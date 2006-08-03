@@ -79,19 +79,15 @@ CONTAINS
       USE io_global, ONLY: stdout
       USE energies, ONLY: dft_energy_type
       USE cp_electronic_mass, ONLY: emass
-      USE electrons_base, ONLY: nupdwn, iupdwn
+      USE electrons_base, ONLY: nupdwn, iupdwn, nspin
       USE time_step, ONLY: delt
-      USE wave_functions, ONLY: proj, crot
-      USE phase_factors_module, ONLY: strucf, phfacs
-      USE charge_mix
-      USE charge_density, ONLY: rhoofr
+      USE cp_interfaces, ONLY: rhoofr, newrho, nlrh, proj, crot, strucf, phfacs
       USE guess
       USE diis
       USE cell_module, ONLY: boxdimensions
       USE check_stop, ONLY: check_stop_now
-      USE nl, ONLY: nlrh_m
       USE potentials, ONLY: vofrhos
-      USE forces
+      USE cp_interfaces, ONLY: dforce
       USE wave_types, ONLY: wave_descriptor
       USE atoms_type_module, ONLY: atoms_type
       USE control_flags, ONLY: force_pairing, gamma_only
@@ -119,7 +115,7 @@ CONTAINS
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
-      REAL(DP)  :: fi(:,:)
+      REAL(DP)  :: fi(:)
       TYPE (dft_energy_type) :: edft
 
       REAL(DP)    :: eig(:,:)
@@ -170,8 +166,8 @@ CONTAINS
       eold     = 1.0d10  ! a large number
       nel = 2.0d0 * cdesc%nbt( 1 ) / DBLE( cdesc%nspin )
 
-      IF( SIZE( fi, 2 ) > 1 ) THEN
-        CALL errore(' rundiis ', ' nspin > 1 not allowed ', SIZE( fi, 2 ) )
+      IF( nspin > 1 ) THEN
+        CALL errore(' rundiis ', ' nspin > 1 not allowed ', 2 )
       END IF
 
       ! ... initialize occupation numbers
@@ -227,13 +223,13 @@ CONTAINS
 
              CALL crot( c0(:,:), cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda, SIZE(lambda,1), eig(:,1) )
 
-             call adjef_s(eig(1,1),fi(1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
-             call entropy_s(fi(1,1),temp_elec,cdesc%nbl( 1 ),edft%ent)
+             call adjef_s(eig(1,1),fi(1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
+             call entropy_s(fi(1),temp_elec,cdesc%nbl( 1 ),edft%ent)
 
           END IF
 
 ! ...     self consistent energy
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
+          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
           CALL rhoofr( 1, c0, cdesc, fi, rhoe, ht0)
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
@@ -247,7 +243,7 @@ CONTAINS
 45        FORMAT('etot  drho ',i3,1x,2(1x,f18.10))
 
 ! ...     recalculate potential
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
+          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
@@ -265,18 +261,18 @@ CONTAINS
 
 ! ...     calculate lambda_i,j=<c_i| H |c_j>
 
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
+          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
 
-          CALL dforce_all( c0, fi(:,1), cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce( c0, fi, cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           CALL proj( cgrad, c0, cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda )
           CALL crot( c0, cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda, SIZE(lambda,1), eig(:,1) )
 
-          call adjef_s(eig(1,1),fi(1,1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
-          call entropy_s(fi(1,1),temp_elec,cdesc%nbl(1),edft%ent)
+          call adjef_s(eig(1,1),fi(1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
+          call entropy_s(fi(1),temp_elec,cdesc%nbl(1),edft%ent)
 
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
-          CALL dforce_all( c0, fi(:,1), cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
+          CALL dforce( c0, fi, cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           DO ib = 1, cdesc%nbl( 1 )
             cgrad(:,ib) = cgrad(:,ib) + eig(ib,1)*c0(:,ib)
@@ -285,9 +281,9 @@ CONTAINS
         ELSE
 
 ! ...     DIIS on c0 at FIXED potential
-          edft%enl = nlrh_m(c0, cdesc, tforce, atoms%for, bec, becdr, eigr)
+          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
 
-          CALL dforce_all( c0, fi(:,1), cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+          CALL dforce( c0, fi, cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           CALL proj( cgrad, c0, cdesc%ngwl, cdesc%nbl( 1 ), 1, lambda)
 
@@ -336,7 +332,7 @@ CONTAINS
       END IF
 
       IF( tprint ) THEN
-         WHERE( fi(:,1) /= 0.d0 ) eig(:,1) = eig(:,1) / fi(:,1)
+         WHERE( fi(:) /= 0.d0 ) eig(:,1) = eig(:,1) / fi(:)
       END IF
 
       DEALLOCATE(lambda)
@@ -394,18 +390,17 @@ CONTAINS
 ! ... declare modules
       USE kinds
       USE mp_global, ONLY: me_image, nproc_image
-      USE runcp_module, ONLY: runcp
+      USE cp_interfaces, ONLY: runcp, proj, update_wave_functions
       USE energies, ONLY: dft_energy_type
       USE electrons_module, ONLY: ei
       USE cp_electronic_mass, ONLY: emass
-      USE electrons_base, ONLY: nupdwn, iupdwn
+      USE electrons_base, ONLY: nupdwn, iupdwn, nspin
       USE time_step, ONLY: delt
-      USE wave_functions, ONLY: proj, update_wave_functions
       USE diis
       USE cell_module, ONLY: boxdimensions
       USE check_stop, ONLY: check_stop_now
       USE potentials, ONLY: vofrhos, kspotential
-      USE forces
+      USE cp_interfaces, ONLY: dforce
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE control_flags, ONLY: tortho, tsde
@@ -429,7 +424,7 @@ CONTAINS
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: sfac(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
-      REAL(DP)  :: fi(:,:)
+      REAL(DP)  :: fi(:)
       REAL(DP)  :: bec(:,:)
       REAL(DP)  :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
@@ -439,11 +434,10 @@ CONTAINS
 
 ! ... declare other variables
       LOGICAL :: tlimit, tsteep
-      LOGICAL :: ttreset_diis(SIZE(fi, 2))
-      LOGICAL :: ddoions(SIZE(fi, 2))
+      LOGICAL :: ttreset_diis( nspin )
+      LOGICAL :: ddoions( nspin )
       INTEGER ig, ib, ibg, j, k, ibl, ispin
       INTEGER nfi_l,nrt,istate
-      INTEGER nspin
       INTEGER nx,nrl, ndiis,nowv, isteep, iwfc, nwfc
       REAL(DP)  ekinc, svar1, svar2, svar3_0
       REAL(DP)  s0, s1, s2, s3, s4, s5
@@ -462,7 +456,6 @@ CONTAINS
 ! ... end of declarations
 !  ----------------------------------------------
 
-      nspin       = SIZE(fi, 2)
       istate      = 0
       eold        = 1.0d10  ! a large number
       isteep      = 0
@@ -535,13 +528,13 @@ CONTAINS
             iwfc = iupdwn( ispin )
             nwfc = nupdwn( ispin )
 
-            CALL dforce_all( c0, fi(:,ispin), cgrad, vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
+            CALL dforce( c0, fi, cgrad, vpot(:,ispin), vkb, bec, nwfc, iwfc )
 
             CALL proj( cgrad, c0, cdesc%ngwl, nwfc, iwfc, lambda)
 
             s4 = cclock()
             CALL simupd(ekinc, ddoions(ispin), c0(:,iwfc:iwfc+nwfc-1), cgrad(:,iwfc:iwfc+nwfc-1), cdesc, &
-                svar1, svar2, svar3_0, edft%etot, fi(:,ispin), eigr, sfac, &
+                svar1, svar2, svar3_0, edft%etot, fi(iwfc:iwfc+nwfc-1), eigr, sfac, &
                 vps, ttreset_diis(ispin), istate, cnorm, &
                 eold, ndiis, nowv)
             CALL gram( vkb, bec, nkb, c0(1,iwfc), SIZE(c0,1), nwfc )
@@ -604,19 +597,17 @@ CONTAINS
 
         USE kinds
         USE wave_types
-        USE wave_constrains, ONLY: update_lambda
-        USE wave_base, ONLY: dotp
-        USE cell_base, ONLY: tpiba2
-        USE electrons_module, ONLY: eigs, ei, nb_l, ib_owner, ib_local
-        USE electrons_base, ONLY: iupdwn, nupdwn
-        USE forces, ONLY: dforce_all
-        USE orthogonalize
-        USE pseudopotential,       ONLY: nspnl
-        USE mp,                    ONLY: mp_sum
-        USE mp_global,             ONLY: me_image, nproc_image, intra_image_comm
-        USE atoms_type_module,     ONLY: atoms_type
-        USE reciprocal_vectors,    ONLY: g, gx
-        USE control_flags,         ONLY: gamma_only
+        USE wave_base,               ONLY: dotp
+        USE cell_base,               ONLY: tpiba2
+        USE electrons_module,        ONLY: ei, nb_l, ib_owner, ib_local
+        USE electrons_base,          ONLY: iupdwn, nupdwn
+        USE cp_interfaces,           ONLY: dforce, eigs, ortho, update_lambda
+        USE read_pseudo_module_fpmd, ONLY: nspnl
+        USE mp,                      ONLY: mp_sum
+        USE mp_global,               ONLY: me_image, nproc_image, intra_image_comm
+        USE atoms_type_module,       ONLY: atoms_type
+        USE reciprocal_vectors,      ONLY: g, gx
+        USE control_flags,           ONLY: gamma_only
 
         IMPLICIT NONE
 
@@ -624,7 +615,7 @@ CONTAINS
         COMPLEX(DP), INTENT(inout) ::  c(:,:)
         COMPLEX(DP), INTENT(inout) ::  eforce(:,:)
         TYPE (wave_descriptor), INTENT(in) :: cdesc
-        REAL (DP), INTENT(in) ::  vpot(:,:), fi(:,:)
+        REAL (DP), INTENT(in) ::  vpot(:,:), fi(:)
         REAL (DP) ::  bec(:,:)
         LOGICAL, INTENT(IN) :: TORTHO
         COMPLEX(DP) :: eigr(:,:)
@@ -661,14 +652,14 @@ CONTAINS
           CALL nlsm1( n, 1, nspnl, eigr, c(1,iwfc), bec )
 
 ! ...     Calculate | dH / dpsi(j) >
-          CALL dforce_all( c, fi(:,ispin), eforce, vpot(:,ispin), vkb, bec, nupdwn(ispin), iupdwn(ispin) )
+          CALL dforce( c, fi, eforce, vpot(:,ispin), vkb, bec, nwfc, iwfc )
 
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n
                CALL update_lambda( i,  gam, c, eforce( :, i+iwfc-1), nwfc, iwfc ) 
             END DO
 
-            CALL eigs( n, gam, tortho, fi(:,ispin), ei(:,ispin) )
+            CALL eigs( n, gam, tortho, fi(iwfc:iwfc+nwfc-1), ei(:,ispin) )
           END DO
 
         DEALLOCATE(gam, cgam)

@@ -72,6 +72,7 @@ print_out.o \
 problem_size.o \
 pseudo_base.o \
 pseudopot.o \
+pseudopot_sub.o \
 qmatrixd.o \
 qqberry.o \
 read_pseudo.o \

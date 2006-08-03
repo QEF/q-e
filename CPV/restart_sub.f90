@@ -65,19 +65,16 @@ MODULE from_restart_module
     USE cp_electronic_mass,   ONLY : emass
     USE efield_module,        ONLY : efield_berry_setup, tefield, &
                                      efield_berry_setup2, tefield2
-    USE runcp_module,         ONLY : runcp_uspp, runcp_uspp_force_pairing, runcp_uspp_bgl
-    USE wave_constrains,      ONLY : interpolate_lambda
+    USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
+                                     runcp_uspp_bgl, interpolate_lambda
     USE energies,             ONLY : eself, enl, etot, ekin
     USE time_step,            ONLY : delt, tps
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh, cell_nosezero
-    USE phase_factors_module, ONLY : strucf
     USE cg_module,            ONLY : tcg
-    USE orthogonalize,        ONLY : ortho
     USE orthogonalize_base,   ONLY : updatc, calphi
-    use charge_density,       only : rhoofr
+    use cp_interfaces,        only : rhoofr, ortho, elec_fakekine, strucf
     USE control_flags,        ONLY : force_pairing
-    USE wave_functions,       ONLY : elec_fakekine
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
@@ -420,7 +417,7 @@ MODULE from_restart_module
     USE reciprocal_vectors,   ONLY : gstart, mill_l
     USE gvecs,                ONLY : ngs
     USE gvecw,                ONLY : ngw
-    USE phase_factors_module, ONLY : strucf
+    USE cp_interfaces,        ONLY : strucf
     USE cdvan,                ONLY : dbec
     !
     IMPLICIT NONE
@@ -479,7 +476,7 @@ MODULE from_restart_module
   !
   !--------------------------------------------------------------------------
   SUBROUTINE from_restart_fpmd( nfi, acc, rhoe, cm, c0, cdesc, &
-                                eigr, ei1, ei2, ei3, sfac, fi, ht_m, ht_0, &
+                                eigr, ei1, ei2, ei3, sfac, ht_m, ht_0, &
                                 atoms_m, atoms_0, bec, becdr, vpot, edft )
     !--------------------------------------------------------------------------
     !
@@ -487,12 +484,11 @@ MODULE from_restart_module
     ! ... restart file
     !
     USE kinds,                 ONLY : DP
-    USE phase_factors_module,  ONLY : strucf, phfacs
     USE time_step,             ONLY : delt
-    USE charge_density,        ONLY : rhoofr
+    USE cp_interfaces,         ONLY : rhoofr, strucf, phfacs
     USE wave_base,             ONLY : wave_verlet, rande_base
     USE electrons_module,      ONLY : occn_info
-    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn
+    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f
     USE ions_base,             ONLY : na, nsp, nax, randpos, taui, cdmi
     USE ions_module,           ONLY : set_reference_positions, &
                                       print_scaled_positions, &
@@ -500,9 +496,7 @@ MODULE from_restart_module
     USE energies,              ONLY : dft_energy_type
     USE cell_module,           ONLY : boxdimensions, gethinv, alat
     USE cell_base,             ONLY : r_to_s, s_to_r
-    USE nl,                    ONLY : nlrh_m
     USE potentials,            ONLY : vofrhos
-    USE orthogonalize,         ONLY : ortho
     USE io_global,             ONLY : ionode, ionode_id
     USE io_global,             ONLY : stdout
     USE wave_types,            ONLY : wave_descriptor
@@ -514,7 +508,7 @@ MODULE from_restart_module
     USE parameters,            ONLY : nacx
     USE atoms_type_module,     ONLY : atoms_type
     USE ions_base,             ONLY : vel_srt, tau_units
-    USE runcp_module,          ONLY : runcp_ncpp
+    USE cp_interfaces,         ONLY : runcp_ncpp, ortho, nlrh
     USE grid_dimensions,       ONLY : nr1, nr2, nr3
     USE reciprocal_vectors,    ONLY : mill_l
     USE gvecp,                 ONLY : ngm
@@ -532,7 +526,6 @@ MODULE from_restart_module
     COMPLEX(DP)                :: ei2(:,:)
     COMPLEX(DP)                :: ei3(:,:)
     COMPLEX(DP), INTENT(INOUT) :: cm(:,:), c0(:,:)
-    REAL(DP)                   :: fi(:,:)
     TYPE(boxdimensions)        :: ht_m, ht_0
     REAL(DP)                   :: rhoe(:,:)
     TYPE(wave_descriptor)      :: cdesc
@@ -566,7 +559,7 @@ MODULE from_restart_module
        !
     END IF
     !
-    CALL occn_info( fi )
+    CALL occn_info( f )
     !
     IF ( taurdr ) THEN
        !
@@ -694,19 +687,19 @@ MODULE from_restart_module
        !
        atoms_0%for = 0.D0
        ! 
-       edft%enl = nlrh_m( c0, cdesc, ttforce, atoms_0%for, bec, becdr, eigr )
+       edft%enl = nlrh( c0, ttforce, atoms_0%for, bec, becdr, eigr )
        !
-       CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht_0 )
+       CALL rhoofr( nfi, c0, cdesc, f, rhoe, ht_0 )
        !
        CALL vofrhos( .true. , ttforce, tstress, rhoe, &
-                     atoms_0, vpot, bec, c0, cdesc, fi, eigr, &
+                     atoms_0, vpot, bec, c0, cdesc, f, eigr, &
                      ei1, ei2, ei3, sfac, ht_0, edft )
        !
        IF ( tzeroe ) THEN
           !
           IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, fi, bec, fccc, gam, restart = .TRUE. )
+             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, f, bec, fccc, gam, restart = .TRUE. )
              !
              IF ( tortho ) THEN
                 !

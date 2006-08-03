@@ -52,7 +52,7 @@ SUBROUTINE init_run()
                                        becdr, sfac, eigr, ei1, ei2, ei3, taub, &
                                        irb, eigrb, rhog, rhos, rhor, bephi,    &
                                        becp, acc, acc_this_run, wfill, &
-                                       edft, nfi, vpot, occn, ht0, htm
+                                       edft, nfi, vpot, ht0, htm
   USE cp_main_variables,        ONLY : allocate_mainvar
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE stre,                     ONLY : stress
@@ -63,7 +63,7 @@ SUBROUTINE init_run()
   USE gvecp,                    ONLY : ecutp
   USE funct,                    ONLY : dft_is_meta
   USE metagga,                  ONLY : crosstaus, dkedtaus, gradwfc
-  USE pseudopotential,          ONLY : pseudopotential_indexes, nsanl
+  USE pseudopotential,          ONLY : nsanl
   !
   USE efcalc,                   ONLY : clear_nbeg
   USE cpr_subroutines,          ONLY : print_atomic_var
@@ -72,7 +72,7 @@ SUBROUTINE init_run()
   USE wannier_subroutines,      ONLY : wannier_startup
   USE from_scratch_module,      ONLY : from_scratch
   USE from_restart_module,      ONLY : from_restart  
-  USE restart_file,             ONLY : readfile
+  USE cp_interfaces,            ONLY : readfile
   USE ions_base,                ONLY : ions_cofmass
   USE ensemble_dft,             ONLY : id_matrix_init, allocate_ensemble_dft
   USE efield_module,            ONLY : allocate_efield, allocate_efield2
@@ -81,7 +81,6 @@ SUBROUTINE init_run()
   USE io_files,                 ONLY : outdir, prefix
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
-  USE print_out_module,         ONLY : print_legend
   USE wave_types,               ONLY : wave_descriptor_info
   !
   IMPLICIT NONE
@@ -231,7 +230,7 @@ SUBROUTINE init_run()
                         enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
                         dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
                         fionm, xnhe0, xnhem, vnhe, ekincm, atoms0, edft,   &
-                        ht0, wfill, occn, vpot )
+                        ht0, wfill, vpot )
      !
   ELSE
      !
@@ -249,7 +248,7 @@ SUBROUTINE init_run()
         !
      ELSE IF( program_name == 'FPMD' ) THEN
         !
-        CALL readfile( nfi, tps, c0, cm, occn, atoms0, atomsm, acc,     &
+        CALL readfile( nfi, tps, c0, cm, f, atoms0, atomsm, acc,     &
                        taui, cdmi, htm, ht0, rhor, vpot)
         !
      END IF
@@ -265,7 +264,7 @@ SUBROUTINE init_run()
      ELSE IF( program_name == 'FPMD' ) THEN
         !
         CALL from_restart( nfi, acc, rhor, cm, c0, wfill, eigr, ei1, ei2, &
-                           ei3, sfac, occn, htm, ht0, atomsm, atoms0, bec, &
+                           ei3, sfac, htm, ht0, atomsm, atoms0, bec, &
                            becdr, vpot, edft)
         !
         velh = htm%hvel

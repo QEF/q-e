@@ -97,7 +97,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE from_restart_module,      ONLY : from_restart
   USE wavefunctions_module,     ONLY : c0, cm, phi => cp
   USE wannier_module,           ONLY : allocate_wannier
-  USE print_out_module,         ONLY : printout_new
+  USE cp_interfaces,            ONLY : printout_new
   USE printout_base,            ONLY : printout_base_open, &
                                        printout_base_close, &
                                        printout_pos, printout_cell, &
@@ -110,8 +110,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecw,                    ONLY : ecutw
   USE gvecp,                    ONLY : ecutp
   USE time_step,                ONLY : delt, tps, dt2, dt2by2, twodelt
-  USE electrons_module,         ONLY : cp_eigs
-  USE print_out_module,         ONLY : cp_print_rho
+  USE cp_interfaces,            ONLY : cp_print_rho
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
@@ -120,24 +119,21 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        max_event_step, restart_p
   USE metadyn_vars,             ONLY : ncolvar, dfe_acc, etot_av
   USE cell_base,                ONLY : s_to_r, r_to_s
-  USE phase_factors_module,     ONLY : strucf
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
                                        ions_cofmsub
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
-  USE restart_file,             ONLY : readfile, writefile
+  USE cp_interfaces,            ONLY : readfile, writefile, eigs, strucf
+  USE cp_interfaces,            ONLY : empty_cp, ortho, elec_fakekine
   USE constraints_module,       ONLY : check_constraint, lagrange, &
                                        remove_constr_force
   USE metadyn_base,             ONLY : set_target
   USE autopilot,                ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
-  USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
-  USE wave_functions,           ONLY : elec_fakekine
   USE mp,                       ONLY : mp_bcast
   USE mp_global,                ONLY : intra_image_comm
-  USE empty_states,             ONLY : empty_cp
   !
   IMPLICIT NONE
   !
@@ -597,7 +593,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbspx )  
         END IF
         !
-        CALL cp_eigs( nfi, lambdap, lambda )
+        CALL eigs( nfi, lambdap, lambda )
         !
         ! ... Compute empty states
         !
@@ -871,7 +867,6 @@ SUBROUTINE terminate_run()
   USE cp_main_variables, ONLY : acc
   USE cg_module,         ONLY : tcg, print_clock_tcg
   USE mp,                ONLY : mp_report
-  USE print_out_module,  ONLY : printacc
   USE control_flags,     ONLY : use_task_groups
   !
   IMPLICIT NONE

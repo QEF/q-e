@@ -8,25 +8,11 @@
 #include "f_defs.h"
 
 
-!=----------------------------------------------------------------------------=!
-   MODULE wave_constrains
-!=----------------------------------------------------------------------------=!
-
-     ! ...   include modules
-     USE kinds
-
-     IMPLICIT NONE
-     SAVE
-
-     PRIVATE
-
-     PUBLIC :: interpolate_lambda, update_lambda
 
 !=----------------------------------------------------------------------------=!
-   CONTAINS
+     SUBROUTINE interpolate_lambda_x( lambdap, lambda, lambdam )
 !=----------------------------------------------------------------------------=!
-
-     SUBROUTINE interpolate_lambda( lambdap, lambda, lambdam )
+       USE kinds, ONLY: DP
        IMPLICIT NONE
        REAL(DP) :: lambdap(:,:,:), lambda(:,:,:), lambdam(:,:,:) 
        !
@@ -36,10 +22,13 @@
        lambdam=lambda 
        lambda =lambdap
        RETURN
-     END SUBROUTINE interpolate_lambda
+     END SUBROUTINE interpolate_lambda_x
 
 
-     SUBROUTINE update_lambda( i, lambda, c0, c2, n, noff )
+!=----------------------------------------------------------------------------=!
+     SUBROUTINE update_lambda_x( i, lambda, c0, c2, n, noff )
+!=----------------------------------------------------------------------------=!
+       USE kinds,              ONLY: DP
        USE electrons_module,   ONLY: ib_owner, ib_local
        USE mp_global,          ONLY: me_image, intra_image_comm
        USE mp,                 ONLY: mp_sum
@@ -63,51 +52,24 @@
        END IF
        DEALLOCATE( prod )
        RETURN
-     END SUBROUTINE update_lambda
+     END SUBROUTINE update_lambda_x
 
-!=----------------------------------------------------------------------------=!
-   END MODULE wave_constrains
-!=----------------------------------------------------------------------------=!
 
 
 
 !=----------------------------------------------------------------------------=!
-   MODULE wave_functions
+  subroutine elec_fakekine_x( ekincm, ema0bg, emass, c0, cm, ngw, n, noff, delt )
 !=----------------------------------------------------------------------------=!
-
-! ...   include modules
-        USE kinds
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
-
-          PUBLIC :: crot, proj
-          INTERFACE crot
-            MODULE PROCEDURE  crot_gamma
-          END INTERFACE
-          INTERFACE proj
-            MODULE PROCEDURE  proj_gamma
-          END INTERFACE
-
-          PUBLIC :: elec_fakekine
-          PUBLIC :: update_wave_functions, wave_rand_init, kohn_sham
-
-!=----------------------------------------------------------------------------=!
-      CONTAINS
-!=----------------------------------------------------------------------------=!
-
-
-
-  subroutine elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, n, noff, delt )
     !
     !  This subroutine computes the CP(fake) wave functions kinetic energy
     
+    USE kinds,              only : DP
     use mp,                 only : mp_sum
     use mp_global,          only : intra_image_comm
     use reciprocal_vectors, only : gstart
     use wave_base,          only : wave_speed2
+    !
+    IMPLICIT NONE
     !
     integer, intent(in)      :: ngw    !  number of plane wave coeff.
     integer, intent(in)      :: n      !  number of bands
@@ -135,12 +97,16 @@
     DEALLOCATE( emainv )
 
     return
-  end subroutine elec_fakekine
+  end subroutine elec_fakekine_x
+
+
+
 
 !=----------------------------------------------------------------------------=!
+   SUBROUTINE update_wave_functions_x( cm, c0, cp )
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE update_wave_functions( cm, c0, cp )
+      USE kinds,              ONLY: DP
 
       IMPLICIT NONE
 
@@ -152,11 +118,13 @@
       c0(:,:) = cp(:,:)
 
       RETURN
-   END SUBROUTINE update_wave_functions
+   END SUBROUTINE update_wave_functions_x
+
+
 
 !=----------------------------------------------------------------------------=!
-
    SUBROUTINE crot_gamma ( c0, ngwl, nx, noff, lambda, nrl, eig )
+!=----------------------------------------------------------------------------=!
 
       !  this routine rotates the wave functions to the Kohn-Sham base
       !  it works with a block-like distributed matrix
@@ -177,6 +145,7 @@
 
       ! ... declare modules
 
+      USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
       USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv
@@ -276,9 +245,10 @@
    END SUBROUTINE crot_gamma
 
 
-!=----------------------------------------------------------------------------=!
 
+!=----------------------------------------------------------------------------=!
    SUBROUTINE proj_gamma( a, b, ngw, n, noff, lambda)
+!=----------------------------------------------------------------------------=!
 
         !  projection A=A-SUM{B}<B|A>B
         !  no replicated data are used, allowing scalability for large problems.
@@ -294,6 +264,7 @@
         !  ----------------------------------------------
          
 ! ...   declare modules
+        USE kinds,              ONLY: DP
         USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
         USE wave_base,          ONLY: dotp
         USE reciprocal_vectors, ONLY: gzero
@@ -340,15 +311,16 @@
    END SUBROUTINE proj_gamma
 
 
+
+
+!=----------------------------------------------------------------------------=!
+   SUBROUTINE wave_rand_init_x( cm, n, noff )
 !=----------------------------------------------------------------------------=!
 
-
-   SUBROUTINE wave_rand_init( cm, n, noff )
-
-!  this routine sets the initial wavefunctions at random
-!  ----------------------------------------------
+      !  this routine sets the initial wavefunctions at random
 
 ! ... declare modules
+      USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_sum
       USE mp_wave,            ONLY: splitwf
       USE mp_global,          ONLY: me_image, nproc_image, root_image, intra_image_comm
@@ -406,16 +378,18 @@
       DEALLOCATE( pwt )
 
       RETURN
-    END SUBROUTINE wave_rand_init
+    END SUBROUTINE wave_rand_init_x
 
 
 
-   SUBROUTINE kohn_sham( c, ngw, eforces, n, nl, noff )
+!=----------------------------------------------------------------------------=!
+   SUBROUTINE kohn_sham_x( c, ngw, eforces, n, nl, noff )
+!=----------------------------------------------------------------------------=!
         !
         ! ...   declare modules
 
-        USE kinds
-        USE wave_constrains,  ONLY: update_lambda
+        USE kinds,          ONLY: DP
+        USE cp_interfaces,  ONLY: update_lambda, crot
 
         IMPLICIT NONE
 
@@ -454,10 +428,5 @@
 
         RETURN
         ! ...
-   END SUBROUTINE kohn_sham
-
-
-!=----------------------------------------------------------------------------=!
-   END MODULE wave_functions
-!=----------------------------------------------------------------------------=!
+   END SUBROUTINE kohn_sham_x
 

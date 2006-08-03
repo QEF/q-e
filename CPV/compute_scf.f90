@@ -24,7 +24,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
                                 dim, suspended_image, frozen
   USE check_stop,        ONLY : check_stop_now
   USE xml_io_base,       ONLY : check_restartfile
-  USE main_module,       ONLY : cpmain
+  USE cp_interfaces,     ONLY : main_fpmd
   USE input,             ONLY : modules_setup
   !
   IMPLICIT NONE
@@ -120,7 +120,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      isave = nomore
      !
-     ! ... perform an electronic minimisation using cpmain
+     ! ... perform an electronic minimisation using main_fpmd
      !
      CALL init_run()
      !
@@ -130,7 +130,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
      ELSE IF ( program_name == 'FPMD' ) THEN
         !
-        CALL cpmain( tau, fion, etot )
+        CALL main_fpmd( tau, fion, etot )
         !
      ELSE
         !

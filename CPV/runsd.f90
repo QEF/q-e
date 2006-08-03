@@ -31,14 +31,13 @@
       SUBROUTINE runsd &
                  ( tortho, tprint, tforce, rhoe, atoms_0, bec, becdr, eigr, &
                    vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht0,  &
-                   occ, ei, vpot, doions, edft, maxnstep, sdthr )
+                   fi, ei, vpot, doions, edft, maxnstep, sdthr )
 
 !  this routine computes the electronic ground state via steepest descent
 !  END manual
 
 ! ... declare modules
       USE energies,             ONLY: dft_energy_type, print_energies
-      USE wave_functions,       ONLY: update_wave_functions
       USE check_stop,           ONLY: check_stop_now
       USE io_global,            ONLY: ionode
       USE io_global,            ONLY: stdout
@@ -46,8 +45,7 @@
       USE wave_types,           ONLY: wave_descriptor
       USE potentials,           ONLY: kspotential
       USE atoms_type_module,    ONLY: atoms_type
-      USE runcp_module,         ONLY: runcp
-      USE phase_factors_module, ONLY: strucf, phfacs
+      USE cp_interfaces,        ONLY: runcp, update_wave_functions, strucf, phfacs
       USE control_flags,        ONLY: force_pairing
       use grid_dimensions,      only: nr1, nr2, nr3
       USE reciprocal_vectors,   ONLY: mill_l
@@ -69,7 +67,7 @@
       COMPLEX(DP) :: ei2(:,:)
       COMPLEX(DP) :: ei3(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht0
-      REAL(DP)  :: occ(:,:)
+      REAL(DP)  :: fi(:)
       REAL(DP) :: bec(:,:)
       REAL(DP) :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
@@ -127,11 +125,11 @@
 
         CALL kspotential( 1, ttprint, ttforce, ttstress, rhoe, atoms_0, &
                           bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0,  &
-                          occ, vpot, edft )
+                          fi, vpot, edft )
 
         s2 = cclock()
 
-        CALL runcp( ttprint, ttortho, ttsde, cm, c0, cp, vpot, vkb, occ, ekinc, ht0, ei, bec, fccc)
+        CALL runcp( ttprint, ttortho, ttsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht0, ei, bec, fccc)
 
         emin  = edft%etot
         demin = eold - emin
@@ -168,7 +166,7 @@
       IF( tforce ) THEN
         atoms_0%for = 0.0d0
         CALL kspotential( 1, ttprint, tforce, ttstress, rhoe, &
-          atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, occ, vpot, edft )
+          atoms_0, bec, becdr, eigr, ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht0, fi, vpot, edft )
         IF(ionode ) THEN
           WRITE( stdout,fmt="(12X,'runsd: fion and edft calculated = ',F14.6)") edft%etot
         END IF

@@ -171,13 +171,13 @@ MODULE guess
       
 !  ----------------------------------------------
 !  ----------------------------------------------
-          SUBROUTINE guessrho(rho, cm, c0, cdesc, occ, ht ) 
+          SUBROUTINE guessrho(rho, cm, c0, cdesc, fi, ht ) 
 
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
              USE cell_module, only: boxdimensions
-             use charge_density, only: rhoofr
+             use cp_interfaces, only: rhoofr
              USE wave_types
              USE parameters, ONLY: nspinx
 
@@ -186,7 +186,7 @@ MODULE guess
              COMPLEX(DP), INTENT(IN) :: c0(:,:), cm(:,:)
              TYPE (wave_descriptor), INTENT(IN) :: cdesc
              TYPE (boxdimensions), INTENT(IN) :: ht
-             REAL(DP), INTENT(IN) :: occ(:,:)
+             REAL(DP), INTENT(IN) :: fi(:)
 
 ! ...        declare other variables
              REAL(DP), ALLOCATABLE :: rho0( :, : )
@@ -201,12 +201,12 @@ MODULE guess
 
              IF( tfirst ) THEN
                ALLOCATE( rho_save( SIZE( rho, 1 ), nspin ) )
-               CALL rhoofr( 1, cm, cdesc, occ, rho_save, ht)
+               CALL rhoofr( 1, cm, cdesc, fi, rho_save, ht)
                tfirst = .FALSE.
              END IF
 
              ALLOCATE( rho0( SIZE( rho, 1 ), nspin ) )
-             CALL rhoofr( 1, c0, cdesc, occ, rho0, ht)
+             CALL rhoofr( 1, c0, cdesc, fi, rho0, ht)
 
              rho = 2.0d0 * rho0 - rho_save
 

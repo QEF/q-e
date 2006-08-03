@@ -8,39 +8,9 @@
 #include "f_defs.h"
 
 
-!  BEGIN manual
-
 !=----------------------------------------------------------------------------=!
-   MODULE phase_factors_module
+   SUBROUTINE phfacs_x( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
 !=----------------------------------------------------------------------------=!
-
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
-!  routines in this module:
-!  SUBROUTINE phfacs
-!  SUBROUTINE strucf
-!  ----------------------------------------------
-
-!  END manual
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
-
-        PUBLIC :: strucf, phfacs
-
-! ...   --+ end of module-scope declarations +--
-
-!=----------------------------------------------------------------------------=!
-   CONTAINS
-!=----------------------------------------------------------------------------=!
-
-
-!=----------------------------------------------------------------------------=!
-!  BEGIN manual
-
-      SUBROUTINE phfacs( ei1, ei2, ei3, eigr, mill, taus, nr1, nr2, nr3, nat )
 
       !  this routine computes the phase factors
       !
@@ -58,10 +28,10 @@
       !    ix,iy,iz = Miller indices
       !  ----------------------------------------------
  
-!  END manual
-
           USE kinds,           ONLY: DP
           USE constants,       ONLY: tpi
+
+          IMPLICIT NONE
 
           ! ...     declare subroutine arguments
 
@@ -152,13 +122,12 @@
           END DO
 
           RETURN
-      END SUBROUTINE phfacs
+      END SUBROUTINE phfacs_x
 
 
 !=----------------------------------------------------------------------------=!
-!  BEGIN manual
-
-      SUBROUTINE strucf( sfac, ei1, ei2, ei3, mill, ngm )
+   SUBROUTINE strucf_x( sfac, ei1, ei2, ei3, mill, ngm )
+!=----------------------------------------------------------------------------=!
 
 !  this routine computes the structure factors
 !
@@ -175,8 +144,7 @@
 !    ig = index of G vector
 !    is = index of atomic species
 !    ix,iy,iz = Miller indices of G vector
-!  ----------------------------------------------
-!  END manual
+
 
       USE kinds,            ONLY: DP
       USE ions_base,        ONLY: nat, na, nsp
@@ -217,11 +185,8 @@
       call stop_clock( 'strucf' )
 
       RETURN
-      END SUBROUTINE strucf
+   END SUBROUTINE strucf_x
 
-!=----------------------------------------------------------------------------=!
-   END MODULE phase_factors_module
-!=----------------------------------------------------------------------------=!
 
 
 !-----------------------------------------------------------------------
@@ -245,7 +210,7 @@
       use grid_dimensions,    only: nr1, nr2, nr3
       use reciprocal_vectors, only: mill_l
       use gvecw,              only: ngw
-      use phase_factors_module, only: phfacs
+      use cp_interfaces,      only: phfacs
 !
       implicit none
       real(DP) tau0(3,nat)
@@ -285,7 +250,7 @@
       use cell_base,     only: r_to_s
       use small_box,     only: ainvb
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
-      use phase_factors_module, only: phfacs
+      use cp_interfaces, only: phfacs
 !                 
       implicit none    
       real(8) :: taub(3,nat)

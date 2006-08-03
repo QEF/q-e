@@ -5,59 +5,21 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Wed Apr  5 23:04:18 MDT 2000
-!  ----------------------------------------------
 
 #include "f_defs.h"
 
-
-  MODULE stress
-
-       USE kinds
-
-       IMPLICIT NONE
-       PRIVATE
-       SAVE
-
-
-       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
-       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
-
-       REAL(DP),  DIMENSION(3,3), PARAMETER :: delta = reshape &
-         ( (/ 1.0_DP, 0.0_DP, 0.0_DP, &
-              0.0_DP, 1.0_DP, 0.0_DP, &
-              0.0_DP, 0.0_DP, 1.0_DP  &
-            /), (/ 3, 3 /) )
-
-       ! ...  dalbe(:) = delta(alpha(:),beta(:))
-       !
-       REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
-         (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
-
-       PUBLIC :: pstress
-       PUBLIC :: pseudo_stress, compute_gagb, stress_har
-       PUBLIC :: stress_hartree, add_drhoph, stress_local
-       PUBLIC :: stress_kin, stress_nl
-       PUBLIC :: dalbe
-
-     CONTAINS
-
-
 !------------------------------------------------------------------------------!
-
-   SUBROUTINE pstress( pail, desr, dekin, denl, deps, deht, dexc, box )
+   SUBROUTINE pstress_x( pail, desr, dekin, denl, deps, deht, dexc, box )
+!------------------------------------------------------------------------------!
 
       !  this routine sum up stress tensor from partial contributions
 
-      USE cell_module,          ONLY: boxdimensions
-      USE mp_global,            ONLY: intra_image_comm
-      USE mp,                   ONLY: mp_sum
-      USE control_flags,        ONLY: iprsta
+      USE kinds,         ONLY: DP
+      USE cell_base,     ONLY: boxdimensions
+      USE mp_global,     ONLY: intra_image_comm
+      USE mp,            ONLY: mp_sum
+      USE control_flags, ONLY: iprsta
+      USE stress_param,  ONLY: alpha, beta
 
       IMPLICIT NONE
 
@@ -90,37 +52,40 @@
 100   FORMAT(6X,A3,10X,F8.4)
 
       RETURN
-   END SUBROUTINE pstress
+   END SUBROUTINE pstress_x
+
 
 
 !------------------------------------------------------------------------------!
-
-
-
-   SUBROUTINE stress_nl(denl, gagb, c0, occ, eigr, bec, enl, ht, htm1)
+   SUBROUTINE stress_nl_x( denl, gagb, c0, occ, eigr, bec, enl, ht, htm1 )
+!------------------------------------------------------------------------------!
 
       !  this routine computes nl part of the stress tensor from dft total energy
 
-      USE constants, ONLY: pi, au_gpa
-      USE pseudopotential, ONLY: nlin_stress, nlin, nspnl, nsanl
-      USE ions_base, ONLY: nsp, na
+      USE kinds,               ONLY: DP
+      USE constants,           ONLY: pi, au_gpa
+      USE cp_interfaces,       ONLY: nlin_stress, nlin
+      USE read_pseudo_module_fpmd, ONLY: nspnl
+      USE pseudopotential,     ONLY: nsanl
+      USE ions_base,           ONLY: nsp, na
       USE spherical_harmonics, ONLY: set_dmqm, set_fmrm, set_pmtm
-      USE mp_global, ONLY: intra_image_comm, root_image, me_image
-      USE io_global, ONLY: stdout
-      USE cell_base, ONLY: tpiba2, omega
-      USE reciprocal_vectors, ONLY: gstart, gzero, g, gx
-      USE gvecw, ONLY: ngw
-      USE uspp_param, only: nh, lmaxkb, nbeta, nhm
-      USE uspp, only: nhtol, nhtolm, indv, nkb
-      USE electrons_base, only: nupdwn, iupdwn, nspin
-      USE cdvan, only: dbec
-      USE cvan, only: ish
-      USE mp, only: mp_sum
+      USE mp_global,           ONLY: intra_image_comm, root_image, me_image
+      USE io_global,           ONLY: stdout
+      USE cell_base,           ONLY: tpiba2, omega
+      USE reciprocal_vectors,  ONLY: gstart, gzero, g, gx
+      USE gvecw,               ONLY: ngw
+      USE uspp_param,          only: nh, lmaxkb, nbeta, nhm
+      USE uspp,                only: nhtol, nhtolm, indv, nkb
+      USE electrons_base,      only: nupdwn, iupdwn, nspin
+      USE cdvan,               only: dbec
+      USE cvan,                only: ish
+      USE mp,                  only: mp_sum
+      USE stress_param,        ONLY: alpha, beta, dalbe
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(DP), INTENT(IN) :: occ(:,:)
+      REAL(DP), INTENT(IN) :: occ(:)
       COMPLEX(DP), INTENT(IN) :: c0(:,:)
       REAL(DP), INTENT(OUT) :: denl(:)
       REAL(DP), INTENT(IN) :: gagb(:,:)
@@ -344,7 +309,7 @@
 
               DO in = 1, nx
                 !
-                fac = 2.0d0 * occ( in, ispin ) * wsg( ih, is)
+                fac = 2.0d0 * occ( in + iupdwn( ispin ) - 1 ) * wsg( ih, is)
                 !
                 DO ia = 1, na(is)
                   isa = iss + ia - 1
@@ -406,20 +371,24 @@
 
 
       RETURN
-      END SUBROUTINE stress_nl
+   END SUBROUTINE stress_nl_x
+
 
 
 
 !------------------------------------------------------------------------------!
-
-
-
-   SUBROUTINE pseudo_stress( deps, epseu, gagb, sfac, dvps, rhoeg, omega )
+   SUBROUTINE pseudo_stress_x( deps, epseu, gagb, sfac, dvps, rhoeg, omega )
+!------------------------------------------------------------------------------!
       !
+      USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart
       USE gvecs,              ONLY: ngs
       USE electrons_base,     ONLY: nspin
+      USE stress_param,       ONLY: dalbe
+      USE cp_interfaces,      ONLY: stress_local
+
+      IMPLICIT NONE
 
       REAL(DP),     INTENT(IN)  :: omega
       REAL(DP),     INTENT(OUT) :: deps(:)
@@ -448,17 +417,22 @@
       DEALLOCATE( drhoe, rhoe )
 
       RETURN
-   END SUBROUTINE pseudo_stress
+   END SUBROUTINE pseudo_stress_x
 
-!  ----------------------------------------------
 
-   SUBROUTINE stress_local( deps, epseu, gagb, sfac, rhoe, drhoe, omega )
+
+!------------------------------------------------------------------------------!
+   SUBROUTINE stress_local_x( deps, epseu, gagb, sfac, rhoe, drhoe, omega )
+!------------------------------------------------------------------------------!
       !
+      USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart
       USE gvecs,              ONLY: ngs
       USE electrons_base,     ONLY: nspin
       USE local_pseudo,       ONLY: vps, dvps
+
+      IMPLICIT NONE
 
       REAL(DP),     INTENT(IN)  :: omega
       REAL(DP),     INTENT(OUT) :: deps(:)
@@ -504,13 +478,14 @@
       deps = omega * DBLE( depst )
 
       RETURN
-   END SUBROUTINE stress_local
+   END SUBROUTINE stress_local_x
 
 
-!  ----------------------------------------------
 
 
-      SUBROUTINE stress_kin(dekin, c0, occ, gagb) 
+!------------------------------------------------------------------------------!
+   SUBROUTINE stress_kin_x(dekin, c0, occ, gagb) 
+!------------------------------------------------------------------------------!
 
 !  this routine computes the kinetic energy contribution to the stress 
 !  tensor
@@ -518,10 +493,8 @@
 !  dekin(:) = - 2 (sum over i) f(i) * 
 !    ( (sum over g) gagb(:,g) CONJG( c0(g,i) ) c0(g,i) )
 !                       
-!  ----------------------------------------------
-!  END manual
 
-! ... declare modules
+      USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ecsig, ecfix, ecutz, ngw
       USE constants,          ONLY: pi
       USE reciprocal_vectors, ONLY: gstart, g
@@ -531,10 +504,10 @@
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
-      REAL(DP), INTENT(OUT) :: dekin(:)
-      COMPLEX(DP), INTENT(IN) :: c0(:,:)
-      REAL(DP), INTENT(IN) :: occ(:,:)
-      REAL(DP) gagb(:,:)
+      REAL(DP),    INTENT(OUT) :: dekin(:)
+      COMPLEX(DP), INTENT(IN)  :: c0(:,:)
+      REAL(DP),    INTENT(IN)  :: occ(:)
+      REAL(DP),    INTENT(IN)  :: gagb(:,:)
 
 ! ... declare other variables
       REAL(DP)  :: sk(6), scg, efac
@@ -571,23 +544,28 @@
             sk(5)  = sk(5) + scg * gagb(5,ig)
             sk(6)  = sk(6) + scg * gagb(6,ig)
           END DO
-          dekin = dekin  + occ(ib,ispin) * sk
+          dekin = dekin  + occ( iwfc ) * sk
         END DO
       END DO
       dekin = - 2.0_DP * dekin
       DEALLOCATE(arg) 
       RETURN
-      END SUBROUTINE stress_kin
+   END SUBROUTINE stress_kin_x
 
 
-!  ----------------------------------------------
 
-   SUBROUTINE add_drhoph( drhot, sfac, gagb )
+
+!------------------------------------------------------------------------------!
+   SUBROUTINE add_drhoph_x( drhot, sfac, gagb )
+!------------------------------------------------------------------------------!
       !
       USE kinds,        ONLY: DP
       USE gvecs,        ONLY: ngs
       USE ions_base,    ONLY: nsp, rcmax
       USE local_pseudo, ONLY: rhops
+      USE stress_param, ONLY: dalbe
+      !
+      IMPLICIT NONE
       !
       COMPLEX(DP), INTENT(INOUT) :: drhot( :, : )
       COMPLEX(DP), INTENT(IN) :: sfac( :, : )
@@ -615,13 +593,16 @@
          END DO
       END DO
       RETURN
-   END SUBROUTINE add_drhoph
-
-!  ----------------------------------------------
+   END SUBROUTINE add_drhoph_x
 
 
-   SUBROUTINE stress_har(deht, ehr, sfac, rhoeg, gagb, omega ) 
 
+
+!------------------------------------------------------------------------------!
+   SUBROUTINE stress_har_x(deht, ehr, sfac, rhoeg, gagb, omega ) 
+!------------------------------------------------------------------------------!
+
+      use kinds,              only: DP
       use ions_base,          only: nsp, rcmax
       use mp_global,          ONLY: me_image, root_image
       USE constants,          ONLY: fpi
@@ -631,12 +612,15 @@
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin
+      USE stress_param,       ONLY: dalbe
+      USE cp_interfaces,      ONLY: add_drhoph, stress_hartree
 
       IMPLICIT NONE
 
-      REAL(DP)    :: omega, DEHT(:), EHR, gagb(:,:)
-      COMPLEX(DP) :: RHOEG(:,:)
-      COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+      REAL(DP),    INTENT(OUT) :: DEHT(:)
+      REAL(DP),    INTENT(IN)  :: omega, EHR, gagb(:,:)
+      COMPLEX(DP), INTENT(IN)  :: RHOEG(:,:)
+      COMPLEX(DP), INTENT(IN)  :: sfac(:,:)
 
       COMPLEX(DP)    DEHC(6)
       COMPLEX(DP)    RHOP,DRHOP
@@ -686,11 +670,14 @@
       DEALLOCATE( rhot, drhot )
 
       RETURN
-   END SUBROUTINE stress_har
+   END SUBROUTINE stress_har_x
 
-!  ----------------------------------------------
 
-   SUBROUTINE stress_hartree(deht, ehr, sfac, rhot, drhot, gagb, omega ) 
+
+
+!------------------------------------------------------------------------------!
+   SUBROUTINE stress_hartree_x(deht, ehr, sfac, rhot, drhot, gagb, omega ) 
+!------------------------------------------------------------------------------!
 
       ! This subroutine computes: d E_hartree / dh  =
       !   E_hartree * h^t + 
@@ -700,6 +687,7 @@
       !   rho_t  = rho_e + rho_I
       !   drho_t = d rho_t / dh = -rho_e + d rho_hard / dh  + d rho_I / dh
 
+      use kinds,              only: DP
       use ions_base,          only: nsp, rcmax
       use mp_global,          ONLY: me_image, root_image
       USE constants,          ONLY: fpi
@@ -709,10 +697,12 @@
       USE gvecp,              ONLY: ngm
       USE local_pseudo,       ONLY: rhops
       USE electrons_base,     ONLY: nspin
+      USE stress_param,       ONLY: dalbe
 
       IMPLICIT NONE
 
-      REAL(DP)    :: omega, DEHT(:), EHR, gagb(:,:)
+      REAL(DP),    INTENT(OUT) :: DEHT(:)
+      REAL(DP),    INTENT(IN)  :: omega, EHR, gagb(:,:)
       COMPLEX(DP) :: rhot(:)  ! total charge: Sum_spin ( rho_e + rho_I )
       COMPLEX(DP) :: drhot(:,:)
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
@@ -762,19 +752,24 @@
       DEALLOCATE( hgm1 )
 
       RETURN
-      END SUBROUTINE stress_hartree
-
-!  ----------------------------------------------
-!  ----------------------------------------------
-!  ----------------------------------------------
+   END SUBROUTINE stress_hartree_x
 
 
+
+!------------------------------------------------------------------------------!
       SUBROUTINE stress_debug(dekin, deht, dexc, desr, deps, denl, htm1)
-        USE io_global, ONLY: stdout
-        USE mp_global, ONLY: intra_image_comm
-        USE mp,        ONLY: mp_sum
-        REAL(DP) :: dekin(:), deht(:), dexc(:), desr(:), deps(:), denl(:)
-        REAL(DP) :: detot( 6 ), htm1(3,3)
+!------------------------------------------------------------------------------!
+
+        USE kinds,        ONLY: DP
+        USE io_global,    ONLY: stdout
+        USE mp_global,    ONLY: intra_image_comm
+        USE mp,           ONLY: mp_sum
+        USE stress_param, ONLY: alpha, beta
+
+        IMPLICIT NONE
+
+        REAL(DP) :: dekin(6), deht(6), dexc(6), desr(6), deps(6), denl(6)
+        REAL(DP) :: detot(6), htm1(3,3)
         REAL(DP) :: detmp(3,3)
 
         INTEGER :: k, i, j
@@ -860,14 +855,20 @@
       RETURN
       END SUBROUTINE stress_debug
 
-!=----------------------------------------------------------------------------=!
 
 
-      SUBROUTINE compute_gagb( gagb, gx, ngm, tpiba2 )
+
+!------------------------------------------------------------------------------!
+      SUBROUTINE compute_gagb_x( gagb, gx, ngm, tpiba2 )
+!------------------------------------------------------------------------------!
 
          ! ... compute G_alpha * G_beta  
 
-         USE kinds, ONLY: DP
+         USE kinds,        ONLY: DP
+         USE stress_param, ONLY: alpha, beta
+
+         IMPLICIT NONE
+
          INTEGER,  INTENT(IN)  :: ngm
          REAL(DP), INTENT(IN)  :: gx(:,:)
          REAL(DP), INTENT(OUT) :: gagb(:,:)
@@ -881,11 +882,4 @@
             END DO
          END DO
 
-      END SUBROUTINE compute_gagb
-
-
-!=----------------------------------------------------------------------------=!
-
-  END MODULE stress
-
-!=----------------------------------------------------------------------------=!
+      END SUBROUTINE compute_gagb_x

@@ -7,55 +7,6 @@
 !
 #include "f_defs.h"
 
-!=----------------------------------------------------------------------------=!
-  module core
-!=----------------------------------------------------------------------------=!
-
-    USE kinds
-    USE splines,    ONLY: spline_data
-
-  implicit none
-  save
-  !     nlcc_any = 0 no core correction on any atom
-  !     rhocb  = core charge in G space (box grid)
-  !     rhoc   = core charge in real space  (dense grid)
-  !     rhocg  = core charge in G space  (dense grid)
-  !     drhocg = derivative of core charge in G space (used for stress)
-  logical :: nlcc_any
-  real(8), allocatable:: rhocb(:,:)
-  real(8), allocatable:: rhoc(:)
-  real(8), allocatable:: rhocg(:,:)
-  real(8), allocatable:: drhocg(:,:)
-
-!=----------------------------------------------------------------------------=!
-  contains
-!=----------------------------------------------------------------------------=!
-
-  subroutine allocate_core( nnrx, ngm, ngb, nsp )
-     integer, intent(in) :: nnrx, ngm, ngb, nsp
-     IF ( nlcc_any ) THEN
-        !
-        ALLOCATE( rhoc( nnrx ) )
-        ALLOCATE( rhocb( ngb, nsp ) )
-        ALLOCATE( rhocg( ngm, nsp ) )
-        ALLOCATE( drhocg( ngm, nsp ) )
-        !
-     ELSE
-        !
-        ! ... dummy allocation required because this array appears in the
-        ! ... list of arguments of some routines
-        !
-        ALLOCATE( rhoc( 1 ) )
-        !
-     END IF
-  end subroutine allocate_core
-
-  subroutine deallocate_core()
-      IF( ALLOCATED( rhocb  ) ) DEALLOCATE( rhocb )
-      IF( ALLOCATED( rhoc   ) ) DEALLOCATE( rhoc  )
-      IF( ALLOCATED( rhocg  ) ) DEALLOCATE( rhocg  )
-      IF( ALLOCATED( drhocg ) ) DEALLOCATE( drhocg )
-  end subroutine deallocate_core
 
 !=----------------------------------------------------------------------------=!
    subroutine core_charge_ftr( tpre )
@@ -64,16 +15,19 @@
      !  Compute the fourier trasform of the core charge, from the radial
      !  mesh to the reciprocal space
      !
-     use control_flags,   ONLY : program_name
-     use ions_base,       ONLY : nsp
-     use atom,            ONLY : nlcc, r, rab, mesh, rho_atc
-     use gvecb,           ONLY : ngb, gb
-     use small_box,       ONLY : omegab, tpibab
-     use pseudo_base,     ONLY : compute_rhocg
-     use pseudopotential, ONLY : tpstab, build_cctab, rhoc1_sp, rhocp_sp, chkpstab
-     use cell_base,       ONLY : omega, tpiba2, tpiba
-     USE splines,         ONLY : spline
+     use kinds,              ONLY : DP
+     use control_flags,      ONLY : program_name
+     use ions_base,          ONLY : nsp
+     use atom,               ONLY : nlcc, r, rab, mesh, rho_atc
+     use gvecb,              ONLY : ngb, gb
+     use small_box,          ONLY : omegab, tpibab
+     use pseudo_base,        ONLY : compute_rhocg
+     use cp_interfaces,      ONLY : build_cctab, chkpstab
+     use pseudopotential,    ONLY : tpstab, rhoc1_sp, rhocp_sp
+     use cell_base,          ONLY : omega, tpiba2, tpiba
+     USE splines,            ONLY : spline
      use reciprocal_vectors, ONLY : ngm, g, gstart
+     USE core,               ONLY : rhocb, rhocg, drhocg, nlcc_any
      !
      IMPLICIT NONE
      !
@@ -133,18 +87,17 @@
 
      return
    end subroutine core_charge_ftr
-!=----------------------------------------------------------------------------=!
 
 
 !=----------------------------------------------------------------------------=!
-   subroutine add_core_charge( rhoetg, rhoetr, sfac, rhoc, nsp)
+   subroutine add_core_charge_x( rhoetg, rhoetr, sfac, rhoc, nsp)
 !=----------------------------------------------------------------------------=!
      USE kinds,          ONLY: DP
      USE fft_base,       ONLY: dfftp
      use electrons_base, only: nspin
      use gvecp,          only: ngm
      use atom,           only: nlcc
-     USE fft_module,     ONLY: invfft
+     USE cp_interfaces,  ONLY: invfft
      USE io_global,      ONLY: stdout
      USE mp_global,      ONLY: intra_image_comm
      USE cell_base,      ONLY: omega
@@ -199,24 +152,24 @@
      DEALLOCATE( vtemp, psi )
 
      RETURN
-   end subroutine add_core_charge
-!=----------------------------------------------------------------------------=!
+   end subroutine add_core_charge_x
 
 
+
 !=----------------------------------------------------------------------------=!
-   subroutine core_charge_forces( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3 )
+   subroutine core_charge_forces_x &
+     ( fion, vxc, rhoc1, tnlcc, atoms, ht, ei1, ei2, ei3 )
 !=----------------------------------------------------------------------------=!
 
      !   This subroutine computes the non local core correction
      !   contribution to the atomic forces
 
-     USE kinds, ONLY : DP
-     USE cell_base, ONLY: tpiba
-     USE cell_module, ONLY: boxdimensions
-     USE atoms_type_module, ONLY: atoms_type
-     USE grid_dimensions, ONLY: nr1, nr2, nr3
+     USE kinds,              ONLY: DP
+     USE cell_base,          ONLY: tpiba, boxdimensions
+     USE atoms_type_module,  ONLY: atoms_type
+     USE grid_dimensions,    ONLY: nr1, nr2, nr3
      USE reciprocal_vectors, ONLY: mill_l, gstart, gx, ngm
-     USE ions_base, ONLY: nat
+     USE ions_base,          ONLY: nat
 
      IMPLICIT NONE
 
@@ -285,13 +238,7 @@
      END IF
 
      RETURN
-!=----------------------------------------------------------------------------=!
-   end subroutine core_charge_forces
-!=----------------------------------------------------------------------------=!
-
-
-!=----------------------------------------------------------------------------=!
-   end module core
+   END SUBROUTINE core_charge_forces_x
 !=----------------------------------------------------------------------------=!
 
 
@@ -318,7 +265,7 @@
       use gvecp,              only: ngm
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nnrx
-      USE fft_module,         ONLY: fwfft
+      USE cp_interfaces,      ONLY: fwfft
 !
       implicit none
       !
@@ -396,7 +343,7 @@
       use small_box,       only: tpibab
       use atom,            only: nlcc
       use core,            only: rhocb
-      use fft_module,      only: invfft
+      use cp_interfaces,   only: invfft
       use fft_base,        only: dfftb
       use reciprocal_vectors, only: gstart
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
@@ -502,7 +449,7 @@
       use gvecb,           only: ngb, npb, nmb
       use control_flags,   only: iprint
       use core,            only: rhocb
-      use fft_module,      only: invfft
+      use cp_interfaces,   only: invfft
       use fft_base,        only: dfftb
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
@@ -575,5 +522,5 @@
       call stop_clock( 'set_cc' )
 !
       return
-      end subroutine set_cc
+   end subroutine set_cc
 

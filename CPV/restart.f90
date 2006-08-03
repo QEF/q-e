@@ -5,36 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!=----------------------------------------------------------------------------=!
-  MODULE restart_file
-!=----------------------------------------------------------------------------=!
-
-  USE kinds, ONLY: DP
-
-  IMPLICIT NONE
-
-  PRIVATE
-
-  SAVE
-
-  REAL(DP) :: cclock
-  EXTERNAL  :: cclock
-
-  PUBLIC :: writefile, readfile
-
-  INTERFACE readfile
-    MODULE PROCEDURE readfile_cp, readfile_fpmd
-  END INTERFACE
-
-  INTERFACE writefile
-    MODULE PROCEDURE writefile_cp, writefile_fpmd
-  END INTERFACE
-  
-!=----------------------------------------------------------------------------=!
-     CONTAINS
-!=----------------------------------------------------------------------------=!
 
 !-----------------------------------------------------------------------
+
       subroutine writefile_cp                                         &
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
@@ -44,6 +17,7 @@
 !
 ! read from file and distribute data calculated in preceding iterations
 !
+      USE kinds,            ONLY: DP
       USE ions_base,        ONLY: nsp, na, cdmi, taui
       USE cell_base,        ONLY: s_to_r
       USE cp_restart,       ONLY: cp_writefile
@@ -57,7 +31,7 @@
       implicit none
       integer, INTENT(IN) :: ndw, nfi
       REAL(DP), INTENT(IN) :: h(3,3), hold(3,3)
-      complex(8), INTENT(IN) :: c0(:,:), cm(:,:)
+      complex(DP), INTENT(IN) :: c0(:,:), cm(:,:)
       REAL(DP), INTENT(IN) :: tausm(:,:), taus(:,:), fion(:,:)
       REAL(DP), INTENT(IN) :: vels(:,:), velsm(:,:)
       REAL(DP), INTENT(IN) :: acc(:), lambda(:,:,:), lambdam(:,:,:)
@@ -77,7 +51,6 @@
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
-      REAL(DP), ALLOCATABLE :: occ_ ( :, : )
       REAL(DP) :: htm1(3,3), omega
 
 !
@@ -96,14 +69,6 @@
       gvel   = 0.0d0
       
 
-      ALLOCATE( occ_ ( nbnd, nspin ) )
-      occ_ = 0.0d0
-      do ispin = 1, nspin
-        do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
-          occ_ ( i - iupdwn ( ispin ) + 1, ispin ) = occ_f( i ) 
-        end do
-      end do
-
       !
       !  Sincronize lambdas, whose replicas could diverge on
       !  different processors
@@ -114,18 +79,16 @@
       IF( tens ) THEN
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
-          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
-          occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
+          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
+          occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
           rho, c0, cm, mat_z = mat_z  )
       ELSE
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
-          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_ , &
-          occ_ , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
+          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
+          occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
           rho, c0, cm  )
       END IF
-
-      DEALLOCATE( occ_ )
 
       return
       end subroutine writefile_cp
@@ -140,6 +103,7 @@
 !
 ! read from file and distribute data calculated in preceding iterations
 !
+      USE kinds,          ONLY : DP
       USE io_files,       ONLY : scradir
       USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ
       USE gvecw,          ONLY : ngw, ngwt
@@ -150,9 +114,10 @@
       USE autopilot,      ONLY : employ_rules
 !
       implicit none
+
       integer :: ndr, nfi, flag
       REAL(DP) :: h(3,3), hold(3,3)
-      complex(8) :: c0(:,:), cm(:,:)
+      complex(DP) :: c0(:,:), cm(:,:)
       REAL(DP) :: tausm(:,:),taus(:,:), fion(:,:)
       REAL(DP) :: vels(:,:), velsm(:,:)
       REAL(DP) :: acc(:),lambda(:,:,:), lambdam(:,:,:)
@@ -171,7 +136,7 @@
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
       integer :: nk = 1, ispin, i, ib
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
-      REAL(DP), ALLOCATABLE :: occ_ ( :, : )
+      REAL(DP), ALLOCATABLE :: occ_ ( : )
       REAL(DP) :: htm1(3,3), b1(3) , b2(3), b3(3), omega
         
       LOGICAL::lopen
@@ -189,7 +154,7 @@
         RETURN
       END IF
 
-      ALLOCATE( occ_ ( nbnd, nspin ) )
+      ALLOCATE( occ_ ( SIZE( occ_f ) ) )
 
       IF( tens ) THEN
          CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
@@ -220,11 +185,7 @@
       enddo
       
       IF( .NOT. keep_occ ) THEN
-         do ispin = 1, nspin
-            do i = iupdwn ( ispin ), iupdwn ( ispin ) - 1 + nupdwn ( ispin )
-               occ_f( i ) = occ_ ( i - iupdwn ( ispin ) + 1, ispin )
-            end do
-         end do
+         occ_f( : ) = occ_ ( : )
       END IF
 
       DEALLOCATE( occ_ )
@@ -240,39 +201,38 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE writefile_fpmd( nfi, trutime, c0, cm, occ, &
-     atoms_0, atoms_m, acc, taui, cdmi, &
-     ht_m, ht_0, rho, vpot)
+   SUBROUTINE writefile_fpmd &
+     ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
+       ht_0, rho, vpot )
                                                                         
-        USE cell_module, only: boxdimensions, r_to_s
-        USE wave_types, ONLY: wave_descriptor
-        USE control_flags, ONLY: ndw, gamma_only
-        USE control_flags, ONLY: twfcollect, force_pairing
+        USE kinds,             ONLY: DP
+        USE cell_module,       ONLY: boxdimensions, r_to_s
+        USE control_flags,     ONLY: ndw, gamma_only
+        USE control_flags,     ONLY: twfcollect, force_pairing
         USE atoms_type_module, ONLY: atoms_type
-        USE io_global, ONLY: ionode, ionode_id
-        USE io_global, ONLY: stdout
-        USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
-        USE electrons_base, ONLY: nbsp, nspin, nudx
-        USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
-        USE cp_restart, ONLY: cp_writefile
-        USE electrons_module, ONLY: ei
-        USE io_files, ONLY: scradir
-        USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+        USE io_global,         ONLY: ionode, ionode_id
+        USE io_global,         ONLY: stdout
+        USE electrons_nose,    ONLY: xnhe0, xnhem, vnhe
+        USE electrons_base,    ONLY: nbsp, nspin, nudx
+        USE cell_nose,         ONLY: xnhh0, xnhhm, vnhh
+        USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
+        USE cp_restart,        ONLY: cp_writefile
+        USE electrons_module,  ONLY: ei
+        USE io_files,          ONLY: scradir
+        USE grid_dimensions,   ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
 
         IMPLICIT NONE 
  
-        INTEGER, INTENT(IN) :: nfi
-        COMPLEX(DP), INTENT(IN) :: c0(:,:), cm(:,:) 
-        REAL(DP), INTENT(IN) :: occ(:,:)
-        TYPE (boxdimensions), INTENT(IN) :: ht_m, ht_0
-        TYPE (atoms_type), INTENT(IN) :: atoms_0, atoms_m
-        REAL(DP), INTENT(IN) :: rho(:,:)
-        REAL(DP), INTENT(INOUT) :: vpot(:,:)
-                                                                        
-        REAL(DP), INTENT(IN) :: taui(:,:)
-        REAL(DP), INTENT(IN) :: acc(:), cdmi(:) 
-        REAL(DP), INTENT(IN) :: trutime
+        INTEGER,              INTENT(IN)    :: nfi
+        COMPLEX(DP),          INTENT(IN)    :: c0(:,:), cm(:,:) 
+        REAL(DP),             INTENT(IN)    :: occ(:)
+        TYPE (boxdimensions), INTENT(IN)    :: ht_m, ht_0
+        TYPE (atoms_type),    INTENT(IN)    :: atoms_0, atoms_m
+        REAL(DP),             INTENT(IN)    :: rho(:,:)
+        REAL(DP),             INTENT(INOUT) :: vpot(:,:)
+        REAL(DP),             INTENT(IN)    :: taui(:,:)
+        REAL(DP),             INTENT(IN)    :: acc(:), cdmi(:) 
+        REAL(DP),             INTENT(IN)    :: trutime
 
         REAL(DP), ALLOCATABLE :: lambda(:,:,:)
         REAL(DP) :: ekincm
@@ -304,47 +264,46 @@
    END SUBROUTINE writefile_fpmd
 
 
-
 !=----------------------------------------------------------------------------=!
 
-        SUBROUTINE readfile_fpmd( nfi, trutime, &
-          c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, &
-          ht_m, ht_0, rho, vpot )
+
+   SUBROUTINE readfile_fpmd &
+      ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
+        ht_0, rho, vpot )
                                                                         
-        use electrons_base, only: nbsp, nspin, nudx
-        USE cell_module, only: boxdimensions, cell_init, r_to_s, s_to_r
-        use parameters, only: npkx, nsx
-        USE mp_global, ONLY: intra_image_comm
-        USE mp_wave, ONLY: mergewf
-        USE wave_types, ONLY: wave_descriptor
-        USE control_flags, ONLY: ndr, tbeg, gamma_only
+        USE kinds,             ONLY: DP
+        use electrons_base,    ONLY: nbsp, nspin, nudx
+        USE cell_module,       ONLY: boxdimensions, cell_init, r_to_s, s_to_r
+        use parameters,        ONLY: npkx, nsx
+        USE mp_global,         ONLY: intra_image_comm
+        USE mp_wave,           ONLY: mergewf
+        USE control_flags,     ONLY: ndr, tbeg, gamma_only
         USE atoms_type_module, ONLY: atoms_type
-        USE io_global, ONLY: ionode
-        USE io_global, ONLY: stdout
-        USE gvecw, ONLY: ecutwfc => ecutw
-        USE gvecp, ONLY: ecutrho => ecutp
-        USE ions_base, ONLY: nat, nsp, na
-        USE control_flags, ONLY: twfcollect, force_pairing
-        USE grid_dimensions, ONLY: nr1, nr2, nr3
-        USE electrons_nose, ONLY: xnhe0, xnhem, vnhe
-        USE cell_nose, ONLY: xnhh0, xnhhm, vnhh
-        USE ions_nose, ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
-        USE cp_restart, ONLY: cp_readfile
-        USE io_files, ONLY: scradir
+        USE io_global,         ONLY: ionode
+        USE io_global,         ONLY: stdout
+        USE gvecw,             ONLY: ecutwfc => ecutw
+        USE gvecp,             ONLY: ecutrho => ecutp
+        USE ions_base,         ONLY: nat, nsp, na
+        USE control_flags,     ONLY: twfcollect, force_pairing
+        USE grid_dimensions,   ONLY: nr1, nr2, nr3
+        USE electrons_nose,    ONLY: xnhe0, xnhem, vnhe
+        USE cell_nose,         ONLY: xnhh0, xnhhm, vnhh
+        USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
+        USE cp_restart,        ONLY: cp_readfile
+        USE io_files,          ONLY: scradir
  
         IMPLICIT NONE 
  
-        INTEGER, INTENT(OUT) :: nfi
-        COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cm(:,:) 
-        REAL(DP), INTENT(INOUT) :: occ(:,:)
+        INTEGER,              INTENT(OUT)   :: nfi
+        COMPLEX(DP),          INTENT(INOUT) :: c0(:,:), cm(:,:) 
+        REAL(DP),             INTENT(INOUT) :: occ(:)
         TYPE (boxdimensions), INTENT(INOUT) :: ht_m, ht_0
-        TYPE (atoms_type), INTENT(INOUT) :: atoms_0, atoms_m
-        REAL(DP), INTENT(INOUT) :: rho(:,:)
-        REAL(DP), INTENT(INOUT) :: vpot(:,:)
-                                                                        
-        REAL(DP), INTENT(OUT) :: taui(:,:)
-        REAL(DP), INTENT(OUT) :: acc(:), cdmi(:) 
-        REAL(DP), INTENT(OUT) :: trutime
+        TYPE (atoms_type),    INTENT(INOUT) :: atoms_0, atoms_m
+        REAL(DP),             INTENT(INOUT) :: rho(:,:)
+        REAL(DP),             INTENT(INOUT) :: vpot(:,:)
+        REAL(DP),             INTENT(OUT)   :: taui(:,:)
+        REAL(DP),             INTENT(OUT)   :: acc(:), cdmi(:) 
+        REAL(DP),             INTENT(OUT)   :: trutime
 
         REAL(DP), ALLOCATABLE :: lambda_ ( : , : , : )
         REAL(DP) :: ekincm
@@ -378,9 +337,3 @@
 
         RETURN 
         END SUBROUTINE readfile_fpmd
-
-!=----------------------------------------------------------------------------=!
-
-!=----------------------------------------------------------------------------=!
-     END MODULE restart_file
-!=----------------------------------------------------------------------------=!

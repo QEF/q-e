@@ -28,7 +28,7 @@ CONTAINS
                               enthal, etot, lambda, lambdam, lambdap, ema0bg,  &
                               dbec, delt, bephi, becp, velh, dt2bye, iforce,   &
                               fionm, xnhe0, xnhem, vnhe, ekincm, atoms, edft,  &
-                              ht, cdesc, fi, vpot )
+                              ht, cdesc, vpot )
     !--------------------------------------------------------------------------
     !
     USE kinds,                ONLY : DP
@@ -48,7 +48,7 @@ CONTAINS
     USE cell_module,          ONLY : boxdimensions
     use electrons_base,       ONLY : nbsp
     USE electrons_base,       ONLY : f, nspin, nupdwn, iupdwn
-    USE electrons_module,     ONLY : occn_init, occn_info
+    USE electrons_module,     ONLY : occn_info
     USE energies,             ONLY : entropy
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb
@@ -69,21 +69,17 @@ CONTAINS
                                      berry_energy2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
-    USE runcp_module,         ONLY : runcp_uspp, runcp_ncpp, runcp_uspp_force_pairing, &
-                                     runcp_uspp_bgl
-    USE phase_factors_module, ONLY : strucf, phfacs
-    USE orthogonalize,        ONLY : ortho
+    USE cp_interfaces,        ONLY : runcp_uspp, runcp_ncpp, runcp_uspp_force_pairing, &
+                                     runcp_uspp_bgl, strucf, phfacs
+    USE cp_interfaces,        ONLY : rhoofr, ortho, nlrh, wave_rand_init, elec_fakekine
     USE orthogonalize_base,   ONLY : updatc, calphi
     USE atoms_type_module,    ONLY : atoms_type
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE wave_types,           ONLY : wave_descriptor
-    USE wave_functions,       ONLY : wave_rand_init, elec_fakekine
-    USE nl,                   ONLY : nlrh_m
-    USE charge_density,       ONLY : rhoofr
     USE potentials,           ONLY : vofrhos
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
-    USE print_out_module,     ONLY : printout
+    USE cp_interfaces,        ONLY : printout
 
 
     !
@@ -113,7 +109,6 @@ CONTAINS
     TYPE(dft_energy_type) ,  INTENT(OUT)   :: edft
     TYPE(boxdimensions)  ,   INTENT(INOUT) :: ht
     TYPE(wave_descriptor),   INTENT(IN)    :: cdesc
-    REAL(DP),                INTENT(OUT)   :: fi(:,:)
     REAL(DP),                INTENT(OUT)   :: vpot(:,:)
 
     !
@@ -188,8 +183,7 @@ CONTAINS
     !
     ! ... initialize bands
     !
-    CALL occn_init( fi )
-    CALL occn_info( fi )
+    CALL occn_info( f )
     !
     atoms%for  = 0.D0
     atoms%vels = 0.D0
@@ -259,8 +253,8 @@ CONTAINS
          !
          IF( force_pairing ) THEN
             !
-            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm(:,:), &
-        &                 c0(:,:), ei_unp, fromscra = .TRUE. )
+            CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
+        &                 c0, ei_unp, fromscra = .TRUE. )
             ! lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
             lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
             !
@@ -352,12 +346,12 @@ CONTAINS
 
     ELSE
 
-       edft%enl = nlrh_m( cm, cdesc, ttforce, atoms%for, bec, becdr, eigr )
+       edft%enl = nlrh( cm, ttforce, atoms%for, bec, becdr, eigr )
        !
-       CALL rhoofr( 0, cm, cdesc, fi, rhor, ht )
+       CALL rhoofr( 0, cm, cdesc, f, rhor, ht )
        !
        CALL vofrhos( ttprint, ttforce, tstress, rhor, atoms, &
-                  vpot, bec, cm, cdesc, fi, eigr, ei1, ei2, ei3, &
+                  vpot, bec, cm, cdesc, f, eigr, ei1, ei2, ei3, &
                   sfac, ht, edft )
        !
        IF( iprsta > 1 ) CALL debug_energies( edft )
@@ -366,7 +360,7 @@ CONTAINS
           !
           IF ( .NOT. force_pairing ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, fi, bec, fccc, gam, fromscra = .TRUE. )
+             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, f, bec, fccc, gam, fromscra = .TRUE. )
              !
           ELSE
              !

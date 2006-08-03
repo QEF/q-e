@@ -9,31 +9,8 @@
 #include "f_defs.h"
 
 !
-!
-!----------------------------------------------
- MODULE nl
-!----------------------------------------------
 
-
-        USE kinds
-        USE spherical_harmonics
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
-
-
-        PUBLIC :: nlrh_m
-
-
-!----------------------------------------------
- CONTAINS
-!----------------------------------------------
-
-
-
-   REAL(DP) FUNCTION nlrh_m( c0, cdesc, tforce, fion, bec, becdr, eigr )
+   FUNCTION nlrh_x( c0, tforce, fion, bec, becdr, eigr )
 
       !  this routine computes:
       !  Kleinman-Bylander pseudopotential terms (see nlsm1)
@@ -42,22 +19,24 @@
       !
       ! ... include modules
 
-      USE wave_types,        ONLY: wave_descriptor
-      USE pseudopotential,   ONLY: nspnl
-      USE electrons_base,    ONLY: iupdwn, nupdwn
-      USE uspp,              ONLY: becsum, nkb
+      USE kinds,                   ONLY: DP
+      USE read_pseudo_module_fpmd, ONLY: nspnl
+      USE electrons_base,          ONLY: iupdwn, nupdwn, nspin
+      USE gvecw,                   ONLY: ngw
+      USE uspp,                    ONLY: becsum, nkb
 
       IMPLICIT NONE
 
+      REAL(DP) :: nlrh_x
+
       ! ... declare subroutine arguments
 
-      COMPLEX(DP)                           :: eigr(:,:)     ! exp(i G dot r)
-      COMPLEX(DP),           INTENT(INOUT)  :: c0(:,:)       ! wave functions
-      TYPE (wave_descriptor), INTENT(IN)    :: cdesc         ! wave functions descriptor
-      LOGICAL,               INTENT(IN)     :: tforce        ! if .TRUE. compute forces on ions
-      REAL(DP), INTENT(INOUT)               :: fion(:,:)      ! atomic forces
-      REAL(DP)                              :: bec(:,:)
-      REAL(DP)                              :: becdr(:,:,:)
+      COMPLEX(DP)                 :: eigr(:,:)     ! exp(i G dot r)
+      COMPLEX(DP), INTENT(INOUT)  :: c0(:,:)       ! wave functions
+      LOGICAL,     INTENT(IN)     :: tforce        ! if .TRUE. compute forces on ions
+      REAL(DP),    INTENT(INOUT)  :: fion(:,:)     ! atomic forces
+      REAL(DP)                    :: bec(:,:)
+      REAL(DP)                    :: becdr(:,:,:)
 
       REAL(DP)    :: ennl
       EXTERNAL    :: ennl
@@ -71,16 +50,16 @@
       ! ... end of declarations
       !
 
-      DO iss = 1, cdesc%nspin
+      DO iss = 1, nspin
          !
-         CALL nlsm1 ( cdesc%nbl( iss ), 1, nspnl, eigr(1,1),    &
+         CALL nlsm1 ( nupdwn( iss ), 1, nspnl, eigr(1,1),    &
                       c0( 1, iupdwn( iss ) ), bec(1, iupdwn( iss ) ) )
          !
          IF( tforce ) THEN
             !
             ALLOCATE( btmp( nkb, nupdwn( iss ), 3 ) ) 
             !
-            CALL nlsm2( cdesc%ngwl, nkb, nupdwn( iss ), eigr(1,1), &
+            CALL nlsm2( ngw, nkb, nupdwn( iss ), eigr(1,1), &
                         c0( 1, iupdwn( iss ) ), btmp( 1, 1, 1 ), .false. )
             !
             DO i = 1, 3
@@ -95,7 +74,7 @@
          !
       END DO
       
-      nlrh_m = ennl( becsum, bec )
+      nlrh_x = ennl( becsum, bec )
 
       IF( tforce ) THEN
          !
@@ -104,9 +83,5 @@
       END IF
       !
       RETURN
-   END FUNCTION nlrh_m
+   END FUNCTION nlrh_x
 
-
-!----------------------------------------------
- END MODULE nl
-!----------------------------------------------

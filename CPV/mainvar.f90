@@ -88,13 +88,13 @@ MODULE cp_main_variables
   !
   TYPE (wave_descriptor) :: wfill     ! wave function descriptor for filled
   !
-  REAL(DP), ALLOCATABLE :: occn(:,:)  ! occupation numbers for filled state
-  !
   TYPE(dft_energy_type) :: edft
   !
   INTEGER :: nfi             ! counter on the electronic iterations
   INTEGER :: nprint_nfi=-1   ! counter indicating the last time data have been
                              ! printed on file ( prefix.pos, ... )
+  INTEGER :: nfi_run         ! counter on the electronic iterations,
+                             ! for the present run
   !
   CONTAINS
     !
@@ -187,8 +187,6 @@ MODULE cp_main_variables
       CALL wave_descriptor_init( wfill, ngw, ngwt, nupdwn,  nupdwn, &
             1, 1, nspin, 'gamma', gzero )
       !
-      ALLOCATE( occn( wfill%ldb, wfill%lds ) )
-      !
       RETURN
       !
     END SUBROUTINE allocate_mainvar
@@ -220,7 +218,6 @@ MODULE cp_main_variables
       IF( ALLOCATED( kedtaus ) ) DEALLOCATE( kedtaus )
       IF( ALLOCATED( kedtaug ) ) DEALLOCATE( kedtaug )
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
-      IF( ALLOCATED( occn ) )    DEALLOCATE( occn )
       IF( ALLOCATED( taub ) )    DEALLOCATE( taub )
       !
       RETURN

@@ -272,3 +272,75 @@ contains
 end module cvan
 
 
+MODULE stress_param
+
+   USE kinds, ONLY : DP
+
+   IMPLICIT NONE
+   SAVE
+
+   INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
+   INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
+
+   REAL(DP),  DIMENSION(3,3), PARAMETER :: delta = reshape &
+         ( (/ 1.0_DP, 0.0_DP, 0.0_DP, &
+              0.0_DP, 1.0_DP, 0.0_DP, &
+              0.0_DP, 0.0_DP, 1.0_DP  &
+            /), (/ 3, 3 /) )
+
+   ! ...  dalbe(:) = delta(alpha(:),beta(:))
+   !
+   REAL(DP),  DIMENSION(6), PARAMETER :: dalbe = &
+         (/ 1.0_DP, 0.0_DP, 0.0_DP, 1.0_DP, 0.0_DP, 1.0_DP /)
+
+END MODULE
+
+
+
+MODULE core
+   !
+   USE kinds
+   ! 
+   IMPLICIT NONE
+   SAVE
+   !     nlcc_any = 0 no core correction on any atom
+   !     rhocb  = core charge in G space (box grid)
+   !     rhoc   = core charge in real space  (dense grid)
+   !     rhocg  = core charge in G space  (dense grid)
+   !     drhocg = derivative of core charge in G space (used for stress)
+   !
+   LOGICAL :: nlcc_any
+   REAL(DP), ALLOCATABLE:: rhocb(:,:)
+   REAL(DP), ALLOCATABLE:: rhoc(:)
+   REAL(DP), ALLOCATABLE:: rhocg(:,:)
+   REAL(DP), ALLOCATABLE:: drhocg(:,:)
+   !
+CONTAINS
+   !
+   SUBROUTINE allocate_core( nnrx, ngm, ngb, nsp ) 
+     INTEGER, INTENT(IN) :: nnrx, ngm, ngb, nsp
+     IF ( nlcc_any ) THEN    
+        !
+        ALLOCATE( rhoc( nnrx ) )
+        ALLOCATE( rhocb( ngb, nsp ) )
+        ALLOCATE( rhocg( ngm, nsp ) )
+        ALLOCATE( drhocg( ngm, nsp ) )
+        !
+     ELSE
+        !
+        ! ... dummy allocation required because this array appears in the
+        ! ... list of arguments of some routines
+        !
+        ALLOCATE( rhoc( 1 ) )
+        !
+     END IF
+   END SUBROUTINE allocate_core
+   !
+   SUBROUTINE deallocate_core()
+      IF( ALLOCATED( rhocb  ) ) DEALLOCATE( rhocb )
+      IF( ALLOCATED( rhoc   ) ) DEALLOCATE( rhoc  )
+      IF( ALLOCATED( rhocg  ) ) DEALLOCATE( rhocg  )
+      IF( ALLOCATED( drhocg ) ) DEALLOCATE( drhocg )
+   END SUBROUTINE deallocate_core
+   !
+END MODULE core

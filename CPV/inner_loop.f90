@@ -80,7 +80,7 @@
                                 passo, iter3, enesti, ninner_ef
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
-      use charge_density, only: rhoofr
+      use cp_interfaces,  only: rhoofr
 
       !
       IMPLICIT NONE

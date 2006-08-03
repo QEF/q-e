@@ -62,18 +62,16 @@
 
 ! ... declare modules
       USE energies, ONLY: dft_energy_type, print_energies
-      USE electrons_module, ONLY: eigs, nb_l
+      USE electrons_module, ONLY: nb_l
       USE electrons_base, ONLY: nupdwn, iupdwn, nbsp
       USE cp_electronic_mass, ONLY: emass
       USE cp_main_variables,  ONLY: ema0bg
-      USE wave_functions, ONLY: elec_fakekine, proj
       USE wave_base, ONLY: dotp, hpsi
-      USE wave_constrains, ONLY: update_lambda
       USE check_stop, ONLY: check_stop_now
-      USE forces
+      USE cp_interfaces, ONLY: dforce, eigs, ortho, elec_fakekine, &
+                               proj, update_lambda
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE orthogonalize
       USE cell_module, ONLY: boxdimensions
       USE wave_types
       USE potentials, ONLY: kspotential
@@ -98,7 +96,7 @@
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: sfac(:,:)
       TYPE (boxdimensions), INTENT(INOUT) :: ht0
-      REAL(DP) :: occ(:,:)
+      REAL(DP) :: occ(:)
       REAL(DP) :: bec(:,:)
       REAL(DP) :: becdr(:,:,:)
       TYPE (dft_energy_type) :: edft
@@ -188,7 +186,7 @@
 ! ...     Calculate wave functions gradient (temporarely stored in cp)
 ! ...     |d H / dPsi_j > = H |Psi_j> - Sum{i} <Psi_i|H|Psi_j> |Psi_i>
 
-          CALL dforce_all( c0, occ(:,iss), cp, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+          CALL dforce( c0, occ, cp, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
  
           ! ...     Project the gradient
 
@@ -322,7 +320,7 @@
           iwfc = iupdwn( iss )
           nwfc = nupdwn( iss )
 
-          CALL dforce_all( c0, occ(:,iss), hacca, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+          CALL dforce( c0, occ, hacca, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
           nb_g( iss ) = cdesc%nbt( iss )
 
@@ -335,7 +333,7 @@
           DO i = 1, nb( iss )
               CALL update_lambda( i,  gam, c0, hacca(:,iwfc+i-1), nwfc, iwfc )
           END DO
-          CALL eigs( nb( iss ), gam, tortho, occ(:,iss), ei(:,iss) )
+          CALL eigs( nb( iss ), gam, tortho, occ(iwfc:iwfc+nwfc-1), ei(:,iss) )
           DEALLOCATE( cgam, gam, STAT=ierr )
           IF( ierr/=0 ) CALL errore(' runcg ', ' deallocating gam ',ierr)
         END DO
@@ -388,7 +386,7 @@
         COMPLEX(DP) :: ei2(:,:)
         COMPLEX(DP) :: ei3(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(DP), INTENT(IN) :: occ(:,:)
+        REAL(DP), INTENT(IN) :: occ(:)
         REAL(DP) :: bec(:,:)
         REAL(DP) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft

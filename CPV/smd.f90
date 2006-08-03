@@ -49,7 +49,7 @@ subroutine sminit (ibrav,celldm, ecut, ecutw,ndr,nbeg,  &
   use cell_base, only: hold, h
   use betax, only: mmx, refg
   !use restartsm
-  use restart_file
+  use cp_interfaces, only: writefile, readfile
   use parameters, only: nacx, nhclm
   USE smd_rep, only: rep
   USE path_variables, only: &

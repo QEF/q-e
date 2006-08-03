@@ -7,37 +7,14 @@
 !
 #include "f_defs.h"
 
-!=----------------------------------------------------------------------------=!
-   MODULE forces
-!=----------------------------------------------------------------------------=!
 
-       USE kinds
-       USE cell_base, ONLY: tpiba2
+    SUBROUTINE dforce1_x( co, ce, dco, dce, fio, fie, hg, v, psi_stored )
 
-       IMPLICIT NONE
-       SAVE
- 
-       PRIVATE
-
-! ... i^l imaginary unit to the angular momentum
-       COMPLEX(DP), PARAMETER :: cimgl(0:3) = (/ (1.0d0,0.0d0), &
-         (0.0d0,1.0d0), (-1.0d0,0.0d0), (0.0d0,-1.0d0) /)
-       COMPLEX(DP), PARAMETER :: czero = (0.0_DP,0.0_DP)
-       REAL(DP),    PARAMETER :: rzero =  0.0_DP
-
-       PUBLIC :: dforce, dforce_all
-
-!=----------------------------------------------------------------------------=!
-   CONTAINS
-!=----------------------------------------------------------------------------=!
-
-
-
-    SUBROUTINE dforce1( co, ce, dco, dce, fio, fie, hg, v, psi_stored )
-
+      USE kinds,      ONLY: DP
       USE fft_base,   ONLY: dffts
       USE gvecw,      ONLY: ngw
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
+      USE cell_base,  ONLY: tpiba2
 
       IMPLICIT NONE
 
@@ -87,13 +64,13 @@
       END DO
 
     RETURN
-    END SUBROUTINE dforce1
+    END SUBROUTINE dforce1_x
 
 
 !=----------------------------------------------------------------------------=!
 
 
-    SUBROUTINE dforce2( fio, fie, df, da, vkb, beco, bece )
+    SUBROUTINE dforce2_x( fio, fie, df, da, vkb, beco, bece )
 
         !  this routine computes:
         !  the generalized force df=CMPLX(dfr,dfi) acting on the i-th
@@ -101,11 +78,12 @@
         !  represented by the vector c=CMPLX(cr,ci)
         !  ----------------------------------------------
 
-      USE ions_base,       ONLY: na
-      USE pseudopotential, ONLY: nspnl
-      USE uspp_param,      only: nh
-      USE uspp,            only: nhtol, nhtolm, indv, beta, dvan, nkb
-      use cvan,            only: ish
+      USE kinds,                   ONLY: DP
+      USE ions_base,               ONLY: na
+      USE read_pseudo_module_fpmd, ONLY: nspnl
+      USE uspp_param,              ONLY: nh
+      USE uspp,                    ONLY: nhtol, nhtolm, indv, beta, dvan, nkb
+      use cvan,                    ONLY: ish
       !
 
       IMPLICIT NONE
@@ -151,7 +129,7 @@
       !
 
       RETURN
-    END SUBROUTINE dforce2
+    END SUBROUTINE dforce2_x
 
 
 
@@ -159,13 +137,15 @@
 
      
 
-    SUBROUTINE dforce( ib, c, f, df, da, v, vkb, bec, n, noffset )
+    SUBROUTINE dforce_fpmd( ib, c, f, df, da, v, vkb, bec, n, noffset )
        !
+       USE kinds,              ONLY: DP
        USE reciprocal_vectors, ONLY: ggp, g, gx
+       USE cp_interfaces
        !
        IMPLICIT NONE
        !
-       INTEGER,     INTENT(IN)  :: ib     ! band and spin index
+       INTEGER,     INTENT(IN)  :: ib     ! band index
        COMPLEX(DP), INTENT(IN)  :: c(:,:)
        COMPLEX(DP), INTENT(OUT) :: df(:), da(:)
        REAL (DP),   INTENT(IN)  :: v(:), bec(:,:), f(:)
@@ -182,70 +162,72 @@
        !
        IF( ib == n ) THEN
           !
-          ALLOCATE( dum( SIZE( da ) ) )
+          ALLOCATE( dum( SIZE( df ) ) )
           !
-          CALL dforce1( c( :, in ), c( :, in ), df, dum, f(ib), f(ib), ggp, v )
+          CALL dforce1( c( :, in ), c( :, in ), df, dum, f( in ), f( in ), ggp, v )
           !
-          CALL dforce2( f(ib), f(ib), df , dum , vkb, bec( :, in ), bec( :, in ) )
+          CALL dforce2( f( in ), f( in ), df , dum , vkb, bec( :, in ), bec( :, in ) )
           !
           DEALLOCATE( dum )
           !
        ELSE
           !
-          CALL dforce1( c( :, in ), c( :, in+1 ), df, da, f(ib), f(ib+1), ggp, v )
+          CALL dforce1( c( :, in ), c( :, in+1 ), df, da, f( in ), f(in+1), ggp, v )
           !
-          CALL dforce2( f(ib), f(ib+1), df, da, vkb, bec( :, in ), bec( :, in+1 ) )
+          CALL dforce2( f(in), f(in+1), df, da, vkb, bec( :, in ), bec( :, in+1 ) )
           !
        END IF
        !
-       return
-    END SUBROUTINE dforce
+       RETURN
+    END SUBROUTINE dforce_fpmd
 
 
 !  ----------------------------------------------
   
 
     SUBROUTINE dforce_all( c, f, cgrad, vpot, vkb, bec, n, noffset )
-        !
-        IMPLICIT NONE
+       !
+       USE kinds,              ONLY: DP
+       USE cp_interfaces
 
-        COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
-        REAL(DP),              INTENT(IN)    :: vpot(:), f(:)
-        COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
-        COMPLEX(DP),           INTENT(IN)    :: vkb(:,:)
-        REAL(DP),              INTENT(IN)    :: bec(:,:)
-        INTEGER,               INTENT(IN)    :: n, noffset
+       IMPLICIT NONE
+
+       COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
+       REAL(DP),              INTENT(IN)    :: vpot(:), f(:)
+       COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
+       COMPLEX(DP),           INTENT(IN)    :: vkb(:,:)
+       REAL(DP),              INTENT(IN)    :: bec(:,:)
+       INTEGER,               INTENT(IN)    :: n, noffset
        
-        INTEGER :: ib, in
-        !
-        IF( n > 0 ) THEN
-           !
-           !   Process two states at the same time
-           !
-           DO ib = 1, n-1, 2
-              !
-              in = ib + noffset - 1
-              !
-              CALL dforce( ib, c, f, cgrad(:,in), cgrad(:,in+1), vpot, vkb, bec, n, noffset )
-              !
-           END DO
-           !
-           !   and now process the last state in case that n is odd
-           !
-           IF( MOD( n, 2 ) /= 0 ) THEN
-              ib = n
-              in = ib + noffset - 1
-              CALL dforce( ib, c, f, cgrad(:,in), cgrad(:,in), vpot, vkb, bec, n, noffset )
-           END IF
-           !
-        END IF
-        !
-        RETURN
+       INTEGER :: ib, in
+       !
+       IF( n > 0 ) THEN
+          !
+          !   Process two states at the same time
+          !
+          DO ib = 1, n-1, 2
+             !
+             in = ib + noffset - 1
+             !
+             CALL dforce( ib, c, f, cgrad(:,in), cgrad(:,in+1), vpot, vkb, bec, n, noffset )
+             !
+          END DO
+          !
+          !   and now process the last state in case that n is odd
+          !
+          IF( MOD( n, 2 ) /= 0 ) THEN
+             !
+             in = n + noffset - 1
+             !
+             CALL dforce( n, c, f, cgrad(:,in), cgrad(:,in), vpot, vkb, bec, n, noffset )
+             !
+          END IF
+          !
+       END IF
+       !
+       RETURN
     END SUBROUTINE dforce_all
 
-
-
- END MODULE forces
 
 
 !
@@ -274,7 +256,7 @@
       USE cell_base, ONLY: tpiba2
       USE ensemble_dft, ONLY: tens
       USE funct, ONLY: dft_is_meta
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
 !
       IMPLICIT NONE
 !
@@ -449,7 +431,7 @@
       USE task_groups
       use fft_base,  only : dffts
       use mp_global, only : nogrp, me_image, me_ogrp
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
       use parallel_include
 !
       implicit none

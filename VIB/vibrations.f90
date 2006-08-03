@@ -138,8 +138,8 @@ CONTAINS
     USE gvecp,                ONLY : ecutp
     USE gvecw,                ONLY : ngw, ggp, ecutw
     USE ions_nose,            ONLY : xnhp0,xnhpm, vnhp, nhpcl, nhpdim
-    USE print_out_module,     ONLY : cp_print_rho
-    USE restart_file,         ONLY : writefile
+    USE cp_interfaces,        ONLY : cp_print_rho
+    USE cp_interfaces,        ONLY : writefile
     USE time_step,            ONLY : delt, tps
     USE wavefunctions_module, ONLY : c0, cm
 #endif
@@ -366,7 +366,7 @@ CONTAINS
     USE efield_module,        ONLY : efield_update
     USE energies,             ONLY : etot
     USE from_scratch_module,  ONLY : from_scratch
-    USE phase_factors_module, ONLY : strucf     
+    USE cp_interfaces,        ONLY : strucf     
     USE wavefunctions_module, ONLY : c0, cm
 #endif
 #ifdef DFT_PW

@@ -12,14 +12,9 @@
 
 #include "f_defs.h"
 
-MODULE fft_module
-
-   IMPLICIT NONE
-
-CONTAINS
 
 !-----------------------------------------------------------------------
-  subroutine invfft( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, ia )
+  subroutine invfft_x( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, ia )
 !-----------------------------------------------------------------------
 ! grid_type = 'Dense'
 !   inverse fourier transform of potentials and charge density
@@ -121,12 +116,12 @@ CONTAINS
       END IF
 !
       return
-      end subroutine invfft
+      end subroutine invfft_x
 
 
 
 !-----------------------------------------------------------------------
-      subroutine fwfft(grid_type,f,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+      subroutine fwfft_x(grid_type,f,nr1,nr2,nr3,nr1x,nr2x,nr3x)
 !-----------------------------------------------------------------------
 ! grid_type = 'Dense'
 !   forward fourier transform of potentials and charge density 
@@ -201,9 +196,8 @@ CONTAINS
       END IF
 
       return
-      end subroutine fwfft
+      end subroutine fwfft_x
 
-END MODULE fft_module
 
 
 !-----------------------------------------------------------------------

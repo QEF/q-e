@@ -12,91 +12,53 @@
 
 #include "f_defs.h"
 
-!=----------------------------------------------------------------------=!
-      MODULE charge_density
-!=----------------------------------------------------------------------=!
-
-!  include modules
-        USE kinds
-        USE io_files, ONLY: rho_name, rho_name_up, rho_name_down, rho_name_avg
-        USE io_files, ONLY: rhounit
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
-
-        REAL(DP), PARAMETER :: zero = 0.0_DP
-        REAL(DP), PARAMETER :: one = 1.0_DP
-
-!  end of module-scope declarations
-!  ----------------------------------------------
-
-        PUBLIC :: rhoofr, fillgrad, checkrho
-
-        INTERFACE rhoofr
-           MODULE PROCEDURE rhoofr_fpmd, rhoofr_cp
-        END INTERFACE
-
-!=----------------------------------------------------------------------=!
-      CONTAINS
-!=----------------------------------------------------------------------=!
 
 
-        SUBROUTINE charge_density_closeup()
-          INTEGER :: ierr
-          RETURN
-        END SUBROUTINE charge_density_closeup
-!
+    FUNCTION dft_total_charge_x( c, ngw, fi, n )
+       !
+       !  This subroutine compute the Total Charge in reciprocal space
+       !
 
-      REAL(DP) FUNCTION dft_total_charge( ispin, c, cdesc, fi )
+       USE kinds,              ONLY: DP
+       USE reciprocal_vectors, ONLY: gzero
 
-!  This subroutine compute the Total Charge in reciprocal space
-!  ------------------------------------------------------------
+       IMPLICIT NONE
 
-        USE wave_types, ONLY: wave_descriptor
-
-        IMPLICIT NONE
-
-        COMPLEX(DP), INTENT(IN) :: c(:,:)
-        INTEGER, INTENT(IN) :: ispin
-        TYPE (wave_descriptor), INTENT(IN) :: cdesc
-        REAL (DP),  INTENT(IN) :: fi(:)
-        INTEGER   :: ib, igs
-        REAL(DP) :: rsum
-        COMPLEX(DP) :: wdot
-        COMPLEX(DP) :: ZDOTC
-        EXTERNAL ZDOTC
-
-! ... end of declarations
-
-        IF( ( cdesc%nbl( ispin ) > SIZE( c, 2 ) ) .OR. &
-            ( cdesc%nbl( ispin ) > SIZE( fi )     )    ) &
-          CALL errore( ' dft_total_charge ', ' wrong sizes ', 1 )
+       INTEGER,     INTENT(IN) :: ngw, n
+       COMPLEX(DP), INTENT(IN) :: c(:,:)
+       REAL (DP),   INTENT(IN) :: fi(:)
+       !
+       REAL(DP) :: dft_total_charge_x
+       !
+       INTEGER     :: ib, igs
+       REAL(DP)    :: rsum
+       COMPLEX(DP) :: wdot
+       COMPLEX(DP) :: ZDOTC
+       EXTERNAL ZDOTC
 
         rsum = 0.0d0
 
-        IF( cdesc%gamma .AND. cdesc%gzero ) THEN
+        IF( gzero ) THEN
 
-          DO ib = 1, cdesc%nbl( ispin )
-            wdot = ZDOTC( ( cdesc%ngwl - 1 ), c(2,ib), 1, c(2,ib), 1 )
+          DO ib = 1, n
+            wdot = ZDOTC( ( ngw - 1 ), c(2,ib), 1, c(2,ib), 1 )
             wdot = wdot + DBLE( c(1,ib) )**2 / 2.0d0
             rsum = rsum + fi(ib) * DBLE( wdot )
           END DO
 
         ELSE
 
-          DO ib = 1, cdesc%nbl( ispin )
-            wdot = ZDOTC( cdesc%ngwl, c(1,ib), 1, c(1,ib), 1 )
+          DO ib = 1, n
+            wdot = ZDOTC( ngw, c(1,ib), 1, c(1,ib), 1 )
             rsum = rsum + fi(ib) * DBLE( wdot )
           END DO
 
         END IF
 
-        dft_total_charge = rsum
+        dft_total_charge_x = rsum
 
         RETURN
-      END FUNCTION dft_total_charge
+      END FUNCTION dft_total_charge_x
 
 
 
@@ -125,6 +87,7 @@
 
 ! ... declare modules
 
+    USE kinds,           ONLY: DP
     USE fft_base,        ONLY: dfftp, dffts
     USE mp_global,       ONLY: intra_image_comm
     USE mp,              ONLY: mp_sum
@@ -135,8 +98,9 @@
     USE control_flags,   ONLY: iprint
     USE parameters,      ONLY: nspinx
     USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
-    USE fft_module,      ONLY: invfft
+    USE cp_interfaces,   ONLY: invfft
     USE electrons_base,  ONLY: iupdwn, nupdwn
+    USE cp_interfaces,   ONLY: dft_total_charge
 
 
     IMPLICIT NONE
@@ -146,7 +110,7 @@
     INTEGER,              INTENT(IN) :: nfi
     COMPLEX(DP)                     :: c0(:,:)
     TYPE (boxdimensions), INTENT(IN) :: box
-    REAL(DP),          INTENT(IN) :: fi(:,:)
+    REAL(DP),          INTENT(IN) :: fi(:)
     REAL(DP),            INTENT(OUT) :: rhor(:,:)
     TYPE (wave_descriptor), INTENT(IN) :: cdesc
 
@@ -162,6 +126,8 @@
 
 ! ... end of declarations
 !  ----------------------------------------------
+
+    CALL start_clock( 'rhoofr' )
 
     nnr   =  dfftp%nr1x * dfftp%nr2x * dfftp%npl
 
@@ -187,7 +153,7 @@
 
     END IF
 
-    rhor  = zero
+    rhor  = 0.0d0
 
     DO ispin = 1, nspin
 
@@ -195,7 +161,7 @@
        ! ...  Gamma-point calculation: wave functions are real and can be
        ! ...  Fourier-transformed two at a time as a complex vector
 
-       psi2 = zero
+       psi2 = 0.0d0
 
        nb   = ( nupdwn(ispin) - MOD( nupdwn(ispin), 2 ) )
 
@@ -221,8 +187,8 @@
          ! ...  occupation numbers divided by cell volume
          ! ...  Remember: rhor( r ) =  rhor( s ) / omega
 
-         coef3 = fi( is1, ispin ) / omega
-         coef4 = fi( is2, ispin ) / omega 
+         coef3 = fi( iwfc1 ) / omega
+         coef4 = fi( iwfc2 ) / omega 
 
          ! ...  compute charge density from wave functions
 
@@ -254,7 +220,7 @@
 
          ! ...  occupation numbers divided by cell volume
 
-         coef3 = fi( nb, ispin ) / omega
+         coef3 = fi( iwfc1 ) / omega
 
          ! ...  compute charge density from wave functions
 
@@ -282,7 +248,8 @@
       DO ispin = 1, nspin
         fact = 2.d0
         iwfc1 = iupdwn( ispin )
-        rsumgs = dft_total_charge( ispin, c0( :, iwfc1 : iwfc1+nupdwn(ispin)-1 ), cdesc, fi(:,ispin) )
+        rsumgs = dft_total_charge( c0( :, iwfc1 : iwfc1+nupdwn(ispin)-1 ), cdesc%ngwl, &
+                                   fi( iwfc1 : iwfc1+nupdwn(ispin)-1 ), nupdwn(ispin) )
         rsumg( ispin ) = rsumg( ispin ) + fact * rsumgs
       END DO
       !
@@ -309,6 +276,7 @@
     DEALLOCATE(psi2, STAT=ierr)
     IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating psi2 ', ABS(ierr) )
 
+    CALL stop_clock( 'rhoofr' )
 
     RETURN
 !=----------------------------------------------------------------------=!
@@ -356,8 +324,9 @@
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_main_variables,  ONLY: rhopr
-      USE fft_module,         ONLY: fwfft, invfft
+      USE cp_interfaces,      ONLY: fwfft, invfft
       USE fft_base,           ONLY: dffts
+      USE cp_interfaces,      ONLY: checkrho
 !
       IMPLICIT NONE
       INTEGER nfi
@@ -797,7 +766,7 @@
 
 !=----------------------------------------------------------------------=!
 
-   SUBROUTINE fillgrad( nspin, rhog, gradr )
+   SUBROUTINE fillgrad_x( nspin, rhog, gradr )
 
       !
       !     calculates gradient of charge density for gradient corrections
@@ -810,11 +779,11 @@
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nnrx
       use cell_base,          only: tpiba
-      USE fft_module,         ONLY: invfft
+      USE cp_interfaces,      ONLY: invfft
 !
       implicit none
 ! input
-      integer nspin
+      integer, intent(in) :: nspin
       complex(DP) :: rhog( ngm, nspin )
 ! output
       real(DP) ::    gradr( nnrx, 3, nspin )
@@ -858,12 +827,12 @@
       deallocate( v )
 !
       RETURN
-    END SUBROUTINE fillgrad
+    END SUBROUTINE fillgrad_x
 
 
 !
 !----------------------------------------------------------------------
-      SUBROUTINE checkrho(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
+   SUBROUTINE checkrho_x(nnr,nspin,rhor,rmin,rmax,rsum,rnegsum)
 !----------------------------------------------------------------------
 !
 !     check \int rho(r)dr and the negative part of rho
@@ -874,7 +843,7 @@
 
       IMPLICIT NONE
 
-      INTEGER nnr, nspin
+      INTEGER, INTENT(IN) :: nnr, nspin
       REAL(DP) rhor(nnr,nspin), rmin, rmax, rsum, rnegsum
       !
       REAL(DP) roe
@@ -896,9 +865,229 @@
       CALL mp_sum( rsum, intra_image_comm )
       CALL mp_sum( rnegsum, intra_image_comm )
       RETURN
-    END SUBROUTINE checkrho
+   END SUBROUTINE checkrho_x
 
 
-!=----------------------------------------------------------------------=!
-      END MODULE charge_density
-!=----------------------------------------------------------------------=!
+
+!----------------------------------------------------------------------
+   SUBROUTINE newrho_x(rhor, drho, nfi)
+!----------------------------------------------------------------------
+
+! ... declare modules
+      USE kinds,              ONLY: DP
+      USE fft_base,           ONLY: dfftp
+      USE cp_interfaces,      ONLY: fwfft, invfft
+      USE ions_base,          ONLY: nsp
+      USE cell_base,          ONLY: tpiba2
+      USE reciprocal_vectors, ONLY: gstart, gzero, g
+      USE gvecp,              ONLY: ngm
+      USE wave_base,          ONLY: scalw
+      USE mp_global,          ONLY: intra_image_comm
+      USE io_global,          ONLY: stdout
+      USE mp,                 ONLY: mp_sum
+      USE charge_mix,         ONLY: chmix, metric, rho, rr, aa_save, &
+                                    achmix, g1met2, g0chmix2, daamax, &
+                                    allocate_charge_mix
+
+      IMPLICIT NONE
+
+! ... declare subroutine arguments
+      REAL(DP), INTENT(INOUT) :: rhor(:)
+      REAL(DP), INTENT(OUT) ::  drho
+      INTEGER, INTENT(IN) :: nfi
+
+! ... declare other variables
+      COMPLEX(DP) :: dr
+      COMPLEX(DP) :: rhoout(ngm)
+      REAL(DP) :: g02, g12, ar, den, num, rsc
+      REAL(DP) :: alpha(daamax)
+      REAL(DP), ALLOCATABLE :: aa(:,:)
+      REAL(DP), ALLOCATABLE :: rho_old(:)
+      INTEGER :: ns, sp, is, ism, i, ig
+      LOGICAL, SAVE :: tfirst = .TRUE.
+      INTEGER, SAVE :: dimaa, dimaaold, nrho_t, ierr
+      COMPLEX(DP), ALLOCATABLE :: psi(:)
+
+! ... end of declarations
+!  ----------------------------------------------
+
+      IF( nfi /= 0 .AND. tfirst ) THEN
+
+        CALL errore(' newrho ', ' not initialized ', nfi )
+
+      ELSE IF( nfi == 0 )THEN
+
+        IF( tfirst ) THEN
+          CALL allocate_charge_mix( ngm )
+        END IF
+
+! ...   define array chmix = A * G^2 / (G^2 + G_0^2) and metric = (G^2 + G_1^2) / G^2
+        g02 = g0chmix2 / tpiba2
+        g12 = g1met2 / tpiba2
+        IF(gzero) THEN
+          chmix(1)  = 0.0d0
+          metric(1) = 0.0d0
+        END IF
+        DO ig = gstart, ngm
+          chmix(ig)  = achmix * g(ig) / (g(ig)+g02)
+          metric(ig) = (g(ig)+g12)    /  g(ig)
+        END DO
+        tfirst = .FALSE.
+
+      END IF
+
+! ... Reset matrix dimension for the first iteration / initialization
+      IF( nfi <= 1 )THEN
+        dimaa  = 0
+        nrho_t = 0
+      END IF
+
+! ... Now update matrix dimension and counter
+      nrho_t = nrho_t + 1
+
+      dimaaold = dimaa                    ! save the previous matrix dimension 
+      dimaa    = MIN( daamax, nrho_t-1 )  ! number of densities and rr saved up to now
+
+      ism      = MOD( nrho_t-1, daamax )
+      if( ism == 0 ) ism = daamax
+      is       = MOD( nrho_t  , daamax )
+      if( is  == 0 ) is  = daamax
+
+! ... Fourier tranform of rhor
+
+      ALLOCATE( psi( SIZE( rhor ) ) )
+
+      psi = rhor
+
+      CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoout, ngm )
+
+      DEALLOCATE( psi )
+ 
+
+      IF( nrho_t == 1 )THEN
+
+        rho(:,1) = rhoout
+        RETURN
+
+      ELSE IF( nrho_t.EQ.2 .OR. (daamax.EQ.1 .AND. nrho_t.GT.1) )THEN
+
+        WRITE( stdout, fmt='( 3X,"charge mixing of order  1")' )
+
+        DO ig = gstart, ngm
+          dr = rhoout(ig) - rho(ig,1)
+          rr(ig,1) = dr
+          rhoout(ig) = rho(ig,1) + chmix(ig) * dr
+          rho(ig,is) = rhoout(ig)
+        END DO
+        IF( gzero ) THEN
+          rhoout(1) = rho(1,1)
+          rr(1,1)   = (0.d0,0.d0)
+        END IF
+        IF( daamax /= 1 )THEN
+          rsc = scalw(gzero, rr(:,1), rr(:,1), metric)
+          aa_save(1, 1) =  rsc
+        END IF
+
+      ELSE
+
+        IF( dimaa < 1 .OR. dimaa > daamax ) THEN
+          CALL errore(' newrho ', ' dimaa out of range ', dimaa )
+        END IF
+        IF( dimaaold < 1 .OR. dimaaold > daamax ) THEN
+          CALL errore(' newrho ', ' dimaaold out of range ', dimaaold )
+        END IF
+
+        WRITE( stdout, fmt='( 3X,"charge mixing of order ",I2)' ) dimaa
+
+        DO ig = gstart, ngm
+          rr(ig,ism) = rhoout(ig) - rho(ig,ism)
+        END DO
+        IF(gzero) THEN
+          rr(1,ism) = (0.d0, 0.d0)
+        END IF
+
+! ...   Allocate the new A matrix
+        ALLOCATE( aa ( dimaa, dimaa ), STAT=ierr )
+        IF( ierr /= 0 ) CALL errore(' newrho ', ' allocating aa ', ierr)
+
+! ...   Fill in new A with the content of the old a
+        aa( 1:dimaaold, 1:dimaaold ) = aa_save( 1:dimaaold, 1:dimaaold )
+
+! ...   Compute new matrix A
+        DO i = 1, dimaa
+          rsc = scalw(gzero,rr(:,i),rr(:,ism),metric)
+          aa(i,ism)=  rsc
+          aa(ism,i)=  rsc
+        END DO
+
+! ...   Save the content of A for the next iteration
+        aa_save( 1:dimaa, 1:dimaa ) = aa( 1:dimaa, 1:dimaa )
+
+! ...   Compute alphas
+        CALL invgen( aa )
+        den = SUM( aa )
+        DO i = 1, dimaa
+          alpha(i) = SUM( aa(:,i) ) / den
+        END DO
+
+        DEALLOCATE( aa, STAT=ierr )
+        IF( ierr /= 0 ) CALL errore(' newrho ', ' deallocating aa ', ierr)
+
+        DO ig = gstart, ngm
+          rhoout(ig) = (0.d0,0.d0)
+          DO i = 1, dimaa
+            rhoout(ig) = rhoout(ig) + alpha(i) * ( rho(ig,i) + chmix(ig) * rr(ig,i) )
+          END DO
+          rho(ig,is) = rhoout(ig)
+        END DO
+        IF(gzero) THEN
+          rhoout(1) = rho(1,1)
+        END IF
+
+      END IF
+
+      ALLOCATE( rho_old( SIZE(rhor) ), STAT=ierr )
+      IF( ierr /= 0 ) CALL errore(' newrho ', ' allocating rho_old ', ierr)
+      rho_old = rhor 
+
+      ! ... rhor back to real space rhor = FFT( rhoout )
+      ! CALL pinvfft(rhor, rhoout)
+
+      ALLOCATE( psi( SIZE( rhor ) ) )
+
+      CALL rho2psi( 'Dense', psi, dfftp%nnr, rhoout, ngm )
+      CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+
+      rhor = DBLE( psi )
+
+      drho = SUM( (rho_old - rhor)**2 )
+
+      DEALLOCATE(psi)
+      DEALLOCATE(rho_old, STAT=ierr)
+      IF( ierr /= 0 ) CALL errore(' newrho ', ' deallocating rho_old ', ierr)
+
+      CALL mp_sum(drho, intra_image_comm)
+
+      RETURN
+
+   CONTAINS
+
+        SUBROUTINE invgen( aa )
+
+          IMPLICIT NONE
+          INTEGER dimaa
+          REAL(DP) :: aa(:,:)
+
+          REAL(DP) ::  scr1(SIZE(aa,1),SIZE(aa,2))
+          REAL(DP) ::  scr2(SIZE(aa,1),SIZE(aa,2))
+          REAL(DP) ::  scr3(4*SIZE(aa,1))
+          REAL(DP) ::  cond, toleig
+          INTEGER   ::  info, iopt, mrank
+          toleig = 1.d-10
+          iopt   = 10
+          CALL geninv(aa, SIZE(aa,1), SIZE(aa,2), mrank, cond, scr1, scr2, scr3, toleig, info, iopt)
+          RETURN
+        END SUBROUTINE invgen
+
+   END SUBROUTINE newrho_x

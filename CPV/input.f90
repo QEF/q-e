@@ -914,12 +914,11 @@ MODULE input
            nr2s_ => nr2s, &
            nr3s_ => nr3s
      USE guess,              ONLY : guess_setup
-     USE empty_states,       ONLY : empty_init
      USE diis,               ONLY : diis_setup
      USE charge_mix,         ONLY : charge_mix_setup
      USE potentials,         ONLY : potential_init
      USE kohn_sham_states,   ONLY : ks_states_init
-     USE electrons_module,   ONLY : electrons_setup
+     USE electrons_module,   ONLY : electrons_setup, empty_init
      USE electrons_base,     ONLY : electrons_base_initval
      USE ensemble_dft,       ONLY : ensemble_initval,tens
      USE wannier_base,       ONLY : wannier_init
@@ -1238,7 +1237,7 @@ MODULE input
                               thdyn, tnoseh
     !
     USE electrons_nose,       ONLY: electrons_nose_info
-    USE empty_states,         ONLY: empty_print_info
+    USE electrons_module,     ONLY: empty_print_info
     USE diis,                 ONLY: diis_print_info
     USE potentials,           ONLY: potential_print_info
     USE runcg_module,         ONLY: runcg_info

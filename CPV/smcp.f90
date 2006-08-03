@@ -56,7 +56,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp, ecutw
   USE gvecp,                    ONLY : ecutp
-  USE restart_file,             ONLY : writefile, readfile
+  USE cp_interfaces,            ONLY : writefile, readfile
   USE parameters,               ONLY : nacx, nsx, nhclm
   USE constants,                ONLY : pi, factem, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir, smwout, outdir
@@ -85,16 +85,13 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE smd_ene,                  ONLY : etot_ar, ekin_ar, eht_ar, epseu_ar, &
                                        exc_ar, esr_ar, deallocate_smd_ene
   USE from_restart_module,      ONLY : from_restart
-  USE runcp_module,             ONLY : runcp_uspp
-  USE phase_factors_module,     ONLY : strucf
+  USE cp_interfaces,            ONLY : runcp_uspp, strucf
   USE cp_main_variables,        ONLY : ei1, ei2, ei3, eigr, sfac, irb, taub, &
                                        eigrb, rhog, rhor, rhos, becdr, bephi, &
                                        becp, ema0bg, allocate_mainvar, nfi
   USE fft_base,                 ONLY : dfftp
-  USE orthogonalize,            ONLY : ortho
   USE orthogonalize_base,       ONLY : updatc, calphi
-  use charge_density,           only : rhoofr
-  USE wave_functions,           ONLY : wave_rand_init, elec_fakekine
+  use cp_interfaces,            only : rhoofr, ortho, wave_rand_init, elec_fakekine
   !
 #if ! defined __NOSMD
   !

@@ -9,7 +9,7 @@
 ! ----------------------------------------------------------------------------
 ! BEGIN manual
 
-  SUBROUTINE bessel2(XG, RW, FINT, LNL, INDL, MMAX)
+  SUBROUTINE bessel2_x(XG, RW, FINT, LNL, INDL, MMAX)
 
 !  This subroutine Compute:
 !     Fint(x,l) = J_l(x);   l = INDL(j); j = 1, LNL
@@ -87,12 +87,12 @@
       END DO
 
       RETURN
-      END SUBROUTINE bessel2
+      END SUBROUTINE bessel2_x
 
 ! ----------------------------------------------------------------------------
 ! BEGIN manual
 
-  SUBROUTINE BESSEL3(XG, RW, FINT, LNL, INDL, MMAX)
+  SUBROUTINE BESSEL3_x(XG, RW, FINT, LNL, INDL, MMAX)
 
 !  This subroutine Compute:
 !     Fint(x,l) = f_l(x);   l = INDL(j); j = 1, LNL
@@ -195,5 +195,5 @@
       END DO
 
       RETURN
-      END SUBROUTINE bessel3
+      END SUBROUTINE bessel3_x
 

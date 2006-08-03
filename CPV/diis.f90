@@ -223,15 +223,15 @@ CONTAINS
 !  ----------------------------------------------
 
 ! ...  declare modules
-       USE control_flags, ONLY: gamma_only
-       USE cell_base, ONLY: tpiba2
-       USE pseudopotential, ONLY: nspnl
-       USE ions_base, ONLY: nsp, na
-       USE mp_global, ONLY: intra_image_comm
-       USE mp, ONLY: mp_sum, mp_max
-       USE reciprocal_vectors, ONLY: gstart, gzero, ggp
-       USE uspp_param, only: nh
-       USE uspp, only: nhtol, indv
+       USE control_flags,           ONLY: gamma_only
+       USE cell_base,               ONLY: tpiba2
+       USE read_pseudo_module_fpmd, ONLY: nspnl
+       USE ions_base,               ONLY: nsp, na
+       USE mp_global,               ONLY: intra_image_comm
+       USE mp,                      ONLY: mp_sum, mp_max
+       USE reciprocal_vectors,      ONLY: gstart, gzero, ggp
+       USE uspp_param,              ONLY: nh
+       USE uspp,                    ONLY: nhtol, indv
 
 
       IMPLICIT NONE
@@ -285,22 +285,18 @@ CONTAINS
 
 !  ----------------------------------------------
 !  ----------------------------------------------
-      SUBROUTINE fermi_diis( ent, occ, nb, nel, eig, wke, efermi, sume, temp)
-        USE electrons_module, ONLY: fermi_energy
-        REAL(DP)   :: occ(:,:)
+      SUBROUTINE fermi_diis( ent, fi, nb, nel, eig, wke, efermi, sume, temp)
+        USE cp_interfaces, ONLY: fermi_energy
+        REAL(DP)   :: fi(:)
         REAL(DP)   :: wke(:,:)
         REAL(DP)   :: eig(:,:), efermi, sume, ent, temp, entk, qtot
         INTEGER :: ispin, nel, nb
 
         qtot = DBLE( nel ) 
-        CALL fermi_energy( eig, occ, wke, efermi, qtot, temp, sume)
+        CALL fermi_energy( eig, fi, wke, efermi, qtot, temp, sume)
 
-! ...   compute the entropic correction
-        ent = 0.0d0
-        DO ispin = 1, SIZE( occ, 2 )
-            CALL entropy( occ(:,ispin), temp, nb, entk )
-            ent = ent + entk
-        END DO
+        ! ...   compute the entropic correction
+        CALL entropy( fi(:), temp, nb, ent )
       RETURN
       END SUBROUTINE fermi_diis
 

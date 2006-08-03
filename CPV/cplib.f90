@@ -216,7 +216,7 @@
       USE mp_global, ONLY: intra_image_comm
       USE atom, ONLY: nlcc
       USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
-      USE fft_module, ONLY: fwfft
+      USE cp_interfaces, ONLY: fwfft
 
       IMPLICIT NONE
 
@@ -441,7 +441,7 @@
       USE derho
       USE dqgb_mod
       USE recvecs_indexes, ONLY: nm, np
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
       USE fft_base, ONLY: dfftb
 
       IMPLICIT NONE
@@ -1309,7 +1309,7 @@
       USE control_flags, ONLY: iprint, thdyn, tfor, tprnfor
       USE mp, ONLY: mp_sum
       USE mp_global, ONLY: intra_image_comm
-      USE fft_module, ONLY: invfft
+      USE cp_interfaces, ONLY: invfft
       USE fft_base, ONLY: dfftb
 !
       IMPLICIT NONE
@@ -2017,7 +2017,7 @@
       USE control_flags, ONLY: iprint, iprsta, tpre
       USE qgb_mod
       USE recvecs_indexes, ONLY: np, nm
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
       USE fft_base, ONLY: dfftb
 !
       IMPLICIT NONE
@@ -2517,16 +2517,16 @@
       USE local_pseudo, ONLY: vps, dvps, rhops
       USE core, ONLY: nlcc_any
       USE gvecb
-      USE dener, ONLY: detot, dekin, dps, dh, dsr, dxc, denl
+      USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl
       USE derho
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-      USE funct, ONLY: dft_is_meta
-      USE fft_module, ONLY: fwfft, invfft
-      USE sic_module, ONLY: self_interaction, sic_epsilon, sic_alpha
-      USE energies,   ONLY: self_exc, self_ehte
+      USE mp,               ONLY: mp_sum
+      USE mp_global,        ONLY: intra_image_comm
+      USE funct,            ONLY: dft_is_meta
+      USE cp_interfaces,    ONLY: fwfft, invfft
+      USE sic_module,       ONLY: self_interaction, sic_epsilon, sic_alpha
+      USE energies,         ONLY: self_exc, self_ehte
       USE potentials,       ONLY: vofesr, self_vofhar
-      USE stress,           ONLY: pseudo_stress, compute_gagb, stress_hartree, &
+      USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local
 !
       IMPLICIT NONE

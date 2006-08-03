@@ -45,7 +45,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE io_global,                ONLY : ionode, stdout
   USE mp,                       ONLY : mp_barrier, mp_sum
   USE mp_global,                ONLY : nproc_image, me_image, root_image, intra_image_comm
-  USE fft_module,               ONLY : invfft
+  USE cp_interfaces,            ONLY : invfft
   USE fft_base,                 ONLY : dfftp
   USE parallel_include
   !
@@ -3585,7 +3585,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb, dvan
   USE cell_base,              ONLY : tpiba2
-  USE fft_module,             ONLY : fwfft, invfft
+  USE cp_interfaces,          ONLY : fwfft, invfft
   !
   IMPLICIT NONE
   !
@@ -3878,8 +3878,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE mp_global,              ONLY : intra_image_comm
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb
-  USE fft_module,             ONLY : fwfft, invfft
-  USE charge_density,         ONLY : checkrho
+  USE cp_interfaces,          ONLY : fwfft, invfft
+  USE cp_interfaces,          ONLY : checkrho
   USE mp,                     ONLY : mp_sum
   !
   IMPLICIT NONE

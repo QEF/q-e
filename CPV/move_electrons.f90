@@ -39,12 +39,12 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE cpr_subroutines,      ONLY : compute_stress
   USE ensemble_dft,         ONLY : compute_entropy2
   USE efield_module,        ONLY : berry_energy, berry_energy2
-  USE runcp_module,         ONLY : runcp_uspp, runcp_uspp_force_pairing, runcp_uspp_bgl
-  USE wave_constrains,      ONLY : interpolate_lambda
+  USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
+                                   runcp_uspp_bgl, interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi
   USE control_flags,        ONLY : force_pairing
-  USE charge_density,       only : rhoofr
+  USE cp_interfaces,        ONLY : rhoofr
   USE electrons_base,       ONLY : nupdwn 
   !
   IMPLICIT NONE

@@ -75,7 +75,7 @@
       use mp, only: mp_sum
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
-      use charge_density,           ONLY : rhoofr
+      use cp_interfaces,            ONLY : rhoofr
       USE cpr_subroutines,      ONLY : compute_stress!ATTENZIONE
       USE printout_base,    ONLY: printout_stress!ATTENZIONE
 

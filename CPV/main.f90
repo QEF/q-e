@@ -5,28 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
 
-!=----------------------------------------------------------------------------=!
-  MODULE main_module
-!=----------------------------------------------------------------------------=!
- 
-    IMPLICIT NONE
-    SAVE
 
-    PRIVATE
+   SUBROUTINE cpmain_x( tau, fion, etot )
 
-    PUBLIC :: cpmain
-
-!=----------------------------------------------------------------------------=!
-  CONTAINS
-!=----------------------------------------------------------------------------=!
-
-!  ----------------------------------------------
-!  BEGIN manual
-
-    SUBROUTINE cpmain( tau, fion, etot )
 
 !  this routine does some initialization, then handles for the main loop
 !  for Car-Parrinello dynamics
@@ -59,7 +41,6 @@
 !  18      : Kohn Sham states ( file name KS... )
 !  19      : file EMPTY_STATES.WF
 !  20      : file STRUCTUR_FACTOR
-!  28      : loops timing
 !  29      : atomic velocities
 !  30      : conductivity
 !  31      : eigenvalues
@@ -72,18 +53,14 @@
 !  38      : internal stress tensor
 !  39      : thermostats energies
 !  40      : thermal stress tensor
-!  41      : stress timing
-!  42      : ortho timing
-!  43      : vofrho timing
 !  ----------------------------------------------
-!  END manual
+
 
 ! ... declare modules
       USE kinds
-      USE phase_factors_module, ONLY : strucf, phfacs
-      USE restart_file, ONLY : writefile, readfile
+      USE cp_interfaces, ONLY : writefile, readfile, strucf, phfacs
       USE parameters, ONLY: nacx, nspinx
-      USE runcp_module, ONLY: runcp, runcp_force_pairing
+      USE cp_interfaces, ONLY: runcp, runcp_force_pairing
       USE runcg_module, ONLY: runcg
       USE runcg_ion_module, ONLY: runcg_ion
       USE control_flags, ONLY: tbeg, nomore, tprnfor, tpre, &
@@ -96,22 +73,19 @@
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
                   tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
-      USE print_out_module, ONLY: printout, print_sfac, &
-          printacc
+      USE cp_interfaces, ONLY: printout, print_sfac
       USE cell_module, ONLY: movecell, press, boxdimensions, updatecell
-      USE empty_states, ONLY: empty_cp
+      USE cp_interfaces, ONLY: empty_cp
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE turbo, ONLY: tturbo
-      USE pseudopotential
       USE potentials, ONLY: vofrhos, localisation
       USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
       USE electrons_module, ONLY: ei, n_emp
       USE diis, ONLY: allocate_diis
-      USE charge_density, ONLY: rhoofr
+      USE cp_interfaces, ONLY: rhoofr, nlrh, update_wave_functions
       USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
-      USE nl, ONLY: nlrh_m
       USE time_step, ONLY: tps, delt
       USE rundiis_module, ONLY: rundiis, runsdiis
       USE wave_types
@@ -119,19 +93,17 @@
       USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE wave_functions, ONLY: update_wave_functions
       USE runsd_module, ONLY: runsd
       USE input, ONLY: iosys
       USE cell_base, ONLY: alat, a1, a2, a3, cell_kinene, velh
       USE cell_base, ONLY: frich, greash
       USE stick_base, ONLY: pstickset
-      USE electrons_module, ONLY: bmeshset
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
       USE ions_base, ONLY: taui, cdmi, nat, nsp
       USE sic_module, ONLY: self_interaction, nat_localisation
       USE ions_base, ONLY: if_pos, ind_srt, ions_thermal_stress
       USE constants, ONLY: au_ps
-      USE electrons_base, ONLY: nupdwn, nbnd, nspin
+      USE electrons_base, ONLY: nupdwn, nbnd, nspin, f
       USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
                                 vnhe, xnhe0, xnhem, xnhep, qne, ekincw
       USE cell_nose, ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
@@ -177,10 +149,15 @@
       USE printout_base   , ONLY: printout_base_init
       USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, &
                                     ht0, htm, htp, rhor, vpot, wfill, &
-                                    acc, acc_this_run, occn, edft, nfi, bec, becdr
+                                    acc, acc_this_run,  edft, nfi, bec, becdr
       USE ions_positions,    ONLY : atoms0, atomsp, atomsm
       USE cg_module,         ONLY : tcg
+
+      !
+
       IMPLICIT NONE
+
+      !
 
       REAL(DP) :: tau( :, : )
       REAL(DP) :: fion( :, : )
@@ -315,7 +292,7 @@
            ! ...     perform DIIS minimization on electronic states
            !
            CALL runsdiis(ttprint, rhor, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
-                         sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, vpot, doions, edft )
+                         sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, vpot, doions, edft )
            !
         ELSE IF (ttdiis .AND. t_diis_rot) THEN
            !
@@ -324,14 +301,14 @@
            IF( nspin > 1 ) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
            !
            CALL rundiis(ttprint, rhor, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
-                        sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, vpot, doions, edft )
+                        sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, vpot, doions, edft )
            !
         ELSE IF ( tconjgrad ) THEN
            !
            ! ...     on entry c0 should contain the wavefunctions to be optimized
            !
            CALL runcg(tortho, ttprint, rhor, atoms0, bec, becdr, &
-                eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+                eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, &
                 vpot, doions, edft, ekin_maxiter, etot_conv_thr, tconv_cg )
            !
            ! ...     on exit c0 and cp both contain the updated wave function
@@ -340,13 +317,13 @@
         ELSE IF ( tsteepdesc ) THEN
            !
            CALL runsd(tortho, ttprint, ttforce, rhor, atoms0, bec, becdr, eigr,   &
-                vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+                vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, &
                 vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
            !
         ELSE IF ( tconjgrad_ion%active ) THEN
            !
            CALL runcg_ion(nfi, tortho, ttprint, rhor, atomsp, atoms0, atomsm, bec, &
-                becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, occn, ei, &
+                becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, &
                 vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
                 tconvthrs%ekin, tconjgrad_ion%nstepex )
            !
@@ -365,17 +342,17 @@
         !
         atoms0%for = 0.0d0
         !
-        edft%enl = nlrh_m( c0, wfill, ttforce, atoms0%for, bec, becdr, eigr)
+        edft%enl = nlrh( c0, ttforce, atoms0%for, bec, becdr, eigr)
 
         ! ...   compute the new charge density "rhor"
         !
-        CALL rhoofr( nfi, c0, wfill, occn, rhor, ht0)
+        CALL rhoofr( nfi, c0, wfill, f, rhor, ht0)
 
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "pail".
         !
         CALL vofrhos(ttprint, ttforce, tstress, rhor, atoms0, &
-          vpot, bec, c0, wfill, occn, eigr, ei1, ei2, ei3, sfac, ht0, edft)
+          vpot, bec, c0, wfill, f, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
         ! CALL debug_energies( edft ) ! DEBUG
 
@@ -407,12 +384,12 @@
               ! index band; and put equal for paired wf spin up and down
               !
               CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, &
-                vpot, vkb, occn, ekinc, ht0, ei, bec, fccc )
+                vpot, vkb, f, ekinc, ht0, ei, bec, fccc )
               !
            ELSE
               !
               CALL runcp( ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, &
-                         occn, ekinc, ht0, ei, bec, fccc )
+                         f, ekinc, ht0, ei, bec, fccc )
               !
            END IF
            !
@@ -658,7 +635,7 @@
         ! ...   write the restart file
         !
         IF( ttsave .OR. ttexit ) THEN
-          CALL writefile( nfi, tps, c0, cm, occn, atoms0, atomsm, acc,  &
+          CALL writefile( nfi, tps, c0, cm, f, atoms0, atomsm, acc,  &
                           taui, cdmi, htm, ht0, rhor, vpot )
         END IF
 
@@ -680,7 +657,7 @@
         END DO
       END IF
       !
-      CALL ks_states(c0, wfill, occn, vpot, eigr, vkb, bec )
+      CALL ks_states(c0, f, vpot, eigr, vkb, bec )
 
       IF(tprnsfac) THEN
         CALL print_sfac(rhor, sfac)
@@ -696,8 +673,4 @@
       END DO
 
       RETURN
-    END SUBROUTINE cpmain
-
-!=----------------------------------------------------------------------------=!
-  END MODULE main_module
-!=----------------------------------------------------------------------------=!
+    END SUBROUTINE cpmain_x

@@ -36,10 +36,9 @@ CONTAINS
 
           USE wave_types,         ONLY: wave_descriptor
           USE pseudopotential,    ONLY: nsanl
-          USE forces,             ONLY: dforce_all
+          USE cp_interfaces,      ONLY: dforce, kohn_sham
           USE electrons_module,   ONLY: ei, ei_emp, n_emp, nupdwn_emp, iupdwn_emp, nb_l, n_emp_l
           USE electrons_base,     ONLY: nupdwn, iupdwn, nspin
-          USE wave_functions,     ONLY: kohn_sham
           USE constants,          ONLY: autoev, pi, k_boltzman_au, au_to_ohmcmm1, eps8
           USE cell_base,          ONLY: tpiba2
           USE mp,                 ONLY: mp_sum
@@ -47,9 +46,9 @@ CONTAINS
           USE io_global,          ONLY: ionode, stdout
           USE control_flags,      ONLY: force_pairing
           USE reciprocal_vectors, ONLY: gx, g
-          USE pseudopotential,    ONLY: nspnl
           USE uspp_param,         ONLY: nhm
           USE uspp,               ONLY: nkb
+          USE read_pseudo_module_fpmd, ONLY: nspnl
 
           INTEGER,  INTENT(IN) :: nfi
           REAL(DP), INTENT(IN) :: omega
@@ -123,11 +122,11 @@ CONTAINS
 
              ff = 2.0d0 / nspin
              !
-             CALL dforce_all( cf, ff, eforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+             CALL dforce( cf, ff, eforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
              CALL kohn_sham( cf, ngw, eforce, nupdwn(iss), nb_l(iss), iupdwn(iss) )
              !
-             CALL dforce_all( ce, ff, eforce, vpot(:,iss), vkb, bece, nupdwn_emp(iss), iupdwn_emp(iss) )
+             CALL dforce( ce, ff, eforce, vpot(:,iss), vkb, bece, nupdwn_emp(iss), iupdwn_emp(iss) )
              !
              CALL kohn_sham( ce, ngw, eforce, nupdwn_emp(iss), n_emp_l(iss), iupdwn_emp(iss) )
 

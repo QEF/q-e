@@ -5,50 +5,17 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!=----------------------------------------------------------------------------=!
-   MODULE print_out_module
-!=----------------------------------------------------------------------------=!
 
-        USE kinds,     ONLY: DP
-        USE io_global, ONLY: ionode, ionode_id, stdout
-        USE io_files,  ONLY: sfacunit, sfac_file, opt_unit
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
-        
-        REAL(DP) :: old_clock_value = -1.0d0
-
-        REAL(DP) :: timeform = 0.0d0, &
-                     timernl = 0.0d0,  &
-                     timerho = 0.0d0,  &
-                     timevof = 0.0d0,  &
-                     timerd = 0.0d0
-        REAL(DP) :: timeorto = 0.0d0, timeloop = 0.0d0
-        INTEGER   :: timecnt = 0
-
-        REAL(DP), EXTERNAL :: cclock
-
-        INTEGER :: nstep_run = 0
-
-        PUBLIC :: printout_new
-        PUBLIC :: printout
-        PUBLIC :: print_sfac, printacc, print_legend
-        PUBLIC :: cp_print_rho
-        PUBLIC :: update_accomulators
 
 !=----------------------------------------------------------------------------=!
-   CONTAINS
-!=----------------------------------------------------------------------------=!
-
-
-   SUBROUTINE printout_new &
+   SUBROUTINE printout_new_x   &
      ( nfi, tfirst, tfilei, tprint, tps, h, stress, tau0, vels, &
        fion, ekinc, temphc, tempp, temps, etot, enthal, econs, econt, &
        vnhh, xnhh0, vnhp, xnhp0, atot, ekin, epot )
+!=----------------------------------------------------------------------------=!
 
       !
+      USE kinds,             ONLY : DP
       USE control_flags,     ONLY : iprint
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
@@ -68,6 +35,7 @@
       USE io_files,          ONLY : scradir
       USE control_flags,     ONLY : ndw, tdipole
       USE polarization,      ONLY : print_dipole
+      USE io_global,         ONLY : ionode, ionode_id, stdout
       !
       IMPLICIT NONE
       !
@@ -308,32 +276,37 @@
 2949  FORMAT( I6,1X,4(1X,F7.4), F8.5 )
       !
       RETURN
-   END SUBROUTINE
+   END SUBROUTINE printout_new_x
    !  
    !
-   SUBROUTINE printout(nfi, atoms, ekinc, ekcell, tprint, ht, edft) 
 
-      USE control_flags,    ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
-                                  toptical, tconjgrad
-      use constants,        only: factem, au_gpa, amu_si, bohr_radius_cm
-      use energies,         only: print_energies, dft_energy_type
-      use mp_global,        only: me_image, intra_image_comm
-      use electrons_module, only: print_eigenvalues
-      use time_step,        ONLY: tps
-      USE electrons_nose,   ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
-      USE sic_module,       ONLY: ind_localisation, pos_localisation, nat_localisation, &
-                                  self_interaction, sic_rloc
+!=----------------------------------------------------------------------------=!
+   SUBROUTINE printout_x(nfi, atoms, ekinc, ekcell, tprint, ht, edft) 
+!=----------------------------------------------------------------------------=!
+
+      USE kinds,              ONLY: DP
+      USE control_flags,      ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
+                                    toptical, tconjgrad
+      use constants,          only: factem, au_gpa, amu_si, bohr_radius_cm
+      use energies,           only: print_energies, dft_energy_type
+      use mp_global,          only: me_image, intra_image_comm
+      use electrons_module,   only: print_eigenvalues
+      use time_step,          ONLY: tps
+      USE electrons_nose,     ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
+      USE sic_module,         ONLY: ind_localisation, pos_localisation, nat_localisation, &
+                                    self_interaction, sic_rloc
       !!USE ions_base,        ONLY: ions_displacement, cdm_displacement
-      USE ions_base,        ONLY: ions_temp, cdmi, taui, nsp
-      USE ions_nose,        ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, &
-                                  kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
-      USE cell_module,      only: s_to_r, boxdimensions, press
-      USE cell_nose,        ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh
-      USE cell_base,        ONLY: iforceh
-      USE printout_base,    ONLY: printout_base_open, printout_base_close, &
-                                  printout_pos, printout_cell, printout_stress
-      USE environment,      ONLY: start_cclock_val
+      USE ions_base,          ONLY: ions_temp, cdmi, taui, nsp
+      USE ions_nose,          ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, &
+                                    kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
+      USE cell_module,        only: s_to_r, press
+      USE cell_nose,          ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh
+      USE cell_base,          ONLY: iforceh, boxdimensions
+      USE printout_base,      ONLY: printout_base_open, printout_base_close, &
+                                    printout_pos, printout_cell, printout_stress
+      USE environment,        ONLY: start_cclock_val
       USE atoms_type_module,  ONLY: atoms_type
+      USE cp_interfaces,      ONLY: printout_new
 
       IMPLICIT NONE
 
@@ -456,11 +429,15 @@
 
 
     RETURN
-  END SUBROUTINE printout
+  END SUBROUTINE printout_x
+
+
 
 !=----------------------------------------------------------------------------=!
-
   SUBROUTINE print_legend()
+!=----------------------------------------------------------------------------=!
+    !
+    USE io_global, ONLY : ionode, stdout
     !
     IMPLICIT NONE
     !
@@ -483,16 +460,24 @@
     !
   END SUBROUTINE print_legend
 
+
+
+
+!=----------------------------------------------------------------------------=!
+    SUBROUTINE print_sfac_x( rhoe, sfac )
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE print_sfac( rhoe, sfac )
-
-      USE mp_global, ONLY: me_image, nproc_image, intra_image_comm
-      USE mp, ONLY: mp_max, mp_get, mp_put
+      USE kinds,              ONLY : DP
+      USE mp_global,          ONLY: me_image, nproc_image, intra_image_comm
+      USE mp,                 ONLY: mp_max, mp_get, mp_put
       USE reciprocal_vectors, ONLY: ig_l2g, gx, g
-      USE gvecp, ONLY: ngm
-      USE fft_base, ONLY : dfftp
-      USE fft_module, ONLY: fwfft
+      USE gvecp,              ONLY: ngm
+      USE fft_base,           ONLY : dfftp
+      USE cp_interfaces,      ONLY: fwfft
+      USE io_global,          ONLY : ionode, ionode_id, stdout
+      USE io_files,           ONLY: sfacunit, sfac_file, opt_unit
+
+      IMPLICIT NONE
 
       REAL(DP), INTENT(IN) :: rhoe(:,:)
       COMPLEX(DP), INTENT(IN) ::  sfac(:,:)
@@ -567,16 +552,18 @@
         DEALLOCATE(sfac_rcv)
 
       RETURN
-    END SUBROUTINE print_sfac
+    END SUBROUTINE print_sfac_x
+
+
 
 
 !=----------------------------------------------------------------------------=!
-
-
-    SUBROUTINE printacc( )
+   SUBROUTINE printacc( )
+!=----------------------------------------------------------------------------=!
 
       USE kinds,               ONLY : DP
-      USE cp_main_variables,   ONLY : acc, acc_this_run, nfi
+      USE cp_main_variables,   ONLY : acc, acc_this_run, nfi, nfi_run
+      USE io_global,           ONLY : ionode, stdout
 
       IMPLICIT NONE
       !
@@ -590,8 +577,8 @@
          avgs  = acc( 1:9 ) / DBLE( nfi )
       END IF
       !
-      IF ( nstep_run > 0 ) THEN
-         avgs_run = acc_this_run(1:9) / DBLE( nstep_run )
+      IF ( nfi_run > 0 ) THEN
+         avgs_run = acc_this_run(1:9) / DBLE( nfi_run )
       END IF
 
       IF( ionode ) THEN
@@ -623,10 +610,11 @@
       RETURN
     END SUBROUTINE printacc
 
+
+
 !=----------------------------------------------------------------------------=!
-
-
-    SUBROUTINE open_and_append( iunit, file_name )
+    SUBROUTINE open_and_append_x( iunit, file_name )
+!=----------------------------------------------------------------------------=!
       USE io_global, ONLY: ionode
       IMPLICIT NONE
       INTEGER, INTENT(IN) :: iunit
@@ -639,11 +627,14 @@
           CALL errore( ' open_and_append ', ' opening file '//trim(file_name), 1 )
       END IF
       RETURN
-    END SUBROUTINE open_and_append
+    END SUBROUTINE open_and_append_x
+
+
 
 !=----------------------------------------------------------------------------=!
-
-   SUBROUTINE cp_print_rho(nfi, bec, c0, eigr, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
+   SUBROUTINE cp_print_rho_x &
+      (nfi, bec, c0, eigr, irb, eigrb, rhor, rhog, rhos, lambdap, lambda, tau0, h )
+!=----------------------------------------------------------------------------=!
    
      use kinds, only: DP
      use ensemble_dft, only: tens, ismear, z0, c0diag, becdiag, dval, zaux, e0, zx
@@ -655,7 +646,7 @@
      use grid_dimensions, only: nnr => nnrx
      use io_global, only: ionode,stdout
      USE control_flags, ONLY: printwfc
-     use charge_density, only: rhoofr
+     use cp_interfaces, only: rhoofr
 
      IMPLICIT NONE
 
@@ -710,51 +701,49 @@
      ! 
 
      RETURN
-   END SUBROUTINE cp_print_rho
+   END SUBROUTINE cp_print_rho_x
+
+
 
 
 !=----------------------------------------------------------------------------=!
-
-
-   SUBROUTINE update_accomulators( ekinc, ekin, epot, etot, tempp, enthal, econs, press, volume )
+   SUBROUTINE update_accomulators &
+      ( ekinc, ekin, epot, etot, tempp, enthal, econs, press, volume )
+!=----------------------------------------------------------------------------=!
 
       USE kinds,               ONLY : DP
-      USE cp_main_variables,   ONLY : acc, acc_this_run
+      USE cp_main_variables,   ONLY : acc, acc_this_run, nfi_run
 
       IMPLICIT NONE
 
       REAL(DP), INTENT(IN) :: ekinc, ekin, epot, etot, tempp
       REAL(DP), INTENT(IN) :: enthal, econs, press, volume
 
-        nstep_run = nstep_run + 1
+      nfi_run = nfi_run + 1
 
-        ! ...   sum up values to be averaged
+      ! ...   sum up values to be averaged
 
-        acc(1) = acc(1) + ekinc
-        acc(2) = acc(2) + ekin
-        acc(3) = acc(3) + epot
-        acc(4) = acc(4) + etot
-        acc(5) = acc(5) + tempp
-        acc(6) = acc(6) + enthal
-        acc(7) = acc(7) + econs
-        acc(8) = acc(8) + press  ! pressure in GPa
-        acc(9) = acc(9) + volume
+      acc(1) = acc(1) + ekinc
+      acc(2) = acc(2) + ekin
+      acc(3) = acc(3) + epot
+      acc(4) = acc(4) + etot
+      acc(5) = acc(5) + tempp
+      acc(6) = acc(6) + enthal
+      acc(7) = acc(7) + econs
+      acc(8) = acc(8) + press  ! pressure in GPa
+      acc(9) = acc(9) + volume
 
-        ! ...   sum up values to be averaged
+      ! ...   sum up values to be averaged
 
-        acc_this_run(1) = acc_this_run(1) + ekinc
-        acc_this_run(2) = acc_this_run(2) + ekin
-        acc_this_run(3) = acc_this_run(3) + epot
-        acc_this_run(4) = acc_this_run(4) + etot
-        acc_this_run(5) = acc_this_run(5) + tempp
-        acc_this_run(6) = acc_this_run(6) + enthal
-        acc_this_run(7) = acc_this_run(7) + econs
-        acc_this_run(8) = acc_this_run(8) + press  ! pressure in GPa
-        acc_this_run(9) = acc_this_run(9) + volume
+      acc_this_run(1) = acc_this_run(1) + ekinc
+      acc_this_run(2) = acc_this_run(2) + ekin
+      acc_this_run(3) = acc_this_run(3) + epot
+      acc_this_run(4) = acc_this_run(4) + etot
+      acc_this_run(5) = acc_this_run(5) + tempp
+      acc_this_run(6) = acc_this_run(6) + enthal
+      acc_this_run(7) = acc_this_run(7) + econs
+      acc_this_run(8) = acc_this_run(8) + press  ! pressure in GPa
+      acc_this_run(9) = acc_this_run(9) + volume
 
       RETURN
    END SUBROUTINE
-
-!=----------------------------------------------------------------------------=!
-   END MODULE print_out_module
-!=----------------------------------------------------------------------------=!

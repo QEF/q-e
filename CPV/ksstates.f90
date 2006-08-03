@@ -97,35 +97,33 @@ CONTAINS
 !  ----------------------------------------------
 
 
-      SUBROUTINE ks_states(cf, wfill, occ, vpot, eigr, vkb, bec )
+      SUBROUTINE ks_states(cf, occ, vpot, eigr, vkb, bec )
 
         ! ...   declare modules
         USE kinds
         USE mp_global,        ONLY : intra_image_comm
         USE io_global,        ONLY : ionode, stdout
         USE ions_base,        ONLY : nsp
-        USE wave_types,       ONLY : wave_descriptor, wave_descriptor_init
-        USE wave_functions,   ONLY : kohn_sham
-        USE forces
+        USE cp_interfaces,    ONLY : dforce, kohn_sham
         USE control_flags,    ONLY : force_pairing
         USE electrons_base,   ONLY : nupdwn, iupdwn, nspin, nbsp
         USE electrons_module, ONLY : n_emp, nupdwn_emp, iupdwn_emp, nb_l, n_emp_l
-        USE empty_states,     ONLY : readempty
+        USE gvecw,            ONLY : ngw
+        USE cp_interfaces,    ONLY : readempty
         USE uspp,             ONLY : nkb
 
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
         COMPLEX(DP), INTENT(INOUT) :: cf(:,:)
-        TYPE (wave_descriptor), INTENT(IN) :: wfill
         COMPLEX(DP)  ::  eigr(:,:)
         COMPLEX(DP)  ::  vkb(:,:)
-        REAL(DP), INTENT(IN)  ::  occ(:,:), bec(:,:)
+        REAL(DP), INTENT(IN)  ::  occ(:), bec(:,:)
         REAL(DP) ::  vpot(:,:)
 
         ! ...   declare other variables
-        INTEGER  :: i, ib, ig, ngw, nb_g, iss, iks
-        INTEGER  :: n_emps, in, ns
+        INTEGER  :: i, ib, ig, nb_g, iss, iks
+        INTEGER  :: n_emps
         LOGICAL  :: tortho = .TRUE.
         LOGICAL  :: exist 
 
@@ -137,21 +135,17 @@ CONTAINS
 
         CHARACTER (LEN=6), EXTERNAL :: int_to_char
 
-        TYPE (wave_descriptor) :: wempt  ! wave function descriptor for empty states
-
         ! ...   end of declarations
-
-        ngw  = wfill%ngwl
 
         IF( tksout ) THEN
 
-           ALLOCATE( fforce( ngw, nbsp ) )
+           ALLOCATE( fforce( ngw, SIZE( cf, 2 ) ) )
 
            DO iss = 1, nspin
 
               IF( nupdwn( iss ) > 0 ) THEN
 
-                 CALL dforce_all( cf, occ(:,iss), fforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+                 CALL dforce( cf, occ, fforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
               END IF
 
@@ -159,10 +153,10 @@ CONTAINS
 
            IF( force_pairing ) THEN 
               DO i = 1, nupdwn(2)
-                 fforce(:,i) = occ(i,1) * fforce(:,i) + occ(i,2) * fforce(:,i+iupdwn(2)-1)
+                 fforce(:,i) = occ(i) * fforce(:,i) + occ(i+iupdwn(2)-1) * fforce(:,i+iupdwn(2)-1)
               END DO
               DO i = nupdwn(2)+1, nupdwn(1)
-                 fforce(:,i) = occ(i,1) * fforce(:,i)
+                 fforce(:,i) = occ(i) * fforce(:,i)
               END DO
               DO i = iupdwn(2), iupdwn(2) + nupdwn(2) - 1
                  fforce(:,i) = fforce(:,i-iupdwn(2)+1)
@@ -183,9 +177,6 @@ CONTAINS
           n_emps = nupdwn_emp( 1 )
           IF( nspin == 2 ) n_emps = n_emps + nupdwn_emp( 2 )
 
-          CALL wave_descriptor_init( wempt, ngw, wfill%ngwt, nupdwn_emp, nupdwn_emp, &
-                                 1, 1, nspin, 'gamma' , wfill%gzero )
-  
           ALLOCATE( ce( ngw,  n_emp * nspin ) )
           !
           ALLOCATE( bec_emp( nkb, n_emps ) )
@@ -199,26 +190,23 @@ CONTAINS
 
           ALLOCATE( eforce( ngw, SIZE( ce, 2 ) ) )
 
+          ALLOCATE( fi( SIZE( ce, 2 ) ) )
+
+          fi = 2.0d0 / nspin
+
           DO iss = 1, nspin
 
-            in = iupdwn_emp( iss )
-            ns = nupdwn_emp( iss ) 
+             IF( nupdwn_emp( iss ) > 0 ) THEN
 
-            IF( ns > 0 ) THEN
+                CALL dforce( ce, fi, eforce, vpot(:,iss), vkb, bec_emp, nupdwn_emp( iss ), iupdwn_emp( iss ) ) 
 
-              ALLOCATE( fi( ns ) )
+                CALL kohn_sham( ce, ngw, eforce, nupdwn_emp( iss ), n_emp_l(iss), iupdwn_emp( iss ) )
 
-              fi = 2.0d0 / nspin
-
-              CALL dforce_all( ce, fi, eforce, vpot(:,iss), vkb, bec_emp, ns, in ) 
-
-              CALL kohn_sham( ce, ngw, eforce, ns, n_emp_l(iss), in )
-
-              DEALLOCATE( fi )
-
-            END IF
+             END IF
 
           END DO
+
+          DEALLOCATE( fi )
 
           DEALLOCATE( eforce )
 
@@ -317,7 +305,7 @@ CONTAINS
         USE gvecw, ONLY: ngw
         USE fft_base, ONLY: dfftp, dffts
         USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnrx
-        USE fft_module, ONLY: invfft
+        USE cp_interfaces, ONLY: invfft
         USE xml_io_base, ONLY: write_rho_xml
         USE mp_global,       ONLY: nproc_image, me_image, intra_image_comm
 

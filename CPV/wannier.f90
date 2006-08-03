@@ -658,7 +658,7 @@ MODULE wannier_subroutines
     USE cell_base,      ONLY : h, hold
     USE ions_base,      ONLY : pmass
     USE cvan,           ONLY : nvb
-    USE restart_file,   ONLY : writefile
+    USE cp_interfaces,  ONLY : writefile
     !
     IMPLICIT NONE
     !

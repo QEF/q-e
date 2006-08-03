@@ -29,7 +29,8 @@ subroutine formf( tfirst, eself )
   use atom,            ONLY : r, rab, mesh, numeric
   use uspp_param,      ONLY : vloc_at, oldvan
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
-  use pseudopotential, ONLY : tpstab, build_pstab, vps_sp, dvps_sp
+  use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
+  use cp_interfaces,   ONLY : build_pstab
   use splines,         ONLY : spline
   use reciprocal_vectors, ONLY : gstart, g
   !
@@ -131,10 +132,9 @@ SUBROUTINE newnlinit()
   ! ... See also comments in nlinit
   !
   use control_flags,    ONLY : tpre
-  use pseudopotential,  ONLY : interpolate_beta, interpolate_qradb
-  use pseudopotential,  ONLY : exact_beta, tpstab, check_tables
-  use pseudopotential,  ONLY : exact_qradb
-  USE core,             ONLY : core_charge_ftr
+  use pseudopotential,  ONLY : tpstab
+  use cp_interfaces,    ONLY : interpolate_beta, interpolate_qradb, &
+                               exact_beta, check_tables, exact_qradb
   !
   IMPLICIT NONE
   !
@@ -358,7 +358,7 @@ subroutine nlinit
       use dqrad_mod,       ONLY : dqrad
       use dqgb_mod,        ONLY : dqgb
       use betax,           ONLY : qradx, dqradx, refg, betagx, mmx, dbetagx
-      use pseudopotential, ONLY : pseudopotential_indexes, compute_dvan, &
+      use cp_interfaces,   ONLY : pseudopotential_indexes, compute_dvan, &
                                   compute_betagx, compute_qradx
       USE grid_dimensions, ONLY : nnrx
 

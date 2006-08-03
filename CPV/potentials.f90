@@ -162,8 +162,7 @@
         ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
           ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft )
 
-        USE charge_density,    ONLY: rhoofr
-        USE nl,                ONLY: nlrh_m
+        USE cp_interfaces,     ONLY: rhoofr, nlrh
         USE energies,          ONLY: dft_energy_type
         USE cell_module,       ONLY: boxdimensions
         USE atoms_type_module, ONLY: atoms_type
@@ -181,7 +180,7 @@
         COMPLEX(DP) :: ei3(:,:)
         COMPLEX(DP) :: eigr(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(DP), INTENT(IN) :: fi(:,:)
+        REAL(DP), INTENT(IN) :: fi(:)
         REAL(DP) :: bec(:,:)
         REAL(DP) :: becdr(:,:,:)
         TYPE (dft_energy_type) :: edft
@@ -189,7 +188,7 @@
         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
         LOGICAL, INTENT(IN) :: tforce, tstress, tprint
 
-        edft%enl = nlrh_m( c0, cdesc, tforce, atoms%for, bec, becdr, eigr )
+        edft%enl = nlrh( c0, tforce, atoms%for, bec, becdr, eigr )
 
         CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht )
 
@@ -248,10 +247,11 @@
       USE ions_base,      ONLY: rcmax, zv, nsp
       USE fft_base,       ONLY: dfftp
       USE energies,       ONLY: total_energy, dft_energy_type
-      USE stress,         ONLY: pstress, stress_kin, compute_gagb, stress_nl, &
-                                dalbe, stress_local, add_drhoph, stress_hartree
+      USE cp_interfaces,  ONLY: pstress, stress_kin, compute_gagb, stress_nl, &
+                                stress_local, add_drhoph, stress_hartree
+      USE stress_param,   ONLY: dalbe
       USE funct,          ONLY: dft_is_gradient
-      USE charge_density, ONLY: fillgrad
+      USE cp_interfaces,  ONLY: fillgrad
       USE vanderwaals,    ONLY: tvdw, vdw
       USE wave_types,     ONLY: wave_descriptor
       USE io_global,      ONLY: ionode, stdout
@@ -260,22 +260,20 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE atom,           ONLY: nlcc
       USE core,           ONLY: nlcc_any, rhocg, drhocg
-      USE core,           ONLY: add_core_charge, core_charge_forces
-      USE fft_module,     ONLY: fwfft, invfft
+      USE cp_interfaces,  ONLY: fwfft, invfft, add_core_charge, core_charge_forces
       USE electrons_base, ONLY: iupdwn, nupdwn, nspin
       !
-      USE reciprocal_vectors,   ONLY: gx, g, gstart
-      USE atoms_type_module,    ONLY: atoms_type
-      USE exchange_correlation, ONLY: exch_corr_energy
-      use grid_dimensions,      only: nr1, nr2, nr3, nnrx
-      USE exchange_correlation, ONLY: stress_xc
+      USE reciprocal_vectors, ONLY: gx, g, gstart
+      USE atoms_type_module,  ONLY: atoms_type
+      USE cp_interfaces,      ONLY: exch_corr_energy, stress_xc
+      use grid_dimensions,    only: nr1, nr2, nr3, nnrx
 
       IMPLICIT NONE
 
 ! ... declare subroutine arguments
       LOGICAL, INTENT(IN) :: tprint, tforce, tstress
       REAL(DP)            :: vpot(:,:)
-      REAL(DP),    INTENT(IN) :: fi(:,:)
+      REAL(DP),    INTENT(IN) :: fi(:)
       REAL(DP)    :: bec(:,:)
       COMPLEX(DP) :: ei1(:,:)
       COMPLEX(DP) :: ei2(:,:)
@@ -385,7 +383,7 @@
       edft%emkin = 0.0d0
 
       DO iss = 1, nspin
-         edft%ekin  = edft%ekin + enkin( c0( 1, iupdwn(iss) ), SIZE( c0, 1 ), fi( 1, iss ), nupdwn(iss) )
+         edft%ekin  = edft%ekin + enkin( c0( 1, iupdwn(iss) ), SIZE( c0, 1 ), fi( iupdwn( iss ) ), nupdwn(iss) )
       END DO
 
 
@@ -763,7 +761,7 @@
       USE green_functions, ONLY: greenf
       USE mp_global,       ONLY: me_image
       USE fft_base,        ONLY: dfftp
-      USE fft_module,      ONLY: fwfft
+      USE cp_interfaces,   ONLY: fwfft
       USE gvecp,           ONLY: ngm
       USE cell_module,     ONLY: boxdimensions, s_to_r, alat
       USE constants,       ONLY: gsmall, pi
@@ -1473,7 +1471,7 @@
       USE gvecp, ONLY: ngm
       USE gvecw, ONLY: ngw
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
 
       IMPLICIT NONE
 

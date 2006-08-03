@@ -122,7 +122,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   USE wavefunctions_module, ONLY : c0
   USE uspp,                 ONLY : becsum
   USE grid_dimensions,      ONLY : nnrx
-  USE charge_density,       ONLY : rhoofr
+  USE cp_interfaces,        ONLY : rhoofr
 #endif
 #ifdef DFT_PW
   USE scf,                  ONLY : rhor=>rho
@@ -321,7 +321,7 @@ SUBROUTINE relax_wavefunction (fion)
   USE gvecs,                ONLY : ngs
   USE ions_positions,       ONLY : tau0
   USE ions_base,            ONLY : ityp, nat
-  USE phase_factors_module, ONLY : strucf     
+  USE cp_interfaces,        ONLY : strucf     
   USE reciprocal_vectors,   ONLY : mill_l
   USE time_step,            ONLY : dt2
   USE io_global,            ONLY : stdout

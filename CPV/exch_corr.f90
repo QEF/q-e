@@ -5,29 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!=----------------------------------------------------------------------------=!
-  MODULE exchange_correlation
-!=----------------------------------------------------------------------------=!
+
 #include "f_defs.h"
 
-        USE kinds, ONLY: DP
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
 
 ! ... Gradient Correction & exchange and correlation
 
-        REAL(DP), PARAMETER :: small_rho = 1.0d-10
-
-        PUBLIC :: v2gc, exch_corr_energy, stress_xc
-
 !=----------------------------------------------------------------------------=!
-   CONTAINS
+        SUBROUTINE v2gc_x( v2xc, grho, rhor, vpot )
 !=----------------------------------------------------------------------------=!
-
-        SUBROUTINE v2gc( v2xc, grho, rhor, vpot )
 
           USE kinds,              ONLY: DP
           USE fft_base,           ONLY: dfftp
@@ -35,7 +21,7 @@
           USE reciprocal_vectors, ONLY: gstart, gx
           use grid_dimensions,    only: nnrx
           USE gvecp,              ONLY: ngm
-          USE fft_module,         ONLY: fwfft, invfft
+          USE cp_interfaces,      ONLY: fwfft, invfft
 !                                                                       
           implicit none
 !                                                                       
@@ -90,13 +76,15 @@
           DEALLOCATE( vtemp )
 
           RETURN
-        END SUBROUTINE v2gc
+        END SUBROUTINE v2gc_x
+
 
 !=----------------------------------------------------------------------------=!
-
-    SUBROUTINE stress_gc(grho, v2xc, gcpail, omega)
+    SUBROUTINE stress_gc_x(grho, v2xc, gcpail, omega)
+!=----------------------------------------------------------------------------=!
 !
-      use grid_dimensions, only: nr1, nr2, nr3, nnrx
+        USE kinds,           ONLY: DP
+        use grid_dimensions, only: nr1, nr2, nr3, nnrx
 
         IMPLICIT NONE
 !
@@ -127,21 +115,22 @@
         END DO
 
       RETURN
-    END SUBROUTINE stress_gc
+    END SUBROUTINE stress_gc_x
+
 
 !=----------------------------------------------------------------------------=!
-
-    SUBROUTINE stress_xc( dexc, strvxc, sfac, vxc, grho, v2xc, &
+    SUBROUTINE stress_xc_x( dexc, strvxc, sfac, vxc, grho, v2xc, &
         gagb, tnlcc, rhocp, box)
+!=----------------------------------------------------------------------------=!
 
       USE kinds,              ONLY: DP
       USE ions_base,          ONLY: nsp
-      USE cell_module,        ONLY: boxdimensions
-      USE cell_base,          ONLY: tpiba
+      USE cell_base,          ONLY: tpiba, boxdimensions
       USE funct,              ONLY: dft_is_gradient
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp,              ONLY: ngm
       USE io_global,          ONLY: stdout
+      USE cp_interfaces,      ONLY: stress_gc
 
       IMPLICIT NONE
 
@@ -236,17 +225,21 @@
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 
-      END SUBROUTINE stress_xc
+      END SUBROUTINE stress_xc_x
+
+
 
 
 !=----------------------------------------------------------------------------=!
-
-
-     SUBROUTINE exch_corr_energy(rhoetr, grho, vpot, exc, vxc, v2xc)
+     SUBROUTINE exch_corr_energy_x(rhoetr, grho, vpot, exc, vxc, v2xc)
+!=----------------------------------------------------------------------------=!
 
         USE kinds,           ONLY: DP
-        use grid_dimensions, only: nnrx
-        USE funct, ONLY: dft_is_gradient
+        use grid_dimensions, ONLY: nnrx
+        USE funct,           ONLY: dft_is_gradient
+        USE cp_interfaces,   ONLY: v2gc
+
+        implicit none
 
         REAL (DP) :: rhoetr(:,:)
         REAL (DP) :: grho(:,:,:)
@@ -287,11 +280,8 @@
 
 
         RETURN
-      END SUBROUTINE exch_corr_energy
+      END SUBROUTINE exch_corr_energy_x
 
-!=----------------------------------------------------------------------------=!
-   END MODULE exchange_correlation
-!=----------------------------------------------------------------------------=!
 
 
 
@@ -320,7 +310,7 @@
       use kinds,           ONLY : DP
       use constants,       ONLY : au_gpa
       USE sic_module,      ONLY : self_interaction, sic_alpha
-      USE charge_density,  ONLY : fillgrad
+      USE cp_interfaces,   ONLY : fillgrad
 !
       implicit none
 
@@ -559,7 +549,7 @@
       use grid_dimensions, only: nr1, nr2, nr3, nnr => nnrx, nr1x, nr2x, nr3x
       use cell_base, only: ainv, tpiba, omega
       use derho, only: drhog
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
 !                 
       implicit none  
 ! input                   

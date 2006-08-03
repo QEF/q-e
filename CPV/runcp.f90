@@ -5,28 +5,11 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-
-!=----------------------------------------------------------------------------=!
-  MODULE runcp_module
-!=----------------------------------------------------------------------------=!
-
-        IMPLICIT NONE
-        PRIVATE
-        SAVE
-
-        PUBLIC :: runcp, runcp_force_pairing
-        PUBLIC :: runcp_uspp, runcp_uspp_force_pairing, runcp_ncpp
-        PUBLIC :: runcp_uspp_bgl
-
-!=----------------------------------------------------------------------------=!
-        CONTAINS
-!=----------------------------------------------------------------------------=!
 
 
-!  ----------------------------------------------
 
-   SUBROUTINE runcp &
+
+   SUBROUTINE runcp_x &
       ( ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc )
 
       !     This subroutine performs a Car-Parrinello or Steepest-Descent step
@@ -39,18 +22,16 @@
 
       ! ...   declare modules
       USE kinds
-      USE electrons_module,   ONLY : eigs, nb_l
+      USE electrons_module,   ONLY : nb_l
       USE electrons_base,     ONLY : nupdwn, iupdwn, nspin, nbsp, nudx
       USE cp_electronic_mass, ONLY : emass
       USE cp_main_variables,  ONLY : ema0bg
-      USE wave_functions,     ONLY : elec_fakekine
       USE wave_base,          ONLY : hpsi
       USE cell_module,        ONLY : boxdimensions
       USE time_step,          ONLY : delt
-      USE orthogonalize,      ONLY : ortho
-      USE wave_constrains,    ONLY : update_lambda
       USE uspp,               ONLY : nkb
-      USE gvecw,              ONLY: ngw
+      USE gvecw,              ONLY : ngw
+      USE cp_interfaces,      ONLY : runcp_ncpp, eigs, ortho, elec_fakekine, update_lambda
 
       IMPLICIT NONE
 
@@ -59,7 +40,7 @@
       LOGICAL :: ttprint, tortho, tsde
       COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
       COMPLEX(DP)  ::  vkb(:,:)
-      REAL(DP), INTENT(IN)  ::  fi(:,:)
+      REAL(DP), INTENT(IN)  ::  fi(:)
       REAL(DP), INTENT(IN)  ::  bec(:,:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
       REAL (DP) ::  vpot(:,:)
@@ -89,7 +70,7 @@
       !
       IF( ttprint ) THEN
         DO is = 1, nspin
-          CALL eigs( nupdwn(is), gam(:,:,is), tortho, fi(:,is), ei(:,is) )
+          CALL eigs( nupdwn(is), gam(:,:,is), tortho, fi(iupdwn(is):iupdwn(is)+nupdwn(is)-1), ei(:,is) )
         END DO
       END IF
 
@@ -112,14 +93,14 @@
 
 
       RETURN
-    END SUBROUTINE runcp
+    END SUBROUTINE runcp_x
 
 
 !=----------------------------------------------------------------------------------=!
 
 
-    SUBROUTINE runcp_ncpp( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, lambda, &
-                           fromscra, diis, restart )
+    SUBROUTINE runcp_ncpp_x &
+       ( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, lambda, fromscra, diis, restart )
 
        !     This subroutine performs a Car-Parrinello or Steepest-Descent step
        !     on the electronic variables, computing forces on electrons and,
@@ -131,13 +112,12 @@
 
        ! ...   declare modules
       USE kinds
-      USE electrons_base,     ONLY:  nupdwn, iupdwn, nspin
+      USE electrons_base,     ONLY: nupdwn, iupdwn, nspin, nudx
       USE cp_electronic_mass, ONLY: emass
       USE cp_main_variables,  ONLY: ema0bg
       USE wave_base,          ONLY: wave_steepest, wave_verlet
       USE time_step,          ONLY: delt
-      USE forces,             ONLY: dforce
-      USE wave_constrains,    ONLY: update_lambda
+      USE cp_interfaces,      ONLY: dforce, update_lambda
       USE control_flags,      ONLY: tsde
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gzero
@@ -149,7 +129,7 @@
       COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
       REAL(DP)    :: gam(:,:,:)
       COMPLEX(DP) :: vkb(:,:)
-      REAL(DP), INTENT(IN)  ::  fi(:,:)
+      REAL(DP), INTENT(IN)  ::  fi(:)
       REAL (DP) ::  vpot(:,:)
       REAL (DP), INTENT(IN) ::  bec(:,:)
       REAL(DP), INTENT(IN) :: fccc
@@ -186,6 +166,7 @@
       ALLOCATE( c2(ngw), c3(ngw), svar3(ngw), STAT = ierr )
       IF( ierr /= 0 ) CALL errore(' runcp_ncpp ', ' allocating c2, c3, svar3 ', ierr)
 
+      !
       ! ...   determines friction dynamically according to the Nose' dynamics
       !
 
@@ -204,9 +185,7 @@
 
       DO is = 1, nspin
 
-        nx   = nupdwn( is )
-        IF( nx > SIZE( fi, 1 ) ) &
-          CALL errore(' runcp ',' inconsistent occupation numbers ', 1)
+          nx   = nupdwn( is )
 
           nb = nx - MOD(nx, 2)
 
@@ -215,7 +194,7 @@
             iwfc = iupdwn(is)
             nwfc = nupdwn(is)
 
-            CALL dforce( i, c0, fi(:,is), c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
+            CALL dforce( i, c0, fi, c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
                CALL update_lambda( i  , gam( :, :,is), c0, c2, nwfc, iwfc )
@@ -249,7 +228,7 @@
             iwfc = iupdwn(is)
             nwfc = nupdwn(is)
 
-            CALL dforce( nx, c0, fi(:,is), c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
+            CALL dforce( nx, c0, fi, c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
                CALL update_lambda( nb, gam( :, :,is), c0, c2, nwfc, iwfc )
@@ -275,7 +254,7 @@
       IF( ierr /= 0 ) CALL errore(' runcp_ncpp ', ' deallocating 1 ', ierr)
 
       RETURN
-    END SUBROUTINE runcp_ncpp
+    END SUBROUTINE runcp_ncpp_x
 
 
 !=----------------------------------------------------------------------------------=!
@@ -284,8 +263,8 @@
 !eigr==e^ig*r f is the occupation number
 !fnl if the factor non local
 
-    SUBROUTINE runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, &
-        vpot, vkb, fi, ekinc, ht, ei, bec, fccc)
+    SUBROUTINE runcp_force_pairing_x &
+       (ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc)
 
 !  same as runcp, except that electrons are paired forcedly
 !  i.e. this handles a state dependant Hamiltonian for the paired and unpaired electrons
@@ -297,20 +276,17 @@
       USE kinds
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
-      USE electrons_module,   ONLY: eigs, nb_l
+      USE electrons_module,   ONLY: nb_l
       USE electrons_base,     ONLY: iupdwn, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
       USE cp_main_variables,  ONLY: ema0bg
-      USE wave_functions,     ONLY: elec_fakekine
       USE wave_base,          ONLY: wave_steepest, wave_verlet
       USE wave_base,          ONLY: hpsi
       USE cell_module,        ONLY: boxdimensions
       USE time_step,          ONLY: delt
-      USE forces,             ONLY: dforce
-      USE orthogonalize,      ONLY: ortho
+      USE cp_interfaces,      ONLY: dforce, eigs, ortho, elec_fakekine, update_lambda
       USE constants,          ONLY: autoev
       USE io_global,          ONLY: ionode
-      USE wave_constrains,    ONLY: update_lambda
       USE uspp,               ONLY: nkb
       use reciprocal_vectors, only: gzero, gstart
       USE gvecw,              ONLY: ngw
@@ -322,7 +298,7 @@
       LOGICAL :: ttprint, tortho, tsde
       COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
       COMPLEX(DP)  ::  vkb(:,:)
-      REAL(DP), INTENT(INOUT) ::  fi(:,:)
+      REAL(DP), INTENT(INOUT) ::  fi(:)
       TYPE (boxdimensions), INTENT(IN)  ::  ht
       REAL (DP) ::  vpot(:,:)
       REAL(DP) :: ei(:,:)
@@ -367,9 +343,6 @@
       nx    = nupdwn(1)
       n_unp = nupdwn(1)
 
-      IF( nx /= SIZE( fi, 1 ) ) &
-        CALL errore(' runcp_forced_pairing ',' inconsistent occupation numbers ', 1)
-
       IF( nupdwn(1) /= (nupdwn(2) + 1) ) &
         CALL errore(' runcp_forced_pairing ',' inconsistent spin numbers ', 1)
 
@@ -389,8 +362,8 @@
 
       occup   = 0.D0
       occdown = 0.D0
-      occup(  1:nupdwn(1) )  = fi( 1:nupdwn(1), 1 )
-      occdown( 1:nupdwn(2) ) = fi( 1:nupdwn(2), 2 ) 
+      occup(  1:nupdwn(1) )  = fi( 1:nupdwn(1) )
+      occdown( 1:nupdwn(2) ) = fi( iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) 
 
 
         IF( MOD( n_unp, 2 ) == 0 ) nb =  n_unp - 1
@@ -398,8 +371,8 @@
 
         DO i = 1, nb, 2
           !
-          CALL dforce( i, c0, fi(:,1), c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
-          CALL dforce( i, c0, fi(:,1), c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
+          CALL dforce( i, c0, fi, c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
+          CALL dforce( i, c0, fi, c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
           !
           c2 = occup(i  )* (c2 + c4)
           c3 = occup(i+1)* (c3 + c5)
@@ -431,8 +404,8 @@
           !
           nb = n_unp - 1
           !
-          CALL dforce( nb, c0, fi(:,1), c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
-          CALL dforce( nb, c0, fi(:,2), c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
+          CALL dforce( nb, c0, fi, c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
+          CALL dforce( nb, c0, fi, c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
 
           c2 = occup(nb)* (c2 + c4)
 
@@ -450,7 +423,7 @@
         END IF
 
         !
-        CALL dforce( n_unp, c0, fi(:,1), c2, c3, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+        CALL dforce( n_unp, c0, fi, c2, c3, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
         intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp ) ) )
         IF ( gstart == 2 ) THEN
@@ -478,7 +451,7 @@
 
         IF( ttprint ) THEN
 
-            ALLOCATE( occsum( SIZE( fi, 1 ) ) )
+            ALLOCATE( occsum( nupdwn(1) ) )
             occsum(:) = occup(:) + occdown(:)
 
             CALL eigs( nupdwn(2), gam, tortho, occsum, ei(:,1) )
@@ -518,40 +491,42 @@
       IF( ierr /= 0 ) CALL errore(' runcp_force_pairing ', ' deallocating ', ierr)
 
       RETURN
-    END SUBROUTINE runcp_force_pairing
+    END SUBROUTINE runcp_force_pairing_x
 
 
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
-              fromscra, restart )
-     !
-     use wave_base, only: wave_steepest, wave_verlet
-     use control_flags, only: lwf, tsde
-     !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
-     use uspp, only : deeq, betae => vkb
-     use reciprocal_vectors, only : gstart
-     use electrons_base, only : n=>nbsp, ispin, f, nspin
-     use wannier_subroutines, only: ef_potential
-     use efield_module, only: dforce_efield, tefield, dforce_efield2, tefield2
+   SUBROUTINE runcp_uspp_x &
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
+      !
+      USE kinds,             ONLY: DP
+      use wave_base, only: wave_steepest, wave_verlet
+      use control_flags, only: lwf, tsde
+      !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
+      use uspp, only : deeq, betae => vkb
+      use reciprocal_vectors, only : gstart
+      use electrons_base, only : n=>nbsp, ispin, f, nspin
+      use wannier_subroutines, only: ef_potential
+      use efield_module, only: dforce_efield, tefield, dforce_efield2, tefield2
 
-     use gvecw, only: ngw
+      use gvecw, only: ngw
      !
      IMPLICIT NONE
      integer, intent(in) :: nfi
-     real(8) :: fccc, ccc
-     real(8) :: ema0bg(:), dt2bye
-     real(8) :: rhos(:,:)
-     real(8) :: bec(:,:)
-     complex(8) :: c0(:,:), cm(:,:)
+     real(DP) :: fccc, ccc
+     real(DP) :: ema0bg(:), dt2bye
+     real(DP) :: rhos(:,:)
+     real(DP) :: bec(:,:)
+     complex(DP) :: c0(:,:), cm(:,:)
      logical, optional, intent(in) :: fromscra
      logical, optional, intent(in) :: restart
      !
-     real(8) ::  verl1, verl2, verl3
-     real(8), allocatable:: emadt2(:)
-     real(8), allocatable:: emaver(:)
-     complex(8), allocatable:: c2(:), c3(:)
+     !
+     real(DP) ::  verl1, verl2, verl3
+     real(DP), allocatable:: emadt2(:)
+     real(DP), allocatable:: emaver(:)
+     complex(DP), allocatable:: c2(:), c3(:)
      integer :: i
      integer :: iflag
      logical :: ttsde
@@ -622,16 +597,17 @@
      deallocate(c2)
      deallocate(c3)
 !
-   END SUBROUTINE runcp_uspp
+   END SUBROUTINE runcp_uspp_x
 !
 !
 !=----------------------------------------------------------------------------=!
 !
 !
 
-   SUBROUTINE runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
-              fromscra, restart )
+   SUBROUTINE runcp_uspp_bgl_x &
+      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
      !
+      USE kinds,             ONLY: DP
      use wave_base,              only: my_wave_steepest, my_wave_verlet
      use control_flags,          only: lwf, tsde
      use uspp,                   only: deeq, betae => vkb
@@ -649,13 +625,15 @@
      !
      IMPLICIT NONE
      integer, intent(in) :: nfi
-     real(8) :: fccc, ccc
-     real(8) :: ema0bg(:), dt2bye
-     real(8) :: rhos(:,:)
-     real(8) :: bec(:,:)
-     complex(8) :: c0(:,:), cm(:,:)
+     real(DP) :: fccc, ccc
+     real(DP) :: ema0bg(:), dt2bye
+     real(DP) :: rhos(:,:)
+     real(DP) :: bec(:,:)
+     complex(DP) :: c0(:,:), cm(:,:)
      logical, optional, intent(in) :: fromscra
      logical, optional, intent(in) :: restart
+     !
+     !
      !
      real(8) ::  verl1, verl2, verl3
      real(8), allocatable:: emadt2(:)
@@ -794,14 +772,15 @@
      deallocate(c3)
 
 
-   END SUBROUTINE runcp_uspp_bgl
+   END SUBROUTINE runcp_uspp_bgl_x
 !
 !=----------------------------------------------------------------------------=!
 !=----------------------------------------------------------------------------=!
 
-    SUBROUTINE runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, &
-                                         intermed, fromscra, restart )
+    SUBROUTINE runcp_uspp_force_pairing_x  &
+       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, intermed, fromscra, restart )
   !
+      USE kinds,               ONLY : DP
       USE wave_base,           ONLY : wave_steepest, wave_verlet
       USE control_flags,       ONLY : lwf, tsde
   !   use uspp,                only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
@@ -820,27 +799,28 @@
   !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: nfi
-      REAL(8) :: fccc, ccc
-      REAL(8) :: ema0bg(:), dt2bye
-      REAL(8) :: rhos(:,:)
-      REAL(8) :: bec(:,:)
-      COMPLEX(8) :: c0(:,:), cm(:,:)
+      REAL(DP) :: fccc, ccc
+      REAL(DP) :: ema0bg(:), dt2bye
+      REAL(DP) :: rhos(:,:)
+      REAL(DP) :: bec(:,:)
+      COMPLEX(DP) :: c0(:,:), cm(:,:)
+      REAL(DP)    :: intermed
       LOGICAL, OPTIONAL, INTENT(in) :: fromscra
       LOGICAL, OPTIONAL, INTENT(in) :: restart
 !
-      REAL(8) ::  verl1, verl2, verl3
-      REAL(8), ALLOCATABLE:: emadt2(:)
-      REAL(8), ALLOCATABLE:: emaver(:)
-      COMPLEX(8), ALLOCATABLE:: c2(:), c3(:)
+      REAL(DP) ::  verl1, verl2, verl3
+      REAL(DP), ALLOCATABLE:: emadt2(:)
+      REAL(DP), ALLOCATABLE:: emaver(:)
+      COMPLEX(DP), ALLOCATABLE:: c2(:), c3(:)
       INTEGER :: i
       INTEGER :: iflag
       LOGICAL :: ttsde
 !
-       INTEGER    :: ierr,  nb, np_dw, is_dw, npair, n_unp, n_dwn, n_pair 
-       REAL(8)    :: intermed, ei_unp_mem, ei_unp_wfc
-       COMPLEX(8) ::  intermed3
-       INTEGER(8), ALLOCATABLE:: occ(:)
-       COMPLEX(8), ALLOCATABLE:: c4(:), c5(:)
+       INTEGER     :: ierr,  nb, np_dw, is_dw, npair, n_unp, n_dwn, n_pair 
+       REAL(DP)    :: ei_unp_mem, ei_unp_wfc
+       COMPLEX(DP) :: intermed3
+       REAL(DP),    ALLOCATABLE :: occ(:)
+       COMPLEX(DP), ALLOCATABLE :: c4(:), c5(:)
 !
 ! ... Controlling on sic applicability
 !
@@ -887,8 +867,8 @@
 !
        ALLOCATE( occ( nbspx ) )
 !
-       occ( 1:np_dw )  = 1
-       occ( nbspx   )  = 0
+       occ( 1:np_dw )  = 1.0d0
+       occ( nbspx   )  = 0.0d0
 !
 ! c0(dwn_paired) == c0(up_paired)
 ! cm(dwn_paired) == cm(up_paired)
@@ -991,10 +971,5 @@
       DEALLOCATE(c2, c4)
       DEALLOCATE(c3, c5)
 
-     END SUBROUTINE runcp_uspp_force_pairing
+     END SUBROUTINE runcp_uspp_force_pairing_x
 
-!=----------------------------------------------------------------------------=!
-
-!=----------------------------------------------------------------------------=!
-   END MODULE runcp_module
-!=----------------------------------------------------------------------------=!

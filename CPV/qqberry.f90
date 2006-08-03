@@ -16,21 +16,22 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
   use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-  use uspp_param, only: lmaxq, nqlc, kkbeta, nbeta, nbetam, nh, nhm, oldvan
-  use uspp, only: indv, lpx, lpl, ap,nhtolm
-  use atom, only: r, rab
+
+  use uspp_param,         only: lmaxq, nqlc, kkbeta, nbeta, nbetam, nh, nhm, oldvan
+  use uspp,               only: indv, lpx, lpl, ap,nhtolm
+  use atom,               only: r, rab
   use core
-  use gvecw, only: ngw
+  use gvecw,              only: ngw
   use reciprocal_vectors, only: mill_l
-  use  constants
-  use cvan, only: nvb
-  use  ions_base
-  use ions_base, only : nas => nax
-  use cell_base, only: a1, a2, a3
+  use constants
+  use cvan,               only: nvb
+  use ions_base
+  use ions_base,          only: nas => nax
+  use cell_base,          only: a1, a2, a3
   use reciprocal_vectors, only: ng0 => gstart, gx, g
-  use mp, only: mp_sum
-  use mp_global, only: intra_image_comm
-  use pseudopotential, only: fill_qrl
+  use mp,                 only: mp_sum
+  use mp_global,          only: intra_image_comm
+  use cp_interfaces,      only: fill_qrl
   
   implicit none
 

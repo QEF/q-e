@@ -26,6 +26,7 @@ CP_OBJS = \
 ../CPV/compute_scf.o \
 ../CPV/cp_emass.o \
 ../CPV/cp_fpmd.o \
+../CPV/cp_interfaces.o \
 ../CPV/cp_restart.o \
 ../CPV/cplib.o \
 ../CPV/cpr_mod.o \
@@ -78,6 +79,7 @@ CP_OBJS = \
 ../CPV/problem_size.o \
 ../CPV/pseudo_base.o \
 ../CPV/pseudopot.o \
+../CPV/pseudopot_sub.o \
 ../CPV/qmatrixd.o \
 ../CPV/qqberry.o \
 ../CPV/read_pseudo.o \

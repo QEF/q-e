@@ -11,70 +11,18 @@
 !     EMPTY STATES
 !
 
-! ---------------------------------------------------------------------- !
-      MODULE empty_states
-! ---------------------------------------------------------------------- !
 
-        USE kinds
-        USE io_files, ONLY: empty_file, emptyunit
-
-        IMPLICIT NONE
-        SAVE
-
-        PRIVATE
- 
-        INTEGER  :: max_emp = 0    !  maximum number of iterations
-        REAL(DP) :: ethr_emp       !  threshold for convergence
-
-        LOGICAL  :: prn_emp       = .FALSE.
-
-        CHARACTER(LEN=256) :: fileempty
-        LOGICAL  :: first = .TRUE.
-
-        PUBLIC :: empty_init , empty_print_info, readempty, empty_cp
-
-! ---------------------------------------------------------------------- !
-      CONTAINS
-! ---------------------------------------------------------------------- !
-
-        SUBROUTINE empty_print_info(iunit)
-          !
-          USE electrons_module, ONLY: n_emp
-          INTEGER, INTENT(IN) :: iunit
-          !
-          IF ( n_emp > 0 ) WRITE (iunit,620) n_emp, max_emp, ethr_emp
-620       FORMAT(3X,'Empty states minimization : states = ',I4, &
-             ' maxiter = ',I8,' ethr = ',D10.4)
-          !
-          RETURN
-        END SUBROUTINE empty_print_info
-
-!----------------------------------------------------------------------
-
-        SUBROUTINE empty_init( max_emp_ , ethr_emp_ )
-
-          INTEGER, INTENT(IN) :: max_emp_
-          REAL(DP), INTENT(IN) :: ethr_emp_
-
-          max_emp   = max_emp_
-          ethr_emp  = ethr_emp_
-
-          RETURN
-        END SUBROUTINE empty_init
-
-!
-!=----------------------------------------------------------------------------=!
-!
-
-      LOGICAL FUNCTION readempty( c_emp, ne )
+      LOGICAL FUNCTION readempty_x( c_emp, ne )
 
         ! ...   This subroutine reads empty states from unit emptyunit
 
+        USE kinds,              ONLY: DP
         USE mp_global,          ONLY: me_image, nproc_image, intra_image_comm
         USE io_global,          ONLY: stdout, ionode, ionode_id
         USE mp,                 ONLY: mp_bcast, mp_sum
         USE mp_wave,            ONLY: splitwf
         USE io_files,           ONLY: scradir
+        USE io_files,           ONLY: empty_file, emptyunit
         USE reciprocal_vectors, ONLY: ig_l2g
         USE gvecw,              ONLY: ngw
 
@@ -87,6 +35,8 @@
         INTEGER :: ierr, ig, i, iss
         INTEGER :: ngw_rd, ne_rd, ngw_l
         INTEGER :: ngw_g
+
+        CHARACTER(LEN=256) :: fileempty
 
         COMPLEX(DP), ALLOCATABLE :: ctmp(:)
         !
@@ -151,25 +101,27 @@
           CLOSE(emptyunit)
         END IF
 
-        readempty = exst
+        readempty_x = exst
         DEALLOCATE(ctmp)
 
         RETURN
-      END FUNCTION readempty
+      END FUNCTION readempty_x
 
 !
 !=----------------------------------------------------------------------------=!
 !
 
-      SUBROUTINE writeempty( c_emp, ne )
+      SUBROUTINE writeempty_x( c_emp, ne )
 
         ! ...   This subroutine writes empty states to unit emptyunit
 
         USE xml_io_base
+        USE kinds,              ONLY: DP
         USE mp_global,          ONLY: me_image, nproc_image, intra_image_comm
         USE mp_wave,            ONLY: mergewf
         USE mp,                 ONLY: mp_sum
         USE io_files,           ONLY: scradir
+        USE io_files,           ONLY: empty_file, emptyunit
         USE io_global,          ONLY: ionode, ionode_id, stdout
         USE reciprocal_vectors, ONLY: ig_l2g
         USE gvecw,              ONLY: ngw
@@ -180,6 +132,7 @@
         INTEGER :: ig, i, ngw_g, iss, ngw_l
         LOGICAL :: exst
         COMPLEX(DP), ALLOCATABLE :: ctmp(:)
+        CHARACTER(LEN=256) :: fileempty
         !
         ! ... Subroutine Body
         !
@@ -223,11 +176,12 @@
         DEALLOCATE(ctmp)
 
         RETURN
-      END SUBROUTINE writeempty
+      END SUBROUTINE writeempty_x
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE gram_empty( tortho, eigr, betae, bec_emp, bec_occ, nkbx, c_emp, c_occ, ngwx, n_emp, n_occ )
+   SUBROUTINE gram_empty_x  &
+      ( tortho, eigr, betae, bec_emp, bec_occ, nkbx, c_emp, c_occ, ngwx, n_emp, n_occ )
 !-----------------------------------------------------------------------
 !
 !     gram-schmidt orthogonalization of the empty states ( c_emp ) 
@@ -341,7 +295,7 @@
       DEALLOCATE( csc_occ )
       !
       RETURN
-   END SUBROUTINE gram_empty
+   END SUBROUTINE gram_empty_x
 
 
 
@@ -351,7 +305,7 @@
 !
 !
 
-   SUBROUTINE empty_cp ( nfi, c0, v )
+   SUBROUTINE empty_cp_x ( nfi, c0, v )
 
       USE kinds,                ONLY : DP
       USE control_flags,        ONLY : iprsta, tsde, program_name
@@ -361,19 +315,19 @@
       USE uspp,                 ONLY : vkb, nkb
       USE grid_dimensions,      ONLY : nnrx
       USE electrons_base,       ONLY : nbsp, nspin, f, nudx, iupdwn, nupdwn
-      USE electrons_module,     ONLY : iupdwn_emp, nupdwn_emp, n_emp, ei_emp
+      USE electrons_module,     ONLY : iupdwn_emp, nupdwn_emp, n_emp, ei_emp, &
+                                       max_emp, ethr_emp
       USE ions_base,            ONLY : nat, nsp
       USE gvecw,                ONLY : ngw
       USE orthogonalize_base,   ONLY : calphi, updatc
       USE reciprocal_vectors,   ONLY : gzero, gstart
-      USE wave_functions,       ONLY : wave_rand_init, elec_fakekine
       USE wave_base,            ONLY : wave_steepest, wave_verlet, frice
-      USE pseudopotential,      ONLY : nspnl
       USE cvan,                 ONLY : nvb
       USE cp_electronic_mass,   ONLY : emass
       USE time_step,            ONLY : delt
-      USE orthogonalize,        ONLY : ortho
       USE check_stop,           ONLY : check_stop_now
+      USE cp_interfaces,        ONLY : writeempty, readempty, gram_empty, ortho, &
+                                       wave_rand_init, elec_fakekine
       !
       IMPLICIT NONE
       !
@@ -646,10 +600,5 @@
 112   FORMAT(/,3X,'Empty states: convergence achieved')
 
       RETURN
-   END SUBROUTINE empty_cp
+   END SUBROUTINE empty_cp_x
 
-!
-!
-! ---------------------------------------------------------------------- !
-      END MODULE empty_states
-! ---------------------------------------------------------------------- !

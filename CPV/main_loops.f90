@@ -89,11 +89,11 @@ END SUBROUTINE neb_loop
 SUBROUTINE cpr_loop( nloop )
   !----------------------------------------------------------------------------
   !
-  USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : nat
-  USE control_flags, ONLY : lmetadyn, program_name
-  USE metadyn_base,  ONLY : metadyn_init
-  USE main_module,   ONLY : cpmain
+  USE kinds,           ONLY : DP
+  USE ions_base,       ONLY : nat
+  USE control_flags,   ONLY : lmetadyn, program_name
+  USE metadyn_base,    ONLY : metadyn_init
+  USE cp_interfaces,   ONLY : main_fpmd
   !
   IMPLICIT NONE
   !
@@ -134,7 +134,7 @@ SUBROUTINE cpr_loop( nloop )
            !
         ELSE
            !
-           CALL cpmain( tau, fion, etot )
+           CALL main_fpmd( tau, fion, etot )
            !
         END IF
         !

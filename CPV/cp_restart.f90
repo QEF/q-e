@@ -95,8 +95,8 @@ MODULE cp_restart
       REAL(DP),              INTENT(IN) :: vnhp(:)      ! 
       INTEGER,               INTENT(IN) :: nhpcl        ! 
       INTEGER,               INTENT(IN) :: nhpdim       ! 
-      REAL(DP),              INTENT(IN) :: occ0(:,:)    ! 
-      REAL(DP),              INTENT(IN) :: occm(:,:)    ! 
+      REAL(DP),              INTENT(IN) :: occ0(:)      !  occupations of electronic states
+      REAL(DP),              INTENT(IN) :: occm(:)      ! 
       REAL(DP),              INTENT(IN) :: lambda0(:,:,:) ! 
       REAL(DP),              INTENT(IN) :: lambdam(:,:,:) ! 
       REAL(DP),              INTENT(IN) :: xnhe0        ! 
@@ -116,8 +116,8 @@ MODULE cp_restart
       INTEGER               :: kunit, ib, ik_eff
       INTEGER               :: k1, k2, k3
       INTEGER               :: nk1, nk2, nk3
-      INTEGER               :: j, i, ispin, ig, nspin_wfc, iss_wfc
-      INTEGER               :: is, ia, isa, iss, ise, ik, ierr
+      INTEGER               :: j, i, iss, ig, nspin_wfc, iss_wfc
+      INTEGER               :: is, ia, isa, ik, ierr
       INTEGER,  ALLOCATABLE :: mill(:,:)
       INTEGER,  ALLOCATABLE :: ftmp(:,:)
       REAL(DP), ALLOCATABLE :: occ_(:)
@@ -228,13 +228,9 @@ MODULE cp_restart
       !
       ALLOCATE( ftmp( nudx, nspin ) )
       !
-      DO ispin = 1, nspin
+      DO iss = 1, nspin
          !
-         iss = iupdwn(ispin)
-         !
-         ise = iss + nupdwn(ispin) - 1
-         !
-         ftmp(1:nupdwn(ispin),ispin) = f(iss:ise)
+         ftmp( 1:nupdwn(iss), iss ) = f( iupdwn(iss) : iupdwn(iss) + nupdwn(iss) - 1 )
          !
       END DO
       !
@@ -538,21 +534,23 @@ MODULE cp_restart
             !
             CALL iotk_write_dat( iunpun, "WEIGHT", wk(ik) )
             !
-            ALLOCATE( occ_( SIZE( occ0, 1 ) ) )
+            ALLOCATE( occ_( nbnd ) )
             !
-            DO ispin = 1, nspin
+            DO iss = 1, nspin
                !
-               cspin = iotk_index( ispin )
+               cspin = iotk_index( iss )
                !
                CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
                CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), &
-                                    et(:,ispin), ATTR = attr  )
+                                    et(:,iss), ATTR = attr  )
                !
-               occ_ = occ0( :, ispin ) / wk(ik)
-               CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ), occ_(:) )
+               occ_ = 0.0d0
+               occ_ ( 1:nupdwn( iss ) ) = occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) / wk(ik)
+               CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ), occ_ )
 
-               occ_ = occm( :, ispin ) / wk(ik)
-               CALL iotk_write_dat( iunpun, "OCCM" // TRIM( cspin ), occ_(:) )
+               occ_ = 0.0d0
+               occ_ ( 1:nupdwn( iss ) ) = occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) / wk(ik)
+               CALL iotk_write_dat( iunpun, "OCCM" // TRIM( cspin ), occ_ )
                !
             END DO
             !
@@ -575,9 +573,9 @@ MODULE cp_restart
          CALL write_gk( iunout, ik, mill, filename )
          !
          !
-         DO ispin = 1, nspin
+         DO iss = 1, nspin
             ! 
-            ik_eff = ik + ( ispin - 1 ) * nk
+            ik_eff = ik + ( iss - 1 ) * nk
             ! 
             IF ( ionode ) THEN
                !
@@ -587,11 +585,11 @@ MODULE cp_restart
                   !
                ELSE
                   !
-                  filename = TRIM( wfc_filename( ".", 'evc', ik, ispin ) )
+                  filename = TRIM( wfc_filename( ".", 'evc', ik, iss ) )
                   !
                END IF
                !
-               CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ), &
+               CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (iss) ), &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                IF ( nspin == 1 ) THEN
@@ -600,19 +598,19 @@ MODULE cp_restart
                   !
                ELSE
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+                  filename = TRIM( wfc_filename( dirname, 'evc', ik, iss ) )
                   !
                END IF
                !
             END IF
             !
-            iss_wfc = ispin
+            iss_wfc = iss
             if( force_pairing ) iss_wfc = 1   ! only the WF for the first spin is allocated
             !
             ib = iupdwn( iss_wfc )
             !
-            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
-                            c02(:,ib:), ngwt, nbnd, ig_l2g, ngw, &
+            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
+                            c02(:,ib:ib+nupdwn(iss_wfc)-1), ngwt, nupdwn(iss_wfc), ig_l2g, ngw, &
                             filename, scalef )
             !
             IF ( ionode ) THEN
@@ -623,7 +621,7 @@ MODULE cp_restart
                   !
                ELSE
                   !
-                  filename = TRIM( wfc_filename( ".", 'evcm', ik, ispin ) )
+                  filename = TRIM( wfc_filename( ".", 'evcm', ik, iss ) )
                   !
                END IF
                !
@@ -636,7 +634,7 @@ MODULE cp_restart
                   !
                ELSE
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+                  filename = TRIM( wfc_filename( dirname, 'evcm', ik, iss ) )
                   !
                END IF
                !
@@ -645,8 +643,8 @@ MODULE cp_restart
             !
             ib = iupdwn(iss_wfc)
             !
-            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, ispin, nspin, &
-                            cm2(:,ib:SIZE(cm2,2)), ngwt, nbnd, ig_l2g, ngw, &
+            CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
+                            cm2(:,ib:ib+nupdwn(iss_wfc)-1), ngwt, nupdwn(iss_wfc), ig_l2g, ngw, &
                             filename, scalef )
             !
          END DO
@@ -656,9 +654,9 @@ MODULE cp_restart
          !
       END DO k_points_loop
       !
-      DO ispin = 1, nspin
+      DO iss = 1, nspin
          ! 
-         cspin = iotk_index( ispin )
+         cspin = iotk_index( iss )
          !
          IF ( ionode .AND. PRESENT( mat_z ) ) THEN
             ! 
@@ -668,7 +666,7 @@ MODULE cp_restart
                             filename, CREATE = .TRUE., BINARY = .TRUE. )
             !
             CALL iotk_write_dat( iunpun, &
-                                 "mat_z" // TRIM( cspin ), mat_z(:,:,ispin) )
+                                 "mat_z" // TRIM( cspin ), mat_z(:,:,iss) )
             !
          END IF
          !
@@ -743,7 +741,7 @@ MODULE cp_restart
       USE gvecs,                    ONLY : ngs, ngst
       USE gvecw,                    ONLY : ngw, ngwt, ecutw
       USE electrons_base,           ONLY : nspin, nbnd, nelt, nel, &
-                                           nupdwn, iupdwn
+                                           nupdwn, iupdwn, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, symm_type, &
                                            s_to_r, r_to_s
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
@@ -785,8 +783,8 @@ MODULE cp_restart
       REAL(DP),              INTENT(INOUT) :: vnhp(:)      !  
       INTEGER,               INTENT(INOUT) :: nhpcl        !  
       INTEGER,               INTENT(INOUT) :: nhpdim       !  
-      REAL(DP),              INTENT(INOUT) :: occ0(:,:)    !
-      REAL(DP),              INTENT(INOUT) :: occm(:,:)    !
+      REAL(DP),              INTENT(INOUT) :: occ0(:)      ! occupations
+      REAL(DP),              INTENT(INOUT) :: occm(:)      !
       REAL(DP),              INTENT(INOUT) :: lambda0(:,:,:) !
       REAL(DP),              INTENT(INOUT) :: lambdam(:,:,:) !
       REAL(DP),              INTENT(INOUT) :: b1(3)        !
@@ -807,7 +805,7 @@ MODULE cp_restart
       INTEGER              :: kunit
       INTEGER              :: k1, k2, k3
       INTEGER              :: nk1, nk2, nk3
-      INTEGER              :: i, j, ispin, ig, nspin_wfc, ierr, ik
+      INTEGER              :: i, j, iss, ig, nspin_wfc, ierr, ik
       REAL(DP)             :: omega, htm1(3,3), hinv(3,3), scalef
       LOGICAL              :: found
       LOGICAL              :: tread_cm
@@ -824,7 +822,7 @@ MODULE cp_restart
       REAL(DP)              :: alat_, a1_(3), a2_(3), a3_(3)
       REAL(DP)              :: pmass_, zv_ 
       REAL(DP)              :: celldm_(6)
-      INTEGER               :: ispin_, nspin_, ngwt_, nbnd_ 
+      INTEGER               :: iss_, nspin_, ngwt_, nbnd_ 
       REAL(DP)              :: nelec_
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_
@@ -1159,44 +1157,47 @@ MODULE cp_restart
             !
          END IF
          !
-         DO ispin = 1, nspin
+         DO iss = 1, nspin
             !
-            cspin = iotk_index( ispin )
+            cspin = iotk_index( iss )
             !
             tread_cm = .TRUE.
             !
-            ik_eff = ik + ( ispin - 1 ) * nk
+            ik_eff = ik + ( iss - 1 ) * nk
             !
             IF ( ionode ) THEN
                !
-               ALLOCATE( occ_ ( nbnd_ ) )
+               ALLOCATE( occ_ ( MAX( nudx , nbnd_ ) ) )
+               !
+               occ_ = 0.0d0
                !
                CALL iotk_scan_dat( iunpun, &
-                                   "OCC" // TRIM( cspin ), occ_ ,  &
+                                   "OCC" // TRIM( cspin ), occ_ ( 1:nbnd_ ),  &
                                    FOUND = found, IERR = ierr )
-               !
-               occ0( 1:nbnd, ispin ) = occ_ ( 1:nbnd )
                !
                IF( ierr /= 0 ) THEN
                   attr = "error reading OCC"
                   GOTO 100
                END IF
                !
-               occ0(:,ispin) = occ0(:,ispin) * wk_
+               occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
+               !
+               occ_ = 0.0d0
                !
                CALL iotk_scan_dat( iunpun, &
-                                   "OCCM" // TRIM( cspin ), occ_ , &
+                                   "OCCM" // TRIM( cspin ), occ_ ( 1:nbnd_ ) , &
                                    FOUND = found, IERR = ierr )
                !
                IF ( .NOT. found ) THEN
                   !
-                  occm(:,ispin) = occ0(:,ispin)
+                  occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = &
+                      occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 )
                   !
                   tread_cm = .FALSE.
                   !
                ELSE
                   !
-                  occm( 1:nbnd, ispin ) = occ_ ( 1:nbnd ) * wk_
+                  occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
                   !
                END IF
                !
@@ -1214,19 +1215,19 @@ MODULE cp_restart
                   !
                ELSE
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+                  filename = TRIM( wfc_filename( dirname, 'evc', ik, iss ) )
                   !
                END IF
                !
             END IF
             !
-            IF( .NOT. ( ispin > 1 .AND. force_pairing ) ) THEN
+            IF( .NOT. ( iss > 1 .AND. force_pairing ) ) THEN
                !
                ! Only WF with spin 1 are needed when force_pairing is active
                !
-               ib = iupdwn(ispin)
+               ib = iupdwn(iss)
                !
-               CALL read_wfc( iunout, ik_eff , nk, kunit, ispin_, nspin_, &
+               CALL read_wfc( iunout, ik_eff , nk, kunit, iss_, nspin_, &
                               c02(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
                               filename, scalef_ )
                !
@@ -1243,19 +1244,19 @@ MODULE cp_restart
                   ELSE
                      !
                      filename = TRIM( wfc_filename( dirname, &
-                                                    'evcm', ik, ispin ) )
+                                                    'evcm', ik, iss ) )
                      !
                   END IF
                   !
                END IF
                !
-               IF( .NOT. ( ispin > 1 .AND. force_pairing ) ) THEN
+               IF( .NOT. ( iss > 1 .AND. force_pairing ) ) THEN
                   !
                   ! Only WF with spin 1 are needed when force_pairing is active
                   !
-                  ib = iupdwn(ispin)
+                  ib = iupdwn(iss)
                   !
-                  CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
+                  CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_, &
                                  cm2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
                                  filename, scalef_ )
                   !
@@ -1274,11 +1275,11 @@ MODULE cp_restart
          !
       END DO k_points_loop
       !
-      DO ispin = 1, nspin
+      DO iss = 1, nspin
          !
          IF ( ionode .AND. PRESENT( mat_z ) ) &
             CALL iotk_scan_dat( iunpun, "mat_z" // &
-                              & TRIM( iotk_index( ispin ) ), mat_z(:,:,ispin) )
+                              & TRIM( iotk_index( iss ) ), mat_z(:,:,iss) )
          !
       END DO
       !
@@ -1330,8 +1331,8 @@ MODULE cp_restart
       !
       CALL mp_bcast( kunit, ionode_id, intra_image_comm )
 
-      CALL mp_bcast( occ0(:,:), ionode_id, intra_image_comm )
-      CALL mp_bcast( occm(:,:), ionode_id, intra_image_comm )
+      CALL mp_bcast( occ0, ionode_id, intra_image_comm )
+      CALL mp_bcast( occm, ionode_id, intra_image_comm )
       !
       IF ( PRESENT( mat_z ) ) &
          CALL mp_bcast( mat_z(:,:,:), ionode_id, intra_image_comm )
@@ -1362,9 +1363,9 @@ MODULE cp_restart
          !
       END IF
       !
-      DO ispin = 1, nspin
+      DO iss = 1, nspin
          DO ib = 1, SIZE( lambda0, 2 )
-            CALL mp_bcast( lambda0( :, ib, ispin), ionode_id, intra_image_comm )
+            CALL mp_bcast( lambda0( :, ib, iss), ionode_id, intra_image_comm )
          END DO
       END DO
       !
@@ -1384,9 +1385,9 @@ MODULE cp_restart
          !
       END IF
       !
-      DO ispin = 1, nspin
+      DO iss = 1, nspin
          DO ib = 1, SIZE( lambda0, 2 )
-            CALL mp_bcast( lambdam( :, ib, ispin), ionode_id, intra_image_comm )
+            CALL mp_bcast( lambdam( :, ib, iss), ionode_id, intra_image_comm )
          END DO
       END DO
 
@@ -1411,7 +1412,7 @@ MODULE cp_restart
     END SUBROUTINE cp_readfile
     ! 
     !------------------------------------------------------------------------
-    SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, ispin, nspin, c2, c4, tag )
+    SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, iss, nspin, c2, c4, tag )
       !------------------------------------------------------------------------
       !
       USE electrons_base,     ONLY : nbnd, iupdwn
@@ -1421,18 +1422,18 @@ MODULE cp_restart
       !
       INTEGER,               INTENT(IN)  :: ndr
       CHARACTER(LEN=*),      INTENT(IN)  :: scradir
-      INTEGER,               INTENT(IN)  :: ik, ispin, nk, nspin
+      INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
       CHARACTER,             INTENT(IN)  :: tag
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c2(:,:)
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c4(:,:,:,:)
       !
       CHARACTER(LEN=256) :: dirname, filename
-      INTEGER            :: ik_eff, ib, kunit, ispin_, nspin_, ngwt_, nbnd_
+      INTEGER            :: ik_eff, ib, kunit, iss_, nspin_, ngwt_, nbnd_
       REAL(DP)           :: scalef
       !
       kunit = 1
       !
-      ik_eff = ik + ( ispin - 1 ) * nk
+      ik_eff = ik + ( iss - 1 ) * nk
       !
       dirname = restart_dir( scradir, ndr )
       !
@@ -1444,7 +1445,7 @@ MODULE cp_restart
             !
          ELSE
             !
-            filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+            filename = TRIM( wfc_filename( dirname, 'evc', ik, iss ) )
             !
          END IF
          !
@@ -1456,7 +1457,7 @@ MODULE cp_restart
             !
          ELSE
             !
-            filename = TRIM( wfc_filename( dirname, 'evcm', ik, ispin ) )
+            filename = TRIM( wfc_filename( dirname, 'evcm', ik, iss ) )
             !
          END IF
          !
@@ -1464,15 +1465,15 @@ MODULE cp_restart
       !
       IF ( PRESENT( c4 ) ) THEN
          !
-         CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_,  &
-                        c4(:,:,ik,ispin), ngwt_, nbnd_, ig_l2g, &
+         CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_,  &
+                        c4(:,:,ik,iss), ngwt_, nbnd_, ig_l2g, &
                         ngw, filename, scalef )
          !
       ELSE IF ( PRESENT( c2 ) ) THEN
          !
-         ib = iupdwn(ispin)
+         ib = iupdwn(iss)
          !
-         CALL read_wfc( iunout, ik_eff, nk, kunit, ispin_, nspin_, &
+         CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_, &
                         c2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw,  &
                         filename, scalef )
          !

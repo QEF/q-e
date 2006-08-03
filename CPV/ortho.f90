@@ -7,99 +7,64 @@
 !
 #include "f_defs.h"
 
-!=----------------------------------------------------------------------------=!
-   MODULE orthogonalize
-!=----------------------------------------------------------------------------=!
-
-       USE kinds, ONLY: DP
-
-       IMPLICIT NONE
-
-       SAVE
-
-       PRIVATE
-
-       INTERFACE ortho
-         MODULE PROCEDURE ortho_s, ortho_m, ortho_cp
-       END INTERFACE
-
-       PUBLIC :: ortho
-
-!=----------------------------------------------------------------------------=!
-   CONTAINS
-!=----------------------------------------------------------------------------=!
-
-
-   SUBROUTINE ortho_s( c0, cp, phi, n, nss, istart, success )
-
-      USE control_flags,      ONLY: ortho_eps, ortho_max
-      USE orthogonalize_base, ONLY: updatc, calphi
-
-      INTEGER,     INTENT(IN)    :: n, nss, istart
-      COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:), phi(:,:)
-      LOGICAL,     INTENT(OUT), OPTIONAL :: success
-      !
-      INTEGER     :: iter
-      REAL(DP)    :: diff, dum(2,2)
-      COMPLEX(DP) :: cdum(2,2)
-      REAL(DP),    ALLOCATABLE :: x0(:,:)
-
-      ! ...   Scale wave functions
-
-      ALLOCATE( x0( nss, nss ) )
-
-      CALL ortho_gamma( 1, cp, SIZE(cp,1), phi, dum, dum, 2, dum, dum, &
-                           x0, nss, diff, iter, n, nss, istart )
-
-      CALL updatc( 1.0d0, n, x0, nss, phi, SIZE(phi,1), dum, 1, dum, dum, cp, nss, istart )
-
-      DEALLOCATE( x0 )
-
-      IF( PRESENT( success ) ) THEN
-             success = .TRUE.
-      END IF
-      !
-      IF ( iter > ortho_max ) THEN
-         IF( PRESENT( success ) ) THEN
-            success = .FALSE.
-         ELSE
-            call errore(' ortho ','  itermax ',iter)
-         END IF
-      END IF
-      !
-      RETURN
-      !
-   END SUBROUTINE ortho_s
 
 
 !=----------------------------------------------------------------------------=!
-
    SUBROUTINE ortho_m( c0, cp, nupdwn, iupdwn, nspin )
+!=----------------------------------------------------------------------------=!
       !
+      USE kinds,              ONLY: DP
       USE control_flags,      ONLY: force_pairing
-      USE orthogonalize_base, ONLY: calphi
       USE cp_main_variables,  ONLY: ema0bg
+      USE control_flags,      ONLY: ortho_eps, ortho_max
+      USE orthogonalize_base, ONLY: calphi, updatc
       !
+      IMPLICIT NONE
+
       INTEGER,     INTENT(IN)    :: nupdwn(:), iupdwn(:), nspin
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
       !
       COMPLEX(DP), ALLOCATABLE :: phi(:,:)
-      INTEGER :: iss, nss, iwfc, nwfc, info
-      REAL(DP)    :: dum(2,2)
-      COMPLEX(DP) :: cdum(2,2)
+      REAL(DP),    ALLOCATABLE :: x0(:,:)
+      INTEGER                  :: iss, nss, iwfc, nwfc, info
+      INTEGER                  :: iter
+      INTEGER                  :: ngwx, nx
+      REAL(DP)                 :: diff
+      REAL(DP)                 :: dum(2,2)
+      COMPLEX(DP)              :: cdum(2,2)
       !
       CALL start_clock( 'ortho' )  
 
-      ALLOCATE( phi( SIZE( c0, 1 ), SIZE( c0, 2 ) ), STAT = info )
+      nx   = SIZE( c0, 2 )
+      ngwx = SIZE( c0, 1 )
+
+      ALLOCATE( phi( ngwx, nx ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating phi ', 3 )
 
-      CALL calphi( c0, SIZE(c0,1), dum, 1, cdum, phi, SIZE(c0,2), ema0bg )
+      CALL calphi( c0, ngwx, dum, 1, cdum, phi, nx, ema0bg )
       !
       nss = nspin
       IF( force_pairing ) nss = 1
       !
       DO iss = 1, nss
-          CALL ortho_s( c0, cp, phi, SIZE(c0,2), nupdwn(iss), iupdwn(iss) )
+          !
+          nwfc = nupdwn(iss)
+          iwfc = iupdwn(iss)
+          !
+          ALLOCATE( x0( nwfc, nwfc ), STAT = info )
+          IF( info /= 0 ) CALL errore( ' ortho ', ' allocating x0 ', 4 )
+          !
+          CALL ortho_gamma( 1, cp, ngwx, phi, dum, dum, 2, dum, dum, &
+                            x0, nwfc, diff, iter, nx, nwfc, iwfc )
+          !
+          IF ( iter > ortho_max ) THEN
+             call errore(' ortho ','  itermax ',iter)
+          END IF
+          !
+          CALL updatc( 1.0d0, nx, x0, nwfc, phi, ngwx, dum, 1, dum, dum, cp, nwfc, iwfc )
+          !
+          DEALLOCATE( x0 )
+          !
       END DO
       !
       IF( force_pairing ) cp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp(:,1:nupdwn(2))
@@ -112,15 +77,17 @@
    END SUBROUTINE ortho_m
 
 
+
+
 !=----------------------------------------------------------------------------=!
-
-
    SUBROUTINE ortho_gamma( iopt, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
                            x0, nx, diff, iter, n, nss, istart )
+!=----------------------------------------------------------------------------=!
       !
       ! 
       ! 
 
+      USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate, &
                                     ortho_alt_iterate, updatc, diagonalize_rho
 
@@ -215,12 +182,12 @@
    END SUBROUTINE ortho_gamma
 
 
+
+
 !=----------------------------------------------------------------------------=!
-
-
-
    SUBROUTINE ortho_cp( eigr, cp, phi, ngwx, x0, nudx, diff, iter, ccc, &
                         bephi, becp, nbsp, nspin, nupdwn, iupdwn )
+!=----------------------------------------------------------------------------=!
       !
       !     input = cp (non-orthonormal), beta
       !     input = phi |phi>=s'|c0>
@@ -357,7 +324,3 @@
       RETURN
       END SUBROUTINE ortho_cp
 
-
-!=----------------------------------------------------------------------------=!
-   END MODULE orthogonalize
-!=----------------------------------------------------------------------------=!

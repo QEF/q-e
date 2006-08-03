@@ -21,7 +21,7 @@
                                          nr1sx, nr2sx, nr3sx, nnrs => nnrsx
       use cell_base,              only : tpiba2
       USE metagga,                ONLY : kedtaus
-      USE fft_module,             ONLY : fwfft, invfft
+      USE cp_interfaces,          ONLY : fwfft, invfft
 !
       implicit none
 !
@@ -83,7 +83,7 @@
       use dener
       use metagga, ONLY : kedtaur, kedtaus, kedtaug, crosstaus, gradwfc, &
                           dkedtaus
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
 #if defined __BGL
       USE task_groups, ONLY: strd
       USE mp_global,   ONLY: nogrp
@@ -282,7 +282,7 @@
       use mp,      ONLY : mp_sum
       use mp_global, ONLY : intra_image_comm
       use metagga, ONLY : kedtaur, kedtaug, kedtaus, dkedtaus
-      USE fft_module, ONLY: fwfft, invfft
+      USE cp_interfaces, ONLY: fwfft, invfft
 !
       implicit none
 !

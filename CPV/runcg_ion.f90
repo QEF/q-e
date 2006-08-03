@@ -30,7 +30,7 @@
 !  BEGIN manual
 
    SUBROUTINE runcg_ion(nfi, tortho, tprint, rhoe, atomsp, atoms0, atomsm, &
-      bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+      bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, fi, ei, &
       vpot, doions, edft, etol, ftol, maxiter, sdthr, maxnstep )
 
 !  this routine computes the equilibrium ionic positions via conjugate gradient
@@ -39,7 +39,7 @@
       ! ... declare modules
 
       USE energies, ONLY: dft_energy_type, print_energies
-      USE wave_functions, ONLY: update_wave_functions
+      USE cp_interfaces, ONLY: update_wave_functions, printout
       USE wave_base, ONLY: dotp
       USE check_stop, ONLY: check_stop_now
       USE io_global, ONLY: ionode
@@ -48,7 +48,6 @@
       USE wave_types, ONLY: wave_descriptor
       USE time_step, ONLY: delt
       USE atoms_type_module, ONLY: atoms_type
-      USE print_out_module
       USE parameters, ONLY: nacx
       USE runsd_module, ONLY: runsd
 
@@ -73,7 +72,7 @@
       COMPLEX(DP) :: ei3(:,:)
       COMPLEX(DP) :: sfac(:,:)
       TYPE (boxdimensions), INTENT(INOUT) ::  ht
-      REAL(DP)  :: occ(:,:)
+      REAL(DP)  :: fi(:)
       TYPE (dft_energy_type) :: edft
 
       REAL(DP)    :: ei(:,:)
@@ -154,7 +153,7 @@
       old_clock_value = s1
 
       CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, bec, becdr, eigr, vkb, &
-                 ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, vpot, &
+                 ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, fi, ei, vpot, &
                  doions, edft, maxnstep, sdthr )
 
       IF( ionode .AND. cg_prn ) THEN
@@ -181,7 +180,7 @@
         IF(ionode) &
           WRITE( stdout,fmt="(/,8X,'cgion: iter',I5,' line minimization along gradient starting')") iter
 
-        CALL cglinmin(fret, edft, cp, c0, cm, cdesc, occ, ei, vpot, rhoe, xi, atomsp, atoms0, &
+        CALL cglinmin(fret, edft, cp, c0, cm, cdesc, fi, ei, vpot, rhoe, xi, atomsp, atoms0, &
           ht, bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, maxnstep, sdthr, displ)
 
         IF( tbad ) THEN
@@ -197,7 +196,7 @@
           displ = displ / 2.0d0
 
           CALL runsd(ttortho, ttprint, ttforce, rhoe, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
-                     sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, vpot, doions, edft, maxnstep, sdthr )
+                     sfac, c0, cm, cp, cdesc, tcel, ht, fi, ei, vpot, doions, edft, maxnstep, sdthr )
         
 !          tbad = .TRUE.
 
@@ -284,7 +283,7 @@
 ! ---------------------------------------------------------------------- !
 ! ---------------------------------------------------------------------- !
 
-      SUBROUTINE cglinmin(emin, edft, cp, c0, cm, cdesc, occ, ei, vpot, &
+      SUBROUTINE cglinmin(emin, edft, cp, c0, cm, cdesc, fi, ei, vpot, &
         rhoe, hacca, atomsp, atoms0, ht, bec, becdr, eigr, vkb, ei1, ei2, ei3, sfac, &
         maxnstep, sdthr, displ)
 
@@ -292,7 +291,7 @@
 
         USE wave_types, ONLY: wave_descriptor
         USE energies, ONLY: dft_energy_type
-        USE wave_functions, ONLY: update_wave_functions
+        USE cp_interfaces, ONLY: update_wave_functions
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
         USE cell_module, ONLY: boxdimensions, r_to_s
@@ -318,7 +317,7 @@
         COMPLEX(DP) :: ei3(:,:)
         COMPLEX(DP) :: sfac(:,:)
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(DP)  :: occ(:,:)
+        REAL(DP)  :: fi(:)
         TYPE (dft_energy_type) :: edft
         REAL (DP) ::  hacca(:,:)
         REAL (DP), INTENT(in) ::  vpot(:,:)
@@ -541,7 +540,7 @@
          ! ...  positions (atomsp)
 
            CALL runsd(ttortho, ttprint, ttforce, rhoe, atomsp, bec, becdr, eigr, &
-                      vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, occ, ei, &
+                      vkb, ei1, ei2, ei3, sfac, c0, cm, cp, cdesc, tcel, ht, fi, ei, &
                       vpot, doions, edft, maxnstep, sdthr )
 
            cgenergy = edft%etot
