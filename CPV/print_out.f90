@@ -315,14 +315,15 @@
       LOGICAL             :: tprint
       type (boxdimensions), intent(in) :: ht
       TYPE (dft_energy_type) :: edft
+      REAL(DP) :: ekinc, ekcell
 !
 ! ...
       INTEGER   :: is, ia, k, i, j, ik, isa, iunit, nfill, nempt
       REAL(DP) :: tau(3), vel(3), stress_tensor(3,3), temps( atoms%nsp )
       REAL(DP) :: tempp, econs, ettt, out_press, ekinpr, enosee
-      REAL(DP) :: ekinc, ekcell, epot
       REAL(DP) :: enthal, totalmass, enoseh, temphc, enosep
       REAL(DP) :: h(3,3)
+      REAL(DP) :: epot
       !!REAL(DP) :: dis( nsp )
       LOGICAL   :: tfile, topen, tsic, tfirst
       CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )

@@ -1101,6 +1101,7 @@
          LOGICAL             :: tprint
          type (boxdimensions), intent(in) :: ht
          TYPE (dft_energy_type) :: edft
+         REAL(DP) :: ekinc, ekcell
       END SUBROUTINE
    END INTERFACE
 
