@@ -33,7 +33,7 @@ MODULE vibrations
   !               frozen atoms are not displaced
   !
 #ifdef DFT_CP
-  COMPLEX (KIND=DP), ALLOCATABLE :: ref_c0(:,:,:)
+  COMPLEX (KIND=DP), ALLOCATABLE :: ref_c0(:,:)
   REAL    (KIND=DP), ALLOCATABLE :: ref_lambda(:,:,:)
 #endif
 
@@ -130,7 +130,6 @@ CONTAINS
     USE cp_main_variables,    ONLY : irb, eigrb, rhor, rhog, rhos, acc
     USE cp_main_variables,    ONLY : lambdap, eigr, rhopr
     USE electrons_base,       ONLY : nbsp, nbspx, nel, f, nudx, nspin
-    USE electrons_module,     ONLY : cp_eigs
     USE ions_positions,       ONLY : tau0, taus, tausm, vels, velsm
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     USE energies,             ONLY : etot, ekin, ekincm
@@ -167,7 +166,7 @@ CONTAINS
     ! (1) Allocate arrays
     !
 #ifdef DFT_CP
-    ALLOCATE( ref_c0     ( ngw,   nbspx, 1    ) )
+    ALLOCATE( ref_c0     ( ngw,   nbspx       ) )
     ALLOCATE( ref_lambda ( nudx,  nudx, nspin ) )
 #endif
     ALLOCATE( ref_tau    ( 3,     natx        ) )
@@ -278,7 +277,7 @@ CONTAINS
 #ifdef DFT_CP
        IF ( tcg ) THEN
           !
-          CALL writefile( ndw, h, hold ,nfi, c0(:,:,1), c0old, taus, tausm, &
+          CALL writefile( ndw, h, hold ,nfi, c0(:,:), c0old, taus, tausm, &
                vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,    &
                vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav,&
@@ -286,7 +285,7 @@ CONTAINS
           !
        ELSE
           !
-          CALL writefile( ndw, h, hold, nfi, c0(:,:,1), cm(:,:,1), taus,  &
+          CALL writefile( ndw, h, hold, nfi, c0(:,:), cm(:,:), taus,  &
                tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
                xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&

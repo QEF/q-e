@@ -89,6 +89,7 @@ PW_OBJS = \
 ../PW/ewald_dipole.o \
 ../PW/exx.o \
 ../PW/fftw.o \
+../PW/find_group.o \
 ../PW/force_cc.o \
 ../PW/force_corr.o \
 ../PW/force_ew.o \

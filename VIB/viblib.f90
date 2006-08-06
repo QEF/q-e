@@ -166,7 +166,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   rhog           = 0.0
   rhos           = 0.0
   !
-  CALL rhoofr(nfi,c0(:,:,1),irb,eigrb,bec,becsum,rhor,rhog,rhos,enl,ekin)
+  CALL rhoofr(nfi,c0(:,:),irb,eigrb,bec,becsum,rhor,rhog,rhos,enl,ekin)
 #endif
 
 #ifdef DFT_PW
@@ -456,7 +456,7 @@ subroutine set_guess_wfc ( disp_sign )
      ! ... use reference wavefunction as initial guess
      !
 #ifdef DFT_CP
-     c0(:,:,1) = ref_c0(:,:,1)
+     c0(:,:) = ref_c0(:,:)
 #endif
      !
 #ifdef DFT_PW
@@ -497,7 +497,7 @@ subroutine set_guess_wfc ( disp_sign )
      ! ... at dispalcement at the negative direction
      !
 #ifdef DFT_CP
-     c0(:,:,1) = 2*ref_c0(:,:,1)-c0(:,:,1) 
+     c0(:,:) = 2*ref_c0(:,:)-c0(:,:) 
 #endif
 #ifdef DFT_PW
      history = 2
