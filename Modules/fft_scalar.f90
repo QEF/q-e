@@ -485,14 +485,7 @@
 
 #elif defined __SUN
 
-       write (6,*) "Warning:   FFTs have been heavily restructured, those using sunperf are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cft_1z','sunperf untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cft_1z','sunperf untested, please test',1)
-
        CALL zffti (nz, tablez (1, icurrent) )
-
 
 #elif defined __FFTMKL8
 
@@ -1410,12 +1403,6 @@
                      table(1,icurrent), work(1), isys)
 
 #elif defined __SUN
-
-       write (6,*) "Warning:   FFTs have been heavily restructured, those using sunperf are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cfft3d','sunperf untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cfft3d','sunperf untested, please test',1)
 
        CALL zfft3i ( nx, ny, nz, table (1,icurrent) )
 
