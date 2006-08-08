@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,10 +12,10 @@ SUBROUTINE print_clock_pw()
    ! ... this routine prints out the clocks at the end of the run
    ! ... it tries to construct the calling tree of the program.
    !
-   USE io_global,     ONLY : stdout
-   USE control_flags, ONLY : isolve, use_para_diago
-   USE force_mod,     ONLY : lforce, lstres
-   USE mp_global,     ONLY : mpime, root
+   USE io_global,        ONLY : stdout
+   USE control_flags,    ONLY : isolve
+   USE force_mod,        ONLY : lforce, lstres
+   USE mp_global,        ONLY : mpime, root
    !
    IMPLICIT NONE
    !
@@ -87,11 +87,14 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'h_psi' )
       CALL print_clock( 'g_psi' )
       CALL print_clock( 'overlap' )
-      CALL print_clock( 'cdiaghg' )
+      CALL print_clock( 'diagh' )
+      CALL print_clock( 'diaghg' )
+      CALL print_clock( 'choldc' )
+      CALL print_clock( 'inversion' )
+      CALL print_clock( 'paragemm' )
+      !
       CALL print_clock( 'update' )
       CALL print_clock( 'last' )
-      !
-      IF ( use_para_diago ) CALL print_clock( 'cgramg1' )
       !
       WRITE( stdout, * )
       !
@@ -122,7 +125,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 's_psi' )
       CALL print_clock( 'g_psi' )
       CALL print_clock( 'cdiaghg' )
-      CALL print_clock( 'cgramg1' )
+      CALL print_clock( 'cholortho' )
       !
       WRITE( stdout, * )
       !

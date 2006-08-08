@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,138 +12,182 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !----------------------------------------------------------------------------
   !
   ! ... calculates eigenvalues and eigenvectors of the generalized problem
-  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix .
+  ! ... Hv=eSv, with H symmetric matrix, S overlap matrix.
   ! ... On output both matrix are unchanged
-  ! ... Uses LAPACK routines
   !
-  USE kinds,     ONLY : DP
-  USE mp,        ONLY : mp_bcast
-  USE mp_global, ONLY : npool, me_pool, root_pool, intra_pool_comm, my_image_id
+  ! ... LAPACK version - uses both DSYGV and DSYGVX
+  ! ... the parallel version is also implemented
+  !
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : use_para_diago, para_diago_dim
+  USE parallel_toolkit, ONLY : diagonalize
+  USE mp,               ONLY : mp_bcast
+  USE mp_global,        ONLY : npool, nproc_pool, me_pool, &
+                               root_pool, intra_pool_comm
   !
   IMPLICIT NONE
   !
-  ! ... on INPUT
-  !
-  INTEGER :: n, m, ldh
+  INTEGER, INTENT(IN) :: n, m, ldh
     ! dimension of the matrix to be diagonalized
     ! number of eigenstates to be calculated
     ! leading dimension of h, as declared in the calling pgm unit
-  REAL(DP) :: h(ldh,n)
+  REAL(DP), INTENT(IN) :: h(ldh,n), s(ldh,n)
     ! matrix to be diagonalized
-  REAL(DP) :: s(ldh,n)
     ! overlap matrix
   !
-  ! ... on OUTPUT
-  !
-  REAL(DP) :: e(n)
+  REAL(DP), INTENT(OUT) :: e(n)
     ! eigenvalues
-  REAL(DP) :: v(ldh,m)
+  REAL(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
   !
-  ! ... LOCAL variables
-  !
-  INTEGER                    :: lwork, nb, ILAENV, mm, info
-    ! ILAENV returns optimal block size "nb"
+  INTEGER               :: i, j, lwork, nb, mm, info
     ! mm = number of calculated eigenvectors
-  EXTERNAL                      ILAENV
-  INTEGER, ALLOCATABLE       :: iwork(:), ifail(:)
-  REAL(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:),  work(:)
-  LOGICAL                    :: all_eigenvalues
+  INTEGER,  ALLOCATABLE :: iwork(:), ifail(:)
+  REAL(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:), vdum(:,:), work(:)
+  LOGICAL               :: all_eigenvalues
+  INTEGER, EXTERNAL     :: ILAENV
+    ! ILAENV returns optimal block size "nb"
   !
   !
-  CALL start_clock( 'cdiaghg' )
+  CALL start_clock( 'diaghg' )
   !
-  all_eigenvalues = ( m == n )
-  !
-  ! ... check for optimal block size
-  !
-  nb = ILAENV( 1, 'DSYTRD', 'U', n, -1, -1, -1 )
-  !
-  IF ( nb < 1 .OR. nb >= n ) THEN
-     !
-     lwork = 8 * n
-     !
-  ELSE
-     !
-     lwork = ( nb + 3 ) * n
-     !
-  END IF
-  !
-  ! ... allocate workspace
-  !
-  ALLOCATE( work( lwork ) )    
-  ALLOCATE( sdum( ldh, n ) )
-  !    
-  IF ( .NOT. all_eigenvalues ) THEN
-     !
-     ALLOCATE( hdum( ldh, n ) )    
-     ALLOCATE( iwork( 5*n ) )    
-     ALLOCATE( ifail( n ) )    
-     !
-  END IF
+  ALLOCATE( sdum( n, n ) )
   !
   ! ... input s and (see below) h are copied so that they are not destroyed
   !
-  sdum = s
+  sdum(:,:) = s(1:n,:)
   !
-  ! ... only the first processor diagonalize the matrix
-  !
-  IF ( me_pool == root_pool ) THEN
+  IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     IF ( all_eigenvalues ) THEN
+     PRINT *, me_pool, "USING PARALLEL rdiaghg"
+     !
+     ALLOCATE( hdum( n, n ), vdum( n, n ) )
+     !
+     hdum(:,:) = h(1:n,:)
+     !
+     CALL start_clock( 'choldc' )
+     !
+     ! ... Cholesky decomposition of sdum ( L is stored in sdum )
+     !
+     CALL para_dcholdc( n, sdum, n, intra_pool_comm )
+     !
+     CALL stop_clock( 'choldc' )
+     !
+     ! ... L is inverted ( sdum = L^1 )
+     !
+     CALL start_clock( 'inversion' )
+     !
+     CALL DTRTRI( 'L', 'N', n, sdum, n, info )
+     CALL errore( 'rdiaghg', 'DTRTRI failed', ABS( info ) )
+     !
+     CALL stop_clock( 'inversion' )
+     !
+     ! ... vdum = L^-1*H
+     !
+     CALL start_clock( 'paragemm' )
+     !
+     CALL para_dgemm( 'N', 'N', n, n, n, 1.D0, sdum, &
+                      n, hdum, n, 0.D0, vdum, n, intra_pool_comm )
+     !
+     ! ... hdum = ( L^-1*H )*(L^-1)^T
+     !
+     CALL para_dgemm( 'N', 'T', n, n, n, 1.D0, vdum, &
+                      n, sdum, n, 0.D0, hdum, n, intra_pool_comm )
+     !
+     CALL stop_clock( 'paragemm' )
+     !
+     CALL diagonalize( 1, hdum, n, e, vdum, n, n, &
+                       nproc_pool, me_pool, intra_pool_comm )
+     !
+     ! ... v = (L^T)^-1 v
+     !
+     CALL start_clock( 'paragemm' )
+     !
+     CALL para_dgemm( 'T', 'N', n, m, n, 1.D0, sdum, &
+                      n, vdum, n, 0.D0, v, ldh, intra_pool_comm )
+     !
+     CALL stop_clock( 'paragemm' )
+     !
+     DEALLOCATE( hdum, vdum )
+     !
+  ELSE  
+     !
+     ! ... only the first processor diagonalize the matrix
+     !
+     IF ( me_pool == root_pool ) THEN
         !
-        ! ... calculate all eigenvalues
+        all_eigenvalues = ( m == n )
         !
-        v(:,1:n) = h(:,:)
+        ! ... check for optimal block size
         !
+        nb = ILAENV( 1, 'DSYTRD', 'U', n, -1, -1, -1 )
+        !
+        IF ( nb < 1 .OR. nb >= n ) THEN
+           !
+           lwork = 8*n
+           !
+        ELSE
+           !
+           lwork = ( nb + 3 )*n
+           !
+        END IF     
+        !
+        ALLOCATE( work( lwork ) )
+        !
+        IF ( all_eigenvalues ) THEN
+           !
+           ! ... calculate all eigenvalues
+           !
+           v(:,:) = h(:,:)
+           !
 #if defined (__ESSL)
-        !
-        ! ... there is a name conflict between essl and lapack ...
-        !
-        CALL DSYGV( 1, v, ldh, sdum, ldh, e, v, ldh, n, work, lwork )
-        !
-        info = 0
-        !
+           !
+           ! ... there is a name conflict between essl and lapack ...
+           !
+           CALL DSYGV( 1, v, ldh, sdum, n, e, v, ldh, n, work, lwork )
+           !
+           info = 0
 #else
-        CALL DSYGV( 1, 'V', 'U', n, v, ldh, sdum, ldh, e, work, &
-                    lwork, info )
-        !
+           CALL DSYGV( 1, 'V', 'U', n, v, &
+                       ldh, sdum, n, e, work, lwork, info )
 #endif
-     ELSE
+           !
+        ELSE
+           !
+           ALLOCATE( hdum( n, n ) )
+           ALLOCATE( iwork( 5*n ) )
+           ALLOCATE( ifail( n ) )
+           !
+           ! ... calculate only m lowest eigenvalues
+           !
+           hdum(:,:) = h(1:n,:)
+           !
+           CALL DSYGVX( 1, 'V', 'I', 'U', n, hdum, n, sdum,  &
+                        n, 0.D0, 0.D0, 1, m, 0.D0, mm, e, v, &
+                        ldh, work, lwork, iwork, ifail, info )
+           !
+           DEALLOCATE( ifail )
+           DEALLOCATE( iwork )
+           DEALLOCATE( hdum )
+           !
+        END IF
         !
-        ! ... calculate only m lowest eigenvalues
+        DEALLOCATE( work )
         !
-        hdum = h
+        CALL errore( 'rdiaghg', 'info =/= 0', ABS( info ) )
         !
-        CALL DSYGVX( 1, 'V', 'I', 'U', n, hdum, ldh, sdum, ldh, &
-                     0.D0, 0.D0, 1, m, 0.D0, mm, e, v, ldh, work, lwork, &
-                     iwork, ifail, info )
-        !             
      END IF
      !
-     CALL errore( 'rdiaghg', 'info =/= 0', ABS( info ) )
+     ! ... broadcast eigenvectors and eigenvalues to all other processors
      !
-  END IF
-  !
-  ! ... broadcast eigenvectors and eigenvalues to all other processors
-  !
-  CALL mp_bcast( e, root_pool, intra_pool_comm )
-  CALL mp_bcast( v, root_pool, intra_pool_comm )
-  !
-  ! ... deallocate workspace
-  !
-  IF ( .NOT. all_eigenvalues ) THEN
-     !
-     DEALLOCATE( ifail )
-     DEALLOCATE( iwork )
-     DEALLOCATE( hdum )
+     CALL mp_bcast( e, root_pool, intra_pool_comm )
+     CALL mp_bcast( v, root_pool, intra_pool_comm )
      !
   END IF
   !
   DEALLOCATE( sdum )
-  DEALLOCATE( work )
   !
-  CALL stop_clock( 'cdiaghg' )
+  CALL stop_clock( 'diaghg' )
   !
   RETURN
   !

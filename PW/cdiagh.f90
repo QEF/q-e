@@ -36,7 +36,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   REAL(DP)    :: e(n)      ! eigenvalues
   COMPLEX(DP) :: v(ldh,n)  ! eigenvectors (column-wise)
   !
-  CALL start_clock( 'cdiagh' )  
+  CALL start_clock( 'diagh' )  
   !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
@@ -53,7 +53,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
      !
   END IF
   !
-  CALL stop_clock( 'cdiagh' )
+  CALL stop_clock( 'diagh' )
   !
   RETURN
   !
