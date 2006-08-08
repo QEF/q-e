@@ -49,18 +49,17 @@ PROGRAM metadyn_PP
   !
   ! ... Written by Carlo Sbraccia (sbraccia@princeton.edu)
   !
+  USE io_global, ONLY : stdout
+  USE constants, ONLY : rytoev
+  !
   IMPLICIT NONE
   !
   INTEGER, PARAMETER :: SP = KIND( 1.0 )
   !
-  INTEGER,       PARAMETER :: grid_points = 100
-  INTEGER,       PARAMETER :: num_lev = 20
-  REAL(KIND=SP)            :: E_min = -0.20, & 
-                              E_max =  0.00
-  REAL(KIND=SP)            :: x_min =  1.00, &
-                              x_max = 16.00, &
-                              y_min =  1.00, &
-                              y_max = 16.00
+  INTEGER, PARAMETER :: grid_points = 100
+  INTEGER, PARAMETER :: num_lev = 20
+  REAL(KIND=SP)      :: E_min, E_max
+  REAL(KIND=SP)      :: x_min, x_max, y_min, y_max
   !
   REAL(KIND=SP) :: delta_x, delta_y, r_min(2)
   REAL(KIND=SP) :: delta_E
@@ -68,17 +67,16 @@ PROGRAM metadyn_PP
   REAL(KIND=SP) :: level(num_lev)
   REAL(KIND=SP) :: surf(grid_points,grid_points)
   !
-  CHARACTER(LEN=256)            :: filename, prefix
-  INTEGER                       :: ix, iy
-  LOGICAL                       :: lsym, loptimise, lrun_dynamics
-  INTEGER                       :: nconstr, nstep
-  REAL(KIND=SP)                 :: A, sigma(2)
-  REAL(KIND=SP),    ALLOCATABLE :: sigma_tmp(:)
-  REAL(KIND=SP),    ALLOCATABLE :: s(:,:), s_tmp(:,:), sg(:,:), sg_tmp(:,:)
-  REAL(KIND=SP),    ALLOCATABLE :: pes(:), fe_grad(:,:)
-  CHARACTER(LEN=5), ALLOCATABLE :: label(:)
+  CHARACTER(LEN=256)         :: filename, prefix
+  INTEGER                    :: ix, iy
+  LOGICAL                    :: lsym, lrun_dynamics
+  INTEGER                    :: nconstr, nstep
+  REAL(KIND=SP)              :: amp, sigma(2)
+  REAL(KIND=SP), ALLOCATABLE :: sigma_tmp(:)
+  REAL(KIND=SP), ALLOCATABLE :: s(:,:), s_tmp(:,:), sg(:,:), sg_tmp(:,:)
+  REAL(KIND=SP), ALLOCATABLE :: pes(:)
   !
-  INTEGER       :: i, j, idum, counter
+  INTEGER       :: i, idum, j, counter
   REAL(KIND=SP) :: x, y
   !
   NAMELIST / INPUT / filename, prefix, ix, iy, lsym, lrun_dynamics
@@ -87,7 +85,6 @@ PROGRAM metadyn_PP
   INTEGER, EXTERNAL :: PGOPEN
 #endif
   !
-  ! ... the code starts here
   !
   filename      = ''
   prefix        = 'metadyn_pp'
@@ -101,26 +98,24 @@ PROGRAM metadyn_PP
   OPEN( UNIT = 10, FILE = filename, STATUS = "OLD" )
   !
   READ( 10, * ) nconstr, nstep
-  READ( 10, * ) A
+  READ( 10, * ) amp
   !
   ALLOCATE( sigma_tmp( nconstr ) )
   !
   READ( 10, * ) sigma_tmp(:)
   !
-  ALLOCATE( s(             2, nstep ) )
-  ALLOCATE( s_tmp(   nconstr, nstep ) )
-  ALLOCATE( sg(            2, nstep ) )
-  ALLOCATE( sg_tmp(  nconstr, nstep ) )
-  ALLOCATE( pes(              nstep ) )
-  ALLOCATE( fe_grad( nconstr, nstep ) )
-  ALLOCATE( label(            nstep ) )
+  ALLOCATE( s(  2, nstep ) )
+  ALLOCATE( sg( 2, nstep ) )
+  !
+  ALLOCATE( s_tmp(  nconstr, nstep ) )
+  ALLOCATE( sg_tmp( nconstr, nstep ) )
+  ALLOCATE( pes( nstep ) )
   !
   counter = 0
   !
   DO i = 1, nstep
      !
-     READ( 10, *, END = 9 ) &
-        label(i), s_tmp(:,i), pes(i), sg_tmp(:,i), fe_grad(:,i)
+     READ( 10, *, END = 9 ) idum, s_tmp(:,i), pes(i), sg_tmp(:,i)
      !
      counter = counter + 1
      !
@@ -128,30 +123,42 @@ PROGRAM metadyn_PP
   !
 9 nstep = counter
   !
-  WRITE( *, '(/,"number of steps = ",I5,/)' ) nstep
+  WRITE( stdout, '(/,"number of steps = ",I5,/)' ) nstep
   !
   CLOSE( UNIT = 10 )
   !
-  sigma(1) = sigma_tmp(ix)
-  sigma(2) = sigma_tmp(iy)
-  !
-  s(1,:)  = s_tmp(ix,:)
-  s(2,:)  = s_tmp(iy,:)
-  sg(1,:) = sg_tmp(ix,:)
-  sg(2,:) = sg_tmp(iy,:)
+  IF ( nconstr == 1 ) THEN
+     !
+     WRITE( stdout, '("1 DIMENSIONAL CASE ...",/)' )
+     !
+     sigma(1) = sigma_tmp(1)
+     sigma(2) = sigma_tmp(1)
+     !
+     s(1,:)  = s_tmp(1,:)
+     s(2,:)  = 0.0
+     sg(1,:) = sg_tmp(1,:)
+     sg(2,:) = 0.0
+     !
+  ELSE
+     !
+     sigma(1) = sigma_tmp(ix)
+     sigma(2) = sigma_tmp(iy)
+     !
+     s(1,:)  = s_tmp(ix,:)
+     s(2,:)  = s_tmp(iy,:)
+     sg(1,:) = sg_tmp(ix,:)
+     sg(2,:) = sg_tmp(iy,:)
+     !
+  END IF
   !
   DEALLOCATE( sigma_tmp )
   DEALLOCATE( s_tmp )
   DEALLOCATE( sg_tmp )
   !
-  x_min = MIN( MINVAL(  s(1,:nstep) ), &
-               MINVAL( sg(1,:nstep) ) ) - 4.D0 * sigma(1) / 2.0
-  y_min = MIN( MINVAL(  s(2,:nstep) ), &
-               MINVAL( sg(2,:nstep) ) ) - 4.D0 * sigma(2) / 2.0
-  x_max = MAX( MAXVAL(  s(1,:nstep) ), &
-               MAXVAL( sg(1,:nstep) ) ) + 4.D0 * sigma(1) / 2.0
-  y_max = MAX( MAXVAL(  s(2,:nstep) ), &
-               MAXVAL( sg(2,:nstep) ) ) + 4.D0 * sigma(2) / 2.0
+  x_min = MIN( MINVAL( s(1,:nstep) ), MINVAL( sg(1,:nstep) ) ) - 3.0*sigma(1)
+  y_min = MIN( MINVAL( s(2,:nstep) ), MINVAL( sg(2,:nstep) ) ) - 3.0*sigma(2)
+  x_max = MAX( MAXVAL( s(1,:nstep) ), MAXVAL( sg(1,:nstep) ) ) + 3.0*sigma(1)
+  y_max = MAX( MAXVAL( s(2,:nstep) ), MAXVAL( sg(2,:nstep) ) ) + 3.0*sigma(2)
   !
   IF ( lsym ) THEN
      !
@@ -169,11 +176,11 @@ PROGRAM metadyn_PP
   !
   DO i = 1, grid_points
      !
-     x = x_min + REAL( i - 1 ) * delta_x 
+     x = x_min + REAL( i - 1 )*delta_x 
      !
      DO j = 1, grid_points
         !
-        y = y_min + REAL( j - 1 ) * delta_y
+        y = y_min + REAL( j - 1 )*delta_y
         !
         surf(i,j) = sum_gaussians( x, y ) 
         !
@@ -186,16 +193,16 @@ PROGRAM metadyn_PP
   !
   delta_E = ( E_max - E_min ) / REAL( num_lev )
   !
-  WRITE( *, '("MINIMUM VALUE = ",F12.7," eV"  )' ) E_min * 13.605826
-  WRITE( *, '("MAXIMUM VALUE = ",F12.7," eV",/)' ) E_max * 13.605826
-  WRITE( *, '("ISO-ENERGY SPACING= ",F12.7," eV"/)' ) delta_E * 13.605826
+  WRITE( stdout, '("MINIMUM VALUE = ",F12.7," eV"  )' ) E_min*rytoev
+  WRITE( stdout, '("MAXIMUM VALUE = ",F12.7," eV",/)' ) E_max*rytoev
+  WRITE( stdout, '("ISO-ENERGY SPACING= ",F12.7," eV"/)' ) delta_E*rytoev
   !
   r_min(:) = MINLOC( surf(:,:) )
   !
   r_min(1) = x_min + ( r_min(1) - 1 ) * delta_x
   r_min(2) = y_min + ( r_min(2) - 1 ) * delta_y
   !
-  WRITE( *, '("MINIMUM (X,Y) :  ",2F12.7)' ) r_min(1), r_min(2)
+  WRITE( stdout, '("MINIMUM (X,Y) :  ",2F12.7)' ) r_min(1), r_min(2)
   !
   tr_array(1) = x_min - delta_x
   tr_array(2) = delta_x
@@ -206,7 +213,7 @@ PROGRAM metadyn_PP
   !
   DO i = 1, num_lev
      !
-     level(i) = E_min + REAL( i - 1 ) * delta_E
+     level(i) = E_min + REAL( i - 1 )*delta_E
      !
   END DO
   !
@@ -246,7 +253,7 @@ PROGRAM metadyn_PP
         CALL PGSLW( 1 )
         CALL PGLINE( 2, s(1,i-1:i), s(2,i-1:i) )
         !
-        CALL delay( 100000 )
+        CALL delay( 500000 )
         !
      END DO
      !
@@ -299,27 +306,39 @@ PROGRAM metadyn_PP
   !
   OPEN( UNIT = 99, FILE = TRIM( prefix ) // '.dat' )
   !
-  DO i = 1, grid_points
+  IF ( nconstr == 1 ) THEN
      !
-     x = x_min + REAL( i - 1 ) * delta_x 
-     !
-     DO j = 1, grid_points
+     DO i = 1, grid_points
         !
-        y = y_min + REAL( j - 1 ) * delta_y
+        x = x_min + REAL( i - 1 )*delta_x 
         !
-        WRITE( 99, '(3(2X,F16.10))' ) x, y, surf(i,j)
+        WRITE( 99, '(2(2X,F16.10))' ) x, surf(i,1)
         !
      END DO
      !
-  END DO
+  ELSE
+     !
+     DO i = 1, grid_points
+        !
+        x = x_min + REAL( i - 1 )*delta_x 
+        !
+        DO j = 1, grid_points
+           !
+           y = y_min + REAL( j - 1 )*delta_y
+           !
+           WRITE( 99, '(3(2X,F16.10))' ) x, y, surf(i,j)
+           !
+        END DO
+        !
+     END DO
+     !
+  END IF
   !
   CLOSE( UNIT = 99 )
   !
   DEALLOCATE( s )
   DEALLOCATE( sg )
   DEALLOCATE( pes )
-  DEALLOCATE( fe_grad )
-  DEALLOCATE( label )
   !
   STOP
   !
@@ -340,10 +359,10 @@ PROGRAM metadyn_PP
       !
       DO i = 1, nstep
          !
-         exponent = ( x - sg(1,i) )**2 / ( 2.0 * sigma(1)**2 ) + &
-                    ( y - sg(2,i) )**2 / ( 2.0 * sigma(2)**2 )
+         exponent = ( x - sg(1,i) )**2 / ( 2.0*sigma(1)**2 ) + &
+                    ( y - sg(2,i) )**2 / ( 2.0*sigma(2)**2 )
          !
-         sum_gaussians = sum_gaussians - A * EXP( - exponent )
+         sum_gaussians = sum_gaussians - amp*EXP( - exponent )
          !
       END DO
       !
@@ -351,10 +370,10 @@ PROGRAM metadyn_PP
          !
          DO i = 1, nstep
             !
-            exponent = ( x - sg(2,i) )**2 / ( 2.0 * sigma(2)**2 ) + &
-                       ( y - sg(1,i) )**2 / ( 2.0 * sigma(1)**2 )
+            exponent = ( x - sg(2,i) )**2 / ( 2.0*sigma(2)**2 ) + &
+                       ( y - sg(1,i) )**2 / ( 2.0*sigma(1)**2 )
             !
-            sum_gaussians = sum_gaussians - A * EXP( - exponent )
+            sum_gaussians = sum_gaussians - amp*EXP( - exponent )
             !
          END DO         
          !
@@ -378,7 +397,7 @@ PROGRAM metadyn_PP
       !
       DO i = 1, iterations
          !
-         xdum = SIN( DBLE( i ) )
+         xdum = SIN( REAL( i, KIND = SP ) )
          !
       END DO
       !
