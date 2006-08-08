@@ -42,7 +42,8 @@ PROGRAM do_plan_avg
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
-  outdir = './'
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   filplot = 'tmp.pp' 
   !
   IF ( ionode )  THEN

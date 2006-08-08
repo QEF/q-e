@@ -129,7 +129,8 @@ dt             REAL ( default = 20.D0 )
                (1 a.u.=4.8378 * 10^-17 s : beware, CP and FPMD codes use
                Hartree atomic units, half that much!!!)
 
-outdir         CHARACTER ( default = current directory ('./') )
+outdir         CHARACTER ( default = value of the ESPRESSO_TMPDIR environment
+               variable if set; current directory ('./') otherwise )
                input, temporary, output files are found in this directory,
                see also 'wfcdir'
             
@@ -165,7 +166,8 @@ forc_conv_thr  REAL ( default = 1.0D-3 )
 disk_io        CHARACTER
                'high', 'default', 'low', 'minimal'
 
-pseudo_dir     CHARACTER ( default = '$HOME/pw/pseudo/' )
+pseudo_dir     CHARACTER ( default = value of the $ESPRESSO_PSEUDO environment
+               variable if set; '$HOME/espresso/pseudo/' otherwise )
                directory containing pseudopotential files
 
 tefield        LOGICAL ( default = .FALSE. )

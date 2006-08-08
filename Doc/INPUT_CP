@@ -171,7 +171,8 @@ prefix         CHARACTER ( default = 'cp' )
 verbosity      CHARACTER
                'high' | 'default' | 'low' | 'minimal'
 
-outdir         CHARACTER ( default = current directory ('./') )
+outdir         CHARACTER ( default =  value of the ESPRESSO_TMPDIR environment
+               variable if set; current directory ('./') otherwise )
                input, temporary, output files are found in this directory.
 
 disk_io        CHARACTER
@@ -180,7 +181,8 @@ disk_io        CHARACTER
                The charge density is not needed to restart but 
                may be needed for other purposes
 
-pseudo_dir     CHARACTER ( default = current directory ('./') )
+pseudo_dir     CHARACTER ( default = value of the $ESPRESSO_PSEUDO environment
+               variable if set; '$HOME/espresso/pseudo/' otherwise )
                directory containing pseudopotential files.
 
 ndr, ndw       INTEGER ( default = 50 )

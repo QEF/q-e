@@ -33,7 +33,6 @@ SUBROUTINE wfcinit()
                                    nwordatwfc
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE random_numbers,       ONLY : rndm
-  USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
   !

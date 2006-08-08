@@ -246,10 +246,6 @@ SUBROUTINE iosys()
   REAL(DP) :: theta, phi
   !
   !
-  CALL getenv( 'HOME', pseudo_dir )
-  !
-  pseudo_dir = TRIM( pseudo_dir ) // '/pw/pseudo/'
-  !
   IF ( ionode ) CALL input_from_file()
   !
   ! ... all namelists are read

@@ -82,7 +82,8 @@ SUBROUTINE extract (filplot)
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
-  outdir = './'
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   filplot = 'tmp.pp' 
   plot_num = -1
   spin_component = 0

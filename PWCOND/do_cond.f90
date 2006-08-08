@@ -41,7 +41,8 @@ SUBROUTINE do_cond(nodenumber)
 !
 !   set default values for variables in namelist
 !                                             
-  outdir = './'
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefixt = ' '
   prefixl = ' '
   prefixs = ' '

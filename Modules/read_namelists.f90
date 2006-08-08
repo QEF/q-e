@@ -72,17 +72,23 @@ MODULE read_namelists_module
        ndr = 50
        ndw = 50
        !
-       ! ... use the path specified as outdir and the filename prefix to store 
-       ! ... the output
+       ! ... use the path specified as outdir and the filename prefix 
+       ! ... to store output data
        !
-       outdir  = './'   
-       scradir = './'   
+       CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+       IF ( TRIM( outdir ) == ' ' ) outdir = './'
+       scradir = outdir
        IF( prog == 'PW' ) prefix = 'pwscf'  
        IF( prog == 'CP' ) prefix = 'cp' 
        !
        ! ... directory containing the pseudopotentials
        !
-       pseudo_dir    = './'  
+       CALL getenv( 'ESPRESSO_PSEUDO', pseudo_dir )
+       IF ( TRIM( pseudo_dir ) == ' ') THEN
+          CALL getenv( 'HOME', pseudo_dir )
+          pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
+       END IF
+       !
        refg          = 0.05d0
        max_seconds   = 1.D+7
        ekin_conv_thr = 1.D-6

@@ -59,7 +59,8 @@ SUBROUTINE d3_readin()
      !
      ethr_ph = 1.d-5
      iverbosity = 0
-     outdir = './'
+     CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+     IF ( TRIM( outdir ) == ' ' ) outdir = './'
      prefix = 'pwscf'
      fildyn = 'd3dyn'
      fildrho = ' '

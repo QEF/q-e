@@ -55,7 +55,8 @@ PROGRAM epsilon
   calculation  = 'eps'
   prefix       = 'pwscf'
   shift        = 0.0d0
-  outdir       = './'
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   smear        = 0.02
   wmax         = 30.0d0
   nw           = 600

@@ -28,7 +28,8 @@ PROGRAM pw2casino
   !   set default values for variables in namelist 
   ! 
   prefix = 'pwscf'
-  outdir = './'
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
 
   IF ( ionode )  THEN 
      !

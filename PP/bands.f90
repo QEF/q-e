@@ -31,7 +31,8 @@ PROGRAM bands
   !   set default values for variables in namelist
   !
   prefix = 'pwscf'
-  outdir = './'
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   filband = 'bands.out'
   lsigma = .false.
   spin_component = 1

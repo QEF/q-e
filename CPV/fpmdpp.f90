@@ -69,10 +69,11 @@ PROGRAM fpmd_postproc
 
   dunit = 14
 
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix    = 'cp'
   fileout   = 'out'
   output    = 'xsf'  ! 'grd'
-  outdir    = './'
   scradir   = './'
   lcharge   = .false.
   lforces   = .false.

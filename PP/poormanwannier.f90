@@ -35,7 +35,8 @@ PROGRAM poormanwannier
   !   set default values for variables in namelist 
   ! 
   prefix = 'pwscf' 
-  outdir = './' 
+  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  IF ( TRIM( outdir ) == ' ' ) outdir = './'
   first_band=-1
   last_band=-1
   ! 
