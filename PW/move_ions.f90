@@ -24,7 +24,7 @@ SUBROUTINE move_ions()
   USE kinds,                  ONLY : DP
   USE cell_base,              ONLY : alat, at, bg, omega
   USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
-  USE ions_base,              ONLY : nat, ityp, tau
+  USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE gvect,                  ONLY : nr1, nr2, nr3
   USE symme,                  ONLY : s, ftau, nsym, irt
   USE ener,                   ONLY : etot
@@ -51,7 +51,8 @@ SUBROUTINE move_ions()
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   REAL(DP)              :: energy_error, gradient_error
   LOGICAL               :: step_accepted, exst
-  REAL(DP), ALLOCATABLE :: pos(:), gradient(:)
+  REAL(DP), ALLOCATABLE :: pos(:), grad(:)
+  INTEGER,  ALLOCATABLE :: fixion(:)
   !
   !
   ! ... only one node does the calculation in the parallel case
@@ -117,14 +118,14 @@ SUBROUTINE move_ions()
         !
         ! ... the bfgs procedure is used
         !  
-        ALLOCATE( pos(      3*nat ) )
-        ALLOCATE( gradient( 3*nat ) )
+        ALLOCATE( pos( 3*nat ), grad( 3*nat ), fixion( 3*nat ) )
         !
-        pos      =   RESHAPE( tau,   (/ 3 * nat /) ) * alat
-        gradient = - RESHAPE( force, (/ 3 * nat /) )
+        pos    =   RESHAPE( tau,    (/ 3 * nat /) ) * alat
+        grad   = - RESHAPE( force,  (/ 3 * nat /) )
+        fixion =   RESHAPE( if_pos, (/ 3 * nat /) )
         !
-        CALL bfgs( pos, etot, gradient, tmp_dir, stdout, epse, epsf, &
-                   energy_error, gradient_error, istep, nstep,       &
+        CALL bfgs( pos, etot, grad, fixion, tmp_dir, stdout, epse, &
+                   epsf, energy_error, gradient_error, istep, nstep, &
                    step_accepted, conv_ions )
         !
         IF ( conv_ions ) THEN
@@ -141,10 +142,9 @@ SUBROUTINE move_ions()
               WRITE( UNIT = stdout, FMT = 9010 )
               WRITE( UNIT = stdout, FMT = 9020 )
               !
-              CALL hinit0()
-              CALL potinit()
-              CALL newd()
-              CALL wfcinit()
+              ! ... the system is reinitialized
+              !
+              CALL init_h()
               !
               ! ... this check is performed only once
               !
@@ -183,13 +183,12 @@ SUBROUTINE move_ions()
            !
         END IF
         !   
-        tau   =   RESHAPE( pos,      (/ 3, nat /) ) / alat
-        force = - RESHAPE( gradient, (/ 3, nat /) )
+        tau   =   RESHAPE( pos,  (/ 3, nat /) ) / alat
+        force = - RESHAPE( grad, (/ 3, nat /) )
         !
         CALL output_tau( conv_ions )
         !
-        DEALLOCATE( pos )
-        DEALLOCATE( gradient ) 
+        DEALLOCATE( pos, grad, fixion ) 
         !
      END IF
      !

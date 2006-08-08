@@ -46,12 +46,7 @@ SUBROUTINE init_run()
   !
   CALL openfil()
   !
-  CALL hinit0()
-  CALL potinit()
-  !
-  CALL newd()
-  !
-  CALL wfcinit()
+  CALL init_h()
   !
   IF ( lmd ) CALL allocate_dyn_vars()
   !
@@ -60,3 +55,20 @@ SUBROUTINE init_run()
   RETURN
   !
 END SUBROUTINE init_run
+!
+!----------------------------------------------------------------------------
+SUBROUTINE init_h()
+  !----------------------------------------------------------------------------
+  !
+  IMPLICIT NONE
+  !
+  CALL hinit0()
+  CALL potinit()
+  !
+  CALL newd()
+  !
+  CALL wfcinit()  
+  !
+  RETURN
+  !
+END SUBROUTINE init_h
