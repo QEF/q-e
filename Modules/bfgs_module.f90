@@ -5,10 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#define __DFP
-#define __BFGS
-!#define __MIXEDBFGSMS
-!
 !----------------------------------------------------------------------------
 MODULE bfgs_module
   !----------------------------------------------------------------------------
@@ -74,7 +70,8 @@ MODULE bfgs_module
       energy_p                 ! energy at the previous iteration
   INTEGER :: &
       scf_iter,               &! number of scf iterations
-      bfgs_iter                ! number of bfgs iterations
+      bfgs_iter,              &! number of bfgs iterations
+      gdiis_iter               ! number of gdiis iterations
   !
   LOGICAL :: &
       tr_min_hit               ! .TRUE. if the trust_radius has already been set
@@ -82,6 +79,12 @@ MODULE bfgs_module
   !
   LOGICAL :: &
       conv_bfgs                ! .TRUE. when bfgs convergence has been achieved
+  !
+  REAL(DP), ALLOCATABLE :: &
+      inv_hess0(:,:),         &! starting guess for the iverse hessian matrix
+      projmat(:,:),           &! matrix that pojects out fixed ions
+      dirtm(:,:),             &! transformation matrix to internal coordinates
+      invtm(:,:)               ! inverse transformation matrix
   !
   ! ... default values for all these variables are set in 
   ! ... Modules/read_namelist.f90 (SUBROUTINE ions_defaults)
@@ -103,19 +106,18 @@ MODULE bfgs_module
   !
   CONTAINS
     !
-    ! ... public methods :
-    !
     !------------------------------------------------------------------------
-    SUBROUTINE bfgs( pos, energy, grad, scratch, stdout, energy_thr, grad_thr, &
-                     energy_error, grad_error, istep, nstep, step_accepted,    &
-                     stop_bfgs )
+    SUBROUTINE bfgs( pos, energy, grad, fixion, scratch, stdout, energy_thr, &
+                     grad_thr, energy_error, grad_error, istep, nstep,       &
+                     step_accepted, stop_bfgs )
       !------------------------------------------------------------------------
       !
       ! ... list of input/output arguments : 
       !  
       !  pos            : vector containing 3N coordinates of the system ( x )
       !  energy         : energy of the system ( V(x) )
-      !  grad           : vector containing 3N components of ( grad( V(x) ) ) 
+      !  grad           : vector containing 3N components of grad( V(x) )
+      !  fixion         : vector used to freeze a deg. of freedom
       !  scratch        : scratch directory
       !  stdout         : unit for standard output
       !  energy_thr     : treshold on energy difference for BFGS convergence
@@ -130,11 +132,10 @@ MODULE bfgs_module
       !
       IMPLICIT NONE
       !
-      ! ... input/output arguments
-      !
       REAL(DP),         INTENT(INOUT) :: pos(:)
       REAL(DP),         INTENT(INOUT) :: energy
       REAL(DP),         INTENT(INOUT) :: grad(:)
+      INTEGER,          INTENT(IN)    :: fixion(:)
       CHARACTER(LEN=*), INTENT(IN)    :: scratch
       INTEGER,          INTENT(IN)    :: stdout
       REAL(DP),         INTENT(IN)    :: energy_thr, grad_thr
@@ -143,36 +144,35 @@ MODULE bfgs_module
       REAL(DP),         INTENT(OUT)   :: energy_error, grad_error
       LOGICAL,          INTENT(OUT)   :: step_accepted, stop_bfgs
       !
-      ! ... local variables
-      !
       INTEGER  :: dim, i, j
       LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
-      !
-      REAL(DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
-      INTEGER,  ALLOCATABLE :: iwork(:)
-      INTEGER               :: k, k_m, info
-      REAL(DP)              :: gamma0
       !
       !
       dim = SIZE( pos )
       !
       ! ... conditional work-space allocation
       !   
-      IF ( .NOT. ALLOCATED( grad_old ) ) ALLOCATE( grad_old( dim, bfgs_ndim ) )
-      IF ( .NOT. ALLOCATED( pos_old ) )  ALLOCATE( pos_old(  dim, bfgs_ndim ) )
+      IF ( .NOT. ALLOCATED( grad_old ) )  ALLOCATE( grad_old( dim, bfgs_ndim ) )
+      IF ( .NOT. ALLOCATED( pos_old ) )   ALLOCATE( pos_old(  dim, bfgs_ndim ) )
       !
-      IF ( .NOT. ALLOCATED( inv_hess ) ) ALLOCATE( inv_hess( dim, dim ) )
+      IF ( .NOT. ALLOCATED( inv_hess ) )  ALLOCATE( inv_hess(  dim, dim ) )
+      IF ( .NOT. ALLOCATED( inv_hess0 ) ) ALLOCATE( inv_hess0( dim, dim ) )
+      IF ( .NOT. ALLOCATED( projmat ) )   ALLOCATE( projmat(   dim, dim ) )
       !
-      IF ( .NOT. ALLOCATED( pos_p ) )    ALLOCATE( pos_p(    dim ) )
-      IF ( .NOT. ALLOCATED( grad_p ) )   ALLOCATE( grad_p(   dim ) )
-      IF ( .NOT. ALLOCATED( step ) )     ALLOCATE( step(     dim ) )
-      IF ( .NOT. ALLOCATED( step_old ) ) ALLOCATE( step_old( dim ) )
-      IF ( .NOT. ALLOCATED( pos_best ) ) ALLOCATE( pos_best( dim ) )
+      IF ( .NOT. ALLOCATED( pos_p ) )     ALLOCATE( pos_p(    dim ) )
+      IF ( .NOT. ALLOCATED( grad_p ) )    ALLOCATE( grad_p(   dim ) )
+      IF ( .NOT. ALLOCATED( step ) )      ALLOCATE( step(     dim ) )
+      IF ( .NOT. ALLOCATED( step_old ) )  ALLOCATE( step_old( dim ) )
+      IF ( .NOT. ALLOCATED( pos_best ) )  ALLOCATE( pos_best( dim ) )
       !
-      ! ... the BFGS file is read
+      IF ( .NOT. ALLOCATED( dirtm ) )     ALLOCATE( dirtm( dim, dim ) )
+      IF ( .NOT. ALLOCATED( invtm ) )     ALLOCATE( invtm( dim, dim ) )
       !
-      CALL read_bfgs_file( pos, grad, energy, scratch, dim, stdout )
+      ! ... the BFGS file is read (pos & grad are converted here to
+      ! ... internal coordinates )
+      !
+      CALL read_bfgs_file( pos, grad, fixion, energy, scratch, dim, stdout )
       !
       scf_iter = scf_iter + 1
       !
@@ -188,7 +188,14 @@ MODULE bfgs_module
       !
       stop_bfgs = conv_bfgs .OR. ( scf_iter >= nstep )
       !
-      IF ( stop_bfgs ) RETURN
+      IF ( stop_bfgs ) THEN
+         !
+         pos(:)  = to_cart_coords( pos,  dim )
+         grad(:) = to_cart_coords( grad, dim )
+         !
+         RETURN
+         !
+      END IF
       !
       istep = scf_iter
       !
@@ -219,7 +226,7 @@ MODULE bfgs_module
          !
          ! ... E(s) = a*s*s + b*s + c      ( we use E(0), dE(0), E(s') )
          !
-         ! ... s_min = - 0.5 * ( dE(0)*s'*s' ) / ( E(s') - E(0) - dE(0)*s' )
+         ! ... s_min = - 0.5*( dE(0)*s'*s' ) / ( E(s') - E(0) - dE(0)*s' )
          !
          dE0s = ( grad_p(:) .dot. step_old(:) )
          !
@@ -265,9 +272,9 @@ MODULE bfgs_module
                !
             END IF
             !
-            inv_hess(:,:) = identity( dim )
+            CALL reset_bfgs()
             !
-            step(:) = - grad(:)
+            step(:) = - ( inv_hess(:,:) .times. grad(:) )
             !
             trust_radius = trust_radius_min
             !
@@ -289,7 +296,16 @@ MODULE bfgs_module
          !
          bfgs_iter = bfgs_iter + 1
          !
-         IF ( bfgs_iter > 1 ) THEN
+         IF ( bfgs_iter == 1 ) THEN
+            !
+            ! ... first iteration
+            !
+            IF ( grad_error < 0.01D0 ) &
+               trust_radius_ini = MIN( 0.2D0, trust_radius_ini )
+            !
+            step_accepted = .FALSE.
+            !
+         ELSE
             !
             step_accepted = .TRUE.
             !
@@ -298,127 +314,30 @@ MODULE bfgs_module
             !
             CALL check_wolfe_conditions( lwolfe, energy, grad )
             !
-            IF ( lwolfe ) THEN
-               !
-               WRITE( UNIT = stdout, &
-                    & FMT = '(5X,"Wolfe conditions satisfied",/)' )
-               !
-            ELSE
-               !
-               WRITE( UNIT = stdout, &
-                    & FMT = '(5X,"Wolfe conditions not satisfied",/)' )
-               !
-            END IF
-            !
             CALL update_inverse_hessian( pos, grad, dim, stdout )
             !
-            IF ( bfgs_ndim > 1 ) THEN
-               !
-               ! ... GDIIS extrapolation
-               !
-               k   = MIN( bfgs_iter, bfgs_ndim )
-               k_m = k + 1
-               !
-               ALLOCATE( res( dim, k ) )
-               !
-               ALLOCATE( overlap( k_m, k_m ) )
-               !
-               ALLOCATE( work(  k_m ) )
-               ALLOCATE( iwork( k_m ) )
-               !
-               ! ... the new direction is added to the workspace
-               !
-               DO i = bfgs_ndim, 2, -1
-                  !
-                  pos_old(:,i)  = pos_old(:,i-1)
-                  grad_old(:,i) = grad_old(:,i-1)
-                  !
-               END DO
-               !
-               pos_old(:,1)  = pos(:)
-               grad_old(:,1) = grad(:)
-               !
-               ! ... |res_i> = H^-1 \times |g_i>
-               !
-               CALL DGEMM( 'N', 'N', dim, k, dim, 1.D0, inv_hess, &
-                           dim, grad_old, dim, 0.D0, res, dim )
-               !
-               ! ... overlap_ij = <res_i|res_j>
-               !
-               CALL DGEMM( 'T', 'N', k, k, dim, 1.D0, res, &
-                           dim, res, dim, 0.D0, overlap, k_m )
-               !
-               overlap(:,  k_m) = 1.D0
-               overlap(k_m,k_m) = 0.D0
-               !
-               ! ... overlap is inverted
-               !
-               CALL DSYTRF( 'U', k_m, overlap, k_m, iwork, work, k_m, info )
-               CALL DSYTRI( 'U', k_m, overlap, k_m, iwork, work, info )
-               !
-               FORALL( i = 1 : k_m, j = 1 : k_m, j > i )
-                  !
-                  ! ... overlap is symmetrised
-                  ! 
-                  overlap(j,i) = overlap(i,j)
-                  !
-               END FORALL
-               !
-               work(:) = (/ ( 0.D0, i = 1, k ), 1.D0 /)
-               !
-               pos_best(:) = 0.D0
-               step(:)     = 0.D0
-               !
-               DO i = 1, k
-                  !
-                  gamma0 = SUM( overlap(:,i) * work(:) )
-                  !
-                  pos_best(:) = pos_best(:) + gamma0 * pos_old(:,i)
-                  !
-                  step(:) = step(:) - gamma0 * res(:,i)
-                  !
-               END DO
-               !
-               ! ... the step must be consistent with the old positions
-               !
-               step(:) = step(:) + ( pos_best(:) - pos(:) )
-               !
-               IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
-                  !
-                  ! ... if the extrapolated direction is uphill the last
-                  ! ... gradient only is uded
-                  !
-                  step(:) = - ( inv_hess(:,:) .times. grad(:) )
-                  !
-               END IF
-               !
-               DEALLOCATE( res, overlap, work, iwork )
-               !
-            ELSE
-               !
-               step(:) = - ( inv_hess(:,:) .times. grad(:) )
-               !
-            END IF
+         END IF
+         !
+         IF ( bfgs_ndim > 1 ) THEN
+            !
+            ! ... GDIIS extrapolation
+            !
+            CALL gdiis_step()
             !
          ELSE
             !
-            IF ( grad_error < 0.01D0 ) &
-               trust_radius_ini = MIN( 0.2D0, trust_radius_ini )
+            step(:) = - ( inv_hess(:,:) .times. grad(:) )
             !
-            step_accepted = .FALSE.
-            !
-            step = - grad
-            !
-         END IF
+         END IF         
          !
          IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
             !
             WRITE( UNIT = stdout, &
                    FMT = '(5X,"uphill step: resetting bfgs history",/)' )
             !
-            step(:) = - grad(:)
+            CALL reset_bfgs()
             !
-            inv_hess(:,:) = identity( dim )
+            step(:) = - ( inv_hess(:,:) .times. grad(:) )
             !
          END IF
          !  
@@ -448,19 +367,10 @@ MODULE bfgs_module
       !
       ! ... step along the bfgs direction
       !
-      IF ( norm( step(:) ) < eps16 ) THEN
-         !
-         WRITE( UNIT = stdout, &
-              & FMT = '(5X,"WARNING : norm( step )",T30,"= ",F18.10)' ) &
-              norm( step(:) )
-         !
-         step(:) = - grad(:)
-         !
-      ELSE
-         !
-         step(:) = trust_radius * step(:) / norm( step(:) )
-         !
-      END IF
+      IF ( norm( step(:) ) < eps16 ) &
+         CALL errore( 'bfgs', 'NR step-length unreasonably short', 1 )
+      !
+      step(:) = trust_radius * step(:) / norm( step(:) )
       !
       ! ... informations needed for the next iteration are saved
       ! ... this must be done before positions update
@@ -471,26 +381,129 @@ MODULE bfgs_module
       !
       pos(:) = pos(:) + step(:)
       !
+      pos(:)  = to_cart_coords( pos,  dim )
+      grad(:) = to_cart_coords( grad, dim )
+      !
+      CONTAINS
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE gdiis_step()
+          !--------------------------------------------------------------------
+          !
+          IMPLICIT NONE
+          !
+          REAL(DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
+          INTEGER,  ALLOCATABLE :: iwork(:)
+          INTEGER               :: k, k_m, info
+          REAL(DP)              :: gamma0
+          !
+          !
+          gdiis_iter = gdiis_iter + 1
+          !
+          k   = MIN( gdiis_iter, bfgs_ndim )
+          k_m = k + 1
+          !
+          ALLOCATE( res( dim, k ) )
+          ALLOCATE( overlap( k_m, k_m ) )
+          ALLOCATE( work( k_m ), iwork( k_m ) )
+          !
+          ! ... the new direction is added to the workspace
+          !
+          DO i = bfgs_ndim, 2, -1
+             !
+             pos_old(:,i)  = pos_old(:,i-1)
+             grad_old(:,i) = grad_old(:,i-1)
+             !
+          END DO
+          !
+          pos_old(:,1)  = pos(:)
+          grad_old(:,1) = grad(:)
+          !
+          ! ... |res_i> = H^-1 \times |g_i>
+          !
+          CALL DGEMM( 'N', 'N', dim, k, dim, 1.D0, &
+                      inv_hess, dim, grad_old, dim, 0.D0, res, dim )
+          !
+          ! ... overlap_ij = <grad_i|res_j>
+          !
+          CALL DGEMM( 'T', 'N', k, k, dim, 1.D0, &
+                      res, dim, res, dim, 0.D0, overlap, k_m )
+          !
+          overlap( :, k_m) = 1.D0
+          overlap(k_m, : ) = 1.D0
+          overlap(k_m,k_m) = 0.D0
+          !
+          ! ... overlap is inverted via Bunch-Kaufman diagonal pivoting method
+          !
+          CALL DSYTRF( 'U', k_m, overlap, k_m, iwork, work, k_m, info )
+          CALL DSYTRI( 'U', k_m, overlap, k_m, iwork, work, info )
+          !
+          ! ... overlap is symmetrised
+          !
+          FORALL( i = 1:k_m, &
+                  j = 1:k_m, j > i ) overlap(j,i) = overlap(i,j)
+          !
+          pos_best(:) = 0.D0
+          step(:)     = 0.D0
+          !
+          DO i = 1, k
+             !
+             gamma0 = overlap(k_m,i)
+             !
+             pos_best(:) = pos_best(:) + gamma0*pos_old(:,i)
+             !
+             step(:) = step(:) - gamma0*res(:,i)
+             !
+          END DO
+          !
+          ! ... the step must be consistent with the old positions
+          !
+          step(:) = step(:) + ( pos_best(:) - pos(:) )
+          !
+          IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
+             !
+             ! ... if the extrapolated direction is uphill use only the
+             ! ... last gradient and reset gdiis hystory
+             !
+             step(:) = - ( inv_hess(:,:) .times. grad(:) )
+             !
+             gdiis_iter = 0
+             !
+          END IF
+          !
+          DEALLOCATE( res, overlap, work, iwork )
+          !
+        END SUBROUTINE gdiis_step
+        !      
     END SUBROUTINE bfgs
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_bfgs_file( pos, grad, energy, scratch, dim, stdout )
+    SUBROUTINE reset_bfgs()
+      !------------------------------------------------------------------------
+      !
+      inv_hess(:,:) = inv_hess0(:,:)
+      !
+      gdiis_iter = 0
+      !
+    END SUBROUTINE reset_bfgs
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE read_bfgs_file( pos, grad, fixion, energy, scratch, dim, stdout )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
-      REAL(DP),         INTENT(IN)    :: pos(:)
-      REAL(DP),         INTENT(IN)    :: grad(:)
+      REAL(DP),         INTENT(INOUT) :: pos(:)
+      REAL(DP),         INTENT(INOUT) :: grad(:)
+      INTEGER,          INTENT(IN)    :: fixion(:)
       CHARACTER(LEN=*), INTENT(IN)    :: scratch
       INTEGER,          INTENT(IN)    :: dim
       INTEGER,          INTENT(IN)    :: stdout
       REAL(DP),         INTENT(INOUT) :: energy
       !
-      ! ... local variables
-      !
-      INTEGER             :: rank1, rank2
-      CHARACTER (LEN=256) :: bfgs_file, hess_file
-      LOGICAL             :: file_exists
+      INTEGER            :: rank1, rank2
+      CHARACTER(LEN=256) :: bfgs_file
+      LOGICAL            :: file_exists
       !
       !
       bfgs_file = TRIM( scratch ) // TRIM( prefix ) // '.bfgs'
@@ -513,8 +526,15 @@ MODULE bfgs_module
          READ( iunbfgs, * ) grad_old
          READ( iunbfgs, * ) inv_hess
          READ( iunbfgs, * ) tr_min_hit
+         READ( iunbfgs, * ) inv_hess0
+         READ( iunbfgs, * ) dirtm
          !     
          CLOSE( UNIT = iunbfgs )
+         !
+         invtm(:,:) = TRANSPOSE( dirtm(:,:) )
+         !
+         pos(:)  = to_internal_coords( pos,  dim )
+         grad(:) = to_internal_coords( grad, dim )
          !
          trust_radius_old = norm( pos(:) - pos_p(:) )
          !
@@ -526,46 +546,24 @@ MODULE bfgs_module
          !
          WRITE( UNIT = stdout, FMT = '(/,5X,"BFGS Geometry Optimization")' )
          !
-         pos_p            = 0.D0
-         grad_p           = 0.D0
-         scf_iter         = 0
-         bfgs_iter        = 0
-         energy_p         = energy
-         step_old         = 0.D0
+         CALL generate_hess( pos, dim )
+         !
+         CALL init_internal_coords( dim, fixion )
+         !
+         pos(:)  = to_internal_coords( pos,  dim )
+         grad(:) = to_internal_coords( grad, dim )
+         !
+         pos_p     = 0.D0
+         grad_p    = 0.D0
+         scf_iter  = 0
+         bfgs_iter = 0
+         energy_p  = energy
+         step_old  = 0.D0
+         !
          trust_radius_old = trust_radius_ini
          !
-         pos_old(:,:)     = 0.D0
-         grad_old(:,:)    = 0.D0
-         !
-         pos_old(:,1)     = pos
-         grad_old(:,1)    = grad
-         !
-         inv_hess   = identity( dim )
-         !
-         hess_file = TRIM( scratch ) // TRIM( prefix ) // '.hess_in'
-         !
-         INQUIRE( FILE = TRIM( hess_file ) , EXIST = file_exists )
-         !
-         IF ( file_exists ) THEN
-            !
-            OPEN( UNIT = iunbfgs, FILE = TRIM( hess_file ), &
-                  STATUS = 'UNKNOWN', ACTION = 'READ' )  
-            !
-            READ( iunbfgs, * ) rank1, rank2
-            !
-            IF ( ( rank1 == rank2 ) .AND. ( rank1 == dim ) ) THEN
-               !
-               WRITE( UNIT = stdout, &
-                    & FMT = '(/,5X,"Reading the approximate inverse ", &
-                    & "hessian from file",/)' )                
-               !
-               READ( iunbfgs, * ) inv_hess
-               !
-            END IF
-            !
-            CLOSE( UNIT = iunbfgs )                 
-            !
-         END IF
+         pos_old(:,:)  = 0.D0
+         grad_old(:,:) = 0.D0
          !
          tr_min_hit = .FALSE.
          !
@@ -597,6 +595,8 @@ MODULE bfgs_module
       WRITE( iunbfgs, * ) grad_old
       WRITE( iunbfgs, * ) inv_hess
       WRITE( iunbfgs, * ) tr_min_hit
+      WRITE( iunbfgs, * ) inv_hess0
+      WRITE( iunbfgs, * ) dirtm
       ! 
       CLOSE( UNIT = iunbfgs )
       !
@@ -613,17 +613,14 @@ MODULE bfgs_module
       INTEGER,  INTENT(IN)  :: dim
       INTEGER,  INTENT(IN)  :: stdout
       !
-      ! ... local variables
-      !
+      INTEGER               :: i
       REAL(DP), ALLOCATABLE :: y(:), s(:)
-      REAL(DP), ALLOCATABLE :: Hs(:), Hy(:), yH(:), aux(:)
-      REAL(DP), ALLOCATABLE :: H_bfgs(:,:), H_ms(:,:)
+      REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
+      REAL(DP), ALLOCATABLE :: H_bfgs(:,:)
       REAL(DP)              :: sdoty, coeff
       !
       !
-      ALLOCATE( y( dim ), s( dim ) )
-      ALLOCATE( Hs( dim ), Hy( dim ), yH( dim ), aux( dim ) )
-      ALLOCATE( H_bfgs( dim, dim ), H_ms( dim, dim ) )
+      ALLOCATE( y( dim ), s( dim ), Hy( dim ), yH( dim ), H_bfgs( dim, dim ) )
       !
       s(:) = pos(:)  - pos_p(:)
       y(:) = grad(:) - grad_p(:)
@@ -638,55 +635,22 @@ MODULE bfgs_module
                          &     "behaviour in update_inverse_hessian")' )
          WRITE( stdout, '(  5X,"         resetting bfgs history",/)' )
          !
-         inv_hess = identity( dim )
+         CALL reset_bfgs()
          !
          RETURN
          !
       END IF
       !
-      Hs(:) = ( inv_hess .times. s(:) )
       Hy(:) = ( inv_hess .times. y(:) )
       yH(:) = ( y(:) .times. inv_hess )
-      !
-#if defined (__DFP)
-      !
-      ! ... DFP update
-      !
-      inv_hess = inv_hess + matrix( y(:), y(:) ) / sdoty - &
-                            matrix( Hs(:), Hs(:) ) / ( s(:) .dot. Hs(:) )
-      !
-#endif
-      !
-#if defined (__BFGS)
       !
       ! ... BFGS update
       !
       inv_hess = inv_hess + 1.D0 / sdoty * &
                       ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
                         ( matrix( s, yH ) +  matrix( Hy, s ) ) )
-#endif
       !
-#if defined (__MIXEDBFGSMS)
-      !
-      ! ... Bofill ( = BFGS + Murtag-Sargent ) update
-      !
-      aux(:) = y(:) - Hs(:)
-      !
-      coeff = ABS( s .dot. aux ) / ( norm( s ) * norm( aux ) )
-      !
-      H_bfgs = 1.D0 / sdoty * &
-               ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
-                 ( matrix( s, yH ) +  matrix( Hy, s ) ) )
-      !
-      H_ms = matrix( aux, aux ) / ( s .dot. aux )
-      !
-      inv_hess = inv_hess + coeff * H_bfgs + ( 1.D0 - coeff ) * H_ms
-      !
-#endif
-      !
-      DEALLOCATE( y, s )
-      DEALLOCATE( Hs, Hy, yH, aux )
-      DEALLOCATE( H_bfgs, H_ms )
+      DEALLOCATE( y, s, Hy, yH, H_bfgs )
       !
       RETURN
       !
@@ -722,8 +686,7 @@ MODULE bfgs_module
       INTEGER,  INTENT(IN)  :: dim   
       INTEGER,  INTENT(IN)  :: stdout
       !
-      ! ... local variables
-      !
+      INTEGER  :: i
       REAL(DP) :: a
       LOGICAL  :: ltest
       !
@@ -762,16 +725,16 @@ MODULE bfgs_module
             ! ... the history has already been reset at the previous step :
             ! ... something is going wrong
             !
-            CALL errore( 'bfgs', &
-                         'bfgs history already reset at previous step', 1 )
+            CALL errore( 'bfgs', 'history already reset at previous step', 1 )
             !
          END IF
          !
-         WRITE( UNIT = stdout, FMT = '(5X,"resetting bfgs history",/)' )
+         WRITE( UNIT = stdout, &
+                FMT = '(5X,"small trust_radius: resetting bfgs history",/)' )
          !
-         inv_hess = identity( dim )
+         CALL reset_bfgs()
          !
-         step = - grad
+         step(:) = - ( inv_hess(:,:) .times. grad(:) )
          !
          trust_radius = trust_radius_min
          !
@@ -808,17 +771,6 @@ MODULE bfgs_module
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"Final energy = ",F18.10," ryd")' ) energy
          !
-         WRITE( UNIT = stdout, &
-              & FMT = '(/,5X,"Saving the approximate inverse hessian",/)' )
-         !
-         OPEN( UNIT = iunbfgs, FILE = TRIM( scratch ) // TRIM( prefix ) // &
-             & '.hess_out', STATUS = 'UNKNOWN', ACTION = 'WRITE' )  
-         !
-         WRITE( iunbfgs, * ) SHAPE( inv_hess )
-         WRITE( iunbfgs, * ) inv_hess
-         !
-         CLOSE( UNIT = iunbfgs )
-         !
          CALL delete_if_present( TRIM( scratch ) // TRIM( prefix ) // '.bfgs' )
          !
       ELSE
@@ -830,15 +782,224 @@ MODULE bfgs_module
          !
       END IF
       !
-      DEALLOCATE( pos_p )
-      DEALLOCATE( grad_p )
-      DEALLOCATE( pos_old )
-      DEALLOCATE( grad_old )
-      DEALLOCATE( inv_hess )
-      DEALLOCATE( step )
-      DEALLOCATE( step_old )
-      DEALLOCATE( pos_best )
+      IF ( ALLOCATED( pos_p ) )      DEALLOCATE( pos_p )
+      IF ( ALLOCATED( grad_p ) )     DEALLOCATE( grad_p )
+      IF ( ALLOCATED( pos_old ) )    DEALLOCATE( pos_old )
+      IF ( ALLOCATED( grad_old ) )   DEALLOCATE( grad_old )
+      IF ( ALLOCATED( inv_hess ) )   DEALLOCATE( inv_hess )
+      IF ( ALLOCATED( inv_hess0 ) )  DEALLOCATE( inv_hess0 )
+      IF ( ALLOCATED( step) )        DEALLOCATE( step )
+      IF ( ALLOCATED( step_old ) )   DEALLOCATE( step_old )
+      IF ( ALLOCATED( pos_best ) )   DEALLOCATE( pos_best )
+      IF ( ALLOCATED( dirtm ) )      DEALLOCATE( dirtm )
+      IF ( ALLOCATED( invtm ) )      DEALLOCATE( invtm )
       !
     END SUBROUTINE terminate_bfgs
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE init_internal_coords( dim, fixion )
+      !------------------------------------------------------------------------
+      !
+      ! ... inv_hess(:,:) contains the initial estimate of the hessian matrix
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: dim
+      INTEGER, INTENT(IN) :: fixion(:)
+      !
+      INTEGER               :: i, nat, info, lwork
+      REAL(DP), ALLOCATABLE :: w(:), work(:)
+      !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!! ... model hessian disabled (to enable it, comment out these lines)
+!!
+inv_hess(:,:)  = identity( dim )
+dirtm(:,:)     = identity( dim )
+invtm(:,:)     = identity( dim )
+inv_hess0(:,:) = inv_hess(:,:)
+RETURN
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !
+      lwork = 3*dim
+      !
+      ALLOCATE( w( dim ), work( lwork ) )
+      !
+      dirtm(:,:) = inv_hess(:,:)
+      !
+      CALL DSYEV( 'V', 'U', dim, dirtm, dim, w, work, lwork, info )
+      !
+      CALL errore( 'init_internal_coords', &
+                   'error in the diagonalisation of starting hessian', info )
+      !
+      invtm(:,:) = TRANSPOSE( dirtm(:,:) )
+      !
+      inv_hess(:,:) = 0.D0
+      FORALL( i = 4:dim ) inv_hess(i,i) = 1.D0 / w(i)
+      !
+      DEALLOCATE( w, work )
+      !
+      IF ( dim <= 12 ) THEN
+         !
+         PRINT *, "DIAGONAL INVERSE HESSIAN"
+         !
+         DO i = 1, dim
+            !
+            PRINT '(12(X,F10.6))', inv_hess(i,:)
+            !
+         END DO
+         !
+         PRINT *, "DIRECT TRANSFORMATION MATRIX"
+         !
+         DO i = 1, dim
+            !
+            PRINT '(12(X,F10.6))', dirtm(i,:)
+            !
+         END DO
+         !
+         PRINT *, "INVERSE TRANSFORMATION MATRIX"
+         !
+         DO i = 1, dim
+            !
+            PRINT '(12(X,F10.6))', invtm(i,:)
+            !
+         END DO
+         !
+      END IF
+      !
+      projmat(:,:) = 0.D0
+      !
+      FORALL( i = 1:dim ) projmat(i,i) = DBLE( fixion(i) )
+      !
+      projmat(:,:) = MATMUL( dirtm(:,:), MATMUL( projmat(:,:), invtm(:,:) ) )
+      !
+      inv_hess(:,:) = MATMUL( projmat(:,:), inv_hess(:,:) )
+      !
+      inv_hess0(:,:) = inv_hess(:,:)
+
+      IF ( dim <= 12 ) THEN
+         !
+         PRINT *, "INVERSE HESSIAN AGAIN"
+         !
+         DO i = 1, dim
+            !
+            PRINT '(12(X,F10.6))', inv_hess(i,:)
+            !
+         END DO
+         !
+      END IF
+      !
+    END SUBROUTINE init_internal_coords
+    !
+    !------------------------------------------------------------------------
+    FUNCTION to_internal_coords( vect_in, dim ) RESULT( vect_out )
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,  INTENT(IN) :: dim
+      REAL(DP), INTENT(IN) :: vect_in(dim)
+      REAL(DP)             :: vect_out(dim)
+      !
+      vect_out(:) = ( dirtm(:,:) .times. vect_in(:) )
+      !
+    END FUNCTION to_internal_coords
+    !
+    !------------------------------------------------------------------------
+    FUNCTION to_cart_coords( vect_in, dim ) RESULT( vect_out )
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,  INTENT(IN) :: dim
+      REAL(DP), INTENT(IN) :: vect_in(dim)
+      REAL(DP)             :: vect_out(dim)
+      !
+      vect_out(:) = ( invtm(:,:) .times. vect_in(:) )
+      !
+    END FUNCTION to_cart_coords
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE generate_hess( pos, dim )
+      !------------------------------------------------------------------------
+      !
+      ! ... the hessian matrix is termporarly stored into inv_hess(:,:)
+      !
+      USE constants,          ONLY : rytoev
+      USE constraints_module, ONLY : pbc
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,  INTENT(IN) :: dim
+      REAL(DP), INTENT(IN) :: pos(:)
+      !
+      REAL(DP), ALLOCATABLE :: tau(:,:)
+      REAL(DP)              :: k_ij, dist_ij
+      INTEGER               :: i, j, in, jn
+      INTEGER               :: nat
+      REAL(DP)              :: r_cov_max
+      !
+      REAL(DP), PARAMETER :: r_cov = 2.23D0
+      REAL(DP), PARAMETER :: k0    = 6174.45D0
+      !
+      !
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+!!
+!! ... model hessian disabled (to enable it, comment out these lines)
+!!      
+inv_hess(:,:) = identity( dim ); RETURN
+!!
+!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+      !
+      nat = dim / 3
+      !
+      r_cov_max = r_cov
+      !
+      ALLOCATE( tau( 3, nat ) )
+      !
+      tau(:,:) = RESHAPE( pos, (/ 3, nat /) )
+      !
+      inv_hess(:,:) = 0.D0
+      !
+      DO in = 1, nat
+         !
+         i = 3*in - 2
+         !
+         DO jn = 1, nat
+            !
+            IF ( jn == in ) CYCLE
+            !
+            j = 3*jn - 2
+            !
+            dist_ij = norm( pbc( tau(:,in) - tau(:,jn) ) )
+            !
+            IF ( dist_ij > 6.D0*r_cov_max ) CYCLE
+            !
+            k_ij = k0*( ( r_cov + r_cov ) / dist_ij )**8
+            !
+            inv_hess(i:i+2,i:i+2) = inv_hess(i:i+2,i:i+2) + k_ij*identity( 3 )
+            !
+            inv_hess(j:j+2,i:i+2) = - k_ij*identity( 3 )
+            !
+         END DO
+         !
+      END DO
+      !
+      IF ( dim <= 12 ) THEN
+         !
+         PRINT *, "HESSIAN"
+         !
+         DO i = 1, dim
+            !
+            PRINT '(12(X,F10.3))', inv_hess(i,:)
+            !
+         END DO
+         !
+      END IF
+      !
+      DEALLOCATE( tau )
+      !
+    END SUBROUTINE generate_hess
     !
 END MODULE bfgs_module
