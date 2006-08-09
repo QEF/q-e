@@ -51,32 +51,29 @@ subroutine sph_bes (msh, r, q, l, jl)
   !  case l=-1
 
   if (l == - 1) then
-     if (abs (q * r (1) ) < eps14) then
-        call errore ('sph_bes', 'j_{-1}(0) ?!?',-1)
-        ir0 = 2
-     else
-        ir0 = 1
-     end if
+     if (abs (q * r (1) ) < eps14) call errore ('sph_bes', 'j_{-1}(0) ?!?',1)
 
 #if defined (__MASS)
 
-        qr = q * r
-        call vcos( cos_qr, qr, msh)
-        jl(ir0:) = cos_qr(ir0:) / ( q * r(ir0:) )
+     qr = q * r
+     call vcos( cos_qr, qr, msh)
+     jl = cos_qr / qr
 
 #else
 
-        jl (ir0:) = cos (q * r (ir0:) ) / (q * r (ir0:) )
+     jl (:) = cos (q * r (:) ) / (q * r (:) )
 
 #endif
 
-        if (ir0 == 2) jl(1) = jl(2)
-      return
+     return
+
   end if
 
   ! series expansion for small values of the argument
+  ! ir0 is the first grid point for which q*r(ir0) > xseries
+  ! notice that for small q it may happen that q*r(msh) < xseries !
 
-  ir0 = 1
+  ir0 = msh+1
   do ir = 1, msh
      if ( abs (q * r (ir) ) > xseries ) then
         ir0 = ir
@@ -92,7 +89,12 @@ subroutine sph_bes (msh, r, q, l, jl)
                 ( 1.0_dp - x**2/3.0_dp/2.0_dp/(2.0_dp*l+7) * &
                 ( 1.0_dp - x**2/4.0_dp/2.0_dp/(2.0_dp*l+9) ) ) ) )
   end do
-        
+
+  ! the following shouldn't be needed but do you trust compilers
+  ! to do the right thing in this special case ? I don't - PG
+
+  if ( ir0 > msh ) return
+
   if (l == 0) then
 
 #if defined (__MASS)
@@ -235,7 +237,6 @@ subroutine sph_bes (msh, r, q, l, jl)
      call errore ('sph_bes', 'not implemented', abs(l))
 
   endif
-
   !
   return
 end subroutine sph_bes
