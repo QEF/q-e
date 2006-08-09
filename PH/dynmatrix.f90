@@ -146,8 +146,12 @@ subroutine dynmatrix
   !
   !   Diagonalizes the dynamical matrix at q
   !
+  IF (all_comp) THEN
+     call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
+     IF (lgamma) CALL find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, &
+                                     xq, rtau, amass, ntyp, ityp)
+  END IF
 
-  if (all_comp) call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
   call stop_clock('dynmatrix')
   return
 end subroutine dynmatrix

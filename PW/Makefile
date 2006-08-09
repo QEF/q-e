@@ -56,6 +56,7 @@ data_structure.o \
 davcio.o \
 deriv_drhoc.o \
 diis_base.o \
+divide_class.o \
 real_diis_module.o \
 realus.o \
 complex_diis_module.o \

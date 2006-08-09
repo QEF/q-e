@@ -1,4 +1,11 @@
-SUBROUTINE find_group(nrot,smat,gname)
+!
+! Copyright (C) 2006 Quantum-ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+SUBROUTINE find_group(nrot,smat,gname,code_group)
 !
 !  Given a group of nrot rotation matrices smat (in cartesian coordinates)
 !  this routine finds the name of the point group. It assumes but does not
@@ -11,12 +18,12 @@ USE kinds, ONLY : DP
 
 IMPLICIT NONE
 
-INTEGER :: nrot
+INTEGER :: nrot, code_group
 REAL(DP) :: smat(3,3,nrot)
 CHARACTER (LEN=4) :: gname, group_name
-INTEGER :: noperation(6), code_group, irot, ts, tipo_sym
+INTEGER :: noperation(6), irot, ts, tipo_sym
 !
-! For each possible group operation
+! For each possible group operation the function tipo_sym gives a code
 !   1 identity, 
 !   2 inversion, 
 !   3 proper rotation <> 180, 

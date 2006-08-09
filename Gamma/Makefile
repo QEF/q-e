@@ -57,6 +57,7 @@ PWOBJS = \
 ../PW/real_diis_module.o \
 ../PW/complex_diis_module.o \
 ../PW/diropn.o \
+../PW/divide_class.o \
 ../PW/divide_et_impera.o \
 ../PW/divide.o \
 ../PW/d_matrix.o \

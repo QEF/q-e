@@ -35,6 +35,8 @@ SUBROUTINE summary()
   USE pseud,           ONLY : zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
                               a_nlcc, b_nlcc, alpha_nlcc
   USE symme,           ONLY : nsym, invsym, s, t_rev, ftau
+  USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
+                             char_mat, name_rap, name_class
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, diis_ndim, &
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
@@ -63,6 +65,11 @@ SUBROUTINE summary()
     ! counter on types
     ! counter on angular momenta
     ! total number of G-vectors (parallel executio
+  INTEGER :: &
+          nclass_ref   ! The number of classes of the point group
+  LOGICAL :: is_complex
+  INTEGER :: irot, iclass
+    !
   REAL(DP) :: sr(3,3,48), ft1, ft2, ft3
     ! symmetry matrix in real axes
     ! fractionary translation
@@ -288,12 +295,33 @@ SUBROUTINE summary()
                                          isym,  (sr (1, ipol,isym) , ipol = 1, 3)
            WRITE( stdout, '(17x," (",3f11.7," )")')  (sr (2, ipol,isym) , ipol = 1, 3)
            WRITE( stdout, '(17x," (",3f11.7," )"/)') (sr (3, ipol,isym) , ipol = 1, 3)
-        ENDIF
+        END IF
+     END DO
+     CALL find_group(nsym,sr,gname,code_group)
+     WRITE(stdout,'(5x,"the point group is ",a4)') gname
+     CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap,name_class)
+     WRITE(stdout,'(5x, "there are", i3," classes")') nclass_ref
+     WRITE(stdout,'(5x, "the character table:")')
+     WRITE(stdout,'(/6x,12(a5,1x))') (name_class(irot),irot=1,nclass_ref)
+     DO iclass=1,nclass_ref
+        WRITE(stdout,'(a4,12f6.2)') name_rap(iclass), &
+                 (REAL(char_mat(iclass,irot)),irot=1,nclass_ref)
      ENDDO
-     CALL find_group(nsym,sr,gname)
-     WRITE(6,'(5x,"the point group is ",a4)') gname
-
-  ENDIF
+     IF (is_complex(code_group)) THEN
+        WRITE(stdout,'(5x,"imaginary part")') 
+        DO iclass=1,nclass_ref
+           WRITE(stdout,'(a4,12f6.2)') name_rap(iclass), &
+                 (AIMAG(char_mat(iclass,irot)),irot=1,nclass_ref)
+        ENDDO
+     ENDIF
+     CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
+     IF (nclass.ne.nclass_ref) CALL errore('summary','point group ??',1)
+     WRITE(stdout,'(/5x, "the symmetry operations in each class:")')
+     DO iclass=1,nclass
+        WRITE(stdout,'(5x,a5,12i5)') name_class(which_irr(iclass)), &
+                      (elem(i,iclass), i=1,nelem(iclass))
+     ENDDO
+  END IF
   !
   !    description of the atoms inside the unit cell
   !

@@ -208,6 +208,26 @@ MODULE symme
        invsym                   ! if .TRUE. the system has inversion symmetry
   !
 END MODULE symme
+
+MODULE rap_point_group
+   !
+   USE kinds,      ONLY : DP
+   !
+   INTEGER :: &
+          code_group,  &   ! The code of the point group
+          nclass,  &       ! The number of classes of the point group
+          nelem(12),   &   ! The elements of each class
+          elem(8,12),  &   ! Which elements in the smat list for each class
+          which_irr(12)    ! For each class gives its position in the 
+                           ! character table.
+   !
+   COMPLEX(DP) :: char_mat(12,12)       ! the character tables
+
+   CHARACTER(LEN=4) :: name_rap(12), & ! the name of the representation
+                       gname           ! the name of the group
+   CHARACTER(LEN=5) :: name_class(12)  ! the name of the class
+   !
+END MODULE rap_point_group
 !
 !
 MODULE pseud
@@ -580,6 +600,7 @@ MODULE pwcom
   USE lsda_mod
   USE ktetra
   USE symme
+  USE rap_point_group
   USE pseud
   USE vlocal
   USE wvfct

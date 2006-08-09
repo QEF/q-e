@@ -131,6 +131,7 @@ PWOBJS = \
 ../PW/deriv_drhoc.o \
 ../PW/diropn.o \
 ../PW/divide.o \
+../PW/divide_class.o \
 ../PW/divide_et_impera.o \
 ../PW/dndepsilon.o \
 ../PW/dprojdepsilon.o \

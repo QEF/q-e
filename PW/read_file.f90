@@ -23,6 +23,8 @@ SUBROUTINE read_file()
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx
   USE symme,                ONLY : irt, nsym, ftau, s
+  USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
+                                   char_mat, name_rap, gname, name_class
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
@@ -44,8 +46,9 @@ SUBROUTINE read_file()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, ierr
+  INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
   REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
+  REAL(DP) :: sr(3,3,48)
   LOGICAL  :: exst
   !
   !
@@ -216,6 +219,15 @@ SUBROUTINE read_file()
   CALL pw_readfile( 'wave', ierr )
   !
   CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+  !
+  !  setup the point group representation tables
+  ! 
+  DO isym=1,nsym
+     CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
+  END DO
+  CALL find_group(nsym,sr,gname,code_group)
+  CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class)
+  CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
   !
   RETURN
   !

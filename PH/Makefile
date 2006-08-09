@@ -64,6 +64,7 @@ ef_shift.o \
 elph.o \
 elphon.o \
 find_equiv_sites.o \
+find_mode_sym.o \
 generate_dynamical_matrix_c.o \
 gmressolve_all.o \
 h_psiq.o \
@@ -239,6 +240,7 @@ PWOBJS = \
 ../PW/diropn.o \
 ../PW/divide.o \
 ../PW/divide_et_impera.o \
+../PW/divide_class.o \
 ../PW/dndepsilon.o \
 ../PW/dndtau_of_k.o \
 ../PW/dprojdepsilon.o \
