@@ -1596,7 +1596,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
   !
   CALL sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, 6, &
        6, 6, irt, ftau, nqx, nq, q, wk, invsym, minus_q, xqq, &
-       0, 0, .FALSE., mdum)
+       0, 0, .FALSE., .FALSE., mdum)
   
   IF (ntetra /= 6 * nk1 * nk2 * nk3) &
        CALL errore ('gen_qpoints','inconsistent ntetra',1)

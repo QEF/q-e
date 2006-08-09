@@ -693,7 +693,7 @@ SUBROUTINE setup()
   !
   CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
        nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
-       xqq, modenum, noncolin, m_loc )
+       xqq, modenum, noncolin, domag, m_loc )
   !
   CALL checkallsym( nsym, s, nat, tau, ityp, at, &
        bg, nr1, nr2, nr3, irt, ftau )

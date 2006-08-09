@@ -133,7 +133,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   nosym = .false.
   call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
-       modenum, .false., mdum)
+       modenum, .false., .false., mdum)
   do isym = 1, nsym
      sym (isym) = .true.
   enddo

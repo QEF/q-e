@@ -9,7 +9,7 @@
 !-----------------------------------------------------------------------
 subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
      nr1, nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q, xq, &
-     modenum, noncolin, m_loc)
+     modenum, noncolin, domag, m_loc)
   !-----------------------------------------------------------------------
   !
   !     This routine performs the following tasks:
@@ -67,7 +67,7 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   ! input-output: weights of k points
   ! input: coordinates of a q-point
 
-  logical :: invsym, minus_q, noncolin
+  logical :: invsym, minus_q, noncolin, domag
   ! output: if true the crystal has inversion
   ! output: if true a symmetry sends q->-q+G
   character :: sname (48) * 45
@@ -115,7 +115,7 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
 
   call smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, nr3, &
        sym, minus_q)
-  IF (noncolin) THEN
+  IF (noncolin.and.domag) THEN
      minus_q=.false.
      IF ( ABS(DOT_PRODUCT(xq,xq)) > 1.0D-07 ) CALL errore ('sgama', &
           'phonon not implemented with non collinear magnetism', 1)
