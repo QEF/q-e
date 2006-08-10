@@ -2,7 +2,8 @@ module realus
   USE kinds,                ONLY : DP
   integer,allocatable :: box(:,:), maxbox(:)
   REAL(KIND=DP),ALLOCATABLE ::&
-       qsave(:,:,:,:) !To be used in newd in real space - max kkbeta, nbrx,nbrx
+!!!       qsave(:,:,:,:) !To be used in newd in real space - max kkbeta, nbrx,nbrx
+       qsave(:,:,:) !To be used in newd in real space - max kkbeta, nbrx,nbrx
   !nat 
   real(KIND=DP),allocatable:: boxradius(:),boxdistance(:,:),xyz(:,:,:)     
   real(KIND=DP),allocatable:: spher(:,:,:) !Spherical harmonics
@@ -80,16 +81,13 @@ contains
     parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi,eps = 1.0d-9)
 
 
-    ! end from 
-
     call start_clock ('qpointlist')
-
 
     !generates the spherical harmonics for r space
     !
 
-
-    if (.not.allocated (tau0))    allocate(tau0(3,nat)) 
+    allocate(tau0(3,nat)) 
+    
     if (allocated(box)) deallocate (box)
     if (.not.allocated(maxbox)) allocate (maxbox(nat))
     maxbox=0
@@ -136,8 +134,6 @@ contains
 #endif
     ! Bring all the atomic positions on the first unit cell
 
-
-
     tau0=tau
     call cryst_to_cart(nat,tau0,bg,-1)
     do iat=1,nat
@@ -150,8 +146,6 @@ contains
     !now we find the points
     maxbox=0
     do iat = 1,nat
-
-
 
        do ir=1,nrxx
 
@@ -168,9 +162,9 @@ contains
                 do k = k0-nr3, k0+nr3, nr3
 
                    do ipol=1,3
-                      posi(ipol) =  real(i)/real(nr1) * at(ipol,1) &
-                           + real(j)/real(nr2) * at(ipol,2) &
-                           + real(k)/real(nr3) * at(ipol,3)
+                      posi(ipol) = DBLE(i)/DBLE(nr1) * at(ipol,1) &
+                                 + DBLE(j)/DBLE(nr2) * at(ipol,2) &
+                                 + DBLE(k)/DBLE(nr3) * at(ipol,3)
 
                    enddo
 
@@ -193,6 +187,9 @@ contains
        end do
        write (6,*) 'saved ', maxbox (iat), ' of ', nrxx, ' for ',iat
     end do
+
+    DEALLOCATE( tau0 )
+    DEALLOCATE( boxradius )
 
     goodestimate=maxval(maxbox)
     if (goodestimate > roughestimate) call errore('qpointlist', 'Roughestimate &
@@ -232,8 +229,6 @@ contains
        allocate (rl(3,idimension),rl2(idimension))
        do ir=1,idimension
 
-
-
           do ipol=1,3
              rl(ipol,ir) = xyz(ipol,ir,inat)
 
@@ -254,16 +249,18 @@ contains
 !We delete the buffer
        deallocate(rl,rl2,tempspher)
 
-
-
     end do
 
-
-
+    DEALLOCATE( xyz )
 
  !Let's do the main work
+ 
     if (allocated(qsave)) deallocate(qsave)
-    allocate(qsave(goodestimate,maxval(nh),maxval(nh),nat))
+   
+   ! allocate(qsave(goodestimate,maxval(nh),maxval(nh),nat))
+   
+    allocate(qsave(goodestimate,nhm*(nhm+1)/2,nat))
+    
     qsave=0d0
 
 !The source is inspired by init_us_1
@@ -317,7 +314,7 @@ contains
        allocate(qtot(kkbeta(nt),nbeta(nt),nbeta(nt)))
       
 !variables used for spline interpolation
- if (allocated(xsp)) deallocate(xsp)
+       if (allocated(xsp)) deallocate(xsp)
        if (allocated(ysp)) deallocate(ysp)
        if (allocated(wsp)) deallocate(wsp)
 
@@ -374,16 +371,31 @@ contains
 !else spline interpolation
                             interpolatedqtot= splint(xsp,ysp,wsp,boxdistance(ir,inat))
                          endif
-                         do iih=1,nh(nt)
-                            do ijh=iih,nh(nt)
-                               if ((nb.eq.indv(iih,nt)).and.(mb.eq.indv(ijh,nt))) then
+                         
+                        ! do iih=1,nh(nt)
+                        !    do ijh=iih,nh(nt)
+                        !       if ((nb.eq.indv(iih,nt)).and.(mb.eq.indv(ijh,nt))) then
+                        !          do lemme=l*l+1,(l+1)*(l+1)
+                        !             qsave(ir,iih,ijh,inat)=qsave(ir,iih,ijh,inat)+interpolatedqtot* &
+                        !                  &ap(lemme,nhtolm(iih,nt),nhtolm(ijh,nt)) * spher(ir,lemme,inat)
+                        !          end do
+                        !       endif
+                        !    end do
+                        ! end do
+                         
+                         ijh = 0
+                         do ih=1,nh(nt)
+                            do jh=ih,nh(nt)
+                               ijh = ijh + 1
+                               if ((nb.eq.indv(ih,nt)).and.(mb.eq.indv(jh,nt))) then
                                   do lemme=l*l+1,(l+1)*(l+1)
-                                     qsave(ir,iih,ijh,inat)=qsave(ir,iih,ijh,inat)+interpolatedqtot* &
-                                          &ap(lemme,nhtolm(iih,nt),nhtolm(ijh,nt)) * spher(ir,lemme,inat)
+                                     qsave(ir,ijh,inat)=qsave(ir,ijh,inat)+interpolatedqtot* &
+                                          &ap(lemme,nhtolm(ih,nt),nhtolm(jh,nt)) * spher(ir,lemme,inat)
                                   end do
                                endif
                             end do
                          end do
+                         
                       enddo
                    endif
 
@@ -392,14 +404,13 @@ contains
           end do
        endif
     end do
-    if (allocated(qtot)) deallocate (qtot)
-    if (allocated(xsp)) deallocate(xsp)
-    if (allocated(ysp)) deallocate(ysp)
-    if (allocated(wsp)) deallocate(wsp)
-
-
-
-
+    
+    DEALLOCATE( qtot )
+    DEALLOCATE( xsp )
+    DEALLOCATE( ysp )
+    DEALLOCATE( wsp )
+    DEALLOCATE( boxdistance )
+    DEALLOCATE( spher )
 
     call stop_clock('qpointlist')
   end subroutine qpointlist
@@ -424,7 +435,7 @@ IMPLICIT NONE
     !
 REAL(DP), PARAMETER  :: pi = 3.14159265358979d0, fpi = 4.d0 * pi
 REAL(DP), ALLOCATABLE :: aux(:,:)
-INTEGER :: na, ih, jh, is, ir, nt, nht, nspin0
+INTEGER :: na, ih, jh, ijh, is, ir, nt, nht, nspin0
 
 IF (.NOT.okvan) THEN
    !
@@ -481,12 +492,14 @@ END DO
 
 DO na=1,nat
    nt=ityp(na)
+   ijh = 0
    DO ih=1,nh(nt)
       DO jh=ih,nh(nt)
+         ijh = ijh + 1
          DO is=1,nspin0
             DO ir=1,maxbox(na)
-               deeq (ih,jh,na,is)=deeq(ih,jh,na,is)+( qsave(ir,ih,jh,na) &
-                                 *aux(box(ir,na),is) )  
+               deeq (ih,jh,na,is)= deeq(ih,jh,na,is) + &
+                                   qsave(ir,ijh,na)*aux(box(ir,na),is)
             END DO
             deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
          END DO
@@ -896,7 +909,7 @@ subroutine addusdens_r
                  ijh = ijh + 1
                  do ir =1,maxbox(na)
                     rho(box(ir,na),is) = rho(box(ir,na),is) + &
-                                         qsave(ir,ih,jh,na) * becsum(ijh,na,is)
+                                         qsave(ir,ijh,na) * becsum(ijh,na,is)
                   enddo
               enddo
            enddo
