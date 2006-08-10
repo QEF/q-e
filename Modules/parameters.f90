@@ -14,7 +14,7 @@ MODULE parameters
   SAVE
   !
   INTEGER, PARAMETER :: &
-       ntypx  = 4,      &! max number of different types of atom
+       ntypx  = 10,     &! max number of different types of atom
        npsx   = ntypx,  &! max number of different PPs (obsolete)
        npk    = 4000,   &! max number of k-points               
        lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
