@@ -315,7 +315,7 @@ SUBROUTINE summary()
         ENDDO
      ENDIF
      CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
-     IF (nclass.ne.nclass_ref) CALL errore('summary','point group ??',1)
+     IF (nclass.ne.nclass_ref) CALL errore('summary','point group ?',1)
      WRITE(stdout,'(/5x, "the symmetry operations in each class:")')
      DO iclass=1,nclass
         WRITE(stdout,'(5x,a5,12i5)') name_class(which_irr(iclass)), &
