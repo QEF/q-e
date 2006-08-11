@@ -19,7 +19,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        lcoarsegrained, ndr, ndw, nomore, tsde, &
                                        tortho, tnosee, tnosep, trane, tranp,   &
                                        tsdp, tcp, tcap, ampre, amprp, tnoseh,  &
-                                       tolp, ortho_eps, ortho_max, printwfc
+                                       tolp, ortho_eps, ortho_max, printwfc,   &
+                                       tprojwfc
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE cvan,                     ONLY : nvb, ish
@@ -851,6 +852,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                      fion, tps, z0, f, rhopr )
      !
   END IF
+  !
+  IF( tprojwfc )   CALL projwfc( c0, SIZE( c0, 2 ), eigr, vkb, nbsp ) 
   !
   IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !

@@ -38,9 +38,12 @@
             lmax_wfc = MAX (lmax_wfc, lchi (nb, is) )
          ENDDO
       ENDDO
+      !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
+      !
       CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
       ndm = MAXVAL(mesh(1:nsp))
+      !
       ALLOCATE(jl(ndm), vchi(ndm))
       ALLOCATE(q(ngw), chiq(ngw))
 !
@@ -51,10 +54,10 @@
       natwfc=0
       isa   = 0
       DO is=1,nsp
-!
-!   radial fourier transform of the chi functions
-!   NOTA BENE: chi is r times the radial part of the atomic wavefunction
-!
+         !
+         !   radial fourier transform of the chi functions
+         !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
+         !
          DO nb = 1,nchi(is)
             l = lchi(nb,is)
             DO i=1,ngw
@@ -64,10 +67,10 @@
                ENDDO
                CALL simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
             ENDDO
-!
-!   multiply by angular part and structure factor
-!   NOTA BENE: the factor i^l MUST be present!!!
-!
+            !
+            !   multiply by angular part and structure factor
+            !   NOTA BENE: the factor i^l MUST be present!!!
+            !
             DO m = 1,2*l+1
                lm = l**2 + m
                DO ia = 1 + isa, na(is) + isa
@@ -412,20 +415,20 @@ END FUNCTION
       USE kinds,                    ONLY: DP
       USE control_flags,            ONLY: iprint
       USE ions_base,                ONLY: na, nsp, nat
-      USE cvan
+      USE cvan,                     ONLY: nvb
       USE uspp_param,               ONLY: nhm, nh
       USE grid_dimensions,          ONLY: nr1, nr2, nr3, &
                                           nr1x, nr2x, nr3x, nnr => nnrx
       USE electrons_base,           ONLY: nspin
-      USE gvecb
+      USE gvecb,                    ONLY: ngb, npb, nmb
       USE gvecp,                    ONLY: ng => ngm
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
                                           nr1bx, nr2bx, nr3bx, nnrb => nnrbx
       USE cell_base,                ONLY: ainv
-      USE qgb_mod
-      USE cdvan
-      USE derho
-      USE dqgb_mod
+      USE qgb_mod,                  ONLY: qgb
+      USE cdvan,                    ONLY: drhovan
+      USE derho,                    ONLY: drhor, drhog
+      USE dqgb_mod,                 ONLY: dqgb
       USE recvecs_indexes,          ONLY: nm, np
       USE cp_interfaces,            ONLY: fwfft, invfft
       USE fft_base,                 ONLY: dfftb
@@ -704,30 +707,30 @@ END FUNCTION
 !
 ! Contribution to ionic forces from local pseudopotential
 !
-      USE kinds, ONLY: dp
-      USE constants, ONLY: pi, fpi
-      USE electrons_base, ONLY: nspin
-      USE gvecs
-      USE gvecp, ONLY: ng => ngm
+      USE kinds,              ONLY: dp
+      USE constants,          ONLY: pi, fpi
+      USE electrons_base,     ONLY: nspin
+      USE gvecs,              ONLY: ngs
+      USE gvecp,              ONLY: ng => ngm
       USE reciprocal_vectors, ONLY: gstart, gx, mill_l, g
-      USE cell_base, ONLY: omega, tpiba, tpiba2
-      USE ions_base, ONLY: nsp, na, nat
-      USE grid_dimensions, ONLY: nr1, nr2, nr3
-      USE local_pseudo, ONLY: vps, rhops
+      USE cell_base,          ONLY: omega, tpiba, tpiba2
+      USE ions_base,          ONLY: nsp, na, nat
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3
+      USE local_pseudo,       ONLY: vps, rhops
 !
       IMPLICIT NONE
 ! input
-      COMPLEX(8) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
+      COMPLEX(DP) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
      &           ei1(-nr1:nr1,nat),                                 &
      &           ei2(-nr2:nr2,nat),                                 &
      &           ei3(-nr3:nr3,nat)
 ! output
-      REAL(8) fion1(3,nat)
+      REAL(DP) fion1(3,nat)
 ! local
       INTEGER ig, is, isa, ism, ia, ix, iss, isup, isdw
       INTEGER i, j, k
-      REAL(8)  wz
-      COMPLEX(8) eigrx, vcgs, cnvg, cvn
+      REAL(DP)  wz
+      COMPLEX(DP) eigrx, vcgs, cnvg, cvn
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
@@ -783,15 +786,16 @@ END FUNCTION
 !
 ! initialize wavefunctions with gaussians - edit to fit your system
 !
-      USE ions_base, ONLY: na, nsp, nat
-      USE electrons_base, ONLY: n => nbsp
-      USE gvecw, ONLY: ngw
+      USE kinds,              ONLY: DP
+      USE ions_base,          ONLY: na, nsp, nat
+      USE electrons_base,     ONLY: n => nbsp
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gx, g
 !
       IMPLICIT NONE
 !
-      COMPLEX(8) eigr(ngw,nat), cm(ngw,n)
-      REAL(8)    sigma, auxf
+      COMPLEX(DP) eigr(ngw,nat), cm(ngw,n)
+      REAL(DP)    sigma, auxf
       INTEGER nband, is, ia, ig, isa
 !
       sigma=12.0
@@ -1157,26 +1161,27 @@ END FUNCTION
 !     sets the indexes irb and positions taub for the small boxes 
 !     around atoms
 !
-      USE ions_base, ONLY: nsp, na, nat
-      USE grid_dimensions, ONLY: nr1, nr2, nr3
-      USE cell_base, ONLY: ainv, a1, a2, a3
+      USE kinds,                    ONLY: DP
+      USE ions_base,                ONLY: nsp, na, nat
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3
+      USE cell_base,                ONLY: ainv, a1, a2, a3
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
-      USE control_flags, ONLY: iprsta
-      USE io_global, ONLY: stdout
-      USE mp_global, ONLY: nproc_image, me_image
-      USE fft_base,  ONLY: dfftb, dfftp, fft_dlay_descriptor
-      USE fft_types, ONLY: fft_box_set
-      USE cvan,      ONLY: nvb
+      USE control_flags,            ONLY: iprsta
+      USE io_global,                ONLY: stdout
+      USE mp_global,                ONLY: nproc_image, me_image
+      USE fft_base,                 ONLY: dfftb, dfftp, fft_dlay_descriptor
+      USE fft_types,                ONLY: fft_box_set
+      USE cvan,                     ONLY: nvb
 
       IMPLICIT NONE
 ! input
-      REAL(8), INTENT(in):: tau0(3,nat)
+      REAL(DP), INTENT(in)  :: tau0(3,nat)
 ! output
-      INTEGER, INTENT(out):: irb(3,nat)
-      REAL(8), INTENT(out):: taub(3,nat)
+      INTEGER,  INTENT(out) :: irb(3,nat)
+      REAL(DP), INTENT(out) :: taub(3,nat)
 ! local
-      REAL(8) x(3), xmod
-      INTEGER nr(3), nrb(3), xint, is, ia, i, isa
+      REAL(DP) :: x(3), xmod
+      INTEGER  :: nr(3), nrb(3), xint, is, ia, i, isa
 !
       nr (1)=nr1
       nr (2)=nr2
@@ -1278,39 +1283,39 @@ END FUNCTION
 !     where
 !         rho_lm = \sum_j f_j <psi_j|beta_l><beta_m|psi_j>
 !
-      USE kinds, ONLY: dp
-      USE uspp_param, ONLY: nh, nhm
-      USE uspp, ONLY: deeq
-      USE cvan, ONLY: nvb
-      USE ions_base, ONLY: nat, nsp, na
-      USE parameters, ONLY: nsx
-      USE constants, ONLY: pi, fpi
-      USE grid_dimensions, ONLY: nr3, nnr => nnrx
-      USE gvecb
-      USE small_box, ONLY: omegab, tpibab
+      USE kinds,                    ONLY: dp
+      USE uspp_param,               ONLY: nh, nhm
+      USE uspp,                     ONLY: deeq
+      USE cvan,                     ONLY: nvb
+      USE ions_base,                ONLY: nat, nsp, na
+      USE parameters,               ONLY: nsx
+      USE constants,                ONLY: pi, fpi
+      USE grid_dimensions,          ONLY: nr3, nnr => nnrx
+      USE gvecb,                    ONLY: ngb, npb, nmb, gxb
+      USE small_box,                ONLY: omegab, tpibab
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      USE qgb_mod
-      USE electrons_base, ONLY: nspin
-      USE control_flags, ONLY: iprint, thdyn, tfor, tprnfor
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-      USE cp_interfaces, ONLY: invfft
-      USE fft_base, ONLY: dfftb
+                                          nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      USE qgb_mod,                  ONLY: qgb
+      USE electrons_base,           ONLY: nspin
+      USE control_flags,            ONLY: iprint, thdyn, tfor, tprnfor
+      USE mp,                       ONLY: mp_sum
+      USE mp_global,                ONLY: intra_image_comm
+      USE cp_interfaces,            ONLY: invfft
+      USE fft_base,                 ONLY: dfftb
 !
       IMPLICIT NONE
 ! input
       INTEGER irb(3,nat)
-      REAL(8) rhovan(nhm*(nhm+1)/2,nat,nspin)
-      COMPLEX(8) eigrb(ngb,nat)
-      REAL(8)  vr(nnr,nspin)
+      REAL(DP) rhovan(nhm*(nhm+1)/2,nat,nspin)
+      COMPLEX(DP) eigrb(ngb,nat)
+      REAL(DP)  vr(nnr,nspin)
 ! output
-      REAL(8)  fion(3,nat)
+      REAL(DP)  fion(3,nat)
 ! local
       INTEGER isup,isdw,iss, iv,ijv,jv, ik, nfft, isa, ia, is, ig
-      REAL(8)  fvan(3,nat,nsx), fac, fac1, fac2, boxdotgrid
-      COMPLEX(8) ci, facg1, facg2
-      COMPLEX(8), ALLOCATABLE :: qv(:)
+      REAL(DP)  fvan(3,nat,nsx), fac, fac1, fac2, boxdotgrid
+      COMPLEX(DP) ci, facg1, facg2
+      COMPLEX(DP), ALLOCATABLE :: qv(:)
       EXTERNAL boxdotgrid
 !
       CALL start_clock( 'newd' )
@@ -1526,20 +1531,21 @@ END FUNCTION
 !     contribution to fion due to the orthonormality constraint
 ! 
 !
-      USE io_global, ONLY: stdout
-      USE ions_base, ONLY: na, nsp, nat
-      USE uspp, ONLY :nhsa=>nkb, qq
-      USE uspp_param, ONLY: nhm, nh
-      USE cvan, ONLY: ish, nvb
+      USE kinds,          ONLY: DP
+      USE io_global,      ONLY: stdout
+      USE ions_base,      ONLY: na, nsp, nat
+      USE uspp,           ONLY: nhsa=>nkb, qq
+      USE uspp_param,     ONLY: nhm, nh
+      USE cvan,           ONLY: ish, nvb
       USE electrons_base, ONLY: nbspx, nbsp, nudx, nspin, iupdwn, nupdwn
-      USE constants, ONLY: pi, fpi
+      USE constants,      ONLY: pi, fpi
 !
       IMPLICIT NONE
-      REAL(8) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nudx,nudx,nspin)
-      REAL(8) fion(3,nat)
+      REAL(DP) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nudx,nudx,nspin)
+      REAL(DP) fion(3,nat)
 !
       INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart
-      REAL(8), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
+      REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
 
 #if defined __BGL
       COMPLEX*16 :: B, A1, A2, A3, C1, C2, C3
@@ -1717,13 +1723,15 @@ END FUNCTION
 !
 !     brings atoms inside the unit cell
 !
+      USE kinds,  ONLY: DP
+
       IMPLICIT NONE
 ! input
-      REAL(8) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
+      REAL(DP) rin(3), a1(3),a2(3),a3(3), ainv(3,3)
 ! output
-      REAL(8) rout(3)
+      REAL(DP) rout(3)
 ! local
-      REAL(8) x,y,z
+      REAL(DP) x,y,z
 !
 ! bring atomic positions to crystal axis
 !
@@ -1788,69 +1796,73 @@ END FUNCTION
       END SUBROUTINE prefor
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE projwfc(c,eigr,betae)
+   SUBROUTINE projwfc( c, nx, eigr, betae, n  )
 !-----------------------------------------------------------------------
-!
-! Projection on atomic wavefunctions
-!
-      USE io_global, ONLY: stdout
-      USE mp_global, ONLY: intra_image_comm
-      USE mp, ONLY: mp_sum
-      USE electrons_base, ONLY: nx => nbspx, n => nbsp
-      USE gvecw, ONLY: ngw
+      !
+      ! Projection on atomic wavefunctions
+      !
+      USE kinds,              ONLY: DP
+      USE io_global,          ONLY: stdout
+      USE mp_global,          ONLY: intra_image_comm
+      USE mp,                 ONLY: mp_sum
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE ions_base, ONLY: nsp, na, nat
-      USE uspp, ONLY: nhsa => nkb
-      USE atom, ONLY: nchi, lchi
+      USE ions_base,          ONLY: nsp, na, nat
+      USE uspp,               ONLY: nhsa => nkb
+      USE atom,               ONLY: nchi, lchi
 !
       IMPLICIT NONE
-      COMPLEX(8), INTENT(in) :: c(ngw,nx), eigr(ngw,nat),      &
-     &                               betae(ngw,nhsa)
+      INTEGER,     INTENT(IN) :: nx, n
+      COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nhsa)
 !
-      COMPLEX(8), ALLOCATABLE:: wfc(:,:), swfc(:,:), becwfc(:,:)
-      REAL(8), ALLOCATABLE   :: overlap(:,:), e(:), z(:,:),        &
-     &                               proj(:,:), temp(:)
-      REAL(8)                :: somma
-      INTEGER n_atomic_wfc
-      INTEGER is, ia, nb, l, m, k, i
-!
-! calculate number of atomic states
-!
-      n_atomic_wfc=0
+      COMPLEX(DP), ALLOCATABLE :: wfc(:,:), swfc(:,:), becwfc(:,:)
+      REAL(DP),    ALLOCATABLE :: overlap(:,:), e(:), z(:,:)
+      REAL(DP),    ALLOCATABLE :: proj(:,:), temp(:)
+      REAL(DP)                 :: somma
+
+      INTEGER :: n_atomic_wfc
+      INTEGER :: is, ia, nb, l, m, k, i
+      !
+      ! calculate number of atomic states
+      !
+      n_atomic_wfc = 0
+      !
       DO is=1,nsp
          DO nb = 1,nchi(is)
             l = lchi(nb,is)
             n_atomic_wfc = n_atomic_wfc + (2*l+1)*na(is)
          END DO
       END DO
-      IF (n_atomic_wfc.EQ.0) RETURN
+      IF ( n_atomic_wfc .EQ. 0 ) RETURN
+      !
+      ALLOCATE( wfc( ngw, n_atomic_wfc ) )
+      !
+      ! calculate wfc = atomic states
+      !
+      CALL atomic_wfc( eigr, n_atomic_wfc, wfc )
+      !
+      ! calculate bec = <beta|wfc>
+      !
+      ALLOCATE( becwfc( nhsa, n_atomic_wfc ) )
+      !
+      CALL nlsm1( n_atomic_wfc, 1, nsp, eigr, wfc, becwfc )
+      !
+      ! calculate swfc = S|wfc>
+      !
+      ALLOCATE( swfc( ngw, n_atomic_wfc ) )
+      !
+      CALL s_wfc( n_atomic_wfc, becwfc, betae, wfc, swfc )
+      !
+      ! calculate overlap(i,j) = <wfc_i|S|wfc_j> 
+      !
+      ALLOCATE( overlap( n_atomic_wfc, n_atomic_wfc ) )
 !
-      ALLOCATE(wfc(ngw,n_atomic_wfc))
-!
-! calculate wfc = atomic states
-!
-      CALL atomic_wfc(eigr,n_atomic_wfc,wfc)
-!
-! calculate bec = <beta|wfc>
-!
-      ALLOCATE(becwfc(nhsa,n_atomic_wfc))
-      CALL nlsm1 (n_atomic_wfc,1,nsp,eigr,wfc,becwfc)
-
-! calculate swfc = S|wfc>
-!
-      ALLOCATE(swfc(ngw,n_atomic_wfc))
-      CALL s_wfc(n_atomic_wfc,becwfc,betae,wfc,swfc)
-!
-! calculate overlap(i,j) = <wfc_i|S|wfc_j> 
-!
-      ALLOCATE(overlap(n_atomic_wfc,n_atomic_wfc))
-!
-      CALL MXMA(wfc,2*ngw,1,swfc,1,2*ngw,overlap,1,                     &
-     &          n_atomic_wfc,n_atomic_wfc,2*ngw,n_atomic_wfc)
+      CALL MXMA( wfc, 2*ngw, 1, swfc, 1, 2*ngw, overlap, 1,                     &
+     &          n_atomic_wfc, n_atomic_wfc, 2*ngw, n_atomic_wfc )
 
       CALL mp_sum( overlap, intra_image_comm )
 
-      overlap=overlap*2.d0
+      overlap = overlap * 2.d0
       IF (gstart == 2) THEN
          DO l=1,n_atomic_wfc
             DO m=1,n_atomic_wfc
@@ -1858,14 +1870,17 @@ END FUNCTION
             END DO
          END DO
       END IF
-!
-! calculate (overlap)^(-1/2)(i,j). An orthonormal set of vectors |wfc_i>
-! is obtained by introducing |wfc_j>=(overlap)^(-1/2)(i,j)*S|wfc_i>
-!
+      !
+      ! calculate (overlap)^(-1/2)(i,j). An orthonormal set of vectors |wfc_i>
+      ! is obtained by introducing |wfc_j>=(overlap)^(-1/2)(i,j)*S|wfc_i>
+      !
       ALLOCATE(z(n_atomic_wfc,n_atomic_wfc))
       ALLOCATE(e(n_atomic_wfc))
-      CALL rdiag(n_atomic_wfc,overlap,n_atomic_wfc,e,z)
+      !
+      CALL rdiag( n_atomic_wfc, overlap, n_atomic_wfc, e, z )
+      !
       overlap=0.d0
+      !
       DO l=1,n_atomic_wfc
          DO m=1,n_atomic_wfc
             DO k=1,n_atomic_wfc
@@ -1873,11 +1888,12 @@ END FUNCTION
             END DO
          END DO
       END DO
+      !
       DEALLOCATE(e)
       DEALLOCATE(z)
-!
-! calculate |wfc_j>=(overlap)^(-1/2)(i,j)*S|wfc_i>   (note the S matrix!)
-!
+      !
+      ! calculate |wfc_j>=(overlap)^(-1/2)(i,j)*S|wfc_i>   (note the S matrix!)
+      !
       wfc=0.d0
       DO m=1,n_atomic_wfc
          DO l=1,n_atomic_wfc
@@ -1887,11 +1903,13 @@ END FUNCTION
       DEALLOCATE(overlap)
       DEALLOCATE(swfc)
       DEALLOCATE(becwfc)
-!
-! calculate proj = <c|S|wfc> 
-!
+      !
+      ! calculate proj = <c|S|wfc> 
+      !
       ALLOCATE(proj(n,n_atomic_wfc))
+
       ALLOCATE(temp(ngw))
+
       DO m=1,n
          DO l=1,n_atomic_wfc
             temp(:)=DBLE(CONJG(c(:,m))*wfc(:,l))
@@ -1899,6 +1917,7 @@ END FUNCTION
             IF (gstart == 2) proj(m,l)=proj(m,l)-temp(1)
          END DO
       END DO
+
       DEALLOCATE(temp)
 
       CALL mp_sum( proj, intra_image_comm )
@@ -1937,24 +1956,24 @@ END FUNCTION
 
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE rdiag (n,h,ldh,e,v)
+      SUBROUTINE rdiag ( n, h, ldh, e, v )
 !-----------------------------------------------------------------------
 !
 !   calculates all the eigenvalues and eigenvectors of a complex
 !   hermitean matrix H . On output, the matrix H is destroyed
 !
       USE kinds,            ONLY: DP
-      USE parallel_toolkit, ONLY: zhpev_drv
+      USE parallel_toolkit, ONLY: dspev_drv
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(in)           :: n, ldh
-      COMPLEX(DP), INTENT(inout):: h(ldh,n)
-      REAL   (DP), INTENT(out)  :: e(n)
-      COMPLEX(DP), INTENT(out)  :: v(ldh,n)
+      INTEGER,  INTENT(in)   :: n, ldh
+      REAL(DP), INTENT(inout):: h(ldh,n)
+      REAL(DP), INTENT(out)  :: e(n)
+      REAL(DP), INTENT(out)  :: v(ldh,n)
 !
       INTEGER :: i, j, k
-      COMPLEX(DP), ALLOCATABLE :: ap( : )
+      REAL(DP), ALLOCATABLE :: ap( : )
 !
       ALLOCATE( ap( n * ( n + 1 ) / 2 ) )
 
@@ -1966,7 +1985,7 @@ END FUNCTION
          END DO
       END DO
 
-      CALL zhpev_drv( 'V', 'L', n, ap, e, v, ldh )
+      CALL dspev_drv( 'V', 'L', n, ap, e, v, ldh )
 
       DEALLOCATE( ap )
 !
@@ -2268,24 +2287,24 @@ END FUNCTION
 !     input: wfc, becwfc=<wfc|beta>, betae=|beta>
 !     output: swfc=S|wfc>
 !
+      USE kinds, ONLY: DP
       USE ions_base, ONLY: na
       USE cvan, ONLY: nvb, ish
       USE uspp, ONLY: nhsa => nkb, nhsavb=>nkbus, qq
       USE uspp_param, ONLY: nh
       USE gvecw, ONLY: ngw
-      !use parm
       USE constants, ONLY: pi, fpi
       IMPLICIT NONE
 ! input
       INTEGER, INTENT(in)         :: n_atomic_wfc
-      COMPLEX(8), INTENT(in) :: betae(ngw,nhsa),                   &
+      COMPLEX(DP), INTENT(in) :: betae(ngw,nhsa),                   &
      &                               wfc(ngw,n_atomic_wfc)
-      REAL(8), INTENT(in)    :: becwfc(nhsa,n_atomic_wfc)
+      REAL(DP), INTENT(in)    :: becwfc(nhsa,n_atomic_wfc)
 ! output
-      COMPLEX(8), INTENT(out):: swfc(ngw,n_atomic_wfc)
+      COMPLEX(DP), INTENT(out):: swfc(ngw,n_atomic_wfc)
 ! local
       INTEGER is, iv, jv, ia, inl, jnl, i
-      REAL(8) qtemp(nhsavb,n_atomic_wfc)
+      REAL(DP) qtemp(nhsavb,n_atomic_wfc)
 !
       swfc=0.d0
 !

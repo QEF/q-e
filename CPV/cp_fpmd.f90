@@ -358,7 +358,7 @@ end subroutine ggenb
       !  First of all count the number of G vectors according with the FFT mesh 
       ! 
       CALL gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw,&
-                   dfftp%isind, dfftp%nr1x, lgam )
+                   dfftp%isind, SIZE( dfftp%isind), dfftp%nr1x, lgam )
       !
       !     Second step. Compute and sort all G vectors, and build non
       !     distributed reciprocal space vectors arrays (ng_g = global
@@ -524,21 +524,25 @@ end subroutine ggenb
 
 
 !-------------------------------------------------------------------------
-SUBROUTINE gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, isind, ldis, lgam )
+SUBROUTINE gcount &
+   ( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, &
+     isind, nind, ldis, lgam )
 !-------------------------------------------------------------------------
+
+  USE kinds, ONLY: DP
 
   IMPLICIT NONE
 
-  INTEGER ng, ngs, ngw
-  integer nr1,nr2,nr3
-  real(8) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
-  INTEGER :: isind(*), ldis
+  INTEGER  ng, ngs, ngw
+  INTEGER  nr1, nr2, nr3, nind
+  REAL(DP) b1(3), b2(3), b3(3), gcut, gcuts, gcutw
+  INTEGER :: isind( nind ), ldis
   LOGICAL :: lgam
 
   INTEGER :: nr1m1, nr2m1, nr3m1
-  INTEGER :: i, j, k, n1p, n2p, ir
+  INTEGER :: i, j, k, n1p, n2p, ir, iind
 
-  real(8) :: g2, t(3)
+  REAL(DP) :: g2, t(3)
 
   if( gcut < gcuts ) call errore(' gcount ', ' gcut .lt. gcuts ', 1 )
 
@@ -562,29 +566,35 @@ SUBROUTINE gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, 
 !     exclude space with x<0
 !
       loop_x: do i= -nr1m1, nr1m1
+         !
          if( lgam .AND. ( i < 0 ) ) cycle loop_x
+         !
          loop_y: do j=-nr2m1,nr2m1
-!
-!     exclude plane with x=0, y<0
-!
+            !
+            !     exclude plane with x=0, y<0
+            !
             if( lgam .AND. ( i.eq.0.and.j.lt.0 ) ) cycle loop_y
-!
-            loop_z: do k=-nr3m1,nr3m1
-!
-!     exclude line with x=0, y=0, z<0
-!
-               if( lgam .AND. ( i.eq.0.and.j.eq.0.and.k.lt.0 ) ) cycle loop_z
-!
-!     consider only columns that belong to this node
-!
+            !
+            !
+            !     consider only columns that belong to this node
+            !
 
 #if defined __PARA
-               n1p = i + 1
-               if (n1p.lt.1) n1p = n1p + nr1
-               n2p = j + 1
-               if (n2p.lt.1) n2p = n2p + nr2
-               if ( isind( n1p + (n2p-1)*ldis ) .eq. 0 ) cycle loop_z
+            n1p = i + 1
+            if ( n1p .lt. 1 ) n1p = n1p + nr1
+            n2p = j + 1
+            if ( n2p .lt. 1 ) n2p = n2p + nr2
+            iind = n1p + (n2p-1)*ldis
+            if ( iind > nind ) &
+               CALL errore( " gcount ", " wrong grid size ", iind )
+            if ( isind( iind ) .eq. 0 ) cycle loop_y
 #endif
+
+            loop_z: do k=-nr3m1,nr3m1
+               !
+               !     exclude line with x=0, y=0, z<0
+               !
+               if( lgam .AND. ( i.eq.0.and.j.eq.0.and.k.lt.0 ) ) cycle loop_z
 
                g2=0.d0
                do ir=1,3
@@ -595,8 +605,11 @@ SUBROUTINE gcount( ng, ngs, ngw, b1, b2, b3, nr1, nr2, nr3, gcut, gcuts, gcutw, 
                ng=ng+1
                if(g2.lt.gcutw) ngw=ngw+1
                if(g2.lt.gcuts) ngs=ngs+1
+               !
             end do loop_z
+            !
          end do loop_y
+         !
       end do loop_x
 
   RETURN

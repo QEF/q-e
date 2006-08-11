@@ -311,6 +311,11 @@ MODULE control_flags
   CHARACTER(LEN=1), PUBLIC :: vhasse = 'Z'
                               !  averaging axis 
 
+  LOGICAL,          PUBLIC :: tprojwfc = .FALSE.
+                              !  in CP controls the printing of wave function projections
+                              !  on atomic states
+
+
   !
   ! ...  end of module-scope declarations
   ! 

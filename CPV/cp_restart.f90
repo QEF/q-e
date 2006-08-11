@@ -907,7 +907,7 @@ MODULE cp_restart
       REAL(DP)              :: alat_, a1_(3), a2_(3), a3_(3)
       REAL(DP)              :: pmass_, zv_ 
       REAL(DP)              :: celldm_(6)
-      INTEGER               :: iss_, nspin_, ngwt_, nbnd_ 
+      INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , n_emp_ , nbnd_tot
       REAL(DP)              :: nelec_
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_
@@ -1207,14 +1207,20 @@ MODULE cp_restart
             CALL iotk_scan_dat( iunpun, &
                                 "NUMBER_OF_ELECTRONS", nelec_, ATTR = attr )
             !
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_, ATTR = attr )
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_tot , ATTR = attr )
             !
          ELSE
             !
             CALL iotk_scan_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec_ )
-            CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_ )
+            CALL iotk_scan_dat( iunpun, "NUMBER_OF_BANDS", nbnd_tot )
             !
          END IF
+         !
+         CALL iotk_scan_dat( iunpun, "NUMBER_OF_EMPTY_STATES", n_emp_, FOUND = found )
+         !
+         IF( .NOT. found ) n_emp_ = 0
+         !
+         nbnd_ = nbnd_tot - n_emp_
          !
          CALL iotk_scan_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin_ )
          ! 
@@ -1250,15 +1256,15 @@ MODULE cp_restart
             !
             IF ( ionode ) THEN
                !
-               ALLOCATE( occ_ ( MAX( nudx , nbnd_ ) ) )
+               ALLOCATE( occ_ ( MAX( nudx , nbnd_tot ) ) )
                !
                occ_ = 0.0d0
                !
-               CALL iotk_scan_dat( iunpun, "OCC0" // TRIM( cspin ), occ_ ( 1:nbnd_ ), FOUND = found )
+               CALL iotk_scan_dat( iunpun, "OCC0" // TRIM( cspin ), occ_ ( 1 : nbnd_ ), FOUND = found )
                !
                IF( .NOT. found ) THEN
                   !
-                  CALL iotk_scan_dat( iunpun, "OCC" // TRIM( cspin ), occ_ ( 1:nbnd_ ), FOUND = found )
+                  CALL iotk_scan_dat( iunpun, "OCC" // TRIM( cspin ), occ_ ( 1:nbnd_tot ), FOUND = found )
                   !
                   IF( found ) THEN
                      occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
@@ -1269,7 +1275,7 @@ MODULE cp_restart
                   !
                   occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) )
                   !
-                  CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ), occ_ ( 1:nbnd_ ), FOUND = found )
+                  CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ), occ_ ( 1 : nbnd_ ), FOUND = found )
                   !
                   IF( found ) THEN
                      occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) )

@@ -264,6 +264,7 @@ MODULE input
      USE control_flags, ONLY : force_pairing_ => force_pairing
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
      USE control_flags, ONLY : iesr, tvhmean, vhrmin, vhrmax, vhasse
+     USE control_flags, ONLY : tprojwfc
      !
      ! ...  Other modules
      !
@@ -380,6 +381,12 @@ MODULE input
          iprsta_ = 1
          timing_ = .TRUE.
          !
+       CASE( 'default+projwfc' )
+         !
+         iprsta_  = 1
+         timing_  = .TRUE.
+         tprojwfc = .TRUE.
+         !
        CASE( 'medium' )
          !
          iprsta_   = 2
@@ -392,6 +399,7 @@ MODULE input
          memchk_   = .TRUE.
          timing_   = .TRUE.
          tprnsfac_ = .TRUE.
+         tprojwfc  = .TRUE.
          !
        CASE DEFAULT
          !

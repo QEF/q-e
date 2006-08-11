@@ -169,17 +169,21 @@ prefix         CHARACTER ( default = 'cp' )
                basename prepended to input/output filenames. 
                
 verbosity      CHARACTER
-               'high' | 'default' | 'low' | 'minimal'
+               'high' | 'default' | 'low' | 'minimal' | 'default+projwc'
+               'default+projwc' 
+                  the codes prints the dafault output quantities
+                  and the projections of the wave functions on atomic wfc  
 
 outdir         CHARACTER ( default =  value of the ESPRESSO_TMPDIR environment
                variable if set; current directory ('./') otherwise )
                input, temporary, output files are found in this directory.
 
 disk_io        CHARACTER
-               'high', 'default', 'low', 'minimal'
-               'high', CP code will write charge density, Kohn-Sham wf files, 
-               and additional informations in data-file.xml in order to 
-               restart with a PW calculation or to use postprocessin tools.
+               'high', 'default', 'minimal'
+               'high'
+                  CP code will write charge density, Kohn-Sham wf files, 
+                  and additional informations in data-file.xml in order to 
+                  restart with a PW calculation or to use postprocessin tools.
 
 saverho        LOGICAL 
                This flag controls the saving of charge density in CP codes:
