@@ -224,7 +224,7 @@
         ENERGY_CHECK: if(.not. ene_ok ) then
           call calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           else
 
            if(newscheme.or.firstiter) then 
@@ -236,7 +236,7 @@
             call rotate(z0,c0(:,:),bec,c0diag,becdiag)
             !     calculation of rho corresponding to the rotated wavefunctions
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
-                     &                    ,rhovan,rhor,rhog,rhos,enl,ekin)
+                     &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           endif
 
           !calculates the potential
@@ -524,7 +524,7 @@
                
         !calculate energy
         if(.not.tens) then
-          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
            rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
@@ -532,7 +532,7 @@
           !     calculation of the rotated quantities
           call rotate(z0,cm(:,:),becm,c0diag,becdiag)
           !     calculation of rho corresponding to the rotated wavefunctions
-          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         endif
 
         !calculate potential
@@ -585,14 +585,14 @@
 
         !call calbec(1,nsp,eigr,cm,becm)
         if(.not.tens) then
-          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
               rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
           !     calculation of the rotated quantities
           call rotate(z0,cm(:,:),becm,c0diag,becdiag)
           !     calculation of rho corresponding to the rotated wavefunctions
-          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
+          call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         endif
 
         !calculates the potential
@@ -675,14 +675,14 @@
             call gram(betae,bec,nhsa,cm,ngw,n)
             call calbec(1,nsp,eigr,cm,becm)
             if(.not.tens) then
-              call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,ekin)
+              call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
             else
               if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
               rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
               !     calculation of the rotated quantities
               call rotate(z0,cm(:,:),becm,c0diag,becdiag)
               !     calculation of rho corresponding to the rotated wavefunctions
-              call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
+              call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
             endif
   
             !calculates the potential
@@ -753,7 +753,7 @@
           call  calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
             call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0, dbec, .true. )
-            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           else
 
             !     calculation of the rotated quantities
@@ -761,7 +761,7 @@
             !     calculation of rho corresponding to the rotated wavefunctions
             call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec, .true. )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
-                     &                    ,rhovan,rhor,rhog,rhos,enl,ekin)
+                     &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           endif
 
           !calculates the potential

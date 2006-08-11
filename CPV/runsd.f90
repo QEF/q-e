@@ -43,7 +43,7 @@
       USE io_global,            ONLY: stdout
       USE cell_module,          ONLY: boxdimensions
       USE wave_types,           ONLY: wave_descriptor
-      USE potentials,           ONLY: kspotential
+      USE cp_interfaces,        ONLY: kspotential
       USE atoms_type_module,    ONLY: atoms_type
       USE cp_interfaces,        ONLY: runcp, update_wave_functions, strucf, phfacs
       USE control_flags,        ONLY: force_pairing

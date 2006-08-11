@@ -194,7 +194,7 @@ END FUNCTION calculate_dx
       USE mp, ONLY: mp_bcast, mp_sum
       USE io_global, ONLY: stdout, ionode, ionode_id
       USE uspp_param, ONLY : tvanp, oldvan
-      USE atom, ONLY: numeric, nlcc
+      USE atom, ONLY: numeric, nlcc, oc, lchi, nchi
       USE cvan, ONLY: nvb
       use ions_base, only: nsp
       use read_upf_module, only: read_pseudo_upf
@@ -219,6 +219,10 @@ END FUNCTION calculate_dx
 
       nspnl   = 0  ! number of non local pseudo
       nvb     = 0  ! number of Vanderbilt pseudo
+      !
+      oc      = 0  ! init atomic wf occupation
+      lchi    = 0  ! init atomic wf angular momentum
+      nchi    = 0  ! init numbero of atomic wf
 
       IF( nsp < 1 ) THEN
         CALL errore(' READPOT ',' nsp less than one! ', 1 )
@@ -789,7 +793,7 @@ subroutine upf2internal ( upf, is, ierr )
   !
   use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
-  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
+  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric, oc
   use ions_base, only: zv
   use funct, only: set_dft_from_name, dft_is_hybrid
   !
@@ -821,7 +825,7 @@ subroutine upf2internal ( upf, is, ierr )
   !
   nchi(is) = upf%nwfc
   lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)
-  ! oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
+  oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
   chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
 
   !
@@ -877,7 +881,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   !
   use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
-  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric
+  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric, oc
   use ions_base, only: zv
   use funct, only: set_dft_from_name, dft_is_hybrid
   !
@@ -912,6 +916,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
 
   !
   !
+  oc  ( 1 : ap%nrps, is ) = ap%oc  ( 1 : ap%nrps )
   lchi( 1 : ap%nrps, is ) = ap%lrps( 1 : ap%nrps )
   chi ( 1 : ap%mesh, 1 : ap%nrps, is ) = ap%rps( 1 : ap%mesh, 1 : ap%nrps )
   !
@@ -1021,6 +1026,7 @@ SUBROUTINE upf2ncpp( upf, ap )
   ap%vloc( 1:upf%mesh ) = upf%vloc( 1:upf%mesh ) / 2.0d0
   ap%nrps = upf%nwfc
   ap%lrps( 1:upf%nwfc ) = upf%lchi( 1:upf%nwfc )
+  ap%oc  ( 1:upf%nwfc ) = upf%oc( 1:upf%nwfc )
   ap%rps( 1:upf%mesh, 1:upf%nwfc ) = upf%chi( 1:upf%mesh, 1:upf%nwfc )
   
   DO l = 1, ap%nbeta
@@ -1256,13 +1262,13 @@ END SUBROUTINE read_atomic_cc
       nlcc(is)=.false.
       read(iunps,*) z,zv(is),nbeta(is),lloc(is),exfact
       if (zv(is) < 1 .or. zv(is) > 100 ) then
-         call errore('readpp','wrong potential read',15)
+         call errore('readbhs','wrong potential read',15)
       endif
 
       call dftname_cp (nint(exfact), dft_name)
       call set_dft_from_name( dft_name )
       IF ( dft_is_hybrid() ) &
-         CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
+         CALL errore( 'readbhs', 'HYBRID XC not implemented in CPV', 1 )
 !
       if(lloc(is).eq.2)then 
          lll(1,is)=0
@@ -1316,7 +1322,7 @@ END SUBROUTINE read_atomic_cc
       if(nlcc(is)) then
          read(15,*) meshp,cmeshp
          if ( meshp.ne.mesh(is) .or. cmeshp.ne.cmesh ) then
-            call errore('readpp','core charge mesh mismatch',is)
+            call errore('readbhs','core charge mesh mismatch',is)
          endif
          do ir=1,mesh(is)
             read(15,*) rdum, rho_atc(ir,is)

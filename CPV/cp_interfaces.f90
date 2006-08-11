@@ -108,7 +108,20 @@
    PUBLIC :: open_and_append
    PUBLIC :: cp_print_rho
 
+
+   PUBLIC :: vofmean
+   PUBLIC :: kspotential
+   PUBLIC :: vofrhos
+   PUBLIC :: vofps
+   PUBLIC :: vofloc
+   PUBLIC :: force_loc
+   PUBLIC :: self_vofhar
+   PUBLIC :: localisation
    !
+   PUBLIC :: n_atom_wfc
+   !
+   PUBLIC :: set_eitot
+   PUBLIC :: set_evtot
    !
    !
 
@@ -325,19 +338,20 @@
 
   
    INTERFACE rhoofr
-      SUBROUTINE rhoofr_fpmd (nfi, c0, cdesc, fi, rhor, box)
+      SUBROUTINE rhoofr_fpmd (nfi, tstress, c0, fi, rhor, omega, ekin, dekin)
          USE kinds,      ONLY: DP         
-         USE cell_module,     ONLY: boxdimensions
-         USE wave_types,      ONLY: wave_descriptor
          IMPLICIT NONE
          INTEGER,              INTENT(IN) :: nfi
+         LOGICAL,              INTENT(IN) :: tstress
          COMPLEX(DP)                     :: c0(:,:)
-         TYPE (boxdimensions), INTENT(IN) :: box
          REAL(DP),          INTENT(IN) :: fi(:)
          REAL(DP),            INTENT(OUT) :: rhor(:,:)
-         TYPE (wave_descriptor), INTENT(IN) :: cdesc
+         REAL(DP),          INTENT(IN) :: omega
+         REAL(DP),          INTENT(OUT) :: ekin
+         REAL(DP),          INTENT(OUT) :: dekin(6)
       END SUBROUTINE rhoofr_fpmd
-      SUBROUTINE rhoofr_cp (nfi,c,irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,ekin)
+      SUBROUTINE rhoofr_cp &
+         ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin )
          USE kinds,      ONLY: DP         
          IMPLICIT NONE
          INTEGER nfi
@@ -350,6 +364,7 @@
          COMPLEX(DP) rhog( :, : )
          REAL(DP) rhos(:,:)
          REAL(DP) enl, ekin
+         REAL(DP) denl(3,3), dekin(6)
       END SUBROUTINE rhoofr_cp
    END INTERFACE
 
@@ -405,7 +420,7 @@
       END SUBROUTINE readfile_cp
       SUBROUTINE readfile_fpmd  &
          ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-           ht_0, rho, vpot )
+           ht_0, rho, vpot, lambda )
          USE kinds,             ONLY: DP
          USE cell_module,       ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
@@ -420,6 +435,7 @@
          REAL(DP),             INTENT(OUT)   :: taui(:,:)
          REAL(DP),             INTENT(OUT)   :: acc(:), cdmi(:)
          REAL(DP),             INTENT(OUT)   :: trutime
+         REAL(DP),             INTENT(OUT)   :: lambda(:,:,:)
       END SUBROUTINE readfile_fpmd
    END INTERFACE
 
@@ -453,7 +469,7 @@
       END SUBROUTINE writefile_cp
       SUBROUTINE writefile_fpmd  &
          ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-           ht_0, rho, vpot )
+           ht_0, rho, vpot, lambda )
          USE kinds,             ONLY: DP
           USE cell_module,       ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
@@ -468,6 +484,7 @@
          REAL(DP),             INTENT(IN)    :: taui(:,:)
          REAL(DP),             INTENT(IN)    :: acc(:), cdmi(:)
          REAL(DP),             INTENT(IN)    :: trutime
+         REAL(DP),             INTENT(IN)    :: lambda(:,:,:)
       END SUBROUTINE writefile_fpmd
    END INTERFACE
  
@@ -505,7 +522,7 @@
 
    INTERFACE runcp_ncpp
       SUBROUTINE runcp_ncpp_x &
-         ( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, lambda, fromscra, diis, restart )
+         ( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, tlambda, fromscra, diis, restart )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
          COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
@@ -515,7 +532,7 @@
          REAL (DP) ::  vpot(:,:)
          REAL (DP), INTENT(IN) ::  bec(:,:)
          REAL(DP), INTENT(IN) :: fccc
-         LOGICAL, OPTIONAL, INTENT(IN) :: lambda, fromscra, diis, restart
+         LOGICAL, OPTIONAL, INTENT(IN) :: tlambda, fromscra, diis, restart
       END SUBROUTINE
    END INTERFACE
 
@@ -715,11 +732,13 @@
 
 
    INTERFACE ortho
-      SUBROUTINE ortho_m( c0, cp, nupdwn, iupdwn, nspin )
+      SUBROUTINE ortho_m( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)    :: nupdwn(:), iupdwn(:), nspin
          COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
+         REAL(DP),    INTENT(INOUT) :: lambda(:,:,:)
+         REAL(DP),    INTENT(IN)    :: ccc
       END SUBROUTINE
       SUBROUTINE ortho_cp &
          ( eigr, cp, phi, ngwx, x0, nudx, diff, iter, ccc, bephi, becp, nbsp, &
@@ -790,17 +809,19 @@
 
 
    INTERFACE nlrh
-      FUNCTION nlrh_x( c0, tforce, fion, bec, becdr, eigr )
+      SUBROUTINE nlrh_x( c0, tforce, tstress, fion, bec, becdr, eigr, enl, denl )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
-         REAL(DP) :: nlrh_x
          COMPLEX(DP)                 :: eigr(:,:)    
-         COMPLEX(DP), INTENT(INOUT)  :: c0(:,:)     
+         COMPLEX(DP)                 :: c0(:,:)     
          LOGICAL,     INTENT(IN)     :: tforce     
+         LOGICAL,     INTENT(IN)     :: tstress     
          REAL(DP),    INTENT(INOUT)  :: fion(:,:) 
          REAL(DP)                    :: bec(:,:)
          REAL(DP)                    :: becdr(:,:,:)
-      END FUNCTION
+         REAL(DP),    INTENT(OUT)    :: enl
+         REAL(DP),    INTENT(OUT)    :: denl( 6 )
+      END SUBROUTINE
    END INTERFACE
 
 
@@ -888,29 +909,25 @@
    END INTERFACE
 
    INTERFACE stress_kin
-      SUBROUTINE stress_kin_x(dekin, c0, occ, gagb)
+      SUBROUTINE stress_kin_x(dekin, c0, occ)
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          REAL(DP),    INTENT(OUT) :: dekin(:)
          COMPLEX(DP), INTENT(IN)  :: c0(:,:)
          REAL(DP),    INTENT(IN)  :: occ(:)
-         REAL(DP),    INTENT(IN)  :: gagb(:,:)
       END SUBROUTINE
    END INTERFACE
 
    INTERFACE stress_nl
-      SUBROUTINE stress_nl_x( denl, gagb, c0, occ, eigr, bec, enl, ht, htm1 )
+      SUBROUTINE stress_nl_x( denl, c0, occ, eigr, bec, enl )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          REAL(DP), INTENT(IN) :: occ(:)
          COMPLEX(DP), INTENT(IN) :: c0(:,:)
          REAL(DP), INTENT(OUT) :: denl(:)
-         REAL(DP), INTENT(IN) :: gagb(:,:)
          COMPLEX(DP), INTENT(IN) :: eigr(:,:)
          REAL(DP) :: bec(:,:)
          REAL(DP), INTENT(IN) :: enl
-         REAL(DP), INTENT(IN) :: ht(3,3)
-         REAL(DP), INTENT(IN) :: htm1(3,3)
       END SUBROUTINE
    END INTERFACE
 
@@ -924,13 +941,14 @@
    END INTERFACE
 
    INTERFACE update_lambda
-      SUBROUTINE update_lambda_x( i, lambda, c0, c2, n, noff )
+      SUBROUTINE update_lambda_x( i, lambda, c0, c2, n, noff, tdist )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          INTEGER, INTENT(IN) :: n, noff
          REAL(DP)            :: lambda(:,:)
          COMPLEX(DP)         :: c0(:,:), c2(:)
-         INTEGER :: i
+         INTEGER, INTENT(IN) :: i
+         LOGICAL, INTENT(IN) :: tdist   !  if .true. lambda is distributed
       END SUBROUTINE
    END INTERFACE
 
@@ -987,6 +1005,15 @@
          COMPLEX(DP), INTENT(INOUT) :: c0(:,:)
          REAL(DP) :: lambda(:,:)
          REAL(DP) :: eig(:)
+      END SUBROUTINE
+      SUBROUTINE crot_gamma2 ( c0rot, c0, ngw, n, noffr, noff, lambda, nx, eig )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)    :: ngw, n, nx, noffr, noff
+         COMPLEX(DP), INTENT(INOUT) :: c0rot(:,:)
+         COMPLEX(DP), INTENT(IN)    :: c0(:,:)
+         REAL(DP),    INTENT(IN)    :: lambda(:,:)
+         REAL(DP),    INTENT(OUT)   :: eig(:)
       END SUBROUTINE
    END INTERFACE
 
@@ -1139,6 +1166,180 @@
       END SUBROUTINE
    END INTERFACE
 
+
+   INTERFACE vofmean
+      SUBROUTINE vofmean_x( sfac, rhops, rhoeg )
+         USE kinds,          ONLY: DP
+         IMPLICIT NONE
+         REAL(DP),    INTENT(IN)   :: RHOPS(:,:)
+         COMPLEX(DP), INTENT(IN)   :: RHOEG(:)
+         COMPLEX(DP), INTENT(IN)   :: sfac(:,:)
+      END SUBROUTINE
+   END INTERFACE
+
+   INTERFACE kspotential
+      SUBROUTINE kspotential_x &
+         ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
+          ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft )
+         USE kinds,             ONLY: DP
+         USE energies,          ONLY: dft_energy_type
+         USE cell_module,       ONLY: boxdimensions
+         USE atoms_type_module, ONLY: atoms_type
+         USE wave_types,        ONLY: wave_descriptor 
+         IMPLICIT NONE
+         INTEGER,              INTENT(IN)    :: nfi
+         LOGICAL, INTENT(IN) :: tforce, tstress, tprint
+         REAL(DP) :: rhoe(:,:)
+         TYPE (atoms_type),    INTENT(INOUT) :: atoms
+         REAL(DP) :: bec(:,:)
+         REAL(DP) :: becdr(:,:,:)
+         COMPLEX(DP) :: eigr(:,:)
+         COMPLEX(DP) :: ei1(:,:)
+         COMPLEX(DP) :: ei2(:,:)
+         COMPLEX(DP) :: ei3(:,:)
+         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+         COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
+         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
+         LOGICAL   :: tcel
+         TYPE (boxdimensions), INTENT(INOUT) ::  ht
+         REAL(DP), INTENT(IN) :: fi(:)
+         REAL(DP)    :: vpot(:,:)
+         TYPE (dft_energy_type) :: edft
+      END SUBROUTINE
+   END INTERFACE
+
+
+   INTERFACE vofrhos
+      SUBROUTINE vofrhos_x &
+         ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, cdesc, fi, &
+           eigr, ei1, ei2, ei3, sfac, box, edft )
+         USE kinds,             ONLY: DP
+         USE energies,          ONLY: dft_energy_type
+         USE cell_module,       ONLY: boxdimensions
+         USE atoms_type_module, ONLY: atoms_type
+         USE wave_types,        ONLY: wave_descriptor 
+         IMPLICIT NONE
+         LOGICAL, INTENT(IN) :: tprint, tforce, tstress
+         REAL(DP) :: rhoe(:,:)
+         TYPE (atoms_type), INTENT(INOUT) :: atoms
+         REAL(DP)            :: vpot(:,:)
+         REAL(DP)    :: bec(:,:)
+         COMPLEX(DP),   INTENT(IN) :: c0(:,:)
+         TYPE (wave_descriptor), INTENT(IN) :: cdesc
+         REAL(DP),    INTENT(IN) :: fi(:)
+         COMPLEX(DP) :: eigr(:,:)
+         COMPLEX(DP) :: ei1(:,:)
+         COMPLEX(DP) :: ei2(:,:)
+         COMPLEX(DP) :: ei3(:,:)
+         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+         TYPE (boxdimensions),    INTENT(INOUT) :: box 
+         TYPE (dft_energy_type) :: edft
+      END SUBROUTINE
+   END INTERFACE
+   
+
+   INTERFACE vofps
+      SUBROUTINE vofps_x( eps, vloc, rhoeg, vps, sfac, omega )
+         USE kinds,              ONLY: DP 
+         IMPLICIT NONE
+         REAL(DP),    INTENT(IN)  :: vps(:,:)
+         REAL(DP),    INTENT(IN)  :: omega
+         COMPLEX(DP), INTENT(OUT) :: vloc(:)
+         COMPLEX(DP), INTENT(IN)  :: rhoeg(:)
+         COMPLEX(DP), INTENT(IN)  :: sfac(:,:)
+         COMPLEX(DP), INTENT(OUT) :: eps
+      END SUBROUTINE
+   END INTERFACE
+
+
+   INTERFACE vofloc
+      SUBROUTINE vofloc_x( tscreen, ehte, ehti, eh, vloc, rhoeg, &
+                     rhops, vps, sfac, omega, screen_coul )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         LOGICAL,     INTENT(IN)    :: tscreen
+         REAL(DP),    INTENT(IN)    :: rhops(:,:), vps(:,:)
+         COMPLEX(DP), INTENT(INOUT) :: vloc(:)
+         COMPLEX(DP), INTENT(IN)    :: rhoeg(:)
+         COMPLEX(DP), INTENT(IN)    :: sfac(:,:)
+         REAL(DP),    INTENT(OUT)   :: ehte, ehti 
+         REAL(DP),    INTENT(IN)    :: omega
+         COMPLEX(DP), INTENT(OUT)   :: eh
+         COMPLEX(DP), INTENT(IN)    :: screen_coul(:)
+      END SUBROUTINE
+   END INTERFACE
+
+   INTERFACE force_loc
+      SUBROUTINE force_loc_x( tscreen, rhoeg, fion, rhops, vps, eigr, ei1, ei2, ei3, &
+                        sfac, omega, screen_coul )
+         USE kinds,              ONLY: DP
+         USE grid_dimensions,    ONLY: nr1, nr2, nr3
+         USE ions_base,          ONLY: nat
+         IMPLICIT NONE
+         LOGICAL     :: tscreen
+         REAL(DP)    :: fion(:,:) 
+         REAL(DP)    :: rhops(:,:), vps(:,:)  
+         COMPLEX(DP) :: rhoeg(:)
+         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+            COMPLEX(DP) :: ei1(-nr1:nr1,nat)
+         COMPLEX(DP) :: ei2(-nr2:nr2,nat)
+         COMPLEX(DP) :: ei3(-nr3:nr3,nat)
+         COMPLEX(DP) :: eigr(:,:)
+         REAL(DP)    :: omega
+         COMPLEX(DP) :: screen_coul(:)
+      END SUBROUTINE
+   END INTERFACE
+ 
+   INTERFACE self_vofhar
+      SUBROUTINE self_vofhar_x( tscreen, self_ehte, vloc, rhoeg, omega, hmat )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         LOGICAL     :: tscreen
+         COMPLEX(DP) :: vloc(:)
+         COMPLEX(DP) :: rhoeg(:,:)
+         REAL(DP)    :: self_ehte
+         REAL(DP), INTENT(IN) :: omega 
+         REAL(DP), INTENT(IN) :: hmat( 3, 3 )
+      END SUBROUTINE
+   END INTERFACE
+   
+   INTERFACE localisation
+      SUBROUTINE localisation_x( wfc, atoms_m, ht)
+         USE kinds,              ONLY: DP
+         USE cell_module, ONLY: boxdimensions
+         USE atoms_type_module, ONLY: atoms_type
+         IMPLICIT NONE 
+         COMPLEX(DP), INTENT(IN) :: wfc(:)
+         TYPE (atoms_type), INTENT(in) :: atoms_m
+         TYPE (boxdimensions), INTENT(in) :: ht
+      END SUBROUTINE
+   END INTERFACE
+
+
+   INTERFACE n_atom_wfc
+      FUNCTION n_atom_wfc_x()
+         INTEGER n_atom_wfc_x
+      END FUNCTION
+   END INTERFACE
+
+   INTERFACE set_eitot
+      SUBROUTINE set_eitot_x( eitot )
+         USE kinds, ONLY: DP
+         IMPLICIT NONE
+         REAL(DP), INTENT(OUT) :: eitot(:,:)
+      END SUBROUTINE
+   END INTERFACE
+
+   INTERFACE set_evtot
+      SUBROUTINE set_evtot_x( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+         USE kinds,            ONLY: DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  :: c0(:,:)
+         COMPLEX(DP), INTENT(OUT) :: ctot(:,:)
+         REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
+         INTEGER,     INTENT(IN)  :: iupdwn_tot(2), nupdwn_tot(2)
+      END SUBROUTINE
+   END INTERFACE
 
 
 !=----------------------------------------------------------------------------=!

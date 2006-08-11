@@ -230,6 +230,7 @@ MODULE input
                                tzeroe_        => tzeroe, &
                                tdamp_         => tdamp, &
                                trhor_         => trhor, &
+                               trhow_         => trhow, &
                                tvlocw_        => tvlocw, &
                                ortho_eps_     => ortho_eps, &
                                ortho_max_     => ortho_max, &
@@ -262,6 +263,7 @@ MODULE input
                                forc_maxiter_  => forc_maxiter
      USE control_flags, ONLY : force_pairing_ => force_pairing
      USE control_flags, ONLY : remove_rigid_rot_ => remove_rigid_rot
+     USE control_flags, ONLY : iesr, tvhmean, vhrmin, vhrmax, vhasse
      !
      ! ...  Other modules
      !
@@ -294,7 +296,8 @@ MODULE input
         tdipole_card, toptical_card, tnewnfi_card, newnfi_card,                &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
-        tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot
+        tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
+        iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho
      !
      IMPLICIT NONE
      !
@@ -316,6 +319,12 @@ MODULE input
      etot_conv_thr_ = etot_conv_thr
      forc_conv_thr_ = forc_conv_thr
      ekin_maxiter_  = electron_maxstep
+     iesr           = iesr_inp
+     !
+     tvhmean = tvhmean_inp
+     vhrmin  = vhrmin_inp
+     vhrmax  = vhrmax_inp
+     vhasse  = vhasse_inp
      !
      remove_rigid_rot_ = remove_rigid_rot
      !
@@ -355,6 +364,11 @@ MODULE input
      ! for now use reduce_io in CP to specify if the charge density is saved
      !
      reduce_io_ = .NOT.( TRIM( disk_io ) == 'high' )
+     trhow_     = .NOT. reduce_io_
+     ! 
+     !   saverho overwrites disk_io
+     !
+     IF( saverho ) trhow_ = .TRUE.
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
@@ -872,8 +886,7 @@ MODULE input
            diis_size, diis_hcut, diis_rothr, diis_chguess, diis_g0chmix,       &
            diis_nchmix, diis_g1chmix, empty_states_maxstep,                    &
            empty_states_ethr, empty_states_nbnd,                               &
-           iprnks_empty, vhrmax_inp, vhnr_inp, vhiunit_inp, vhrmin_inp,        &
-           tvhmean_inp, vhasse_inp, nconstr_inp, iesr_inp, iprnks, nprnks,     &
+           iprnks_empty, nconstr_inp, iprnks, nprnks,                          &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, press, cell_damping, cell_dofree, tf_inp, nprnks_empty,      &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
@@ -916,7 +929,6 @@ MODULE input
      USE guess,              ONLY : guess_setup
      USE diis,               ONLY : diis_setup
      USE charge_mix,         ONLY : charge_mix_setup
-     USE potentials,         ONLY : potential_init
      USE kohn_sham_states,   ONLY : ks_states_init
      USE electrons_module,   ONLY : electrons_setup, empty_init
      USE electrons_base,     ONLY : electrons_base_initval
@@ -1018,9 +1030,6 @@ MODULE input
      CALL empty_init( empty_states_maxstep, ethr_emp_inp )
 
      !
-     CALL potential_init( tvhmean_inp,vhnr_inp, vhiunit_inp, &
-                          vhrmin_inp, vhrmax_inp, vhasse_inp, iesr_inp )
-
      CALL ks_states_init( nspin, nprnks, iprnks, nprnks_empty, iprnks_empty )
 
      CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup,         &
@@ -1239,7 +1248,6 @@ MODULE input
     USE electrons_nose,       ONLY: electrons_nose_info
     USE electrons_module,     ONLY: empty_print_info
     USE diis,                 ONLY: diis_print_info
-    USE potentials,           ONLY: potential_print_info
     USE runcg_module,         ONLY: runcg_info
     USE sic_module,           ONLY: sic_info
     USE wave_base,            ONLY: frice, grease

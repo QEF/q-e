@@ -273,19 +273,24 @@
          end do
       end do
 
-      nbndx = MAXVAL( nupdwn )
+      nbndx = nupdwn (1)
+      nudx  = nupdwn (1)
       nbsp  = nupdwn (1) + nupdwn (2)
 
       IF ( nspin == 1 ) THEN 
         nelt = nel(1)
-        nudx = nupdwn(1)
       ELSE
         nelt = nel(1) + nel(2)
-        nudx = MAX( nupdwn(1), nupdwn(2) )
       END IF
 
-      IF( nbnd < MAX( nupdwn(1), nupdwn(2) ) ) &
-        CALL errore(' electrons_base_initval ',' inconsistent nbnd and nupdwn(1) or nupdwn(2) ', 1 )
+      IF( nupdwn(1) < nupdwn(2) ) &
+        CALL errore(' electrons_base_initval ',' nupdwn(1) should be greather or equal nupdwn(2) ', 1 )
+
+      IF( nbnd < nupdwn(1) ) &
+        CALL errore(' electrons_base_initval ',' inconsistent nbnd, should be .GE. than  nupdwn(1) ', 1 )
+
+      IF( nbspx < ( nupdwn(1) * nspin ) ) &
+        CALL errore(' electrons_base_initval ',' inconsistent nbspx, should be .GE. than  nspin * nupdwn(1) ', 1 )
 
       IF( ( 2 * nbnd ) < nelt ) &
         CALL errore(' electrons_base_initval ',' too few states ',  1  )

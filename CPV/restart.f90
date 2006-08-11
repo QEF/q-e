@@ -21,12 +21,14 @@
       USE ions_base,        ONLY: nsp, na, cdmi, taui
       USE cell_base,        ONLY: s_to_r
       USE cp_restart,       ONLY: cp_writefile
+      USE cp_interfaces,    ONLY: set_evtot, set_eitot
       USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
-      USE electrons_module, ONLY: ei
+      USE electrons_module, ONLY: ei, ei_emp, n_emp, iupdwn_emp, nupdwn_emp
       USE io_files,         ONLY: scradir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: root_image, intra_image_comm
+      USE control_flags,    ONLY: reduce_io
 !
       implicit none
       integer, INTENT(IN) :: ndw, nfi
@@ -49,18 +51,21 @@
       REAL(DP), INTENT(in) :: mat_z(:,:,:)
 
       REAL(DP) :: ht(3,3), htm(3,3), htvel(3,3), gvel(3,3)
-      integer :: nk = 1, ispin, i, ib
+      INTEGER  :: nk = 1, ispin, i, ib
       REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
       REAL(DP) :: htm1(3,3), omega
+      COMPLEX(DP), ALLOCATABLE :: ctot(:,:)
+      REAL(DP),    ALLOCATABLE :: eitot(:,:)
+      INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
 
-!
-! Do not write restart file if the unit number 
-! is negative, this is used mainly for benchmarks
-! and tests
-!
 
       if ( ndw < 1 ) then
-        return
+         !
+         ! Do not write restart file if the unit number 
+         ! is negative, this is used mainly for benchmarks and tests
+         !
+         return
+         !
       end if
 
       ht     = TRANSPOSE( h ) 
@@ -68,7 +73,21 @@
       htvel  = TRANSPOSE( velh ) 
       gvel   = 0.0d0
       
-
+      nupdwn_tot = nupdwn + nupdwn_emp
+      iupdwn_tot(1) = iupdwn(1)
+      iupdwn_tot(2) = nupdwn(1) + 1
+      !
+      ALLOCATE( eitot( nupdwn_tot(1), nspin ) )
+      !
+      CALL set_eitot( eitot )
+      !
+      IF( .NOT. reduce_io ) THEN
+         !
+         ALLOCATE( ctot( SIZE( c0, 1 ), nupdwn_tot(1) * nspin ) )
+         !
+         CALL set_evtot( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+         !
+      END IF
       !
       !  Sincronize lambdas, whose replicas could diverge on
       !  different processors
@@ -77,18 +96,26 @@
       CALL mp_bcast( lambdam, root_image, intra_image_comm )
 
       IF( tens ) THEN
-        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
+        !
+        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk,   &
+          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,        &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
-          occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
-          rho, c0, cm, mat_z = mat_z  )
+          occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei,            &
+          rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn, nupdwn, mat_z = mat_z  )
+        !
       ELSE
-        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
-          ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus, &
-          vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
-          occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei, &
-          rho, c0, cm  )
+        ! 
+        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk,      &
+             ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,        &
+             vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
+             occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, eitot,          &
+             rho, c0, cm, ctot, iupdwn, nupdwn, iupdwn_tot, nupdwn_tot )
+        !
       END IF
+
+      DEALLOCATE( eitot )
+      !
+      IF( .NOT. reduce_io ) DEALLOCATE( ctot )
 
       return
       end subroutine writefile_cp
@@ -203,23 +230,24 @@
 
    SUBROUTINE writefile_fpmd &
      ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-       ht_0, rho, vpot )
+       ht_0, rho, vpot, lambda )
                                                                         
         USE kinds,             ONLY: DP
         USE cell_module,       ONLY: boxdimensions, r_to_s
         USE control_flags,     ONLY: ndw, gamma_only
-        USE control_flags,     ONLY: twfcollect, force_pairing
+        USE control_flags,     ONLY: twfcollect, force_pairing, reduce_io
         USE atoms_type_module, ONLY: atoms_type
         USE io_global,         ONLY: ionode, ionode_id
         USE io_global,         ONLY: stdout
         USE electrons_nose,    ONLY: xnhe0, xnhem, vnhe
-        USE electrons_base,    ONLY: nbsp, nspin, nudx
+        USE electrons_base,    ONLY: nbsp, nspin, nudx, iupdwn, nupdwn
         USE cell_nose,         ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
         USE cp_restart,        ONLY: cp_writefile
-        USE electrons_module,  ONLY: ei
+        USE electrons_module,  ONLY: ei, ei_emp, iupdwn_emp, nupdwn_emp, n_emp
         USE io_files,          ONLY: scradir
         USE grid_dimensions,   ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+        USE cp_interfaces,     ONLY: set_evtot, set_eitot
 
         IMPLICIT NONE 
  
@@ -233,10 +261,13 @@
         REAL(DP),             INTENT(IN)    :: taui(:,:)
         REAL(DP),             INTENT(IN)    :: acc(:), cdmi(:) 
         REAL(DP),             INTENT(IN)    :: trutime
+        REAL(DP),             INTENT(IN)    :: lambda(:,:,:)
 
-        REAL(DP), ALLOCATABLE :: lambda(:,:,:)
         REAL(DP) :: ekincm
-        INTEGER   :: i, j, k, iss, ir
+        INTEGER   :: i, j, k, ir
+        COMPLEX(DP), ALLOCATABLE :: ctot(:,:)
+        REAL(DP),    ALLOCATABLE :: eitot(:,:)
+        INTEGER  :: nupdwn_tot( 2 ), iupdwn_tot( 2 )
 
         INTEGER  :: nkpt = 1
         REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
@@ -247,18 +278,34 @@
         !   if ndw < 1 Do not save wave functions and other system
         !   properties on the writefile subroutine
 
-        ALLOCATE( lambda(nudx,nudx,nspin) )
-        lambda  = 0.0d0
         ekincm = 0.0d0
         !
+        nupdwn_tot = nupdwn + nupdwn_emp
+        iupdwn_tot(1) = iupdwn(1)
+        iupdwn_tot(2) = nupdwn(1) + 1
+        !
+        ALLOCATE( eitot( nupdwn_tot(1), nspin ) )
+        !
+        CALL set_eitot( eitot )
+
+        IF( .NOT. reduce_io ) THEN
+           !
+           ALLOCATE( ctot( SIZE( c0, 1 ), nupdwn_tot(1) * nspin ) )
+           !
+           CALL set_evtot( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+           !
+        END IF
         !
         CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
-          ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi, &
-          atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,  &
-          xnhe0, xnhem, vnhe, ekincm, ei, rho, c0, cm )
+          ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi,   &
+          atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for,    &
+          vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,            &
+          xnhe0, xnhem, vnhe, ekincm, eitot, rho, c0, cm, ctot, iupdwn, nupdwn,   &
+          iupdwn_tot, nupdwn_tot )
 
-        DEALLOCATE( lambda )
+        DEALLOCATE( eitot )
+
+        IF( .NOT. reduce_io ) DEALLOCATE( ctot )
 
      RETURN 
    END SUBROUTINE writefile_fpmd
@@ -269,7 +316,7 @@
 
    SUBROUTINE readfile_fpmd &
       ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-        ht_0, rho, vpot )
+        ht_0, rho, vpot, lambda )
                                                                         
         USE kinds,             ONLY: DP
         use electrons_base,    ONLY: nbsp, nspin, nudx
@@ -304,8 +351,8 @@
         REAL(DP),             INTENT(OUT)   :: taui(:,:)
         REAL(DP),             INTENT(OUT)   :: acc(:), cdmi(:) 
         REAL(DP),             INTENT(OUT)   :: trutime
+        REAL(DP),             INTENT(OUT)   :: lambda(:,:,:)
 
-        REAL(DP), ALLOCATABLE :: lambda_ ( : , : , : )
         REAL(DP) :: ekincm
         REAL(DP) :: hp0_ (3,3)
         REAL(DP) :: hm1_ (3,3)
@@ -317,16 +364,11 @@
         INTEGER  :: nkpt = 1
         REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
 
-        ALLOCATE( lambda_( nudx , nudx, nspin ) )
-        lambda_  = 0.0d0
-
         CALL cp_readfile( ndr, scradir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
-          xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda_ , lambda_ , b1, b2,   &
+          xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda, b1, b2,   &
           b3, xnhe0, xnhem, vnhe, ekincm, c0, cm )
-
-        DEALLOCATE( lambda_ )
 
         IF( .NOT. tbeg ) THEN
           CALL cell_init( ht_0, hp0_ )
@@ -337,3 +379,92 @@
 
         RETURN 
         END SUBROUTINE readfile_fpmd
+
+
+!------------------------------------------------------------------------------!
+   SUBROUTINE set_eitot_x( eitot )
+!------------------------------------------------------------------------------!
+      USE kinds,            ONLY: DP
+      USE electrons_base,   ONLY: nupdwn, nspin
+      USE electrons_module, ONLY: nupdwn_emp, ei, ei_emp, n_emp
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(OUT) :: eitot(:,:)
+      !
+      INTEGER :: n
+      !
+      eitot = 0.0d0
+      !
+      eitot( 1:nupdwn(1), 1 ) = ei( 1:nupdwn(1), 1 )
+      IF( nspin == 2 ) eitot( 1:nupdwn(2), 2 ) = ei( 1:nupdwn(2), 2 )
+      !  
+      IF( n_emp > 0 ) THEN
+         ! 
+         n = nupdwn(1)
+         eitot( n+1 : n+nupdwn_emp(1), 1 ) = ei_emp( 1 : nupdwn_emp(1), 1 )
+         IF( nspin == 2 ) THEN
+            n = nupdwn(2)
+            eitot( n+1 : n+nupdwn_emp(2), 2 ) = ei_emp( 1 : nupdwn_emp(2), 2 )
+         END IF
+         !
+      END IF
+      !
+      RETURN
+   END SUBROUTINE set_eitot_x
+
+
+!------------------------------------------------------------------------------!
+   SUBROUTINE set_evtot_x( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+!------------------------------------------------------------------------------!
+      USE kinds,            ONLY: DP
+      USE electrons_base,   ONLY: nupdwn, nspin, iupdwn, nudx
+      USE electrons_module, ONLY: nupdwn_emp, ei, ei_emp, n_emp, iupdwn_emp
+      USE cp_interfaces,    ONLY: readempty, crot
+      !
+      IMPLICIT NONE
+      !
+      COMPLEX(DP), INTENT(IN)  :: c0(:,:)
+      COMPLEX(DP), INTENT(OUT) :: ctot(:,:)
+      REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
+      INTEGER,     INTENT(IN)  :: iupdwn_tot(2), nupdwn_tot(2)
+      !
+      COMPLEX(DP), ALLOCATABLE :: cemp(:,:)
+      REAL(DP),    ALLOCATABLE :: eitmp(:)
+      LOGICAL                  :: t_emp
+      !
+      ALLOCATE( eitmp( nudx ) )
+      !
+      ctot = 0.0d0
+      !
+      CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(1), iupdwn_tot(1), iupdwn(1), lambda(:,:,1), nudx, eitmp )
+      !
+      IF( nspin == 2 ) THEN
+         CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(2), iupdwn_tot(2), iupdwn(2), lambda(:,:,2), nudx, eitmp )
+      END IF
+      !
+      t_emp = .FALSE.
+      !
+      IF( n_emp > 0 ) THEN
+          !
+          ALLOCATE( cemp( SIZE( c0, 1 ), n_emp * nspin ) )
+          cemp = 0.0d0
+          t_emp = readempty( cemp, n_emp * nspin )
+          !
+      END IF
+      !
+      IF( t_emp ) THEN
+         ctot( :, nupdwn( 1 )+1 : nupdwn_tot(1) ) = cemp( :, 1:nupdwn_emp( 1 ) )
+         IF( nspin == 2 ) THEN
+             ctot( :, iupdwn_tot(2) + nupdwn(2) : iupdwn_tot(2) + nupdwn_tot(1) - 1 ) = &
+                cemp( :, iupdwn_emp(2) : iupdwn_emp(2) + nupdwn_emp(2) - 1 )
+         END IF
+      END IF
+      !
+      IF( n_emp > 0 ) DEALLOCATE( cemp )
+      !
+      DEALLOCATE( eitmp )
+      !
+      RETURN
+
+   END SUBROUTINE set_evtot_x

@@ -174,6 +174,7 @@ MODULE cp_main_variables
       ELSE IF( program_name == 'FPMD' ) THEN
          !
          ALLOCATE( vpot( nnr, nspin ) )
+         ALLOCATE( lambda(  nudx, nudx, nspin ) )
          !
       END IF
       !

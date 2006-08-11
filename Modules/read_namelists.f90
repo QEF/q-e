@@ -104,6 +104,8 @@ MODULE read_namelists_module
        lelfield = .FALSE.
        nberrycyc  = 1
        !
+       saverho = .TRUE.
+       !
        RETURN
        !
      END SUBROUTINE
@@ -598,6 +600,7 @@ MODULE read_namelists_module
        CALL mp_bcast( printwfc,      ionode_id )
        CALL mp_bcast( lelfield,      ionode_id )
        CALL mp_bcast( nberrycyc,     ionode_id )
+       CALL mp_bcast( saverho,       ionode_id )
        ! 
        RETURN
        !
@@ -1056,8 +1059,6 @@ MODULE read_namelists_module
              CALL infomsg( sub_name,' dipfield not implemented yet ', -1)
           IF( lberry ) & 
              CALL infomsg( sub_name,' lberry not implemented yet ', -1)
-          IF( disk_io /= 'default' ) &
-             CALL infomsg( sub_name,' disk_io not used ', -1)
           IF( gdir /= 0 ) &
              CALL infomsg( sub_name,' gdir not used ', -1)
           IF( nppstr /= 0 ) &

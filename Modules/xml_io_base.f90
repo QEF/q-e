@@ -1446,7 +1446,8 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_wfc( iuni, ik, nk, kunit, ispin, &
-                         nspin, wf, ngw, nbnd, igl, ngwl, filename, scalef )
+                         nspin, wf, ngw, nbnd, igl, ngwl, filename, scalef, &
+                         flink )
       !------------------------------------------------------------------------
       !
       USE mp_wave,   ONLY : splitwf
@@ -1466,6 +1467,7 @@ MODULE xml_io_base
       INTEGER,            INTENT(IN)    :: igl(:)
       CHARACTER(LEN=256), INTENT(IN)    :: filename
       REAL(DP),           INTENT(OUT)   :: scalef
+      LOGICAL, OPTIONAL,  INTENT(IN)    :: flink
       !
       INTEGER                  :: i, j
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
@@ -1473,12 +1475,20 @@ MODULE xml_io_base
       INTEGER                  :: iks, ike, nkt, ikt
       INTEGER                  :: igwx, igwx_, ik_, nk_, kunit_
       INTEGER                  :: npool, ipmask(nproc_image), ipdest
+      LOGICAL                  :: flink_
       !
+      flink_ = .FALSE.
+      IF( PRESENT( flink ) ) flink_ = flink
       !
       CALL set_kpoints_vars( ik, nk, kunit, ngwl, igl, &
                              npool, ikt, iks, ike, igwx, ipmask, ipdest )
       !
-      IF ( ionode ) &
+      !  if flink = .true. we are following a link and the file is
+      !  already opened for read
+      !
+      ierr = 0
+      !
+      IF ( ionode .AND. .NOT. flink_ ) &
          CALL iotk_open_read( iuni, FILE = filename, &
                               BINARY = .TRUE., IERR = ierr )
       !
@@ -1547,7 +1557,7 @@ MODULE xml_io_base
          !
       END DO
       !
-      IF ( ionode ) CALL iotk_close_read( iuni )
+      IF ( ionode .AND. .NOT. flink_ ) CALL iotk_close_read( iuni )
       !
       DEALLOCATE( wtmp )
       !

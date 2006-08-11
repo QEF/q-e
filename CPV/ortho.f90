@@ -10,7 +10,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_m( c0, cp, nupdwn, iupdwn, nspin )
+   SUBROUTINE ortho_m( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
 !=----------------------------------------------------------------------------=!
       !
       USE kinds,              ONLY: DP
@@ -23,25 +23,27 @@
 
       INTEGER,     INTENT(IN)    :: nupdwn(:), iupdwn(:), nspin
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
+      REAL(DP),    INTENT(INOUT) :: lambda(:,:,:)
+      REAL(DP),    INTENT(IN)    :: ccc
       !
       COMPLEX(DP), ALLOCATABLE :: phi(:,:)
-      REAL(DP),    ALLOCATABLE :: x0(:,:)
       INTEGER                  :: iss, nss, iwfc, nwfc, info
-      INTEGER                  :: iter
-      INTEGER                  :: ngwx, nx
+      INTEGER                  :: iter, i, j
+      INTEGER                  :: ngwx, n, nx
       REAL(DP)                 :: diff
       REAL(DP)                 :: dum(2,2)
       COMPLEX(DP)              :: cdum(2,2)
       !
       CALL start_clock( 'ortho' )  
 
-      nx   = SIZE( c0, 2 )
+      n    = SIZE( c0, 2 )
       ngwx = SIZE( c0, 1 )
+      nx   = SIZE( lambda, 1 )
 
-      ALLOCATE( phi( ngwx, nx ), STAT = info )
+      ALLOCATE( phi( ngwx, n ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating phi ', 3 )
 
-      CALL calphi( c0, ngwx, dum, 1, cdum, phi, nx, ema0bg )
+      CALL calphi( c0, ngwx, dum, 1, cdum, phi, n, ema0bg )
       !
       nss = nspin
       IF( force_pairing ) nss = 1
@@ -51,19 +53,22 @@
           nwfc = nupdwn(iss)
           iwfc = iupdwn(iss)
           !
-          ALLOCATE( x0( nwfc, nwfc ), STAT = info )
-          IF( info /= 0 ) CALL errore( ' ortho ', ' allocating x0 ', 4 )
-          !
           CALL ortho_gamma( 1, cp, ngwx, phi, dum, dum, 2, dum, dum, &
-                            x0, nwfc, diff, iter, nx, nwfc, iwfc )
+                            lambda(:,:,iss), nx, diff, iter, n, nwfc, iwfc )
           !
           IF ( iter > ortho_max ) THEN
              call errore(' ortho ','  itermax ',iter)
           END IF
           !
-          CALL updatc( 1.0d0, nx, x0, nwfc, phi, ngwx, dum, 1, dum, dum, cp, nwfc, iwfc )
+          CALL updatc( 1.0d0, n, lambda(:,:,iss), nx, phi, ngwx, dum, 1, dum, dum, cp, nwfc, iwfc )
+          !     
+          !     lagrange multipliers
           !
-          DEALLOCATE( x0 )
+          DO i=1,nss
+             DO j=1,nss
+                lambda( i, j, iss ) = lambda( i, j, iss ) / ccc
+             END DO
+          END DO
           !
       END DO
       !

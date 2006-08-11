@@ -120,8 +120,7 @@
         USE mp_global,          ONLY: me_image, nproc_image, intra_image_comm
         USE mp_wave,            ONLY: mergewf
         USE mp,                 ONLY: mp_sum
-        USE io_files,           ONLY: scradir
-        USE io_files,           ONLY: empty_file, emptyunit
+        USE io_files,           ONLY: empty_file, emptyunit, scradir
         USE io_global,          ONLY: ionode, ionode_id, stdout
         USE reciprocal_vectors, ONLY: ig_l2g
         USE gvecw,              ONLY: ngw
@@ -327,7 +326,7 @@
       USE time_step,            ONLY : delt
       USE check_stop,           ONLY : check_stop_now
       USE cp_interfaces,        ONLY : writeempty, readempty, gram_empty, ortho, &
-                                       wave_rand_init, elec_fakekine
+                                       wave_rand_init, elec_fakekine, crot
       !
       IMPLICIT NONE
       !
@@ -336,7 +335,7 @@
       REAL(DP)               :: v(:,:)
       !
       INTEGER  :: i, iss, j, in, in_emp, iter, iter_ortho
-      INTEGER  :: n_occs, n_emps, n_empx, issw
+      INTEGER  :: n_occs, n_emps, n_empx, issw, n
       LOGICAL  :: exst
       !
       REAL(DP) :: fccc, ccc, csv, dt2bye, bigr
@@ -567,14 +566,18 @@
 
       END DO ITERATIONS
 
-      ! ...  Compute eigenvalues
+      ! ...  Compute eigenvalues and bring wave functions on Kohn-Sham orbitals
 
-      CALL eigs0( ei_emp, .false., nspin, nupdwn_emp, iupdwn_emp, .true., f_emp, &
-                  n_empx, lambda_emp, n_empx )
+      DO iss = 1, nspin
+         i = iupdwn_emp(iss)
+         n = nupdwn_emp(iss)
+         CALL crot( cm_emp, c0_emp, ngw, n, i, i, lambda_emp(:,:,iss), n_empx, ei_emp(:,iss) )
+         ei_emp( 1:n, iss ) = ei_emp( 1:n, iss ) / f_emp( i : i + n - 1 )
+      END DO
 
       ! ...   Save emptystates to disk
 
-      CALL writeempty( c0_emp, n_empx * nspin )
+      CALL writeempty( cm_emp, n_empx * nspin )
 
       ! CALL opticalp( nfi, omega, c_occ, wfill, c_emp, wempt, vpot, eigr, vkb, bec )
       ! 

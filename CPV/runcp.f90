@@ -23,9 +23,9 @@
       ! ...   declare modules
       USE kinds
       USE electrons_module,   ONLY : nb_l
-      USE electrons_base,     ONLY : nupdwn, iupdwn, nspin, nbsp, nudx
+      USE electrons_base,     ONLY : nupdwn, iupdwn, nspin, nbsp, nudx, nbspx
       USE cp_electronic_mass, ONLY : emass
-      USE cp_main_variables,  ONLY : ema0bg
+      USE cp_main_variables,  ONLY : ema0bg, lambda
       USE wave_base,          ONLY : hpsi
       USE cell_module,        ONLY : boxdimensions
       USE time_step,          ONLY : delt
@@ -49,35 +49,38 @@
       REAL(DP), INTENT(IN) :: fccc
 
       ! ...   declare other variables
-      INTEGER :: ierr, is
-
-      REAL(DP),    ALLOCATABLE :: gam(:,:,:)
+      INTEGER  :: ierr, is
+      REAL(DP) :: ccc
 
       ! ...   end of declarations
 
       ngw = SIZE( cp, 1 )
       !
-      ALLOCATE( gam( nudx, nudx, nspin ), STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp ', ' allocating gam, prod ', ierr)
-
       ekinc    = 0.0d0
 
       !  Compute electronic forces and move electrons
 
-      CALL runcp_ncpp( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, lambda = ttprint )
+      CALL runcp_ncpp( cm, c0, cp, vpot, vkb, fi, bec, fccc, lambda, tlambda = ttprint )
 
       !  Compute eigenstate
       !
       IF( ttprint ) THEN
         DO is = 1, nspin
-          CALL eigs( nupdwn(is), gam(:,:,is), tortho, fi(iupdwn(is):iupdwn(is)+nupdwn(is)-1), ei(:,is) )
+           CALL eigs( nupdwn(is), lambda(:,:,is), tortho, fi(iupdwn(is):iupdwn(is)+nupdwn(is)-1), ei(:,is) )
         END DO
       END IF
 
       !  Orthogonalize the new wave functions "cp"
 
       IF( tortho ) THEN
-         CALL ortho( c0, cp, nupdwn, iupdwn, nspin )
+         !
+         ccc    = fccc * delt * delt / emass
+         !
+         CALL ortho( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
+         !
+         !IF( ttprint ) THEN
+         !   call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .true. , fi, nbspx, lambda, nudx )
+         !END IF
       ELSE
          DO is = 1, nspin
             CALL gram( vkb, bec, nkb, cp(1,iupdwn(is)), SIZE(cp,1), nupdwn(is) )
@@ -88,10 +91,6 @@
 
       CALL elec_fakekine( ekinc, ema0bg, emass, cp, cm, ngw, nbsp, 1, 2.0d0 * delt )
 
-      DEALLOCATE( gam, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp ', ' deallocating 1 ', ierr)
-
-
       RETURN
     END SUBROUTINE runcp_x
 
@@ -100,7 +99,7 @@
 
 
     SUBROUTINE runcp_ncpp_x &
-       ( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, lambda, fromscra, diis, restart )
+       ( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, tlambda, fromscra, diis, restart )
 
        !     This subroutine performs a Car-Parrinello or Steepest-Descent step
        !     on the electronic variables, computing forces on electrons and,
@@ -133,7 +132,7 @@
       REAL (DP) ::  vpot(:,:)
       REAL (DP), INTENT(IN) ::  bec(:,:)
       REAL(DP), INTENT(IN) :: fccc
-      LOGICAL, OPTIONAL, INTENT(IN) :: lambda, fromscra, diis, restart
+      LOGICAL, OPTIONAL, INTENT(IN) :: tlambda, fromscra, diis, restart
 
 ! ...   declare other variables
       REAL(DP) ::  svar1, svar2
@@ -148,8 +147,8 @@
 ! ...   end of declarations
 !  ----------------------------------------------
 
-      IF( PRESENT( lambda ) ) THEN
-        tlam = lambda
+      IF( PRESENT( tlambda ) ) THEN
+        tlam = tlambda
       ELSE
         tlam = .FALSE.
       END IF
@@ -197,8 +196,8 @@
             CALL dforce( i, c0, fi, c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
-               CALL update_lambda( i  , gam( :, :,is), c0, c2, nwfc, iwfc )
-               CALL update_lambda( i+1, gam( :, :,is), c0, c3, nwfc, iwfc )
+               CALL update_lambda( i  , gam( :, :,is), c0, c2, nwfc, iwfc, .true. )
+               CALL update_lambda( i+1, gam( :, :,is), c0, c3, nwfc, iwfc, .true. )
             END IF
 
             IF( iflag == 2 ) THEN
@@ -231,7 +230,7 @@
             CALL dforce( nx, c0, fi, c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
 
             IF( tlam ) THEN
-               CALL update_lambda( nb, gam( :, :,is), c0, c2, nwfc, iwfc )
+               CALL update_lambda( nb, gam( :, :,is), c0, c2, nwfc, iwfc, .true. )
             END IF
 
             IF( iflag == 2 ) THEN
@@ -279,7 +278,7 @@
       USE electrons_module,   ONLY: nb_l
       USE electrons_base,     ONLY: iupdwn, nupdwn, nspin
       USE cp_electronic_mass, ONLY: emass
-      USE cp_main_variables,  ONLY: ema0bg
+      USE cp_main_variables,  ONLY: ema0bg, lambda
       USE wave_base,          ONLY: wave_steepest, wave_verlet
       USE wave_base,          ONLY: hpsi
       USE cell_module,        ONLY: boxdimensions
@@ -308,7 +307,7 @@
 
 ! ...   declare other variables
       REAL(DP) :: s3, s4
-      REAL(DP) :: svar1, svar2, etmp
+      REAL(DP) :: svar1, svar2, etmp, ccc
       INTEGER :: i, ig, nx, nb, j, nb_g, nb_lx, ierr, ibl
       INTEGER :: ispin_wfc, n_unp, iwfc, nwfc 
       REAL(DP), ALLOCATABLE :: occup(:), occdown(:), occsum(:)
@@ -379,8 +378,8 @@
 
           IF( ttprint ) then
             !
-            CALL update_lambda( i  , gam( :, :), c0, c2, nupdwn(1), 1 )
-            CALL update_lambda( i+1, gam( :, :), c0, c3, nupdwn(1), 1 )
+            CALL update_lambda( i  , gam( :, :), c0, c2, nupdwn(1), 1, .true. )
+            CALL update_lambda( i+1, gam( :, :), c0, c3, nupdwn(1), 1, .true. )
 
           END IF
 
@@ -410,7 +409,7 @@
           c2 = occup(nb)* (c2 + c4)
 
           IF( ttprint ) THEN
-            CALL update_lambda( nb, gam( :, :), c0, c2, nupdwn(2), iupdwn(1) )
+            CALL update_lambda( nb, gam( :, :), c0, c2, nupdwn(2), iupdwn(1), .true. )
           END IF
 
           IF ( tsde ) THEN
@@ -474,10 +473,16 @@
         ENDIF
 
       IF( tortho ) THEN
-         CALL ortho( c0, cp, nupdwn, iupdwn, nspin )
+         !
+         ccc    = fccc * delt * delt / emass
+         !
+         CALL ortho( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
+         !
       ELSE
+         !
          CALL gram( vkb, bec, nkb, cp(1,1), SIZE(cp,1), nupdwn(1) )
          cp(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cp(:,1:nupdwn(2))
+         !
       END IF
 
       !  Compute fictitious kinetic energy of the electrons at time t

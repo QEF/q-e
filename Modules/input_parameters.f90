@@ -280,12 +280,17 @@ MODULE input_parameters
         INTEGER :: printwfc=1
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
 
+        LOGICAL :: saverho = .TRUE.
+          ! This flag controls the saving of charge density in CP codes:
+          !  .TRUE.  save charge density to restart dir
+          !  .FALSE. do not save charge density
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr, tefield2
+          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr, tefield2, &
+          saverho
 
 !
 !=----------------------------------------------------------------------------=!

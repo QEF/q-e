@@ -3873,13 +3873,13 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, ispin
   USE constants,              ONLY : pi, fpi
   USE wannier_base,           ONLY : iwf
-  USE dener,                  ONLY : dekin, denl
+  USE dener,                  ONLY : dekin, denl, dekin6
   USE io_global,              ONLY : stdout, ionode
   USE mp_global,              ONLY : intra_image_comm
   USE uspp_param,             ONLY : nh, nhm
   USE uspp,                   ONLY : nkb
   USE cp_interfaces,          ONLY : fwfft, invfft
-  USE cp_interfaces,          ONLY : checkrho
+  USE cp_interfaces,          ONLY : checkrho, stress_kin
   USE mp,                     ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -3917,7 +3917,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   !     calculation of kinetic energy ekin
   !     ==================================================================
   ekin=enkin(c,ngw,f,nbsp)
-  IF(tpre) CALL denkin(c,dekin)
+  IF(tpre) CALL stress_kin( dekin6, c, f )
   !
   !     ==================================================================
   !     calculation of non-local energy

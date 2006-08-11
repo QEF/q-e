@@ -34,12 +34,13 @@ MODULE cp_restart
     SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, &
                              wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,   &
                              taui, cdmi, stau0, svel0, staum, svelm, force,  &
-                             vnhp, xnhp0, xnhpm,nhpcl,nhpdim, occ0, occm,    &
+                             vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ0, occm,  &
                              lambda0,lambdam, xnhe0, xnhem, vnhe, ekincm,    &
-                             et, rho, c02, cm2, mat_z )
+                             et, rho, c02, cm2, ctot, iupdwn, nupdwn,        &
+                             iupdwn_tot, nupdwn_tot, mat_z )
       !------------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : gamma_only, force_pairing, reduce_io
+      USE control_flags,            ONLY : gamma_only, force_pairing, trhow, reduce_io
       USE io_files,                 ONLY : psfile, pseudo_dir
       USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image
       USE printout_base,            ONLY : title
@@ -50,8 +51,7 @@ MODULE cp_restart
       USE gvecs,                    ONLY : ngs, ngst, ecuts, gcuts, dual
       USE gvecw,                    ONLY : ngw, ngwt, ecutw, gcutw
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
-      USE electrons_base,           ONLY : nspin, nbnd, nbsp, nelt, nel, &
-                                           nupdwn, iupdwn, f, nudx
+      USE electrons_base,           ONLY : nspin, nelt, nel
       USE cell_base,                ONLY : ibrav, alat, celldm, &
                                            symm_type, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
@@ -64,6 +64,7 @@ MODULE cp_restart
       USE parameters,               ONLY : nhclm
       USE fft_base,                 ONLY : dfftp
       USE constants,                ONLY : pi
+      USE cp_interfaces,            ONLY : n_atom_wfc
       !
       IMPLICIT NONE
       !
@@ -103,10 +104,15 @@ MODULE cp_restart
       REAL(DP),              INTENT(IN) :: xnhem        ! 
       REAL(DP),              INTENT(IN) :: vnhe         ! 
       REAL(DP),              INTENT(IN) :: ekincm       ! 
-      REAL(DP),              INTENT(IN) :: et(:,:)      ! 
+      REAL(DP),              INTENT(IN) :: et(:,:)      !  eigenvalues
       REAL(DP),              INTENT(IN) :: rho(:,:)     ! 
       COMPLEX(DP),           INTENT(IN) :: c02(:,:)     ! 
       COMPLEX(DP),           INTENT(IN) :: cm2(:,:)     ! 
+      COMPLEX(DP),           INTENT(IN) :: ctot(:,:)    ! 
+      INTEGER,               INTENT(IN) :: iupdwn(:)    ! 
+      INTEGER,               INTENT(IN) :: nupdwn(:)    ! 
+      INTEGER,               INTENT(IN) :: iupdwn_tot(:)! 
+      INTEGER,               INTENT(IN) :: nupdwn_tot(:)! 
       REAL(DP),    OPTIONAL, INTENT(IN) :: mat_z(:,:,:) ! 
       !
       LOGICAL               :: write_charge_density
@@ -120,9 +126,9 @@ MODULE cp_restart
       INTEGER               :: is, ia, isa, ik, ierr
       INTEGER,  ALLOCATABLE :: mill(:,:)
       INTEGER,  ALLOCATABLE :: ftmp(:,:)
-      REAL(DP), ALLOCATABLE :: occ_(:)
       INTEGER,  ALLOCATABLE :: ityp(:)
       REAL(DP), ALLOCATABLE :: tau(:,:)
+      REAL(DP), ALLOCATABLE :: dtmp(:)
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       REAL(DP)              :: omega, htm1(3,3), h(3,3)
       REAL(DP)              :: a1(3), a2(3), a3(3)
@@ -131,9 +137,27 @@ MODULE cp_restart
       REAL(DP)              :: scalef
       LOGICAL               :: lsda
       REAL(DP)              :: s0, s1, cclock
+      INTEGER               :: nbnd_tot
+      INTEGER               :: nbnd_emp
+      INTEGER               :: nbnd_
       !
+      write_charge_density = trhow
       !
-      write_charge_density = .NOT.reduce_io
+      IF( nspin > 1 .AND. .NOT. force_pairing ) THEN
+         !
+         !  check if the array storing wave functions is large enought
+         !
+         IF( SIZE( c02, 2 ) < ( iupdwn( 2 ) + nupdwn(1) - 1 ) ) &
+            CALL errore('cp_writefile',' wrong wave functions dimension ', 1 )
+         !
+      END IF
+      !
+      IF(  nupdwn_tot(1) < nupdwn(1) ) &
+         CALL errore( " writefile ", " wrong number of states ", 1 )
+      !
+      nbnd_    = nupdwn(1) 
+      nbnd_tot = MAX( nupdwn(1), nupdwn_tot(1) )
+      nbnd_emp = MAX( 0, nupdwn_tot(1) - nupdwn(1) )
       !
       IF ( ionode ) THEN
          !
@@ -226,11 +250,13 @@ MODULE cp_restart
       !
       lsda = ( nspin == 2 )
       !
-      ALLOCATE( ftmp( nudx, nspin ) )
+      ALLOCATE( ftmp( nbnd_tot , nspin ) )
+      !
+      ftmp = 0.0d0
       !
       DO iss = 1, nspin
          !
-         ftmp( 1:nupdwn(iss), iss ) = f( iupdwn(iss) : iupdwn(iss) + nupdwn(iss) - 1 )
+         ftmp( 1:nupdwn(iss), iss ) = occ0( iupdwn(iss) : iupdwn(iss) + nupdwn(iss) - 1 )
          !
       END DO
       !
@@ -247,16 +273,15 @@ MODULE cp_restart
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
-      CALL errore( 'cp_writefile ', &
-                   'cannot open restart file for writing', ierr )
+      CALL errore( 'cp_writefile ', 'cannot open restart file for writing', ierr )
       !
       s0 = cclock() 
       !
       IF ( ionode ) THEN
          !
-!-------------------------------------------------------------------------------
-! ... STATUS
-!-------------------------------------------------------------------------------
+         !-------------------------------------------------------------------------------
+         ! ... STATUS
+         !-------------------------------------------------------------------------------
          !
          CALL iotk_write_begin( iunpun, "STATUS" )
          !
@@ -328,8 +353,8 @@ MODULE cp_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_occ( LGAUSS = .FALSE., LTETRA = .FALSE., &
-                         TFIXED_OCC = .TRUE., LSDA = lsda, NELUP = nupdwn(1), &
-                         NELDW = nupdwn(2), F_INP = DBLE( ftmp ) )
+                         TFIXED_OCC = .TRUE., LSDA = lsda, NELUP = nupdwn_tot(1), &
+                         NELDW = nupdwn_tot(2), F_INP = DBLE( ftmp ) )
          !
 !-------------------------------------------------------------------------------
 ! ... BRILLOUIN_ZONE
@@ -494,6 +519,8 @@ MODULE cp_restart
          ! 
          CALL iotk_write_begin( iunpun, "BAND_STRUCTURE" )
          !
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", n_atom_wfc() )
+         !
          nelec = nelt
          !
          IF ( nspin == 2 ) THEN
@@ -503,22 +530,26 @@ MODULE cp_restart
             CALL iotk_write_dat( iunpun, &
                                  "NUMBER_OF_ELECTRONS", nelec, ATTR = attr )
             !
-            CALL iotk_write_attr( attr, "UP", nupdwn(1), FIRST = .TRUE. )
-            CALL iotk_write_attr( attr, "DW", nupdwn(2) )
+            CALL iotk_write_attr( attr, "UP", nupdwn_tot(1), FIRST = .TRUE. )
+            CALL iotk_write_attr( attr, "DW", nupdwn_tot(2) )
             CALL iotk_write_dat( iunpun, &
-                                 "NUMBER_OF_BANDS", nbnd, ATTR = attr )
+                                 "NUMBER_OF_BANDS", nbnd_tot , ATTR = attr )
             !
          ELSE
             !
             CALL iotk_write_dat( iunpun, "NUMBER_OF_ELECTRONS", nelec )
             !
-            CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd )
+            CALL iotk_write_dat( iunpun, "NUMBER_OF_BANDS", nbnd_tot )
             !
          END IF
+         !
+         CALL iotk_write_dat( iunpun, "NUMBER_OF_EMPTY_STATES", nbnd_emp )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
          !
          CALL iotk_write_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+         !
+         CALL iotk_write_dat( iunpun, "MAX_NPW", ngwt )
          !
       END IF
       !
@@ -534,27 +565,37 @@ MODULE cp_restart
             !
             CALL iotk_write_dat( iunpun, "WEIGHT", wk(ik) )
             !
-            ALLOCATE( occ_( nbnd ) )
+            ALLOCATE( dtmp ( nbnd_tot ) )
             !
             DO iss = 1, nspin
                !
                cspin = iotk_index( iss )
                !
-               CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
-               CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), &
-                                    et(:,iss), ATTR = attr  )
+               dtmp = 0.0d0
                !
-               occ_ = 0.0d0
-               occ_ ( 1:nupdwn( iss ) ) = occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) / wk(ik)
-               CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ), occ_ )
-
-               occ_ = 0.0d0
-               occ_ ( 1:nupdwn( iss ) ) = occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) / wk(ik)
-               CALL iotk_write_dat( iunpun, "OCCM" // TRIM( cspin ), occ_ )
+               IF( .NOT. reduce_io ) THEN
+                  ! 
+                  !  writes data required by postproc and PW
+                  !
+                  CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
+                  !
+                  CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), et( 1 : nbnd_tot, iss ) , ATTR = attr  )
+                  !
+                  dtmp ( 1:nupdwn( iss ) ) = occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) / wk(ik)
+                  !
+                  CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ), dtmp )
+                  !
+               END IF
+               !
+               CALL iotk_write_dat( iunpun, "OCC0"  // TRIM( cspin ), &
+                                    occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) )
+               !
+               CALL iotk_write_dat( iunpun, "OCCM" // TRIM( cspin ), &
+                                    occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) )
                !
             END DO
             !
-            DEALLOCATE( occ_ )
+            DEALLOCATE( dtmp )
             !
             ! ... G+K vectors
             !
@@ -577,41 +618,85 @@ MODULE cp_restart
             ! 
             ik_eff = ik + ( iss - 1 ) * nk
             ! 
+            iss_wfc = iss
+            if( force_pairing ) iss_wfc = 1   ! only the WF for the first spin is allocated
+            !
+            IF( .NOT. reduce_io ) THEN 
+               ! 
+               !   Save additional WF, 
+               !   orthogonal KS states to be used for post processing and PW
+               ! 
+               IF ( ionode ) THEN
+                  !
+                  IF ( nspin == 1 ) THEN
+                     !
+                     filename = TRIM( wfc_filename( ".", 'evc', ik ) )
+                     !
+                  ELSE
+                     !
+                     filename = TRIM( wfc_filename( ".", 'evc', ik, iss ) )
+                     !
+                  END IF
+                  !
+                  CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (iss) ), &
+                                  filename, CREATE = .FALSE., BINARY = .TRUE. )
+                  !
+                  IF ( nspin == 1 ) THEN
+                     !
+                     filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+                     !
+                  ELSE
+                     !
+                     filename = TRIM( wfc_filename( dirname, 'evc', ik, iss ) )
+                  !
+                  END IF
+                  !
+               END IF
+               !
+               ib = iupdwn_tot( iss_wfc )
+               !
+               CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin,        &
+                               ctot( :, ib : ib + nbnd_tot - 1 ), ngwt, nbnd_tot , &
+                               ig_l2g, ngw, filename, scalef )
+               !
+            END IF
+            !
+            !  Save wave function at time t
+            !
             IF ( ionode ) THEN
                !
                IF ( nspin == 1 ) THEN
                   !
-                  filename = TRIM( wfc_filename( ".", 'evc', ik ) )
+                  filename = TRIM( wfc_filename( ".", 'evc0', ik ) )
                   !
                ELSE
                   !
-                  filename = TRIM( wfc_filename( ".", 'evc', ik, iss ) )
+                  filename = TRIM( wfc_filename( ".", 'evc0', ik, iss ) )
                   !
                END IF
                !
-               CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (iss) ), &
+               CALL iotk_link( iunpun, "WFC0" // TRIM( iotk_index (iss) ), &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                IF ( nspin == 1 ) THEN
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+                  filename = TRIM( wfc_filename( dirname, 'evc0', ik ) )
                   !
                ELSE
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik, iss ) )
+                  filename = TRIM( wfc_filename( dirname, 'evc0', ik, iss ) )
                   !
                END IF
                !
             END IF
             !
-            iss_wfc = iss
-            if( force_pairing ) iss_wfc = 1   ! only the WF for the first spin is allocated
-            !
-            ib = iupdwn( iss_wfc )
+            ib = iupdwn(iss_wfc)
             !
             CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
-                            c02(:,ib:ib+nupdwn(iss_wfc)-1), ngwt, nupdwn(iss_wfc), ig_l2g, ngw, &
+                            c02( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , ig_l2g, ngw, &
                             filename, scalef )
+            !
+            !  Save wave function at time t - dt
             !
             IF ( ionode ) THEN
                !
@@ -625,7 +710,7 @@ MODULE cp_restart
                   !
                END IF
                !
-               CALL iotk_link( iunpun, "wfcm", &
+               CALL iotk_link( iunpun, "WFCM" // TRIM( iotk_index (iss) ), &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
                IF ( nspin == 1 ) THEN
@@ -640,11 +725,10 @@ MODULE cp_restart
                !
             END IF
             !
-            !
             ib = iupdwn(iss_wfc)
             !
             CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
-                            cm2(:,ib:ib+nupdwn(iss_wfc)-1), ngwt, nupdwn(iss_wfc), ig_l2g, ngw, &
+                            cm2( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , ig_l2g, ngw, &
                             filename, scalef )
             !
          END DO
@@ -653,6 +737,8 @@ MODULE cp_restart
             CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
          !
       END DO k_points_loop
+      !
+      !
       !
       DO iss = 1, nspin
          ! 
@@ -808,7 +894,6 @@ MODULE cp_restart
       INTEGER              :: i, j, iss, ig, nspin_wfc, ierr, ik
       REAL(DP)             :: omega, htm1(3,3), hinv(3,3), scalef
       LOGICAL              :: found
-      LOGICAL              :: tread_cm
       INTEGER, ALLOCATABLE :: mill(:,:)
       !
       ! ... variables read for testing pourposes
@@ -827,7 +912,7 @@ MODULE cp_restart
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_
       INTEGER               :: nhpcl_, nhpdim_ 
-      INTEGER               :: ib
+      INTEGER               :: ib, nb
       INTEGER               :: ik_eff
       REAL(DP)              :: amass_(ntypx)
       INTEGER,  ALLOCATABLE :: ityp_(:) 
@@ -1161,8 +1246,6 @@ MODULE cp_restart
             !
             cspin = iotk_index( iss )
             !
-            tread_cm = .TRUE.
-            !
             ik_eff = ik + ( iss - 1 ) * nk
             !
             IF ( ionode ) THEN
@@ -1171,33 +1254,26 @@ MODULE cp_restart
                !
                occ_ = 0.0d0
                !
-               CALL iotk_scan_dat( iunpun, &
-                                   "OCC" // TRIM( cspin ), occ_ ( 1:nbnd_ ),  &
-                                   FOUND = found, IERR = ierr )
+               CALL iotk_scan_dat( iunpun, "OCC0" // TRIM( cspin ), occ_ ( 1:nbnd_ ), FOUND = found )
                !
-               IF( ierr /= 0 ) THEN
-                  attr = "error reading OCC"
-                  GOTO 100
-               END IF
-               !
-               occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
-               !
-               occ_ = 0.0d0
-               !
-               CALL iotk_scan_dat( iunpun, &
-                                   "OCCM" // TRIM( cspin ), occ_ ( 1:nbnd_ ) , &
-                                   FOUND = found, IERR = ierr )
-               !
-               IF ( .NOT. found ) THEN
+               IF( .NOT. found ) THEN
                   !
-                  occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = &
-                      occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 )
+                  CALL iotk_scan_dat( iunpun, "OCC" // TRIM( cspin ), occ_ ( 1:nbnd_ ), FOUND = found )
                   !
-                  tread_cm = .FALSE.
+                  IF( found ) THEN
+                     occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
+                     occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
+                  END IF
                   !
                ELSE
                   !
-                  occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
+                  occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) )
+                  !
+                  CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ), occ_ ( 1:nbnd_ ), FOUND = found )
+                  !
+                  IF( found ) THEN
+                     occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) )
+                  END IF
                   !
                END IF
                !
@@ -1205,62 +1281,94 @@ MODULE cp_restart
                !
             END IF
             !
-            CALL mp_bcast( tread_cm, ionode_id, intra_image_comm )
+            CALL mp_bcast( found, ionode_id, intra_image_comm )
+            !
+            IF( .NOT. found ) &
+               CALL errore( " readfile ", " occupation numbers not found! ", 1 )
+            !
             !
             IF ( ionode ) THEN
                !
-               IF ( nspin == 1 ) THEN
+               CALL iotk_scan_begin( iunpun, "WFC0" // TRIM( iotk_index (iss) ), FOUND = found )
+               !
+               filename = "WFC0" // TRIM( iotk_index (iss) )
+               !
+               IF( .NOT. found ) THEN
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+                  CALL iotk_scan_begin( iunpun, "wfc", FOUND = found )
                   !
-               ELSE
+                  filename = "wfc"
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik, iss ) )
+               END IF
+               !
+               IF( .NOT. found ) THEN
+                  !
+                  CALL iotk_scan_begin( iunpun, "WFC" // TRIM( iotk_index (iss) ), FOUND = found )
+                  !
+                  filename = "WFC" // TRIM( iotk_index (iss) )
                   !
                END IF
                !
             END IF
+            !
+            CALL mp_bcast( found, ionode_id, intra_image_comm )
+            !
+            IF( .NOT. found ) &
+               CALL errore( " readfile ", " wave functions not found! ", 1 )
             !
             IF( .NOT. ( iss > 1 .AND. force_pairing ) ) THEN
                !
                ! Only WF with spin 1 are needed when force_pairing is active
                !
                ib = iupdwn(iss)
+               nb = nupdwn(iss)
                !
-               CALL read_wfc( iunout, ik_eff , nk, kunit, iss_, nspin_, &
-                              c02(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
-                              filename, scalef_ )
+               ! filename is not needed we are following the link!
+               !
+               CALL read_wfc( iunpun, ik_eff , nk, kunit, iss_, nspin_, &
+                              c02( :, ib:ib+nb-1 ), ngwt_, nbnd_, ig_l2g, ngw, &
+                              filename, scalef_, .TRUE. )
                !
             END IF
             !
-            IF ( tread_cm ) THEN 
+            IF ( ionode ) &
+               CALL iotk_scan_end( iunpun, TRIM(filename) )
+            !
+            IF ( ionode ) THEN 
                !
-               IF ( ionode ) THEN
+               CALL iotk_scan_begin( iunpun, "WFCM" // TRIM( iotk_index (iss) ), FOUND = found )
+               !
+               filename = "WFCM" // TRIM( iotk_index (iss) )
+               !
+               IF( .NOT. found ) THEN
                   !
-                  IF ( nspin == 1 ) THEN
-                     !
-                     filename = TRIM( wfc_filename( dirname, 'evcm', ik ) )
-                     !
-                  ELSE
-                     !
-                     filename = TRIM( wfc_filename( dirname, &
-                                                    'evcm', ik, iss ) )
-                     !
-                  END IF
+                  CALL iotk_scan_begin( iunpun, "wfcm", FOUND = found )
+                  !
+                  filename = "wfcm"
                   !
                END IF
+               !
+            END IF
+            !
+            CALL mp_bcast( found, ionode_id, intra_image_comm )
+            !
+            IF( found ) THEN
                !
                IF( .NOT. ( iss > 1 .AND. force_pairing ) ) THEN
                   !
                   ! Only WF with spin 1 are needed when force_pairing is active
                   !
                   ib = iupdwn(iss)
+                  nb = nupdwn(iss)
                   !
-                  CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_, &
-                                 cm2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw, &
-                                 filename, scalef_ )
+                  CALL read_wfc( iunpun, ik_eff, nk, kunit, iss_, nspin_, &
+                                 cm2( :, ib:ib+nb-1 ), ngwt_, nbnd_, ig_l2g, ngw, &
+                                 filename, scalef_ , .TRUE. )
                   !
                END IF
+               !
+               IF ( ionode ) &
+                  CALL iotk_scan_end( iunpun, TRIM( filename ) )
                !
             ELSE
                !
@@ -1412,10 +1520,10 @@ MODULE cp_restart
     END SUBROUTINE cp_readfile
     ! 
     !------------------------------------------------------------------------
-    SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, iss, nspin, c2, c4, tag )
+    SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, iss, nspin, c2, tag )
       !------------------------------------------------------------------------
       !
-      USE electrons_base,     ONLY : nbnd, iupdwn
+      USE electrons_base,     ONLY : iupdwn, nupdwn
       USE reciprocal_vectors, ONLY : ngwt, ngw, ig_l2g
       !
       IMPLICIT NONE
@@ -1425,10 +1533,9 @@ MODULE cp_restart
       INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
       CHARACTER,             INTENT(IN)  :: tag
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c2(:,:)
-      COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c4(:,:,:,:)
       !
       CHARACTER(LEN=256) :: dirname, filename
-      INTEGER            :: ik_eff, ib, kunit, iss_, nspin_, ngwt_, nbnd_
+      INTEGER            :: ik_eff, ib, nb, kunit, iss_, nspin_, ngwt_, nbnd_
       REAL(DP)           :: scalef
       !
       kunit = 1
@@ -1441,11 +1548,11 @@ MODULE cp_restart
          !
          IF ( nspin == 1 ) THEN
             !
-            filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+            filename = TRIM( wfc_filename( dirname, 'evc0', ik ) )
             !
          ELSE
             !
-            filename = TRIM( wfc_filename( dirname, 'evc', ik, iss ) )
+            filename = TRIM( wfc_filename( dirname, 'evc0', ik, iss ) )
             !
          END IF
          !
@@ -1463,21 +1570,12 @@ MODULE cp_restart
          !
       END IF
       !
-      IF ( PRESENT( c4 ) ) THEN
-         !
-         CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_,  &
-                        c4(:,:,ik,iss), ngwt_, nbnd_, ig_l2g, &
-                        ngw, filename, scalef )
-         !
-      ELSE IF ( PRESENT( c2 ) ) THEN
-         !
-         ib = iupdwn(iss)
-         !
-         CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_, &
-                        c2(:,ib:), ngwt_, nbnd_, ig_l2g, ngw,  &
-                        filename, scalef )
-         !
-      END IF
+      ib = iupdwn(iss)
+      nb = nupdwn(iss)
+      !
+      CALL read_wfc( iunout, ik_eff, nk, kunit, iss_, nspin_, &
+                     c2(:,ib:ib+nb-1), ngwt_, nbnd_, ig_l2g, ngw,  &
+                     filename, scalef )
       !
       RETURN
       !

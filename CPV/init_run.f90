@@ -190,7 +190,8 @@ SUBROUTINE init_run()
   !
   IF ( ALLOCATED( deeq ) ) deeq(:,:,:,:) = 0.D0
   !
-  IF ( ALLOCATED( lambda ) ) lambda = 0.D0
+  IF ( ALLOCATED( lambda  ) ) lambda  = 0.D0
+  IF ( ALLOCATED( lambdam ) ) lambdam = 0.D0
   !
   taum  = tau0
   taup  = 0.D0
@@ -249,7 +250,7 @@ SUBROUTINE init_run()
      ELSE IF( program_name == 'FPMD' ) THEN
         !
         CALL readfile( nfi, tps, c0, cm, f, atoms0, atomsm, acc,     &
-                       taui, cdmi, htm, ht0, rhor, vpot)
+                       taui, cdmi, htm, ht0, rhor, vpot, lambda )
         !
      END IF
      !

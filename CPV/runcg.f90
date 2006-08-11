@@ -74,7 +74,8 @@
       USE io_global, ONLY: stdout
       USE cell_module, ONLY: boxdimensions
       USE wave_types
-      USE potentials, ONLY: kspotential
+      USE cp_main_variables, ONLY: lambda
+      USE cp_interfaces, ONLY: kspotential
       USE time_step, ONLY: delt
       USE atoms_type_module, ONLY: atoms_type
       USE control_flags, ONLY: force_pairing
@@ -116,7 +117,8 @@
 
 
       REAL(DP)    :: gg, ggo, ekinc_old, emin, demin, dek, dt2fact, eks
-      COMPLEX(DP) :: lambda
+      REAL(DP)    :: ccc, fccc
+      COMPLEX(DP) :: lam
 
       COMPLEX(DP), ALLOCATABLE :: hacca(:,:)
 
@@ -148,6 +150,7 @@
 
       ngw         = cdesc%ngwl
       nb          = cdesc%nbl
+
 
       IF( force_pairing ) &
         CALL errore( ' runcg ', ' force pairing not implemented ', 1 )
@@ -214,8 +217,8 @@
                 ELSE
                   gg  = dotp( cm(:, iwfc), cp(:, iwfc))
                 END IF
-                lambda = gg / ggo
-                hacca(:, iwfc) = cp(:, iwfc) + lambda * hacca(:, iwfc)
+                lam = gg / ggo
+                hacca(:, iwfc) = cp(:, iwfc) + lam * hacca(:, iwfc)
               ELSE
                 hacca(:, iwfc) = cp(:, iwfc)
               END IF
@@ -241,8 +244,11 @@
 
           !  if we find a bad direction slow down the move and ...
 
+          fccc = 1.0d0
+
           IF( ionode ) WRITE( stdout, fmt='(3X,"bad step, advancing with steepest descent")')
-          dt2fact = dt2fact * 0.5d0  
+
+          dt2fact = dt2fact * fccc / 2.0d0
 
           !  ... with the up to date gradient "cm" perform a steepest descent step
 
@@ -251,7 +257,11 @@
           IF( gzero ) cp( 1, : ) = DBLE( cp( 1, : ) )
 
           IF( tortho ) THEN
-             CALL ortho( c0, cp, nupdwn, iupdwn, nspin )
+             !
+             ccc = fccc * delt * delt / emass
+             !
+             CALL ortho( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
+             !
           ELSE
              DO iss = 1, nspin
                 iwfc = iupdwn( iss )
@@ -331,7 +341,7 @@
           END IF
           IF( ierr/=0 ) CALL errore(' runcg ', ' allocating gam ',ierr)
           DO i = 1, nb( iss )
-              CALL update_lambda( i,  gam, c0, hacca(:,iwfc+i-1), nwfc, iwfc )
+              CALL update_lambda( i,  gam, c0, hacca(:,iwfc+i-1), nwfc, iwfc, .true. )
           END DO
           CALL eigs( nb( iss ), gam, tortho, occ(iwfc:iwfc+nwfc-1), ei(:,iss) )
           DEALLOCATE( cgam, gam, STAT=ierr )
@@ -364,7 +374,7 @@
         USE io_global,         ONLY: ionode
         USE io_global,         ONLY: stdout
         USE cell_module,       ONLY: boxdimensions
-        USE potentials,        ONLY: kspotential
+        USE cp_interfaces,     ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
         USE uspp,              ONLY: nkb
         USE electrons_base,    ONLY: iupdwn, nupdwn

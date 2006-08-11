@@ -26,7 +26,7 @@
 
 
 !=----------------------------------------------------------------------------=!
-     SUBROUTINE update_lambda_x( i, lambda, c0, c2, n, noff )
+     SUBROUTINE update_lambda_x( i, lambda, c0, c2, n, noff, tdist )
 !=----------------------------------------------------------------------------=!
        USE kinds,              ONLY: DP
        USE electrons_module,   ONLY: ib_owner, ib_local
@@ -38,7 +38,8 @@
        INTEGER, INTENT(IN) :: n, noff
        REAL(DP)            :: lambda(:,:)
        COMPLEX(DP)         :: c0(:,:), c2(:)
-       INTEGER :: i
+       INTEGER, INTENT(IN) :: i
+       LOGICAL, INTENT(IN) :: tdist   !  if .true. lambda is distributed
        !
        REAL(DP), ALLOCATABLE :: prod(:)
        INTEGER :: ibl
@@ -46,9 +47,13 @@
        ALLOCATE( prod( n ) )
        prod = hpsi( gzero, c0, SIZE( c0, 1 ), c2, n, noff )
        CALL mp_sum( prod, intra_image_comm )
-       IF( me_image == ib_owner( i ) ) THEN
-           ibl = ib_local( i )
-           lambda( ibl, : ) = prod( : )
+       IF( tdist ) THEN
+          IF( me_image == ib_owner( i ) ) THEN
+             ibl = ib_local( i )
+             lambda( ibl, : ) = prod( : )
+          END IF
+       ELSE
+          lambda( i, : ) = prod( : )
        END IF
        DEALLOCATE( prod )
        RETURN
@@ -245,6 +250,74 @@
    END SUBROUTINE crot_gamma
 
 
+!=----------------------------------------------------------------------------=!
+   SUBROUTINE crot_gamma2 ( c0rot, c0, ngw, n, noffr, noff, lambda, nx, eig )
+!=----------------------------------------------------------------------------=!
+
+      !  this routine rotates the wave functions to the Kohn-Sham base
+      !  it works with a block-like distributed matrix
+      !  of the Lagrange multipliers ( lambda ).
+      !
+      ! ... declare modules
+
+      USE kinds,            ONLY: DP
+      USE mp,               ONLY: mp_bcast
+      USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
+      USE parallel_toolkit, ONLY: dspev_drv
+
+      IMPLICIT NONE
+
+      ! ... declare subroutine arguments
+
+      INTEGER,     INTENT(IN)    :: ngw, n, nx, noffr, noff
+      COMPLEX(DP), INTENT(INOUT) :: c0rot(:,:)
+      COMPLEX(DP), INTENT(IN)    :: c0(:,:)
+      REAL(DP),    INTENT(IN)    :: lambda(:,:)
+      REAL(DP),    INTENT(OUT)   :: eig(:)
+
+      ! ... declare other variables
+      !
+      REAL(DP), ALLOCATABLE :: vv(:,:), ap(:)
+      INTEGER               :: i, j, k
+
+      IF( nx < 1 ) THEN
+        RETURN
+      END IF
+
+      ALLOCATE( vv( nx, nx ) )
+
+      ! NON distributed lambda
+
+      ALLOCATE( ap( nx * ( nx + 1 ) / 2 ) )
+
+      K = 0
+      DO J = 1, n
+         DO I = J, n
+            K = K + 1
+            ap( k ) = lambda( i, j )
+         END DO
+      END DO
+
+      CALL dspev_drv( 'V', 'L', n, ap, eig, vv, nx )
+
+      DEALLOCATE( ap )
+
+      DO i = 1, n
+         c0rot( :, i+noffr-1 ) = 0.0d0
+      END DO
+
+      DO j = 1, n
+         DO i = 1, n
+            CALL DAXPY( 2*ngw, vv(j,i), c0(1,j+noff-1), 1, c0rot(1,i+noffr-1), 1 )
+         END DO
+      END DO
+
+      DEALLOCATE( vv )
+
+      RETURN
+   END SUBROUTINE crot_gamma2
+
+
 
 !=----------------------------------------------------------------------------=!
    SUBROUTINE proj_gamma( a, b, ngw, n, noff, lambda)
@@ -405,6 +478,7 @@
         INTEGER ::  ib
         REAL(DP),  ALLOCATABLE :: gam(:,:)
         REAL(DP),  ALLOCATABLE :: eig(:)
+        LOGICAL ::  tdist
 
         ! ...   end of declarations
 
@@ -413,12 +487,14 @@
            eforces = 0.0d0
 
         ELSE
+ 
+           tdist  =  ( nl /= n )
 
            ALLOCATE( eig( n ) )
            ALLOCATE( gam( nl, n ) )
 
            DO ib = 1, n
-              CALL update_lambda( ib, gam, c, eforces(:,ib+noff-1), n, noff )
+              CALL update_lambda( ib, gam, c, eforces(:,ib+noff-1), n, noff, tdist )
            END DO
            CALL crot( c, ngw, n, noff, gam, nl, eig )
 

@@ -10,25 +10,25 @@
 
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE atomic_wfc(eigr,n_atomic_wfc,wfc)
+      SUBROUTINE atomic_wfc( eigr, n_atomic_wfc, wfc )
 !-----------------------------------------------------------------------
 !
 ! Compute atomic wavefunctions in G-space
 !
-      USE gvecw, ONLY: ngw
+      USE kinds,              ONLY: DP
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart, g, gx
-      USE ions_base, ONLY: nsp, na, nat
-      USE cell_base, ONLY: tpiba
-      USE atom, ONLY: nchi, lchi, mesh, r, chi, rab
+      USE ions_base,          ONLY: nsp, na, nat
+      USE cell_base,          ONLY: tpiba
+      USE atom,               ONLY: nchi, lchi, mesh, r, chi, rab
 !
       IMPLICIT NONE
-      INTEGER, INTENT(in) :: n_atomic_wfc
-      COMPLEX(8), INTENT(in) ::  eigr(ngw,nat)
-      COMPLEX(8), INTENT(out):: wfc(ngw,n_atomic_wfc)
+      INTEGER,     INTENT(in) :: n_atomic_wfc
+      COMPLEX(DP), INTENT(in) :: eigr( ngw, nat )
+      COMPLEX(DP), INTENT(out):: wfc( ngw, n_atomic_wfc )
 !
       INTEGER :: natwfc, ndm, is, ia, ir, nb, l, m, lm, i, lmax_wfc, isa
-      REAL(8), ALLOCATABLE::  ylm(:,:), q(:), jl(:), vchi(:),      &
-     &     chiq(:)
+      REAL(DP), ALLOCATABLE ::  ylm(:,:), q(:), jl(:), vchi(:), chiq(:)
 !
 ! calculate max angular momentum required in wavefunctions
 !
@@ -87,29 +87,67 @@
       RETURN
       END SUBROUTINE atomic_wfc
 !
+
+!-----------------------------------------------------------------------
+FUNCTION n_atom_wfc_x( )
+!----------------------------------------------------------------------------
+  !
+  ! ... Find max number of bands needed
+  !
+  USE atom,             ONLY : nchi, lchi, oc
+  USE ions_base,        ONLY : na, nsp
+  USE kinds,            ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER  :: n_atom_wfc_x
+  INTEGER  :: is, n
+  !
+  n_atom_wfc_x = 0
+  !
+  DO is = 1, nsp
+     !
+     DO n = 1, nchi( is )
+        !
+        IF ( oc( n, is ) >= 0.D0 ) THEN
+           !
+           n_atom_wfc_x = n_atom_wfc_x + na(is) * ( 2 * lchi( n, is ) + 1 )
+           !
+        END IF
+        !
+     END DO
+     !
+  END DO
+  !
+  RETURN
+END FUNCTION
+
 !
 
 !-----------------------------------------------------------------------
-      REAL(8) FUNCTION cscnorm( bec, nkbx, cp, ngwx, i, n )
+   FUNCTION cscnorm( bec, nkbx, cp, ngwx, i, n )
 !-----------------------------------------------------------------------
 !     requires in input the updated bec(i)
 !
-      USE ions_base,  ONLY: na
-      USE gvecw,      ONLY: ngw
+      USE ions_base,          ONLY: na
+      USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE cvan,       ONLY: ish, nvb
-      USE uspp_param, ONLY: nh
-      USE uspp,       ONLY: qq
-      USE mp,         ONLY: mp_sum
-      USE mp_global,  ONLY: intra_image_comm
-      USE kinds,      ONLY: DP
+      USE cvan,               ONLY: ish, nvb
+      USE uspp_param,         ONLY: nh
+      USE uspp,               ONLY: qq
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_image_comm
+      USE kinds,              ONLY: DP
 !
       IMPLICIT NONE
+      !
       INTEGER, INTENT(IN) :: i, n
       INTEGER, INTENT(IN) :: ngwx, nkbx
       REAL(DP)    :: bec( nkbx, n )
       COMPLEX(DP) :: cp( ngwx, n )
-!
+      !
+      REAL(DP) :: cscnorm
+      !
       INTEGER ig, is, iv, jv, ia, inl, jnl
       REAL(8) rsum
       REAL(8), ALLOCATABLE:: temp(:)
@@ -146,58 +184,6 @@
       RETURN
       END FUNCTION cscnorm
 !
-!-----------------------------------------------------------------------
-      SUBROUTINE denkin(c,dekin)
-!-----------------------------------------------------------------------
-!
-      USE constants, ONLY: pi, fpi
-      USE electrons_base, ONLY: n => nbsp, nx => nbspx, f
-      USE gvecw, ONLY: ngw
-      USE reciprocal_vectors, ONLY: gstart, g, gx
-      USE cell_base, ONLY: ainv, tpiba2
-      USE gvecw, ONLY: ggp, ecutz, ecsig, ecfix
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-!
-      IMPLICIT NONE
-! input
-      COMPLEX(8) c(ngw,nx)
-! output
-      REAL(8) dekin(3,3)
-! local
-      INTEGER j, k, ig, i
-      REAL(8), ALLOCATABLE:: gtmp(:)
-      REAL(8) sk(n)  ! automatic array
-      REAL(8) :: ga, dggp, efac
-!
-      ALLOCATE (gtmp(ngw))
-      dekin=0.d0
-      DO j=1,3
-         DO k=1,3
-            DO ig=1,ngw
-               efac     = 2.d0 * ecutz / ecsig / SQRT(pi)
-               dggp     = 1.d0 + efac * EXP( - ( tpiba2 * g(ig) - ecfix ) * ( tpiba2 * g(ig) - ecfix ) / ecsig / ecsig )
-               ga       = gx(1,ig) * ainv(k,1) + gx(2,ig) * ainv(k,2) + gx(3,ig) * ainv(k,3)
-               gtmp(ig) = gx(j,ig) * ga * dggp
-            END DO
-            DO i=1,n
-               sk(i)=0.d0
-               DO ig=gstart,ngw
-                  sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*gtmp(ig)
-               END DO
-            END DO
-            DO i=1,n
-               dekin(j,k)=dekin(j,k)-2.d0*tpiba2*(f(i)*sk(i))
-            END DO
-         END DO
-      END DO
-      DEALLOCATE (gtmp)
-
-      CALL mp_sum( dekin( 1:3, 1:3 ), intra_image_comm )
-!
-      RETURN
-      END SUBROUTINE denkin
-
 !
 !-----------------------------------------------------------------------
       SUBROUTINE denlcc( nnr, nspin, vxcr, sfac, drhocg, dcc )
@@ -207,16 +193,16 @@
 ! parameters h 
 ! Output in dcc
 !
-      USE kinds, ONLY: DP
-      USE ions_base, ONLY: nsp
+      USE kinds,              ONLY: DP
+      USE ions_base,          ONLY: nsp
       USE reciprocal_vectors, ONLY: gstart, gx, ngs, g, ngm
-      USE recvecs_indexes, ONLY: np
-      USE cell_base, ONLY: omega, ainv, tpiba2
-      USE mp, ONLY: mp_sum
-      USE mp_global, ONLY: intra_image_comm
-      USE atom, ONLY: nlcc
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
-      USE cp_interfaces, ONLY: fwfft
+      USE recvecs_indexes,    ONLY: np
+      USE cell_base,          ONLY: omega, ainv, tpiba2
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_image_comm
+      USE atom,               ONLY: nlcc
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+      USE cp_interfaces,      ONLY: fwfft
 
       IMPLICIT NONE
 
@@ -423,41 +409,41 @@
 !     On input rhor and rhog must contain the smooth part only !!!
 !     Output in module derho (drhor, drhog)
 !
-      USE kinds, ONLY: dp
-      USE control_flags, ONLY: iprint
-      USE ions_base, ONLY: na, nsp, nat
+      USE kinds,                    ONLY: DP
+      USE control_flags,            ONLY: iprint
+      USE ions_base,                ONLY: na, nsp, nat
       USE cvan
-      USE uspp_param, ONLY: nhm, nh
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
-      USE electrons_base, ONLY: nspin
+      USE uspp_param,               ONLY: nhm, nh
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, &
+                                          nr1x, nr2x, nr3x, nnr => nnrx
+      USE electrons_base,           ONLY: nspin
       USE gvecb
-      USE gvecp, ONLY: ng => ngm
+      USE gvecp,                    ONLY: ng => ngm
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, &
-            nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      USE cell_base, ONLY: ainv
+                                          nr1bx, nr2bx, nr3bx, nnrb => nnrbx
+      USE cell_base,                ONLY: ainv
       USE qgb_mod
       USE cdvan
       USE derho
       USE dqgb_mod
-      USE recvecs_indexes, ONLY: nm, np
-      USE cp_interfaces, ONLY: fwfft, invfft
-      USE fft_base, ONLY: dfftb
+      USE recvecs_indexes,          ONLY: nm, np
+      USE cp_interfaces,            ONLY: fwfft, invfft
+      USE fft_base,                 ONLY: dfftb
 
       IMPLICIT NONE
 ! input
       INTEGER, INTENT(in) ::  irb(3,nat)
-      REAL(8), INTENT(in)::  rhor(nnr,nspin)
-      REAL(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
-      COMPLEX(8), INTENT(in)::  eigrb(ngb,nat), rhog(ng,nspin)
+      REAL(DP), INTENT(in)::  rhor(nnr,nspin)
+      REAL(DP) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      COMPLEX(DP), INTENT(in)::  eigrb(ngb,nat), rhog(ng,nspin)
 ! local
       INTEGER i, j, isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,   &
      &     isa, ia, ir
-      REAL(8) sum, dsum
-      COMPLEX(8) fp, fm, ci
-      COMPLEX(8), ALLOCATABLE :: v(:)
-      COMPLEX(8), ALLOCATABLE:: dqgbt(:,:)
-      COMPLEX(8), ALLOCATABLE :: qv(:)
+      REAL(DP) sum, dsum
+      COMPLEX(DP) fp, fm, ci
+      COMPLEX(DP), ALLOCATABLE :: v(:)
+      COMPLEX(DP), ALLOCATABLE:: dqgbt(:,:)
+      COMPLEX(DP), ALLOCATABLE :: qv(:)
 !
 !
       DO j=1,3
@@ -2497,35 +2483,36 @@
 !     rhor output: total potential on dense real space grid
 !     rhos output: total potential on smooth real space grid
 !
-      USE kinds,         ONLY: dp
-      USE control_flags, ONLY: iprint, iprsta, thdyn, tpre, tfor, tprnfor
-      USE io_global,     ONLY: stdout
-      USE ions_base,     ONLY: nsp, na, nat, rcmax
+      USE kinds,              ONLY: dp
+      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, tfor, &
+                                    tprnfor, iesr
+      USE io_global,          ONLY: stdout
+      USE ions_base,          ONLY: nsp, na, nat, rcmax
       USE gvecs
-      USE gvecp, ONLY: ng => ngm
-      USE cell_base, ONLY: omega, r_to_s
-      USE cell_base, ONLY: a1, a2, a3, tpiba2, h, ainv
+      USE gvecp,              ONLY: ng => ngm
+      USE cell_base,          ONLY: omega, r_to_s
+      USE cell_base,          ONLY: a1, a2, a3, tpiba2, h, ainv
       USE reciprocal_vectors, ONLY: gstart, g, gx
-      USE recvecs_indexes, ONLY: np, nm
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, &
-            nr1x, nr2x, nr3x, nnr => nnrx
+      USE recvecs_indexes,    ONLY: np, nm
+      USE grid_dimensions,    ONLY: nr1, nr2, nr3, &
+                                    nr1x, nr2x, nr3x, nnr => nnrx
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
-            nr1sx, nr2sx, nr3sx, nnrsx
-      USE electrons_base, ONLY: nspin
-      USE constants, ONLY: pi, fpi, au_gpa
-      USE energies, ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc 
-      USE local_pseudo, ONLY: vps, dvps, rhops
-      USE core, ONLY: nlcc_any
+                                        nr1sx, nr2sx, nr3sx, nnrsx
+      USE electrons_base,   ONLY: nspin
+      USE constants,        ONLY: pi, fpi, au_gpa
+      USE energies,         ONLY: etot, eself, enl, ekin, epseu, esr, eht, exc 
+      USE local_pseudo,     ONLY: vps, dvps, rhops
+      USE core,             ONLY: nlcc_any
       USE gvecb
-      USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl
+      USE dener,            ONLY: detot, dekin, dps, dh, dsr, dxc, denl, &
+                                  detot6, dekin6, dps6, dh6, dsr6, dxc6, denl6
       USE derho
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_image_comm
       USE funct,            ONLY: dft_is_meta
-      USE cp_interfaces,    ONLY: fwfft, invfft
+      USE cp_interfaces,    ONLY: fwfft, invfft, self_vofhar
       USE sic_module,       ONLY: self_interaction, sic_epsilon, sic_alpha
       USE energies,         ONLY: self_exc, self_ehte
-      USE potentials,       ONLY: vofesr, self_vofhar
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local
 !
@@ -2608,18 +2595,9 @@
          !
          CALL r_to_s( tau0, stmp, na, nsp, ainv )
          !
-         CALL vofesr( 1, esr, desr, fion, stmp, tpre, h )
+         CALL vofesr( iesr, esr, dsr6, fion, stmp, tpre, h )
          !
          call mp_sum( fion, intra_image_comm )
-         !
-         IF( tpre ) THEN
-            call mp_sum( desr, intra_image_comm )
-            DO k = 1, 6
-               detmp( alpha(k), beta(k) ) = desr(k)
-               detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
-            END DO
-            dsr = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
-         END IF
          !
          DEALLOCATE( stmp )
          !
@@ -2670,16 +2648,7 @@
 !
       IF( tpre ) THEN
          !
-         CALL stress_local( deps, epseu, gagb, sfac, rhotmp, drhot, omega )
-         !
-         call mp_sum( deps, intra_image_comm )
-         !
-         DO k = 1, 6
-            detmp( alpha(k), beta(k) ) = deps(k)
-            detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
-         END DO
-         !
-         dps = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         CALL stress_local( dps6, epseu, gagb, sfac, rhotmp, drhot, omega )
          !
       END IF
       !
@@ -2720,23 +2689,13 @@
          !
          CALL add_drhoph( drhot, sfac, gagb )
          !
-         CALL stress_hartree(deht, eh*omega, sfac, rhotmp, drhot, gagb, omega )
-         !
-         call mp_sum( deht, intra_image_comm )
-         !
-         DO k = 1, 6
-            detmp( alpha(k), beta(k) ) = deht(k)
-            detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
-         END DO
-         !
-         dh = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         CALL stress_hartree(dh6, eh*omega, sfac, rhotmp, drhot, gagb, omega )
          !
       END IF
       !
       IF(tpre) THEN
          DEALLOCATE( drhot )
       END IF
-
       !    
       !     forces on ions, ionic term in reciprocal space
       !     
@@ -2919,7 +2878,22 @@
       !
       etot = ekin + eht + epseu + enl + exc + ebac
       !
-      IF(tpre) detot = dekin + dh + dps + denl + dxc + dsr
+      IF( tpre ) THEN
+         !
+         detot6 = dekin6 + dh6 + dps6 + dsr6
+         !
+         call mp_sum( detot6, intra_image_comm )
+         !
+         DO k = 1, 6
+            detmp( alpha(k), beta(k) ) = detot6(k)
+            detmp( beta(k), alpha(k) ) = detmp( alpha(k), beta(k) )
+         END DO
+         !
+         detot = MATMUL( detmp(:,:), TRANSPOSE( ainv(:,:) ) )
+         !
+         detot = detot + denl + dxc
+         !
+      END IF
       !
       !
       CALL stop_clock( 'vofrho' )

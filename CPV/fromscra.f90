@@ -51,6 +51,7 @@ CONTAINS
     USE electrons_module,     ONLY : occn_info
     USE energies,             ONLY : entropy
     USE energies,             ONLY : dft_energy_type, debug_energies
+    USE dener,                ONLY : denl, denl6, dekin6
     USE uspp,                 ONLY : vkb, becsum, deeq, nkb
     USE io_global,            ONLY : stdout, ionode
     USE cpr_subroutines,      ONLY : compute_stress, print_atomic_var, &
@@ -77,7 +78,7 @@ CONTAINS
     USE wave_base,            ONLY : wave_steepest
     USE wavefunctions_module, ONLY : c0, cm, phi => cp
     USE wave_types,           ONLY : wave_descriptor
-    USE potentials,           ONLY : vofrhos
+    USE cp_interfaces,        ONLY : vofrhos
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE cp_interfaces,        ONLY : printout
 
@@ -116,7 +117,6 @@ CONTAINS
     COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
     REAL(DP)                 :: verl1, verl2
     REAL(DP)                 :: bigr, dum
-    REAL(DP)                 :: adum( nacx )
     INTEGER                  :: i, j, iter, iss, ierr, nspin_wfc
     LOGICAL                  :: tlast = .FALSE.
     REAL(DP)                 :: gam(1,1,1)
@@ -179,7 +179,7 @@ CONTAINS
 
     IF( force_pairing ) cm(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm(:,1:nupdwn(2))
     !
-    if( iprsta .ge. 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
+    if( iprsta >= 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
     !
     ! ... initialize bands
     !
@@ -195,10 +195,6 @@ CONTAINS
     fion = 0.0d0
     tausm = taus
 
-    IF( program_name == 'CP90' ) THEN
-       lambdam = lambda
-    END IF
-    
     CALL formf( tfirst, eself )
     !
     edft%eself = eself
@@ -221,7 +217,7 @@ CONTAINS
          CALL initbox ( tau0, taub, irb )
          CALL phbox( taub, eigrb )
          !
-         CALL rhoofr ( nfi, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, ekin )
+         CALL rhoofr ( nfi, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
          !
          !     put core charge (if present) in rhoc(r)
          !
@@ -269,7 +265,6 @@ CONTAINS
 #endif
             !
          ENDIF
-
          !
          !     nlfq needs deeq bec
          !
@@ -317,24 +312,25 @@ CONTAINS
 
          if ( tpre ) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
 
-         if(iprsta.ge.3) CALL dotcsc( eigr, c0, ngw, nbsp )
+         if ( iprsta >= 3 ) CALL dotcsc( eigr, c0, ngw, nbsp )
          !
-
-         xnhp0=0.
-         xnhpm=0.
-         vnhp =0.
-         fionm=0.
+         xnhp0 = 0.0d0
+         xnhpm = 0.0d0
+         vnhp  = 0.0d0
+         fionm = 0.0d0
+         !
          CALL ions_vel( vels, taus, tausm, na, nsp, delt )
-         xnhh0(:,:)=0.
-         xnhhm(:,:)=0.
-         vnhh (:,:) =0.
-         velh (:,:)=(h(:,:)-hold(:,:))/delt
+         !
+         xnhh0(:,:) = 0.0d0
+         xnhhm(:,:) = 0.0d0
+         vnhh (:,:) = 0.0d0
+         velh (:,:) = ( h(:,:) - hold(:,:) ) / delt
          !
          CALL elec_fakekine( ekincm, ema0bg, emass, c0, cm, ngw, nbsp, 1, delt )
 
-         xnhe0=0.
-         xnhem=0.
-         vnhe =0.
+         xnhe0 = 0.0d0
+         xnhem = 0.0d0
+         vnhe  = 0.0d0
 
          lambdam = lambda
          !
@@ -346,13 +342,12 @@ CONTAINS
 
     ELSE
 
-       edft%enl = nlrh( cm, ttforce, atoms%for, bec, becdr, eigr )
+       CALL nlrh( cm, ttforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
        !
-       CALL rhoofr( 0, cm, cdesc, f, rhor, ht )
+       CALL rhoofr( 0, tstress, cm, f, rhor, ht%deth, edft%ekin, dekin6 )
        !
        CALL vofrhos( ttprint, ttforce, tstress, rhor, atoms, &
-                  vpot, bec, cm, cdesc, f, eigr, ei1, ei2, ei3, &
-                  sfac, ht, edft )
+                  vpot, bec, cm, cdesc, f, eigr, ei1, ei2, ei3, sfac, ht, edft )
        !
        IF( iprsta > 1 ) CALL debug_energies( edft )
        !
@@ -370,7 +365,9 @@ CONTAINS
           !
           IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL ortho( cm, c0, nupdwn, iupdwn, nspin )
+             ccc = fccc * delt * delt / emass
+             !
+             CALL ortho( cm, c0, lambda, ccc, nupdwn, iupdwn, nspin )
              !
           ELSE
              !
@@ -389,8 +386,6 @@ CONTAINS
           c0 = cm
           !
        END IF
-
-       adum = 0.D0
        !
     END IF
 

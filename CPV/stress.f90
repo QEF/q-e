@@ -57,7 +57,7 @@
 
 
 !------------------------------------------------------------------------------!
-   SUBROUTINE stress_nl_x( denl, gagb, c0, occ, eigr, bec, enl, ht, htm1 )
+   SUBROUTINE stress_nl_x( denl, c0, occ, eigr, bec, enl )
 !------------------------------------------------------------------------------!
 
       !  this routine computes nl part of the stress tensor from dft total energy
@@ -88,12 +88,9 @@
       REAL(DP), INTENT(IN) :: occ(:)
       COMPLEX(DP), INTENT(IN) :: c0(:,:)
       REAL(DP), INTENT(OUT) :: denl(:)
-      REAL(DP), INTENT(IN) :: gagb(:,:)
       COMPLEX(DP), INTENT(IN) :: eigr(:,:)
       REAL(DP) :: bec(:,:)
       REAL(DP), INTENT(IN) :: enl
-      REAL(DP), INTENT(IN) :: ht(3,3)
-      REAL(DP), INTENT(IN) :: htm1(3,3)
 
 ! ... declare functions
       REAL(DP)  DDOT
@@ -252,14 +249,15 @@
               iy  = nhtolm( ih, is )
               iv  = indv  ( ih, is )
               l   = nhtol ( ih, is )
-              anm = 2*l + 1
 
+              anm = ( 2*l + 1 ) 
 
               ! WRITE(6,*) 'DEBUG ih, iy, iv, l = ', ih, iy, iv, l
 
               gwtmp(1) = 0.0d0
               DO ig = gstart, ngw
-                gwtmp( ig ) = gagb(kk,ig) * gspha(ig,iy) * ( anm * wnl(ig,iv,is,1) - wnla(ig,iv,is) )
+                gwtmp( ig ) = gx( alpha( kk ), ig ) * gx( beta( kk ), ig ) * tpiba2 * &
+                              gspha(ig,iy) * ( anm * wnl(ig,iv,is,1) - wnla(ig,iv,is) )
               END DO
 
               IF( igh(l) < 0 ) igh(l) = ih
@@ -346,24 +344,24 @@
       DEALLOCATE( wnl )
       DEALLOCATE( wsg )
 
-      IF( new_stress ) THEN
-        DO k=1,6
-          detmp(alpha(k),beta(k)) = denl(k)
-          detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
-        END DO
-        denl_gpa = detmp
-        detmp = MATMUL( detmp(:,:), htm1(:,:) )
-        WRITE( stdout,*) "FROM stress_nl derivative of e(nl)"
-        CALL mp_sum( detmp, intra_image_comm )
-        CALL mp_sum( denl_new, intra_image_comm )
-        CALL mp_sum( denl_gpa, intra_image_comm )
-        WRITE( stdout,*) "denl FPMD"
-        WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
-        WRITE( stdout,*) "denl CP"
-        WRITE( stdout,5555) ((denl_new(i,j),j=1,3),i=1,3)
-        WRITE( stdout,*) "Stress nl (GPa)"
-        WRITE( stdout,5555) ((-denl_gpa(i,j)*au_gpa/omega,j=1,3),i=1,3)
-      END IF
+!      IF( new_stress ) THEN
+!        DO k=1,6
+!          detmp(alpha(k),beta(k)) = denl(k)
+!          detmp(beta(k),alpha(k)) = detmp(alpha(k),beta(k))
+!        END DO
+!        denl_gpa = detmp
+!        detmp = MATMUL( detmp(:,:), htm1(:,:) )
+!        WRITE( stdout,*) "FROM stress_nl derivative of e(nl)"
+!        CALL mp_sum( detmp, intra_image_comm )
+!        CALL mp_sum( denl_new, intra_image_comm )
+!        CALL mp_sum( denl_gpa, intra_image_comm )
+!        WRITE( stdout,*) "denl FPMD"
+!        WRITE( stdout,5555) ((detmp(i,j),j=1,3),i=1,3)
+!        WRITE( stdout,*) "denl CP"
+!        WRITE( stdout,5555) ((denl_new(i,j),j=1,3),i=1,3)
+!        WRITE( stdout,*) "Stress nl (GPa)"
+!        WRITE( stdout,5555) ((-denl_gpa(i,j)*au_gpa/omega,j=1,3),i=1,3)
+!      END IF
 
 5555  format(1x,f12.5,1x,f12.5,1x,f12.5/                                &
      &       1x,f12.5,1x,f12.5,1x,f12.5/                                &
@@ -484,7 +482,7 @@
 
 
 !------------------------------------------------------------------------------!
-   SUBROUTINE stress_kin_x(dekin, c0, occ, gagb) 
+   SUBROUTINE stress_kin_x( dekin, c0, occ ) 
 !------------------------------------------------------------------------------!
 
 !  this routine computes the kinetic energy contribution to the stress 
@@ -497,9 +495,10 @@
       USE kinds,              ONLY: DP
       USE gvecw,              ONLY: ecsig, ecfix, ecutz, ngw
       USE constants,          ONLY: pi
-      USE reciprocal_vectors, ONLY: gstart, g
+      USE reciprocal_vectors, ONLY: gstart, g, gx
       USE cell_base,          ONLY: tpiba2
       USE electrons_base,     ONLY: nspin, iupdwn, nupdwn
+      USE stress_param,       ONLY: alpha, beta
 
       IMPLICIT NONE
 
@@ -507,7 +506,6 @@
       REAL(DP),    INTENT(OUT) :: dekin(:)
       COMPLEX(DP), INTENT(IN)  :: c0(:,:)
       REAL(DP),    INTENT(IN)  :: occ(:)
-      REAL(DP),    INTENT(IN)  :: gagb(:,:)
 
 ! ... declare other variables
       REAL(DP)  :: sk(6), scg, efac
@@ -537,14 +535,14 @@
           iwfc = ib + iupdwn( ispin ) - 1
           DO ig = gstart, ngw
             scg = arg(ig) * CONJG( c0( ig, iwfc ) ) * c0( ig, iwfc )
-            sk(1)  = sk(1) + scg * gagb(1,ig)
-            sk(2)  = sk(2) + scg * gagb(2,ig)
-            sk(3)  = sk(3) + scg * gagb(3,ig)
-            sk(4)  = sk(4) + scg * gagb(4,ig)
-            sk(5)  = sk(5) + scg * gagb(5,ig)
-            sk(6)  = sk(6) + scg * gagb(6,ig)
+            sk(1)  = sk(1) + scg * gx( alpha( 1 ), ig ) * gx( beta( 1 ), ig )
+            sk(2)  = sk(2) + scg * gx( alpha( 2 ), ig ) * gx( beta( 2 ), ig )
+            sk(3)  = sk(3) + scg * gx( alpha( 3 ), ig ) * gx( beta( 3 ), ig )
+            sk(4)  = sk(4) + scg * gx( alpha( 4 ), ig ) * gx( beta( 4 ), ig )
+            sk(5)  = sk(5) + scg * gx( alpha( 5 ), ig ) * gx( beta( 5 ), ig )
+            sk(6)  = sk(6) + scg * gx( alpha( 6 ), ig ) * gx( beta( 6 ), ig )
           END DO
-          dekin = dekin  + occ( iwfc ) * sk
+          dekin = dekin  + occ( iwfc ) * sk * tpiba2
         END DO
       END DO
       dekin = - 2.0_DP * dekin

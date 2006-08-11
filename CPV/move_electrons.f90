@@ -30,7 +30,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE ions_positions,       ONLY : tau0
   USE ions_base,            ONLY : nat
   USE stre,                 ONLY : stress
-  USE dener,                ONLY : detot
+  USE dener,                ONLY : detot, denl, dekin6
   USE efield_module,        ONLY : tefield, ipolp, qmat, gqq, evalue, &
                                    tefield2, ipolp2, qmat2, gqq2, evalue2
   !
@@ -76,7 +76,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
      !
      CALL rhoofr( nfi, c0, irb, eigrb, bec, &
-                     becsum, rhor, rhog, rhos, enl, ekin )
+                     becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
      !
      !
      ! ... put core charge (if present) in rhoc(r)

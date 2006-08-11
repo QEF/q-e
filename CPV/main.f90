@@ -78,8 +78,9 @@
       USE cp_interfaces, ONLY: empty_cp
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
+      USE dener, ONLY: denl6, dekin6
       USE turbo, ONLY: tturbo
-      USE potentials, ONLY: vofrhos, localisation
+      USE cp_interfaces, ONLY: vofrhos, localisation
       USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
       USE electrons_module, ONLY: ei, n_emp
       USE diis, ONLY: allocate_diis
@@ -147,7 +148,7 @@
       !
       USE io_files        , ONLY: outdir, prefix
       USE printout_base   , ONLY: printout_base_init
-      USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, &
+      USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, lambda, &
                                     ht0, htm, htp, rhor, vpot, wfill, &
                                     acc, acc_this_run,  edft, nfi, bec, becdr
       USE ions_positions,    ONLY : atoms0, atomsp, atomsm
@@ -342,11 +343,11 @@
         !
         atoms0%for = 0.0d0
         !
-        edft%enl = nlrh( c0, ttforce, atoms0%for, bec, becdr, eigr)
+        CALL nlrh( c0, ttforce, tstress, atoms0%for, bec, becdr, eigr, edft%enl, denl6 )
 
         ! ...   compute the new charge density "rhor"
         !
-        CALL rhoofr( nfi, c0, wfill, f, rhor, ht0)
+        CALL rhoofr( nfi, tstress, c0, f, rhor, ht0%deth, edft%ekin, dekin6 )
 
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "pail".
@@ -636,7 +637,7 @@
         !
         IF( ttsave .OR. ttexit ) THEN
           CALL writefile( nfi, tps, c0, cm, f, atoms0, atomsm, acc,  &
-                          taui, cdmi, htm, ht0, rhor, vpot )
+                          taui, cdmi, htm, ht0, rhor, vpot, lambda )
         END IF
 
         ! ...   loop back

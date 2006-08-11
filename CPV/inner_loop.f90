@@ -148,7 +148,7 @@
   
         ! calculates the electronic charge density
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
-                     rhor, rhog, rhos, enl, ekin )
+                     rhor, rhog, rhos, enl, denl, ekin, dekin6 )
         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
   
         ! calculates the SCF potential, the total energy
@@ -308,7 +308,7 @@
         ! calculates the free energy at x    
         CALL rotate( zxt, c0(:,:), bec, c0diag, becdiag )   
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
-                     rhor, rhog, rhos, enl, ekin ) 
+                     rhor, rhog, rhos, enl, denl, ekin, dekin6 ) 
         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
         CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
                      ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion2 )
@@ -493,7 +493,7 @@
         CALL calcmt( f, z0, fmat0 )
         CALL rotate( z0, c0(:,:), bec, c0diag, becdiag )
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, &
-                     rhovan, rhor, rhog, rhos, enl, ekin) 
+                     rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin6 ) 
         IF(nlcc_any) CALL set_cc(irb,eigrb,rhoc)
         CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
                      ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion2 )

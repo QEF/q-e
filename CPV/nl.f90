@@ -10,7 +10,7 @@
 
 !
 
-   FUNCTION nlrh_x( c0, tforce, fion, bec, becdr, eigr )
+   SUBROUTINE nlrh_x( c0, tforce, tstress, fion, bec, becdr, eigr, enl, denl )
 
       !  this routine computes:
       !  Kleinman-Bylander pseudopotential terms (see nlsm1)
@@ -21,22 +21,24 @@
 
       USE kinds,                   ONLY: DP
       USE read_pseudo_module_fpmd, ONLY: nspnl
-      USE electrons_base,          ONLY: iupdwn, nupdwn, nspin
+      USE electrons_base,          ONLY: iupdwn, nupdwn, nspin, f
       USE gvecw,                   ONLY: ngw
       USE uspp,                    ONLY: becsum, nkb
+      USE cp_interfaces,           ONLY: stress_nl
 
       IMPLICIT NONE
-
-      REAL(DP) :: nlrh_x
 
       ! ... declare subroutine arguments
 
       COMPLEX(DP)                 :: eigr(:,:)     ! exp(i G dot r)
-      COMPLEX(DP), INTENT(INOUT)  :: c0(:,:)       ! wave functions
-      LOGICAL,     INTENT(IN)     :: tforce        ! if .TRUE. compute forces on ions
+      COMPLEX(DP)                 :: c0(:,:)       ! wave functions
+      LOGICAL,     INTENT(IN)     :: tforce        ! if .TRUE. compute nl forces on ions
+      LOGICAL,     INTENT(IN)     :: tstress       ! if .TRUE. compute nl Q-M stress
       REAL(DP),    INTENT(INOUT)  :: fion(:,:)     ! atomic forces
       REAL(DP)                    :: bec(:,:)
       REAL(DP)                    :: becdr(:,:,:)
+      REAL(DP),    INTENT(OUT)    :: enl
+      REAL(DP),    INTENT(OUT)    :: denl( 6 )
 
       REAL(DP)    :: ennl
       EXTERNAL    :: ennl
@@ -44,7 +46,6 @@
       ! ... declare other variables
       !
       INTEGER     :: iss, i, j
-      REAL(DP)    :: etmp
       REAL(DP), ALLOCATABLE :: btmp( :, :, : )
 
       ! ... end of declarations
@@ -74,7 +75,7 @@
          !
       END DO
       
-      nlrh_x = ennl( becsum, bec )
+      enl = ennl( becsum, bec )
 
       IF( tforce ) THEN
          !
@@ -82,6 +83,14 @@
          !
       END IF
       !
+      IF( tstress ) THEN
+         !
+         ! ... compute enl (non-local) contribution
+         !
+         CALL stress_nl( denl, c0, f, eigr, bec, enl )
+         !
+      END IF
+      !
       RETURN
-   END FUNCTION nlrh_x
+   END SUBROUTINE nlrh_x
 

@@ -53,7 +53,7 @@ MODULE control_flags
             tscreen, gamma_only, force_pairing, tchi2
   !
   PUBLIC :: fix_dependencies, check_flags
-  PUBLIC :: tvlocw, trhor, thdyn, iprsta
+  PUBLIC :: tvlocw, trhor, thdyn, iprsta, trhow
   PUBLIC :: twfcollect, printwfc
   PUBLIC :: tuspp
   PUBLIC :: program_name
@@ -68,6 +68,7 @@ MODULE control_flags
   !
   LOGICAL :: tvlocw    = .FALSE. ! write potential to unit 46 (only cp, seldom used)
   LOGICAL :: trhor     = .FALSE. ! read rho from      unit 47 (only cp, seldom used)
+  LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities
@@ -294,6 +295,22 @@ MODULE control_flags
   !
   LOGICAL, PUBLIC :: &
     use_task_groups = .FALSE.  ! if TRUE task groups parallelization is used
+  !
+  ! ... Number of neighbouring cell to consider in ewald sum
+  !
+  INTEGER, PUBLIC :: iesr = 1
+  !
+  ! ... Parameter for plotting Vh average
+  !
+  LOGICAL,          PUBLIC :: tvhmean = .FALSE.  
+                              !  if TRUE save Vh averag to file Vh_mean.out
+  REAL(DP),         PUBLIC :: vhrmin = 0.0d0
+                              !  starting "radius" for plotting
+  REAL(DP),         PUBLIC :: vhrmax = 1.0d0
+                              !  maximum "radius" for plotting
+  CHARACTER(LEN=1), PUBLIC :: vhasse = 'Z'
+                              !  averaging axis 
+
   !
   ! ...  end of module-scope declarations
   ! 

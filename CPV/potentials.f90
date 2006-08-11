@@ -11,55 +11,11 @@
 
 #include "f_defs.h"
 
-!=----------------------------------------------------------------------------=!
-  MODULE potentials
-!=----------------------------------------------------------------------------=!
-
-        USE kinds,         ONLY: DP
-
-        IMPLICIT NONE 
-        PRIVATE
-        SAVE
-
-        LOGICAL   :: tvhmean
-        INTEGER   :: vhnr, vhiunit
-        REAL(DP)  :: vhrmin, vhrmax
-        CHARACTER :: vhasse
-
-        INTEGER   :: iesr
-
-        PUBLIC :: vofrhos, potential_init, potential_print_info, &
-                  kspotential, localisation, vofesr
-
-        PUBLIC :: self_vofhar
-
-!=----------------------------------------------------------------------------=!
-  CONTAINS
-!=----------------------------------------------------------------------------=!
-
-      SUBROUTINE potential_init &
-          ( tvhmean_inp, vhnr_inp, vhiunit_inp, vhrmin_inp, vhrmax_inp, &
-            vhasse_inp, iesr_inp )
-
-          LOGICAL,   INTENT(IN) :: tvhmean_inp
-          INTEGER,   INTENT(IN) :: vhnr_inp, vhiunit_inp
-          REAL(DP),  INTENT(IN) :: vhrmin_inp, vhrmax_inp
-          CHARACTER, INTENT(IN) :: vhasse_inp
-          INTEGER,   INTENT(IN) :: iesr_inp
-
-          tvhmean = tvhmean_inp
-          vhnr    = vhnr_inp
-          vhiunit = vhiunit_inp
-          vhrmin  = vhrmin_inp
-          vhrmax  = vhrmax_inp
-          vhasse  = vhasse_inp
-          iesr    = iesr_inp
-
-        RETURN
-      END SUBROUTINE potential_init
 
 
       SUBROUTINE potential_print_info( iunit )
+
+        USE control_flags, ONLY: iesr
 
         INTEGER, INTENT(IN) :: iunit
 
@@ -73,15 +29,21 @@
       END SUBROUTINE potential_print_info
      
 
-      SUBROUTINE vofmean( sfac, rhops, rhoeg )
+      SUBROUTINE vofmean_x( sfac, rhops, rhoeg )
 
-        USE constants, ONLY: fpi
-        USE cell_base, ONLY: tpiba2, tpiba
-        USE mp,        ONLY: mp_sum
-        USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
-        USE io_global, ONLY: ionode
-        USE gvecp,     ONLY: ngm
+        USE kinds,              ONLY: DP
+        USE control_flags,      ONLY: vhrmin, vhrmax, vhasse
+        USE cp_main_variables,  ONLY: nfi
+        USE constants,          ONLY: fpi
+        USE cell_base,          ONLY: tpiba2, tpiba
+        USE mp,                 ONLY: mp_sum
+        USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
+        USE io_global,          ONLY: ionode
+        USE io_files,           ONLY: opt_unit
+        USE gvecp,              ONLY: ngm
         USE reciprocal_vectors, ONLY: gstart, gx, g
+
+        IMPLICIT NONE
 
         REAL(DP),    INTENT(IN)   :: RHOPS(:,:)
         COMPLEX(DP), INTENT(IN)   :: RHOEG(:)
@@ -93,6 +55,7 @@
         
         INTEGER :: ig, is, iasse, ipiano1, ipiano2
         INTEGER :: ir
+        INTEGER :: vhnr = 640
 
         IF( (vhasse.NE.'X') .AND. (vhasse.NE.'Y') .AND. (vhasse.NE.'Z') ) THEN
           CALL errore( ' vofmean ', ' wrong asse ',0)
@@ -143,65 +106,73 @@
         END DO
         CALL mp_sum( vrmean, intra_image_comm )
 
+
         IF(ionode) THEN
+          OPEN( unit = opt_unit, file = 'Vh_mean.out', position = 'append' )
+          WRITE(opt_unit,*) nfi
           DO ir = 1, vhnr
             r = vhrmin + (ir-1)*dr
-            WRITE(vhiunit,100) r, vrmean(ir)
+            WRITE(opt_unit,100) r, vrmean(ir)
           END DO
+          CLOSE( unit = opt_unit )
  100      FORMAT(2X,F14.8,F14.8)
         END IF
         
         DEALLOCATE(vrmean)
 
         RETURN
-      END SUBROUTINE vofmean
+      END SUBROUTINE vofmean_x
 
 !  -------------------------------------------------------------------------
 
-      SUBROUTINE kspotential &
+      SUBROUTINE kspotential_x &
         ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
           ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft )
 
-        USE cp_interfaces,     ONLY: rhoofr, nlrh
+        USE kinds,             ONLY: DP
+        USE cp_interfaces,     ONLY: rhoofr, nlrh, vofrhos
         USE energies,          ONLY: dft_energy_type
         USE cell_module,       ONLY: boxdimensions
         USE atoms_type_module, ONLY: atoms_type
         USE wave_types,        ONLY: wave_descriptor
+        USE dener,             ONLY: denl6, dekin6
+
+        IMPLICIT NONE
 
 ! ...   declare subroutine arguments
-        LOGICAL   :: tcel
         INTEGER,              INTENT(IN)    :: nfi
-        TYPE (atoms_type),    INTENT(INOUT) :: atoms
-        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
-        TYPE (wave_descriptor),  INTENT(IN) :: cdesc
+        LOGICAL, INTENT(IN) :: tforce, tstress, tprint
         REAL(DP) :: rhoe(:,:)
+        TYPE (atoms_type),    INTENT(INOUT) :: atoms
+        REAL(DP) :: bec(:,:)
+        REAL(DP) :: becdr(:,:,:)
+        COMPLEX(DP) :: eigr(:,:)
         COMPLEX(DP) :: ei1(:,:)
         COMPLEX(DP) :: ei2(:,:)
         COMPLEX(DP) :: ei3(:,:)
-        COMPLEX(DP) :: eigr(:,:)
+        COMPLEX(DP), INTENT(IN) :: sfac(:,:)
+        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
+        TYPE (wave_descriptor),  INTENT(IN) :: cdesc
+        LOGICAL   :: tcel
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
         REAL(DP), INTENT(IN) :: fi(:)
-        REAL(DP) :: bec(:,:)
-        REAL(DP) :: becdr(:,:,:)
-        TYPE (dft_energy_type) :: edft
         REAL(DP)    :: vpot(:,:)
-        COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-        LOGICAL, INTENT(IN) :: tforce, tstress, tprint
+        TYPE (dft_energy_type) :: edft
 
-        edft%enl = nlrh( c0, tforce, atoms%for, bec, becdr, eigr )
+        CALL nlrh( c0, tforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
 
-        CALL rhoofr( nfi, c0, cdesc, fi, rhoe, ht )
+        CALL rhoofr( nfi, tstress, c0, fi, rhoe, ht%deth, edft%ekin, dekin6 )
 
         CALL vofrhos( tprint, tforce, tstress, rhoe, atoms, vpot, bec, &
                       c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, &
                       ht, edft )
 
         RETURN
-      END SUBROUTINE kspotential
+      END SUBROUTINE kspotential_x
 
 !=----------------------------------------------------------------------------=!
 
-   SUBROUTINE vofrhos &
+   SUBROUTINE vofrhos_x &
       ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, cdesc, fi, &
         eigr, ei1, ei2, ei3, sfac, box, edft )
 
@@ -239,19 +210,19 @@
 
       ! ... include modules
 
-      USE control_flags,  ONLY: tscreen, iprsta
+      USE kinds,          ONLY: DP
+      USE control_flags,  ONLY: tscreen, iprsta, iesr, tvhmean
       USE mp_global,      ONLY: nproc_image, me_image, intra_image_comm
       USE mp,             ONLY: mp_sum
       USE cell_module,    ONLY: boxdimensions
       USE cell_base,      ONLY: tpiba2
       USE ions_base,      ONLY: rcmax, zv, nsp
       USE fft_base,       ONLY: dfftp
-      USE energies,       ONLY: total_energy, dft_energy_type
+      USE energies,       ONLY: total_energy, dft_energy_type, ekin
       USE cp_interfaces,  ONLY: pstress, stress_kin, compute_gagb, stress_nl, &
                                 stress_local, add_drhoph, stress_hartree
       USE stress_param,   ONLY: dalbe
       USE funct,          ONLY: dft_is_gradient
-      USE cp_interfaces,  ONLY: fillgrad
       USE vanderwaals,    ONLY: tvdw, vdw
       USE wave_types,     ONLY: wave_descriptor
       USE io_global,      ONLY: ionode, stdout
@@ -265,8 +236,10 @@
       !
       USE reciprocal_vectors, ONLY: gx, g, gstart
       USE atoms_type_module,  ONLY: atoms_type
-      USE cp_interfaces,      ONLY: exch_corr_energy, stress_xc
+      USE cp_interfaces,      ONLY: exch_corr_energy, stress_xc, vofmean
+      USE cp_interfaces,      ONLY: vofloc, vofps, self_vofhar, force_loc, fillgrad
       use grid_dimensions,    only: nr1, nr2, nr3, nnrx
+      use dener,              only: dekin6, denl6
 
       IMPLICIT NONE
 
@@ -312,8 +285,6 @@
 
       REAL(DP),    ALLOCATABLE :: gagb(:,:)
 
-      REAL(DP) ::  pail(3,3)
-
       COMPLEX(DP) :: ehtep
       REAL(DP)    :: self_exc, self_vxc
 
@@ -323,7 +294,7 @@
 
       REAL(DP)  :: dum, exc, vxc, ehr, strvxc
       REAL(DP)  :: omega, desr(6), pesum(16)
-      REAL(DP), DIMENSION (6) :: dekin, deht, deps, denl, dexc, dvdw
+      REAL(DP), DIMENSION (6) :: deht, deps, dexc, dvdw
 
       LOGICAL :: ttscreen, ttsic, tgc
 
@@ -333,8 +304,6 @@
 
       DATA iflag / 0 /
       SAVE iflag, desr
-
-      REAL(DP), EXTERNAL :: enkin
 
       !  end of declarations
       !  ----------------------------------------------
@@ -349,10 +318,7 @@
 
       omega    = box%deth
       !
-      pail     = box%pail
-
       tgc      = dft_is_gradient()
-      !
       !
       !   Allocate local array
       !
@@ -374,33 +340,6 @@
       ALLOCATE( rhog( ngm ) )
       ALLOCATE( vloc( ngm ) )
       ALLOCATE( psi( SIZE( rhoe, 1 ) ) )
-
-
-
-      ! ... compute kinetic energy
-
-      edft%ekin  = 0.0d0
-      edft%emkin = 0.0d0
-
-      DO iss = 1, nspin
-         edft%ekin  = edft%ekin + enkin( c0( 1, iupdwn(iss) ), SIZE( c0, 1 ), fi( iupdwn( iss ) ), nupdwn(iss) )
-      END DO
-
-
-      IF( tstress ) THEN
-         !
-         !
-         ! ... compute kinetic energy contribution
-         !
-         CALL stress_kin( dekin, c0, fi, gagb )
-         !
-         ! ... compute enl (non-local) contribution
-         !
-         CALL stress_nl( denl, gagb, c0, fi, eigr, bec, edft%enl, box%a, box%m1 )
-         !
-      END IF
-
-      !
       !
       IF( tscreen ) THEN
          !
@@ -724,14 +663,13 @@
       ! ... sum up stress tensor
       !
       IF( tstress ) THEN
-         CALL pstress( pail, desr, dekin, denl, deps, deht, dexc, box )
+         CALL pstress( box%pail, desr, dekin6, denl6, deps, deht, dexc, box )
       END IF
 
 
       ! ... Copy new atomic forces on for type member
       !
       atoms%for( 1:3, 1:atoms%nat ) = fion
-      box%pail = pail
 
       DEALLOCATE( rhoeg, rhoetr, grho, v2xc, fion )
       DEALLOCATE( vloc, psi )
@@ -752,25 +690,28 @@
       CALL flush_unit( stdout )
 
       RETURN
-      END SUBROUTINE vofrhos
+      END SUBROUTINE vofrhos_x
 
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE cluster_bc( screen_coul, hg, omega, hmat )
 
+      USE kinds,           ONLY: DP
       USE green_functions, ONLY: greenf
       USE mp_global,       ONLY: me_image
       USE fft_base,        ONLY: dfftp
       USE cp_interfaces,   ONLY: fwfft
       USE gvecp,           ONLY: ngm
-      USE cell_module,     ONLY: boxdimensions, s_to_r, alat
+      USE cell_module,     ONLY: s_to_r, alat
       USE constants,       ONLY: gsmall, pi
       USE cell_base,       ONLY: tpiba2
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
+
+      IMPLICIT NONE
       
-      REAL(DP), INTENT(IN) :: hg(:)
+      REAL(DP), INTENT(IN) :: hg( ngm )
       REAL(DP), INTENT(IN) :: omega, hmat( 3, 3 )
-      COMPLEX(DP) :: screen_coul(:)
+      COMPLEX(DP) :: screen_coul( ngm )
 
       ! ... declare external function
       !
@@ -846,7 +787,7 @@
 !=----------------------------------------------------------------------------=!
 
 
-   SUBROUTINE vofps( eps, vloc, rhoeg, vps, sfac, omega )
+   SUBROUTINE vofps_x( eps, vloc, rhoeg, vps, sfac, omega )
 
       !  this routine computes:
       !  omega = ht%deth
@@ -856,6 +797,7 @@
       !  if Gamma symmetry Fact = 2 else Fact = 1
       !
 
+      USE kinds,              ONLY: DP
       USE io_global,          ONLY: stdout
       USE ions_base,          ONLY: nsp
       USE gvecp,              ONLY: ngm
@@ -911,12 +853,12 @@
       CALL mp_sum( eps, intra_image_comm )
 
       RETURN
-   END SUBROUTINE vofps
+   END SUBROUTINE vofps_x
 
 
 !=----------------------------------------------------------------------------=!
 
-  SUBROUTINE vofloc( tscreen, ehte, ehti, eh, vloc, rhoeg, &
+  SUBROUTINE vofloc_x( tscreen, ehte, ehti, eh, vloc, rhoeg, &
                      rhops, vps, sfac, omega, screen_coul )
 
       !  this routine computes:
@@ -933,6 +875,7 @@
       !  vloc(ig)     =  vloc_h(ig) + vloc_ps(ig) 
       !
 
+      USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
@@ -1020,10 +963,10 @@
       CALL mp_sum(ehti, intra_image_comm)
       !
       RETURN
-  END SUBROUTINE vofloc
+  END SUBROUTINE vofloc_x
 
 
-  SUBROUTINE force_loc( tscreen, rhoeg, fion, rhops, vps, eigr, ei1, ei2, ei3, &
+  SUBROUTINE force_loc_x( tscreen, rhoeg, fion, rhops, vps, eigr, ei1, ei2, ei3, &
                         sfac, omega, screen_coul )
 
       !  this routine computes:
@@ -1042,6 +985,7 @@
       !  if Gamma symmetry Fact = 2.0 else Fact = 1
       !
 
+      USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE cell_base,          ONLY: tpiba2, tpiba
       USE io_global,          ONLY: stdout
@@ -1125,7 +1069,7 @@
       DEALLOCATE( ftmp )
        
       RETURN
-      END SUBROUTINE force_loc
+      END SUBROUTINE force_loc_x
 
 
 !
@@ -1133,6 +1077,7 @@
    SUBROUTINE vofesr( iesr, esr, desr, fion, taus, tstress, hmat )
 !=----------------------------------------------------------------------------=!
 
+      USE kinds,       ONLY : DP
       USE constants,   ONLY : sqrtpm1
       USE cell_module, ONLY : s_to_r, pbcs
       USE mp_global,   ONLY : nproc_image, me_image, intra_image_comm
@@ -1144,10 +1089,10 @@
 ! ... ARGUMENTS 
       
       INTEGER,  INTENT(IN) :: iesr
-      REAL(DP), INTENT(IN) :: taus(:,:)
+      REAL(DP), INTENT(IN) :: taus(3,nat)
       REAL(DP) :: ESR
-      REAL(DP) :: DESR(:)
-      REAL(DP) :: FION(:,:)
+      REAL(DP) :: DESR(6)
+      REAL(DP) :: FION(3,nat)
       LOGICAL,  INTENT(IN) :: TSTRESS
       REAL(DP), INTENT(in) :: hmat( 3, 3 )
 
@@ -1358,11 +1303,12 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE self_vofhar( tscreen, self_ehte, vloc, rhoeg, omega, hmat )
+   SUBROUTINE self_vofhar_x( tscreen, self_ehte, vloc, rhoeg, omega, hmat )
 !=----------------------------------------------------------------------------=!
 
       !  adds the hartree part of the self interaction
 
+      USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE control_flags,      ONLY: gamma_only
       USE cell_module,        ONLY: boxdimensions
@@ -1446,18 +1392,17 @@
 
       RETURN
 !=----------------------------------------------------------------------------=!
-   END SUBROUTINE self_vofhar
+   END SUBROUTINE self_vofhar_x
 !=----------------------------------------------------------------------------=!
 
 
 
-      SUBROUTINE localisation( wfc, atoms_m, ht)
+!=----------------------------------------------------------------------------=!
+   SUBROUTINE localisation_x( wfc, atoms_m, ht)
+!=----------------------------------------------------------------------------=!
 
-!  adds the hartree part of the self interaction
-!
-!  ----------------------------------------------
-!  END manual
 
+      USE kinds,              ONLY: DP
       USE constants, ONLY: fpi
       USE control_flags, ONLY: gamma_only
       USE cell_module, ONLY: boxdimensions, s_to_r
@@ -1626,10 +1571,5 @@
       DEALLOCATE( k_density, density, psi )
 
       RETURN
-      END SUBROUTINE localisation
+      END SUBROUTINE localisation_x
 
-
- 
-!=----------------------------------------------------------------------------=!
-   END MODULE potentials
-!=----------------------------------------------------------------------------=!

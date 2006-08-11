@@ -642,6 +642,7 @@
      use electrons_base, only: nx => nbspx, n => nbsp, ispin, f, nspin
      use electrons_base, only: nel, iupdwn, nupdwn, nudx, nelt
      use energies, only: enl, ekin
+     use dener, only: denl, dekin6
      use ions_base, only: nsp
      use uspp, only: rhovan => becsum
      use grid_dimensions, only: nnr => nnrx
@@ -694,7 +695,7 @@
          if(i.ne.printwfc)  c0diag(:,i)= (0.d0,0.d0)
        enddo
        call calbec(1,nsp,eigr,c0diag,becdiag)
-       call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,ekin)
+       call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
      endif
 
      ! PLEASE USE write_rho_xml to save any quantities defined on the 

@@ -190,6 +190,7 @@ MODULE guess
 
 ! ...        declare other variables
              REAL(DP), ALLOCATABLE :: rho0( :, : )
+             REAL(DP) :: edum, dedum(6)
 
              LOGICAL, SAVE :: tfirst = .TRUE.
              INTEGER :: ispin, nspin
@@ -201,12 +202,12 @@ MODULE guess
 
              IF( tfirst ) THEN
                ALLOCATE( rho_save( SIZE( rho, 1 ), nspin ) )
-               CALL rhoofr( 1, cm, cdesc, fi, rho_save, ht)
+               CALL rhoofr( 1, .false., cm, fi, rho_save, ht%deth, edum, dedum )
                tfirst = .FALSE.
              END IF
 
              ALLOCATE( rho0( SIZE( rho, 1 ), nspin ) )
-             CALL rhoofr( 1, c0, cdesc, fi, rho0, ht)
+             CALL rhoofr( 1, .false., c0, fi, rho0, ht%deth, edum, dedum )
 
              rho = 2.0d0 * rho0 - rho_save
 

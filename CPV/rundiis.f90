@@ -78,6 +78,7 @@ CONTAINS
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE energies, ONLY: dft_energy_type
+      USE dener, ONLY: denl6, dekin6
       USE cp_electronic_mass, ONLY: emass
       USE electrons_base, ONLY: nupdwn, iupdwn, nspin
       USE time_step, ONLY: delt
@@ -86,7 +87,7 @@ CONTAINS
       USE diis
       USE cell_module, ONLY: boxdimensions
       USE check_stop, ONLY: check_stop_now
-      USE potentials, ONLY: vofrhos
+      USE cp_interfaces, ONLY: vofrhos
       USE cp_interfaces, ONLY: dforce
       USE wave_types, ONLY: wave_descriptor
       USE atoms_type_module, ONLY: atoms_type
@@ -196,7 +197,7 @@ CONTAINS
 
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
-      CALL rhoofr( 1, c0, cdesc, fi, rhoe, ht0)
+      CALL rhoofr( 1, tstress, c0, fi, rhoe, ht0%deth,edft%ekin, dekin6)
       CALL newrho(rhoe(:,1), drho, 0)  ! memorize density
       CALL phfacs( ei1, ei2, ei3, eigr, mill_l, atoms%taus, nr1, nr2, nr3, atoms%nat )
       CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngm )
@@ -229,8 +230,8 @@ CONTAINS
           END IF
 
 ! ...     self consistent energy
-          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
-          CALL rhoofr( 1, c0, cdesc, fi, rhoe, ht0)
+          CALL nlrh(c0, tforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
+          CALL rhoofr( 1, tstress, c0, fi, rhoe, ht0%deth, edft%ekin, dekin6 )
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
@@ -243,7 +244,7 @@ CONTAINS
 45        FORMAT('etot  drho ',i3,1x,2(1x,f18.10))
 
 ! ...     recalculate potential
-          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
+          CALL nlrh(c0, tforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
           CALL vofrhos(.FALSE., tforce, tstress, rhoe, atoms, &
             vpot, bec, c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
@@ -261,7 +262,7 @@ CONTAINS
 
 ! ...     calculate lambda_i,j=<c_i| H |c_j>
 
-          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
+          CALL nlrh(c0, tforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
 
           CALL dforce( c0, fi, cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
@@ -271,7 +272,7 @@ CONTAINS
           call adjef_s(eig(1,1),fi(1),efermi,nel, cdesc%nbl( 1 ),temp_elec,sume)
           call entropy_s(fi(1),temp_elec,cdesc%nbl(1),edft%ent)
 
-          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
+          CALL nlrh(c0, tforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
           CALL dforce( c0, fi, cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
           DO ib = 1, cdesc%nbl( 1 )
@@ -281,7 +282,7 @@ CONTAINS
         ELSE
 
 ! ...     DIIS on c0 at FIXED potential
-          edft%enl = nlrh(c0, tforce, atoms%for, bec, becdr, eigr)
+          CALL nlrh(c0, tforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
 
           CALL dforce( c0, fi, cgrad, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
 
@@ -399,7 +400,7 @@ CONTAINS
       USE diis
       USE cell_module, ONLY: boxdimensions
       USE check_stop, ONLY: check_stop_now
-      USE potentials, ONLY: vofrhos, kspotential
+      USE cp_interfaces, ONLY: vofrhos, kspotential
       USE cp_interfaces, ONLY: dforce
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
@@ -656,7 +657,7 @@ CONTAINS
 
 ! ...       Calculate Eij = < psi(i) | H | psi(j) > = < psi(i) | dH / dpsi(j) >
             DO i = 1, n
-               CALL update_lambda( i,  gam, c, eforce( :, i+iwfc-1), nwfc, iwfc ) 
+               CALL update_lambda( i,  gam, c, eforce( :, i+iwfc-1), nwfc, iwfc, .true. ) 
             END DO
 
             CALL eigs( n, gam, tortho, fi(iwfc:iwfc+nwfc-1), ei(:,ispin) )

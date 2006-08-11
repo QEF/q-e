@@ -177,9 +177,15 @@ outdir         CHARACTER ( default =  value of the ESPRESSO_TMPDIR environment
 
 disk_io        CHARACTER
                'high', 'default', 'low', 'minimal'
-               'high' will write charge density files in CP
-               The charge density is not needed to restart but 
-               may be needed for other purposes
+               'high', CP code will write charge density, Kohn-Sham wf files, 
+               and additional informations in data-file.xml in order to 
+               restart with a PW calculation or to use postprocessin tools.
+
+saverho        LOGICAL 
+               This flag controls the saving of charge density in CP codes:
+               If .TRUE.  save charge density to restart dir,
+               .FALSE. do not save charge density. 
+               Warning: this flags overwrite disk_io
 
 pseudo_dir     CHARACTER ( default = value of the $ESPRESSO_PSEUDO environment
                variable if set; '$HOME/espresso/pseudo/' otherwise )
@@ -187,6 +193,7 @@ pseudo_dir     CHARACTER ( default = value of the $ESPRESSO_PSEUDO environment
 
 ndr, ndw       INTEGER ( default = 50 )
                Units for input and output restart file.
+
 
 ===============================================================================
 NAMELIST &SYSTEM

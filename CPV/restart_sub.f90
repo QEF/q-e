@@ -75,6 +75,7 @@ MODULE from_restart_module
     USE orthogonalize_base,   ONLY : updatc, calphi
     use cp_interfaces,        only : rhoofr, ortho, elec_fakekine, strucf
     USE control_flags,        ONLY : force_pairing
+    USE dener,                ONLY : denl, dekin6
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
@@ -202,7 +203,7 @@ MODULE from_restart_module
                                    eigrb, taub, irb, ibrav, b1, b2, b3 )
        !
        CALL rhoofr( nfi, c0, irb, eigrb, bec, &
-                    becsum, rhor, rhog, rhos, enl, ekin )
+                    becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
        !
        ! ... put core charge (if present) in rhoc(r)
        !
@@ -494,9 +495,10 @@ MODULE from_restart_module
                                       print_scaled_positions, &
                                       set_velocities
     USE energies,              ONLY : dft_energy_type
+    USE dener,                 ONLY : denl6, dekin6
     USE cell_module,           ONLY : boxdimensions, gethinv, alat
     USE cell_base,             ONLY : r_to_s, s_to_r
-    USE potentials,            ONLY : vofrhos
+    USE cp_interfaces,         ONLY : vofrhos
     USE io_global,             ONLY : ionode, ionode_id
     USE io_global,             ONLY : stdout
     USE wave_types,            ONLY : wave_descriptor
@@ -509,11 +511,13 @@ MODULE from_restart_module
     USE atoms_type_module,     ONLY : atoms_type
     USE ions_base,             ONLY : vel_srt, tau_units
     USE cp_interfaces,         ONLY : runcp_ncpp, ortho, nlrh
+    USE cp_main_variables,     ONLY : lambda
     USE grid_dimensions,       ONLY : nr1, nr2, nr3
     USE reciprocal_vectors,    ONLY : mill_l
     USE gvecp,                 ONLY : ngm
     USE ions_base,             ONLY : nat, tau_srt
     USE uspp,                  ONLY : vkb, nkb
+    USE cp_electronic_mass,    ONLY : emass
     !
     IMPLICIT NONE
     !
@@ -535,7 +539,7 @@ MODULE from_restart_module
     TYPE(dft_energy_type)      :: edft
     !
     INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa, iss
-    REAL(DP)    :: fccc
+    REAL(DP)    :: fccc, ccc
     REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
     REAL(DP)    :: gam(1,1,1)
     LOGICAL     :: ttforce
@@ -687,9 +691,9 @@ MODULE from_restart_module
        !
        atoms_0%for = 0.D0
        ! 
-       edft%enl = nlrh( c0, ttforce, atoms_0%for, bec, becdr, eigr )
+       CALL nlrh( c0, ttforce, tstress, atoms_0%for, bec, becdr, eigr, edft%enl, denl6 )
        !
-       CALL rhoofr( nfi, c0, cdesc, f, rhoe, ht_0 )
+       CALL rhoofr( nfi, tstress, c0, f, rhoe, ht_0%deth, edft%ekin, dekin6 )
        !
        CALL vofrhos( .true. , ttforce, tstress, rhoe, &
                      atoms_0, vpot, bec, c0, cdesc, f, eigr, &
@@ -703,7 +707,9 @@ MODULE from_restart_module
              !
              IF ( tortho ) THEN
                 !
-                CALL ortho( cm, c0, nupdwn, iupdwn, nspin )
+                ccc = fccc * delt * delt / emass
+                !
+                CALL ortho( cm, c0, lambda, ccc, nupdwn, iupdwn, nspin )
                 !
              ELSE
                 !

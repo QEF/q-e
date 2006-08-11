@@ -50,7 +50,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE smallbox_grid_dimensions, ONLY : nr1b, nr2b, nr3b
   USE local_pseudo,             ONLY : allocate_local_pseudo
   USE io_global,                ONLY : io_global_start, stdout, ionode
-  USE dener,                    ONLY : detot
+  USE dener,                    ONLY : detot, denl, dekin6
   USE derho,                    ONLY : drhog, drhor
   USE cdvan,                    ONLY : dbec, drhovan
   USE stre,                     ONLY : stress
@@ -548,7 +548,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
 
         CALL rhoofr (nfi,rep_el(sm_k)%cm,irb,eigrb,rep_el(sm_k)%bec, & 
-             & rep_el(sm_k)%rhovan,rhor,rhog,rhos,enl,ekin_ar(sm_k))
+             & rep_el(sm_k)%rhovan,rhor,rhog,rhos,enl,denl,ekin_ar(sm_k),dekin6)
 
         ekin = ekin_ar(sm_k)
 
@@ -869,7 +869,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
 
         CALL rhoofr (nfi,rep_el(sm_k)%c0,irb,eigrb,rep_el(sm_k)%bec, &
-             & rep_el(sm_k)%rhovan,rhor,rhog,rhos,enl,ekin_ar(sm_k))
+             & rep_el(sm_k)%rhovan,rhor,rhog,rhos,enl,denl,ekin_ar(sm_k),dekin6)
 
         ekin = ekin_ar(sm_k)
         !
