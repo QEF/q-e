@@ -279,7 +279,6 @@ cat > H2+H-cp.in << EOF
   restart_mode   = "from_scratch",
   prefix         = "H2+H-cp"
   outdir         = "$TMP_DIR/",
-  scradir        = "$TMP_DIR/",
   pseudo_dir     = "$PSEUDO_DIR/",
   iprint         = 50,
 /
