@@ -44,7 +44,7 @@ PROGRAM fpmd_postproc
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
   REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
 
-  CHARACTER(len=256) :: filepp, fileout, output, outdir
+  CHARACTER(len=256) :: filepp, fileout, output
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
   CHARACTER(len=256) :: print_state
   CHARACTER(len=3)   :: atm( maxsp ), lab
@@ -59,7 +59,7 @@ PROGRAM fpmd_postproc
 
   REAL(DP) :: euler(6)
 
-  NAMELIST /inputpp/ prefix, outdir, fileout, output, outdir, &
+  NAMELIST /inputpp/ prefix, fileout, output, outdir, &
                      lcharge, lforces, ldynamics, lpdb, lrotation, &
                      ns1, ns2, ns3, np1, np2, np3, print_state, &
                      atomic_number, nframes, ndr, charge_density, &
