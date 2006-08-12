@@ -119,6 +119,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
                                    rhog, rhos
   USE electrons_base,       ONLY : nspin
   USE energies,             ONLY : ekin, enl
+  USE dener,                ONLY : dekin6, denl
   USE wavefunctions_module, ONLY : c0
   USE uspp,                 ONLY : becsum
   USE grid_dimensions,      ONLY : nnrx
@@ -166,7 +167,7 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   rhog           = 0.0
   rhos           = 0.0
   !
-  CALL rhoofr(nfi,c0(:,:),irb,eigrb,bec,becsum,rhor,rhog,rhos,enl,ekin)
+  CALL rhoofr(nfi,c0(:,:),irb,eigrb,bec,becsum,rhor,rhog,rhos,enl,denl,ekin,dekin6)
 #endif
 
 #ifdef DFT_PW
