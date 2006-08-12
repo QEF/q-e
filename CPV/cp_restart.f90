@@ -31,7 +31,7 @@ MODULE cp_restart
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE cp_writefile( ndw, scradir, ascii, nfi, simtime, acc, nk, xk, &
+    SUBROUTINE cp_writefile( ndw, outdir, ascii, nfi, simtime, acc, nk, xk, &
                              wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,   &
                              taui, cdmi, stau0, svel0, staum, svelm, force,  &
                              vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ0, occm,  &
@@ -69,7 +69,7 @@ MODULE cp_restart
       IMPLICIT NONE
       !
       INTEGER,               INTENT(IN) :: ndw          !
-      CHARACTER(LEN=*),      INTENT(IN) :: scradir      !
+      CHARACTER(LEN=*),      INTENT(IN) :: outdir       !  directory used to store output and restart files
       LOGICAL,               INTENT(IN) :: ascii        !
       INTEGER,               INTENT(IN) :: nfi          ! index of the current step
       REAL(DP),              INTENT(IN) :: simtime      ! simulated time
@@ -172,7 +172,7 @@ MODULE cp_restart
       CALL errore( 'cp_writefile', &
                    'no free units to write wavefunctions', ierr )
       !
-      dirname = restart_dir( scradir, ndw )
+      dirname = restart_dir( outdir, ndw )
       !
       ! ... Create main restart directory
       !
@@ -809,7 +809,7 @@ MODULE cp_restart
     END SUBROUTINE cp_writefile
     !
     !------------------------------------------------------------------------
-    SUBROUTINE cp_readfile( ndr, scradir, ascii, nfi, simtime, acc, nk, xk,   &
+    SUBROUTINE cp_readfile( ndr, outdir, ascii, nfi, simtime, acc, nk, xk,   &
                             wk, ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh,     &
                             taui, cdmi, stau0, svel0, staum, svelm, force,    &
                             vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ0, occm,      &
@@ -842,7 +842,7 @@ MODULE cp_restart
       IMPLICIT NONE
       !
       INTEGER,               INTENT(IN)    :: ndr          !  I/O unit number
-      CHARACTER(LEN=*),      INTENT(IN)    :: scradir      !
+      CHARACTER(LEN=*),      INTENT(IN)    :: outdir       !
       LOGICAL,               INTENT(IN)    :: ascii        !
       INTEGER,               INTENT(INOUT) :: nfi          ! index of the current step
       REAL(DP),              INTENT(INOUT) :: simtime      ! simulated time
@@ -934,7 +934,7 @@ MODULE cp_restart
       kunit = 1
       found = .FALSE.
       !
-      dirname = restart_dir( scradir, ndr )
+      dirname = restart_dir( outdir, ndr )
       !
       ! ... Open XML descriptor
       !
@@ -1517,7 +1517,7 @@ MODULE cp_restart
       !
       if (nprint_nfi.eq.-2) then
          write( stdout,*) 'nprint_nfi= ',nprint_nfi
-         CALL read_print_counter( nprint_nfi, scradir, ndr )
+         CALL read_print_counter( nprint_nfi, outdir, ndr )
          write( stdout,*) 'nprint_nfi= ',nprint_nfi
       endif
       !
@@ -1526,7 +1526,7 @@ MODULE cp_restart
     END SUBROUTINE cp_readfile
     ! 
     !------------------------------------------------------------------------
-    SUBROUTINE cp_read_wfc( ndr, scradir, ik, nk, iss, nspin, c2, tag )
+    SUBROUTINE cp_read_wfc( ndr, outdir, ik, nk, iss, nspin, c2, tag )
       !------------------------------------------------------------------------
       !
       USE electrons_base,     ONLY : iupdwn, nupdwn
@@ -1535,7 +1535,7 @@ MODULE cp_restart
       IMPLICIT NONE
       !
       INTEGER,               INTENT(IN)  :: ndr
-      CHARACTER(LEN=*),      INTENT(IN)  :: scradir
+      CHARACTER(LEN=*),      INTENT(IN)  :: outdir
       INTEGER,               INTENT(IN)  :: ik, iss, nk, nspin
       CHARACTER,             INTENT(IN)  :: tag
       COMPLEX(DP), OPTIONAL, INTENT(OUT) :: c2(:,:)
@@ -1548,7 +1548,7 @@ MODULE cp_restart
       !
       ik_eff = ik + ( iss - 1 ) * nk
       !
-      dirname = restart_dir( scradir, ndr )
+      dirname = restart_dir( outdir, ndr )
       !
       IF ( tag /= 'm' ) THEN
          !
@@ -1588,7 +1588,7 @@ MODULE cp_restart
     END SUBROUTINE cp_read_wfc
     !
     !------------------------------------------------------------------------
-    SUBROUTINE cp_read_cell( ndr, scradir, ascii, ht, &
+    SUBROUTINE cp_read_cell( ndr, outdir, ascii, ht, &
                              htm, htvel, gvel, xnhh0, xnhhm, vnhh )
       !------------------------------------------------------------------------
       !
@@ -1599,7 +1599,7 @@ MODULE cp_restart
       IMPLICIT NONE
       !
       INTEGER,          INTENT(IN)    :: ndr
-      CHARACTER(LEN=*), INTENT(IN)    :: scradir
+      CHARACTER(LEN=*), INTENT(IN)    :: outdir
       LOGICAL,          INTENT(IN)    :: ascii
       REAL(DP),         INTENT(INOUT) :: ht(3,3)
       REAL(DP),         INTENT(INOUT) :: htm(3,3)
@@ -1624,7 +1624,7 @@ MODULE cp_restart
       CHARACTER(LEN=9) :: symm_type_
       !
       !
-      dirname = restart_dir( scradir, ndr ) 
+      dirname = restart_dir( outdir, ndr ) 
       !
       filename = TRIM( dirname ) // '/' // TRIM( xmlpun )
       !

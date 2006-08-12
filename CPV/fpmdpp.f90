@@ -44,7 +44,7 @@ PROGRAM fpmd_postproc
   REAL(DP), ALLOCATABLE :: sigma(:,:), force(:,:)
   REAL(DP), ALLOCATABLE :: stau0(:,:), svel0(:,:), force0(:,:)
 
-  CHARACTER(len=256) :: filepp, fileout, output, scradir
+  CHARACTER(len=256) :: filepp, fileout, output, outdir
   CHARACTER(len=256) :: filecel, filepos, filefor, filepdb
   CHARACTER(len=256) :: print_state
   CHARACTER(len=3)   :: atm( maxsp ), lab
@@ -59,7 +59,7 @@ PROGRAM fpmd_postproc
 
   REAL(DP) :: euler(6)
 
-  NAMELIST /inputpp/ prefix, outdir, fileout, output, scradir, &
+  NAMELIST /inputpp/ prefix, outdir, fileout, output, outdir, &
                      lcharge, lforces, ldynamics, lpdb, lrotation, &
                      ns1, ns2, ns3, np1, np2, np3, print_state, &
                      atomic_number, nframes, ndr, charge_density, &
@@ -74,7 +74,7 @@ PROGRAM fpmd_postproc
   prefix    = 'cp'
   fileout   = 'out'
   output    = 'xsf'  ! 'grd'
-  scradir   = './'
+  outdir   = './'
   lcharge   = .false.
   lforces   = .false.
   ldynamics = .false.
@@ -148,7 +148,7 @@ PROGRAM fpmd_postproc
   !  Now read the XML data file
   !
 
-  filepp = restart_dir( scradir, ndr )
+  filepp = restart_dir( outdir, ndr )
   !
   filepp = TRIM( filepp ) // '/' // 'data-file.xml'
   !
@@ -301,7 +301,7 @@ PROGRAM fpmd_postproc
      !
      CALL read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
                      natoms, nr1, nr2, nr3, ispin, at, tau_in, force, &
-                     rho_in, prefix, scradir, ndr, charge_density )
+                     rho_in, prefix, outdir, ndr, charge_density )
 
      IF( nframes == 1 ) THEN
         !
@@ -444,7 +444,7 @@ END PROGRAM fpmd_postproc
 
 SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
                       natoms, nr1, nr2, nr3, ispin, at, tau, force, &
-                      rho, prefix, scradir, ndr, charge_density )
+                      rho, prefix, outdir, ndr, charge_density )
 
   USE kinds,      ONLY: DP
   USE constants,  ONLY: bohr => BOHR_RADIUS_ANGS
@@ -459,7 +459,7 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
   REAL(DP), INTENT(out) :: at(3, 3), tau(3, natoms), force(3, natoms)
   REAL(DP), INTENT(out) :: rho(nr1, nr2, nr3)
   CHARACTER(LEN=*), INTENT(IN) :: prefix
-  CHARACTER(LEN=*), INTENT(IN) :: scradir
+  CHARACTER(LEN=*), INTENT(IN) :: outdir
   CHARACTER(LEN=*), INTENT(IN) :: charge_density
 
   INTEGER  :: i, j, ix, iy, iz, ierr
@@ -499,7 +499,7 @@ SUBROUTINE read_fpmd( lforces, lcharge, lbinary, cunit, punit, funit, dunit, &
 
   IF (lcharge) THEN
 
-     filename = restart_dir( scradir, ndr )
+     filename = restart_dir( outdir, ndr )
      !
      IF( charge_density == 'spin' ) THEN
         filename = TRIM( filename ) // '/' // 'spin-polarization.xml'

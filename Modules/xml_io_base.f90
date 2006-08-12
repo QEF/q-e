@@ -181,11 +181,11 @@ MODULE xml_io_base
     END SUBROUTINE
     !
     !------------------------------------------------------------------------
-    FUNCTION restart_dir( scradir, runit )
+    FUNCTION restart_dir( outdir, runit )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=256)           :: restart_dir
-      CHARACTER(LEN=*), INTENT(IN) :: scradir
+      CHARACTER(LEN=*), INTENT(IN) :: outdir
       INTEGER,          INTENT(IN) :: runit
       !
       CHARACTER(LEN=256)         :: dirname
@@ -200,11 +200,11 @@ MODULE xml_io_base
       !
       dirname = TRIM( prefix ) // '_' // TRIM( int_to_char( runit ) )// '.save'
       !
-      IF ( LEN( scradir ) > 1 ) THEN
+      IF ( LEN( outdir ) > 1 ) THEN
          !
-         strlen = INDEX( scradir, ' ' ) - 1
+         strlen = INDEX( outdir, ' ' ) - 1
          !
-         dirname = scradir(1:strlen) // '/' // dirname
+         dirname = outdir(1:strlen) // '/' // dirname
          !
       END IF
       !
@@ -215,7 +215,7 @@ MODULE xml_io_base
     END FUNCTION restart_dir
     !
     !------------------------------------------------------------------------
-    FUNCTION check_restartfile( scradir, ndr )
+    FUNCTION check_restartfile( outdir, ndr )
       !------------------------------------------------------------------------
       !
       USE io_global, ONLY : ionode, ionode_id
@@ -225,13 +225,13 @@ MODULE xml_io_base
       !
       LOGICAL                      :: check_restartfile
       INTEGER,          INTENT(IN) :: ndr
-      CHARACTER(LEN=*), INTENT(IN) :: scradir
+      CHARACTER(LEN=*), INTENT(IN) :: outdir
       CHARACTER(LEN=256)           :: filename
       LOGICAL                      :: lval
       INTEGER                      :: strlen
       !
       !
-      filename = restart_dir( scradir, ndr )
+      filename = restart_dir( outdir, ndr )
       !
       IF ( ionode ) THEN
          !
@@ -333,7 +333,7 @@ MODULE xml_io_base
     END SUBROUTINE save_history
     !
     !------------------------------------------------------------------------
-    SUBROUTINE save_print_counter( iter, scradir, wunit )
+    SUBROUTINE save_print_counter( iter, outdir, wunit )
       !------------------------------------------------------------------------
       !
       ! ... a counter indicating the last successful pritout iteration is saved
@@ -345,14 +345,14 @@ MODULE xml_io_base
       IMPLICIT NONE
       !
       INTEGER,          INTENT(IN) :: iter
-      CHARACTER(LEN=*), INTENT(IN) :: scradir
+      CHARACTER(LEN=*), INTENT(IN) :: outdir
       INTEGER,          INTENT(IN) :: wunit
       !
       INTEGER            :: ierr
       CHARACTER(LEN=256) :: filename, dirname
       !
       !
-      dirname = restart_dir( scradir, wunit )
+      dirname = restart_dir( outdir, wunit )
       !
       IF ( ionode ) THEN
          !
@@ -394,7 +394,7 @@ MODULE xml_io_base
     END SUBROUTINE save_print_counter
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_print_counter( nprint_nfi, scradir, runit )
+    SUBROUTINE read_print_counter( nprint_nfi, outdir, runit )
       !------------------------------------------------------------------------
       !
       ! ... the counter indicating the last successful pritout iteration 
@@ -407,14 +407,14 @@ MODULE xml_io_base
       IMPLICIT NONE
       !
       INTEGER,          INTENT(OUT) :: nprint_nfi
-      CHARACTER(LEN=*), INTENT(IN)  :: scradir
+      CHARACTER(LEN=*), INTENT(IN)  :: outdir
       INTEGER,          INTENT(IN)  :: runit
       !
       INTEGER            :: ierr
       CHARACTER(LEN=256) :: filename, dirname
       !
       !
-      dirname = restart_dir( scradir, runit )
+      dirname = restart_dir( outdir, runit )
       !
       IF ( ionode ) THEN
          !

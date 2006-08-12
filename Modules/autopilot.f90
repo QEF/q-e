@@ -211,27 +211,27 @@ CONTAINS
   !
   ! Put this in setcontrol_flags on the select statement
   !-----------------------------------------------------------------------
-  LOGICAL FUNCTION auto_check (ndr, scradir)
+  LOGICAL FUNCTION auto_check (ndr, outdir)
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: ndr    !  I/O unit number
-    CHARACTER(LEN=*), INTENT(IN) :: scradir
+    CHARACTER(LEN=*), INTENT(IN) :: outdir
     CHARACTER(LEN=256) :: dirname, filename
     CHARACTER (LEN=6), EXTERNAL :: int_to_char
     LOGICAL :: restart_p = .FALSE.
     INTEGER :: strlen
-    ! right now cp_readfile is called with scradir = ' '
+    ! right now cp_readfile is called with outdir = ' '
     ! so, in keeping with the current design,
     ! the responsibility of setting 
-    ! ndr and scradir is the calling program
+    ! ndr and outdir is the calling program
 
 
     IF (ionode) THEN
        dirname = 'RESTART' // int_to_char( ndr )
-       IF ( LEN( scradir ) > 1 ) THEN
-          strlen  = index(scradir,' ') - 1
-          dirname = scradir(1:strlen) // '/' // dirname
+       IF ( LEN( outdir ) > 1 ) THEN
+          strlen  = index(outdir,' ') - 1
+          dirname = outdir(1:strlen) // '/' // dirname
        END IF
 
        filename = TRIM( dirname ) // '/' // 'restart.xml'

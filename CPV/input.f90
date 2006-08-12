@@ -93,13 +93,12 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE input_parameters,        ONLY : atom_pfile, pseudo_dir, ntyp, nat, &
-                                         prefix, scradir, outdir, xc_type
+                                         prefix, outdir, xc_type
      USE control_flags,           ONLY : program_name
      USE parameters,              ONLY : nsx
      USE read_pseudo_module_fpmd, ONLY : readpp
      USE io_files,                ONLY : psfile_     => psfile , &
                                          pseudo_dir_ => pseudo_dir, &
-                                         scradir_    => scradir, &
                                          outdir_     => outdir, &
                                          prefix_     => prefix
      USE ions_base,               ONLY : nsp_ => nsp, nat_ => nat
@@ -111,7 +110,6 @@ MODULE input
         CALL errore( 'iosys_pseudo ', 'input file has not been read yet!', 1 )
      !
      prefix_  = TRIM( prefix  )
-     scradir_ = TRIM( scradir )
      outdir_  = TRIM( outdir )
      !
      ! ... Set internal variables for the number of species and number of atoms

@@ -17,7 +17,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE control_flags,     ONLY : conv_elec, ndr, program_name, nbeg, taurdr, &
                                 trane, ampre, nomore, tfor, isave
   USE cp_main_variables, ONLY : nfi
-  USE io_files,          ONLY : iunpath, iunexit, outdir, prefix, scradir
+  USE io_files,          ONLY : iunpath, iunexit, outdir, prefix
   USE io_global,         ONLY : stdout, ionode
   USE path_formats,      ONLY : scf_fmt
   USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
@@ -34,7 +34,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ! 
   INTEGER               :: image
   REAL(DP)              :: tcpu 
-  CHARACTER(LEN=256)    :: outdir_saved, scradir_saved
+  CHARACTER(LEN=256)    :: outdir_saved
   LOGICAL               :: file_exists, opnd
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
@@ -50,7 +50,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
   outdir_saved  = outdir
-  scradir_saved = scradir
   ! 
   DO image = N_in, N_fin
      !
@@ -68,8 +67,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
               TRIM( int_to_char( image ) ) // "/"
-     !
-     scradir = outdir
      !
      tcpu = get_clock( 'CP' )
      !
@@ -98,7 +95,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      nfi    = 0
      tfor   = .FALSE.
      !
-     IF ( check_restartfile( scradir, ndr ) ) THEN
+     IF ( check_restartfile( outdir, ndr ) ) THEN
         !
         WRITE( stdout, '(/,2X,"restarting from file",/)' )
         !
@@ -166,7 +163,6 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   END DO
   !
   outdir  = outdir_saved
-  scradir = scradir_saved
   !
   suspended_image = 0
   !

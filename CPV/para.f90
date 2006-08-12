@@ -72,7 +72,7 @@
       use grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
       use xml_io_base,     ONLY: read_rho_xml, restart_dir
       use control_flags,   ONLY: ndr
-      USE io_files,        ONLY: scradir
+      USE io_files,        ONLY: outdir
       !
       implicit none
       !
@@ -82,7 +82,7 @@
       integer            :: is
       CHARACTER(LEN=256) :: filename
       !
-      filename = restart_dir( scradir, ndr )
+      filename = restart_dir( outdir, ndr )
       !
       filename = TRIM(filename) // '/' // 'charge-density'
       !

@@ -27,7 +27,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE ions_base,          ONLY : tau, nat, nsp, ityp, if_pos, sort_tau, &
                                  tau_srt, ind_srt
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
-  USE io_files,           ONLY : prefix, outdir, scradir, iunpath, iunaxsf, &
+  USE io_files,           ONLY : prefix, outdir, iunpath, iunaxsf, &
                                  iunupdate, exit_file, iunexit
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
@@ -47,7 +47,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   INTEGER, INTENT(IN)   :: N_in, N_fin
   LOGICAL, INTENT(OUT)  :: stat
   INTEGER               :: image, iter
-  CHARACTER(LEN=256)    :: outdir_saved, scradir_saved, filename
+  CHARACTER(LEN=256)    :: outdir_saved, filename
   LOGICAL               :: file_exists, opnd
   LOGICAL               :: tnosep_saved
   REAL(DP)              :: tcpu
@@ -93,7 +93,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   END IF
   !
   outdir_saved  = outdir
-  scradir_saved = scradir
   !
   tnosep_saved = tnosep
   !
@@ -165,8 +164,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
                  TRIM( int_to_char( image ) ) // "/"        
         !
-        scradir = outdir
-        !
         ! ... unit stdout is connected to the appropriate file
         !
         IF ( ionode ) THEN
@@ -235,7 +232,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         tconvthrs%active = .TRUE.
         !
-        IF ( check_restartfile( scradir, ndr ) ) THEN
+        IF ( check_restartfile( outdir, ndr ) ) THEN
            !
            WRITE( stdout, '(/,3X,"restarting from file",/)' )
            !
@@ -365,7 +362,6 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   DEALLOCATE( tauout, fion )
   !
   outdir  = outdir_saved
-  scradir = scradir_saved
   !
   tnosep = tnosep_saved
   !
@@ -396,7 +392,7 @@ SUBROUTINE metadyn()
                                  ampre, nbeg, tfor, taurdr, ndr, ndw, isave
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos
   USE io_global,          ONLY : stdout
-  USE io_files,           ONLY : iunmeta, iunaxsf, scradir
+  USE io_files,           ONLY : iunmeta, iunaxsf, outdir
   USE metadyn_vars,       ONLY : ncolvar, fe_grad, new_target, to_target,   &
                                  metadyn_fmt, to_new_target, fe_step,       &
                                  metadyn_history, max_metadyn_iter,         &
@@ -420,7 +416,7 @@ SUBROUTINE metadyn()
   LOGICAL               :: tnosep_saved
   !
   !
-  dirname = restart_dir( scradir, ndw )
+  dirname = restart_dir( outdir, ndw )
   !
   ALLOCATE( tau( 3, nat ), fion( 3, nat ) )
   !
@@ -449,7 +445,7 @@ SUBROUTINE metadyn()
      !
      tconvthrs%active = .TRUE.
      !
-  ELSE IF ( check_restartfile( scradir, ndr ) ) THEN
+  ELSE IF ( check_restartfile( outdir, ndr ) ) THEN
      !
      WRITE( stdout, '(/,3X,"restarting from file",/)' )
      !

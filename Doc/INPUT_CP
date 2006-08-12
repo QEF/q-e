@@ -176,7 +176,8 @@ verbosity      CHARACTER
 
 outdir         CHARACTER ( default =  value of the ESPRESSO_TMPDIR environment
                variable if set; current directory ('./') otherwise )
-               input, temporary, output files are found in this directory.
+               input, temporary, trajectories and output files are found in 
+               this directory.
 
 disk_io        CHARACTER
                'high', 'default', 'minimal'

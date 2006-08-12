@@ -32,7 +32,7 @@
 
       USE xml_io_base,       ONLY : save_print_counter
       USE cp_main_variables, ONLY : nprint_nfi
-      USE io_files,          ONLY : scradir
+      USE io_files,          ONLY : outdir
       USE control_flags,     ONLY : ndw, tdipole
       USE polarization,      ONLY : print_dipole
       USE io_global,         ONLY : ionode, ionode_id, stdout
@@ -79,10 +79,10 @@
       IF( tprint ) THEN
          IF ( tfile ) THEN
             ! we're writing files, let's save nfi
-            CALL save_print_counter( nfi, scradir, ndw )
+            CALL save_print_counter( nfi, outdir, ndw )
          ELSE IF ( tfilei ) then
             ! not there yet, save the old nprint_nfi
-            CALL save_print_counter( nprint_nfi, scradir, ndw )
+            CALL save_print_counter( nprint_nfi, outdir, ndw )
          END IF
       END IF
       !

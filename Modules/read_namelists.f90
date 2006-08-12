@@ -77,7 +77,6 @@ MODULE read_namelists_module
        !
        CALL getenv( 'ESPRESSO_TMPDIR', outdir )
        IF ( TRIM( outdir ) == ' ' ) outdir = './'
-       scradir = outdir
        IF( prog == 'PW' ) prefix = 'pwscf'  
        IF( prog == 'CP' ) prefix = 'cp' 
        !
@@ -580,7 +579,6 @@ MODULE read_namelists_module
        CALL mp_bcast( ndw,           ionode_id )
        CALL mp_bcast( outdir,        ionode_id )
        CALL mp_bcast( wfcdir,        ionode_id )
-       CALL mp_bcast( scradir,       ionode_id )
        CALL mp_bcast( prefix,        ionode_id )
        CALL mp_bcast( max_seconds,   ionode_id )
        CALL mp_bcast( ekin_conv_thr, ionode_id )

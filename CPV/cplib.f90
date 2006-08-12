@@ -1924,17 +1924,19 @@ END FUNCTION
 
       i=0
       WRITE( stdout,'(/''Projection on atomic states:'')')
+      WRITE( stdout, 100 )
       DO is=1,nsp
          DO nb = 1,nchi(is)
             l=lchi(nb,is)
             DO m = -l,l
                DO ia=1,na(is)
                   i=i+1
-                  WRITE( stdout,'(''atomic state # '',i3,'': atom # '',i3,    &
-     &                      ''  species # '',i2,''  wfc # '',i2,        &
-     &                      '' (l='',i1,'' m='',i2,'')'')')             &
-     &                 i, ia, is, nb, l, m
+!                  WRITE( stdout,'(''atomic state # '',i4,'': atom # '',i3,    &
+!     &                      ''  species # '',i2,''  wfc # '',i2,        &
+!     &                      '' (l='',i1,'' m='',i2,'')'')')             &
+!     &                 i, ia, is, nb, l, m
                END DO
+               WRITE( stdout, 110 ) i-na(is)+1, i, na(is), is, nb, l, m
             END DO
          END DO
       END DO
@@ -1948,6 +1950,10 @@ END FUNCTION
          WRITE( stdout,'(''state # '',i4,''    sum c^2 ='',f7.4)') m,somma
          WRITE( stdout,'(10f7.4)') (ABS(proj(m,l)),l=1,n_atomic_wfc)
       END DO
+
+ 100  FORMAT( 3X,'atomic state    atoms  specie  wfc  l  m')
+ 110  FORMAT( 3X, I4, ' - ', I4, 4X, I4, 6X, I3,   I5, I4,I3)
+
 !
       DEALLOCATE(proj)
       DEALLOCATE(wfc)

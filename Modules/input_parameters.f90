@@ -185,8 +185,9 @@ MODULE input_parameters
           ! and it is opened in the running directory.
 
         CHARACTER(LEN=256) :: outdir = './'
-          ! specify the directory where the code opens output files
-          ! _NOT_ for restart file
+          ! specify the directory where the code opens output and restart 
+          ! files. When possible put this directory in the fastest available
+          ! filesystem ( not NFS! )
 
         CHARACTER(LEN=256) :: prefix = 'prefix'
           ! specify the prefix for the output file, if not specified the
@@ -200,16 +201,9 @@ MODULE input_parameters
           ! Accurancy of the interpolation table, interval between
           ! table values in Rydberg
 
-        CHARACTER(LEN=256) :: scradir = './'
-          ! specify the scratch directory to store large, usually temporary, 
-          ! files. When possible put this directory in the fastest available
-          ! filesystem ( not NFS! )
-
-
         CHARACTER(LEN=256) :: wfcdir = 'undefined'
           ! scratch directory that is hopefully local to the node
-          ! to store large, usually temporary files. Note that the 'scradir'
-          ! above is quite confusing and does not do what is claimed
+          ! to store large, usually temporary files. 
 
         REAL(DP) :: max_seconds = 1.0d+7
           ! smoothly terminate program after the specified number of seconds
@@ -289,7 +283,7 @@ MODULE input_parameters
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
           wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
           pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, scradir,lelfield, nberrycyc, refg, tqr, tefield2, &
+          wf_collect, printwfc, lelfield, nberrycyc, refg, tqr, tefield2, &
           saverho
 
 !

@@ -24,7 +24,7 @@
       USE cp_interfaces,    ONLY: set_evtot, set_eitot
       USE electrons_base,   ONLY: nspin, nbnd, nbsp, iupdwn, nupdwn
       USE electrons_module, ONLY: ei, ei_emp, n_emp, iupdwn_emp, nupdwn_emp
-      USE io_files,         ONLY: scradir
+      USE io_files,         ONLY: outdir
       USE ensemble_dft,     ONLY: tens
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: root_image, intra_image_comm
@@ -97,7 +97,7 @@
 
       IF( tens ) THEN
         !
-        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk,   &
+        CALL cp_writefile( ndw, outdir, .TRUE., nfi, tps, acc, nk, xk, wk,   &
           ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,        &
           vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
           occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, ei,            &
@@ -105,7 +105,7 @@
         !
       ELSE
         ! 
-        CALL cp_writefile( ndw, scradir, .TRUE., nfi, tps, acc, nk, xk, wk,      &
+        CALL cp_writefile( ndw, outdir, .TRUE., nfi, tps, acc, nk, xk, wk,      &
              ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi , taus,        &
              vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim, occ_f , &
              occ_f , lambda, lambdam, xnhe0, xnhem, vnhe, ekincm, eitot,          &
@@ -131,7 +131,7 @@
 ! read from file and distribute data calculated in preceding iterations
 !
       USE kinds,          ONLY : DP
-      USE io_files,       ONLY : scradir
+      USE io_files,       ONLY : outdir
       USE electrons_base, ONLY : nbnd, nbsp, nspin, nupdwn, iupdwn, keep_occ
       USE gvecw,          ONLY : ngw, ngwt
       USE ions_base,      ONLY : nsp, na, cdmi, taui
@@ -169,14 +169,14 @@
       LOGICAL::lopen
 
       IF( flag == -1 ) THEN
-        CALL cp_read_cell( ndr, scradir, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
+        CALL cp_read_cell( ndr, outdir, .TRUE., ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh )
         h     = TRANSPOSE( ht )
         hold  = TRANSPOSE( htm )
         velh  = TRANSPOSE( htvel )
         RETURN
       ELSE IF ( flag == 0 ) THEN
         DO ispin = 1, nspin
-          CALL cp_read_wfc( ndr, scradir, 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
+          CALL cp_read_wfc( ndr, outdir, 1, 1, ispin, nspin, c2 = cm(:,:), tag = 'm' )
         END DO
         RETURN
       END IF
@@ -184,13 +184,13 @@
       ALLOCATE( occ_ ( SIZE( occ_f ) ) )
 
       IF( tens ) THEN
-         CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+         CALL cp_readfile( ndr, outdir, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
                 xnhe0, xnhem, vnhe, ekincm, c0, cm, mat_z = mat_z )
       ELSE
-         CALL cp_readfile( ndr, scradir, .TRUE., nfi, tps, acc, nk, xk, wk, &
+         CALL cp_readfile( ndr, outdir, .TRUE., nfi, tps, acc, nk, xk, wk, &
                 ht, htm, htvel, gvel, xnhh0, xnhhm, vnhh, taui, cdmi, taus, &
                 vels, tausm, velsm, fion, vnhp, xnhp0, xnhpm, nhpcl,nhpdim,occ_ , &
                 occ_ , lambda, lambdam, b1, b2, b3, &
@@ -245,7 +245,7 @@
         USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
         USE cp_restart,        ONLY: cp_writefile
         USE electrons_module,  ONLY: ei, ei_emp, iupdwn_emp, nupdwn_emp, n_emp
-        USE io_files,          ONLY: scradir
+        USE io_files,          ONLY: outdir
         USE grid_dimensions,   ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
         USE cp_interfaces,     ONLY: set_evtot, set_eitot
 
@@ -296,7 +296,7 @@
            !
         END IF
         !
-        CALL cp_writefile( ndw, scradir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
+        CALL cp_writefile( ndw, outdir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
           ht_0%a, ht_m%a, ht_0%hvel, ht_0%gvel, xnhh0, xnhhm, vnhh, taui, cdmi,   &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for,    &
           vnhp, xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda,            &
@@ -337,7 +337,7 @@
         USE cell_nose,         ONLY: xnhh0, xnhhm, vnhh
         USE ions_nose,         ONLY: vnhp, xnhp0, xnhpm, nhpcl, nhpdim
         USE cp_restart,        ONLY: cp_readfile
-        USE io_files,          ONLY: scradir
+        USE io_files,          ONLY: outdir
  
         IMPLICIT NONE 
  
@@ -364,7 +364,7 @@
         INTEGER  :: nkpt = 1
         REAL(DP) :: xk(3,1) = 0.0d0, wk(1) = 2.0d0
 
-        CALL cp_readfile( ndr, scradir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
+        CALL cp_readfile( ndr, outdir, .TRUE., nfi, trutime, acc, nkpt, xk, wk, &
           hp0_ , hm1_ , hvel_ , gvel_ , xnhh0, xnhhm, vnhh, taui, cdmi, &
           atoms_0%taus, atoms_0%vels, atoms_m%taus, atoms_m%vels, atoms_0%for, vnhp, &
           xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda, b1, b2,   &

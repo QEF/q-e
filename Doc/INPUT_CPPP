@@ -37,11 +37,7 @@ output         CHARACTER ( default = 'xsf' )
 
 outdir         CHARACTER ( default = './' )
                directory containing the CP trajectory files (.evp .pos .cel ...)
-               to be processed
-
-scradir        CHARACTER ( default = './' )
-               directory containing the CP restart files ( .save ) to be 
-               processed
+               and restart files ( .save ) to be processed
 
 lcharge        LOGICAL ( default = .false. )
                This logical flag control the processing of charge density.
