@@ -21,6 +21,7 @@ SUBROUTINE hinit1()
   USE scf,           ONLY : vrs, vltot, vr
   USE vlocal,        ONLY : strf
   USE control_flags, ONLY : pot_order
+  USE realus,        ONLY : tqr, qpointlist
   !
   IMPLICIT NONE
   !
@@ -53,6 +54,8 @@ SUBROUTINE hinit1()
   ! ... define the total local potential (external+scf)
   !
   CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
+  !
+  IF ( tqr ) CALL qpointlist()
   !
   ! ... update the D matrix
   !
