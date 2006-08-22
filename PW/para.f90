@@ -532,6 +532,68 @@ SUBROUTINE scatter( f_in, f_out )
   RETURN
   !
 END SUBROUTINE scatter
+
+!----------------------------------------------------------------------------
+SUBROUTINE cscatter_sym( f_in, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... scatters data from the first processor of every pool
+  !
+  ! ... COMPLEX*16  f_in  = gathered variable (nrx1*nrx2*nrx3)
+  ! ... COMPLEX*16  f_out = distributed variable (nxx)
+  !
+  USE pfft,      ONLY : ncplane, npp, nxx 
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
+                        me_pool, root_pool
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
+  USE parallel_include    
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: f_in(*), f_out(nxx)
+  !
+#if defined (__PARA)  
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
+  !
+  !
+  CALL start_clock( 'cscatter_sym' )
+  !
+  DO proc = 0, ( nproc_pool - 1 )
+     !
+     sendcount(proc) = 2 * ncplane * npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + sendcount(proc-1)
+        !
+     END IF
+     !
+  END DO
+  !
+  CALL mp_barrier( intra_pool_comm )
+  !  
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_REAL8,   &
+                     f_out, sendcount(me_pool), MPI_REAL8, &
+                     root_pool, intra_pool_comm, info )
+  !
+  CALL errore( 'cscatter_sym', 'info<>0', info )
+  !
+  IF ( sendcount(me_pool) /= nxx ) f_out(sendcount(me_pool)+1:nxx) = 0.D0
+  !
+  CALL stop_clock( 'cscatter_sym' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cscatter_sym
 !
 !----------------------------------------------------------------------------
 SUBROUTINE cscatter_smooth( f_in, f_out )

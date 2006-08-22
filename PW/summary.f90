@@ -36,7 +36,12 @@ SUBROUTINE summary()
                               a_nlcc, b_nlcc, alpha_nlcc
   USE symme,           ONLY : nsym, invsym, s, t_rev, ftau
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
-                             char_mat, name_rap, name_class
+                              char_mat, name_rap, name_class, gname
+  USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, which_irr_so, &
+                              char_mat_so, name_rap_so, name_class_so, d_spin, &
+                              name_class_so1
+  USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, gname_is, &
+                                 sname_is, code_group_is
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, diis_ndim, &
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
@@ -67,7 +72,7 @@ SUBROUTINE summary()
     ! total number of G-vectors (parallel executio
   INTEGER :: &
           nclass_ref   ! The number of classes of the point group
-  LOGICAL :: is_complex
+  LOGICAL :: is_complex, is_complex_so
   INTEGER :: irot, iclass
     !
   REAL(DP) :: sr(3,3,48), ft1, ft2, ft3
@@ -78,7 +83,7 @@ SUBROUTINE summary()
   REAL(DP) :: xkg(3)
     ! coordinates of the k point in crystal axes
   CHARACTER :: mixing_style * 9
-  CHARACTER :: ps * 5, gname * 4 
+  CHARACTER :: ps * 5, group_name*11
     ! name of pseudo type
   REAL(DP) :: xp
     ! fraction contributing to a given atom type (obsolescent)
@@ -261,9 +266,23 @@ SUBROUTINE summary()
   ENDIF
   IF (iverbosity.EQ.1) THEN
      WRITE( stdout, '(36x,"s",24x,"frac. trans.")')
+     nsym_is=0
      DO isym = 1, nsym
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
-        IF(noncolin.and.domag) WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
+        IF (noncolin) THEN
+           IF (domag) THEN
+              WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
+              IF (t_rev(isym)==0) THEN
+                 nsym_is=nsym_is+1
+                 CALL s_axis_to_cart (s(1,1,isym), sr_is(1,1,nsym_is), at, bg)
+                 CALL find_u(sr_is(1,1,nsym_is), d_spin_is(1,1,nsym_is))
+                 ftau_is(:,nsym_is)=ftau(:,isym)
+                 sname_is(nsym_is)=sname(isym)
+              ENDIF
+           ELSE
+              CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
+           END IF
+        END IF
         CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
         IF (ftau(1,isym).NE.0.OR.ftau(2,isym).NE.0.OR.ftau(3,isym).NE.0) THEN
            ft1 = at(1,1)*ftau(1,isym)/nr1 + at(1,2)*ftau(2,isym)/nr2 + &
@@ -298,29 +317,29 @@ SUBROUTINE summary()
         END IF
      END DO
      CALL find_group(nsym,sr,gname,code_group)
-     WRITE(stdout,'(5x,"the point group is ",a4)') gname
-     CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap,name_class)
-     WRITE(stdout,'(5x, "there are", i3," classes")') nclass_ref
-     WRITE(stdout,'(5x, "the character table:")')
-     WRITE(stdout,'(/6x,12(a5,1x))') (name_class(irot),irot=1,nclass_ref)
-     DO iclass=1,nclass_ref
-        WRITE(stdout,'(a4,12f6.2)') name_rap(iclass), &
-                 (REAL(char_mat(iclass,irot)),irot=1,nclass_ref)
-     ENDDO
-     IF (is_complex(code_group)) THEN
-        WRITE(stdout,'(5x,"imaginary part")') 
-        DO iclass=1,nclass_ref
-           WRITE(stdout,'(a4,12f6.2)') name_rap(iclass), &
-                 (AIMAG(char_mat(iclass,irot)),irot=1,nclass_ref)
-        ENDDO
+     IF (noncolin.AND.domag) THEN
+        CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
+        CALL set_irr_rap_so(code_group_is,nclass_ref,nrap,char_mat_so, &
+                            name_rap_so,name_class_so,name_class_so1)
+        CALL divide_class_so(code_group_is,nsym_is,sr_is,d_spin_is, &
+                             has_e,nclass,nelem_so,elem_so,which_irr_so)
+        IF (nclass.ne.nclass_ref) CALL errore('summary', &
+                                                 'point double group ?',1)
+     ELSE
+        IF (noncolin) THEN
+           CALL set_irr_rap_so(code_group,nclass_ref,nrap,char_mat_so, &
+                               name_rap_so,name_class_so,name_class_so1)
+           CALL divide_class_so(code_group,nsym,sr,d_spin,has_e,nclass,  &
+                                nelem_so, elem_so,which_irr_so)
+           IF (nclass.ne.nclass_ref) CALL errore('summary', &
+                                                'point double group ?',1)
+        ELSE
+           CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap,name_class)
+           CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
+           IF (nclass.ne.nclass_ref) CALL errore('summary','point group ?',1)
+        ENDIF
      ENDIF
-     CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
-     IF (nclass.ne.nclass_ref) CALL errore('summary','point group ?',1)
-     WRITE(stdout,'(/5x, "the symmetry operations in each class:")')
-     DO iclass=1,nclass
-        WRITE(stdout,'(5x,a5,12i5)') name_class(which_irr(iclass)), &
-                      (elem(i,iclass), i=1,nelem(iclass))
-     ENDDO
+     CALL write_group_info(.true.)
   END IF
   !
   !    description of the atoms inside the unit cell

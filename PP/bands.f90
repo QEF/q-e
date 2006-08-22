@@ -13,17 +13,21 @@ PROGRAM bands
   !
   USE io_files,  ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
   USE mp_global, ONLY : npool
-  USE io_global, ONLY : ionode, ionode_id
+  USE wvfct,     ONLY : nbnd
+  USE klist,     ONLY : nkstot
+  USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
+
   !
   IMPLICIT NONE
   !
   CHARACTER (len=256) :: filband, outdir
-  LOGICAL :: lsigma(4)
+  LOGICAL :: lsigma(4), lsym
   INTEGER :: spin_component
+  INTEGER, ALLOCATABLE :: iltot(:,:)
   INTEGER :: ios
   !
-  NAMELIST / inputpp / outdir, prefix, filband, spin_component, lsigma
+  NAMELIST / inputpp / outdir, prefix, filband, spin_component, lsigma, lsym
   !                                  
   !
   CALL start_postproc (nd_nmbr)
@@ -34,6 +38,7 @@ PROGRAM bands
   CALL getenv( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   filband = 'bands.out'
+  lsym=.false.
   lsigma = .false.
   spin_component = 1
   !
@@ -57,22 +62,26 @@ PROGRAM bands
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast( filband, ionode_id )
   CALL mp_bcast( spin_component, ionode_id )
-  CALL mp_bcast( lsigma(:), ionode_id )
+  CALL mp_bcast( lsym, ionode_id )
+  CALL mp_bcast( lsigma, ionode_id )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file
   CALL openfil_pp
   CALL init_us_1
+  ALLOCATE(iltot(nbnd,nkstot))
   !
-  CALL punch_band (filband, spin_component, lsigma)
+  CALL punch_band (filband, spin_component, lsigma, iltot)
+  IF (lsym) call sym_band(iltot, filband, spin_component)
   !
+  DEALLOCATE(iltot)
   CALL stop_pp
   STOP
 END PROGRAM bands
 !
 !-----------------------------------------------------------------------
-SUBROUTINE punch_band (filband, spin_component, lsigma)
+SUBROUTINE punch_band (filband, spin_component, lsigma, iltot)
   !-----------------------------------------------------------------------
   !
   !    This routine writes the band energies on a file. The routine orders
@@ -111,6 +120,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
   ! becpold: <psi|beta> at previous k-point
   COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:,:), old_nc(:,:), new_nc(:,:)
   COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
+  INTEGER :: iltot(nbnd,nkstot)
   ! as above for the noncolinear case
   INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol, ih, is1
   ! counters
@@ -129,7 +139,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
   REAL(DP), ALLOCATABLE:: edeg(:)
   REAL(DP), ALLOCATABLE:: sigma_avg(:,:,:)
   ! expectation value of sigma
-  REAL(DP), PARAMETER :: eps = 0.00001
+  REAL(DP), PARAMETER :: eps = 0.00001d0
   ! threshold (Ry) for degenerate states 
   REAL(DP) :: minene
   COMPLEX(DP), EXTERNAL :: cgracsc, cgracsc_nc
@@ -411,6 +421,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma)
         !
      END IF
      !
+  iltot(:,ik)=il(:)
   END DO
   !
   DEALLOCATE (index, degbands)

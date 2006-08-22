@@ -262,7 +262,8 @@ MODULE control_ph
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands
-  LOGICAL :: lgamma, lgamma_gamma, convt, epsil, trans, elph, zue, recover
+  LOGICAL :: lgamma, lgamma_gamma, convt, epsil, trans, elph, zue, recover, &
+             search_sym    !  if .TRUE. search the mode symmetry
   ! lgamma: if .TRUE. this is a q=0 computation
   ! lgamma_gamma: if .TRUE. this is a q=0 computation with k=0 only 
   ! convt : if .TRUE. the phonon has converged

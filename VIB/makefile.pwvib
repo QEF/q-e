@@ -66,6 +66,7 @@ PW_OBJS = \
 ../PW/deriv_drhoc.o \
 ../PW/diis_base.o \
 ../PW/divide_class.o \
+../PW/divide_class_so.o \
 ../PW/real_diis_module.o \
 ../PW/realus.o \
 ../PW/complex_diis_module.o \

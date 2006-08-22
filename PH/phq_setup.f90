@@ -54,10 +54,12 @@ subroutine phq_setup
   USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
-  USE symme,         ONLY : nsym, s, irt
+  USE symme,         ONLY : nsym, s, ftau, irt
   USE atom,          ONLY : nlcc
   USE constants,     ONLY : degspin, pi
   USE wvfct,         ONLY : nbnd, et
+  USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
+                                   char_mat, name_rap, gname, name_class
   use phcom
   USE control_flags, ONLY : iverbosity, modenum
   USE funct,         ONLY : dmxc, dmxc_spin  
@@ -71,6 +73,8 @@ subroutine phq_setup
   ! to set nbnd_occ in the metallic case
   ! minimum band energy
   ! maximum band energy
+
+  real(DP) :: sr(3,3,48)
 
   integer :: ir, table (48, 48), isym, jsym, irot, ik, ibnd, ipol, &
        mu, nu, imode0, irr, ipert, na, it, nt
@@ -89,7 +93,7 @@ subroutine phq_setup
   ! counter on iterations
   ! counter on atomic type
 
-  logical :: sym (48)
+  logical :: sym (48), is_symmorphic
   ! the symmetry operations
 
   call start_clock ('phq_setup')
@@ -238,6 +242,29 @@ subroutine phq_setup
              nirr, gi, gimq, iverbosity)
      endif
   endif
+  is_symmorphic=.true.
+  DO isym=1,nsymq
+     is_symmorphic=( is_symmorphic.and.(ftau(1,irgq(isym))==0).and.  &
+                                       (ftau(2,irgq(isym))==0).and.  &
+                                       (ftau(3,irgq(isym))==0) )
+  
+  END DO
+  search_sym=.true.
+  IF (.not.is_symmorphic) THEN
+     DO isym=1,nsymq
+        search_sym=( search_sym.and.(abs(gi(1,irgq(isym)))<1.d-8).and.  &
+                                    (abs(gi(2,irgq(isym)))<1.d-8).and.  &
+                                    (abs(gi(3,irgq(isym)))<1.d-8) )
+     END DO
+  END IF
+  IF (search_sym) THEN
+     DO isym=1,nsym
+        CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
+     END DO
+     CALL find_group(nsym,sr,gname,code_group)
+     CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class)
+     CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
+  ENDIF
 
   IF (lgamma_gamma) THEN
      ALLOCATE(has_equivalent(nat))

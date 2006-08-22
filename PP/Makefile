@@ -29,9 +29,11 @@ openfil_pp.o\
 plot_io.o \
 plot_whole_cell.o \
 punch_plot.o \
+smallgk.o \
 start_postproc.o \
 stm.o \
 stop_pp.o \
+sym_band.o \
 work_function.o \
 xsf.o 
 
@@ -127,6 +129,7 @@ PWOBJS = \
 ../PW/diropn.o \
 ../PW/divide.o \
 ../PW/divide_class.o \
+../PW/divide_class_so.o \
 ../PW/divide_et_impera.o \
 ../PW/dndepsilon.o \
 ../PW/dprojdepsilon.o \

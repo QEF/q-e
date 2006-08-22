@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !-----------------------------------------------------------------------------
 SUBROUTINE divide_class(code_group,nrot,smat,nclass,nelem,elem,which_irr)
 !-----------------------------------------------------------------------------
@@ -25,6 +27,9 @@ SUBROUTINE divide_class(code_group,nrot,smat,nclass,nelem,elem,which_irr)
 !                a change to which_irr. Presently the character tables 
 !                are those given by P.W. Atkins, M.S. Child, and 
 !                C.S.G. Phillips, "Tables for group theory". 
+!                Several equivalent names for the irreducible representation
+!                are given. D, G, L, S are used for Delta, Gamma, Lambda 
+!                and Sigma.
 !
 
 USE kinds, ONLY : DP
@@ -38,10 +43,10 @@ INTEGER :: &
           elem(8,12),  &   ! Which elements in the smat list for each class
           which_irr(12)    ! See above 
 
-REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3)
+REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), ars
 
 INTEGER :: nclass_ref, done(48), irot, jrot, krot, iclass
-INTEGER :: tipo_sym, icode, ipol, axis
+INTEGER :: tipo_sym, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
 REAL(DP) :: angle_rot, angle_rot_s
 LOGICAL :: compare_mat, is_axis, first, first1
@@ -100,12 +105,14 @@ ELSEIF (code_group==6) THEN
 !  C_4
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          which_irr(iclass)=3
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
-         IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-90.d0)<eps) THEN
+      ELSEIF (ts==3) THEN
+         ars=angle_rot(smat(1,1,elem(1,iclass)))
+         IF (ABS(ars-90.d0)<eps) THEN
             which_irr(iclass)=2
-         ELSEIF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-270.d0)<eps) THEN
+         ELSEIF (ABS(ars-270.d0)<eps) THEN
             which_irr(iclass)=4
          ELSE
             CALL errore('divide_class','wrong angle',1)
@@ -119,16 +126,18 @@ ELSEIF (code_group==7) THEN
 !  C_6
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          which_irr(iclass)=4
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
-         IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-60.d0)<eps) THEN
+      ELSEIF (ts==3) THEN
+         ars=angle_rot(smat(1,1,elem(1,iclass)))
+         IF (ABS(ars-60.d0)<eps) THEN
             which_irr(iclass)=2
-         ELSEIF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
+         ELSEIF (ABS(ars-120.d0)<eps) THEN
             which_irr(iclass)=3
-         ELSEIF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-240.d0)<eps) THEN
+         ELSEIF (ABS(ars-240.d0)<eps) THEN
             which_irr(iclass)=5
-         ELSEIF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-300.d0)<eps) THEN
+         ELSEIF (ABS(ars-300.d0)<eps) THEN
             which_irr(iclass)=6
          ELSE
             CALL errore('divide_class','wrong angle',1)
@@ -163,9 +172,10 @@ ELSEIF (code_group==9) THEN
 !  D_3
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          which_irr(iclass)=3
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ELSEIF (ts==3) THEN
          which_irr(iclass)=2
       ELSE
          CALL errore('divide_class','wrong sym_type',1)
@@ -176,13 +186,26 @@ ELSEIF (code_group==10) THEN
 !  D_4
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          which_irr(iclass)=2
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
-         IF (is_axis(ax,3)) THEN
+         axis=0
+         DO ipol=1,3
+            IF (is_axis(ax,ipol)) axis=ipol
+         ENDDO 
+         axis1=MOD(ipol,3)+1
+         axis2=MOD(ipol+1,3)+1
+         IF (axis==0) call errore('divide_class_so','unknown D_4 axis ',1)
+      ENDIF
+   END DO
+   DO iclass=2,nclass
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
+         CALL versor(smat(1,1,elem(1,iclass)),ax)
+         IF (is_axis(ax,axis)) THEN
             which_irr(iclass)=3
-         ELSEIF (is_axis(ax,2).or.is_axis(ax,1)) THEN
+         ELSEIF (is_axis(ax,axis1).or.is_axis(ax,axis2)) THEN
             which_irr(iclass)=4
          ELSE
             which_irr(iclass)=5
@@ -197,14 +220,15 @@ ELSEIF (code_group==11) THEN
 !
    first=.true.
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
-         IF ((ABS(angle_rot(smat(1,1,elem(1,iclass)))-60.d0)<eps) .OR.  &
-             (ABS(angle_rot(smat(1,1,elem(1,iclass)))-300.d0)<eps) ) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
+         ars=angle_rot(smat(1,1,elem(1,iclass)))
+         IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps) ) THEN
             which_irr(iclass)=2
          ELSE
             which_irr(iclass)=3
          ENDIF
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSEIF (ts==4) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,3)) THEN
             which_irr(iclass)=4
@@ -226,9 +250,10 @@ ELSEIF (code_group==12) THEN
 !
    first=.true.
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          which_irr(iclass)=2
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5.and.first) THEN
+      ELSEIF (ts==5.and.first) THEN
          which_irr(iclass)=3
          first=.false.
       ELSE
@@ -240,9 +265,10 @@ ELSEIF (code_group==13) THEN
 !  C_3v
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          which_irr(iclass)=2
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSEIF (ts==5) THEN
          which_irr(iclass)=3
       ELSE
          CALL errore('divide_class','wrong operation',1)
@@ -254,11 +280,12 @@ ELSEIF (code_group==14) THEN
 !
    first=.true.
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          which_irr(iclass)=2
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSEIF (ts==4) THEN
          which_irr(iclass)=3
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5.and.first) THEN
+      ELSEIF (ts==5.and.first) THEN
          which_irr(iclass)=4
          first=.false.
       ELSE
@@ -272,16 +299,17 @@ ELSEIF (code_group==15) THEN
 !
    first=.true.
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
-         IF ((ABS(angle_rot(smat(1,1,elem(1,iclass)))-60.d0)<eps)  &
-            .OR.(ABS(angle_rot(smat(1,1,elem(1,iclass)))-300.d0)<eps)) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
+         ars=angle_rot(smat(1,1,elem(1,iclass)))
+         IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
             which_irr(iclass)=2
          ELSE
             which_irr(iclass)=3
          ENDIF
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSEIF (ts==4) THEN
          which_irr(iclass)=4
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5.and.first) THEN
+      ELSEIF (ts==5.and.first) THEN
          which_irr(iclass)=5
          first=.false.
       ELSE
@@ -293,11 +321,12 @@ ELSEIF (code_group==16) THEN
 !  C_2h
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          which_irr(iclass)=2
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSEIF (ts==2) THEN
          which_irr(iclass)=3
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSEIF (ts==5) THEN
          which_irr(iclass)=4
       ELSE
          CALL errore('divide_class','wrong sym_type',1)
@@ -308,15 +337,16 @@ ELSEIF (code_group==17) THEN
 !  C_3h
 !
 DO iclass=2,nclass
-   IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+   ts=tipo_sym(smat(1,1,elem(1,iclass)))
+   IF (ts==3) THEN
       IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
          which_irr(iclass)=2
       ELSE
          which_irr(iclass)=3
       END IF
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+   ELSEIF (ts==5) THEN
       which_irr(iclass)=4
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+   ELSEIF (ts==6) THEN
       IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
          which_irr(iclass)=5
       ELSE
@@ -331,26 +361,27 @@ ELSEIF (code_group==18) THEN
 !  C_4h
 !
 DO iclass=2,nclass
-   IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+   ts=tipo_sym(smat(1,1,elem(1,iclass)))
+   IF (ts==3) THEN
       IF (angle_rot(smat(1,1,elem(1,iclass))-90.d0)<eps) THEN
          which_irr(iclass)=2
       ELSE
          which_irr(iclass)=4
       END IF
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+   ELSEIF (ts==4) THEN
       which_irr(iclass)=3
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+   ELSEIF (ts==2) THEN
       which_irr(iclass)=5
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+   ELSEIF (ts==5) THEN
       which_irr(iclass)=7
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+   ELSEIF (ts==6) THEN
       IF (angle_rot_s(smat(1,1,elem(1,iclass))-90.d0)<eps) THEN
          which_irr(iclass)=8
       ELSE
          which_irr(iclass)=6
       END IF
    ELSE
-      call errore('divide_class','wrong operation',1)
+      CALL errore('divide_class','wrong operation',1)
    ENDIF
 ENDDO
 ELSEIF (code_group==19) THEN
@@ -358,30 +389,33 @@ ELSEIF (code_group==19) THEN
 !  C_6h
 !
 DO iclass=2,nclass
-   IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
-      IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-60.d0)<eps) THEN
+   ts=tipo_sym(smat(1,1,elem(1,iclass)))
+   IF (ts==3) THEN
+      ars=angle_rot(smat(1,1,elem(1,iclass)))
+      IF (ABS(ars-60.d0)<eps) THEN
          which_irr(iclass)=2
-      ELSEIF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
+      ELSEIF (ABS(ars-120.d0)<eps) THEN
          which_irr(iclass)=3
-      ELSEIF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-240.d0)<eps) THEN
+      ELSEIF (ABS(ars-240.d0)<eps) THEN
          which_irr(iclass)=5
-      ELSEIF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-300.d0)<eps) THEN
+      ELSEIF (ABS(ars-300.d0)<eps) THEN
          which_irr(iclass)=6
       END IF
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+   ELSEIF (ts==4) THEN
       which_irr(iclass)=4
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+   ELSEIF (ts==2) THEN
       which_irr(iclass)=7
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+   ELSEIF (ts==5) THEN
       which_irr(iclass)=10
-   ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
-      IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-60.d0)<eps) THEN
+   ELSEIF (ts==6) THEN
+      ars=angle_rot_s(smat(1,1,elem(1,iclass)))
+      IF (ABS(ars-60.d0)<eps) THEN
          which_irr(iclass)=11
-      ELSEIF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
+      ELSEIF (ABS(ars-120.d0)<eps) THEN
          which_irr(iclass)=12
-      ELSEIF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-240.d0)<eps) THEN
+      ELSEIF (ABS(ars-240.d0)<eps) THEN
          which_irr(iclass)=8
-      ELSEIF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-300.d0)<eps) THEN
+      ELSEIF (ABS(ars-300.d0)<eps) THEN
          which_irr(iclass)=9
       END IF
    ELSE
@@ -395,7 +429,8 @@ ELSEIF (code_group==20) THEN
 !  mirror_axis gives the normal to the mirror plane
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,3)) THEN
             which_irr(iclass)=2
@@ -404,9 +439,9 @@ ELSEIF (code_group==20) THEN
          ELSE IF (is_axis(ax,1)) THEN
             which_irr(iclass)=4
          END IF
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSEIF (ts==2) THEN
          which_irr(iclass)=5
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSEIF (ts==5) THEN
          CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,3)) THEN
             which_irr(iclass)=6
@@ -422,17 +457,18 @@ ELSEIF (code_group==21) THEN
 !  D_3h
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          which_irr(iclass)=2
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSE IF (ts==4) THEN
          which_irr(iclass)=3
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSE IF (ts==5) THEN
          IF (nelem(iclass)>1) THEN
             which_irr(iclass)=6
          ELSE 
             which_irr(iclass)=4
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ELSE IF (ts==6) THEN
          which_irr(iclass)=5
       END IF
    END DO
@@ -444,7 +480,8 @@ ELSEIF (code_group==22) THEN
 !  First search the order 4 axis
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          which_irr(iclass)=2
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          axis=0
@@ -457,7 +494,8 @@ ELSEIF (code_group==22) THEN
    first=.TRUE.
    first1=.TRUE.
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,axis)) THEN
             which_irr(iclass)=3
@@ -469,9 +507,9 @@ ELSEIF (code_group==22) THEN
                which_irr(iclass)=5
             END IF 
          END IF
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSEIF (ts==2) THEN
          which_irr(iclass)=6
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSEIF (ts==5) THEN
          CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,axis)) THEN
             which_irr(iclass)=8
@@ -483,7 +521,7 @@ ELSEIF (code_group==22) THEN
                which_irr(iclass)=10
             END IF 
          END IF
-      ELSEIF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ELSEIF (ts==6) THEN
          which_irr(iclass)=7
       END IF
    END DO
@@ -494,14 +532,15 @@ ELSEIF (code_group==23) THEN
    first=.TRUE.
    first1=.TRUE.
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
-         IF ((ABS(angle_rot(smat(1,1,elem(1,iclass)))-60.d0)<eps).OR. &
-             (ABS(angle_rot(smat(1,1,elem(1,iclass)))-300.d0)<eps)) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
+         ars=angle_rot(smat(1,1,elem(1,iclass)))
+         IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
             which_irr(iclass)=2
          ELSE
             which_irr(iclass)=3
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSE IF (ts==4) THEN
          IF (nelem(iclass)==1) THEN
             which_irr(iclass)=4
          ELSE
@@ -512,9 +551,9 @@ ELSEIF (code_group==23) THEN
                which_irr(iclass)=6
             END IF 
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSE IF (ts==2) THEN
           which_irr(iclass)=7
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSE IF (ts==5) THEN
           IF (nelem(iclass)==1) THEN
              which_irr(iclass)=10
           ELSE 
@@ -525,12 +564,12 @@ ELSEIF (code_group==23) THEN
                 which_irr(iclass)=12
              ENDIF
           END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
-         IF ((ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-60.d0)<eps) .OR. &
-             (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-300.d0)<eps)) THEN
-             which_irr(iclass)=9
-         ELSE
+      ELSE IF (ts==6) THEN
+         ars=angle_rot_s(smat(1,1,elem(1,iclass)))
+         IF ((ABS(ars-60.d0)<eps).OR.(ABS(ars-300.d0)<eps)) THEN
              which_irr(iclass)=8
+         ELSE
+             which_irr(iclass)=9
          END IF
       END IF
    END DO
@@ -539,15 +578,16 @@ ELSEIF (code_group==24) THEN
 !  D_2d
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==6) THEN
          which_irr(iclass)=2
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSE IF (ts==4) THEN
          IF (nelem(iclass)==1) THEN
             which_irr(iclass)=3
          ELSE
             which_irr(iclass)=4
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSE IF (ts==5) THEN
          which_irr(iclass)=5
       ELSE
          CALL errore('divide_class','wrong operation',1)
@@ -558,15 +598,16 @@ ELSEIF (code_group==25) THEN
 !  D_3d
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          which_irr(iclass)=2
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSE IF (ts==4) THEN
          which_irr(iclass)=3
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSE IF (ts==2) THEN
          which_irr(iclass)=4
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ELSE IF (ts==6) THEN
          which_irr(iclass)=5
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSE IF (ts==5) THEN
          which_irr(iclass)=6
       ELSE
          CALL errore('divide_class','wrong operation',1)
@@ -577,9 +618,10 @@ ELSEIF (code_group==26) THEN
 !  S_4
 !
     DO iclass=2,nclass
-       IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+       ts=tipo_sym(smat(1,1,elem(1,iclass)))
+       IF (ts==4) THEN
           which_irr(iclass)=3
-       ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+       ELSE IF (ts==6) THEN
           IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-90.d0)<eps) THEN
              which_irr(iclass)=2
           ELSE
@@ -594,15 +636,16 @@ ELSE IF (code_group==27) THEN
 !  S_6
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
             which_irr(iclass)=2
          ELSE
             which_irr(iclass)=3
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSE IF (ts==2) THEN
          which_irr(iclass)=4
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ELSE IF (ts==6) THEN
          IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-60.d0)<eps) THEN
             which_irr(iclass)=6
          ELSE
@@ -617,11 +660,12 @@ ELSEIF (code_group==28) THEN
 !  T
 !
    DO iclass=2,nclass
-      IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
+      ars=angle_rot(smat(1,1,elem(1,iclass)))
+      IF (ABS(ars-120.d0)<eps) THEN
          which_irr(iclass)=2
-      ELSE IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-240.d0)<eps) THEN
+      ELSE IF (ABS(ars-240.d0)<eps) THEN
          which_irr(iclass)=3
-      ELSE IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-180.d0)<eps) THEN
+      ELSE IF (ABS(ars-180.d0)<eps) THEN
          which_irr(iclass)=4
       ELSE
          CALL errore('divide_class','wrong angle',1)
@@ -632,23 +676,24 @@ ELSE IF (code_group==29) THEN
 !  T_h
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          IF (ABS(angle_rot(smat(1,1,elem(1,iclass)))-120.d0)<eps) THEN
             which_irr(iclass)=2
          ELSE
             which_irr(iclass)=3
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSE IF (ts==4) THEN
          which_irr(iclass)=4
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSE IF (ts==2) THEN
          which_irr(iclass)=5
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ELSE IF (ts==6) THEN
          IF (ABS(angle_rot_s(smat(1,1,elem(1,iclass)))-60.d0)<eps) THEN
             which_irr(iclass)=6
          ELSE
             which_irr(iclass)=7
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSE IF (ts==5) THEN
          which_irr(iclass)=8
       ELSE
          CALL errore('divide_class','wrong operation',1)
@@ -659,13 +704,14 @@ ELSEIF (code_group==30) THEN
 !  T_d
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==3) THEN
          which_irr(iclass)=2
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ELSE IF (ts==4) THEN
          which_irr(iclass)=3
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ELSE IF (ts==6) THEN
          which_irr(iclass)=4
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSE IF (ts==5) THEN
          which_irr(iclass)=5
       ELSE
          CALL errore('divide_class','wrong operation',1)
@@ -676,13 +722,14 @@ ELSEIF (code_group==31) THEN
 !  O
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          IF (nelem(iclass)==3) THEN
             which_irr(iclass)=3
          ELSE
             which_irr(iclass)=5
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ELSE IF (ts==3) THEN
          IF (nelem(iclass)==8) THEN
             which_irr(iclass)=2
          ELSE
@@ -697,34 +744,35 @@ ELSEIF (code_group==32) THEN
 !  O_h
 !
    DO iclass=2,nclass
-      IF (tipo_sym(smat(1,1,elem(1,iclass)))==4) THEN
+      ts=tipo_sym(smat(1,1,elem(1,iclass)))
+      IF (ts==4) THEN
          IF (nelem(iclass)==3) THEN
             which_irr(iclass)=5
          ELSE
             which_irr(iclass)=3
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==3) THEN
+      ELSE IF (ts==3) THEN
          IF (nelem(iclass)==8) THEN
             which_irr(iclass)=2
          ELSE
             which_irr(iclass)=4
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==2) THEN
+      ELSE IF (ts==2) THEN
          which_irr(iclass)=6
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==5) THEN
+      ELSE IF (ts==5) THEN
          IF (nelem(iclass)==6) THEN
             which_irr(iclass)=10
          ELSE
             which_irr(iclass)=9
          END IF
-      ELSE IF (tipo_sym(smat(1,1,elem(1,iclass)))==6) THEN
+      ELSE IF (ts==6) THEN
          IF (nelem(iclass)==8) THEN
             which_irr(iclass)=8
          ELSE
             which_irr(iclass)=7
          END IF
       ELSE
-         CALL errore('divide_class','wrong operation',1)
+         CALL errore('divide_class_so','wrong operation',1)
       END IF
    ENDDO
 ELSE
@@ -797,7 +845,9 @@ SUBROUTINE versor(smat,ax)
 !-----------------------------------------------------------------------------
 !
 !  This subroutine receives a rotation matrix and determines the rotation
-!  axis. The orientation of the axis is chosen arbitrarily.
+!  axis. The orientation of the axis is with the tip in the hemisphere
+!  z>=0. In the xy plane the axis is in the y>0 region and the positive
+!  x axis is taken for z=0 and y=0.
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
@@ -846,9 +896,9 @@ a1(3) =-smat(1,2)+smat(2,1)
 !
 IF (a1(3) < -eps ) THEN
    a1=-a1
-ELSEIF (abs(a1(3))<eps .and. a1(1) < -eps ) THEN
+ELSEIF (abs(a1(3))<eps .and. a1(2) < -eps ) THEN
    a1=-a1
-ELSEIF (abs(a1(3))<eps .and. abs(a1(1))<eps.and.a1(2) < -eps ) THEN
+ELSEIF (abs(a1(3))<eps .and. abs(a1(2))<eps.and.a1(1) < -eps ) THEN
    a1=-a1
 ENDIF
 
@@ -922,9 +972,9 @@ IF (sint<eps) CALL errore('angle_rot','problem with the matrix',1)
 ax=a1
 IF (ax(3) < -eps ) THEN
    ax=-ax
-ELSEIF (abs(ax(3))<eps .and. ax(1) < -eps ) THEN
+ELSEIF (abs(ax(3))<eps .and. ax(2) < -eps ) THEN
    ax=-ax
-ELSEIF (abs(ax(3))<eps .and. abs(ax(1))<eps.and.ax(2) < -eps ) THEN
+ELSEIF (abs(ax(3))<eps .and. abs(ax(2))<eps.and.ax(1) < -eps ) THEN
    ax=-ax
 ENDIF
 IF (ABS(a1(1))>eps) THEN
@@ -993,6 +1043,13 @@ SUBROUTINE set_irr_rap(code_group,nclass_ref,char_mat,name_rap,name_class)
 !
 !  This subroutine collects the character tables of the 32 crystallographic
 !  point groups.
+!  Various names have been used in the litterature to identify
+!  the irreducible representations. Several equivalent names are
+!  collected in this routine. The first name is taken 
+!  from the book of P.W. Atkins, M.S. Child, and C.S.G. Phillips, 
+!  "Tables for group theory".
+!   D, G, L, S are used for Delta, Gamma, Lambda and Sigma.
+!   
 !
 USE kinds, ONLY : DP
 IMPLICIT NONE
@@ -1000,14 +1057,14 @@ IMPLICIT NONE
 INTEGER :: nclass_ref, &    ! Output: number of irreducible representation
            code_group       ! Input: code of the group 
 
-CHARACTER(LEN=4) :: name_rap(12)   ! Output: name of the representations
+CHARACTER(LEN=15) :: name_rap(12)   ! Output: name of the representations
 CHARACTER(LEN=5) :: name_class(12) ! Output: name of the classes
 
 COMPLEX(DP) :: char_mat(12,12) ! Output: character matrix
 
 REAL(DP) :: sqr3d2
 
-sqr3d2=sqrt(3.d0)*0.5d0
+sqr3d2=SQRT(3.d0)*0.5d0
 
 char_mat=(1.d0,0.d0)
 
@@ -1269,17 +1326,17 @@ ELSEIF (code_group==12) THEN
    name_class(3)="s_xz "
    name_class(4)="s_yz "
 
-   name_rap(1)="A_1 "
+   name_rap(1)="A_1  D_1  S_1"
 
-   name_rap(2)="A_2 "
+   name_rap(2)="A_2  D_2  S_2"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
 
-   name_rap(3)="B_1 "
+   name_rap(3)="B_1  D_3  S_3"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,4)=(-1.d0,0.d0)
 
-   name_rap(4)="B_2 "
+   name_rap(4)="B_2  D_4  S_4"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
 
@@ -1291,12 +1348,12 @@ ELSEIF (code_group==13) THEN
    name_class(2)="2C3  "
    name_class(3)="3s_v "
 
-   name_rap(1)="A_1 "
+   name_rap(1)="A_1  L_1"
 
-   name_rap(2)="A_2 "
+   name_rap(2)="A_2  L_2"
    char_mat(2,3)=(-1.d0,0.d0)
 
-   name_rap(3)="E   "
+   name_rap(3)="E    L_3"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -1311,21 +1368,21 @@ ELSEIF (code_group==14) THEN
    name_class(4)="2s_v "
    name_class(5)="2s_d "
 
-   name_rap(1)="A_1 "
+   name_rap(1)="A_1  D_1"
 
-   name_rap(2)="A_2 "
+   name_rap(2)="A_2  D_1'"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
-   name_rap(3)="B_1 "
+   name_rap(3)="B_1  D_2"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
 
-   name_rap(4)="B_2 "
+   name_rap(4)="B_2  D_2'"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
 
-   name_rap(5)="E   "
+   name_rap(5)="E    D_5"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -1757,27 +1814,27 @@ ELSEIF (code_group==22) THEN
    name_class(10)="2s_d "
 
 
-   name_rap(1)="A_1g"
+   name_rap(1)="A_1g M_1"
 
-   name_rap(2)="A_2g"
+   name_rap(2)="A_2g M_2"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
    char_mat(2,9)=(-1.d0,0.d0)
    char_mat(2,10)=(-1.d0,0.d0)
 
-   name_rap(3)="B_1g"
+   name_rap(3)="B_1g M_3"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
    char_mat(3,7)=(-1.d0,0.d0)
    char_mat(3,10)=(-1.d0,0.d0)
 
-   name_rap(4)="B_2g"
+   name_rap(4)="B_2g M_4"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
    char_mat(4,7)=(-1.d0,0.d0)
    char_mat(4,9)=(-1.d0,0.d0)
 
-   name_rap(5)="E_g "
+   name_rap(5)="E_g  M_5"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -1789,35 +1846,35 @@ ELSEIF (code_group==22) THEN
    char_mat(5,9)=( 0.d0,0.d0)
    char_mat(5,10)=( 0.d0,0.d0)
 
-   name_rap(6)="A_1u"
+   name_rap(6)="A_1u M_1'"
    char_mat(6,6)=(-1.d0,0.d0)
    char_mat(6,7)=(-1.d0,0.d0)
    char_mat(6,8)=(-1.d0,0.d0)
    char_mat(6,9)=(-1.d0,0.d0)
    char_mat(6,10)=(-1.d0,0.d0)
 
-   name_rap(7)="A_2u"
+   name_rap(7)="A_2u M_2'"
    char_mat(7,4)=(-1.d0,0.d0)
    char_mat(7,5)=(-1.d0,0.d0)
    char_mat(7,6)=(-1.d0,0.d0)
    char_mat(7,7)=(-1.d0,0.d0)
    char_mat(7,8)=(-1.d0,0.d0)
 
-   name_rap(8)="B_1u"
+   name_rap(8)="B_1u M_3'"
    char_mat(8,2)=(-1.d0,0.d0)
    char_mat(8,5)=(-1.d0,0.d0)
    char_mat(8,6)=(-1.d0,0.d0)
    char_mat(8,8)=(-1.d0,0.d0)
    char_mat(8,9)=(-1.d0,0.d0)
 
-   name_rap(9)="B_2u"
+   name_rap(9)="B_2u M_4'"
    char_mat(9,2)=(-1.d0,0.d0)
    char_mat(9,4)=(-1.d0,0.d0)
    char_mat(9,6)=(-1.d0,0.d0)
    char_mat(9,8)=(-1.d0,0.d0)
    char_mat(9,10)=(-1.d0,0.d0)
 
-   name_rap(10)="E_u "
+   name_rap(10)="E_u  M_5'"
    char_mat(10,1)=( 2.d0,0.d0)
    char_mat(10,2)=( 0.d0,0.d0)
    char_mat(10,3)=(-2.d0,0.d0)
@@ -1962,21 +2019,21 @@ ELSEIF (code_group==24) THEN
    name_class(4)="2C2' "
    name_class(5)="2s_d "
 
-   name_rap(1)="A_1 "
+   name_rap(1)="A_1  X_1  W_1"
 
-   name_rap(2)="A_2 "
+   name_rap(2)="A_2  X_4  W_2'"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
-   name_rap(3)="B_1 "
+   name_rap(3)="B_1  X_2  W_1'"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
 
-   name_rap(4)="B_2 "
+   name_rap(4)="B_2  X_3  W_2"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
 
-   name_rap(5)="E   "
+   name_rap(5)="E    X_5  W_3"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -1994,13 +2051,13 @@ ELSEIF (code_group==25) THEN
    name_class(5)="2S6  "
    name_class(6)="3s_d "
 
-   name_rap(1)="A_1g"
+   name_rap(1)="A_1g L_1"
 
-   name_rap(2)="A_2g"
+   name_rap(2)="A_2g L_2"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,6)=(-1.d0,0.d0)
 
-   name_rap(3)="E_g "
+   name_rap(3)="E_g  L_3"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -2008,17 +2065,17 @@ ELSEIF (code_group==25) THEN
    char_mat(3,5)=(-1.d0,0.d0)
    char_mat(3,6)=( 0.d0,0.d0)
 
-   name_rap(4)="A_1u"
+   name_rap(4)="A_1u L_1'"
    char_mat(4,4)=(-1.d0,0.d0)
    char_mat(4,5)=(-1.d0,0.d0)
    char_mat(4,6)=(-1.d0,0.d0)
 
-   name_rap(5)="A_2u"
+   name_rap(5)="A_2u L_2'"
    char_mat(5,3)=(-1.d0,0.d0)
    char_mat(5,4)=(-1.d0,0.d0)
    char_mat(5,5)=(-1.d0,0.d0)
 
-   name_rap(6)="E_u "
+   name_rap(6)="E_u  L_3'"
    char_mat(6,1)=( 2.d0,0.d0)
    char_mat(6,2)=(-1.d0,0.d0)
    char_mat(6,3)=( 0.d0,0.d0)
@@ -2034,18 +2091,18 @@ ELSEIF (code_group==26) THEN
    name_class(3)="C2   "
    name_class(4)="S4^3 "
 
-   name_rap(1)="A   "
+   name_rap(1)="A    W_1"
 
-   name_rap(2)="B   "
+   name_rap(2)="B    W_3"
    char_mat(2,2)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
 
-   name_rap(3)="E   "
+   name_rap(3)="E    W_4"
    char_mat(3,2)=( 0.d0, 1.d0)
    char_mat(3,3)=(-1.d0,0.d0)
    char_mat(3,4)=( 0.d0,-1.d0)
 
-   name_rap(4)="E*  "
+   name_rap(4)="E*   W_2"
    char_mat(4,2)=( 0.d0,-1.d0)
    char_mat(4,3)=(-1.d0,0.d0)
    char_mat(4,4)=( 0.d0, 1.d0)
@@ -2200,26 +2257,26 @@ ELSEIF (code_group==30) THEN
    name_class(4)="6S4  "
    name_class(5)="6s_d "
 
-   name_rap(1)="A_1 "
+   name_rap(1)="A_1  G_1  P_1"
 
-   name_rap(2)="A_2 "
+   name_rap(2)="A_2  G_2  P_2"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
-   name_rap(3)="E   "
+   name_rap(3)="E    G_12 P_3"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 2.d0,0.d0)
    char_mat(3,4)=( 0.d0,0.d0)
    char_mat(3,5)=( 0.d0,0.d0)
 
-   name_rap(4)="T_1 "
+   name_rap(4)="T_1  G_25 P_5"
    char_mat(4,1)=( 3.d0,0.d0)
    char_mat(4,2)=( 0.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
    char_mat(4,5)=(-1.d0,0.d0)
 
-   name_rap(5)="T_2 "
+   name_rap(5)="T_2  G_15 P_4"
    char_mat(5,1)=( 3.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-1.d0,0.d0)
@@ -2275,15 +2332,15 @@ ELSEIF (code_group==32) THEN
    name_class(9)="3s_h "
    name_class(10)="6s_d "
 
-   name_rap(1)="A_1g"
+   name_rap(1)="A_1g G_1   G_1+"
 
-   name_rap(2)="A_2g"
+   name_rap(2)="A_2g G_2   G_2+"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,7)=(-1.d0,0.d0)
    char_mat(2,10)=(-1.d0,0.d0)
 
-   name_rap(3)="E_g "
+   name_rap(3)="E_g  G_12  G_3+"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -2295,7 +2352,7 @@ ELSEIF (code_group==32) THEN
    char_mat(3,9)=( 2.d0,0.d0)
    char_mat(3,10)=( 0.d0,0.d0)
 
-   name_rap(4)="T_1g"
+   name_rap(4)="T_1g G_15' G_4+"
    char_mat(4,1)=( 3.d0,0.d0)
    char_mat(4,2)=( 0.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
@@ -2306,7 +2363,7 @@ ELSEIF (code_group==32) THEN
    char_mat(4,10)=(-1.d0,0.d0)
 
 
-   name_rap(5)="T_2g"
+   name_rap(5)="T_2g G_25' G_5+"
    char_mat(5,1)=( 3.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,4)=(-1.d0,0.d0)
@@ -2316,21 +2373,21 @@ ELSEIF (code_group==32) THEN
    char_mat(5,8)=( 0.d0,0.d0)
    char_mat(5,9)=(-1.d0,0.d0)
 
-   name_rap(6)="A_1u"
+   name_rap(6)="A_1u G_1'  G_1-"
    char_mat(6,6)=(-1.d0,0.d0)
    char_mat(6,7)=(-1.d0,0.d0)
    char_mat(6,8)=(-1.d0,0.d0)
    char_mat(6,9)=(-1.d0,0.d0)
    char_mat(6,10)=(-1.d0,0.d0)
 
-   name_rap(7)="A_2u"
+   name_rap(7)="A_2u G_2'  G_2-"
    char_mat(7,3)=(-1.d0,0.d0)
    char_mat(7,4)=(-1.d0,0.d0)
    char_mat(7,6)=(-1.d0,0.d0)
    char_mat(7,8)=(-1.d0,0.d0)
    char_mat(7,9)=(-1.d0,0.d0)
 
-   name_rap(8)="E_u "
+   name_rap(8)="E_u  G_12' G_3-"
    char_mat(8,1)=( 2.d0,0.d0)
    char_mat(8,2)=(-1.d0,0.d0)
    char_mat(8,3)=( 0.d0,0.d0)
@@ -2341,7 +2398,7 @@ ELSEIF (code_group==32) THEN
    char_mat(8,9)=(-2.d0,0.d0)
    char_mat(8,10)=( 0.d0,0.d0)
 
-   name_rap(9)="T_1u"
+   name_rap(9)="T_1u G_15  G_4-"
    char_mat(9,1)=( 3.d0,0.d0)
    char_mat(9,2)=( 0.d0,0.d0)
    char_mat(9,3)=(-1.d0,0.d0)
@@ -2350,7 +2407,7 @@ ELSEIF (code_group==32) THEN
    char_mat(9,7)=(-1.d0,0.d0)
    char_mat(9,8)=( 0.d0,0.d0)
 
-   name_rap(10)="T_2u"
+   name_rap(10)="T_2u G_25  G_5-"
    char_mat(10,1)=( 3.d0,0.d0)
    char_mat(10,2)=( 0.d0,0.d0)
    char_mat(10,4)=(-1.d0,0.d0)

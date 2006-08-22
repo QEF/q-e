@@ -223,12 +223,52 @@ MODULE rap_point_group
    !
    COMPLEX(DP) :: char_mat(12,12)       ! the character tables
 
-   CHARACTER(LEN=4) :: name_rap(12), & ! the name of the representation
-                       gname           ! the name of the group
+   CHARACTER(LEN=15) :: name_rap(12)  ! the name of the representation
+   CHARACTER(LEN=11) :: gname           ! the name of the group
    CHARACTER(LEN=5) :: name_class(12)  ! the name of the class
    !
 END MODULE rap_point_group
+
+MODULE rap_point_group_so
+   !
+   USE kinds,      ONLY : DP
+   !
+   INTEGER :: &
+          nrap,    &       ! The number of classes of the point group
+          nelem_so(24),   &! The elements of each class
+          elem_so(12,24),  &! Which elements in the smat list for each class
+          has_e(12,24),  & ! if -1 the smat is multiplied by -E
+          which_irr_so(24) ! For each class gives its position in the 
+                           ! character table.
+   !
+   COMPLEX(DP) :: char_mat_so(12,24),  &   ! the character tables
+                  d_spin(2,2,48)           ! the rotation in spin space
+
+   CHARACTER(LEN=15) :: name_rap_so(12)  ! the name of the representation
+   CHARACTER(LEN=5) :: name_class_so(24), &  ! the name of the class
+                       name_class_so1(24)  ! the name of the class
+   !
+END MODULE rap_point_group_so
 !
+MODULE rap_point_group_is
+   !
+   USE kinds,      ONLY : DP
+   !
+   INTEGER :: &
+          ftau_is(3,48), & ! The fractional transl. of the invariant subgroup
+          nsym_is,       & ! The number of operations of the invariant subgroup
+          code_group_is    ! The code of the point invariant subgroup
+
+   REAL(DP) :: &
+          sr_is(3,3,48)    ! The matrices of the invariant subgroup
+
+   COMPLEX(DP) :: &
+                d_spin_is(2,2,48)      ! the rotation in spin space
+
+   CHARACTER(LEN=45) :: sname_is(48)   ! name of the symmetries
+   CHARACTER(LEN=11) :: gname_is       ! the name of the invariant group
+   !
+END MODULE rap_point_group_is
 !
 MODULE pseud
   !
@@ -601,6 +641,8 @@ MODULE pwcom
   USE ktetra
   USE symme
   USE rap_point_group
+  USE rap_point_group_so
+  USE rap_point_group_is
   USE pseud
   USE vlocal
   USE wvfct

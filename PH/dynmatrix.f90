@@ -148,7 +148,7 @@ subroutine dynmatrix
   !
   IF (all_comp) THEN
      call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
-     IF (lgamma) CALL find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, &
+     IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, &
                                      xq, rtau, amass, ntyp, ityp)
   END IF
 

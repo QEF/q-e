@@ -10,9 +10,7 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, xq, rtau, &
 !
 !   This subroutine finds the irreducible representations which give
 !   the transformation properties of eigenvectors of the dynamical 
-!   matrix. Presently it is used only with lgamma=.true., but should
-!   also work at a generic q. It does NOT work at zone border in
-!   non symmorphic point groups.
+!   matrix. It does NOT work at zone border in non symmorphic space groups.
 !  
 !
 #include "f_defs.h"
@@ -109,13 +107,13 @@ END DO
 !  And now use the character table to identify the symmetry representation
 !  of each group of modes
 !
-WRITE(stdout,'(/,5x,"Mode symmetry, ",a5," point group:",/)') gname
+WRITE(stdout,'(/,5x,"Mode symmetry, ",a11," point group:",/)') gname
 
 DO igroup=1,ngroup
    DO irap=1,nclass
       times=(0.d0,0.d0)
       DO iclass=1,nclass
-         times=times+trace(iclass,igroup)*char_mat(irap, &
+         times=times+CONJG(trace(iclass,igroup))*char_mat(irap, &
                      which_irr(iclass))*nelem(iclass)
       ENDDO
       times=times/nsym
@@ -125,11 +123,11 @@ DO igroup=1,ngroup
           errore('find_mode_sym','wrong symmetry mode im. part',1)
       IF (ABS(times) > eps) THEN
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
-            WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x,"-->",a5)') &
+            WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x,"--> ",a15)') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                                 name_rap(irap)
          ELSE
-            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x,"-->",i3,a5)') &
+            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x,"--> ",i3,a15)') &
               istart(igroup), istart(igroup+1)-1, &
               w1(istart(igroup)), NINT(DBLE(times)), name_rap(irap)
          END IF

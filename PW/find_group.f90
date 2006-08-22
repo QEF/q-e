@@ -20,7 +20,7 @@ IMPLICIT NONE
 
 INTEGER :: nrot, code_group
 REAL(DP) :: smat(3,3,nrot)
-CHARACTER (LEN=4) :: gname, group_name
+CHARACTER (LEN=11) :: gname, group_name
 INTEGER :: noperation(6), irot, ts, tipo_sym
 !
 ! For each possible group operation the function tipo_sym gives a code
@@ -135,17 +135,18 @@ FUNCTION group_name(code)
 IMPLICIT NONE
 
 INTEGER :: code
-CHARACTER(LEN=4) :: group_name
+CHARACTER(LEN=11) :: group_name
 
-CHARACTER(LEN=4) :: gname(32)
+CHARACTER(LEN=11) :: gname(32)
 
-data gname  / "C_1 ", "C_i ", "C_s ", "C_2 ", "C_3 ", &
-              "C_4 ", "C_6 ", "D_2 ", "D_3 ", "D_4 ", &
-              "D_6 ", "C_2v", "C_3v", "C_4v", "C_6v", &
-              "C_2h", "C_3h", "C_4h", "C_6h", "D_2h", &
-              "D_3h", "D_4h", "D_6h", "D_2d", "D_3d", &
-              "S_4 ", "S_6 ", "T   ", "T_h ", "T_d ", &
-              "O   ", "O_h "  /
+data gname  / "C_1 (1)    ", "C_i (-1)   ", "C_s (m)    ", "C_2  (2)   ", &
+              "C_3 (3)    ", "C_4 (4)    ", "C_6 (6)    ", "D_2  (222) ", &
+              "D_3 (32)   ", "D_4 (422)  ", "D_6 (622)  ", "C_2v (mm2) ", &
+              "C_3v (3m)  ", "C_4v (4mm) ", "C_6v (6mm) ", "C_2h (2/m) ", &
+              "C_3h (-6)  ", "C_4h (4/m) ", "C_6h (6/m) ", "D_2h (mmm) ", &
+              "D_3h (-62m)", "D_4h(4/mmm)", "D_6h(6/mmm)", "D_2d (-42m)", &
+              "D_3d (-3m) ", "S_4 (-4)   ", "S_6 (-3)   ", "T    (23)  ", & 
+              "T_h (m-3)  ", "T_d (-43m) ", "O   (432)  ", "O_h (m-3m) "  /
 
 IF (code < 1 .OR. code > 32 ) CALL errore('group_name','code is out of range',1)
 
