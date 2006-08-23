@@ -17,7 +17,7 @@ $ECHO "the band structure of four simple systems: Si, Al, Cu, Ni."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x"
+BIN_LIST="pw.x bands.x"
 PSEUDO_LIST="Si.vbc.UPF Al.vbc.UPF Cu.pz-d-rrkjus.UPF NiUS.RRKJ3.UPF"
 
 $ECHO
@@ -65,8 +65,10 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running bands.x as: $PW_COMMAND"
 $ECHO
 
 for diago in david cg ; do
@@ -173,6 +175,21 @@ EOF
     $ECHO "  running the band-structure calculation for Si...\c"
     $PW_COMMAND < si.band.$diago.in > si.band.$diago.out
     $ECHO " done"
+
+cat > si.bands.in << EOF
+ &inputpp
+    prefix='silicon',
+    outdir='$TMP_DIR'
+    filband='si.band'
+    lsym=.true.,
+ /
+EOF
+    if test "`echo $diago`" = "david";
+    then
+       $ECHO "  running the symmetry analysis for Si bands...\c"
+       $BANDS_COMMAND < si.bands.in > si.bands.out
+       $ECHO " done"
+    fi
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"
@@ -413,6 +430,22 @@ EOF
     $ECHO "  running the band-structure calculation for Cu...\c"
     $PW_COMMAND < cu.band.$diago.in > cu.band.$diago.out
     $ECHO " done"
+
+cat > cu.bands.in << EOF
+ &inputpp
+    prefix='cu',
+    outdir='$TMP_DIR'
+    filband='cu.band'
+    lsym=.true.,
+ /
+EOF
+    if test "`echo $diago`" = "david";
+    then
+       $ECHO "  running the symmetry analysis for Cu bands...\c"
+       $BANDS_COMMAND < cu.bands.in > cu.bands.out
+       $ECHO " done"
+    fi
+
 
     # clean TMP_DIR
     $ECHO "  cleaning $TMP_DIR...\c"

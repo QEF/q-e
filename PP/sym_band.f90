@@ -336,11 +336,13 @@ DO igroup=1,ngroup
                      which_irr(iclass))*nelem(iclass)
       ENDDO
       times=times/nsym
-      IF (ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4) CALL  &
-          errore('find_band_sym','wrong symmetry band',-1)
-      IF (ABS(AIMAG(times)) > eps) CALL  &
-          errore('find_band_sym','wrong symmetry band im. part',-1)
-      IF (ABS(times) > eps) THEN
+      IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
+          (ABS(AIMAG(times)) > eps) ) THEN
+            WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
+                      & "-->   ?")') &
+              istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), dim_rap
+              GOTO 300
+      ELSE IF (ABS(times) > eps) THEN
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
             ibnd=istart(igroup)
             IF (rap_et(ibnd)==-1) THEN
@@ -364,10 +366,11 @@ DO igroup=1,ngroup
             WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
                       & "--> ",i3,a15)') &
               istart(igroup), istart(igroup+1)-1, &
-              w1(istart(igroup)), NINT(DBLE(times)), dim_rap, name_rap(irap)
+              w1(istart(igroup)), dim_rap, NINT(DBLE(times)), name_rap(irap)
          END IF
       END IF
    END DO
+300 CONTINUE
 END DO
 WRITE( stdout, '(/,1x,74("*"))')
 

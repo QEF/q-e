@@ -20,7 +20,7 @@ $ECHO "including spin-orbit coupling."
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="pw.x pwcond.x"
+BIN_LIST="pw.x pwcond.x bands.x"
 PSEUDO_LIST="Ptrel.RRKJ3.UPF"
 
 $ECHO
@@ -70,8 +70,10 @@ $ECHO " done"
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 PWCOND_COMMAND="$PARA_PREFIX $BIN_DIR/pwcond.x $PARA_POSTFIX"
+BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running bands.x as: $BANDS_COMMAND"
 $ECHO "  running pwcond.x as: $PWCOND_COMMAND"
 $ECHO
  
@@ -151,21 +153,31 @@ Pt  79.90    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
 Pt  0.0000000   0.00000000   0.0  
 K_POINTS 
-11
-0.0 0.0 0.0 0.0
-0.0 0.0 0.1 0.1
-0.0 0.0 0.2 0.2
-0.0 0.0 0.3 0.3
-0.0 0.0 0.4 0.4
-0.0 0.0 0.5 0.5
-0.0 0.0 0.6 0.6
-0.0 0.0 0.7 0.7
-0.0 0.0 0.8 0.8
-0.0 0.0 0.9 0.9
-0.0 0.0 1.0 1.0
+8
+0.0 0.0 0.0 1.0
+0.1 0.0 0.0 1.0
+1.0 0.0 0.0 1.0
+0.4 0.2 0.1 1.0
+0.4 0.4 0.0 1.0
+0.4 0.4 0.4 1.0
+0.5 0.5 0.5 1.0
+0.75 0.75 0.0 1.0
 EOF
 $ECHO "  running the non-scf calculation for Pt with spin-orbit coupling...\c"
 $PW_COMMAND < pt.nscf.in > pt.nscf.out
+$ECHO " done"
+
+cat > pt.bands.in << EOF
+ &inputpp
+    prefix='Pt',
+    outdir='$TMP_DIR/'
+    filband='pt.band'
+    lsym=.true.,
+ /
+EOF
+
+$ECHO "  running the symmetry analysis for Pt bands...\c"
+$BANDS_COMMAND < pt.bands.in > pt.bands.out
 $ECHO " done"
 
 # a self-consistent calculation of Pt in a tetragonal cell
