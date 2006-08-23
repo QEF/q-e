@@ -341,28 +341,28 @@ DO igroup=1,ngroup
             WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
                       & "-->   ?")') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), dim_rap
-              GOTO 300
+         ibnd=istart(igroup)
+         IF (rap_et(ibnd)==-1) THEN
+            DO i=1,dim_rap
+               ibnd=istart(igroup)+i-1
+               rap_et(ibnd)=0
+            END DO
+         END IF
+         GOTO 300
       ELSE IF (ABS(times) > eps) THEN
+         ibnd=istart(igroup)
+         IF (rap_et(ibnd)==-1) THEN
+            DO i=1,dim_rap
+               ibnd=istart(igroup)+i-1
+               rap_et(ibnd)=irap
+            ENDDO
+         ENDIF
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
-            ibnd=istart(igroup)
-            IF (rap_et(ibnd)==-1) THEN
-               DO i=1,dim_rap
-                  ibnd=istart(igroup)+i-1
-                  rap_et(ibnd)=irap
-               ENDDO
-            ENDIF
             WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x&
                       & "--> ",a15)') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                               dim_rap, name_rap(irap)
          ELSE
-            ibnd=istart(igroup)
-            IF (rap_et(ibnd)==-1) THEN
-               DO i=1,dim_rap
-                  ibnd=istart(igroup)+i-1
-                  rap_et(ibnd)=0
-               ENDDO
-            ENDIF
             WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
                       & "--> ",i3,a15)') &
               istart(igroup), istart(igroup+1)-1, &
@@ -653,31 +653,34 @@ DO igroup=1,ngroup
       ENDDO
       times=times/2/nsym
 !      write(6,*) igroup, irap, times
-      IF (ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4) CALL  &
-          errore('find_band_sym_so','wrong symmetry band',-1)
-      IF (ABS(AIMAG(times)) > eps) CALL  &
-          errore('find_band_sym_so','wrong symmetry band im. part',-1)
+      IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
+          (ABS(AIMAG(times)) > eps) ) THEN
+            WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
+                      & "-->   ?")') &
+              istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), dim_rap
+         ibnd=istart(igroup)
+         IF (rap_et(ibnd)==-1) THEN
+            DO i=1,dim_rap
+               ibnd=istart(igroup)+i-1
+               rap_et(ibnd)=0
+            END DO
+         END IF
+         GOTO 300
+      END IF
       IF (ABS(times) > eps) THEN
+         ibnd=istart(igroup)
+         IF (rap_et(ibnd)==-1) THEN
+            DO i=1,dim_rap
+               ibnd=istart(igroup)+i-1
+               rap_et(ibnd)=irap
+            END DO
+         END IF
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
-            ibnd=istart(igroup)
-            IF (rap_et(ibnd)==-1) THEN
-               DO i=1,dim_rap
-                  ibnd=istart(igroup)+i-1
-                  rap_et(ibnd)=irap
-               ENDDO
-            ENDIF
             WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
                       & "--> ",a15)') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                              dim_rap, name_rap_so(irap)
          ELSE
-            ibnd=istart(igroup)
-            IF (rap_et(ibnd)==-1) THEN
-               DO i=1,dim_rap
-                  ibnd=istart(igroup)+i-1
-                  rap_et(ibnd)=0
-               ENDDO
-            ENDIF
             WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x&
                       & "--> ",i3,a15)') &
               istart(igroup), istart(igroup+1)-1, &
@@ -685,6 +688,7 @@ DO igroup=1,ngroup
          END IF
       END IF
    END DO
+300 CONTINUE
 END DO
 WRITE( stdout, '(/,1x,74("*"))')
 
