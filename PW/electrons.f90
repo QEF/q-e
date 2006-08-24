@@ -460,6 +460,7 @@ SUBROUTINE electrons()
         ngk_g(1:nks) = ngk(:)
         CALL mp_sum( ngk_g(1:nks), intra_pool_comm )
         CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+        CALL mp_bcast ( ngk_g, root_pool, intra_pool_comm )
         CALL mp_bcast ( ngk_g, root_pool, inter_pool_comm )
         CALL  poolrecover( et, nbnd, nkstot, nks )
         !
