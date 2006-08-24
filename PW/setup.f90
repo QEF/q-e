@@ -87,8 +87,6 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  REAL(DP), PARAMETER :: &
-      eps  = 1.0D-12   !  small number
   INTEGER :: & 
       na,             &!
       nt,             &!
@@ -648,8 +646,8 @@ SUBROUTINE setup()
   !
   ! ... set the granularity for k-point distribution
   !
-  IF ( ( ABS( xqq(1) ) < eps .AND. ABS( xqq(2) ) < eps .AND. &
-         ABS( xqq(3) ) < eps) .OR. ( .NOT. lphonon ) ) THEN
+  IF ( ( ABS( xqq(1) ) < eps8 .AND. ABS( xqq(2) ) < eps8 .AND. &
+         ABS( xqq(3) ) < eps8) .OR. ( .NOT. lphonon ) ) THEN
      !
      kunit = 1
      !

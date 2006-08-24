@@ -455,10 +455,10 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
-        ALLOCATE ( ngk_g (nks) ) 
+        ALLOCATE ( ngk_g (nkstot) ) 
         !
-        ngk_g(:) = ngk(:)
-        CALL mp_sum( ngk_g(:), intra_pool_comm )
+        ngk_g(1:nks) = ngk(:)
+        CALL mp_sum( ngk_g(1:nks), intra_pool_comm )
         CALL ipoolrecover( ngk_g, 1, nkstot, nks )
         CALL  poolrecover( et, nbnd, nkstot, nks )
         !

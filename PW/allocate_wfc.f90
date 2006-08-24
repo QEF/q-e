@@ -16,7 +16,7 @@ SUBROUTINE allocate_wfc()
   !
   USE io_global, ONLY : stdout
   USE wvfct,     ONLY : gamma_only, npwx, nbnd, nbndx, et, wg
-  USE klist,     ONLY : nkstot, nelec, nelup, neldw, two_fermi_energies
+  USE klist,     ONLY : nelec, nelup, neldw, two_fermi_energies
   USE basis,     ONLY : natomwfc
   USE gvect,     ONLY : ngl
   USE uspp,      ONLY : nkb
