@@ -30,7 +30,7 @@ subroutine allocate_nlpot
   USE cell_base,        ONLY : tpiba2
   USE cellmd,           ONLY : cell_factor
   USE gvect,            ONLY : ngm, gcutm, ecutwfc, g
-  USE klist,            ONLY : xk, wk, ngk, nks, nkstot, xqq
+  USE klist,            ONLY : xk, wk, ngk, nks, xqq
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : Hubbard_lmax, ns, nsnew
   USE noncollin_module, ONLY : noncolin
@@ -50,16 +50,16 @@ subroutine allocate_nlpot
   !
   !   calculate number of PWs for all kpoints
   !
-  call n_plane_waves (ecutwfc, tpiba2, nks, nkstot, xk, g, ngm, npwx, ngk)
+  allocate (ngk( nks ))
+  !
+  call n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !
-  allocate (igk( npwx))
-
+  allocate (igk( npwx ), g2kin ( npwx ) )
+  !
   allocate (igk_l2g( npwx, nks))    
   igk_l2g = 0
-
-  allocate (g2kin( npwx))    
   !
   !     calculate the number of beta functions for each atomic type
   !

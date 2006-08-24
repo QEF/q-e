@@ -20,7 +20,6 @@ SUBROUTINE electrons()
   ! ... the separate contributions.
   !
   USE kinds,                ONLY : DP
-  USE parameters,           ONLY : npk 
   USE constants,            ONLY : eps8, rytoev
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
@@ -71,8 +70,8 @@ SUBROUTINE electrons()
   REAL(DP) :: dexx
   REAL(DP) :: fock0, fock1, fock2
 #endif
-  INTEGER :: &
-      ngkp(npk)        !  number of plane waves summed on all nodes
+  INTEGER, ALLOCATABLE :: &
+      ngk_g(:)         !  number of plane waves summed on all nodes
   CHARACTER (LEN=256) :: &
       flmix            !
   REAL(DP) :: &
@@ -456,15 +455,12 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
-#if defined (__PARA)
+        ALLOCATE ( ngk_g (nks) ) 
         !
-        ngkp(1:nks) = ngk(1:nks)
-        !
-        CALL mp_sum( ngkp(1:nks), intra_pool_comm )
-        CALL ipoolrecover( ngkp, 1, nkstot, nks )
-        CALL poolrecover( et, nbnd, nkstot, nks )
-        !
-#endif
+        ngk_g(:) = ngk(:)
+        CALL mp_sum( ngk_g(:), intra_pool_comm )
+        CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+        CALL  poolrecover( et, nbnd, nkstot, nks )
         !
         DO ik = 1, nkstot
            !
@@ -476,11 +472,7 @@ SUBROUTINE electrons()
            END IF
            !
            IF ( conv_elec ) THEN
-#if defined (__PARA)
-              WRITE( stdout, 9021 ) ( xk(i,ik), i = 1, 3 ), ngkp(ik)
-#else
-              WRITE( stdout, 9021 ) ( xk(i,ik), i = 1, 3 ), ngk(ik)
-#endif
+              WRITE( stdout, 9021 ) ( xk(i,ik), i = 1, 3 ), ngk_g(ik)
            ELSE
               WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
            END IF
@@ -502,6 +494,8 @@ SUBROUTINE electrons()
            END IF
            !
         END DO
+        !
+        DEALLOCATE ( ngk_g )
         !
         IF ( lgauss .OR. ltetra ) THEN
            IF ( two_fermi_energies ) THEN

@@ -17,6 +17,7 @@ SUBROUTINE clean_pw( lflag )
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE fixed_occ,            ONLY : f_inp
   USE ktetra,               ONLY : tetra
+  USE klist,                ONLY : ngk
   USE reciprocal_vectors,   ONLY : ig_l2g
   USE symme,                ONLY : irt
   USE vlocal,               ONLY : strf, vloc, vnew
@@ -101,6 +102,7 @@ SUBROUTINE clean_pw( lflag )
   !
   ! ... arrays allocated in allocate_nlpot.f90 ( and never deallocated )
   !
+  IF ( ALLOCATED( ngk ) )        DEALLOCATE( ngk )
   IF ( ALLOCATED( igk ) )        DEALLOCATE( igk )
   IF ( ALLOCATED( igk_l2g ) )    DEALLOCATE( igk_l2g )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )

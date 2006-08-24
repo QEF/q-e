@@ -132,8 +132,9 @@ MODULE klist
        nelup,             &! number of spin-up electrons (if two_fermi_energies=t)
        neldw,             &! number of spin-dw electrons (if two_fermi_energies=t)
        tot_charge
+  INTEGER, ALLOCATABLE :: &
+       ngk(:)              ! number of plane waves for each k point
   INTEGER :: &
-       ngk(npk),          &! number of plane waves for each k point
        nks,               &! number of k points in this pool
        nkstot,            &! total number of k points
        ngauss,            &! type of smearing technique
