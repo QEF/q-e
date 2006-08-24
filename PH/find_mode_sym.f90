@@ -21,7 +21,7 @@ USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
 IMPLICIT NONE
 INTEGER ::                  &
           nat, nsym,        & 
-          ntyp, ityp(ntyp), &
+          ntyp, ityp(nat),  &
           irt(48,nat),      &
           s(3,3,48)  
 

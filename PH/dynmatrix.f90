@@ -151,7 +151,6 @@ subroutine dynmatrix
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, &
                                      xq, rtau, amass, ntyp, ityp)
   END IF
-
   call stop_clock('dynmatrix')
   return
 end subroutine dynmatrix
