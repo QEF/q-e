@@ -13,8 +13,8 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
   ! Find number of plane waves for each k-point
   !
   USE kinds, only: DP
-  USE mp,        ONLY : mp_max, mp_barrier
-  USE mp_global, ONLY : inter_pool_comm, intra_image_comm
+  USE mp,        ONLY : mp_max
+  USE mp_global, ONLY : inter_pool_comm
   implicit none
   !
   integer, intent(in) :: nks, ngm
@@ -52,7 +52,6 @@ subroutine n_plane_waves (ecutwfc, tpiba2, nks, xk, g, ngm, npwx, ngk)
   ! when using pools, set npwx to the maximum value across pools
   ! (you may run into trouble at restart otherwise)
   !
-  CALL mp_barrier( intra_image_comm )
   CALL mp_max ( npwx, inter_pool_comm )
   !
   return

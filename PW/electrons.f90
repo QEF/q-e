@@ -59,8 +59,8 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
-  USE mp_global,            ONLY : intra_pool_comm
-  USE mp,                   ONLY : mp_sum
+  USE mp_global,            ONLY : root_pool, intra_pool_comm, inter_pool_comm
+  USE mp,                   ONLY : mp_sum, mp_bcast
   !
   IMPLICIT NONE
   !
@@ -460,6 +460,7 @@ SUBROUTINE electrons()
         ngk_g(1:nks) = ngk(:)
         CALL mp_sum( ngk_g(1:nks), intra_pool_comm )
         CALL ipoolrecover( ngk_g, 1, nkstot, nks )
+        CALL mp_bcast ( ngk_g, root_pool, inter_pool_comm )
         CALL  poolrecover( et, nbnd, nkstot, nks )
         !
         DO ik = 1, nkstot
