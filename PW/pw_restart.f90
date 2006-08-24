@@ -2214,7 +2214,7 @@ MODULE pw_restart
       !
       ALLOCATE( kisort( npwx ) )
       !
-      DO ik = 1, nkstot
+      DO ik = 1, nks
          !
          kisort = 0
          npw    = npwx
@@ -2299,7 +2299,6 @@ MODULE pw_restart
                filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
                !
             END IF
-            !
             !
             CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
                            evc, npw_g, nbnd, igk_l2g(:,ik-iks+1),   &
