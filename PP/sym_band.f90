@@ -158,6 +158,7 @@ SUBROUTINE sym_band(iltot, filband, spin_component)
         WRITE(stdout,'(/,5x,"zone border point and non-symmorphic group ")') 
         WRITE(stdout,'(5x,"symmetry decomposition not available")') 
         WRITE( stdout, '(/,1x,74("*"))')
+        rap_et(:,ik)=-1
         GOTO 100
      ENDIF
 

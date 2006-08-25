@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2001-2004 PWSCF group
 ! This file is distributed under the terms of the
@@ -13,17 +14,30 @@ program read_bands
   implicit none
   real, allocatable :: e(:,:), k(:,:), e_in(:), kx(:)
   real :: k1(3), k2(3), xk1, xk2, ps
+  real, allocatable :: e_rap(:,:), k_rap(:,:)
+  integer, allocatable :: nbnd_rapk(:), rap(:,:)
   integer, allocatable :: npoints(:)
-  integer :: nks = 0, nbnd = 0, ios, nlines, n,i,ni,nf,nl, ierr, ilen
+  integer :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl, ierr, ilen
+  integer :: nks_rap = 0, nbnd_rap = 0
   logical, allocatable :: high_symmetry(:), is_in_range(:)
-  character(len=256) :: filename
+  character(len=256) :: filename, filename1
   namelist /plot/ nks, nbnd
+  namelist /plot_rap/ nks_rap, nbnd_rap
   integer :: n_interp, init
   real, allocatable :: k_interp(:), e_interp(:), coef_interp(:,:)
 
-  real :: emin = 1.e10, emax =-1.e10,  etic, eref, deltaE, Ef
+  real :: emin = 1.e10, emax =-1.e10, etic, eref, deltaE, Ef
+
+  integer, parameter :: max_lines=99 
+  real :: point(max_lines+1), mine
+  integer :: nrap(max_lines)
+  integer :: ilines, irap, ibnd, ipoint
+
   real, parameter :: cm=28.453, xdim=15.0*cm, ydim=10.0*cm, &
-                     x0=2.0*cm, y0=2.0*cm
+                     x0=2.0*cm, y0=2.0*cm, eps=1.e-4
+
+  logical :: exist_rap
+  logical, allocatable :: todo(:)
 
 
   call get_file ( filename )
@@ -35,22 +49,60 @@ program read_bands
   else
      print '("Reading ",i4," bands at ",i4," k-points")', nbnd, nks
   end if
+
+  filename1=TRIM(filename)//".rap"
+  exist_rap=.true.
+  open(unit=21,file=filename1,form='formatted',err=100,iostat=ios)
+
+100 if (ios .ne. 0) then
+     exist_rap=.false.
+  endif
+  if (exist_rap) read (21, plot_rap, iostat=ios)
+  if (nks_rap.ne.nks.or.nbnd_rap.ne.nbnd.or.ios.ne.0) then
+     write(6,'("file with representation but not compatible with bands")')
+     exist_rap=.false.
+  endif
   !
   allocate (e(nbnd,nks))
   allocate (k(3,nks), e_in(nks), kx(nks), npoints(nks), high_symmetry(nks))
+
+  if (exist_rap) then
+     allocate(nbnd_rapk(nks))
+     allocate(e_rap(nbnd,nks))
+     allocate(rap(nbnd,nks))
+     allocate(k_rap(3,nks))
+     allocate(todo(nbnd))
+  end if
 
   do n=1,nks
      read(1,*,end=20,err=20) ( k(i,n), i=1,3 )
      read(1,*,end=20,err=20) (e(i,n),i=1,nbnd)
      if (n==1) then
-        kx(n) = 0.0
+        kx(n) = sqrt (k(1,1)**2 + k(2,1)**2 + k(3,1)**2)
      else
         kx(n) = kx(n-1) + sqrt ( (k(1,n)-k(1,n-1))**2 + &
                                  (k(2,n)-k(2,n-1))**2 + &
                                  (k(3,n)-k(3,n-1))**2 )
      end if
+
+     if (exist_rap) then
+        read(21,*,end=20,err=20) (k_rap(i,n),i=1,3)
+        read(21,*,end=20,err=20) (rap(i,n),i=1,nbnd)
+        if (abs(k(1,n)-k_rap(1,n))+abs(k(2,n)-k_rap(2,n))+  &
+            abs(k(3,n)-k_rap(3,n))  > eps ) then
+            write(stdout,'("Incompatible k points in rap file")')
+            deallocate(nbnd_rapk)
+            deallocate(e_rap)
+            deallocate(rap)
+            deallocate(k_rap)
+            deallocate(todo)
+            close(unit=21)
+            exist_rap=.false.
+        end if
+     end if
   end do
   close(unit=1)
+  if (exist_rap) close(unit=21)
 
   do n=1,nks
      do i=1,nbnd
@@ -93,6 +145,7 @@ program read_bands
            nlines=nlines+1
            npoints(nlines+1) = 1
         end if
+        point(nlines+1)=n
         WRITE( stdout,'("high-symmetry point: ",3f7.4)') (k(i,n),i=1,3)
      else
         npoints(nlines+1) = npoints(nlines+1)+1
@@ -105,22 +158,161 @@ program read_bands
      print '("skipping ...")'
      go to 25
   end if
-  open (unit=2,file=filename,form='formatted',status='unknown',&
-       iostat=ios)  
-  ! draw bands
-  do i=1,nbnd
-     if (is_in_range(i)) then
-        if ( mod(i,2) /= 0) then
-           write (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
-        else
-           write (2,'(2f10.4)') (kx(n), e(i,n),n=nks,1,-1)
+  if (.not.exist_rap) then
+     open (unit=2,file=filename,form='formatted',status='unknown',&
+           iostat=ios)  
+     ! draw bands
+     do i=1,nbnd
+        if (is_in_range(i)) then
+           if ( mod(i,2) /= 0) then
+              write (2,'(2f10.4)') (kx(n), e(i,n),n=1,nks)
+           else
+              write (2,'(2f10.4)') (kx(n), e(i,n),n=nks,1,-1)
+           end if
         end if
-     end if
-  end do
-  close (unit = 2)
+     end do
+     close (unit = 2)
+  else
+!
+!   In this case we write a diffent file for each line and for each
+!   representation. Each file contains the bands of that representation.
+!   The file is called filename.#line.#rap
+!
+!
+!   First determine for each line how many representations are there
+!
+     do ilines=1,nlines
+        nrap(ilines)=0
+        do ipoint=1,npoints(ilines)-2
+           n=point(ilines) + ipoint
+           do ibnd=1,nbnd
+              nrap(ilines)=max(nrap(ilines),rap(ibnd,n))
+           end do
+        end do
+        write(6,*) 'lines nrap',ilines, nrap(ilines)
+     end do
+!
+!   Then, for each line and for each representation along that line
+!
+     do ilines=1,nlines
+        if (nrap(ilines)==0) then
+!
+!   Along this line the symmetry decomposition has not been done. 
+!   Plot all the bands as in the standard case
+!
+           if (ilines<10) then
+              write(filename1,'(a,".",i1)') TRIM(filename), ilines
+           else
+              write(filename1,'(a,".",i1)') TRIM(filename), ilines
+           endif
+           open (unit=2,file=filename1,form='formatted',status='unknown',&
+                iostat=ios)  
+           ! draw bands
+           do i=1,nbnd
+              if (is_in_range(i)) then
+                 if ( mod(i,2) /= 0) then
+                    write (2,'(2f10.4)') (kx(n), e(i,n),n=point(ilines),&
+                                                          point(ilines+1))
+                 else
+                    write (2,'(2f10.4)') (kx(n), e(i,n),n=point(ilines+1), &
+                                                          point(ilines),-1 )
+                 end if
+              end if
+           end do
+           close (unit = 2)
+        endif
+        do irap=1, nrap(ilines)
+!
+!     open a file
+!
+           if (ilines>99.or.irap>12) then
+              write(6,'("too many lines or rap")')
+              stop
+           endif
+           if (ilines < 10) then
+              if (irap < 10 ) then
+                 write(filename1,'(a,".",i1,".",i1)') TRIM(filename),ilines,irap
+              else
+                 write(filename1,'(a,".",i1,".",i2)') TRIM(filename),ilines,irap
+              endif
+           else
+              if (irap < 10 ) then
+                 write(filename1,'(a,".",i2,".",i1)') TRIM(filename),ilines,irap
+              else
+                 write(filename1,'(a,".",i2,".",i2)') TRIM(filename),ilines,irap
+              endif
+           endif
+           open (unit=2,file=filename1,form='formatted',status='unknown',&
+                 iostat=ios)
+!  For each k point along this line selects only the bands which belong
+!  to the irap representation
+           nbnd_rapk=100000
+           do n=point(ilines)+1, point(ilines+1)-1
+              nbnd_rapk(n)=0
+              do i=1,nbnd
+                 if (rap(i,n)==irap) then
+                    nbnd_rapk(n) = nbnd_rapk(n) + 1
+                    e_rap(nbnd_rapk(n),n)=e(i,n)
+                 endif
+              enddo
+           enddo
+!
+!   on the two high symmetry points the representation is different. So for each
+!   band choose the closest eigenvalue available.
+!
+           todo=.true.
+           do i=1,nbnd_rapk(point(ilines)+1)
+              mine=1.d8
+              do j=1,nbnd
+                 if (abs(e_rap(i,point(ilines)+1)-e(j,point(ilines)))<mine &
+                                                           .and. todo(j)) then
+                    e_rap(i,point(ilines))=e(j,point(ilines))
+                    mine=abs( e_rap(i,point(ilines)+1)-e(j,point(ilines)))
+                    todo(j)=.false.
+                 end if
+              end do
+           end do
+           todo=.true.
+           do i=1,nbnd_rapk(point(ilines+1)-1)
+              mine=1.d8
+              do j=1,nbnd
+                 if (abs(e_rap(i,point(ilines+1)-1)- &
+                          e(j,point(ilines+1)))<mine .and. todo(j)) then
+                    e_rap(i,point(ilines+1))=e(j,point(ilines+1))
+                    mine=abs(e_rap(i,point(ilines+1)-1)-e(j,point(ilines+1)) )
+                    todo(j)=.false.
+                 end if
+              end do
+           end do
+           do i=1,MINVAL(nbnd_rapk)
+              if (is_in_range(i)) then
+                 if ( mod(i,2) /= 0) then
+                    write (2,'(2f10.4)') ((kx(n), e_rap(i,n)), &
+                                        n=point(ilines),point(ilines+1))
+                 else
+                    write (2,'(2f10.4)') ((kx(n), e_rap(i,n)), &
+                                       n=point(ilines+1),point(ilines),-1)
+                 end if
+              end if
+           end do
+           if (MINVAL(nbnd_rapk)==0) THEN
+              close (unit = 2,status='delete')
+           else
+              close (unit = 2)
+           endif
+        end do
+     end do
+  endif
   print '("bands in xmgr format written to file ",a)', filename
   !
 25 continue
+  if (exist_rap) then
+     deallocate(nbnd_rapk)
+     deallocate(e_rap)
+     deallocate(rap)
+     deallocate(k_rap)
+     deallocate(todo)
+  endif
   print '("output file (ps) > ",$)'
   read(5,'(a)',end=30,err=30)  filename
   if (filename == ' ' ) then
