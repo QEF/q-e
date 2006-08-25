@@ -1055,7 +1055,9 @@ ELSEIF (code_group==5) THEN
 
 ELSEIF (code_group==6) THEN
 !
-! C_4
+! C_4   NB: The signs of the characters of the class C4^3 -C4^2 
+!            are changed with respect to Koster, Space groups and
+!            their representation. 
 !
    nclass_ref=8
    name_class(3)="C4   "
@@ -1072,32 +1074,40 @@ ELSEIF (code_group==6) THEN
    char_mat(1,4)=CMPLX(-dsq2,-dsq2)
    char_mat(1,5)=( 0.d0,1.d0)
    char_mat(1,6)=( 0.d0,-1.d0)
-   char_mat(1,7)=CMPLX(-dsq2, dsq2)
-   char_mat(1,8)=CMPLX( dsq2,-dsq2)
+!   char_mat(1,7)=CMPLX(-dsq2, dsq2)
+!   char_mat(1,8)=CMPLX( dsq2,-dsq2)
+   char_mat(1,7)=CMPLX( dsq2,-dsq2)
+   char_mat(1,8)=CMPLX(-dsq2, dsq2)
 
    name_rap(2)="G_6  "
    char_mat(2,3)=CMPLX( dsq2,-dsq2)
    char_mat(2,4)=CMPLX(-dsq2, dsq2)
    char_mat(2,5)=( 0.d0,-1.d0)
    char_mat(2,6)=( 0.d0, 1.d0)
-   char_mat(2,7)=CMPLX(-dsq2,-dsq2)
-   char_mat(2,8)=CMPLX( dsq2, dsq2)
+!   char_mat(2,7)=CMPLX(-dsq2,-dsq2)
+!   char_mat(2,8)=CMPLX( dsq2, dsq2)
+   char_mat(2,7)=CMPLX( dsq2, dsq2)
+   char_mat(2,8)=CMPLX(-dsq2,-dsq2)
 
    name_rap(3)="G_7  "
    char_mat(3,3)=CMPLX(-dsq2,-dsq2)
    char_mat(3,4)=CMPLX( dsq2, dsq2)
    char_mat(3,5)=( 0.d0,1.d0)
    char_mat(3,6)=( 0.d0,-1.d0)
-   char_mat(3,7)=CMPLX( dsq2,-dsq2)
-   char_mat(3,8)=CMPLX(-dsq2, dsq2)
+!   char_mat(3,7)=CMPLX( dsq2,-dsq2)
+!   char_mat(3,8)=CMPLX(-dsq2, dsq2)
+   char_mat(3,7)=CMPLX(-dsq2, dsq2)
+   char_mat(3,8)=CMPLX( dsq2,-dsq2)
 
    name_rap(4)="G_8  "
    char_mat(4,3)=CMPLX(-dsq2, dsq2)
    char_mat(4,4)=CMPLX( dsq2,-dsq2)
    char_mat(4,5)=( 0.d0,-1.d0)
    char_mat(4,6)=( 0.d0, 1.d0)
-   char_mat(4,7)=CMPLX( dsq2, dsq2)
-   char_mat(4,8)=CMPLX(-dsq2,-dsq2)
+!   char_mat(4,7)=CMPLX( dsq2, dsq2)
+!   char_mat(4,8)=CMPLX(-dsq2,-dsq2)
+   char_mat(4,7)=CMPLX(-dsq2,-dsq2)
+   char_mat(4,8)=CMPLX( dsq2, dsq2)
 
 
 ELSEIF (code_group==7) THEN

@@ -191,7 +191,7 @@ SUBROUTINE sym_band(iltot, filband, spin_component)
      REWIND (iunout)
      DO ik = nks1, nks2
         IF (ik == nks1) &
-           WRITE (iunout, '(" &plot nbnd=",i4,", nks=",i4," /")') &
+           WRITE (iunout, '(" &plot_rap nbnd_rap=",i4,", nks_rap=",i4," /")') &
                  nbnd, nks2-nks1+1
         WRITE (iunout, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
         WRITE (iunout, '(10i8)') (rap_et (iltot(ibnd,ik),ik), ibnd=1,nbnd)
@@ -252,7 +252,8 @@ INTEGER ::         &
         irot,      &
         irap,      &
         iclass,    &
-        na, i, j, ig
+        shift,     &
+        na, i, j, ig, dimen
 
 INTEGER, ALLOCATABLE :: istart(:)
 
@@ -329,6 +330,7 @@ WRITE(stdout,'(/,5x,"Band symmetry, ",a11," point group:",/)') gname
 
 DO igroup=1,ngroup
    dim_rap=istart(igroup+1)-istart(igroup)
+   shift=0
    DO irap=1,nclass
       times=(0.d0,0.d0)
       DO iclass=1,nclass
@@ -350,12 +352,14 @@ DO igroup=1,ngroup
          END IF
          GOTO 300
       ELSE IF (ABS(times) > eps) THEN
-         ibnd=istart(igroup)
+         ibnd=istart(igroup)+shift
+         dimen=NINT(DBLE(char_mat(irap,1)))
          IF (rap_et(ibnd)==-1) THEN
-            DO i=1,dim_rap
-               ibnd=istart(igroup)+i-1
+            DO i=1,dimen
+               ibnd=istart(igroup)+shift+i-1
                rap_et(ibnd)=irap
             ENDDO
+            shift=shift+dimen
          ENDIF
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
             WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x&
@@ -553,8 +557,9 @@ INTEGER ::         &
         dim_rap,   &  ! counters
         irot,      &
         irap,      &
+        shift,     &
         iclass,    &
-        na, i, j, ig, ipol, jpol, jrap
+        na, i, j, ig, ipol, jpol, jrap, dimen
 
 INTEGER, ALLOCATABLE :: istart(:)    ! point in list of energies where the
                                      ! new group starts
@@ -625,12 +630,13 @@ DO iclass=1,nclass
 !      write(6,*) igroup, iclass, dim_rap, trace(iclass,igroup)
    END DO
 END DO
+!
+CALL reduce(2*48*nbnd,trace)
+!
 !DO iclass=1,nclass
 !   write(6,'(i5,3(2f10.5,3x))') iclass,trace(iclass,1),trace(iclass,2), &
 !                                       trace(iclass,3)
 !ENDDO
-!
-CALL reduce(2*48*nbnd,trace)
 !
 !  And now use the character table to identify the symmetry representation
 !  of each group of bands
@@ -645,6 +651,7 @@ ENDIF
 
 DO igroup=1,ngroup
    dim_rap=istart(igroup+1)-istart(igroup)
+   shift=0
    DO irap=1,nrap
       times=(0.d0,0.d0)
       DO iclass=1,nclass
@@ -668,12 +675,14 @@ DO igroup=1,ngroup
          GOTO 300
       END IF
       IF (ABS(times) > eps) THEN
-         ibnd=istart(igroup)
+         dimen=NINT(DBLE(char_mat_so(irap,1)))
+         ibnd=istart(igroup) + shift
          IF (rap_et(ibnd)==-1) THEN
-            DO i=1,dim_rap
-               ibnd=istart(igroup)+i-1
+            DO i=1,dimen
+               ibnd=istart(igroup)+shift+i-1
                rap_et(ibnd)=irap
             END DO
+            shift=shift+dimen
          END IF
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
             WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
