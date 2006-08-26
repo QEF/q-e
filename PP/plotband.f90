@@ -52,15 +52,17 @@ program read_bands
 
   filename1=TRIM(filename)//".rap"
   exist_rap=.true.
-  open(unit=21,file=filename1,form='formatted',err=100,iostat=ios)
+  open(unit=21,file=filename1,form='formatted',status='old',err=100,iostat=ios)
 
 100 if (ios .ne. 0) then
      exist_rap=.false.
   endif
-  if (exist_rap) read (21, plot_rap, iostat=ios)
-  if (nks_rap.ne.nks.or.nbnd_rap.ne.nbnd.or.ios.ne.0) then
-     write(6,'("file with representation but not compatible with bands")')
-     exist_rap=.false.
+  if (exist_rap) then
+     read (21, plot_rap, iostat=ios)
+     if (nks_rap.ne.nks.or.nbnd_rap.ne.nbnd.or.ios.ne.0) then
+        write(6,'("file with representations not compatible with bands")')
+        exist_rap=.false.
+     endif
   endif
   !
   allocate (e(nbnd,nks))
