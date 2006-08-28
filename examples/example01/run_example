@@ -68,7 +68,7 @@ PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
-$ECHO "  running bands.x as: $PW_COMMAND"
+$ECHO "  running bands.x as: $BANDS_COMMAND"
 $ECHO
 
 for diago in david cg ; do
