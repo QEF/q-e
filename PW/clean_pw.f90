@@ -21,8 +21,7 @@ SUBROUTINE clean_pw( lflag )
   USE reciprocal_vectors,   ONLY : ig_l2g
   USE symme,                ONLY : irt
   USE vlocal,               ONLY : strf, vloc, vnew
-  USE wvfct,                ONLY : igk, igk_l2g, g2kin, &
-                                   et, wg, btype, gamma_only
+  USE wvfct,                ONLY : igk, g2kin, et, wg, btype, gamma_only
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, rhog, vr, vltot, &
                                    rho_core, rhog_core,vrs
@@ -104,7 +103,6 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( ngk ) )        DEALLOCATE( ngk )
   IF ( ALLOCATED( igk ) )        DEALLOCATE( igk )
-  IF ( ALLOCATED( igk_l2g ) )    DEALLOCATE( igk_l2g )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
   IF ( ALLOCATED( ns ) )         DEALLOCATE( ns )

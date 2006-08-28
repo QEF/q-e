@@ -108,33 +108,3 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   RETURN
   !
 END SUBROUTINE gk_sort
-!
-!----------------------------------------------------------------------------
-SUBROUTINE gk_l2gmap( ngm, ig_l2g, ngk, igk, igk_l2g )
-  !----------------------------------------------------------------------------
-  !
-  ! ... This subroutine maps local G+k index to the global G vector index
-  ! ... the mapping is used to collect wavefunctions subsets distributed
-  ! ... across processors.
-  ! ... Written by Carlo Cavazzoni
-  !
-  IMPLICIT NONE
-  !
-  ! ... Here the dummy variables
-  !
-  INTEGER :: ngm, ngk, igk(ngk), ig_l2g(ngm)   ! input
-  INTEGER :: igk_l2g(ngk)                      ! output
-  INTEGER :: nk
-  !
-  ! input: mapping between local and global G vector index
-  !
-  !
-  DO nk = 1, ngk
-     !
-     igk_l2g(nk) = ig_l2g( igk(nk) )
-     !
-  END DO
-  !
-  RETURN
-  !
-END SUBROUTINE gk_l2gmap

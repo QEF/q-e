@@ -19,15 +19,14 @@ SUBROUTINE hinit0()
   USE gvect,     ONLY : nr1, nr2, nr3, ngm, ecutwfc, ig_l2g, &
                         g, eigts1, eigts2, eigts3
   USE vlocal,    ONLY : strf
-  USE wvfct,     ONLY : npw, g2kin, igk, igk_l2g
+  USE wvfct,     ONLY : npw, g2kin, igk
   USE io_files,  ONLY : iunigk
   USE realus,    ONLY : tqr, qpointlist
   !
   IMPLICIT NONE
   !
   INTEGER :: ik
-    ! counter on k points
-  !
+  ! counter on k points
   !
   ! ... calculate the local part of the pseudopotentials
   !
@@ -45,8 +44,6 @@ SUBROUTINE hinit0()
      ! ... g2kin is used here as work space
      !
      CALL gk_sort( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
-     !
-     CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk, igk_l2g(1,ik) )
      !
      ! ... if there is only one k-point npw and igk stay in memory
      !

@@ -34,7 +34,7 @@ subroutine allocate_nlpot
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : Hubbard_lmax, ns, nsnew
   USE noncollin_module, ONLY : noncolin
-  USE wvfct,            ONLY : npwx, npw, igk, igk_l2g, g2kin
+  USE wvfct,            ONLY : npwx, npw, igk, g2kin
   USE us,               ONLY : qrad, tab, tab_at, dq, nqx, nqxq
   USE uspp,             ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
                                nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
@@ -57,9 +57,6 @@ subroutine allocate_nlpot
   !   igk relates the index of PW k+G to index in the list of G vector
   !
   allocate (igk( npwx ), g2kin ( npwx ) )
-  !
-  allocate (igk_l2g( npwx, nks))    
-  igk_l2g = 0
   !
   !     calculate the number of beta functions for each atomic type
   !

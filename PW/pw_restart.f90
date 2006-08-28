@@ -59,7 +59,7 @@ MODULE pw_restart
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
-      USE io_files,             ONLY : nwordwfc, iunwfc, psfile
+      USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
       USE input_parameters,     ONLY : pseudo_dir 
                                      ! warning, pseudo_dir in the data-file
                                      ! should always point to the original
@@ -74,7 +74,7 @@ MODULE pw_restart
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
       USE wvfct,                ONLY : gamma_only, npw, npwx, g2kin, et, wg, &
-                                       igk_l2g, nbnd
+                                       igk, nbnd
       USE ener,                 ONLY : ef
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
@@ -103,11 +103,10 @@ MODULE pw_restart
       CHARACTER(LEN=256)    :: dirname, filename, file_pseudo, rho_file_base
       CHARACTER(LEN=80)     :: bravais_lattice
       INTEGER               :: i, ig, ik, ngg, ierr, ipol, ik_eff, num_k_points
-      !!!INTEGER,  ALLOCATABLE :: kisort(:)
       INTEGER               :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER               :: ike, iks, npw_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
-      INTEGER,  ALLOCATABLE :: itmp(:,:)
+      INTEGER,  ALLOCATABLE :: igk_l2g(:,:), itmp(:,:)
       LOGICAL               :: lgvec, lwfc
       REAL(DP), ALLOCATABLE :: rhoaux(:)
       !
@@ -208,29 +207,24 @@ MODULE pw_restart
       !
       CALL mp_sum( itmp, intra_pool_comm )
       !
-      ! ... build the G+k array indexes - BEWARE:
-      !!! The following operations are commented out because igk_l2g
-      !!! is already calculated in the initialization (routine hinit0)
-      !!! It should be done here, but there is a problem with variable
-      !!! cell: the starting unit cell and G-vectors should be used
+      ! ... build the igk_l2g array, yielding the correspondence between
+      ! ... the local k+G index and the global G index - see also ig_l2g
+      ! ... igk_l2g is build from arrays igk, previously stored in hinit0
+      ! ... Beware: for variable-cell case, one has to use starting G and 
+      ! ... k+G vectors
       !
-      !!!ALLOCATE( kisort( npwx ) )
+      ALLOCATE ( igk_l2g ( npwx, nks ) )
+      igk_l2g = 0
       !
-      !!!DO ik = 1, nks
-         !
-         !!!kisort = 0
-         !!!npw    = npwx
-         !
-         !!!CALL gk_sort( xk(1,ik+iks-1), ngm, g, &
-         !!!              ecutwfc/tpiba2, npw, kisort(1), g2kin )
-         !
-         !!!CALL gk_l2gmap( ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
-         !
-         !!!ngk(ik) = npw
-         !
-      !!!END DO
+      IF ( nks > 1 ) REWIND( iunigk )
       !
-      !!!DEALLOCATE( kisort )
+      DO ik = 1, nks
+         !
+         IF ( nks > 1 ) READ ( iunigk ) npw, igk
+         !
+         CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk(1), igk_l2g(1,ik) )
+         !
+      END DO
       !
       ! ... compute the global number of G+k vectors for each k point
       !
@@ -610,6 +604,8 @@ MODULE pw_restart
          END IF
          !
       END DO k_points_loop
+      !
+      DEALLOCATE ( igk_l2g )
       !
       IF ( ionode ) THEN
          !
@@ -2109,8 +2105,7 @@ MODULE pw_restart
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
-      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
-                                       igk_l2g, nbnd
+      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
       USE wavefunctions_module, ONLY : evc, evc_nc
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
@@ -2132,7 +2127,7 @@ MODULE pw_restart
       INTEGER              :: npool, nkbl, nkl, nkr, npwx_g
       INTEGER              :: ike, iks, npw_g, ispin
       INTEGER, ALLOCATABLE :: ngk_g(:)
-      INTEGER, ALLOCATABLE :: itmp(:,:)
+      INTEGER, ALLOCATABLE :: igk_l2g(:,:), itmp(:,:)
       LOGICAL              :: exst, opnd
       REAL(DP)             :: scalef
       !
@@ -2210,7 +2205,11 @@ MODULE pw_restart
       !
       CALL mp_sum( itmp, intra_pool_comm )
       !
-      ! ... build the G+k array indexes
+      ! ... build the igk_l2g array, yielding the correspondence between
+      ! ... the local k+G index and the global G index - see also ig_l2g
+      !
+      ALLOCATE ( igk_l2g ( npwx, nks ) )
+      igk_l2g = 0
       !
       ALLOCATE( kisort( npwx ) )
       !
@@ -2395,6 +2394,8 @@ MODULE pw_restart
          !
       END DO k_points_loop
       !
+      DEALLOCATE ( igk_l2g )
+      !
       IF ( ionode ) THEN
          !
          CALL iotk_scan_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
@@ -2556,5 +2557,34 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE read_
+    !
+    !----------------------------------------------------------------------------
+    SUBROUTINE gk_l2gmap( ngm, ig_l2g, ngk, igk, igk_l2g )
+      !----------------------------------------------------------------------------
+      !
+      ! ... This subroutine maps local G+k index to the global G vector index
+      ! ... the mapping is used to collect wavefunctions subsets distributed
+      ! ... across processors.
+      ! ... Written by Carlo Cavazzoni
+      !
+      IMPLICIT NONE
+      !
+      ! ... Here the dummy variables
+      !
+      INTEGER :: ngm, ngk, igk(ngk), ig_l2g(ngm)   ! input
+      INTEGER :: igk_l2g(ngk)                      ! output
+      INTEGER :: nk
+      !
+      ! input: mapping between local and global G vector index
+      !
+      DO nk = 1, ngk
+         !
+         igk_l2g(nk) = ig_l2g( igk(nk) )
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE gk_l2gmap
     !
 END MODULE pw_restart

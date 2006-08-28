@@ -331,9 +331,7 @@ MODULE wvfct
        npw,              &! the number of plane waves
        current_k          ! the index of k-point under consideration
   INTEGER, ALLOCATABLE, TARGET :: &
-       igk(:),           &! correspondence k+G <-> G
-       igk_l2g(:,:)       ! correspondence local index k+G <-> global G index
-                          ! see also ig_l2g
+       igk(:)             ! index of G corresponding to a given index of k+G
   REAL(DP), ALLOCATABLE :: &
        et(:,:),          &! eigenvalues of the hamiltonian
        wg(:,:),          &! the weight of each k point and band
