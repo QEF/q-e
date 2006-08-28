@@ -734,14 +734,10 @@ Here is a list:
 
 \begin{itemize}
   \item
-    \texttt{make pw} produces \texttt{PW/pw.x} and
-    \texttt{PW/memory.x}.
+    \texttt{make pw} produces \texttt{PW/pw.x}.
 
     \texttt{pw.x} calculates electronic structure, structural
     optimization, molecular dynamics, barriers with NEB.
-    \texttt{memory.x} is an auxiliary program that checks the input of
-    \texttt{pw.x} for correctness and yields a rough (under-) estimate
-    of the required memory.
   \item
     \texttt{make ph} produces \texttt{PH/ph.x}.
 
@@ -2527,10 +2523,6 @@ with $m$, $p$, $q=$ small factors; all other variables have the same
 meaning as above.
 Note that if the $\Gamma$-point only ($\mathbf{q}=0$) is used to
 sample the Brillouin Zone, the value of $N$ will be cut into half.
-
-Code \texttt{memory.x} yields a rough estimate of the memory required 
-by \texttt{pw.x} and checks for the validity of the input data file as 
-well. Use it exactly as \texttt{pw.x}.
 
 The memory required by the phonon code follows the same patterns,
 with somewhat larger factors $m$, $p$, $q$.
