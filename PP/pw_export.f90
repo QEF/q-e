@@ -395,6 +395,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   integer, allocatable :: itmp1( : )
   integer, allocatable :: igwk( :, : )
   integer, allocatable :: l2g_new( : )
+  integer, allocatable :: igk_l2g( : )
 
 
   real(DP) :: wfc_scal 
@@ -474,9 +475,8 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   enddo
   deallocate( rtmp_g )
 
-
-
   ! build the G+k array indexes
+  allocate ( igk_l2g ( npwx, nks ) ) )
   allocate ( kisort( npwx ) )
   do ik = 1, nks
      kisort = 0
@@ -809,7 +809,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
        ENDIF
   ENDIF
 
-
+  DEALLOCATE( igk_l2g )
   DEALLOCATE( igwk )
   DEALLOCATE ( ngk_g )
 
