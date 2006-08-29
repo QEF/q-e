@@ -15,14 +15,8 @@
 \begin{titlepage}
 \Huge
 \begin{center}
-$PW_{SCF}$'s epsilon.x user's manual\\[4.5cm]
+$PW_{SCF}$'s epsilon.x user's manual\\[1.5cm]
 \normalsize
-\begin{figure}[h]
-\centering
-\epsfig{file=logo_eps.eps,width=4cm}
-\label{logo}
-\end{figure}
-\vspace{4.5cm}
 \textbf{Manual Autor:}
 \emph{Andrea Benassi}$^{1,2}$\\[0.3cm]
 \textbf{Code Developers:}
@@ -41,10 +35,10 @@ processors of the previews parallel PW runs, it can run with a single processor 
 performed with the
 variable WF\_COLLECT=.TRUE..\\
 Epsilon.x doesn't support the reduction of the k-points grid into the unreducible Brillouin zone, so the previews PW runs must be 
-performed with a uniform k-points grid and all k-points weights must be equal to each oter, i.g. in the k-points card the k-points
-coordinates must be given manualy in \emph{crystal} or \emph{alat} or \emph{bhor}, but not with the \emph{automatic} option. Also the 
-auto-symmetrizzation of k-points grid can produce a non uniform distribution of k-points weights, in order to avoid this
-PW's behavior the variable NOSYM must be set .TRUE. disabling auto-symmetrizzation.
+performed with a uniform k-points grid and all k-points weights must be equal to each other, i.g. in the k-points card the k-points
+coordinates must be given manualy in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Also the 
+auto-symmetrization of k-points grid can produce a non uniform distribution of k-points weights, in order to avoid this
+PW's behavior the variable NOSYM must be set .TRUE. to disable auto-symmetrizzation.
 \section{Input file}
 When executed epsilon.x reads an input file from standard input, this file contains two ForTran namelists:
 \begin{verbatim}
@@ -112,7 +106,7 @@ valence and conduction bands,
 $E_{\textbf{k},n}$ are the eighenvalues of the hamiltonian and $f(E_{\textbf{k},n})$ is the Fermi distribution function 
 that account for the occupation of the bands. In the last two notation the sum over spin values is included into
 Fermi function whose normalizzation is two instead of one.   
-The Dirca Delta function it's numerically implemented by means of Lorentzian 
+The Dirac Delta function it's numerically implemented by means of Lorentzian 
 or Gaussian functions normalized to one:
 \begin{equation}
 L(\omega)=\frac{\Gamma}{\pi\big[(E_{\textbf{k},n'}-E_{\textbf{k},n}-\hbar\omega)^2+\Gamma^2\big]}
@@ -147,7 +141,7 @@ that comes from a perturbation theory with adiabatic turning on:
 ...\frac{f(E_{\textbf{k},n})}{E_{\textbf{k},n'}-E_{\textbf{k},n}-\hbar\omega-i\hbar\Gamma}\Bigg\}
 \end{equation}
 where $\Gamma$ is the adiabatic parameter and, for the total energy conservation it must tend to zeto. This is the way in 
-which the Dirac Delta function appears and this means that every exited state has an infinite lifetime, i.g. is stationary. 
+which the Dirac Delta function appears and this means that every excited state has an infinite lifetime, i.g. is stationary. 
 \begin{displaymath}
 \epsilon_{2_{\alpha,\beta}}(\omega)=\frac{4 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\in V}\sum_{n'\in C}\sum_{\textbf{k}}
 \frac{|\hat{\textbf{p}}_{\alpha,\beta}|^2 f(E_{\textbf{k},n})}{(E_{\textbf{k},n'}-E_{\textbf{k},n})^2}...
@@ -220,7 +214,7 @@ tensor calculated on the immaginary frequency axe $\epsilon_{\alpha,\beta}(i\ome
 The LOSS spectrum is proportional to the immaginary of the inverse dielectric tensor, that is:
 \begin{equation}
 Imm\Bigg\{\frac{1}{\epsilon_{\alpha,\beta}(\omega)}\Bigg\}=
-\frac{\epsilon_{2_{\alpha,\beta}}^{2}(\omega)}{\epsilon_{1_{\alpha,\beta}}^{2}(\omega)+
+\frac{\epsilon_{2_{\alpha,\beta}}(\omega)}{\epsilon_{1_{\alpha,\beta}}^{2}(\omega)+
 \epsilon_{2_{\alpha,\beta}}^{2}(\omega)}
 \end{equation}
 this quantity provides a useful check of the dielectric tensor calculation becasue it reaches its maximum at the bulk plasmon
