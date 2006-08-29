@@ -395,7 +395,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   integer, allocatable :: itmp1( : )
   integer, allocatable :: igwk( :, : )
   integer, allocatable :: l2g_new( : )
-  integer, allocatable :: igk_l2g( : )
+  integer, allocatable :: igk_l2g( :, : )
 
 
   real(DP) :: wfc_scal 
@@ -476,13 +476,20 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   deallocate( rtmp_g )
 
   ! build the G+k array indexes
-  allocate ( igk_l2g ( npwx, nks ) ) )
+  allocate ( igk_l2g ( npwx, nks ) )
   allocate ( kisort( npwx ) )
   do ik = 1, nks
      kisort = 0
      npw = npwx
      call gk_sort (xk (1, ik+iks-1), ngm, g, ecutwfc / tpiba2, npw, kisort(1), g2kin)
-     call gk_l2gmap (ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
+     !
+     ! mapping between local and global G vector index, for this kpoint
+     !
+     DO ig = 1, npw
+        !
+        igk_l2g(ig) = ig_l2g( kisort(ig) )
+        !
+     END DO
      ngk (ik) = npw
   end do
   deallocate (kisort)
