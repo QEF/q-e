@@ -357,8 +357,6 @@
                   ns_lp  = dfft%nsp( ipz )  
                 END IF
                 DO is = 1, ns_lp - 1, 2
-                  !mc1 = dfft%ismap( is   + is_offset )
-                  !mc2 = dfft%ismap( is+1 + is_offset )
                   mc1 = dfft%ismap( is   + is_offset )
                   mc2 = dfft%ismap( is+1 + is_offset )
                   DO k = 1 , nz_l
@@ -372,7 +370,6 @@
                 END DO
                 IF( MOD( ns_lp, 2 ) /= 0 ) THEN
                   is = ns_lp
-                  ! mc1 = dfft%ismap( is   + is_offset )
                   mc1 = dfft%ismap( is   + is_offset )
                   DO k = 1 , nz_l
                     r( mc1 + (k-1)*ldx*ldy ) = rcvbuf(k + offset, ipz)
@@ -403,7 +400,6 @@
                 ns_lp  = dfft%nsp( ipz )  
               END IF
               DO is = 1, ns_lp
-                ! mc1 = dfft%ismap( is   + is_offset )
                 mc1 = dfft%ismap( is   + is_offset )
                 DO k = 1 , nz_l
                   sndbuf( k + offset, ipz ) = r( mc1 + (k-1)*ldx*ldy )
