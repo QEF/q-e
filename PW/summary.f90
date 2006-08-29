@@ -375,7 +375,7 @@ SUBROUTINE summary()
      WRITE( stdout, '(/,5x,"site n.     atom        ", &
           &             "          positions (cryst. coord.)")')
 
-     WRITE( stdout, '(7x,i2,8x,a6," tau(",i3,") = (",3f11.7,"  )")') &
+     WRITE( stdout, '(7x,i3,8x,a6," tau(",i3,") = (",3f11.7,"  )")') &
            (na, atm(ityp(na)), na,  (xau(ipol,na), ipol=1,3), na=1,nat)
      !
      !   deallocate work space
