@@ -253,8 +253,7 @@ programs (with "make all"), or only some specific programs.
 "make" with no arguments yields a list of valid compilation targets.
 Here is a list:
 
-  make pw           compile PW/pw.x (electronic and ionic optimization), 
-                      PW/memory.x (checks memory usage and tests input)
+  make pw           compile PW/pw.x (electronic and ionic optimization)
   make cp           compile CPV/cp.x (Car-Parrinello MD with ultrasoft
                       pseudopotentials)
   make ph           compile PH/ph.x (phonons)

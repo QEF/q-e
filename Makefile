@@ -185,7 +185,7 @@ links : bindir
 	      ../PP/efg.x ../PP/plotband.x ../PP/plotrho.x ../PP/pmw.x \
 	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
 	      ../PP/voronoy.x ../PP/pw_export.x \
-	    ../PW/memory.x ../PW/pw.x \
+	    ../PW/pw.x \
 	    ../PWCOND/pwcond.x \
 	    ../atomic/ld1.x \
 	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/dynmat.x \

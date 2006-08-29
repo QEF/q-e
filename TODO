@@ -1,19 +1,19 @@
-TODO LIST - May 2006
+TODO LIST - August 2006
 
 BUGS TO EXAMINE
 
 - Zr pp buggy?
 - strange empty states with C blyp ?
 - O pseudopotentials?
+- Wannier with nonorthogonal axis?
 
 INSTALLATION/PORTING
 
-- replacement for FFTW on Intel/AMD
+- workaround for /usr/bin/oslevel problem in AIX
 
 COMMON
 
-- cleanup of the scratch directory mess: 
-  outdir, tmp_dir, wfc_dir, scradir...
+- uniform and clear values for constants in Modules/constants.f90
 
 - pseudopotentials: support new format (XML) if/when ready
 
@@ -28,6 +28,9 @@ COMMON
 - merge spherical harmonics between CP-PW and FPMD
   merge integration routines, random number generators
 
+- spherical bessel functions: only one function calculating dj_l/dx
+  j_l with l=-1 should not be needed
+
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds 
   and other very low level modules 
@@ -39,11 +42,11 @@ COMMON
 
 PW
 
+- do not overwrite the charge density in a non scf calculation
+
 - add possibility to read atomic positions from file
 
 - Use more standard choices for crystal axis
-
-- fix problem with j'_l(x)Y_lm(x) for x -> 0 and l=1
 
 - make hpsi/spsi/newd/addusdens/CG/DIIS  faster
   - remove complex factor i**l from beta fct and q(r) (preliminary)
@@ -63,6 +66,7 @@ PW
   and also what are exactly the output quantites!
 
 - some symmetry-related routines such as sgama are too complex
+  Verify that a group is a group (call multable again in sgama)
 
 Low priority:
 
@@ -80,7 +84,16 @@ POSTPROCESSING
   As a consequence most postprocessing codes will not work.
   The file format should be reconsidered: XML ?
 
+- chdens in parallel execution
+
+- dipolo + Makov-Payne: verify
+
+- pwtools: add example of a plot of phonon dispersions
+  Fix fqha.f90
+
 PH, D3, Gamma
+
+- stop with 'prefix.EXIT' and restart 
 
 - use charge mixing instead of potential mixing
 
@@ -97,28 +110,25 @@ PH, D3, Gamma
 
 DOCUMENTATION
 
+- move to wiki-based documentation
+
 - better documentation for file format
 
 - single source (xml?) for text file, GUI help file, user guide
   (Tone?)
 
-- tests/examples for some features (e.g. variable cell, many kinds
-  of postprocessings) are still missing
-
 - better automated testing procedure, quick and distinct from examples!
 
 - add some benchmarks
 
-- expand and update the manual; add a list of FAQ, or of already
-  answered questions
-
-- complete the developer's (technical) guide
-
 CP/FPMD:
 
-- CP: check on small box size
+- PWGui for CP/FPMD?
 
-- Documentation needs serious improvements
+- riduce usage of nonscalable static and dynamical memroy:
+  qfunc, qrad, uspp, etc
+
+- check on small box size
 
 - Proposals from Princeton:
   * just one name for CP and FPMD
