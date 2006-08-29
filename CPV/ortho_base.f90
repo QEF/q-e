@@ -999,9 +999,7 @@ CONTAINS
       !
       CALL start_clock( 'calphi' )
 
-
-      phi(:,:) = (0.d0, 0.d0)
-!
+      !
       IF ( nvb > 0 ) THEN
 
          ALLOCATE( qtemp( nhsavb, n ) )
@@ -1024,10 +1022,17 @@ CONTAINS
             END DO
          END DO
 !
-         CALL MXMA                                                     &
-     &       ( betae, 1, 2*ngwx, qtemp, 1, nhsavb, phi, 1, 2*ngwx, 2*ngw, nhsavb, n )
+!         CALL MXMA                                                     &
+!     &       ( betae, 1, 2*ngwx, qtemp, 1, nhsavb, phi, 1, 2*ngwx, 2*ngw, nhsavb, n )
+
+         CALL DGEMM &
+              ( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngwx, qtemp, nhsavb, 0.0d0, phi, 2*ngwx )
 
          DEALLOCATE( qtemp )
+
+      ELSE
+
+         phi = (0.d0, 0.d0)
 
       END IF
 !

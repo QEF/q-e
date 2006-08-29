@@ -63,7 +63,9 @@
         do iss=1,nspin
          nss=nupdwn(iss)
          istart=iupdwn(iss)
-          call MXMA(c0(1,istart),1,2*ngw,z0(1,1,iss),nudx,1,c0diag(1,istart),1,2*ngw,2*ngw,nss,nss)
+          !call MXMA(c0(1,istart),1,2*ngw,z0(1,1,iss),nudx,1,c0diag(1,istart),1,2*ngw,2*ngw,nss,nss)
+          call DGEMM( 'N', 'T', 2*ngw, nss, nss, 1.0d0, c0(1,istart), 2*ngw, z0(1,1,iss), nudx, &
+                      0.0d0, c0diag(1,istart), 2*ngw )
         end do
 
         do iss=1,nspin
@@ -534,8 +536,10 @@ subroutine pc2(a,beca,b,becb)
             end do
          end do
 !NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
-         call MXMA                                                     &
-     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
+!         call MXMA                                                     &
+!     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
+         CALL DGEMM( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
+                    qtemp, nhsavb, 0.0d0, phi, 2*ngw )
          if (do_k) then
             do j=1,n
                do ig=1,ngw

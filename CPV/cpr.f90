@@ -125,7 +125,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : readfile, writefile, eigs, strucf
-  USE cp_interfaces,            ONLY : empty_cp, ortho, elec_fakekine
+  USE cp_interfaces,            ONLY : empty_cp, ortho, elec_fakekine, print_projwfc
   USE constraints_module,       ONLY : check_constraint, lagrange, &
                                        remove_constr_force
   USE metadyn_base,             ONLY : set_target
@@ -853,7 +853,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
   END IF
   !
-  IF( tprojwfc )   CALL projwfc( c0, SIZE( c0, 2 ), eigr, vkb, nbsp ) 
+  IF( tprojwfc )   CALL print_projwfc( c0, lambda, eigr, vkb )
   !
   IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !

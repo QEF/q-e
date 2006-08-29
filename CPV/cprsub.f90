@@ -245,10 +245,13 @@ subroutine nlfh( bec, dbec, lambda )
 !
                      if(nh(is).gt.0)then
 
-                        temp = 0.d0
+!                        temp = 0.d0
+!                        call MXMA                                          &
+!     &                    (tmpdh,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
 
-                        call MXMA                                          &
-     &                    (tmpdh,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
+                        CALL DGEMM &
+                             ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdh, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
+
 #if defined __TRUE_BGL
                         B  = (0D0,0D0)
                         A1 = (0D0,0D0)

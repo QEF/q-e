@@ -123,6 +123,7 @@
    PUBLIC :: set_eitot
    PUBLIC :: set_evtot
    !
+   PUBLIC :: print_projwfc
    !
 
    INTERFACE bessel2
@@ -1341,6 +1342,14 @@
       END SUBROUTINE
    END INTERFACE
 
+   INTERFACE print_projwfc
+      SUBROUTINE print_projwfc_x ( c0, lambda, eigr, vkb )
+         USE kinds,            ONLY: DP
+         IMPLICIT NONE
+         COMPLEX(DP), INTENT(IN)  :: c0(:,:), eigr(:,:), vkb(:,:)
+         REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
+      END SUBROUTINE
+   END INTERFACE
 
 !=----------------------------------------------------------------------------=!
    END MODULE

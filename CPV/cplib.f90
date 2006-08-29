@@ -1599,10 +1599,13 @@ END FUNCTION
 
                   if ( nh(is) .gt. 0 )then
 !
-                     temp = 0d0
 
-                     call MXMA                                             &
-     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
+                     CALL DGEMM &
+                          ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
+!
+!                     temp = 0d0
+!                     call MXMA                                             &
+!     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
 !
                      !---------------------------------------------------------
                      !BG/L 440d specific implementation:
@@ -1681,10 +1684,12 @@ END FUNCTION
 !
                   IF(nh(is).GT.0)THEN
                      !
-                     temp = 0.d0
+!                     temp = 0.d0
+!                     CALL MXMA                                             &
+!     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
 !
-                     CALL MXMA                                             &
-     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
+                     CALL DGEMM &
+                          ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
 !
                      DO j=1,nss
                         DO i=1,nss
@@ -1796,12 +1801,13 @@ END FUNCTION
       END SUBROUTINE prefor
 !
 !-----------------------------------------------------------------------
-   SUBROUTINE projwfc( c, nx, eigr, betae, n  )
+   SUBROUTINE projwfc( c, nx, eigr, betae, n, ei  )
 !-----------------------------------------------------------------------
       !
       ! Projection on atomic wavefunctions
       !
       USE kinds,              ONLY: DP
+      USE constants,          ONLY: autoev
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_image_comm
       USE mp,                 ONLY: mp_sum
@@ -1814,6 +1820,7 @@ END FUNCTION
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n
       COMPLEX(DP), INTENT(IN) :: c( ngw, nx ), eigr(ngw,nat), betae(ngw,nhsa)
+      REAL(DP),    INTENT(IN) :: ei( nx )
 !
       COMPLEX(DP), ALLOCATABLE :: wfc(:,:), swfc(:,:), becwfc(:,:)
       REAL(DP),    ALLOCATABLE :: overlap(:,:), e(:), z(:,:)
@@ -1856,9 +1863,13 @@ END FUNCTION
       ! calculate overlap(i,j) = <wfc_i|S|wfc_j> 
       !
       ALLOCATE( overlap( n_atomic_wfc, n_atomic_wfc ) )
-!
-      CALL MXMA( wfc, 2*ngw, 1, swfc, 1, 2*ngw, overlap, 1,                     &
-     &          n_atomic_wfc, n_atomic_wfc, 2*ngw, n_atomic_wfc )
+
+      CALL DGEMM &
+           ( 'T', 'N', n_atomic_wfc, n_atomic_wfc, 2*ngw, 1.0d0, wfc, 2*ngw, &
+             swfc, 2*ngw, 0.0d0, overlap, n_atomic_wfc )
+
+!      CALL MXMA( wfc, 2*ngw, 1, swfc, 1, 2*ngw, overlap, 1,                     &
+!     &          n_atomic_wfc, n_atomic_wfc, 2*ngw, n_atomic_wfc )
 
       CALL mp_sum( overlap, intra_image_comm )
 
@@ -1923,7 +1934,7 @@ END FUNCTION
       CALL mp_sum( proj, intra_image_comm )
 
       i=0
-      WRITE( stdout,'(/''Projection on atomic states:'')')
+      WRITE( stdout,  90 ) 
       WRITE( stdout, 100 )
       DO is=1,nsp
          DO nb = 1,nchi(is)
@@ -1931,10 +1942,6 @@ END FUNCTION
             DO m = -l,l
                DO ia=1,na(is)
                   i=i+1
-!                  WRITE( stdout,'(''atomic state # '',i4,'': atom # '',i3,    &
-!     &                      ''  species # '',i2,''  wfc # '',i2,        &
-!     &                      '' (l='',i1,'' m='',i2,'')'')')             &
-!     &                 i, ia, is, nb, l, m
                END DO
                WRITE( stdout, 110 ) i-na(is)+1, i, na(is), is, nb, l, m
             END DO
@@ -1947,12 +1954,15 @@ END FUNCTION
          DO l=1,n_atomic_wfc
             somma=somma+proj(m,l)**2
          END DO
-         WRITE( stdout,'(''state # '',i4,''    sum c^2 ='',f7.4)') m,somma
-         WRITE( stdout,'(10f7.4)') (ABS(proj(m,l)),l=1,n_atomic_wfc)
+         WRITE( stdout, 120 ) m, somma, ei(m)*autoev
+         WRITE( stdout, 130 ) (ABS(proj(m,l)),l=1,n_atomic_wfc)
       END DO
 
- 100  FORMAT( 3X,'atomic state    atoms  specie  wfc  l  m')
+  90  FORMAT( 3X,'Projection on atomic states')
+ 100  FORMAT( 3X,'atomic state    atom   specie  wfc  l  m')
  110  FORMAT( 3X, I4, ' - ', I4, 4X, I4, 6X, I3,   I5, I4,I3)
+ 120  FORMAT( 3X,'state # ',i4,'    sum c^2 = ',f7.4, ' eV = ', F7.2 )
+ 130  FORMAT( 3X, 10f7.4)
 
 !
       DEALLOCATE(proj)
@@ -2312,7 +2322,7 @@ END FUNCTION
       INTEGER is, iv, jv, ia, inl, jnl, i
       REAL(DP) qtemp(nhsavb,n_atomic_wfc)
 !
-      swfc=0.d0
+      swfc = wfc
 !
       IF (nvb.GT.0) THEN
          qtemp=0.d0
@@ -2333,11 +2343,16 @@ END FUNCTION
             END DO
          END DO
 !
-         CALL MXMA (betae,1,2*ngw,qtemp,1,nhsavb,swfc,1,                &
-     &              2*ngw,2*ngw,nhsavb,n_atomic_wfc)
+!         CALL MXMA (betae,1,2*ngw,qtemp,1,nhsavb,swfc,1,                &
+!     &              2*ngw,2*ngw,nhsavb,n_atomic_wfc)
+!
+         CALL DGEMM &
+              ('N','N',2*ngw,n_atomic_wfc,nhsavb,1.0d0,betae,2*ngw,&
+               qtemp,nhsavb,1.0d0,swfc,2*ngw)
+!
       END IF
 !
-      swfc=swfc+wfc
+!      swfc=swfc+wfc
 !
       RETURN
       END SUBROUTINE s_wfc

@@ -307,7 +307,7 @@
    SUBROUTINE empty_cp_x ( nfi, c0, v )
 
       USE kinds,                ONLY : DP
-      USE control_flags,        ONLY : iprsta, tsde, program_name, tprojwfc
+      USE control_flags,        ONLY : iprsta, tsde, program_name
       USE io_global,            ONLY : ionode, stdout
       USE cp_main_variables,    ONLY : eigr, ema0bg
       USE cell_base,            ONLY : omega
@@ -574,10 +574,6 @@
          CALL crot( cm_emp, c0_emp, ngw, n, i, i, lambda_emp(:,:,iss), n_empx, ei_emp(:,iss) )
          ei_emp( 1:n, iss ) = ei_emp( 1:n, iss ) / f_emp( i : i + n - 1 )
       END DO
-
-      IF( tprojwfc ) THEN
-         CALL projwfc( c0_emp, SIZE( c0_emp, 2 ), eigr, vkb, n_emps  )
-      END IF
 
       ! ...   Save emptystates to disk
 

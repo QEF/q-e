@@ -241,39 +241,40 @@
 !     d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
 !              sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
 !                                 e^-ig.r_i < beta_i,j | c_n >}
-      USE kinds, ONLY: dp
-      USE control_flags, ONLY: iprint
-      USE gvecs
-      USE gvecw, ONLY: ngw
-      USE cvan, ONLY: ish
-      USE uspp, ONLY: nhsa=>nkb, dvan, deeq
-      USE uspp_param, ONLY: nhm, nh
+!
+      USE kinds,                  ONLY: dp
+      USE control_flags,          ONLY: iprint
+      USE gvecs,                  ONLY: nms, nps
+      USE cvan,                   ONLY: ish
+      USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
+      USE uspp_param,             ONLY: nhm, nh
       USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, &
-            nr1sx, nr2sx, nr3sx, nnrsx
-      USE constants, ONLY: pi, fpi
-      USE ions_base, ONLY: nsp, na, nat
-      USE gvecw, ONLY: ggp
-      USE cell_base, ONLY: tpiba2
-      USE ensemble_dft, ONLY: tens
-      USE funct, ONLY: dft_is_meta
-      USE cp_interfaces, ONLY: fwfft, invfft
+                                        nr1sx, nr2sx, nr3sx, nnrsx
+      USE constants,              ONLY: pi, fpi
+      USE ions_base,              ONLY: nsp, na, nat
+      USE gvecw,                  ONLY: ngw, ggp
+      USE cell_base,              ONLY: tpiba2
+      USE ensemble_dft,           ONLY: tens
+      USE funct,                  ONLY: dft_is_meta
+      USE cp_interfaces,          ONLY: fwfft, invfft
 !
       IMPLICIT NONE
 !
-      INTEGER, INTENT(IN) :: i
-      INTEGER, INTENT(IN) :: n, nspin
-      INTEGER, INTENT(IN) :: ispin( n )
+      INTEGER,  INTENT(IN) :: i
+      INTEGER,  INTENT(IN) :: n, nspin
+      INTEGER,  INTENT(IN) :: ispin( n )
       REAL(DP), INTENT(IN) :: f( n )
       !
-      COMPLEX(DP) betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
-      REAL(DP) bec(nhsa,n), v(nnrsx,nspin)
+      COMPLEX(DP) :: betae(ngw,nhsa), c(ngw), ca(ngw), df(ngw), da(ngw)
+      REAL(DP)    :: bec(nhsa,n), v(nnrsx,nspin)
       !
       ! local variables
       !
-      INTEGER iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
-      REAL(DP) fi, fip, dd
-      COMPLEX(DP) fp,fm,ci
-      REAL(DP) af(nhsa), aa(nhsa) ! automatic arrays
+      INTEGER     :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
+      INTEGER     :: ivoff, jvoff
+      REAL(DP)    :: fi, fip, dd
+      COMPLEX(DP) :: fp, fm, ci
+      REAL(DP)    :: af(nhsa), aa(nhsa) ! automatic arrays
       COMPLEX(DP), ALLOCATABLE :: dtemp(:)
       COMPLEX(DP), ALLOCATABLE :: psi(:)
 !
@@ -322,12 +323,12 @@
 !       in the potential part because of the logics
 !
    
-     IF (tens) THEN
-        fi =-0.5
-        fip=-0.5
+      IF (tens) THEN
+         fi =-0.5
+         fip=-0.5
       ELSE
-        fi =-  f(i)*0.5
-        fip=-f(i+1)*0.5
+         fi =-  f(i)*0.5
+         fip=-f(i+1)*0.5
       END IF
 
       DO ig=1,ngw
@@ -341,12 +342,19 @@
 !
 !     aa_i,i,n = sum_j d_i,ij <beta_i,j|c_n>
 ! 
-      IF(nhsa.GT.0)THEN
-         DO inl=1,nhsa
-            af(inl)=0.
-            aa(inl)=0.
-         END DO
-!
+      IF( nhsa > 0 ) THEN
+         !
+         af = 0.0d0
+         aa = 0.0d0
+         !
+         IF (tens) THEN
+            fi = 1.0d0
+            fip= 1.0d0
+         ELSE
+            fi = f(i)
+            fip= f(i+1)
+         END IF
+         !
          DO is=1,nsp
             DO iv=1,nh(is)
                DO jv=1,nh(is)
@@ -354,40 +362,53 @@
                   DO ism=1,is-1
                      isa=isa+na(ism)
                   END DO
-                  DO ia=1,na(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     jnl=ish(is)+(jv-1)*na(is)+ia
-                     isa=isa+1
-                     dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
-                     IF(tens) THEN
-                      af(inl)=af(inl)-dd*bec(jnl,  i)
-                     ELSE
-                      af(inl)=af(inl)- f(i)*dd*bec(jnl,  i)
-                     END IF
-                     dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
-                     IF(tens) THEN
-                      IF (i.NE.n) aa(inl)=aa(inl)-dd*bec(jnl,i+1)
-                     ELSE
-                      IF (i.NE.n) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
-                     END IF
-                  END DO
+                  ivoff = ish(is)+(iv-1)*na(is)
+                  jvoff = ish(is)+(jv-1)*na(is)
+                  IF( i /= n ) THEN
+                     DO ia=1,na(is)
+                        inl = ivoff + ia
+                        jnl = jvoff + ia
+                        isa = isa + 1
+                        dd = deeq(iv,jv,isa,iss1) + dvan(iv,jv,is)
+                        af(inl) = af(inl) - fi  * dd * bec(jnl,  i)
+                        dd = deeq(iv,jv,isa,iss2) + dvan(iv,jv,is)
+                        aa(inl) = aa(inl) - fip * dd * bec(jnl,i+1)
+                     END DO
+                  ELSE
+                     DO ia=1,na(is)
+                        inl = ivoff + ia
+                        jnl = jvoff + ia
+                        isa = isa + 1
+                        dd = deeq(iv,jv,isa,iss1) + dvan(iv,jv,is)
+                        af(inl) = af(inl) - fi * dd * bec(jnl,  i)
+                     END DO
+                  END IF
                END DO
             END DO
          END DO
 !
-         dtemp = 0.0d0
-         CALL MXMA                                                      &
-     &        (betae,1,2*ngw,af,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
-         DO ig=1,ngw
-            df(ig)=df(ig)+dtemp(ig)
-         END DO
+         CALL DGEMV( 'N', 2*ngw, nhsa, 1.0d0, betae, 2*ngw, af, 1, 1.0d0, df, 1 )
 !
-         dtemp = 0.0d0
-         CALL MXMA                                                      &
-     &        (betae,1,2*ngw,aa,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
-         DO ig=1,ngw
-            da(ig)=da(ig)+dtemp(ig)
-         END DO
+!         CALL DGEMM( 'N', 'N', 2*ngw, 1, nhsa, 1.0d0, betae, 2*ngw, af, nhsa, 1.0d0, df, 2*ngw )
+!
+!         dtemp = 0.0d0
+!         CALL MXMA                                                      &
+!     &        (betae,1,2*ngw,af,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
+!         DO ig=1,ngw
+!            df(ig)=df(ig)+dtemp(ig)
+!         END DO
+
+!
+         CALL DGEMV( 'N', 2*ngw, nhsa, 1.0d0, betae, 2*ngw, aa, 1, 1.0d0, da, 1 )
+!
+!         CALL DGEMM( 'N', 'N', 2*ngw, 1, nhsa, 1.0d0, betae, 2*ngw, aa, nhsa, 1.0d0, da, 2*ngw )
+!
+!         dtemp = 0.0d0
+!         CALL MXMA                                                      &
+!     &        (betae,1,2*ngw,aa,1,nhsa,dtemp,1,2*ngw,2*ngw,nhsa,1)
+!         DO ig=1,ngw
+!            da(ig)=da(ig)+dtemp(ig)
+!         END DO
       ENDIF
 
       DEALLOCATE( dtemp )
@@ -664,7 +685,8 @@
 !
          dtemp(:,:) = 0.0d0
 
-         call MXMA (betae, 1, 2*ngw, af, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
+!         call MXMA (betae, 1, 2*ngw, af, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
+         call DGEMM ( 'N', 'N', 2*ngw, NOGRP, nhsa, 1.0d0, betae, 2*ngw, af, nhsa, 0.0d0, dtemp, 2*ngw)
 
 !         DO index = 1, NOGRP
 !            DO ig = 1+(index-1)*ngw, index*ngw
@@ -679,7 +701,8 @@
 
          dtemp(:,:) = 0.0d0
 
-         call MXMA (betae, 1, 2*ngw, aa, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
+         ! call MXMA (betae, 1, 2*ngw, aa, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
+         call DGEMM ( 'N', 'N', 2*ngw, NOGRP, nhsa, 1.0d0, betae, 2*ngw, aa, nhsa, 0.0d0, dtemp, 2*ngw)
 
 !         DO index = 1, NOGRP
 !            DO ig = 1+(index-1)*ngw, index*ngw
@@ -705,3 +728,152 @@
       return
       end subroutine dforce_bgl
 !
+!
+!
+!----------------------------------------------------------------------------
+SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... computes: the generalized force df=CMPLX(dfr,dfi) acting on the i-th
+  ! ...           electron state at the gamma point of the brillouin zone
+  ! ...           represented by the vector c=CMPLX(cr,CI)
+  !
+  ! ...    d_n(g) = f_n { 0.5 g^2 c_n(g) + [vc_n](g) +
+  ! ...                   sum_i,ij d^q_i,ij (-i)**l beta_i,i(g) 
+  ! ...                                e^-ig.r_i < beta_i,j | c_n > }
+  !
+  USE kinds,                  ONLY : DP
+  USE control_flags,          ONLY : iprint
+  USE gvecs,                  ONLY : nms, nps
+  USE gvecw,                  ONLY : ngw
+  USE cvan,                   ONLY : ish
+  USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s, &
+                                     nr1sx, nr2sx, nr3sx, nnrsx
+  USE electrons_base,         ONLY : nbspx, nbsp, nspin, f, ispin
+  USE constants,              ONLY : pi, fpi
+  USE ions_base,              ONLY : nsp, na, nat
+  USE gvecw,                  ONLY : ggp
+  USE uspp_param,             ONLY : nh, nhm
+  USE uspp,                   ONLY : nkb, dvan
+  USE cell_base,              ONLY : tpiba2
+  USE cp_interfaces,          ONLY : fwfft, invfft
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: betae(ngw,nkb), c(ngw), ca(ngw), df(ngw), da(ngw)
+  REAL(DP)    :: bec(nkb,nbsp), deeq(nhm,nhm,nat,nspin), v(nnrsx,nspin), v1(nnrsx,nspin)
+  INTEGER           :: i
+  ! local variables
+  INTEGER             :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
+  REAL(DP)      :: fi, fip, dd
+  COMPLEX(DP)   :: fp,fm, ci
+  REAL(DP)      :: af(nkb), aa(nkb)
+  COMPLEX(DP)   :: dtemp(ngw)    !
+  COMPLEX(DP), ALLOCATABLE :: psi(:)
+  !
+  !
+  CALL start_clock( 'dforce_field' )
+
+  ci = ( 0.0d0, 1.0d0 )
+
+  ALLOCATE( psi( nnrsx ) )
+  !
+  !     important: if nbsp is odd => c(*,nbsp+1)=0.
+  ! 
+  IF (MOD(nbsp,2).NE.0.AND.i.EQ.nbsp) THEN
+     DO ig=1,ngw
+        ca(ig)=(0.,0.)
+     END DO
+  ENDIF
+  !
+  !
+  psi( 1:nnrsx ) = 0.D0
+  DO ig=1,ngw
+     psi(nms(ig))=CONJG(c(ig)-CI*ca(ig))
+     psi(nps(ig))=c(ig)+CI*ca(ig)
+  END DO
+  !
+  CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+  !     
+  iss1=ispin(i)
+  !
+  ! the following avoids a potential out-of-bounds error
+  !
+  IF (i.NE.nbsp) THEN
+     iss2=ispin(i+1)
+  ELSE
+     iss2=iss1
+  END IF
+  !
+  DO ir=1,nnrsx
+     psi(ir)=CMPLX(v(ir,iss1)* DBLE(psi(ir)), v1(ir,iss2)*AIMAG(psi(ir)) )
+  END DO
+  !
+  CALL fwfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+  !
+  !     note : the factor 0.5 appears 
+  !       in the kinetic energy because it is defined as 0.5*g**2
+  !       in the potential part because of the logics
+  !
+  fi =-  f(i)*0.5
+  fip=-f(i+1)*0.5
+  DO ig=1,ngw
+     fp= psi(nps(ig)) + psi(nms(ig))
+     fm= psi(nps(ig)) - psi(nms(ig))
+     df(ig)= fi*(tpiba2*ggp(ig)* c(ig)+CMPLX(DBLE(fp), AIMAG(fm)))
+     da(ig)=fip*(tpiba2*ggp(ig)*ca(ig)+CMPLX(AIMAG(fp),-DBLE(fm)))
+  END DO
+  !
+  !     aa_i,i,nbsp = sum_j d_i,ij <beta_i,j|c_n>
+  ! 
+  IF(nkb.GT.0)THEN
+     DO inl=1,nkb
+        af(inl)=0.
+        aa(inl)=0.
+     END DO
+     !
+     DO is=1,nsp
+        DO iv=1,nh(is)
+           DO jv=1,nh(is)
+              isa=0
+              DO ism=1,is-1
+                 isa=isa+na(ism)
+              END DO
+              DO ia=1,na(is)
+                 inl=ish(is)+(iv-1)*na(is)+ia
+                 jnl=ish(is)+(jv-1)*na(is)+ia
+                 isa=isa+1
+                 dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
+                 af(inl)=af(inl)-  f(i)*dd*bec(jnl,  i)
+                 dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
+                 IF (i.NE.nbsp) aa(inl)=aa(inl)-f(i+1)*dd*bec(jnl,i+1)
+              END DO
+           END DO
+        END DO
+     END DO
+     !
+     CALL DGEMV( 'N', 2*ngw, nkb, 1.0d0, betae, 2*ngw, af, 1, 1.0d0, df, 1 )
+!     DO ig=1,ngw
+!        dtemp(ig)=(0.,0.)
+!     END DO
+!     CALL MXMA(betae,1,2*ngw,af,1,nkb,dtemp,1,2*ngw,2*ngw,nkb,1)
+!     DO ig=1,ngw
+!        df(ig)=df(ig)+dtemp(ig)
+!     END DO
+     !
+     CALL DGEMV( 'N', 2*ngw, nkb, 1.0d0, betae, 2*ngw, aa, 1, 1.0d0, da, 1 )
+!     DO ig=1,ngw
+!        dtemp(ig)=(0.,0.)
+!     END DO
+!     CALL MXMA(betae,1,2*ngw,aa,1,nkb,dtemp,1,2*ngw,2*ngw,nkb,1)
+!     DO ig=1,ngw
+!        da(ig)=da(ig)+dtemp(ig)
+!     END DO
+  ENDIF
+
+  DEALLOCATE( psi )
+  !
+  CALL stop_clock( 'dforce_field' )
+  !
+  RETURN
+END SUBROUTINE dforce_field
