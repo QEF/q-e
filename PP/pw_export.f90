@@ -487,7 +487,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
      !
      DO ig = 1, npw
         !
-        igk_l2g(ig) = ig_l2g( kisort(ig) )
+        igk_l2g(ig,ik) = ig_l2g( kisort(ig) )
         !
      END DO
      ngk (ik) = npw
