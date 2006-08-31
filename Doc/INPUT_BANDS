@@ -22,4 +22,8 @@
   !
   ! lsigma(i)  i=1,2,3. if true writes a file filband.i with the expectation
   !            values of the spin operator on the spinor wave-functions.
-               (only in the noncollinear case).
+  !            (only in the noncollinear case).
+  ! 
+  ! lsym       if .true. the bands are classified according to the irreducible
+  !            representations of the small group of k. A file "filband".rap
+  !            with the same format of "filband" is written. 
