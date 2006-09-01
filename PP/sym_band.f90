@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-SUBROUTINE sym_band(iltot, filband, spin_component)
+SUBROUTINE sym_band(iltot, filband, spin_component, firstk, lastk)
   !-----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
@@ -39,34 +39,43 @@ SUBROUTINE sym_band(iltot, filband, spin_component)
   IMPLICIT NONE
   !
   INTEGER :: ik, i, j, irot, iclass, code_group_old, ig, ibnd
-  INTEGER :: spin_component, nks1, nks2
+  INTEGER :: spin_component, nks1, nks2, firstk, lastk
   INTEGER :: iltot(nbnd,nkstot), iunout, ios
   INTEGER :: sk(3,3,48), ftauk(3,48), gk(3,48), sk_is(3,3,48), &
              gk_is(3,48), t_revk(48), nsymk, isym, ipol, jpol
   LOGICAL :: is_complex, is_complex_so, search_sym, is_symmorphic
   REAL(DP) :: sr(3,3,48), ft1, ft2, ft3
   COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), ZDOTC
-  INTEGER, ALLOCATABLE :: rap_et(:,:)
+  INTEGER, ALLOCATABLE :: rap_et(:)
   CHARACTER(LEN=45) :: snamek(48)
   CHARACTER (LEN=256) :: filband, namefile
   !
-  ALLOCATE(rap_et(nbnd,nkstot))
+  ALLOCATE(rap_et(nbnd))
   IF (nspin==1.OR.nspin==4) THEN
-     nks1=1
-     nks2=nkstot
+     nks1=MAX(1,firstk)
+     nks2=MIN(nkstot, lastk)
      IF (spin_component .ne. 1)  &
         CALL errore('punch_bands','uncorrect spin_component',1)
   ELSE IF (nspin.eq.2) THEN
      IF (spin_component == 1) THEN
-        nks1=1
-        nks2=nks/2
+        nks1=MAX(1,firstk)
+        nks2=MIN(nks/2,lastk)
      ELSE IF (spin_component==2) THEN
-        nks1=nks/2 + 1
-        nks2=nks
+        nks1=nks/2 + MAX(1,firstk)
+        nks2=nks/2 + MIN(nks/2,lastk)
      ELSE
         CALL errore('punch_bands','uncorrect spin_component',1)
      END IF
   END IF
+
+  IF ( ionode ) THEN
+     iunout=58
+     namefile=TRIM(filband)//".rap"
+     OPEN (unit = iunout, file = namefile, status = 'unknown', form = &
+          'formatted', err = 200, iostat = ios)
+200  CALL errore ('sym_band', 'Opening filband file', ABS (ios) )
+     REWIND (iunout)
+  ENDIF
 
   code_group_old=0
   DO ik = nks1, nks2
@@ -158,7 +167,7 @@ SUBROUTINE sym_band(iltot, filband, spin_component)
         WRITE(stdout,'(/,5x,"zone border point and non-symmorphic group ")') 
         WRITE(stdout,'(5x,"symmetry decomposition not available")') 
         WRITE( stdout, '(/,1x,74("*"))')
-        rap_et(:,ik)=-1
+        rap_et=-1
         GOTO 100
      ENDIF
 
@@ -167,39 +176,32 @@ SUBROUTINE sym_band(iltot, filband, spin_component)
         IF (domag) THEN
            CALL find_band_sym_so(evc_nc,et(1,ik),at,nbnd,npw,nsym_is, &
               ngm,sk_is,ftau_is,d_spin_is,gk_is,xk(1,ik),igk,nl,nr1,nr2,& 
-              nr3,nrx1,nrx2,nrx3,nrxx,npwx,rap_et(1,ik) )
+              nr3,nrx1,nrx2,nrx3,nrxx,npwx,rap_et )
         ELSE
            CALL find_band_sym_so(evc_nc,et(1,ik),at,nbnd,npw,nsymk,ngm, &
               sk,ftauk,d_spink,gk,xk(1,ik),igk,nl,nr1,nr2,nr3,nrx1, &
-              nrx2,nrx3,nrxx,npwx,rap_et(1,ik))
+              nrx2,nrx3,nrxx,npwx,rap_et)
         ENDIF
      ELSE
         CALL find_band_sym (evc, et(1,ik), at, nbnd, npw, nsymk, ngm, &
            sk, ftauk, gk, xk(1,ik), igk, nl, nr1, nr2, nr3, nrx1, &
-           nrx2, nrx3, nrxx, npwx, rap_et(1,ik) )
+           nrx2, nrx3, nrxx, npwx, rap_et )
      END IF
 
      code_group_old=code_group
 100  CONTINUE
-  END DO
-  IF ( ionode ) THEN
-     !
-     iunout=58
-     namefile=TRIM(filband)//".rap"
-     OPEN (unit = iunout, file = namefile, status = 'unknown', form = &
-          'formatted', err = 200, iostat = ios)
-200  CALL errore ('sym_band', 'Opening filband file', ABS (ios) )
-     REWIND (iunout)
-     DO ik = nks1, nks2
+     IF (ionode) THEN
         IF (ik == nks1) &
            WRITE (iunout, '(" &plot_rap nbnd_rap=",i4,", nks_rap=",i4," /")') &
                  nbnd, nks2-nks1+1
         WRITE (iunout, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
-        WRITE (iunout, '(10i8)') (rap_et (iltot(ibnd,ik),ik), ibnd=1,nbnd)
-     END DO
+        WRITE (iunout, '(10i8)') (rap_et(iltot(ibnd,ik)), ibnd=1,nbnd)
+     ENDIF
+  END DO
+
+  IF (ionode) THEN
      CLOSE(iunout)
   END IF
-
   !
   DEALLOCATE(rap_et)
   RETURN

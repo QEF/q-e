@@ -27,3 +27,6 @@
   ! lsym       if .true. the bands are classified according to the irreducible
   !            representations of the small group of k. A file "filband".rap
   !            with the same format of "filband" is written. 
+  !
+  ! firstk     if lsym=.true. makes the symmetry analysis only for k points
+  ! lastk      between firstk to lastk

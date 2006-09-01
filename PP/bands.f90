@@ -23,11 +23,12 @@ PROGRAM bands
   !
   CHARACTER (len=256) :: filband, outdir
   LOGICAL :: lsigma(4), lsym
-  INTEGER :: spin_component
+  INTEGER :: spin_component, firstk, lastk
   INTEGER, ALLOCATABLE :: iltot(:,:)
   INTEGER :: ios
   !
-  NAMELIST / inputpp / outdir, prefix, filband, spin_component, lsigma, lsym
+  NAMELIST / inputpp / outdir, prefix, filband, spin_component, lsigma, lsym, &
+                       firstk, lastk
   !                                  
   !
   CALL start_postproc (nd_nmbr)
@@ -40,6 +41,8 @@ PROGRAM bands
   filband = 'bands.out'
   lsym=.false.
   lsigma = .false.
+  firstk=0
+  lastk=10000000
   spin_component = 1
   !
   IF ( npool > 1 ) CALL errore('bands','pools not implemented',npool)
@@ -62,6 +65,8 @@ PROGRAM bands
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast( filband, ionode_id )
   CALL mp_bcast( spin_component, ionode_id )
+  CALL mp_bcast( firstk, ionode_id )
+  CALL mp_bcast( lastk, ionode_id )
   CALL mp_bcast( lsym, ionode_id )
   CALL mp_bcast( lsigma, ionode_id )
   !
@@ -72,8 +77,8 @@ PROGRAM bands
   CALL init_us_1
   ALLOCATE(iltot(nbnd,nkstot))
   !
-  CALL punch_band (filband, spin_component, lsigma, iltot)
-  IF (lsym) call sym_band(iltot, filband, spin_component)
+  CALL punch_band(filband,spin_component,lsigma,iltot)
+  IF (lsym) call sym_band(iltot,filband,spin_component,firstk,lastk)
   !
   DEALLOCATE(iltot)
   CALL stop_pp
