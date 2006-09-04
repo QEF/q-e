@@ -281,7 +281,8 @@ PWOBJS = \
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps average.x bands.x dos.x efg.x plotband.x plotrho.x wfdd.x \
+all : tldeps average.x bands.x dos.x efg.x plotband.x plotproj.x \
+      plotrho.x wfdd.x \
       pmw.x pp.x projwfc.x pw2casino.x pw2wannier90.x pw_export.x \
       voronoy.x initial_state.x dipole.x sumpdos.x plan_avg.x pw2gw.x
 
@@ -319,6 +320,11 @@ plan_avg.x : plan_avg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 plotband.x : plotband.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		plotband.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../PP/$@ . )
+
+plotproj.x : plotproj.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		plotproj.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plotrho.x : plotrho.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
