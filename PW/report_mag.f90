@@ -16,7 +16,7 @@
 !
 
       USE kinds,      ONLY : DP
-      USE ions_base,  ONLY : nat, tau
+      USE ions_base,  ONLY : nat, tau, ityp
       USE io_global,  ONLY : stdout
       use constants,  ONLY : pi
       USE scf,        ONLY : rho
@@ -69,9 +69,9 @@
             WRITE( stdout,1018) (m_loc(ipol,iat)/r_loc(iat),ipol=1,3)
             WRITE( stdout,1013) norm,theta,phi
             if (i_cons.eq.1) then
-               WRITE( stdout,1015) (mcons(ipol,iat),ipol=1,3)
+               WRITE( stdout,1015) (mcons(ipol,ityp(iat)),ipol=1,3)
             else if (i_cons.eq.2) then
-               WRITE( stdout,1017) 180.d0 * acos(mcons(3,iat))/pi
+               WRITE( stdout,1017) 180.d0 * acos(mcons(3,ityp(iat)))/pi
             endif
          endif
          WRITE( stdout,1010)

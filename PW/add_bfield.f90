@@ -41,7 +41,7 @@ etcon=0.d0
 IF (i_cons.LT.3) THEN
    CALL get_locals(r_loc, m_loc, rho)
 
-   DO na = 1,ntyp
+   DO na = 1,nat
       nt = ityp(na)
       IF (i_cons==1) THEN
          ! i_cons = 1 means that the 3 components of the magnetization
