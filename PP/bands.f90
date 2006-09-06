@@ -24,7 +24,6 @@ PROGRAM bands
   CHARACTER (len=256) :: filband, outdir
   LOGICAL :: lsigma(4), lsym
   INTEGER :: spin_component, firstk, lastk
-  INTEGER, ALLOCATABLE :: iltot(:,:)
   INTEGER :: ios
   !
   NAMELIST / inputpp / outdir, prefix, filband, spin_component, lsigma, lsym, &
@@ -75,18 +74,16 @@ PROGRAM bands
   CALL read_file
   CALL openfil_pp
   CALL init_us_1
-  ALLOCATE(iltot(nbnd,nkstot))
   !
-  CALL punch_band(filband,spin_component,lsigma,iltot)
-  IF (lsym) call sym_band(iltot,filband,spin_component,firstk,lastk)
+  CALL punch_band(filband,spin_component,lsigma,lsym)
+  IF (lsym) call sym_band(filband,spin_component,firstk,lastk)
   !
-  DEALLOCATE(iltot)
   CALL stop_pp
   STOP
 END PROGRAM bands
 !
 !-----------------------------------------------------------------------
-SUBROUTINE punch_band (filband, spin_component, lsigma, iltot)
+SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   !-----------------------------------------------------------------------
   !
   !    This routine writes the band energies on a file. The routine orders
@@ -125,7 +122,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, iltot)
   ! becpold: <psi|beta> at previous k-point
   COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:,:), old_nc(:,:), new_nc(:,:)
   COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
-  INTEGER :: iltot(nbnd,nkstot)
+  LOGICAL :: lsym
   ! as above for the noncolinear case
   INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol, ih, is1
   ! counters
@@ -241,7 +238,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, iltot)
         CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
      END IF
      !
-     IF (ik == nks1) THEN
+     IF (ik==nks1.or.lsym) THEN
         !
         !  first k-point in the list:
         !  save eigenfunctions in the current order (increasing energy)
@@ -426,7 +423,6 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, iltot)
         !
      END IF
      !
-  iltot(:,ik)=il(:)
   END DO
   !
   DEALLOCATE (index, degbands)

@@ -1,10 +1,12 @@
   !      Program: bands.x
-  !      Purpose: Rewrite the bands ordering them according to maximum overlap 
+  !      Purpose: Rewrite the bands ordering them using the overlap 
   !               of the wave-functions on neighbor k points
   !               and calculate properties of each eigen-function.
   !      Presently it can calculate:
   !      a) The expectation value of the spin operator on each spinor
   !         wave-function.
+  !      b) The symmetry properties of each wavefunction. With this option
+  !         the bands are not ordered according to the overlap.
   !
   !      The input data of this program are read from standard input
   !      or from a file and have the following format:

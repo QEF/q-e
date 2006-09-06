@@ -61,7 +61,7 @@ program read_bands
      read (21, plot_rap, iostat=ios)
      if (nks_rap.ne.nks.or.nbnd_rap.ne.nbnd.or.ios.ne.0) then
         write(6,'("file with representations not compatible with bands")')
-        exist_rap=.false.
+        exist_rap=.FALSE.
      endif
   endif
   !
@@ -76,6 +76,8 @@ program read_bands
      allocate(todo(nbnd))
   end if
 
+  high_symmetry=.FALSE.
+
   do n=1,nks
      read(1,*,end=20,err=20) ( k(i,n), i=1,3 )
      read(1,*,end=20,err=20) (e(i,n),i=1,nbnd)
@@ -88,7 +90,7 @@ program read_bands
      end if
 
      if (exist_rap) then
-        read(21,*,end=20,err=20) (k_rap(i,n),i=1,3)
+        read(21,*,end=20,err=20) (k_rap(i,n),i=1,3), high_symmetry(n)
         read(21,*,end=20,err=20) (rap(i,n),i=1,nbnd)
         if (abs(k(1,n)-k_rap(1,n))+abs(k(2,n)-k_rap(2,n))+  &
             abs(k(3,n)-k_rap(3,n))  > eps ) then
@@ -132,7 +134,7 @@ program read_bands
         ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
          sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
          sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
-        high_symmetry(n) = abs(ps-1.0) .gt.1.0e-4
+        high_symmetry(n) = high_symmetry(n).OR.(abs(ps-1.0) .gt.1.0e-4)
 !
 !  The gamma point is a high symmetry point  
 !

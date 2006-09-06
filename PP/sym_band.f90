@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-SUBROUTINE sym_band(iltot, filband, spin_component, firstk, lastk)
+SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   !-----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
@@ -40,10 +40,10 @@ SUBROUTINE sym_band(iltot, filband, spin_component, firstk, lastk)
   !
   INTEGER :: ik, i, j, irot, iclass, code_group_old, ig, ibnd
   INTEGER :: spin_component, nks1, nks2, firstk, lastk
-  INTEGER :: iltot(nbnd,nkstot), iunout, ios
+  INTEGER :: iunout, ios
   INTEGER :: sk(3,3,48), ftauk(3,48), gk(3,48), sk_is(3,3,48), &
              gk_is(3,48), t_revk(48), nsymk, isym, ipol, jpol
-  LOGICAL :: is_complex, is_complex_so, search_sym, is_symmorphic
+  LOGICAL :: is_complex, is_complex_so, search_sym, is_symmorphic, is_high_sym
   REAL(DP) :: sr(3,3,48), ft1, ft2, ft3
   COMPLEX(DP) :: d_spink(2,2,48), d_spin_is(2,2,48), ZDOTC
   INTEGER, ALLOCATABLE :: rap_et(:)
@@ -78,6 +78,7 @@ SUBROUTINE sym_band(iltot, filband, spin_component, firstk, lastk)
   ENDIF
 
   code_group_old=0
+  is_high_sym=.FALSE.
   DO ik = nks1, nks2
      !
      !    prepare the indices of this k point
@@ -171,7 +172,12 @@ SUBROUTINE sym_band(iltot, filband, spin_component, firstk, lastk)
         GOTO 100
      ENDIF
 
-     IF (code_group.ne.code_group_old) CALL write_group_info(.true.)
+     IF (code_group.ne.code_group_old) THEN
+        CALL write_group_info(.true.)
+        is_high_sym=.NOT.is_high_sym
+     ELSE
+        is_high_sym=.FALSE.
+     ENDIF
      IF (noncolin) THEN
         IF (domag) THEN
            CALL find_band_sym_so(evc_nc,et(1,ik),at,nbnd,npw,nsym_is, &
@@ -194,8 +200,8 @@ SUBROUTINE sym_band(iltot, filband, spin_component, firstk, lastk)
         IF (ik == nks1) &
            WRITE (iunout, '(" &plot_rap nbnd_rap=",i4,", nks_rap=",i4," /")') &
                  nbnd, nks2-nks1+1
-        WRITE (iunout, '(10x,3f10.6)') xk(1,ik),xk(2,ik),xk(3,ik)
-        WRITE (iunout, '(10i8)') (rap_et(iltot(ibnd,ik)), ibnd=1,nbnd)
+        WRITE (iunout, '(10x,3f10.6,l5)') xk(1,ik),xk(2,ik),xk(3,ik),is_high_sym
+        WRITE (iunout, '(10i8)') (rap_et(ibnd), ibnd=1,nbnd)
      ENDIF
   END DO
 

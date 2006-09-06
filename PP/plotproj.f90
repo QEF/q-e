@@ -32,14 +32,16 @@ PROGRAM plotproj
 !  filename     ! name of the file with the band eigenvalues
 !  filename1    ! name of the file with the projections
 !  fileout      ! name of the output file where the bands are written
+!  threshold    ! see below
 !  ncri         ! number of criterions for selecting the bands
 !  for each criterion
-!  first_atomic_wfc, last_atomic_wfc, threshold !the band is selected if the
-!                                               sum of the projections on
-!                                               the atomic wavefunctions between
-!                                               first_atomic_wfc and
-!                                               last_atomic_wfc is larger than
-!                                               threshold.
+!  first_atomic_wfc, last_atomic_wfc   ! the band is selected if the
+!                                        sum of the projections on
+!                                        the atomic wavefunctions between
+!                                        first_atomic_wfc and
+!                                        last_atomic_wfc is larger than
+!                                        threshold. The sum is done on
+!                                        all criterions.
 !
 #include "f_defs.h"
 
@@ -51,8 +53,8 @@ INTEGER :: nks = 0, nbnd = 0, ios, n, i, ibnd, na, idum, nat, &
            natomwfc, nwfc, ntyp, ncri, icri
 LOGICAL, ALLOCATABLE :: toplot(:,:)
 CHARACTER(LEN=256) :: filename, filename1
-REAL(DP) :: psum
-REAL(DP), ALLOCATABLE :: proj(:,:,:), threshold(:)
+REAL(DP) :: psum, threshold
+REAL(DP), ALLOCATABLE :: proj(:,:,:)
 INTEGER, ALLOCATABLE :: first_atomic_wfc(:), last_atomic_wfc(:)
 
 CALL get_file ( filename )
@@ -124,15 +126,15 @@ END IF
 OPEN (UNIT=2,FILE=filename,FORM='formatted',STATUS='unknown',IOSTAT=ios)  
 IF (ios.ne.0) STOP "Error opening output file "
 
+READ(5, *, ERR=20, IOSTAT=ios) threshold
 READ(5, *, ERR=20, IOSTAT=ios) ncri
 IF (ncri<1)  STOP '("no orbital given ...")'
 ALLOCATE(first_atomic_wfc(ncri))
 ALLOCATE(last_atomic_wfc(ncri))
-ALLOCATE(threshold(ncri))
 DO icri=1,ncri
    READ(5, *, ERR=20, IOSTAT=ios) first_atomic_wfc(icri),  &
-                   last_atomic_wfc(icri), threshold(icri)
-   IF (first_atomic_wfc(icri)>nwfc .OR. last_atomic_wfc(icri)>nwfc .OR. &
+                   last_atomic_wfc(icri)
+   IF (first_atomic_wfc(icri)>natomwfc.OR.last_atomic_wfc(icri)>natomwfc .OR. &
        first_atomic_wfc(icri)<1 .OR. &
        last_atomic_wfc(icri)<first_atomic_wfc(icri) ) THEN 
       PRINT '("Problem with ...",i5)', icri
@@ -143,13 +145,13 @@ END DO
 toplot=.FALSE.
 DO i=1,nbnd
    DO n=1,nks
+      psum=0.d0
       DO icri=1,ncri
-         psum=0.d0
          DO nwfc=first_atomic_wfc(icri),last_atomic_wfc(icri)
             psum=psum+ABS(proj(nwfc,i,n))
          END DO
-         toplot(i,n)=toplot(i,n).OR.(psum > threshold(icri))
       END DO
+      toplot(i,n)=toplot(i,n).OR.(psum > threshold)
    END DO
 END DO
 
