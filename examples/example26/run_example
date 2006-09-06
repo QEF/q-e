@@ -78,9 +78,11 @@ $ECHO "  running cp.x as: $CP_COMMAND"
 $ECHO
 
 # clean TMP_DIR
+if test "0$1" -le 1 ; then
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
+fi
 
 # Now is ....
 date
