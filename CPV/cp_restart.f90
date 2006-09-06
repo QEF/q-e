@@ -903,11 +903,12 @@ MODULE cp_restart
       CHARACTER(LEN=3)      :: atm_(ntypx)
       INTEGER               :: nat_, nsp_, na_
       INTEGER               :: nk_, ik_, nt_
-      LOGICAL               :: gamma_only_ 
+      LOGICAL               :: gamma_only_ , lsda_
       REAL(DP)              :: alat_, a1_(3), a2_(3), a3_(3)
       REAL(DP)              :: pmass_, zv_ 
       REAL(DP)              :: celldm_(6)
       INTEGER               :: iss_, nspin_, ngwt_, nbnd_ , n_emp_ , nbnd_tot
+      INTEGER               :: nelup_ , neldw_ , ntmp
       REAL(DP)              :: nelec_
       REAL(DP)              :: scalef_
       REAL(DP)              :: wk_
@@ -1011,6 +1012,35 @@ MODULE cp_restart
       CALL errore( 'cp_readfile', &
                    'cannot read positions from restart file', ierr )
       !
+      !
+      IF( ionode ) THEN
+         CALL iotk_scan_begin( iunpun, "OCCUPATIONS", FOUND = found )
+         lsda_  = .FALSE.
+         nelup_ = 0
+         neldw_ = 0
+         IF( found ) THEN
+            CALL iotk_scan_empty( iunpun, "INFO", attr )
+            CALL iotk_scan_attr( attr, "lsda",  lsda_ )
+            IF( lsda_ ) THEN
+               CALL iotk_scan_attr( attr, "nelup",  nelup_ )
+               CALL iotk_scan_attr( attr, "neldw",  neldw_ )
+            END IF
+            CALL iotk_scan_end( iunpun, "OCCUPATIONS" )
+         END IF
+      END IF
+      !
+      CALL mp_bcast( lsda_ , ionode_id, intra_image_comm )
+      CALL mp_bcast( nelup_ , ionode_id, intra_image_comm )
+      CALL mp_bcast( neldw_ , ionode_id, intra_image_comm )
+      !
+      IF( lsda_ .AND. nspin == 1 ) &
+         CALL errore( 'cp_readfile', 'LSDA restart file with a spinless run', ierr )
+
+      IF( lsda_ ) THEN
+         IF( ( nelup_ /=  nupdwn( 1 ) ) .OR. ( neldw_ /=  nupdwn( 2 ) ) ) &
+            CALL errore( 'cp_readfile', 'inconsistent number of spin states', ierr )
+      END IF
+
       ! ... read MD timesteps variables
       !
       IF ( ionode ) &
@@ -1260,7 +1290,7 @@ MODULE cp_restart
                !
                occ_ = 0.0d0
                !
-               CALL iotk_scan_dat( iunpun, "OCC0" // TRIM( cspin ), occ_ ( 1 : nbnd_ ), FOUND = found )
+               CALL iotk_scan_dat( iunpun, "OCC0" // TRIM( cspin ), occ_ ( 1 :  nupdwn( iss ) ), FOUND = found )
                !
                IF( .NOT. found ) THEN
                   !
@@ -1275,7 +1305,7 @@ MODULE cp_restart
                   !
                   occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) )
                   !
-                  CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ), occ_ ( 1 : nbnd_ ), FOUND = found )
+                  CALL iotk_scan_dat( iunpun, "OCCM" // TRIM( cspin ), occ_ ( 1 :  nupdwn( iss ) ), FOUND = found )
                   !
                   IF( found ) THEN
                      occm( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) )
