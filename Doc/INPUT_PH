@@ -1,116 +1,121 @@
-c   phonon input cards are as follows:
-c
-c card 1   title_ph (a line that is reprinted on output)
-c
-c                    namelist "inputph"
-c
-cc  variable             meaning                              default value
-c
-c amass(ntyp) atomic mass [amu] of each atomic type                 0
-c             If not specified, masses are read from data file
-c
-c outdir      scratch directory                                     './'
-c
-c prefix      prepended to input/output filenames                'pwscf'
-c             must be the same used in the calculation
-c             of unperturbed system
-c
-c niter_ph    maximum number of iterations in a scf step             50
-c
-c tr2_ph      threshold for selfconsistency                        1e-10
-c
-c alpha_mix(niter) mixing factor (for each iteration) for   alpha_mix(1)=0.7
-c             updating the scf potential:
-c             vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
-c nmix_ph     number of iterations used in potential mixing          4
-c
-c iverbosity  iverbosity=0 short output, iverbosity=1 verbose output 0
-c
-c reduce_io   reduce I/O to the strict minimum                       .false.
-c
-c max_seconds maximum allowed run time before the job stops smoothly 1.d7
-c
-c fildyn      file where the dynamical matrix is written           'matdyn'
-c
-c fildrho     file where the charge density responses are written     ' '
-c
-c filelph     file where electron-phonon matrix elements are written  ' '
-c
-c fildvscf    file where the the potential variation is written       ' '
-c             (for later use in electron-phonon calculation)
-c
-c
-c epsil       if .true. in a q=0 calculation for a non metal the      .false.
-c             macroscopic dielectric constant of the system is 
-c             computed. Do not set epsil to .true. if you have a
-c             metallic system or q/=0: the code will complain and stop
-c
-c trans       if .true. the phonons are computed                      .true.
-c             If trans.and.epsil effective charges are calculated            
-c
-c lraman      if .true. calculate nonresonant Raman coefficients      .false.
-c             using second-order response as in:
-c             M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
-c             Optional variables for Raman:
-c     eth_rps threshold for calculation of  Pc R |psi>                1.0d-9
-c     eth_ns  threshold for non-scf wavefunction calculation          1.0e-12
-c     dek     delta_xk used for wavefunction derivation wrt k         1.0e-3
-c
-c recover     if .true. restart from an interrupted run               .false.
-c
-c elph        if .true. electron-phonon lambda coeffs are computed    .false.
-c             For metals only, requires gaussian smearing.
-c             If elph.and.trans, the lambdas are calculated in the same
-c             run, using the same k-point grid for phonons and lambdas
-c             If elph.and..not.trans, the lambdas are calculated using
-c             previously saved DeltaVscf in fildvscf, previously saved
-c             dynamical matrix, and the present punch file. This allows
-c             the use of a different (larger) k-point grid.
-c
-c zue         if .true. in a q=0 calculation for a non metal the 
-c             effective charges are computed from the phonon
-c             density responses. Note that if trans.and.epsil
-c             effective charges are calculated using a different
-c             algorithm. The results should be the same within
-c             numerical noise.
-c
-c fpol        if .true. calculate dynamic polarizabilities            .false.
-c             ( experimantal stage, see example33 for calculation
-c               of methane )
-c
-c lnscf       If .TRUE. the run makes first a nscf calculation        .false.
-c
-c ldisp       If .TRUE. the run calculates phonons for a grid of      .false.
-c             q-points specified by nq1, nq2, nq3  - for direct
-c             calculation of the entire phonon dispersion
-c             (ldisp and modenum are not compatible)
-c
-c nq1,nq2,nq3 parameters of the Monkhorst-Pack grid (no offset) used   0,0,0
-c             when ldisp=.true. Same meaning as for nk1, nk2, nk3
-c             in the input of pw.x
-c
-c maxirr      maximum number of irreducible representation to be     0 i.e. all
-c             computed in a single run 
-c
-c nrapp       the representations to do                               0
-c             (nrapp and nat_todo are not compatible)
-c
-c nat_todo    number of atom to be displaced                          0
-c             (nrapp and nat_todo are not compatible)
-c
-c modenum     for single mode calculation                             -1
-c             If not set here, will be read from file .save           
-c             (if modenum.ne.0 => nat_todo = 0; nrapp = 1; list(1) = 
-c             modenum)
-c
+  phonon input cards are as follows:
 
-c                    End of namelist "inputph"
-c
-c card 2   xq(3)   the phonon wavevector; must be equal to the one used
-c                  in the non-selfconsistent calculation (not read if 
-c                  ldisp is true).
-c
-c card 3   list(na), na = 1, nrapp
-c
-c card 3   atomo(na), na = 1, nat_todo
-c
+card 1   title_ph (a line that is reprinted on output)
+
+                   namelist "inputph"
+
+ variable             meaning                              default value
+
+amass(ntyp) atomic mass [amu] of each atomic type                 0
+            If not specified, masses are read from data file
+
+outdir      scratch directory                                     './'
+
+prefix      prepended to input/output filenames                'pwscf'
+            must be the same used in the calculation
+            of unperturbed system
+
+niter_ph    maximum number of iterations in a scf step             50
+
+tr2_ph      threshold for selfconsistency                        1e-10
+
+alpha_mix(niter) mixing factor (for each iteration) for   alpha_mix(1)=0.7
+            updating the scf potential:
+            vnew(in) = alpha_mix*vold(out) + (1-alpha_mix)*vold(in)
+nmix_ph     number of iterations used in potential mixing          4
+
+iverbosity  iverbosity=0 short output, iverbosity=1 verbose output 0
+
+reduce_io   reduce I/O to the strict minimum                       .false.
+
+max_seconds maximum allowed run time before the job stops smoothly 1.d7
+
+fildyn      file where the dynamical matrix is written           'matdyn'
+
+fildrho     file where the charge density responses are written     ' '
+
+filelph     file where electron-phonon matrix elements are written  ' '
+
+fildvscf    file where the the potential variation is written       ' '
+            (for later use in electron-phonon calculation)
+
+
+epsil       if .true. in a q=0 calculation for a non metal the      .false.
+            macroscopic dielectric constant of the system is 
+            computed. Do not set epsil to .true. if you have a
+            metallic system or q/=0: the code will complain and stop
+
+trans       if .true. the phonons are computed                      .true.
+            If trans.and.epsil effective charges are calculated            
+
+lraman      if .true. calculate nonresonant Raman coefficients      .false.
+            using second-order response as in:
+            M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
+            Optional variables for Raman:
+    eth_rps threshold for calculation of  Pc R |psi>                1.0d-9
+    eth_ns  threshold for non-scf wavefunction calculation          1.0e-12
+    dek     delta_xk used for wavefunction derivation wrt k         1.0e-3
+
+recover     if .true. restart from an interrupted run               .false.
+
+elph        if .true. electron-phonon lambda coeffs are computed    .false.
+            For metals only, requires gaussian smearing.
+            If elph.and.trans, the lambdas are calculated in the same
+            run, using the same k-point grid for phonons and lambdas
+            If elph.and..not.trans, the lambdas are calculated using
+            previously saved DeltaVscf in fildvscf, previously saved
+            dynamical matrix, and the present punch file. This allows
+            the use of a different (larger) k-point grid.
+
+zue         if .true. in a q=0 calculation for a non metal the 
+            effective charges are computed from the phonon
+            density responses. Note that if trans.and.epsil
+            effective charges are calculated using a different
+            algorithm. The results should be the same within
+            numerical noise.
+
+fpol        if .true. calculate dynamic polarizabilities            .false.
+            ( experimantal stage, see example33 for calculation
+              of methane )
+
+lnscf       If .TRUE. the run makes first a nscf calculation        .false.
+
+ldisp       If .TRUE. the run calculates phonons for a grid of      .false.
+            q-points specified by nq1, nq2, nq3  - for direct
+            calculation of the entire phonon dispersion.
+            The pw.x data file should not be produced using 
+            "calculation='phonon'" in this case
+
+nq1,nq2,nq3 parameters of the Monkhorst-Pack grid (no offset) used   0,0,0
+            when ldisp=.true. Same meaning as for nk1, nk2, nk3
+            in the input of pw.x
+
+nrapp       choose the subset of irreducible representations (irreps)
+            for which the linear response calculation is performed:
+            "nrapp" irreps, specified in input (see below) are used.
+            Default: nrapp=0, i.e. use all irreps . nrapp must be <= 3*nat
+            Do not specify "nat_todo" together with "nrapp"
+
+maxirr      perform calculations only up to the first "maxirr" irreps.
+            Default: maxirr=0, i.e.  use all irreps. maxirr must be <= 3*nat
+            Do not specify "nat_todo" or "nrapp" together with "maxirr"
+
+nat_todo    choose the subset of atoms to be used in the linear response 
+            calculation: "nat_todo" atoms, specified in input (see below)
+            are displaced. Default: nat_todo=0, i.e. displace all atoms
+            Do not specify "nrapp" together with "nat_todo"
+
+                   End of namelist "inputph"
+
+card 2   xq(3)   the phonon wavevector; must be equal to the one used
+                 in the non-selfconsistent calculation (not read if 
+                 ldisp is true).
+
+card 3   list(na), na = 1, nrapp
+                 contains the list of indices of irreps used in the
+                 calculation if  "nrapp" is specified
+OR:
+card 3   atomo(na), na = 1, nat_todo
+                 contains the list of indices of atoms used in the
+                 calculation if  "nat_todo" is specified
+

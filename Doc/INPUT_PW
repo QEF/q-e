@@ -874,7 +874,10 @@ press_cov_thr  REAL ( default = 0.5D0 Kbar )
 &PHONON ( only in calculation = 'phonon' )
 
 modenum        INTEGER ( default = 0 )
-               for single-mode phonon calculation
+               for single-mode phonon calculation : modenum is the index of the
+               irreducible representation (irrep) into which the reducible
+               representation formed by the 3*nat atomic displacements are
+               decomposed in order to perform the phonon calculation
 
 xqq(3)         REAL
                q-point (units 2pi/a) for phonon calculation
