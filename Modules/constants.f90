@@ -68,7 +68,7 @@ MODULE constants
   ! ...                                  = 0.208194346 e*A
   ! ... ( 1 esu = (0.1/c) Am, c=299792458 m/s)
   !
-  REAL(DP), PARAMETER :: DEBYE_SI         = 3.3356409519 * 10D-30 ! C*m 
+  REAL(DP), PARAMETER :: DEBYE_SI         = 3.3356409519 * 1.0D-30 ! C*m 
   REAL(DP), PARAMETER :: AU_DEBYE         = ELECTRON_SI * BOHR_RADIUS_SI / &
 	                                       DEBYE_SI
   !
@@ -100,7 +100,6 @@ MODULE constants
   REAL(DP), PARAMETER :: DIP_DEBYE = AU_DEBYE
   REAL(DP), PARAMETER :: AU_TERAHERTZ  = AU_PS
   REAL(DP), PARAMETER :: AU_TO_OHMCMM1 = 46000.0D0 ! (ohm cm)^-1
-  REAL(DP), PARAMETER :: k_boltzman_au = 3.1667D-6  ! Hartree K^-1 
   !
 
 END MODULE constants

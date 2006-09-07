@@ -39,7 +39,7 @@ CONTAINS
           USE cp_interfaces,      ONLY: dforce, kohn_sham
           USE electrons_module,   ONLY: ei, ei_emp, n_emp, nupdwn_emp, iupdwn_emp, nb_l, n_emp_l
           USE electrons_base,     ONLY: nupdwn, iupdwn, nspin
-          USE constants,          ONLY: autoev, pi, k_boltzman_au, au_to_ohmcmm1, eps8
+          USE constants,          ONLY: autoev, pi, k_boltzmann_au, au_to_ohmcmm1, eps8
           USE cell_base,          ONLY: tpiba2
           USE mp,                 ONLY: mp_sum
           USE mp_global,          ONLY: intra_image_comm
@@ -81,7 +81,7 @@ CONTAINS
 
           nfreq = INT( maxdie / ddie + 1.0d0 )
           !
-          beta = 1.0d0 / ( k_boltzman_au * temperature )
+          beta = 1.0d0 / ( k_boltzmann_au * temperature )
           !
           fact = 2.0d0 * pi / ( 3.0d0 * omega )
 
