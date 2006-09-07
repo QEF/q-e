@@ -55,7 +55,10 @@
 
       do is = nspmn, nspmx
          !
-         IF( nh( is ) < 1 ) CYCLE
+         IF( nh( is ) < 1 ) THEN
+            isa = isa + na(is)
+            CYCLE
+         END IF
          !
          IF( nproc_image > 1 ) THEN
             nhx = nh( is ) * na( is )
