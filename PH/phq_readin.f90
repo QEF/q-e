@@ -48,13 +48,12 @@ SUBROUTINE phq_readin()
   !
   IMPLICIT NONE
   !
-  INTEGER :: ios, ipol, iter, na, it, modenum_aux
+  INTEGER :: ios, ipol, iter, na, it
     ! integer variable for I/O control
     ! counter on polarizations
     ! counter on iterations
     ! counter on atoms
     ! counter on types
-    ! auxiliary variable
   REAL(DP) :: amass_input(nsx)
     ! save masses read from input here
   CHARACTER (LEN=256) :: outdir
@@ -70,7 +69,7 @@ SUBROUTINE phq_readin()
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
                        prefix, fildyn, filelph, fildvscf, fildrho,   &
-                       lnscf, ldisp, nq1, nq2, nq3, modenum,         &
+                       lnscf, ldisp, nq1, nq2, nq3,                  &
                        eth_rps, eth_ns, lraman, elop, dek, recover, &
                        fpol, asr
   ! tr2_ph       : convergence threshold
@@ -149,7 +148,6 @@ SUBROUTINE phq_readin()
   nq1          = 0
   nq2          = 0
   nq3          = 0
-  modenum      = -1
   dek          = 1.0d-3
   recover      = .FALSE.
   asr          = .FALSE.
@@ -220,10 +218,9 @@ SUBROUTINE phq_readin()
   !   Here we finished the reading of the input file.
   !   Now allocate space for pwscf variables, read and check them.
   !
-  !   modenum and amass will also be read from file:
-  !   save their content in auxiliary variables
+  !   amass will also be read from file:
+  !   save its content in auxiliary variables
   !
-  modenum_aux = modenum
   amass_input(:)= amass(:)
   !
   CALL read_file ( )
@@ -233,11 +230,6 @@ SUBROUTINE phq_readin()
 
   IF (noncolin) CALL errore('phq_readin', &
      'The non collinear phonon code is not yet available',1)
-  !
-  !  reset and broadcast modenum if it was read from input
-  !
-  IF (modenum_aux .NE. -1) modenum = modenum_aux     
-  CALL mp_bcast( modenum, ionode_id )
   !
   !  set masses to values read from input, if available;
   !  leave values read from file otherwise
@@ -303,22 +295,16 @@ SUBROUTINE phq_readin()
        &Wrong maxirr ', ABS (maxirr) )
   IF (MOD (nks, 2) .NE.0.AND..NOT.lgamma) CALL errore ('phq_readin', &
        'k-points are odd', nks)
-  IF (modenum .ne. 0) THEN
+  IF (modenum > 0) THEN
+     IF ( ldisp ) &
+          CALL errore('phq_readin','Dispersion calculation and &
+          & single mode calculation not possibile !',1)
      nrapp = 1
      nat_todo = 0
      list (1) = modenum
   ENDIF
   
-  IF (modenum.ne.0 .AND. ldisp) &
-       CALL errore('phq_readin','Dispersion calculation and &
-       & single mode calculation not possibile !',1)
-
-  IF (modenum.ne.0) lgamma_gamma=.FALSE.
-
-  IF (ldisp) lgamma_gamma=.FALSE.
-
-  IF (lraman) lgamma_gamma=.FALSE.
-
+  IF (modenum > 0 .OR. ldisp .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.not.lgamma_gamma) asr=.FALSE.
   !
   !  broadcast the values of nq1, nq2, nq3
