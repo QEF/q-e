@@ -3137,7 +3137,7 @@ IF (noncolin) THEN
       WRITE(stdout,'(/,5x,"double point group ",a11)') gname
    END IF
    WRITE(stdout,'(5x, "there are", i3," classes and",i3, &
-                         " irreducible representations")') nclass, nrap
+                     &   " irreducible representations")') nclass, nrap
 ELSE
    WRITE(stdout,'(/,5x,"point group ",a11)') gname
    WRITE(stdout,'(5x, "there are", i3," classes")') nclass
