@@ -1410,3 +1410,180 @@ SUBROUTINE para_zcholdc( n, a, lda, comm )
   RETURN
   !
 END SUBROUTINE para_zcholdc
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_dtrtri( n, a, lda, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... parallel inversion of a lower trinagular matrix done distributing
+  ! ... by columns ( the number of columns assigned to each processor are
+  ! ... chosen to optimize the load balance )
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)    :: n
+  INTEGER,  INTENT(IN)    :: lda
+  REAL(DP), INTENT(INOUT) :: a(lda,*)
+  INTEGER,  INTENT(IN)    :: comm
+  !
+  INTEGER               :: i, j, k
+  INTEGER               :: i0, i1, dim, mpime, nproc, ierr
+  REAL(DP)              :: sum, area
+  REAL(DP), ALLOCATABLE :: inva(:,:)
+  !
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  dim  = n
+  area = DBLE( n*n / 2 ) / DBLE( nproc )
+  i0   = 1
+  i1   = 1
+  !
+  DO i = 0, nproc - 1
+     !
+     i1 = i1 + ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
+     !
+     i1 = MIN( i1, n )
+     !
+     IF ( i == mpime ) EXIT
+     !     
+     dim = n - i1
+     !
+     i0 = i1 + 1
+     !
+  END DO
+  !
+  ALLOCATE( inva( n, i0:i1 ) )
+  !
+  inva(:,:) = 0.D0
+  !
+  DO i = i0, i1
+     !
+     inva(i,i) = 1.D0 / a(i,i)
+     !
+     DO j = i + 1, n
+        !
+        sum = 0.D0
+        !
+        DO k = i, j - 1
+           !
+           sum = sum + inva(k,i)*a(j,k)
+           !
+        END DO
+        !
+        inva(j,i) = - sum / a(j,j)
+        !
+     END DO
+     !
+  END DO
+  !
+  a(1:lda,1:n) = 0.D0
+  a(1:n,i0:i1) = inva(:,:)
+  !
+  DEALLOCATE( inva )
+  !
+  CALL reduce( lda*n, a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_dtrtri
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_ztrtri( n, a, lda, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... parallel inversion of a lower trinagular matrix done distributing
+  ! ... by columns ( the number of columns assigned to each processor are
+  ! ... chosen to optimize the load balance )
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,     INTENT(IN)    :: n
+  INTEGER,     INTENT(IN)    :: lda
+  COMPLEX(DP), INTENT(INOUT) :: a(lda,*)
+  INTEGER,     INTENT(IN)    :: comm
+  !
+  INTEGER                  :: i, j, k
+  INTEGER                  :: i0, i1, dim, mpime, nproc, ierr
+  REAL(DP)                 :: area
+  COMPLEX(DP)              :: sum
+  COMPLEX(DP), ALLOCATABLE :: inva(:,:)
+  !
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  dim  = n
+  area = DBLE( n*n / 2 ) / DBLE( nproc )
+  i0   = 1
+  i1   = 1
+  !
+  DO i = 0, nproc - 1
+     !
+     i1 = i1 + ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
+     !
+     IF ( i == mpime ) EXIT
+     !     
+     dim = n - i1
+     !
+     i0 = i1 + 1
+     !
+  END DO
+  !
+  ALLOCATE( inva( n, i0:i1 ) )
+  !
+  inva(:,:) = ZERO
+  !
+  DO i = i0, i1
+     !
+     inva(i,i) = ONE / a(i,i)
+     !
+     DO j = i + 1, n
+        !
+        sum = ZERO
+        !
+        DO k = i, j - 1
+           !
+           sum = sum + inva(k,i)*a(j,k)
+           !
+        END DO
+        !
+        inva(j,i) = - sum / a(j,j)
+        !
+     END DO
+     !
+  END DO
+  !
+  a(1:lda,1:n) = ZERO
+  a(1:n,i0:i1) = inva(:,:)
+  !
+  DEALLOCATE( inva )
+  !
+  CALL reduce( 2*lda*n, a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_ztrtri

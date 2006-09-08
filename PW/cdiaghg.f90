@@ -77,12 +77,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL stop_clock( 'choldc' )
      !
-     ! ... L is inverted ( sdum = L^1 )
+     ! ... L is inverted ( sdum = L^-1 )
      !
      CALL start_clock( 'inversion' )
      !
-     CALL ZTRTRI( 'L', 'N', n, sdum, n, info )
-     CALL errore( 'cdiaghg', 'DTRTRI failed', ABS( info ) )
+     CALL para_ztrtri( n, sdum, n, intra_pool_comm )
      !
      CALL stop_clock( 'inversion' )
      !
