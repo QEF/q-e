@@ -48,7 +48,6 @@ input.o \
 ions.o \
 ions_positions.o \
 ksstates.o \
-macdep.o \
 main.o \
 mainvar.o \
 main_loops.o \

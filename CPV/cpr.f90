@@ -923,6 +923,4 @@ SUBROUTINE terminate_run()
   !
   CALL mp_report()
   !
-  CALL memory()
-  !
 END SUBROUTINE terminate_run

@@ -1576,9 +1576,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      !
   ENDDO FIN_REP_LOOP               ! <<<<<<<<<<<<<<<<<<<<<<<<<<<<< !
   !
-  !
-  CALL memory
-  !      
 1977 FORMAT(5x,//'====================== end cprvan ',                 &
        &            '======================',//)
 
