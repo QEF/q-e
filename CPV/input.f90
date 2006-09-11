@@ -173,7 +173,19 @@ MODULE input
      !
      ! ... fix values for dependencies
      !
-     IF ( program_name == 'FPMD' ) CALL fix_dependencies()
+     IF ( program_name == 'FPMD' ) THEN 
+        !
+        IF ( lconstrain .OR. lmetadyn ) THEN
+
+           ! ...  Apply sort to constraints atomic index
+
+           CALL new_atomind_constraints()
+
+        END IF 
+ 
+        CALL fix_dependencies()
+        !
+     END IF
      !
      ! ... write to stdout input module information
      !
@@ -1330,6 +1342,8 @@ MODULE input
       CALL ions_print_info( )
       !
       IF( tfor .AND. tnosep ) CALL ions_nose_info()
+      !
+      CALL constraint_info( )
       !
       IF( thdyn .AND. tnoseh ) frich = 0.0d0
       !

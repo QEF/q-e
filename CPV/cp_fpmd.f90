@@ -1679,3 +1679,73 @@ SUBROUTINE gmeshinfo( )
    RETURN
 
 END SUBROUTINE gmeshinfo
+
+!----------------------------------------------
+SUBROUTINE constraint_info()
+!----------------------------------------------
+   USE kinds,              ONLY: DP
+   USE constraints_module, ONLY: nconstr, constr_tol, constr_type, constr, target
+   USE io_global,          ONLY: ionode, stdout
+   USE control_flags,      ONLY: lconstrain
+   !
+   IMPLICIT NONE
+   !
+   INTEGER :: ic
+   !
+   IF( lconstrain .AND. ionode ) THEN
+      !
+      WRITE( stdout, 10 ) 
+      WRITE( stdout, 20 ) nconstr, constr_tol
+      !
+      DO ic = 1, nconstr
+         !
+         IF( constr_type( ic ) == 3 ) THEN
+            !
+            ! distance
+            !
+            WRITE( stdout, 30 ) ic
+            WRITE( stdout, 40 ) NINT(constr( 1, ic )), NINT(constr( 2, ic )), target( ic )
+            !
+         END IF
+         !
+      END DO
+      !
+   END IF
+   !
+10 FORMAT( 3X, "Using constrained dynamics")
+20 FORMAT( 3X, "number of constrain and tolerance: ", I5, D10.2)
+30 FORMAT( 3X, "constrain ", I5, " type distance ")
+40 FORMAT( 3X, "  atoms ", I5, I5, " target dist ", F10.5)
+   !
+END SUBROUTINE constraint_info
+
+
+SUBROUTINE new_atomind_constraints()
+   !
+   USE kinds,              ONLY: DP
+   USE constraints_module, ONLY: constr
+   USE ions_base,          ONLY: ind_bck
+   !
+   IMPLICIT NONE
+   !
+   INTEGER  :: ic, ia
+   INTEGER  :: iaa
+   REAL(DP) :: aa
+   !
+   !  Substitute the atom index given in the input file
+   !  with the new atom index, after the sort in the
+   !  atomic coordinates.
+   !
+   DO ic = 1, SIZE( constr, 2 )
+      DO ia = 1, SIZE( constr, 1 )
+         IF( constr( ia, ic ) > 0.0 ) THEN
+            iaa = NINT( constr( ia, ic ) )
+            aa  = DBLE( ind_bck( iaa ) )
+            constr( ia, ic ) = aa
+         END IF
+      END DO
+   END DO
+   !
+   RETURN
+   !
+END SUBROUTINE new_atomind_constraints

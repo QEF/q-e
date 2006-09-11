@@ -436,7 +436,7 @@ SUBROUTINE metadyn()
      do_first_scf = .TRUE.
      !
      nomore = 200
-     trane  = .TRUE.
+     trane  = .TRUE. 
      ampre  = 0.02D0
      !
      tnosep = .FALSE.

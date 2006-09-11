@@ -121,6 +121,11 @@ MODULE constraints_module
        !
        ALLOCATE( constr( nc_fields, nconstr ) )
        !
+       ! ... setting constr to 0 to findout which elements have
+       !     been set to an atomic index. This is required for CP.
+       !
+       constr = 0.0d0
+       !
        ! ... NB: the first "ncolvar" constraints are collective variables (used
        ! ...     for meta-dynamics and free-energy smd), the remaining are real
        ! ...     constraints
