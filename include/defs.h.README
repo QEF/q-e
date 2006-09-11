@@ -10,7 +10,7 @@ Hardware/OS:
       __AIX       Ibm rs/6000 machines
       __LINUX     Intel/Amd 32-bit cpus (pentium, athlon) running Linux
       __LINUX64   Intel/Amd/Alpha 64-bit cpus (Opteron, Itanium) running Linux
-      __MAC       Macintosh powerPC with OS-X
+      __MAC       Macintosh OS-X (powerpc or Intel processor)
       __HP        hp-compaq PA-RISC workstations and parallel machines
       __ALTIX     sgi altix 350/3000 machines running Linux
       __ORIGIN    sgi origin 2k or 3k machines
@@ -23,6 +23,7 @@ Parallel execution:
       __SHMEM     Use Shared Memory library (only Altix and Origin)
       __LAM       LAM version of the MPI library
 Compilers:
+      __XLF       xlf compiler (ibm or macintosh with powerpc processor)
       __G95       g95 compiler
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __INTEL     Intel ifc and ifort compilers (workaround for compiler bugs)

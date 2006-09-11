@@ -308,15 +308,18 @@ machines;
   hp          HP PA-RISC workstations
   hpMPI       HP PA-RISC parallel machines
   ia64        HP Itanium workstations
-  ibm         IBM RS6000 workstations
-  ibmsp       IBM SP machines
   irix        SGI workstations
-  macos       MAC OS-X for PPC machines with xlf
+  macos-xlf   MAC OS-X for PPC machines with xlf
+  macos-intel MAC OS-X for Intel CPUs with ifort compiler and mkl
   origin      SGI Origin 2000/3000
   pc_abs      Linux PCs, Absoft compiler
   pc_ifc      Linux PCs, Intel compiler
   pc_lahey    Linux PCs, Lahey compiler
   pc_pgi      Linux PCs, Portland compiler
+  power5-aix-serial
+              IBM Power5, serial 
+  power5-aix-parallel
+              IBM Power5, parallel
   sun         Sun workstations
   sunMPI      Sun parallel machines
   sxcross     NEC SX-6 (cross-compilation)

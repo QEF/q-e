@@ -18,8 +18,8 @@ SHELL=/bin/bsh
 
 # If the mass library is available, use -D__MASS
 
-DFLAGS     = -D__AIX,-D__ESSL,-D__MASS,-D__PARA,-D__MPI
-CPPFLAGS   = -D__AIX -D__ESSL -D__MASS -D__PARA -D__MPI
+DFLAGS     = -D__AIX,-D__XLF,-D__ESSL,-D__MASS,-D__PARA,-D__MPI
+CPPFLAGS   = -D__AIX -D__XLF -D__ESSL -D__MASS -D__PARA -D__MPI
 
 # Fortran and C compilers 
 CC           = mpcc

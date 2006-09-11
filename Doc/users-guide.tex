@@ -490,7 +490,8 @@ Currently supported architectures are:
   \texttt{alinux}:  HP-Compaq alpha running Linux\\
   \texttt{sparc}:   Sun SPARC machines\\
   \texttt{crayx1}:  Cray X1 machines\\
-  \texttt{mac}:     Apple PowerPC machines running Mac OS X\\
+  \texttt{macppc}:  Apple PowerPC machines running Mac OS X\\
+  \texttt{mac686}:  Apple Intel machines running Mac OS X\\
   \texttt{cygwin}:  MS-Windows PCs with Cygwin
 \end{quote}
 Finally, \texttt{configure} recognizes the following command-line
@@ -1418,6 +1419,11 @@ Thibeadeau, April 2006).
 
 The Absoft 9.1 compiler on Mac OS-X does not work (info by Axel
 Kohlmeyer, June 2006).
+
+Newer Mac OS-X machines with Intel CPUs and gcc4+g95 are supported
+by \texttt{ configure}. With the Intel compiler \texttt{ifort} and 
+MKL libraries, use \texttt{install/Make.macos-intel} 
+(info by Matteo Coccoccioni, Aug. 2006).
 
 \paragraph{T3E}
 

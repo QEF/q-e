@@ -846,7 +846,7 @@ RETURN
          !
          DO i = 1, dim
             !
-            PRINT '(12(X,F10.6))', inv_hess(i,:)
+            PRINT '(12(1X,F10.6))', inv_hess(i,:)
             !
          END DO
          !
@@ -854,7 +854,7 @@ RETURN
          !
          DO i = 1, dim
             !
-            PRINT '(12(X,F10.6))', dirtm(i,:)
+            PRINT '(12(1X,F10.6))', dirtm(i,:)
             !
          END DO
          !
@@ -862,7 +862,7 @@ RETURN
          !
          DO i = 1, dim
             !
-            PRINT '(12(X,F10.6))', invtm(i,:)
+            PRINT '(12(1X,F10.6))', invtm(i,:)
             !
          END DO
          !
@@ -884,7 +884,7 @@ RETURN
          !
          DO i = 1, dim
             !
-            PRINT '(12(X,F10.6))', inv_hess(i,:)
+            PRINT '(12(1X,F10.6))', inv_hess(i,:)
             !
          END DO
          !
@@ -992,7 +992,7 @@ inv_hess(:,:) = identity( dim ); RETURN
          !
          DO i = 1, dim
             !
-            PRINT '(12(X,F10.3))', inv_hess(i,:)
+            PRINT '(12(1X,F10.3))', inv_hess(i,:)
             !
          END DO
          !

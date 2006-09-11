@@ -29,8 +29,8 @@ program read_bands
   real :: emin = 1.e10, emax =-1.e10, etic, eref, deltaE, Ef
 
   integer, parameter :: max_lines=99 
-  real :: point(max_lines+1), mine
-  integer :: nrap(max_lines)
+  real :: mine
+  integer :: point(max_lines+1), nrap(max_lines)
   integer :: ilines, irap, ibnd, ipoint
 
   real, parameter :: cm=28.453, xdim=15.0*cm, ydim=10.0*cm, &
@@ -295,10 +295,10 @@ program read_bands
            do i=1,MINVAL(nbnd_rapk)
               if (is_in_range(i)) then
                  if ( mod(i,2) /= 0) then
-                    write (2,'(2f10.4)') ((kx(n), e_rap(i,n)), &
+                    write (2,'(2f10.4)') (kx(n), e_rap(i,n), &
                                         n=point(ilines),point(ilines+1))
                  else
-                    write (2,'(2f10.4)') ((kx(n), e_rap(i,n)), &
+                    write (2,'(2f10.4)') (kx(n), e_rap(i,n), &
                                        n=point(ilines+1),point(ilines),-1)
                  end if
               end if

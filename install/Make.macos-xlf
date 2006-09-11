@@ -46,8 +46,8 @@ MASS_LIBS      =
 
 # See include/defs.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
-DFLAGS         = -D__MAC -D__FFTW -D__USE_INTERNAL_FFTW
-FDFLAGS        = -D__MAC,-D__FFTW,-D__USE_INTERNAL_FFTW
+DFLAGS         = -D__MAC -D__XLF -D__FFTW -D__USE_INTERNAL_FFTW
+FDFLAGS        = -D__MAC,-D__XLF,-D__FFTW,-D__USE_INTERNAL_FFTW
 IFLAGS         = -I../include 
 MODFLAGS       = -I. -I../Modules -I../PW -I../PH -I../iotk/src
 

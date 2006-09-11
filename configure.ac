@@ -75,7 +75,8 @@ then
 		alphaev*-*-linux* )     arch=alinux ;;
 		sparc-sun-* )           arch=sparc  ;;
 		*cray-unicosmp* )       arch=crayx1 ;;
-		powerpc-apple-darwin* ) arch=mac    ;;
+		powerpc-apple-darwin* ) arch=macppc ;;
+		i686-apple-darwin* )    arch=mac686 ;;
 		*-pc-cygwin )           arch=cygwin ;;
 	esac
 fi
@@ -102,7 +103,7 @@ aix )
 	try_f90="xlf90_r xlf90 f90"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
-	try_dflags="-D__AIX"
+	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
 	try_f90="f90"
@@ -136,9 +137,17 @@ crayx1 )
 	try_arflags="ruv"
 	try_dflags="-D__X1"
 	;;
-mac )
+macppc )
 	try_mpif90="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__MAC -D__XLF"
+	ranlib="ranlib"
+	;;
+mac686 )
+	try_mpif90="g95"
+	try_f90="g95"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__MAC"
@@ -228,7 +237,7 @@ then
 		try_mpicc="mpcc"
 		try_mpif77="mpxlf"
 		;;
-	mac:mpxlf* )
+	macppc:mpxlf* )
 		try_mpicc="mpcc"
 		try_mpif77="mpxlf mpf77"
 		;;
@@ -300,11 +309,11 @@ crayx1:ftn )
 	try_cc="cc"
 	try_f77="$f90"
 	;;
-mac:xlf90 )
+macppc:xlf90 )
 	try_cc="gcc"
 	try_f77="xlf f77 $f90"
 	;;
-mac:* )
+macppc:* )
 	try_cc="gcc"
 	try_f77="f77 $f90"
 	;;
@@ -385,8 +394,9 @@ aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
 mips:cc:f90 )                       ;;
 alinux:ccc:fort | alinux:gcc:fort ) ;;
 alpha:cc:f90 )                      ;;
-mac:mpcc:mpf90 )                    ;;
-mac:gcc:xlf90 )                     ;;
+macppc:mpcc:mpf90 )                 ;;
+macppc:gcc:xlf90 )                  ;;
+mac686:gcc:g95 )                    ;;
 crayx1:cc:ftn )                     ;;
 sparc:cc:f90 )                      ;;
 cygwin:gcc:g95 )                    ;;
@@ -466,30 +476,12 @@ ia32:ifc* )
 	if test `echo $version | sed 's/\..*//'` -lt 7
 	then
 		# old versions of ifc require this stuff
-		echo $ECHO_N "setting up ifc environment... $ECHO_C"
 		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
 		try_f90flags_noopt="\$(FFLAGS_NOOPT) -cl,./intel.pcl"
-		pcl_ph="D3 Raman"
-		pcl_pw="PH PP Gamma PWCOND pwtools $pcl_ph"
-		pcl_modules="PW CPV flib upftools atomic $pcl_pw"
-		pcl_dot=". Modules $pcl_modules"
-		for dir in $pcl_dot
-		do
-			echo work.pc > $topdir/$dir/intel.pcl
-		done
-		for dir in $pcl_modules
-		do
-			echo ../Modules/work.pc >> $topdir/$dir/intel.pcl
-		done
-		for dir in $pcl_pw
-		do
-			echo ../PW/work.pc >> $topdir/$dir/intel.pcl
-		done
-		for dir in $pcl_ph
-		do
-			echo ../PH/work.pc >> $topdir/$dir/intel.pcl
-		done
-		echo "${ECHO_T}done"
+                if test -x $topdir/ifcmods.sh
+                then
+                   ./ifcmods.sh
+                fi
 	fi
 	;;
 ia32:pgf* )
@@ -588,7 +580,7 @@ crayx1:ftn )
         pre_fdflags="-e Z -F"
         have_cpp=1
 	;;
-mac:* )
+macppc:* )
 	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
 -qdpc -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
@@ -660,11 +652,11 @@ crayx1:cc )
         try_cflags=""
         c_ldflags=""
         ;;
-mac:gcc )
+macppc:gcc )
 	try_cflags="-O3 -fomit-frame-pointer -I/usr/include/malloc"
 	try_cpp="cpp"
 	;;
-mac:* )
+macppc:* )
 	try_cflags="-O4"
 	;;
 *:gcc )
@@ -760,7 +752,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -1024,7 +1016,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -1129,7 +1121,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -1201,7 +1193,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -1248,7 +1240,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 

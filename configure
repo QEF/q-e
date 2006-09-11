@@ -1440,7 +1440,8 @@ then
 		alphaev*-*-linux* )     arch=alinux ;;
 		sparc-sun-* )           arch=sparc  ;;
 		*cray-unicosmp* )       arch=crayx1 ;;
-		powerpc-apple-darwin* ) arch=mac    ;;
+		powerpc-apple-darwin* ) arch=macppc ;;
+		i686-apple-darwin* )    arch=mac686 ;;
 		*-pc-cygwin )           arch=cygwin ;;
 	esac
 fi
@@ -1467,7 +1468,7 @@ aix )
 	try_f90="xlf90_r xlf90 f90"
 	try_ar="ar"
 	try_arflags="-X64 ruv"
-	try_dflags="-D__AIX"
+	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
 	try_f90="f90"
@@ -1501,9 +1502,17 @@ crayx1 )
 	try_arflags="ruv"
 	try_dflags="-D__X1"
 	;;
-mac )
+macppc )
 	try_mpif90="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
+	try_ar="ar"
+	try_arflags="ruv"
+	try_dflags="-D__MAC -D__XLF"
+	ranlib="ranlib"
+	;;
+mac686 )
+	try_mpif90="g95"
+	try_f90="g95"
 	try_ar="ar"
 	try_arflags="ruv"
 	try_dflags="-D__MAC"
@@ -1625,7 +1634,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1628:" \
+echo "$as_me:1637:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2010,7 +2019,7 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 		try_mpicc="mpcc"
 		try_mpif77="mpxlf"
 		;;
-	mac:mpxlf* )
+	macppc:mpxlf* )
 		try_mpicc="mpcc"
 		try_mpif77="mpxlf mpf77"
 		;;
@@ -2114,7 +2123,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2117:" \
+echo "$as_me:2126:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2317,11 +2326,11 @@ crayx1:ftn )
 	try_cc="cc"
 	try_f77="$f90"
 	;;
-mac:xlf90 )
+macppc:xlf90 )
 	try_cc="gcc"
 	try_f77="xlf f77 $f90"
 	;;
-mac:* )
+macppc:* )
 	try_cc="gcc"
 	try_f77="f77 $f90"
 	;;
@@ -2954,7 +2963,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2957:" \
+echo "$as_me:2966:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3721,7 +3730,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3724:" \
+echo "$as_me:3733:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3894,8 +3903,9 @@ aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
 mips:cc:f90 )                       ;;
 alinux:ccc:fort | alinux:gcc:fort ) ;;
 alpha:cc:f90 )                      ;;
-mac:mpcc:mpf90 )                    ;;
-mac:gcc:xlf90 )                     ;;
+macppc:mpcc:mpf90 )                 ;;
+macppc:gcc:xlf90 )                  ;;
+mac686:gcc:g95 )                    ;;
 crayx1:cc:ftn )                     ;;
 sparc:cc:f90 )                      ;;
 cygwin:gcc:g95 )                    ;;
@@ -3980,7 +3990,7 @@ ia32:ifc* )
 		try_f90flags_noopt="\$(FFLAGS_NOOPT) -cl,./intel.pcl"
                 if test -x $topdir/ifcmods.sh
                 then
-		   ./ifcmods.sh
+                   ./ifcmods.sh
                 fi
 	fi
 	;;
@@ -4080,7 +4090,7 @@ crayx1:ftn )
         pre_fdflags="-e Z -F"
         have_cpp=1
 	;;
-mac:* )
+macppc:* )
 	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
 -qdpc -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
@@ -4152,11 +4162,11 @@ crayx1:cc )
         try_cflags=""
         c_ldflags=""
         ;;
-mac:gcc )
+macppc:gcc )
 	try_cflags="-O3 -fomit-frame-pointer -I/usr/include/malloc"
 	try_cpp="cpp"
 	;;
-mac:* )
+macppc:* )
 	try_cflags="-O4"
 	;;
 *:gcc )
@@ -4517,7 +4527,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -5874,7 +5884,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -6434,7 +6444,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -6823,7 +6833,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 
@@ -6961,7 +6971,7 @@ then
 
 	# build list of directories to search
 	case "$arch" in
-	mac )    try_libdirs="/usr/local/lib /sw/lib" ;;
+	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
 	*)       try_libdirs="/usr/local/lib"         ;;
 	esac
 

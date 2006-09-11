@@ -18,7 +18,7 @@
 #  define DIRECT_IO_FACTOR 8 
 #endif
 
-#if defined (__AIX) || defined (__MAC) || defined(__ABSOFT)
+#if defined (__XLF) || defined(__ABSOFT)
 #  define flush  flush_
 #endif
 
@@ -162,7 +162,6 @@
 #    define ZSCAL    zscal
 #    define ZSWAP    zswap
 #    define ZDSCAL   zdscal
-
 
 #endif
 

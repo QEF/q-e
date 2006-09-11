@@ -23,7 +23,7 @@
 
 /* Absoft: do nothing */
 
-#  if defined (__AIX) || defined (__HP) || defined (__MAC)
+#  if defined (__XLF) || defined (__HP)
 
 /* convert to lowercase */
 
