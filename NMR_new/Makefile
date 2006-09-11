@@ -138,6 +138,8 @@ PWOBJS = \
 ../PW/davcio.o \
 ../PW/deriv_drhoc.o \
 ../PW/diis_base.o \
+../PW/divide_class.o \
+../PW/divide_class_so.o \
 ../PW/real_diis_module.o \
 ../PW/complex_diis_module.o \
 ../PW/diropn.o \
@@ -161,6 +163,7 @@ PWOBJS = \
 ../PW/ewald.o \
 ../PW/ewald_dipole.o \
 ../PW/fftw.o \
+../PW/find_group.o \
 ../PW/force_cc.o \
 ../PW/force_corr.o \
 ../PW/force_ew.o \
