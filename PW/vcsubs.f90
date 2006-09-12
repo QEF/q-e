@@ -53,7 +53,6 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   !
   !
   USE kinds
-  ! USE io_global, ONLY: stdout
   implicit none
   !
   real(DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
@@ -79,15 +78,11 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   real(DP) :: vx2 (mxdtyp), vy2 (mxdtyp), vz2 (mxdtyp)
   real(DP) :: rms (mxdtyp), vmean (mxdtyp), ekin (mxdtyp)
 
-  real(DP) :: ptmass, boltz, ekint, ut, factem, etot, tr, ekk, etl, &
+  real(DP) :: ekint, ut, etot, tr, ekk, etl, &
        cmass, uta, enew, v0, eka, utl, ekla, eta, dt, vcell, p, press, &
        temp, ww, pv
 
   integer :: na, nt, i, j, l, k, m, ntype
-  !
-  factem = 1.57889d5
-  boltz = um / factem
-  ptmass = .5d0 * 1837.36
   !
   ! calculate the metric for the current step
   !
@@ -433,7 +428,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   !
   USE kinds,         only : DP
-  USE constants,     ONLY : eps16
+  USE constants,     ONLY : eps16, k_boltzmann_ry
   USE io_global,     ONLY : stdout
   
   implicit none
@@ -460,17 +455,13 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   integer :: i, j, k, l, m, na, nt, nst, natot, nzero, ntimes, &
        ntcheck, ntype, i_update, n_update
 
-  real(DP) :: factem, avpv, boltz, ptmass, pv, ww, ts, xx, alpha, x, &
+  real(DP) :: avpv,  pv, ww, ts, xx, alpha, x, &
        tr, tnew, tolp, temp, avk, avu, ekk, avp, ack, acu, acpv, acp, dt, &
        p, enew, v0, vcell, press, ut, etl, etot, ekint, utl, uta, cmass, &
        eka, ekla, eta
   logical :: symmetrize_stress
   !
   real(DP) :: force (3, mxdatm), d2 (3, 3)
-  !
-  factem = 1.57889d5
-  boltz = um / factem
-  ptmass = .5d0 * 1837.36
   !
   !      zero energy components
   !
@@ -768,9 +759,9 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !       choose # of degrees of freedom and calculate tnew
   !
   if (calc (1:1) .ne.'m') then
-     tnew = dois / tres / DBLE (natot + 1) * avk / boltz
+     tnew = dois / tres / DBLE (natot + 1) * avk / k_boltzmann_ry
   else
-     tnew = dois / tres / DBLE (natot - 1) * avk / boltz
+     tnew = dois / tres / DBLE (natot - 1) * avk / k_boltzmann_ry
   endif
   !
   !       careful with zero temperature
@@ -938,6 +929,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
   !     vmean(nt), rms(nt),vx2(nt),vy2(nt),vz2(nt)
   !
   USE io_global,   ONLY : stdout
+  USE constants,   ONLY : k_boltzmann_ry
   USE kinds , only : DP
   implicit none
   !
@@ -954,19 +946,11 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
   integer :: na, nt, j, k, ntype, iseed, natom
 
 
-  real(DP) :: ran3, vfac, sig, tfac, vr, atemp, eps, temp, ekint, t, &
-       factem, ptmass, boltz
+  real(DP) :: ran3, vfac, sig, tfac, vr, atemp, eps, temp, ekint, t
   real(DP) :: b0, b1, c0, c1
   real(DP) :: zero, um, dois, tres
   data b0, b1, c0, c1 / 2.30753d0, 0.27061d0, 0.99229d0, 0.04481d0 /
   data zero, um, dois, tres / 0.d0, 1.d0, 2.d0, 3.0d0 /
-  !
-  !     boltz = boltzman constant in ry/kelvin
-  !     ptmass = proton (neuton) mass in a. u.
-  !
-  factem = 1.57889d5
-  boltz = um / factem
-  ptmass = .5d0 * 1837.36
   !
   !     example run
   !
@@ -991,7 +975,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
      !
      do nt = 1, ntype
         natom = 0
-        vfac = dsqrt (boltz * t / atmass (nt) )
+        vfac = dsqrt (k_boltzmann_ry * t / atmass (nt) )
         !            WRITE( stdout,901)
         !            WRITE( stdout,*) 'vfac = ',vfac
         iseed = iseed+382
@@ -1059,7 +1043,7 @@ subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
      !
      !     rescale velocities to give correct temperature
      !
-     atemp = dois * ekint / tres / DBLE (natot - 1) / boltz
+     atemp = dois * ekint / tres / DBLE (natot - 1) / k_boltzmann_ry
      tfac = dsqrt (t / atemp)
      if (temp.lt.1d-14) tfac = zero
      !         WRITE( stdout,*) 'atemp = ',atemp,' k'

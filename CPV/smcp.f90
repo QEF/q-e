@@ -58,7 +58,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE gvecp,                    ONLY : ecutp
   USE cp_interfaces,            ONLY : writefile, readfile
   USE parameters,               ONLY : nacx, nsx, nhclm
-  USE constants,                ONLY : pi, factem, au_ps
+  USE constants,                ONLY : pi, k_boltzmann_au, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir, smwout, outdir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
   USE wave_base,                ONLY : wave_speed2, frice, grease
@@ -218,7 +218,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   !
   !
-  gausp = delt * SQRT(tempw/factem)
+  gausp = delt * SQRT(tempw* k_boltzmann_au)
   twodel = 2.d0 * delt
   dt2 = delt * delt
   dt2by2 = .5d0 * dt2
@@ -427,8 +427,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   temp1=tempw+tolp
   temp2=tempw-tolp
-  gkbt = DBLE( ndega ) * tempw / factem
-  kbt = tempw / factem
+  gkbt = DBLE( ndega ) * tempw * k_boltzmann_au
+  kbt = tempw * k_boltzmann_au
 
   etot_ar(0   )  = smd_ene_ini
   etot_ar(smd_p) = smd_ene_fin
@@ -1203,9 +1203,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            CALL cell_kinene( ekinh, temphh, velh )
         ENDIF
         IF(thdiag) THEN
-           temphc=2.*factem*ekinh/3.
+           temphc=2.D0 / k_boltzmann_au * ekinh / 3.d0
         ELSE
-           temphc=2.*factem*ekinh/9.
+           temphc=2.D0 / k_boltzmann_au * ekinh / 9.d0
         ENDIF
         !
         ! warning! thdyn and tcp/tcap are not compatible yet!!!

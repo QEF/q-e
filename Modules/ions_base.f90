@@ -590,7 +590,7 @@
 
   subroutine ions_temp( tempp, temps, ekinpr, vels, na, nsp, h, pmass, ndega, nhpdim, atm2nhp, ekin2nhp )
     !
-    use constants, only: factem
+    use constants, only: k_boltzmann_au
     !
     implicit none
     !
@@ -638,7 +638,7 @@
     !
     do is = 1, nsp
       temps( is ) = temps( is ) * 0.5d0
-      temps( is ) = temps( is ) * factem / ( 1.5d0 * na(is) )
+      temps( is ) = temps( is ) / k_boltzmann_au / ( 1.5d0 * na(is) )
     end do
     !
     ekinpr = 0.5 * ekinpr
@@ -646,7 +646,7 @@
     IF( ndega < 1 ) THEN 
        tempp = 0.0d0
     ELSE
-       tempp  = ekinpr * factem * 2.0d0 / DBLE( ndega )
+       tempp  = ekinpr / k_boltzmann_au * 2.0d0 / DBLE( ndega )
     END IF
     !
     return
@@ -679,7 +679,7 @@
 
   subroutine ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, na, nsp, fion, iforce, &
                            pmass, delt )
-    use constants, only: pi, factem
+    use constants, only: pi, k_boltzmann_au
     USE random_numbers, ONLY : randy
     implicit none
     logical, intent(in) :: tcap
@@ -694,7 +694,7 @@
     integer :: i, ia, is, nat, isa
 
     dt2by2 = .5d0 * delt * delt
-    gausp = delt * sqrt( tempw / factem )
+    gausp = delt * sqrt( tempw * k_boltzmann_au )
     nat = SUM( na( 1:nsp ) )
 
     if(.not.tcap) then

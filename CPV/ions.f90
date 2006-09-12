@@ -670,7 +670,7 @@
 
 ! ... declare modules
       USE cell_module, ONLY: R_TO_S, boxdimensions
-      use constants, ONLY: factem
+      use constants, ONLY: k_boltzmann_au
       use io_global, ONLY: ionode
       use control_flags, ONLY: tolp
       use ions_nose, ONLY: tempw
@@ -694,7 +694,7 @@
 ! ... Subroutine body
 !
 
-        tempp   = atoms_0%ekint * factem
+        tempp   = atoms_0%ekint / k_boltzmann_au
         tempp   = tempp * 2.0_DP / atoms_0%doft
         temp1   = tempw + tolp
         temp2   = tempw - tolp

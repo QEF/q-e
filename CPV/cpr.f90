@@ -73,7 +73,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp
   USE parameters,               ONLY : nsx
-  USE constants,                ONLY : pi, factem, au_ps
+  USE constants,                ONLY : pi, k_boltzmann_au, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
   USE wave_base,                ONLY : wave_speed2, frice, grease
@@ -549,7 +549,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( COUNT( iforceh == 1 ) > 0 ) THEN
         !
-        temphc = 2.D0 * factem * ekinh / DBLE( COUNT( iforceh == 1 ) )
+        temphc = 2.D0 / k_boltzmann_au * ekinh / DBLE( COUNT( iforceh == 1 ) )
         !
      ELSE
         !

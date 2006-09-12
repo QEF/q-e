@@ -50,7 +50,7 @@
 !------------------------------------------------------------------------------!
 
   subroutine ions_nose_init( tempw_ , fnosep_ , nhpcl_ , nhptyp_ , ndega_ , nhgrp_ )
-    use constants,      only: factem, pi, au_terahertz
+    use constants,      only: k_boltzmann_au, pi, au_terahertz
     use control_flags,  only: tnosep
     use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
     real(DP), intent(in)  :: tempw_ , fnosep_(:) 
@@ -132,7 +132,7 @@
       if (nhpend.eq.1) anum2nhp(nhpdim) = nhpdim - 1
       ! set gkbt2nhp for each thermostat
       do is=1,nhpdim
-         gkbt2nhp(is) = DBLE(anum2nhp(is)) * tempw / factem
+         gkbt2nhp(is) = DBLE(anum2nhp(is)) * tempw * k_boltzmann_au
       enddo
       ! scale the target energy by some factor convering 3*nat to ndega
       if (nhpdim.gt.1) then
@@ -141,9 +141,9 @@
          enddo
       endif
       !
-      gkbt = DBLE( ndega ) * tempw / factem
+      gkbt = DBLE( ndega ) * tempw * k_boltzmann_au
       if (nhpdim.eq.1) gkbt2nhp(1) = gkbt
-      kbt  = tempw / factem
+      kbt  = tempw * k_boltzmann_au
 
       fnosep(1) = fnosep_ (1)
       if( fnosep(1) > 0.0d0 ) then
@@ -154,7 +154,8 @@
         do i = 2, nhpcl
           fnosep(i) = fnosep_ (i)
           if( fnosep(i) > 0.0d0 ) then
-            qnp_(i) = 2.d0 * tempw / factem / ( fnosep(i) * ( 2.d0 * pi ) * au_terahertz )**2
+            qnp_(i) = 2.d0 * tempw  * k_boltzmann_au / &
+                 ( fnosep(i) * ( 2.d0 * pi ) * au_terahertz )**2
           else
             qnp_(i) = qnp_(1) / DBLE(ndega)
           endif

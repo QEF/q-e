@@ -287,7 +287,7 @@
       USE kinds,              ONLY: DP
       USE control_flags,      ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
                                     toptical, tconjgrad
-      use constants,          only: factem, au_gpa, amu_si, bohr_radius_cm
+      use constants,          only: k_boltzmann_au, au_gpa, amu_si, bohr_radius_cm
       use energies,           only: print_energies, dft_energy_type
       use mp_global,          only: me_image, intra_image_comm
       use electrons_module,   only: print_eigenvalues
@@ -358,7 +358,7 @@
       END IF
 
       if( COUNT( iforceh == 1 ) > 0 ) then
-         temphc = 2.0d0 * factem * ekcell / DBLE( COUNT( iforceh == 1 ) )
+         temphc = 2.0d0 / k_boltzmann_au * ekcell / DBLE( COUNT( iforceh == 1 ) )
       else
          temphc = 0.0d0
       endif

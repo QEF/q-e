@@ -881,17 +881,17 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_kinene( ekinh, temphh, velh )
-    use constants, only: factem
+    use constants, only: k_boltzmann_au
     implicit none
     REAL(DP), intent(out) :: ekinh, temphh(3,3)
     REAL(DP), intent(in)  :: velh(3,3)
     integer :: i,j
     ekinh = 0.0d0
     do j=1,3
-      do i=1,3
-        ekinh=ekinh+0.5*wmass*velh(i,j)*velh(i,j)
-        temphh(i,j)=factem*wmass*velh(i,j)*velh(i,j)
-      end do
+       do i=1,3
+          ekinh = ekinh + 0.5*wmass*velh(i,j)*velh(i,j)
+          temphh(i,j) = wmass*velh(i,j)*velh(i,j)/k_boltzmann_au
+       end do
     end do
     return
   end subroutine cell_kinene
@@ -932,13 +932,13 @@
 CONTAINS
 
   subroutine cell_nose_init( temph_init, fnoseh_init )
-     USE constants, ONLY: factem, pi, au_terahertz
+     USE constants, ONLY: pi, au_terahertz, k_boltzmann_au
      REAL(DP), INTENT(IN) :: temph_init, fnoseh_init
      ! set thermostat parameter for cell
      qnh    = 0.0d0
      temph  = temph_init
      fnoseh = fnoseh_init
-     if( fnoseh > 0.0d0 ) qnh = 2.d0 * ( 3 * 3 ) * temph / factem / &
+     if( fnoseh > 0.0d0 ) qnh = 2.d0 * ( 3 * 3 ) * temph * k_boltzmann_au / &
           (fnoseh*(2.d0*pi)*au_terahertz)**2
     return
   end subroutine cell_nose_init
@@ -960,14 +960,15 @@ CONTAINS
   end subroutine cell_nosevel
 
   subroutine cell_noseupd( xnhhp, xnhh0, xnhhm, delt, qnh, temphh, temph, vnhh )
-    use constants, only: factem
+    use constants, only: k_boltzmann_au
     implicit none
     REAL(DP), intent(out) :: xnhhp(3,3), vnhh(3,3)
     REAL(DP), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt, qnh, temphh(3,3), temph
     integer :: i, j
     do j=1,3
       do i=1,3
-        xnhhp(i,j)=2.*xnhh0(i,j)-xnhhm(i,j)+ (delt**2/qnh)/factem*(temphh(i,j)-temph)
+        xnhhp(i,j) = 2.*xnhh0(i,j)-xnhhm(i,j) + &
+             (delt**2/qnh)* k_boltzmann_au * (temphh(i,j)-temph)
         vnhh(i,j) =(xnhhp(i,j)-xnhhm(i,j))/( 2.0d0 * delt )
       end do
     end do
@@ -976,7 +977,7 @@ CONTAINS
 
   
   REAL(DP) function cell_nose_nrg( qnh, xnhh0, vnhh, temph, iforceh )
-    use constants, only: factem
+    use constants, only: k_boltzmann_au
     implicit none
     REAL(DP) :: qnh, vnhh( 3, 3 ), temph, xnhh0( 3, 3 )
     integer :: iforceh( 3, 3 )
@@ -985,7 +986,7 @@ CONTAINS
     cell_nose_nrg = 0.0d0
     do i=1,3
       do j=1,3
-        enij = 0.5*qnh*vnhh(i,j)*vnhh(i,j)+temph/factem*xnhh0(i,j)
+        enij = 0.5*qnh*vnhh(i,j)*vnhh(i,j)+temph*k_boltzmann_au*xnhh0(i,j)
         cell_nose_nrg = cell_nose_nrg + iforceh( i, j ) * enij
       enddo
     enddo
@@ -1006,7 +1007,7 @@ CONTAINS
 
   SUBROUTINE cell_nose_info()
 
-      use constants,     only: factem, au_terahertz, pi
+      use constants,     only: au_terahertz, pi
       use time_step,     only: delt
       USE io_global,     ONLY: stdout
       USE control_flags, ONLY: tnoseh
