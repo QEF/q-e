@@ -31,7 +31,7 @@ MODULE bfgs_module
   USE io_files,  ONLY : iunbfgs, prefix
   USE constants, ONLY : eps16
   !
-  USE basic_algebra_routines  
+  USE basic_algebra_routines
   !
   IMPLICIT NONE
   !
@@ -175,13 +175,12 @@ MODULE bfgs_module
       CALL read_bfgs_file( pos, grad, fixion, energy, scratch, dim, stdout )
       !
       scf_iter = scf_iter + 1
-      !
-      energy_error = ABS( energy_p - energy )
-      grad_error   = 0.D0
+      istep    = scf_iter
       !
       ! ... convergence is checked here
       !
-      grad_error = MAXVAL( ABS( grad(:) ) )
+      energy_error = ABS( energy_p - energy )
+      grad_error   = MAXVAL( ABS( grad(:) ) )
       !
       conv_bfgs = energy_error < energy_thr      
       conv_bfgs = conv_bfgs .AND. ( grad_error < grad_thr )
@@ -190,6 +189,9 @@ MODULE bfgs_module
       !
       IF ( stop_bfgs ) THEN
          !
+         ! ... quick return ( positions and forces are back-converted to
+         ! ... cartesian coordinates )
+         !
          pos(:)  = to_cart_coords( pos,  dim )
          grad(:) = to_cart_coords( grad, dim )
          !
@@ -197,14 +199,12 @@ MODULE bfgs_module
          !
       END IF
       !
-      istep = scf_iter
-      !
       ! ... some output is written
       !
       WRITE( UNIT = stdout, &
            & FMT = '(/,5X,"number of scf cycles",T30,"= ",I3)' ) scf_iter
       WRITE( UNIT = stdout, &
-           & FMT = '(  5X,"number of bfgs steps",T30,"= ",I3,/)' ) bfgs_iter
+           & FMT = '(5X,"number of bfgs steps",T30,"= ",I3,/)' ) bfgs_iter
       IF ( scf_iter > 1 ) &
          WRITE( UNIT = stdout, &
               & FMT = '(5X,"energy old",T30,"= ",F18.10," ryd")' ) energy_p
@@ -222,7 +222,7 @@ MODULE bfgs_module
          WRITE( UNIT = stdout, &
               & FMT = '(5X,"CASE: energy_new > energy_old",/)' )
          !
-         ! ... the new trust radius is obtained with a quadratic interpolation
+         ! ... the new trust radius is obtained by quadratic interpolation
          !
          ! ... E(s) = a*s*s + b*s + c      ( we use E(0), dE(0), E(s') )
          !
@@ -238,7 +238,7 @@ MODULE bfgs_module
             !
          ELSE
             !
-            ! ... no quadratic interpolation is possible
+            ! ... no quadratic interpolation is possible: we use bisection
             !
             trust_radius = 0.5D0 * trust_radius_old
             !
@@ -256,7 +256,8 @@ MODULE bfgs_module
          !
          IF ( trust_radius < trust_radius_min ) THEN
             !
-            ! ... the history is reset
+            ! ... the history is reset ( the history can be reset at most two
+            ! ... consecutive times )
             !
             WRITE( UNIT = stdout, &
                    FMT = '(/,5X,"trust_radius < trust_radius_min")' )
@@ -326,6 +327,8 @@ MODULE bfgs_module
             !
          ELSE
             !
+            ! ... standard Newton-Raphson step
+            !
             step(:) = - ( inv_hess(:,:) .times. grad(:) )
             !
          END IF         
@@ -345,19 +348,17 @@ MODULE bfgs_module
          !
          IF ( bfgs_iter == 1 ) THEN
             !
-            trust_radius =  trust_radius_ini
+            trust_radius = trust_radius_ini
             !
             tr_min_hit = .FALSE.
             !
          ELSE
             !
-            trust_radius =  trust_radius_old
+            trust_radius = trust_radius_old
             !
             CALL compute_trust_radius( lwolfe, energy, grad, dim, stdout )
             !   
          END IF
-         !
-         IF ( conv_bfgs ) RETURN
          !
          WRITE( UNIT = stdout, &
               & FMT = '(5X,"new trust radius",T30,"= ",F18.10," bohr")' ) &
@@ -372,12 +373,12 @@ MODULE bfgs_module
       !
       step(:) = trust_radius * step(:) / norm( step(:) )
       !
-      ! ... informations needed for the next iteration are saved
-      ! ... this must be done before positions update
+      ! ... information required by next iteration is saved here ( this must
+      ! ... be done before positions are updated )
       !
       CALL write_bfgs_file( pos, energy, grad, scratch )                
       !
-      ! ... positions are updated
+      ! ... positions are updated and then converted to cartesian coordinates
       !
       pos(:) = pos(:) + step(:)
       !
@@ -481,6 +482,9 @@ MODULE bfgs_module
     SUBROUTINE reset_bfgs()
       !------------------------------------------------------------------------
       !
+      ! ... inv_hess0 contains the initial guess for the inverse hessian matrix
+      ! ... in internal units
+      !
       inv_hess(:,:) = inv_hess0(:,:)
       !
       gdiis_iter = 0
@@ -501,7 +505,6 @@ MODULE bfgs_module
       INTEGER,          INTENT(IN)    :: stdout
       REAL(DP),         INTENT(INOUT) :: energy
       !
-      INTEGER            :: rank1, rank2
       CHARACTER(LEN=256) :: bfgs_file
       LOGICAL            :: file_exists
       !
