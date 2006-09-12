@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF-FPMD-CP90 group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,12 +15,12 @@ MODULE mytime
   !
   SAVE
   !
-  INTEGER,        PARAMETER :: maxclock = 100
-  REAL (DP), PARAMETER :: notrunning = - 1.D0
+  INTEGER,  PARAMETER :: maxclock = 100
+  REAL(DP), PARAMETER :: notrunning = - 1.D0
   ! 
-  REAL (DP)     :: myclock(maxclock), t0(maxclock)
-  CHARACTER (LEN=12) :: clock_label(maxclock)
-  INTEGER            :: called(maxclock)
+  REAL(DP)          :: myclock(maxclock), t0(maxclock)
+  CHARACTER(LEN=12) :: clock_label(maxclock)
+  INTEGER           :: called(maxclock)
   !
   INTEGER :: nclock = 0
   LOGICAL :: no
@@ -31,8 +31,8 @@ END MODULE mytime
 SUBROUTINE init_clocks( go )
   !----------------------------------------------------------------------------
   !
-  ! flag = .TRUE.  : clocks will run
-  ! flag = .FALSE. : only clock #1 will run
+  ! ... flag = .TRUE.  : clocks will run
+  ! ... flag = .FALSE. : only clock #1 will run
   !
   USE kinds,  ONLY : DP
   USE mytime, ONLY : called, t0, myclock, no, notrunning, maxclock, clock_label
@@ -47,9 +47,9 @@ SUBROUTINE init_clocks( go )
   !
   DO n = 1, maxclock
      !
-     called(n)  = 0
-     myclock(n) = 0.D0
-     t0(n)      = notrunning
+     called(n)      = 0
+     myclock(n)     = 0.D0
+     t0(n)          = notrunning
      clock_label(n) = ' '
      !
   END DO
@@ -68,9 +68,11 @@ SUBROUTINE start_clock( label )
   !
   IMPLICIT NONE
   !
-  REAL (DP)    :: scnds
-  CHARACTER (LEN=*) :: label
-  INTEGER           :: n
+  CHARACTER(LEN=*) :: label
+  INTEGER          :: n
+  !
+  REAL(DP), EXTERNAL :: scnds
+  !
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
   !
@@ -123,9 +125,10 @@ SUBROUTINE stop_clock( label )
   !
   IMPLICIT NONE
   !
-  REAL (DP)    :: scnds
-  CHARACTER (LEN=*) :: label
-  INTEGER           :: n
+  CHARACTER(LEN=*) :: label
+  INTEGER          :: n
+  !
+  REAL(DP), EXTERNAL :: scnds
   !
   !
   IF ( no ) RETURN
@@ -174,8 +177,9 @@ SUBROUTINE print_clock( label )
   !
   IMPLICIT NONE
   !
-  CHARACTER (LEN=*) :: label
-  INTEGER           :: n
+  CHARACTER(LEN=*) :: label
+  INTEGER          :: n
+  !
   !
   IF ( label == ' ' ) THEN
      !
@@ -220,10 +224,11 @@ SUBROUTINE print_this_clock( n )
   !
   IMPLICIT NONE
   !
-  REAL(DP) :: scnds
-  INTEGER       :: n
+  INTEGER  :: n
   REAL(DP) :: elapsed_cpu_time, nsec
-  INTEGER       :: nday, nhour, nmin, nmax
+  INTEGER  :: nday, nhour, nmin, nmax
+  !
+  REAL(DP), EXTERNAL :: scnds
   !
   !
   IF ( t0(n) == notrunning ) THEN
@@ -341,10 +346,11 @@ FUNCTION get_clock( label )
   !
   IMPLICIT NONE
   !
-  REAL(DP)     :: get_clock
-  REAL(DP)     :: scnds
-  CHARACTER (LEN=*) :: label
-  INTEGER           :: n
+  REAL(DP)         :: get_clock
+  CHARACTER(LEN=*) :: label
+  INTEGER          :: n
+  !
+  REAL(DP), EXTERNAL :: scnds
   !
   !
   IF ( no ) THEN
