@@ -887,37 +887,47 @@ SUBROUTINE check_para_diag_efficiency()
      !
      IF ( ionode ) time_para = scnds()
      !
-     IF ( gamma_only ) THEN
+     DO i = 1, nbndx / dim
         !
-        CALL diagonalize( 1, ar, dim, e, vr, dim, dim, &
-                          nproc_pool, me_pool, intra_pool_comm )
+        IF ( gamma_only ) THEN
+           !
+           CALL diagonalize( 1, ar, dim, e, vr, dim, dim, &
+                             nproc_pool, me_pool, intra_pool_comm )
+           !
+        ELSE
+           !
+           CALL cdiagonalize( 1, ac, dim, e, vc, dim, dim, &
+                              nproc_pool, me_pool, intra_pool_comm )
+           !
+        END IF
         !
-     ELSE
-        !
-        CALL cdiagonalize( 1, ac, dim, e, vc, dim, dim, &
-                           nproc_pool, me_pool, intra_pool_comm )
-        !
-     END IF
+     END DO
      !
      CALL mp_barrier()
      !
-     IF ( ionode ) time_para = scnds() - time_para
+     IF ( ionode ) &
+        time_para = ( scnds() - time_para ) / DBLE( nbndx / dim )
      !
      IF ( ionode ) time_serial = scnds()
      !
-     IF ( gamma_only ) THEN
+     DO i = 1, nbndx / dim
         !
-        CALL rdiagh( dim, ar, dim, e, vr )
+        IF ( gamma_only ) THEN
+           !
+           CALL rdiagh( dim, ar, dim, e, vr )
+           !
+        ELSE
+           !
+           CALL cdiagh( dim, ac, dim, e, vc )
+           !
+        END IF
         !
-     ELSE
-        !
-        CALL cdiagh( dim, ac, dim, e, vc )
-        !
-     END IF
+     END DO
      !
      CALL mp_barrier()
      !
-     IF ( ionode ) time_serial = scnds() - time_serial
+     IF ( ionode ) &
+        time_serial = ( scnds() - time_serial ) / DBLE( nbndx / dim )
      !
      IF ( gamma_only ) THEN
         !
