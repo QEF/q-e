@@ -6,10 +6,6 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#if !defined(__MAC)
-#include <malloc.h>
-#endif
-
 #include "c_defs.h"
 
 /* 
@@ -21,6 +17,7 @@
 void MEMSTAT(int *kilobytes)
 {
 #if defined __AIX || defined __LINUX || defined __LINUX64
+#include <malloc.h>
   struct mallinfo info;  
   info = mallinfo();
   *kilobytes = info.arena / 1024 ;

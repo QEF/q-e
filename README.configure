@@ -110,16 +110,18 @@ values for several variables:
   (on IBM machines) or "try_dflags=-D__LINUX" (on 32-bit PCs with
   Linux) or "try_dflags=-D__LINUX64" (Linux on Itanium and Opteron).
 
-For example, here's the entry for Mac OS X:
+- you should define "try_iflags" with the appropriate "-I" option(s)
+  needed by the preprocessor or by the compiler to locate *.h files
+  to be included; you need "-I../include"in all cases
 
-  mac )
-          try_mpif90="mpxlf90 mpf90"
-          try_f90="xlf90 f90"
-          try_ar="ar"
-          try_arflags="ruv"
-          try_dflags="-D__MAC -D__XLF"
-          ranlib="ranlib"
-          ;;
+For example, here's the entry for IBM machines running AIX:
+
+aix )
+        try_mpif90="mpxlf90_r mpxlf90"
+        try_f90="xlf90_r xlf90 f90"
+        try_arflags="-X64 ruv"
+        try_dflags="-D__AIX -D__XLF"
+        ;;
 
 Then look for these lines:
 

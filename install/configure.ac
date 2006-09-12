@@ -19,6 +19,7 @@ cpp=$CPP
 cflags=$CFLAGS
 cppflags=$CPPFLAGS
 dflags=$DFLAGS
+iflags=$IFLAGS
 f77=$F77
 f90=$F90
 mpif77=$MPIF77
@@ -82,89 +83,68 @@ then
 fi
 echo checking architecture... $arch
 
-# candidate compilers, archiver and flags based on architecture
+# candidate archiver and archiver flags
+try_ar="ar"
+try_arflags="ruv"
+try_iflags="-I../include"
+
+# candidate compilers and flags based on architecture
 case $arch in
 ia64 | amd64 )
 	try_mpif90="mpif90"
 	try_f90="ifort ifc efc pgf90 pathf95 g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
-	try_dflags="-D__LINUX64"
 	;;
 ia32 )
 	try_mpif90="mpif90"
 	try_f90="ifort ifc pgf90 pathf95 g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__LINUX"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 f90"
-	try_ar="ar"
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__COMPLIB -D__SGI64 -D__ORIGIN"
 	;;
 alpha )
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__ALPHA"
 	;;
 alinux )
 	try_mpif90="mpif90"
 	try_f90="fort g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__ALPHA -D__LINUX64"
 	;;
 sparc )
 	try_mpif90="mpf90"
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__SUN"
 	;;
 crayx1 )
 	try_f90="ftn"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__X1"
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
-	try_ar="ar"
-	try_arflags="ruv"
-	try_dflags="-D__MAC -D__XLF"
+	try_dflags="-D__XLF"
 	ranlib="ranlib"
 	;;
 mac686 )
-	try_mpif90="g95"
-	try_f90="g95"
-	try_ar="ar"
-	try_arflags="ruv"
-	try_dflags="-D__MAC"
+	try_f90="ifort g95"
 	ranlib="ranlib"
 	;;
 cygwin )
 	try_mpif90="mpif90"
 	try_f90="g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__LINUX"
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture)
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	;;
 esac
 
@@ -653,7 +633,7 @@ crayx1:cc )
         c_ldflags=""
         ;;
 macppc:gcc )
-	try_cflags="-O3 -fomit-frame-pointer -I/usr/include/malloc"
+	try_cflags="-O3 -fomit-frame-pointer"
 	try_cpp="cpp"
 	;;
 macppc:* )
@@ -1334,17 +1314,17 @@ then
 			unset ac_cv_header_fftw_h # clear cached value
 			if test "$dir" = "none"
 			then
-				try_ioption=
+				try_ifftw=
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
-				try_ioption="-I$dir"
+				try_ifftw="-I$dir"
 			fi
-			CFLAGS="$test_cflags $try_ioption"
-			CPPFLAGS="$test_cppflags $try_ioption"
+			CFLAGS="$test_cflags $try_ifftw"
+			CPPFLAGS="$test_cppflags $try_ifftw"
 			LDFLAGS="$c_ldflags"
 			LIBS="$fft_libs"
 			AC_CHECK_HEADER(fftw.h, have_fftw_h=1
-					ifftw="$try_ioption")
+					try_iflags="$try_iflags $try_ifftw")
 			if test "$ac_cv_header_fftw_h" != "no"
 			then break ; fi
 		done
@@ -1377,6 +1357,9 @@ AC_LANG_POP(Fortran 77)
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
+
+if test "$iflags" = "" ; then iflags="$try_iflags" ; fi
+echo setting IFLAGS... $iflags
 
 # xlf compilers (AIX and powerpc) want comma-separated -D directives
 if test "$xlf_flags" -ne 0
@@ -1446,7 +1429,7 @@ AC_SUBST(fflags)
 AC_SUBST(fflags_noopt)
 AC_SUBST(pre_fdflags)
 AC_SUBST(imod)
-AC_SUBST(ifftw)
+AC_SUBST(iflags)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
 AC_SUBST(blas_libs)

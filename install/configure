@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc mpicc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f90flags_noopt f77 mpif77 fflags fflags_noopt pre_fdflags imod ifftw ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs mylib ar arflags ranlib f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc mpicc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f90flags_noopt f77 mpif77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs mylib ar arflags ranlib f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1328,6 +1328,7 @@ cpp=$CPP
 cflags=$CFLAGS
 cppflags=$CPPFLAGS
 dflags=$DFLAGS
+iflags=$IFLAGS
 f77=$F77
 f90=$F90
 mpif77=$MPIF77
@@ -1447,90 +1448,69 @@ then
 fi
 echo checking architecture... $arch
 
-# candidate compilers, archiver and flags based on architecture
+# candidate archiver and archiver flags
+try_ar="ar"
+try_arflags="ruv"
+try_iflags="-I../include"
+
+# candidate compilers and flags based on architecture
 case $arch in
 ia64 | amd64 )
 	try_mpif90="mpif90"
 	try_f90="ifort ifc efc pgf90 pathf95 g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
-	try_dflags="-D__LINUX64"
 	;;
 ia32 )
 	try_mpif90="mpif90"
 	try_f90="ifort ifc pgf90 pathf95 g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__LINUX"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 f90"
-	try_ar="ar"
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__COMPLIB -D__SGI64 -D__ORIGIN"
 	;;
 alpha )
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__ALPHA"
 	;;
 alinux )
 	try_mpif90="mpif90"
 	try_f90="fort g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__ALPHA -D__LINUX64"
 	;;
 sparc )
 	try_mpif90="mpf90"
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__SUN"
 	;;
 crayx1 )
 	try_f90="ftn"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__X1"
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
-	try_ar="ar"
-	try_arflags="ruv"
-	try_dflags="-D__MAC -D__XLF"
+	try_dflags="-D__XLF"
 	ranlib="ranlib"
 	;;
 mac686 )
-	try_mpif90="g95"
-	try_f90="g95"
-	try_ar="ar"
-	try_arflags="ruv"
-	try_dflags="-D__MAC"
+	try_f90="ifort g95"
 	ranlib="ranlib"
 	;;
 cygwin )
 	try_mpif90="mpif90"
 	try_f90="g95 f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	try_dflags="-D__LINUX"
 	;;
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported architecture" >&5
 echo "$as_me: WARNING: unsupported architecture" >&2;}
 	try_f90="f90"
-	try_ar="ar"
-	try_arflags="ruv"
 	;;
 esac
 
@@ -1634,7 +1614,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1637:" \
+echo "$as_me:1617:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2123,7 +2103,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2126:" \
+echo "$as_me:2106:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2963,7 +2943,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2966:" \
+echo "$as_me:2946:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3730,7 +3710,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3733:" \
+echo "$as_me:3713:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4163,7 +4143,7 @@ crayx1:cc )
         c_ldflags=""
         ;;
 macppc:gcc )
-	try_cflags="-O3 -fomit-frame-pointer -I/usr/include/malloc"
+	try_cflags="-O3 -fomit-frame-pointer"
 	try_cpp="cpp"
 	;;
 macppc:* )
@@ -8003,13 +7983,13 @@ fi
 			unset ac_cv_header_fftw_h # clear cached value
 			if test "$dir" = "none"
 			then
-				try_ioption=
+				try_ifftw=
 			else
 				echo $ECHO_N "in $dir: " $ECHO_C
-				try_ioption="-I$dir"
+				try_ifftw="-I$dir"
 			fi
-			CFLAGS="$test_cflags $try_ioption"
-			CPPFLAGS="$test_cppflags $try_ioption"
+			CFLAGS="$test_cflags $try_ifftw"
+			CPPFLAGS="$test_cppflags $try_ifftw"
 			LDFLAGS="$c_ldflags"
 			LIBS="$fft_libs"
 
@@ -8405,7 +8385,7 @@ echo "${ECHO_T}$ac_cv_header_fftw_h" >&6
 fi
 if test $ac_cv_header_fftw_h = yes; then
   have_fftw_h=1
-					ifftw="$try_ioption"
+					try_iflags="$try_iflags $try_ifftw"
 fi
 
 
@@ -8542,6 +8522,9 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
+
+if test "$iflags" = "" ; then iflags="$try_iflags" ; fi
+echo setting IFLAGS... $iflags
 
 # xlf compilers (AIX and powerpc) want comma-separated -D directives
 if test "$xlf_flags" -ne 0
@@ -9305,7 +9288,7 @@ s,@fflags@,$fflags,;t t
 s,@fflags_noopt@,$fflags_noopt,;t t
 s,@pre_fdflags@,$pre_fdflags,;t t
 s,@imod@,$imod,;t t
-s,@ifftw@,$ifftw,;t t
+s,@iflags@,$iflags,;t t
 s,@ld@,$ld,;t t
 s,@ldflags@,$ldflags,;t t
 s,@blas_libs@,$blas_libs,;t t

@@ -38,7 +38,7 @@ FDFLAGS        = @fdflags@
 # In most cases, IFLAGS = -I../include
 # If loading an external FFTW library, add the location of FFTW include files
 
-IFLAGS         = -I../include @ifftw@
+IFLAGS         = @iflags@
 
 # MODFLAGS = flag used by f90 compiler to locate modules
 # You need in all cases to search for modules in ./, in ../iotk/src, in ../Modules
