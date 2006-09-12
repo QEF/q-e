@@ -76,14 +76,15 @@ MODULE path_base
       istep_path = 0
       conv_elec  = .TRUE.
       !
-      ! ... the dimension of all "path" arrays is set here
-      ! ... ( It corresponds to the dimension of the configurational space )
+      ! ... the dimension of all "path" arrays (dim) is set here
+      ! ... ( it corresponds to the dimension of the configurational space )
       !
       IF ( lcoarsegrained ) THEN
          !
          dim = ncolvar
          !
-         use_masses = .FALSE.
+         use_masses   = .FALSE.
+         use_freezing = .FALSE.
          !
       ELSE
          !
@@ -143,7 +144,7 @@ MODULE path_base
       !
       IF ( ALLOCATED( climbing_ ) ) THEN
          !
-         climbing = climbing_(1:num_of_images)
+         climbing = climbing_
          !
       ELSE
          !
@@ -528,20 +529,20 @@ MODULE path_base
             !
             IF ( climbing(i) ) THEN
                !
-               grad(:,i) = grad(:,i) - 2.D0 * &
-                           tangent(:,i) * ( tangent(:,i) .dot. grad(:,i) )
+               grad(:,i) = grad(:,i) - 2.D0 * tangent(:,i) * &
+                                       ( grad(:,i) .dot. tangent(:,i) )
                ! 
             ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
                !
                ! ... projection of the pes gradients 
                !
                grad(:,i) = grad(:,i) - &
-                           tangent(:,i) * ( tangent(:,i) .dot. grad(:,i) )
+                           tangent(:,i) * ( grad(:,i) .dot. tangent(:,i) )
                !
                IF ( llangevin ) THEN
                   !
                   lang(:,i) = lang(:,i) - &
-                              tangent(:,i) * ( tangent(:,i) .dot. lang(:,i) )
+                              tangent(:,i) * ( lang(:,i) .dot. tangent(:,i) )
                   !
                END IF
                !
@@ -710,8 +711,8 @@ MODULE path_base
       !
       DO i = 2, nim
          !
-         pes(i) = pes(i-1) + 0.5D0 * ( ( pos(:,i) - pos(:,i-1) ) .dot. &
-                                       ( grad_pes(:,i) + grad_pes(:,i-1) ) )
+         pes(i) = pes(i-1) + 0.5D0*( ( pos(:,i) - pos(:,i-1) ) .dot. &
+                                     ( grad_pes(:,i) + grad_pes(:,i-1) ) )
          !
       END DO
       !
@@ -727,7 +728,7 @@ MODULE path_base
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_images, suspended_image,  &
+      USE path_variables, ONLY : num_of_images, pending_image,  &
                                  istep_path, pes, first_last_opt, &
                                  Emin, Emax, Emax_index
       !
@@ -750,7 +751,7 @@ MODULE path_base
          !
       END IF
       !
-      IF ( suspended_image /= 0 ) N_in = suspended_image
+      IF ( pending_image /= 0 ) N_in = pending_image
       !
       CALL compute_scf( N_in, N_fin, stat )
       !
@@ -768,7 +769,7 @@ MODULE path_base
     SUBROUTINE born_oppenheimer_fes( stat )
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_images, suspended_image, &
+      USE path_variables, ONLY : num_of_images, pending_image, &
                                  istep_path, first_last_opt
       !
       IMPLICIT NONE
@@ -790,7 +791,7 @@ MODULE path_base
          !
       END IF
       !
-      IF ( suspended_image /= 0 ) N_in = suspended_image
+      IF ( pending_image /= 0 ) N_in = pending_image
       !
       CALL compute_fes_grads( N_in, N_fin, stat )
       !
@@ -842,7 +843,7 @@ MODULE path_base
       !
       USE control_flags,    ONLY : lneb, lsmd, lcoarsegrained
       USE path_variables,   ONLY : conv_path, istep_path, nstep_path,  &
-                                   suspended_image, activation_energy, &
+                                   pending_image, activation_energy, &
                                    err_max, pes, climbing, CI_scheme,  &
                                    Emax_index, fixed_tan, tangent
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
@@ -868,7 +869,7 @@ MODULE path_base
          !
          CALL write_output()
          !
-         suspended_image = 0
+         pending_image = 0
          !
          CALL write_restart()
          !
@@ -987,14 +988,14 @@ MODULE path_base
       !------------------------------------------------------------------------
       !
       USE control_flags,  ONLY : lsmd
-      USE path_variables, ONLY : suspended_image, tangent
+      USE path_variables, ONLY : pending_image, tangent
       !
       USE path_reparametrisation
       !
       IMPLICIT NONE
       !
       !
-      IF ( suspended_image /= 0 ) RETURN
+      IF ( pending_image /= 0 ) RETURN
       !
       IF ( lsmd ) CALL reparametrise()
       !
@@ -1011,7 +1012,7 @@ MODULE path_base
       USE input_parameters, ONLY : num_of_images_inp => num_of_images
       USE control_flags,    ONLY : lneb, lsmd
       USE path_variables,   ONLY : path_thr, istep_path, nstep_path, &
-                                   conv_path, suspended_image, &
+                                   conv_path, pending_image, &
                                    num_of_images, llangevin
       USE path_formats,     ONLY : final_fmt
       !
@@ -1047,7 +1048,7 @@ MODULE path_base
             !
          END IF
          !
-         suspended_image = 0
+         pending_image = 0
          !
          conv_path = .TRUE.
          !
@@ -1077,7 +1078,7 @@ MODULE path_base
             !
          END IF
          !
-         suspended_image = 0
+         pending_image = 0
          !
          check_exit = .TRUE.
          !

@@ -826,7 +826,7 @@ fe_nstep       INTEGER ( default = 100 )
                Maximum number of steps used to evaluate the potential of
                mean force.
 
-shake_nstep    INTEGER ( default = 10 )
+sw_nstep       INTEGER ( default = 10 )
                Number of steps used to switch to the new values of the
                collective variables.
 

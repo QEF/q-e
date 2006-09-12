@@ -23,8 +23,7 @@ MODULE metadyn_vars
   !
   INTEGER :: ncolvar
   !
-  INTEGER  :: fe_nstep
-  INTEGER  :: shake_nstep
+  INTEGER  :: fe_nstep, sw_nstep
   !
   REAL(DP), ALLOCATABLE :: dfe_acc(:)
   REAL(DP), ALLOCATABLE :: fe_grad(:)
@@ -45,8 +44,6 @@ MODULE metadyn_vars
   REAL(DP) :: etot_av
   !
   INTEGER :: first_metadyn_iter
-  INTEGER :: first_fe_iter
-  INTEGER :: first_shake_iter
   !
   CHARACTER(LEN=80) :: metadyn_fmt
   !
@@ -60,7 +57,7 @@ MODULE metadyn_vars
                                      g_amplitude_ => g_amplitude, &
                                      fe_step_     => fe_step, &
                                      fe_nstep_    => fe_nstep, &
-                                     shake_nstep_ => shake_nstep
+                                     sw_nstep_    => sw_nstep
       USE control_flags,      ONLY : lmetadyn, nstep
       !
       IMPLICIT NONE
@@ -82,7 +79,7 @@ MODULE metadyn_vars
       END IF
       !
       fe_nstep    = fe_nstep_
-      shake_nstep = shake_nstep_
+      sw_nstep    = sw_nstep_
       g_amplitude = g_amplitude_
       fe_step(:)  = fe_step_(1:ncolvar)
       !

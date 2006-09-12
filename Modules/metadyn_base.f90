@@ -276,7 +276,7 @@ MODULE metadyn_base
       USE constants,          ONLY : eps32
       USE constraints_module, ONLY : target
       USE metadyn_vars,       ONLY : ncolvar, fe_grad, fe_step, new_target, &
-                                     to_target, shake_nstep, gaussian_pos, &
+                                     to_target, sw_nstep, gaussian_pos, &
                                      g_amplitude
       USE random_numbers,     ONLY : rndm
       !
@@ -305,7 +305,7 @@ MODULE metadyn_base
       !
       CALL impose_domain_constraints()
       !
-      to_target(:) = ( new_target(:) - target(1:ncolvar) ) / DBLE( shake_nstep )
+      to_target(:) = ( new_target(:) - target(1:ncolvar) ) / DBLE( sw_nstep )
       !
       RETURN
       !

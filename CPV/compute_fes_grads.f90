@@ -17,9 +17,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE control_flags,      ONLY : nomore, ldamped, tconvthrs, trane, ampre, &
                                  nbeg, tfor, taurdr, tnosep, ndr, isave
   USE metadyn_vars,       ONLY : ncolvar, new_target, to_target, dfe_acc, &
-                                 etot_av, shake_nstep, fe_nstep, to_new_target
-  USE path_variables,     ONLY : pos, pes, grad_pes, frozen, &
-                                 num_of_images, istep_path, suspended_image
+                                 sw_nstep, fe_nstep, to_new_target
+  USE path_variables,     ONLY : pos, pes, grad_pes, &
+                                 num_of_images, istep_path, pending_image
   USE constraints_module, ONLY : lagrange, target, &
                                  init_constraint, deallocate_constraint
   USE cell_base,          ONLY : alat, at
@@ -53,6 +53,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   REAL(DP)              :: tcpu
   REAL(DP), ALLOCATABLE :: tauout(:,:), fion(:,:)
   REAL(DP)              :: etot
+  CHARACTER(LEN=10)     :: stage
+  INTEGER               :: fe_step0, sw_step0
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   REAL(DP),         EXTERNAL :: get_clock
@@ -68,11 +70,13 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   CALL flush_unit( iunpath )
   !
-  IF ( ionode ) THEN
+  IF ( meta_ionode ) THEN
      !
-     OPEN( UNIT = iunaxsf, FILE = TRIM( prefix ) // "_" // &
-         & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf", &
-           STATUS = "UNKNOWN", ACTION = "WRITE" )
+     filename = TRIM( prefix ) // "_" // &
+              & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf"
+     !
+     OPEN( UNIT = iunaxsf, &
+           FILE = filename, STATUS = "UNKNOWN", ACTION = "WRITE" )
      !
      WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I5)' ) num_of_images
      WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
@@ -101,11 +105,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   IF ( my_image_id == root ) THEN
      !
-     FORALL( image = N_in:N_fin, .NOT. frozen(image) )
-        !
-        grad_pes(:,image) = 0.D0
-        !
-     END FORALL     
+     grad_pes(:,:) = 0.D0
      !
   ELSE
      !
@@ -130,7 +130,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
      IF ( image > N_fin ) EXIT fes_loop
      !     
-     suspended_image = image
+     pending_image = image
      !
      IF ( check_stop_now( iunpath ) ) THEN
         !   
@@ -145,80 +145,124 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !    
      END IF
      !
-     ! ... free-energy gradient ( for non-frozen images only )
+     ! ... calculation of the mean-force
      !
-     IF ( .NOT. frozen(image) ) THEN
+     tcpu = get_clock( 'CP' )
+     !
+     IF ( nimage > 1 ) THEN
         !
-        tcpu = get_clock( 'CP' )
+        WRITE( UNIT = iunpath, FMT = scf_fmt_para ) my_image_id, tcpu, image
         !
-        IF ( nimage > 1 ) THEN
-           !
-           WRITE( UNIT = iunpath, FMT = scf_fmt_para ) my_image_id, tcpu, image
-           !
-        ELSE
-           !
-           WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, image
-           !
-        END IF
-        !      
-        outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
-                 TRIM( int_to_char( image ) ) // "/"        
+     ELSE
         !
-        ! ... unit stdout is connected to the appropriate file
+        WRITE( UNIT = iunpath, FMT = scf_fmt ) tcpu, image
+        !
+     END IF
+     !      
+     outdir = TRIM( outdir_saved ) // "/" // TRIM( prefix ) // "_" // &
+              TRIM( int_to_char( image ) ) // "/"
+     !
+     ! ... unit stdout is connected to the appropriate file
+     !
+     IF ( ionode ) THEN
+        !
+        INQUIRE( UNIT = stdout, OPENED = opnd )
+        IF ( opnd ) CLOSE( UNIT = stdout )
+        OPEN( UNIT = stdout, FILE = TRIM( outdir ) // 'CP.out', &
+              STATUS = 'UNKNOWN', POSITION = 'APPEND' )
+        !
+     END IF
+     !
+     ! ... initialization
+     !
+     CALL deallocate_modules_var()
+     CALL deallocate_constraint()
+     !
+     CALL modules_setup()
+     !
+     filename = TRIM( outdir ) // "therm_average.restart"
+     !
+     INQUIRE( FILE = filename, EXIST = file_exists )
+     !
+     IF ( file_exists ) THEN
+        !
+        ! ... we read the previous positions, the value of the accumulators,
+        ! ... and the number of steps already performed for this image from
+        ! ... a restart file
         !
         IF ( ionode ) THEN
            !
-           INQUIRE( UNIT = stdout, OPENED = opnd )
-           IF ( opnd ) CLOSE( UNIT = stdout )
-           OPEN( UNIT = stdout, FILE = TRIM( outdir ) // 'CP.out', &
-                 STATUS = 'UNKNOWN', POSITION = 'APPEND' )
+           OPEN( UNIT = 1000, FILE = filename )
+           !
+           READ( 1000, * ) stage
+           READ( 1000, * ) tau(:,:)
+           READ( 1000, * ) nomore
+           READ( 1000, * ) to_target
+           READ( 1000, * ) dfe_acc
+           !
+           CLOSE( UNIT = 1000 )
            !
         END IF
         !
-        ! ... initialization
+        CALL mp_bcast( stage,     ionode_id )
+        CALL mp_bcast( tau,       ionode_id )
+        CALL mp_bcast( nomore,    ionode_id )
+        CALL mp_bcast( to_target, ionode_id )
+        CALL mp_bcast( dfe_acc,   ionode_id )
         !
-        CALL deallocate_modules_var()
-        CALL deallocate_constraint()
+     ELSE
         !
-        CALL modules_setup()
+        ! ... otherwise we use the output positions from the previous image
         !
-        filename = TRIM( outdir ) // "therm_average.restart"
+        tau(:,:) = tauout(:,:)
         !
-        INQUIRE( FILE = filename, EXIST = file_exists )
+        stage = 'tobedone'
         !
-        IF ( file_exists ) THEN
-           !
-           ! ... if possible we read the previous positions for this image
-           ! ... from a restart file
-           !
-           IF ( ionode ) THEN
-              !
-              WRITE( stdout, '(/,3X,"restarting pos and vel from file",/)' )
-              !
-              OPEN( UNIT = 1000, FILE = filename )
-              !
-              READ( 1000, * ) tau(:,:)
-              !
-              CLOSE( UNIT = 1000 )
-              !
-           END IF
-           !
-           CALL mp_bcast( tau, ionode_id )
-           !
-        ELSE
-           !
-           ! ... otherwise we use the output positions for the previous image
-           !
-           tau(:,:) = tauout(:,:)
-           !
-        END IF
+     END IF
+     !
+     CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
+     !
+     CALL init_constraint( nat, tau, ityp, 1.D0 )
+     !
+     fe_step0 = 0
+     sw_step0 = 0
+     !
+     SELECT CASE( stage )
+     CASE( 'done' )
         !
-        CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
+        ! ... do nothing and recompute the average quantities
         !
-        CALL init_constraint( nat, tau, ityp, 1.D0 )
+     CASE( 'tobedone' )
         !
-        ! ... first we do a wavefunctions optimisation to bring the system on
-        ! ... the BO surface
+        new_target(:) = pos(:,image)
+        !
+        to_target(:) = ( new_target(:) - target(1:ncolvar) ) / DBLE( sw_nstep )
+        !
+        stage = 'switch'
+        !
+        dfe_acc = 0.D0
+        !
+     CASE( 'switch' )
+        !
+        dfe_acc = 0.D0
+        !
+        sw_step0 = nomore
+        !
+     CASE( 'mean-force' )
+        !
+        fe_step0 = nomore
+        !
+     CASE DEFAULT
+        !
+        CALL errore( 'compute_fes_grads', &
+                     'stage ' // TRIM( stage ) // ' unknown', 1 )
+        !
+     END SELECT
+     !
+     IF ( stage /= 'done' ) THEN
+        !
+        ! ... first we do a wavefunctions optimisation to bring the system
+        ! ... on the BO surface
         !
         tconvthrs%ekin  = ekin_conv_thr
         tconvthrs%derho = etot_conv_thr
@@ -256,26 +300,24 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         CALL cprmain( tauout, fion, etot )
         !
-        ! ... the new values of the collective-variables are set here
+        tfor   = .TRUE.
+        tnosep = tnosep_saved
         !
-        new_target(:) = pos(:,image)
+     END IF
+     !
+     IF ( stage == 'switch' ) THEN
         !
-        to_target(:) = ( new_target(:) - &
-                         target(1:ncolvar) ) / DBLE( shake_nstep )
-        !
-        ! ... then the system is "adiabatically" moved to the new values of the
-        ! ... collective-variables
+        ! ... first the collective variables are "adiabatically" changed to
+        ! ... the new vales by using MD without damping
         !
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )
         !
-        nfi    = 0
-        nomore = shake_nstep
-        isave  = nomore
+        nfi    = sw_step0
+        nomore = sw_nstep
+        isave  = sw_nstep
         !
-        tfor   = .TRUE.
-        frice  = electron_damping
-        tnosep = tnosep_saved
+        frice = electron_damping
         !
         tconvthrs%active = .FALSE.
         to_new_target    = .TRUE.
@@ -284,16 +326,21 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         CALL cprmain( tauout, fion, etot )
         !
-        ! ... and finally the free energy gradients are computed
+        stage = 'mean-force'
+        !
+        CALL write_restart( 'mean-force', 0 )
+        !
+     END IF
+     !
+     IF ( stage == 'mean-force' ) THEN
+        !
+        ! ... then the free energy gradients are computed        
         !
         WRITE( stdout, '(/,5X,"calculation of the mean force",/)' )
         !
-        etot_av = 0.D0
-        dfe_acc = 0.D0
-        !    
-        nfi    = 0
+        nfi    = fe_step0
         nomore = fe_nstep
-        isave  = nomore
+        isave  = fe_nstep
         !
         IF ( ldamped ) THEN
            !
@@ -307,43 +354,39 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
            !
            frice = 0.D0
            !
+           tconvthrs%active = .FALSE.
+           !
         END IF
         !
         to_new_target = .FALSE.
         !
         CALL cprmain( tauout, fion, etot )
         !
-        ! ... the averages are computed here
+     END IF
+     !
+     ! ... the averages are computed here
+     !
+     IF ( ldamped ) THEN
         !
-        IF ( ldamped ) THEN
-           !
-           ! ... zero temperature
-           !
-           grad_pes(:,image) = - lagrange(1:ncolvar)
-           !
-           pes(image) = etot
-           !
-        ELSE
-           !
-           ! ... finite temperature
-           !
-           grad_pes(:,image) = dfe_acc(:) / DBLE( nomore )
-           !
-        END IF
+        ! ... zero temperature case
         !
-        IF ( ionode ) THEN
-           !
-           CALL write_axsf_file( image, tauout, 1.D0 )
-           !
-           ! ... the restart file is written here
-           !
-           OPEN( UNIT = 1000, FILE = filename )
-           !
-           WRITE( 1000, * ) tauout(:,:)
-           !
-           CLOSE( UNIT = 1000 )
-           !
-        END IF
+        grad_pes(:,image) = - lagrange(1:ncolvar)
+        !
+     ELSE
+        !
+        ! ... finite temperature case
+        !
+        grad_pes(:,image) = dfe_acc(:) / DBLE( fe_nstep )
+        !
+     END IF
+     !
+     IF ( ionode ) THEN
+        !
+        ! ... the restart file is written here
+        !
+        CALL write_restart( 'done', 0 )
+        !
+        CALL write_axsf_file( image, tauout, 1.D0 )
         !
      END IF
      !
@@ -356,6 +399,34 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   END DO fes_loop
   !
   CLOSE( UNIT = iunaxsf )
+  !
+  IF ( meta_ionode ) THEN
+     !
+     ! ... when all the images are done the stage is changed from 
+     ! ... 'done' to 'tobedone'
+     !
+     DO image = N_in, N_fin
+        !
+        outdir = TRIM( outdir_saved ) // TRIM( prefix ) // &
+                 "_" // TRIM( int_to_char( image ) ) // "/"
+        !
+        filename = TRIM( outdir ) // "therm_average.restart"
+        !
+        OPEN( UNIT = 1000, FILE = filename )
+        !
+        READ( 1000, * ) stage
+        READ( 1000, * ) tauout(:,:)
+        READ( 1000, * ) nomore
+        READ( 1000, * ) to_target
+        READ( 1000, * ) dfe_acc
+        !
+        CLOSE( UNIT = 1000 )
+        !
+        CALL write_restart( 'tobedone', 0 )
+        !
+     END DO
+     !
+  END IF  
   !
   CALL add_domain_potential()
   !
@@ -373,15 +444,36 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
   END IF
   !
-  suspended_image = 0
+  pending_image = 0
   !
   RETURN  
   !
+  CONTAINS
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_restart( stage, nstep )
+      !------------------------------------------------------------------------
+      !
+      CHARACTER(LEN=*), INTENT(IN) :: stage
+      INTEGER,          INTENT(IN) :: nstep
+      !
+      OPEN( UNIT = 1000, FILE = filename )
+      !
+      WRITE( 1000, * ) TRIM( stage )
+      WRITE( 1000, * ) tauout(:,:)
+      WRITE( 1000, * ) nstep
+      WRITE( 1000, * ) to_target
+      WRITE( 1000, * ) dfe_acc
+      !
+      CLOSE( UNIT = 1000 )
+      !
+    END SUBROUTINE write_restart
+    !
 END SUBROUTINE compute_fes_grads
 !
-!------------------------------------------------------------------------
+!----------------------------------------------------------------------------
 SUBROUTINE metadyn()
-  !------------------------------------------------------------------------
+  !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
   USE input_parameters,   ONLY : electron_damping, ekin_conv_thr, etot_conv_thr
@@ -393,10 +485,10 @@ SUBROUTINE metadyn()
   USE ions_base,          ONLY : nat, nsp, ityp, if_pos
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : iunmeta, iunaxsf, outdir
-  USE metadyn_vars,       ONLY : ncolvar, fe_grad, new_target, to_target,   &
-                                 metadyn_fmt, to_new_target, fe_step,       &
-                                 metadyn_history, max_metadyn_iter,         &
-                                 first_metadyn_iter, fe_nstep, shake_nstep, &
+  USE metadyn_vars,       ONLY : ncolvar, fe_grad, new_target, to_target, &
+                                 metadyn_fmt, to_new_target, fe_step,     &
+                                 metadyn_history, max_metadyn_iter,       &
+                                 first_metadyn_iter, fe_nstep, sw_nstep,  &
                                  dfe_acc, etot_av, gaussian_pos
   USE metadyn_base,       ONLY : add_gaussians, add_domain_potential, &
                                  evolve_collective_vars
@@ -489,7 +581,7 @@ SUBROUTINE metadyn()
                             & "to the new coarse-grained positions",/)' )
         !
         nfi    = 0
-        nomore = shake_nstep
+        nomore = sw_nstep
         isave  = nomore
         !
         tconvthrs%active = .FALSE.
@@ -539,7 +631,7 @@ SUBROUTINE metadyn()
      !
      IF ( ldamped ) THEN
         !
-        ! ... zero temperature
+        ! ... zero temperature case
         !
         etot_av = etot
         !
@@ -547,7 +639,7 @@ SUBROUTINE metadyn()
         !
      ELSE
         !
-        ! ... finite temperature
+        ! ... finite temperature case
         !
         etot_av = etot_av / DBLE( nomore )
         !

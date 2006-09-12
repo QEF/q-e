@@ -21,7 +21,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE io_global,         ONLY : stdout, ionode
   USE path_formats,      ONLY : scf_fmt
   USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
-                                dim, suspended_image, frozen
+                                dim, pending_image, frozen
   USE check_stop,        ONLY : check_stop_now
   USE xml_io_base,       ONLY : check_restartfile
   USE cp_interfaces,     ONLY : main_fpmd
@@ -55,7 +55,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      IF ( frozen(image) ) CYCLE
      !
-     suspended_image = image
+     pending_image = image
      !
      IF ( check_stop_now() ) THEN
         !
@@ -164,7 +164,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !
   outdir  = outdir_saved
   !
-  suspended_image = 0
+  pending_image = 0
   !
   DEALLOCATE( tau, fion )
   !

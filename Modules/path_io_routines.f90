@@ -134,14 +134,14 @@ MODULE path_io_routines
        WRITE( iunpath, summary_fmt ) "CI_scheme",     TRIM( CI_scheme )
        !
        WRITE( UNIT = iunpath, &
-              FMT = '(5X,"first_last_opt",T35," = ",1X,L1))' ) first_last_opt
+              FMT = '(5X,"first_last_opt",T35," = ",1X,L1)' ) first_last_opt
        !
        WRITE( UNIT = iunpath, &
-              FMT = '(5X,"coarse-grained phase-space",T35, " = ",1X,L1))' ) &
+              FMT = '(5X,"coarse-grained phase-space",T35, " = ",1X,L1)' ) &
            lcoarsegrained
        !
        WRITE( UNIT = iunpath, &
-              FMT = '(5X,"use_freezing",T35," = ",1X,L1))' ) use_freezing
+              FMT = '(5X,"use_freezing",T35," = ",1X,L1)' ) use_freezing
        !
        WRITE( UNIT = iunpath, &
               FMT = '(5X,"ds",T35," = ",1X,F6.4," a.u.")' ) ds
@@ -166,7 +166,7 @@ MODULE path_io_routines
        IF ( lsmd ) THEN
           !
           WRITE( UNIT = iunpath, &
-                 FMT = '(5X,"fixed_tan",T35," = ",1X,L1))' ) fixed_tan
+                 FMT = '(5X,"fixed_tan",T35," = ",1X,L1)' ) fixed_tan
           !
           IF ( llangevin ) &
              WRITE( UNIT = iunpath, &
@@ -208,7 +208,7 @@ MODULE path_io_routines
        USE input_parameters,       ONLY : if_pos
        USE path_variables,         ONLY : nim => num_of_images
        USE path_variables,         ONLY : istep_path, nstep_path, frozen, dim, &
-                                          suspended_image, pos, pes, grad_pes, &
+                                          pending_image, pos, pes, grad_pes, &
                                           lquick_min, posold, Emax, Emin,      &
                                           Emax_index
        USE path_reparametrisation, ONLY : spline_interpolation
@@ -241,7 +241,7 @@ MODULE path_io_routines
              !
              READ( UNIT = iunrestart, FMT = * ) istep_path
              READ( UNIT = iunrestart, FMT = * ) nstep_path
-             READ( UNIT = iunrestart, FMT = * ) suspended_image
+             READ( UNIT = iunrestart, FMT = * ) pending_image
              READ( UNIT = iunrestart, FMT = * ) conv_elec
              !
           ELSE   
@@ -420,7 +420,7 @@ MODULE path_io_routines
              !
           END IF
           !
-          IF ( suspended_image == 0 ) THEN
+          IF ( pending_image == 0 ) THEN
              !
              Emin       = MINVAL( pes(:) )
              Emax       = MAXVAL( pes(:) )
@@ -434,7 +434,7 @@ MODULE path_io_routines
        !
        CALL mp_bcast( istep_path,      meta_ionode_id )
        CALL mp_bcast( nstep_path,      meta_ionode_id )
-       CALL mp_bcast( suspended_image, meta_ionode_id )
+       CALL mp_bcast( pending_image, meta_ionode_id )
        CALL mp_bcast( conv_elec,       meta_ionode_id )
        !
        CALL mp_bcast( pos,      meta_ionode_id )
@@ -464,7 +464,7 @@ MODULE path_io_routines
        USE input_parameters, ONLY : if_pos       
        USE io_files,         ONLY : iunrestart, path_file, tmp_dir 
        USE control_flags,    ONLY : conv_elec, lcoarsegrained
-       USE path_variables,   ONLY : istep_path, nstep_path, suspended_image, &
+       USE path_variables,   ONLY : istep_path, nstep_path, pending_image, &
                                     dim, num_of_images, pos, pes, grad_pes,  &
                                     posold, frozen, lquick_min
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
@@ -494,10 +494,10 @@ MODULE path_io_routines
           !
           CLOSE( iunrestart )
           !
-          ! ... then, if suspended_image == 0, it is also written on the 
+          ! ... then, if pending_image == 0, it is also written on the 
           ! ... scratch direcoty (a backup copy at each iteration)
           !
-          IF ( suspended_image == 0 ) THEN
+          IF ( pending_image == 0 ) THEN
              !
              file = TRIM( tmp_dir ) // &
                     TRIM( path_file ) // TRIM( int_to_char( istep_path ) )
@@ -534,7 +534,7 @@ MODULE path_io_routines
            !
            WRITE( UNIT = in_unit, FMT = '(I4)' ) istep_path
            WRITE( UNIT = in_unit, FMT = '(I4)' ) nstep_path
-           WRITE( UNIT = in_unit, FMT = '(I4)' ) suspended_image
+           WRITE( UNIT = in_unit, FMT = '(I4)' ) pending_image
            WRITE( UNIT = in_unit, FMT = '(L1)' ) conv_elec
            !
            WRITE( UNIT = in_unit, FMT = '("NUMBER OF IMAGES")' )

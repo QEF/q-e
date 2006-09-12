@@ -33,7 +33,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE io_files,         ONLY : prefix, tmp_dir, &
                                iunpath, iunupdate, exit_file, iunexit
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE path_variables,   ONLY : pos, pes, grad_pes, dim, suspended_image, &
+  USE path_variables,   ONLY : pos, pes, grad_pes, dim, pending_image, &
                                istep_path, frozen, write_save
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
@@ -107,7 +107,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      IF ( image > N_fin ) EXIT scf_loop
      !     
-     suspended_image = image
+     pending_image = image
      !
      IF ( check_stop_now( iunpath ) ) THEN
         !   
@@ -328,7 +328,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      stat = .TRUE.
      !
-     suspended_image = 0
+     pending_image = 0
      !
   ELSE
      !
@@ -336,7 +336,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      IF ( nimage > 1 ) THEN
         !
-        CALL mp_min( suspended_image, inter_image_comm )
+        CALL mp_min( pending_image, inter_image_comm )
         !
         OPEN(  UNIT = iunexit, FILE = TRIM( exit_file ) )
         CLOSE( UNIT = iunexit, STATUS = 'DELETE' )

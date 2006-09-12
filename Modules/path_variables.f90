@@ -43,7 +43,7 @@ MODULE path_variables
        num_of_images,            &! number of images
        deg_of_freedom,           &! number of degrees of freedom 
                                   ! ( dim - #( of fixed coordinates ) )
-       suspended_image            ! last image for which scf has not been
+       pending_image              ! last image for which scf has not been
                                   ! achieved
   REAL(DP) :: &
        ds,                       &! the optimization step
