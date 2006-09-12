@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -2974,5 +2974,729 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 END SUBROUTINE rep_matmul_drv
 
 !==----------------------------------------------==!
-    END MODULE parallel_toolkit
+END MODULE parallel_toolkit
 !==----------------------------------------------==!
+
+!
+! ... some simple routines for parallel linear algebra (the matrices are
+! ... always replicated on all the cpus)
+!
+! ... written by carlo sbraccia ( 2006 )
+!
+#define ZERO ( 0.D0, 0.D0 )
+#define ONE  ( 1.D0, 0.D0 )
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_dgemm( transa, transb, m, n, k, &
+                       alpha, a, lda, b, ldb, beta, c, ldc, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... trivial parallelization (splitting matrix B by columns) of DGEMM 
+  !
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_bcast
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=1), INTENT(IN)    :: transa, transb
+  INTEGER,          INTENT(IN)    :: m, n, k
+  REAL(DP),         INTENT(IN)    :: alpha, beta
+  INTEGER,          INTENT(IN)    :: lda, ldb, ldc
+  REAL(DP),         INTENT(INOUT) :: a(lda,*), b(ldb,*), c(ldc,*)
+  INTEGER,          INTENT(IN)    :: comm
+  !
+  INTEGER              :: i, mpime, nproc, ierr
+  INTEGER              :: ncol, i0, i1
+  INTEGER, ALLOCATABLE :: i0a(:), i1a(:)
+  !
+  ! ... quick return if possible
+  !
+  IF ( m == 0 .OR. n == 0 .OR. &
+       ( ( alpha == 0.D0 .OR. k == 0 ) .AND. beta == 1.D0 ) ) RETURN
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  ncol = n / nproc
+  !
+  ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
+  !
+  DO i = 0, nproc -1
+     !
+     i0a(i) = i*ncol + 1
+     i1a(i) = ( i + 1 )*ncol
+     !
+  END DO
+  !
+  i1a(nproc-1) = n
+  !
+  i0 = i0a(mpime)
+  i1 = i1a(mpime)
+  !
+  IF ( transb == 'n' .OR. transb == 'N' ) THEN
+     !
+     CALL DGEMM( transa, transb, m, i1 - i0 + 1, k, &
+                 alpha, a, lda, b(1,i0), ldb, beta, c(1,i0), ldc )
+     !
+  ELSE
+     !
+     CALL DGEMM( transa, transb, m, i1 - i0 + 1, k, &
+                 alpha, a, lda, b(i0,1), ldb, beta, c(1,i0), ldc )
+     !
+  END IF
+  !
+  DO i = 0 , nproc - 1
+     !
+     CALL mp_bcast( c(1:ldc,i0a(i):i1a(i)), i, comm )
+     !
+  END DO
+  !
+  DEALLOCATE( i0a, i1a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_dgemm
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_zgemm( transa, transb, m, n, k, &
+                       alpha, a, lda, b, ldb, beta, c, ldc, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... trivial parallelization (splitting matrix B by columns) of ZGEMM
+  !
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_bcast
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=1), INTENT(IN)    :: transa, transb
+  INTEGER,          INTENT(IN)    :: m, n, k
+  COMPLEX(DP),      INTENT(IN)    :: alpha, beta
+  INTEGER,          INTENT(IN)    :: lda, ldb, ldc
+  COMPLEX(DP),      INTENT(INOUT) :: a(lda,*), b(ldb,*), c(ldc,*)
+  INTEGER,          INTENT(IN)    :: comm
+  !
+  INTEGER              :: i, mpime, nproc, ierr
+  INTEGER              :: ncol, i0, i1
+  INTEGER, ALLOCATABLE :: i0a(:), i1a(:)
+  !
+  ! ... quick return if possible
+  !
+  IF ( m == 0 .OR. n == 0 .OR. &
+       ( ( alpha == 0.D0 .OR. k == ZERO ) .AND. beta == ONE ) ) RETURN
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  ncol = n / nproc
+  !
+  ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
+  !
+  DO i = 0, nproc -1
+     !
+     i0a(i) = i*ncol + 1
+     i1a(i) = ( i + 1 )*ncol
+     !
+  END DO
+  !
+  i1a(nproc-1) = n
+  !
+  i0 = i0a(mpime)
+  i1 = i1a(mpime)
+  !
+  IF ( transb == 'n' .OR. transb == 'N' ) THEN
+     !
+     CALL ZGEMM( transa, transb, m, i1 - i0 + 1, k, &
+                 alpha, a, lda, b(1,i0), ldb, beta, c(1,i0), ldc )
+     !
+  ELSE
+     !
+     CALL ZGEMM( transa, transb, m, i1 - i0 + 1, k, &
+                 alpha, a, lda, b(i0,1), ldb, beta, c(1,i0), ldc )
+     !
+  END IF
+  !
+  DO i = 0 , nproc - 1
+     !
+     CALL mp_bcast( c(1:ldc,i0a(i):i1a(i)), i, comm )
+     !
+  END DO
+  !
+  DEALLOCATE( i0a, i1a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_zgemm
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_dgemv( trans, m, n, alpha, &
+                       a, lda, x, incx, beta, y, incy, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... trivial parallelization (splitting matrix A by rows) of DGEMV
+  !
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_bcast
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=1), INTENT(IN)    :: trans
+  INTEGER,          INTENT(IN)    :: m, n
+  REAL(DP),         INTENT(IN)    :: alpha, beta
+  INTEGER,          INTENT(IN)    :: lda, incx, incy
+  REAL(DP),         INTENT(INOUT) :: a(lda,*)
+  REAL(DP),         INTENT(INOUT) :: x(*), y(*)
+  INTEGER,          INTENT(IN)    :: comm
+  !
+  INTEGER               :: i, j, mpime, nproc, ierr
+  INTEGER               :: nrow, i0, i1, dim, ydum_size
+  INTEGER,  ALLOCATABLE :: i0a(:), i1a(:)
+  REAL(DP), ALLOCATABLE :: ydum(:)
+  !
+  ! ... quick return if possible
+  !
+  IF ( m == 0 .OR. n == 0 .OR. &
+       ( alpha == 0.D0 .AND. beta == 1.D0 ) ) RETURN
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  nrow = m / nproc
+  !
+  ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
+  !
+  DO i = 0, nproc -1
+     !
+     i0a(i) = i*nrow + 1
+     i1a(i) = ( i + 1 )*nrow
+     !
+  END DO
+  !
+  i1a(nproc-1) = m
+  !
+  i0 = i0a(mpime)
+  i1 = i1a(mpime)
+  !
+  IF ( trans == 'n' .OR. trans == 'N' ) THEN
+     !
+     dim = ( 1 + ( m - 1 )*ABS( incy ) )
+     !
+     ydum_size = m
+     !
+  ELSE
+     !
+     dim = ( 1 + ( n - 1 )*ABS( incy ) )
+     !
+     ydum_size = n
+     !
+  END IF
+  !
+  ALLOCATE( ydum( ydum_size ) )
+  !
+  i = 0
+  !
+  DO j = 1, dim, incy
+     !
+     i = i + 1
+     !
+     IF ( i < i0 .OR. i > i1 ) CYCLE
+     !
+     ydum(i) = y(j)
+     !
+  END DO
+  !
+  IF ( trans == 'n' .OR. trans == 'N' ) THEN
+     !
+     CALL DGEMV( trans, i1 - i0 + 1, n, &
+                 alpha, a(i0,1), lda, x, incx, beta, ydum(i0), 1 )
+     !
+  ELSE
+     !
+     CALL DGEMV( trans, i1 - i0 + 1, n, &
+                 alpha, a(1,i0), lda, x, incx, beta, ydum(i0), 1 )
+     !
+  END IF
+  !
+  DO i = 0 , nproc - 1
+     !
+     CALL mp_bcast( ydum(i0a(i):i1a(i)), i, comm )
+     !
+  END DO
+  !
+  i = 0
+  !
+  DO j = 1, dim, incy
+     !
+     i = i + 1
+     !
+     y(j) = ydum(i)
+     !
+  END DO  
+  !
+  DEALLOCATE( ydum, i0a, i1a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_dgemv
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_zgemv( trans, m, n, alpha, &
+                       a, lda, x, incx, beta, y, incy, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... trivial parallelization (splitting matrix A by rows) of ZGEMV
+  !
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_bcast
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  CHARACTER(LEN=1), INTENT(IN)    :: trans
+  INTEGER,          INTENT(IN)    :: m, n
+  COMPLEX(DP),      INTENT(IN)    :: alpha, beta
+  INTEGER,          INTENT(IN)    :: lda, incx, incy
+  COMPLEX(DP),      INTENT(INOUT) :: a(lda,*)
+  COMPLEX(DP),      INTENT(INOUT) :: x(*), y(*)
+  INTEGER,          INTENT(IN)    :: comm
+  !
+  INTEGER                  :: i, j, mpime, nproc, ierr
+  INTEGER                  :: nrow, i0, i1, dim, ydum_size
+  INTEGER,     ALLOCATABLE :: i0a(:), i1a(:)
+  COMPLEX(DP), ALLOCATABLE :: ydum(:)
+  !
+  ! ... quick return if possible
+  !
+  IF ( m == 0 .OR. n == 0 .OR. &
+       ( alpha == 0.D0 .AND. beta == 1.D0 ) ) RETURN
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  nrow = m / nproc
+  !
+  ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
+  !
+  DO i = 0, nproc -1
+     !
+     i0a(i) = i*nrow + 1
+     i1a(i) = ( i + 1 )*nrow
+     !
+  END DO
+  !
+  i1a(nproc-1) = m
+  !
+  i0 = i0a(mpime)
+  i1 = i1a(mpime)
+  !
+  IF ( trans == 'n' .OR. trans == 'N' ) THEN
+     !
+     dim = ( 1 + ( m - 1 )*ABS( incy ) )
+     !
+     ydum_size = m
+     !
+  ELSE
+     !
+     dim = ( 1 + ( n - 1 )*ABS( incy ) )
+     !
+     ydum_size = n
+     !
+  END IF
+  !
+  ALLOCATE( ydum( ydum_size ) )
+  !
+  i = 0
+  !
+  DO j = 1, dim, incy
+     !
+     i = i + 1
+     !
+     IF ( i < i0 .OR. i > i1 ) CYCLE
+     !
+     ydum(i) = y(j)
+     !
+  END DO
+  !
+  IF ( trans == 'n' .OR. trans == 'N' ) THEN
+     !
+     CALL ZGEMV( trans, i1 - i0 + 1, n, &
+                 alpha, a(i0,1), lda, x, incx, beta, ydum(i0), 1 )
+     !
+  ELSE
+     !
+     CALL ZGEMV( trans, i1 - i0 + 1, n, &
+                 alpha, a(1,i0), lda, x, incx, beta, ydum(i0), 1 )
+     !
+  END IF
+  !
+  DO i = 0 , nproc - 1
+     !
+     CALL mp_bcast( ydum(i0a(i):i1a(i)), i, comm )
+     !
+  END DO
+  !
+  i = 0
+  !
+  DO j = 1, dim, incy
+     !
+     i = i + 1
+     !
+     y(j) = ydum(i)
+     !
+  END DO  
+  !
+  DEALLOCATE( ydum, i0a, i1a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_zgemv
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_dcholdc( n, a, lda, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... trivial parallelization (using a parallel version of DGEMV) of
+  ! ... the Cholesky deconposition (equivalent to DPOTF2)
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)    :: n
+  INTEGER,  INTENT(IN)    :: lda
+  REAL(DP), INTENT(INOUT) :: a(lda,*)
+  INTEGER,  INTENT(IN)    :: comm
+  !
+  INTEGER            :: i, j
+  REAL(DP)           :: aii
+  REAL(DP), EXTERNAL :: DDOT
+  !
+  !
+  DO i = 1, n
+     !
+     aii = a(i,i) - DDOT( i-1, a(i,1), lda, a(i,1), lda )
+     !
+     IF ( aii < 0.D0 ) &
+        CALL errore( 'para_dcholdc', 'a is not positive definite', i )
+     !
+     aii = SQRT( aii )
+     !
+     a(i,i) = aii
+     !
+     IF ( i < n ) THEN
+        !
+        CALL para_dgemv( 'N', n-i, i-1, -1.D0, a(i+1,1), &
+                         lda, a(i,1), lda, 1.D0, a(i+1,i), 1, comm )
+        !
+        CALL DSCAL( n-i, 1.D0 / aii, a(i+1,i), 1 )
+        !
+     END IF
+     !
+  END DO
+  !
+  FORALL( i = 1:n, j = 1:n, j > i ) a(i,j) = 0.D0
+  !
+  RETURN
+  !
+END SUBROUTINE para_dcholdc
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_zcholdc( n, a, lda, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... trivial parallelization (using a parallel version of ZGEMV) of
+  ! ... the Cholesky deconposition (equivalent to ZPOTF2)
+  !
+  USE kinds, ONLY : DP
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,     INTENT(IN)    :: n
+  INTEGER,     INTENT(IN)    :: lda
+  COMPLEX(DP), INTENT(INOUT) :: a(lda,*)
+  INTEGER,     INTENT(IN)    :: comm
+  !
+  INTEGER               :: i, j
+  REAL(DP)              :: aii
+  COMPLEX(DP), EXTERNAL :: ZDOTC
+  !
+  !
+  DO i = 1, n
+     !
+     aii = REAL( a(i,i) ) - ZDOTC( i-1, a(i,1), lda, a(i,1), lda )
+     !
+     IF ( aii < 0.D0 ) &
+        CALL errore( 'para_zcholdc', 'a is not positive definite', i )
+     !
+     aii = SQRT( aii )
+     !
+     a(i,i) = aii
+     !
+     IF ( i < n ) THEN
+        !
+        CALL ZLACGV( i-1, a(i,1), lda )
+        !
+        CALL para_zgemv( 'N', n-i, i-1, -ONE, a(i+1,1), &
+                         lda, a(i,1), lda, ONE, a(i+1,i), 1, comm )
+        !
+        CALL ZLACGV( i-1, a(i,1), lda )
+        !
+        CALL ZDSCAL( n-i, ONE / aii, a(i+1,i), 1 )
+        !
+     END IF
+     !
+  END DO
+  !
+  FORALL( i = 1:n, j = 1:n, j > i ) a(i,j) = ZERO
+  !
+  RETURN
+  !
+END SUBROUTINE para_zcholdc
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_dtrtri( n, a, lda, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... parallel inversion of a lower trinagular matrix done distributing
+  ! ... by columns ( the number of columns assigned to each processor are
+  ! ... chosen to optimize the load balance )
+  !
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_bcast
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)    :: n
+  INTEGER,  INTENT(IN)    :: lda
+  REAL(DP), INTENT(INOUT) :: a(lda,*)
+  INTEGER,  INTENT(IN)    :: comm
+  !
+  INTEGER               :: i, j, k
+  INTEGER               :: i0, i1, dim, mpime, nproc, ierr
+  INTEGER,  ALLOCATABLE :: i0a(:), i1a(:)
+  REAL(DP)              :: sum, area
+  REAL(DP), ALLOCATABLE :: inva(:,:)
+  !
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  dim  = n
+  area = DBLE( n*n / 2 ) / DBLE( nproc )
+  !
+  ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
+  !
+  i0a(0) = 1
+  i1a(0) = 1 + ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
+  i1a(0) = MIN( i1a(0), n )
+  !
+  DO i = 1, nproc - 1
+     !
+     dim = n - i1a(i-1)
+     !
+     i0a(i) = i1a(i-1) + 1
+     !
+     i1a(i) = i1a(i-1) + &
+              ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
+     !
+     i1a(i) = MIN( i1a(i), n )
+     !
+  END DO
+  !
+  i0 = i0a(mpime)
+  i1 = i1a(mpime)
+  !
+  ALLOCATE( inva( n, i0:i1 ) )
+  !
+  inva(:,:) = 0.D0
+  !
+  DO i = i0, i1
+     !
+     inva(i,i) = 1.D0 / a(i,i)
+     !
+     DO j = i + 1, n
+        !
+        sum = 0.D0
+        !
+        DO k = i, j - 1
+           !
+           sum = sum + inva(k,i)*a(j,k)
+           !
+        END DO
+        !
+        inva(j,i) = - sum / a(j,j)
+        !
+     END DO
+     !
+  END DO
+  !
+  a(1:lda,1:n) = 0.D0
+  a(1:n,i0:i1) = inva(:,:)
+  !
+  DEALLOCATE( inva )
+  !
+  DO i = 0 , nproc - 1
+     !
+     CALL mp_bcast( a(1:n,i0a(i):i1a(i)), i, comm )
+     !
+  END DO
+  !
+  DEALLOCATE( i0a, i1a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_dtrtri
+!
+!----------------------------------------------------------------------------
+SUBROUTINE para_ztrtri( n, a, lda, comm )
+  !----------------------------------------------------------------------------
+  !
+  ! ... parallel inversion of a lower trinagular matrix done distributing
+  ! ... by columns ( the number of columns assigned to each processor are
+  ! ... chosen to optimize the load balance )
+  !
+  USE kinds, ONLY : DP
+  USE mp,    ONLY : mp_bcast
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,     INTENT(IN)    :: n
+  INTEGER,     INTENT(IN)    :: lda
+  COMPLEX(DP), INTENT(INOUT) :: a(lda,*)
+  INTEGER,     INTENT(IN)    :: comm
+  !
+  INTEGER                  :: i, j, k
+  INTEGER                  :: i0, i1, dim, mpime, nproc, ierr
+  INTEGER,    ALLOCATABLE  :: i0a(:), i1a(:)
+  REAL(DP)                 :: area
+  COMPLEX(DP)              :: sum
+  COMPLEX(DP), ALLOCATABLE :: inva(:,:)
+  !
+  !
+#if defined (__MPI)
+  !
+  CALL MPI_COMM_SIZE( comm, nproc, ierr )
+  CALL MPI_COMM_RANK( comm, mpime, ierr )
+  !
+#else
+  !
+  nproc = 1
+  mpime = 0
+  !
+#endif
+  !
+  dim  = n
+  area = DBLE( n*n / 2 ) / DBLE( nproc )
+  !
+  ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
+  !
+  i0a(0) = 1
+  i1a(0) = 1 + ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
+  i1a(0) = MIN( i1a(0), n )
+  !
+  DO i = 1, nproc - 1
+     !
+     dim = n - i1a(i-1)
+     !
+     i0a(i) = i1a(i-1) + 1
+     !
+     i1a(i) = i1a(i-1) + &
+              ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
+     !
+     i1a(i) = MIN( i1a(i), n )
+     !
+  END DO
+  !
+  i0 = i0a(mpime)
+  i1 = i1a(mpime)
+  !
+  ALLOCATE( inva( n, i0:i1 ) )
+  !
+  inva(:,:) = ZERO
+  !
+  DO i = i0, i1
+     !
+     inva(i,i) = ONE / a(i,i)
+     !
+     DO j = i + 1, n
+        !
+        sum = ZERO
+        !
+        DO k = i, j - 1
+           !
+           sum = sum + inva(k,i)*a(j,k)
+           !
+        END DO
+        !
+        inva(j,i) = - sum / a(j,j)
+        !
+     END DO
+     !
+  END DO
+  !
+  a(1:lda,1:n) = ZERO
+  a(1:n,i0:i1) = inva(:,:)
+  !
+  DEALLOCATE( inva )
+  !
+  DO i = 0 , nproc - 1
+     !
+     CALL mp_bcast( a(1:n,i0a(i):i1a(i)), i, comm )
+     !
+  END DO
+  !
+  DEALLOCATE( i0a, i1a )
+  !
+  RETURN
+  !
+END SUBROUTINE para_ztrtri
