@@ -107,7 +107,7 @@ cat > metadyn-pw.in << EOF
   fe_step(3)        = 0.3D0,
   g_amplitude       = 0.01D0,
   fe_nstep          = 80,
-  shake_nstep       = 5,
+  sw_nstep          = 5,
   ion_dynamics      = "damp",
   pot_extrapolation = "second_order",
   wfc_extrapolation = "second_order",
@@ -169,14 +169,14 @@ cat > metadyn-cp.in << EOF
   ortho_max         = 250,
 /
 &IONS
-  fe_step(1)        = 0.3D0,
-  fe_step(2)        = 0.3D0,
-  fe_step(3)        = 0.3D0,
-  g_amplitude       = 0.01D0,
-  fe_nstep          = 80,
-  shake_nstep       = 5,
-  ion_dynamics      = "damp",
-  ion_damping       = 0.005D0,
+  fe_step(1)   = 0.3D0,
+  fe_step(2)   = 0.3D0,
+  fe_step(3)   = 0.3D0,
+  g_amplitude  = 0.01D0,
+  fe_nstep     = 80,
+  sw_nstep     = 5,
+  ion_dynamics = "damp",
+  ion_damping  = 0.005D0,
 /
 COLLECTIVE_VARS
 3
@@ -211,7 +211,7 @@ cat > metadyn-cp-T=300K.in << EOF
 &CONTROL
   dt             = 10.D0,
   calculation    = "metadyn",
-  prefix         = "metadyn-cp-T=300",
+  prefix         = "metadyn-cp-T=300K",
   outdir         = "$TMP_DIR/",
   pseudo_dir     = "$PSEUDO_DIR/",
   nstep          = 10,
@@ -237,7 +237,7 @@ cat > metadyn-cp-T=300K.in << EOF
   fe_step(3)       = 0.3D0,
   g_amplitude      = 0.01D0,
   fe_nstep         = 150,
-  shake_nstep      = 20,
+  sw_nstep         = 20,
   ion_dynamics     = "verlet",
   ion_temperature  = "nose",
   tempw            = 300.D0,
