@@ -65,13 +65,22 @@ do
 	check2=`wc pwdiff.sh.tmp2 | awk '{print $1}'`
 	eof2=1
     fi
-
-    head -$check1 pwdiff.sh.tmp1 > pwdiff.sh.tmp3
-    head -$check2 pwdiff.sh.tmp2 > pwdiff.sh.tmp4
-
+    # some OS do not like "head -0"
+    if test $check1 -gt 0
+    then
+        head -$check1 pwdiff.sh.tmp1 > pwdiff.sh.tmp3
+    else
+        touch pwdiff.sh.tmp3
+    fi
+    if test $check2 -gt 0
+    then
+        head -$check2 pwdiff.sh.tmp2 > pwdiff.sh.tmp4
+    else
+        touch pwdiff.sh.tmp4
+    fi
     # diff up to next checkpoints, then postprocess
     diff -wib pwdiff.sh.tmp3 pwdiff.sh.tmp4 \
-	| awk -f $postdiff o1=$offset1 o2=$offset2 >> pwdiff.sh.tmp5
+	   | awk -f $postdiff o1=$offset1 o2=$offset2 >> pwdiff.sh.tmp5
 
     # discard processed part
     sed "1,${check1}d" pwdiff.sh.tmp1 > pwdiff.sh.tmp3
@@ -80,6 +89,7 @@ do
     mv -f pwdiff.sh.tmp4 pwdiff.sh.tmp2
     offset1=`expr $offset1 + $check1 + $eof1 - 1`
     offset2=`expr $offset2 + $check2 + $eof2 - 1`
+
 done
 
 # return success if there's no output, failure otherwise (as diff does)
