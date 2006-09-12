@@ -589,15 +589,17 @@ CONTAINS
          rdum        ! dummy real variable
     !
     logical :: & 
-         rel      ! if true the atomic calculation is relativistic
+         rel         ! if true the atomic calculation is relativistic
     !
     character(len=75) :: &
-         titleps    ! the title of the pseudo
+         titleps     ! the title of the pseudo
     !
     real(DP) :: &
-         rsatom(ndmx)    ! charge density of pseudoatom
+         rsatom(ndmx) ! charge density of pseudoatom
     integer :: &
          lmax       ! max angular momentum
+    character(len=2) :: &
+         adum       ! dummy character variable
     !
     !     We first check the input variables
     !
@@ -655,7 +657,7 @@ CONTAINS
     !
     do nb=1,nchi(is)
        read(iunps,'(a2,2i3,f6.2)',err=100,iostat=ios) &
-            rdum, ndum, lchi(nb,is), oc(nb,is)
+            adum, ndum, lchi(nb,is), oc(nb,is)
        lll(nb,is)=lchi(nb,is)
        !
        ! oc < 0 distinguishes between bound states from unbound states
