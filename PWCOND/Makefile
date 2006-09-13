@@ -99,6 +99,7 @@ PWOBJS = \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
 ../PW/atomic_wfc_nc.o \
+../PW/average_pp.o \
 ../PW/becmod.o \
 ../PW/bp_calc_btq.o \
 ../PW/bp_qvan3.o \

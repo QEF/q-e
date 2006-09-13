@@ -56,7 +56,6 @@ CP_OBJS = \
 ../CPV/ions.o \
 ../CPV/ions_positions.o \
 ../CPV/ksstates.o \
-../CPV/macdep.o \
 ../CPV/main.o \
 ../CPV/mainvar.o \
 ../CPV/main_loops.o \

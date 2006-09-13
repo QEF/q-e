@@ -196,6 +196,7 @@ PWOBJS = \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
 ../PW/atomic_wfc_nc.o \
+../PW/average_pp.o \
 ../PW/becmod.o \
 ../PW/bp_c_phase.o \
 ../PW/bp_calc_btq.o \
@@ -211,7 +212,6 @@ PWOBJS = \
 ../PW/ccgdiagg.o \
 ../PW/compute_scf.o \
 ../PW/compute_fes_grads.o \
-../PW/rcgdiagg.o \
 ../PW/cdiagh.o \
 ../PW/cdiaghg.o \
 ../PW/cdiisg_nc.o \
@@ -330,6 +330,7 @@ PWOBJS = \
 ../PW/pw_restart.o \
 ../PW/pwcom.o \
 ../PW/qvan2.o \
+../PW/rcgdiagg.o \
 ../PW/rdiagh.o \
 ../PW/rdiaghg.o \
 ../PW/read_conf_from_file.o \
