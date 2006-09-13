@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc mpicc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f90flags_noopt f77 mpif77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs mylib ar arflags ranlib f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP SET_MAKE EGREP cc mpicc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f90flags_noopt f77 mpif77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs mylib ar arflags arflags_dynamic ranlib f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1345,6 +1345,7 @@ mass_libs=$MASS_LIBS
 libdirs=$LIBDIRS
 ar=$AR
 arflags=$ARFLAGS
+arflags_dynamic=$ARFLAGS_DYNAMIC
 mylib=$MYLIB
 includefftw=$INCLUDEFFTW
 
@@ -1451,6 +1452,7 @@ echo checking architecture... $arch
 # candidate archiver and archiver flags
 try_ar="ar"
 try_arflags="ruv"
+try_arflags_dynamic="ruv"
 try_iflags="-I../include"
 
 # candidate compilers and flags based on architecture
@@ -1496,7 +1498,10 @@ macppc )
 	try_mpif90="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
 	try_dflags="-D__XLF"
-	ranlib="ranlib"
+# the following is needed due to bugs in xlf 8.1 with static libraries
+  	try_ar="libtool"
+ 	try_arflags="-static -o"
+  	try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
 	;;
 mac686 )
 	try_f90="ifort g95"
@@ -1614,7 +1619,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1617:" \
+echo "$as_me:1622:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2103,7 +2108,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2106:" \
+echo "$as_me:2111:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2943,7 +2948,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2946:" \
+echo "$as_me:2951:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3710,7 +3715,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3713:" \
+echo "$as_me:3718:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4143,7 +4148,7 @@ crayx1:cc )
         c_ldflags=""
         ;;
 macppc:gcc )
-	try_cflags="-O3 -fomit-frame-pointer"
+	try_cflags="-O3"
 	try_cpp="cpp"
 	;;
 macppc:* )
@@ -4414,10 +4419,12 @@ if test "$ld" = ""       ; then ld="$mpif90"           ; fi
 if test "$ldflags" = ""  ; then ldflags="$try_ldflags" ; fi
 if test "$ar" = ""       ; then ar="$try_ar"           ; fi
 if test "$arflags" = ""  ; then arflags="$try_arflags" ; fi
+if test "$arflags_dynamic" = ""  ; then arflags_dynamic="$try_arflags_dynamic"; fi
 echo setting LD... $ld
 echo setting LDFLAGS... $ldflags
 echo setting AR... $ar
 echo setting ARFLAGS... $arflags
+echo setting ARFLAGS_DYNAMIC...$arflags_dynamic
 
 # compilation rules
 echo "$as_me:$LINENO: checking whether ${MAKE-make} sets \$(MAKE)" >&5
@@ -5627,7 +5634,10 @@ fi
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-latlas -lg2c"
+			case "$arch" in
+			     macppc ) LIBS="-latlas" ;;
+			     * )      LIBS="-latlas -lg2c" ;;
+ 			esac
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -8614,6 +8624,7 @@ fi
 
 
 
+
           ac_config_files="$ac_config_files make.sys"
 
           ac_config_files="$ac_config_files configure.msg"
@@ -9299,6 +9310,7 @@ s,@mass_libs@,$mass_libs,;t t
 s,@mylib@,$mylib,;t t
 s,@ar@,$ar,;t t
 s,@arflags@,$arflags,;t t
+s,@arflags_dynamic@,$arflags_dynamic,;t t
 s,@ranlib@,$ranlib,;t t
 s,@f90rule@,$f90rule,;t t
 s,@blas_line@,$blas_line,;t t

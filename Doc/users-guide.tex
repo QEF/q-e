@@ -1,6 +1,6 @@
 
 \documentclass[12pt,a4paper]{article}
- \def\version{3.1.1}
+ \def\version{3.2cvs}
  \def\stableversion{3.1.1} % last stable release
 
  \usepackage{epsfig}
@@ -1415,13 +1415,29 @@ sudo /opt/ibmcmp/xlf/8.1/bin/xlf\_configure -gcc /usr -install -smprt
    /opt/ibmcmp/xlf/8.1/etc/xlf.base.cfg}
 \end{enumerate}
 replaces the xlf.cfg with the correct location (info by Pascal 
-Thibeadeau, April 2006).
+Thibaudeau, April 2006).
 
 The Absoft 9.1 compiler on Mac OS-X does not work (info by Axel
 Kohlmeyer, June 2006).
 
+Due to bugs in XLF v.8.1, the \texttt{libiotk.a} library does not work 
+if generated as a static library. Workaround: replace
+\texttt{../iotk/src/libiotk.a} with \texttt{../iotk/src/*.o} in
+\texttt{make.sys}. Versions later than 3.1.1 generate a dynamical 
+library. In order to run the executables, the environment variable 
+\texttt{DYLD\_LIBRARY\_PATH} must be set to point to the library. 
+With sh/bash, define:
+\begin{verbatim}
+   export DYLD_LIBRARY_PATH=$TOPDIR/iotk/src
+\end{verbatim}
+and with csh, tcsh:
+\begin{verbatim}
+   setenv DYLD_LIBRARY_PATH $TOPDIR/iotk/src
+\end{verbatim}
+(info by Pascal Thibaudeau, September 2006).
+
 Newer Mac OS-X machines with Intel CPUs and gcc4+g95 are supported
-by \texttt{ configure}. With the Intel compiler \texttt{ifort} and 
+by \texttt{configure}. With the Intel compiler \texttt{ifort} and 
 MKL libraries, use \texttt{install/Make.macos-intel} 
 (info by Matteo Coccoccioni, Aug. 2006).
 

@@ -9,7 +9,6 @@ bachel.o \
 capital.o \
 dost.o \
 erf.o \
-flush_unit.o \
 functionals.o \
 lsda_functionals.o \
 more_functionals.o \
@@ -38,6 +37,7 @@ ylmr2.o
 
 POBJS = \
 blockset.o \
+flush_unit.o \
 gridsetup.o \
 hangup.o \
 ilcm.o \
@@ -62,26 +62,26 @@ flib.a : $(OBJS)
 blas_and_lapack : blas lapack
 	touch $@
 
-blas : blas.o dlamch.o
+blas : $(OBJS) blas.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
 	$(RANLIB) flib.a
 	touch $@
 
-lapack : lapack.o dlamch.o
+lapack : $(OBJS) lapack.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
 	$(RANLIB) flib.a
 	touch $@
 
-lapack_ibm : lapack_ibm.o dlamch.o
+lapack_ibm : $(OBJS) lapack_ibm.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
 	$(RANLIB) flib.a
 	touch $@
 
-lapack_mkl : lapack_mkl.o 
+lapack_mkl : $(OBJS) lapack_mkl.o 
 	$(AR) $(ARFLAGS) flib.a $?
 	touch $@
 
-lapack_atlas : lapack_atlas.o dlamch.o
+lapack_atlas : $(OBJS) lapack_atlas.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
 	touch $@
 

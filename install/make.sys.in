@@ -41,16 +41,16 @@ FDFLAGS        = @fdflags@
 IFLAGS         = @iflags@
 
 # MODFLAGS = flag used by f90 compiler to locate modules
-# You need in all cases to search for modules in ./, in ../iotk/src, in ../Modules
+# You need to search for modules in ./, in ../iotk/src, in ../Modules
 # Some applications also neeed modules in ../PW, ../PH, ../CPV
 
-MODFLAGS       = @imod@./ @imod@../Modules  @imod@../iotk/src @imod@../PW \
-                 @imod@../PH @imod@../CPV
+MODFLAGS       = @imod@./  @imod@../Modules  @imod@../iotk/src \
+                 @imod@../PW  @imod@../PH  @imod@../CPV
 
 # Compilers: C, F90, F77, serial and parallel versions
 # If you are compiling for serial execution, use MPIF90 = $(F90) and so on
-# If you do not have anything suitable for MPIF90, try to use F90 and to specify
-# the direcctory containing "mpif.h" in IFLAGS, MPI libraries in MPI_LIBS
+# If you do not have anything suitable for MPIF90, use F90 and specify the
+# directory containing "mpif.h" in IFLAGS, MPI libraries in MPI_LIBS
 # MPICC and MPIF77 are not actually used
 
 CC             = @cc@
@@ -60,8 +60,8 @@ MPIF90         = @mpif90@
 F77            = @f77@
 MPIF77         = @mpif77@
 
-# C preprocessor and preprocessing flags - for explicit preprocessing, if needed
-# (see the compilation rules above)
+# C preprocessor and preprocessing flags - for explicit preprocessing, 
+# if needed (see the compilation rules above)
 # preprocessing flags must include DFLAGS and IFLAGS
 
 CPP            = @cpp@
@@ -114,12 +114,17 @@ MASS_LIBS      = @mass_libs@
 
 MYLIB          = @mylib@
 
-# ar command and flags - typically AR = ar, ARFLAGS = ruv
+# ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
+# ARFLAGS_DYNAMICS is used in iotk to produce a dynamical library,
+# for Mac OS-X with PowerPC and xlf compiler. In all other cases
+# ARFLAGS_DYNAMICS = $(ARFLAGS)
 
 AR             = @ar@
 ARFLAGS        = @arflags@
+ARFLAGS_DYNAMIC= @arflags_dynamic@
 
-# ranlib command. If ranlib is not needed (it isn't in most cases) use RANLIB = echo
+# ranlib command. If ranlib is not needed (it isn't in most cases) use
+# RANLIB = echo
 
 RANLIB         = @ranlib@
 

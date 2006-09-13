@@ -36,6 +36,7 @@ mass_libs=$MASS_LIBS
 libdirs=$LIBDIRS
 ar=$AR
 arflags=$ARFLAGS
+arflags_dynamic=$ARFLAGS_DYNAMIC
 mylib=$MYLIB
 includefftw=$INCLUDEFFTW
 
@@ -86,6 +87,7 @@ echo checking architecture... $arch
 # candidate archiver and archiver flags
 try_ar="ar"
 try_arflags="ruv"
+try_arflags_dynamic="ruv"
 try_iflags="-I../include"
 
 # candidate compilers and flags based on architecture
@@ -131,7 +133,11 @@ macppc )
 	try_mpif90="mpxlf90 mpf90"
 	try_f90="xlf90 f90"
 	try_dflags="-D__XLF"
-	ranlib="ranlib"
+# due to bugs in xlf 8.1 for powerpc mac os-x, the iotk library must be
+# created as a dynamical library, using "libtool"
+  	try_ar="libtool"
+ 	try_arflags="-static -o"
+  	try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
 	;;
 mac686 )
 	try_f90="ifort g95"
@@ -633,7 +639,7 @@ crayx1:cc )
         c_ldflags=""
         ;;
 macppc:gcc )
-	try_cflags="-O3 -fomit-frame-pointer"
+	try_cflags="-O3"
 	try_cpp="cpp"
 	;;
 macppc:* )
@@ -671,10 +677,12 @@ if test "$ld" = ""       ; then ld="$mpif90"           ; fi
 if test "$ldflags" = ""  ; then ldflags="$try_ldflags" ; fi
 if test "$ar" = ""       ; then ar="$try_ar"           ; fi
 if test "$arflags" = ""  ; then arflags="$try_arflags" ; fi
+if test "$arflags_dynamic" = ""  ; then arflags_dynamic="$try_arflags_dynamic"; fi
 echo setting LD... $ld
 echo setting LDFLAGS... $ldflags
 echo setting AR... $ar
 echo setting ARFLAGS... $arflags
+echo setting ARFLAGS_DYNAMIC...$arflags_dynamic
 
 # compilation rules
 AC_PROG_MAKE_SET
@@ -940,8 +948,11 @@ then
 				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-latlas -lg2c"
+			LDFLAGS="$test_ldflags $try_loption" 
+			case "$arch" in
+			     macppc ) LIBS="-latlas" ;;
+			     * )      LIBS="-latlas -lg2c" ;;
+ 			esac
 			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
@@ -1440,6 +1451,7 @@ AC_SUBST(mass_libs)
 AC_SUBST(mylib)
 AC_SUBST(ar)
 AC_SUBST(arflags)
+AC_SUBST(arflags_dynamic)
 AC_SUBST(ranlib)
 AC_SUBST(f90rule)
 AC_SUBST(blas_line)
