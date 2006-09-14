@@ -301,6 +301,9 @@ MODULE read_namelists_module
        maxiter = 40
        passop  = 0.3D0
        etresh  = 1.D-6
+       l_blockocc = .FALSE.
+       n_blockocc(1) = 1
+       n_blockocc(2) = 1 
        !
        epol   = 3
        efield = 0.D0
@@ -768,6 +771,8 @@ MODULE read_namelists_module
        CALL mp_bcast( occmass,            ionode_id )
        CALL mp_bcast( rotation_damping,   ionode_id )
        CALL mp_bcast( occupation_damping, ionode_id )
+       CALL mp_bcast( l_blockocc,         ionode_id )
+       CALL mp_bcast( n_blockocc,         ionode_id )
        !
        ! ... conjugate gradient
        !

@@ -858,25 +858,31 @@ MODULE input_parameters
           ! damping for the occupational degrees of freedom.
 
         LOGICAL :: tcg = .true. 
-          ! falg per gradiente coniugato
+          ! if true perform in cpv conjugate gradient minimization of electron energy
 
         INTEGER :: maxiter = 40
-          ! numero massime iterazioni 
+          ! man number of conjugate gradient iterations
 
         REAL(DP)  :: etresh =0.1d-6 
-          ! treshhold su energia 
+          ! treshhold on energy
 
         REAL(DP) :: passop =0.3 
-          ! passetto per ricerca minimo
+          ! small step for parabolic interpolation
+
+        LOGICAL  :: l_blockocc = .false.
+          ! if true in ensemble DFT the lowest states in energy are taken diagonal
+
+        INTEGER  :: n_blockocc(2) = (1,1)
+          ! number of states kept diagonal for spin channel
 
         INTEGER  :: epol = 3
-          ! direzione campo elettrico
+          ! electric field direction
 
         REAL(DP) :: efield =0.d0 
           ! electric field intensity in atomic units
 
        INTEGER  :: epol2 = 3
-          ! direzione campo elettrico
+          ! electric field direction
 
         REAL(DP) :: efield2 =0.d0
           ! electric field intensity in atomic units
@@ -898,7 +904,7 @@ MODULE input_parameters
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
-          efield, epol2, efield2, diago_full_acc
+          efield, epol2, efield2, diago_full_acc, l_blockocc,n_blockocc
 
 !
 !=----------------------------------------------------------------------------=!
