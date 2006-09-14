@@ -364,11 +364,11 @@ DO igroup=1,ngroup
          ibnd=istart(igroup)+shift
          dimen=NINT(DBLE(char_mat(irap,1)))
          IF (rap_et(ibnd)==-1) THEN
-            DO i=1,dimen
+            DO i=1,dimen*NINT(DBLE(times))
                ibnd=istart(igroup)+shift+i-1
                rap_et(ibnd)=irap
             ENDDO
-            shift=shift+dimen
+            shift=shift+dimen*NINT(DBLE(times))
          ENDIF
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
             WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x&
@@ -377,7 +377,7 @@ DO igroup=1,ngroup
                               dim_rap, name_rap(irap)
          ELSE
             WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
-                      & "--> ",i3,a15)') &
+                      & "--> ",i3," ",a15)') &
               istart(igroup), istart(igroup+1)-1, &
               w1(istart(igroup)), dim_rap, NINT(DBLE(times)), name_rap(irap)
          END IF
@@ -668,7 +668,6 @@ DO igroup=1,ngroup
                      which_irr_so(iclass))*DBLE(nelem_so(iclass))
       ENDDO
       times=times/2/nsym
-!      write(6,*) igroup, irap, times
       IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
           (ABS(AIMAG(times)) > eps) ) THEN
             WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
@@ -687,11 +686,11 @@ DO igroup=1,ngroup
          dimen=NINT(DBLE(char_mat_so(irap,1)))
          ibnd=istart(igroup) + shift
          IF (rap_et(ibnd)==-1) THEN
-            DO i=1,dimen
+            DO i=1,dimen*NINT(DBLE(times))
                ibnd=istart(igroup)+shift+i-1
                rap_et(ibnd)=irap
             END DO
-            shift=shift+dimen
+            shift=shift+dimen*NINT(DBLE(times))
          END IF
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
             WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x,&
@@ -700,9 +699,9 @@ DO igroup=1,ngroup
                              dim_rap, name_rap_so(irap)
          ELSE
             WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x&
-                      & "--> ",i3,a15)') &
+                      & "--> ",i3," ",a15)') &
               istart(igroup), istart(igroup+1)-1, &
-              w1(istart(igroup)), NINT(DBLE(times)), dim_rap, name_rap_so(irap)
+              w1(istart(igroup)), dim_rap, NINT(DBLE(times)), name_rap_so(irap)
          END IF
       END IF
    END DO
