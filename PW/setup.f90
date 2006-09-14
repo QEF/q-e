@@ -298,6 +298,8 @@ SUBROUTINE setup()
   !
   IF ( nbnd == 0 ) THEN
      !
+     IF (nat==0) CALL errore('setup','free electrons: nbnd required in input',1)
+     !
      nbnd = MAX ( NINT( nelec / degspin ), NINT(nelup), NINT(neldw) )
      !
      IF ( lgauss .OR. ltetra ) THEN
@@ -380,6 +382,8 @@ SUBROUTINE setup()
      END IF
      !
   END IF   
+  !
+  IF (nat==0) ethr=1.0D-8
   !
   IF ( .NOT. lscf ) niter = 1
   !
@@ -560,12 +564,18 @@ SUBROUTINE setup()
   !
   input_nks = nks
   !
-  CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
-       nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
-       xqq, modenum, noncolin, domag, m_loc )
+  IF (nat>0) THEN
+     CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
+          nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
+          xqq, modenum, noncolin, domag, m_loc )
+  ELSE
+     nsym=nrot
+     invsym=.true.
+  ENDIF
   !
-  CALL checkallsym( nsym, s, nat, tau, ityp, at, &
-       bg, nr1, nr2, nr3, irt, ftau )
+  IF (nat>0) &
+     CALL checkallsym( nsym, s, nat, tau, ityp, at, &
+          bg, nr1, nr2, nr3, irt, ftau )
   !
   ! ... if dynamics is done the system should have no symmetries
   ! ... (inversion symmetry alone is allowed)

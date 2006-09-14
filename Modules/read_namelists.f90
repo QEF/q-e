@@ -1100,12 +1100,12 @@ MODULE read_namelists_module
            CALL errore( ' iosys ', &
                       & ' invalid lattice parameters ( celldm or a )', 1 )
        !
-       IF( nat < 1 ) &
-          CALL errore( sub_name ,' nat less than one ', MAX( nat, 1) )
+       IF( nat < 0 ) &
+          CALL errore( sub_name ,' nat less than zero ', MAX( nat, 1) )
        !
-       IF( ntyp < 1 ) &
-          CALL errore( sub_name ,' ntyp less than one ', MAX( ntyp, 1) )
-       IF( ntyp < 1 .OR. ntyp > nsx ) &
+       IF( ntyp < 0 ) &
+          CALL errore( sub_name ,' ntyp less than zero ', MAX( ntyp, 1) )
+       IF( ntyp < 0 .OR. ntyp > nsx ) &
           CALL errore( sub_name , &
                        & ' ntyp too large, increase NSX ', MAX( ntyp, 1) )
        !

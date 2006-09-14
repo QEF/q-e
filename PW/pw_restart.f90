@@ -1293,10 +1293,14 @@ MODULE pw_restart
       !         data directory is not visible to all processors,
       !         as in PC clusters without a parallel file system.
       !
-      CALL mp_bcast( psfile(1), ionode_id, intra_image_comm )
+      IF (nsp>0) THEN
+         CALL mp_bcast( psfile(1), ionode_id, intra_image_comm )
       !
-      INQUIRE ( FILE =  TRIM( dirname ) // '/' //  TRIM( psfile(1) ), &
-           EXIST = exst )
+         INQUIRE ( FILE =  TRIM( dirname ) // '/' //  TRIM( psfile(1) ), &
+             EXIST = exst )
+      ELSE
+         exst=.TRUE.
+      END IF
       !
       ierr = 0
       IF ( .NOT. exst ) ierr = -1 
@@ -1333,7 +1337,7 @@ MODULE pw_restart
             !
          END DO
          !
-         tau(:,:) = tau(:,:) / alat
+         if (nat > 0) tau(:,:) = tau(:,:) / alat
          !
          CALL iotk_scan_end( iunpun, "IONS" )
          !

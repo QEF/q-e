@@ -157,7 +157,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   ENDDO
   
   iunpun = 18
-  maxdeg = 4 * npol 
+  maxdeg = 10 * npol 
   !
   IF ( ionode ) THEN
      !

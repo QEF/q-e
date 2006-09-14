@@ -71,7 +71,7 @@ SUBROUTINE read_file()
   !
   ! ... allocate space for atomic positions, symmetries, forces, tetrahedra
   !
-  IF ( nat <= 0 ) &
+  IF ( nat < 0 ) &
      CALL errore( 'read_file', 'wrong number of atoms', 1 )
   !
   ! ... allocation
@@ -142,6 +142,7 @@ SUBROUTINE read_file()
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
+  IF (nat>0) &
   CALL checkallsym( nsym, s, nat, tau, &
                     ityp, at, bg, nr1, nr2, nr3, irt, ftau )
   !
