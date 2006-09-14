@@ -1,4 +1,4 @@
-      SUBROUTINE INFOG1L( GINDX, NB, NPROCS, MYROC, ISRCPROC, LINDX,    
+      SUBROUTINE INFOG1L( GINDX, NB, NPROCS, MYROC, ISRCPROC, LINDX,    &
      &                    ROCSRC )
 !
 !  -- ScaLAPACK tools routine (version 1.5) --
@@ -7,7 +7,7 @@
 !     May 1, 1997
 !
 !     .. Scalar Arguments ..
-      INTEGER            GINDX, ISRCPROC, LINDX, MYROC, NB, NPROCS,     
+      INTEGER            GINDX, ISRCPROC, LINDX, MYROC, NB, NPROCS,     &
      &                   ROCSRC
 !     ..
 !

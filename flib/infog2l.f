@@ -1,4 +1,4 @@
-      SUBROUTINE INFOG2L( GRINDX, GCINDX, DESC, NPROW, NPCOL, MYROW,    
+      SUBROUTINE INFOG2L( GRINDX, GCINDX, DESC, NPROW, NPCOL, MYROW,    &
      &                    MYCOL, LRINDX, LCINDX, RSRC, CSRC )
 !
 !  -- ScaLAPACK tools routine (version 1.5) --
@@ -7,7 +7,7 @@
 !     May 1, 1997
 !
 !     .. Scalar Arguments ..
-      INTEGER            CSRC, GCINDX, GRINDX, LRINDX, LCINDX, MYCOL,   
+      INTEGER            CSRC, GCINDX, GRINDX, LRINDX, LCINDX, MYCOL,   &
      &                   MYROW, NPCOL, NPROW, RSRC
 !     ..
 !     .. Array Arguments ..
@@ -120,10 +120,10 @@
 !  =====================================================================
 !
 !     .. Parameters ..
-      INTEGER            BLOCK_CYCLIC_2D, CSRC_, CTXT_, DLEN_, DTYPE_,  
+      INTEGER            BLOCK_CYCLIC_2D, CSRC_, CTXT_, DLEN_, DTYPE_,  &
      &                   LLD_, MB_, M_, NB_, N_, RSRC_
-      PARAMETER          ( BLOCK_CYCLIC_2D = 1, DLEN_ = 9, DTYPE_ = 1,  
-     &                     CTXT_ = 2, M_ = 3, N_ = 4, MB_ = 5, NB_ = 6, 
+      PARAMETER          ( BLOCK_CYCLIC_2D = 1, DLEN_ = 9, DTYPE_ = 1,  &
+     &                     CTXT_ = 2, M_ = 3, N_ = 4, MB_ = 5, NB_ = 6, &
      &                      RSRC_ = 7, CSRC_ = 8, LLD_ = 9 )
 !     ..
 !     .. Local Scalars ..
@@ -145,16 +145,16 @@
       LRINDX = ( RBLK / NPROW + 1 ) * DESC(MB_) + 1
       LCINDX = ( CBLK / NPCOL + 1 ) * DESC(NB_) + 1
 !
-      IF( MOD( MYROW+NPROW-DESC(RSRC_), NPROW ) .GE.                    
+      IF( MOD( MYROW+NPROW-DESC(RSRC_), NPROW ) .GE.                    &
      &    MOD( RBLK, NPROW ) ) THEN
-         IF( MYROW.EQ.RSRC )                                            
+         IF( MYROW.EQ.RSRC )                                            &
      &      LRINDX = LRINDX + MOD( GRCPY, DESC(MB_) )
          LRINDX = LRINDX - DESC(MB_)
       END IF
 !
-      IF( MOD( MYCOL+NPCOL-DESC(CSRC_), NPCOL ) .GE.                    
+      IF( MOD( MYCOL+NPCOL-DESC(CSRC_), NPCOL ) .GE.                    &
      &    MOD( CBLK, NPCOL ) ) THEN
-         IF( MYCOL.EQ.CSRC )                                            
+         IF( MYCOL.EQ.CSRC )                                            &
      &      LCINDX = LCINDX + MOD( GCCPY, DESC(NB_) )
          LCINDX = LCINDX - DESC(NB_)
       END IF

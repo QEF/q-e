@@ -45,7 +45,7 @@
 !     ..
 !     .. Executable Statements ..
 !
-      INDXL2G = NPROCS*NB*((INDXLOC-1)/NB) + MOD(INDXLOC-1,NB) +        
+      INDXL2G = NPROCS*NB*((INDXLOC-1)/NB) + MOD(INDXLOC-1,NB) +        &
      &          MOD(NPROCS+IPROC-ISRCPROC, NPROCS)*NB + 1
 !
       RETURN
