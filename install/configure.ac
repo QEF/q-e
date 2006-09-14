@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 3.1, , espresso)
+AC_INIT(ESPRESSO, 3.2, , espresso)
 
 # -----------------------------
 # application-specific settings
@@ -90,48 +90,46 @@ try_arflags="ruv"
 try_arflags_dynamic="ruv"
 try_iflags="-I../include"
 
+# candidate fortran compilers good for all cases
+try_mpif90="mpif90"
+try_f90="g95 gfortran f90"
+
 # candidate compilers and flags based on architecture
 case $arch in
 ia64 | amd64 )
-	try_mpif90="mpif90"
-	try_f90="ifort ifc efc pgf90 pathf95 g95 f90"
+	try_f90="ifort ifc efc pgf90 pathf95 $try_f90"
 	;;
 ia32 )
-	try_mpif90="mpif90"
-	try_f90="ifort ifc pgf90 pathf95 g95 f90"
+	try_f90="ifort ifc pgf90 pathf95 $try_f90"
 	try_dflags="-D__LINUX"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
-	try_f90="xlf90_r xlf90 f90"
+	try_f90="xlf90_r xlf90 $try_f90"
 	try_arflags="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
-	try_f90="f90"
 	try_dflags="-D__COMPLIB -D__SGI64 -D__ORIGIN"
 	;;
 alpha )
-	try_f90="f90"
 	try_dflags="-D__ALPHA"
 	;;
 alinux )
-	try_mpif90="mpif90"
-	try_f90="fort g95 f90"
+	try_f90="fort $try_f90"
 	try_dflags="-D__ALPHA -D__LINUX64"
 	;;
 sparc )
 	try_mpif90="mpf90"
-	try_f90="f90"
 	try_dflags="-D__SUN"
 	;;
 crayx1 )
-	try_f90="ftn"
+	try_f90="ftn $try_f90"
 	try_dflags="-D__X1"
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
-	try_f90="xlf90 f90"
+	try_f90="xlf90 $try_f90"
 	try_dflags="-D__XLF"
 # due to bugs in xlf 8.1 for powerpc mac os-x, the iotk library must be
 # created as a dynamical library, using "libtool"
@@ -140,17 +138,13 @@ macppc )
   	try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
 	;;
 mac686 )
-	try_f90="ifort g95"
-	ranlib="ranlib"
+	try_f90="ifort $try_f90"
 	;;
 cygwin )
-	try_mpif90="mpif90"
-	try_f90="g95 f90"
 	try_dflags="-D__LINUX"
 	;;
 * )
-	AC_MSG_WARN(unsupported architecture)
-	try_f90="f90"
+	AC_MSG_WARN(unsupported architecture?)
 	;;
 esac
 
@@ -242,75 +236,52 @@ if test "$use_parallel" -eq 0 ; then mpif90=$f90 ; fi
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
 
+# candidate C and f77 compilers good for all cases
+try_cc="cc gcc"
+try_f77="$f90"
+
 case "$arch:$f90" in
 *:ifort* )
-	try_cc="icc ecc gcc cc"
-	try_f77="$f90"
+	try_cc="icc ecc $try_cc"
 	;;
 *:ifc* )
-	try_cc="icc ecc gcc cc"
-	try_f77="$f90"
+	try_cc="icc ecc $try_cc"
 	;;
 *:pgf90 )
-	try_cc="pgcc gcc cc"
+	try_cc="pgcc $try_cc"
 	try_f77="pgf77 $f90"
 	;;
 *:pathf95 )
-	try_cc="pathcc gcc cc"
-	try_f77="$f90"
-	;;
-*:g95 )
-	try_cc="gcc cc"
-	try_f77="$f90"
+	try_cc="pathcc $try_cc"
 	;;
 ia32:* | ia64:* | amd64:* )
-	try_cc="gcc cc"
 	try_f77="f77 $f90"
 	;;
 aix:*xlf*_r )
-	try_cc="xlc_r cc gcc"
+	try_cc="xlc_r $try_cc"
 	try_f77="xlf_r f77 $f90"
 	;;
 aix:*xlf* )
-	try_cc="xlc cc gcc"
+	try_cc="xlc $try_cc"
 	try_f77="xlf f77 $f90"
 	;;
 mips:* )
-	try_cc="cc gcc"
 	try_f77="f77 $f90"
 	;;
 alpha:* )
-	try_cc="cc gcc"
 	try_f77="f77 $f90"
 	;;
 alinux:* )
-	try_cc="ccc gcc"
 	try_f77="fort g77 f77 $f90"
 	;;
 sparc:* )
-	try_cc="cc gcc"
 	try_f77="f77 $f90"
 	;;
 crayx1:ftn )
 	try_cc="cc"
-	try_f77="$f90"
 	;;
 macppc:xlf90 )
-	try_cc="gcc"
 	try_f77="xlf f77 $f90"
-	;;
-macppc:* )
-	try_cc="gcc"
-	try_f77="f77 $f90"
-	;;
-cygwin*:g95 )
-	try_cc="gcc cc"
-	try_f77="g95 $f90"
-	;;
-* )
-	# unknown, try these
-	try_cc="cc gcc"
-	try_f77="f77 $f90"
 	;;
 esac
 
@@ -357,43 +328,8 @@ if test "$use_parallel" -eq 0 ; then mpif77=$f77 ; fi
 echo setting F77... $f77
 echo setting MPIF77... $mpif77
 
-# check whether the C and Fortran compilers are compatible
-case "$arch:$cc:$f90" in
-	# list supported combinations here
-ia32:icc:ifort* | ia32:icc:ifc* )   ;;
-ia32:gcc:ifort* | ia32:gcc:ifc* )   ;;
-ia32:pgcc:pgf90 )                   ;;
-ia32:pathcc:pathf95 )               ;;
-ia32:gcc:g95 )                      ;;
-ia64:icc:ifort* | ia64:icc:ifc* )   ;;
-ia64:gcc:ifort* | ia64:gcc:ifc* )   ;;
-ia64:pgcc:pgf90 )                   ;;
-ia64:pathcc:pathf95 )               ;;
-ia64:gcc:g95 )                      ;;
-amd64:icc:ifort* | amd64:icc:ifc* ) ;;
-amd64:gcc:ifort* | amd64:gcc:ifc* ) ;;
-amd64:pgcc:pgf90 )                  ;;
-amd64:pathcc:pathf95 )              ;;
-amd64:gcc:g95 )                     ;;
-aix:mpcc*:mpxlf* )                  ;;
-aix:xlc*:*xlf* | aix:cc:*xlf* )     ;;
-mips:cc:f90 )                       ;;
-alinux:ccc:fort | alinux:gcc:fort ) ;;
-alpha:cc:f90 )                      ;;
-macppc:mpcc:mpf90 )                 ;;
-macppc:gcc:xlf90 )                  ;;
-mac686:gcc:g95 )                    ;;
-crayx1:cc:ftn )                     ;;
-sparc:cc:f90 )                      ;;
-cygwin:gcc:g95 )                    ;;
-
-* )
-	AC_MSG_WARN(unsupported C/Fortran compilers combination)
-	;;
-esac
-
 # check Fortran compiler flags
-have_cpp=0
+have_cpp=1
 xlf_flags=0
 
 case "$arch:$f90" in
@@ -406,7 +342,6 @@ ia64:ifort* | amd64:ifort* )
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
-	have_cpp=1
 	;;
 ia64:ifc* )
 	try_fflags="-Vaxlib -O2"
@@ -417,7 +352,6 @@ ia64:ifc* )
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
-	have_cpp=1
 	;;
 ia64:pgf* | amd64:pgf* )
 	try_fflags="-fast -r8"
@@ -427,6 +361,7 @@ ia64:pgf* | amd64:pgf* )
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
+	have_cpp=0
 	;;
 ia64:path* | amd64:path* )
 	try_fflags="-march=auto -O2"
@@ -436,6 +371,7 @@ ia64:path* | amd64:path* )
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__EKO"
+	have_cpp=0
 	;;
 ia32:ifort* )
         try_fflags="-O2 -tpp6 -assume byterecl"
@@ -446,7 +382,6 @@ ia32:ifort* )
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
-	have_cpp=1
 	;;
 ia32:ifc* )
         try_fflags="-Vaxlib -O2 -tpp6"
@@ -457,7 +392,6 @@ ia32:ifc* )
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
-	have_cpp=1
 
 	if test `echo $version | sed 's/\..*//'` -lt 7
 	then
@@ -478,6 +412,7 @@ ia32:pgf* )
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
+	have_cpp=0
 	;;
 ia32:path* )
 	try_fflags="-march=auto -O2"
@@ -487,6 +422,7 @@ ia32:path* )
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__EKO"
+	have_cpp=0
 	;;
 *:g95 )
 	try_fflags="-O3 -cpp"
@@ -496,17 +432,14 @@ ia32:path* )
 	try_ldflags=""
 	#try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__G95"
-	have_cpp=1
 	;;
-cygwin:g95 )
-        try_fflags="-O3 -cpp"
-        try_f90flags="\$(FFLAGS)"
-        try_fflags_noopt="-O0 -cpp"
-        try_f90flags_noopt="\$(FFLAGS_NOOPT)"
-        try_ldflags=""
-        #try_ldflags_static="-static"
-        try_dflags="$try_dflags -D__G95"
-        have_cpp=1
+*:gfortran )
+	try_fflags="-O3"
+	try_f90flags="\$(FFLAGS) -x f95-cpp-input"
+	try_fflags_noopt="-O0"
+	try_f90flags_noopt="\$(FFLAGS_NOOPT) -x f95-cpp-input"
+	try_ldflags=""
+	#try_ldflags_static="-static"
         ;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \
@@ -518,7 +451,6 @@ aix:*xlf* )
 	# try_ldflags_static="-bstatic"
 	pre_fdflags="-WF,"
 	xlf_flags=1
-	have_cpp=1
 	;;
 mips:f90 )
 	try_fflags="-mips4 -64 -O2 -r10000 -r8"
@@ -527,7 +459,6 @@ mips:f90 )
 	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags="-mips4 -64"
 	pre_fdflags="-ftpp -macro_expand "
-	have_cpp=1
 	;;
 alinux:fort )
 	have_cpp=1
@@ -537,9 +468,9 @@ alinux:fort )
 	try_fflags_noopt="-O0 -r8 -align dcommons -align records"
 	try_f90flags_noopt="\$(FFLAGS_NOOPT) -free"
         try_ldflags_static="-non_shared"
+	have_cpp=0
 	;;
 alpha:f90 )
-	have_cpp=1
 	pre_fdflags="-cpp "
 	try_fflags="-O -real_size 64 -align dcommons -align records -assume buffered_io -fpe1"
 	try_f90flags="\$(FFLAGS) -free"
@@ -554,6 +485,7 @@ sparc:mpf90 | sparc:f90 )
 	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	imod="-M"
+        have_cpp=0
 	;;
 crayx1:ftn )
         try_fflags="-s default64 -dp -rma -e0 \
@@ -564,7 +496,6 @@ crayx1:ftn )
         try_ldflags="-s default64 -f nan64"
         try_dflags="$try_dflags -D__X1_COA"
         pre_fdflags="-e Z -F"
-        have_cpp=1
 	;;
 macppc:* )
 	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
@@ -575,7 +506,6 @@ macppc:* )
 	try_ldflags=""
 	pre_fdflags="-WF,"
 	xlf_flags=1
-	have_cpp=1
 	;;
 * )
 	# unknown, try these
@@ -584,6 +514,7 @@ macppc:* )
 	try_fflags_noopt="-O0"
 	try_f90flags_noopt="$\(FFLAGS_NOOPT)"
 	try_ldflags=""
+	have_cpp=0
 	;;
 esac
 if test "$use_shared" -eq 0 ; then
@@ -599,26 +530,17 @@ echo setting FFLAGS_NOOPT... $fflags_noopt
 echo setting F90FLAGS_NOOPT... $f90flags_noopt
 if test "$imod" = "" ; then imod="-I" ; fi
 
+# tentative C and loader flags, good for many cases
+try_cflags="-O3"
+c_ldflags=""
+
 case "$arch:$cc" in
-*:icc )
-	try_cflags="-O3"
-	c_ldflags=""
-	;;
 *:pgcc )
 	try_cflags="-fast"
-	c_ldflags=""
-	try_cpp="cpp"
 	;;
 *:pathcc )
-	try_cflags="-O3"
-	c_ldflags=""
 	try_cpp="pathcc -E"
 	;;
-cygwin:gcc )
-        try_cflags="-O3 -fomit-frame-pointer"
-        c_ldflags=""
-        try_cpp="cpp"
-        ;;
 aix:mpcc* | aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
@@ -636,22 +558,9 @@ sparc:mpcc | sparc:cc )
 	;;
 crayx1:cc )
         try_cflags=""
-        c_ldflags=""
         ;;
-macppc:gcc )
-	try_cflags="-O3"
-	try_cpp="cpp"
-	;;
-macppc:* )
+macppc:xlc* | macppc:mpcc* )
 	try_cflags="-O4"
-	;;
-*:gcc )
-	try_cflags="-O3 -fomit-frame-pointer"
-	c_ldflags=""
-	try_cpp="cpp"
-	;;
-* )
-	try_cflags="-O"
 	;;
 esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
@@ -1381,7 +1290,7 @@ else
 fi
 echo setting FDFLAGS... $fdflags
 
-if test "$ranlib" = "" ; then ranlib=echo ; fi
+AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
 echo setting RANLIB... $ranlib
 echo setting MYLIB... $mylib
 
