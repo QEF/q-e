@@ -9,32 +9,55 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine calcmt(fdiag,zmat,fmat)
+      subroutine calcmt(fdiag,zmat,fmat,firstiter)
 !-----------------------------------------------------------------------
 !
 !  constructs fmat=zmat^t.fdiag.zmat
 !
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx
+      use ensemble_dft, only : l_blockocc, n_blockocc
 
       implicit none
-      integer iss, nss, istart, i, j, k
+      logical firstiter
+
+      integer iss, nss, istart, i, j, k, ii, jj, kk
       real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),        &
    &                fdiag(nx)
 
+
       call start_clock('calcmt')
-      do iss=1,nspin
-       nss=nupdwn(iss)
-       istart=iupdwn(iss)
-       do i=1,nss
-        do k=1,nss
-         fmat(k,i,iss)=0.0
-         do j=1,nss
-          fmat(k,i,iss)=fmat(k,i,iss)+                                   &
-    &         zmat(j,k,iss)*fdiag(j+istart-1)*zmat(j,i,iss)
+      if(firstiter.or. .not.l_blockocc) then
+        do iss=1,nspin
+         nss=nupdwn(iss)
+         istart=iupdwn(iss)
+         do i=1,nss
+          do k=1,nss
+           fmat(k,i,iss)=0.0
+           do j=1,nss
+            fmat(k,i,iss)=fmat(k,i,iss)+                                   &
+    &           zmat(j,k,iss)*fdiag(j+istart-1)*zmat(j,i,iss)
+           end do
+          end do
          end do
         end do
-       end do
-      end do
+      else
+        fmat(:,:,:)=0.d0
+        do iss=1,nspin
+         nss=nupdwn(iss)
+         istart=iupdwn(iss)
+         do i=n_blockocc(iss)+1,nss
+          do k=n_blockocc(iss)+1,nss
+           do j=n_blockocc(iss)+1,nss
+            ii=i-n_blockocc(iss)
+            jj=j-n_blockocc(iss)
+            kk=k-n_blockocc(iss)
+            fmat(kk,ii,iss)=fmat(kk,ii,iss)+                                   &
+    &           zmat(j,k,iss)*fdiag(j+istart-1)*zmat(j,i,iss)
+           end do
+          end do
+         end do
+        end do
+      endif
 
       call stop_clock('calcmt')
       return
@@ -42,7 +65,7 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine rotate(z0,c0,bec,c0diag,becdiag)
+      subroutine rotate(z0,c0,bec,c0diag,becdiag,firstiter)
 !-----------------------------------------------------------------------
       use kinds, only: dp
       use cvan
@@ -51,41 +74,87 @@
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use gvecw, only: ngw
       use ions_base, only: nas => nax, nsp, na
+      use ensemble_dft, only: n_blockocc,l_blockocc
 
       implicit none
       integer iss, nss, istart, i, j, k, ni, nj, is, jv, ia, jnl
-      real(8) z0(nudx,nudx,nspin)
-      real(8) bec(nhsa,n), becdiag(nhsa,n)
-      complex(8) c0(ngw,nx), c0diag(ngw,nx)
+      real(kind=DP) z0(nudx,nudx,nspin)
+      real(kind=DP) bec(nhsa,n), becdiag(nhsa,n)
+      complex(kind=DP) c0(ngw,nx), c0diag(ngw,nx)
+      logical firstiter
+  
+      real(kind=DP), allocatable :: z1(:,:)
+      integer :: nii,njj,nrot
 
       CALL start_clock( 'rotate' )
-      c0diag(1:ngw,1:nx)=0.d0
-        do iss=1,nspin
-         nss=nupdwn(iss)
-         istart=iupdwn(iss)
-          !call MXMA(c0(1,istart),1,2*ngw,z0(1,1,iss),nudx,1,c0diag(1,istart),1,2*ngw,2*ngw,nss,nss)
-          call DGEMM( 'N', 'T', 2*ngw, nss, nss, 1.0d0, c0(1,istart), 2*ngw, z0(1,1,iss), nudx, &
-                      0.0d0, c0diag(1,istart), 2*ngw )
-        end do
+      if(firstiter.or. .not.l_blockocc) then
+        c0diag(1:ngw,1:nx)=0.d0
+          do iss=1,nspin
+           nss=nupdwn(iss)
+           istart=iupdwn(iss)
+            call DGEMM( 'N', 'T', 2*ngw, nss, nss, 1.0d0, c0(1,istart), 2*ngw, z0(1,1,iss), nudx, &
+                        0.0d0, c0diag(1,istart), 2*ngw )
+          end do
 
-        do iss=1,nspin
-        nss=nupdwn(iss)
-        istart=iupdwn(iss)
-        do ni=1,nss
-         do is=1,nsp
-          do jv=1,nh(is)
-           do ia=1,na(is)
-            jnl=ish(is)+(jv-1)*na(is)+ia
-             becdiag(jnl,ni+istart-1)=0.0
-             do nj=1,nss
-              becdiag(jnl,ni+istart-1)=becdiag(jnl,ni+istart-1)+        &
-     &        CMPLX(z0(ni,nj,iss),0.d0)*bec(jnl,nj+istart-1)
+          do iss=1,nspin
+          nss=nupdwn(iss)
+          istart=iupdwn(iss)
+          do ni=1,nss
+           do is=1,nsp
+            do jv=1,nh(is)
+             do ia=1,na(is)
+              jnl=ish(is)+(jv-1)*na(is)+ia
+               becdiag(jnl,ni+istart-1)=0.0
+               do nj=1,nss
+                becdiag(jnl,ni+istart-1)=becdiag(jnl,ni+istart-1)+        &
+       &        CMPLX(z0(ni,nj,iss),0.d0)*bec(jnl,nj+istart-1)
+               end do
              end do
+            end do
+           end do
            end do
           end do
+      else
+!copy the diagonal ones
+        c0diag(:,:)=(0.d0,0.d0)
+        becdiag(:,:)=0.d0
+        do iss=1,nspin
+          istart=iupdwn(iss)
+          c0diag(:,istart:istart+n_blockocc(iss)-1)=c0(:,istart:istart+n_blockocc(iss)-1)
+          becdiag(:,istart:istart+n_blockocc(iss)-1)=bec(:,istart:istart+n_blockocc(iss)-1)
+        enddo
+!now unitarian transformation
+         do iss=1,nspin
+           nss=nupdwn(iss)
+           istart=iupdwn(iss)
+           nrot=nss-n_blockocc(iss)
+           allocate(z1(nrot,nrot))
+           do ni=1,nrot
+              do nj=1,nrot
+                z1(ni,nj)=z0(n_blockocc(iss)+ni,n_blockocc(iss)+nj,iss)
+              enddo
+           enddo
+           call DGEMM( 'N', 'T', 2*ngw, nrot, nrot, 1.0d0, c0(1,istart+n_blockocc(iss)), 2*ngw, z1, nrot, &
+                        0.0d0, c0diag(1,istart+n_blockocc(iss)), 2*ngw )
+           do ni=istart+n_blockocc(iss),istart+nss-1
+            do is=1,nsp
+             do jv=1,nh(is)
+              do ia=1,na(is)
+               jnl=ish(is)+(jv-1)*na(is)+ia
+                do nj=istart+n_blockocc(iss),istart+nss-1
+                   nii=ni-n_blockocc(iss)-istart+1
+                   njj=nj-n_blockocc(iss)-istart+1
+                   becdiag(jnl,ni)=becdiag(jnl,ni)+        &
+       &           CMPLX(z1(nii,njj),0.d0)*bec(jnl,nj)
+                end do
+               end do
+              end do
+             end do
+            end do
+           deallocate(z1)
          end do
-        end do
-        end do
+      endif
+
       CALL stop_clock( 'rotate' )
       return
       end subroutine rotate
@@ -122,32 +191,57 @@
     end subroutine ddiag
 
 !-----------------------------------------------------------------------
-      subroutine calcm(fdiag,zmat,fmat)
+      subroutine calcm(fdiag,zmat,fmat,firstiter)
 !-----------------------------------------------------------------------
 !
 !  constructs fmat=zmat.fdiag.zmat^t
 !
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
+      use ensemble_dft, only : l_blockocc, n_blockocc
 
       implicit none
-      integer iss, nss, istart, i, j, k
+
+      logical firstiter
+
+
+      integer iss, nss, istart, i, j, k, ii, jj, kk
       real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
     &   fdiag(nx)
 
       call start_clock('calcm')
-      do iss=1,nspin
-       nss=nupdwn(iss)
-       istart=iupdwn(iss)
-       do i=1,nss
-        do k=1,nss
-         fmat(k,i,iss)=0.0
-         do j=1,nss
-          fmat(k,i,iss)=fmat(k,i,iss)+                                  &
+
+      if(firstiter .or. .not. l_blockocc) then
+        do iss=1,nspin
+         nss=nupdwn(iss)
+         istart=iupdwn(iss)
+         do i=1,nss
+          do k=1,nss
+           fmat(k,i,iss)=0.0
+           do j=1,nss
+            fmat(k,i,iss)=fmat(k,i,iss)+                                  &
     &            zmat(k,j,iss)*fdiag(j+istart-1)*zmat(i,j,iss)
+           end do
+          end do
          end do
         end do
-       end do
-      end do
+      else
+       fmat(:,:,:)=0.d0
+       do iss=1,nspin
+         nss=nupdwn(iss)
+         istart=iupdwn(iss)
+         do i=n_blockocc(iss)+1,nss
+          do k=n_blockocc(iss)+1,nss
+           do j=n_blockocc(iss)+1,nss
+            ii=i-n_blockocc(iss)
+            jj=j-n_blockocc(iss)
+            kk=k-n_blockocc(iss)
+            fmat(kk,ii,iss)=fmat(kk,ii,iss)+                                  &
+    &            zmat(k,j,iss)*fdiag(j+istart-1)*zmat(i,j,iss)
+           end do
+          end do
+         end do
+        end do
+     endif
 
       call stop_clock('calcm')
       return

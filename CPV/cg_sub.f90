@@ -34,7 +34,7 @@
                       ef1, enocc, f0, fmatx, fx, zaux, zx, ex, zxt, atot1, etot1, &
                       dedx1, dentdx1, dx, dadx1, faux, eqc, eqa, atotmin, xmin, &
                       entropy2, f2, etot2, eqb, compute_entropy2, compute_entropy_der, &
-                      compute_entropy
+                      compute_entropy, l_blockocc, n_blockocc
 !---
       use gvecp, only: ngm
       use gvecs, only: ngs
@@ -229,11 +229,11 @@
 
            if(newscheme.or.firstiter) then 
                call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                 rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec  )
+                 rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter)
                firstiter=.false.
            endif
             !     calculation of the rotated quantities
-            call rotate(z0,c0(:,:),bec,c0diag,becdiag)
+            call rotate(z0,c0(:,:),bec,c0diag,becdiag,.false.)
             !     calculation of rho corresponding to the rotated wavefunctions
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
                      &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
@@ -355,7 +355,7 @@
         call pc2(c0,bec,gi,becm)
 
         
-        if(tens) call calcmt(f,z0,fmat0)
+        if(tens) call calcmt(f,z0,fmat0,.false.)
 
         call calbec(1,nsp,eigr,hpsi,bec0) 
 
@@ -391,25 +391,51 @@
 
         else
 
-           do iss=1,nspin
-              nss=nupdwn(iss)
-              istart=iupdwn(iss)
-              do i=1,nss
-                 do j=1,nss
-                    do ig=1,ngw
-                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
-                    enddo
-                    if (ng0.eq.2) then
-                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,iss)
-                    endif
-                    
-                 enddo
-              enddo
-           enddo
-
+          if(.not.l_blockocc) then
+             do iss=1,nspin
+                nss=nupdwn(iss)
+                istart=iupdwn(iss)
+                do i=1,nss
+                   do j=1,nss
+                      do ig=1,ngw
+                         gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
+                      enddo
+                      if (ng0.eq.2) then
+                         gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,iss)
+                      endif
+                   enddo
+                enddo
+             enddo
+          else
+            do  iss=1,nspin
+                nss=nupdwn(iss)
+                istart=iupdwn(iss)
+                do i=1,n_blockocc(iss)
+                   do ig=1,ngw
+                      gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,i+istart-1))*f(i+istart-1)
+                   enddo
+                   if (ng0.eq.2) then
+                      gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,i+istart-1))*f(i+istart-1)
+                   endif
+                enddo
+                do i=n_blockocc(iss)+1,nss
+                   ii=i-n_blockocc(iss)
+                   do j=n_blockocc(iss)+1,nss
+                      jj=j-n_blockocc(iss)
+                      do ig=1,ngw
+                         gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(jj,ii,iss)
+                      enddo
+                      if (ng0.eq.2) then
+                         gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(jj,ii,iss)
+                      endif
+                   enddo
+                enddo
+             enddo
+       
+          endif
            call mp_sum( gamma, intra_image_comm )
-           
            if(nvb.gt.0) then
+            if(.not. l_blockocc) then
               do iss=1,nspin
                  nss=nupdwn(iss)
                  istart=iupdwn(iss)
@@ -429,9 +455,45 @@
                     enddo
                  enddo
               enddo
+            else
+             do iss=1,nspin
+                 nss=nupdwn(iss)
+                 istart=iupdwn(iss)
+
+                 do i=1,n_blockocc(iss)
+                     do is=1,nvb
+                        do iv=1,nh(is)
+                           do jv=1,nh(is)
+                              do ia=1,na(is)
+                                 inl=ish(is)+(iv-1)*na(is)+ia
+                                 jnl=ish(is)+(jv-1)*na(is)+ia
+                                 gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,i+istart-1)*f(i+istart-1)
+                              end do
+                           end do
+                        end do
+                     enddo
+                 enddo
+                 do i=n_blockocc(iss)+1,nss
+                    ii=i-n_blockocc(iss)
+                    do j=n_blockocc(iss)+1,nss
+                       jj=j-n_blockocc(iss)
+                       do is=1,nvb
+                          do iv=1,nh(is)
+                             do jv=1,nh(is)
+                                do ia=1,na(is)
+                                   inl=ish(is)+(iv-1)*na(is)+ia
+                                   jnl=ish(is)+(jv-1)*na(is)+ia
+                                   gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,j+istart-1)*fmat0(jj,ii,iss)
+                                end do
+                             end do
+                          end do
+                       enddo
+                    enddo
+                 enddo
+              enddo
+           endif
           endif
         endif
-
 
 
         !case of first iteration
@@ -483,23 +545,56 @@
         else
           !in the ensamble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
           !     calculation of the kinetic energy x=xmin      
-          call calcmt(f,z0,fmat0)
-         do is=1,nspin
-             nss=nupdwn(is)
-             istart=iupdwn(is)
-             do i=1,nss
-                do j=1,nss
+         call calcmt(f,z0,fmat0,.false.)
+         if(.not. l_blockocc) then
+           do is=1,nspin
+               nss=nupdwn(is)
+               istart=iupdwn(is)
+               do i=1,nss
+                  do j=1,nss
+                     do ig=1,ngw
+                      dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(j,i,is)
+                      dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
+                     enddo
+                     if (ng0.eq.2) then
+                      dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(j,i,is)
+                      dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
+                     end if
+                   enddo
+              enddo
+            enddo
+          else
+            do is=1,nspin
+               nss=nupdwn(is)
+               istart=iupdwn(is)
+
+               do i=1,n_blockocc(iss)
                    do ig=1,ngw
-                    dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(j,i,is)
-                    dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,i+istart-1))*f(i+istart-1)
+                    dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,i+istart-1))*f(i+istart-1)
                    enddo
                    if (ng0.eq.2) then
-                    dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(j,i,is)
-                    dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
+                    dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,i+istart-1))*f(i+istart-1)
+                    dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,i+istart-1))*f(i+istart-1)
                    end if
-                  enddo
-            enddo
-          enddo
+              enddo
+
+              do i=n_blockocc(iss)+1,nss
+                  ii=i-n_blockocc(iss)
+                  do j=n_blockocc(iss)+1,nss
+                     jj=j-n_blockocc(iss)
+                     do ig=1,ngw
+                      dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(jj,ii,is)
+                      dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(jj,ii,is)
+                     enddo
+                     if (ng0.eq.2) then
+                      dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(jj,ii,is)
+                      dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(jj,ii,is)
+                     end if
+                 enddo
+              enddo
+           enddo
+          endif
         endif
 
         call mp_sum( dene0, intra_image_comm )
@@ -527,10 +622,10 @@
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
+           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
 
           !     calculation of the rotated quantities
-          call rotate(z0,cm(:,:),becm,c0diag,becdiag)
+          call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
           !     calculation of rho corresponding to the rotated wavefunctions
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         endif
@@ -588,9 +683,9 @@
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
+              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
           !     calculation of the rotated quantities
-          call rotate(z0,cm(:,:),becm,c0diag,becdiag)
+          call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
           !     calculation of rho corresponding to the rotated wavefunctions
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         endif
@@ -678,9 +773,9 @@
               call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
             else
               if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm  )
+              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
               !     calculation of the rotated quantities
-              call rotate(z0,cm(:,:),becm,c0diag,becdiag)
+              call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
               !     calculation of rho corresponding to the rotated wavefunctions
               call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
             endif
@@ -730,7 +825,7 @@
         !
         !=======================================================================
         if(tens.and. .not.newscheme) call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec  )
+           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter  )
 
  
             
@@ -757,7 +852,7 @@
           else
 
             !     calculation of the rotated quantities
-            call rotate(z0,c0(:,:),bec,c0diag,becdiag)
+            call rotate(z0,c0(:,:),bec,c0diag,becdiag,.false.)
             !     calculation of rho corresponding to the rotated wavefunctions
             call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec, .true. )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
@@ -855,29 +950,48 @@
         call mp_sum( lambda, intra_image_comm )
   
         if(tens) then!in the ensemble case matrix labda must be multiplied with f
-           do is = 1, nspin
+           do iss = 1, nspin
               !
-              nss = nupdwn(is)
-              istart = iupdwn(is)
+              nss = nupdwn(iss)
+              istart = iupdwn(iss)
               !
               lambdap(:,:,is) = 0.0d0
               !
-              do k = 1, nss
-                 kk = k + istart - 1
-                 do j = 1, nss
-                    jj = j + istart - 1
-                    do i = 1, nss
-                       lambdap( i, j, is ) = lambdap( i, j, is ) + &
-                          lambda( i, k, is ) * fmat0( kk, jj, 1 )
-                    end do
-                 end do
-              enddo
+              if(.not. l_blockocc) then
+                do k = 1, nss
+                   do j = 1, nss
+                      do i = 1, nss
+                         lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
+                            lambda( i, k, iss ) * fmat0( k, j, iss )
+                      end do
+                   end do
+                enddo
+              else
+                 do i = 1, n_blockocc(iss)
+                   do j = 1, n_blockocc(iss)
+                         lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
+                            lambda( i, j, iss ) * f(j+istart-1)
+                   end do
+                enddo
+
+                do i = n_blockocc(iss)+1,nss
+                   do j = n_blockocc(iss)+1,nss
+                      jj=j-n_blockocc(iss)
+                      do k = 1, n_blockocc(iss)+1,nss
+                         kk=k-n_blockocc(iss)
+                         lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
+                            lambda( i, k, iss ) * fmat0( kk, jj, iss )
+                      end do
+                   end do
+                enddo
+
+              endif
               !
               do i = 1, nss
                  do j = 1, nss
-                    sta = lambda(i,j,is)
-                    lambda(i,j,is) = lambdap(i,j,is)
-                    lambdap(i,j,is) = sta
+                    sta = lambda(i,j,iss)
+                    lambda(i,j,iss) = lambdap(i,j,iss)
+                    lambdap(i,j,iss) = sta
                  enddo
               enddo
            end do

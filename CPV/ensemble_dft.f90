@@ -36,6 +36,8 @@ MODULE ensemble_dft
                                            ! in CP Lagrangian.
       real(DP) :: fricz      = 0       ! unitary degrees of freedom damping.
       real(DP) :: fricf      = 0       ! occupational degrees of freedom damping.
+      logical :: l_blockocc!if true consider lowest n_block states fixed
+      integer :: n_blockocc(2) !number of fixed states for spin channel
 
 !***ensemble-DFT
       real(DP), allocatable::                 bec0(:,:)
@@ -165,7 +167,8 @@ CONTAINS
 
   SUBROUTINE ensemble_initval &
     ( occupations_ , n_inner_ , fermi_energy_ , rotmass_ , occmass_ , rotation_damping_ , &
-      occupation_damping_ , occupation_dynamics_ , rotation_dynamics_ ,  degauss_ , smearing_ )
+      occupation_damping_ , occupation_dynamics_ , rotation_dynamics_ ,  degauss_ , smearing_ ,&
+       l_blockocc_, n_blockocc_)     
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: occupations_
     CHARACTER(LEN=*), INTENT(IN) :: rotation_dynamics_
@@ -174,6 +177,8 @@ CONTAINS
     INTEGER, INTENT(IN) :: n_inner_
     REAL(DP), INTENT(IN) :: fermi_energy_ , rotmass_ , occmass_ , rotation_damping_
     REAL(DP), INTENT(IN) :: occupation_damping_ , degauss_
+    LOGICAL :: l_blockocc_
+    INTEGER :: n_blockocc_(2)
 
       SELECT CASE ( TRIM( occupations_ ) )
           !
@@ -199,6 +204,8 @@ CONTAINS
           fricf   = occupation_damping_
           zmass   = rotmass_
           fmass   = occmass_
+          l_blockocc = l_blockocc_
+          n_blockocc(1:2) = n_blockocc_(1:2)
 
           SELECT CASE ( TRIM( rotation_dynamics_ ) )
             CASE ( 'line-minimization','l-m','lm' )

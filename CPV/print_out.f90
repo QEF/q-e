@@ -690,7 +690,7 @@
            end do
          enddo
        enddo
-       call rotate(zx,c0(:,:),bec,c0diag,becdiag)
+       call rotate(zx,c0(:,:),bec,c0diag,becdiag,.true.)
        do i=1,n
          if(i.ne.printwfc)  c0diag(:,i)= (0.d0,0.d0)
        enddo

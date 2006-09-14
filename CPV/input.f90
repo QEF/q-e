@@ -897,7 +897,7 @@ MODULE input
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
-           nhgrp, cell_units, restart_mode, sic_alpha
+           nhgrp, cell_units, restart_mode, sic_alpha, l_blockocc,n_blockocc
 
      USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
            diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
@@ -1059,7 +1059,7 @@ MODULE input
      CALL ensemble_initval( occupations, n_inner, fermi_energy, rotmass, &
                             occmass, rotation_damping, occupation_damping, &
                             occupation_dynamics, rotation_dynamics, degauss, &
-                            smearing )
+                            smearing,l_blockocc,n_blockocc )
      IF( ( program_name == 'CP90' ) .AND. .NOT.tcg .AND. tens ) &
           CALL errore(' modules_setup ', 'Ensemble DFT implemented only with CG   ', 1 )
      !
