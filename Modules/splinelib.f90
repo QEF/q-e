@@ -15,7 +15,7 @@ MODULE splinelib
   !
   PRIVATE
   !
-  PUBLIC :: dosplineint, spline, splint
+  PUBLIC :: dosplineint, spline, splint, splint_deriv
   !
   INTERFACE dosplineint
      !
@@ -101,9 +101,47 @@ MODULE splinelib
       splint = a * ydata(klo) + b * ydata(khi) + &
                ( ( a**3 - a ) * d2y(klo) + ( b**3 - b ) * d2y(khi) ) * &
                ( h**2 ) / 6.D0
+
+      END FUNCTION splint
+
+
+    !------------------------------------------------------------------------
+    FUNCTION splint_deriv( xdata, ydata, d2y, x )
+      !------------------------------------------------------------------------
       !
-      CONTAINS
-         !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(IN) :: xdata(:), ydata(:), d2y(:)
+      REAL(DP), INTENT(IN) :: x
+      !
+      REAL(DP) :: splint_deriv
+      INTEGER  :: k, khi, klo, xdim
+      REAL(DP) :: a, b, da, db, h
+      !
+      !
+      xdim = SIZE( xdata )
+      !
+      klo = 1
+      khi = xdim
+      !
+      klo = MAX( MIN( locate( xdata, x ), ( xdim - 1 ) ), 1 )
+      !
+      khi = klo + 1
+      !
+      h = xdata(khi) - xdata(klo)
+      !
+      a = ( xdata(khi) - x ) / h
+      b = ( x - xdata(klo) ) / h
+      da = -1.d0 / h
+      db = 1.d0 / h
+      !
+      splint_deriv = da * ydata(klo) + db * ydata(khi) + &
+               ( ( 3.d0*a**2 - 1.d0 ) * da * d2y(klo) + &
+                 ( 3.d0*b**2 - 1.d0 ) * db * d2y(khi) ) * &
+               ( h**2 ) / 6.D0
+
+      END FUNCTION splint_deriv
+
          !-------------------------------------------------------------------
          FUNCTION locate( xx, x )
            !-------------------------------------------------------------------
@@ -157,7 +195,6 @@ MODULE splinelib
            !
          END FUNCTION locate      
          !
-    END FUNCTION splint
     !
     !------------------------------------------------------------------------
     SUBROUTINE dosplineint_1D( old_mesh, old_vec, new_mesh, new_vec )
