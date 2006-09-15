@@ -268,9 +268,6 @@ MODULE input_parameters
           !  .FALSE. do not collect wavefunctions, leave them in temporary
           !          local file
 
-        LOGICAL :: tqr = .FALSE.
-
-
         INTEGER :: printwfc=1
           ! if <0 do nothing, if==0 print rho and fort.47, if == nband print band
 
@@ -280,11 +277,11 @@ MODULE input_parameters
           !  .FALSE. do not save charge density
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
-          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir, prefix, &
-          wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr, forc_conv_thr, &
-          pseudo_dir, disk_io, tefield, dipfield, lberry, gdir, nppstr, &
-          wf_collect, printwfc, lelfield, nberrycyc, refg, tqr, tefield2, &
-          saverho
+          nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
+          prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
+          forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
+          gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
+          tefield2, saverho
 
 !
 !=----------------------------------------------------------------------------=!
@@ -887,7 +884,8 @@ MODULE input_parameters
         REAL(DP) :: efield2 =0.d0
           ! electric field intensity in atomic units
 
-
+        LOGICAL :: tqr = .FALSE.
+          ! US contributions are added in real space
 
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
@@ -899,12 +897,12 @@ MODULE input_parameters
           diis_temp, diis_achmix, diis_g0chmix, diis_g1chmix,          &
           diis_nchmix, diis_nrot, diis_rothr, diis_ethr, diis_chguess, &
           mixing_mode, mixing_beta, mixing_ndim, mixing_fixed_ns,      &
-          diago_cg_maxiter, diago_david_ndim, diagonalization,         &
+          tqr, diago_cg_maxiter, diago_david_ndim, diagonalization,    &
           startingpot, startingwfc , conv_thr, diago_diis_ndim,        &
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
-          efield, epol2, efield2, diago_full_acc, l_blockocc,n_blockocc
+          efield, epol2, efield2, diago_full_acc, l_blockocc, n_blockocc
 
 !
 !=----------------------------------------------------------------------------=!

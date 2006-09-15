@@ -1,642 +1,499 @@
-module realus
-  USE kinds,                ONLY : DP
-  integer,allocatable :: box(:,:), maxbox(:)
-  REAL(KIND=DP),ALLOCATABLE ::&
-!!!       qsave(:,:,:,:) !To be used in newd in real space - max kkbeta, nbrx,nbrx
-       qsave(:,:,:) !To be used in newd in real space - max kkbeta, nbrx,nbrx
-  !nat 
-  real(KIND=DP),allocatable:: boxradius(:),boxdistance(:,:),xyz(:,:,:)     
-  real(KIND=DP),allocatable:: spher(:,:,:) !Spherical harmonics
-  logical ::tqr
-contains
-  subroutine deallocatenewdreal()
-    if (allocated(box))  deallocate (box)
-    if (allocated(boxdistance)) deallocate (boxdistance)
-    if (allocated(maxbox))  deallocate (maxbox)
-    if (allocated(qsave)) deallocate (qsave)
-    if (allocated(boxradius)) deallocate (boxradius)
-    if (allocated(xyz)) deallocate (xyz)
-    if (allocated(spher)) deallocate (spher)
-  end subroutine deallocatenewdreal
-
-
+!
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 #include "f_defs.h"
+!
+!----------------------------------------------------------------------------
+MODULE realus
+  !----------------------------------------------------------------------------
   !
-  !----------------------------------------------------------------------
-  subroutine qpointlist
-    !----------------------------------------------------------------------
-    !This subroutine is the driver routine of the box system in this implementation of US in real space.
-    !All the variables common in the module are computed and stored for reusing. 
-    !This routine has to be called every time the atoms are moved and of course in the beginning.
-    !A set of spherical boxes are computed for each atom. 
-    !In boxradius there are the radii of the boxes.
-    !In maxbox the upper limit of leading index id est the number of points of the fine mesh contained in each box.
-    !In xyz there are the coordinates of the points with origin in the centre of atom.
-    !In boxdistance the distance from the centre.
-    !In spher the spherical harmonics computed for each box
-    !In qsave the q value interpolated in these boxes.
-
-    !Strictly speaking only qsave, box and maxbox are necessary and so we can also save memory deallocating the others.
-    !Most of time is spent here but the others are faster. Actually 10^-3 Rydberg accuracy is reached. 
-
-    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
-    USE cell_base,            ONLY : omega,alat
-    USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, g, gg, &
-         ngm, gstart, ig1, ig2, ig3, eigts1, eigts2, &
-         eigts3, nl,nrxx
-    USE lsda_mod,             ONLY : nspin
-    USE scf,                  ONLY : vr, vltot
-    USE uspp,                 ONLY : okvan
-    USE uspp,                 ONLY : indv,deeq, dvan,nhtol, nhtolm,aainit,ap,nhtoj,lpx, lpl
-    USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp,kkbeta,nbeta,qfunc,dion,lmaxkb,qfcoef,nqf, nqlc, lll, rinner,jjj
-    USE wvfct,                ONLY : gamma_only
-    USE wavefunctions_module, ONLY : psic
-    !
-
-    USE atom,                 ONLY : r
-    USE io_global,  ONLY : stdout
-    USE cell_base,  ONLY : at, bg
-    USE pfft,       ONLY : npp
-    USE mp_global,  ONLY : me_pool
-    USE splinelib,  ONLY : spline, splint
-    implicit none
-
-    integer :: inat, indm, inbrx1, inbrx2, inrxx, idimension, ilm,ih,jh,is,m, iih,ijh, ilemme
-    integer :: roughestimate,goodestimate, lamx2,l,nt,ndm
-    integer,allocatable :: bufferpoints (:,:)
-    real (kind=DP),allocatable :: bufferdistance (:,:),cost(:),bufferxyz(:,:,:)
-    real (kind=DP) :: tempdistance,interpolatedqtot,first,second
-
-
-    ! from make_pointlist  
-    integer  :: index0,index,indproc,iat,ir,iat1
-    integer  :: i,j,k,i0,j0,k0,ipol,ishift(3),lemme,nb,mb,ilast
-    integer :: i1,i2,i3,i4
-    real(kind=dp) :: a1,a2,a3, a4, rx
-
-    real(kind=dp) :: posi(3),distance,shift(3),scalprod, distmin
-    real(kind=dp), allocatable :: tau0(:,:), rl(:,:), rl2(:)
-    real(KIND=DP),allocatable:: tempspher(:,:),qtot(:,:,:),xsp(:),ysp(:),wsp(:)
-    real(kind=DP) :: pi, fpi,eps
-    parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi,eps = 1.0d-9)
-
-
-    call start_clock ('qpointlist')
-
-    !generates the spherical harmonics for r space
-    !
-
-    allocate(tau0(3,nat)) 
-    
-    if (allocated(box)) deallocate (box)
-    if (.not.allocated(maxbox)) allocate (maxbox(nat))
-    maxbox=0
-    !This finds the radii for integration
-    if (.not.allocated(boxradius)) then
-!       write (*,*) 'Genero boxradius' 
-       allocate (boxradius(ntyp))
-       boxradius=0.D0
-       do inat=1,ntyp
-          do inbrx1 =1,nbeta(inat)
-             do inbrx2=1,nbeta(inat)
-                do indm=kkbeta(inat),1,-1
-                   if ((abs(qfunc(indm,inbrx1,inbrx2,inat))>10**(-6))) then
-                      boxradius(inat)=max(r(indm,inat),boxradius(inat))
-!                      write (*,*) 'radius for ',inat,' = ', boxradius(inat)
-                      exit
-                   endif
-                end do
-             end do
-          end do
-       end do
-    endif
-
-!We first save points in a buffer and then we choose a better fitted table... if fortran had vectors 
-!like c++ or free form arrays like java we could save up to 40 % of memory
-
-    roughestimate=10*int(((1/(omega))*nrxx*(maxval(boxradius)**3)))
-    allocate (bufferpoints(roughestimate,nat))
-    bufferpoints=0
-    allocate (bufferdistance(roughestimate,nat))
-    bufferdistance=0D0
-    allocate (bufferxyz(3,roughestimate,nat))
-
-    !FROM SOUBROUTINE MAKE_POINTLIST we have copied these lines and adapted to our needs
-    !The mesh is multiplied by 27 to cover also border atoms on properly.
-
-
-    index0 = 0
-#ifdef __PARA
-    do indproc=1,me_pool
-       index0 = index0 + nrx1*nrx2*npp(indproc)
-    enddo
-
-#endif
-    ! Bring all the atomic positions on the first unit cell
-
-    tau0=tau
-    call cryst_to_cart(nat,tau0,bg,-1)
-    do iat=1,nat
-       do ipol=1,3
-          tau0(ipol,iat)=tau0(ipol,iat)-nint(tau0(ipol,iat))
-       enddo
-    enddo
-    call cryst_to_cart(nat,tau0,at,1)
-
-    !now we find the points
-    maxbox=0
-    do iat = 1,nat
-
-       do ir=1,nrxx
-
-          index = index0 + ir - 1
-
-          k0 = index/(nrx1*nrx2)
-          index = index - (nrx1*nrx2) * k0
-          j0 = index / nrx1
-          index = index - nrx1*j0
-          i0 = index
-
-          do i = i0-nr1,i0+nr1, nr1
-             do j = j0-nr2, j0+nr2, nr2
-                do k = k0-nr3, k0+nr3, nr3
-
-                   do ipol=1,3
-                      posi(ipol) = DBLE(i)/DBLE(nr1) * at(ipol,1) &
-                                 + DBLE(j)/DBLE(nr2) * at(ipol,2) &
-                                 + DBLE(k)/DBLE(nr3) * at(ipol,3)
-
-                   enddo
-
-                   tempdistance = sqrt((posi(1)-tau0(1,iat))**2+&
-                        &(posi(2)-tau0(2,iat))**2+(posi(3)-tau0(3,iat))**2)
-                   tempdistance = tempdistance*alat
-                   if (tempdistance<boxradius(ityp(iat)))then
-                      maxbox(iat)=maxbox(iat)+1
-                      bufferpoints(maxbox(iat),iat)=ir
-                      bufferdistance(maxbox(iat), iat)=tempdistance
-                      bufferxyz(1,maxbox(iat),iat)=(posi(1)-tau0(1,iat))*alat
-                      bufferxyz(2,maxbox(iat),iat)=(posi(2)-tau0(2,iat))*alat
-                      bufferxyz(3,maxbox(iat),iat)=(posi(3)-tau0(3,iat))*alat
-                   endif
-                end do
-
-             end do
-
-          end do
-       end do
-       write (6,*) 'saved ', maxbox (iat), ' of ', nrxx, ' for ',iat
-    end do
-
-    DEALLOCATE( tau0 )
-    DEALLOCATE( boxradius )
-
-    goodestimate=maxval(maxbox)
-    if (goodestimate > roughestimate) call errore('qpointlist', 'Roughestimate &
-         &is too rough',2)
-    !now store them in a more convenient place
-
-    if (allocated(box)) deallocate (box)
-    if (allocated(boxdistance)) deallocate (boxdistance)
-    if (allocated(xyz)) deallocate(xyz)
-    allocate (box(goodestimate,nat), &
-         boxdistance(goodestimate,nat),xyz(3,goodestimate,nat))
-    box=0
-    boxdistance=0
-    do inat=1,nat
-       do indm=1,goodestimate
-          box(indm,inat)=bufferpoints(indm,inat)
-          boxdistance(indm,inat)=&
-               &   bufferdistance(indm,inat)
-          xyz(1,indm,inat)=bufferxyz(1,indm,inat)
-          xyz(2,indm,inat)=bufferxyz(2,indm,inat)
-          xyz(3,indm,inat)=bufferxyz(3,indm,inat)       
-       end do
-    end do
-    deallocate (bufferpoints)
-    deallocate (bufferdistance)
-    deallocate (bufferxyz)
-
-! Now it frees memory used for buffers.
-
-!Now it computes the spherical harmonics
-    lamx2=lmaxq**2
-    if (allocated(spher)) deallocate(spher)
-    allocate(spher(goodestimate,lamx2,nat))
-    do inat=1,nat
-
-       idimension=maxbox(inat)
-       allocate (rl(3,idimension),rl2(idimension))
-       do ir=1,idimension
-
-          do ipol=1,3
-             rl(ipol,ir) = xyz(ipol,ir,inat)
-
-          enddo
-          rl2(ir)=rl(1,ir)**2+rl(2,ir)**2+rl(3,ir)**2
-       end do
-
-       allocate (tempspher(idimension,lamx2))
-       call ylmr2 (lamx2,idimension,rl,rl2,tempspher)
-
-!We do a similar buffering
-       do ir=1,idimension
-          do ilm=1,lamx2
-             spher(ir,ilm,inat)=tempspher(ir,ilm)
-          end do
-       end do
-
-!We delete the buffer
-       deallocate(rl,rl2,tempspher)
-
-    end do
-
-    DEALLOCATE( xyz )
-
- !Let's do the main work
- 
-    if (allocated(qsave)) deallocate(qsave)
-   
-   ! allocate(qsave(goodestimate,maxval(nh),maxval(nh),nat))
-   
-    allocate(qsave(goodestimate,nhm*(nhm+1)/2,nat))
-    
-    qsave=0d0
-
-!The source is inspired by init_us_1
-
-!We perform two steps: first we compute for each l the qtot (radial q), then we interpolate it in our mesh, 
-!and then we add it to qsave with the correct spherica harmonics
-
-!Q is read from pseudo and it is divided into two parts:
-!in the inner radius a polinomial representation is known and so strictly speaking we do not use interpolation but just 
-!compute the correct value
-!
-
-
-    ndm = MAXVAL (kkbeta(1:ntyp))
-!    ap (:,:,:)   = 0.d0
-!    do nt=1,ntyp
-!       nqlc(nt) = MIN ( nqlc(nt), lmaxq )
-!       if ( nqlc(nt) < 0 )  nqlc(nt) = 0
-!    end do
-!    do nt = 1, ntyp
-!       ih = 1
-!       do nb = 1, nbeta (nt)
-!          l = lll (nb, nt)
-!          j = jjj (nb, nt)
-!          do m = 1, 2 * l + 1
-!             nhtol (ih, nt) = l
-!             nhtolm(ih, nt) = l*l+m
-!             nhtoj (ih, nt) = j
-!             indv  (ih, nt) = nb
-!             ih = ih + 1
-!          enddo
-!       enddo
-!       do ih = 1, nh (nt)
-!          do jh = 1, nh (nt)
-!             if (nhtol (ih, nt) == nhtol (jh, nt) .and. &
-!                  nhtolm(ih, nt) == nhtolm(jh, nt) ) then
-!                ir = indv (ih, nt)
-!!                is = indv (jh, nt)
-!                dvan (ih, jh, nt) = dion (ir, is, nt)
-!             endif
-!          enddo
-!       enddo
-!    enddo
-    !
-    !  compute Clebsch-Gordan coefficients
-    !
-!    if (okvan) call aainit (lmaxkb + 1)
-    do inat = 1, nat
-       nt =ityp(inat)
-       if (allocated(qtot)) deallocate (qtot)
-       allocate(qtot(kkbeta(nt),nbeta(nt),nbeta(nt)))
-      
-!variables used for spline interpolation
-       if (allocated(xsp)) deallocate(xsp)
-       if (allocated(ysp)) deallocate(ysp)
-       if (allocated(wsp)) deallocate(wsp)
-
-       allocate (xsp(kkbeta(nt)),ysp(kkbeta(nt)),wsp(kkbeta(nt)))
-!The radii in x
-       do ir=1,kkbeta(nt)
-          xsp(ir)=r(ir,nt)
-       end do
-
-       if (tvanp (nt) ) then
-          do l = 0, nqlc (nt) - 1
-             !
-             !     first we build for each nb,mb,l the total Q(|r|) function
-             !     note that l is the true (combined) angular momentum
-             !     and that the arrays have dimensions 1..l+1
-             !
-
-             do nb = 1, nbeta (nt)
-                do mb = nb, nbeta (nt)
-                   if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
-                        (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
-                        (mod (l + lll (nb, nt) + lll (mb, nt), 2) == 0) ) then
-                      do ir = 1, kkbeta (nt)
-                         if (r (ir, nt) >= rinner (l + 1, nt) ) then
-                            qtot (ir, nb, mb) = qfunc (ir, nb, mb, nt)/(r(ir,nt)**2)
-                         else
-                            ilast = ir
-                         endif
-                      enddo
-                      if (rinner (l + 1, nt) > 0.d0) &
-                           call setqfcorr(qfcoef (1, l+1, nb, mb, nt), &
-                           qtot(1,nb,mb), r(1,nt), nqf(nt),l,ilast)
-!We save the values in y
-                      do ir =1,kkbeta(nt)
-                         ysp(ir)=qtot(ir,nb,mb)
-                      end do
-
-!compute the first derivative in first point
-                      call setqfcorrpointfirst(qfcoef (1, l+1, nb, mb, nt), &
-                           first, r(1,nt), nqf(nt),l)
-!compute the second derivative in second point
-                      call setqfcorrpointsecond(qfcoef (1, l+1, nb, mb, nt), &
-                           second, r(1,nt), nqf(nt),l)
-!call spline 
-                      call spline(xsp,ysp,first,second,wsp)
-
-
-                      do ir=1,maxbox(inat)
-                         if (boxdistance (ir, inat) < rinner (l + 1, nt) ) then
-!if in the inner radius just compute the polynomial
-                            call setqfcorrpoint(qfcoef (1, l+1, nb, mb, nt), &
-                                 interpolatedqtot, boxdistance(ir,inat), nqf(nt),l)
-                         else   
-!else spline interpolation
-                            interpolatedqtot= splint(xsp,ysp,wsp,boxdistance(ir,inat))
-                         endif
-                         
-                        ! do iih=1,nh(nt)
-                        !    do ijh=iih,nh(nt)
-                        !       if ((nb.eq.indv(iih,nt)).and.(mb.eq.indv(ijh,nt))) then
-                        !          do lemme=l*l+1,(l+1)*(l+1)
-                        !             qsave(ir,iih,ijh,inat)=qsave(ir,iih,ijh,inat)+interpolatedqtot* &
-                        !                  &ap(lemme,nhtolm(iih,nt),nhtolm(ijh,nt)) * spher(ir,lemme,inat)
-                        !          end do
-                        !       endif
-                        !    end do
-                        ! end do
-                         
-                         ijh = 0
-                         do ih=1,nh(nt)
-                            do jh=ih,nh(nt)
-                               ijh = ijh + 1
-                               if ((nb.eq.indv(ih,nt)).and.(mb.eq.indv(jh,nt))) then
-                                  do lemme=l*l+1,(l+1)*(l+1)
-                                     qsave(ir,ijh,inat)=qsave(ir,ijh,inat)+interpolatedqtot* &
-                                          &ap(lemme,nhtolm(ih,nt),nhtolm(jh,nt)) * spher(ir,lemme,inat)
-                                  end do
-                               endif
-                            end do
-                         end do
-                         
-                      enddo
-                   endif
-
-                end do
-             end do
-          end do
-       endif
-    end do
-    
-    DEALLOCATE( qtot )
-    DEALLOCATE( xsp )
-    DEALLOCATE( ysp )
-    DEALLOCATE( wsp )
-    DEALLOCATE( boxdistance )
-    DEALLOCATE( spher )
-
-    call stop_clock('qpointlist')
-  end subroutine qpointlist
-
-SUBROUTINE newd_r
-!
-!  This subroutine is the real version of newd
-!  This is faster
-!
-USE kinds,                ONLY : DP
-USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-USE cell_base,            ONLY : omega
-USE gvect,                ONLY : nr1, nr2, nr3, nrxx
-USE lsda_mod,             ONLY : nspin
-USE scf,                  ONLY : vr, vltot
-USE uspp,                 ONLY : okvan
-USE uspp,                 ONLY : deeq, deeq_nc, dvan, dvan_so
-USE uspp_param,           ONLY : nh, nhm, tvanp
-USE noncollin_module,     ONLY : noncolin
-USE spin_orb,             ONLY : so, domag, lspinorb
-IMPLICIT NONE
-    !
-REAL(DP), PARAMETER  :: pi = 3.14159265358979d0, fpi = 4.d0 * pi
-REAL(DP), ALLOCATABLE :: aux(:,:)
-INTEGER :: na, ih, jh, ijh, is, ir, nt, nht, nspin0
-
-IF (.NOT.okvan) THEN
-   !
-   ! ... no ultrasoft potentials: use bare coefficients for projectors
-   !
-   DO na = 1, nat
-      !
-      nt  = ityp(na)
-      nht = nh(nt)
-      !
-      IF ( lspinorb ) THEN
-         !
-         deeq_nc(1:nht,1:nht,na,1:nspin) = dvan_so(1:nht,1:nht,1:nspin,nt)
-         !
-      ELSE IF ( noncolin ) THEN
-         !
-         deeq_nc(1:nht,1:nht,na,1) = dvan(1:nht,1:nht,nt)
-         deeq_nc(1:nht,1:nht,na,2) = ( 0.D0, 0.D0 )
-         deeq_nc(1:nht,1:nht,na,3) = ( 0.D0, 0.D0 )
-         deeq_nc(1:nht,1:nht,na,4) = dvan(1:nht,1:nht,nt)
-         !
-      ELSE
-         !
-         DO is = 1, nspin
-            !
-            deeq(1:nht,1:nht,na,is) = dvan(1:nht,1:nht,nt)
-            !
-         END DO
-         !
-      END IF
-      !
-   END DO
-   !
-   ! ... early return
-   !
-   RETURN
-   !
-END IF
-!
-CALL start_clock( 'newd' )
-!
-nspin0=nspin
-IF (noncolin.and..not.domag) nspin0=1
-!
-deeq(:,:,:,:)=0.D0 
-ALLOCATE(aux(nrxx,nspin0))
-DO is=1,nspin0
-   IF ( nspin0 == 4 .AND. is /= 1 ) then
-      aux(:,is) = vr(:,is)
-   ELSE
-      aux(:,is) = vltot(:) + vr(:,is)
-   END IF
-END DO
-
-DO na=1,nat
-   nt=ityp(na)
-   ijh = 0
-   DO ih=1,nh(nt)
-      DO jh=ih,nh(nt)
-         ijh = ijh + 1
-         DO is=1,nspin0
-            DO ir=1,maxbox(na)
-               deeq (ih,jh,na,is)= deeq(ih,jh,na,is) + &
-                                   qsave(ir,ijh,na)*aux(box(ir,na),is)
-            END DO
-            deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
-         END DO
-      END DO
-   END DO
-END DO
-deeq=deeq*omega/(nr1*nr2*nr3)
-DEALLOCATE(aux)
-
-!$    write (55,*) 'scriviamo deeq'
-!$    do inat=1,nat
-!$       do ih=1,nh(ityp(inat))
-!$          do jh=ih,nh(ityp(inat))
-!$             do is=1,nspin0
-!$                write (55,*) inat,ih,jh,deeq(ih,jh,inat,is)
-!$             end do
-!$          end do
-!$       end do
-!$    end do
-    !stop
-
-#ifdef __PARA
-    call reduce (nhm * nhm * nat * nspin0, deeq)
-#endif
-DO na = 1, nat
-   nt = ityp (na)
-   IF ( noncolin ) THEN
-      !
-      IF (so(nt)) THEN
-         !
-         CALL newd_so(na)
-         !
-      ELSE
-         !
-         CALL newd_nc(na)
-         !
-      END IF
-      !
-   ELSE
-      DO is = 1, nspin0
-         DO ih = 1, nh (nt)
-            DO jh = ih, nh (nt)
-               deeq(ih, jh, na, is)=deeq(ih, jh, na, is)+dvan(ih,jh,nt)
-               deeq(jh, ih, na, is)=deeq(ih, jh, na, is)
-            END DO
-         END DO
-      END DO      
-   END IF
-   !        WRITE( stdout,'( "dion pseudo ",i4)') nt
-   !        do ih = 1, nh(nt)
-   !           WRITE( stdout,'(8f9.4)') (dvan(ih,jh,nt),jh=1,nh(nt))
-   !        end do
-ENDDO
-
-CALL stop_clock('newd')
-
-RETURN
-
+  USE kinds, ONLY : DP
+  !
+  ! ... module originally written by Antonio Suriano and Stefano de Gironcoli
+  ! ... modified by Carlo Sbraccia
+  !
+  INTEGER,  ALLOCATABLE :: box(:,:), maxbox(:)
+  REAL(DP), ALLOCATABLE :: qsave(:,:)
+  REAL(DP), ALLOCATABLE :: boxradius(:), boxdistance(:,:), xyz(:,:,:)     
+  REAL(DP), ALLOCATABLE :: spher(:,:,:)
+  LOGICAL               :: tqr
+  !
   CONTAINS
     !
+    SUBROUTINE deallocatenewdreal()
+      !
+      IF ( ALLOCATED( box ) )         DEALLOCATE( box )
+      IF ( ALLOCATED( boxdistance ) ) DEALLOCATE( boxdistance )
+      IF ( ALLOCATED( maxbox ) )      DEALLOCATE( maxbox )
+      IF ( ALLOCATED( qsave ) )       DEALLOCATE( qsave )
+      IF ( ALLOCATED( boxradius ) )   DEALLOCATE( boxradius )
+      IF ( ALLOCATED( xyz ) )         DEALLOCATE( xyz )
+      IF ( ALLOCATED( spher ) )       DEALLOCATE( spher )
+      !
+    END SUBROUTINE deallocatenewdreal
+    !
     !------------------------------------------------------------------------
-    SUBROUTINE newd_so(na)
+    SUBROUTINE qpointlist()
       !------------------------------------------------------------------------
       !
-      USE spin_orb, ONLY : fcoef, so, domag, lspinorb
+      ! ... This subroutine is the driver routine of the box system in this 
+      ! ... implementation of US in real space.
+      ! ... All the variables common in the module are computed and stored for 
+      ! ... reusing. 
+      ! ... This routine has to be called every time the atoms are moved and of
+      ! ... course at the beginning.
+      ! ... A set of spherical boxes are computed for each atom. 
+      ! ... In boxradius there are the radii of the boxes.
+      ! ... In maxbox the upper limit of leading index, namely the number of
+      ! ... points of the fine mesh contained in each box.
+      ! ... In xyz there are the coordinates of the points with origin in the
+      ! ... centre of atom.
+      ! ... In boxdistance the distance from the centre.
+      ! ... In spher the spherical harmonics computed for each box
+      ! ... In qsave the q value interpolated in these boxes.
+      !
+      ! ... Most of time is spent here; the calling routines are faster.
+      !
+      USE constants,  ONLY : pi, fpi, eps8, eps16
+      USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+      USE cell_base,  ONLY : at, bg, omega, alat
+      USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+      USE uspp,       ONLY : okvan
+      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
+      USE uspp_param, ONLY : lmaxq, nh, nhm, tvanp, kkbeta, nbeta, &
+                             qfunc, dion, lmaxkb, qfcoef, nqf, nqlc, &
+                             lll, rinner
+      USE atom,       ONLY : r
+      USE pfft,       ONLY : npp
+      USE mp_global,  ONLY : me_pool
+      USE splinelib,  ONLY : spline, splint
       !
       IMPLICIT NONE
       !
-      INTEGER :: na
-
-      INTEGER :: ijs, is1, is2, kh, lh
+      INTEGER               :: qsdim, ia, ib, ibia, it, mbia
+      INTEGER               :: indm, inbrx1, inbrx2, idimension, &
+                               ilm, ih, jh, iih, lllnbnt, lllmbnt
+      INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
+      INTEGER,  ALLOCATABLE :: bufferpoints(:,:)
+      REAL(DP), ALLOCATABLE :: bufferdistance(:,:), bufferxyz(:,:,:)
+      REAL(DP)              :: distance, interpolatedqtot, first, second
+      INTEGER               :: index0, index, indproc, ir
+      INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ilast
+      REAL(DP)              :: posi(3)
+      REAL(DP), ALLOCATABLE :: tau0(:,:), rl(:,:), rl2(:)
+      REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
+                               xsp(:), ysp(:), wsp(:)
+      REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
       !
       !
-      nt=ityp(na)
-      ijs = 0
+      IF ( .NOT. okvan ) RETURN
       !
-      DO is1 = 1, 2
+      CALL start_clock( 'qpointlist' )
+      !
+      ! ... qsave is deallocated here to free the memory for the buffers
+      !
+      IF ( ALLOCATED( qsave ) ) DEALLOCATE( qsave )
+      !
+      IF ( .NOT. ALLOCATED( boxradius ) ) THEN
          !
-         DO is2 =1, 2
-            !
-            ijs = ijs + 1
-            !
-            IF (domag) THEN
-               DO ih = 1, nh(nt)
-                  !
-                  DO jh = 1, nh(nt)
+         ! ... here we calculate the radius of each spherical box ( one
+         ! ... for each non-local projector )
+         !
+         ALLOCATE( boxradius( ntyp ) )
+         !
+         boxradius(:) = 0.D0
+         !
+         DO it = 1, ntyp
+            DO inbrx1 = 1, nbeta(it)
+               DO inbrx2 = 1, nbeta(it)
+                  DO indm = kkbeta(it), 1, -1
                      !
-                     deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
-                     !
-                     DO kh = 1, nh(nt)
+                     IF ( ABS( qfunc(indm,inbrx1,inbrx2,it) ) > eps16 ) THEN
                         !
-                        DO lh = 1, nh(nt)
-                           !
-                           deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
-                                deeq (kh,lh,na,1)*            &
-                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
-                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
-                             deeq (kh,lh,na,2)*            &
-                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  + &
-                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
-                             (0.D0,-1.D0)*deeq (kh,lh,na,3)*            &
-                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt)  - &
-                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
-                             deeq (kh,lh,na,4)*            &
-                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  - &
-                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
-                           !
-                        END DO
+                        boxradius(it) = MAX( r(indm,it), boxradius(it) )
                         !
-                     END DO
+                     END IF
                      !
                   END DO
-                  !
                END DO
+            END DO
+         END DO
+         !
+      END IF
+      !
+      ! ... bring all the atomic positions on the first unit cell
+      !
+      ALLOCATE( tau0( 3, nat ) )
+      !
+      tau0(:,:) = tau(:,:)
+      !
+      CALL cryst_to_cart( nat, tau0, bg, -1 )
+      !
+      tau0(:,:) = tau0(:,:) - ANINT( tau0(:,:) )
+      !
+      CALL cryst_to_cart( nat, tau0, at, 1 )
+      !
+      ! ... a rough estimate for the number of grid-points per box
+      ! ... is provided here
+      !
+      mbr = MAXVAL( boxradius(:) )
+      !
+      mbx = mbr*&
+            SQRT( bg(1,1)**2 + bg(1,2)**2 + bg(1,3)**2 ) / alat
+      mby = mbr*&
+            SQRT( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 ) / alat
+      mbz = mbr*&
+            SQRT( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 ) / alat
+      !
+      dmbx = 2*ANINT( mbx*nrx1 ) + 1
+      dmby = 2*ANINT( mby*nrx2 ) + 1
+      dmbz = 2*ANINT( mbz*nrx3 ) + 1
+      !
+      roughestimate = ANINT( DBLE( dmbx*dmby*dmbz ) * pi / 6.D0 )
+      !
+     ! PRINT *, roughestimate, 10*INT( ( (1/omega)*nrxx*( mbr**3 ) ) )
+      !
+      ALLOCATE( bufferpoints(   roughestimate, nat ) )
+      ALLOCATE( bufferdistance( roughestimate, nat ) )
+      ALLOCATE( bufferxyz( 3,   roughestimate, nat ) )
+      !
+      bufferpoints(:,:) = 0
+      bufferdistance(:,:) = 0.D0
+      !
+      ! ... from soubroutine make_pointlist we have copied these lines and
+      ! ... adapted to our needs; the mesh is multiplied by 27 to cover 
+      ! ... also border atoms on properly.
+      !
+      IF ( .NOT.ALLOCATED( maxbox ) ) ALLOCATE( maxbox( nat ) )
+      !
+      maxbox(:) = 0
+      !
+      ! ... now we find the points
+      !
+      index0 = 0
+      !
+#if defined (__PARA)
+      !
+      DO i = 1, me_pool
+         index0 = index0 + nrx1*nrx2*npp(i)
+      END DO
+      !
+#endif
+      !
+      DO ia = 1, nat
+         !
+         DO ir = 1, nrxx
+            !
+            index = index0 + ir - 1
+            k0    = index / (nrx1*nrx2)
+            index = index - (nrx1*nrx2)*k0
+            j0    = index / nrx1
+            index = index - nrx1*j0
+            i0    = index
+            !
+            DO i = i0-nr1, i0+nr1, nr1
+               DO j = j0-nr2, j0+nr2, nr2
+                  DO k = k0-nr3, k0+nr3, nr3
+                     !
+                     DO ipol = 1, 3
+                        posi(ipol) = DBLE( i ) / DBLE( nr1 ) * at(ipol,1) + &
+                                     DBLE( j ) / DBLE( nr2 ) * at(ipol,2) + &
+                                     DBLE( k ) / DBLE( nr3 ) * at(ipol,3)
+                     END DO
+                     !
+                     distance = SQRT( ( posi(1) - tau0(1,ia) )**2 + &
+                                      ( posi(2) - tau0(2,ia) )**2 + &
+                                      ( posi(3) - tau0(3,ia) )**2 )*alat
+                     !
+                     IF ( distance < boxradius(ityp(ia)) ) THEN
+                        !
+                        mbia = maxbox(ia) + 1
+                        !
+                        maxbox(ia) = mbia
+                        bufferpoints(mbia,ia) = ir
+                        bufferdistance(mbia,ia) = distance
+                        bufferxyz(:,mbia,ia) = ( posi(:) - tau0(:,ia) )*alat
+                        !
+                     END IF
+                  END DO
+               END DO
+            END DO
+         END DO
+      END DO
+      !
+      DEALLOCATE( tau0 )
+      !
+      goodestimate = MAXVAL( maxbox )
+     ! PRINT *, "GOOD ESTIMATE = ", goodestimate
+      !
+      IF ( goodestimate > roughestimate ) &
+         CALL errore( 'qpointlist', 'rough-estimate is too rough', 2 )
+      !
+      ! ... now store them in a more convenient place
+      !
+      IF ( ALLOCATED( box ) )         DEALLOCATE( box )
+      IF ( ALLOCATED( boxdistance ) ) DEALLOCATE( boxdistance )
+      IF ( ALLOCATED( xyz ) )         DEALLOCATE( xyz )
+      !
+      ALLOCATE( box(         goodestimate, nat ) )
+      ALLOCATE( boxdistance( goodestimate, nat ) )
+      ALLOCATE( xyz( 3,      goodestimate, nat ) )
+      !
+      box(:,:)         = bufferpoints(1:goodestimate,:)
+      boxdistance(:,:) = bufferdistance(1:goodestimate,:)
+      xyz(:,:,:)       = bufferxyz(:,1:goodestimate,:)
+      !
+      DEALLOCATE( bufferpoints )
+      DEALLOCATE( bufferdistance )
+      DEALLOCATE( bufferxyz )
+      !
+      ! ... now it computes the spherical harmonics
+      !
+      lamx2 = lmaxq*lmaxq
+      !
+      IF ( ALLOCATED( spher ) ) DEALLOCATE( spher )
+      !
+      ALLOCATE( spher( goodestimate, lamx2, nat ) )
+      !
+      spher(:,:,:) = 0.D0
+      !
+      DO ia = 1, nat
+         !
+         idimension = maxbox(ia)
+         !
+         ALLOCATE( rl( 3, idimension ), rl2( idimension ) )
+         !
+         DO ir = 1, idimension
+            !
+            rl(:,ir) = xyz(:,ir,ia)
+            !
+            rl2(ir) = rl(1,ir)**2 + rl(2,ir)**2 + rl(3,ir)**2
+            !
+         END DO
+         !
+         ALLOCATE( tempspher( idimension, lamx2 ) )
+         !
+         CALL ylmr2( lamx2, idimension, rl, rl2, tempspher )
+         !
+         spher(1:idimension,:,ia) = tempspher(:,:)
+         !
+         DEALLOCATE( rl, rl2, tempspher )
+         !
+      END DO
+      !
+      DEALLOCATE( xyz )
+      !
+      ! ... let's do the main work
+      !
+      qsdim = 0
+      DO ia = 1, nat
+         IF ( maxbox(ia) == 0 ) CYCLE
+         nt = ityp(ia)
+         IF ( .NOT. tvanp(nt) ) CYCLE
+         DO ih = 1, nh(nt)
+            DO jh = ih, nh(nt)
+               qsdim = qsdim + 1
+            END DO
+         END DO
+      END DO
+      !      
+      PRINT *, "QSAVE SIZE : ", goodestimate*qsdim
+      !
+      ALLOCATE( qsave( goodestimate, qsdim ) )
+      !
+      qsave(:,:) = 0.D0
+      !
+      ! ... the source is inspired by init_us_1
+      !
+      ! ... we perform two steps: first we compute for each l the qtot
+      ! ... (radial q), then we interpolate it in our mesh, and then we
+      ! ... add it to qsave with the correct spherical harmonics
+      !
+      ! ... Q is read from pseudo and it is divided into two parts:
+      ! ... in the inner radius a polinomial representation is known and so
+      ! ... strictly speaking we do not use interpolation but just compute
+      ! ... the correct value
+      !
+      ib   = 0
+      ibia = 0
+      !
+      DO ia = 1, nat
+         !
+         IF ( maxbox(ia) == 0 ) CYCLE
+         !
+         nt = ityp(ia)
+         !
+         IF ( .NOT. tvanp(nt) ) CYCLE
+         !
+         ALLOCATE( qtot( kkbeta(nt), nbeta(nt), nbeta(nt) ) )
+         !
+         ! ... variables used for spline interpolation
+         !
+         ALLOCATE( xsp( kkbeta(nt) ), ysp( kkbeta(nt) ), wsp( kkbeta(nt ) ) )
+         !
+         ! ... the radii in x
+         !
+         xsp(:) = r(1:kkbeta(nt),nt)
+         !
+         DO l = 0, nqlc(nt) - 1
+            !
+            ! ... first we build for each nb,mb,l the total Q(|r|) function
+            ! ... note that l is the true (combined) angular momentum
+            ! ... and that the arrays have dimensions 1..l+1
+            !
+            DO nb = 1, nbeta(nt)
+               DO mb = nb, nbeta(nt)
+                  !
+                  lllnbnt = lll(nb,nt)
+                  lllmbnt = lll(mb,nt)
+                  !
+                  IF ( .NOT. ( l >= ABS( lllnbnt - lllmbnt ) .AND. &
+                               l <= lllnbnt + lllmbnt        .AND. &
+                               MOD( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
+                  !
+                  DO ir = 1, kkbeta(nt)
+                     IF ( r(ir,nt) >= rinner(l+1,nt) ) THEN
+                        qtot(ir,nb,mb) = qfunc(ir,nb,mb,nt) / r(ir,nt)**2
+                     ELSE
+                        ilast = ir
+                     END IF
+                  END DO
+                  !
+                  IF ( rinner(l+1,nt) > 0.D0 ) &
+                     CALL setqfcorr( qfcoef(1,l+1,nb,mb,nt), &
+                                     qtot(1,nb,mb), r(1,nt), nqf(nt), l, ilast )
+                  !
+                  ! ... we save the values in y
+                  !
+                  ysp(:) = qtot(1:kkbeta(nt),nb,mb)
+                  !
+                  ! ... compute the first derivative in first point
+                  !
+                  CALL setqfcorrpointfirst( qfcoef(1,l+1,nb,mb,nt), &
+                                            first, r(1,nt), nqf(nt), l )
+                  !
+                  ! ... compute the second derivative in second point
+                  !
+                  CALL setqfcorrpointsecond( qfcoef(1,l+1,nb,mb,nt), &
+                                             second, r(1,nt), nqf(nt), l )
+                  !
+                  ! ... call spline
+                  !
+                  CALL spline( xsp, ysp, first, second, wsp )
+                  !
+                  DO ir = 1, maxbox(ia)
+                     !
+                     IF ( boxdistance(ir,ia) < rinner(l+1,nt) ) THEN
+                        !
+                        ! ... if in the inner radius just compute the
+                        ! ... polynomial
+                        !
+                        CALL setqfcorrpoint( qfcoef(1,l+1,nb,mb,nt), &
+                                             interpolatedqtot,       &
+                                             boxdistance(ir,ia), nqf(nt), l )
+                        !
+                     ELSE   
+                        !
+                        ! ... spline interpolation
+                        !
+                        interpolatedqtot = splint( xsp, ysp, &
+                                                   wsp, boxdistance(ir,ia) )
+                        !
+                     END IF
+                     !
+                     ib = ibia
+                     !
+                     DO ih = 1, nh(nt)
+                        DO jh = ih, nh(nt)
+                           !
+                           ib = ib + 1
+                           !
+                           IF ( .NOT.( nb == indv(ih,nt) .AND. &
+                                       mb == indv(jh,nt) ) ) CYCLE
+                           !
+                           DO lm = l*l+1, (l+1)*(l+1)
+                              !
+                              qsave(ir,ib) = qsave(ir,ib) + &
+                                             interpolatedqtot*spher(ir,lm,ia)*&
+                                             ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
+                              !
+                           END DO
+                        END DO
+                     END DO
+                  END DO
+               END DO
+            END DO
+         END DO
+         !
+         ibia = ib
+         !
+         DEALLOCATE( qtot )
+         DEALLOCATE( xsp )
+         DEALLOCATE( ysp )
+         DEALLOCATE( wsp )
+         !
+      END DO
+      !
+      DEALLOCATE( boxdistance )
+      DEALLOCATE( spher )
+      !
+      CALL stop_clock( 'qpointlist' )
+      !
+    END SUBROUTINE qpointlist
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE newd_r()
+      !------------------------------------------------------------------------
+      !
+      ! ... this subroutine is the version of newd in real space
+      !
+      USE constants,        ONLY : pi, fpi
+      USE ions_base,        ONLY : nat, ntyp => nsp, ityp
+      USE cell_base,        ONLY : omega
+      USE gvect,            ONLY : nr1, nr2, nr3, nrxx
+      USE lsda_mod,         ONLY : nspin
+      USE scf,              ONLY : vr, vltot
+      USE uspp,             ONLY : okvan
+      USE uspp,             ONLY : deeq, deeq_nc, dvan, dvan_so
+      USE uspp_param,       ONLY : nh, nhm, tvanp
+      USE noncollin_module, ONLY : noncolin
+      USE spin_orb,         ONLY : so, domag, lspinorb
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), ALLOCATABLE :: aux(:,:)
+      INTEGER               :: ia, ih, jh, ijh, is, ir, nt, nspin0
+      INTEGER               :: ib, mbia, nht, nhnt
+      !
+      IF ( .NOT. okvan ) THEN
+         !
+         ! ... no ultrasoft potentials: use bare coefficients for projectors
+         !
+         DO ia = 1, nat
+            !
+            nt  = ityp(ia)
+            nht = nh(nt)
+            !
+            IF ( lspinorb ) THEN
+               !
+               deeq_nc(1:nht,1:nht,ia,1:nspin) = dvan_so(1:nht,1:nht,1:nspin,nt)
+               !
+            ELSE IF ( noncolin ) THEN
+               !
+               deeq_nc(1:nht,1:nht,ia,1) = dvan(1:nht,1:nht,nt)
+               deeq_nc(1:nht,1:nht,ia,2) = ( 0.D0, 0.D0 )
+               deeq_nc(1:nht,1:nht,ia,3) = ( 0.D0, 0.D0 )
+               deeq_nc(1:nht,1:nht,ia,4) = dvan(1:nht,1:nht,nt)
                !
             ELSE
                !
-               DO ih = 1, nh(nt)
+               DO is = 1, nspin
                   !
-                  DO jh = 1, nh(nt)
-                     !
-                     deeq_nc(ih,jh,na,ijs) = dvan_so(ih,jh,ijs,nt)
-                     !
-                     DO kh = 1, nh(nt)
-                        !
-                        DO lh = 1, nh(nt)
-                           !
-                           deeq_nc(ih,jh,na,ijs) = deeq_nc(ih,jh,na,ijs) +   &
-                                deeq (kh,lh,na,1)*            &
-                             (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt)  + &
-                             fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt) ) 
-                           !
-                        END DO
-                        !
-                     END DO
-                     !
-                  END DO
+                  deeq(1:nht,1:nht,ia,is) = dvan(1:nht,1:nht,nt)
                   !
                END DO
                !
@@ -644,283 +501,425 @@ RETURN
             !
          END DO
          !
+         ! ... early return
+         !
+         RETURN
+         !
+      END IF
+      !
+      CALL start_clock( 'newd' )
+      !
+      nspin0 = nspin
+      !
+      IF ( noncolin .AND..NOT. domag ) nspin0 = 1
+      !
+      deeq(:,:,:,:) = 0.D0
+      !
+      ALLOCATE( aux( nrxx, nspin0 ) )
+      !
+      DO is = 1, nspin0
+         !
+         IF ( nspin0 == 4 .AND. is /= 1 ) THEN
+            aux(:,is) = vr(:,is)
+         ELSE
+            aux(:,is) = vltot(:) + vr(:,is)
+         END IF
+         !
       END DO
       !
-    RETURN
+      ib = 0
       !
-    END SUBROUTINE newd_so
+      DO ia = 1, nat
+         !
+         mbia = maxbox(ia)
+         !
+         IF ( mbia == 0 ) CYCLE
+         !
+         nt = ityp(ia)
+         !
+         IF ( .NOT. tvanp(nt) ) CYCLE
+         !
+         nhnt = nh(nt)
+         !
+         DO ih = 1, nhnt
+            DO jh = ih, nhnt
+               ib = ib + 1
+               DO is = 1, nspin0
+                  DO ir = 1, mbia
+                     deeq(ih,jh,ia,is)= deeq(ih,jh,ia,is) + &
+                                        qsave(ir,ib)*aux(box(ir,ia),is)
+                  END DO
+                  deeq(jh,ih,ia,is) = deeq(ih,jh,ia,is)
+               END DO
+            END DO
+         END DO
+      END DO
+      !
+      deeq(:,:,:,:) = deeq(:,:,:,:)*omega/(nr1*nr2*nr3)
+      !
+      DEALLOCATE( aux )
+      !
+      CALL reduce( nhm*nhm*nat*nspin0, deeq )
+      !
+      DO ia = 1, nat
+         !
+         nt = ityp(ia)
+         !
+         IF ( noncolin ) THEN
+            !
+            IF ( so(nt) ) THEN
+               CALL newd_so( ia )
+            ELSE
+               CALL newd_nc( ia )
+            END IF
+            !
+         ELSE
+            !
+            nhnt = nh(nt)
+            !
+            DO is = 1, nspin0
+               DO ih = 1, nhnt
+                  DO jh = ih, nhnt
+                     deeq(ih,jh,ia,is) = deeq(ih,jh,ia,is) + dvan(ih,jh,nt)
+                     deeq(jh,ih,ia,is) = deeq(ih,jh,ia,is)
+                  END DO
+               END DO
+            END DO
+            !
+         END IF
+      ENDDO
+      !
+      CALL stop_clock( 'newd' )
+      !
+      RETURN
+      !
+      CONTAINS
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE newd_so( ia )
+          !--------------------------------------------------------------------
+          !
+          USE spin_orb, ONLY : fcoef, so, domag, lspinorb
+          !
+          IMPLICIT NONE
+          !
+          INTEGER, INTENT(IN) :: ia
+          INTEGER             :: ijs, is1, is2, kh, lh
+          !
+          !
+          nt = ityp(ia)
+          ijs = 0
+          !
+          DO is1 = 1, 2
+             DO is2 = 1, 2
+                !
+                ijs = ijs + 1
+                !
+                IF ( domag ) THEN
+                   !
+                   DO ih = 1, nh(nt)
+                      DO jh = 1, nh(nt)
+                         !
+                         deeq_nc(ih,jh,ia,ijs) = dvan_so(ih,jh,ijs,nt)
+                         !
+                         DO kh = 1, nh(nt)
+                            DO lh = 1, nh(nt)
+                               !
+                               deeq_nc(ih,jh,ia,ijs) = deeq_nc(ih,jh,ia,ijs) + &
+                                deeq (kh,lh,ia,1)*                             &
+                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) + &
+                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt)) + &
+                                deeq (kh,lh,ia,2)*                             &
+                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt) + &
+                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
+                                (0.D0,-1.D0)*deeq (kh,lh,ia,3)*                &
+                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,2,is2,nt) - &
+                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,1,is2,nt)) + &
+                                deeq (kh,lh,ia,4)*                             &
+                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) - &
+                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt))   
+                               !
+                            END DO
+                         END DO
+                      END DO
+                   END DO
+                   !
+                ELSE
+                   !
+                   DO ih = 1, nh(nt)
+                      DO jh = 1, nh(nt)
+                         !
+                         deeq_nc(ih,jh,ia,ijs) = dvan_so(ih,jh,ijs,nt)
+                         !
+                         DO kh = 1, nh(nt)
+                            DO lh = 1, nh(nt)
+                               !
+                               deeq_nc(ih,jh,ia,ijs) = deeq_nc(ih,jh,ia,ijs) + &
+                                deeq (kh,lh,ia,1)*                             &
+                                (fcoef(ih,kh,is1,1,nt)*fcoef(lh,jh,1,is2,nt) + &
+                                fcoef(ih,kh,is1,2,nt)*fcoef(lh,jh,2,is2,nt) ) 
+                               !
+                            END DO
+                         END DO
+                      END DO
+                   END DO
+                   !
+                END IF
+                !
+             END DO
+          END DO
+          !
+          RETURN
+          !
+        END SUBROUTINE newd_so
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE newd_nc( ia )
+          !--------------------------------------------------------------------
+          !
+          IMPLICIT NONE
+          !
+          INTEGER, INTENT(IN) :: ia
+          !
+          nt = ityp(ia)
+          !
+          DO ih = 1, nh(nt)
+             DO jh = 1, nh(nt)
+                !
+                IF ( lspinorb ) THEN
+                   !
+                   deeq_nc(ih,jh,ia,1) = dvan_so(ih,jh,1,nt) + &
+                                         deeq(ih,jh,ia,1) + deeq(ih,jh,ia,4)
+                   deeq_nc(ih,jh,ia,4) = dvan_so(ih,jh,4,nt) + &
+                                         deeq(ih,jh,ia,1) - deeq(ih,jh,ia,4)
+                   !
+                ELSE
+                   !
+                   deeq_nc(ih,jh,ia,1) = dvan(ih,jh,nt) + &
+                                         deeq(ih,jh,ia,1) + deeq(ih,jh,ia,4)
+                   deeq_nc(ih,jh,ia,4) = dvan(ih,jh,nt) + &
+                                         deeq(ih,jh,ia,1) - deeq(ih,jh,ia,4)
+                   !
+                END IF
+                !
+                deeq_nc(ih,jh,ia,2) = deeq(ih,jh,ia,2) - &
+                                      ( 0.D0, 1.D0 ) * deeq(ih,jh,ia,3)
+                !                      
+                deeq_nc(ih,jh,ia,3) = deeq(ih,jh,ia,2) + &
+                                      ( 0.D0, 1.D0 ) * deeq(ih,jh,ia,3)
+                !                      
+             END DO
+          END DO
+          !
+          RETURN
+          !
+        END SUBROUTINE newd_nc
+        !
+    END SUBROUTINE newd_r
     !
     !------------------------------------------------------------------------
-    SUBROUTINE newd_nc(na)
-      !------------------------------------------------------------------------
+    SUBROUTINE setqfcorr( qfcoef, rho, r, nqf, ltot, mesh )
+      !-----------------------------------------------------------------------
+      !
+      ! ... This routine compute the first part of the Q function up to rinner.
+      ! ... On output it contains  Q
       !
       IMPLICIT NONE
       !
-      INTEGER :: na
+      INTEGER,  INTENT(IN):: nqf, ltot, mesh
+        ! input: the number of coefficients
+        ! input: the angular momentum
+        ! input: the number of mesh point
+      REAL(DP), INTENT(IN) :: r(mesh), qfcoef(nqf)
+        ! input: the radial mesh
+        ! input: the coefficients of Q
+      REAL(DP), INTENT(OUT) :: rho(mesh)
+        ! output: the function to be computed
       !
-      nt = ityp(na)
+      INTEGER  :: ir, i
+      REAL(DP) :: rr
       !
-      DO ih = 1, nh(nt)
+      DO ir = 1, mesh
          !
-         DO jh = 1, nh(nt)
+         rr = r(ir)**2
+         !
+         rho(ir) = qfcoef(1)
+         !
+         DO i = 2, nqf
+            rho(ir) = rho(ir) + qfcoef(i)*rr**(i-1)
+         END DO
+         !
+         rho(ir) = rho(ir)*r(ir)**ltot
+         !
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE setqfcorr
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE setqfcorrpoint( qfcoef, rho, r, nqf, ltot )
+      !------------------------------------------------------------------------
+      !
+      ! ... This routine compute the first part of the Q function at the
+      ! ... point r. On output it contains  Q
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,  INTENT(IN):: nqf, ltot
+        ! input: the number of coefficients
+        ! input: the angular momentum
+      REAL(DP), INTENT(IN) :: r, qfcoef(nqf)
+        ! input: the radial mesh
+        ! input: the coefficients of Q
+      REAL(DP), INTENT(OUT) :: rho 
+        ! output: the function to be computed
+      !
+      INTEGER  :: i
+      REAL(DP) :: rr
+      !
+      rr = r*r
+      !
+      rho = qfcoef(1)
+      !
+      DO i = 2, nqf
+         rho = rho + qfcoef(i)*rr**(i-1)
+      END DO
+      !
+      rho = rho*r**ltot
+      !
+      RETURN
+      !
+    END SUBROUTINE setqfcorrpoint
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE setqfcorrpointfirst( qfcoef, rho, r, nqf, ltot )
+      !------------------------------------------------------------------------
+      !
+      ! ... On output it contains  Q'  (probably wrong)
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,  INTENT(IN) :: nqf, ltot
+        ! input: the number of coefficients
+        ! input: the angular momentum
+      REAL(DP), INTENT(IN) :: r, qfcoef(nqf)
+        ! input: the radial mesh
+        ! input: the coefficients of Q
+      REAL(DP), INTENT(OUT) :: rho 
+        ! output: the function to be computed
+      !
+      INTEGER  :: i
+      REAL(DP) :: rr
+      !
+      rr = r*r
+      !
+      DO i = MAX( 1, 2-ltot ), nqf
+         rho = rho + qfcoef(i)*rr**(i-2+ltot)*(i-1+ltot)
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE setqfcorrpointfirst
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE setqfcorrpointsecond( qfcoef, rho, r, nqf, ltot )
+      !------------------------------------------------------------------------
+      !
+      ! ... On output it contains  Q''
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,  INTENT(IN) :: nqf, ltot
+        ! input: the number of coefficients
+        ! input: the angular momentum
+      REAL(DP), INTENT(IN) :: r, qfcoef(nqf)
+        ! input: the radial mesh
+        ! input: the coefficients of Q
+      REAL(DP), INTENT(OUT) :: rho
+        ! output: the function to be computed
+      !
+      INTEGER  :: i
+      REAL(DP) :: rr
+      !
+      rr = r*r
+      !
+      DO i = MAX( 3-ltot, 1 ), nqf
+         rho = rho + qfcoef(i)*rr**(i-3+ltot)*(i-1+ltot)*(i-2+ltot)
+      END DO
+      !
+      RETURN
+      !
+    END SUBROUTINE setqfcorrpointsecond
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE addusdens_r()
+      !------------------------------------------------------------------------
+      !
+      ! ... This routine adds to the charge density the part which is due to
+      ! ... the US augmentation.
+      !
+      USE ions_base,        ONLY : nat, ityp
+      USE lsda_mod,         ONLY : nspin
+      USE scf,              ONLY : rho
+      USE uspp,             ONLY : okvan
+      USE uspp,             ONLY : becsum
+      USE uspp_param,       ONLY : tvanp, nh
+      USE noncollin_module, ONLY : noncolin
+      USE spin_orb,         ONLY : domag
+      !
+      IMPLICIT NONE
+      !
+      INTEGER :: ia, ib, nt, ir, irb, ih, jh, ijh, is, nspin0, mbia, nhnt
+      !
+      !
+      IF ( .NOT. okvan ) RETURN
+      !
+      CALL start_clock( 'addusdens' )
+      !
+      nspin0 = nspin
+      !
+      IF ( noncolin .AND..NOT. domag ) nspin0 = 1
+      !
+      DO is = 1, nspin0
+         !
+         ib = 0
+         !
+         DO ia = 1, nat
             !
-            IF (lspinorb) THEN
-               deeq_nc(ih,jh,na,1) = dvan_so(ih,jh,1,nt) + &
-                                     deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
-               !                      
-               deeq_nc(ih,jh,na,4) = dvan_so(ih,jh,4,nt) + &
-                                     deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
-               !
-            ELSE
-               deeq_nc(ih,jh,na,1) = dvan(ih,jh,nt) + &
-                                     deeq(ih,jh,na,1) + deeq(ih,jh,na,4)
-               !                      
-               deeq_nc(ih,jh,na,4) = dvan(ih,jh,nt) + &
-                                     deeq(ih,jh,na,1) - deeq(ih,jh,na,4)
-               !
-            END IF
-            deeq_nc(ih,jh,na,2) = deeq(ih,jh,na,2) - &
-                                  ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
-            !                      
-            deeq_nc(ih,jh,na,3) = deeq(ih,jh,na,2) + &
-                                  ( 0.D0, 1.D0 ) * deeq(ih,jh,na,3)
-            !                      
+            mbia = maxbox(ia)
+            !
+            IF ( mbia == 0 ) CYCLE
+            !
+            nt = ityp(ia)
+            !
+            IF ( .NOT. tvanp(nt) ) CYCLE
+            !
+            nhnt = nh(nt)
+            !
+            ijh = 0
+            !
+            DO ih = 1, nhnt
+               DO jh = ih, nhnt
+                  !
+                  ijh = ijh + 1
+                  ib  = ib  + 1
+                  !
+                  DO ir = 1, mbia
+                     irb = box(ir,ia)
+                     rho(irb,is) = rho(irb,is) + &
+                                   qsave(ir,ib)*becsum(ijh,ia,is)
+                  END DO
+               END DO
+            END DO
          END DO
          !
       END DO
       !
-    RETURN
-    END SUBROUTINE newd_nc
-    !
-END SUBROUTINE newd_r
-
-
-  subroutine setqfcorr (qfcoef, rho, r, nqf, ltot, mesh)
-    !-----------------------------------------------------------------------
-    !
-    !   This routine compute the first part of the Q function up to rinner.
-    !   On output it contains  Q
-    !
-    !
-    USE kinds
-    implicit none
-    !
-    !     first the dummy variables
-    !
-    integer :: nqf, ltot, mesh
-    ! input: the number of coefficients
-    ! input: the angular momentum
-    ! input: the number of mesh point
-    real(kind=DP) :: r (mesh), qfcoef (nqf), rho (mesh)
-    ! input: the radial mesh
-    ! input: the coefficients of Q
-    ! output: the function to be computed
-    !
-    !     here the local variables
-    !
-    integer :: ir, i
-    ! counter on  mesh points
-    ! counter on the coeffients
-
-    real(kind=DP) :: rr
-    ! the square of the radius
- 
-    do ir = 1, mesh
-       rr = r (ir) **2
-       rho (ir) = qfcoef (1)
-       do i = 2, nqf
-          rho (ir) = rho (ir) + qfcoef (i) * rr** (i - 1)
-       enddo
-       rho (ir) = rho (ir) * r (ir) ** (ltot)
-
-    enddo
-    return
-  end subroutine setqfcorr
-subroutine setqfcorrpoint (qfcoef, rho, r, nqf, ltot)
-    !-----------------------------------------------------------------------
-    !
-    !   This routine compute the first part of the Q function in the point r.
-    !   On output it contains  Q
-    !
-    !
-    USE kinds
-    implicit none
-    !
-    !     first the dummy variables
-    !
-    integer :: nqf, ltot, mesh
-    ! input: the number of coefficients
-    ! input: the angular momentum
-    ! input: the number of mesh point
-    real(kind=DP) :: r , qfcoef (nqf), rho 
-    ! input: the radial mesh
-    ! input: the coefficients of Q
-    ! output: the function to be computed
-    !
-    !     here the local variables
-    !
-    integer :: ir, i
-    ! counter on  mesh points
-    ! counter on the coeffients
-
-    real(kind=DP) :: rr
-    ! the square of the radius
- 
-
-       rr = r  **2
-       rho  = qfcoef (1)
-       do i = 2, nqf
-          rho  = rho  + qfcoef (i) * rr** (i - 1)
-       enddo
-       rho  = rho  * r  ** (ltot)
-
-
-    return
-  end subroutine setqfcorrpoint
-subroutine setqfcorrpointfirst (qfcoef, rho, r, nqf, ltot)
-    !-----------------------------------------------------------------------
-    !
-    !   
-    !   On output it contains  Q'
-    !   probably wrong
-    !
-    USE kinds
-    implicit none
-    !
-    !     first the dummy variables
-    !
-    integer :: nqf, ltot, mesh
-    ! input: the number of coefficients
-    ! input: the angular momentum
-    ! input: the number of mesh point
-    real(kind=DP) :: r , qfcoef (nqf), rho 
-    ! input: the radial mesh
-    ! input: the coefficients of Q
-    ! output: the function to be computed
-    !
-    !     here the local variables
-    !
-    integer :: ir, i
-    ! counter on  mesh points
-    ! counter on the coeffients
-
-    real(kind=DP) :: rr
-    ! the square of the radius
- 
-
-       rr = r  **2
-
-      do i = max(1,2-ltot), nqf
-          rho  = rho  + qfcoef (i) * rr** (i - 2+ltot)*(i-1+ltot)
-       enddo
-
-
-
-
-    return
-  end subroutine setqfcorrpointfirst
-  subroutine setqfcorrpointsecond (qfcoef, rho, r, nqf, ltot)
-    !-----------------------------------------------------------------------
-    !
-    !   
-    !   On output it contains  Q''
-    !
-    !
-    USE kinds
-    implicit none
-    !
-    !     first the dummy variables
-    !
-    integer :: nqf, ltot, mesh
-    ! input: the number of coefficients
-    ! input: the angular momentum
-    ! input: the number of mesh point
-    real(kind=DP) :: r , qfcoef (nqf), rho 
-    ! input: the radial mesh
-    ! input: the coefficients of Q
-    ! output: the function to be computed
-    !
-    !     here the local variables
-    !
-    integer :: ir, i
-    ! counter on  mesh points
-    ! counter on the coeffients
-
-    real(kind=DP) :: rr
-    ! the square of the radius
-
-
-    rr = r  **2
-    do i = max(3-ltot,1), nqf
-       rho  = rho  + qfcoef (i) * rr** (i - 3+ltot)*(i-1+ltot)*(i-2+ltot)
-    enddo
-
-
-
-    return
-  end subroutine setqfcorrpointsecond
-
-subroutine addusdens_r
-  !----------------------------------------------------------------------
-  !
-  !  This routine adds to the charge density the part which is due to
-  !  the US augmentation.
-  !
-  USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                                   ngm, nl, nlm, gg, g, eigts1, eigts2, &
-                                   eigts3, ig1, ig2, ig3
-  USE lsda_mod,             ONLY : nspin
-  USE scf,                  ONLY : rho
-  USE uspp,                 ONLY : okvan
-  USE uspp,                 ONLY : becsum
-  USE uspp_param,           ONLY : lmaxq, tvanp, nh
-  USE wvfct,                ONLY : gamma_only
-  USE wavefunctions_module, ONLY : psic
-  USE noncollin_module,     ONLY : noncolin
-  USE spin_orb,             ONLY : domag
-  !
-  implicit none
-  !
-  !     here the local variables
-  !
-
-  integer :: na, nt, ir, ih, jh, ijh, is, nspin0
-  ! counters
-
-  ! work space for rho(G,nspin)
-  ! Fourier transform of q
-
-  if (.not.okvan) return
-
-  call start_clock ('addusdens')
-
-  nspin0=nspin
-  IF (noncolin.AND..NOT.domag) nspin0=1
-
-  do is=1, nspin0
-     do na=1,nat
-        nt = ityp(na)
-        if (tvanp(nt)) then
-           ijh = 0
-           do ih = 1, nh (nt)
-              do jh = ih, nh (nt)
-                 ijh = ijh + 1
-                 do ir =1,maxbox(na)
-                    rho(box(ir,na),is) = rho(box(ir,na),is) + &
-                                         qsave(ir,ijh,na) * becsum(ijh,na,is)
-                  enddo
-              enddo
-           enddo
-        endif
-     enddo
-  enddo
-  !
-  call stop_clock ('addusdens')
-  return
-end subroutine addusdens_r
-
-   
+      CALL stop_clock( 'addusdens' )
+      !
+      RETURN
+      !
+    END SUBROUTINE addusdens_r
     !
 END MODULE realus

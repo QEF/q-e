@@ -179,7 +179,7 @@ SUBROUTINE iosys()
                                nstep, iprint, tstress, tprnfor, dt, outdir, &
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
-                               gdir, nppstr, wf_collect,lelfield, efield, tqr, &
+                               gdir, nppstr, wf_collect,lelfield, efield, &
                                nberrycyc
   !
   ! ... SYSTEM namelist
@@ -204,7 +204,7 @@ SUBROUTINE iosys()
   !
   USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
-                               diago_thr_init, diago_cg_maxiter,           &
+                               tqr, diago_thr_init, diago_cg_maxiter,      &
                                diago_david_ndim, diago_diis_ndim,          &
                                diagonalization, diago_full_acc,            &
                                startingwfc, startingpot
