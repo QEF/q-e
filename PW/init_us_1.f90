@@ -35,7 +35,12 @@ subroutine init_us_1
   USE cell_base,  ONLY : omega, tpiba
   USE gvect,      ONLY : g, gg
   USE lsda_mod,   ONLY : nspin
+#ifdef USE_SPLINES
+  USE us,         ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad
+  USE splinelib
+#else
   USE us,         ONLY : nqxq, dq, nqx, tab, qrad
+#endif
   USE uspp,       ONLY : nhtol, nhtoj, nhtolm, dvan, qq, indv, ap, aainit, &
                          qq_so, dvan_so, okvan
   USE uspp_param, ONLY : lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
@@ -68,6 +73,10 @@ subroutine init_us_1
   integer, external :: sph_ind
   complex(DP) :: coeff, qgm(1)
   real(DP) :: spinor, ji, jk
+#ifdef USE_SPLINES
+  real(DP), allocatable :: xdata(:)
+  real(DP) :: d1
+#endif
 
   call start_clock ('init_us_1')
   !
@@ -362,6 +371,23 @@ subroutine init_us_1
 #ifdef __PARA
   call reduce (nqx * nbetam * ntyp, tab)
 #endif
+
+#ifdef USE_SPLINES
+  ! initialize spline interpolation
+  allocate(xdata(lastq-startq+1))
+  do iq = startq, lastq
+    xdata(iq) = (iq - 1) * dq
+  enddo
+  do nt = 1, ntyp
+     do nb = 1, nbeta (nt)
+        l = lll (nb, nt)
+        d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
+        call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
+     enddo
+  enddo
+  deallocate(xdata)
+#endif
+
   deallocate (ylmk0)
   deallocate (qtot)
   deallocate (besr)

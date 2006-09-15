@@ -23,7 +23,12 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
+#ifdef USE_SPLINES
+  USE us,         ONLY : nqxq, tab, tab_d2y, dq
+  USE splinelib
+#else
   USE us,         ONLY : tab, dq
+#endif
   USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
   !
   implicit none
@@ -43,6 +48,11 @@ subroutine gen_us_dy (ik, u, dvkb)
 
   complex(DP), allocatable :: sk (:)
   complex(DP) :: phase, pref
+
+#ifdef USE_SPLINES
+  integer :: startq, lastq, iq
+  real(DP), allocatable :: xdata(:)
+#endif
 
   dvkb(:,:) = (0.d0, 0.d0)
   if (lmaxkb.le.0) return
@@ -68,9 +78,22 @@ subroutine gen_us_dy (ik, u, dvkb)
   do ig = 1, npw
      q (ig) = sqrt ( q(ig) ) * tpiba
   end do
+
+#ifdef USE_SPLINES
+  call divide (nqxq, startq, lastq)
+  allocate(xdata(lastq-startq+1))
+  do iq = startq, lastq
+    xdata(iq) = (iq - 1) * dq
+  enddo
+#endif
+
   do nt = 1, ntyp
+     ! calculate beta in G-space using an interpolation table
      do nb = 1, nbeta (nt)
         do ig = 1, npw
+#ifdef USE_SPLINES           
+           vkb0(ig,nb,nt) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), q(ig))
+#else
            px = q (ig) / dq - int (q (ig) / dq)
            ux = 1.d0 - px
            vx = 2.d0 - px
@@ -83,6 +106,7 @@ subroutine gen_us_dy (ik, u, dvkb)
                                tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
                                tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
                                tab (i3, nb, nt) * px * ux * vx / 6.d0
+#endif
         enddo
      enddo
   enddo

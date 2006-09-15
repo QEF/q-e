@@ -35,7 +35,11 @@ subroutine allocate_nlpot
   USE ldaU,             ONLY : Hubbard_lmax, ns, nsnew
   USE noncollin_module, ONLY : noncolin
   USE wvfct,            ONLY : npwx, npw, igk, g2kin
+#ifdef USE_SPLINES
+  USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, nqxq
+#else
   USE us,               ONLY : qrad, tab, tab_at, dq, nqx, nqxq
+#endif
   USE uspp,             ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
                                nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
   USE uspp_param,       ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, nbetam,tvanp
@@ -56,7 +60,7 @@ subroutine allocate_nlpot
   !
   !   igk relates the index of PW k+G to index in the list of G vector
   !
-  allocate (igk( npwx ), g2kin ( npwx ) )
+  allocate (igk( npwx ), g2kin ( npwx ) )    
   !
   !     calculate the number of beta functions for each atomic type
   !
@@ -128,7 +132,12 @@ subroutine allocate_nlpot
   !
   nqx = INT( (sqrt (ecutwfc) / dq + 4) * cell_factor )
 
-  allocate (tab( nqx , nbetam , nsp))    
+  allocate (tab( nqx , nbetam , nsp))
+
+#ifdef USE_SPLINES
+  ! d2y is for the cubic splines
+  allocate (tab_d2y( nqx , nbetam , nsp))
+#endif
 
   allocate (tab_at( nqx , nchix , nsp))
 

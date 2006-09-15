@@ -96,6 +96,7 @@ PWOBJS = \
 ../PW/allocate_locpot.o \
 ../PW/allocate_nlpot.o \
 ../PW/allocate_wfc.o \
+../PW/average_pp.o \
 ../PW/atomic_rho.o \
 ../PW/atomic_wfc.o \
 ../PW/atomic_wfc_nc.o \

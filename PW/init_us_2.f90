@@ -20,7 +20,12 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   USE constants,  ONLY : tpi
   USE gvect,      ONLY : eigts1, eigts2, eigts3, ig1, ig2, ig3, g
   USE wvfct,      ONLY : npw, npwx, igk
+#ifdef USE_SPLINES
+  USE us,         ONLY : nqxq, dq, tab, tab_d2y
+  USE splinelib
+#else
   USE us,         ONLY : dq, tab
+#endif
   USE uspp,       ONLY : nkb, vkb, nhtol, nhtolm, indv
   USE uspp_param, ONLY : lmaxkb, nbeta, nhm, nh
   !
@@ -43,6 +48,12 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
 
   complex(DP) :: phase, pref
   complex(DP), allocatable :: sk(:)
+
+#ifdef USE_SPLINES
+  real(DP), allocatable :: xdata(:)
+  integer :: startq, lastq, iq
+#endif
+
   !
   !
   if (lmaxkb.lt.0) return
@@ -69,11 +80,22 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
 
+#ifdef USE_SPLINES
+  call divide (nqxq, startq, lastq)
+  allocate(xdata(lastq-startq+1))
+  do iq = startq, lastq
+    xdata(iq) = (iq - 1) * dq
+  enddo
+#endif
+
   jkb = 0
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
      do nb = 1, nbeta (nt)
         do ig = 1, npw_
+#ifdef USE_SPLINES
+           vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
+#else
            px = qg (ig) / dq - int (qg (ig) / dq)
            ux = 1.d0 - px
            vx = 2.d0 - px
@@ -86,6 +108,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
                      tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
                      tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
                      tab (i3, nb, nt) * px * ux * vx / 6.d0
+#endif
         enddo
         ! add spherical harmonic part
         do ih = 1, nh (nt)
