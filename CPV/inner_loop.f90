@@ -134,7 +134,7 @@
       REAL(DP)               :: xinit
       INTEGER                :: ii,jj,kk,nrot
       REAL(kind=DP), ALLOCATABLE :: ztmp(:,:)
- 
+   
       CALL start_clock( 'inner_loop' )
       ! initializes variables
       fion2( :, : )= 0.D0
@@ -168,7 +168,6 @@
       END IF
       ene_ok=.FALSE.
       atot0=etot+entropy
-      write(37,*) 'energy entropy 0', etot, entropy!ATTENZIONE
       etot0=etot
 
       ! calculates the occupation matrix 
@@ -431,7 +430,6 @@
         CALL newd( rhor, irb, eigrb, rhovan, fion2 )
         CALL prefor( eigr, betae )
         atot1=etot+entropy
-        write(37,*) 'energy entropy 1', etot, entropy!ATTENZIONE
         etot1=etot
   
         ! calculates the Hamiltonian matrix
@@ -721,7 +719,6 @@
         CALL prefor( eigr, betae )
         ene_ok= .TRUE.
         atotmin = etot + entropy      
-        write(37,*) 'energy entropy 2',etot,entropy!ATTENZIONE
         IF (ionode) write(37,'(a3,i2,2f15.10)') 'CI',niter,atot0,atotmin
         atot0=atotmin
         atot=atotmin

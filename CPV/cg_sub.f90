@@ -128,7 +128,7 @@
 
       if(ionode) open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
       if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
-
+      
 !set tpa preconditioning
 
       call  emass_precond_tpa( ema0bg, tpiba2, emass_cutoff )
@@ -326,10 +326,14 @@
           endif
 
           hpsi(1:ngw,  i)=c2(1:ngw)
-          hpsi(1:ngw,i+1)=c3(1:ngw)
+          if(i+1 <= n) then
+            hpsi(1:ngw,i+1)=c3(1:ngw)
+          endif
           if (ng0.eq.2) then
             hpsi(1,  i)=CMPLX(DBLE(hpsi(1,  i)), 0.d0)
-            hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0)
+            if(i+1 <= n) then
+              hpsi(1,i+1)=CMPLX(DBLE(hpsi(1,i+1)), 0.d0)
+            endif
           end if
         enddo
 
@@ -839,10 +843,10 @@
 
 !   restore hi
 !        hi(:,:)=gi(:,:) 
- 
+
+
       end do!on conjugate gradient iterations
       !calculates atomic forces and lambda
-
 
        if(tpre) then!if pressure is need the following is written because of caldbec
           call  calbec(1,nsp,eigr,c0,bec)
@@ -915,11 +919,15 @@
 
           do ig=1,ngw
             gi(ig,  i)=c2(ig)
-            gi(ig,i+1)=c3(ig)
+            if(i+1 <= n) then
+              gi(ig,i+1)=c3(ig)
+            endif
           end do
           if (ng0.eq.2) then
             gi(1,  i)=CMPLX(DBLE(gi(1,  i)),0.d0)
-            gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0)
+            if(i+1 <= n) then
+              gi(1,i+1)=CMPLX(DBLE(gi(1,i+1)),0.d0)
+            endif
           end if
         enddo
 
@@ -955,7 +963,7 @@
               nss = nupdwn(iss)
               istart = iupdwn(iss)
               !
-              lambdap(:,:,is) = 0.0d0
+              lambdap(:,:,iss) = 0.0d0
               !
               if(.not. l_blockocc) then
                 do k = 1, nss
@@ -1013,8 +1021,7 @@
            call bforceion(fion,tfor.or.tprnfor,ipolp2, qmat2,bec,becdr,gqq2,evalue2)
         endif
 
-
-        deallocate( hpsi,hpsi0,gi,hi) 
+        deallocate(hpsi0,hpsi,gi,hi)
         deallocate( s_minus1,k_minus1)
        if(ionode) close(37)!for debug and tuning purposes
        call stop_clock('runcg_uspp')
