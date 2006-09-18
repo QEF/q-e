@@ -20,7 +20,7 @@ subroutine scale_h
   USE cellmd,     ONLY : at_old, omega_old
   USE gvect,      ONLY : g, gg, ngm
   USE klist,      ONLY : xk, wk, nkstot
-  USE us,         ONLY : nqxq, nqx, qrad, tab
+  USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at
   !
   implicit none
   !
@@ -50,6 +50,7 @@ subroutine scale_h
   !
   tab(:,:,:) = tab(:,:,:) * sqrt (omega_old/omega)
   qrad(:,:,:,:) = qrad(:,:,:,:) * omega_old/omega
+  tab_at(:,:,:) = tab_at(:,:,:) * sqrt (omega_old/omega)
   !
   ! recalculate the local part of the pseudopotential
   !
