@@ -17,7 +17,7 @@ SUBROUTINE init_run()
   USE kinds,                    ONLY : DP
   USE control_flags,            ONLY : nbeg, nomore, lwf, iprsta, &
                                        ndr, tfor, tprnfor, tpre, program_name, &
-                                       force_pairing, newnfi, tnewnfi
+                                       force_pairing, newnfi, tnewnfi, ndw
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
   USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, &
                                        cdmi, ityp, taui, cdms
@@ -82,11 +82,13 @@ SUBROUTINE init_run()
   USE io_global,                ONLY : ionode, stdout
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
+  USE xml_io_base,              ONLY : restart_dir, create_directory
   !
   IMPLICIT NONE
   !
-  INTEGER :: neupdwn( nspinx )
-  INTEGER :: lds_wfc
+  INTEGER            :: neupdwn( nspinx )
+  INTEGER            :: lds_wfc
+  CHARACTER(LEN=256) :: dirname
   !
   !
   CALL start_clock( 'initialize' )
@@ -94,6 +96,12 @@ SUBROUTINE init_run()
   ! ... initialize directories
   !
   CALL printout_base_init( outdir, prefix )
+  !
+  dirname = restart_dir( outdir, ndw )
+  !
+  ! ... Create main restart directory
+  !
+  CALL create_directory( dirname )
   !
   ! ... initialize g-vectors, fft grids
   !

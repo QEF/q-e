@@ -2643,9 +2643,9 @@ END FUNCTION
          !
       END IF
 !
-
       rhotmp( 1:ng ) = rhog( 1:ng, 1 )
       !
+
       IF( tpre ) THEN
          DO ij = 1, 6
             i = alpha( ij )
@@ -2883,29 +2883,35 @@ END FUNCTION
       vs (:) = (0.d0, 0.d0)
       !
       IF(nspin.EQ.1)THEN
+         !
          iss=1
          DO ig=1,ngs
             vs(nms(ig))=CONJG(rhog(ig,iss))
             vs(nps(ig))=rhog(ig,iss)
          END DO
-!
+         !
          CALL invfft('Smooth',vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-!
+         !
          DO ir=1,nnrsx
             rhos(ir,iss)=DBLE(vs(ir))
          END DO
+         !
       ELSE
+         !
          isup=1
          isdw=2
          DO ig=1,ngs
             vs(nps(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO 
+         !
          CALL invfft('Smooth',vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         !
          DO ir=1,nnrsx
             rhos(ir,isup)= DBLE(vs(ir))
             rhos(ir,isdw)=AIMAG(vs(ir))
          END DO
+         !
       ENDIF
 
       IF( dft_is_meta() ) CALL vofrho_meta( v, vs )  !METAGGA

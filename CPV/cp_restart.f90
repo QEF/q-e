@@ -1665,7 +1665,8 @@ MODULE cp_restart
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
       !
       CALL errore( 'cp_read_cell', &
-                   'cannot open restart file for reading', ierr )
+                   'cannot open restart file for reading: ' // TRIM(filename), &
+                   ierr )
       !
       IF ( ionode ) THEN
          !
