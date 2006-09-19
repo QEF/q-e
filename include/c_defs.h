@@ -45,7 +45,7 @@
 #  define LN_ACTIVATE ln_activate
 #  define LN_IND ln_ind
 #  define CCLOCK cclock
-#  define ELAPSED_SECONDS elapsed_seconds
+#  define SCNDS scnds
 #  define C_MKDIR c_mkdir
 #  define MEMSTAT memstat
 
@@ -70,8 +70,8 @@
 #  define LN_SET ln_set__
 #  define LN_ACTIVATE ln_activate__
 #  define LN_IND ln_ind__
-#  define CCLOCK cclock_
-#  define ELAPSED_SECONDS elapsed_seconds__
+#  define CCLOCK cclock__
+#  define SCNDS scnds__
 #  define C_MKDIR c_mkdir__
 #  define MEMSTAT memstat_
 
@@ -97,7 +97,7 @@
 #  define LN_ACTIVATE ln_activate_
 #  define LN_IND ln_ind_
 #  define CCLOCK cclock_
-#  define ELAPSED_SECONDS elapsed_seconds_
+#  define SCNDS scnds_
 #  define C_MKDIR c_mkdir_
 #  define MEMSTAT memstat_
 

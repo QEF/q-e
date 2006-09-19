@@ -26,6 +26,7 @@ MODULE check_stop
   !
   LOGICAL, PRIVATE :: tinit = .FALSE.
   !
+  REAL(DP) :: init_second
   !
   CONTAINS
      !
@@ -42,8 +43,7 @@ MODULE check_stop
        IMPLICIT NONE
        !
        LOGICAL            :: tex
-       REAL(DP)           :: seconds
-       REAL(DP), EXTERNAL :: elapsed_seconds
+       REAL(DP), EXTERNAL :: cclock
        !
        IF ( tinit ) &
           WRITE( UNIT = stdout, &
@@ -68,7 +68,7 @@ MODULE check_stop
           !
        END IF
        !
-       seconds = elapsed_seconds()
+       init_second = cclock()
        tinit   = .TRUE.
        !
        RETURN
@@ -91,11 +91,11 @@ MODULE check_stop
        INTEGER            :: unit
        LOGICAL            :: check_stop_now, tex
        REAL(DP)           :: seconds
-       REAL(DP), EXTERNAL :: elapsed_seconds
+       REAL(DP), EXTERNAL :: cclock
        !
        !
-       ! ... elapsed_seconds is a C function returning the elapsed solar 
-       ! ... time in seconds since the first call to the function itself
+       ! ... cclock is a C function returning the elapsed solar 
+       ! ... time in seconds since the Epoch ( 00:00:00 1/1/1970 )
        !
        IF ( .NOT. tinit ) &
           CALL errore( 'check_stop_now', 'check_stop not initialized', 1 )
@@ -118,7 +118,7 @@ MODULE check_stop
              !
           ELSE
              !
-             seconds = elapsed_seconds()
+             seconds = cclock() - init_second
              !
              check_stop_now = ( seconds  >  max_seconds )
              !

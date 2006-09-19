@@ -6,32 +6,18 @@
   or http://www.gnu.org/copyleft/gpl.txt .
 */
 
-#include <stdio.h>
 #include <time.h>
-#include <ctype.h>
-#include <sys/types.h>
 #include <sys/time.h>
+#include <sys/times.h>
 
 #include "c_defs.h"
 
 
-double ELAPSED_SECONDS()
-{
-  static time_t tstart, tend;
-  static int first = 1;
-  double sec;
-  time(&tend);
-  if( first ) {
-    tstart = tend;
-    first = 0;
-  }
-  sec = difftime( tend, tstart );
-  return sec;
-}
-
-
 double CCLOCK()
-/* Restituisce i secondi trascorsi dalla chiamata al timer rest */
+
+/* Return the second elapsed since Epoch (00:00:00 UTC, January 1, 1970)
+*/
+
 {
 
 #if defined __T3E
@@ -50,3 +36,29 @@ double CCLOCK()
 #endif
 
 }
+
+
+double SCNDS ( )
+
+/* Return the cpu time associated to the current process 
+*/
+
+{
+	static struct tms T;
+	static int first = 1;
+	static double init_cputime = 0.0;
+	double cputime;
+
+        times(&T);
+
+        cputime   = (double)(T.tms_utime);
+        cputime  /= (double)CLK_TCK ;
+
+	if( first ) {
+		first = 0;
+		init_cputime = cputime;
+	}
+
+	return cputime - init_cputime;
+}
+

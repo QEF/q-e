@@ -4046,6 +4046,7 @@ c_ldflags=""
 case "$arch:$cc" in
 *:pgcc )
 	try_cflags="-fast"
+	try_cpp="cpp -P -traditional"
 	;;
 *:pathcc )
 	try_cpp="pathcc -E"
@@ -4316,9 +4317,9 @@ echo setting CPP... $cpp
 
 echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
 case $cpp in
-	cpp) try_cppflags="-P -traditional" ;;
-	fpp) try_cppflags="-P"              ;;
-	*)   try_cppflags=""                ;;
+	cpp)  try_cppflags="-P -traditional" ;;
+	fpp)  try_cppflags="-P"              ;;
+	*)    try_cppflags=""                ;;
 esac
 if test "$cppflags" = "" ; then cppflags=$try_cppflags ; fi
 echo "${ECHO_T}$cppflags"
@@ -4371,8 +4372,14 @@ then
 	f90rule="\$(MPIF90) \$(F90FLAGS) -c \$<"
 	echo "${ECHO_T}no"
 else
+if test "$cpp" = "pgcc -E"
+then
+	f90rule="\$(CPP) \$(CPPFLAGS) \$< > \$*.F90 \\
+	\$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
+else
 	f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$*.F90 \\
 	\$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
+fi
 	echo "${ECHO_T}yes"
 fi
 
