@@ -354,6 +354,8 @@ MODULE xml_io_base
       !
       dirname = restart_dir( outdir, wunit )
       !
+      CALL create_directory( TRIM( dirname ) )
+      !
       IF ( ionode ) THEN
          !
          filename = TRIM( dirname ) // '/print_counter.xml'
@@ -361,17 +363,6 @@ MODULE xml_io_base
          CALL iotk_open_write( iunpun, FILE = filename, &
                              & ROOT = "PRINT_COUNTER",  IERR = ierr )
          !
-      END IF
-
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-
-      IF ( ierr > 0 ) THEN
-         ! try to create the restart directory if non-existent
-         CALL create_directory( TRIM( dirname ) )
-         IF ( ionode ) THEN
-            CALL iotk_open_write( iunpun, FILE = filename, &
-                                & ROOT = "PRINT_COUNTER", IERR = ierr )
-         END IF
       END IF
       !
       CALL mp_bcast( ierr, ionode_id, intra_image_comm )
