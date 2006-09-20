@@ -1,5 +1,5 @@
 /*
-  Copyright (C) 2002 FPMD group
+  Copyright (C) 2002-2006 Quantum-Espresso group
   This file is distributed under the terms of the
   GNU General Public License. See the file `License'
   in the root directory of the present distribution,
@@ -12,6 +12,12 @@
 
 #include "c_defs.h"
 
+/* This should catch systems that do not define the older CLK_TCK symbol, 
+   but do define the newer CLOCKS_PER_SEC constant */
+
+#ifndef CLK_TCK
+#define CLK_TCK CLOCKS_PER_SEC
+#endif
 
 double CCLOCK()
 

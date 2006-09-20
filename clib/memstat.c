@@ -16,7 +16,7 @@
 
 void MEMSTAT(int *kilobytes)
 {
-#if defined __AIX || defined __LINUX || defined __LINUX64
+#if defined __HAVE_MALLINFO
 #include <malloc.h>
   struct mallinfo info;  
   info = mallinfo();
