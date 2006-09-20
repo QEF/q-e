@@ -58,8 +58,7 @@ END PROGRAM pw2casino
 SUBROUTINE compute_casino
 
   USE kinds, ONLY: DP
-  USE atom, ONLY: zmesh
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE cell_base, ONLY: omega, alat, tpiba2, at, bg
   USE char, ONLY: title
   USE constants, ONLY: tpi
@@ -79,12 +78,13 @@ SUBROUTINE compute_casino
   USE wavefunctions_module, ONLY : evc
   IMPLICIT NONE
   INTEGER :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
-       nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb 
+       nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb, at_num 
   INTEGER, ALLOCATABLE :: INDEX(:), igtog(:)
   LOGICAL :: exst, found
   REAL(DP) :: ek, eloc, enl, charge, etotefield
   COMPLEX(DP), ALLOCATABLE :: aux(:), hpsi(:,:)
   INTEGER :: ios
+  INTEGER, EXTERNAL :: atomic_number
   REAL (DP), EXTERNAL :: ewald
 
   CALL init_us_1
@@ -259,7 +259,9 @@ SUBROUTINE compute_casino
   WRITE(io,*) nat
   WRITE(io,'(a)')' Atomic number and position of the atoms(au) '
   DO na = 1, nat
-     WRITE(io,'(i6,3f20.14)') INT(zmesh(ityp(na))), (alat*tau(j,na),j=1,3)
+     nt = ityp(na)
+     at_num = atomic_number(TRIM(atm(nt)))
+     WRITE(io,'(i6,3f20.14)') at_num, (alat*tau(j,na),j=1,3)
   ENDDO
   WRITE(io,'(a)') ' Primitive lattice vectors (au) '
   WRITE(io,100) alat*at(1,1), alat*at(2,1), alat*at(3,1)
