@@ -1,4 +1,14 @@
+!
+! Copyright (C) 2006 Malgorzata Wierbowska and Quantum-Espresso group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
 MODULE a2F
+  !
+  ! This module contains a routine saving variables needed for the
+  ! electron-phonon calculation (new algorithm implemeted by MW) 
   !
   USE kinds,      ONLY : DP
   !
