@@ -14,7 +14,6 @@ use_shared=1
 topdir=$TOPDIR
 arch=$ARCH
 env_cc=$CC
-mpicc=$MPICC
 cpp=$CPP
 cflags=$CFLAGS
 cppflags=$CPPFLAGS
@@ -22,7 +21,6 @@ dflags=$DFLAGS
 iflags=$IFLAGS
 f77=$F77
 f90=$F90
-mpif77=$MPIF77
 mpif90=$MPIF90
 fflags=$FFLAGS
 f90flags=$F90FLAGS
@@ -200,28 +198,6 @@ then
 		;;
 	esac
 
-	case "$arch:$mpif90" in
-	*:mpif90 )
-		try_mpicc="mpicc"
-		try_mpif77="mpif77"
-		;;
-	*:mpf90 )
-		try_mpicc="mpcc"
-		try_mpif77="mpf77"
-		;;
-	aix:mpxlf*_r )
-		try_mpicc="mpcc_r"
-		try_mpif77="mpxlf_r"
-		;;
-	aix:mpxlf* )
-		try_mpicc="mpcc"
-		try_mpif77="mpxlf"
-		;;
-	macppc:mpxlf* )
-		try_mpicc="mpcc"
-		try_mpif77="mpxlf mpf77"
-		;;
-	esac
 fi
 
 # clear cached values
@@ -272,6 +248,7 @@ alpha:* )
 	try_f77="f77 $f90"
 	;;
 alinux:* )
+	try_cc="ccc $try_cc"
 	try_f77="fort g77 f77 $f90"
 	;;
 sparc:* )
@@ -285,25 +262,6 @@ macppc:xlf90 )
 	;;
 esac
 
-if test "$use_parallel" -ne 0
-then
-	# clear cached values
-	unset CC ac_cv_prog_ac_ct_CC ac_cv_c_compiler_gnu ac_cv_prog_cc_g
-
-	# check parallel C compiler
-	if test "$mpicc" = "" ; then mpicc="$try_mpicc $try_cc" ; fi
-	AC_PROG_CC($mpicc)
-	mpicc=$CC
-
-	# clear cached values
-	unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
-
-	# check parallel Fortran 77 compiler
-	if test "$mpif77" = "" ; then mpif77="$try_mpif77 $try_f77" ; fi
-	AC_PROG_F77($mpif77)
-	mpif77=$F77
-fi
-
 # clear cached values
 unset CC ac_cv_prog_ac_ct_CC ac_cv_c_compiler_gnu ac_cv_prog_cc_g
 
@@ -311,10 +269,8 @@ unset CC ac_cv_prog_ac_ct_CC ac_cv_c_compiler_gnu ac_cv_prog_cc_g
 if test "$env_cc" = "" ; then cc="$try_cc" ; else cc="$env_cc"; fi
 AC_PROG_CC($cc)
 cc=$CC
-if test "$use_parallel" -eq 0 ; then mpicc=$cc ; fi
 
 echo setting CC... $cc
-echo setting MPICC... $mpicc
 
 # clear cached values
 unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
@@ -323,10 +279,8 @@ unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 if test "$f77" = "" ; then f77="$try_f77" ; fi
 AC_PROG_F77($f77)
 f77=$F77
-if test "$use_parallel" -eq 0 ; then mpif77=$f77 ; fi
 
 echo setting F77... $f77
-echo setting MPIF77... $mpif77
 
 # check Fortran compiler flags
 have_cpp=1
@@ -337,7 +291,6 @@ ia64:ifort* | amd64:ifort* )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -347,7 +300,6 @@ ia64:ifc* )
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -357,7 +309,6 @@ ia64:pgf* | amd64:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
@@ -367,7 +318,6 @@ ia64:path* | amd64:path* )
 	try_fflags="-march=auto -O2"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__EKO"
@@ -377,7 +327,6 @@ ia32:ifort* )
         try_fflags="-O2 -tpp6 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -387,7 +336,6 @@ ia32:ifc* )
         try_fflags="-Vaxlib -O2 -tpp6"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -nomodule"
 	try_ldflags="-Vaxlib"
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
@@ -397,7 +345,6 @@ ia32:ifc* )
 	then
 		# old versions of ifc require this stuff
 		try_f90flags="\$(FFLAGS) -cl,./intel.pcl"
-		try_f90flags_noopt="\$(FFLAGS_NOOPT) -cl,./intel.pcl"
                 if test -x $topdir/ifcmods.sh
                 then
                    ./ifcmods.sh
@@ -408,7 +355,6 @@ ia32:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	try_ldflags_static="-Bstatic"
 	try_dflags="$try_dflags -D__PGI"
@@ -418,7 +364,6 @@ ia32:path* )
 	try_fflags="-march=auto -O2"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__EKO"
@@ -428,7 +373,6 @@ ia32:path* )
 	try_fflags="-O3 -cpp"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0 -cpp"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	#try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__G95"
@@ -437,7 +381,6 @@ ia32:path* )
 	try_fflags="-O3"
 	try_f90flags="\$(FFLAGS) -x f95-cpp-input"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -x f95-cpp-input"
 	try_ldflags=""
 	#try_ldflags_static="-static"
         ;;
@@ -446,7 +389,6 @@ aix:*xlf* )
 -qarch=auto -qtune=auto -qdpc -Q -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qsuffix=cpp=f90 -qfree=f90"
 	try_fflags_noopt="-q64 -O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -qsuffix=cpp=f90 -qfree=f90"
 	try_ldflags="-q64"
 	# try_ldflags_static="-bstatic"
 	pre_fdflags="-WF,"
@@ -456,7 +398,6 @@ mips:f90 )
 	try_fflags="-mips4 -64 -O2 -r10000 -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-mips4 -64 -O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags="-mips4 -64"
 	pre_fdflags="-ftpp -macro_expand "
 	;;
@@ -466,7 +407,6 @@ alinux:fort )
 	try_fflags="-O -r8 -align dcommons -align records"
 	try_f90flags="\$(FFLAGS) -free"
 	try_fflags_noopt="-O0 -r8 -align dcommons -align records"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -free"
         try_ldflags_static="-non_shared"
 	have_cpp=0
 	;;
@@ -475,14 +415,12 @@ alpha:f90 )
 	try_fflags="-O -real_size 64 -align dcommons -align records -assume buffered_io -fpe1"
 	try_f90flags="\$(FFLAGS) -free"
 	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records -assume buffered_io"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -free"
 	;;
 sparc:mpf90 | sparc:f90 )
 	try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
 -xarch=v8plusb -xlic_lib=sunperf"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0 -xlic_lib=sunperf"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT)"
 	try_ldflags=""
 	imod="-M"
         have_cpp=0
@@ -492,7 +430,6 @@ crayx1:ftn )
 -O scalar3,stream3,vector3,nointerchange -Z -O inline5"
         try_f90flags="\$(FFLAGS)"
         try_fflags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
-        try_f90flags_noopt="\$(FFLAGS_NOOPT)"
         try_ldflags="-s default64 -f nan64"
         try_dflags="$try_dflags -D__X1_COA"
         pre_fdflags="-e Z -F"
@@ -502,7 +439,6 @@ macppc:* )
 -qdpc -qalias=nointptr"
 	try_f90flags="\$(FFLAGS) -qfree=f90"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="\$(FFLAGS_NOOPT) -qfree=f90"
 	try_ldflags=""
 	pre_fdflags="-WF,"
 	xlf_flags=1
@@ -512,7 +448,6 @@ macppc:* )
 	try_fflags="-O"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
-	try_f90flags_noopt="$\(FFLAGS_NOOPT)"
 	try_ldflags=""
 	have_cpp=0
 	;;
@@ -523,11 +458,9 @@ try_ldflags="$try_ldflags $try_ldflags_static" ; fi
 if test "$fflags" = ""   ; then fflags=$try_fflags     ; fi
 if test "$f90flags" = "" ; then f90flags=$try_f90flags ; fi
 if test "$fflags_noopt" = ""   ; then fflags_noopt=$try_fflags_noopt     ; fi
-if test "$f90flags_noopt" = "" ; then f90flags_noopt=$try_f90flags_noopt ; fi
 echo setting FFLAGS... $fflags
 echo setting F90FLAGS... $f90flags
 echo setting FFLAGS_NOOPT... $fflags_noopt
-echo setting F90FLAGS_NOOPT... $f90flags_noopt
 if test "$imod" = "" ; then imod="-I" ; fi
 
 # tentative C and loader flags, good for many cases
@@ -1282,6 +1215,22 @@ fi
 
 AC_LANG_POP(Fortran 77)
 
+# check if the structure mallinfo is present in malloc.h
+AC_CHECK_HEADER(malloc.h,have_malloc_h=1,have_malloc_h=0, )
+if test "$have_malloc_h" -ne 0 
+then
+AC_CHECK_MEMBER([struct mallinfo.arena], 
+                [have_mallinfo=1], 
+                [have_mallinfo=0],
+	        [#include <malloc.h>])
+
+if test "$have_mallinfo" -eq 1
+then 
+try_dflags="-D__HAVE_MALLINFO $try_dflags"
+fi
+
+fi
+
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
 echo setting DFLAGS... $dflags
 
@@ -1300,6 +1249,7 @@ echo setting FDFLAGS... $fdflags
 AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
 echo setting RANLIB... $ranlib
 echo setting MYLIB... $mylib
+
 
 # generate dependencies
 if test -x $topdir/makedeps.sh
@@ -1340,7 +1290,6 @@ fi
 
 # export settings to generated files
 AC_SUBST(cc)
-AC_SUBST(mpicc)
 AC_SUBST(cflags)
 AC_SUBST(dflags)
 AC_SUBST(fdflags)
@@ -1349,9 +1298,7 @@ AC_SUBST(cppflags)
 AC_SUBST(f90)
 AC_SUBST(mpif90)
 AC_SUBST(f90flags)
-AC_SUBST(f90flags_noopt)
 AC_SUBST(f77)
-AC_SUBST(mpif77)
 AC_SUBST(fflags)
 AC_SUBST(fflags_noopt)
 AC_SUBST(pre_fdflags)

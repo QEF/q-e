@@ -6,14 +6,20 @@ BUGS TO EXAMINE
 - strange empty states with C blyp ?
 - O pseudopotentials?
 - Wannier with nonorthogonal axis?
+- Zval is wrong for pseudopotentials generated on a ionic
+  configuration, when semicore states are in the valence
 
 INSTALLATION/PORTING
 
 - workaround for /usr/bin/oslevel problem in AIX
 
+- cleanup of configure stuff and of preprocessing options
+
 COMMON
 
 - uniform and clear values for constants in Modules/constants.f90
+
+- check license
 
 - pseudopotentials: support new format (XML) if/when ready
 

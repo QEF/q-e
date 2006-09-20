@@ -47,18 +47,16 @@ IFLAGS         = @iflags@
 MODFLAGS       = @imod@./  @imod@../Modules  @imod@../iotk/src \
                  @imod@../PW  @imod@../PH  @imod@../CPV
 
-# Compilers: C, F90, F77, serial and parallel versions
-# If you are compiling for serial execution, use MPIF90 = $(F90) and so on
-# If you do not have anything suitable for MPIF90, use F90 and specify the
-# directory containing "mpif.h" in IFLAGS, MPI libraries in MPI_LIBS
-# MPICC and MPIF77 are not actually used
+# Compilers: fortran-90 (serial and parallel versions), fortran-77, C
+# If you are compiling for serial execution, use MPIF90 = $(F90) 
+# If you do not have anything suitable for MPIF90, use MPIF90 = $(F90),
+# specify the directory containing "mpif.h" in IFLAGS,
+# specify the location of MPI libraries in MPI_LIBS
 
 CC             = @cc@
-MPICC          = @mpicc@
 F90            = @f90@
 MPIF90         = @mpif90@
 F77            = @f77@
-MPIF77         = @mpif77@
 
 # C preprocessor and preprocessing flags - for explicit preprocessing, 
 # if needed (see the compilation rules above)
@@ -75,10 +73,9 @@ CFLAGS         = @cflags@ $(DFLAGS) $(IFLAGS)
 F90FLAGS       = @f90flags@ @pre_fdflags@$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
 FFLAGS         = @fflags@
 
-# compiler flags without optimization for F90 (not actually used) and F77
+# compiler flags without optimization for fortran-77
 # the latter is NEEDED to properly compile dlamch.f, used by lapack
 
-F90FLAGS_NOOPT = @f90flags_noopt@ @pre_fdflags@$(FDFLAGS) $(IFLAGS) $(MODFLAGS)
 FFLAGS_NOOPT   = @fflags_noopt@
 
 # Linker and linker-specific flags (if any)
