@@ -16,6 +16,8 @@ Hardware/OS:
       __ALPHA     hp-compaq (formerly dec) alphas
       FUJ64       Fujitsu VPP5000 vector machines
       __SX6       Nec sx-6 vector machines
+      __HAVE_MALLINFO  for machines having the mallinfo structure, used to
+                  estimate memory usage, in malloc.h - set by "configure"
 Parallel execution:
       __PARA      Parallel execution, in general
       __MPI       Use MPI library

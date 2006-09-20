@@ -70,8 +70,8 @@
 #  define LN_SET ln_set__
 #  define LN_ACTIVATE ln_activate__
 #  define LN_IND ln_ind__
-#  define CCLOCK cclock__
-#  define SCNDS scnds__
+#  define CCLOCK cclock_
+#  define SCNDS scnds_
 #  define C_MKDIR c_mkdir__
 #  define MEMSTAT memstat_
 
