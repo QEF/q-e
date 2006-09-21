@@ -110,13 +110,13 @@ bindir :
 # remove object files and executables
 clean :
 	touch make.sys 
-	# make complains if they aren't there; same with make.depend below
+	# make complains if they aren't there
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND Raman VdW\
 		atomic clib flib pwtools upftools iotk \
 	; do \
 	    if test -d $$dir ; then \
-		( cd $$dir ; touch make.depend ; \
+		( cd $$dir ; \
 		if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= clean ; \
 		else $(MAKE) $(MFLAGS) TLDEPS= clean ; fi ) \
 	    fi \
@@ -138,7 +138,7 @@ distclean veryclean : clean
 
 tar :
 	tar cvf espresso.tar \
-	    License README* */README* Makefile */Makefile \
+	    License README* */README* Makefile */Makefile */make.depend \
 	    configure configure.ac config.guess config.sub configure.msg.in \
             install-sh \
 	    make.sys.in \
@@ -196,3 +196,7 @@ links : bindir
 	      if test -f $$exe ; then ln -fs $$exe . ; fi \
 	done \
 	)
+
+depend:
+	@echo 'Checking dependencies...'
+	- ( if test -x ./makedeps.sh ; then ./makedeps.sh ; fi)
