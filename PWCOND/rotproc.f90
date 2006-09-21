@@ -115,10 +115,10 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
       ENDDO                      
       numb=numb+1
     ENDIF
-    CALL mpi_allreduce(amat, amat_aux, 2*2*n2d*2*n2d, MPI_REAL8,     &
+    CALL mpi_allreduce(amat, amat_aux, 2*2*n2d*2*n2d, MPI_DOUBLE_PRECISION, &
                        MPI_SUM, new_comm, info)
     CALL mpi_allreduce(vec, vec_aux, 2*2*n2d*(2*n2d+npol*norb),        &
-                       MPI_REAL8, MPI_SUM, new_comm, info)
+                       MPI_DOUBLE_PRECISION, MPI_SUM, new_comm, info)
     CALL DCOPY(2*2*n2d*2*n2d, amat_aux, 1, amat, 1)  
     CALL DCOPY(2*2*n2d*(2*n2d+npol*norb), vec_aux, 1, vec, 1) 
     CALL ZGESV(2*n2d, 2*n2d+npol*norb, amat, 2*n2d, ipiv,              &
@@ -266,22 +266,22 @@ SUBROUTINE rotproc (fun0, fund0, fun1, fund1, funl0, fundl0, funl1,  &
 !
 ! Broadcast of the functions and the integrals to all CPU
 !
-  CALL mpi_bcast(fun0, 2*n2d*2*n2d, MPI_REAL8,  0,          &
+  CALL mpi_bcast(fun0, 2*n2d*2*n2d, MPI_DOUBLE_PRECISION,  0,          &
                  MPI_COMM_WORLD, info)
-  CALL mpi_bcast(fund0, 2*n2d*2*n2d, MPI_REAL8, 0,          &
+  CALL mpi_bcast(fund0, 2*n2d*2*n2d, MPI_DOUBLE_PRECISION, 0,          &
                  MPI_COMM_WORLD, info)   
-  CALL mpi_bcast(funl0, 2*n2d*npol*norbf, MPI_REAL8,  0,         &
+  CALL mpi_bcast(funl0, 2*n2d*npol*norbf, MPI_DOUBLE_PRECISION,  0,    &
                  MPI_COMM_WORLD, info)   
-  CALL mpi_bcast(fundl0, 2*n2d*npol*norbf, MPI_REAL8, 0,         &
+  CALL mpi_bcast(fundl0, 2*n2d*npol*norbf, MPI_DOUBLE_PRECISION, 0,    &
                  MPI_COMM_WORLD, info)   
 
-  CALL mpi_bcast(fun1, 2*n2d*2*n2d, MPI_REAL8,  nproc-1,    &
+  CALL mpi_bcast(fun1, 2*n2d*2*n2d, MPI_DOUBLE_PRECISION,  nproc-1,    &
                  MPI_COMM_WORLD, info)
-  CALL mpi_bcast(fund1, 2*n2d*2*n2d, MPI_REAL8, nproc-1,    &
+  CALL mpi_bcast(fund1, 2*n2d*2*n2d, MPI_DOUBLE_PRECISION, nproc-1,    &
                  MPI_COMM_WORLD, info)
-  CALL mpi_bcast(funl1, 2*n2d*npol*norbf, MPI_REAL8,  nproc-1,   &
+  CALL mpi_bcast(funl1, 2*n2d*npol*norbf, MPI_DOUBLE_PRECISION,  nproc-1,   &
                  MPI_COMM_WORLD, info)
-  CALL mpi_bcast(fundl1, 2*n2d*npol*norbf, MPI_REAL8, nproc-1,   &
+  CALL mpi_bcast(fundl1, 2*n2d*npol*norbf, MPI_DOUBLE_PRECISION, nproc-1,   &
                  MPI_COMM_WORLD, info)                         
 
 !

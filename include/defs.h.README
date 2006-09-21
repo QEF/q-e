@@ -22,7 +22,6 @@ Parallel execution:
       __PARA      Parallel execution, in general
       __MPI       Use MPI library
       __SHMEM     Use Shared Memory library (only Altix and Origin)
-      __LAM       LAM version of the MPI library
 Compilers:
       __XLF       xlf compiler (ibm or macintosh with powerpc processor)
       __G95       g95 compiler
@@ -79,7 +78,6 @@ Output definitions from include files
       getarg, getenv     add an underscore) in some specific cases
       CMPLX              force it to produce double-precision numbers
       DREAL DIMAG DCMPLX redefined as fake names to prevent their usage
-      MPI_REAL8          redefined to prevent compilation problems with LAM
   include/c_defs.h
       C routine names    converted to lowercase and with the appropriate
                          number of underscores added

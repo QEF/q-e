@@ -28,10 +28,6 @@
 #  define iargc  iargc_
 #endif
 
-#if defined(__LAM) && ( defined (__LINUX) || defined (__LINUX64) )
-#  define MPI_REAL8 MPI_DOUBLE_PRECISION
-#endif
-
 #  define DREAL       @@_use_DBLE_instead@@
 #  define DIMAG       @@_use_AIMAG_instead@@
 #  define DCMPLX      @@_use_CMPLX_instead@@

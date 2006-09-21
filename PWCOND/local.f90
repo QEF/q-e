@@ -247,7 +247,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
         CALL mpi_send(nprob,1,MPI_INTEGER,0,17,     &
                                     MPI_COMM_WORLD,info )
       CALL errore ('n2d reduction','info<>0 in send',info)       
-      CALL mpi_send(psiprob,2*ngper*npol*ngper*npol,MPI_REAL8,0,18, &
+      CALL mpi_send(psiprob,2*ngper*npol*ngper*npol,MPI_DOUBLE_PRECISION,0,18,&
                                     MPI_COMM_WORLD,info )           
       CALL errore ('n2d reduction','info<>0 in send',info)
     ELSE
@@ -261,7 +261,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
         CALL mpi_recv(nprob,1,MPI_INTEGER,       &
                        ig,17,MPI_COMM_WORLD,status,info )
         CALL errore ('n2d reduction','info<>0 in recv',info)
-        CALL mpi_recv(psiprob,2*ngper*npol*ngper*npol,MPI_REAL8,  &
+        CALL mpi_recv(psiprob,2*ngper*npol*ngper*npol,MPI_DOUBLE_PRECISION,  &
                        ig,18,MPI_COMM_WORLD,status,info )         
         CALL errore ('n2d reduction','info<>0 in recv',info)
         CALL gramsh(ngper*npol,nprob,1,nprob,         &

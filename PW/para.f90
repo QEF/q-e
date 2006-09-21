@@ -172,7 +172,7 @@ SUBROUTINE reduce( dim, ps )
      !                             
 #else
      !
-     CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_REAL8, &
+     CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_DOUBLE_PRECISION, &
                          MPI_SUM, intra_pool_comm, info )
      !                    
      CALL errore( 'reduce', 'error in allreduce1', info )
@@ -200,7 +200,7 @@ SUBROUTINE reduce( dim, ps )
      !                             
 #else
      !
-     CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_REAL8, &
+     CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, &
                          MPI_SUM, intra_pool_comm, info )
      !
      CALL errore( 'reduce', 'error in allreduce2', info )
@@ -256,7 +256,7 @@ SUBROUTINE poolreduce( dim, ps )
   !
   DO n = 1, nbuf
      !
-     CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_REAL8, &
+     CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_DOUBLE_PRECISION, &
                          MPI_SUM, inter_pool_comm, info )
      !
      CALL errore( 'poolreduce', 'info<>0 at allreduce1', info )
@@ -267,7 +267,7 @@ SUBROUTINE poolreduce( dim, ps )
   !
   IF ( ( dim - nbuf * maxb ) > 0 ) THEN
      !
-     CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_REAL8, &
+     CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, &
                          MPI_SUM, inter_pool_comm, info )
      !
      CALL errore( 'poolreduce', 'info<>0 at allreduce2', info )
@@ -331,8 +331,8 @@ SUBROUTINE gather( f_in, f_out )
   !
   CALL mp_barrier( intra_pool_comm )
   !
-  CALL MPI_GATHERV( f_in, recvcount(me_pool), MPI_REAL8, f_out, &
-                    recvcount, displs, MPI_REAL8, root_pool,    &
+  CALL MPI_GATHERV( f_in, recvcount(me_pool), MPI_DOUBLE_PRECISION, f_out, &
+                    recvcount, displs, MPI_DOUBLE_PRECISION, root_pool,    &
                     intra_pool_comm, info )
   !
   CALL errore( 'gather', 'info<>0', info )
@@ -389,8 +389,8 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   CALL mp_barrier( intra_pool_comm )
   !
-  CALL MPI_ALLGATHERV( f_in, recvcount(me_pool), MPI_REAL8, &
-                       f_out, recvcount, displs, MPI_REAL8, &
+  CALL MPI_ALLGATHERV( f_in, recvcount(me_pool), MPI_DOUBLE_PRECISION, &
+                       f_out, recvcount, displs, MPI_DOUBLE_PRECISION, &
                        intra_pool_comm, info )
   !
   CALL errore( 'cgather_sym', 'info<>0', info )
@@ -452,8 +452,8 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   !
   CALL mp_barrier( intra_pool_comm )
   !
-  CALL MPI_GATHERV( f_in, recvcount(me_pool), MPI_REAL8, f_out, &
-                    recvcount, displs, MPI_REAL8, root_pool,    &
+  CALL MPI_GATHERV( f_in, recvcount(me_pool), MPI_DOUBLE_PRECISION, f_out, &
+                    recvcount, displs, MPI_DOUBLE_PRECISION, root_pool,    &
                     intra_pool_comm, info )
   !
   CALL errore( 'gather', 'info<>0', info )
@@ -514,8 +514,8 @@ SUBROUTINE scatter( f_in, f_out )
   !
   CALL mp_barrier( intra_pool_comm )
   !  
-  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_REAL8,   &
-                     f_out, sendcount(me_pool), MPI_REAL8, &
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
+                     f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
                      root_pool, intra_pool_comm, info )
   !
   CALL errore( 'scatter', 'info<>0', info )
@@ -576,8 +576,8 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   !
   CALL mp_barrier( intra_pool_comm )
   !  
-  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_REAL8,   &
-                     f_out, sendcount(me_pool), MPI_REAL8, &
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
+                     f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
                      root_pool, intra_pool_comm, info )
   !
   CALL errore( 'cscatter_sym', 'info<>0', info )
@@ -639,8 +639,8 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   !
   CALL mp_barrier( intra_pool_comm )
   !  
-  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_REAL8,   &
-                     f_out, sendcount(me_pool), MPI_REAL8, &
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
+                     f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
                      root_pool, intra_pool_comm, info )
   !
   CALL errore( 'scatter', 'info<>0', info )
@@ -745,14 +745,14 @@ SUBROUTINE poolextreme( ps, iflag )
   !
   IF ( iflag > 0 ) THEN
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_REAL8, MPI_MAX, &
+     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MAX, &
                          inter_pool_comm, info )
      !
      CALL errore( 'poolextreme', 'info<>0 in allreduce1', info )
      !
   ELSE
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_REAL8, MPI_MIN, &
+     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MIN, &
                          inter_pool_comm, info )
      !
      CALL errore( 'poolextreme', 'info<>0 in allreduce2', info )
@@ -803,7 +803,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
   !
   IF ( me_pool == root_pool .AND. my_pool_id > 0 ) THEN
      !
-     CALL MPI_SEND( vec, (length*nks), MPI_REAL8, 0, 17, &
+     CALL MPI_SEND( vec, (length*nks), MPI_DOUBLE_PRECISION, 0, 17, &
                     inter_pool_comm, info )
      !     
      CALL errore( 'poolrecover', 'info<>0 in send', info )
@@ -828,7 +828,7 @@ SUBROUTINE poolrecover( vec, length, nkstot, nks )
      !
      IF ( me_pool == root_pool .AND. my_pool_id == 0 ) THEN
         !
-        CALL MPI_RECV( vec(1,nbase+1), (length*fine), MPI_REAL8, &
+        CALL MPI_RECV( vec(1,nbase+1), (length*fine), MPI_DOUBLE_PRECISION, &
                        (i-1), 17, inter_pool_comm, status, info )
         !
         CALL errore( 'poolrecover', 'info<>0 in recv', info )
@@ -944,12 +944,12 @@ SUBROUTINE extreme( ps, iflag )
   !
   IF ( iflag > 0 ) THEN
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_REAL8, MPI_MAX, &
+     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MAX, &
                          intra_image_comm, info )
      !
   ELSE
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_REAL8, MPI_MIN, &
+     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MIN, &
                          intra_image_comm, info )
      !
   END IF
