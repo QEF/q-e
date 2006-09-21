@@ -211,7 +211,7 @@ CONTAINS
     U = 0.0
     restart_vib = .FALSE.
     restart_cyc_counter = -1
-    call flush(stdout)
+    call flush_unit(stdout)
     !
     ! (4) Setting the T matrix (diagonal mass matrix)
     !
