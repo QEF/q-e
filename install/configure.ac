@@ -272,6 +272,14 @@ cc=$CC
 
 echo setting CC... $cc
 
+# check size of pointers to int - needed to decide the size of integer
+# arrays in fortran holding C pointers for FFTW
+
+AC_CHECK_SIZEOF([int *])
+SIZEOF_INT_P=$ac_cv_sizeof_int_p
+AC_SUBST(SIZEOF_INT_P)
+AC_CONFIG_FILES([include/fft_defs.h:include/fft_defs.h.in])
+
 # clear cached values
 unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 

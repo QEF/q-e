@@ -20,6 +20,7 @@
 #if defined __HPM
 #  include "/cineca/prod/hpm/include/f_hpm.h"
 #endif
+#include "fft_defs.h"
 #include "f_defs.h"
 
 #if defined __FFTMKL8

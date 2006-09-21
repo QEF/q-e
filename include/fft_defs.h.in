@@ -1,0 +1,2 @@
+
+#define C_POINTER integer(kind=@SIZEOF_INT_P@)

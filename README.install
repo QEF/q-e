@@ -336,9 +336,14 @@ your system. Follow the explanations inside the file make.sys.
 If you are using an old version of the ifc compiler, you need
 to run the script "./ifcmods.sh".
 
-Finally, create the files with dependencies, */make.depend:
+Create the files with dependencies, */make.depend:
 
      ./makedeps.sh
 
 (if you modify the program sources, you might need to rerun it).
+
+Finally, copy "include/fft_defs.h.in" into "include/fft_defs.h",
+edit it. Set the kind of integer to 4 (8) for compilers producing
+32-bit (64-bit) executables.
+
 At this stage you are ready to move back to the 'COMPILE" section above
