@@ -1464,7 +1464,6 @@ ia64 | amd64 )
 	;;
 ia32 )
 	try_f90="ifort ifc pgf90 pathf95 $try_f90"
-	try_dflags="-D__LINUX"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
@@ -1473,7 +1472,7 @@ aix )
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
-	try_dflags="-D__COMPLIB -D__SGI64 -D__ORIGIN"
+	try_dflags="-D__COMPLIB -D__ORIGIN"
 	;;
 alpha )
 	try_dflags="-D__ALPHA"
@@ -1500,11 +1499,8 @@ macppc )
  	try_arflags="-static -o"
   	try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
 	;;
-mac686 )
+mac686 | cygwin )
 	try_f90="ifort $try_f90"
-	;;
-cygwin )
-	try_dflags="-D__LINUX"
 	;;
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported architecture?" >&5
@@ -1612,7 +1608,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1615:" \
+echo "$as_me:1611:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2079,7 +2075,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2082:" \
+echo "$as_me:2078:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3808,7 +3804,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3811:" \
+echo "$as_me:3807:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
