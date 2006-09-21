@@ -502,11 +502,15 @@ EOF
 	echo i386-ibm-aix
 	exit 0 ;;
     ia64:AIX:*:*)
-	if [ -x /usr/bin/oslevel ] ; then
-		IBM_REV=`/usr/bin/oslevel`
-	else
+        #
+        # depending on system configuration, on some aix machines
+        # /usr/bin/oslevel may crash this script and configure
+        #
+	#if [ -x /usr/bin/oslevel ] ; then
+	#	IBM_REV=`/usr/bin/oslevel`
+	#else
 		IBM_REV=${UNAME_VERSION}.${UNAME_RELEASE}
-	fi
+	#fi
 	echo ${UNAME_MACHINE}-ibm-aix${IBM_REV}
 	exit 0 ;;
     *:AIX:2:3)
@@ -538,11 +542,15 @@ EOF
 	else
 		IBM_ARCH=powerpc
 	fi
-	if [ -x /usr/bin/oslevel ] ; then
-		IBM_REV=`/usr/bin/oslevel`
-	else
+        #
+        # depending on system configuration, on some aix machines
+        # /usr/bin/oslevel may crash this script and configure
+        #
+	#if [ -x /usr/bin/oslevel ] ; then
+	#	IBM_REV=`/usr/bin/oslevel`
+	#else
 		IBM_REV=${UNAME_VERSION}.${UNAME_RELEASE}
-	fi
+	#fi
 	echo ${IBM_ARCH}-ibm-aix${IBM_REV}
 	exit 0 ;;
     *:AIX:*:*)

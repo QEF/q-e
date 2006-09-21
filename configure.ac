@@ -99,7 +99,6 @@ ia64 | amd64 )
 	;;
 ia32 )
 	try_f90="ifort ifc pgf90 pathf95 $try_f90"
-	try_dflags="-D__LINUX"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
@@ -108,7 +107,7 @@ aix )
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
-	try_dflags="-D__COMPLIB -D__SGI64 -D__ORIGIN"
+	try_dflags="-D__COMPLIB -D__ORIGIN"
 	;;
 alpha )
 	try_dflags="-D__ALPHA"
@@ -135,11 +134,8 @@ macppc )
  	try_arflags="-static -o"
   	try_arflags_dynamic="-dynamic -arch_only ppc -all_load -single_module -L/opt/ibmcmp/xlf/8.1/lib -lxlf90 -lxl -lc -o"
 	;;
-mac686 )
+mac686 | cygwin )
 	try_f90="ifort $try_f90"
-	;;
-cygwin )
-	try_dflags="-D__LINUX"
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture?)
