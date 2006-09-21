@@ -2,6 +2,7 @@
 ESPRESSO can take advantage of several optimized numerical libraries
 (essl, fftw, mkl...).  This configure script attempts to find them,
 but may fail if they have been installed in non-standard locations.
+If a required library is not found, the local copy will be compiled.
 
 The following libraries have been found:
   @blas_line@
@@ -9,7 +10,7 @@ The following libraries have been found:
   @fft_line@
   @mpi_line@
   @mass_line@
-Please check if that is correct.
+Please check if this is what you expect.
 
 If any libraries are missing, you may specify a list of directories
 to search and retry, as follows:

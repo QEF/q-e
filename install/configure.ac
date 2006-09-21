@@ -1259,13 +1259,6 @@ echo setting RANLIB... $ranlib
 echo setting MYLIB... $mylib
 
 
-# generate dependencies
-if test -x $topdir/makedeps.sh
-then
-	echo checking dependencies...
-	( cd $topdir ; ./makedeps.sh )
-fi
-
 # configure output messages
 blas_line="BLAS_LIBS=$blas_libs"
 lapack_line="LAPACK_LIBS=$lapack_libs"
@@ -1336,6 +1329,15 @@ AC_CONFIG_FILES(make.sys)
 AC_CONFIG_FILES(configure.msg)
 
 AC_OUTPUT
+
+# generate dependencies - must be done AFTER include/fft_defs.h
+# has been generated
+
+if test -x $topdir/makedeps.sh
+then
+	echo checking dependencies...
+	( cd $topdir ; ./makedeps.sh )
+fi
 
 # final messages
 sed '/@delete@/d' configure.msg
