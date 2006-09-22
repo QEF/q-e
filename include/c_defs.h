@@ -11,7 +11,7 @@ or http://www.gnu.org/copyleft/gpl.txt .
 
    C routine 'name' is called as 
       F77_FUNC('name','NAME')
-   if 'name' does not conatin an underscore; by
+   if 'name' does not contain an underscore; by
       F77_FUNC_('name','NAME')
    if it does . The following defines F77_FUNC and F77_FUNC_
 

@@ -154,7 +154,23 @@ void F77_FUNC_(ln_dealloc,LN_DEALLOC)(void )
     free((void *)IG);
 }
 
-void F77_FUNC_(ln_ind,LN_IND)(int * IRI1, int * IRI2, int * IRI3)
+void F77_FUNC_(ln_set,LN_SET)(int * IRI1, int * IRI2, int * IRI3, int * ig)
+{
+    if( *ig<1 || *ig > LN_SIZE) {
+       exit(*ig);
+    }
+    IndexSet( &LN[*ig-1], *IRI1, *IRI2, *IRI3 );
+    IG[*ig-1] = *ig;
+
+}
+
+int F77_FUNC_(ln_activate,LN_ACTIVATE)()
+{
+    IndexSort(LN,IG,LN_SIZE);
+    return 0;   
+}
+
+int F77_FUNC_(ln_ind,LN_IND)(int * IRI1, int * IRI2, int * IRI3)
 {
     static struct Index B;
     static int          ib;
