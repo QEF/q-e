@@ -260,12 +260,18 @@ subroutine checksym_mag (ir,nat,ityp,xau,rau,ft,sym,irt,mxau,mrau,t_rev)
         if(ityp(na).eq.ityp(nb).and. &
            eqvect(rau (1, na),xau(1,nb),ft)) na1 = nb
      enddo
-     if(na1.ne.0.and.abs(mrau(1,na) - mxau(1,na1))+       &
-                     abs(mrau(2,na) - mxau(2,na1))+       &
-                     abs(mrau(3,na) - mxau(3,na1)).gt.1.0D-5) t1 = 0
-     if(na1.ne.0.and.abs(mrau(1,na) + mxau(1,na1))+       &
-                     abs(mrau(2,na) + mxau(2,na1))+       &
-                     abs(mrau(3,na) + mxau(3,na1)).gt.1.0D-5) t2 = 0
+     !
+     IF ( na1 /= 0 ) THEN
+        !
+        if( abs(mrau(1,na) - mxau(1,na1))+       &
+            abs(mrau(2,na) - mxau(2,na1))+       &
+            abs(mrau(3,na) - mxau(3,na1)).gt.1.0D-5) t1 = 0
+        if( abs(mrau(1,na) + mxau(1,na1))+       &
+            abs(mrau(2,na) + mxau(2,na1))+       &
+            abs(mrau(3,na) + mxau(3,na1)).gt.1.0D-5) t2 = 0
+        !
+     END IF
+     !
      if(na1.eq.0.or.(t1+t2).eq.0) then
        sym(ir) = .false.
        t_rev = 0
