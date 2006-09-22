@@ -1469,6 +1469,7 @@ aix )
 	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 $try_f90"
 	try_arflags="-X64 ruv"
+	try_arflags_dynamics="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
@@ -1508,20 +1509,22 @@ echo "$as_me: WARNING: unsupported architecture?" >&2;}
 	;;
 esac
 
-if test "$use_parallel" -ne 0
-then
-	# clear cached values
-	unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+# check serial Fortran 90 compiler. This must be done before performing
+# the check for the parallel compiler (section below) because option
+# --disable-parallel will do very strange things otherwise. The reason
+# seems to be that autoconf does not repeat all tests for the second
+# occurrence of AC_PROG_F77. So the first occurrence is the one that
+# must always be performed, the second is optional. PG & CC sep.2006
 
-	# check parallel Fortran 90 compiler
-	if test "$mpif90" = "" -a "$f90" != "" ; then mpif90=$f90; fi
-	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $try_f90" ; fi
-	ac_ext=f
+# clear cached values (not sure when and why this is needed)
+unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+if test "$f90" = "" ; then f90="$try_f90" ; fi
+ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
 ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  for ac_prog in $mpif90
+  for ac_prog in $f90
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -1563,7 +1566,7 @@ fi
 fi
 if test -z "$F77"; then
   ac_ct_F77=$F77
-  for ac_prog in $mpif90
+  for ac_prog in $f90
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -1608,7 +1611,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1611:" \
+echo "$as_me:1614:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -1933,62 +1936,23 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-	mpif90=$F77
+f90=$F77
 
-	case "$arch" in
-	ia32 | ia64 | amd64 )
-		# check which compiler does mpif90 wrap
-		echo $ECHO_N "checking version of $mpif90... $ECHO_C"
-		ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-		pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-		eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
-		g95_version=`$mpif90 -v 2>&1 | grep "g95"`
-		if test "$ifort_version" != ""
-		then
-			version=`$mpif90 -V 2>&1 | grep Version |
-				 sed 's/.*Version//' | awk '{print $1}'`
-			if test `echo $version | sed 's/\..*//'` -lt 8
-			then
-				try_f90="ifc efc"
-				echo "${ECHO_T}ifc $version"
-			else
-				try_f90="ifort efc"
-				echo "${ECHO_T}ifort $version"
-			fi
-		elif test "$pgf_version" != ""
-		then
-			version=`echo $pgf_version | awk '{print $2}'`
-			try_f90="pgf90"
-			echo "${ECHO_T}pgf90 $version"
-		elif test "$eko_version" != ""
-		then
-			version=`echo $eko_version | awk '{print $6}'`
-			try_f90="pathf95"
-			echo "${ECHO_T}pathf95 $version"
-		elif test "$g95_version" != ""
-		then
-			version=`echo $g95_version | awk '{print $3}'`
-			try_f90="g95"
-			echo "${ECHO_T}g95 $version"
-		else
-			echo "${ECHO_T}unknown"
-		fi
-		;;
-	esac
+if test "$use_parallel" -eq 0 ;
+then
+	mpif90=$f90
+else
+	# clear cached values
+        unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 
-fi
-
-# clear cached values
-unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
-
-# check serial Fortran 90 compiler
-if test "$f90" = "" ; then f90="$try_f90" ; fi
-ac_ext=f
+	# check parallel Fortran 90 compiler
+	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $f90" ; fi
+	ac_ext=f
 ac_compile='$F77 -c $FFLAGS conftest.$ac_ext >&5'
 ac_link='$F77 -o conftest$ac_exeext $FFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_f77_compiler_gnu
 if test -n "$ac_tool_prefix"; then
-  for ac_prog in $f90
+  for ac_prog in $mpif90
   do
     # Extract the first word of "$ac_tool_prefix$ac_prog", so it can be a program name with args.
 set dummy $ac_tool_prefix$ac_prog; ac_word=$2
@@ -2030,7 +1994,7 @@ fi
 fi
 if test -z "$F77"; then
   ac_ct_F77=$F77
-  for ac_prog in $f90
+  for ac_prog in $mpif90
 do
   # Extract the first word of "$ac_prog", so it can be a program name with args.
 set dummy $ac_prog; ac_word=$2
@@ -2075,7 +2039,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2078:" \
+echo "$as_me:2042:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2219,8 +2183,50 @@ ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
 ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
 ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
-f90=$F77
-if test "$use_parallel" -eq 0 ; then mpif90=$f90 ; fi
+	mpif90=$F77
+
+	case "$arch" in
+	ia32 | ia64 | amd64 )
+		# check which compiler does mpif90 wrap
+		echo $ECHO_N "checking version of $mpif90... $ECHO_C"
+		ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+		pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+		eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
+		g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+		if test "$ifort_version" != ""
+		then
+			version=`$mpif90 -V 2>&1 | grep Version |
+				 sed 's/.*Version//' | awk '{print $1}'`
+			if test `echo $version | sed 's/\..*//'` -lt 8
+			then
+				try_f90="ifc efc"
+				echo "${ECHO_T}ifc $version"
+			else
+				try_f90="ifort efc"
+				echo "${ECHO_T}ifort $version"
+			fi
+		elif test "$pgf_version" != ""
+		then
+			version=`echo $pgf_version | awk '{print $2}'`
+			try_f90="pgf90"
+			echo "${ECHO_T}pgf90 $version"
+		elif test "$eko_version" != ""
+		then
+			version=`echo $eko_version | awk '{print $6}'`
+			try_f90="pathf95"
+			echo "${ECHO_T}pathf95 $version"
+		elif test "$g95_version" != ""
+		then
+			version=`echo $g95_version | awk '{print $3}'`
+			try_f90="g95"
+			echo "${ECHO_T}g95 $version"
+		else
+			echo "${ECHO_T}unknown"
+		fi
+		;;
+	esac
+
+fi
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
@@ -3804,7 +3810,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3807:" \
+echo "$as_me:3813:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4072,13 +4078,11 @@ mips:f90 )
 	pre_fdflags="-ftpp -macro_expand "
 	;;
 alinux:fort )
-	have_cpp=1
 	pre_fdflags="-cpp "
 	try_fflags="-O -r8 -align dcommons -align records"
 	try_f90flags="\$(FFLAGS) -free"
 	try_fflags_noopt="-O0 -r8 -align dcommons -align records"
         try_ldflags_static="-non_shared"
-	have_cpp=0
 	;;
 alpha:f90 )
 	pre_fdflags="-cpp "
@@ -4136,11 +4140,11 @@ if test "$imod" = "" ; then imod="-I" ; fi
 # tentative C and loader flags, good for many cases
 try_cflags="-O3"
 c_ldflags=""
+try_cpp="cpp"
 
 case "$arch:$cc" in
 *:pgcc )
 	try_cflags="-fast"
-	try_cpp="cpp -P -traditional"
 	;;
 *:pathcc )
 	try_cpp="pathcc -E"
@@ -4170,243 +4174,11 @@ esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
 echo setting CFLAGS... $cflags
 
-# preprocessor
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-echo "$as_me:$LINENO: checking how to run the C preprocessor" >&5
-echo $ECHO_N "checking how to run the C preprocessor... $ECHO_C" >&6
-# On Suns, sometimes $CPP names a directory.
-if test -n "$CPP" && test -d "$CPP"; then
-  CPP=
-fi
-if test -z "$CPP"; then
-  if test "${ac_cv_prog_CPP+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-      # Double quotes because CPP needs to be expanded
-    for CPP in "$CC -E" "$CC -E -traditional-cpp" "/lib/cpp"
-    do
-      ac_preproc_ok=false
-for ac_c_preproc_warn_flag in '' yes
-do
-  # Use a header file that comes with gcc, so configuring glibc
-  # with a fresh cross-compiler works.
-  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
-  # <limits.h> exists even on freestanding compilers.
-  # On the NeXT, cc -E runs the code through the compiler's parser,
-  # not just through cpp. "Syntax error" is here to catch this case.
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#ifdef __STDC__
-# include <limits.h>
-#else
-# include <assert.h>
-#endif
-		     Syntax error
-_ACEOF
-if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
-  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } >/dev/null; then
-  if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
-  else
-    ac_cpp_err=
-  fi
-else
-  ac_cpp_err=yes
-fi
-if test -z "$ac_cpp_err"; then
-  :
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-  # Broken: fails on valid input.
-continue
-fi
-rm -f conftest.err conftest.$ac_ext
-
-  # OK, works on sane cases.  Now check whether non-existent headers
-  # can be detected and how.
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <ac_nonexistent.h>
-_ACEOF
-if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
-  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } >/dev/null; then
-  if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
-  else
-    ac_cpp_err=
-  fi
-else
-  ac_cpp_err=yes
-fi
-if test -z "$ac_cpp_err"; then
-  # Broken: success on invalid input.
-continue
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-  # Passes both tests.
-ac_preproc_ok=:
-break
-fi
-rm -f conftest.err conftest.$ac_ext
-
-done
-# Because of `break', _AC_PREPROC_IFELSE's cleaning code was skipped.
-rm -f conftest.err conftest.$ac_ext
-if $ac_preproc_ok; then
-  break
-fi
-
-    done
-    ac_cv_prog_CPP=$CPP
-
-fi
-  CPP=$ac_cv_prog_CPP
-else
-  ac_cv_prog_CPP=$CPP
-fi
-echo "$as_me:$LINENO: result: $CPP" >&5
-echo "${ECHO_T}$CPP" >&6
-ac_preproc_ok=false
-for ac_c_preproc_warn_flag in '' yes
-do
-  # Use a header file that comes with gcc, so configuring glibc
-  # with a fresh cross-compiler works.
-  # Prefer <limits.h> to <assert.h> if __STDC__ is defined, since
-  # <limits.h> exists even on freestanding compilers.
-  # On the NeXT, cc -E runs the code through the compiler's parser,
-  # not just through cpp. "Syntax error" is here to catch this case.
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#ifdef __STDC__
-# include <limits.h>
-#else
-# include <assert.h>
-#endif
-		     Syntax error
-_ACEOF
-if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
-  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } >/dev/null; then
-  if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
-  else
-    ac_cpp_err=
-  fi
-else
-  ac_cpp_err=yes
-fi
-if test -z "$ac_cpp_err"; then
-  :
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-  # Broken: fails on valid input.
-continue
-fi
-rm -f conftest.err conftest.$ac_ext
-
-  # OK, works on sane cases.  Now check whether non-existent headers
-  # can be detected and how.
-  cat >conftest.$ac_ext <<_ACEOF
-/* confdefs.h.  */
-_ACEOF
-cat confdefs.h >>conftest.$ac_ext
-cat >>conftest.$ac_ext <<_ACEOF
-/* end confdefs.h.  */
-#include <ac_nonexistent.h>
-_ACEOF
-if { (eval echo "$as_me:$LINENO: \"$ac_cpp conftest.$ac_ext\"") >&5
-  (eval $ac_cpp conftest.$ac_ext) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } >/dev/null; then
-  if test -s conftest.err; then
-    ac_cpp_err=$ac_c_preproc_warn_flag
-    ac_cpp_err=$ac_cpp_err$ac_c_werror_flag
-  else
-    ac_cpp_err=
-  fi
-else
-  ac_cpp_err=yes
-fi
-if test -z "$ac_cpp_err"; then
-  # Broken: success on invalid input.
-continue
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-  # Passes both tests.
-ac_preproc_ok=:
-break
-fi
-rm -f conftest.err conftest.$ac_ext
-
-done
-# Because of `break', _AC_PREPROC_IFELSE's cleaning code was skipped.
-rm -f conftest.err conftest.$ac_ext
-if $ac_preproc_ok; then
-  :
-else
-  { { echo "$as_me:$LINENO: error: C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details." >&5
-echo "$as_me: error: C preprocessor \"$CPP\" fails sanity check
-See \`config.log' for more details." >&2;}
-   { (exit 1); exit 1; }; }
-fi
-
-ac_ext=c
-ac_cpp='$CPP $CPPFLAGS'
-ac_compile='$CC -c $CFLAGS $CPPFLAGS conftest.$ac_ext >&5'
-ac_link='$CC -o conftest$ac_exeext $CFLAGS $CPPFLAGS $LDFLAGS conftest.$ac_ext $LIBS >&5'
-ac_compiler_gnu=$ac_cv_c_compiler_gnu
-
+# preprocessor - try cpp in all cases; the preprocessor returned by
+# AC_PROG_CPP
+# may sometimes refuse to preprocess fortran files
 if test "$cpp" = "" ; then cpp=$try_cpp; fi
-if test "$cpp" = "" ; then cpp=$CPP;     fi
+# if test "$cpp" = "" ; then cpp=$CPP;     fi
 echo setting CPP... $cpp
 
 echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
@@ -4466,14 +4238,8 @@ then
 	f90rule="\$(MPIF90) \$(F90FLAGS) -c \$<"
 	echo "${ECHO_T}no"
 else
-if test "$cpp" = "pgcc -E"
-then
-	f90rule="\$(CPP) \$(CPPFLAGS) \$< > \$*.F90 \\
-	\$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
-else
 	f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$*.F90 \\
 	\$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
-fi
 	echo "${ECHO_T}yes"
 fi
 

@@ -104,6 +104,7 @@ aix )
 	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 $try_f90"
 	try_arflags="-X64 ruv"
+	try_arflags_dynamics="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
@@ -142,14 +143,28 @@ mac686 | cygwin )
 	;;
 esac
 
-if test "$use_parallel" -ne 0
+# check serial Fortran 90 compiler. This must be done before performing
+# the check for the parallel compiler (section below) because option
+# --disable-parallel will do very strange things otherwise. The reason
+# seems to be that autoconf does not repeat all tests for the second
+# occurrence of AC_PROG_F77. So the first occurrence is the one that
+# must always be performed, the second is optional. PG & CC sep.2006
+
+# clear cached values (not sure when and why this is needed)
+unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+if test "$f90" = "" ; then f90="$try_f90" ; fi
+AC_PROG_F77($f90)
+f90=$F77
+
+if test "$use_parallel" -eq 0 ; 
 then
+	mpif90=$f90
+else
 	# clear cached values
-	unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
+        unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 
 	# check parallel Fortran 90 compiler
-	if test "$mpif90" = "" -a "$f90" != "" ; then mpif90=$f90; fi
-	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $try_f90" ; fi
+	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $f90" ; fi
 	AC_PROG_F77($mpif90)
 	mpif90=$F77
 
@@ -195,15 +210,6 @@ then
 	esac
 
 fi
-
-# clear cached values
-unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
-
-# check serial Fortran 90 compiler
-if test "$f90" = "" ; then f90="$try_f90" ; fi
-AC_PROG_F77($f90)
-f90=$F77
-if test "$use_parallel" -eq 0 ; then mpif90=$f90 ; fi
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
@@ -406,13 +412,11 @@ mips:f90 )
 	pre_fdflags="-ftpp -macro_expand "
 	;;
 alinux:fort )
-	have_cpp=1
 	pre_fdflags="-cpp "
 	try_fflags="-O -r8 -align dcommons -align records"
 	try_f90flags="\$(FFLAGS) -free"
 	try_fflags_noopt="-O0 -r8 -align dcommons -align records"
         try_ldflags_static="-non_shared"
-	have_cpp=0
 	;;
 alpha:f90 )
 	pre_fdflags="-cpp "
@@ -470,11 +474,11 @@ if test "$imod" = "" ; then imod="-I" ; fi
 # tentative C and loader flags, good for many cases
 try_cflags="-O3"
 c_ldflags=""
+try_cpp="cpp"
 
 case "$arch:$cc" in
 *:pgcc )
 	try_cflags="-fast"
-	try_cpp="cpp -P -traditional"
 	;;
 *:pathcc )
 	try_cpp="pathcc -E"
@@ -504,10 +508,11 @@ esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
 echo setting CFLAGS... $cflags
 
-# preprocessor
-AC_PROG_CPP
+# preprocessor - try cpp in all cases; the preprocessor returned by
+# AC_PROG_CPP
+# may sometimes refuse to preprocess fortran files
 if test "$cpp" = "" ; then cpp=$try_cpp; fi
-if test "$cpp" = "" ; then cpp=$CPP;     fi
+# if test "$cpp" = "" ; then cpp=$CPP;     fi
 echo setting CPP... $cpp
 
 echo $ECHO_N "setting CPPFLAGS... $ECHO_C"
@@ -539,14 +544,8 @@ then
 	f90rule="\$(MPIF90) \$(F90FLAGS) -c \$<"
 	echo "${ECHO_T}no"
 else
-if test "$cpp" = "pgcc -E"
-then
-	f90rule="\$(CPP) \$(CPPFLAGS) \$< > \$*.F90 \\
-	\$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
-else
 	f90rule="\$(CPP) \$(CPPFLAGS) \$< -o \$*.F90 \\
 	\$(MPIF90) \$(F90FLAGS) -c \$*.F90 -o \$*.o"
-fi
 	echo "${ECHO_T}yes"
 fi
 
