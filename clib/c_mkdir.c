@@ -39,7 +39,7 @@ static void * xcmalloc ( size_t size )
 } /* xcmalloc */
 
 
-int C_MKDIR( const char * dirname , const int * length )
+int F77_FUNC_(c_mkdir,C_MKDIR)( const char * dirname , const int * length )
 {
 
    int retval = -1 ;

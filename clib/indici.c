@@ -141,36 +141,20 @@ int IndexFind(struct Index * A, int n, struct Index * B)
     return i;
 } 
 
-void LN_ALLOC(int * LN_DIM)
+void F77_FUNC_(ln_alloc,LN_ALLOC)(int * LN_DIM)
 {
     LN_SIZE = * LN_DIM;
     LN = ( struct Index *) malloc ( LN_SIZE * sizeof( struct Index ));
     IG = ( int          *) malloc ( LN_SIZE * sizeof( int          ));
 }
 
-void LN_DEALLOC(void )
+void F77_FUNC_(ln_dealloc,LN_DEALLOC)(void )
 {
     free((void *)LN);
     free((void *)IG);
 }
 
-void LN_SET(int * IRI1, int * IRI2, int * IRI3, int * ig)
-{
-    if( *ig<1 || *ig > LN_SIZE) {
-       exit(*ig);
-    }
-    IndexSet( &LN[*ig-1], *IRI1, *IRI2, *IRI3 );
-    IG[*ig-1] = *ig;
-
-}
-
-int LN_ACTIVATE()
-{
-    IndexSort(LN,IG,LN_SIZE);
-    return 0;   
-}
-
-int LN_IND(int * IRI1, int * IRI2, int * IRI3)
+void F77_FUNC_(ln_ind,LN_IND)(int * IRI1, int * IRI2, int * IRI3)
 {
     static struct Index B;
     static int          ib;

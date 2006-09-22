@@ -19,19 +19,12 @@
 #define CLK_TCK CLOCKS_PER_SEC
 #endif
 
-double CCLOCK()
+double F77_FUNC(cclock,CCLOCK)()
 
 /* Return the second elapsed since Epoch (00:00:00 UTC, January 1, 1970)
 */
 
 {
-
-#if defined __T3E
-
-/*  return (double)(rtclock() * 3.333e-6 / 2.); */
-    return (double)( ( _rtc() / (double)CLK_TCK ) );
-
-#else
 
     struct timeval tmp;
     double sec;
@@ -39,12 +32,10 @@ double CCLOCK()
     sec = tmp.tv_sec + ((double)tmp.tv_usec)/1000000.0;
     return sec;
 
-#endif
-
 }
 
 
-double SCNDS ( )
+double F77_FUNC(scnds,SCNDS) ( )
 
 /* Return the cpu time associated to the current process 
 */
