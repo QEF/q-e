@@ -126,8 +126,9 @@ SUBROUTINE setup()
      !
 #if defined (__PGI)
      DO na = 1, nat
-        nelec = nelec + zv( ityp(na) ) - tot_charge
+        nelec = nelec + zv( ityp(na) )
      END DO
+     nelec = nelec - tot_charge
 #else
      nelec = SUM( zv(ityp(1:nat)) ) - tot_charge
 #endif
