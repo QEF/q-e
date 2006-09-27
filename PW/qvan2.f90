@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -10,13 +10,13 @@
 subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !-----------------------------------------------------------------------
   !
-  !    This routine computes the fourier transform of the Q function assum
-  !    that the radial fourier trasform is already computed and stored
+  !    This routine computes the fourier transform of the Q functions
+  !    The interpolation table for the radial fourier trasform is stored 
   !    in qrad.
   !
   !    The formula implemented here is
   !
-  !     q(g,l,k) = sum_lm (-i)^l ap(lm,l,k) yr_lm(g^) qrad(g,l,l,k)
+  !     q(g,i,j) = sum_lm (-i)^l ap(lm,i,j) yr_lm(g^) qrad(g,l,i,j)
   !
   !
 #include "f_defs.h"
@@ -25,39 +25,40 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   USE uspp_param, ONLY: lmaxq, nbetam
   USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtolm
   implicit none
-
+  !
+  ! Input variables
+  !
   integer :: ngy, ih, jh, np
-  ! input: the number of G vectors to compute
-  ! input: the first index of Q
-  ! input: the second index of Q
-  ! input: the number of the pseudopotential
-
+  ! ngy   :   number of G vectors to compute
+  ! ih, jh:   first and second index of Q
+  ! np    :   index of pseudopotentials
+  !
   real(DP) :: ylmk0 (ngy, lmaxq * lmaxq), qmod (ngy)
-  ! the spherical harmonics
-  ! input: moduli of the q+g vectors
-  complex(DP) :: qg (ngy)
+  ! ylmk0 :  spherical harmonics
+  ! qmod  :  moduli of the q+g vectors
+  !
   ! output: the fourier transform of interest
+  !
+  real(DP) :: qg (2,ngy)
   !
   !     here the local variables
   !
-
-  complex(DP) :: sig
-  ! (-i)^L
-
-  integer :: nb, mb, nmb, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
-  ! the atomic index corresponding to ih
-  ! the atomic index corresponding to jh
-  ! combined index (nb,mb)
-  ! the lm corresponding to ih
-  ! the lm corresponding to jh
-  ! counter on g vectors
-  ! the actual LM
-  ! the angular momentum L
-  ! the possible LM's compatible with ih,j
-  ! counters for interpolation table
-
-  real(DP) :: sixth, dqi, qm, px, ux, vx, wx, uvx, pwx, work
-  ! 1 divided by six
+  real (DP) :: sig
+  ! the nonzero real or imaginary part of (-i)^L 
+  real (DP), parameter :: sixth = 1.d0 / 6.d0
+  !
+  integer :: nb, mb, nmb, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3, ind
+  ! nb,mb  : atomic index corresponding to ih,jh
+  ! nmb    : combined index (nb,mb)
+  ! ivl,jvl: combined LM index corresponding to ih,jh
+  ! ig     : counter on g vectors
+  ! lp     : combined LM index
+  ! l-1    is the angular momentum L
+  ! lm     : all possible LM's compatible with ih,jh
+  ! i0-i3  : counters for interpolation table
+  ! ind    : ind=1 if the results is real (l even), ind=2 if complex (l odd)
+  !
+  real(DP) :: dqi, qm, px, ux, vx, wx, uvx, pwx, work
   ! 1 divided dq
   ! qmod/dq
   ! measures for interpolation table
@@ -68,7 +69,6 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   !
   !     compute the indices which correspond to ih,jh
   !
-  sixth = 1.d0 / 6.d0
   dqi = 1 / dq
   nb = indv (ih, np)
   mb = indv (jh, np)
@@ -83,33 +83,45 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
        call errore (' qvan2 ', ' wrong dimensions (1)', MAX(nb,mb))
   if (ivl > nlx .OR. jvl > nlx) &
        call errore (' qvan2 ', ' wrong dimensions (2)', MAX(ivl,jvl))
-  qg(:) = (0.d0, 0.d0)
+  qg = 0.d0
   !
   !    and make the sum over the non zero LM
   !
   do lm = 1, lpx (ivl, jvl)
      lp = lpl (ivl, jvl, lm)
+     if ( lp < 1 .or. lp > 49 ) call errore (' qvan ', ' lp wrong ', max(lp,1))
      !
-     !     extraction of angular momentum l from lp:
+     !     find angular momentum l corresponding to combined index lp
      !
-     if (lp.eq.1) then
+     if (lp == 1) then
         l = 1
-     elseif ( (lp.ge.2) .and. (lp.le.4) ) then
+        sig = 1.0d0
+        ind = 1
+     elseif ( lp <= 4) then
         l = 2
-     elseif ( (lp.ge.5) .and. (lp.le.9) ) then
+        sig =-1.0d0
+        ind = 2
+     elseif ( lp <= 9 ) then
         l = 3
-     elseif ( (lp.ge.10) .and. (lp.le.16) ) then
+        sig =-1.0d0
+        ind = 1
+     elseif ( lp <= 16 ) then
         l = 4
-     elseif ( (lp.ge.17) .and. (lp.le.25) ) then
+        sig = 1.0d0
+        ind = 2
+     elseif ( lp <= 25 ) then
         l = 5
-     elseif ( (lp.ge.26) .and. (lp.le.36) ) then
+        sig = 1.0d0
+        ind = 1
+     elseif ( lp <= 36 ) then
         l = 6
-     elseif ( (lp.ge.37) .and. (lp.le.49) ) then
-        l = 7
+        sig =-1.0d0
+        ind = 2
      else
-        call errore (' qvan ', ' lp > 49 ', lp)
+        l = 7
+        sig =-1.0d0
+        ind = 1
      endif
-     sig = (0.d0, -1.d0) ** (l - 1)
      sig = sig * ap (lp, ivl, jvl)
      do ig = 1, ngy
         !
@@ -134,7 +146,7 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
                   qrad (i2, nmb, l, np) * pwx * ux + &
                   qrad (i3, nmb, l, np) * px * uvx
         endif
-        qg (ig) = qg (ig) + sig * ylmk0 (ig, lp) * work
+        qg (ind,ig) = qg (ind,ig) + sig * ylmk0 (ig, lp) * work
      enddo
   enddo
 
