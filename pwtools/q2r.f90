@@ -457,6 +457,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
   !
   IMPLICIT NONE
   !
+  REAL(DP), PARAMETER :: eps8=1.D-8
   ! I/O variables
   LOGICAL :: lrigid
   INTEGER :: nqs, ntyp, nat, ibrav
@@ -511,7 +512,8 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
      IF (nat1.NE.nat) CALL errore('read_f','wrong nat',1)
      IF (ibrav1.NE.ibrav) CALL errore('read_f','wrong ibrav',1)
      DO i=1,6
-        IF(celldm1(i).NE.celldm(i)) CALL errore('read_f','wrong celldm',i)
+        IF( abs (celldm1(i)-celldm(i)) > eps8 ) &
+             CALL errore('read_f','wrong celldm',i)
      END DO
      if (ibrav==0) then
          read (1,*) symm_type1
@@ -520,7 +522,7 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
          read (1,*) ((at1(i,j),i=1,3),j=1,3)
          do i=1,3
             do j=1,3
-               if(at1(i,j).NE.at(i,j)) &
+               if( abs (at1(i,j)-at(i,j)) > eps8) &
                  CALL errore('read_f','wrong at(i,j)',i+3*(j-1))
             end do
          end do
@@ -529,15 +531,17 @@ SUBROUTINE read_file( nqs, xq, epsil, lrigid, &
         READ(1,*) i,atm1,amass1
         IF (i.NE.nt) CALL errore('read_f','wrong data read',nt)
         IF (atm1.NE.atm(nt)) CALL errore('read_f','wrong atm',nt)
-        IF (amass1.NE.amass(nt)) CALL errore('read_f','wrong amass',nt)
+        IF (abs(amass1-amass(nt)) > eps8 ) &
+             CALL errore('read_f','wrong amass',nt)
      END DO
      DO na=1,nat
         READ(1,*) i,ityp1,(tau1(j),j=1,3)
         IF (i.NE.na) CALL errore('read_f','wrong data read',na)
         IF (ityp1.NE.ityp(na)) CALL errore('read_f','wrong ityp',na)
-        IF (tau1(1).NE.tau(1,na)) CALL errore('read_f','wrong tau1',na)
-        IF (tau1(2).NE.tau(2,na)) CALL errore('read_f','wrong tau2',na)
-        IF (tau1(3).NE.tau(3,na)) CALL errore('read_f','wrong tau3',na)
+        IF ( abs (tau1(1)-tau(1,na)) > eps8 .OR. &
+             abs (tau1(2)-tau(2,na)) > eps8 .OR. &
+             abs (tau1(3)-tau(3,na)) > eps8 ) &
+             CALL errore('read_f','wrong tau',na)
      END DO
   END IF
   !
