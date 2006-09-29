@@ -1,8 +1,8 @@
-TODO LIST - August 2006
+TODO LIST - September 2006
 
 BUGS TO EXAMINE
 
-- Zr pp buggy?
+- Zr and Ir pp buggy?
 - strange empty states with C blyp ?
 - O pseudopotentials?
 - Wannier with nonorthogonal axis?
@@ -11,9 +11,8 @@ BUGS TO EXAMINE
 
 INSTALLATION/PORTING
 
-- workaround for /usr/bin/oslevel problem in AIX
-
-- cleanup of configure stuff and of preprocessing options
+- final cleanup of configure stuff and of preprocessing options
+  (especially in libraries - fix the case of sp5 in cineca)
 
 COMMON
 
@@ -131,7 +130,7 @@ CP/FPMD:
 
 - PWGui for CP/FPMD?
 
-- riduce usage of nonscalable static and dynamical memroy:
+- reduce usage of nonscalable static and dynamical memory:
   qfunc, qrad, uspp, etc
 
 - check on small box size

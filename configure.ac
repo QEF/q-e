@@ -115,7 +115,7 @@ alpha )
 	;;
 alinux )
 	try_f90="fort $try_f90"
-	try_dflags="-D__ALPHA -D__LINUX64"
+	try_dflags="-D__ALPHA"
 	;;
 sparc )
 	try_mpif90="mpf90"
@@ -385,7 +385,6 @@ ia32:path* )
 	try_fflags_noopt="-O0 -cpp"
 	try_ldflags=""
 	#try_ldflags_static="-static"
-	try_dflags="$try_dflags -D__G95"
 	;;
 *:gfortran )
 	try_fflags="-O3"
@@ -562,8 +561,12 @@ else
 fi
 test_ldflags="`echo $ldflags | sed 's/\$([[^)]]*)//g'`"
 
+# find Fortran to C wrappers
+
+AC_F77_WRAPPERS
+
 AC_LANG_PUSH(Fortran 77)
-F77=$f90 # use Fortran 90 actually (autoconf only knows Fortran 77!)
+F77=$f90 # use Fortran 90 actually 
 
 # search for libraries
 have_blas=0
@@ -1223,14 +1226,9 @@ AC_CHECK_HEADER(malloc.h,have_malloc_h=1,have_malloc_h=0, )
 if test "$have_malloc_h" -ne 0 
 then
 AC_CHECK_MEMBER([struct mallinfo.arena], 
-                [have_mallinfo=1], 
-                [have_mallinfo=0],
+                [AC_DEFINE(HAVE_MALLINFO)], 
+                ,
 	        [#include <malloc.h>])
-
-if test "$have_mallinfo" -eq 1
-then 
-try_dflags="-D__HAVE_MALLINFO $try_dflags"
-fi
 
 fi
 
@@ -1320,6 +1318,7 @@ AC_SUBST(mpi_line)
 AC_SUBST(mass_line)
 AC_SUBST(parallel_report)
 
+AC_CONFIG_HEADERS([include/c_defs.h:include/c_defs.h.in])
 AC_CONFIG_FILES(make.sys)
 AC_CONFIG_FILES(configure.msg)
 

@@ -58,6 +58,8 @@ Specifically, "configure" generates the following files:
    "configure.msg"     : a report of the configuration run
    "include/fft_defs.h": defines the type of fortran variable
                          containing a C pointer.
+   "include/c_defs.h":   defines C to fortran calling convention
+                         and a few more things (used by C files)
 "configure.msg" is only used by "configure" to print its final report.
 It isn't needed for compilation.
 NOTA BENE: unlike previous versions, "configure" no longer runs the
@@ -135,7 +137,7 @@ If you want to modify the "configure" script itself (advanced users
 only!), read the instructions in "README.configure" first.  You'll
 need GNU Autoconf (http://www.gnu.org/software/autoconf/).
 
-If "configure" fail and you cannot find a way to have it produce a
+If "configure" fails and you cannot find a way to have it produce a
 make.sys file, see the "MANUAL INSTALLATION PROCEDURE" section below
 
 ----------------------------------------------------------------------
@@ -335,8 +337,8 @@ your system. Follow the explanations inside the file make.sys.
 If you are using an old version of the ifc compiler, you need
 to run the script "./ifcmods.sh".
 
-Finally, copy "include/fft_defs.h.in" into "include/fft_defs.h",
-edit it. Set the kind of integer to 4 (8) for compilers producing
-32-bit (64-bit) executables.
+If "configure" has run till the end, it should have produced 
+the correct files "include/fft_defs.h" and "include/c_defs.h".
+If not, follow the explanations in "include/defs.h.README". 
 
 At this stage you are ready to move back to the 'COMPILE" section above

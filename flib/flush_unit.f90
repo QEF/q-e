@@ -5,7 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !  
-#include "f_defs.h"
+#if defined(__XLF) || defined(__ABSOFT)
+   #define flush flush_
+#endif
 !
 !----------------------------------------------------------------------------
 SUBROUTINE flush_unit( unit_tobeflushed )

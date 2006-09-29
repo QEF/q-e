@@ -12,10 +12,6 @@
 #  define DIRECT_IO_FACTOR 8 
 #endif
 
-#if defined (__XLF) || defined(__ABSOFT)
-#  define flush  flush_
-#endif
-
 #if defined(__ABSOFT)
 #  define getenv getenv_
 #  define getarg getarg_

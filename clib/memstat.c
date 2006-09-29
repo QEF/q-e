@@ -16,7 +16,7 @@
 
 void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
 {
-#if defined __HAVE_MALLINFO
+#if defined(HAVE_MALLINFO)
 #include <malloc.h>
   struct mallinfo info;  
   info = mallinfo();
