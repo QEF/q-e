@@ -35,8 +35,15 @@ subroutine gweights (nks, wk, nbnd, nelec, degauss, ngauss, &
         ! Calculate the gaussian weights
         wg (ibnd, kpoint) = wk (kpoint) * &
                             wgauss ( (ef-et(ibnd,kpoint)) / degauss, ngauss)
-        ! The correct form of the band energy is  \int e n(e) de   for e<ef
-        ! demet is the correction to add to the sum of eigenvalues
+        !
+        ! The correct (i.e. variational) form of the band energy is 
+        !    Eband = \int e N(e) de   for e<Ef , where N(e) is the DOS
+        ! This differs by the term "demet" from the sum of KS eigenvalues:
+        !    Eks = \sum wg(n,k) et(n,k)
+        ! which is non variational. When a Fermi-Dirac function is used
+        ! for a given T, the variational energy is really the free energy F,
+        ! and F = E - TS , with E = non variational energy, -TS = demet
+        !
         demet = demet + wk (kpoint) * &
                  degauss * w1gauss ( (ef-et(ibnd,kpoint)) / degauss, ngauss)
      enddo

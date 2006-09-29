@@ -607,7 +607,7 @@ SUBROUTINE electrons()
         END IF
         !
         WRITE( stdout, 9060 ) &
-            eband, ( eband + deband ), ehart, ( etxc - etxcc ), ewld
+            ( eband + deband ), ehart, ( etxc - etxcc ), ewld
         !
 #if defined (EXX)
         !
@@ -619,6 +619,10 @@ SUBROUTINE electrons()
         !
         IF ( tefield ) WRITE( stdout, 9061 ) etotefield
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
+        !
+        !   With Fermi-Dirac population factor, etot is the electronic
+        !   free energy F = E - TS , demet is the -TS contribution
+        !
         IF ( degauss /= 0.0 ) WRITE( stdout, 9070 ) demet
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
@@ -715,8 +719,8 @@ SUBROUTINE electrons()
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
-9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
-            /'     one-electron contribution =',  F15.8,' ryd' &
+! 9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
+9060 FORMAT(/'     one-electron contribution =',  F15.8,' ryd' &
             /'     hartree contribution      =',  F15.8,' ryd' &
             /'     xc contribution           =',  F15.8,' ryd' &
             /'     ewald contribution        =',  F15.8,' ryd' )
@@ -726,7 +730,7 @@ SUBROUTINE electrons()
 9064 FORMAT( '     Half Fock energy 2        =',  F15.8,' ryd' )
 9066 FORMAT( '     dexx                      =',  F15.8,' ryd' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd' )
-9070 FORMAT( '     correction for metals     =',F15.8,' ryd' )
+9070 FORMAT( '     "-TS" contribution        =',F15.8,' ryd' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd' )
 9072 FORMAT( '     Magnetic field            =', F12.7,' ryd' )
 9073 FORMAT( '     lambda                    =', F11.2,' ryd' )

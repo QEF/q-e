@@ -356,13 +356,13 @@ MODULE ener
   REAL(DP) :: &
        etot,           &! the total energy of the solid
        eband,          &! the band energy
-       deband,         &! correction for variational energy
+       deband,         &! scf correction to have variational energy
        ehart,          &! the hartree energy
        etxc,           &! the exchange and correlation energy
        vtxc,           &! another exchange-correlation energy
        etxcc,          &! the nlcc exchange and correlation
        ewld,           &! the ewald energy
-       demet,          &! correction for metals
+       demet,          &! variational correction ("-TS") for metals
        ef, ef_up, ef_dw ! the fermi energy (up and dw if two_fermi_energies=.T.)
   !
 END MODULE ener
