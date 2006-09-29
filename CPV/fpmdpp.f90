@@ -33,7 +33,7 @@ PROGRAM fpmd_postproc
   INTEGER, PARAMETER :: maxsp = 20
 
   INTEGER                    :: natoms, nsp, na(maxsp), atomic_number(maxsp)
-  INTEGER                    :: ounit, cunit, punit, funit, dunit, bunit
+  INTEGER                    :: ounit, cunit, punit, funit, dunit, bunit, ksunit
   INTEGER                    :: nr1, nr2, nr3, ns1, ns2, ns3
   INTEGER                    :: np1, np2, np3, np, ispin
   INTEGER, ALLOCATABLE       :: ityp(:)
@@ -286,6 +286,10 @@ PROGRAM fpmd_postproc
   bunit = 15
   OPEN(bunit, file=filepdb, status='unknown')
 
+  ! Unit for KS states
+  !
+  ksunit = 16
+
   ! XSF file header
   !
   IF ( output == 'xsf' ) THEN
@@ -395,6 +399,8 @@ PROGRAM fpmd_postproc
 
   END DO
 
+  CLOSE(ounit)
+
   IF ( print_state /= ' ' ) THEN
      !
      CALL read_density( TRIM( print_state ) // '.xml', dunit, nr1, nr2, nr3, rho_in, lbinary )
@@ -402,15 +408,16 @@ PROGRAM fpmd_postproc
      !
      IF (output == 'xsf') THEN
         ! write data as XSF format
-        OPEN( unit = dunit, file = TRIM( print_state ) // '.xsf' )
-        CALL write_xsf( ldynamics, lforces, .true., dunit, n, at, &
+        OPEN( unit = ksunit, file = TRIM( print_state ) // '.xsf' )
+        WRITE( ksunit, * ) 'CRYSTAL'  !  XSF files need this one line header
+        CALL write_xsf( ldynamics, lforces, .true., ksunit, n, at, &
                         natoms, ityp, tau_out, force, rho_out, ns1, ns2, ns3 )
      ELSE IF( output == 'grd' ) THEN
-        OPEN( unit = dunit, file = TRIM( print_state ) // '.grd' )
-        CALL write_grd( dunit, at, rho_out, ns1, ns2, ns3 )
+        OPEN( unit = ksunit, file = TRIM( print_state ) // '.grd' )
+        CALL write_grd( ksunit, at, rho_out, ns1, ns2, ns3 )
      END IF
      !
-     CLOSE( dunit )
+     CLOSE( ksunit )
      !
   END IF
 
@@ -418,7 +425,6 @@ PROGRAM fpmd_postproc
   CALL write_pdb( bunit, at, tau_out, natoms, ityp, euler, lrotation )
 
   ! free allocated resources
-  CLOSE(ounit)
   CLOSE(punit)
   CLOSE(cunit)
   IF (lforces) CLOSE(funit)
