@@ -240,7 +240,7 @@ SUBROUTINE move_ions()
      ! ... according to the symmetry of the system.
      !
      CALL checkallsym( nsym, s, nat, tau, ityp, &
-                       at, bg, nr1, nr2, nr3, irt, ftau )
+                       at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
   END IF
   !  

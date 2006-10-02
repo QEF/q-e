@@ -44,7 +44,8 @@ SUBROUTINE setup()
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : tmp_dir, prefix, delete_if_present
   USE constants,          ONLY : pi, degspin
-  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type
+  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type,&
+                                 omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : startingpot, natomwfc
   USE gvect,              ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
@@ -576,7 +577,7 @@ SUBROUTINE setup()
   !
   IF (nat>0) &
      CALL checkallsym( nsym, s, nat, tau, ityp, at, &
-          bg, nr1, nr2, nr3, irt, ftau )
+          bg, nr1, nr2, nr3, irt, ftau, alat, omega )
   !
   ! ... if dynamics is done the system should have no symmetries
   ! ... (inversion symmetry alone is allowed)

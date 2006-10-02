@@ -144,7 +144,7 @@ SUBROUTINE read_file()
   !
   IF (nat>0) &
   CALL checkallsym( nsym, s, nat, tau, &
-                    ityp, at, bg, nr1, nr2, nr3, irt, ftau )
+                    ityp, at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
   !
   ! ... read pseudopotentials
   !

@@ -221,6 +221,7 @@ sumkg.o \
 sumkt.o \
 summary.o \
 swap.o \
+symmetrize_at.o \
 symrho.o \
 symrho_mag.o \
 symscalar.o \

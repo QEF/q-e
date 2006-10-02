@@ -7,7 +7,7 @@
 !
 !-----------------------------------------------------------------------
 subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
-     nr3, irt, ftau)
+     nr3, irt, ftau, alat, omega)
   !-----------------------------------------------------------------------
   !     given a crystal group this routine checks that the actual
   !     atomic positions and bravais lattice vectors are compatible with
@@ -35,7 +35,7 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
   ! k-th symmetry operation, referred to the
   ! crystal axis and in units at/nr (0-nr-1)
 
-  real(DP) :: tau (3, nat), at (3, 3), bg (3, 3)
+  real(DP) :: tau (3, nat), at (3, 3), bg (3, 3), alat, omega
   ! input: cartesian coordinates of the atoms
   ! input: basis of the real-space lattice
   ! input:  "   "   "  reciprocal-space lattic
@@ -126,14 +126,25 @@ subroutine checkallsym (nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
      ft (3) = ftau (3, isym) / DBLE (nr3)
 
      call checksym (isym, nat, ityp, xau, rau, ft, loksym, irt)
-     if (.not.loksym (isym) ) call errore ('checkallsym', &
-          ' symmetry operation not satisfied  ', isym)
   enddo
   !
   !   deallocate work space
   !
   deallocate(rau)
   deallocate(xau)
+  !
+  !
+  do isym = 1,nsym
+     if (.not.loksym (isym) ) call errore ('checkallsym', &
+          'the following symmetry operation is not satisfied  ', -isym)
+  end do
+  if (ANY (.not.loksym (1:nsym) ) ) then
+      call symmetrize_at(nsym, s, nat, tau, ityp, at, bg, nr1, nr2, &
+                         nr3, irt, ftau, alat, omega)
+      call errore ('checkallsym', &
+           'some of the original symmetry operations not satisfied ',1)
+  end if
+  
   !
   return
 end subroutine checkallsym
