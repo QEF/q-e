@@ -55,7 +55,7 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   real(DP) , allocatable :: xau (:,:)
   ! atomic coordinates in crystal axis
   logical :: fractional_translations
-  real(DP) :: work(3), obnr(3), bg_old(3,3), sat(3,3), wrk(3,3), ba(3,3)
+  real(DP) :: work, obnr(3), bg_old(3,3), sat(3,3), wrk(3,3), ba(3,3)
   integer :: table(48,48), invs(3,3,48)
   !
   allocate(xau(3,nat))
@@ -76,13 +76,12 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   do irot = 1, nsym
      do na = 1, nat
         do kpol = 1, 3
-           work (kpol) =  &
-                       s (1, kpol, irot) * xau (1, na) + &
-                       s (2, kpol, irot) * xau (2, na) + &
-                       s (3, kpol, irot) * xau (3, na) - &
-                       ftau(kpol,irot)* obnr(kpol) 
-           tau (kpol, irt(irot,na)) = tau (kpol, irt(irot,na)) + work(ipol) &
-                                    - nint(work(kpol)-xau(kpol,irt(irot,na))) 
+           work =  s (1, kpol, irot) * xau (1, na) + &
+                   s (2, kpol, irot) * xau (2, na) + &
+                   s (3, kpol, irot) * xau (3, na) - &
+                   ftau(kpol,irot)* obnr(kpol) 
+           tau (kpol, irt(irot,na)) = tau (kpol, irt(irot,na)) + work &
+                                    - nint(work-xau(kpol,irt(irot,na))) 
         enddo
      enddo
   enddo
@@ -96,10 +95,13 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
      CALL inverse_s (nsym, s, table, invs)
      CALL recips( at_old(1,1), at_old(1,2), at_old(1,3), &
                   bg_old(1,1), bg_old(1,2), bg_old(1,3) )
-     ba(ipol,jpol) = bg_old(1,ipol) * at(1,jpol) + &
-                     bg_old(2,ipol) * at(2,jpol) + &
-                     bg_old(3,ipol) * at(3,jpol) 
-
+     do ipol=1,3
+        do jpol=1,3
+           ba(ipol,jpol) = bg_old(1,ipol) * at(1,jpol) + &
+                           bg_old(2,ipol) * at(2,jpol) + &
+                           bg_old(3,ipol) * at(3,jpol) 
+        end do
+     end do
      at = 0.d0
      !
      !  at(i) = 1/nsym sum_S  at_old(m) S(l,m) <bg_old(l)|at(k)> invS(i,k) 
