@@ -452,7 +452,7 @@ MODULE realus
       ! ... this subroutine is the version of newd in real space
       !
       USE constants,        ONLY : pi, fpi
-      USE ions_base,        ONLY : nat, ntyp => nsp, ityp
+      USE ions_base,        ONLY : nat, ityp
       USE cell_base,        ONLY : omega
       USE gvect,            ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,         ONLY : nspin

@@ -131,7 +131,6 @@ CONTAINS
 
 
   SUBROUTINE berry_energy( enb, enbi, bec, cm, fion )
-    USE uspp, ONLY: betae => vkb
     USE ions_positions, ONLY: tau0
     USE control_flags, ONLY: tfor, tprnfor
     IMPLICIT NONE
@@ -249,7 +248,6 @@ CONTAINS
 
 
   SUBROUTINE berry_energy2( enb, enbi, bec, cm, fion )
-    USE uspp, ONLY: betae => vkb
     USE ions_positions, ONLY: tau0
     USE control_flags, ONLY: tfor, tprnfor
     IMPLICIT NONE
