@@ -1,8 +1,8 @@
-TODO LIST - September 2006
+TODO LIST - October 2006
 
 BUGS TO EXAMINE
 
-- Zr and Ir pp buggy?
+- Zr pp buggy?
 - strange empty states with C blyp ?
 - O pseudopotentials?
 - Wannier with nonorthogonal axis?
@@ -14,9 +14,16 @@ INSTALLATION/PORTING
 - final cleanup of configure stuff and of preprocessing options
   (especially in libraries - fix the case of sp5 in cineca)
 
+- compile to produce big_endian?
+
+- produce a libpw.a library and so on instead of specifying all
+  needed objects? same for lapack: compile all objects, make a 
+  library
+
 COMMON
 
 - uniform and clear values for constants in Modules/constants.f90
+  (mostly finished)
 
 - check license
 
@@ -45,7 +52,16 @@ COMMON
 - cleanup and merge of routines reading and processing PPs;
   merge uspp-related stuff ("small box") of CP into PW
 
+- cleanup of the nelup/neldw/nelec/tot_charge/magnetization/... mess
+
+- The symbol for Rydberg is Ry, not ryd!!!
+
 PW
+
+- write wall time in addition to CPU time
+
+- Fermi-Dirac: pass T instead of "broadening", make it possible
+  to use it on top of smearing for free-energy calculations
 
 - do not overwrite the charge density in a non scf calculation
 

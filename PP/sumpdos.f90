@@ -5,8 +5,10 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-! pre-processes getarg and iargc for portability
-#include "f_defs.h"
+#if defined(__ABSOFT)
+#  define getarg getarg_
+#  define iargc  iargc_
+#endif
 !
 PROGRAM sumpdos
   IMPLICIT NONE

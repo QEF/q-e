@@ -358,6 +358,5 @@ pw2wannier90.o : ../include/f_defs.h
 pw_export.o : ../include/f_defs.h
 smallgk.o : ../include/f_defs.h
 stm.o : ../include/f_defs.h
-sumpdos.o : ../include/f_defs.h
 sym_band.o : ../include/f_defs.h
 voronoy.o : ../include/f_defs.h

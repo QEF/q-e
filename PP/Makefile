@@ -251,6 +251,7 @@ PWOBJS = \
 ../PW/sumkt.o \
 ../PW/summary.o \
 ../PW/swap.o \
+../PW/symmetrize_at.o \
 ../PW/symrho.o \
 ../PW/symrho_mag.o \
 ../PW/symscalar.o \

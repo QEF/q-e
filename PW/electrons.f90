@@ -623,6 +623,7 @@ SUBROUTINE electrons()
         !   With Fermi-Dirac population factor, etot is the electronic
         !   free energy F = E - TS , demet is the -TS contribution
         !
+        WRITE( stdout, 9069 ) descf
         IF ( degauss /= 0.0 ) WRITE( stdout, 9070 ) demet
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
@@ -730,6 +731,7 @@ SUBROUTINE electrons()
 9064 FORMAT( '     Half Fock energy 2        =',  F15.8,' ryd' )
 9066 FORMAT( '     dexx                      =',  F15.8,' ryd' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd' )
+9069 FORMAT( '     scf correction            =',F15.8,' ryd' )
 9070 FORMAT( '     "-TS" contribution        =',F15.8,' ryd' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd' )
 9072 FORMAT( '     Magnetic field            =', F12.7,' ryd' )

@@ -1,21 +1,13 @@
 !
-!  Copyright (C) 2002-2004 PWSCF,FPMD,CPV groups
+!  Copyright (C) 2002-2006 Quantum-ESPRESSO group
 !  This file is distributed under the terms of the
 !  GNU General Public License. See the file `License'
 !  in the root directory of the present distribution,
 !  or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-#if defined(__ALPHA)
-#  define DIRECT_IO_FACTOR 2
-#else
-#  define DIRECT_IO_FACTOR 8 
-#endif
-
 #if defined(__ABSOFT)
 #  define getenv getenv_
-#  define getarg getarg_
-#  define iargc  iargc_
 #endif
 
 #  define DREAL       @@_use_DBLE_instead@@
@@ -24,130 +16,50 @@
 #  define CMPLX(a,b)  cmplx(a,b,kind=DP)
 
 #if defined(ADD_BLAS_TWO_UNDERSCORES)
-
-#    define DAXPY    daxpy__
-#    define DCOPY    dcopy__
-#    define DDOT     ddot__
-#    define DGETRF   dgetrf__
-#    define DGETRI   dgetri__
-#    define DGEMV    dgemv__
-#    define DGEMM    dgemm__
-#    define DGER     dger__
-#    define DNRM2    dnrm2__
-#    define DPOTRF   dpotrf__
-#    define DPOTRS   dpotrs__
-#    define DSCAL    dscal__
-#    define DSPEV    dspev__
-#    define DSYTRF   dsytrf__
-#    define DSYTRI   dsytri__
-#    define DSYEV    dsyev__
-#    define DSYGV    dsygv__
-#    define DSYGVX   dsygvx__
-#    define DSWAP    dswap__
-#    define ILAENV   ilaenv__
-#    define IDAMAX   idamax__
-#    define IZAMAX   izamax__
-#    define ZAXPY    zaxpy__
-#    define ZCOPY    zcopy__
-#    define ZDOTC    zdotc__
-#    define ZDOTU    zdotu__
-#    define ZGEMM    zgemm__
-#    define ZGEMV    zgemv__
-#    define ZGESV    zgesv__
-#    define ZGESVD   zgesvd__
-#    define ZGGEV    zggev__
-#    define ZHEEV    zheev__
-#    define ZHEEVX   zheevx__
-#    define ZHEGV    zhegv__
-#    define ZHEGVX   zhegvx__
-#    define ZHPEV    zhpev__
-#    define ZSCAL    zscal__
-#    define ZSWAP    zswap__
-#    define ZDSCAL   zdscal__
-
-#  elif defined(ADD_BLAS_ONE_UNDERSCORE)
-
-#    define DAXPY    daxpy_
-#    define DCOPY    dcopy_
-#    define DDOT     ddot_
-#    define DGETRF   dgetrf_
-#    define DGETRI   dgetri_
-#    define DGEMV    dgemv_
-#    define DGEMM    dgemm_
-#    define DGER     dger_
-#    define DNRM2    dnrm2_
-#    define DPOTRF   dpotrf_
-#    define DPOTRS   dpotrs_
-#    define DSCAL    dscal_
-#    define DSPEV    dspev_
-#    define DSYTRF   dsytrf_
-#    define DSYTRI   dsytri_
-#    define DSYEV    dsyev_
-#    define DSYGV    dsygv_
-#    define DSYGVX   dsygvx_
-#    define DSWAP    dswap_
-#    define ILAENV   ilaenv_
-#    define IDAMAX   idamax_
-#    define IZAMAX   izamax_
-#    define ZAXPY    zaxpy_
-#    define ZCOPY    zcopy_
-#    define ZDOTC    zdotc_
-#    define ZDOTU    zdotu_
-#    define ZGEMM    zgemm_
-#    define ZGEMV    zgemv_
-#    define ZGESV    zgesv_
-#    define ZGESVD   zgesvd_
-#    define ZGGEV    zggev_
-#    define ZHEEV    zheev_
-#    define ZHEEVX   zheevx_
-#    define ZHEGV    zhegv_
-#    define ZHEGVX   zhegvx_
-#    define ZHPEV    zhpev_
-#    define ZSCAL    zscal_
-#    define ZSWAP    zswap_
-#    define ZDSCAL   zdscal_
-
-#  else
-
-#    define DAXPY    daxpy
-#    define DCOPY    dcopy
-#    define DDOT     ddot
-#    define DGETRF   dgetrf
-#    define DGETRI   dgetri
-#    define DGEMV    dgemv
-#    define DGEMM    dgemm
-#    define DGER     dger
-#    define DNRM2    dnrm2
-#    define DPOTRF   dpotrf
-#    define DPOTRS   dpotrs
-#    define DSCAL    dscal
-#    define DSPEV    dspev
-#    define DSYTRF   dsytrf
-#    define DSYTRI   dsytri
-#    define DSYEV    dsyev
-#    define DSYGV    dsygv
-#    define DSYGVX   dsygvx
-#    define DSWAP    dswap
-#    define ILAENV   ilaenv
-#    define IDAMAX   idamax
-#    define IZAMAX   izamax
-#    define ZAXPY    zaxpy
-#    define ZCOPY    zcopy
-#    define ZDOTC    zdotc
-#    define ZDOTU    zdotu
-#    define ZGEMM    zgemm
-#    define ZGEMV    zgemv
-#    define ZGESV    zgesv
-#    define ZGESVD   zgesvd
-#    define ZGGEV    zggev
-#    define ZHEEV    zheev
-#    define ZHEEVX   zheevx
-#    define ZHEGV    zhegv
-#    define ZHEGVX   zhegvx
-#    define ZHPEV    zhpev
-#    define ZSCAL    zscal
-#    define ZSWAP    zswap
-#    define ZDSCAL   zdscal
-
+#    define C_NAME(name) name ## __
+#elif defined(ADD_BLAS_ONE_UNDERSCORE)
+#    define C_NAME(name) name ## _
+#else
+#    define C_NAME(name) name
 #endif
+
+#define DAXPY    C_NAME(daxpy)
+#define DCOPY    C_NAME(dcopy)
+#define DDOT     C_NAME(ddot)
+#define DGETRF   C_NAME(dgetrf)
+#define DGETRI   C_NAME(dgetri)
+#define DGEMV    C_NAME(dgemv)
+#define DGEMM    C_NAME(dgemm)
+#define DGER     C_NAME(dger)
+#define DNRM2    C_NAME(dnrm2)
+#define DPOTRF   C_NAME(dpotrf)
+#define DPOTRS   C_NAME(dpotrs)
+#define DSCAL    C_NAME(dscal)
+#define DSPEV    C_NAME(dspev)
+#define DSYTRF   C_NAME(dsytrf)
+#define DSYTRI   C_NAME(dsytri)
+#define DSYEV    C_NAME(dsyev)
+#define DSYGV    C_NAME(dsygv)
+#define DSYGVX   C_NAME(dsygvx)
+#define DSWAP    C_NAME(dswap)
+#define ILAENV   C_NAME(ilaenv)
+#define IDAMAX   C_NAME(idamax)
+#define IZAMAX   C_NAME(izamax)
+#define ZAXPY    C_NAME(zaxpy)
+#define ZCOPY    C_NAME(zcopy)
+#define ZDOTC    C_NAME(zdotc)
+#define ZDOTU    C_NAME(zdotu)
+#define ZGEMM    C_NAME(zgemm)
+#define ZGEMV    C_NAME(zgemv)
+#define ZGESV    C_NAME(zgesv)
+#define ZGESVD   C_NAME(zgesvd)
+#define ZGGEV    C_NAME(zggev)
+#define ZHEEV    C_NAME(zheev)
+#define ZHEEVX   C_NAME(zheevx)
+#define ZHEGV    C_NAME(zhegv)
+#define ZHEGVX   C_NAME(zhegvx)
+#define ZHPEV    C_NAME(zhpev)
+#define ZSCAL    C_NAME(zscal)
+#define ZSWAP    C_NAME(zswap)
+#define ZDSCAL   C_NAME(zdscal)
 

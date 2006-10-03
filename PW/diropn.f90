@@ -14,7 +14,15 @@ subroutine diropn (unit, extension, recl, exst)
   !     for direct I/O access
   !     If appropriate, the node number is added to the file name
   !
-#include "f_defs.h"
+#if defined(__ALPHA)
+#  define DIRECT_IO_FACTOR 2
+#else
+#  define DIRECT_IO_FACTOR 8 
+#endif
+  !
+  ! the  record length in direct-access I/O is given by the number of
+  ! real*8 words times DIRECT_IO_FACTOR (may depend on the compiler)
+  !
   USE kinds
   use io_files, only: prefix, tmp_dir, nd_nmbr
   use mp_global, only: mpime

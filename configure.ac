@@ -104,7 +104,7 @@ aix )
 	try_mpif90="mpxlf90_r mpxlf90"
 	try_f90="xlf90_r xlf90 $try_f90"
 	try_arflags="-X64 ruv"
-	try_arflags_dynamics="-X64 ruv"
+	try_arflags_dynamic="-X64 ruv"
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )

@@ -28,8 +28,6 @@ sph_dbes.o : ../Modules/kind.o
 volume.o : ../Modules/kind.o
 ylmr2.o : ../Modules/kind.o
 dylmr2.o : ../include/f_defs.h
-flush_unit.o : ../include/f_defs.h
-inpfile.o : ../include/f_defs.h
 invmat.o : ../include/f_defs.h
 invmat_complex.o : ../include/f_defs.h
 linpack.o : ../include/f_defs.h
