@@ -74,8 +74,8 @@ SUBROUTINE compute_sigma_bare(chi_bare)
 
   do na = 1, nat
     tr_sigma = (sigma_bare(1,1,na)+sigma_bare(2,2,na)+sigma_bare(3,3,na))/3.d0
-    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
-          '')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1d6
+    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),'') &
+       &  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1d6
     write(stdout, tens_fmt) sigma_bare(:,:,na) * 1d6
   enddo
 

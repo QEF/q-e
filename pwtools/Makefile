@@ -2,29 +2,7 @@
 
 include ../make.sys
 
-PWOBJS = \
-../PW/checksym.o \
-../PW/coset.o \
-../PW/cryst_to_car.o \
-../PW/cubicsym.o \
-../PW/eqvect.o \
-../PW/error_handler.o \
-../PW/hexsym.o \
-../PW/irrek.o \
-../PW/inverse_s.o \
-../PW/kpoint_grid.o \
-../PW/mode_group.o \
-../PW/multable.o \
-../PW/noncol.o \
-../PW/pwcom.o \
-../PW/sgam_at.o \
-../PW/sgam_at_mag.o \
-../PW/sgam_ph.o \
-../PW/sgama.o \
-../PW/smallg_q.o \
-../PW/trnvecc.o \
-../PW/w0gauss.o \
-../PW/wsweight.o
+PWOBJS = ../PW/libpw.a
 
 MODULES = \
 ../Modules/basic_algebra_routines.o \
@@ -61,17 +39,17 @@ band_plot.x : band_plot.o $(LIBOBJS)
 
 dist.x : dist.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		dist.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		dist.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 dynmat.x : dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		dynmat.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 ev.x : ev.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		ev.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		ev.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 fqha.x : fqha.o $(LIBOBJS)
@@ -80,17 +58,17 @@ fqha.x : fqha.o $(LIBOBJS)
 
 kpoints.x : kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		kpoints.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 lambda.x : lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		lambda.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		matdyn.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 metadyn_pp.x : metadyn_pp.o $(LIBOBJS)
@@ -99,17 +77,17 @@ metadyn_pp.x : metadyn_pp.o $(LIBOBJS)
 
 path_int.x : path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		path_int.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pwi2xsf.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		q2r.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 # Isaev
 bands_FS.x : bands_FS.o

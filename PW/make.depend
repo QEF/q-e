@@ -1189,7 +1189,6 @@ c_phase_field.o : ../include/f_defs.h
 data_structure.o : ../include/f_defs.h
 deriv_drhoc.o : ../include/f_defs.h
 diis_base.o : ../include/f_defs.h
-diropn.o : ../include/f_defs.h
 divide_class.o : ../include/f_defs.h
 divide_class_so.o : ../include/f_defs.h
 divide_et_impera.o : ../include/f_defs.h
@@ -1275,7 +1274,6 @@ show_memory.o : ../include/f_defs.h
 smallg_q.o : ../include/f_defs.h
 s_psi_nc.o : ../include/f_defs.h
 s_psi.o : ../include/f_defs.h
-startup.o : ../include/f_defs.h
 stres_cc.o : ../include/f_defs.h
 stres_ewa.o : ../include/f_defs.h
 stres_gradcorr.o : ../include/f_defs.h

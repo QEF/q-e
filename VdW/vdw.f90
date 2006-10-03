@@ -173,8 +173,8 @@ SUBROUTINE vdw_init ( )
         CALL  errore ('extract', 'nfs too large', 1 )
      DO i = 1, nfs
         READ (5, *, err = 10, iostat = ios) fiu(i)
-10   CALL errore ('extract', 'error or eof while reading frequencies', ABS(ios) )
      ENDDO
+10   CALL errore ('extract', 'error or eof while reading frequencies', ABS(ios) )
   END IF
   !
   !

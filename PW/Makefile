@@ -82,7 +82,6 @@ estimate.o \
 ewald.o \
 ewald_dipole.o \
 exx.o \
-fftw.o \
 find_group.o \
 force_cc.o \
 force_corr.o \
@@ -315,16 +314,20 @@ TLDEPS=bindir mods libs libiotk
 
 all : tldeps pw.x
 
-pw.x : pwscf.o $(PWOBJS) $(LIBOBJS)
+pw.x : pwscf.o libpw.a $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		pwscf.o $(PWOBJS) $(MODULES) $(LIBOBJS) $(LIBS)
+		pwscf.o $(MODULES) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
+
+libpw.a : $(PWOBJS)
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f pw.x *.o *~ *.F90 *.d *.mod *.i work.pc
+	- /bin/rm -f pw.x *.o *.a *~ *.F90 *.d *.mod *.i work.pc
 
 include make.depend
 

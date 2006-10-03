@@ -176,14 +176,17 @@ MODULES = \
 WRAPPERS = wrapper.o
 TLDEPS= bindir mods libs libiotk
 
-all : tldeps cp.x cppp.x
-cp : tldeps cp.x cppp.x
+all : cp
+cp : tldeps libcp.a cp.x cppp.x
 
-cp.x : cprstart.o $(FOBJS) $(LOBJS) $(LIBOBJS)
+cp.x : cprstart.o libcp.a $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o cp.x \
-		cprstart.o $(FOBJS) $(LOBJS) $(MODULES) \
-		$(LIBOBJS) $(LIBS)
+		cprstart.o $(MODULES) libcp.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
+
+libcp.a : $(FOBJS) $(LOBJS) 
+	 $(AR) $(ARFLAGS) $@ $?
+	 $(RANLIB) $@
 
 cp_version.o : cpver.h
 
@@ -211,6 +214,6 @@ tldeps:
 
 clean :
 	- /bin/rm -f cppp.x *.o *.mod cpver.h *.i core* *.F90 fort* \
-		*.cpp *.d work.pc  *.s cp.x
+		*.cpp *.d work.pc *.a *.s cp.x
 
 include make.depend

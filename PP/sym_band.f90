@@ -371,8 +371,8 @@ DO igroup=1,ngroup
             shift=shift+dimen*NINT(DBLE(times))
          ENDIF
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
-            WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x&
-                      & "--> ",a15)') &
+            WRITE(stdout,'(5x, "e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,&
+                      & 3x,"--> ",a15)') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                               dim_rap, name_rap(irap)
          ELSE
@@ -698,8 +698,8 @@ DO igroup=1,ngroup
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                              dim_rap, name_rap_so(irap)
          ELSE
-            WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,3x&
-                      & "--> ",i3," ",a15)') &
+            WRITE(stdout,'(5x,"e(",i3," -",i3,") = ",f12.5,2x,"eV",3x,i3,&
+                      & 3x,"--> ",i3," ",a15)') &
               istart(igroup), istart(igroup+1)-1, &
               w1(istart(igroup)), dim_rap, NINT(DBLE(times)), name_rap_so(irap)
          END IF

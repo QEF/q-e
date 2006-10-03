@@ -11,111 +11,7 @@ vib_rdiaghg.o        \
 read_input_vib.o \
 viblib.o         
 
-CP_OBJS = \
-../CPV/atoms_type.o \
-../CPV/bessel.o \
-../CPV/berryion.o \
-../CPV/bforceion.o \
-../CPV/cg.o \
-../CPV/cg_sub.o \
-../CPV/cglib.o \
-../CPV/chargedensity.o \
-../CPV/chargemix.o \
-../CPV/chi2.o \
-../CPV/compute_fes_grads.o \
-../CPV/compute_scf.o \
-../CPV/cp_emass.o \
-../CPV/cp_fpmd.o \
-../CPV/cp_interfaces.o \
-../CPV/cp_restart.o \
-../CPV/cplib.o \
-../CPV/cpr_mod.o \
-../CPV/cpr.o \
-../CPV/cprsub.o \
-../CPV/dealloc.o \
-../CPV/dforceb.o \
-../CPV/diis.o \
-../CPV/efermi.o \
-../CPV/efield.o \
-../CPV/eigs0.o \
-../CPV/electrons.o \
-../CPV/emptystates.o \
-../CPV/ensemble_dft.o \
-../CPV/exch_corr.o \
-../CPV/fftdrv.o \
-../CPV/fft.o \
-../CPV/forces.o \
-../CPV/fromscra.o \
-../CPV/greenf.o \
-../CPV/gtable.o \
-../CPV/guess.o \
-../CPV/init.o \
-../CPV/init_run.o \
-../CPV/inner_loop.o \
-../CPV/input.o \
-../CPV/ions.o \
-../CPV/ions_positions.o \
-../CPV/ksstates.o \
-../CPV/main.o \
-../CPV/mainvar.o \
-../CPV/main_loops.o \
-../CPV/cplib_meta.o \
-../CPV/metaxc.o \
-../CPV/modules.o \
-../CPV/move_electrons.o \
-../CPV/nl_base.o \
-../CPV/nlcc.o \
-../CPV/nl.o \
-../CPV/ortho_base.o \
-../CPV/ortho.o \
-../CPV/para.o \
-../CPV/path_routines.o \
-../CPV/periodic.o \
-../CPV/phasefactor.o \
-../CPV/polarization.o \
-../CPV/potentials.o \
-../CPV/print_out.o \
-../CPV/problem_size.o \
-../CPV/pseudo_base.o \
-../CPV/pseudopot.o \
-../CPV/pseudopot_sub.o \
-../CPV/qmatrixd.o \
-../CPV/qqberry.o \
-../CPV/read_pseudo.o \
-../CPV/redis.o \
-../CPV/restart.o \
-../CPV/restart_sub.o \
-../CPV/runcg_ion.o \
-../CPV/runcg.o \
-../CPV/runcp.o \
-../CPV/rundiis.o \
-../CPV/runsd.o \
-../CPV/smcp.o \
-../CPV/smd_modules.o \
-../CPV/smd.o  \
-../CPV/smlam.o \
-../CPV/spharmonic.o \
-../CPV/spline.o \
-../CPV/stop_run.o \
-../CPV/stress.o \
-../CPV/turbo.o \
-../CPV/util.o \
-../CPV/vanderwaals.o \
-../CPV/cp_version.o \
-../CPV/wannier_base.o \
-../CPV/wannier.o \
-../CPV/waveinit.o \
-../CPV/wave.o \
-../CPV/wave_types.o \
-../CPV/wf.o \
-../CPV/$(WRAPPERS)
-
-LOBJS = \
-../CPV/adjef.o \
-../CPV/entropy.o \
-../CPV/forceconv.o \
-../CPV/geninv.o \
-../CPV/indices.o 
+CP_OBJS = ../CPV/libcp.a
 
 MODULES = \
 ../Modules/atom.o \
@@ -190,9 +86,9 @@ all : cpvib.x
 
 cpvib: cpvib.x
 #cpvib.x : FFLAGS += -DDFT_CP
-cpvib.x : cleancp $(CP_OBJS) $(VIB_OBJ) $(LOBJS) $(LIBOBJS) ../CPV/cp.x vibstart.o
+cpvib.x : cleancp $(CP_OBJS) $(VIB_OBJ) $(LIBOBJS) ../CPV/cp.x vibstart.o
 	$(MPIF90) $(LDFLAGS) -o cpvib.x -I../CPV \
-		vibstart.o $(CP_OBJS) $(VIB_OBJ) $(LOBJS) $(MODULES) \
+		vibstart.o $(VIB_OBJ) $(MODULES) $(CP_OBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../VIB/cpvib.x . )
 
