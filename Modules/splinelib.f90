@@ -21,7 +21,7 @@ MODULE splinelib
      !
      MODULE PROCEDURE dosplineint_1D, dosplineint_2D
      !
-  END INTERFACE dosplineint
+  END INTERFACE
   !
   CONTAINS
     !

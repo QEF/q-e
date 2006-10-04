@@ -58,7 +58,7 @@
             C_POINTER :: DFTI_Desc
          END FUNCTION dfti_create_descriptor_highd
 
-       END INTERFACE DftiCreateDescriptor
+       END INTERFACE
 
       INTERFACE DftiCommitDescriptor
 

@@ -22,7 +22,7 @@ MODULE from_restart_module
                       from_restart_fpmd, &
                       from_restart_sm
      !
-  END INTERFACE from_restart
+  END INTERFACE
   !
   CONTAINS
   !

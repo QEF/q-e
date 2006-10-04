@@ -19,7 +19,7 @@ MODULE random_numbers
      !
      MODULE PROCEDURE gauss_dist_scal, gauss_dist_vect
      !
-  END INTERFACE gauss_dist
+  END INTERFACE
   !
   CONTAINS
     !

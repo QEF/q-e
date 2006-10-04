@@ -31,7 +31,7 @@ MODULE path_reparametrisation
      !
      MODULE PROCEDURE spline_interpolation_1D, spline_interpolation_2D
      !
-  END INTERFACE spline_interpolation
+  END INTERFACE
   !
   CONTAINS
     !
