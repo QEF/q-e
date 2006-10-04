@@ -243,11 +243,12 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      if (abs(celldm(4))>=1.d0) call errore ('latgen', 'wrong celldm(4)', ibrav)
      !
      sen = sqrt( 1.d0 - celldm(4) ** 2 )
-     a1(1) = 0.5 * celldm(1) * sen
-     a1(2) = 0.5 * celldm(1) * (celldm(4) - celldm(2))
-     a2(1) = 0.5 * celldm(1) * sen
-     a2(2) = 0.5 * celldm(1) * (celldm(4) + celldm(2))
-     a3(3) = celldm(1) * celldm(3)
+     a1(1) = 0.5 * celldm(1) 
+     a1(2) = a1(1) * celldm(2)
+     a2(1) =-a1(1)
+     a2(2) = a1(2)
+     a3(2) = celldm(1) * celldm(3) * celldm(4)
+     a3(3) = celldm(1) * celldm(3) * sen
      !
   else if (ibrav == 14) then
      !
