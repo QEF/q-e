@@ -11,7 +11,7 @@
        np2=nk2*ntj
        np3=nk3*ntk
        npr = np1*np2*np3
-       nkr = nk2*nk2*nk3
+       nkr = nk1*nk2*nk3
        
        ll = 0
        iold = 1         
