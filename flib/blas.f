@@ -1,3 +1,8 @@
+C
+C This file contains several Blas subroutines (levels 1,2,3)
+C from the netlib repository: http://www.netlib.org
+C See there for copyright information
+C     
       SUBROUTINE DAXPY(N,DA,DX,INCX,DY,INCY)
 C
 C     CONSTANT TIMES A VECTOR PLUS A VECTOR.
@@ -2428,6 +2433,41 @@ c
    50 continue
       return
       end
+      DOUBLE COMPLEX FUNCTION ZDOTC(N,ZX,INCX,ZY,INCY)
+C
+C     FORMS THE DOT PRODUCT OF A VECTOR.
+C     JACK DONGARRA, 3/11/78.
+C
+      DOUBLE COMPLEX ZX(1),ZY(1),ZTEMP
+      INTEGER I,INCX,INCY,IX,IY,N
+      ZTEMP = (0.0D0,0.0D0)
+      ZDOTC = (0.0D0,0.0D0)
+      IF(N.LE.0)RETURN
+      IF(INCX.EQ.1.AND.INCY.EQ.1)GO TO 20
+C
+C        CODE FOR UNEQUAL INCREMENTS OR EQUAL INCREMENTS
+C          NOT EQUAL TO 1
+C
+      IX = 1
+      IY = 1
+      IF(INCX.LT.0)IX = (-N+1)*INCX + 1
+      IF(INCY.LT.0)IY = (-N+1)*INCY + 1
+      DO 10 I = 1,N
+        ZTEMP = ZTEMP + DCONJG(ZX(IX))*ZY(IY)
+        IX = IX + INCX
+        IY = IY + INCY
+   10 CONTINUE
+      ZDOTC = ZTEMP
+      RETURN
+C
+C        CODE FOR BOTH INCREMENTS EQUAL TO 1
+C
+   20 DO 30 I = 1,N
+        ZTEMP = ZTEMP + DCONJG(ZX(I))*ZY(I)
+   30 CONTINUE
+      ZDOTC = ZTEMP
+      RETURN
+      END
       double complex function zdotu(n,zx,incx,zy,incy)
 c
 c     forms the dot product of two vectors.

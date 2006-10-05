@@ -100,11 +100,8 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
-# MYLIB can be one of the following (depending on BLAS_LIBS and LAPACK_LIBS):
-# blas       : compile the local copy of blas routines
+# MYLIB can be one of the following (depending on LAPACK_LIBS):
 # lapack     : compile the local copy of lapack routines
-# blas_and_lapack : all of the above - use this for a quick test
-#              or if you don't have an optimized blas/lapack library
 # lapack_ibm : compile only lapack routines not present in IBM ESSL
 #              use this together with IBM ESSL
 # lapack_atlas: compile only lapack routines not present in the Atlas library

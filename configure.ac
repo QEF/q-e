@@ -847,6 +847,11 @@ then
 		done
 	fi
 fi
+
+# no blas library found: use the built-in one
+
+if test "$have_blas" -eq 0 ; then blas_libs="../flib/blas.a" ; fi
+
 echo setting BLAS_LIBS... $blas_libs
 
 # check for lapack
@@ -1136,7 +1141,6 @@ then
 else
 	LIBS="$lapack_libs $blas_libs"
 	AC_SEARCH_LIBS(zggev, "", , mylib="lapack")
-	AC_SEARCH_LIBS(dgemm, "", , mylib="blas_and_lapack")
 fi
 
 LIBS="$mass_libs"

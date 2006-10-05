@@ -110,7 +110,6 @@ bindir :
 # remove object files and executables
 clean :
 	touch make.sys 
-	# make complains if they aren't there
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND Raman VdW\
 		atomic clib flib pwtools upftools iotk \

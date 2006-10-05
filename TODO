@@ -16,14 +16,14 @@ INSTALLATION/PORTING
 
 - compile to produce big_endian?
 
-- produce a libpw.a library and so on instead of specifying all
-  needed objects? same for lapack: compile all objects, make a 
-  library
+- how to put modules into a library so that one loads a few libraries
+  instead of 1000000 objects? on all machines and compilers ?? 
+  blas / lapack: make libraries instead of the present mess
 
 COMMON
 
 - uniform and clear values for constants in Modules/constants.f90
-  (mostly finished)
+  (work to be finished)
 
 - check license
 

@@ -52,19 +52,15 @@ numroc.o \
 ownerof.o \
 error.o
 
-all: flib.a ptools.a $(MYLIB)
+all: blas.a flib.a ptools.a $(MYLIB)
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-blas_and_lapack : blas lapack
-	touch $@
-
-blas : $(OBJS) blas.o dlamch.o
-	$(AR) $(ARFLAGS) flib.a $?
-	$(RANLIB) flib.a
-	touch $@
+blas.a : blas.o dlamch.o
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@ 
 
 lapack : $(OBJS) lapack.o dlamch.o
 	$(AR) $(ARFLAGS) flib.a $?
