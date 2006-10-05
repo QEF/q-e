@@ -52,7 +52,7 @@ numroc.o \
 ownerof.o \
 error.o
 
-all: blas.a flib.a lapack_atlas.a lapack.a lapack_mkl.a ptools.a
+all: blas.a flib.a lapack_atlas.a lapack.a ptools.a
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
@@ -67,9 +67,6 @@ lapack_atlas.a : lapack_atlas.o dlamch.o
 	$(RANLIB) $@ 
 
 lapack.a : lapack_atlas.o lapack_all.o dlamch.o
-	$(AR) $(ARFLAGS) $@ $?
-
-lapack_mkl.a : lapack_mkl.o
 	$(AR) $(ARFLAGS) $@ $?
 
 dlamch.o : dlamch.f

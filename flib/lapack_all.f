@@ -1,3 +1,7 @@
+c
+c   This file contains LAPACK routines used in quantum-espresso
+c   that are part of ATLAS - from www.netlib.org
+c
       SUBROUTINE DGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
 *
 *  -- LAPACK driver routine (version 3.0) --

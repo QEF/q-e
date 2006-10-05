@@ -973,23 +973,25 @@ then
 	then lapack_libs="-lessl $lapack_libs" ; fi
 fi
 
-# no blas library found: use the built-in one (it is done here
-# because blas_libs is used in the above tests)
+# no blas library found: use the built-in blas
+# (blas_libs is used in the above tests so it is safe to set it here)
 
 if test "$have_blas" -eq 0 ; then blas_libs="../flib/blas.a" ; fi
 
 echo setting BLAS_LIBS... $blas_libs
 
-# add now the missing lapack routines for mkl, essl, atlas
-# use the built-in lapack library if none is available
+# if some or all lapack routines are missing, add them here
 
-if test $have_mkl -ne 0 ;then
-	lapack_libs="$lapack_libs ../flib/lapack_mkl.a"
-elif test $have_atlas -ne 0 -a $have_lapack -eq 0; then
+if test $have_atlas -ne 0 -a $have_lapack -eq 0; then
+# add missing lapack routines to complete atlas
+# note that some compilers do not like to have multiple symbols
 	lapack_libs="$lapack_libs ../flib/lapack_atlas.a"
 elif test $have_essl -ne 0 -a $have_lapack -eq 0; then
+# ibm doesn't complain if there are multiple symbols so add everything
+# due to name conflicts, essl must be loaded before lapack
 	lapack_libs="-lessl ../flib/lapack.a"
 elif test $have_lapack -eq 0 ; then
+# nothing found, use built-in library
 	lapack_libs="../flib/lapack.a"
 fi
 
@@ -1114,6 +1116,9 @@ then
 		;;
 	esac
 fi
+
+if test "$mass_libs" != ""; then try_dflags="$try_dflags -D__MASS" ; fi
+
 echo setting MASS_LIBS... $mass_libs
 
 # check for mpi
@@ -1169,17 +1174,6 @@ echo setting MPI_LIBS... $mpi_libs
 F77=$f90
 FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
-parallel=0
-
-
-LIBS="$mass_libs"
-AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
-
-if test "$arch" = "aix"
-then
-	LIBS="$fft_libs"
-	AC_SEARCH_LIBS(dcft, "", have_fft=1)
-fi
 
 if test "$have_fft" -eq 0
 then
@@ -1244,6 +1238,7 @@ then
 	AC_LANG_POP(C)
 fi
 
+parallel=0
 if test "$use_parallel" -ne 0
 then
 	F77=$mpif90

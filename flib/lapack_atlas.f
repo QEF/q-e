@@ -1,3 +1,7 @@
+c
+c   This file contains LAPACK routines used in quantum-espresso
+c   that are not part of ATLAS - from www.netlib.org
+c
       SUBROUTINE ZHPTRS( UPLO, N, NRHS, AP, IPIV, B, LDB, INFO )
 *
 *  -- LAPACK routine (version 3.0) --

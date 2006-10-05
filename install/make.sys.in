@@ -96,7 +96,6 @@ BLAS_LIBS      = @blas_libs@
 # The following lapack libraries will be available in flib/ :
 # ../flib/lapack.a : contains all needed routines
 # ../flib/lapack_atlas.a: only routines not present in the Atlas library
-# ../flib/lapack_mkl.a :  only routines not present in Intel MKL
 # For IBM machines with essl: load essl BEFORE lapack !
 
 LAPACK_LIBS    = @lapack_libs@
