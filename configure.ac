@@ -35,7 +35,6 @@ libdirs=$LIBDIRS
 ar=$AR
 arflags=$ARFLAGS
 arflags_dynamic=$ARFLAGS_DYNAMIC
-mylib=$MYLIB
 includefftw=$INCLUDEFFTW
 
 # command-line arguments
@@ -570,6 +569,7 @@ F77=$f90 # use Fortran 90 actually
 
 # search for libraries
 have_blas=0
+have_atlas=0
 have_mkl=0
 have_lapack=0
 have_essl=0
@@ -743,9 +743,15 @@ then
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS=""
-		AC_SEARCH_LIBS(dgemm, essl, have_essl=1 have_blas=1
-			       blas_libs="$LIBS" 
-                               try_dflags="$try_dflags -D__ESSL")
+		AC_SEARCH_LIBS(dgemm, essl, have_blas=1
+			       blas_libs="$LIBS" )
+                # notice that some IBM machines may not need -lessl
+                # to load blas so the above test may fail
+                if test "`echo $blas_libs | grep essl`" != ""
+                then
+                    have_essl=1 
+                    try_dflags="$try_dflags -D__ESSL"
+                fi
 		;;
 
 	mips:* )
@@ -808,7 +814,7 @@ then
 			     macppc ) LIBS="-latlas" ;;
 			     * )      LIBS="-latlas -lg2c" ;;
  			esac
-			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1
+			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1 have_atlas=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
@@ -848,14 +854,10 @@ then
 	fi
 fi
 
-# no blas library found: use the built-in one
-
-if test "$have_blas" -eq 0 ; then blas_libs="../flib/blas.a" ; fi
-
-echo setting BLAS_LIBS... $blas_libs
 
 # check for lapack
 # supported vendor replacements:
+#   essl on IBM
 #   mkl on linux
 #   SUNperf on sparc
 # internal version is used if none is found
@@ -918,7 +920,20 @@ then
 		AC_SEARCH_LIBS(zggev, sunperf, have_lapack=1
 			       lapack_libs="-xlic_lib=sunperf $LIBS")
 		;;
-
+	aix:* )
+		# check for essl (may not be revealed by the previous
+		# test of blas) 
+                if test have_essl -eq 0
+                then
+		   unset ac_cv_search_zggev # clear cached value
+		   FFLAGS="$test_fflags"
+		   LDFLAGS="$test_ldflags"
+		   LIBS="$blas_libs"
+		   AC_SEARCH_LIBS(dgemm, essl, have_essl=1
+		  	          lapack_libs="-lessl" 
+ 				  try_dflags="$try_dflags -D__ESSL")
+                fi
+		;;
 	esac
 
 	if test "$have_lapack" -eq 0
@@ -957,6 +972,27 @@ then
 	if test "$have_essl" -ne 0 && test "$have_lapack" -ne 0
 	then lapack_libs="-lessl $lapack_libs" ; fi
 fi
+
+# no blas library found: use the built-in one (it is done here
+# because blas_libs is used in the above tests)
+
+if test "$have_blas" -eq 0 ; then blas_libs="../flib/blas.a" ; fi
+
+echo setting BLAS_LIBS... $blas_libs
+
+# add now the missing lapack routines for mkl, essl, atlas
+# use the built-in lapack library if none is available
+
+if test $have_mkl -ne 0 ;then
+	lapack_libs="$lapack_libs ../flib/lapack_mkl.a"
+elif test $have_atlas -ne 0 -a $have_lapack -eq 0; then
+	lapack_libs="$lapack_libs ../flib/lapack_atlas.a"
+elif test $have_essl -ne 0 -a $have_lapack -eq 0; then
+	lapack_libs="-lessl ../flib/lapack.a"
+elif test $have_lapack -eq 0 ; then
+	lapack_libs="../flib/lapack.a"
+fi
+
 echo setting LAPACK_LIBS... $lapack_libs
 
 # check for fftw
@@ -985,7 +1021,7 @@ then
 		LDFLAGS="$test_ldflags"
 		LIBS="$fft_libs"
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
-		;;
+	    ;;     
 	sparc )
 		# check for SUNperf library
 		unset ac_cv_search_zfft3i # clear cached value
@@ -1135,13 +1171,6 @@ FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
 parallel=0
 
-if test "`echo $lapack_libs | grep mkl`" != ""
-then
-	mylib="lapack_mkl"
-else
-	LIBS="$lapack_libs $blas_libs"
-	AC_SEARCH_LIBS(zggev, "", , mylib="lapack")
-fi
 
 LIBS="$mass_libs"
 AC_SEARCH_LIBS(vexp, "", try_dflags="$try_dflags -D__MASS")
@@ -1253,8 +1282,6 @@ echo setting FDFLAGS... $fdflags
 
 AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
 echo setting RANLIB... $ranlib
-echo setting MYLIB... $mylib
-
 
 # configure output messages
 blas_line="BLAS_LIBS=$blas_libs"
@@ -1309,7 +1336,6 @@ AC_SUBST(lapack_libs)
 AC_SUBST(fft_libs)
 AC_SUBST(mpi_libs)
 AC_SUBST(mass_libs)
-AC_SUBST(mylib)
 AC_SUBST(ar)
 AC_SUBST(arflags)
 AC_SUBST(arflags_dynamic)

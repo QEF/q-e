@@ -308,7 +308,7 @@ ac_includes_default="\
 # include <unistd.h>
 #endif"
 
-ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP SIZEOF_INT_P SET_MAKE FLIBS ranlib cc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs mylib ar arflags arflags_dynamic f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
+ac_subst_vars='SHELL PATH_SEPARATOR PACKAGE_NAME PACKAGE_TARNAME PACKAGE_VERSION PACKAGE_STRING PACKAGE_BUGREPORT exec_prefix prefix program_transform_name bindir sbindir libexecdir datadir sysconfdir sharedstatedir localstatedir libdir includedir oldincludedir infodir mandir build_alias host_alias target_alias DEFS ECHO_C ECHO_N ECHO_T LIBS build build_cpu build_vendor build_os F77 FFLAGS LDFLAGS ac_ct_F77 EXEEXT OBJEXT CC CFLAGS CPPFLAGS ac_ct_CC CPP EGREP SIZEOF_INT_P SET_MAKE FLIBS ranlib cc cflags dflags fdflags cpp cppflags f90 mpif90 f90flags f77 fflags fflags_noopt pre_fdflags imod iflags ld ldflags blas_libs lapack_libs fft_libs mpi_libs mass_libs ar arflags arflags_dynamic f90rule blas_line lapack_line fft_line mpi_line mass_line parallel_report LIBOBJS LTLIBOBJS'
 ac_subst_files=''
 
 # Initialize some variables set by options.
@@ -1344,7 +1344,6 @@ libdirs=$LIBDIRS
 ar=$AR
 arflags=$ARFLAGS
 arflags_dynamic=$ARFLAGS_DYNAMIC
-mylib=$MYLIB
 includefftw=$INCLUDEFFTW
 
 # command-line arguments
@@ -1611,7 +1610,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1614:" \
+echo "$as_me:1613:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2039,7 +2038,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2042:" \
+echo "$as_me:2041:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -3810,7 +3809,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:3813:" \
+echo "$as_me:3812:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4309,7 +4308,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4312: \"$ac_link\") >&5
+(eval echo $as_me:4311: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4387,7 +4386,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4390: \"$ac_link\") >&5
+(eval echo $as_me:4389: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -5083,6 +5082,7 @@ F77=$f90 # use Fortran 90 actually
 
 # search for libraries
 have_blas=0
+have_atlas=0
 have_mkl=0
 have_lapack=0
 have_essl=0
@@ -5891,11 +5891,17 @@ echo "$as_me:$LINENO: result: $ac_cv_search_dgemm" >&5
 echo "${ECHO_T}$ac_cv_search_dgemm" >&6
 if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
-  have_essl=1 have_blas=1
+  have_blas=1
 			       blas_libs="$LIBS"
-                               try_dflags="$try_dflags -D__ESSL"
 fi
 
+                # notice that some IBM machines may not need -lessl
+                # to load blas so the above test may fail
+                if test "`echo $blas_libs | grep essl`" != ""
+                then
+                    have_essl=1
+                    try_dflags="$try_dflags -D__ESSL"
+                fi
 		;;
 
 	mips:* )
@@ -6320,7 +6326,7 @@ echo "$as_me:$LINENO: result: $ac_cv_search_dgemm" >&5
 echo "${ECHO_T}$ac_cv_search_dgemm" >&6
 if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
-  have_blas=1
+  have_blas=1 have_atlas=1
 				       blas_libs="$try_loption $LIBS"
 fi
 
@@ -6453,14 +6459,10 @@ fi
 	fi
 fi
 
-# no blas library found: use the built-in one
-
-if test "$have_blas" -eq 0 ; then blas_libs="../flib/blas.a" ; fi
-
-echo setting BLAS_LIBS... $blas_libs
 
 # check for lapack
 # supported vendor replacements:
+#   essl on IBM
 #   mkl on linux
 #   SUNperf on sparc
 # internal version is used if none is found
@@ -6887,7 +6889,111 @@ if test "$ac_cv_search_zggev" != no; then
 fi
 
 		;;
+	aix:* )
+		# check for essl (may not be revealed by the previous
+		# test of blas)
+                if test have_essl -eq 0
+                then
+		   unset ac_cv_search_zggev # clear cached value
+		   FFLAGS="$test_fflags"
+		   LDFLAGS="$test_ldflags"
+		   LIBS="$blas_libs"
+		   echo "$as_me:$LINENO: checking for library containing dgemm" >&5
+echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
+if test "${ac_cv_search_dgemm+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_dgemm=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dgemm="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
 
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_dgemm" = no; then
+  for ac_lib in essl; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dgemm="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_dgemm" >&5
+echo "${ECHO_T}$ac_cv_search_dgemm" >&6
+if test "$ac_cv_search_dgemm" != no; then
+  test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
+  have_essl=1
+		  	          lapack_libs="-lessl"
+ 				  try_dflags="$try_dflags -D__ESSL"
+fi
+
+                fi
+		;;
 	esac
 
 	if test "$have_lapack" -eq 0
@@ -7017,6 +7123,27 @@ fi
 	if test "$have_essl" -ne 0 && test "$have_lapack" -ne 0
 	then lapack_libs="-lessl $lapack_libs" ; fi
 fi
+
+# no blas library found: use the built-in one (it is done here
+# because blas_libs is used in the above tests)
+
+if test "$have_blas" -eq 0 ; then blas_libs="../flib/blas.a" ; fi
+
+echo setting BLAS_LIBS... $blas_libs
+
+# add now the missing lapack routines for mkl, essl, atlas
+# use the built-in lapack library if none is available
+
+if test $have_mkl -ne 0 ;then
+	lapack_libs="$lapack_libs ../flib/lapack_mkl.a"
+elif test $have_atlas -ne 0 -a $have_lapack -eq 0; then
+	lapack_libs="$lapack_libs ../flib/lapack_atlas.a"
+elif test $have_essl -ne 0 -a $have_lapack -eq 0; then
+	lapack_libs="-lessl ../flib/lapack.a"
+elif test $have_lapack -eq 0 ; then
+	lapack_libs="../flib/lapack.a"
+fi
+
 echo setting LAPACK_LIBS... $lapack_libs
 
 # check for fftw
@@ -7136,7 +7263,7 @@ if test "$ac_cv_search_dcft" != no; then
   have_fft=1 fft_libs="$LIBS"
 fi
 
-		;;
+	    ;;
 	sparc )
 		# check for SUNperf library
 		unset ac_cv_search_zfft3i # clear cached value
@@ -8090,106 +8217,6 @@ FFLAGS="$test_fflags"
 LDFLAGS="$test_ldflags"
 parallel=0
 
-if test "`echo $lapack_libs | grep mkl`" != ""
-then
-	mylib="lapack_mkl"
-else
-	LIBS="$lapack_libs $blas_libs"
-	echo "$as_me:$LINENO: checking for library containing zggev" >&5
-echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6
-if test "${ac_cv_search_zggev+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-ac_cv_search_zggev=no
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call zggev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_search_zggev="none required"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-if test "$ac_cv_search_zggev" = no; then
-  for ac_lib in ""; do
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-    cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call zggev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_search_zggev="-l$ac_lib"
-break
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-  done
-fi
-LIBS=$ac_func_search_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_search_zggev" >&5
-echo "${ECHO_T}$ac_cv_search_zggev" >&6
-if test "$ac_cv_search_zggev" != no; then
-  test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
-
-else
-  mylib="lapack"
-fi
-
-fi
 
 LIBS="$mass_libs"
 echo "$as_me:$LINENO: checking for library containing vexp" >&5
@@ -9171,8 +9198,6 @@ echo "${ECHO_T}no" >&6
 fi
 
 echo setting RANLIB... $ranlib
-echo setting MYLIB... $mylib
-
 
 # configure output messages
 blas_line="BLAS_LIBS=$blas_libs"
@@ -9205,7 +9230,6 @@ else
 fi
 
 # export settings to generated files
-
 
 
 
@@ -9901,7 +9925,6 @@ s,@lapack_libs@,$lapack_libs,;t t
 s,@fft_libs@,$fft_libs,;t t
 s,@mpi_libs@,$mpi_libs,;t t
 s,@mass_libs@,$mass_libs,;t t
-s,@mylib@,$mylib,;t t
 s,@ar@,$ar,;t t
 s,@arflags@,$arflags,;t t
 s,@arflags_dynamic@,$arflags_dynamic,;t t

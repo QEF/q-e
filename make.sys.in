@@ -29,7 +29,7 @@
 # FDFLAGS = as DFLAGS, for the f90 compiler
 # See include/defs.h.README for a list of options and their meaning
 # With the exception of IBM xlf, FDFLAGS = $(DFLAGS)
-# For IBM xlf, FDFLAGS is the same as DFLAGS but with separating commas !
+# For IBM xlf, FDFLAGS is the same as DFLAGS with separating commas 
 
 DFLAGS         = @dflags@
 FDFLAGS        = @fdflags@
@@ -88,28 +88,32 @@ FFLAGS_NOOPT   = @fflags_noopt@
 LDFLAGS        = @ldflags@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
-# For parallel execution, the correct path to MPI libraries must
-# be specified in MPI_LIBS (expect for IBM if you use mpxlf)
+
+# If you have nothing better, use the local copy : ../flib/blas.a
 
 BLAS_LIBS      = @blas_libs@
+
+# The following lapack libraries will be available in flib/ :
+# ../flib/lapack.a : contains all needed routines
+# ../flib/lapack_atlas.a: only routines not present in the Atlas library
+# ../flib/lapack_mkl.a :  only routines not present in Intel MKL
+# For IBM machines with essl: load essl BEFORE lapack !
+
 LAPACK_LIBS    = @lapack_libs@
+
+# nothing needed here if the the internal copy of FFTW is compiled
+# (needs -D__FFTW -D__USE_INTERNAL_FFTW in DFLAGS)
+
 FFT_LIBS       = @fft_libs@
+
+# For parallel execution, the correct path to MPI libraries must
+# be specified in MPI_LIBS (except for IBM if you use mpxlf)
+
 MPI_LIBS       = @mpi_libs@
 
 # IBM-specific: MASS libraries, if available and if -D__MASS is defined in FDFLAGS
 
 MASS_LIBS      = @mass_libs@
-
-# MYLIB can be one of the following (depending on LAPACK_LIBS):
-# lapack     : compile the local copy of lapack routines
-# lapack_ibm : compile only lapack routines not present in IBM ESSL
-#              use this together with IBM ESSL
-# lapack_atlas: compile only lapack routines not present in the Atlas library
-#              use this together with Atlas libraries if these are not complete 
-# lapack_mkl : compile only lapack routines not present in Intel MKL
-#              use this together with Intel MKL
-
-MYLIB          = @mylib@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 # ARFLAGS_DYNAMICS is used in iotk to produce a dynamical library,

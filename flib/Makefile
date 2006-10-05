@@ -52,33 +52,25 @@ numroc.o \
 ownerof.o \
 error.o
 
-all: blas.a flib.a ptools.a $(MYLIB)
+all: blas.a flib.a lapack_atlas.a lapack.a lapack_mkl.a ptools.a
 
 flib.a : $(OBJS)
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@
 
-blas.a : blas.o dlamch.o
+blas.a : blas.o
 	$(AR) $(ARFLAGS) $@ $?
 	$(RANLIB) $@ 
 
-lapack : $(OBJS) lapack.o dlamch.o
-	$(AR) $(ARFLAGS) flib.a $?
-	$(RANLIB) flib.a
-	touch $@
+lapack_atlas.a : lapack_atlas.o dlamch.o
+	$(AR) $(ARFLAGS) $@ $?
+	$(RANLIB) $@ 
 
-lapack_ibm : $(OBJS) lapack_ibm.o dlamch.o
-	$(AR) $(ARFLAGS) flib.a $?
-	$(RANLIB) flib.a
-	touch $@
+lapack.a : lapack_atlas.o lapack_all.o dlamch.o
+	$(AR) $(ARFLAGS) $@ $?
 
-lapack_mkl : $(OBJS) lapack_mkl.o 
-	$(AR) $(ARFLAGS) flib.a $?
-	touch $@
-
-lapack_atlas : $(OBJS) lapack_atlas.o dlamch.o
-	$(AR) $(ARFLAGS) flib.a $?
-	touch $@
+lapack_mkl.a : lapack_mkl.o
+	$(AR) $(ARFLAGS) $@ $?
 
 dlamch.o : dlamch.f
 	$(F77) $(FFLAGS_NOOPT) -c $<
@@ -88,8 +80,6 @@ ptools.a : $(POBJS)
 	$(RANLIB) $@
 
 clean :
-	- /bin/rm -f ptools.a *.o *.mod *.i *.F90 core* work.pc flib.a \
-		blas_and_lapack blas lapack lapack_ibm lapack_t3e \
-		lapack_mkl lapack_atlas
+	- /bin/rm -f *.a *.o *.mod *.i *.F90 core* work.pc
 
 include make.depend
