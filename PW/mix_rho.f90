@@ -47,7 +47,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
     nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
     alphamix,              &! (in) mixing factor
     dr2                     ! (out) the estimated errr on the energy
-  REAL (DP) :: &
+  REAL(DP) :: &
     tr2_min       ! estimated error from diagonalization. If the estimated
                   ! scf error is smaller than this, exit: a more accurate 
                   ! diagonalization is needed
@@ -80,7 +80,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   LOGICAL :: &
     savetofile,   &! save intermediate steps on file "prefix"."file_extension"
     exst           ! if true the file exists
-
+  !
   ! ... saved variables and arrays
   !
   INTEGER, SAVE :: &
@@ -123,11 +123,11 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
   !
   conv = ( dr2 < tr2 )
   !
-  ! ... if the self-consistency error (dr2) is smaller than the estimated 
-  ! ... error due to diagonalization (tr2_min), exit and leave rhocin and 
-  ! ... rhocout unchanged
-  !
   IF ( conv .OR. dr2 < tr2_min ) THEN
+     !
+     ! ... if convergence is achieved or if the self-consistency error (dr2) is
+     ! ... smaller than the estimated error due to diagonalization (tr2_min),
+     ! ... exit and leave rhocin and rhocout unchanged
      !
      IF ( ALLOCATED( df ) )    DEALLOCATE( df )
      IF ( ALLOCATED( dv ) )    DEALLOCATE( dv )
@@ -135,8 +135,6 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
      IF ( ALLOCATED( dv_ns ) ) DEALLOCATE( dv_ns )
      !
      rhocout(:,:) = rhocout(:,:) + rhocin(:,:)
-     !
-     IF ( conv ) rhocin(:,:) = rhocout(:,:)
      !
      CALL stop_clock( 'mix_rho' )
      !

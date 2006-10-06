@@ -354,7 +354,8 @@ MODULE ener
   SAVE
   !
   REAL(DP) :: &
-       etot,           &! the total energy of the solid
+       etot,           &! the total Kohn-Sham energy of the solid
+       hwf_energy,     &! this is the Harris-Weinert-Foulkes energy
        eband,          &! the band energy
        deband,         &! scf correction to have variational energy
        ehart,          &! the hartree energy

@@ -13,9 +13,9 @@ SUBROUTINE electrons()
   !
   ! ... This routine is a driver of the self-consistent cycle.
   ! ... It uses the routine c_bands for computing the bands at fixed
-  ! ... Hamiltonian, the routine sum_band to compute the charge
-  ! ... density, the routine v_of_rho to compute the new potential
-  ! ... and the routine mix_rho to mix input and output charge densities
+  ! ... Hamiltonian, the routine sum_band to compute the charge density,
+  ! ... the routine v_of_rho to compute the new potential and the routine
+  ! ... mix_rho to mix input and output charge densities.
   ! ... It prints on output the total energy and its decomposition in
   ! ... the separate contributions.
   !
@@ -34,10 +34,11 @@ SUBROUTINE electrons()
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
-  USE wvfct,                ONLY : nbnd, et, gamma_only, wg,npwx
+  USE wvfct,                ONLY : nbnd, et, gamma_only, wg, npwx
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
-  USE ener,                 ONLY : etot, eband, deband, ehart, vtxc, etxc, &
-                                   etxcc, ewld, demet, ef, ef_up, ef_dw 
+  USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
+                                   vtxc, etxc, etxcc, ewld, demet, ef,     &
+                                   ef_up, ef_dw 
   USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
                                    vr, vltot, vrs 
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
@@ -49,12 +50,14 @@ SUBROUTINE electrons()
                                    niter_with_fixed_ns, lda_plus_u  
   USE extfield,             ONLY : tefield, etotefield  
   USE wavefunctions_module, ONLY : evc, evc_nc, psic
-  USE noncollin_module,     ONLY : noncolin, npol, magtot_nc
-  USE noncollin_module,     ONLY : factlist, pointlist, pointnum, mcons,&
-                                   i_cons, bfield, lambda, vtcon, report
+  USE noncollin_module,     ONLY : noncolin, npol, magtot_nc, factlist, &
+                                   pointlist, pointnum, mcons, i_cons,  &
+                                   bfield, lambda, vtcon, report
   USE spin_orb,             ONLY : domag
   USE bp,                   ONLY : lelfield, lberry, nberrycyc
   USE io_rho_xml,           ONLY : write_rho
+  USE uspp,                 ONLY : okvan
+  USE realus,               ONLY : tqr
 #if defined (EXX)
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
@@ -71,50 +74,49 @@ SUBROUTINE electrons()
   REAL(DP) :: fock0, fock1, fock2
 #endif
   INTEGER, ALLOCATABLE :: &
-      ngk_g(:)         !  number of plane waves summed on all nodes
-  CHARACTER (LEN=256) :: &
-      flmix            !
+      ngk_g(:)       ! number of plane waves summed on all nodes
+  CHARACTER(LEN=256) :: &
+      flmix          !
   REAL(DP) :: &
-      dr2,            &!  the norm of the diffence between potential
-      charge,         &!  the total charge
-      mag,            &!  local magnetization
-      ehomo, elumo     !  highest occupied and lowest onuccupied levels
-   INTEGER :: &
-      i,                 &!  counter on polarization
-      is,                &!  counter on spins
-      ig,                &!  counter on G-vectors
-      ik,                &!  counter on k points
-      kbnd,              &!  counter on bands
-      ibnd_up,ibnd_down, &!  counter on bands
-      ibnd,              &!  counter on bands
-      idum,              &!  dummy counter on iterations
-      iter,              &!  counter on iterations
-      ik_                 !  used to read ik from restart file
+      dr2,          &! the norm of the diffence between potential
+      charge,       &! the total charge
+      mag,          &! local magnetization
+      ehomo, elumo   ! highest occupied and lowest onuccupied levels
   INTEGER :: &
-      ldim2           !
+      i,            &! counter on polarization
+      is,           &! counter on spins
+      ik,           &! counter on k points
+      kbnd,         &! counter on bands
+      ibnd_up,      &! counter on bands
+      ibnd_down,    &! counter on bands
+      ibnd,         &! counter on bands
+      idum,         &! dummy counter on iterations
+      iter,         &! counter on iterations
+      ik_            ! used to read ik from restart file
   REAL(DP) :: &
-       tr2_min,      &! estimated error on energy coming from diagonalization
-       descf          ! correction for variational energy
-
+       tr2_min,     &! estimated error on energy coming from diagonalization
+       descf         ! correction for variational energy
   REAL(DP), ALLOCATABLE :: &
-      wg_g(:,:)        ! temporary array used to collect array wg from pools
-                       ! and then print occupations on stdout
+      wg_g(:,:)      ! temporary array used to collect array wg from pools
+                     ! and then print occupations on stdout
   LOGICAL :: &
       exst, first
   !
-  ! ... external functions
-  !
-  REAL(DP), EXTERNAL :: ewald, get_clock
-  !
-  ! ... auxiliary variables for calculating and storing rho in G-space
+  ! ... auxiliary variables for calculating and storing temporary copies of
+  ! ... the charge density and of the HXC-potential
   !
   COMPLEX(DP), ALLOCATABLE :: rhognew(:,:)
   REAL(DP),    ALLOCATABLE :: rhonew(:,:)
+  REAL(DP),    ALLOCATABLE :: vaux(:,:)
   !
   ! ... variables needed for electric field calculation
   !
   INTEGER                  :: inberry
   COMPLEX(DP), ALLOCATABLE :: psi(:,:)
+  !
+  ! ... external functions
+  !
+  REAL(DP), EXTERNAL :: ewald, get_clock, DNRM2
   !
   !
   CALL start_clock( 'electrons' )
@@ -154,8 +156,8 @@ SUBROUTINE electrons()
   !
   ! ... calculates the ewald contribution to total energy
   !
-  ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, omega, &
-                g, gg, ngm, gcutm, gstart, gamma_only, strf )
+  ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
+                omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !               
   IF ( reduce_io ) THEN
      !
@@ -248,13 +250,55 @@ SUBROUTINE electrons()
         !
         IF ( iter > 1 .AND. check_stop_now() ) RETURN
         !
+        ! ... deband = - \sum_v <\psi_v | V_h + V_xc |\psi_v> is calculated a
+        ! ... first time here using the input density and potential ( to be
+        ! ... used to calculate the Harris-Weinert-Foulkes energy )
+        !
+        deband = delta_e()
+        !
+        ! ... the new density is computed here
+        !
         CALL sum_band()
         !
-        ! ... output charge density in real space is stored in rho
+        ! ... bring output charge density (now stored in rho) to G-space
+        ! ... (rhognew) for mixing
+        !
+        ALLOCATE( rhognew( ngm, nspin ) )
+        !
+        DO is = 1, nspin
+           !
+           psic(:) = rho(:,is)
+           !
+           CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+           !
+           rhognew(:,is) = psic(nl(:))
+           !
+           IF ( okvan .AND. tqr ) THEN
+              !
+              ! ... in case the augmentation charges are computed in real space
+              ! ... we apply an FFT filter to the density in real space to
+              ! ... remove features that are not compatible with the FFT grid.
+              !
+              psic(:) = ( 0.D0, 0.D0 )
+              !
+              psic(nl(:)) = rhognew(:,is)
+              !
+              IF ( gamma_only ) psic(nlm(:)) = CONJG( rhognew(:,is) )
+              !
+              CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+              !
+              rho(:,is) = psic(:)
+              !
+           END IF
+           !
+        END DO
+        !
+        ! ... the Harris-Weinert-Foulkes energy is computed here using only
+        ! ... quantities obtained from the input density
+        !
+        hwf_energy = eband + deband + ( etxc - etxcc ) + ewld + ehart + demet
         !
         IF ( lda_plus_u )  THEN
-           !
-           ldim2 = ( 2*Hubbard_lmax + 1 )**2
            !
            CALL write_ns()
            !
@@ -275,32 +319,34 @@ SUBROUTINE electrons()
         ! 
         deband = delta_e()
         !
-        ! ... bring output charge density (rho) to G-space (rhognew) for mixing
-        !
-        ALLOCATE( rhognew( ngm, nspin ) )
-        !
-        DO is = 1, nspin
-           !
-           psic(:) = rho(:,is)
-           !
-           CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-           !
-           rhognew(:,is) = psic(nl(:))
-           !
-        END DO
-        !
         CALL mix_rho( rhognew, rhog, nsnew, ns, mixing_beta, &
                       dr2, tr2_min, iter, nmix, flmix, conv_elec )
         !
+        ! ... if convergence is achieved or if the self-consistency error
+        ! ... (dr2) is smaller than the estimated error due to diagonalization
+        ! ... (tr2_min), rhog and rhognew are unchanged: rhog contains the
+        ! ... input density and rhognew contains the output density, both in
+        ! ... G-space.
+        ! ... in the other cases rhog now contains mixed charge density in
+        ! ... G-space.
+        !
+        IF ( conv_elec ) THEN
+           !
+           ! ... if convergence is achieved, rhognew is copied into rhog so
+           ! ... that rho and rhog contain the same charge density, one in
+           ! ... R-space, the other in G-space
+           !
+           rhog(:,:) = rhognew(:,:)
+           !
+        END IF
+        !
         DEALLOCATE( rhognew )
         !
-        ! ... rhog now contains mixed charge density in G-space
-        !
-        ! ... first scf iteration: check if the threshold on diagonalization
-        ! ... (ethr) was small enough wrt the error in self-consistency (dr2)
-        ! ... If not, perform a  new diagonalization with reduced threshold
-        !
         IF ( first ) THEN
+           !
+           ! ... first scf iteration: check if the threshold on diagonalization
+           ! ... (ethr) was small enough wrt the error in self-consistency (dr2)
+           ! ... if not, perform a new diagonalization with reduced threshold
            !
            first = .FALSE.
            !
@@ -338,8 +384,8 @@ SUBROUTINE electrons()
               !
            END DO
            !
-           ! ... no convergence yet: calculate new potential from 
-           ! ... mixed charge density (i.e. the new estimate) 
+           ! ... no convergence yet: calculate new potential from mixed
+           ! ... charge density (i.e. the new estimate) 
            !
            CALL v_of_rho( rhonew, rhog, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
@@ -353,6 +399,8 @@ SUBROUTINE electrons()
            !
            descf = delta_escf()
            !
+           ! ... now rho contains the mixed charge density in R-space
+           !
            rho(:,:) = rhonew(:,:)
            !
            DEALLOCATE( rhonew )
@@ -363,13 +411,21 @@ SUBROUTINE electrons()
            !
         ELSE
            !
-           ! ... convergence reached: store V(out)-V(in) in vnew ( used 
-           ! ... to correct the forces )
+           ALLOCATE( vaux( nrxx, nspin ) )
+           !
+           ! ... convergence reached:
+           ! ... 1) the new HXC-potential is temporarily stored in vaux and
+           ! ...    then copied into vr.
+           ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
            CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
-                          ehart, etxc, vtxc, etotefield, charge, vnew )
+                          ehart, etxc, vtxc, etotefield, charge, vaux )
            !
-           vnew = vnew - vr
+           vnew(:,:) = vaux(:,:) - vr(:,:)
+           !
+           vr(:,:) = vaux(:,:)
+           !
+           DEALLOCATE( vaux )
            !
            ! ... note that rho is the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
@@ -413,8 +469,8 @@ SUBROUTINE electrons()
         !
      END IF
      !
-     ! ... In the US case we need to recompute the self consistent term
-     ! ... in the nonlocal potential.
+     ! ... in the US case we have to recompute the self-consistent
+     ! ... term in the nonlocal potential
      !
      CALL newd()
      !
@@ -458,11 +514,15 @@ SUBROUTINE electrons()
         ALLOCATE ( ngk_g (nkstot) ) 
         !
         ngk_g(1:nks) = ngk(:)
+        !
         CALL mp_sum( ngk_g(1:nks), intra_pool_comm )
+        !
         CALL ipoolrecover( ngk_g, 1, nkstot, nks )
-        CALL mp_bcast ( ngk_g, root_pool, intra_pool_comm )
-        CALL mp_bcast ( ngk_g, root_pool, inter_pool_comm )
-        CALL  poolrecover( et, nbnd, nkstot, nks )
+        !
+        CALL mp_bcast( ngk_g, root_pool, intra_pool_comm )
+        CALL mp_bcast( ngk_g, root_pool, inter_pool_comm )
+        !
+        CALL poolrecover( et, nbnd, nkstot, nks )
         !
         DO ik = 1, nkstot
            !
@@ -500,26 +560,28 @@ SUBROUTINE electrons()
         DEALLOCATE ( ngk_g )
         !
         IF ( lgauss .OR. ltetra ) THEN
+           !
            IF ( two_fermi_energies ) THEN
-              WRITE( stdout, 9041 ) ef_up * rytoev, ef_dw * rytoev
+              WRITE( stdout, 9041 ) ef_up*rytoev, ef_dw*rytoev
            ELSE
-              WRITE( stdout, 9040 ) ef * rytoev
+              WRITE( stdout, 9040 ) ef*rytoev
            END IF
+           !
         ELSE
            !
            IF ( tfixed_occ ) THEN
               ibnd = 0
-              DO kbnd=1,nbnd
-                 IF (nspin==1.OR.nspin==4) THEN
-                    IF (f_inp(kbnd,1)>0.d0) ibnd=kbnd
+              DO kbnd = 1, nbnd
+                 IF ( nspin == 1 .OR. nspin == 4 ) THEN
+                    IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
                  ELSE
-                    IF (f_inp(kbnd,1)>0.d0) ibnd_up=kbnd
-                    IF (f_inp(kbnd,2)>0.d0) ibnd_down=kbnd
+                    IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
+                    IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_down = kbnd
                  END IF
               END DO
            ELSE
               IF ( nspin == 1 ) THEN
-                 ibnd =  NINT( nelec ) / 2.D0
+                 ibnd =  NINT( nelec ) / 2
               ELSE
                  ibnd =  NINT( nelec )
               END IF
@@ -527,17 +589,17 @@ SUBROUTINE electrons()
            !
            IF ( ionode .AND. nbnd > ibnd ) THEN
               !
-              IF (nspin==1.OR.nspin==4) THEN
-                 ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
-                 elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
+              IF ( nspin == 1 .OR. nspin == 4 ) THEN
+                 ehomo = MAXVAL( et(ibnd  ,1:nkstot) )
+                 elumo = MINVAL( et(ibnd+1,1:nkstot) )
               ELSE 
-                 ehomo = MAX(MAXVAL(et(ibnd_up, 1:nkstot/2)), &
-                             MAXVAL(et(ibnd_down, nkstot/2+1:nkstot)))
-                 elumo = MIN(MINVAL(et(ibnd_up+1, 1:nkstot/2) ), &
-                             MINVAL(et(ibnd_down+1, nkstot/2+1:nkstot)))
+                 ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
+                              MAXVAL( et(ibnd_down,nkstot/2+1:nkstot) ) )
+                 elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
+                              MINVAL( et(ibnd_down+1,nkstot/2+1:nkstot) ) )
               ENDIF
               !
-              WRITE( stdout, 9042 ) ehomo * rytoev, elumo * rytoev
+              WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
               !
            END IF
         END IF
@@ -565,7 +627,6 @@ SUBROUTINE electrons()
         IF ( first ) THEN
            !
            fock0 = exxenergy2()
-           !
            CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
@@ -601,9 +662,9 @@ SUBROUTINE electrons()
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !  
         IF ( dr2 > eps8 ) THEN
-           WRITE( stdout, 9081 ) etot, dr2
+           WRITE( stdout, 9081 ) etot, hwf_energy, dr2
         ELSE
-           WRITE( stdout, 9083 ) etot, dr2
+           WRITE( stdout, 9083 ) etot, hwf_energy, dr2
         END IF
         !
         WRITE( stdout, 9060 ) &
@@ -613,7 +674,7 @@ SUBROUTINE electrons()
         !
         WRITE( stdout, 9062 ) fock1
         WRITE( stdout, 9063 ) fock2
-        WRITE( stdout, 9064 ) 0.5D0 * fock2
+        WRITE( stdout, 9064 ) 0.5D0*fock2
         !
 #endif
         !
@@ -629,17 +690,17 @@ SUBROUTINE electrons()
      ELSE IF ( conv_elec .AND. lmd ) THEN
         !
         IF ( dr2 > eps8 ) THEN
-           WRITE( stdout, 9081 ) etot, dr2
+           WRITE( stdout, 9081 ) etot, hwf_energy, dr2
         ELSE
-           WRITE( stdout, 9083 ) etot, dr2
+           WRITE( stdout, 9083 ) etot, hwf_energy, dr2
         END IF
         !
      ELSE
         !
         IF ( dr2 > eps8 ) THEN
-           WRITE( stdout, 9080 ) etot, dr2
+           WRITE( stdout, 9080 ) etot, hwf_energy, dr2
         ELSE
-           WRITE( stdout, 9082 ) etot, dr2
+           WRITE( stdout, 9082 ) etot, hwf_energy, dr2
         END IF
         !
      END IF
@@ -720,34 +781,33 @@ SUBROUTINE electrons()
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
-! 9060 FORMAT(/'     band energy sum           =',  F15.8,' ryd' &
-9060 FORMAT(/'     one-electron contribution =',  F15.8,' ryd' &
-            /'     hartree contribution      =',  F15.8,' ryd' &
-            /'     xc contribution           =',  F15.8,' ryd' &
-            /'     ewald contribution        =',  F15.8,' ryd' )
-9061 FORMAT( '     electric field correction =',  F15.8,' ryd' )
-9062 FORMAT( '     Fock energy 1             =',  F15.8,' ryd' )
-9063 FORMAT( '     Fock energy 2             =',  F15.8,' ryd' )
-9064 FORMAT( '     Half Fock energy 2        =',  F15.8,' ryd' )
-9066 FORMAT( '     dexx                      =',  F15.8,' ryd' )
+9060 FORMAT(/'     one-electron contribution =',F15.8,' ryd' &
+            /'     hartree contribution      =',F15.8,' ryd' &
+            /'     xc contribution           =',F15.8,' ryd' &
+            /'     ewald contribution        =',F15.8,' ryd' )
+9061 FORMAT( '     electric field correction =',F15.8,' ryd' )
+9062 FORMAT( '     Fock energy 1             =',F15.8,' ryd' )
+9063 FORMAT( '     Fock energy 2             =',F15.8,' ryd' )
+9064 FORMAT( '     Half Fock energy 2        =',F15.8,' ryd' )
+9066 FORMAT( '     dexx                      =',F15.8,' ryd' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd' )
 9069 FORMAT( '     scf correction            =',F15.8,' ryd' )
 9070 FORMAT( '     "-TS" contribution        =',F15.8,' ryd' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd' )
-9072 FORMAT( '     Magnetic field            =', F12.7,' ryd' )
-9073 FORMAT( '     lambda                    =', F11.2,' ryd' )
-9080 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
+9072 FORMAT( '     Magnetic field            =',F12.7, ' ryd' )
+9073 FORMAT( '     lambda                    =',F11.2,' ryd' )
+9080 FORMAT(/'     total  KS-energy          =',0PF15.8,' ryd' &
+            /'     total HWF-energy          =',0PF15.8,' ryd' &
             /'     estimated scf accuracy    <',0PF15.8,' ryd' )
-9081 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
+9081 FORMAT(/'!    total  KS-energy          =',0PF15.8,' ryd' &
+            /'     total HWF-energy          =',0PF15.8,' ryd' &
             /'     estimated scf accuracy    <',0PF15.8,' ryd' )
-9082 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
+9082 FORMAT(/'     total  KS-energy          =',0PF15.8,' ryd' &
+            /'     total HWF-energy          =',0PF15.8,' ryd' &
             /'     estimated scf accuracy    <',1PE15.1,' ryd' )
-9083 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
+9083 FORMAT(/'!    total  KS-energy          =',0PF15.8,' ryd' &
+            /'     total HWF-energy          =',0PF15.8,' ryd' &
             /'     estimated scf accuracy    <',1PE15.1,' ryd' )
-9085 FORMAT(/'     total energy              =',0PF15.8,' ryd' &
-            /'     potential mean squ. error =',1PE15.1,' ryd^2' )
-9086 FORMAT(/'!    total energy              =',0PF15.8,' ryd' &
-            /'     potential mean squ. error =',1PE15.1,' ryd^2' )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved' )
 9120 FORMAT(/'     convergence NOT achieved, stopping' )
@@ -816,7 +876,7 @@ SUBROUTINE electrons()
           END IF
           !
           WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-          WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
+          WRITE( stdout, 9030 ) ( et(ibnd,ik)*rytoev, ibnd = 1, nbnd )
           !
        END DO
        !
@@ -824,48 +884,48 @@ SUBROUTINE electrons()
           !
           ef = efermig( et, nbnd, nks, nelec, wk, degauss, ngauss, 0, isk )
           !
-          WRITE( stdout, 9040 ) ef * rytoev
+          WRITE( stdout, 9040 ) ef*rytoev
           !
        ELSE IF ( ltetra .AND. .NOT. lbands ) THEN
           !
           ef = efermit( et, nbnd, nks, nelec, nspin, ntetra, tetra, 0, isk )
           !
-          WRITE( stdout, 9040 ) ef * rytoev
+          WRITE( stdout, 9040 ) ef*rytoev
           !
        ELSE IF (.NOT. lbands) THEN
           !
           IF ( tfixed_occ ) THEN
               ibnd = 0
-              DO kbnd=1,nbnd
-                 IF (nspin==1.OR.nspin==4) THEN
-                    IF (f_inp(kbnd,1)>0.d0) ibnd=kbnd
+              DO kbnd = 1, nbnd
+                 IF ( nspin == 1 .OR. nspin == 4 ) THEN
+                    IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
                  ELSE
-                    IF (f_inp(kbnd,1)>0.d0) ibnd_up=kbnd
-                    IF (f_inp(kbnd,2)>0.d0) ibnd_down=kbnd
+                    IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
+                    IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_down = kbnd
                  END IF
               END DO
           ELSE
              IF ( nspin == 1 ) THEN
-                ibnd =  nint (nelec) / 2.d0
+                ibnd = NINT( nelec ) / 2
              ELSE
-                ibnd =  nint (nelec)
+                ibnd = NINT( nelec )
              END IF
           END IF
           !
           IF ( ionode .AND. nbnd > ibnd ) THEN
              !
-             IF (nspin==1.OR.nspin==4) THEN
-                ehomo = MAXVAL ( et( ibnd  , 1:nkstot) )
-                elumo = MINVAL ( et( ibnd+1, 1:nkstot) )
+             IF ( nspin == 1 .OR. nspin == 4 ) THEN
+                ehomo = MAXVAL( et(ibnd  ,1:nkstot) )
+                elumo = MINVAL( et(ibnd+1,1:nkstot) )
              !
              ELSE
-                ehomo = MAX(MAXVAL(et(ibnd_up, 1:nkstot/2)), &
-                            MAXVAL(et(ibnd_down, nkstot/2+1:nkstot)))
-                elumo = MIN(MINVAL(et(ibnd_up+1, 1:nkstot/2) ), &
-                            MINVAL(et(ibnd_down+1, nkstot/2+1:nkstot)))
+                ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
+                             MAXVAL( et(ibnd_down,nkstot/2+1:nkstot) ) )
+                elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
+                             MINVAL( et(ibnd_down+1,nkstot/2+1:nkstot) ) )
              END IF
              IF ( ehomo < elumo ) &
-                  WRITE( stdout, 9042 ) ehomo * rytoev, elumo * rytoev
+                WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
              !
           END IF
           !
@@ -917,8 +977,8 @@ SUBROUTINE electrons()
           magtot = magtot * omega / ( nr1*nr2*nr3 )
           absmag = absmag * omega / ( nr1*nr2*nr3 )
           !
-          CALL mp_sum ( magtot, intra_pool_comm )
-          CALL mp_sum ( absmag, intra_pool_comm )
+          CALL mp_sum( magtot, intra_pool_comm )
+          CALL mp_sum( absmag, intra_pool_comm )
           !
        ELSE IF ( noncolin ) THEN
           !

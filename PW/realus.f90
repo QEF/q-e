@@ -17,22 +17,22 @@ MODULE realus
   ! ... modified by Carlo Sbraccia
   !
   INTEGER,  ALLOCATABLE :: box(:,:), maxbox(:)
-  REAL(DP), ALLOCATABLE :: qsave(:,:)
-  REAL(DP), ALLOCATABLE :: boxradius(:), boxdistance(:,:), xyz(:,:,:)     
+  REAL(DP), ALLOCATABLE :: qsave(:)
+  REAL(DP), ALLOCATABLE :: boxrad(:)
+  REAL(DP), ALLOCATABLE :: boxdist(:,:), xyz(:,:,:)     
   REAL(DP), ALLOCATABLE :: spher(:,:,:)
   LOGICAL               :: tqr
   !
   CONTAINS
     !
+    !------------------------------------------------------------------------
     SUBROUTINE deallocatenewdreal()
+      !------------------------------------------------------------------------
       !
-      IF ( ALLOCATED( box ) )         DEALLOCATE( box )
-      IF ( ALLOCATED( boxdistance ) ) DEALLOCATE( boxdistance )
-      IF ( ALLOCATED( maxbox ) )      DEALLOCATE( maxbox )
-      IF ( ALLOCATED( qsave ) )       DEALLOCATE( qsave )
-      IF ( ALLOCATED( boxradius ) )   DEALLOCATE( boxradius )
-      IF ( ALLOCATED( xyz ) )         DEALLOCATE( xyz )
-      IF ( ALLOCATED( spher ) )       DEALLOCATE( spher )
+      IF ( ALLOCATED( box ) )     DEALLOCATE( box )
+      IF ( ALLOCATED( maxbox ) )  DEALLOCATE( maxbox )
+      IF ( ALLOCATED( qsave ) )   DEALLOCATE( qsave )
+      IF ( ALLOCATED( boxrad ) )  DEALLOCATE( boxrad )
       !
     END SUBROUTINE deallocatenewdreal
     !
@@ -52,18 +52,17 @@ MODULE realus
       ! ... points of the fine mesh contained in each box.
       ! ... In xyz there are the coordinates of the points with origin in the
       ! ... centre of atom.
-      ! ... In boxdistance the distance from the centre.
+      ! ... In boxdist the distance from the centre.
       ! ... In spher the spherical harmonics computed for each box
       ! ... In qsave the q value interpolated in these boxes.
       !
       ! ... Most of time is spent here; the calling routines are faster.
       !
       USE constants,  ONLY : pi, fpi, eps8, eps16
-      USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
+      USE ions_base,  ONLY : nat, nsp, ityp, tau
       USE cell_base,  ONLY : at, bg, omega, alat
       USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-      USE uspp,       ONLY : okvan
-      USE uspp,       ONLY : indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
+      USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
       USE uspp_param, ONLY : lmaxq, nh, nhm, tvanp, kkbeta, nbeta, &
                              qfunc, dion, lmaxkb, qfcoef, nqf, nqlc, &
                              lll, rinner
@@ -74,20 +73,21 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      INTEGER               :: qsdim, ia, ib, ibia, it, mbia
+      INTEGER               :: qsdim, ia, it, mbia, iqs, iqsia
       INTEGER               :: indm, inbrx1, inbrx2, idimension, &
-                               ilm, ih, jh, iih, lllnbnt, lllmbnt
+                               ilm, ih, jh, iih, ijh, lllnbnt, lllmbnt
       INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
-      INTEGER,  ALLOCATABLE :: bufferpoints(:,:)
-      REAL(DP), ALLOCATABLE :: bufferdistance(:,:), bufferxyz(:,:,:)
-      REAL(DP)              :: distance, interpolatedqtot, first, second
+      INTEGER,  ALLOCATABLE :: buffpoints(:,:)
+      REAL(DP), ALLOCATABLE :: buffdist(:,:)
+      REAL(DP)              :: distsq, qtot_int, first, second
       INTEGER               :: index0, index, indproc, ir
       INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ilast
       REAL(DP)              :: posi(3)
-      REAL(DP), ALLOCATABLE :: tau0(:,:), rl(:,:), rl2(:)
+      REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
       REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
                                xsp(:), ysp(:), wsp(:)
       REAL(DP)              :: mbr, mbx, mby, mbz, dmbx, dmby, dmbz
+      REAL(DP)              :: inv_nr1, inv_nr2, inv_nr3, tau_ia(3), boxradsq_ia
       !
       !
       IF ( .NOT. okvan ) RETURN
@@ -98,23 +98,25 @@ MODULE realus
       !
       IF ( ALLOCATED( qsave ) ) DEALLOCATE( qsave )
       !
-      IF ( .NOT. ALLOCATED( boxradius ) ) THEN
+      IF ( .NOT. ALLOCATED( boxrad ) ) THEN
          !
          ! ... here we calculate the radius of each spherical box ( one
          ! ... for each non-local projector )
          !
-         ALLOCATE( boxradius( ntyp ) )
+         ALLOCATE( boxrad( nsp ) )
          !
-         boxradius(:) = 0.D0
+         boxrad(:) = 0.D0
          !
-         DO it = 1, ntyp
+         DO it = 1, nsp
             DO inbrx1 = 1, nbeta(it)
                DO inbrx2 = 1, nbeta(it)
                   DO indm = kkbeta(it), 1, -1
                      !
                      IF ( ABS( qfunc(indm,inbrx1,inbrx2,it) ) > eps16 ) THEN
                         !
-                        boxradius(it) = MAX( r(indm,it), boxradius(it) )
+                        boxrad(it) = MAX( r(indm,it), boxrad(it) )
+                        !
+                        CYCLE
                         !
                      END IF
                      !
@@ -123,31 +125,18 @@ MODULE realus
             END DO
          END DO
          !
+         boxrad(:) = boxrad(:) / alat
+         !
       END IF
-      !
-      ! ... bring all the atomic positions on the first unit cell
-      !
-      ALLOCATE( tau0( 3, nat ) )
-      !
-      tau0(:,:) = tau(:,:)
-      !
-      CALL cryst_to_cart( nat, tau0, bg, -1 )
-      !
-      tau0(:,:) = tau0(:,:) - ANINT( tau0(:,:) )
-      !
-      CALL cryst_to_cart( nat, tau0, at, 1 )
       !
       ! ... a rough estimate for the number of grid-points per box
       ! ... is provided here
       !
-      mbr = MAXVAL( boxradius(:) )
+      mbr = MAXVAL( boxrad(:) )
       !
-      mbx = mbr*&
-            SQRT( bg(1,1)**2 + bg(1,2)**2 + bg(1,3)**2 ) / alat
-      mby = mbr*&
-            SQRT( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 ) / alat
-      mbz = mbr*&
-            SQRT( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 ) / alat
+      mbx = mbr*SQRT( bg(1,1)**2 + bg(1,2)**2 + bg(1,3)**2 )
+      mby = mbr*SQRT( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 )
+      mbz = mbr*SQRT( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 )
       !
       dmbx = 2*ANINT( mbx*nrx1 ) + 1
       dmby = 2*ANINT( mby*nrx2 ) + 1
@@ -155,18 +144,15 @@ MODULE realus
       !
       roughestimate = ANINT( DBLE( dmbx*dmby*dmbz ) * pi / 6.D0 )
       !
-     ! PRINT *, roughestimate, 10*INT( ( (1/omega)*nrxx*( mbr**3 ) ) )
+      CALL start_clock( 'realus:boxes' )
       !
-      ALLOCATE( bufferpoints(   roughestimate, nat ) )
-      ALLOCATE( bufferdistance( roughestimate, nat ) )
-      ALLOCATE( bufferxyz( 3,   roughestimate, nat ) )
+      ALLOCATE( buffpoints( roughestimate, nat ) )
+      ALLOCATE( buffdist(   roughestimate, nat ) )
       !
-      bufferpoints(:,:) = 0
-      bufferdistance(:,:) = 0.D0
+      ALLOCATE( xyz( 3, roughestimate, nat ) )
       !
-      ! ... from soubroutine make_pointlist we have copied these lines and
-      ! ... adapted to our needs; the mesh is multiplied by 27 to cover 
-      ! ... also border atoms on properly.
+      buffpoints(:,:) = 0
+      buffdist(:,:) = 0.D0
       !
       IF ( .NOT.ALLOCATED( maxbox ) ) ALLOCATE( maxbox( nat ) )
       !
@@ -184,72 +170,83 @@ MODULE realus
       !
 #endif
       !
+      inv_nr1 = 1.D0 / DBLE( nr1 )
+      inv_nr2 = 1.D0 / DBLE( nr2 )
+      inv_nr3 = 1.D0 / DBLE( nr3 )
+      !
       DO ia = 1, nat
+         !
+         IF ( .NOT. tvanp(ityp(ia)) ) CYCLE
+         !
+         boxradsq_ia = boxrad(ityp(ia))**2
+         !
+         tau_ia(1) = tau(1,ia)
+         tau_ia(2) = tau(2,ia)
+         tau_ia(3) = tau(3,ia)
          !
          DO ir = 1, nrxx
             !
-            index = index0 + ir - 1
-            k0    = index / (nrx1*nrx2)
-            index = index - (nrx1*nrx2)*k0
-            j0    = index / nrx1
-            index = index - nrx1*j0
-            i0    = index
+            ! ... three dimensional indexes
             !
-            DO i = i0-nr1, i0+nr1, nr1
-               DO j = j0-nr2, j0+nr2, nr2
-                  DO k = k0-nr3, k0+nr3, nr3
-                     !
-                     DO ipol = 1, 3
-                        posi(ipol) = DBLE( i ) / DBLE( nr1 ) * at(ipol,1) + &
-                                     DBLE( j ) / DBLE( nr2 ) * at(ipol,2) + &
-                                     DBLE( k ) / DBLE( nr3 ) * at(ipol,3)
-                     END DO
-                     !
-                     distance = SQRT( ( posi(1) - tau0(1,ia) )**2 + &
-                                      ( posi(2) - tau0(2,ia) )**2 + &
-                                      ( posi(3) - tau0(3,ia) )**2 )*alat
-                     !
-                     IF ( distance < boxradius(ityp(ia)) ) THEN
-                        !
-                        mbia = maxbox(ia) + 1
-                        !
-                        maxbox(ia) = mbia
-                        bufferpoints(mbia,ia) = ir
-                        bufferdistance(mbia,ia) = distance
-                        bufferxyz(:,mbia,ia) = ( posi(:) - tau0(:,ia) )*alat
-                        !
-                     END IF
-                  END DO
-               END DO
+            index = index0 + ir - 1
+            k     = index / (nrx1*nrx2)
+            index = index - (nrx1*nrx2)*k
+            j     = index / nrx1
+            index = index - nrx1*j
+            i     = index
+            !
+            DO ipol = 1, 3
+               posi(ipol) = DBLE( i )*inv_nr1*at(ipol,1) + &
+                            DBLE( j )*inv_nr2*at(ipol,2) + &
+                            DBLE( k )*inv_nr3*at(ipol,3)
             END DO
+            !
+            posi(:) = posi(:) - tau_ia(:)
+            !
+            ! ... minimum image convenction
+            !
+            CALL cryst_to_cart( 1, posi, bg, -1 )
+            !
+            posi(:) = posi(:) - ANINT( posi(:) )
+            !
+            CALL cryst_to_cart( 1, posi, at, 1 )
+            !
+            distsq = posi(1)**2 + posi(2)**2 + posi(3)**2
+            !
+            IF ( distsq < boxradsq_ia ) THEN
+               !
+               mbia = maxbox(ia) + 1
+               !
+               maxbox(ia)          = mbia
+               buffpoints(mbia,ia) = ir
+               buffdist(mbia,ia)   = SQRT( distsq )*alat
+               xyz(:,mbia,ia)      = posi(:)*alat
+               !
+            END IF
          END DO
       END DO
       !
-      DEALLOCATE( tau0 )
-      !
       goodestimate = MAXVAL( maxbox )
-     ! PRINT *, "GOOD ESTIMATE = ", goodestimate
       !
       IF ( goodestimate > roughestimate ) &
          CALL errore( 'qpointlist', 'rough-estimate is too rough', 2 )
       !
       ! ... now store them in a more convenient place
       !
-      IF ( ALLOCATED( box ) )         DEALLOCATE( box )
-      IF ( ALLOCATED( boxdistance ) ) DEALLOCATE( boxdistance )
-      IF ( ALLOCATED( xyz ) )         DEALLOCATE( xyz )
+      IF ( ALLOCATED( box ) )     DEALLOCATE( box )
+      IF ( ALLOCATED( boxdist ) ) DEALLOCATE( boxdist )
       !
-      ALLOCATE( box(         goodestimate, nat ) )
-      ALLOCATE( boxdistance( goodestimate, nat ) )
-      ALLOCATE( xyz( 3,      goodestimate, nat ) )
+      ALLOCATE( box(     goodestimate, nat ) )
+      ALLOCATE( boxdist( goodestimate, nat ) )
       !
-      box(:,:)         = bufferpoints(1:goodestimate,:)
-      boxdistance(:,:) = bufferdistance(1:goodestimate,:)
-      xyz(:,:,:)       = bufferxyz(:,1:goodestimate,:)
+      box(:,:)     = buffpoints(1:goodestimate,:)
+      boxdist(:,:) = buffdist(1:goodestimate,:)
       !
-      DEALLOCATE( bufferpoints )
-      DEALLOCATE( bufferdistance )
-      DEALLOCATE( bufferxyz )
+      DEALLOCATE( buffpoints )
+      DEALLOCATE( buffdist )
+      !
+      CALL stop_clock( 'realus:boxes' )
+      CALL start_clock( 'realus:spher' )
       !
       ! ... now it computes the spherical harmonics
       !
@@ -262,6 +259,8 @@ MODULE realus
       spher(:,:,:) = 0.D0
       !
       DO ia = 1, nat
+         !
+         IF ( .NOT. tvanp(ityp(ia)) ) CYCLE
          !
          idimension = maxbox(ia)
          !
@@ -287,25 +286,29 @@ MODULE realus
       !
       DEALLOCATE( xyz )
       !
+      CALL stop_clock( 'realus:spher' )
+      CALL start_clock( 'realus:qsave' )
+      !
       ! ... let's do the main work
       !
       qsdim = 0
       DO ia = 1, nat
-         IF ( maxbox(ia) == 0 ) CYCLE
+         mbia = maxbox(ia)
+         IF ( mbia == 0 ) CYCLE
          nt = ityp(ia)
          IF ( .NOT. tvanp(nt) ) CYCLE
          DO ih = 1, nh(nt)
             DO jh = ih, nh(nt)
-               qsdim = qsdim + 1
+               qsdim = qsdim + mbia
             END DO
          END DO
       END DO
       !      
-      PRINT *, "QSAVE SIZE : ", goodestimate*qsdim
+      PRINT *, "QSAVE SIZE : ", qsdim
       !
-      ALLOCATE( qsave( goodestimate, qsdim ) )
+      ALLOCATE( qsave( qsdim ) )
       !
-      qsave(:,:) = 0.D0
+      qsave(:) = 0.D0
       !
       ! ... the source is inspired by init_us_1
       !
@@ -318,12 +321,14 @@ MODULE realus
       ! ... strictly speaking we do not use interpolation but just compute
       ! ... the correct value
       !
-      ib   = 0
-      ibia = 0
+      iqs   = 0
+      iqsia = 0
       !
       DO ia = 1, nat
          !
-         IF ( maxbox(ia) == 0 ) CYCLE
+         mbia = maxbox(ia)
+         !
+         IF ( mbia == 0 ) CYCLE
          !
          nt = ityp(ia)
          !
@@ -373,13 +378,13 @@ MODULE realus
                   !
                   ! ... compute the first derivative in first point
                   !
-                  CALL setqfcorrpointfirst( qfcoef(1,l+1,nb,mb,nt), &
-                                            first, r(1,nt), nqf(nt), l )
+                  CALL setqfcorrptfirst( qfcoef(1,l+1,nb,mb,nt), &
+                                         first, r(1,nt), nqf(nt), l )
                   !
                   ! ... compute the second derivative in second point
                   !
-                  CALL setqfcorrpointsecond( qfcoef(1,l+1,nb,mb,nt), &
-                                             second, r(1,nt), nqf(nt), l )
+                  CALL setqfcorrptsecond( qfcoef(1,l+1,nb,mb,nt), &
+                                          second, r(1,nt), nqf(nt), l )
                   !
                   ! ... call spline
                   !
@@ -387,39 +392,38 @@ MODULE realus
                   !
                   DO ir = 1, maxbox(ia)
                      !
-                     IF ( boxdistance(ir,ia) < rinner(l+1,nt) ) THEN
+                     IF ( boxdist(ir,ia) < rinner(l+1,nt) ) THEN
                         !
                         ! ... if in the inner radius just compute the
                         ! ... polynomial
                         !
-                        CALL setqfcorrpoint( qfcoef(1,l+1,nb,mb,nt), &
-                                             interpolatedqtot,       &
-                                             boxdistance(ir,ia), nqf(nt), l )
+                        CALL setqfcorrpt( qfcoef(1,l+1,nb,mb,nt), &
+                                          qtot_int, boxdist(ir,ia), nqf(nt), l )
                         !
                      ELSE   
                         !
                         ! ... spline interpolation
                         !
-                        interpolatedqtot = splint( xsp, ysp, &
-                                                   wsp, boxdistance(ir,ia) )
+                        qtot_int = splint( xsp, ysp, wsp, boxdist(ir,ia) )
                         !
                      END IF
                      !
-                     ib = ibia
+                     ijh = 0
                      !
                      DO ih = 1, nh(nt)
                         DO jh = ih, nh(nt)
                            !
-                           ib = ib + 1
+                           iqs = iqsia + ijh*mbia + ir
+                           ijh = ijh + 1
                            !
                            IF ( .NOT.( nb == indv(ih,nt) .AND. &
                                        mb == indv(jh,nt) ) ) CYCLE
                            !
                            DO lm = l*l+1, (l+1)*(l+1)
                               !
-                              qsave(ir,ib) = qsave(ir,ib) + &
-                                             interpolatedqtot*spher(ir,lm,ia)*&
-                                             ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
+                              qsave(iqs) = qsave(iqs) + &
+                                           qtot_int*spher(ir,lm,ia)*&
+                                           ap(lm,nhtolm(ih,nt),nhtolm(jh,nt))
                               !
                            END DO
                         END DO
@@ -429,7 +433,7 @@ MODULE realus
             END DO
          END DO
          !
-         ibia = ib
+         iqsia = iqs
          !
          DEALLOCATE( qtot )
          DEALLOCATE( xsp )
@@ -438,9 +442,10 @@ MODULE realus
          !
       END DO
       !
-      DEALLOCATE( boxdistance )
+      DEALLOCATE( boxdist )
       DEALLOCATE( spher )
       !
+      CALL stop_clock( 'realus:qsave' )
       CALL stop_clock( 'qpointlist' )
       !
     END SUBROUTINE qpointlist
@@ -465,9 +470,9 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      REAL(DP), ALLOCATABLE :: aux(:,:)
+      REAL(DP), ALLOCATABLE :: aux(:)
       INTEGER               :: ia, ih, jh, ijh, is, ir, nt, nspin0
-      INTEGER               :: ib, mbia, nht, nhnt
+      INTEGER               :: mbia, nht, nhnt, iqs
       !
       IF ( .NOT. okvan ) THEN
          !
@@ -515,39 +520,36 @@ MODULE realus
       !
       deeq(:,:,:,:) = 0.D0
       !
-      ALLOCATE( aux( nrxx, nspin0 ) )
+      ALLOCATE( aux( nrxx ) )
       !
       DO is = 1, nspin0
          !
          IF ( nspin0 == 4 .AND. is /= 1 ) THEN
-            aux(:,is) = vr(:,is)
+            aux(:) = vr(:,is)
          ELSE
-            aux(:,is) = vltot(:) + vr(:,is)
+            aux(:) = vltot(:) + vr(:,is)
          END IF
          !
-      END DO
-      !
-      ib = 0
-      !
-      DO ia = 1, nat
+         iqs = 0
          !
-         mbia = maxbox(ia)
-         !
-         IF ( mbia == 0 ) CYCLE
-         !
-         nt = ityp(ia)
-         !
-         IF ( .NOT. tvanp(nt) ) CYCLE
-         !
-         nhnt = nh(nt)
-         !
-         DO ih = 1, nhnt
-            DO jh = ih, nhnt
-               ib = ib + 1
-               DO is = 1, nspin0
+         DO ia = 1, nat
+            !
+            mbia = maxbox(ia)
+            !
+            IF ( mbia == 0 ) CYCLE
+            !
+            nt = ityp(ia)
+            !
+            IF ( .NOT. tvanp(nt) ) CYCLE
+            !
+            nhnt = nh(nt)
+            !
+            DO ih = 1, nhnt
+               DO jh = ih, nhnt
                   DO ir = 1, mbia
+                     iqs = iqs + 1
                      deeq(ih,jh,ia,is)= deeq(ih,jh,ia,is) + &
-                                        qsave(ir,ib)*aux(box(ir,ia),is)
+                                        qsave(iqs)*aux(box(ir,ia))
                   END DO
                   deeq(jh,ih,ia,is) = deeq(ih,jh,ia,is)
                END DO
@@ -758,7 +760,7 @@ MODULE realus
     END SUBROUTINE setqfcorr
     !
     !------------------------------------------------------------------------
-    SUBROUTINE setqfcorrpoint( qfcoef, rho, r, nqf, ltot )
+    SUBROUTINE setqfcorrpt( qfcoef, rho, r, nqf, ltot )
       !------------------------------------------------------------------------
       !
       ! ... This routine compute the first part of the Q function at the
@@ -790,10 +792,10 @@ MODULE realus
       !
       RETURN
       !
-    END SUBROUTINE setqfcorrpoint
+    END SUBROUTINE setqfcorrpt
     !
     !------------------------------------------------------------------------
-    SUBROUTINE setqfcorrpointfirst( qfcoef, rho, r, nqf, ltot )
+    SUBROUTINE setqfcorrptfirst( qfcoef, rho, r, nqf, ltot )
       !------------------------------------------------------------------------
       !
       ! ... On output it contains  Q'  (probably wrong)
@@ -820,10 +822,10 @@ MODULE realus
       !
       RETURN
       !
-    END SUBROUTINE setqfcorrpointfirst
+    END SUBROUTINE setqfcorrptfirst
     !
     !------------------------------------------------------------------------
-    SUBROUTINE setqfcorrpointsecond( qfcoef, rho, r, nqf, ltot )
+    SUBROUTINE setqfcorrptsecond( qfcoef, rho, r, nqf, ltot )
       !------------------------------------------------------------------------
       !
       ! ... On output it contains  Q''
@@ -850,7 +852,7 @@ MODULE realus
       !
       RETURN
       !
-    END SUBROUTINE setqfcorrpointsecond
+    END SUBROUTINE setqfcorrptsecond
     !
     !------------------------------------------------------------------------
     SUBROUTINE addusdens_r()
@@ -860,17 +862,20 @@ MODULE realus
       ! ... the US augmentation.
       !
       USE ions_base,        ONLY : nat, ityp
+      USE cell_base,        ONLY : omega
       USE lsda_mod,         ONLY : nspin
       USE scf,              ONLY : rho
-      USE uspp,             ONLY : okvan
-      USE uspp,             ONLY : becsum
+      USE klist,            ONLY : nelec
+      USE gvect,            ONLY : nr1, nr2, nr3
+      USE uspp,             ONLY : okvan, becsum
       USE uspp_param,       ONLY : tvanp, nh
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       !
       IMPLICIT NONE
       !
-      INTEGER :: ia, ib, nt, ir, irb, ih, jh, ijh, is, nspin0, mbia, nhnt
+      INTEGER  :: ia, nt, ir, irb, ih, jh, ijh, is, nspin0, mbia, nhnt, iqs
+      REAL(DP) :: charge
       !
       !
       IF ( .NOT. okvan ) RETURN
@@ -883,7 +888,7 @@ MODULE realus
       !
       DO is = 1, nspin0
          !
-         ib = 0
+         iqs = 0
          !
          DO ia = 1, nat
             !
@@ -903,18 +908,39 @@ MODULE realus
                DO jh = ih, nhnt
                   !
                   ijh = ijh + 1
-                  ib  = ib  + 1
                   !
                   DO ir = 1, mbia
+                     !
                      irb = box(ir,ia)
-                     rho(irb,is) = rho(irb,is) + &
-                                   qsave(ir,ib)*becsum(ijh,ia,is)
+                     iqs = iqs + 1
+                     !
+                     rho(irb,is) = rho(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
                   END DO
                END DO
             END DO
          END DO
          !
       END DO
+      !
+      ! ... check the integral of the total charge
+      !
+      charge = SUM( rho(:,1:nspin0) )*omega / ( nr1*nr2*nr3 )
+      !
+      CALL reduce( 1, charge )
+      !
+      IF ( ABS( charge - nelec ) / charge > 1.D-4 ) THEN
+         !
+         ! ... the error on the charge is too large
+         !
+         CALL errore( 'addusdens_r', 'charge is wrong: increase ecutrho', 1 )
+         !
+      ELSE
+         !
+         ! ... rescale the density to impose the correct number of electrons
+         !
+         rho(:,:) = rho(:,:) / charge * nelec
+         !
+      END IF
       !
       CALL stop_clock( 'addusdens' )
       !

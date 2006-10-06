@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,17 +8,23 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------
-subroutine addusdens
+SUBROUTINE addusdens()
   !----------------------------------------------------------------------
-  USE realus, ONLY: tqr,  addusdens_r
-  if (tqr) then
-     call addusdens_r
-  else
-     call addusdens_g
-  endif
-  return
-end subroutine addusdens
-
+  !
+  USE realus, ONLY: tqr, addusdens_r
+  !
+  IMPLICIT NONE
+  !
+  IF ( tqr ) THEN
+     CALL addusdens_r()
+  ELSE
+     CALL addusdens_g()
+  END IF
+  !
+  RETURN
+  !
+END SUBROUTINE addusdens
+!
 !----------------------------------------------------------------------
 subroutine addusdens_g
   !----------------------------------------------------------------------

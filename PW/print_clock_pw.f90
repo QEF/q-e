@@ -33,11 +33,19 @@ SUBROUTINE print_clock_pw()
    IF ( lstres ) CALL print_clock( 'stress' )
    !
    WRITE( stdout, * )
+   CALL print_clock( 'qpointlist' )
+   CALL print_clock( 'realus:boxes' )
+   CALL print_clock( 'realus:spher' )
+   CALL print_clock( 'realus:qsave' )
+   !
+   WRITE( stdout, * )
    !
    CALL print_clock( 'electrons' )
    CALL print_clock( 'c_bands' )
    CALL print_clock( 'sum_band' )
    CALL print_clock( 'v_of_rho' )
+   CALL print_clock( 'v_h' )
+   CALL print_clock( 'v_xc' )
    CALL print_clock( 'newd' )
    !
 #ifdef DEBUG_NEWD

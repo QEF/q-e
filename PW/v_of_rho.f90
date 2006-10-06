@@ -111,6 +111,8 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
                          vanishing_mag    = 1.D-20
   !
   !
+  CALL start_clock( 'v_xc' )
+  !
   etxc   = 0.D0
   vtxc   = 0.D0
   v(:,:) = 0.D0
@@ -245,6 +247,8 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   CALL reduce( 1, vtxc )
   CALL reduce( 1, etxc )
   !
+  CALL stop_clock( 'v_xc' )
+  !
   RETURN
   !
 END SUBROUTINE v_xc
@@ -274,6 +278,8 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   REAL(DP)              :: rgtot_re, rgtot_im
   INTEGER               :: is, ig
   !
+  !
+  CALL start_clock( 'v_h' )
   !
   ALLOCATE( aux( 2, nrxx ), aux1( 2, ngm ) )
   !
@@ -365,6 +371,8 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   END IF
   !
   DEALLOCATE( aux, aux1 )
+  !
+  CALL stop_clock( 'v_h' )
   !
   RETURN
   !
