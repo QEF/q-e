@@ -125,6 +125,7 @@
    !
    PUBLIC :: print_projwfc
    !
+   PUBLIC :: movecell
 
    INTERFACE bessel2
       SUBROUTINE bessel2_x(XG, RW, FINT, LNL, INDL, MMAX)
@@ -423,7 +424,7 @@
          ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
            ht_0, rho, vpot, lambda )
          USE kinds,             ONLY: DP
-         USE cell_module,       ONLY: boxdimensions
+         USE cell_base,         ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
          IMPLICIT NONE
          INTEGER,              INTENT(OUT)   :: nfi
@@ -472,7 +473,7 @@
          ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
            ht_0, rho, vpot, lambda )
          USE kinds,             ONLY: DP
-          USE cell_module,       ONLY: boxdimensions
+          USE cell_base,         ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
          IMPLICIT NONE
          INTEGER,              INTENT(IN)    :: nfi
@@ -505,7 +506,7 @@
       SUBROUTINE runcp_x &
          ( ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc )
          USE kinds,             ONLY: DP
-         USE cell_module,       ONLY : boxdimensions
+         USE cell_base,         ONLY : boxdimensions
          IMPLICIT NONE
          LOGICAL :: ttprint, tortho, tsde
          COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
@@ -559,7 +560,7 @@
       SUBROUTINE runcp_force_pairing_x &
          (ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc)
          USE kinds,             ONLY : DP
-         USE cell_module,       ONLY : boxdimensions
+         USE cell_base,         ONLY : boxdimensions
          IMPLICIT NONE
          LOGICAL :: ttprint, tortho, tsde
          COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
@@ -1184,7 +1185,7 @@
           ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft )
          USE kinds,             ONLY: DP
          USE energies,          ONLY: dft_energy_type
-         USE cell_module,       ONLY: boxdimensions
+         USE cell_base,         ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
          USE wave_types,        ONLY: wave_descriptor 
          IMPLICIT NONE
@@ -1216,7 +1217,7 @@
            eigr, ei1, ei2, ei3, sfac, box, edft )
          USE kinds,             ONLY: DP
          USE energies,          ONLY: dft_energy_type
-         USE cell_module,       ONLY: boxdimensions
+         USE cell_base,         ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
          USE wave_types,        ONLY: wave_descriptor 
          IMPLICIT NONE
@@ -1307,7 +1308,7 @@
    INTERFACE localisation
       SUBROUTINE localisation_x( wfc, atoms_m, ht)
          USE kinds,              ONLY: DP
-         USE cell_module, ONLY: boxdimensions
+         USE cell_base,   ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
          IMPLICIT NONE 
          COMPLEX(DP), INTENT(IN) :: wfc(:)
@@ -1350,6 +1351,19 @@
          REAL(DP),    INTENT(IN)  :: lambda(:,:,:)
       END SUBROUTINE
    END INTERFACE
+
+
+   INTERFACE movecell
+      SUBROUTINE movecell_x( tsdc, box_tm1, box_t0, box_tp1, velh )
+         USE kinds,         ONLY: DP
+         USE cell_base,     ONLY: boxdimensions
+         IMPLICIT NONE
+         LOGICAL              :: tsdc
+         TYPE (boxdimensions) :: box_tm1, box_t0, box_tp1
+         REAL(DP)             :: velh(3,3)
+      END SUBROUTINE
+   END INTERFACE
+
 
 !=----------------------------------------------------------------------------=!
    END MODULE

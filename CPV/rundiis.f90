@@ -85,7 +85,7 @@ CONTAINS
       USE cp_interfaces, ONLY: rhoofr, newrho, nlrh, proj, crot, strucf, phfacs
       USE guess
       USE diis
-      USE cell_module, ONLY: boxdimensions
+      USE cell_base, ONLY: boxdimensions
       USE check_stop, ONLY: check_stop_now
       USE cp_interfaces, ONLY: vofrhos
       USE cp_interfaces, ONLY: dforce
@@ -398,7 +398,7 @@ CONTAINS
       USE electrons_base, ONLY: nupdwn, iupdwn, nspin
       USE time_step, ONLY: delt
       USE diis
-      USE cell_module, ONLY: boxdimensions
+      USE cell_base, ONLY: boxdimensions
       USE check_stop, ONLY: check_stop_now
       USE cp_interfaces, ONLY: vofrhos, kspotential
       USE cp_interfaces, ONLY: dforce

@@ -79,9 +79,7 @@
 
       USE mp,          ONLY: mp_sum
       USE constants,   ONLY: pi
-      USE cell_base,   ONLY: tpiba
-      USE cell_module, ONLY: alat
-      USE cell_module, ONLY: s_to_r
+      USE cell_base,   ONLY: tpiba, alat, s_to_r
       USE ions_base,   ONLY: zv, nat, nsp, na
       USE mp_global,   ONLY: me_image, nproc_image, intra_image_comm
       USE mp_wave,     ONLY: pwscatter

@@ -44,7 +44,7 @@
       USE check_stop, ONLY: check_stop_now
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE cell_module, ONLY: boxdimensions, s_to_r, r_to_s
+      USE cell_base, ONLY: boxdimensions, s_to_r, r_to_s
       USE wave_types, ONLY: wave_descriptor
       USE time_step, ONLY: delt
       USE atoms_type_module, ONLY: atoms_type
@@ -294,7 +294,7 @@
         USE cp_interfaces, ONLY: update_wave_functions
         USE io_global, ONLY: ionode
         USE io_global, ONLY: stdout
-        USE cell_module, ONLY: boxdimensions, r_to_s
+        USE cell_base, ONLY: boxdimensions, r_to_s
         USE atoms_type_module, ONLY: atoms_type
         USE check_stop, ONLY: check_stop_now
         USE runsd_module, ONLY: runsd

@@ -496,8 +496,7 @@ MODULE from_restart_module
                                       set_velocities
     USE energies,              ONLY : dft_energy_type
     USE dener,                 ONLY : denl6, dekin6
-    USE cell_module,           ONLY : boxdimensions, gethinv, alat
-    USE cell_base,             ONLY : r_to_s, s_to_r
+    USE cell_base,             ONLY : r_to_s, s_to_r, boxdimensions, gethinv, alat
     USE cp_interfaces,         ONLY : vofrhos
     USE io_global,             ONLY : ionode, ionode_id
     USE io_global,             ONLY : stdout

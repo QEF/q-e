@@ -27,7 +27,7 @@
       USE cp_electronic_mass, ONLY : emass
       USE cp_main_variables,  ONLY : ema0bg, lambda
       USE wave_base,          ONLY : hpsi
-      USE cell_module,        ONLY : boxdimensions
+      USE cell_base,          ONLY : boxdimensions
       USE time_step,          ONLY : delt
       USE uspp,               ONLY : nkb
       USE gvecw,              ONLY : ngw
@@ -281,7 +281,7 @@
       USE cp_main_variables,  ONLY: ema0bg, lambda
       USE wave_base,          ONLY: wave_steepest, wave_verlet
       USE wave_base,          ONLY: hpsi
-      USE cell_module,        ONLY: boxdimensions
+      USE cell_base,          ONLY: boxdimensions
       USE time_step,          ONLY: delt
       USE cp_interfaces,      ONLY: dforce, eigs, ortho, elec_fakekine, update_lambda
       USE constants,          ONLY: autoev

@@ -90,7 +90,7 @@
 
 
 ! ... declare modules
-        USE cell_module, ONLY: s_to_r, pbcs
+        USE cell_base, ONLY: s_to_r, pbcs
 
         IMPLICIT NONE
 
@@ -198,7 +198,7 @@
 
 
 ! ... declare modules
-      USE cell_module, ONLY: r_to_s, boxdimensions
+      USE cell_base, ONLY: r_to_s, boxdimensions
       USE time_step, ONLY: delt
 
       IMPLICIT NONE
@@ -252,7 +252,7 @@
 !  ----------------------------------------------
 
 ! ...   declare modules
-        USE cell_module, ONLY: s_to_r, boxdimensions
+        USE cell_base, ONLY: s_to_r, boxdimensions
 
         IMPLICIT NONE
 
@@ -298,7 +298,7 @@
 !  --------------------------------------------------------------------------   
 !  END manual ---------------------------------------------------------------   
 
-        USE cell_module, ONLY: boxdimensions
+        USE cell_base, ONLY: boxdimensions
         USE cell_base, ONLY: r_to_s, s_to_r
         USE constants, ONLY: angstrom_au
 
@@ -341,8 +341,8 @@
 
 
 ! ...   declare modules
-        USE cell_module, ONLY: S_TO_R
-        USE cell_module, ONLY: boxdimensions
+        USE cell_base, ONLY: S_TO_R
+        USE cell_base, ONLY: boxdimensions
 
         IMPLICIT NONE
 
@@ -429,7 +429,7 @@
 
 ! ... declare modules
       USE constants,          ONLY : amu_au
-      USE cell_module,        ONLY : dgcell, r_to_s, s_to_r, boxdimensions
+      USE cell_base,          ONLY : dgcell, r_to_s, s_to_r, boxdimensions
       use control_flags,      ONLY : tnosep, tcap, tcp, tdampions, lconstrain
       use time_step,          ONLY : delt
       use ions_base,          ONLY : fricp, iforce
@@ -669,7 +669,7 @@
 
 
 ! ... declare modules
-      USE cell_module, ONLY: R_TO_S, boxdimensions
+      USE cell_base, ONLY: R_TO_S, boxdimensions
       use constants, ONLY: k_boltzmann_au
       use io_global, ONLY: ionode
       use control_flags, ONLY: tolp
@@ -754,8 +754,8 @@
         ! array "pos" and "for" using the same atoms sequence
         ! as in the input file
 
-        USE cell_module, ONLY: s_to_r
-        USE cell_module, ONLY: boxdimensions, pbcs
+        USE cell_base, ONLY: s_to_r
+        USE cell_base, ONLY: boxdimensions, pbcs
 
         IMPLICIT NONE
 

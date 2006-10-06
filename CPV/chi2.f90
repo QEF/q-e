@@ -36,8 +36,7 @@
 
       SUBROUTINE PRINTCHI2(box)
 
-      USE cell_base, ONLY: tpiba
-      USE cell_module, only: boxdimensions
+      USE cell_base, ONLY: tpiba, boxdimensions
       use mp, ONLY: mp_sum
       USE mp_global, ONLY: intra_image_comm
       USE io_global, ONLY: ionode

@@ -233,7 +233,7 @@
        ht_0, rho, vpot, lambda )
                                                                         
         USE kinds,             ONLY: DP
-        USE cell_module,       ONLY: boxdimensions, r_to_s
+        USE cell_base,         ONLY: boxdimensions, r_to_s
         USE control_flags,     ONLY: ndw, gamma_only
         USE control_flags,     ONLY: twfcollect, force_pairing, reduce_io
         USE atoms_type_module, ONLY: atoms_type
@@ -320,7 +320,7 @@
                                                                         
         USE kinds,             ONLY: DP
         use electrons_base,    ONLY: nbsp, nspin, nudx
-        USE cell_module,       ONLY: boxdimensions, cell_init, r_to_s, s_to_r
+        USE cell_base,         ONLY: boxdimensions, cell_init, r_to_s, s_to_r
         use parameters,        ONLY: npkx, nsx
         USE mp_global,         ONLY: intra_image_comm
         USE mp_wave,           ONLY: mergewf

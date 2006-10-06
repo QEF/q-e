@@ -176,7 +176,7 @@ MODULE guess
 !  (describe briefly what this routine does...)
 !  ----------------------------------------------
 
-             USE cell_module, only: boxdimensions
+             USE cell_base, only: boxdimensions
              use cp_interfaces, only: rhoofr
              USE wave_types
              USE parameters, ONLY: nspinx

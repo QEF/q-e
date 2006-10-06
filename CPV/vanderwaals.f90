@@ -23,7 +23,7 @@
 !---------------------------------
       subroutine VdW(evdw, atoms, fion, box) 
 
-      USE cell_module, ONLY: s_to_r, boxdimensions, pbcs
+      USE cell_base, ONLY: s_to_r, boxdimensions, pbcs
       USE mp_global, ONLY: me_image, root_image
       USE atoms_type_module, ONLY: atoms_type
 
@@ -227,7 +227,7 @@
 
 !      REAL(DP) FUNCTION VDW_FORCES(C6,IESR,FION,STAU0,NA,NAX,NSP)
 !
-!      USE cell_module, only: R_TO_S, S_TO_R
+!      USE cell_base, only: R_TO_S, S_TO_R
 !
 !      implicit none
 !
@@ -341,7 +341,7 @@
 !
 !      subroutine VDW_STRESS(C6,IESR,STAU0,DVDW,NA,NAX,NSP)
 !
-!      USE cell_module, only: R_TO_S, S_TO_R
+!      USE cell_base, only: R_TO_S, S_TO_R
 !
 !      implicit none
 !

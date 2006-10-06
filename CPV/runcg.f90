@@ -72,7 +72,7 @@
                                proj, update_lambda
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE cell_module, ONLY: boxdimensions
+      USE cell_base, ONLY: boxdimensions
       USE wave_types
       USE cp_main_variables, ONLY: lambda
       USE cp_interfaces, ONLY: kspotential
@@ -373,7 +373,7 @@
         USE energies,          ONLY: dft_energy_type
         USE io_global,         ONLY: ionode
         USE io_global,         ONLY: stdout
-        USE cell_module,       ONLY: boxdimensions
+        USE cell_base,         ONLY: boxdimensions
         USE cp_interfaces,     ONLY: kspotential
         USE atoms_type_module, ONLY: atoms_type
         USE uspp,              ONLY: nkb

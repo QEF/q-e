@@ -41,7 +41,7 @@
       USE check_stop,           ONLY: check_stop_now
       USE io_global,            ONLY: ionode
       USE io_global,            ONLY: stdout
-      USE cell_module,          ONLY: boxdimensions
+      USE cell_base,            ONLY: boxdimensions
       USE wave_types,           ONLY: wave_descriptor
       USE cp_interfaces,        ONLY: kspotential
       USE atoms_type_module,    ONLY: atoms_type

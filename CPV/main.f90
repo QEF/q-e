@@ -73,18 +73,18 @@
                   tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
                   tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
-      USE cp_interfaces, ONLY: printout, print_sfac
-      USE cell_module, ONLY: movecell, press, boxdimensions, updatecell
-      USE cp_interfaces, ONLY: empty_cp
+      USE cell_base, ONLY: press, boxdimensions, updatecell
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE dener, ONLY: denl6, dekin6
       USE turbo, ONLY: tturbo
+      USE cp_interfaces, ONLY: printout, print_sfac, movecell
+      USE cp_interfaces, ONLY: empty_cp
       USE cp_interfaces, ONLY: vofrhos, localisation
+      USE cp_interfaces, ONLY: rhoofr, nlrh, update_wave_functions
       USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
       USE electrons_module, ONLY: ei, n_emp
       USE diis, ONLY: allocate_diis
-      USE cp_interfaces, ONLY: rhoofr, nlrh, update_wave_functions
       USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
       USE time_step, ONLY: tps, delt

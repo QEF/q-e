@@ -299,9 +299,8 @@
       USE ions_base,          ONLY: ions_temp, cdmi, taui, nsp
       USE ions_nose,          ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, &
                                     kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
-      USE cell_module,        only: s_to_r, press
       USE cell_nose,          ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh
-      USE cell_base,          ONLY: iforceh, boxdimensions
+      USE cell_base,          ONLY: iforceh, boxdimensions, s_to_r, press
       USE printout_base,      ONLY: printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
       USE environment,        ONLY: start_cclock_val

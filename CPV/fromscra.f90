@@ -43,9 +43,8 @@ CONTAINS
     USE ions_base,            ONLY : taui, cdmi, nat
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force
+                                     cell_force, boxdimensions
     USE cell_nose,            ONLY : xnhh0, xnhhm,  vnhh
-    USE cell_module,          ONLY : boxdimensions
     use electrons_base,       ONLY : nbsp
     USE electrons_base,       ONLY : f, nspin, nupdwn, iupdwn
     USE electrons_module,     ONLY : occn_info

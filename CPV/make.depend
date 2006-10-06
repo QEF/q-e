@@ -91,7 +91,6 @@ chi2.o : ../Modules/kind.o
 chi2.o : ../Modules/mp.o
 chi2.o : ../Modules/mp_global.o
 chi2.o : ../Modules/recvec.o
-chi2.o : periodic.o
 compute_fes_grads.o : ../Modules/basic_algebra_routines.o
 compute_fes_grads.o : ../Modules/cell_base.o
 compute_fes_grads.o : ../Modules/check_stop.o
@@ -156,7 +155,6 @@ cp_interfaces.o : ../Modules/kind.o
 cp_interfaces.o : ../Modules/recvec.o
 cp_interfaces.o : ../Modules/uspp.o
 cp_interfaces.o : atoms_type.o
-cp_interfaces.o : periodic.o
 cp_interfaces.o : wave_types.o
 cp_restart.o : ../Modules/cell_base.o
 cp_restart.o : ../Modules/constants.o
@@ -472,7 +470,6 @@ fromscra.o : ensemble_dft.o
 fromscra.o : ions_positions.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
-fromscra.o : periodic.o
 fromscra.o : wave_types.o
 geninv.o : ../Modules/kind.o
 greenf.o : ../Modules/kind.o
@@ -484,6 +481,7 @@ gtable.o : ../Modules/io_global.o
 gtable.o : ../Modules/mp.o
 gtable.o : ../Modules/mp_global.o
 gtable.o : ../Modules/recvec.o
+guess.o : ../Modules/cell_base.o
 guess.o : ../Modules/control_flags.o
 guess.o : ../Modules/kind.o
 guess.o : ../Modules/mp.o
@@ -492,7 +490,6 @@ guess.o : ../Modules/parameters.o
 guess.o : ../Modules/ptoolkit.o
 guess.o : ../Modules/uspp.o
 guess.o : cp_interfaces.o
-guess.o : periodic.o
 guess.o : wave_types.o
 indices.o : ../Modules/kind.o
 init.o : ../Modules/berry_phase.o
@@ -619,7 +616,6 @@ ions.o : ../Modules/ions_nose.o
 ions.o : ../Modules/kind.o
 ions.o : ../Modules/timestep.o
 ions.o : atoms_type.o
-ions.o : periodic.o
 ions_positions.o : ../Modules/kind.o
 ions_positions.o : atoms_type.o
 ksstates.o : ../Modules/control_flags.o
@@ -670,7 +666,6 @@ main.o : ions_positions.o
 main.o : ksstates.o
 main.o : mainvar.o
 main.o : modules.o
-main.o : periodic.o
 main.o : polarization.o
 main.o : runcg.o
 main.o : runcg_ion.o
@@ -838,7 +833,6 @@ polarization.o : ../Modules/kind.o
 polarization.o : ../Modules/mp.o
 polarization.o : ../Modules/mp_global.o
 polarization.o : ../Modules/mp_wave.o
-polarization.o : periodic.o
 potentials.o : ../Modules/atom.o
 potentials.o : ../Modules/cell_base.o
 potentials.o : ../Modules/constants.o
@@ -861,7 +855,6 @@ potentials.o : cp_interfaces.o
 potentials.o : greenf.o
 potentials.o : mainvar.o
 potentials.o : modules.o
-potentials.o : periodic.o
 potentials.o : vanderwaals.o
 potentials.o : wave_types.o
 print_out.o : ../Modules/cell_base.o
@@ -893,7 +886,6 @@ print_out.o : ensemble_dft.o
 print_out.o : environment.o
 print_out.o : mainvar.o
 print_out.o : modules.o
-print_out.o : periodic.o
 print_out.o : polarization.o
 problem_size.o : ../Modules/electrons_base.o
 problem_size.o : ../Modules/fft_base.o
@@ -995,7 +987,6 @@ restart.o : cp_interfaces.o
 restart.o : cp_restart.o
 restart.o : electrons.o
 restart.o : ensemble_dft.o
-restart.o : periodic.o
 restart_sub.o : ../Modules/cell_base.o
 restart_sub.o : ../Modules/control_flags.o
 restart_sub.o : ../Modules/electrons_base.o
@@ -1023,9 +1014,9 @@ restart_sub.o : ions_positions.o
 restart_sub.o : mainvar.o
 restart_sub.o : modules.o
 restart_sub.o : ortho_base.o
-restart_sub.o : periodic.o
 restart_sub.o : wannier.o
 restart_sub.o : wave_types.o
+runcg.o : ../Modules/cell_base.o
 runcg.o : ../Modules/check_stop.o
 runcg.o : ../Modules/control_flags.o
 runcg.o : ../Modules/electrons_base.o
@@ -1041,8 +1032,8 @@ runcg.o : cp_interfaces.o
 runcg.o : electrons.o
 runcg.o : environment.o
 runcg.o : mainvar.o
-runcg.o : periodic.o
 runcg.o : wave_types.o
+runcg_ion.o : ../Modules/cell_base.o
 runcg_ion.o : ../Modules/check_stop.o
 runcg_ion.o : ../Modules/energies.o
 runcg_ion.o : ../Modules/io_global.o
@@ -1052,9 +1043,9 @@ runcg_ion.o : ../Modules/timestep.o
 runcg_ion.o : ../Modules/wave_base.o
 runcg_ion.o : atoms_type.o
 runcg_ion.o : cp_interfaces.o
-runcg_ion.o : periodic.o
 runcg_ion.o : runsd.o
 runcg_ion.o : wave_types.o
+runcp.o : ../Modules/cell_base.o
 runcp.o : ../Modules/constants.o
 runcp.o : ../Modules/control_flags.o
 runcp.o : ../Modules/electrons_base.o
@@ -1075,7 +1066,6 @@ runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : electrons.o
 runcp.o : mainvar.o
-runcp.o : periodic.o
 runcp.o : wannier.o
 rundiis.o : ../Modules/cell_base.o
 rundiis.o : ../Modules/check_stop.o
@@ -1098,9 +1088,9 @@ rundiis.o : diis.o
 rundiis.o : electrons.o
 rundiis.o : guess.o
 rundiis.o : modules.o
-rundiis.o : periodic.o
 rundiis.o : read_pseudo.o
 rundiis.o : wave_types.o
+runsd.o : ../Modules/cell_base.o
 runsd.o : ../Modules/check_stop.o
 runsd.o : ../Modules/control_flags.o
 runsd.o : ../Modules/energies.o
@@ -1110,7 +1100,6 @@ runsd.o : ../Modules/kind.o
 runsd.o : ../Modules/recvec.o
 runsd.o : atoms_type.o
 runsd.o : cp_interfaces.o
-runsd.o : periodic.o
 runsd.o : wave_types.o
 smcp.o : ../Modules/atom.o
 smcp.o : ../Modules/cell_base.o
@@ -1196,10 +1185,10 @@ turbo.o : ../Modules/kind.o
 turbo.o : ../Modules/mp.o
 turbo.o : ../Modules/mp_global.o
 util.o : ../Modules/kind.o
+vanderwaals.o : ../Modules/cell_base.o
 vanderwaals.o : ../Modules/kind.o
 vanderwaals.o : ../Modules/mp_global.o
 vanderwaals.o : atoms_type.o
-vanderwaals.o : periodic.o
 wannier.o : ../Modules/cell_base.o
 wannier.o : ../Modules/control_flags.o
 wannier.o : ../Modules/electrons_base.o

@@ -132,7 +132,7 @@
         USE kinds,             ONLY: DP
         USE cp_interfaces,     ONLY: rhoofr, nlrh, vofrhos
         USE energies,          ONLY: dft_energy_type
-        USE cell_module,       ONLY: boxdimensions
+        USE cell_base,         ONLY: boxdimensions
         USE atoms_type_module, ONLY: atoms_type
         USE wave_types,        ONLY: wave_descriptor
         USE dener,             ONLY: denl6, dekin6
@@ -214,8 +214,7 @@
       USE control_flags,  ONLY: tscreen, iprsta, iesr, tvhmean
       USE mp_global,      ONLY: nproc_image, me_image, intra_image_comm
       USE mp,             ONLY: mp_sum
-      USE cell_module,    ONLY: boxdimensions
-      USE cell_base,      ONLY: tpiba2
+      USE cell_base,      ONLY: tpiba2, boxdimensions
       USE ions_base,      ONLY: rcmax, zv, nsp
       USE fft_base,       ONLY: dfftp
       USE energies,       ONLY: total_energy, dft_energy_type, ekin
@@ -702,9 +701,8 @@
       USE fft_base,        ONLY: dfftp
       USE cp_interfaces,   ONLY: fwfft
       USE gvecp,           ONLY: ngm
-      USE cell_module,     ONLY: s_to_r, alat
       USE constants,       ONLY: gsmall, pi
-      USE cell_base,       ONLY: tpiba2
+      USE cell_base,       ONLY: tpiba2, s_to_r, alat
       use grid_dimensions, only: nr1, nr2, nr3, nr1l, nr2l, nr3l, nnrx
 
       IMPLICIT NONE
@@ -1079,7 +1077,7 @@
 
       USE kinds,       ONLY : DP
       USE constants,   ONLY : sqrtpm1
-      USE cell_module, ONLY : s_to_r, pbcs
+      USE cell_base,   ONLY : s_to_r, pbcs
       USE mp_global,   ONLY : nproc_image, me_image, intra_image_comm
       USE mp,          ONLY : mp_sum
       USE ions_base,   ONLY : rcmax, zv, nsp, na, nat
@@ -1311,8 +1309,7 @@
       USE kinds,              ONLY: DP
       USE constants,          ONLY: fpi
       USE control_flags,      ONLY: gamma_only
-      USE cell_module,        ONLY: boxdimensions
-      USE cell_base,          ONLY: tpiba2
+      USE cell_base,          ONLY: tpiba2, boxdimensions
       USE gvecp,              ONLY: ngm
       USE reciprocal_vectors, ONLY: gstart, g
       USE sic_module,         ONLY: sic_epsilon, sic_alpha
@@ -1405,13 +1402,12 @@
       USE kinds,              ONLY: DP
       USE constants, ONLY: fpi
       USE control_flags, ONLY: gamma_only
-      USE cell_module, ONLY: boxdimensions, s_to_r
       USE atoms_type_module, ONLY: atoms_type
       USE sic_module, ONLY: ind_localisation, nat_localisation, print_localisation
       USE sic_module, ONLY: sic_rloc, pos_localisation
       USE ions_base, ONLY: ind_srt
       USE fft_base, ONLY: dfftp, dffts
-      USE cell_base, ONLY: tpiba2
+      USE cell_base, ONLY: tpiba2, boxdimensions, s_to_r
       USE reciprocal_vectors, ONLY: gstart, g
       USE gvecp, ONLY: ngm
       USE gvecw, ONLY: ngw
