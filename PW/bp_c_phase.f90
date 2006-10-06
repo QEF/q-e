@@ -822,7 +822,7 @@ SUBROUTINE c_phase
         fac*pdl_tot,fac*DBLE(mod_tot)
 !  --- Write polarization direction ---
    WRITE( stdout,"(/,8X,'The polarization direction is:  ( ', &
-       &  F7.5,' , ',F7.5,' , ',F7.5,' )'))") upol(1),upol(2),upol(3)
+       &  F7.5,' , ',F7.5,' , ',F7.5,' )')") upol(1),upol(2),upol(3)
 
 !  --- End of information relative to polarization calculation ---
    WRITE( stdout,"(/,/,15X,50('=')/,/)")
