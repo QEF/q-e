@@ -63,8 +63,6 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     PRINT *, me_pool, "USING PARALLEL cdiaghg"
-     !
      ALLOCATE( hdum( n, n ), vdum( n, n ) )
      !
      hdum(:,:) = h(1:n,:)
