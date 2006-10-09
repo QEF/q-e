@@ -127,6 +127,18 @@ compute_scf.o : ../Modules/xml_io_base.o
 compute_scf.o : cp_interfaces.o
 compute_scf.o : input.o
 compute_scf.o : mainvar.o
+cp_autopilot.o : ../Modules/autopilot.o
+cp_autopilot.o : ../Modules/control_flags.o
+cp_autopilot.o : ../Modules/input_parameters.o
+cp_autopilot.o : ../Modules/io_global.o
+cp_autopilot.o : ../Modules/ions_base.o
+cp_autopilot.o : ../Modules/ions_nose.o
+cp_autopilot.o : ../Modules/kind.o
+cp_autopilot.o : ../Modules/mp.o
+cp_autopilot.o : ../Modules/parser.o
+cp_autopilot.o : ../Modules/timestep.o
+cp_autopilot.o : ../Modules/wave_base.o
+cp_autopilot.o : cp_emass.o
 cp_emass.o : ../Modules/control_flags.o
 cp_emass.o : ../Modules/kind.o
 cp_fpmd.o : ../Modules/cell_base.o
@@ -242,6 +254,7 @@ cpr.o : ../Modules/uspp.o
 cpr.o : ../Modules/wave_base.o
 cpr.o : ../Modules/wavefunctions.o
 cpr.o : cg.o
+cpr.o : cp_autopilot.o
 cpr.o : cp_emass.o
 cpr.o : cp_interfaces.o
 cpr.o : cpr_mod.o
@@ -983,6 +996,7 @@ restart.o : ../Modules/mp_wave.o
 restart.o : ../Modules/parameters.o
 restart.o : ../Modules/recvec.o
 restart.o : atoms_type.o
+restart.o : cp_autopilot.o
 restart.o : cp_interfaces.o
 restart.o : cp_restart.o
 restart.o : electrons.o

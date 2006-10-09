@@ -138,7 +138,7 @@
       USE cp_restart,     ONLY : cp_readfile, cp_read_cell, cp_read_wfc
       USE ensemble_dft,   ONLY : tens
       USE autopilot,      ONLY : event_step, event_index, max_event_step
-      USE autopilot,      ONLY : employ_rules
+      USE cp_autopilot,   ONLY : employ_rules
 !
       implicit none
 

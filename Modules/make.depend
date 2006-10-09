@@ -1,14 +1,10 @@
 atom.o : kind.o
 atom.o : parameters.o
-autopilot.o : control_flags.o
 autopilot.o : input_parameters.o
 autopilot.o : io_global.o
-autopilot.o : ions_base.o
-autopilot.o : ions_nose.o
 autopilot.o : kind.o
 autopilot.o : mp.o
 autopilot.o : parser.o
-autopilot.o : wave_base.o
 basic_algebra_routines.o : kind.o
 berry_phase.o : io_global.o
 berry_phase.o : mp.o

@@ -15,6 +15,7 @@ chargemix.o \
 chi2.o \
 compute_fes_grads.o \
 compute_scf.o \
+cp_autopilot.o \
 cp_emass.o \
 cp_fpmd.o \
 cp_interfaces.o \

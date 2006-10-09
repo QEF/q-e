@@ -129,7 +129,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE constraints_module,       ONLY : check_constraint, lagrange, &
                                        remove_constr_force
   USE metadyn_base,             ONLY : set_target
-  USE autopilot,                ONLY : pilot
+  USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing

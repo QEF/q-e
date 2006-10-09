@@ -9,7 +9,7 @@
 !      on-the-fly changes to job parameters; 
 !      and pausing of a running job.  
 !
-! For more information, see AUTOPILOT in document directory.
+! For more information, see README.AUTOPILOT in document directory.
 !
 ! This program is free software; you can redistribute it and/or modify it under 
 ! the terms of the GNU General Public License as published by the Free Software 
@@ -61,13 +61,14 @@ MODULE autopilot
   ! This module handles the Autopilot Feature Suite
   ! Written by Lee Atkinson, with help from the ATP team at Targacept, Inc 
   ! Created June 2005
+  ! Modified by Yonas Abraham, Sept 2006
   !
   !   The address for Targacept, Inc. is:
   !     200 East First Street, Suite
   !     300, Winston-Salem, North Carolina 27101; 
   !     Attn: Molecular Design.
   !
-  ! See autopilot.html in the Doc directory for more information.
+  ! See README.AUTOPILOT in the Doc directory for more information.
   !---------------------------------------------------------------------------
 
   USE kinds
@@ -150,12 +151,13 @@ MODULE autopilot
 
 
   PRIVATE
-  PUBLIC :: auto_check, init_autopilot, card_autopilot, pilot, employ_rules, add_rule, & 
+  PUBLIC :: auto_check, init_autopilot, card_autopilot, add_rule, & 
        & assign_rule, restart_p, max_event_step, event_index, event_step, rule_isave, &
        & rule_iprint, rule_dt, rule_emass, rule_electron_dynamics, rule_electron_damping, &
        & rule_ion_dynamics, rule_ion_damping, rule_ion_temperature, rule_tempw, &
        & event_isave, event_iprint, event_dt, event_emass, &
        & event_electron_dynamics, event_electron_damping, event_ion_dynamics, &
+       & current_nfi, pilot_p, pilot_unit, pause_p,auto_error, parse_mailbox, &
        & event_ion_damping, event_ion_temperature, event_tempw
 
 CONTAINS
@@ -754,193 +756,6 @@ CONTAINS
   END SUBROUTINE assign_rule
 
 
-  !-----------------------------------------------------------------------
-  ! EMPLOY_RULES
-  !-----------------------------------------------------------------------
-  SUBROUTINE employ_rules()
-    USE input_parameters, ONLY : isave, iprint, dt, & 
-         & emass, electron_dynamics, electron_damping, &
-         & ion_dynamics, ion_damping, &
-         & ion_temperature, fnosep, nhpcl, nhgrp, ndega, nat
-    use ions_nose, ONLY: tempw
-    USE control_flags, only: tsde, tsdp, tfor, tcp, tnosep
-    use wave_base, only: frice
-    use ions_base, only: fricp
-    USE ions_nose, ONLY: ions_nose_init
-    USE io_global, ONLY: ionode, ionode_id
-    IMPLICIT NONE
-
-
-    ! This is notification to stdout
-    ! It helps the user to identify 
-    ! when rules are employed
-    write(*,*)
-    write(*,*) '========================================'
-    write(*,*) 'EMPLOY RULES:'
-    write(*,*) '  CURRENT_NFI=', current_nfi
-    write(*,*) '  event_index=', event_index
-    write(*,*) '  event_step==', event_step(event_index)
-    write(*,*) '========================================'
-    write(*,*)
-    call flush_unit(6)
-
-
-    !----------------------------------------
-    !     &CONTROL
-    !----------------------------------------
-
-    ! ISAVE
-    if (event_isave(event_index)) then
-       isave            = rule_isave(event_index)
-       write(*,*) 'RULE EVENT: isave', isave
-    endif
-
-    ! IPRINT
-    if (event_iprint(event_index)) then
-       iprint           = rule_iprint(event_index)
-       write(*,*) 'RULE EVENT: iprint', iprint
-    endif
-
-    if (event_dt(event_index)) then
-       dt               = rule_dt(event_index)
-       write(*,*) 'RULE EVENT: dt', dt
-    endif
-
-    !----------------------------------------
-    !     &SYSTEM
-    !----------------------------------------
-
-    !----------------------------------------
-    !     &ELECTRONS
-    !----------------------------------------
-
-    ! EMASS    
-    if (event_emass(event_index)) then
-       emass            = rule_emass(event_index)
-       write(*,*) 'RULE EVENT: emass', emass
-    endif
-
-    ! ELECTRON_DYNAMICS   
-
-    if (event_electron_dynamics(event_index)) then
-       electron_dynamics= rule_electron_dynamics(event_index)
-       select case ( electron_dynamics ) 
-       case ('SD')
-          tsde  = .true.
-          frice = 0.d0
-       case ('VERLET')
-          tsde  = .false.
-          frice = 0.d0
-       case ('DAMP')
-          tsde  = .false.
-          frice = electron_damping
-       case ('NONE')
-          tsde  = .false.
-          frice = 0.d0
-       case default
-          call auto_error(' autopilot ',' unknown electron_dynamics '//trim(electron_dynamics) )
-       end select
-
-       write(*,*) 'RULE EVENT: electron_dynamics', electron_dynamics
-
-    endif
-
-
-    ! ELECTRON_DAMPING   
-    if (event_electron_damping(event_index)) then
-       ! meaningful only if " electron_dynamics = 'damp' "
-       electron_damping = rule_electron_damping(event_index)
-       frice = electron_damping
-       write(*,*) 'RULE EVENT: electron_damping', electron_damping
-    endif
-
-    !----------------------------------------
-    !     &IONS
-    !----------------------------------------
-
-
-    ! ION_DYNAMICS   
-    ! ion_dynamics = 'default' | 'sd' | 'cg' | 'damp' | 'md' | 'none' | 'diis' 
-    if (event_ion_dynamics(event_index)) then
-       ion_dynamics= rule_ion_dynamics(event_index)
-       select case ( ion_dynamics ) 
-       case ('SD')
-          tsdp = .true.
-          tfor = .true.
-          fricp= 0.d0
-       case ('VERLET')
-          tsdp = .false.
-          tfor = .true.
-          fricp= 0.d0
-       case ('DAMP')
-          tsdp = .false.
-          tfor = .true.
-          fricp= ion_damping
-       case ('NONE')
-          tsdp = .false.
-          tfor = .false.
-          fricp= 0.d0
-       case default
-          call auto_error(' iosys ',' unknown ion_dynamics '//trim(ion_dynamics) )
-       end select
-
-       write(*,*) 'RULE EVENT: ion_dynamics', ion_dynamics
-    endif
-
-
-    ! ION_DAMPING   
-    if (event_ion_damping(event_index)) then
-       ! meaningful only if " ion_dynamics = 'damp' "
-       ion_damping = rule_ion_damping(event_index)
-       write(*,*) 'RULE EVENT: ion_damping', ion_damping
-    endif
-
-
-    ! ION_TEMPERATURE 
-    if (event_ion_temperature(event_index)) then
-       ion_temperature = rule_ion_temperature(event_index)
-       select case ( ion_temperature ) 
-          !         temperature control of ions via nose' thermostat
-          !         tempw (real(DP))  frequency (in which units?)
-          !         fnosep (real(DP))  temperature (in which units?)
-       case ('NOSE')
-          tnosep = .true.
-          tcp = .false.
-       case ('NOT_CONTROLLED')
-          tnosep = .false.
-          tcp = .false.
-       case ('RESCALING' )
-          tnosep = .false.
-          tcp = .true.
-       case default
-          call auto_error(' iosys ',' unknown ion_temperature '//trim(ion_temperature) )
-       end select
-
-       write(*,*) 'RULE EVENT: ion_temperature', ion_temperature
-
-    endif
-
-    ! TEMPW
-    if (event_tempw(event_index)) then
-       tempw  = rule_tempw(event_index)
-       ! The follwiong is a required side effect
-       ! when resetting tempw
-       CALL ions_nose_init( tempw, fnosep, nhpcl, ndega, nat , nhgrp)
-       write(*,*) 'RULE EVENT: tempw', tempw
-    endif
-
-    !----------------------------------------
-    !     &CELL
-    !----------------------------------------
-
-    !----------------------------------------
-    !     &PHONON
-    !----------------------------------------
-
-
-  END SUBROUTINE employ_rules
-
-
 
 
   !-----------------------------------------------------------------------
@@ -983,9 +798,14 @@ CONTAINS
        write(*,*) 'SLEEPING'
        write(*,*) 'INPUT_LINE=', input_line
        pause_p = .TRUE.
+     ! now you can pass continue to resume 
+    ELSE IF (matches( "CONTINUE", input_line ) .or. &
+             matches( "RESUME", input_line ) ) THEN
+       write(*,*) 'RUNNING'
+       write(*,*) 'INPUT_LINE=', input_line
+       pause_p = .FALSE.
 
        ! Now just quit this subroutine
-
     ELSE
        ! Also, We didnt see a PAUSE cmd!
        pause_p = .FALSE.
@@ -1038,106 +858,6 @@ CONTAINS
 
   end subroutine parse_mailbox
 
-
-  !-----------------------------------------------------------------------
-  ! PILOT
-  !
-  ! Here is the main pilot routine called in CPR, at the top
-  ! of the basic dynamics loop just after nose hoover update 
-  !-----------------------------------------------------------------------
-  subroutine pilot (nfi)
-    USE parser, ONLY: parse_unit
-    USE io_global, ONLY: ionode, ionode_id
-    USE mp,        ONLY : mp_bcast, mp_barrier
-    IMPLICIT NONE
-    INTEGER :: nfi
-    LOGICAL :: file_p
-    CHARACTER (LEN=256) :: mbfile = "pilot.mb"
-
-    ! Dynamics Loop Started
-    pilot_p   = .TRUE.
-
-    ! This is so we can usurp the exiting parser
-    ! that defaults to stdin (unit=5)
-    ! We have to do it this way if we are to 
-    ! call (reuse) the card_autopilot that is called
-    ! by read_cards
-    parse_unit = pilot_unit
-
-    ! Our own local for nfi
-    current_nfi = nfi
-
-    ! Great for Debugging
-    !IF( ionode ) THEN
-    !write(*,*)
-    !write(*,*) '========================================'
-    !write(*,*) 'Autopilot (Dynamic Rules) Implementation'
-    !write(*,*) '  CURRENT_NFI=', current_nfi
-    !write(*,*) '  event_index=', event_index
-    !write(*,*) '  event_step==', event_step(event_index)
-    !write(*,*) '========================================'
-    !write(*,*)
-    !call flush_unit(6)
-    !END IF
-
-
-    ! This allows one pass. Calling parse_mailbox will either:
-    ! 1) call init_auto_pilot, which will always set this modules global PAUSE_P variable to FALSE
-    ! 2) detect a pause indicator, setting PAUSE_P to TRUE until a new mailbox overrides.
-    pause_loop: do
-
-       file_p = .FALSE.
-       IF ( ionode ) INQUIRE( FILE = TRIM( mbfile ), EXIST = file_p )
-       call mp_bcast(file_p, ionode_id)     
-
-       IF ( file_p ) THEN
-
-          WRITE(*,*) 
-          WRITE(*,*) 'Pilot: Mailbox Found!'
-          WRITE(*,*) '       CURRENT_NFI=', current_nfi
-          call flush_unit(6)
-
-          ! Open the mailbox
-          IF ( ionode ) OPEN( UNIT = pilot_unit, FILE = TRIM( mbfile ) )
-
-          ! Will reset PAUSE_P to false unless there is a PAUSE cmd
-          ! The following call is MPI safe! It only generates side effects
-          CALL parse_mailbox()
-          !call mp_barrier()
-          WRITE(*,*) 'return from parse_mailbox' 
-
-          ! Perhaps instead of deleting move the file as an input log     
-          IF( ionode ) CLOSE( UNIT = pilot_unit, STATUS = 'DELETE' )
-
-       END IF
-
-       IF( .NOT. pause_p ) THEN
-          EXIT pause_loop
-       ELSE
-          write(*,*) 'SLEEPING .... send another pilot.mb'
-          call sleep (5)
-       END if
-
-    end do pause_loop
-
-    ! Autopilot (Dynamic Rules) Implementation
-    ! When nfi has passed (is greater than
-    ! the next event, then employ rules
-    ! Mailbox may have issued several rules
-    ! Attempt to catch up! 
-    do while (current_nfi >= event_step(event_index) )         
-
-       write(*,*) 'in while: event_index ', event_index 
-       call employ_rules()
-       call mp_barrier()
-
-       ! update event_index to current
-       event_index = event_index + 1
-       write(*,*) 'in while after: event_index ', event_index 
-
-    enddo
-
-  end subroutine pilot
 
 END MODULE autopilot
 
