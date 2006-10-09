@@ -87,10 +87,9 @@ Some environment variables that are relevant to "configure" are:
 
   ARCH : label identifying the machine type (see below)
   F90, F77, CC : names of Fortran 95, Fortran 77, and C compilers
-  MPIF90, MPIF77, MPICC : names of parallel compilers
-  CPP : source file preprocessor (defaults to "$CC -E")
-  LD : linker (defaults to $MPIF90)
-  CFLAGS, FFLAGS, F90FLAGS, CPPFLAGS, LDFLAGS : compilation flags
+  MPIF90 : names of parallel compilers
+  CFLAGS, FFLAGS, F90FLAGS : compilation flags
+  LDFLAGS : linker flags
   LIBDIRS : extra directories to search for libraries (see below)
 
 For example, the following command line:
@@ -169,8 +168,10 @@ If none of these is available, we suggest that you use the optimized
 ATLAS library (http://math-atlas.sourceforge.net/).
 Note that ATLAS is not a complete replacement for LAPACK: it contains
 all of the BLAS, plus the LU code, plus the full storage Cholesky
-code.  Follow the instructions in the ATLAS distributions to produce a
-full LAPACK replacement.
+code. Missing routines are compiled into flib/lapack_atlas.a and should
+be loaded together with ATLAS, unless you have an ATLAS library that
+contains a full LAPACK replacement (follow the instructions in the 
+ATLAS distribution)
 
 Axel Kohlmeyer maintains a set of ATLAS libraries, containing all of
 LAPACK and no external reference to fortran libraries:
@@ -205,8 +206,10 @@ directories in the list must be separated by spaces.  For example:
 
   ./configure LIBDIRS="/opt/intel/mkl70/lib/32 /usr/lib/math"
 
-If this still fails, you may set some or all of the *_LIBS variables
-manually and retry.  For example:
+Alternatively you can set environmental variable LD_LIBRARY_PATH 
+to contain the path to the missing libraries. If this still fails,
+you may set some or all of the *_LIBS variables manually and retry. 
+For example:
 
   ./configure BLAS_LIBS="-L/usr/lib/math -lf77blas -latlas_sse"
 

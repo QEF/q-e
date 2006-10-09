@@ -149,8 +149,6 @@ esac
 # occurrence of AC_PROG_F77. So the first occurrence is the one that
 # must always be performed, the second is optional. PG & CC sep.2006
 
-# clear cached values (not sure when and why this is needed)
-unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 if test "$f90" = "" ; then f90="$try_f90" ; fi
 AC_PROG_F77($f90)
 f90=$F77
@@ -159,7 +157,7 @@ if test "$use_parallel" -eq 0 ;
 then
 	mpif90=$f90
 else
-	# clear cached values
+        # clear cached values (not sure when and why this is needed)
         unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
 
 	# check parallel Fortran 90 compiler
@@ -263,9 +261,6 @@ macppc:xlf90 )
 	;;
 esac
 
-# clear cached values
-unset CC ac_cv_prog_ac_ct_CC ac_cv_c_compiler_gnu ac_cv_prog_cc_g
-
 # check serial C compiler
 if test "$env_cc" = "" ; then cc="$try_cc" ; else cc="$env_cc"; fi
 AC_PROG_CC($cc)
@@ -280,6 +275,17 @@ AC_CHECK_SIZEOF([int *])
 SIZEOF_INT_P=$ac_cv_sizeof_int_p
 AC_SUBST(SIZEOF_INT_P)
 AC_CONFIG_FILES([include/fft_defs.h:include/fft_defs.h.in])
+
+# check if the structure mallinfo is present in malloc.h
+AC_CHECK_HEADER(malloc.h,have_malloc_h=1,have_malloc_h=0, )
+if test "$have_malloc_h" -ne 0 
+then
+AC_CHECK_MEMBER([struct mallinfo.arena], 
+                [AC_DEFINE(HAVE_MALLINFO)], 
+                ,
+	        [#include <malloc.h>])
+
+fi
 
 # clear cached values
 unset F77 ac_cv_prog_ac_ct_F77 ac_cv_f77_compiler_gnu ac_cv_prog_f77_g
@@ -646,15 +652,8 @@ then
 
 	ia64:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/8.1/lib/64
-                             /opt/intel/mkl/8.0/lib/64
-			     /opt/intel/mkl721/lib/64
-			     /opt/intel/mkl72/lib/64
-			     /opt/intel/mkl701/lib/64
-			     /opt/intel/mkl70/lib/64
-			     /opt/intel/mkl/mkl61/lib/64
-			     /opt/intel/mkl/lib/64
-			     /opt/intel/mkl61/lib/64"
+		try_libdirs="/opt/intel/mkl/*/lib/64
+			     /opt/intel/mkl*/lib/64"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -678,9 +677,8 @@ then
 		;;
 
 	amd64:* )
-		try_libdirs="/opt/intel/mkl/8.1/lib/em64t
-                             /opt/intel/mkl/8.0/lib/em64t
-			     /opt/intel/mkl721/lib/em64t"
+		try_libdirs="/opt/intel/mkl/*/lib/em64t
+			     /opt/intel/mkl*/lib/em64t"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
 		for dir in none $try_libdirs
@@ -705,15 +703,8 @@ then
 
 	ia32:* )
 		# check for mkl (in several directories)
-		try_libdirs="/opt/intel/mkl/8.1/lib/32
-                             /opt/intel/mkl/8.0/lib/32
-			     /opt/intel/mkl721/lib/32
-			     /opt/intel/mkl72/lib/32
-			     /opt/intel/mkl701/lib/32
-			     /opt/intel/mkl70/lib/32
-			     /opt/intel/mkl/mkl61/lib/32
-			     /opt/intel/mkl/lib/32
-			     /opt/intel/mkl61/lib/32
+		try_libdirs="/opt/intel/mkl/*/lib/32
+			     /opt/intel/mkl*/lib/32
 			     /cineca/prod/intel/lib"
 		try_libdirs="$libdirs $try_libdirs $ld_library_path"
 
@@ -854,7 +845,6 @@ then
 	fi
 fi
 
-
 # check for lapack
 # supported vendor replacements:
 #   essl on IBM
@@ -968,9 +958,37 @@ then
 			then break ; fi
 		done
 	fi
+
 	# essl must precede lapack (if present)
+
 	if test "$have_essl" -ne 0 && test "$have_lapack" -ne 0
 	then lapack_libs="-lessl $lapack_libs" ; fi
+
+        # if some or all lapack routines are missing, add them here
+
+        if test "$have_lapack" -eq 0 ; then
+
+            if test "$have_atlas" -ne 0 ; then
+
+            # add missing lapack routines so as to complete atlas
+            # note that some compilers do not like to have multiple symbols
+
+	    lapack_libs="$lapack_libs ../flib/lapack_atlas.a"
+
+        elif test "$have_essl" -ne 0 ; then
+
+        # ibm doesn't complain if there are multiple symbols so add everything
+ 
+	    lapack_libs="$lapack_libs ../flib/lapack.a"
+
+        else
+
+	# nothing found, use built-in library
+
+ 	    lapack_libs="../flib/lapack.a"
+
+        fi
+    fi
 fi
 
 # no blas library found: use the built-in blas
@@ -980,27 +998,11 @@ if test "$have_blas" -eq 0 -a "blas_libs" = ""
 then
     blas_libs="../flib/blas.a"
 fi
+
 echo setting BLAS_LIBS... $blas_libs
-
-# if some or all lapack routines are missing, add them here
-
-if test "lapack_libs" = ""; then
-   if test "$have_atlas" -ne 0 -a "$have_lapack" -eq 0; then
-# add missing lapack routines to complete atlas
-# note that some compilers do not like to have multiple symbols
-	lapack_libs="$lapack_libs ../flib/lapack_atlas.a"
-   elif test "$have_essl" -ne 0 -a "$have_lapack" -eq 0; then
-# ibm doesn't complain if there are multiple symbols so add everything
-# due to name conflicts, essl must be loaded before lapack
-	lapack_libs="-lessl ../flib/lapack.a"
-   elif test "$have_lapack" -eq 0 ; then
-# nothing found, use built-in library
-	lapack_libs="../flib/lapack.a"
-   fi
-fi
 echo setting LAPACK_LIBS... $lapack_libs
 
-# check for fftw
+# check for FFT libraries
 # supported vendor replacements:
 #   essl on aix
 #   SUNperf on sparc
@@ -1076,6 +1078,71 @@ then
 fi
 echo setting FFT_LIBS... $fft_libs
 
+# final checks on available FFT libraries
+
+if test "$have_fft" -eq 0
+then
+	AC_LANG_PUSH(C)
+
+	try_dflags="$try_dflags -D__FFTW"
+
+	CFLAGS="$test_cflags"
+	LDFLAGS="$c_ldflags"
+	LIBS="$fft_libs"
+	AC_SEARCH_LIBS(fftwnd, "", have_fft=1 have_fftw=1)
+
+	# find location of fftw.h (if needed)
+	if test "$have_fftw" -ne 0
+	then
+		if test "$includefftw" = ""
+		then
+			# if libfftw is in /some/path/lib, then fftw.h is
+			# probably in /some/path/include
+			includefftw=`echo $fft_libs |
+				sed 's/.*-L\([[^ ]]*\)  *-lfftw.*/\1/
+				     s/lib/include/'`
+		fi
+		try_includedirs="$includefftw /usr/local/include \
+				 /cineca/lib/fftw-2.1.3/fftw"
+		for dir in none $try_includedirs
+		do
+			unset ac_cv_header_fftw_h # clear cached value
+			if test "$dir" = "none"
+			then
+				try_ifftw=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_ifftw="-I$dir"
+			fi
+			CFLAGS="$test_cflags $try_ifftw"
+			CPPFLAGS="$test_cppflags $try_ifftw"
+			LDFLAGS="$c_ldflags"
+			LIBS="$fft_libs"
+			AC_CHECK_HEADER(fftw.h, have_fftw_h=1
+					try_iflags="$try_iflags $try_ifftw")
+			if test "$ac_cv_header_fftw_h" != "no"
+			then break ; fi
+		done
+	fi
+
+	# if no valid FFT library was found, use the local copy
+	if test "$have_fft" -eq 0
+	then
+		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
+	fi
+
+	if test "$have_fftw" -ne 0 && test "$have_fftw_h" -eq 0
+	then
+		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
+		AC_MSG_WARN([fftw library detected, but fftw.h not found])
+	fi
+
+	AC_LANG_POP(C)
+fi
+
+F77=$f90
+FFLAGS="$test_fflags"
+LDFLAGS="$test_ldflags"
 # check for mass on aix
 if test "$mass_libs" = ""
 then
@@ -1173,74 +1240,7 @@ then
 fi
 echo setting MPI_LIBS... $mpi_libs
 
-# final checks on available libraries
-F77=$f90
-FFLAGS="$test_fflags"
-LDFLAGS="$test_ldflags"
-
-if test "$have_fft" -eq 0
-then
-	AC_LANG_PUSH(C)
-
-	if test "$have_fft" -eq 0
-	then
-		try_dflags="$try_dflags -D__FFTW"
-
-		CFLAGS="$test_cflags"
-		LDFLAGS="$c_ldflags"
-		LIBS="$fft_libs"
-		AC_SEARCH_LIBS(fftwnd, "", have_fft=1 have_fftw=1)
-	fi
-
-	# find location of fftw.h (if needed)
-	if test "$have_fftw" -ne 0
-	then
-		if test "$includefftw" = ""
-		then
-			# if libfftw is in /some/path/lib, then fftw.h is
-			# probably in /some/path/include
-			includefftw=`echo $fft_libs |
-				sed 's/.*-L\([[^ ]]*\)  *-lfftw.*/\1/
-				     s/lib/include/'`
-		fi
-		try_includedirs="$includefftw /usr/local/include \
-				 /cineca/lib/fftw-2.1.3/fftw"
-		for dir in none $try_includedirs
-		do
-			unset ac_cv_header_fftw_h # clear cached value
-			if test "$dir" = "none"
-			then
-				try_ifftw=
-			else
-				echo $ECHO_N "in $dir: " $ECHO_C
-				try_ifftw="-I$dir"
-			fi
-			CFLAGS="$test_cflags $try_ifftw"
-			CPPFLAGS="$test_cppflags $try_ifftw"
-			LDFLAGS="$c_ldflags"
-			LIBS="$fft_libs"
-			AC_CHECK_HEADER(fftw.h, have_fftw_h=1
-					try_iflags="$try_iflags $try_ifftw")
-			if test "$ac_cv_header_fftw_h" != "no"
-			then break ; fi
-		done
-	fi
-
-	# if no valid FFT library was found, use our implementation
-	if test "$have_fft" -eq 0
-	then
-		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
-	fi
-
-	if test "$have_fftw" -ne 0 && test "$have_fftw_h" -eq 0
-	then
-		try_dflags="$try_dflags -D__USE_INTERNAL_FFTW"
-		AC_MSG_WARN([fftw library detected, but fftw.h not found])
-	fi
-
-	AC_LANG_POP(C)
-fi
-
+# final check on availability of parallel environment
 parallel=0
 if test "$use_parallel" -ne 0
 then
@@ -1248,19 +1248,6 @@ then
 	LIBS="$mpi_libs"
 	AC_SEARCH_LIBS(mpi_init, "", parallel=1
 		       try_dflags="$try_dflags -D__MPI -D__PARA")
-fi
-
-AC_LANG_POP(Fortran 77)
-
-# check if the structure mallinfo is present in malloc.h
-AC_CHECK_HEADER(malloc.h,have_malloc_h=1,have_malloc_h=0, )
-if test "$have_malloc_h" -ne 0 
-then
-AC_CHECK_MEMBER([struct mallinfo.arena], 
-                [AC_DEFINE(HAVE_MALLINFO)], 
-                ,
-	        [#include <malloc.h>])
-
 fi
 
 if test "$dflags" = "" ; then dflags="$try_dflags" ; fi
