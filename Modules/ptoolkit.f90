@@ -1795,11 +1795,11 @@
 !  =====================================================================
 !
 !     .. Parameters ..
-      REAL(DP)   ZERO, ONE, TWO, THREE, CTEMP, STEMP
-      PARAMETER          ( ZERO = 0.0D0, ONE = 1.0D0, TWO = 2.0D0, &
+      REAL(DP)  RZERO, RONE, TWO, THREE, CTEMP, STEMP
+      PARAMETER          ( RZERO = 0.0D0, RONE = 1.0D0, TWO = 2.0D0, &
      &                   THREE = 3.0D0 )
-      COMPLEX(DP)         CZERO, CONE,ZTEMP
-      PARAMETER          ( CZERO = ( 0.0D0, 0.0D0 ), CONE = ( 1.0D0, 0.0D0 ) )
+      COMPLEX(DP)         ZERO, ONE,ZTEMP
+      PARAMETER          ( ZERO = ( 0.0D0, 0.0D0 ), ONE = ( 1.0D0, 0.0D0 ) )
       INTEGER            MAXIT
       PARAMETER          ( MAXIT = 30 )
 !     ..
@@ -1876,7 +1876,7 @@
       END DO
 
       IF( N.EQ.1 ) THEN
-         IF( ICOMPZ.EQ.2 .AND. OW(1).EQ.ME ) Z( IL(1), 1 ) = CONE
+         IF( ICOMPZ.EQ.2 .AND. OW(1).EQ.ME ) Z( IL(1), 1 ) = ONE
          RETURN
       END IF
 !
@@ -1885,7 +1885,7 @@
       EPS = DLAMCH( 'E' )
       EPS2 = EPS**2
       SAFMIN = DLAMCH( 'S' )
-      SAFMAX = ONE / SAFMIN
+      SAFMAX = RONE / SAFMIN
       SSFMAX = SQRT( SAFMAX ) / THREE
       SSFMIN = SQRT( SAFMIN ) / EPS2
 !
@@ -1893,10 +1893,10 @@
 !     matrix.
 !
       IF( ICOMPZ.EQ.2 ) THEN
-        CALL ZLASET( 'Full', NRL, N, CZERO, CZERO, Z, LDZ )
+        CALL ZLASET( 'Full', NRL, N, ZERO, ZERO, Z, LDZ )
         DO J = 1, N
           IF(OW(J).EQ.ME) THEN
-            Z( IL(J), J ) = CONE
+            Z( IL(J), J ) = ONE
           END IF
         END DO
       END IF
@@ -1914,13 +1914,13 @@
    10 CONTINUE
 
       IF( L1.GT.N )   GO TO 160
-      IF( L1.GT.1 )   E( L1-1 ) = ZERO
+      IF( L1.GT.1 )   E( L1-1 ) = RZERO
       IF( L1.LE.NM1 ) THEN
          DO 20 M = L1, NM1
             TST = DABS( E( M ) )
-            IF( TST.EQ.ZERO )        GO TO 30
+            IF( TST.EQ.RZERO )        GO TO 30
             IF( TST.LE.( SQRT(DABS(D(M)))*SQRT(DABS(D(M+1))))*EPS ) THEN
-               E( M ) = ZERO
+               E( M ) = RZERO
                GO TO 30
             END IF
    20    CONTINUE
@@ -1939,7 +1939,7 @@
 !
       ANORM = DLANST( 'I', LEND-L+1, D( L ), E( L ) )
       ISCALE = 0
-      IF( ANORM.EQ.ZERO )   GO TO 10
+      IF( ANORM.EQ.RZERO )   GO TO 10
       IF( ANORM.GT.SSFMAX ) THEN
          ISCALE = 1
          CALL DLASCL( 'G', 0, 0, ANORM, SSFMAX, LEND-L+1, 1, D( L ), N, INFO )
@@ -1975,7 +1975,7 @@
          M = LEND
 !
    60    CONTINUE
-         IF( M.LT.LEND )  E( M ) = ZERO
+         IF( M.LT.LEND )  E( M ) = RZERO
          P = D( L )
          IF( M.EQ.L )     GO TO 80
 !
@@ -1989,7 +1989,7 @@
                WORK( N-1+L ) = S
                CTEMP = WORK( L )
                STEMP = WORK( N-1+L )
-               IF( ( CTEMP.NE.ONE ) .OR. ( STEMP.NE.ZERO ) ) THEN
+               IF( ( CTEMP.NE.RONE ) .OR. ( STEMP.NE.RZERO ) ) THEN
                   DO KL = 1, NRL
                      ZTEMP = Z( KL, 1+L )
                      Z( KL, 1+L ) = CTEMP*ZTEMP - STEMP*Z( KL, L )
@@ -2001,7 +2001,7 @@
             END IF
             D( L ) = RT1
             D( L+1 ) = RT2
-            E( L ) = ZERO
+            E( L ) = RZERO
             L = L + 2
             IF( L.LE.LEND )     GO TO 40
             GO TO 140
@@ -2013,12 +2013,12 @@
 !        Form shift.
 !
          G = ( D( L+1 )-P ) / ( TWO*E( L ) )
-         R = DLAPY2( G, ONE )
+         R = DLAPY2( G, RONE )
          G = D( M ) - P + ( E( L ) / ( G+SIGN( R, G ) ) )
 !
-         S = ONE
-         C = ONE
-         P = ZERO
+         S = RONE
+         C = RONE
+         P = RZERO
 !
 !        Inner loop
 !
@@ -2049,7 +2049,7 @@
            DO J = M - L + 1 - 1, 1, -1
              CTEMP =  WORK( L + J -1)
              STEMP =  WORK( N-1+L + J-1)
-             IF( ( CTEMP.NE.ONE ) .OR. ( STEMP.NE.ZERO ) ) THEN
+             IF( ( CTEMP.NE.RONE ) .OR. ( STEMP.NE.RZERO ) ) THEN
                DO KL = 1, NRL
                  ZTEMP = Z( KL, J+1+L-1 )
                  Z( KL, J+1+L-1 ) = CTEMP*ZTEMP - STEMP*Z( KL, J+L-1 )
@@ -2090,7 +2090,7 @@
          M = LEND
 !
   110    CONTINUE
-         IF( M.GT.LEND )   E( M-1 ) = ZERO
+         IF( M.GT.LEND )   E( M-1 ) = RZERO
          P = D( L )
          IF( M.EQ.L )      GO TO 130
 !
@@ -2104,7 +2104,7 @@
                WORK( N-1+M ) = S
                CTEMP = WORK( M )
                STEMP = WORK( N-1+M )
-               IF( ( CTEMP.NE.ONE ) .OR. ( STEMP.NE.ZERO ) ) THEN
+               IF( ( CTEMP.NE.RONE ) .OR. ( STEMP.NE.RZERO ) ) THEN
                   DO KL = 1, NRL
                      ZTEMP = Z( KL, L)
                      Z( KL, L )   = CTEMP*ZTEMP - STEMP*Z( KL, L-1 )
@@ -2116,7 +2116,7 @@
             END IF
             D( L-1 ) = RT1
             D( L ) = RT2
-            E( L-1 ) = ZERO
+            E( L-1 ) = RZERO
             L = L - 2
             IF( L.GE.LEND )    GO TO 90
             GO TO 140
@@ -2128,12 +2128,12 @@
 !        Form shift.
 !
          G = ( D( L-1 )-P ) / ( TWO*E( L-1 ) )
-         R = DLAPY2( G, ONE )
+         R = DLAPY2( G, RONE )
          G = D( M ) - P + ( E( L-1 ) / ( G+SIGN( R, G ) ) )
 !
-         S = ONE
-         C = ONE
-         P = ZERO
+         S = RONE
+         C = RONE
+         P = RZERO
 !
 !        Inner loop
 !
@@ -2164,7 +2164,7 @@
             DO J = 1, L - M
                CTEMP = WORK( M+J-1 )
                STEMP = WORK( N-1+M+J-1 )
-               IF( ( CTEMP.NE.ONE ) .OR. ( STEMP.NE.ZERO ) ) THEN
+               IF( ( CTEMP.NE.RONE ) .OR. ( STEMP.NE.RZERO ) ) THEN
                   DO KL = 1, NRL
                      ZTEMP = Z( KL, J+M )
                      Z( KL, J+M )   = CTEMP*ZTEMP - STEMP*Z(KL, J+M-1)
@@ -2210,7 +2210,7 @@
 !
       IF( JTOT .EQ. NMAXIT ) THEN
          DO 150 I = 1, N - 1
-            IF( E( I ) .NE. ZERO )  INFO = INFO + 1
+            IF( E( I ) .NE. RZERO )  INFO = INFO + 1
   150    CONTINUE
          WRITE(6,*) 'WARNING pzsteqr, convergence not achieved INFO = ', INFO
          RETURN
@@ -2983,9 +2983,6 @@ END MODULE parallel_toolkit
 !
 ! ... written by carlo sbraccia ( 2006 )
 !
-#define ZERO ( 0.D0, 0.D0 )
-#define ONE  ( 1.D0, 0.D0 )
-!
 !----------------------------------------------------------------------------
 SUBROUTINE para_dgemm( transa, transb, m, n, k, &
                        alpha, a, lda, b, ldb, beta, c, ldc, comm )
@@ -3087,6 +3084,7 @@ SUBROUTINE para_zgemm( transa, transb, m, n, k, &
   COMPLEX(DP),      INTENT(INOUT) :: a(lda,*), b(ldb,*), c(ldc,*)
   INTEGER,          INTENT(IN)    :: comm
   !
+  COMPLEX(DP), PARAMETER :: ONE=(1.0_DP, 0.0_DP), ZERO=(0.0_DP, 0.0_DP) 
   INTEGER              :: i, mpime, nproc, ierr
   INTEGER              :: ncol, i0, i1
   INTEGER, ALLOCATABLE :: i0a(:), i1a(:)
@@ -3455,6 +3453,7 @@ SUBROUTINE para_zcholdc( n, a, lda, comm )
   COMPLEX(DP), INTENT(INOUT) :: a(lda,*)
   INTEGER,     INTENT(IN)    :: comm
   !
+  COMPLEX(DP), PARAMETER :: ONE=(1.0_DP, 0.0_DP), ZERO=(0.0_DP, 0.0_DP) 
   INTEGER               :: i, j
   REAL(DP)              :: aii
   COMPLEX(DP), EXTERNAL :: ZDOTC
@@ -3480,7 +3479,7 @@ SUBROUTINE para_zcholdc( n, a, lda, comm )
         !
         CALL ZLACGV( i-1, a(i,1), lda )
         !
-        CALL ZDSCAL( n-i, ONE / aii, a(i+1,i), 1 )
+        CALL ZDSCAL( n-i, 1.0_DP / aii, a(i+1,i), 1 )
         !
      END IF
      !
@@ -3610,6 +3609,7 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   !
   IMPLICIT NONE
   !
+  COMPLEX(DP), PARAMETER :: ONE=(1.0_DP, 0.0_DP), ZERO=(0.0_DP, 0.0_DP) 
   INTEGER,     INTENT(IN)    :: n
   INTEGER,     INTENT(IN)    :: lda
   COMPLEX(DP), INTENT(INOUT) :: a(lda,*)
