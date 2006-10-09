@@ -67,11 +67,7 @@ wavefunctions.o \
 wannier.o \
 xml_io_base.o
 
-all : libmod.a
-
-libmod.a: $(MODULES)
-	$(AR) $(ARFLAGS) $@ $?
-	$(RANLIB) $@
+all : $(MODULES)
 
 clean :
 	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod work.pc
