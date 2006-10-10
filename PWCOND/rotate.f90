@@ -62,6 +62,8 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
 !
 ! To recalculate intw1 with new functions
 !
+  if (norbnow==0) goto 100
+
   allocate( aux( norbf*npol, n2d ) )
   call ZGEMM('n','n',norbnow*npol,n2d,n2d,one,intw1,norbf*npol,h,n2d,zero,&
                  aux,norbf*npol)
@@ -83,6 +85,8 @@ subroutine rotatef(app, bpp, bf, anlp, bnlp, bnlf, intw1, intw2,    &
   call ZGEMM('n','n',norbnow*npol,norbnow*npol,n2d,-one,intw1,norbf*npol, &
                      bnlp,n2d,one,intw2,norbf*npol)
   bnlp=(0.d0,0.d0)
+
+100 continue
 
   deallocate(h)
   deallocate(ipiv)
@@ -138,6 +142,8 @@ subroutine rotateb (app, bpp, af, intw1, n2d, norbf, norbnow, npol)
 !
 ! To recalculate intw1 with new functions
 !                                         
+  if (norbnow==0) goto 100
+
   allocate( aux( norbf*npol, n2d ) )
   allocate( aux1( norbf*npol, n2d ) )
   do iorb=1,norbnow*npol
@@ -154,6 +160,8 @@ subroutine rotateb (app, bpp, af, intw1, n2d, norbf, norbnow, npol)
   enddo
   deallocate(aux)
   deallocate(aux1)
+
+100 continue
 
   deallocate(h)
   deallocate(ipiv)
