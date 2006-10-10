@@ -138,7 +138,7 @@ program read_bands
 !
 !  The gamma point is a high symmetry point  
 !
-        if (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0e-4) high_symmetry(n)=.true.
+        if (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0e-9) high_symmetry(n)=.true.
      end if
 
      if (high_symmetry(n)) then
