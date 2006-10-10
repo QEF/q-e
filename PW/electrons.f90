@@ -342,7 +342,7 @@ SUBROUTINE electrons()
         !
         DEALLOCATE( rhognew )
         !
-        IF ( first ) THEN
+        IF ( first .and. nat > 0) THEN
            !
            ! ... first scf iteration: check if the threshold on diagonalization
            ! ... (ethr) was small enough wrt the error in self-consistency (dr2)

@@ -184,7 +184,11 @@ SUBROUTINE potinit()
             '(/,5X,"starting charge ",F10.5,", renormalised to ",F10.5)') &
          charge, nelec
      !
-     rho = rho / charge * nelec
+     IF (nat>0) THEN
+        rho = rho / charge * nelec
+     ELSE
+        rho = nelec / omega
+     ENDIF
      !
   ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) / charge > 1.D-3 ) THEN
      !

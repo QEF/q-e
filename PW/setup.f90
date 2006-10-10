@@ -75,6 +75,7 @@ SUBROUTINE setup()
   USE bp,                 ONLY : gdir, lberry, nppstr
   USE fixed_occ,          ONLY : f_inp, tfixed_occ   
   USE char,               ONLY : sname
+  USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : nimage, kunit
   USE spin_orb,           ONLY : lspinorb, domag, so
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
@@ -385,7 +386,14 @@ SUBROUTINE setup()
      !
   END IF   
   !
-  IF (nat==0) ethr=1.0D-8
+  IF (nat==0) THEN
+     ethr=1.0D-8
+!
+!  In this case, print the Hatree-Fock energy of free electrons per cell 
+!  (not per electron).
+!
+     CALL set_dft_from_name('sla-noc-nogx-nogc')
+  END IF
   !
   IF ( .NOT. lscf ) niter = 1
   !
