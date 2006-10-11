@@ -34,7 +34,6 @@ poten.o \
 print_clock_pwcond.o \
 rotproc.o \
 save_cond.o \
-scatter_back.o \
 scatter_forw.o \
 summary_band.o \
 summary_tran.o \
