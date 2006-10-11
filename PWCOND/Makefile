@@ -32,7 +32,6 @@ local.o \
 local_set.o \
 poten.o \
 print_clock_pwcond.o \
-rotate.o \
 rotproc.o \
 save_cond.o \
 scatter_back.o \
