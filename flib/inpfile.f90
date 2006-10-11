@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #if defined(__ABSOFT)
+#  define getenv getenv_
 #  define getarg getarg_
 #  define iargc  iargc_
 #endif
@@ -153,4 +154,12 @@ SUBROUTINE get_arg_ntg( ntask_groups )
    RETURN
 END SUBROUTINE get_arg_ntg
 
-
+SUBROUTINE get_env ( variable_name, variable_value )
+  !
+  ! Wrapper for intrinsic getenv - all machine-dependent stuff here
+  !
+  CHARACTER (LEN=*)  :: variable_name, variable_value
+  !
+  CALL getenv ( variable_name, variable_value)
+  !
+END SUBROUTINE get_env

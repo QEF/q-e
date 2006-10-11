@@ -5,11 +5,6 @@
 !  in the root directory of the present distribution,
 !  or http://www.gnu.org/copyleft/gpl.txt .
 !
-
-#if defined(__ABSOFT)
-#  define getenv getenv_
-#endif
-
 #  define DREAL       @@_use_DBLE_instead@@
 #  define DIMAG       @@_use_AIMAG_instead@@
 #  define DCMPLX      @@_use_CMPLX_instead@@

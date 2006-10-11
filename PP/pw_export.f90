@@ -292,7 +292,7 @@ program pp_punch
   !   set default values for variables in namelist
   !
   prefix='export'
-  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   pp_file= ' '
   uspp_spsi = .FALSE.

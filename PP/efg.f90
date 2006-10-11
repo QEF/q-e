@@ -30,7 +30,7 @@ program efg
   ! set default value
   !
   prefix = 'pwscf'
-  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   Q=1.d0
   rc = 1.6d0

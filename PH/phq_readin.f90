@@ -136,7 +136,7 @@ SUBROUTINE phq_readin()
   elop         = .FALSE.
   max_seconds  = 10000000.D0
   reduce_io    = .FALSE.
-  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix       = 'pwscf'
   filelph      = ' '

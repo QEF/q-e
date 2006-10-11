@@ -69,7 +69,7 @@ PROGRAM fpmd_postproc
 
   dunit = 14
 
-  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix    = 'cp'
   fileout   = 'out'

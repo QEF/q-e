@@ -75,7 +75,7 @@ MODULE read_namelists_module
        ! ... use the path specified as outdir and the filename prefix 
        ! ... to store output data
        !
-       CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+       CALL get_env( 'ESPRESSO_TMPDIR', outdir )
        IF ( TRIM( outdir ) == ' ' ) outdir = './'
        IF( prog == 'PW' ) prefix = 'pwscf'  
        IF( prog == 'CP' ) prefix = 'cp' 

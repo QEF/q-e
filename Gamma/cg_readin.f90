@@ -28,7 +28,7 @@ SUBROUTINE cg_readin()
   !
   CALL start_clock('cg_readin')
   !
-  CALL getenv( 'ESPRESSO_TMPDIR', outdir )
+  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix = 'pwscf'
   fildyn = 'matdyn'
