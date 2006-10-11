@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
+subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
    !--------------------------------------------------------------------
    !
    use kinds,      only : DP
@@ -18,33 +18,38 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
    ! I/O variables
    !
    integer mesh
-   real (kind=8) :: dx, zed, r(0:mesh), r2(0:mesh), rho(0:mesh)
+   real (kind=8) :: rho_input(mesh)
+   real (kind=8) :: dx, zed, r(mesh), r2(mesh), rho(mesh)
    !
    ! local variables
    !
-   logical :: csi
+   logical :: csi, l_add_tf_term
    real (kind=8) :: error, error2, e, charge, beta, u, alpha, dalpha, c6, du1, &
                     du2, factor, ze2, thresh
    real (kind=8), allocatable :: veff(:), y(:), yy(:), sqr(:)
    real (kind=8), allocatable :: dvpot(:), dvscf(:), drho(:), dvhx(:), dvxc(:), pp(:)
    complex (kind=8), allocatable :: dy(:), drho_old(:)
-   integer i, iter, n, l, iu, Nu, Nc, counter, nstop
+   integer i, iter, n, l, ly, iu, Nu, Nc, counter, nstop, mesh_save
 
-   allocate ( veff(0:mesh),y(0:mesh),yy(0:mesh),sqr(0:mesh) )
-   allocate ( dvpot(0:mesh),dvscf(0:mesh),drho(0:mesh),dvhx(0:mesh),dvxc(0:mesh),pp(0:mesh) )
-   allocate ( dy(0:mesh), drho_old(0:mesh) )
+   allocate ( veff(mesh),y(mesh),yy(mesh),sqr(mesh) )
+   allocate ( dvpot(mesh),dvscf(mesh),drho(mesh),dvhx(mesh),dvxc(mesh),pp(mesh) )
+   allocate ( dy(mesh), drho_old(mesh) )
    !
    write(6,'(/,/,/,5x,20(''-''),'' Compute C6 from polarizability with TFvW approx.'',10(''-''),/)')
    !
-   do i = 0, mesh
-      rho(i) = rho(i) / (fpi*r(i)**2)
+   do i = 1, mesh
+      rho(i) = rho_input(i) / (fpi*r(i)**2)
    end do
    !
-   counter = 0
-   do i = 0, mesh
+   counter = 1
+   do i = 1, mesh
       if (rho(i) .gt. 1.0d-30) counter = counter + 1 
    enddo
+   mesh_save = mesh
    mesh = counter
+#ifdef DEBUG
+   write (*,*) mesh
+#endif
    !
    if (lsd .ne. 0) call errore ('c6_tfvw', 'implemented only for non-magnetic ions', lsd) 
    csi = .true.
@@ -57,7 +62,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
    if (.not. csi) call errore ('c6_tfvw', 'implemented only for closed-shell ions', 1)
 !   rho = 0.d0
 !   open (7,file='rho.out',status='unknown',form='formatted')
-!   do i=0,mesh
+!   do i=1,mesh
 !      read (7,'(P5E20.12)') r(i), rho(i), y(i), y(i), y(i)
 !      write (6,'(P5E15.6)') r(i), rho(i)
 !   end do
@@ -66,6 +71,11 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
 ! compute unperturbed effective potential
 !
    call veff_of_rho(mesh,dx,r,r2,rho,y,veff)
+#ifdef DEBUG
+   write (*,*) "veff "
+   write (*,*) veff(1:3)
+   write (*,*) veff(mesh-5:mesh)
+#endif
 !
 ! check that veff and y are what we think
 !
@@ -76,20 +86,30 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
    ze2 = - zed * e2
    thresh = 1.d-14
 
-   do i=0,mesh
+   do i=1,mesh
       sqr(i) = sqrt(r(i))
       charge = charge + rho(i) * fpi * r2(i) * r(i) * dx
    end do
 !   call solve_scheq(n,l,e,mesh,dx,r,sqr,r2,veff,zed,yy)
-   call ascheq (n, l, e, mesh, dx, r, r2, sqr, veff(0), ze2, thresh, yy(0), nstop)
+   call ascheq (n, l, e, mesh-1, dx, r, r2, sqr, veff, ze2, thresh, yy, nstop)
 
    error = 0.d0
-   do i=0,mesh
+   do i=1,mesh
       error = error + (y(i)-yy(i)/sqr(i)*sqrt(charge))**2 * r2(i) * dx
    end do
 
-   if (error > 1.d-8) & 
+#ifdef DEBUG
+      write (*,*) error
+      write (*,*) y(1:3)
+      write (*,*) y(mesh-2:mesh)
+      write (*,*) yy(1:3)
+      write (*,*) yy(mesh-2:mesh)
+      write (*,*) sqr(1:3)
+      write (*,*) sqrt(charge)
+#endif
+   if (error > 1.d-8) then
       call errore('c6_tfvw','auxiliary funtions veff(r) and y(r) are inaccurate',1)
+   end if
 !
 ! initialize external perturbation (electric field)
 !
@@ -124,7 +144,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
       endif
       !
       if (iu.eq.0) then
-         do i=0,mesh
+         do i=1,mesh
             dvscf(i) = dvpot(i)
             drho_old(i) = 0.d0
          end do 
@@ -139,20 +159,22 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
          ! solve Sternheimer equation for the auxiliary wavefunction
          !
          l = 1
-         call sternheimer(u, l, mesh, dx, r, sqr, r2, veff ,zed, y, dvscf, dy)
+         ly = 0
+         call sternheimer(u,l,ly,mesh,dx,r,sqr,r2,veff,zed,y,dvscf,dy)
          ! compute drho of r
          !
          call drho_of_r(mesh, dx, r, r2, y, dy, drho)
          !
-         ! compute dv of drho
+         ! compute dv of drho (including the TF term)
          !
-         call dv_of_drho(mesh, dx, r,r2,rho,drho,dvhx,dvxc,pp)
+         l_add_tf_term = .true.
+         call dv_of_drho(mesh, dx, r,r2,rho,drho,dvhx,dvxc,pp, l_add_tf_term)
          !
          ! mix
          !
          error = 0.d0
          error2 = 0.d0
-         do i=0,mesh
+         do i=1,mesh
             dvscf(i) = dvscf(i) + beta * (dvpot(i)+dvhx(i) -dvscf(i))
             error = error + abs (drho(i) -drho_old(i))
             error2 = error2 + abs (drho(i) -drho_old(i))* r(i) * dx
@@ -187,6 +209,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho)
    deallocate ( veff, y, yy, sqr )
    deallocate ( dvpot, dvscf, drho, dvhx, pp )
    
+   mesh = mesh_save
    return
 end subroutine
   
@@ -202,8 +225,7 @@ subroutine veff_of_rho(mesh,dx,r,r2,rho,y,veff)
    ! I/O variables
    !
    integer mesh
-   real (kind=8) :: dx, r(0:mesh), r2(0:mesh), rho(0:mesh), &
-                    veff(0:mesh), y(0:mesh)
+   real (kind=8) :: dx, r(mesh), r2(mesh), rho(mesh), veff(mesh), y(mesh)
    ! 
    ! local variables
    !
@@ -214,15 +236,15 @@ subroutine veff_of_rho(mesh,dx,r,r2,rho,y,veff)
 !
 ! compute auxiliary wavefunction y
 !
-   do i=0,mesh
+   do i=1,mesh
       y(i) = sqrt(rho(i)*r(i)*fpi)
    end do
 !
 ! compute effective potential veff
 !
-   allocate (vold(0:mesh))
+   allocate (vold(mesh))
 
-   do i=0,mesh
+   do i=1,mesh
       vold(i) = 0.d0
    end do
    dx2= dx*dx
@@ -232,16 +254,16 @@ subroutine veff_of_rho(mesh,dx,r,r2,rho,y,veff)
       !
       k=k+1
       !
-      do i=1,mesh-1
+      do i=2,mesh-1
          veff(i) = ( y(i+1)/y(i) + y(i-1)/y(i) -2.d0 )/dx2  &
                  - ( vold(i+1)*y(i+1)/y(i) + vold(i-1)*y(i-1)/y(i) -2.d0*vold(i) )/12.d0
       end do
-      veff(0) = veff(1) + (veff(2)-veff(1))*(r(0)-r(1))/(r(2)-r(1)) 
+      veff(1) = veff(2) + (veff(3)-veff(2))*(r(1)-r(2))/(r(3)-r(2)) 
       veff(mesh) = (y(mesh-1)/y(mesh) -2.d0 )/dx2 &
                  - (vold(mesh-1)*y(mesh-1)/y(mesh) -2.d0*vold(mesh) )/12.d0
 !
       error = 0.d0
-      do i=0,mesh
+      do i=1,mesh
          error = error + abs( veff(i) - vold(i) )
          vold(i) = veff(i)
       end do
@@ -251,7 +273,7 @@ subroutine veff_of_rho(mesh,dx,r,r2,rho,y,veff)
 
    deallocate (vold)
    !
-   do i=0,mesh
+   do i=1,mesh
       veff(i) = (veff(i) -0.25d0)/r2(i)
    end do
    !
@@ -266,7 +288,7 @@ subroutine veff_of_rho(mesh,dx,r,r2,rho,y,veff)
 end subroutine
 !
 !--------------------------------------------------------------------
-subroutine dv_of_drho(mesh,dx,r,r2,rho,drho,dvhx,dvxc,pp)
+subroutine dv_of_drho(mesh,dx,r,r2,rho,drho,dvhx,dvxc,pp, l_add_tf_term)
    !--------------------------------------------------------------------
    use constants, only : e2, pi, fpi
 !   use flags,      only : HartreeFock, rpa
@@ -274,9 +296,10 @@ subroutine dv_of_drho(mesh,dx,r,r2,rho,drho,dvhx,dvxc,pp)
    !
    ! I/O variables
    !
+   logical l_add_tf_term
    integer mesh
-   real (kind=8) :: dx, r(0:mesh), r2(0:mesh)
-   real (kind=8) :: rho(0:mesh), drho(0:mesh), dvhx(0:mesh), pp(0:mesh), dvxc(0:mesh)
+   real (kind=8) :: dx, r(mesh), r2(mesh)
+   real (kind=8) :: rho(mesh), drho(mesh), dvhx(mesh), pp(mesh), dvxc(mesh)
    !
    ! local variables
    !
@@ -284,9 +307,9 @@ subroutine dv_of_drho(mesh,dx,r,r2,rho,drho,dvhx,dvxc,pp)
    real (kind=8), allocatable :: qq(:)
    integer i
 
-   allocate (qq(0:mesh))
+   allocate (qq(mesh))
 
-   do i=0,mesh 
+   do i=1,mesh 
       dr3   = fpi * r2(i) * r(i) * dx
       pp(i) = drho(i) * r(i)  * dr3 /3.d0
       qq(i) = drho(i) / r2(i) * dr3 /3.d0
@@ -294,23 +317,46 @@ subroutine dv_of_drho(mesh,dx,r,r2,rho,drho,dvhx,dvxc,pp)
    do i=1,mesh
       pp(i) = pp(i) + pp(i-1) 
    end do
-   do i=mesh-1,0,-1
+!   write (*,*) "pp in dv_of_drho"
+!   write (*,*) pp(1:6)
+!   write (*,*) pp(mesh-5:mesh)
+!   write (*,*) "qq -prima in dv_of_drho"
+!   write (*,*) qq(1:6)
+!   write (*,*) qq(mesh-5:mesh)
+   do i=mesh-1,1,-1
       qq(i) = qq(i) + qq(i+1)
    end do
-   do i=0,mesh
+!   write (*,*) "qq -dopo in dv_of_drho"
+!   write (*,*) qq(1:6)
+!   write (*,*) "r2 in dv_of_drho"
+!   write (*,*) r2(1:6)
+!   write (*,*) "r in dv_of_drho"
+!   write (*,*) r(1:6)
+   do i=1,mesh
       dvhx(i) = e2 * ( pp(i) / r2(i) + qq(i) * r(i) ) ! Hartree term
    end do
+
+!   write (*,*) "Hartree in dv_of_drho"
+!   write (*,*) dvhx(1:6)
+!   write (*,*) dvhx(mesh-5:mesh)
 ! add TF term
-   do i=0,mesh
-      kf2 = ( 3.d0*pi*pi*rho(i) )**(2.d0/3.d0)
-      dvhx(i) = dvhx(i) + e2/3.d0* kf2 / rho(i) * drho(i)
-   end do
+   if (l_add_tf_term) then
+      do i=1,mesh
+         kf2 = ( 3.d0*pi*pi*rho(i) )**(2.d0/3.d0)
+         dvhx(i) = dvhx(i) + e2/3.d0* kf2 / rho(i) * drho(i)
+      end do
+   end if
 !
 !add xc term
 !         
-   do i=0,mesh
+!   write (*,*) "dvxc in dv_of_drho"
+!   write (*,*) dvxc(1:6)
+   do i=1,mesh
       dvhx(i) = dvhx(i) + dvxc(i) * drho(i)
    end do
+!   write (*,*) "Hartree + dvxc in dv_of_drho"
+!   write (*,*) dvhx(1:3)
+!   write (*,*) dvhx(mesh-2:mesh)
 !
    deallocate (qq)
 
@@ -329,7 +375,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    ! I/O variables
    !
    integer :: mesh
-   real(kind=8) :: rho(0:mesh), dvxc(0:mesh)
+   real(kind=8) :: rho(mesh), dvxc(mesh)
    !
    ! local variables
    !
@@ -339,7 +385,7 @@ subroutine dvxc_dn(mesh, rho, dvxc)
    !
    if ( dft_is_gradient() ) &
       call errore ('dvxc_dn', 'gradient correction to dvxc not yet implemented', 1)
-   do i = 0, mesh
+   do i = 1, mesh
       ! LDA only
       dvxc(i) = dmxc (rho(i))
       !
@@ -360,11 +406,11 @@ subroutine drho_of_r(mesh, dx, r, r2, y, dy, drho)
    ! I/O vaiables
    !
    integer mesh
-   real (kind=8) :: dx, r(0:mesh), r2(0:mesh), y(0:mesh), drho(0:mesh)
-   complex (kind=8) :: dy(0:mesh)
+   real (kind=8) :: dx, r(mesh), r2(mesh), y(mesh), drho(mesh)
+   complex (kind=8) :: dy(mesh)
    ! local variables
    integer i
-   do i=0,mesh
+   do i=1,mesh
       drho(i) = 2.d0 * y(i) * real(dy(i)) * r(i) / (fpi*r2(i))
    end do
 
@@ -382,13 +428,13 @@ subroutine init_dpot(r,mesh,dvpot)
    ! I/O variables
    !
    integer mesh
-   real (kind=8) :: r(0:mesh), dvpot(0:mesh)
+   real (kind=8) :: r(mesh), dvpot(mesh)
    !
    ! local variables
    !
    integer i
 
-   do i =0,mesh
+   do i =1,mesh
       dvpot (i) = - e2*r(i)
    end do
 
@@ -396,7 +442,7 @@ subroutine init_dpot(r,mesh,dvpot)
 end subroutine
 
 !--------------------------------------------------------------------
-subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
+subroutine sternheimer(u, l, ll, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    !--------------------------------------------------------------------
    !
    ! solve the sternheimer equation for imaginary frequency 
@@ -406,11 +452,11 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    !
    ! I/O variables
    ! 
-   integer mesh, l
+   integer mesh, l, ll
    real (kind=8) :: u,  dx, zed
-   real (kind=8) :: r(0:mesh), sqr(0:mesh), r2(0:mesh)
-   real (kind=8) :: vpot(0:mesh), y(0:mesh), dvpot(0:mesh)
-   complex (kind=8) :: dy(0:mesh)
+   real (kind=8) :: r(mesh), sqr(mesh), r2(mesh)
+   real (kind=8) :: vpot(mesh), y(mesh), dvpot(mesh)
+   complex (kind=8) :: dy(mesh)
    !
    ! local variables
    !
@@ -419,7 +465,7 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    complex (kind=8) :: gg, aa, bb, fac, e
    complex (kind=8), allocatable :: f(:), g(:), yy(:)
 
-   allocate ( f(0:mesh), g(0:mesh), yy(0:mesh) )
+   allocate ( f(mesh), g(mesh), yy(mesh) )
 
    ddx12=dx*dx/12.d0
    sqlhf = (l+0.5d0)**2
@@ -433,8 +479,8 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    !
    icl = 2
 !   f(0) = ddx12 *( sqlhf + r2(0) * (vpot(0)-e) )
-   f(0) = ddx12 *( r2(0) * (vpot(0)-e) )
-   do i=1,mesh
+   f(1) = ddx12 *( r2(1) * (vpot(1)-e) )
+   do i=2,mesh
 !      f(i) = ddx12 * ( sqlhf + r2(i) *(vpot(i)-e) )
       f(i) = ddx12 * ( r2(i) *(vpot(i)-e) )
       if( real(f(i)) .ne. sign(real(f(i)),real(f(i-1))) &
@@ -442,11 +488,11 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    end do
 !   write (*,*) icl
 
-   do i=0,mesh
+   do i=1,mesh
       f(i) = ddx12 * ( sqlhf + r2(i) *(vpot(i)-e) )
    end do
 
-   do i=0,mesh
+   do i=1,mesh
       f(i)=1.0d0-f(i)
       g(i)= ddx12 * r2(i) * dvpot(i) * y(i) 
    end do 
@@ -456,19 +502,19 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    !
    ! determination of the wave-function in the first two points 
    !
-   yy(0) = r(0)**(l+1) *(1.d0 - 2.d0*zed*r(0)/x2l2) / sqr(0)
    yy(1) = r(1)**(l+1) *(1.d0 - 2.d0*zed*r(1)/x2l2) / sqr(1)
+   yy(2) = r(2)**(l+1) *(1.d0 - 2.d0*zed*r(2)/x2l2) / sqr(2)
    !
    ! outward integration 
    !
-   do i =1, icl-1
+   do i =2, icl-1
       yy(i+1)=( (12.d0-10.d0*f(i))*yy(i)-f(i-1)*yy(i-1) )/f(i+1)
    end do
    !
    ! rescale to 1 at icl
    !
    fac = 1.d0/yy(icl)
-   do i =0, icl
+   do i =1, icl
       yy(i)= yy(i) * fac 
    end do
    !
@@ -504,12 +550,12 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    !
    ! determination of the wave-function in the first two points 
    !
-   dy(0) = r(0)**(l+1) *(1.d0 - 2.d0*zed*r(0)/x2l2) / sqr(0)
    dy(1) = r(1)**(l+1) *(1.d0 - 2.d0*zed*r(1)/x2l2) / sqr(1)
+   dy(2) = r(2)**(l+1) *(1.d0 - 2.d0*zed*r(2)/x2l2) / sqr(2)
    !
    ! outward integration 
    !
-   do i =1, icl-1
+   do i =2, icl-1
       gg = g(i+1) + 10.d0*g(i) + g(i-1)
       dy(i+1)=( (12.d0-10.d0*f(i))*dy(i)-f(i-1)*dy(i-1) + gg )/f(i+1)
    end do
@@ -517,7 +563,7 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    ! choose the solution that goes to 1 in icl
    !
    fac =  dy(icl) - 1.d0
-   do i = 0,icl
+   do i = 1,icl
       dy(i) = dy(i) - fac * yy(i)
    end do
    !
@@ -555,7 +601,7 @@ subroutine sternheimer(u, l, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
    bb= (12.d0-10.d0*f(i))*yy(i)-f(i+1)*yy(i+1)-f(i-1)*yy(i-1) 
    !   write (*,*) aa, bb
    fac = aa/bb
-   do i=0,mesh
+   do i=1,mesh
       dy(i) = dy(i) - fac * yy(i)
    end do
    deallocate ( f, g, yy )
