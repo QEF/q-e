@@ -105,7 +105,7 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
       ELSE
          qm1(ig)=0.d0
       END IF
-      a1 = -1.d0*gk(ipol,ig)
+      a1 = -1.d0*gk(jpol,ig)
       a2 = -1.d0*gk(ipol,ig)*gk(jpol,ig)*qm1(ig)
       DO iwf = 1,natomwfc
          dwfc(ig,iwf) = aux(ig,iwf)*a1 + dwfc(ig,iwf)*a2
