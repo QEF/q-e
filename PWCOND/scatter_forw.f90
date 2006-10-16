@@ -267,15 +267,17 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 
 !-------
 !    adding nonlocal part
-    CALL ZGEMM('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
+    IF (norb>0) THEN
+       CALL ZGEMM('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
                n2d,f1,n2d,one,funl1,n2d)
-    do i = 1, norb*npol
-      do lam = 1, n2d
-        f1(lam,i) = -zkk(lam)*f1(lam,i)
-      enddo
-    enddo 
-    CALL ZGEMM('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
-               n2d,f1,n2d,one,fundl1,n2d)
+       do i = 1, norb*npol
+          do lam = 1, n2d
+             f1(lam,i) = -zkk(lam)*f1(lam,i)
+          enddo
+       enddo 
+       CALL ZGEMM('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
+                  n2d,f1,n2d,one,fundl1,n2d)
+    END IF
 !-------
 
 !------
@@ -311,12 +313,14 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
         f_aux(i,j) = intw1(i,j)
       enddo
     enddo   
-    call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,      &
-               xmat(1,n2d+1),2*n2d,one,intw1(1,n2d+1),norbf*npol)
-    call ZGEMM('n','n',norb*npol,norb*npol,n2d,one,f_aux,norb*npol,&
-               xmat(1,2*n2d+1),2*n2d,one,intw2,norbf*npol)
-    call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,xmat, &
-               2*n2d,zero,intw1,norbf*npol)
+    IF (norb>0) THEN
+       call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,      &
+                  xmat(1,n2d+1),2*n2d,one,intw1(1,n2d+1),norbf*npol)
+       call ZGEMM('n','n',norb*npol,norb*npol,n2d,one,f_aux,norb*npol,&
+                  xmat(1,2*n2d+1),2*n2d,one,intw2,norbf*npol)
+       call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,xmat, &
+                  2*n2d,zero,intw1,norbf*npol)
+    END IF
 !--------
 
 !-------
@@ -331,8 +335,9 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                2*n2d,zero,fun0,n2d)
     call ZGEMM('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat(1,n2d+1), &
                2*n2d,one,fun0(1,n2d+1),n2d)
-    call ZGEMM('n','n',n2d,norb*npol,n2d,one,amat,2*n2d,         &
-               xmat(1,2*n2d+1),2*n2d,one,funl0,n2d)
+    IF (norb>0) &
+       call ZGEMM('n','n',n2d,norb*npol,n2d,one,amat,2*n2d,         &
+                  xmat(1,2*n2d+1),2*n2d,one,funl0,n2d)
 !---------------
 
 11  continue 
@@ -386,10 +391,12 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                n2d,amat,2*n2d,zero,fun1,n2d)
     CALL ZGEMM('n','n',n2d,2*n2d,n2d,one,psiper(1,1,kp),     &
                n2d,amat(n2d+1,1),2*n2d,zero,fund1,n2d)
-    CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
-               n2d,f1,n2d,zero,funl1,n2d)
-    CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
-               n2d,f2,n2d,zero,fundl1,n2d)
+    IF (norb>0) THEN
+       CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
+                  n2d,f1,n2d,zero,funl1,n2d)
+       CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
+                  n2d,f2,n2d,zero,fundl1,n2d)
+    END IF
 !---------
 
   enddo
@@ -418,15 +425,19 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
              n2d,amat,2*n2d,zero,fun0,n2d)
   CALL ZGEMM('n','n',n2d,2*n2d,n2d,one,psiper(1,1,1),     &
              n2d,amat(n2d+1,1),2*n2d,zero,fund0,n2d)
-  CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
-             n2d,f1,n2d,zero,funl0,n2d)
-  CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
-             n2d,f2,n2d,zero,fundl0,n2d)
+  IF (norb>0) THEN
+     CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
+                n2d,f1,n2d,zero,funl0,n2d)
+     CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
+                n2d,f2,n2d,zero,fundl0,n2d)
+  END IF
 !---------
 
 ! scaling the integrals
-  CALL DSCAL(2*norbf*npol*2*n2d, sarea, intw1, 1)
-  CALL DSCAL(2*norbf*npol*norbf*npol, sarea, intw2, 1)
+  IF (norbf>0) THEN
+     CALL DSCAL(2*norbf*npol*2*n2d, sarea, intw1, 1)
+     CALL DSCAL(2*norbf*npol*norbf*npol, sarea, intw2, 1)
+  END IF
 
 !
 ! To construct the functions in the whole rigion zin<z<zfin in the
