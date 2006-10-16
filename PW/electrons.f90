@@ -680,11 +680,11 @@ SUBROUTINE electrons()
         !
         IF ( tefield ) WRITE( stdout, 9061 ) etotefield
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
+        IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
         !
         !   With Fermi-Dirac population factor, etot is the electronic
         !   free energy F = E - TS , demet is the -TS contribution
         !
-        WRITE( stdout, 9069 ) descf
         IF ( degauss /= 0.0 ) WRITE( stdout, 9070 ) demet
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
@@ -766,7 +766,7 @@ SUBROUTINE electrons()
   !
 9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
 9001 FORMAT(/'     Self-consistent Calculation' )
-9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' ryd',5X,'beta=',F4.2 )
+9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' Ry',5X,'beta=',F4.2 )
 9015 FORMAT(/' ------ SPIN UP ------------'/ )
 9016 FORMAT(/' ------ SPIN DOWN ----------'/ )
 9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
@@ -781,33 +781,34 @@ SUBROUTINE electrons()
 9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
 9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
-9060 FORMAT(/'     one-electron contribution =',F15.8,' ryd' &
-            /'     hartree contribution      =',F15.8,' ryd' &
-            /'     xc contribution           =',F15.8,' ryd' &
-            /'     ewald contribution        =',F15.8,' ryd' )
-9061 FORMAT( '     electric field correction =',F15.8,' ryd' )
-9062 FORMAT( '     Fock energy 1             =',F15.8,' ryd' )
-9063 FORMAT( '     Fock energy 2             =',F15.8,' ryd' )
-9064 FORMAT( '     Half Fock energy 2        =',F15.8,' ryd' )
-9066 FORMAT( '     dexx                      =',F15.8,' ryd' )
-9065 FORMAT( '     Hubbard energy            =',F15.8,' ryd' )
-9069 FORMAT( '     scf correction            =',F15.8,' ryd' )
-9070 FORMAT( '     "-TS" contribution        =',F15.8,' ryd' )
-9071 FORMAT( '     Magnetic field            =',3F12.7,' ryd' )
-9072 FORMAT( '     Magnetic field            =',F12.7, ' ryd' )
-9073 FORMAT( '     lambda                    =',F11.2,' ryd' )
-9080 FORMAT(/'     total  KS-energy          =',0PF15.8,' ryd' &
-            /'     total HWF-energy          =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',0PF15.8,' ryd' )
-9081 FORMAT(/'!    total  KS-energy          =',0PF15.8,' ryd' &
-            /'     total HWF-energy          =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',0PF15.8,' ryd' )
-9082 FORMAT(/'     total  KS-energy          =',0PF15.8,' ryd' &
-            /'     total HWF-energy          =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',1PE15.1,' ryd' )
-9083 FORMAT(/'!    total  KS-energy          =',0PF15.8,' ryd' &
-            /'     total HWF-energy          =',0PF15.8,' ryd' &
-            /'     estimated scf accuracy    <',1PE15.1,' ryd' )
+9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
+            /'     one-electron contribution =',F15.8,' Ry' &
+            /'     hartree contribution      =',F15.8,' Ry' &
+            /'     xc contribution           =',F15.8,' Ry' &
+            /'     ewald contribution        =',F15.8,' Ry' )
+9061 FORMAT( '     electric field correction =',F15.8,' Ry' )
+9062 FORMAT( '     Fock energy 1             =',F15.8,' Ry' )
+9063 FORMAT( '     Fock energy 2             =',F15.8,' Ry' )
+9064 FORMAT( '     Half Fock energy 2        =',F15.8,' Ry' )
+9066 FORMAT( '     dexx                      =',F15.8,' Ry' )
+9065 FORMAT( '     Hubbard energy            =',F15.8,' Ry' )
+9069 FORMAT( '     scf correction            =',F15.8,' Ry' )
+9070 FORMAT( '     smearing contrib. (-TS)   =',F15.8,' Ry' )
+9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )
+9072 FORMAT( '     Magnetic field            =',F12.7, ' Ry' )
+9073 FORMAT( '     lambda                    =',F11.2,' Ry' )
+9080 FORMAT(/'     total energy              =',0PF15.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
+            /'     estimated scf accuracy    <',0PF15.8,' Ry' )
+9081 FORMAT(/'!    total energy              =',0PF15.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
+            /'     estimated scf accuracy    <',0PF15.8,' Ry' )
+9082 FORMAT(/'     total energy              =',0PF15.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
+            /'     estimated scf accuracy    <',1PE15.1,' Ry' )
+9083 FORMAT(/'!    total energy              =',0PF15.8,' Ry' &
+            /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
+            /'     estimated scf accuracy    <',1PE15.1,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
 9110 FORMAT(/'     convergence has been achieved' )
 9120 FORMAT(/'     convergence NOT achieved, stopping' )
