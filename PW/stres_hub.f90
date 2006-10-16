@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
+#undef TIMING
 !
 !----------------------------------------------------------------------
 SUBROUTINE stres_hub ( sigmah )
@@ -25,6 +26,7 @@ SUBROUTINE stres_hub ( sigmah )
   USE io_files,  ONLY : prefix, iunocc
   USE wvfct,     ONLY : gamma_only   
   USE io_global, ONLY : stdout, ionode
+
    !
    IMPLICIT NONE
    !
@@ -36,6 +38,10 @@ SUBROUTINE stres_hub ( sigmah )
    LOGICAL :: exst
    REAL (DP), ALLOCATABLE :: dns(:,:,:,:)
    !       dns(ldim,ldim,nspin,nat), ! the derivative of the atomic occupations
+#ifdef TIMING
+   CALL start_clock( 'stres_hub' )
+#endif
+
  
    IF (U_projection .NE. "atomic") CALL errore("stres_hub", &
                    " stress for this U_projection_type not implemented",1)
@@ -72,8 +78,15 @@ SUBROUTINE stres_hub ( sigmah )
    END DO
 #endif
    omin1 = 1.d0/omega
+!
+!  NB: both ipol and jpol must run from 1 to 3 because this stress 
+!      contribution is not in general symmetric when computed only 
+!      from k-points in the irreducible wedge of the BZ. 
+!      It is (must be) symmetric after symmetrization but this requires 
+!      the full stress tensor not only its upper triangular part.
+!
    DO ipol = 1,3
-      DO jpol = 1,ipol
+      DO jpol = 1,3
          CALL dndepsilon(dns,ldim,ipol,jpol)
          DO na = 1,nat                 
             nt = ityp(na)
@@ -98,20 +111,31 @@ SUBROUTINE stres_hub ( sigmah )
    END DO
    IF (nspin.EQ.1) sigmah(:,:) = 2.d0 * sigmah(:,:)
 
-   !
-   ! Symmetryze the stress tensor
-   !
-   DO ipol = 1,3
-      DO jpol = ipol,3
-         sigmah(ipol,jpol) = sigmah(jpol,ipol)
-      END DO
-   END DO
-   
    CALL trntns(sigmah,at,bg,-1)
    CALL symtns(sigmah,nsym,s)
    CALL trntns(sigmah,at,bg,1)
 
+!
+! Symmetryze the stress tensor with respect to cartesian coordinates
+! it should NOT be needed, let's do it for safety.
+!
+   DO ipol = 1,3
+      DO jpol = ipol,3
+         if ( abs( sigmah(ipol,jpol)-sigmah(jpol,ipol) )  > 1.d-6 ) then
+             write (stdout,'(2i3,2f12.7)') ipol,jpol,sigmah(ipol,jpol), &
+                                                     sigmah(jpol,ipol)
+            call errore('stres_hub',' non-symmetric stress contribution',1)
+         end if
+         sigmah(ipol,jpol) = 0.5d0* ( sigmah(ipol,jpol) + sigmah(jpol,ipol) )
+         sigmah(jpol,ipol) = sigmah(ipol,jpol)
+      END DO
+   END DO
+   
    DEALLOCATE (dns)
+#ifdef TIMING
+   CALL stop_clock( 'stres_hub' )
+   CALL print_clock( 'stres_hub' )
+#endif
 
    RETURN
 END  SUBROUTINE stres_hub
