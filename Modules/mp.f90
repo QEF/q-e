@@ -24,7 +24,8 @@
 !      PRIVATE
       PUBLIC :: mp_start, mp_end, mp_env, mp_group, mp_cart_create, &
         mp_bcast, mp_stop, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
-        mp_excng, mp_gather, mp_get, mp_put, mp_barrier, mp_report
+        mp_excng, mp_gather, mp_get, mp_put, mp_barrier, mp_report, &
+        mp_group_free
 !
       INTERFACE mp_excng    ! Carlo Cavazzoni
         MODULE PROCEDURE mp_excng_i
@@ -290,23 +291,39 @@
       END SUBROUTINE mp_env
 !------------------------------------------------------------------------------!
 !..mp_group
-      SUBROUTINE mp_group(group_list, group_size, base_group, groupid)
+      SUBROUTINE mp_group(group_list, group_size, old_comm, new_comm)
         IMPLICIT NONE
-        INTEGER, INTENT (IN) :: group_list(:), group_size, base_group
-        INTEGER, INTENT (OUT) :: groupid
+        INTEGER, INTENT (IN) :: group_list(:), group_size, old_comm
+        INTEGER, INTENT (OUT) :: new_comm
         INTEGER :: base, newgroup, ierr
 
         ierr = 0
-        groupid = base_group
+        new_comm = old_comm
 #if defined(__MPI)
-        CALL mpi_comm_group(base_group,base,ierr)
+        CALL mpi_comm_group(old_comm,base,ierr)
         IF (ierr/=0) CALL mp_stop(8010)
         CALL mpi_group_incl(base,group_size,group_list,newgroup,ierr)
         IF (ierr/=0) CALL mp_stop(8011)
-        CALL mpi_comm_create(base_group,newgroup,groupid,ierr)
+        CALL mpi_comm_create(old_comm,newgroup,new_comm,ierr)
         IF (ierr/=0) CALL mp_stop(8012)
 #endif
       END SUBROUTINE mp_group
+!------------------------------------------------------------------------------!
+!..mp_group_free
+      SUBROUTINE mp_group_free( comm )
+        IMPLICIT NONE
+        INTEGER, INTENT (IN) :: comm
+        INTEGER :: base, ierr
+        ierr = 0
+#if defined(__MPI)
+        CALL mpi_comm_group( comm, base, ierr )
+        IF (ierr/=0) CALL mp_stop(8010)
+        CALL mpi_comm_free( comm, ierr )
+        IF (ierr/=0) CALL mp_stop(8011)
+        CALL mpi_group_free( base, ierr )
+        IF (ierr/=0) CALL mp_stop(8012)
+#endif
+      END SUBROUTINE mp_group_free
 !------------------------------------------------------------------------------!
 !..mp_cart_create
       SUBROUTINE mp_cart_create(comm_old,ndims,dims,pos,comm_cart)

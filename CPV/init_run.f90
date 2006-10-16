@@ -83,6 +83,7 @@ SUBROUTINE init_run()
   USE printout_base,            ONLY : printout_base_init
   USE wave_types,               ONLY : wave_descriptor_info
   USE xml_io_base,              ONLY : restart_dir, create_directory
+  USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   !
   IMPLICIT NONE
   !
@@ -224,6 +225,10 @@ SUBROUTINE init_run()
   CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
   !
   CALL print_legend( )
+  !
+  CALL mesure_mmul_perf( nudx )
+  !
+  CALL mesure_diag_perf( nudx )
   !
   IF ( nbeg < 0 ) THEN
      !

@@ -104,6 +104,7 @@
 
       REAL(DP) :: tu, tp, one_over_h
       REAL(DP) :: one_over_scale
+      REAL(DP) :: redin(3), redout(3)
       REAL(DP), ALLOCATABLE :: ul(:)
       REAL(DP), ALLOCATABLE :: pl(:)
       integer :: l, i, j, k, t, tl, ierr
@@ -118,7 +119,7 @@
         RETURN
       END IF
 
-      ALLOCATE( u( n ), p( n ), vtmp( n ), ul( n ), pl( n ), is( n ), ri( n ) )
+      ALLOCATE( u( n ), p( n+1 ), vtmp( n+1 ), ul( n ), pl( n ), is( n ), ri( n ) )
 
       DO I = N, 1, -1
         IS(I)  = (I-1)/NPROC
@@ -135,7 +136,7 @@
          L     = I - 1         ! primo elemeto
          H     = 0.0d0
 
-         IF ( L .GT. 1 ) THEN
+         IF ( L > 1 ) THEN
 
            SCALE = 0.0D0
            DO K = 1, is(l)
@@ -144,8 +145,9 @@
 
 #if defined __PARA
 #  if defined __MPI
-           CALL MPI_ALLREDUCE(SCALE, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
-           SCALE = TMP
+           redin(1) = scale
+           CALL MPI_ALLREDUCE(redin, redout, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
+           SCALE = redout(1)
 #  endif
 #endif
 
@@ -164,15 +166,19 @@
                SIGMA  = SIGMA + A(k,I)**2 
              END DO
 
-             IF(RI(L) .eq. ME ) THEN
-               F = A(is(L),I)
+             IF( ri(l) .eq. me ) THEN
+               F = A( is(l), i )
+             ELSE
+               F = 0.0d0
              END IF
 
 #if defined __PARA
 #  if defined __MPI
-             CALL MPI_ALLREDUCE(SIGMA, TMP, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
-             SIGMA = TMP
-             CALL MPI_BCAST(F, 1, MPI_DOUBLE_PRECISION, RI(L), comm, IERR)
+             redin(1) = sigma
+             redin(2) = f
+             CALL MPI_ALLREDUCE( redin, redout, 2, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
+             SIGMA = redout(1)
+             f     = redout(2)
 #  endif
 #endif
 
@@ -233,30 +239,34 @@
 
 #if defined __PARA
 #  if defined __MPI
-             CALL MPI_ALLREDUCE(KAPPA,TMP,1,MPI_DOUBLE_PRECISION,MPI_SUM, comm,IERR)
-             KAPPA = TMP
-             CALL MPI_ALLREDUCE(vtmp,p,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
+             vtmp( l + 1 ) = kappa
+             CALL MPI_ALLREDUCE( vtmp, p, l+1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR )
+             kappa = p( l + 1 )
 #  endif
 #else
              p(1:l) = vtmp(1:l)
 #endif
 
-             CALL DAXPY(l, -kappa, u, 1, p, 1)
+             CALL DAXPY( l, -kappa, u, 1, p, 1 )
+             CALL DGER( is(l), l, -1.0d0, ul, 1, p, 1, a, lda )
+             CALL DGER( is(l), l, -1.0d0, p( me + 1 ), nproc, u, 1, a, lda )
 
-             k = me + 1
-             DO kl = 1,is(l)          
-               PL(kl) = P(k)
-               k      = k + NPROC
-             END DO
+             ! k = me + 1
+             ! DO kl = 1,is(l)          
+             !   PL(kl) = P(k)
+             !   k      = k + NPROC
+             ! END DO
 
-             DO J = 1,L
-               tu= U(J)
-               tp= P(J)
-               DO KL = 1,is(l)
-                 A(KL,j) = A(KL,j) - UL(KL) * tp 
-                 A(KL,j) = A(KL,j) - PL(KL) * tu 
-               END DO
-             END DO
+
+             ! DO J = 1,L
+             !   tu= U(J)
+             !   tp= P(J)
+             !   DO KL = 1,is(l)
+             !     A(KL,j) = A(KL,j) - UL(KL) * tp 
+             !     A(KL,j) = A(KL,j) - PL(KL) * tu 
+             !   END DO
+             ! END DO
+
            END IF
 
          ELSE 
@@ -2793,6 +2803,10 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
   IF( ALLOCATED( at ) ) DEALLOCATE( at )
   IF( ALLOCATED( bt ) ) DEALLOCATE( bt )
 
+  CALL MPI_COMM_FREE(COMM_ROW, ierr)
+  CALL MPI_COMM_FREE(COMM_COL, ierr)
+
+
 #else
 
      !  if we are not compiling with __MPI this is equivalent to a blas call
@@ -3700,3 +3714,579 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   RETURN
   !
 END SUBROUTINE para_ztrtri
+
+!
+!
+!
+
+SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, dims, coor, comm )
+   !
+   !  Parallel square matrix multiplication with Cannon's algorithm
+   !
+   IMPLICIT NONE
+   !
+   CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+   INTEGER, INTENT(IN) :: n
+   REAL*8, INTENT(IN) :: alpha, beta
+   INTEGER, INTENT(IN) :: lda, ldb, ldc
+   REAL*8 :: a(lda,*), b(ldb,*), c(ldc,*)
+   INTEGER, INTENT(IN) :: dims(2), coor(2)
+   INTEGER, INTENT(IN) :: comm
+   !
+   !  performs one of the matrix-matrix operations
+   !
+   !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+   !
+   !  where  op( x ) is one of
+   !
+   !     OP( X ) = X   OR   OP( X ) = X',
+   !
+   !  alpha and beta are scalars, and a, b and c are square matrices
+   !
+#if defined (__MPI)
+   !
+   include 'mpif.h'
+   !
+#endif
+   !
+   integer :: ierr
+   integer :: np
+   integer :: i, j, nr, nc, nb, iter, rowid, colid
+   logical :: ta, tb
+   !
+   real*8, allocatable :: bblk(:,:), ablk(:,:)
+   !
+#if defined (__MPI)
+   !
+   integer :: istatus( MPI_STATUS_SIZE )
+   !
+#endif
+   !
+   integer :: ldim_block, gind_block
+   external :: ldim_block, gind_block
+   
+   IF( coor(1) < 0 ) THEN
+      RETURN
+   END IF
+
+   IF( dims(1) == 1 ) THEN 
+      !
+      !  quick return if only one processor is used 
+      !
+      CALL dgemm( TRANSA, TRANSB, n, n, n, alpha, a, lda, b, ldb, beta, c, ldc)
+      !
+      RETURN
+      !
+   END IF
+
+   rowid = coor(1)
+   colid = coor(2)
+   np    = dims(1)
+
+   IF( dims(1) /= dims(2) ) THEN
+      CALL errore( ' sqr_mm_cannon ', ' only square processor grid is allowed ', 1 )
+   END IF
+
+   nb = n / np
+   IF( MOD( n, np ) /= 0 ) nb = nb + 1
+   !
+   !  Compute the size of the local block
+   !
+   nr = ldim_block( n, np, rowid )
+   nc = ldim_block( n, np, colid )
+   !
+   allocate( ablk( nb, nb ) )
+   DO j = 1, nc
+      DO i = 1, nr
+         ablk( i, j ) = a( i, j )
+      END DO
+   END DO
+   IF( nc < nb ) ablk( :, nb )  = 0.0d0
+   IF( nr < nb ) ablk( nb, : )  = 0.0d0
+   !
+   allocate( bblk( nb, nb ) )
+   DO j = 1, nc
+      DO i = 1, nr
+         bblk( i, j ) = b( i, j )
+      END DO
+   END DO
+   IF( nc < nb ) bblk( :, nb )  = 0.0d0
+   IF( nr < nb ) bblk( nb, : )  = 0.0d0
+   !
+   ta = ( TRANSA == 'T' .OR. TRANSA == 't' )
+   tb = ( TRANSB == 'T' .OR. TRANSB == 't' )
+   !
+   !  Shift A rowid+1 places to the west
+   ! 
+   IF( ta ) THEN
+      CALL shift_exch_block( ablk, 'W', 1 )
+   ELSE
+      CALL shift_block( ablk, 'W', rowid+1, 1 )
+   END IF
+   !
+   !  Shift B colid+1 places to the north
+   ! 
+   IF( tb ) THEN
+      CALL shift_exch_block( bblk, 'N', np+1 )
+   ELSE
+      CALL shift_block( bblk, 'N', colid+1, np+1 )
+   END IF
+   !
+   !  Accumulate on C
+   !
+   CALL dgemm( TRANSA, TRANSB, nr, nc, nb, alpha, ablk, nb, bblk, nb, beta, c, ldc)
+   !
+   DO iter = 2, np
+      !
+      !  Shift A 1 places to the east
+      ! 
+      CALL shift_block( ablk, 'E', 1, iter )
+      !
+      !  Shift B 1 places to the south
+      ! 
+      CALL shift_block( bblk, 'S', 1, np+iter )
+      !
+      !  Accumulate on C
+      !
+      CALL dgemm( TRANSA, TRANSB, nr, nc, nb, alpha, ablk, nb, bblk, nb, 1.0d0, c, ldc)
+      !
+   END DO
+
+   deallocate( ablk, bblk )
+   
+   RETURN
+
+CONTAINS
+
+   SUBROUTINE shift_block( blk, dir, ln, tag )
+      !
+      !   Block shift 
+      !
+      IMPLICIT NONE
+      REAL*8 :: blk( :, : )
+      CHARACTER(LEN=1), INTENT(IN) :: dir      ! shift direction
+      INTEGER,          INTENT(IN) :: ln       ! shift lenght
+      INTEGER,          INTENT(IN) :: tag      ! communication tag
+      !
+      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+      !
+      IF( dir == 'W' ) THEN
+         !
+         irdst = rowid
+         irsrc = rowid
+         icdst = MOD( colid - ln + np, np )
+         icsrc = MOD( colid + ln + np, np )
+         !
+      ELSE IF( dir == 'E' ) THEN
+         !
+         irdst = rowid
+         irsrc = rowid
+         icdst = MOD( colid + ln + np, np )
+         icsrc = MOD( colid - ln + np, np )
+         !
+      ELSE IF( dir == 'N' ) THEN
+
+         irdst = MOD( rowid - ln + np, np )
+         irsrc = MOD( rowid + ln + np, np )
+         icdst = colid
+         icsrc = colid
+
+      ELSE IF( dir == 'S' ) THEN
+
+         irdst = MOD( rowid + ln + np, np )
+         irsrc = MOD( rowid - ln + np, np )
+         icdst = colid
+         icsrc = colid
+
+      ELSE
+
+         CALL errore( ' sqr_mm_cannon ', ' unknown shift direction ', 1 )
+
+      END IF
+
+      !
+      idest = icdst + np * irdst
+      isour = icsrc + np * irsrc
+      !
+#if defined (__MPI)
+      !
+      CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
+           idest, tag, isour, tag, comm, istatus, ierr)
+      !
+#endif
+
+
+      RETURN
+   END SUBROUTINE
+
+
+   SUBROUTINE shift_exch_block( blk, dir, tag )
+      !
+      !   Combined block shift and exchange
+      !   only used for the first step
+      !
+      IMPLICIT NONE
+      REAL*8 :: blk( :, : )
+      CHARACTER(LEN=1), INTENT(IN) :: dir
+      INTEGER,          INTENT(IN) :: tag
+      !
+      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+      INTEGER :: icol, irow
+      !
+      IF( dir == 'W' ) THEN
+         !
+         icol = rowid
+         irow = colid
+         !
+         irdst = irow
+         icdst = MOD( icol - irow-1 + np, np )
+         !
+         irow = rowid
+         icol = MOD( colid + rowid+1 + np, np )
+         !
+         irsrc = icol
+         icsrc = irow
+         !
+      ELSE IF( dir == 'N' ) THEN
+         !
+         icol = rowid
+         irow = colid
+         !
+         icdst = icol
+         irdst = MOD( irow - icol-1 + np, np )
+         !
+         irow = MOD( rowid + colid+1 + np, np )
+         icol = colid
+         !
+         irsrc = icol
+         icsrc = irow
+
+      ELSE
+
+         CALL errore( ' sqr_mm_cannon ', ' unknown shift_exch direction ', 1 )
+
+      END IF
+      !
+      idest = icdst + np * irdst
+      isour = icsrc + np * irsrc
+      !
+      !
+#if defined (__MPI)
+      !
+      CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
+           idest, tag, isour, tag, comm, istatus, ierr)
+      !
+#endif
+
+
+      RETURN
+   END SUBROUTINE
+
+
+   SUBROUTINE exchange_block( blk )
+      !
+      !   Block exchange ( transpose )
+      !
+      IMPLICIT NONE
+      REAL*8 :: blk( :, : )
+      !
+      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+      !
+      irdst = colid
+      icdst = rowid
+      irsrc = colid
+      icsrc = rowid
+      !
+      idest = icdst + np * irdst
+      isour = icsrc + np * irsrc
+      !
+#if defined (__MPI)
+      !
+      CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
+           idest, np+np+1, isour, np+np+1, comm, istatus, ierr)
+      !
+#endif
+
+      RETURN
+   END SUBROUTINE
+
+
+END SUBROUTINE
+
+!
+!
+
+SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, dims, coor, comm )
+   !
+   !  Parallel square matrix transposition with Cannon's algorithm
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda, ldb
+   REAL*8              :: a(lda,*), b(ldb,*)
+   INTEGER, INTENT(IN) :: dims(2), coor(2)
+   INTEGER, INTENT(IN) :: comm
+   !
+#if defined (__MPI)
+   !
+   INCLUDE 'mpif.h'
+   !
+#endif
+   !
+   INTEGER :: ierr
+   INTEGER :: np, rowid, colid
+   INTEGER :: i, j, nr, nc, nb
+   !
+   REAL*8, ALLOCATABLE :: ablk(:,:)
+   !
+#if defined (__MPI)
+   !
+   INTEGER :: istatus( MPI_STATUS_SIZE )
+   !
+#endif
+   !
+   integer :: ldim_block, gind_block
+   external :: ldim_block, gind_block
+   
+   IF( coor(1) < 0 ) THEN
+      RETURN
+   END IF
+
+   IF( dims(1) == 1 ) THEN
+      CALL mytranspose( a, lda, b, ldb, n, n )
+   END IF
+
+   rowid = coor(1)
+   colid = coor(2)
+   np    = dims(1)
+
+   nb = n / np
+   IF( MOD( n, np ) /= 0 ) nb = nb + 1
+   !
+   !  Compute the size of the local block
+   !
+   nr = ldim_block( n, np, rowid )
+   nc = ldim_block( n, np, colid )
+   !
+   allocate( ablk( nb, nb ) )
+   DO j = 1, nc
+      DO i = 1, nr
+         ablk( i, j ) = a( i, j )
+      END DO
+   END DO
+   IF( nc < nb ) ablk( :, nb )  = 0.0d0
+   IF( nr < nb ) ablk( nb, : )  = 0.0d0
+   !
+   !
+   CALL exchange_block( ablk )
+   !
+   DO j = 1, nr
+      DO i = 1, nc
+         b( j, i ) = ablk( i, j )
+      END DO
+   END DO
+   !
+   deallocate( ablk )
+   
+   RETURN
+
+CONTAINS
+
+   SUBROUTINE exchange_block( blk )
+      !
+      !   Block exchange ( transpose )
+      !
+      IMPLICIT NONE
+      REAL*8 :: blk( :, : )
+      !
+      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
+      !
+      irdst = colid
+      icdst = rowid
+      irsrc = colid
+      icsrc = rowid
+      !
+      idest = icdst + np * irdst
+      isour = icsrc + np * irsrc
+      !
+#if defined (__MPI)
+      !
+      CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
+           idest, np+np+1, isour, np+np+1, comm, istatus, ierr)
+      !
+#endif
+
+      RETURN
+   END SUBROUTINE
+
+
+END SUBROUTINE
+
+!
+!
+
+SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, dims, coor, comm_b )
+   !
+   !  Parallel square matrix redistribution.
+   !  A (input) is cyclically distributed by rows across processors
+   !  B (output) is distributed by block across 2D processors grid
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda, ldb
+   REAL*8 :: a(lda,*), b(ldb,*)
+   INTEGER, INTENT(IN) :: nproc, me, dims(2), coor(2)
+   INTEGER, INTENT(IN) :: comm_a, comm_b
+   !
+#if defined (__MPI)
+   !
+   include 'mpif.h'
+   !
+#endif
+   !
+   integer :: ierr, itag
+   integer :: np, rowid, colid, ip, iprow, ipcol
+   integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
+   integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
+   !
+   real*8, allocatable :: rcvbuf(:,:,:)
+   real*8, allocatable :: sndbuf(:,:,:)
+   integer, allocatable :: irhand(:)
+   integer, allocatable :: ishand(:)
+   logical, allocatable :: rtest(:), rdone(:)
+   !
+#if defined (__MPI)
+   !
+   integer :: istatus( MPI_STATUS_SIZE )
+   !
+#endif
+   !
+   integer :: ldim_block, gind_block
+   external :: ldim_block, gind_block
+   integer :: ldim_cyclic, gind_cyclic, owner_cyclic
+   external :: ldim_cyclic, gind_cyclic, owner_cyclic
+   
+
+#if defined (__MPI)
+
+   np = dims(1)
+
+   !  Compute the size of the block
+   !
+   nb = n / np
+   IF( MOD( n, np ) /= 0 ) nb = nb + 1
+   !
+   !
+   nbuf = (nb/nproc+1) * nb
+   !
+   ALLOCATE( sndbuf( nb/nproc+1, nb, np*np ) )
+   ALLOCATE( ishand( np*np ) )
+   !
+   IF( coor(1) >= 0 ) THEN
+      ALLOCATE( rcvbuf( nb/nproc+1, nb, nproc ) )
+      ALLOCATE( irhand( nproc ) )
+      ALLOCATE( rtest( nproc ) )
+      ALLOCATE( rdone( nproc ) )
+   END IF
+   
+   DO ip = 0, nproc - 1
+      !
+      IF( coor(1) >= 0 ) THEN
+         !
+         itag = coor(2) + coor(1) * np + nproc * ip
+         !
+         call mpi_irecv( rcvbuf(1,1,ip+1), nbuf, MPI_DOUBLE_PRECISION, ip, itag, &
+                comm_a, irhand(ip+1), ierr )
+      END IF
+      !
+      IF( ip < np*np ) THEN
+
+         iprow = ip / np
+         ipcol = MOD( ip, np )
+         ip_nr = ldim_block( n, np, iprow )
+         ip_nc = ldim_block( n, np, ipcol )
+         ip_ir = gind_block( 1, n, np, iprow )
+         ip_ic = gind_block( 1, n, np, ipcol )
+         !
+         DO j = 1, ip_nc
+            jj = j + ip_ic - 1
+            il = 1
+            DO i = 1, ip_nr
+               ii = i + ip_ir - 1
+               IF( MOD( ii - 1, nproc ) == me ) THEN
+                  sndbuf( il, j, ip+1 ) = a( ( ii - 1 )/nproc + 1, jj )
+                  il = il + 1
+               END IF 
+            END DO
+         END DO
+   
+         itag = ip + nproc * me
+   
+         CALL mpi_isend( sndbuf(1,1,ip+1), nbuf, MPI_DOUBLE_PRECISION, ip, itag, &
+                   comm_a, ishand(ip+1), ierr )
+      END IF
+     
+   END DO
+
+   IF( coor(1) >= 0 ) THEN
+      !
+      nr  = ldim_block( n, np, coor(1) )
+      nc  = ldim_block( n, np, coor(2) )
+      !
+      ir  = gind_block( 1, n, np, coor(1) )
+      ic  = gind_block( 1, n, np, coor(2) )
+      !
+      rdone = .FALSE.
+
+10    CONTINUE
+
+      DO ip = 0, nproc - 1
+         !
+         CALL mpi_test( irhand(ip+1), rtest(ip+1), istatus, ierr )
+         !
+         IF( rtest(ip+1) .AND. .NOT. rdone(ip+1) ) THEN
+            DO j = 1, nc
+               il = 1
+               DO i = 1, nr
+                  ii = i + ir - 1
+                  IF( MOD( ii - 1, nproc ) == ip ) THEN
+                     b( i, j ) = rcvbuf( il, j, ip+1 )
+                     il = il + 1
+                  END IF 
+               END DO
+            END DO
+            rdone(ip+1) = .TRUE.
+         END IF
+      END DO
+   
+      IF( .NOT. ALL( rtest ) ) GO TO 10
+      !
+   END IF
+ 
+   !
+   DO ip = 0, np*np - 1
+      CALL mpi_wait( ishand( ip+1 ), istatus, ierr)
+   END DO
+
+   DEALLOCATE( sndbuf )
+   DEALLOCATE( ishand )
+   !
+   IF( coor(1) >= 0 ) THEN
+      DEALLOCATE( rcvbuf )
+      DEALLOCATE( irhand )
+      DEALLOCATE( rtest )
+      DEALLOCATE( rdone )
+   END IF
+   
+#else
+
+   b( 1:n, 1:n ) = a( 1:n, 1:n )   
+
+#endif
+
+   RETURN
+
+END SUBROUTINE cyc2blk_redist
+

@@ -94,7 +94,11 @@
 
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate, &
-                                    ortho_alt_iterate, updatc, diagonalize_rho
+                                    ortho_alt_iterate, updatc, &
+                                    use_parallel_diag, diagonalize_parallel, &
+                                    diagonalize_serial
+      USE mp_global,          ONLY: nproc_image, np_ortho, me_ortho, ortho_comm, &
+                                    me_image, intra_image_comm
 
       IMPLICIT  NONE
 
@@ -112,67 +116,136 @@
 
       ! ... Locals
 
-      REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), rho(:,:), tau(:,:), temp(:,:)
-      REAL(DP),   ALLOCATABLE :: rhoa(:,:), rhod(:)
-      INTEGER  :: i, j, info
+      REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:)
+      REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
+      INTEGER  :: i, j, info, nr, nc, ir, ic
+      LOGICAL  :: iter_node
+      !
+      INTEGER  :: ldim_block, gind_block
+      EXTERNAL :: ldim_block, gind_block
 
       ! ...   Subroutine body
 
+      IF( me_ortho(1) >= 0 ) THEN
+         !
+         iter_node = .TRUE.
+         !
+         nr = ldim_block( nss, np_ortho(1), me_ortho(1) )
+         nc = ldim_block( nss, np_ortho(2), me_ortho(2) )
+         !
+         ir = gind_block( 1, nss, np_ortho(1), me_ortho(1) )
+         ic = gind_block( 1, nss, np_ortho(2), me_ortho(2) )
+         !
+      ELSE
+         !
+         iter_node = .FALSE.
+         !
+      END IF
 
-      ALLOCATE( s(nx,nx), sig(nx,nx), rho(nx,nx), tau(nx,nx), temp(nx,nx), STAT = info )
+
+      ALLOCATE( wrk( nx, nx ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
-      ALLOCATE( rhoa(nx,nx), rhod(nx), STAT = info )
+      ALLOCATE( rhos( nx, nx ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 2 )
-
-      ! ...   Initialize rho, sig and tau
-
+      ALLOCATE( rhod( nx ), STAT = info )
+      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 3 )
       !
       !     rho = <s'c0|s|cp>
-      !     sig = 1-<cp|s|cp>
-      !     tau = <s'c0|s|s'c0>
       !
-      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rho, nx )
+      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, wrk, nx )
       !
-      CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nx )
-      !
-      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nx )
+      !  Symmetric part of rho
       !
       DO j = 1, nss
         DO i = 1, nss
 
-          rhoa(i,j) = 0.5d0*(rho(i,j)-rho(j,i))
-          temp(i,j) = 0.5d0*(rho(i,j)+rho(j,i))
+          rhos(i,j) = 0.5d0*(wrk(i,j)+wrk(j,i))
           !
           ! on some machines (IBM RS/6000 for instance) the following test allows
           ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
           ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
           ! that the program goes on forever doing nothing and writing nothing.
           !
-          IF (temp(i,j) /= temp(i,j)) CALL errore('ortho','ortho went bananas',1)
+          IF (rhos(i,j) /= rhos(i,j)) CALL errore('ortho','ortho went bananas',1)
 
         ENDDO
       ENDDO
+      !
+      !  Antisymmetric part of rho, alredy distributed across ortho procs.
+      !
+      IF( iter_node ) THEN
+         ALLOCATE( rhoa( nr, nc ) )
+         DO j = 1, nc
+            DO i = 1, nr
+               rhoa( i, j ) = 0.5d0 * ( wrk( i+ir-1, j+ic-1 ) - wrk( j+ic-1, i+ir-1 ) )
+            END DO
+         END DO
+      ELSE
+         ALLOCATE( rhoa( 1, 1 ) )
+      END IF
 
-      ! ...   Diagonalize Matrix  symmetric part of rho (temp)
+
+      ! ...   Diagonalize Matrix  symmetric part of rho (rhos)
+
 
       CALL start_clock( 'rsg' )
 
-      CALL diagonalize_rho( nss, temp, rhod, s )
+      !
+      !       Compute s and rho
+      ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
+      !
+
+      IF( iter_node ) THEN
+         !
+         ALLOCATE( s( nr, nc ) ) 
+         ALLOCATE( sig( nr, nc ) ) 
+         ALLOCATE( tau( nr, nc ) ) 
+         !
+      ELSE
+         !
+         ALLOCATE( s( 1, 1 ) ) 
+         ALLOCATE( sig( 1, 1 ) ) 
+         ALLOCATE( tau( 1, 1 ) ) 
+         !
+      END IF
+
+      IF( use_parallel_diag ) THEN
+         !
+         CALL diagonalize_parallel( 'D', nss, rhos, rhod, s )
+         !
+      ELSE
+         !
+         CALL diagonalize_serial( nss, rhos, rhod, wrk )
+         CALL distribute_matrix( wrk, s )
+         !
+      END IF
+      !
 
       CALL stop_clock( 'rsg' )
 
-      ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
+      !
+      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 4 )
+      !
+      !     sig = 1-<cp|s|cp>
+      !
+      CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, wrk, nx )
+      CALL distribute_matrix( wrk, sig )
+      !
+      !     tau = <s'c0|s|s'c0>
+      !
+      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, wrk, nx )
+      CALL distribute_matrix( wrk, tau )
 
-      DO j = 1, nss
-        DO i = 1, nss
-          temp(i,j) = 0.5d0*(rho(i,j)+rho(j,i))
-        ENDDO
-      ENDDO
+      DEALLOCATE( wrk )
 
       IF( iopt == 0 ) THEN
-         CALL ortho_iterate( iter, diff, s, rhod, x0, sig, rhoa, temp, tau, nx, nss )
+         !
+         CALL ortho_iterate( iter, diff, s, nr, rhod, x0, sig, rhoa, rhos, tau, nx, nss )
+         !
       ELSE
-         CALL ortho_alt_iterate( iter, diff, s, rhod, x0, sig, rhoa, tau, nx, nss )
+         !
+         CALL ortho_alt_iterate( iter, diff, s, nr, rhod, x0, sig, rhoa, tau, nx, nss )
+         !
       END IF
       !
       DO i=1,nss
@@ -181,9 +254,25 @@
         END DO
       END DO
 
-      DEALLOCATE( rhoa, rhod, s, sig, rho, tau, temp )
+      DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
 
       RETURN
+
+   CONTAINS
+
+      SUBROUTINE distribute_matrix( a, b )
+         REAL(DP) :: a(:,:), b(:,:)
+         IF( iter_node ) THEN
+            DO j = 1, nc
+               DO i = 1, nr
+                  b( i, j ) = a( i + ir - 1, j + ic - 1 )
+               END DO
+            END DO
+         END IF
+         RETURN
+      END SUBROUTINE
+
+
    END SUBROUTINE ortho_gamma
 
 

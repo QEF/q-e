@@ -33,6 +33,7 @@ MODULE mp_global
   INTEGER :: root_image  = 0  ! index of the root processor within an image
   INTEGER :: my_pool_id  = 0  ! index of my pool
   INTEGER :: my_image_id = 0  ! index of my image
+  INTEGER :: me_ortho(2) = 0  ! coordinates of the processors
   !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
   INTEGER :: nimage      = 1  ! number of "path-images"-pools
@@ -40,6 +41,7 @@ MODULE mp_global
   INTEGER :: npgrp       = 1  ! number of processor withing a "task group" 
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
   INTEGER :: nproc_image = 1  ! number of processor within an image
+  INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
   !
   ! ... communicators
   !
@@ -49,6 +51,7 @@ MODULE mp_global
   INTEGER :: intra_image_comm = 0  ! intra image communicator  
   INTEGER :: me_pgrp          = 0  ! index of the processor in plane-wave group (task grouping)
   INTEGER :: me_ogrp          = 0  ! index of the processor in orbital group (task grouping)
+  INTEGER :: ortho_comm       = 0  ! communicator used for fast and memory saving ortho
   !
   CONTAINS
      !
@@ -76,6 +79,7 @@ MODULE mp_global
        intra_pool_comm  = group_i
        inter_image_comm = group_i
        intra_image_comm = group_i
+       ortho_comm       = group_i
        !
        RETURN
        !
@@ -105,7 +109,7 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
   ! ... This routine initialize the pool :  MPI division in pools and images
   !
-  USE mp,        ONLY : mp_barrier, mp_bcast
+  USE mp,        ONLY : mp_barrier, mp_bcast, mp_group
   USE parallel_include
   !
   IMPLICIT NONE
@@ -114,9 +118,9 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   INTEGER, OPTIONAL, INTENT(IN) :: ntask_groups_
   !
   INTEGER :: ierr = 0
-  ! 
   !
 #if defined (__PARA)
+  ! 
   !
   IF( PRESENT( nimage_ ) ) THEN
      nimage = nimage_
@@ -196,6 +200,8 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
 #endif
   !
+  CALL init_ortho_group( nproc_image, me_image, intra_image_comm )
+  !
 #if defined __BGL
   !
   IF( MOD( nproc_image, nogrp ) /= 0 ) &
@@ -208,5 +214,60 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   RETURN
   !
 END SUBROUTINE init_pool
+!
+!
+SUBROUTINE init_ortho_group( nproc_try, me_try, comm_try )
+   !
+   USE mp, ONLY : mp_group_free, mp_group
+   !
+   IMPLICIT NONE
+    
+   INTEGER, INTENT(IN) :: nproc_try, me_try, comm_try
+    
+   LOGICAL :: first = .true.
+   INTEGER :: np_list( nproc_try )
+   INTEGER :: i
+    
+#if defined __MPI
+
+   IF( .NOT. first ) THEN
+      !  
+      !  free resources associated to the communicator
+      !
+      IF( me_ortho(1) >= 0 ) CALL mp_group_free( ortho_comm )
+      !
+   END IF
+
+   !  find the square closer (but lower) to nproc_try
+   !
+   np_ortho = INT( SQRT( DBLE( nproc_try ) + 0.1d0 ) )
+
+   !  here we choose the first processors, but on some machine other choices may be better
+   !
+   do i = 1, np_ortho(1) * np_ortho(2)
+      np_list( i ) = i - 1
+   end do
+
+   !  initialize the communicator for the new group
+   !
+   CALL mp_group( np_list, np_ortho(1) * np_ortho(2), comm_try, ortho_comm )
+   !
+   !  Computes coordinates of the processors, in row maior order
+   !
+   if( me_try <  np_ortho(1) * np_ortho(2) ) then
+       me_ortho(1) = me_try / np_ortho(1)
+       me_ortho(2) = MOD( me_try, np_ortho(1) )
+   else
+       me_ortho(1) = -1
+       me_ortho(2) = -1
+   endif
+
+#endif
+    
+   first = .false.
+    
+   RETURN
+END SUBROUTINE init_ortho_group
+     !
      !
 END MODULE mp_global
