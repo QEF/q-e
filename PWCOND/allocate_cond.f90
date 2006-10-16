@@ -33,26 +33,32 @@ subroutine allocate_cond
   allocate( fund0(n2d, 2*n2d) )
   allocate( fund1(n2d, 2*n2d) ) 
 
-  allocate( funl0(n2d, norbf*npol) )     
-  allocate( funl1(n2d, norbf*npol) )
-  allocate( fundl0(n2d, norbf*npol) )
-  allocate( fundl1(n2d, norbf*npol) )
+  IF (norbf>0) THEN
+     allocate( funl0(n2d, norbf*npol) )     
+     allocate( funl1(n2d, norbf*npol) )
+     allocate( fundl0(n2d, norbf*npol) )
+     allocate( fundl1(n2d, norbf*npol) )
 
-  allocate( intw1(norbf*npol, 2*n2d) )
-  allocate( intw2(norbf*npol, norbf*npol) )
+     allocate( intw1(norbf*npol, 2*n2d) )
+     allocate( intw2(norbf*npol, norbf*npol) )
+  ENDIF
 
   allocate( kvall(2*(n2d+npol*nocrosl)) )
   allocate( kfunl(n2d, 2*(n2d+npol*nocrosl)) ) 
   allocate( kfundl(n2d, 2*(n2d+npol*nocrosl)) )  
-  allocate( kintl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
-  allocate( kcoefl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
+  IF (nocrosl>0) THEN
+     allocate( kintl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
+     allocate( kcoefl(nocrosl*npol, 2*(n2d+npol*nocrosl)) )  
+  ENDIF
 
   if(ikind.ne.0) then
     allocate( kvalr(2*(n2d+npol*nocrosr)) ) 
     allocate( kfunr(n2d, 2*(n2d+npol*nocrosr)) )
     allocate( kfundr(n2d, 2*(n2d+npol*nocrosr)) )
-    allocate( kintr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )
-    allocate( kcoefr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )      
+    IF (nocrosr>0) THEN
+       allocate( kintr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )
+       allocate( kcoefr(nocrosr*npol, 2*(n2d+npol*nocrosr)) )      
+    ENDIF
   endif
 
   return

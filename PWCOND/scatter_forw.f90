@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2003 A. Smogunov 
 ! This file is distributed under the terms of the
@@ -78,13 +79,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   call divide(nrz,kin,kfin)
 
   ALLOCATE( psigper( ngper*npol, n2d ) )
-  ALLOCATE( w( nz1, n2d, norb*npol ) )
   ALLOCATE( w0( nz1, ngper, 5 ) )
-  ALLOCATE( cix( nz1, n2d, norb*npol ) )
-  ALLOCATE( dix( nz1, n2d, norb*npol ) )
-  ALLOCATE( ci( norb*npol, n2d ) )
-  ALLOCATE( di( norb*npol, n2d ) )
-  ALLOCATE( inslab( norb ) )
   ALLOCATE( zkk( n2d ) )
   ALLOCATE( ezk( n2d ) )
   ALLOCATE( emzk( n2d ) )
@@ -94,13 +89,21 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   ALLOCATE( amat( 2*n2d, 2*n2d ) )
   ALLOCATE( xmat( 2*n2d, 2*n2d+norb*npol ) )
   ALLOCATE( ipiv(2*n2d) )
-  ALLOCATE( f0(n2d,norb*npol) )
-  ALLOCATE( f1(n2d,norb*npol) )
-  ALLOCATE( f2(n2d,norb*npol) )
-  ALLOCATE( f_aux(norb*npol,n2d) )
 
-  intw1=(0.d0,0.d0)
-  intw2=(0.d0,0.d0)
+  IF (norb>0) THEN
+     ALLOCATE( w( nz1, n2d, norb*npol ) )
+     ALLOCATE( cix( nz1, n2d, norb*npol ) )
+     ALLOCATE( dix( nz1, n2d, norb*npol ) )
+     ALLOCATE( ci( norb*npol, n2d ) )
+     ALLOCATE( di( norb*npol, n2d ) )
+     ALLOCATE( inslab( norb ) )
+     ALLOCATE( f0(n2d,norb*npol) )
+     ALLOCATE( f1(n2d,norb*npol) )
+     ALLOCATE( f2(n2d,norb*npol) )
+     ALLOCATE( f_aux(norb*npol,n2d) )
+     intw1=(0.d0,0.d0)
+     intw2=(0.d0,0.d0)
+  END IF
 
 !
 ! some orbitals relations
@@ -163,9 +166,11 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
         psigper(:,:) = psiper(:,:,kp)
     endif
 
-    w = 0.d0
-    ci = 0.d0
-    di = 0.d0
+    IF (norb>0) THEN
+       w = 0.d0
+       ci = 0.d0
+       di = 0.d0
+    ENDIF
     DO iorb=1, norb
       IF(cros(iorb,k).EQ.1.AND.inslab(iorb).EQ.iorb) THEN
        mdim = 2*tblm(3,iorb)+1
@@ -205,36 +210,38 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
        ENDIF
     ENDDO
     DO iorb=1, norb*npol
-     iorba=iorb
-     IF (npol.EQ.2) iorba=(iorb+1)/2
-     IF (cros(iorba,k).EQ.1) THEN
-        DO lam=1, n2d
-           ci(iorb,lam)=int1d(w(1,lam,iorb),   &
-                        zk(lam,kp),dz,dz1,nz1,tpiba,1)
-           di(iorb,lam)=int1d(w(1,lam,iorb),   &
-                        zk(lam,kp),dz,dz1,nz1,tpiba,-1)
-        ENDDO
-        DO iorb1=1, norb*npol
-           iorb1a=iorb1
-           IF (npol.EQ.2) iorb1a=(iorb1+1)/2
-           IF (cros(iorb1a,k).EQ.1) THEN
-             DO lam=1, n2d
-                intw2(iorb,iorb1)=intw2(iorb,iorb1)-                     &
-                   int2d(w(1,lam,iorb),w(1,lam,iorb1),cix(1,lam,iorb1),  &
-                         dix(1,lam,iorb1),ezk1(1,lam),emzk1(1,lam),      &
-                         zk(lam,kp),dz1,tpiba,nz1)*zk2(lam)
-             ENDDO
-           ENDIF
-        ENDDO
-     ENDIF
+       iorba=iorb
+       IF (npol.EQ.2) iorba=(iorb+1)/2
+       IF (cros(iorba,k).EQ.1) THEN
+          DO lam=1, n2d
+             ci(iorb,lam)=int1d(w(1,lam,iorb),   &
+                          zk(lam,kp),dz,dz1,nz1,tpiba,1)
+             di(iorb,lam)=int1d(w(1,lam,iorb),   &
+                          zk(lam,kp),dz,dz1,nz1,tpiba,-1)
+          ENDDO
+          DO iorb1=1, norb*npol
+             iorb1a=iorb1
+             IF (npol.EQ.2) iorb1a=(iorb1+1)/2
+             IF (cros(iorb1a,k).EQ.1) THEN
+                DO lam=1, n2d
+                   intw2(iorb,iorb1)=intw2(iorb,iorb1)-                     &
+                      int2d(w(1,lam,iorb),w(1,lam,iorb1),cix(1,lam,iorb1),  &
+                            dix(1,lam,iorb1),ezk1(1,lam),emzk1(1,lam),      &
+                            zk(lam,kp),dz1,tpiba,nz1)*zk2(lam)
+                ENDDO
+             ENDIF
+          ENDDO
+       ENDIF
     ENDDO
 !----
 
 !-----------
 ! computes f1 and f2 
 !
-    f1 = 0.d0
-    f2 = 0.d0
+    IF (norb>0) THEN
+       f1 = 0.d0
+       f2 = 0.d0
+    ENDIF
     DO iorb=1, norb*npol
       iorba=iorb
       IF (npol.EQ.2) iorba=(iorb+1)/2
@@ -257,7 +264,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !     b coeff. and fp on the left boundary
       fun0 = 0.d0
       funl0 = 0.d0
-      f0 = f1
+      IF (norb>0) f0 = f1
       do n = 1, n2d
         fun0(n,n) = 1.d0
       enddo
@@ -269,7 +276,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !    adding nonlocal part
     IF (norb>0) THEN
        CALL ZGEMM('n','n',n2d,norb*npol,n2d,-one,psiper(1,1,kp), &
-               n2d,f1,n2d,one,funl1,n2d)
+                  n2d,f1,n2d,one,funl1,n2d)
        do i = 1, norb*npol
           do lam = 1, n2d
              f1(lam,i) = -zkk(lam)*f1(lam,i)
@@ -308,19 +315,19 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 !-------
 !  rotates integrals
 !
-    do i = 1, norb*npol
-      do j = 1, n2d
-        f_aux(i,j) = intw1(i,j)
-      enddo
-    enddo   
     IF (norb>0) THEN
+       do i = 1, norb*npol
+          do j = 1, n2d
+             f_aux(i,j) = intw1(i,j)
+          enddo
+       enddo   
        call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,      &
                   xmat(1,n2d+1),2*n2d,one,intw1(1,n2d+1),norbf*npol)
        call ZGEMM('n','n',norb*npol,norb*npol,n2d,one,f_aux,norb*npol,&
                   xmat(1,2*n2d+1),2*n2d,one,intw2,norbf*npol)
        call ZGEMM('n','n',norb*npol,n2d,n2d,one,f_aux,norb*npol,xmat, &
                   2*n2d,zero,intw1,norbf*npol)
-    END IF
+    ENDIF
 !--------
 
 !-------
@@ -425,19 +432,19 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
              n2d,amat,2*n2d,zero,fun0,n2d)
   CALL ZGEMM('n','n',n2d,2*n2d,n2d,one,psiper(1,1,1),     &
              n2d,amat(n2d+1,1),2*n2d,zero,fund0,n2d)
-  IF (norb>0) THEN
+  IF (norb > 0) THEN
      CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
                 n2d,f1,n2d,zero,funl0,n2d)
      CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
                 n2d,f2,n2d,zero,fundl0,n2d)
-  END IF
+  ENDIF
 !---------
 
 ! scaling the integrals
-  IF (norbf>0) THEN
+  IF (norbf > 0) THEN
      CALL DSCAL(2*norbf*npol*2*n2d, sarea, intw1, 1)
      CALL DSCAL(2*norbf*npol*norbf*npol, sarea, intw2, 1)
-  END IF
+  ENDIF
 
 !
 ! To construct the functions in the whole rigion zin<z<zfin in the
@@ -449,13 +456,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 #endif
 
   deallocate( psigper )
-  deallocate( w )
   deallocate( w0 )
-  deallocate( cix )
-  deallocate( dix )
-  deallocate( ci )
-  deallocate( di )
-  deallocate( inslab )
   deallocate( zkk )
   deallocate( ezk )
   deallocate( emzk )
@@ -465,11 +466,19 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
   deallocate( amat )
   deallocate( xmat )
   deallocate( ipiv )
-  deallocate( f0 )
-  deallocate( f1 )
-  deallocate( f2 )
-  deallocate( f_aux )
 
+  IF (norb>0) THEN
+     deallocate( w )
+     deallocate( cix )
+     deallocate( dix )
+     deallocate( ci )
+     deallocate( di )
+     deallocate( inslab )
+     deallocate( f0 )
+     deallocate( f1 )
+     deallocate( f2 )
+     deallocate( f_aux )
+  END IF
   CALL stop_clock('scatter_forw')
 
   return

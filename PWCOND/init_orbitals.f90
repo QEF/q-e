@@ -103,15 +103,17 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !-----------------------------
 ! Formation of some orbital arrays
 !
-  allocate( taunew(4,norb) )
-  allocate( tblm(4,norb) )
-  allocate( natih(2,norb) )
-  allocate( cros(norb, nrz) )
-  if (noncolin) then
-    allocate(zpseu_nc(2, norb, norb, nspin))
-  else
-    allocate( zpseu(2, norb, norb) )
-  endif
+  IF (norb>0) THEN
+     allocate( taunew(4,norb) )
+     allocate( tblm(4,norb) )
+     allocate( natih(2,norb) )
+     allocate( cros(norb, nrz) )
+     if (noncolin) then
+        allocate(zpseu_nc(2, norb, norb, nspin))
+     else
+        allocate( zpseu(2, norb, norb) )
+     endif
+  ENDIF
 
   ilocros = 0
   ioins =  lnocros 
@@ -255,11 +257,13 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !----------------------------
 !    To form zpseu
 !
-  if (noncolin) then
-    zpseu_nc=0.d0
-  else
-    zpseu = 0.d0
-  endif
+  IF (norb>0) THEN
+     if (noncolin) then
+        zpseu_nc=0.d0
+     else
+        zpseu = 0.d0
+     endif
+  ENDIF
 
   orbin = 1
   orbfin = lnocros+noins
@@ -316,85 +320,93 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
       nocrosr = nocros
       noinsr = noins
     endif
-    allocate( taunewl(4,norbl) )
-    allocate( tblml(4,norbl) )
-    allocate( crosl(norbl, nrzl) )
-    if (noncolin) then
-      allocate(zpseul_nc(2, norbl, norbl, nspin))
-    else
-      allocate( zpseul(2, norbl, norbl) )
-    endif
-    taunewl = taunew
-    tblml = tblm
-    crosl = cros
-    if (noncolin) then
-      zpseul_nc = zpseu_nc
-    else
-      zpseul = zpseu
-    endif
-    rl = r
-    rabl = rab
-    betarl = betar
+    IF (norbl>0) THEN
+       allocate( taunewl(4,norbl) )
+       allocate( tblml(4,norbl) )
+       allocate( crosl(norbl, nrzl) )
+       if (noncolin) then
+          allocate(zpseul_nc(2, norbl, norbl, nspin))
+       else
+          allocate( zpseul(2, norbl, norbl) )
+       endif
+       taunewl = taunew
+       tblml = tblm
+       crosl = cros
+       if (noncolin) then
+          zpseul_nc = zpseu_nc
+       else
+          zpseul = zpseu
+       endif
+       rl = r
+       rabl = rab
+       betarl = betar
+    ENDIF
     norbf = norbl
   elseif(lsr.eq.2) then
     norbs = norb
     noinss = noins
-    allocate( taunews(4,norbs) )
-    allocate( tblms(4,norbs) )
-    allocate( cross(norbs, nrzs) )
-    if (noncolin) then
-      allocate(zpseus_nc(2, norbs, norbs, nspin))
-    else
-      allocate( zpseus(2, norbs, norbs) )
-    endif
-    taunews = taunew
-    tblms = tblm
-    cross = cros
-    if (noncolin) then
-      zpseus_nc = zpseu_nc
-    else
-      zpseus = zpseu
-    endif      
-    rs = r
-    rabs = rab
-    betars = betar
+    IF (norbs>0) THEN
+       allocate( taunews(4,norbs) )
+       allocate( tblms(4,norbs) )
+       allocate( cross(norbs, nrzs) )
+       if (noncolin) then
+          allocate(zpseus_nc(2, norbs, norbs, nspin))
+       else
+          allocate( zpseus(2, norbs, norbs) )
+       endif
+       taunews = taunew
+       tblms = tblm
+       cross = cros
+       if (noncolin) then
+          zpseus_nc = zpseu_nc
+       else
+          zpseus = zpseu
+       endif      
+       rs = r
+       rabs = rab
+       betars = betar
+    ENDIF
     norbf = max(norbf,norbs)
   elseif(lsr.eq.3) then
     norbr = norb
     nocrosr = nocros
     noinsr = noins
-    allocate( taunewr(4,norbr) )
-    allocate( tblmr(4,norbr) )
-    allocate( crosr(norbr, nrzr) )
-    if (noncolin) then
-      allocate(zpseur_nc(2, norbr, norbr, nspin))
-    else
-      allocate( zpseur(2, norbr, norbr) )
-    endif
-    taunewr = taunew
-    tblmr = tblm
-    crosr = cros
-    if (noncolin) then
-      zpseur_nc = zpseu_nc
-    else
-      zpseur = zpseu
-    endif
-    rr = r
-    rabr = rab
-    betarr = betar
+    IF (norbr>0) THEN
+       allocate( taunewr(4,norbr) )
+       allocate( tblmr(4,norbr) )
+       allocate( crosr(norbr, nrzr) )
+       if (noncolin) then
+          allocate(zpseur_nc(2, norbr, norbr, nspin))
+       else
+          allocate( zpseur(2, norbr, norbr) )
+       endif
+       taunewr = taunew
+       tblmr = tblm
+       crosr = cros
+       if (noncolin) then
+          zpseur_nc = zpseu_nc
+       else
+          zpseur = zpseu
+       endif
+       rr = r
+       rabr = rab
+       betarr = betar
+    ENDIF
     norbf = max(norbf,norbr)
   endif
 !---------------------------
 
   deallocate (orbind)
-  deallocate (taunew)
-  deallocate (tblm)
-  deallocate (natih)
-  deallocate (cros)
-  if (noncolin) then
-    deallocate (zpseu_nc)
-  else
-    deallocate (zpseu)
+  if (norb>0) THEN
+     deallocate (taunew)
+     deallocate (tblm)
+     deallocate (natih)
+     deallocate (cros)
+     if (noncolin) then
+        deallocate (zpseu_nc)
+     else
+        deallocate (zpseu)
+     endif
   endif
   return
 end subroutine init_orbitals

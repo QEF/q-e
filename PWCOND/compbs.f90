@@ -49,33 +49,35 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   call start_clock('compbs')
 
   noins = norb-2*nocros
-  if(lleft.eq.1) then
-    if (noncolin) then
-      allocate( zpseu_nc(2,norb,norb,nspin) )
-      zpseu_nc = zpseul_nc
-    else
-      allocate( zpseu(2,norb,norb) )
-      zpseu = zpseul
-    endif
-  else
-    if (noncolin) then
-      allocate( zpseu_nc(2,norb,norb,nspin) )
-      zpseu_nc = zpseur_nc
-    else
-      allocate( zpseu(2,norb,norb) )
-      zpseu = zpseur
-    endif
-  endif
+  IF (norb>0) THEN
+     if(lleft.eq.1) then
+       if (noncolin) then
+         allocate( zpseu_nc(2,norb,norb,nspin) )
+         zpseu_nc = zpseul_nc
+       else
+         allocate( zpseu(2,norb,norb) )
+         zpseu = zpseul
+       endif
+     else
+       if (noncolin) then
+          allocate( zpseu_nc(2,norb,norb,nspin) )
+          zpseu_nc = zpseur_nc
+       else
+          allocate( zpseu(2,norb,norb) )
+          zpseu = zpseur
+       endif
+     endif
+     if (noncolin) then
+        allocate( zps_nc( norb*npol, norb*npol ) )
+     else
+        allocate( zps( norb, norb ) )
+     endif
+  END IF
 
   allocate( amat( (2*n2d+npol*norb), (2*n2d+npol*norb) ) )
   allocate( bmat( (2*n2d+npol*norb), (2*n2d+npol*norb) ) )
   allocate( vec( (2*n2d+npol*norb), 2*(n2d+npol*nocros) ) )
   allocate( aux( n2d, 2*n2d+npol*norb))
-  if (noncolin) then
-    allocate( zps_nc( norb*npol, norb*npol ) )
-  else
-    allocate( zps( norb, norb ) )
-  endif
 
   amat=(0.d0,0.d0)
   bmat=(0.d0,0.d0)
@@ -116,7 +118,6 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 !
 !   1
 !
-
   do n=1, 2*n2d
     do ig=1, n2d
       amat(ig, n)=fun1(ig, n)
@@ -205,6 +206,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 !
 ! To reduce matrices and solve GEP A X = c B X; X = {a_n, a_\alpha}
 ! 
+
   call compbs_2(npol*nocros, npol*norb, n2d, 2*(n2d+npol*nocros),   &
                 amat, bmat, vec, kval) 
 
@@ -348,13 +350,15 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
   deallocate(bmat)
   deallocate(vec)
   deallocate(aux)
-  if (noncolin) then
-    deallocate(zpseu_nc)
-    deallocate(zps_nc)
-  else
-    deallocate(zpseu)
-    deallocate(zps)
-  endif
+  IF (norb>0) THEN
+     if (noncolin) then
+        deallocate(zpseu_nc)
+        deallocate(zps_nc)
+     else
+        deallocate(zpseu)
+        deallocate(zps)
+     endif
+  ENDIF
   call stop_clock('compbs')
 
   return

@@ -37,13 +37,19 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
 
   allocate( bmt( ntot, ntot ) )
   allocate( amt( ntot, ntot ) )
-  allocate( auxa( nocros ) )
-  allocate( auxb( nocros ) )
-  allocate( auxc( noins ) )
-  allocate( hmat( noins, noins ) )
-  allocate( hmt( noins, noins ) )
   allocate( vecaux( ntot, ntot ) )
-  allocate( ipiv( noins ) )
+
+  if (nocros>0) then
+     allocate( auxa( nocros ) )
+     allocate( auxb( nocros ) )
+  endif
+
+  if (noins>0) then
+     allocate( auxc( noins ) )
+     allocate( hmat( noins, noins ) )
+     allocate( hmt( noins, noins ) )
+     allocate( ipiv( noins ) )
+  endif
 
 !
 ! To interchange inside and right crossing orbitals in a and b
@@ -84,7 +90,7 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
 !
 ! Set up hmat and unit matrix hmt 
 !
-  hmt=(0.d0,0.d0)
+  if (noins>0) hmt=(0.d0,0.d0)
   do i=1, noins
     do j=1, noins
       hmat(i,j)=amat(ntot+i,ntot+j)
@@ -98,7 +104,7 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
 !     To invert hmt=hmat^{-1}
 !
   info=0
-  if (noins.gt.0)                                            &
+  if (noins>0)                                            &
        call ZGESV(noins,noins,hmat,noins,ipiv,hmt,noins,info)  
 
   if (info.ne.0) call errore('compbs_2','problems with the linear system', &
@@ -145,7 +151,7 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
   enddo
 
   do j=1, ntot 
-    auxc=(0.d0,0.d0)
+    if (noins>0) auxc=(0.d0,0.d0)
     do i=1, noins
       do k=1, ntot
         auxc(i)=auxc(i)+amat(ntot+i,k)*vecaux(k,j)
@@ -216,15 +222,21 @@ subroutine compbs_2(nocros, norb, n2d, ntot, amat, bmat, &
     enddo
   enddo                 
 
-  deallocate(hmat)
-  deallocate(hmt)
-  deallocate(auxa)
-  deallocate(auxb)  
-  deallocate(auxc)
+  IF (nocros>0) THEN
+     deallocate(auxa)
+     deallocate(auxb)  
+  END IF
+
+  IF (noins>0) THEN
+     deallocate(hmat)
+     deallocate(hmt)
+     deallocate(auxc)
+     deallocate(ipiv)
+  END IF
+
   deallocate(vecaux)
   deallocate(amt)
   deallocate(bmt)
-  deallocate(ipiv)
   call stop_clock('compbs_2')
 
   return

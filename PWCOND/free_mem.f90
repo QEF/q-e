@@ -32,26 +32,32 @@ subroutine free_mem
   deallocate(fund0)
   deallocate(fund1)
 
-  deallocate(funl0)
-  deallocate(funl1)
-  deallocate(fundl0)
-  deallocate(fundl1)
+  IF (norbf>0) THEN
+     deallocate(funl0)
+     deallocate(funl1)
+     deallocate(fundl0)
+     deallocate(fundl1)
 
-  deallocate(intw1)
-  deallocate(intw2)
+     deallocate(intw1)
+     deallocate(intw2)
+  END IF
 
   deallocate(kvall)
   deallocate(kfunl)
   deallocate(kfundl)
-  deallocate(kintl)
-  deallocate(kcoefl)
+  IF (nocrosl>0) THEN
+     deallocate(kintl)
+     deallocate(kcoefl)
+  END IF
 
   if (ikind.ne.0) then 
     deallocate(kvalr)
     deallocate(kfunr)
     deallocate(kfundr)
-    deallocate(kintr)
-    deallocate(kcoefr)
+    IF (nocrosr>0) THEN
+       deallocate(kintr)
+       deallocate(kcoefr)
+    END IF
   endif
 !
 ! From init_gper
