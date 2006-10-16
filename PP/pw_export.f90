@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2006 Andrea Ferretti and Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -157,9 +157,6 @@
           call iotk_write_empty(iuni,"Info",attr)
         end if
 
-        ! write(200+mpime+ik*10,*) mpime, nproc, root, me_pool, my_pool_id, nproc_pool, intra_pool_comm, root_pool, npool
-        ! write(200+mpime+ik*10,*) ngwl, nkbl, kunit, iks, ike, ngw, nbnd, ik, nk, kunit, ispin, nspin, scal, igwx, ierr
-        ! close(200+mpime+ik*10)
 
         ALLOCATE( wtmp( MAX(igwx,1) ) )
         wtmp = 0.0d0
@@ -168,13 +165,15 @@
           IF( t0 ) THEN
             IF( npool > 1 ) THEN
               IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-                CALL mergewf(wf0(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+                CALL mergewf(wf0(:,j), wtmp, ngwl, igl, me_pool, &
+                             nproc_pool, root_pool, intra_pool_comm)
               END IF
               IF( ipsour /= ionode_id ) THEN
                 CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j, world_comm )
               END IF
             ELSE
-              CALL mergewf(wf0(:,j), wtmp, ngwl, igl, mpime, nproc, ionode_id, world_comm )
+              CALL mergewf(wf0(:,j), wtmp, ngwl, igl, mpime, nproc, &
+                           ionode_id, world_comm )
             END IF
 
             if( ionode ) then
@@ -188,7 +187,8 @@
           IF( tm ) THEN
             IF( npool > 1 ) THEN
               IF( ( ikt >= iks ) .AND. ( ikt <= ike ) ) THEN
-                CALL mergewf(wfm(:,j), wtmp, ngwl, igl, me_pool, nproc_pool, root_pool, intra_pool_comm)
+                CALL mergewf(wfm(:,j), wtmp, ngwl, igl, me_pool, &
+                             nproc_pool, root_pool, intra_pool_comm)
               END IF
               IF( ipsour /= ionode_id ) THEN
                 CALL mp_get( wtmp, wtmp, mpime, ionode_id, ipsour, j, world_comm )
@@ -267,7 +267,7 @@ program pp_punch
 
   use pwcom
   use io_global, ONLY : stdout, ionode, ionode_id
-  use io_files,  ONLY : psfile, pseudo_dir
+  use io_files,  ONLY : psfile, pseudo_dir, trimcheck
   use io_files,  ONLY : nd_nmbr, prefix, tmp_dir, outdir
   use ions_base, ONLY : ntype => nsp
   use iotk_module
@@ -323,7 +323,7 @@ program pp_punch
   !
   ! ... Broadcasting variables
   !
-  tmp_dir = outdir
+  tmp_dir = trimcheck( outdir )
   CALL mp_bcast( outdir, ionode_id )
   CALL mp_bcast( tmp_dir, ionode_id )
   CALL mp_bcast( prefix, ionode_id )
@@ -363,21 +363,24 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   use iotk_module
 
 
-  use kinds,          only : DP 
+  use kinds,          ONLY : DP 
   use pwcom  
-  use becmod,         only : becp, rbecp
+  use global_version, ONLY : version_number
+  use becmod,         ONLY : becp, rbecp
   use wavefunctions_module,  ONLY : evc
-  use io_files,       only : nd_nmbr, outdir, prefix, iunwfc, nwordwfc
-  use io_files,       only : pseudo_dir, psfile
-  use io_base_export, only : write_restart_wfc
-  use io_global,      only : ionode, stdout
+  use io_files,       ONLY : nd_nmbr, outdir, prefix, iunwfc, nwordwfc
+  use io_files,       ONLY : pseudo_dir, psfile
+  use io_base_export, ONLY : write_restart_wfc
+  use io_global,      ONLY : ionode, stdout
   USE ions_base,      ONLY : atm, nat, ityp, tau, nsp
-  use mp_global,      only : nproc, nproc_pool, mpime
-  use mp_global,      only : my_pool_id, intra_pool_comm, inter_pool_comm
-  use mp,             only : mp_sum, mp_max
-
+  use mp_global,      ONLY : nproc, nproc_pool, mpime
+  use mp_global,      ONLY : my_pool_id, intra_pool_comm, inter_pool_comm
+  use mp,             ONLY : mp_sum, mp_max
 
   implicit none
+
+  CHARACTER(5), PARAMETER :: fmt_name="QEXPT"
+  CHARACTER(5), PARAMETER :: fmt_version="1.1.0"
 
   integer, intent(in) :: kunit
   character(80), intent(in) :: pp_file
@@ -385,7 +388,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   integer :: i, j, k, ig, ik, ibnd, na, ngg,ig_, ierr
   integer, allocatable :: kisort(:)
-  real(DP) :: xyz(3)
+  real(DP) :: xyz(3), tmp(3)
   integer :: npool, nkbl, nkl, nkr, npwx_g
   integer :: ike, iks, npw_g, ispin, local_pw
   integer, allocatable :: ngk_g( : )
@@ -490,6 +493,9 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
         igk_l2g(ig,ik) = ig_l2g( kisort(ig) )
         !
      END DO
+     !
+     igk_l2g( npw+1 : npwx, ik ) = 0
+     !
      ngk (ik) = npw
   end do
   deallocate (kisort)
@@ -500,14 +506,27 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   ngk_g( iks:ike ) = ngk( 1:nks )
   CALL mp_sum( ngk_g )
 
-  ! compute the Maximum G vector index among all G+k an processors
+  ! compute the Maximum G vector index among all G+k and processors
   npw_g = MAXVAL( igk_l2g(:,:) )
   CALL mp_max( npw_g )
 
   ! compute the Maximum number of G vector among all k points
   npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
 
+
   if( ionode ) then
+    !
+    write(0,*) "Writing header"
+    CALL iotk_write_begin(50,"Header")
+    CALL iotk_write_attr (attr,"name",TRIM(fmt_name),FIRST=.true.)
+    CALL iotk_write_attr (attr,"version",TRIM(fmt_version))
+    CALL iotk_write_empty(50,"format", ATTR=attr)
+    !
+    CALL iotk_write_attr (attr,"name","Quantum-ESPRESSO",FIRST=.true.)
+    CALL iotk_write_attr (attr,"version",TRIM(version_number))
+    CALL iotk_write_empty(50,"creator", ATTR=attr)
+    CALL iotk_write_end(50,"Header")
+    !
     write(0,*) "Writing dimensions"
     call iotk_write_begin(50,"Dimensions")
     call iotk_write_attr (attr,"nktot",nkstot,first=.true.)
@@ -587,12 +606,28 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
     call iotk_write_attr(attr,"nsym",nsym,first=.true.)
     call iotk_write_attr(attr,"invsym",invsym)
     call iotk_write_empty(50,"symmops",attr)
-! The matrix s is the transpose of the symmetry matrix in direct space,
-! in units of a_i.
+    !
+    ! The matrix s is the transpose of the symmetry matrix in direct space,
+    ! in units of a_i.
+    !
     DO i=1,nsym
-       call iotk_write_dat  (50,"sym"//TRIM(iotk_index(i)),s(1:3,1:3,i),fmt="(3i3)")
+       !
+       CALL iotk_write_attr ( attr,"name", TRIM(sname(i)), FIRST=.TRUE. )
+       CALL iotk_write_empty(50,"info"//TRIM(iotk_index(i)), ATTR=attr )
+       !
+       tmp(1) = ftau(1,i) / DBLE( nr1 )
+       tmp(2) = ftau(2,i) / DBLE( nr2 )
+       tmp(3) = ftau(3,i) / DBLE( nr3 )
+       !
+       CALL iotk_write_attr(attr,"units","crystal",first=.TRUE.)
+       !
+       CALL iotk_write_dat (50,"sym"//TRIM(iotk_index(i)), &
+                                s(1:3,1:3,i), ATTR=attr, COLUMNS=3)
+       CALL iotk_write_dat (50,"trasl"//TRIM(iotk_index(i)), tmp(:), ATTR=attr )
+       !
     ENDDO
-    call iotk_write_end  (50,"Symmetry")
+    !
+    CALL iotk_write_end  (50,"Symmetry")
 
     write(0,*) "Writing k-mesh"
     call iotk_write_attr (attr,"nk",nkstot,first=.true.)
@@ -636,39 +671,47 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
   if(ionode) call iotk_write_begin(50,"Wfc_grids",ATTR=attr)
 
 
-  do ik = 1, nkstot
+  DO ik = 1, nkstot
     igwk(:,ik) = 0
-    allocate( itmp1( npw_g ) )
+    !
+    ALLOCATE( itmp1( npw_g ), STAT= ierr )
+    IF ( ierr/=0 ) CALL errore('pw_export','allocating itmp1', ABS(ierr) )
     itmp1 = 0
-    if( ik >= iks .AND. ik <= ike ) then 
-      do  ig = 1, ngk( ik-iks+1 )
+    ! 
+    IF( ik >= iks .AND. ik <= ike ) THEN 
+      DO  ig = 1, ngk( ik-iks+1 )
         itmp1( igk_l2g( ig, ik-iks+1 ) ) = igk_l2g( ig, ik-iks+1 ) 
-      end do
-    end if
-    call mp_sum( itmp1 )
+      END DO
+    END IF
+    !
+    CALL mp_sum( itmp1 )
+    !
     ngg = 0
-    do  ig = 1, npw_g
-      if( itmp1( ig ) == ig ) then
+    DO  ig = 1, npw_g
+      IF( itmp1( ig ) == ig ) THEN
         ngg = ngg + 1
         igwk( ngg , ik) = ig
-      end if
-    end do
-    if( ngg /= ngk_g( ik ) ) then
+      END IF
+    END DO
+    IF( ngg /= ngk_g( ik ) ) THEN
       WRITE( stdout,*) ' ik, ngg, ngk_g = ', ik, ngg, ngk_g( ik )
-    end if
-    deallocate( itmp1 )
-    if( ionode ) then
-      call iotk_write_attr (attr,"npw",ngk_g(ik),first=.true.)
-! Controlla le unita' di k
-      call iotk_write_attr (attr,"kcry",xk(1:3,ik))
-      if(.not.single_file) &
-        call iotk_link(50,"Kpoint"//iotk_index(ik),"grid"//iotk_index(ik),create=.true.,binary=.not.ascii,raw=raw)
-      call iotk_write_begin(50,"Kpoint"//iotk_index(ik),attr)
-      call iotk_write_dat  (50,"index",igwk(1:ngk_g(ik),ik))
-      call iotk_write_dat  (50,"grid",itmp_g(1:3,igwk(1:ngk_g(ik),ik)),fmt="(3i5)")
-      call iotk_write_end  (50,"Kpoint"//iotk_index(ik))
-    end if
-  end do
+    END IF
+    !
+    DEALLOCATE( itmp1 )
+    !
+    IF( ionode ) THEN
+      CALL iotk_write_attr (attr,"npw",ngk_g(ik),first=.true.)
+      ! Controlla le unita' di k
+      CALL iotk_write_attr (attr,"kcry",xk(1:3,ik))
+      IF(.NOT.single_file) &
+          CALL iotk_link(50,"Kpoint"//iotk_index(ik),"grid"//iotk_index(ik), &
+                         create=.true.,binary=.not.ascii,raw=raw)
+      CALl iotk_write_begin(50,"Kpoint"//iotk_index(ik),attr)
+      CALL iotk_write_dat  (50,"index",igwk(1:ngk_g(ik),ik))
+      CALL iotk_write_dat  (50,"grid",itmp_g(1:3,igwk(1:ngk_g(ik),ik)),fmt="(3i5)")
+      CALL iotk_write_end  (50,"Kpoint"//iotk_index(ik))
+    END IF
+  END DO
 
   if(ionode) call iotk_write_end(50,"Wfc_grids")
   deallocate( itmp_g )
@@ -729,6 +772,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
          end if
        end do
      end do
+
 
      ispin = isk( ik )
      !  WRITE(0,*) ' ### ', ik,nkstot,iks,ike,kunit,nproc,nproc_pool 

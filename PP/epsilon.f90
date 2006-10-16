@@ -140,7 +140,6 @@ SUBROUTINE eps_calc ( smeartype, smear, nw, wmax, shift, calculation )
   REAL(DP)      :: alpha, etrans, const, w, renorm 
   COMPLEX(DP)   :: caux, dipole_aux(3)
   !
-  INTEGER,  ALLOCATABLE    :: igk_l2g(:)
   REAL(DP), ALLOCATABLE    :: focc(:,:), wgrid(:)
   REAL(DP), ALLOCATABLE    :: epsr(:,:), epsi(:,:), jdos(:), ieps(:,:), eels(:,:)
   REAL(DP), ALLOCATABLE    :: dipole(:,:,:)
