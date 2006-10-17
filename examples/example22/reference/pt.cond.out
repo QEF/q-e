@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.3.1.1  starts ...
-     Today is 29Jun2006 at  4:47:26 
+     Program POST-PROC v.3.2cvs starts ...
+     Today is 17Oct2006 at  4:56:54 
 
      nbndx  =    28  nbnd   =    28  natomwfc =    36  npwx   =     570
      nelec  =  20.00  nkb   =    52  ngl    =     947
@@ -205,18 +205,14 @@
   -0.3204412   0.0000000   0.0000000
   -0.3204412   0.0000000   0.0000000
  
-     PWCOND       :    56.18s CPU time
+     PWCOND       :  1m 7.92s CPU time
 
-     init         :     2.82s CPU
+     init         :     2.89s CPU
      poten        :     0.05s CPU
-     local        :     2.26s CPU
+     local        :     2.13s CPU
  
-     scatter_forw :    44.16s CPU
-     integrals    :    24.11s CPU
-     rotatef      :     1.36s CPU (      24 calls,   0.057 s avg)
-     rotateb      :     0.88s CPU (      24 calls,   0.037 s avg)
-     scatter_back :     8.94s CPU
+     scatter_forw :    57.28s CPU
  
-     compbs       :     6.93s CPU
-     compbs_2     :     6.19s CPU
+     compbs       :     5.62s CPU
+     compbs_2     :     4.89s CPU
  

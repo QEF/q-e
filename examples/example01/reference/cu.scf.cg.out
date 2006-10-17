@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.1.1  starts ...
-     Today is 29Jun2006 at  2:31:47 
+     Program PWSCF     v.3.2cvs starts ...
+     Today is 17Oct2006 at  2:37:59 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -99,228 +99,236 @@
      starting charge   10.99968, renormalised to   11.00000
      Starting wfc are atomic +   4 random wfc
 
-     total cpu time spent up to now is      1.21 secs
+     total cpu time spent up to now is      1.28 secs
 
      Self-consistent Calculation
 
-     iteration #  1     ecut=    25.00 ryd     beta=0.70
+     iteration #  1     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
      ethr =  1.00E-02,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is      2.47 secs
+     total cpu time spent up to now is      2.51 secs
 
-     total energy              =   -87.74243158 ryd
-     estimated scf accuracy    <     0.21583166 ryd
+     total energy              =   -87.74243158 Ry
+     Harris-Foulkes estimate   =   -87.90140545 Ry
+     estimated scf accuracy    <     0.21583166 Ry
 
-     iteration #  2     ecut=    25.00 ryd     beta=0.70
+     iteration #  2     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
      ethr =  1.96E-03,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is      3.46 secs
+     total cpu time spent up to now is      3.45 secs
 
-     total energy              =   -87.81363931 ryd
-     estimated scf accuracy    <     0.15426501 ryd
+     total energy              =   -87.81362123 Ry
+     Harris-Foulkes estimate   =   -87.89183179 Ry
+     estimated scf accuracy    <     0.15426501 Ry
 
-     iteration #  3     ecut=    25.00 ryd     beta=0.70
+     iteration #  3     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
      ethr =  1.40E-03,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      4.36 secs
+     total cpu time spent up to now is      4.27 secs
 
-     total energy              =   -87.84090893 ryd
-     estimated scf accuracy    <     0.00017593 ryd
+     total energy              =   -87.84090806 Ry
+     Harris-Foulkes estimate   =   -87.84099436 Ry
+     estimated scf accuracy    <     0.00017594 Ry
 
-     iteration #  4     ecut=    25.00 ryd     beta=0.70
+     iteration #  4     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
      ethr =  1.60E-06,  avg # of iterations =  5.4
 
-     total cpu time spent up to now is      5.74 secs
+     total cpu time spent up to now is      5.51 secs
 
-     total energy              =   -87.84116614 ryd
-     estimated scf accuracy    <     0.00005031 ryd
+     total energy              =   -87.84116609 Ry
+     Harris-Foulkes estimate   =   -87.84118855 Ry
+     estimated scf accuracy    <     0.00005009 Ry
 
-     iteration #  5     ecut=    25.00 ryd     beta=0.70
+     iteration #  5     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
-     ethr =  4.57E-07,  avg # of iterations =  3.0
+     ethr =  4.55E-07,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      6.65 secs
+     total cpu time spent up to now is      6.31 secs
 
-     total energy              =   -87.84117663 ryd
-     estimated scf accuracy    <     0.00000001 ryd
+     total energy              =   -87.84117662 Ry
+     Harris-Foulkes estimate   =   -87.84117652 Ry
+     estimated scf accuracy    <     0.00000002 Ry
 
-     iteration #  6     ecut=    25.00 ryd     beta=0.70
+     iteration #  6     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
-     ethr =  1.34E-10,  avg # of iterations =  4.2
+     ethr =  1.71E-10,  avg # of iterations =  4.1
 
-     total cpu time spent up to now is      7.79 secs
+     total cpu time spent up to now is      7.32 secs
 
-     total energy              =   -87.84117673 ryd
-     estimated scf accuracy    <     0.00000008 ryd
+     total energy              =   -87.84117673 Ry
+     Harris-Foulkes estimate   =   -87.84117676 Ry
+     estimated scf accuracy    <     0.00000009 Ry
 
-     iteration #  7     ecut=    25.00 ryd     beta=0.70
+     iteration #  7     ecut=    25.00 Ry     beta=0.70
      CG style diagonalization
-     ethr =  1.34E-10,  avg # of iterations =  3.5
+     ethr =  1.71E-10,  avg # of iterations =  3.5
 
-     total cpu time spent up to now is      8.79 secs
+     total cpu time spent up to now is      8.20 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (   169 PWs)   bands (ev):
 
-     4.9902  11.2013  11.2013  11.2013  12.0902  12.0902  38.8605  41.0135
-    41.0135  41.0135
+     4.9902  11.2012  11.2012  11.2012  12.0901  12.0901  38.8601  41.0131
+    41.0131  41.0131
 
           k =-0.1250 0.1250-0.1250 (   165 PWs)   bands (ev):
 
-     5.5709  11.0866  11.3030  11.3030  12.0598  12.0598  34.2714  39.2724
-    39.7086  39.7086
+     5.5709  11.0865  11.3029  11.3029  12.0597  12.0597  34.2711  39.2721
+    39.7082  39.7082
 
           k =-0.2500 0.2500-0.2500 (   156 PWs)   bands (ev):
 
-     7.1554  10.9528  11.3713  11.3713  12.1824  12.1824  27.5278  38.3736
-    38.3736  38.4665
+     7.1553  10.9527  11.3712  11.3712  12.1823  12.1823  27.5276  38.3732
+    38.3732  38.4661
 
           k =-0.3750 0.3750-0.3750 (   159 PWs)   bands (ev):
 
-     8.7582  11.2416  11.2416  11.7720  12.5307  12.5307  21.8043  37.4542
-    37.7370  37.7370
+     8.7581  11.2415  11.2415  11.7718  12.5306  12.5306  21.8040  37.4538
+    37.7366  37.7366
 
           k = 0.5000-0.5000 0.5000 (   156 PWs)   bands (ev):
 
-     9.1127  11.1668  11.1668  12.7054  12.7054  13.4644  18.6415  37.0217
-    37.6111  37.6112
+     9.1126  11.1667  11.1667  12.7053  12.7053  13.4643  18.6413  37.0214
+    37.6107  37.6108
 
           k = 0.0000 0.2500 0.0000 (   165 PWs)   bands (ev):
 
-     5.7620  10.9726  11.3944  11.3944  11.8896  12.1761  36.7458  36.7458
-    36.7673  38.6745
+     5.7619  10.9725  11.3943  11.3943  11.8894  12.1759  36.7454  36.7454
+    36.7670  38.6741
 
           k =-0.1250 0.3750-0.1250 (   160 PWs)   bands (ev):
 
-     7.0143  10.7493  11.4317  11.5525  11.9732  12.3081  30.0782  34.8358
-    36.4461  38.9415
+     7.0143  10.7492  11.4316  11.5524  11.9731  12.3080  30.0779  34.8354
+    36.4457  38.9411
 
           k =-0.2500 0.5000-0.2500 (   158 PWs)   bands (ev):
 
-     8.7288  10.8276  11.1809  11.4890  12.5933  12.8059  23.9428  34.0862
-    34.9383  36.6370
+     8.7287  10.8275  11.1808  11.4888  12.5932  12.8058  23.9426  34.0858
+    34.9379  36.6367
 
           k = 0.6250-0.3750 0.6250 (   163 PWs)   bands (ev):
 
-     9.3834  10.9635  11.3699  11.6202  12.7175  14.6392  19.3210  32.8138
-    34.6292  36.4062
+     9.3833  10.9634  11.3698  11.6201  12.7173  14.6390  19.3208  32.8135
+    34.6288  36.4059
 
           k = 0.5000-0.2500 0.5000 (   161 PWs)   bands (ev):
 
-     9.3119  11.0368  11.3691  11.4826  12.4844  14.0537  20.5834  31.5890
-    36.5317  37.3115
+     9.3118  11.0367  11.3690  11.4824  12.4842  14.0536  20.5832  31.5887
+    36.5314  37.3111
 
           k = 0.3750-0.1250 0.3750 (   159 PWs)   bands (ev):
 
-     8.2136  10.8073  11.2559  11.5072  12.0313  12.8221  25.8865  31.4950
-    39.3201  39.7087
+     8.2135  10.8072  11.2558  11.5071  12.0312  12.8220  25.8862  31.4947
+    39.3197  39.7083
 
           k = 0.2500 0.0000 0.2500 (   160 PWs)   bands (ev):
 
-     6.4955  10.8984  11.3916  11.4736  11.8695  12.2786  32.0412  32.7825
-    41.5270  42.4824
+     6.4954  10.8983  11.3915  11.4734  11.8694  12.2785  32.0409  32.7822
+    41.5266  42.4819
 
           k = 0.0000 0.5000 0.0000 (   165 PWs)   bands (ev):
 
-     7.7943  10.4349  11.6327  11.9193  11.9193  12.3851  32.3396  32.3396
-    33.7602  34.5445
+     7.7943  10.4348  11.6325  11.9192  11.9192  12.3850  32.3393  32.3393
+    33.7599  34.5442
 
           k =-0.1250 0.6250-0.1250 (   162 PWs)   bands (ev):
 
-     9.0228  10.2344  11.4503  12.0192  12.6218  12.9854  26.9782  30.3534
-    31.0984  35.0368
+     9.0227  10.2343  11.4502  12.0191  12.6217  12.9853  26.9779  30.3531
+    31.0981  35.0365
 
           k = 0.7500-0.2500 0.7500 (   158 PWs)   bands (ev):
 
-     9.7669  10.3290  11.2647  11.8945  12.7491  15.5295  21.6003  27.6747
-    31.3018  35.1329
+     9.7668  10.3289  11.2646  11.8944  12.7490  15.5294  21.6001  27.6744
+    31.3015  35.1326
 
           k = 0.6250-0.1250 0.6250 (   162 PWs)   bands (ev):
 
-    10.0184  10.5265  11.0685  11.7898  12.5064  16.7740  20.0924  26.0419
-    32.9714  35.8421
+    10.0183  10.5264  11.0684  11.7897  12.5063  16.7738  20.0922  26.0416
+    32.9710  35.8417
 
           k = 0.5000 0.0000 0.5000 (   164 PWs)   bands (ev):
 
-     9.6267  10.6775  10.8947  11.7428  12.0921  14.2040  24.5962  26.0250
-    35.8988  37.3881
+     9.6266  10.6774  10.8945  11.7427  12.0920  14.2038  24.5960  26.0247
+    35.8985  37.3877
 
           k = 0.0000 0.7500 0.0000 (   162 PWs)   bands (ev):
 
-     9.2058   9.9167  12.5534  12.5534  12.5972  13.2866  26.4703  29.2999
-    29.2999  33.3068
+     9.2057   9.9166  12.5533  12.5533  12.5970  13.2865  26.4700  29.2996
+    29.2996  33.3065
 
           k = 0.8750-0.1250 0.8750 (   164 PWs)   bands (ev):
 
-     9.4501   9.8715  12.2020  12.4697  12.7944  15.9128  23.7215  25.2520
-    29.0132  34.1883
+     9.4501   9.8714  12.2019  12.4696  12.7942  15.9126  23.7213  25.2517
+    29.0129  34.1879
 
           k = 0.7500 0.0000 0.7500 (   168 PWs)   bands (ev):
 
-     9.8607  10.1092  11.5077  12.2377  12.6489  19.0057  20.5142  22.9127
-    30.3245  34.7830
+     9.8606  10.1091  11.5076  12.2376  12.6488  19.0055  20.5140  22.9124
+    30.3242  34.7826
 
           k = 0.0000-1.0000 0.0000 (   150 PWs)   bands (ev):
 
-     9.2586   9.7080  12.6857  12.8601  12.8601  16.0646  22.1079  28.1799
-    28.1799  32.9221
+     9.2585   9.7079  12.6856  12.8600  12.8600  16.0645  22.1077  28.1796
+    28.1797  32.9218
 
           k =-0.2500 0.5000 0.0000 (   156 PWs)   bands (ev):
 
-     8.3839  10.5247  11.2023  11.9285  11.9817  12.8600  28.3783  29.1675
-    34.7027  39.7252
+     8.3838  10.5246  11.2022  11.9284  11.9816  12.8599  28.3780  29.1672
+    34.7023  39.7248
 
           k = 0.6250-0.3750 0.8750 (   161 PWs)   bands (ev):
 
-     9.6523  10.6051  10.9253  11.7992  12.4587  14.3781  22.9151  28.5914
-    31.6506  39.6661
+     9.6522  10.6050  10.9252  11.7990  12.4586  14.3780  22.9148  28.5911
+    31.6503  39.6657
 
           k = 0.5000-0.2500 0.7500 (   164 PWs)   bands (ev):
 
-     9.8899  10.5879  11.1597  11.6870  12.6467  16.6900  19.1413  29.3146
-    29.7909  39.3673
+     9.8898  10.5878  11.1595  11.6869  12.6466  16.6898  19.1411  29.3143
+    29.7906  39.3669
 
           k = 0.7500-0.2500 1.0000 (   166 PWs)   bands (ev):
 
-     9.6142  10.1148  11.4164  12.3920  12.5495  14.7885  25.8703  26.6506
-    27.2661  37.8990
+     9.6141  10.1147  11.4163  12.3918  12.5494  14.7884  25.8700  26.6503
+    27.2659  37.8987
 
           k = 0.6250-0.1250 0.8750 (   161 PWs)   bands (ev):
 
-     9.9929  10.2652  11.1242  12.1238  12.7326  18.0168  21.2251  24.7937
-    27.1018  39.0187
+     9.9928  10.2650  11.1241  12.1237  12.7325  18.0166  21.2249  24.7934
+    27.1016  39.0184
 
           k = 0.5000 0.0000 0.7500 (   158 PWs)   bands (ev):
 
-    10.2725  10.4558  10.7013  12.0027  12.5536  17.1252  21.9647  24.2066
-    28.8743  40.2132
+    10.2724  10.4557  10.7012  12.0026  12.5535  17.1250  21.9645  24.2064
+    28.8740  40.2128
 
           k =-0.2500-1.0000 0.0000 (   164 PWs)   bands (ev):
 
-     9.5932   9.9451  11.8840  12.4222  12.8603  17.7231  22.3903  24.9292
-    26.0241  37.2952
+     9.5931   9.9450  11.8839  12.4221  12.8602  17.7229  22.3900  24.9290
+    26.0238  37.2948
 
           k =-0.5000-1.0000 0.0000 (   156 PWs)   bands (ev):
 
-    10.0286  10.6779  10.6779  12.0572  12.8607  20.9511  20.9511  23.1326
-    24.0540  44.6538
+    10.0285  10.6778  10.6778  12.0570  12.8606  20.9509  20.9509  23.1324
+    24.0538  44.6534
 
-     the Fermi energy is    14.4958 ev
+     the Fermi energy is    14.4957 ev
 
-!    total energy              =   -87.84117675 ryd
-     estimated scf accuracy    <        7.5E-11 ryd
+!    total energy              =   -87.84117675 Ry
+     Harris-Foulkes estimate   =   -87.84117675 Ry
+     estimated scf accuracy    <        9.6E-11 Ry
 
-     band energy sum           =     9.09196815 ryd
-     one-electron contribution =   -10.24217983 ryd
-     hartree contribution      =    18.89094387 ryd
-     xc contribution           =   -14.05623362 ryd
-     ewald contribution        =   -82.43214130 ryd
-     correction for metals     =    -0.00156586 ryd
+     The total energy is the sum of the following terms:
+
+     one-electron contribution =   -10.24218059 Ry
+     hartree contribution      =    18.89094481 Ry
+     xc contribution           =   -14.05623381 Ry
+     ewald contribution        =   -82.43214130 Ry
+     smearing contrib. (-TS)   =    -0.00156586 Ry
 
      convergence has been achieved
 
@@ -334,50 +342,52 @@
      entering subroutine stress ...
 
           total   stress  (ryd/bohr**3)                  (kbar)     P=  -11.12
-  -0.00007559   0.00000000   0.00000000        -11.12      0.00      0.00
-   0.00000000  -0.00007559   0.00000000          0.00    -11.12      0.00
-   0.00000000   0.00000000  -0.00007559          0.00      0.00    -11.12
+  -0.00007558   0.00000000   0.00000000        -11.12      0.00      0.00
+   0.00000000  -0.00007558   0.00000000          0.00    -11.12      0.00
+   0.00000000   0.00000000  -0.00007558          0.00      0.00    -11.12
 
 
      Writing output data file cu.save
  
-     PWSCF        :     9.80s CPU time
+     PWSCF        :     9.07s CPU time
 
-     init_run     :     1.17s CPU
-     electrons    :     7.58s CPU
+     init_run     :     1.25s CPU
+     electrons    :     6.92s CPU
      forces       :     0.15s CPU
-     stress       :     0.71s CPU
+     stress       :     0.65s CPU
  
-     electrons    :     7.58s CPU
-     c_bands      :     5.48s CPU (       7 calls,   0.783 s avg)
-     sum_band     :     1.35s CPU (       7 calls,   0.193 s avg)
-     v_of_rho     :     0.09s CPU (       8 calls,   0.011 s avg)
-     newd         :     0.55s CPU (       8 calls,   0.069 s avg)
+ 
+     electrons    :     6.92s CPU
+     c_bands      :     5.09s CPU (       7 calls,   0.727 s avg)
+     sum_band     :     1.31s CPU (       7 calls,   0.187 s avg)
+     v_of_rho     :     0.06s CPU (       8 calls,   0.008 s avg)
+     v_h          :     0.03s CPU (       8 calls,   0.004 s avg)
+     v_xc         :     0.03s CPU (       8 calls,   0.004 s avg)
+     newd         :     0.42s CPU (       8 calls,   0.052 s avg)
      mix_rho      :     0.01s CPU (       7 calls,   0.001 s avg)
  
-     c_bands      :     5.48s CPU (       7 calls,   0.783 s avg)
-     init_us_2    :     0.09s CPU (     493 calls,   0.000 s avg)
-     ccgdiagg     :     4.08s CPU (     203 calls,   0.020 s avg)
+     c_bands      :     5.09s CPU (       7 calls,   0.727 s avg)
+     init_us_2    :     0.12s CPU (     493 calls,   0.000 s avg)
+     ccgdiagg     :     3.95s CPU (     203 calls,   0.019 s avg)
  
-     sum_band     :     1.35s CPU (       7 calls,   0.193 s avg)
+     sum_band     :     1.31s CPU (       7 calls,   0.187 s avg)
      becsum       :     0.01s CPU (     203 calls,   0.000 s avg)
-     addusdens    :     0.45s CPU (       7 calls,   0.064 s avg)
+     addusdens    :     0.40s CPU (       7 calls,   0.057 s avg)
  
-     wfcrot1      :     1.52s CPU (     203 calls,   0.007 s avg)
-     h_1psi       :     5.18s CPU (    8282 calls,   0.001 s avg)
-     s_1psi       :     0.15s CPU (    6252 calls,   0.000 s avg)
-     cdiaghg      :     0.03s CPU (     203 calls,   0.000 s avg)
+     wfcrot1      :     1.25s CPU (     203 calls,   0.006 s avg)
+     h_1psi       :     4.70s CPU (    8260 calls,   0.001 s avg)
+     s_1psi       :     0.20s CPU (    6230 calls,   0.000 s avg)
  
-     h_1psi       :     5.18s CPU (    8282 calls,   0.001 s avg)
-     init         :     0.05s CPU (    8282 calls,   0.000 s avg)
-     firstfft     :     2.23s CPU (    8282 calls,   0.000 s avg)
-     secondfft    :     2.16s CPU (    8282 calls,   0.000 s avg)
-     add_vuspsi   :     0.24s CPU (    8282 calls,   0.000 s avg)
+     h_1psi       :     4.70s CPU (    8260 calls,   0.001 s avg)
+     init         :     0.02s CPU (    8260 calls,   0.000 s avg)
+     firstfft     :     2.21s CPU (    8260 calls,   0.000 s avg)
+     secondfft    :     1.91s CPU (    8260 calls,   0.000 s avg)
+     add_vuspsi   :     0.13s CPU (    8260 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.19s CPU (   14795 calls,   0.000 s avg)
-     cft3         :     0.23s CPU (      68 calls,   0.003 s avg)
-     cft3s        :     4.69s CPU (   18609 calls,   0.000 s avg)
-     interpolate  :     0.08s CPU (      15 calls,   0.005 s avg)
-     davcio       :     0.05s CPU (     696 calls,   0.000 s avg)
+     ccalbec      :     0.24s CPU (   14751 calls,   0.000 s avg)
+     cft3         :     0.17s CPU (      60 calls,   0.003 s avg)
+     cft3s        :     4.38s CPU (   18565 calls,   0.000 s avg)
+     interpolate  :     0.04s CPU (      15 calls,   0.003 s avg)
+     davcio       :     0.00s CPU (     696 calls,   0.000 s avg)
  

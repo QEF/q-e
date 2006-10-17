@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:15:39  29Jun2006               
+   This run was started on:   5:24: 3  17Oct2006               
 
    Serial Build
 
@@ -250,8 +250,8 @@
   Allocation for pointers : successful 
   Allocation ended 
 
-   reading restart file: .//cp_61.save
-   restart file read in    0.024 sec.
+   reading restart file: /scr/giannozz/tmp//cp_61.save
+   restart file read in    0.028 sec.
 
  nprint_nfi=           -2
  nprint_nfi=           -1
@@ -260,48 +260,48 @@
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_62.save
-   restart file read in    0.024 sec.
+   reading restart file: /scr/giannozz/tmp//cp_62.save
+   restart file read in    0.028 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_63.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_63.save
+   restart file read in    0.028 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_64.save
-   restart file read in    0.024 sec.
+   reading restart file: /scr/giannozz/tmp//cp_64.save
+   restart file read in    0.028 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_65.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_65.save
+   restart file read in    0.028 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_66.save
-   restart file read in    0.024 sec.
+   reading restart file: /scr/giannozz/tmp//cp_66.save
+   restart file read in    0.028 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_67.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_67.save
+   restart file read in    0.028 sec.
 
 
    formf: eself=   1.49603
@@ -317,7 +317,7 @@
    4  0.00000 0.00000 2.25000
    5  0.00000 0.00000 2.31614
    6  0.00000 0.00000 2.38228
-   7  0.00000 0.00000 2.44843
+   7  0.00000 0.00000 2.44842
    8  0.00000 0.00000 2.51457
   
   _____________________________________________
@@ -623,57 +623,57 @@
  
  
 
-   writing restart file: .//cp_61.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_61.save
+   restart file written in    0.050 sec.
 
 
-   writing restart file: .//cp_62.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_62.save
+   restart file written in    0.050 sec.
 
 
-   writing restart file: .//cp_63.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_63.save
+   restart file written in    0.050 sec.
 
 
-   writing restart file: .//cp_64.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_64.save
+   restart file written in    0.049 sec.
 
 
-   writing restart file: .//cp_65.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_65.save
+   restart file written in    0.049 sec.
 
 
-   writing restart file: .//cp_66.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_66.save
+   restart file written in    0.049 sec.
 
-     initialize   :     0.33s CPU
+     initialize   :     0.35s CPU
      formf        :     0.05s CPU (       7 calls,   0.007 s avg)
-     rhoofr       :    12.96s CPU (     420 calls,   0.031 s avg)
-     vofrho       :    82.98s CPU (     420 calls,   0.198 s avg)
-     dforce       :     3.30s CPU (     840 calls,   0.004 s avg)
+     rhoofr       :    11.71s CPU (     420 calls,   0.028 s avg)
+     vofrho       :    79.32s CPU (     420 calls,   0.189 s avg)
+     dforce       :     2.88s CPU (     840 calls,   0.003 s avg)
      calphi       :     0.04s CPU (     420 calls,   0.000 s avg)
      ortho        :     0.06s CPU (     420 calls,   0.000 s avg)
-     updatc       :     0.00s CPU (     840 calls,   0.000 s avg)
-     newd         :     0.58s CPU (     420 calls,   0.001 s avg)
+     updatc       :     0.02s CPU (     840 calls,   0.000 s avg)
+     newd         :     0.60s CPU (     420 calls,   0.001 s avg)
      calbec       :     0.00s CPU (     427 calls,   0.000 s avg)
-     prefor       :     0.01s CPU (     847 calls,   0.000 s avg)
-     strucf       :     0.16s CPU (     427 calls,   0.000 s avg)
-     rhov         :     4.62s CPU (     420 calls,   0.011 s avg)
-     nlsm1        :     0.01s CPU (    1267 calls,   0.000 s avg)
-     fft          :    33.11s CPU (    5880 calls,   0.006 s avg)
-     ffts         :     2.95s CPU (     840 calls,   0.004 s avg)
-     fftw         :     4.64s CPU (    2520 calls,   0.002 s avg)
-     fftb         :     0.76s CPU (    2100 calls,   0.000 s avg)
+     prefor       :     0.03s CPU (     847 calls,   0.000 s avg)
+     strucf       :     0.10s CPU (     427 calls,   0.000 s avg)
+     rhov         :     4.27s CPU (     420 calls,   0.010 s avg)
+     nlsm1        :     0.02s CPU (    1267 calls,   0.000 s avg)
+     fft          :    34.21s CPU (    5880 calls,   0.006 s avg)
+     ffts         :     2.79s CPU (     840 calls,   0.003 s avg)
+     fftw         :     4.16s CPU (    2520 calls,   0.002 s avg)
+     fftb         :     0.90s CPU (    2100 calls,   0.000 s avg)
      rsg          :     0.00s CPU (     840 calls,   0.000 s avg)
 
-   writing restart file: .//cp_67.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_67.save
+   restart file written in    0.049 sec.
 
  
-     CP           :  1m40.93s CPU time
+     CP           :  1m35.52s CPU time
 
  
-   This run was terminated on:   5:17:20  29Jun2006            
+   This run was terminated on:   5:25:46  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

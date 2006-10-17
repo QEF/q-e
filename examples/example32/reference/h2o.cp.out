@@ -1,19 +1,16 @@
 =------------------------------------------------------------------------------=
 
-     Ab-initio DFT calculation of normal modes for
-     molecules and clusters in vacuum. The CP code is used as
-     the undelying DFT egine.
+     CP: variable-cell Car-Parrinello molecular dynamics
+     using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
-     Authors of the normal-modes code: Silviu Zilberman
-
-     Authors of the CP code: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   6:49:38  29Jun2006               
+   This run was started on:   7: 2:27  17Oct2006               
 
    Serial Build
 Warning: card  &IONS ignored
@@ -104,7 +101,7 @@ Warning: electron_velocities keyword has no effect
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
+   Species   1 atoms =    1 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
         0.009570     0.009570     0.000000
    Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.50 (a.u.)
         1.833180    -0.217650    -0.000150
@@ -227,6 +224,9 @@ Warning: electron_velocities keyword has no effect
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+   ortho mmul, time for serial driver =   0.00194
+   ortho mmul, best time for paralle driver =   0.00194 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00024  0.01367
 
 
    Wave Initialization: random initial wave-functions
@@ -419,8 +419,8 @@ Warning: electron_velocities keyword has no effect
      atom   2 type  2   force =     0.00001187   -0.00000119    0.00000854
      atom   3 type  2   force =     0.00000002    0.00000279   -0.00000087
 
-   writing restart file: .//h2o_51.save
-   restart file written in    0.087 sec.
+   writing restart file: /scr/giannozz/tmp//h2o_51.save
+   restart file written in    0.193 sec.
 
  Done
  
@@ -1141,7 +1141,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9234   0.0000
  Done scf relaxation for displacement.
    displacement total energy         :        -17.181022 hartree
    Ground-state dipole vector [debye]:       -1.320       -1.312        0.000
-   Dipole moment [debye]             :        1.861
+   Dipole moment [debye]             :        1.862
  
  
  Saving restart information...
@@ -1788,7 +1788,7 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1355.9225   0.0000
  Done scf relaxation for displacement.
    displacement total energy         :        -17.181022 hartree
    Ground-state dipole vector [debye]:       -1.312       -1.320        0.000
-   Dipole moment [debye]             :        1.861
+   Dipole moment [debye]             :        1.862
  
  
  Saving restart information...
@@ -1970,38 +1970,37 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9674   0.0000
    volume        :        0.00000       0.00000 (AU)
 
 
-     initialize   :     1.26s CPU
+     initialize   :     1.28s CPU
      formf        :     0.70s CPU
-     rhoofr       :   135.41s CPU (     362 calls,   0.374 s avg)
-     vofrho       :   416.59s CPU (     343 calls,   1.215 s avg)
-     dforce       :    39.80s CPU (     344 calls,   0.116 s avg)
-     calphi       :     0.37s CPU (     172 calls,   0.002 s avg)
-     gram         :     0.81s CPU (     350 calls,   0.002 s avg)
-     newd         :     0.01s CPU (     172 calls,   0.000 s avg)
-     calbec       :     1.13s CPU (    1168 calls,   0.001 s avg)
-     prefor       :     0.05s CPU (     192 calls,   0.000 s avg)
-     strucf       :     0.16s CPU (      20 calls,   0.008 s avg)
+     rhoofr       :   137.14s CPU (     362 calls,   0.379 s avg)
+     vofrho       :   375.81s CPU (     343 calls,   1.096 s avg)
+     dforce       :    35.81s CPU (     344 calls,   0.104 s avg)
+     calphi       :     0.41s CPU (     172 calls,   0.002 s avg)
+     gram         :     0.90s CPU (     350 calls,   0.003 s avg)
+     newd         :     0.00s CPU (     172 calls,   0.000 s avg)
+     calbec       :     0.74s CPU (    1168 calls,   0.001 s avg)
+     prefor       :     0.08s CPU (     192 calls,   0.000 s avg)
+     strucf       :     0.13s CPU (      20 calls,   0.006 s avg)
      nlfl         :     0.00s CPU (      19 calls,   0.000 s avg)
-     nlfq         :     0.06s CPU (      19 calls,   0.003 s avg)
-     nlsm1        :     1.13s CPU (    1168 calls,   0.001 s avg)
-     nlsm2        :     0.06s CPU (      19 calls,   0.003 s avg)
-     fft          :   231.06s CPU (    2763 calls,   0.084 s avg)
-     ffts         :    56.60s CPU (     705 calls,   0.080 s avg)
-     fftw         :    64.89s CPU (    1412 calls,   0.046 s avg)
-     runcg_uspp   :   592.98s CPU (      19 calls,  31.209 s avg)
-     pc2          :     2.27s CPU (     459 calls,   0.005 s avg)
-     pcdaga2      :     0.72s CPU (     153 calls,   0.005 s avg)
-     xminus1      :     0.12s CPU (     306 calls,   0.000 s avg)
+     nlfq         :     0.05s CPU (      19 calls,   0.003 s avg)
+     nlsm1        :     0.73s CPU (    1168 calls,   0.001 s avg)
+     nlsm2        :     0.05s CPU (      19 calls,   0.003 s avg)
+     fft          :   225.24s CPU (    2763 calls,   0.082 s avg)
+     ffts         :    59.24s CPU (     705 calls,   0.084 s avg)
+     fftw         :    68.47s CPU (    1412 calls,   0.048 s avg)
+     runcg_uspp   :   548.88s CPU (      19 calls,  28.888 s avg)
+     pc2          :     2.18s CPU (     459 calls,   0.005 s avg)
+     pcdaga2      :     0.83s CPU (     153 calls,   0.005 s avg)
+     xminus1      :     0.06s CPU (     306 calls,   0.000 s avg)
      emass_p_tpa  :     0.00s CPU (      19 calls,   0.000 s avg)
  
  
  
-     CP           : 10m 4.83s CPU time
+     CP           :  9m20.36s CPU time
 
  
-   This run was terminated on:   6:59:43  29Jun2006            
+   This run was terminated on:   7:12:34  17Oct2006            
 
 =------------------------------------------------------------------------------=
-   ELAPSED SECONDS:   605.0
    JOB DONE.
 =------------------------------------------------------------------------------=

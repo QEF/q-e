@@ -1,6 +1,6 @@
 
-     Program D3TOTEN   v.3.1.1  starts ...
-     Today is  6Jul2006 at  3:14:49 
+     Program D3TOTEN   v.3.2cvs starts ...
+     Today is 17Oct2006 at  3:24:23 
 
      nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     534
      nelec  =   8.00  nkb   =     8  ngl    =      86
@@ -75,7 +75,7 @@
      Representation     2      3 modes - To be done
 
                     **   Complex  Version    **
-     D3TOTEN      :     0.85s CPU time
+     D3TOTEN      :     0.83s CPU time
 
 
      Nscf calculating of the perturbed wavefunctions
@@ -86,44 +86,44 @@
      Representation #  1 modes #   1  2  3
 
 
-      thresh= 0.100E-04 total cpu time :    46.4 secs   av.it.: 157.9
+      thresh= 0.100E-04 total cpu time :    47.1 secs   av.it.: 157.8
 
 
      Representation #  2 modes #   4  5  6
 
 
-      thresh= 0.100E-04 total cpu time :    92.0 secs   av.it.: 158.2
-     gen_dwfc(3)   cpu time:    91.19 sec    Total time:       92.04 sec
+      thresh= 0.100E-04 total cpu time :    94.2 secs   av.it.: 158.0
+     gen_dwfc(3)   cpu time:    93.42 sec    Total time:       94.25 sec
 
      Finished the ncf calculation of the perturbed wavefunctions
 
      calling gen_dpdvp
-     gen_dpdvp     cpu time:     0.00 sec    Total time:       92.04 sec
+     gen_dpdvp     cpu time:     0.00 sec    Total time:       94.25 sec
 
      Calculating the matrix elements <dpsi |dH |dpsi>
 
      calling dpsidvdpsi:  1
-     dpsidvdpsi  1 cpu time:     0.69 sec    Total time:       92.73 sec
+     dpsidvdpsi  1 cpu time:     0.73 sec    Total time:       94.98 sec
 
      calling dpsidvdpsi:  2
-     dpsidvdpsi  2 cpu time:     0.68 sec    Total time:       93.41 sec
+     dpsidvdpsi  2 cpu time:     0.71 sec    Total time:       95.69 sec
 
      calling dpsidvdpsi:  3
-     dpsidvdpsi  3 cpu time:     0.69 sec    Total time:       94.10 sec
+     dpsidvdpsi  3 cpu time:     0.66 sec    Total time:       96.35 sec
 
      calling dpsidvdpsi:  4
-     dpsidvdpsi  4 cpu time:     0.68 sec    Total time:       94.78 sec
+     dpsidvdpsi  4 cpu time:     0.69 sec    Total time:       97.04 sec
 
      calling dpsidvdpsi:  5
-     dpsidvdpsi  5 cpu time:     0.68 sec    Total time:       95.46 sec
+     dpsidvdpsi  5 cpu time:     0.71 sec    Total time:       97.75 sec
 
      calling dpsidvdpsi:  6
-     dpsidvdpsi  6 cpu time:     0.69 sec    Total time:       96.15 sec
+     dpsidvdpsi  6 cpu time:     0.72 sec    Total time:       98.47 sec
 
      Calculating the matrix elements <dpsi|dpsi>< psi|dH|psi> 
 
      calling dpsidpsidv
-     dpsidpsidv    cpu time:     0.12 sec    Total time:       96.27 sec
+     dpsidpsidv    cpu time:     0.05 sec    Total time:       98.52 sec
 
      Calculating the matrix elements <psi |d^2 v |dpsi>
 
@@ -154,59 +154,59 @@
  -0.325460  0.000000    0.650919  0.000000    0.000000  0.000000
            1
   0.000000  0.000000   -0.541865  0.000000    0.644573  0.000000
- -0.541865  0.000000    0.000000  0.000000   -0.827294  0.000000
-  0.644573  0.000000   -0.827294  0.000000    0.000000  0.000000
+ -0.541865  0.000000    0.000000  0.000000   -0.827293  0.000000
+  0.644573  0.000000   -0.827293  0.000000    0.000000  0.000000
            2
   0.000000  0.000000    0.541865  0.000000   -0.644573  0.000000
-  0.541865  0.000000    0.000000  0.000000    0.827294  0.000000
- -0.644573  0.000000    0.827294  0.000000    0.000000  0.000000
+  0.541865  0.000000    0.000000  0.000000    0.827293  0.000000
+ -0.644573  0.000000    0.827293  0.000000    0.000000  0.000000
            1
-  0.000000  0.000000    1.010788  0.000000    0.569270  0.000000
-  1.010788  0.000000    0.000000  0.000000   -0.218513  0.000000
-  0.569270  0.000000   -0.218513  0.000000    0.000000  0.000000
+  0.000000  0.000000    1.010787  0.000000    0.569269  0.000000
+  1.010787  0.000000    0.000000  0.000000   -0.218513  0.000000
+  0.569269  0.000000   -0.218513  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000   -1.010788  0.000000   -0.569270  0.000000
- -1.010788  0.000000    0.000000  0.000000    0.218513  0.000000
- -0.569270  0.000000    0.218513  0.000000    0.000000  0.000000
+  0.000000  0.000000   -1.010787  0.000000   -0.569269  0.000000
+ -1.010787  0.000000    0.000000  0.000000    0.218513  0.000000
+ -0.569269  0.000000    0.218513  0.000000    0.000000  0.000000
            1
-  0.000000  0.000000    0.279639  0.000000   -0.808681  0.000000
-  0.279639  0.000000    0.000000  0.000000   -0.813231  0.000000
- -0.808681  0.000000   -0.813231  0.000000    0.000000  0.000000
+  0.000000  0.000000    0.279639  0.000000   -0.808680  0.000000
+  0.279639  0.000000    0.000000  0.000000   -0.813230  0.000000
+ -0.808680  0.000000   -0.813230  0.000000    0.000000  0.000000
            2
-  0.000000  0.000000   -0.279639  0.000000    0.808681  0.000000
- -0.279639  0.000000    0.000000  0.000000    0.813231  0.000000
-  0.808681  0.000000    0.813231  0.000000    0.000000  0.000000
-     drhod2v       cpu time:     0.61 sec    Total time:       96.88 sec
+  0.000000  0.000000   -0.279639  0.000000    0.808680  0.000000
+ -0.279639  0.000000    0.000000  0.000000    0.813230  0.000000
+  0.808680  0.000000    0.813230  0.000000    0.000000  0.000000
+     drhod2v       cpu time:     0.42 sec    Total time:       98.94 sec
 
      Calculating the matrix elements <psi |d^3v |psi>
 
      calling d3vrho
-     d3vrho        cpu time:     0.33 sec    Total time:       97.21 sec
+     d3vrho        cpu time:     0.26 sec    Total time:       99.20 sec
 
      Calculating the Ewald contribution
 
      calling d3ionq
 
      Alpha used in Ewald sum =   1.0000
-     d3ionq        cpu time:     0.05 sec    Total time:       97.26 sec
+     d3ionq        cpu time:     0.04 sec    Total time:       99.24 sec
 
      Calculating the valence contribution
 
      calling d3_valence
-     d3_valence    cpu time:     0.00 sec    Total time:       97.26 sec
+     d3_valence    cpu time:     0.00 sec    Total time:       99.24 sec
 
      calling drho_cc(+1)
-     drho_cc(+1)   cpu time:     0.00 sec    Total time:       97.26 sec
+     drho_cc(+1)   cpu time:     0.00 sec    Total time:       99.24 sec
 
      Calculating the exchange-correlation contribution
 
      calling d3_exc
-     d3_exc        cpu time:     0.17 sec    Total time:       97.43 sec
+     d3_exc        cpu time:     0.07 sec    Total time:       99.31 sec
 
      Calculating the core-correction contribution
 
      calling d3dyn_cc
-     d3dyn_cc      cpu time:     0.00 sec    Total time:       97.43 sec
+     d3dyn_cc      cpu time:     0.00 sec    Total time:       99.31 sec
 
      Symmetrizing and writing the tensor to disc
 
@@ -215,31 +215,31 @@
      Number of q in the star =    1
      List of q in the star:
           1   0.000000000   0.000000000   0.000000000
-     d3matrix      cpu time:     0.03 sec    Total time:       97.46 sec
+     d3matrix      cpu time:     0.02 sec    Total time:       99.33 sec
  
-     D3TOTEN      :  1m37.46s CPU time
+     D3TOTEN      :  1m39.33s CPU time
 
      d3_setup     :     0.01s CPU
-     phq_init     :     0.12s CPU
+     phq_init     :     0.13s CPU
  
-     solve_linter :    91.19s CPU (       2 calls,  45.595 s avg)
-     ortho        :     0.00s CPU (      60 calls,   0.000 s avg)
-     cgsolve      :    90.49s CPU (      60 calls,   1.508 s avg)
+     solve_linter :    93.42s CPU (       2 calls,  46.710 s avg)
+     ortho        :     0.01s CPU (      60 calls,   0.000 s avg)
+     cgsolve      :    92.68s CPU (      60 calls,   1.545 s avg)
  
-     cgsolve      :    90.49s CPU (      60 calls,   1.508 s avg)
-     ch_psi       :    88.14s CPU (   10280 calls,   0.009 s avg)
+     cgsolve      :    92.68s CPU (      60 calls,   1.545 s avg)
+     ch_psi       :    90.32s CPU (   10287 calls,   0.009 s avg)
  
-     ch_psi       :    88.14s CPU (   10280 calls,   0.009 s avg)
-     h_psiq       :    84.42s CPU (   10280 calls,   0.008 s avg)
-     last         :     3.48s CPU (   10280 calls,   0.000 s avg)
+     ch_psi       :    90.32s CPU (   10287 calls,   0.009 s avg)
+     h_psiq       :    87.43s CPU (   10287 calls,   0.008 s avg)
+     last         :     2.64s CPU (   10287 calls,   0.000 s avg)
  
-     h_psiq       :    84.42s CPU (   10280 calls,   0.008 s avg)
-     firstfft     :    41.60s CPU (   38028 calls,   0.001 s avg)
-     secondfft    :    36.79s CPU (   38028 calls,   0.001 s avg)
+     h_psiq       :    87.43s CPU (   10287 calls,   0.008 s avg)
+     firstfft     :    42.36s CPU (   37990 calls,   0.001 s avg)
+     secondfft    :    38.36s CPU (   37990 calls,   0.001 s avg)
  
       General routines
-     ccalbec      :     1.88s CPU (   20600 calls,   0.000 s avg)
-     cft3         :     0.07s CPU (      34 calls,   0.002 s avg)
-     cft3s        :    79.11s CPU (   79416 calls,   0.001 s avg)
-     davcio       :     0.22s CPU (    5668 calls,   0.000 s avg)
+     ccalbec      :     1.81s CPU (   20614 calls,   0.000 s avg)
+     cft3         :     0.06s CPU (      34 calls,   0.002 s avg)
+     cft3s        :    81.41s CPU (   79340 calls,   0.001 s avg)
+     davcio       :     0.02s CPU (    5668 calls,   0.000 s avg)
  

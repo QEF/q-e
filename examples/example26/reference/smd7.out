@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:21:59  29Jun2006               
+   This run was started on:   5:30:24  17Oct2006               
 
    Serial Build
 
@@ -258,8 +258,8 @@
   Allocation for pointers : successful 
   Allocation ended 
 
-   reading restart file: .//cp_71.save
-   restart file read in    0.024 sec.
+   reading restart file: /scr/giannozz/tmp//cp_71.save
+   restart file read in    0.029 sec.
 
  nprint_nfi=           -2
  nprint_nfi=           -1
@@ -268,48 +268,48 @@
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_72.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_72.save
+   restart file read in    0.029 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_73.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_73.save
+   restart file read in    0.029 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_74.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_74.save
+   restart file read in    0.030 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_75.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_75.save
+   restart file read in    0.029 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_76.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_76.save
+   restart file read in    0.029 sec.
 
 
    formf: eself=   1.49603
    formf:     vps(g=0)=  -0.0017921     rhops(g=0)=  -0.0010000
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
-   reading restart file: .//cp_77.save
-   restart file read in    0.023 sec.
+   reading restart file: /scr/giannozz/tmp//cp_77.save
+   restart file read in    0.029 sec.
 
 
    formf: eself=   1.49603
@@ -544,15 +544,15 @@
   103      -14.68749     1  0.15206E-05   8  0.00009  0.00005  0.17668E-01  0.20987E-01
   104      -14.68852     1  0.17133E-05   8  0.00013  0.00004  0.18455E-01  0.21915E-01
   105      -14.68961     1  0.19890E-05   8  0.00015  0.00002  0.18914E-01  0.22533E-01
-  106      -14.69076     1  0.23751E-05   8  0.00016  0.00001  0.18853E-01  0.22643E-01
+  106      -14.69076     1  0.23752E-05   8  0.00016  0.00001  0.18853E-01  0.22643E-01
   107      -14.69194     1  0.28780E-05   8  0.00016  0.00000  0.18214E-01  0.22168E-01
-  108      -14.69310     1  0.34853E-05   8  0.00016  0.00000  0.17065E-01  0.21173E-01
-  109      -14.69426     1  0.41602E-05   8  0.00015  0.00000  0.15589E-01  0.19806E-01
+  108      -14.69310     1  0.34854E-05   8  0.00016  0.00000  0.17065E-01  0.21173E-01
+  109      -14.69426     1  0.41602E-05   8  0.00015  0.00000  0.15588E-01  0.19806E-01
   110      -14.69538     1  0.48837E-05   8  0.00015  0.00000  0.13988E-01  0.18245E-01
   111      -14.69647     1  0.56240E-05   8  0.00015  0.00001  0.12472E-01  0.16695E-01
   112      -14.69754     1  0.63237E-05   8  0.00016  0.00001  0.11187E-01  0.15296E-01
   113      -14.69856     1  0.69500E-05   8  0.00018  0.00002  0.10184E-01  0.14211E-01
-  114      -14.69953     1  0.75061E-05   8  0.00019  0.00002  0.94495E-02  0.13557E-01
+  114      -14.69953     1  0.75062E-05   8  0.00019  0.00002  0.94495E-02  0.13557E-01
   115      -14.70041     1  0.80005E-05   8  0.00021  0.00002  0.89160E-02  0.13091E-01
   116      -14.70125     1  0.84398E-05   8  0.00022  0.00001  0.85123E-02  0.12784E-01
   117      -14.70202     1  0.88430E-05   8  0.00023  0.00001  0.81520E-02  0.12516E-01
@@ -565,30 +565,30 @@
   124      -14.70565     1  0.87143E-05   8  0.00016  0.00000  0.53216E-02  0.87130E-02
   125      -14.70595     1  0.81486E-05   8  0.00016  0.00000  0.49544E-02  0.80547E-02
   126      -14.70622     1  0.75228E-05   8  0.00015  0.00000  0.45787E-02  0.74534E-02
-  127      -14.70644     1  0.68866E-05   8  0.00014  0.00000  0.42061E-02  0.69170E-02
+  127      -14.70644     1  0.68866E-05   8  0.00014  0.00000  0.42061E-02  0.69169E-02
   128      -14.70664     1  0.62786E-05   8  0.00014  0.00000  0.38480E-02  0.64396E-02
-  129      -14.70680     1  0.57216E-05   8  0.00013  0.00000  0.35107E-02  0.60064E-02
-  130      -14.70694     1  0.52164E-05   8  0.00012  0.00000  0.31951E-02  0.55979E-02
-  131      -14.70706     1  0.47510E-05   1  0.00011  0.00000  0.28996E-02  0.52026E-02
-  132      -14.70715     1  0.43139E-05   1  0.00010  0.00000  0.26213E-02  0.48036E-02
-  133      -14.70722     1  0.38810E-05   1  0.00009  0.00000  0.23596E-02  0.43963E-02
+  129      -14.70680     1  0.57216E-05   8  0.00013  0.00000  0.35107E-02  0.60063E-02
+  130      -14.70694     1  0.52164E-05   8  0.00012  0.00000  0.31950E-02  0.55979E-02
+  131      -14.70706     1  0.47510E-05   1  0.00011  0.00000  0.28995E-02  0.52026E-02
+  132      -14.70715     1  0.43138E-05   1  0.00010  0.00000  0.26213E-02  0.48036E-02
+  133      -14.70722     1  0.38809E-05   1  0.00009  0.00000  0.23596E-02  0.43963E-02
   134      -14.70728     1  0.34339E-05   1  0.00008  0.00000  0.21278E-02  0.39779E-02
   135      -14.70733     1  0.29595E-05   1  0.00007  0.00000  0.19964E-02  0.35603E-02
   136      -14.70736     1  0.24595E-05   1  0.00007  0.00000  0.19638E-02  0.31521E-02
   137      -14.70739     1  0.19418E-05   1  0.00006  0.00000  0.19451E-02  0.27663E-02
   138      -14.70741     1  0.14188E-05   1  0.00005  0.00000  0.19170E-02  0.24047E-02
-  139      -14.70742     1  0.90080E-06   1  0.00005  0.00000  0.18774E-02  0.20752E-02
-  140      -14.70743     1  0.39603E-06   1  0.00004  0.00000  0.18315E-02  0.18765E-02
-  141      -14.70744     1  0.72708E-07   8  0.00004  0.00000  0.17808E-02  0.18531E-02
-  142      -14.70739     1  0.50566E-06   1  0.00003  0.00000  0.17308E-02  0.18315E-02
-  143      -14.70739     1  0.92292E-06   1  0.00003  0.00000  0.16751E-02  0.18116E-02
+  139      -14.70742     1  0.90079E-06   1  0.00005  0.00000  0.18774E-02  0.20752E-02
+  140      -14.70743     1  0.39602E-06   1  0.00004  0.00000  0.18315E-02  0.18765E-02
+  141      -14.70744     1  0.72722E-07   8  0.00004  0.00000  0.17808E-02  0.18531E-02
+  142      -14.70739     1  0.50567E-06   1  0.00003  0.00000  0.17308E-02  0.18315E-02
+  143      -14.70739     1  0.92294E-06   1  0.00003  0.00000  0.16751E-02  0.18116E-02
   144      -14.70739     1  0.13179E-05   1  0.00002  0.00000  0.16181E-02  0.17938E-02
   145      -14.70740     1  0.16974E-05   1  0.00002  0.00000  0.15602E-02  0.17772E-02
   146      -14.70740     1  0.20648E-05   1  0.00002  0.00000  0.15020E-02  0.17629E-02
   147      -14.70741     1  0.24240E-05   1  0.00002  0.00000  0.14446E-02  0.17499E-02
   148      -14.70741     1  0.27716E-05   1  0.00001  0.00000  0.13894E-02  0.17381E-02
   149      -14.70742     1  0.31043E-05   1  0.00001  0.00000  0.13482E-02  0.17273E-02
-  150      -14.70743     1  0.34161E-05   1  0.00001  0.00000  0.13363E-02  0.17173E-02
+  150      -14.70743     1  0.34162E-05   1  0.00001  0.00000  0.13363E-02  0.17173E-02
   151      -14.70743     1  0.37040E-05   1  0.00001  0.00000  0.13264E-02  0.17080E-02
   152      -14.70747     1  0.39649E-05   1  0.00001  0.00000  0.13067E-02  0.16992E-02
   153      -14.70748     1  0.41672E-05   1  0.00000  0.00000  0.12879E-02  0.16910E-02
@@ -605,7 +605,7 @@
   164      -14.70764     1  0.54635E-05   1  0.00000  0.00000  0.10591E-02  0.16221E-02
   165      -14.70766     1  0.55240E-05   1  0.00000  0.00000  0.10415E-02  0.16146E-02
   166      -14.70768     1  0.55757E-05   1  0.00000  0.00000  0.10238E-02  0.16065E-02
-  167      -14.70770     1  0.56197E-05   1  0.00000  0.00000  0.10065E-02  0.15980E-02
+  167      -14.70770     1  0.56198E-05   1  0.00000  0.00000  0.10065E-02  0.15980E-02
   168      -14.70772     1  0.56579E-05   1  0.00000  0.00000  0.98980E-03  0.15895E-02
   169      -14.70775     1  0.56920E-05   1  0.00000  0.00000  0.97404E-03  0.15810E-02
   170      -14.70777     1  0.57239E-05   1  0.00000  0.00000  0.95935E-03  0.15753E-02
@@ -625,7 +625,7 @@
   184      -14.70812     1  0.61914E-05   1  0.00000  0.00000  0.82016E-03  0.15129E-02
   185      -14.70814     1  0.62354E-05   1  0.00000  0.00000  0.81261E-03  0.15087E-02
   186      -14.70816     1  0.62820E-05   1  0.00000  0.00000  0.80568E-03  0.15043E-02
-  187      -14.70819     1  0.63315E-05   1  0.00000  0.00000  0.79940E-03  0.14998E-02
+  187      -14.70819     1  0.63315E-05   1  0.00000  0.00000  0.79939E-03  0.14998E-02
   188      -14.70821     1  0.63842E-05   1  0.00000  0.00000  0.79370E-03  0.14951E-02
   189      -14.70823     1  0.64397E-05   1  0.00000  0.00000  0.78845E-03  0.14903E-02
   190      -14.70825     1  0.64974E-05   1  0.00000  0.00000  0.78353E-03  0.14855E-02
@@ -838,7 +838,7 @@
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.83   -5.38
+  -11.82   -5.38
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
@@ -851,7 +851,7 @@
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-  -11.55   -5.71
+  -11.55   -5.70
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
@@ -885,60 +885,60 @@
  
  
 
-   writing restart file: .//cp_71.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_71.save
+   restart file written in    0.050 sec.
 
 
-   writing restart file: .//cp_72.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_72.save
+   restart file written in    0.050 sec.
 
 
-   writing restart file: .//cp_73.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_73.save
+   restart file written in    0.050 sec.
 
 
-   writing restart file: .//cp_74.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_74.save
+   restart file written in    0.050 sec.
 
 
-   writing restart file: .//cp_75.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_75.save
+   restart file written in    0.049 sec.
 
 
-   writing restart file: .//cp_76.save
-   restart file written in    0.024 sec.
+   writing restart file: /scr/giannozz/tmp//cp_76.save
+   restart file written in    0.050 sec.
 
-     initialize   :     0.33s CPU
+     initialize   :     0.36s CPU
      formf        :     0.06s CPU (       7 calls,   0.009 s avg)
-     rhoofr       :    22.06s CPU (     700 calls,   0.032 s avg)
-     vofrho       :   140.57s CPU (     700 calls,   0.201 s avg)
-     dforce       :     5.59s CPU (    1400 calls,   0.004 s avg)
-     calphi       :     0.02s CPU (     700 calls,   0.000 s avg)
-     ortho        :     0.07s CPU (     700 calls,   0.000 s avg)
-     updatc       :     0.02s CPU (    1400 calls,   0.000 s avg)
-     newd         :     4.39s CPU (     700 calls,   0.006 s avg)
-     calbec       :     0.01s CPU (     714 calls,   0.000 s avg)
-     prefor       :     0.03s CPU (    1407 calls,   0.000 s avg)
-     strucf       :     0.15s CPU (     707 calls,   0.000 s avg)
-     nlfl         :     0.00s CPU (     700 calls,   0.000 s avg)
-     nlfq         :     0.05s CPU (     700 calls,   0.000 s avg)
-     rhov         :     7.48s CPU (     700 calls,   0.011 s avg)
-     nlsm1        :     0.03s CPU (    2114 calls,   0.000 s avg)
-     nlsm2        :     0.04s CPU (     700 calls,   0.000 s avg)
-     fft          :    55.60s CPU (    9800 calls,   0.006 s avg)
-     ffts         :     5.10s CPU (    1400 calls,   0.004 s avg)
-     fftw         :     7.41s CPU (    4200 calls,   0.002 s avg)
-     fftb         :     3.28s CPU (    9800 calls,   0.000 s avg)
-     rsg          :     0.01s CPU (    1400 calls,   0.000 s avg)
+     rhoofr       :    19.63s CPU (     700 calls,   0.028 s avg)
+     vofrho       :   134.95s CPU (     700 calls,   0.193 s avg)
+     dforce       :     4.52s CPU (    1400 calls,   0.003 s avg)
+     calphi       :     0.07s CPU (     700 calls,   0.000 s avg)
+     ortho        :     0.13s CPU (     700 calls,   0.000 s avg)
+     updatc       :     0.01s CPU (    1400 calls,   0.000 s avg)
+     newd         :     4.35s CPU (     700 calls,   0.006 s avg)
+     calbec       :     0.00s CPU (     714 calls,   0.000 s avg)
+     prefor       :     0.06s CPU (    1407 calls,   0.000 s avg)
+     strucf       :     0.24s CPU (     707 calls,   0.000 s avg)
+     nlfl         :     0.03s CPU (     700 calls,   0.000 s avg)
+     nlfq         :     0.10s CPU (     700 calls,   0.000 s avg)
+     rhov         :     7.17s CPU (     700 calls,   0.010 s avg)
+     nlsm1        :     0.06s CPU (    2114 calls,   0.000 s avg)
+     nlsm2        :     0.08s CPU (     700 calls,   0.000 s avg)
+     fft          :    56.36s CPU (    9800 calls,   0.006 s avg)
+     ffts         :     4.61s CPU (    1400 calls,   0.003 s avg)
+     fftw         :     6.47s CPU (    4200 calls,   0.002 s avg)
+     fftb         :     3.65s CPU (    9800 calls,   0.000 s avg)
+     rsg          :     0.00s CPU (    1400 calls,   0.000 s avg)
 
-   writing restart file: .//cp_77.save
-   restart file written in    0.024 sec.
-
- 
-     CP           :  2m54.04s CPU time
+   writing restart file: /scr/giannozz/tmp//cp_77.save
+   restart file written in    0.050 sec.
 
  
-   This run was terminated on:   5:24:53  29Jun2006            
+     CP           :  2m45.10s CPU time
+
+ 
+   This run was terminated on:   5:33:20  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:52:51  29Jun2006               
+   This run was started on:   5: 3: 2  17Oct2006               
 
    Serial Build
 
@@ -126,7 +126,7 @@
    ion dynamics with fricp =  0.0000 and greasp =  1.0000
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
+   Species   1 atoms =    1 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.50 (a.u.)
         0.009900     0.009900     0.000000
    Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.50 (a.u.)
         1.832500    -0.224300    -0.000100
@@ -330,8 +330,11 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+   ortho mmul, time for serial driver =   0.00069
+   ortho mmul, best time for paralle driver =   0.00069 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00004  0.00355
 
-   reading restart file: .//h2o_mol_50.save
+   reading restart file: /scr/giannozz/tmp//h2o_mol_50.save
    restart file read in    0.040 sec.
 
 
@@ -465,7 +468,7 @@
 
   -24.94  -12.64   -9.19   -7.16
  
-   Allocated memory (kb) =      1254
+   Allocated memory (kb) =      1256
  
    CELL_PARAMETERS
    20.00000000    0.00000000    0.00000000
@@ -482,19 +485,19 @@
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
    ATOMIC_POSITIONS
-   O    0.588890E-02  0.588668E-02  0.112719E-04
+   O    0.588890E-02  0.588668E-02  0.112720E-04
    H    0.188057E+01 -0.208105E+00 -0.240785E-02
-   H   -0.208191E+00  0.188052E+01  0.232749E-02
+   H   -0.208191E+00  0.188052E+01  0.232750E-02
  
    ATOMIC_VELOCITIES
-   O    0.128831E-04  0.128776E-04 -0.992422E-07
-   H   -0.118178E-03 -0.875291E-04 -0.620489E-05
-   H   -0.879510E-04 -0.118512E-03  0.779277E-05
+   O    0.128831E-04  0.128776E-04 -0.992421E-07
+   H   -0.118180E-03 -0.875290E-04 -0.620490E-05
+   H   -0.879508E-04 -0.118513E-03  0.779277E-05
  
    Forces acting on atoms (au):
-   O    0.840779E-02  0.840451E-02  0.583748E-03
-   H   -0.975296E-02  0.134649E-02 -0.304510E-03
-   H    0.134516E-02 -0.975100E-02 -0.279238E-03
+   O    0.840778E-02  0.840449E-02  0.583748E-03
+   H   -0.975294E-02  0.134649E-02 -0.304510E-03
+   H    0.134516E-02 -0.975098E-02 -0.279238E-03
  
 
 
@@ -506,15 +509,15 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00001    0.0    3.1   -17.20496   -17.20522   -17.20518   -17.20517  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: .//h2o_mol_51.save
-   restart file written in    0.111 sec.
+   writing restart file: /scr/giannozz/tmp//h2o_mol_51.save
+   restart file written in    0.184 sec.
 
   101  0.00001    0.0    4.2   -17.20498   -17.20524   -17.20518   -17.20517  0.0000  0.0000  0.0000  0.0000
   102  0.00001    0.0    5.5   -17.20501   -17.20526   -17.20519   -17.20517  0.0000  0.0000  0.0000  0.0000
   103  0.00001    0.0    7.0   -17.20503   -17.20529   -17.20519   -17.20518  0.0000  0.0000  0.0000  0.0000
-  104  0.00002    0.0    8.6   -17.20506   -17.20532   -17.20520   -17.20518  0.0000  0.0000  0.0000  0.0000
+  104  0.00002    0.0    8.5   -17.20506   -17.20532   -17.20520   -17.20518  0.0000  0.0000  0.0000  0.0000
   105  0.00002    0.0   10.3   -17.20676   -17.20702   -17.20687   -17.20685  0.0000  0.0000  0.0000  0.0000
-  106  0.00002    0.0   12.3   -17.20679   -17.20705   -17.20688   -17.20686  0.0000  0.0000  0.0000  0.0000
+  106  0.00002    0.0   12.2   -17.20679   -17.20705   -17.20688   -17.20686  0.0000  0.0000  0.0000  0.0000
   107  0.00003    0.0   14.2   -17.20683   -17.20709   -17.20689   -17.20686  0.0000  0.0000  0.0000  0.0000
   108  0.00003    0.0   15.9   -17.20686   -17.20712   -17.20689   -17.20686  0.0000  0.0000  0.0000  0.0000
   109  0.00004    0.0   17.5   -17.20689   -17.20715   -17.20690   -17.20686  0.0000  0.0000  0.0000  0.0000
@@ -632,7 +635,7 @@
 
   -25.16  -12.81   -9.23   -7.19
  
-   Allocated memory (kb) =      1302
+   Allocated memory (kb) =      1256
  
    CELL_PARAMETERS
    20.00000000    0.00000000    0.00000000
@@ -649,19 +652,19 @@
         0.00000000         0.00000000         0.00000000
         0.00000000         0.00000000         0.00000000
    ATOMIC_POSITIONS
-   O    0.759993E-02  0.757183E-02  0.244269E-04
+   O    0.759992E-02  0.757182E-02  0.244268E-04
    H    0.184236E+01 -0.196883E+00 -0.802698E-02
    H   -0.197361E+00  0.184233E+01  0.773615E-02
  
    ATOMIC_VELOCITIES
-   O   -0.197575E-04 -0.198391E-04  0.325297E-06
-   H    0.267562E-03  0.494578E-04 -0.145748E-04
-   H    0.485578E-04  0.267968E-03  0.937002E-05
+   O   -0.197576E-04 -0.198392E-04  0.325297E-06
+   H    0.267564E-03  0.494571E-04 -0.145748E-04
+   H    0.485572E-04  0.267970E-03  0.937003E-05
  
    Forces acting on atoms (au):
-   O   -0.522920E-02 -0.518613E-02  0.217276E-03
-   H    0.825240E-02 -0.302470E-02 -0.152924E-03
-   H   -0.302319E-02  0.821083E-02 -0.643524E-04
+   O   -0.522914E-02 -0.518607E-02  0.217276E-03
+   H    0.825232E-02 -0.302469E-02 -0.152924E-03
+   H   -0.302318E-02  0.821076E-02 -0.643528E-04
  
 
 
@@ -673,8 +676,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   200  0.00003    0.0   10.3   -17.20679   -17.20705   -17.20690   -17.20687  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: .//h2o_mol_51.save
-   restart file written in    0.046 sec.
+   writing restart file: /scr/giannozz/tmp//h2o_mol_51.save
+   restart file written in    0.120 sec.
 
 
 
@@ -684,42 +687,42 @@
    ekin          :        7.82375       7.82375 (AU)
    epot          :      -29.54086     -29.54086 (AU)
    totel energy  :      -17.20648     -17.20648 (AU)
-   temperature   :       10.59700      10.59700 (K )
+   temperature   :       10.59630      10.59630 (K )
    enthalpy      :      -17.20667     -17.20667 (AU)
    econs         :      -17.20652     -17.20652 (AU)
    pressure      :        0.00000       0.00000 (Gpa)
    volume        :     8000.00000    8000.00000 (AU)
 
 
-     initialize   :     2.74s CPU
-     total_time   :   421.38s CPU (     200 calls,   2.107 s avg)
-     formf        :     0.37s CPU
-     rhoofr       :    93.64s CPU (     200 calls,   0.468 s avg)
-     vofrho       :   243.33s CPU (     200 calls,   1.217 s avg)
-     calphi       :     1.06s CPU (     200 calls,   0.005 s avg)
-     ortho        :     2.23s CPU (     200 calls,   0.011 s avg)
-     updatc       :     0.28s CPU (     200 calls,   0.001 s avg)
-     newd         :     1.53s CPU (     200 calls,   0.008 s avg)
-     calbec       :     0.03s CPU (     201 calls,   0.000 s avg)
-     prefor       :     0.87s CPU (     401 calls,   0.002 s avg)
-     strucf       :     1.27s CPU (     201 calls,   0.006 s avg)
-     nlfl         :     0.00s CPU (     200 calls,   0.000 s avg)
-     nlfq         :     2.76s CPU (     200 calls,   0.014 s avg)
-     rhov         :    25.72s CPU (     200 calls,   0.129 s avg)
-     nlsm1        :     1.75s CPU (     601 calls,   0.003 s avg)
-     nlsm2        :     2.76s CPU (     200 calls,   0.014 s avg)
-     fft          :   151.26s CPU (    1800 calls,   0.084 s avg)
-     ffts         :    36.08s CPU (     400 calls,   0.090 s avg)
-     fftw         :    51.50s CPU (    1200 calls,   0.043 s avg)
-     fftb         :     3.14s CPU (   31914 calls,   0.000 s avg)
+     initialize   :     2.57s CPU
+     total_time   :   359.50s CPU (     200 calls,   1.797 s avg)
+     formf        :     0.17s CPU
+     rhoofr       :    73.27s CPU (     200 calls,   0.366 s avg)
+     vofrho       :   209.72s CPU (     200 calls,   1.049 s avg)
+     calphi       :     1.00s CPU (     200 calls,   0.005 s avg)
+     ortho        :     2.01s CPU (     200 calls,   0.010 s avg)
+     updatc       :     0.18s CPU (     200 calls,   0.001 s avg)
+     newd         :     1.11s CPU (     200 calls,   0.006 s avg)
+     calbec       :     0.01s CPU (     201 calls,   0.000 s avg)
+     prefor       :     0.93s CPU (     401 calls,   0.002 s avg)
+     strucf       :     1.14s CPU (     201 calls,   0.006 s avg)
+     nlfl         :     0.01s CPU (     200 calls,   0.000 s avg)
+     nlfq         :     2.63s CPU (     200 calls,   0.013 s avg)
+     rhov         :    15.77s CPU (     200 calls,   0.079 s avg)
+     nlsm1        :     1.42s CPU (     601 calls,   0.002 s avg)
+     nlsm2        :     2.63s CPU (     200 calls,   0.013 s avg)
+     fft          :   123.49s CPU (    1800 calls,   0.069 s avg)
+     ffts         :    28.18s CPU (     400 calls,   0.070 s avg)
+     fftw         :    48.65s CPU (    1200 calls,   0.041 s avg)
+     fftb         :     2.77s CPU (   31914 calls,   0.000 s avg)
      rsg          :     0.01s CPU (     200 calls,   0.000 s avg)
  
  
  
-     CP           :  7m10.53s CPU time
+     CP           :  6m 7.88s CPU time
 
  
-   This run was terminated on:   5: 0: 1  29Jun2006            
+   This run was terminated on:   5: 9:33  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

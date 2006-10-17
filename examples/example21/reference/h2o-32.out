@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:53:32  29Jun2006               
+   This run was started on:   4: 2:48  17Oct2006               
 
    Serial Build
 
@@ -39,7 +39,7 @@
 
    Atomic wavefunction Grid : Channels =  2, Mesh =   631
                               dx   = 0.01734863831720
-   Channels occupation number :     0.0000    0.0000
+   Channels occupation number :     2.0000    4.0000
    point      radius        wavefunction
        1  0.781250E-03  0.255544E-03  0.103901E-05
      157  0.116993E-01  0.382712E-02  0.232913E-03
@@ -66,7 +66,7 @@
 
    Atomic wavefunction Grid : Channels =  1, Mesh =   809
                               dx   = 0.02500000000000
-   Channels occupation number :     0.0000
+   Channels occupation number :     1.0000
    point      radius        wavefunction
        1  0.112299E-02  0.000000E+00
      202  0.170886E+00  0.000000E+00
@@ -149,7 +149,7 @@
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =   32 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
+   Species   1 atoms =   32 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
         6.232830     7.195170     3.174230
        12.460065     1.439780     1.857540
         9.127310     5.132480    18.023360
@@ -469,6 +469,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+   ortho mmul, time for serial driver =   0.00265
+   ortho mmul, best time for paralle driver =   0.00265 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.02870  0.02030
 
 
    Wave Initialization: random initial wave-functions
@@ -511,7 +514,7 @@
 
  * Physical Quantities at step:    10
 
-   Simulated time t = 0.12094500D-02 ps
+   Simulated time t = 0.12094422D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =  256.000000   in r-space = 256.000000
@@ -548,9 +551,9 @@
    20.56   20.60   20.96   21.61   21.82   22.66   23.00   23.31   24.23   24.51
    25.20   26.17   26.31   26.84   27.31   27.62   27.71   28.38   29.41   29.77
    30.02   30.40   31.02   31.41   32.39   32.51   33.15   33.66   34.10   34.75
-   34.95   35.36   35.58   36.45   37.09   37.41   38.27   38.98
+   34.95   35.36   35.58   36.45   37.08   37.41   38.27   38.98
  
-   Allocated memory (kb) =      1874
+   Allocated memory (kb) =      1864
  
    CELL_PARAMETERS
    18.65000000    0.00000000    0.00000000
@@ -563,9 +566,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-      501.74972894        -0.59898792        -9.87582428
-       -0.59898792       492.05018594         4.68538825
-       -9.87582428         4.68538825       497.41604964
+      501.74993337        -0.59898817        -9.87582831
+       -0.59898817       492.05038642         4.68539016
+       -9.87582831         4.68539016       497.41625231
    ATOMIC_POSITIONS
    O    0.623283E+01  0.719517E+01  0.317423E+01
    O    0.124601E+02  0.143978E+01  0.185754E+01
@@ -885,31 +888,33 @@
    temperature   :        0.00000       0.00000 (K )
    enthalpy      :      468.21405     468.21405 (AU)
    econs         :      468.21405     468.21405 (AU)
-   pressure      :     5457.46747    5457.46747 (Gpa)
+   pressure      :     5457.46969    5457.46969 (Gpa)
    volume        :     6486.88962    6486.88962 (AU)
 
 
-     initialize   :    72.14s CPU
-     main_loop    :   524.13s CPU (      10 calls,  52.413 s avg)
-     formf        :     1.37s CPU
-     calphi       :     3.32s CPU (      11 calls,   0.302 s avg)
-     ortho        :    31.16s CPU (      11 calls,   2.833 s avg)
-     updatc       :     6.87s CPU (      11 calls,   0.625 s avg)
-     gram         :    13.43s CPU
-     prefor       :     0.04s CPU
-     strucf       :     1.16s CPU
-     nlsm1        :     2.48s CPU (      11 calls,   0.225 s avg)
-     nlsm2        :     1.28s CPU (       2 calls,   0.640 s avg)
-     fft          :    25.59s CPU (      88 calls,   0.291 s avg)
-     fftw         :   390.56s CPU (    2242 calls,   0.174 s avg)
-     rsg          :     0.23s CPU (      11 calls,   0.021 s avg)
+     initialize   :    65.65s CPU
+     main_loop    :   439.90s CPU (      10 calls,  43.990 s avg)
+     formf        :     1.48s CPU
+     rhoofr       :   142.50s CPU (      11 calls,  12.955 s avg)
+     vofrho       :    44.19s CPU (      11 calls,   4.017 s avg)
+     calphi       :     1.46s CPU (      11 calls,   0.133 s avg)
+     ortho        :    29.92s CPU (      11 calls,   2.720 s avg)
+     updatc       :     6.26s CPU (      11 calls,   0.569 s avg)
+     gram         :    13.21s CPU
+     prefor       :     0.03s CPU
+     strucf       :     1.26s CPU
+     nlsm1        :     2.66s CPU (      11 calls,   0.242 s avg)
+     nlsm2        :     1.64s CPU (       2 calls,   0.820 s avg)
+     fft          :    24.81s CPU (      88 calls,   0.282 s avg)
+     fftw         :   345.29s CPU (    2242 calls,   0.154 s avg)
+     rsg          :     0.16s CPU (      11 calls,   0.015 s avg)
  
  
  
-     CP           : 10m47.18s CPU time
+     CP           :  9m12.27s CPU time
 
  
-   This run was terminated on:   4: 4:21  29Jun2006            
+   This run was terminated on:   4:12:36  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

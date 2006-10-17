@@ -1,6 +1,6 @@
 
-     Program PHONON    v.3.1.1  starts ...
-     Today is  6Jul2006 at  7: 0:31 
+     Program PHONON    v.3.2cvs starts ...
+     Today is 17Oct2006 at  7:12:52 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -59,166 +59,187 @@
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
 
      pseudo 1 is C          zval =  4.0   lmax= 0   lloc= 0
-     (in numerical form: 269 grid points, xmin =  0.00, dx = 0.0000)
+     (in numerical form:  269 grid points, xmin =  0.00, dx = 0.0000)
 
      pseudo 2 is H          zval =  1.0   lmax=-1   lloc= 0
-     (in numerical form: 131 grid points, xmin =  0.00, dx = 0.0000)
+     (in numerical form:  131 grid points, xmin =  0.00, dx = 0.0000)
 
 
      Atomic displacements:
-     There are   6 irreducible representations
+     There are  15 irreducible representations
 
-     Representation     1      3 modes - To be done
+     Representation     1      1 modes - To be done
 
      Representation     2      1 modes - To be done
 
-     Representation     3      3 modes - To be done
+     Representation     3      1 modes - To be done
 
-     Representation     4      3 modes - To be done
+     Representation     4      1 modes - To be done
 
-     Representation     5      3 modes - To be done
+     Representation     5      1 modes - To be done
 
-     Representation     6      2 modes - To be done
-     PHONON       :     1.16s CPU time
+     Representation     6      1 modes - To be done
+
+     Representation     7      1 modes - Calculated using symmetry
+
+     Representation     8      1 modes - Calculated using symmetry
+
+     Representation     9      1 modes - Calculated using symmetry
+
+     Representation    10      1 modes - Calculated using symmetry
+
+     Representation    11      1 modes - Calculated using symmetry
+
+     Representation    12      1 modes - Calculated using symmetry
+
+     Representation    13      1 modes - Calculated using symmetry
+
+     Representation    14      1 modes - Calculated using symmetry
+
+     Representation    15      1 modes - Calculated using symmetry
+     PHONON       :     1.13s CPU time
 
 
      Frequency Dependent Polarizability Calculation
 
 
-      iter #   1 total cpu time :    17.7 secs   av.it.:   5.0
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.501E-08
+      iter #   1 total cpu time :    18.4 secs   av.it.:   5.0
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.503E-08
 
-      iter #   2 total cpu time :    40.8 secs   av.it.:  12.0
-      thresh= 0.708E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.443E-10
+      iter #   2 total cpu time :    40.9 secs   av.it.:  12.0
+      thresh= 0.709E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.433E-10
 
-      iter #   3 total cpu time :    64.0 secs   av.it.:  12.0
-      thresh= 0.666E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.155E-11
+      iter #   3 total cpu time :    63.2 secs   av.it.:  12.0
+      thresh= 0.658E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.158E-11
 
-      iter #   4 total cpu time :    86.1 secs   av.it.:  12.0
-      thresh= 0.124E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.527E-14
+      iter #   4 total cpu time :    85.0 secs   av.it.:  12.0
+      thresh= 0.126E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.561E-14
 
           Polarizability in cartesian axis at frequency  1.50
 
-          (       6.897120710       0.000000000       0.000000000 )
-          (       0.000000000       6.897120710       0.000000000 )
-          (       0.000000000       0.000000000       6.897120710 )
+          (       6.897042631       0.000000000       0.000000000 )
+          (       0.000000000       6.897042631       0.000000000 )
+          (       0.000000000       0.000000000       6.897042631 )
 
-      iter #   1 total cpu time :    99.0 secs   av.it.:   7.0
+      iter #   1 total cpu time :    97.4 secs   av.it.:   7.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.375E-07
 
-      iter #   2 total cpu time :   125.2 secs   av.it.:  14.0
-      thresh= 0.194E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.378E-08
+      iter #   2 total cpu time :   123.2 secs   av.it.:  14.0
+      thresh= 0.194E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.372E-08
 
-      iter #   3 total cpu time :   151.9 secs   av.it.:  14.0
-      thresh= 0.615E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.269E-09
+      iter #   3 total cpu time :   148.9 secs   av.it.:  14.0
+      thresh= 0.610E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.261E-09
 
-      iter #   4 total cpu time :   175.4 secs   av.it.:  12.7
-      thresh= 0.164E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.374E-12
+      iter #   4 total cpu time :   171.5 secs   av.it.:  12.0
+      thresh= 0.162E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.403E-12
 
-      iter #   5 total cpu time :   206.9 secs   av.it.:  17.0
-      thresh= 0.611E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.596E-14
+      iter #   5 total cpu time :   201.4 secs   av.it.:  17.0
+      thresh= 0.635E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.509E-14
 
           Polarizability in cartesian axis at frequency  0.00
 
-          (      20.676105940       0.000000000       0.000000000 )
-          (       0.000000000      20.676105940       0.000000000 )
-          (       0.000000000       0.000000000      20.676105940 )
+          (      20.676171854       0.000000000       0.000000000 )
+          (       0.000000000      20.676171854       0.000000000 )
+          (       0.000000000       0.000000000      20.676171854 )
 
      End of Frequency Dependent Polarizability Calculation
 
      Electric Fields Calculation
 
-      iter #   1 total cpu time :   210.8 secs   av.it.:   6.0
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.374E-07
+      iter #   1 total cpu time :   204.2 secs   av.it.:   6.0
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.375E-07
 
-      iter #   2 total cpu time :   216.4 secs   av.it.:  10.7
-      thresh= 0.193E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.349E-08
+      iter #   2 total cpu time :   209.2 secs   av.it.:  11.0
+      thresh= 0.194E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.353E-08
 
-      iter #   3 total cpu time :   222.1 secs   av.it.:  10.0
-      thresh= 0.591E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.238E-09
+      iter #   3 total cpu time :   214.1 secs   av.it.:  10.0
+      thresh= 0.594E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.240E-09
 
-      iter #   4 total cpu time :   227.6 secs   av.it.:  10.0
-      thresh= 0.154E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.523E-12
+      iter #   4 total cpu time :   218.8 secs   av.it.:  10.0
+      thresh= 0.155E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.510E-12
 
-      iter #   5 total cpu time :   233.4 secs   av.it.:  11.0
-      thresh= 0.723E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.257E-14
+      iter #   5 total cpu time :   223.9 secs   av.it.:  11.0
+      thresh= 0.714E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.128E-13
+
+      iter #   6 total cpu time :   228.9 secs   av.it.:  10.7
+      thresh= 0.113E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.229E-14
 
      End of electric fields calculation
 
           Dielectric constant in cartesian axis 
 
-          (       1.250763458       0.000000000       0.000000000 )
-          (       0.000000000       1.250763458       0.000000000 )
-          (       0.000000000       0.000000000       1.250763458 )
+          (       1.250774121       0.000000000       0.000000000 )
+          (       0.000000000       1.250774121       0.000000000 )
+          (       0.000000000       0.000000000       1.250774121 )
 
           Effective charges E-U in cartesian axis 
 
            atom      1
-          (       -0.13189        0.00000        0.00000 )
-          (        0.00000       -0.13189        0.00000 )
-          (        0.00000        0.00000       -0.13189 )
+          (       -0.13200        0.00000        0.00000 )
+          (        0.00000       -0.13200        0.00000 )
+          (        0.00000        0.00000       -0.13200 )
            atom      2
-          (       -0.01635       -0.08472       -0.08472 )
-          (       -0.08472       -0.01635       -0.08472 )
-          (       -0.08472       -0.08472       -0.01635 )
+          (       -0.01647       -0.08472       -0.08472 )
+          (       -0.08472       -0.01647       -0.08472 )
+          (       -0.08472       -0.08472       -0.01647 )
            atom      3
-          (       -0.01635        0.08472        0.08472 )
-          (        0.08472       -0.01635       -0.08472 )
-          (        0.08472       -0.08472       -0.01635 )
+          (       -0.01647        0.08472        0.08472 )
+          (        0.08472       -0.01647       -0.08472 )
+          (        0.08472       -0.08472       -0.01647 )
            atom      4
-          (       -0.01635       -0.08472        0.08472 )
-          (       -0.08472       -0.01635        0.08472 )
-          (        0.08472        0.08472       -0.01635 )
+          (       -0.01647       -0.08472        0.08472 )
+          (       -0.08472       -0.01647        0.08472 )
+          (        0.08472        0.08472       -0.01647 )
            atom      5
-          (       -0.01635        0.08472       -0.08472 )
-          (        0.08472       -0.01635        0.08472 )
-          (       -0.08472        0.08472       -0.01635 )
+          (       -0.01647        0.08472       -0.08472 )
+          (        0.08472       -0.01647        0.08472 )
+          (       -0.08472        0.08472       -0.01647 )
  
-     PHONON       :  3m55.65s CPU time
+     PHONON       :  3m51.15s CPU time
 
      INITIALIZATION: 
-     phq_setup    :     0.03s CPU
-     phq_init     :     0.72s CPU
+     phq_setup    :     0.02s CPU
+     phq_init     :     0.71s CPU
  
-     phq_init     :     0.72s CPU
-     init_vloc    :     0.02s CPU (       2 calls,   0.010 s avg)
+     phq_init     :     0.71s CPU
+     init_vloc    :     0.01s CPU (       2 calls,   0.005 s avg)
      init_us_1    :     0.01s CPU
  
      DIELECTRIC CONSTANT AND EFFECTIVE CHARGES:
-     solve_e      :   232.23s CPU (       3 calls,  77.410 s avg)
+     solve_e      :   227.79s CPU (       3 calls,  75.930 s avg)
      dielec       :     0.00s CPU
-     zstar_eu     :     2.25s CPU
+     zstar_eu     :     2.22s CPU
  
  
  
  
      dvqpsi_us    :     2.20s CPU (      15 calls,   0.147 s avg)
-     cgsolve      :    23.03s CPU (      18 calls,   1.279 s avg)
-     incdrhoscf   :     4.82s CPU (      42 calls,   0.115 s avg)
-     dv_of_drho   :     2.93s CPU (      42 calls,   0.070 s avg)
-     mix_pot      :     2.00s CPU (      14 calls,   0.143 s avg)
+     cgsolve      :    29.75s CPU (      21 calls,   1.417 s avg)
+     incdrhoscf   :     4.89s CPU (      45 calls,   0.109 s avg)
+     dv_of_drho   :     3.14s CPU (      45 calls,   0.070 s avg)
+     mix_pot      :     0.86s CPU (      15 calls,   0.057 s avg)
  
      dvqpsi_us    :     2.20s CPU (      15 calls,   0.147 s avg)
      dvqpsi_us_on :     0.01s CPU (      15 calls,   0.001 s avg)
  
-     cgsolve      :    23.03s CPU (      18 calls,   1.279 s avg)
-     ch_psi       :   201.57s CPU (    6399 calls,   0.032 s avg)
+     cgsolve      :    29.75s CPU (      21 calls,   1.417 s avg)
+     ch_psi       :   202.86s CPU (    6365 calls,   0.032 s avg)
  
-     ch_psi       :   201.57s CPU (    6399 calls,   0.032 s avg)
-     h_psiq       :   195.79s CPU (    6399 calls,   0.031 s avg)
-     last         :     5.08s CPU (    6399 calls,   0.001 s avg)
+     ch_psi       :   202.86s CPU (    6365 calls,   0.032 s avg)
+     h_psiq       :   197.56s CPU (    6365 calls,   0.031 s avg)
+     last         :     4.86s CPU (    6365 calls,   0.001 s avg)
  
-     h_psiq       :   195.79s CPU (    6399 calls,   0.031 s avg)
-     firstfft     :    89.81s CPU (    7025 calls,   0.013 s avg)
-     secondfft    :    88.36s CPU (    7025 calls,   0.013 s avg)
-     add_vuspsi   :     0.87s CPU (    6399 calls,   0.000 s avg)
+     h_psiq       :   197.56s CPU (    6365 calls,   0.031 s avg)
+     firstfft     :    91.05s CPU (    7086 calls,   0.013 s avg)
+     secondfft    :    89.12s CPU (    7086 calls,   0.013 s avg)
+     add_vuspsi   :     0.86s CPU (    6365 calls,   0.000 s avg)
  
-     incdrhoscf   :     4.82s CPU (      42 calls,   0.115 s avg)
+     incdrhoscf   :     4.89s CPU (      45 calls,   0.109 s avg)
  
  
       General routines
-     ccalbec      :     0.96s CPU (   12850 calls,   0.000 s avg)
-     cft3         :     2.44s CPU (     129 calls,   0.019 s avg)
-     cft3s        :   171.99s CPU (   14785 calls,   0.012 s avg)
-     davcio       :     1.33s CPU (     267 calls,   0.005 s avg)
+     ccalbec      :     0.99s CPU (   12785 calls,   0.000 s avg)
+     cft3         :     2.69s CPU (     138 calls,   0.019 s avg)
+     cft3s        :   176.13s CPU (   14955 calls,   0.012 s avg)
+     davcio       :     0.01s CPU (     288 calls,   0.000 s avg)
  

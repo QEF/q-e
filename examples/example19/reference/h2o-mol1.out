@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:46:11   6Jul2006               
+   This run was started on:   3:55:48  17Oct2006               
 
    Serial Build
 
@@ -39,7 +39,7 @@
 
    Atomic wavefunction Grid : Channels =  2, Mesh =   631
                               dx   = 0.01734863831720
-   Channels occupation number :     0.0000    0.0000
+   Channels occupation number :     2.0000    4.0000
    point      radius        wavefunction
        1  0.781250E-03  0.255544E-03  0.103901E-05
      157  0.116993E-01  0.382712E-02  0.232913E-03
@@ -66,7 +66,7 @@
 
    Atomic wavefunction Grid : Channels =  1, Mesh =   809
                               dx   = 0.02500000000000
-   Channels occupation number :     0.0000
+   Channels occupation number :     1.0000
    point      radius        wavefunction
        1  0.112299E-02  0.000000E+00
      202  0.170886E+00  0.000000E+00
@@ -135,7 +135,7 @@
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =    1 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
+   Species   1 atoms =    1 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   0.80 (a.u.)
         0.009900     0.009900     0.000000
    Species   2 atoms =    2 mass =      1822.89 (a.u.),         1.00 (amu) rcmax =   0.80 (a.u.)
         1.832500    -0.224300    -0.000100
@@ -275,6 +275,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+   ortho mmul, time for serial driver =   0.00074
+   ortho mmul, best time for paralle driver =   0.00074 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00005  0.00354
 
 
    Wave Initialization: random initial wave-functions
@@ -305,7 +308,7 @@
 
  * Physical Quantities at step:    10
 
-   Simulated time t = 0.12094500D-02 ps
+   Simulated time t = 0.12094422D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -332,7 +335,7 @@
 
   -33.18  -21.31   19.19   22.24
  
-   Allocated memory (kb) =      1914
+   Allocated memory (kb) =      1912
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -345,9 +348,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       53.72428967       -15.01280461         4.42132058
-      -15.01280461        96.03055353        -0.99595806
-        4.42132058        -0.99595806        71.06005707
+       53.72431156       -15.01281072         4.42132238
+      -15.01281072        96.03059266        -0.99595847
+        4.42132238        -0.99595847        71.06008602
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -384,7 +387,7 @@
 
  * Physical Quantities at step:    20
 
-   Simulated time t = 0.24189000D-02 ps
+   Simulated time t = 0.24188843D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -411,7 +414,7 @@
 
   -31.50  -15.99   -9.01   -4.37
  
-   Allocated memory (kb) =      1962
+   Allocated memory (kb) =      1912
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -424,9 +427,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        5.97517058        -6.15650577         0.47659264
-       -6.15650577        12.99356899        -0.31820064
-        0.47659264        -0.31820064         0.31769907
+        5.97517302        -6.15650828         0.47659284
+       -6.15650828        12.99357428        -0.31820076
+        0.47659284        -0.31820076         0.31769920
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -463,7 +466,7 @@
 
  * Physical Quantities at step:    30
 
-   Simulated time t = 0.36283500D-02 ps
+   Simulated time t = 0.36283265D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -490,7 +493,7 @@
 
   -27.85  -14.23   -9.45   -6.64
  
-   Allocated memory (kb) =      1962
+   Allocated memory (kb) =      1912
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -503,9 +506,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        2.47589122        -2.20976775         0.30205401
-       -2.20976775         1.09170681        -0.52115441
-        0.30205401        -0.52115441        -5.63496598
+        2.47589223        -2.20976865         0.30205414
+       -2.20976865         1.09170726        -0.52115462
+        0.30205414        -0.52115462        -5.63496828
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -542,7 +545,7 @@
 
  * Physical Quantities at step:    40
 
-   Simulated time t = 0.48378000D-02 ps
+   Simulated time t = 0.48377686D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -567,9 +570,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -26.38  -13.59   -9.22   -7.10
+  -26.37  -13.59   -9.22   -7.10
  
-   Allocated memory (kb) =      1962
+   Allocated memory (kb) =      1912
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -582,9 +585,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        0.39897477        -0.80909581         0.22275552
-       -0.80909581        -1.64210798        -0.47602549
-        0.22275552        -0.47602549        -5.72749607
+        0.39897493        -0.80909614         0.22275561
+       -0.80909614        -1.64210865        -0.47602568
+        0.22275561        -0.47602568        -5.72749840
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -621,7 +624,7 @@
 
  * Physical Quantities at step:    50
 
-   Simulated time t = 0.60472500D-02 ps
+   Simulated time t = 0.60472108D-02 ps
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
@@ -648,7 +651,7 @@
 
   -25.68  -13.23   -9.10   -7.17
  
-   Allocated memory (kb) =      1962
+   Allocated memory (kb) =      1912
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -661,9 +664,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -0.77999699        -0.26869122         0.12274619
-       -0.26869122        -2.25304965        -0.36805517
-        0.12274619        -0.36805517        -4.86983456
+       -0.77999730        -0.26869133         0.12274624
+       -0.26869133        -2.25305057        -0.36805532
+        0.12274624        -0.36805532        -4.86983655
    ATOMIC_POSITIONS
    O    0.990000E-02  0.990000E-02  0.000000E+00
    H    0.183250E+01 -0.224300E+00 -0.100000E-03
@@ -689,8 +692,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
    50  0.00357    0.0    0.0   -17.08765   -17.08765   -17.08765   -17.08408  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: .//h2o_mol_51.save
-   restart file written in    0.092 sec.
+   writing restart file: /scr/giannozz/tmp//h2o_mol_51.save
+   restart file written in    0.181 sec.
 
 
 
@@ -703,31 +706,33 @@
    temperature   :        0.00000       0.00000 (K )
    enthalpy      :       -9.51218      -9.51218 (AU)
    econs         :       -9.51218      -9.51218 (AU)
-   pressure      :      156.36249     156.36249 (Gpa)
+   pressure      :      156.36255     156.36255 (Gpa)
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.56s CPU
-     main_loop    :    78.90s CPU (      50 calls,   1.578 s avg)
-     formf        :     1.42s CPU
-     calphi       :     0.09s CPU (      51 calls,   0.002 s avg)
-     ortho        :     0.38s CPU (      51 calls,   0.007 s avg)
-     updatc       :     0.07s CPU (      51 calls,   0.001 s avg)
+     initialize   :     4.64s CPU
+     main_loop    :    74.57s CPU (      50 calls,   1.491 s avg)
+     formf        :     1.50s CPU
+     rhoofr       :     6.35s CPU (      51 calls,   0.125 s avg)
+     vofrho       :    58.68s CPU (      51 calls,   1.151 s avg)
+     calphi       :     0.07s CPU (      51 calls,   0.001 s avg)
+     ortho        :     0.30s CPU (      51 calls,   0.006 s avg)
+     updatc       :     0.09s CPU (      51 calls,   0.002 s avg)
      gram         :     0.00s CPU
      prefor       :     0.00s CPU
      strucf       :     0.01s CPU
-     nlsm1        :     0.04s CPU (      51 calls,   0.001 s avg)
+     nlsm1        :     0.05s CPU (      51 calls,   0.001 s avg)
      nlsm2        :     0.01s CPU (       6 calls,   0.002 s avg)
-     fft          :    32.44s CPU (     408 calls,   0.080 s avg)
-     fftw         :    14.22s CPU (     306 calls,   0.046 s avg)
+     fft          :    35.35s CPU (     408 calls,   0.087 s avg)
+     fftw         :    14.06s CPU (     306 calls,   0.046 s avg)
      rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m23.72s CPU time
+     CP           :  1m19.47s CPU time
 
  
-   This run was terminated on:   3:47:35   6Jul2006            
+   This run was terminated on:   3:57:15  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

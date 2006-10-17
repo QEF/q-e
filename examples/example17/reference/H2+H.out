@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.1.1  starts ...
-     Today is 29Jun2006 at  3:36:51 
+     Program PWSCF     v.3.2cvs starts ...
+     Today is 17Oct2006 at  3:45:59 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -37,25 +37,25 @@
      ------------------------------ iteration   1 ------------------------------
 
      tcpu =      0.0    self-consistency for image   1
-     tcpu =      1.5    self-consistency for image   2
-     tcpu =      3.1    self-consistency for image   3
-     tcpu =      4.9    self-consistency for image   4
-     tcpu =      6.6    self-consistency for image   5
-     tcpu =      8.4    self-consistency for image   6
-     tcpu =     10.0    self-consistency for image   7
+     tcpu =      1.4    self-consistency for image   2
+     tcpu =      2.8    self-consistency for image   3
+     tcpu =      4.4    self-consistency for image   4
+     tcpu =      5.9    self-consistency for image   5
+     tcpu =      7.5    self-consistency for image   6
+     tcpu =      8.9    self-consistency for image   7
 
-     activation energy (->) =   1.705781 eV
-     activation energy (<-) =   1.705781 eV
+     activation energy (->) =   1.705764 eV
+     activation energy (<-) =   1.705764 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.0015164            2.084107            F
-         3        -48.1941196            2.303301            F
-         4        -47.7962789            1.708793            F
-         5        -48.1941196            2.303308            F
-         6        -49.0015164            2.084105            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.0010348            2.084250            F
+         3        -48.1936459            2.303345            F
+         4        -47.7958091            1.708818            F
+         5        -48.1936459            2.303352            F
+         6        -49.0010348            2.084248            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -64,24 +64,24 @@
 
      ------------------------------ iteration   2 ------------------------------
 
-     tcpu =     11.5    self-consistency for image   2
-     tcpu =     12.9    self-consistency for image   3
-     tcpu =     14.6    self-consistency for image   4
-     tcpu =     16.9    self-consistency for image   5
-     tcpu =     18.6    self-consistency for image   6
+     tcpu =     10.3    self-consistency for image   2
+     tcpu =     11.5    self-consistency for image   3
+     tcpu =     13.0    self-consistency for image   4
+     tcpu =     15.0    self-consistency for image   5
+     tcpu =     16.5    self-consistency for image   6
 
-     activation energy (->) =   1.463749 eV
-     activation energy (<-) =   1.463749 eV
+     activation energy (->) =   1.463729 eV
+     activation energy (<-) =   1.463729 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.1186876            1.626676            F
-         3        -48.3977834            2.006094            F
-         4        -48.0383106            1.727864            F
-         5        -48.3977845            2.006094            F
-         6        -49.1186874            1.626676            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.1182237            1.626598            F
+         3        -48.3973174            2.006062            F
+         4        -48.0378445            1.727853            F
+         5        -48.3973185            2.006062            F
+         6        -49.1182234            1.626598            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -90,24 +90,24 @@
 
      ------------------------------ iteration   3 ------------------------------
 
-     tcpu =     20.0    self-consistency for image   2
-     tcpu =     21.4    self-consistency for image   3
-     tcpu =     23.2    self-consistency for image   4
-     tcpu =     24.6    self-consistency for image   5
-     tcpu =     26.4    self-consistency for image   6
+     tcpu =     17.8    self-consistency for image   2
+     tcpu =     19.0    self-consistency for image   3
+     tcpu =     20.5    self-consistency for image   4
+     tcpu =     21.8    self-consistency for image   5
+     tcpu =     23.4    self-consistency for image   6
 
-     activation energy (->) =   1.099017 eV
-     activation energy (<-) =   1.099017 eV
+     activation energy (->) =   1.098992 eV
+     activation energy (<-) =   1.098992 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.3122308            1.332400            F
-         3        -48.7125005            1.599356            F
-         4        -48.4030423            1.696586            F
-         5        -48.7125008            1.599355            F
-         6        -49.3122313            1.332395            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.3117540            1.332417            F
+         3        -48.7120285            1.599559            F
+         4        -48.4025813            1.696513            F
+         5        -48.7120288            1.599558            F
+         6        -49.3117544            1.332413            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -116,24 +116,24 @@
 
      ------------------------------ iteration   4 ------------------------------
 
-     tcpu =     27.9    self-consistency for image   2
-     tcpu =     29.4    self-consistency for image   3
-     tcpu =     31.0    self-consistency for image   4
-     tcpu =     32.9    self-consistency for image   5
-     tcpu =     34.4    self-consistency for image   6
+     tcpu =     24.7    self-consistency for image   2
+     tcpu =     26.1    self-consistency for image   3
+     tcpu =     27.7    self-consistency for image   4
+     tcpu =     29.4    self-consistency for image   5
+     tcpu =     31.1    self-consistency for image   6
 
-     activation energy (->) =   0.736046 eV
-     activation energy (<-) =   0.736046 eV
+     activation energy (->) =   0.736037 eV
+     activation energy (<-) =   0.736037 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4424433            0.968366            F
-         3        -49.0142828            1.611472            F
-         4        -48.7660133            1.535182            F
-         5        -49.0142826            1.611471            F
-         6        -49.4424436            0.968360            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4419575            0.967929            F
+         3        -49.0138193            1.610946            F
+         4        -48.7655363            1.535161            F
+         5        -49.0138191            1.610945            F
+         6        -49.4419578            0.967924            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -142,24 +142,24 @@
 
      ------------------------------ iteration   5 ------------------------------
 
-     tcpu =     36.0    self-consistency for image   2
-     tcpu =     37.4    self-consistency for image   3
-     tcpu =     38.9    self-consistency for image   4
-     tcpu =     40.6    self-consistency for image   5
-     tcpu =     42.2    self-consistency for image   6
+     tcpu =     32.6    self-consistency for image   2
+     tcpu =     33.7    self-consistency for image   3
+     tcpu =     35.1    self-consistency for image   4
+     tcpu =     36.6    self-consistency for image   5
+     tcpu =     37.9    self-consistency for image   6
 
-     activation energy (->) =   0.416542 eV
-     activation energy (<-) =   0.416542 eV
+     activation energy (->) =   0.416515 eV
+     activation energy (<-) =   0.416515 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4480349            1.271094            F
-         3        -49.2557045            1.404590            F
-         4        -49.0855172            1.145348            F
-         5        -49.2557040            1.404590            F
-         6        -49.4480347            1.271093            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4475544            1.270947            F
+         3        -49.2552351            1.404626            F
+         4        -49.0850579            1.145306            F
+         5        -49.2552347            1.404625            F
+         6        -49.4475542            1.270946            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -168,24 +168,24 @@
 
      ------------------------------ iteration   6 ------------------------------
 
-     tcpu =     43.5    self-consistency for image   2
-     tcpu =     45.2    self-consistency for image   3
-     tcpu =     47.0    self-consistency for image   4
-     tcpu =     48.8    self-consistency for image   5
-     tcpu =     50.6    self-consistency for image   6
+     tcpu =     39.1    self-consistency for image   2
+     tcpu =     40.3    self-consistency for image   3
+     tcpu =     42.0    self-consistency for image   4
+     tcpu =     43.5    self-consistency for image   5
+     tcpu =     45.1    self-consistency for image   6
 
-     activation energy (->) =   0.212485 eV
-     activation energy (<-) =   0.212485 eV
+     activation energy (->) =   0.212475 eV
+     activation energy (<-) =   0.212475 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.3556453            2.334563            F
-         3        -49.3499559            1.813061            F
-         4        -49.2895749            0.273168            F
-         5        -49.3499559            1.813054            F
-         6        -49.3556452            2.334563            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.3552170            2.334309            F
+         3        -49.3494659            1.813193            F
+         4        -49.2890981            0.273197            F
+         5        -49.3494659            1.813187            F
+         6        -49.3552168            2.334309            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -194,24 +194,24 @@
 
      ------------------------------ iteration   7 ------------------------------
 
-     tcpu =     52.2    self-consistency for image   2
-     tcpu =     53.5    self-consistency for image   3
-     tcpu =     55.2    self-consistency for image   4
-     tcpu =     57.1    self-consistency for image   5
-     tcpu =     58.8    self-consistency for image   6
+     tcpu =     46.3    self-consistency for image   2
+     tcpu =     47.5    self-consistency for image   3
+     tcpu =     49.0    self-consistency for image   4
+     tcpu =     50.6    self-consistency for image   5
+     tcpu =     52.1    self-consistency for image   6
 
-     activation energy (->) =   0.309396 eV
-     activation energy (<-) =   0.309396 eV
+     activation energy (->) =   0.309369 eV
+     activation energy (<-) =   0.309369 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4638176            0.843393            F
-         3        -49.3392800            0.644168            F
-         4        -49.1926640            0.868154            F
-         5        -49.3392797            0.644168            F
-         6        -49.4638176            0.843389            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4633346            0.843227            F
+         3        -49.3387999            0.644524            F
+         4        -49.1922038            0.868546            F
+         5        -49.3387995            0.644524            F
+         6        -49.4633346            0.843223            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -220,24 +220,24 @@
 
      ------------------------------ iteration   8 ------------------------------
 
-     tcpu =     60.1    self-consistency for image   2
-     tcpu =     61.4    self-consistency for image   3
-     tcpu =     62.8    self-consistency for image   4
-     tcpu =     64.2    self-consistency for image   5
-     tcpu =     65.6    self-consistency for image   6
+     tcpu =     53.3    self-consistency for image   2
+     tcpu =     54.5    self-consistency for image   3
+     tcpu =     55.8    self-consistency for image   4
+     tcpu =     56.9    self-consistency for image   5
+     tcpu =     58.2    self-consistency for image   6
 
-     activation energy (->) =   0.258110 eV
-     activation energy (<-) =   0.258110 eV
+     activation energy (->) =   0.258066 eV
+     activation energy (<-) =   0.258066 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4705391            0.152129            F
-         3        -49.3631369            0.444637            F
-         4        -49.2439497            0.651823            F
-         5        -49.3631366            0.444639            F
-         6        -49.4705391            0.152129            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4700506            0.152213            F
+         3        -49.3626653            0.444282            F
+         4        -49.2435074            0.651459            F
+         5        -49.3626651            0.444283            F
+         6        -49.4700505            0.152212            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -246,24 +246,24 @@
 
      ------------------------------ iteration   9 ------------------------------
 
-     tcpu =     66.9    self-consistency for image   2
-     tcpu =     68.2    self-consistency for image   3
-     tcpu =     69.5    self-consistency for image   4
-     tcpu =     70.8    self-consistency for image   5
-     tcpu =     72.1    self-consistency for image   6
+     tcpu =     59.4    self-consistency for image   2
+     tcpu =     60.5    self-consistency for image   3
+     tcpu =     61.6    self-consistency for image   4
+     tcpu =     62.8    self-consistency for image   5
+     tcpu =     64.0    self-consistency for image   6
 
      activation energy (->) =   0.223964 eV
      activation energy (<-) =   0.223964 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4693231            0.343802            F
-         3        -49.3768899            0.367595            F
-         4        -49.2780952            0.412437            F
-         5        -49.3768897            0.367595            F
-         6        -49.4693231            0.343802            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4688397            0.343519            F
+         3        -49.3763956            0.367305            F
+         4        -49.2776094            0.412417            F
+         5        -49.3763954            0.367305            F
+         6        -49.4688397            0.343519            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -272,50 +272,50 @@
 
      ------------------------------ iteration  10 ------------------------------
 
-     tcpu =     73.4    self-consistency for image   2
-     tcpu =     74.7    self-consistency for image   3
-     tcpu =     76.1    self-consistency for image   4
-     tcpu =     77.2    self-consistency for image   5
-     tcpu =     78.5    self-consistency for image   6
+     tcpu =     65.1    self-consistency for image   2
+     tcpu =     66.3    self-consistency for image   3
+     tcpu =     67.4    self-consistency for image   4
+     tcpu =     68.5    self-consistency for image   5
+     tcpu =     69.6    self-consistency for image   6
 
-     activation energy (->) =   0.219828 eV
-     activation energy (<-) =   0.219828 eV
+     activation energy (->) =   0.219820 eV
+     activation energy (<-) =   0.219820 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4712442            0.170902            F
-         3        -49.3723197            0.271448            F
-         4        -49.2822320            0.369260            F
-         5        -49.3723195            0.271449            F
-         6        -49.4712442            0.170903            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4707571            0.170749            F
+         3        -49.3718334            0.271383            F
+         4        -49.2817534            0.369201            F
+         5        -49.3718332            0.271383            F
+         6        -49.4707571            0.170750            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
-     path length          =  5.214 bohr
+     path length          =  5.215 bohr
      inter-image distance =  0.869 bohr
 
      ------------------------------ iteration  11 ------------------------------
 
-     tcpu =     79.9    self-consistency for image   2
-     tcpu =     81.3    self-consistency for image   3
-     tcpu =     82.8    self-consistency for image   4
-     tcpu =     84.0    self-consistency for image   5
-     tcpu =     85.5    self-consistency for image   6
+     tcpu =     70.7    self-consistency for image   2
+     tcpu =     72.0    self-consistency for image   3
+     tcpu =     73.3    self-consistency for image   4
+     tcpu =     74.3    self-consistency for image   5
+     tcpu =     75.5    self-consistency for image   6
 
-     activation energy (->) =   0.213931 eV
-     activation energy (<-) =   0.213931 eV
+     activation energy (->) =   0.213921 eV
+     activation energy (<-) =   0.213921 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4705650            0.049795            F
-         3        -49.3711482            0.177716            F
-         4        -49.2881285            0.295181            F
-         5        -49.3711480            0.177716            F
-         6        -49.4705649            0.049795            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4700781            0.049796            F
+         3        -49.3706638            0.177883            F
+         4        -49.2876520            0.295067            F
+         5        -49.3706636            0.177883            F
+         6        -49.4700780            0.049796            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -324,50 +324,50 @@
 
      ------------------------------ iteration  12 ------------------------------
 
-     tcpu =     87.0    self-consistency for image   2
-     tcpu =     88.3    self-consistency for image   3
-     tcpu =     89.7    self-consistency for image   4
-     tcpu =     91.0    self-consistency for image   5
-     tcpu =     92.4    self-consistency for image   6
+     tcpu =     76.8    self-consistency for image   2
+     tcpu =     77.9    self-consistency for image   3
+     tcpu =     79.2    self-consistency for image   4
+     tcpu =     80.3    self-consistency for image   5
+     tcpu =     81.6    self-consistency for image   6
 
-     activation energy (->) =   0.205195 eV
-     activation energy (<-) =   0.205195 eV
+     activation energy (->) =   0.205188 eV
+     activation energy (<-) =   0.205188 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4693426            0.139760            F
-         3        -49.3710362            0.081033            F
-         4        -49.2968643            0.095098            F
-         5        -49.3710360            0.081033            F
-         6        -49.4693425            0.139761            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4688512            0.140133            F
+         3        -49.3705487            0.080792            F
+         4        -49.2963855            0.094835            F
+         5        -49.3705485            0.080792            F
+         6        -49.4688511            0.140133            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
-     path length          =  5.293 bohr
+     path length          =  5.294 bohr
      inter-image distance =  0.882 bohr
 
      ------------------------------ iteration  13 ------------------------------
 
-     tcpu =     93.8    self-consistency for image   2
-     tcpu =     94.9    self-consistency for image   3
-     tcpu =     95.9    self-consistency for image   4
-     tcpu =     97.3    self-consistency for image   5
-     tcpu =     98.3    self-consistency for image   6
+     tcpu =     82.7    self-consistency for image   2
+     tcpu =     83.7    self-consistency for image   3
+     tcpu =     84.6    self-consistency for image   4
+     tcpu =     85.7    self-consistency for image   5
+     tcpu =     86.6    self-consistency for image   6
 
      activation energy (->) =   0.204270 eV
      activation energy (<-) =   0.204270 eV
 
      image        energy (eV)        error (eV/A)        frozen
 
-         1        -49.5020596            0.018535            T
-         2        -49.4690875            0.044845            F
-         3        -49.3706909            0.041994            F
-         4        -49.2977897            0.015021            F
-         5        -49.3706907            0.041994            F
-         6        -49.4690875            0.044845            F
-         7        -49.5020596            0.018547            T
+         1        -49.5015730            0.010088            T
+         2        -49.4686054            0.044907            F
+         3        -49.3702122            0.042217            F
+         4        -49.2973028            0.015775            F
+         5        -49.3702121            0.042217            F
+         6        -49.4686054            0.044907            F
+         7        -49.5015730            0.010106            T
 
      climbing image =  4
 
@@ -379,43 +379,46 @@
 
      neb: convergence achieved in  13 iterations
  
-     PWSCF        :  1m39.47s CPU time
+     PWSCF        :  1m27.71s CPU time
 
-     init_run     :    11.63s CPU (      67 calls,   0.174 s avg)
-     electrons    :    77.70s CPU (      67 calls,   1.160 s avg)
-     forces       :     2.24s CPU (      67 calls,   0.033 s avg)
+     init_run     :    11.45s CPU (      67 calls,   0.171 s avg)
+     electrons    :    67.21s CPU (      67 calls,   1.003 s avg)
+     forces       :     2.09s CPU (      67 calls,   0.031 s avg)
  
-     electrons    :    77.70s CPU (      67 calls,   1.160 s avg)
-     c_bands      :    13.29s CPU (     560 calls,   0.024 s avg)
-     sum_band     :    12.25s CPU (     560 calls,   0.022 s avg)
-     v_of_rho     :    43.45s CPU (     687 calls,   0.063 s avg)
-     newd         :     2.67s CPU (     627 calls,   0.004 s avg)
-     mix_rho      :     1.27s CPU (     560 calls,   0.002 s avg)
  
-     c_bands      :    13.29s CPU (     560 calls,   0.024 s avg)
-     init_us_2    :     0.18s CPU (    2388 calls,   0.000 s avg)
-     cegterg      :    12.96s CPU (    1120 calls,   0.012 s avg)
+     electrons    :    67.21s CPU (      67 calls,   1.003 s avg)
+     c_bands      :    12.83s CPU (     559 calls,   0.023 s avg)
+     sum_band     :    11.59s CPU (     559 calls,   0.021 s avg)
+     v_of_rho     :    37.06s CPU (     686 calls,   0.054 s avg)
+     v_h          :     1.28s CPU (     686 calls,   0.002 s avg)
+     v_xc         :    35.77s CPU (     686 calls,   0.052 s avg)
+     newd         :     2.17s CPU (     626 calls,   0.003 s avg)
+     mix_rho      :     0.78s CPU (     559 calls,   0.001 s avg)
  
-     sum_band     :    12.25s CPU (     560 calls,   0.022 s avg)
-     becsum       :     0.00s CPU (    1120 calls,   0.000 s avg)
-     addusdens    :     2.53s CPU (     560 calls,   0.005 s avg)
+     c_bands      :    12.83s CPU (     559 calls,   0.023 s avg)
+     init_us_2    :     0.22s CPU (    2384 calls,   0.000 s avg)
+     cegterg      :    12.61s CPU (    1118 calls,   0.011 s avg)
  
-     cegterg      :    12.96s CPU (    1120 calls,   0.012 s avg)
-     h_psi        :    10.95s CPU (    3208 calls,   0.003 s avg)
-     g_psi        :     0.13s CPU (    2074 calls,   0.000 s avg)
-     cdiaghg      :     0.66s CPU (    3074 calls,   0.000 s avg)
-     update       :     0.14s CPU (    2074 calls,   0.000 s avg)
-     last         :     0.11s CPU (    1240 calls,   0.000 s avg)
+     sum_band     :    11.59s CPU (     559 calls,   0.021 s avg)
+     becsum       :     0.00s CPU (    1118 calls,   0.000 s avg)
+     addusdens    :     2.76s CPU (     559 calls,   0.005 s avg)
  
-     h_psi        :    10.95s CPU (    3208 calls,   0.003 s avg)
-     init         :     0.04s CPU (    3208 calls,   0.000 s avg)
-     add_vuspsi   :     0.03s CPU (    3208 calls,   0.000 s avg)
-     s_psi        :     0.11s CPU (    3208 calls,   0.000 s avg)
+     cegterg      :    12.61s CPU (    1118 calls,   0.011 s avg)
+     h_psi        :    11.19s CPU (    3204 calls,   0.003 s avg)
+     g_psi        :     0.12s CPU (    2072 calls,   0.000 s avg)
+     diaghg       :     0.61s CPU (    3070 calls,   0.000 s avg)
+     update       :     0.17s CPU (    2072 calls,   0.000 s avg)
+     last         :     0.11s CPU (    1238 calls,   0.000 s avg)
+ 
+     h_psi        :    11.19s CPU (    3204 calls,   0.003 s avg)
+     init         :     0.05s CPU (    3204 calls,   0.000 s avg)
+     add_vuspsi   :     0.04s CPU (    3204 calls,   0.000 s avg)
+     s_psi        :     0.08s CPU (    3204 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.04s CPU (    1120 calls,   0.000 s avg)
-     cft3         :    26.52s CPU (   19823 calls,   0.001 s avg)
-     cft3s        :    13.79s CPU (   22828 calls,   0.001 s avg)
-     interpolate  :     7.18s CPU (    2374 calls,   0.003 s avg)
-     davcio       :     0.21s CPU (    4618 calls,   0.000 s avg)
+     ccalbec      :     0.01s CPU (    1118 calls,   0.000 s avg)
+     cft3         :    23.88s CPU (   17855 calls,   0.001 s avg)
+     cft3s        :    14.44s CPU (   22794 calls,   0.001 s avg)
+     interpolate  :     6.03s CPU (    2370 calls,   0.003 s avg)
+     davcio       :     0.04s CPU (    4612 calls,   0.000 s avg)
  

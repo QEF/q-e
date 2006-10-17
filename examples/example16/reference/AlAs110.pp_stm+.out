@@ -1,21 +1,21 @@
 
-     Program POST-PROC v.3.1.1  starts ...
-     Today is 29Jun2006 at  3:36:48 
+     Program POST-PROC v.3.2cvs starts ...
+     Today is 17Oct2006 at  3:45:55 
 
      nbndx  =    34  nbnd   =    34  natomwfc =    91  npwx   =    3109
      nelec  =  56.00  nkb   =    56  ngl    =    2793
 
      Calling punch_plot, plot_num =   5
 
-     workfunction     =   -12.9733 +-    13.9593 eV
-     without exchcorr =    -4.4472 +-    12.7436 eV
+     workfunction     =   -12.9732 +-    13.9591 eV
+     without exchcorr =    -4.4472 +-    12.7435 eV
 
      Work function written on file workf
      Planar mean charge written on file charge
      Use the true wfcs
      Sample bias          =  1.0000 eV
 
-     STM:      0.28s cpu time
+     STM:      0.21s cpu time
      Writing data to file  AlAsresm+1.0
      Reading header from file  AlAsresm+1.0
      Reading data from file  AlAsresm+1.0

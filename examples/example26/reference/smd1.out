@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:14:20  29Jun2006               
+   This run was started on:   5:22:44  17Oct2006               
 
    Serial Build
 
@@ -412,13 +412,13 @@
   Center of mass 
   
    0  0.00000 0.00000 1.98543
-   1  0.00000 0.00000 2.05158
+   1  0.00000 0.00000 2.05157
    2  0.00000 0.00000 2.11772
    3  0.00000 0.00000 2.18386
    4  0.00000 0.00000 2.25000
    5  0.00000 0.00000 2.31614
    6  0.00000 0.00000 2.38228
-   7  0.00000 0.00000 2.44843
+   7  0.00000 0.00000 2.44842
    8  0.00000 0.00000 2.51457
   
   _____________________________________________
@@ -586,7 +586,7 @@
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
-   26.88   33.59
+   26.87   33.59
 
 
  eigenvalues at k-point:  0.000 0.000 0.000
@@ -836,58 +836,58 @@
  
  
 
-   writing restart file: .//cp_61.save
-   restart file written in    0.037 sec.
+   writing restart file: /scr/giannozz/tmp//cp_61.save
+   restart file written in    0.062 sec.
 
 
-   writing restart file: .//cp_62.save
-   restart file written in    0.036 sec.
+   writing restart file: /scr/giannozz/tmp//cp_62.save
+   restart file written in    0.062 sec.
 
 
-   writing restart file: .//cp_63.save
-   restart file written in    0.036 sec.
+   writing restart file: /scr/giannozz/tmp//cp_63.save
+   restart file written in    0.061 sec.
 
 
-   writing restart file: .//cp_64.save
-   restart file written in    0.036 sec.
+   writing restart file: /scr/giannozz/tmp//cp_64.save
+   restart file written in    0.061 sec.
 
 
-   writing restart file: .//cp_65.save
-   restart file written in    0.036 sec.
+   writing restart file: /scr/giannozz/tmp//cp_65.save
+   restart file written in    0.062 sec.
 
 
-   writing restart file: .//cp_66.save
-   restart file written in    0.036 sec.
+   writing restart file: /scr/giannozz/tmp//cp_66.save
+   restart file written in    0.062 sec.
 
-     initialize   :     1.84s CPU
+     initialize   :     1.75s CPU
      formf        :     0.05s CPU
-     rhoofr       :     3.46s CPU (     112 calls,   0.031 s avg)
-     vofrho       :    22.55s CPU (     112 calls,   0.201 s avg)
-     dforce       :     0.83s CPU (     224 calls,   0.004 s avg)
-     calphi       :     0.02s CPU (     112 calls,   0.000 s avg)
-     ortho        :     0.03s CPU (     112 calls,   0.000 s avg)
+     rhoofr       :     3.28s CPU (     112 calls,   0.029 s avg)
+     vofrho       :    21.30s CPU (     112 calls,   0.190 s avg)
+     dforce       :     0.86s CPU (     224 calls,   0.004 s avg)
+     calphi       :     0.00s CPU (     112 calls,   0.000 s avg)
+     ortho        :     0.02s CPU (     112 calls,   0.000 s avg)
      updatc       :     0.00s CPU (     224 calls,   0.000 s avg)
      gram         :     0.00s CPU (       7 calls,   0.000 s avg)
-     newd         :     0.20s CPU (     112 calls,   0.002 s avg)
+     newd         :     0.12s CPU (     112 calls,   0.001 s avg)
      calbec       :     0.00s CPU (     119 calls,   0.000 s avg)
      prefor       :     0.01s CPU (     224 calls,   0.000 s avg)
-     strucf       :     0.04s CPU (     112 calls,   0.000 s avg)
-     rhov         :     1.18s CPU (     112 calls,   0.011 s avg)
+     strucf       :     0.02s CPU (     112 calls,   0.000 s avg)
+     rhov         :     1.15s CPU (     112 calls,   0.010 s avg)
      nlsm1        :     0.00s CPU (     343 calls,   0.000 s avg)
-     fft          :     9.25s CPU (    1568 calls,   0.006 s avg)
-     ffts         :     0.70s CPU (     224 calls,   0.003 s avg)
-     fftw         :     1.16s CPU (     672 calls,   0.002 s avg)
-     fftb         :     0.16s CPU (     560 calls,   0.000 s avg)
+     fft          :     9.33s CPU (    1568 calls,   0.006 s avg)
+     ffts         :     0.78s CPU (     224 calls,   0.003 s avg)
+     fftw         :     1.31s CPU (     672 calls,   0.002 s avg)
+     fftb         :     0.25s CPU (     560 calls,   0.000 s avg)
      rsg          :     0.01s CPU (     224 calls,   0.000 s avg)
 
-   writing restart file: .//cp_67.save
-   restart file written in    0.036 sec.
+   writing restart file: /scr/giannozz/tmp//cp_67.save
+   restart file written in    0.061 sec.
 
  
-     CP           :    27.63s CPU time
+     CP           :    26.03s CPU time
 
  
-   This run was terminated on:   5:14:48  29Jun2006            
+   This run was terminated on:   5:23:12  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

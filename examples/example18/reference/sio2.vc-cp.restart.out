@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:46:15  29Jun2006               
+   This run was started on:   3:55:21  17Oct2006               
 
    Serial Build
 
@@ -42,7 +42,7 @@
 
    Simulation Cell Parameters (from input)
    external pressure       =            1.00 [GPa]
-   wmass (calculated)      =        49868.29 [AU]
+   wmass (calculated)      =        49868.25 [AU]
    ibrav =    8
    alat  =     9.28990000
    a1    =     9.28990000    0.00000000    0.00000000
@@ -93,7 +93,7 @@
    ion dynamics with fricp =  0.0000 and greasp =  1.0000
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =   12 mass =     29166.24 (a.u.),        16.00 (amu) rcmax =   1.00 (a.u.)
+   Species   1 atoms =   12 mass =     29166.22 (a.u.),        16.00 (amu) rcmax =   1.00 (a.u.)
         3.188294    14.832370     1.228830
         7.832315     6.787040     1.228830
         2.074435     5.995380     4.737583
@@ -106,7 +106,7 @@
         7.833244     9.302011     5.580296
         2.075364    10.092062     2.073586
         6.719385     2.046732     2.073586
-   Species   2 atoms =    6 mass =     51040.92 (a.u.),        28.00 (amu) rcmax =   1.00 (a.u.)
+   Species   2 atoms =    6 mass =     51040.88 (a.u.),        28.00 (amu) rcmax =   1.00 (a.u.)
         0.288916     8.045330     3.404563
         4.933866     0.000000     3.404563
         2.133890    12.277174    -0.041880
@@ -134,7 +134,7 @@
    ionic degrees of freedom for each chain   54
 
 
-   nose` mass(es) for chain    1 =  100013.420
+   nose` mass(es) for chain    1 =   99946.831
 
 
    Cell Dynamics Parameters (from STDIN)
@@ -146,14 +146,14 @@
    cell parameters dynamics with nose` temp. control
    Constant PRESSURE Molecular dynamics:
    External pressure (GPa) =        1.00
-   Volume mass             =    49868.29
+   Volume mass             =    49868.25
 
 
    cell dynamics with nose` temperature control:
    Kinetic energy required   =  300.00000 (Kelvin) 
    time steps per nose osc.  =   400
    nose` frequency           =      8.607 (THz) 
-   nose` mass(es)            =   10000.049
+   nose` mass(es)            =    9993.391
 
    Verbosity: iprsta =  1
 
@@ -310,8 +310,11 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+   ortho mmul, time for serial driver =   0.00098
+   ortho mmul, best time for paralle driver =   0.00098 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00205  0.00474
 
-   reading restart file: .//cp_93.save
+   reading restart file: /scr/giannozz/tmp//cp_93.save
    restart file read in    0.057 sec.
 
 
@@ -330,7 +333,7 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
     1  0.00004   42.6    2.5  -211.98286  -211.93099  -211.93017  -211.93013  0.0000 -0.0006 -0.0001 -0.0041
     2  0.00005   51.1    3.0  -211.98303  -211.93117  -211.93018  -211.93013  0.0000 -0.0007 -0.0001 -0.0049
-    3  0.00007   60.4    3.5  -211.98321  -211.93136  -211.93020  -211.93013  0.0000 -0.0008 -0.0001 -0.0057
+    3  0.00007   60.4    3.5  -211.98321  -211.93136  -211.93020  -211.93013  0.0000 -0.0008 -0.0001 -0.0058
     4  0.00007   70.7    4.1  -211.98341  -211.93156  -211.93021  -211.93014  0.0000 -0.0009 -0.0001 -0.0067
     5  0.00008   81.9    4.7  -211.98362  -211.93179  -211.93022  -211.93014  0.0000 -0.0009 -0.0001 -0.0077
     6  0.00008   94.1    5.4  -211.98385  -211.93203  -211.93022  -211.93014  0.0000 -0.0010 -0.0001 -0.0088
@@ -365,12 +368,12 @@
    -5.63   -5.23   -5.19   -4.80   -4.78   -4.40   -4.37   -4.34   -4.18   -4.03
    -4.00   -3.97   -3.67   -3.63   -3.25   -3.24   -3.16   -2.98
  
-   Allocated memory (kb) =      1614
+   Allocated memory (kb) =      1608
  
    CELL_PARAMETERS
-    9.29989962    0.00005301   -0.00002175
-    0.00009182   16.08813338   -0.00287835
-   -0.00002393   -0.00182728   10.18248659
+    9.29989964    0.00005301   -0.00002175
+    0.00009182   16.08813338   -0.00287836
+   -0.00002393   -0.00182729   10.18248656
 
    System Density [g/cm^3] :     2.6480
 
@@ -378,9 +381,9 @@
    Center of mass square displacement (a.u.):   0.000240
 
    Total stress (GPa)
-        3.61394227         0.02290955        -0.00717947
-        0.02290955        -0.45078428        -1.01525320
-       -0.00717947        -1.01525319       -11.34795823
+        3.61394227         0.02290950        -0.00717948
+        0.02290950        -0.45078472        -1.01525348
+       -0.00717948        -1.01525348       -11.34796425
    ATOMIC_POSITIONS
    O    0.319019E+01  0.148349E+02  0.122117E+01
    O    0.783928E+01  0.679098E+01  0.122215E+01
@@ -402,44 +405,44 @@
    Si   0.678586E+01  0.118551E+02  0.682859E+01
  
    ATOMIC_VELOCITIES
-   O   -0.138032E-04  0.433701E-04 -0.184886E-04
-   O   -0.130320E-04  0.442643E-04 -0.178486E-04
-   O    0.398711E-04  0.200758E-04 -0.223784E-04
-   O    0.402859E-04  0.179646E-04 -0.209226E-04
-   O   -0.166235E-04 -0.609144E-04 -0.594838E-04
-   O   -0.168038E-04 -0.601764E-04 -0.587962E-04
-   O   -0.181057E-04  0.612353E-04  0.609515E-04
-   O   -0.180623E-04  0.609696E-04  0.611012E-04
-   O   -0.127708E-04 -0.426992E-04  0.194352E-04
-   O   -0.134590E-04 -0.419849E-04  0.200550E-04
-   O    0.415117E-04 -0.156507E-04  0.173869E-04
-   O    0.421101E-04 -0.148515E-04  0.169761E-04
-   Si  -0.584088E-05 -0.128352E-05  0.587391E-06
-   Si  -0.633498E-05 -0.758648E-06  0.115901E-05
-   Si  -0.275223E-05 -0.166410E-05  0.302686E-05
-   Si  -0.272910E-05 -0.234932E-05  0.269165E-05
-   Si  -0.308103E-05 -0.776260E-06 -0.282219E-05
-   Si  -0.275798E-05  0.201754E-06 -0.349285E-05
+   O   -0.138033E-04  0.433704E-04 -0.184887E-04
+   O   -0.130321E-04  0.442646E-04 -0.178487E-04
+   O    0.398714E-04  0.200760E-04 -0.223785E-04
+   O    0.402862E-04  0.179647E-04 -0.209228E-04
+   O   -0.166236E-04 -0.609148E-04 -0.594842E-04
+   O   -0.168039E-04 -0.601768E-04 -0.587966E-04
+   O   -0.181059E-04  0.612357E-04  0.609519E-04
+   O   -0.180624E-04  0.609700E-04  0.611016E-04
+   O   -0.127709E-04 -0.426995E-04  0.194354E-04
+   O   -0.134591E-04 -0.419852E-04  0.200552E-04
+   O    0.415120E-04 -0.156508E-04  0.173870E-04
+   O    0.421104E-04 -0.148516E-04  0.169762E-04
+   Si  -0.584092E-05 -0.128353E-05  0.587396E-06
+   Si  -0.633503E-05 -0.758653E-06  0.115902E-05
+   Si  -0.275225E-05 -0.166411E-05  0.302688E-05
+   Si  -0.272912E-05 -0.234934E-05  0.269167E-05
+   Si  -0.308105E-05 -0.776264E-06 -0.282221E-05
+   Si  -0.275800E-05  0.201758E-06 -0.349288E-05
  
    Forces acting on atoms (au):
-   O   -0.187992E-02  0.469925E-02 -0.242633E-02
-   O   -0.179294E-02  0.483032E-02 -0.231055E-02
-   O    0.462822E-02  0.245385E-02 -0.261300E-02
-   O    0.463893E-02  0.226863E-02 -0.254405E-02
-   O   -0.183238E-02 -0.687043E-02 -0.667315E-02
-   O   -0.182833E-02 -0.688852E-02 -0.665682E-02
-   O   -0.197563E-02  0.696024E-02  0.688320E-02
-   O   -0.198181E-02  0.697896E-02  0.688070E-02
-   O   -0.178957E-02 -0.476302E-02  0.258396E-02
-   O   -0.183575E-02 -0.464787E-02  0.252480E-02
-   O    0.471253E-02 -0.205418E-02  0.219283E-02
-   O    0.481297E-02 -0.203420E-02  0.209942E-02
-   Si  -0.461033E-03 -0.145663E-03  0.617355E-04
-   Si  -0.499004E-03 -0.110844E-03  0.154984E-03
-   Si  -0.726255E-03 -0.111718E-03  0.225644E-03
-   Si  -0.719071E-03 -0.212343E-03  0.158716E-03
-   Si  -0.768036E-03 -0.249857E-03 -0.225559E-03
-   Si  -0.702903E-03 -0.102597E-03 -0.316523E-03
+   O   -0.187992E-02  0.469924E-02 -0.242633E-02
+   O   -0.179294E-02  0.483030E-02 -0.231055E-02
+   O    0.462821E-02  0.245384E-02 -0.261299E-02
+   O    0.463892E-02  0.226863E-02 -0.254404E-02
+   O   -0.183238E-02 -0.687041E-02 -0.667313E-02
+   O   -0.182833E-02 -0.688850E-02 -0.665680E-02
+   O   -0.197562E-02  0.696022E-02  0.688318E-02
+   O   -0.198181E-02  0.697894E-02  0.688068E-02
+   O   -0.178956E-02 -0.476301E-02  0.258395E-02
+   O   -0.183575E-02 -0.464785E-02  0.252480E-02
+   O    0.471252E-02 -0.205418E-02  0.219282E-02
+   O    0.481295E-02 -0.203419E-02  0.209941E-02
+   Si  -0.461030E-03 -0.145662E-03  0.617351E-04
+   Si  -0.499001E-03 -0.110843E-03  0.154983E-03
+   Si  -0.726252E-03 -0.111718E-03  0.225642E-03
+   Si  -0.719069E-03 -0.212343E-03  0.158714E-03
+   Si  -0.768033E-03 -0.249855E-03 -0.225557E-03
+   Si  -0.702900E-03 -0.102596E-03 -0.316521E-03
  
 
 
@@ -451,8 +454,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
    10  0.00014  151.5    8.5  -211.98494  -211.93316  -211.93028  -211.93015  0.0000 -0.0009 -0.0001 -0.0140
 
-   writing restart file: .//cp_94.save
-   restart file written in    0.188 sec.
+   writing restart file: /scr/giannozz/tmp//cp_94.save
+   restart file written in    0.216 sec.
 
 
 
@@ -462,43 +465,43 @@
    ekin          :       94.60333      94.60333 (AU)
    epot          :     -343.05677    -343.05677 (AU)
    totel energy  :     -211.98380    -211.98380 (AU)
-   temperature   :        5.25356       5.25356 (K )
+   temperature   :        5.25326       5.25326 (K )
    enthalpy      :     -211.93197    -211.93197 (AU)
    econs         :     -211.93022    -211.93022 (AU)
    pressure      :       -2.51420      -2.51420 (Gpa)
    volume        :     1524.83295    1524.83295 (AU)
 
 
-     initialize   :     7.54s CPU
-     total_time   :    16.13s CPU (      10 calls,   1.613 s avg)
-     formf        :     0.71s CPU (      11 calls,   0.065 s avg)
-     rhoofr       :     6.18s CPU (      10 calls,   0.618 s avg)
-     vofrho       :     1.82s CPU (      10 calls,   0.182 s avg)
-     dforce       :     2.84s CPU (     240 calls,   0.012 s avg)
+     initialize   :     8.66s CPU
+     total_time   :    17.15s CPU (      10 calls,   1.715 s avg)
+     formf        :     0.69s CPU (      11 calls,   0.063 s avg)
+     rhoofr       :     6.23s CPU (      10 calls,   0.623 s avg)
+     vofrho       :     1.74s CPU (      10 calls,   0.174 s avg)
+     dforce       :     2.59s CPU (     240 calls,   0.011 s avg)
      calphi       :     0.10s CPU (      10 calls,   0.010 s avg)
-     ortho        :     0.42s CPU (      10 calls,   0.042 s avg)
-     updatc       :     0.06s CPU (      10 calls,   0.006 s avg)
-     newd         :     1.88s CPU (      10 calls,   0.188 s avg)
-     calbec       :     0.04s CPU (      11 calls,   0.004 s avg)
-     prefor       :     0.08s CPU (      21 calls,   0.004 s avg)
-     strucf       :     0.03s CPU (      11 calls,   0.003 s avg)
+     ortho        :     0.59s CPU (      10 calls,   0.059 s avg)
+     updatc       :     0.04s CPU (      10 calls,   0.004 s avg)
+     newd         :     1.75s CPU (      10 calls,   0.175 s avg)
+     calbec       :     0.13s CPU (      11 calls,   0.012 s avg)
+     prefor       :     0.06s CPU (      21 calls,   0.003 s avg)
+     strucf       :     0.07s CPU (      11 calls,   0.006 s avg)
      nlfl         :     0.00s CPU (      10 calls,   0.000 s avg)
-     nlfq         :     0.56s CPU (      10 calls,   0.056 s avg)
-     rhov         :     0.43s CPU (      10 calls,   0.043 s avg)
-     nlsm1        :     0.33s CPU (      31 calls,   0.011 s avg)
-     nlsm2        :     0.56s CPU (      10 calls,   0.056 s avg)
-     fft          :     3.00s CPU (     130 calls,   0.023 s avg)
-     ffts         :     0.14s CPU (      20 calls,   0.007 s avg)
-     fftw         :     2.60s CPU (     720 calls,   0.004 s avg)
-     fftb         :     1.42s CPU (    2940 calls,   0.000 s avg)
-     rsg          :     0.01s CPU (      10 calls,   0.001 s avg)
+     nlfq         :     0.84s CPU (      10 calls,   0.084 s avg)
+     rhov         :     0.37s CPU (      10 calls,   0.037 s avg)
+     nlsm1        :     0.53s CPU (      31 calls,   0.017 s avg)
+     nlsm2        :     0.84s CPU (      10 calls,   0.084 s avg)
+     fft          :     3.32s CPU (     130 calls,   0.026 s avg)
+     ffts         :     0.11s CPU (      20 calls,   0.006 s avg)
+     fftw         :     2.75s CPU (     720 calls,   0.004 s avg)
+     fftb         :     1.18s CPU (    2940 calls,   0.000 s avg)
+     rsg          :     0.03s CPU (      10 calls,   0.003 s avg)
  
  
  
-     CP           :    23.93s CPU time
+     CP           :    25.97s CPU time
 
  
-   This run was terminated on:   3:46:39  29Jun2006            
+   This run was terminated on:   3:55:47  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.1.1 - Sat Jun 10 02:34:07 CEST 2006                       
+     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   6: 2: 3  29Jun2006               
+   This run was started on:   6:10: 6  17Oct2006               
 
    Serial Build
 Warning: card &CELL ignored
@@ -45,7 +45,7 @@ Warning: card / ignored
 
    Simulation Cell Parameters (from input)
    external pressure       =            0.00 [GPa]
-   wmass (calculated)      =       160952.68 [AU]
+   wmass (calculated)      =       160952.54 [AU]
    ibrav =    1
    alat  =    15.91200000
    a1    =    15.91200000    0.00000000    0.00000000
@@ -107,7 +107,7 @@ Warning: card / ignored
    Ions are not allowed to move
    Ionic position (from input)
    sorted by specie, and converted to real a.u. coordinates
-   Species   1 atoms =   32 mass =     21892.91 (a.u.),        12.01 (amu) rcmax =   0.80 (a.u.)
+   Species   1 atoms =   32 mass =     21892.89 (a.u.),        12.01 (amu) rcmax =   0.80 (a.u.)
         0.066300     0.066300     4.044300
         4.044300     4.044300     4.044300
         4.044300     0.066300     8.022300
@@ -140,7 +140,7 @@ Warning: card / ignored
        12.000300    12.000300    12.000300
        12.000300     8.022300    15.978300
         8.022300    12.000300    15.978300
-   Species   2 atoms =   32 mass =     44296.23 (a.u.),        24.30 (amu) rcmax =   0.50 (a.u.)
+   Species   2 atoms =   32 mass =     44296.19 (a.u.),        24.30 (amu) rcmax =   0.50 (a.u.)
         0.066300     0.066300     0.066300
         4.044300     4.044300     0.066300
         4.044300     0.066300     4.044300
@@ -391,9 +391,12 @@ Warning: card / ignored
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
+   ortho mmul, time for serial driver =   0.00282
+   ortho mmul, best time for paralle driver =   0.00282 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.02851  0.02002
 
-   reading restart file: .//mgo_50.save
-   restart file read in    0.220 sec.
+   reading restart file: /scr/giannozz/tmp//mgo_50.save
+   restart file read in    0.217 sec.
 
  nprint_nfi=           -2
  nprint_nfi=            1
@@ -440,7 +443,7 @@ Initialize Berry phase electric field
     1.87    1.87    1.87    1.87    1.87    1.87    1.87    1.92    1.92    1.92
     1.92    1.92    1.92    1.92    1.92    2.46    2.46    2.46
  
-   Allocated memory (kb) =      1862
+   Allocated memory (kb) =      1864
  
    CELL_PARAMETERS
    15.91200000    0.00000000    0.00000000
@@ -608,7 +611,7 @@ Initialize Berry phase electric field
    Mg   0.247040E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
-   Mg   0.247042E-04  0.247041E-04  0.198668E-02
+   Mg   0.247042E-04  0.247042E-04  0.198668E-02
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247042E-04  0.198668E-02
    Mg   0.247041E-04  0.247040E-04  0.198668E-02
@@ -620,7 +623,7 @@ Initialize Berry phase electric field
    Mg   0.247041E-04  0.247041E-04  0.198668E-02
    Mg   0.247041E-04  0.247040E-04  0.198668E-02
    Mg   0.247041E-04  0.247042E-04  0.198668E-02
-   Mg   0.247040E-04  0.247041E-04  0.198668E-02
+   Mg   0.247040E-04  0.247040E-04  0.198668E-02
    O   -0.470348E-04 -0.470346E-04 -0.200940E-02
    O   -0.470345E-04 -0.470352E-04 -0.200940E-02
    O   -0.470347E-04 -0.470346E-04 -0.200940E-02
@@ -667,8 +670,8 @@ Initialize Berry phase electric field
 Step     2       0   -547.28628   -547.28628   -547.28628    17
 Elct. dipole 1   15.415235  Ionic dipole 1    1.060800
 
-   writing restart file: .//mgo_50.save
-   restart file written in    0.310 sec.
+   writing restart file: /scr/giannozz/tmp//mgo_50.save
+   restart file written in    0.414 sec.
 
 
 
@@ -681,46 +684,46 @@ Elct. dipole 1   15.415235  Ionic dipole 1    1.060800
    temperature   :        0.00000       0.00000 (K )
    enthalpy      :        0.00000       0.00000 (AU)
    econs         :     -547.27818    -547.28628 (AU)
-   pressure      :      -25.94395       0.00000 (Gpa)
+   pressure      :      -25.94396       0.00000 (Gpa)
    volume        :     4028.78703    4028.78703 (AU)
 
 
-     initialize   :     6.77s CPU
-     total_time   :   541.71s CPU
-     formf        :     0.29s CPU
-     rhoofr       :    46.78s CPU (      34 calls,   1.376 s avg)
-     vofrho       :    39.54s CPU (      33 calls,   1.198 s avg)
-     dforce       :    48.33s CPU (    1088 calls,   0.044 s avg)
-     calphi       :     2.20s CPU (      17 calls,   0.129 s avg)
-     gram         :    52.30s CPU (      33 calls,   1.585 s avg)
-     newd         :    88.04s CPU (      17 calls,   5.179 s avg)
-     calbec       :    26.97s CPU (     116 calls,   0.233 s avg)
-     prefor       :     0.57s CPU (      19 calls,   0.030 s avg)
-     strucf       :     0.13s CPU (       2 calls,   0.065 s avg)
-     nlfl         :     0.05s CPU
-     nlfq         :     0.72s CPU
-     set_cc       :     4.85s CPU (      34 calls,   0.143 s avg)
-     rhov         :     9.75s CPU (      34 calls,   0.287 s avg)
-     nlsm1        :    26.97s CPU (     116 calls,   0.233 s avg)
-     nlsm2        :     0.69s CPU
-     forcecc      :     9.83s CPU (      33 calls,   0.298 s avg)
-     fft          :    12.88s CPU (     167 calls,   0.077 s avg)
-     ffts         :     1.21s CPU (      67 calls,   0.018 s avg)
-     fftw         :    45.34s CPU (    4352 calls,   0.010 s avg)
-     fftb         :    64.06s CPU (   13280 calls,   0.005 s avg)
-     runcg_uspp   :   541.37s CPU
-     pc2          :    68.51s CPU (      48 calls,   1.427 s avg)
-     pcdaga2      :    20.52s CPU (      16 calls,   1.282 s avg)
+     initialize   :     6.91s CPU
+     total_time   :   544.33s CPU
+     formf        :     0.28s CPU
+     rhoofr       :    46.48s CPU (      34 calls,   1.367 s avg)
+     vofrho       :    41.11s CPU (      33 calls,   1.246 s avg)
+     dforce       :    44.47s CPU (    1088 calls,   0.041 s avg)
+     calphi       :     2.10s CPU (      17 calls,   0.124 s avg)
+     gram         :    52.44s CPU (      33 calls,   1.589 s avg)
+     newd         :    80.22s CPU (      17 calls,   4.719 s avg)
+     calbec       :    34.98s CPU (     116 calls,   0.302 s avg)
+     prefor       :     0.53s CPU (      19 calls,   0.028 s avg)
+     strucf       :     0.12s CPU (       2 calls,   0.060 s avg)
+     nlfl         :     0.04s CPU
+     nlfq         :     0.96s CPU
+     set_cc       :     5.05s CPU (      34 calls,   0.149 s avg)
+     rhov         :    10.53s CPU (      34 calls,   0.310 s avg)
+     nlsm1        :    34.98s CPU (     116 calls,   0.302 s avg)
+     nlsm2        :     0.93s CPU
+     forcecc      :    11.90s CPU (      33 calls,   0.361 s avg)
+     fft          :    14.16s CPU (     167 calls,   0.085 s avg)
+     ffts         :     1.34s CPU (      67 calls,   0.020 s avg)
+     fftw         :    44.56s CPU (    4352 calls,   0.010 s avg)
+     fftb         :    58.49s CPU (   13280 calls,   0.004 s avg)
+     runcg_uspp   :   543.94s CPU
+     pc2          :    67.91s CPU (      48 calls,   1.415 s avg)
+     pcdaga2      :    20.65s CPU (      16 calls,   1.291 s avg)
      set_x_minus1 :     3.54s CPU (       2 calls,   1.770 s avg)
-     xminus1      :    22.20s CPU (      32 calls,   0.694 s avg)
+     xminus1      :    23.31s CPU (      32 calls,   0.728 s avg)
      emass_p_tpa  :     0.00s CPU
  
  
  
-     CP           :  9m 8.87s CPU time
+     CP           :  9m11.56s CPU time
 
  
-   This run was terminated on:   6:11:13  29Jun2006            
+   This run was terminated on:   6:19:28  17Oct2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
