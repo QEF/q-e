@@ -34,7 +34,8 @@ MODULE geomcell_cond
             nk1ts, nk2ts, &    ! k-point mesh dimensions
             k1ts, k2ts         ! k-point mesh shift
   INTEGER, ALLOCATABLE :: &
-     ninsh(:)      !  number of G in shell
+     ninsh(:),   & !  number of G in shell
+     nl_2d(:)      !  correspondence G list 2D fft_mesh
   REAL(DP)    :: &
      bdl,      &   !  right boundary of the left lead
      bds,      &   !        -||-     of the scatt. region 
@@ -150,6 +151,7 @@ MODULE control_cond
      earr(:),       &  ! energy array
      tran_tot(:)       ! transmission array
   LOGICAL        :: &
+     lorb,          &  ! if .t. calculate the states in all slabs
      lwrite_loc,    &  ! if .t. save eigenproblem result on fil_loc
      lread_loc,     &  ! if .t. read eigenproblem result from fil_loc
      lwrite_cond,   &  ! if .t. save variables needed for pwcond
@@ -174,6 +176,7 @@ MODULE scattnl_cond
        funl1(:,:),     &!       --              right boundary
        fundl0(:,:),    &!  nonlocal fun.' on     left boundary
        fundl1(:,:),    &!       --              right boundary
+       funz0(:,:,:),   &!  local+nonlocal fun. on all slabs
        intw1(:,:),     &!  integrals with beta-fun. of loc. fun.
        intw2(:,:)       !       --                   nonloc fun. 
   !
@@ -193,6 +196,7 @@ MODULE cb_cond
   COMPLEX(DP), ALLOCATABLE :: &
        kvall(:),       &!  k           for the left lead 
        kfunl(:,:),     &!  phi_k(z=d)  for the left lead
+       kfunz(:,:,:),   &!  phi_k(z)  for all slabs
        kfundl(:,:),    &!  phi_k'(z=d) for the left lead
        kintl(:,:),     &!  integral of phi_k with beta-fun.
        kcoefl(:,:),    &!  coeff. of phi_k over nonloc. fun.

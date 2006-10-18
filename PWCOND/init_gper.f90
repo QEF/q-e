@@ -12,8 +12,9 @@ subroutine init_gper(ik)
 !
 #include "f_defs.h"
   USE io_global,  ONLY :  stdout 
-  use pwcom
-  use cond  
+  USE noncollin_module, ONLY : npol
+  USE pwcom
+  USE cond  
   implicit none
   integer :: ipol, igper, icount, ik, k, ig, i, il, j, jl, iw 
   integer, allocatable :: nshell(:,:)
@@ -68,6 +69,7 @@ subroutine init_gper(ik)
 ! Global variables
 !
   allocate( gper( 2, ngper ) )
+  if (lorb) allocate( nl_2d( npol*ngper ) )
   allocate( ninsh( ngpsh ) )
   allocate( gnsh( ngpsh ) ) 
 !

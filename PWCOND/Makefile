@@ -4,6 +4,7 @@ include ../make.sys
 
 PPOBJS = \
 ../PP/start_postproc.o \
+../PP/xsf.o \
 ../PP/stop_pp.o
 
 PWCONDOBJS = \

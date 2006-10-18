@@ -10,7 +10,6 @@
 !
 subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
                   kfund, kint, kcoef)  
-
 !
 ! Using the basis functions obtained by scatter_forw it computes
 ! the complex band structure (CBS) of the lead. 
@@ -19,9 +18,12 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 !
 #include "f_defs.h"
   USE noncollin_module, ONLY : noncolin, npol
-  use spin_orb, only : lspinorb
-  use lsda_mod, only: nspin
-  use cond
+  USE spin_orb,  ONLY : lspinorb
+  USE lsda_mod,  ONLY : nspin
+  USE cond
+  USE pwcom,     ONLY : alat, at, omega
+  USE ions_base, ONLY : nat, ityp
+
   implicit none
   integer ::   &
      nocros,   & ! number of orbitals crossing the boundary
@@ -30,21 +32,27 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
      lleft       ! 1/0 if it is left/right tip    
   integer :: ik, i, j, kin, kfin, ig, info, lam, n, iorb, iorb1, &
              iorb2, aorb, borb, nt, startk, lastk, nchan, nb, ih, &
-             ih1, ij, is, js 
-  real(DP), parameter :: eps=1.d-8
-  real(DP) :: raux, DDOT
-  real(DP), allocatable :: zpseu(:,:,:), zps(:,:)
-  complex(DP), parameter :: cim=(0.d0,1.d0) 
-  complex(DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                  &
+             ih1, ij, is, js, ichan 
+  REAL(DP), PARAMETER :: eps=1.d-8
+  REAL(DP) :: raux, DDOT
+  REAL(DP), ALLOCATABLE :: zpseu(:,:,:), zps(:,:)
+  COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0) 
+  COMPLEX(DP) :: x1, x2, x3, x4, y1, y2, y3, y4,                  &
             kval(2*(n2d+npol*nocros)), kfun(n2d,2*(n2d+npol*nocros)),  &
             kint(nocros*npol,2*(n2d+npol*nocros)),  &
             kcoef(nocros*npol,2*(n2d+npol*nocros)), &
             kfund(n2d,2*(n2d+npol*nocros))   
-  complex(DP), allocatable :: amat(:,:), bmat(:,:), vec(:,:), &
+  COMPLEX(DP), ALLOCATABLE :: amat(:,:), bmat(:,:), vec(:,:), &
                                    zpseu_nc(:,:,:,:),              &
                                    zps_nc(:,:), aux(:,:) 
-  complex(DP), parameter :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
+  CHARACTER(LEN=50) :: filename
   LOGICAL :: exst
+
+  REAL(DP) :: x0(3)
+  INTEGER :: ounit, ikchoice, mu, ix, jx, iix, jjx, iig
+  COMPLEX(DP) :: funr(nrx*nry), fung(npol*ngper), auxfr((nrx+1)*(nry+1))
+
 
   call start_clock('compbs')
 
@@ -345,6 +353,74 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
     enddo                     
 
   endif
+
+IF (lorb) THEN
+!
+!    Calculate the Bloch functions in all z points
+!
+   raux=0.d0
+   DO ik=1,nrzpl
+      CALL ZGEMM('n', 'n', n2d, nchan, 2*n2d+npol*norb, one, funz0(1,1,ik), &
+                   n2d, vec, 2*n2d+npol*norb, zero, kfunz(1,1,ik), n2d)
+      raux=raux+DDOT(2*n2d,kfunz(1,1,ik),1,kfunz(1,1,ik),1)
+   END DO
+   raux=raux*omega/nrzpl
+   raux=1.d0/sqrt(raux)
+   DO ik=1,nrzpl
+      call DSCAL(2*n2d,raux,kfunz(1,1,ik),1)
+   ENDDO
+!
+!    Transform and save all propagating functions. One function after the other.
+!
+   DO ik=1,nrzpl   
+      DO ichan=1,nchan
+         fung=(0.d0,0.d0)
+         DO ig=1,npol*ngper
+            DO mu=1,n2d
+               fung(ig)=fung(ig) + kfunz(mu,ichan,ik) * newbg(ig,mu)
+            END DO
+         END DO
+
+         funr=(0.d0,0.d0)
+         DO ig=1,ngper*npol
+            funr(nl_2d(ig))=fung(ig)
+         END DO
+
+         CALL cft3(funr,nrx,nry,1,nrx,nry,1,1)
+!
+!  Copy the wavefunction for printing, using the boundary conditions
+!
+         DO ix=1,nrx+1
+            iix=ix
+            IF (ix>nrx) iix=1
+            DO jx=1,nry+1
+               jjx=jx
+               IF (jx>nry) jjx=1
+               ig=ix+(jx-1)*(nrx+1)
+               iig=iix+(jjx-1)*nrx
+               auxfr(ig)=REAL(funr(iig))**2+AIMAG(funr(iig))**2
+            END DO
+         END DO
+!  
+         ounit = 34
+         IF (ik>9) THEN
+            write(filename,'("wfc_z.",i2)') ik
+         ELSE
+            write(filename,'("wfc_z.",i1)') ik
+         ENDIF
+         OPEN (UNIT=ounit, FILE=filename, FORM='formatted', STATUS='unknown')
+
+         x0=0.d0
+         CALL xsf_struct (alat, at, 1, x0, 'Al1', 1, ounit)
+         CALL xsf_datagrid_2d (auxfr,nrx+1,nry+1,1.d0,1.d0,x0,at(1,1),at(1,2),&
+                                                alat,ounit)
+!         do ix=1,nrx+1
+!            write(ounit,*) ix, REAL(auxfr(ix))
+!         ENDDO
+         CLOSE(ounit)
+      END DO
+   END DO
+END IF
 
   deallocate(amat)
   deallocate(bmat)

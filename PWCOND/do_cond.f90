@@ -17,6 +17,7 @@ SUBROUTINE do_cond(nodenumber)
   USE pwcom
   USE cond 
   USE io_files 
+  USE noncollin_module, ONLY : noncolin
   USE io_global, ONLY : stdout, ionode, ionode_id
 
   USE mp
@@ -32,7 +33,7 @@ SUBROUTINE do_cond(nodenumber)
                        lwrite_loc, lread_loc, lwrite_cond, lread_cond, & 
                        orbj_in,orbj_fin,ikind,iofspin,llocal,          & 
                        bdl, bds, bdr, nz1, energy0, denergy, ecut2d,   &
-                       ewind, epsproj, delgep, cutplot
+                       ewind, epsproj, delgep, cutplot, lorb
                                                                                
   nd_nmbr=nodenumber
   CALL init_clocks(.TRUE.)
@@ -71,6 +72,7 @@ SUBROUTINE do_cond(nodenumber)
   epsproj = 1.d-3
   delgep = 5.d-10
   cutplot = 2.d0
+  lorb=.FALSE.
 
   IF ( ionode )  THEN
      !
@@ -245,6 +247,9 @@ ELSE
     CALL clean_pw(.true.)
   ENDIF
 ENDIF
+
+IF (lorb.and.okvan) call errore('do_cond','lorb not working with US-PP',1)
+IF (lorb.and.noncolin) call errore('do_cond','lorb not working with noncolin',1)
 
 IF (nkpts==0) THEN
    IF (ionode) THEN

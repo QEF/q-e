@@ -35,17 +35,17 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
         cros(norb,nrz), &
         tblm(4,norb),   &
         k, kz, n, lam, ig, lam1, mdim, itt, nbb, iorb, iorb1,   &
-        iorba, iorb1a, is, kp, nok, k1, nt, nb, kin, kfin
-  INTEGER :: i, j, info
+        iorba, iorb1a, is, kp, k1, nt, nb, kin, kfin
+  INTEGER :: i, j, kp1, info
   INTEGER, ALLOCATABLE :: ipiv(:), inslab(:)
   real(DP) :: z(nrz+1), r(1:ndmx,npsx), rab(1:ndmx,npsx),        &
                    betar(1:ndmx,nbrx,npsx), taunew(4,norb) 
   REAL(DP), PARAMETER :: eps=1.d-8
-  REAL(DP) :: DDOT, dz, tr, tr1, dz1 
+  REAL(DP) :: DDOT, dz, tr, dz1 
   COMPLEX(DP), PARAMETER :: cim=(0.d0,1.d0), one=(1.d0, 0.d0), &
                                  zero=(0.d0,0.d0) 
-  COMPLEX(DP) :: int1d, int2d, c, d, e, f, s1, s2, s3, s4, arg,&
-                      f1p, ZDOTC, fact, factm, psiper(n2d,n2d,nrzp), &
+  COMPLEX(DP) :: int1d, int2d, c, d, e, f, arg,&
+                      ZDOTC, fact, factm, psiper(n2d,n2d,nrzp), &
                       zk(n2d,nrzp)
   COMPLEX(DP), ALLOCATABLE ::   &
      psigper(:,:), & ! psigper(g,lam)=newbg(g,lam1) psiper(lam1,lam)
@@ -347,6 +347,23 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                   xmat(1,2*n2d+1),2*n2d,one,funl0,n2d)
 !---------------
 
+!-------
+! rotates all previous functions if lorb is .true.
+!
+    IF (lorb) THEN
+       DO kp1=kp,2,-1 
+          DO i = 1, n2d
+             DO j = 1, n2d
+                amat(i,j) = funz0(i,j,kp1)
+             END DO
+          END DO
+          CALL ZGEMM('n','n',n2d,n2d,n2d,one,amat,2*n2d,xmat,          &
+                      2*n2d,zero,funz0(1,1,kp1),n2d)
+          CALL ZGEMM('n','n',n2d,n2d+norb*npol,n2d,one,amat,2*n2d,     &
+                      xmat(1,n2d+1), 2*n2d,one,funz0(1,n2d+1,kp1),n2d)
+       END DO
+    END IF
+
 11  continue 
 
 !------
@@ -404,6 +421,17 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
        CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,kp), &
                   n2d,f2,n2d,zero,fundl1,n2d)
     END IF
+
+    IF (kp<nrzpl) THEN
+       DO i=1,n2d
+          DO j=1,2*n2d
+             funz0(i,j,kp+1)=fun1(i,j)
+          END DO
+          DO j=1,norb*npol
+             funz0(i,2*n2d+j,kp+1)=funl1(i,j)
+          END DO
+       END DO
+    END IF
 !---------
 
   enddo
@@ -438,6 +466,15 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
      CALL ZGEMM('n','n',n2d,norb*npol,n2d,one,psiper(1,1,1), &
                 n2d,f2,n2d,zero,fundl0,n2d)
   ENDIF
+!---------
+  DO i=1,n2d
+     DO j=1,2*n2d
+        funz0(i,j,1)=fun0(i,j)
+     END DO
+     DO j=1,norb*npol
+        funz0(i,2*n2d+j,1)=funl0(i,j)
+     END DO
+  END DO
 !---------
 
 ! scaling the integrals
