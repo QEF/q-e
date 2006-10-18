@@ -250,6 +250,9 @@ ENDIF
 
 IF (lorb.and.okvan) call errore('do_cond','lorb not working with US-PP',1)
 IF (lorb.and.noncolin) call errore('do_cond','lorb not working with noncolin',1)
+#ifdef __PARA
+   IF (lorb) call errore('do_cond','lorb not working in parallel',1)
+#endif
 
 IF (nkpts==0) THEN
    IF (ionode) THEN
