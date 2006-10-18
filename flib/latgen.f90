@@ -244,11 +244,11 @@ subroutine latgen(ibrav,celldm,a1,a2,a3,omega)
      !
      sen = sqrt( 1.d0 - celldm(4) ** 2 )
      a1(1) = 0.5 * celldm(1) 
-     a1(2) = a1(1) * celldm(2)
-     a2(1) =-a1(1)
-     a2(2) = a1(2)
-     a3(2) = celldm(1) * celldm(3) * celldm(4)
-     a3(3) = celldm(1) * celldm(3) * sen
+     a1(3) =-a1(1) * celldm(3)
+     a2(1) = celldm(1) * celldm(2) * celldm(4)
+     a2(2) = celldm(1) * celldm(2) * sen
+     a3(1) = a1(1)
+     a3(3) =-a1(3)
      !
   else if (ibrav == 14) then
      !
