@@ -422,7 +422,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                   n2d,f2,n2d,zero,fundl1,n2d)
     END IF
 
-    IF (kp<nrzpl) THEN
+    IF (lorb.and.kp<nrzpl) THEN
        DO i=1,n2d
           DO j=1,2*n2d
              funz0(i,j,kp+1)=fun1(i,j)
@@ -467,14 +467,16 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
                 n2d,f2,n2d,zero,fundl0,n2d)
   ENDIF
 !---------
-  DO i=1,n2d
-     DO j=1,2*n2d
-        funz0(i,j,1)=fun0(i,j)
+  IF (lorb) THEN
+     DO i=1,n2d
+        DO j=1,2*n2d
+           funz0(i,j,1)=fun0(i,j)
+        END DO
+        DO j=1,norb*npol
+           funz0(i,2*n2d+j,1)=funl0(i,j)
+        END DO
      END DO
-     DO j=1,norb*npol
-        funz0(i,2*n2d+j,1)=funl0(i,j)
-     END DO
-  END DO
+  END IF
 !---------
 
 ! scaling the integrals
