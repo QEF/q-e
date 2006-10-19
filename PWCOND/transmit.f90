@@ -14,9 +14,10 @@ subroutine transmit(ik, ien)
 ! the scattering region.
 !
 #include "f_defs.h"
-  USE io_global,  ONLY :  stdout
+  use io_global,  ONLY :  stdout
+  use io_files,  ONLY :  prefixl, prefixs
   use lsda_mod, only: nspin
-  USE noncollin_module, ONLY : noncolin, npol
+  use noncollin_module, ONLY : noncolin, npol
   use spin_orb, only : lspinorb
   use cond
 implicit none
@@ -245,17 +246,20 @@ implicit none
 ! eigenchannel decomposition
 !
   call eigenchnl(nchanl, nchanr, tmat, veceig, eigen)
-  WRITE( stdout,*) 'Eigenchannel decomposition:'
   tk=0
   do n=1, nchanl
-    WRITE( stdout,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
-    do ig=1, nchanl
-      tj= DBLE(veceig(ig,n))**2+AIMAG(veceig(ig,n))**2
-      WRITE( stdout,'(20x, f9.5)') tj
-    enddo
     tk=tk+eigen(n)
   enddo
-
+  if(prefixl.ne.prefixs) then 
+   WRITE( stdout,*) 'Eigenchannel decomposition:'
+   do n=1, nchanl
+     WRITE( stdout,'(''@'',i5, 2f9.5)') n, eev, eigen(n)
+     do ig=1, nchanl
+       tj= DBLE(veceig(ig,n))**2+AIMAG(veceig(ig,n))**2
+       WRITE( stdout,'(20x, f9.5)') tj
+     enddo
+   enddo
+  endif
 !
 ! Output of T(k) on a general file
 !
