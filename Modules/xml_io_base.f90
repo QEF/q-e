@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -23,7 +23,10 @@ MODULE xml_io_base
   !
   IMPLICIT NONE
   !
-  LOGICAL, PARAMETER :: rho_binary = .TRUE.
+  CHARACTER(5), PARAMETER :: fmt_name = "QEXML"
+  CHARACTER(5), PARAMETER :: fmt_version = "1.2.0"
+  !
+  LOGICAL, PARAMETER      :: rho_binary = .TRUE.
   !
   PRIVATE
   !
@@ -31,9 +34,11 @@ MODULE xml_io_base
   PUBLIC :: create_directory, kpoint_dir, wfc_filename, copy_file,       &
             restart_dir, check_restartfile, pp_check_file, save_history, &
             save_print_counter, read_print_counter, set_kpoints_vars,    &
+            write_header,                                                &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
             write_efield, write_spin, write_xc, write_occ, write_bz,     &
-            write_phonon, write_rho_xml, write_wfc, read_wfc, read_rho_xml
+            write_phonon, write_rho_xml, write_wfc, write_eig,           &
+            read_wfc, read_rho_xml
   !
   CHARACTER(iotk_attlenx) :: attr
   !
@@ -104,20 +109,26 @@ MODULE xml_io_base
     END FUNCTION kpoint_dir
     !
     !------------------------------------------------------------------------
-    FUNCTION wfc_filename( basedir, name, ik, ipol, tag )
+    FUNCTION wfc_filename( basedir, name, ik, ipol, tag, extension )
       !------------------------------------------------------------------------
       !
-      CHARACTER(LEN=256)              :: wfc_filename
-      CHARACTER(LEN=*),    INTENT(IN) :: basedir
-      CHARACTER(LEN=*),    INTENT(IN) :: name
-      INTEGER,             INTENT(IN) :: ik
-      INTEGER,   OPTIONAL, INTENT(IN) :: ipol
-      CHARACTER, OPTIONAL, INTENT(IN) :: tag
+      CHARACTER(LEN=256)                 :: wfc_filename
+      CHARACTER(LEN=*),       INTENT(IN) :: basedir
+      CHARACTER(LEN=*),       INTENT(IN) :: name
+      INTEGER,                INTENT(IN) :: ik
+      INTEGER,      OPTIONAL, INTENT(IN) :: ipol
+      CHARACTER(*), OPTIONAL, INTENT(IN) :: tag
+      CHARACTER(*), OPTIONAL, INTENT(IN) :: extension
       !    
-      CHARACTER(LEN=256) :: filename
+      CHARACTER(LEN=256) :: filename, tag_, ext_
       !
       !
       filename = ''
+      tag_     = ''
+      ext_     = '.dat'
+      !
+      IF ( PRESENT( tag ) )         tag_ = '_'//TRIM(tag)
+      IF ( PRESENT( extension ) )   ext_ = '.'//TRIM(extension)
       !
       IF ( PRESENT( ipol ) ) THEN
          !      
@@ -125,17 +136,8 @@ MODULE xml_io_base
          !
       END IF
       !
-      IF ( PRESENT( tag ) ) THEN
-         !
-         filename = TRIM( kpoint_dir( basedir, ik ) ) // '/' // &
-                  & TRIM( name ) // TRIM( filename ) // '_' // tag // '.dat'
-         !
-      ELSE
-         !
-         filename = TRIM( kpoint_dir( basedir, ik ) ) // '/' // &
-                  & TRIM( name ) // TRIM( filename ) // '.dat'
-         !
-      END IF
+      filename = TRIM( kpoint_dir( basedir, ik ) ) // '/' // &
+                 & TRIM( name ) // TRIM( filename ) // TRIM( tag_ ) // TRIM( ext_)
       !
       wfc_filename = TRIM( filename )
       !
@@ -555,6 +557,30 @@ MODULE xml_io_base
     !
     ! ... writing subroutines
     !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_header( creator_name, creator_version ) 
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      CHARACTER(LEN=*), INTENT(IN) :: creator_name, creator_version
+
+
+      CALL iotk_write_begin( iunpun, "HEADER" )
+      !
+      CALL iotk_write_attr(attr, "NAME",TRIM(fmt_name), FIRST=.TRUE.)
+      CALL iotk_write_attr(attr, "VERSION",TRIM(fmt_version) )
+      CALL iotk_write_empty( iunpun, "FORMAT", ATTR=attr )
+      !
+      CALL iotk_write_attr(attr, "NAME",TRIM(creator_name), FIRST=.TRUE.)
+      CALL iotk_write_attr(attr, "VERSION",TRIM(creator_version) )
+      CALL iotk_write_empty( iunpun, "CREATOR", ATTR=attr )
+      !
+      CALL iotk_write_end( iunpun, "HEADER" )
+      !
+    END SUBROUTINE write_header
+    !
+    !
     !------------------------------------------------------------------------
     SUBROUTINE write_cell( ibrav, symm_type, &
                            celldm, alat, a1, a2, a3, b1, b2, b3 )
@@ -614,16 +640,18 @@ MODULE xml_io_base
       CALL iotk_write_dat( iunpun, "CELL_DIMENSIONS", celldm(1:6) )
       !
       CALL iotk_write_begin( iunpun, "DIRECT_LATTICE_VECTORS" )
-      CALL iotk_write_dat(   iunpun, "a1", a1(:) * alat, ATTR = attr )
-      CALL iotk_write_dat(   iunpun, "a2", a2(:) * alat, ATTR = attr )
-      CALL iotk_write_dat(   iunpun, "a3", a3(:) * alat, ATTR = attr )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_DIRECT_LATTICE_VECTORS", ATTR=attr )
+      CALL iotk_write_dat(   iunpun, "a1", a1(:) * alat )
+      CALL iotk_write_dat(   iunpun, "a2", a2(:) * alat )
+      CALL iotk_write_dat(   iunpun, "a3", a3(:) * alat )
       CALL iotk_write_end(   iunpun, "DIRECT_LATTICE_VECTORS" )
       !
       CALL iotk_write_attr( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
       CALL iotk_write_begin( iunpun, "RECIPROCAL_LATTICE_VECTORS" )
-      CALL iotk_write_dat(   iunpun, "b1", b1(:), ATTR = attr )
-      CALL iotk_write_dat(   iunpun, "b2", b2(:), ATTR = attr )
-      CALL iotk_write_dat(   iunpun, "b3", b3(:), ATTR = attr )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_RECIPROCAL_LATTICE_VECTORS", ATTR=attr )
+      CALL iotk_write_dat(   iunpun, "b1", b1(:) )
+      CALL iotk_write_dat(   iunpun, "b2", b2(:) )
+      CALL iotk_write_dat(   iunpun, "b3", b3(:) )
       CALL iotk_write_end(   iunpun, "RECIPROCAL_LATTICE_VECTORS" )
       !
       CALL iotk_write_end( iunpun, "CELL" )
@@ -659,6 +687,9 @@ MODULE xml_io_base
       !
       flen = LEN_TRIM( pseudo_dir )
       !
+      CALL iotk_write_attr ( attr, "UNITS", "a.m.u.", FIRST = .TRUE. )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_MASSES", ATTR = attr )
+      !
       DO i = 1, nsp
          !
          CALL iotk_write_dat( iunpun, "ATOM_TYPE", atm(i) )
@@ -680,9 +711,8 @@ MODULE xml_io_base
             CALL copy_file( TRIM( file_pseudo ), &
                             TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
          !
-         CALL iotk_write_attr( attr, "UNITS", "a.m.u.", FIRST = .TRUE. )
          CALL iotk_write_dat( iunpun, TRIM( atm(i) ) // "_MASS", &
-                              amass(i), ATTR = attr )
+                              amass(i) )
          !
          CALL iotk_write_dat( iunpun, "PSEUDO_FOR_" // &
                             & TRIM( atm(i) ), TRIM( psfile(i) ) )
@@ -696,7 +726,7 @@ MODULE xml_io_base
       CALL iotk_write_dat( iunpun, "PSEUDO_DIR", TRIM( pseudo_dir) )
       !
       CALL iotk_write_attr( attr, "UNITS", "Bohr", FIRST = .TRUE. )
-      CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", attr )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_ATOMIC_POSITIONS", ATTR = attr )
       !
       DO i = 1, nat
          !
@@ -716,7 +746,7 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_symmetry( ibrav, symm_type, nsym, invsym, &
-                               nr1, nr2, nr3, ftau, s, sname, irt, t_rev )
+                               nr1, nr2, nr3, ftau, s, sname, irt, nat, t_rev )
       !------------------------------------------------------------------------
       !
       INTEGER,          INTENT(IN) :: ibrav, nsym,  nr1, nr2, nr3
@@ -724,7 +754,7 @@ MODULE xml_io_base
       LOGICAL,          INTENT(IN) :: invsym
       INTEGER,          INTENT(IN) :: s(:,:,:), ftau(:,:)
       CHARACTER(LEN=*), INTENT(IN) :: sname(:)
-      INTEGER,          INTENT(IN) :: irt(:,:), t_rev(:)
+      INTEGER,          INTENT(IN) :: irt(:,:), nat, t_rev(:)
       !
       INTEGER  :: i
       REAL(DP) :: tmp(3)
@@ -739,24 +769,30 @@ MODULE xml_io_base
       !
       CALL iotk_write_dat( iunpun, "INVERSION_SYMMETRY", invsym )
       !
+      CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMS", nat )
+      !
+      CALL iotk_write_attr( attr, "UNITS", "Crystal", FIRST = .TRUE. )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_SYMMETRIES", ATTR = attr )
+      !
       DO i = 1, nsym
          !
-         CALL iotk_write_attr( attr, "UNITS", "Crystal", FIRST = .TRUE. )
+         CALL iotk_write_begin( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
+         !
+         CALL iotk_write_attr ( attr, "NAME", TRIM( sname(i) ), FIRST=.TRUE. )
+         CALL iotk_write_attr ( attr, "T_REV", t_rev(i) )
+         CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
          !
          tmp(1) = ftau(1,i) / DBLE( nr1 )
          tmp(2) = ftau(2,i) / DBLE( nr2 )
          tmp(3) = ftau(3,i) / DBLE( nr3 )
          !
-         CALL iotk_write_attr( attr, "ROT", s(:,:,i) )
-         CALL iotk_write_attr( attr, "T_REV", t_rev(i) )
-         CALL iotk_write_attr( attr, "FRAC_TRANS", tmp(:) )
-         CALL iotk_write_attr( attr, "NAME", TRIM( sname(i) ) )
-         CALL iotk_write_attr( attr, "EQ_IONS", irt(i,:) )
+         CALL iotk_write_dat( iunpun, "ROTATION", s(:,:,i), COLUMNS=3 )
+         CALL iotk_write_dat( iunpun, "FRACTIONAL_TRANSLATION", tmp(1:3) )
+         CALL iotk_write_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat), COLUMNS=8 )
          !
-         CALL iotk_write_empty( iunpun, &
-                                "SYMM" // TRIM( iotk_index( i ) ), attr )
+         CALL iotk_write_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
          !
-      END DO
+      ENDDO
       !
       CALL iotk_write_end( iunpun, "SYMMETRIES" )
       !
@@ -813,14 +849,14 @@ MODULE xml_io_base
       !
       CALL iotk_write_begin( iunpun, "PLANE_WAVES" )
       !
-      CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
+      CALL iotk_write_attr ( attr, "UNITS", "Hartree", FIRST = .TRUE. )
+      CALL iotk_write_empty( iunpun, "UNITS_FOR_CUTOFF", ATTR = attr )
       !
-      CALL iotk_write_dat( iunpun, "WFC_CUTOFF", ecutwfc / e2, ATTR = attr )
+      CALL iotk_write_dat( iunpun, "WFC_CUTOFF", ecutwfc / e2 )
       !
-      CALL iotk_write_dat( iunpun, "RHO_CUTOFF", &
-                           ecutwfc * dual / e2, ATTR = attr )
+      CALL iotk_write_dat( iunpun, "RHO_CUTOFF", ecutwfc * dual / e2 )
       !
-      CALL iotk_write_dat( iunpun, "MAX_NPW", npwx )
+      CALL iotk_write_dat( iunpun, "MAX_NUMBER_OF_GK-VECTORS", npwx )
       !
       CALL iotk_write_dat( iunpun, "GAMMA_ONLY", gamma_only )
       !
@@ -842,12 +878,13 @@ MODULE xml_io_base
          !
          ! ... write the G-vectors
          !
-         CALL iotk_link( iunpun, "G-VECTORS_FILE", &
-                         "gvectors.dat", CREATE = .TRUE., BINARY = .TRUE. )
+         CALL iotk_link( iunpun, "G-VECTORS", &
+                         "./gvectors.dat", CREATE = .TRUE., BINARY = .TRUE. )
          !
-         CALL iotk_write_begin( iunpun, "G-VECTORS", ATTR = attr )
-         CALL iotk_write_dat( iunpun, "g", itmp(1:3,1:ngm_g), COLUMNS = 3 )
-         CALL iotk_write_end( iunpun, "G-VECTORS" )
+         CALL iotk_write_begin( iunpun, "G-VECTORS" )
+         CALL iotk_write_empty( iunpun, "INFO", ATTR = attr )
+         CALL iotk_write_dat  ( iunpun, "g", itmp(1:3,1:ngm_g), COLUMNS = 3 )
+         CALL iotk_write_end  ( iunpun, "G-VECTORS" )
          !
       END IF
       !
@@ -891,7 +928,7 @@ MODULE xml_io_base
       !
       CHARACTER(LEN=*),   INTENT(IN) :: dft
       LOGICAL,            INTENT(IN) :: lda_plus_u
-      INTEGER,            INTENT(IN) :: nsp
+      INTEGER,  OPTIONAL, INTENT(IN) :: nsp
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_lmax
       INTEGER,  OPTIONAL, INTENT(IN) :: Hubbard_l(:)
       REAL(DP), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
@@ -908,11 +945,11 @@ MODULE xml_io_base
          IF ( .NOT. PRESENT( Hubbard_lmax ) .OR. &
               .NOT. PRESENT( Hubbard_l )    .OR. & 
               .NOT. PRESENT( Hubbard_U )    .OR. &
+              .NOT. PRESENT( nsp )          .OR. &
               .NOT. PRESENT( Hubbard_alpha ) ) &
             CALL errore( 'write_exchange_correlation', &
                          ' variables for LDA+U not present', 1 )
          !
-! @AF@
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPECIES", nsp )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
@@ -979,13 +1016,11 @@ MODULE xml_io_base
       !
       IF ( tfixed_occ ) THEN
          !
-! @AF@
          CALL iotk_write_attr( attr, "lsda" , lsda, FIRST = .TRUE. )
          CALL iotk_write_attr( attr, "nelup", nelup )
          CALL iotk_write_attr( attr, "neldw", neldw )
          !
          CALL iotk_write_empty( iunpun, 'INFO', ATTR = attr )
-! \ @AF@
          !
          CALL iotk_write_dat( iunpun, "INPUT_OCC_UP", f_inp(1:nelup,1) )
          !
@@ -1385,16 +1420,15 @@ MODULE xml_io_base
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_open_write( iuni, FILE = TRIM( filename ), BINARY = .TRUE. )
+         CALL iotk_open_write( iuni, FILE = TRIM( filename ), ROOT="WFC", BINARY = .TRUE. )
          !
          CALL iotk_write_attr( attr, "ngw",          ngw, FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "igwx",         igwx )
          CALL iotk_write_attr( attr, "nbnd",         nbnd )
          CALL iotk_write_attr( attr, "ik",           ik )
          CALL iotk_write_attr( attr, "nk",           nk )
-         CALL iotk_write_attr( attr, "kunit",        kunit )
          CALL iotk_write_attr( attr, "ispin",        ispin )
          CALL iotk_write_attr( attr, "nspin",        nspin )
-         CALL iotk_write_attr( attr, "igwx",         igwx )
          CALL iotk_write_attr( attr, "scale_factor", scalef )
          !
          CALL iotk_write_empty( iuni, "INFO", attr )
@@ -1452,7 +1486,7 @@ MODULE xml_io_base
       INTEGER,            INTENT(IN)    :: iuni
       COMPLEX(DP),        INTENT(OUT)   :: wf(:,:)
       INTEGER,            INTENT(IN)    :: ik, nk
-      INTEGER,            INTENT(INOUT) :: kunit
+      INTEGER,            INTENT(IN)    :: kunit
       INTEGER,            INTENT(INOUT) :: ngw, nbnd, ispin, nspin
       INTEGER,            INTENT(IN)    :: ngwl
       INTEGER,            INTENT(IN)    :: igl(:)
@@ -1464,7 +1498,7 @@ MODULE xml_io_base
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER                  :: ierr
       INTEGER                  :: iks, ike, nkt, ikt
-      INTEGER                  :: igwx, igwx_, ik_, nk_, kunit_
+      INTEGER                  :: igwx, igwx_, ik_, nk_
       INTEGER                  :: npool, ipmask(nproc_image), ipdest
       LOGICAL                  :: flink_
       !
@@ -1496,7 +1530,6 @@ MODULE xml_io_base
           CALL iotk_scan_attr( attr, "nbnd",         nbnd )
           CALL iotk_scan_attr( attr, "ik",           ik_ )
           CALL iotk_scan_attr( attr, "nk",           nk_ )
-          CALL iotk_scan_attr( attr, "kunit",        kunit_ )
           CALL iotk_scan_attr( attr, "ispin",        ispin )
           CALL iotk_scan_attr( attr, "nspin",        nspin )
           CALL iotk_scan_attr( attr, "igwx",         igwx_ )
@@ -1508,7 +1541,6 @@ MODULE xml_io_base
       CALL mp_bcast( nbnd,   ionode_id, intra_image_comm )
       CALL mp_bcast( ik_,    ionode_id, intra_image_comm )
       CALL mp_bcast( nk_,    ionode_id, intra_image_comm )
-      CALL mp_bcast( kunit_, ionode_id, intra_image_comm )
       CALL mp_bcast( ispin,  ionode_id, intra_image_comm )
       CALL mp_bcast( nspin,  ionode_id, intra_image_comm )
       CALL mp_bcast( igwx_,  ionode_id, intra_image_comm )
@@ -1556,4 +1588,53 @@ MODULE xml_io_base
       !
     END SUBROUTINE read_wfc
     !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_eig( iuni, filename, nbnd, eig, energy_units, &
+                          occ, ik, ispin, ef )
+      !------------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      INTEGER,            INTENT(IN) :: iuni
+      INTEGER,            INTENT(IN) :: nbnd
+      REAL(DP),           INTENT(IN) :: eig(:)
+      CHARACTER(*),       INTENT(IN) :: energy_units
+      REAL(DP), OPTIONAL, INTENT(IN) :: occ(:), ef
+      INTEGER,  OPTIONAL, INTENT(IN) :: ik, ispin
+      CHARACTER(LEN=256), INTENT(IN) :: filename
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_open_write ( iuni, FILE = TRIM( filename ), BINARY = .FALSE. )
+         !
+         CALL iotk_write_attr ( attr, "nbnd", nbnd, FIRST=.TRUE. )
+         IF ( PRESENT( ik) )    CALL iotk_write_attr ( attr, "ik", ik )
+         IF ( PRESENT( ispin) ) CALL iotk_write_attr ( attr, "ispin", ispin )
+         CALL iotk_write_empty( iuni, "INFO", ATTR = attr )
+         !
+         CALL iotk_write_attr ( attr, "UNITS", TRIM(energy_units), FIRST = .TRUE. )
+         CALL iotk_write_empty( iuni, "UNITS_FOR_ENERGIES", ATTR=attr)
+         !
+         IF ( PRESENT( ef ) ) THEN
+            !
+            CALL iotk_write_dat( iuni, "FERMI_ENERGY", ef)
+            !
+         ENDIF
+         !
+         CALL iotk_write_dat( iuni, "EIGENVALUES", eig(:) )
+         !
+         IF ( PRESENT( occ ) ) THEN
+            !
+            CALL iotk_write_dat( iuni, "OCCUPATIONS", occ(:) )
+            !
+         ENDIF
+         !
+         CALL iotk_close_write ( iuni )
+         !
+      ENDIF
+      !
+    END SUBROUTINE write_eig
+         
+
 END MODULE xml_io_base

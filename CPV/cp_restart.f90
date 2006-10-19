@@ -65,6 +65,7 @@ MODULE cp_restart
       USE fft_base,                 ONLY : dfftp
       USE constants,                ONLY : pi
       USE cp_interfaces,            ONLY : n_atom_wfc
+      USE global_version,           ONLY : version_number
       !
       IMPLICIT NONE
       !
@@ -278,10 +279,23 @@ MODULE cp_restart
       s0 = cclock() 
       !
       IF ( ionode ) THEN
+
+!-------------------------------------------------------------------------------
+! ... HEADER
+!-------------------------------------------------------------------------------
          !
-         !-------------------------------------------------------------------------------
-         ! ... STATUS
-         !-------------------------------------------------------------------------------
+         CALL write_header( "CP", TRIM(version_number) )
+         !
+!-------------------------------------------------------------------------------
+! ... this flag is used to check if the file can be used for post-processing
+!-------------------------------------------------------------------------------
+         !
+         CALL iotk_write_dat( iunpun, "PP_CHECK_FLAG", .true. )
+         !
+         !
+!-------------------------------------------------------------------------------
+! ... STATUS
+!-------------------------------------------------------------------------------
          !
          CALL iotk_write_begin( iunpun, "STATUS" )
          !
@@ -373,20 +387,18 @@ MODULE cp_restart
          !
          CALL iotk_write_end( iunpun, "PARALLELISM" )
          !
+      END IF
+      !
 !-------------------------------------------------------------------------------
 ! ... CHARGE-DENSITY
 !-------------------------------------------------------------------------------
-         !
-         IF (write_charge_density) CALL iotk_write_begin( iunpun, "CHARGE-DENSITY" )
-         !
-      END IF
       !
       IF (write_charge_density) then
          !
          rho_file_base = 'charge-density'
          !
          IF ( ionode )&
-              CALL iotk_link( iunpun, "CHARGE", rho_file_base, &
+              CALL iotk_link( iunpun, "CHARGE-DENSITY", rho_file_base, &
               CREATE = .FALSE., BINARY = .TRUE. )
          !
          rho_file_base = TRIM( dirname ) // '/' // TRIM( rho_file_base )
@@ -424,13 +436,11 @@ MODULE cp_restart
          !
       END IF ! write_charge_density
       !
-      IF ( ionode ) THEN
-         !
-         if (write_charge_density) CALL iotk_write_end( iunpun, "CHARGE-DENSITY" )
-         !
 !-------------------------------------------------------------------------------
 ! ... TIMESTEPS
 !-------------------------------------------------------------------------------
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_write_attr( attr, "nt", 2, FIRST = .TRUE. )
          !
@@ -510,14 +520,14 @@ MODULE cp_restart
          !
       END IF
 
-      !-------------------------------------------------------------------------------
-      ! ... BAND_STRUCTURE
-      !-------------------------------------------------------------------------------
+!-------------------------------------------------------------------------------
+! ... BAND_STRUCTURE_INFO
+!-------------------------------------------------------------------------------
 
       IF ( ionode ) THEN
 
          ! 
-         CALL iotk_write_begin( iunpun, "BAND_STRUCTURE" )
+         CALL iotk_write_begin( iunpun, "BAND_STRUCTURE_INFO" )
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_ATOMIC_WFC", n_atom_wfc() )
          !
@@ -547,13 +557,18 @@ MODULE cp_restart
          !
          CALL iotk_write_dat( iunpun, "NUMBER_OF_SPIN_COMPONENTS", nspin )
          !
-         CALL iotk_write_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+         CALL iotk_write_end( iunpun, "BAND_STRUCTURE_INFO" )
          !
-         CALL iotk_write_dat( iunpun, "MAX_NPW", ngwt )
+         CALL iotk_write_begin( iunpun, "EIGENVALUES" )
+         !
          !
       END IF
       !
-      k_points_loop: DO ik = 1, nk
+!-------------------------------------------------------------------------------
+! ... EIGENVALUES
+!-------------------------------------------------------------------------------
+      !
+      k_points_loop1: DO ik = 1, nk
          !
          IF ( ionode ) THEN
             !
@@ -577,13 +592,27 @@ MODULE cp_restart
                   ! 
                   !  writes data required by postproc and PW
                   !
-                  CALL iotk_write_attr( attr, "UNITS", "Hartree", FIRST = .TRUE. )
-                  !
-                  CALL iotk_write_dat( iunpun, "ET" // TRIM( cspin ), et( 1 : nbnd_tot, iss ) , ATTR = attr  )
-                  !
+                  IF( nspin == 2 ) THEN
+                     IF( iss == 1 ) filename = wfc_filename( ".", 'eigenval1', ik, EXTENSION='xml' )
+                     IF( iss == 2 ) filename = wfc_filename( ".", 'eigenval2', ik, EXTENSION='xml' )
+                     !
+                     IF( iss == 1 ) CALL iotk_link( iunpun, "DATAFILE.1", &
+                                                    filename, CREATE = .FALSE., BINARY = .FALSE. )
+                     IF( iss == 2 ) CALL iotk_link( iunpun, "DATAFILE.2", &
+                                                    filename, CREATE = .FALSE., BINARY = .FALSE. )
+   
+                     IF( iss == 1 ) filename = wfc_filename( dirname, 'eigenval1', ik, EXTENSION='xml' )
+                     IF( iss == 2 ) filename = wfc_filename( dirname, 'eigenval2', ik, EXTENSION='xml' )
+                  ELSE
+                     filename = wfc_filename( ".", 'eigenval', ik, EXTENSION='xml' )
+                     CALL iotk_link( iunpun, "DATAFILE", filename, CREATE = .FALSE., BINARY = .FALSE. )
+                     filename = wfc_filename( dirname, 'eigenval', ik, EXTENSION='xml' )
+                  END IF
+
                   dtmp ( 1:nupdwn( iss ) ) = occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) / wk(ik)
                   !
-                  CALL iotk_write_dat( iunpun, "OCC"  // TRIM( cspin ), dtmp )
+                  CALL write_eig( iunout, filename, nbnd_tot, et( 1:nbnd_tot, iss) , "Hartree", &
+                               OCC = dtmp(:), IK=ik, ISPIN=iss, EF=0.0d0 )
                   !
                END IF
                !
@@ -597,6 +626,32 @@ MODULE cp_restart
             !
             DEALLOCATE( dtmp )
             !
+            CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+
+         END IF
+         !
+      END DO k_points_loop1
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_write_end( iunpun, "EIGENVALUES" )
+         !
+         CALL iotk_write_begin( iunpun, "EIGENVECTORS" )
+         !
+         CALL iotk_write_dat  ( iunpun, "MAX_NUMBER_OF_GK-VECTORS", ngwt )
+         !
+      END IF
+      !
+!-------------------------------------------------------------------------------
+! ... EIGENVECTORS
+!-------------------------------------------------------------------------------
+      !
+      k_points_loop2: DO ik = 1, nk
+
+         IF( ionode ) THEN
+
+            CALL iotk_write_begin( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
+            !
             ! ... G+K vectors
             !
             CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngwt )
@@ -604,15 +659,13 @@ MODULE cp_restart
             !
             filename = TRIM( wfc_filename( ".", 'gkvectors', ik ) )
             !
-            CALL iotk_link( iunpun, "gkvectors", &
-                            filename, CREATE = .FALSE., BINARY = .TRUE. )
+            CALL iotk_link( iunpun, "GK-VECTORS", filename, CREATE = .FALSE., BINARY = .TRUE. )
             !
             filename = TRIM( wfc_filename( dirname, 'gkvectors', ik ) )
             !
          END IF
          !
          CALL write_gk( iunout, ik, mill, filename )
-         !
          !
          DO iss = 1, nspin
             ! 
@@ -638,8 +691,12 @@ MODULE cp_restart
                      !
                   END IF
                   !
-                  CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (iss) ), &
-                                  filename, CREATE = .FALSE., BINARY = .TRUE. )
+                  IF( nspin == 2 ) THEN
+                     CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (iss) ), &
+                                     filename, CREATE = .FALSE., BINARY = .TRUE. )
+                  ELSE
+                     CALL iotk_link( iunpun, "WFC", filename, CREATE = .FALSE., BINARY = .TRUE. )
+                  END IF
                   !
                   IF ( nspin == 1 ) THEN
                      !
@@ -731,55 +788,50 @@ MODULE cp_restart
                             cm2( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , ig_l2g, ngw, &
                             filename, scalef )
             !
+            cspin = iotk_index( iss )
+            !
+            IF ( ionode ) THEN
+   
+               IF(  PRESENT( mat_z ) ) THEN
+                  ! 
+                  filename = TRIM( wfc_filename( ".", 'mat_z', ik, iss ) )
+                  !
+                  CALL iotk_link( iunpun, "MAT_Z" // TRIM( cspin ), &
+                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
+                  !
+                  CALL iotk_write_dat( iunpun, "MAT_Z" // TRIM( cspin ), mat_z(:,:,iss) )
+                  !
+               END IF
+               !
+               ! ... write matrix lambda to file
+               !
+               filename = TRIM( wfc_filename( ".", 'lambda0', ik, iss ) )
+               !
+               CALL iotk_link( iunpun, "LAMBDA0" // TRIM( cspin ), &
+                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
+               !
+               CALL iotk_write_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda0(:,:,iss) )
+               !
+               filename = TRIM( wfc_filename( ".", 'lambdam', ik, iss ) )
+               !
+               CALL iotk_link( iunpun, "LAMBDAM" // TRIM( cspin ), &
+                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
+               !
+               CALL iotk_write_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambdam(:,:,iss) )
+               !
+            END IF
+            !
          END DO
-         !
+
          IF ( ionode ) &
             CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
          !
-      END DO k_points_loop
-      !
-      !
-      !
-      DO iss = 1, nspin
-         ! 
-         cspin = iotk_index( iss )
-         !
-         IF ( ionode .AND. PRESENT( mat_z ) ) THEN
-            ! 
-            filename = 'mat_z' // cspin
-            !
-            CALL iotk_link( iunpun, "mat_z" // TRIM( cspin ), &
-                            filename, CREATE = .TRUE., BINARY = .TRUE. )
-            !
-            CALL iotk_write_dat( iunpun, &
-                                 "mat_z" // TRIM( cspin ), mat_z(:,:,iss) )
-            !
-         END IF
-         !
-      END DO
+      END DO k_points_loop2
       !
       IF( ionode ) THEN
         !  
-        CALL iotk_write_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+        CALL iotk_write_end( iunpun, "EIGENVECTORS" )
         !     
-        CALL iotk_write_end( iunpun, "BAND_STRUCTURE" )
-        ! 
-      END IF
-      !
-      ! ... write matrix lambda to file
-      !
-      filename = TRIM( dirname ) // '/lambda.dat'
-      !
-      IF ( ionode ) THEN
-         !
-         OPEN( UNIT = 10, FILE = TRIM( filename ), &
-               STATUS = 'UNKNOWN', FORM = 'UNFORMATTED' )
-         !
-         WRITE( 10 ) lambda0
-         WRITE( 10 ) lambdam
-         !
-         CLOSE( UNIT = 10 )
-         !
       END IF
       !
       IF ( ionode ) CALL iotk_close_write( iunpun )
@@ -1012,16 +1064,34 @@ MODULE cp_restart
       CALL errore( 'cp_readfile', &
                    'cannot read positions from restart file', ierr )
       !
+      !  Read SPIN infos
+      !
+      lsda_ = ( nspin == 2 )
       !
       IF( ionode ) THEN
-         CALL iotk_scan_begin( iunpun, "OCCUPATIONS", FOUND = found )
-         lsda_  = .FALSE.
-         nelup_ = 0
-         neldw_ = 0
+         CALL iotk_scan_begin( iunpun, "SPIN", FOUND = found )
          IF( found ) THEN
-            CALL iotk_scan_empty( iunpun, "INFO", attr )
-            CALL iotk_scan_attr( attr, "lsda",  lsda_ )
-            IF( lsda_ ) THEN
+            CALL iotk_scan_dat( iunpun, "LSDA", lsda_ )
+            CALL iotk_scan_end( iunpun, "SPIN" )
+         END IF
+      END IF
+      !
+      CALL mp_bcast( lsda_ , ionode_id, intra_image_comm )
+      !
+      IF( lsda_ .AND. nspin == 1 ) &
+         CALL errore( 'cp_readfile', 'LSDA restart file with a spinless run', ierr )
+
+      !
+      !  Read Occupations infos
+      !
+      nelup_ = nupdwn( 1 )
+      neldw_ = nupdwn( 2 )
+
+      IF( ionode ) THEN
+         CALL iotk_scan_begin( iunpun, "OCCUPATIONS", FOUND = found )
+         IF( found ) THEN
+            CALL iotk_scan_empty( iunpun, "INFO", attr, FOUND = found )
+            IF( lsda_ .AND. found ) THEN
                CALL iotk_scan_attr( attr, "nelup",  nelup_ )
                CALL iotk_scan_attr( attr, "neldw",  neldw_ )
             END IF
@@ -1029,13 +1099,9 @@ MODULE cp_restart
          END IF
       END IF
       !
-      CALL mp_bcast( lsda_ , ionode_id, intra_image_comm )
       CALL mp_bcast( nelup_ , ionode_id, intra_image_comm )
       CALL mp_bcast( neldw_ , ionode_id, intra_image_comm )
       !
-      IF( lsda_ .AND. nspin == 1 ) &
-         CALL errore( 'cp_readfile', 'LSDA restart file with a spinless run', ierr )
-
       IF( lsda_ ) THEN
          IF( ( nelup_ /=  nupdwn( 1 ) ) .OR. ( neldw_ /=  nupdwn( 2 ) ) ) &
             CALL errore( 'cp_readfile', 'inconsistent number of spin states', ierr )
@@ -1230,7 +1296,7 @@ MODULE cp_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE" )
+         CALL iotk_scan_begin( iunpun, "BAND_STRUCTURE_INFO" )
          !
          IF ( nspin == 2 ) THEN
             !
@@ -1264,11 +1330,13 @@ MODULE cp_restart
             !
          END IF
          !
-         CALL iotk_scan_begin( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
+         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE_INFO" )
+         !
+         CALL iotk_scan_begin( iunpun, "EIGENVALUES" )
          !
       END IF
       !
-      k_points_loop: DO ik = 1, nk
+      k_points_loop1: DO ik = 1, nk
          !
          IF ( ionode ) THEN
             !
@@ -1294,7 +1362,19 @@ MODULE cp_restart
                !
                IF( .NOT. found ) THEN
                   !
-                  CALL iotk_scan_dat( iunpun, "OCC" // TRIM( cspin ), occ_ ( 1:nbnd_tot ), FOUND = found )
+                  IF( nspin == 1 ) THEN
+                     CALL iotk_scan_begin( iunpun, "DATAFILE", FOUND = found )
+                  ELSE
+                     CALL iotk_scan_begin( iunpun, "DATAFILE//TRIM(cspin)", FOUND = found )
+                  END IF
+                  !
+                  CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", occ_( 1:nbnd_tot ) ) 
+                  !
+                  IF( nspin == 1 ) THEN
+                     CALL iotk_scan_end( iunpun, "DATAFILE" )
+                  ELSE
+                     CALL iotk_scan_end( iunpun, "DATAFILE//TRIM(cspin)" )
+                  END IF
                   !
                   IF( found ) THEN
                      occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) = occ_ ( 1:nupdwn( iss ) ) * wk_
@@ -1322,7 +1402,24 @@ MODULE cp_restart
             IF( .NOT. found ) &
                CALL errore( " readfile ", " occupation numbers not found! ", 1 )
             !
+         END DO
+
+         IF ( ionode ) CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+         !
+      END DO k_points_loop1
+
+      IF ( ionode ) THEN
+         CALL iotk_scan_end  ( iunpun, "EIGENVALUES" )
+         CALL iotk_scan_begin( iunpun, "EIGENVECTORS" )
+      END IF
             !
+      k_points_loop2: DO ik = 1, nk
+         !
+         IF ( ionode ) THEN
+            CALL iotk_scan_begin( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+         END IF
+         !
+         DO iss = 1, nspin
             IF ( ionode ) THEN
                !
                CALL iotk_scan_begin( iunpun, "WFC0" // TRIM( iotk_index (iss) ), FOUND = found )
@@ -1331,17 +1428,13 @@ MODULE cp_restart
                !
                IF( .NOT. found ) THEN
                   !
-                  CALL iotk_scan_begin( iunpun, "wfc", FOUND = found )
-                  !
-                  filename = "wfc"
-                  !
-               END IF
-               !
-               IF( .NOT. found ) THEN
-                  !
-                  CALL iotk_scan_begin( iunpun, "WFC" // TRIM( iotk_index (iss) ), FOUND = found )
-                  !
-                  filename = "WFC" // TRIM( iotk_index (iss) )
+                  IF( nspin == 2 ) THEN
+                     CALL iotk_scan_begin( iunpun, "WFC" // TRIM( iotk_index (iss) ), FOUND = found )
+                     filename = "WFC" // TRIM( iotk_index (iss) )
+                  ELSE
+                     CALL iotk_scan_begin( iunpun, "WFC", FOUND = found )
+                     filename = "WFC"
+                  END IF
                   !
                END IF
                !
@@ -1376,14 +1469,6 @@ MODULE cp_restart
                !
                filename = "WFCM" // TRIM( iotk_index (iss) )
                !
-               IF( .NOT. found ) THEN
-                  !
-                  CALL iotk_scan_begin( iunpun, "wfcm", FOUND = found )
-                  !
-                  filename = "wfcm"
-                  !
-               END IF
-               !
             END IF
             !
             CALL mp_bcast( found, ionode_id, intra_image_comm )
@@ -1414,24 +1499,44 @@ MODULE cp_restart
             !
          END DO
          !
-         IF ( ionode ) &
-            CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
+         DO iss = 1, nspin
+            !
+            IF( ionode ) THEN
+               !
+               IF ( PRESENT( mat_z ) ) THEN
+                  CALL iotk_scan_dat( iunpun, "MAT_Z" // TRIM( iotk_index( iss ) ), mat_z(:,:,iss), FOUND = found )
+                  IF( .NOT. found ) THEN
+                     WRITE( stdout, * ) 'WARNING mat_z not read from restart file'
+                     mat_z(:,:,iss) = 0.0d0
+                  END IF
+               END IF
+               !
+               ! ... read matrix lambda to file
+               !
+               IF( ionode ) THEN
+                  CALL iotk_scan_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda0(:,:,iss), FOUND = found )
+                  IF( .NOT. found ) THEN
+                     WRITE( stdout, * ) 'WARNING lambda0 not read from restart file'
+                     lambda0(:,:,iss) = 0.0d0
+                  END IF
+                  CALL iotk_scan_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambdam(:,:,iss), FOUND = found )
+                  IF( .NOT. found ) THEN
+                     WRITE( stdout, * ) 'WARNING lambdam not read from restart file'
+                     lambdam(:,:,iss) = 0.0d0
+                  END IF
+               END IF
+               ! 
+            END IF
+            !
+         END DO
          !
-      END DO k_points_loop
-      !
-      DO iss = 1, nspin
+         IF ( ionode ) CALL iotk_scan_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
          !
-         IF ( ionode .AND. PRESENT( mat_z ) ) &
-            CALL iotk_scan_dat( iunpun, "mat_z" // &
-                              & TRIM( iotk_index( iss ) ), mat_z(:,:,iss) )
-         !
-      END DO
+      END DO k_points_loop2
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_end( iunpun, "EIGENVALUES_AND_EIGENVECTORS" )
-         !
-         CALL iotk_scan_end( iunpun, "BAND_STRUCTURE" )
+         CALL iotk_scan_end( iunpun, "EIGENVECTORS" )
          !
       END IF
       !
@@ -1483,29 +1588,7 @@ MODULE cp_restart
       !
       IF ( ionode ) &
          CALL iotk_close_read( iunpun )
-      !
-      ! ... read matrix lambda to file
-      !
-      filename = TRIM( dirname ) // '/lambda.dat'
-      !
-      IF ( ionode ) THEN
-         !
-         INQUIRE( file = TRIM( filename ), EXIST = found )
-         !
-         IF ( found ) THEN
-            !
-            OPEN( UNIT = 10, FILE = TRIM( filename ), &
-                  STATUS = 'OLD', FORM = 'UNFORMATTED' )
-            !
-            READ( 10 ) lambda0
-            !
-         ELSE
-            !
-            lambda0 = 0.0d0 
-            !
-         END IF
-         !
-      END IF
+
       !
       DO iss = 1, nspin
          DO ib = 1, SIZE( lambda0, 2 )
@@ -1513,28 +1596,11 @@ MODULE cp_restart
          END DO
       END DO
       !
-      IF ( ionode ) THEN
-         !
-         IF ( found ) THEN
-            !
-            READ( 10 ) lambdam
-            !
-            CLOSE( UNIT = 10 )
-            !
-         ELSE
-            !
-            lambdam = 0.0d0 
-            !
-         END IF
-         !
-      END IF
-      !
       DO iss = 1, nspin
          DO ib = 1, SIZE( lambda0, 2 )
             CALL mp_bcast( lambdam( :, ib, iss), ionode_id, intra_image_comm )
          END DO
       END DO
-
       !
       s1 = cclock()
       !
@@ -1935,7 +2001,9 @@ MODULE cp_restart
        INTEGER, ALLOCATABLE :: igwk(:)
        INTEGER, ALLOCATABLE :: itmp1(:)
        INTEGER  :: npwx_g, npw_g, ig, ngg
+       REAL(DP) :: xk(3)
 
+       xk     = 0.0d0
        npwx_g = ngwt
        npw_g  = ngwt
 
@@ -1974,17 +2042,17 @@ MODULE cp_restart
        !
        IF ( ionode ) THEN
           !
-          CALL iotk_open_write( iun, FILE = TRIM( filename ), BINARY = .TRUE. )
+          CALL iotk_open_write( iun, FILE = TRIM( filename ), &
+                                ROOT="GK-VECTORS", BINARY = .TRUE. )
           !
-          CALL iotk_write_begin( iun,"K-POINT" // iotk_index( ik ), attr )
+          CALL iotk_write_dat( iun, "NUMBER_OF_GK-VECTORS", npw_g )
+          CALL iotk_write_dat( iun, "MAX_NUMBER_OF_GK-VECTORS", npwx_g )
           !
-          CALL iotk_write_attr( attr, "NUMBER_OF_GK-VECTORS", npw_g, FIRST = .TRUE. )
-          CALL iotk_write_empty( iun, "INFO", ATTR = attr )
+          CALL iotk_write_attr ( attr, "UNITS", "2 pi / a", FIRST = .TRUE. )
+          CALL iotk_write_dat( iun, "K-POINT_COORDS", xk(:), ATTR = attr )
           !
           CALL iotk_write_dat( iun, "INDEX", igwk( 1:npw_g ) )
           CALL iotk_write_dat( iun, "GRID", mill( 1:3, igwk( 1:npw_g ) ), COLUMNS = 3 )
-          !
-          CALL iotk_write_end( iun, "K-POINT" // iotk_index( ik ) )
           !
           CALL iotk_close_write( iun )
           !
@@ -1994,7 +2062,7 @@ MODULE cp_restart
 
        RETURN
 
-    END SUBROUTINE
+    END SUBROUTINE write_gk
     !
     !
     !
