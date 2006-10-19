@@ -690,13 +690,6 @@ Most likely (and even more so if there isn't an exact match to your
 machine type), you'll have to tweak \texttt{make.sys} by hand.
 In particular, you must specify the full list of libraries that
 you intend to link to.
-You'll also have to set the \texttt{MYLIB} variable to:
-\begin{quote}
-  \texttt{blas\_and\_lapack} to compile BLAS and LAPACK from source;\\
-  \texttt{lapack\_mkl} to use the Intel MKL library;\\
-  \texttt{lapack\_essl} to use IBM ESSL libraries;\\
-  otherwise, leave it empty.
-\end{quote}
 
 If \texttt{configure} didn't manage to create the file 
 \texttt{include/fft\_defs.h}, copy and edit the template 
@@ -1306,9 +1299,11 @@ A workaround is available: see
 On Intel CPUs, it is very convenient to use Intel MKL libraries.
 If \texttt{configure} doesn't find them, try
 \texttt{configure --enable-shared}.
-MKL also contains optimized FFT routines, but they are
-presently not supported: use FFTW instead. Note that ifort 8 fails 
-to load with MKL v.~5.2 or earlier versions,
+MKL also contains optimized FFT routines, whose support is presently
+at an experimental stage (MKL v.8 and later). Intel separately
+distributes a FFTW interface using MKL FFT routines, giving a nice
+speedup with respect to compiled FFTW.
+Note that ifort 8 fails to load with MKL v.~5.2 or earlier versions,
 because some symbols that are referenced by MKL are missing. There
 is a fix for this (info from Konstantin Kudin): add libF90.a from 
 ifc 7.1 at the linking stage, as the last library.

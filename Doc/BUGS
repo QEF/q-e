@@ -1,3 +1,47 @@
+Fixed in version 3.2:
+
+  *  Case ibrav=13 fixed for good this time!!!
+
+  *  Bug in PH/clinear.f90 for cells having nr1 /= nr2 may have
+     affected new electron-phonon algorithm
+  
+  *  Poor accuracy of routines calculating spherical bessel functions
+     for high l and small q - should have been harmless
+  
+  *  LDA+U with variable-cell dynamics/relaxation was wrong due to
+     missing rescaling of the integrals of atomic wavefunctions.
+     This bug has been present since at least 3.0 
+
+  *  Parallel subspace diagonalization could occasionally fail,
+     replacd by a new algorithm that is much more stable 
+
+Fixed in version 3.1.1:
+
+  *  Methfessel-Paxton broadening was hardcoded in the calculation of
+     the electron-phonon coefficients (ngauss1=1 in PH/elphon.f90).
+     There is no good reason to use this instead of simple gaussian
+     (ngauss1=0), which, moreover, guarantees positive definite results.
+
+Fixed in version 3.1:
+
+  *  various problems in stress calculation, both in PW and in CP
+
+  *  in phonon dispersion calculation, the threshold for diagonalization
+     was not always what was expected to be. Minor numerical differences 
+     could result.
+
+  *  the new algorithm for electron-phonon calculation removes a serious
+     bug in the old algorithm, present in v.2.1 to 3 included: when 
+     electron-phonon coefficients were calculated together with the 
+     dynamical matrix, the symmetrization of coeffcients was incorrect.
+     Results from separate calculations were correct.
+
+Fixed in version 3.0:
+
+  *  latgen.f90 : case ibrav=13 bad
+
+  *  kpoints.f : case ibrav=5 bad
+
 Fixed in version 3.1.1:
 
   *  Methfessel-Paxton broadening was hardcoded in the calculation of

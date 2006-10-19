@@ -1165,7 +1165,7 @@ COLLECTIVE_VARS
      12          Monoclinic P                    celldm(2)=b/a,celldm(3)=c/a,
                                                  celldm(4)=cos(ab)
      13          Monoclinic base-centered        celldm(2)=b/a,celldm(3)=c/a,
-                                                 celldm(4)=cos(bc)
+                                                 celldm(4)=cos(ab)
      14          Triclinic                       celldm(2)= b/a,
                                                  celldm(3)= c/a,
                                                  celldm(4)= cos(bc),
@@ -1235,10 +1235,10 @@ COLLECTIVE_VARS
 
   base centered monoclinic
   =============================
-     a1 = (  a/2,          b/2,            0 ),
-     a2 = ( -a/2,          b/2,            0 ),
-     a3 = (    0, c*cos(alpha), c*sin(alpha) )
-  where alpha is the angle between axis b and c
+     a1 = (  a/2,         0,                -c/2),
+     a2 = (b*cos(gamma), b*sin(gamma), 0),
+     a3 = (  a/2,         0,                  c/2),
+  where gamma is the angle between axis a and b
 
   triclinic 
   =============================
