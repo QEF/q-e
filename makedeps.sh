@@ -5,8 +5,15 @@
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 TOPDIR=`pwd`
 
-for DIR in Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic Nmr VIB VdW
+if test $# = 0
+then
+    dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
+           Gamma PH D3 atomic Nmr VIB VdW"
+else
+    dirs=$*
+fi
+
+for DIR in $dirs
 do
     # set inter-directory dependencies
     case $DIR in
@@ -42,16 +49,10 @@ do
 
     if test "$DIR" = "Modules"
     then
-	mv make.depend make.depend.tmp
-        sed 's/fft_scalar.o : @mkl_dfti.f90@//' make.depend.tmp > make.depend
-	mv make.depend make.depend.tmp
-	sed 's/fft_scalar.o : @mkl_dft_type@//' make.depend.tmp > make.depend
+	cat make.depend | sed 's/fft_scalar.o : @mkl_dfti.f90@//' > make.depend.tmp 
+	cat make.depend.tmp | sed 's/fft_scalar.o : @mkl_dft_type@//' > make.depend
    fi
 
-   
-
- 
-       
     rm -f make.depend.tmp
 
     # check for missing dependencies

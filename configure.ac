@@ -801,12 +801,9 @@ then
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption" 
-			case "$arch" in
-			     macppc ) LIBS="-latlas" ;;
-			     * )      LIBS="-latlas -lg2c" ;;
- 			esac
+			LIBS="-latlas" 
 			AC_SEARCH_LIBS(dgemm, f77blas, have_blas=1 have_atlas=1
-				       blas_libs="$try_loption $LIBS")
+				       blas_libs="$try_loption $LIBS", , -lg2c)
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done

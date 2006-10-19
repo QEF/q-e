@@ -6473,10 +6473,7 @@ fi
 			fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
-			case "$arch" in
-			     macppc ) LIBS="-latlas" ;;
-			     * )      LIBS="-latlas -lg2c" ;;
- 			esac
+			LIBS="-latlas"
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -6521,7 +6518,7 @@ rm -f conftest.err conftest.$ac_objext \
       conftest$ac_exeext conftest.$ac_ext
 if test "$ac_cv_search_dgemm" = no; then
   for ac_lib in f77blas; do
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    LIBS="-l$ac_lib -lg2c $ac_func_search_save_LIBS"
     cat >conftest.$ac_ext <<_ACEOF
       program main
       call dgemm

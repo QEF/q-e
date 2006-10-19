@@ -8,24 +8,25 @@ BUGS TO EXAMINE
 - Wannier with nonorthogonal axis?
 - Zval is wrong for pseudopotentials generated on a ionic
   configuration, when semicore states are in the valence
+- discrepancies between spin-unpolarized and spin=0 spin-polarized
+  results with gradient corrections
 
 INSTALLATION/PORTING
 
 - final cleanup of configure stuff and of preprocessing options
-  (especially in libraries - fix the case of sp5 in cineca)
+  Add support for fft3
 
 - compile to produce big_endian?
 
 - how to put modules into a library so that one loads a few libraries
   instead of 1000000 objects? on all machines and compilers ?? 
-  blas / lapack: make libraries instead of the present mess
 
 COMMON
 
 - uniform and clear values for constants in Modules/constants.f90
   (work to be finished)
 
-- check license
+- check licenses
 
 - pseudopotentials: support new format (XML) if/when ready
 
@@ -49,14 +50,14 @@ COMMON
 
 - replace calls to level-1 blas copy, scal, axpy, with f90 syntax
 
-- cleanup and merge of routines reading and processing PPs;
-  merge uspp-related stuff ("small box") of CP into PW
+- CP "small boxes" vs PW "real-space" approach
 
 - cleanup of the nelup/neldw/nelec/tot_charge/magnetization/... mess
 
-- The symbol for Rydberg is Ry, not ryd!!!
-
 PW
+
+- Add option to avoid reading/writing wfc all the time,
+  keep everything in memory
 
 - write wall time in addition to CPU time
 
@@ -67,7 +68,7 @@ PW
 
 - add possibility to read atomic positions from file
 
-- Use more standard choices for crystal axis
+- Use more standard choices for crystal axis (if any)
 
 - make hpsi/spsi/newd/addusdens/CG/DIIS  faster
   - remove complex factor i**l from beta fct and q(r) (preliminary)
@@ -133,7 +134,7 @@ DOCUMENTATION
 
 - move to wiki-based documentation
 
-- better documentation for file format
+- update documentation for file format
 
 - single source (xml?) for text file, GUI help file, user guide
   (Tone?)
