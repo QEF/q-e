@@ -156,7 +156,8 @@ section calculation with 2nd-order response.\\
 -- Ralph Gebauer (ICTP, Trieste) and Adriano Mosca Conte (SISSA, Trieste) 
 implemented noncolinear magnetism, AdC the spin-orbit.\\
 -- Mickael Profeta (Paris VI) implemented electric-field gradients.\\
--- Carlo Sbraccia (Princeton) implemented NEB, Strings method, Metadynamics.\\
+-- Carlo Sbraccia (Princeton) implemented NEB, Strings method, Metadynamics,
+parallel subspace diagonalization, and more.\\
 -- Alexander Smogunov (SISSA) and AdC implemented ballistic conductance.\\
 -- Paolo Umari (MIT) implemented finite electric fields.\\
 -- Renata Wentzcovitch (UMinn) implemented variable-cell molecular dynamics.\\
@@ -179,7 +180,7 @@ gradients.\\
 -- Xiaofei Wang (Princeton) implemented META-GGA.\\
 -- The Autopilot feature was implemented by Targacept, Inc.
 
-Gerardo Ballabio implemented ``configure" for Quantum-Espresso.
+Gerardo Ballabio implemented ``configure'' for Quantum-Espresso.
 
 PWgui was written by Anton Kokalj (Jo\v{z}ef Stefan Institute, Ljubljana)
 and is based on his GUIB concept
@@ -371,7 +372,7 @@ CVS (Concurrent Version System): see the file \texttt{README.cvs}
 contained in the distribution.
 
 To install Quantum-ESPRESSO from source, you need C and Fortran-95
-compilers (Fortran-90 is not sufficient, but most ``Fortran-90"
+compilers (Fortran-90 is not sufficient, but most ``Fortran-90''
 compilers are actually Fortran-95-compliant).
 If you don't have a commercial Fortran-95 compiler, you may install
 the free \texttt{g95} compiler:
@@ -420,7 +421,7 @@ Specifically, \texttt{configure} generates the following files:
 \begin{quote}
   \texttt{make.sys}: compilation rules and flags\\
   \texttt{configure.msg}: a report of the configuration run\\
-  \texttt{include/fft_defs.h}: contains the type of fortran variable
+  \texttt{include/fft\_defs.h}: contains the type of fortran variable
      containing a C pointer.
 \end{quote}
 
@@ -539,12 +540,14 @@ A copy of the needed routines is provided with the distribution.
 However, when available, optimized vendor-specific libraries can be
 used instead: this often yields huge performance gains.
 
+\paragraph{BLAS and LAPACK}
+
 Quantum-ESPRESSO can use the following architecture-specific replacements for
 BLAS and LAPACK:
 \begin{quote}
   \texttt{MKL} for Intel Linux PCs\\
   \texttt{ACML} for AMD Linux PCs\\
-  \texttt{essl} for IBM machines\\
+  \texttt{ESSL} for IBM machines\\
   \texttt{complib.sgimath} for SGI Origin\\
   \texttt{SCSL} for SGI Altix\\
   \texttt{scilib} for Cray T3e\\
@@ -560,14 +563,6 @@ all of the BLAS, plus the LU code, plus the full storage Cholesky
 code.  Follow the instructions in the ATLAS distributions to produce a
 full LAPACK replacement.
 
-Axel Kohlmeyer maintains a set of ATLAS libraries, 
-containing all of LAPACK and no external reference to fortran
-libraries:\hfill\break
-\htmladdnormallink%
-{{\small\texttt{http://www.theochem.rub.de/\~{}axel.kohlmeyer/%
-                cpmd-linux.html\#atlas}}}%
-{http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html\#atlas}
-
 Sergei Lisenkov reported success and good performances with
 optimized BLAS by Kazushige Goto.
 They can be downloaded freely (but not redistributed!) from:
@@ -575,19 +570,44 @@ They can be downloaded freely (but not redistributed!) from:
 {\texttt{http://www.cs.utexas.edu/users/flame/goto/}}%
 {http://www.cs.utexas.edu/users/flame/goto/}
 
-At compilation time you have to choose whether to use the built-in
-copy of FFTW (v.$<$3), a precompiled FFTW v.$<$3 library, or a
-precompiled FFTW v.3 library. This is done using preprocessing
-options with rather obvious meaning : 
-\texttt{\_\_FFTW}, \texttt{\_\_USE\_INTERNAL\_FFTW}, \texttt{\_\_FFTW3}.
+\paragraph{FFT}
 
-The FFTW library can also be replaced by vendor-specific FFT libraries, 
-if available and if a driver is available in the code. Presently 
-drivers are present for IBM ESSL, Intel MKL v.8, SCSL and COMPLIB 
-scientific libraries from SGI, sunperf from SUN. Not all of them
-are automatically selected by \texttt{configure}, though.
+Quantum-ESPRESSO can use the following vendor-specific FFT 
+libraries: IBM ESSL; SCSL and COMPLIB scientific libraries from SGI; 
+sunperf from SUN Intel MKL v.8 (experimental, not recognized by 
+\texttt{configure}).
 
-Finally, Quantum-ESPRESSO can use the MASS vector math library from
+If you use FFTW, you have to choose before compilation whether to load
+the built-in copy (v.2) of FFTW or a precompiled v.2 or v.3 FFTW library. 
+This is done using preprocessing options: 
+\texttt{-D\_\_FFTW} (for precompiled v.2), 
+\texttt{-D\_\_FFTW \_\_USE\_INTERNAL\_FFTW} (for internal v.2),
+\texttt{-D\_\_FFTW3} (for v.3) (for precompiled v.3).
+Beware: FFTW v.3 gives mysterious crashes in some cases. For this
+reason \texttt{configure} will look for FFTW v.2 only.
+
+If you want to link to a precompiled FFTW v.$<$3 library, you will need 
+the corresponding \texttt{fftw.h} include file. That may or may not 
+have been installed on your system together with the library: in
+particular, most Linux distributions split libraries into ``base'' 
+and ``development'' packages, include files normally belonging to the 
+latter. Thus if you can't find \texttt{fftw.h} on your machine, chances
+are you must install the FFTW development package (how to do this and
+what it is exactly called depends  on your operating system version).
+
+If instead the file is there, but \texttt{configure} doesn't find it,
+you may specify its location in the \texttt{INCLUDEFFTW} environment
+variable.
+For example:
+\begin{verbatim}
+  ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
+\end{verbatim}
+If everything else fails, you'll have to modify the \texttt{make.sys}
+file manually: see section \ref{manualconf}, ``Manual configuration''.
+
+\paragraph{Other libraries}
+
+Quantum-ESPRESSO can use the MASS vector math library from
 IBM, if available (only on AIX).
 
 The \texttt{configure} script attempts to find optimized libraries,
@@ -614,25 +634,6 @@ Beware that in this case, \texttt{configure} will blindly accept the
 specified value, and won't do any extra search.  This is so that if
 \texttt{configure} finds any library that you don't want to use, you
 can override it.
-
-If you want to link to a precompiled FFTW v.$<$3 library, you will need 
-the corresponding \texttt{fftw.h} include file. That may or may not 
-have been installed on your system together with the library: in
-particular, most Linux distributions split libraries into ``base'' 
-and ``development'' packages, include files normally belonging to the 
-latter. Thus if you can't find \texttt{fftw.h} on your machine, chances
-are you must install the FFTW development package (how to do this and
-what it is exactly called depends  on your operating system version).
-
-If instead the file is there, but \texttt{configure} doesn't find it,
-you may specify its location in the \texttt{INCLUDEFFTW} environment
-variable.
-For example:
-\begin{verbatim}
-  ./configure INCLUDEFFTW="/usr/lib/fftw-2.1.3/fftw"
-\end{verbatim}
-If everything else fails, you'll have to write the \texttt{make.sys}
-file manually: see section \ref{manualconf}, ``Manual configuration''.
 
 \textbf{Please note:}
 If you change any settings after a previous (successful or failed)
@@ -1115,10 +1116,14 @@ still missing, see below (for Linux PC).
 
 \paragraph{IBM AIX}
 
-On some IBM machines running AIX, the command \texttt{/usr/bin/oslevel}
-used by \texttt{configure} to get info about the type of system is not 
-executable to normal users. As a consequence \texttt{configure} stops.'
-Complain with your system manager.
+On IBM machines running AIX, there is a potential conflict between 
+a few LAPACK routines that are also part of ESSL, but with a different
+calling sequence. The appearence of run-time errors like
+\begin{verbatim}
+ON ENTRY TO ZHPEV  PARAMETER NUMBER  1 HAD AN ILLEGAL VALUE
+\end{verbatim}
+is a signal that you are calling the bad routine. If you have 
+defined \texttt{-D\_\_ESSL} you should load ESSL before LAPACK.
 
 \paragraph{SGI machines with IRIX/MIPS compiler}
 
@@ -1134,6 +1139,13 @@ conjunction with with \texttt{FORALL} constructs. There is no
 known solution other than editing the \texttt{FORALL} construct
 that gives a problem, or to replace it with an equivalent 
 \texttt{DO...END DO} construct.
+
+Some versions of the MIPS compiler are confused by the presence of
+multiple variable renaming in modules, i.e. by constructs like:
+\begin{verbatim}
+ USE mymodule, newname => oldname
+\end{verbatim}
+in the same file. Workaround: don't use twice the same \texttt{newname}.
 
 \paragraph{Linux Alphas with Compaq compiler}
 
@@ -1152,41 +1164,18 @@ Most of its contents applies to the Quantum-ESPRESSO code as well:\hfill\break
 \htmladdnormallink%
 {\texttt{http://www.theochem.rub.de/\~{}axel.kohlmeyer/cpmd-linux.html}}%
 {http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html}.
+In particular, there is a set of ATLAS libraries, containing 
+all of LAPACK and no external reference to fortran libraries:\hfill\break
+\htmladdnormallink%
+{{\small\texttt{http://www.theochem.rub.de/\~{}axel.kohlmeyer/%
+                cpmd-linux.html\#atlas}}}%
+{http://www.theochem.rub.de/~axel.kohlmeyer/cpmd-linux.html\#atlas}
 
 It is convenient to create semi-statically linked executables
 (with only libc/libm/libpthread linked dynamically). If you want
 to produce a binary that runs on different machines, compile it
 on the oldest machine you have (i.e. the one with the oldest verison
 of the operating system).
-
-Since there is no standard compiler for Linux, different compilers
-have different ideas about the right way to call external libraries.
-As a consequence you may have a mismatch between what your compiler
-calls (``symbols") and the actual name of the required library call.
-Use the \texttt{nm} command to determine the name of a library call,
-as in the following examples:%
-\begin{verbatim}
-    nm /usr/local/lib/libblas.a | grep T | grep -i daxpy
-    nm /usr/local/lib/liblapack.a | grep T | grep -i zhegv
-\end{verbatim}
-where typical location and name of libraries is assumed.
-Most precompiled libraries have lowercase names with one or two
-underscores (\_) appended. \texttt{configure} should select the 
-appropriate preprocessing options in \texttt{make.sys}, but in
-case of trouble, be aware that:
-\begin{itemize}
-  \item the Absoft compiler is case-sensitive (like C and unlike
-        other Fortran compilers) and does not add an underscore
-        to symbol names (note that if your libraries contain 
-        uppercase or mixed case names, you are out of luck:
-        You must either recompile your own libraries, or change 
-        the \texttt{\#define}'s in \texttt{include/f\_defs.h});
-  \item both Portland compiler (pgf90) and Intel compiler (ifort/ifc)
-        are case insensitive and add an underscore to symbol names.
-\end{itemize}
-
-With some precompiled lapack libraries, you may need to add
-\texttt{-lg2c} or \texttt{-lm} or both.
 
 \paragraph{Linux PCs with Portland Group compiler (pgf90)}
 
@@ -1271,7 +1260,7 @@ Update to a more patched version: 8.0.046 for v.~8.0,
 
 There is a well known problem with ifort 8 and pthreads 
 (that are used both in Debian Woody and Sarge) that causes
-``segmentation fault" errors (info from Lucas Fernandez Seivane). 
+``segmentation fault'' errors (info from Lucas Fernandez Seivane). 
 Version 7 did not have this problem.
 
 \paragraph{ifc v.7}
@@ -1296,6 +1285,7 @@ A workaround is available: see
 {http://newweb.ices.utexas.edu/misc/ctype.c}.
 
 \paragraph{MKL}
+
 On Intel CPUs, it is very convenient to use Intel MKL libraries.
 If \texttt{configure} doesn't find them, try
 \texttt{configure --enable-shared}.
@@ -1308,7 +1298,7 @@ because some symbols that are referenced by MKL are missing. There
 is a fix for this (info from Konstantin Kudin): add libF90.a from 
 ifc 7.1 at the linking stage, as the last library.
 Note that some combinations of not-so-recent versions of MKL 
-and ifc may yield a lot of ``undefined references" when statically 
+and ifc may yield a lot of ``undefined references'' when statically 
 loaded: use \texttt{configure --enable-shared}, 
 or remove the \texttt{-static} option in \texttt{make.sys}.
 Note that \texttt{pwcond.x} works only with recent versions
@@ -1322,6 +1312,59 @@ they refer to different parallelization paradigms).
 MKL by default sets the variable to the number of CPUs installed and 
 thus gives the impression of a much better performance, as the CPU time
 is only measured for the master thread (info from Axel Kohlmeyer).
+
+\paragraph{Fun with precompiled libraries}
+
+Since there is no standard fortran compiler for Linux, different compilers
+have different ideas about the right way to call external libraries.
+As a consequence you may have a mismatch between what your compiler
+calls (``symbols'') and the actual name of the required library call.
+Use the \texttt{nm} command to determine the name of a library call,
+as in the following examples:%
+\begin{verbatim}
+    nm /usr/local/lib/libblas.a | grep -i 'T daxpy'
+    nm /usr/local/lib/liblapack.a | grep -i 'T zhegv'
+\end{verbatim}
+where typical location and name of libraries is assumed.
+Most precompiled libraries have lowercase names with one or two
+underscores (\_) appended. \texttt{configure} should select the 
+appropriate preprocessing options in \texttt{make.sys}, but in
+case of trouble, be aware that:
+\begin{itemize}
+  \item the Absoft compiler is case-sensitive (like C and unlike
+        other Fortran compilers) and does not add an underscore
+        to symbol names (note that if your libraries contain 
+        uppercase or mixed case names, you are out of luck:
+        You must either recompile your own libraries, or change 
+        the \texttt{\#define}'s in \texttt{include/f\_defs.h});
+  \item both Portland compiler (pgf90) and Intel compiler (ifort/ifc)
+        are case insensitive and add an underscore to symbol names.
+\end{itemize}
+
+Another potential source of trouble is the incompatibility
+between I/O libraries used by different fortran compilers.
+This manifests itself under the form of missing routines with 
+strange names (like \texttt{s\_wsfe, do\_fio}...) at linking stage. 
+Possible workarounds include
+\begin{itemize}
+\item loading the missing routines; it is often sufficient to load
+\texttt{-lg2c} (sometimes \texttt{-lm} may also be needed); or
+\item (better) to replace the BLAS routine {\tt xerbla} (it should
+be the only one containing I/O calls) with a recompiled object. 
+Locate the library containing this routine using \texttt{nm}, 
+for instance:
+\begin{quote}
+  {\tt nm /path/to/your/libs/libf77blas.a | grep 'T xerbla'}
+\end{quote}
+and replace the object  \texttt{xerbla.o} in the library with the 
+one you will compile. In \texttt{flib/}:
+\begin{quote}
+{\tt make xerbla.o} \\
+{\tt ar rv /path/to/your/libs/libf77blas.a xerbla.o}
+\end{quote}
+\end{itemize}
+If nothing works, you may need to recompile the libraries with 
+your fortran compiler, or to use the internal (slow) copy.
 
 \paragraph{AMD CPUs, Intel Itanium}
 
@@ -1351,7 +1394,7 @@ support) should work. 64-bit executables can address a
 much larger memory space, but apparently they are not especially
 faster than 32-bit executables. The Intel compiler has been 
 reported to be more reliable and to produce faster executables 
-wrt the Portland compiler. You may also try with g95.
+wrt the Portland compiler. You may also try g95.
 
 \paragraph{Linux PC clusters with MPI}
 
@@ -1378,7 +1421,7 @@ execution, read the ``Parallelization issues'' section.
 
 \paragraph{Mac OS X}
 
-Compilation with \texttt{xlf} under Mac OSX 10.4 (``Tiger") may produce
+Compilation with \texttt{xlf} under Mac OSX 10.4 (``Tiger'') may produce
 the following linkage error:
 \begin{verbatim}
  ld: Undefined symbols:
@@ -1393,7 +1436,7 @@ Other workaround: Set gcc version to 3.3. This is done with the command
 \begin{verbatim}
 sudo gcc_select 3.3
 \end{verbatim}
-If you get the message ``Error trying to determine current cc version (got)" 
+If you get the message ``Error trying to determine current cc version (got)'' 
 change the order of directory in your \texttt{PATH} variable in order to make
 \texttt{/opt/ibm/...} to appear at its end. The \texttt{xlc} alias to 
 \texttt{cc} will stop working, but as soon you have set gcc version,
@@ -1443,9 +1486,9 @@ and with csh, tcsh:
 \end{verbatim}
 (info by Pascal Thibaudeau, September 2006).
 
-Newer Mac OS-X machines with Intel CPUs and gcc4+g95 are supported
-by \texttt{configure}. With the Intel compiler \texttt{ifort} and 
-MKL libraries, use \texttt{install/Make.macos-intel} 
+Newer Mac OS-X machines with Intel CPUs  are supported by \texttt{configure},
+at least with gcc4+g95. With the Intel compiler \texttt{ifort} and 
+MKL libraries, you may try \texttt{install/Make.macos-intel} 
 (info by Matteo Coccoccioni, Aug. 2006).
 
 \paragraph{T3E}
@@ -2039,7 +2082,7 @@ This section is intended to explain how to perform basic
 Car-Parrinello (CP) simulations using the CP codes.
 
 It is important to understand that a CP simulation is a sequence of 
-different runs, some of them used to ``prepare" the initial state
+different runs, some of them used to ``prepare'' the initial state
 of the system, and other performed to collect statistics,
 or to modify the state of the system itself, i.e. modify the temperature
 or the pressure.
@@ -2204,7 +2247,7 @@ ATOMIC_POSITIONS (bohr)
     Minimize ionic positions.
 
     As we pointed out in 4) if the interatomic forces are too high,
-    the system could ``explode" if we switch on the ionic dynamics.
+    the system could ``explode'' if we switch on the ionic dynamics.
     To avoid that we need to relax the system. 
 
     Again there are different strategies to relax the system, but the
@@ -2426,15 +2469,15 @@ H 1.00d0 h.ps
     transfer of energy between ionic and electronic degrees of
     freedom. Beware: the usage of electronic thermostats is quite
     delicate. The following information comes from K. Kudin:
-    {\em The main issue is that there is usually some ``natural" fictitious
-    kinetic energy that electrons gain from the ionic motion (``drag"). One
+    {\em The main issue is that there is usually some ``natural'' fictitious
+    kinetic energy that electrons gain from the ionic motion (``drag''). One
     could easily quantify how much of the fictitious energy comes from this
     drag by doing a CP run, then a couple of CG (same as BO) steps, and
     then going back to CP. The fictitious electronic energy at the last CP
     restart will be purely due to the drag effect.
 
     The thermostat on electrons will either try to overexcite the
-    otherwise ``cold" electrons, or, will try to take them down to an
+    otherwise ``cold'' electrons, or, will try to take them down to an
     unnaturally cold state where their fictitious kinetic energy is even
     below what would be just due pure drag. Neither of this is good.
 
@@ -2626,7 +2669,7 @@ Note however that you need a decent communication hardware (at least
 Gigabit ethernet) in order to have acceptable performances with PW 
 parallelization.
 Do not expect good scaling with cheap hardware: plane-wave
-calculations are by no means an ``embarrassing parallel" problem. 
+calculations are by no means an ``embarrassing parallel'' problem. 
 
 Also note that multiprocessor motherboards for Intel Pentium CPUs 
 typically have just one memory bus for all processors. This dramatically 
@@ -3092,7 +3135,7 @@ Reduce \texttt{mixing\_beta} from the default value (0.7) to $\sim
 0.3-0.1$ or smaller. Try the \texttt{mixing\_mode} value that is
 more appropriate for your problem. For slab geometries used in surface 
 problems or for elongated cells, \texttt{mixing\_mode='local-TF'} should
-be the better choice, dampening ``charge sloshing".  You may also try to 
+be the better choice, dampening ``charge sloshing''.  You may also try to 
 increase \texttt{mixing\_ndim} to more than 8 (default value). Beware: 
 the larger \texttt{mixing\_ndim}, the larger the amount of memory you need.
 
@@ -3277,14 +3320,16 @@ execution path.
 to run /usr/bin/oslevel and stops!} On some IBM AIX machines, the command
 \texttt{/usr/bin/oslevel} used by \texttt{configure} to get info about
 the type of system is not executable to normal users. Complain with
-your system manager.
+your system manager. Fixed since v.3.2 anyway.
 
 \item {\texttt{configure} \em says ``unsupported C/Fortran compilers 
 combination''!}
 Unless you have trouble in compilation/linking, never mind.
+Check removed sionce v.3.2
 
 \item {\texttt{configure} \em says ``unsupported architecture''!}
-If compilation/linking still works, never mind, Otherwise, see 
+If compilation/linking still works, never mind, Otherwise, supply
+a suitable supported architecture to \texttt{configure}: see 
 instructions in \texttt{README.configure} on what to do. Note that 
 in most cases you may use \texttt{configure} to produce dependencies, 
 then edit the file \texttt{make.sys}.
@@ -3319,7 +3364,7 @@ molecular dynamics?}
 ``A common mistake many new users make is to set the time step 
 \texttt{dt} inproperly to the same order of magnitude as for CP 
 algorithm, or not setting \texttt{dt} at all. This will produce 
-a ``not evolving dynamics". Good values for the original RMW
+a `not evolving dynamics'. Good values for the original RMW
 (RM Wentzcovitch) dynamics are \texttt{dt}$=50\div70$. 
 
 The choice of the cell mass is a delicate matter. An off-optimal mass 
@@ -3329,7 +3374,7 @@ oscillation times for internal degrees of freedom comparable to
 cell degrees of freedom in non-damped Variable-Cell MD. Test calculations 
 are advisable before extensive calculation.
 
-``I have tested the damping algorithm that I have developed and it has
+I have tested the damping algorithm that I have developed and it has
 worked well so far. It allows for a much longer time step 
 (\texttt{dt}=$100\div150$) than the RMW one and is much more stable 
 with very small cell masses, which is useful when the cell shape, 
@@ -3348,7 +3393,7 @@ What position in real space  corresponds to an array value? }
 
 The index of arrays used to store functions defined on 3D meshes is  
 actually a shorthand for three indeces, following the FORTRAN  
-convention (``leftmost index runs faster"). An example will explain  
+convention (``leftmost index runs faster''). An example will explain  
 this better. Suppose you have a 3D array of dimension \texttt{(nr1,nr2,nr3)},
 say \texttt{psi(nr1,nr2,nr3)}. FORTRAN compilers store this array 
 sequentially  in the computer RAM in the following way:
@@ -3383,7 +3428,7 @@ space, the \texttt{(i,j,k)} point of the mesh is
 \end{equation}
 
 where the $\tau$'s are the basis vectors of the Bravais lattice. The  
-latter are stored row-wise in the ``AT" array:
+latter are stored row-wise in the ``AT'' array:
 \begin{equation}
 \tau_1 = at(:,1), \tau_2 = at(:,2), \tau_3 = at(:,3)
 \end{equation}
@@ -3392,11 +3437,8 @@ latter are stored row-wise in the ``AT" array:
 \item {\em Is there a simple way to determine the symmetry
 of a given phonon mode?}
 
-In some cases, degeneracy will help. In other cases, the character of a
-mode can be easily determined by direct inspection. In general, one needs
-to perform a group-symmetry analysis of the phonon mode, and this is 
-presently not implemented. So the short answer is: no, only not-so-simple 
-ways.
+A symmetry analizer was added in v.3.2 by Andrea Dal Corso. The
+following info may still be of interest to somebody, though.
 
 You might find the ISOTROPY package useful:\\
 \htmladdnormallink{\texttt{http://stokes.byu.edu/iso/isotropy.html}}%
@@ -3426,11 +3468,11 @@ dynamics}, J.L. Warren, T.G. Worlton.''
 ``\texttt{ecutrho} defines the resolution on the real space FFT mesh 
 (as expressed by \texttt{nr1}, \texttt{nr2} and \texttt{nr3}, that
 the code left on its own sets automatically). In the ultrasoft
-case we refer to this mesh as the ``hard" mesh, since
+case we refer to this mesh as the `hard' mesh, since
 it is denser than the smooth mesh that is needed to
 represent the square of the non-norm-conserving wavefunctions.
 
-On this ``hard", fine-spaced mesh, you need to determine the size
+On this `hard', fine-spaced mesh, you need to determine the size
 of the cube that will encompass the largest of the augmentation
 charges - this is what \texttt{nr1b}, \texttt{nr2b}, \texttt{nr3b} are.
 
