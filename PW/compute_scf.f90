@@ -284,7 +284,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
         !
         ! ... the save file is written ( if required )
         !
-        IF ( write_save ) CALL punch()
+        IF ( write_save ) CALL punch('all')
         !
      END IF
      !

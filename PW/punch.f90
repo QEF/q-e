@@ -47,11 +47,12 @@ SUBROUTINE punch( what )
      !
   ENDIF
   !
-  ! ... The following instruction is used  when more k-points are needed
-  ! ... for finite-q phonon calculations (on fine q-grid) then those needed
-  ! ... for self-consistency. In such a case, a self-consistent calculation
-  ! ... with few k-points is followed by a non-self-consistent one with added
-  ! ... k-points, whose weight is set to zero.
+  ! ... The following instruction is used when phonons are calculated
+  ! ... one q-wavevector at the time. Weights and occupations have to be
+  ! ... recomputed. Note that if you want to use more k-points for the
+  ! ... phonon calculation then those needed for self-consistency, you
+  ! ... can, by performing a scf with less k-points, followed by a non-scf
+  ! ... one with additional k-points, whose weight on input is set to zero
   !
   IF ( .NOT. lscf .AND. .NOT. lbands ) CALL sum_band ( )
   !

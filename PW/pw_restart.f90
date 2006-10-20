@@ -53,7 +53,8 @@ MODULE pw_restart
     SUBROUTINE pw_writefile( what )
       !------------------------------------------------------------------------
       !
-      USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions
+      USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions, &
+                                       lscf
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
@@ -705,7 +706,9 @@ MODULE pw_restart
 ! ... CHARGE-DENSITY FILES
 !-------------------------------------------------------------------------------
       !
-      CALL write_rho( rho, nspin )
+      ! ... do not overwrite the scf charge density with a non-scf one
+      !
+      IF ( lscf ) CALL write_rho( rho, nspin )
       !
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS

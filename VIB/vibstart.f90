@@ -326,8 +326,6 @@ subroutine end_pw
   !
 #ifdef DFT_PW
   !
-  CALL punch()
-  !
   CALL stop_run( conv_ions )
   !
 #endif
