@@ -45,11 +45,11 @@ INTEGER :: &
 
 REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), ars
 
-INTEGER :: nclass_ref, done(48), irot, jrot, krot, iclass
+INTEGER :: nclass_ref, done(48), irot, jrot, krot, iclass, i
 INTEGER :: tipo_sym, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
 REAL(DP) :: angle_rot, angle_rot_s
-LOGICAL :: compare_mat, is_axis, first, first1
+LOGICAL :: compare_mat, is_axis, first, first1, done_ax(6)
 !
 ! Divide the group in classes.
 !
@@ -428,16 +428,29 @@ ELSEIF (code_group==20) THEN
 !
 !  mirror_axis gives the normal to the mirror plane
 !
+   done_ax=.TRUE.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==4) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,3)) THEN
             which_irr(iclass)=2
+            done_ax(1)=.FALSE.
          ELSE IF (is_axis(ax,2)) THEN
             which_irr(iclass)=3
+            done_ax(2)=.FALSE.
          ELSE IF (is_axis(ax,1)) THEN
             which_irr(iclass)=4
+            done_ax(3)=.FALSE.
+         ELSE
+            DO i=1,3
+               IF (done_ax(i)) THEN 
+                  which_irr(iclass)=i+1
+                  done_ax(i)=.FALSE.
+                  GOTO 100
+               END IF
+            END DO 
+100         CONTINUE
          END IF
       ELSEIF (ts==2) THEN
          which_irr(iclass)=5
@@ -445,10 +458,22 @@ ELSEIF (code_group==20) THEN
          CALL mirror_axis(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,3)) THEN
             which_irr(iclass)=6
+            done_ax(4)=.FALSE.
          ELSE IF (is_axis(ax,2)) THEN
             which_irr(iclass)=7
+            done_ax(5)=.FALSE.
          ELSE IF (is_axis(ax,1)) THEN
             which_irr(iclass)=8
+            done_ax(6)=.FALSE.
+         ELSE
+            DO i=4,6
+               IF (done_ax(i)) THEN 
+                  which_irr(iclass)=i+2
+                  done_ax(i)=.FALSE.
+                  GOTO 120
+               END IF
+            END DO 
+120         CONTINUE
          END IF
       END IF
    END DO

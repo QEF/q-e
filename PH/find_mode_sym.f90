@@ -115,12 +115,15 @@ DO igroup=1,ngroup
       DO iclass=1,nclass
          times=times+CONJG(trace(iclass,igroup))*char_mat(irap, &
                      which_irr(iclass))*nelem(iclass)
+!         write(6,*) igroup, irap, iclass, which_irr(iclass)
       ENDDO
       times=times/nsym
-      IF (ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4) call  &
-          errore('find_mode_sym','wrong symmetry mode',1)
-      IF (ABS(AIMAG(times)) > eps) call  &
-          errore('find_mode_sym','wrong symmetry mode im. part',1)
+      IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
+          (ABS(AIMAG(times)) > eps) ) THEN
+            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x, "-->   ?")') &
+              istart(igroup), istart(igroup+1)-1, w1(istart(igroup))
+      ENDIF
+
       IF (ABS(times) > eps) THEN
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
             WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x,"--> ",a15)') &

@@ -57,6 +57,7 @@ INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
 REAL(DP) :: angle_rot, angle_rot_s, ars
 LOGICAL :: compare_mat_so, is_axis, first, first1
+LOGICAL :: done_ax(6)
 !
 ! Divide the group in classes.
 !
@@ -499,6 +500,7 @@ ELSEIF (code_group==20) THEN
 !
 !  mirror_axis gives the normal to the mirror plane
 !
+   done_ax=.TRUE.
    DO iclass=2,nclass
       ts=tipo_sym(smat(1,1,elem(1,iclass)))
       IF (ts==1) THEN
@@ -507,10 +509,22 @@ ELSEIF (code_group==20) THEN
          CALL versor(smat(1,1,elem(1,iclass)),ax)
          IF (is_axis(ax,3)) THEN
             which_irr(iclass)=3
+            done_ax(1)=.FALSE.
          ELSE IF (is_axis(ax,2)) THEN
             which_irr(iclass)=4
+            done_ax(2)=.FALSE.
          ELSE IF (is_axis(ax,1)) THEN
             which_irr(iclass)=5
+            done_ax(3)=.FALSE.
+         ELSE
+            DO i=1,3
+               IF (done_ax(i)) THEN
+                  which_irr(iclass)=i+2
+                  done_ax(i)=.FALSE.
+                  GOTO 100
+               END IF
+            END DO
+100         CONTINUE
          END IF
       ELSEIF (ts==2) THEN
          IF (has_e(1,iclass)==-1) THEN
@@ -526,6 +540,15 @@ ELSEIF (code_group==20) THEN
             which_irr(iclass)=9
          ELSE IF (is_axis(ax,1)) THEN
             which_irr(iclass)=10
+         ELSE
+            DO i=4,6
+               IF (done_ax(i)) THEN
+                  which_irr(iclass)=i+4
+                  done_ax(i)=.FALSE.
+                  GOTO 110
+               END IF
+            END DO
+110         CONTINUE
          END IF
       END IF
    END DO
