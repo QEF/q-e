@@ -229,7 +229,7 @@ SUBROUTINE do_initial_state (excite)
   !
   RETURN
   !
-9035 FORMAT(5X,'atom ',I3,' type ',I2,'   shift =',F13.6,' ryd, =',F13.5,' eV')
+9035 FORMAT(5X,'atom ',I3,' type ',I2,'   shift =',F13.6,' Ry, =',F13.5,' eV')
 !
 END SUBROUTINE do_initial_state
 

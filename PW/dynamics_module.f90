@@ -541,7 +541,7 @@ MODULE dynamics_module
             WRITE( UNIT = stdout, &
                    FMT = '(/,5X,"End of damped dynamics calculation")' )
             WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"Final energy = ",F18.10," ryd"/)' ) etot
+                   FMT = '(/,5X,"Final energy = ",F18.10," Ry"/)' ) etot
             !
             CALL output_tau( .TRUE. )
             !

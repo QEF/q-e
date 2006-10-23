@@ -385,7 +385,7 @@ SUBROUTINE summary()
 
   IF (lgauss) THEN
      WRITE( stdout, '(/5x,"number of k points=",i5, &
-          &               "  gaussian broad. (ryd)=",f8.4,5x, &
+          &               "  gaussian broad. (Ry)=",f8.4,5x, &
           &               "ngauss = ",i3)') nkstot, degauss, ngauss
   ELSE IF (ltetra) THEN
      WRITE( stdout,'(/5x,"number of k points=",i5, &

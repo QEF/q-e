@@ -196,7 +196,7 @@ subroutine phq_summary
      WRITE( stdout, '(5x,"number of k points=",i5)') nkstot
   else
      WRITE( stdout, '(5x,"number of k points=",i5, &
-          &               "  gaussian broad. (ryd)=",f8.4,5x, &
+          &               "  gaussian broad. (Ry)=",f8.4,5x, &
           &               "ngauss = ",i3)') nkstot, degauss, ngauss
   endif
   WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')

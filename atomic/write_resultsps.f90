@@ -33,9 +33,8 @@ subroutine write_resultsps
 1270 format(5x,'mesh =',i4,' r(mesh) =',f10.5,' xmin =',f6.2,' dx =',f8.5)
   if (rel.lt.2) then
      write(6,1000)
-1000 format(/5x,'n l     nl             e AE (Ryd)',  &
-          '       e PS (Ryd) ',   &
-          '  De AE-PS (Ryd) ')
+1000 format(/5x,'n l     nl             e AE (Ry) ',  &
+          '       e PS (Ry)    De AE-PS (Ry) ')
      write(6,1100) &
           (nnts(n),llts(n),elts(n),iswts(n),octs(n), &
           enl(nstoae(n)),enls(n), &
@@ -47,9 +46,8 @@ subroutine write_resultsps
 1100 format(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5)
   else
      write(6,1001)
-1001 format(/5x,'n l  j  nl             e AE (Ryd)',  &
-          '       e PS (Ryd) ',   &
-          '  De AE-PS (Ryd) ')
+1001 format(/5x,'n l  j  nl             e AE (Ry)',  &
+          '       e PS (Ry)    De AE-PS (Ry) ')
      write(6,1101) &
           (nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
           enl(nstoae(n)),enls(n), &

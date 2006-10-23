@@ -400,7 +400,7 @@ SUBROUTINE vcsmd()
   CALL cryst_to_cart( nat, tau, at, 1 )
   !
   WRITE( stdout,'(A3,3X,3F14.9)') ( atm(ityp(na)), tau(:,na), na = 1, nat )
-  WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ryd   T = ",F6.1," K ", &
+  WRITE( stdout, '(/5X,"Ekin = ",F14.8," Ry    T = ",F6.1," K ", &
        &       " Etot = ",F14.8)') ekint, tnew, edyn + e_start
   !
   CALL output_tau( lmovecell )

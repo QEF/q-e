@@ -105,7 +105,7 @@ subroutine stress
   call stop_clock ('stress')
 
   return
-9000 format (10x,'total   stress  (ryd/bohr**3)',18x,'(kbar)', &
+9000 format (10x,'total   stress  (Ry/bohr**3) ',18x,'(kbar)', &
              &5x,'P=',f8.2/3 (3f13.8,4x,3f10.2/))
 9005 format &
          &  (5x,'kinetic stress (kbar)',3f10.2/2(26x,3f10.2/)/ &

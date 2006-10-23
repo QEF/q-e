@@ -1205,7 +1205,7 @@ END SUBROUTINE gshcount
 
 100     FORMAT(/,3X,'Energy Cut-offs',/ &
                 ,3X,'---------------',/ &
-                ,3X,'Ecutwfc = ',F6.1,' Ryd., ', 3X,'Ecutrho = ',F6.1,' Ryd., ', 3X,'Ecuts = ',F6.1,' Ryd.',/ &
+                ,3X,'Ecutwfc = ',F6.1,' Ry,   ', 3X,'Ecutrho = ',F6.1,' Ry,   ', 3X,'Ecuts = ',F6.1,' Ry',/ &
                 ,3X,'Gcutwfc = ',F6.1,'     , ', 3X,'Gcutrho = ',F6.1,'       ', 3X,'Gcuts = ',F6.1)
 150     FORMAT(  3X,'modified kinetic energy functional, with parameters:',/,   &
                  3X,'ecutz = ',f8.4,'  ecsig = ', f7.4,'  ecfix = ',f6.2)

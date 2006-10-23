@@ -144,7 +144,7 @@ subroutine set_rhoc
   !
   return
 
-9000 format (5x,'core-only xc energy         = ',f15.8,' ryd')
+9000 format (5x,'core-only xc energy         = ',f15.8,' Ry')
 
 end subroutine set_rhoc
 

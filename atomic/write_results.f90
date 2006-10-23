@@ -34,7 +34,7 @@ subroutine write_results
   if (rel.lt.2) then
      write(6,1000)
 1000 format(/5x, &
-          'n l     nl                  e(Ryd)','         e(Ha)          e(eV)')
+          'n l     nl                  e(Ry) ','         e(Ha)          e(eV)')
 
      oep = get_iexch() .eq. 4
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
@@ -56,7 +56,7 @@ subroutine write_results
   else
      write(6,1001)
 1001 format(/5x, &
-          'n l j   nl                  e(Ryd)','         e(Ha)          e(eV)')
+          'n l j   nl                  e(Ry) ','         e(Ha)          e(eV)')
      write(6,'(5x,"Spin orbit split results")')
      write(6,1120) &
           (nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &

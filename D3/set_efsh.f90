@@ -84,7 +84,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
      ef_sh (imode0 + ipert) =  DBLE (def (ipert) )
   enddo
 
-  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ryd) =", &
+  WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", &
        &            2f10.4)')  (ipert, def (ipert) , ipert = 1, npe)
   return
 end subroutine set_efsh

@@ -175,10 +175,10 @@ SUBROUTINE move_ions()
            !
            IF ( tr2 > 1.D-10 ) THEN
               WRITE( stdout, &
-                     '(5X,"new conv_thr",T30,"= ",0PF18.10," ryd",/)' ) tr2
+                     '(5X,"new conv_thr",T30,"= ",0PF18.10," Ry",/)' ) tr2
            ELSE
               WRITE( stdout, &
-                     '(5X,"new conv_thr",T30,"= ",1PE18.1," ryd",/)' ) tr2
+                     '(5X,"new conv_thr",T30,"= ",1PE18.1 ," Ry",/)' ) tr2
            END IF
            !
            ! ... the logical flag lcheck_mag is set again to .TRUE. (needed if 

@@ -207,9 +207,9 @@ MODULE bfgs_module
            & FMT = '(5X,"number of bfgs steps",T30,"= ",I3,/)' ) bfgs_iter
       IF ( scf_iter > 1 ) &
          WRITE( UNIT = stdout, &
-              & FMT = '(5X,"energy old",T30,"= ",F18.10," ryd")' ) energy_p
+              & FMT = '(5X,"energy old",T30,"= ",F18.10," Ry")' ) energy_p
       WRITE( UNIT = stdout, &
-           & FMT = '(5X,"energy new",T30,"= ",F18.10," ryd",/)' ) energy
+           & FMT = '(5X,"energy new",T30,"= ",F18.10," Ry",/)' ) energy
       !
       ! ... the bfgs algorithm starts here
       !
@@ -772,7 +772,7 @@ MODULE bfgs_module
          WRITE( UNIT = stdout, &
               & FMT = '(/,5X,"End of BFGS Geometry Optimization")' )
          WRITE( UNIT = stdout, &
-              & FMT = '(/,5X,"Final energy = ",F18.10," ryd")' ) energy
+              & FMT = '(/,5X,"Final energy = ",F18.10," Ry")' ) energy
          !
          CALL delete_if_present( TRIM( scratch ) // TRIM( prefix ) // '.bfgs' )
          !
