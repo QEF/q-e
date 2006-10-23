@@ -657,7 +657,10 @@ SUBROUTINE electrons()
 #endif
      !
      IF ( lda_plus_u ) etot = etot + eth
-     IF ( tefield )    etot = etot + etotefield
+     IF ( tefield ) THEN
+        etot = etot + etotefield
+        hwf_energy = hwf_energy + etotefield
+     END IF
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
         !  
