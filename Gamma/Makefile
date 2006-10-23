@@ -62,7 +62,6 @@ a_h.o \
 cg_readin.o \
 cg_setup.o \
 cg_setupdgc.o \
-cg_summary.o \
 cgcom.o \
 cgsolve.o \
 d2ion.o \
