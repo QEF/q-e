@@ -27,7 +27,6 @@ bp_radin.o \
 bp_strings.o \
 bp_ylm_q.o \
 c_bands.o \
-c_gemm.o \
 c_phase_field.o \
 ccalbec.o \
 ccalbec_nc.o \
@@ -127,7 +126,6 @@ irrek.o \
 iweights.o \
 kpoint_grid.o \
 lchk_tauxk.o \
-linmin.o \
 make_pointlists.o \
 mix_pot.o \
 mix_rho.o \
@@ -177,7 +175,6 @@ rotate_wfc_nc.o \
 ruotaijk.o \
 s_1psi.o \
 s_axis_to_ca.o \
-s_gemm.o \
 s_psi.o \
 s_psi_nc.o \
 save_in_cbands.o \
@@ -199,7 +196,6 @@ sgam_at.o \
 sgam_at_mag.o \
 sgam_ph.o \
 sgama.o \
-show_memory.o \
 smallg_q.o \
 spinor.o \
 sph_ind.o \
@@ -232,7 +228,6 @@ trnvecc.o \
 trnvect.o \
 tweights.o \
 update_pot.o \
-updathes.o \
 upf_to_internal.o \
 usnldiag.o \
 usnldiag_nc.o \
