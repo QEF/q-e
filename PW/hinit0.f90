@@ -61,8 +61,8 @@ SUBROUTINE hinit0()
      !
      CALL cryst_to_cart( nat, tau, bg, - 1 )
      !
-     CALL swap( 9, at, at_old )
-     CALL swap( 1, omega, omega_old )
+     CALL dswap( 9, at, 1, at_old, 1 )
+     CALL dswap( 1, omega, 1, omega_old, 1 )
      !
      CALL cryst_to_cart( nat, tau, at, + 1 )
      !
