@@ -451,7 +451,8 @@
             END DO
           enddo
         endif
-
+        
+        c0hc0(:,:,:)=0.d0
 
         DO is= 1, nspin
           nss= nupdwn( is )
