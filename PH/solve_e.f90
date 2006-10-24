@@ -31,7 +31,6 @@ subroutine solve_e
   USE uspp_param,            ONLY : nhm
   use phcom
   USE control_flags,         ONLY : reduce_io
-  USE mp_global,             ONLY : me_pool, root_pool
   
   implicit none
 
@@ -109,7 +108,7 @@ subroutine solve_e
      iter0 = 0
   endif
   !
-  IF ( me_pool == root_pool .AND. fildrho /= ' ') THEN
+  IF ( ionode .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
      CALL DIROPN (iudrho, TRIM(fildrho)//'.E', lrdrho, exst)

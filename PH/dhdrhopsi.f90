@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -40,6 +40,7 @@ subroutine dhdrhopsi
 #include "f_defs.h"
   use pwcom
   use mp, only: mp_end
+  USE mp_global, ONLY : npool
   use io_files, only: prefix, iunigk
   use kinds, only : DP
   USE wavefunctions_module,  ONLY: evc
@@ -207,6 +208,8 @@ subroutine dhdrhopsi
 #ifdef __PARA
      call poolreduce (1, avg_iter1) 
      call poolreduce (1, avg_iter2) 
+     avg_iter1 = avg_iter1 / npool 
+     avg_iter2 = avg_iter2 / npool 
 #endif
      write (6, 9000) ik, eth_ns,  avg_iter1 / 6.d0
      write (6, 9010) ik, eth_ns,  avg_iter2 / 18.d0

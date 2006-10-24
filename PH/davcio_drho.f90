@@ -13,15 +13,16 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   !
   ! ... reads/writes variation of the charge with respect to a perturbation
   ! ... on a file.
-  ! ... isw = +1 : gathers data from the nodes and writes on a single file
+  ! ... isw = +1 : gathers data from the processors, writes to a single file
   ! ... isw = -1 : reads data from a single file and distributes them
   !
-  use pwcom
   USE kinds,     ONLY : DP
-  use phcom
   USE pfft,      ONLY : npp, ncplane
-  USE mp_global, ONLY : intra_pool_comm, me_pool, root_pool, my_image_id
+  USE io_global, ONLY : ionode, ionode_id
+  USE mp_global, ONLY : inter_pool_comm, me_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
+  USE gvect,     ONLY : nrx1, nrx2, nrx3, nrxx
+  USE lsda_mod,  ONLY : nspin
   USE parallel_include
   !
   IMPLICIT NONE
@@ -41,8 +42,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   !
   IF ( isw == 1 ) THEN
      !
-     ! ... First task of each pool is the only task allowed to write
-     ! ... the file
+     ! ... First task is the only task allowed to write the file
      !
      DO is = 1, nspin
         !   
@@ -52,35 +52,21 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      call mp_barrier()
      !
-     IF ( me_pool == root_pool ) CALL davcio( ddrho, lrec, iunit, nrec, + 1 )
+     IF ( ionode ) CALL davcio( ddrho, lrec, iunit, nrec, + 1 )
      !
   ELSE IF ( isw < 0 ) THEN
      !
-     ! ... First task of the pool reads ddrho, and broadcasts to all the
-     ! ... processors of the pool
+     ! ... First task reads and broadcasts ddrho to all pools
      !
-     IF ( me_pool == root_pool ) CALL davcio( ddrho, lrec, iunit, nrec, - 1 )
+     IF ( ionode ) CALL davcio( ddrho, lrec, iunit, nrec, - 1 )
      !
-     CALL mp_bcast( ddrho, root_pool, intra_pool_comm )
+     CALL mp_bcast( ddrho, ionode_id, inter_pool_comm )
      !
-     ! ... Distributes ddrho between between the tasks of the pool
-     !
-     itmp = 1
-     !
-     DO proc = 1, me_pool
-        !
-        itmp = itmp + ncplane * npp(proc)
-        !
-     END DO
-     !
-     dim = ncplane * npp(me_pool+1)
+     ! ... distributes ddrho between between the tasks of the pool
      !
      DO is = 1, nspin
-        ! 
-        drho(:,is) = ( 0.D0, 0.D0 )
-        !
-        drho(1:dim,is) = ddrho(itmp:itmp+dim,is)
-        !CALL ZCOPY( ncplane*npp(me_pool+1), ddrho(itmp,is), 1, drho(1,is), 1 )
+        !   
+        CALL cscatter_sym ( ddrho(1,is), drho(1,is) )
         !
      END DO
      !
