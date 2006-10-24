@@ -105,10 +105,10 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
 
   dip=0.d0
   dipion=0.d0
-  n3=nmax+ndesc+(nr3-ndesc)/2
-  IF (n3.GT.nr3) n3=n3-nr3
+  n3=nmax+ndesc+(npoints-ndesc)/2
+  IF (n3.GT.nmax+ndesc) n3=n3-npoints
   z0=(n3-1)*deltal
-  IF (MOD(nr3-ndesc,2).NE.0) z0=z0+deltal*0.5d0
+  IF (MOD(npoints-ndesc,2).NE.0) z0=z0+deltal*0.5d0
   z0=z0/alat
 
   IF (first.AND.dipfield) z0=0.d0
