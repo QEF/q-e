@@ -77,7 +77,6 @@ efermit.o \
 electrons.o \
 eqvect.o \
 error_handler.o \
-estimate.o \
 ewald.o \
 ewald_dipole.o \
 exx.o \
