@@ -46,6 +46,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE qpoint,               ONLY : npwq, igkq, nksq
   USE partial,              ONLY : comp_irr, done_irr, ifat
   USE modes,                ONLY : npert, u
+  USE mp_global,             ONLY : me_pool, root_pool
   !
   implicit none
 
@@ -167,7 +168,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      flmixdpot = 'mixd'
   endif
   !
-  IF (ionode .AND. fildrho /= ' ') THEN
+  IF (me_pool == root_pool .AND. fildrho /= ' ') THEN
      INQUIRE (UNIT = iudrho, OPENED = exst)
      IF (exst) CLOSE (UNIT = iudrho, STATUS='keep')
      CALL DIROPN (iudrho, TRIM(fildrho)//'.u', lrdrho, exst)
