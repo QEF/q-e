@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2006 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,8 @@ MODULE mytime
   INTEGER,  PARAMETER :: maxclock = 100
   REAL(DP), PARAMETER :: notrunning = - 1.D0
   ! 
-  REAL(DP)          :: myclock(maxclock), t0(maxclock)
+  REAL(DP)          :: cputime(maxclock), t0cpu(maxclock)
+  REAL(DP)          :: walltime, t0wall
   CHARACTER(LEN=12) :: clock_label(maxclock)
   INTEGER           :: called(maxclock)
   !
@@ -35,7 +36,8 @@ SUBROUTINE init_clocks( go )
   ! ... flag = .FALSE. : only clock #1 will run
   !
   USE kinds,  ONLY : DP
-  USE mytime, ONLY : called, t0, myclock, no, notrunning, maxclock, clock_label
+  USE mytime, ONLY : called, t0cpu, cputime, no, notrunning, maxclock, &
+       clock_label, walltime, t0wall
   !
   IMPLICIT NONE
   !
@@ -48,11 +50,14 @@ SUBROUTINE init_clocks( go )
   DO n = 1, maxclock
      !
      called(n)      = 0
-     myclock(n)     = 0.D0
-     t0(n)          = notrunning
+     cputime(n)     = 0.D0
+     t0cpu(n)       = notrunning
      clock_label(n) = ' '
      !
   END DO
+  !
+  t0wall = 0.D0
+  walltime = 0.D0
   !
   RETURN
   !
@@ -64,14 +69,15 @@ SUBROUTINE start_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, t0
+  USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
+                        t0cpu, t0wall
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: label
   INTEGER          :: n
   !
-  REAL(DP), EXTERNAL :: scnds
+  REAL(DP), EXTERNAL :: scnds, cclock
   !
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
@@ -81,13 +87,14 @@ SUBROUTINE start_clock( label )
      IF ( label == clock_label(n) ) THEN
         !
         ! ... found previously defined clock: check if not already started,
-        ! ... store in t0 the starting time
+        ! ... store in t0cpu the starting time
         !
-        IF ( t0(n) /= notrunning ) THEN
+        IF ( t0cpu(n) /= notrunning ) THEN
            WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
                           & " already started")' ) n, label
         ELSE
-           t0(n) = scnds()
+           t0cpu(n) = scnds()
+           IF ( n == 1 ) t0wall = cclock()
         END IF
         !
         RETURN
@@ -106,7 +113,8 @@ SUBROUTINE start_clock( label )
      !
      nclock              = nclock + 1
      clock_label(nclock) = TRIM(label)
-     t0(nclock)          = scnds()
+     t0cpu(nclock)          = scnds()
+     IF ( nclock == 1 ) t0wall = cclock()
      !
   END IF
   !
@@ -120,15 +128,15 @@ SUBROUTINE stop_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mytime,    ONLY : no, nclock, clock_label, myclock, &
-                        notrunning, called, t0
+  USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
+                        notrunning, called, t0cpu, t0wall
   !
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: label
   INTEGER          :: n
   !
-  REAL(DP), EXTERNAL :: scnds
+  REAL(DP), EXTERNAL :: scnds, cclock
   !
   !
   IF ( no ) RETURN
@@ -140,15 +148,16 @@ SUBROUTINE stop_clock( label )
         ! ... found previously defined clock : check if properly initialised,
         ! ... add elapsed time, increase the counter of calls
         !
-        IF ( t0(n) == notrunning ) THEN
+        IF ( t0cpu(n) == notrunning ) THEN
            !
            WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, &
                           & " not running")' ) n, label
            !
         ELSE
            !
-           myclock(n) = myclock(n) + scnds() - t0(n)
-           t0(n)      = notrunning
+           cputime(n) = cputime(n) + scnds() - t0cpu(n)
+           IF ( n == 1 ) walltime = walltime + cclock() - t0wall
+           t0cpu(n)      = notrunning
            called(n)  = called(n) + 1
            !
         END IF
@@ -217,31 +226,32 @@ SUBROUTINE print_this_clock( n )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mytime,    ONLY : no, nclock, clock_label, myclock, &
-                        notrunning, called, t0
+  USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
+                        notrunning, called, t0cpu, t0wall
   USE mp,        ONLY : mp_max, mp_min
   USE mp_global, ONLY : intra_image_comm, my_image_id
   !
   IMPLICIT NONE
   !
   INTEGER  :: n
-  REAL(DP) :: elapsed_cpu_time, nsec
-  INTEGER  :: nday, nhour, nmin, nmax
+  REAL(DP) :: elapsed_cpu_time, elapsed_wall_time, nsec, msec
+  INTEGER  :: nday, nhour, nmin, nmax, mday, mhour, mmin
   !
-  REAL(DP), EXTERNAL :: scnds
+  REAL(DP), EXTERNAL :: scnds, cclock
   !
   !
-  IF ( t0(n) == notrunning ) THEN
+  IF ( t0cpu(n) == notrunning ) THEN
      !
      ! ... clock stopped, print the stored value for the cpu time
      !
-     elapsed_cpu_time = myclock(n)
+     elapsed_cpu_time = cputime(n)
      !
   ELSE
      !
      ! ... clock not stopped, print the current value of the cpu time
      !
-     elapsed_cpu_time = myclock(n) + scnds() - t0(n)
+     elapsed_cpu_time = cputime(n) + scnds() - t0cpu(n)
+     elapsed_wall_time = walltime + cclock() - t0wall
      !
   END If
   !
@@ -257,6 +267,7 @@ SUBROUTINE print_this_clock( n )
   ! ... may be useful for testing purposes :
   !
   CALL mp_max( elapsed_cpu_time, intra_image_comm )
+  CALL mp_max( elapsed_wall_time, intra_image_comm )
   !
   ! ... In parallel execution, some processor
   ! ... can use the clock less than other, we assume that the maximum
@@ -277,33 +288,45 @@ SUBROUTINE print_this_clock( n )
      nmin  = nsec / 60
      nsec  = nsec - 60 * nmin
      !
+     ! ... The first clock writes elapsed (wall) time as well
+     !
+     mday  = elapsed_wall_time / 86400
+     msec  = elapsed_wall_time - 86400 * mday
+     mhour = msec / 3600 
+     msec  = msec - 3600 * mhour
+     mmin  = msec / 60
+     msec  = msec - 60 * mmin
+     !
      IF ( nday > 0 ) THEN
         !    
         WRITE( stdout, &
-               '(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU time"/)' ) &
-             clock_label(n), nday, nhour, nmin
+               '(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU time, ", &
+           &            "   ",3X,I2,"d",3X,I2,"h",I2, "m wall time"/)' ) &
+             clock_label(n), nday, nhour, nmin, mday, mhour, mmin
         !
      ELSE IF ( nhour > 0 ) THEN
         !
         WRITE( stdout, &
-               '(5X,A12," : ",3X,I2,"h",I2,"m CPU time"/)' ) &
-             clock_label(n), nhour, nmin
+               '(5X,A12," : ",3X,I2,"h",I2,"m CPU time, ", &
+           &            "   ",3X,I2,"h",I2,"m wall time"/)' ) &
+             clock_label(n), nhour, nmin, mhour, mmin
         !
      ELSE IF ( nmin > 0 ) THEN
         !
         WRITE( stdout, &
-               '(5X,A12," : ",I2,"m",F5.2,"s CPU time"/)' ) &
-             clock_label(n), nmin, nsec
+               '(5X,A12," : ",I2,"m",F5.2,"s CPU time, ", &
+               &        "   ",I2,"m",F5.2,"s wall time"/)' ) &
+             clock_label(n), nmin, nsec, mmin, msec
         !
      ELSE
         !
         WRITE( stdout, &
-               '(5X,A12," : ",3X,F5.2,"s CPU time"/)' ) &
-             clock_label(n), nsec
+               '(5X,A12," : ",3X,F5.2,"s CPU time,",3X,F5.2,"s wall time"/)' )&
+             clock_label(n), nsec, msec
         !
      END IF
      !
-  ELSE IF ( nmax == 1 .OR. t0(n) /= notrunning ) THEN
+  ELSE IF ( nmax == 1 .OR. t0cpu(n) /= notrunning ) THEN
      !
      ! ... for clocks that have been called only once
      !
@@ -339,8 +362,8 @@ FUNCTION get_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
-  USE mytime,    ONLY : no, nclock, clock_label, myclock, &
-                        notrunning, called, t0
+  USE mytime,    ONLY : no, nclock, clock_label, cputime, &
+                        notrunning, called, t0cpu
   USE mp,        ONLY : mp_max, mp_min
   USE mp_global, ONLY : intra_image_comm 
   !
@@ -373,13 +396,13 @@ FUNCTION get_clock( label )
      !
      IF ( label == clock_label(n) ) THEN
         !
-        IF ( t0(n) == notrunning ) THEN
+        IF ( t0cpu(n) == notrunning ) THEN
            !
-           get_clock = myclock(n)
+           get_clock = cputime(n)
            !
         ELSE
            !
-           get_clock = myclock(n) + scnds() - t0(n)
+           get_clock = cputime(n) + scnds() - t0cpu(n)
            !
         END IF
         !
