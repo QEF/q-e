@@ -165,6 +165,7 @@ MODULE read_namelists_module
 !
 ! ... set starting_magnetization to an invalid value:
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
+! ... (unless the magnetization is set in other ways)
 ! ... in CP starting_magnetization MUST REMAIN UNSET 
 !
        starting_magnetization = sm_not_set
@@ -1158,8 +1159,11 @@ MODULE read_namelists_module
           ! ... stop if starting_magnetization is not set for
           ! ... all atomic types
           !
-          IF ( (nspin==2) .AND. ALL(starting_magnetization == sm_not_set) ) &
-            CALL errore(sub_name,'some starting_magnetization MUST be set', 1 )
+          IF ( nspin == 2 .AND. nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
+               multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
+               ALL(starting_magnetization == sm_not_set) ) THEN
+             CALL errore(sub_name,'some starting_magnetization MUST be set', 1 )
+          END IF
           !
        END IF
        !

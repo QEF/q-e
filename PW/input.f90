@@ -368,9 +368,9 @@ SUBROUTINE iosys()
      IF ( .NOT. lsda ) &
         CALL errore( 'iosys', 'fixed nelup/neldw requires nspin=2', 1 )
      !
-     IF ( ABS( nelup + neldw - nelec ) > 1.D-10 ) &
+     IF ( tot_magnetization < 0 .AND. multiplicity == 0 .AND. &
+          ABS( nelup + neldw - nelec ) > 1.D-10 ) &
         CALL errore( 'iosys', 'nelup + neldw must be equal to nelec', 1 )
-     !
      !
   END IF
   !
