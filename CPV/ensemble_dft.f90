@@ -251,7 +251,8 @@ CONTAINS
           CALL errore(' ensemble_initval ',' occupation method not implemented', 1 )
           !
       END SELECT
-
+     
+      IF(tens) CALL ensemble_dft_info()
 
     RETURN
   END SUBROUTINE ensemble_initval
