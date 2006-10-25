@@ -105,7 +105,8 @@ subroutine dhdrhopsi
   allocate (becp1_sw  (nkb,nbnd)      )
 
   call start_clock('dhdrhopsi')
-  write (6,'(/5x,''Derivative coefficient:'',f10.6)') dek
+  write (6,'(/5x,''Derivative coefficient:'',f10.6, &
+           & ''    Threshold:'',1pe9.2)') dek, eth_ns
   itdba = CMPLX (0.d0, 0.5d0 / (dek * tpiba))
   npwq = npw
   max_iter = 20
@@ -124,9 +125,10 @@ subroutine dhdrhopsi
   !
   call set_dvscf(dvscfs)
 
+  avg_iter1 = 0.d0
+  avg_iter2 = 0.d0
+
   do ik = 1, nksq
-     write(6,'(/,8x,''k('',i4,'') = ('',3f12.7,'')'',/)') &
-             ik, ( xk( ipa, ik), ipa = 1, 3)
      !
      ! -------------------------1-st Step -------------------------
      ! Computes the derivative with respect to the k-point by finite
@@ -143,9 +145,6 @@ subroutine dhdrhopsi
      call DCOPY (nbnd, et (1, ik), 1, et_sw, 1)
      call ZCOPY (nkb * nbnd, becp1 (1, 1, ik), 1, becp1_sw, 1)
      call davcio (ev_sw, lrwfc, iuwfc, ik, -1)
-
-     avg_iter1 = 0.d0
-     avg_iter2 = 0.d0
 
      do ipa = 1, 3
         do isg = -1, 1, 2
@@ -204,15 +203,6 @@ subroutine dhdrhopsi
           enddo
         enddo
      enddo
-
-#ifdef __PARA
-     call poolreduce (1, avg_iter1) 
-     call poolreduce (1, avg_iter2) 
-     avg_iter1 = avg_iter1 / npool 
-     avg_iter2 = avg_iter2 / npool 
-#endif
-     write (6, 9000) ik, eth_ns,  avg_iter1 / 6.d0
-     write (6, 9010) ik, eth_ns,  avg_iter2 / 18.d0
 
      if (d_test) then
         do ipa = 1, 6
@@ -297,6 +287,15 @@ subroutine dhdrhopsi
      enddo
   enddo
 
+#ifdef __PARA
+  call poolreduce (1, avg_iter1) 
+  call poolreduce (1, avg_iter2) 
+#endif
+  avg_iter1 = avg_iter1 / nkstot
+  avg_iter2 = avg_iter2 / nkstot
+  write (6, 9000) avg_iter1 / 6.d0
+  write (6, 9010) avg_iter2 / 18.d0
+
   if (d_test) call dielec_test
 
   deallocate (et_sw    )
@@ -312,10 +311,8 @@ subroutine dhdrhopsi
   deallocate (ps2      )
   deallocate (becp1_sw )
 
-9000 format (5x,'Non-scf  u_k:',i4,' ,thr. = ',1pe9.2, &
-        &   ', avg iteration # =',0pf5.1 )
-9010 format (5x,'Non-scf Du_k:',i4,' ,thr. = ',1pe9.2, &
-        &   ', avg iteration # =',0pf5.1 )
+9000 format (5x,'Non-scf  u_k: avg # of iterations =',0pf5.1 )
+9010 format (5x,'Non-scf Du_k: avg # of iterations =',0pf5.1 )
 
   call stop_clock('dhdrhopsi')
   return
