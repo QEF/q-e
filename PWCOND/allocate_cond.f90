@@ -33,10 +33,7 @@ subroutine allocate_cond
   allocate( fund0(n2d, 2*n2d) )
   allocate( fund1(n2d, 2*n2d) ) 
 
-  IF (lorb) THEN
-     allocate( funz0(n2d, 2*n2d+norbf*npol, nrzpl) )
-     allocate( kfunz(n2d, 2*(n2d+npol*nocrosl), nrzpl) )
-  END IF
+  IF (lorb) allocate( funz0(n2d, 2*n2d+norbf*npol, MAX(nrzpl,nrzps)) )
 
   IF (norbf>0) THEN
      allocate( funl0(n2d, norbf*npol) )     

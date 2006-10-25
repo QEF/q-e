@@ -196,7 +196,6 @@ MODULE cb_cond
   COMPLEX(DP), ALLOCATABLE :: &
        kvall(:),       &!  k           for the left lead 
        kfunl(:,:),     &!  phi_k(z=d)  for the left lead
-       kfunz(:,:,:),   &!  phi_k(z)  for all slabs
        kfundl(:,:),    &!  phi_k'(z=d) for the left lead
        kintl(:,:),     &!  integral of phi_k with beta-fun.
        kcoefl(:,:),    &!  coeff. of phi_k over nonloc. fun.

@@ -32,7 +32,7 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
      lleft       ! 1/0 if it is left/right tip    
   integer :: ik, i, j, kin, kfin, ig, info, lam, n, iorb, iorb1, &
              iorb2, aorb, borb, nt, startk, lastk, nchan, nb, ih, &
-             ih1, ij, is, js, ichan 
+             ih1, ij, is, js, ichan
   REAL(DP), PARAMETER :: eps=1.d-8
   REAL(DP) :: raux, DDOT
   REAL(DP), ALLOCATABLE :: zpseu(:,:,:), zps(:,:)
@@ -354,73 +354,14 @@ subroutine compbs(lleft, nocros, norb, nchan, kval, kfun,  &
 
   endif
 
-IF (lorb) THEN
-!
-!    Calculate the Bloch functions in all z points
-!
-   raux=0.d0
-   DO ik=1,nrzpl
-      CALL ZGEMM('n', 'n', n2d, nchan, 2*n2d+npol*norb, one, funz0(1,1,ik), &
-                   n2d, vec, 2*n2d+npol*norb, zero, kfunz(1,1,ik), n2d)
-      raux=raux+DDOT(2*n2d,kfunz(1,1,ik),1,kfunz(1,1,ik),1)
-   END DO
-   raux=raux*omega/nrzpl
-   raux=1.d0/sqrt(raux)
-   DO ik=1,nrzpl
-      call DSCAL(2*n2d,raux,kfunz(1,1,ik),1)
-   ENDDO
-!
-!    Transform and save all propagating functions. One function after the other.
-!
-   DO ik=1,nrzpl   
-      DO ichan=1,nchan
-         fung=(0.d0,0.d0)
-         DO ig=1,npol*ngper
-            DO mu=1,n2d
-               fung(ig)=fung(ig) + kfunz(mu,ichan,ik) * newbg(ig,mu)
-            END DO
-         END DO
-
-         funr=(0.d0,0.d0)
-         DO ig=1,ngper*npol
-            funr(nl_2d(ig))=fung(ig)
-         END DO
-
-         CALL cft3(funr,nrx,nry,1,nrx,nry,1,1)
-!
-!  Copy the wavefunction for printing, using the boundary conditions
-!
-         DO ix=1,nrx+1
-            iix=ix
-            IF (ix>nrx) iix=1
-            DO jx=1,nry+1
-               jjx=jx
-               IF (jx>nry) jjx=1
-               ig=ix+(jx-1)*(nrx+1)
-               iig=iix+(jjx-1)*nrx
-               auxfr(ig)=REAL(funr(iig))**2+AIMAG(funr(iig))**2
-            END DO
-         END DO
-!  
-         ounit = 34
-         IF (ik>9) THEN
-            write(filename,'("wfc_z.",i2)') ik
-         ELSE
-            write(filename,'("wfc_z.",i1)') ik
-         ENDIF
-         OPEN (UNIT=ounit, FILE=filename, FORM='formatted', STATUS='unknown')
-
-         x0=0.d0
-         CALL xsf_struct (alat, at, 1, x0, 'Al1', 1, ounit)
-         CALL xsf_datagrid_2d (auxfr,nrx+1,nry+1,1.d0,1.d0,x0,at(1,1),at(1,2),&
-                                                alat,ounit)
-!         do ix=1,nrx+1
-!            write(ounit,*) ix, REAL(auxfr(ix))
-!         ENDDO
-         CLOSE(ounit)
-      END DO
-   END DO
-END IF
+  IF (lorb.and.ikind==0) THEN
+  !
+  !    Calculate the Bloch functions in all z points
+  !
+     ounit=34
+     CALL write_states(nrzpl, n2d, norb, norbf, nchan, &
+                                   nrx, nry, ounit, funz0, vec, .TRUE.)
+  END IF
 
   deallocate(amat)
   deallocate(bmat)

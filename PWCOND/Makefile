@@ -4,7 +4,7 @@ include ../make.sys
 
 PPOBJS = \
 ../PP/start_postproc.o \
-../PP/xsf.o \
+../PP/plot_io.o \
 ../PP/stop_pp.o
 
 PWCONDOBJS = \
@@ -39,7 +39,8 @@ scatter_forw.o \
 summary_band.o \
 summary_tran.o \
 sunitary.o \
-transmit.o
+transmit.o \
+write_states.o
 
 MODULES = \
 ../Modules/atom.o \

@@ -23,14 +23,14 @@ subroutine transmit(ik, ien)
 implicit none
 
   integer :: ik, ien, n, iorb, iorb1, iorb2, iorba, ipol, nt, &
-             ih, ih1, ig, ntran, ij, is, js, info
+             ih, ih1, ig, ntran, ij, is, js, ichan, ounit, info
   integer, allocatable :: ipiv(:)
   real(DP) :: tk, tj, tij, eev
   real(DP), allocatable :: zps(:,:), eigen(:)
   complex(DP) :: x1, x2, xi1(2)
   complex(DP), allocatable :: amat(:,:), vec1(:,:), &
                      tmat(:,:), veceig(:,:), zps_nc(:,:), &
-                     vec2(:,:), smat(:,:)
+                     vec2(:,:), smat(:,:), vec(:,:)
 
   eev = earr(ien)
   ntran=4*n2d+npol*(norbs+nocrosl+nocrosr)
@@ -303,8 +303,9 @@ implicit none
                xi1(ipol) = xi1(ipol)+intw2(iorba, ig)*vec2(2*n2d+ig, n)
             enddo
          enddo
-         write(stdout,'(2i5,2f20.12)') n, iorb-orbj_in+1,   &
-                        ( DBLE(xi1(ipol))**2+AIMAG(xi1(ipol))**2,ipol=1,npol)
+         write(stdout,'(2i5,2f16.12,2x,2f16.12)') n, iorb-orbj_in+1,   &
+                                      (xi1(ipol),ipol=1,npol)
+
       enddo
      endif
     enddo
@@ -313,6 +314,18 @@ implicit none
 
   endif
 
+  IF (lorb) THEN
+     ALLOCATE(vec(2*n2d+npol*norbs,nchanl))
+     DO ichan=1,nchanl
+        DO ig=1, 2*n2d+npol*norbs
+           vec(ig,ichan)=vec1(ig,ichan)
+        END DO
+     END DO
+     ounit=34
+     CALL write_states(nrzps,n2d,norbs,norbf,nchanl,nrx,nry, &
+                                       ounit,funz0,vec,.FALSE.)
+     DEALLOCATE(vec)
+  END IF
 
   deallocate(ipiv)
   deallocate(amat)
