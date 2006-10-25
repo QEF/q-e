@@ -504,7 +504,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #endif
      tcpu = get_clock ('PHONON')
 
-     WRITE( stdout, '(/,5x," iter # ",i3," total cpu time : ",f7.1, &
+     WRITE( stdout, '(/,5x," iter # ",i3," total cpu time :",f8.1, &
           &      " secs   av.it.: ",f5.1)') iter, tcpu, averlt
      dr2 = dr2 / npert (irr)
      WRITE( stdout, '(5x," thresh=",e10.3, " alpha_mix = ",f6.3, &
