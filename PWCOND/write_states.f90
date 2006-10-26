@@ -20,14 +20,14 @@ SUBROUTINE write_states(nrzp,n2d,norb,norbf,nchan,nrx,nry,ounit, &
  USE kinds, ONLY : DP
  USE noncollin_module, ONLY : npol
  USE cond,      ONLY : ngper, newbg, nl_2d
- USE pwcom,     ONLY : omega, ibrav, celldm, gcutm, dual, ecutwfc, at
+ USE pwcom,     ONLY : omega, ibrav, celldm, gcutms, dual, ecutwfc, at
  USE ions_base, ONLY : ityp, zv, tau, atm
 
  IMPLICIT NONE
  INTEGER :: nrzp,n2d,norb,norbf,nchan,nrx,nry,ounit 
  COMPLEX(DP) :: funz0(n2d, 2*n2d+norbf*npol, nrzp), vec(2*n2d+npol*norb,nchan)
  LOGICAL :: norm_flag
- INTEGER :: ik, ig, ir, mu, ichan, ios
+ INTEGER :: ik, ig, ir, mu, ig1, ichan, ipol, ios
  REAL(DP) :: DDOT
  COMPLEX(DP), PARAMETER :: one=(1.d0,0.d0), zero=(0.d0,0.d0)
  CHARACTER(LEN=50) :: filename
@@ -41,7 +41,7 @@ SUBROUTINE write_states(nrzp,n2d,norb,norbf,nchan,nrx,nry,ounit, &
 !    Calculate the functions in all z points
 !
  ALLOCATE(funr(nrx*nry))
- ALLOCATE(fung(npol*ngper))
+ ALLOCATE(fung(ngper))
  ALLOCATE(kfunz(n2d,nchan,nrzp))
  DO ik=1,nrzp
     CALL ZGEMM('n', 'n', n2d, nchan, 2*n2d+npol*norb, one, funz0(1,1,ik), &
@@ -83,25 +83,28 @@ SUBROUTINE write_states(nrzp,n2d,norb,norbf,nchan,nrx,nry,ounit, &
 
     aux_plot=(0.d0,0.d0)
     DO ik=1,nrzp
-       fung=(0.d0,0.d0)
-       DO ig=1,npol*ngper
-          DO mu=1,n2d
-             fung(ig)=fung(ig) + kfunz(mu,ichan,ik) * newbg(ig,mu)
+       DO ipol=1,npol
+          fung=(0.d0,0.d0)
+          DO ig=1,ngper
+             ig1=ig+(ipol-1)*ngper
+             DO mu=1,n2d
+                fung(ig)=fung(ig) + kfunz(mu,ichan,ik) * newbg(ig1,mu)
+             END DO
           END DO
-       END DO
 
-       funr=(0.d0,0.d0)
-       DO ig=1,ngper*npol
-          funr(nl_2d(ig))=fung(ig)
-       END DO
+          funr=(0.d0,0.d0)
+          DO ig=1,ngper
+             funr(nl_2d(ig))=fung(ig)
+          END DO
 
-       CALL cft3(funr,nrx,nry,1,nrx,nry,1,1)
-
-       DO ix=1,nrx
-          DO jx=1,nry
-             ir=ix + (jx - 1) * nrx + (ik - 1) * nrx * nry
-             ig=ix+(jx-1)*nrx
-             aux_plot(ir)=REAL(funr(ig))**2+AIMAG(funr(ig))**2
+          CALL cft3(funr,nrx,nry,1,nrx,nry,1,1)
+ 
+          DO ix=1,nrx
+             DO jx=1,nry
+                ir=ix + (jx - 1) * nrx + (ik - 1) * nrx * nry
+                ig=ix+(jx-1)*nrx
+                aux_plot(ir)=aux_plot(ir)+REAL(funr(ig))**2+AIMAG(funr(ig))**2
+             END DO
           END DO
        END DO
     END DO
@@ -110,7 +113,7 @@ SUBROUTINE write_states(nrzp,n2d,norb,norbf,nchan,nrx,nry,ounit, &
     title_here='written by pwcond'
 
     CALL plot_io (TRIM(filename), title_here, nrx, nry, nrzp,       &
-                  nrx, nry, nrzp, 0, 0, ibrav, celldm, at, gcutm,   &
+                  nrx, nry, nrzp, 0, 0, ibrav, celldm, at, gcutms,   &
                   dual, ecutwfc, 7, atm, ityp, zv, tau, aux_plot, + 1)
  END DO
  DEALLOCATE(aux_plot)
