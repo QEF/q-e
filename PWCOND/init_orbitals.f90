@@ -295,11 +295,13 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        enddo
      else
        if (noncolin) then
-         do is = 1, nspin
-          zpseu_nc(1,iorb,iorb,is)=dion(ib,ib,nt)
-         enddo
+         zpseu_nc(1,iorb,iorb,:)=(0.d0,0.d0)
+         zpseu_nc(2,iorb,iorb,:)=(0.d0,0.d0)
+         zpseu_nc(1,iorb,iorb,1)=dion(ib,ib,nt)
+         zpseu_nc(1,iorb,iorb,4)=dion(ib,ib,nt)
        else
          zpseu(1,iorb,iorb)=dion(ib,ib,nt)
+         zpseu(2,iorb,iorb)=0.d0
        endif
      endif
    enddo
