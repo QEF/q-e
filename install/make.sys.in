@@ -38,7 +38,7 @@ FDFLAGS        = @fdflags@
 # In most cases, IFLAGS = -I../include
 # If loading an external FFTW library, add the location of FFTW include files
 
-IFLAGS         = @iflags@
+IFLAGS         = @iflags@ @includefftw@
 
 # MODFLAGS = flag used by f90 compiler to locate modules
 # You need to search for modules in ./, in ../iotk/src, in ../Modules
@@ -114,6 +114,10 @@ MPI_LIBS       = @mpi_libs@
 
 MASS_LIBS      = @mass_libs@
 
+# pgplot libraries (used by some post-processing tools)
+
+PGPLOT_LIBS    = @pgplot_libs@
+
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
 # ARFLAGS_DYNAMICS is used in iotk to produce a dynamical library,
 # for Mac OS-X with PowerPC and xlf compiler. In all other cases
@@ -131,5 +135,5 @@ RANLIB         = @ranlib@
 # all internal and external libraries - do not modify
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
-LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS)
+LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS)
 

@@ -36,6 +36,8 @@ ar=$AR
 arflags=$ARFLAGS
 arflags_dynamic=$ARFLAGS_DYNAMIC
 includefftw=$INCLUDEFFTW
+pgplot_libs=$PGPLOT_LIBS
+
 
 # command-line arguments
 for arg in $*
@@ -1101,7 +1103,7 @@ then
 		fi
 		try_includedirs="$includefftw /usr/local/include \
 				 /cineca/lib/fftw-2.1.3/fftw"
-		for dir in none $try_includedirs
+                for dir in none $try_includedirs
 		do
 			unset ac_cv_header_fftw_h # clear cached value
 			if test "$dir" = "none"
@@ -1311,6 +1313,7 @@ AC_SUBST(fflags_noopt)
 AC_SUBST(pre_fdflags)
 AC_SUBST(imod)
 AC_SUBST(iflags)
+AC_SUBST(includefftw)
 AC_SUBST(ld)
 AC_SUBST(ldflags)
 AC_SUBST(blas_libs)
@@ -1318,6 +1321,7 @@ AC_SUBST(lapack_libs)
 AC_SUBST(fft_libs)
 AC_SUBST(mpi_libs)
 AC_SUBST(mass_libs)
+AC_SUBST(pgplot_libs)
 AC_SUBST(ar)
 AC_SUBST(arflags)
 AC_SUBST(arflags_dynamic)
