@@ -297,21 +297,21 @@ SUBROUTINE print_this_clock( n )
      mmin  = msec / 60
      msec  = msec - 60 * mmin
      !
-     IF ( nday > 0 ) THEN
+     IF ( nday > 0 .OR. mday > 0 ) THEN
         !    
         WRITE( stdout, &
                '(5X,A12," : ",3X,I2,"d",3X,I2,"h",I2, "m CPU time, ", &
            &            "   ",3X,I2,"d",3X,I2,"h",I2, "m wall time"/)' ) &
              clock_label(n), nday, nhour, nmin, mday, mhour, mmin
         !
-     ELSE IF ( nhour > 0 ) THEN
+     ELSE IF ( nhour > 0 .OR. mhour > 0 ) THEN
         !
         WRITE( stdout, &
                '(5X,A12," : ",3X,I2,"h",I2,"m CPU time, ", &
            &            "   ",3X,I2,"h",I2,"m wall time"/)' ) &
              clock_label(n), nhour, nmin, mhour, mmin
         !
-     ELSE IF ( nmin > 0 ) THEN
+     ELSE IF ( nmin > 0 .OR. mmin > 0 ) THEN
         !
         WRITE( stdout, &
                '(5X,A12," : ",I2,"m",F5.2,"s CPU time, ", &
