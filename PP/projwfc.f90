@@ -198,7 +198,8 @@ MODULE projections
   END TYPE wfc_label 
   TYPE(wfc_label), ALLOCATABLE :: nlmchi(:) 
 
-  REAL (DP), ALLOCATABLE :: proj (:,:,:)
+  REAL (DP),    ALLOCATABLE :: proj (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: proj_aux (:,:,:)
 
 END MODULE projections
 !
@@ -211,7 +212,8 @@ MODULE projections_nc
   END TYPE wfc_label_nc 
   TYPE(wfc_label_nc), ALLOCATABLE :: nlmchi(:) 
 
-  REAL (DP), ALLOCATABLE :: proj (:,:,:)
+  REAL (DP),    ALLOCATABLE :: proj (:,:,:)
+  COMPLEX (DP), ALLOCATABLE :: proj_aux (:,:,:)
 
 END MODULE projections_nc
 !
@@ -295,12 +297,16 @@ SUBROUTINE projwave( filproj, lsym )
   IF (lmax_wfc > 3) CALL errore ('projwave', 'l > 3 not yet implemented', 1) 
   IF (nwfc /= natomwfc) CALL errore ('projwave', 'wrong # of atomic wfcs?', 1) 
   ! 
-  ALLOCATE(proj (natomwfc, nbnd, nkstot) ) 
-  proj   = 0.d0 
+  ALLOCATE( proj (natomwfc, nbnd, nkstot) ) 
+  ALLOCATE( proj_aux (natomwfc, nbnd, nkstot) ) 
+  proj      = 0.d0 
+  proj_aux  = (0.d0, 0.d0) 
+  !
   IF (.NOT. lda_plus_u) ALLOCATE(swfcatom (npwx , natomwfc ) ) 
   ALLOCATE(wfcatom (npwx, natomwfc) ) 
   ALLOCATE(overlap (natomwfc, natomwfc) ) 
   overlap= (0.d0,0.d0) 
+  !
   IF ( gamma_only ) THEN 
      ALLOCATE(roverlap (natomwfc, natomwfc) ) 
      roverlap= 0.d0 
@@ -378,11 +384,19 @@ SUBROUTINE projwave( filproj, lsym )
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j> 
      ! 
      IF ( gamma_only ) THEN 
+        !
         ALLOCATE(rproj0(natomwfc,nbnd), rwork1 (nbnd) ) 
         CALL pw_gemm ('Y', natomwfc, nbnd, npw, wfcatom, npwx, evc, npwx, rproj0, natomwfc) 
+        !
+        proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.d0 )
+        !
      ELSE 
+        !
         ALLOCATE(proj0(natomwfc,nbnd), work1 (nbnd) ) 
         CALL ccalbec (natomwfc, npwx, npw, nbnd, proj0, wfcatom, evc) 
+        !
+        proj_aux(:,:,ik) = proj0(:,:)
+        !
      END IF 
      ! 
      ! symmetrize the projections 
@@ -490,8 +504,9 @@ SUBROUTINE projwave( filproj, lsym )
   !   vectors et and proj are distributed across the pools 
   !   collect data for all k-points to the first pool
   ! 
-  CALL poolrecover (et, nbnd, nkstot, nks) 
-  CALL poolrecover (proj, nbnd * natomwfc, nkstot, nks) 
+  CALL poolrecover (et,       nbnd, nkstot, nks) 
+  CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks) 
+  CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks)
   ! 
   IF ( ionode ) THEN 
      ! 
@@ -527,6 +542,12 @@ SUBROUTINE projwave( filproj, lsym )
            CLOSE(iunproj)
         END DO
      END IF
+
+     !
+     ! write projections to file using iotk
+     !
+     CALL write_proj( "atomic_proj.xml", proj_aux )
+
      ! 
      ! write on the standard output file 
      ! 
@@ -787,14 +808,17 @@ SUBROUTINE projwave_nc(filproj, lsym )
   ALLOCATE(wfcatom_nc (npwx, npol, natomwfc) )
   IF (.NOT. lda_plus_u) ALLOCATE(swfcatom_nc (npwx, npol, natomwfc ) )  
   ALLOCATE (becp_nc ( nkb, npol, natomwfc)) 
-  ALLOCATE(overlap (natomwfc, natomwfc) )
   ALLOCATE(e (natomwfc) )  
   ALLOCATE(work (natomwfc, natomwfc) )
+  !
+  ALLOCATE(overlap (natomwfc, natomwfc) )
   ALLOCATE(proj0(natomwfc,nbnd), work1 (nbnd) )
   ALLOCATE(proj (natomwfc, nbnd, nkstot) )
-  overlap = (0.d0,0.d0)
-  proj0 = (0.d0,0.d0)
-  proj = 0.d0  
+  ALLOCATE(proj_aux (natomwfc, nbnd, nkstot) )
+  overlap  = (0.d0,0.d0)
+  proj0    = (0.d0,0.d0)
+  proj     = 0.d0  
+  proj_aux = (0.d0,0.d0)  
   ! 
   !    loop on k points 
   ! 
@@ -860,8 +884,12 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j> 
      !
      CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom_nc, & 
-       npwx*npol, evc_nc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
+                 npwx*npol, evc_nc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
      CALL reduce (2 * natomwfc * nbnd, proj0)
+     !
+     proj_aux(:,:,ik) = proj0(:,:)
+
+     !
      IF (lsym) THEN
         DO nwfc = 1, natomwfc 
            ! 
@@ -1018,8 +1046,9 @@ SUBROUTINE projwave_nc(filproj, lsym )
   !   vectors et and proj are distributed across the pools 
   !   collect data for all k-points to the first pool
   ! 
-  CALL poolrecover (et, nbnd, nkstot, nks) 
-  CALL poolrecover (proj, nbnd * natomwfc, nkstot, nks) 
+  CALL poolrecover (et,       nbnd, nkstot, nks) 
+  CALL poolrecover (proj,     nbnd * natomwfc, nkstot, nks) 
+  CALL poolrecover (proj_aux, 2 * nbnd * natomwfc, nkstot, nks) 
   ! 
   IF ( ionode ) THEN 
      ! 
@@ -1050,6 +1079,12 @@ SUBROUTINE projwave_nc(filproj, lsym )
         END DO
         CLOSE(iunproj)
      END IF
+
+     !
+     ! write projections to file using iotk
+     !
+     CALL write_proj( "atomic_proj.xml", proj_aux )
+
      ! 
      ! write on the standard output file 
      ! 
@@ -1373,6 +1408,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, filpdos)
   !
   DEALLOCATE (nlmchi) 
   DEALLOCATE (proj) 
+  DEALLOCATE (proj_aux) 
   !
   RETURN 
 END SUBROUTINE partialdos
@@ -1606,65 +1642,204 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, filpdos)
   !
   DEALLOCATE (nlmchi) 
   DEALLOCATE (proj) 
+  DEALLOCATE (proj_aux) 
   !
   RETURN 
 END SUBROUTINE partialdos_nc
-
-
+!
+!-----------------------------------------------------------------------
 SUBROUTINE write_io_header(filplot, iunplot, title, nrx1, nrx2, nrx3, &
            nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
            nkstot,nbnd,natomwfc) 
+   !-----------------------------------------------------------------------
 
-USE kinds, ONLY: DP
-USE ions_base, ONLY : zv, atm, tau, ityp
-USE noncollin_module, ONLY: noncolin
-USE spin_orb, ONLY: lspinorb 
-
-IMPLICIT NONE
-CHARACTER (LEN=*) :: filplot
-CHARACTER (LEN=*) :: title
-INTEGER :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav
-REAL(DP) :: celldm (6), gcutm, dual, ecutwfc, at(3,3)
-INTEGER :: iunplot, ios, na, nt, i
-INTEGER :: nkstot,nbnd,natomwfc
-!
-if (filplot == ' ') call errore ('write_io_h', 'filename missing', 1)
-
-OPEN (UNIT = iunplot, FILE = filplot, FORM = 'formatted', &
-      STATUS = 'unknown', ERR = 101, IOSTAT = ios)
-101     CALL errore ('write_io_h', 'opening file '//TRIM(filplot), abs (ios) )
-WRITE (iunplot, '(a)') title
-WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
-WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
-IF  (ibrav == 0) THEN
-    WRITE ( iunplot, * ) at(:,1)
-    WRITE ( iunplot, * ) at(:,2)
-    WRITE ( iunplot, * ) at(:,3)
-END IF
-WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, 9
-WRITE (iunplot, '(i4,3x,a2,3x,f5.2)') &
-      (nt, atm (nt), zv (nt), nt=1, ntyp)
-WRITE (iunplot, '(i4,3x,3f15.9,3x,i2)') (na, &
-      (tau (i, na), i = 1, 3), ityp (na), na = 1, nat)
-WRITE (iunplot, '(3i8)') natomwfc, nkstot, nbnd
-WRITE (iunplot, '(2l5)') noncolin, lspinorb
-
-RETURN
+   USE kinds, ONLY: DP
+   USE ions_base, ONLY : zv, atm, tau, ityp
+   USE noncollin_module, ONLY: noncolin
+   USE spin_orb, ONLY: lspinorb 
+   
+   IMPLICIT NONE
+   CHARACTER (LEN=*) :: filplot
+   CHARACTER (LEN=*) :: title
+   INTEGER :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav
+   REAL(DP) :: celldm (6), gcutm, dual, ecutwfc, at(3,3)
+   INTEGER :: iunplot, ios, na, nt, i
+   INTEGER :: nkstot,nbnd,natomwfc
+   !
+   if (filplot == ' ') call errore ('write_io_h', 'filename missing', 1)
+   
+   OPEN (UNIT = iunplot, FILE = filplot, FORM = 'formatted', &
+         STATUS = 'unknown', ERR = 101, IOSTAT = ios)
+   101     CALL errore ('write_io_h', 'opening file '//TRIM(filplot), abs (ios) )
+   WRITE (iunplot, '(a)') title
+   WRITE (iunplot, '(8i8)') nrx1, nrx2, nrx3, nr1, nr2, nr3, nat, ntyp
+   WRITE (iunplot, '(i6,6f12.8)') ibrav, celldm
+   IF  (ibrav == 0) THEN
+       WRITE ( iunplot, * ) at(:,1)
+       WRITE ( iunplot, * ) at(:,2)
+       WRITE ( iunplot, * ) at(:,3)
+   END IF
+   WRITE (iunplot, '(3f20.10,i6)') gcutm, dual, ecutwfc, 9
+   WRITE (iunplot, '(i4,3x,a2,3x,f5.2)') &
+         (nt, atm (nt), zv (nt), nt=1, ntyp)
+   WRITE (iunplot, '(i4,3x,3f15.9,3x,i2)') (na, &
+         (tau (i, na), i = 1, 3), ityp (na), na = 1, nat)
+   WRITE (iunplot, '(3i8)') natomwfc, nkstot, nbnd
+   WRITE (iunplot, '(2l5)') noncolin, lspinorb
+   
+   RETURN
 END SUBROUTINE write_io_header
-
+!
+!-----------------------------------------------------------------------
 FUNCTION compute_mj(j,l,m)
-USE kinds, ONLY: DP
-IMPLICIT NONE
-REAL(DP) :: compute_mj, j
-INTEGER  :: l, m
+   !-----------------------------------------------------------------------
+   USE kinds, ONLY: DP
+   IMPLICIT NONE
+   !
+   REAL(DP) :: compute_mj, j
+   INTEGER  :: l, m
 
-IF (ABS(j-l-0.5d0).lt.1.d-4) THEN
-   compute_mj=m+0.5d0
-ELSE IF (ABS(j-l+0.5d0).lt.1.d-4) THEN
-   compute_mj=m-0.5d0
-ELSE
-   call errore('compute_mj','l and j not compatible',1)
-END IF
+   IF (ABS(j-l-0.5d0).lt.1.d-4) THEN
+       compute_mj=m+0.5d0
+   ELSE IF (ABS(j-l+0.5d0).lt.1.d-4) THEN
+      compute_mj=m-0.5d0
+   ELSE
+      call errore('compute_mj','l and j not compatible',1)
+   END IF
 
-RETURN
-END
+   RETURN
+END FUNCTION compute_mj
+!
+!-----------------------------------------------------------------------
+SUBROUTINE  write_proj (filename, projs)
+  !-----------------------------------------------------------------------
+  !
+  USE kinds
+  USE io_files,         ONLY : iun => iunat, prefix, tmp_dir
+  USE basis,            ONLY : natomwfc
+  USE cell_base
+  USE klist,            ONLY : wk, xk, nkstot, nelec
+  USE noncollin_module, ONLY : noncolin
+  USE lsda_mod,         ONLY : nspin, isk
+  USE ener,             ONLY : ef
+  USE wvfct,            ONLY : et, nbnd
+  USE iotk_module
+  IMPLICIT NONE
+
+  CHARACTER(*),  INTENT(IN) :: filename
+  COMPLEX(DP),   INTENT(IN) :: projs(natomwfc,nbnd,nkstot)
+  !
+  CHARACTER(256)          :: tmp
+  CHARACTER(iotk_attlenx) :: attr
+  INTEGER :: i,j, ik, ik_eff, ia, ierr, num_k_points
+
+!
+! subroutine body
+!
+
+  tmp = TRIM( tmp_dir ) // TRIM( prefix ) // '.save/' //TRIM(filename)
+  !
+  CALL iotk_open_write(iun, FILE=TRIM(tmp), ROOT="ATOMIC_PROJECTIONS", IERR=ierr )
+  IF ( ierr /= 0 ) RETURN
+  !
+  !
+  num_k_points = nkstot
+  IF ( nspin == 2 ) num_k_points = nkstot / 2
+  !
+  CALL iotk_write_begin(iun, "HEADER")
+  !
+  CALL iotk_write_dat(iun, "NUMBER_OF_BANDS", nbnd)
+  CALL iotk_write_dat(iun, "NUMBER_OF_K-POINTS", num_k_points )
+  CALL iotk_write_dat(iun, "NUMBER_OF_SPIN_COMPONENTS", nspin)
+  CALL iotk_write_dat(iun, "NON-COLINEAR_CALCULATION",noncolin)
+  CALL iotk_write_dat(iun, "NUMBER_OF_ATOMIC_WFC", natomwfc)
+  CALL iotk_write_dat(iun, "NUMBER_OF_ELECTRONS", nelec )
+  CALL iotk_write_attr(attr, "UNITS", " 2 pi / a", FIRST=.TRUE.  )
+  CALL iotk_write_empty (iun,  "UNITS_FOR_K-POINTS", ATTR=attr)
+  CALL iotk_write_attr(attr, "UNITS", "Rydberg", FIRST=.TRUE.  )
+  CALL iotk_write_empty (iun,  "UNITS_FOR_ENERGY", ATTR=attr)
+  CALL iotk_write_dat(iun, "FERMI_ENERGY", ef )
+  !
+  CALL iotk_write_end(iun, "HEADER")
+  !
+  !
+  CALL iotk_write_dat(iun, "K-POINTS", xk(:,1:num_k_points) , COLUMNS=3 )
+  CALL iotk_write_dat(iun, "WEIGHT_OF_K-POINTS", wk(1:num_k_points), COLUMNS=8 )
+  !
+  CALL iotk_write_begin(iun, "EIGENVALUES")
+  !
+  DO ik=1,num_k_points
+     !
+     CALL iotk_write_begin( iun, "K-POINT"//TRIM(iotk_index(ik)) )
+     !
+     IF ( nspin == 2 ) THEN
+        !
+        ik_eff = ik + num_k_points
+        !
+        CALL iotk_write_dat( iun, "EIG.1", et(:,ik) )
+        CALL iotk_write_dat( iun, "EIG.2", et(:,ik_eff) )
+        !
+     ELSE
+        !
+        CALL iotk_write_dat( iun, "EIG", et(:,ik) )
+        !
+     ENDIF
+     !
+     CALL iotk_write_end( iun, "K-POINT"//TRIM(iotk_index(ik)) )
+     !
+  ENDDO
+  !
+  CALL iotk_write_end(iun, "EIGENVALUES")
+
+  !
+  ! main loop atomic wfc
+  !
+  CALL iotk_write_begin(iun, "PROJECTIONS")
+  !
+  DO ik=1,num_k_points
+     !
+     CALL iotk_write_begin( iun, "K-POINT"//TRIM(iotk_index(ik)) )
+     !
+     IF ( nspin == 2 ) THEN
+        !
+        CALL iotk_write_begin ( iun, "SPIN.1" )
+           !
+           DO ia = 1, natomwfc
+               CALL iotk_write_dat(iun, "ATMWFC"//TRIM(iotk_index(ia)), projs(ia,:,ik)  )
+           ENDDO
+           !
+        CALL iotk_write_end ( iun, "SPIN.1" )
+        !
+        ik_eff = ik + num_k_points
+        !
+        CALL iotk_write_begin ( iun, "SPIN.2" )
+           !
+           DO ia = 1, natomwfc
+               CALL iotk_write_dat(iun, "ATMWFC"//TRIM(iotk_index(ia)), projs(ia,:,ik_eff)  )
+           ENDDO
+           !
+        CALL iotk_write_end ( iun, "SPIN.2" )
+        !
+     ELSE
+        !
+        DO ia = 1,natomwfc
+            CALL iotk_write_dat(iun, "ATMWFC"//TRIM(iotk_index(ia)), projs(ia,:,ik)  )
+        ENDDO
+        !
+     ENDIF
+     !
+     CALL iotk_write_end( iun, "K-POINT"//TRIM(iotk_index(ik)) )
+     !
+  ENDDO
+  !
+  CALL iotk_write_end(iun, "PROJECTIONS")
+
+  !
+  ! closing the file
+  !
+  CALL iotk_close_write(iun)
+
+END SUBROUTINE write_proj
+
+
+
