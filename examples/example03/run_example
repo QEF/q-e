@@ -87,8 +87,7 @@ cat > co.rx.in << EOF
   outdir       = "$TMP_DIR",
 /
 &SYSTEM
-  ibrav     = 1,
-  celldm(1) = 12.D0, 
+  ibrav     = 0,
   nat       = 2, 
   ntyp      = 2,
   ecutwfc   = 24.D0, 
@@ -102,6 +101,10 @@ cat > co.rx.in << EOF
   pot_extrapolation = "second_order",
   wfc_extrapolation = "second_order",
 /
+CELL_PARAMETERS cubic
+12.0  0.0  0.0
+ 0.0 12.0  0.0
+ 0.0  0.0 12.0
 ATOMIC_SPECIES
 O  1.00  O.LDA.US.RRKJ3.UPF
 C  1.00  C.pz-rrkjus.UPF
