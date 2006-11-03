@@ -276,7 +276,7 @@ $nabc
 $Sysname
 EOF
 
-$KVECS_COMMAND < kvecs_FS.in > kvecs_FS,out
+$KVECS_COMMAND < kvecs_FS.in > kvecs_FS.out
 
 cat > ni.fs.in << EOF
  &control
