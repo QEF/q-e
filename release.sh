@@ -1,6 +1,6 @@
 #!/bin/sh -x
 #
-VERSION=3.1.1
+VERSION=3.2
 TARGET_MACHINE=cibs.sns.it:public_html/public/
 #
 TMPDIR=espresso-$VERSION
@@ -23,8 +23,8 @@ mkdir $TMPDIR/bin
 
 make veryclean
 
-find . -type f -name *~ -exec /bin/rm {} \;
-find . -type f -name .#* -exec /bin/rm {} \;
+find . -type f -name "*~" -exec /bin/rm {} \;
+find . -type f -name ".#*" -exec /bin/rm {} \;
 if test -f espresso.tar.gz ; then /bin/rm espresso.tar.gz ; fi
 
 # produce updated ChangeLogs

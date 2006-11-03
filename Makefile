@@ -142,7 +142,7 @@ tar :
             install-sh \
 	    make.sys.in \
 	    makedeps.sh moduledep.sh includedep.sh ifcmods.sh \
-	    configure.old ChangeLog ChangeLog.html \
+	    ChangeLog ChangeLog.html \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# remove unneeded stuff from iotk
