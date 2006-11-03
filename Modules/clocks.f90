@@ -245,6 +245,7 @@ SUBROUTINE print_this_clock( n )
      ! ... clock stopped, print the stored value for the cpu time
      !
      elapsed_cpu_time = cputime(n)
+     elapsed_wall_time= walltime
      !
   ELSE
      !
