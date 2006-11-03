@@ -19,7 +19,7 @@ program read_bands
   integer, allocatable :: npoints(:)
   integer :: nks = 0, nbnd = 0, ios, nlines, n,i,j,ni,nf,nl, ierr, ilen
   integer :: nks_rap = 0, nbnd_rap = 0
-  logical, allocatable :: high_symmetry(:), is_in_range(:)
+  logical, allocatable :: high_symmetry(:), is_in_range(:), is_in_range_rap(:)
   character(len=256) :: filename, filename1
   namelist /plot/ nks, nbnd
   namelist /plot_rap/ nks_rap, nbnd_rap
@@ -67,6 +67,7 @@ program read_bands
   !
   allocate (e(nbnd,nks))
   allocate (k(3,nks), e_in(nks), kx(nks), npoints(nks), high_symmetry(nks))
+  allocate (is_in_range(nbnd))
 
   if (exist_rap) then
      allocate(nbnd_rapk(nks))
@@ -74,6 +75,7 @@ program read_bands
      allocate(rap(nbnd,nks))
      allocate(k_rap(3,nks))
      allocate(todo(nbnd))
+     allocate (is_in_range_rap(nbnd))
   end if
 
   high_symmetry=.FALSE.
@@ -100,6 +102,7 @@ program read_bands
             deallocate(rap)
             deallocate(k_rap)
             deallocate(todo)
+            deallocate(is_in_range_rap)
             close(unit=21)
             exist_rap=.false.
         end if
@@ -117,8 +120,7 @@ program read_bands
   print '("Range:",2f8.4,"eV  Emin, Emax > ",$)', emin, emax
   read(5,*) emin, emax
 
-  allocate (is_in_range(nbnd))
-  is_in_range(:) = .false.
+  is_in_range = .false.
   do i=1,nbnd
      is_in_range(i) = any (e(i,1:nks) >= emin .and. e(i,1:nks) <= emax)
   end do
@@ -292,8 +294,13 @@ program read_bands
                  end if
               end do
            end do
+           is_in_range_rap=.false.
            do i=1,MINVAL(nbnd_rapk)
-              if (is_in_range(i)) then
+              is_in_range_rap(i) = any (e_rap(i,point(ilines):point(ilines+1))&
+                    >= emin .and. e(i,point(ilines):point(ilines+1)) <= emax)
+           enddo
+           do i=1,MINVAL(nbnd_rapk)
+              if (is_in_range_rap(i)) then
                  if ( mod(i,2) /= 0) then
                     write (2,'(2f10.4)') (kx(n), e_rap(i,n), &
                                         n=point(ilines),point(ilines+1))
