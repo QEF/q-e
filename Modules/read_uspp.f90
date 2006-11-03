@@ -283,19 +283,20 @@ CONTAINS
        if ( lll(iv,is) > lmaxx .or. lll(iv,is) < 0 ) &
             call errore( 'readvan', 'lll wrong or too large ', is )
        do jv=iv,nbeta(is)
+          !
+          !  the symmetric matric Q_{nb,mb} is stored in packed form
+          !  Q(iv,jv) => qfunc(ijv) as defined below (for jv >= iv)
+          !
+          ijv = jv * (jv-1) / 2 + iv
           read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
                dion(iv,jv,is), ddd(iv,jv), qqq(iv,jv,is),   &
-               (qfunc(ir,iv,jv,is),ir=1,kkbeta(is)),        &
+               (qfunc(ir,ijv,is),ir=1,kkbeta(is)),          &
                ((qfcoef(i,lp,iv,jv,is),i=1,nqf(is)),lp=1,nqlc(is))
           !
           !     Use the symmetry of the coefficients
           !
           dion(jv,iv,is)=dion(iv,jv,is)
           qqq(jv,iv,is)=qqq(iv,jv,is)
-          !
-          do ir = 1, kkbeta(is)
-             qfunc(ir,jv,iv,is)=qfunc(ir,iv,jv,is)
-          enddo
           !
           do i = 1, nqf(is)
              do lp= 1, nqlc(is)
@@ -455,10 +456,9 @@ CONTAINS
     allocate ( b(nqf(is)), x(nqf(is)) )
     ALLOCATE ( qrl(kkbeta(is), nqlc(is)) )
     !
-    ijv = 0
     do iv=1,nbeta(is)
        do jv=iv,nbeta(is)
-          ijv = ijv + 1
+          ijv = jv * (jv-1) / 2 + iv
           !
           ! original version, assuming lll(jv) >= lll(iv) 
           !   lmin=lll(jv,is)-lll(iv,is)+1
@@ -480,7 +480,7 @@ CONTAINS
              ! reconstruct rinner
              !
              do ir=kkbeta(is),1,-1
-                if ( abs(qrl(ir,l)-qfunc(ir,iv,jv,is)) > 1.0d-6) go to 10
+                if ( abs(qrl(ir,l)-qfunc(ir,ijv,is)) > 1.0d-6) go to 10
              end do
 10           irinner = ir+1
              rinner(l,is) = r(irinner,is)
@@ -575,7 +575,7 @@ CONTAINS
     integer::  iexch, icorr, igcx, igcc
 
     integer:: &
-         nb,mb, nmb,&! counters on beta functions
+         nb,mb, ijv,&! counters on beta functions
          n,         &! counter on mesh points
          ir,        &! counters on mesh points
          pseudotype,&! the type of pseudopotential
@@ -675,6 +675,11 @@ CONTAINS
           betar(ir,nb,is)=0.d0
        enddo
        do mb=1,nb
+          ! 
+          ! the symmetric matric Q_{nb,mb} is stored in packed form
+          ! Q(nb,mb) => qfunc(ijv) as defined below (for mb <= nb)
+          !
+          ijv = nb * (nb - 1) / 2 + mb
           read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
                dion(nb,mb,is)
           dion(mb,nb,is)=dion(nb,mb,is)
@@ -683,16 +688,12 @@ CONTAINS
                   qqq(nb,mb,is)
              qqq(mb,nb,is)=qqq(nb,mb,is)
              read(iunps,'(1p4e19.11)',err=100,iostat=ios) &
-                  (qfunc(n,nb,mb,is),n=1,mesh(is))
-             do n=1,mesh(is)
-                qfunc(n,mb,nb,is)=qfunc(n,nb,mb,is)
-             enddo
+                  (qfunc(n,ijv,is),n=1,mesh(is))
           else
              qqq(nb,mb,is)=0.d0
              qqq(mb,nb,is)=0.d0
              do n=1,mesh(is)
-                qfunc(n,nb,mb,is)=0.d0
-                qfunc(n,mb,nb,is)=0.d0
+                qfunc(n,ijv,is)=0.d0
              enddo
           endif
        enddo

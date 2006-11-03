@@ -13,11 +13,11 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   !   of the augmented qrad charges at a given ql point.
   !   Rydberg atomic units are  used.
   !
+  USE kinds, ONLY: DP
   USE atom, ONLY: r, rab, dx
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY: omega
   USE parameters, ONLY:  ndmx
-  USE kinds, ONLY: DP
   USE constants, ONLY: fpi
   USE uspp_param, ONLY: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
        nbeta, nbetam, kkbeta, tvanp
@@ -28,7 +28,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   INTEGER :: idbes
   !
   INTEGER :: ik, msh_bp, i, np, m, k, l
-  INTEGER :: n, ilmin, ilmax, iv, jv
+  INTEGER :: n, ilmin, ilmax, iv, jv, ijv
   REAL(DP)  :: jl(ndmx), jlp1(ndmx), aux(ndmx), sum
   !
   DO np=1,ntyp
@@ -36,13 +36,14 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
      IF (tvanp(np)) THEN
         DO iv =1, nbeta(np)
            DO jv =iv, nbeta(np)
+              ijv = jv * (jv-1) / 2 + iv
               ilmin = iabs(lll(iv,np)-lll(jv,np))
               ilmax = iabs(lll(iv,np)+lll(jv,np))
               !       only need to calculate for for lmin,lmin+2 ...lmax-2,lmax
               DO l = ilmin,ilmax,2
                  DO i =  msh_bp,2,-1
                     IF (r(i,np) .LT. rinner(l+1,np)) GOTO 100
-                    aux(i) = qfunc(i,iv,jv,np)
+                    aux(i) = qfunc(i,ijv,np)
                  ENDDO
 100              CALL setqf(qfcoef(1,l+1,iv,jv,np),aux(1),r(1,np) &
                       ,nqf(np),l,i)

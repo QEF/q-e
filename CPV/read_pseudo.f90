@@ -807,7 +807,7 @@ subroutine upf2internal ( upf, is, ierr )
   !
   !     Local variables
   !
-  integer :: nb, exfact
+  integer :: nb, mb, ijv, exfact
   !
   zv(is)  = upf%zp
   ! psd (is)= upf%psd
@@ -844,8 +844,12 @@ subroutine upf2internal ( upf, is, ierr )
   lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
   rinner(1:upf%nqlc,is) = upf%rinner(1:upf%nqlc)
   qqq(1:upf%nbeta,1:upf%nbeta,is) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-  qfunc (1:upf%mesh, 1:upf%nbeta, 1:upf%nbeta, is) = &
-       upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
+  do nb = 1, upf%nbeta
+     do mb = nb, upf%nbeta
+        ijv = mb * (mb-1) /2 + nb
+        qfunc (1:upf%mesh, ijv, is) = upf%qfunc(1:upf%mesh, nb, mb)
+     end do
+  end do
   qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
        upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
 
@@ -926,7 +930,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
 
   rinner(:,is) = 0.0d0
   qqq(:,:,is)  = 0.0d0
-  qfunc(:,:,:,is) = 0.0d0
+  qfunc(:,:,is) = 0.0d0
   qfcoef(:,:,:,:,is) = 0.0d0
 
   !

@@ -74,14 +74,14 @@ MODULE realus
       IMPLICIT NONE
       !
       INTEGER               :: qsdim, ia, it, mbia, iqs, iqsia
-      INTEGER               :: indm, inbrx1, inbrx2, idimension, &
+      INTEGER               :: indm, inbrx, idimension, &
                                ilm, ih, jh, iih, ijh, lllnbnt, lllmbnt
       INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
       REAL(DP), ALLOCATABLE :: buffdist(:,:)
       REAL(DP)              :: distsq, qtot_int, first, second
       INTEGER               :: index0, index, indproc, ir
-      INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ilast
+      INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ijv, ilast
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
       REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
@@ -108,19 +108,17 @@ MODULE realus
          boxrad(:) = 0.D0
          !
          DO it = 1, nsp
-            DO inbrx1 = 1, nbeta(it)
-               DO inbrx2 = 1, nbeta(it)
-                  DO indm = kkbeta(it), 1, -1
+            DO inbrx = 1, nbeta(it)*(nbeta(it)+1)/2
+               DO indm = kkbeta(it), 1, -1
+                  !
+                  IF ( ABS( qfunc(indm,inbrx,it) ) > eps16 ) THEN
                      !
-                     IF ( ABS( qfunc(indm,inbrx1,inbrx2,it) ) > eps16 ) THEN
-                        !
-                        boxrad(it) = MAX( r(indm,it), boxrad(it) )
-                        !
-                        CYCLE
-                        !
-                     END IF
+                     boxrad(it) = MAX( r(indm,it), boxrad(it) )
                      !
-                  END DO
+                     CYCLE
+                     !
+                  END IF
+                  !
                END DO
             END DO
          END DO
@@ -352,6 +350,7 @@ MODULE realus
             !
             DO nb = 1, nbeta(nt)
                DO mb = nb, nbeta(nt)
+                  ijv = mb * (mb-1) /2 + nb
                   !
                   lllnbnt = lll(nb,nt)
                   lllmbnt = lll(mb,nt)
@@ -362,7 +361,7 @@ MODULE realus
                   !
                   DO ir = 1, kkbeta(nt)
                      IF ( r(ir,nt) >= rinner(l+1,nt) ) THEN
-                        qtot(ir,nb,mb) = qfunc(ir,nb,mb,nt) / r(ir,nt)**2
+                        qtot(ir,nb,mb) = qfunc(ir,ijv,nt) / r(ir,nt)**2
                      ELSE
                         ilast = ir
                      END IF

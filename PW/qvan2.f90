@@ -47,9 +47,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   ! the nonzero real or imaginary part of (-i)^L 
   real (DP), parameter :: sixth = 1.d0 / 6.d0
   !
-  integer :: nb, mb, nmb, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3, ind
+  integer :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3, ind
   ! nb,mb  : atomic index corresponding to ih,jh
-  ! nmb    : combined index (nb,mb)
+  ! ijv    : combined index (nb,mb)
   ! ivl,jvl: combined LM index corresponding to ih,jh
   ! ig     : counter on g vectors
   ! lp     : combined LM index
@@ -73,9 +73,9 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
   nb = indv (ih, np)
   mb = indv (jh, np)
   if (nb.ge.mb) then
-     nmb = nb * (nb - 1) / 2 + mb
+     ijv = nb * (nb - 1) / 2 + mb
   else
-     nmb = mb * (mb - 1) / 2 + nb
+     ijv = mb * (mb - 1) / 2 + nb
   endif
   ivl = nhtolm(ih, np)
   jvl = nhtolm(jh, np)
@@ -141,10 +141,10 @@ subroutine qvan2 (ngy, ih, jh, np, qmod, qg, ylmk0)
            i3 = i0 + 3
            uvx = ux * vx * sixth
            pwx = px * wx * 0.5d0
-           work = qrad (i0, nmb, l, np) * uvx * wx + &
-                  qrad (i1, nmb, l, np) * pwx * vx - &
-                  qrad (i2, nmb, l, np) * pwx * ux + &
-                  qrad (i3, nmb, l, np) * px * uvx
+           work = qrad (i0, ijv, l, np) * uvx * wx + &
+                  qrad (i1, ijv, l, np) * pwx * vx - &
+                  qrad (i2, ijv, l, np) * pwx * ux + &
+                  qrad (i3, ijv, l, np) * px * uvx
         endif
         qg (ind,ig) = qg (ind,ig) + sig * ylmk0 (ig, lp) * work
      enddo

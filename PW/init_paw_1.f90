@@ -31,7 +31,7 @@ subroutine init_paw_1
   !     here a few local variables
   !
 
-  integer :: nt, ih, jh, nb, mb, nmb, l, m, ir, iq, is, startq, &
+  integer :: nt, ih, jh, nb, mb, l, m, ir, iq, is, startq, &
        lastq, ilast,  na, j, n1, n2, ndm, nrs, nrc
   ! various counters
   real(DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)

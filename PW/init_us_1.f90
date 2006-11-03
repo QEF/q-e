@@ -53,10 +53,10 @@ subroutine init_us_1
   !     here a few local variables
   !
 
-  integer :: nt, ih, jh, nb, mb, nmb, l, m, ir, iq, is, startq, &
+  integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, startq, &
        lastq, ilast, ndm
   ! various counters
-  real(DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
+  real(DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:)
   ! various work space
   real(DP) :: prefr, pref, q, qi
   ! the prefactor of the q functions
@@ -86,7 +86,7 @@ subroutine init_us_1
   allocate (aux ( ndm))    
   allocate (aux1( ndm))    
   allocate (besr( ndm))    
-  allocate (qtot( ndm , nbetam , nbetam))    
+  allocate (qtot( ndm , nbetam*(nbetam+1)/2 ))    
   allocate (ylmk0( lmaxq * lmaxq))    
   ap (:,:,:)   = 0.d0
   if (lmaxq > 0) qrad(:,:,:,:)= 0.d0
@@ -236,19 +236,20 @@ subroutine init_us_1
            !
            do nb = 1, nbeta (nt)
               do mb = nb, nbeta (nt)
+                 ijv = mb * (mb-1) / 2 + nb
                  if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
                       (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
                       (mod (l + lll (nb, nt) + lll (mb, nt), 2) == 0) ) then
                     do ir = 1, kkbeta (nt)
                        if (r (ir, nt) >= rinner (l + 1, nt) ) then
-                          qtot (ir, nb, mb) = qfunc (ir, nb, mb, nt)
+                          qtot (ir, ijv) = qfunc (ir, ijv, nt)
                        else
                           ilast = ir
                        endif
                     enddo
                    if (rinner (l + 1, nt) > 0.d0) &
                          call setqf(qfcoef (1, l+1, nb, mb, nt), &
-                                    qtot(1,nb,mb), r(1,nt), nqf(nt),l,ilast)
+                                    qtot(1,ijv), r(1,nt), nqf(nt),l,ilast)
                  endif
               enddo
            enddo
@@ -266,15 +267,15 @@ subroutine init_us_1
                  !    the Q are symmetric with respect to indices
                  !
                  do mb = nb, nbeta (nt)
-                    nmb = mb * (mb - 1) / 2 + nb
+                    ijv = mb * (mb - 1) / 2 + nb
                     if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
                          (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
                          (mod (l + lll(nb, nt) + lll(mb, nt), 2) == 0) ) then
                        do ir = 1, kkbeta (nt)
-                          aux1 (ir) = aux (ir) * qtot (ir, nb, mb)
+                          aux1 (ir) = aux (ir) * qtot (ir, ijv)
                        enddo
                        call simpson (kkbeta(nt), aux1, rab(1, nt), &
-                                     qrad(iq,nmb,l + 1, nt) )
+                                     qrad(iq,ijv,l + 1, nt) )
                     endif
                  enddo
               enddo

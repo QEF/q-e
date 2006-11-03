@@ -1042,7 +1042,7 @@
                   ijv = jv*(jv-1)/2 + iv
                   do l=1,nqlc(is)
                      do ig=1,ngb
-                           dqradb(ig,ijv,l,is) =  dqradx(ig,ijv,l,is)
+                        dqradb(ig,ijv,l,is) =  dqradx(ig,ijv,l,is)
                      enddo
                      do i=1,3
                         do j=1,3
@@ -1627,7 +1627,7 @@
              do l = lmin, lmax
                do ir = 1, kkbeta(is)
                   if ( r(ir,is) >= rinner(l,is) ) then
-                     qrl(ir,ijv,l)=qfunc(ir,iv,jv,is)
+                     qrl(ir,ijv,l)=qfunc(ir,ijv,is)
                   else
                      qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
                      do i = 2, nqf(is)

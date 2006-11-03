@@ -21,7 +21,7 @@ MODULE uspp_param
        betar(ndmx,nbrx,npsx),      &! radial beta_{mu} functions
        jjj(nbrx,npsx),             &! total angular momentum of the beta function
        qqq(nbrx,nbrx,npsx),        &! q_{mu,nu} parameters (in the atomic case)
-       qfunc(ndmx,nbrx,nbrx,npsx), &! Q_{mu,nu}(|r|) function for |r|> r_L
+       qfunc(ndmx,nbrx*(nbrx+1)/2,npsx), &! Q_{mu,nu}(|r|) function for |r|> r_L
        qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q for |r|<r_L
        vloc_at(ndmx,npsx),                &! local potential
        rinner(lqmax,npsx)                  ! values of r_L

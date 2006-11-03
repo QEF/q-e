@@ -48,7 +48,7 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   complex(DP) :: sig
   ! (-i)^L
 
-  integer :: nb, mb, nmb, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
+  integer :: nb, mb, ijv, ivl, jvl, ig, lp, l, lm, i0, i1, i2, i3
   ! the atomic index corresponding to ih
   ! the atomic index corresponding to jh
   ! combined index (nb,mb)
@@ -76,9 +76,9 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
   nb = indv (ih, np)
   mb = indv (jh, np)
   if (nb.ge.mb) then
-     nmb = nb * (nb - 1) / 2 + mb
+     ijv = nb * (nb - 1) / 2 + mb
   else
-     nmb = mb * (mb - 1) / 2 + nb
+     ijv = mb * (mb - 1) / 2 + nb
   endif
   ivl = nhtolm (ih, np)
   jvl = nhtolm (jh, np)
@@ -134,14 +134,14 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
            
      pwx = px * wx * 0.5d0
            
-     work = qrad (i0, nmb, l, np) * uvx * wx +                          &
-            qrad (i1, nmb, l, np) * pwx * vx -                          &
-            qrad (i2, nmb, l, np) * pwx * ux +                          &
-            qrad (i3, nmb, l, np) * px * uvx 
-     work1 = - qrad(i0, nmb, l, np) * (ux*vx + vx*wx + ux*wx) * sixth   &
-             + qrad(i1, nmb, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0   &
-             - qrad(i2, nmb, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0   &
-             + qrad(i3, nmb, l, np) * (ux*vx - px*ux - px*vx) * sixth 
+     work = qrad (i0, ijv, l, np) * uvx * wx +                          &
+            qrad (i1, ijv, l, np) * pwx * vx -                          &
+            qrad (i2, ijv, l, np) * pwx * ux +                          &
+            qrad (i3, ijv, l, np) * px * uvx 
+     work1 = - qrad(i0, ijv, l, np) * (ux*vx + vx*wx + ux*wx) * sixth   &
+             + qrad(i1, ijv, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0   &
+             - qrad(i2, ijv, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0   &
+             + qrad(i3, ijv, l, np) * (ux*vx - px*ux - px*vx) * sixth 
                    
      work1 = work1 * dqi
 
@@ -170,14 +170,14 @@ subroutine dqvan2 (ngy, ih, jh, np, qmod, dqg, ylmk0, dylmk0, ipol)
 
            pwx = px * wx * 0.5d0
 
-           work = qrad (i0, nmb, l, np) * uvx * wx + &
-                  qrad (i1, nmb, l, np) * pwx * vx - &
-                  qrad (i2, nmb, l, np) * pwx * ux + &
-                  qrad (i3, nmb, l, np) * px * uvx
-           work1 = - qrad(i0, nmb, l, np) * (ux*vx + vx*wx + ux*wx) * sixth &
-                   + qrad(i1, nmb, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0 &
-                   - qrad(i2, nmb, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0 &
-                   + qrad(i3, nmb, l, np) * (ux*vx - px*ux - px*vx) * sixth
+           work = qrad (i0, ijv, l, np) * uvx * wx + &
+                  qrad (i1, ijv, l, np) * pwx * vx - &
+                  qrad (i2, ijv, l, np) * pwx * ux + &
+                  qrad (i3, ijv, l, np) * px * uvx
+           work1 = - qrad(i0, ijv, l, np) * (ux*vx + vx*wx + ux*wx) * sixth &
+                   + qrad(i1, ijv, l, np) * (wx*vx - px*wx - px*vx) * 0.5d0 &
+                   - qrad(i2, ijv, l, np) * (wx*ux - px*wx - px*ux) * 0.5d0 &
+                   + qrad(i3, ijv, l, np) * (ux*vx - px*ux - px*vx) * sixth
 
            work1 = work1 * dqi
         end if

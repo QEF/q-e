@@ -35,8 +35,7 @@
       use gvecp, only: ecut => ecutp, gcut => gcutp
       use gvecs, only: gcuts
       use gvecb, only: gcutb
-      use fft_scalar, only: good_fft_dimension, good_fft_order
-      USE fft_base, ONLY: dfftp, dffts, fft_dlay_descriptor
+      USE fft_base,         ONLY: dfftp, dffts
       USE stick_base,       ONLY: pstickset
       USE control_flags,    ONLY: tdipole
       USE berry_phase,      ONLY: berry_setup
@@ -215,7 +214,7 @@
       USE ions_positions,   ONLY: allocate_ions_positions, &
                                   atoms0, atomsm, atomsp
       use cp_restart,       only: cp_read_cell
-      USE fft_base,         ONLY: dfftb, fft_dlay_descriptor
+      USE fft_base,         ONLY: dfftb
       USE fft_types,        ONLY: fft_box_allocate
       USE cp_main_variables,     ONLY: ht0, htm, taub
       USE ions_module,           ONLY: atoms_init

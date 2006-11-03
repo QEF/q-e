@@ -47,7 +47,7 @@ subroutine set_pseudo_upf (is, upf)
   !
   !     Local variables
   !
-  integer :: nb, ir
+  integer :: nb, mb, ijv, ir
   TYPE (pseudo_upf) :: upf
   !
   !
@@ -88,8 +88,12 @@ subroutine set_pseudo_upf (is, upf)
   lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
   rinner(1:upf%nqlc,is) = upf%rinner(1:upf%nqlc)
   qqq(1:upf%nbeta,1:upf%nbeta,is) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-  qfunc (1:upf%mesh, 1:upf%nbeta, 1:upf%nbeta, is) = &
-       upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
+  do nb = 1, upf%nbeta
+     do mb = nb, upf%nbeta
+        ijv = mb * (mb-1) / 2 + nb
+	qfunc (1:upf%mesh, ijv, is) = upf%qfunc(1:upf%mesh, nb, mb)
+     end do
+  end do
   qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
        upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
   !

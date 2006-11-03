@@ -23,7 +23,7 @@ subroutine compute_qdipol
 
   real(DP), allocatable :: qrad2(:,:,:), qtot(:,:,:), aux(:)
   real(DP) :: fact
-  integer :: nt, l, ir, nb, mb, ilast, ipol, ih, ivl, jh, jvl, lp, ndm
+  integer :: nt, l, ir, nb, mb, ijv, ilast, ipol, ih, ivl, jh, jvl, lp, ndm
 
   call start_clock('cmpt_qdipol')
   ndm = MAXVAL (kkbeta(1:ntyp))
@@ -42,12 +42,13 @@ subroutine compute_qdipol
 !
         do nb = 1, nbeta (nt)
            do mb = nb, nbeta (nt)
+              ijv = mb * (mb-1) /2 + nb
               if ((l.ge.abs(lll(nb,nt)-lll(mb,nt))) .and. &
                    (l.le.lll(nb,nt)+lll(mb,nt))      .and. &
                    (mod (l+lll(nb,nt)+lll(mb,nt),2) .eq.0) ) then
                  do ir = 1, kkbeta (nt)
                     if (r(ir, nt).ge.rinner(l+1, nt)) then
-                       qtot(ir, nb, mb)=qfunc(ir,nb,mb,nt)
+                       qtot(ir, nb, mb)=qfunc(ir,ijv,nt)
                     else
                        ilast = ir
                     endif
