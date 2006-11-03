@@ -1,19 +1,22 @@
 Fixed in version 3.2:
 
+  *  In same cases the energy under an external sawtooth potential
+     simulating an electric field was not correct
+
   *  Case ibrav=13 fixed for good this time!!!
 
   *  Bug in PH/clinear.f90 for cells having nr1 /= nr2 may have
      affected new electron-phonon algorithm
   
   *  Poor accuracy of routines calculating spherical bessel functions
-     for high l and small q - should have been harmless
+     for high l and small q - harmless except in very special cases
   
   *  LDA+U with variable-cell dynamics/relaxation was wrong due to
      missing rescaling of the integrals of atomic wavefunctions.
      This bug has been present since at least 3.0 
 
-  *  Parallel subspace diagonalization could occasionally fail,
-     replacd by a new algorithm that is much more stable 
+  *  Parallel subspace diagonalization could occasionally fail;
+     replaced by a new algorithm that is much more stable 
 
 Fixed in version 3.1.1:
 
