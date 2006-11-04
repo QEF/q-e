@@ -1393,21 +1393,21 @@ ELSEIF (code_group==14) THEN
    name_class(4)="2s_v "
    name_class(5)="2s_d "
 
-   name_rap(1)="A_1 G_1 D_1"
+   name_rap(1)="A_1  G_1 D_1"
 
-   name_rap(2)="A_2 G_2 D_1'"
+   name_rap(2)="A_2  G_2 D_1'"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
-   name_rap(3)="B_1 G_3 D_2"
+   name_rap(3)="B_1  G_3 D_2"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
 
-   name_rap(4)="B_2 G_4 D_2'"
+   name_rap(4)="B_2  G_4 D_2'"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
 
-   name_rap(5)="E G_5 D_5"
+   name_rap(5)="E    G_5 D_5"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)

@@ -63,7 +63,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
         redgel = redge-zlen
         redger = redge+zlen
         if (ledge.le.bd1.and.redge.gt.bd2) &
-            call errore ('init_cond','Too big atomic spheres',1)
+            call errore ('init_orbitals','Too big atomic spheres',1)
         if (ledge.gt.bd1.and.redge.le.bd2) then  
            noins = noins+2*lll(ib,nt)+1
            orbind(na,ib) = 0
@@ -259,7 +259,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
 !
   IF (norb>0) THEN
      if (noncolin) then
-        zpseu_nc=0.d0
+        zpseu_nc=(0.d0,0.d0)
      else
         zpseu = 0.d0
      endif
@@ -294,15 +294,19 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
          endif
        enddo
      else
-       if (noncolin) then
-         zpseu_nc(1,iorb,iorb,:)=(0.d0,0.d0)
-         zpseu_nc(2,iorb,iorb,:)=(0.d0,0.d0)
-         zpseu_nc(1,iorb,iorb,1)=dion(ib,ib,nt)
-         zpseu_nc(1,iorb,iorb,4)=dion(ib,ib,nt)
-       else
-         zpseu(1,iorb,iorb)=dion(ib,ib,nt)
-         zpseu(2,iorb,iorb)=0.d0
-       endif
+       do iorb1=orbin,orbfin
+          if (natih(1,iorb)==natih(1,iorb1)) then
+             na=natih(1,iorb1)
+             ih=natih(2,iorb)
+             ih1 = natih(2,iorb1)
+             if (noncolin) then
+                zpseu_nc(1,iorb,iorb1,1)=deeq(ih,ih1,na,1)
+                zpseu_nc(1,iorb,iorb1,4)=deeq(ih,ih1,na,4)
+             else
+                zpseu(1,iorb,iorb1)=deeq(ih,ih1,na,1)
+             end if
+          end if
+       end do
      endif
    enddo
    orbin = lnocros+noins+1
