@@ -32,7 +32,8 @@ SUBROUTINE force_hub(forceh)
    USE uspp,                 ONLY : nkb, vkb
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk
-   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
+   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
+                                    iunat, iunsat, nwordatwfc
    USE atom,                 ONLY : nchi, lchi, oc
 
    IMPLICIT NONE
@@ -117,7 +118,9 @@ SUBROUTINE force_hub(forceh)
 
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 
-      CALL atomic_wfc( ik, wfcatom )
+!      CALL atomic_wfc( ik, wfcatom )
+! read atomic wfc instead
+      CALL davcio(wfcatom,nwordatwfc,iunat,ik,-1)
    
       DO ipol = 1,3
          DO alpha = 1,nat                 ! the displaced atom

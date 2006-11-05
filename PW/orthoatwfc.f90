@@ -18,7 +18,7 @@ SUBROUTINE orthoatwfc
   USE kinds,      ONLY : DP
   USE parameters, ONLY : nchix
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunsat, nwordatwfc, iunigk
+  USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk
@@ -103,6 +103,15 @@ SUBROUTINE orthoatwfc
      ELSE
         CALL atomic_wfc (ik, wfcatom)
      END IF
+     !
+     ! write atomic wfc on unit iunat
+     !
+     IF (noncolin) THEN
+        CALL davcio (wfcatom_nc, nwordatwfc, iunat, ik, 1)
+     ELSE
+        CALL davcio (wfcatom, nwordatwfc, iunat, ik, 1)
+     ENDIF
+     
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      
      IF ( gamma_only ) THEN 
@@ -182,6 +191,9 @@ SUBROUTINE orthoatwfc
         
    END IF ! orthogonalize_wfc
 
+     !
+     ! write S * atomic wfc on unit iunsat
+     !
      IF (noncolin) THEN
         CALL davcio (swfcatom_nc, nwordatwfc, iunsat, ik, 1)
      ELSE

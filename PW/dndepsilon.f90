@@ -26,8 +26,8 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
    USE becmod,               ONLY : becp
-   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
-
+   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
+                                    iunat, iunsat, nwordatwfc
    IMPLICIT NONE
    !
    ! I/O variables first
@@ -90,7 +90,10 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       CALL ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
 
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
-      CALL atomic_wfc( ik, wfcatom )
+!      CALL atomic_wfc( ik, wfcatom )
+! read atomic wfc instead
+      CALL davcio(wfcatom,nwordatwfc,iunat,ik,-1)
+
 
       dproj(:,:) = (0.d0,0.d0)
 
