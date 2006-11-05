@@ -1,0 +1,177 @@
+
+     Program POST-PROC v.3.1.1  starts ...
+     Today is  9Oct2006 at 15:37:14 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       2
+     R & G space division:  proc/pool =    2
+ 
+  Reading nscf_save data
+
+     Planes per process (thick) : nr3 = 18 npp =   9 ncplane =  324
+ 
+ Proc/  planes cols    G   planes cols    G    columns  G
+ Pool       (dense grid)      (smooth grid)   (wavefct grid)
+  1      9     99    957    9     99    957   42    230
+  2      9    100    960    9    100    960   43    229
+  0     18    199   1917   18    199   1917   85    459
+ 
+
+     nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     133
+     nelec  =   8.00  nkb   =     2  ngl    =      52
+ 
+  Spin CASE ( default = unpolarized )
+ 
+  Wannier mode is: library        
+ 
+  Setting up...
+ 
+  MP grid is   4 x  4 x  4
+  - Number of atoms is (  2)
+  - Number of wannier functions is (  4)
+  - All guiding functions are given 
+  - All neighbours are found 
+ 
+ 
+  Opening pp-files 
+ 
+  Ylm expansion
+ 
+ AMN
+ iknum =       64
+       1
+       2
+       3
+       4
+       5
+       6
+       7
+       8
+       9
+      10
+      11
+      12
+      13
+      14
+      15
+      16
+      17
+      18
+      19
+      20
+      21
+      22
+      23
+      24
+      25
+      26
+      27
+      28
+      29
+      30
+      31
+      32
+      33
+      34
+      35
+      36
+      37
+      38
+      39
+      40
+      41
+      42
+      43
+      44
+      45
+      46
+      47
+      48
+      49
+      50
+      51
+      52
+      53
+      54
+      55
+      56
+      57
+      58
+      59
+      60
+      61
+      62
+      63
+      64
+ 
+  AMN calculated
+
+MMN
+ iknum =       64
+       1
+       2
+       3
+       4
+       5
+       6
+       7
+       8
+       9
+      10
+      11
+      12
+      13
+      14
+      15
+      16
+      17
+      18
+      19
+      20
+      21
+      22
+      23
+      24
+      25
+      26
+      27
+      28
+      29
+      30
+      31
+      32
+      33
+      34
+      35
+      36
+      37
+      38
+      39
+      40
+      41
+      42
+      43
+      44
+      45
+      46
+      47
+      48
+      49
+      50
+      51
+      52
+      53
+      54
+      55
+      56
+      57
+      58
+      59
+      60
+      61
+      62
+      63
+      64
+ 
+  MMN calculated
