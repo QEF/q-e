@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#undef DEBUG
 !---------------------------------------------------------------
 subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
    !--------------------------------------------------------------------
@@ -48,7 +49,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
    mesh_save = mesh
    mesh = counter
 #ifdef DEBUG
-   write (*,*) mesh
+   write (*,*) "mesh ", mesh
 #endif
    !
    if (lsd .ne. 0) call errore ('c6_tfvw', 'implemented only for non-magnetic ions', lsd) 
@@ -72,8 +73,9 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
 !
    call veff_of_rho(mesh,dx,r,r2,rho,y,veff)
 #ifdef DEBUG
-   write (*,*) "veff "
+   write (*,*) "veff(1:3)"
    write (*,*) veff(1:3)
+   write (*,*) "veff(mesh-5:mesh)"
    write (*,*) veff(mesh-5:mesh)
 #endif
 !
@@ -91,7 +93,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
       charge = charge + rho(i) * fpi * r2(i) * r(i) * dx
    end do
 !   call solve_scheq(n,l,e,mesh,dx,r,sqr,r2,veff,zed,yy)
-   call ascheq (n, l, e, mesh-1, dx, r, r2, sqr, veff, ze2, thresh, yy, nstop)
+   call ascheq (n, l, e, mesh, dx, r, r2, sqr, veff, ze2, thresh, yy, nstop)
 
    error = 0.d0
    do i=1,mesh
@@ -99,13 +101,19 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
    end do
 
 #ifdef DEBUG
-      write (*,*) error
+      write (*,*) "ascheq called with mesh"
+      write (*,*) "nstop", nstop, e
+      write (*,*) "error ",error
+      write (*,*) "y(1:3)"
       write (*,*) y(1:3)
+      write (*,*) "y(mesh-2:mesh)"
       write (*,*) y(mesh-2:mesh)
+      write (*,*) "yy(1:3)"
       write (*,*) yy(1:3)
+      write (*,*) "yy(mesh-2:mesh)"
       write (*,*) yy(mesh-2:mesh)
       write (*,*) sqr(1:3)
-      write (*,*) sqrt(charge)
+      write (*,*) "sqrt(charge)", sqrt(charge)
 #endif
    if (error > 1.d-8) then
       call errore('c6_tfvw','auxiliary funtions veff(r) and y(r) are inaccurate',1)
@@ -164,11 +172,43 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
          ! compute drho of r
          !
          call drho_of_r(mesh, dx, r, r2, y, dy, drho)
+#ifdef DEGUG
+         write (*,*) "========================"
+         write (*,*) "drho(1:3)"
+         write (*,*) drho(1:3)
+         write (*,*) "drho(20:22)"
+         write (*,*) drho(20:22)
+         write (*,*) "drho(40:42)"
+         write (*,*) drho(40:42)
+         write (*,*) "drho(mesh-2:mesh)"
+         write (*,*) drho(mesh-2:mesh)
+#endif
          !
          ! compute dv of drho (including the TF term)
          !
          l_add_tf_term = .true.
          call dv_of_drho(mesh, dx, r,r2,rho,drho,dvhx,dvxc,pp, l_add_tf_term)
+
+#ifdef DEGUG
+         write (*,*) "========================"
+         write (*,*) "dvhx(1:3)"
+         write (*,*) dvhx(1:3)
+         write (*,*) "dvhx(20:22)"
+         write (*,*) dvhx(20:22)
+         write (*,*) "dvhx(40:42)"
+         write (*,*) dvhx(40:42)
+         write (*,*) "dvhx(mesh-2:mesh)"
+         write (*,*) dvhx(mesh-2:mesh)
+         write (*,*) "========================"
+         write (*,*) "pp(1:3)"
+         write (*,*) pp(1:3)
+         write (*,*) "pp(20:22)"
+         write (*,*) pp(20:22)
+         write (*,*) "pp(40:42)"
+         write (*,*) pp(40:42)
+         write (*,*) "pp(mesh-2:mesh)"
+         write (*,*) pp(mesh-2:mesh)
+#endif
          !
          ! mix
          !
@@ -196,7 +236,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
       if (iu .gt. Nc .and. iu .lt. Nu) factor = du2
       if (iu .eq. Nu)                 factor = 0.5d0 * du2
       c6 = c6 + factor*alpha*alpha
-
+ 
    end do
 
    c6 = c6 * 3.d0 / pi 
@@ -261,6 +301,10 @@ subroutine veff_of_rho(mesh,dx,r,r2,rho,y,veff)
       veff(1) = veff(2) + (veff(3)-veff(2))*(r(1)-r(2))/(r(3)-r(2)) 
       veff(mesh) = (y(mesh-1)/y(mesh) -2.d0 )/dx2 &
                  - (vold(mesh-1)*y(mesh-1)/y(mesh) -2.d0*vold(mesh) )/12.d0
+!
+! the routine that integrates the Sh.Eq. requires that v(mesh) is an upper bound
+!
+      veff(mesh) = max(veff(mesh),veff(mesh-1))
 !
       error = 0.d0
       do i=1,mesh

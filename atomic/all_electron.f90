@@ -49,7 +49,10 @@ subroutine all_electron(ild)
   !
   ! compute C6 coefficient if required
   !
-  if (vdw) call c6_tfvw ( mesh, zed, dx, r(1), r2(1), rho(1,1) )
+  if (vdw) then
+     call c6_tfvw ( mesh, zed, dx, r, r2, rho(1,1) )
+     call c6_dft  ( mesh, zed, dx, r, r2 )
+  end if
   !
   return
   !

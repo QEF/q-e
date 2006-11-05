@@ -11,6 +11,7 @@ for xc in sla-noc sla-pz sla-gl; do
 $LD1 < $atom.$xc.in > $atom.$xc.out
 mv $atom.$xc.out $workd
 mv freq-pol.dat $workd/$atom.$xc.freq-pol.dat
+mv freq-pol-dft.dat $workd/$atom.$xc.freq-pol-dft.dat
 rm -f ld1.*
 done 
 done

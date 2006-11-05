@@ -10,6 +10,7 @@ all_electron.o \
 ascheq.o \
 ascheqlocps.o \
 ascheqps.o \
+c6_dft.o \
 c6_tfvw.o \
 cfdsol.o \
 chargeps.o \
