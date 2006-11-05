@@ -12,7 +12,7 @@ SUBROUTINE close_files()
   ! ... Close all files and synchronize processes for a new scf calculation.
   !
   USE ldaU,          ONLY : lda_plus_u
-  USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat
+  USE io_files,      ONLY : prefix, iunwfc, iunigk, iunsat
   USE mp_global,     ONLY : intra_image_comm
   USE mp,            ONLY : mp_barrier
   !
@@ -31,12 +31,12 @@ SUBROUTINE close_files()
   INQUIRE( UNIT = iunigk, OPENED = opnd )
   IF ( opnd ) CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
-  ! ... iunat contains the orthogonalized wfcs
+  ! ... iunsat contains the (orthogonalized) atomic wfcs * S
   !
   IF ( lda_plus_u ) THEN
      !
-     INQUIRE( UNIT = iunat, OPENED = opnd )  
-     IF ( opnd ) CLOSE( UNIT = iunat, STATUS = 'KEEP' )
+     INQUIRE( UNIT = iunsat, OPENED = opnd )  
+     IF ( opnd ) CLOSE( UNIT = iunsat, STATUS = 'KEEP' )
      !
   END IF
   !

@@ -23,7 +23,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE constants,            ONLY : eps4
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
-  USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc
+  USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, nwordwfc
   USE cell_base,            ONLY : tpiba2 
   USE klist,                ONLY : nkstot, nks, xk, nelec
   USE uspp,                 ONLY : okvan

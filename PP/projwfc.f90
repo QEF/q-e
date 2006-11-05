@@ -1715,7 +1715,7 @@ SUBROUTINE  write_proj (filename, projs)
   !-----------------------------------------------------------------------
   !
   USE kinds
-  USE io_files,         ONLY : iun => iunat, prefix, tmp_dir
+  USE io_files,         ONLY : iun => iunsat, prefix, tmp_dir
   USE basis,            ONLY : natomwfc
   USE cell_base
   USE klist,            ONLY : wk, xk, nkstot, nelec

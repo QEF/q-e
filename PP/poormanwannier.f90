@@ -87,7 +87,7 @@ SUBROUTINE projection (first_band, last_band)
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: becp, rbecp
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
-                      iunat, nwordatwfc
+                      iunsat, nwordatwfc
   USE wavefunctions_module, ONLY: evc 
 
   IMPLICIT NONE 
@@ -122,9 +122,8 @@ SUBROUTINE projection (first_band, last_band)
   WRITE( stdout, '(/5x,"Calling projection .... ")') 
   IF ( gamma_only ) WRITE( stdout, '(5x,"gamma-point specific algorithms are used")') 
   ! 
-  iunat = 13
   nwordatwfc = 2 * npwx * natomwfc
-  CALL diropn( iunat, 'atwfc', nwordatwfc, exst )
+  CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
   !
   ALLOCATE(proj (natomwfc, nbnd, nkstot) ) 
   ALLOCATE(wfcatom (npwx, natomwfc) ) 
@@ -314,7 +313,7 @@ SUBROUTINE projection (first_band, last_band)
      END IF 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
 
-     CALL davcio (swfcatom, nwordatwfc, iunat, ik, 1)
+     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
 
 
      ! on k-points 

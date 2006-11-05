@@ -80,25 +80,27 @@ MODULE io_files
   !
   ! ... units in pwscf
   !
+  INTEGER :: iunres      =  1 ! unit for the restart of the run
   INTEGER :: iunpun      =  4 ! unit for saving the final results
   INTEGER :: iunwfc      = 10 ! unit with wavefunctions
-  INTEGER :: iunat       = 13 ! unit for saving orthogonal atomic wfcs
-  INTEGER :: iunocc      = 14 ! unit for saving the atomic n_{ij}
   INTEGER :: iunoldwfc   = 11 ! unit with old wavefunctions
   INTEGER :: iunoldwfc2  = 12 ! as above at step -2
+  INTEGER :: iunat       = 13 ! unit for saving (orthogonal) atomic wfcs 
+  INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
+  INTEGER :: iunocc      = 15 ! unit for saving the atomic n_{ij}
   INTEGER :: iunigk      = 16 ! unit for saving indices
-  INTEGER :: iunres      =  1 ! unit for the restart of the run
+  !
+  INTEGER :: iunexit     = 26 ! unit for a soft exit  
+  INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
+  INTEGER :: iunnewimage = 28 ! unit for parallelization among images
+  INTEGER :: iunblock    = 29 ! as above (blocking file)
+  !
   INTEGER :: iunbfgs     = 30 ! unit for the bfgs restart file
   INTEGER :: iunatsicwfc = 31 ! unit for sic wfc
   !
   INTEGER :: nwordwfc    =  2 ! lenght of record in wavefunction file
   INTEGER :: nwordatwfc  =  2 ! lenght of record in atomic wfc file
   INTEGER :: nwordwann   =  2 ! lenght of record in sic wfc file
-  !
-  INTEGER :: iunexit     = 26 ! unit for a soft exit  
-  INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)
-  INTEGER :: iunnewimage = 28 ! unit for parallelization among images
-  INTEGER :: iunblock    = 29 ! as above (blocking file)
   !
   ! ... "path" specific
   !

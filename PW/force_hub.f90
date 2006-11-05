@@ -32,7 +32,7 @@ SUBROUTINE force_hub(forceh)
    USE uspp,                 ONLY : nkb, vkb
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk
-   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunat
+   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
    USE atom,                 ONLY : nchi, lchi, oc
 
    IMPLICIT NONE
@@ -102,7 +102,7 @@ SUBROUTINE force_hub(forceh)
       IF (nks.GT.1) READ (iunigk) npw, igk
 
       CALL davcio(evc,nwordwfc,iunwfc,ik,-1)
-      CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+      CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
       c_one= (1.d0, 0.d0)
       c_zero = (0.d0, 0.d0)
       CALL ZGEMM ('C', 'N', natomwfc, nbnd, npw, c_one, &

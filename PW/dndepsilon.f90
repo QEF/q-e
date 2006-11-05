@@ -26,7 +26,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
    USE becmod,               ONLY : becp
-   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunat
+   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
 
    IMPLICIT NONE
    !
@@ -96,7 +96,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
 
       CALL dprojdepsilon(ik,dproj,wfcatom,spsi,ipol,jpol)
 
-      CALL davcio(swfcatom,nwordatwfc,iunat,ik,-1)
+      CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
 
       DO ibnd = 1, nbnd
          DO i=1,natomwfc

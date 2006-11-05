@@ -29,7 +29,7 @@ SUBROUTINE wfcinit()
   USE uspp,                 ONLY : nkb, vkb, okvan
   USE ldaU,                 ONLY : swfcatom, swfcatom_nc, lda_plus_u
   USE noncollin_module,     ONLY : noncolin, npol
-  USE io_files,             ONLY : iunat, nwordwfc, iunwfc, iunigk, &
+  USE io_files,             ONLY : iunsat, nwordwfc, iunwfc, iunigk, &
                                    nwordatwfc
   USE wavefunctions_module, ONLY : evc, evc_nc
   USE random_numbers,       ONLY : rndm
@@ -154,7 +154,7 @@ SUBROUTINE wfcinit()
           g2kin(:) = g2kin(:) * tpiba2
           !
           IF ( lda_plus_u ) &
-             CALL davcio( swfcatom, nwordatwfc, iunat, ik, - 1 )
+             CALL davcio( swfcatom, nwordatwfc, iunsat, ik, - 1 )
           !
           IF ( startingwfc == 'atomic' ) THEN
              !
@@ -346,12 +346,12 @@ SUBROUTINE wfcinit()
           IF ( noncolin ) THEN
              !
              IF ( lda_plus_u ) &
-                CALL davcio( swfcatom_nc, nwordatwfc, iunat, ik, -1 )
+                CALL davcio( swfcatom_nc, nwordatwfc, iunsat, ik, -1 )
              !
           ELSE
              !
              IF ( lda_plus_u ) &
-                CALL davcio( swfcatom, nwordatwfc, iunat, ik, -1 )
+                CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
              !
           END IF
           !

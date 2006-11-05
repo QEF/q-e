@@ -19,8 +19,7 @@ SUBROUTINE openfil_pp()
   USE wvfct,          ONLY : nbnd, npwx
   USE ldaU,           ONLY : lda_plus_U
   use control_flags,  only: twfcollect
-  USE io_files,       ONLY : prefix, &
-                             iunat, iunwfc, &
+  USE io_files,       ONLY : prefix, iunsat, iunwfc, &
                              iunigk, nwordwfc, nwordatwfc
   USE mp_global,        ONLY : kunit
   USE noncollin_module, ONLY : npol

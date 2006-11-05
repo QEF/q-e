@@ -18,7 +18,7 @@ SUBROUTINE orthoatwfc
   USE kinds,      ONLY : DP
   USE parameters, ONLY : nchix
   USE io_global,  ONLY : stdout
-  USE io_files,   ONLY : iunat, nwordatwfc, iunigk
+  USE io_files,   ONLY : iunsat, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk
@@ -183,9 +183,9 @@ SUBROUTINE orthoatwfc
    END IF ! orthogonalize_wfc
 
      IF (noncolin) THEN
-        CALL davcio (swfcatom_nc, nwordatwfc, iunat, ik, 1)
+        CALL davcio (swfcatom_nc, nwordatwfc, iunsat, ik, 1)
      ELSE
-        CALL davcio (swfcatom, nwordatwfc, iunat, ik, 1)
+        CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
      ENDIF
      
   ENDDO

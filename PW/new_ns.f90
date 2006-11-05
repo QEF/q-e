@@ -30,7 +30,7 @@ SUBROUTINE new_ns()
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, gamma_only
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
-  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunat
+  USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
 
   IMPLICIT NONE
   !
@@ -85,7 +85,7 @@ SUBROUTINE new_ns()
      IF (nks.GT.1) READ (iunigk) npw, igk
      IF (nks.GT.1) CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      
-     CALL davcio (swfcatom, nwordatwfc, iunat, ik, - 1)
+     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
      !
      ! make the projection
      !

@@ -22,7 +22,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
-  USE io_files,             ONLY : iunigk, nwordatwfc, iunat, iunwfc, nwordwfc, iunefield
+  USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, nwordwfc, iunefield
   USE cell_base,            ONLY : tpiba2 
   USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -210,7 +210,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... Needed for LDA+U
           !
-          IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunat, ik, -1 )
+          IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
           !
           ! ... sets the kinetic energy
           !
@@ -491,7 +491,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !   
           ! ... Needed for LDA+U
           !
-          IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunat, ik, -1 )
+          IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
           !
           ! ... sets the kinetic energy
           !
