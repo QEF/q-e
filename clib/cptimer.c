@@ -34,12 +34,33 @@ double F77_FUNC(cclock,CCLOCK)()
 
 }
 
+#ifdef __QK_USER__
+#include <catamount/dclock.h>
+double F77_FUNC(scnds,SCNDS) ( )
+
+/* cray xt3 has no times() on the compute nodes.
+ * Return the wall time associated to the current process.
+*/
+{
+	static int first = 1;
+	static double init_cputime = 0.0;
+	double cputime;
+
+        cputime   = dclock();
+
+	if( first ) {
+		first = 0;
+		init_cputime = cputime;
+	}
+
+	return cputime - init_cputime;
+}
+#else
 
 double F77_FUNC(scnds,SCNDS) ( )
 
 /* Return the cpu time associated to the current process 
 */
-
 {
 	static struct tms T;
 	static int first = 1;
@@ -58,4 +79,4 @@ double F77_FUNC(scnds,SCNDS) ( )
 
 	return cputime - init_cputime;
 }
-
+#endif
