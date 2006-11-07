@@ -309,7 +309,6 @@ The following libraries are searched for:
     essl on AIX
     complib.sgimath on sgi origin
     SCSL on sgi altix
-    scilib on Cray T3E
     SUNperf on sparc
     cxml on alpha
   Moreover, ATLAS is used over BLAS if available.

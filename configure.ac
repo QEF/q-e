@@ -61,7 +61,9 @@ AC_CANONICAL_BUILD
 # to work around that, let's pretend we are cross-compiling even if we aren't
 # !!! this relies on undocumented Autoconf behavior !!! 
 if test "$host" = "" ; then host=$build ; fi
-cross_compiling=yes
+
+# this is our internal variable saying if we are REALLY cross-compiling
+cross_compiling=no
 
 # identify architecture
 if test "$arch" = ""
@@ -79,6 +81,7 @@ then
 		powerpc-apple-darwin* ) arch=macppc ;;
 		i686-apple-darwin* )    arch=mac686 ;;
 		*-pc-cygwin )           arch=cygwin ;;
+		sx*-nec-superux* )      arch=necsx ;;
 	esac
 fi
 echo checking architecture... $arch
@@ -125,6 +128,7 @@ sparc )
 crayx1 )
 	try_f90="ftn $try_f90"
 	try_dflags="-D__X1"
+        cross_compiling=yes
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
@@ -138,6 +142,14 @@ macppc )
 	;;
 mac686 | cygwin )
 	try_f90="ifort $try_f90"
+	;;
+necsx )
+	try_mpif90="sxmpif90"
+	try_f90="sxf90"
+	try_ar="sxar"
+	try_arflags="rv"
+  	try_arflags_dynamic="rv"
+        cross_compiling=yes
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture?)
@@ -260,6 +272,10 @@ crayx1:ftn )
 	;;
 macppc:xlf90 )
 	try_f77="xlf f77 $f90"
+	;;
+necsx:sxf90 )
+	try_cc="sxcc"
+	try_f77="sxf90"
 	;;
 esac
 
@@ -457,6 +473,16 @@ macppc:* )
 	pre_fdflags="-WF,"
 	xlf_flags=1
 	;;
+
+necsx:sxf90 )
+	try_f90flags="-float0 -Ep -P stack -sx6 -USX -eab -R5 -C hopt -Wf\" -P nh -ptr byte -pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack -fusion -O noif -init stack=zero heap=zero -Ncont -A dbl4\" "
+	try_fflags="-f0 \$(F90FLAGS)"
+	try_fflags_noopt="\$(F90FLAGS) -C debug"
+	try_ldflags="-float0 -P stack -sx6 -USX -eab -R5 -Wl\" -f zero \" "
+	try_dflags=" -DLANGUAGE_FORTRAN -D__SX6 -USX "
+	try_fdflags="\"\$(DFLAGS)\" "
+	pre_fdflags="-Wp"
+	;;
 * )
 	# unknown, try these
 	try_fflags="-O"
@@ -509,6 +535,11 @@ crayx1:cc )
         ;;
 macppc:xlc* | macppc:mpcc* )
 	try_cflags="-O4"
+	;;
+necsx:sxcc )
+	try_cpp="sxcpp"
+	try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
+	try_ar="sxar"
 	;;
 esac
 if test "$cflags" = "" ; then cflags=$try_cflags ; fi
@@ -776,6 +807,16 @@ then
 		AC_SEARCH_LIBS(dgemm, sunperf, have_blas=1
 			       blas_libs="-xlic_lib=sunperf $LIBS")
 		;;
+	necsx:* )
+		# check for blas in /SX/usr/lib
+		unset ac_cv_search_dgemm # clear cached value
+		try_libdirs="/SX/usr/lib/"
+		try_libdirs="$try_libdirs $ld_library_path"
+		FFLAGS=""
+		LDFLAGS=""
+		LIBS=""
+		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="-lblas",exit)
+		;;
 
 	esac
 
@@ -878,7 +919,7 @@ then
 		fi
 		;;
 
-        amd64:path* )
+        amd64:path* | amd64:pgf* )
                 # check for acml
                 unset ac_cv_search_zggev # clear cached value
                 FFLAGS="$test_fflags"
@@ -922,6 +963,17 @@ then
 		  	          lapack_libs="-lessl" 
  				  try_dflags="$try_dflags -D__ESSL")
                 fi
+		;;
+	necsx:* )
+		# check lapack
+		try_libdirs="/SX/usr/lib/"
+		try_libdirs="$try_libdirs $ld_library_path"
+		unset ac_cv_search_zggev # clear cached value
+		FFLAGS=""
+		LDFLAGS=""
+		LIBS="$blas_libs"
+		AC_SEARCH_LIBS(zggev, lapack, have_lapack=1 lapack_libs="-llapack")
+		AC_SEARCH_LIBS(zhegvx, lapack, try_dflags="$try_dflags -DHAS_ZHEGVX")
 		;;
 	esac
 
@@ -1036,6 +1088,16 @@ then
 		LIBS="$libs"
 		AC_SEARCH_LIBS(zfft3i, sunperf, have_fft=1
 			       fft_libs="-xlic_lib=sunperf $LIBS")
+		;;
+	necsx )
+		# check for ASL and/or MathKeisan libs
+		unset ac_cv_search_zfc3fb # clear cached value
+		unset ac_cv_search_zzfft3d # clear cached value
+		FFLAGS=""
+		LDFLAGS=""
+		LIBS="$libs"
+		AC_SEARCH_LIBS(zfc3fb, asl, try_dflags="$try_dflags -DASL" fft_libs="$LIBS")
+		AC_SEARCH_LIBS(zzfft3d, fft, have_fft=1 fft_libs="$LIBS",have_fft=0)
 		;;
 	esac
 
@@ -1264,7 +1326,12 @@ else
 fi
 echo setting FDFLAGS... $fdflags
 
-AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
+if test "$cross_compiling" = "yes"
+then
+	ranlib=echo
+else
+	AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
+fi
 echo setting RANLIB... $ranlib
 
 # configure output messages
