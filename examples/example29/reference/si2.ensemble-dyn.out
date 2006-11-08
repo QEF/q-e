@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:43: 4  17Oct2006               
+   This run was started on:   5:43:33   8Nov2006               
 
    Serial Build
      from  system_checkin      : info #        -1
@@ -59,10 +59,21 @@
     | conv_thr     = 0.00000100000 a.u.    |
     | passop       =       0.30000 a.u.    |
     ========================================
+      ensemble-DFT calculation     =    T
+      grand-canonical calculation  =    F
+
+    =====================================
+    |      ensemble-DFT parameters      |
+    =====================================
+    | ninner       =         8          |
+    | etemp        =   0.02500 a.u.     |
+    | ismear       =         2          |
+    | fermi energy =   0.00000 a.u.     |
+    =====================================
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   15.0 Ryd.,    Ecutrho =   60.0 Ryd.,    Ecuts =   60.0 Ryd.
+   Ecutwfc =   15.0 Ry,      Ecutrho =   60.0 Ry,      Ecuts =   60.0 Ry
    Gcutwfc =    6.2     ,    Gcutrho =   12.3          Gcuts =   12.3
    NOTA BENE: refg, mmx =   0.050000  1440
    Orthog. with Gram-Schmidt
@@ -221,9 +232,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00076
-   ortho mmul, best time for paralle driver =   0.00076 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00007  0.00358
+   ortho mmul, time for serial driver =   0.00075
+   ortho mmul, best time for paralle driver =   0.00075 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00006  0.00358
 
 
    Wave Initialization: random initial wave-functions
@@ -240,7 +251,7 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
  
        nfi   tempp            E -T.S-mu.nbsp         +K_p #Iter
-Step     1       0     -7.56895     -7.70162     -7.70161    57
+Step     1       0     -7.56894     -7.70162     -7.70161    57
 Step     2       0     -7.56894     -7.70162     -7.70162     6
 Step     3       0     -7.56894     -7.70163     -7.70162     7
 Step     4       1     -7.56895     -7.70164     -7.70162     6
@@ -248,17 +259,17 @@ Step     4       1     -7.56895     -7.70164     -7.70162     6
  * Physical Quantities at step:     5
  
 Occupations  :
- 1.999949 1.999450 1.627472 0.933469 0.933464 0.245836 0.245834 0.014526
+ 1.999949 1.999450 1.627461 0.933482 0.933475 0.245828 0.245825 0.014530
 
 
                 total energy =       -7.56896 Hartree a.u.
-              kinetic energy =        2.49419 Hartree a.u.
+              kinetic energy =        2.49418 Hartree a.u.
         electrostatic energy =       -9.31529 Hartree a.u.
                          esr =        0.00000 Hartree a.u.
                        eself =       15.95769 Hartree a.u.
       pseudopotential energy =       -0.50590 Hartree a.u.
-  n-l pseudopotential energy =        1.77984 Hartree a.u.
- exchange-correlation energy =       -2.02181 Hartree a.u.
+  n-l pseudopotential energy =        1.77985 Hartree a.u.
+ exchange-correlation energy =       -2.02180 Hartree a.u.
            average potential =        0.00000 Hartree a.u.
 
 
@@ -267,7 +278,7 @@ Occupations  :
 
    -9.73   -8.12   -3.54   -2.45   -2.45   -1.20   -1.20    0.80
  
-   Allocated memory (kb) =      2520
+   Allocated memory (kb) =      2428
  
    CELL_PARAMETERS
    10.00000000    0.00000000    0.00000000
@@ -280,20 +291,20 @@ Occupations  :
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        0.27073254         0.00034681        -0.00063861
-        0.00034681         0.27081927         0.00008035
-       -0.00063861         0.00008035        -4.61925424
+        0.27080364         0.00034019        -0.00067709
+        0.00034019         0.27083392         0.00010908
+       -0.00067709         0.00010908        -4.61929874
    ATOMIC_POSITIONS
-   Si   0.955320E-07  0.404782E-07  0.507602E-03
-   Si  -0.955320E-07 -0.404782E-07  0.549949E+01
+   Si   0.113395E-06  0.181112E-07  0.507722E-03
+   Si  -0.113395E-06 -0.181112E-07  0.549949E+01
  
    ATOMIC_VELOCITIES
-   Si  -0.402383E-09  0.582130E-08  0.228312E-04
-   Si   0.402383E-09 -0.582130E-08 -0.228312E-04
+   Si   0.202794E-08  0.269403E-08  0.228340E-04
+   Si  -0.202794E-08 -0.269403E-08 -0.228340E-04
  
    Forces acting on atoms (au):
-   Si  -0.115005E-04  0.997173E-05  0.258958E-01
-   Si   0.115005E-04 -0.997173E-05 -0.258958E-01
+   Si  -0.105964E-04  0.980716E-05  0.259009E-01
+   Si   0.105964E-04 -0.980716E-05 -0.259009E-01
  
 
 
@@ -303,7 +314,7 @@ Occupations  :
 Step     5       2     -7.56896     -7.70165     -7.70162     6
 
    writing restart file: /scr/giannozz/tmp//Si_dimer_50.save
-   restart file written in    0.070 sec.
+   restart file written in    0.073 sec.
 
 
 
@@ -313,48 +324,48 @@ Step     5       2     -7.56896     -7.70165     -7.70162     6
    ekin          :        2.49391       2.49391 (AU)
    epot          :      -11.84268     -11.84268 (AU)
    totel energy  :       -7.56895      -7.56895 (AU)
-   temperature   :        1.14501       1.14501 (K )
+   temperature   :        1.14549       1.14549 (K )
    enthalpy      :        0.00000       0.00000 (AU)
    econs         :       -7.70162      -7.70162 (AU)
-   pressure      :       -1.36163      -1.36163 (Gpa)
+   pressure      :       -1.36159      -1.36159 (Gpa)
    volume        :     1500.00000    1500.00000 (AU)
 
 
-     initialize   :     1.04s CPU
-     total_time   :   187.79s CPU (       5 calls,  37.558 s avg)
+     initialize   :     1.05s CPU
+     total_time   :   214.82s CPU (       5 calls,  42.964 s avg)
      formf        :     0.13s CPU
-     rhoofr       :    38.61s CPU (    1271 calls,   0.030 s avg)
-     vofrho       :   119.78s CPU (    1271 calls,   0.094 s avg)
-     dforce       :    27.48s CPU (    4720 calls,   0.006 s avg)
-     calphi       :     0.01s CPU (      82 calls,   0.000 s avg)
-     gram         :     0.04s CPU (     163 calls,   0.000 s avg)
-     newd         :     0.01s CPU (    1262 calls,   0.000 s avg)
-     calbec       :     0.11s CPU (     567 calls,   0.000 s avg)
-     prefor       :     0.34s CPU (    1273 calls,   0.000 s avg)
+     rhoofr       :    46.08s CPU (    1481 calls,   0.031 s avg)
+     vofrho       :   136.94s CPU (    1481 calls,   0.092 s avg)
+     dforce       :    29.99s CPU (    5560 calls,   0.005 s avg)
+     calphi       :     0.00s CPU (      82 calls,   0.000 s avg)
+     gram         :     0.02s CPU (     163 calls,   0.000 s avg)
+     newd         :     0.03s CPU (    1472 calls,   0.000 s avg)
+     calbec       :     0.17s CPU (     567 calls,   0.000 s avg)
+     prefor       :     0.16s CPU (    1483 calls,   0.000 s avg)
      strucf       :     0.00s CPU (       6 calls,   0.000 s avg)
      nlfl         :     0.00s CPU (       5 calls,   0.000 s avg)
-     nlfq         :     0.01s CPU (       5 calls,   0.002 s avg)
-     nlsm1        :     0.11s CPU (     567 calls,   0.000 s avg)
-     nlsm2        :     0.01s CPU (      10 calls,   0.001 s avg)
-     fft          :    50.72s CPU (   10168 calls,   0.005 s avg)
-     ffts         :    13.06s CPU (    2542 calls,   0.005 s avg)
-     fftw         :    38.52s CPU (   14524 calls,   0.003 s avg)
-     runcg_uspp   :   187.79s CPU (       5 calls,  37.558 s avg)
-     inner_loop   :   164.21s CPU (      82 calls,   2.003 s avg)
-     rotate       :     0.27s CPU (    1271 calls,   0.000 s avg)
-     calcmt       :     0.00s CPU (    1334 calls,   0.000 s avg)
-     calcm        :     0.00s CPU (     549 calls,   0.000 s avg)
-     pc2          :     0.14s CPU (     231 calls,   0.001 s avg)
+     nlfq         :     0.00s CPU (       5 calls,   0.000 s avg)
+     nlsm1        :     0.16s CPU (     567 calls,   0.000 s avg)
+     nlsm2        :     0.00s CPU (      10 calls,   0.000 s avg)
+     fft          :    58.92s CPU (   11848 calls,   0.005 s avg)
+     ffts         :    14.62s CPU (    2962 calls,   0.005 s avg)
+     fftw         :    43.97s CPU (   17044 calls,   0.003 s avg)
+     runcg_uspp   :   214.82s CPU (       5 calls,  42.964 s avg)
+     inner_loop   :   191.39s CPU (      82 calls,   2.334 s avg)
+     rotate       :     0.25s CPU (    1481 calls,   0.000 s avg)
+     calcmt       :     0.00s CPU (    1544 calls,   0.000 s avg)
+     calcm        :     0.00s CPU (     654 calls,   0.000 s avg)
+     pc2          :     0.09s CPU (     231 calls,   0.000 s avg)
      pcdaga2      :     0.04s CPU (      77 calls,   0.001 s avg)
      xminus1      :     0.00s CPU (     154 calls,   0.000 s avg)
      emass_p_tpa  :     0.00s CPU (       5 calls,   0.000 s avg)
  
  
  
-     CP           :  3m 8.89s CPU time
+     CP           :  3m35.92s CPU time,     3m53.74s wall time
 
  
-   This run was terminated on:   5:46:26  17Oct2006            
+   This run was terminated on:   5:47:27   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

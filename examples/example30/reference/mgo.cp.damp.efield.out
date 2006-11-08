@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   6:19:28  17Oct2006               
+   This run was started on:   6:20:34   8Nov2006               
 
    Serial Build
 Warning: card &CELL ignored
@@ -59,7 +59,7 @@ Warning: card / ignored
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   20.0 Ryd.,    Ecutrho =  160.0 Ryd.,    Ecuts =   80.0 Ryd.
+   Ecutwfc =   20.0 Ry,      Ecutrho =  160.0 Ry,      Ecuts =   80.0 Ry
    Gcutwfc =   11.3     ,    Gcutrho =   32.0          Gcuts =   22.7
    NOTA BENE: refg, mmx =   0.050000  3840
    Eigenvalues calculated without the kinetic term contribution
@@ -391,12 +391,12 @@ Warning: card / ignored
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00279
-   ortho mmul, best time for paralle driver =   0.00279 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.02834  0.01992
+   ortho mmul, time for serial driver =   0.00278
+   ortho mmul, best time for paralle driver =   0.00278 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.02825  0.02004
 
    reading restart file: /scr/giannozz/tmp//mgo_50.save
-   restart file read in    0.204 sec.
+   restart file read in    0.211 sec.
 
  nprint_nfi=           -2
  nprint_nfi=            2
@@ -706,7 +706,7 @@ Elct. dipole 1  -13.976963  Ionic dipole 1   -0.187117
 Elct. dipole 1  -13.761932  Ionic dipole 1   -0.293250
 
    writing restart file: /scr/giannozz/tmp//mgo_50.save
-   restart file written in    0.444 sec.
+   restart file written in    0.435 sec.
 
 
 
@@ -723,38 +723,38 @@ Elct. dipole 1  -13.761932  Ionic dipole 1   -0.293250
    volume        :     4028.78703    4028.78703 (AU)
 
 
-     initialize   :     5.41s CPU
-     total_time   :   565.92s CPU (      20 calls,  28.296 s avg)
-     formf        :     0.29s CPU
-     rhoofr       :    27.02s CPU (      20 calls,   1.351 s avg)
-     vofrho       :    23.51s CPU (      20 calls,   1.175 s avg)
-     dforce       :    53.75s CPU (    1280 calls,   0.042 s avg)
-     calphi       :     2.45s CPU (      20 calls,   0.123 s avg)
-     ortho        :    14.88s CPU (      20 calls,   0.744 s avg)
-     updatc       :     1.22s CPU (      20 calls,   0.061 s avg)
-     newd         :   107.28s CPU (      20 calls,   5.364 s avg)
-     calbec       :     8.10s CPU (      41 calls,   0.198 s avg)
-     prefor       :     1.15s CPU (      41 calls,   0.028 s avg)
-     strucf       :     1.38s CPU (      21 calls,   0.066 s avg)
-     nlfl         :     0.72s CPU (      20 calls,   0.036 s avg)
-     nlfq         :    18.92s CPU (      20 calls,   0.946 s avg)
-     set_cc       :     2.64s CPU (      20 calls,   0.132 s avg)
-     rhov         :     5.54s CPU (      20 calls,   0.277 s avg)
-     nlsm1        :    16.14s CPU (      81 calls,   0.199 s avg)
-     nlsm2        :    18.45s CPU (      20 calls,   0.923 s avg)
-     forcecc      :     6.28s CPU (      20 calls,   0.314 s avg)
-     fft          :     8.19s CPU (     100 calls,   0.082 s avg)
-     ffts         :     0.76s CPU (      40 calls,   0.019 s avg)
-     fftw         :    41.53s CPU (    3840 calls,   0.011 s avg)
-     fftb         :    72.06s CPU (   14080 calls,   0.005 s avg)
-     rsg          :     0.23s CPU (      20 calls,   0.012 s avg)
+     initialize   :     5.42s CPU
+     total_time   :   564.47s CPU (      20 calls,  28.224 s avg)
+     formf        :     0.27s CPU
+     rhoofr       :    27.53s CPU (      20 calls,   1.376 s avg)
+     vofrho       :    23.73s CPU (      20 calls,   1.187 s avg)
+     dforce       :    51.87s CPU (    1280 calls,   0.041 s avg)
+     calphi       :     2.39s CPU (      20 calls,   0.120 s avg)
+     ortho        :    14.86s CPU (      20 calls,   0.743 s avg)
+     updatc       :     1.19s CPU (      20 calls,   0.060 s avg)
+     newd         :   107.17s CPU (      20 calls,   5.358 s avg)
+     calbec       :     8.48s CPU (      41 calls,   0.207 s avg)
+     prefor       :     1.16s CPU (      41 calls,   0.028 s avg)
+     strucf       :     1.35s CPU (      21 calls,   0.064 s avg)
+     nlfl         :     0.65s CPU (      20 calls,   0.032 s avg)
+     nlfq         :    18.95s CPU (      20 calls,   0.948 s avg)
+     set_cc       :     2.68s CPU (      20 calls,   0.134 s avg)
+     rhov         :     5.52s CPU (      20 calls,   0.276 s avg)
+     nlsm1        :    16.38s CPU (      81 calls,   0.202 s avg)
+     nlsm2        :    18.50s CPU (      20 calls,   0.925 s avg)
+     forcecc      :     6.26s CPU (      20 calls,   0.313 s avg)
+     fft          :     8.14s CPU (     100 calls,   0.081 s avg)
+     ffts         :     0.77s CPU (      40 calls,   0.019 s avg)
+     fftw         :    39.36s CPU (    3840 calls,   0.010 s avg)
+     fftb         :    72.67s CPU (   14080 calls,   0.005 s avg)
+     rsg          :     0.25s CPU (      20 calls,   0.013 s avg)
  
  
  
-     CP           :  9m31.67s CPU time
+     CP           :  9m30.26s CPU time,     9m39.13s wall time
 
  
-   This run was terminated on:   6:29: 8  17Oct2006            
+   This run was terminated on:   6:30:13   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

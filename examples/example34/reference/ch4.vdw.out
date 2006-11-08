@@ -1,6 +1,6 @@
 
-     Program VdW       v.3.2cvs starts ...
-     Today is 17Oct2006 at  7:17:28 
+     Program VdW       v.3.2    starts ...
+     Today is  8Nov2006 at  7:20:14 
 
      nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =    4801
      nelec  =   8.00  nkb   =     1  ngl    =     368
@@ -26,28 +26,28 @@
       iter #   1 total cpu time :     4.9 secs   av.it.:   6.0
       thresh= 0.100E-01 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.439E-07
 
-      iter #   2 total cpu time :    10.9 secs   av.it.:  12.0
+      iter #   2 total cpu time :    11.0 secs   av.it.:  12.0
       thresh= 0.210E-04 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.286E-07
 
-      iter #   3 total cpu time :    17.3 secs   av.it.:  13.0
+      iter #   3 total cpu time :    17.4 secs   av.it.:  13.0
       thresh= 0.169E-04 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.129E-08
 
-      iter #   4 total cpu time :    24.0 secs   av.it.:  14.0
+      iter #   4 total cpu time :    24.2 secs   av.it.:  14.0
       thresh= 0.359E-05 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.964E-09
 
-      iter #   5 total cpu time :    30.1 secs   av.it.:  12.0
+      iter #   5 total cpu time :    30.3 secs   av.it.:  12.0
       thresh= 0.310E-05 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.145E-10
 
-      iter #   6 total cpu time :    35.3 secs   av.it.:  10.0
+      iter #   6 total cpu time :    35.6 secs   av.it.:  10.0
       thresh= 0.381E-06 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.888E-11
 
-      iter #   7 total cpu time :    40.4 secs   av.it.:  10.0
+      iter #   7 total cpu time :    40.9 secs   av.it.:  10.0
       thresh= 0.298E-06 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.266E-12
 
-      iter #   8 total cpu time :    46.0 secs   av.it.:  11.0
+      iter #   8 total cpu time :    46.6 secs   av.it.:  11.0
       thresh= 0.516E-07 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.219E-13
 
-      iter #   9 total cpu time :    51.5 secs   av.it.:  11.0
+      iter #   9 total cpu time :    52.1 secs   av.it.:  11.0
       thresh= 0.148E-07 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.281E-14
 
           Polarizability in cartesian axis at frequency  1.50
@@ -56,37 +56,37 @@
           (       0.000000000       6.193787429       0.000000000 )
           (       0.000000000       0.000000000       6.193787429 )
 
-      iter #   1 total cpu time :    55.3 secs   av.it.:   7.0
+      iter #   1 total cpu time :    55.9 secs   av.it.:   7.0
       thresh= 0.100E-01 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.255E-05
 
-      iter #   2 total cpu time :    61.6 secs   av.it.:  13.0
+      iter #   2 total cpu time :    62.4 secs   av.it.:  13.0
       thresh= 0.160E-03 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.526E-07
 
-      iter #   3 total cpu time :    67.6 secs   av.it.:  12.0
+      iter #   3 total cpu time :    68.4 secs   av.it.:  12.0
       thresh= 0.229E-04 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.121E-07
 
-      iter #   4 total cpu time :    73.6 secs   av.it.:  12.0
+      iter #   4 total cpu time :    74.5 secs   av.it.:  12.0
       thresh= 0.110E-04 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.557E-09
 
-      iter #   5 total cpu time :    79.6 secs   av.it.:  12.0
+      iter #   5 total cpu time :    80.5 secs   av.it.:  12.0
       thresh= 0.236E-05 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.342E-09
 
-      iter #   6 total cpu time :    85.3 secs   av.it.:  11.0
+      iter #   6 total cpu time :    86.2 secs   av.it.:  11.0
       thresh= 0.185E-05 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.283E-10
 
-      iter #   7 total cpu time :    90.9 secs   av.it.:  11.0
+      iter #   7 total cpu time :    91.9 secs   av.it.:  11.0
       thresh= 0.532E-06 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.328E-11
 
-      iter #   8 total cpu time :    96.2 secs   av.it.:  10.0
+      iter #   8 total cpu time :    97.2 secs   av.it.:  10.0
       thresh= 0.181E-06 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.143E-11
 
-      iter #   9 total cpu time :   102.2 secs   av.it.:  12.0
+      iter #   9 total cpu time :   103.4 secs   av.it.:  12.0
       thresh= 0.120E-06 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.629E-13
 
-      iter #  10 total cpu time :   107.5 secs   av.it.:  10.0
+      iter #  10 total cpu time :   108.7 secs   av.it.:  10.0
       thresh= 0.251E-07 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.417E-13
 
-      iter #  11 total cpu time :   113.4 secs   av.it.:  12.0
+      iter #  11 total cpu time :   114.7 secs   av.it.:  12.0
       thresh= 0.204E-07 al_mix_vdw =  0.100 |ddv_scf|^2 =  0.264E-14
 
           Polarizability in cartesian axis at frequency  0.00

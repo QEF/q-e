@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:58:36  17Oct2006               
+   This run was started on:   3:57:37   8Nov2006               
 
    Serial Build
 
@@ -103,7 +103,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   80.0 Ryd.,    Ecutrho =  320.0 Ryd.,    Ecuts =  320.0 Ryd.
+   Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
    Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
    NOTA BENE: refg, mmx =   0.050000  7680
    Eigenvalues calculated without the kinetic term contribution
@@ -292,10 +292,10 @@
  
    ortho mmul, time for serial driver =   0.00073
    ortho mmul, best time for paralle driver =   0.00073 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00004  0.00353
+   ortho diag, time for parallel and serial driver =   0.00004  0.00355
 
    reading restart file: /scr/giannozz/tmp//h2o_mol_51.save
-   restart file read in    0.045 sec.
+   restart file read in    0.049 sec.
 
  nprint_nfi=           -2
  nprint_nfi=          100
@@ -694,7 +694,7 @@
   150  0.00077    0.0    2.6   -17.17915   -17.17915   -17.17913   -17.17836  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.146 sec.
+   restart file written in    0.152 sec.
 
 
 
@@ -711,28 +711,28 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.57s CPU
-     main_loop    :    70.97s CPU (      50 calls,   1.419 s avg)
+     initialize   :     4.60s CPU
+     main_loop    :    71.25s CPU (      50 calls,   1.425 s avg)
      formf        :     1.42s CPU
-     rhoofr       :     6.43s CPU (      51 calls,   0.126 s avg)
-     vofrho       :    54.19s CPU (      51 calls,   1.063 s avg)
-     calphi       :     0.09s CPU (      51 calls,   0.002 s avg)
-     ortho        :     0.41s CPU (      51 calls,   0.008 s avg)
-     updatc       :     0.10s CPU (      51 calls,   0.002 s avg)
-     prefor       :     0.00s CPU (      51 calls,   0.000 s avg)
-     strucf       :     0.40s CPU (      51 calls,   0.008 s avg)
-     nlsm1        :     0.03s CPU (      51 calls,   0.001 s avg)
-     nlsm2        :     0.09s CPU (      51 calls,   0.002 s avg)
-     fft          :    33.12s CPU (     408 calls,   0.081 s avg)
-     fftw         :    14.10s CPU (     306 calls,   0.046 s avg)
+     rhoofr       :     6.38s CPU (      51 calls,   0.125 s avg)
+     vofrho       :    54.88s CPU (      51 calls,   1.076 s avg)
+     calphi       :     0.08s CPU (      51 calls,   0.002 s avg)
+     ortho        :     0.34s CPU (      51 calls,   0.007 s avg)
+     updatc       :     0.09s CPU (      51 calls,   0.002 s avg)
+     prefor       :     0.03s CPU (      51 calls,   0.001 s avg)
+     strucf       :     0.34s CPU (      51 calls,   0.007 s avg)
+     nlsm1        :     0.04s CPU (      51 calls,   0.001 s avg)
+     nlsm2        :     0.08s CPU (      51 calls,   0.002 s avg)
+     fft          :    33.35s CPU (     408 calls,   0.082 s avg)
+     fftw         :    13.70s CPU (     306 calls,   0.045 s avg)
      rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m15.78s CPU time
+     CP           :  1m16.12s CPU time,     1m22.88s wall time
 
  
-   This run was terminated on:   3:59:58  17Oct2006            
+   This run was terminated on:   3:58:59   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

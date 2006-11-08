@@ -1,6 +1,6 @@
 
-     Program PHCG      v.3.2cvs starts ...
-     Today is 17Oct2006 at  3: 1:12 
+     Program PHCG      v.3.2    starts ...
+     Today is  8Nov2006 at  2:59:37 
 
      nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     230
      nelec  =   8.00  nkb   =     4  ngl    =      80
@@ -20,9 +20,9 @@ H        0.128530744  -0.128530744  -0.128530744
 
 
      dielectric constant                    polarizability (A^3)
-  4.871203  0.000000  0.000000       0.197207E+02  0.636267E-12  0.248851E-13
-  0.000000  4.871203  0.000000       0.634005E-12  0.197207E+02  0.296925E-11
-  0.000000  0.000000  4.871203       0.147048E-13  0.297547E-11  0.197207E+02
+  4.871203  0.000000  0.000000       0.197207E+02  0.649275E-12 -0.565571E-15
+  0.000000  4.871203  0.000000       0.649275E-12  0.197207E+02  0.295624E-11
+  0.000000  0.000000  4.871203       0.565571E-15  0.294549E-11  0.197207E+02
 
      z*( 1)   -0.4487    0.0000    0.0000
                0.0000   -0.4487    0.0000
@@ -70,9 +70,9 @@ H        0.128530744  -0.128530744  -0.128530744
      omega(  1) =-15.333404 [THz] =-511.470691 [cm-1]
      omega(  2) =-15.333404 [THz] =-511.470691 [cm-1]
      omega(  3) =-15.333404 [THz] =-511.470691 [cm-1]
-     omega(  4) = -0.000001 [THz] =  -0.000023 [cm-1]
-     omega(  5) =  0.000000 [THz] =  -0.000011 [cm-1]
-     omega(  6) =  0.000000 [THz] =   0.000010 [cm-1]
+     omega(  4) = -0.000001 [THz] =  -0.000035 [cm-1]
+     omega(  5) = -0.000001 [THz] =  -0.000034 [cm-1]
+     omega(  6) =  0.000000 [THz] =   0.000007 [cm-1]
      omega(  7) = 22.212989 [THz] = 740.950446 [cm-1]
      omega(  8) = 22.212989 [THz] = 740.950446 [cm-1]
      omega(  9) = 27.100279 [THz] = 903.973965 [cm-1]
@@ -84,36 +84,36 @@ H        0.128530744  -0.128530744  -0.128530744
      omega( 15) = 82.472140 [THz] =2750.992628 [cm-1]
  **************************************************************************
  
-     phcg         :     2.23s CPU time
+     phcg         :     2.41s CPU time,    2.50s wall time
 
-     cg_readin    :     0.16s CPU
-     init_vloc    :     0.01s CPU (       2 calls,   0.005 s avg)
-     cft3         :     0.34s CPU (     232 calls,   0.001 s avg)
+     cg_readin    :     0.27s CPU
+     init_vloc    :     0.00s CPU (       2 calls,   0.000 s avg)
+     cft3         :     0.37s CPU (     232 calls,   0.002 s avg)
      v_of_rho     :     0.00s CPU
      v_xc         :     0.00s CPU
      v_h          :     0.00s CPU
-     cg_setup     :     0.04s CPU
-     init_us_1    :     0.02s CPU
+     cg_setup     :     0.03s CPU
+     init_us_1    :     0.03s CPU
      davcio       :     0.00s CPU
      init_us_2    :     0.00s CPU
-     dvpsi_e      :     0.20s CPU (       3 calls,   0.067 s avg)
+     dvpsi_e      :     0.22s CPU (       3 calls,   0.073 s avg)
      stres_us31   :     0.00s CPU (       3 calls,   0.000 s avg)
      stres_us32   :     0.00s CPU (       3 calls,   0.000 s avg)
      stres_us33   :     0.00s CPU (       3 calls,   0.000 s avg)
      stres_us34   :     0.00s CPU (       3 calls,   0.000 s avg)
      pw_gemm      :     0.00s CPU (     318 calls,   0.000 s avg)
-     cgsolve      :     1.63s CPU (       9 calls,   0.181 s avg)
-     h_h          :     0.19s CPU (      45 calls,   0.004 s avg)
-     vloc_psi     :     0.82s CPU (     186 calls,   0.004 s avg)
-     cft3s        :     1.33s CPU (    1266 calls,   0.001 s avg)
+     cgsolve      :     1.69s CPU (       9 calls,   0.188 s avg)
+     h_h          :     0.22s CPU (      45 calls,   0.005 s avg)
+     vloc_psi     :     0.94s CPU (     186 calls,   0.005 s avg)
+     cft3s        :     1.41s CPU (    1266 calls,   0.001 s avg)
      add_vuspsi   :     0.00s CPU (     132 calls,   0.000 s avg)
-     solve_e      :     0.74s CPU
-     a_h          :     1.41s CPU (      87 calls,   0.016 s avg)
+     solve_e      :     0.73s CPU
+     a_h          :     1.47s CPU (      87 calls,   0.017 s avg)
      dgradcorr    :     0.00s CPU (      87 calls,   0.000 s avg)
-     dielec       :     0.05s CPU
-     dvpsi_kb     :     0.38s CPU (      54 calls,   0.007 s avg)
-     solve_ph     :     1.03s CPU
+     dielec       :     0.04s CPU
+     dvpsi_kb     :     0.41s CPU (      54 calls,   0.008 s avg)
+     solve_ph     :     1.12s CPU
      dynmat_init  :     0.01s CPU
      rhod2vkb     :     0.01s CPU
-     drhodv       :     0.31s CPU (       3 calls,   0.103 s avg)
-     diaghg       :     0.01s CPU
+     drhodv       :     0.35s CPU (       3 calls,   0.117 s avg)
+     diaghg       :     0.00s CPU

@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.3.2cvs starts ...
-     Today is 24Oct2006 at 15:16:33 
+     Program POST-PROC v.3.2    starts ...
+     Today is  8Nov2006 at  3: 7:59 
 
      nbndx  =     6  nbnd   =     6  natomwfc =     9  npwx   =    1381
      nelec  =   3.00  nkb   =     4  ngl    =     905
@@ -1354,14 +1354,14 @@ E-Ef(ev), T(x2 spins) =   -6.3500000   2.0000000
  to transmit
           E-Ef(ev), T =   -6.9500000   0.0000000
  
-     PWCOND       :    38.94s CPU time
+     PWCOND       :    30.45s CPU time,   31.49s wall time
 
-     init         :     0.96s CPU
+     init         :     1.00s CPU
      poten        :     0.02s CPU (       2 calls,   0.010 s avg)
-     local        :     5.67s CPU
+     local        :     4.02s CPU
  
-     scatter_forw :    27.83s CPU (     200 calls,   0.139 s avg)
+     scatter_forw :    21.87s CPU (     200 calls,   0.109 s avg)
  
-     compbs       :     3.87s CPU (     100 calls,   0.039 s avg)
-     compbs_2     :     3.20s CPU (     100 calls,   0.032 s avg)
+     compbs       :     3.14s CPU (     100 calls,   0.031 s avg)
+     compbs_2     :     2.73s CPU (     100 calls,   0.027 s avg)
  

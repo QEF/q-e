@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.2cvs starts ...
-     Today is 17Oct2006 at  3:11:42 
+     Program PWSCF     v.3.2    starts ...
+     Today is  8Nov2006 at  3:10: 9 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -64,7 +64,7 @@
      site n.     atom                  positions (a_0 units)
          1           Fe  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=   70  gaussian broad. (ryd)=  0.0500     ngauss =  -1
+     number of k points=   70  gaussian broad. (Ry)=  0.0500     ngauss =  -1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0625000   0.0625000   0.0625000), wk =   0.0135135
         k(    2) = (   0.0625000   0.0625000   0.1875000), wk =   0.0135135
@@ -161,7 +161,7 @@
  ==============================================================================
      Starting wfc are atomic +   4 random wfc
 
-     total cpu time spent up to now is      3.12 secs
+     total cpu time spent up to now is      3.43 secs
 
      Self-consistent Calculation
 
@@ -180,7 +180,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     11.18 secs
+     total cpu time spent up to now is     11.65 secs
 
      total energy              =   -55.70590743 Ry
      Harris-Foulkes estimate   =   -55.76528546 Ry
@@ -205,7 +205,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     16.34 secs
+     total cpu time spent up to now is     16.91 secs
 
      total energy              =   -55.68122158 Ry
      Harris-Foulkes estimate   =   -55.71643991 Ry
@@ -230,7 +230,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     22.05 secs
+     total cpu time spent up to now is     22.81 secs
 
      total energy              =   -55.69773244 Ry
      Harris-Foulkes estimate   =   -55.69838631 Ry
@@ -255,7 +255,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     29.17 secs
+     total cpu time spent up to now is     30.11 secs
 
      total energy              =   -55.69214372 Ry
      Harris-Foulkes estimate   =   -55.69901745 Ry
@@ -280,7 +280,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     35.16 secs
+     total cpu time spent up to now is     36.26 secs
 
      total energy              =   -55.69106514 Ry
      Harris-Foulkes estimate   =   -55.69398863 Ry
@@ -305,7 +305,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     41.00 secs
+     total cpu time spent up to now is     42.22 secs
 
      total energy              =   -55.69053785 Ry
      Harris-Foulkes estimate   =   -55.69192320 Ry
@@ -318,7 +318,7 @@
      iteration #  7     ecut=    25.00 Ry     beta=0.20
      Davidson diagonalization with overlap
      ethr =  2.99E-06,  avg # of iterations =  2.8
-     constraint energy (Ryd) =      1.31110273
+     constraint energy (Ryd) =      1.31110274
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
@@ -330,7 +330,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     47.37 secs
+     total cpu time spent up to now is     48.73 secs
 
      total energy              =   -55.69063471 Ry
      Harris-Foulkes estimate   =   -55.69075684 Ry
@@ -343,7 +343,7 @@
      iteration #  8     ecut=    25.00 Ry     beta=0.20
      Davidson diagonalization with overlap
      ethr =  1.09E-06,  avg # of iterations =  1.0
-     constraint energy (Ryd) =      1.69263626
+     constraint energy (Ryd) =      1.69263621
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
@@ -355,7 +355,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     52.53 secs
+     total cpu time spent up to now is     53.95 secs
 
      total energy              =   -55.69217510 Ry
      Harris-Foulkes estimate   =   -55.69063719 Ry
@@ -368,7 +368,7 @@
      iteration #  9     ecut=    25.00 Ry     beta=0.20
      Davidson diagonalization with overlap
      ethr =  9.11E-07,  avg # of iterations =  2.0
-     constraint energy (Ryd) =      1.13900647
+     constraint energy (Ryd) =      1.13900643
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
@@ -380,7 +380,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     58.45 secs
+     total cpu time spent up to now is     60.01 secs
 
      total energy              =   -55.68909852 Ry
      Harris-Foulkes estimate   =   -55.69243509 Ry
@@ -405,7 +405,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     65.11 secs
+     total cpu time spent up to now is     66.87 secs
 
      total energy              =   -55.69040402 Ry
      Harris-Foulkes estimate   =   -55.68974796 Ry
@@ -418,7 +418,7 @@
      iteration # 11     ecut=    25.00 Ry     beta=0.20
      Davidson diagonalization with overlap
      ethr =  2.21E-07,  avg # of iterations =  2.0
-     constraint energy (Ryd) =      1.25172061
+     constraint energy (Ryd) =      1.25172059
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
@@ -430,7 +430,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     70.83 secs
+     total cpu time spent up to now is     72.75 secs
 
      total energy              =   -55.69034784 Ry
      Harris-Foulkes estimate   =   -55.69044657 Ry
@@ -455,7 +455,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     76.06 secs
+     total cpu time spent up to now is     78.07 secs
 
      total energy              =   -55.69031810 Ry
      Harris-Foulkes estimate   =   -55.69034883 Ry
@@ -468,7 +468,7 @@
      iteration # 13     ecut=    25.00 Ry     beta=0.20
      Davidson diagonalization with overlap
      ethr =  2.75E-08,  avg # of iterations =  1.1
-     constraint energy (Ryd) =      1.24570622
+     constraint energy (Ryd) =      1.24570623
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
@@ -480,7 +480,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     81.23 secs
+     total cpu time spent up to now is     83.34 secs
 
      total energy              =   -55.69032008 Ry
      Harris-Foulkes estimate   =   -55.69031820 Ry
@@ -493,7 +493,7 @@
      iteration # 14     ecut=    25.00 Ry     beta=0.20
      Davidson diagonalization with overlap
      ethr =  1.71E-08,  avg # of iterations =  1.0
-     constraint energy (Ryd) =      1.24538197
+     constraint energy (Ryd) =      1.24538198
 
  ==============================================================================
      atom number    1 relative position :    0.0000   0.0000   0.0000
@@ -505,7 +505,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     86.37 secs
+     total cpu time spent up to now is     88.55 secs
 
      total energy              =   -55.69031890 Ry
      Harris-Foulkes estimate   =   -55.69032012 Ry
@@ -530,7 +530,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     91.52 secs
+     total cpu time spent up to now is     93.81 secs
 
      total energy              =   -55.69029768 Ry
      Harris-Foulkes estimate   =   -55.69031892 Ry
@@ -555,7 +555,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is     96.66 secs
+     total cpu time spent up to now is     99.10 secs
 
      total energy              =   -55.69029664 Ry
      Harris-Foulkes estimate   =   -55.69029772 Ry
@@ -580,7 +580,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is    101.81 secs
+     total cpu time spent up to now is    104.33 secs
 
      total energy              =   -55.69029666 Ry
      Harris-Foulkes estimate   =   -55.69029665 Ry
@@ -605,7 +605,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is    106.94 secs
+     total cpu time spent up to now is    109.59 secs
 
      total energy              =   -55.69029641 Ry
      Harris-Foulkes estimate   =   -55.69029666 Ry
@@ -630,7 +630,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is    112.01 secs
+     total cpu time spent up to now is    114.84 secs
 
      total energy              =   -55.69029657 Ry
      Harris-Foulkes estimate   =   -55.69029642 Ry
@@ -649,13 +649,13 @@
      atom number    1 relative position :    0.0000   0.0000   0.0000
      charge :     6.402929
      magnetization :          1.607779    0.000000    0.140673
-     magnetization/charge:    0.251100    0.000000    0.021970
+     magnetization/charge:    0.251101    0.000000    0.021970
      polar coord.: r, theta, phi [deg] :     1.613921   84.999621    0.000000
      constrained moment :     0.498097    0.000000    0.043578
 
  ==============================================================================
 
-     total cpu time spent up to now is    117.15 secs
+     total cpu time spent up to now is    120.05 secs
 
      total energy              =   -55.69029641 Ry
      Harris-Foulkes estimate   =   -55.69029657 Ry
@@ -680,7 +680,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is    122.21 secs
+     total cpu time spent up to now is    125.27 secs
 
      total energy              =   -55.69029648 Ry
      Harris-Foulkes estimate   =   -55.69029641 Ry
@@ -705,7 +705,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is    127.35 secs
+     total cpu time spent up to now is    130.48 secs
 
      total energy              =   -55.69029639 Ry
      Harris-Foulkes estimate   =   -55.69029648 Ry
@@ -730,7 +730,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is    132.52 secs
+     total cpu time spent up to now is    135.75 secs
 
      total energy              =   -55.69029638 Ry
      Harris-Foulkes estimate   =   -55.69029639 Ry
@@ -755,7 +755,7 @@
 
  ==============================================================================
 
-     total cpu time spent up to now is    137.61 secs
+     total cpu time spent up to now is    140.88 secs
 
      End of self-consistent calculation
 
@@ -1131,48 +1131,48 @@
 
      Writing output data file fe.save
  
-     PWSCF        :  2m17.75s CPU time
+     PWSCF        :  2m21.13s CPU time,     2m27.42s wall time
 
-     init_run     :     3.06s CPU
-     electrons    :   134.49s CPU
+     init_run     :     3.36s CPU
+     electrons    :   137.45s CPU
  
  
-     electrons    :   134.49s CPU
-     c_bands      :   105.29s CPU (      24 calls,   4.387 s avg)
-     sum_band     :    26.40s CPU (      24 calls,   1.100 s avg)
-     v_of_rho     :     0.33s CPU (      25 calls,   0.013 s avg)
-     v_h          :     0.07s CPU (      25 calls,   0.003 s avg)
-     v_xc         :     0.25s CPU (      25 calls,   0.010 s avg)
-     newd         :     1.33s CPU (      25 calls,   0.053 s avg)
-     mix_rho      :     0.07s CPU (      24 calls,   0.003 s avg)
+     electrons    :   137.45s CPU
+     c_bands      :   107.62s CPU (      24 calls,   4.484 s avg)
+     sum_band     :    27.08s CPU (      24 calls,   1.128 s avg)
+     v_of_rho     :     0.31s CPU (      25 calls,   0.012 s avg)
+     v_h          :     0.05s CPU (      25 calls,   0.002 s avg)
+     v_xc         :     0.26s CPU (      25 calls,   0.010 s avg)
+     newd         :     1.38s CPU (      25 calls,   0.055 s avg)
+     mix_rho      :     0.10s CPU (      24 calls,   0.004 s avg)
  
-     c_bands      :   105.29s CPU (      24 calls,   4.387 s avg)
-     init_us_2    :     0.90s CPU (    3430 calls,   0.000 s avg)
-     cegterg      :   102.68s CPU (    1680 calls,   0.061 s avg)
+     c_bands      :   107.62s CPU (      24 calls,   4.484 s avg)
+     init_us_2    :     1.05s CPU (    3430 calls,   0.000 s avg)
+     cegterg      :   104.94s CPU (    1680 calls,   0.062 s avg)
  
-     sum_band     :    26.40s CPU (      24 calls,   1.100 s avg)
-     becsum       :     0.19s CPU (    1680 calls,   0.000 s avg)
-     addusdens    :     2.18s CPU (      24 calls,   0.091 s avg)
+     sum_band     :    27.08s CPU (      24 calls,   1.128 s avg)
+     becsum       :     0.27s CPU (    1680 calls,   0.000 s avg)
+     addusdens    :     2.19s CPU (      24 calls,   0.091 s avg)
  
-     wfcrot       :     1.85s CPU (      70 calls,   0.026 s avg)
-     cegterg      :   102.68s CPU (    1680 calls,   0.061 s avg)
-     h_psi        :    87.89s CPU (    4472 calls,   0.020 s avg)
-     g_psi        :     0.80s CPU (    2722 calls,   0.000 s avg)
-     diaghg       :     5.81s CPU (    4402 calls,   0.001 s avg)
+     wfcrot       :     2.16s CPU (      70 calls,   0.031 s avg)
+     cegterg      :   104.94s CPU (    1680 calls,   0.062 s avg)
+     h_psi        :    89.98s CPU (    4472 calls,   0.020 s avg)
+     g_psi        :     0.83s CPU (    2722 calls,   0.000 s avg)
+     diaghg       :     5.85s CPU (    4402 calls,   0.001 s avg)
      update       :     1.79s CPU (    2722 calls,   0.001 s avg)
-     last         :     0.96s CPU (    1680 calls,   0.001 s avg)
+     last         :     1.16s CPU (    1680 calls,   0.001 s avg)
  
-     h_psi        :    87.89s CPU (    4472 calls,   0.020 s avg)
+     h_psi        :    89.98s CPU (    4472 calls,   0.020 s avg)
      init         :     1.23s CPU (    4472 calls,   0.000 s avg)
-     firstfft     :    41.40s CPU (   59587 calls,   0.001 s avg)
-     secondfft    :    36.44s CPU (   59587 calls,   0.001 s avg)
-     add_vuspsi   :     1.94s CPU (    4472 calls,   0.000 s avg)
-     s_psi        :     2.64s CPU (    4472 calls,   0.001 s avg)
+     firstfft     :    43.14s CPU (   59587 calls,   0.001 s avg)
+     secondfft    :    35.74s CPU (   59587 calls,   0.001 s avg)
+     add_vuspsi   :     2.16s CPU (    4472 calls,   0.000 s avg)
+     s_psi        :     2.53s CPU (    4472 calls,   0.001 s avg)
  
      General routines
-     ccalbec      :     1.76s CPU (    6152 calls,   0.000 s avg)
-     cft3         :     1.11s CPU (     615 calls,   0.002 s avg)
-     cft3s        :    75.21s CPU (  292304 calls,   0.000 s avg)
+     ccalbec      :     1.62s CPU (    6152 calls,   0.000 s avg)
+     cft3         :     1.02s CPU (     615 calls,   0.002 s avg)
+     cft3s        :    75.34s CPU (  292304 calls,   0.000 s avg)
      interpolate  :     0.46s CPU (     196 calls,   0.002 s avg)
-     davcio       :     0.09s CPU (    5110 calls,   0.000 s avg)
+     davcio       :     0.07s CPU (    5110 calls,   0.000 s avg)
  

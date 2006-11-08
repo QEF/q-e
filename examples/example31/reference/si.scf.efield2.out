@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.2cvs starts ...
-     Today is 17Oct2006 at  6:41:22 
+     Program PWSCF     v.3.2    starts ...
+     Today is  8Nov2006 at  6:41:51 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -143,7 +143,7 @@
 
      Starting wfc are random
 
-     total cpu time spent up to now is      8.71 secs
+     total cpu time spent up to now is      8.88 secs
 
      Self-consistent Calculation
 
@@ -167,12 +167,12 @@
      ethr =  5.95E-06,  avg # of iterations =  1.0
  
      Expectation value of exp(iGx):
- (-4.836133569003152E-005,2.216162047249772E-005)
-     Electronic Dipole per cell (a.u.)  0.976402405681679     
+ (-4.836133568992869E-005,2.216162047277013E-005)
+     Electronic Dipole per cell (a.u.)  0.976402405679713     
      Ionic Dipole per cell (a.u.)   8.00000000000000     
  
 
-     total cpu time spent up to now is    605.72 secs
+     total cpu time spent up to now is    685.54 secs
 
      total energy              =   -62.94940994 Ry
      Harris-Foulkes estimate   =   -62.94825001 Ry
@@ -187,12 +187,12 @@
      ethr =  6.04E-07,  avg # of iterations =  1.0
  
      Expectation value of exp(iGx):
- (-4.643919579680015E-005,2.595026571537508E-005)
-     Electronic Dipole per cell (a.u.)  0.947641751837125     
+ (-4.643919579678008E-005,2.595026571540280E-005)
+     Electronic Dipole per cell (a.u.)  0.947641751836894     
      Ionic Dipole per cell (a.u.)   8.00000000000000     
  
 
-     total cpu time spent up to now is    741.55 secs
+     total cpu time spent up to now is    838.91 secs
 
      total energy              =   -62.94947388 Ry
      Harris-Foulkes estimate   =   -62.94947675 Ry
@@ -207,12 +207,12 @@
      ethr =  7.10E-08,  avg # of iterations =  1.0
  
      Expectation value of exp(iGx):
- (-4.546347047450854E-005,2.762048592918815E-005)
-     Electronic Dipole per cell (a.u.)  0.934549168374621     
+ (-4.546347047438872E-005,2.762048592936952E-005)
+     Electronic Dipole per cell (a.u.)  0.934549168373151     
      Ionic Dipole per cell (a.u.)   8.00000000000000     
  
 
-     total cpu time spent up to now is    876.40 secs
+     total cpu time spent up to now is    990.96 secs
 
      total energy              =   -62.94950469 Ry
      Harris-Foulkes estimate   =   -62.94950478 Ry
@@ -227,12 +227,12 @@
      ethr =  5.38E-09,  avg # of iterations =  1.0
  
      Expectation value of exp(iGx):
- (-4.521735290287112E-005,2.801831182762743E-005)
-     Electronic Dipole per cell (a.u.)  0.931382925208993     
+ (-4.521735290299060E-005,2.801831182745768E-005)
+     Electronic Dipole per cell (a.u.)  0.931382925210396     
      Ionic Dipole per cell (a.u.)   8.00000000000000     
  
 
-     total cpu time spent up to now is   1023.57 secs
+     total cpu time spent up to now is   1158.40 secs
 
      total energy              =   -62.94951501 Ry
      Harris-Foulkes estimate   =   -62.94951501 Ry
@@ -247,12 +247,12 @@
      ethr =  4.00E-11,  avg # of iterations =  1.1
  
      Expectation value of exp(iGx):
- (-4.518349678283578E-005,2.806645953488856E-005)
-     Electronic Dipole per cell (a.u.)  0.930985184098191     
+ (-4.518349678281645E-005,2.806645953493295E-005)
+     Electronic Dipole per cell (a.u.)  0.930985184097867     
      Ionic Dipole per cell (a.u.)   8.00000000000000     
  
 
-     total cpu time spent up to now is   1194.60 secs
+     total cpu time spent up to now is   1351.91 secs
 
      End of self-consistent calculation
 
@@ -586,43 +586,43 @@
 
      Writing output data file silicon.save
  
-     PWSCF        : 19m54.78s CPU time
+     PWSCF        : 22m32.26s CPU time,    23m35.63s wall time
 
-     init_run     :     8.59s CPU
-     electrons    :  1185.89s CPU
+     init_run     :     8.78s CPU
+     electrons    :  1343.03s CPU
  
  
-     electrons    :  1185.89s CPU
-     c_bands      :  1143.75s CPU (      18 calls,  63.542 s avg)
-     sum_band     :    19.65s CPU (       6 calls,   3.275 s avg)
-     v_of_rho     :     0.46s CPU (       6 calls,   0.077 s avg)
-     v_h          :     0.05s CPU (       6 calls,   0.008 s avg)
+     electrons    :  1343.03s CPU
+     c_bands      :  1301.39s CPU (      18 calls,  72.299 s avg)
+     sum_band     :    19.87s CPU (       6 calls,   3.312 s avg)
+     v_of_rho     :     0.45s CPU (       6 calls,   0.075 s avg)
+     v_h          :     0.04s CPU (       6 calls,   0.007 s avg)
      v_xc         :     0.41s CPU (       6 calls,   0.068 s avg)
      mix_rho      :     0.02s CPU (       6 calls,   0.003 s avg)
  
-     c_bands      :  1143.75s CPU (      18 calls,  63.542 s avg)
-     init_us_2    :     2.97s CPU (    1575 calls,   0.002 s avg)
-     cegterg      :  1139.83s CPU (    1134 calls,   1.005 s avg)
+     c_bands      :  1301.39s CPU (      18 calls,  72.299 s avg)
+     init_us_2    :     3.19s CPU (    1575 calls,   0.002 s avg)
+     cegterg      :  1297.13s CPU (    1134 calls,   1.144 s avg)
  
-     sum_band     :    19.65s CPU (       6 calls,   3.275 s avg)
+     sum_band     :    19.87s CPU (       6 calls,   3.312 s avg)
  
-     wfcrot       :     7.63s CPU (      63 calls,   0.121 s avg)
-     cegterg      :  1139.83s CPU (    1134 calls,   1.005 s avg)
-     h_psi        :   351.06s CPU (    4233 calls,   0.083 s avg)
-     g_psi        :     3.34s CPU (    3036 calls,   0.001 s avg)
-     diaghg       :     7.92s CPU (    3855 calls,   0.002 s avg)
-     update       :    11.02s CPU (    3036 calls,   0.004 s avg)
-     last         :     5.99s CPU (    1390 calls,   0.004 s avg)
+     wfcrot       :     7.82s CPU (      63 calls,   0.124 s avg)
+     cegterg      :  1297.13s CPU (    1134 calls,   1.144 s avg)
+     h_psi        :   373.49s CPU (    4233 calls,   0.088 s avg)
+     g_psi        :     3.41s CPU (    3036 calls,   0.001 s avg)
+     diaghg       :     7.57s CPU (    3855 calls,   0.002 s avg)
+     update       :    10.67s CPU (    3036 calls,   0.004 s avg)
+     last         :     6.07s CPU (    1390 calls,   0.004 s avg)
  
-     h_psi        :   351.06s CPU (    4233 calls,   0.083 s avg)
-     init         :     2.21s CPU (    4233 calls,   0.001 s avg)
-     firstfft     :   150.18s CPU (   52618 calls,   0.003 s avg)
-     secondfft    :   153.61s CPU (   52618 calls,   0.003 s avg)
-     add_vuspsi   :    14.37s CPU (    4233 calls,   0.003 s avg)
+     h_psi        :   373.49s CPU (    4233 calls,   0.088 s avg)
+     init         :     2.13s CPU (    4233 calls,   0.001 s avg)
+     firstfft     :   159.41s CPU (   52618 calls,   0.003 s avg)
+     secondfft    :   165.89s CPU (   52618 calls,   0.003 s avg)
+     add_vuspsi   :    13.88s CPU (    4233 calls,   0.003 s avg)
  
      General routines
-     ccalbec      :    11.02s CPU (    4233 calls,   0.003 s avg)
-     cft3         :     0.27s CPU (      60 calls,   0.004 s avg)
-     cft3s        :   302.35s CPU (  111284 calls,   0.003 s avg)
-     davcio       :     0.35s CPU (   15081 calls,   0.000 s avg)
+     ccalbec      :    11.39s CPU (    4233 calls,   0.003 s avg)
+     cft3         :     0.24s CPU (      60 calls,   0.004 s avg)
+     cft3s        :   321.45s CPU (  111284 calls,   0.003 s avg)
+     davcio       :     0.43s CPU (   15081 calls,   0.000 s avg)
  

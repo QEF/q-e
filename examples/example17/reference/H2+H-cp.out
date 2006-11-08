@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:51:26  17Oct2006               
+   This run was started on:   3:50:25   8Nov2006               
 
    Serial Build
 
@@ -59,7 +59,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   20.0 Ryd.,    Ecutrho =  100.0 Ryd.,    Ecuts =   80.0 Ryd.
+   Ecutwfc =   20.0 Ry,      Ecutrho =  100.0 Ry,      Ecuts =   80.0 Ry
    Gcutwfc =    0.7     ,    Gcutrho =    1.6          Gcuts =    1.4
    NOTA BENE: refg, mmx =   0.050000  2400
    Eigenvalues calculated without the kinetic term contribution
@@ -133,12 +133,12 @@
      ------------------------------ iteration   1 ------------------------------
 
      tcpu =      0.0    self-consistency for image   1
-     tcpu =      2.7    self-consistency for image   2
-     tcpu =      5.4    self-consistency for image   3
-     tcpu =      9.5    self-consistency for image   4
-     tcpu =     12.8    self-consistency for image   5
-     tcpu =     17.7    self-consistency for image   6
-     tcpu =     20.8    self-consistency for image   7
+     tcpu =      2.9    self-consistency for image   2
+     tcpu =      5.9    self-consistency for image   3
+     tcpu =     10.0    self-consistency for image   4
+     tcpu =     13.2    self-consistency for image   5
+     tcpu =     18.0    self-consistency for image   6
+     tcpu =     21.1    self-consistency for image   7
 
      activation energy (->) =   1.706818 eV
      activation energy (<-) =   1.707019 eV
@@ -160,11 +160,11 @@
 
      ------------------------------ iteration   2 ------------------------------
 
-     tcpu =     23.8    self-consistency for image   2
-     tcpu =     25.6    self-consistency for image   3
-     tcpu =     27.6    self-consistency for image   4
-     tcpu =     29.5    self-consistency for image   5
-     tcpu =     31.5    self-consistency for image   6
+     tcpu =     24.1    self-consistency for image   2
+     tcpu =     25.9    self-consistency for image   3
+     tcpu =     27.9    self-consistency for image   4
+     tcpu =     29.7    self-consistency for image   5
+     tcpu =     31.7    self-consistency for image   6
 
      activation energy (->) =   1.463795 eV
      activation energy (<-) =   1.463996 eV
@@ -186,11 +186,11 @@
 
      ------------------------------ iteration   3 ------------------------------
 
-     tcpu =     33.4    self-consistency for image   2
-     tcpu =     35.3    self-consistency for image   3
-     tcpu =     37.4    self-consistency for image   4
-     tcpu =     39.3    self-consistency for image   5
-     tcpu =     41.5    self-consistency for image   6
+     tcpu =     33.6    self-consistency for image   2
+     tcpu =     35.6    self-consistency for image   3
+     tcpu =     37.6    self-consistency for image   4
+     tcpu =     39.6    self-consistency for image   5
+     tcpu =     41.6    self-consistency for image   6
 
      activation energy (->) =   1.100827 eV
      activation energy (<-) =   1.101028 eV
@@ -212,10 +212,10 @@
 
      ------------------------------ iteration   4 ------------------------------
 
-     tcpu =     43.5    self-consistency for image   2
-     tcpu =     45.5    self-consistency for image   3
-     tcpu =     47.6    self-consistency for image   4
-     tcpu =     49.6    self-consistency for image   5
+     tcpu =     43.7    self-consistency for image   2
+     tcpu =     45.7    self-consistency for image   3
+     tcpu =     47.7    self-consistency for image   4
+     tcpu =     49.7    self-consistency for image   5
      tcpu =     51.7    self-consistency for image   6
 
      activation energy (->) =   0.739359 eV
@@ -240,9 +240,9 @@
 
      tcpu =     53.7    self-consistency for image   2
      tcpu =     55.7    self-consistency for image   3
-     tcpu =     57.8    self-consistency for image   4
+     tcpu =     57.7    self-consistency for image   4
      tcpu =     59.8    self-consistency for image   5
-     tcpu =     61.9    self-consistency for image   6
+     tcpu =     61.8    self-consistency for image   6
 
      activation energy (->) =   0.420116 eV
      activation energy (<-) =   0.420316 eV
@@ -264,10 +264,10 @@
 
      ------------------------------ iteration   6 ------------------------------
 
-     tcpu =     64.0    self-consistency for image   2
-     tcpu =     65.7    self-consistency for image   3
-     tcpu =     67.8    self-consistency for image   4
-     tcpu =     69.9    self-consistency for image   5
+     tcpu =     63.9    self-consistency for image   2
+     tcpu =     65.6    self-consistency for image   3
+     tcpu =     67.7    self-consistency for image   4
+     tcpu =     69.8    self-consistency for image   5
      tcpu =     71.9    self-consistency for image   6
 
      activation energy (->) =   0.214373 eV
@@ -292,7 +292,7 @@
 
      tcpu =     73.7    self-consistency for image   2
      tcpu =     75.5    self-consistency for image   3
-     tcpu =     77.6    self-consistency for image   4
+     tcpu =     77.5    self-consistency for image   4
      tcpu =     79.6    self-consistency for image   5
      tcpu =     81.6    self-consistency for image   6
 
@@ -316,10 +316,10 @@
 
      ------------------------------ iteration   8 ------------------------------
 
-     tcpu =     83.4    self-consistency for image   2
+     tcpu =     83.5    self-consistency for image   2
      tcpu =     85.2    self-consistency for image   3
      tcpu =     86.6    self-consistency for image   4
-     tcpu =     88.3    self-consistency for image   5
+     tcpu =     88.4    self-consistency for image   5
      tcpu =     89.8    self-consistency for image   6
 
      activation energy (->) =   0.257817 eV
@@ -342,11 +342,11 @@
 
      ------------------------------ iteration   9 ------------------------------
 
-     tcpu =     91.5    self-consistency for image   2
-     tcpu =     92.9    self-consistency for image   3
-     tcpu =     94.4    self-consistency for image   4
+     tcpu =     91.6    self-consistency for image   2
+     tcpu =     93.0    self-consistency for image   3
+     tcpu =     94.5    self-consistency for image   4
      tcpu =     96.2    self-consistency for image   5
-     tcpu =     97.6    self-consistency for image   6
+     tcpu =     97.7    self-consistency for image   6
 
      activation energy (->) =   0.222883 eV
      activation energy (<-) =   0.223083 eV
@@ -369,7 +369,7 @@
      ------------------------------ iteration  10 ------------------------------
 
      tcpu =     99.0    self-consistency for image   2
-     tcpu =    100.1    self-consistency for image   3
+     tcpu =    100.2    self-consistency for image   3
      tcpu =    101.5    self-consistency for image   4
      tcpu =    102.3    self-consistency for image   5
      tcpu =    103.7    self-consistency for image   6
@@ -422,8 +422,8 @@
 
      tcpu =    114.6    self-consistency for image   2
      tcpu =    116.6    self-consistency for image   3
-     tcpu =    118.4    self-consistency for image   4
-     tcpu =    120.4    self-consistency for image   5
+     tcpu =    118.5    self-consistency for image   4
+     tcpu =    120.5    self-consistency for image   5
      tcpu =    122.3    self-consistency for image   6
 
      activation energy (->) =   0.206746 eV
@@ -448,9 +448,9 @@
 
      tcpu =    124.3    self-consistency for image   2
      tcpu =    125.2    self-consistency for image   3
-     tcpu =    126.3    self-consistency for image   4
+     tcpu =    126.2    self-consistency for image   4
      tcpu =    127.0    self-consistency for image   5
-     tcpu =    128.2    self-consistency for image   6
+     tcpu =    128.0    self-consistency for image   6
 
      activation energy (->) =   0.206435 eV
      activation energy (<-) =   0.206636 eV
@@ -472,11 +472,11 @@
 
      ------------------------------ iteration  14 ------------------------------
 
-     tcpu =    129.0    self-consistency for image   2
-     tcpu =    130.1    self-consistency for image   3
-     tcpu =    131.3    self-consistency for image   4
-     tcpu =    132.7    self-consistency for image   5
-     tcpu =    133.8    self-consistency for image   6
+     tcpu =    128.9    self-consistency for image   2
+     tcpu =    130.0    self-consistency for image   3
+     tcpu =    131.1    self-consistency for image   4
+     tcpu =    132.5    self-consistency for image   5
+     tcpu =    133.6    self-consistency for image   6
 
      activation energy (->) =   0.205120 eV
      activation energy (<-) =   0.205321 eV
@@ -501,10 +501,10 @@
 
      neb: convergence achieved in  14 iterations
  
-     CP           :  2m14.94s CPU time
+     CP           :  2m14.68s CPU time,     2m23.42s wall time
 
  
-   This run was terminated on:   3:53:51  17Oct2006            
+   This run was terminated on:   3:52:49   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

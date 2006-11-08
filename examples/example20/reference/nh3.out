@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:59:59  17Oct2006               
+   This run was started on:   3:59: 0   8Nov2006               
 
    Serial Build
 
@@ -103,7 +103,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   80.0 Ryd.,    Ecutrho =  320.0 Ryd.,    Ecuts =  320.0 Ryd.
+   Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
    Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
    NOTA BENE: refg, mmx =   0.050000  7680
    Eigenvalues calculated without the kinetic term contribution
@@ -1221,7 +1221,7 @@
   100  0.00007    0.0    0.0   -11.71674   -11.71674   -11.71673   -11.71667  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//nh3_mol_51.save
-   restart file written in    0.182 sec.
+   restart file written in    0.187 sec.
 
 
 
@@ -1238,29 +1238,29 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.88s CPU
-     main_loop    :   149.52s CPU (     100 calls,   1.495 s avg)
-     formf        :     1.73s CPU
-     rhoofr       :    12.71s CPU (     101 calls,   0.126 s avg)
-     vofrho       :   115.14s CPU (     101 calls,   1.140 s avg)
-     calphi       :     0.09s CPU (     101 calls,   0.001 s avg)
-     ortho        :     0.67s CPU (     101 calls,   0.007 s avg)
-     updatc       :     0.16s CPU (     101 calls,   0.002 s avg)
+     initialize   :     4.72s CPU
+     main_loop    :   149.45s CPU (     100 calls,   1.495 s avg)
+     formf        :     1.52s CPU
+     rhoofr       :    12.58s CPU (     101 calls,   0.125 s avg)
+     vofrho       :   115.00s CPU (     101 calls,   1.139 s avg)
+     calphi       :     0.12s CPU (     101 calls,   0.001 s avg)
+     ortho        :     0.73s CPU (     101 calls,   0.007 s avg)
+     updatc       :     0.21s CPU (     101 calls,   0.002 s avg)
      gram         :     0.01s CPU
-     prefor       :     0.06s CPU (     101 calls,   0.001 s avg)
-     strucf       :     0.88s CPU (     101 calls,   0.009 s avg)
-     nlsm1        :     0.03s CPU (     101 calls,   0.000 s avg)
-     nlsm2        :     0.25s CPU (     101 calls,   0.002 s avg)
-     fft          :    68.43s CPU (     808 calls,   0.085 s avg)
-     fftw         :    27.63s CPU (     606 calls,   0.046 s avg)
+     prefor       :     0.02s CPU (     101 calls,   0.000 s avg)
+     strucf       :     0.94s CPU (     101 calls,   0.009 s avg)
+     nlsm1        :     0.06s CPU (     101 calls,   0.001 s avg)
+     nlsm2        :     0.27s CPU (     101 calls,   0.003 s avg)
+     fft          :    67.18s CPU (     808 calls,   0.083 s avg)
+     fftw         :    27.74s CPU (     606 calls,   0.046 s avg)
      rsg          :     0.00s CPU (     101 calls,   0.000 s avg)
  
  
  
-     CP           :  2m34.80s CPU time
+     CP           :  2m34.54s CPU time,     2m47.80s wall time
 
  
-   This run was terminated on:   4: 2:48  17Oct2006            
+   This run was terminated on:   4: 1:48   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

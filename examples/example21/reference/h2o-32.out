@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4: 2:48  17Oct2006               
+   This run was started on:   4: 1:48   8Nov2006               
 
    Serial Build
 
@@ -103,7 +103,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   70.0 Ryd.,    Ecutrho =  280.0 Ryd.,    Ecuts =  280.0 Ryd.
+   Ecutwfc =   70.0 Ry,      Ecutrho =  280.0 Ry,      Ecuts =  280.0 Ry
    Gcutwfc =   24.8     ,    Gcutrho =   49.7          Gcuts =   49.7
    modified kinetic energy functional, with parameters:
    ecutz =  68.0000  ecsig =  8.0000  ecfix =  68.00
@@ -469,9 +469,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00265
-   ortho mmul, best time for paralle driver =   0.00265 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.02870  0.02030
+   ortho mmul, time for serial driver =   0.00287
+   ortho mmul, best time for paralle driver =   0.00287 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.02831  0.01998
 
 
    Wave Initialization: random initial wave-functions
@@ -553,7 +553,7 @@
    30.02   30.40   31.02   31.41   32.39   32.51   33.15   33.66   34.10   34.75
    34.95   35.36   35.58   36.45   37.08   37.41   38.27   38.98
  
-   Allocated memory (kb) =      1864
+   Allocated memory (kb) =      1868
  
    CELL_PARAMETERS
    18.65000000    0.00000000    0.00000000
@@ -892,29 +892,29 @@
    volume        :     6486.88962    6486.88962 (AU)
 
 
-     initialize   :    65.65s CPU
-     main_loop    :   439.90s CPU (      10 calls,  43.990 s avg)
-     formf        :     1.48s CPU
-     rhoofr       :   142.50s CPU (      11 calls,  12.955 s avg)
-     vofrho       :    44.19s CPU (      11 calls,   4.017 s avg)
-     calphi       :     1.46s CPU (      11 calls,   0.133 s avg)
-     ortho        :    29.92s CPU (      11 calls,   2.720 s avg)
-     updatc       :     6.26s CPU (      11 calls,   0.569 s avg)
-     gram         :    13.21s CPU
-     prefor       :     0.03s CPU
-     strucf       :     1.26s CPU
-     nlsm1        :     2.66s CPU (      11 calls,   0.242 s avg)
-     nlsm2        :     1.64s CPU (       2 calls,   0.820 s avg)
-     fft          :    24.81s CPU (      88 calls,   0.282 s avg)
-     fftw         :   345.29s CPU (    2242 calls,   0.154 s avg)
-     rsg          :     0.16s CPU (      11 calls,   0.015 s avg)
+     initialize   :    69.74s CPU
+     main_loop    :   459.84s CPU (      10 calls,  45.984 s avg)
+     formf        :     1.64s CPU
+     rhoofr       :   146.42s CPU (      11 calls,  13.311 s avg)
+     vofrho       :    45.96s CPU (      11 calls,   4.178 s avg)
+     calphi       :     1.69s CPU (      11 calls,   0.154 s avg)
+     ortho        :    32.21s CPU (      11 calls,   2.928 s avg)
+     updatc       :     6.71s CPU (      11 calls,   0.610 s avg)
+     gram         :    12.83s CPU
+     prefor       :     0.02s CPU
+     strucf       :     1.13s CPU
+     nlsm1        :     2.86s CPU (      11 calls,   0.260 s avg)
+     nlsm2        :     1.67s CPU (       2 calls,   0.835 s avg)
+     fft          :    25.43s CPU (      88 calls,   0.289 s avg)
+     fftw         :   356.16s CPU (    2242 calls,   0.159 s avg)
+     rsg          :     0.19s CPU (      11 calls,   0.017 s avg)
  
  
  
-     CP           :  9m12.27s CPU time
+     CP           :  9m38.51s CPU time,    10m16.92s wall time
 
  
-   This run was terminated on:   4:12:36  17Oct2006            
+   This run was terminated on:   4:12: 5   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

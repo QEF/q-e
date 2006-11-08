@@ -1,6 +1,6 @@
 
-     Program PHONON    v.3.2cvs starts ...
-     Today is 17Oct2006 at  2:52: 6 
+     Program PHONON    v.3.2    starts ...
+     Today is  8Nov2006 at  2:50:12 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -63,7 +63,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=   29  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=   29  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (  -0.1250000   0.1250000  -0.1250000), wk =   0.0312500
@@ -103,7 +103,7 @@
      There are   1 irreducible representations
 
      Representation     1      3 modes - To be done
-     PHONON       :     0.45s CPU time
+     PHONON       :     0.70s CPU time,    0.75s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -113,25 +113,25 @@
 
      Self-consistent Calculation
  
-     Pert. #  1: Fermi energy shift (Ryd) =    0.0000    0.0000
-     Pert. #  2: Fermi energy shift (Ryd) =    0.0000    0.0000
-     Pert. #  3: Fermi energy shift (Ryd) =    0.0000    0.0000
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
 
-      iter #   1 total cpu time :     1.0 secs   av.it.:   3.2
+      iter #   1 total cpu time :     1.5 secs   av.it.:   3.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.143E-07
  
-     Pert. #  1: Fermi energy shift (Ryd) =    0.0000    0.0000
-     Pert. #  2: Fermi energy shift (Ryd) =    0.0000    0.0000
-     Pert. #  3: Fermi energy shift (Ryd) =    0.0000    0.0000
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
 
-      iter #   2 total cpu time :     1.6 secs   av.it.:   5.4
+      iter #   2 total cpu time :     2.3 secs   av.it.:   5.4
       thresh= 0.120E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.149E-08
  
-     Pert. #  1: Fermi energy shift (Ryd) =    0.0000    0.0000
-     Pert. #  2: Fermi energy shift (Ryd) =    0.0000    0.0000
-     Pert. #  3: Fermi energy shift (Ryd) =    0.0000    0.0000
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
 
-      iter #   3 total cpu time :     2.3 secs   av.it.:   5.0
+      iter #   3 total cpu time :     3.0 secs   av.it.:   5.0
       thresh= 0.386E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.174E-12
 
      End of self-consistent calculation
@@ -166,49 +166,49 @@
      lambda( 3)=  0.0000   gamma=    0.00 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
-     lambda( 1)=  0.0000   gamma=    0.02 GHz
+     lambda( 1)=  0.0000   gamma=    0.03 GHz
      lambda( 2)=  0.0000   gamma=    0.03 GHz
      lambda( 3)=  0.0000   gamma=    0.02 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.0000   gamma=    0.16 GHz
-     lambda( 2)=  0.0000   gamma=    0.20 GHz
-     lambda( 3)=  0.0000   gamma=    0.16 GHz
+     lambda( 1)=  0.0000   gamma=    0.19 GHz
+     lambda( 2)=  0.0000   gamma=    0.18 GHz
+     lambda( 3)=  0.0000   gamma=    0.15 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.0000   gamma=    0.35 GHz
-     lambda( 2)=  0.0000   gamma=    0.42 GHz
-     lambda( 3)=  0.0000   gamma=    0.34 GHz
+     lambda( 1)=  0.0000   gamma=    0.41 GHz
+     lambda( 2)=  0.0000   gamma=    0.38 GHz
+     lambda( 3)=  0.0000   gamma=    0.33 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
-     lambda( 1)=  0.0000   gamma=    0.61 GHz
-     lambda( 2)=  0.0000   gamma=    0.69 GHz
-     lambda( 3)=  0.0000   gamma=    0.59 GHz
+     lambda( 1)=  0.0000   gamma=    0.68 GHz
+     lambda( 2)=  0.0000   gamma=    0.64 GHz
+     lambda( 3)=  0.0000   gamma=    0.57 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.0000   gamma=    0.87 GHz
-     lambda( 2)=  0.0000   gamma=    0.97 GHz
-     lambda( 3)=  0.0000   gamma=    0.84 GHz
+     lambda( 1)=  0.0000   gamma=    0.95 GHz
+     lambda( 2)=  0.0000   gamma=    0.90 GHz
+     lambda( 3)=  0.0000   gamma=    0.83 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.0000   gamma=    1.12 GHz
-     lambda( 2)=  0.0000   gamma=    1.22 GHz
-     lambda( 3)=  0.0000   gamma=    1.09 GHz
+     lambda( 1)=  0.0000   gamma=    1.21 GHz
+     lambda( 2)=  0.0000   gamma=    1.15 GHz
+     lambda( 3)=  0.0000   gamma=    1.07 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
-     lambda( 1)=  0.0000   gamma=    1.36 GHz
-     lambda( 2)=  0.0000   gamma=    1.46 GHz
-     lambda( 3)=  0.0000   gamma=    1.32 GHz
+     lambda( 1)=  0.0000   gamma=    1.44 GHz
+     lambda( 2)=  0.0000   gamma=    1.39 GHz
+     lambda( 3)=  0.0000   gamma=    1.31 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
-     lambda( 1)=  0.0000   gamma=    1.58 GHz
-     lambda( 2)=  0.0000   gamma=    1.68 GHz
-     lambda( 3)=  0.0000   gamma=    1.55 GHz
+     lambda( 1)=  0.0000   gamma=    1.67 GHz
+     lambda( 2)=  0.0000   gamma=    1.61 GHz
+     lambda( 3)=  0.0000   gamma=    1.53 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
-     lambda( 1)=  0.0000   gamma=    1.79 GHz
-     lambda( 2)=  0.0000   gamma=    1.89 GHz
-     lambda( 3)=  0.0000   gamma=    1.76 GHz
+     lambda( 1)=  0.0000   gamma=    1.88 GHz
+     lambda( 2)=  0.0000   gamma=    1.82 GHz
+     lambda( 3)=  0.0000   gamma=    1.74 GHz
  
  
      Number of q in the star =    1
@@ -257,7 +257,7 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=  240  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  240  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (  -0.2500000   0.2500000  -0.2500000), wk =   0.0000000
@@ -510,13 +510,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     11.24 secs
+     total cpu time spent up to now is     11.43 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.3
 
-     total cpu time spent up to now is     19.77 secs
+     total cpu time spent up to now is     21.27 secs
 
      End of band structure calculation
 
@@ -1525,7 +1525,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=  240  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  240  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (  -0.2500000   0.2500000  -0.2500000), wk =   0.0000000
@@ -1778,7 +1778,7 @@
      Representation     1      1 modes - To be done
 
      Representation     2      2 modes - To be done
-     PHONON       :    20.68s CPU time
+     PHONON       :    22.40s CPU time,   23.22s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -1788,26 +1788,23 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    21.8 secs   av.it.:   4.3
+      iter #   1 total cpu time :    23.6 secs   av.it.:   4.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.223E-01
 
-      iter #   2 total cpu time :    22.8 secs   av.it.:   5.0
+      iter #   2 total cpu time :    24.5 secs   av.it.:   5.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.907E+00
 
-      iter #   3 total cpu time :    23.6 secs   av.it.:   4.8
+      iter #   3 total cpu time :    25.4 secs   av.it.:   4.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.445E-06
 
-      iter #   4 total cpu time :    24.6 secs   av.it.:   5.6
+      iter #   4 total cpu time :    26.4 secs   av.it.:   5.6
       thresh= 0.667E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.198E-08
 
-      iter #   5 total cpu time :    25.5 secs   av.it.:   5.5
-      thresh= 0.445E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.178E-09
+      iter #   5 total cpu time :    27.3 secs   av.it.:   5.5
+      thresh= 0.445E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.174E-09
 
-      iter #   6 total cpu time :    26.4 secs   av.it.:   5.4
-      thresh= 0.133E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.338E-09
-
-      iter #   7 total cpu time :    27.1 secs   av.it.:   3.2
-      thresh= 0.184E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.123E-11
+      iter #   6 total cpu time :    28.2 secs   av.it.:   5.2
+      thresh= 0.132E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.445E-10
 
      End of self-consistent calculation
 
@@ -1818,13 +1815,13 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    29.5 secs   av.it.:   3.4
+      iter #   1 total cpu time :    30.6 secs   av.it.:   3.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.373E-07
 
-      iter #   2 total cpu time :    31.6 secs   av.it.:   6.1
+      iter #   2 total cpu time :    32.6 secs   av.it.:   6.1
       thresh= 0.193E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.348E-08
 
-      iter #   3 total cpu time :    33.5 secs   av.it.:   5.6
+      iter #   3 total cpu time :    34.5 secs   av.it.:   5.6
       thresh= 0.590E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.114E-10
 
      End of self-consistent calculation
@@ -1847,69 +1844,69 @@
      q = (   -0.250000000   0.250000000  -0.250000000 ) 
 
  **************************************************************************
-     omega( 1) =       3.546011 [THz] =     118.282988 [cm-1]
-     omega( 2) =       3.546011 [THz] =     118.282988 [cm-1]
-     omega( 3) =       6.379472 [THz] =     212.797695 [cm-1]
+     omega( 1) =       3.546011 [THz] =     118.282987 [cm-1]
+     omega( 2) =       3.546011 [THz] =     118.282987 [cm-1]
+     omega( 3) =       6.378833 [THz] =     212.776382 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_3v (3m)   point group:
 
      omega(  1 -  2) =    118.28299  [cm-1]   --> E    L_3       
-     omega(  3 -  3) =    212.79769  [cm-1]   --> A_1  L_1       
+     omega(  3 -  3) =    212.77638  [cm-1]   --> A_1  L_1       
 
  **************************************************************************
      electron-phonon interaction  ...
 
      Gaussian Broadening:   0.010 Ry, ngauss=   0
      DOS =  1.881758 states/spin/Ry/Unit Cell at Ef=  8.327072 eV
-     lambda( 1)=  0.0198   gamma=    0.45 GHz
-     lambda( 2)=  0.0206   gamma=    0.46 GHz
-     lambda( 3)=  0.2276   gamma=   16.65 GHz
+     lambda( 1)=  0.0206   gamma=    0.46 GHz
+     lambda( 2)=  0.0198   gamma=    0.45 GHz
+     lambda( 3)=  0.2277   gamma=   16.65 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
-     lambda( 1)=  0.0279   gamma=    0.75 GHz
-     lambda( 2)=  0.0277   gamma=    0.75 GHz
+     lambda( 1)=  0.0277   gamma=    0.75 GHz
+     lambda( 2)=  0.0279   gamma=    0.75 GHz
      lambda( 3)=  0.1992   gamma=   17.41 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.0362   gamma=    1.04 GHz
-     lambda( 2)=  0.0359   gamma=    1.03 GHz
+     lambda( 1)=  0.0360   gamma=    1.03 GHz
+     lambda( 2)=  0.0363   gamma=    1.04 GHz
      lambda( 3)=  0.1832   gamma=   17.06 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.0447   gamma=    1.35 GHz
-     lambda( 2)=  0.0443   gamma=    1.33 GHz
-     lambda( 3)=  0.1965   gamma=   19.15 GHz
+     lambda( 1)=  0.0443   gamma=    1.34 GHz
+     lambda( 2)=  0.0447   gamma=    1.35 GHz
+     lambda( 3)=  0.1966   gamma=   19.16 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
-     lambda( 1)=  0.0517   gamma=    1.61 GHz
-     lambda( 2)=  0.0511   gamma=    1.59 GHz
-     lambda( 3)=  0.2178   gamma=   21.92 GHz
+     lambda( 1)=  0.0511   gamma=    1.59 GHz
+     lambda( 2)=  0.0518   gamma=    1.61 GHz
+     lambda( 3)=  0.2180   gamma=   21.93 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.0569   gamma=    1.80 GHz
-     lambda( 2)=  0.0561   gamma=    1.78 GHz
-     lambda( 3)=  0.2370   gamma=   24.30 GHz
+     lambda( 1)=  0.0561   gamma=    1.78 GHz
+     lambda( 2)=  0.0570   gamma=    1.81 GHz
+     lambda( 3)=  0.2372   gamma=   24.31 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.0607   gamma=    1.94 GHz
-     lambda( 2)=  0.0598   gamma=    1.91 GHz
-     lambda( 3)=  0.2511   gamma=   25.98 GHz
+     lambda( 1)=  0.0598   gamma=    1.91 GHz
+     lambda( 2)=  0.0608   gamma=    1.94 GHz
+     lambda( 3)=  0.2513   gamma=   25.99 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
-     lambda( 1)=  0.0636   gamma=    2.04 GHz
-     lambda( 2)=  0.0627   gamma=    2.01 GHz
-     lambda( 3)=  0.2608   gamma=   27.07 GHz
+     lambda( 1)=  0.0628   gamma=    2.01 GHz
+     lambda( 2)=  0.0637   gamma=    2.04 GHz
+     lambda( 3)=  0.2609   gamma=   27.08 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
-     lambda( 1)=  0.0660   gamma=    2.12 GHz
-     lambda( 2)=  0.0652   gamma=    2.09 GHz
-     lambda( 3)=  0.2673   gamma=   27.78 GHz
+     lambda( 1)=  0.0653   gamma=    2.10 GHz
+     lambda( 2)=  0.0661   gamma=    2.12 GHz
+     lambda( 3)=  0.2675   gamma=   27.79 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
-     lambda( 1)=  0.0681   gamma=    2.19 GHz
-     lambda( 2)=  0.0675   gamma=    2.17 GHz
-     lambda( 3)=  0.2721   gamma=   28.28 GHz
+     lambda( 1)=  0.0676   gamma=    2.17 GHz
+     lambda( 2)=  0.0682   gamma=    2.19 GHz
+     lambda( 3)=  0.2723   gamma=   28.29 GHz
  
  
      Number of q in the star =    8
@@ -1966,7 +1963,7 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=  130  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  130  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.5000000  -0.5000000   0.5000000), wk =   0.0000000
@@ -2109,13 +2106,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     42.26 secs
+     total cpu time spent up to now is     42.85 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.1
 
-     total cpu time spent up to now is     46.94 secs
+     total cpu time spent up to now is     48.20 secs
 
      End of band structure calculation
 
@@ -2684,7 +2681,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=  130  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  130  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.5000000  -0.5000000   0.5000000), wk =   0.0000000
@@ -2827,7 +2824,7 @@
      Representation     1      1 modes - To be done
 
      Representation     2      2 modes - To be done
-     PHONON       :    47.61s CPU time
+     PHONON       :    49.13s CPU time,   53.71s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -2837,19 +2834,19 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    48.3 secs   av.it.:   4.4
+      iter #   1 total cpu time :    49.8 secs   av.it.:   4.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.277E-03
 
-      iter #   2 total cpu time :    48.8 secs   av.it.:   5.6
+      iter #   2 total cpu time :    50.3 secs   av.it.:   5.6
       thresh= 0.167E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.333E-03
 
-      iter #   3 total cpu time :    49.3 secs   av.it.:   5.0
+      iter #   3 total cpu time :    50.8 secs   av.it.:   5.0
       thresh= 0.183E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.701E-08
 
-      iter #   4 total cpu time :    49.9 secs   av.it.:   5.6
+      iter #   4 total cpu time :    51.4 secs   av.it.:   5.6
       thresh= 0.837E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.340E-09
 
-      iter #   5 total cpu time :    50.4 secs   av.it.:   5.0
+      iter #   5 total cpu time :    51.8 secs   av.it.:   5.0
       thresh= 0.184E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.126E-11
 
      End of self-consistent calculation
@@ -2861,13 +2858,13 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    51.7 secs   av.it.:   3.4
+      iter #   1 total cpu time :    53.2 secs   av.it.:   3.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.410E-07
 
-      iter #   2 total cpu time :    52.9 secs   av.it.:   6.0
+      iter #   2 total cpu time :    54.4 secs   av.it.:   6.0
       thresh= 0.203E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.358E-08
 
-      iter #   3 total cpu time :    54.0 secs   av.it.:   5.6
+      iter #   3 total cpu time :    55.4 secs   av.it.:   5.6
       thresh= 0.599E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.203E-10
 
      End of self-consistent calculation
@@ -2886,9 +2883,9 @@
      q = (    0.500000000  -0.500000000   0.500000000 ) 
 
  **************************************************************************
-     omega( 1) =       4.482887 [THz] =     149.534001 [cm-1]
-     omega( 2) =       4.482887 [THz] =     149.534001 [cm-1]
-     omega( 3) =       9.370634 [THz] =     312.572781 [cm-1]
+     omega( 1) =       4.482887 [THz] =     149.533999 [cm-1]
+     omega( 2) =       4.482887 [THz] =     149.533999 [cm-1]
+     omega( 3) =       9.370634 [THz] =     312.572780 [cm-1]
  **************************************************************************
 
      Mode symmetry, D_3d (-3m)  point group:
@@ -2901,54 +2898,54 @@
 
      Gaussian Broadening:   0.010 Ry, ngauss=   0
      DOS =  1.881758 states/spin/Ry/Unit Cell at Ef=  8.327072 eV
-     lambda( 1)=  0.0257   gamma=    0.93 GHz
-     lambda( 2)=  0.0288   gamma=    1.04 GHz
-     lambda( 3)=  0.0402   gamma=    6.35 GHz
+     lambda( 1)=  0.0253   gamma=    0.92 GHz
+     lambda( 2)=  0.0291   gamma=    1.05 GHz
+     lambda( 3)=  0.0403   gamma=    6.35 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
-     lambda( 1)=  0.0706   gamma=    3.05 GHz
-     lambda( 2)=  0.0774   gamma=    3.34 GHz
-     lambda( 3)=  0.1272   gamma=   23.99 GHz
+     lambda( 1)=  0.0699   gamma=    3.02 GHz
+     lambda( 2)=  0.0781   gamma=    3.37 GHz
+     lambda( 3)=  0.1272   gamma=   24.00 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.0804   gamma=    3.70 GHz
-     lambda( 2)=  0.0851   gamma=    3.91 GHz
-     lambda( 3)=  0.1514   gamma=   30.42 GHz
+     lambda( 1)=  0.0799   gamma=    3.67 GHz
+     lambda( 2)=  0.0856   gamma=    3.93 GHz
+     lambda( 3)=  0.1515   gamma=   30.44 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.0854   gamma=    4.11 GHz
-     lambda( 2)=  0.0882   gamma=    4.25 GHz
-     lambda( 3)=  0.1598   gamma=   33.60 GHz
+     lambda( 1)=  0.0851   gamma=    4.10 GHz
+     lambda( 2)=  0.0885   gamma=    4.26 GHz
+     lambda( 3)=  0.1599   gamma=   33.63 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
-     lambda( 1)=  0.0883   gamma=    4.39 GHz
-     lambda( 2)=  0.0900   gamma=    4.47 GHz
-     lambda( 3)=  0.1644   gamma=   35.70 GHz
+     lambda( 1)=  0.0881   gamma=    4.38 GHz
+     lambda( 2)=  0.0901   gamma=    4.48 GHz
+     lambda( 3)=  0.1646   gamma=   35.73 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.0889   gamma=    4.50 GHz
-     lambda( 2)=  0.0899   gamma=    4.55 GHz
-     lambda( 3)=  0.1672   gamma=   36.98 GHz
+     lambda( 1)=  0.0887   gamma=    4.49 GHz
+     lambda( 2)=  0.0900   gamma=    4.56 GHz
+     lambda( 3)=  0.1673   gamma=   37.02 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.0877   gamma=    4.48 GHz
-     lambda( 2)=  0.0882   gamma=    4.51 GHz
-     lambda( 3)=  0.1693   gamma=   37.79 GHz
+     lambda( 1)=  0.0876   gamma=    4.47 GHz
+     lambda( 2)=  0.0883   gamma=    4.51 GHz
+     lambda( 3)=  0.1695   gamma=   37.82 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
      lambda( 1)=  0.0856   gamma=    4.39 GHz
      lambda( 2)=  0.0859   gamma=    4.40 GHz
-     lambda( 3)=  0.1716   gamma=   38.44 GHz
+     lambda( 3)=  0.1718   gamma=   38.47 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
      lambda( 1)=  0.0834   gamma=    4.28 GHz
      lambda( 2)=  0.0834   gamma=    4.28 GHz
-     lambda( 3)=  0.1743   gamma=   39.07 GHz
+     lambda( 3)=  0.1744   gamma=   39.10 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
      lambda( 1)=  0.0813   gamma=    4.17 GHz
      lambda( 2)=  0.0811   gamma=    4.16 GHz
-     lambda( 3)=  0.1772   gamma=   39.74 GHz
+     lambda( 3)=  0.1773   gamma=   39.76 GHz
  
  
      Number of q in the star =    4
@@ -3001,7 +2998,7 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=  200  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  200  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.0000000   0.5000000   0.0000000), wk =   0.0000000
@@ -3214,13 +3211,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     62.81 secs
+     total cpu time spent up to now is     63.83 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.1
 
-     total cpu time spent up to now is     69.80 secs
+     total cpu time spent up to now is     71.94 secs
 
      End of band structure calculation
 
@@ -4069,7 +4066,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=  200  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  200  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.0000000   0.5000000   0.0000000), wk =   0.0000000
@@ -4282,7 +4279,7 @@
      Representation     1      2 modes - To be done
 
      Representation     2      1 modes - To be done
-     PHONON       :  1m10.61s CPU time
+     PHONON       :  1m13.00s CPU time,     1m18.87s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -4292,16 +4289,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    72.3 secs   av.it.:   3.4
+      iter #   1 total cpu time :    74.7 secs   av.it.:   3.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.101E-06
 
-      iter #   2 total cpu time :    74.0 secs   av.it.:   6.0
+      iter #   2 total cpu time :    76.4 secs   av.it.:   6.0
       thresh= 0.318E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.354E-08
 
-      iter #   3 total cpu time :    75.6 secs   av.it.:   5.4
+      iter #   3 total cpu time :    78.0 secs   av.it.:   5.4
       thresh= 0.595E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.197E-09
 
-      iter #   4 total cpu time :    77.1 secs   av.it.:   5.2
+      iter #   4 total cpu time :    79.5 secs   av.it.:   5.2
       thresh= 0.140E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.196E-13
 
      End of self-consistent calculation
@@ -4313,20 +4310,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :    78.7 secs   av.it.:   4.0
+      iter #   1 total cpu time :    81.1 secs   av.it.:   4.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.885E-02
 
-      iter #   2 total cpu time :    79.4 secs   av.it.:   4.6
+      iter #   2 total cpu time :    81.8 secs   av.it.:   4.6
       thresh= 0.941E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.195E+00
 
-      iter #   3 total cpu time :    80.1 secs   av.it.:   4.4
-      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.553E-07
+      iter #   3 total cpu time :    82.5 secs   av.it.:   4.4
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.554E-07
 
-      iter #   4 total cpu time :    81.0 secs   av.it.:   5.8
+      iter #   4 total cpu time :    83.4 secs   av.it.:   5.8
       thresh= 0.235E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.119E-08
 
-      iter #   5 total cpu time :    81.2 secs   av.it.:   5.0
-      thresh= 0.345E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.488E-12
+      iter #   5 total cpu time :    84.2 secs   av.it.:   5.0
+      thresh= 0.345E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.518E-12
 
      End of self-consistent calculation
 
@@ -4346,15 +4343,15 @@
      q = (    0.000000000   0.500000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       4.263570 [THz] =     142.218346 [cm-1]
-     omega( 2) =       4.263570 [THz] =     142.218346 [cm-1]
-     omega( 3) =       6.793543 [THz] =     226.609709 [cm-1]
+     omega( 1) =       4.263570 [THz] =     142.218347 [cm-1]
+     omega( 2) =       4.263570 [THz] =     142.218347 [cm-1]
+     omega( 3) =       6.793212 [THz] =     226.598674 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_4v (4mm)  point group:
 
-     omega(  1 -  2) =    142.21835  [cm-1]   --> E    D_5       
-     omega(  3 -  3) =    226.60971  [cm-1]   --> A_1  D_1       
+     omega(  1 -  2) =    142.21835  [cm-1]   --> E    G_5 D_5   
+     omega(  3 -  3) =    226.59867  [cm-1]   --> A_1  G_1 D_1   
 
  **************************************************************************
      electron-phonon interaction  ...
@@ -4363,52 +4360,52 @@
      DOS =  1.881758 states/spin/Ry/Unit Cell at Ef=  8.327072 eV
      lambda( 1)=  0.0573   gamma=    1.87 GHz
      lambda( 2)=  0.0573   gamma=    1.87 GHz
-     lambda( 3)=  0.0590   gamma=    4.89 GHz
+     lambda( 3)=  0.0589   gamma=    4.88 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
-     lambda( 1)=  0.1074   gamma=    4.20 GHz
-     lambda( 2)=  0.1074   gamma=    4.20 GHz
-     lambda( 3)=  0.1085   gamma=   10.76 GHz
+     lambda( 1)=  0.1075   gamma=    4.20 GHz
+     lambda( 2)=  0.1075   gamma=    4.20 GHz
+     lambda( 3)=  0.1084   gamma=   10.75 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.1167   gamma=    4.86 GHz
-     lambda( 2)=  0.1167   gamma=    4.86 GHz
-     lambda( 3)=  0.1691   gamma=   17.86 GHz
+     lambda( 1)=  0.1168   gamma=    4.86 GHz
+     lambda( 2)=  0.1168   gamma=    4.86 GHz
+     lambda( 3)=  0.1690   gamma=   17.85 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.1315   gamma=    5.73 GHz
-     lambda( 2)=  0.1315   gamma=    5.73 GHz
-     lambda( 3)=  0.2107   gamma=   23.29 GHz
+     lambda( 1)=  0.1316   gamma=    5.73 GHz
+     lambda( 2)=  0.1316   gamma=    5.73 GHz
+     lambda( 3)=  0.2105   gamma=   23.26 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
      lambda( 1)=  0.1442   gamma=    6.48 GHz
      lambda( 2)=  0.1442   gamma=    6.48 GHz
-     lambda( 3)=  0.2347   gamma=   26.79 GHz
+     lambda( 3)=  0.2345   gamma=   26.76 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.1518   gamma=    6.95 GHz
-     lambda( 2)=  0.1518   gamma=    6.95 GHz
-     lambda( 3)=  0.2489   gamma=   28.93 GHz
+     lambda( 1)=  0.1519   gamma=    6.96 GHz
+     lambda( 2)=  0.1519   gamma=    6.96 GHz
+     lambda( 3)=  0.2486   gamma=   28.90 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.1556   gamma=    7.19 GHz
-     lambda( 2)=  0.1556   gamma=    7.19 GHz
-     lambda( 3)=  0.2569   gamma=   30.14 GHz
+     lambda( 1)=  0.1557   gamma=    7.19 GHz
+     lambda( 2)=  0.1557   gamma=    7.19 GHz
+     lambda( 3)=  0.2566   gamma=   30.10 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
      lambda( 1)=  0.1573   gamma=    7.29 GHz
      lambda( 2)=  0.1573   gamma=    7.29 GHz
-     lambda( 3)=  0.2612   gamma=   30.75 GHz
+     lambda( 3)=  0.2610   gamma=   30.72 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
-     lambda( 1)=  0.1580   gamma=    7.33 GHz
-     lambda( 2)=  0.1580   gamma=    7.33 GHz
-     lambda( 3)=  0.2633   gamma=   31.02 GHz
+     lambda( 1)=  0.1580   gamma=    7.34 GHz
+     lambda( 2)=  0.1580   gamma=    7.34 GHz
+     lambda( 3)=  0.2630   gamma=   30.99 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
-     lambda( 1)=  0.1583   gamma=    7.35 GHz
-     lambda( 2)=  0.1583   gamma=    7.35 GHz
-     lambda( 3)=  0.2641   gamma=   31.12 GHz
+     lambda( 1)=  0.1584   gamma=    7.35 GHz
+     lambda( 2)=  0.1584   gamma=    7.35 GHz
+     lambda( 3)=  0.2639   gamma=   31.10 GHz
  
  
      Number of q in the star =    6
@@ -4463,7 +4460,7 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=  576  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  576  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.7500000  -0.2500000   0.7500000), wk =   0.0000000
@@ -5052,13 +5049,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     92.27 secs
+     total cpu time spent up to now is     94.52 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.6
 
-     total cpu time spent up to now is    112.98 secs
+     total cpu time spent up to now is    118.61 secs
 
      End of band structure calculation
 
@@ -7411,7 +7408,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=  576  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  576  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.7500000  -0.2500000   0.7500000), wk =   0.0000000
@@ -8002,7 +7999,7 @@
      Representation     2      1 modes - To be done
 
      Representation     3      1 modes - To be done
-     PHONON       :  1m54.52s CPU time
+     PHONON       :  2m 0.38s CPU time,     2m 9.67s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -8012,20 +8009,20 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   117.2 secs   av.it.:   4.2
+      iter #   1 total cpu time :   123.3 secs   av.it.:   4.2
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.894E-04
 
-      iter #   2 total cpu time :   119.7 secs   av.it.:   5.6
+      iter #   2 total cpu time :   125.6 secs   av.it.:   5.6
       thresh= 0.945E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.124E-03
 
-      iter #   3 total cpu time :   121.8 secs   av.it.:   4.9
+      iter #   3 total cpu time :   127.8 secs   av.it.:   4.9
       thresh= 0.111E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.368E-06
 
-      iter #   4 total cpu time :   124.2 secs   av.it.:   5.7
+      iter #   4 total cpu time :   130.2 secs   av.it.:   5.7
       thresh= 0.607E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.221E-08
 
-      iter #   5 total cpu time :   126.7 secs   av.it.:   5.7
-      thresh= 0.470E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.973E-10
+      iter #   5 total cpu time :   132.7 secs   av.it.:   5.7
+      thresh= 0.470E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.972E-10
 
      End of self-consistent calculation
 
@@ -8036,17 +8033,17 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   130.1 secs   av.it.:   3.4
+      iter #   1 total cpu time :   136.2 secs   av.it.:   3.4
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.553E-06
 
-      iter #   2 total cpu time :   132.5 secs   av.it.:   5.6
+      iter #   2 total cpu time :   138.6 secs   av.it.:   5.6
       thresh= 0.744E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.139E-07
 
-      iter #   3 total cpu time :   134.6 secs   av.it.:   4.8
+      iter #   3 total cpu time :   140.8 secs   av.it.:   4.8
       thresh= 0.118E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.105E-08
 
-      iter #   4 total cpu time :   136.8 secs   av.it.:   4.8
-      thresh= 0.325E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.936E-13
+      iter #   4 total cpu time :   142.9 secs   av.it.:   4.8
+      thresh= 0.325E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.934E-13
 
      End of self-consistent calculation
 
@@ -8057,23 +8054,23 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   140.5 secs   av.it.:   4.1
+      iter #   1 total cpu time :   146.7 secs   av.it.:   4.1
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.130E-03
 
-      iter #   2 total cpu time :   142.9 secs   av.it.:   5.5
+      iter #   2 total cpu time :   149.1 secs   av.it.:   5.5
       thresh= 0.114E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.195E-03
 
-      iter #   3 total cpu time :   145.1 secs   av.it.:   4.8
+      iter #   3 total cpu time :   151.3 secs   av.it.:   4.8
       thresh= 0.140E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.130E-06
 
-      iter #   4 total cpu time :   147.6 secs   av.it.:   5.9
+      iter #   4 total cpu time :   153.7 secs   av.it.:   5.9
       thresh= 0.361E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.277E-08
 
-      iter #   5 total cpu time :   149.9 secs   av.it.:   5.6
-      thresh= 0.527E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.167E-09
+      iter #   5 total cpu time :   156.1 secs   av.it.:   5.6
+      thresh= 0.527E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.168E-09
 
-      iter #   6 total cpu time :   152.3 secs   av.it.:   5.7
-      thresh= 0.129E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.487E-11
+      iter #   6 total cpu time :   158.5 secs   av.it.:   5.7
+      thresh= 0.129E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.503E-11
 
      End of self-consistent calculation
 
@@ -8111,16 +8108,16 @@
      q = (    0.750000000  -0.250000000   0.750000000 ) 
 
  **************************************************************************
-     omega( 1) =       5.407899 [THz] =     180.389295 [cm-1]
-     omega( 2) =       6.803874 [THz] =     226.954308 [cm-1]
-     omega( 3) =       8.777211 [THz] =     292.778188 [cm-1]
+     omega( 1) =       5.407899 [THz] =     180.389276 [cm-1]
+     omega( 2) =       6.803918 [THz] =     226.955786 [cm-1]
+     omega( 3) =       8.777162 [THz] =     292.776557 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_s (m)     point group:
 
-     omega(  1 -  1) =    180.38929  [cm-1]   --> A''            
-     omega(  2 -  2) =    226.95431  [cm-1]   --> A'             
-     omega(  3 -  3) =    292.77819  [cm-1]   --> A'             
+     omega(  1 -  1) =    180.38928  [cm-1]   --> A''            
+     omega(  2 -  2) =    226.95579  [cm-1]   --> A'             
+     omega(  3 -  3) =    292.77656  [cm-1]   --> A'             
 
  **************************************************************************
      electron-phonon interaction  ...
@@ -8132,49 +8129,49 @@
      lambda( 3)=  0.1918   gamma=   26.55 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
-     lambda( 1)=  0.0850   gamma=    5.34 GHz
-     lambda( 2)=  0.1225   gamma=   12.18 GHz
-     lambda( 3)=  0.2185   gamma=   36.16 GHz
+     lambda( 1)=  0.0852   gamma=    5.35 GHz
+     lambda( 2)=  0.1223   gamma=   12.16 GHz
+     lambda( 3)=  0.2189   gamma=   36.24 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.0862   gamma=    5.77 GHz
-     lambda( 2)=  0.1009   gamma=   10.69 GHz
-     lambda( 3)=  0.2041   gamma=   35.98 GHz
+     lambda( 1)=  0.0864   gamma=    5.78 GHz
+     lambda( 2)=  0.1002   gamma=   10.62 GHz
+     lambda( 3)=  0.2049   gamma=   36.11 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.0886   gamma=    6.20 GHz
-     lambda( 2)=  0.0965   gamma=   10.69 GHz
-     lambda( 3)=  0.1979   gamma=   36.51 GHz
+     lambda( 1)=  0.0888   gamma=    6.22 GHz
+     lambda( 2)=  0.0955   gamma=   10.59 GHz
+     lambda( 3)=  0.1987   gamma=   36.66 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
-     lambda( 1)=  0.0916   gamma=    6.62 GHz
-     lambda( 2)=  0.0983   gamma=   11.25 GHz
-     lambda( 3)=  0.1986   gamma=   37.83 GHz
+     lambda( 1)=  0.0918   gamma=    6.64 GHz
+     lambda( 2)=  0.0970   gamma=   11.11 GHz
+     lambda( 3)=  0.1995   gamma=   38.01 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.0935   gamma=    6.89 GHz
-     lambda( 2)=  0.1010   gamma=   11.78 GHz
-     lambda( 3)=  0.2008   gamma=   38.98 GHz
+     lambda( 1)=  0.0938   gamma=    6.91 GHz
+     lambda( 2)=  0.0995   gamma=   11.61 GHz
+     lambda( 3)=  0.2019   gamma=   39.19 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.0942   gamma=    7.00 GHz
-     lambda( 2)=  0.1030   gamma=   12.12 GHz
-     lambda( 3)=  0.2023   gamma=   39.62 GHz
+     lambda( 1)=  0.0945   gamma=    7.02 GHz
+     lambda( 2)=  0.1015   gamma=   11.94 GHz
+     lambda( 3)=  0.2035   gamma=   39.84 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
-     lambda( 1)=  0.0941   gamma=    7.02 GHz
-     lambda( 2)=  0.1043   gamma=   12.32 GHz
-     lambda( 3)=  0.2028   gamma=   39.85 GHz
+     lambda( 1)=  0.0943   gamma=    7.03 GHz
+     lambda( 2)=  0.1028   gamma=   12.14 GHz
+     lambda( 3)=  0.2039   gamma=   40.07 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
-     lambda( 1)=  0.0935   gamma=    6.98 GHz
-     lambda( 2)=  0.1053   gamma=   12.44 GHz
-     lambda( 3)=  0.2026   gamma=   39.85 GHz
+     lambda( 1)=  0.0938   gamma=    7.00 GHz
+     lambda( 2)=  0.1039   gamma=   12.28 GHz
+     lambda( 3)=  0.2036   gamma=   40.06 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
-     lambda( 1)=  0.0929   gamma=    6.94 GHz
-     lambda( 2)=  0.1060   gamma=   12.54 GHz
-     lambda( 3)=  0.2020   gamma=   39.75 GHz
+     lambda( 1)=  0.0931   gamma=    6.95 GHz
+     lambda( 2)=  0.1048   gamma=   12.39 GHz
+     lambda( 3)=  0.2030   gamma=   39.93 GHz
  
  
      Number of q in the star =   24
@@ -8247,7 +8244,7 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=  328  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  328  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.5000000   0.0000000   0.5000000), wk =   0.0000000
@@ -8588,13 +8585,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is    162.54 secs
+     total cpu time spent up to now is    168.06 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.3
 
-     total cpu time spent up to now is    174.25 secs
+     total cpu time spent up to now is    181.60 secs
 
      End of band structure calculation
 
@@ -9955,7 +9952,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=  328  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  328  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.5000000   0.0000000   0.5000000), wk =   0.0000000
@@ -10298,7 +10295,7 @@
      Representation     2      1 modes - To be done
 
      Representation     3      1 modes - To be done
-     PHONON       :  2m55.33s CPU time
+     PHONON       :  3m 2.90s CPU time,     3m21.07s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -10308,19 +10305,19 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   176.9 secs   av.it.:   4.0
+      iter #   1 total cpu time :   184.5 secs   av.it.:   4.0
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.647E-03
 
-      iter #   2 total cpu time :   178.2 secs   av.it.:   5.0
+      iter #   2 total cpu time :   185.8 secs   av.it.:   5.0
       thresh= 0.254E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.220E-02
 
-      iter #   3 total cpu time :   179.4 secs   av.it.:   4.1
+      iter #   3 total cpu time :   186.9 secs   av.it.:   4.1
       thresh= 0.469E-02 alpha_mix =  0.700 |ddv_scf|^2 =  0.455E-07
 
-      iter #   4 total cpu time :   180.8 secs   av.it.:   6.1
+      iter #   4 total cpu time :   188.4 secs   av.it.:   6.1
       thresh= 0.213E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.164E-08
 
-      iter #   5 total cpu time :   182.2 secs   av.it.:   5.4
+      iter #   5 total cpu time :   189.7 secs   av.it.:   5.4
       thresh= 0.405E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.739E-10
 
      End of self-consistent calculation
@@ -10332,16 +10329,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   184.2 secs   av.it.:   3.3
+      iter #   1 total cpu time :   191.7 secs   av.it.:   3.3
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.203E-06
 
-      iter #   2 total cpu time :   185.5 secs   av.it.:   5.4
+      iter #   2 total cpu time :   193.1 secs   av.it.:   5.4
       thresh= 0.450E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.146E-07
 
-      iter #   3 total cpu time :   186.8 secs   av.it.:   5.0
+      iter #   3 total cpu time :   194.4 secs   av.it.:   5.0
       thresh= 0.121E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.215E-09
 
-      iter #   4 total cpu time :   188.1 secs   av.it.:   5.1
+      iter #   4 total cpu time :   195.6 secs   av.it.:   5.1
       thresh= 0.147E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.147E-12
 
      End of self-consistent calculation
@@ -10353,16 +10350,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   190.1 secs   av.it.:   3.6
+      iter #   1 total cpu time :   197.7 secs   av.it.:   3.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.574E-05
 
-      iter #   2 total cpu time :   191.4 secs   av.it.:   5.5
+      iter #   2 total cpu time :   199.0 secs   av.it.:   5.5
       thresh= 0.240E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.391E-06
 
-      iter #   3 total cpu time :   192.8 secs   av.it.:   5.4
+      iter #   3 total cpu time :   200.3 secs   av.it.:   5.4
       thresh= 0.625E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.302E-08
 
-      iter #   4 total cpu time :   194.1 secs   av.it.:   5.2
+      iter #   4 total cpu time :   201.6 secs   av.it.:   5.2
       thresh= 0.550E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.117E-11
 
      End of self-consistent calculation
@@ -10390,15 +10387,15 @@
 
  **************************************************************************
      omega( 1) =       4.869038 [THz] =     162.414711 [cm-1]
-     omega( 2) =       6.532062 [THz] =     217.887599 [cm-1]
-     omega( 3) =       8.528701 [THz] =     284.488748 [cm-1]
+     omega( 2) =       6.532063 [THz] =     217.887611 [cm-1]
+     omega( 3) =       8.528700 [THz] =     284.488713 [cm-1]
  **************************************************************************
 
      Mode symmetry, C_2v (mm2)  point group:
 
      omega(  1 -  1) =    162.41471  [cm-1]   --> B_1  D_3  S_3  
-     omega(  2 -  2) =    217.88760  [cm-1]   --> B_2  D_4  S_4  
-     omega(  3 -  3) =    284.48875  [cm-1]   --> A_1  D_1  S_1  
+     omega(  2 -  2) =    217.88761  [cm-1]   --> B_2  D_4  S_4  
+     omega(  3 -  3) =    284.48871  [cm-1]   --> A_1  D_1  S_1  
 
  **************************************************************************
      electron-phonon interaction  ...
@@ -10411,48 +10408,48 @@
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
      lambda( 1)=  0.0428   gamma=    2.18 GHz
-     lambda( 2)=  0.1247   gamma=   11.43 GHz
+     lambda( 2)=  0.1248   gamma=   11.44 GHz
      lambda( 3)=  0.3880   gamma=   60.64 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.0340   gamma=    1.85 GHz
-     lambda( 2)=  0.1224   gamma=   11.95 GHz
-     lambda( 3)=  0.2652   gamma=   44.13 GHz
+     lambda( 1)=  0.0340   gamma=    1.84 GHz
+     lambda( 2)=  0.1226   gamma=   11.97 GHz
+     lambda( 3)=  0.2651   gamma=   44.12 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.0334   gamma=    1.89 GHz
-     lambda( 2)=  0.1245   gamma=   12.72 GHz
-     lambda( 3)=  0.2310   gamma=   40.25 GHz
+     lambda( 1)=  0.0333   gamma=    1.89 GHz
+     lambda( 2)=  0.1250   gamma=   12.77 GHz
+     lambda( 3)=  0.2309   gamma=   40.22 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
-     lambda( 1)=  0.0344   gamma=    2.02 GHz
-     lambda( 2)=  0.1273   gamma=   13.43 GHz
-     lambda( 3)=  0.2184   gamma=   39.29 GHz
+     lambda( 1)=  0.0343   gamma=    2.01 GHz
+     lambda( 2)=  0.1280   gamma=   13.51 GHz
+     lambda( 3)=  0.2181   gamma=   39.24 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.0355   gamma=    2.12 GHz
-     lambda( 2)=  0.1287   gamma=   13.83 GHz
-     lambda( 3)=  0.2111   gamma=   38.69 GHz
+     lambda( 1)=  0.0353   gamma=    2.11 GHz
+     lambda( 2)=  0.1296   gamma=   13.93 GHz
+     lambda( 3)=  0.2108   gamma=   38.62 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.0363   gamma=    2.18 GHz
-     lambda( 2)=  0.1293   gamma=   14.02 GHz
-     lambda( 3)=  0.2061   gamma=   38.10 GHz
+     lambda( 1)=  0.0361   gamma=    2.18 GHz
+     lambda( 2)=  0.1302   gamma=   14.13 GHz
+     lambda( 3)=  0.2057   gamma=   38.03 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
-     lambda( 1)=  0.0369   gamma=    2.23 GHz
-     lambda( 2)=  0.1299   gamma=   14.13 GHz
-     lambda( 3)=  0.2028   gamma=   37.62 GHz
+     lambda( 1)=  0.0368   gamma=    2.22 GHz
+     lambda( 2)=  0.1307   gamma=   14.23 GHz
+     lambda( 3)=  0.2025   gamma=   37.56 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
-     lambda( 1)=  0.0375   gamma=    2.27 GHz
-     lambda( 2)=  0.1305   gamma=   14.22 GHz
-     lambda( 3)=  0.2009   gamma=   37.31 GHz
+     lambda( 1)=  0.0374   gamma=    2.26 GHz
+     lambda( 2)=  0.1313   gamma=   14.30 GHz
+     lambda( 3)=  0.2006   gamma=   37.25 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
-     lambda( 1)=  0.0381   gamma=    2.30 GHz
-     lambda( 2)=  0.1311   gamma=   14.29 GHz
-     lambda( 3)=  0.1999   gamma=   37.13 GHz
+     lambda( 1)=  0.0380   gamma=    2.30 GHz
+     lambda( 2)=  0.1318   gamma=   14.36 GHz
+     lambda( 3)=  0.1996   gamma=   37.09 GHz
  
  
      Number of q in the star =   12
@@ -10513,7 +10510,7 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=  118  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  118  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.0000000  -1.0000000   0.0000000), wk =   0.0000000
@@ -10644,13 +10641,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is    202.56 secs
+     total cpu time spent up to now is    209.55 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations =  9.8
 
-     total cpu time spent up to now is    206.64 secs
+     total cpu time spent up to now is    214.34 secs
 
      End of band structure calculation
 
@@ -11171,7 +11168,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=  118  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  118  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (   0.0000000  -1.0000000   0.0000000), wk =   0.0000000
@@ -11302,7 +11299,7 @@
      Representation     1      2 modes - To be done
 
      Representation     2      1 modes - To be done
-     PHONON       :  3m27.30s CPU time
+     PHONON       :  3m35.25s CPU time,     3m58.91s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -11312,16 +11309,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   208.4 secs   av.it.:   3.5
+      iter #   1 total cpu time :   216.3 secs   av.it.:   3.5
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.318E-06
 
-      iter #   2 total cpu time :   209.4 secs   av.it.:   5.9
+      iter #   2 total cpu time :   217.3 secs   av.it.:   5.9
       thresh= 0.564E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.448E-08
 
-      iter #   3 total cpu time :   210.4 secs   av.it.:   5.5
+      iter #   3 total cpu time :   218.3 secs   av.it.:   5.5
       thresh= 0.669E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.420E-09
 
-      iter #   4 total cpu time :   211.3 secs   av.it.:   5.3
+      iter #   4 total cpu time :   219.2 secs   av.it.:   5.3
       thresh= 0.205E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.187E-13
 
      End of self-consistent calculation
@@ -11333,16 +11330,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   212.2 secs   av.it.:   3.8
+      iter #   1 total cpu time :   220.2 secs   av.it.:   3.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.683E-04
 
-      iter #   2 total cpu time :   212.7 secs   av.it.:   5.1
+      iter #   2 total cpu time :   220.7 secs   av.it.:   5.1
       thresh= 0.827E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.258E-04
 
-      iter #   3 total cpu time :   213.2 secs   av.it.:   4.9
+      iter #   3 total cpu time :   221.1 secs   av.it.:   4.9
       thresh= 0.508E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.509E-08
 
-      iter #   4 total cpu time :   213.7 secs   av.it.:   5.2
+      iter #   4 total cpu time :   221.6 secs   av.it.:   5.2
       thresh= 0.714E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.252E-10
 
      End of self-consistent calculation
@@ -11360,9 +11357,9 @@
      q = (    0.000000000  -1.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       6.051545 [THz] =     201.859170 [cm-1]
-     omega( 2) =       6.051545 [THz] =     201.859170 [cm-1]
-     omega( 3) =       9.997231 [THz] =     333.473953 [cm-1]
+     omega( 1) =       6.051545 [THz] =     201.859168 [cm-1]
+     omega( 2) =       6.051545 [THz] =     201.859168 [cm-1]
+     omega( 3) =       9.997231 [THz] =     333.473950 [cm-1]
  **************************************************************************
 
      Mode symmetry, D_4h(4/mmm) point group:
@@ -11375,53 +11372,53 @@
 
      Gaussian Broadening:   0.010 Ry, ngauss=   0
      DOS =  1.881758 states/spin/Ry/Unit Cell at Ef=  8.327072 eV
-     lambda( 1)=  0.1835   gamma=   12.08 GHz
-     lambda( 2)=  0.1854   gamma=   12.20 GHz
+     lambda( 1)=  0.1854   gamma=   12.20 GHz
+     lambda( 2)=  0.1835   gamma=   12.08 GHz
      lambda( 3)=  0.0897   gamma=   16.11 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
-     lambda( 1)=  0.1438   gamma=   11.31 GHz
-     lambda( 2)=  0.1610   gamma=   12.67 GHz
+     lambda( 1)=  0.1610   gamma=   12.67 GHz
+     lambda( 2)=  0.1439   gamma=   11.32 GHz
      lambda( 3)=  0.2008   gamma=   43.12 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.1225   gamma=   10.26 GHz
-     lambda( 2)=  0.1407   gamma=   11.79 GHz
+     lambda( 1)=  0.1407   gamma=   11.79 GHz
+     lambda( 2)=  0.1224   gamma=   10.26 GHz
      lambda( 3)=  0.1662   gamma=   38.00 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.1122   gamma=    9.84 GHz
-     lambda( 2)=  0.1281   gamma=   11.23 GHz
+     lambda( 1)=  0.1282   gamma=   11.24 GHz
+     lambda( 2)=  0.1121   gamma=    9.83 GHz
      lambda( 3)=  0.1468   gamma=   35.13 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
-     lambda( 1)=  0.1071   gamma=    9.70 GHz
-     lambda( 2)=  0.1212   gamma=   10.98 GHz
+     lambda( 1)=  0.1214   gamma=   10.99 GHz
+     lambda( 2)=  0.1070   gamma=    9.69 GHz
      lambda( 3)=  0.1440   gamma=   35.58 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.1053   gamma=    9.72 GHz
-     lambda( 2)=  0.1179   gamma=   10.88 GHz
-     lambda( 3)=  0.1457   gamma=   36.67 GHz
+     lambda( 1)=  0.1181   gamma=   10.90 GHz
+     lambda( 2)=  0.1052   gamma=    9.70 GHz
+     lambda( 3)=  0.1457   gamma=   36.68 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.1051   gamma=    9.79 GHz
-     lambda( 2)=  0.1162   gamma=   10.82 GHz
+     lambda( 1)=  0.1164   gamma=   10.83 GHz
+     lambda( 2)=  0.1050   gamma=    9.77 GHz
      lambda( 3)=  0.1480   gamma=   37.59 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
-     lambda( 1)=  0.1054   gamma=    9.85 GHz
-     lambda( 2)=  0.1149   gamma=   10.73 GHz
+     lambda( 1)=  0.1151   gamma=   10.75 GHz
+     lambda( 2)=  0.1053   gamma=    9.83 GHz
      lambda( 3)=  0.1501   gamma=   38.27 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
-     lambda( 1)=  0.1056   gamma=    9.88 GHz
-     lambda( 2)=  0.1136   gamma=   10.62 GHz
+     lambda( 1)=  0.1138   gamma=   10.64 GHz
+     lambda( 2)=  0.1055   gamma=    9.86 GHz
      lambda( 3)=  0.1521   gamma=   38.80 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
-     lambda( 1)=  0.1057   gamma=    9.88 GHz
-     lambda( 2)=  0.1123   gamma=   10.50 GHz
+     lambda( 1)=  0.1124   gamma=   10.51 GHz
+     lambda( 2)=  0.1055   gamma=    9.87 GHz
      lambda( 3)=  0.1538   gamma=   39.25 GHz
  
  
@@ -11474,7 +11471,7 @@
      site n.     atom                  positions (a_0 units)
          1           Al  tau(  1) = (   0.0000000   0.0000000   0.0000000  )
 
-     number of k points=  174  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  174  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (  -0.5000000  -1.0000000   0.0000000), wk =   0.0000000
@@ -11661,13 +11658,13 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is    222.22 secs
+     total cpu time spent up to now is    229.68 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  3.33E-10,  avg # of iterations = 10.1
 
-     total cpu time spent up to now is    228.43 secs
+     total cpu time spent up to now is    236.77 secs
 
      End of band structure calculation
 
@@ -12412,7 +12409,7 @@
 
 
      G cutoff =   85.4897  (    869 G-vectors)     FFT grid: ( 15, 15, 15)
-     number of k points=  174  gaussian broad. (ryd)=  0.0500     ngauss =   1
+     number of k points=  174  gaussian broad. (Ry)=  0.0500     ngauss =   1
                        cart. coord. in units 2pi/a_0
         k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (  -0.5000000  -1.0000000   0.0000000), wk =   0.0000000
@@ -12599,7 +12596,7 @@
      Representation     1      2 modes - To be done
 
      Representation     2      1 modes - To be done
-     PHONON       :  3m49.21s CPU time
+     PHONON       :  3m57.77s CPU time,     4m22.60s wall time
 
 
      Alpha used in Ewald sum =   0.7000
@@ -12609,16 +12606,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   230.8 secs   av.it.:   3.6
+      iter #   1 total cpu time :   239.4 secs   av.it.:   3.6
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.522E-05
 
-      iter #   2 total cpu time :   232.3 secs   av.it.:   5.9
+      iter #   2 total cpu time :   241.0 secs   av.it.:   5.9
       thresh= 0.228E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.101E-05
 
-      iter #   3 total cpu time :   233.8 secs   av.it.:   5.6
+      iter #   3 total cpu time :   242.5 secs   av.it.:   5.6
       thresh= 0.101E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.102E-08
 
-      iter #   4 total cpu time :   235.3 secs   av.it.:   5.6
+      iter #   4 total cpu time :   244.0 secs   av.it.:   5.6
       thresh= 0.319E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.870E-12
 
      End of self-consistent calculation
@@ -12630,16 +12627,16 @@
 
      Self-consistent Calculation
 
-      iter #   1 total cpu time :   236.7 secs   av.it.:   3.8
+      iter #   1 total cpu time :   245.4 secs   av.it.:   3.8
       thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.928E-05
 
-      iter #   2 total cpu time :   237.5 secs   av.it.:   5.6
+      iter #   2 total cpu time :   246.1 secs   av.it.:   5.6
       thresh= 0.305E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.136E-05
 
-      iter #   3 total cpu time :   238.2 secs   av.it.:   5.5
+      iter #   3 total cpu time :   246.8 secs   av.it.:   5.5
       thresh= 0.116E-03 alpha_mix =  0.700 |ddv_scf|^2 =  0.379E-08
 
-      iter #   4 total cpu time :   238.9 secs   av.it.:   5.4
+      iter #   4 total cpu time :   247.6 secs   av.it.:   5.4
       thresh= 0.616E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.657E-11
 
      End of self-consistent calculation
@@ -12660,69 +12657,69 @@
      q = (   -0.500000000  -1.000000000   0.000000000 ) 
 
  **************************************************************************
-     omega( 1) =       6.511719 [THz] =     217.208995 [cm-1]
-     omega( 2) =       7.825579 [THz] =     261.034952 [cm-1]
-     omega( 3) =       7.825579 [THz] =     261.034952 [cm-1]
+     omega( 1) =       6.511721 [THz] =     217.209059 [cm-1]
+     omega( 2) =       7.825581 [THz] =     261.035021 [cm-1]
+     omega( 3) =       7.825581 [THz] =     261.035021 [cm-1]
  **************************************************************************
 
      Mode symmetry, D_2d (-42m) point group:
 
-     omega(  1 -  1) =    217.20900  [cm-1]   --> B_2  X_3  W_2  
-     omega(  2 -  3) =    261.03495  [cm-1]   --> E    X_5  W_3  
+     omega(  1 -  1) =    217.20906  [cm-1]   --> B_2  X_3  W_2  
+     omega(  2 -  3) =    261.03502  [cm-1]   --> E    X_5  W_3  
 
  **************************************************************************
      electron-phonon interaction  ...
 
      Gaussian Broadening:   0.010 Ry, ngauss=   0
      DOS =  1.881758 states/spin/Ry/Unit Cell at Ef=  8.327072 eV
-     lambda( 1)=  0.0328   gamma=    2.50 GHz
-     lambda( 2)=  0.0617   gamma=    6.79 GHz
-     lambda( 3)=  0.0615   gamma=    6.77 GHz
+     lambda( 1)=  0.0329   gamma=    2.50 GHz
+     lambda( 2)=  0.0616   gamma=    6.78 GHz
+     lambda( 3)=  0.0616   gamma=    6.78 GHz
      Gaussian Broadening:   0.020 Ry, ngauss=   0
      DOS =  2.249756 states/spin/Ry/Unit Cell at Ef=  8.324244 eV
-     lambda( 1)=  0.0733   gamma=    6.68 GHz
-     lambda( 2)=  0.1117   gamma=   14.69 GHz
-     lambda( 3)=  0.1103   gamma=   14.51 GHz
+     lambda( 1)=  0.0734   gamma=    6.69 GHz
+     lambda( 2)=  0.1116   gamma=   14.68 GHz
+     lambda( 3)=  0.1105   gamma=   14.53 GHz
      Gaussian Broadening:   0.030 Ry, ngauss=   0
      DOS =  2.396042 states/spin/Ry/Unit Cell at Ef=  8.311221 eV
-     lambda( 1)=  0.0689   gamma=    6.68 GHz
-     lambda( 2)=  0.1178   gamma=   16.50 GHz
-     lambda( 3)=  0.1150   gamma=   16.11 GHz
+     lambda( 1)=  0.0690   gamma=    6.70 GHz
+     lambda( 2)=  0.1177   gamma=   16.49 GHz
+     lambda( 3)=  0.1152   gamma=   16.14 GHz
      Gaussian Broadening:   0.040 Ry, ngauss=   0
      DOS =  2.507879 states/spin/Ry/Unit Cell at Ef=  8.299880 eV
-     lambda( 1)=  0.0687   gamma=    6.97 GHz
-     lambda( 2)=  0.1334   gamma=   19.56 GHz
-     lambda( 3)=  0.1305   gamma=   19.14 GHz
+     lambda( 1)=  0.0689   gamma=    7.00 GHz
+     lambda( 2)=  0.1333   gamma=   19.55 GHz
+     lambda( 3)=  0.1308   gamma=   19.18 GHz
      Gaussian Broadening:   0.050 Ry, ngauss=   0
      DOS =  2.589584 states/spin/Ry/Unit Cell at Ef=  8.291477 eV
-     lambda( 1)=  0.0727   gamma=    7.63 GHz
-     lambda( 2)=  0.1509   gamma=   22.85 GHz
-     lambda( 3)=  0.1480   gamma=   22.41 GHz
+     lambda( 1)=  0.0730   gamma=    7.66 GHz
+     lambda( 2)=  0.1508   gamma=   22.84 GHz
+     lambda( 3)=  0.1483   gamma=   22.45 GHz
      Gaussian Broadening:   0.060 Ry, ngauss=   0
      DOS =  2.638140 states/spin/Ry/Unit Cell at Ef=  8.285296 eV
-     lambda( 1)=  0.0770   gamma=    8.23 GHz
-     lambda( 2)=  0.1632   gamma=   25.19 GHz
-     lambda( 3)=  0.1603   gamma=   24.74 GHz
+     lambda( 1)=  0.0774   gamma=    8.26 GHz
+     lambda( 2)=  0.1632   gamma=   25.18 GHz
+     lambda( 3)=  0.1606   gamma=   24.78 GHz
      Gaussian Broadening:   0.070 Ry, ngauss=   0
      DOS =  2.661607 states/spin/Ry/Unit Cell at Ef=  8.280323 eV
-     lambda( 1)=  0.0800   gamma=    8.62 GHz
+     lambda( 1)=  0.0803   gamma=    8.66 GHz
      lambda( 2)=  0.1701   gamma=   26.48 GHz
-     lambda( 3)=  0.1673   gamma=   26.04 GHz
+     lambda( 3)=  0.1675   gamma=   26.08 GHz
      Gaussian Broadening:   0.080 Ry, ngauss=   0
      DOS =  2.670887 states/spin/Ry/Unit Cell at Ef=  8.275821 eV
-     lambda( 1)=  0.0817   gamma=    8.83 GHz
+     lambda( 1)=  0.0820   gamma=    8.87 GHz
      lambda( 2)=  0.1732   gamma=   27.06 GHz
-     lambda( 3)=  0.1706   gamma=   26.64 GHz
+     lambda( 3)=  0.1708   gamma=   26.68 GHz
      Gaussian Broadening:   0.090 Ry, ngauss=   0
      DOS =  2.673746 states/spin/Ry/Unit Cell at Ef=  8.271352 eV
-     lambda( 1)=  0.0825   gamma=    8.93 GHz
+     lambda( 1)=  0.0828   gamma=    8.96 GHz
      lambda( 2)=  0.1742   gamma=   27.24 GHz
-     lambda( 3)=  0.1718   gamma=   26.87 GHz
+     lambda( 3)=  0.1720   gamma=   26.90 GHz
      Gaussian Broadening:   0.100 Ry, ngauss=   0
      DOS =  2.674314 states/spin/Ry/Unit Cell at Ef=  8.266690 eV
-     lambda( 1)=  0.0828   gamma=    8.97 GHz
+     lambda( 1)=  0.0830   gamma=    8.99 GHz
      lambda( 2)=  0.1740   gamma=   27.22 GHz
-     lambda( 3)=  0.1720   gamma=   26.89 GHz
+     lambda( 3)=  0.1721   gamma=   26.92 GHz
  
  
      Number of q in the star =    6
@@ -12734,109 +12731,109 @@
           5   0.000000000   1.000000000  -0.500000000
           6   0.000000000   1.000000000   0.500000000
  
-     PWSCF        :   246.33s CPU
-     init_run     :    11.54s CPU (       7 calls,   1.649 s avg)
-     electrons    :    63.04s CPU (       7 calls,   9.006 s avg)
+     PWSCF        :   254.75s CPU
+     init_run     :     9.63s CPU (       7 calls,   1.376 s avg)
+     electrons    :    72.91s CPU (       7 calls,  10.416 s avg)
  
  
-     electrons    :    63.04s CPU (       7 calls,   9.006 s avg)
-     c_bands      :    62.90s CPU (       7 calls,   8.986 s avg)
-     sum_band     :     3.07s CPU (       7 calls,   0.439 s avg)
-     v_of_rho     :     0.01s CPU (       8 calls,   0.001 s avg)
+     electrons    :    72.91s CPU (       7 calls,  10.416 s avg)
+     c_bands      :    72.81s CPU (       7 calls,  10.401 s avg)
+     sum_band     :     3.05s CPU (       7 calls,   0.436 s avg)
+     v_of_rho     :     0.02s CPU (       8 calls,   0.003 s avg)
      v_h          :     0.01s CPU (       8 calls,   0.001 s avg)
-     v_xc         :     0.00s CPU (       8 calls,   0.000 s avg)
+     v_xc         :     0.01s CPU (       8 calls,   0.001 s avg)
  
-     c_bands      :    62.90s CPU (       7 calls,   8.986 s avg)
-     init_us_2    :     1.22s CPU (   21972 calls,   0.000 s avg)
-     cegterg      :    62.51s CPU (    1766 calls,   0.035 s avg)
+     c_bands      :    72.81s CPU (       7 calls,  10.401 s avg)
+     init_us_2    :     1.45s CPU (   21852 calls,   0.000 s avg)
+     cegterg      :    72.38s CPU (    1766 calls,   0.041 s avg)
  
-     sum_band     :     3.07s CPU (       7 calls,   0.439 s avg)
+     sum_band     :     3.05s CPU (       7 calls,   0.436 s avg)
  
-     wfcrot       :    10.77s CPU (    1766 calls,   0.006 s avg)
-     cegterg      :    62.51s CPU (    1766 calls,   0.035 s avg)
-     h_psi        :    61.56s CPU (   21748 calls,   0.003 s avg)
-     g_psi        :     0.45s CPU (   18216 calls,   0.000 s avg)
+     wfcrot       :     8.90s CPU (    1766 calls,   0.005 s avg)
+     cegterg      :    72.38s CPU (    1766 calls,   0.041 s avg)
+     h_psi        :    70.32s CPU (   21748 calls,   0.003 s avg)
+     g_psi        :     0.59s CPU (   18216 calls,   0.000 s avg)
      diagh        :     0.00s CPU (      16 calls,   0.000 s avg)
-     diaghg       :     6.77s CPU (   19982 calls,   0.000 s avg)
-     update       :     1.37s CPU (   18216 calls,   0.000 s avg)
-     last         :     2.22s CPU (   73195 calls,   0.000 s avg)
+     diaghg       :     6.81s CPU (   19982 calls,   0.000 s avg)
+     update       :     0.91s CPU (   18216 calls,   0.000 s avg)
+     last         :     1.81s CPU (   72702 calls,   0.000 s avg)
  
-     h_psi        :    61.56s CPU (   21748 calls,   0.003 s avg)
-     init         :     0.77s CPU (   89995 calls,   0.000 s avg)
-     firstfft     :    60.52s CPU (  218286 calls,   0.000 s avg)
-     secondfft    :    55.70s CPU (  218286 calls,   0.000 s avg)
-     add_vuspsi   :     1.09s CPU (   89995 calls,   0.000 s avg)
-     s_psi        :     0.31s CPU (  148534 calls,   0.000 s avg)
+     h_psi        :    70.32s CPU (   21748 calls,   0.003 s avg)
+     init         :     0.69s CPU (   89502 calls,   0.000 s avg)
+     firstfft     :    64.64s CPU (  217465 calls,   0.000 s avg)
+     secondfft    :    59.52s CPU (  217465 calls,   0.000 s avg)
+     add_vuspsi   :     1.14s CPU (   89502 calls,   0.000 s avg)
+     s_psi        :     0.28s CPU (  147428 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     1.87s CPU (  190375 calls,   0.000 s avg)
-     cft3         :     0.16s CPU (     344 calls,   0.000 s avg)
-     cft3s        :   148.48s CPU (  594515 calls,   0.000 s avg)
-     davcio       :     0.34s CPU (   73376 calls,   0.000 s avg)
+     ccalbec      :     1.91s CPU (  189269 calls,   0.000 s avg)
+     cft3         :     0.13s CPU (     341 calls,   0.000 s avg)
+     cft3s        :   158.18s CPU (  592013 calls,   0.000 s avg)
+     davcio       :     0.51s CPU (   72764 calls,   0.000 s avg)
  
  
-     PHONON       :  4m 6.75s CPU time
+     PHONON       :  4m15.41s CPU time,     4m42.24s wall time
 
      INITIALIZATION: 
-     phq_setup    :     0.01s CPU (       8 calls,   0.001 s avg)
-     phq_init     :     0.32s CPU (       8 calls,   0.040 s avg)
+     phq_setup    :     0.03s CPU (       8 calls,   0.004 s avg)
+     phq_init     :     0.34s CPU (       8 calls,   0.043 s avg)
  
-     phq_init     :     0.32s CPU (       8 calls,   0.040 s avg)
-     init_vloc    :     0.01s CPU (      16 calls,   0.001 s avg)
-     init_us_1    :     0.16s CPU (      15 calls,   0.011 s avg)
+     phq_init     :     0.34s CPU (       8 calls,   0.043 s avg)
+     init_vloc    :     0.00s CPU (      16 calls,   0.000 s avg)
+     init_us_1    :     0.15s CPU (      15 calls,   0.010 s avg)
  
      DYNAMICAL MATRIX:
-     dynmat0      :     0.23s CPU (       8 calls,   0.029 s avg)
-     phqscf       :   107.71s CPU (       8 calls,  13.464 s avg)
+     dynmat0      :     0.26s CPU (       8 calls,   0.032 s avg)
+     phqscf       :   108.20s CPU (       8 calls,  13.525 s avg)
      dynmatrix    :     0.11s CPU (       8 calls,   0.014 s avg)
  
-     phqscf       :   107.71s CPU (       8 calls,  13.464 s avg)
-     solve_linter :   107.26s CPU (      17 calls,   6.309 s avg)
-     drhodv       :     0.45s CPU (      17 calls,   0.026 s avg)
+     phqscf       :   108.20s CPU (       8 calls,  13.525 s avg)
+     solve_linter :   107.78s CPU (      17 calls,   6.340 s avg)
+     drhodv       :     0.42s CPU (      17 calls,   0.025 s avg)
  
-     dynmat0      :     0.23s CPU (       8 calls,   0.029 s avg)
-     dynmat_us    :     0.23s CPU (       8 calls,   0.029 s avg)
+     dynmat0      :     0.26s CPU (       8 calls,   0.032 s avg)
+     dynmat_us    :     0.26s CPU (       8 calls,   0.032 s avg)
      d2ionq       :     0.00s CPU (       8 calls,   0.000 s avg)
  
-     dynmat_us    :     0.23s CPU (       8 calls,   0.029 s avg)
+     dynmat_us    :     0.26s CPU (       8 calls,   0.032 s avg)
  
-     phqscf       :   107.71s CPU (       8 calls,  13.464 s avg)
-     solve_linter :   107.26s CPU (      17 calls,   6.309 s avg)
+     phqscf       :   108.20s CPU (       8 calls,  13.525 s avg)
+     solve_linter :   107.78s CPU (      17 calls,   6.340 s avg)
  
-     solve_linter :   107.26s CPU (      17 calls,   6.309 s avg)
-     dvqpsi_us    :     9.67s CPU (    2736 calls,   0.004 s avg)
-     ortho        :     0.86s CPU (   12040 calls,   0.000 s avg)
-     cgsolve      :    64.82s CPU (   12040 calls,   0.005 s avg)
-     incdrhoscf   :    12.31s CPU (   12040 calls,   0.001 s avg)
-     vpsifft      :     9.09s CPU (    9304 calls,   0.001 s avg)
-     dv_of_drho   :     0.16s CPU (      98 calls,   0.002 s avg)
-     mix_pot      :     0.01s CPU (      74 calls,   0.000 s avg)
-     ef_shift     :     0.00s CPU (       4 calls,   0.000 s avg)
+     solve_linter :   107.78s CPU (      17 calls,   6.340 s avg)
+     dvqpsi_us    :    11.27s CPU (    2736 calls,   0.004 s avg)
+     ortho        :     0.89s CPU (   11920 calls,   0.000 s avg)
+     cgsolve      :    63.26s CPU (   11920 calls,   0.005 s avg)
+     incdrhoscf   :    12.42s CPU (   11920 calls,   0.001 s avg)
+     vpsifft      :     8.99s CPU (    9184 calls,   0.001 s avg)
+     dv_of_drho   :     0.09s CPU (      97 calls,   0.001 s avg)
+     mix_pot      :     0.03s CPU (      73 calls,   0.000 s avg)
+     ef_shift     :     0.01s CPU (       4 calls,   0.002 s avg)
      localdos     :     0.03s CPU
-     symdvscf     :     0.55s CPU (      74 calls,   0.007 s avg)
+     symdvscf     :     0.58s CPU (      73 calls,   0.008 s avg)
  
-     dvqpsi_us    :     9.67s CPU (    2736 calls,   0.004 s avg)
+     dvqpsi_us    :    11.27s CPU (    2736 calls,   0.004 s avg)
      dvqpsi_us_on :     0.47s CPU (    2736 calls,   0.000 s avg)
  
-     cgsolve      :    64.82s CPU (   12040 calls,   0.005 s avg)
-     ch_psi       :    63.48s CPU (   68247 calls,   0.001 s avg)
+     cgsolve      :    63.26s CPU (   11920 calls,   0.005 s avg)
+     ch_psi       :    62.06s CPU (   67754 calls,   0.001 s avg)
  
-     ch_psi       :    63.48s CPU (   68247 calls,   0.001 s avg)
-     h_psiq       :    61.66s CPU (   68247 calls,   0.001 s avg)
-     last         :     2.22s CPU (   73195 calls,   0.000 s avg)
+     ch_psi       :    62.06s CPU (   67754 calls,   0.001 s avg)
+     h_psiq       :    60.43s CPU (   67754 calls,   0.001 s avg)
+     last         :     1.81s CPU (   72702 calls,   0.000 s avg)
  
-     h_psiq       :    61.66s CPU (   68247 calls,   0.001 s avg)
-     firstfft     :    60.52s CPU (  218286 calls,   0.000 s avg)
-     secondfft    :    55.70s CPU (  218286 calls,   0.000 s avg)
-     add_vuspsi   :     1.09s CPU (   89995 calls,   0.000 s avg)
+     h_psiq       :    60.43s CPU (   67754 calls,   0.001 s avg)
+     firstfft     :    64.64s CPU (  217465 calls,   0.000 s avg)
+     secondfft    :    59.52s CPU (  217465 calls,   0.000 s avg)
+     add_vuspsi   :     1.14s CPU (   89502 calls,   0.000 s avg)
  
-     incdrhoscf   :    12.31s CPU (   12040 calls,   0.001 s avg)
+     incdrhoscf   :    12.42s CPU (   11920 calls,   0.001 s avg)
  
  
       General routines
-     ccalbec      :     1.87s CPU (  190375 calls,   0.000 s avg)
-     cft3         :     0.16s CPU (     344 calls,   0.000 s avg)
-     cft3s        :   148.48s CPU (  594515 calls,   0.000 s avg)
-     davcio       :     0.34s CPU (   73376 calls,   0.000 s avg)
-     write_rec    :     0.00s CPU (      74 calls,   0.000 s avg)
+     ccalbec      :     1.91s CPU (  189269 calls,   0.000 s avg)
+     cft3         :     0.13s CPU (     341 calls,   0.000 s avg)
+     cft3s        :   158.18s CPU (  592013 calls,   0.000 s avg)
+     davcio       :     0.51s CPU (   72764 calls,   0.000 s avg)
+     write_rec    :     0.04s CPU (      73 calls,   0.001 s avg)
  

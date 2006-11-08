@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:36:36  17Oct2006               
+   This run was started on:   5:37: 4   8Nov2006               
 
    Serial Build
 
@@ -56,7 +56,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   12.0 Ryd.,    Ecutrho =   48.0 Ryd.,    Ecuts =   48.0 Ryd.
+   Ecutwfc =   12.0 Ry,      Ecutrho =   48.0 Ry,      Ecuts =   48.0 Ry
    Gcutwfc =    7.7     ,    Gcutrho =   15.4          Gcuts =   15.4
    NOTA BENE: refg, mmx =   0.050000  1152
    Eigenvalues calculated without the kinetic term contribution
@@ -245,9 +245,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00080
-   ortho mmul, best time for paralle driver =   0.00080 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00011  0.00358
+   ortho mmul, time for serial driver =   0.00079
+   ortho mmul, best time for paralle driver =   0.00079 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00011  0.00359
 
 
    Wave Initialization: random initial wave-functions
@@ -316,7 +316,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.064 sec.
+   restart file written in    0.067 sec.
 
 
      calculation of the mean force
@@ -331,7 +331,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -425,7 +425,7 @@
     5  0.00994    0.0  165.5   -18.99243   -18.99243   -18.98457   -18.97463  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -590,7 +590,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -684,7 +684,7 @@
     5  0.00950    0.0  159.2   -18.99560   -18.99560   -18.98804   -18.97854  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -844,7 +844,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -938,7 +938,7 @@
     5  0.00712    0.0  141.2   -18.99287   -18.99287   -18.98616   -18.97904  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -1104,7 +1104,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -1198,7 +1198,7 @@
     5  0.00934    0.0  156.0   -18.97129   -18.97129   -18.96388   -18.95454  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -1359,7 +1359,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -1453,7 +1453,7 @@
     5  0.00573    0.0   97.1   -18.98664   -18.98664   -18.98202   -18.97629  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -1609,7 +1609,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -1703,7 +1703,7 @@
     5  0.00697    0.0  139.8   -18.98751   -18.98751   -18.98087   -18.97389  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -1872,7 +1872,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -1966,7 +1966,7 @@
     5  0.00824    0.0  172.7   -18.96728   -18.96728   -18.95908   -18.95084  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -2143,7 +2143,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -2237,7 +2237,7 @@
     5  0.00874    0.0  155.7   -18.98323   -18.98323   -18.97583   -18.96710  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -2403,7 +2403,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -2497,7 +2497,7 @@
     5  0.00550    0.0   97.3   -18.98754   -18.98754   -18.98292   -18.97742  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
      calculation of the mean force
@@ -2751,7 +2751,7 @@
    80  0.00000    0.0    0.1   -18.99040   -18.99040   -18.99040   -18.99039  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp_50.save
-   restart file written in    0.046 sec.
+   restart file written in    0.049 sec.
 
 
 
@@ -2769,34 +2769,34 @@
 
 
      initialize   :     0.34s CPU
-     total_time   :   102.30s CPU (     707 calls,   0.145 s avg)
+     total_time   :   101.91s CPU (     707 calls,   0.144 s avg)
      formf        :     0.04s CPU
-     rhoofr       :    31.38s CPU (     708 calls,   0.044 s avg)
-     vofrho       :    32.62s CPU (     708 calls,   0.046 s avg)
-     dforce       :    30.45s CPU (    4248 calls,   0.007 s avg)
-     calphi       :     0.11s CPU (     708 calls,   0.000 s avg)
-     ortho        :     1.58s CPU (     708 calls,   0.002 s avg)
-     updatc       :     0.18s CPU (     708 calls,   0.000 s avg)
+     rhoofr       :    30.63s CPU (     708 calls,   0.043 s avg)
+     vofrho       :    33.38s CPU (     708 calls,   0.047 s avg)
+     dforce       :    29.91s CPU (    4248 calls,   0.007 s avg)
+     calphi       :     0.16s CPU (     708 calls,   0.000 s avg)
+     ortho        :     1.64s CPU (     708 calls,   0.002 s avg)
+     updatc       :     0.22s CPU (     708 calls,   0.000 s avg)
      gram         :     0.00s CPU
-     newd         :     0.00s CPU (     708 calls,   0.000 s avg)
-     calbec       :     0.76s CPU (     709 calls,   0.001 s avg)
-     prefor       :     0.35s CPU (    1371 calls,   0.000 s avg)
-     strucf       :     1.28s CPU (     708 calls,   0.002 s avg)
+     newd         :     0.01s CPU (     708 calls,   0.000 s avg)
+     calbec       :     0.78s CPU (     709 calls,   0.001 s avg)
+     prefor       :     0.37s CPU (    1371 calls,   0.000 s avg)
+     strucf       :     1.32s CPU (     708 calls,   0.002 s avg)
      nlfl         :     0.00s CPU (     663 calls,   0.000 s avg)
-     nlfq         :     2.70s CPU (     663 calls,   0.004 s avg)
-     nlsm1        :     0.77s CPU (    2125 calls,   0.000 s avg)
-     nlsm2        :     2.67s CPU (     663 calls,   0.004 s avg)
-     fft          :    12.40s CPU (    2124 calls,   0.006 s avg)
-     ffts         :     8.26s CPU (    1416 calls,   0.006 s avg)
-     fftw         :    40.28s CPU (   12744 calls,   0.003 s avg)
-     rsg          :     0.05s CPU (     708 calls,   0.000 s avg)
+     nlfq         :     2.65s CPU (     663 calls,   0.004 s avg)
+     nlsm1        :     0.78s CPU (    2125 calls,   0.000 s avg)
+     nlsm2        :     2.57s CPU (     663 calls,   0.004 s avg)
+     fft          :    12.82s CPU (    2124 calls,   0.006 s avg)
+     ffts         :     8.41s CPU (    1416 calls,   0.006 s avg)
+     fftw         :    39.24s CPU (   12744 calls,   0.003 s avg)
+     rsg          :     0.07s CPU (     708 calls,   0.000 s avg)
  
  
  
-     CP           :  1m43.39s CPU time
+     CP           :  1m42.95s CPU time,     1m51.32s wall time
 
  
-   This run was terminated on:   5:38:28  17Oct2006            
+   This run was terminated on:   5:38:55   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

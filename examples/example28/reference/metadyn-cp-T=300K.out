@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:38:28  17Oct2006               
+   This run was started on:   5:38:55   8Nov2006               
 
    Serial Build
 
@@ -56,7 +56,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   12.0 Ryd.,    Ecutrho =   48.0 Ryd.,    Ecuts =   48.0 Ryd.
+   Ecutwfc =   12.0 Ry,      Ecutrho =   48.0 Ry,      Ecuts =   48.0 Ry
    Gcutwfc =    7.7     ,    Gcutrho =   15.4          Gcuts =   15.4
    NOTA BENE: refg, mmx =   0.050000  1152
    Eigenvalues calculated without the kinetic term contribution
@@ -293,9 +293,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00081
-   ortho mmul, best time for paralle driver =   0.00081 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00010  0.00358
+   ortho mmul, time for serial driver =   0.00084
+   ortho mmul, best time for paralle driver =   0.00084 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00010  0.00359
 
 
    Wave Initialization: random initial wave-functions
@@ -490,7 +490,7 @@
    MAIN: convergence achieved for system relaxation
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.067 sec.
+   restart file written in    0.068 sec.
 
 
      calculation of the mean force
@@ -904,7 +904,7 @@
   150  0.00098    0.0  333.3   -18.97014   -18.97014   -18.95589   -18.97499  0.0000  0.0000 -0.0003 -1.3583
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -1013,7 +1013,7 @@
    20  0.00076    0.0  296.2   -18.98036   -18.98036   -18.96769   -18.98481  0.0000  0.0000 -0.0008 -1.4547
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -1427,7 +1427,7 @@
   150  0.00080    0.0  279.6   -18.98575   -18.98575   -18.97380   -18.98635  0.0000  0.0000  0.0021 -1.5699
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.049 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -1950,7 +1950,7 @@
   150  0.00064    0.0  245.2   -18.98996   -18.98996   -18.97947   -18.99614  0.0000  0.0000  0.0007 -0.0911
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -2059,7 +2059,7 @@
    20  0.00097    0.0  334.0   -18.98869   -18.98869   -18.97441   -18.99326  0.0000  0.0000  0.0000 -0.0268
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -2473,7 +2473,7 @@
   150  0.00060    0.0  144.9   -18.97059   -18.97059   -18.96439   -18.99312  0.0000  0.0000  0.0010 -0.9196
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -2582,7 +2582,7 @@
    20  0.00089    0.0  365.7   -18.99027   -18.99027   -18.97464   -19.00079  0.0000  0.0000  0.0025 -0.6046
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -2996,7 +2996,7 @@
   150  0.00080    0.0  319.4   -18.99356   -18.99356   -18.97991   -19.00121  0.0000  0.0000  0.0001 -0.8513
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.051 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -3105,7 +3105,7 @@
    20  0.00079    0.0  261.8   -18.98603   -18.98603   -18.97484   -18.99416  0.0000  0.0000  0.0001 -0.8200
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -3519,7 +3519,7 @@
   150  0.00091    0.0  238.7   -18.97539   -18.97539   -18.96519   -18.99380  0.0000  0.0000 -0.0005 -2.2086
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -3628,7 +3628,7 @@
    20  0.00095    0.0  356.8   -18.97282   -18.97282   -18.95757   -18.98659  0.0000  0.0000 -0.0007 -2.3256
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -4042,7 +4042,7 @@
   150  0.00063    0.0  197.0   -18.96820   -18.96820   -18.95977   -18.98681  0.0000  0.0000  0.0004 -2.6973
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -4151,7 +4151,7 @@
    20  0.00081    0.0  275.1   -18.97249   -18.97249   -18.96073   -18.98851  0.0000  0.0000  0.0002 -2.6366
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -4565,7 +4565,7 @@
   150  0.00086    0.0  300.1   -18.97317   -18.97317   -18.96034   -18.98910  0.0000  0.0000  0.0002 -2.3519
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -4674,7 +4674,7 @@
    20  0.00065    0.0  236.6   -18.96254   -18.96254   -18.95242   -18.98193  0.0000  0.0000  0.0005 -2.2775
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -5088,7 +5088,7 @@
   150  0.00097    0.0  361.1   -18.96695   -18.96695   -18.95152   -18.98231  0.0000  0.0000  0.0005 -0.9850
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      adiabatic switch of the system to the new coarse-grained positions
@@ -5197,7 +5197,7 @@
    20  0.00060    0.0  222.7   -18.97030   -18.97030   -18.96077   -18.98801  0.0000  0.0000  0.0000 -0.9378
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
      calculation of the mean force
@@ -5611,7 +5611,7 @@
   150  0.00061    0.0  193.1   -18.97806   -18.97806   -18.96981   -18.98892  0.0000  0.0000  0.0004 -0.2110
 
    writing restart file: /scr/giannozz/tmp//metadyn-cp-T=300K_50.save
-   restart file written in    0.048 sec.
+   restart file written in    0.050 sec.
 
 
 
@@ -5628,35 +5628,35 @@
    volume        :    32287.73333    2744.00000 (AU)
 
 
-     initialize   :     0.34s CPU
-     total_time   :   251.63s CPU (    1765 calls,   0.143 s avg)
-     formf        :     0.03s CPU
-     rhoofr       :    75.72s CPU (    1766 calls,   0.043 s avg)
-     vofrho       :    81.92s CPU (    1766 calls,   0.046 s avg)
-     dforce       :    74.61s CPU (   10596 calls,   0.007 s avg)
-     calphi       :     0.46s CPU (    1766 calls,   0.000 s avg)
-     ortho        :     4.30s CPU (    1766 calls,   0.002 s avg)
+     initialize   :     0.35s CPU
+     total_time   :   255.03s CPU (    1765 calls,   0.144 s avg)
+     formf        :     0.04s CPU
+     rhoofr       :    75.99s CPU (    1766 calls,   0.043 s avg)
+     vofrho       :    82.61s CPU (    1766 calls,   0.047 s avg)
+     dforce       :    76.86s CPU (   10596 calls,   0.007 s avg)
+     calphi       :     0.30s CPU (    1766 calls,   0.000 s avg)
+     ortho        :     4.34s CPU (    1766 calls,   0.002 s avg)
      updatc       :     0.50s CPU (    1766 calls,   0.000 s avg)
-     gram         :     0.01s CPU
+     gram         :     0.00s CPU
      newd         :     0.03s CPU (    1766 calls,   0.000 s avg)
-     calbec       :     2.01s CPU (    1767 calls,   0.001 s avg)
-     prefor       :     0.85s CPU (    3446 calls,   0.000 s avg)
-     strucf       :     3.06s CPU (    1766 calls,   0.002 s avg)
-     nlfl         :     0.02s CPU (    1680 calls,   0.000 s avg)
-     nlfq         :     5.66s CPU (    1680 calls,   0.003 s avg)
+     calbec       :     2.00s CPU (    1767 calls,   0.001 s avg)
+     prefor       :     0.98s CPU (    3446 calls,   0.000 s avg)
+     strucf       :     3.28s CPU (    1766 calls,   0.002 s avg)
+     nlfl         :     0.00s CPU (    1680 calls,   0.000 s avg)
+     nlfq         :     5.88s CPU (    1680 calls,   0.003 s avg)
      nlsm1        :     2.00s CPU (    5299 calls,   0.000 s avg)
-     nlsm2        :     5.59s CPU (    1680 calls,   0.003 s avg)
-     fft          :    30.15s CPU (    5298 calls,   0.006 s avg)
-     ffts         :    20.47s CPU (    3532 calls,   0.006 s avg)
-     fftw         :    97.73s CPU (   31788 calls,   0.003 s avg)
-     rsg          :     0.16s CPU (    1766 calls,   0.000 s avg)
+     nlsm2        :     5.79s CPU (    1680 calls,   0.003 s avg)
+     fft          :    30.53s CPU (    5298 calls,   0.006 s avg)
+     ffts         :    20.52s CPU (    3532 calls,   0.006 s avg)
+     fftw         :    99.18s CPU (   31788 calls,   0.003 s avg)
+     rsg          :     0.20s CPU (    1766 calls,   0.000 s avg)
  
  
  
-     CP           :  4m12.64s CPU time
+     CP           :  4m16.19s CPU time,     4m36.64s wall time
 
  
-   This run was terminated on:   5:43: 2  17Oct2006            
+   This run was terminated on:   5:43:31   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

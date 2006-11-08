@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   7: 2:27  17Oct2006               
+   This run was started on:   7: 5:28   8Nov2006               
 
    Serial Build
 Warning: card  &IONS ignored
@@ -70,7 +70,7 @@ Warning: electron_velocities keyword has no effect
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   80.0 Ryd.,    Ecutrho =  320.0 Ryd.,    Ecuts =  320.0 Ryd.
+   Ecutwfc =   80.0 Ry,      Ecutrho =  320.0 Ry,      Ecuts =  320.0 Ry
    Gcutwfc =   17.1     ,    Gcutrho =   34.2          Gcuts =   34.2
    NOTA BENE: refg, mmx =   0.050000  7680
    Eigenvalues calculated without the kinetic term contribution
@@ -224,9 +224,9 @@ Warning: electron_velocities keyword has no effect
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00194
-   ortho mmul, best time for paralle driver =   0.00194 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00024  0.01367
+   ortho mmul, time for serial driver =   0.00067
+   ortho mmul, best time for paralle driver =   0.00067 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00005  0.00355
 
 
    Wave Initialization: random initial wave-functions
@@ -420,7 +420,7 @@ Warning: electron_velocities keyword has no effect
      atom   3 type  2   force =     0.00000002    0.00000279   -0.00000087
 
    writing restart file: /scr/giannozz/tmp//h2o_51.save
-   restart file written in    0.193 sec.
+   restart file written in    0.187 sec.
 
  Done
  
@@ -1970,36 +1970,36 @@ QUADRUPOLE MOMENT              (HARTREE A.U.)1354.9674   0.0000
    volume        :        0.00000       0.00000 (AU)
 
 
-     initialize   :     1.28s CPU
+     initialize   :     1.22s CPU
      formf        :     0.70s CPU
-     rhoofr       :   137.14s CPU (     362 calls,   0.379 s avg)
-     vofrho       :   375.81s CPU (     343 calls,   1.096 s avg)
-     dforce       :    35.81s CPU (     344 calls,   0.104 s avg)
-     calphi       :     0.41s CPU (     172 calls,   0.002 s avg)
-     gram         :     0.90s CPU (     350 calls,   0.003 s avg)
+     rhoofr       :   130.33s CPU (     362 calls,   0.360 s avg)
+     vofrho       :   380.61s CPU (     343 calls,   1.110 s avg)
+     dforce       :    34.79s CPU (     344 calls,   0.101 s avg)
+     calphi       :     0.31s CPU (     172 calls,   0.002 s avg)
+     gram         :     0.81s CPU (     350 calls,   0.002 s avg)
      newd         :     0.00s CPU (     172 calls,   0.000 s avg)
      calbec       :     0.74s CPU (    1168 calls,   0.001 s avg)
-     prefor       :     0.08s CPU (     192 calls,   0.000 s avg)
-     strucf       :     0.13s CPU (      20 calls,   0.006 s avg)
+     prefor       :     0.05s CPU (     192 calls,   0.000 s avg)
+     strucf       :     0.16s CPU (      20 calls,   0.008 s avg)
      nlfl         :     0.00s CPU (      19 calls,   0.000 s avg)
-     nlfq         :     0.05s CPU (      19 calls,   0.003 s avg)
+     nlfq         :     0.07s CPU (      19 calls,   0.004 s avg)
      nlsm1        :     0.73s CPU (    1168 calls,   0.001 s avg)
-     nlsm2        :     0.05s CPU (      19 calls,   0.003 s avg)
-     fft          :   225.24s CPU (    2763 calls,   0.082 s avg)
-     ffts         :    59.24s CPU (     705 calls,   0.084 s avg)
-     fftw         :    68.47s CPU (    1412 calls,   0.048 s avg)
-     runcg_uspp   :   548.88s CPU (      19 calls,  28.888 s avg)
+     nlsm2        :     0.07s CPU (      19 calls,   0.004 s avg)
+     fft          :   223.42s CPU (    2763 calls,   0.081 s avg)
+     ffts         :    55.43s CPU (     705 calls,   0.079 s avg)
+     fftw         :    64.51s CPU (    1412 calls,   0.046 s avg)
+     runcg_uspp   :   545.80s CPU (      19 calls,  28.726 s avg)
      pc2          :     2.18s CPU (     459 calls,   0.005 s avg)
-     pcdaga2      :     0.83s CPU (     153 calls,   0.005 s avg)
-     xminus1      :     0.06s CPU (     306 calls,   0.000 s avg)
-     emass_p_tpa  :     0.00s CPU (      19 calls,   0.000 s avg)
+     pcdaga2      :     0.80s CPU (     153 calls,   0.005 s avg)
+     xminus1      :     0.10s CPU (     306 calls,   0.000 s avg)
+     emass_p_tpa  :     0.01s CPU (      19 calls,   0.001 s avg)
  
  
  
-     CP           :  9m20.36s CPU time
+     CP           :  9m16.90s CPU time,    10m 3.89s wall time
 
  
-   This run was terminated on:   7:12:34  17Oct2006            
+   This run was terminated on:   7:15:32   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

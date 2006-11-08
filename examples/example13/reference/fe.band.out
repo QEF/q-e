@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.2cvs starts ...
-     Today is 17Oct2006 at  3:11:25 
+     Program PWSCF     v.3.2    starts ...
+     Today is  8Nov2006 at  3: 9:51 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -108,7 +108,7 @@
 
      Starting wfc are atomic +   4 random wfc
 
-     total cpu time spent up to now is      1.98 secs
+     total cpu time spent up to now is      2.02 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
@@ -135,7 +135,7 @@
      WARNING:     1 eigenvalues not converged
      ethr =  1.25E-10,  avg # of iterations = 25.1
 
-     total cpu time spent up to now is     16.81 secs
+     total cpu time spent up to now is     16.84 secs
 
      End of band structure calculation
 
@@ -281,43 +281,43 @@
 
      Writing output data file fe.save
  
-     PWSCF        :    16.90s CPU time
+     PWSCF        :    16.95s CPU time,   17.34s wall time
 
-     init_run     :     1.92s CPU
-     electrons    :    14.84s CPU
+     init_run     :     1.94s CPU
+     electrons    :    14.82s CPU
  
  
-     electrons    :    14.84s CPU
-     c_bands      :    14.83s CPU
-     v_of_rho     :     0.00s CPU
-     v_h          :     0.00s CPU
-     v_xc         :     0.00s CPU
-     newd         :     0.04s CPU
+     electrons    :    14.82s CPU
+     c_bands      :    14.82s CPU
+     v_of_rho     :     0.02s CPU
+     v_h          :     0.01s CPU
+     v_xc         :     0.01s CPU
+     newd         :     0.05s CPU
  
-     c_bands      :    14.83s CPU
+     c_bands      :    14.82s CPU
      init_us_2    :     0.01s CPU (      56 calls,   0.000 s avg)
-     cegterg      :    14.78s CPU (      49 calls,   0.302 s avg)
+     cegterg      :    14.79s CPU (      49 calls,   0.302 s avg)
  
  
-     wfcrot       :     0.76s CPU (      28 calls,   0.027 s avg)
-     cegterg      :    14.78s CPU (      49 calls,   0.302 s avg)
-     h_psi        :    11.48s CPU (     781 calls,   0.015 s avg)
-     g_psi        :     0.07s CPU (     704 calls,   0.000 s avg)
-     diaghg       :     1.96s CPU (     732 calls,   0.003 s avg)
-     update       :     0.51s CPU (     704 calls,   0.001 s avg)
-     last         :     0.33s CPU (     138 calls,   0.002 s avg)
+     wfcrot       :     0.74s CPU (      28 calls,   0.026 s avg)
+     cegterg      :    14.79s CPU (      49 calls,   0.302 s avg)
+     h_psi        :    11.55s CPU (     781 calls,   0.015 s avg)
+     g_psi        :     0.18s CPU (     704 calls,   0.000 s avg)
+     diaghg       :     2.05s CPU (     732 calls,   0.003 s avg)
+     update       :     0.43s CPU (     704 calls,   0.001 s avg)
+     last         :     0.37s CPU (     138 calls,   0.003 s avg)
  
-     h_psi        :    11.48s CPU (     781 calls,   0.015 s avg)
-     init         :     0.23s CPU (     781 calls,   0.000 s avg)
-     firstfft     :     5.97s CPU (    6829 calls,   0.001 s avg)
-     secondfft    :     4.15s CPU (    6829 calls,   0.001 s avg)
-     add_vuspsi   :     0.33s CPU (     781 calls,   0.000 s avg)
-     s_psi        :     0.31s CPU (     781 calls,   0.000 s avg)
+     h_psi        :    11.55s CPU (     781 calls,   0.015 s avg)
+     init         :     0.17s CPU (     781 calls,   0.000 s avg)
+     firstfft     :     5.83s CPU (    6829 calls,   0.001 s avg)
+     secondfft    :     4.36s CPU (    6829 calls,   0.001 s avg)
+     add_vuspsi   :     0.38s CPU (     781 calls,   0.000 s avg)
+     s_psi        :     0.27s CPU (     781 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.19s CPU (     781 calls,   0.000 s avg)
-     cft3         :     0.01s CPU (      15 calls,   0.001 s avg)
-     cft3s        :     8.39s CPU (   27320 calls,   0.000 s avg)
+     ccalbec      :     0.15s CPU (     781 calls,   0.000 s avg)
+     cft3         :     0.03s CPU (      15 calls,   0.002 s avg)
+     cft3s        :     8.76s CPU (   27320 calls,   0.000 s avg)
      interpolate  :     0.01s CPU (       4 calls,   0.003 s avg)
-     davcio       :     0.00s CPU (     105 calls,   0.000 s avg)
+     davcio       :     0.01s CPU (     105 calls,   0.000 s avg)
  

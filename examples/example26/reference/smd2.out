@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:23:12  17Oct2006               
+   This run was started on:   5:23:29   8Nov2006               
 
    Serial Build
 
@@ -73,7 +73,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   15.0 Ryd.,    Ecutrho =  100.0 Ryd.,    Ecuts =   60.0 Ryd.
+   Ecutwfc =   15.0 Ry,      Ecutrho =  100.0 Ry,      Ecuts =   60.0 Ry
    Gcutwfc =    6.2     ,    Gcutrho =   15.9          Gcuts =   12.3
    NOTA BENE: refg, mmx =   0.050000  2400
    Eigenvalues calculated without the kinetic term contribution
@@ -251,7 +251,7 @@
   Allocation ended 
 
    reading restart file: /scr/giannozz/tmp//cp_61.save
-   restart file read in    0.029 sec.
+   restart file read in    0.033 sec.
 
 
    formf: eself=   1.49603
@@ -259,7 +259,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: /scr/giannozz/tmp//cp_62.save
-   restart file read in    0.028 sec.
+   restart file read in    0.031 sec.
 
 
    formf: eself=   1.49603
@@ -267,7 +267,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: /scr/giannozz/tmp//cp_63.save
-   restart file read in    0.028 sec.
+   restart file read in    0.032 sec.
 
 
    formf: eself=   1.49603
@@ -275,7 +275,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: /scr/giannozz/tmp//cp_64.save
-   restart file read in    0.028 sec.
+   restart file read in    0.031 sec.
 
 
    formf: eself=   1.49603
@@ -283,7 +283,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: /scr/giannozz/tmp//cp_65.save
-   restart file read in    0.028 sec.
+   restart file read in    0.031 sec.
 
 
    formf: eself=   1.49603
@@ -291,7 +291,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: /scr/giannozz/tmp//cp_66.save
-   restart file read in    0.028 sec.
+   restart file read in    0.031 sec.
 
 
    formf: eself=   1.49603
@@ -299,7 +299,7 @@
    formf: sum_g vps(g)=  -1.0579820 sum_g rhops(g)=  -0.1758329
 
    reading restart file: /scr/giannozz/tmp//cp_67.save
-   restart file read in    0.028 sec.
+   restart file read in    0.031 sec.
 
 
    formf: eself=   1.49603
@@ -734,56 +734,56 @@
  
 
    writing restart file: /scr/giannozz/tmp//cp_61.save
-   restart file written in    0.050 sec.
+   restart file written in    0.053 sec.
 
 
    writing restart file: /scr/giannozz/tmp//cp_62.save
-   restart file written in    0.049 sec.
+   restart file written in    0.053 sec.
 
 
    writing restart file: /scr/giannozz/tmp//cp_63.save
-   restart file written in    0.059 sec.
+   restart file written in    0.053 sec.
 
 
    writing restart file: /scr/giannozz/tmp//cp_64.save
-   restart file written in    0.049 sec.
+   restart file written in    0.053 sec.
 
 
    writing restart file: /scr/giannozz/tmp//cp_65.save
-   restart file written in    0.049 sec.
+   restart file written in    0.053 sec.
 
 
    writing restart file: /scr/giannozz/tmp//cp_66.save
-   restart file written in    0.049 sec.
+   restart file written in    0.053 sec.
 
-     initialize   :     0.34s CPU
-     formf        :     0.05s CPU (       7 calls,   0.007 s avg)
-     rhoofr       :     5.99s CPU (     210 calls,   0.029 s avg)
-     vofrho       :    39.33s CPU (     210 calls,   0.187 s avg)
-     dforce       :     1.32s CPU (     420 calls,   0.003 s avg)
-     calphi       :     0.00s CPU (     210 calls,   0.000 s avg)
+     initialize   :     0.37s CPU
+     formf        :     0.06s CPU (       7 calls,   0.009 s avg)
+     rhoofr       :     6.03s CPU (     210 calls,   0.029 s avg)
+     vofrho       :    39.72s CPU (     210 calls,   0.189 s avg)
+     dforce       :     1.62s CPU (     420 calls,   0.004 s avg)
+     calphi       :     0.01s CPU (     210 calls,   0.000 s avg)
      ortho        :     0.03s CPU (     210 calls,   0.000 s avg)
      updatc       :     0.00s CPU (     420 calls,   0.000 s avg)
-     newd         :     0.31s CPU (     210 calls,   0.001 s avg)
+     newd         :     0.22s CPU (     210 calls,   0.001 s avg)
      calbec       :     0.00s CPU (     217 calls,   0.000 s avg)
      prefor       :     0.01s CPU (     427 calls,   0.000 s avg)
-     strucf       :     0.12s CPU (     217 calls,   0.001 s avg)
-     rhov         :     2.25s CPU (     210 calls,   0.011 s avg)
+     strucf       :     0.09s CPU (     217 calls,   0.000 s avg)
+     rhov         :     2.15s CPU (     210 calls,   0.010 s avg)
      nlsm1        :     0.01s CPU (     637 calls,   0.000 s avg)
-     fft          :    16.59s CPU (    2940 calls,   0.006 s avg)
-     ffts         :     1.34s CPU (     420 calls,   0.003 s avg)
-     fftw         :     1.92s CPU (    1260 calls,   0.002 s avg)
-     fftb         :     0.60s CPU (    1050 calls,   0.001 s avg)
+     fft          :    17.10s CPU (    2940 calls,   0.006 s avg)
+     ffts         :     1.24s CPU (     420 calls,   0.003 s avg)
+     fftw         :     2.50s CPU (    1260 calls,   0.002 s avg)
+     fftb         :     0.31s CPU (    1050 calls,   0.000 s avg)
      rsg          :     0.01s CPU (     420 calls,   0.000 s avg)
 
    writing restart file: /scr/giannozz/tmp//cp_67.save
-   restart file written in    0.049 sec.
+   restart file written in    0.053 sec.
 
  
-     CP           :    47.82s CPU time
+     CP           :    48.43s CPU time,   51.51s wall time
 
  
-   This run was terminated on:   5:24: 3  17Oct2006            
+   This run was terminated on:   5:24:21   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

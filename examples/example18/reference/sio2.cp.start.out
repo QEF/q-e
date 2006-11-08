@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Fri Oct 6 02:32:59 CEST 2006                       
+     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:53:51  17Oct2006               
+   This run was started on:   3:52:49   8Nov2006               
 
    Serial Build
 
@@ -56,7 +56,7 @@
 
    Energy Cut-offs
    ---------------
-   Ecutwfc =   20.0 Ryd.,    Ecutrho =  150.0 Ryd.,    Ecuts =   80.0 Ryd.
+   Ecutwfc =   20.0 Ry,      Ecutrho =  150.0 Ry,      Ecuts =   80.0 Ry
    Gcutwfc =    6.6     ,    Gcutrho =   18.1          Gcuts =   13.2
    modified kinetic energy functional, with parameters:
    ecutz = 150.0000  ecsig =  2.0000  ecfix =  16.00
@@ -270,9 +270,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00099
-   ortho mmul, best time for paralle driver =   0.00099 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00205  0.00479
+   ortho mmul, time for serial driver =   0.00102
+   ortho mmul, best time for paralle driver =   0.00102 with    1 procs
+   ortho diag, time for parallel and serial driver =   0.00206  0.00477
 
 
    Wave Initialization: random initial wave-functions
@@ -341,7 +341,7 @@
    -5.29   -5.19   -5.01   -4.86   -4.78   -4.46   -4.22   -3.87   -3.73   -3.47
    -3.08   -2.10   -1.73    1.69    5.06    7.65   10.37   10.65
  
-   Allocated memory (kb) =      1516
+   Allocated memory (kb) =      1520
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -428,7 +428,7 @@
    20  1.13098    0.0    0.0  -204.68460  -204.68460  -204.68460  -203.55361  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /scr/giannozz/tmp//cp_91.save
-   restart file written in    0.219 sec.
+   restart file written in    0.221 sec.
 
 
 
@@ -445,34 +445,34 @@
    volume        :     1526.90154    1526.90154 (AU)
 
 
-     initialize   :     5.33s CPU
-     total_time   :    15.71s CPU (      20 calls,   0.785 s avg)
+     initialize   :     5.32s CPU
+     total_time   :    14.92s CPU (      20 calls,   0.746 s avg)
      formf        :     0.30s CPU
-     rhoofr       :     4.40s CPU (      21 calls,   0.210 s avg)
-     vofrho       :     1.83s CPU (      21 calls,   0.087 s avg)
-     dforce       :     5.54s CPU (     504 calls,   0.011 s avg)
-     calphi       :     0.18s CPU (      21 calls,   0.009 s avg)
-     ortho        :     1.24s CPU (      21 calls,   0.059 s avg)
-     updatc       :     0.06s CPU (      21 calls,   0.003 s avg)
-     gram         :     0.09s CPU
-     newd         :     2.81s CPU (      21 calls,   0.134 s avg)
-     calbec       :     0.21s CPU (      22 calls,   0.010 s avg)
-     prefor       :     0.07s CPU (      21 calls,   0.003 s avg)
+     rhoofr       :     4.24s CPU (      21 calls,   0.202 s avg)
+     vofrho       :     1.80s CPU (      21 calls,   0.086 s avg)
+     dforce       :     5.08s CPU (     504 calls,   0.010 s avg)
+     calphi       :     0.17s CPU (      21 calls,   0.008 s avg)
+     ortho        :     1.16s CPU (      21 calls,   0.055 s avg)
+     updatc       :     0.07s CPU (      21 calls,   0.003 s avg)
+     gram         :     0.08s CPU
+     newd         :     2.76s CPU (      21 calls,   0.131 s avg)
+     calbec       :     0.20s CPU (      22 calls,   0.009 s avg)
+     prefor       :     0.06s CPU (      21 calls,   0.003 s avg)
      strucf       :     0.11s CPU (      21 calls,   0.005 s avg)
-     rhov         :     0.80s CPU (      21 calls,   0.038 s avg)
-     nlsm1        :     1.01s CPU (      64 calls,   0.016 s avg)
-     fft          :     2.07s CPU (      84 calls,   0.025 s avg)
-     ffts         :     0.22s CPU (      42 calls,   0.005 s avg)
-     fftw         :     5.83s CPU (    1512 calls,   0.004 s avg)
-     fftb         :     1.91s CPU (    4662 calls,   0.000 s avg)
-     rsg          :     0.06s CPU (      21 calls,   0.003 s avg)
+     rhov         :     0.83s CPU (      21 calls,   0.040 s avg)
+     nlsm1        :     0.98s CPU (      64 calls,   0.015 s avg)
+     fft          :     2.03s CPU (      84 calls,   0.024 s avg)
+     ffts         :     0.24s CPU (      42 calls,   0.006 s avg)
+     fftw         :     5.32s CPU (    1512 calls,   0.004 s avg)
+     fftb         :     1.81s CPU (    4662 calls,   0.000 s avg)
+     rsg          :     0.07s CPU (      21 calls,   0.003 s avg)
  
  
  
-     CP           :    21.19s CPU time
+     CP           :    20.43s CPU time,   22.27s wall time
 
  
-   This run was terminated on:   3:54:14  17Oct2006            
+   This run was terminated on:   3:53:12   8Nov2006            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
