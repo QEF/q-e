@@ -550,7 +550,6 @@ BLAS and LAPACK:
   \texttt{ESSL} for IBM machines\\
   \texttt{complib.sgimath} for SGI Origin\\
   \texttt{SCSL} for SGI Altix\\
-  \texttt{scilib} for Cray T3e\\
   \texttt{SUNperf} for Sun\\
   \texttt{cxml} for HP-Compaq Alphas.
 \end{quote}
@@ -1562,12 +1561,7 @@ mpiexec -n 16 pw.x -npool 8 < input
 
 PARA_PREFIX="mpiexec -n 16", PARA_POSTFIX="-npool 8"
 \end{verbatim}
-  \item [Cray T3E] (old):
-\begin{verbatim}
-mpprun -n 16 pw.x -npool 8 < input
 
-PARA_PREFIX="mpprun -n 16", PARA_POSTFIX="-npool 8"
-\end{verbatim}
 \end{description}
 
 Note that each processor writes its own set of temporary wavefunction

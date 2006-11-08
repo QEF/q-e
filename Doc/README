@@ -10,6 +10,7 @@ refman.tex         Reference (technical) manual for PWscf: little more
                    than a template at present
 
 smd.tex            Notes on the usage of the "Strings Method", by Y. Kanai
+README.XT3         Notes on I/O on Cray XT3 machines, by Axel Kohlmeyer
 README.AUTOPILOT   Notes on the "autopilot" feature, by Targacept, Inc.
 nomefile.upf       Naming convention for UPF pseudopotentials
                    The UPF format is described in ../upftools/UPF

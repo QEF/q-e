@@ -1,0 +1,25 @@
+"On the cray xt3 there is a special hack to keep files in
+memory instead of writing them without changes to the code.
+You have to do a: 
+   module load iobuf
+before compiling and then add -liobuf at link time.
+If you run a job you set the environment variable 
+IOBUF_PARAMS to proper numbers and you can gain a lot.
+Here is one example:
+
+env IOBUF_PARAMS='*.wfc*:noflush:count=1:size=15M:verbose,*.dat:count=2:size=50M:lazyflush:lazyclose:verbose,*.UPF+*.xml:count=8:size=8M:verbose' 
+pbsyod ~/pwscf/pwscf-cvs/bin/pw.x -npool 4 -in si64-pw-2x2x2.inp > & 
+si64-pw-2x2x2-32-more-iobuf.out &
+
+This will ignore all flushes on the *wfc* (scratch files) using a
+single i/o buffer large enough to contain the whole file (~12 MB here).
+this way they are actually never(!) written to disk.
+The *.dat files are part of the restart, so needed, but you can be
+'lazy' since they are write-only. .xml files have a lot of accesses
+(due to iotk), but with a few rather small buffers, this can be
+handled as well. You have to pay attention not to make the buffers
+too large, if the code needs a lot of memory, too and in this example
+there is a lot of room for improvement. After you have tuned those
+parameters, you can remove the 'verboses' and enjoy the fast execution.
+Apart from the i/o issues the cray xt3 is a really nice and fast machine."
+(Info by Axel Kohlmeyer)
