@@ -1347,7 +1347,6 @@ arflags_dynamic=$ARFLAGS_DYNAMIC
 includefftw=$INCLUDEFFTW
 pgplot_libs=$PGPLOT_LIBS
 
-
 # command-line arguments
 for arg in $*
 do
@@ -1425,10 +1424,13 @@ build_os=`echo $ac_cv_build | sed 's/^\([^-]*\)-\([^-]*\)-\(.*\)$/\3/'`
 # would fail because they can't run the compiled executables.
 # to work around that, let's pretend we are cross-compiling even if we aren't
 # !!! this relies on undocumented Autoconf behavior !!!
-if test "$host" = "" ; then host=$build ; fi
 
-# this is our internal variable saying if we are REALLY cross-compiling
-cross_compiling=no
+# This is used to distinguish between true and fake cross compilation
+# (only on NEC SX6 actually)
+if test "$host" != "" ; then ranlib=echo; fi
+
+cross_compiling=yes
+if test "$host" = "" ; then host=$build; fi
 
 # identify architecture
 if test "$arch" = ""
@@ -1493,7 +1495,6 @@ sparc )
 crayx1 )
 	try_f90="ftn $try_f90"
 	try_dflags="-D__X1"
-        cross_compiling=yes
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
@@ -1514,7 +1515,6 @@ necsx )
 	try_ar="sxar"
 	try_arflags="rv"
   	try_arflags_dynamic="rv"
-        cross_compiling=yes
 	;;
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported architecture?" >&5
@@ -9463,11 +9463,9 @@ else
 fi
 echo setting FDFLAGS... $fdflags
 
-if test "$cross_compiling" = "yes"
+if test "$ranlib" != "echo"
 then
-	ranlib=echo
-else
-	# Extract the first word of "ranlib", so it can be a program name with args.
+   # Extract the first word of "ranlib", so it can be a program name with args.
 set dummy ranlib; ac_word=$2
 echo "$as_me:$LINENO: checking for $ac_word" >&5
 echo $ECHO_N "checking for $ac_word... $ECHO_C" >&6

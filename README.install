@@ -43,10 +43,10 @@ script. It will (try to) detect compilers and libraries available on
 your machine, and set up things accordingly.
 Presently it is expected to work on most Linux 32- and 64-bit (Itanium
 and Opteron) PCs and clusters, IBM SP machines, SGI Origin, some
-HP-Compaq Alpha machines, Cray X1, Mac OS X, MS-Windows PCs, NEC SX6.
-It may work with some assistance also on other architectures (see
-below). If it fails and you do not manage to convince it to work,
-see the MANUAL INSTALLATION section  below.
+HP-Compaq Alpha machines, Cray X1, Mac OS X, MS-Windows PCs, NEC SX6
+(with cross compilation). It may work with some assistance also on 
+other architectures (see below). If it fails and you do not manage 
+to convince it to work, see the MANUAL INSTALLATION section  below.
 
 For cross-compilation, you have to specify the target machine with the
 "--host" option (see below).  This feature hasn't been tested

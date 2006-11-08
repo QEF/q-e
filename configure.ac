@@ -38,7 +38,6 @@ arflags_dynamic=$ARFLAGS_DYNAMIC
 includefftw=$INCLUDEFFTW
 pgplot_libs=$PGPLOT_LIBS
 
-
 # command-line arguments
 for arg in $*
 do
@@ -60,10 +59,13 @@ AC_CANONICAL_BUILD
 # would fail because they can't run the compiled executables.
 # to work around that, let's pretend we are cross-compiling even if we aren't
 # !!! this relies on undocumented Autoconf behavior !!! 
-if test "$host" = "" ; then host=$build ; fi
 
-# this is our internal variable saying if we are REALLY cross-compiling
-cross_compiling=no
+# This is used to distinguish between true and fake cross compilation
+# (only on NEC SX6 actually)
+if test "$host" != "" ; then ranlib=echo; fi
+
+cross_compiling=yes
+if test "$host" = "" ; then host=$build; fi
 
 # identify architecture
 if test "$arch" = ""
@@ -128,7 +130,6 @@ sparc )
 crayx1 )
 	try_f90="ftn $try_f90"
 	try_dflags="-D__X1"
-        cross_compiling=yes
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
@@ -149,7 +150,6 @@ necsx )
 	try_ar="sxar"
 	try_arflags="rv"
   	try_arflags_dynamic="rv"
-        cross_compiling=yes
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture?)
@@ -1326,11 +1326,9 @@ else
 fi
 echo setting FDFLAGS... $fdflags
 
-if test "$cross_compiling" = "yes"
+if test "$ranlib" != "echo"
 then
-	ranlib=echo
-else
-	AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
+   AC_CHECK_PROG(ranlib,ranlib,ranlib,echo)
 fi
 echo setting RANLIB... $ranlib
 
