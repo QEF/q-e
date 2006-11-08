@@ -350,7 +350,8 @@ subroutine solve_e
      !
      ! partially calculated results
      !
-     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+     write (iunrec) dyn, dyn00
+     write (iunrec) epsilon, zstareu, zstarue, zstareu0, zstarue0
      !
      ! info on current iteration (iter=0 if potential mixing not available)
      !

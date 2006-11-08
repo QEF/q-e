@@ -249,7 +249,8 @@ subroutine solve_e2
      !
      ! partially calculated results
      !
-     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+     write (iunrec) dyn, dyn00
+     write (iunrec)  epsilon, zstareu, zstarue, zstareu0, zstarue0
      !
      ! info on current iteration (iter=0 potential mixing not available)
      !

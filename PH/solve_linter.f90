@@ -40,12 +40,14 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
                                    iuwfc, lrwfc, iunrec, iudvscf
   USE output,               ONLY : fildrho, fildvscf
   USE phus,                 ONLY : int1, int2, int3
-  USE efield_mod,           ONLY : epsilon, zstareu, zstarue, zstareu0, zstarue0
-  USE dynmat,               ONLY : dyn, dyn00
   USE eqv,                  ONLY : dvpsi, dpsi, evq
   USE qpoint,               ONLY : npwq, igkq, nksq
   USE partial,              ONLY : comp_irr, done_irr, ifat
   USE modes,                ONLY : npert, u
+  ! used oly to write the restart file
+  USE efield_mod,           ONLY : epsilon, zstareu, zstarue, zstareu0, zstarue0
+  USE dynmat,               ONLY : dyn, dyn00
+  USE ramanm,               ONLY : lraman, elop, ramtns, eloptns 
   !
   implicit none
 
@@ -526,7 +528,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      ! partially calculated results
      !
-     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+     write (iunrec) dyn, dyn00
+     write (iunrec) epsilon, zstareu, zstarue, zstareu0, zstarue0
+     IF (lraman) write (iunrec) ramtns
+     IF (elop)   write (iunrec) eloptns
      !
      ! info on what to do with various irreps (only if irr > 0)
      !

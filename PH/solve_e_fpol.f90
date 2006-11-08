@@ -98,19 +98,20 @@ subroutine solve_e_fpol ( iw )
   allocate (etc(nbnd, nkstot))
   etc(:,:) = dcmplx( et(:,:), iw )
 
+  ! restart NOT IMPLEMENTED
+
   if (irr0 == -20) then
-     ! restarting in Electric field calculation
-     read (iunrec) iter0, convt, dr2
-     read (iunrec) dvscfin
-     if (okvan) read (iunrec) int3
-     close (unit = iunrec, status = 'keep')
-     if (doublegrid) then
-        do is=1,nspin
-           do ipol=1,3
-              call cinterpolate (dvscfin(1,is,ipol), dvscfins(1,is,ipol), -1)
-           enddo
-        enddo
-     endif
+     !read (iunrec) iter0, convt, dr2
+     !read (iunrec) dvscfin
+     !if (okvan) read (iunrec) int3
+     !close (unit = iunrec, status = 'keep')
+     !if (doublegrid) then
+     !   do is=1,nspin
+     !      do ipol=1,3
+     !         call cinterpolate (dvscfin(1,is,ipol), dvscfins(1,is,ipol), -1)
+     !      enddo
+     !   enddo
+     !endif
   else if (irr0 > -20 .AND. irr0 <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
@@ -360,30 +361,33 @@ subroutine solve_e_fpol ( iw )
      !
      CALL flush_unit( stdout )
      !
-     call seqopn (iunrec, 'recover', 'unformatted', exst)
+     ! restart NOT IMPLEMENTED
+     !
+     !call seqopn (iunrec, 'recover', 'unformatted', exst)
      !
      ! irr: state of the calculation
      ! irr=-20 Electric Field
      !
-     irr = -20
+     !irr = -20
      !
-     write (iunrec) irr
+     !write (iunrec) irr
      !
      ! partially calculated results
      !
-     write (iunrec) dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
+     !write (iunrec) dyn, dyn00
+     !write (iunrec) epsilon, zstareu, zstarue, zstareu0, zstarue0
      !
      ! info on current iteration (iter=0 if potential mixing not available)
      !
-     if (reduce_io) then
-        write (iunrec) 0, convt, dr2
-     else
-        write (iunrec) iter, convt, dr2
-     end if
-     write (iunrec) dvscfin
-     if (okvan) write (iunrec) int3
+     !if (reduce_io) then
+     !   write (iunrec) 0, convt, dr2
+     !else
+     !   write (iunrec) iter, convt, dr2
+     !end if
+     !write (iunrec) dvscfin
+     !if (okvan) write (iunrec) int3
 
-     close (unit = iunrec, status = 'keep')
+     !close (unit = iunrec, status = 'keep')
      tcpu = get_clock ('PHONON')
      if (convt .or. tcpu > max_seconds) goto 155
 
