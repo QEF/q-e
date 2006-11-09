@@ -17,7 +17,7 @@ MODULE printout_base
   CHARACTER(LEN=75) :: title
   ! ...  title of the simulation
 
-  CHARACTER(LEN=256) :: fort_unit(30:40)
+  CHARACTER(LEN=256) :: fort_unit(30:42)
   ! ...  fort_unit = fortran units for saving physical quantity
 
   CHARACTER(LEN=256) :: pprefix
@@ -62,6 +62,8 @@ CONTAINS
         fort_unit(38) = trim(pprefix)//'.str'
         fort_unit(39) = trim(pprefix)//'.nos'
         fort_unit(40) = trim(pprefix)//'.the'
+        fort_unit(41) = trim(pprefix)//'.spr'  ! wannier spread
+        fort_unit(42) = trim(pprefix)//'.wfc'  ! wannier function
         DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
            OPEN(UNIT=iunit, FILE=fort_unit(iunit), &
                STATUS='unknown', POSITION='append', IOSTAT = ierr )
@@ -77,25 +79,104 @@ CONTAINS
   END SUBROUTINE printout_base_init
 
 
-  SUBROUTINE printout_base_open( )
+  SUBROUTINE printout_base_open( suffix )
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: suffix
     INTEGER :: iunit
-    ! ...  Open units 30, 31, ... 40 for simulation output
+    LOGICAL :: ok
+    ! ...  Open units 30, 31, ... 42 for simulation output
+    IF( PRESENT( suffix ) ) THEN
+       IF( LEN( suffix ) /= 3 ) &
+          CALL errore(" printout_base_open ", " wrong suffix ", 1 )
+       ok = .false.
+    END IF
     DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
-       OPEN( UNIT=iunit, FILE=fort_unit(iunit), STATUS='unknown', POSITION='append')
+       IF( PRESENT( suffix ) ) THEN
+          IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
+             OPEN( UNIT=iunit, FILE=fort_unit(iunit), STATUS='unknown', POSITION='append')
+             ok = .true.
+          END IF
+       ELSE
+          OPEN( UNIT=iunit, FILE=fort_unit(iunit), STATUS='unknown', POSITION='append')
+       END IF
     END DO
+    IF( PRESENT( suffix ) ) THEN
+       IF( .NOT. ok ) &
+          CALL errore(" printout_base_open ", " file with suffix "//suffix//" not found ", 1 )
+    END IF
     RETURN
   END SUBROUTINE printout_base_open
 
-  SUBROUTINE printout_base_close( )
+
+  FUNCTION printout_base_unit( suffix )
+    !   return the unit corresponding to a given suffix
+    CHARACTER(LEN=*), INTENT(IN) :: suffix
+    INTEGER :: printout_base_unit
     INTEGER :: iunit
-    LOGICAL :: topen
-    ! ...   Close and flush unit 30, ... 40
+    LOGICAL :: ok
+    IF( LEN( suffix ) /= 3 ) &
+       CALL errore(" printout_base_unit ", " wrong suffix ", 1 )
+    ok = .false.
     DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
-       INQUIRE( UNIT=iunit, OPENED=topen )
-       IF (topen) THEN
-          CLOSE(iunit)
+       IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
+          printout_base_unit = iunit
+          ok = .true.
        END IF
     END DO
+    IF( .NOT. ok ) &
+       CALL errore(" printout_base_unit ", " file with suffix "//suffix//" not found ", 1 )
+    RETURN
+  END FUNCTION printout_base_unit
+
+
+  FUNCTION printout_base_name( suffix )
+    !  return the full name of a print out file with a given suffix
+    CHARACTER(LEN=*), INTENT(IN) :: suffix
+    CHARACTER(LEN=256) :: printout_base_name
+    INTEGER :: iunit
+    LOGICAL :: ok
+    IF( LEN( suffix ) /= 3 ) &
+       CALL errore(" printout_base_name ", " wrong suffix ", 1 )
+    ok = .false.
+    DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
+       IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
+          printout_base_name = fort_unit(iunit)
+          ok = .true.
+       END IF
+    END DO
+    IF( .NOT. ok ) &
+       CALL errore(" printout_base_name ", " file with suffix "//suffix//" not found ", 1 )
+    RETURN
+  END FUNCTION printout_base_name
+
+
+
+  SUBROUTINE printout_base_close( suffix )
+    CHARACTER(LEN=*), OPTIONAL, INTENT(IN) :: suffix
+    INTEGER :: iunit
+    LOGICAL :: topen
+    LOGICAL :: ok
+    ! ...   Close and flush unit 30, ... 42
+    IF( PRESENT( suffix ) ) THEN
+       IF( LEN( suffix ) /= 3 ) &
+          CALL errore(" printout_base_close ", " wrong suffix ", 1 )
+       ok = .false.
+    END IF
+    DO iunit = LBOUND( fort_unit, 1 ), UBOUND( fort_unit, 1 )
+       IF( PRESENT( suffix ) ) THEN
+          IF( index( fort_unit(iunit), suffix, back=.TRUE. ) == ( len_trim( fort_unit(iunit) ) - 2 ) ) THEN
+             INQUIRE( UNIT=iunit, OPENED=topen )
+             IF( topen ) CLOSE(iunit)
+             ok = .true.
+          END IF
+       ELSE
+          INQUIRE( UNIT=iunit, OPENED=topen )
+          IF (topen) CLOSE(iunit)
+       END IF
+    END DO
+    IF( PRESENT( suffix ) ) THEN
+       IF( .NOT. ok ) &
+          CALL errore(" printout_base_close ", " file with suffix "//suffix//" not found ", 1 )
+    END IF
     RETURN
   END SUBROUTINE printout_base_close
 
