@@ -47,11 +47,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE mp_global,                ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE cp_interfaces,            ONLY : invfft
   USE fft_base,                 ONLY : dfftp
+  USE printout_base,            ONLY : printout_base_open, printout_base_unit, &
+                                       printout_base_close
   USE parallel_include
   !
   IMPLICIT NONE
   !
-  INTEGER,           INTENT(IN)    :: irb(3,nat), jw, ibrav
+  INTEGER,     INTENT(IN)    :: irb(3,nat), jw, ibrav
   REAL(DP),    INTENT(INOUT) :: bec(nkb,nbsp), becdr(nkb,nbsp,3)
   REAL(DP),    INTENT(IN)    :: b1(3), b2(3), b3(3), taub(3,nax)
   COMPLEX(DP), INTENT(INOUT) :: c(ngw,nbspx)
@@ -64,13 +66,13 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   COMPLEX(DP), ALLOCATABLE :: c_m(:,:), c_p(:,:), c_psp(:,:)
   COMPLEX(DP), ALLOCATABLE :: c_msp(:,:)
-  INTEGER,           ALLOCATABLE :: tagz(:)
+  INTEGER,     ALLOCATABLE :: tagz(:)
   REAL(DP),    ALLOCATABLE :: Uspin(:,:)
   COMPLEX(DP), ALLOCATABLE :: X(:,:), X1(:,:), Xsp(:,:), X2(:,:), X3(:,:)
   COMPLEX(DP), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: qv(:)
-  REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), W(:,:), wr(:)
-  INTEGER,           ALLOCATABLE :: f3(:)
+  REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), mt0(:), wr(:), W(:,:), EW(:,:)
+  INTEGER,     ALLOCATABLE :: f3(:), f4(:)
   !
   LOGICAL           :: what1
   INTEGER           :: inl, jnl, iss, isa, is, ia, ijv, i, j, k, l, ig, &
@@ -78,6 +80,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                        ibig3, ir1, ir2, ir3, ir, clwf, m,  &
                        ib, jb, total, nstat, jj, ngpww, irb3
   REAL(DP)    :: t1, t2, t3, taup(3)
+  REAL(DP)    :: wrsq, wrsqmin
   COMPLEX(DP) :: qvt
   REAL (DP)   :: temp_vec(3)
   INTEGER           :: adjust,ini, ierr1,nnn, me
@@ -86,6 +89,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   REAL(DP)    :: wfcx, wfcy, wfcz
   REAL(DP)    :: wfc(3,nbsp)
   REAL(DP)    :: te(6)
+  INTEGER     :: iunit
   
   COMPLEX(DP), EXTERNAL :: boxdotgridcplx
   !
@@ -110,471 +114,14 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
 #endif
   !
-  ! ... set up the weights and the G vectors for wannie-function calculation
-  !
   me = me_image + 1
   !
   te = 0.D0
   !
-  SELECT CASE( ibrav )
-  CASE( 0 )
-     !
-     ! ... free cell used for cpr
-     !
-     nw = 6
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     ! ... assigns weights for the triclinic/cpr case
-     !
-     CALL tric_wts( b1, b2, b3, alat, weight )
-     !
-     wfg(:,:) = 0
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     wfg(4,1) = 1
-     wfg(4,2) = 1
-     wfg(5,2) = 1
-     wfg(5,3) = 1
-     wfg(6,1) = 1
-     wfg(6,3) = 1
-     !
-  CASE( 1 )
-     !
-     ! ... cubic P [sc]
-     !
-     nw = 3
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     weight = 1.D0
-     !
-     wfg(:,:) = 0
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-  CASE( 2 )
-     !
-     ! ... cubic F [fcc]
-     !
-     nw = 4
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     weight = 0.25D0
-     !
-     wfg(:,:) =  0     
-     wfg(1,1) =  1
-     wfg(2,2) =  1
-     wfg(3,3) =  1
-     wfg(4,:) = -1
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-  CASE( 3 )
-     !
-     ! ... cubic I [bcc]
-     !
-     nw=6
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     weight = 0.25D0
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     wfg(:,:) =  0
-     wfg(1,1) =  1
-     wfg(2,2) =  1
-     wfg(3,3) =  1
-     wfg(4,1) =  1
-     wfg(4,2) =  1
-     wfg(5,2) =  1
-     wfg(5,3) =  1
-     wfg(6,1) = -1
-     wfg(6,3) =  1
-     !
-  CASE( 4 )
-     !
-     ! ... hexagonal and trigonal P
-     !
-     nw = 4
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     weight(1) = 0.5D0
-     weight(2) = 0.5D0
-     weight(3) = 1.D0 / b3(3)**2
-     weight(4) = 0.5D0
-     !
-     wfg(:,:) =  0
-     wfg(1,1) =  1
-     wfg(2,2) =  1
-     wfg(3,3) =  1
-     wfg(4,1) =  1
-     wfg(4,2) = -1
-     !
-  CASE( 5 )
-     !
-     ! ... trigonal R
-     !
-     nw = 6
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     t1 = 1.D0 - 1.D0 / ( b2(2)**2 * 1.5D0 )
-     !
-     weight(1) =  1.D0
-     weight(2) =  1.D0 + 2.D0 * t1
-     weight(3) =  1.D0
-     weight(4) =  t1
-     weight(5) = -t1
-     weight(6) = -t1
-     !
-     wfg(:,:) =  0
-     wfg(1,1) =  1
-     wfg(2,2) =  1
-     wfg(3,3) =  1
-     wfg(4,1) =  1
-     wfg(4,3) =  1
-     wfg(5,2) = -1
-     wfg(5,3) =  1
-     wfg(6,1) =  1
-     wfg(6,2) = -1
-     !
-  CASE( 6 )
-     !
-     ! ... tetragonal P[st]
-     !
-     nw=3
-     !
-     ALLOCATE( wfg( nw , 3 ), weight( nw ) )
-     ALLOCATE( tagz(nw) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     weight(1) = 1.D0
-     weight(2) = 1.D0
-     weight(3) = 1.D0 / b3(3)**2
-     !
-     wfg(:,:) = 0
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     !
-  CASE( 7 )
-     !
-     ! ... tetragonal I [bct]
-     !
-     nw=6
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0  
-     !
-     t1 = 0.25D0 / b2(3)**2
-     !
-     weight(1) = 0.5D0 - t1
-     weight(2) = t1
-     weight(3) = t1
-     weight(4) = t1
-     weight(5) = weight(1)
-     weight(6) = t1
-     !
-     wfg(:,:) =  0
-     wfg(1,1) =  1
-     wfg(2,2) =  1
-     wfg(3,3) =  1
-     wfg(4,1) =  1
-     wfg(4,3) =  1
-     wfg(5,2) =  1
-     wfg(5,3) = -1
-     wfg(6,1) =  1
-     wfg(6,2) =  1
-     !
-  CASE( 8 )
-     !
-     ! ... orthorhombic P
-     !
-     nw = 3
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     weight(1) = 1.D0
-     weight(2) = 1.D0 / b2(2)**2
-     weight(3) = 1.D0 / b3(3)**2
-     !
-     wfg(:,:) = 0
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     !
-  CASE( 9 )
-     !
-     ! ... one face centered orthorhombic C
-     !
-     IF ( b1(2) == 1 ) THEN
-        !
-        nw = 3
-        !
-        ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-        ALLOCATE( tagz( nw ) )
-        !
-        wfg(:,:) = 0
-        !
-        weight(1) = 0.5D0
-        weight(2) = 0.5D0
-        !
-     ELSE
-        !
-        IF ( b1(2) > 1 ) THEN
-           !
-           CALL errore( 'cp-wf', 'Please make celldm(2) not less than 1', 1 )
-           !
-        ELSE
-           !
-           nw = 4
-           !
-           ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-           ALLOCATE( tagz( nw ) )
-           !
-           weight(1) = 0.5D0
-           weight(2) = 0.5D0
-           weight(4) = 0.25D0 * ( 1.D0 / b1(2)**2 - 1.D0 )
-           !
-           wfg(:,:) = 0
-           wfg(4,1) = 1
-           wfg(4,2) = 1
-        END IF
-        !
-     END IF
-     !
-     weight(3) = 1.D0 / b3(3)**2
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     !
-  CASE( 10 )
-     !
-     ! ... all face centered orthorhombic F
-     !
-     IF ( b1(2) == -1 .AND. b1(3) == 1 ) &
-        CALL errore( 'cp-wf', 'Please change ibrav to 2', 1 )
-     !
-     IF ( b1(1) > b1(3) .OR. b1(1) + b1(2) < 0 ) &
-        CALL errore( 'cp-wf', 'Please make celldm(2) >= 1 >= celldm(3)', 1 )
-     !
-     IF ( b1(3) == 1 ) THEN
-        !
-        nw = 5
-        !
-     ELSE
-        !
-        nw = 6
-        !
-     END IF
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     weight(:) = 0.25D0 / b1(3)**2
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     wfg(:,:) = 0
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     wfg(4,:) = 1
-     wfg(5,2) = 1
-     wfg(5,3) = 1
-     !
-     weight(5) = 0.25D0 / b1(2)**2 - weight(1)
-     !
-     IF ( b1(3) /= 1 ) THEN
-        !
-        weight(6) = 0.25D0 - weight(1)
-        !
-        wfg(6,1) = 1
-        wfg(6,2) = 1
-        !
-     END IF
-     !
-  CASE( 11 )
-     !
-     ! ... body centered orthohombic I
-     !
-     IF ( b1(3) == 1 .AND. b2(2) == 1 ) &
-        CALL errore( 'cp-wf', 'Please change ibrav to 3', 1 )
-     !
-     IF ( b1(3) == 1 .OR. b2(2) == 1 ) &
-        CALL errore( 'cp-wf', 'Please change ibrav to 7', 1 )
-     !
-     nw = 6
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     t1 = 0.25D0
-     t2 = t1 / b2(2)**2
-     t3 = t1 / b1(3)**2
-     !
-     weight(1) =  t1 - t2 + t3
-     weight(2) =  t1 + t2 - t3
-     weight(3) = -t1 + t2 + t3
-     weight(4) = weight(3)
-     weight(5) = weight(1)
-     weight(6) = weight(2)
-     !
-     wfg(:,:) =  0
-     wfg(1,1) =  1
-     wfg(2,2) =  1
-     wfg(3,3) =  1
-     wfg(4,1) =  1
-     wfg(4,2) =  1
-     wfg(5,2) =  1
-     wfg(5,3) =  1
-     wfg(6,1) = -1
-     wfg(6,3) =  1
-     !
-  CASE( 12 )
-     !
-     ! ... monoclinic P
-     !
-     nw=4
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     t1 = - b1(2) / b2(2)
-     !
-     k = NINT( t1 )
-     !
-     IF ( k == 0 .AND. t1 >= 0 ) k =  1
-     IF ( k == 0 .AND. t1 <= 0 ) k = -1
-     !
-     t2 = t1 / SQRT( 1.D0 - 1.D0 / ( 1.D0 + b1(2)**2 ) )
-     !
-     weight(4) = t1 / DBLE( k )
-     weight(1) = 1.D0 - weight(4)
-     weight(2) = t2**2 - t1 * k
-     weight(3) = 1.D0 / b3(3)**2
-     !
-     wfg(:,:) = 0
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     wfg(4,1) = 1
-     wfg(4,2) = k
-     !
-  CASE( 13 )
-     !
-     ! ... one face centered monoclinic C
-     !
-     nw = 6
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     t1 = - b1(2) / b3(2)
-     !
-     k = NINT( t1 )
-     !
-     IF (k == 0 .AND. t1 >= 0 ) k =  1
-     IF (k == 0 .AND. t1 <= 0 ) k = -1
-     !
-     t2 = 1.D0 / ( 4.D0 * b1(1)**2 )
-     t3 = 1.D0 / b3(2)**2
-     !
-     weight(1) = 2.D0 * t2 * ( 1.D0 - t1 )
-     weight(2) = weight(1)
-     weight(3) = t3 + 4.D0 * t2 * t1 * ( t1 - k )
-     weight(4) = 1.D0 - 2.D0 * t2
-     weight(5) = 2.D0 * t1 * t2 / DBLE( k )
-     weight(6) = weight(5)
-     !
-     wfg(:,:) =  0
-     wfg(1,1) =  1
-     wfg(2,2) =  1
-     wfg(3,3) =  1
-     wfg(4,1) =  1
-     wfg(4,2) = -1
-     wfg(5,1) =  1
-     wfg(5,3) =  k
-     wfg(6,2) =  1
-     wfg(6,3) =  k
-     !
-  CASE default
-     !
-     ! ... free cell used for cpr
-     !
-     nw = 6
-     !
-     ALLOCATE( wfg( nw, 3 ), weight( nw ) )
-     ALLOCATE( tagz( nw ) )
-     !
-     tagz(:) = 1
-     tagz(3) = 0
-     !
-     ! ... assigns weights for the triclinic/cpr case
-     !
-     CALL tric_wts( b1, b2, b3, alat, weight )
-     !
-     wfg(:,:) = 0
-     wfg(1,1) = 1
-     wfg(2,2) = 1
-     wfg(3,3) = 1
-     wfg(4,1) = 1
-     wfg(4,2) = 1
-     wfg(5,2) = 1
-     wfg(5,3) = 1
-     wfg(6,1) = 1
-     wfg(6,3) = 1
-     !
-  END SELECT
+  ALLOCATE( tagz( nw ))
+  !
+  tagz(:) = 1
+  tagz(3) = 0
   !
   ! ... set up matrix O
   !
@@ -969,8 +516,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:)
-        CALL ZGEMM('c','nbsp',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
-        CALL ZGEMM('T','nbsp',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
+        CALL ZGEMM('C','N',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
+        CALL ZGEMM('T','N',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
 #ifdef __PARA
         CALL mp_sum ( X, intra_image_comm )
 #endif
@@ -997,8 +544,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL ZGEMM('c','nbsp',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL ZGEMM('T','nbsp',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL ZGEMM('C','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
+        CALL ZGEMM('T','N',nbsp,nupdwn(1),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
         CALL mp_sum ( Xsp, intra_image_comm )
 #endif
@@ -1024,8 +571,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:,1,1)
-        CALL ZGEMM('c','nbsp',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
-        CALL ZGEMM('T','nbsp',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
+        CALL ZGEMM('C','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_psp,ngw,ONE,Xsp,nbsp)
+        CALL ZGEMM('T','N',nbsp,nupdwn(2),ngw,ONE,c,ngw,c_msp,ngw,ONE,Xsp,nbsp)
 #ifdef __PARA
         CALL mp_sum ( Xsp, intra_image_comm )
 #endif
@@ -1146,9 +693,9 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !        cwf(:,:)=c(:,:,1,1)
   becwf=0.0
   U2=Uall*ONE
-  CALL ZGEMM('nbsp','nbsp',ngw,nbsp,nbsp,ONE,c,ngw,U2,nbsp,ZERO,cwf,ngw)
+  CALL ZGEMM('N','N',ngw,nbsp,nbsp,ONE,c,ngw,U2,nbsp,ZERO,cwf,ngw)
   !           call ZGEMM('nbsp','nbsp',ngw,nbsp,nbsp,ONE,cwf,ngw,U2,nbsp,ZERO,cwf,ngw)
-  CALL DGEMM('nbsp','nbsp',nkb,nbsp,nbsp,ONE,bec,nkb,Uall,nbsp,ZERO,becwf,nkb)
+  CALL DGEMM('N','N',nkb,nbsp,nbsp,ONE,bec,nkb,Uall,nbsp,ZERO,becwf,nkb)
   U2=ZERO
   IF(iprsta.GT.4) THEN
      WRITE( stdout, * ) "Updating Wafefunctions and Bec"
@@ -1160,11 +707,10 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   IF(iprsta.GT.4) THEN
      WRITE( stdout, * ) "Wafefunctions and Bec Updated"
   END IF
-
   !
   ! calculate wannier-function centers
   !
-  ALLOCATE( wr( nw ), W( nw, nw ), gr( nw, 3 ), f3( nw ), mt( nw ) )
+  ALLOCATE( wr(nw), W(nw,nw), gr(nw,3), EW(nw,nw), f3(nw), f4(nw), mt0(nw), mt(nw) )
   DO inw=1, nw
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   END DO
@@ -1174,33 +720,53 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   DO i=1, nw
      DO j=1, nw
-        W(i,j)=SUM(gr(i,:)*gr(j,:))*weight(j)
-        !        write(6, *) i,j,W(i,j)
+        W(i,j)=DOT_PRODUCT(gr(i,:),gr(j,:))*weight(j)
      END DO
   END DO
-  !  write(24, *) "wannier function centers: (unit:\AA)"
+  !
+  EW = W
+  DO i=1,nw
+     EW(i,i) = EW(i,i)-1.D0
+  END DO
+  !
+  ! ... balance the phase factor if necessary
+  !
+  ! adjust mt : very inefficient routine added by Young-Su -> must be improved
   DO i=1, nbsp
-     mt=-AIMAG(LOG(O(:,i,i)))/tpi
-     wfc(1, i)=SUM(mt*weight*gr(:,1))
-     wfc(2, i)=SUM(mt*weight*gr(:,2))
-     wfc(3, i)=SUM(mt*weight*gr(:,3))
-     DO inw=1, nw
-        wr(inw)=SUM(wfc(:,i)*gr(inw,:))-mt(inw)
-     END DO
-     mt=wr
-     f3=0
-     adjust=0
+     mt0(:) = -AIMAG(LOG(O(:,i,i)))/tpi
+     wr = MATMUL(EW,mt0)
+     wrsq = SUM(wr(:)**2)
+     IF ( wrsq .lt. 1.D-6 ) THEN
+        mt = mt0
+     ELSE
+        wrsqmin = 100.D0
+COMB:   DO k=3**nw-1,0,-1
+           tk=k
+           DO j=nw,1,-1
+              f3(j)=tk/3**(j-1)
+              tk=tk-f3(j)*3**(j-1)
+           END DO
+           mt(:)=mt0(:)+f3(:)-1
+           wr = MATMUL(EW,mt)
+           wrsq = SUM(wr(:)**2)
+           IF ( wrsq .lt. wrsqmin ) THEN
+              wrsqmin = wrsq
+              f4(:)=f3(:)-1
+           END IF
+        END DO COMB
+        mt = mt0 + f4
+     END IF
      !
-     ! ... balance the phase factor if necessary
-     !
-     wfc(1,i) = ( wfc(1,i) + SUM( mt * weight * gr(:,1) ) ) * alat
-     wfc(2,i) = ( wfc(2,i) + SUM( mt * weight * gr(:,2) ) ) * alat
-     wfc(3,i) = ( wfc(3,i) + SUM( mt * weight * gr(:,3) ) ) * alat
+     wfc(1, i) = SUM(mt*weight(:)*gr(:,1))*alat
+     wfc(2, i) = SUM(mt*weight(:)*gr(:,2))*alat
+     wfc(3, i) = SUM(mt*weight(:)*gr(:,3))*alat
      !
   END DO
   !
   IF ( ionode ) THEN
      !
+     iunit = printout_base_unit( "wfc" )
+     CALL printout_base_open( "wfc" )
      IF ( .NOT. what1 ) THEN
         !
         ! ... pbc are imposed here in the range [0,1]
@@ -1209,22 +775,23 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            !
            temp_vec(:) = MATMUL( ainv(:,:), wfc(:,i) )
            !
-           WHERE( temp_vec(:) >= 1.D0 ) temp_vec(:) = temp_vec(:) - 1.D0
-           WHERE( temp_vec(:) < 0.D0 )  temp_vec(:) = temp_vec(:) + 1.D0
+           temp_vec(:) = temp_vec(:) - floor (temp_vec(:))
            !
-           temp_vec(:) = MATMUL( temp_vec(:), h(:,:) )
+           temp_vec(:) = MATMUL( h(:,:), temp_vec(:) )
            !
-           WRITE( 26, '(3f11.6)' ) temp_vec(:)
+           WRITE( iunit, '(3f11.6)' ) temp_vec(:)
            !
         END DO
         !
      END IF
+     CALL printout_base_close( "wfc" )
      !
   END IF
   !
+  !
   IF ( nspin == 2 .AND. nvb > 0 ) DEALLOCATE( X2, X3 )
   !
-  DEALLOCATE( wr, W, mt, f3, gr )
+  DEALLOCATE( wr, W, gr, EW, f3, f4, mt0, mt )
   !
 #if defined (__PARA)
   !
@@ -1243,7 +810,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
 #endif
   !
-  DEALLOCATE( X, O, Oa, wfg, weight, tagz )
+  DEALLOCATE( X, O, Oa, tagz )
   !
   RETURN
   !
@@ -1266,6 +833,8 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iprsta
   USE mp_global,        ONLY : me_image
+  USE printout_base,    ONLY : printout_base_open, printout_base_unit, &
+                               printout_base_close
   USE parallel_include
   !
   IMPLICIT NONE
@@ -1291,7 +860,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   REAL(DP), PARAMETER :: autoaf=0.529177d0
   REAL(DP) :: spread, sp
   REAL(DP) :: wfc(3,nbsp), gr(nw,3)
-  INTEGER  :: me
+  INTEGER  :: me, iunit
   !
   me = me_image + 1
   !
@@ -1316,10 +885,10 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      X1(:, :)=Omat(inw, :, :)
      U3=ZERO
      !    call ZGEMUL(U2, m, 'T', X1, m, 'nbsp', U3, m, m,m,m) 
-     CALL ZGEMM ('T', 'nbsp', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+     CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
      X1=ZERO
      !    call ZGEMUL(U3, m, 'nbsp', U2, m, 'nbsp', X1, m, m,m,m) 
-     CALL ZGEMM ('nbsp','nbsp', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+     CALL ZGEMM ('N','N', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
      Oc(inw, :, :)=X1(:, :)
   END DO
 
@@ -1422,10 +991,10 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      !   
      U3=ZERO
      !    call ZGEMUL(z, m, 'nbsp', d, m, 'nbsp', U3, m, m,m,m)
-     CALL ZGEMM ('nbsp', 'nbsp', m,m,m,ONE,z,m,d,m,ZERO,U3,m)  
+     CALL ZGEMM ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)  
      U2=ZERO
      !    call ZGEMUL(U3, m, 'nbsp', z, m, 'c', U2, m, m,m,m)
-     CALL ZGEMM ('nbsp','c', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
+     CALL ZGEMM ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
      U=DBLE(U2)
      U2=ZERO
      U3=ZERO
@@ -1439,7 +1008,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      !
      !    call DGEMUL(Umat, m, 'nbsp', U, m, 'nbsp', U1, m, m,m,m) 
      U1=ZERO
-     CALL DGEMM ('nbsp', 'nbsp', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
+     CALL DGEMM ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
 
      Umat=U1 
 
@@ -1450,10 +1019,10 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      DO inw=1, nw
         X1(:, :)=Omat(inw, :, :)
         !    call ZGEMUL(U2, m, 'T', X1, m, 'nbsp', U3, m, m,m,m)
-        CALL ZGEMM ('T', 'nbsp', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+        CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
         X1=ZERO
         !    call ZGEMUL(U3, m, 'nbsp', U2, m, 'nbsp', X1, m, m,m,m)
-        CALL ZGEMM ('nbsp','nbsp',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+        CALL ZGEMM ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
         Oc(inw, :, :)=X1(:, :)
      END DO
      U2=ZERO
@@ -1478,23 +1047,33 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   END DO
 
 241 DEALLOCATE(wr, W)
+
   spread=0.0
+
+  IF(me.EQ.1) THEN
+     iunit = printout_base_unit( "spr" )
+     CALL printout_base_open( "spr" )
+  END IF
+
   DO i=1, m
+     !
      mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
-     sp= (alat*autoaf/tpi)**2*SUM(mt*weight)
-#ifdef __PARA
+     sp = (alat*autoaf/tpi)**2*SUM(mt*weight)
+     !
      IF(me.EQ.1) THEN
-#endif
-        WRITE(25, '(f10.7)') sp
-#ifdef __PARA
+        WRITE(iunit, '(f10.7)') sp
      END IF
-#endif
      IF ( sp < 0.D0 ) &
         CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )
      !
      spread=spread+sp
      !
   END DO
+
+  IF(me.EQ.1) THEN
+     CALL printout_base_close( "spr" )
+  END IF
+
   spread=spread/m
 
 #ifdef __PARA
@@ -1528,7 +1107,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   USE gvecw,              ONLY : ngw
   USE electrons_base,     ONLY : nbsp
   USE wannier_base,       ONLY : gnx, gnn, indexplus, indexminus, &
-                                 indexplusz, indexminusz, tag, tagp
+                                 indexplusz, indexminusz, tag, tagp, &
+                                 wfg, weight, nw
   USE cvan,               ONLY : nvb
   USE mp,                 ONLY : mp_barrier, mp_bcast
   USE mp_global,          ONLY : nproc_image, me_image, intra_image_comm, root_image
@@ -1554,6 +1134,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   INTEGER :: ti1,tj1,tk1, clwf
   INTEGER :: me
   !
+
   me = me_image + 1
   !
   IF ( nbsp < nproc_image ) &
@@ -1599,667 +1180,37 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
   bigg(1:3,1:ntot)=gnx(1:3,1:ntot)
   bign(1:3,1:ntot)=gnn(1:3,1:ntot)
 #endif
+  !
+  CALL setwfg( ibrav, b1, b2, b3 )
+  !
+  nw1 = nw
+
+  WRITE( stdout, * ) "WANNIER SETUP : check G vectors and weights"
+  DO i=1,nw1 
+     WRITE( stdout,'("inw = ",I1,":",3I4,F11.6)') i,wfg(i,:), weight(i)
+  END DO
+  
+  WRITE( stdout, * ) "Translations to be done", nw1
+  ALLOCATE(indexplus(ntot,nw1))
+  ALLOCATE(indexminus(ntot,nw1))
+  ALLOCATE(tag(ntot,nw1))
+  ALLOCATE(tagp(ntot,nw1))
+  ALLOCATE(indexplusz(ngw))
+  ALLOCATE(indexminusz(ngw))
+  ALLOCATE(i_1(nw1))
+  ALLOCATE(j_1(nw1))
+  ALLOCATE(k_1(nw1))
+
+  indexplus=0
+  indexminus=0
+  tag=0
+  tagp=0
+  indexplusz=0
+  indexminusz=0
+  i_1(:)=wfg(:,1)
+  j_1(:)=wfg(:,2)
+  k_1(:)=wfg(:,3)
 
-  SELECT CASE(ibrav)
-  CASE(0)
-     !       free cell for cpr
-
-     nw1=6
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(indexminusz(ngw))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1     ! 1
-     j_1(4)=1     ! 1
-     k_1(4)=0     ! 0
-
-     i_1(5)=0     ! 0
-     j_1(5)=1     ! 1
-     k_1(5)=1     ! 1
-
-     i_1(6)=1     ! 1
-     j_1(6)=0     ! 0
-     k_1(6)=1     ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(1)
-     !   cubic P [sc]
-
-     nw1=3
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     i_1(1)=1   ! 1
-     j_1(1)=0   ! 0 
-     k_1(1)=0   ! 0
-
-     i_1(2)=0   ! 0 
-     j_1(2)=1   ! 1
-     k_1(2)=0   ! 0
-
-     i_1(3)=0   ! 0
-     j_1(3)=0   ! 0
-     k_1(3)=1   ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(2)
-     !   cubic F [FCC]
-     nw1=4
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-
-     i_1(1)=1   ! 1
-     j_1(1)=0   ! 0
-     k_1(1)=0   ! 0
-
-     i_1(2)=0   ! 0
-     j_1(2)=1   ! 1
-     k_1(2)=0   ! 0
-
-     i_1(3)=0   ! 0
-     j_1(3)=0   ! 0
-     k_1(3)=1   ! 1 
-
-     i_1(4)=-1    ! -1
-     j_1(4)=-1    ! -1
-     k_1(4)=-1    ! -1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(3)
-     !       cubic I [bcc]
-     nw1=6
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0   ! 0
-     j_1(3)=0   ! 0
-     k_1(3)=1   ! 1
-
-     i_1(4)=1   ! 1
-     j_1(4)=1   ! 1
-     k_1(4)=0   ! 0   
-
-     i_1(5)=1   ! 1
-     j_1(5)=1   ! 1
-     k_1(5)=1   ! 1
-
-     i_1(6)=-1   ! -1
-     j_1(6)=0   ! 0
-     k_1(6)=1   ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(4)
-     !   hexagonal and trigonal P
-
-     nw1=4
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1     ! 1
-     j_1(4)=-1    ! -1
-     k_1(4)=0     ! 0
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(5)
-     !   trigonal R
-
-     nw1=6   
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0   ! 0
-     j_1(3)=0   ! 0
-     k_1(3)=1   ! 1
-
-     i_1(4)=1   ! 1
-     j_1(4)=0   ! 0
-     k_1(4)=1   ! 1
-
-     i_1(5)=0   ! 0
-     j_1(5)=-1   ! -1
-     k_1(5)=1   ! 1
-
-     i_1(6)=1   ! 1
-     j_1(6)=-1   ! -1
-     k_1(6)=0   ! 0
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(6)
-     ! tetragonal P [st]
-
-     nw1=3
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1   ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(7)
-     ! tetragonal I [bct]
-
-     nw1=6
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1   ! 1
-     j_1(4)=0   ! 0
-     k_1(4)=1   ! 1
-
-     i_1(5)=0   ! 0
-     j_1(5)=1   ! 1
-     k_1(5)=-1   ! -1
-
-     i_1(6)=1   ! 1
-     j_1(6)=1   ! 1
-     k_1(6)=0   ! 0
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(8)
-     ! Orthorhombic P
-     nw1=3
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-     indexplus=0
-     indexminus=0
-     tag=0
-     tagp=0
-     indexplusz=0
-     indexminusz=0
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(9)
-     ! One face centered Orthorhombic C
-     IF(b1(2).EQ.1) THEN 
-
-        nw1=3
-        WRITE( stdout, * ) "Translations to be done", nw1
-        ALLOCATE(indexplus(ntot,nw1))
-        ALLOCATE(indexminus(ntot,nw1))
-        ALLOCATE(tag(ntot,nw1))
-        ALLOCATE(tagp(ntot,nw1))
-        ALLOCATE(indexplusz(ngw))
-        ALLOCATE(indexminusz(ngw))
-        ALLOCATE(i_1(nw1))
-        ALLOCATE(j_1(nw1))
-        ALLOCATE(k_1(nw1))
-
-     ELSE
-        IF ( b1(2) > 1 ) THEN
-           !
-           CALL errore( 'cp-wf', 'Please make celldm(2) not less than 1', 1 )
-           !
-        ELSE
-           nw1=4
-           WRITE( stdout, * ) "Translations to be done", nw1
-           ALLOCATE(indexplus(ntot,nw1))
-           ALLOCATE(indexminus(ntot,nw1))
-           ALLOCATE(tag(ntot,nw1))
-           ALLOCATE(tagp(ntot,nw1))
-           ALLOCATE(indexplusz(ngw))
-           ALLOCATE(indexminusz(ngw))
-
-           ALLOCATE(i_1(nw1))
-           ALLOCATE(j_1(nw1))
-           ALLOCATE(k_1(nw1))
-
-           i_1(4)=1
-           j_1(4)=1
-           k_1(4)=0
-        END IF
-     END IF
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(10)
-     ! all face centered orthorhombic F
-
-     IF ( b1(2) == -1 .AND. b1(3) == 1 ) &
-        CALL errore( 'cp-wf', 'Please change ibrav to 2', 1 )
-     !
-     IF ( ( b1(1) > b1(3) ) .OR. ( b1(1) + b1(2) < 0 ) ) &
-        CALL errore( 'cp-wf', 'Please make celldm(2)>=1>=celldm(3)', 1 )
-     !
-     IF(b1(3).EQ.1) THEN
-        nw1=5
-        WRITE( stdout, * ) "Translations to be done", nw1
-        ALLOCATE(indexplus(ntot,nw1))
-        ALLOCATE(indexminus(ntot,nw1))
-        ALLOCATE(tag(ntot,nw1))
-        ALLOCATE(tagp(ntot,nw1))
-        ALLOCATE(indexplusz(ngw))
-        ALLOCATE(indexminusz(ngw))
-
-        ALLOCATE(i_1(nw1))
-        ALLOCATE(j_1(nw1))
-        ALLOCATE(k_1(nw1))
-     ELSE
-        nw1=6
-        WRITE( stdout, * ) "Translations to be done", nw1
-        ALLOCATE(indexplus(ntot,nw1))
-        ALLOCATE(indexminus(ntot,nw1))
-        ALLOCATE(tag(ntot,nw1))
-        ALLOCATE(tagp(ntot,nw1))
-        ALLOCATE(indexplusz(ngw))
-        ALLOCATE(indexminusz(ngw))
-
-        ALLOCATE(i_1(nw1))
-        ALLOCATE(j_1(nw1))
-        ALLOCATE(k_1(nw1))
-
-        i_1(6)=1   ! 1
-        j_1(6)=1   ! 1
-        k_1(6)=0   ! 0
-
-     END IF
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1   ! 1
-     j_1(4)=1    ! 1
-     k_1(4)=1   ! 1
-
-     i_1(5)=0   ! 0
-     j_1(5)=1   ! 1
-     k_1(5)=0   ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(11) 
-     ! Body centered orthorhombic I
-
-     IF ( ( b1(3) == 1 ) .AND. ( b2(2) == 1 ) ) &
-        CALL errore( 'cp-wf', 'Please change ibrav to 3', 1 )
-     !
-     IF ( ( b1(3) == 1 ) .OR. ( b2(2) == 1 ) ) &
-        CALL errore( 'cp-wf', 'Please change ibrav to 7', 1 )
-     !
-     nw1=6
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1     ! 1
-     j_1(4)=1     ! 1
-     k_1(4)=0     ! 0
-
-     i_1(5)=1     ! 1
-     j_1(5)=0     ! 0
-     k_1(5)=1     ! 1
-
-     i_1(6)=-1    ! -1
-     j_1(6)=0     ! 0
-     k_1(6)=1     ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(12)
-     ! monoclinic P
-
-     nw1=4
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     t1=-b1(2)/b2(2)
-     kk=NINT(t1)
-     IF((kk.EQ.0).AND.(t1.GE.0)) kk=1
-     IF((kk.EQ.0).AND.(t1.LE.0)) kk=-1
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1     ! 1
-     j_1(4)=kk    ! kk
-     k_1(4)=0     ! 0
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE(13)
-     ! one face centered monoclinic C
-
-     nw1=6
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminusz(ngw))
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     t1=-b1(2)/b3(2)
-     kk=NINT(t1)
-     IF((kk.EQ.0).AND.(t1.GE.0)) kk=1
-     IF((kk.EQ.0).AND.(t1.LE.0)) kk=-1
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1     ! 1
-     j_1(4)=-1    ! -1
-     k_1(4)=0     ! 0
-
-     i_1(5)=1   ! 1
-     j_1(5)=0   ! 0
-     k_1(5)=kk   ! kk
-
-     i_1(6)=0   ! 0
-     j_1(6)=1   ! 1
-     k_1(6)=kk   ! kk
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  CASE default
-     !       free cell for cpr
-
-     nw1=6
-     WRITE( stdout, * ) "Translations to be done", nw1
-     ALLOCATE(indexplus(ntot,nw1))
-     ALLOCATE(indexplusz(ngw))
-     ALLOCATE(indexminus(ntot,nw1))
-     ALLOCATE(indexminusz(ngw))
-     ALLOCATE(tag(ntot,nw1))
-     ALLOCATE(tagp(ntot,nw1))
-     ALLOCATE(i_1(nw1))
-     ALLOCATE(j_1(nw1))
-     ALLOCATE(k_1(nw1))
-
-     i_1(1)=1     ! 1
-     j_1(1)=0     ! 0
-     k_1(1)=0     ! 0
-
-     i_1(2)=0     ! 0
-     j_1(2)=1     ! 1
-     k_1(2)=0     ! 0
-
-     i_1(3)=0     ! 0
-     j_1(3)=0     ! 0
-     k_1(3)=1     ! 1
-
-     i_1(4)=1     ! 1
-     j_1(4)=1     ! 1
-     k_1(4)=0     ! 0
-
-     i_1(5)=0     ! 0
-     j_1(5)=1     ! 1
-     k_1(5)=1     ! 1
-
-     i_1(6)=1     ! 1
-     j_1(6)=0     ! 0
-     k_1(6)=1     ! 1
-
-     indexplus(:,3)=0
-     indexminus(:,3)=0
-     tag(:,3)=0
-     tagp(:,3)=0
-
-  END SELECT
 
   WRITE( stdout, * ) "ibrav selected:", ibrav
   !
@@ -2559,6 +1510,386 @@ SUBROUTINE grid_map()
 END SUBROUTINE grid_map
 !
 !----------------------------------------------------------------------------
+SUBROUTINE setwfg( ibrav, b1, b2, b3 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... added by Young-Su Lee ( Nov 2006 )
+  ! Find G vectors for a given ibrav and celldms
+  !
+  USE kinds,              ONLY : DP
+  USE cell_base,          ONLY : tpiba, celldm
+  USE wannier_base,       ONLY : wfg, nw, weight
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN) :: b1(3), b2(3), b3(3)
+  INTEGER,  INTENT(IN) :: ibrav
+  REAL(DP) :: tweight(6), t0, t1, t2, t3, t4, t5, t6
+  INTEGER  :: twfg(6,3), kk
+  
+  twfg(:,:) = 0
+
+  twfg(1,1)=1   
+  twfg(1,2)=0    
+  twfg(1,3)=0   
+
+  twfg(2,1)=0    
+  twfg(2,2)=1   
+  twfg(2,3)=0   
+
+  twfg(3,1)=0   
+  twfg(3,2)=0   
+  twfg(3,3)=1   
+
+  SELECT CASE(ibrav)
+
+  CASE(1)
+     !
+     !  Cubic P [sc]
+     !
+     nw = 3
+     !
+     !
+  CASE(2)
+     !
+     !  Cubic F [fcc]
+     !
+     nw = 4
+
+     twfg(4,1)=-1    
+     twfg(4,2)=-1   
+     twfg(4,3)=-1  
+     !
+     !
+  CASE(3)
+     !
+     !  Cubic I [bcc]
+     !
+     nw = 6
+
+     twfg(4,1)=1 
+     twfg(4,2)=1 
+     twfg(4,3)=0   
+
+     twfg(5,1)=0 
+     twfg(5,2)=1 
+     twfg(5,3)=1 
+
+     twfg(6,1)=-1
+     twfg(6,2)=0 
+     twfg(6,3)=1 
+     !
+     !
+  CASE(4)
+     !
+     !  Hexagonal and Trigonal P
+     !
+     nw = 4
+
+     twfg(4,1)=1     
+     twfg(4,2)=-1   
+     twfg(4,3)=0   
+     !
+     !
+  CASE(5)
+     !
+     !  Trigonal R
+     !
+     t0 = 1.D0/3.D0
+     !
+     IF ( celldm(4) .ge. t0 ) THEN    
+        !
+        nw = 4
+        !
+        twfg(4,1)=1
+        twfg(4,2)=1
+        twfg(4,3)=1
+        !
+     ELSE
+        !
+        IF ( celldm(4) .gt. 0 ) THEN
+           !
+           nw = 6
+           ! 
+           twfg(4,1)=1
+           twfg(4,2)=1
+           twfg(4,3)=0
+         
+           twfg(5,1)=0
+           twfg(5,2)=1
+           twfg(5,3)=1
+         
+           twfg(6,1)=1
+           twfg(6,2)=0
+           twfg(6,3)=1
+           !
+        ELSE IF ( celldm(4) .eq. 0 ) THEN
+           !
+           nw = 3
+           !
+        ELSE
+           !
+           nw = 6
+           ! 
+           twfg(4,1)=1
+           twfg(4,2)=-1
+           twfg(4,3)=0
+         
+           twfg(5,1)=0
+           twfg(5,2)=1
+           twfg(5,3)=-1
+         
+           twfg(6,1)=-1
+           twfg(6,2)=0
+           twfg(6,3)=1
+           !
+        END IF
+        !
+     END IF
+
+  CASE(6)
+     !
+     !  Tetragonal P [st]
+     !
+     nw = 3
+     !
+     !
+  CASE(7)
+     !
+     !  Tetragonal I [bct]
+     !
+     nw = 6
+
+     twfg(4,1)=1  
+     twfg(4,2)=0  
+     twfg(4,3)=1  
+
+     twfg(5,1)=0  
+     twfg(5,2)=1  
+     twfg(5,3)=-1 
+
+     twfg(6,1)=1  
+     twfg(6,2)=1  
+     twfg(6,3)=0  
+     !
+     !
+  CASE(8)
+     !
+     !  Orthorhombic P
+     !
+     nw = 3
+     !
+     !
+  CASE(9)
+     !
+     !  Orthorhombic C
+     !
+     IF (celldm(2).EQ.1) THEN   ! Tetragonal P 
+        !
+        nw=3
+        !
+     ELSE
+        !
+        nw = 4
+        !
+        IF ( celldm(2) < 1 ) THEN
+           !
+           twfg(4,1)=1
+           twfg(4,2)=-1
+           twfg(4,3)=0
+           !
+        ELSE
+           !
+           twfg(4,1)=1
+           twfg(4,2)=1
+           twfg(4,3)=0
+           !
+        END IF
+        !
+     END IF
+     !
+     !
+  CASE(10)
+     !
+     !  Orthorhombic F
+     !
+     twfg(4,1)=1    
+     twfg(4,2)=1   
+     twfg(4,3)=1   
+     !
+     IF ( celldm(2) .eq. 1 .AND. celldm(3) .eq. 1 )  THEN ! Cubic F
+        !
+        nw = 4
+        !
+     ELSE
+        !
+        nw = 6
+        !
+        IF ( celldm(2) .eq. 1 .AND. celldm(3) .ne. 1) THEN ! Tetragonal I
+           !
+           twfg(5,1)=1  
+           twfg(5,2)=1  
+           twfg(5,3)=0  
+           twfg(6,1)=0  
+           twfg(6,2)=1  
+           twfg(6,3)=1  
+           !
+        ELSE IF ( celldm(2) .ne. 1 .AND. celldm(3) .eq. 1) THEN ! Tetragonal I
+           !
+           twfg(5,1)=1   
+           twfg(5,2)=1   
+           twfg(5,3)=0   
+           twfg(6,1)=1   
+           twfg(6,2)=0   
+           twfg(6,3)=1   
+           !
+        ELSE IF ( celldm(2) .eq. celldm(3) ) THEN ! Tetragonal I
+           !
+           twfg(5,1)=0   
+           twfg(5,2)=1   
+           twfg(5,3)=1   
+           twfg(6,1)=1   
+           twfg(6,2)=0   
+           twfg(6,3)=1   
+           !
+        ELSE IF ( celldm(2) .gt. 1 .and. celldm(3) .gt. 1 ) THEN
+           !
+           twfg(5,1)=0   
+           twfg(5,2)=1   
+           twfg(5,3)=1   
+           twfg(6,1)=1   
+           twfg(6,2)=0   
+           twfg(6,3)=1   
+           !
+        ELSE IF ( celldm(2) .lt. celldm(3) ) THEN
+           !
+           twfg(5,1)=1   
+           twfg(5,2)=1   
+           twfg(5,3)=0   
+           twfg(6,1)=1   
+           twfg(6,2)=0   
+           twfg(6,3)=1   
+           !
+        ELSE           
+           !
+           twfg(5,1)=1   
+           twfg(5,2)=1   
+           twfg(5,3)=0   
+           twfg(6,1)=0   
+           twfg(6,2)=1   
+           twfg(6,3)=1   
+           !
+        END IF
+        !
+     END IF
+     !
+     !
+  CASE(11) 
+     !
+     !  Orthorhombic I
+     !
+     nw = 6
+     !
+     twfg(4,1)=1     
+     twfg(4,2)=1     
+     twfg(4,3)=0     
+
+     twfg(5,1)=0     
+     twfg(5,2)=1     
+     twfg(5,3)=1     
+
+     twfg(6,1)=-1   
+     twfg(6,2)=0     
+     twfg(6,3)=1     
+     !
+     !
+  CASE(12)
+     !
+     !  Monoclinic P
+     !
+     IF ( celldm(4) .eq. 0 ) THEN ! Orthorhombic P
+        !
+        nw = 3
+        !
+     ELSE
+        !
+        nw = 4
+        !
+        t1 = SQRT(DOT_PRODUCT(b1,b1))
+        t2 = SQRT(DOT_PRODUCT(b2,b2))
+        t4 = DOT_PRODUCT(b1,b2)/t1/t2
+        !
+        t0 = - t4 * t1 / t2
+        kk = NINT(t0)
+        !
+        IF((kk.EQ.0).AND.(t0.GT.0)) kk=1
+        IF((kk.EQ.0).AND.(t0.LT.0)) kk=-1
+      
+        twfg(4,1)=1     
+        twfg(4,2)=kk    
+        twfg(4,3)=0     
+        !
+     END IF
+     !
+     !
+  CASE(0,13,14)
+     !
+     !  Monoclinic C, Triclinic P, Free Cell
+     !
+     nw = 6 
+     !
+     t1 = SQRT(DOT_PRODUCT(b1,b1))
+     t2 = SQRT(DOT_PRODUCT(b2,b2))
+     t3 = SQRT(DOT_PRODUCT(b3,b3))
+     t4 = DOT_PRODUCT(b1,b2)/t1/t2
+     t5 = DOT_PRODUCT(b2,b3)/t2/t3
+     t6 = DOT_PRODUCT(b3,b1)/t3/t1
+     !
+     t0 = - t4 * t1 / t2
+     kk = NINT(t0)
+     !
+     IF((kk.EQ.0).AND.(t0.GE.0)) kk=1
+     IF((kk.EQ.0).AND.(t0.LT.0)) kk=-1
+     
+     twfg(4,1)=1 
+     twfg(4,2)=kk
+     twfg(4,3)=0 
+     !
+     t0 = - t5 * t2 / t3
+     kk = NINT(t0)
+     !
+     IF((kk.EQ.0).AND.(t0.GE.0)) kk=1
+     IF((kk.EQ.0).AND.(t0.LT.0)) kk=-1
+     !
+     twfg(5,1)=0  
+     twfg(5,2)=1   
+     twfg(5,3)=kk 
+     !
+     t0 = - t6 * t3 / t1
+     kk = NINT(t0)
+     !
+     IF((kk.EQ.0).AND.(t0.GE.0)) kk=1
+     IF((kk.EQ.0).AND.(t0.LT.0)) kk=-1
+     ! 
+     twfg(6,1)=kk 
+     twfg(6,2)=0 
+     twfg(6,3)=1
+     !   
+     !
+  END SELECT
+  !
+  CALL tric_wts2( b1, b2, b3, nw, twfg, tweight ) 
+  !
+  ALLOCATE(wfg(nw,3), weight(nw))
+  !
+  wfg(:,:) = twfg(1:nw,:)
+  weight(:) = tweight(1:nw)
+  !
+  RETURN
+  !
+END SUBROUTINE setwfg
+!
+!----------------------------------------------------------------------------
 SUBROUTINE tric_wts( rp1, rp2, rp3, alat, wts )
   !----------------------------------------------------------------------------
   !
@@ -2645,7 +1976,80 @@ SUBROUTINE tric_wts( rp1, rp2, rp3, alat, wts )
        ((b1z*b2y*b3x - b1y*b2z*b3x - b1z*b2x*b3y + b1x*b2z*b3y + &
        b1y*b2x*b3z - b1x*b2y*b3z)**2)
   !
+  RETURN
+  !
 END SUBROUTINE tric_wts
+!
+!----------------------------------------------------------------------------
+SUBROUTINE tric_wts2( rp1, rp2, rp3, nw, wfg, weight )
+  !----------------------------------------------------------------------------
+  !
+  ! ... added by Young-Su Lee ( Nov 2006 )
+  !
+  ! Find the least square solutions of weights for G vectors
+  ! If the set of G vectors and calculated weights do not conform to the condition,
+  !  SUM_i weight_i G_ia G_ib = delta_ab
+  ! the code stops.
+  !
+  USE kinds,              ONLY : DP
+  USE io_global,          ONLY : stdout
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN)  :: rp1(3), rp2(3), rp3(3)
+  INTEGER, INTENT(IN)   :: wfg(6,3), nw
+  REAL(DP), INTENT(OUT) :: weight(6)
+  !
+  REAL(DP) :: gp(6,nw), A(6,nw), gr(nw,3), S(6), R(6), WORK(1000), t
+  INTEGER  :: i, LWORK, INFO
+  !
+  DO i=1, nw
+     gr(i,:) = wfg(i,1)*rp1(:)+wfg(i,2)*rp2(:)+wfg(i,3)*rp3(:)
+  END DO
+                                                                                                                       
+  DO i=1, nw
+     gp(1,i)=gr(i,1)*gr(i,1)
+     gp(2,i)=gr(i,2)*gr(i,2)
+     gp(3,i)=gr(i,3)*gr(i,3)
+     gp(4,i)=gr(i,1)*gr(i,2)
+     gp(5,i)=gr(i,2)*gr(i,3)
+     gp(6,i)=gr(i,3)*gr(i,1)
+  END DO
+  !
+  R = 0.D0
+  R(1:3) = 1.D0
+  !
+  LWORK=1000
+  A = gp
+  S = R
+  !
+  CALL DGELS( 'N', 6, nw, 1, A, 6, S, 6, WORK, LWORK, INFO )
+  !
+  IF (INFO .ne. 0) THEN
+     WRITE( stdout, * ) "failed to get a weight factor for ",INFO,"th vector"
+     STOP
+  END IF
+  !
+  weight(1:nw) = S(:)
+  S=matmul(gp,weight(1:nw))
+  !
+  DO i=1, nw
+     IF ( weight(i) .lt. 0.D0 ) THEN
+        WRITE( stdout, * ) "WARNING: weight factor less than zero"
+     END IF
+  END DO
+  !
+  DO i=1,6
+     t = abs(S(i)-R(i))
+     IF ( t .gt. 1.D-8 ) THEN
+        WRITE( stdout, * ) "G vectors do not satisfy the completeness condition",i,t
+        STOP
+     END IF
+  END DO
+  !
+  RETURN
+  !
+END SUBROUTINE tric_wts2
 !
 !----------------------------------------------------------------------------
 SUBROUTINE small_box_wf( i_1, j_1, k_1, nw1 )
@@ -3210,6 +2614,8 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE constants,              ONLY : tpi
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
   USE mp_global,              ONLY : me_image
+  USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
+                                     printout_base_close
   USE parallel_include
   !
   IMPLICIT NONE
@@ -3238,7 +2644,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   COMPLEX(DP) :: ct1, ct2, ct3, z(m, m), X(m, m), d(m,m), d2(m,m)
   COMPLEX(DP) :: f1(2*m-1), wp(m*(m+1)/2), Oc(nw, m, m)
   COMPLEX(DP) ::  Oc2(nw, m, m),wp1(m*(m+1)/2), X1(m,m), U2(m,m), U3(m,m)
-  INTEGER :: me
+  INTEGER :: me, iunit
   !
   me = me_image + 1
   !
@@ -3258,9 +2664,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   DO inw=1, nw
      X1(:, :)=Omat(inw, :, :)
      U3=ZERO
-     CALL ZGEMM ('T', 'nbsp', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+     CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
      X1=ZERO
-     CALL ZGEMM ('nbsp','nbsp', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+     CALL ZGEMM ('N','N', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
      Oc(inw, :, :)=X1(:, :)
   END DO
 
@@ -3283,13 +2689,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      !    WRITE( stdout, * ) t01
 
      IF(ABS(oldt1-t01).LT.tolw) THEN 
-#ifdef __PARA
         IF(me.EQ.1) THEN
-#endif
            WRITE(27,*) "MLWF Generated at Step",k
-#ifdef __PARA
         END IF
-#endif
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Generated at Step",k
         END IF
@@ -3367,7 +2769,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
 
      ELSE
         !
-        CALL DGEMM ('T','nbsp', m,m,m,ONE,Wm,m,Wm,m,ZERO,d3,m)
+        CALL DGEMM ('T','N', m,m,m,ONE,Wm,m,Wm,m,ZERO,d3,m)
 
         t1=0.D0
         DO i=1, m
@@ -3375,7 +2777,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         END DO
         IF (t1.NE.0) THEN
            d4=(W-Wm)
-           CALL DGEMM ('T','nbsp', m,m,m,ONE,W,m,d4,m,ZERO,d3,m)
+           CALL DGEMM ('T','N', m,m,m,ONE,W,m,d4,m,ZERO,d3,m)
            t2=0.D0
            DO i=1, m
               t2=t2+d3(i, i)
@@ -3415,16 +2817,16 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         END DO
 
         U3=ZERO
-        CALL ZGEMM ('nbsp', 'nbsp', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
+        CALL ZGEMM ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
         U2=ZERO
-        CALL ZGEMM ('nbsp','c', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
+        CALL ZGEMM ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
         U=DBLE(U2)
         U2=ZERO
         U3=ZERO
         !
         !   update Uspin
         U1=ZERO
-        CALL DGEMM ('nbsp', 'nbsp', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
+        CALL DGEMM ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
         Umat=U1
 
         !
@@ -3434,9 +2836,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
         U3=ZERO
         DO inw=1, nw
            X1(:,:)=Omat(inw,:,:)
-           CALL ZGEMM ('T', 'nbsp', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+           CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
            X1=ZERO
-           CALL ZGEMM ('nbsp','nbsp',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+           CALL ZGEMM ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
            Oc2(inw, :,:)=X(:,:)
         END DO
         U2=ZERO 
@@ -3481,9 +2883,9 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      !   U=z*exp(d)*z+
      !
      U3=ZERO
-     CALL ZGEMM ('nbsp', 'nbsp', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
+     CALL ZGEMM ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)
      U2=ZERO
-     CALL ZGEMM ('nbsp','c', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
+     CALL ZGEMM ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
      U=DBLE(U2)
      U2=ZERO
      U3=ZERO
@@ -3491,7 +2893,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      !   update Uspin
      !
      U1=ZERO
-     CALL DGEMM ('nbsp', 'nbsp', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
+     CALL DGEMM ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
      Umat=U1
 
      !   update Oc
@@ -3500,21 +2902,17 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
      U3=ZERO
      DO inw=1, nw
         X1(:, :)=Omat(inw, :, :)
-        CALL ZGEMM ('T', 'nbsp', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
+        CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
         X1=ZERO
-        CALL ZGEMM ('nbsp','nbsp',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
+        CALL ZGEMM ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
         Oc(inw, :, :)=X1(:, :)
      END DO
      U2=ZERO
      U3=ZERO
      IF(ABS(t01-oldt1).GE.tolw.AND.k.GE.nit) THEN
-#ifdef __PARA
         IF(me.EQ.1) THEN
-#endif
            WRITE(27,*) "MLWF Not generated after",k,"Steps."
-#ifdef __PARA
         END IF
-#endif
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Not generated after",k,"Steps."
         END IF
@@ -3529,16 +2927,20 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   ! calculate the spread
   !
   !  write(24, *) "spread: (unit \AA^2)"
+
+  IF(me.EQ.1) THEN
+     iunit = printout_base_unit( "spr" )
+     CALL printout_base_open( "spr" )
+  END IF
+
   DO i=1, m
+     !
      mt=1.D0-DBLE(Oc(:,i,i)*CONJG(Oc(:,i,i)))
      sp = (alat*autoaf/tpi)**2*SUM(mt*weight)
-#ifdef __PARA
+     !
      IF(me.EQ.1) THEN
-#endif
-        WRITE(25, '(f10.7)') sp
-#ifdef __PARA
+        WRITE(iunit, '(f10.7)') sp
      END IF
-#endif
      IF( sp < 0.D0 ) &
         CALL errore( 'cp-wf', 'Something wrong WF Spread negative', 1 )
      !
@@ -3547,14 +2949,16 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   END DO
   spread=spread/DBLE(m)
 
-#ifdef __PARA
   IF(me.EQ.1) THEN
-#endif
+     CALL printout_base_open( "spr" )
+  END IF
+
+  IF(me.EQ.1) THEN
      WRITE(24, '(f10.7)') spread
      WRITE(27,*) "Average spread = ", spread
-#ifdef __PARA
   END IF
-#endif
+  !
+  Omat=Oc
   !
   RETURN
 END SUBROUTINE wfsteep

@@ -186,7 +186,7 @@ MODULE wannier_subroutines
   !--------------------------------------------------------------------------
   !
   USE kinds,     ONLY : DP
-  USE io_global, ONLY : stdout
+  USE io_global, ONLY : stdout, ionode
   !
   IMPLICIT NONE
   SAVE
@@ -202,6 +202,7 @@ MODULE wannier_subroutines
                                       efx1, efy1, efz1, wf_switch, sw_len
     USE wannier_base,          ONLY : calwf, wfsd, wfdt, maxwfdt, nsd, nit, &
                                       wf_q, wf_friction, nsteps
+    USE printout_base,         ONLY : printout_base_name
     !
     IMPLICIT NONE
     !
@@ -209,13 +210,14 @@ MODULE wannier_subroutines
     REAL(DP) :: a1(3), a2(3), a3(3)
     REAL(DP) :: b1(3), b2(3), b3(3)
     REAL(DP) :: alat
+    CHARACTER(LEN=256) :: fname
     !
     INTEGER :: i
     !
     ! ... More Wannier and Field Initialization
     !
     IF (calwf.GT.1) THEN
-       IF(calwf.EQ.3) THEN
+       IF( calwf.EQ.3 .AND. ionode ) THEN
           WRITE( stdout, * ) "------------------------DYNAMICS IN THE WANNIER BASIS--------------------------"
           WRITE( stdout, * ) "                             DYNAMICS PARAMETERS "
           IF(wfsd) THEN
@@ -230,8 +232,10 @@ MODULE wannier_subroutines
              WRITE( stdout, * ) nsteps,"STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD"
           END IF
           WRITE( stdout, * ) "AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24"
-          WRITE( stdout, * ) "INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  FORT.25"
-          WRITE( stdout, * ) "WANNIER CENTERS WRITTEN TO                     FORT.26"
+          fname = printout_base_name( "spr" )
+          WRITE( stdout, * ) "INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  "//TRIM(fname)
+          fname = printout_base_name( "wfc" )
+          WRITE( stdout, * ) "WANNIER CENTERS WRITTEN TO                     "//TRIM(fname)
           WRITE( stdout, * ) "SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27"
           WRITE( stdout, * ) "-------------------------------------------------------------------------------"
           WRITE( stdout, * )
@@ -258,24 +262,29 @@ MODULE wannier_subroutines
        END DO
     END IF
     IF(wf_efield) THEN
+
        CALL grid_map
-       WRITE( stdout, * ) "GRID MAPPING DONE"
-       WRITE( stdout, * ) "DYNAMICS IN THE PRESENCE OF AN EXTERNAL ELECTRIC FIELD"
-       WRITE( stdout, * )
-       WRITE( stdout, * ) "POLARIZATION CONTRIBUTION OUTPUT TO FORT.28 IN THE FOLLOWING FORMAT"
-       WRITE( stdout, * )
-       WRITE( stdout, * ) "EFX, EFY, EFZ, ELECTRIC ENTHANLPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)"
-       WRITE( stdout, * )
-       WRITE( stdout, '(" E0(x) = ",F10.7)' ) efx0
-       WRITE( stdout, '(" E0(y) = ",F10.7)' ) efy0
-       WRITE( stdout, '(" E0(z) = ",F10.7)' ) efz0
-       WRITE( stdout, '(" E1(x) = ",F10.7)' ) efx1
-       WRITE( stdout, '(" E1(y) = ",F10.7)' ) efy1
-       WRITE( stdout, '(" E1(z) = ",F10.7)' ) efz1
-       !
-       IF ( wf_switch ) WRITE( stdout, 12127) sw_len
-       !
-       WRITE( stdout, * )
+
+       IF( ionode ) THEN
+          WRITE( stdout, * ) "GRID MAPPING DONE"
+          WRITE( stdout, * ) "DYNAMICS IN THE PRESENCE OF AN EXTERNAL ELECTRIC FIELD"
+          WRITE( stdout, * )
+          WRITE( stdout, * ) "POLARIZATION CONTRIBUTION OUTPUT TO FORT.28 IN THE FOLLOWING FORMAT"
+          WRITE( stdout, * )
+          WRITE( stdout, * ) "EFX, EFY, EFZ, ELECTRIC ENTHANLPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)"
+          WRITE( stdout, * )
+          WRITE( stdout, '(" E0(x) = ",F10.7)' ) efx0
+          WRITE( stdout, '(" E0(y) = ",F10.7)' ) efy0
+          WRITE( stdout, '(" E0(z) = ",F10.7)' ) efz0
+          WRITE( stdout, '(" E1(x) = ",F10.7)' ) efx1
+          WRITE( stdout, '(" E1(y) = ",F10.7)' ) efy1
+          WRITE( stdout, '(" E1(z) = ",F10.7)' ) efz1
+          !
+          IF ( wf_switch ) WRITE( stdout, 12127) sw_len
+          !
+          WRITE( stdout, * )
+          !
+       END IF
        !
 12127  FORMAT(' FIELD WILL BE TURNED ON ADIBATICALLY OVER ',i5,' STEPS')
     END IF
