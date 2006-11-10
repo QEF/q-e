@@ -64,9 +64,10 @@ subroutine gen_us_dj (ik, dvkb)
   real(DP), allocatable :: xdata(:)
 #endif
 
+  if (nkb.eq.0) return
+
   call start_clock('stres_us31')
 
-  if (nkb.eq.0) return
   allocate (djl( npw , nbetam , ntyp))    
   allocate (ylm( npw ,(lmaxkb + 1) **2))    
   allocate (gk( 3, npw))    
