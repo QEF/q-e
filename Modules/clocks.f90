@@ -79,6 +79,9 @@ SUBROUTINE start_clock( label )
   !
   REAL(DP), EXTERNAL :: scnds, cclock
   !
+#if defined (__TRACE)
+  WRITE( stdout, '("TRACE Start: ",A12)') label
+#endif
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
   !
@@ -138,6 +141,9 @@ SUBROUTINE stop_clock( label )
   !
   REAL(DP), EXTERNAL :: scnds, cclock
   !
+#if defined (__TRACE)
+  WRITE( stdout, '("TRACE End: ",A12)') label
+#endif
   !
   IF ( no ) RETURN
   !
