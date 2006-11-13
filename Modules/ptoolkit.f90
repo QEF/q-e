@@ -22,6 +22,7 @@
     PUBLIC :: pdspev_drv, dspev_drv, &
               diagonalize, pzhpev_drv, zhpev_drv, cdiagonalize
     PUBLIC :: rep_matmul_drv
+    PUBLIC :: zrep_matmul_drv
 
     CONTAINS
 
@@ -2987,6 +2988,167 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 
 END SUBROUTINE rep_matmul_drv
 
+
+SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
+  !
+  !  Parallel matrix multiplication with replicated matrix
+  !
+  implicit none
+  !
+  CHARACTER(LEN=1), INTENT(IN) :: transa, transb
+  INTEGER, INTENT(IN) :: m, n, k
+  COMPLEX(DP), INTENT(IN) :: alpha, beta
+  INTEGER, INTENT(IN) :: lda, ldb, ldc
+  COMPLEX(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
+  INTEGER, INTENT(IN) :: comm
+  !
+  !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
+  !
+  !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
+  !
+  !  WHERE  OP( X ) IS ONE OF
+  !
+  !     OP( X ) = X   OR   OP( X ) = X',
+  !
+  !  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
+  !  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
+  !
+  !
+  !
+
+#if defined __MPI
+
+  !
+
+  INTEGER :: ME, I, II, J, JJ, IP, SOUR, DEST, INFO, IERR, ioff, ldx
+  INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
+  INTEGER :: nproc, mpime, q, r
+
+  COMPLEX(DP), ALLOCATABLE :: auxa( : )
+  COMPLEX(DP), ALLOCATABLE :: auxc( : )
+
+  !
+  ! ... BODY
+  !
+
+  CALL MPI_COMM_SIZE(comm, NPROC, IERR)
+  CALL MPI_COMM_RANK(comm, MPIME, IERR)
+
+  IF ( NPROC == 1 ) THEN
+
+     !  if there is only one proc no need of using parallel alg.
+
+     CALL ZGEMM(TRANSA, TRANSB, M, N, K, alpha, A, lda, B, ldb, beta, C, ldc)
+
+     RETURN
+
+  END IF
+
+  ME = MPIME + 1
+  Q = INT( m / NPROC )
+  R = MOD( m , NPROC )
+
+  ! ... Find out the number of elements in the local block
+  !     along "M" first dimension os matrix A
+
+  NB = Q
+  IF( ME <= R ) NB = NB + 1
+
+  ! ... Find out the global index of the local first row
+
+  IF( ME <= R ) THEN
+     ib_s = (Q+1)*(ME-1) + 1
+  ELSE
+     ib_s = Q*(ME-1) + R + 1
+  END IF
+
+  ldx = m / nproc + 1
+
+  ALLOCATE( auxa( MAX( n, m ) * ldx ) )
+  ALLOCATE( auxc( MAX( n, m ) * ldx ) )
+
+  IF( TRANSA == 'N' .OR. TRANSA == 'n' ) THEN
+     ibuf = 0
+     ioff = ib_s - 1
+     DO J = 1, k
+        DO I = 1, NB
+           auxa( ibuf + I ) = A( I + ioff, J )
+        END DO
+        ibuf = ibuf + ldx
+     END DO
+  ELSE
+     ibuf = 0
+     ioff = ib_s - 1
+     DO J = 1, k
+        DO I = 1, NB
+           auxa( ibuf + I ) = CONJG( A( J, I + ioff ) )
+        END DO
+        ibuf = ibuf + ldx
+     END DO
+     !ioff = ib_s - 1
+     !call mytranspose( A( 1, ioff + 1 ), lda, auxa(1), ldx, m, nb)
+  END IF
+
+  IF( beta /= 0.0d0 ) THEN
+     ibuf = 0
+     ioff = ib_s - 1
+     DO J = 1, n
+        DO I = 1, NB
+           auxc( ibuf + I ) = C( I + ioff, J )
+        END DO
+        ibuf = ibuf + ldx
+     END DO
+  END IF
+
+  CALL ZGEMM( 'N', transb, nb, n, k, alpha, auxa(1), ldx, B, ldb, beta, auxc(1), ldx )
+
+  ! ... Here processors exchange blocks
+
+  DO IP = 0, NPROC-1
+
+     ! ...    Find out the number of elements in the block of processor SOUR
+
+     NB_SOUR = q
+     IF( (IP+1) .LE. r ) NB_SOUR = NB_SOUR+1
+
+     ! ...    Find out the global index of the first row owned by SOUR
+
+     IF( (IP+1) .LE. r ) THEN
+        ib_sour = (Q+1)*IP + 1
+     ELSE
+        ib_sour = Q*IP + R + 1
+     END IF
+
+     IF( mpime == ip ) auxa(1:n*ldx) = auxc(1:n*ldx)
+
+     CALL MPI_BCAST( auxa(1), ldx*n, mpi_double_complex, ip, comm, IERR)
+
+     IBUF = 0
+     ioff = IB_SOUR - 1
+     DO J = 1, N
+        DO I = 1, NB_SOUR
+           C( I + ioff, J ) = AUXA( IBUF + I )
+        END DO
+        IBUF = IBUF + ldx
+     END DO
+
+  END DO
+
+  DEALLOCATE( auxa, auxc )
+
+#else
+
+     !  if we are not compiling with __MPI this is equivalent to a blas call
+
+     CALL ZGEMM(TRANSA, TRANSB, m, N, k, alpha, A, lda, B, ldb, beta, C, ldc)
+
+#endif
+
+  RETURN
+
+END SUBROUTINE zrep_matmul_drv
+
+
 !==----------------------------------------------==!
 END MODULE parallel_toolkit
 !==----------------------------------------------==!
@@ -3007,6 +3169,7 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   USE kinds, ONLY : DP
   USE mp,    ONLY : mp_bcast
   USE parallel_include
+  USE parallel_toolkit
   !
   IMPLICIT NONE
   !
@@ -3026,6 +3189,13 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   IF ( m == 0 .OR. n == 0 .OR. &
        ( ( alpha == 0.D0 .OR. k == 0 ) .AND. beta == 1.D0 ) ) RETURN
   !
+#if defined (__XD1)
+  !
+  CALL rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
+  RETURN
+  !
+#endif
+
 #if defined (__MPI)
   !
   CALL MPI_COMM_SIZE( comm, nproc, ierr )
@@ -3088,6 +3258,7 @@ SUBROUTINE para_zgemm( transa, transb, m, n, k, &
   USE kinds, ONLY : DP
   USE mp,    ONLY : mp_bcast
   USE parallel_include
+  USE parallel_toolkit
   !
   IMPLICIT NONE
   !
@@ -3106,7 +3277,14 @@ SUBROUTINE para_zgemm( transa, transb, m, n, k, &
   ! ... quick return if possible
   !
   IF ( m == 0 .OR. n == 0 .OR. &
-       ( ( alpha == 0.D0 .OR. k == ZERO ) .AND. beta == ONE ) ) RETURN
+       ( ( alpha == 0.D0 .OR. k == 0 ) .AND. beta == ONE ) ) RETURN
+
+#if defined (__XD1)
+  !
+  CALL zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
+  RETURN
+  !
+#endif
   !
 #if defined (__MPI)
   !
