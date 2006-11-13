@@ -88,7 +88,7 @@ SUBROUTINE electrons()
       ik,           &! counter on k points
       kbnd,         &! counter on bands
       ibnd_up,      &! counter on bands
-      ibnd_down,    &! counter on bands
+      ibnd_dw,    &! counter on bands
       ibnd,         &! counter on bands
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
@@ -576,28 +576,44 @@ SUBROUTINE electrons()
                     IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
                  ELSE
                     IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
-                    IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_down = kbnd
+                    IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
                  END IF
               END DO
            ELSE
               IF ( nspin == 1 ) THEN
-                 ibnd =  NINT( nelec ) / 2
+                 ibnd = NINT( nelec ) / 2
               ELSE
-                 ibnd =  NINT( nelec )
+                 ibnd    = NINT( nelec )
+                 ibnd_up = NINT( nelup )
+                 ibnd_dw = NINT( neldw )
               END IF
            END IF
            !
            IF ( ionode .AND. nbnd > ibnd ) THEN
               !
               IF ( nspin == 1 .OR. nspin == 4 ) THEN
-                 ehomo = MAXVAL( et(ibnd  ,1:nkstot) )
+                 ehomo = MAXVAL( et(ibnd,  1:nkstot) )
                  elumo = MINVAL( et(ibnd+1,1:nkstot) )
-              ELSE 
-                 ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
-                              MAXVAL( et(ibnd_down,nkstot/2+1:nkstot) ) )
-                 elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                              MINVAL( et(ibnd_down+1,nkstot/2+1:nkstot) ) )
-              ENDIF
+              ELSE
+                 IF ( ibnd_up == 0 ) THEN
+                    !
+                    ehomo = MAXVAL( et(ibnd_dw,1:nkstot/2) )
+                    elumo = MINVAL( et(ibnd_up+1,nkstot/2+1:nkstot) )
+                    !
+                 ELSE IF ( ibnd_dw == 0 ) THEN
+                    !
+                    ehomo = MAXVAL( et(ibnd_up,1:nkstot/2) )
+                    elumo = MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) )
+                    !
+                 ELSE
+                    !
+                    ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
+                                 MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
+                    elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
+                                 MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
+                    !
+                 END IF
+              END IF
               !
               WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
               !
@@ -905,7 +921,7 @@ SUBROUTINE electrons()
                     IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
                  ELSE
                     IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
-                    IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_down = kbnd
+                    IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
                  END IF
               END DO
           ELSE
@@ -924,9 +940,9 @@ SUBROUTINE electrons()
              !
              ELSE
                 ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
-                             MAXVAL( et(ibnd_down,nkstot/2+1:nkstot) ) )
+                             MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
                 elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                             MINVAL( et(ibnd_down+1,nkstot/2+1:nkstot) ) )
+                             MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
              END IF
              IF ( ehomo < elumo ) &
                 WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
