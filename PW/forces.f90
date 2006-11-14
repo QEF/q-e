@@ -38,7 +38,7 @@ SUBROUTINE forces()
   USE ions_base,     ONLY : if_pos
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
-  USE control_flags, ONLY : remove_rigid_rot
+  USE control_flags, ONLY : remove_rigid_rot, lbfgs
   !
   IMPLICIT NONE
   !
@@ -49,7 +49,7 @@ SUBROUTINE forces()
                            forcescc(:,:), &
                            forceh(:,:)
     ! nonlocal, local, core-correction, ewald, scf correction terms, and hubbard
-  REAL(DP) :: sum, sumscf
+  REAL(DP) :: sumfor, sumscf
   INTEGER  :: ipol, na
     ! counter on polarization
     ! counter on atoms
@@ -97,7 +97,7 @@ SUBROUTINE forces()
   !
   DO ipol = 1, 3
      !
-     sum = 0.D0
+     sumfor = 0.D0
      !
      DO na = 1, nat
         !
@@ -110,7 +110,7 @@ SUBROUTINE forces()
         !
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
         !
-        sum = sum + force(ipol,na)
+        sumfor = sumfor + force(ipol,na)
         !
      END DO
      !
@@ -118,7 +118,7 @@ SUBROUTINE forces()
      !
      DO na = 1, nat
         !
-        force(ipol,na) = force(ipol,na) - sum / DBLE( nat )
+        force(ipol,na) = force(ipol,na) - sumfor / DBLE( nat )
         !
      END DO
      !
@@ -181,27 +181,34 @@ SUBROUTINE forces()
   !
 #endif
   !
-  sum    = 0.D0
+  sumfor = 0.D0
   sumscf = 0.D0
   !
   DO na = 1, nat
      !
-     sum = sum + &
-           force(1,na)**2 + force(2,na)**2 + force(3,na)**2
+     sumfor = sumfor + &
+              force(1,na)**2 + force(2,na)**2 + force(3,na)**2
      !
      sumscf = sumscf + &
               forcescc(1,na)**2 + forcescc(2,na)**2+ forcescc(3,na)**2
      !
   END DO
   !
+  sumfor = SQRT( sumfor )
+  sumscf = SQRT( sumscf )
+
   WRITE( stdout, '(/5x,"Total force = ",F12.6,5X, &
-              &  "Total SCF correction = ",F12.6)') SQRT( sum ), SQRT( sumscf )
+              &  "Total SCF correction = ",F12.6)') sumfor, sumscf
   !
   DEALLOCATE( forcenl, forcelc, forcecc, forceh, forceion, forcescc )
   !
   lforce = .TRUE.
   !
   CALL stop_clock( 'forces' )
+  !
+  IF ( lbfgs .AND. ( sumfor < 10.D0*sumscf ) ) &
+     CALL errore( 'forces', 'scf correction on ' // &
+                & 'the force is too large: reduce conv_thr', 1 )
   !
   RETURN
   !
