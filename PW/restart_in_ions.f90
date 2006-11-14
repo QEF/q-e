@@ -19,7 +19,6 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE klist, ONLY: nks
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY : rho, rhog, rho_core, rhog_core
-  USE wavefunctions_module, ONLY : psic
   USE control_flags, ONLY: restart, tr2, ethr
   USE vlocal, ONLY: vnew
   USE wvfct, ONLY: nbnd, et

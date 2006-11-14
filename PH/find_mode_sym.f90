@@ -153,9 +153,9 @@ USE kinds, ONLY : DP
 USE constants, ONLY: tpi
 IMPLICIT NONE
 
+INTEGER :: nat, irot, irt(48,nat)
 COMPLEX(DP) :: mode(3*nat), rmode(3*nat), phase
 REAL(DP)  :: sr(3,3), rtau(3,48,nat), xq(3), arg
-INTEGER :: nat, irot, irt(48,nat)
 INTEGER :: na, nb, ipol, kpol, mu_i, mu_k
 
 rmode=(0.d0,0.d0)
