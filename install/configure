@@ -4394,7 +4394,7 @@ necsx:sxf90 )
 	try_fflags="-f0 \$(F90FLAGS)"
 	try_fflags_noopt="\$(F90FLAGS) -C debug"
 	try_ldflags="-float0 -P stack -sx6 -USX -eab -R5 -Wl\" -f zero \" "
-	try_dflags=" -DLANGUAGE_FORTRAN -D__SX6 -USX "
+	try_dflags=" -DLANGUAGE_FORTRAN -D__SX6 -USX -D__USE_3D_FFT "
 	try_fdflags="\"\$(DFLAGS)\" "
 	pre_fdflags="-Wp"
 	;;
