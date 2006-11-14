@@ -69,6 +69,7 @@ SUBROUTINE start_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
+  USE mp_global, ONLY : mpime
   USE mytime,    ONLY : nclock, clock_label, notrunning, no, maxclock, &
                         t0cpu, t0wall
   !
@@ -80,7 +81,7 @@ SUBROUTINE start_clock( label )
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
-  WRITE( stdout, '("TRACE Start: ",A12)') label
+  WRITE( *, '("mpime = ",I2,", TRACE Start: ",A12)') mpime, label
 #endif
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
@@ -131,6 +132,7 @@ SUBROUTINE stop_clock( label )
   !
   USE kinds,     ONLY : DP
   USE io_global, ONLY : stdout
+  USE mp_global, ONLY : mpime
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall
   !
@@ -142,7 +144,7 @@ SUBROUTINE stop_clock( label )
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
-  WRITE( stdout, '("TRACE End: ",A12)') label
+  WRITE( *, '("mpime = ",I2,", TRACE End: ",A12)') mpime, label
 #endif
   !
   IF ( no ) RETURN
