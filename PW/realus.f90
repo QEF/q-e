@@ -136,9 +136,9 @@ MODULE realus
       mby = mbr*SQRT( bg(2,1)**2 + bg(2,2)**2 + bg(2,3)**2 )
       mbz = mbr*SQRT( bg(3,1)**2 + bg(3,2)**2 + bg(3,3)**2 )
       !
-      dmbx = 2*ANINT( mbx*nrx1 ) + 1
-      dmby = 2*ANINT( mby*nrx2 ) + 1
-      dmbz = 2*ANINT( mbz*nrx3 ) + 1
+      dmbx = 2*ANINT( mbx*nrx1 ) + 2
+      dmby = 2*ANINT( mby*nrx2 ) + 2
+      dmbz = 2*ANINT( mbz*nrx3 ) + 2
       !
       roughestimate = ANINT( DBLE( dmbx*dmby*dmbz ) * pi / 6.D0 )
       !
@@ -815,6 +815,8 @@ MODULE realus
       !
       rr = r*r
       !
+      rho = 0.D0
+      !
       DO i = MAX( 1, 2-ltot ), nqf
          rho = rho + qfcoef(i)*rr**(i-2+ltot)*(i-1+ltot)
       END DO
@@ -844,6 +846,8 @@ MODULE realus
       REAL(DP) :: rr
       !
       rr = r*r
+      !
+      rho = 0.D0
       !
       DO i = MAX( 3-ltot, 1 ), nqf
          rho = rho + qfcoef(i)*rr**(i-3+ltot)*(i-1+ltot)*(i-2+ltot)
