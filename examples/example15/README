@@ -1,27 +1,5 @@
 Example for calculating the Raman tensor
 
-This example shows, how you can calculate the nonlinear
-susceptibilty and the Raman tensor with the help of the 2n+1
-theorem.
-Therefore, different calculations are performed.
-First, a normal self-consistent calculation of the groundstate.
-Second, a response calculation for electric-field and atomic-displacement 
-perturbations. 
-All these calculations mentioned above are done in the standard way like 
-in the calculation of phonon frequencies and the dielectric constant.
-
-Then a non-self-consistent calculation of the ground state is performed.
-Therin, the wavefunctions of a standard k-point mesh are computed, which is
-given in the usual way in the input of PW by K_POINTS.
-Additional, for each k-point, points k+b are calculated, where b is a small
-vector either in cartesian directions (lcart=.true.) or in direction of the 
-next neighbour of the k point (lcart = .false.).
-The length of these vector is specified in the variable b_length.
-
-Finally, the perturbed wavefunctions are calculated non self consistently
-on the enlarged mesh (the variables lboth, lelfield, and latomic specify
-the way of calculating the derivatives with respect to the k vector by
-finite differences and therefore which wavefuntions are needed on the 
-enlarged mesh), then the nonlinear susceptibility, and the Raman tensor.
-
-
+This example shows how to calculate the nonlinear susceptibility 
+and the Raman tensor using second-order response, as described in:
+M. Lazzeri and F. Mauri, Phys. Rev. Lett. 90, 036401 (2003)
