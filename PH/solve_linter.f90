@@ -24,7 +24,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE ions_base,            ONLY : nat
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : prefix, iunigk
-  USE check_stop,           ONLY : max_seconds
+  USE check_stop,           ONLY : check_stop_now
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
   USE kinds,                ONLY : DP
@@ -549,14 +549,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      close (unit = iunrec, status = 'keep')
 
      call stop_clock ('write_rec')
-     if (convt .or. tcpu > max_seconds) goto 155
-
+     if (check_stop_now()) then 
+        call stop_ph (.false.)
+        goto 155
+     endif
+     if (convt) goto 155
   enddo
 155 iter0=0
-  if (tcpu > max_seconds .and..not.convt) then
-     WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') tcpu, max_seconds
-     call stop_ph (.false.)
-  endif
   !
   !    There is a part of the dynamical matrix which requires the integral
   !    self consistent change of the potential and the variation of the ch

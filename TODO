@@ -111,7 +111,8 @@ POSTPROCESSING
 
 PH, D3, Gamma
 
-- stop with 'prefix.EXIT' and restart 
+- stop with 'prefix.EXIT' and restart (PH now has it; D3 & Gamma do not
+  have any infrastructure for stopping like this)
 
 - use charge mixing instead of potential mixing
 

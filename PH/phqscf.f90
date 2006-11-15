@@ -18,7 +18,7 @@ SUBROUTINE phqscf
   !
 
   USE io_global,  ONLY : stdout, ionode
-  USE check_stop, ONLY: max_seconds
+!  USE check_stop, ONLY: max_seconds
   USE pwcom
   USE kinds, ONLY : DP
   USE phcom

@@ -24,7 +24,7 @@ subroutine solve_e_fpol ( iw )
   USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : prefix, iunigk
   use pwcom
-  USE check_stop,            ONLY : max_seconds
+  USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp
@@ -388,16 +388,13 @@ subroutine solve_e_fpol ( iw )
      !if (okvan) write (iunrec) int3
 
      !close (unit = iunrec, status = 'keep')
-     tcpu = get_clock ('PHONON')
-     if (convt .or. tcpu > max_seconds) goto 155
-
+     if (check_stop_now()) then
+        call stop_ph (.false.)
+        goto 155
+     endif
+     if (convt) goto 155
   enddo
 155 continue
-  if (tcpu > max_seconds) then
-     WRITE( stdout, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
-          max_seconds
-     call stop_ph (.false.)
-  endif
   deallocate (eprec)
   deallocate (h_diag)
   deallocate (ps)

@@ -25,7 +25,7 @@ subroutine solve_e2
   USE wavefunctions_module,  ONLY: evc
   USE phcom
   USE ramanm
-  USE check_stop, ONLY: max_seconds
+  USE check_stop, ONLY: check_stop_now
   implicit none
 
   real(DP) ::  thresh, weight, avg_iter, dr2
@@ -62,9 +62,6 @@ subroutine solve_e2
   ! counter on mesh points
   ! the record number
   ! integer variable for I/O control
-
-  real(DP) :: tcpu, get_clock
-  ! timing variables
 
   character (len=256) :: flmixdpot
   ! the name of the file with the
@@ -263,16 +260,14 @@ subroutine solve_e2
      if (okvan) write (iunrec) int3
      close (unit = iunrec, status = 'keep')
 
-     tcpu = get_clock ('PHONON')
-     if (convt .or. tcpu > max_seconds) goto 155
+     if ( check_stop_now() ) then
+        call stop_ph (.false.)
+        goto 155
+     endif
+     if ( convt ) goto 155
 
   enddo
 155 continue
-  if (tcpu > max_seconds) then
-     write (6, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
-          max_seconds
-     call stop_ph (.false.)
-  endif
   deallocate (dvscfin )
   if (doublegrid) deallocate (dvscfins )
   deallocate (dvscfout )
