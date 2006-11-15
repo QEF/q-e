@@ -18,6 +18,9 @@ Fixed in version 3.2:
   *  Parallel subspace diagonalization could occasionally fail;
      replaced by a new algorithm that is much more stable 
 
+  *  Restart problems in parallel run for two cases:
+     1) with pools, 2) with local filesystems
+
 Fixed in version 3.1.1:
 
   *  Methfessel-Paxton broadening was hardcoded in the calculation of
