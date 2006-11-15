@@ -271,7 +271,8 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   IMPLICIT NONE
   !
   COMPLEX(DP), INTENT(IN)  :: rhog(ngm,nspin)
-  REAL(DP),    INTENT(OUT) :: v(nrxx,nspin), ehart, charge
+  REAL(DP),  INTENT(INOUT) :: v(nrxx,nspin)
+  REAL(DP),    INTENT(OUT) :: ehart, charge
   !
   REAL(DP)              :: fac
   REAL(DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
