@@ -53,7 +53,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
   USE io_global,        ONLY : stdout, ionode
-  USE scf,              ONLY : rho, vltot, vr
+  USE scf,              ONLY : rho, rhog, vltot, vr
   USE wvfct,            ONLY : npw, nbnd, wg, igk, gamma_only
   USE noncollin_module, ONLY : noncolin
 
@@ -64,7 +64,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   REAL(DP) :: sample_bias, z, dz, dummy
   REAL(DP) :: emin, emax, wf, charge, epsilon
 
-  INTEGER :: is, ik, ibnd, ir, ninter, nspin_eff, ipol
+  INTEGER :: is, ik, ibnd, ir, ninter, ipol
 #ifdef __PARA
   ! auxiliary vector (parallel case)
   REAL(DP), ALLOCATABLE :: raux1 (:)
@@ -209,13 +209,11 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      raux(:) = vltot(:) 
      IF (nspin == 2) THEN
-        rho(:,1) =  rho(:,1) +  rho(:,2)
+        rhog(:,1) =  rhog(:,1) +  rhog(:,2)
+        rho (:,1) =  rho (:,1) +  rho (:,2)
         nspin = 1
      END IF
-     nspin_eff=nspin
-     if (noncolin) nspin_eff=1
-     CALL v_h (rho(1,1), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-       nl, ngm, gg, gstart, nspin_eff, alat, omega, ehart, charge, raux)
+     CALL v_h (rhog, ehart, charge, raux)
      IF (tefield.AND.dipfield) CALL add_efield(rho,raux,dummy,1)
 
   ELSEIF (plot_num == 12) THEN
