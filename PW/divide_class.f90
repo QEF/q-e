@@ -1839,27 +1839,27 @@ ELSEIF (code_group==22) THEN
    name_class(10)="2s_d "
 
 
-   name_rap(1)="A_1g M_1"
+   name_rap(1)="A_1g X_1  M_1"
 
-   name_rap(2)="A_2g M_2"
+   name_rap(2)="A_2g X_4  M_4"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
    char_mat(2,9)=(-1.d0,0.d0)
    char_mat(2,10)=(-1.d0,0.d0)
 
-   name_rap(3)="B_1g M_3"
+   name_rap(3)="B_1g X_2  M_2"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
    char_mat(3,7)=(-1.d0,0.d0)
    char_mat(3,10)=(-1.d0,0.d0)
 
-   name_rap(4)="B_2g M_4"
+   name_rap(4)="B_2g X_3  M_3"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
    char_mat(4,7)=(-1.d0,0.d0)
    char_mat(4,9)=(-1.d0,0.d0)
 
-   name_rap(5)="E_g  M_5"
+   name_rap(5)="E_g  X_5  M_5"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -1871,35 +1871,35 @@ ELSEIF (code_group==22) THEN
    char_mat(5,9)=( 0.d0,0.d0)
    char_mat(5,10)=( 0.d0,0.d0)
 
-   name_rap(6)="A_1u M_1'"
+   name_rap(6)="A_1u X_1' M_1'"
    char_mat(6,6)=(-1.d0,0.d0)
    char_mat(6,7)=(-1.d0,0.d0)
    char_mat(6,8)=(-1.d0,0.d0)
    char_mat(6,9)=(-1.d0,0.d0)
    char_mat(6,10)=(-1.d0,0.d0)
 
-   name_rap(7)="A_2u M_2'"
+   name_rap(7)="A_2u X_4' M_4'"
    char_mat(7,4)=(-1.d0,0.d0)
    char_mat(7,5)=(-1.d0,0.d0)
    char_mat(7,6)=(-1.d0,0.d0)
    char_mat(7,7)=(-1.d0,0.d0)
    char_mat(7,8)=(-1.d0,0.d0)
 
-   name_rap(8)="B_1u M_3'"
+   name_rap(8)="B_1u X_2' M_2'"
    char_mat(8,2)=(-1.d0,0.d0)
    char_mat(8,5)=(-1.d0,0.d0)
    char_mat(8,6)=(-1.d0,0.d0)
    char_mat(8,8)=(-1.d0,0.d0)
    char_mat(8,9)=(-1.d0,0.d0)
 
-   name_rap(9)="B_2u M_4'"
+   name_rap(9)="B_2u X_3' M_3'"
    char_mat(9,2)=(-1.d0,0.d0)
    char_mat(9,4)=(-1.d0,0.d0)
    char_mat(9,6)=(-1.d0,0.d0)
    char_mat(9,8)=(-1.d0,0.d0)
    char_mat(9,10)=(-1.d0,0.d0)
 
-   name_rap(10)="E_u  M_5'"
+   name_rap(10)="E_u  X_5' M_5'"
    char_mat(10,1)=( 2.d0,0.d0)
    char_mat(10,2)=( 0.d0,0.d0)
    char_mat(10,3)=(-2.d0,0.d0)
