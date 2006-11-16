@@ -207,8 +207,9 @@ SUBROUTINE forces()
   CALL stop_clock( 'forces' )
   !
   IF ( lbfgs .AND. ( sumfor < 10.D0*sumscf ) ) &
-     CALL errore( 'forces', 'scf correction on ' // &
-                & 'the force is too large: reduce conv_thr', 1 )
+  WRITE( stdout,'(5x,"SCF correction compared to forces is too large, reduce conv_thr")')
+!     CALL errore( 'forces', 'scf correction on ' // &
+!                & 'the force is too large: reduce conv_thr', 1 )
   !
   RETURN
   !
