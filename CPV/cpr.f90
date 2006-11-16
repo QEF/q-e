@@ -134,7 +134,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
   USE mp,                       ONLY : mp_bcast
-  USE mp_global,                ONLY : intra_image_comm
+  USE mp_global,                ONLY : root_image, intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -712,6 +712,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! ... now:  cm=c(t) c0=c(t+dt)
      !
      tfirst = .FALSE.
+     !
+     ! sync lambda and lambdam
+     !
+      CALL mp_bcast( lambda, root_image, intra_image_comm )
+      CALL mp_bcast( lambdam, root_image, intra_image_comm )
      !
      ! ... write on file ndw each isave
      !
