@@ -36698,3 +36698,1657 @@ CIBM           PREFER SCALAR
 *     End of DPTTS2
 *
       END
+!
+! dgels and following subroutines used only in wf.f90
+!
+      SUBROUTINE DGELS( TRANS, M, N, NRHS, A, LDA, B, LDB, WORK, LWORK,
+     $                  INFO )
+*
+*  -- LAPACK driver routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          TRANS
+      INTEGER            INFO, LDA, LDB, LWORK, M, N, NRHS
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), B( LDB, * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGELS solves overdetermined or underdetermined real linear systems
+*  involving an M-by-N matrix A, or its transpose, using a QR or LQ
+*  factorization of A.  It is assumed that A has full rank.
+*
+*  The following options are provided:
+*
+*  1. If TRANS = 'N' and m >= n:  find the least squares solution of
+*     an overdetermined system, i.e., solve the least squares problem
+*                  minimize || B - A*X ||.
+*
+*  2. If TRANS = 'N' and m < n:  find the minimum norm solution of
+*     an underdetermined system A * X = B.
+*
+*  3. If TRANS = 'T' and m >= n:  find the minimum norm solution of
+*     an undetermined system A**T * X = B.
+*
+*  4. If TRANS = 'T' and m < n:  find the least squares solution of
+*     an overdetermined system, i.e., solve the least squares problem
+*                  minimize || B - A**T * X ||.
+*
+*  Several right hand side vectors b and solution vectors x can be
+*  handled in a single call; they are stored as the columns of the
+*  M-by-NRHS right hand side matrix B and the N-by-NRHS solution
+*  matrix X.
+*
+*  Arguments
+*  =========
+*
+*  TRANS   (input) CHARACTER
+*          = 'N': the linear system involves A;
+*          = 'T': the linear system involves A**T.
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  NRHS    (input) INTEGER
+*          The number of right hand sides, i.e., the number of
+*          columns of the matrices B and X. NRHS >=0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the M-by-N matrix A.
+*          On exit,
+*            if M >= N, A is overwritten by details of its QR
+*                       factorization as returned by DGEQRF;
+*            if M <  N, A is overwritten by details of its LQ
+*                       factorization as returned by DGELQF.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  B       (input/output) DOUBLE PRECISION array, dimension (LDB,NRHS)
+*          On entry, the matrix B of right hand side vectors, stored
+*          columnwise; B is M-by-NRHS if TRANS = 'N', or N-by-NRHS
+*          if TRANS = 'T'.
+*          On exit, B is overwritten by the solution vectors, stored
+*          columnwise:
+*          if TRANS = 'N' and m >= n, rows 1 to n of B contain the least
+*          squares solution vectors; the residual sum of squares for the
+*          solution in each column is given by the sum of squares of
+*          elements N+1 to M in that column;
+*          if TRANS = 'N' and m < n, rows 1 to N of B contain the
+*          minimum norm solution vectors;
+*          if TRANS = 'T' and m >= n, rows 1 to M of B contain the
+*          minimum norm solution vectors;
+*          if TRANS = 'T' and m < n, rows 1 to M of B contain the
+*          least squares solution vectors; the residual sum of squares
+*          for the solution in each column is given by the sum of
+*          squares of elements M+1 to N in that column.
+*
+*  LDB     (input) INTEGER
+*          The leading dimension of the array B. LDB >= MAX(1,M,N).
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.
+*          LWORK >= max( 1, MN + max( MN, NRHS ) ).
+*          For optimal performance,
+*          LWORK >= max( 1, MN + max( MN, NRHS )*NB ).
+*          where MN = min(M,N) and NB is the optimum block size.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ZERO, ONE
+      PARAMETER          ( ZERO = 0.0D0, ONE = 1.0D0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LQUERY, TPSD
+      INTEGER            BROW, I, IASCL, IBSCL, J, MN, NB, SCLLEN, WSIZE
+      DOUBLE PRECISION   ANRM, BIGNUM, BNRM, SMLNUM
+*     ..
+*     .. Local Arrays ..
+      DOUBLE PRECISION   RWORK( 1 )
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      DOUBLE PRECISION   DLAMCH, DLANGE
+      EXTERNAL           LSAME, ILAENV, DLAMCH, DLANGE
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGELQF, DGEQRF, DLASCL, DLASET, DORMLQ, DORMQR,
+     $                   DTRSM, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          DBLE, MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments.
+*
+      INFO = 0
+      MN = MIN( M, N )
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( .NOT.( LSAME( TRANS, 'N' ) .OR. LSAME( TRANS, 'T' ) ) ) THEN
+         INFO = -1
+      ELSE IF( M.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( NRHS.LT.0 ) THEN
+         INFO = -4
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -6
+      ELSE IF( LDB.LT.MAX( 1, M, N ) ) THEN
+         INFO = -8
+      ELSE IF( LWORK.LT.MAX( 1, MN+MAX( MN, NRHS ) ) .AND. .NOT.LQUERY )
+     $          THEN
+         INFO = -10
+      END IF
+*
+*     Figure out optimal block size
+*
+      IF( INFO.EQ.0 .OR. INFO.EQ.-10 ) THEN
+*
+         TPSD = .TRUE.
+         IF( LSAME( TRANS, 'N' ) )
+     $      TPSD = .FALSE.
+*
+         IF( M.GE.N ) THEN
+            NB = ILAENV( 1, 'DGEQRF', ' ', M, N, -1, -1 )
+            IF( TPSD ) THEN
+               NB = MAX( NB, ILAENV( 1, 'DORMQR', 'LN', M, NRHS, N,
+     $              -1 ) )
+            ELSE
+               NB = MAX( NB, ILAENV( 1, 'DORMQR', 'LT', M, NRHS, N,
+     $              -1 ) )
+            END IF
+         ELSE
+            NB = ILAENV( 1, 'DGELQF', ' ', M, N, -1, -1 )
+            IF( TPSD ) THEN
+               NB = MAX( NB, ILAENV( 1, 'DORMLQ', 'LT', N, NRHS, M,
+     $              -1 ) )
+            ELSE
+               NB = MAX( NB, ILAENV( 1, 'DORMLQ', 'LN', N, NRHS, M,
+     $              -1 ) )
+            END IF
+         END IF
+*
+         WSIZE = MAX( 1, MN+MAX( MN, NRHS )*NB )
+         WORK( 1 ) = DBLE( WSIZE )
+*
+      END IF
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGELS ', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( MIN( M, N, NRHS ).EQ.0 ) THEN
+         CALL DLASET( 'Full', MAX( M, N ), NRHS, ZERO, ZERO, B, LDB )
+         RETURN
+      END IF
+*
+*     Get machine parameters
+*
+      SMLNUM = DLAMCH( 'S' ) / DLAMCH( 'P' )
+      BIGNUM = ONE / SMLNUM
+      CALL DLABAD( SMLNUM, BIGNUM )
+*
+*     Scale A, B if max element outside range [SMLNUM,BIGNUM]
+*
+      ANRM = DLANGE( 'M', M, N, A, LDA, RWORK )
+      IASCL = 0
+      IF( ANRM.GT.ZERO .AND. ANRM.LT.SMLNUM ) THEN
+*
+*        Scale matrix norm up to SMLNUM
+*
+         CALL DLASCL( 'G', 0, 0, ANRM, SMLNUM, M, N, A, LDA, INFO )
+         IASCL = 1
+      ELSE IF( ANRM.GT.BIGNUM ) THEN
+*
+*        Scale matrix norm down to BIGNUM
+*
+         CALL DLASCL( 'G', 0, 0, ANRM, BIGNUM, M, N, A, LDA, INFO )
+         IASCL = 2
+      ELSE IF( ANRM.EQ.ZERO ) THEN
+*
+*        Matrix all zero. Return zero solution.
+*
+         CALL DLASET( 'F', MAX( M, N ), NRHS, ZERO, ZERO, B, LDB )
+         GO TO 50
+      END IF
+*
+      BROW = M
+      IF( TPSD )
+     $   BROW = N
+      BNRM = DLANGE( 'M', BROW, NRHS, B, LDB, RWORK )
+      IBSCL = 0
+      IF( BNRM.GT.ZERO .AND. BNRM.LT.SMLNUM ) THEN
+*
+*        Scale matrix norm up to SMLNUM
+*
+         CALL DLASCL( 'G', 0, 0, BNRM, SMLNUM, BROW, NRHS, B, LDB,
+     $                INFO )
+         IBSCL = 1
+      ELSE IF( BNRM.GT.BIGNUM ) THEN
+*
+*        Scale matrix norm down to BIGNUM
+*
+         CALL DLASCL( 'G', 0, 0, BNRM, BIGNUM, BROW, NRHS, B, LDB,
+     $                INFO )
+         IBSCL = 2
+      END IF
+*
+      IF( M.GE.N ) THEN
+*
+*        compute QR factorization of A
+*
+         CALL DGEQRF( M, N, A, LDA, WORK( 1 ), WORK( MN+1 ), LWORK-MN,
+     $                INFO )
+*
+*        workspace at least N, optimally N*NB
+*
+         IF( .NOT.TPSD ) THEN
+*
+*           Least-Squares Problem min || A * X - B ||
+*
+*           B(1:M,1:NRHS) := Q' * B(1:M,1:NRHS)
+*
+            CALL DORMQR( 'Left', 'Transpose', M, NRHS, N, A, LDA,
+     $                   WORK( 1 ), B, LDB, WORK( MN+1 ), LWORK-MN,
+     $                   INFO )
+*
+*           workspace at least NRHS, optimally NRHS*NB
+*
+*           B(1:N,1:NRHS) := inv(R) * B(1:N,1:NRHS)
+*
+            CALL DTRSM( 'Left', 'Upper', 'No transpose', 'Non-unit', N,
+     $                  NRHS, ONE, A, LDA, B, LDB )
+*
+            SCLLEN = N
+*
+         ELSE
+*
+*           Overdetermined system of equations A' * X = B
+*
+*           B(1:N,1:NRHS) := inv(R') * B(1:N,1:NRHS)
+*
+            CALL DTRSM( 'Left', 'Upper', 'Transpose', 'Non-unit', N,
+     $                  NRHS, ONE, A, LDA, B, LDB )
+*
+*           B(N+1:M,1:NRHS) = ZERO
+*
+            DO 20 J = 1, NRHS
+               DO 10 I = N + 1, M
+                  B( I, J ) = ZERO
+   10          CONTINUE
+   20       CONTINUE
+*
+*           B(1:M,1:NRHS) := Q(1:N,:) * B(1:N,1:NRHS)
+*
+            CALL DORMQR( 'Left', 'No transpose', M, NRHS, N, A, LDA,
+     $                   WORK( 1 ), B, LDB, WORK( MN+1 ), LWORK-MN,
+     $                   INFO )
+*
+*           workspace at least NRHS, optimally NRHS*NB
+*
+            SCLLEN = M
+*
+         END IF
+*
+      ELSE
+*
+*        Compute LQ factorization of A
+*
+         CALL DGELQF( M, N, A, LDA, WORK( 1 ), WORK( MN+1 ), LWORK-MN,
+     $                INFO )
+*
+*        workspace at least M, optimally M*NB.
+*
+         IF( .NOT.TPSD ) THEN
+*
+*           underdetermined system of equations A * X = B
+*
+*           B(1:M,1:NRHS) := inv(L) * B(1:M,1:NRHS)
+*
+            CALL DTRSM( 'Left', 'Lower', 'No transpose', 'Non-unit', M,
+     $                  NRHS, ONE, A, LDA, B, LDB )
+*
+*           B(M+1:N,1:NRHS) = 0
+*
+            DO 40 J = 1, NRHS
+               DO 30 I = M + 1, N
+                  B( I, J ) = ZERO
+   30          CONTINUE
+   40       CONTINUE
+*
+*           B(1:N,1:NRHS) := Q(1:N,:)' * B(1:M,1:NRHS)
+*
+            CALL DORMLQ( 'Left', 'Transpose', N, NRHS, M, A, LDA,
+     $                   WORK( 1 ), B, LDB, WORK( MN+1 ), LWORK-MN,
+     $                   INFO )
+*
+*           workspace at least NRHS, optimally NRHS*NB
+*
+            SCLLEN = N
+*
+         ELSE
+*
+*           overdetermined system min || A' * X - B ||
+*
+*           B(1:N,1:NRHS) := Q * B(1:N,1:NRHS)
+*
+            CALL DORMLQ( 'Left', 'No transpose', N, NRHS, M, A, LDA,
+     $                   WORK( 1 ), B, LDB, WORK( MN+1 ), LWORK-MN,
+     $                   INFO )
+*
+*           workspace at least NRHS, optimally NRHS*NB
+*
+*           B(1:M,1:NRHS) := inv(L') * B(1:M,1:NRHS)
+*
+            CALL DTRSM( 'Left', 'Lower', 'Transpose', 'Non-unit', M,
+     $                  NRHS, ONE, A, LDA, B, LDB )
+*
+            SCLLEN = M
+*
+         END IF
+*
+      END IF
+*
+*     Undo scaling
+*
+      IF( IASCL.EQ.1 ) THEN
+         CALL DLASCL( 'G', 0, 0, ANRM, SMLNUM, SCLLEN, NRHS, B, LDB,
+     $                INFO )
+      ELSE IF( IASCL.EQ.2 ) THEN
+         CALL DLASCL( 'G', 0, 0, ANRM, BIGNUM, SCLLEN, NRHS, B, LDB,
+     $                INFO )
+      END IF
+      IF( IBSCL.EQ.1 ) THEN
+         CALL DLASCL( 'G', 0, 0, SMLNUM, BNRM, SCLLEN, NRHS, B, LDB,
+     $                INFO )
+      ELSE IF( IBSCL.EQ.2 ) THEN
+         CALL DLASCL( 'G', 0, 0, BIGNUM, BNRM, SCLLEN, NRHS, B, LDB,
+     $                INFO )
+      END IF
+*
+   50 CONTINUE
+      WORK( 1 ) = DBLE( WSIZE )
+*
+      RETURN
+*
+*     End of DGELS
+*
+      END
+      SUBROUTINE DGELQF( M, N, A, LDA, TAU, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, LWORK, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGELQF computes an LQ factorization of a real M-by-N matrix A:
+*  A = L * Q.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the M-by-N matrix A.
+*          On exit, the elements on and below the diagonal of the array
+*          contain the m-by-min(m,n) lower trapezoidal matrix L (L is
+*          lower triangular if m <= n); the elements above the diagonal,
+*          with the array TAU, represent the orthogonal matrix Q as a
+*          product of elementary reflectors (see Further Details).
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  TAU     (output) DOUBLE PRECISION array, dimension (min(M,N))
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,M).
+*          For optimum performance LWORK >= M*NB, where NB is the
+*          optimal blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  Further Details
+*  ===============
+*
+*  The matrix Q is represented as a product of elementary reflectors
+*
+*     Q = H(k) . . . H(2) H(1), where k = min(m,n).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(1:i-1) = 0 and v(i) = 1; v(i+1:n) is stored on exit in A(i,i+1:n),
+*  and tau in TAU(i).
+*
+*  =====================================================================
+*
+*     .. Local Scalars ..
+      LOGICAL            LQUERY
+      INTEGER            I, IB, IINFO, IWS, K, LDWORK, LWKOPT, NB,
+     $                   NBMIN, NX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGELQ2, DLARFB, DLARFT, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      NB = ILAENV( 1, 'DGELQF', ' ', M, N, -1, -1 )
+      LWKOPT = M*NB
+      WORK( 1 ) = LWKOPT
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      ELSE IF( LWORK.LT.MAX( 1, M ) .AND. .NOT.LQUERY ) THEN
+         INFO = -7
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGELQF', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      K = MIN( M, N )
+      IF( K.EQ.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      NBMIN = 2
+      NX = 0
+      IWS = M
+      IF( NB.GT.1 .AND. NB.LT.K ) THEN
+*
+*        Determine when to cross over from blocked to unblocked code.
+*
+         NX = MAX( 0, ILAENV( 3, 'DGELQF', ' ', M, N, -1, -1 ) )
+         IF( NX.LT.K ) THEN
+*
+*           Determine if workspace is large enough for blocked code.
+*
+            LDWORK = M
+            IWS = LDWORK*NB
+            IF( LWORK.LT.IWS ) THEN
+*
+*              Not enough workspace to use optimal NB:  reduce NB and
+*              determine the minimum value of NB.
+*
+               NB = LWORK / LDWORK
+               NBMIN = MAX( 2, ILAENV( 2, 'DGELQF', ' ', M, N, -1,
+     $                 -1 ) )
+            END IF
+         END IF
+      END IF
+*
+      IF( NB.GE.NBMIN .AND. NB.LT.K .AND. NX.LT.K ) THEN
+*
+*        Use blocked code initially
+*
+         DO 10 I = 1, K - NX, NB
+            IB = MIN( K-I+1, NB )
+*
+*           Compute the LQ factorization of the current block
+*           A(i:i+ib-1,i:n)
+*
+            CALL DGELQ2( IB, N-I+1, A( I, I ), LDA, TAU( I ), WORK,
+     $                   IINFO )
+            IF( I+IB.LE.M ) THEN
+*
+*              Form the triangular factor of the block reflector
+*              H = H(i) H(i+1) . . . H(i+ib-1)
+*
+               CALL DLARFT( 'Forward', 'Rowwise', N-I+1, IB, A( I, I ),
+     $                      LDA, TAU( I ), WORK, LDWORK )
+*
+*              Apply H to A(i+ib:m,i:n) from the right
+*
+               CALL DLARFB( 'Right', 'No transpose', 'Forward',
+     $                      'Rowwise', M-I-IB+1, N-I+1, IB, A( I, I ),
+     $                      LDA, WORK, LDWORK, A( I+IB, I ), LDA,
+     $                      WORK( IB+1 ), LDWORK )
+            END IF
+   10    CONTINUE
+      ELSE
+         I = 1
+      END IF
+*
+*     Use unblocked code to factor the last or only block.
+*
+      IF( I.LE.K )
+     $   CALL DGELQ2( M-I+1, N-I+1, A( I, I ), LDA, TAU( I ), WORK,
+     $                IINFO )
+*
+      WORK( 1 ) = IWS
+      RETURN
+*
+*     End of DGELQF
+*
+      END
+      SUBROUTINE DGEQRF( M, N, A, LDA, TAU, WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, LWORK, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGEQRF computes a QR factorization of a real M-by-N matrix A:
+*  A = Q * R.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the M-by-N matrix A.
+*          On exit, the elements on and above the diagonal of the array
+*          contain the min(M,N)-by-N upper trapezoidal matrix R (R is
+*          upper triangular if m >= n); the elements below the diagonal,
+*          with the array TAU, represent the orthogonal matrix Q as a
+*          product of min(m,n) elementary reflectors (see Further
+*          Details).
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  TAU     (output) DOUBLE PRECISION array, dimension (min(M,N))
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.  LWORK >= max(1,N).
+*          For optimum performance LWORK >= N*NB, where NB is
+*          the optimal blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  Further Details
+*  ===============
+*
+*  The matrix Q is represented as a product of elementary reflectors
+*
+*     Q = H(1) H(2) . . . H(k), where k = min(m,n).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
+*  and tau in TAU(i).
+*
+*  =====================================================================
+*
+*     .. Local Scalars ..
+      LOGICAL            LQUERY
+      INTEGER            I, IB, IINFO, IWS, K, LDWORK, LWKOPT, NB,
+     $                   NBMIN, NX
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DGEQR2, DLARFB, DLARFT, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. External Functions ..
+      INTEGER            ILAENV
+      EXTERNAL           ILAENV
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      NB = ILAENV( 1, 'DGEQRF', ' ', M, N, -1, -1 )
+      LWKOPT = N*NB
+      WORK( 1 ) = LWKOPT
+      LQUERY = ( LWORK.EQ.-1 )
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      ELSE IF( LWORK.LT.MAX( 1, N ) .AND. .NOT.LQUERY ) THEN
+         INFO = -7
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGEQRF', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      K = MIN( M, N )
+      IF( K.EQ.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      NBMIN = 2
+      NX = 0
+      IWS = N
+      IF( NB.GT.1 .AND. NB.LT.K ) THEN
+*
+*        Determine when to cross over from blocked to unblocked code.
+*
+         NX = MAX( 0, ILAENV( 3, 'DGEQRF', ' ', M, N, -1, -1 ) )
+         IF( NX.LT.K ) THEN
+*
+*           Determine if workspace is large enough for blocked code.
+*
+            LDWORK = N
+            IWS = LDWORK*NB
+            IF( LWORK.LT.IWS ) THEN
+*
+*              Not enough workspace to use optimal NB:  reduce NB and
+*              determine the minimum value of NB.
+*
+               NB = LWORK / LDWORK
+               NBMIN = MAX( 2, ILAENV( 2, 'DGEQRF', ' ', M, N, -1,
+     $                 -1 ) )
+            END IF
+         END IF
+      END IF
+*
+      IF( NB.GE.NBMIN .AND. NB.LT.K .AND. NX.LT.K ) THEN
+*
+*        Use blocked code initially
+*
+         DO 10 I = 1, K - NX, NB
+            IB = MIN( K-I+1, NB )
+*
+*           Compute the QR factorization of the current block
+*           A(i:m,i:i+ib-1)
+*
+            CALL DGEQR2( M-I+1, IB, A( I, I ), LDA, TAU( I ), WORK,
+     $                   IINFO )
+            IF( I+IB.LE.N ) THEN
+*
+*              Form the triangular factor of the block reflector
+*              H = H(i) H(i+1) . . . H(i+ib-1)
+*
+               CALL DLARFT( 'Forward', 'Columnwise', M-I+1, IB,
+     $                      A( I, I ), LDA, TAU( I ), WORK, LDWORK )
+*
+*              Apply H' to A(i:m,i+ib:n) from the left
+*
+               CALL DLARFB( 'Left', 'Transpose', 'Forward',
+     $                      'Columnwise', M-I+1, N-I-IB+1, IB,
+     $                      A( I, I ), LDA, WORK, LDWORK, A( I, I+IB ),
+     $                      LDA, WORK( IB+1 ), LDWORK )
+            END IF
+   10    CONTINUE
+      ELSE
+         I = 1
+      END IF
+*
+*     Use unblocked code to factor the last or only block.
+*
+      IF( I.LE.K )
+     $   CALL DGEQR2( M-I+1, N-I+1, A( I, I ), LDA, TAU( I ), WORK,
+     $                IINFO )
+*
+      WORK( 1 ) = IWS
+      RETURN
+*
+*     End of DGEQRF
+*
+      END
+      DOUBLE PRECISION FUNCTION DLANGE( NORM, M, N, A, LDA, WORK )
+*
+*  -- LAPACK auxiliary routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     October 31, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          NORM
+      INTEGER            LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DLANGE  returns the value of the one norm,  or the Frobenius norm, or
+*  the  infinity norm,  or the  element of  largest absolute value  of a
+*  real matrix A.
+*
+*  Description
+*  ===========
+*
+*  DLANGE returns the value
+*
+*     DLANGE = ( max(abs(A(i,j))), NORM = 'M' or 'm'
+*              (
+*              ( norm1(A),         NORM = '1', 'O' or 'o'
+*              (
+*              ( normI(A),         NORM = 'I' or 'i'
+*              (
+*              ( normF(A),         NORM = 'F', 'f', 'E' or 'e'
+*
+*  where  norm1  denotes the  one norm of a matrix (maximum column sum),
+*  normI  denotes the  infinity norm  of a matrix  (maximum row sum) and
+*  normF  denotes the  Frobenius norm of a matrix (square root of sum of
+*  squares).  Note that  max(abs(A(i,j)))  is not a  matrix norm.
+*
+*  Arguments
+*  =========
+*
+*  NORM    (input) CHARACTER*1
+*          Specifies the value to be returned in DLANGE as described
+*          above.
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.  When M = 0,
+*          DLANGE is set to zero.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.  When N = 0,
+*          DLANGE is set to zero.
+*
+*  A       (input) DOUBLE PRECISION array, dimension (LDA,N)
+*          The m by n matrix A.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(M,1).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (LWORK),
+*          where LWORK >= M when NORM = 'I'; otherwise, WORK is not
+*          referenced.
+*
+* =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE, ZERO
+      PARAMETER          ( ONE = 1.0D+0, ZERO = 0.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, J
+      DOUBLE PRECISION   SCALE, SUM, VALUE
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLASSQ
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          ABS, MAX, MIN, SQRT
+*     ..
+*     .. Executable Statements ..
+*
+      IF( MIN( M, N ).EQ.0 ) THEN
+         VALUE = ZERO
+      ELSE IF( LSAME( NORM, 'M' ) ) THEN
+*
+*        Find max(abs(A(i,j))).
+*
+         VALUE = ZERO
+         DO 20 J = 1, N
+            DO 10 I = 1, M
+               VALUE = MAX( VALUE, ABS( A( I, J ) ) )
+   10       CONTINUE
+   20    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'O' ) ) .OR. ( NORM.EQ.'1' ) ) THEN
+*
+*        Find norm1(A).
+*
+         VALUE = ZERO
+         DO 40 J = 1, N
+            SUM = ZERO
+            DO 30 I = 1, M
+               SUM = SUM + ABS( A( I, J ) )
+   30       CONTINUE
+            VALUE = MAX( VALUE, SUM )
+   40    CONTINUE
+      ELSE IF( LSAME( NORM, 'I' ) ) THEN
+*
+*        Find normI(A).
+*
+         DO 50 I = 1, M
+            WORK( I ) = ZERO
+   50    CONTINUE
+         DO 70 J = 1, N
+            DO 60 I = 1, M
+               WORK( I ) = WORK( I ) + ABS( A( I, J ) )
+   60       CONTINUE
+   70    CONTINUE
+         VALUE = ZERO
+         DO 80 I = 1, M
+            VALUE = MAX( VALUE, WORK( I ) )
+   80    CONTINUE
+      ELSE IF( ( LSAME( NORM, 'F' ) ) .OR. ( LSAME( NORM, 'E' ) ) ) THEN
+*
+*        Find normF(A).
+*
+         SCALE = ZERO
+         SUM = ONE
+         DO 90 J = 1, N
+            CALL DLASSQ( M, A( 1, J ), 1, SCALE, SUM )
+   90    CONTINUE
+         VALUE = SCALE*SQRT( SUM )
+      END IF
+*
+      DLANGE = VALUE
+      RETURN
+*
+*     End of DLANGE
+*
+      END
+      SUBROUTINE DORMLQ( SIDE, TRANS, M, N, K, A, LDA, TAU, C, LDC,
+     $                   WORK, LWORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     June 30, 1999
+*
+*     .. Scalar Arguments ..
+      CHARACTER          SIDE, TRANS
+      INTEGER            INFO, K, LDA, LDC, LWORK, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), C( LDC, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DORMLQ overwrites the general real M-by-N matrix C with
+*
+*                  SIDE = 'L'     SIDE = 'R'
+*  TRANS = 'N':      Q * C          C * Q
+*  TRANS = 'T':      Q**T * C       C * Q**T
+*
+*  where Q is a real orthogonal matrix defined as the product of k
+*  elementary reflectors
+*
+*        Q = H(k) . . . H(2) H(1)
+*
+*  as returned by DGELQF. Q is of order M if SIDE = 'L' and of order N
+*  if SIDE = 'R'.
+*
+*  Arguments
+*  =========
+*
+*  SIDE    (input) CHARACTER*1
+*          = 'L': apply Q or Q**T from the Left;
+*          = 'R': apply Q or Q**T from the Right.
+*
+*  TRANS   (input) CHARACTER*1
+*          = 'N':  No transpose, apply Q;
+*          = 'T':  Transpose, apply Q**T.
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix C. M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix C. N >= 0.
+*
+*  K       (input) INTEGER
+*          The number of elementary reflectors whose product defines
+*          the matrix Q.
+*          If SIDE = 'L', M >= K >= 0;
+*          if SIDE = 'R', N >= K >= 0.
+*
+*  A       (input) DOUBLE PRECISION array, dimension
+*                               (LDA,M) if SIDE = 'L',
+*                               (LDA,N) if SIDE = 'R'
+*          The i-th row must contain the vector which defines the
+*          elementary reflector H(i), for i = 1,2,...,k, as returned by
+*          DGELQF in the first k rows of its array argument A.
+*          A is modified by the routine but restored on exit.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A. LDA >= max(1,K).
+*
+*  TAU     (input) DOUBLE PRECISION array, dimension (K)
+*          TAU(i) must contain the scalar factor of the elementary
+*          reflector H(i), as returned by DGELQF.
+*
+*  C       (input/output) DOUBLE PRECISION array, dimension (LDC,N)
+*          On entry, the M-by-N matrix C.
+*          On exit, C is overwritten by Q*C or Q**T*C or C*Q**T or C*Q.
+*
+*  LDC     (input) INTEGER
+*          The leading dimension of the array C. LDC >= max(1,M).
+*
+*  WORK    (workspace/output) DOUBLE PRECISION array, dimension (LWORK)
+*          On exit, if INFO = 0, WORK(1) returns the optimal LWORK.
+*
+*  LWORK   (input) INTEGER
+*          The dimension of the array WORK.
+*          If SIDE = 'L', LWORK >= max(1,N);
+*          if SIDE = 'R', LWORK >= max(1,M).
+*          For optimum performance LWORK >= N*NB if SIDE = 'L', and
+*          LWORK >= M*NB if SIDE = 'R', where NB is the optimal
+*          blocksize.
+*
+*          If LWORK = -1, then a workspace query is assumed; the routine
+*          only calculates the optimal size of the WORK array, returns
+*          this value as the first entry of the WORK array, and no error
+*          message related to LWORK is issued by XERBLA.
+*
+*  INFO    (output) INTEGER
+*          = 0:  successful exit
+*          < 0:  if INFO = -i, the i-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      INTEGER            NBMAX, LDT
+      PARAMETER          ( NBMAX = 64, LDT = NBMAX+1 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LEFT, LQUERY, NOTRAN
+      CHARACTER          TRANST
+      INTEGER            I, I1, I2, I3, IB, IC, IINFO, IWS, JC, LDWORK,
+     $                   LWKOPT, MI, NB, NBMIN, NI, NQ, NW
+*     ..
+*     .. Local Arrays ..
+      DOUBLE PRECISION   T( LDT, NBMAX )
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      INTEGER            ILAENV
+      EXTERNAL           LSAME, ILAENV
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLARFB, DLARFT, DORML2, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      LEFT = LSAME( SIDE, 'L' )
+      NOTRAN = LSAME( TRANS, 'N' )
+      LQUERY = ( LWORK.EQ.-1 )
+*
+*     NQ is the order of Q and NW is the minimum dimension of WORK
+*
+      IF( LEFT ) THEN
+         NQ = M
+         NW = N
+      ELSE
+         NQ = N
+         NW = M
+      END IF
+      IF( .NOT.LEFT .AND. .NOT.LSAME( SIDE, 'R' ) ) THEN
+         INFO = -1
+      ELSE IF( .NOT.NOTRAN .AND. .NOT.LSAME( TRANS, 'T' ) ) THEN
+         INFO = -2
+      ELSE IF( M.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -4
+      ELSE IF( K.LT.0 .OR. K.GT.NQ ) THEN
+         INFO = -5
+      ELSE IF( LDA.LT.MAX( 1, K ) ) THEN
+         INFO = -7
+      ELSE IF( LDC.LT.MAX( 1, M ) ) THEN
+         INFO = -10
+      ELSE IF( LWORK.LT.MAX( 1, NW ) .AND. .NOT.LQUERY ) THEN
+         INFO = -12
+      END IF
+*
+      IF( INFO.EQ.0 ) THEN
+*
+*        Determine the block size.  NB may be at most NBMAX, where NBMAX
+*        is used to define the local array T.
+*
+         NB = MIN( NBMAX, ILAENV( 1, 'DORMLQ', SIDE // TRANS, M, N, K,
+     $        -1 ) )
+         LWKOPT = MAX( 1, NW )*NB
+         WORK( 1 ) = LWKOPT
+      END IF
+*
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DORMLQ', -INFO )
+         RETURN
+      ELSE IF( LQUERY ) THEN
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( M.EQ.0 .OR. N.EQ.0 .OR. K.EQ.0 ) THEN
+         WORK( 1 ) = 1
+         RETURN
+      END IF
+*
+      NBMIN = 2
+      LDWORK = NW
+      IF( NB.GT.1 .AND. NB.LT.K ) THEN
+         IWS = NW*NB
+         IF( LWORK.LT.IWS ) THEN
+            NB = LWORK / LDWORK
+            NBMIN = MAX( 2, ILAENV( 2, 'DORMLQ', SIDE // TRANS, M, N, K,
+     $              -1 ) )
+         END IF
+      ELSE
+         IWS = NW
+      END IF
+*
+      IF( NB.LT.NBMIN .OR. NB.GE.K ) THEN
+*
+*        Use unblocked code
+*
+         CALL DORML2( SIDE, TRANS, M, N, K, A, LDA, TAU, C, LDC, WORK,
+     $                IINFO )
+      ELSE
+*
+*        Use blocked code
+*
+         IF( ( LEFT .AND. NOTRAN ) .OR.
+     $       ( .NOT.LEFT .AND. .NOT.NOTRAN ) ) THEN
+            I1 = 1
+            I2 = K
+            I3 = NB
+         ELSE
+            I1 = ( ( K-1 ) / NB )*NB + 1
+            I2 = 1
+            I3 = -NB
+         END IF
+*
+         IF( LEFT ) THEN
+            NI = N
+            JC = 1
+         ELSE
+            MI = M
+            IC = 1
+         END IF
+*
+         IF( NOTRAN ) THEN
+            TRANST = 'T'
+         ELSE
+            TRANST = 'N'
+         END IF
+*
+         DO 10 I = I1, I2, I3
+            IB = MIN( NB, K-I+1 )
+*
+*           Form the triangular factor of the block reflector
+*           H = H(i) H(i+1) . . . H(i+ib-1)
+*
+            CALL DLARFT( 'Forward', 'Rowwise', NQ-I+1, IB, A( I, I ),
+     $                   LDA, TAU( I ), T, LDT )
+            IF( LEFT ) THEN
+*
+*              H or H' is applied to C(i:m,1:n)
+*
+               MI = M - I + 1
+               IC = I
+            ELSE
+*
+*              H or H' is applied to C(1:m,i:n)
+*
+               NI = N - I + 1
+               JC = I
+            END IF
+*
+*           Apply H or H'
+*
+            CALL DLARFB( SIDE, TRANST, 'Forward', 'Rowwise', MI, NI, IB,
+     $                   A( I, I ), LDA, T, LDT, C( IC, JC ), LDC, WORK,
+     $                   LDWORK )
+   10    CONTINUE
+      END IF
+      WORK( 1 ) = LWKOPT
+      RETURN
+*
+*     End of DORMLQ
+*
+      END
+      SUBROUTINE DGELQ2( M, N, A, LDA, TAU, WORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGELQ2 computes an LQ factorization of a real m by n matrix A:
+*  A = L * Q.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the m by n matrix A.
+*          On exit, the elements on and below the diagonal of the array
+*          contain the m by min(m,n) lower trapezoidal matrix L (L is
+*          lower triangular if m <= n); the elements above the diagonal,
+*          with the array TAU, represent the orthogonal matrix Q as a
+*          product of elementary reflectors (see Further Details).
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  TAU     (output) DOUBLE PRECISION array, dimension (min(M,N))
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (M)
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -i, the i-th argument had an illegal value
+*
+*  Further Details
+*  ===============
+*
+*  The matrix Q is represented as a product of elementary reflectors
+*
+*     Q = H(k) . . . H(2) H(1), where k = min(m,n).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(1:i-1) = 0 and v(i) = 1; v(i+1:n) is stored on exit in A(i,i+1:n),
+*  and tau in TAU(i).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, K
+      DOUBLE PRECISION   AII
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLARF, DLARFG, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGELQ2', -INFO )
+         RETURN
+      END IF
+*
+      K = MIN( M, N )
+*
+      DO 10 I = 1, K
+*
+*        Generate elementary reflector H(i) to annihilate A(i,i+1:n)
+*
+         CALL DLARFG( N-I+1, A( I, I ), A( I, MIN( I+1, N ) ), LDA,
+     $                TAU( I ) )
+         IF( I.LT.M ) THEN
+*
+*           Apply H(i) to A(i+1:m,i:n) from the right
+*
+            AII = A( I, I )
+            A( I, I ) = ONE
+            CALL DLARF( 'Right', M-I, N-I+1, A( I, I ), LDA, TAU( I ),
+     $                  A( I+1, I ), LDA, WORK )
+            A( I, I ) = AII
+         END IF
+   10 CONTINUE
+      RETURN
+*
+*     End of DGELQ2
+*
+      END
+      SUBROUTINE DORML2( SIDE, TRANS, M, N, K, A, LDA, TAU, C, LDC,
+     $                   WORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      CHARACTER          SIDE, TRANS
+      INTEGER            INFO, K, LDA, LDC, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), C( LDC, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DORML2 overwrites the general real m by n matrix C with
+*
+*        Q * C  if SIDE = 'L' and TRANS = 'N', or
+*
+*        Q'* C  if SIDE = 'L' and TRANS = 'T', or
+*
+*        C * Q  if SIDE = 'R' and TRANS = 'N', or
+*
+*        C * Q' if SIDE = 'R' and TRANS = 'T',
+*
+*  where Q is a real orthogonal matrix defined as the product of k
+*  elementary reflectors
+*
+*        Q = H(k) . . . H(2) H(1)
+*
+*  as returned by DGELQF. Q is of order m if SIDE = 'L' and of order n
+*  if SIDE = 'R'.
+*
+*  Arguments
+*  =========
+*
+*  SIDE    (input) CHARACTER*1
+*          = 'L': apply Q or Q' from the Left
+*          = 'R': apply Q or Q' from the Right
+*
+*  TRANS   (input) CHARACTER*1
+*          = 'N': apply Q  (No transpose)
+*          = 'T': apply Q' (Transpose)
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix C. M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix C. N >= 0.
+*
+*  K       (input) INTEGER
+*          The number of elementary reflectors whose product defines
+*          the matrix Q.
+*          If SIDE = 'L', M >= K >= 0;
+*          if SIDE = 'R', N >= K >= 0.
+*
+*  A       (input) DOUBLE PRECISION array, dimension
+*                               (LDA,M) if SIDE = 'L',
+*                               (LDA,N) if SIDE = 'R'
+*          The i-th row must contain the vector which defines the
+*          elementary reflector H(i), for i = 1,2,...,k, as returned by
+*          DGELQF in the first k rows of its array argument A.
+*          A is modified by the routine but restored on exit.
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A. LDA >= max(1,K).
+*
+*  TAU     (input) DOUBLE PRECISION array, dimension (K)
+*          TAU(i) must contain the scalar factor of the elementary
+*          reflector H(i), as returned by DGELQF.
+*
+*  C       (input/output) DOUBLE PRECISION array, dimension (LDC,N)
+*          On entry, the m by n matrix C.
+*          On exit, C is overwritten by Q*C or Q'*C or C*Q' or C*Q.
+*
+*  LDC     (input) INTEGER
+*          The leading dimension of the array C. LDC >= max(1,M).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension
+*                                   (N) if SIDE = 'L',
+*                                   (M) if SIDE = 'R'
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -i, the i-th argument had an illegal value
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      LOGICAL            LEFT, NOTRAN
+      INTEGER            I, I1, I2, I3, IC, JC, MI, NI, NQ
+      DOUBLE PRECISION   AII
+*     ..
+*     .. External Functions ..
+      LOGICAL            LSAME
+      EXTERNAL           LSAME
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLARF, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      LEFT = LSAME( SIDE, 'L' )
+      NOTRAN = LSAME( TRANS, 'N' )
+*
+*     NQ is the order of Q
+*
+      IF( LEFT ) THEN
+         NQ = M
+      ELSE
+         NQ = N
+      END IF
+      IF( .NOT.LEFT .AND. .NOT.LSAME( SIDE, 'R' ) ) THEN
+         INFO = -1
+      ELSE IF( .NOT.NOTRAN .AND. .NOT.LSAME( TRANS, 'T' ) ) THEN
+         INFO = -2
+      ELSE IF( M.LT.0 ) THEN
+         INFO = -3
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -4
+      ELSE IF( K.LT.0 .OR. K.GT.NQ ) THEN
+         INFO = -5
+      ELSE IF( LDA.LT.MAX( 1, K ) ) THEN
+         INFO = -7
+      ELSE IF( LDC.LT.MAX( 1, M ) ) THEN
+         INFO = -10
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DORML2', -INFO )
+         RETURN
+      END IF
+*
+*     Quick return if possible
+*
+      IF( M.EQ.0 .OR. N.EQ.0 .OR. K.EQ.0 )
+     $   RETURN
+*
+      IF( ( LEFT .AND. NOTRAN ) .OR. ( .NOT.LEFT .AND. .NOT.NOTRAN ) )
+     $     THEN
+         I1 = 1
+         I2 = K
+         I3 = 1
+      ELSE
+         I1 = K
+         I2 = 1
+         I3 = -1
+      END IF
+*
+      IF( LEFT ) THEN
+         NI = N
+         JC = 1
+      ELSE
+         MI = M
+         IC = 1
+      END IF
+*
+      DO 10 I = I1, I2, I3
+         IF( LEFT ) THEN
+*
+*           H(i) is applied to C(i:m,1:n)
+*
+            MI = M - I + 1
+            IC = I
+         ELSE
+*
+*           H(i) is applied to C(1:m,i:n)
+*
+            NI = N - I + 1
+            JC = I
+         END IF
+*
+*        Apply H(i)
+*
+         AII = A( I, I )
+         A( I, I ) = ONE
+         CALL DLARF( SIDE, MI, NI, A( I, I ), LDA, TAU( I ),
+     $               C( IC, JC ), LDC, WORK )
+         A( I, I ) = AII
+   10 CONTINUE
+      RETURN
+*
+*     End of DORML2
+*
+      END
+      SUBROUTINE DGEQR2( M, N, A, LDA, TAU, WORK, INFO )
+*
+*  -- LAPACK routine (version 3.0) --
+*     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
+*     Courant Institute, Argonne National Lab, and Rice University
+*     February 29, 1992
+*
+*     .. Scalar Arguments ..
+      INTEGER            INFO, LDA, M, N
+*     ..
+*     .. Array Arguments ..
+      DOUBLE PRECISION   A( LDA, * ), TAU( * ), WORK( * )
+*     ..
+*
+*  Purpose
+*  =======
+*
+*  DGEQR2 computes a QR factorization of a real m by n matrix A:
+*  A = Q * R.
+*
+*  Arguments
+*  =========
+*
+*  M       (input) INTEGER
+*          The number of rows of the matrix A.  M >= 0.
+*
+*  N       (input) INTEGER
+*          The number of columns of the matrix A.  N >= 0.
+*
+*  A       (input/output) DOUBLE PRECISION array, dimension (LDA,N)
+*          On entry, the m by n matrix A.
+*          On exit, the elements on and above the diagonal of the array
+*          contain the min(m,n) by n upper trapezoidal matrix R (R is
+*          upper triangular if m >= n); the elements below the diagonal,
+*          with the array TAU, represent the orthogonal matrix Q as a
+*          product of elementary reflectors (see Further Details).
+*
+*  LDA     (input) INTEGER
+*          The leading dimension of the array A.  LDA >= max(1,M).
+*
+*  TAU     (output) DOUBLE PRECISION array, dimension (min(M,N))
+*          The scalar factors of the elementary reflectors (see Further
+*          Details).
+*
+*  WORK    (workspace) DOUBLE PRECISION array, dimension (N)
+*
+*  INFO    (output) INTEGER
+*          = 0: successful exit
+*          < 0: if INFO = -i, the i-th argument had an illegal value
+*
+*  Further Details
+*  ===============
+*
+*  The matrix Q is represented as a product of elementary reflectors
+*
+*     Q = H(1) H(2) . . . H(k), where k = min(m,n).
+*
+*  Each H(i) has the form
+*
+*     H(i) = I - tau * v * v'
+*
+*  where tau is a real scalar, and v is a real vector with
+*  v(1:i-1) = 0 and v(i) = 1; v(i+1:m) is stored on exit in A(i+1:m,i),
+*  and tau in TAU(i).
+*
+*  =====================================================================
+*
+*     .. Parameters ..
+      DOUBLE PRECISION   ONE
+      PARAMETER          ( ONE = 1.0D+0 )
+*     ..
+*     .. Local Scalars ..
+      INTEGER            I, K
+      DOUBLE PRECISION   AII
+*     ..
+*     .. External Subroutines ..
+      EXTERNAL           DLARF, DLARFG, XERBLA
+*     ..
+*     .. Intrinsic Functions ..
+      INTRINSIC          MAX, MIN
+*     ..
+*     .. Executable Statements ..
+*
+*     Test the input arguments
+*
+      INFO = 0
+      IF( M.LT.0 ) THEN
+         INFO = -1
+      ELSE IF( N.LT.0 ) THEN
+         INFO = -2
+      ELSE IF( LDA.LT.MAX( 1, M ) ) THEN
+         INFO = -4
+      END IF
+      IF( INFO.NE.0 ) THEN
+         CALL XERBLA( 'DGEQR2', -INFO )
+         RETURN
+      END IF
+*
+      K = MIN( M, N )
+*
+      DO 10 I = 1, K
+*
+*        Generate elementary reflector H(i) to annihilate A(i+1:m,i)
+*
+         CALL DLARFG( M-I+1, A( I, I ), A( MIN( I+1, M ), I ), 1,
+     $                TAU( I ) )
+         IF( I.LT.N ) THEN
+*
+*           Apply H(i) to A(i:m,i+1:n) from the left
+*
+            AII = A( I, I )
+            A( I, I ) = ONE
+            CALL DLARF( 'Left', M-I+1, N-I, A( I, I ), 1, TAU( I ),
+     $                  A( I, I+1 ), LDA, WORK )
+            A( I, I ) = AII
+         END IF
+   10 CONTINUE
+      RETURN
+*
+*     End of DGEQR2
+*
+      END
