@@ -113,8 +113,7 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   !    that do not belong to it
   !
 
-  call smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, nr3, &
-       sym, minus_q)
+  call smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   IF (noncolin.and.domag) THEN
      minus_q=.false.
      IF ( ABS(DOT_PRODUCT(xq,xq)) > 1.0D-07 ) CALL errore ('sgama', &

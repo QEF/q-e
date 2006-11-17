@@ -7,8 +7,7 @@
 !
 #include "f_defs.h"
 !-----------------------------------------------------------------------
-subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, &
-     nr3, sym, minus_q)
+subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   !-----------------------------------------------------------------------
   !
   ! This routine selects, among the symmetry matrices of the point group
@@ -26,8 +25,7 @@ subroutine smallg_q (xq, modenum, at, bg, nrot, s, ftau, nr1, nr2, &
   ! input: the direct lattice vectors
   ! input: the q point of the crystal
 
-  integer :: s (3, 3, 48), nrot, nr1, nr2, nr3, ftau (3, 48), &
-       modenum
+  integer :: s (3, 3, 48), nrot, ftau (3, 48), modenum
   ! input: the symmetry matrices
   ! input: number of symmetry operations
   ! input: fft grid dimension (units for ftau)
