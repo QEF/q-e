@@ -1968,7 +1968,7 @@ end subroutine exch_corr_cp
         rhob = 0.5d0 * rho
         grhoa = 0.25d0 * grho
         grhob = 0.25d0 * grho
-        CALL LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB, SX,V1XA,V2XA,V1XB,V2XB)
+        CALL LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB,sx,V1XA,V2XA,V1XB,V2XB)
         v1x = V1XA
         v2x = V2XA
       END SUBROUTINE wrap_b88
@@ -1990,7 +1990,7 @@ end subroutine exch_corr_cp
       END SUBROUTINE wrap_glyp
 
 !     ==================================================================
-      SUBROUTINE LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB, SX,V1XA,V2XA,V1XB,V2XB)
+      SUBROUTINE LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB,sx,V1XA,V2XA,V1XB,V2XB)
 !     ==--------------------------------------------------------------==
 ! BECKE EXCHANGE: PRA 38, 3098 (1988)
       IMPLICIT NONE
@@ -2001,7 +2001,7 @@ end subroutine exch_corr_cp
       PARAMETER(OB3=1.D0/3.D0,SMALL=1.D-20)
 
 !     ==--------------------------------------------------------------==
-      SX=0.0D0
+      sx=0.0D0
       V1XA=0.0D0
       V2XA=0.0D0
       V1XB=0.0D0
@@ -2021,7 +2021,7 @@ end subroutine exch_corr_cp
         DDD   = 6.0D0*B1*(SHM1+XS/SA2B8)
         GF    = -B1*XS2/DD
         DGF   = (-2.0D0*B1*XS*DD + B1*XS2*DDD)/DD2
-        SX    = GF*BR4
+        sx    = GF*BR4
         V1XA  = 4./3.*BR1*(GF-XS*DGF)
         V2XA  = DGF/A
       ENDIF
@@ -2040,7 +2040,7 @@ end subroutine exch_corr_cp
         DDD   = 6.0D0*B1*(SHM1+XS/SA2B8)
         GF    = -B1*XS2/DD
         DGF   = (-2.0D0*B1*XS*DD + B1*XS2*DDD)/DD2
-        SX    = SX+GF*BR4
+        sx    = sx+GF*BR4
         V1XB  = 4./3.*BR1*(GF-XS*DGF)
         V2XB  = DGF/A
       ENDIF
