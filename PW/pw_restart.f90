@@ -22,7 +22,8 @@ MODULE pw_restart
   USE constants, ONLY : e2
   USE io_files,  ONLY : tmp_dir, prefix, iunpun, xmlpun
   USE io_global, ONLY : ionode, ionode_id, stdout
-  USE mp_global, ONLY : my_pool_id, intra_image_comm, intra_pool_comm, inter_pool_comm
+  USE mp_global, ONLY : my_pool_id, intra_image_comm, &
+                        intra_pool_comm, inter_pool_comm
   USE mp,        ONLY : mp_bcast, mp_sum, mp_max
   !
   IMPLICIT NONE
@@ -174,9 +175,9 @@ MODULE pw_restart
          !
          ! ... find out the index of the first k point in this pool
          !
-         iks = nkl * my_pool_id + 1
+         iks = nkl*my_pool_id + 1
          !
-         IF ( my_pool_id >= nkr ) iks = iks + nkr * kunit
+         IF ( my_pool_id >= nkr ) iks = iks + nkr*kunit
          !
          ! ... find out the index of the last k point in this pool
          !
@@ -184,7 +185,7 @@ MODULE pw_restart
          !
       END IF
       !
-      ! ... find out the global number of G vectors: ngm_g  
+      ! ... find out the global number of G vectors: ngm_g
       !
       ngm_g = ngm
       !
@@ -212,14 +213,15 @@ MODULE pw_restart
       ! ... Beware: for variable-cell case, one has to use starting G and 
       ! ... k+G vectors
       !
-      ALLOCATE (      igk_l2g ( npwx, nks ) )
+      ALLOCATE ( igk_l2g( npwx, nks ) )
+      !
       igk_l2g = 0
       !
       IF ( nks > 1 ) REWIND( iunigk )
       !
       DO ik = 1, nks
          !
-         IF ( nks > 1 ) READ ( iunigk ) npw, igk
+         IF ( nks > 1 ) READ( iunigk ) npw, igk
          !
          CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk(1), igk_l2g(1,ik) )
          !
@@ -232,30 +234,30 @@ MODULE pw_restart
       ngk_g = 0
       ngk_g(iks:ike) = ngk(1:nks)
       !
-      CALL mp_sum( ngk_g )
+      CALL mp_sum( ngk_g, intra_image_comm )
       !
       ! ... compute the maximum G vector index among all G+k an processors
       !
       npw_g = MAXVAL( igk_l2g(:,:) )
       !
-      CALL mp_max( npw_g )
+      CALL mp_max( npw_g, intra_image_comm )
       !
       ! ... compute the maximum number of G vector among all k points
       !
       npwx_g = MAXVAL( ngk_g(1:nkstot) )
       !
-      ! 
-      ! ... define a further l2g map to write gkvectors and wfc coherently 
-      ! 
-      ALLOCATE ( igk_l2g_kdip ( npwx_g, nks ) )
+      ! ... define a further l2g map to write gkvectors and wfc coherently
+      !
+      ALLOCATE ( igk_l2g_kdip( npwx_g, nks ) )
+      !
       igk_l2g_kdip = 0
       !
       DO ik = iks, ike
          !
-         CALL gk_l2gmap_kdip( npw_g, ngk_g( ik ), ngk( ik-iks+1 ), igk_l2g(1, ik-iks+1 ), &
-                              igk_l2g_kdip(1, ik-iks+1 ) )
-      ENDDO
-
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik), ngk(ik-iks+1), &
+                              igk_l2g(1,ik-iks+1), igk_l2g_kdip(1,ik-iks+1) )
+      END DO
+      !
       IF ( ionode ) THEN
          !
          ! ... open XML descriptor
@@ -484,10 +486,12 @@ MODULE pw_restart
                   !
                END IF
                !
-               filename = wfc_filename( dirname, 'eigenval2', ik, EXTENSION='xml' )
+               filename = wfc_filename( dirname, &
+                                        'eigenval2', ik, EXTENSION = 'xml' )
                !
-               CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, "Hartree", &
-                               OCC = raux(:), IK=ik, ISPIN=ispin, EF=ef )
+               CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
+                               "Hartree", OCC = raux(:), IK = ik,          &
+                               ISPIN = ispin, EF = ef )
                !
             ELSE
                !
@@ -508,8 +512,8 @@ MODULE pw_restart
                !
                filename = wfc_filename( dirname, 'eigenval', ik, EXTENSION='xml' )
                !
-               CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, "Hartree", &
-                               OCC = raux(:), IK=ik, EF=ef )
+               CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
+                               "Hartree", OCC = raux(:), IK = ik, EF = ef )
                !
             END IF
             !
@@ -580,8 +584,8 @@ MODULE pw_restart
                   !
                   filename = wfc_filename( ".", 'evc', ik, ispin )
                   !
-                  CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ) , filename, &
-                                  CREATE = .FALSE., BINARY = .TRUE. )
+                  CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ), &
+                                  filename, CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = wfc_filename( dirname, 'evc', ik, ispin )
                   !
@@ -605,15 +609,15 @@ MODULE pw_restart
                   !
                   filename = wfc_filename( ".", 'evc', ik, ispin )
                   !
-                  CALL iotk_link( iunpun, "WFC" // TRIM(iotk_index( ispin)) , filename, &
-                                  CREATE = .FALSE., BINARY = .TRUE. )
+                  CALL iotk_link( iunpun, "WFC"//TRIM( iotk_index( ispin ) ), &
+                                  filename, CREATE = .FALSE., BINARY = .TRUE. )
                   !
                   filename = wfc_filename( dirname, 'evc', ik, ispin )
                   !
                END IF
                !
                CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
-                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1),   &
+                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
                                ngk(ik_eff-iks+1), filename, 1.D0 )
                !
             ELSE
@@ -644,8 +648,8 @@ MODULE pw_restart
                         !
                         filename = wfc_filename( ".", 'evc', ik, ipol )
                         !
-                        CALL iotk_link( iunpun, "WFC" // TRIM(iotk_index(ipol)), filename, &
-                                        CREATE = .FALSE., BINARY = .TRUE. )
+                        CALL iotk_link( iunpun, "WFC"//TRIM( iotk_index( ipol ) ), &
+                                        filename, CREATE = .FALSE., BINARY = .TRUE. )
                         !
                         filename = wfc_filename( dirname, 'evc', ik, ipol )
                         !
@@ -653,7 +657,7 @@ MODULE pw_restart
                      !
                      CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
                                      evc_nc(:,ipol,:), npw_g, nbnd,           &
-                                     igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),      &
+                                     igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
                                      filename, 1.D0 )
                      !
                   END DO
@@ -754,7 +758,7 @@ MODULE pw_restart
              !
           END IF
           !
-          CALL mp_sum( itmp1 )
+          CALL mp_sum( itmp1, intra_image_comm )
           !
           ngg = 0
           !
@@ -1018,7 +1022,6 @@ MODULE pw_restart
       USE klist,            ONLY : nkstot, nelec
       USE wvfct,            ONLY : nbnd, npwx, gamma_only
       USE mp_global,        ONLY : kunit
-      
       !
       IMPLICIT NONE
       !
@@ -1091,7 +1094,7 @@ MODULE pw_restart
          CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
          CALL iotk_scan_attr( attr, "nr1", nr1 )
          CALL iotk_scan_attr( attr, "nr2", nr2 )
-         CALL iotk_scan_attr( attr, "nr3", nr3 )         
+         CALL iotk_scan_attr( attr, "nr3", nr3 )
          !
          CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
          !
@@ -1120,7 +1123,7 @@ MODULE pw_restart
          CALL iotk_scan_dat( iunpun, &
                              "NUMBER_OF_TETRAHEDRA", ntetra, DEFAULT = 0 )
          !
-         CALL iotk_scan_end( iunpun, "OCCUPATIONS" )        
+         CALL iotk_scan_end( iunpun, "OCCUPATIONS" )
          !
          CALL iotk_scan_begin( iunpun, "BRILLOUIN_ZONE" )
          !
@@ -1391,17 +1394,15 @@ MODULE pw_restart
       !
       IF ( ierr < 0 ) THEN
          !
-         ! PP files in data directory are NOT visible to all processors:
-         ! PP files are read from the original location
+         ! ... PP files in data directory are NOT visible to all processors:
+         ! ... PP files are read from the original location
          !
-         IF ( ionode ) THEN
-            CALL iotk_scan_dat( iunpun, "PSEUDO_DIR", pseudo_dir )
-         END IF
+         IF ( ionode ) CALL iotk_scan_dat( iunpun, "PSEUDO_DIR", pseudo_dir )
          !
          CALL mp_bcast( pseudo_dir, ionode_id, intra_image_comm )
          !
-         CALL infomsg( 'read_ions ', 'PP will be read from ' // &
-              TRIM ( pseudo_dir ), -1)
+         CALL infomsg( 'read_ions ', &
+                     & 'PP will be read from ' // TRIM( pseudo_dir ), -1 )
          !
       END IF
       !
@@ -1481,17 +1482,17 @@ MODULE pw_restart
          IF ( .NOT. found ) THEN
             !
             nsym = 1
-            s (:,:,nsym) = 0
-            s (1,1,nsym) = 1
-            s (2,2,nsym) = 1
-            s (3,3,nsym) = 1
-            ftau (:,nsym)= 0
-            sname (nsym) = 'identity'
-            do i = 1, SIZE (irt, 2)
-               irt (nsym, i) = i
+            s(:,:,nsym) = 0
+            s(1,1,nsym) = 1
+            s(2,2,nsym) = 1
+            s(3,3,nsym) = 1
+            ftau(:,nsym)= 0
+            sname(nsym) = 'identity'
+            do i = 1, SIZE( irt, 2 )
+               irt(nsym,i) = i
             end do
             invsym = .FALSE.
-            t_rev (nsym) = 0
+            t_rev(nsym) = 0
             !
          ELSE
             !
@@ -1509,13 +1510,13 @@ MODULE pw_restart
                CALL iotk_scan_attr( attr, "NAME",  sname(i) )
                CALL iotk_scan_attr( attr, "T_REV", t_rev(i) )
                !
-               CALL iotk_scan_dat  ( iunpun, "ROTATION", s(:,:,i) )
-               CALL iotk_scan_dat  ( iunpun, "FRACTIONAL_TRANSLATION", tmp(:) )
-               CALL iotk_scan_dat  ( iunpun, "EQUIVALENT_IONS", irt(i,1:nat_) )
+               CALL iotk_scan_dat( iunpun, "ROTATION", s(:,:,i) )
+               CALL iotk_scan_dat( iunpun, "FRACTIONAL_TRANSLATION", tmp(:) )
+               CALL iotk_scan_dat( iunpun, "EQUIVALENT_IONS", irt(i,1:nat_) )
                !
-               ftau(1,i) = NINT(tmp(1) * DBLE( nr1 ))
-               ftau(2,i) = NINT(tmp(2) * DBLE( nr2 ))
-               ftau(3,i) = NINT(tmp(3) * DBLE( nr3 ))
+               ftau(1,i) = NINT( tmp(1)*DBLE( nr1 ) )
+               ftau(2,i) = NINT( tmp(2)*DBLE( nr2 ) )
+               ftau(3,i) = NINT( tmp(3)*DBLE( nr3 ) )
                !
                CALL iotk_scan_end( iunpun, "SYMM" // TRIM( iotk_index( i ) ) )
                !
@@ -1589,7 +1590,6 @@ MODULE pw_restart
          ELSE
             !
             tefield  = .FALSE.
-            !
             dipfield = .FALSE.
             !
          END IF
@@ -1658,7 +1658,7 @@ MODULE pw_restart
          CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
          CALL iotk_scan_attr( attr, "nr1", nr1 )
          CALL iotk_scan_attr( attr, "nr2", nr2 )
-         CALL iotk_scan_attr( attr, "nr3", nr3 )         
+         CALL iotk_scan_attr( attr, "nr3", nr3 )
          !
          CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
          !
@@ -1834,7 +1834,7 @@ MODULE pw_restart
             !
             CALL iotk_scan_dat( iunpun, "HUBBARD_ALPHA", Hubbard_alpha(1:nsp_) )
             !
-         END IF         
+         END IF
          !
          CALL iotk_scan_end( iunpun, "EXCHANGE_CORRELATION" )
          !
@@ -1913,7 +1913,7 @@ MODULE pw_restart
                                 & TRIM( iotk_index( ik ) ), attr )
             !
             CALL iotk_scan_attr( attr, "XYZ", xk(:,ik) )
-            !            
+            !
             CALL iotk_scan_attr( attr, "WEIGHT", wk(ik) )
             !
             IF ( lsda ) THEN
@@ -2031,7 +2031,7 @@ MODULE pw_restart
             IF ( lsda ) &
                CALL iotk_scan_dat( iunpun, "INPUT_OCC_DOWN", f_inp(:,2) )
             !
-         END IF         
+         END IF
          !
          CALL iotk_scan_end( iunpun, "OCCUPATIONS" )
          !
@@ -2176,7 +2176,7 @@ MODULE pw_restart
          !
          et(:,:) = et(:,:) * e2
          !
-         FORALL( ik = 1:nkstot ) wg(:,ik) = wg(:,ik) * wk(ik)
+         FORALL( ik = 1:nkstot ) wg(:,ik) = wg(:,ik)*wk(ik)
          !
          CALL iotk_scan_end( iunpun, "EIGENVALUES" )
          !
@@ -2214,7 +2214,7 @@ MODULE pw_restart
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE gvect,                ONLY : ngm, ngm_g, ig1, ig2, ig3, g, ecutwfc
-      USE noncollin_module,     ONLY : noncolin, npol                             
+      USE noncollin_module,     ONLY : noncolin, npol
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
       !
       IMPLICIT NONE
@@ -2288,7 +2288,7 @@ MODULE pw_restart
       !
       ngm_g = ngm
       !
-      CALL mp_sum( ngm_g, intra_pool_comm )      
+      CALL mp_sum( ngm_g, intra_pool_comm )
       !
       ! ... collect all G vectors across processors within the pools
       !
@@ -2309,7 +2309,7 @@ MODULE pw_restart
       ! ... build the igk_l2g array, yielding the correspondence between
       ! ... the local k+G index and the global G index - see also ig_l2g
       !
-      ALLOCATE (      igk_l2g ( npwx, nks ) )
+      ALLOCATE ( igk_l2g( npwx, nks ) )
       igk_l2g = 0
       !
       ALLOCATE( kisort( npwx ) )
@@ -2319,7 +2319,8 @@ MODULE pw_restart
          kisort = 0
          npw    = npwx
          !
-         CALL gk_sort( xk(1,ik+iks-1), ngm, g, ecutwfc/tpiba2, npw, kisort(1), g2kin )
+         CALL gk_sort( xk(1,ik+iks-1), ngm, g, &
+                       ecutwfc/tpiba2, npw, kisort(1), g2kin )
          !
          CALL gk_l2gmap( ngm, ig_l2g(1), npw, kisort(1), igk_l2g(1,ik) )
          !
@@ -2336,29 +2337,29 @@ MODULE pw_restart
       ngk_g = 0
       ngk_g(iks:ike) = ngk(1:nks)
       !
-      CALL mp_sum( ngk_g )
+      CALL mp_sum( ngk_g, intra_image_comm )
       !
       ! ... compute the Maximum G vector index among all G+k an processors
       !
       npw_g = MAXVAL( igk_l2g(:,:) )
       !
-      CALL mp_max( npw_g )
+      CALL mp_max( npw_g, intra_image_comm )
       !
       ! ... compute the Maximum number of G vector among all k points
       !
-      npwx_g = MAXVAL( ngk_g( 1:nkstot ) )
-      !      
+      npwx_g = MAXVAL( ngk_g(1:nkstot) )
+      !
       ! 
       ! ... define a further l2g map to read gkvectors and wfc coherently 
       ! 
-      ALLOCATE ( igk_l2g_kdip ( npwx_g, nks ) )
+      ALLOCATE( igk_l2g_kdip( npwx_g, nks ) )
       igk_l2g_kdip = 0
       !
       DO ik = iks, ike
          !
-         CALL gk_l2gmap_kdip( npw_g, ngk_g( ik ), ngk( ik-iks+1 ), igk_l2g(1, ik-iks+1 ), &
-                              igk_l2g_kdip(1, ik-iks+1 ) )
-      ENDDO
+         CALL gk_l2gmap_kdip( npw_g, ngk_g(ik), ngk(ik-iks+1), &
+                              igk_l2g(1,ik-iks+1), igk_l2g_kdip(1,ik-iks+1) )
+      END DO
       !
       !
       IF ( ionode ) THEN
@@ -2576,7 +2577,7 @@ MODULE pw_restart
       END IF
       !
       CALL mp_bcast( modenum, ionode_id, intra_image_comm )
-      CALL mp_bcast( xqq,     ionode_id, intra_image_comm )      
+      CALL mp_bcast( xqq,     ionode_id, intra_image_comm )
       !
       RETURN
       !
@@ -2688,15 +2689,15 @@ MODULE pw_restart
       !
       ! ... Here the dummy variables
       !
-      INTEGER,           INTENT(IN)  :: ngm, ngk, igk(ngk), ig_l2g(ngm)
-      INTEGER,           INTENT(OUT) :: igk_l2g(ngk)                    
-      INTEGER :: ig
+      INTEGER, INTENT(IN)  :: ngm, ngk, igk(ngk), ig_l2g(ngm)
+      INTEGER, INTENT(OUT) :: igk_l2g(ngk)
+      INTEGER              :: ig
       !
-      ! input: mapping between local and global G vector index
+      ! ... input: mapping between local and global G vector index
       !
       DO ig = 1, ngk
          !
-         igk_l2g(ig) = ig_l2g( igk(ig) )
+         igk_l2g(ig) = ig_l2g(igk(ig))
          !
       END DO
       !
@@ -2704,92 +2705,85 @@ MODULE pw_restart
       !
     END SUBROUTINE gk_l2gmap
     !
-    !----------------------------------------------------------------------------
+    !-----------------------------------------------------------------------
     SUBROUTINE gk_l2gmap_kdip( npw_g, ngk_g, ngk, igk_l2g, igk_l2g_kdip, igwk )
-      !----------------------------------------------------------------------------
+      !-----------------------------------------------------------------------
       !
       ! ... This subroutine maps local G+k index to the global G vector index
       ! ... the mapping is used to collect wavefunctions subsets distributed
       ! ... across processors.
-      !     This map is used to obtained the G+k grids related to each kpt
+      ! ... This map is used to obtained the G+k grids related to each kpt
       !
       IMPLICIT NONE
       !
       ! ... Here the dummy variables
       !
       INTEGER,           INTENT(IN)  :: npw_g, ngk_g, ngk
-      INTEGER,           INTENT(IN)  :: igk_l2g(ngk)                    
-      INTEGER, OPTIONAL, INTENT(OUT) :: igwk(ngk_g), igk_l2g_kdip(ngk)         
+      INTEGER,           INTENT(IN)  :: igk_l2g(ngk)
+      INTEGER, OPTIONAL, INTENT(OUT) :: igwk(ngk_g), igk_l2g_kdip(ngk)
       !
       INTEGER, ALLOCATABLE :: igwk_(:), itmp(:)
-      INTEGER :: ig, ig_, ngg
-     
+      INTEGER              :: ig, ig_, ngg
       !
       !
       ALLOCATE( itmp( npw_g ) )
       ALLOCATE( igwk_( ngk_g ) )
       !
-      itmp     ( : ) = 0
-      igwk_    ( : ) = 0
+      itmp(:)  = 0
+      igwk_(:) = 0
       !
       !
       DO ig = 1, ngk
-          !
-          itmp( igk_l2g( ig ) ) = igk_l2g( ig )
-          !
-      ENDDO
+         !
+         itmp(igk_l2g(ig)) = igk_l2g(ig)
+         !
+      END DO
       !
       CALL mp_sum( itmp, intra_pool_comm )
       !
       ngg = 0
       DO ig = 1, npw_g
-          !
-          IF ( itmp(ig) == ig ) THEN
-              !
-              ngg = ngg + 1
-              !
-              igwk_ ( ngg ) = ig
-              !
-          ENDIF
-          !
-      ENDDO
+         !
+         IF ( itmp(ig) == ig ) THEN
+            !
+            ngg = ngg + 1
+            !
+            igwk_(ngg) = ig
+            !
+         END IF
+         !
+      END DO
       !
-      IF ( ngg /= ngk_g ) THEN 
-          !
-          CALL errore('igk_l2g_kdip','unexpected dimension in ngg',1)
-          !
-      ENDIF
+      IF ( ngg /= ngk_g ) &
+         CALL errore( 'igk_l2g_kdip', 'unexpected dimension in ngg', 1 )
       !
-      IF ( PRESENT ( igwk ) ) THEN
-          !
-          igwk( 1: ngk_g ) = igwk_ ( 1 : ngk_g )
-          !
-      ENDIF
-
+      IF ( PRESENT( igwk ) ) THEN
+         !
+         igwk(1:ngk_g) = igwk_(1:ngk_g)
+         !
+      END IF
+      !
       IF ( PRESENT( igk_l2g_kdip ) ) THEN
-          !
-          !
-          igk_l2g_kdip ( 1 : ngk ) = 0 
-          !
-          DO ig = 1, ngk
-             !
-             ngg = igk_l2g(ig)
-             !
-             DO ig_ = 1, ngk_g
-                !
-                IF( ngg == igwk_( ig_ ) ) THEN
-                   !
-                   igk_l2g_kdip (ig) = ig_
-                   EXIT
-                   !
-                ENDIF
-                !
-             ENDDO
-             !
-          ENDDO
-          !
-      ENDIF
-
+         !
+         igk_l2g_kdip(1:ngk) = 0
+         !
+         DO ig = 1, ngk
+            !
+            ngg = igk_l2g(ig)
+            !
+            DO ig_ = 1, ngk_g
+               !
+               IF ( ngg == igwk_(ig_) ) THEN
+                  !
+                  igk_l2g_kdip (ig) = ig_
+                  !
+                  EXIT
+                  !
+               END IF
+            END DO
+         END DO
+      END IF
+      !
       DEALLOCATE( itmp, igwk_ )
       !
       RETURN
