@@ -136,7 +136,7 @@ SUBROUTINE iosys()
                             reduce_io, langevin_rescaling, ethr, lscf, lbfgs, &
                             lmd, lpath, lneb, lsmd, lphonon, ldamped, lbands, &
                             lrescale_t, lmetadyn, lconstrain, lcoarsegrained, &
-                            restart, twfcollect
+                            restart, twfcollect, use_para_diago
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -795,6 +795,14 @@ SUBROUTINE iosys()
      isolve = 0
      !
      david = diago_david_ndim
+     !
+  CASE ( 'david+para' )
+     !
+     isolve = 0
+     !
+     david = diago_david_ndim
+     !
+     use_para_diago = .TRUE.
      !
   CASE DEFAULT
      !

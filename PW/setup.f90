@@ -65,7 +65,7 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, alpha0, beta0, lscf, lmd, lpath, &
                                  lphonon, david, isolve, niter, noinv, nosym, &
-                                 modenum, lbands
+                                 modenum, lbands, use_para_diago
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : psd, nbeta, jjj, tvanp
@@ -681,7 +681,7 @@ SUBROUTINE setup()
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
-  CALL check_para_diag_efficiency()
+  IF ( use_para_diago ) CALL check_para_diag_efficiency()
   !
 #else
   !
