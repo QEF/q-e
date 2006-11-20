@@ -159,8 +159,8 @@
         ierr = 0
         taskid = 0
 
-        DEALLOCATE( mp_call_count )
-        DEALLOCATE( mp_call_sizex )
+        IF ( ALLOCATED ( mp_call_count ) ) DEALLOCATE( mp_call_count )
+        IF ( ALLOCATED ( mp_call_sizex ) ) DEALLOCATE( mp_call_sizex )
 
 #if defined __HPM 
 
