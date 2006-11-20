@@ -199,6 +199,12 @@ pseudo_dir     CHARACTER ( default = value of the $ESPRESSO_PSEUDO environment
 ndr, ndw       INTEGER ( default = 50 )
                Units for input and output restart file.
 
+tabps          LOGICAL ( default = .false. )
+               .true. to compute the volume and/or the surface of an isolated
+               system for finete pressure/finite surface tension calculations
+               (PRL 94, 145501 (2005); JCP 124, 074103 (2006)).
+               
+
 
 ===============================================================================
 NAMELIST &SYSTEM
@@ -761,6 +767,46 @@ cell_dofree    CHARACTER ( default = 'all' )
                yz      = only the y and z axis are moved, angles are unchanged
                xyz     = x, y and z axis are moved, angles are unchanged
 
+
+===============================================================================
+NAMELIST &PRESS_AI ( only if tabps = .true. )
+
+abivol         LOGICAL ( default = .false. )
+               .true. for finite pressure calculations
+
+abisur         LOGICAL ( default = .false. )
+               .true. for finite surface tension calculations
+
+P_ext          REAL ( default = 0.d0 )
+               external pressure in GPa
+
+pvar           LOGICAL ( default = .false. )
+               .true. for variable pressure calculations
+               pressure changes linearly with time: 
+               Delta_P = (P_fin - P_in)/nstep
+        
+P_in           REAL ( default = 0.d0 )
+               only if pvar = .true.
+               initial value of the external pressure (GPa)
+
+P_fin          REAL ( default = 0.d0 )
+               only if pvar = .true.
+               final value of the external pressure (GPa)
+
+Surf_t         REAL ( default = 0.d0 )
+               Surface tension (in a.u.; typical values 1.d-4 - 1.d-3)
+
+rho_thr        REAL ( default = 0.d0 )
+               threshold parameter which defines the electronic charge density
+               isosurface to compute the 'quantum' volume of the system
+               (typical values: 1.d-4 - 1.d-3)
+               (corresponds to alpha in PRL 94 145501 (2005))
+
+dthr           REAL ( default = 0.d0 )
+               thikness of the external skin of the electronic charge density
+               used to compute the 'quantum' surface
+               (typical values: 1.d-4 - 1.d-3; 50% to 100% of rho_thr)
+               (corresponds to Delta in PRL 94 145501 (2005))
 
 ===============================================================================
 NAMELIST &WANNIER ( only if calculation = 'cp-wf' )
