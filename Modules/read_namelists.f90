@@ -65,6 +65,7 @@ MODULE read_namelists_module
        !
        tstress = .FALSE.
        tprnfor = .FALSE.
+       tabps = .FALSE.
        !
        IF( prog == 'PW' ) dt  = 20.D0
        IF( prog == 'CP' ) dt  =  1.D0
@@ -482,6 +483,51 @@ MODULE read_namelists_module
        !
      END SUBROUTINE
      !
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Variables initialization for Namelist PRESS_AI
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE press_ai_defaults( prog )
+     !
+       USE pres_ai_mod
+       !
+       IMPLICIT NONE
+       !
+       CHARACTER(LEN=2) :: prog   ! ... specify the calling program
+       !
+       abivol = .false.
+       abisur = .false.
+       pvar = .false.
+       fill_vac = .false.
+       cntr = .false.
+       scale_at = .false.
+       t_gauss = .false.
+       jellium = .false.
+
+       P_ext = 0.d0
+       P_in = 0.d0
+       P_fin = 0.d0
+       Surf_t = 0.d0
+       rho_thr = 0.d0
+       dthr = 0.d0
+       step_rad = 0.d0
+       delta_eps = 0.d0
+       delta_sigma = 0.d0
+       R_j = 0.d0
+       h_j = 0.d0
+
+       n_cntr = 0
+       axis = 3
+       !
+       RETURN
+       !
+     END SUBROUTINE
+     !
+
      !=----------------------------------------------------------------------=!
      !
      !  Variables initialization for Namelist PHONON
@@ -578,6 +624,7 @@ MODULE read_namelists_module
        CALL mp_bcast( isave,         ionode_id )
        CALL mp_bcast( tstress,       ionode_id )
        CALL mp_bcast( tprnfor,       ionode_id )
+       CALL mp_bcast( tabps,         ionode_id )
        CALL mp_bcast( dt,            ionode_id )
        CALL mp_bcast( ndr,           ionode_id )
        CALL mp_bcast( ndw,           ionode_id )
@@ -923,6 +970,72 @@ MODULE read_namelists_module
        CALL mp_bcast( cell_damping,     ionode_id )
        CALL mp_bcast( press_conv_thr,   ionode_id )
        ! 
+       RETURN
+       !
+     END SUBROUTINE
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Correct (a.u.) units to pressure
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE press_ai_units()
+       !----------------------------------------------------------------------
+       !
+       USE pres_ai_mod
+       USE constants, ONLY : au_gpa
+       !
+       IMPLICIT NONE
+       !
+       P_ext = P_ext / au_gpa
+       P_in = P_in / au_gpa
+       P_fin = P_fin / au_gpa
+       if (pvar) P_ext = P_in
+       jellium = .false.  ! provvisorio
+     END SUBROUTINE
+     !
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !  Broadcast variables values for Namelist PRESS_AI
+     !
+     !=----------------------------------------------------------------------=!
+     !
+     !----------------------------------------------------------------------
+     SUBROUTINE press_ai_bcast()
+       !----------------------------------------------------------------------
+       !
+       USE io_global, ONLY: ionode_id
+       USE mp,        ONLY: mp_bcast
+       USE pres_ai_mod
+       !
+       IMPLICIT NONE
+       !
+       !
+       CALL mp_bcast( abivol, ionode_id )
+       CALL mp_bcast( abisur, ionode_id )
+       CALL mp_bcast( t_gauss, ionode_id )
+       CALL mp_bcast( cntr, ionode_id )
+       CALL mp_bcast( P_ext, ionode_id )
+       CALL mp_bcast( Surf_t, ionode_id )
+       CALL mp_bcast( pvar, ionode_id )
+       CALL mp_bcast( P_in, ionode_id )
+       CALL mp_bcast( P_fin, ionode_id )
+       CALL mp_bcast( delta_eps, ionode_id )
+       CALL mp_bcast( delta_sigma, ionode_id )
+       CALL mp_bcast( fill_vac, ionode_id )
+       CALL mp_bcast( scale_at, ionode_id )
+       CALL mp_bcast( n_cntr, ionode_id )
+       CALL mp_bcast( axis, ionode_id )
+       CALL mp_bcast( rho_thr, ionode_id )
+       CALL mp_bcast( dthr, ionode_id )
+       CALL mp_bcast( step_rad, ionode_id )
+       CALL mp_bcast( jellium, ionode_id )
+       CALL mp_bcast( R_j, ionode_id )
+       CALL mp_bcast( h_j, ionode_id )
+       !
        RETURN
        !
      END SUBROUTINE
@@ -1787,6 +1900,15 @@ MODULE read_namelists_module
        !
        CALL cell_bcast()
        CALL cell_checkin( prog )
+       !
+       IF( ionode ) THEN
+          if (tabps) then
+             READ( 5, press_ai, iostat = ios )
+          end if
+       END IF
+       !
+       CALL press_ai_units()
+       CALL press_ai_bcast()
        !
        ! ... PHONON namelist
        !

@@ -20,6 +20,7 @@ MODULE input_parameters
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr
+  USE pres_ai_mod
   !
   IMPLICIT NONE
   !
@@ -276,12 +277,15 @@ MODULE input_parameters
           !  .TRUE.  save charge density to restart dir
           !  .FALSE. do not save charge density
 
+        LOGICAL :: tabps = .FALSE. ! for ab-initio pressure and/or surface
+                                   ! calculations
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
-          tefield2, saverho
+          tefield2, saverho, tabps
 
 !
 !=----------------------------------------------------------------------------=!
@@ -1276,6 +1280,17 @@ MODULE input_parameters
                           press, wmass, cell_temperature, temph, fnoseh,   &
                           cell_dofree, greash, cell_factor, cell_nstepe,   &
                           cell_damping, press_conv_thr
+
+!
+!=----------------------------------------------------------------------------=!!
+! PRESS_AI Namelist Input Parameters
+!=----------------------------------------------------------------------------=!
+!
+!
+      NAMELIST / press_ai / abivol, P_ext, pvar, P_in, P_fin, rho_thr,  &
+     &                      step_rad, delta_eps, delta_sigma, n_cntr,   &
+     &                      fill_vac, scale_at, t_gauss, abisur,        &
+     &                      Surf_t, dthr, cntr, axis, jellium, R_j, h_j
 
 !
 !=----------------------------------------------------------------------------=!

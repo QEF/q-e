@@ -43,6 +43,7 @@ parallel_include.o \
 parallel_types.o \
 parameters.o \
 parser.o \
+pres_ai_mod.o \
 pseudodata.o \
 pseudo_types.o \
 ptoolkit.o \

@@ -50,7 +50,7 @@ MODULE control_flags
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
             tsteepdesc, ionic_conjugate_gradient, tconjgrad_ion, tatomicwfc, &
-            tscreen, gamma_only, force_pairing, tchi2
+            tscreen, gamma_only, force_pairing, tchi2, tabps
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tvlocw, trhor, thdyn, iprsta, trhow
@@ -99,6 +99,7 @@ MODULE control_flags
   INTEGER :: printwfc      = -1      ! Print wave functions, temporarely used only by ensemble-dft
   LOGICAL :: force_pairing = .FALSE. ! ...   Force pairing
   LOGICAL :: tchi2         = .FALSE. ! Compute Chi^2
+  LOGICAL :: tabps         = .FALSE. ! ab-initio pressure and/or volume
   !
   TYPE (convergence_criteria) :: tconvthrs
                               !  thresholds used to check GS convergence 
