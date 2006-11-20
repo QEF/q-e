@@ -140,8 +140,7 @@ tar :
 	    License README* */README* Makefile */Makefile */make.depend \
 	    configure configure.ac config.guess config.sub configure.msg.in \
             install-sh make.sys.in \
-	    makedeps.sh moduledep.sh includedep.sh ifcmods.sh \
-	    cvs2cl.pl ChangeLog ChangeLog.html \
+	    makedeps.sh moduledep.sh includedep.sh \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# remove unneeded stuff from iotk
