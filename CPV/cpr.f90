@@ -94,6 +94,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        vnhe, electrons_nose_nrg,    &
                                        electrons_nose_shiftvar,           &
                                        electrons_nosevel, electrons_noseupd
+  USE pres_ai_mod,              ONLY : P_ext, P_in, P_fin, pvar, volclu, &
+                                       surfclu, Surf_t, abivol, abisur
   USE from_scratch_module,      ONLY : from_scratch
   USE from_restart_module,      ONLY : from_restart
   USE wavefunctions_module,     ONLY : c0, cm, phi => cp
@@ -167,6 +169,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   INTEGER  :: k, ii, l, m, iss
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
+  REAL(DP) :: deltaP
   REAL(DP) :: stress_gpa(3,3), thstress(3,3)
   !
   REAL(DP), ALLOCATABLE :: usrt_tau0(:,:), usrt_taup(:,:), usrt_fion(:,:)
@@ -214,6 +217,17 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      tlast   = ( nfi == nomore )
      ttprint = ( MOD( nfi, iprint ) == 0 ).or.tlast
      tfile = ( MOD( nfi, iprint ) == 0 )
+     !
+     if (abivol) then
+        if (pvar) then
+           if (nfi.eq.1) then
+              deltaP = (P_fin - P_in) / dfloat(nomore)
+              P_ext = P_in
+           else
+              P_ext = P_ext + deltaP
+           end if
+        end if
+     end if
      !
      IF ( ionode .AND. ttprint ) &
         WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
@@ -652,10 +666,16 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! 
      tps = tps + delt * au_ps
      !
+     if (abivol) etot = etot - P_ext*volclu
+     if (abisur) etot = etot - Surf_t*surfclu
+     !
      CALL printout_new( nfi, tfirst, tfile, ttprint, tps, hold, stress, &
                         tau0, vels, fion, ekinc, temphc, tempp, temps, etot, &
                         enthal, econs, econt, vnhh, xnhh0, vnhp, xnhp0, atot, &
                         ekin, epot )
+     !
+     if (abivol) etot = etot + P_ext*volclu
+     if (abisur) etot = etot + Surf_t*surfclu
      !
      IF( tfor ) THEN
         !

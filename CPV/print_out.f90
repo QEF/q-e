@@ -20,7 +20,8 @@
       USE energies,          ONLY : print_energies, dft_energy_type
       USE printout_base,     ONLY : printout_base_open, printout_base_close, &
                                     printout_pos, printout_cell, printout_stress
-      USE constants,         ONLY : au_gpa, amu_si, bohr_radius_cm, amu_au, BOHR_RADIUS_ANGS
+      USE constants,         ONLY : au_gpa, amu_si, bohr_radius_cm, &
+                                    amu_au, BOHR_RADIUS_ANGS, pi
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
                                     cdm_displacement, ions_displacement
       USE cell_base,         ONLY : s_to_r, get_volume
@@ -29,6 +30,8 @@
       USE cg_module,         ONLY : tcg, itercg
       USE sic_module,        ONLY : self_interaction, sic_alpha, sic_epsilon
       USE electrons_module,  ONLY : print_eigenvalues
+      USE pres_ai_mod,      ONLY : P_ext, Surf_t, volclu, surfclu, abivol, &
+                                   abisur, pvar, n_ele
 
       USE xml_io_base,       ONLY : save_print_counter
       USE cp_main_variables, ONLY : nprint_nfi
@@ -233,9 +236,22 @@
            !
            WRITE( stdout, * )
            WRITE( stdout, 1947 )
+           if (abivol.and.pvar) write(stdout,*) 'P = ', P_ext*au_gpa
            !
         END IF
       ! 
+      if (abivol) then
+         write(stdout,*) nfi, 'ab-initio volume = ', volclu, ' a.u.^3'
+         write(stdout,*) nfi, 'PV = ', P_ext*volclu, ' ha'
+      end if
+      if (abisur) then
+         write(stdout,*) nfi, 'ab-initio surface = ', surfclu, ' a.u.^2'
+         if (abivol) write(stdout,*) nfi, 'spherical surface = ', &
+                 4.d0*pi*(0.75d0*volclu/pi)**(2.d0/3.d0), ' a.u.^2'
+         write(stdout,*) nfi, 't*S = ', Surf_t*surfclu, ' ha'
+      end if
+      if (abivol.or.abisur) write(stdout,*) nfi, &
+         ' # of electrons within the isosurface = ', n_ele
       IF( .not. tcg ) THEN
          !
          WRITE( stdout, 1948 ) nfi, ekinc, temphc, tempp, etot, enthal, econs, &

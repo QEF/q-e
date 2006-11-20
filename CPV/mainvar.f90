@@ -12,13 +12,15 @@ MODULE cp_main_variables
   !----------------------------------------------------------------------------
   !
   USE kinds,             ONLY : DP
-  USE parameters,        ONLY : nacx
+  USE parameters,        ONLY : natx, nsx, nacx
   USE control_flags,     ONLY : program_name
   USE funct,             ONLY : dft_is_meta
   USE metagga,           ONLY : kedtaur, kedtaus, kedtaug
   USE cell_base,         ONLY : boxdimensions
   USE wave_types,        ONLY : wave_descriptor, wave_descriptor_init
   USE energies,          ONLY : dft_energy_type
+  USE pres_ai_mod,       ONLY : abivol, abisur, jellium, t_gauss, rho_gaus, &
+                                v_vol, posv, f_vol
   !
   IMPLICIT NONE
   SAVE
@@ -162,6 +164,15 @@ MODULE cp_main_variables
          ALLOCATE( rhopr( nnr,   nspin ) )
          ALLOCATE( rhos( nnrsx, nspin ) )
          ALLOCATE( rhog( ng,    nspin ) )
+         !
+         if ( abivol.or.abisur ) then
+            !
+            allocate(rho_gaus(nnr))
+            allocate(v_vol(nnr))
+            if (jellium.or.t_gauss) allocate(posv(3,nr1*nr2*nr3))
+            if (t_gauss) allocate(f_vol(3,natx,nsx))
+            !
+         end if
          !
          IF ( nosmd ) THEN
             !

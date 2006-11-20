@@ -39,6 +39,7 @@ fftdrv.o \
 fft.o \
 forces.o \
 fromscra.o \
+gradrho.o \
 greenf.o \
 gtable.o \
 guess.o \
@@ -95,6 +96,7 @@ stress.o \
 turbo.o \
 util.o \
 vanderwaals.o \
+vol_clu.o \
 cp_version.o \
 wannier_base.o \
 wannier.o \
@@ -151,6 +153,7 @@ MODULES = \
 ../Modules/path_reparametrisation.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
+../Modules/pres_ai_mod.o \
 ../Modules/parser.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \

@@ -206,6 +206,7 @@ cplib.o : ../Modules/kind.o
 cplib.o : ../Modules/mp.o
 cplib.o : ../Modules/mp_global.o
 cplib.o : ../Modules/parameters.o
+cplib.o : ../Modules/pres_ai_mod.o
 cplib.o : ../Modules/ptoolkit.o
 cplib.o : ../Modules/recvec.o
 cplib.o : ../Modules/sic.o
@@ -247,6 +248,7 @@ cpr.o : ../Modules/metadyn_vars.o
 cpr.o : ../Modules/mp.o
 cpr.o : ../Modules/mp_global.o
 cpr.o : ../Modules/parameters.o
+cpr.o : ../Modules/pres_ai_mod.o
 cpr.o : ../Modules/printout_base.o
 cpr.o : ../Modules/recvec.o
 cpr.o : ../Modules/timestep.o
@@ -485,6 +487,10 @@ fromscra.o : modules.o
 fromscra.o : ortho_base.o
 fromscra.o : wave_types.o
 geninv.o : ../Modules/kind.o
+gradrho.o : ../Modules/cell_base.o
+gradrho.o : ../Modules/griddim.o
+gradrho.o : ../Modules/recvec.o
+gradrho.o : fft.o
 greenf.o : ../Modules/kind.o
 gsmesh.o : ../Modules/cell_base.o
 gsmesh.o : ../Modules/constants.o
@@ -701,6 +707,7 @@ mainvar.o : ../Modules/energies.o
 mainvar.o : ../Modules/functionals.o
 mainvar.o : ../Modules/kind.o
 mainvar.o : ../Modules/parameters.o
+mainvar.o : ../Modules/pres_ai_mod.o
 mainvar.o : modules.o
 mainvar.o : wave_types.o
 metaxc.o : ../Modules/recvec.o
@@ -883,6 +890,7 @@ print_out.o : ../Modules/ions_base.o
 print_out.o : ../Modules/ions_nose.o
 print_out.o : ../Modules/kind.o
 print_out.o : ../Modules/mp.o
+print_out.o : ../Modules/pres_ai_mod.o
 print_out.o : ../Modules/mp_global.o
 print_out.o : ../Modules/printout_base.o
 print_out.o : ../Modules/recvec.o
@@ -1203,6 +1211,21 @@ vanderwaals.o : ../Modules/cell_base.o
 vanderwaals.o : ../Modules/kind.o
 vanderwaals.o : ../Modules/mp_global.o
 vanderwaals.o : atoms_type.o
+vol_clu.o : ../Modules/cell_base.o
+vol_clu.o : ../Modules/control_flags.o
+vol_clu.o : ../Modules/electrons_base.o
+vol_clu.o : ../Modules/fft_base.o
+vol_clu.o : ../Modules/griddim.o
+vol_clu.o : ../Modules/io_global.o
+vol_clu.o : ../Modules/ions_base.o
+vol_clu.o : ../Modules/mp_global.o
+vol_clu.o : ../Modules/mp.o
+vol_clu.o : ../Modules/parameters.o
+vol_clu.o : ../Modules/pres_ai_mod.o
+vol_clu.o : ../Modules/recvec.o
+vol_clu.o : fft.o
+vol_clu.o : ions_positions.o
+vol_clu.o : modules.o
 wannier.o : ../Modules/cell_base.o
 wannier.o : ../Modules/control_flags.o
 wannier.o : ../Modules/electrons_base.o
@@ -1270,6 +1293,7 @@ forceconv.o : ../include/f_defs.h
 forces.o : ../include/f_defs.h
 fromscra.o : ../include/f_defs.h
 geninv.o : ../include/f_defs.h
+gradrho.o : ../include/f_defs.h
 greenf.o : ../include/f_defs.h
 gsmesh.o : ../include/f_defs.h
 guess.o : ../include/f_defs.h
@@ -1297,6 +1321,7 @@ runcg.o : ../include/f_defs.h
 rundiis.o : ../include/f_defs.h
 smcp.o : ../include/f_defs.h
 stress.o : ../include/f_defs.h
+vol_clu.o : ../include/f_defs.h
 wannier.o : ../include/f_defs.h
 wave.o : ../include/f_defs.h
 wf.o : ../include/f_defs.h

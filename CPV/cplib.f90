@@ -2550,6 +2550,8 @@ END FUNCTION
       USE mp,               ONLY: mp_sum
       USE mp_global,        ONLY: intra_image_comm
       USE funct,            ONLY: dft_is_meta
+      USE pres_ai_mod,      ONLY: abivol, abisur, v_vol, P_ext, volclu,  &
+                                  Surf_t, surfclu
       USE cp_interfaces,    ONLY: fwfft, invfft, self_vofhar
       USE sic_module,       ONLY: self_interaction, sic_epsilon, sic_alpha
       USE energies,         ONLY: self_exc, self_ehte
@@ -2618,6 +2620,10 @@ END FUNCTION
          ALLOCATE( gagb( 6, ng ) )
          CALL compute_gagb( gagb, gx, ng, tpiba2 )
       END IF
+!
+!     ab-initio pressure and surface tension contributions to the potential
+!
+      if (abivol.or.abisur) call vol_clu(rhor,rhog,sfac,nfi)
       !
       ttsic = ( ABS( self_interaction ) /= 0 )
       !
@@ -2780,9 +2786,15 @@ END FUNCTION
 !
       IF( nspin == 1 ) THEN
          iss = 1
-         DO ir = 1, nnr
-            v(ir) = CMPLX( rhor( ir, iss ), 0.d0 )
-         END DO
+         if (abivol.or.abisur) then
+            do ir=1,nnr
+               v(ir)=CMPLX( rhor( ir, iss ) + v_vol( ir ), 0.d0 )
+            end do           
+         else
+            do ir=1,nnr
+               v(ir)=CMPLX( rhor( ir, iss ), 0.d0 )
+            end do
+         end if
          !
          !     v_xc(r) --> v_xc(g)
          !
@@ -2798,9 +2810,15 @@ END FUNCTION
       ELSE
          isup=1
          isdw=2
-         DO ir=1,nnr
-            v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
-         END DO
+         if (abivol.or.abisur) then
+            do ir=1,nnr
+               v(ir)=CMPLX(rhor(ir,isup)+v_vol(ir),rhor(ir,isdw)+v_vol(ir))
+            end do
+         else
+            do ir=1,nnr
+               v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
+            end do
+         end if
          CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          DO ig=1,ng
             fp=v(np(ig))+v(nm(ig))
@@ -2923,6 +2941,9 @@ END FUNCTION
       !     etot is the total energy ; ekin, enl were calculated in rhoofr
       !
       etot = ekin + eht + epseu + enl + exc + ebac
+      !
+      if (abivol) etot = etot + P_ext*volclu
+      if (abisur) etot = etot + Surf_t*surfclu
       !
       IF( tpre ) THEN
          !
