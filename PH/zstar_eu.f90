@@ -58,7 +58,7 @@ subroutine zstar_eu
               ! read DeltaV*psi(scf) for electric field in jpol direction
               !
               call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
-              do ibnd = 1, nbnd
+              do ibnd = 1, nbnd_occ(ik)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
                       ZDOTC(npw,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
               enddo

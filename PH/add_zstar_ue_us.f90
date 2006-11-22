@@ -70,8 +70,8 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            ! add the term of the double summation
            !
-           do ibnd = 1, nbnd
-              do jbnd = 1, nbnd
+           do ibnd = 1, nbnd_occ(ik)
+              do jbnd = 1, nbnd_occ(ik)
                  zstarue0(mode,jpol)=zstarue0(mode,jpol) +              &
                       weight *                                          &
                       dot_product(evc(1:npw,ibnd),dvpsi(1:npw,jbnd))*   &
@@ -101,7 +101,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            ! And calculate finally the scalar product 
            !
-           do ibnd = 1, nbnd
+           do ibnd = 1, nbnd_occ(ik)
               zstarue0(mode,jpol)=zstarue0(mode,jpol) - weight *   &
                    dot_product(evc(1:npw,ibnd),dvpsi(1:npw,ibnd))
            enddo

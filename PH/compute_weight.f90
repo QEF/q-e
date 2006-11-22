@@ -56,7 +56,12 @@ subroutine compute_weight (wgg)
               theta = wgauss ( (et (jbnd,ikq) - et (ibnd,ikk) ) / degauss, 0)
               wg2 = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
            else
-              theta = 0.5d0
+              IF (et (jbnd,ikq) > et (ibnd,ikk)) THEN
+                 theta = 1.0d0
+              ELSE
+                 theta = 0.d0
+              ENDIF
+              IF (ABS(et (jbnd,ikq) - et (ibnd,ikk)) < 1.d-8) theta=0.5d0
               if (wk (ikk) .le.eps) then
                  wg2 = 0.d0
               else
