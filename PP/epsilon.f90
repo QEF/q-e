@@ -7,7 +7,7 @@
 
 !------------------------------
 PROGRAM epsilon
-  !------------------------------
+!------------------------------
   !
   ! Compute the complex macroscopic dielectric function,
   ! at the RPA level, neglecting local field effects.
@@ -55,8 +55,7 @@ PROGRAM epsilon
   calculation  = 'eps'
   prefix       = 'pwscf'
   shift        = 0.0d0
-  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-  IF ( TRIM( outdir ) == ' ' ) outdir = './'
+  outdir       = './'
   smear        = 0.02
   wmax         = 30.0d0
   nw           = 600
@@ -66,7 +65,6 @@ PROGRAM epsilon
   ! read input
   !
   CALL input_from_file( )
-  !
   IF ( ionode )  THEN 
      !
      READ (5, inputpp, IOSTAT=ios)
@@ -135,14 +133,16 @@ SUBROUTINE eps_calc ( smeartype, smear, nw, wmax, shift, calculation )
   !
   ! local variables
   !
-  INTEGER       :: i, ig, ik, iband1, iband2
+  INTEGER       :: i, ig, ik, iband1, iband2,it1,it2
   INTEGER       :: iw, iwp, ierr,count
   REAL(DP)      :: alpha, etrans, const, w, renorm 
-  COMPLEX(DP)   :: caux, dipole_aux(3)
+  COMPLEX(DP)   :: caux, dipole_aux(3),dipole_aux1,dipole_aux2
   !
+  INTEGER,  ALLOCATABLE    :: igk_l2g(:)
   REAL(DP), ALLOCATABLE    :: focc(:,:), wgrid(:)
-  REAL(DP), ALLOCATABLE    :: epsr(:,:), epsi(:,:), jdos(:), ieps(:,:), eels(:,:)
-  REAL(DP), ALLOCATABLE    :: dipole(:,:,:)
+  REAL(DP), ALLOCATABLE    :: epsr(:,:), epsi(:,:), epsrtot(:,:,:)
+  REAL(DP), ALLOCATABLE    :: epsitot(:,:,:),jdos(:), ieps(:,:), eels(:,:)
+  REAL(DP), ALLOCATABLE    :: dipole(:,:,:),dipoletot(:,:,:,:)
 
 !
 !--------------------------
@@ -427,7 +427,7 @@ ENDIF
                     caux= CONJG(evc(ig,iband1))*evc(ig,iband2) 
                     !
                     dipole_aux(:) = dipole_aux(:) + &
-                          ( xk(:,ik) + g(:,igk(ig)) ) * caux
+                          ( g(:,igk(ig)) ) * caux
                    !
                ENDDO
                !
@@ -573,6 +573,187 @@ ENDIF
   !
   DEALLOCATE ( focc, wgrid )
   DEALLOCATE ( epsr, epsi, eels, ieps)
+
+ELSE IF (calculation == 'offdiag' ) THEN
+!
+! initializations
+!
+!
+! allocate main spectral and auxiliary quantities
+!
+   ALLOCATE( dipoletot(3,3, nbnd, nbnd), STAT=ierr )
+       IF (ierr/=0) CALL errore('epsilon','allocating dipole', ABS(ierr) )
+   ALLOCATE (focc(nbnd,nks), STAT=ierr)
+       IF (ierr/=0) CALL errore('epsilon','allocating focc', ABS(ierr))
+   ALLOCATE(wgrid(nw+1),STAT=ierr)
+       IF (ierr/=0) CALL errore('epsilon','allocating wgrid', ABS(ierr))
+   ALLOCATE( epsrtot( 3,3, nw+1), epsitot( 3,3, nw+1) ,STAT=ierr )
+       IF (ierr/=0) CALL errore('epsilon','allocating eps', ABS(ierr))
+  !
+  ! occupation numbers
+  !
+   DO ik = 1,nks
+   DO i  = 1,nbnd
+        focc(i,ik)= wg(i,ik) * 2.0_DP/wk(ik)
+   ENDDO
+   ENDDO
+
+   !
+   ! set the energy grid
+   !
+   alpha = wmax/REAL(nw, DP)
+   !
+   DO iw = 1, nw + 1
+       wgrid(iw) = (iw-1)*alpha
+   ENDDO
+   !
+   ! initialize response functions
+   !
+   epsrtot  = 0.0_DP
+   epsitot  = 0.0_DP
+   !
+   ! main kpt loop
+   !
+   kpt_loop3: &
+   DO ik = 1, nks
+      !
+      ! setup k+G grids for each kpt
+      !
+      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
+      !
+      ! read wfc for the given kpt
+      !
+      CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+
+      !
+      ! compute matrix elements
+      !
+      dipoletot   = 0.0_DP
+      !
+      DO it1 = 1, 3
+         DO it2 = 1, 3
+            DO iband2 = 1,nbnd
+               DO iband1 = 1,nbnd
+                  !
+                  IF ( focc(iband2,ik) <  2.0d0) THEN
+                  IF ( focc(iband1,ik) >= 1e-4 ) THEN
+                  !
+                  dipole_aux1 = 0.0_DP
+                  dipole_aux2 = 0.0_DP
+                  !
+                  DO  ig=1,npw
+
+                     caux= CONJG(evc(ig,iband1))*evc(ig,iband2)
+
+                     dipole_aux1 = dipole_aux1+ &
+                           ( g(it1,igk(ig)) ) * caux
+
+                     dipole_aux2 = dipole_aux2+ &
+                           ( g(it2,igk(ig)) ) * caux
+
+                 ENDDO
+                 !
+                 dipoletot(it1,it2,iband1,iband2)= tpiba2* ABS(&
+                                   dipole_aux1 * CONJG( dipole_aux2 ))
+                 !
+                 ENDIF
+                 ENDIF
+                 !
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDDO
+     !
+     ! recover G parallelism
+     !
+     CALL reduce( 3 * 3 * nbnd * nbnd, dipoletot )
+     !
+     ! Calculation of real and immaginary parts
+     ! of the macroscopic dielettric function from dipole
+     ! approximation.
+     ! 'smear' is the brodening parameter
+     !
+     DO iband2 = 1,nbnd
+     DO iband1 = 1,nbnd
+         !
+         IF ( focc(iband2,ik) <  2.0d0) THEN
+         IF ( focc(iband1,ik) >= 1e-4 ) THEN
+
+               !
+               ! transition energy
+               !
+               etrans = ( et(iband2,ik) -et(iband1,ik) ) * RYTOEV + shift
+               !
+               if( etrans < 1d-10 ) cycle
+
+               ! loop over frequencies
+               !
+              DO iw = 1, nw+1
+                   !
+                   w = wgrid(iw)
+                   !
+                   epsitot(:,:,iw) = epsitot(:,:,iw) + dipoletot(:,:,iband1,iband2) * smear * w* &
+                                             RYTOEV**3 * (focc(iband1,ik)-focc(iband2,ik))/  &
+                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans * PI)
+                   epsrtot(:,:,iw) = epsrtot(:,:,iw) + dipoletot(:,:,iband1,iband2) * RYTOEV**3 * &
+                                             (focc(iband1,ik)-focc(iband2,ik)) * &
+                                             (etrans**2 - w**2 ) / &
+                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans * PI)
+               ENDDO
+
+         ENDIF
+         ENDIF
+
+     ENDDO
+     ENDDO
+  ENDDO kpt_loop3
+
+  !
+  ! impose the correct normalization
+  !
+  const = 64.0d0 * PI**2 / ( omega * REAL(nkstot, DP) )
+
+  epsrtot(:,:,:) = 1.0_DP + epsrtot(:,:,:) * const
+  epsitot(:,:,:) =          epsitot(:,:,:) * const
+
+  !
+  ! write results on data files
+  !
+      OPEN (41, FILE='epsxx.dat', FORM='FORMATTED' )
+      OPEN (42, FILE='epsxy.dat', FORM='FORMATTED' )
+      OPEN (43, FILE='epsxz.dat', FORM='FORMATTED' )
+      OPEN (44, FILE='epsyx.dat', FORM='FORMATTED' )
+      OPEN (45, FILE='epsyy.dat', FORM='FORMATTED' )
+      OPEN (46, FILE='epsyz.dat', FORM='FORMATTED' )
+      OPEN (47, FILE='epszx.dat', FORM='FORMATTED' )
+      OPEN (48, FILE='epszy.dat', FORM='FORMATTED' )
+      OPEN (49, FILE='epszz.dat', FORM='FORMATTED' )
+      !
+      DO iw =1, nw+1
+          !
+          WRITE(41,"(4f15.6)") wgrid(iw), epsrtot(1,1, iw), epsitot(1,1, iw)
+          WRITE(42,"(4f15.6)") wgrid(iw), epsrtot(1,2, iw), epsitot(1,2, iw)
+          WRITE(43,"(4f15.6)") wgrid(iw), epsrtot(1,3, iw), epsitot(1,3, iw)
+          WRITE(44,"(4f15.6)") wgrid(iw), epsrtot(2,1, iw), epsitot(2,1, iw)
+          WRITE(45,"(4f15.6)") wgrid(iw), epsrtot(2,2, iw), epsitot(2,2, iw)
+          WRITE(46,"(4f15.6)") wgrid(iw), epsrtot(2,3, iw), epsitot(2,3, iw)
+          WRITE(47,"(4f15.6)") wgrid(iw), epsrtot(3,1, iw), epsitot(3,1, iw)
+          WRITE(48,"(4f15.6)") wgrid(iw), epsrtot(3,2, iw), epsitot(3,2, iw)
+          WRITE(49,"(4f15.6)") wgrid(iw), epsrtot(3,3, iw), epsitot(3,3, iw)
+          !
+      ENDDO
+      !
+      CLOSE(30)
+      CLOSE(40)
+      CLOSE(41)
+      CLOSE(42)
+  !
+  ! local cleaning
+  !
+  DEALLOCATE ( focc, wgrid )
+  DEALLOCATE ( epsrtot, epsitot )
+  DEALLOCATE ( dipoletot)
+
  ELSE
 
  CALL errore('epsilon', 'reading CALCULATION in namelist INPUTPP', 1)
