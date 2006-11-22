@@ -230,6 +230,7 @@ projwfc.o : ../Modules/wavefunctions.o
 projwfc.o : ../PW/becmod.o
 projwfc.o : ../PW/noncol.o
 projwfc.o : ../PW/pwcom.o
+projwfc.o : ../iotk/src/iotk_module.o
 punch_plot.o : ../Modules/cell_base.o
 punch_plot.o : ../Modules/constants.o
 punch_plot.o : ../Modules/io_global.o
@@ -270,6 +271,7 @@ pw2wannier90.o : ../Modules/uspp.o
 pw2wannier90.o : ../Modules/wannier.o
 pw2wannier90.o : ../Modules/wavefunctions.o
 pw2wannier90.o : ../PW/becmod.o
+pw2wannier90.o : ../PW/noncol.o
 pw2wannier90.o : ../PW/pwcom.o
 pw_export.o : ../Modules/io_files.o
 pw_export.o : ../Modules/io_global.o
@@ -279,6 +281,7 @@ pw_export.o : ../Modules/mp.o
 pw_export.o : ../Modules/mp_global.o
 pw_export.o : ../Modules/mp_wave.o
 pw_export.o : ../Modules/parameters.o
+pw_export.o : ../Modules/version.o
 pw_export.o : ../Modules/wavefunctions.o
 pw_export.o : ../PW/becmod.o
 pw_export.o : ../PW/pwcom.o
