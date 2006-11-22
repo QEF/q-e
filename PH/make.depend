@@ -160,13 +160,13 @@ d2ionq.o : ../Modules/constants.o
 d2ionq.o : ../Modules/io_global.o
 d2ionq.o : ../Modules/kind.o
 d2mxc.o : ../Modules/kind.o
+davcio_drho.o : ../Modules/io_global.o
 davcio_drho.o : ../Modules/kind.o
 davcio_drho.o : ../Modules/mp.o
 davcio_drho.o : ../Modules/mp_global.o
 davcio_drho.o : ../Modules/parallel_include.o
 davcio_drho.o : ../PW/para.o
 davcio_drho.o : ../PW/pwcom.o
-davcio_drho.o : phcom.o
 deallocate_part.o : phcom.o
 deallocate_phq.o : ../Modules/wavefunctions.o
 deallocate_phq.o : ../PW/becmod.o
@@ -181,6 +181,7 @@ dgradcorr.o : ../Modules/kind.o
 dhdrhopsi.o : ../Modules/io_files.o
 dhdrhopsi.o : ../Modules/kind.o
 dhdrhopsi.o : ../Modules/mp.o
+dhdrhopsi.o : ../Modules/mp_global.o
 dhdrhopsi.o : ../Modules/wavefunctions.o
 dhdrhopsi.o : ../PW/becmod.o
 dhdrhopsi.o : ../PW/pwcom.o
@@ -416,12 +417,12 @@ phq_readin.o : ../PW/noncol.o
 phq_readin.o : ../PW/pwcom.o
 phq_readin.o : phcom.o
 phq_readin.o : ramanm.o
-phq_recover.o : ../Modules/control_flags.o
 phq_recover.o : ../Modules/io_global.o
 phq_recover.o : ../Modules/ions_base.o
 phq_recover.o : ../Modules/kind.o
-phq_recover.o : ../PW/pwcom.o
+phq_recover.o : ../Modules/uspp.o
 phq_recover.o : phcom.o
+phq_recover.o : ramanm.o
 phq_setup.o : ../Modules/atom.o
 phq_setup.o : ../Modules/cell_base.o
 phq_setup.o : ../Modules/constants.o
@@ -442,7 +443,6 @@ phq_summary.o : ../Modules/printout_base.o
 phq_summary.o : ../Modules/uspp.o
 phq_summary.o : ../PW/pwcom.o
 phq_summary.o : phcom.o
-phqscf.o : ../Modules/check_stop.o
 phqscf.o : ../Modules/io_global.o
 phqscf.o : ../Modules/kind.o
 phqscf.o : ../PW/pwcom.o
@@ -586,6 +586,7 @@ solve_linter.o : ../Modules/wavefunctions.o
 solve_linter.o : ../PW/becmod.o
 solve_linter.o : ../PW/pwcom.o
 solve_linter.o : phcom.o
+solve_linter.o : ramanm.o
 star_q.o : ../Modules/io_global.o
 star_q.o : ../Modules/kind.o
 stop_ph.o : ../Modules/kind.o

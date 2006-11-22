@@ -1,6 +1,7 @@
 allocate_cond.o : ../PW/noncol.o
 allocate_cond.o : condcom.o
 bessj.o : ../Modules/kind.o
+compbs.o : ../Modules/ions_base.o
 compbs.o : ../PW/noncol.o
 compbs.o : ../PW/pwcom.o
 compbs.o : condcom.o
@@ -16,6 +17,7 @@ do_cond.o : ../Modules/io_files.o
 do_cond.o : ../Modules/io_global.o
 do_cond.o : ../Modules/ions_base.o
 do_cond.o : ../Modules/mp.o
+do_cond.o : ../PW/noncol.o
 do_cond.o : ../PW/pwcom.o
 do_cond.o : condcom.o
 eigenchnl.o : ../Modules/kind.o
@@ -40,6 +42,7 @@ init_cond.o : ../PW/noncol.o
 init_cond.o : ../PW/pwcom.o
 init_cond.o : condcom.o
 init_gper.o : ../Modules/io_global.o
+init_gper.o : ../PW/noncol.o
 init_gper.o : ../PW/pwcom.o
 init_gper.o : condcom.o
 init_orbitals.o : ../Modules/atom.o
@@ -74,7 +77,6 @@ poten.o : condcom.o
 print_clock_pwcond.o : ../Modules/io_global.o
 print_clock_pwcond.o : ../Modules/mp_global.o
 print_clock_pwcond.o : condcom.o
-rotate.o : ../Modules/kind.o
 rotproc.o : ../Modules/kind.o
 rotproc.o : ../Modules/mp_global.o
 rotproc.o : ../Modules/parallel_include.o
@@ -86,8 +88,6 @@ save_cond.o : ../Modules/parameters.o
 save_cond.o : ../PW/noncol.o
 save_cond.o : ../PW/pwcom.o
 save_cond.o : condcom.o
-scatter_back.o : ../PW/noncol.o
-scatter_back.o : condcom.o
 scatter_forw.o : ../Modules/cell_base.o
 scatter_forw.o : ../Modules/constants.o
 scatter_forw.o : ../Modules/parameters.o
@@ -103,10 +103,16 @@ summary_tran.o : ../Modules/kind.o
 summary_tran.o : condcom.o
 sunitary.o : ../Modules/io_global.o
 sunitary.o : ../Modules/kind.o
+transmit.o : ../Modules/io_files.o
 transmit.o : ../Modules/io_global.o
 transmit.o : ../PW/noncol.o
 transmit.o : ../PW/pwcom.o
 transmit.o : condcom.o
+write_states.o : ../Modules/ions_base.o
+write_states.o : ../Modules/kind.o
+write_states.o : ../PW/noncol.o
+write_states.o : ../PW/pwcom.o
+write_states.o : condcom.o
 allocate_cond.o : ../include/f_defs.h
 compbs.o : ../include/f_defs.h
 compbs_2.o : ../include/f_defs.h
@@ -123,10 +129,9 @@ jbloch.o : ../include/f_defs.h
 kbloch.o : ../include/f_defs.h
 local.o : ../include/f_defs.h
 poten.o : ../include/f_defs.h
-rotate.o : ../include/f_defs.h
 rotproc.o : ../include/f_defs.h
 save_cond.o : ../include/f_defs.h
-scatter_back.o : ../include/f_defs.h
 scatter_forw.o : ../include/f_defs.h
 summary_band.o : ../include/f_defs.h
 transmit.o : ../include/f_defs.h
+write_states.o : ../include/f_defs.h

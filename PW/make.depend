@@ -352,7 +352,6 @@ electrons.o : noncol.o
 electrons.o : pwcom.o
 electrons.o : realus.o
 eqvect.o : ../Modules/kind.o
-estimate.o : ../Modules/kind.o
 ewald.o : ../Modules/kind.o
 ewald_dipole.o : ../Modules/cell_base.o
 ewald_dipole.o : ../Modules/constants.o
@@ -588,8 +587,6 @@ kpoint_grid.o : ../Modules/kind.o
 kpoint_grid.o : noncol.o
 kpoint_grid.o : pwcom.o
 lchk_tauxk.o : ../Modules/kind.o
-linmin.o : ../Modules/io_global.o
-linmin.o : ../Modules/kind.o
 make_pointlists.o : ../Modules/cell_base.o
 make_pointlists.o : ../Modules/io_global.o
 make_pointlists.o : ../Modules/ions_base.o
@@ -734,6 +731,7 @@ pw_restart.o : ../Modules/kind.o
 pw_restart.o : ../Modules/mp.o
 pw_restart.o : ../Modules/mp_global.o
 pw_restart.o : ../Modules/recvec.o
+pw_restart.o : ../Modules/version.o
 pw_restart.o : ../Modules/wavefunctions.o
 pw_restart.o : ../Modules/xml_io_base.o
 pw_restart.o : ../iotk/src/iotk_module.o
@@ -1053,7 +1051,6 @@ summary.o : ../Modules/mp_global.o
 summary.o : ../Modules/uspp.o
 summary.o : noncol.o
 summary.o : pwcom.o
-swap.o : ../Modules/kind.o
 symmetrize_at.o : ../Modules/io_global.o
 symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
@@ -1083,7 +1080,6 @@ update_pot.o : ../Modules/wavefunctions.o
 update_pot.o : io_rho_xml.o
 update_pot.o : noncol.o
 update_pot.o : pwcom.o
-updathes.o : ../Modules/kind.o
 upf_to_internal.o : ../Modules/atom.o
 upf_to_internal.o : ../Modules/functionals.o
 upf_to_internal.o : ../Modules/ions_base.o
@@ -1274,7 +1270,6 @@ sgam_at.o : ../include/f_defs.h
 sgam_at_mag.o : ../include/f_defs.h
 sgam_ph.o : ../include/f_defs.h
 sgama.o : ../include/f_defs.h
-show_memory.o : ../include/f_defs.h
 smallg_q.o : ../include/f_defs.h
 stres_cc.o : ../include/f_defs.h
 stres_ewa.o : ../include/f_defs.h
@@ -1297,7 +1292,6 @@ symvect.o : ../include/f_defs.h
 symz.o : ../include/f_defs.h
 trnvecc.o : ../include/f_defs.h
 update_pot.o : ../include/f_defs.h
-updathes.o : ../include/f_defs.h
 vcsubs.o : ../include/f_defs.h
 vhpsi.o : ../include/f_defs.h
 vhpsi_nc.o : ../include/f_defs.h

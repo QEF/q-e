@@ -28,11 +28,6 @@ cg_setupdgc.o : ../Modules/functionals.o
 cg_setupdgc.o : ../Modules/kind.o
 cg_setupdgc.o : ../PW/pwcom.o
 cg_setupdgc.o : cgcom.o
-cg_summary.o : ../Modules/io_global.o
-cg_summary.o : ../Modules/ions_base.o
-cg_summary.o : ../Modules/uspp.o
-cg_summary.o : ../PW/pwcom.o
-cg_summary.o : cgcom.o
 cgcom.o : ../Modules/kind.o
 cgsolve.o : ../Modules/io_global.o
 cgsolve.o : ../Modules/kind.o
