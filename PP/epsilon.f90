@@ -140,10 +140,10 @@ SUBROUTINE eps_calc ( smeartype, smear, nw, wmax, shift, calculation )
   !
   INTEGER,  ALLOCATABLE    :: igk_l2g(:)
   REAL(DP), ALLOCATABLE    :: focc(:,:), wgrid(:)
-  REAL(DP), ALLOCATABLE    :: epsr(:,:), epsi(:,:), epsrtot(:,:,:)
-  REAL(DP), ALLOCATABLE    :: epsitot(:,:,:),jdos(:), ieps(:,:), eels(:,:)
-  REAL(DP), ALLOCATABLE    :: dipole(:,:,:),dipoletot(:,:,:,:)
-
+  REAL(DP), ALLOCATABLE    :: epsr(:,:), epsi(:,:)
+  REAL(DP), ALLOCATABLE    :: jdos(:), ieps(:,:), eels(:,:)
+  REAL(DP), ALLOCATABLE    :: dipole(:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: epstot(:,:,:),dipoletot(:,:,:,:) 
 !
 !--------------------------
 ! main routine body
@@ -292,7 +292,8 @@ count=0
                    !
                    w = wgrid(iw)
                    !
-                   jdos(iw) = jdos(iw) + (focc(iband1,ik)-focc(iband2,ik)) * EXP(-(etrans-w)**2/smear**2) &
+                   jdos(iw) = jdos(iw) + (focc(iband1,ik)-focc(iband2,ik)) * &
+                              EXP(-(etrans-w)**2/smear**2) &
                                 / (smear * SQRT(PI)) 
                
                ENDDO
@@ -473,12 +474,12 @@ ENDIF
 
                    epsi(:,iw) = epsi(:,iw) + dipole(:,iband1,iband2) * smear * w* &
                                              RYTOEV**3 * (focc(iband1,ik)-focc(iband2,ik))/  &
-                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans * PI)
+                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans )
                     
                    epsr(:,iw) = epsr(:,iw) + dipole(:,iband1,iband2) * RYTOEV**3 * &
                                              (focc(iband1,ik)-focc(iband2,ik)) * &
                                              (etrans**2 - w**2 ) / &
-                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans * PI)
+                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans )
                    
                ENDDO
 
@@ -493,7 +494,7 @@ ENDIF
   !
   ! impose the correct normalization
   !
-  const = 64.0d0 * PI**2 / ( omega * REAL(nkstot, DP) )
+  const = 64.0d0 * PI / ( omega * REAL(nkstot, DP) )
 
   epsr(:,:) = 1.0_DP + epsr(:,:) * const  
   epsi(:,:) =          epsi(:,:) * const 
@@ -587,7 +588,7 @@ ELSE IF (calculation == 'offdiag' ) THEN
        IF (ierr/=0) CALL errore('epsilon','allocating focc', ABS(ierr))
    ALLOCATE(wgrid(nw+1),STAT=ierr)
        IF (ierr/=0) CALL errore('epsilon','allocating wgrid', ABS(ierr))
-   ALLOCATE( epsrtot( 3,3, nw+1), epsitot( 3,3, nw+1) ,STAT=ierr )
+   ALLOCATE(epstot( 3,3, nw+1),STAT=ierr )
        IF (ierr/=0) CALL errore('epsilon','allocating eps', ABS(ierr))
   !
   ! occupation numbers
@@ -609,8 +610,7 @@ ELSE IF (calculation == 'offdiag' ) THEN
    !
    ! initialize response functions
    !
-   epsrtot  = 0.0_DP
-   epsitot  = 0.0_DP
+   epstot  = 0.0_DP
    !
    ! main kpt loop
    !
@@ -653,8 +653,8 @@ ELSE IF (calculation == 'offdiag' ) THEN
 
                  ENDDO
                  !
-                 dipoletot(it1,it2,iband1,iband2)= tpiba2* ABS(&
-                                   dipole_aux1 * CONJG( dipole_aux2 ))
+                 dipoletot(it1,it2,iband1,iband2)= tpiba2* &
+                                   dipole_aux1 * CONJG( dipole_aux2 )
                  !
                  ENDIF
                  ENDIF
@@ -666,7 +666,8 @@ ELSE IF (calculation == 'offdiag' ) THEN
      !
      ! recover G parallelism
      !
-     CALL reduce( 3 * 3 * nbnd * nbnd, dipoletot )
+     CALL reduce( 2 * 3 * 3 * nbnd * nbnd, dipoletot )
+     
      !
      ! Calculation of real and immaginary parts
      ! of the macroscopic dielettric function from dipole
@@ -692,14 +693,10 @@ ELSE IF (calculation == 'offdiag' ) THEN
                    !
                    w = wgrid(iw)
                    !
-                   epsitot(:,:,iw) = epsitot(:,:,iw) + dipoletot(:,:,iband1,iband2) * smear * w* &
-                                             RYTOEV**3 * (focc(iband1,ik)-focc(iband2,ik))/  &
-                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans * PI)
-                   epsrtot(:,:,iw) = epsrtot(:,:,iw) + dipoletot(:,:,iband1,iband2) * RYTOEV**3 * &
-                                             (focc(iband1,ik)-focc(iband2,ik)) * &
-                                             (etrans**2 - w**2 ) / &
-                                  (( (etrans**2 -w**2 )**2 + smear**2 * w**2 )* etrans * PI)
-               ENDDO
+                   epstot(:,:,iw) = epstot(:,:,iw) + dipoletot(:,:,iband1,iband2)*RYTOEV**3/(etrans) *&
+                                  focc(iband1,ik)/(etrans**2 - w**2 - (0,1)*smear*w) 
+              
+              ENDDO
 
          ENDIF
          ENDIF
@@ -711,10 +708,9 @@ ELSE IF (calculation == 'offdiag' ) THEN
   !
   ! impose the correct normalization
   !
-  const = 64.0d0 * PI**2 / ( omega * REAL(nkstot, DP) )
+  const = 64.0d0 * PI / ( omega * REAL(nkstot, DP) )
 
-  epsrtot(:,:,:) = 1.0_DP + epsrtot(:,:,:) * const
-  epsitot(:,:,:) =          epsitot(:,:,:) * const
+  epstot(:,:,:) = 1.0_DP + epstot(:,:,:) * const
 
   !
   ! write results on data files
@@ -731,15 +727,15 @@ ELSE IF (calculation == 'offdiag' ) THEN
       !
       DO iw =1, nw+1
           !
-          WRITE(41,"(4f15.6)") wgrid(iw), epsrtot(1,1, iw), epsitot(1,1, iw)
-          WRITE(42,"(4f15.6)") wgrid(iw), epsrtot(1,2, iw), epsitot(1,2, iw)
-          WRITE(43,"(4f15.6)") wgrid(iw), epsrtot(1,3, iw), epsitot(1,3, iw)
-          WRITE(44,"(4f15.6)") wgrid(iw), epsrtot(2,1, iw), epsitot(2,1, iw)
-          WRITE(45,"(4f15.6)") wgrid(iw), epsrtot(2,2, iw), epsitot(2,2, iw)
-          WRITE(46,"(4f15.6)") wgrid(iw), epsrtot(2,3, iw), epsitot(2,3, iw)
-          WRITE(47,"(4f15.6)") wgrid(iw), epsrtot(3,1, iw), epsitot(3,1, iw)
-          WRITE(48,"(4f15.6)") wgrid(iw), epsrtot(3,2, iw), epsitot(3,2, iw)
-          WRITE(49,"(4f15.6)") wgrid(iw), epsrtot(3,3, iw), epsitot(3,3, iw)
+          WRITE(41,"(4f15.6)") wgrid(iw), REAL(epstot(1,1, iw)), AIMAG(epstot(1,1, iw))
+          WRITE(42,"(4f15.6)") wgrid(iw), REAL(epstot(1,2, iw)), AIMAG(epstot(1,2, iw))
+          WRITE(43,"(4f15.6)") wgrid(iw), REAL(epstot(1,3, iw)), AIMAG(epstot(1,3, iw))
+          WRITE(44,"(4f15.6)") wgrid(iw), REAL(epstot(2,1, iw)), AIMAG(epstot(2,1, iw))
+          WRITE(45,"(4f15.6)") wgrid(iw), REAL(epstot(2,2, iw)), AIMAG(epstot(2,2, iw))
+          WRITE(46,"(4f15.6)") wgrid(iw), REAL(epstot(2,3, iw)), AIMAG(epstot(2,3, iw))
+          WRITE(47,"(4f15.6)") wgrid(iw), REAL(epstot(3,1, iw)), AIMAG(epstot(3,1, iw))
+          WRITE(48,"(4f15.6)") wgrid(iw), REAL(epstot(3,2, iw)), AIMAG(epstot(3,2, iw))
+          WRITE(49,"(4f15.6)") wgrid(iw), REAL(epstot(3,3, iw)), AIMAG(epstot(3,3, iw))
           !
       ENDDO
       !
@@ -751,7 +747,7 @@ ELSE IF (calculation == 'offdiag' ) THEN
   ! local cleaning
   !
   DEALLOCATE ( focc, wgrid )
-  DEALLOCATE ( epsrtot, epsitot )
+  DEALLOCATE ( epstot )
   DEALLOCATE ( dipoletot)
 
  ELSE
