@@ -7,7 +7,6 @@
 %
 \documentclass[twocolumn]{article}
 \usepackage[english]{babel}
-\usepackage[dvips]{epsfig}
 \usepackage[centertags,intlimits]{amsmath}
 \usepackage{amssymb}
 \usepackage{verbatim}
@@ -15,8 +14,9 @@
 \begin{titlepage}
 \Huge
 \begin{center}
-$PW_{SCF}$'s epsilon.x user's manual\\[1.5cm]
+$PW_{SCF}$'s epsilon.x user's manual\\[4.5cm]
 \normalsize
+\vspace{10.5cm}
 \textbf{Manual Autor:}
 \emph{Andrea Benassi}$^{1,2}$\\[0.3cm]
 \textbf{Code Developers:}
@@ -34,49 +34,52 @@ parallel mode. As all the others post processing codes, epsilon.x must run with 
 processors of the previews parallel PW runs, it can run with a single processor if and only if the previews parallel PW runs where
 performed with the
 variable WF\_COLLECT=.TRUE..\\
-Epsilon.x doesn't support the reduction of the k-points grid into the unreducible Brillouin zone, so the previews PW runs must be 
+Epsilon.x doesn't support the reduction of the k-points grid into the unreducible Brillouin zone, so the previews PW runs must be
 performed with a uniform k-points grid and all k-points weights must be equal to each other, i.g. in the k-points card the k-points
-coordinates must be given manualy in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Also the 
-auto-symmetrization of k-points grid can produce a non uniform distribution of k-points weights, in order to avoid this
-PW's behavior the variable NOSYM must be set .TRUE. to disable auto-symmetrizzation.
+coordinates must be given manualy in \emph{crystal} or \emph{alat} or \emph{bohr}, but not with the \emph{automatic} option. Also the
+auto-symmetrizzation of k-points grid can produce a non uniform distribution of k-points weights, in order to avoid this
+PW's behavior the variable NOSYM must be set .TRUE. disabling auto-symmetrizzation.
 \section{Input file}
 When executed epsilon.x reads an input file from standard input, this file contains two ForTran namelists:
 \begin{verbatim}
  &inputpp
     outdir='/scratch/bulk/'
     prefix='bulk'
-    calculation='eps' 
+    calculation='eps'
  /
- &energy_grid 
+ &energy_grid
     smeartype='gauss'
     smear=0.15d0
     wmax=30.0d0
     nw=1000
     shift=0.0d0
- / 
-\end{verbatim} 
+ /
+\end{verbatim}
 the first two character are the location and names of the output files from the previews PW runs. \emph{calculation}
 select the kind of calculation to be performed by epsilon.x, actually the following calculation are implemented:
 \begin{itemize}
 \item  \emph{eps}: dielectric tensor calculation, in addition to the standard output the code produces the four files
-\emph{epsr.dat}, \emph{epsi.dat}, \emph{eels.dat} and \emph{ieps.dat}. The first two contain the real and immaginary 
+\emph{epsr.dat}, \emph{epsi.dat}, \emph{eels.dat} and \emph{ieps.dat}. The first two contain the real and immaginary
 parts of the dielectric
-tensor diagonal components $\epsilon_{1_{\alpha,\alpha}}(\omega)$ e $\epsilon_{2_{\alpha,\alpha}}(\omega)$, 
-as a function of frequency (in eV). The third file contains the electron energy loss spectrum calculated from the diagonal 
-elements of dielectrc tensor and the last one contains the diagonal components of 
-dielectric tensor calculated on the immaginary axe of frequency (via London transformation) 
-$\epsilon_{\alpha,\alpha}(i\omega)$. 
+tensor diagonal components $\epsilon_{1_{\alpha,\alpha}}(\omega)$ e $\epsilon_{2_{\alpha,\alpha}}(\omega)$,
+as a function of frequency (in eV). The third file contains the electron energy loss spectrum calculated from the diagonal
+elements of dielectrc tensor and the last one contains the diagonal components of
+dielectric tensor calculated on the immaginary axe of frequency (via London transformation)
+$\epsilon_{\alpha,\alpha}(i\omega)$.
 \item  \emph{jdos}: joint density of state calculation, in addition to the standard output the code produces the file
 \emph{jdos.dat}, containing the joint density of state (in eV$^{-1}$) as a function of frequency (in eV)
+\item  \emph{offdiag}: calculation of diagonal and off-diagonal components of dielectric tensor. In addition
+to the standard output the code produces one file for each component of the dielectric tensor (i.e.
+\emph{epsxy.dat}), each file contains real and imaginary part of the tensor componet.
 \end{itemize}
 \emph{smeartype} select the kind of brodening for the plot of joint density of state, it can be both
-\emph{gauss} or \emph{lorentz} for a gaussian or lorentzian brodening. \emph{smear} is the broadening parameter (in eV), 
-it will be the gaussian or lorentzian broadening parameter in the case of joint density of state calculation or the 
+\emph{gauss} or \emph{lorentz} for a gaussian or lorentzian brodening. \emph{smear} is the broadening parameter (in eV),
+it will be the gaussian or lorentzian broadening parameter in the case of joint density of state calculation or the
 Drude-Lorentz broadening parameter for the dielectric tensor calculation.
-The desired functions will be calculated in a frequency interval $\big[$-\emph{wmax},\emph{wmax}$\big]$ and \emph{nw} 
-is the number of points of the frequency mesh, \emph{wmax} is expected to be in eV. Finally \emph{shift} is the number 
-of eV for an optional rigid shift of the immaginary part of the dielectric function. 
-   
+The desired functions will be calculated in a frequency interval $\big[$-\emph{wmax},\emph{wmax}$\big]$ and \emph{nw}
+is the number of points of the frequency mesh, \emph{wmax} is expected to be in eV. Finally \emph{shift} is the number
+of eV for an optional rigid shift of the immaginary part of the dielectric function.
+
 \section{Joint density of states}
 The joint density of state is defined has:
 \begin{displaymath}
@@ -101,12 +104,12 @@ n(\omega)=\sum_{n\in V}\sum_{n'\in C}\frac{\Omega}{(2\pi)^3}\int d^3\textbf{k}\d
 \begin{displaymath}
 ...[f(E_{\textbf{k},n})-f(E_{\textbf{k},n'})]
 \end{displaymath}
-were $\sigma$ is the spin component, $\Omega$ is the volume of the lattice cell, $n$ and $n'$ belong respectively to the 
-valence and conduction bands, 
-$E_{\textbf{k},n}$ are the eighenvalues of the hamiltonian and $f(E_{\textbf{k},n})$ is the Fermi distribution function 
+were $\sigma$ is the spin component, $\Omega$ is the volume of the lattice cell, $n$ and $n'$ belong respectively to the
+valence and conduction bands,
+$E_{\textbf{k},n}$ are the eighenvalues of the hamiltonian and $f(E_{\textbf{k},n})$ is the Fermi distribution function
 that account for the occupation of the bands. In the last two notation the sum over spin values is included into
-Fermi function whose normalizzation is two instead of one.   
-The Dirac Delta function it's numerically implemented by means of Lorentzian 
+Fermi function whose normalizzation is two instead of one.
+The Dirac Delta function it's numerically implemented by means of Lorentzian
 or Gaussian functions normalized to one:
 \begin{equation}
 L(\omega)=\frac{\Gamma}{\pi\big[(E_{\textbf{k},n'}-E_{\textbf{k},n}-\hbar\omega)^2+\Gamma^2\big]}
@@ -116,23 +119,23 @@ L(\omega)=\frac{\Gamma}{\pi\big[(E_{\textbf{k},n'}-E_{\textbf{k},n}-\hbar\omega)
 G(\omega)=\frac{1}{\Gamma\sqrt{\pi}}e^{(E_{\textbf{k},n'}-E_{\textbf{k},n}-\hbar\omega)^2/\Gamma^2}
 \label{gau}
 \end{equation}
-$\Gamma$ is the brodening parameter from the input file. The implemented formula is obtained sobstituting the 
-Dirac Delta function in (\ref{imp}) by (\ref{lor}) or (\ref{gau}) and sobstituting $\frac{\Omega}{(2\pi)^3}\int 
+$\Gamma$ is the brodening parameter from the input file. The implemented formula is obtained sobstituting the
+Dirac Delta function in (\ref{imp}) by (\ref{lor}) or (\ref{gau}) and sobstituting $\frac{\Omega}{(2\pi)^3}\int
 d^3\textbf{k}$ by a simple sun over k-points.\\
-Integrating analitically (\ref{imp}) one obtains: 
+Integrating analitically (\ref{imp}) one obtains:
 \begin{eqnarray}
 \sum_{\textbf{k}}\sum_{n}\sum_{n'}[f(E_{\textbf{k},n})-f(E_{\textbf{k},n'})]
 \end{eqnarray}
-so a division by this quantity is needed to renormalize to one the joint density of state, the standard output file 
-contains a convergence check on this renormalizzazion. Note that in the case of 
+so a division by this quantity is needed to renormalize to one the joint density of state, the standard output file
+contains a convergence check on this renormalizzazion. Note that in the case of
 joint density of state the two kinds of brodening (\ref{lor}) and (\ref{gau}) are exactly equivalent.
 
 \section{Dielectric tensor}
-The immaginary part of the dielectric tensor $\epsilon_{2_{\alpha,\beta}}(\omega)$ can be viewed as a response function 
+The immaginary part of the dielectric tensor $\epsilon_{2_{\alpha,\beta}}(\omega)$ can be viewed as a response function
 that comes from a perturbation theory with adiabatic turning on:
 \begin{displaymath}
-\epsilon_{\alpha,\beta}(\omega)=1+\frac{4 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\in V}\sum_{n'\in C}\sum_{\textbf{k}}
-\frac{|\hat{\textbf{p}}_{\alpha,\beta}|^2}{(E_{\textbf{k},n'}-E_{\textbf{k},n})^2}...
+\epsilon_{\alpha,\beta}(\omega)=1+\frac{4 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\ne n'}\sum_{\textbf{k}}
+\frac{\hat{\textbf{M}}_{\alpha,\beta}}{(E_{\textbf{k},n'}-E_{\textbf{k},n})^2}...
 \end{displaymath}
 \begin{displaymath}
 ...\Bigg\{\frac{f(E_{\textbf{k},n})}{E_{\textbf{k},n'}-E_{\textbf{k},n}+\hbar\omega+i\hbar\Gamma}+...
@@ -140,23 +143,23 @@ that comes from a perturbation theory with adiabatic turning on:
 \begin{equation}
 ...\frac{f(E_{\textbf{k},n})}{E_{\textbf{k},n'}-E_{\textbf{k},n}-\hbar\omega-i\hbar\Gamma}\Bigg\}
 \end{equation}
-where $\Gamma$ is the adiabatic parameter and, for the total energy conservation it must tend to zeto. This is the way in 
-which the Dirac Delta function appears and this means that every excited state has an infinite lifetime, i.g. is stationary. 
+where $\Gamma$ is the adiabatic parameter and, for the total energy conservation it must tend to zeto. This is the way in
+which the Dirac Delta function appears and this means that every excited state has an infinite lifetime, i.g. is stationary.
 \begin{displaymath}
-\epsilon_{2_{\alpha,\beta}}(\omega)=\frac{4 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\in V}\sum_{n'\in C}\sum_{\textbf{k}}
-\frac{|\hat{\textbf{p}}_{\alpha,\beta}|^2 f(E_{\textbf{k},n})}{(E_{\textbf{k},n'}-E_{\textbf{k},n})^2}...
+\epsilon_{2_{\alpha,\beta}}(\omega)=\frac{4 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\ne n'}\sum_{\textbf{k}}
+\frac{\hat{\textbf{M}}_{\alpha,\beta} f(E_{\textbf{k},n})}{(E_{\textbf{k},n'}-E_{\textbf{k},n})^2}...
 \end{displaymath}
 \begin{equation}
 ...\bigg[\delta(E_{\textbf{k},n'}-E_{\textbf{k},n}+\hbar\omega)+\delta(E_{\textbf{k},n'}-
 E_{\textbf{k},n}-\hbar\omega)\bigg]
 \end{equation}
-This situation is unphysical because the interaction with 
-electromagnetic field (even in the absence of photons, i.g. spontaneous emission) gives an intrinsic broadening to all exited 
-states, the lifetime is finite and $\Gamma$ must be greater than zero. In the limit of small but non vanishing $\Gamma$ 
-the dielectric tensor turns into the Drude-Lorentz one: 
+This situation is unphysical because the interaction with
+electromagnetic field (even in the absence of photons, i.g. spontaneous emission) gives an intrinsic broadening to all exited
+states, the lifetime is finite and $\Gamma$ must be greater than zero. In the limit of small but non vanishing $\Gamma$
+the dielectric tensor turns into the Drude-Lorentz one:
 \begin{displaymath}
-\epsilon_{2_{\alpha,\beta}}(\omega)=\frac{8 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\in V}\sum_{n'\in C}\sum_{\textbf{k}}
-\frac{|\hat{\textbf{p}}_{\alpha,\beta}|^2}{E_{\textbf{k},n'}-E_{\textbf{k},n}}...
+\epsilon_{2_{\alpha,\beta}}(\omega)=\frac{8 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\ne n'}\sum_{\textbf{k}}
+\frac{\hat{\textbf{M}}_{\alpha,\beta}}{E_{\textbf{k},n'}-E_{\textbf{k},n}}...
 \end{displaymath}
 \begin{equation}
 ...\frac{\Gamma \omega f(E_{\textbf{k},n})}{\big[(E_{\textbf{k},n'}-E_{\textbf{k},n})^2-\hbar\omega^2\big]^2+\Gamma^2\hbar\omega^2}
@@ -165,44 +168,51 @@ while the real part comes from the Krames-Kronig transformation:
 \begin{equation}
 \epsilon_{1_{\alpha,\beta}}(\omega)=1+\frac{2}{\pi}\int_{0}^{\infty}\frac{\omega' \epsilon_{2_{\alpha,\beta}}(\omega')}
 {\omega'^{2}-\omega^{2}}d\omega'
-\end{equation} 
+\end{equation}
 \begin{displaymath}
-\epsilon_{1_{\alpha,\beta}}(\omega)=1+\frac{8 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\in V}\sum_{n'\in C}\sum_{\textbf{k}}
-\frac{|\hat{\textbf{p}}_{\alpha,\beta}|^2}{E_{\textbf{k},n'}-E_{\textbf{k},n}}...
+\epsilon_{1_{\alpha,\beta}}(\omega)=1+\frac{8 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n\ne n'}\sum_{\textbf{k}}
+\frac{\hat{\textbf{p}}_{\alpha,\beta}}{E_{\textbf{k},n'}-E_{\textbf{k},n}}...
 \end{displaymath}
 \begin{equation}
 ...\frac{\big[(\omega_{\textbf{k},n'}-\omega_{\textbf{k},n})^2-\omega^2\big]f(E_{\textbf{k},n})}{\big[(E_{\textbf{k},n'}-E_{\textbf{k},n})^2
 -\hbar\omega^2\big]^2+\Gamma^2\hbar\omega^2}
 \end{equation}
+finally the complex dielectric function is:
+\begin{displaymath}
+\epsilon_{\alpha,\beta}(\omega)=1+\frac{8 \pi e^2}{\Omega N_{\textbf{k}} m^2}\sum_{n'\ne n}\sum_{\textbf{k}}
+\frac{\hat{\textbf{M}}_{\alpha,\beta}}{(E_{\textbf{k},n'}-E_{\textbf{k},n})}...
+\end{displaymath}
+\begin{displaymath}
+...\frac{f(E_{\textbf{k},n})}{(E_{\textbf{k},n'}-E_{\textbf{k},n})^2+(\hbar\omega)^2+i\hbar\Gamma\omega}
+\end{displaymath}
 The squared matrix elements are defined as follow:
 \begin{equation}
-\hat{\textbf{p}}_{\alpha,\beta}=\langle\psi_{\textbf{k},n'}\vert\hat{\textbf{p}}_{\alpha}\vert \psi_{\textbf{k},n}\rangle
-\langle\psi_{\textbf{k},n}\vert\hat{\textbf{p}}_{\beta}^{\dagger}\vert\psi_{\textbf{k},n'}\rangle
+\hat{\textbf{M}}_{\alpha,\beta}=\langle u_{\textbf{k},n'}\vert\hat{\textbf{p}}_{\alpha}\vert u_{\textbf{k},n}\rangle
+\langle u_{\textbf{k},n}\vert\hat{\textbf{p}}_{\beta}^{\dagger}\vert u_{\textbf{k},n'}\rangle
 \label{nos}
 \end{equation}
 \begin{equation}
-\propto \psi_{\textbf{k},n'}^{\star}(\textbf{r})\frac{d}{d x_{\alpha}}\psi_{\textbf{k},n}(\textbf{r})
-\psi_{\textbf{k},n}^{\star}(\textbf{r})\frac{d}{d x_{\beta}}\psi_{\textbf{k},n'}(\textbf{r})
+\propto u_{\textbf{k},n'}^{\star}(\textbf{r})\frac{d}{d x_{\alpha}}u_{\textbf{k},n}(\textbf{r})
+u_{\textbf{k},n}^{\star}(\textbf{r})\frac{d}{d x_{\beta}}u_{\textbf{k},n'}(\textbf{r})
 \end{equation}
-the double index reveals the tensorial nature of $\epsilon_{2}(\omega)$, while $\vert \psi_{\textbf{k},n}\rangle$ is a
-single particle Bloch function obtained by the PW's DFT calculation. 
-The calculation of the off-diagonal elements of 
-the tensor $\epsilon_{2_{\alpha,\beta}}(\omega)$ is not implemented but it is trivial to obtain from the preview definition. 
-In all the cases illustrated above the non-local contriution due to the pseudopotential is neglected, actually the 
+the double index reveals the tensorial nature of $\epsilon_{2}(\omega)$, while $\vert u_{\textbf{k},n}\rangle$ is a
+factor of the single particle Bloch function obtained by the PW's DFT calculation.
+In all the cases illustrated above the non-local contriution due to the pseudopotential is neglected, actually the
 correction to the matrix element that take into account the non-local part of the hamiltonian it's not implemented.
-From the previews definition of the immaginary part of the dielettric function it is easy to see that even the local-field 
+From the previews definition of the immaginary part of the dielettric function it is easy to see that even the local-field
 contributions are not implemented.\\
 PW works on a plane wave set so the Bloch functions of the matrix element (\ref{nos}) are decomposed as follow:
 \begin{equation}
-\vert \psi_{\textbf{k},n}\rangle=\frac{1}{\sqrt{V}}\sum_{\textbf{G}}a_{n,\textbf{k},\textbf{G}}
+\vert \psi_{\textbf{k},n}\rangle=e^{i\textbf{G}\cdot\textbf{r}}u_{\textbf{k},n}=\frac{1}{\sqrt{V}}\sum_{\textbf{G}}a_{n,\textbf{k},\textbf{G}}
 e^{i(\textbf{k}+\textbf{G})\cdot\textbf{r}}
 \end{equation}
 and consequently:
 \begin{equation}
-\hat{\textbf{p}}_{\alpha,\alpha}=\vert\sum_{\textbf{G}}a^{\star}_{n,\textbf{k},\textbf{G}}a_{n',\textbf{k},\textbf{G}}
-(k_{\alpha}+G_{\alpha})\vert^{2}
+\hat{\textbf{M}}_{\alpha,\beta}=\bigg(\sum_{\textbf{G}}a^{\star}_{n,\textbf{k},\textbf{G}}a_{n',\textbf{k},\textbf{G}}
+G_{\alpha}\bigg) \bigg(\sum_{\textbf{G}}a^{\star}_{n,\textbf{k},\textbf{G}}a_{n',\textbf{k},\textbf{G}}
+G_{\beta}\bigg)
 \end{equation}
-defined in this way the matrix element accounts only for interband transitions, i.e. vertical transition in which the 
+defined in this way the matrix element accounts only for interband transitions, i.e. vertical transition in which the
 electron momentum $\textbf{k}$ is conserved (optical approximation). In standard optics the intraband transitions give a 
 neglectable contribution due to the very low momentum transfered by the incomming/outcomming photon.\\
 Operating a London transformation upon $\epsilon_{2_{\alpha,\beta}}(\omega)$, it's possible to obtain the whole dielectric
