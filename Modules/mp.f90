@@ -1376,6 +1376,9 @@
         IF( PRESENT( gid ) ) group = gid
         msglen = size(msg)
         IF( msglen*4 > mp_msgsiz_max ) CALL mp_stop( 8114 )
+#  if defined (__XD1)
+        CALL PARALLEL_SUM_INTEGER( msg, msglen, group, ierr )
+#  else
         m1 = size(msg(:,1))
         m2 = size(msg(1,:))
         ALLOCATE (res(m1,m2),STAT=ierr)
@@ -1385,6 +1388,7 @@
         msg = res
         DEALLOCATE (res, STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8117 )
+#  endif
         mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
         mp_call_count( 32 ) = mp_call_count( 32 ) + 1
         mp_call_sizex( 32 ) = MAX( mp_call_sizex( 32 ), msglen )
@@ -2067,7 +2071,7 @@
 #  endif
 10      FORMAT(3X,'Message Passing, maximum message size (bytes) : ',I15)
 20      FORMAT(3X,'Sub.   calls   maxsize')
-30      FORMAT(3X,I4,I8,I8)
+30      FORMAT(3X,I4,I8,I10)
 #else
         WRITE( stdout, *) 
 #endif
@@ -2127,6 +2131,42 @@
 #endif
         RETURN
       END SUBROUTINE PARALLEL_SUM_REAL
+
+
+      SUBROUTINE PARALLEL_SUM_INTEGER( ARRAY, N, GID, ierr )
+        IMPLICIT NONE
+        INTEGER :: N, GID, ierr
+        INTEGER :: ARRAY(N)
+#if defined __MPI
+        INCLUDE 'mpif.h'
+        INTEGER, PARAMETER :: NSIZ = __MSGSIZ_MAX
+        INTEGER :: ib, nb, ip, nn
+        INTEGER, ALLOCATABLE :: ARRAY_TMP(:)
+        IF( n <= nsiz ) THEN
+          ALLOCATE( ARRAY_TMP( n ) )
+          CALL MPI_ALLREDUCE( ARRAY, ARRAY_TMP, N, MPI_INTEGER, MPI_SUM, GID, ierr )
+          ARRAY(1:n) = ARRAY_TMP(1:n)
+          DEALLOCATE( ARRAY_TMP )
+        ELSE
+          ALLOCATE( ARRAY_TMP( nsiz ) )
+          nb = n / nsiz
+          DO ib = 1, nb
+            ip = ( ib - 1 ) * nsiz + 1
+            nn = ip + nsiz - 1
+            CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nsiz, MPI_INTEGER, MPI_SUM, GID, ierr )
+            ARRAY(ip:nn) = ARRAY_TMP(1:nsiz)
+          END DO
+          nn = MOD( n, nsiz )
+          IF( nn /= 0 ) THEN
+            ip = nb * nsiz + 1
+            CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nn, MPI_INTEGER, MPI_SUM, GID, ierr )
+            ARRAY(ip:n) = ARRAY_TMP(1:nn)
+          END IF
+          DEALLOCATE( ARRAY_TMP )
+        END IF
+#endif
+        RETURN
+      END SUBROUTINE PARALLEL_SUM_INTEGER
 
 !
 !=----------------------------------------------------------------------------=!

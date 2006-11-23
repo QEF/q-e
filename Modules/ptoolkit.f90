@@ -3883,7 +3883,11 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   !
   DO i = 0 , nproc - 1
      !
+#if defined __XD1
+     CALL BCAST_REAL( a( 1, i0a(i) ), i1a(i)-i0a(i)+1, i, comm, ierr )
+#else
      CALL mp_bcast( a(1:n,i0a(i):i1a(i)), i, comm )
+#endif
      !
   END DO
   !
