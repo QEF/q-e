@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2006 Quantum-espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file 'License'
 ! in the root directory of the present distribution,
@@ -11,8 +11,9 @@
 program fhi2upf  
   !---------------------------------------------------------------------
   !
-  !     Convert a pseudopotential written in the Fritz-Haber format
-  !     (numerical format) to unified pseudopotential format
+  !     Convert a pseudopotential file in Fritz-Haber numerical format
+  !     either ".cpi" (fhi88pp) or ".fhi" (abinit)
+  !     to unified pseudopotential format
   !     Restrictions:
   !     - no semicore states
   !     Adapted from the converter written by Andrea Ferretti 
@@ -69,6 +70,12 @@ module fhi
                                            ! (wfc, grid, potentials...)
   !------------------------------
 
+  ! variables for the abinit header
+
+  real(8) :: Zatom, Zion, r2well, rchrg, fchrg, qchrg
+  integer :: pspdat = 0, pspcod = 0 , pspxc = 0, lloc_ = -1, mmax = 0
+  character(len=256) :: info = ' '
+
 end module fhi
 ! 
 !     ----------------------------------------------------------
@@ -84,10 +91,35 @@ subroutine read_fhi(iunps)
   
   integer               :: l, i, idum, mesh
 
-  ! Starting file reading
+  ! Start reading file
 
-  read(iunps,*) Zval, lmax_
-  lmax_ = lmax_ - 1
+  read(iunps,'(a)') info
+  read(info,*,iostat=i) Zval, l
+  if ( i /= 0 ) then
+     write (6,'("read_fhi: assuming abinit format")')
+     read(iunps,*) Zatom, Zion, pspdat
+     read(iunps,*) pspcod, pspxc, lmax_,lloc_, mmax, r2well
+     if (pspcod /= 6) then
+        write (6,'("read_fhi: unknown PP type ",i1,"...stopping")') pspcod
+        stop
+     end if
+     read(iunps,*) rchrg, fchrg, qchrg
+     !
+     read(iunps,*)
+     read(iunps,*)
+     read(iunps,*)
+     !
+     read(iunps,*) Zval, l
+     if (abs(Zion-Zval) > 1.0d-8) then
+        write (6,'("read_fhi: Zval/Zion mismatch...stopping")')
+        stop
+     end if
+     if (l-1 /= lmax_) then
+        write (6,'("read_fhi: lmax mismatch...stopping")')
+        stop
+     end if
+  end if
+  lmax_ = l - 1
 
   if (lmax_+1 > Nl) then
      write (6,'("read_fhi: too many l-components...stopping")')
@@ -103,6 +135,10 @@ subroutine read_fhi(iunps)
   do l=0,lmax_
      comp(l)%lcomp = l
      read(iunps,*) comp(l)%nmesh, comp(l)%amesh
+     if (mmax > 0 .and. mmax /= comp(l)%nmesh) then
+        write (6,'("read_fhi: mismatched number of grid points...stopping")')
+        stop
+     end if
      if ( l > 0) then
         if (comp(l)%nmesh /= comp(0)%nmesh .or.   &
             comp(l)%amesh /= comp(0)%amesh )      then
@@ -163,19 +199,38 @@ subroutine convert_fhi
   real(8), allocatable :: aux(:)
   real(8) :: vll
   character (len=20):: dft  
+  character (len=2), external:: atom_name
   integer :: lloc, kkbeta
   integer :: l, i, ir, iv
   !
-  print '("Atom name > ",$)'
-  read (5,'(a)') psd
-  print '("l local (max: ",i1,") > ",$)', lmax_
-  read (5,*) lloc
-  print '("DFT > ",$)'
-  read (5,'(a)') dft
-
+  if (nint(Zatom) > 0) then
+     psd = atom_name(nint(Zatom))
+  else
+     print '("Atom name > ",$)'
+     read (5,'(a)') psd
+  end if
+  if ( lloc_ < 0 ) then
+     print '("l local (max: ",i1,") > ",$)', lmax_
+     read (5,*) lloc
+  else
+     lloc = lloc_
+  end if
+  if (pspxc == 7) then
+     dft = 'PW'
+  else
+     if (pspxc > 0) then
+        print '("DFT read from abinit file: ",i1)', pspxc
+     end if
+     print '("DFT > ",$)'
+     read (5,'(a)') dft
+  end if
   write(generated, '("Generated using Fritz-Haber code")')
   write(date_author,'("Author: unknown    Generation date: as well")')
-  comment = 'Info: automatically converted from FHI format'
+  if (trim(info) /= ' ') then
+     comment = trim(info)
+  else
+     comment = 'Info: automatically converted from FHI format'
+  end if
   ! reasonable assumption
   rel = 1
   rcloc = 0.0
