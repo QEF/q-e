@@ -74,7 +74,7 @@ module fhi
 
   real(8) :: Zatom, Zion, r2well, rchrg, fchrg, qchrg
   integer :: pspdat = 0, pspcod = 0 , pspxc = 0, lloc_ = -1, mmax = 0
-  character(len=256) :: info = ' '
+  character(len=256) :: info
 
 end module fhi
 ! 
@@ -118,6 +118,8 @@ subroutine read_fhi(iunps)
         write (6,'("read_fhi: lmax mismatch...stopping")')
         stop
      end if
+  else 
+     info = ' '
   end if
   lmax_ = l - 1
 
