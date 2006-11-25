@@ -185,6 +185,7 @@ cp_restart.o : ../Modules/mp_global.o
 cp_restart.o : ../Modules/parameters.o
 cp_restart.o : ../Modules/printout_base.o
 cp_restart.o : ../Modules/recvec.o
+cp_restart.o : ../Modules/version.o
 cp_restart.o : ../Modules/xml_io_base.o
 cp_restart.o : ../iotk/src/iotk_module.o
 cp_restart.o : cp_interfaces.o
@@ -435,7 +436,6 @@ fftdrv.o : ../Modules/kind.o
 fftdrv.o : ../Modules/mp_global.o
 fftdrv.o : ../Modules/parallel_include.o
 fftdrv.o : ../Modules/task_groups.o
-fnl.o : ../Modules/kind.o
 forceconv.o : ../Modules/kind.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
@@ -490,12 +490,8 @@ geninv.o : ../Modules/kind.o
 gradrho.o : ../Modules/cell_base.o
 gradrho.o : ../Modules/griddim.o
 gradrho.o : ../Modules/recvec.o
-gradrho.o : fft.o
+gradrho.o : cp_interfaces.o
 greenf.o : ../Modules/kind.o
-gsmesh.o : ../Modules/cell_base.o
-gsmesh.o : ../Modules/constants.o
-gsmesh.o : ../Modules/kind.o
-gsmesh.o : ../Modules/stick_base.o
 gtable.o : ../Modules/io_global.o
 gtable.o : ../Modules/mp.o
 gtable.o : ../Modules/mp_global.o
@@ -515,7 +511,6 @@ init.o : ../Modules/berry_phase.o
 init.o : ../Modules/cell_base.o
 init.o : ../Modules/control_flags.o
 init.o : ../Modules/fft_base.o
-init.o : ../Modules/fft_scalar.o
 init.o : ../Modules/fft_types.o
 init.o : ../Modules/griddim.o
 init.o : ../Modules/io_files.o
@@ -564,6 +559,7 @@ init_run.o : fromscra.o
 init_run.o : ions_positions.o
 init_run.o : mainvar.o
 init_run.o : modules.o
+init_run.o : ortho_base.o
 init_run.o : pseudopot.o
 init_run.o : restart_sub.o
 init_run.o : wannier.o
@@ -791,6 +787,7 @@ ortho.o : ../Modules/electrons_base.o
 ortho.o : ../Modules/io_global.o
 ortho.o : ../Modules/ions_base.o
 ortho.o : ../Modules/kind.o
+ortho.o : ../Modules/mp_global.o
 ortho.o : ../Modules/recvec.o
 ortho.o : ../Modules/uspp.o
 ortho.o : mainvar.o
@@ -890,8 +887,8 @@ print_out.o : ../Modules/ions_base.o
 print_out.o : ../Modules/ions_nose.o
 print_out.o : ../Modules/kind.o
 print_out.o : ../Modules/mp.o
-print_out.o : ../Modules/pres_ai_mod.o
 print_out.o : ../Modules/mp_global.o
+print_out.o : ../Modules/pres_ai_mod.o
 print_out.o : ../Modules/printout_base.o
 print_out.o : ../Modules/recvec.o
 print_out.o : ../Modules/sic.o
@@ -949,7 +946,6 @@ pseudopot_sub.o : pseudo_base.o
 pseudopot_sub.o : pseudopot.o
 pseudopot_sub.o : read_pseudo.o
 pseudopot_sub.o : spline.o
-pseudotab_base.o : ../Modules/kind.o
 qmatrixd.o : ../Modules/cell_base.o
 qmatrixd.o : ../Modules/constants.o
 qmatrixd.o : ../Modules/electrons_base.o
@@ -1218,12 +1214,12 @@ vol_clu.o : ../Modules/fft_base.o
 vol_clu.o : ../Modules/griddim.o
 vol_clu.o : ../Modules/io_global.o
 vol_clu.o : ../Modules/ions_base.o
-vol_clu.o : ../Modules/mp_global.o
 vol_clu.o : ../Modules/mp.o
+vol_clu.o : ../Modules/mp_global.o
 vol_clu.o : ../Modules/parameters.o
 vol_clu.o : ../Modules/pres_ai_mod.o
 vol_clu.o : ../Modules/recvec.o
-vol_clu.o : fft.o
+vol_clu.o : cp_interfaces.o
 vol_clu.o : ions_positions.o
 vol_clu.o : modules.o
 wannier.o : ../Modules/cell_base.o
@@ -1233,6 +1229,7 @@ wannier.o : ../Modules/griddim.o
 wannier.o : ../Modules/io_global.o
 wannier.o : ../Modules/ions_base.o
 wannier.o : ../Modules/kind.o
+wannier.o : ../Modules/printout_base.o
 wannier.o : ../Modules/recvec.o
 wannier.o : ../Modules/wave_base.o
 wannier.o : cp_interfaces.o
@@ -1265,6 +1262,7 @@ wf.o : ../Modules/kind.o
 wf.o : ../Modules/mp.o
 wf.o : ../Modules/mp_global.o
 wf.o : ../Modules/parallel_include.o
+wf.o : ../Modules/printout_base.o
 wf.o : ../Modules/recvec.o
 wf.o : ../Modules/uspp.o
 wf.o : cp_interfaces.o
@@ -1295,7 +1293,6 @@ fromscra.o : ../include/f_defs.h
 geninv.o : ../include/f_defs.h
 gradrho.o : ../include/f_defs.h
 greenf.o : ../include/f_defs.h
-gsmesh.o : ../include/f_defs.h
 guess.o : ../include/f_defs.h
 init_run.o : ../include/f_defs.h
 inner_loop.o : ../include/f_defs.h
