@@ -1404,10 +1404,14 @@ plus with the newer OpenMPI implementation.
 The number of possible configurations, in terms of type and version of 
 the MPI libraries, kernels, system libraries, compilers, is very large. 
 Quantum-ESPRESSO compiles and works on all non-buggy, properly configured 
-hardware and software combinations. You may have to recompile MPI 
-libraries in order 
-to be able to use them with the Intel compiler. See Axel Kohlmeyer's 
-web site for precompiled versions of the MPI libraries.
+hardware and software combinations. 
+See Axel Kohlmeyer's web site for precompiled versions of the MPI libraries, 
+and consider the following advice from Axel:
+"Please make sure that your MPI package is compatible with or compiled
+for the fortran compiler you want to use to compiled quantum-espresso with.
+Precompiled packages may be compiled for a different compiler and thus
+need special flags or environment variables set to use the compiler of
+your choice."
 
 If Quantum-ESPRESSO does not work for some reason on a PC cluster, try first 
 if it works in serial execution. A frequent problem with parallel execution
