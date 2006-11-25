@@ -137,10 +137,10 @@ distclean veryclean : clean
 
 tar :
 	tar cvf espresso.tar \
-	    License README* */README* Makefile */Makefile */make.depend \
+	    License README* */README* Makefile */Makefile *./makefile.*  */make.depend \
 	    configure configure.ac config.guess config.sub configure.msg.in \
             install-sh make.sys.in \
-	    makedeps.sh moduledep.sh includedep.sh \
+	    makedeps.sh moduledep.sh includedep.sh ifcmods.sh \
 	    */*.f90 */*.c */*.f clib/*.h include/*.h* upftools/UPF \
 	    pwtools/*.awk pwtools/*.sh
 	# remove unneeded stuff from iotk
