@@ -11,7 +11,7 @@
 SUBROUTINE setup()
   !----------------------------------------------------------------------------
   !
-  ! ... This routine 
+  ! ... This routine
   ! ... 1) determines various parameters of the calculation
   ! ... 2) finds actual crystal symmetry, determine lattice
   ! ... 3) generates k-points corresponding to the crystal symmetry
@@ -44,8 +44,8 @@ SUBROUTINE setup()
   USE io_global,          ONLY : stdout
   USE io_files,           ONLY : tmp_dir, prefix, delete_if_present
   USE constants,          ONLY : pi, degspin
-  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, symm_type,&
-                                 omega
+  USE cell_base,          ONLY : at, bg, alat, tpiba, tpiba2, ibrav, &
+                                 symm_type, omega
   USE ions_base,          ONLY : nat, tau, ntyp => nsp, ityp, zv
   USE basis,              ONLY : startingpot, natomwfc
   USE gvect,              ONLY : gcutm, ecutwfc, dual, nr1, nr2, nr3
@@ -70,10 +70,10 @@ SUBROUTINE setup()
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : psd, nbeta, jjj, tvanp
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, Hubbard_l, &
-                                 Hubbard_alpha, Hubbard_lmax
+  USE ldaU,               ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, &
+                                 Hubbard_l, Hubbard_alpha, Hubbard_lmax
   USE bp,                 ONLY : gdir, lberry, nppstr
-  USE fixed_occ,          ONLY : f_inp, tfixed_occ   
+  USE fixed_occ,          ONLY : f_inp, tfixed_occ
   USE char,               ONLY : sname
   USE funct,              ONLY : set_dft_from_name
   USE mp_global,          ONLY : nimage, kunit
@@ -89,28 +89,12 @@ SUBROUTINE setup()
   !
   IMPLICIT NONE
   !
-  INTEGER :: & 
-      na,             &!
-      nt,             &!
-      input_nks,      &!
-      nrot,           &!
-      irot,           &!
-      isym,           &!
-      tipo,           &!
-      is,             &!
-      nb,             &!
-      ierr,           &!
-      ibnd             !
-  LOGICAL :: &
-      minus_q,        &!
-      ltest            !
-  REAL(DP) :: &
-      iocc             !
-  INTEGER, EXTERNAL :: &
-      n_atom_wfc,     &!
-      set_Hubbard_l
-  LOGICAL, EXTERNAL :: &
-      lchk_tauxk       !  tests that atomic coordinates do not overlap
+  INTEGER  :: na, nt, input_nks, nrot, irot, isym, tipo, is, nb, ierr, ibnd
+  LOGICAL  :: minus_q, ltest
+  REAL(DP) :: iocc, ionic_charge
+  !
+  INTEGER, EXTERNAL :: n_atom_wfc, set_Hubbard_l
+  LOGICAL, EXTERNAL :: lchk_tauxk ! tests that atomic coordinates do not overlap
   !
   !
   ALLOCATE( m_loc( 3, nat ) )
@@ -122,18 +106,20 @@ SUBROUTINE setup()
   !
   zv(1:ntyp) = zp(1:ntyp)
   !
-  ! ... Set the number of electrons equal to the total ionic charge
+#if defined (__PGI)
+     DO na = 1, nat
+        ionic_charge = ionic_charge + zv( ityp(na) )
+     END DO
+     ionic_charge = ionic_charge - tot_charge
+#else
+     ionic_charge = SUM( zv(ityp(1:nat)) ) - tot_charge
+#endif
   !
   IF ( nelec == 0.D0 ) THEN
      !
-#if defined (__PGI)
-     DO na = 1, nat
-        nelec = nelec + zv( ityp(na) )
-     END DO
-     nelec = nelec - tot_charge
-#else
-     nelec = SUM( zv(ityp(1:nat)) ) - tot_charge
-#endif
+     ! ... set the number of electrons equal to the total ionic charge
+     !
+     nelec = ionic_charge
      !
   END IF
   !
@@ -151,7 +137,7 @@ SUBROUTINE setup()
      !
      ! ... wavefunctions are spinors with 2 components
      !
-     npol = 2          
+     npol = 2
      !
      ! ... transform angles to radiants
      !
@@ -193,7 +179,7 @@ SUBROUTINE setup()
      !
      bfield=0.D0
      !
-     IF ( i_cons == 2 ) THEN    
+     IF ( i_cons == 2 ) THEN
         !
         ! ... angle theta between the magnetic moments and the z-axis is
         ! ... constrained. Transform theta to radiants
@@ -241,7 +227,7 @@ SUBROUTINE setup()
         END DO
 #else
         iocc = iocc + SUM( f_inp(1:nbnd,1) )
-#endif        
+#endif
         DO ibnd = 1, nbnd
            if (f_inp(ibnd,1).gt.1.d0.or.f_inp(ibnd,1).lt.0.d0) call &
               errore('setup','wrong fixed occupations',1)
@@ -266,7 +252,7 @@ SUBROUTINE setup()
         END DO
         !
      END IF
-     !  
+     !
      IF ( ABS( iocc - nelec ) > 1D-5 ) &
         CALL errore( 'setup', 'strange occupations', 1 )
      !
@@ -791,11 +777,8 @@ FUNCTION n_atom_wfc( nat, ityp )
               n_atom_wfc = n_atom_wfc + 2 * lchi(n,nt) + 1
               !
            END IF
-           !
         END IF
-        !
      END DO
-     !
   END DO
   !
   RETURN
@@ -811,7 +794,6 @@ SUBROUTINE check_para_diag_efficiency()
   USE control_flags,    ONLY : use_para_diago, para_diago_dim, isolve
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE random_numbers,   ONLY : rranf
-  USE parallel_toolkit, ONLY : diagonalize, cdiagonalize
   USE mp_global,        ONLY : nproc_pool, me_pool, intra_pool_comm
   USE mp,               ONLY : mp_bcast, mp_barrier
   !
@@ -820,8 +802,8 @@ SUBROUTINE check_para_diag_efficiency()
   INTEGER                  :: dim, dim_pool, i, j, m, m_min
   REAL(DP)                 :: time_para, time_serial, delta_t, delta_t_old
   LOGICAL                  :: lfirst
-  REAL(DP),    ALLOCATABLE :: ar(:,:), vr(:,:)
-  COMPLEX(DP), ALLOCATABLE :: ac(:,:), vc(:,:)
+  REAL(DP),    ALLOCATABLE :: ar(:,:), br(:,:), vr(:,:)
+  COMPLEX(DP), ALLOCATABLE :: ac(:,:), bc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: e(:)
   !
   REAL(DP), EXTERNAL :: scnds
@@ -835,9 +817,9 @@ SUBROUTINE check_para_diag_efficiency()
      WRITE( stdout, '(/,5X,"looking for ", &
                      &     "the optimal diagonalization algorithm ...",/)' )
   !
-  m_min = ( nbnd / nproc_pool ) * nproc_pool
+  m_min = ( nbnd / nproc_pool )*nproc_pool
   !
-  m = ( 100 / nproc_pool ) * nproc_pool
+  m = ( 100 / nproc_pool )*nproc_pool
   !
   IF ( m > nbndx .OR. nbndx < 200 )  THEN
      !
@@ -847,11 +829,8 @@ SUBROUTINE check_para_diag_efficiency()
      !
   END IF
   !
-  IF ( ionode ) THEN
-     !
+  IF ( ionode ) &
      WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
-     !
-  END IF
   !
   lfirst = .TRUE.
   !
@@ -864,9 +843,11 @@ SUBROUTINE check_para_diag_efficiency()
      IF ( gamma_only ) THEN
         !
         ALLOCATE( ar( dim, dim ) )
+        ALLOCATE( br( dim, dim ) )
         ALLOCATE( vr( dim, dim ) )
         !
         ar(:,:) = 0.D0
+        br(:,:) = 0.D0
         !
         DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
            !
@@ -881,12 +862,16 @@ SUBROUTINE check_para_diag_efficiency()
         !
         CALL reduce( dim*dim, ar )
         !
+        FORALL( i = 1:dim ) br(i,i) = 1.D0
+        !
      ELSE
         !
         ALLOCATE( ac( dim, dim ) )
+        ALLOCATE( bc( dim, dim ) )
         ALLOCATE( vc( dim, dim ) )
         !
         ac(:,:) = ( 0.D0, 0.D0 )
+        bc(:,:) = ( 0.D0, 0.D0 )
         !
         DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
            !
@@ -901,62 +886,39 @@ SUBROUTINE check_para_diag_efficiency()
         !
         CALL reduce( 2*dim*dim, ac )
         !
+        FORALL( i = 1:dim ) bc(i,i) = ( 1.D0, 0.D0 )
+        !
      END IF
      !
      CALL mp_barrier()
      !
+     ! ... parallel diagonalizer
+     !
+     use_para_diago = .TRUE.
+     para_diago_dim = 1
+     !
      IF ( ionode ) time_para = scnds()
      !
-     DO i = 1, nbndx / dim
-        !
-        IF ( gamma_only ) THEN
-           !
-           CALL diagonalize( 1, ar, dim, e, vr, dim, dim, &
-                             nproc_pool, me_pool, intra_pool_comm )
-           !
-        ELSE
-           !
-           CALL cdiagonalize( 1, ac, dim, e, vc, dim, dim, &
-                              nproc_pool, me_pool, intra_pool_comm )
-           !
-        END IF
-        !
-     END DO
-     !
-     CALL mp_barrier()
+     CALL do_test()
      !
      IF ( ionode ) &
         time_para = ( scnds() - time_para ) / DBLE( nbndx / dim )
      !
+     ! ... serial diagonalizer
+     !
+     use_para_diago = .FALSE.
+     !
      IF ( ionode ) time_serial = scnds()
      !
-     DO i = 1, nbndx / dim
-        !
-        IF ( gamma_only ) THEN
-           !
-           CALL rdiagh( dim, ar, dim, e, vr )
-           !
-        ELSE
-           !
-           CALL cdiagh( dim, ac, dim, e, vc )
-           !
-        END IF
-        !
-     END DO
-     !
-     CALL mp_barrier()
+     CALL do_test()
      !
      IF ( ionode ) &
         time_serial = ( scnds() - time_serial ) / DBLE( nbndx / dim )
      !
      IF ( gamma_only ) THEN
-        !
-        DEALLOCATE( ar, vr, e )
-        !
+        DEALLOCATE( ar, br, vr, e )
      ELSE
-        !
-        DEALLOCATE( ac, vc, e )
-        !
+        DEALLOCATE( ac, bc, vc, e )
      END IF
      !
      IF ( ionode ) &
@@ -974,9 +936,11 @@ SUBROUTINE check_para_diag_efficiency()
         !
         EXIT
         !
-     ELSE IF ( .NOT. lfirst ) THEN
+     ELSE IF ( .NOT.lfirst ) THEN
         !
         ! ... the parallel diagonalizer is getting slower and slower
+        !
+        use_para_diago = .FALSE.
         !
         IF ( delta_t > delta_t_old ) EXIT
         !
@@ -991,19 +955,36 @@ SUBROUTINE check_para_diag_efficiency()
   IF ( ionode ) THEN
      !
      IF ( use_para_diago ) THEN
-        !
         WRITE( stdout, '(/,5X,"a parallel algorithm will be used for ", &
                         &     "matrices larger than ",I4,/)' ) para_diago_dim
-        !
      ELSE
-        !
         WRITE( stdout, '(/,5X,"a serial algorithm will be used",/)' )
-        !
      END IF
      !
   END IF
   !
   RETURN
   !
+  CONTAINS
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE do_test()
+      !-----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      DO i = 1, nbndx / dim
+         !
+         IF ( gamma_only ) THEN
+            CALL rdiaghg( dim, dim, ar, br, dim, e, vr )
+         ELSE
+            CALL cdiaghg( dim, dim, ac, bc, dim, e, vc )
+         END IF
+      END DO
+      !
+      CALL mp_barrier()
+      !
+    END SUBROUTINE do_test
+    !
 END SUBROUTINE check_para_diag_efficiency
 
