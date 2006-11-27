@@ -338,7 +338,7 @@ CONTAINS
        ELSE IF (TRIM(pilot_type) .eq. 'AUTO') THEN
           process_this_line = .FALSE.
        ELSE
-          WRITE(*,*) 'AUTOPILOT: UNRECOGNIZED PILOT TYPE!', TRIM(pilot_type), '===='
+          IF( ionode ) WRITE(*,*) 'AUTOPILOT: UNRECOGNIZED PILOT TYPE!', TRIM(pilot_type), '===='
           GO TO 10
        END IF
     ELSE
@@ -358,7 +358,7 @@ CONTAINS
        END IF
 
 
-       WRITE(*,*) 'card_autopilot 1: input_line ', input_line
+       IF( ionode ) WRITE(*,*) 'card_autopilot 1: input_line ', input_line
 
        ! Assume that pilot_p is an indicator and that
        ! this call to card_autopilot is from parse_mailbox
@@ -379,14 +379,14 @@ CONTAINS
           input_line( i : i ) = capital( input_line( i : i ) )
        END DO
 
-       WRITE(*,*) 'card_autopilot 2: input_line ', input_line
+       IF( ionode ) WRITE(*,*) 'card_autopilot 2: input_line ', input_line
 
        ! If ENDRULES isnt found, add_rule will fail
        ! and we run out of line anyway
        IF ( tend .or. matches( 'ENDRULES', input_line ) ) GO TO 10
 
        ! Assume this is a rule
-       write(*,*) 'about to add_rule: input_line ', input_line
+       IF( ionode ) write(*,*) 'about to add_rule: input_line ', input_line
        CALL ADD_RULE(input_line)
        ! now, do not process this line anymore
        ! make sure we get the next one
@@ -394,7 +394,7 @@ CONTAINS
 
     END DO
 
-    WRITE(*,*) 'AUTOPILOT SET'
+    IF( ionode ) WRITE(*,*) 'AUTOPILOT SET'
 
 10  CONTINUE
 
@@ -420,8 +420,6 @@ CONTAINS
     integer            :: ios
     integer            :: event
 
-    LOGICAL, SAVE      :: tread = .FALSE.
-
     LOGICAL, EXTERNAL  :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
 
@@ -439,7 +437,7 @@ CONTAINS
 
     linelen=LEN_TRIM( input_line )
 
-    write(*,*) 'ADD_RULE: pilot_type', pilot_type
+    IF( ionode ) write(*,*) 'ADD_RULE: pilot_type', pilot_type
 
 
     ! Attempt to get PLUS SYMBOL
@@ -508,7 +506,7 @@ CONTAINS
        ! [NOW [+ plus_step] :] var_label = value_str
        !-------------------------------------------
 
-       write(*,*) 'ADD_RULE: MANUAL STEERING'
+       IF( ionode ) write(*,*) 'ADD_RULE: MANUAL STEERING'
 
        ! if there is a NOW, get it and try to get plus and plus_step
 
@@ -539,7 +537,7 @@ CONTAINS
        ! We may have a new event , or not! :)
 
        IF ( ((event-1) .gt. 0) .and. ( now_step .lt. event_step(event-1)) ) THEN
-          write(*,*) ' AutoPilot: current input_line', input_line 
+          IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
           CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
           go to 20
        ENDIF
@@ -549,7 +547,7 @@ CONTAINS
           event = event + 1
 
           IF (event > max_event_step) THEN
-             write(*,*) ' AutoPilot: current input_line', input_line 
+             IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
              CALL auto_error( ' AutoPilot ','Maximum Number of Dynamic Rule Event Exceeded!')
              go to 20
           ENDIF
@@ -570,7 +568,7 @@ CONTAINS
        ! ON_STEP = on_step : var_label = value_str
        !-------------------------------------------
 
-       write(*,*) 'ADD_RULE: POWER STEERING'
+       IF( ionode ) write(*,*) 'ADD_RULE: POWER STEERING'
 
        ! Attempt to get ON_STEP
        on_step = MAX_INT
@@ -594,7 +592,7 @@ CONTAINS
 
 
        IF ( ((event-1) .gt. 0) .and. ( on_step .lt. event_step(event-1)) ) THEN
-          write(*,*) ' AutoPilot: current input_line', input_line 
+          IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line 
           CALL auto_error( ' AutoPilot ','Dynamic Rule Event Out of Order!')
           go to 20
        ENDIF
@@ -604,7 +602,7 @@ CONTAINS
           ! new event
           event = event + 1
           IF (event > max_event_step) THEN
-             write(*,*) ' AutoPilot: current input_line', input_line
+             IF( ionode ) write(*,*) ' AutoPilot: current input_line', input_line
              CALL auto_error( ' AutoPilot ','Maximum Number of Dynamic Rule Event Exceeded!')
              go to 20
           ENDIF
@@ -639,14 +637,14 @@ CONTAINS
     ! there can exists more than one rule per event
 
     IF ( (n_rules+1) .gt. max_rules) THEN
-       write(*,*) ' AutoPilot: current n_rules', n_rules
+       IF( ionode ) write(*,*) ' AutoPilot: current n_rules', n_rules
        CALL auto_error( ' AutoPilot ', ' invalid number of rules ')
        go to 20
     END IF
 
     call assign_rule(event, var_label, value_str)    
 
-    write(*,*) 'n_rules=', n_rules
+    IF( ionode ) write(*,*) 'n_rules=', n_rules
 
     CALL flush_unit(6)
 
@@ -668,7 +666,6 @@ CONTAINS
     INTEGER   :: int_value
     REAL      :: real_value
     REAL(DP) :: realDP_value
-    LOGICAL   :: logical_value
     LOGICAL   :: assigned
     LOGICAL, EXTERNAL  :: matches
     CHARACTER(LEN=1), EXTERNAL :: capital
@@ -682,7 +679,7 @@ CONTAINS
     END DO
 
 
-    write(*,*) 'ASSIGNING RULE: event var value', event, var, value
+    IF( ionode ) write(*,*) 'ASSIGNING RULE: event var value', event, var, value
     assigned = .TRUE.
 
     IF ( matches( "ISAVE", var ) ) THEN
@@ -697,7 +694,7 @@ CONTAINS
        read(value, *) real_value
        rule_dt(event)  = real_value
        event_dt(event) = .true.
-       write(*,*) 'RULE_DT', rule_dt(event), 'EVENT', event
+       IF( ionode ) write(*,*) 'RULE_DT', rule_dt(event), 'EVENT', event
     ELSEIF ( matches( "EMASS", var ) ) THEN
        read(value, *) realDP_value
        rule_emass(event)  = realDP_value
@@ -747,9 +744,9 @@ CONTAINS
 
 40  if (assigned) then
        n_rules   = n_rules + 1
-       write(*,*) 'Autopilot: Rule Assigned ', n_rules
+       IF( ionode ) write(*,*) 'Autopilot: Rule Assigned ', n_rules
     else
-       write(*,*) 'Autopilot: Rule Assignment Failure '
+       IF( ionode ) write(*,*) 'Autopilot: Rule Assignment Failure '
        CALL auto_error( 'autopilot', ' ASSIGN_RULE: FAILED  '//trim(var)//' '//trim(value) )
     endif
 
@@ -770,9 +767,8 @@ CONTAINS
     USE io_global, ONLY: ionode, ionode_id
     USE mp,        ONLY : mp_bcast, mp_barrier
     IMPLICIT NONE
-    INTEGER :: i,j
+    INTEGER :: i
     CHARACTER(LEN=256) :: input_line
-    CHARACTER(LEN=80)  :: card
     LOGICAL            :: tend
 
     CHARACTER(LEN=1), EXTERNAL :: capital
@@ -795,14 +791,14 @@ CONTAINS
          matches( "WAIT",  input_line ) .or. &
          matches( "HOLD",  input_line ) ) THEN
 
-       write(*,*) 'SLEEPING'
-       write(*,*) 'INPUT_LINE=', input_line
+       IF( ionode ) write(*,*) 'SLEEPING'
+       IF( ionode ) write(*,*) 'INPUT_LINE=', input_line
        pause_p = .TRUE.
      ! now you can pass continue to resume 
     ELSE IF (matches( "CONTINUE", input_line ) .or. &
              matches( "RESUME", input_line ) ) THEN
-       write(*,*) 'RUNNING'
-       write(*,*) 'INPUT_LINE=', input_line
+       IF( ionode ) write(*,*) 'RUNNING'
+       IF( ionode ) write(*,*) 'INPUT_LINE=', input_line
        pause_p = .FALSE.
 
        ! Now just quit this subroutine
@@ -814,17 +810,17 @@ CONTAINS
        ! even though this line will be passed to it the first time
 
        IF ( matches( "AUTOPILOT", TRIM(input_line) ) ) THEN
-          WRITE(*,*) 'NEW AUTOPILOT COURSE DETECTED' 
+          IF( ionode ) WRITE(*,*) 'NEW AUTOPILOT COURSE DETECTED' 
           pilot_type ='AUTO'
        ELSE IF (matches( "PILOT", TRIM(input_line) ) ) THEN
-          WRITE(*,*) 'RELATIVE PILOT COURSE CORRECTION DETECTED'
+          IF( ionode ) WRITE(*,*) 'RELATIVE PILOT COURSE CORRECTION DETECTED'
           pilot_type ='PILOT'
        ELSE IF (matches( "NOW", TRIM(input_line) ) ) THEN
-          WRITE(*,*) 'MANUAL PILOTING DETECTED'
+          IF( ionode ) WRITE(*,*) 'MANUAL PILOTING DETECTED'
           pilot_type ='MANUAL'
        ELSE
           ! Well lets just pause since this guys is throwing trash
-          WRITE(*,*) 'MAILBOX CONTENTS NOT UNDERSTOOD: pausing'
+          IF( ionode ) WRITE(*,*) 'MAILBOX CONTENTS NOT UNDERSTOOD: pausing'
           pause_p = .TRUE.
        ENDIF
 
@@ -845,8 +841,8 @@ CONTAINS
     CALL init_autopilot()
 
 
-    WRITE(*,*) 'parse_mailbox: about to call card_autopilot: pilot_type', pilot_type
-    write(*,*) 'input_line=', input_line    
+    IF( ionode ) WRITE(*,*) 'parse_mailbox: about to call card_autopilot: pilot_type', pilot_type
+    IF( ionode ) write(*,*) 'input_line=', input_line    
     CALL card_autopilot( input_line )
 
 
@@ -854,7 +850,7 @@ CONTAINS
 50  CONTINUE
     !call mp_barrier()    
 
-    WRITE(*,*) 'end of parse' 
+    IF( ionode ) WRITE(*,*) 'end of parse' 
 
   end subroutine parse_mailbox
 
