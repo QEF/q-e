@@ -137,7 +137,6 @@ ns_adj.o \
 newd.o \
 noncol.o \
 openfil.o \
-ortho.o \
 orthoatwfc.o \
 output_tau.o \
 para.o \
