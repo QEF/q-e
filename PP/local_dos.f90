@@ -32,7 +32,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   USE symme,                ONLY : nsym, s, ftau
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : nh, nhm, tvanp
-  USE wavefunctions_module, ONLY : evc, evc_nc, psic, psic_nc
+  USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
                                    gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
@@ -136,18 +136,14 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
      if (ik == kpoint .or. iflag /= 0) then
         if (lsda) current_spin = isk (ik)
         call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-        if (noncolin) then
-           call davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
-        else
-           call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-        endif
+        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
         call init_us_2 (npw, igk, xk (1, ik), vkb)
 
         if (gamma_only) then
            call pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, rbecp, nkb)
         else
            if (noncolin) then
-              call ccalbec_nc (nkb,npwx,npw,npol,nbnd,becp_nc,vkb,evc_nc)
+              call ccalbec_nc (nkb,npwx,npw,npol,nbnd,becp_nc,vkb,evc)
            else
               call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
            endif
@@ -159,10 +155,11 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
            if (ibnd == kband .or. iflag /= 0) then
               if (noncolin) then
                  psic_nc = (0.d0,0.d0)
+                 do ig = 1, npw
+                    psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
+                    psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
+                 enddo
                  do ipol=1,npol
-                    do ig = 1, npw
-                       psic_nc(nls(igk(ig)),ipol)=evc_nc(ig,ipol,ibnd)
-                    enddo
                     call cft3s (psic_nc(1,ipol),nr1s,nr2s,nr3s, &
                                                 nrx1s,nrx2s,nrx3s,2)
                  enddo

@@ -25,7 +25,7 @@ SUBROUTINE clean_pw( lflag )
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, rhog, vr, vltot, &
                                    rho_core, rhog_core,vrs
-  USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
+  USE wavefunctions_module, ONLY : evc, psic, psic_nc
 #ifdef USE_SPLINES
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y
 #else
@@ -134,7 +134,6 @@ SUBROUTINE clean_pw( lflag )
   !
   IF ( ALLOCATED( evc ) )        DEALLOCATE( evc )
   IF ( ALLOCATED( swfcatom ) )   DEALLOCATE( swfcatom )
-  IF ( ALLOCATED( evc_nc ) )     DEALLOCATE( evc_nc )
   !
   ! ... fft structures allocated in data_structure.f90  
   !

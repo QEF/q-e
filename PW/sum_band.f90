@@ -36,7 +36,7 @@ SUBROUTINE sum_band()
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : nh, tvanp, nhm
-  USE wavefunctions_module, ONLY : evc, psic, evc_nc, psic_nc
+  USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, bfield, npol
   USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
@@ -485,11 +485,7 @@ SUBROUTINE sum_band()
           IF ( nks > 1 ) THEN
              !
              READ( iunigk ) npw, igk
-             IF (noncolin) THEN
-                CALL davcio( evc_nc, nwordwfc, iunwfc, ik, -1 )
-             ELSE
-                CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
-             ENDIF
+             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              !
           END IF
           !
@@ -508,14 +504,14 @@ SUBROUTINE sum_band()
              w1 = wg(ibnd,ik) / omega
              IF (noncolin) THEN
                 psic_nc = (0.D0,0.D0)
-                DO ipol=1,npol
-                   DO ig = 1, npw
-                      psic_nc(nls(igk(ig)),ipol)=evc_nc(ig,ipol,ibnd)
-                   END DO
-                   call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, &
-                                                           nrx2s, nrx3s, 2)
+                DO ig = 1, npw
+                   psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
+                   psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
                 END DO
-                w1 = wg (ibnd, ik) / omega
+                call cft3s (psic_nc(1,1), nr1s, nr2s, nr3s, &
+                                          nrx1s,nrx2s,nrx3s, 2)
+                call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, &
+                                          nrx1s,nrx2s,nrx3s, 2)
                 !
                 ! increment the charge density ...
                 !
@@ -577,7 +573,7 @@ SUBROUTINE sum_band()
           IF (noncolin) THEN
              IF ( nkb > 0 ) &
                 CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, &
-                                                 becp_nc, vkb, evc_nc )
+                                                 becp_nc, vkb, evc )
           ELSE
              IF ( nkb > 0 ) &
                 CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )

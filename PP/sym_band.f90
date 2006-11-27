@@ -33,7 +33,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE uspp,                 ONLY : nkb, vkb
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : noncolin
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, stdout
   !
   IMPLICIT NONE
@@ -90,11 +90,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
      !
      !   read eigenfunctions
      !
-     IF (noncolin) THEN
-        CALL davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
-     ELSE
-        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     END IF
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      ! 
      ! Find the small group of k
      !
@@ -180,11 +176,11 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
      ENDIF
      IF (noncolin) THEN
         IF (domag) THEN
-           CALL find_band_sym_so(evc_nc,et(1,ik),at,nbnd,npw,nsym_is, &
+           CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsym_is, &
               ngm,sk_is,ftau_is,d_spin_is,gk_is,xk(1,ik),igk,nl,nr1,nr2,& 
               nr3,nrx1,nrx2,nrx3,nrxx,npwx,rap_et )
         ELSE
-           CALL find_band_sym_so(evc_nc,et(1,ik),at,nbnd,npw,nsymk,ngm, &
+           CALL find_band_sym_so(evc,et(1,ik),at,nbnd,npw,nsymk,ngm, &
               sk,ftauk,d_spink,gk,xk(1,ik),igk,nl,nr1,nr2,nr3,nrx1, &
               nrx2,nrx3,nrxx,npwx,rap_et)
         ENDIF
@@ -512,12 +508,12 @@ DEALLOCATE(psir)
 RETURN
 END SUBROUTINE rotate_psi
 
-SUBROUTINE find_band_sym_so (evc_nc,et,at,nbnd,npw,nsym,ngm,s,ftau,d_spin,gk, &
+SUBROUTINE find_band_sym_so (evc,et,at,nbnd,npw,nsym,ngm,s,ftau,d_spin,gk, &
                      xk,igk,nl,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,npwx,rap_et)
 !
 !   This subroutine finds the irreducible representations of the 
 !   double group which give the transformation properties of the 
-!   spinor wavefunctions evc_nc. 
+!   spinor wavefunctions evc. 
 !   Presently it does NOT work at zone border if the space group of
 !   the crystal has fractionary translations (non-symmorphic space groups).
 !
@@ -555,7 +551,7 @@ REAL(DP) ::                 &
 
 COMPLEX(DP) ::  &
             d_spin(2,2,48), & 
-            evc_nc(npwx, npol, nbnd)       
+            evc(npwx*npol, nbnd)       
 
 REAL(DP), PARAMETER :: eps=1.d-5
 
@@ -575,15 +571,15 @@ INTEGER, ALLOCATABLE :: istart(:)    ! point in list of energies where the
 COMPLEX(DP) :: ZDOTC, times          ! moltiplication factors     
                                         
 REAL(DP), ALLOCATABLE ::  w1(:)      ! list of energy eigenvalues in eV
-COMPLEX(DP), ALLOCATABLE ::  evcr(:,:,:), & ! the rotated of each wave function
-                             trace(:,:)     ! the trace of the symmetry matrix
-                                            ! within a given group
+COMPLEX(DP), ALLOCATABLE ::  evcr(:,:), & ! the rotated of each wave function
+                             trace(:,:)   ! the trace of the symmetry matrix
+                                          ! within a given group
 !
 !    Divide the bands on the basis of the band degeneracy.
 !
 ALLOCATE(istart(nbnd+1))
 ALLOCATE(w1(nbnd))
-ALLOCATE(evcr(npwx,npol,nbnd))
+ALLOCATE(evcr(npwx*npol,nbnd))
 ALLOCATE(trace(48,nbnd))
 IF (okvan) ALLOCATE(becp_nc(nkb,npol,nbnd))
 
@@ -614,7 +610,7 @@ DO iclass=1,nclass
 !       rotate the k point.
 !
    DO ibnd=1,nbnd
-      CALL rotate_psi_so(evc_nc(1,1,ibnd),evcr(1,1,ibnd),s(1,1,irot),      &
+      CALL rotate_psi_so(evc(1,ibnd),evcr(1,ibnd),s(1,1,irot),        &
                ftau(1,irot),d_spin(1,1,irot),has_e(1,iclass),gk(1,irot), &
                nl,igk,npol,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,ngm,npw,npwx)
    END DO
@@ -633,8 +629,7 @@ DO iclass=1,nclass
       DO i=1,dim_rap
          ibnd=istart(igroup)+i-1
          trace(iclass,igroup)=trace(iclass,igroup) +            &
-                ZDOTC(npw,evc_nc(1,1,ibnd),1,evcr(1,1,ibnd),1)+ &
-                ZDOTC(npw,evc_nc(1,2,ibnd),1,evcr(1,2,ibnd),1)
+                ZDOTC(2*npwx,evc(1,ibnd),1,evcr(1,ibnd),1)
       END DO
 !      write(6,*) igroup, iclass, dim_rap, trace(iclass,igroup)
    END DO
@@ -757,8 +752,8 @@ psic = ( 0.D0, 0.D0 )
 psir = ( 0.D0, 0.D0 )
 !
 DO ipol=1,npol
-   psic(nl(igk(1:npw)),ipol) = evc_nc(1:npw,ipol)
    !
+   psic(nl(igk(1:npw)),ipol) = evc_nc(1:npw,ipol)
    CALL cft3( psic(1,ipol), nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
    !
 #if defined  (__PARA)

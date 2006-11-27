@@ -67,7 +67,7 @@ MODULE pw_restart
                                      ! warning, pseudo_dir in the data-file
                                      ! should always point to the original
                                      ! dir specified in the input.
-      USE wavefunctions_module, ONLY : evc, evc_nc
+      USE wavefunctions_module, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
                                        lgauss, ngauss, degauss, nelec, xqq
       USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
@@ -624,19 +624,7 @@ MODULE pw_restart
                !
                IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                   !
-                  IF ( noncolin ) THEN
-                     !
-                     CALL davcio( evc_nc, nwordwfc, iunwfc, (ik-iks+1), -1 )
-                     !
-                  ELSE
-                     !
-                     CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), -1 )
-                     !
-                     ! the following two line can be used to debug read_wfc
-                     ! WRITE(100+10*ik+me_pool,fmt="(2D18.10)") evc
-                     ! CLOSE(100+10*ik+me_pool )
-                     !
-                  END IF
+                  CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), -1 )
                   !
                END IF
                !
@@ -655,8 +643,11 @@ MODULE pw_restart
                         !
                      END IF
                      !
+                     !!! TEMP
+                     nkl=(ipol-1)*npwx+1
+                     nkr= ipol   *npwx
                      CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
-                                     evc_nc(:,ipol,:), npw_g, nbnd,           &
+                                     evc(nkl:nkr,:), npw_g, nbnd,             &
                                      igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
                                      filename, 1.D0 )
                      !
@@ -2210,7 +2201,7 @@ MODULE pw_restart
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
       USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, nbnd
-      USE wavefunctions_module, ONLY : evc, evc_nc
+      USE wavefunctions_module, ONLY : evc
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
       USE gvect,                ONLY : ngm, ngm_g, ig1, ig2, ig3, g, ecutwfc
@@ -2462,8 +2453,11 @@ MODULE pw_restart
                      !
                   END IF
                   !
+                  !!! TEMP
+                  nkl=(ipol-1)*npwx+1
+                  nkr= ipol   *npwx
                   CALL read_wfc( iunout, ik, nkstot, kunit, ispin,          &
-                                 nspin, evc_nc(:,ipol,:), npw_g, nbnd,      &
+                                 nspin, evc(nkl:nkr,:), npw_g, nbnd,        &
                                  igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
                                  filename, scalef )
                   !
@@ -2487,19 +2481,11 @@ MODULE pw_restart
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
-               IF ( noncolin ) THEN
-                  !
-                  CALL davcio( evc_nc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
-                  !
-               ELSE
-                  !
-                  ! the following two line can be used to debug read_wfc
-                  ! WRITE(200+10*ik+me_pool,fmt="(2D18.10)") evc
-                  ! CLOSE(200+10*ik+me_pool )
-                  !
-                  CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
-                  !
-               END IF
+               CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
+               !
+               ! the following two line can be used to debug read_wfc
+               ! WRITE(200+10*ik+me_pool,fmt="(2D18.10)") evc
+               ! CLOSE(200+10*ik+me_pool )
                !
             END IF
             !

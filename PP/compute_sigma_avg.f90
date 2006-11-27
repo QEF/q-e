@@ -17,7 +17,7 @@ USE spin_orb,             ONLY : so, fcoef
 USE uspp,                 ONLY : nkb,qq,vkb,nhtol,nhtoj,nhtolm,indv
 USE uspp_param,           ONLY : nh, tvanp, nhm
 USE wvfct,                ONLY : nbnd, npwx, npw, igk 
-USE wavefunctions_module, ONLY : evc_nc, psic_nc
+USE wavefunctions_module, ONLY : evc, psic_nc
 USE klist,                ONLY : nks, xk
 USE gvect,                ONLY : g,gg,nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx
 USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
@@ -38,7 +38,7 @@ REAL(KIND=DP) :: sigma_avg(4,nbnd)
 INTEGER :: ik    
 
 INTEGER :: ibnd, ig, ir, ijkb0, na, np, ih, ikb, ijh, jh, jkb    
-INTEGER :: ipol, kh, kkb, is1, is2
+INTEGER :: ipol, kh, kkb, is1, is2, npwi, npwf
 INTEGER :: li, mi, lj, mj, mi1, i, j, k, ijk
 REAL(DP) :: magtot1(4), magtot2(4)
 REAL(DP) :: x0, y0, dx, dy, r_cut, r_aux, xx, yy
@@ -108,10 +108,11 @@ DO ibnd = 1, nbnd
 
 !--  Pseudo part
    psic_nc = (0.D0,0.D0)
+   DO ig = 1, npw
+      psic_nc(nls(igk(ig)), 1)=evc(ig     ,ibnd)
+      psic_nc(nls(igk(ig)), 2)=evc(ig+npwx,ibnd)
+   END DO
    DO ipol=1,npol
-      DO ig = 1, npw
-         psic_nc(nls(igk(ig)),ipol)=evc_nc(ig,ipol,ibnd)
-      END DO
       call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
    ENDDO
    !
@@ -148,10 +149,12 @@ DO ibnd = 1, nbnd
       DO ipol = 1, npol
          dfx = 0.d0
          dfy = 0.d0
+         npwi=(ipol-1)*npwx+1
+         npwf=(ipol-1)*npwx+npw
          dfx(nls(igk(1:npw))) = (xk(1,ik)+g(1,igk(1:npw)))*tpiba* &
-                          (0.d0,1.d0)*evc_nc(1:npw,ipol,ibnd)
+                          (0.d0,1.d0)*evc(npwi:npwf,ibnd)
          dfy(nls(igk(1:npw))) = (xk(2,ik)+g(2,igk(1:npw)))*tpiba* &
-                          (0.d0,1.d0)*evc_nc(1:npw,ipol,ibnd)
+                          (0.d0,1.d0)*evc(npwi:npwf,ibnd)
          CALL cft3s( dfx, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
          CALL cft3s( dfy, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
          DO i = 1, nr1s

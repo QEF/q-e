@@ -31,7 +31,7 @@ SUBROUTINE wfcinit()
   USE noncollin_module,     ONLY : noncolin, npol
   USE io_files,             ONLY : iunsat, nwordwfc, iunwfc, iunigk, &
                                    nwordatwfc
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : rndm
   !
   IMPLICIT NONE
@@ -265,15 +265,9 @@ SUBROUTINE wfcinit()
           !
           ! ... read the wavefunction into memory (if it is not done in c_bands)
           !
-          IF ( noncolin ) THEN
+          IF ( nks == 1 .AND. reduce_io ) THEN
              !
-             IF ( nks == 1 .AND. reduce_io ) &
-                CALL davcio( evc_nc, nwordwfc, iunwfc, 1, -1 )
-             !
-          ELSE
-             !
-             IF ( nks == 1 .AND. reduce_io ) &
-                CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
+             CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
              !
           ENDIF
           !
@@ -490,25 +484,21 @@ SUBROUTINE wfcinit()
           !
           et(1:nbnd,ik) = etatom(1:nbnd)
           !
+          evc(:,:) = ( 0.D0, 0.D0 )
+          !
           IF ( noncolin ) THEN
              !
-             evc_nc(:,:,1:nbnd) = wfcatom_nc(:,:,1:nbnd)
-             !
-             evc_nc(npw+1:npwx,:,:) = ( 0.D0, 0.D0 )
-             !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
+             evc(1     :npw     ,1:nbnd) = wfcatom_nc(1:npw,1,1:nbnd)
+             evc(1+npwx:npw+npwx,1:nbnd) = wfcatom_nc(1:npw,2,1:nbnd)
              !
           ELSE
              !
-             evc(:,1:nbnd) = wfcatom(:,1:nbnd)
-             !
-             evc(npw+1:npwx,:) = ( 0.D0, 0.D0 )
-             !
-             IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+             evc(1:npw,1:nbnd) = wfcatom(1:npw,1:nbnd)
              !
           END IF
+          !
+          IF ( nks > 1 .OR. .NOT. reduce_io ) &
+             CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
           !
        END DO
        !

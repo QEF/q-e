@@ -104,7 +104,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   USE uspp,                 ONLY : nkb, vkb, qq
   USE uspp_param,           ONLY : tvanp, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode 
 
   IMPLICIT NONE
@@ -120,7 +120,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   COMPLEX(DP), ALLOCATABLE :: becp(:,:), becpold (:,:)
   ! becp   : <psi|beta> at current  k-point
   ! becpold: <psi|beta> at previous k-point
-  COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:,:), old_nc(:,:), new_nc(:,:)
+  COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:), old_nc(:,:), new_nc(:,:)
   COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
   LOGICAL :: lsym
   ! as above for the noncolinear case
@@ -180,7 +180,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   END IF
   !
   IF (noncolin) THEN
-     ALLOCATE (psiold_nc( npwx, npol, nbnd))
+     ALLOCATE (psiold_nc( npwx*npol, nbnd))
      ALLOCATE (becp_nc(nkb, npol, nbnd), becpold_nc(nkb, npol, nbnd))
      ALLOCATE (old_nc(ngm,npol), new_nc(ngm,npol))
      ALLOCATE (sigma_avg(4,nbnd,nks))
@@ -222,17 +222,13 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
      !
      !   read eigenfunctions
      !
-     IF (noncolin) THEN
-        CALL davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
-     ELSE
-        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     END IF
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      !
      ! calculate becp = <psi|beta> 
      ! 
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      IF (noncolin) THEN
-        CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc_nc)
+        CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
         CALL compute_sigma_avg(sigma_avg(1,1,ik),becp_nc,ik,lsigma)
      ELSE
         CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
@@ -265,10 +261,9 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
         DO ibnd = 1, nbnd
            IF (noncolin) THEN
               old_nc = (0.d0, 0.d0)
-              DO ipol=1, npol
-                 DO ig = 1, npwold
-                    old_nc(igkold(ig),ipol)=psiold_nc(ig,ipol,index(ibnd))
-                 END DO
+              DO ig = 1, npwold
+                 old_nc(igkold(ig), 1)=psiold_nc(ig     ,index(ibnd))
+                 old_nc(igkold(ig), 2)=psiold_nc(ig+npwx,index(ibnd))
               END DO
            ELSE
               old = (0.d0, 0.d0)
@@ -280,10 +275,9 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
               IF (ok (jbnd) == 0) THEN
                  IF (noncolin) THEN
                     new_nc = (0.d0, 0.d0)
-                    DO ipol=1,npol
-                       DO ig = 1, npw
-                          new_nc (igk (ig),ipol ) = evc_nc (ig,ipol, jbnd)
-                       END DO
+                    DO ig = 1, npw
+                       new_nc (igk (ig), 1) = evc (ig     , jbnd)
+                       new_nc (igk (ig), 2) = evc (ig+npwx, jbnd)
                     END DO
                     pro = cgracsc_nc (nkb,becp_nc(1,1,jbnd), &
                               becpold_nc(1,1,index(ibnd)), nhm, ntyp, nh, &
@@ -344,10 +338,8 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
      !
      DO ibnd = 1, nbnd
         IF (noncolin) THEN
+           psiold_nc(:, ibnd) = evc(:, il (ibnd))
            DO ipol=1,npol
-              DO ig = 1, npw
-                 psiold_nc(ig, ipol, ibnd) = evc_nc(ig, ipol, il (ibnd))
-              END DO
               DO ikb = 1, nkb
                  becpold_nc(ikb, ipol, ibnd) = becp_nc(ikb, ipol, il(ibnd))
               END DO

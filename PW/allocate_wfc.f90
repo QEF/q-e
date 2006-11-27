@@ -22,19 +22,15 @@ SUBROUTINE allocate_wfc()
   USE uspp,      ONLY : nkb
   USE ldaU,                 ONLY : swfcatom, lda_plus_u
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc
   !
   IMPLICIT NONE
   !
   !
-  IF ( gamma_only ) THEN
-     ALLOCATE( evc( npwx, nbnd ) )    
+  IF (noncolin) THEN
+     ALLOCATE( evc( npwx*npol, nbnd ) )    
   ELSE
-     IF (noncolin) THEN
-        ALLOCATE( evc_nc( npwx, npol, nbnd ) )    
-     ELSE
-        ALLOCATE( evc( npwx, nbnd ) )    
-     END IF
+     ALLOCATE( evc( npwx, nbnd ) )    
   ENDIF
   !
   ! ... needed for LDA+U

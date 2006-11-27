@@ -21,7 +21,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE wvfct,                ONLY : gamma_only, npw, npwx, nbnd, igk, wg, et
   USE uspp_param,           ONLY : lmaxkb, nh, tvanp, newpseudo
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, deeq_nc, qq_so
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc
   USE spin_orb,             ONLY : lspinorb
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_global,            ONLY : me_pool, root_pool
@@ -284,15 +284,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        !
        if (noncolin) then
           ALLOCATE( becp_nc( nkb, npol, nbnd ) )
-          CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc_nc )
+          CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc )
           ALLOCATE( work2_nc(npwx,npol) )
        else
           ALLOCATE( becp( nkb, nbnd ) )
           CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
-          ALLOCATE( work2( npwx ))
        endif
        !
-       ALLOCATE( work1(npwx), qm1( npwx ) )
+       ALLOCATE( work1(npwx), work2(npwx), qm1( npwx ) )
        !
        DO i = 1, npw
           q = SQRT( gk(1,i)**2 + gk(2,i)**2 + gk(3,i)**2 )
@@ -478,15 +477,16 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           DO ipol = 1, 3
              DO jpol = 1, ipol
                 IF (noncolin) THEN
-                   DO is=1,npol
-                      DO i = 1, npw
-                         work1(i) = evc_nc(i,is,ibnd)*gk(ipol,i)* &
-                                                      gk(jpol,i)*qm1(i)
-                      END DO
-                      sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                      2.D0 * wg(ibnd,ik) * &
-                                      DDOT(2*npw,work1,1,work2_nc(1,is), 1)
+                   DO i = 1, npw
+                      work1(i) = evc(i     ,ibnd)*gk(ipol,i)* &
+                                                  gk(jpol,i)*qm1(i)
+                      work2(i) = evc(i+npwx,ibnd)*gk(ipol,i)* &
+                                                  gk(jpol,i)*qm1(i)
                    END DO
+                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
+                                   2.D0 * wg(ibnd,ik) * &
+                                 ( DDOT(2*npw,work1,1,work2_nc(1,1), 1) + &
+                                   DDOT(2*npw,work2,1,work2_nc(1,2), 1) )
                 ELSE
                    DO i = 1, npw
                       work1(i) = evc(i,ibnd)*gk(ipol,i)*gk(jpol,i)*qm1(i)
@@ -585,14 +585,14 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
              END DO
              DO jpol = 1, ipol
                 IF (noncolin) THEN
-                   DO is=1,npol
-                      DO i = 1, npw
-                         work1(i) = evc_nc(i,is,ibnd) * gk(jpol,i)
-                      END DO
-                      sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
-                                 2.D0 * wg(ibnd,ik) * & 
-                                 DDOT( 2 * npw, work1, 1, work2_nc(1,is), 1 )
+                   DO i = 1, npw
+                      work1(i) = evc(i     ,ibnd) * gk(jpol,i)
+                      work2(i) = evc(i+npwx,ibnd) * gk(jpol,i)
                    END DO
+                   sigmanlc(ipol,jpol) = sigmanlc(ipol,jpol) - &
+                              2.D0 * wg(ibnd,ik) * & 
+                            ( DDOT( 2 * npw, work1, 1, work2_nc(1,1), 1 ) + &
+                              DDOT( 2 * npw, work2, 1, work2_nc(1,2), 1 ) )
                 ELSE
                    DO i = 1, npw
                       work1(i) = evc(i,ibnd) * gk(jpol,i)

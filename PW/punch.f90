@@ -18,7 +18,7 @@ SUBROUTINE punch( what )
   USE scf,                  ONLY : rho
   USE control_flags,        ONLY : reduce_io, lscf, lbands
   USE wvfct,                ONLY : et, wg, nbnd
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : prefix, iunpun, iunwfc, nwordwfc
   USE noncollin_module,     ONLY : noncolin
   USE pw_restart,           ONLY : pw_writefile
@@ -35,17 +35,8 @@ SUBROUTINE punch( what )
   !
   ! ... if the wavefunction has not been written on file, do it now
   !
-  IF ( noncolin ) THEN
-     !
-     IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio( evc_nc, nwordwfc, iunwfc, 1, +1 )
-     !
-  ELSE
-     !
-     IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio( evc, nwordwfc, iunwfc, 1, +1 )
-     !
-  ENDIF
+  IF ( nks == 1 .AND. reduce_io ) &
+     CALL davcio( evc, nwordwfc, iunwfc, 1, +1 )
   !
   ! ... The following instruction is used when phonons are calculated
   ! ... one q-wavevector at the time. Weights and occupations have to be

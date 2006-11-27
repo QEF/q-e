@@ -21,10 +21,10 @@ subroutine local_dos1d (ik, kband, plan)
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
   USE uspp_param, ONLY: nh, tvanp, nhm
-  USE wvfct, ONLY: npw, wg, igk
+  USE wvfct, ONLY: npw, npwx, wg, igk
   USE noncollin_module, ONLY: noncolin, npol
   USE spin_orb, ONLY: lspinorb, so, fcoef
-  USE wavefunctions_module,  ONLY: evc, psic, evc_nc, psic_nc
+  USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE becmod, ONLY: becp, becp_nc
   implicit none
   !
@@ -84,18 +84,19 @@ subroutine local_dos1d (ik, kband, plan)
   !
   if (noncolin) then
      psic_nc = (0.d0,0.d0)
+     do ig = 1, npw
+        psic_nc (nls (igk (ig) ), 1 ) = evc (ig     , kband)
+        psic_nc (nls (igk (ig) ), 2 ) = evc (ig+npwx, kband)
+     enddo
      do ipol=1,npol
-        do ig = 1, npw
-           psic_nc (nls (igk (ig) ), ipol ) = evc_nc (ig, ipol, kband)
-        enddo
         call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
      enddo
 
      w1 = wg (kband, ik) / omega
      do ipol=1,npol
         do ir = 1, nrxxs
-           aux(ir) = aux(ir) + w1 * (DBLE(psic_nc(ir,ipol))**2 + &
-                                     AIMAG(psic_nc(ir,ipol))**2)
+           aux(ir) = aux(ir) + w1 * ( DBLE(psic_nc(ir,ipol))**2 + &
+                                     AIMAG(psic_nc(ir,ipol))**2 )
         enddo
      enddo
   else

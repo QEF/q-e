@@ -26,7 +26,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : nh, tvanp, nhm
-  USE wavefunctions_module, ONLY : evc_nc, psic_nc
+  USE wavefunctions_module, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, so, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, g2kin
@@ -69,19 +69,20 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   DO ik = 1, nks
      IF (ik == kpoint) THEN
         CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-        CALL davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
+        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
         IF (nkb > 0) CALL init_us_2 (npw, igk, xk (1, ik), vkb)
-        CALL ccalbec_nc (nkb,npwx,npw,npol,nbnd,becp_nc,vkb,evc_nc)
+        CALL ccalbec_nc (nkb,npwx,npw,npol,nbnd,becp_nc,vkb,evc)
         !
         !
         DO ibnd = 1, nbnd
            !
            IF (ibnd == kband) then
               psic_nc = (0.D0,0.D0)
+              DO ig = 1, npw
+                 psic_nc(nls(igk(ig)),1)=evc(ig     ,ibnd)
+                 psic_nc(nls(igk(ig)),2)=evc(ig+npwx,ibnd)
+              END DO
               DO ipol=1,npol
-                 DO ig = 1, npw
-                    psic_nc(nls(igk(ig)),ipol)=evc_nc(ig,ipol,ibnd)
-                 END DO
                  call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, &
                                                           nrx2s, nrx3s, 2)
               END DO

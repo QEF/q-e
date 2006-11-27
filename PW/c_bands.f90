@@ -36,7 +36,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
-  USE wavefunctions_module, ONLY : evc, evc_nc  
+  USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc
   USE bp,                   ONLY : lelfield, evcel
   !
@@ -477,17 +477,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... read in wavefunctions from the previous iteration
           !
-          IF ( noncolin ) THEN
-             !
-             IF ( nks > 1 .OR. .NOT. reduce_io.OR. lelfield ) &
-                CALL davcio( evc_nc, nwordwfc, iunwfc, ik, -1 )
-             !
-          ELSE
-             !
-             IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield) &
-                CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
-             !
-          END IF
+          IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield) &
+             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
           !   
           ! ... Needed for LDA+U
           !
@@ -546,16 +537,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( iter > 1 .OR. istep > 0 .OR. ntry > 0 ) THEN
                    !
-                   IF ( noncolin ) THEN
-                      !
-                      CALL cinitcgg( npwx, npw, nbnd, &
-                                     nbnd, evc_nc, evc_nc, et(1,ik) )
-                      !
-                   ELSE
-                      !
-                      CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
-                      !
-                   END IF
+                   CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
                    !
                    avg_iter = avg_iter + 1.D0
                    !
@@ -563,9 +545,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( noncolin ) THEN
                    !
-                   CALL ccgdiagg( npwx, npw, nbnd, evc_nc, et(1,ik), &
-                                  btype(1,ik), h_diag_nc, ethr, max_cg_iter, &
-                                  .NOT. lscf, notconv, cg_iter )
+                   CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
+                                  h_diag_nc, ethr, max_cg_iter, .NOT. lscf, &
+                                  notconv, cg_iter )
                    !
                 ELSE
                    !
@@ -581,17 +563,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 ! ... iterative diagonalization of the next scf iteration 
                 ! ... and for rho calculation
                 !
-                IF ( noncolin ) THEN
-                   !
-                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
-                      CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
-                   !
-                ELSE
-                   !
-                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
-                      CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-                   !
-                END IF
+                IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                 !
                 ntry = ntry + 1                
                 !
@@ -628,7 +601,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 IF ( noncolin ) THEN
                    !
                    CALL cdiisg_nc( npw, npwx, nbnd, diis_ndim, &
-                                   evc_nc, et(1,ik), ethr, btype(1,ik), &
+                                   evc, et(1,ik), ethr, btype(1,ik), &
                                    notconv, diis_iter, iter, npol )
                    !
                 ELSE
@@ -644,17 +617,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 ! ... iterative diagonalization of the next scf iteration 
                 ! ... and for rho calculation
                 !
-                IF ( noncolin ) THEN
-                   !
-                   IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                      CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
-                   !
-                ELSE
-                   !
-                   IF ( nks > 1 .OR. .NOT. reduce_io ) &
-                      CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-                   !
-                END IF
+                IF ( nks > 1 .OR. .NOT. reduce_io ) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                 !
                 ntry = ntry + 1                
                 !
@@ -696,19 +660,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 lrot = ( iter == 1 )
                 !
-                IF ( noncolin ) THEN
-                   !
-                   CALL cegterg( npw, npwx, nbnd, nbndx, evc_nc, &
-                                 ethr, okvan, et(1,ik), btype(1,ik), &
-                                 notconv, lrot, dav_iter )
-                   !
-                ELSE
-                   !
-                   CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-                                 okvan, et(1,ik), btype(1,ik), notconv, &
-                                 lrot, dav_iter )
-                   !
-                END IF
+                CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+                              okvan, et(1,ik), btype(1,ik), notconv, &
+                              lrot, dav_iter )
                 !
                 avg_iter = avg_iter + dav_iter
                 !
@@ -716,17 +670,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 ! ... iterative diagonalization of the next scf iteration 
                 ! ... and for rho calculation
                 !
-                IF ( noncolin ) THEN
-                   !
-                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
-                      CALL davcio( evc_nc, nwordwfc, iunwfc, ik, 1 )
-                   !
-                ELSE
-                   !
-                   IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield) &
-                      CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
-                   !
-                END IF
+                IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield) &
+                   CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
                 !
                 ntry = ntry + 1                
                 !

@@ -66,6 +66,23 @@ PROGRAM projwfc
   !      E LDOS(E) PDOS_1(E) ... PDOS_2j+1(E)
   !
   !   All DOS(E) are in states/eV plotted vs E in eV
+  !
+  !  Order of m-components for each l in the output:
+  !
+  !  1, cos(phi), sin(phi), cos(2*phi), sin(2*phi), .., cos(l*phi), sin(l*phi)
+  !
+  !  where phi is the polar angle:x=r cos(theta)cos(phi), y=r cos(theta)sin(phi)
+  !  This is determined in file flib/ylmr2.f90 that calculates spherical harm.
+  !      L=1 :
+  !  1 pz     (m=0)
+  !  2 px     (real combination of m=+/-1 with cosine)
+  !  3 py     (real combination of m=+/-1 with sine)
+  !      L=2 :
+  !  1 dz2    (m=0)
+  !  2 dzx    (real combination of m=+/-1 with cosine)
+  !  3 dzy    (real combination of m=+/-1 with sine)
+  !  4 dx2-y2 (real combination of m=+/-2 with cosine)
+  !  5 dxy    (real combination of m=+/-1 with sine)
   ! 
   ! Important notice:
   !
@@ -237,7 +254,6 @@ SUBROUTINE projwave( filproj, lsym )
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: becp, rbecp
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
-  USE noncollin_module, ONLY: noncolin
   USE spin_orb, ONLY: lspinorb
   USE wavefunctions_module, ONLY: evc 
   !
@@ -695,7 +711,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: becp_nc
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
-  USE wavefunctions_module, ONLY: evc_nc 
+  USE wavefunctions_module, ONLY: evc 
   !
   USE spin_orb,   ONLY: lspinorb, so, domag
   USE projections_nc
@@ -843,7 +859,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      wfcatom_nc= (0.d0,0.d0)
      swfcatom_nc= (0.d0,0.d0)
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin) 
-     CALL davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
+     CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      ! 
      CALL atomic_wfc_nc_proj (ik, wfcatom_nc)
      ! 
@@ -884,7 +900,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j> 
      !
      CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom_nc, & 
-                 npwx*npol, evc_nc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
+                 npwx*npol, evc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
      CALL reduce (2 * natomwfc * nbnd, proj0)
      !
      proj_aux(:,:,ik) = proj0(:,:)

@@ -16,22 +16,14 @@
 
      !
      COMPLEX(DP), ALLOCATABLE, TARGET :: &
-       evc(:,:)     ! wavefunctions in the PW basis
-
+       evc(:,:)     ! wavefunctions in the PW basis set
+                    ! noncolinear case: first index
+                    ! is a combined PW + spin index
      !
      COMPLEX(DP) , ALLOCATABLE, TARGET :: &
-       psic(:)      ! additional memory for FFT
-
-
-     ! three index wave functions, for non colinear code
+       psic(:), &      ! additional memory for FFT
+       psic_nc(:,:)    ! as above for the noncolinear case
      !
-     COMPLEX(DP), ALLOCATABLE, TARGET :: &
-       evc_nc(:,:,:)     !  wavefunctions in the PW basis
-     !
-     COMPLEX(DP), ALLOCATABLE, TARGET :: &
-       psic_nc(:,:)      !  additional memory for FFT
-     !     
-
      ! electronic wave functions, FPMD code
      !
      COMPLEX(DP), ALLOCATABLE :: c0(:,:)  ! wave functions at time t
@@ -45,7 +37,6 @@
        IF( ALLOCATED( cm ) ) DEALLOCATE( cm )
        IF( ALLOCATED( cp ) ) DEALLOCATE( cp )
        IF( ALLOCATED( psic_nc ) ) DEALLOCATE( psic_nc )
-       IF( ALLOCATED( evc_nc ) ) DEALLOCATE( evc_nc )
        IF( ALLOCATED( psic ) ) DEALLOCATE( psic )
        IF( ALLOCATED( evc ) ) DEALLOCATE( evc )
      END SUBROUTINE deallocate_wavefunctions

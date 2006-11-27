@@ -49,7 +49,7 @@ SUBROUTINE electrons()
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u  
   USE extfield,             ONLY : tefield, etotefield  
-  USE wavefunctions_module, ONLY : evc, evc_nc, psic
+  USE wavefunctions_module, ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, npol, magtot_nc, factlist, &
                                    pointlist, pointnum, mcons, i_cons,  &
                                    bfield, lambda, vtcon, report
@@ -476,17 +476,8 @@ SUBROUTINE electrons()
      !
      ! ... save converged wfc if they have not been written previously
      !     
-     IF ( noncolin ) THEN
-        !
-        IF ( nks == 1 .AND. reduce_io ) &
-           CALL davcio( evc_nc, nwordwfc, iunwfc, nks, 1 )
-        !
-     ELSE
-        !
-        IF ( nks == 1 .AND. reduce_io ) &
-           CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
-        !
-     END IF
+     IF ( nks == 1 .AND. reduce_io ) &
+        CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
      !
      ! ... calculate the polarization
      !

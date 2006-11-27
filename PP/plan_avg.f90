@@ -20,7 +20,6 @@ PROGRAM do_plan_avg
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE io_files,  ONLY : tmp_dir, prefix, nd_nmbr, trimcheck
   USE io_global, ONLY : ionode, ionode_id
-  USE noncollin_module, ONLY : noncolin
   USE wvfct,     ONLY : nbnd, gamma_only
   USE mp,        ONLY : mp_bcast
   !
@@ -139,7 +138,7 @@ subroutine plan_avg (averag, plan, ninter)
   USE lsda_mod, ONLY: lsda, current_spin, isk
   USE uspp, ONLY: vkb, nkb
   USE wvfct, ONLY: npw, npwx, nbnd, wg, igk, g2kin
-  USE wavefunctions_module,  ONLY: evc, evc_nc
+  USE wavefunctions_module,  ONLY: evc
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunwfc, nwordwfc
   USE becmod, ONLY: becp, becp_nc
@@ -239,15 +238,11 @@ subroutine plan_avg (averag, plan, ninter)
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-     if (noncolin) then
-        call davcio (evc_nc, nwordwfc, iunwfc, ik, - 1)
-     else
-        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     endif
+     call davcio (evc, nwordwfc, iunwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
 
      if (noncolin) then
-        call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc_nc)
+        call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
      else
         call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
      endif

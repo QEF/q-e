@@ -25,7 +25,7 @@ SUBROUTINE force_us( forcenl )
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE symme,                ONLY : irt, s, nsym
-  USE wavefunctions_module, ONLY : evc, evc_nc
+  USE wavefunctions_module, ONLY : evc
   USE noncollin_module,     ONLY : npol, noncolin
   USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
@@ -222,17 +222,13 @@ SUBROUTINE force_us( forcenl )
           !
           IF ( nks > 1 ) THEN
              READ( iunigk ) npw, igk
-             IF (noncolin) THEN
-                CALL davcio( evc_nc, nwordwfc, iunwfc, ik, -1 )
-             ELSE
-                CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
-             ENDIF
+             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) &
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
           IF (noncolin) THEN
-             CALL ccalbec_nc(nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc_nc)
+             CALL ccalbec_nc(nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
           ELSE
              CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
           ENDIF
@@ -247,7 +243,7 @@ SUBROUTINE force_us( forcenl )
              IF (noncolin) THEN
                 IF ( nkb > 0 ) &
                    CALL ZGEMM( 'C', 'N', nkb, nbnd*npol, npw, ( 1.D0, 0.D0 ),&
-                            vkb1, npwx, evc_nc, npwx, ( 0.D0, 0.D0 ),    &
+                            vkb1, npwx, evc, npwx, ( 0.D0, 0.D0 ),    &
                             dbecp_nc(1,1,1,ipol), nkb )
              ELSE
                 IF ( nkb > 0 ) &

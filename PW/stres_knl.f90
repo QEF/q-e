@@ -20,7 +20,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE symme,                ONLY: s, nsym
   USE wvfct,                ONLY: npw, npwx, nbnd, gamma_only, igk, wg
   USE noncollin_module,     ONLY: noncolin, npol
-  USE wavefunctions_module, ONLY: evc, evc_nc
+  USE wavefunctions_module, ONLY: evc
   implicit none
   real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)
   real(DP), allocatable :: gk (:,:), kfac (:)
@@ -40,11 +40,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   do kpoint = 1, nks
      if (nks.gt.1) then
         read (iunigk) npw, igk
-        if (noncolin) then
-           call davcio (evc_nc, nwordwfc, iunwfc, kpoint, - 1)
-        else
-           call davcio (evc, nwordwfc, iunwfc, kpoint, - 1)
-        endif
+        call davcio (evc, nwordwfc, iunwfc, kpoint, - 1)
      endif
      do i = 1, npw
         gk (1, i) = (xk (1, kpoint) + g (1, igk (i) ) ) * tpiba
@@ -64,11 +60,10 @@ subroutine stres_knl (sigmanlc, sigmakin)
            do ibnd = 1, nbnd
               do i = 1, npw
                  if (noncolin) then
-                    do is=1,npol
-                       sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
-                        gk (l, i) * gk (m, i) * kfac (i) * &
-                          DBLE (CONJG(evc_nc(i,is,ibnd))*evc_nc(i,is,ibnd))
-                    end do
+                    sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
+                     gk (l, i) * gk (m, i) * kfac (i) * &
+                     ( DBLE (CONJG(evc(i     ,ibnd))*evc(i     ,ibnd)) + &
+                       DBLE (CONJG(evc(i+npwx,ibnd))*evc(i+npwx,ibnd)))
                  else
                     sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
                         gk (l, i) * gk (m, i) * kfac (i) * &

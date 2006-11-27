@@ -15,7 +15,7 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   USE control_flags, ONLY: restart, tr2, ethr
   USE wvfct, ONLY: nbnd, et
   USE noncollin_module, ONLY: noncolin
-  USE wavefunctions_module,    ONLY : evc, evc_nc
+  USE wavefunctions_module,    ONLY : evc
   implicit none
   character :: where * 20
   ! are we in the right place?
@@ -64,11 +64,7 @@ subroutine restart_in_electrons (iter, ik_, dr2)
      !
      ! with only one k-point wavefunctions are not read in sum_band
      !
-     if (noncolin) then
-        if (nks.eq.1) call davcio (evc_nc, nwordwfc, iunwfc, 1, - 1)
-     else
-        if (nks.eq.1) call davcio (evc, nwordwfc, iunwfc, 1, - 1)
-     endif
+     if (nks.eq.1) call davcio (evc, nwordwfc, iunwfc, 1, - 1)
   endif
 
   WRITE( stdout, '(5x,"tr2 = ",1pe8.2," ethr = ",1pe8.2)') tr2, ethr
