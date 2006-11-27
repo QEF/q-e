@@ -255,7 +255,7 @@
 
 !=----------------------------------------------------------------------=
 
-      SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, index )
+      SUBROUTINE sticks_sort( ngc, ngcw, ngcs, nct, idx )
 
 ! ...     This subroutine sorts the sticks indexes, according to 
 ! ...     the lenght and type of the sticks, wave functions sticks
@@ -275,7 +275,7 @@
 
         ! index, on output, new sticks indexes
 
-        INTEGER, INTENT(OUT) :: index(:)                
+        INTEGER, INTENT(OUT) :: idx(:)                
 
         INTEGER :: mc, nr3x, ic
         REAL(DP), ALLOCATABLE :: aux(:)
@@ -286,28 +286,28 @@
           ALLOCATE( aux( nct ) )
           DO mc = 1, nct
             aux(mc) = -(ngcw(mc)*nr3x**2 + ngcs(mc)*nr3x + ngc(mc))
-            index(mc) = 0
+            idx(mc) = 0
           END DO
-          CALL hpsort( nct, aux(1), index(1))
+          CALL hpsort( nct, aux(1), idx(1))
           DEALLOCATE( aux )
         ELSE
           ic = 0
           do mc = 1, nct
             if( ngcw(mc) > 0 ) then
               ic = ic + 1
-              index(ic) = mc
+              idx(ic) = mc
             endif
           end do
           do mc = 1, nct
             if( ngcs(mc) > 0 .AND. ngcw(mc) == 0 ) then
               ic = ic + 1
-              index(ic) = mc
+              idx(ic) = mc
             endif
           end do
           do mc = 1, nct
             if( ngc(mc) > 0 .AND. ngcs(mc) == 0 .AND. ngcw(mc) == 0 ) then
               ic = ic + 1
-              index(ic) = mc
+              idx(ic) = mc
             endif
           end do
         END IF
@@ -315,7 +315,7 @@
         ! WRITE( stdout,*) '-----------------'
         ! WRITE( stdout,*) 'STICKS_SORT DEBUG'
         ! DO mc = 1, nct
-        !   WRITE( stdout, fmt="(4I10)" ) index(mc), ngcw( index(mc) ), ngcs( index(mc) ), ngc( index(mc) )
+        !   WRITE( stdout, fmt="(4I10)" ) idx(mc), ngcw( idx(mc) ), ngcs( idx(mc) ), ngc( idx(mc) )
         ! END DO
         ! WRITE( stdout,*) '-----------------'
 
@@ -386,14 +386,14 @@
 
 !=----------------------------------------------------------------------=
 
-    SUBROUTINE sticks_dist1( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
+    SUBROUTINE sticks_dist1( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
                              ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
 
       USE mp_global, ONLY: nproc_pool
 
       LOGICAL, INTENT(IN) :: tk
 
-      INTEGER, INTENT(IN) :: ub(:), lb(:), index(:)
+      INTEGER, INTENT(IN) :: ub(:), lb(:), idx(:)
       INTEGER, INTENT(OUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
       INTEGER, INTENT(OUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
       INTEGER, INTENT(OUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for smooth mesh
@@ -419,7 +419,7 @@
 
       DO mc = 1, nct
 
-         i = index( mc )
+         i = idx( mc )
 !
 ! index contains the desired ordering of sticks (see above)
 !
@@ -485,14 +485,14 @@
 
 !=----------------------------------------------------------------------=
     
-    SUBROUTINE sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngcw, ngcs, nct, &
+    SUBROUTINE sticks_pairup( tk, ub, lb, idx, in1, in2, ngc, ngcw, ngcs, nct, &
                              ncp, ncpw, ncps, ngp, ngpw, ngps, stown, stownw, stowns )
 
       USE mp_global, ONLY: nproc_pool
 
       LOGICAL, INTENT(IN) :: tk
 
-      INTEGER, INTENT(IN) :: ub(:), lb(:), index(:)
+      INTEGER, INTENT(IN) :: ub(:), lb(:), idx(:)
       INTEGER, INTENT(INOUT) :: stown( lb(1): ub(1), lb(2):ub(2) ) ! stick map for potential
       INTEGER, INTENT(INOUT) :: stownw(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
       INTEGER, INTENT(INOUT) :: stowns(lb(1): ub(1), lb(2):ub(2) ) ! stick map for wave functions
@@ -503,7 +503,7 @@
       INTEGER, INTENT(OUT) :: ncp(:), ncpw(:), ncps(:)
       INTEGER, INTENT(OUT) :: ngp(:), ngpw(:), ngps(:)
 
-      INTEGER :: mc, i1, i2, i, j, jj, iss, is, ip
+      INTEGER :: mc, i1, i2, i, jj
 
       IF ( .NOT. tk ) THEN
 
@@ -513,7 +513,7 @@
         !  Note that the total numero of stick "nct" is not modified
 
         DO mc = 1, nct
-           i = index(mc)
+           i = idx(mc)
            i1 = in1(i)
            i2 = in2(i)
            IF( i1 == 0 .and. i2 == 0 ) THEN
@@ -647,18 +647,16 @@
 ! ...     sticks lenght for processor ip = number of G-vectors
 ! ...     owned by the processor ip
 
-        INTEGER :: nsts, nstpsx
+        INTEGER :: nsts
 ! ...   nsts      local number of sticks (smooth mesh)
-! ...   nstpsx    maximum among all processors of nst
 
 
         INTEGER, ALLOCATABLE :: ist(:,:)    ! sticks indexes ordered
 
 
 
-          INTEGER :: i, j, k
-          INTEGER :: ip, is, itmp, iss, i1, i2, ngm_ , ngs_
-          INTEGER, ALLOCATABLE :: ist_tmp(:), index(:)
+          INTEGER :: ip, ngm_ , ngs_
+          INTEGER, ALLOCATABLE :: idx(:)
 
           tk    = .NOT. gamma_only
           ub(1) = ( nr1 - 1 ) / 2
@@ -720,27 +718,27 @@
 
 ! ...       Sorts the sticks according to their lenght
 
-          ALLOCATE( index( nst ) )
+          ALLOCATE( idx( nst ) )
 
-          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, index )
+          CALL sticks_sort( ist(:,4), ist(:,3), ist(:,5), nst, idx )
 
           ! ... Set as first stick the stick containing the G=0
           !
           !  DO iss = 1, nst
-          !    IF( ist( index( iss ), 1 ) == 0 .AND. ist( index( iss ), 2 ) == 0 )  EXIT
+          !    IF( ist( idx( iss ), 1 ) == 0 .AND. ist( idx( iss ), 2 ) == 0 )  EXIT
           !  END DO
-          !  itmp         = index( 1 )
-          !  index( 1 )   = index( iss )
-          !  index( iss ) = itmp
+          !  itmp         = idx( 1 )
+          !  idx( 1 )   = idx( iss )
+          !  idx( iss ) = itmp
 
-          CALL sticks_dist( tk, ub, lb, index, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
+          CALL sticks_dist( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
 
           ngw = sstpw( me_pool + 1 )
           ngm = sstp( me_pool + 1 )
           ngs = sstps( me_pool + 1 )
 
-          CALL sticks_pairup( tk, ub, lb, index, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
+          CALL sticks_pairup( tk, ub, lb, idx, ist(:,1), ist(:,2), ist(:,4), ist(:,3), ist(:,5), &
              nst, nstp, nstpw, nstps, sstp, sstpw, sstps, st, stw, sts )
 
           ! ...   Allocate and Set fft data layout descriptors
@@ -751,9 +749,9 @@
           CALL fft_dlay_allocate( dffts, nproc_pool, nr1sx, nr2sx )
 
           CALL fft_dlay_set( dfftp, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, (me_pool+1), &
-            nproc_pool, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
+            nproc_pool, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstp, nstpw, sstp, sstpw, st, stw )
           CALL fft_dlay_set( dffts, tk, nsts, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, (me_pool+1), &
-            nproc_pool, nogrp, ub, lb, index, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
+            nproc_pool, nogrp, ub, lb, idx, ist(:,1), ist(:,2), nstps, nstpw, sstps, sstpw, sts, stw )
 
 #else
 
@@ -792,7 +790,7 @@
 
 
           DEALLOCATE( ist )
-          DEALLOCATE( index )
+          DEALLOCATE( idx )
 
           DEALLOCATE( st, stw, sts )
           DEALLOCATE( sstp )

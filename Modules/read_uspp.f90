@@ -121,7 +121,6 @@ CONTAINS
          &       npf,           &! as above
          &       nang,          &! number of angular momenta in pseudopotentials
          &       lloc,          &! angular momentum of the local part of PPs
-         &       lmin, lmax,    &! min and max angular momentum in Q
          &       lp,            &! counter on Q angular momenta
          &       l,             &! counter on angular momenta
          &       iv, jv, ijv,   &! beta function counter
@@ -594,8 +593,6 @@ CONTAINS
     character(len=75) :: &
          titleps     ! the title of the pseudo
     !
-    real(DP) :: &
-         rsatom(ndmx) ! charge density of pseudoatom
     integer :: &
          lmax       ! max angular momentum
     character(len=2) :: &

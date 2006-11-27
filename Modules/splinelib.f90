@@ -35,7 +35,7 @@ MODULE splinelib
       REAL(DP), INTENT(OUT) :: d2y(:)
       !
       INTEGER               :: i, k, ydim
-      REAL(DP)              :: p, qn, sig, un
+      REAL(DP)              :: p, sig
       REAL(DP), ALLOCATABLE :: u(:)
       !
       !
@@ -80,7 +80,7 @@ MODULE splinelib
       REAL(DP), INTENT(IN) :: x
       !
       REAL(DP) :: splint
-      INTEGER  :: k, khi, klo, xdim
+      INTEGER  :: khi, klo, xdim
       REAL(DP) :: a, b, h
       !
       !
@@ -115,7 +115,7 @@ MODULE splinelib
       REAL(DP), INTENT(IN) :: x
       !
       REAL(DP) :: splint_deriv
-      INTEGER  :: k, khi, klo, xdim
+      INTEGER  :: khi, klo, xdim
       REAL(DP) :: a, b, da, db, h
       !
       !
@@ -207,7 +207,7 @@ MODULE splinelib
       REAL (DP), INTENT(OUT) :: new_vec(:)
       !
       REAL (DP), ALLOCATABLE :: d2y(:)
-      INTEGER                :: dim, i, j
+      INTEGER                :: i
       INTEGER                :: old_dim, new_dim
       !
       !
@@ -228,9 +228,9 @@ MODULE splinelib
       !
       CALL spline( old_mesh , old_vec(:), 0.D0, 0.D0, d2y  ) 
       !
-      DO j = 1, new_dim
+      DO i = 1, new_dim
          !
-         new_vec(j) = splint( old_mesh, old_vec(:), d2y, new_mesh(j) )
+         new_vec(i) = splint( old_mesh, old_vec(:), d2y, new_mesh(i) )
          !
       END DO
       !

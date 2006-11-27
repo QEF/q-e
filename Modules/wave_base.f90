@@ -71,10 +71,9 @@
         COMPLEX(DP), PARAMETER :: onem = (-1.d0,0.d0)
         COMPLEX(DP), PARAMETER :: zero = ( 0.d0,0.d0)
         REAL(DP), PARAMETER :: small = 1.d-16
-        REAL(DP)    :: DZNRM2
         COMPLEX(DP), ALLOCATABLE :: s(:)
         REAL(DP)    :: anorm
-        INTEGER      :: ib, ig, ngw, nb
+        INTEGER      :: ib, ngw, nb
         ngw = SIZE(wf, 1)
         nb  = SIZE(wf, 2)
         ALLOCATE( s(nb) )
@@ -134,7 +133,7 @@
         REAL(DP)  :: DNRM2
         REAL(DP), ALLOCATABLE  :: s(:)
         REAL(DP)  :: anorm, wftmp
-        INTEGER    :: ib, ig, nwfr, ngw, nb
+        INTEGER    :: ib, nwfr, ngw, nb
 
         ngw  = SIZE(wf, 1)
         nb   = SIZE(wf, 2)
@@ -444,8 +443,6 @@
             USE mp_global, ONLY: intra_image_comm
             USE mp, ONLY: mp_sum
 
-            REAL(DP) :: DDOT
-            REAL(DP) :: dot_tmp
             LOGICAL, INTENT(IN) :: gzero
 
             COMPLEX(DP) :: a(:), b(:)

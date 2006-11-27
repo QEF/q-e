@@ -690,7 +690,7 @@
     integer, intent(in) :: iforce(:,:)
 
     REAL(DP) :: alfap, qr(3), alfar, gausp
-    REAL(DP) :: dt2by2, ftmp
+    REAL(DP) :: dt2by2
     integer :: i, ia, is, nat, isa
 
     dt2by2 = .5d0 * delt * delt
@@ -765,7 +765,6 @@
       REAL(DP) :: dis
       REAL(DP) :: tau( :, : )      ! position in real space
 
-      INTEGER   ::  i, ia
       REAL(DP)  ::  cdm(3)
 
       CALL ions_cofmass(tau, pmass, na, nsp, cdm)
@@ -794,7 +793,7 @@
       REAL (DP), INTENT(IN)  :: tau(:,:)
 
       REAL(DP) :: rdist(3), r2, cdm(3)
-      INTEGER  :: i, j, k, isa
+      INTEGER  :: is, ia, isa
 
       ! ...   Compute the current value of cdm "Centro Di Massa"
       !
@@ -803,15 +802,15 @@
       IF( SIZE( dis ) < nsp ) &
           CALL errore(' displacement ',' size of dis too small ', 1)
       isa = 0
-      DO k = 1, nsp
-         dis(k) = 0.0_DP
+      DO is = 1, nsp
+         dis(is) = 0.0_DP
          r2     = 0.0_DP
-         DO j = 1, na(k)
+         DO ia = 1, na(is)
             isa = isa + 1
             rdist = tau(:,isa) - cdm
             r2 = r2 + SUM( ( rdist(:) - taui(:,isa) )**2 )
          END DO
-         dis(k) = dis(k) + r2 / DBLE(na(k))
+         dis(is) = dis(is) + r2 / DBLE(na(is))
       END DO
 
       RETURN

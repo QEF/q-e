@@ -11,9 +11,8 @@ subroutine pz_polarized (rs, ec, vc)
   parameter (a = 0.01555d0, b = - 0.0269d0, c = 0.0007d0, d = &
        - 0.0048d0, gc = - 0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0)
   real(DP) :: lnrs, rs12, ox, dox
-  LOGICAL       :: xc_rel
   REAL(DP), PARAMETER :: xcprefact = 0.022575584, pi34 = 0.6203504908994d0 
-  REAL(DP) :: betha, etha, csi, prefact
+  ! REAL(DP) :: betha, etha, csi, prefact
   !
   if (rs.lt.1.0d0) then
      ! high density formula

@@ -457,7 +457,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: stw( lb(2) : ub(2), lb(3) : ub(3) )
 
     integer :: nr1, nr2, nr3, nr1x, nr2x, nr3x
-    integer :: m1, m2, i1, i2, i3
+    integer :: m1, m2, i2, i3
 
     IF( SIZE( desc%iplw ) < nr3x .OR. SIZE( desc%isind ) < nr2x * nr3x ) &
       CALL errore(' fft_dlay_scalar ', ' wrong dimensions ', 1 )

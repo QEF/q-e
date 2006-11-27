@@ -31,7 +31,7 @@ MODULE random_numbers
       !
       REAL(DP) :: rranf
       !
-      INTEGER :: kk, m, konst
+      INTEGER :: m, konst
       DATA m/100001/, konst/125/
       SAVE m, konst
       !
@@ -219,7 +219,7 @@ MODULE random_numbers
       REAL(DP), INTENT(IN) :: sigma
       REAL(DP)             :: gauss_dist_scal
       !
-      REAL(DP) :: x1, x2, w, coeff
+      REAL(DP) :: x1, x2, w
       !
       !
       gaussian_loop: DO
@@ -255,7 +255,7 @@ MODULE random_numbers
       INTEGER,  INTENT(IN) :: dim
       REAL(DP)             :: gauss_dist_vect( dim )
       !
-      REAL(DP) :: x1, x2, w, coeff
+      REAL(DP) :: x1, x2, w
       INTEGER  :: i
       !
       !

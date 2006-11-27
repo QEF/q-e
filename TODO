@@ -1,11 +1,10 @@
-TODO LIST - October 2006
+TODO LIST - November 2006
 
 BUGS TO EXAMINE
 
 - Zr pp buggy?
 - strange empty states with C blyp ?
 - O pseudopotentials?
-- Wannier with nonorthogonal axis?
 - Zval is wrong for pseudopotentials generated on a ionic
   configuration, when semicore states are in the valence
 - discrepancies between spin-unpolarized and spin=0 spin-polarized
@@ -13,20 +12,17 @@ BUGS TO EXAMINE
 
 INSTALLATION/PORTING
 
-- final cleanup of configure stuff and of preprocessing options
-  Add support for fft3
-
-- compile to produce big_endian?
-
-- how to put modules into a library so that one loads a few libraries
-  instead of 1000000 objects? on all machines and compilers ?? 
+- add support for more Nec's
+- remove install/
+- put misc scripts into a Utils/ subdirectory
+- release.sh is clumsy, simplify
 
 COMMON
 
 - uniform and clear values for constants in Modules/constants.f90
   (almost finished)
 
-- check licenses
+- check whether license is written in the header of the file
 
 - pseudopotentials: support new format (XML) if/when ready
 
@@ -49,6 +45,7 @@ COMMON
 - error is in flib/ but requires modules: not a good solution,
   things in flib/ should not use modules except maybe kinds 
   and other very low level modules 
+- too many confusing error messages are still around
 
 - replace calls to level-1 blas copy, scal, axpy, with f90 syntax
 
@@ -103,8 +100,6 @@ POSTPROCESSING
   The file format should be reconsidered: XML ?
 
 - chdens in parallel execution
-
-- dipolo + Makov-Payne: verify
 
 - pwtools: add example of a plot of phonon dispersions
   Fix fqha.f90

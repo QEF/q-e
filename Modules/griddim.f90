@@ -292,7 +292,6 @@
 
 ! ... declare other variables
       INTEGER :: i, j, k
-      INTEGER :: nr1x, nr2x, nr3x
       INTEGER :: nr1tab, nr2tab, nr3tab, nr
       INTEGER :: nb(3)
       REAL(DP) :: gsq, sqgc

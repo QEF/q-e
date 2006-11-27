@@ -96,7 +96,7 @@ SUBROUTINE task_groups_init( dffts )
    !nproc_image:      Total number of processors
    !NPGRP:      Number of processors per group
    INTEGER  ::  MSGLEN, I, J, N1, LABEL, IPOS, WORLD, NEWGROUP
-   INTEGER  ::  ios, IERR
+   INTEGER  ::  IERR
 
    !--------------------------------------------------------------
    !Allocations

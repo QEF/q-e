@@ -230,7 +230,6 @@ MODULE xml_io_base
       CHARACTER(LEN=*), INTENT(IN) :: outdir
       CHARACTER(LEN=256)           :: filename
       LOGICAL                      :: lval
-      INTEGER                      :: strlen
       !
       !
       filename = restart_dir( outdir, ndr )
@@ -309,10 +308,10 @@ MODULE xml_io_base
       CHARACTER(LEN=*), INTENT(IN) :: dirname
       INTEGER,          INTENT(IN) :: iter
       !
+#if defined (__VERBOSE_SAVE)
+      !
       CHARACTER(LEN=256) :: filename
       CHARACTER(LEN=6)   :: hindex
-      !
-#if defined (__VERBOSE_SAVE)
       !
       CALL create_directory( TRIM( dirname ) // '/history' )
       !
@@ -1409,7 +1408,7 @@ MODULE xml_io_base
       REAL(DP),           INTENT(IN) :: scalef    
         ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
       !
-      INTEGER                  :: i, j, ierr
+      INTEGER                  :: j
       INTEGER                  :: iks, ike, ikt, igwx
       INTEGER                  :: npool, ipmask(nproc_image), ipsour
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
@@ -1496,10 +1495,10 @@ MODULE xml_io_base
       REAL(DP),           INTENT(OUT)   :: scalef
       LOGICAL, OPTIONAL,  INTENT(IN)    :: flink
       !
-      INTEGER                  :: i, j
+      INTEGER                  :: j
       COMPLEX(DP), ALLOCATABLE :: wtmp(:)
       INTEGER                  :: ierr
-      INTEGER                  :: iks, ike, nkt, ikt
+      INTEGER                  :: iks, ike, ikt
       INTEGER                  :: igwx, igwx_, ik_, nk_
       INTEGER                  :: npool, ipmask(nproc_image), ipdest
       LOGICAL                  :: flink_

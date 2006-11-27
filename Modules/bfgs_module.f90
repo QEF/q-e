@@ -616,11 +616,10 @@ MODULE bfgs_module
       INTEGER,  INTENT(IN)  :: dim
       INTEGER,  INTENT(IN)  :: stdout
       !
-      INTEGER               :: i
       REAL(DP), ALLOCATABLE :: y(:), s(:)
       REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
       REAL(DP), ALLOCATABLE :: H_bfgs(:,:)
-      REAL(DP)              :: sdoty, coeff
+      REAL(DP)              :: sdoty
       !
       !
       ALLOCATE( y( dim ), s( dim ), Hy( dim ), yH( dim ), H_bfgs( dim, dim ) )
@@ -689,7 +688,6 @@ MODULE bfgs_module
       INTEGER,  INTENT(IN)  :: dim   
       INTEGER,  INTENT(IN)  :: stdout
       !
-      INTEGER  :: i
       REAL(DP) :: a
       LOGICAL  :: ltest
       !
@@ -810,7 +808,7 @@ MODULE bfgs_module
       INTEGER, INTENT(IN) :: dim
       INTEGER, INTENT(IN) :: fixion(:)
       !
-      INTEGER               :: i, nat, info, lwork
+      INTEGER               :: i, info, lwork
       REAL(DP), ALLOCATABLE :: w(:), work(:)
       !
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!

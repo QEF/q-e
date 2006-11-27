@@ -23,11 +23,11 @@
 
 
         INTEGER :: ldx, ldy, n, m, what
-        REAL*8 :: x(ldx, m), y(ldy, n)
+        REAL(8) :: x(ldx, m), y(ldy, n)
         INTEGER :: i, j, k, d, nb, mb, ib, jb, ioff, joff
         INTEGER :: iind, jind
         INTEGER,  PARAMETER :: bsiz = __BSIZ_VALUE
-        REAL*8 :: buf(bsiz, bsiz), bswp
+        REAL(8) :: buf(bsiz, bsiz), bswp
 
         if( n>ldx ) then
           write(6,fmt='("trasponi: inconsistent ldx and n")')
@@ -157,11 +157,11 @@
 
 
         INTEGER :: ldx, ldy, n, m, what
-        COMPLEX*16 :: x(ldx, m), y(ldy, n)
+        COMPLEX(8) :: x(ldx, m), y(ldy, n)
         INTEGER :: i, j, k, d, nb, mb, ib, jb, ioff, joff
         INTEGER :: iind, jind
         INTEGER,  PARAMETER :: bsiz = __BSIZ_VALUE / 2
-        COMPLEX*16 :: buf(bsiz, bsiz), bswp
+        COMPLEX(8) :: buf(bsiz, bsiz), bswp
 
         if( n>ldx ) then
           write(6,fmt='("trasponi: inconsistent ldx and n")')

@@ -55,7 +55,7 @@
     use ions_base,      only: ndofp, tions_base_init, nsp, nat, na
     real(DP), intent(in)  :: tempw_ , fnosep_(:) 
     integer, intent(in) :: nhpcl_ , nhptyp_ , ndega_ , nhgrp_(:)
-    integer :: nsvar, i, j, iat, is, ia
+    integer :: i, j, iat, is, ia
 
     IF( .NOT. tions_base_init ) &
       CALL errore(' ions_nose_init ', ' you should call ions_base_init first ', 1 )

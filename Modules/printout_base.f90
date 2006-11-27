@@ -35,7 +35,6 @@ CONTAINS
      INTEGER :: iunit, ierr
      CHARACTER(LEN=*), INTENT(IN) :: outdir
      CHARACTER(LEN=*), INTENT(IN) :: prefix
-     CHARACTER(LEN=256) :: file_name
 
 
      IF( prefix /= ' ' ) THEN

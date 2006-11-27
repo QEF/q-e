@@ -461,7 +461,7 @@
           INTEGER, INTENT(IN) :: group, nproc
           INTEGER, INTENT(IN) :: iopt, ldx, ldy, ldz
 
-          INTEGER :: i, j, k, is, nz, ns, mc1
+          INTEGER :: k, is, nz, ns, mc1
 
           nz = dfft%npp( me )
 

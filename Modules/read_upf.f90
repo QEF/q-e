@@ -160,7 +160,6 @@ subroutine scan_end (iunps, string)
   ! String read from file
   character (len=75) :: rstring
   logical, external :: matches
-  logical :: rew
 
   read (iunps, '(a)', end = 300, err = 300) rstring  
   if (matches ("</PP_"//string//">", rstring) ) return  
@@ -182,8 +181,7 @@ subroutine read_pseudo_header (upf, iunps)
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   integer :: iunps  
   !
-  integer :: is, ierr  
-  integer :: nb, nw  
+  integer :: nw  
   character (len=80) :: dummy  
   logical, external :: matches
 
@@ -236,7 +234,6 @@ subroutine read_pseudo_mesh (upf, iunps)
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
   integer :: ir
-  character (len=75) :: dummy  
 
   ALLOCATE( upf%r( 0:upf%mesh ), upf%rab( 0:upf%mesh ) )
   upf%r   = 0.0d0
@@ -294,7 +291,6 @@ subroutine read_pseudo_local (upf, iunps)
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
   integer :: ir
-  character (len=75) :: dummy
   !
   ALLOCATE( upf%vloc( 0:upf%mesh ) )
   upf%vloc = 0.0d0
@@ -320,7 +316,7 @@ subroutine read_pseudo_nl (upf, iunps)
   integer :: iunps  
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: nb, mb, n, ir, nd, ios, idum, ldum, icon, lp, i, ikk
+  integer :: nb, mb, n, ir, ios, idum, ldum, icon, lp, i, ikk
   ! counters
   character (len=75) :: dummy  
   !

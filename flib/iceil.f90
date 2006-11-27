@@ -5,13 +5,15 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-
+#if 0
+! CURRENTLY UNUSED. PLEASE REMOVE ON NEXT OCCASION.
+! AXEL KOHLMEYER. 2006-11-25
       integer function iceil(i,j)
 
       implicit none
 
       integer i,j
-      real*8 a
+      real(8) a
 
       a = DBLE(i)/DBLE(j)
    
@@ -19,4 +21,4 @@
 
       return
       end function iceil
-
+#endif

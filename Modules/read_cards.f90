@@ -428,7 +428,7 @@ MODULE read_cards_module
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=2)   :: prog
        CHARACTER(LEN=4)   :: lb_pos
-       INTEGER            :: ia, i, k, is, nfield, index, rep_i
+       INTEGER            :: ia, k, is, nfield, index, rep_i
        LOGICAL, EXTERNAL  :: matches
        LOGICAL            :: tend
        LOGICAL, SAVE      :: tread = .FALSE.

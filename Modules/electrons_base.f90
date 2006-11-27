@@ -513,7 +513,7 @@
 
       IMPLICIT NONE
 
-      INTEGER   :: nsvar, i
+      INTEGER   :: nsvar
       REAL(DP) :: wnosee
 
       IF( tnosee ) THEN

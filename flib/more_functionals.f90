@@ -14,11 +14,14 @@
 !     ==  THIS IS ONLY THE LDA PART                                   ==
 !     ==--------------------------------------------------------------==
       USE kinds, ONLY: DP
-      IMPLICIT REAL(DP) (A-H,O-Z), INTEGER (I-N)
-      REAL(DP) :: a, b, c, d, cf, small
-      PARAMETER (SMALL=1.D-24)
-      PARAMETER (A=0.04918D0,B=0.132D0,C=0.2533D0,D=0.349D0)
-      PARAMETER (CF=2.87123400018819108D0)
+!
+      IMPLICIT NONE
+!     arguments
+      REAL(DP) :: RHO,ETA,ELYP,VALYP,VBLYP
+!     locals
+      REAL(DP) :: RA,RB,RM3,DR,E1,OR,DOR,E2,DE1A,DE1B,DE2A,DE2B
+      REAL(DP), PARAMETER :: SMALL=1.D-24, A=0.04918D0, B=0.132D0, &
+                         C=0.2533D0, D=0.349D0, CF=2.87123400018819108D0
 !     ==--------------------------------------------------------------==
       RA=RHO*0.5D0*(1.D0+ETA)
       RA=MAX(RA,SMALL)
@@ -53,20 +56,21 @@
 !     ==  PADE APPROXIMATION                                          ==
 !     ==--------------------------------------------------------------==
       USE kinds, ONLY: DP
-      IMPLICIT REAL(DP) (A-H,O-Z), INTEGER (I-N)
-      REAL(DP) :: a0, a1, a2, a3, b1, b2, b3, b4
-      REAL(DP) :: da0, da1, da2, da3, db1, db2, db3, db4
-      REAL(DP) :: rsfac, fsfac
-      PARAMETER (A0=.4581652932831429d0,A1=2.217058676663745d0, &
-           A2=0.7405551735357053d0,A3=0.01968227878617998d0)
-      PARAMETER (B1=1.0D0,B2=4.504130959426697d0, &
-                 B3=1.110667363742916d0,B4=0.02359291751427506d0)
-      PARAMETER (DA0=.119086804055547D0,DA1=.6157402568883345d0, &
-                 DA2=.1574201515892867d0,DA3=.003532336663397157d0)
-      PARAMETER (DB1=0.0d0,DB2=.2673612973836267d0,  &
-                 DB3=.2052004607777787d0,DB4=.004200005045691381d0)
-      PARAMETER (RSFAC=.6203504908994000d0)
-      PARAMETER (FSFAC=1.92366105093153617d0)
+      IMPLICIT NONE
+!     arguments
+      REAL(DP) :: RHO,ETA,EC,VCA,VCB
+!     locals
+      REAL(DP) :: RS,FS,DFS,DFSA,DFSB,A0P,A1P,A2P,A3P,B1P,B2P,B3P,B4P
+      REAL(DP) :: TOP,DTOP,TOPX,BOT,DBOT,BOTX,VC,DX
+      REAL(DP), PARAMETER :: A0=.4581652932831429d0, A1=2.217058676663745d0, &
+                A2=0.7405551735357053d0, A3=0.01968227878617998d0
+      REAL(DP), PARAMETER :: B1=1.0D0, B2=4.504130959426697d0, &
+                 B3=1.110667363742916d0, B4=0.02359291751427506d0
+      REAL(DP), PARAMETER :: DA0=.119086804055547D0, DA1=.6157402568883345d0, &
+                 DA2=.1574201515892867d0, DA3=.003532336663397157d0
+      REAL(DP), PARAMETER :: DB1=0.0d0, DB2=.2673612973836267d0,  &
+                 DB3=.2052004607777787d0, DB4=.004200005045691381d0
+      REAL(DP), PARAMETER :: RSFAC=.6203504908994000d0, FSFAC=1.92366105093153617d0
 !     ==--------------------------------------------------------------==
       RS=RSFAC*RHO**(-1.d0/3.d0)
       FS=FSFAC*((1.d0+ETA)**(4.d0/3.d0)+(1.d0-ETA)**(4.d0/3.d0)-2.d0)
@@ -104,9 +108,14 @@
 !     ==--------------------------------------------------------------==
       USE kinds, ONLY: DP
 ! LEE, YANG PARR: GRADIENT CORRECTION PART
-      IMPLICIT REAL(DP) (A-H,O-Z), INTEGER (I-N)
-      REAL(DP) :: a, b, c, d
-      PARAMETER(A=0.04918D0,B=0.132D0,C=0.2533D0,D=0.349D0)
+      IMPLICIT NONE ! REAL(DP) (A-H,O-Z), INTEGER (I-N)
+!     arguments
+      REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB,SC, &
+                  V1CA,V2CA,V1CB,V2CB,V2CAB
+!     locals
+      REAL(DP) :: RHO,RM3,DR,OR,DOR,DER,DDER
+      REAL(DP) :: DLAA,DLAB,DLBB,DLAAA,DLAAB,DLABA,DLABB,DLBBA,DLBBB
+      REAL(DP), PARAMETER :: A=0.04918D0,B=0.132D0,C=0.2533D0,D=0.349D0
 !     ==--------------------------------------------------------------==
       RHO=RA+RB
       RM3=RHO**(-1.D0/3.D0)
@@ -1701,17 +1710,17 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
   real(DP), intent(in) :: rhor( nnr, nspin )
   real(DP) :: v( nnr, nspin )
   real(DP) :: etxc
-  integer :: ir, is, isup, isdw, k
-  real(DP) :: rho, rup, rdw, ex, ec, vx(2), vc(2)
-  real(DP) :: rh, grh2, zeta, vxup, vxdw, vcup, vcdw
-  real(DP) :: grho, sx, sc, v1x, v2x, v1c, v2c
+  integer :: ir, is, k
+  real(DP) :: rup, rdw, ex, ec, vx(2), vc(2)
+  real(DP) :: rh, grh2, zeta 
+  real(DP) :: sx, sc, v1x, v2x, v1c, v2c
   real(DP) :: rhox, arhox, e2, sx_dbg, sc_dbg
   real(DP) :: grho2(2), arho, segno
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw
   real(DP) :: v1cup, v1cdw
   real(DP) :: grhoup, grhodw, grhoud
   real(DP) :: v2cup, v2cdw, v2cud
-  integer :: neg(3), ipol
+  integer :: neg(3)
   real(DP), parameter :: epsr = 1.0d-10, epsg = 1.0d-10
   logical :: debug_xc = .false.
   logical :: igcc_is_lyp
@@ -1960,10 +1969,11 @@ end subroutine exch_corr_cp
 
 
       SUBROUTINE wrap_b88( rho, grho, sx, v1x, v2x )
+        USE kinds, ONLY: DP
         IMPLICIT NONE
-        REAL*8 ::  rho, grho, sx, v1x, v2x 
-        REAL*8 :: b1 = 0.0042d0
-        REAL*8 :: RHOA,RHOB,GRHOA,GRHOB, V1XA,V2XA,V1XB,V2XB
+        REAL(DP) ::  rho, grho, sx, v1x, v2x 
+        REAL(DP) :: b1 = 0.0042d0
+        REAL(DP) :: RHOA,RHOB,GRHOA,GRHOB, V1XA,V2XA,V1XB,V2XB
         rhoa = 0.5d0 * rho
         rhob = 0.5d0 * rho
         grhoa = 0.25d0 * grho
@@ -1974,10 +1984,11 @@ end subroutine exch_corr_cp
       END SUBROUTINE wrap_b88
 
       SUBROUTINE wrap_glyp( rho, grho, sc, v1c, v2c )
+        USE kinds, ONLY: DP
         IMPLICIT NONE
-        REAL*8 :: rho, grho, sc, v1c, v2c
-        REAL*8 :: RA,RB,GRHOAA,GRHOAB,GRHOBB
-        REAL*8 :: V1CA,V2CA,V1CB,V2CB,V2CAB
+        REAL(DP) :: rho, grho, sc, v1c, v2c
+        REAL(DP) :: RA,RB,GRHOAA,GRHOAB,GRHOBB
+        REAL(DP) :: V1CA,V2CA,V1CB,V2CB,V2CAB
         ra = rho * 0.5d0
         rb = rho * 0.5d0
         grhoaa = 0.25d0 * grho
@@ -1993,12 +2004,12 @@ end subroutine exch_corr_cp
       SUBROUTINE LSD_B88(B1,RHOA,RHOB,GRHOA,GRHOB,sx,V1XA,V2XA,V1XB,V2XB)
 !     ==--------------------------------------------------------------==
 ! BECKE EXCHANGE: PRA 38, 3098 (1988)
+      USE kinds, ONLY: DP
       IMPLICIT NONE
-      REAL*8 :: OB3, SMALL
-      REAL*8 :: xs, xs2, sa2b8, br1, br2, br4, ddd, gf, dgf, shm1, dd
-      REAL*8 :: dd2, grhoa, grhob, sx, b1, rhoa, rhob, v2xb, aa, a 
-      REAL*8 :: v1xa, v2xa, v1xb
-      PARAMETER(OB3=1.D0/3.D0,SMALL=1.D-20)
+      REAL(DP),PARAMETER :: OB3=1.D0/3.D0, SMALL=1.D-20
+      REAL(DP) :: xs, xs2, sa2b8, br1, br2, br4, ddd, gf, dgf, shm1, dd
+      REAL(DP) :: dd2, grhoa, grhob, sx, b1, rhoa, rhob, v2xb, aa, a 
+      REAL(DP) :: v1xa, v2xa, v1xb
 
 !     ==--------------------------------------------------------------==
       sx=0.0D0

@@ -1014,7 +1014,7 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER   :: nsvar, i
+      INTEGER   :: nsvar
       REAL(DP) :: wnoseh
 
       IF( tnoseh ) THEN

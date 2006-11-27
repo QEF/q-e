@@ -1118,7 +1118,6 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
-       CHARACTER(LEN=80) :: msg
        CHARACTER(LEN=20) :: sub_name = ' control_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1208,7 +1207,6 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
-       CHARACTER(LEN=80) :: msg
        CHARACTER(LEN=20) :: sub_name = ' system_checkin '
        !
        !
@@ -1341,7 +1339,6 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
-       CHARACTER(LEN=80) :: msg
        CHARACTER(LEN=20) :: sub_name = ' electrons_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1393,7 +1390,6 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
-       CHARACTER(LEN=80) :: msg
        CHARACTER(LEN=20) :: sub_name = ' ions_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1516,7 +1512,6 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
-       CHARACTER(LEN=80) :: msg
        CHARACTER(LEN=20) :: sub_name = ' cell_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
@@ -1599,7 +1594,6 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2)  :: prog   ! ... specify the calling program
-       CHARACTER(LEN=80) :: msg
        CHARACTER(LEN=20) :: sub_name = ' fixval '
        !
        !

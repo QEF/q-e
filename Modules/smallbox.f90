@@ -46,7 +46,6 @@
        USE io_global, ONLY: stdout
        IMPLICIT NONE
        REAL(DP), INTENT(IN) :: alat, omega, a1(3), a2(3), a3(3), rat1, rat2, rat3
-       INTEGER :: i
 
        alatb  = alat * rat1
        IF( alatb <= 0.0d0 ) CALL errore(' small_box_set ', ' alatb <= 0 ', 1 )

@@ -736,7 +736,7 @@ MODULE constraints_module
      END SUBROUTINE init_constraint
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE constraint_grad( index, nat, tau, &
+     SUBROUTINE constraint_grad( idx, nat, tau, &
                                  if_pos, ityp, tau_units, g, dg )
        !-----------------------------------------------------------------------
        !
@@ -745,7 +745,7 @@ MODULE constraints_module
        !
        IMPLICIT NONE
        !
-       INTEGER,  INTENT(IN)  :: index
+       INTEGER,  INTENT(IN)  :: idx
        INTEGER,  INTENT(IN)  :: nat
        REAL(DP), INTENT(IN)  :: tau(:,:)
        INTEGER,  INTENT(IN)  :: if_pos(:,:)
@@ -771,17 +771,17 @@ MODULE constraints_module
        !
        dg(:,:) = 0.D0
        !
-       SELECT CASE ( constr_type(index) )
+       SELECT CASE ( constr_type(idx) )
        CASE( 1 )
           !
           ! ... constraint on global coordination
           !
-          type_coord1 = ANINT( constr(1,index) )
-          type_coord2 = ANINT( constr(2,index) )
+          type_coord1 = ANINT( constr(1,idx) )
+          type_coord2 = ANINT( constr(2,idx) )
           !
-          r_c = constr(3,index)
+          r_c = constr(3,idx)
           !
-          smoothing = 1.D0 / constr(4,index)
+          smoothing = 1.D0 / constr(4,idx)
           !
           g = 0.D0
           !
@@ -821,18 +821,18 @@ MODULE constraints_module
           g  = g  / DBLE( n_type_coord1 )
           dg = dg / DBLE( n_type_coord1 )
           !
-          g = ( g - target(index) )
+          g = ( g - target(idx) )
           !
        CASE( 2 )
           !
           ! ... constraint on local coordination
           !
-          ia          = ANINT( constr(1,index) )
-          type_coord1 = ANINT( constr(2,index) )
+          ia          = ANINT( constr(1,idx) )
+          type_coord1 = ANINT( constr(2,idx) )
           !
-          r_c = constr(3,index)
+          r_c = constr(3,idx)
           !
-          smoothing = 1.D0 / constr(4,index)
+          smoothing = 1.D0 / constr(4,idx)
           !
           g = 0.D0
           !
@@ -859,20 +859,20 @@ MODULE constraints_module
              !
           END DO
           !
-          g = ( g - target(index) )
+          g = ( g - target(idx) )
           !
        CASE( 3 )
           !
           ! ... constraint on distances
           !
-          ia1 = ANINT( constr(1,index) )
-          ia2 = ANINT( constr(2,index) )
+          ia1 = ANINT( constr(1,idx) )
+          ia2 = ANINT( constr(2,idx) )
           !
           dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
           !
           norm_dtau = norm( dtau(:) )
           !
-          g = ( norm_dtau - target(index) )
+          g = ( norm_dtau - target(idx) )
           !
           dg(:,ia1) = dtau(:) / norm_dtau
           !
@@ -883,9 +883,9 @@ MODULE constraints_module
           ! ... constraint on planar angles (for the notation used here see
           ! ... Appendix C of the Allen-Tildesley book)
           !
-          ia0 = ANINT( constr(1,index) )
-          ia1 = ANINT( constr(2,index) )
-          ia2 = ANINT( constr(3,index) )
+          ia0 = ANINT( constr(1,idx) )
+          ia1 = ANINT( constr(2,idx) )
+          ia2 = ANINT( constr(3,idx) )
           !
           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
@@ -896,7 +896,7 @@ MODULE constraints_module
           !
           inv_den = 1.D0 / SQRT( C00 * C11 )
           !
-          g = ( C01 * inv_den - target(index) )
+          g = ( C01 * inv_den - target(idx) )
           !
           dg(:,ia0) = ( d1(:) - C01 / C00 * d0(:) ) * inv_den
           dg(:,ia2) = ( C01 / C11 * d1(:) - d0(:) ) * inv_den
@@ -907,10 +907,10 @@ MODULE constraints_module
           ! ... constraint on torsional angle (for the notation used here 
           ! ... see Appendix C of the Allen-Tildesley book)
           !
-          ia0 = ANINT( constr(1,index) )
-          ia1 = ANINT( constr(2,index) )
-          ia2 = ANINT( constr(3,index) )
-          ia3 = ANINT( constr(4,index) )
+          ia0 = ANINT( constr(1,idx) )
+          ia1 = ANINT( constr(2,idx) )
+          ia2 = ANINT( constr(3,idx) )
+          ia3 = ANINT( constr(4,idx) )
           !
           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
@@ -936,7 +936,7 @@ MODULE constraints_module
           !
           inv_den = 1.D0 / SQRT( D01 * D12 )
           !
-          g = ( ( C01 * C12 - C02 * C11 ) * inv_den - target(index) )
+          g = ( ( C01 * C12 - C02 * C11 ) * inv_den - target(idx) )
           !
           dg(:,ia0) = ( C12 * d1(:) - C11 * d2(:) - &
                         invD01 * fac * ( C11 * d0(:) - C01 * d1(:) ) ) * inv_den
@@ -956,9 +956,9 @@ MODULE constraints_module
           !
           ! ... constraint on structure factor at a given k vector
           !
-          k(1) = constr(1,index) * tpi / tau_units
-          k(2) = constr(2,index) * tpi / tau_units
-          k(3) = constr(3,index) * tpi / tau_units
+          k(1) = constr(1,idx) * tpi / tau_units
+          k(2) = constr(2,idx) * tpi / tau_units
+          k(3) = constr(3,idx) * tpi / tau_units
           !
           struc_fac = ( 1.D0, 0.D0 )
           !
@@ -991,7 +991,7 @@ MODULE constraints_module
           !
           g = ( CONJG( struc_fac ) * struc_fac ) / DBLE( nat*nat )
           !
-          g = ( g - target(index) )
+          g = ( g - target(idx) )
           !
           dg(:,:) = dg(:,:) * 2.D0 / DBLE( nat*nat )
           !
@@ -1000,7 +1000,7 @@ MODULE constraints_module
           ! ... constraint on spherical average of the structure factor for
           ! ... a given k-vector of norm k
           !
-          norm_k = constr(1,index) * tpi / tau_units
+          norm_k = constr(1,idx) * tpi / tau_units
           !
           g = 0.D0
           !
@@ -1039,7 +1039,7 @@ MODULE constraints_module
              !
           END DO
           !
-          g = ( 2.D0 * fpi * g / DBLE( nat ) - target(index) )
+          g = ( 2.D0 * fpi * g / DBLE( nat ) - target(idx) )
           !
           dg(:,:) = 4.D0 * fpi * dg(:,:) / DBLE( nat )
           !
@@ -1047,7 +1047,7 @@ MODULE constraints_module
           !
           ! ... constraint on Bennett projection
           !
-          ia0 = ANINT( constr(1,index) )
+          ia0 = ANINT( constr(1,idx) )
           !
           d0(:) = tau(:,ia0)
           d1(:) = SUM( tau(:,:), DIM = 2 )
@@ -1055,9 +1055,9 @@ MODULE constraints_module
           d1(:) = pbc( ( d1(:) - d0(:) )*tau_units ) / DBLE( nat - 1 ) - &
                   pbc( d0(:)*tau_units )
           !
-          d2(:) = constr(2:4,index)
+          d2(:) = constr(2:4,idx)
           !
-          g = ( d1(:) .dot. d2(:) ) / tau_units - target( index )
+          g = ( d1(:) .dot. d2(:) ) / tau_units - target( idx )
           !
           dg = 0.D0
           !
@@ -1109,7 +1109,7 @@ MODULE constraints_module
        REAL(DP), INTENT(IN)    :: dt
        REAL(DP), INTENT(IN)    :: massconv
        !
-       INTEGER               :: na, i, index, dim
+       INTEGER               :: na, i, idx, dim
        REAL(DP), ALLOCATABLE :: gp(:), dgp(:,:), dg0(:,:,:)
        REAL(DP)              :: g0
        REAL(DP)              :: lambda, fac, invdtsq
@@ -1130,31 +1130,31 @@ MODULE constraints_module
        !
        dim = 3*nat
        !
-       DO index = 1, nconstr
+       DO idx = 1, nconstr
           !
-          CALL constraint_grad( index, nat, tau0, &
-                                if_pos, ityp, tau_units, g0, dg0(:,:,index) )
+          CALL constraint_grad( idx, nat, tau0, &
+                                if_pos, ityp, tau_units, g0, dg0(:,:,idx) )
           !
        END DO
        !
        outer_loop: DO i = 1, maxiter
           !
-          inner_loop: DO index = 1, nconstr
+          inner_loop: DO idx = 1, nconstr
              !
-             ltest(index) = .FALSE.
+             ltest(idx) = .FALSE.
              !
-             CALL constraint_grad( index, nat, taup, &
-                                   if_pos, ityp, tau_units, gp(index), dgp )
+             CALL constraint_grad( idx, nat, taup, &
+                                   if_pos, ityp, tau_units, gp(idx), dgp )
              !
              ! ... check if gp = 0
              !
 #if defined (__DEBUG_CONSTRAINTS)
-             WRITE( stdout, '(2(2X,I3),F12.8)' ) i, index, ABS( gp(index) )
+             WRITE( stdout, '(2(2X,I3),F12.8)' ) i, idx, ABS( gp(idx) )
 #endif
              !
-             IF ( ABS( gp(index) ) < constr_tol ) THEN
+             IF ( ABS( gp(idx) ) < constr_tol ) THEN
                 !
-                ltest(index) = .TRUE.
+                ltest(idx) = .TRUE.
                 !
                 CYCLE inner_loop
                 !
@@ -1169,19 +1169,19 @@ MODULE constraints_module
                 !
              END DO
              !
-             lambda = gp(index) / DDOT( dim, dgp, 1, dg0(:,:,index), 1 )
+             lambda = gp(idx) / DDOT( dim, dgp, 1, dg0(:,:,idx), 1 )
              !
              DO na = 1, nat
                 !
                 fac = amass(ityp(na)) * massconv * tau_units
                 !
-                taup(:,na) = taup(:,na) - lambda * dg0(:,na,index) / fac
+                taup(:,na) = taup(:,na) - lambda * dg0(:,na,idx) / fac
                 !
              END DO
              !
-             lagrange(index) = lagrange(index) + lambda * invdtsq
+             lagrange(idx) = lagrange(idx) + lambda * invdtsq
              !
-             force(:,:) = force(:,:) - lambda * dg0(:,:,index) * invdtsq
+             force(:,:) = force(:,:) - lambda * dg0(:,:,idx) * invdtsq
 	     !
           END DO inner_loop
           !

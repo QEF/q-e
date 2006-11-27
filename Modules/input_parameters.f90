@@ -343,7 +343,7 @@ MODULE input_parameters
           ! may be fractionary in PW, but not in CP and FPMD !
 
         REAL(DP):: tot_charge = 0.0d0
-	  ! total system charge 
+          ! total system charge 
 
         INTEGER :: multiplicity = 0
           ! spin multiplicity (2s+1), 1 for singlet, 2 for doublet etc.
@@ -574,7 +574,7 @@ MODULE input_parameters
              noncolin, lspinorb, lambda, angle1, angle2, report, &
              constrained_magnetization, B_field, fixed_magnetization, &
              sic, sic_epsilon, force_pairing, sic_alpha, &
-	     tot_charge, multiplicity, tot_magnetization
+             tot_charge, multiplicity, tot_magnetization
 
 
 !=----------------------------------------------------------------------------=!

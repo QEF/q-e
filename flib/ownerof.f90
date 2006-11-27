@@ -52,7 +52,7 @@
 
        IMPLICIT NONE
 
-       INTEGER :: ig, nx, np, r, q
+       INTEGER :: ig, nx, np
 
        owner_cyclic = MOD( ig-1, np )
 

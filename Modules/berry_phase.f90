@@ -76,7 +76,7 @@
       integer in(8)
       integer, allocatable :: icnt_snd(:,:) ! icnt_snd(nproc_image,8)
       integer, allocatable :: icnt_rcv(:,:) ! icnt_rcv(nproc_image,8)
-      integer :: i, j, ig, itmp, in_l, igowner, igl, ngwt
+      integer :: i, j, ig, itmp, in_l, ngwt
 
 
       IF( ionode ) THEN
