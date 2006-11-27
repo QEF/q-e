@@ -3191,7 +3191,8 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   !
 #if defined (__XD1)
   !
-  CALL rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
+  CALL rep_matmul_drv( transa, transb, m, n, k, &
+                       alpha, a, lda, b, ldb, beta, c, ldc, comm )
   RETURN
   !
 #endif
@@ -3269,19 +3270,21 @@ SUBROUTINE para_zgemm( transa, transb, m, n, k, &
   COMPLEX(DP),      INTENT(INOUT) :: a(lda,*), b(ldb,*), c(ldc,*)
   INTEGER,          INTENT(IN)    :: comm
   !
-  COMPLEX(DP), PARAMETER :: ONE=(1.0_DP, 0.0_DP), ZERO=(0.0_DP, 0.0_DP) 
-  INTEGER              :: i, mpime, nproc, ierr
-  INTEGER              :: ncol, i0, i1
-  INTEGER, ALLOCATABLE :: i0a(:), i1a(:)
+  INTEGER                :: i, mpime, nproc, ierr
+  INTEGER                :: ncol, i0, i1
+  INTEGER, ALLOCATABLE   :: i0a(:), i1a(:)
+  !
+  COMPLEX(DP), PARAMETER :: ONE = (1.0_DP,0.0_DP), ZERO = ( 0.0_DP, 0.0_DP )
   !
   ! ... quick return if possible
   !
   IF ( m == 0 .OR. n == 0 .OR. &
        ( ( alpha == 0.D0 .OR. k == 0 ) .AND. beta == ONE ) ) RETURN
-
+  !
 #if defined (__XD1)
   !
-  CALL zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, comm )
+  CALL zrep_matmul_drv( transa, transb, m, n, k, &
+                        alpha, a, lda, b, ldb, beta, c, ldc, comm )
   RETURN
   !
 #endif
@@ -3451,7 +3454,7 @@ SUBROUTINE para_dgemv( trans, m, n, alpha, &
      !
      y(j) = ydum(i)
      !
-  END DO  
+  END DO
   !
   DEALLOCATE( ydum, i0a, i1a )
   !
@@ -3645,10 +3648,11 @@ SUBROUTINE para_zcholdc( n, a, lda, comm )
   COMPLEX(DP), INTENT(INOUT) :: a(lda,*)
   INTEGER,     INTENT(IN)    :: comm
   !
-  COMPLEX(DP), PARAMETER :: ONE=(1.0_DP, 0.0_DP), ZERO=(0.0_DP, 0.0_DP) 
   INTEGER               :: i, j
   REAL(DP)              :: aii
   COMPLEX(DP), EXTERNAL :: ZDOTC
+  !
+  COMPLEX(DP), PARAMETER :: ONE = (1.0_DP,0.0_DP), ZERO = ( 0.0_DP, 0.0_DP )
   !
   !
   DO i = 1, n
@@ -3703,9 +3707,10 @@ SUBROUTINE para_dtrtri( n, a, lda, comm )
   INTEGER,  INTENT(IN)    :: comm
   !
   INTEGER               :: i, j, k
-  INTEGER               :: i0, i1, dim, mpime, nproc, ierr
+  INTEGER               :: i0, i1, mpime, nproc, ierr
   INTEGER,  ALLOCATABLE :: i0a(:), i1a(:)
-  REAL(DP)              :: sum, area
+  REAL(DP)              :: an, xfrac
+  REAL(DP)              :: sum
   REAL(DP), ALLOCATABLE :: inva(:,:)
   !
   !
@@ -3721,27 +3726,22 @@ SUBROUTINE para_dtrtri( n, a, lda, comm )
   !
 #endif
   !
-  dim  = n
-  area = DBLE( n*n / 2 ) / DBLE( nproc )
-  !
   ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
   !
-  i0a(0) = 1
-  i1a(0) = 1 + ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
-  i1a(0) = MIN( i1a(0), n )
+  an = 1.D0 / DBLE( nproc )
   !
-  DO i = 1, nproc - 1
+  i0a(0) = 1
+  !
+  DO i = 0, nproc - 2
      !
-     dim = n - i1a(i-1)
+     xfrac = 1.D0 - SQRT( 1.D0 - DBLE( i+1 )*an )
      !
-     i0a(i) = i1a(i-1) + 1
-     !
-     i1a(i) = i1a(i-1) + &
-              ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
-     !
-     i1a(i) = MIN( i1a(i), n )
+     i1a(i)   = ANINT( xfrac*n )
+     i0a(i+1) = i1a(i) + 1
      !
   END DO
+  !
+  i1a(nproc-1) = n
   !
   i0 = i0a(mpime)
   i1 = i1a(mpime)
@@ -3777,7 +3777,11 @@ SUBROUTINE para_dtrtri( n, a, lda, comm )
   !
   DO i = 0 , nproc - 1
      !
+#if defined __XD1
+     CALL BCAST_REAL( a(1,i0a(i)), i1a(i)-i0a(i)+1, i, comm, ierr )
+#else
      CALL mp_bcast( a(1:n,i0a(i):i1a(i)), i, comm )
+#endif
      !
   END DO
   !
@@ -3793,7 +3797,7 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   !
   ! ... parallel inversion of a lower trinagular matrix done distributing
   ! ... by columns ( the number of columns assigned to each processor are
-  ! ... chosen to optimize the load balance )
+  ! ... chosen to optimize the load balance in the limit of large matrices )
   !
   USE kinds, ONLY : DP
   USE mp,    ONLY : mp_bcast
@@ -3801,18 +3805,19 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP), PARAMETER :: ONE=(1.0_DP, 0.0_DP), ZERO=(0.0_DP, 0.0_DP) 
   INTEGER,     INTENT(IN)    :: n
   INTEGER,     INTENT(IN)    :: lda
   COMPLEX(DP), INTENT(INOUT) :: a(lda,*)
   INTEGER,     INTENT(IN)    :: comm
   !
   INTEGER                  :: i, j, k
-  INTEGER                  :: i0, i1, dim, mpime, nproc, ierr
-  INTEGER,    ALLOCATABLE  :: i0a(:), i1a(:)
-  REAL(DP)                 :: area
+  INTEGER                  :: i0, i1, mpime, nproc, ierr
+  INTEGER,     ALLOCATABLE :: i0a(:), i1a(:)
+  REAL(DP)                 :: an, xfrac
   COMPLEX(DP)              :: sum
   COMPLEX(DP), ALLOCATABLE :: inva(:,:)
+  !
+  COMPLEX(DP), PARAMETER :: ONE = (1.0_DP,0.0_DP), ZERO = ( 0.0_DP, 0.0_DP )
   !
   !
 #if defined (__MPI)
@@ -3827,27 +3832,22 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   !
 #endif
   !
-  dim  = n
-  area = DBLE( n*n / 2 ) / DBLE( nproc )
-  !
   ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
   !
-  i0a(0) = 1
-  i1a(0) = 1 + ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
-  i1a(0) = MIN( i1a(0), n )
+  an = 1.D0 / DBLE( nproc )
   !
-  DO i = 1, nproc - 1
+  i0a(0) = 1
+  !
+  DO i = 0, nproc - 2
      !
-     dim = n - i1a(i-1)
+     xfrac = 1.D0 - SQRT( 1.D0 - DBLE( i+1 )*an )
      !
-     i0a(i) = i1a(i-1) + 1
-     !
-     i1a(i) = i1a(i-1) + &
-              ANINT( dim - SQRT( MAX( dim*dim - 2.D0*area, 0.D0 ) ) )
-     !
-     i1a(i) = MIN( i1a(i), n )
+     i1a(i)   = ANINT( xfrac*n )
+     i0a(i+1) = i1a(i) + 1
      !
   END DO
+  !
+  i1a(nproc-1) = n
   !
   i0 = i0a(mpime)
   i1 = i1a(mpime)
@@ -3883,11 +3883,7 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   !
   DO i = 0 , nproc - 1
      !
-#if defined __XD1
-     CALL BCAST_REAL( a( 1, i0a(i) ), i1a(i)-i0a(i)+1, i, comm, ierr )
-#else
      CALL mp_bcast( a(1:n,i0a(i):i1a(i)), i, comm )
-#endif
      !
   END DO
   !
@@ -3898,9 +3894,6 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
 END SUBROUTINE para_ztrtri
 
 !
-!
-!
-
 SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, dims, coor, comm )
    !
    !  Parallel square matrix multiplication with Cannon's algorithm
