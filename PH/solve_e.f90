@@ -313,6 +313,7 @@ subroutine solve_e
              iudrho,ipol,+1)
         call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
      enddo
+     IF (lnoloc) dvscfout(:,:,:)=(0.d0,0.d0)
      !
      !   mix the new potential with the old 
      !

@@ -80,7 +80,15 @@ subroutine dielec
   !
   !  and print the result
   !
-  WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
+  IF (lnoloc) THEN 
+      WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis (DV_Hxc=0)",/)')
+  ELSE IF (lrpa) THEN
+     WRITE( stdout, '(/,10x,"RPA dielectric constant in cartesian axis (DV_xc=0)",/)')
+  ELSE
+      WRITE( stdout, '(/,10x,"Dielectric constant in cartesian axis ",/)')
+  ENDIF
+
+ 
 
   WRITE( stdout, '(10x,"(",3f18.9," )")') ((epsilon(ipol,jpol), ipol=1,3), jpol=1,3)
   call stop_clock ('dielec')

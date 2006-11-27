@@ -50,6 +50,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! the exchange-correlation contribution is computed in real space
   !
   dvaux (:,:) = (0.d0, 0.d0)
+  if (lrpa) goto 111
 
   fac = 1.d0 / DBLE (nspin)
   if (nlcc_any.and.flag) then
@@ -80,6 +81,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif
+111 continue
   !
   ! copy the total (up+down) delta rho in dvscf(*,1) and go to G-space
   !

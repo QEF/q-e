@@ -33,7 +33,7 @@ SUBROUTINE phq_readin()
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
                             zue, trans, &
                             elph, tr2_ph, niter_ph, nmix_ph, maxirr, lnscf, &
-                            ldisp, recover
+                            ldisp, recover, lrpa, lnoloc
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
@@ -71,7 +71,7 @@ SUBROUTINE phq_readin()
                        prefix, fildyn, filelph, fildvscf, fildrho,   &
                        lnscf, ldisp, nq1, nq2, nq3,                  &
                        eth_rps, eth_ns, lraman, elop, dek, recover, &
-                       fpol, asr
+                       fpol, asr, lrpa, lnoloc
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
   ! alpha_mix    : the mixing parameter
@@ -128,6 +128,8 @@ SUBROUTINE phq_readin()
   nrapp        = 0
   iverbosity   = 0
   trans        = .TRUE.
+  lrpa         = .FALSE.
+  lnoloc       = .FALSE.
   epsil        = .FALSE.
   zue          = .FALSE.
   fpol         = .FALSE.
@@ -194,6 +196,9 @@ SUBROUTINE phq_readin()
        'gamma is needed for elec.field', 1)
   IF (zue.AND..NOT.trans) CALL errore ('phq_readin', 'trans must be &
        &.t. for Zue calc.', 1)
+
+  IF (trans.AND.(lrpa.OR.lnoloc)) CALL errore('phq_readin', &
+                    'only dielectric constant with lrpa or lnoloc',1)
   !
   ! reads the frequencies ( just if fpol = .true. )
   !

@@ -263,6 +263,9 @@ MODULE control_ph
   ! CPU time up to now
   ! the alpha value for shifting the bands
   LOGICAL :: lgamma, lgamma_gamma, convt, epsil, trans, elph, zue, recover, &
+             lrpa, &       !  if .TRUE. calculates the RPA dielectric constant
+             lnoloc, &     !  if .TRUE. calculates the dielectric constant
+                           !  neglecting local field effects
              search_sym    !  if .TRUE. search the mode symmetry
   ! lgamma: if .TRUE. this is a q=0 computation
   ! lgamma_gamma: if .TRUE. this is a q=0 computation with k=0 only 

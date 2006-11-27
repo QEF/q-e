@@ -45,6 +45,12 @@ epsil       if .true. in a q=0 calculation for a non metal the      .false.
             computed. Do not set epsil to .true. if you have a
             metallic system or q/=0: the code will complain and stop
 
+lrpa        if .true. the dielectric constant is calculated at the  .false.
+            RPA level with DV_xc=0.
+
+lnoloc      if .true. the dielectric constant is calculated without .false.
+            local fields, i.e. by setting DV_H=0 and DV_xc=0. 
+
 trans       if .true. the phonons are computed                      .true.
             If trans.and.epsil effective charges are calculated            
 

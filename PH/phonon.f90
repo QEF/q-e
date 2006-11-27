@@ -32,7 +32,8 @@ PROGRAM phonon
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
-                              epsil, trans, elph, zue, recover, maxirr, irr0
+                              epsil, trans, elph, zue, recover, maxirr, irr0, &
+                              lnoloc, lrpa
   USE freq_ph
   USE output,          ONLY : fildyn, fildrho
   USE global_version,  ONLY : version_number
@@ -307,7 +308,7 @@ PROGRAM phonon
            !
            ! ... calculate the effective charges Z(E,Us) (E=scf,Us=bare)
            !
-           CALL zstar_eu()
+           IF (.NOT.(lrpa.OR.lnoloc)) CALL zstar_eu()
            !
            IF ( fildrho /= ' ' ) CALL punch_plot_e()
            !
