@@ -814,7 +814,7 @@ MODULE pw_restart
       CHARACTER(LEN=*), INTENT(IN)  :: what
       INTEGER,          INTENT(OUT) :: ierr
       !
-      CHARACTER(LEN=256) :: dirname      
+      CHARACTER(LEN=256) :: dirname
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, &
                             lxc, locc, lbz, lbs, lwfc, &
                             lsymm, lph, lrho, lefield

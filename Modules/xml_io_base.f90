@@ -540,11 +540,11 @@ MODULE xml_io_base
       !
       ! ... get the maximum index within the pool
       !
-      CALL mp_max( igwx, intra_pool_comm ) 
+      CALL mp_max( igwx, intra_pool_comm )
       !
       ! ... now notify all procs if an error has been found 
       !
-      CALL mp_max( ierr, intra_image_comm ) 
+      CALL mp_max( ierr, intra_image_comm )
       !
       CALL errore( 'set_kpoint_vars ', 'wrong size ngl', ierr )
       !
@@ -1448,11 +1448,13 @@ MODULE xml_io_base
                              nproc_pool, root_pool, intra_pool_comm )
             !
             IF ( ipsour /= ionode_id ) &
-               CALL mp_get( wtmp, wtmp, me_image, ionode_id, ipsour, j, intra_image_comm )
+               CALL mp_get( wtmp, wtmp, me_image, &
+                            ionode_id, ipsour, j, intra_image_comm )
             !
          ELSE
             !
-            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, me_image, nproc_image, ionode_id, intra_image_comm )
+            CALL mergewf( wf0(:,j), wtmp, ngwl, igl, &
+                          me_image, nproc_image, ionode_id, intra_image_comm )
             !
          END IF
          !
@@ -1562,9 +1564,10 @@ MODULE xml_io_base
             END IF
             !
             IF ( npool > 1 ) THEN
-               
+               !
                IF ( ipdest /= ionode_id ) &
-                  CALL mp_put( wtmp, wtmp, me_image, ionode_id, ipdest, j, intra_image_comm )
+                  CALL mp_put( wtmp, wtmp, me_image, &
+                               ionode_id, ipdest, j, intra_image_comm )
                !
                IF ( ( ikt >= iks ) .AND. ( ikt <= ike ) ) &
                   CALL splitwf( wf(:,j), wtmp, ngwl, igl, me_pool, &
@@ -1572,7 +1575,8 @@ MODULE xml_io_base
                !
             ELSE
                !
-               CALL splitwf( wf(:,j), wtmp, ngwl, igl, me_image, nproc_image, ionode_id, intra_image_comm )
+               CALL splitwf( wf(:,j), wtmp, ngwl, igl, &
+                             me_image, nproc_image, ionode_id, intra_image_comm )
                !
             END IF
             !
