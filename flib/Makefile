@@ -12,7 +12,6 @@ erf.o \
 functionals.o \
 lsda_functionals.o \
 more_functionals.o \
-iceil.o \
 iglocal.o \
 inpfile.o \
 int_to_char.o \
