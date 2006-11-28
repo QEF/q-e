@@ -725,7 +725,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
              ind0, ios 
   REAL(DP) :: jj
   REAL(DP), ALLOCATABLE :: e (:)
-  COMPLEX(DP), ALLOCATABLE :: wfcatom_nc (:,:,:)
+  COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:)
   COMPLEX(DP), ALLOCATABLE :: overlap(:,:), work(:,:),work1(:), proj0(:,:)
   ! Some workspace for k-point calculation ... 
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
@@ -821,8 +821,8 @@ SUBROUTINE projwave_nc(filproj, lsym )
   IF (lmax_wfc > 3) CALL errore ('projwave_nc', 'l > 3 not yet implemented', 1)
   IF (nwfc /= natomwfc) CALL errore ('projwave_nc','wrong # of atomic wfcs?',1)
   !
-  ALLOCATE(wfcatom_nc (npwx, npol, natomwfc) )
-  IF (.NOT. lda_plus_u) ALLOCATE(swfcatom_nc (npwx, npol, natomwfc ) )  
+  ALLOCATE(wfcatom (npwx, npol*natomwfc) )
+  IF (.NOT. lda_plus_u) ALLOCATE(swfcatom (npwx*npol, natomwfc ) )  
   ALLOCATE (becp_nc ( nkb, npol, natomwfc)) 
   ALLOCATE(e (natomwfc) )  
   ALLOCATE(work (natomwfc, natomwfc) )
@@ -856,24 +856,24 @@ SUBROUTINE projwave_nc(filproj, lsym )
   ENDIF   
   ! 
   DO ik = 1, nks  
-     wfcatom_nc= (0.d0,0.d0)
-     swfcatom_nc= (0.d0,0.d0)
+     wfcatom = (0.d0,0.d0)
+     swfcatom= (0.d0,0.d0)
      CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin) 
      CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
      ! 
-     CALL atomic_wfc_nc_proj (ik, wfcatom_nc)
+     CALL atomic_wfc_nc_proj (ik, wfcatom)
      ! 
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
  
-     CALL ccalbec_nc (nkb, npwx, npw, npol, natomwfc, becp_nc, vkb, wfcatom_nc)
+     CALL ccalbec_nc (nkb, npwx, npw, npol, natomwfc, becp_nc, vkb, wfcatom)
  
-     CALL s_psi_nc (npwx, npw, natomwfc, wfcatom_nc, swfcatom_nc) 
+     CALL s_psi_nc (npwx, npw, natomwfc, wfcatom, swfcatom) 
      ! 
-     ! wfcatom_nc = |phi_i> , swfcatom_nc = \hat S |phi_i> 
+     ! wfcatom = |phi_i> , swfcatom = \hat S |phi_i> 
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j> 
      ! 
-     CALL ZGEMM ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom_nc, & 
-       npwx*npol, swfcatom_nc, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
+     CALL ZGEMM ('C', 'N', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), wfcatom, & 
+       npwx*npol, swfcatom, npwx*npol, (0.d0, 0.d0), overlap, natomwfc)
      CALL reduce (2 * natomwfc * natomwfc, overlap)
      ! 
      ! calculate O^{-1/2} 
@@ -892,14 +892,14 @@ SUBROUTINE projwave_nc(filproj, lsym )
         ENDDO 
      ENDDO
      ! 
-     ! calculate wfcatom_nc = O^{-1/2} \hat S | phi> 
+     ! calculate wfcatom = O^{-1/2} \hat S | phi> 
      ! 
      CALL ZGEMM ('n', 't', npwx*npol, natomwfc, natomwfc, (1.d0, 0.d0) , & 
-     swfcatom_nc, npwx*npol,  overlap, natomwfc, (0.d0, 0.d0), wfcatom_nc, npwx*npol) 
+     swfcatom, npwx*npol,  overlap, natomwfc, (0.d0, 0.d0), wfcatom, npwx*npol) 
      ! 
      ! make the projection <psi_i| O^{-1/2} \hat S | phi_j> 
      !
-     CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom_nc, & 
+     CALL ZGEMM ('C','N',natomwfc, nbnd, npwx*npol, (1.d0, 0.d0), wfcatom, & 
                  npwx*npol, evc, npwx*npol, (0.d0, 0.d0), proj0, natomwfc)
      CALL reduce (2 * natomwfc * nbnd, proj0)
      !
@@ -1056,8 +1056,8 @@ SUBROUTINE projwave_nc(filproj, lsym )
   DEALLOCATE (e)
   DEALLOCATE (becp_nc)
   DEALLOCATE (overlap) 
-  DEALLOCATE (wfcatom_nc) 
-  IF (.NOT. lda_plus_u) DEALLOCATE (swfcatom_nc) 
+  DEALLOCATE (wfcatom) 
+  IF (.NOT. lda_plus_u) DEALLOCATE (swfcatom) 
   ! 
   !   vectors et and proj are distributed across the pools 
   !   collect data for all k-points to the first pool

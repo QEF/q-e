@@ -506,8 +506,7 @@ MODULE ldaU
   SAVE
   !
   COMPLEX(DP), ALLOCATABLE :: &
-       swfcatom(:,:),   &      ! orthogonalized atomic wfcs
-       swfcatom_nc(:,:,:)      ! orthogonalized atomic wfcs noncollinear case
+       swfcatom(:,:)           ! orthogonalized atomic wfcs
   REAL(DP), ALLOCATABLE :: &
        ns(:,:,:,:),          &! the occupation matrix used in h_psi
        nsnew(:,:,:,:)         ! the occupation matrix computed by at

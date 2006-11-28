@@ -53,6 +53,9 @@ COMMON
 
 PW
 
+- real matrices with inversion symmetry (Dario)
+- Add option to prevent writing the final file (Dario)
+
 - Add option to avoid reading/writing wfc all the time,
   keep everything in memory
 

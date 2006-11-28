@@ -20,7 +20,7 @@ SUBROUTINE allocate_wfc()
   USE basis,     ONLY : natomwfc
   USE gvect,     ONLY : ngl
   USE uspp,      ONLY : nkb
-  USE ldaU,                 ONLY : swfcatom, lda_plus_u
+  USE ldaU,      ONLY : swfcatom, lda_plus_u
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   !
@@ -29,14 +29,12 @@ SUBROUTINE allocate_wfc()
   !
   IF (noncolin) THEN
      ALLOCATE( evc( npwx*npol, nbnd ) )    
+     IF ( lda_plus_u ) ALLOCATE( swfcatom( npwx*npol, natomwfc) )    
   ELSE
      ALLOCATE( evc( npwx, nbnd ) )    
+     IF ( lda_plus_u ) ALLOCATE( swfcatom( npwx, natomwfc) )    
   ENDIF
   !
-  ! ... needed for LDA+U
-  !
-  IF ( lda_plus_u ) ALLOCATE( swfcatom( npwx, natomwfc) )    
-  !  
   WRITE( stdout, 100) nbndx, nbnd, natomwfc, npwx, nelec, nkb, ngl
   IF (two_fermi_energies) WRITE( stdout, 101) nelup, neldw
   !

@@ -22,7 +22,7 @@ SUBROUTINE orthoatwfc
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk
-  USE ldaU,       ONLY : swfcatom, swfcatom_nc, U_projection
+  USE ldaU,       ONLY : swfcatom, U_projection
   USE wvfct,      ONLY : npwx, npw, igk, gamma_only
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : becp, rbecp, becp_nc
@@ -43,14 +43,12 @@ SUBROUTINE orthoatwfc
      
   COMPLEX(DP) :: temp, t (5)
   COMPLEX(DP) , ALLOCATABLE :: wfcatom (:,:), work (:,:), overlap (:,:)
-  COMPLEX(DP), ALLOCATABLE :: wfcatom_nc(:,:,:)
   REAL(DP) , ALLOCATABLE :: e (:)
 
   t0 = scnds ()
   
   IF (noncolin) THEN
-     ALLOCATE (wfcatom_nc( npwx, npol, natomwfc))    
-     wfcatom_nc=(0.D0,0.D0)
+     ALLOCATE (wfcatom( npwx*npol, natomwfc))    
   ELSE
      ALLOCATE (wfcatom( npwx, natomwfc))    
   END IF
@@ -99,18 +97,14 @@ SUBROUTINE orthoatwfc
      work(:,:) = (0.d0,0.d0)
      
      IF (noncolin) THEN
-        CALL atomic_wfc_nc (ik, wfcatom_nc)
+        CALL atomic_wfc_nc (ik, wfcatom)
      ELSE
         CALL atomic_wfc (ik, wfcatom)
      END IF
      !
      ! write atomic wfc on unit iunat
      !
-     IF (noncolin) THEN
-        CALL davcio (wfcatom_nc, nwordatwfc, iunat, ik, 1)
-     ELSE
-        CALL davcio (wfcatom, nwordatwfc, iunat, ik, 1)
-     ENDIF
+     CALL davcio (wfcatom, nwordatwfc, iunat, ik, 1)
      
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      
@@ -119,14 +113,14 @@ SUBROUTINE orthoatwfc
              wfcatom, npwx, rbecp, nkb) 
      ELSE
         IF (noncolin) THEN
-           CALL ccalbec_nc(nkb,npwx,npw,npol,natomwfc,becp_nc,vkb,wfcatom_nc)
+           CALL ccalbec_nc(nkb,npwx,npw,npol,natomwfc,becp_nc,vkb,wfcatom)
         ELSE
            CALL ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
         END IF
      ENDIF
 
      IF (noncolin) THEN
-        CALL s_psi_nc (npwx, npw, natomwfc, wfcatom_nc, swfcatom_nc)
+        CALL s_psi_nc (npwx, npw, natomwfc, wfcatom, swfcatom)
      ELSE
         CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom)
      ENDIF
@@ -137,10 +131,10 @@ SUBROUTINE orthoatwfc
      !
      IF (noncolin) THEN
         CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npwx*npol, (1.d0, 0.d0), &
-         wfcatom_nc,npwx,swfcatom_nc,npwx,(0.d0,0.d0),overlap,natomwfc)
+             wfcatom, npwx, swfcatom, npwx, (0.d0,0.d0), overlap, natomwfc)
      ELSE
-         CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0) , &
-             wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0) , overlap, natomwfc)
+         CALL ZGEMM ('c', 'n', natomwfc, natomwfc, npw, (1.d0, 0.d0), &
+             wfcatom, npwx, swfcatom, npwx, (0.d0, 0.d0), overlap, natomwfc)
      END IF
 #ifdef __PARA
      CALL reduce (2 * natomwfc * natomwfc, overlap)
@@ -177,10 +171,11 @@ SUBROUTINE orthoatwfc
         work(:,1) = (0.d0,0.d0)
         IF (noncolin) THEN
            DO ipol=1,npol
+              j = i + (ipol-1)*npwx
               CALL ZGEMV ('n',natomwfc,natomwfc,(1.d0,0.d0),overlap, &
-                   natomwfc,swfcatom_nc(i,ipol,1),npwx*npol, &
+                   natomwfc,swfcatom(j,1),npwx*npol, &
                                        (0.d0,0.d0),work,1)
-              CALL ZCOPY (natomwfc,work,1,swfcatom_nc(i,ipol,1),npwx*npol)
+              CALL ZCOPY (natomwfc,work,1,swfcatom(j,1),npwx*npol)
            END DO
         ELSE
            CALL ZGEMV ('n', natomwfc, natomwfc, (1.d0, 0.d0) , overlap, &
@@ -192,23 +187,15 @@ SUBROUTINE orthoatwfc
    END IF ! orthogonalize_wfc
 
      !
-     ! write S * atomic wfc on unit iunsat
+     ! write S * atomic wfc to unit iunsat
      !
-     IF (noncolin) THEN
-        CALL davcio (swfcatom_nc, nwordatwfc, iunsat, ik, 1)
-     ELSE
-        CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
-     ENDIF
+     CALL davcio (swfcatom, nwordatwfc, iunsat, ik, 1)
      
   ENDDO
   DEALLOCATE (overlap)
   DEALLOCATE (work)
   DEALLOCATE (e)
-  IF (noncolin) THEN
-     DEALLOCATE (wfcatom_nc)
-  ELSE
-     DEALLOCATE (wfcatom)
-  END IF
+  DEALLOCATE (wfcatom)
   IF ( gamma_only ) THEN 
      DEALLOCATE (rbecp) 
   ELSE
