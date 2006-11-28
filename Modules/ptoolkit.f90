@@ -2512,7 +2512,7 @@ SUBROUTINE matmerge_drv( m, k, a, lda, ar, ldar, nb, dims, coor, comm )
   INTEGER :: jsrc, isrc, ipsrc, coosrc(2)
   INTEGER :: nmb, nkb, nk, nm, mpime
 
-  REAL*8, ALLOCATABLE :: buf(:,:)
+  REAL(DP), ALLOCATABLE :: buf(:,:)
   !
   INTEGER  :: INDXG2L
   EXTERNAL :: INDXG2L
@@ -2648,9 +2648,9 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
   integer :: nnb, nmb, nkb 
   integer :: nr, nra, nca, nc, nrb, ncb, ii, jj
   integer :: nrt, ncat, nct, nrbt
-  real*8, allocatable :: abuf(:,:), bbuf(:,:)
-  real*8, allocatable :: at(:,:)
-  real*8, allocatable :: bt(:,:)
+  real(DP), allocatable :: abuf(:,:), bbuf(:,:)
+  real(DP), allocatable :: at(:,:)
+  real(DP), allocatable :: bt(:,:)
   !
   integer :: numroc
   integer :: indxg2l
@@ -2864,8 +2864,8 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
   INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
   INTEGER :: nproc, mpime, q, r
 
-  REAL*8, ALLOCATABLE :: auxa( : )
-  REAL*8, ALLOCATABLE :: auxc( : )
+  REAL(8), ALLOCATABLE :: auxa( : )
+  REAL(8), ALLOCATABLE :: auxc( : )
 
   !
   ! ... BODY
@@ -3898,13 +3898,15 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
+   USE kinds,     ONLY : DP
+   !
    IMPLICIT NONE
    !
    CHARACTER(LEN=1), INTENT(IN) :: transa, transb
    INTEGER, INTENT(IN) :: n
-   REAL*8, INTENT(IN) :: alpha, beta
+   REAL(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
-   REAL*8 :: a(lda,*), b(ldb,*), c(ldc,*)
+   REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
    INTEGER, INTENT(IN) :: dims(2), coor(2)
    INTEGER, INTENT(IN) :: comm
    !
@@ -3929,7 +3931,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    integer :: i, j, nr, nc, nb, iter, rowid, colid
    logical :: ta, tb
    !
-   real*8, allocatable :: bblk(:,:), ablk(:,:)
+   real(DP), allocatable :: bblk(:,:), ablk(:,:)
    !
 #if defined (__MPI)
    !
@@ -4038,7 +4040,7 @@ CONTAINS
       !   Block shift 
       !
       IMPLICIT NONE
-      REAL*8 :: blk( :, : )
+      REAL(DP) :: blk( :, : )
       CHARACTER(LEN=1), INTENT(IN) :: dir      ! shift direction
       INTEGER,          INTENT(IN) :: ln       ! shift lenght
       INTEGER,          INTENT(IN) :: tag      ! communication tag
@@ -4101,7 +4103,7 @@ CONTAINS
       !   only used for the first step
       !
       IMPLICIT NONE
-      REAL*8 :: blk( :, : )
+      REAL(DP) :: blk( :, : )
       CHARACTER(LEN=1), INTENT(IN) :: dir
       INTEGER,          INTENT(IN) :: tag
       !
@@ -4163,7 +4165,7 @@ CONTAINS
       !   Block exchange ( transpose )
       !
       IMPLICIT NONE
-      REAL*8 :: blk( :, : )
+      REAL(DP) :: blk( :, : )
       !
       INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
       !
@@ -4195,11 +4197,13 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, dims, coor, comm )
    !
    !  Parallel square matrix transposition with Cannon's algorithm
    !
+   USE kinds,     ONLY : DP
+   !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
-   REAL*8              :: a(lda,*), b(ldb,*)
+   REAL(DP)            :: a(lda,*), b(ldb,*)
    INTEGER, INTENT(IN) :: dims(2), coor(2)
    INTEGER, INTENT(IN) :: comm
    !
@@ -4213,7 +4217,7 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, dims, coor, comm )
    INTEGER :: np, rowid, colid
    INTEGER :: i, j, nr, nc, nb
    !
-   REAL*8, ALLOCATABLE :: ablk(:,:)
+   REAL(DP), ALLOCATABLE :: ablk(:,:)
    !
 #if defined (__MPI)
    !
@@ -4273,7 +4277,7 @@ CONTAINS
       !   Block exchange ( transpose )
       !
       IMPLICIT NONE
-      REAL*8 :: blk( :, : )
+      REAL(DP) :: blk( :, : )
       !
       INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
       !
@@ -4307,11 +4311,13 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, dims, coor, com
    !  A (input) is cyclically distributed by rows across processors
    !  B (output) is distributed by block across 2D processors grid
    !
+   USE kinds,     ONLY : DP
+   !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
-   REAL*8 :: a(lda,*), b(ldb,*)
+   REAL(DP) :: a(lda,*), b(ldb,*)
    INTEGER, INTENT(IN) :: nproc, me, dims(2), coor(2)
    INTEGER, INTENT(IN) :: comm_a, comm_b
    !
@@ -4326,8 +4332,8 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, dims, coor, com
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
    !
-   real*8, allocatable :: rcvbuf(:,:,:)
-   real*8, allocatable :: sndbuf(:,:,:)
+   real(DP), allocatable :: rcvbuf(:,:,:)
+   real(DP), allocatable :: sndbuf(:,:,:)
    integer, allocatable :: irhand(:)
    integer, allocatable :: ishand(:)
    logical, allocatable :: rtest(:), rdone(:)
