@@ -85,7 +85,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   logical :: verb, test_new_preconditioning_nc 
   ! controlling verbosity of printout
   complex(DP), external ::  ZDOTC
-  external h_1psi_nc, cdiagh
+  external h_1psi, cdiagh
 
   call start_clock ('diis')
 
@@ -143,7 +143,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      !
      !     calculate hpsi=H|psi_1> and spsi=S|psi_1> 
      !
-     call h_1psi_nc (ndmx, ndim, npol, psi(1,1,nbase), hpsi(1,1,nbase), &
+     call h_1psi (ndmx, ndim, psi(1,1,nbase), hpsi(1,1,nbase), &
                   spsi(1,1,nbase))
      !  
      !     calculate the first element of the reduced hamiltonian 
@@ -236,7 +236,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      !
      !     calculate hpsi=H|psi> and spsi=S|psi> 
      !
-        call h_1psi_nc (ndmx, ndim, npol, psi(1,1,nbase), hpsi(1,1,nbase), &
+        call h_1psi (ndmx, ndim, psi(1,1,nbase), hpsi(1,1,nbase), &
                      spsi(1,1,nbase))
      !
      !     orthogonalize

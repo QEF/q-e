@@ -78,17 +78,9 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
   !
   DO m = 1, nstart
      !
-     IF ( noncolin ) THEN
-        !
-        CALL h_1psi_nc( ndmx, ndim, npol, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
-        IF(lelfield) call h_epsi_her(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
-        !
-     ELSE
-        !
-        CALL h_1psi( ndmx, ndim, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
-        IF(lelfield) call h_epsi_her(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
-        !
-     END IF
+     CALL h_1psi( ndmx, ndim, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
+     !
+     IF(lelfield) call h_epsi_her(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
      !
      CALL DGEMV( 'T', kdim2, 2, 1.D0, aux(1,1,1), &
                  kdmx2, psi(1,1,m), 1, 0.D0, rtmp, 1 )

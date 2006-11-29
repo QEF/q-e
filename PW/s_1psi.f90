@@ -6,21 +6,21 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE s_1psi( lda, n, psi, spsi )
+SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !----------------------------------------------------------------------------
   !
   ! ... spsi = S*psi for one wavefunction
   ! ... Wrapper routine - calls ccalbec and s_psi
   !
   USE kinds,  ONLY : DP
-  USE wvfct,  ONLY : npwx
   USE uspp,   ONLY : vkb, nkb
   USE wvfct,  ONLY : gamma_only
-  USE becmod, ONLY : becp, rbecp
+  USE becmod, ONLY : becp, rbecp, becp_nc
+  USE noncollin_module, ONLY : noncolin, npol
   !
   IMPLICIT NONE
   !
-  INTEGER          :: lda, n
+  INTEGER          :: npwx, n
   COMPLEX(DP) :: psi(n), spsi(n)
   !
   !
@@ -32,11 +32,27 @@ SUBROUTINE s_1psi( lda, n, psi, spsi )
      !
   ELSE
      !
-     CALL ccalbec( nkb, npwx, n, 1, becp, vkb, psi )
+     IF ( noncolin ) THEN
+        !
+        CALL ccalbec_nc( nkb, npwx, n, npol, 1, becp_nc, vkb, psi )
+        !
+     ELSE
+        !
+        CALL ccalbec( nkb, npwx, n, 1, becp, vkb, psi )
+        !
+     END IF
      !
   END IF 
   !
-  CALL s_psi( lda, n, 1, psi, spsi )
+  IF ( noncolin ) THEN
+     !
+     CALL s_psi_nc( npwx, n, 1, psi, spsi )
+     !
+  ELSE
+     !
+     CALL s_psi( npwx, n, 1, psi, spsi )
+     !
+  END IF
   !
   CALL stop_clock( 's_1psi' )
   !

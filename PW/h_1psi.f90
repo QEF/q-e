@@ -15,6 +15,7 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   ! ... Wrapper routine - calls h_psi and s_psi
   !
   USE kinds, ONLY : DP
+  USE noncollin_module, ONLY: noncolin
   !
   IMPLICIT NONE
   !
@@ -24,8 +25,17 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   !
   CALL start_clock( 'h_1psi' )
   !
-  CALL h_psi( lda, n, 1, psi, hpsi )
-  CALL s_psi( lda, n, 1, psi, spsi )
+  IF ( noncolin) THEN
+     !
+     CALL h_psi_nc( lda, n, 1, psi, hpsi )
+     CALL s_psi_nc( lda, n, 1, psi, spsi )
+     !
+  ELSE
+     !
+     CALL h_psi( lda, n, 1, psi, hpsi )
+     CALL s_psi( lda, n, 1, psi, spsi )
+     !
+  END IF
   !
   CALL stop_clock( 'h_1psi' )
   !

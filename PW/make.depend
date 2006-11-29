@@ -140,8 +140,6 @@ ccalbec.o : pwcom.o
 ccalbec_nc.o : ../Modules/kind.o
 ccgdiagg.o : ../Modules/constants.o
 ccgdiagg.o : ../Modules/kind.o
-ccgdiagg.o : ../Modules/uspp.o
-ccgdiagg.o : becmod.o
 ccgdiagg.o : noncol.o
 ccgdiagg.o : pwcom.o
 cdiagh.o : ../Modules/control_flags.o
@@ -467,7 +465,7 @@ gradcorr.o : ../Modules/wavefunctions.o
 gradcorr.o : pwcom.o
 gweights.o : ../Modules/kind.o
 h_1psi.o : ../Modules/kind.o
-h_1psi_nc.o : ../Modules/kind.o
+h_1psi.o : noncol.o
 h_epsi_her.o : ../Modules/cell_base.o
 h_epsi_her.o : ../Modules/constants.o
 h_epsi_her.o : ../Modules/io_files.o
@@ -576,6 +574,7 @@ io_rho_xml.o : ../Modules/io_files.o
 io_rho_xml.o : ../Modules/io_global.o
 io_rho_xml.o : ../Modules/kind.o
 io_rho_xml.o : ../Modules/mp.o
+io_rho_xml.o : ../Modules/mp_global.o
 io_rho_xml.o : ../Modules/xml_io_base.o
 io_rho_xml.o : pwcom.o
 ions.o : ../Modules/control_flags.o
@@ -655,12 +654,6 @@ openfil.o : ../Modules/mp_global.o
 openfil.o : noncol.o
 openfil.o : pw_restart.o
 openfil.o : pwcom.o
-ortho.o : ../Modules/io_files.o
-ortho.o : ../Modules/kind.o
-ortho.o : ../Modules/uspp.o
-ortho.o : ../Modules/wavefunctions.o
-ortho.o : becmod.o
-ortho.o : pwcom.o
 orthoatwfc.o : ../Modules/io_files.o
 orthoatwfc.o : ../Modules/io_global.o
 orthoatwfc.o : ../Modules/ions_base.o
@@ -878,6 +871,7 @@ ruotaijk.o : ../Modules/kind.o
 s_1psi.o : ../Modules/kind.o
 s_1psi.o : ../Modules/uspp.o
 s_1psi.o : becmod.o
+s_1psi.o : noncol.o
 s_1psi.o : pwcom.o
 s_axis_to_ca.o : ../Modules/kind.o
 s_psi.o : ../Modules/ions_base.o
@@ -943,7 +937,6 @@ setup.o : ../Modules/kind.o
 setup.o : ../Modules/mp.o
 setup.o : ../Modules/mp_global.o
 setup.o : ../Modules/parameters.o
-setup.o : ../Modules/ptoolkit.o
 setup.o : ../Modules/random_numbers.o
 setup.o : ../Modules/uspp.o
 setup.o : exx.o
@@ -1235,7 +1228,6 @@ mix_rho.o : ../include/f_defs.h
 mode_group.o : ../include/f_defs.h
 new_ns.o : ../include/f_defs.h
 newd.o : ../include/f_defs.h
-ortho.o : ../include/f_defs.h
 orthoatwfc.o : ../include/f_defs.h
 para.o : ../include/f_defs.h
 potinit.o : ../include/f_defs.h

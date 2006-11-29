@@ -23,9 +23,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   USE constants,        ONLY : pi
   USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : noncolin, npol
-  USE uspp,             ONLY : vkb, nkb
-  USE becmod,           ONLY : becp_nc
+  USE noncollin_module, ONLY : npol
   USE bp,               ONLY : lelfield
   !
   IMPLICIT NONE
@@ -114,17 +112,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      ! ... calculate S|psi>
      !
-     IF ( noncolin ) THEN
-        !
-        CALL ccalbec_nc( nkb, ndmx, ndim, npol, 1, becp_nc, vkb, psi(1,m) )
-        !
-        CALL s_psi_nc( ndmx, ndim, 1, psi(1,m), spsi )
-        !
-     ELSE
-        !
-        CALL s_1psi( ndmx, ndim, psi(1,m), spsi )
-        !
-     END IF
+     CALL s_1psi( ndmx, ndim, psi(1,m), spsi )
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
@@ -149,17 +137,9 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     IF ( noncolin ) THEN
-        !
-        CALL h_1psi_nc( ndmx, ndim, npol, psi(1,m), hpsi, spsi )
-        IF( lelfield )  CALL h_epsi_her(ndmx, ndim, 1, psi(1,m), hpsi )
-        !
-     ELSE
-        !
-        CALL h_1psi( ndmx, ndim, psi(1,m), hpsi, spsi )
-        IF( lelfield )  CALL h_epsi_her( ndmx, ndim, 1, psi(1,m), hpsi)
-        !
-     END IF
+     CALL h_1psi( ndmx, ndim, psi(1,m), hpsi, spsi )
+     !
+     IF( lelfield )  CALL h_epsi_her(ndmx, ndim, 1, psi(1,m), hpsi )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
@@ -196,17 +176,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         ! ... scg is used as workspace
         !
-        IF ( noncolin ) THEN
-           !
-           CALL ccalbec_nc( nkb, ndmx, ndim, npol, 1, becp_nc, vkb, g(1) )
-           !
-           CALL s_psi_nc( ndmx, ndim, 1, g(1), scg(1) )
-           !
-        ELSE
-           !
-           CALL s_1psi( ndmx, ndim, g(1), scg(1) )
-           !
-        END IF
+        CALL s_1psi( ndmx, ndim, g(1), scg(1) )
         !
         CALL ZGEMV( 'C', kdim, ( m - 1 ), ONE, psi, &
                     kdmx, scg, 1, ZERO, lagrange, 1  )
@@ -274,17 +244,9 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         ! ... |scg> is S|cg>
         !
-        IF ( noncolin ) THEN
-           !
-           CALL h_1psi_nc( ndmx, ndim, npol, cg(1), ppsi(1), scg(1) )
-           IF( lelfield ) CALL h_epsi_her( ndmx, ndim, 1, cg(1), ppsi(1))
-           !
-        ELSE
-           !
-           CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
-           IF( lelfield ) CALL h_epsi_her(ndmx, ndim, 1, cg(1), ppsi(1))
-           !
-        END IF
+        CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
+        !
+        IF( lelfield ) CALL h_epsi_her( ndmx, ndim, 1, cg(1), ppsi(1) )
         !
         cg0 = DDOT( kdim2, cg(1), 1, scg(1), 1 )
         !

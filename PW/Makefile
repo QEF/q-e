@@ -103,7 +103,6 @@ gweights.o \
 h_epsi_her.o \
 h_1psi.o \
 h_psi.o \
-h_1psi_nc.o \
 h_psi_nc.o \
 hexsym.o \
 hinit0.o \
