@@ -80,7 +80,7 @@ MODULE realus
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
       REAL(DP), ALLOCATABLE :: buffdist(:,:)
       REAL(DP)              :: distsq, qtot_int, first, second
-      INTEGER               :: index0, index, indproc, ir
+      INTEGER               :: idx0, idx, indproc, ir
       INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ijv, ilast
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
@@ -158,12 +158,12 @@ MODULE realus
       !
       ! ... now we find the points
       !
-      index0 = 0
+      idx0 = 0
       !
 #if defined (__PARA)
       !
       DO i = 1, me_pool
-         index0 = index0 + nrx1*nrx2*npp(i)
+         idx0 = idx0 + nrx1*nrx2*npp(i)
       END DO
       !
 #endif
@@ -186,12 +186,12 @@ MODULE realus
             !
             ! ... three dimensional indexes
             !
-            index = index0 + ir - 1
-            k     = index / (nrx1*nrx2)
-            index = index - (nrx1*nrx2)*k
-            j     = index / nrx1
-            index = index - nrx1*j
-            i     = index
+            idx   = idx0 + ir - 1
+            k     = idx / (nrx1*nrx2)
+            idx   = idx - (nrx1*nrx2)*k
+            j     = idx / nrx1
+            idx   = idx - nrx1*j
+            i     = idx
             !
             DO ipol = 1, 3
                posi(ipol) = DBLE( i )*inv_nr1*at(ipol,1) + &

@@ -140,7 +140,7 @@ CONTAINS
 !=----------------------------------------------------------------------------=!
 
   SUBROUTINE fft_dlay_set( desc, tk, nst, nr1, nr2, nr3, nr1x, nr2x, nr3x, me, &
-    nproc, nogrp, ub, lb, index, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
+    nproc, nogrp, ub, lb, idx, in1, in2, ncp, ncpw, ngp, ngpw, st, stw )
 
     TYPE (fft_dlay_descriptor) :: desc
 
@@ -150,7 +150,7 @@ CONTAINS
     INTEGER, INTENT(IN) :: me       ! processor index Starting from 1
     INTEGER, INTENT(IN) :: nproc    ! number of processor
     INTEGER, INTENT(IN) :: nogrp    ! number of groups for task-grouping
-    INTEGER, INTENT(IN) :: index(:)
+    INTEGER, INTENT(IN) :: idx(:)
     INTEGER, INTENT(IN) :: in1(:)
     INTEGER, INTENT(IN) :: in2(:)
     INTEGER, INTENT(IN) :: ncp(:)
@@ -175,7 +175,7 @@ CONTAINS
     IF( ( nr1 > nr1x ) .OR. ( nr2 > nr2x ) .OR. ( nr3 > nr3x ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong fft dimensions ', 2 )
 
-    IF( ( SIZE( index ) < nst ) .OR. ( SIZE( in1 ) < nst ) .OR. ( SIZE( in2 ) < nst ) ) &
+    IF( ( SIZE( idx ) < nst ) .OR. ( SIZE( in1 ) < nst ) .OR. ( SIZE( in2 ) < nst ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong number of stick dimensions ', 3 )
 
     IF( ( SIZE( ncp ) < nproc ) .OR. ( SIZE( ngp ) < nproc ) ) &
@@ -267,7 +267,7 @@ CONTAINS
     desc%iplw   = 0
 
     DO iss = 1, nst
-      is = index( iss )
+      is = idx( iss )
       i1 = in1( is )
       i2 = in2( is )
       IF( st( i1, i2 ) > 0 ) THEN

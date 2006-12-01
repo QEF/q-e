@@ -407,29 +407,29 @@ SUBROUTINE wfcinit()
           IF ( isolve == 1 ) THEN
              !
              CALL cinitcgg( npwx, npw, n_starting_wfc, &
-                            nbnd, wfcatom, wfcatom, etatom )
+                            nbnd, wfcatom, evc, etatom )
              !
           ELSE
              !
              IF ( noncolin ) THEN
                 !
                 CALL rotate_wfc_nc( npwx, npw, n_starting_wfc, nbnd, &
-                                   wfcatom, npol, okvan, wfcatom, etatom )
+                                   wfcatom, npol, okvan, evc, etatom )
                 !
              ELSE
                 !
                 CALL rotate_wfc( npwx, npw, n_starting_wfc, &
-                                 nbnd, wfcatom, okvan, wfcatom, etatom )
+                                 nbnd, wfcatom, okvan, evc, etatom )
                 !
              END IF
+             !
+             evc(npw+1:npwx,1:nbnd) = (0.d0, 0.d0)
              !
           END IF
           !
           ! ... the first nbnd wavefunctions and eigenvalues are copied
           !
           et(1:nbnd,ik) = etatom(1:nbnd)
-          !
-          evc(:,1:nbnd) = wfcatom(:,1:nbnd)
           !
           evc(npw+1:npwx,1:nbnd) = (0.d0, 0.d0)
           IF ( noncolin ) THEN

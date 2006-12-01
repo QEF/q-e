@@ -16,6 +16,8 @@ INSTALLATION/PORTING
 - remove install/
 - put misc scripts into a Utils/ subdirectory
 - release.sh is clumsy, simplify
+- some machines do not allow to open more than 32000 directories:
+  this sets a limit to the numbe of k-points (AdC)
 
 COMMON
 
@@ -59,6 +61,15 @@ PW
 - Add option to avoid reading/writing wfc all the time,
   keep everything in memory
 
+- nscf calculations are slow. There must be a way to
+  make a better usage of the available information
+  from the scf calculation: wavefunctions are just 
+  discarded. Same for phonon calculation: it shouldn't
+  be needed to recalculate everything almost from scratch
+  at each different q-points
+
+- DIIS still doesn't work!
+
 - Fermi-Dirac: pass T instead of "broadening", make it possible
   to use it on top of smearing for free-energy calculations
 
@@ -75,7 +86,6 @@ PW
   - seek for CG and DIIS algoritms that only use (H-eS)|psi> and not
     the two vector separately ... compute it in one single call. (this way
     S|psi> is  inexpensive)
-  - disable DIIS until it really works (if ever)
 
 - output should be more informative and less confused
   the printout with UPF PP is incomplete or misleading (lloc=0)
@@ -109,9 +119,6 @@ POSTPROCESSING
 
 PH, D3, Gamma
 
-- stop with 'prefix.EXIT' and restart (PH now has it; D3 & Gamma do not
-  have any infrastructure for stopping like this)
-
 - use charge mixing instead of potential mixing
 
 - move all phonon-specific stuff (symmetry etc) from pw into phonon
@@ -125,6 +132,10 @@ PH, D3, Gamma
 - same input for Gamma and PH
 
 - replace "use pwcom" into more "use" statements
+
+- stop with 'prefix.EXIT' and restart (PH now has it; D3 & Gamma do not
+  have any infrastructure for stopping like this)
+
 
 DOCUMENTATION
 

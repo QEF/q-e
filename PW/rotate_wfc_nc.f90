@@ -20,7 +20,7 @@ subroutine rotate_wfc_nc &
   USE kinds
   implicit none
   !
-  integer :: npw, npwx, nstart, nbnd, npol, i, j, index
+  integer :: npw, npwx, nstart, nbnd, npol, i, j, idx
   ! dimension of the matrix to be diagonalized
   ! leading dimension of matrix psi, as declared in the calling pgm unit
   ! input number of states
@@ -126,9 +126,9 @@ subroutine rotate_wfc_nc &
         do i=1,npw
            hpsi(i,1,j) = (0.d0,0.d0)
            hpsi(i,2,j) = (0.d0,0.d0)
-           do index=1,nstart
-              hpsi(i,1,j) = hpsi(i,1,j) + psi(i,1,index)*vc(index,j)
-              hpsi(i,2,j) = hpsi(i,2,j) + psi(i,2,index)*vc(index,j)
+           do idx=1,nstart
+              hpsi(i,1,j) = hpsi(i,1,j) + psi(i,1,idx)*vc(idx,j)
+              hpsi(i,2,j) = hpsi(i,2,j) + psi(i,2,idx)*vc(idx,j)
            enddo
         enddo
      enddo

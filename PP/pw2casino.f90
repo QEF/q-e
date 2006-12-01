@@ -79,7 +79,7 @@ SUBROUTINE compute_casino
   IMPLICIT NONE
   INTEGER :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
        nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb, at_num 
-  INTEGER, ALLOCATABLE :: INDEX(:), igtog(:)
+  INTEGER, ALLOCATABLE :: idx(:), igtog(:)
   LOGICAL :: exst, found
   REAL(DP) :: ek, eloc, enl, charge, etotefield
   COMPLEX(DP), ALLOCATABLE :: aux(:), hpsi(:,:)
@@ -99,11 +99,11 @@ SUBROUTINE compute_casino
   ALLOCATE (aux(nrxx))
   ALLOCATE (becp (nkb,nbnd))
   ! four times npwx should be enough
-  ALLOCATE (INDEX (4*npwx) )
+  ALLOCATE (idx (4*npwx) )
   ALLOCATE (igtog (4*npwx) )
 
   hpsi (:,:) = (0.d0, 0.d0)
-  INDEX(:) = 0
+  idx(:) = 0
   igtog(:) = 0
 
   IF( lsda ) THEN
@@ -153,7 +153,7 @@ SUBROUTINE compute_casino
         DO ig =1, npw
            IF( igk(ig) > 4*npwx ) & 
                 CALL errore ('pw2casino','increase allocation of index', ig)
-           INDEX( igk(ig) ) = 1
+           idx( igk(ig) ) = 1
         ENDDO
         !
         ! calculate the kinetic energy
@@ -204,7 +204,7 @@ SUBROUTINE compute_casino
 
   ngtot = 0
   DO ig = 1, 4*npwx
-     IF( INDEX(ig) == 1 ) THEN
+     IF( idx(ig) == 1 ) THEN
         ngtot = ngtot + 1
         igtog(ngtot) = ig
      ENDIF
@@ -329,7 +329,7 @@ SUBROUTINE compute_casino
   WRITE (stdout,*) 'Total energy     ', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
 
   DEALLOCATE (igtog)
-  DEALLOCATE (index)
+  DEALLOCATE (idx)
   DEALLOCATE (becp)
   DEALLOCATE (aux)
   DEALLOCATE (hpsi)

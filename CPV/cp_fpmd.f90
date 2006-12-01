@@ -22,7 +22,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
    real(8) b1b(3), b2b(3), b3b(3), gcutb
 !
-   integer, allocatable:: index(:)
+   integer, allocatable:: idx(:)
    integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
    integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum, ip
    real(8) t(3), g2
@@ -69,7 +69,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
       allocate(nmb(ngb))
       allocate(iglb(ngb))
       allocate(mill_b(3,ngb))
-      allocate(index(ngb))
+      allocate(idx(ngb))
 !
 !     third step : find the vectors with g2 < gcutb
 !
@@ -112,20 +112,20 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
  170    format(' ggenb: # of gb vectors < gcutb ngb = ',i6)
       END IF
 
-      call kb07ad_cp90 (gb,ngb,index)
+      call kb07ad_cp90 (gb,ngb,idx)
 
       do ig=1,ngb-1
          icurr=ig
- 30      if(index(icurr).ne.ig) then
+ 30      if(idx(icurr).ne.ig) then
             itv=mill_b(:,icurr)
-            mill_b(:,icurr)=mill_b(:,index(icurr))
-            mill_b(:,index(icurr))=itv
+            mill_b(:,icurr)=mill_b(:,idx(icurr))
+            mill_b(:,idx(icurr))=itv
 
             it=icurr
-            icurr=index(icurr)
-            index(it)=it
-            if(index(icurr).eq.ig) then
-               index(icurr)=icurr
+            icurr=idx(icurr)
+            idx(it)=it
+            if(idx(icurr).eq.ig) then
+               idx(icurr)=icurr
                goto 35
             endif
             goto 30
@@ -133,7 +133,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
  35      continue
       end do
 !
-      deallocate(index)
+      deallocate(idx)
 !
 ! costruct fft indexes (n1b,n2b,n3b) for the box grid
 !
@@ -705,7 +705,7 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
   INTEGER :: i, j, k, ig, n1p, n2p, ng_l
   INTEGER :: icurr, it
   INTEGER :: mill(3)
-  integer, allocatable:: index(:)
+  integer, allocatable:: idx(:)
 
       ng_l=0
       loop_allg: do ig = 1, ng_g
@@ -729,29 +729,29 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
 
       if( ng /= ng_l ) call errore( ' glocal ', ' inconsistent number of G vectors ', ng_l )
 
-      allocate(index(ng))
+      allocate(idx(ng))
 !
 !     reorder the local g's in order of increasing magnitude.
 !
-      call kb07ad_cp90(g,ng,index)
+      call kb07ad_cp90(g,ng,idx)
 !
       do ig=1,ng-1
          icurr=ig
- 30      if(index(icurr).ne.ig) then
+ 30      if(idx(icurr).ne.ig) then
 
             it=ig_l2g(icurr)
-            ig_l2g(icurr)=ig_l2g(index(icurr))
-            ig_l2g(index(icurr))=it
+            ig_l2g(icurr)=ig_l2g(idx(icurr))
+            ig_l2g(idx(icurr))=it
 
             mill=mill_l(:,icurr)
-            mill_l(:,icurr)=mill_l(:,index(icurr))
-            mill_l(:,index(icurr))=mill
+            mill_l(:,icurr)=mill_l(:,idx(icurr))
+            mill_l(:,idx(icurr))=mill
 !
             it=icurr
-            icurr=index(icurr)
-            index(it)=it
-            if(index(icurr).eq.ig) then
-               index(icurr)=icurr
+            icurr=idx(icurr)
+            idx(it)=it
+            if(idx(icurr).eq.ig) then
+               idx(icurr)=icurr
                goto 35
             endif
             goto 30
@@ -769,7 +769,7 @@ SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isi
 !      END IF
 
 
-      deallocate( index )
+      deallocate( idx )
 
   RETURN
 END SUBROUTINE glocal

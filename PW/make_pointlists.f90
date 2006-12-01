@@ -34,7 +34,7 @@ SUBROUTINE make_pointlists
   !
   IMPLICIT NONE
   !
-  INTEGER index0,index,indproc,iat,ir,iat1
+  INTEGER idx0,idx,indproc,iat,ir,iat1
   INTEGER i,j,k,i0,j0,k0,ipol,ishift(3)
 
   REAL(DP) :: posi(3),distance,shift(3),scalprod, distmin
@@ -49,10 +49,10 @@ SUBROUTINE make_pointlists
   ! In the parallel case, find the index-offset to account for the planes
   ! treated by other procs
 
-  index0 = 0
+  idx0 = 0
 #ifdef __PARA
   DO indproc=1,me_pool
-     index0 = index0 + nrx1*nrx2*npp(indproc)
+     idx0 = idx0 + nrx1*nrx2*npp(indproc)
   ENDDO
 
 #endif
@@ -116,13 +116,13 @@ SUBROUTINE make_pointlists
      pointnum(iat) = 0
 
      DO ir=1,nrxx
-        index = index0 + ir - 1
+        idx = idx0 + ir - 1
 
-        k0 = index/(nrx1*nrx2)
-        index = index - (nrx1*nrx2) * k0
-        j0 = index / nrx1
-        index = index - nrx1*j0
-        i0 = index
+        k0  = idx/(nrx1*nrx2)
+        idx = idx - (nrx1*nrx2) * k0
+        j0  = idx / nrx1
+        idx = idx - nrx1*j0
+        i0  = idx
 
         DO i = i0-nr1,i0+nr1, nr1
            DO j = j0-nr2, j0+nr2, nr2

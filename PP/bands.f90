@@ -134,7 +134,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   ! maxdeg : max allowed degeneracy
   INTEGER :: ndeg, deg, nd
   ! ndeg : number of degenerate states
-  INTEGER, ALLOCATABLE :: degeneracy(:), degbands(:,:), INDEX(:)
+  INTEGER, ALLOCATABLE :: degeneracy(:), degbands(:,:), idx(:)
   ! degbands keeps track of which states are degenerate
   INTEGER :: iunpun_sigma(4), indjbnd
   CHARACTER(LEN=256) :: nomefile
@@ -193,7 +193,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   ALLOCATE (igkold (npwx))    
   ALLOCATE (ok (nbnd), il (nbnd), ilold(nbnd) )
   ALLOCATE (degeneracy(nbnd), edeg(nbnd))
-  ALLOCATE (INDEX(nbnd), degbands(nbnd,maxdeg))
+  ALLOCATE (idx(nbnd), degbands(nbnd,maxdeg))
   !
   IF (nspin==1.OR.nspin==4) THEN
      nks1=1
@@ -254,21 +254,21 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
 ! The bands are checked in order of increasing energy.
 !
         DO ibnd=1,nbnd
-           index(ibnd)=ibnd
+           idx(ibnd)=ibnd
            edeg(ibnd)=et(il(ibnd),ik-1)
         ENDDO
-        CALL hpsort(nbnd, edeg, index)
+        CALL hpsort(nbnd, edeg, idx)
         DO ibnd = 1, nbnd
            IF (noncolin) THEN
               old_nc = (0.d0, 0.d0)
               DO ig = 1, npwold
-                 old_nc(igkold(ig), 1)=psiold_nc(ig     ,index(ibnd))
-                 old_nc(igkold(ig), 2)=psiold_nc(ig+npwx,index(ibnd))
+                 old_nc(igkold(ig), 1)=psiold_nc(ig     ,idx(ibnd))
+                 old_nc(igkold(ig), 2)=psiold_nc(ig+npwx,idx(ibnd))
               END DO
            ELSE
               old = (0.d0, 0.d0)
               DO ig = 1, npwold
-                 old (igkold (ig) ) = psiold (ig, index(ibnd))
+                 old (igkold (ig) ) = psiold (ig, idx(ibnd))
               END DO
            END IF
            DO jbnd = 1, nbnd
@@ -280,25 +280,25 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
                        new_nc (igk (ig), 2) = evc (ig+npwx, jbnd)
                     END DO
                     pro = cgracsc_nc (nkb,becp_nc(1,1,jbnd), &
-                              becpold_nc(1,1,index(ibnd)), nhm, ntyp, nh, &
+                              becpold_nc(1,1,idx(ibnd)), nhm, ntyp, nh, &
                               nat, ityp, ngm, npol, new_nc, old_nc, tvanp)
                  ELSE
                     new (:) = (0.d0, 0.d0)
                     DO ig = 1, npw
                        new (igk (ig) ) = evc (ig, jbnd)
                     END DO
-                    pro=cgracsc(nkb,becp(1,jbnd),becpold(1,index(ibnd)), &
+                    pro=cgracsc(nkb,becp(1,jbnd),becpold(1,idx(ibnd)), &
                          nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, tvanp)
                  END IF
-!                 write(6,'(3i5,f15.10)') ik,index(ibnd), jbnd, abs(pro)
+!                 write(6,'(3i5,f15.10)') ik,idx(ibnd), jbnd, abs(pro)
                  IF (abs (pro) > 1.d-2 ) THEN
-                    il (index(ibnd)) = jbnd
+                    il (idx(ibnd)) = jbnd
                     GOTO 10
                  END IF
               END IF
            END DO
-!           WRITE(6,*) '  no band found', ik, ilold(index(ibnd)), &
-!                        et(ilold(index(ibnd)),ik-1)*rytoev
+!           WRITE(6,*) '  no band found', ik, ilold(idx(ibnd)), &
+!                        et(ilold(idx(ibnd)),ik-1)*rytoev
 !
 !     no band found. Takes the closest in energy. NB: This should happen only
 !     for high energy bands. 
@@ -306,15 +306,15 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
            minene=1.d10
            DO jbnd = 1, nbnd
               IF (ok (jbnd) == 0) THEN
-                 IF (abs(et(index(ibnd),ik)-et(jbnd,ik))<minene) THEN
+                 IF (abs(et(idx(ibnd),ik)-et(jbnd,ik))<minene) THEN
                     indjbnd=jbnd
-                    minene=abs(et(index(ibnd),ik)-et(jbnd,ik))
+                    minene=abs(et(idx(ibnd),ik)-et(jbnd,ik))
                  ENDIF
               ENDIF
            ENDDO
-           il(index(ibnd))=indjbnd
+           il(idx(ibnd))=indjbnd
 10         CONTINUE
-           ok (il (index(ibnd)) ) = 1
+           ok (il (idx(ibnd)) ) = 1
         END DO
         !
         !  if there were bands crossing at degenerate eigenvalues
@@ -323,12 +323,12 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
         !
         DO nd = 1, ndeg
            DO deg = 1, degeneracy (nd)
-              INDEX(deg) = il(degbands(nd,deg))
+              idx(deg) = il(degbands(nd,deg))
               edeg (deg) = et(il(degbands(nd,deg)), ik)
            END DO
-           CALL hpsort(degeneracy (nd), edeg, index)
+           CALL hpsort(degeneracy (nd), edeg, idx)
            DO deg = 1, degeneracy (nd)
-              il(degbands(nd,deg)) = INDEX(deg)
+              il(degbands(nd,deg)) = idx(deg)
            END DO
         END DO
      END IF
@@ -417,7 +417,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
      !
   END DO
   !
-  DEALLOCATE (index, degbands)
+  DEALLOCATE (idx, degbands)
   DEALLOCATE (edeg, degeneracy)
   DEALLOCATE (ilold, il, ok)
   DEALLOCATE (igkold)

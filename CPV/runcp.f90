@@ -644,7 +644,7 @@
      real(8), allocatable:: emadt2(:)
      real(8), allocatable:: emaver(:)
      complex(8), allocatable:: c2(:), c3(:)
-     integer :: i, index_in, index
+     integer :: i, idx_in, idx
      integer :: iflag, ierr
      logical :: ttsde
 
@@ -741,29 +741,29 @@
            end if
 
            IF( iflag == 2 ) THEN
-             DO index = 1, 2 * NOGRP, 2
-                cm(:,i+index-1) = c0(:,i+index-1)
-                cm(:,i+index) = c0(:,i+index)
+             DO idx = 1, 2 * NOGRP, 2
+                cm(:,i+idx-1) = c0(:,i+idx-1)
+                cm(:,i+idx) = c0(:,i+idx)
              ENDDO
            END IF
 
-           index_in = 1
-           DO index = 1, 2*NOGRP, 2
+           idx_in = 1
+           DO idx = 1, 2*NOGRP, 2
               IF (tsde) THEN
-                 CALL my_wave_steepest( cm(:, i+index-1 ), c0(:, i+index-1 ), emaver, tg_c2, ngw, index_in )
-                 CALL my_wave_steepest( cm(:, i+index), c0(:, i+index), emaver, tg_c3, ngw, index_in )
+                 CALL my_wave_steepest( cm(:, i+idx-1 ), c0(:, i+idx-1 ), emaver, tg_c2, ngw, idx_in )
+                 CALL my_wave_steepest( cm(:, i+idx), c0(:, i+idx), emaver, tg_c3, ngw, idx_in )
               ELSE
-                 CALL my_wave_verlet( cm(:, i+index-1 ), c0(:, i+index-1 ), &
-                      verl1, verl2, emaver, tg_c2, ngw, index_in )
-                 CALL my_wave_verlet( cm(:, i+index), c0(:, i+index ), &
-                      verl1, verl2, emaver, tg_c3, ngw, index_in )
+                 CALL my_wave_verlet( cm(:, i+idx-1 ), c0(:, i+idx-1 ), &
+                      verl1, verl2, emaver, tg_c2, ngw, idx_in )
+                 CALL my_wave_verlet( cm(:, i+idx), c0(:, i+idx ), &
+                      verl1, verl2, emaver, tg_c3, ngw, idx_in )
 
               ENDIF
               if ( gstart == 2 ) then
-                 cm(1,  i+index-1)=cmplx(real(cm(1,  i+index-1)),0.0)
-                 cm(1,i+index)=cmplx(real(cm(1,i+index)),0.0)
+                 cm(1,  i+idx-1)=cmplx(real(cm(1,  i+idx-1)),0.0)
+                 cm(1,i+idx)=cmplx(real(cm(1,i+idx)),0.0)
               end if
-             index_in = index_in+1
+             idx_in = idx_in+1
 
            ENDDO ! End loop accross 2*NOGRP current eigenstates
 

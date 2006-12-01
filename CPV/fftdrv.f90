@@ -311,7 +311,7 @@ CONTAINS
       INTEGER :: HWMN, IT1, FLAG, num_planes, num_sticks
       COMPLEX(DP), DIMENSION(:), ALLOCATABLE  :: XF, YF, aux 
       INTEGER, DIMENSION(NOGRP) :: local_send_cnt, local_send_displ, local_recv_cnt, local_recv_displ
-      INTEGER  :: index
+      INTEGER  :: idx
 
       ALLOCATE(XF((NOGRP+1)*strd))
       ALLOCATE(YF((NOGRP+1)*strd))
@@ -412,12 +412,12 @@ CONTAINS
             local_send_displ(1) = 0
             local_recv_cnt(1) = nr3x*dfft%nsw(NOLIST(1)+1)
             local_recv_displ(1) = 0
-            DO index=2, NOGRP
-               local_send_cnt(index) = nr3x*dfft%nsw(me_image+1)
-               local_send_displ(index) = local_send_displ(index-1) + strd ! local_send_cnt(index-1)
+            DO idx=2, NOGRP
+               local_send_cnt(idx) = nr3x*dfft%nsw(me_image+1)
+               local_send_displ(idx) = local_send_displ(idx-1) + strd ! local_send_cnt(idx-1)
 
-               local_recv_cnt(index) = nr3x*dfft%nsw(NOLIST(index)+1)
-               local_recv_displ(index)  = local_recv_displ(index-1) + local_recv_cnt(index-1)
+               local_recv_cnt(idx) = nr3x*dfft%nsw(NOLIST(idx)+1)
+               local_recv_displ(idx)  = local_recv_displ(idx-1) + local_recv_cnt(idx-1)
             ENDDO
 
             !------------------------------------------------------------------------------------------

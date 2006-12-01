@@ -31,18 +31,18 @@ MODULE path_opt_routines
   CONTAINS
      !
      !----------------------------------------------------------------------
-     SUBROUTINE langevin( index )
+     SUBROUTINE langevin( idx )
        !----------------------------------------------------------------------
        !
        USE path_variables, ONLY : lang
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN) :: index
+       INTEGER, INTENT(IN) :: idx
        !
        IF ( meta_ionode ) THEN
           !
-          pos(:,index) = pos(:,index) - ds * grad(:,index) + lang(:,index)
+          pos(:,idx) = pos(:,idx) - ds * grad(:,idx) + lang(:,idx)
           !
        END IF
        !
@@ -53,16 +53,16 @@ MODULE path_opt_routines
      END SUBROUTINE langevin
      !
      !----------------------------------------------------------------------
-     SUBROUTINE steepest_descent( index )
+     SUBROUTINE steepest_descent( idx )
        !----------------------------------------------------------------------
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN) :: index
+       INTEGER, INTENT(IN) :: idx
        !
        IF ( meta_ionode ) THEN
           !
-          pos(:,index) = pos(:,index) - ds*ds * grad(:,index)
+          pos(:,idx) = pos(:,idx) - ds*ds * grad(:,idx)
           !
        END IF
        !
@@ -73,7 +73,7 @@ MODULE path_opt_routines
      END SUBROUTINE steepest_descent
      !
      !----------------------------------------------------------------------
-     SUBROUTINE quick_min( index, istep )
+     SUBROUTINE quick_min( idx, istep )
        !---------------------------------------------------------------------- 
        !
        ! ... projected Verlet algorithm
@@ -82,7 +82,7 @@ MODULE path_opt_routines
        !
        IMPLICIT NONE
        !
-       INTEGER, INTENT(IN) :: index, istep
+       INTEGER, INTENT(IN) :: idx, istep
        !
        REAL(DP), ALLOCATABLE :: vel(:), force_versor(:), step(:)
        REAL(DP)              :: projection, norm_grad, norm_vel, norm_step
@@ -94,15 +94,15 @@ MODULE path_opt_routines
           !
           ALLOCATE( vel( dim ), force_versor( dim ), step( dim ) )
           !
-          vel(:) = pos(:,index) - posold(:,index)
+          vel(:) = pos(:,idx) - posold(:,idx)
           !
-          norm_grad = norm( grad(:,index) )
+          norm_grad = norm( grad(:,idx) )
           !
           norm_vel = norm( vel(:) )
           !
           IF ( norm_grad > eps16 .AND. norm_vel > eps16 ) THEN
              !
-             force_versor(:) = - grad(:,index) / norm_grad
+             force_versor(:) = - grad(:,idx) / norm_grad
              !
              projection = ( vel(:) .dot. force_versor(:) )
              !
@@ -114,15 +114,15 @@ MODULE path_opt_routines
              !
           END IF
           !
-          posold(:,index) = pos(:,index)
+          posold(:,idx) = pos(:,idx)
           !
-          step(:) = vel(:) - ds**2 * grad(:,index)
+          step(:) = vel(:) - ds**2 * grad(:,idx)
           !
           norm_step = norm( step(:) )
           !
           step(:) = step(:) / norm_step
           !
-          pos(:,index) = pos(:,index) + step(:) * MIN( norm_step, max_step )
+          pos(:,idx) = pos(:,idx) + step(:) * MIN( norm_step, max_step )
           !
           DEALLOCATE( vel, force_versor, step )
           !

@@ -22,27 +22,27 @@ subroutine divide (ntodiv, startn, lastn)
   ! output: the first band of this processor
   ! output: the last band of this processor
 
-  integer :: nb, resto, index, ip
+  integer :: nb, resto, idx, ip
   ! number of bands per processor
   ! one additional band if me_pool+1 <= resto
   ! counter on bands
   ! counter on processors
   nb = ntodiv / nproc_pool
   resto = ntodiv - nb * nproc_pool
-  index = 0
+  idx = 0
   do ip = 1, nproc_pool
      if (ip.le.resto) then
         if (me_pool+1.eq.ip) then
-           startn = index + 1
+           startn = idx + 1
            lastn = startn + nb
         endif
-        index = index + nb + 1
+        idx = idx + nb + 1
      else
         if (me_pool+1.eq.ip) then
-           startn = index + 1
+           startn = idx + 1
            lastn = startn + nb - 1
         endif
-        index = index + nb
+        idx = idx + nb
      endif
   enddo
 #else

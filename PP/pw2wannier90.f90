@@ -1236,7 +1236,7 @@ subroutine write_plot
    character*20 wfnname
 
    ! aam: 1/5/06: for writing smaller unk files 
-   integer :: n1by2,n2by2,n3by2,i,k,index,pos
+   integer :: n1by2,n2by2,n3by2,i,k,idx,pos
    COMPLEX(DP),allocatable :: psic_small(:)   
    !-------------------------------------------!
 
@@ -1300,9 +1300,9 @@ subroutine write_plot
             do k=1,nr3s,2
                do j=1,nr2s,2
                   do i=1,nr1s,2
-                     index = (k-1)*nr3s*nr2s + (j-1)*nr2s + i
+                     idx = (k-1)*nr3s*nr2s + (j-1)*nr2s + i
                      pos=pos+1
-                     psic_small(pos) = psic_all(index) 
+                     psic_small(pos) = psic_all(idx) 
                   enddo
                enddo
             enddo
@@ -1327,9 +1327,9 @@ subroutine write_plot
             do k=1,nr3s,2
                do j=1,nr2s,2
                   do i=1,nr1s,2
-                     index = (k-1)*nr3s*nr2s + (j-1)*nr2s + i
+                     idx = (k-1)*nr3s*nr2s + (j-1)*nr2s + i
                      pos=pos+1
-                     psic_small(pos) = psic(index) 
+                     psic_small(pos) = psic(idx) 
                   enddo
                enddo
             enddo

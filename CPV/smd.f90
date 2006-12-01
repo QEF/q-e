@@ -928,7 +928,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
 
   INTEGER,intent(in) :: sm_p, kwnp,nsp, nat, nbeg, key 
   INTEGER :: sm_k, isa, na( nsx )
-  INTEGER :: index(2,3), ia, is
+  INTEGER :: ia, is
   INTEGER :: als,bls,cls
   INTEGER :: i,j,k,redismi
 

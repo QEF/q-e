@@ -63,8 +63,8 @@ subroutine hpsort_eps (n, ra, ind, eps)
   implicit none  
   !-input/output variables
   integer, intent(in) :: n  
-  integer, intent(inout) :: ind (n)  
-  real(DP), intent(inout) :: ra (n)
+  integer, intent(inout) :: ind (*)  
+  real(DP), intent(inout) :: ra (*)
   real(DP), intent(in) :: eps
   !-local variables
   integer :: i, ir, j, l, iind  
@@ -121,7 +121,7 @@ subroutine hpsort_eps (n, ra, ind, eps)
           if ( hslt( ra (j),  ra (j + 1) ) ) then  
              j = j + 1  
           else if ( .not. hslt( ra (j+1),  ra (j) ) ) then
-             ! this means ra(j) == ra(j+1) within tollerance
+             ! this means ra(j) == ra(j+1) within tolerance
              if (ind (j) .lt.ind (j + 1) ) j = j + 1
           endif
        endif
@@ -132,7 +132,7 @@ subroutine hpsort_eps (n, ra, ind, eps)
           i = j  
           j = j + j  
        else if ( .not. hslt ( ra(j) , rra ) ) then
-          !this means rra == ra(j) within tollerance
+          !this means rra == ra(j) within tolerance
           ! demote rra
           if (iind.lt.ind (j) ) then
              ra (i) = ra (j)
@@ -201,8 +201,8 @@ subroutine hpsort (n, ra, ind)
   implicit none  
   !-input/output variables
   integer :: n  
-  integer :: ind (n)  
-  real(DP) :: ra (n)  
+  integer :: ind (*)  
+  real(DP) :: ra (*)  
   !-local variables
   integer :: i, ir, j, l, iind  
   real(DP) :: rra  
@@ -317,8 +317,8 @@ subroutine ihpsort (n, ia, ind)
   implicit none  
   !-input/output variables
   integer :: n  
-  integer :: ind (n)  
-  integer :: ia (n)  
+  integer :: ind (*)  
+  integer :: ia (*)  
   !-local variables
   integer :: i, ir, j, l, iind  
   integer :: iia  
@@ -404,7 +404,7 @@ subroutine ihpsort (n, ia, ind)
 end subroutine ihpsort
 
 !     ==================================================================
-      SUBROUTINE gqsort(COUNT,N,INDEX)
+      SUBROUTINE gqsort(COUNT,N,IDX)
 !     ==--------------------------------------------------------------==
 !     == Sorting routine for the reciprocal space vectors (g)         ==
 !     == Warning, this is not an exact SORT!! This routine has been   ==
@@ -418,15 +418,15 @@ end subroutine ihpsort
                  IY, INTEST, K, IFK, K1, IP, LNGTH
       
       logical :: cpgt,cplt
-      REAL(DP) :: COUNT(N),AV,X
+      REAL(DP) :: COUNT(*),AV,X
       
-      INTEGER :: INDEX(N)
+      INTEGER :: IDX(*)
       DIMENSION :: MARK(50)
 !     ==--------------------------------------------------------------==
 !     ==  SET INDEX ARRAY TO ORIGINAL ORDER .                         ==
 !     ==--------------------------------------------------------------==
       DO I=1,N
-        INDEX(I)=I
+        IDX(I)=I
       ENDDO
 !     ==--------------------------------------------------------------==
 !     == CHECK THAT A TRIVIAL CASE HAS NOT BEEN ENTERED.              ==
@@ -459,13 +459,13 @@ end subroutine ihpsort
           I=J
    40     IF(cplt(COUNT(I-1),COUNT(I)) )GOTO 60
           IF(cpgt(COUNT(I-1),COUNT(I)) )GOTO 50
-          IF(INDEX(I-1).LT.INDEX(I))GOTO 60
+          IF(IDX(I-1).LT.IDX(I))GOTO 60
    50     AV=COUNT(I-1)
           COUNT(I-1)=COUNT(I)
           COUNT(I)=AV
-          INT=INDEX(I-1)
-          INDEX(I-1)=INDEX(I)
-          INDEX(I)=INT
+          INT=IDX(I-1)
+          IDX(I-1)=IDX(I)
+          IDX(I)=INT
           I=I-1
           IF(I.GT.IS)GOTO  40
    60   CONTINUE
@@ -479,9 +479,9 @@ end subroutine ihpsort
 !     ==--------------------------------------------------------------==
    70   IY=(IS+IF)/2
         X=COUNT(IY)
-        INTEST=INDEX(IY)
+        INTEST=IDX(IY)
         COUNT(IY)=COUNT(IF)
-        INDEX(IY)=INDEX(IF)
+        IDX(IY)=IDX(IF)
 !     ==--------------------------------------------------------------==
 !     == THE MARKERS 'I' AND 'IFK' ARE USED FOR THE BEGINNING AND END ==
 !     == OF THE SECTION NOT SO FAR TESTED AGAINST THE PRESENT VALUE   ==
@@ -497,19 +497,19 @@ end subroutine ihpsort
         DO 110 I=IS,IF
           IF(cpgt(X,COUNT(I)))GOTO 110
           IF(cplt(X,COUNT(I)))GOTO 80
-          IF(INTEST.GT.INDEX(I))GOTO 110
+          IF(INTEST.GT.IDX(I))GOTO 110
    80     IF(I.GE.IFK)GOTO 120
           COUNT(IFK)=COUNT(I)
-          INDEX(IFK)=INDEX(I)
+          IDX(IFK)=IDX(I)
           K1=K
           DO 100 K=K1,IFKA
             IFK=IF-K
             IF(cpgt(COUNT(IFK),X))GOTO 100
             IF(cplt(COUNT(IFK),X))GOTO 90
-            IF(INTEST.LE.INDEX(IFK))GOTO 100
+            IF(INTEST.LE.IDX(IFK))GOTO 100
    90       IF(I.GE.IFK)GOTO 130
             COUNT(I)=COUNT(IFK)
-            INDEX(I)=INDEX(IFK)
+            IDX(I)=IDX(IFK)
             GO TO 110
   100     CONTINUE
           GOTO 120
@@ -522,11 +522,11 @@ end subroutine ihpsort
 !     == INDEPENDENTLY .                                              ==
 !     ==--------------------------------------------------------------==
   120   COUNT(IFK)=X
-        INDEX(IFK)=INTEST
+        IDX(IFK)=INTEST
         IP=IFK
         GOTO 140
   130   COUNT(I)=X
-        INDEX(I)=INTEST
+        IDX(I)=INTEST
         IP=I
 !     ==--------------------------------------------------------------==
 !     ==  STORE THE LONGER SUBDIVISION IN WORKSPACE.                  ==
@@ -563,7 +563,7 @@ end subroutine ihpsort
 
 
 !     ==================================================================
-      SUBROUTINE iqsort(COUNT,N,INDEX)
+      SUBROUTINE iqsort(COUNT,N,IDX)
 !     ==--------------------------------------------------------------==
 !     == same as rqsort but for array of integers                     ==
 !     ==--------------------------------------------------------------==
@@ -573,15 +573,13 @@ end subroutine ihpsort
                  IY, INTEST, K, IFK, K1, IP, LNGTH
             
       
-      INTEGER :: COUNT(N),AV,X
-      
-      INTEGER INDEX(N)
-      INTEGER MARK(50)
+      INTEGER :: COUNT(*),AV,X
+      INTEGER :: IDX(*),MARK(50)
 !     ==--------------------------------------------------------------==
 !     ==  SET INDEX ARRAY TO ORIGINAL ORDER .                         ==
 !     ==--------------------------------------------------------------==
       DO I=1,N
-        INDEX(I)=I
+        IDX(I)=I
       ENDDO
 !     ==--------------------------------------------------------------==
 !     == CHECK THAT A TRIVIAL CASE HAS NOT BEEN ENTERED.              ==
@@ -614,13 +612,13 @@ end subroutine ihpsort
           I=J
    40     IF((COUNT(I-1).LT.COUNT(I)) )GOTO 60
           IF((COUNT(I-1).GT.COUNT(I)) )GOTO 50
-          IF(INDEX(I-1).LT.INDEX(I))GOTO 60
+          IF(IDX(I-1).LT.IDX(I))GOTO 60
    50     AV=COUNT(I-1)
           COUNT(I-1)=COUNT(I)
           COUNT(I)=AV
-          INT=INDEX(I-1)
-          INDEX(I-1)=INDEX(I)
-          INDEX(I)=INT
+          INT=IDX(I-1)
+          IDX(I-1)=IDX(I)
+          IDX(I)=INT
           I=I-1
           IF(I.GT.IS)GOTO  40
    60   CONTINUE
@@ -634,9 +632,9 @@ end subroutine ihpsort
 !     ==--------------------------------------------------------------==
    70   IY=(IS+IF)/2
         X=COUNT(IY)
-        INTEST=INDEX(IY)
+        INTEST=IDX(IY)
         COUNT(IY)=COUNT(IF)
-        INDEX(IY)=INDEX(IF)
+        IDX(IY)=IDX(IF)
 !     ==--------------------------------------------------------------==
 !     == THE MARKERS 'I' AND 'IFK' ARE USED FOR THE BEGINNING AND END ==
 !     == OF THE SECTION NOT SO FAR TESTED AGAINST THE PRESENT VALUE   ==
@@ -652,19 +650,19 @@ end subroutine ihpsort
         DO 110 I=IS,IF
           IF((X.GT.COUNT(I)))GOTO 110
           IF((X.LT.COUNT(I)))GOTO 80
-          IF(INTEST.GT.INDEX(I))GOTO 110
+          IF(INTEST.GT.IDX(I))GOTO 110
    80     IF(I.GE.IFK)GOTO 120
           COUNT(IFK)=COUNT(I)
-          INDEX(IFK)=INDEX(I)
+          IDX(IFK)=IDX(I)
           K1=K
           DO 100 K=K1,IFKA
             IFK=IF-K
             IF((COUNT(IFK).GT.X))GOTO 100
             IF((COUNT(IFK).LT.X))GOTO 90
-            IF(INTEST.LE.INDEX(IFK))GOTO 100
+            IF(INTEST.LE.IDX(IFK))GOTO 100
    90       IF(I.GE.IFK)GOTO 130
             COUNT(I)=COUNT(IFK)
-            INDEX(I)=INDEX(IFK)
+            IDX(I)=IDX(IFK)
             GO TO 110
   100     CONTINUE
           GOTO 120
@@ -677,11 +675,11 @@ end subroutine ihpsort
 !     == INDEPENDENTLY .                                              ==
 !     ==--------------------------------------------------------------==
   120   COUNT(IFK)=X
-        INDEX(IFK)=INTEST
+        IDX(IFK)=INTEST
         IP=IFK
         GOTO 140
   130   COUNT(I)=X
-        INDEX(I)=INTEST
+        IDX(I)=INTEST
         IP=I
 !     ==--------------------------------------------------------------==
 !     ==  STORE THE LONGER SUBDIVISION IN WORKSPACE.                  ==
@@ -719,25 +717,23 @@ end subroutine ihpsort
 
 
 !     ==================================================================
-      SUBROUTINE rqsort(COUNT,N,INDEX)
+      SUBROUTINE rqsort(COUNT,N,IDX)
 !     ==--------------------------------------------------------------==
 !     == Sorting routine for the double precison arrayis              ==
 !     == THE WORK-SPACE 'MARK' OF LENGTH 50 PERMITS UP TO 2**(50/2)   ==
 !     ==--------------------------------------------------------------==
       USE kinds
       
-      INTEGER :: N, MARK, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
+      INTEGER :: N, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
                  IY, INTEST, K, IFK, K1, IP, LNGTH
       
-      REAL(DP) COUNT(N),AV,X
-      
-      INTEGER INDEX(N)
-      DIMENSION MARK(50)
+      REAL(DP) :: COUNT(*),AV,X
+      INTEGER :: IDX(*), MARK(50)
 !     ==--------------------------------------------------------------==
 !     ==  SET INDEX ARRAY TO ORIGINAL ORDER .                         ==
 !     ==--------------------------------------------------------------==
       DO I=1,N
-        INDEX(I)=I
+        IDX(I)=I
       ENDDO
 !     ==--------------------------------------------------------------==
 !     == CHECK THAT A TRIVIAL CASE HAS NOT BEEN ENTERED.              ==
@@ -770,13 +766,13 @@ end subroutine ihpsort
           I=J
    40     IF( (COUNT(I-1) .LT. COUNT(I)) )GOTO 60
           IF( (COUNT(I-1) .GT. COUNT(I)) )GOTO 50
-          IF(INDEX(I-1).LT.INDEX(I))GOTO 60
+          IF(IDX(I-1).LT.IDX(I))GOTO 60
    50     AV=COUNT(I-1)
           COUNT(I-1)=COUNT(I)
           COUNT(I)=AV
-          INT=INDEX(I-1)
-          INDEX(I-1)=INDEX(I)
-          INDEX(I)=INT
+          INT=IDX(I-1)
+          IDX(I-1)=IDX(I)
+          IDX(I)=INT
           I=I-1
           IF(I.GT.IS)GOTO  40
    60   CONTINUE
@@ -790,9 +786,9 @@ end subroutine ihpsort
 !     ==--------------------------------------------------------------==
    70   IY=(IS+IF)/2
         X=COUNT(IY)
-        INTEST=INDEX(IY)
+        INTEST=IDX(IY)
         COUNT(IY)=COUNT(IF)
-        INDEX(IY)=INDEX(IF)
+        IDX(IY)=IDX(IF)
 !     ==--------------------------------------------------------------==
 !     == THE MARKERS 'I' AND 'IFK' ARE USED FOR THE BEGINNING AND END ==
 !     == OF THE SECTION NOT SO FAR TESTED AGAINST THE PRESENT VALUE   ==
@@ -808,19 +804,19 @@ end subroutine ihpsort
         DO 110 I=IS,IF
           IF((X .GT. COUNT(I)))GOTO 110
           IF((X .LT. COUNT(I)))GOTO 80
-          IF(INTEST.GT.INDEX(I))GOTO 110
+          IF(INTEST.GT.IDX(I))GOTO 110
    80     IF(I.GE.IFK)GOTO 120
           COUNT(IFK)=COUNT(I)
-          INDEX(IFK)=INDEX(I)
+          IDX(IFK)=IDX(I)
           K1=K
           DO 100 K=K1,IFKA
             IFK=IF-K
             IF((COUNT(IFK) .GT. X))GOTO 100
             IF((COUNT(IFK) .LT. X))GOTO 90
-            IF(INTEST.LE.INDEX(IFK))GOTO 100
+            IF(INTEST.LE.IDX(IFK))GOTO 100
    90       IF(I.GE.IFK)GOTO 130
             COUNT(I)=COUNT(IFK)
-            INDEX(I)=INDEX(IFK)
+            IDX(I)=IDX(IFK)
             GO TO 110
   100     CONTINUE
           GOTO 120
@@ -833,11 +829,11 @@ end subroutine ihpsort
 !     == INDEPENDENTLY .                                              ==
 !     ==--------------------------------------------------------------==
   120   COUNT(IFK)=X
-        INDEX(IFK)=INTEST
+        IDX(IFK)=INTEST
         IP=IFK
         GOTO 140
   130   COUNT(I)=X
-        INDEX(I)=INTEST
+        IDX(I)=INTEST
         IP=I
 !     ==--------------------------------------------------------------==
 !     ==  STORE THE LONGER SUBDIVISION IN WORKSPACE.                  ==
@@ -873,7 +869,7 @@ end subroutine ihpsort
 !     ==================================================================
 
 !-------------------------------------------------------------------------
-      subroutine kb07ad_cp90(count,n,index)
+      subroutine kb07ad_cp90(count,n,idx)
 !-------------------------------------------------------------------------
 !     
 !             kb07ad      handles double precision variables
@@ -881,14 +877,14 @@ end subroutine ihpsort
 !  the work-space 'mark' of length 50 permits up to 2**(50/2) numbers
 !  to be sorted.
       implicit none
-      integer n, index(n)
-      real(8) count(n)
-      real(8) av, x
-      integer k1, ifk, lngth, ip, k, int, ifka, intest, iy
-      integer i, m, la, is, if, mloop, ifca, is1, j, mark(50)
+      integer :: n, idx(*)
+      real(8) :: count(*)
+      real(8) :: av, x
+      integer :: k1, ifk, lngth, ip, k, int, ifka, intest, iy
+      integer :: i, m, la, is, if, mloop, ifca, is1, j, mark(50)
 !  set index array to original order .
       do i=1,n
-         index(i)=i
+         idx(i)=i
       end do
 !  check that a trivial case has not been entered .
       if(n.eq.1) go to 10
@@ -915,13 +911,13 @@ end subroutine ihpsort
       i=j
    40 if(count(i-1).lt.count(i))goto 60
       if(count(i-1).gt.count(i))goto 50
-      if(index(i-1).lt.index(i))goto 60
+      if(idx(i-1).lt.idx(i))goto 60
    50 av=count(i-1)
       count(i-1)=count(i)
       count(i)=av
-      int=index(i-1)
-      index(i-1)=index(i)
-      index(i)=int
+      int=idx(i-1)
+      idx(i-1)=idx(i)
+      idx(i)=int
       i=i-1
       if(i.gt.is)goto  40
    60 continue
@@ -933,9 +929,9 @@ end subroutine ihpsort
 !  highest address.
    70 iy=(is+if)/2
       x=count(iy)
-      intest=index(iy)
+      intest=idx(iy)
       count(iy)=count(if)
-      index(iy)=index(if)
+      idx(iy)=idx(if)
 !  the markers 'i' and 'ifk' are used for the beginning and end
 !  of the section not so far tested against the present value
 !  of x .
@@ -947,19 +943,19 @@ end subroutine ihpsort
       do 110 i=is,if
       if(x.gt.count(i))goto 110
       if(x.lt.count(i))goto 80
-      if(intest.gt.index(i))goto 110
+      if(intest.gt.idx(i))goto 110
    80 if(i.ge.ifk)goto 120
       count(ifk)=count(i)
-      index(ifk)=index(i)
+      idx(ifk)=idx(i)
       k1=k
       do 100 k=k1,ifka
       ifk=if-k
       if(count(ifk).gt.x)goto 100
       if(count(ifk).lt.x)goto 90
-      if(intest.le.index(ifk))goto 100
+      if(intest.le.idx(ifk))goto 100
    90 if(i.ge.ifk)goto 130
       count(i)=count(ifk)
-      index(i)=index(ifk)
+      idx(i)=idx(ifk)
       go to 110
   100 continue
       goto 120
@@ -970,11 +966,11 @@ end subroutine ihpsort
 !  to any element in the second part, and they may now be sorted
 !  independently .
   120 count(ifk)=x
-      index(ifk)=intest
+      idx(ifk)=intest
       ip=ifk
       goto 140
   130 count(i)=x
-      index(i)=intest
+      idx(i)=intest
       ip=i
 !  store the longer subdivision in workspace.
   140 if((ip-is).gt.(if-ip))goto 150

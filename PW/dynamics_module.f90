@@ -650,7 +650,7 @@ MODULE dynamics_module
       !
       INTEGER, INTENT(IN) :: istep
       !
-      INTEGER               :: i, j, index
+      INTEGER               :: i, j, idx
       REAL(DP)              :: dx, dy, dz
       REAL(DP)              :: dtau(3)
       REAL(DP)              :: inv_dmax
@@ -708,9 +708,9 @@ MODULE dynamics_module
             !
             dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * alat )
             !
-            index = ANINT( norm( dtau(:) ) * inv_dmax * DBLE( hist_len ) )
+            idx = ANINT( norm( dtau(:) ) * inv_dmax * DBLE( hist_len ) )
             !
-            radial_distr(index,i) = radial_distr(index,i) + 1.D0
+            radial_distr(idx,i) = radial_distr(idx,i) + 1.D0
             !
          END DO
          !
@@ -730,7 +730,7 @@ MODULE dynamics_module
       !
       IMPLICIT NONE
       !
-      INTEGER             :: i, index
+      INTEGER             :: i, idx
       REAL(DP)            :: dist, dmax
       REAL(DP), PARAMETER :: max_dist(3) = (/ 0.5D0, 0.5D0, 0.5D0 /)
       !
@@ -762,16 +762,16 @@ MODULE dynamics_module
       !
       OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // ".rdf.dat" )
       !
-      DO index = 1, hist_len
+      DO idx = 1, hist_len
          !
-         dist = DBLE( index ) / DBLE( hist_len ) * dmax
+         dist = DBLE( idx ) / DBLE( hist_len ) * dmax
          !
          IF ( dist > dmax / SQRT( 3.0 ) ) CYCLE
          !
-         radial_distr(index,:) = radial_distr(index,:) / dist**2
+         radial_distr(idx,:) = radial_distr(idx,:) / dist**2
          !
          WRITE( 4, '(2(2X,F16.8))' ) &
-             dist, SUM( radial_distr(index,:) ) / DBLE( nat )
+             dist, SUM( radial_distr(idx,:) ) / DBLE( nat )
          !
       END DO
       !

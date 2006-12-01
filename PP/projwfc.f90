@@ -274,7 +274,7 @@ SUBROUTINE projwave( filproj, lsym )
   REAL(DP) :: psum, totcharge(nspinx)
   INTEGER  :: nksinit, nkslast
   CHARACTER(LEN=256) :: filename
-  INTEGER, ALLOCATABLE :: INDEX(:) 
+  INTEGER, ALLOCATABLE :: idx(:) 
   LOGICAL :: lsym
   ! 
   ! 
@@ -576,7 +576,7 @@ SUBROUTINE projwave( filproj, lsym )
 1000 FORMAT (5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
                 " (l=",i1," m=",i2,")") 
      ! 
-     ALLOCATE(INDEX (natomwfc), proj1 (natomwfc) ) 
+     ALLOCATE(idx(natomwfc), proj1 (natomwfc) ) 
      DO ik = 1, nkstot 
         WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
         DO ibnd = 1, nbnd 
@@ -590,10 +590,10 @@ SUBROUTINE projwave( filproj, lsym )
            ! sort projections by magnitude, in decreasing order 
            ! 
            DO nwfc = 1, natomwfc 
-              INDEX (nwfc) = 0 
+              idx (nwfc) = 0 
               proj1 (nwfc) = - proj (nwfc, ibnd, ik) 
            END DO
-           CALL hpsort_eps (natomwfc, proj1, index, eps4) 
+           CALL hpsort_eps (natomwfc, proj1, idx, eps4) 
            ! 
            !  only projections that are larger than 0.001 are written 
            ! 
@@ -607,10 +607,10 @@ SUBROUTINE projwave( filproj, lsym )
            ! fancy (?!?) formatting 
            ! 
            WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') & 
-                (proj1 (i), INDEX(i), i = 1, MIN(5,nwfc)) 
+                (proj1 (i), idx(i), i = 1, MIN(5,nwfc)) 
            DO j = 1, (nwfc-1)/5 
               WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') & 
-                   (proj1 (i), INDEX(i), i = 5*j+1, MIN(5*(j+1),nwfc)) 
+                   (proj1 (i), idx(i), i = 5*j+1, MIN(5*(j+1),nwfc)) 
            END DO
            psum = 0.d0 
            DO nwfc = 1, natomwfc 
@@ -620,7 +620,7 @@ SUBROUTINE projwave( filproj, lsym )
            ! 
         ENDDO
      ENDDO
-     DEALLOCATE (index, proj1) 
+     DEALLOCATE (idx, proj1) 
      ! 
      ! estimate partial charges (Loewdin) on each atom 
      ! 
@@ -730,7 +730,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   ! Some workspace for k-point calculation ... 
   REAL(DP), ALLOCATABLE :: charges(:,:,:), proj1 (:)
   REAL(DP) :: psum, totcharge(nspinx), fact(2), spinor, compute_mj
-  INTEGER, ALLOCATABLE :: INDEX(:) 
+  INTEGER, ALLOCATABLE :: idx(:) 
   !
   COMPLEX(DP) :: d12(2, 2, 48), d32(4, 4, 48), d52(6, 6, 48), &
                       d72(8, 8, 48)
@@ -1125,7 +1125,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
                    " (l=",i1," m=",i2," s_z=",f4.1,")") 
      ENDIF
      ! 
-     ALLOCATE(INDEX (natomwfc), proj1 (natomwfc) ) 
+     ALLOCATE(idx (natomwfc), proj1 (natomwfc) ) 
      DO ik = 1, nkstot 
         WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
         DO ibnd = 1, nbnd 
@@ -1134,10 +1134,10 @@ SUBROUTINE projwave_nc(filproj, lsym )
            ! sort projections by magnitude, in decreasing order 
            ! 
            DO nwfc = 1, natomwfc 
-              INDEX (nwfc) = 0 
+              idx (nwfc) = 0 
               proj1 (nwfc) = - proj (nwfc, ibnd, ik) 
            END DO
-           CALL hpsort_eps (natomwfc, proj1, index, eps4) 
+           CALL hpsort_eps (natomwfc, proj1, idx, eps4) 
            ! 
            !  only projections that are larger than 0.001 are written 
            ! 
@@ -1151,10 +1151,10 @@ SUBROUTINE projwave_nc(filproj, lsym )
            ! fancy (?!?) formatting 
            ! 
            WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') & 
-                (proj1 (i), INDEX(i), i = 1, MIN(5,nwfc)) 
+                (proj1 (i), idx(i), i = 1, MIN(5,nwfc)) 
            DO j = 1, (nwfc-1)/5 
               WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') & 
-                   (proj1 (i), INDEX(i), i = 5*j+1, MIN(5*(j+1),nwfc)) 
+                   (proj1 (i), idx(i), i = 5*j+1, MIN(5*(j+1),nwfc)) 
            END DO
            psum = 0.d0 
            DO nwfc = 1, natomwfc 
@@ -1164,7 +1164,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
            ! 
         ENDDO
      ENDDO
-     DEALLOCATE (index, proj1) 
+     DEALLOCATE (idx, proj1) 
      ! 
      ! estimate partial charges (Loewdin) on each atom 
      ! 

@@ -156,7 +156,7 @@
       ! ... LOCALS
 
       INTEGER :: i, nrl, n, ierr
-      INTEGER,     ALLOCATABLE :: index(:)
+      INTEGER,     ALLOCATABLE :: idx(:)
       REAL(DP),   ALLOCATABLE :: ftmp(:)
 
       REAL(DP),   ALLOCATABLE :: vv(:,:)
@@ -210,8 +210,8 @@
 
       ELSE
 
-             ALLOCATE(index(n), STAT=ierr)
-             IF( ierr/=0 ) CALL errore( ' eigs ',' allocating index ',ierr )
+             ALLOCATE(idx(n), STAT=ierr)
+             IF( ierr/=0 ) CALL errore( ' eigs ',' allocating idx ',ierr )
              ei = 0.0_DP
              DO i = 1, n
                 IF ( ib_owner(i) == me_image ) THEN
@@ -219,10 +219,10 @@
                 END IF
              END DO
              CALL mp_sum(ei,intra_image_comm)
-             index(1) = 0
-             CALL hpsort(n, ei, index)
-             DEALLOCATE(index, STAT=ierr)
-             IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating index ',ierr )
+             idx(1) = 0
+             CALL hpsort(n, ei, idx)
+             DEALLOCATE(idx, STAT=ierr)
+             IF( ierr/=0 ) CALL errore( ' eigs ',' deallocating idx ',ierr )
 
       END IF
 

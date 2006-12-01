@@ -79,7 +79,7 @@ subroutine data_structure( lgamma )
 
   logical :: tk = .TRUE.   
   ! map type: true for full space sticks map, false for half space sticks map
-  integer, allocatable :: in1(:), in2(:), index(:)
+  integer, allocatable :: in1(:), in2(:), idx(:)
   ! sticks coordinates
 
   !
@@ -178,7 +178,7 @@ subroutine data_structure( lgamma )
   !
   ALLOCATE( in1( nct ), in2( nct ) )
   ALLOCATE( ngc( nct ), ngcs( nct ), ngkc( nct ) )
-  ALLOCATE( index( nct ) )
+  ALLOCATE( idx( nct ) )
 
 !
 ! ...     initialize the sticks indexes array ist
@@ -188,12 +188,12 @@ subroutine data_structure( lgamma )
 
   CALL sticks_countg( tk, ub, lb, st, stw, sts, in1, in2, ngc, ngkc, ngcs )
 
-  CALL sticks_sort( ngc, ngkc, ngcs, nct, index )
+  CALL sticks_sort( ngc, ngkc, ngcs, nct, idx )
 
-  CALL sticks_dist( tk, ub, lb, index, in1, in2, ngc, ngkc, ngcs, nct, &
+  CALL sticks_dist( tk, ub, lb, idx, in1, in2, ngc, ngkc, ngcs, nct, &
           ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts )
 
-  CALL sticks_pairup( tk, ub, lb, index, in1, in2, ngc, ngkc, ngcs, nct, &
+  CALL sticks_pairup( tk, ub, lb, idx, in1, in2, ngc, ngkc, ngcs, nct, &
           ncp, nkcp, ncps, ngp, ngkp, ngps, st, stw, sts )
 
   !  set the total number of G vectors
@@ -219,10 +219,10 @@ subroutine data_structure( lgamma )
 
   CALL fft_dlay_set( dfftp, &
        tk, nct, nr1, nr2, nr3, nrx1, nrx2, nrx3, (me_pool+1), &
-       nproc_pool, nogrp, ub, lb, index, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
+       nproc_pool, nogrp, ub, lb, idx, in1(:), in2(:), ncp, nkcp, ngp, ngkp, st, stw)
   CALL fft_dlay_set( dffts, &
        tk, ncts, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, (me_pool+1), &
-       nproc_pool, nogrp, ub, lb, index, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
+       nproc_pool, nogrp, ub, lb, idx, in1(:), in2(:), ncps, nkcp, ngps, ngkp, sts, stw)
 
   !  if tk = .FALSE. only half reciprocal space is considered, then we
   !  need to correct the number of sticks
@@ -259,7 +259,7 @@ subroutine data_structure( lgamma )
   WRITE( stdout,*)
 
 
-  DEALLOCATE( stw, st, sts, in1, in2, index, ngc, ngcs, ngkc )
+  DEALLOCATE( stw, st, sts, in1, in2, idx, ngc, ngcs, ngkc )
 
   !
   !   ncp0 = starting column for each processor

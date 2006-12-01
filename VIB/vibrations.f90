@@ -382,7 +382,7 @@ CONTAINS
     ! ... local variables
     !
     INTEGER                       :: iax, iax2, coord
-    INTEGER                       :: index, disp_sign, cyc_counter
+    INTEGER                       :: idx, disp_sign, cyc_counter
 
     REAL (KIND=DP)                :: E_plus
     REAL (KIND=DP)                :: dipole(3)
@@ -401,7 +401,7 @@ CONTAINS
     DO iax=1,nat
        IF (active_atom(iax)) THEN
           DO coord=1,3 !x,y,z
-             index = (iax-1)*3 + coord
+             idx = (iax-1)*3 + coord
              DO disp_sign=-1,1,2 !displacement sign: +-1
                 !
                 ! ... Check if displacement was already calculated in previous run
@@ -499,7 +499,7 @@ CONTAINS
                          E_minus = etot
                          DO iax2 = 1,nat
                             IF (active_atom(iax2)) THEN
-                               U((iax2-1)*3+1:(iax2-1)*3+3,index) = fion(1:3,iax2)
+                               U((iax2-1)*3+1:(iax2-1)*3+3,idx) = fion(1:3,iax2)
                             END IF
                          END DO
                          dip_minus = dipole
@@ -510,20 +510,20 @@ CONTAINS
                          E_plus = etot
                          DO iax2=1,nat
                             IF (active_atom(iax2)) THEN
-                               U((iax2-1)*3+1:(iax2-1)*3+3,index) = U((iax2-1)*3+1:(iax2-1)*3+3,index) &
+                               U((iax2-1)*3+1:(iax2-1)*3+3,idx) = U((iax2-1)*3+1:(iax2-1)*3+3,idx) &
                                     - fion(1:3,iax2)
                             END IF
                          END DO
                          ! adding negative sign, since electronic charge is positive
                          ! in this CP code.
-                         born_charge(:,index)=-(dipole-dip_minus)/(2*displacement)
+                         born_charge(:,idx)=-(dipole-dip_minus)/(2*displacement)
                          !
                          ! A verification on the diagonal element of dynamical matrix:
                          ! ... comparing numerical second derivative of the total energy
                          ! ... to first derivative of the forces
                          !
                          tmp1 = (E_plus+E_minus-2*ref_etot)/(displacement*displacement)
-                         tmp2 = U(index,index)/(2*displacement)
+                         tmp2 = U(idx,idx)/(2*displacement)
                          IF( (ABS(tmp1-tmp2)/(tmp2) > 0.1) .AND. (tmp2 > eps4 ) ) THEN
                             CALL infomsg('calc_hessian','Warning: consistency check',-1)
                             WRITE(stdout,*)              '    Numerical second derivative of the total energy, compared to'
@@ -1024,7 +1024,7 @@ CONTAINS
     REAL (KIND=DP)                :: inertia_tensor(3,3), inertia_moments(3), inertia_eigenvecs(3,3)
     REAL (KIND=DP)                :: xx, yy, zz 
     REAL (KIND=DP)                :: P(nat,3)
-    INTEGER                       :: index, zero_moment_index
+    INTEGER                       :: idx, zero_moment_index
     !
 #ifdef DFT_PW
     pmass = amass * AMU_AU
@@ -1188,23 +1188,23 @@ CONTAINS
        DO i=1,nat
           DO coord=1,3
              !
-             index=4
+             idx=4
              IF (zero_moment_index.NE.1) THEN
-                D(index,3*(i-1)+coord)=(P(i,2)*inertia_eigenvecs(coord,3)-   &
+                D(idx,3*(i-1)+coord)=(P(i,2)*inertia_eigenvecs(coord,3)-   &
                      P(i,3)*inertia_eigenvecs(coord,2))/SQRT(T(3*(i-1)+coord,3*(i-1)+coord))
-                index=index+1
+                idx=idx+1
              END IF
              !
              IF (zero_moment_index.NE.2) THEN
-                D(index,3*(i-1)+coord)=(P(i,3)*inertia_eigenvecs(coord,1)-   &
+                D(idx,3*(i-1)+coord)=(P(i,3)*inertia_eigenvecs(coord,1)-   &
                      P(i,1)*inertia_eigenvecs(coord,3))/SQRT(T(3*(i-1)+coord,3*(i-1)+coord))
-                index=index+1
+                idx=idx+1
              END IF
              !
              IF (zero_moment_index.NE.3) THEN
-                D(index,3*(i-1)+coord)=(P(i,1)*inertia_eigenvecs(coord,2)-   &
+                D(idx,3*(i-1)+coord)=(P(i,1)*inertia_eigenvecs(coord,2)-   &
                      P(i,2)*inertia_eigenvecs(coord,1))/SQRT(T(3*(i-1)+coord,3*(i-1)+coord))
-                index=index+1
+                idx=idx+1
              END IF
              !
           END DO
@@ -1470,7 +1470,7 @@ CONTAINS
     !
     ! ... local variables
     !
-    INTEGER                     :: i, ia, coord, index
+    INTEGER                     :: i, ia, coord, idx
     REAL (KIND=DP)              :: mode_charge(3,3*nat)
     REAL (KIND=DP)              :: tot_charge, tot_system_charge(3,3)
     !
@@ -1487,8 +1487,8 @@ CONTAINS
        WRITE (filep,*) 'Atom Label: ',TRIM(atom_label(ityp(ia)))
        WRITE (filep,*) ''
        DO coord=1,3             !x,y,z
-          index=(ia-1)*3+coord  !index of atom1 coordinate in continueous counting
-          WRITE (filep,'(3(f8.3,3X))') born_charge(1,index),born_charge(2,index),born_charge(3,index)
+          idx=(ia-1)*3+coord    !index of atom1 coordinate in continueous counting
+          WRITE (filep,'(3(f8.3,3X))') born_charge(1,idx),born_charge(2,idx),born_charge(3,idx)
        END DO
     END DO
     !

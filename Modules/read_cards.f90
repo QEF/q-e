@@ -428,7 +428,7 @@ MODULE read_cards_module
        CHARACTER(LEN=256) :: input_line
        CHARACTER(LEN=2)   :: prog
        CHARACTER(LEN=4)   :: lb_pos
-       INTEGER            :: ia, k, is, nfield, index, rep_i
+       INTEGER            :: ia, k, is, nfield, idx, rep_i
        LOGICAL, EXTERNAL  :: matches
        LOGICAL            :: tend
        LOGICAL, SAVE      :: tread = .FALSE.
@@ -656,7 +656,7 @@ MODULE read_cards_module
            !
            DO ia = 1, nat
               !
-              index = 3 * ( ia - 1 )
+              idx = 3 * ( ia - 1 )
               !
               CALL read_line( input_line, end_of_file = tend )
               !
@@ -668,9 +668,9 @@ MODULE read_cards_module
               !
               IF ( nfield == 4 ) THEN
                  !
-                 READ( input_line, * ) lb_pos, pos((index+1),image), &
-                                               pos((index+2),image), &
-                                               pos((index+3),image)
+                 READ( input_line, * ) lb_pos, pos((idx+1),image), &
+                                               pos((idx+2),image), &
+                                               pos((idx+3),image)
                  !
               ELSE IF ( nfield == 7 ) THEN
                  !
@@ -682,9 +682,9 @@ MODULE read_cards_module
                     !
                  END IF
                  !
-                 READ( input_line, * ) lb_pos, pos((index+1),image), &
-                                               pos((index+2),image), &
-                                               pos((index+3),image), &
+                 READ( input_line, * ) lb_pos, pos((idx+1),image), &
+                                               pos((idx+2),image), &
+                                               pos((idx+3),image), &
                                                if_pos(1,ia), &
                                                if_pos(2,ia), &
                                                if_pos(3,ia)

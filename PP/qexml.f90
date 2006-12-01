@@ -1667,12 +1667,12 @@ CONTAINS
 
 
     !------------------------------------------------------------------------
-    SUBROUTINE qexml_read_gk( ik, npwk, npwkx, index, igk, ierr )
+    SUBROUTINE qexml_read_gk( ik, npwk, npwkx, idx, igk, ierr )
       !------------------------------------------------------------------------
       !
       INTEGER,                INTENT(IN)  :: ik
       INTEGER,      OPTIONAL, INTENT(OUT) :: npwk, npwkx
-      INTEGER,      OPTIONAL, INTENT(OUT) :: igk(:,:), index(:)
+      INTEGER,      OPTIONAL, INTENT(OUT) :: igk(:,:), idx(:)
       INTEGER,                INTENT(OUT) :: ierr
       !
       INTEGER :: npwk_, npwkx_
@@ -1702,9 +1702,9 @@ CONTAINS
       CALL iotk_scan_begin( iunpun, "K-POINT" //TRIM(iotk_index(ik)), IERR=ierr )
       IF (ierr/=0) RETURN
       !
-      IF ( PRESENT( index )  )  THEN
+      IF ( PRESENT( idx )  )  THEN
           !
-          CALL iotk_scan_dat( iunpun, "INDEX", index(1: npwk_) , IERR=ierr )
+          CALL iotk_scan_dat( iunpun, "INDEX", idx(1: npwk_) , IERR=ierr )
           IF (ierr/=0) RETURN
           !
       ENDIF

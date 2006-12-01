@@ -3146,7 +3146,7 @@ USE io_global,            ONLY : stdout
 
 IMPLICIT NONE
 
-INTEGER :: iclass, irot, i, index
+INTEGER :: iclass, irot, i, idx
 LOGICAL :: is_complex, is_complex_so, flag
 
 IF (noncolin) THEN
@@ -3186,9 +3186,9 @@ IF (noncolin) THEN
                    (REAL(char_mat_so(iclass,irot)), irot=13,nclass)
       END DO
    END IF
-   index=code_group
-   IF (noncolin.and.domag) index=code_group_is
-   IF (is_complex_so(index)) THEN
+   idx=code_group
+   IF (noncolin.and.domag) idx=code_group_is
+   IF (is_complex_so(idx)) THEN
       WRITE(stdout,'(/,5x,"imaginary part")')
       WRITE(stdout,'(/,7x,12(a5,1x))') (name_class_so(irot), &
                                         irot=1,MIN(12,nclass))
@@ -3224,9 +3224,9 @@ ELSE
       WRITE(stdout,'(a5,12f6.2)') name_rap(iclass), &
          (REAL(char_mat(iclass,irot)),irot=1,nclass)
    ENDDO
-   index=code_group
-   IF (noncolin.and.domag) index=code_group_is
-   IF (is_complex(index)) THEN
+   idx=code_group
+   IF (noncolin.and.domag) idx=code_group_is
+   IF (is_complex(idx)) THEN
       WRITE(stdout,'(5x,"imaginary part")')
       DO iclass=1,nclass
          WRITE(stdout,'(a5,12f6.2)') name_rap(iclass), &

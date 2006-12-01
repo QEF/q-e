@@ -103,7 +103,6 @@ SUBROUTINE projection (first_band, last_band)
   LOGICAL :: exst 
   COMPLEX(DP), ALLOCATABLE :: proj (:,:,:)
   COMPLEX(DP), ALLOCATABLE :: wfcatom (:,:) 
-  INTEGER, ALLOCATABLE :: INDEX(:) 
   ! 
   COMPLEX(DP), ALLOCATABLE ::  proj0(:,:) 
   ! Some workspace for k-point calculation ... 

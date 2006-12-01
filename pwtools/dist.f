@@ -31,7 +31,7 @@
       integer nat, ibrav, nsp, ityp(nax)
       integer nsp1, nsp2, nat0, na, nb, n, nd, nn, nn1, nn2, nn3
       integer iout, i
-      integer atom1(ndistx), atom2(ndistx), index(ndistx), ndist
+      integer atom1(ndistx), atom2(ndistx), idx(ndistx), ndist
       character*3 atm(nspx), atm1, atm2
       character*80 filename, line
       character*1  capital, other_cell(ndistx)
@@ -215,14 +215,14 @@
          end if
       end do
 !
-      index(1)=0.0
-      if (ndist.gt.0) call hpsort(ndist,d,index)
+      idx(1)=0.0
+      if (ndist.gt.0) call hpsort(ndist,d,idx)
 !
       if (iout.eq.1)                                                    
      &     write(iout,100) atm1, atm2, dmin,dmax
       do nd=1,ndist
-         write(iout,200) atom1(index(nd)), atom2(index(nd)),            
-     &        other_cell(index(nd)), d(nd)
+         write(iout,200) atom1(idx(nd)), atom2(idx(nd)),            
+     &        other_cell(idx(nd)), d(nd)
       end do
 !
       go to 30

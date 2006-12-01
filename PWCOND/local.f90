@@ -169,7 +169,7 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
 
   INTEGER :: nrz, n2d 
   INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k,      &
-             ios, index, number, nprob, nteam, nteamnow,     &
+             ios, idx, number, nprob, nteam, nteamnow,     &
              info, kin, kfin, is, js
 #ifdef __PARA
   INTEGER :: status(MPI_STATUS_SIZE)
@@ -227,11 +227,11 @@ subroutine local_1 (edummy, nrz, vppot, n2d, psibase)
            DO ipol=1, 2
               gp(ipol)=gper(ipol,ig)-gper(ipol,jg)
            ENDDO
-           index=number(gp, at, fftxy, nrx, nry)
-           IF (index.GT.0) THEN
+           idx=number(gp, at, fftxy, nrx, nry)
+           IF (idx.GT.0) THEN
               DO is=1,npol
                  DO js=1,npol
-                    amat(ig+(is-1)*ngper,jg+(js-1)*ngper)=vppot(kin,index,is,js)
+                    amat(ig+(is-1)*ngper,jg+(js-1)*ngper)=vppot(kin,idx,is,js)
                     amat(jg+(js-1)*ngper,ig+(is-1)*ngper)= &
                         CONJG(amat(ig+(is-1)*ngper,jg+(js-1)*ngper))
                  ENDDO
@@ -307,7 +307,7 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
 
   INTEGER :: nrz, nrzp
   INTEGER :: i, il, j, jl, ixy, ig, jg, ipol, igper, k, kp, &
-             ios, info, index, number, kin, kfin, is, js 
+             ios, info, idx, number, kin, kfin, is, js 
   INTEGER, ALLOCATABLE :: fftxy(:,:)
   REAL(DP) :: zkr(n2d,nrzp)
   REAL(DP), ALLOCATABLE :: gp(:)
@@ -350,11 +350,11 @@ subroutine local_2(nrz, nrzp, vppot, psiper, zkr)
             DO ipol=1, 2
                gp(ipol) = gper(ipol,ig) - gper(ipol,jg)
             ENDDO
-            index=number(gp, at, fftxy, nrx, nry)
+            idx=number(gp, at, fftxy, nrx, nry)
             DO is=1,npol
                DO js=1,npol
-                  IF (index.GT.0) THEN
-                     aij=vppot(k,index,is,js)
+                  IF (idx.GT.0) THEN
+                     aij=vppot(k,idx,is,js)
                   ELSE
                      aij=(0.d0,0.d0)
                   ENDIF

@@ -486,7 +486,7 @@
       !--------
       !C. Bekas
       !--------
-      INTEGER  ::  eig_index, index, index_df_da, ierr
+      INTEGER  ::  eig_index, idx, index_df_da, ierr
       INTEGER, DIMENSION(NOGRP) :: local_send_cnt, local_send_displ, local_recv_cnt, local_recv_displ
 !
       call start_clock( 'dforce' ) 
@@ -509,7 +509,7 @@
 !
 
          psi(:) = (0D0,0D0)
-         index = 1
+         idx = 1
          eig_offset = 0
          do eig_index = 1, 2*NOGRP, 2! Outer loop for eigenvalues
             !The  eig_index loop is executed only ONCE when NOGRP=1.
@@ -525,11 +525,11 @@
             !---------------------------------------------
 
             do ig=1,ngw
-               psi(nms(ig)+eig_offset*strd)=conjg( c(ig,index) - ci*ca(ig,index) )
-               psi(nps(ig)+eig_offset*strd)=c(ig,index)+ci*ca(ig,index)
+               psi(nms(ig)+eig_offset*strd)=conjg( c(ig,idx) - ci*ca(ig,idx) )
+               psi(nps(ig)+eig_offset*strd)=c(ig,idx)+ci*ca(ig,idx)
             end do
             eig_offset = eig_offset + 1
-            index = index + 2
+            idx = idx + 2
          end do
 
          CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)  
@@ -581,12 +581,12 @@
       local_send_displ(1) = 0
       local_recv_cnt(1) = nr3sx*dffts%nsw(me_image+1)
       local_recv_displ(1) = 0
-      DO index=2, NOGRP
-         local_send_cnt(index) = nr3sx*dffts%nsw(NOLIST(index)+1)
-         local_send_displ(index) = local_send_displ(index-1) + local_send_cnt(index-1)
+      DO idx=2, NOGRP
+         local_send_cnt(idx) = nr3sx*dffts%nsw(NOLIST(idx)+1)
+         local_send_displ(idx) = local_send_displ(idx-1) + local_send_cnt(idx-1)
 
-         local_recv_cnt(index) = nr3sx*dffts%nsw(me_image+1)
-         local_recv_displ(index)  = local_recv_displ(index-1) + local_recv_cnt(index-1)
+         local_recv_cnt(idx) = nr3sx*dffts%nsw(me_image+1)
+         local_recv_displ(idx)  = local_recv_displ(idx-1) + local_recv_cnt(idx-1)
       ENDDO
 
       CALL start_clock('DFORCE_ALL')
@@ -611,19 +611,19 @@
       !--------------------------------------------------------------
       eig_offset = 0
       index_df_da = 1
-      DO index = 1, 2*NOGRP, 2
+      DO idx = 1, 2*NOGRP, 2
          do ig=1,ngw
             if (tens) then
                fi = -0.5
                fip = -0.5
             else
-               fi = -0.5*f(i+index-1)
-               fip = -0.5*f(i+index)
+               fi = -0.5*f(i+idx-1)
+               fip = -0.5*f(i+idx)
             endif
             fp= temp_psi(nps(ig)+eig_offset) +  temp_psi(nms(ig)+eig_offset)
             fm= temp_psi(nps(ig)+eig_offset) -  temp_psi(nms(ig)+eig_offset)
-            df(index_df_da)= fi*(tpiba2 * ggp(ig) * c(ig,index)+cmplx(real(fp), aimag(fm)))
-            da(index_df_da)= fip*(tpiba2 * ggp(ig) * ca(ig,index)+cmplx(aimag(fp),-real(fm)))
+            df(index_df_da)= fi*(tpiba2 * ggp(ig) * c(ig,idx)+cmplx(real(fp), aimag(fm)))
+            da(index_df_da)= fip*(tpiba2 * ggp(ig) * ca(ig,idx)+cmplx(aimag(fp),-real(fm)))
             index_df_da = index_df_da + 1
          enddo
          eig_offset = eig_offset + nr3sx * dffts%nsw(me_image+1)
@@ -662,19 +662,19 @@
                      !Work on all currently treated (NOGRP) eigenvalues
                      !-------------------------------------------------
                      ig = 1
-                     DO index = 1, 2*NOGRP, 2
+                     DO idx = 1, 2*NOGRP, 2
                         if (tens) then 
-                           af(inl,ig) = af(inl,ig) -  dd*bec(jnl,  i+index-1 )
+                           af(inl,ig) = af(inl,ig) -  dd*bec(jnl,  i+idx-1 )
                         else
-                           af(inl,ig) = af(inl,ig) -  f(i+index-1)*dd*bec(jnl,  i+index-1 )
+                           af(inl,ig) = af(inl,ig) -  f(i+idx-1)*dd*bec(jnl,  i+idx-1 )
                         endif
 
                         dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
                       
                         if (tens) then
-                           if ((i+index-1).ne.n) aa(inl,ig) = aa(inl,ig) - dd*bec(jnl,i+index)
+                           if ((i+idx-1).ne.n) aa(inl,ig) = aa(inl,ig) - dd*bec(jnl,i+idx)
                         else
-                           if ((i+index-1).ne.n) aa(inl,ig) = aa(inl,ig) - f(i+index)*dd*bec(jnl,i+index)
+                           if ((i+idx-1).ne.n) aa(inl,ig) = aa(inl,ig) - f(i+idx)*dd*bec(jnl,i+idx)
                         endif    
                         ig = ig + 1
                      ENDDO
@@ -688,9 +688,9 @@
 !         call MXMA (betae, 1, 2*ngw, af, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
          call DGEMM ( 'N', 'N', 2*ngw, NOGRP, nhsa, 1.0d0, betae, 2*ngw, af, nhsa, 0.0d0, dtemp, 2*ngw)
 
-!         DO index = 1, NOGRP
-!            DO ig = 1+(index-1)*ngw, index*ngw
-!               df(ig) = df(ig) + dtemp(ig,index)
+!         DO idx = 1, NOGRP
+!            DO ig = 1+(idx-1)*ngw, idx*ngw
+!               df(ig) = df(ig) + dtemp(ig,idx)
 !            END DO
 !         ENDDO
 
@@ -704,9 +704,9 @@
          ! call MXMA (betae, 1, 2*ngw, aa, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
          call DGEMM ( 'N', 'N', 2*ngw, NOGRP, nhsa, 1.0d0, betae, 2*ngw, aa, nhsa, 0.0d0, dtemp, 2*ngw)
 
-!         DO index = 1, NOGRP
-!            DO ig = 1+(index-1)*ngw, index*ngw
-!               da(ig) = da(ig) + dtemp(ig,index)
+!         DO idx = 1, NOGRP
+!            DO ig = 1+(idx-1)*ngw, idx*ngw
+!               da(ig) = da(ig) + dtemp(ig,idx)
 !            ENDDO
 !         ENDDO
 
