@@ -93,10 +93,10 @@ end Module dynamical
       filout='dynmat.out'
       filmol='dynmat.mold'
       filxsf='dynmat.axsf'
-      amass(:)=0.0
-      q(1)=0.0
-      q(2)=0.0
-      q(3)=0.0
+      amass(:)=0.0d0
+      q(1)=0.0d0
+      q(2)=0.0d0
+      q(3)=0.0d0
 !
       read (5,input)
 !
@@ -113,8 +113,8 @@ end Module dynamical
       call readmat ( fildyn, asr, axis, nat, ntyp, atm, a0, &
            at, omega, amass_, eps0, q_ )
       !
-      gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0e-8
-      amconv = 1.66042e-24/9.1095e-28*0.5
+      gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0d-8
+      amconv = 1.66042d-24/9.1095d-28*0.5d0
       do nt=1, ntyp
          if (amass(nt) > 0.0) then
             amass(nt)=amass(nt)*amconv

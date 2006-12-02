@@ -136,11 +136,11 @@ program read_bands
         ps = ( k1(1)*k2(1) + k1(2)*k2(2) + k1(3)*k2(3) ) / &
          sqrt( k1(1)*k1(1) + k1(2)*k1(2) + k1(3)*k1(3) ) / &
          sqrt( k2(1)*k2(1) + k2(2)*k2(2) + k2(3)*k2(3) )
-        high_symmetry(n) = high_symmetry(n).OR.(abs(ps-1.0) .gt.1.0e-4)
+        high_symmetry(n) = high_symmetry(n).OR.(abs(ps-1.0) .gt.1.0d-4)
 !
 !  The gamma point is a high symmetry point  
 !
-        if (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0e-9) high_symmetry(n)=.true.
+        if (k(1,n)**2+k(2,n)**2+k(3,n)**2 < 1.0d-9) high_symmetry(n)=.true.
      end if
 
      if (high_symmetry(n)) then

@@ -27,19 +27,19 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   real(DP) :: facg(nat), arg, tpi, fpi, tpiba2, e2, alpha,    &
        r(3,mxr), r2(mxr), dtau(3), erfc, rmax, rr,                 &
        upperbound, charge, gt2, fac, fnat, df, d2f, ar
-  parameter(e2=2.0, tpi=2.0*3.14159265358979d0 )
+  parameter(e2=2.d0, tpi=2.d0*3.14159265358979d0 )
   external erfc, rgen
   !
   !
   tpiba2 = (tpi/alat)**2
-  fpi = 2.0*tpi
+  fpi = 2.d0*tpi
   !
-  charge = 0.0
+  charge = 0.d0
   do na=1, nat
      charge = charge + zv(ityp(na))
   end do
   !
-  alpha=0.5
+  alpha=0.5d0
   ! appropriate for c60
   WRITE( stdout,'("     d2ion: alpha = ",f6.2)') alpha
   !
@@ -55,12 +55,12 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      !
      ! upperbound is a safe upper bound for the error ON THE ENERGY
      !
-     upperbound=e2*charge**2*sqrt(2*alpha/tpi)*                     &
-          &              erfc(sqrt(tpiba2*gg(ng)/4.0/alpha))
-     if(upperbound.lt.1.0e-6) go to 20
+     upperbound=e2*charge**2*sqrt(2.0d0*alpha/tpi)*             &
+          &              erfc(sqrt(tpiba2*gg(ng)/4.d0/alpha))
+     if(upperbound.lt.1.0d-6) go to 20
      !
      gt2 = gg(ng)*tpiba2
-     fac = -e2*fpi*tpiba2/omega*exp(-gt2/alpha/4.0)/gt2
+     fac = -e2*fpi*tpiba2/omega*exp(-gt2/alpha/4.d0)/gt2
      do na = 1,nat
         nta= ityp(na)
         fnat = 0.0
@@ -131,9 +131,9 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
            do nr=1, nrm
               rr=sqrt(r2(nr))*alat
               ar = sqrt(alpha)*rr
-              d2f = ( 3.0*erfc(ar) + sqrt(8.0/tpi)*ar*              &
-                     (3.0+2.0*ar**2)*exp(-ar**2) ) / rr**5
-              df  = (    -erfc(ar) - sqrt(8.0/tpi)*ar*exp(-ar**2) ) / rr**3
+              d2f = ( 3.d0*erfc(ar) + sqrt(8.d0/tpi)*ar*              &
+                     (3.d0+2.d0*ar**2)*exp(-ar**2) ) / rr**5
+              df  = (    -erfc(ar) - sqrt(8.d0/tpi)*ar*exp(-ar**2) ) / rr**3
               do nu_i = 1,nmodes
                  if (has_equivalent( (nu_i-1)/3+1 ).eq.1 ) go to 25
                  arg = r(1,nr)*u(mu_i+1,nu_i) + &

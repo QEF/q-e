@@ -25,7 +25,7 @@ subroutine kpoint_grid &
   integer nks
   real(DP)  xk(3,npk), wk(npk)
   ! LOCAL:
-  real(DP), parameter :: eps=1.0e-5
+  real(DP), parameter :: eps=1.0d-5
   real(DP) xkr(3), deltap(3), deltam(3), fact, xx, yy, zz
   real(DP), allocatable:: xkg(:,:), wkk(:)
   integer nkr, i,j,k, ns, n, nk

@@ -183,7 +183,7 @@ subroutine read_ncpp(iunps)
      allocate(rho_atc_(mesh_))
      if (nlcc_) then
         rho_atc_(:) =(a_nlcc+b_nlcc*(r_(:)**2))*exp(-alpha_nlcc*r_(:)**2)
-        where(abs(rho_atc_) < 1.0e-15)
+        where(abs(rho_atc_) < 1.0d-15)
            rho_atc_ = 0
         end where
      end if

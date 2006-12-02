@@ -21,7 +21,7 @@ subroutine pbcg_psi (lda, n, m, psi, h_diag, flag)
   ! input: the leading dimension of the psi vector
   ! input: the real dimension of the vector
   ! input: the number of vectors
-  ! input: flag=1 use h_diag, flag=-1 use dconjg(h_diag)
+  ! input: flag=1 use h_diag, flag=-1 use CONJG(h_diag)
   complex(kind=DP) :: psi (lda, m)
   ! inp/out: the vector to be preconditioned
 
@@ -37,7 +37,7 @@ subroutine pbcg_psi (lda, n, m, psi, h_diag, flag)
        if (flag .eq. 1) then
          psi (i, k) = psi (i, k) * h_diag (i, k)
        else if (flag .eq. -1) then
-         psi (i, k) = psi (i, k) * dconjg(h_diag (i, k))
+         psi (i, k) = psi (i, k) * CONJG(h_diag (i, k))
        else
          print*, 'flag is neither 1 nor -1. Stop'
        endif  

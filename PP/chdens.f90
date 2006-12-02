@@ -226,7 +226,7 @@ SUBROUTINE chdens (filplot)
      if (gcutmsa.ne.gcutm.or.duals.ne.dual.or.ecuts.ne.ecutwfc ) &
           call errore ('chdens', 'incompatible gcutm or dual or ecut', 1)
      do i = 1, 6
-        if (abs( celldm (i)-celldms (i) ) .gt. 1.0e-7 ) call errore &
+        if (abs( celldm (i)-celldms (i) ) .gt. 1.0d-7 ) call errore &
              ('chdens', 'incompatible celldm', 1)
      enddo
      !

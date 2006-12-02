@@ -88,7 +88,7 @@ SUBROUTINE init_run()
   IMPLICIT NONE
   !
   INTEGER            :: neupdwn( nspinx )
-  INTEGER            :: lds_wfc
+  INTEGER            :: lds_wfc, i
   CHARACTER(LEN=256) :: dirname
   !
   !
@@ -254,7 +254,8 @@ SUBROUTINE init_run()
      !
      IF( program_name == 'CP90' ) THEN
         !
-        CALL readfile( 1, ndr, h, hold, nfi, c0, cm, taus,   &
+        i = 1  
+        CALL readfile( i, ndr, h, hold, nfi, c0, cm, taus,   &
                        tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,   &

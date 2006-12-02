@@ -51,7 +51,7 @@ subroutine add_exchange ( energy )
          end do
          do l3=l0,l1+l2
             sss = sl3(l1,l2,l3)
-            if (abs(sss).gt.1.0e-10) then
+            if (abs(sss).gt.1.0d-10) then
                call hartree(l3,l1+l2+2,mesh,r,r2,sqr,dx,wrk,wrk2)
                fac = -e2*ocs*sss/2.0d0
                do i=1,mesh

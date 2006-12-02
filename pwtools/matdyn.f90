@@ -107,8 +107,8 @@ PROGRAM matdyn
   !
   INTEGER:: nax, nax_blk
   INTEGER, PARAMETER:: ntypx=10, nrwsx=200
-  REAL(DP), PARAMETER :: eps=1.0e-6,  rydcm1 = 13.6058*8065.5, &
-       amconv = 1.66042e-24/9.1095e-28*0.5
+  REAL(DP), PARAMETER :: eps=1.0d-6,  rydcm1 = 13.6058d0*8065.5d0, &
+       amconv = 1.66042d-24/9.1095d-28*0.5d0
   INTEGER :: nr1, nr2, nr3, nsc, nk1, nk2, nk3, ntetra, ibrav
   CHARACTER(LEN=256) :: flfrc, flfrq, flvec, fltau, fldos
   CHARACTER(LEN=10)  :: asr
@@ -1321,7 +1321,7 @@ SUBROUTINE q_gen(nsc,qbid,at_blk,bg_blk,at,bg)
   !
   INTEGER, PARAMETER:: nr1=4, nr2=4, nr3=4, &
                        nrm=(2*nr1+1)*(2*nr2+1)*(2*nr3+1)
-  REAL(DP), PARAMETER:: eps=1.0e-7
+  REAL(DP), PARAMETER:: eps=1.0d-7
   INTEGER :: i, j, k,i1, i2, i3, idum(nrm), iq
   REAL(DP) :: qnorm(nrm), qbd(3,nrm) ,qwork(3), delta
   LOGICAL lbho

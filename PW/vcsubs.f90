@@ -1285,7 +1285,7 @@ subroutine updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
   implicit none
   !
   real(DP) :: pi, twopi, eps, zero, um, dois, tres
-  parameter (pi = 3.141592653589793e0, twopi = 2.0e0 * pi)
+  parameter (pi = 3.141592653589793d0, twopi = 2.0d0 * pi)
   parameter (eps = 1.0d-14)
   parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0)
   !

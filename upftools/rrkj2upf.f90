@@ -206,12 +206,12 @@ subroutine convert_rrkj
   nbeta = nbeta_
   ntwfc = 0
   do i=1, nwfs
-     if (oc(i) .gt. 1.0e-12) ntwfc = ntwfc + 1
+     if (oc(i) .gt. 1.0d-12) ntwfc = ntwfc + 1
   end do
   allocate( elsw(ntwfc), ocw(ntwfc), lchiw(ntwfc) )
   n = 0
   do i=1, nwfs
-     if (oc(i) .gt. 1.0e-12) then
+     if (oc(i) .gt. 1.0d-12) then
         n = n + 1
         elsw(n) = els(i)
         ocw (n) = oc (i)
@@ -277,7 +277,7 @@ subroutine convert_rrkj
   allocate (chi(mesh,ntwfc))
   n = 0
   do i=1, nwfs
-     if (oc(i) .gt. 1.0e-12) then
+     if (oc(i) .gt. 1.0d-12) then
         n = n + 1
         chi(:,n) = chi_(:,i)
      end if

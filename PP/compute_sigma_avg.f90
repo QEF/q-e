@@ -122,24 +122,24 @@ DO ibnd = 1, nbnd
    IF (lsigma(1)) THEN
       DO ir = 1,nrxxs
          rho(ir,2) = rho(ir,2) + 2.D0* &
-                   (real(psic_nc(ir,1))*real(psic_nc(ir,2)) + &
-                   DIMAG(psic_nc(ir,1))*DIMAG(psic_nc(ir,2)))
+                   (REAL(psic_nc(ir,1))*REAL(psic_nc(ir,2)) + &
+                   AIMAG(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)))
       END DO
       IF (doublegrid) CALL interpolate( rho(1,2), rho(1,2), 1 )
    END IF
    IF (lsigma(2)) THEN
       DO ir = 1,nrxxs
          rho(ir,3) = rho(ir,3) + 2.D0* &
-                   (real(psic_nc(ir,1))*DIMAG(psic_nc(ir,2)) - &
-                    real(psic_nc(ir,2))*DIMAG(psic_nc(ir,1)))
+                   (REAL(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)) - &
+                    REAL(psic_nc(ir,2))*AIMAG(psic_nc(ir,1)))
       END DO
       IF (doublegrid) CALL interpolate( rho(1,3), rho(1,3), 1 )
    END IF
    IF (lsigma(3)) THEN
       DO ir = 1,nrxxs
          rho(ir,4) = rho(ir,4) + &
-                   (real(psic_nc(ir,1))**2+DIMAG(psic_nc(ir,1))**2 &
-                   -real(psic_nc(ir,2))**2-DIMAG(psic_nc(ir,2))**2)
+                   (REAL(psic_nc(ir,1))**2+AIMAG(psic_nc(ir,1))**2 &
+                   -REAL(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
       END DO
       IF (doublegrid) CALL interpolate( rho(1,4), rho(1,4), 1 )
    END IF
@@ -161,7 +161,7 @@ DO ibnd = 1, nbnd
             xx = (i-1)*dx - x0
             DO j = 1, nr2s
                yy = (j-1)*dy - y0
-               r_aux = SQRT (xx**2 + yy**2)
+               r_aux = DSQRT (xx**2 + yy**2)
                IF (r_aux.LE.r_cut) THEN
                   DO k = 1, npps(me_pool+1)
                      ijk = i + (j-1) * nrx1s + (k-1) * nrx1s * nrx2s
@@ -176,7 +176,7 @@ DO ibnd = 1, nbnd
             END DO
          END DO
          c_aux = ZDOTC(nrxxs, psic_nc(1,ipol), 1, dfx, 1)
-         magtot1(4) = magtot1(4) + DIMAG(c_aux)
+         magtot1(4) = magtot1(4) + AIMAG(c_aux)
       END DO
       CALL reduce( 1, magtot1(4) )
       magtot1(4) = magtot1(4)/(nr1s*nr2s*nr3s)
@@ -230,24 +230,24 @@ DO ibnd = 1, nbnd
                END DO
                IF (lsigma(1)) THEN
                   DO ih = 1, nh(np)
-                     magtot2(1)=magtot2(1)+ 2.d0*qq(ih,ih,np)*DREAL &
-                             ( be1(ih,2)*DCONJG(be1(ih,1)) )
+                     magtot2(1)=magtot2(1)+ 2.d0*qq(ih,ih,np)  &
+                              * REAL( be1(ih,2)*CONJG(be1(ih,1)) )
                      DO jh = ih + 1, nh(np)   
-                        magtot2(1)=magtot2(1)+2.d0*qq(ih,jh,np)*DREAL &
-                                  (be1(jh,2)*DCONJG(be1(ih,1))+ &
-                                   be1(jh,1)*DCONJG(be1(ih,2)) )
+                        magtot2(1)=magtot2(1)+2.d0*qq(ih,jh,np) &
+                              * REAL( be1(jh,2)*CONJG(be1(ih,1))+ &
+                                   be1(jh,1)*CONJG(be1(ih,2)) )
 
                      ENDDO
                   ENDDO
                ENDIF
                IF (lsigma(2)) THEN
                   DO ih = 1, nh(np)
-                     magtot2(2)=magtot2(2)+ 2.d0*qq(ih,ih,np)*DIMAG   &
-                               ( be1(ih,2)*DCONJG(be1(ih,1)) )
+                     magtot2(2)=magtot2(2)+ 2.d0*qq(ih,ih,np)*AIMAG   &
+                               ( be1(ih,2)*CONJG(be1(ih,1)) )
                      DO jh = ih + 1, nh(np)   
-                        magtot2(2)=magtot2(2) + 2.d0*qq(ih,jh,np)*DIMAG &
-                               (  be1(jh,2) * DCONJG(be1(ih,1)) &
-                                - be1(jh,1) * DCONJG(be1(ih,2)) )
+                        magtot2(2)=magtot2(2) + 2.d0*qq(ih,jh,np)*AIMAG &
+                               (  be1(jh,2) * CONJG(be1(ih,1)) &
+                                - be1(jh,1) * CONJG(be1(ih,2)) )
                      END DO
                   END DO
                END IF
@@ -256,16 +256,16 @@ DO ibnd = 1, nbnd
                      magtot2(3) = magtot2(3) + qq(ih,ih,np)*              &
                             ( ABS(be1(ih,1))**2 - ABS(be1(ih,2))**2 )
                      DO jh = ih + 1, nh(np)   
-                        magtot2(3) = magtot2(3) + 2.d0*qq(ih,jh,np)*DREAL & 
-                                   (be1(jh,1)*DCONJG(be1(ih,1)) &
-                                   -be1(jh,2)*DCONJG(be1(ih,2)) ) 
+                        magtot2(3) = magtot2(3) + 2.d0*qq(ih,jh,np) &
+                                   * REAL( be1(jh,1)*CONJG(be1(ih,1)) &
+                                        -be1(jh,2)*CONJG(be1(ih,2)) ) 
                      END DO 
                   END DO
                END IF
                IF (lsigma(4)) THEN
                   DO ih = 1, nh(np)
                      DO jh = ih + 1, nh(np)   
-                        magtot2(4)= magtot2(4)+2.d0*DREAL(qq_lz(ih,jh,np)*  &
+                        magtot2(4)= magtot2(4)+2.d0*REAL(qq_lz(ih,jh,np)*  &
                                  ( CONJG(be1(ih,1))*be1(jh,1) +           &
                                    CONJG(be1(ih,2))*be1(jh,2) ) )
                      END DO

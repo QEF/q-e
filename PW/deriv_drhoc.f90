@@ -58,7 +58,7 @@ integer :: igl, igl0  ,i
 !
 ! G=0 term
 !
-if (gl (1) .lt.1.0e-8) then
+if (gl (1) .lt.1.0d-8) then
    drhocg (1) = 0.0
    igl0 = 2
 else

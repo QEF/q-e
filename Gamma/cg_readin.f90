@@ -36,10 +36,10 @@ SUBROUTINE cg_readin()
   trans  = .TRUE.
   raman  = .FALSE.
   asr    = .FALSE.
-  tr2_ph = 1.0e-12
+  tr2_ph = 1.0d-12
   niter_ph= 50
   nmodes =  0
-  deltatau= 0.0
+  deltatau= 0.0d0
   nderiv = 2
   first  = 1
   last   = 0
@@ -186,14 +186,14 @@ SUBROUTINE cg_readmodes(iunit)
      DO nu = 1,nmodes
         DO mu = 1, nu-1
            utest = DDOT(3*nat,u(1,nu),1,u(1,mu),1)
-           IF (ABS(utest).GT.1.0e-10) THEN
+           IF (ABS(utest).GT.1.0d-10) THEN
               PRINT *, ' warning: input modes are not orthogonal'
               CALL DAXPY(3*nat,-utest,u(1,mu),1,u(1,nu),1)
            END IF
         END DO
         unorm = SQRT(DDOT(3*nat,u(1,nu),1,u(1,nu),1))
-        IF (ABS(unorm).LT.1.0e-10) go to 10
-        CALL DSCAL(3*nat,1.0/unorm,u(1,nu),1)
+        IF (ABS(unorm).LT.1.0d-10) go to 10
+        CALL DSCAL(3*nat,1.0d0/unorm,u(1,nu),1)
      END DO
      go to 20
 10   CALL errore('phonon','wrong data read',1)

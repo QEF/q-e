@@ -2422,17 +2422,17 @@ END FUNCTION
 !
 ! paranoid checks
 !
-      frac= ABS(fup-nup).GT.1.0e-6
+      frac= ABS(fup-nup).GT.1.0d-6
       fup = 0.0
       DO i=1,nup
          fup = fup + f(i)
       END DO
-      frac=frac.OR.ABS(fup-nup).GT.1.0e-6
+      frac=frac.OR.ABS(fup-nup).GT.1.0d-6
       fdw = 0.0
       DO j=iupdwn(2),iupdwn(2)-1+ndw
          fdw = fdw + f(j)
       END DO
-      frac=frac.OR.ABS(fdw-ndw).GT.1.0e-6
+      frac=frac.OR.ABS(fdw-ndw).GT.1.0d-6
 !
       spin0 = ABS(fup-fdw)/2.d0 * ( ABS(fup-fdw)/2.d0 + 1.d0 ) + fdw
 !

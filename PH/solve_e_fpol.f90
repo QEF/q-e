@@ -96,7 +96,7 @@ subroutine solve_e_fpol ( iw )
   allocate (eprec(nbnd))
 
   allocate (etc(nbnd, nkstot))
-  etc(:,:) = dcmplx( et(:,:), iw )
+  etc(:,:) = CMPLX( et(:,:), iw )
 
   ! restart NOT IMPLEMENTED
 
@@ -262,12 +262,12 @@ subroutine solve_e_fpol ( iw )
                  !
                  do ig = 1, npw
 !                   h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
-                    h_diag(ig,ibnd)=dcmplx(1.d0, 0.d0) / &
-                    dcmplx( max(1.0d0,g2kin(ig)/eprec(ibnd))-et(ibnd,ik),-iw )
+                    h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0) / &
+                    CMPLX( max(1.0d0,g2kin(ig)/eprec(ibnd))-et(ibnd,ik),-iw )
                  end do
               else
                  do ig = 1, npw
-                    h_diag(ig,ibnd)=dcmplx(1.d0, 0.d0)
+                    h_diag(ig,ibnd)=CMPLX(1.d0, 0.d0)
                  end do
               endif
               !

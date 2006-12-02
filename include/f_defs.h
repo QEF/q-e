@@ -8,6 +8,7 @@
 #  define DREAL       @@_use_DBLE_instead@@
 #  define DIMAG       @@_use_AIMAG_instead@@
 #  define DCMPLX      @@_use_CMPLX_instead@@
+#  define DFLOAT      @@_use_DBLE_instead@@
 #  define CMPLX(a,b)  cmplx(a,b,kind=DP)
 
 #if defined(ADD_BLAS_TWO_UNDERSCORES)

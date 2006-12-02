@@ -28,8 +28,8 @@ MODULE qexml_module
   !
   ! some default for kinds
   !
-  INTEGER,   PARAMETER :: dbl = SELECTED_REAL_KIND( 14, 200 )
-  REAL(dbl), PARAMETER :: e2 = 2.0_dbl
+  INTEGER,   PARAMETER :: DP = SELECTED_REAL_KIND( 14, 200 )
+  REAL(DP),  PARAMETER :: e2 = 2.0_dbl
   !
   ! internal data to be set
   !
@@ -347,9 +347,9 @@ CONTAINS
       !
       INTEGER,           OPTIONAL, INTENT(IN) :: ibrav
       CHARACTER(LEN=*),  OPTIONAL, INTENT(IN) :: symm_type
-      REAL(dbl),         OPTIONAL, INTENT(IN) :: celldm(6), alat
-      REAL(dbl),         OPTIONAL, INTENT(IN) :: a1(3), a2(3), a3(3)
-      REAL(dbl),         OPTIONAL, INTENT(IN) :: b1(3), b2(3), b3(3)
+      REAL(DP),          OPTIONAL, INTENT(IN) :: celldm(6), alat
+      REAL(DP),          OPTIONAL, INTENT(IN) :: a1(3), a2(3), a3(3)
+      REAL(DP),          OPTIONAL, INTENT(IN) :: b1(3), b2(3), b3(3)
       !
       CHARACTER(LEN=256) :: bravais_lattice
       !
@@ -431,10 +431,10 @@ CONTAINS
       CHARACTER(LEN=*),  INTENT(IN) :: psfile(:)
       CHARACTER(LEN=*),  INTENT(IN) :: pseudo_dir
       CHARACTER(LEN=*),  INTENT(IN) :: dirname
-      REAL(dbl),         INTENT(IN) :: amass(:)
-      REAL(dbl),         INTENT(IN) :: tau(:,:)
+      REAL(DP),          INTENT(IN) :: amass(:)
+      REAL(DP),          INTENT(IN) :: tau(:,:)
       INTEGER,           INTENT(IN) :: if_pos(:,:)
-      REAL(dbl),         INTENT(IN) :: pos_unit
+      REAL(DP),          INTENT(IN) :: pos_unit
       !
       INTEGER            :: i, flen
       CHARACTER(LEN=256) :: file_pseudo
@@ -511,7 +511,7 @@ CONTAINS
       INTEGER,          INTENT(IN) :: irt(:,:), t_rev(:)
       !
       INTEGER   :: i
-      REAL(dbl) :: tmp(3)
+      REAL(DP)  :: tmp(3)
       !
       !
       CALL iotk_write_begin( iunpun, "SYMMETRIES" )
@@ -555,7 +555,7 @@ CONTAINS
       INTEGER,   INTENT(IN) :: npwx, nr1, nr2, nr3, ngm_g, &
                                nr1s, nr2s, nr3s, ngms_g, nr1b, nr2b, nr3b
       INTEGER,   INTENT(IN) :: itmp(:,:)
-      REAL(dbl), INTENT(IN) :: ecutwfc, dual
+      REAL(DP),  INTENT(IN) :: ecutwfc, dual
       LOGICAL,   INTENT(IN) :: gamma_only, lgvec
       !
       !
@@ -642,7 +642,7 @@ CONTAINS
       INTEGER,             INTENT(IN) :: nsp
       INTEGER,   OPTIONAL, INTENT(IN) :: Hubbard_lmax
       INTEGER,   OPTIONAL, INTENT(IN) :: Hubbard_l(:)
-      REAL(dbl), OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
+      REAL(DP),  OPTIONAL, INTENT(IN) :: Hubbard_U(:), Hubbard_alpha(:)
       !
       !
       CALL iotk_write_begin( iunpun, "EXCHANGE_CORRELATION" )
@@ -683,7 +683,7 @@ CONTAINS
       LOGICAL,             INTENT(IN) :: lgauss, ltetra, tfixed_occ, lsda
       INTEGER,   OPTIONAL, INTENT(IN) :: ngauss, ntetra, nelup, neldw
       INTEGER,   OPTIONAL, INTENT(IN) :: tetra(:,:)
-      REAL(dbl), OPTIONAL, INTENT(IN) :: degauss, occupations(:,:)      
+      REAL(DP),  OPTIONAL, INTENT(IN) :: degauss, occupations(:,:)      
       !
       INTEGER :: i
       !
@@ -739,7 +739,7 @@ CONTAINS
       !------------------------------------------------------------------------
       !
       INTEGER,   INTENT(IN) :: num_k_points, k1, k2, k3, nk1, nk2, nk3
-      REAL(dbl), INTENT(IN) :: xk(:,:), wk(:)
+      REAL(DP),  INTENT(IN) :: xk(:,:), wk(:)
       !
       INTEGER :: ik
       !
@@ -780,7 +780,7 @@ CONTAINS
       !------------------------------------------------------------------------
       !
       INTEGER,   INTENT(IN) :: modenum
-      REAL(dbl), INTENT(IN) :: xqq(:)
+      REAL(DP),  INTENT(IN) :: xqq(:)
       !
       !
       CALL iotk_write_begin( iunpun, "PHONON" )
@@ -819,14 +819,14 @@ CONTAINS
       CHARACTER(LEN=*),   INTENT(IN) :: rho_file_base
       INTEGER,            INTENT(IN) :: nr1, nr2, nr3
       INTEGER,            INTENT(IN) :: nr1x, nr2x
-      REAL(dbl),          INTENT(IN) :: rho(:)
+      REAL(DP),           INTENT(IN) :: rho(:)
       INTEGER, OPTIONAL,  INTENT(IN) :: ipp(:)
       INTEGER, OPTIONAL,  INTENT(IN) :: npp(:)
 #ifdef __HAVE_RHO_WRITE 
       !
       INTEGER                :: ierr, i, j, k, kk, ldr, ip
       CHARACTER(LEN=256)     :: rho_file
-      REAL(dbl), ALLOCATABLE :: rho_plane(:)
+      REAL(DP), ALLOCATABLE  :: rho_plane(:)
       INTEGER,   ALLOCATABLE :: kowner(:)
       INTEGER                :: iopool_id, ionode_pool
       !
@@ -955,14 +955,14 @@ CONTAINS
       CHARACTER(LEN=*),   INTENT(IN)  :: rho_file_base
       INTEGER,            INTENT(IN)  :: nr1, nr2, nr3
       INTEGER,            INTENT(IN)  :: nr1x, nr2x
-      REAL(dbl),          INTENT(OUT) :: rho(:)
+      REAL(DP),           INTENT(OUT) :: rho(:)
       INTEGER, OPTIONAL,  INTENT(IN)  :: ipp(:)
       INTEGER, OPTIONAL,  INTENT(IN)  :: npp(:)
       !
       INTEGER                :: ierr, i, j, k, kk, ldr, ip
       INTEGER                :: nr( 3 )
       CHARACTER(LEN=256)     :: rho_file
-      REAL(dbl), ALLOCATABLE :: rho_plane(:)
+      REAL(DP),  ALLOCATABLE :: rho_plane(:)
       INTEGER,   ALLOCATABLE :: kowner(:)
       INTEGER                :: iopool_id, ionode_pool
       !
@@ -1110,20 +1110,20 @@ CONTAINS
       !
       INTEGER,             INTENT(IN) :: iuni
       INTEGER,             INTENT(IN) :: ik, nk, kunit, ispin, nspin
-      COMPLEX(dbl),        INTENT(IN) :: wf0(:,:)
+      COMPLEX(DP),         INTENT(IN) :: wf0(:,:)
       INTEGER,             INTENT(IN) :: ngw
       INTEGER,             INTENT(IN) :: nbnd
       INTEGER,             INTENT(IN) :: ngwl
       INTEGER,             INTENT(IN) :: igl(:)
       CHARACTER(LEN=256),  INTENT(IN) :: filename
-      REAL(dbl),           INTENT(IN) :: scalef    
+      REAL(DP),            INTENT(IN) :: scalef    
         ! scale factor, usually 1.0 for pw and 1/SQRT( omega ) for CP
 #ifdef __HAVE_WRITE_WFC
       !
       INTEGER                   :: i, j, ierr
       INTEGER                   :: iks, ike, ikt, igwx
       INTEGER                   :: npool, ipmask(nproc_image), ipsour
-      COMPLEX(dbl), ALLOCATABLE :: wtmp(:)
+      COMPLEX(DP),  ALLOCATABLE :: wtmp(:)
       !
       !
       CALL set_kpoints_vars( ik, nk, kunit, ngwl, igl, &
@@ -1244,17 +1244,17 @@ CONTAINS
       !
       CHARACTER(LEN=*),  OPTIONAL, INTENT(OUT) :: bravais_latt
       CHARACTER(LEN=*),  OPTIONAL, INTENT(OUT) :: symm_type
-      REAL(dbl),         OPTIONAL, INTENT(OUT) :: celldm(6), alat
-      REAL(dbl),         OPTIONAL, INTENT(OUT) :: a1(3), a2(3), a3(3)
-      REAL(dbl),         OPTIONAL, INTENT(OUT) :: b1(3), b2(3), b3(3)
+      REAL(DP),          OPTIONAL, INTENT(OUT) :: celldm(6), alat
+      REAL(DP),          OPTIONAL, INTENT(OUT) :: a1(3), a2(3), a3(3)
+      REAL(DP),          OPTIONAL, INTENT(OUT) :: b1(3), b2(3), b3(3)
       CHARACTER(LEN=*),  OPTIONAL, INTENT(OUT) :: alat_units, a_units, b_units
       INTEGER,                     INTENT(OUT) :: ierr
       !
       CHARACTER(256)     :: bravais_latt_, symm_type_
       CHARACTER(256)     :: alat_units_, a_units_, b_units_
-      REAL(dbl)          :: celldm_(6), alat_ 
-      REAL(dbl)          :: a1_(3), a2_(3), a3_(3)
-      REAL(dbl)          :: b1_(3), b2_(3), b3_(3)
+      REAL(DP)           :: celldm_(6), alat_ 
+      REAL(DP)           :: a1_(3), a2_(3), a3_(3)
+      REAL(DP)           :: b1_(3), b2_(3), b3_(3)
       !
 
       ierr=0
@@ -1345,9 +1345,9 @@ CONTAINS
       INTEGER,          OPTIONAL, INTENT(OUT) :: ityp(:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: atm(:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: psfile(:)
-      REAL(dbl),        OPTIONAL, INTENT(OUT) :: amass(:)
+      REAL(DP),         OPTIONAL, INTENT(OUT) :: amass(:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: amass_units
-      REAL(dbl),        OPTIONAL, INTENT(OUT) :: tau(:,:)
+      REAL(DP),         OPTIONAL, INTENT(OUT) :: tau(:,:)
       INTEGER,          OPTIONAL, INTENT(OUT) :: if_pos(:,:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: tau_units
       INTEGER,                    INTENT(OUT) :: ierr
@@ -1357,8 +1357,8 @@ CONTAINS
       INTEGER,        ALLOCATABLE :: ityp_(:)
       CHARACTER(3),   ALLOCATABLE :: atm_(:)       
       CHARACTER(256), ALLOCATABLE :: psfile_(:)       
-      REAL(dbl),      ALLOCATABLE :: amass_(:)
-      REAL(dbl),      ALLOCATABLE :: tau_(:,:)
+      REAL(DP),       ALLOCATABLE :: amass_(:)
+      REAL(DP),       ALLOCATABLE :: tau_(:,:)
       INTEGER,        ALLOCATABLE :: if_pos_(:,:)
       !      
       INTEGER            :: i
@@ -1456,7 +1456,7 @@ CONTAINS
       INTEGER,          OPTIONAL, INTENT(OUT) :: nsym
       LOGICAL,          OPTIONAL, INTENT(OUT) :: invsym
       INTEGER,          OPTIONAL, INTENT(OUT) :: s(:,:,:)
-      REAL(dbl),        OPTIONAL, INTENT(OUT) :: trasl(:,:)
+      REAL(DP),         OPTIONAL, INTENT(OUT) :: trasl(:,:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: sname(:)
       CHARACTER(LEN=*), OPTIONAL, INTENT(OUT) :: s_units
       INTEGER,          OPTIONAL, INTENT(OUT) :: t_rev(:)
@@ -1467,7 +1467,7 @@ CONTAINS
       CHARACTER(256)       :: sname_(48), s_units_
       LOGICAL              :: invsym_
       INTEGER              :: s_(3,3,48)
-      REAL(dbl)            :: trasl_(3,48)
+      REAL(DP)             :: trasl_(3,48)
       INTEGER              :: t_rev_(48)
       INTEGER              :: nat_
       INTEGER, ALLOCATABLE :: irt_(:,:)
@@ -1557,14 +1557,14 @@ CONTAINS
       INTEGER,      OPTIONAL, INTENT(OUT) :: npwx, nr1, nr2, nr3, ngm, &
                                              nr1s, nr2s, nr3s, ngms, nr1b, nr2b, nr3b
       INTEGER,      OPTIONAL, INTENT(OUT) :: igv(:,:)
-      REAL(dbl),    OPTIONAL, INTENT(OUT) :: ecutwfc, ecutrho
+      REAL(DP),     OPTIONAL, INTENT(OUT) :: ecutwfc, ecutrho
       LOGICAL,      OPTIONAL, INTENT(OUT) :: gamma_only
       CHARACTER(*), OPTIONAL, INTENT(OUT) :: cutoff_units
       INTEGER,                INTENT(OUT) :: ierr
       !
       INTEGER        :: npwx_, nr1_, nr2_, nr3_, ngm_, &
                         nr1s_, nr2s_, nr3s_, ngms_, nr1b_, nr2b_, nr3b_
-      REAL(dbl)      :: ecutwfc_, ecutrho_
+      REAL(DP)       :: ecutwfc_, ecutrho_
       CHARACTER(256) :: cutoff_units_
       LOGICAL        :: gamma_only_
       !
@@ -1797,15 +1797,15 @@ CONTAINS
       INTEGER,          OPTIONAL, INTENT(OUT) :: Hubbard_lmax
       INTEGER,          OPTIONAL, INTENT(OUT) :: Hubbard_l(:)
       INTEGER,          OPTIONAL, INTENT(OUT) :: nsp
-      REAL(dbl),        OPTIONAL, INTENT(OUT) :: Hubbard_U(:), Hubbard_alpha(:)
+      REAL(DP),         OPTIONAL, INTENT(OUT) :: Hubbard_U(:), Hubbard_alpha(:)
       INTEGER,                    INTENT(OUT) :: ierr
       !
       CHARACTER(256) :: dft_
       LOGICAL        :: lda_plus_u_
       INTEGER        :: Hubbard_lmax_, nsp_
       INTEGER,    ALLOCATABLE :: Hubbard_l_(:)
-      REAL(dbl),  ALLOCATABLE :: Hubbard_U_(:)
-      REAL(dbl),  ALLOCATABLE :: Hubbard_alpha_(:)
+      REAL(DP),   ALLOCATABLE :: Hubbard_U_(:)
+      REAL(DP),   ALLOCATABLE :: Hubbard_alpha_(:)
       ! 
       ierr = 0
       !
@@ -1874,13 +1874,13 @@ CONTAINS
       LOGICAL,      OPTIONAL, INTENT(OUT) :: lgauss, ltetra, tfixed_occ
       INTEGER,      OPTIONAL, INTENT(OUT) :: ngauss, ntetra
       INTEGER,      OPTIONAL, INTENT(OUT) :: tetra(:,:)
-      REAL(dbl),    OPTIONAL, INTENT(OUT) :: degauss, occupations(:,:)
+      REAL(DP),     OPTIONAL, INTENT(OUT) :: degauss, occupations(:,:)
       CHARACTER(*), OPTIONAL, INTENT(OUT) :: degauss_units
       INTEGER,                INTENT(OUT) :: ierr
       !
       LOGICAL        :: lgauss_, ltetra_, tfixed_occ_
       INTEGER        :: ngauss_, ntetra_
-      REAL(dbl)      :: degauss_
+      REAL(DP)       :: degauss_
       CHARACTER(256) :: degauss_units_
       INTEGER,  ALLOCATABLE :: tetra_(:,:)
       INTEGER :: i
@@ -1973,13 +1973,13 @@ CONTAINS
       !------------------------------------------------------------------------
       !
       INTEGER,       OPTIONAL, INTENT(OUT) :: num_k_points, k1, k2, k3, nk1, nk2, nk3
-      REAL(dbl),     OPTIONAL, INTENT(OUT) :: xk(:,:), wk(:)
+      REAL(DP),      OPTIONAL, INTENT(OUT) :: xk(:,:), wk(:)
       CHARACTER(*),  OPTIONAL, INTENT(OUT) :: k_units
       INTEGER,                 INTENT(OUT) :: ierr
       !
       INTEGER                :: num_k_points_, k1_, k2_, k3_, nk1_, nk2_, nk3_
       CHARACTER(256)         :: k_units_
-      REAL(dbl), ALLOCATABLE :: xk_(:,:), wk_(:)
+      REAL(DP),  ALLOCATABLE :: xk_(:,:), wk_(:)
       !
       INTEGER :: ik
       !
@@ -2062,7 +2062,7 @@ CONTAINS
       !------------------------------------------------------------------------
       !
       INTEGER,       OPTIONAL, INTENT(OUT) :: modenum
-      REAL(dbl),     OPTIONAL, INTENT(OUT) :: xqq(:)
+      REAL(DP),      OPTIONAL, INTENT(OUT) :: xqq(:)
       CHARACTER(*),  OPTIONAL, INTENT(OUT) :: q_units
       INTEGER,                 INTENT(OUT) :: ierr
       !
@@ -2106,16 +2106,16 @@ CONTAINS
       !------------------------------------------------------------------------
       !
       INTEGER,      OPTIONAL, INTENT(OUT) :: nbnd, num_k_points, nspin, natomwfc
-      REAL(dbl),    OPTIONAL, INTENT(OUT) :: ef, nelec, xk(:,:), wk(:), occ(:,:), occ_s(:,:,:)
-      REAL(dbl),    OPTIONAL, INTENT(OUT) :: eig(:,:), eig_s(:,:,:)
+      REAL(DP),     OPTIONAL, INTENT(OUT) :: ef, nelec, xk(:,:), wk(:), occ(:,:), occ_s(:,:,:)
+      REAL(DP),     OPTIONAL, INTENT(OUT) :: eig(:,:), eig_s(:,:,:)
       CHARACTER(*), OPTIONAL, INTENT(OUT) :: energy_units, k_units
       INTEGER,                INTENT(OUT) :: ierr
       !
       INTEGER        :: nbnd_, num_k_points_, nspin_, natomwfc_
-      REAL(dbl)      :: ef_, nelec_ 
+      REAL(DP)       :: ef_, nelec_ 
       CHARACTER(256) :: energy_units_, k_units_
       INTEGER        :: ik, ispin
-      REAL(dbl), ALLOCATABLE :: xk_(:,:), wk_(:), occ_s_(:,:,:), eig_s_(:,:,:)
+      REAL(DP), ALLOCATABLE :: xk_(:,:), wk_(:), occ_s_(:,:,:), eig_s_(:,:,:)
       !
       
       ierr = 0
@@ -2228,11 +2228,11 @@ CONTAINS
       INTEGER,                 INTENT(IN)  :: ibnds, ibnde, ik, ispin
       INTEGER,       OPTIONAL, INTENT(IN)  :: npwk, igk(:)
       INTEGER,       OPTIONAL, INTENT(OUT) :: ngw, igwx
-      COMPLEX(dbl),  OPTIONAL, INTENT(OUT) :: wf(:,:), wf_kindip(:,:)
+      COMPLEX(DP),   OPTIONAL, INTENT(OUT) :: wf(:,:), wf_kindip(:,:)
       INTEGER,                 INTENT(OUT) :: ierr
       !
       INTEGER :: ngw_, igwx_, ig, ib, lindex
-      COMPLEX(dbl),  ALLOCATABLE :: wf_(:)
+      COMPLEX(DP),   ALLOCATABLE :: wf_(:)
 
       ierr = 0
       !

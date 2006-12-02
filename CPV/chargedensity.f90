@@ -653,7 +653,7 @@
          IMPLICIT NONE
          !
          INTEGER :: to, from, ii, eig_index, ierr, eig_offset
-         COMPLEX*16 :: tmp1(256) !CHANGE
+         COMPLEX(DP) :: tmp1(256) !CHANGE
 
          do i = 1, n, 2*nogrp
             !

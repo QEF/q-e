@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2003 PWSCF group
 ! This file is distributed under the terms of the
@@ -34,11 +33,12 @@
 !      where Efit is the fitted value from the EOS
 !            Pfit is the corresponding pressure from the EOS
 !
+      USE kinds, only: DP
       IMPLICIT NONE
       INTEGER nmaxpar, nmaxpt, nseek, nmin, npar,npt,istat
       PARAMETER(nmaxpar=4, nmaxpt=100, nseek=10000, nmin=4)
       CHARACTER bravais*3, filin*20
-      REAL*8 par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
+      REAL(DP) par(nmaxpar), deltapar(nmaxpar), parmin(nmaxpar), &
              parmax(nmaxpar), v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              fac, emin, chisq, a
       COMMON v0, etot, emin, efit, istat, npt
@@ -129,14 +129,15 @@
       SUBROUTINE eqstate(npar,par,chisq)
 !-----------------------------------------------------------------------
 !
+      USE kinds, only: DP
       IMPLICIT NONE
       INTEGER nmaxpt, npt, npar, i, istat
       PARAMETER( nmaxpt=100 )
-      REAL*8 par(npar), k0, dk0, d2k0, c0, c1, x, &
+      REAL(DP) par(npar), k0, dk0, d2k0, c0, c1, x, &
              vol0, v0(nmaxpt), etot(nmaxpt), efit(nmaxpt), &
              ddk, emin, conv_atomic_unit, chisq
       COMMON v0, etot, emin, efit, istat, npt
-      PARAMETER ( conv_atomic_unit=6.79777e-6 )
+      PARAMETER ( conv_atomic_unit=6.79777d-6 )
 !
       vol0 = par(1)
       k0   = par(2)*conv_atomic_unit ! converts k0 to atomic units...
@@ -145,18 +146,18 @@
 !
       IF(istat.EQ.1.OR.istat.EQ.2) THEN
          IF(istat.EQ.1) THEN
-            c0 = 0.0
+            c0 = 0.0d0
          ELSE
-            c0 = ( 9.0*k0*d2k0 + 9.0*dk0**2 - 63.0*dk0 + 143.0 ) / 48.0
+            c0 = ( 9.d0*k0*d2k0 + 9.d0*dk0**2-63.d0*dk0+143.d0 )/48.d0
          ENDIF
-         c1 = 3.0*(dk0-4.0)/8.0
+         c1 = 3.d0*(dk0-4.d0)/8.d0
          DO i=1,npt
             x = vol0/v0(i)
-            efit(i) = 9.0*k0*vol0*( (-0.5+  c1-  c0)*x**(2d0/3d0)/2.0 &
-                                   +( 0.5-2*c1+3*c0)*x**(4d0/3d0)/4.0 &
-                                   +(       c1-3*c0)*x**(6d0/3d0)/6.0 &
-                                   +(            c0)*x**(8d0/3d0)/8.0 &
-                                   -(-1d0/8.0+c1/6.0-c0/8.0) )
+            efit(i) = 9.d0*k0*vol0*( (-0.d5+c1-c0)*x**(2.d0/3.d0)/2.d0 &
+                         +( 0.d5-2.d0*c1+3.d0*c0)*x**(4.d0/3.d0)/4.d0 &
+                         +(       c1-3.d0*c0)*x**(6.d0/3.d0)/6.d0 &
+                         +(            c0)*x**(8.d0/3.d0)/8.d0 &
+                         -(-1.d0/8.d0+c1/6.d0-c0/8.d0) )
          ENDDO
       ELSE
          IF(istat.EQ.3) THEN
@@ -165,21 +166,21 @@
             ddk = dk0
          ENDIF
          DO i=1,npt
-            efit(i) = - k0*dk0/ddk*vol0/(ddk-1.0) &
-            + v0(i)*k0*dk0/ddk**2*( (vol0/v0(i))**ddk/(ddk-1.0) + 1.0 ) &
+            efit(i) = - k0*dk0/ddk*vol0/(ddk-1.d0) &
+            + v0(i)*k0*dk0/ddk**2*( (vol0/v0(i))**ddk/(ddk-1.d0)+1.d0) &
             - k0*(dk0-ddk)/ddk*( v0(i)*LOG(vol0/v0(i)) + v0(i)-vol0 )
          ENDDO
       ENDIF
 !
 !      emin = equilibrium energy obtained by minimizing chi**2
 !
-      emin = 0.0
+      emin = 0.0d0
       DO i = 1,npt
          emin = emin + etot(i)-efit(i)
       ENDDO
       emin = emin/npt
 !
-      chisq = 0.0
+      chisq = 0.0d0
       DO i = 1,npt
           efit(i) = efit(i)+emin
           chisq   = chisq + (etot(i)-efit(i))**2
@@ -194,11 +195,13 @@
             (npt,bravais,fac,v0,etot,efit,istat,par,npar,emin,chisq)
 !-----------------------------------------------------------------------
 !
+      USE kinds, only: DP
       IMPLICIT NONE
       INTEGER npt, istat, npar, i, iun, ios
       CHARACTER filout*20, bravais*3
-      REAL*8 v0(npt), etot(npt), efit(npt), par(npar), emin, chisq, fac
-      REAL*8 p(npt), birch, keane
+      REAL(DP) v0(npt), etot(npt), efit(npt), par(npar), emin, chisq, fac
+      REAL(DP) p(npt), birch, keane
+      EXTERNAL birch, keane
 
 
  10   CONTINUE
@@ -268,22 +271,23 @@
 !
 !     Very Stupid Minimization
 !
+      USE kinds, only: DP
       USE random_numbers, ONLY : rndm
       IMPLICIT NONE
       INTEGER maxpar, nseek, npar, nmin, n,j,i
       PARAMETER (maxpar=4)
-      REAL*8 par(npar), deltapar(npar), parmin(npar), parmax(npar), &
+      REAL(DP) par(npar), deltapar(npar), parmin(npar), parmax(npar), &
              parnew(maxpar), chisq, chinew, bidon
 !
 !      various initializations
 !
-      chisq = 1.0e30
-      chinew= 1.0e30
+      chisq = 1.0d30
+      chinew= 1.0d30
       CALL eqstate(npar,par,chisq)
       DO j = 1,nmin
          DO i = 1,nseek
             DO n = 1,npar
-  10           parnew(n) = par(n) + (0.5 - rndm())*deltapar(n)
+  10           parnew(n) = par(n) + (0.5d0 - rndm())*deltapar(n)
                IF(parnew(n).GT.parmax(n) .OR. parnew(n).LT.parmin(n)) &
                go to 10
             ENDDO
@@ -298,7 +302,7 @@
             ENDIF
          ENDDO
          DO n = 1,npar
-            deltapar(n) = deltapar(n)/10.0
+            deltapar(n) = deltapar(n)/10.d0
          ENDDO
       ENDDO
 !
@@ -309,18 +313,19 @@
 !
       FUNCTION birch(x,k0,dk0,d2k0)
 !
+      USE kinds, only: DP
       IMPLICIT NONE
-      REAL*8 birch, x, k0,dk0, d2k0
-      REAL*8 c0, c1
+      REAL(DP) birch, x, k0,dk0, d2k0
+      REAL(DP) c0, c1
 
-      IF(d2k0.NE.0.0) THEN
-         c0 = ( 9.0*k0*d2k0 + 9.0*dk0**2 - 63.0*dk0 + 143.0 ) / 48.0
+      IF(d2k0.NE.0.d0) THEN
+         c0 = (9.d0*k0*d2k0 + 9.d0*dk0**2 - 63.d0*dk0 + 143.d0 )/48.d0
       ELSE
-         c0 = 0.0
+         c0 = 0.0d0
       ENDIF
-      c1 = 3.0*(dk0-4.0)/8.0
-      birch = 3.0*k0*( (-0.5+  c1-  c0)*x**( -5.0/3d0) &
-           +( 0.5-2*c1+3*c0)*x**( -7.0/3d0) &
+      c1 = 3.d0*(dk0-4.d0)/8.d0
+      birch = 3.d0*k0*( (-0.5d0+  c1-  c0)*x**( -5.d0/3.d0) &
+           +( 0.d5-2.d0*c1+3.0d0*c0)*x**( -7.d0/3.d0) &
            +(       c1-3*c0)*x**( -9.0/3d0) &
            +(            c0)*x**(-11.0/3d0) )
       RETURN
@@ -328,8 +333,9 @@
 !     
       FUNCTION keane(x,k0,dk0,d2k0)
 !     
+      USE kinds, only: DP
       IMPLICIT NONE
-      REAL*8 keane, x, k0, dk0, d2k0, ddk
+      REAL(DP) keane, x, k0, dk0, d2k0, ddk
       
       ddk = dk0 + k0*d2k0/dk0
       keane = k0*dk0/ddk**2*( x**(-ddk) - 1d0 ) + (dk0-ddk)/ddk*LOG(x)

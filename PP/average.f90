@@ -206,7 +206,7 @@ PROGRAM average
         IF (gcutmsa.NE.gcutm.OR.duals.NE.dual.OR.ecuts.NE.ecutwfc ) &
              CALL errore ('average', 'incompatible gcutm or dual or ecut', 1)
         DO i = 1, 6
-           IF (ABS( celldm (i)-celldms (i) ) .GT. 1.0e-7 ) &
+           IF (ABS( celldm (i)-celldms (i) ) .GT. 1.0d-7 ) &
                 CALL errore ('chdens', 'incompatible celldm', 1)
         ENDDO
         DO ir = 1, nrxx

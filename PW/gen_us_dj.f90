@@ -55,7 +55,7 @@ subroutine gen_us_dj (ik, dvkb)
   integer :: na, i, l, iig, lm
   real(DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
   real(DP) ::  qt, dv, eps
-  parameter (eps = 1.0e-8)
+  parameter (eps = 1.0d-8)
 
   complex(DP), allocatable :: sk (:)
 

@@ -129,7 +129,7 @@
             DO is = 1, nsp
               totalmass = totalmass + pmass(is) * na(is) / amu_au
             END DO
-            totalmass = totalmass / volume * 11.2061 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
+            totalmass = totalmass / volume * 11.2061d0 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
             WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
 
             CALL cdm_displacement( dis(1), tau0 )

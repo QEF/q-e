@@ -83,10 +83,10 @@ SUBROUTINE g_tensor_crystal
   
   ! Select majority and minority spin components
   rho_diff = SUM ( rho ( :, 1 ) - rho ( :, nspin ) )
-  if ( rho_diff > +1.0e-3 ) then
+  if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
-  else if ( rho_diff < -1.0e-3 ) then
+  else if ( rho_diff < -1.0d-3 ) then
      s_maj = nspin
      s_min = 1
   else

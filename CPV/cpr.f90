@@ -221,7 +221,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      if (abivol) then
         if (pvar) then
            if (nfi.eq.1) then
-              deltaP = (P_fin - P_in) / dfloat(nomore)
+              deltaP = (P_fin - P_in) / DBLE(nomore)
               P_ext = P_in
            else
               P_ext = P_ext + deltaP

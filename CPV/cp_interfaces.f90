@@ -402,7 +402,8 @@
       &       fion, tps, mat_z, occ_f )
          USE kinds,          ONLY : DP
          IMPLICIT NONE
-         integer :: ndr, nfi, flag
+         INTEGER, INTENT(in) :: flag
+         integer :: ndr, nfi
          REAL(DP) :: h(3,3), hold(3,3)
          complex(DP) :: c0(:,:), cm(:,:)
          REAL(DP) :: tausm(:,:),taus(:,:), fion(:,:)

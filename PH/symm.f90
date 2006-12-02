@@ -78,7 +78,7 @@ subroutine symm(phi, u, xq, s, isym, rtau, irt, at, bg, nat)
            arg = arg + (xq(ipol)*(rtau(ipol,isym,na) - rtau(ipol,isym,nb)))
         enddo
         arg = arg * tpi
-        fase = DCMPLX (cos (arg), sin (arg) )
+        fase = CMPLX (DCOS (arg), DSIN (arg) )
         do ipol = 1, 3
            do jpol = 1, 3
               phi2(ipol,jpol,na,nb) = (0.0d0,0.0d0)

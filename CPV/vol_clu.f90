@@ -137,9 +137,9 @@
                      ir = ir1 + (ir2-1)*nr1 + (ir3-1)*nr2*nr1
                      dist = 0.d0
                      do i = 1,3
-                        posv(i,ir) = (dfloat(ir1)-1.0d0)*a1(i)/dfloat(nr1) +&
-     &                              (dfloat(ir2)-1.0d0)*a2(i)/dfloat(nr2) +&
-     &                              (dfloat(ir3)-1.0d0)*a3(i)/dfloat(nr3)
+                        posv(i,ir) = (DBLE(ir1)-1.0d0)*a1(i)/DBLE(nr1) +&
+     &                              (DBLE(ir2)-1.0d0)*a2(i)/DBLE(nr2) +&
+     &                              (DBLE(ir3)-1.0d0)*a3(i)/DBLE(nr3)
                      end do
                   end do
                end do
@@ -207,13 +207,13 @@
          do i = 1,n_cntr
             do is = 1,nsp
                if (cntr(is)) then
-                  rad0 = step_rad(is) + dfloat(i)*delta_sigma
+                  rad0 = step_rad(is) + DBLE(i)*delta_sigma
                   alfa0 = rad0/2.d0
                   do ia = 1,na(is)
                      do k = 1,3
                         if (k.ne.axis) then
                            tau00(k) = (tauv(k,ia,is)-cm(k))*              &
-     &                                  (1.d0-delta_eps*dfloat(i))+cm(k)
+     &                                  (1.d0-delta_eps*DBLE(i))+cm(k)
                         else
                            tau00(k) = tauv(k,ia,is)
                         end if
@@ -224,7 +224,7 @@
                            prod = prod + gx(k,ig)*tau00(k)
                         end do
                         prod = prod*tpiba
-                        fact = cmplx(dcos(prod),-1.d0*dsin(prod))
+                        fact = CMPLX(dcos(prod),-1.d0*dsin(prod))
                         aux = alfa0*hgt*dexp(-0.50*alfa0**2*g(ig)*tpiba2)
                         rhofill(ig) = rhofill(ig) + aux*fact
                      end do 
@@ -307,11 +307,11 @@
             end if
             if (nspin.eq.1) then
                e_j = e_j + v_vol(ir) * rho_real(ir,1) * omega /         &
-     &                                dfloat(nr1*nr2*nr3)
+     &                                DBLE(nr1*nr2*nr3)
             else
                e_j = e_j + v_vol(ir) *                                  &
                      ( rho_real(ir,1) + rho_real(ir,2) ) * omega /      &
-     &                                dfloat(nr1*nr2*nr3)
+     &                                DBLE(nr1*nr2*nr3)
             end if
          end if
 
@@ -325,20 +325,20 @@
                wmeno = 1.d0
             else
                wmeno = weight(i) + (weight(i+1)-weight(i)) *            &
-     &                 (rhoc-rho_thr-dthr-dfloat(i-1)*dx+5.d0*sigma)/dx
+     &                 (rhoc-rho_thr-dthr-DBLE(i-1)*dx+5.d0*sigma)/dx
             end if
             go to 79
          end if
 ! Volume and surface
          k = int((rhoc-rho_thr+5.d0*sigma)/dx) + 1
          weight0 = weight(k) + (weight(k+1)-weight(k)) *                &
-                   (rhoc-rho_thr+5.d0*sigma-dfloat(k-1)*dx)/dx
+                   (rhoc-rho_thr+5.d0*sigma-DBLE(k-1)*dx)/dx
          if (abisur) then
             if (rhoc-rho_thr+dthr.gt.5.d0*sigma) then
                wpiu = weight0
                i = int((rhoc-rho_thr-dthr+5.d0*sigma)/dx) + 1
                wmeno = weight(i)+(weight(i+1)-weight(i))*               &
-     &            (rhoc-rho_thr-dthr+5.d0*sigma-dfloat(i-1)*dx)/dx
+     &            (rhoc-rho_thr-dthr+5.d0*sigma-DBLE(i-1)*dx)/dx
             else if (rho_thr+dthr-rhoc.gt.5.d0*sigma) then
                wmeno = 0.d0
                i = int((rhoc-rho_thr+dthr+5.d0*sigma)/dx) + 1
@@ -348,7 +348,7 @@
                wpiu = weight0
                i = int((rhoc-rho_thr-dthr+5.d0*sigma)/dx) + 1
                wmeno = weight(i)+(weight(i+1)-weight(i))*               &
-     &            (rhoc-rho_thr-dthr+5.d0*sigma-dfloat(i-1)*dx)/dx
+     &            (rhoc-rho_thr-dthr+5.d0*sigma-DBLE(i-1)*dx)/dx
             end if
          end if
   79     continue
@@ -366,7 +366,7 @@
                   do is = 1,nspin
                      dpvdh(k,j) = dpvdh(k,j) +                       &
      &                    v_vol(ir)*drhor(ir,is,k,j)*omega/          &
-     &                    dfloat(nr1*nr2*nr3)
+     &                    DBLE(nr1*nr2*nr3)
                   end do
                end do
             end do
@@ -399,9 +399,9 @@
       call mp_sum(surfclu,intra_image_comm)
       call mp_sum(dpvdh,intra_image_comm)
 #endif
-      volclu = volclu * omega / dfloat(nr1*nr2*nr3)
-      n_ele = n_ele * omega / dfloat(nr1*nr2*nr3)
-      surfclu = surfclu * omega / dfloat(nr1*nr2*nr3) / dthr
+      volclu = volclu * omega / DBLE(nr1*nr2*nr3)
+      n_ele = n_ele * omega / DBLE(nr1*nr2*nr3)
+      surfclu = surfclu * omega / DBLE(nr1*nr2*nr3) / dthr
       do i = 1,3
          do j = 1,3
             stress_vol(i,j) =  dpvdh(i,1)*h(j,1) + dpvdh(i,2)*h(j,2) +  &

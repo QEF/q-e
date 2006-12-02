@@ -44,7 +44,7 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    INTEGER :: i, ig, jkb2, lmax_wfc, na, m1, ibnd, iwf, nt, ib, ih,jh, &
               nworddw, nworddb
    REAL (DP) :: xyz(3,3), q, eps, a1, a2
-   PARAMETER (eps=1.0e-8)
+   PARAMETER (eps=1.0d-8)
 
    COMPLEX (DP) :: ZDOTC
 

@@ -39,7 +39,7 @@ subroutine dvpsi_kb(kpoint,nu)
   dvb_cc(:)= (0.d0, 0.d0)
   do na = 1,nat
      mu = 3*(na-1)
-     if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2.gt. 1.0e-12) then
+     if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2.gt. 1.0d-12) then
         nt=ityp(na)
         if (nlcc(nt)) call drhoc (ngm,gg,omega,tpiba2,numeric(nt),&
                                   a_nlcc(nt),b_nlcc(nt),alpha_nlcc(nt), &
@@ -95,7 +95,7 @@ subroutine dvpsi_kb(kpoint,nu)
      do na = 1,nat
         if (ityp(na) == nt .and. nh(nt) > 0) then
            mu =3*(na-1)
-           if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2 > 1.0e-12) then
+           if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2 > 1.0d-12) then
               !
               !  first term: sum_l sum_G' [ i V_l(G) V^*_l(G') (G'*u) psi(G')
               !  second term: sum_l sum_G' [-i (G*u) V_l(G) V^*_l(G') psi(G')

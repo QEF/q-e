@@ -10,7 +10,8 @@
    MODULE pres_ai_mod
 !=----------------------------------------------------------------------------=!
 
-  use parameters, only: nsx, natx
+  use parameters, only: nsx
+  IMPLICIT NONE
 !
   SAVE
 !

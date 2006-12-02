@@ -20,7 +20,9 @@ MODULE input_parameters
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr
-  USE pres_ai_mod
+  USE pres_ai_mod, ONLY: abivol,axis,abisur,cntr,delta_eps,delta_sigma,dthr, &
+                         fill_vac,h_j,jellium,n_cntr,p_in,p_ext,p_fin,pvar,r_j,&
+                         rho_thr,scale_at,surf_t,step_rad,t_gauss
   !
   IMPLICIT NONE
   !
@@ -873,8 +875,9 @@ MODULE input_parameters
         LOGICAL  :: l_blockocc = .false.
           ! if true in ensemble DFT the lowest states in energy are taken diagonal
 
-        INTEGER  :: n_blockocc(2) = (1,1)
+        INTEGER  :: n_blockocc(2) 
           ! number of states kept diagonal for spin channel
+        DATA n_blockocc /1,1/
 
         INTEGER  :: epol = 3
           ! electric field direction

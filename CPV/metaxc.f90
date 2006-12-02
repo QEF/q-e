@@ -325,7 +325,7 @@ subroutine metaFX(rho,grho2,tau,fx,f1x,f2x,f3x)
   parameter(bb=0.40d0)
   parameter(miu=0.21951d0)
   parameter(fac1=9.57078000062731d0) !fac1=(3*pi^2)^(2/3)
-  parameter(small=1.00e-6)
+  parameter(small=1.00d-6)
   !==------------------------------------------------------------- 
   tauw=0.125d0*grho2/rho
   z=tauw/tau

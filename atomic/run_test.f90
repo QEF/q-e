@@ -113,7 +113,8 @@ subroutine run_test
               endif
            endif
         endif
-20   enddo
+20   continue
+     enddo
      !
      !   and run the pseudopotential test
      !

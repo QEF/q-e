@@ -62,7 +62,7 @@ subroutine drhoc (ngl, gl, omega, tpiba2, numeric, a_nlcc, b_nlcc, &
      !
      ! G=0 term
      !
-     if (gl (1) < 1.0e-8) then
+     if (gl (1) < 1.0d-8) then
         do ir = 1, mesh
            aux (ir) = r (ir) **2 * rhoc (ir)
         enddo

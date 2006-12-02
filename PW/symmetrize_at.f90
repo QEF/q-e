@@ -70,9 +70,9 @@ subroutine symmetrize_at(nsym, s, nat, tau, ityp, at, bg, &
   call cryst_to_cart( nat, xau, bg, -1 )
 
   !
-  obnr(1) = 1.d0/dfloat(nr1)
-  obnr(2) = 1.d0/dfloat(nr2)
-  obnr(3) = 1.d0/dfloat(nr3)
+  obnr(1) = 1.d0/DBLE(nr1)
+  obnr(2) = 1.d0/DBLE(nr2)
+  obnr(3) = 1.d0/DBLE(nr3)
   do irot = 1, nsym
      do na = 1, nat
         do kpol = 1, 3

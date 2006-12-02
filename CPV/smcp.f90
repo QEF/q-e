@@ -672,9 +672,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !======================================================================
         !       nbeg = 0, nbeg = 1
         !======================================================================
-
+        i=1
         CALL readfile                                           &
-             &     ( 1, sm_ndr,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
+             &     ( i, sm_ndr,h,hold,nfi,rep_el(sm_k)%c0,rep_el(sm_k)%cm,rep(sm_k)%taus, &
              &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
              &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                   &
              &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),&
