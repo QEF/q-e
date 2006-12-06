@@ -15,7 +15,7 @@ SUBROUTINE read_file()
   ! ... in the pwscf program and reads them from the data file.
   !
   USE kinds,                ONLY : DP
-  USE ions_base,            ONLY : nat, nsp, ntyp => nsp, ityp, tau, if_pos
+  USE ions_base,            ONLY : nat, nsp, ityp, tau, if_pos
   USE basis,                ONLY : natomwfc
   USE cell_base,            ONLY : tpiba2, alat,omega, at, bg, ibrav
   USE force_mod,            ONLY : force
@@ -168,7 +168,7 @@ SUBROUTINE read_file()
      !
   END DO
   !
-  IF ( .NOT. lspinorb ) CALL average_pp ( ntyp )
+  IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
   !
   ! ... allocate the potential and wavefunctions
   !
