@@ -132,7 +132,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      DEALLOCATE(ppsi)
      IF (okvan) DEALLOCATE(ppsi_us)
 #ifdef __PARA
-     CALL reduce(nbnd*nbnd*3,matp)
+     CALL reduce(nbnd*nbnd*3*2,matp)
 #endif
 
      IF (ionode) THEN

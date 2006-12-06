@@ -78,21 +78,14 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   !
   ! this is the kinetic contribution to p :  (k+G)_ipol * psi
   !
-  IF (noncolin) THEN
-     DO ibnd = 1, nbnd_occ 
-        DO ip=1,npol
-           DO ig = 1, npw
-              ppsi(ig,ip,ibnd)=gk(ipol,ig)*evc(ig+npwx*(ip-1),ibnd)
-           END DO
-        END DO
-     END DO
-  ELSE
+  DO ip=1,npol
      DO ibnd = 1, nbnd_occ 
         DO ig = 1, npw
-           ppsi(ig,1,ibnd)=gk(ipol,ig)*evc(ig,ibnd)
+           ppsi(ig,ip,ibnd)=gk(ipol,ig)*evc(ig+npwx*(ip-1),ibnd)
         END DO
      END DO
-  END IF
+  END DO
+
   !
   ! and this is the contribution from nonlocal pseudopotentials
   !
@@ -137,10 +130,10 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
 
   ijkb0 = 0
   IF (noncolin) THEN
-     ALLOCATE (psc( nkb, 2, nbnd,  2))
+     ALLOCATE (psc( nkb, 2, nbnd_occ,  2))
      psc=(0.d0,0.d0)
   ELSE
-     ALLOCATE (ps2( nkb, nbnd, 2))
+     ALLOCATE (ps2( nkb, nbnd_occ, 2))
      ps2=(0.d0,0.d0)
   END IF
   DO nt = 1, ntyp
@@ -153,40 +146,40 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
                  DO ibnd = 1, nbnd_occ 
                     IF (noncolin) THEN
                        IF (lspinorb) THEN
-                          psc(ikb,1,ibnd,1)=psc(ikb,ibnd,1,1)+(0.d0,-1.d0)* &
+                          psc(ikb,1,ibnd,1)=psc(ikb,1,ibnd,1)+(0.d0,-1.d0)* &
                              (becp2_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1)  &
                                  -et(ibnd,ik)*qq_so(ih,jh,1,nt) )+       &
                               becp2_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,2)- &
                                        et(ibnd,ik)* qq_so(ih,jh,2,nt) ) )
-                          psc(ikb,2,ibnd,1)=psc(ikb,ibnd,2,1)+(0.d0,-1.d0)*  &
+                          psc(ikb,2,ibnd,1)=psc(ikb,2,ibnd,1)+(0.d0,-1.d0)*  &
                              (becp2_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,3)  &
                                  -et(ibnd,ik)*qq_so(ih,jh,3,nt) )+       &
                               becp2_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4)- &
                                        et(ibnd,ik)* qq_so(ih,jh,4,nt) ) )
-                          psc(ikb,1,ibnd,2)=psc(ikb,ibnd,1,2)+(0.d0,-1.d0)* &
+                          psc(ikb,1,ibnd,2)=psc(ikb,1,ibnd,2)+(0.d0,-1.d0)* &
                              (becp_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1)  &
                                  -et(ibnd,ik)*qq_so(ih,jh,1,nt) )+      &
                              becp_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,2)-  &
                                        et(ibnd,ik)* qq_so(ih,jh,2,nt) ) )
-                          psc(ikb,2,ibnd,2)=psc(ikb,ibnd,2,2)+(0.d0,-1.d0)*  &
+                          psc(ikb,2,ibnd,2)=psc(ikb,2,ibnd,2)+(0.d0,-1.d0)*  &
                              (becp_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,3)  &
                                  -et(ibnd,ik)*qq_so(ih,jh,3,nt) )+      &
                              becp_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4)-  &
                                        et(ibnd,ik)* qq_so(ih,jh,4,nt) ) )
                        ELSE
-                          psc(ikb,1,ibnd,1)=psc(ikb,ibnd,1,1)+ (0.d0,-1.d0)* &
+                          psc(ikb,1,ibnd,1)=psc(ikb,1,ibnd,1)+ (0.d0,-1.d0)* &
                               ( becp2_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1) &
                                              -et(ibnd,ik)*qq(ih,jh,nt)) + &
                                 becp2_nc(jkb,2,ibnd)*deeq_nc(ih,jh,na,2) )
-                          psc(ikb,2,ibnd,1)=psc(ikb,ibnd,2,1)+ (0.d0,-1.d0)* &
+                          psc(ikb,2,ibnd,1)=psc(ikb,2,ibnd,1)+ (0.d0,-1.d0)* &
                               ( becp2_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4) &
                                              -et(ibnd,ik)*qq(ih,jh,nt))+  &
                                 becp2_nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
-                          psc(ikb,1,ibnd,2)=psc(ikb,ibnd,1,2)+ (0.d0,-1.d0)* &
+                          psc(ikb,1,ibnd,2)=psc(ikb,1,ibnd,2)+ (0.d0,-1.d0)* &
                               ( becp_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1) &
                                              -et(ibnd,ik)*qq(ih,jh,nt))+ &
                                 becp_nc(jkb,2,ibnd)*deeq_nc(ih,jh,na,2) )
-                          psc(ikb,2,ibnd,2)=psc(ikb,ibnd,2,2)+ (0.d0,-1.d0)* &
+                          psc(ikb,2,ibnd,2)=psc(ikb,2,ibnd,2)+ (0.d0,-1.d0)* &
                               ( becp_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4) &
                                              -et(ibnd,ik)*qq(ih,jh,nt))+ &
                                 becp_nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
@@ -211,21 +204,19 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
 
   IF (nkb>0) THEN
      IF (noncolin) THEN
-        DO ip=1,npol
-           CALL ZGEMM( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
-                (0.d0,0.5d0), vkb(1,1), npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
-                ppsi(1,1,1), npwx )
-           CALL ZGEMM( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
-               (0.d0,0.5d0), work(1,1), npwx, psc(1,1,1,2), nkb, (1.d0,0.d0), &
-               ppsi(1,1,1), npwx )
-        END DO
+        CALL ZGEMM( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
+             (0.d0,0.5d0), vkb, npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
+              ppsi, npwx )
+        CALL ZGEMM( 'N', 'N', npwx, nbnd_occ*npol, nkb, &
+             (0.d0,0.5d0), work, npwx, psc(1,1,1,2), nkb, (1.d0,0.d0), &
+             ppsi, npwx )
      ELSE
         CALL ZGEMM( 'N', 'N', npw, nbnd_occ, nkb, &
              (0.d0,0.5d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.0d0), &
-             ppsi(1,1,1), npwx )
+             ppsi, npwx )
         CALL ZGEMM( 'N', 'N', npw, nbnd_occ, nkb, &
              (0.d0,0.5d0), work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.0d0), &
-             ppsi(1,1,1), npwx )
+             ppsi, npwx )
      END IF
   END IF
   IF (noncolin) THEN
@@ -316,6 +307,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
         DEALLOCATE(ps)
      END IF
   ENDIF
+
 
   IF (nkb > 0) THEN
      DEALLOCATE (dvkb1, dvkb)
