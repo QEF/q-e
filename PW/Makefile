@@ -48,6 +48,8 @@ compute_dip.o \
 compute_rho.o \
 compute_fes_grads.o \
 compute_scf.o \
+compute_qdipol.o \
+compute_qdipol_so.o \
 coset.o \
 cryst_to_car.o \
 cubicsym.o \

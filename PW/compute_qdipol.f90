@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine compute_qdipol
+SUBROUTINE compute_qdipol(dpqq)
   !
   ! This routine computes the term dpqq, i.e. the dipole moment of the
   ! augmentation charge
@@ -16,11 +16,11 @@ subroutine compute_qdipol
   USE ions_base, ONLY: ntyp => nsp
   USE uspp, only: nhtol, nhtolm, indv, nlx, ap
   USE uspp_param, only: nbrx, nbeta, lll, kkbeta, qfunc, rinner, &
-       qfcoef, nqf, tvanp, nh
-  USE phus, ONLY: dpqq
+       qfcoef, nqf, tvanp, nh, nhm
 
   implicit none
 
+  REAL(DP) :: dpqq( nhm, nhm, 3, ntyp)
   real(DP), allocatable :: qrad2(:,:,:), qtot(:,:,:), aux(:)
   real(DP) :: fact
   integer :: nt, l, ir, nb, mb, ijv, ilast, ipol, ih, ivl, jh, jvl, lp, ndm

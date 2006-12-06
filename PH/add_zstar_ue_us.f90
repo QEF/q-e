@@ -39,7 +39,7 @@ subroutine add_zstar_ue_us(imode0,npe)
   !  (Just to be sure, this has already beeen done in phq_setup)
   !
   call start_clock('add_zstar_us')
-  call compute_qdipol
+  call compute_qdipol(dpqq)
   
   allocate (pdsp(nbnd,nbnd))
   allocate (dvkb(npwx,nkb,3))

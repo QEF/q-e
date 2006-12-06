@@ -11,6 +11,7 @@ add_shift_us.o \
 atomic_wfc_nc_proj.o \
 cft.o \
 cgracsc.o \
+compute_ppsi.o \
 compute_sigma_avg.o \
 cube.o \
 cubicspinsym.o \
@@ -35,6 +36,7 @@ stm.o \
 stop_pp.o \
 sym_band.o \
 work_function.o \
+write_p_avg.o \
 xsf.o 
 
 MODULES = \

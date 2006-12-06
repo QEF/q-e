@@ -34,7 +34,6 @@ compute_becsum.o \
 compute_drhous.o \
 compute_dvloc.o \
 compute_nldyn.o \
-compute_qdipol.o \
 compute_weight.o \
 deallocate_part.o \
 deallocate_phq.o \

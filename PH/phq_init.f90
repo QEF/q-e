@@ -197,7 +197,7 @@ SUBROUTINE phq_init()
   CALL drho()
   !
   IF ( ( epsil .OR. zue ) .AND. okvan ) &
-     CALL compute_qdipol()
+     CALL compute_qdipol(dpqq)
   !
   CALL stop_clock( 'phq_init' )
   !

@@ -85,6 +85,12 @@ subroutine dvpsi_e (ik, ipol)
              *(0.d0,-2.d0)*evc (ig, ibnd)
      enddo
   enddo
+!
+! Uncomment this goto and the continue below to calculate 
+! the matrix elements of p without the commutator with the
+! nonlocal potential.
+!
+!  goto 111
   !
   ! and this is the contribution from nonlocal pseudopotentials
   !
@@ -154,6 +160,7 @@ subroutine dvpsi_e (ik, ipol)
        (1.d0,0.d0),work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.d0), &
        dpsi(1,1), npwx )
   deallocate (ps2)
+!  111 continue
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !
@@ -231,6 +238,7 @@ subroutine dvpsi_e (ik, ipol)
      deallocate (spsi)
      call adddvepsi_us(becp2,ipol,ik)
   endif
+
 
   if (nkb > 0) deallocate (dvkb1, dvkb, becp2)
   deallocate (eprec)

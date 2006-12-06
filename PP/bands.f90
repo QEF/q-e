@@ -21,13 +21,13 @@ PROGRAM bands
   !
   IMPLICIT NONE
   !
-  CHARACTER (len=256) :: filband, outdir
-  LOGICAL :: lsigma(4), lsym
+  CHARACTER (len=256) :: filband, filp, outdir
+  LOGICAL :: lsigma(4), lsym, lp
   INTEGER :: spin_component, firstk, lastk
   INTEGER :: ios
   !
-  NAMELIST / inputpp / outdir, prefix, filband, spin_component, lsigma, lsym, &
-                       firstk, lastk
+  NAMELIST / inputpp / outdir, prefix, filband, filp, spin_component, lsigma,&
+                       lsym, lp, filp, firstk, lastk
   !                                  
   !
   CALL start_postproc (nd_nmbr)
@@ -39,7 +39,9 @@ PROGRAM bands
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   filband = 'bands.out'
   lsym=.false.
-  lsigma = .false.
+  lsigma=.false.
+  filp='p_avg.dat'
+  lp=.false.
   firstk=0
   lastk=10000000
   spin_component = 1
@@ -63,20 +65,24 @@ PROGRAM bands
   CALL mp_bcast( tmp_dir, ionode_id )
   CALL mp_bcast( prefix, ionode_id )
   CALL mp_bcast( filband, ionode_id )
+  CALL mp_bcast( filp, ionode_id )
   CALL mp_bcast( spin_component, ionode_id )
   CALL mp_bcast( firstk, ionode_id )
   CALL mp_bcast( lastk, ionode_id )
+  CALL mp_bcast( lp, ionode_id )
   CALL mp_bcast( lsym, ionode_id )
   CALL mp_bcast( lsigma, ionode_id )
   !
   !   Now allocate space for pwscf variables, read and check them.
   !
-  CALL read_file
-  CALL openfil_pp
-  CALL init_us_1
+  CALL read_file()
+  CALL openfil_pp()
+  CALL init_us_1()
+  CALL newd()
   !
   CALL punch_band(filband,spin_component,lsigma,lsym)
   IF (lsym) call sym_band(filband,spin_component,firstk,lastk)
+  IF (lp) CALL write_p_avg(filp,spin_component,firstk,lastk)
   !
   CALL stop_pp
   STOP
@@ -157,7 +163,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   ENDDO
   
   iunpun = 18
-  maxdeg = 10 * npol 
+  maxdeg = 30 * npol 
   !
   IF ( ionode ) THEN
      !
