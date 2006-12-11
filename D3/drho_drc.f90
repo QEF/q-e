@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
+SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
   !-----------------------------------------------------------------------
   !  Reads the variation of the charge saved on a file and changes
   !  it according to the variation of the core_charge
@@ -26,7 +26,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
 
   INTEGER :: iudrho_x
   !input: the unit containing the charge variation
-  REAL (DP) :: xq_x (3), scale
+  REAL (DP) :: xq_x (3), scalef
   !input: q point
   !input: drhocore will be added to the valence charge scaled by this factor
   COMPLEX (DP) :: u_x (3 * nat, 3 * nat), drc_x (ngm, ntyp)
@@ -69,7 +69,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scale)
 
      CALL cft3 (drhoc, nr1, nr2, nr3, nrx1, nrx2, nrx3, + 1)
      CALL davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, - 1)
-     drhov(:) = drhov(:) + scale * drhoc(:)
+     drhov(:) = drhov(:) + scalef * drhoc(:)
      CALL davcio_drho2 (drhov, lrdrho, iudrho_x, ipert, + 1)
   ENDDO
 

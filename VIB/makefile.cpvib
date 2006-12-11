@@ -78,16 +78,11 @@ MODULES = \
 ../Modules/wave_base.o \
 ../Modules/xml_io_base.o
 
-.f90.o:
-	$(MPIF90) $(F90FLAGS) -DDFT_CP -c $<
-
 
 WRAPPERS = wrapper.o
 all : cpvib.x
 
-cpvib: cpvib.x
-#cpvib.x : FFLAGS += -DDFT_CP
-cpvib.x : cleancp $(CP_OBJS) $(VIB_OBJ) $(LIBOBJS) ../CPV/cp.x vibstart.o
+cpvib.x : cleancp $(CP_OBJS) $(VIB_OBJ) $(LIBOBJS) vibstart.o
 	$(MPIF90) $(LDFLAGS) -o cpvib.x -I../CPV \
 		vibstart.o $(VIB_OBJ) $(MODULES) $(CP_OBJS) \
 		$(LIBOBJS) $(LIBS)

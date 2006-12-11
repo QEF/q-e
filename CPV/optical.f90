@@ -61,7 +61,7 @@ CONTAINS
           COMPLEX(DP) :: vkb(:,:)
 
           INTEGER :: iss, ngw
-          INTEGER :: ie, if, nf, ne, idie, ig, ierr, i, nbt, nsst
+          INTEGER :: ie, idf, nf, ne, idie, ig, ierr, i, nbt, nsst
           COMPLEX(DP), ALLOCATABLE :: eforce(:,:)
           REAL (DP), ALLOCATABLE ::   bece(:,:)
           REAL(DP) :: curr(3), currt, wef, w, wg2, p2
@@ -151,10 +151,10 @@ CONTAINS
 
             ef = ( ei_emp(1,iss) + ei(nf,iss) ) / 2.0
 
-            DO if = 1, nf
-               fi( if ) = 2.0 / nspin
-               eig( if ) = ei( if, iss )
-               ! IF( ionode ) WRITE( stdout, fmt = '(I4,2F12.6)' ) if, fi(if), eig(if)
+            DO idf = 1, nf
+               fi( idf ) = 2.0 / nspin
+               eig( idf ) = ei( idf, iss )
+               ! IF( ionode ) WRITE( stdout, fmt = '(I4,2F12.6)' ) idf, fi(idf), eig(idf)
             END DO
 
             DO ie = nf+1, ne+nf
@@ -163,13 +163,13 @@ CONTAINS
                ! IF( ionode ) WRITE( stdout, fmt = '(I4,2F12.6)' ) ie, fi(ie), eig(ie)
             END DO
 
-            DO if = 1, nf
+            DO idf = 1, nf
                !
                DO ie = nf + 1, (nf + ne)
 
                   ! frequencies in atomic units
                   !
-                  wef  = eig(ie) - eig(if)
+                  wef  = eig(ie) - eig(idf)
                   !
                   ! discretize the frequency
                   !
@@ -178,7 +178,7 @@ CONTAINS
                   IF( wef > eps8 ) THEN
 
                       cie = ie-nf
-                      cif = if
+                      cif = idf
 
                       ccurr = 0.0d0
 
@@ -199,15 +199,15 @@ CONTAINS
                       !
                       curr = AIMAG( ccurr )
                       !
-                      !dipole( :, if, ie, iss ) = wg2 * tpiba2 * DBLE( ccurr(:) * CONJG( ccurr(:) ) )
-                      !dipole( :, ie, if, iss ) = wg2 * tpiba2 * DBLE( ccurr(:) * CONJG( ccurr(:) ) )
-                      dipole( :, if, ie, iss ) = wg2 * tpiba2 * curr(:)**2
-                      dipole( :, ie, if, iss ) = wg2 * tpiba2 * curr(:)**2 
+                      !dipole( :, idf, ie, iss ) = wg2 * tpiba2 * DBLE( ccurr(:) * CONJG( ccurr(:) ) )
+                      !dipole( :, ie, idf, iss ) = wg2 * tpiba2 * DBLE( ccurr(:) * CONJG( ccurr(:) ) )
+                      dipole( :, idf, ie, iss ) = wg2 * tpiba2 * curr(:)**2
+                      dipole( :, ie, idf, iss ) = wg2 * tpiba2 * curr(:)**2 
                       !
-                      p2 = DBLE( dipole( 1, if, ie, iss ) + dipole( 2, if, ie, iss ) + dipole( 3, if, ie, iss ) )
+                      p2 = DBLE( dipole( 1, idf, ie, iss ) + dipole( 2, idf, ie, iss ) + dipole( 3, idf, ie, iss ) )
                       !
                       !
-                      currt = wg2 * (fi(if)-fi(ie)) * ( curr(1)**2 + curr(2)**2 + curr(3)**2 )
+                      currt = wg2 * (fi(idf)-fi(ie)) * ( curr(1)**2 + curr(2)**2 + curr(3)**2 )
                       currt = currt * tpiba2  / wef 
                       !
                       ! update dielectric tensor
@@ -217,10 +217,10 @@ CONTAINS
                          diet(idie)  = diet(idie)  + CMPLX(0.0d0, currt) / wef
                          sigma(idie) = sigma(idie) + currt
                          ndiet(idie) = ndiet(idie) + 1
-                         epsilon2(idie) = epsilon2(idie) + 4.0d0 * pi * pi * p2 * fi(if) / wef**2 / 3.0d0
+                         epsilon2(idie) = epsilon2(idie) + 4.0d0 * pi * pi * p2 * fi(idf) / wef**2 / 3.0d0
                       END IF
 
-                      sumrule = sumrule + fi(if) * 2.0d0 * dipole( :, if, ie, iss ) / wef
+                      sumrule = sumrule + fi(idf) * 2.0d0 * dipole( :, idf, ie, iss ) / wef
 
                   END IF
                   !

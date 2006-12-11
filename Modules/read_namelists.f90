@@ -83,9 +83,9 @@ MODULE read_namelists_module
        !
        ! ... directory containing the pseudopotentials
        !
-       CALL getenv( 'ESPRESSO_PSEUDO', pseudo_dir )
+       CALL get_env( 'ESPRESSO_PSEUDO', pseudo_dir )
        IF ( TRIM( pseudo_dir ) == ' ') THEN
-          CALL getenv( 'HOME', pseudo_dir )
+          CALL get_env( 'HOME', pseudo_dir )
           pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
        END IF
        !

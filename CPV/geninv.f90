@@ -291,7 +291,7 @@
       INTEGER I,ITER,J,JOBU,K,KASE,KK,L,LL,LLS,LM1,LP1,LS,LU,M,MAXIT, &
      &        MM,MM1,MP1,NCT,NCTP1,NCU,NRT,NRTP1
       REAL(DP)  DDOT,T,R
-      REAL(DP)  B,C,CS,EL,EMM1,F,G,DNRM2,SCALE,SHIFT,SL,SM,SN, &
+      REAL(DP)  B,C,CS,EL,EMM1,F,G,DNRM2,SCALEF,SHIFT,SL,SM,SN, &
      &                 SMM1,T1,TEST,ZTEST
       LOGICAL WANTU,WANTV
 !
@@ -591,13 +591,13 @@
 !
 !           CALCULATE THE SHIFT.
 !
-            SCALE = DMAX1(DABS(S(M)),DABS(S(M-1)),DABS(E(M-1)), &
+            SCALEF = DMAX1(DABS(S(M)),DABS(S(M-1)),DABS(E(M-1)), &
      &                    DABS(S(L)),DABS(E(L)))
-            SM = S(M)/SCALE
-            SMM1 = S(M-1)/SCALE
-            EMM1 = E(M-1)/SCALE
-            SL = S(L)/SCALE
-            EL = E(L)/SCALE
+            SM = S(M)/SCALEF
+            SMM1 = S(M-1)/SCALEF
+            EMM1 = E(M-1)/SCALEF
+            SL = S(L)/SCALEF
+            EL = E(L)/SCALEF
             B = ((SMM1 + SM)*(SMM1 - SM) + EMM1**2)/2.0D0
             C = (SM*EMM1)**2
             SHIFT = 0.0D0

@@ -414,7 +414,7 @@ end subroutine ihpsort
 !     ==--------------------------------------------------------------==
       USE kinds
       
-      INTEGER :: N, MARK, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
+      INTEGER :: N, MARK, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, IT, &
                  IY, INTEST, K, IFK, K1, IP, LNGTH
       
       logical :: cpgt,cplt
@@ -463,9 +463,9 @@ end subroutine ihpsort
    50     AV=COUNT(I-1)
           COUNT(I-1)=COUNT(I)
           COUNT(I)=AV
-          INT=IDX(I-1)
+          IT=IDX(I-1)
           IDX(I-1)=IDX(I)
-          IDX(I)=INT
+          IDX(I)=IT
           I=I-1
           IF(I.GT.IS)GOTO  40
    60   CONTINUE
@@ -569,7 +569,7 @@ end subroutine ihpsort
 !     ==--------------------------------------------------------------==
       USE kinds
       
-      INTEGER :: N, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
+      INTEGER :: N, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, IT, &
                  IY, INTEST, K, IFK, K1, IP, LNGTH
             
       
@@ -616,9 +616,9 @@ end subroutine ihpsort
    50     AV=COUNT(I-1)
           COUNT(I-1)=COUNT(I)
           COUNT(I)=AV
-          INT=IDX(I-1)
+          IT=IDX(I-1)
           IDX(I-1)=IDX(I)
-          IDX(I)=INT
+          IDX(I)=IT
           I=I-1
           IF(I.GT.IS)GOTO  40
    60   CONTINUE
@@ -724,7 +724,7 @@ end subroutine ihpsort
 !     ==--------------------------------------------------------------==
       USE kinds
       
-      INTEGER :: N, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, INT, &
+      INTEGER :: N, I, M, LA, IS, IF, MLOOP, IFKA, IS1, J, IT, &
                  IY, INTEST, K, IFK, K1, IP, LNGTH
       
       REAL(DP) :: COUNT(*),AV,X
@@ -770,9 +770,9 @@ end subroutine ihpsort
    50     AV=COUNT(I-1)
           COUNT(I-1)=COUNT(I)
           COUNT(I)=AV
-          INT=IDX(I-1)
+          IT=IDX(I-1)
           IDX(I-1)=IDX(I)
-          IDX(I)=INT
+          IDX(I)=IT
           I=I-1
           IF(I.GT.IS)GOTO  40
    60   CONTINUE
@@ -880,8 +880,8 @@ end subroutine ihpsort
       integer :: n, idx(*)
       real(8) :: count(*)
       real(8) :: av, x
-      integer :: k1, ifk, lngth, ip, k, int, ifka, intest, iy
-      integer :: i, m, la, is, if, mloop, ifca, is1, j, mark(50)
+      integer :: k1, ifk, lngth, ip, k, it, ifka, intest, iy
+      integer :: i, m, la, is, idf, mloop, ifca, is1, j, mark(50)
 !  set index array to original order .
       do i=1,n
          idx(i)=i
@@ -899,15 +899,15 @@ end subroutine ihpsort
 !  set up initial values.
       la=2
       is=1
-      if=n
+      idf=n
       do 190 mloop=1,n
 !  if segment is short enough sort with final sorting routine .
-      ifka=if-is
+      ifka=idf-is
       if((ifka+1).gt.m)goto 70
 !********* final sorting ***
 !  ( a simple bubble sort )
       is1=is+1
-      do 60 j=is1,if
+      do 60 j=is1,idf
       i=j
    40 if(count(i-1).lt.count(i))goto 60
       if(count(i-1).gt.count(i))goto 50
@@ -915,9 +915,9 @@ end subroutine ihpsort
    50 av=count(i-1)
       count(i-1)=count(i)
       count(i)=av
-      int=idx(i-1)
+      it=idx(i-1)
       idx(i-1)=idx(i)
-      idx(i)=int
+      idx(i)=it
       i=i-1
       if(i.gt.is)goto  40
    60 continue
@@ -927,20 +927,20 @@ end subroutine ihpsort
 !  select the number in the central position in the segment as
 !  the test number.replace it with the number from the segment's
 !  highest address.
-   70 iy=(is+if)/2
+   70 iy=(is+idf)/2
       x=count(iy)
       intest=idx(iy)
-      count(iy)=count(if)
-      idx(iy)=idx(if)
+      count(iy)=count(idf)
+      idx(iy)=idx(idf)
 !  the markers 'i' and 'ifk' are used for the beginning and end
 !  of the section not so far tested against the present value
 !  of x .
       k=1
-      ifk=if
+      ifk=idf
 !  we alternate between the outer loop that increases i and the
 !  inner loop that reduces ifk, moving numbers and indices as
 !  necessary, until they meet .
-      do 110 i=is,if
+      do 110 i=is,idf
       if(x.gt.count(i))goto 110
       if(x.lt.count(i))goto 80
       if(intest.gt.idx(i))goto 110
@@ -949,7 +949,7 @@ end subroutine ihpsort
       idx(ifk)=idx(i)
       k1=k
       do 100 k=k1,ifka
-      ifk=if-k
+      ifk=idf-k
       if(count(ifk).gt.x)goto 100
       if(count(ifk).lt.x)goto 90
       if(intest.le.idx(ifk))goto 100
@@ -973,23 +973,23 @@ end subroutine ihpsort
       idx(i)=intest
       ip=i
 !  store the longer subdivision in workspace.
-  140 if((ip-is).gt.(if-ip))goto 150
-      mark(la)=if
+  140 if((ip-is).gt.(idf-ip))goto 150
+      mark(la)=idf
       mark(la-1)=ip+1
-      if=ip-1
+      idf=ip-1
       goto 160
   150 mark(la)=ip-1
       mark(la-1)=is
       is=ip+1
 !  find the length of the shorter subdivision.
-  160 lngth=if-is
+  160 lngth=idf-is
       if(lngth.le.0)goto 180
 !  if it contains more than one element supply it with workspace .
       la=la+2
       goto 190
   170 if(la.le.0)goto 10
 !  obtain the address of the shortest segment awaiting quicksort
-  180 if=mark(la)
+  180 idf=mark(la)
       is=mark(la-1)
   190 continue
    10 return

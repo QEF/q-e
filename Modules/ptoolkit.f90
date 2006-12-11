@@ -98,7 +98,7 @@
 !
       REAL(DP) :: DDOT
 !
-      REAL(DP) :: g, scale, sigma, kappa, f, h, tmp
+      REAL(DP) :: g, scalef, sigma, kappa, f, h, tmp
       REAL(DP), ALLOCATABLE :: u(:)
       REAL(DP), ALLOCATABLE :: p(:)
       REAL(DP), ALLOCATABLE :: vtmp(:)
@@ -139,20 +139,20 @@
 
          IF ( L > 1 ) THEN
 
-           SCALE = 0.0D0
+           SCALEF = 0.0D0
            DO K = 1, is(l)
-              SCALE = SCALE + DABS( A(K,I) )
+              SCALEF = SCALEF + DABS( A(K,I) )
            END DO
 
 #if defined __PARA
 #  if defined __MPI
-           redin(1) = scale
+           redin(1) = scalef
            CALL MPI_ALLREDUCE(redin, redout, 1, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
-           SCALE = redout(1)
+           SCALEF = redout(1)
 #  endif
 #endif
 
-           IF ( SCALE .EQ. 0.0D0 )  THEN
+           IF ( SCALEF .EQ. 0.0D0 )  THEN
              IF (RI(L).EQ.ME) THEN
                E(I) = A(is(L),I) 
              END IF
@@ -160,7 +160,7 @@
 
              !  ......  CALCOLO DI SIGMA E DI H
 
-             ONE_OVER_SCALE = 1.0d0/SCALE
+             ONE_OVER_SCALE = 1.0d0/SCALEF
              SIGMA = 0.0D0
              DO k = 1,is(L)
                A(k,I) = A(k,I) * ONE_OVER_SCALE
@@ -186,7 +186,7 @@
              G          = -SIGN(SQRT(SIGMA),F)
              H          = SIGMA - F*G
              ONE_OVER_H = 1.0d0/H
-             E(I)       = SCALE*G
+             E(I)       = SCALEF*G
 
 !  ......  COSTRUZIONE DEL VETTORE U
 

@@ -36,7 +36,7 @@
       character*80 filename, line
       character*1  capital, other_cell(ndistx)
       real*8 at(3,3), bg(3,3), celldm(6), omega, d(ndistx)
-      real*8 tau(3,nax), dr(3), dd, dn1, dn2, dn3, dmin, dmax, scale
+      real*8 tau(3,nax), dr(3), dd, dn1, dn2, dn3, dmin, dmax, scalef
       real*8 angolo(nnx*(nnx-1)/2), drv(3), drn(3,nnx), temp, rtemp(3)
       real*8 fact, pi
       parameter (fact=0.529177d0, pi=3.141592653589793d0)
@@ -88,25 +88,25 @@
       end do
       if (matches('ATOMIC_POSITIONS',line)) then
          if ( matches('ALAT', line) ) then
-            scale = 1.d0
+            scalef = 1.d0
             crys = .false.
          else if ( matches('BOHR', line) ) then
-            scale = celldm(1)
+            scalef = celldm(1)
             crys = .false.
          else if ( matches('CRYSTAL', line) ) then
-            scale = 1.d0
+            scalef = 1.d0
             crys = .true.
          else if ( matches('ANGSTROM', line) ) then
-            scale = celldm(1) * fact
+            scalef = celldm(1) * fact
             crys = .false.
          else
-            scale = 1.d0
+            scalef = 1.d0
             crys = .false.
          end if
       else
-         read(line,*) scale
+         read(line,*) scalef
       end if
-      if (scale.le.0.d0 .or. scale.gt.1000.d0) stop ' scale ! '
+      if (scalef.le.0.d0 .or. scalef.gt.1000.d0) stop ' scalef ! '
 
       nsp = 0
       do na=1,nat
@@ -128,7 +128,7 @@
       else
          do na=1,nat
             do i=1,3
-               tau(i,na)=tau(i,na)/scale
+               tau(i,na)=tau(i,na)/scalef
             end do
          end do
       end if
@@ -143,7 +143,7 @@
          open(unit=1,file=filename,form='formatted')
       end if
 !
-      scale=fact*celldm(1)
+      scalef=fact*celldm(1)
  30   continue
       if (nsp.gt.1) then
          do n = 1, nsp
@@ -190,10 +190,10 @@
                         dn2=dr(2)-nn2
                         do nn3=-2,2
                            dn3=dr(3)-nn3
-                           dd = scale* sqrt(                            
+                           dd = scalef* sqrt(                           
      &                       ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2+
      &                       ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2+
-     &                       ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2)    
+     &                       ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2)
                            if(dd.ge.dmin.and.dd.le.dmax) then
                               ndist=ndist+1
                               if (ndist.gt.ndistx) stop ' ndist !'
@@ -260,7 +260,7 @@
                      dn2=dr(2)-nn2
                      do nn3=-1,1
                         dn3=dr(3)-nn3
-                        dd = scale* sqrt(                               
+                        dd = scalef* sqrt(                              
      &                      ( dn1*at(1,1)+dn2*at(1,2)+dn3*at(1,3) )**2 +
      &                      ( dn1*at(2,1)+dn2*at(2,2)+dn3*at(2,3) )**2 +
      &                      ( dn1*at(3,1)+dn2*at(3,2)+dn3*at(3,3) )**2 )
@@ -307,7 +307,7 @@
             do nn1=1,nn
                do nn2=nn1+1,nn
                   nd=nd+1
-                  angolo(nd) = 360/(2*pi) * acos (scale**2 *            
+                  angolo(nd) = 360/(2*pi) * acos (scalef**2 *
      &                 ( drn(1,nn1)*drn(1,nn2) +                        
      &                   drn(2,nn1)*drn(2,nn2) +                        
      &                   drn(3,nn1)*drn(3,nn2) ) / d(nn1) / d(nn2) )
@@ -317,7 +317,7 @@
 !
 ! dd is the distance from the origin
 !
-            dd = sqrt(tau(1,na)**2 + tau(2,na)**2 + tau(3,na)**2)*scale
+            dd = sqrt(tau(1,na)**2 + tau(2,na)**2 + tau(3,na)**2)*scalef
             write(iout,250) atm(ityp(na)), na, (d(nn1),nn1=1,nn)
             write(iout,300) dd, (angolo(nn1),nn1=1,nn*(nn-1)/2)
 !!!         end if
