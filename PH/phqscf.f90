@@ -81,9 +81,7 @@ SUBROUTINE phqscf
            !
            IF (zue) CALL add_zstar_ue (imode0, npert (irr) )
            IF (zue.AND. okvan) CALL add_zstar_ue_us(imode0, npert (irr) )
-
-        ENDIF
-        IF (convt) THEN
+           !
            WRITE( stdout, '(/,5x,"Convergence has been achieved ")')
            done_irr (irr) = 1
         ELSE
@@ -93,12 +91,6 @@ SUBROUTINE phqscf
         !
         tcpu = get_clock ('PHONON')
         ! if (tcpu > max_second) then
-        ! temporary disabled: recover does not work if program stop here
-           !
-           ! WRITE( stdout, '(/,5x,"Stopping for time limit ",2f10.0)') &
-           !      tcpu, max_second
-           ! CALL stop_ph (.FALSE.)
-        ! ENDIF
         !
         !   We test here if we have done the appropriate number of
         !   representation

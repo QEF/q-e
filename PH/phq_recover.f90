@@ -31,8 +31,16 @@ subroutine phq_recover
   !
   !    phq_readin reads up to here. The following data are read by
   !    routines solve_e, solve_e2, solve_linter:
-  ! iter, convt, dr2
-  !    info on status of linear-response calculation for a given irrep
+  ! iter, dr2
+  !    info on status of linear-response calculation for a given irrep.
+  !    IMPORTANT: at convergence, iter is reset to 0 so that if the code
+  !    restarts it will redo the calculation of the given irrep from the
+  !    beginning. The reason for this apparent absurdity is that after
+  !    convergence is achieved, files containing information needed for
+  !    restarting may be lost (files opened by mix_pot for instance)
+  !    or overwritten at the subsequent interation (files containing
+  !    dvpsi and dpsi). While not efficient in soem specific case, this
+  !    is the only safe way to restart without trouble.
   ! dvscfin
   !    self-consistent potential for current iteration and irrep
   ! if (okvan) int3

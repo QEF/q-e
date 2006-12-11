@@ -135,7 +135,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   !
   if (irr0 > 0) then
      ! restart from Phonon calculation
-     read (iunrec) iter0, convt, dr2
+     read (iunrec) iter0, dr2
      read (iunrec) dvscfin
      if (okvan) read (iunrec) int3
      close (unit = iunrec, status = 'keep')
@@ -150,7 +150,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      endif
   else
     iter0 = 0
-    convt = .false.
   endif
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
@@ -539,10 +538,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      ! info on current iteration (iter=0 potential mixing not available)
      !
-     if (reduce_io) then
-        write (iunrec) 0, convt, dr2
+     if (reduce_io.or.convt) then
+        write (iunrec) 0, dr2
      else
-        write (iunrec) iter, convt, dr2
+        write (iunrec) iter, dr2
      endif
      write (iunrec) dvscfin
      if (okvan) write (iunrec) int3

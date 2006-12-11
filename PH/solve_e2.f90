@@ -84,7 +84,7 @@ subroutine solve_e2
   allocate (aux1(  nrxxs))
   if (irr0 == -10) then
      ! restarting in Raman
-     read (iunrec) iter0, convt, dr2
+     read (iunrec) iter0, dr2
      read (iunrec) dvscfin
      if (okvan) read (iunrec) int3 
      close (unit = iunrec, status = 'keep')
@@ -98,10 +98,7 @@ subroutine solve_e2
      end if
   else
      iter0 = 0
-     convt = .false.
   end if
-  !
-  if (convt) go to 155
   !
   if (degauss.ne.0.d0 .or..not.lgamma) &
         call errore ('solve_e2', 'called in the wrong case', 1)
@@ -251,10 +248,10 @@ subroutine solve_e2
      !
      ! info on current iteration (iter=0 potential mixing not available)
      !
-     if (reduce_io) then
-        write (iunrec) 0, convt, dr2
+     if (reduce_io.or.convt) then
+        write (iunrec) 0, dr2
      else
-        write (iunrec) iter, convt, dr2
+        write (iunrec) iter, dr2
      end if
      write (iunrec) dvscfin
      if (okvan) write (iunrec) int3

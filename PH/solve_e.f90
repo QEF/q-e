@@ -89,7 +89,7 @@ subroutine solve_e
   allocate (eprec(nbnd))
   if (irr0 == -20) then
      ! restarting in Electric field calculation
-     read (iunrec) iter0, convt, dr2
+     read (iunrec) iter0, dr2
      read (iunrec) dvscfin
      if (okvan) read (iunrec) int3
      close (unit = iunrec, status = 'keep')
@@ -100,6 +100,7 @@ subroutine solve_e
            enddo
         enddo
      endif
+     convt = .false.
   else if (irr0 > -20 .AND. irr0 <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
@@ -356,10 +357,10 @@ subroutine solve_e
      !
      ! info on current iteration (iter=0 if potential mixing not available)
      !
-     if (reduce_io) then
-        write (iunrec) 0, convt, dr2
+     if (reduce_io .or. convt) then
+        write (iunrec) 0, dr2
      else
-        write (iunrec) iter, convt, dr2
+        write (iunrec) iter, dr2
      end if
      write (iunrec) dvscfin
      if (okvan) write (iunrec) int3
