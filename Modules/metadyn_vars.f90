@@ -23,7 +23,7 @@ MODULE metadyn_vars
   !
   INTEGER :: ncolvar
   !
-  INTEGER  :: fe_nstep, sw_nstep
+  INTEGER  :: fe_nstep, sw_nstep, eq_nstep
   !
   REAL(DP), ALLOCATABLE :: dfe_acc(:)
   REAL(DP), ALLOCATABLE :: fe_grad(:)
@@ -53,12 +53,13 @@ MODULE metadyn_vars
     SUBROUTINE init_metadyn_vars()
       !------------------------------------------------------------------------
       !
-      USE input_parameters,   ONLY : ncolvar_inp, &
-                                     g_amplitude_ => g_amplitude, &
-                                     fe_step_     => fe_step, &
-                                     fe_nstep_    => fe_nstep, &
-                                     sw_nstep_    => sw_nstep
-      USE control_flags,      ONLY : lmetadyn, nstep
+      USE input_parameters, ONLY : ncolvar_inp, &
+                                   g_amplitude_ => g_amplitude, &
+                                   fe_step_     => fe_step,  &
+                                   fe_nstep_    => fe_nstep, &
+                                   sw_nstep_    => sw_nstep, &
+                                   eq_nstep_    => eq_nstep
+      USE control_flags,    ONLY : lmetadyn, nstep
       !
       IMPLICIT NONE
       !
@@ -80,6 +81,7 @@ MODULE metadyn_vars
       !
       fe_nstep    = fe_nstep_
       sw_nstep    = sw_nstep_
+      eq_nstep    = eq_nstep_
       g_amplitude = g_amplitude_
       fe_step(:)  = fe_step_(1:ncolvar)
       !

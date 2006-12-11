@@ -1684,7 +1684,8 @@ END SUBROUTINE gmeshinfo
 SUBROUTINE constraint_info()
 !----------------------------------------------
    USE kinds,              ONLY: DP
-   USE constraints_module, ONLY: nconstr, constr_tol, constr_type, constr, target
+   USE constraints_module, ONLY: nconstr, constr_tol, &
+                                 constr_type, constr, constr_target
    USE io_global,          ONLY: ionode, stdout
    USE control_flags,      ONLY: lconstrain
    !
@@ -1704,7 +1705,8 @@ SUBROUTINE constraint_info()
             ! distance
             !
             WRITE( stdout, 30 ) ic
-            WRITE( stdout, 40 ) NINT(constr( 1, ic )), NINT(constr( 2, ic )), target( ic )
+            WRITE( stdout, 40 ) NINT( constr(1,ic) ), &
+                                NINT( constr(2,ic) ), constr_target(ic)
             !
          END IF
          !

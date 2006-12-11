@@ -562,22 +562,22 @@ MODULE input_parameters
           ! while neld== number of el with spin down
           ! define the unpaired el with spin up
 
-        NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat,&
-             ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s, &
-             nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization, &
-             occupations, degauss, nelup, neldw, nspin, ecfixed, &
-             qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha, &
-             edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue, &
-             U_projection_type, &
-             input_dft, la2F, &
-#if defined (EXX)
-             x_gamma_extrapolation, nqx1, nqx2, nqx3, &
-#endif
-             noncolin, lspinorb, lambda, angle1, angle2, report, &
-             constrained_magnetization, B_field, fixed_magnetization, &
-             sic, sic_epsilon, force_pairing, sic_alpha, &
-             tot_charge, multiplicity, tot_magnetization
+        LOGICAL :: assume_molsys = .FALSE.
 
+        NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
+             ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
+             nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization,           &
+             occupations, degauss, nelup, neldw, nspin, ecfixed,              &
+             qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha,   &
+             edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
+             U_projection_type, input_dft, la2F, assume_molsys,               &
+#if defined (EXX)
+             x_gamma_extrapolation, nqx1, nqx2, nqx3,                         &
+#endif
+             noncolin, lspinorb, lambda, angle1, angle2, report,              &
+             constrained_magnetization, B_field, fixed_magnetization,         &
+             sic, sic_epsilon, force_pairing, sic_alpha,                      &
+	     tot_charge, multiplicity, tot_magnetization
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters
@@ -936,8 +936,8 @@ MODULE input_parameters
           ! 'damp'     damped dynamics is used to propagate ions
           ! 'verlet'   standard Verlet algorithm is used to propagate ions
 
-        CHARACTER(LEN=80) :: ion_dynamics_allowed(7)
-        DATA ion_dynamics_allowed / 'none', 'sd', 'cg', &
+        CHARACTER(LEN=80) :: ion_dynamics_allowed(8)
+        DATA ion_dynamics_allowed / 'none', 'sd', 'cg', 'langevin', &
                                     'damp', 'verlet', 'bfgs', 'beeman' /
 
         REAL(DP) :: ion_radius(nsx) = 0.5d0
@@ -974,6 +974,8 @@ MODULE input_parameters
           !                  see parameters "fnosep" and "tempw"
           ! 'rescaling'      control ionic temperature via velocities rescaling 
           !                  see parameter "tolp"
+          ! 'andersen'       control ionic temperature using Andersen thermostat
+          !
           ! 'not_controlled' ionic temperature is not controlled
 
         REAL(DP) :: tempw = 300.0d0
@@ -1035,6 +1037,7 @@ MODULE input_parameters
                              wfc_extrapolation = 'default'
           !  These variables are used only by PWSCF
         
+        LOGICAL :: refold_pos
         LOGICAL :: remove_rigid_rot = .FALSE.
         
         !
@@ -1044,8 +1047,6 @@ MODULE input_parameters
         REAL(DP) :: delta_t = 1.D0
         
         INTEGER :: nraise
-        
-        LOGICAL :: refold_pos
         
         !
         ! ... variables added for "path" calculations
@@ -1172,25 +1173,27 @@ MODULE input_parameters
         
         INTEGER  :: fe_nstep = 100
         INTEGER  :: sw_nstep = 10
+        INTEGER  :: eq_nstep = 0
         REAL(DP) :: g_amplitude = 0.005D0
         !
         REAL(DP) :: fe_step( max_nconstr ) = 0.4D0
         !
         NAMELIST / ions / phase_space, ion_dynamics, ion_radius, ion_damping,  &
                           ion_positions, ion_velocities, ion_temperature,      &
-                          tempw, fnosep, nhgrp, nhpcl, nhptyp, ndega, tranp, amprp,   &
-                          greasp, tolp, ion_nstepe, ion_maxstep, upscale,      &
-                          delta_t, pot_extrapolation, wfc_extrapolation,       &
-                          nraise, remove_rigid_rot, num_of_images, CI_scheme,  &
-                          opt_scheme, use_masses, first_last_opt, ds, k_max,   &
-                          k_min, write_save, temp_req, path_thr, fixed_tan,    &
-                          use_freezing, trust_radius_max, trust_radius_min,    &
+                          tempw, fnosep, nhgrp, nhpcl, nhptyp, ndega, tranp,   &
+                          amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &
+                          refold_pos, upscale, delta_t, pot_extrapolation,     &
+                          wfc_extrapolation, nraise, remove_rigid_rot,         &
+                          num_of_images, CI_scheme, opt_scheme, use_masses,    &
+                          first_last_opt, ds, k_max, k_min, write_save,        &
+                          temp_req, path_thr, fixed_tan, use_freezing,         &
+                          trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &
                           smd_stcd2, smd_stcd3, smd_codf, smd_forf, smd_smwf,  &
                           smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, &
                           smd_smlm, smd_ene_ini, smd_ene_fin,                  &
-                          fe_step, fe_nstep, sw_nstep, g_amplitude
+                          fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude
 
 !=----------------------------------------------------------------------------=!
 !  CELL Namelist Input Parameters

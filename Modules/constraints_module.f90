@@ -53,12 +53,12 @@ MODULE constraints_module
   !
   ! ... public variables (assigned in the CONSTRAINTS input card)
   !
-  PUBLIC :: nconstr,     &
-            constr_tol,  &
-            constr_type, &
-            constr,      &
-            lagrange,    &
-            target,      &
+  PUBLIC :: nconstr,       &
+            constr_tol,    &
+            constr_type,   &
+            constr,        &
+            lagrange,      &
+            constr_target, &
             dmax
   !
   ! ... global variables
@@ -67,7 +67,7 @@ MODULE constraints_module
   REAL(DP)              :: constr_tol
   INTEGER,  ALLOCATABLE :: constr_type(:)
   REAL(DP), ALLOCATABLE :: constr(:,:)
-  REAL(DP), ALLOCATABLE :: target(:)
+  REAL(DP), ALLOCATABLE :: constr_target(:)
   REAL(DP), ALLOCATABLE :: lagrange(:)
   REAL(DP)              :: dmax
   !
@@ -84,12 +84,13 @@ MODULE constraints_module
        ! ... implemented as normal constraints but are read using specific
        ! ... input variables)
        !
+       USE input_parameters, ONLY : constr_target_ => constr_target
        USE input_parameters, ONLY : nconstr_inp, constr_tol_inp, &
                                     ncolvar_inp, colvar_tol_inp, &
                                     constr_type_inp, constr_inp, &
                                     colvar_type_inp, colvar_inp, &
-                                    constr_target, constr_target_set, &
-                                    colvar_target, colvar_target_set, nc_fields
+                                    constr_target_set, colvar_target, &
+                                    colvar_target_set, nc_fields
        !
        IMPLICIT NONE
        !
@@ -115,9 +116,9 @@ MODULE constraints_module
        nconstr    = ncolvar_inp + nconstr_inp
        constr_tol = MAX( constr_tol_inp, colvar_tol_inp )
        !
-       ALLOCATE( lagrange(    nconstr ) )
-       ALLOCATE( target(      nconstr ) )
-       ALLOCATE( constr_type( nconstr ) )
+       ALLOCATE( lagrange(      nconstr ) )
+       ALLOCATE( constr_target( nconstr ) )
+       ALLOCATE( constr_type(   nconstr ) )
        !
        ALLOCATE( constr( nc_fields, nconstr ) )
        !
@@ -146,7 +147,7 @@ MODULE constraints_module
           !
        END IF
        !
-       ! ... initializations of target values for the constraints :
+       ! ... initializations of constr_target values for the constraints :
        !
        ! ... first the initialization of the collective variables
        !
@@ -162,7 +163,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = colvar_target(ia)
+                constr_target(ia) = colvar_target(ia)
                 !
                 CYCLE
                 !
@@ -170,7 +171,7 @@ MODULE constraints_module
                 !
                 CALL set_type_coord( ia )
                 !
-             END IF             
+             END IF
              !
           CASE( 'atom_coord' )
              !
@@ -181,7 +182,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = colvar_target(ia)
+                constr_target(ia) = colvar_target(ia)
                 !
                 CYCLE
                 !
@@ -197,23 +198,24 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = colvar_target(ia)
+                constr_target(ia) = colvar_target(ia)
                 !
              ELSE
                 !
                 ia1 = ANINT( constr(1,ia) )
                 ia2 = ANINT( constr(2,ia) )
                 !
-                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
                 !
-                target(ia) = norm( dtau(:) )
+                constr_target(ia) = norm( dtau(:) )
                 !
              END IF
              !
-             IF ( target(ia) > dmax )  THEN
+             IF ( constr_target(ia) > dmax )  THEN
                 !
                 WRITE( stdout, '(/,5X,"target = ",F12.8,/, &
-                                &  5X,"dmax   = ",F12.8)' ) target(ia), dmax
+                                &  5X,"dmax   = ",F12.8)' ) &
+                    constr_target(ia), dmax
                 !
                 CALL errore( 'init_constraint', 'the target for coll.var. '  //&
                            & TRIM( int_to_char( ia ) ) // ' is larger than ' //&
@@ -230,10 +232,11 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                ! ... in the input target for the angle (in degrees) is 
-                ! ... converted to the cosine of the angle
+                ! ... the input value of target for the torsional angle (given
+                ! ... in degrees) is converted to the cosine of the angle
                 !
-                target(ia) = COS( ( 180.D0 - colvar_target(ia) )* tpi / 360.D0 )
+                constr_target(ia) = COS( ( 180.D0 - &
+                                           colvar_target(ia) )*tpi/360.D0 )
                 !
                 CYCLE
                 !
@@ -252,10 +255,10 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                ! ... in the input target for the torsional angle (in degrees)
-                ! ... is converted to the cosine of the angle
+                ! ... the input value of target for the torsional angle (given
+                ! ... in degrees) is converted to the cosine of the angle
                 !
-                target(ia) = COS( colvar_target(ia) * tpi / 360.D0 )
+                constr_target(ia) = COS( colvar_target(ia)*tpi/360.D0 )
                 !
                 CYCLE
                 !
@@ -273,7 +276,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = colvar_target(ia)
+                constr_target(ia) = colvar_target(ia)
                 !
                 CYCLE
                 !
@@ -292,7 +295,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = colvar_target(ia)
+                constr_target(ia) = colvar_target(ia)
                 !
                 CYCLE
                 !
@@ -314,7 +317,7 @@ MODULE constraints_module
              !
              IF ( colvar_target_set(ia) ) THEN
                 !
-                target(ia) = colvar_target(ia)
+                constr_target(ia) = colvar_target(ia)
                 !
                 CYCLE
                 !
@@ -331,7 +334,7 @@ MODULE constraints_module
              !
           END SELECT
           !
-       END DO       
+       END DO
        !
        ! ... then then the initialization of the real constraints
        !
@@ -349,7 +352,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(n)
+                constr_target(ia) = constr_target_(n)
                 !
                 CYCLE
                 !
@@ -357,7 +360,7 @@ MODULE constraints_module
                 !
                 CALL set_type_coord( ia )
                 !
-             END IF             
+             END IF
              !
           CASE( 'atom_coord' )
              !
@@ -368,7 +371,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(n)
+                constr_target(ia) = constr_target_(n)
                 !
                 CYCLE
                 !
@@ -384,23 +387,24 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(n)
+                constr_target(ia) = constr_target_(n)
                 !
              ELSE
                 !
                 ia1 = ANINT( constr(1,ia) )
                 ia2 = ANINT( constr(2,ia) )
                 !
-                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
                 !
-                target(ia) = norm( dtau(:) )
+                constr_target(ia) = norm( dtau(:) )
                 !
              END IF
              !
-             IF ( target(ia) > dmax )  THEN
+             IF ( constr_target(ia) > dmax )  THEN
                 !
                 WRITE( stdout, '(/,5X,"target = ",F12.8,/, &
-                                &  5X,"dmax   = ",F12.8)' ) target(ia), dmax
+                                &  5X,"dmax   = ",F12.8)' ) &
+                    constr_target(ia), dmax
                 !
                 CALL errore( 'init_constraint', 'the target for constraint ' //&
                            & TRIM( int_to_char( n ) ) // ' is larger than '  //&
@@ -417,10 +421,11 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                ! ... in the input target for the angle (in degrees) is 
-                ! ... converted to the cosine of the angle
+                ! ... the input value of target for the torsional angle (given
+                ! ... in degrees) is converted to the cosine of the angle
                 !
-                target(ia) = COS( ( 180.D0 - constr_target(n) )* tpi / 360.D0 )
+                constr_target(ia) = COS( ( 180.D0 - &
+                                           constr_target_(n) )*tpi/360.D0 )
                 !
                 CYCLE
                 !
@@ -439,10 +444,10 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                ! ... in the input target for the torsional angle (in degrees)
-                ! ... is converted to the cosine of the angle
+                ! ... the input value of target for the torsional angle (given
+                ! ... in degrees) is converted to the cosine of the angle
                 !
-                target(ia) = COS( constr_target(n) * tpi / 360.D0 )
+                constr_target(ia) = COS( constr_target_(n)*tpi/360.D0 )
                 !
                 CYCLE
                 !
@@ -460,7 +465,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(n)
+                constr_target(ia) = constr_target_(n)
                 !
                 CYCLE
                 !
@@ -479,7 +484,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(n)
+                constr_target(ia) = constr_target_(n)
                 !
                 CYCLE
                 !
@@ -501,7 +506,7 @@ MODULE constraints_module
              !
              IF ( constr_target_set(n) ) THEN
                 !
-                target(ia) = constr_target(n)
+                constr_target(ia) = constr_target_(n)
                 !
                 CYCLE
                 !
@@ -537,7 +542,7 @@ MODULE constraints_module
            !
            smoothing = 1.D0 / constr(4,ia)
            !
-           target(ia) = 0.D0
+           constr_target(ia) = 0.D0
            !
            n_type_coord1 = 0
            !
@@ -551,12 +556,12 @@ MODULE constraints_module
                  !
                  IF ( ityp(ia2) /= type_coord2 ) CYCLE
                  !
-                 dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+                 dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
                  !
                  norm_dtau = norm( dtau(:) )
                  !
-                 target(ia) = target(ia) + 1.D0 / &
-                              ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
+                 constr_target(ia) = constr_target(ia) + 1.D0 / &
+                                ( EXP( smoothing*( norm_dtau - r_c ) ) + 1.D0 )
                  !
               END DO
               !
@@ -564,7 +569,7 @@ MODULE constraints_module
               !
            END DO
            !
-           target(ia) = target(ia) / DBLE( n_type_coord1 )
+           constr_target(ia) = constr_target(ia) / DBLE( n_type_coord1 )
            !
          END SUBROUTINE set_type_coord
          !
@@ -581,7 +586,7 @@ MODULE constraints_module
            !
            smoothing = 1.D0 / constr(4,ia)
            !
-           target(ia) = 0.D0
+           constr_target(ia) = 0.D0
            !
            DO ia2 = 1, nat
               !
@@ -589,12 +594,12 @@ MODULE constraints_module
               !
               IF ( ityp(ia2) /= type_coord1 ) CYCLE
               !
-              dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+              dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
               !
               norm_dtau = norm( dtau(:) )
               !
-              target(ia) = target(ia) + 1.D0 / &
-                           ( EXP( smoothing * ( norm_dtau - r_c ) ) + 1.D0 )
+              constr_target(ia) = constr_target(ia) + 1.D0 / &
+                                ( EXP( smoothing*( norm_dtau - r_c ) ) + 1.D0 )
               !
            END DO
            !
@@ -610,13 +615,13 @@ MODULE constraints_module
            ia1 = ANINT( constr(2,ia) )
            ia2 = ANINT( constr(3,ia) )
            !
-           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
-           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
            !
            d0(:) = d0(:) / norm( d0(:) )
            d1(:) = d1(:) / norm( d1(:) )
            !
-           target(ia) = d0(:) .dot. d1(:)
+           constr_target(ia) = d0(:) .dot. d1(:)
            !
          END SUBROUTINE set_planar_angle
          !
@@ -631,9 +636,9 @@ MODULE constraints_module
            ia2 = ANINT( constr(3,ia) )
            ia3 = ANINT( constr(4,ia) )
            !
-           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
-           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
-           d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
+           d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+           d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+           d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
            !
            C00 = d0(:) .dot. d0(:)
            C01 = d0(:) .dot. d1(:)
@@ -642,10 +647,10 @@ MODULE constraints_module
            C12 = d1(:) .dot. d2(:)
            C22 = d2(:) .dot. d2(:)
            !
-           D01 = C00 * C11 - C01 * C01
-           D12 = C11 * C22 - C12 * C12
+           D01 = C00*C11 - C01*C01
+           D12 = C11*C22 - C12*C12
            !
-           target(ia) = ( C01 * C12 - C02 * C11 ) / SQRT( D01 * D12 )
+           constr_target(ia) = ( C01*C12 - C02*C11 ) / SQRT( D01*D12 )
            !
          END SUBROUTINE set_torsional_angle
          !
@@ -663,7 +668,7 @@ MODULE constraints_module
            !
            DO i = 1, nat
               !
-              dtau(:) = pbc( ( tau(:,i) - tau(:,1) ) * tau_units )
+              dtau(:) = pbc( ( tau(:,i) - tau(:,1) )*tau_units )
               !
               phase = k(:) .dot. dtau(:)
               !
@@ -671,7 +676,7 @@ MODULE constraints_module
               !
            END DO
            !
-           target(ia) = ( CONJG( struc_fac ) * struc_fac ) / DBLE( nat*nat )
+           constr_target(ia) = CONJG( struc_fac )*struc_fac / DBLE( nat*nat )
            !
          END SUBROUTINE set_structure_factor
          !
@@ -681,27 +686,27 @@ MODULE constraints_module
            !
            INTEGER, INTENT(IN) :: ia
            !
-           norm_k = constr(1,ia) * tpi / tau_units
+           norm_k = constr(1,ia)*tpi/tau_units
            !
-           target(ia) = 0.D0
+           constr_target(ia) = 0.D0
            !
            DO i = 1, nat - 1
               !
               DO j = i + 1, nat
                  !
-                 dtau(:) = pbc( ( tau(:,i) - tau(:,j) ) * tau_units )
+                 dtau(:) = pbc( ( tau(:,i) - tau(:,j) )*tau_units )
                  !
                  norm_dtau = norm( dtau(:) )
                  !
-                 phase = norm_k * norm_dtau
+                 phase = norm_k*norm_dtau
                  !
                  IF ( phase < eps32 ) THEN
                     !
-                    target(ia) = target(ia) + 1.D0
+                    constr_target(ia) = constr_target(ia) + 1.D0
                     !
                  ELSE
                     !
-                    target(ia) = target(ia) + SIN( phase ) / phase
+                    constr_target(ia) = constr_target(ia) + SIN( phase ) / phase
                     !
                  END IF
                  !
@@ -709,7 +714,7 @@ MODULE constraints_module
               !
            END DO
            !
-           target(ia) = 2.D0 * fpi * target(ia) / DBLE( nat )
+           constr_target(ia) = 2.D0 * fpi * constr_target(ia) / DBLE( nat )
            !
          END SUBROUTINE set_sph_structure_factor
          !
@@ -729,7 +734,7 @@ MODULE constraints_module
            !
            d2(:) = constr(2:4,ia)
            !
-           target(ia) = ( d1(:) .dot. d2(:) ) / tau_units
+           constr_target(ia) = ( d1(:) .dot. d2(:) ) / tau_units
            !
          END SUBROUTINE set_bennett_proj
          !
@@ -797,17 +802,17 @@ MODULE constraints_module
                 !
                 IF ( ityp(ia2) /= type_coord2 ) CYCLE
                 !
-                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+                dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
                 !
                 norm_dtau = norm( dtau(:) )
                 !
                 dtau(:) = dtau(:) / norm_dtau
                 !
-                expo = EXP( smoothing * ( norm_dtau - r_c ) )
+                expo = EXP( smoothing*( norm_dtau - r_c ) )
                 !
                 g = g + 1.D0 / ( expo + 1.D0 )
                 !
-                dtau(:) = dtau(:) * smoothing * expo / ( expo + 1.D0 )**2
+                dtau(:) = dtau(:) * smoothing*expo / ( expo + 1.D0 )**2
                 !
                 dg(:,ia2) = dg(:,ia2) + dtau(:)
                 dg(:,ia1) = dg(:,ia1) - dtau(:)
@@ -821,7 +826,7 @@ MODULE constraints_module
           g  = g  / DBLE( n_type_coord1 )
           dg = dg / DBLE( n_type_coord1 )
           !
-          g = ( g - target(idx) )
+          g = ( g - constr_target(idx) )
           !
        CASE( 2 )
           !
@@ -842,13 +847,13 @@ MODULE constraints_module
              !
              IF ( ityp(ia1) /= type_coord1 ) CYCLE
              !
-             dtau(:) = pbc( ( tau(:,ia) - tau(:,ia1) ) * tau_units )
+             dtau(:) = pbc( ( tau(:,ia) - tau(:,ia1) )*tau_units )
              !
              norm_dtau = norm( dtau(:) )
              !
              dtau(:) = dtau(:) / norm_dtau
              !
-             expo = EXP( smoothing * ( norm_dtau - r_c ) )
+             expo = EXP( smoothing*( norm_dtau - r_c ) )
              !
              g = g + 1.D0 / ( expo + 1.D0 )
              !
@@ -859,7 +864,7 @@ MODULE constraints_module
              !
           END DO
           !
-          g = ( g - target(idx) )
+          g = ( g - constr_target(idx) )
           !
        CASE( 3 )
           !
@@ -868,11 +873,11 @@ MODULE constraints_module
           ia1 = ANINT( constr(1,idx) )
           ia2 = ANINT( constr(2,idx) )
           !
-          dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+          dtau(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
           !
           norm_dtau = norm( dtau(:) )
           !
-          g = ( norm_dtau - target(idx) )
+          g = ( norm_dtau - constr_target(idx) )
           !
           dg(:,ia1) = dtau(:) / norm_dtau
           !
@@ -887,19 +892,19 @@ MODULE constraints_module
           ia1 = ANINT( constr(2,idx) )
           ia2 = ANINT( constr(3,idx) )
           !
-          d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
-          d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
+          d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+          d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
           !
           C00 = d0(:) .dot. d0(:)
           C01 = d0(:) .dot. d1(:)
           C11 = d1(:) .dot. d1(:)
           !
-          inv_den = 1.D0 / SQRT( C00 * C11 )
+          inv_den = 1.D0 / SQRT( C00*C11 )
           !
-          g = ( C01 * inv_den - target(idx) )
+          g = ( C01 * inv_den - constr_target(idx) )
           !
-          dg(:,ia0) = ( d1(:) - C01 / C00 * d0(:) ) * inv_den
-          dg(:,ia2) = ( C01 / C11 * d1(:) - d0(:) ) * inv_den
+          dg(:,ia0) = ( d1(:) - C01/C00*d0(:) ) * inv_den
+          dg(:,ia2) = ( C01/C11*d1(:) - d0(:) ) * inv_den
           dg(:,ia1) = - dg(:,ia0) - dg(:,ia2)
           !
        CASE( 5 )
@@ -912,9 +917,9 @@ MODULE constraints_module
           ia2 = ANINT( constr(3,idx) )
           ia3 = ANINT( constr(4,idx) )
           !
-          d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) ) * tau_units )
-          d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) ) * tau_units )
-          d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) ) * tau_units )
+          d0(:) = pbc( ( tau(:,ia0) - tau(:,ia1) )*tau_units )
+          d1(:) = pbc( ( tau(:,ia1) - tau(:,ia2) )*tau_units )
+          d2(:) = pbc( ( tau(:,ia2) - tau(:,ia3) )*tau_units )
           !
           C00 = d0(:) .dot. d0(:)
           C01 = d0(:) .dot. d1(:)
@@ -923,8 +928,8 @@ MODULE constraints_module
           C12 = d1(:) .dot. d2(:)
           C22 = d2(:) .dot. d2(:)
           !
-          D01 = C00 * C11 - C01 * C01
-          D12 = C11 * C22 - C12 * C12
+          D01 = C00*C11 - C01*C01
+          D12 = C11*C22 - C12*C12
           !
           IF ( ABS( D01 ) < eps32 .OR. ABS( D12 ) < eps32 ) &
              CALL errore( 'constraint_grad', 'either D01 or D12 is zero', 1 )
@@ -932,23 +937,23 @@ MODULE constraints_module
           invD01 = 1.D0 / D01
           invD12 = 1.D0 / D12
           !
-          fac = C01 * C12 - C02 * C11
+          fac = C01*C12 - C02*C11
           !
-          inv_den = 1.D0 / SQRT( D01 * D12 )
+          inv_den = 1.D0 / SQRT( D01*D12 )
           !
-          g = ( ( C01 * C12 - C02 * C11 ) * inv_den - target(idx) )
+          g = ( ( C01*C12 - C02*C11 )*inv_den - constr_target(idx) )
           !
-          dg(:,ia0) = ( C12 * d1(:) - C11 * d2(:) - &
-                        invD01 * fac * ( C11 * d0(:) - C01 * d1(:) ) ) * inv_den
+          dg(:,ia0) = ( C12*d1(:) - C11*d2(:) - &
+                        invD01*fac*( C11*d0(:) - C01*d1(:) ) )*inv_den
           !
-          dg(:,ia2) = ( C01 * ( d1(:) - d2(:) ) - &
-                        ( C11 + C12 ) * d0(:) + 2.D0 * C02 * d1(:) - &
-                        invD12 * fac * ( ( C11 + C12 ) * d2(:) - &
-                                         ( C12 + C22 ) * d1(:) ) - &
-                        invD01 * fac * ( C01 * d0(:) - C00 * d1(:) ) ) * inv_den
+          dg(:,ia2) = ( C01*( d1(:) - d2(:) ) - &
+                        ( C11 + C12 )*d0(:) + 2.D0*C02*d1(:) - &
+                        invD12*fac*( ( C11 + C12 )*d2(:) - &
+                                         ( C12 + C22 )*d1(:) ) - &
+                        invD01*fac*( C01*d0(:) - C00*d1(:) ) )*inv_den
           !
-          dg(:,ia3) = ( C11 * d0(:) - C01 * d1(:) - &
-                        invD12 * fac * ( C12 * d1(:) - C11 * d2(:) ) ) * inv_den
+          dg(:,ia3) = ( C11*d0(:) - C01*d1(:) - &
+                        invD12*fac*( C12*d1(:) - C11*d2(:) ) )*inv_den
           !
           dg(:,ia1) = - dg(:,ia0) - dg(:,ia2) - dg(:,ia3)
           !
@@ -956,9 +961,9 @@ MODULE constraints_module
           !
           ! ... constraint on structure factor at a given k vector
           !
-          k(1) = constr(1,idx) * tpi / tau_units
-          k(2) = constr(2,idx) * tpi / tau_units
-          k(3) = constr(3,idx) * tpi / tau_units
+          k(1) = constr(1,idx)*tpi/tau_units
+          k(2) = constr(2,idx)*tpi/tau_units
+          k(3) = constr(3,idx)*tpi/tau_units
           !
           struc_fac = ( 1.D0, 0.D0 )
           !
@@ -966,7 +971,7 @@ MODULE constraints_module
           !
           DO i = 1, nat - 1
              !
-             dtau(:) = pbc( ( tau(:,i+1) - r0(:) ) * tau_units )
+             dtau(:) = pbc( ( tau(:,i+1) - r0(:) )*tau_units )
              !
              phase = k(1)*dtau(1) + k(2)*dtau(2) + k(3)*dtau(3)
              !
@@ -976,11 +981,11 @@ MODULE constraints_module
              !
              DO j = i + 1, nat
                 !
-                dtau(:) = pbc( ( tau(:,j) - ri(:) ) * tau_units )
+                dtau(:) = pbc( ( tau(:,j) - ri(:) )*tau_units )
                 !
                 phase = k(1)*dtau(1) + k(2)*dtau(2) + k(3)*dtau(3)
                 !
-                ksin(:) = k(:) * SIN( phase )
+                ksin(:) = k(:)*SIN( phase )
                 !
                 dg(:,i) = dg(:,i) + ksin(:)
                 dg(:,j) = dg(:,j) - ksin(:)
@@ -989,18 +994,18 @@ MODULE constraints_module
              !
           END DO
           !
-          g = ( CONJG( struc_fac ) * struc_fac ) / DBLE( nat*nat )
+          g = ( CONJG( struc_fac )*struc_fac ) / DBLE( nat*nat )
           !
-          g = ( g - target(idx) )
+          g = ( g - constr_target(idx) )
           !
-          dg(:,:) = dg(:,:) * 2.D0 / DBLE( nat*nat )
+          dg(:,:) = dg(:,:)*2.D0/DBLE( nat*nat )
           !
        CASE( 7 )
           !
           ! ... constraint on spherical average of the structure factor for
           ! ... a given k-vector of norm k
           !
-          norm_k = constr(1,idx) * tpi / tau_units
+          norm_k = constr(1,idx)*tpi/tau_units
           !
           g = 0.D0
           !
@@ -1010,7 +1015,7 @@ MODULE constraints_module
              !
              DO j = i + 1, nat
                 !
-                dtau(:) = pbc( ( ri(:) - tau(:,j) ) * tau_units )
+                dtau(:) = pbc( ( ri(:) - tau(:,j) )*tau_units )
                 !
                 norm_dtau_sq = dtau(1)**2 + dtau(2)**2 + dtau(3)**2
                 !
@@ -1028,7 +1033,7 @@ MODULE constraints_module
                    !
                    g = g + sinxx
                    !
-                   dtau(:) = dtau(:) / norm_dtau_sq * ( COS( phase ) - sinxx )
+                   dtau(:) = dtau(:) / norm_dtau_sq*( COS( phase ) - sinxx )
                    !
                    dg(:,i) = dg(:,i) + dtau(:)
                    dg(:,j) = dg(:,j) - dtau(:)
@@ -1039,9 +1044,9 @@ MODULE constraints_module
              !
           END DO
           !
-          g = ( 2.D0 * fpi * g / DBLE( nat ) - target(idx) )
+          g = ( 2.D0*fpi*g / DBLE( nat ) - constr_target(idx) )
           !
-          dg(:,:) = 4.D0 * fpi * dg(:,:) / DBLE( nat )
+          dg(:,:) = 4.D0*fpi*dg(:,:) / DBLE( nat )
           !
        CASE( 8 )
           !
@@ -1057,7 +1062,7 @@ MODULE constraints_module
           !
           d2(:) = constr(2:4,idx)
           !
-          g = ( d1(:) .dot. d2(:) ) / tau_units - target( idx )
+          g = ( d1(:) .dot. d2(:) ) / tau_units - constr_target( idx )
           !
           dg = 0.D0
           !
@@ -1074,7 +1079,7 @@ MODULE constraints_module
           !
        END SELECT
        !
-       dg(:,:) = dg(:,:) * DBLE( if_pos(:,:) )
+       dg(:,:) = dg(:,:)*DBLE( if_pos(:,:) )
        !
        RETURN
        !
@@ -1165,7 +1170,7 @@ MODULE constraints_module
              !
              DO na = 1, nat
                 !
-                dgp(:,na) = dgp(:,na) / ( amass(ityp(na)) * massconv )
+                dgp(:,na) = dgp(:,na) / ( amass(ityp(na))*massconv )
                 !
              END DO
              !
@@ -1173,16 +1178,16 @@ MODULE constraints_module
              !
              DO na = 1, nat
                 !
-                fac = amass(ityp(na)) * massconv * tau_units
+                fac = amass(ityp(na))*massconv*tau_units
                 !
-                taup(:,na) = taup(:,na) - lambda * dg0(:,na,idx) / fac
+                taup(:,na) = taup(:,na) - lambda*dg0(:,na,idx)/fac
                 !
              END DO
              !
-             lagrange(idx) = lagrange(idx) + lambda * invdtsq
+             lagrange(idx) = lagrange(idx) + lambda*invdtsq
              !
-             force(:,:) = force(:,:) - lambda * dg0(:,:,idx) * invdtsq
-	     !
+             force(:,:) = force(:,:) - lambda*dg0(:,:,idx)*invdtsq
+             !
           END DO inner_loop
           !
           global_test = ALL( ltest(:) )
@@ -1198,12 +1203,12 @@ MODULE constraints_module
           ! ... error messages
           !
           WRITE( stdout, '(/,5X,"Number of step(s): ",I3)') MIN( i, maxiter )
-          WRITE( stdout, '(/,5X,"target convergence: ")' )
+          WRITE( stdout, '(/,5X,"constr_target convergence: ")' )
           !
           DO i = 1, nconstr
              !
              WRITE( stdout, '(5X,"constr # ",I3,2X,L1,3(2X,F16.10))' ) &
-                 i, ltest(i), ABS( gp(i) ), constr_tol, target(i)
+                 i, ltest(i), ABS( gp(i) ), constr_tol, constr_target(i)
              !
           END DO
           !
@@ -1268,7 +1273,7 @@ MODULE constraints_module
           !
           ndg = DDOT( dim, dg(:,:,1), 1, dg(:,:,1), 1 )
           !
-          force(:,:) = force(:,:) - lagrange(1) * dg(:,:,1) / ndg
+          force(:,:) = force(:,:) - lagrange(1)*dg(:,:,1)/ndg
           !
        ELSE
           !
@@ -1308,7 +1313,7 @@ MODULE constraints_module
           !
           DO i = 1, nconstr
              !
-             force(:,:) = force(:,:) - lagrange(i) * dg(:,:,i)
+             force(:,:) = force(:,:) - lagrange(i)*dg(:,:,i)
              !
           END DO
           !
@@ -1355,10 +1360,10 @@ MODULE constraints_module
        IMPLICIT NONE
        !
        !
-       IF ( ALLOCATED( lagrange ) )    DEALLOCATE( lagrange )
-       IF ( ALLOCATED( constr ) )      DEALLOCATE( constr )
-       IF ( ALLOCATED( constr_type ) ) DEALLOCATE( constr_type )
-       IF ( ALLOCATED( target ) )      DEALLOCATE( target )       
+       IF ( ALLOCATED( lagrange ) )      DEALLOCATE( lagrange )
+       IF ( ALLOCATED( constr ) )        DEALLOCATE( constr )
+       IF ( ALLOCATED( constr_type ) )   DEALLOCATE( constr_type )
+       IF ( ALLOCATED( constr_target ) ) DEALLOCATE( constr_target )
        !
        RETURN
        !
@@ -1381,11 +1386,11 @@ MODULE constraints_module
        !
 #if defined (__USE_PBC)
        !
-       pbc(:) = MATMUL( vect(:), bg(:,:) ) / alat
+       pbc(:) = MATMUL( vect(:), bg(:,:) )/alat
        !
        pbc(:) = pbc(:) - ANINT( pbc(:) )
        !
-       pbc(:) = MATMUL( at(:,:), pbc(:) ) * alat
+       pbc(:) = MATMUL( at(:,:), pbc(:) )*alat
        !
 #else
        !
@@ -1410,13 +1415,13 @@ MODULE constraints_module
                               y(3) = (/ 0.0D0, 0.5D0, 0.0D0 /), &
                               z(3) = (/ 0.0D0, 0.0D0, 0.5D0 /)
        !
-       dmax = norm( MATMUL( at(:,:), x(:) ) )       
+       dmax = norm( MATMUL( at(:,:), x(:) ) )
        !
        dmax = MIN( dmax, norm( MATMUL( at(:,:), y(:) ) ) )
        !
        dmax = MIN( dmax, norm( MATMUL( at(:,:), z(:) ) ) )
        !
-       dmax = dmax * alat
+       dmax = dmax*alat
        !
        RETURN
        !

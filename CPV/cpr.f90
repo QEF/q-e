@@ -120,7 +120,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        rhor, rhopr, bephi, becp, nfi
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
-  USE metadyn_vars,             ONLY : ncolvar, dfe_acc, etot_av
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
                                        ions_cofmsub
@@ -128,9 +127,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : readfile, writefile, eigs, strucf
   USE cp_interfaces,            ONLY : empty_cp, ortho, elec_fakekine, print_projwfc
-  USE constraints_module,       ONLY : check_constraint, lagrange, &
-                                       remove_constr_force
-  USE metadyn_base,             ONLY : set_target
+  USE constraints_module,       ONLY : check_constraint, remove_constr_force
+  USE metadyn_base,             ONLY : set_target, mean_force
   USE cp_autopilot,             ONLY : pilot
   USE ions_nose,                ONLY : ions_nose_allocate, ions_nose_shiftvar
   USE orthogonalize_base,       ONLY : updatc
@@ -401,13 +399,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               !
               ! ... average value of the lagrange multipliers
               !
-              IF ( lcoarsegrained ) THEN
-                 !
-                 etot_av = etot_av + etot
-                 !
-                 dfe_acc(:) = dfe_acc(:) - lagrange(1:ncolvar)
-                 !
-              END IF
+              IF ( lcoarsegrained ) CALL mean_force( nfi, etot, 1.D0 )
               !
 	      DEALLOCATE( usrt_tau0, usrt_taup, usrt_fion )
 	      !

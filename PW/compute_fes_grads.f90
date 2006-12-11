@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
+SUBROUTINE compute_fes_grads( fii, lii, stat )
   !----------------------------------------------------------------------------
   !
   USE kinds,              ONLY : DP
@@ -17,14 +17,13 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE basis,              ONLY : startingwfc_ => startingwfc, &
                                  startingpot_ => startingpot
   USE metadyn_vars,       ONLY : ncolvar, dfe_acc, new_target, to_target, &
-                                 to_new_target, sw_nstep, fe_nstep
-  USE path_variables,     ONLY : pos, pes, grad_pes, &
-                                 num_of_images, istep_path, pending_image
-  USE constraints_module, ONLY : lagrange, target, init_constraint, &
+                                 to_new_target, sw_nstep, fe_nstep, eq_nstep
+  USE path_variables,     ONLY : grad_fes => grad_pes, &
+                                 pos, num_of_images, istep_path, pending_image
+  USE constraints_module, ONLY : lagrange, constr_target, init_constraint, &
                                  deallocate_constraint
   USE control_flags,      ONLY : istep, nstep, ethr, conv_ions, ldamped
   USE cell_base,          ONLY : alat, at
-  USE ener,               ONLY : etot
   USE ions_base,          ONLY : nat, tau, ityp
   USE path_formats,       ONLY : scf_fmt, scf_fmt_para
   USE io_files,           ONLY : prefix, tmp_dir, iunpath, iunaxsf, &
@@ -32,26 +31,27 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   USE constants,          ONLY : bohr_radius_angs
   USE io_global,          ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,          ONLY : inter_image_comm, intra_image_comm, &
-                                 my_image_id, nimage, root
+                                 my_image_id, nimage, root_image
   USE mp,                 ONLY : mp_bcast, mp_barrier, mp_sum, mp_min
   USE check_stop,         ONLY : check_stop_now
   USE path_io_routines,   ONLY : new_image_init, get_new_image, &
-                                 stop_other_images  
+                                 stop_other_images
   USE metadyn_base,       ONLY : add_domain_potential
   USE metadyn_io,         ONLY : write_axsf_file
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)  :: N_in, N_fin
+  INTEGER, INTENT(IN)  :: fii, lii
   LOGICAL, INTENT(OUT) :: stat
-  INTEGER              :: image
-  REAL(DP)             :: tcpu
-  CHARACTER(LEN=10)    :: stage
-  INTEGER              :: fe_step0, sw_step0
-  CHARACTER(LEN=256)   :: tmp_dir_saved, filename, basename
-  LOGICAL              :: lfirst_scf = .TRUE.
-  LOGICAL              :: opnd, file_exists
-  LOGICAL              :: ldamped_saved
+  !
+  INTEGER            :: i, image
+  REAL(DP)           :: tcpu
+  CHARACTER(LEN=10)  :: stage
+  INTEGER            :: fe_step0, sw_step0
+  CHARACTER(LEN=256) :: tmp_dir_saved, filename, basename
+  LOGICAL            :: lfirst_scf = .TRUE.
+  LOGICAL            :: opnd, file_exists
+  LOGICAL            :: ldamped_saved
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   REAL(DP),         EXTERNAL :: get_clock
@@ -59,53 +59,53 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   CALL flush_unit( iunpath )
   !
+  filename = TRIM( prefix ) // "_" // &
+           & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf"
+  !
+  OPEN( UNIT = iunaxsf, FILE = filename, ACTION = "WRITE" )
+  !
   IF ( meta_ionode ) THEN
-     !
-     filename = TRIM( prefix ) // "_" // &
-              & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf"
-     !
-     OPEN( UNIT = iunaxsf, FILE = filename, STATUS = "NEW", ACTION = "WRITE" )
      !
      WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I5)' ) num_of_images
      WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
      WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
      WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,1) * alat * bohr_radius_angs, &
-          at(2,1) * alat * bohr_radius_angs, &
-          at(3,1) * alat * bohr_radius_angs
+          at(1,1)*alat*bohr_radius_angs, &
+          at(2,1)*alat*bohr_radius_angs, &
+          at(3,1)*alat*bohr_radius_angs
      WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,2) * alat * bohr_radius_angs, &
-          at(2,2) * alat * bohr_radius_angs, &
-          at(3,2) * alat * bohr_radius_angs
+          at(1,2)*alat*bohr_radius_angs, &
+          at(2,2)*alat*bohr_radius_angs, &
+          at(3,2)*alat*bohr_radius_angs
      WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,3) * alat * bohr_radius_angs, &
-          at(2,3) * alat * bohr_radius_angs, &
-          at(3,3) * alat * bohr_radius_angs
+          at(1,3)*alat*bohr_radius_angs, &
+          at(2,3)*alat*bohr_radius_angs, &
+          at(3,3)*alat*bohr_radius_angs
      !
   END IF
   !
   tmp_dir_saved = tmp_dir
   ldamped_saved = ldamped
   !
-  ! ... vectors pes and grad_pes are initalized to zero for all images on
+  ! ... vectors fes and grad_fes are initalized to zero for all images on
   ! ... all nodes: this is needed for the final mp_sum()
   !
-  IF ( my_image_id == root ) THEN
+  IF ( my_image_id == root_image ) THEN
      !
-     grad_pes(:,:) = 0.D0
+     grad_fes(:,:) = 0.D0
      !
   ELSE
      !
-     grad_pes(:,N_in:N_fin) = 0.D0
-     !   
+     grad_fes(:,fii:lii) = 0.D0
+     !
   END IF
   !
   ! ... only the first cpu initializes the file needed by parallelization 
   ! ... among images
   !
-  IF ( meta_ionode ) CALL new_image_init( N_in, tmp_dir_saved )
+  IF ( meta_ionode ) CALL new_image_init( fii, tmp_dir_saved )
   !
-  image = N_in + my_image_id
+  image = fii + my_image_id
   !
   ! ... all processes are syncronized (needed to have an ordered output)
   !
@@ -115,12 +115,12 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
      ! ... exit if available images are finished
      !
-     IF ( image > N_fin ) EXIT fes_loop
-     !     
+     IF ( image > lii ) EXIT fes_loop
+     !
      pending_image = image
      !
      IF ( check_stop_now( iunpath ) ) THEN
-        !   
+        !
         stat = .FALSE.
         !
         ! ... in case of parallelization on images a stop signal
@@ -128,8 +128,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         IF ( nimage > 1 ) CALL stop_other_images()
         !
-        RETURN
-        !    
+        IF ( interrupt_run( stat ) ) RETURN
+        !
      END IF
      !
      ! ... calculation of the mean-force
@@ -205,8 +205,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      !
      CALL init_run()
      !
-     fe_step0 = 0
-     sw_step0 = 0
+     fe_step0 = 1
+     sw_step0 = 1
      !
      SELECT CASE( stage )
      CASE( 'done' )
@@ -217,7 +217,8 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         new_target(:) = pos(:,image)
         !
-        to_target(:) = ( new_target(:) - target(1:ncolvar) ) / DBLE( sw_nstep )
+        to_target(:) = ( new_target(:) - &
+                         constr_target(1:ncolvar) ) / DBLE( sw_nstep )
         !
         dfe_acc = 0.D0
         !
@@ -257,7 +258,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         nstep = sw_nstep
         !
-        DO istep = sw_step0, sw_nstep
+        DO i = sw_step0, sw_nstep
            !
            CALL electronic_scf( lfirst_scf, stat )
            !
@@ -291,7 +292,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         nstep = fe_nstep
         !
-        DO istep = fe_step0, fe_nstep
+        DO i = fe_step0, fe_nstep
            !
            CALL electronic_scf( .FALSE., stat )
            !
@@ -311,15 +312,20 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
         !
         ! ... zero temperature case
         !
-        grad_pes(:,image) = - lagrange(1:ncolvar) / e2
+        grad_fes(:,image) = - lagrange(1:ncolvar) / e2
         !
      ELSE
         !
         ! ... finite temperature case
         !
-        grad_pes(:,image) = dfe_acc(:) / DBLE( fe_nstep ) / e2
+        grad_fes(:,image) = dfe_acc(:) / DBLE( fe_nstep - eq_nstep ) / e2
         !
      END IF
+     !
+     ! ... notice that grad_fes(:,image) have been computed, so far, by
+     ! ... ionode only: here we broadcast to all the other cpus
+     !
+     CALL mp_bcast( grad_fes(:,image), ionode_id, intra_image_comm )
      !
      IF ( ionode ) THEN
         !
@@ -336,9 +342,9 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
      CALL get_new_image( image, tmp_dir_saved )
      !
      CALL mp_bcast( image, ionode_id, intra_image_comm )
-     !        
+     !
      ! ... input values are restored at the end of each iteration ( they are
-     ! ... modified in init_run )
+     ! ... modified by init_run )
      !
      startingpot_ = startingpot
      startingwfc_ = startingwfc
@@ -353,12 +359,14 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   CLOSE( UNIT = iunaxsf )
   !
+  CALL mp_barrier()
+  !
   IF ( meta_ionode ) THEN
      !
-     ! ... when all the images are done the stage is changed from 
+     ! ... when all the images are done the stage is changed from
      ! ... 'done' to 'tobedone'
      !
-     DO image = N_in, N_fin
+     DO image = fii, lii
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // &
                   "_" // TRIM( int_to_char( image ) ) // "/"
@@ -385,15 +393,7 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   !
   tmp_dir = tmp_dir_saved
   !
-  IF ( nimage > 1 ) THEN
-     !
-     ! ... grad_pes is communicated among "image" pools
-     !
-     CALL mp_sum( grad_pes(:,N_in:N_fin), inter_image_comm )
-     !
-  END IF
-  !
-  ! ... after the first call to compute_fes_grads the input values of 
+  ! ... after the first call to compute_fes_grads the input values of
   ! ... startingpot and startingwfc are both set to 'file'
   !
   startingpot = 'file'
@@ -401,11 +401,17 @@ SUBROUTINE compute_fes_grads( N_in, N_fin, stat )
   startingpot_ = startingpot
   startingwfc_ = startingwfc
   !
-  stat = .TRUE.
-  !
   pending_image = 0
   !
-  RETURN  
+  IF ( nimage > 1 ) THEN
+     !
+     ! ... grad_fes is communicated among "image" pools
+     !
+     CALL mp_sum( grad_fes(:,fii:lii), inter_image_comm )
+     !
+  END IF
+  !
+  RETURN
   !
   CONTAINS
     !
@@ -462,7 +468,7 @@ SUBROUTINE metadyn()
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : eps8
-  USE constraints_module, ONLY : target
+  USE constraints_module, ONLY : constr_target
   USE ions_base,          ONLY : tau
   USE cell_base,          ONLY : alat
   USE io_files,           ONLY : iunaxsf, iunmeta, prefix, tmp_dir
@@ -503,7 +509,7 @@ SUBROUTINE metadyn()
         WRITE( stdout, '(/,5X,"adiabatic switch of the system ", &
                             & "to the new coarse-grained positions",/)' )
         !
-        ! ... the system is "adiabatically" moved to the new target
+        ! ... the system is "adiabatically" moved to the new constr_target
         !
         CALL move_to_target( lfirst_scf )
         !
@@ -522,7 +528,7 @@ SUBROUTINE metadyn()
      IF ( ionode ) THEN
         !
         WRITE( UNIT = iunmeta, FMT = metadyn_fmt ) &
-            iter, target(1:ncolvar), etot_av, gaussian_pos(:), fe_grad(:)
+            iter, constr_target(1:ncolvar), etot_av, gaussian_pos(:), fe_grad(:)
         !
         CALL flush_unit( iunmeta )
         CALL flush_unit( iunaxsf )
@@ -553,15 +559,19 @@ SUBROUTINE metadyn()
       USE constants,          ONLY : e2
       USE ener,               ONLY : etot
       USE lsda_mod,           ONLY : lsda
-      USE control_flags,      ONLY : istep, ldamped, conv_ions, nstep
-      USE metadyn_vars,       ONLY : ncolvar, fe_nstep, dfe_acc, etot_av
+      USE control_flags,      ONLY : ldamped, conv_ions, nstep
+      USE metadyn_vars,       ONLY : fe_nstep, eq_nstep, dfe_acc, etot_av
       USE constraints_module, ONLY : lagrange
       USE io_files,           ONLY : tmp_dir, prefix, delete_if_present
+      USE io_global,          ONLY : ionode_id
+      USE mp_global,          ONLY : intra_image_comm
+      USE mp,                 ONLY : mp_bcast
       !
       IMPLICIT NONE
       !
       LOGICAL, INTENT(INOUT) :: lfirst_scf
       !
+      INTEGER :: i
       LOGICAL :: stat
       !
       !
@@ -574,11 +584,11 @@ SUBROUTINE metadyn()
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.bfgs' )
       CALL delete_if_present( TRIM( tmp_dir ) // TRIM( prefix ) // '.update' )
       !
-      nstep = fe_nstep
-      !
       to_new_target = .FALSE.
       !
-      DO istep = 0, fe_nstep
+      nstep = fe_nstep
+      !
+      DO i = 1, fe_nstep
          !
          CALL electronic_scf( lfirst_scf, stat )
          !
@@ -606,11 +616,17 @@ SUBROUTINE metadyn()
          !
          ! ... finite temperature
          !
-         etot_av = etot_av / DBLE( istep ) / e2
+         etot_av = etot_av / DBLE( fe_nstep ) / e2
          !
-         fe_grad(:) = dfe_acc(:) / DBLE( istep ) / e2
+         fe_grad(:) = dfe_acc(:) / DBLE( fe_nstep - eq_nstep ) / e2
          !
       END IF
+      !
+      ! ... notice that etot_av and fe_grad have been computed, so far, by
+      ! ... ionode only: here we broadcast to all the other cpus
+      !
+      CALL mp_bcast( etot_av, ionode_id, intra_image_comm )
+      CALL mp_bcast( fe_grad, ionode_id, intra_image_comm )
       !
       RETURN
       !
@@ -622,11 +638,12 @@ SUBROUTINE metadyn()
       !
       USE metadyn_vars,  ONLY : sw_nstep
       USE lsda_mod,      ONLY : lsda
-      USE control_flags, ONLY : istep, ldamped, nstep
+      USE control_flags, ONLY : ldamped, nstep
       USE io_files,      ONLY : tmp_dir, prefix, delete_if_present
       !
       LOGICAL, INTENT(INOUT) :: lfirst_scf
       !
+      INTEGER :: i
       LOGICAL :: stat, ldamped_saved
       !
       !
@@ -643,7 +660,7 @@ SUBROUTINE metadyn()
       !
       nstep = sw_nstep
       !
-      DO istep = 0, sw_nstep
+      DO i = 1, sw_nstep
          !
          CALL electronic_scf( lfirst_scf, stat )
          !

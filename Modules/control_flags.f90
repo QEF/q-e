@@ -97,7 +97,7 @@ MODULE control_flags
   LOGICAL :: twfcollect    = .FALSE. ! Collect wave function in the restart file at the end of run.
   LOGICAL :: tuspp         = .FALSE. ! Ultra-soft pseudopotential are being used
   INTEGER :: printwfc      = -1      ! Print wave functions, temporarely used only by ensemble-dft
-  LOGICAL :: force_pairing = .FALSE. ! ...   Force pairing
+  LOGICAL :: force_pairing = .FALSE. ! Force pairing
   LOGICAL :: tchi2         = .FALSE. ! Compute Chi^2
   LOGICAL :: tabps         = .FALSE. ! ab-initio pressure and/or volume
   !
@@ -193,23 +193,22 @@ MODULE control_flags
   ! ... logical flags controlling the execution
   !
   LOGICAL, PUBLIC :: &
-    lfixatom,           &! if .TRUE. some atom is kept fixed
-    lscf,               &! if .TRUE. the calc. is selfconsistent
-    lbfgs,              &! if .TRUE. the calc. is a relaxation based on new BFGS scheme
-    lmd,                &! if .TRUE. the calc. is a dynamics
-    lmetadyn,           &! if .TRUE. the calc. is a meta-dynamics
-    lpath,              &! if .TRUE. the calc. is a path optimizations
-    lneb,               &! if .TRUE. the calc. is NEB dynamics
-    lsmd,               &! if .TRUE. the calc. is string dynamics
-    lwf,                &! if .TRUE. the calc. is with wannier functions
-    lphonon,            &! if .TRUE. the calc. is phonon
-    lbands,             &! if .TRUE. the calc. is band structure
-    lconstrain,         &! if .TRUE. the calc. is constraint
-    ldamped,            &! if .TRUE. the calc. is a damped dynamics
-    lrescale_t,         &! if .TRUE. the ionic temperature is rescaled
-    langevin_rescaling, &! if .TRUE. the ionic dynamics is overdamped Langevin
-    lcoarsegrained,     &! if .TRUE. a coarse-grained phase-space is used
-    restart              ! if .TRUE. restart from results of a preceding run
+    lfixatom,       &! if .TRUE. some atom is kept fixed
+    lscf,           &! if .TRUE. the calc. is selfconsistent
+    lbfgs,          &! if .TRUE. the calc. is a relaxation based on BFGS scheme
+    lmd,            &! if .TRUE. the calc. is a dynamics
+    llang,          &! if .TRUE. the calc. is Langevin dynamics
+    lmetadyn,       &! if .TRUE. the calc. is meta-dynamics
+    lpath,          &! if .TRUE. the calc. is a path optimizations
+    lneb,           &! if .TRUE. the calc. is NEB dynamics
+    lsmd,           &! if .TRUE. the calc. is string dynamics
+    lwf,            &! if .TRUE. the calc. is with wannier functions
+    lphonon,        &! if .TRUE. the calc. is phonon
+    lbands,         &! if .TRUE. the calc. is band structure
+    lconstrain,     &! if .TRUE. the calc. is constraint
+    ldamped,        &! if .TRUE. the calc. is a damped dynamics
+    lcoarsegrained, &! if .TRUE. a coarse-grained phase-space is used
+    restart          ! if .TRUE. restart from results of a preceding run
   !
   LOGICAL, PUBLIC :: &
     remove_rigid_rot     ! if .TRUE. the total torque acting on the atoms is
@@ -288,6 +287,10 @@ MODULE control_flags
   INTEGER, PUBLIC :: &
     para_diago_dim = 0        ! minimum matrix dimension above which a parallel
                               ! algorithm is used
+  !
+  LOGICAL, PUBLIC :: &
+    assume_molsys = .FALSE.   ! if .TRUE. the system is assumed to be an
+                              ! isolated molecular one (molecule in supercell)
   !
   INTEGER  :: ortho_max = 0    ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho

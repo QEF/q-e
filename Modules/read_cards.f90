@@ -212,7 +212,7 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'COLLECTIVE_VARS' ) THEN
           !
           CALL card_collective_vars( input_line )
-          !   
+          !
        ELSE IF ( TRIM(card) == 'VHMEAN' ) THEN
           !
           CALL card_vhmean( input_line )
@@ -1499,9 +1499,9 @@ MODULE read_cards_module
      !                             be specified )
      !                          2: for fixed planar angles ( three atom indexes
      !                             must be specified )
-     !      
+     !
      !      CONSTR(1,.) CONSTR(2,.) ...
-     !     
+     !
      !                          indices object of the constraint, as 
      !                          they appear in the 'POSITION' CARD
      !
@@ -1556,7 +1556,7 @@ MODULE read_cards_module
              CALL errore( 'card_constraints', &
                           'too many fields for this constraint', i )
           !
-          SELECT CASE( constr_type_inp(i) )         
+          SELECT CASE( constr_type_inp(i) )
           CASE( 'type_coord', 'atom_coord' )
              !
              IF ( nfield == 5 ) THEN
@@ -1699,7 +1699,7 @@ MODULE read_cards_module
           END SELECT
           !
        END DO
-       ! 
+       !
        tread = .TRUE.
        !
        RETURN
@@ -1707,9 +1707,9 @@ MODULE read_cards_module
      END SUBROUTINE card_constraints
      !
      SUBROUTINE card_collective_vars( input_line )
-       ! 
+       !
        IMPLICIT NONE
-       ! 
+       !
        CHARACTER(LEN=256) :: input_line
        INTEGER            :: i, nfield
        LOGICAL            :: ltest
@@ -1765,7 +1765,7 @@ MODULE read_cards_module
              CALL errore( 'card_collective_vars', 'too many fields for ' // &
                         & 'this constraint: ' // TRIM( constr_type_inp(i) ), i )
           !
-          SELECT CASE( colvar_type_inp(i) )         
+          SELECT CASE( colvar_type_inp(i) )
           CASE( 'type_coord', 'atom_coord' )
              !
              IF ( cg_phs_path_flag ) THEN
@@ -1891,7 +1891,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars', &
                            & 'struct_fac: wrong number of fields', nfield )
                 !
-             END IF   
+             END IF
              !
           CASE( 'sph_struct_fac' )
              !
@@ -1912,7 +1912,7 @@ MODULE read_cards_module
                 CALL errore( 'card_collective_vars',  &
                            & 'sph_struct_fac: wrong number of fields', nfield )
                 !
-             END IF   
+             END IF
              !
           CASE( 'bennett_proj' )
              !
@@ -1949,9 +1949,9 @@ MODULE read_cards_module
           END SELECT
           !
        END DO
-       ! 
+       !
        tread = .TRUE.
-       ! 
+       !
        RETURN
        !
      END SUBROUTINE card_collective_vars

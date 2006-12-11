@@ -14,6 +14,16 @@ MODULE path_base
   ! ... This module contains all subroutines and functions needed for
   ! ... the implementation of "NEB" and "SMD" methods into Quantum-ESPRESSO
   !
+  ! ... The code is based on the NEB algorithm described in :
+  !
+  ! ...  1) G. Henkelman, B.P. Uberuaga, and H. Jonsson;
+  ! ...     J.Chem.Phys., 113, 9901, (2000)
+  ! ...  2) G. Henkelman, and H. Jonsson; J.Chem.Phys., 113, 9978, (2000)
+  !
+  ! ... More details about the implementation can be found in :
+  !
+  ! ...  http://www.sissa.it/cm/thesis/2005/sbraccia.pdf
+  !
   ! ... Written by Carlo Sbraccia ( 2003-2006 )
   !
   USE kinds,     ONLY : DP
@@ -94,18 +104,18 @@ MODULE path_base
       !
       IF ( nimage > 1 ) THEN
          !
-         ! ... the automatic tuning of the load balance in 
+         ! ... the automatic tuning of the load balance in
          ! ... image-parallelisation is switched off by default
          !
          tune_load_balance = .FALSE.
          !
-         ! ... freezing allowed only with the automatic tuning of 
+         ! ... freezing allowed only with the automatic tuning of
          ! ... the load balance
          !
          use_freezing = tune_load_balance
          !
       END IF
-      !  
+      !
       ! ... dynamical allocation of arrays
       !
       CALL path_allocation()
@@ -138,7 +148,7 @@ MODULE path_base
       tangent      = 0.D0
       grad         = 0.D0
       error        = 0.D0
-      frozen       = .FALSE.      
+      frozen       = .FALSE.
       !
       k = k_min
       !
@@ -163,11 +173,19 @@ MODULE path_base
             !
             INQUIRE( FILE = path_file, EXIST = file_exists )
             !
+            IF ( .NOT. file_exists ) THEN
+               !
+               WRITE( iunpath, &
+                      '(/,5X,"restart file ''",A,"'' not found: ", &
+                       &/,5X,"starting from scratch")' ), TRIM( path_file )
+               !
+               restart_mode = "from_scratch"
+               !
+            END IF
+            !
          END IF
          !
-         CALL mp_bcast( file_exists, meta_ionode_id )
-         !
-         IF ( .NOT. file_exists ) restart_mode = "from_scratch"
+         CALL mp_bcast( restart_mode, meta_ionode_id )
          !
       END IF
       !
@@ -183,7 +201,7 @@ MODULE path_base
             istep_path = 0
             nstep_path = nstep
             !
-         END IF   
+         END IF
          !
          IF ( nstep > nstep_path ) nstep_path = nstep
          !
@@ -277,7 +295,7 @@ MODULE path_base
                !
                i = i + 1
                !
-            END IF   
+            END IF
             !
             IF ( i >= input_images ) &
                CALL errore( 'initialize_path', 'i >= input_images', i )
@@ -300,7 +318,7 @@ MODULE path_base
          !
          WRITE( UNIT = iunpath, &
                  FMT = '(/,5X,"initial path length",&
-                        & T35," = ",F7.4," bohr")' ) path_length  
+                        & T35," = ",F7.4," bohr")' ) path_length
          !
          WRITE( UNIT = iunpath, &
                 FMT = '(5X,"initial inter-image distance",T35," = ",F7.4, &
@@ -420,14 +438,14 @@ MODULE path_base
          !
          DO i = 1, num_of_images 
             !
-            k(i) = 0.5D0 * ( k_sum - k_diff * &
-                             COS( pi * ( pes(i) - Emin ) / delta_E ) )
+            k(i) = 0.5D0*( k_sum - k_diff * &
+                           COS( pi * ( pes(i) - Emin ) / delta_E ) )
             !
          END DO
          !
       END IF
       !
-      k(:) = 0.5D0 * k(:)
+      k(:) = 0.5D0*k(:)
       !
       RETURN
       !
@@ -451,7 +469,7 @@ MODULE path_base
          !
          gradient_loop: DO i = 1, num_of_images
             !
-            IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+            IF ( i > 1 .AND. i < num_of_images ) THEN
                !
                ! ... elastic gradient only along the path ( variable elastic
                ! ... consatnt is used ) NEB recipe
@@ -470,13 +488,13 @@ MODULE path_base
             !
             IF ( climbing(i) ) THEN
                !
-               grad(:,i) = grad(:,i) - 2.D0 * tangent(:,i) * &
-                                       ( grad(:,i) .dot. tangent(:,i) )
+               grad(:,i) = grad(:,i) - &
+                           2.D0*tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
                !
-            ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+            ELSE IF ( i > 1 .AND. i < num_of_images ) THEN
                !
                grad(:,i) = elastic_grad + grad(:,i) - &
-                           tangent(:,i) * ( grad(:,i) .dot. tangent(:,i) )
+                           tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
                !
             END IF
             !
@@ -521,7 +539,7 @@ MODULE path_base
                !
                lang(:,i) = gauss_dist( 0.D0, SQRT( 2.D0*temp_req*ds ), dim )
                !
-               lang(:,i) = lang(:,i) * DBLE( RESHAPE( if_pos, (/ dim /) ) )
+               lang(:,i) = lang(:,i)*DBLE( RESHAPE( if_pos, (/ dim /) ) )
                !
             END IF
             !
@@ -529,20 +547,20 @@ MODULE path_base
             !
             IF ( climbing(i) ) THEN
                !
-               grad(:,i) = grad(:,i) - 2.D0 * tangent(:,i) * &
-                                       ( grad(:,i) .dot. tangent(:,i) )
-               ! 
-            ELSE IF ( ( i > 1 ) .AND. ( i < num_of_images ) ) THEN
+               grad(:,i) = grad(:,i) - &
+                           2.D0*tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
+               !
+            ELSE IF ( i > 1 .AND. i < num_of_images ) THEN
                !
                ! ... projection of the pes gradients 
                !
                grad(:,i) = grad(:,i) - &
-                           tangent(:,i) * ( grad(:,i) .dot. tangent(:,i) )
+                           tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
                !
                IF ( llangevin ) THEN
                   !
                   lang(:,i) = lang(:,i) - &
-                              tangent(:,i) * ( lang(:,i) .dot. tangent(:,i) )
+                              tangent(:,i)*( lang(:,i) .dot. tangent(:,i) )
                   !
                END IF
                !
@@ -604,30 +622,30 @@ MODULE path_base
       REAL(DP), OPTIONAL, INTENT(OUT) :: err_out
       !
       INTEGER  :: i
-      INTEGER  :: N_in, N_fin, free_me, num_of_scf_images
+      INTEGER  :: fii, lii, freed, num_of_scf_images
       REAL(DP) :: err_max
       !
       !
       IF ( first_last_opt ) THEN
          !
-         N_in  = 1
-         N_fin = num_of_images
+         fii  = 1
+         lii = num_of_images
          !
          frozen = .FALSE.
          !
       ELSE
          !
-         N_in  = 2
-         N_fin = ( num_of_images - 1 )      
+         fii  = 2
+         lii = num_of_images - 1
          !
          frozen = .FALSE.
          !
          ! ... the first and the last images are always frozen
          !
-         frozen( N_in  - 1 ) = .TRUE.
-         frozen( N_fin + 1 ) = .TRUE.
+         frozen(fii-1) = .TRUE.
+         frozen(lii+1) = .TRUE.
          !
-      END IF   
+      END IF
       !
       IF ( meta_ionode ) THEN
          !
@@ -640,12 +658,12 @@ MODULE path_base
             !
          END DO
          !
-         err_max = MAXVAL( error(N_in:N_fin), 1 )
+         err_max = MAXVAL( error(fii:lii), 1 )
          !
          IF ( use_freezing ) THEN
             !
-            frozen(N_in:N_fin) = ( error(N_in:N_fin) < &
-                                   MAX( 0.5D0 * err_max, path_thr ) )
+            frozen(fii:lii) = ( error(fii:lii) < &
+                                MAX( 0.5D0 * err_max, path_thr ) )
             !
          END IF
          !
@@ -654,19 +672,19 @@ MODULE path_base
             ! ... in the case of image-parallelisation the number of images
             ! ... to be optimised must be larger than nimage
             !
-            IF ( nimage > ( N_fin - N_in + 1 ) ) &
+            IF ( nimage > ( lii - fii + 1 ) ) &
                CALL errore( 'compute_error', 'nimage is ' // &
-                          & 'larger than the number of available images ', 1 )
+                          & 'larger than the available number of images ', 1 )
             !
             find_scf_images: DO
                !
-               num_of_scf_images = COUNT( .NOT. frozen(N_in:N_fin) )
+               num_of_scf_images = COUNT( .NOT.frozen(fii:lii) )
                !
                IF ( num_of_scf_images >= nimage ) EXIT find_scf_images
                !
-               free_me = MAXLOC( error(N_in:N_fin), 1, frozen(N_in:N_fin) )
+               freed = MAXLOC( error(fii:lii), 1, frozen(fii:lii) )
                !
-               frozen(free_me) = .FALSE.
+               frozen(freed) = .FALSE.
                !
             END DO find_scf_images
             !
@@ -677,7 +695,7 @@ MODULE path_base
             ! ... the old positions of the frozen images are set to the
             ! ... present position (equivalent to resetting the velocity)
             !
-            FORALL( i = N_in:N_fin, frozen(i) ) posold(:,i) = pos(:,i)
+            FORALL( i = fii:lii, frozen(i) ) posold(:,i) = pos(:,i)
             !
          END IF
          !
@@ -693,6 +711,81 @@ MODULE path_base
       RETURN
       !
     END SUBROUTINE compute_error
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE born_oppenheimer_pes( stat )
+      !------------------------------------------------------------------------
+      !
+      USE path_variables, ONLY : num_of_images, pending_image,  &
+                                 istep_path, pes, first_last_opt, &
+                                 Emin, Emax, Emax_index
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL, INTENT(OUT) :: stat
+      !
+      INTEGER  :: fii, lii
+      !
+      !
+      IF ( istep_path == 0 .OR. first_last_opt ) THEN
+         !
+         fii = 1
+         lii = num_of_images
+         !
+      ELSE
+         !
+         fii = 2
+         lii = num_of_images - 1
+         !
+      END IF
+      !
+      IF ( pending_image /= 0 ) fii = pending_image
+      !
+      CALL compute_scf( fii, lii, stat )
+      !
+      IF ( .NOT. stat ) RETURN
+      !
+      Emin       = MINVAL( pes(1:num_of_images) )
+      Emax       = MAXVAL( pes(1:num_of_images) )
+      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
+      !
+      RETURN
+      !
+    END SUBROUTINE born_oppenheimer_pes
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE born_oppenheimer_fes( stat )
+      !------------------------------------------------------------------------
+      !
+      USE path_variables, ONLY : num_of_images, pending_image, &
+                                 istep_path, first_last_opt
+      !
+      IMPLICIT NONE
+      !
+      LOGICAL, INTENT(OUT) :: stat
+      !
+      INTEGER :: fii, lii
+      !
+      !
+      IF ( istep_path == 0 .OR. first_last_opt ) THEN
+         !
+         fii = 1
+         lii = num_of_images
+         !
+      ELSE
+         !
+         fii = 2
+         lii = num_of_images - 1
+         !
+      END IF
+      !
+      IF ( pending_image /= 0 ) fii = pending_image
+      !
+      CALL compute_fes_grads( fii, lii, stat )
+      !
+      RETURN
+      !
+    END SUBROUTINE born_oppenheimer_fes
     !
     !------------------------------------------------------------------------
     SUBROUTINE fe_profile()
@@ -724,110 +817,35 @@ MODULE path_base
       !
     END SUBROUTINE fe_profile
     !
-    !------------------------------------------------------------------------
-    SUBROUTINE born_oppenheimer_pes( stat )
-      !------------------------------------------------------------------------
-      !
-      USE path_variables, ONLY : num_of_images, pending_image,  &
-                                 istep_path, pes, first_last_opt, &
-                                 Emin, Emax, Emax_index
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL, INTENT(OUT) :: stat
-      !
-      INTEGER  :: N_in, N_fin
-      !
-      !
-      IF ( istep_path == 0 .OR. first_last_opt ) THEN
-         !
-         N_in  = 1
-         N_fin = num_of_images
-         !
-      ELSE
-         !
-         N_in  = 2
-         N_fin = ( num_of_images - 1 )
-         !
-      END IF
-      !
-      IF ( pending_image /= 0 ) N_in = pending_image
-      !
-      CALL compute_scf( N_in, N_fin, stat )
-      !
-      IF ( .NOT. stat ) RETURN
-      !
-      Emin       = MINVAL( pes(1:num_of_images) )
-      Emax       = MAXVAL( pes(1:num_of_images) )
-      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
-      !
-      RETURN
-      !
-    END SUBROUTINE born_oppenheimer_pes
-    !
-    !------------------------------------------------------------------------
-    SUBROUTINE born_oppenheimer_fes( stat )
-      !------------------------------------------------------------------------
-      !
-      USE path_variables, ONLY : num_of_images, pending_image, &
-                                 istep_path, first_last_opt
-      !
-      IMPLICIT NONE
-      !
-      LOGICAL, INTENT(OUT) :: stat
-      !
-      INTEGER :: N_in, N_fin
-      !
-      !
-      IF ( istep_path == 0 .OR. first_last_opt ) THEN
-         !
-         N_in  = 1
-         N_fin = num_of_images
-         !
-      ELSE
-         !
-         N_in  = 2
-         N_fin = ( num_of_images - 1 )
-         !
-      END IF
-      !
-      IF ( pending_image /= 0 ) N_in = pending_image
-      !
-      CALL compute_fes_grads( N_in, N_fin, stat )
-      !
-      RETURN
-      !
-    END SUBROUTINE born_oppenheimer_fes
-    !
     !-----------------------------------------------------------------------
     SUBROUTINE check_domain()
       !-----------------------------------------------------------------------
       !
       USE path_variables,     ONLY : pos, num_of_images, &
                                      istep_path, first_last_opt
-      USE constraints_module, ONLY : target
+      USE constraints_module, ONLY : constr_target
       USE metadyn_base,       ONLY : impose_domain_constraints
       !
       IMPLICIT NONE
       !
-      INTEGER :: N_in, N_fin, i
+      INTEGER :: fii, lii, i
       !
       !
       IF ( istep_path == 0 .OR. first_last_opt ) THEN
          !
-         N_in  = 1
-         N_fin = num_of_images
+         fii = 1
+         lii = num_of_images
          !
       ELSE
          !
-         N_in  = 2
-         N_fin = ( num_of_images - 1 )
+         fii = 2
+         lii = num_of_images - 1
          !
-      END IF      
+      END IF
       !
-      DO i = N_in, N_fin
+      DO i = fii, lii
          !
-         target(:) = pos(:,i)
+         constr_target(:) = pos(:,i)
          !
          CALL impose_domain_constraints()
          !
@@ -916,7 +934,7 @@ MODULE path_base
             !
             EXIT optimisation
             !
-         END IF         
+         END IF
          !
          ! ... istep_path is updated after a self-consistency step has been
          ! ... completed
@@ -943,7 +961,7 @@ MODULE path_base
          !
          ! ... the forward activation energy is computed here
          !
-         activation_energy = ( pes(Emax_index) - pes(1) ) * autoev
+         activation_energy = ( pes(Emax_index) - pes(1) )*autoev
          !
          ! ... the error is computed here (frozen images are also set here)
          !
@@ -1027,7 +1045,7 @@ MODULE path_base
       !
       ! ... the program checks if the convergence has been achieved
       !
-      exit_condition = ( .NOT. llangevin .AND. & 
+      exit_condition = ( .NOT.llangevin .AND. & 
                          ( num_of_images == num_of_images_inp ) .AND. &
                          ( err_max <= path_thr ) )
       !
@@ -1050,8 +1068,7 @@ MODULE path_base
          !
          pending_image = 0
          !
-         conv_path = .TRUE.
-         !
+         conv_path  = .TRUE.
          check_exit = .TRUE.
          !
          RETURN
@@ -1066,7 +1083,7 @@ MODULE path_base
          IF ( meta_ionode ) THEN
             !
             WRITE( UNIT = iunpath, FMT = final_fmt )
-            !         
+            !
             IF ( lneb ) &
                WRITE( UNIT = iunpath, &
                       FMT = '(/,5X,"neb: reached the maximum number of ", &
@@ -1118,7 +1135,7 @@ MODULE path_base
                !
                CALL steepest_descent( image )
                !
-            ELSE IF ( llangevin ) THEN   
+            ELSE IF ( llangevin ) THEN
                !
                CALL langevin( image )
                !

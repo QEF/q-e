@@ -8,6 +8,12 @@
 #include "f_defs.h"
 !
 #define __BFGS
+!#define __NPT
+!
+#if defined (__NPT)
+#define RELAXTIME 2000.D0
+#define TARGPRESS 2.39D0
+#endif
 !
 !----------------------------------------------------------------------------
 MODULE dynamics_module
@@ -18,7 +24,7 @@ MODULE dynamics_module
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : prefix, tmp_dir
   USE constants, ONLY : tpi, fpi
-  USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm
+  USE constants, ONLY : amconv, ry_to_kelvin, au_ps, bohr_radius_cm, uakbar
   USE constants, ONLY : eps8
   !
   USE basic_algebra_routines
@@ -30,15 +36,19 @@ MODULE dynamics_module
   REAL(DP) :: &
        dt,          &! time step
        temperature, &! starting temperature
+       virial,      &! virial (used for the pressure)
        delta_t       ! rate of thermalization
   INTEGER :: &
        nraise,      &! the frequency of temperature raising
        ndof          ! the number of degrees of freedom
   LOGICAL :: &
-       refold_pos    ! if true the positions are refolded into the supercell
+       control_temp, &! if true a thermostat is used to control the temperature
+       refold_pos     ! if true the positions are refolded into the supercell
+  CHARACTER(LEN=10) &
+       thermostat    ! the thermostat used to control the temperature
   !
   REAL(DP), ALLOCATABLE :: tau_old(:,:), tau_new(:,:), tau_ref(:,:)
-  REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:)
+  REAL(DP), ALLOCATABLE :: vel(:,:), acc(:,:), chi(:,:)
   REAL(DP), ALLOCATABLE :: mass(:)
   REAL(DP), ALLOCATABLE :: diff_coeff(:)
   REAL(DP), ALLOCATABLE :: radial_distr(:,:)
@@ -63,6 +73,7 @@ MODULE dynamics_module
       !
       IF ( .NOT.ALLOCATED( vel ) ) ALLOCATE( vel( 3, nat ) )
       IF ( .NOT.ALLOCATED( acc ) ) ALLOCATE( acc( 3, nat ) )
+      IF ( .NOT.ALLOCATED( chi ) ) ALLOCATE( chi( 3, nat ) )
       !
       IF ( .NOT.ALLOCATED( diff_coeff ) ) ALLOCATE( diff_coeff( nat ) )
       !
@@ -81,8 +92,9 @@ MODULE dynamics_module
       IF ( ALLOCATED( tau_old ) )       DEALLOCATE( tau_old )
       IF ( ALLOCATED( tau_new ) )       DEALLOCATE( tau_new )
       IF ( ALLOCATED( tau_ref ) )       DEALLOCATE( tau_ref )
-      IF ( ALLOCATED( vel )  )          DEALLOCATE( vel )         
+      IF ( ALLOCATED( vel )  )          DEALLOCATE( vel )
       IF ( ALLOCATED( acc )  )          DEALLOCATE( acc )
+      IF ( ALLOCATED( chi )  )          DEALLOCATE( chi )
       IF ( ALLOCATED( diff_coeff ) )    DEALLOCATE( diff_coeff )
       IF ( ALLOCATED( radial_distr ) )  DEALLOCATE( radial_distr )
       !
@@ -117,14 +129,14 @@ MODULE dynamics_module
       ! ... delta_t < 0 :                   every 'nraise' step the temperature
       ! ...                                 reduced by -delta_t.
       !
-      ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004-2005
+      ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006
       !
-      USE ions_base,     ONLY : nat, nsp, ityp, tau, if_pos, atm
-      USE cell_base,     ONLY : alat
-      USE ener,          ONLY : etot
-      USE force_mod,     ONLY : force
-      USE control_flags, ONLY : istep, nstep, conv_ions, lconstrain, &
-                                lfixatom, lrescale_t, langevin_rescaling
+      USE ions_base,      ONLY : nat, nsp, ityp, tau, if_pos, atm
+      USE cell_base,      ONLY : alat, omega
+      USE ener,           ONLY : etot
+      USE force_mod,      ONLY : force
+      USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain, &
+                                 lfixatom
       !
       USE constraints_module, ONLY : nconstr
       USE constraints_module, ONLY : remove_constr_force, check_constraint
@@ -132,9 +144,10 @@ MODULE dynamics_module
       IMPLICIT NONE
       !
       REAL(DP) :: ekin, etotold
-      REAL(DP) :: total_mass, temp_new, elapsed_time
-      REAL(DP) :: ml(3), mlt
+      REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
+      REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
+      REAL(DP) :: chi, press_new
       LOGICAL  :: file_exists, leof
       !
       REAL(DP), EXTERNAL :: DNRM2
@@ -172,7 +185,8 @@ MODULE dynamics_module
          ELSE
             !
             READ( UNIT = 4, FMT = * ) &
-               temp_new, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+               temp_new, temp_av, mass(:), total_mass, elapsed_time, &
+               tau_ref(:,:)
             !
          END IF
          !
@@ -200,7 +214,7 @@ MODULE dynamics_module
          CALL print_averages()
          !
          RETURN
-         !   
+         !
       END IF
       !
       ! ... elapsed_time is in picoseconds
@@ -209,67 +223,22 @@ MODULE dynamics_module
       !
       istep = istep + 1
       !
-      IF ( lrescale_t ) THEN
-         !
-         vel(:,:) = tau(:,:) - tau_old(:,:)
-         !
-         IF ( MOD( istep, nraise ) == 0 ) THEN
-            !
-            IF ( delta_t == 1.D0 ) THEN
-               !
-               IF ( langevin_rescaling ) THEN
-                  !
-                  CALL start_therm()
-                  !
-                  temp_new = temperature
-                  !
-               ELSE
-                  !
-                  CALL thermalize( temp_new, temperature )
-                  !
-               END IF
-               !
-            ELSE IF ( delta_t < 0 ) THEN
-               !
-               WRITE( UNIT = stdout, &
-                      FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
-                          & ", T = ",F6.1)' )  delta_t, ( temp_new + delta_t )
-               !
-               CALL thermalize( temp_new, ( temp_new + delta_t ) )
-               !
-            END IF
-            !
-         ELSE IF ( delta_t /= 1.D0 .AND. delta_t >= 0 ) THEN
-            !
-            WRITE( stdout, '(/,5X,"Thermalization: delta_t = ",F6.3, &
-                                & ", T = ",F6.1)' ) delta_t, temp_new * delta_t
-            !
-            CALL thermalize( temp_new, temp_new*delta_t )
-            !
-         END IF
-         !
-         ! ... the old positions are updated to reflect the new velocities
-         ! ... ( notice that vel is not the real velocity, but just a 
-         ! ... displacement vector )
-         !
-         tau_old(:,:) = tau(:,:) - vel(:,:)
-         !
-      END IF
+      WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ", &
+                    &I5,/,T28,"time",T37," = ",F8.4," pico-seconds",/)' ) &
+          istep, elapsed_time
+      !
+      IF ( control_temp ) CALL apply_thermostat()
       !
       IF ( lconstrain ) THEN
          !
-         ! ... we first remove the component of the force along the 
-         ! ... constraint gradient ( this constitutes the initial 
+         ! ... we first remove the component of the force along the
+         ! ... constraint gradient ( this constitutes the initial
          ! ... guess for the calculation of the lagrange multipliers )
          !
          CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
          !
       END IF
-      !
-      WRITE( UNIT = stdout, &
-             FMT = '(/,5X,"Entering Dynamics:",T28,"iteration",T37," = ",&
-                    &I5,/,T28,"time",T37," = ",F8.4," pico-seconds")' ) &
-          istep, elapsed_time
       !
       ! ... calculate accelerations in a.u. units / alat
       !
@@ -277,7 +246,26 @@ MODULE dynamics_module
       !
       ! ... Verlet integration scheme
       !
-      tau_new(:,:) = 2.D0 * tau(:,:) - tau_old(:,:) + dt**2 * acc(:,:)
+      tau_new(:,:) = 2.D0*tau(:,:) - tau_old(:,:) + dt**2 * acc(:,:)
+      !
+      IF ( ALL( if_pos(:,:) == 1 ) ) THEN
+         !
+         ! ... if no atom has been fixed  we compute the displacement of the
+         ! ... center of mass and we subtract it from the displaced positions
+         !
+         delta(:) = 0.D0
+         !
+         DO na = 1, nat
+            !
+            delta(:) = delta(:) + mass(na)*( tau_new(:,na) - tau(:,na) )
+            !
+         END DO
+         !
+         delta(:) = delta(:) / total_mass
+         !
+         FORALL( na = 1:nat ) tau_new(:,na) = tau_new(:,na) - delta(:)
+         !
+      END IF
       !
       IF ( lconstrain ) THEN
          !
@@ -285,6 +273,8 @@ MODULE dynamics_module
          !
          CALL check_constraint( nat, tau_new, tau, &
                                 force, if_pos, ityp, alat, dt**2, amconv )
+         !
+#if ! defined (__REDUCE_OUTPUT)
          !
          WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
          !
@@ -298,29 +288,49 @@ MODULE dynamics_module
          !
          WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
          !
+#endif
+         !
       END IF
       !
       ! ... the linear momentum and the kinetic energy are computed here
       !
-      IF ( istep > 1 .OR. lrescale_t ) &
-         vel = ( tau_new - tau_old ) / ( 2.D0 * dt ) * DBLE( if_pos )
+      IF ( istep > 1 .OR. control_temp ) &
+         vel = ( tau_new - tau_old ) / ( 2.D0*dt ) * DBLE( if_pos )
       !
       ml   = 0.D0
-      ekin = 0.D0  
+      ekin = 0.D0
       !
-      DO na = 1, nat 
+      DO na = 1, nat
          ! 
          ml(:) = ml(:) + vel(:,na) * mass(na)
          ekin  = ekin + 0.5D0 * mass(na) * &
                         ( vel(1,na)**2 + vel(2,na)**2 + vel(3,na)**2 )
          !
-      END DO  
+      END DO
       !
-      ekin = ekin * alat**2
+      ekin = ekin*alat**2
       !
-      ! ... find the new temperature
+      ! ... find the new temperature and update the average
       !
       temp_new = 2.D0 / DBLE( ndof ) * ekin * ry_to_kelvin
+      !
+      temp_av = temp_av + temp_new
+      !
+#if defined (__NPT)
+      !
+      ! ... find the new pressure (in Kbar)
+      !
+      press_new = uakbar*( nat*temp_new/ry_to_kelvin + virial ) / omega
+      !
+      chi = 1.D0 - dt / RELAXTIME*( TARGPRESS - press_new )
+      !
+      omega = chi * omega
+      alat  = chi**(1.D0/3.D0) * alat
+      !
+      WRITE( stdout, '(/,5X,"NEW ALAT = ",F8.5,2X,"Bohr"  )' ) alat
+      WRITE( stdout, '(  5X,"PRESSURE = ",F8.5,2X,"Kbar",/)' ) press_new
+      !
+#endif
       !
       ! ... save all the needed quantities on file
       !
@@ -329,7 +339,7 @@ MODULE dynamics_module
       WRITE( UNIT = 4, FMT = * ) etot, istep, tau(:,:), .FALSE.
       !
       WRITE( UNIT = 4, FMT = * ) &
-          temp_new, mass(:), total_mass, elapsed_time, tau_ref(:,:)
+          temp_new, temp_av, mass(:), total_mass, elapsed_time, tau_ref(:,:)
       !
       CLOSE( UNIT = 4, STATUS = 'KEEP' )
       !
@@ -337,7 +347,14 @@ MODULE dynamics_module
       !
       tau(:,:) = tau_new(:,:)
       !
+      IF ( nat == 2 ) &
+         PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
+      !
+#if ! defined (__REDUCE_OUTPUT)
+      !
       CALL output_tau( .FALSE. )
+      !
+#endif
       !
       ! ... infos are written on the standard output
       !
@@ -346,7 +363,7 @@ MODULE dynamics_module
                      & 5X,"Ekin + Etot (const)   = ",F14.8," Ry")' ) &
           ekin, temp_new, ( ekin  + etot )
       !
-      IF ( .NOT.( lconstrain .OR. lfixatom .OR. langevin_rescaling ) ) THEN
+      IF ( .NOT.( lconstrain .OR. lfixatom ) ) THEN
          !
          ! ... total linear momentum must be zero if all atoms move
          !
@@ -373,10 +390,12 @@ MODULE dynamics_module
           !
           IMPLICIT NONE
           !
+          istep = 0
+          !
           WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Molecular Dynamics Calculation")' )
           !
-          ! ... atoms are refold in the central box
+          ! ... atoms are refold in the central box if required
           !
           IF ( refold_pos ) CALL refold_tau()
           !
@@ -384,9 +403,28 @@ MODULE dynamics_module
           !
           tau_ref(:,:) = tau(:,:)
           !
-          WRITE( UNIT = stdout, &
-                 FMT = '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
-              temperature
+          IF ( control_temp ) THEN
+             !
+             WRITE( stdout, &
+                    '(/,5X,"Starting temperature",T27," = ",F8.2," K")' ) &
+                 temperature
+             !
+             SELECT CASE( TRIM( thermostat ) )
+             CASE( 'rescaling' )
+                !
+                WRITE( UNIT = stdout, &
+                       FMT = '(/,5X,"temperature is " &
+                              &     "controlled by rescaling velocities"/)' )
+                !
+             CASE( 'andersen' )
+                !
+                WRITE( UNIT = stdout, &
+                       FMT = '(/,5X,"temperature is " &
+                              &     "controlled by Andersen thermostat"/)' )
+                !
+             END SELECT
+             !
+          END IF
           !
           DO na = 1, nsp
              !
@@ -411,13 +449,15 @@ MODULE dynamics_module
              !
           END DO
           !
-          IF ( lrescale_t ) THEN
+          IF ( control_temp ) THEN
              !
              ! ... initial thermalization. N.B. tau is in units of alat
              !
              CALL start_therm()
              !
              temp_new = temperature
+             !
+             temp_av = 0.D0
              !
              ! ... the old positions are updated to reflect the initial 
              ! ... velocities ( notice that vel is not the real velocity,
@@ -434,6 +474,86 @@ MODULE dynamics_module
           elapsed_time = 0.D0
           !
         END SUBROUTINE md_init
+        !
+        !--------------------------------------------------------------------
+        SUBROUTINE apply_thermostat()
+          !--------------------------------------------------------------------
+          !
+          USE random_numbers, ONLY : rndm, gauss_dist
+          !
+          IMPLICIT NONE
+          !
+          REAL(DP) :: sigma, kt
+          !
+          !
+          vel(:,:) = tau(:,:) - tau_old(:,:)
+          !
+          SELECT CASE( TRIM( thermostat ) )
+          CASE( 'rescaling' )
+             !
+             IF ( MOD( istep, nraise ) == 0 ) THEN
+                !
+                IF ( delta_t == 1.D0 ) THEN
+                   !
+                   temp_av = temp_av / DBLE( nraise )
+                   !
+                   CALL thermalize( temp_av, temperature )
+                   !
+                   temp_av = 0.D0
+                   !
+                ELSE IF ( delta_t < 0 ) THEN
+                   !
+                   temperature = temp_new + delta_t
+                   !
+                   WRITE( UNIT = stdout, &
+                          FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
+                                     & ", T = ",F6.1)' )  delta_t, temperature
+                   !
+                   CALL thermalize( temp_new, temperature )
+                   !
+                END IF
+                !
+             ELSE IF ( delta_t /= 1.D0 .AND. delta_t >= 0 ) THEN
+                !
+                temperature = temp_new*delta_t
+                !
+                WRITE( UNIT = stdout, &
+                       FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
+                                  & ", T = ",F6.1)' ) delta_t, temperature
+                !
+                CALL thermalize( temp_new, temperature )
+                !
+             END IF
+             !
+          CASE( 'andersen' )
+             !
+             kt = temperature / ry_to_kelvin
+             !
+             DO na = 1, nat
+                !
+                IF ( rndm() < 1.D0 / DBLE( nraise ) ) THEN
+                   !
+                   sigma = SQRT( kt / mass(na) )
+                   !
+                   ! ... N.B. velocities must in a.u. units of alat and are zero
+                   ! ...      for fixed ions
+                   !
+                   vel(:,na) = DBLE( if_pos(:,na) ) * &
+                               gauss_dist( 0.D0, sigma, 3 ) * dt / alat
+                   !
+                END IF
+                !
+             END DO
+             !
+          END SELECT
+          !
+          ! ... the old positions are updated to reflect the new velocities
+          ! ... ( notice that vel is not the real velocity, but just a 
+          ! ... displacement vector )
+          !
+          tau_old(:,:) = tau(:,:) - vel(:,:)
+          !
+        END SUBROUTINE apply_thermostat
         !
     END SUBROUTINE verlet
     !
@@ -456,7 +576,7 @@ MODULE dynamics_module
       IMPLICIT NONE
       !
       REAL(DP), ALLOCATABLE :: step(:,:)
-      REAL(DP)              :: norm_step, etotold
+      REAL(DP)              :: norm_step, etotold, delta(3)
       INTEGER               :: na
       LOGICAL               :: file_exists
       !
@@ -492,6 +612,8 @@ MODULE dynamics_module
          !
          tau_old(:,:) = tau(:,:)
          !
+         etotold = etot
+         !
          istep = 0
          !
       END IF
@@ -503,6 +625,8 @@ MODULE dynamics_module
          ! ... for the calculation of the lagrange multipliers)
          !
          CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+         !
+#if ! defined (__REDUCE_OUTPUT)
          !
          WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
          !
@@ -517,37 +641,34 @@ MODULE dynamics_module
          WRITE( stdout, &
                 '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
          !
+#endif
+         !
       END IF
       !
       istep = istep + 1
       !
-      IF ( istep == 1 ) THEN
-         !
+      IF ( istep == 1 ) &
          WRITE( UNIT = stdout, &
                 FMT = '(/,5X,"Damped Dynamics Calculation")' )
+      !
+      ! ... check if convergence for structural minimization is achieved
+      !
+      conv_ions = ( etotold - etot ) < epse
+      conv_ions = conv_ions .AND. ( MAXVAL( ABS( force ) ) < epsf )
+      !
+      IF ( conv_ions ) THEN
          !
-      ELSE
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Damped Dynamics: convergence achieved in " &
+                       & ,I3," steps")' ) istep
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"End of damped dynamics calculation")' )
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"Final energy = ",F18.10," Ry"/)' ) etot
          !
-         ! ... check if convergence for structural minimization is achieved
+         CALL output_tau( .TRUE. )
          !
-         conv_ions = ( etotold - etot ) < epse
-         conv_ions = conv_ions .AND. ( MAXVAL( ABS( force ) ) < epsf )
-         !
-         IF ( conv_ions ) THEN
-            !
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"Damped Dynamics: convergence achieved in " &
-                          & ,I3," steps")' ) istep
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"End of damped dynamics calculation")' )
-            WRITE( UNIT = stdout, &
-                   FMT = '(/,5X,"Final energy = ",F18.10," Ry"/)' ) etot
-            !
-            CALL output_tau( .TRUE. )
-            !
-            RETURN
-            !
-         END IF
+         RETURN
          !
       END IF
       !
@@ -585,7 +706,26 @@ MODULE dynamics_module
       !
       step(:,:) = step(:,:) / norm_step
       !
-      tau_new(:,:) = tau(:,:) + step(:,:) * MIN( norm_step, step_max / alat )
+      tau_new(:,:) = tau(:,:) + step(:,:)*MIN( norm_step, step_max / alat )
+      !
+      IF ( ALL( if_pos(:,:) == 1 ) ) THEN
+         !
+         ! ... if no atom has been fixed  we compute the displacement of the
+         ! ... center of mass and we subtract it from the displaced positions
+         !
+         delta(:) = 0.D0
+         !
+         DO na = 1, nat
+            !
+            delta(:) = delta(:) + ( tau_new(:,na) - tau(:,na) )
+            !
+         END DO
+         !
+         delta(:) = delta(:) / DBLE( nat )
+         !
+         FORALL( na = 1:nat ) tau_new(:,na) = tau_new(:,na) - delta(:)
+         !
+      END IF
       !
       IF ( lconstrain ) THEN
          !
@@ -608,13 +748,193 @@ MODULE dynamics_module
       !
       tau(:,:) = tau_new(:,:)
       !
+#if ! defined (__REDUCE_OUTPUT)
+      !
       CALL output_tau( .FALSE. )
+      !
+#endif
       !
       DEALLOCATE( step )
       !
       RETURN
       !
     END SUBROUTINE proj_verlet
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE langevin_md()
+      !------------------------------------------------------------------------
+      !
+      ! ...
+      !
+      USE ions_base,      ONLY : nat, ityp, tau, if_pos
+      USE cell_base,      ONLY : alat
+      USE ener,           ONLY : etot
+      USE force_mod,      ONLY : force
+      USE control_flags,  ONLY : istep, nstep, conv_ions, lconstrain
+      USE random_numbers, ONLY : gauss_dist
+      !
+      USE constraints_module, ONLY : nconstr
+      USE constraints_module, ONLY : remove_constr_force, check_constraint
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP) :: sigma, kt
+      REAL(DP) :: delta(3)
+      INTEGER  :: na
+      LOGICAL  :: file_exists
+      !
+      REAL(DP), EXTERNAL :: DNRM2
+      !
+      CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
+      !
+      IF ( file_exists ) THEN
+         !
+         ! ... the file is read :  simulation is continuing
+         !
+         READ( UNIT = 4, FMT = * ) istep
+         !
+         CLOSE( UNIT = 4, STATUS = 'KEEP' )
+         !
+      ELSE
+         !
+         CLOSE( UNIT = 4, STATUS = 'DELETE' )
+         !
+         ! ... the file is absent :  simulation is starting from scratch
+         !
+         istep = 0
+         !
+         WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Over-damped Langevin Dynamics Calculation")' )
+         !
+         ! ... atoms are refold in the central box if required
+         !
+         IF ( refold_pos ) CALL refold_tau()
+         !
+         WRITE( UNIT = stdout, &
+                FMT = '(5X,"Integration step",T27," = ",F8.2," a.u.,")' ) dt
+         !
+      END IF
+      !
+      IF ( istep >= nstep ) THEN
+         !
+         conv_ions = .TRUE.
+         !
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"The maximum number of steps has been reached.")' )
+         WRITE( UNIT = stdout, &
+                FMT = '(/,5X,"End of Langevin Dynamics calculation")' )
+         !
+         RETURN
+         !
+      END IF
+      !
+      istep = istep + 1
+      !
+      WRITE( UNIT = stdout, &
+             FMT = '(/,5X,"Entering Dynamics:",T28, &
+                    &     "iteration",T37," = ",I5,/)' ) istep
+      !
+      IF ( lconstrain ) THEN
+         !
+         ! ... we first remove the component of the force along the 
+         ! ... constraint gradient ( this constitutes the initial 
+         ! ... guess for the calculation of the lagrange multipliers )
+         !
+         CALL remove_constr_force( nat, tau, if_pos, ityp, alat, force )
+         !
+      END IF
+      !
+      ! ... compute the stochastic term
+      !
+      kt = temperature / ry_to_kelvin
+      !
+      sigma = SQRT( 2.D0*dt*kt )
+      !
+      delta(:) = 0.D0
+      !
+      DO na = 1, nat
+         !
+         chi(:,na) = gauss_dist( 0.D0, sigma, 3 )*DBLE( if_pos(:,na) )
+         !
+         delta(:) = delta(:) + chi(:,na)
+         !
+      END DO
+      !
+      FORALL( na = 1:nat ) chi(:,na) = chi(:,na) - delta(:) / DBLE( nat )
+      !
+      PRINT *, "|F|   = ", dt*DNRM2( 3*nat, force, 1 )
+      PRINT *, "|CHI| = ", DNRM2( 3*nat, chi, 1 )
+      !
+      ! ... over-damped Langevin dynamics
+      !
+      tau_new(:,:) = tau(:,:) + ( dt*force(:,:) + chi(:,:) ) / alat
+      !
+      IF ( ALL( if_pos(:,:) == 1 ) ) THEN
+         !
+         ! ... here we compute the displacement of the center of mass and we
+         ! ... subtract it from the displaced positions
+         !
+         delta(:) = 0.D0
+         !
+         DO na = 1, nat
+            !
+            delta(:) = delta(:) + ( tau_new(:,na) - tau(:,na) )
+            !
+         END DO
+         !
+         FORALL( na = 1:nat ) tau_new(:,na) = tau_new(:,na) - delta(:)
+         !
+      END IF
+      !
+      IF ( lconstrain ) THEN
+         !
+         ! ... check if the new positions satisfy the constrain equation
+         !
+         CALL check_constraint( nat, tau_new, tau, &
+                                force, if_pos, ityp, alat, dt**2, amconv )
+         !
+#if ! defined (__REDUCE_OUTPUT)
+         !
+         WRITE( stdout, '(/,5X,"Constrained forces (Ry/au):",/)')
+         !
+         DO na = 1, nat
+            !
+            WRITE( stdout, &
+                   '(5X,"atom ",I3," type ",I2,3X,"force = ",3F14.8)' ) &
+                na, ityp(na), force(:,na)
+            !
+         END DO
+         !
+         WRITE( stdout, '(/5X,"Total force = ",F12.6)') DNRM2( 3*nat, force, 1 )
+         !
+#endif
+         !
+      END IF
+      !
+      ! ... save all the needed quantities on file
+      !
+      CALL seqopn( 4, 'md', 'FORMATTED',  file_exists )
+      !
+      WRITE( UNIT = 4, FMT = * ) istep
+      !
+      CLOSE( UNIT = 4, STATUS = 'KEEP' )
+      !
+      ! ... here the tau are shifted
+      !
+      tau(:,:) = tau_new(:,:)
+      !
+      IF ( nat == 2 ) &
+         PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
+      !
+#if ! defined (__REDUCE_OUTPUT)
+      !
+      CALL output_tau( .FALSE. )
+      !
+#endif
+      !
+      RETURN
+      !
+    END SUBROUTINE langevin_md
     !
     !-----------------------------------------------------------------------
     SUBROUTINE refold_tau()
@@ -964,7 +1284,7 @@ MODULE dynamics_module
       ! ... Starting thermalization of the system
       !
       USE symme,          ONLY : invsym, nsym, irt
-      USE control_flags,  ONLY : lfixatom, langevin_rescaling
+      USE control_flags,  ONLY : lfixatom
       USE cell_base,      ONLY : alat
       USE ions_base,      ONLY : nat, if_pos
       USE random_numbers, ONLY : gauss_dist
@@ -993,11 +1313,11 @@ MODULE dynamics_module
       !
       vel = vel * DBLE( if_pos )
       !
-      IF ( langevin_rescaling ) THEN
+      IF ( thermostat == 'langevin' ) THEN
          !
          ! ... vel is used already multiplied by the time step
          !
-         vel(:,:) = vel(:,:) * dt
+         vel(:,:) = dt*vel(:,:)
          !
          RETURN
          !
@@ -1035,7 +1355,7 @@ MODULE dynamics_module
                !
                total_mass = total_mass + mass(na)
                !
-               ml(:) = ml(:) + mass(na) * vel(:,na)
+               ml(:) = ml(:) + mass(na)*vel(:,na)
                !
             END DO
             !
@@ -1066,7 +1386,7 @@ MODULE dynamics_module
       !
       ! ... vel is used already multiplied by the time step
       !
-      vel(:,:) = vel(:,:) * dt
+      vel(:,:) = dt*vel(:,:)
       !
       RETURN
       !
@@ -1098,6 +1418,6 @@ MODULE dynamics_module
       !
       RETURN
       !
-    END SUBROUTINE thermalize         
-    !  
+    END SUBROUTINE thermalize
+    !
 END MODULE dynamics_module

@@ -18,7 +18,7 @@ SUBROUTINE move_ions()
   ! ... coefficients for potential and wavefunctions extrapolation are
   ! ... also computed here
   !
-  USE constants,              ONLY : eps8
+  USE constants,              ONLY : e2, eps8
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, iunupdate
   USE kinds,                  ONLY : DP
@@ -31,18 +31,16 @@ SUBROUTINE move_ions()
   USE force_mod,              ONLY : force
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, lcoarsegrained, conv_ions, &
-                                     lmd, history, tr2
+                                     lmd, llang, history, tr2
   USE relax,                  ONLY : epse, epsf, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
-  USE constraints_module,     ONLY : lagrange
-  USE metadyn_vars,           ONLY : dfe_acc, etot_av, ncolvar
-  USE metadyn_base,           ONLY : set_target
+  USE metadyn_base,           ONLY : set_target, mean_force
   USE mp_global,              ONLY : intra_image_comm
   USE io_global,              ONLY : ionode_id, ionode
   USE mp,                     ONLY : mp_bcast
   USE bfgs_module,            ONLY : bfgs, terminate_bfgs
   USE basic_algebra_routines, ONLY : norm
-  USE dynamics_module,        ONLY : verlet, proj_verlet
+  USE dynamics_module,        ONLY : verlet, langevin_md, proj_verlet
   !
   IMPLICIT NONE
   !
@@ -57,7 +55,7 @@ SUBROUTINE move_ions()
   !
   ! ... only one node does the calculation in the parallel case
   !
-  IF ( ionode ) THEN 
+  IF ( ionode ) THEN
      !
      conv_ions = .FALSE.
      !
@@ -158,7 +156,7 @@ SUBROUTINE move_ions()
               !
               CALL terminate_bfgs( etot, stdout, tmp_dir )
               !
-           END IF   
+           END IF
            !
         ELSE
            !
@@ -170,8 +168,8 @@ SUBROUTINE move_ions()
                      MIN( 1.D0, ( energy_error / ( epse * upscale ) ), &
                                 ( gradient_error / ( epsf * upscale ) ) )
               tr2  = MAX( ( starting_scf_threshold / upscale ), tr2 ) 
-              !       
-           END IF       
+              !
+           END IF
            !
            IF ( tr2 > 1.D-10 ) THEN
               WRITE( stdout, &
@@ -188,13 +186,13 @@ SUBROUTINE move_ions()
            lcheck_mag = .TRUE.
            !
         END IF
-        !   
+        !
         tau   =   RESHAPE( pos,  (/ 3, nat /) ) / alat
         force = - RESHAPE( grad, (/ 3, nat /) )
         !
         CALL output_tau( conv_ions )
         !
-        DEALLOCATE( pos, grad, fixion ) 
+        DEALLOCATE( pos, grad, fixion )
         !
      END IF
      !
@@ -204,13 +202,17 @@ SUBROUTINE move_ions()
         !
         IF ( calc == ' ' ) THEN
            !
-           ! ... Verlet dynamics
+           ! ... dynamics algorithms
            !
            IF ( lcoarsegrained ) CALL set_target()
            !
            IF ( ldamped ) THEN
               !
-              CALL proj_verlet() 
+              CALL proj_verlet()
+              !
+           ELSE IF ( llang ) THEN
+              !
+              CALL langevin_md()
               !
            ELSE
               !
@@ -218,13 +220,7 @@ SUBROUTINE move_ions()
               !
            END IF
            !
-           IF ( lcoarsegrained ) THEN
-              !
-              etot_av = etot_av + etot
-              !
-              dfe_acc(:) = dfe_acc(:) - lagrange(1:ncolvar)
-              !
-           END IF
+           IF ( lcoarsegrained ) CALL mean_force( istep+1, etot, e2 )
            !
         ELSE IF ( calc /= ' ' ) THEN
            !
@@ -243,7 +239,7 @@ SUBROUTINE move_ions()
                        at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
   END IF
-  !  
+  !
   ! ... broadcast calculated quantities to all nodes
   !
   CALL mp_bcast( istep,     ionode_id, intra_image_comm )
@@ -263,14 +259,6 @@ SUBROUTINE move_ions()
      !
   END IF
   !
-  IF ( lcoarsegrained ) THEN
-     !
-     CALL mp_bcast( lagrange, ionode_id, intra_image_comm )
-     CALL mp_bcast( etot_av,  ionode_id, intra_image_comm )
-     CALL mp_bcast( dfe_acc,  ionode_id, intra_image_comm )
-     !
-  END IF
-  ! 
   RETURN
   !
 9010 FORMAT( /5X,'lsda relaxation :  a final configuration with zero', &

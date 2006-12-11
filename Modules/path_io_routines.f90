@@ -208,7 +208,7 @@ MODULE path_io_routines
        USE input_parameters,       ONLY : if_pos
        USE path_variables,         ONLY : nim => num_of_images
        USE path_variables,         ONLY : istep_path, nstep_path, frozen, dim, &
-                                          pending_image, pos, pes, grad_pes, &
+                                          pending_image, pos, pes, grad_pes,   &
                                           lquick_min, posold, Emax, Emin,      &
                                           Emax_index
        USE path_reparametrisation, ONLY : spline_interpolation
@@ -225,7 +225,7 @@ MODULE path_io_routines
        IF ( meta_ionode ) THEN
           !
           WRITE( UNIT = iunpath, &
-                 FMT = '(/,5X,"reading file ", A,/)') TRIM( path_file )
+                 FMT = '(/,5X,"reading file ''",A,"''",/)') TRIM( path_file )
           !
           INQUIRE( FILE = TRIM( path_file ), EXIST = exists )
           !
@@ -362,7 +362,7 @@ MODULE path_io_routines
                    DO i = 1, nim_inp
                       !
                       READ( UNIT = iunrestart, FMT = * )
-                      READ( UNIT = iunrestart, FMT = * ) frozen(i)                      
+                      READ( UNIT = iunrestart, FMT = * ) frozen(i)
                       !
                       DO j = 1, dim
                          !
@@ -370,7 +370,7 @@ MODULE path_io_routines
                          !
                       END DO
                       !
-                   END DO                   
+                   END DO
                    !
                 ELSE
                    !
@@ -771,8 +771,8 @@ MODULE path_io_routines
              !
           END DO   
           !
-       END DO  
-       !     
+       END DO
+       !
        CLOSE( UNIT = iunxyz )
        !
        ! ... the *.axsf file is written here
@@ -814,8 +814,8 @@ MODULE path_io_routines
              !
           END DO   
           !
-       END DO  
-       !     
+       END DO
+       !
        CLOSE( UNIT = iunaxsf )
        !
      END SUBROUTINE write_dat_files
@@ -878,7 +878,7 @@ MODULE path_io_routines
      END SUBROUTINE write_output
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE new_image_init( N_in, outdir )
+     SUBROUTINE new_image_init( fii, outdir )
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine initializes the file needed for the 
@@ -890,7 +890,7 @@ MODULE path_io_routines
        !
        IMPLICIT NONE
        !
-       INTEGER,          INTENT(IN) :: N_in
+       INTEGER,          INTENT(IN) :: fii
        CHARACTER(LEN=*), INTENT(IN) :: outdir
        !
        !
@@ -899,9 +899,9 @@ MODULE path_io_routines
        OPEN( UNIT = iunnewimage, FILE = TRIM( outdir ) // &
            & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
        !
-       WRITE( iunnewimage, * ) N_in + nimage
+       WRITE( iunnewimage, * ) fii + nimage
        ! 
-       CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )       
+       CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
        !
        RETURN
        !
@@ -912,10 +912,10 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine is used to get the new image to work on
-       ! ... the "prefix.BLOCK" file is needed to avoid (when present) that 
+       ! ... the "prefix.LOCK" file is needed to avoid (when present) that 
        ! ... other jobs try to read/write on file "prefix.newimage" 
        !
-       USE io_files,       ONLY : iunnewimage, iunblock, prefix
+       USE io_files,       ONLY : iunnewimage, iunlock, prefix
        USE io_global,      ONLY : ionode
        USE path_variables, ONLY : tune_load_balance
        USE mp_global,      ONLY : nimage
@@ -936,11 +936,11 @@ MODULE path_io_routines
           !
           IF ( tune_load_balance ) THEN
              !
-             filename = TRIM( outdir ) // TRIM( prefix ) // '.BLOCK'
+             filename = TRIM( outdir ) // TRIM( prefix ) // '.LOCK'
              !
              open_loop: DO
-                !          
-                OPEN( UNIT = iunblock, FILE = TRIM( filename ), &
+                !
+                OPEN( UNIT = iunlock, FILE = TRIM( filename ), &
                      & IOSTAT = ioerr, STATUS = 'NEW' )
                 !
                 IF ( ioerr > 0 ) CYCLE open_loop
@@ -969,7 +969,7 @@ MODULE path_io_routines
                 !
              END DO open_loop
              !
-             CLOSE( UNIT = iunblock, STATUS = 'DELETE' )
+             CLOSE( UNIT = iunlock, STATUS = 'DELETE' )
              !
           ELSE
              !
@@ -1003,9 +1003,9 @@ MODULE path_io_routines
        IF ( .NOT. ionode ) RETURN
        !
        OPEN( UNIT = iunexit, FILE = TRIM( exit_file ) )
-       CLOSE( UNIT = iunexit, STATUS = 'KEEP' )               
+       CLOSE( UNIT = iunexit, STATUS = 'KEEP' )
        !
-       RETURN       
+       RETURN
        !
      END SUBROUTINE stop_other_images
      !

@@ -30,13 +30,13 @@ MODULE metadyn_base
       !
       USE kinds,              ONLY : DP
       USE input_parameters,   ONLY : restart_mode
-      USE constraints_module, ONLY : target
+      USE constraints_module, ONLY : constr_target
       USE control_flags,      ONLY : nstep, ndr
       USE constants,          ONLY : bohr_radius_angs
       USE cell_base,          ONLY : at, alat
       USE metadyn_vars,       ONLY : ncolvar, g_amplitude, fe_step, &
                                      max_metadyn_iter, metadyn_fmt, &
-                                     first_metadyn_iter, gaussian_pos
+                                     gaussian_pos, first_metadyn_iter
       USE metadyn_io,         ONLY : read_metadyn_restart
       USE io_files,           ONLY : tmp_dir, outdir, prefix, iunaxsf, &
                                      iunmeta, delete_if_present
@@ -55,6 +55,10 @@ MODULE metadyn_base
       !
       CHARACTER(LEN=6), EXTERNAL :: int_to_char
       !
+      !
+      IF ( ncolvar < 1 ) &
+         CALL errore(  'metadyn_init', &
+                       'number of collective variables must be at least 1', 1 )
       !
       c_ncolvar  = int_to_char( ncolvar )
       !
@@ -153,7 +157,7 @@ MODULE metadyn_base
          !
       END IF
       !
-      gaussian_pos(:) = target(1:ncolvar)
+      gaussian_pos(:) = constr_target(1:ncolvar)
       !
       RETURN
       !
@@ -187,11 +191,11 @@ MODULE metadyn_base
          delta = metadyn_history(:,iter) - metadyn_history(:,i)
          !
          dfe_acc(:) = dfe_acc(:) + delta(:) / fe_step(:)**2 * &
-                      EXP( - SUM( delta(:)**2 / ( 2.D0 * fe_step(:)**2 ) ) )
+                      EXP( - SUM( delta(:)**2 / ( 2.D0*fe_step(:)**2 ) ) )
          !
       END DO
       !
-      fe_grad(:) = fe_grad(:) - g_amplitude * dfe_acc(:)
+      fe_grad(:) = fe_grad(:) - g_amplitude*dfe_acc(:)
       !
       DEALLOCATE( delta )
       !
@@ -204,26 +208,25 @@ MODULE metadyn_base
       !------------------------------------------------------------------------
       !
       ! ... a repulsive potential is added to confine the collective variables
-      ! ... within the appropriate domain :
+      ! ... within the appropriate domain (used to avoid singularities):
       !
-      ! ... V(s) = A * ( sigma / s )^12
+      ! ... V(s) = a*( sigma / s )^12
       !
-      ! ... where A is the amplitude of the gaussians used for meta-dynamics
+      ! ... where a is the amplitude of the gaussians used for meta-dynamics
       !
-      USE constraints_module, ONLY : target, constr_type, dmax
+      USE constraints_module, ONLY : constr_target, constr_type, dmax
       USE metadyn_vars,       ONLY : ncolvar, fe_grad, g_amplitude
       !
       IMPLICIT NONE
       !
       INTEGER  :: i
-      REAL(DP) :: A, inv_s
+      REAL(DP) :: a, inv_s
       !
       REAL(DP), PARAMETER :: coord_sigma = 0.050D0
-      REAL(DP), PARAMETER :: dist_sigma  = 0.050D0
       REAL(DP), PARAMETER :: stfac_sigma = 0.005D0
       !
       !
-      A = 12.D0 * g_amplitude
+      a = 12.D0*g_amplitude
       !
       DO i = 1, ncolvar
          !
@@ -232,31 +235,22 @@ MODULE metadyn_base
             !
             ! ... coordination must always be larger than a minimum threshold
             !
-            inv_s = 1.D0 / target(i)
+            inv_s = 1.D0 / constr_target(i)
             !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( coord_sigma * inv_s )**11
-            !
-         CASE( 3 )
-            !
-            ! ... a distance can never be larger than dmax ( check file
-            ! ... constraints_module.f90 for its definition )
-            !
-            inv_s = 1.D0 / ( dmax - target(i) )
-            !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( dist_sigma * inv_s )**11
+            fe_grad(i) = fe_grad(i) - a*inv_s*( coord_sigma*inv_s )**11
             !
          CASE( 6 )
             !
             ! ... the square modulus of the structure factor is never negative
             ! ... or larger than one
             !
-            inv_s = 1.D0 / target(i)
+            inv_s = 1.D0 / constr_target(i)
             !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**11
+            fe_grad(i) = fe_grad(i) - a*inv_s*( stfac_sigma*inv_s )**11
             !
-            inv_s = 1.D0 / ( 1.D0 - target(i) )
+            inv_s = 1.D0 / ( 1.D0 - constr_target(i) )
             !
-            fe_grad(i) = fe_grad(i) - A * inv_s * ( stfac_sigma * inv_s )**11
+            fe_grad(i) = fe_grad(i) - a*inv_s*( stfac_sigma*inv_s )**11
             !
          END SELECT
          !
@@ -274,7 +268,7 @@ MODULE metadyn_base
       ! ... additional constraints imposed by the domain definition
       !
       USE constants,          ONLY : eps32
-      USE constraints_module, ONLY : target
+      USE constraints_module, ONLY : constr_target
       USE metadyn_vars,       ONLY : ncolvar, fe_grad, fe_step, new_target, &
                                      to_target, sw_nstep, gaussian_pos, &
                                      g_amplitude
@@ -295,17 +289,18 @@ MODULE metadyn_base
       !
       DO i = 1, ncolvar
          !
-         gaussian_pos(i) = target(i) - fe_step(i) * fe_grad(i)
+         gaussian_pos(i) = constr_target(i) - fe_step(i)*fe_grad(i)
          !
-         step = ( 1.D0 + 0.5D0*rndm() ) * fe_step(i)
+         step = ( 1.D0 + 0.5D0*rndm() )*fe_step(i)
          !
-         new_target(i) = target(i) - step * fe_grad(i)
+         new_target(i) = constr_target(i) - step*fe_grad(i)
          !
       END DO
       !
       CALL impose_domain_constraints()
       !
-      to_target(:) = ( new_target(:) - target(1:ncolvar) ) / DBLE( sw_nstep )
+      to_target(:) = ( new_target(:) - &
+                       constr_target(1:ncolvar) ) / DBLE( sw_nstep )
       !
       RETURN
       !
@@ -338,7 +333,15 @@ MODULE metadyn_base
             ! ... constraints_module.f90 for its definition )
             !
             IF ( new_target(i) > dmax ) &
-               new_target(i) = 2.D0 * dmax - new_target(i)
+               new_target(i) = 2.D0*dmax - new_target(i)
+            !
+         CASE( 4, 5 )
+            !
+            ! ... the cosine of the angle (planar or torsional) must be
+            ! ... within -1 and 1
+            !
+            IF ( new_target(i) > +1.D0 ) new_target(i) = +2.D0 - new_target(i)
+            IF ( new_target(i) < -1.D0 ) new_target(i) = -2.D0 - new_target(i)
             !
          CASE( 6 )
             !
@@ -370,14 +373,45 @@ MODULE metadyn_base
       !------------------------------------------------------------------------
       !
       USE metadyn_vars,       ONLY : ncolvar, to_target, to_new_target
-      USE constraints_module, ONLY : target
+      USE constraints_module, ONLY : constr_target
       !
       !
       IF ( to_new_target ) &
-         target(1:ncolvar) = target(1:ncolvar) + to_target(:)
+         constr_target(1:ncolvar) = constr_target(1:ncolvar) + to_target(:)
       !
       RETURN
       !
     END SUBROUTINE set_target
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE mean_force( step, etot, energy_units )
+      !------------------------------------------------------------------------
+      !
+      USE io_global,          ONLY : stdout
+      USE metadyn_vars,       ONLY : dfe_acc, etot_av, ncolvar, eq_nstep
+      USE constraints_module, ONLY : lagrange
+      !
+      INTEGER,  INTENT(IN) :: step
+      REAL(DP), INTENT(IN) :: etot, energy_units
+      CHARACTER(LEN=80)    :: meanfor_fmt
+      !
+      CHARACTER(LEN=6), EXTERNAL :: int_to_char
+      !
+      !
+      IF ( step <= eq_nstep ) RETURN
+      !
+      etot_av = etot_av + etot
+      !
+      dfe_acc(:) = dfe_acc(:) - lagrange(1:ncolvar)
+      !
+      meanfor_fmt = '(/,5X,"MEAN-FORCE ESTIMATE ",' // &
+                  & TRIM( int_to_char( ncolvar ) ) // '(X,F10.6),/)'
+      !
+      WRITE( stdout, meanfor_fmt ) &
+          dfe_acc(:) / DBLE( step - eq_nstep ) / energy_units
+      !
+      RETURN
+      !
+    END SUBROUTINE mean_force
     !
 END MODULE metadyn_base

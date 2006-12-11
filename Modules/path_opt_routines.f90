@@ -42,7 +42,7 @@ MODULE path_opt_routines
        !
        IF ( meta_ionode ) THEN
           !
-          pos(:,idx) = pos(:,idx) - ds * grad(:,idx) + lang(:,idx)
+          pos(:,idx) = pos(:,idx) - ds*grad(:,idx) + lang(:,idx)
           !
        END IF
        !
@@ -62,7 +62,7 @@ MODULE path_opt_routines
        !
        IF ( meta_ionode ) THEN
           !
-          pos(:,idx) = pos(:,idx) - ds*ds * grad(:,idx)
+          pos(:,idx) = pos(:,idx) - ds*ds*grad(:,idx)
           !
        END IF
        !
@@ -116,7 +116,7 @@ MODULE path_opt_routines
           !
           posold(:,idx) = pos(:,idx)
           !
-          step(:) = vel(:) - ds**2 * grad(:,idx)
+          step(:) = vel(:) - ds*ds*grad(:,idx)
           !
           norm_step = norm( step(:) )
           !

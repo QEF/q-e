@@ -37,7 +37,7 @@ MODULE metadyn_io
       !
       USE metadyn_vars,       ONLY : ncolvar, max_metadyn_iter, g_amplitude, &
                                      gaussian_pos, fe_grad, fe_step
-      USE constraints_module, ONLY : target
+      USE constraints_module, ONLY : constr_target
       USE io_global,          ONLY : ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
       !
@@ -137,7 +137,8 @@ MODULE metadyn_io
       !
       CALL iotk_write_end( iunit, "IONS" )
       !
-      CALL iotk_write_dat( iunit, "COLLECTIVE_VARIABLES", target(1:ncolvar) )
+      CALL iotk_write_dat( iunit, &
+                           "COLLECTIVE_VARIABLES", constr_target(1:ncolvar) )
       !
       CALL iotk_write_dat( iunit, "GAUSSIAN_CENTERS", gaussian_pos(:) )
       !
@@ -160,7 +161,7 @@ MODULE metadyn_io
       !
       USE metadyn_vars,       ONLY : ncolvar, gaussian_pos, fe_grad, &
                                      metadyn_history, first_metadyn_iter
-      USE constraints_module, ONLY : target
+      USE constraints_module, ONLY : constr_target
       USE io_global,          ONLY : ionode, ionode_id
       USE mp,                 ONLY : mp_bcast
       !
@@ -252,7 +253,9 @@ MODULE metadyn_io
          !
          CALL iotk_scan_end( iunit, "IONS" )
          !
-         CALL iotk_scan_dat( iunit, "COLLECTIVE_VARIABLES", target(1:ncolvar) )
+         CALL iotk_scan_dat( iunit, &
+                             "COLLECTIVE_VARIABLES", constr_target(1:ncolvar) )
+         !
          CALL iotk_scan_dat( iunit, "GAUSSIAN_CENTERS", gaussian_pos(:) )
          CALL iotk_scan_dat( iunit, "POTENTIAL_OF_MEAN_FORCE", fe_grad(:) )
          !
@@ -270,7 +273,7 @@ MODULE metadyn_io
       CALL mp_bcast( first_metadyn_iter, ionode_id )
       CALL mp_bcast( metadyn_history,    ionode_id )
       CALL mp_bcast( tau,                ionode_id )
-      CALL mp_bcast( target,             ionode_id )
+      CALL mp_bcast( constr_target,      ionode_id )
       CALL mp_bcast( gaussian_pos,       ionode_id )
       CALL mp_bcast( fe_grad,            ionode_id )
       !
@@ -293,19 +296,25 @@ MODULE metadyn_io
       REAL(DP), INTENT(IN) :: tau(:,:)
       REAL(DP), INTENT(IN) :: tau_units
       !
-      INTEGER :: atom
+      INTEGER :: ia
+      LOGICAL :: opnd
       !
+      !
+      INQUIRE( UNIT = iunaxsf, OPENED = opnd )
+      IF ( .NOT.opnd ) &
+         CALL errore( 'write_axsf_file', &
+                      'unit to write the axsf file is closed', 1 )
       !
       WRITE( UNIT = iunaxsf, FMT = '(" PRIMCOORD ",I5)' ) image
       WRITE( UNIT = iunaxsf, FMT = '(I5,"  1")' ) nat
       !
-      DO atom = 1, nat
+      DO ia = 1, nat
          !
          WRITE( UNIT = iunaxsf, FMT = '(A2,3(2X,F18.10))' ) &
-                TRIM( atom_label(ityp(atom)) ), &
-             tau(1,atom) * tau_units * bohr_radius_angs, &
-             tau(2,atom) * tau_units * bohr_radius_angs, &
-             tau(3,atom) * tau_units * bohr_radius_angs
+                TRIM( atom_label(ityp(ia)) ), &
+             tau(1,ia)*tau_units*bohr_radius_angs, &
+             tau(2,ia)*tau_units*bohr_radius_angs, &
+             tau(3,ia)*tau_units*bohr_radius_angs
          !
       END DO
       !

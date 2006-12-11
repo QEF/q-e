@@ -56,7 +56,7 @@ SUBROUTINE iosys()
                             press_       => press, &
                             calc, lmovecell
   !
-  USE dynamics_module, ONLY : temperature, amass, &
+  USE dynamics_module, ONLY : control_temp, temperature, amass, thermostat, &
                               dt_         => dt, &
                               delta_t_    => delta_t, &
                               nraise_     => nraise, &
@@ -124,6 +124,7 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : diis_ndim, isolve, max_cg_iter, david, tr2, imix, &
                             nmix, iverbosity, niter, pot_order, wfc_order, &
+                            assume_molsys_    => assume_molsys, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -133,10 +134,10 @@ SUBROUTINE iosys()
                             iprint_           => iprint, &
                             nosym_            => nosym, &
                             modenum_          => modenum, &
-                            reduce_io, langevin_rescaling, ethr, lscf, lbfgs, &
-                            lmd, lpath, lneb, lsmd, lphonon, ldamped, lbands, &
-                            lrescale_t, lmetadyn, lconstrain, lcoarsegrained, &
-                            restart, twfcollect, use_para_diago
+                            reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb,  &
+                            lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
+                            lconstrain, lcoarsegrained, restart, twfcollect, &
+                            use_para_diago
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -193,12 +194,13 @@ SUBROUTINE iosys()
                                ecfixed, qcutz, q2sigma, lda_plus_U,         &
                                Hubbard_U, Hubbard_alpha, input_dft, la2F,   &
                                starting_ns_eigenvalue, U_projection_type,   &
-#if defined (EXX)                               
+#if defined (EXX)
                                x_gamma_extrapolation, nqx1, nqx2, nqx3, &
 #endif
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
-                               B_field, fixed_magnetization, report, lspinorb
+                               B_field, fixed_magnetization, report, lspinorb,&
+                               assume_molsys
   !
   ! ... ELECTRONS namelist
   !
@@ -295,13 +297,13 @@ SUBROUTINE iosys()
                    & ' smearing requires gaussian broadening', 1 )
      !
      SELECT CASE ( TRIM( smearing ) )
-     CASE ( 'gaussian' , 'gauss' )
+     CASE ( 'gaussian', 'gauss' )
         ngauss = 0
-     CASE ( 'methfessel-paxton' , 'm-p' , 'mp' )
+     CASE ( 'methfessel-paxton', 'm-p', 'mp' )
         ngauss = 1
-     CASE ( 'marzari-vanderbilt' , 'cold' , 'm-v' , 'mv' )
+     CASE ( 'marzari-vanderbilt', 'cold', 'm-v', 'mv' )
         ngauss = -1
-     CASE ( 'fermi-dirac' , 'f-d' , 'fd' )
+     CASE ( 'fermi-dirac', 'f-d', 'fd' )
         ngauss = -99
      END SELECT
      !
@@ -632,13 +634,18 @@ SUBROUTINE iosys()
   CASE( 'md' )
      !
      lscf   = .TRUE.
-     lmd    = .TRUE.          
+     lmd    = .TRUE.
      lforce = .TRUE.
      !
      SELECT CASE( TRIM( ion_dynamics ) )
      CASE( 'verlet' )
         !
         CONTINUE
+        !
+     CASE( 'langevin' )
+        !
+        llang       = .TRUE.
+        temperature = tempw
         !
      CASE DEFAULT
         !
@@ -894,6 +901,10 @@ SUBROUTINE iosys()
         !
         CONTINUE
         !
+     CASE( 'langevin' )
+        !
+        llang = .TRUE.
+        !
      CASE( 'damp' )
         !
         ldamped = .TRUE.
@@ -981,21 +992,20 @@ SUBROUTINE iosys()
   SELECT CASE( TRIM( ion_temperature ) )
   CASE( 'not_controlled' )
      !
-     lrescale_t = .FALSE.
+     control_temp = .FALSE.
      !
   CASE( 'rescaling' )
      !
-     lrescale_t         = .TRUE.
-     langevin_rescaling = .FALSE.
-     temperature        = tempw
-     tolp_              = tolp
+     control_temp = .TRUE.
+     thermostat   = TRIM( ion_temperature )
+     temperature  = tempw
+     tolp_        = tolp
      !
-  CASE( 'langevin' )
+  CASE( 'andersen' )
      !
-     lrescale_t         = .TRUE.
-     langevin_rescaling = .TRUE.
-     temperature        = tempw
-     tolp_              = tolp
+     control_temp = .TRUE.
+     thermostat   = TRIM( ion_temperature )
+     temperature  = tempw
      !
   CASE DEFAULT
      !
@@ -1103,6 +1113,8 @@ SUBROUTINE iosys()
   angle2_   = angle2
   report_   = report
   lambda_   = lambda
+  !
+  assume_molsys_ = assume_molsys
   !
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
   Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)
@@ -1637,36 +1649,36 @@ SUBROUTINE verify_tmpdir( tmp_dir )
                              & ' non existent or non writable', 1 )
   !
   ! ... if starting from scratch all temporary files are removed
-  ! ... from tmp_dir ( only by the master node )  
+  ! ... from tmp_dir ( only by the master node )
   !
-  file_path = TRIM( tmp_dir ) // TRIM( prefix )  
+  file_path = TRIM( tmp_dir ) // TRIM( prefix )
   !
   IF ( restart_mode == 'from_scratch' ) THEN
      !
      IF ( ionode ) THEN
         !
         ! ... xml data file in save directory is removed
-        !     
-        IF (.NOT.lbands) &
+        !
+        IF ( .NOT.lbands ) &
            CALL delete_if_present( TRIM( file_path ) // '.save/data-file.xml' )
         !
         ! ... extrapolation file is removed
-        !     
+        !
         CALL delete_if_present( TRIM( file_path ) // '.update' )
         !
         ! ... MD restart file is removed
         !
         CALL delete_if_present( TRIM( file_path ) // '.md' )
         !
-        ! ... BFGS restart file is removed       
-        !     
+        ! ... BFGS restart file is removed
+        !
         CALL delete_if_present( TRIM( file_path ) // '.bfgs' )
         !
      END IF
      !
-  END IF   
+  END IF
   !
-  ! ... "path" optimisation specific :   in the scratch directory the tree of 
+  ! ... "path" optimisation specific :   in the scratch directory the tree of
   ! ... subdirectories needed by "path" calculations are created
   !
   IF ( lpath ) THEN
@@ -1674,7 +1686,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
      IF ( ionode ) THEN
         !
         ! ... files needed by parallelization among images are removed
-        !               
+        !
         CALL delete_if_present( TRIM( file_path ) // '.BLOCK' )
         CALL delete_if_present( TRIM( file_path ) // '.newimage' )
         !
@@ -1687,10 +1699,10 @@ SUBROUTINE verify_tmpdir( tmp_dir )
            !
         END IF
         !
-     END IF   
+     END IF
      !
      tmp_dir_saved = tmp_dir
-     ! 
+     !
      DO image = 1, num_of_images
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) //"_" // &
@@ -1720,7 +1732,7 @@ SUBROUTINE verify_tmpdir( tmp_dir )
            CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
                       & ' non existent or non writable', 1 )
         !
-        ! ... if starting from scratch all temporary files are removed 
+        ! ... if starting from scratch all temporary files are removed
         ! ... from tmp_dir ( by all the cpus in sequence )
         !
         IF ( restart_mode == 'from_scratch' ) THEN
@@ -1729,18 +1741,13 @@ SUBROUTINE verify_tmpdir( tmp_dir )
               !
               IF ( proc == mpime ) THEN
                  !
-                 ! ... BFGS restart file is removed       
-                 !
-                 CALL delete_if_present( TRIM( tmp_dir ) // &
-                                       & TRIM( prefix ) // '.bfgs' )
-                 !
                  ! ... extrapolation file is removed
-                 !     
+                 !
                  CALL delete_if_present( TRIM( tmp_dir ) // &
                                        & TRIM( prefix ) // '.update' )
                  !
                  ! ... standard output of the self-consistency is removed
-                 !      
+                 !
                  CALL delete_if_present( TRIM( tmp_dir ) // 'PW.out' )
                  !
               END IF
@@ -1749,11 +1756,11 @@ SUBROUTINE verify_tmpdir( tmp_dir )
               !
            END DO
            !
-        END IF  
+        END IF
         !
      END DO
      !
-     tmp_dir = tmp_dir_saved 
+     tmp_dir = tmp_dir_saved
      !
   END IF
   !
