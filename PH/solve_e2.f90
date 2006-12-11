@@ -70,7 +70,7 @@ subroutine solve_e2
   external ch_psi_all, cg_psi
 
   if (lsda) call errore ('solve_e2', ' LSDA not implemented', 1)
-  if (okvan) call errore ('solve_e2', ' okvan is true....', 1)
+  if (okvan) call errore ('solve_e2', ' Ultrasoft PP not implemented', 1)
 
   call start_clock('solve_e2')
   allocate (dvscfin( nrxx, nspin, 6))
@@ -86,7 +86,7 @@ subroutine solve_e2
      ! restarting in Raman
      read (iunrec) iter0, dr2
      read (iunrec) dvscfin
-     if (okvan) read (iunrec) int3 
+     if (okvan) read (iunrec) int1, int2, int3 
      close (unit = iunrec, status = 'keep')
      if (doublegrid) then
         do is = 1, nspin
@@ -254,7 +254,7 @@ subroutine solve_e2
         write (iunrec) iter, dr2
      end if
      write (iunrec) dvscfin
-     if (okvan) write (iunrec) int3
+     if (okvan) write (iunrec) int1, int2, int3
      close (unit = iunrec, status = 'keep')
 
      if ( check_stop_now() ) then

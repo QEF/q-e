@@ -137,7 +137,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      ! restart from Phonon calculation
      read (iunrec) iter0, dr2
      read (iunrec) dvscfin
-     if (okvan) read (iunrec) int3
+     if (okvan) read (iunrec) int1, int2, int3
      close (unit = iunrec, status = 'keep')
      ! reset irr0 to avoid trouble at next irrep
      irr0 = 0
@@ -523,8 +523,6 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      write (iunrec) irr
      !
-     if (okvan) write (iunrec) int1, int2
-     !
      ! partially calculated results
      !
      write (iunrec) dyn, dyn00
@@ -544,7 +542,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
         write (iunrec) iter, dr2
      endif
      write (iunrec) dvscfin
-     if (okvan) write (iunrec) int3
+     if (okvan) write (iunrec) int1, int2, int3
      close (unit = iunrec, status = 'keep')
 
      call stop_clock ('write_rec')

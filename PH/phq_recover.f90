@@ -18,9 +18,6 @@ subroutine phq_recover
   !    irr > 0 irrep up to irr done
   !    irr =-10 to -19 Raman
   !    irr =-20 Electric Field
-  ! if (irr>0 .and. okvan) int1, int2
-  !    arrays used in phonon calculations with US potentials
-  !    (calculated in dvanqq, used in many places)
   ! dyn, dyn00, epsilon, zstareu, zstarue, zstareu0, zstarue0
   !    arrays containing partial results: dyn
   !    or calculated in dynmat0 (not called after restart): dyn00
@@ -43,9 +40,9 @@ subroutine phq_recover
   !    is the only safe way to restart without trouble.
   ! dvscfin
   !    self-consistent potential for current iteration and irrep
-  ! if (okvan) int3
-  !    arrays used with US potentials, calculated by newdq (depends on
-  !    self-consistency) and used in adddvscf, called by solve_* 
+  ! if (okvan) int1, int2, int3
+  !    arrays used with US potentials : int1 and int2 calculated in dvanqq, 
+  !    int3 calculatec in newdq (depends upon self-consistency)
   !
   !    If a valid restart file is found:
   !    - dynmat0 is not called in any case
@@ -84,7 +81,6 @@ subroutine phq_recover
      !
      ! partially calculated results
      !
-     if (okvan.and.irr0>0) read (iunrec) int1, int2
      read (iunrec) dyn, dyn00
      read (iunrec) epsilon, zstareu, zstarue, zstareu0, zstarue0
      IF (irr0>0 .and. lraman) read (iunrec) ramtns

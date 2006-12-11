@@ -91,7 +91,7 @@ subroutine solve_e
      ! restarting in Electric field calculation
      read (iunrec) iter0, dr2
      read (iunrec) dvscfin
-     if (okvan) read (iunrec) int3
+     if (okvan) read (iunrec) int1, int2, int3
      close (unit = iunrec, status = 'keep')
      if (doublegrid) then
         do is=1,nspin
@@ -363,7 +363,7 @@ subroutine solve_e
         write (iunrec) iter, dr2
      end if
      write (iunrec) dvscfin
-     if (okvan) write (iunrec) int3
+     if (okvan) write (iunrec) int1, int2, int3
 
      close (unit = iunrec, status = 'keep')
      if (check_stop_now()) then 
