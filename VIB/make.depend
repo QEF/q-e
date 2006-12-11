@@ -9,8 +9,8 @@ poles.o : ../Modules/fft_base.o
 poles.o : ../Modules/griddim.o
 poles.o : ../Modules/ions_base.o
 poles.o : ../Modules/kind.o
-poles.o : ../Modules/mp.o
 poles.o : ../Modules/mp_global.o
+poles.o : ../Modules/mp.o
 poles.o : ../PW/pwcom.o
 read_input_vib.o : ../Modules/constants.o
 read_input_vib.o : ../Modules/input_parameters.o
@@ -82,8 +82,8 @@ vibstart.o : ../Modules/io_files.o
 vibstart.o : ../Modules/io_global.o
 vibstart.o : ../Modules/kind.o
 vibstart.o : ../Modules/metadyn_base.o
-vibstart.o : ../Modules/mp.o
 vibstart.o : ../Modules/mp_global.o
+vibstart.o : ../Modules/mp.o
 vibstart.o : ../Modules/parameters.o
 vibstart.o : ../Modules/path_base.o
 vibstart.o : ../Modules/path_io_routines.o

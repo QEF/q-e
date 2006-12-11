@@ -5,10 +5,6 @@ cegterg.o : ../Modules/io_global.o
 cegterg.o : ../Modules/kind.o
 cg_psi.o : ../Modules/kind.o
 cgsolve_all.o : ../Modules/kind.o
-ch_psi_all.o : ../Modules/kind.o
-ch_psi_all.o : ../PH/phcom.o
-ch_psi_all.o : ../PW/becmod.o
-ch_psi_all.o : ../PW/pwcom.o
 check_v_eff.o : ../Modules/cell_base.o
 check_v_eff.o : ../Modules/constants.o
 check_v_eff.o : ../Modules/control_flags.o
@@ -20,6 +16,10 @@ check_v_eff.o : ../Modules/wavefunctions.o
 check_v_eff.o : ../PW/g_psi_mod.o
 check_v_eff.o : ../PW/pwcom.o
 check_v_eff.o : vdwcom.o
+ch_psi_all.o : ../Modules/kind.o
+ch_psi_all.o : ../PH/phcom.o
+ch_psi_all.o : ../PW/becmod.o
+ch_psi_all.o : ../PW/pwcom.o
 dv_of_drho.o : ../Modules/functionals.o
 dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../PH/phcom.o
@@ -36,8 +36,8 @@ dvpsi_e.o : vdwcom.o
 eff_pot.o : ../Modules/io_files.o
 eff_pot.o : ../Modules/io_global.o
 eff_pot.o : ../Modules/kind.o
-eff_pot.o : ../Modules/mp.o
 eff_pot.o : ../Modules/mp_global.o
+eff_pot.o : ../Modules/mp.o
 eff_pot.o : ../Modules/uspp.o
 eff_pot.o : ../PW/pwcom.o
 eff_pot.o : vdwcom.o
@@ -90,6 +90,7 @@ stop_vdw.o : ../Modules/control_flags.o
 stop_vdw.o : ../Modules/io_files.o
 stop_vdw.o : ../Modules/mp.o
 stop_vdw.o : ../Modules/parallel_include.o
+vdwcom.o : ../Modules/kind.o
 vdw.o : ../Modules/cell_base.o
 vdw.o : ../Modules/io_files.o
 vdw.o : ../Modules/io_global.o
@@ -100,12 +101,11 @@ vdw.o : ../Modules/parser.o
 vdw.o : ../PH/phcom.o
 vdw.o : ../PW/pwcom.o
 vdw.o : vdwcom.o
-vdwcom.o : ../Modules/kind.o
 allocate_vdw.o : ../include/f_defs.h
 cegterg.o : ../include/f_defs.h
 cgsolve_all.o : ../include/f_defs.h
-ch_psi_all.o : ../include/f_defs.h
 check_v_eff.o : ../include/f_defs.h
+ch_psi_all.o : ../include/f_defs.h
 dv_of_drho.o : ../include/f_defs.h
 dvpsi_e.o : ../include/f_defs.h
 gmressolve_all.o : ../include/f_defs.h

@@ -12,7 +12,6 @@ atomic_paw.o : ../Modules/parameters.o
 atomic_paw.o : parameters.o
 c6_dft.o : ld1inc.o
 c6_dft.o : ../Modules/constants.o
-c6_dft.o : ../Modules/functionals.o
 c6_dft.o : ../Modules/kind.o
 c6_tfvw.o : ld1inc.o
 c6_tfvw.o : ../Modules/constants.o

@@ -6,8 +6,8 @@ error.o : ../Modules/io_files.o
 error.o : ../Modules/io_global.o
 error.o : ../Modules/parallel_include.o
 functionals.o : ../Modules/kind.o
-invmat.o : ../Modules/kind.o
 invmat_complex.o : ../Modules/kind.o
+invmat.o : ../Modules/kind.o
 latgen.o : ../Modules/kind.o
 linpack.o : ../Modules/kind.o
 lsda_functionals.o : ../Modules/kind.o
@@ -17,10 +17,10 @@ more_functionals.o : ../Modules/kind.o
 recips.o : ../Modules/kind.o
 remove_tot_torque.o : ../Modules/kind.o
 simpsn.o : ../Modules/kind.o
-sort.o : ../Modules/constants.o
-sort.o : ../Modules/kind.o
 sort_gvec.o : ../Modules/constants.o
 sort_gvec.o : ../Modules/kind.o
+sort.o : ../Modules/constants.o
+sort.o : ../Modules/kind.o
 sph_bes.o : ../Modules/constants.o
 sph_bes.o : ../Modules/kind.o
 sph_dbes.o : ../Modules/constants.o
@@ -28,8 +28,8 @@ sph_dbes.o : ../Modules/kind.o
 volume.o : ../Modules/kind.o
 ylmr2.o : ../Modules/kind.o
 dylmr2.o : ../include/f_defs.h
-invmat.o : ../include/f_defs.h
 invmat_complex.o : ../include/f_defs.h
+invmat.o : ../include/f_defs.h
 linpack.o : ../include/f_defs.h
 remove_tot_torque.o : ../include/f_defs.h
 transto.o : ../include/opt_param.h
