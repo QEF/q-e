@@ -7,7 +7,7 @@
 !
 
 !-----------------------------------------------------------------------
-subroutine ch_psi_all (n, h, ah, e, ik, m)
+subroutine ch_psi_all_vdw (n, h, ah, e, ik, m)
   !-----------------------------------------------------------------------
   !
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
@@ -26,10 +26,10 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ! input: the number of bands
   ! input: the k point
 
-  complex(kind=DP) :: e (m)
+  complex(DP) :: e (m)
   ! input: the eigenvalue plus imaginary freq.
 
-  complex(kind=DP) :: h (npwx, m), ah (npwx, m)
+  complex(DP) :: h (npwx, m), ah (npwx, m)
   ! input: the vector
   ! output: the operator applied to the vector
   !
@@ -40,7 +40,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   ! the point k+q
   ! counter on G vetors
 
-  complex(kind=DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
+  complex(DP), allocatable :: ps (:,:), hpsi (:,:), spsi (:,:)
   ! scalar products
   ! the product of the Hamiltonian and h
   ! the product of the S matrix and h
@@ -54,7 +54,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
   !   compute the product of the hamiltonian with the h vector
   !
-  call h_psiq (npwx, n, m, h, hpsi, spsi)
+  call h_psiq_vdw (npwx, n, m, h, hpsi, spsi)
   !
   call start_clock ('last')
   !
@@ -112,4 +112,4 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   call stop_clock ('last')
   call stop_clock ('ch_psi')
   return
-end subroutine ch_psi_all
+end subroutine ch_psi_all_vdw

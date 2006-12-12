@@ -1,6 +1,6 @@
 ! autopilot.f90
 !********************************************************************************
-! autopilot.f90 				Copyright (c) 2005 Targacept, Inc.
+! autopilot.f90                                 Copyright (c) 2005 Targacept, Inc.
 !********************************************************************************
 !   The Autopilot Feature suite is a user level enhancement that enables the 
 ! following features:  

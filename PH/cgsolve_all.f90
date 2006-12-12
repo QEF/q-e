@@ -6,6 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#include "f_defs.h"
 !----------------------------------------------------------------------
 subroutine cgsolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
      ndmx, ndim, ethr, ik, kter, conv_root, anorm, nbnd)

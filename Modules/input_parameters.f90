@@ -577,7 +577,7 @@ MODULE input_parameters
              noncolin, lspinorb, lambda, angle1, angle2, report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
-	     tot_charge, multiplicity, tot_magnetization
+             tot_charge, multiplicity, tot_magnetization
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

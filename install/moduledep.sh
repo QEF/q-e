@@ -1,6 +1,10 @@
 #!/bin/sh
 # moduledep.sh -- script that computes dependencies on Fortran 90 modules
 
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
+
 # files whose dependencies must be computed
 sources=`echo *.f90 |
 sed 's/\*\.f90//g'`   # remove the "*.f90" that remains

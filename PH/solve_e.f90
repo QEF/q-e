@@ -57,7 +57,7 @@ subroutine solve_e
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 
-  integer :: kter, iter0, ipol, ibnd, jbnd, iter, lter, &
+  integer :: kter, iter0, ipol, ibnd, iter, lter, &
        ik, ig, irr, ir, is, nrec, ios
   ! counters
   integer :: ltaver, lintercall

@@ -1,6 +1,10 @@
 #!/bin/sh
 # compute dependencies for the PWscf directory tree
 
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 TOPDIR=`pwd`

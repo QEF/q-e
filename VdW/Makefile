@@ -1,4 +1,4 @@
-# Makefile for postprocessing (PP)
+# Makefile for TF-VdW calculation.
 
 include ../make.sys
 
@@ -6,17 +6,13 @@ include ../make.sys
 VdWOBJS = \
 allocate_vdw.o \
 cegterg.o \
-cg_psi.o \
-cgsolve_all.o \
 check_v_eff.o \
 ch_psi_all.o \
 dv_of_drho.o \
 dvpsi_e.o \
 eff_pot.o \
-gmressolve_all.o \
 h_psiq.o \
 incdrhoscf.o \
-openfil_pp.o \
 pbcg_psi.o \
 polariz.o \
 print_clock_vdw.o \
@@ -24,6 +20,9 @@ solve_e.o \
 start_vdw.o \
 stop_vdw.o \
 vdwcom.o
+
+PPOBJS = \
+../PP/openfil_pp.o
 
 MODULES = \
 ../Modules/atom.o \
@@ -71,13 +70,13 @@ PWOBJS = ../PW/libpw.a
 
 PHOBJS = ../PH/libph.a
 
-TLDEPS= bindir mods libs pw
+TLDEPS= bindir mods libs pw ph pp
 
-all : vdw.x
+all : tldeps vdw.x
  
-vdw.x : vdw.o $(VdWOBJS) $(PWOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS)
+vdw.x : vdw.o $(VdWOBJS) $(PPOBJS) $(PWOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		vdw.o $(VdWOBJS) $(MODULES) $(PHOBJS) $(PWOBJS) \
+		vdw.o $(VdWOBJS) $(MODULES) $(PPOBJS) $(PHOBJS) $(PWOBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../VdW/$@ . )
 

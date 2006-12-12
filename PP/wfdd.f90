@@ -7,15 +7,15 @@
 !
 module wanpar
 ! nw:       the number of the G vectors
-! nit:	    the number of total iteration during searching
-! nsd:	    the number of steepest descent iterations
+! nit:      the number of total iteration during searching
+! nsd:      the number of steepest descent iterations
 ! ibrav:    the structure index, the same as ibrav in CP code.
   integer :: nw,  nit, nsd, ibrav
   logical adapt, restart
 ! wfdt:     time step during searching
 ! maxwfdt:  the maximum time step during searching
 ! b1,b2,b3: the reciprocal lattice
-! alat:	    the lattice parameter
+! alat:     the lattice parameter
 ! a1,a2,a3: the real-space lattice
   real(kind=8) :: wfdt, maxwfdt, b1(3), b2(3), b3(3), alat
   real(kind=8) :: a1(3), a2(3), a3(3), tolw
@@ -29,14 +29,14 @@ module wanpar
 ! weight:   the weight of each G vectors
   real(kind=8), allocatable :: weight(:)
 !
-!	These are the Input variables for Damped Dynamics
+!       These are the Input variables for Damped Dynamics
 !
-! q:		imaginary mass of the Unitary Matrix
-! dt:		Time Step for damped dynamics
-! cgordd:	1=conjugate gradient/SD 
-!		any other number = damped dynamics
-! fric:		damping coefficient, b/w 0 and 1
-! nsteps:	Max No. of MD Steps
+! q:            imaginary mass of the Unitary Matrix
+! dt:           Time Step for damped dynamics
+! cgordd:       1=conjugate gradient/SD 
+!               any other number = damped dynamics
+! fric:         damping coefficient, b/w 0 and 1
+! nsteps:       Max No. of MD Steps
   real(kind=8) :: q, dt, fric
   integer :: cgordd, nsteps
 
@@ -56,7 +56,7 @@ program wf
 !
 !    Searching parameters are in the input file:
 !
-!	cgordd  wfdt   maxwfdt   nit   nsd  q dt fric nsteps
+!       cgordd  wfdt   maxwfdt   nit   nsd  q dt fric nsteps
 !
 !
 !    The final unitary matrix Uall is output to fort.39.
@@ -65,11 +65,11 @@ program wf
 !                                            Yudong Wu 
 !                                            June 28,2001
 !
-!	This code has been modified to include Damped dynamics to
-!	find the maximally localized wannier functions.
-!	
-!						Manu
-!						September 16,2001
+!       This code has been modified to include Damped dynamics to
+!       find the maximally localized wannier functions.
+!
+!                                                Manu
+!                                                September 16,2001
 !
 !
 !     copyright MANU/YUDONG WU/NICOLA MARZARI/ROBERTO CAR
@@ -83,10 +83,10 @@ program wf
   complex(kind=8), allocatable :: O(:, :, :), Ospin(:, :, :)
   real(kind=8), allocatable :: Uall(:,:), Uspin(:,:), u1(:,:)
 
-  	read (5,*) cgordd, wfdt, maxwfdt, nit, nsd
+        read (5,*) cgordd, wfdt, maxwfdt, nit, nsd
         read (5,*)  q, dt, fric, adapt, nsteps, tolw
         read (5,*) restart
-	
+
 
 !
 !    input the overlap matrix from fort.38
@@ -211,9 +211,9 @@ program wf
         end do
      end do
      deallocate(Uspin, Ospin)
-    end if	
+    end if
   endif
-	
+
 
 
   rewind 39
@@ -223,7 +223,7 @@ program wf
      end do
   end do
 
-!	u1=matmul(Uall,transpose(Uall))
+!u1=matmul(Uall,transpose(Uall))
 
 ! do i=1, n
 !     do j=1, n
@@ -235,15 +235,15 @@ program wf
 
 contains
 !-------------------------------------------------------------------------
-	subroutine ddyn(m,Omat,Umat)
+subroutine ddyn(m,Omat,Umat)
 !    (m,m) is the size of the matrix Ospin.
 !    Ospin is input overlap matrix.
 !    Uspin is the output unitary transformation.
 !             Rough guess for Uspin can be carried in.
 !
 !
-!					MANU	
-!					SEPTEMBER 17, 2001	
+!                                        MANU
+!                                        SEPTEMBER 17, 2001
 !-------------------------------------------------------------------------
 
   use wanpar
@@ -287,8 +287,8 @@ contains
 !   do i=1,m
 !       Umat(i,i)=1.d0
 !   end do
-	
-	U2=Umat*alpha
+
+        U2=Umat*alpha
 
 !
 ! update Oc using the initial guess of Uspin
@@ -304,8 +304,8 @@ contains
     Oc(inw, :, :)=X1(:, :)
   end do
 
-	U2=beta1
-	U3=beta1
+        U2=beta1
+        U3=beta1
 
  oldspread=0.0
   write(24, *) "spread: (unit \AA^2)"
@@ -325,7 +325,7 @@ contains
     temp=Aminus
 
 
-!	START ITERATIONS HERE
+!        START ITERATIONS HERE
 
   do ini=1, nsteps
 
@@ -340,16 +340,16 @@ contains
 
 
         if(ABS(t0-oldt0).lt.tolw) then
-	   write(6,*) "MLWF Generated at Step",ini
-	   go to 241
-	end if
+           write(6,*) "MLWF Generated at Step",ini
+           go to 241
+        end if
 
         if(adapt) then 
-	if(oldt0.lt.t0) then
-	    fric=fric/2.
-	    A=Aminus
-	    Aminus=temp
-	end if
+          if(oldt0.lt.t0) then
+            fric=fric/2.
+            A=Aminus
+            Aminus=temp
+          end if
         end if
 
 !   calculate d(omega)/dA and store result in W
@@ -366,21 +366,21 @@ contains
           end do
        end do
     end do
-	
+
 
 !   the verlet scheme to calculate A(t+dt)
-	
-	Aplus=0.d0
+
+        Aplus=0.d0
 
    do i=1,m
      do j=i+1,m
- 	Aplus(i,j)=Aplus(i,j)+(2*dt/(2*dt+fric))*(2*A(i,j)               &
+         Aplus(i,j)=Aplus(i,j)+(2*dt/(2*dt+fric))*(2*A(i,j)               &
          -Aminus(i,j)+(dt*dt/q)*W(i,j)) + (fric/(2*dt+fric))*Aminus(i,j)
      enddo
    enddo
 
-	Aplus=Aplus-transpose(Aplus)
-	Aplus=(Aplus-A)
+        Aplus=Aplus-transpose(Aplus)
+        Aplus=(Aplus-A)
 
     do i=1, m
        do j=i,m 
@@ -402,7 +402,7 @@ contains
     end do      !d=exp(d)
 
 !   U=z*exp(d)*z+
-!	
+!
      U3=beta1
      call ZGEMM ('N', 'N', m,m,m,alpha,z,m,d,m,beta1,U3,m)  
      U2=beta1
@@ -436,7 +436,7 @@ contains
     U2=beta1
     U3=beta1
 
-	if(ABS(t0-oldt0).ge.tolw.and.ini.ge.nsteps) then
+        if(ABS(t0-oldt0).ge.tolw.and.ini.ge.nsteps) then
         go to 241
         end if
 
@@ -516,10 +516,10 @@ contains
   do i=1, m
      write(26, '(3f11.6)') wfc(:,i)*autoaf
   end do
- 	
+ 
      write(6,*) "Friction =", fric
      write(6,*) "Mass =", q
-	
+
 
   deallocate(wr, W)
  
@@ -694,13 +694,13 @@ contains
           schd=W
        end if
 !
-!	calculate the new d(Lambda) for the new Search Direction
-!	added by Manu. September 19, 2001
+!        calculate the new d(Lambda) for the new Search Direction
+!        added by Manu. September 19, 2001
 !
 !   calculate slope=d(omiga)/d(lamda)
     slope=SUM(schd**2)
 !------------------------------------------------------------------------
-!	schd=schd*maxwfdt
+!   schd=schd*maxwfdt
     do i=1, m
        do j=i, m
         wp1(i + (j-1)*j/2) = cmplx(0.0d0, schd(i,j))

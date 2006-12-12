@@ -1,6 +1,10 @@
 #!/bin/sh
 # namedep.sh -- script that computes dependencies on Fortran 90 modules
 
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
+
 # first argument is mandatory
 if test $# = 0
 then

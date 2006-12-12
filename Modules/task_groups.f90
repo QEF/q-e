@@ -5,7 +5,7 @@
 !
 !Variable description
 !--------------------
-!MAXGRP:	Maximum number of task-groups
+!MAXGRP:        Maximum number of task-groups
 !--------------------------------------------
 
 MODULE task_groups
@@ -65,8 +65,8 @@ END SUBROUTINE DEALLOCATE_GROUPS
 !========================================================================================
 ! ADDED SUBROUTINEs FOR TASK GROUP PARALLIZATION
 ! C. Bekas, IBM Research, Zurich
-!	- GROUPS: Define and initialize Task Groups
-!	- tg_ivfftw: Inverse FFT driver for Task Groups
+!        - GROUPS: Define and initialize Task Groups
+!        - tg_ivfftw: Inverse FFT driver for Task Groups
 !=======================================================================================
 
 

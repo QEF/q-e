@@ -91,7 +91,7 @@ subroutine set_pseudo_upf (is, upf)
   do nb = 1, upf%nbeta
      do mb = nb, upf%nbeta
         ijv = mb * (mb-1) / 2 + nb
-	qfunc (1:upf%mesh, ijv, is) = upf%qfunc(1:upf%mesh, nb, mb)
+        qfunc (1:upf%mesh, ijv, is) = upf%qfunc(1:upf%mesh, nb, mb)
      end do
   end do
   qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &

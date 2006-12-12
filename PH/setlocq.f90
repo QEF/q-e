@@ -73,7 +73,7 @@ subroutine setlocq (xq, lloc, lmax, numeric, mesh, msh, rab, r, &
   ! gx = modulus of g vectors
   real(DP), external :: erf
   ! the erf function
-  integer :: i, ig, l, ipol, ir
+  integer :: i, ig, l, ir
   ! counters
   !
   if (.not.numeric) then

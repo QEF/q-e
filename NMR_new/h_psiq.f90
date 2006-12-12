@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
+subroutine h_psiq_nmr (lda, n, m, psi, hpsi, spsi)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the product of the Hamiltonian
@@ -99,4 +99,4 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
 
   call stop_clock ('h_psiq')
   return
-end subroutine h_psiq
+end subroutine h_psiq_nmr

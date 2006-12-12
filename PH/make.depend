@@ -147,12 +147,6 @@ compute_nldyn.o : ../Modules/kind.o
 compute_nldyn.o : ../Modules/uspp.o
 compute_nldyn.o : ../PW/pwcom.o
 compute_nldyn.o : phcom.o
-compute_qdipol.o : ../Modules/atom.o
-compute_qdipol.o : ../Modules/constants.o
-compute_qdipol.o : ../Modules/ions_base.o
-compute_qdipol.o : ../Modules/kind.o
-compute_qdipol.o : ../Modules/uspp.o
-compute_qdipol.o : phcom.o
 compute_weight.o : ../Modules/kind.o
 compute_weight.o : ../PW/pwcom.o
 compute_weight.o : phcom.o

@@ -11,7 +11,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
+SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
                     ethr, overlap, e, btype, notcnv, iter )
   !----------------------------------------------------------------------------
   !
@@ -73,8 +73,6 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
     ! the product of H and psi
     ! the product of S and psi
   COMPLEX(KIND=DP), EXTERNAL :: ZDOTC
-    ! scalar product routine
-  COMPLEX(KIND=DP) :: eau
     ! auxiliary complex variable
   REAL(KIND=DP), ALLOCATABLE :: ew(:)
     ! eigenvalues of the reduced hamiltonian
@@ -405,4 +403,4 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, &
   !
   RETURN
   !
-END SUBROUTINE cegterg
+END SUBROUTINE cegterg_vdw

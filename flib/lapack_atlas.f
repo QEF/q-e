@@ -29443,7 +29443,7 @@ CIBM           PREFER SCALAR
 *     End of ZGESVD
 *
       END
-	  SUBROUTINE ZBDSQR( UPLO, N, NCVT, NRU, NCC, D, E, VT, LDVT, U,
+      SUBROUTINE ZBDSQR( UPLO, N, NCVT, NRU, NCC, D, E, VT, LDVT, U,
      $                   LDU, C, LDC, RWORK, INFO )
 *
 *  -- LAPACK routine (version 3.0) --
@@ -30177,7 +30177,7 @@ CIBM           PREFER SCALAR
 *
       END
 
-	  SUBROUTINE ZGEBRD( M, N, A, LDA, D, E, TAUQ, TAUP, WORK, LWORK,
+      SUBROUTINE ZGEBRD( M, N, A, LDA, D, E, TAUQ, TAUP, WORK, LWORK,
      $                   INFO )
 *
 *  -- LAPACK routine (version 3.0) --
@@ -32492,7 +32492,7 @@ CIBM           PREFER SCALAR
 *     End of ZUNMLQ
 *
       END
-	  SUBROUTINE DLASQ2( N, Z, INFO )
+      SUBROUTINE DLASQ2( N, Z, INFO )
 *
 *  -- LAPACK routine (version 3.0) --
 *     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,
@@ -34134,7 +34134,7 @@ CIBM           PREFER SCALAR
 *     End of ZUNML2
 *
       END
-	  SUBROUTINE DLAS2( F, G, H, SSMIN, SSMAX )
+      SUBROUTINE DLAS2( F, G, H, SSMIN, SSMAX )
 *
 *  -- LAPACK auxiliary routine (version 3.0) --
 *     Univ. of Tennessee, Univ. of California Berkeley, NAG Ltd.,

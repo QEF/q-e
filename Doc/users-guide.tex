@@ -3500,5 +3500,16 @@ is the physical length of your box along the $x$ axis. You have to round
 your result to the nearest larger integer.'' (info by Nicola Marzari)
 \end{itemize}
 
+\item {\em How can I calculate magnetic moments for each atom?}
+
+"There is no 'right' way of defining the local magnetic moment around
+ an atom in a multi-atom system. However an approximate way to define
+ it is via the projected density of states on the atomic orbitals (code 
+ {\tt projwfc.x}, see example08 for its use as a postprocessing tool). 
+ This code generate many files with the density of states projected 
+ on each atomic wavefunction of each atom and a BIG amount of data 
+ on the standard output, the last few lines of which contain the 
+ decomposition of Lowdin charges on angular momentum and spin component 
+ of each atom."
 
 \end{document}

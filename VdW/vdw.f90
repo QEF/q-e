@@ -11,7 +11,7 @@
 PROGRAM vdw
   !-----------------------------------------------------------------------
   !
-  !    Program for calculating dynamic polarizability of a genrric finite system
+  !    Program for calculating dynamic polarizability of a generic finite system
   !    (e.g., atoms, molecules,...) using TF-vW approximation.
   !    The two basic steps are:
   !    1) read the output file produced by pw.
@@ -78,8 +78,8 @@ PROGRAM vdw
   i = nfs
   freq_loop : DO WHILE ( i .ge. 1 )
      !
-     call solve_e ( fiu(i) )
-     IF ( convt ) CALL polariz ( fiu(i) )
+     call solve_e_vdw ( fiu(i) )
+     IF ( convt ) CALL polariz_vdw ( fiu(i) )
      i = i - 1
      !
   END DO freq_loop
@@ -165,7 +165,7 @@ SUBROUTINE vdw_init ( )
 200  CALL errore ('vdw', 'reading inputvdw namelist', ABS (ios) )
      tmp_dir = trimcheck ( outdir )
      !
-     !	   reading frequencies
+     !   reading frequencies
      !
      READ (5, *, err = 10, iostat = ios) card
      READ (5, *, err = 10, iostat = ios) nfs

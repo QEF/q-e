@@ -36,7 +36,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   integer :: ibnd, ig, lter
   logical :: conv_root, q_is_zero
   complex(dp), external :: ZDOTC
-  external ch_psi_all, cg_psi
+  external ch_psi_all_nmr, cg_psi
  
 
   call start_clock ('greenf')
@@ -122,7 +122,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   g_psi(:,:) = (0.d0, 0.d0)
 
   ! solve linear system  
-  call cgsolve_all (ch_psi_all, cg_psi, et(1,ik), psi, g_psi, &
+  call cgsolve_all (ch_psi_all_nmr, cg_psi, et(1,ik), psi, g_psi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
        nbnd_occ(ik) )
   !!write(stdout, '(5X,''cgsolve_all converged in '',I3,'' iterations'')') &

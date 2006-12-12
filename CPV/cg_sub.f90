@@ -172,7 +172,7 @@
 !-------------verifica
 !      do i=1,n
 !      do ig=1,ngw
-!      	phi(ig,i,1,1)=phi(ig,i,1,1)+c0(ig,i,1,1)*(1.d0/ema0bg(ig)-1.d0)
+!         phi(ig,i,1,1)=phi(ig,i,1,1)+c0(ig,i,1,1)*(1.d0/ema0bg(ig)-1.d0)
 !      enddo
 !      enddo
 !      !call calbec(1,nsp,eigr,phi,becm)

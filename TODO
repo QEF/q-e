@@ -1,4 +1,4 @@
-TODO LIST - November 2006
+TODO LIST - December 2006
 
 BUGS TO EXAMINE
 
@@ -22,7 +22,7 @@ INSTALLATION/PORTING
 COMMON
 
 - uniform and clear values for constants in Modules/constants.f90
-  (almost finished)
+- convert all single-precision constants to double precision
 
 - check whether license is written in the header of the file
 
@@ -135,6 +135,7 @@ PH, D3, Gamma
 
 - stop with 'prefix.EXIT' and restart (PH now has it; D3 & Gamma do not
   have any infrastructure for stopping like this)
+  Phonon restart is inefficient in some cases
 
 
 DOCUMENTATION

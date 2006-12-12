@@ -14,13 +14,14 @@ subroutine polariz ( iw )
   !
 #include "f_defs.h"
 
-  USE io_global,  ONLY : stdout
-  USE io_files, ONLY: iunigk
-  use pwcom
-  USE kinds, only : DP
-  use phcom
-  use cell_base,  only : omega
-  implicit none
+  USE io_global,    ONLY : stdout
+  USE io_files,     ONLY : iunigk
+  USE pwcom
+  USE kinds,        ONLY : DP
+  USE phcom
+  USE cell_base,    ONLY : omega
+  !
+  IMPLICIT NONE
   !
   ! I/O variables
   !

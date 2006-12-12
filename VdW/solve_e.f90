@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine solve_e ( iu )
+subroutine solve_e_vdw ( iu )
   !-----------------------------------------------------------------------
   !
   !    This routine is a driver for the solution of the linear system which
@@ -95,7 +95,7 @@ subroutine solve_e ( iu )
   character (len=256) :: flmixdpot
   ! the name of the file with the mixing potential
   !
-  external ch_psi_all, pbcg_psi, cg_psi
+  external ch_psi_all_vdw, pbcg_psi, cg_psi
 
   if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
 
@@ -202,7 +202,7 @@ subroutine solve_e ( iu )
            nrec = (ipol - 1) * nksq + ik
            !
            ! computes/reads P_c^+ x psi_kpoint into dvpsi array
-           call dvpsi_e (ik, ipol)
+           call dvpsi_e_vdw (ik, ipol)
            !
            if (iter.eq.1) then
               !
@@ -292,7 +292,7 @@ subroutine solve_e ( iu )
            !
            conv_root = .true.
            !
-           call gmressolve_all (ch_psi_all,pbcg_psi,et_c(1,ik),dvpsi,dpsi,  &
+           call gmressolve_all (ch_psi_all_vdw,pbcg_psi,et_c(1,ik),dvpsi,dpsi,  &
               h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik), 4 )
            !
            ltaver = ltaver + lter
@@ -312,7 +312,7 @@ subroutine solve_e ( iu )
            weight = wk (ik)
            weight = nelecr
            !
-           call incdrhoscf (dvscfout(1,current_spin,ipol), weight, ik, 1)
+           call incdrhoscf_vdw (dvscfout(1,current_spin,ipol), weight, ik, 1)
            !
         enddo   ! on perturbation
      enddo      ! on k points
@@ -350,7 +350,7 @@ subroutine solve_e ( iu )
      do ipol=1,3
         if (fildrho.ne.' ') call davcio_drho(dvscfout(1,1,ipol),lrdrho, &
              iudrho,ipol,+1)
-        call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
+        call dv_of_drho_vdw (0, dvscfout (1, 1, ipol), .false.)
      enddo
 #ifdef __PARA
      call psyme (dvscfout)
@@ -427,4 +427,4 @@ subroutine solve_e ( iu )
   !
   return
   !
-end subroutine solve_e
+end subroutine solve_e_vdw

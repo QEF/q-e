@@ -219,7 +219,7 @@ SUBROUTINE check_v_eff ( veff, charge )
                 vrs_ = vrs
                 vrs = veff
                 !
-                CALL cegterg( npw, npwx, nbnd, nbndx, evc_, ethr, &
+                CALL cegterg_vdw( npw, npwx, nbnd, nbndx, evc_, ethr, &
                               okvan, et(1,ik), btype, notconv, dav_iter )
                 !
                 avg_iter = avg_iter + dav_iter

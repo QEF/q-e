@@ -10,9 +10,7 @@ apply_p.o \
 apply_vel.o \
 greenfunction.o \
 h_psiq.o \
-cg_psi.o \
 ch_psi_all.o \
-cgsolve_all.o \
 sym_cart_tensor.o \
 symmetrize_field.o \
 test_sum_rule.o \
@@ -63,6 +61,7 @@ MODULES = \
 ../Modules/path_opt_routines.o \
 ../Modules/path_io_routines.o \
 ../Modules/path_reparametrisation.o \
+../Modules/pres_ai_mod.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \
@@ -85,13 +84,15 @@ MODULES = \
 
 PWOBJS = ../PW/libpw.a
 
-TLDEPS=bindir mods libs libiotk
+PHOBJS = ../PH/libph.a
+
+TLDEPS=bindir ph pw mods libs libiotk
 
 all : tldeps magn.x
 
-magn.x : $(NMROBJS) $(PWOBJS) $(LIBOBJS)
+magn.x : $(NMROBJS) $(PWOBJS) $(PHOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		$(NMROBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		$(NMROBJS) $(MODULES) $(PHOBJS) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../NMR_new/$@ . )
 
 tldeps:

@@ -188,7 +188,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
         endif 
         !
      enddo
-     kter_eff = kter_eff + float (lbnd) / float (nbnd)
+     kter_eff = kter_eff + DBLE (lbnd) / DBLE (nbnd)
      !
      conv_root = .true.
      do ibnd = 1, nbnd
@@ -227,7 +227,7 @@ subroutine gmressolve_all (h_psi, cg_psi, e, d0psi, dpsi, h_diag, &
               !
               ! compute hm(i,j) 
 !              hm(i,j) = ZDOTC (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
-	      hm4para(1) = ZDOTC (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
+              hm4para(1) = ZDOTC (ndim, w(1,ibnd), 1, v(1,ibnd,i), 1)
 #ifdef __PARA
      call reduce (2, hm4para )
 #endif

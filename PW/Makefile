@@ -237,7 +237,6 @@ vhpsi.o \
 vhpsi_nc.o \
 vloc_of_g.o \
 vloc_psi.o \
-vpack.o \
 w0gauss.o \
 w1gauss.o \
 wfcinit.o \

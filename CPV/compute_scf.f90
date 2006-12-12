@@ -5,6 +5,8 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#include "f_defs.h"
+!
 !----------------------------------------------------------------------------
 SUBROUTINE compute_scf( N_in, N_fin, stat  )
   !----------------------------------------------------------------------------
@@ -35,7 +37,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   INTEGER               :: image
   REAL(DP)              :: tcpu 
   CHARACTER(LEN=256)    :: outdir_saved
-  LOGICAL               :: file_exists, opnd
+  LOGICAL               :: opnd
   REAL(DP), ALLOCATABLE :: tau(:,:)
   REAL(DP), ALLOCATABLE :: fion(:,:)
   REAL(DP)              :: etot

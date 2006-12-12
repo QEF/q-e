@@ -55,7 +55,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !   compute the product of the hamiltonian with the h vector
   !
   call h_psiq (npwx, n, m, h, hpsi, spsi)
-
+  !
   call start_clock ('last')
   !
   !   then we compute the operator H-epsilon S

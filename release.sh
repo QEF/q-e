@@ -1,4 +1,9 @@
 #!/bin/sh -x
+
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
+
 #
 VERSION=3.2
 TARGET_MACHINE=cibs.sns.it:public_html/public/

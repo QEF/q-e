@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
+
 # pwdiff.sh -- script for checking outputs of PWscf examples
 # checking is done in three steps: preprocess, diff against reference
 # data, postprocess

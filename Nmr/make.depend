@@ -7,9 +7,6 @@ magnetic_kkterm.o : ../Modules/kind.o
 magnetic_kkterm.o : ../Modules/wavefunctions.o
 magnetic_kkterm.o : ../PH/phcom.o
 magnetic_kkterm.o : ../PW/pwcom.o
-nmr_mod.o : ../Modules/kind.o
-nmr_mod.o : ../Modules/uspp.o
-nmr_mod.o : ../PW/pwcom.o
 nmr.o : ../Modules/cell_base.o
 nmr.o : ../Modules/io_files.o
 nmr.o : ../Modules/ions_base.o
@@ -18,11 +15,14 @@ nmr.o : ../Modules/parameters.o
 nmr.o : ../Modules/uspp.o
 nmr.o : ../Modules/version.o
 nmr.o : ../Modules/wavefunctions.o
-nmr.o : nmr_mod.o
 nmr.o : ../PH/phcom.o
 nmr.o : ../PW/becmod.o
 nmr.o : ../PW/paw.o
 nmr.o : ../PW/pwcom.o
+nmr.o : nmr_mod.o
+nmr_mod.o : ../Modules/kind.o
+nmr_mod.o : ../Modules/uspp.o
+nmr_mod.o : ../PW/pwcom.o
 solve_cg.o : ../Modules/kind.o
 solve_cg.o : ../Modules/uspp.o
 solve_cg.o : ../Modules/wavefunctions.o
@@ -33,9 +33,9 @@ take_nloc_k_kq.o : ../Modules/ions_base.o
 take_nloc_k_kq.o : ../Modules/kind.o
 take_nloc_k_kq.o : ../Modules/uspp.o
 take_nloc_k_kq.o : ../Modules/wavefunctions.o
-take_nloc_k_kq.o : nmr_mod.o
 take_nloc_k_kq.o : ../PH/phcom.o
 take_nloc_k_kq.o : ../PW/becmod.o
 take_nloc_k_kq.o : ../PW/pwcom.o
+take_nloc_k_kq.o : nmr_mod.o
 nmr.o : ../include/f_defs.h
 solve_cg.o : ../include/f_defs.h

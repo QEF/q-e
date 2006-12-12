@@ -7,7 +7,7 @@
 !
 !
 !----------------------------------------------------------------------
-subroutine dvpsi_e (kpoint, ipol)
+subroutine dvpsi_e_vdw (kpoint, ipol)
   !----------------------------------------------------------------------
   !
   ! On output: dvpsi contains P_c^+ x | psi_kpoint > in crystal axis 
@@ -251,4 +251,4 @@ subroutine dvpsi_e (kpoint, ipol)
   !
   return
   !
-end subroutine dvpsi_e
+end subroutine dvpsi_e_vdw

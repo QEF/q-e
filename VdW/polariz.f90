@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine polariz ( iu )
+subroutine polariz_vdw ( iu )
   !-----------------------------------------------------------------------
   !
   !      calculates the frequency dependent polarizability 
@@ -16,13 +16,13 @@ subroutine polariz ( iu )
 
   USE io_global,    ONLY : stdout
   USE io_files,     ONLY : iunigk
-  use pwcom
-  USE kinds,        only : DP
-  use phcom
-  use cell_base,    only : omega
+  USE pwcom
+  USE kinds,        ONLY : DP
+  USE phcom
+  USE cell_base,    ONLY : omega
   USE eff_v,        ONLY : nelecr, veff, et_c, dvext, dpsi_eff
 
-  implicit none
+  IMPLICIT NONE
   !
   ! I/O variables
   !
@@ -105,4 +105,4 @@ subroutine polariz ( iu )
   call stop_clock ('polariz')
 
   return
-end subroutine polariz
+end subroutine polariz_vdw

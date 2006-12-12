@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf (drhoscf, weight, ik, mode)
+subroutine incdrhoscf_vdw (drhoscf, weight, ik, mode)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -75,14 +75,14 @@ subroutine incdrhoscf (drhoscf, weight, ik, mode)
 
      call cft3s (dpsic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
      do ir = 1, nrxxs
-!        drhoscf (ir) = drhoscf (ir) + wgt * conjg (psi (ir) ) * dpsic (ir)
-        drhoscf (ir) = drhoscf (ir) + wgt * real( conjg(psi(ir)) * dpsic (ir) )
+!        drhoscf (ir) = drhoscf (ir) + wgt * CONJG (psi (ir) ) * dpsic (ir)
+        drhoscf (ir) = drhoscf (ir) + wgt * REAL( CONJG(psi(ir)) * dpsic (ir) )
      enddo
   enddo
-!print*,'drhoscf=', sum(abs(real(drhoscf))), sum(abs(aimag(drhoscf)))
+!print*,'drhoscf=', sum(abs(REAL(drhoscf))), SUM(ABS(AIMAG(drhoscf)))
 !  call addusdbec (ik, wgt, dpsi, dbecsum)
   deallocate (psi)
   deallocate (dpsic)
   call stop_clock ('incdrhoscf')
   return
-end subroutine incdrhoscf
+end subroutine incdrhoscf_vdw

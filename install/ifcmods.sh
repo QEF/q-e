@@ -1,5 +1,9 @@
 #!/bin/sh
 
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
+
 echo "creating catalog file for Intel compiler v.6 and earlier..."
 
 topdir=`pwd`

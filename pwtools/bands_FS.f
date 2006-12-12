@@ -8,8 +8,8 @@
 !       Program is designed to map the Fermi Surface using XCrySDen
 !       See www.xcrysden.org 
 !
-!	Eyvaz Isaev, 2004-2005 
-!	eyvaz_isaev@yahoo.com, e.isaev@misis.ru, Eyvaz.Isaev@fysik.uu.se
+!       Eyvaz Isaev, 2004-2005 
+!       eyvaz_isaev@yahoo.com, e.isaev@misis.ru, Eyvaz.Isaev@fysik.uu.se
 !       Theoretical Physics Department,
 !       Moscow State Institute of Steel and Alloys  
 !

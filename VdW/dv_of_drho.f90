@@ -7,14 +7,14 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine dv_of_drho (mode, dvscf, flag)
+subroutine dv_of_drho_vdw (mode, dvscf, flag)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the self consistent potential
   !     due to the perturbation.
   !
 #include "f_defs.h"
-  use funct
+  use funct, only : dft_is_gradient, dmxc
   use pwcom
   USE kinds, only : DP
   use phcom
@@ -59,7 +59,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   dvaux (:,:) = (0.d0, 0.d0)
 
-  fac = 1.d0 / float (nspin)
+  fac = 1.d0 / DBLE (nspin)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
      do is = 1, nspin
@@ -141,4 +141,4 @@ subroutine dv_of_drho (mode, dvscf, flag)
 
   call stop_clock ('dv_of_drho')
   return
-end subroutine dv_of_drho
+end subroutine dv_of_drho_vdw

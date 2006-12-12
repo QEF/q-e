@@ -1,6 +1,10 @@
 #!/bin/sh 
 # includedep.sh -- script that computes dependencies on preprocessor includes
 
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
+
 # files whose dependencies must be computed
 sources=`echo *.c *.f90 |
 sed 's/\*\.c//g
