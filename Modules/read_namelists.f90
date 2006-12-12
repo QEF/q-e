@@ -1109,8 +1109,6 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' calculation '''// &
                        & TRIM(calculation)//''' not allowed ',1)
-       IF( calculation == ' ' ) &
-          CALL errore( sub_name,' calculation not specified ',1)
        IF( prog == 'CP' ) THEN
           IF( calculation == 'phonon' ) &
              CALL errore( sub_name,' calculation '//calculation// &
@@ -1245,19 +1243,6 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' nosym not implemented in CP ', -1)
        END IF
        !
-       IF( prog == 'PW' ) THEN
-          !
-          ! ... stop if starting_magnetization is not set for
-          ! ... all atomic types
-          !
-          IF ( nspin == 2 .AND. nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
-               multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
-               ALL(starting_magnetization == sm_not_set) ) THEN
-             CALL errore(sub_name,'some starting_magnetization MUST be set', 1 )
-          END IF
-          !
-       END IF
-       !
        ! ... non collinear check
        !
        IF ( noncolin ) THEN
@@ -1382,6 +1367,7 @@ MODULE read_namelists_module
           CALL errore( sub_name, ' phase_space '''// &
                        & TRIM( phase_space )// ''' not allowed ', 1 )
        !
+       allowed = .FALSE.
        DO i = 1, SIZE(ion_dynamics_allowed)
           IF( TRIM(ion_dynamics) == ion_dynamics_allowed(i) ) allowed = .TRUE.
        END DO
@@ -1408,6 +1394,7 @@ MODULE read_namelists_module
        IF ( temp_req < 0.D0 ) &
           CALL errore( sub_name,' temp_req out of range ',1)
        !
+       allowed = .FALSE.
        DO i = 1, SIZE( opt_scheme_allowed )
           IF ( TRIM( opt_scheme ) == &
                opt_scheme_allowed(i) ) allowed = .TRUE.
@@ -1444,6 +1431,7 @@ MODULE read_namelists_module
        IF ( k_min < 0.D0 )  CALL errore( sub_name, 'k_min out of range', 1 )
        IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
        ! 
+       allowed = .FALSE.
        DO i = 1, SIZE( CI_scheme_allowed )
           IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
        END DO
@@ -1787,7 +1775,8 @@ MODULE read_namelists_module
        CALL control_bcast( )
        CALL control_checkin( prog )
        !
-       ! ... defaults values are changed here according to the CONTROL namelist
+       ! ... fixval changes some default values according to the value
+       ! ... of "calculation" read in CONTROL namelist
        !
        CALL fixval( prog )
        !
