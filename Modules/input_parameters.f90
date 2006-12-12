@@ -20,9 +20,6 @@ MODULE input_parameters
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : nsx, npkx, nspinx, lqmax, nhclm, max_nconstr
-  USE pres_ai_mod, ONLY: abivol,axis,abisur,cntr,delta_eps,delta_sigma,dthr, &
-                         fill_vac,h_j,jellium,n_cntr,p_in,p_ext,p_fin,pvar,r_j,&
-                         rho_thr,scale_at,surf_t,step_rad,t_gauss
   !
   IMPLICIT NONE
   !
@@ -1293,6 +1290,12 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
 !
+      LOGICAL  :: abivol, abisur, pvar, fill_vac, scale_at, t_gauss, jellium
+      LOGICAL  :: cntr(nsx)
+      REAL(DP) :: P_ext, P_in, P_fin, rho_thr, step_rad(nsx)
+      REAL(DP) :: Surf_t, dthr, R_j, h_j, delta_eps, delta_sigma
+      INTEGER  :: n_cntr, axis
+
       NAMELIST / press_ai / abivol, P_ext, pvar, P_in, P_fin, rho_thr,  &
      &                      step_rad, delta_eps, delta_sigma, n_cntr,   &
      &                      fill_vac, scale_at, t_gauss, abisur,        &

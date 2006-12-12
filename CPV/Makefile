@@ -69,6 +69,7 @@ periodic.o \
 phasefactor.o \
 polarization.o \
 potentials.o \
+pres_ai_mod.o \
 print_out.o \
 problem_size.o \
 pseudo_base.o \
@@ -153,7 +154,6 @@ MODULES = \
 ../Modules/path_reparametrisation.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
-../Modules/pres_ai_mod.o \
 ../Modules/parser.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \

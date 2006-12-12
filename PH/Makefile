@@ -158,7 +158,6 @@ MODULES = \
 ../Modules/path_opt_routines.o \
 ../Modules/path_io_routines.o \
 ../Modules/path_reparametrisation.o \
-../Modules/pres_ai_mod.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \

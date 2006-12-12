@@ -208,7 +208,6 @@ cplib.o : ../Modules/kind.o
 cplib.o : ../Modules/mp.o
 cplib.o : ../Modules/mp_global.o
 cplib.o : ../Modules/parameters.o
-cplib.o : ../Modules/pres_ai_mod.o
 cplib.o : ../Modules/ptoolkit.o
 cplib.o : ../Modules/recvec.o
 cplib.o : ../Modules/sic.o
@@ -216,6 +215,7 @@ cplib.o : ../Modules/smallbox.o
 cplib.o : ../Modules/uspp.o
 cplib.o : cp_interfaces.o
 cplib.o : modules.o
+cplib.o : pres_ai_mod.o
 cplib_meta.o : ../Modules/cell_base.o
 cplib_meta.o : ../Modules/constants.o
 cplib_meta.o : ../Modules/control_flags.o
@@ -249,7 +249,6 @@ cpr.o : ../Modules/metadyn_base.o
 cpr.o : ../Modules/mp.o
 cpr.o : ../Modules/mp_global.o
 cpr.o : ../Modules/parameters.o
-cpr.o : ../Modules/pres_ai_mod.o
 cpr.o : ../Modules/printout_base.o
 cpr.o : ../Modules/recvec.o
 cpr.o : ../Modules/timestep.o
@@ -268,6 +267,7 @@ cpr.o : ions_positions.o
 cpr.o : mainvar.o
 cpr.o : modules.o
 cpr.o : ortho_base.o
+cpr.o : pres_ai_mod.o
 cpr.o : restart_sub.o
 cpr.o : wannier.o
 cpr_mod.o : ../Modules/io_global.o
@@ -617,6 +617,7 @@ input.o : guess.o
 input.o : ksstates.o
 input.o : mainvar.o
 input.o : modules.o
+input.o : pres_ai_mod.o
 input.o : read_pseudo.o
 input.o : runcg.o
 input.o : turbo.o
@@ -703,8 +704,8 @@ mainvar.o : ../Modules/energies.o
 mainvar.o : ../Modules/functionals.o
 mainvar.o : ../Modules/kind.o
 mainvar.o : ../Modules/parameters.o
-mainvar.o : ../Modules/pres_ai_mod.o
 mainvar.o : modules.o
+mainvar.o : pres_ai_mod.o
 mainvar.o : wave_types.o
 metaxc.o : ../Modules/recvec.o
 modules.o : ../Modules/kind.o
@@ -874,6 +875,9 @@ potentials.o : mainvar.o
 potentials.o : modules.o
 potentials.o : vanderwaals.o
 potentials.o : wave_types.o
+pres_ai_mod.o : ../Modules/constants.o
+pres_ai_mod.o : ../Modules/kind.o
+pres_ai_mod.o : ../Modules/parameters.o
 print_out.o : ../Modules/cell_base.o
 print_out.o : ../Modules/constants.o
 print_out.o : ../Modules/control_flags.o
@@ -888,7 +892,6 @@ print_out.o : ../Modules/ions_nose.o
 print_out.o : ../Modules/kind.o
 print_out.o : ../Modules/mp.o
 print_out.o : ../Modules/mp_global.o
-print_out.o : ../Modules/pres_ai_mod.o
 print_out.o : ../Modules/printout_base.o
 print_out.o : ../Modules/recvec.o
 print_out.o : ../Modules/sic.o
@@ -905,6 +908,7 @@ print_out.o : environment.o
 print_out.o : mainvar.o
 print_out.o : modules.o
 print_out.o : polarization.o
+print_out.o : pres_ai_mod.o
 problem_size.o : ../Modules/electrons_base.o
 problem_size.o : ../Modules/fft_base.o
 problem_size.o : ../Modules/io_global.o
@@ -1217,11 +1221,11 @@ vol_clu.o : ../Modules/ions_base.o
 vol_clu.o : ../Modules/mp.o
 vol_clu.o : ../Modules/mp_global.o
 vol_clu.o : ../Modules/parameters.o
-vol_clu.o : ../Modules/pres_ai_mod.o
 vol_clu.o : ../Modules/recvec.o
 vol_clu.o : cp_interfaces.o
 vol_clu.o : ions_positions.o
 vol_clu.o : modules.o
+vol_clu.o : pres_ai_mod.o
 wannier.o : ../Modules/cell_base.o
 wannier.o : ../Modules/control_flags.o
 wannier.o : ../Modules/electrons_base.o

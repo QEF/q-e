@@ -496,8 +496,6 @@ MODULE read_namelists_module
      !----------------------------------------------------------------------
      SUBROUTINE press_ai_defaults( prog )
      !
-       USE pres_ai_mod
-       !
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
@@ -982,29 +980,6 @@ MODULE read_namelists_module
      !
      !=----------------------------------------------------------------------=!
      !
-     !  Correct (a.u.) units to pressure
-     !
-     !=----------------------------------------------------------------------=!
-     !
-     !----------------------------------------------------------------------
-     SUBROUTINE press_ai_units()
-       !----------------------------------------------------------------------
-       !
-       USE pres_ai_mod
-       USE constants, ONLY : au_gpa
-       !
-       IMPLICIT NONE
-       !
-       P_ext = P_ext / au_gpa
-       P_in = P_in / au_gpa
-       P_fin = P_fin / au_gpa
-       if (pvar) P_ext = P_in
-       jellium = .false.  ! provvisorio
-     END SUBROUTINE
-     !
-     !
-     !=----------------------------------------------------------------------=!
-     !
      !  Broadcast variables values for Namelist PRESS_AI
      !
      !=----------------------------------------------------------------------=!
@@ -1015,7 +990,6 @@ MODULE read_namelists_module
        !
        USE io_global, ONLY: ionode_id
        USE mp,        ONLY: mp_bcast
-       USE pres_ai_mod
        !
        IMPLICIT NONE
        !
@@ -1907,7 +1881,6 @@ MODULE read_namelists_module
           end if
        END IF
        !
-       CALL press_ai_units()
        CALL press_ai_bcast()
        !
        ! ... PHONON namelist

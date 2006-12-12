@@ -1128,7 +1128,6 @@ vloc_of_g.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/wavefunctions.o
 vloc_psi.o : pwcom.o
-vpack.o : ../Modules/kind.o
 w0gauss.o : ../Modules/kind.o
 w1gauss.o : ../Modules/kind.o
 wfcinit.o : ../Modules/cell_base.o

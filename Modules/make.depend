@@ -68,7 +68,6 @@ griddim.o : mp.o
 griddim.o : mp_global.o
 input_parameters.o : kind.o
 input_parameters.o : parameters.o
-input_parameters.o : pres_ai_mod.o
 io_files.o : io_global.o
 io_files.o : parameters.o
 ions_base.o : cell_base.o
@@ -177,7 +176,6 @@ path_reparametrisation.o : mp.o
 path_reparametrisation.o : path_variables.o
 path_reparametrisation.o : splinelib.o
 path_variables.o : kind.o
-pres_ai_mod.o : parameters.o
 printout_base.o : io_global.o
 printout_base.o : kind.o
 printout_base.o : mp.o
@@ -202,7 +200,6 @@ read_namelists.o : input_parameters.o
 read_namelists.o : io_global.o
 read_namelists.o : kind.o
 read_namelists.o : mp.o
-read_namelists.o : pres_ai_mod.o
 read_upf.o : kind.o
 read_upf.o : pseudo_types.o
 read_uspp.o : atom.o

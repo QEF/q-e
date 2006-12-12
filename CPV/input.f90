@@ -881,7 +881,7 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE control_flags,    ONLY : program_name, lconstrain, lneb, lmetadyn, &
-                                  tpre, thdyn
+                                  tpre, thdyn, tabps
 
      USE constants,        ONLY : amu_au, pi
      !
@@ -916,6 +916,12 @@ MODULE input
                                   adapt, calwf, nwf, wffort, writev,           &
                                   wannier_index
      !
+     USE input_parameters, ONLY : abivol, abisur, pvar, fill_vac,     &
+                                  scale_at, t_gauss, jellium, cntr,   &
+                                  P_ext, P_in, P_fin, rho_thr,        &
+                                  step_rad, Surf_t, dthr, R_j, h_j,   &
+                                  delta_eps, delta_sigma, n_cntr, axis
+     !
      USE ions_base,        ONLY : tau, ityp, zv
      USE cell_base,        ONLY : cell_base_init, a1, a2, a3, cell_alat
      USE cell_nose,        ONLY : cell_nose_init
@@ -928,6 +934,7 @@ MODULE input
      USE turbo,            ONLY : turbo_init
      USE efield_module,    ONLY : efield_init
      USE cg_module,        ONLY : cg_init
+     USE pres_ai_mod,      ONLY : pres_ai_init
      !
      USE smallbox_grid_dimensions, ONLY: &
            nnrbx, &  !  variable is used to workaround internal compiler error (IBM xlf)
@@ -1100,6 +1107,13 @@ MODULE input
                         calwf, nwf, wffort, writev, wannier_index,      &
                         restart_mode )
      !
+     ! ... initialize variables for clusters under pressure 
+     !
+     IF ( tabps ) CALL pres_ai_init(abivol, abisur, pvar, fill_vac,     &
+                                    scale_at, t_gauss, jellium, cntr,   &
+                                    P_ext, P_in, P_fin, rho_thr,        &
+                                    step_rad, Surf_t, dthr, R_j, h_j,   &
+                                    delta_eps, delta_sigma, n_cntr, axis)
      RETURN
      !
   END SUBROUTINE modules_setup
