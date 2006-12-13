@@ -218,6 +218,8 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
    ALLOCATE(pdl_elec(nstring))
    ALLOCATE(mod_elec(nstring))
 
+
+
   
 !  -------------------------------------------------------------------------   !
 !           electronic polarization: set values for k-points strings           !
@@ -259,7 +261,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
 !                   electronic polarization: weight strings                    !
 !  -------------------------------------------------------------------------   !
 
-!  --- Calculate string weights, normalizing to 1 (no spin) or 1+1 (spin) ---
+!  --- Calculate string weights, normalizing to 1 (no spin) or 1 (spin) ---
    DO is=1,nspin
       weight=0.0_dp
       DO kort=1,nkort
@@ -267,6 +269,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
          wstring(istring)=wk(nppstr*istring)
          weight=weight+wstring(istring)
       END DO
+      weight=weight/dble(nspin)
       DO kort=1,nkort
          istring=kort+(is-1)*nkort
          wstring(istring)=wstring(istring)/weight
