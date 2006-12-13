@@ -12,8 +12,14 @@ MODULE input_parameters
 !
 !=----------------------------------------------------------------------------=!
 !
-!  this module contains the definitions of all input parameters for CP, FPMD & 
-!  PWSCF codes.
+!  this module contains 
+!  1) the definitions of all input parameters
+!     (both those read from namelists and those read from cards)
+!  2) the definitions of all namelists
+!  3) routines that allocate data needed in input
+!  Note that all values are initialized, but the default values should be
+!  set in the appropriate routines contained in module "read_namelists"
+!  Documentation of input variabe is in INPUT_PW
 !  Originally written by Carlo Cavazzoni for FPMD
 !
 !=----------------------------------------------------------------------------=!
@@ -1290,11 +1296,27 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
 !
-      LOGICAL  :: abivol, abisur, pvar, fill_vac, scale_at, t_gauss, jellium
-      LOGICAL  :: cntr(nsx)
-      REAL(DP) :: P_ext, P_in, P_fin, rho_thr, step_rad(nsx)
-      REAL(DP) :: Surf_t, dthr, R_j, h_j, delta_eps, delta_sigma
-      INTEGER  :: n_cntr, axis
+      LOGICAL  :: abivol = .FALSE.
+      LOGICAL  :: abisur = .FALSE.
+      LOGICAL  :: pvar   = .FALSE.
+      LOGICAL  :: fill_vac=.FALSE.
+      LOGICAL  :: scale_at=.FALSE.
+      LOGICAL  :: t_gauss =.FALSE.
+      LOGICAL  :: jellium= .FALSE.
+      LOGICAL  :: cntr(nsx)=.FALSE.
+      REAL(DP) :: P_ext = 0.d0
+      REAL(DP) :: P_in  = 0.d0
+      REAL(DP) :: P_fin = 0.d0
+      REAL(DP) :: rho_thr = 0.d0
+      REAL(DP) :: step_rad(nsx)=0.d0
+      REAL(DP) :: Surf_t = 0.d0
+      REAL(DP) :: dthr = 0.d0
+      REAL(DP) :: R_j = 0.d0
+      REAL(DP) :: h_j = 0.d0
+      REAL(DP) :: delta_eps = 0.d0
+      REAL(DP) :: delta_sigma=0.d0
+      INTEGER  :: n_cntr = 0
+      INTEGER  :: axis = 0
 
       NAMELIST / press_ai / abivol, P_ext, pvar, P_in, P_fin, rho_thr,  &
      &                      step_rad, delta_eps, delta_sigma, n_cntr,   &
@@ -1309,15 +1331,10 @@ MODULE input_parameters
 
         INTEGER :: modenum = 0
         
-        INTEGER :: nq1, nq2, nq3
-        ! number of q points in each direction
-        
         REAL(DP) :: xqq(3) = 0.0d0
           ! coordinates of q point for phonon calculation
 
-        REAL(DP) :: tr2_ph
-
-        NAMELIST / phonon / modenum, xqq, nq1, nq2, nq3, tr2_ph
+        NAMELIST / phonon / modenum, xqq
 
 !=----------------------------------------------------------------------------=!  
 !  WANNIER Namelist Input Parameters
