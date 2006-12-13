@@ -881,7 +881,7 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE control_flags,    ONLY : program_name, lconstrain, lneb, lmetadyn, &
-                                  tpre, thdyn, tabps
+                                  tpre, thdyn
 
      USE constants,        ONLY : amu_au, pi
      !
@@ -920,7 +920,8 @@ MODULE input
                                   scale_at, t_gauss, jellium, cntr,   &
                                   P_ext, P_in, P_fin, rho_thr,        &
                                   step_rad, Surf_t, dthr, R_j, h_j,   &
-                                  delta_eps, delta_sigma, n_cntr, axis
+                                  delta_eps, delta_sigma, n_cntr,     &
+                                  axis, tabps
      !
      USE ions_base,        ONLY : tau, ityp, zv
      USE cell_base,        ONLY : cell_base_init, a1, a2, a3, cell_alat
