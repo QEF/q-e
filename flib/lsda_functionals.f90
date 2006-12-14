@@ -433,13 +433,13 @@ SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
   real (DP):: rs, trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, xp, &
        beta, sb, alb, vxf, exf
 
-  TRD = ONE/3
-  FTRD = 4*TRD
-  TFTM = 2**FTRD-2
-  A0 = (4/(9*PI))**TRD
+  TRD = ONE/3.d0
+  FTRD = 4.d0*TRD
+  TFTM = 2**FTRD-2.d0
+  A0 = (4.d0/(9.d0*PI))**TRD
   
   !      X-alpha parameter:
-  ALP = 2 * TRD
+  ALP = 2.d0 * TRD
   
   IF (rho <=  ZERO) THEN
      EX = ZERO
@@ -447,23 +447,23 @@ SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
      vxdw  = ZERO
      RETURN
   ELSE
-     FZ = ((1+Z)**FTRD+(1-Z)**FTRD-2)/TFTM
-     FZP = FTRD*((1+Z)**TRD-(1-Z)**TRD)/TFTM
+     FZ = ((1.d0+Z)**FTRD+(1.d0-Z)**FTRD-2.d0)/TFTM
+     FZP = FTRD*((1.d0+Z)**TRD-(1.d0-Z)**TRD)/TFTM
   ENDIF
-  RS = (3 / (4*PI*rho) )**TRD
-  VXP = -3*ALP/(2*PI*A0*RS)
-  XP = 3*VXP/4
+  RS = (3.d0 / (4.d0*PI*rho) )**TRD
+  VXP = -3.d0*ALP/(2.d0*PI*A0*RS)
+  XP = 3.d0*VXP/4.d0
   
   BETA = C014/RS
-  SB = SQRT(1+BETA*BETA)
+  SB = SQRT(1.d0+BETA*BETA)
   ALB = LOG(BETA+SB)
   VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
   XP = XP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
   
-  VXF = 2**TRD*VXP
-  EXF = 2**TRD*XP
-  vxup  = VXP + FZ*(VXF-VXP) + (1-Z)*FZP*(EXF-XP)
-  vxdw  = VXP + FZ*(VXF-VXP) - (1+Z)*FZP*(EXF-XP)
+  VXF = 2.d0**TRD*VXP
+  EXF = 2.d0**TRD*XP
+  vxup  = VXP + FZ*(VXF-VXP) + (1.d0-Z)*FZP*(EXF-XP)
+  vxdw  = VXP + FZ*(VXF-VXP) - (1.d0+Z)*FZP*(EXF-XP)
   EX    = XP + FZ*(EXF-XP)
        
 END SUBROUTINE slater_rxc_spin

@@ -885,7 +885,7 @@
 !     perdew-wang gga (PW91)
 !
       USE kinds, ONLY: DP
-      use constants, only: pi, fpi, pi34
+      use constants, only: pi, fpi
 !
       implicit none
 ! input
@@ -901,8 +901,8 @@
       real(DP) ecrs, eczeta
       real(DP) exup, vcup, v1xup, v2xup, v1cup
       real(DP) exdw, vcdw, v1xdw, v2xdw, v1cdw
-      real(DP) third, small
-      parameter (third=1.d0/3.d0, small=1.d-10)
+      real(DP), parameter:: pi34 = 0.75d0/pi, third = 1.d0/3.d0, &
+                small = 1.d-10
 !
 !     _________________________________________________________________
 !     main loop
@@ -1003,7 +1003,7 @@
 !          v2x = d(rho*exc)/d|grho| * (1/|grho|)
 !
       USE kinds, ONLY : DP
-      USE constants, ONLY : pi34
+      USE constants, ONLY : pi
       implicit none
 !  input
       real(DP) rho, grho
@@ -1012,12 +1012,13 @@
 ! local
       real(DP) ex0, kf, s, s2, s4, f, fs, p0,p1,p2,p3,p4,p5,p6,p7
 ! parameters
-      real(DP) a1, a2, a3, a4, a, b1, bx, thrd, thrd4
+      real(DP) a1, a2, a3, a4, a, b1, bx, pi34, thrd, thrd4
       parameter(a1=0.19645d0,a2=0.27430d0,a=7.7956d0,a4=100.d0)
 ! for becke exchange, set a3=b1=0
       parameter(a3=0.15084d0,b1=0.004d0)
 ! pi34=3/(4pi) ,  bx=(3pi^2)^(1/3)
-      parameter(bx=3.09366773d0, thrd=0.333333333333d0, thrd4=4.d0*thrd)
+      parameter(pi34=0.75d0/pi, bx=3.093667726d0, thrd=0.333333333333d0, &
+                thrd4=4.d0*thrd)
 !
       if (rho.lt.1.d-10) then
          ex =0.0d0
@@ -1076,7 +1077,7 @@
 !         v2c = d(rho*exc)/d|grho|*(1/|grho|)
 !
       USE kinds, ONLY : DP
-      USE constants, ONLY : pi34
+      USE constants, ONLY : pi
       implicit none
 ! input
       real(DP) rs, grho, ec, ecrs
@@ -1088,12 +1089,12 @@
       real(DP) ccrs, rsthrd, fac, bec, coeff, cc
       real(DP) h0, h0b, h0rs, h0t, h1, h1t, h1rs, hrs, ht
 ! parameters
-      real(DP) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4, ax
+      real(DP) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4, ax, pi34
       parameter(nu=15.75592d0,cc0=0.004235d0,cx=-0.001667212d0)
       parameter(c1=0.002568d0,c2=0.023266d0,c3=7.389d-6,c4=8.723d0)
       parameter(c5=0.472d0,c6=7.389d-2,a4=100.d0, alf=0.09d0)
 ! ax=(4*1.9191583/pi)^(1/2), where k_F=1.9191583/r_s, k_s=boh*r_s^(1/2)
-      parameter(ax=1.5631853d0)
+      parameter(ax=1.5631853d0, pi34 = 0.75d0/pi)
 !
 !
       rs2 = rs*rs
@@ -1165,7 +1166,7 @@
 !         v2c   = d(rho*exc)/d|grho|*(1/|grho|) (same for up and down)
 !
       USE kinds, ONLY : DP
-      USE constants, ONLY : pi34
+      USE constants, ONLY : pi
       implicit none
 ! input
       real(DP) rs, zeta, grho, ec, ecrs, eczeta
@@ -1179,13 +1180,13 @@
       real(DP) hz, hrs, ht, comm, pref
 ! parameters
       real(DP) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
-      real(DP) thrdm, thrd2, ax, eta
+      real(DP) thrdm, thrd2, ax, eta, pi34
       parameter(nu=15.75592d0,cc0=0.004235d0,cx=-0.001667212d0)
       parameter(c1=0.002568d0,c2=0.023266d0,c3=7.389d-6,c4=8.723d0)
       parameter(c5=0.472d0,c6=7.389d-2,a4=100.d0, alf=0.09d0)
       parameter(thrdm=-0.333333333333d0,thrd2=0.666666666667d0)
 ! ax=(4*1.9191583/pi)^(1/2), where k_F=1.9191583/r_s, k_s=boh*r_s^(1/2)
-      parameter(ax=1.5631853d0,eta=1.d-12)
+      parameter(ax=1.5631853d0, eta=1.d-12, pi34 = 0.75d0/pi )
 !
 !
       if (grho.lt.1.d-10) then

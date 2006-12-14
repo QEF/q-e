@@ -54,22 +54,22 @@ subroutine slater_rxc (rs, ex, vx)
   real (DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, xp, &
        beta, sb, alb
   !
-  TRD = ONE/3
-  FTRD = 4*TRD
-  TFTM = 2**FTRD-2
-  A0 = (4/(9*PI))**TRD
+  TRD = ONE/3.d0
+  FTRD = 4.d0*TRD
+  TFTM = 2**FTRD-2.d0
+  A0 = (4.d0/(9.d0*PI))**TRD
   
   !      X-alpha parameter:
-  ALP = 2 * TRD
+  ALP = 2.d0 * TRD
   
   Z = ZERO
   FZ = ZERO
   FZP = ZERO
   
-  VXP = -3*ALP/(2*PI*A0*RS)
-  XP = 3*VXP/4
+  VXP = -3.d0*ALP/(2.d0*PI*A0*RS)
+  XP = 3.d0*VXP/4.d0
   BETA = C014/RS
-  SB = SQRT(1+BETA*BETA)
+  SB = SQRT(1.d0+BETA*BETA)
   ALB = LOG(BETA+SB)
   VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
   XP = XP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
@@ -494,7 +494,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
   !
   USE kinds
-  USE constants, ONLY : pi, pi34
+  USE constants, ONLY : pi
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
   ! input: charge and squared gradient
