@@ -514,7 +514,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   real(DP) :: dxunif, dfx, f1, f2, f3, dfx1
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
   real(DP) :: third, c1, c2, c5
-  parameter (third = 1.d0 / 3.d0, c1 = pi34 , &
+  parameter (third = 1.d0 / 3.d0, c1 = 0.75d0 / pi , &
        c2 = 3.093667726280136d0, c5 = 4.d0 * third)
   ! parameters of the functional
   real(DP) :: k (2), mu
