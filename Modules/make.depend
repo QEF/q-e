@@ -203,6 +203,7 @@ read_namelists.o : mp.o
 read_upf.o : kind.o
 read_upf.o : pseudo_types.o
 read_uspp.o : atom.o
+read_uspp.o : constants.o
 read_uspp.o : functionals.o
 read_uspp.o : io_global.o
 read_uspp.o : ions_base.o

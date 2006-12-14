@@ -290,14 +290,14 @@ CONTAINS
 
     rule_isave(:)             = 0
     rule_iprint(:)            = 0
-    rule_dt(:)                = 0.0
-    rule_emass(:)             = 0.0
+    rule_dt(:)                = 0.0d0
+    rule_emass(:)             = 0.0d0
     rule_electron_dynamics(:) = 'NONE'
-    rule_electron_damping(:)  = 0.0
+    rule_electron_damping(:)  = 0.0d0
     rule_ion_dynamics(:)      = 'NONE'
-    rule_ion_damping(:)       = 0.0
+    rule_ion_damping(:)       = 0.0d0
     rule_ion_temperature(:)   = 'NOT_CONTROLLED'
-    rule_tempw(:)             = 0.01
+    rule_tempw(:)             = 0.01d0
 
   END SUBROUTINE init_autopilot
 

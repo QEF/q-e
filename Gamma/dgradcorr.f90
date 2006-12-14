@@ -159,14 +159,14 @@ subroutine gradient1(nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   !--------------------------------------------------------------------
   ! Calculates ga = \grad a in R-space (a is G-space)
   USE kinds, only : DP
+  USE constants, ONLY : tpi
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
         nlm(ngm)
   complex(DP) :: a (nrxx)
   real(DP) :: ga (3, nrxx), g (3, ngm), alat
   integer :: n, ipol
-  real(DP) :: tpi, tpiba
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
+  real(DP) :: tpiba
   complex(DP), allocatable :: gaux (:)
 
   allocate (gaux(  nrxx))    
@@ -220,6 +220,7 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
   !--------------------------------------------------------------------
   ! Calculates da = \sum_i \grad_i a_i in R-space
   USE kinds, only : DP
+  USE constants, ONLY : tpi
   implicit none
   integer :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, ngm, nl (ngm), &
         nlm(ngm)
@@ -227,8 +228,7 @@ subroutine grad_dot1 (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
 
   real(DP) :: g (3, ngm), alat
   integer :: n, ipol
-  real(DP) :: tpi, tpiba
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
+  real(DP) :: tpiba
   complex(DP), allocatable :: aux (:)
   complex(DP) :: fp, fm, aux1, aux2
 

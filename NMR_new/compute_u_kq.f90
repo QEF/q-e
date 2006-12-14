@@ -43,7 +43,6 @@ SUBROUTINE compute_u_kq(ik, q)
   integer, parameter :: max_cg_iter = 200
   integer, parameter :: isolve = 0
   integer, parameter :: david = 4
-  complex(dp) :: ZDOTC
 
   CALL start_clock( 'u_kq' )
   v_of_0 = SUM( vltot(1:nrxx) ) / DBLE( nr1 * nr2 * nr3 )

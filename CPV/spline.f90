@@ -178,13 +178,13 @@
         n = spl % n
 
         IF ( lep ) THEN
-          spl%y2(1) = -0.5
+          spl%y2(1) = -0.5d0
           dxp  = spl%x(2) - spl%x(1)
           dyp  = spl%y(2) - spl%y(1)
           ww(1) = ( 3.0d0 / dxp ) * ( dyp / dxp - y1l )
         ELSE
           spl%y2(1) = 0
-          ww(1) = 0.
+          ww(1) = 0.d0
         END IF
 
         DO i = 2, n - 1
@@ -205,7 +205,7 @@
         END DO
 
         IF ( rep ) THEN
-          qn = 0.5
+          qn = 0.5d0
           dxm = spl%x(n) - spl%x(n-1)
           dym = spl%y(n) - spl%y(n-1)
           un = ( 3.0d0 / dxm ) * ( y1r - dym / dxm )
@@ -214,7 +214,7 @@
           un = 0
         END IF
 
-        spl % y2(n) = ( un - qn * ww(n-1) ) / ( qn * spl%y2(n-1) + 1.0 )
+        spl % y2(n) = ( un - qn * ww(n-1) ) / ( qn * spl%y2(n-1) + 1.0d0 )
 
         DO k = n - 1, 1, -1
           spl % y2(k) = spl%y2(k) * spl%y2(k+1) + ww(k)
@@ -383,7 +383,7 @@
         y2lo = spl%y2(i)
         y2hi = spl%y2(i+1)
         splineh = a*ylo + b*yhi + ((a+1)*y2lo+(b+1)*y2hi)*t*spl%h26
-        y1 = (yhi-ylo)*invh + ((1.-3*a*a)*y2lo+(3*b*b-1.)*y2hi)*spl%h16
+        y1 = (yhi-ylo)*invh + ((1.d0-3*a*a)*y2lo+(3*b*b-1.d0)*y2hi)*spl%h16
 
       END FUNCTION splineh
 !-----------------------------------------------------------------------
@@ -401,11 +401,11 @@
         khi = spl%pos + 1
 
         h = spl%x(khi) - spl%x(klo)
-        IF (h==0.) CALL errore('spline','bad spl%x input',1)
+        IF (h==0.d0) CALL errore('spline','bad spl%x input',1)
         a = (spl%x(khi)-xx)/h
         b = 1 - a
-        spline_1 = (spl%y(khi)-spl%y(klo))/h + ((1.-3*a**2)*spl%y2(klo)+(3*b** &
-          2-1.)*spl%y2(khi))*h/6.
+        spline_1 = (spl%y(khi)-spl%y(klo))/h + ((1.d0-3*a**2)*spl%y2(klo)+(3*b** &
+          2-1.d0)*spl%y2(khi))*h/6.d0
 
         RETURN
       END FUNCTION spline_1
@@ -426,8 +426,8 @@
         a = 1 - b
         aa = a**2
         bb = b**2
-        stamm = 0.5*h*(bb*spl%y(p+1)-aa*spl%y(p)) + h**3/12.*(aa*(1-0.5*aa)* &
-          spl%y2(p)-bb*(1-0.5*bb)*spl%y2(p+1))
+        stamm = 0.5d0*h*(bb*spl%y(p+1)-aa*spl%y(p)) + h**3/12.d0*(aa*(1-0.5d0*aa)* &
+          spl%y2(p)-bb*(1-0.5d0*bb)*spl%y2(p+1))
 
         RETURN
       END FUNCTION stamm
@@ -473,7 +473,7 @@
         i1 = i1 + h*spl%y(pb)
         i2 = i2 + h**3*spl%y2(pb)
 
-        spline_int = vorz*(i1/2.-i2/24.+stamm(spl,pb,xb)-stamm(spl,pa,xa))
+        spline_int = vorz*(i1/2.-i2/24.d0+stamm(spl,pb,xb)-stamm(spl,pa,xa))
 
         RETURN
       END FUNCTION spline_int
@@ -558,7 +558,7 @@
         do i=2,n-1
           sig=0.5d0
           p=sig*y2(i-1)+2.d0
-          y2(i)=(sig-1.)/p
+          y2(i)=(sig-1.d0)/p
           u(i) = (6.0d0 * ( (y(i+1)-y(i))/ dx - (y(i)-y(i-1))/ dx ) &
                         / (2.0d0*dx) - sig * u(i-1) ) / p
         end do 
@@ -613,27 +613,27 @@
       REAL(DP) :: p, qn, sig, un
       REAL(DP) :: u( n )
       if ( yp1 .gt. 0.99d30 ) then
-        y2(1)=0.
-        u(1)=0.
+        y2(1)=0.d0
+        u(1)=0.d0
       else
-        y2(1)=-0.5
-        u(1)=(3./(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
+        y2(1)=-0.5d0
+        u(1)=(3.d0/(x(2)-x(1)))*((y(2)-y(1))/(x(2)-x(1))-yp1)
       endif
       do i=2,n-1
         sig=(x(i)-x(i-1))/(x(i+1)-x(i-1))
-        p=sig*y2(i-1)+2.
-        y2(i)=(sig-1.)/p
-        u(i)=(6.*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1)) / & 
+        p=sig*y2(i-1)+2.d0
+        y2(i)=(sig-1.d0)/p
+        u(i)=(6.d0*((y(i+1)-y(i))/(x(i+1)-x(i))-(y(i)-y(i-1)) / & 
              (x(i)-x(i-1))) / (x(i+1)-x(i-1))-sig*u(i-1))/p
       end do
       if ( ypn .gt. 0.99d30 ) then
-        qn=0.
-        un=0.
+        qn=0.d0
+        un=0.d0
       else
-        qn=0.5
-        un=(3./(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
+        qn=0.5d0
+        un=(3.d0/(x(n)-x(n-1)))*(ypn-(y(n)-y(n-1))/(x(n)-x(n-1)))
       endif
-      y2(n)=(un-qn*u(n-1))/(qn*y2(n-1)+1.)
+      y2(n)=(un-qn*u(n-1))/(qn*y2(n-1)+1.d0)
       do k=n-1,1,-1
         y2(k)=y2(k)*y2(k+1)+u(k)
       end do
@@ -663,7 +663,7 @@
       a=(xa(khi)-x)/h
       b=(x-xa(klo))/h
       y=a*ya(klo)+b*ya(khi)+((a**3-a)*y2a(klo)+(b**3-b)*y2a(khi))* &
-        (h**2)/6.
+        (h**2)/6.d0
       return
       END SUBROUTINE nr_splint
 

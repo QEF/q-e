@@ -28,7 +28,6 @@ SUBROUTINE biot_savart(jpol)
 
   !-- local variables ----------------------------------------------------
   COMPLEX(DP), allocatable :: aux(:), j_of_g(:,:)
-  REAL(DP) :: gk
   complex(dp) :: fact
   INTEGER :: ig, ipol, ispin
 

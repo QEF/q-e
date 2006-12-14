@@ -236,6 +236,7 @@ compute_qdipol_so.o : ../Modules/ions_base.o
 compute_qdipol_so.o : ../Modules/kind.o
 compute_qdipol_so.o : ../Modules/uspp.o
 compute_qdipol_so.o : pwcom.o
+compute_rho.o : ../Modules/constants.o
 compute_rho.o : ../Modules/io_global.o
 compute_rho.o : ../Modules/kind.o
 compute_scf.o : ../Modules/cell_base.o
@@ -272,6 +273,7 @@ data_structure.o : para.o
 data_structure.o : pwcom.o
 davcio.o : ../Modules/io_global.o
 davcio.o : ../Modules/kind.o
+deriv_drhoc.o : ../Modules/constants.o
 deriv_drhoc.o : ../Modules/kind.o
 diis_base.o : ../Modules/constants.o
 diis_base.o : ../Modules/control_flags.o
@@ -321,7 +323,9 @@ dprojdtau.o : pwcom.o
 dqvan2.o : ../Modules/kind.o
 dqvan2.o : ../Modules/uspp.o
 dqvan2.o : pwcom.o
+drhoc.o : ../Modules/constants.o
 drhoc.o : ../Modules/kind.o
+dvloc_of_g.o : ../Modules/constants.o
 dvloc_of_g.o : ../Modules/kind.o
 dynamics_module.o : ../Modules/basic_algebra_routines.o
 dynamics_module.o : ../Modules/cell_base.o
@@ -359,6 +363,7 @@ electrons.o : noncol.o
 electrons.o : pwcom.o
 electrons.o : realus.o
 eqvect.o : ../Modules/kind.o
+ewald.o : ../Modules/constants.o
 ewald.o : ../Modules/kind.o
 ewald_dipole.o : ../Modules/cell_base.o
 ewald_dipole.o : ../Modules/constants.o
@@ -390,6 +395,7 @@ force_corr.o : ../Modules/ions_base.o
 force_corr.o : ../Modules/kind.o
 force_corr.o : ../Modules/wavefunctions.o
 force_corr.o : pwcom.o
+force_ew.o : ../Modules/constants.o
 force_ew.o : ../Modules/kind.o
 force_hub.o : ../Modules/atom.o
 force_hub.o : ../Modules/cell_base.o
@@ -401,6 +407,7 @@ force_hub.o : ../Modules/uspp.o
 force_hub.o : ../Modules/wavefunctions.o
 force_hub.o : becmod.o
 force_hub.o : pwcom.o
+force_lc.o : ../Modules/constants.o
 force_lc.o : ../Modules/kind.o
 force_us.o : ../Modules/cell_base.o
 force_us.o : ../Modules/io_files.o
@@ -614,6 +621,7 @@ mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
 mix_rho.o : ../Modules/wavefunctions.o
 mix_rho.o : pwcom.o
+mode_group.o : ../Modules/constants.o
 mode_group.o : ../Modules/kind.o
 move_ions.o : ../Modules/basic_algebra_routines.o
 move_ions.o : ../Modules/bfgs_module.o
@@ -979,6 +987,7 @@ stres_cc.o : ../Modules/ions_base.o
 stres_cc.o : ../Modules/kind.o
 stres_cc.o : ../Modules/wavefunctions.o
 stres_cc.o : pwcom.o
+stres_ewa.o : ../Modules/constants.o
 stres_ewa.o : ../Modules/kind.o
 stres_gradcorr.o : ../Modules/functionals.o
 stres_gradcorr.o : ../Modules/kind.o
@@ -1024,6 +1033,7 @@ stress.o : ../Modules/io_global.o
 stress.o : ../Modules/ions_base.o
 stress.o : ../Modules/kind.o
 stress.o : pwcom.o
+struct_fact.o : ../Modules/constants.o
 struct_fact.o : ../Modules/kind.o
 sum_band.o : ../Modules/cell_base.o
 sum_band.o : ../Modules/control_flags.o
@@ -1124,11 +1134,14 @@ vhpsi_nc.o : ../Modules/atom.o
 vhpsi_nc.o : ../Modules/ions_base.o
 vhpsi_nc.o : ../Modules/kind.o
 vhpsi_nc.o : pwcom.o
+vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/wavefunctions.o
 vloc_psi.o : pwcom.o
+w0gauss.o : ../Modules/constants.o
 w0gauss.o : ../Modules/kind.o
+w1gauss.o : ../Modules/constants.o
 w1gauss.o : ../Modules/kind.o
 wfcinit.o : ../Modules/cell_base.o
 wfcinit.o : ../Modules/constants.o
@@ -1142,6 +1155,7 @@ wfcinit.o : ../Modules/wavefunctions.o
 wfcinit.o : becmod.o
 wfcinit.o : noncol.o
 wfcinit.o : pwcom.o
+wgauss.o : ../Modules/constants.o
 wgauss.o : ../Modules/kind.o
 write_ns.o : ../Modules/constants.o
 write_ns.o : ../Modules/io_global.o

@@ -85,9 +85,9 @@
       az=a3(3)
       !
       if (.not.coc_flag) then
-         XG0 = -ax/2.
-         YG0 = -ay/2.
-         ZG0 = -az/2.
+         XG0 = -ax/2.d0
+         YG0 = -ay/2.d0
+         ZG0 = -az/2.d0
       end if
       pass1=ax/nr1
       pass2=ax/nr2
@@ -152,7 +152,7 @@
          z0=dipole_vec(3)/ABS(qbac)
          rzero=x0**2+y0**2+z0**2
       ELSE
-         rzero=0.
+         rzero=0.d0
       END IF
       !
       ! ... (2) compute the quadrupole moment

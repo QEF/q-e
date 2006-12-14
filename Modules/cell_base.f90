@@ -775,9 +775,9 @@
       htmp = 0.0d0
     END IF
 
-    verl1 = 2. / ( 1. + ftmp )
-    verl2 = 1. - verl1
-    verl3 = dt2 / ( 1. + ftmp )
+    verl1 = 2.d0 / ( 1.d0 + ftmp )
+    verl2 = 1.d0 - verl1
+    verl3 = dt2 / ( 1.d0 + ftmp )
   
     DO j=1,3
       DO i=1,3
@@ -889,7 +889,7 @@
     ekinh = 0.0d0
     do j=1,3
        do i=1,3
-          ekinh = ekinh + 0.5*wmass*velh(i,j)*velh(i,j)
+          ekinh = ekinh + 0.5d0*wmass*velh(i,j)*velh(i,j)
           temphh(i,j) = wmass*velh(i,j)*velh(i,j)/k_boltzmann_au
        end do
     end do
@@ -955,7 +955,7 @@ CONTAINS
     implicit none
     REAL(DP), intent(inout) :: vnhh(3,3)
     REAL(DP), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
-    vnhh(:,:)=2.*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
+    vnhh(:,:)=2.d0*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
     return
   end subroutine cell_nosevel
 
@@ -967,7 +967,7 @@ CONTAINS
     integer :: i, j
     do j=1,3
       do i=1,3
-        xnhhp(i,j) = 2.*xnhh0(i,j)-xnhhm(i,j) + &
+        xnhhp(i,j) = 2.d0*xnhh0(i,j)-xnhhm(i,j) + &
              (delt**2/qnh)* k_boltzmann_au * (temphh(i,j)-temph)
         vnhh(i,j) =(xnhhp(i,j)-xnhhm(i,j))/( 2.0d0 * delt )
       end do
@@ -986,7 +986,7 @@ CONTAINS
     cell_nose_nrg = 0.0d0
     do i=1,3
       do j=1,3
-        enij = 0.5*qnh*vnhh(i,j)*vnhh(i,j)+temph*k_boltzmann_au*xnhh0(i,j)
+        enij = 0.5d0*qnh*vnhh(i,j)*vnhh(i,j)+temph*k_boltzmann_au*xnhh0(i,j)
         cell_nose_nrg = cell_nose_nrg + iforceh( i, j ) * enij
       enddo
     enddo

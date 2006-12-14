@@ -54,10 +54,8 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
    INTEGER :: igk1(npwx)
    INTEGER :: igk0(npwx)
    INTEGER :: ig
-   INTEGER :: ind1
    INTEGER :: info
    INTEGER :: is
-   INTEGER :: istring
    INTEGER :: iv
    INTEGER :: ivpt(nbnd)
    INTEGER :: j
@@ -65,24 +63,11 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
    INTEGER :: jkb_bp
    INTEGER :: jkb1
    INTEGER :: jv
-   INTEGER :: kindex
-   INTEGER :: kort
-   INTEGER :: kpar
-   INTEGER :: kpoint
-   INTEGER :: kstart
    INTEGER :: m
    INTEGER :: mb
    INTEGER :: mk1
    INTEGER :: mk2
    INTEGER :: mk3
-   INTEGER :: mod_elec_dw
-   INTEGER :: mod_elec_tot
-   INTEGER :: mod_elec_up
-   INTEGER :: mod_ion(nat)
-   INTEGER :: mod_ion_dw
-   INTEGER :: mod_ion_tot
-   INTEGER :: mod_ion_up
-   INTEGER :: mod_tot
    INTEGER :: n1
    INTEGER :: n2
    INTEGER :: n3
@@ -93,18 +78,15 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
    INTEGER :: nhjkbm
    INTEGER :: nkbtona(nkb)
    INTEGER :: nkbtonh(nkb)
-   INTEGER :: nkort
    INTEGER :: np
    INTEGER :: npw1
    INTEGER :: npw0
    INTEGER :: nstring
    INTEGER :: nt
    INTEGER :: ik_stringa!k-point index inside string
-   LOGICAL :: lodd
    REAL(dp) :: dk(3)
    REAL(dp) :: dkm(3)! -dk
    REAL(dp) :: dkmod
-   REAL(dp) :: el_loc
    REAL(dp) :: eps
    REAL(dp) :: fac
    REAL(dp) :: g2kin_bp(npwx)
@@ -113,43 +95,21 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
    REAL(dp) :: gvec
    REAL(dp) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
    REAL(dp) :: ln0(-nr1:nr1,-nr2:nr2,-nr3:nr3)!map g-space global to g-space k-point dependent
-   REAL(dp) :: pdl_elec_dw
-   REAL(dp) :: pdl_elec_tot
-   REAL(dp) :: pdl_elec_up
-   REAL(dp) :: pdl_ion(nat)
-   REAL(dp) :: pdl_ion_dw
-   REAL(dp) :: pdl_ion_tot
-   REAL(dp) :: pdl_ion_up
-   REAL(dp) :: pdl_tot
-   REAL(dp) :: phidw
-   REAL(dp) :: phiup
-   REAL(dp) :: rmod
    REAL(dp) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
-   REAL(dp) :: upol(3)
-   REAL(dp) :: weight
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
-   REAL(dp) :: zeta_mod
    COMPLEX(dp) :: aux(ngm)
    COMPLEX(dp) :: aux0(ngm)
-   COMPLEX(dp) :: aux1(ngm)
    COMPLEX(dp) :: becp0(nkb,nbnd)
    COMPLEX(dp) :: becp_bp(nkb,nbnd)
    COMPLEX(dp) :: becp1(nkb,nbnd) 
    COMPLEX(dp) :: cdet(2)
    COMPLEX(dp) :: cdwork(nbnd)
-   COMPLEX(dp) :: cave
-   COMPLEX(dp) :: cave_dw
-   COMPLEX(dp) :: cave_up
-   COMPLEX(dp) :: det
-   COMPLEX(dp) :: dtheta
    COMPLEX(dp) :: mat(nbnd,nbnd)
    COMPLEX(dp) :: pref
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(dp) :: q_dkp(nhm,nhm,ntyp)!to store the terms T^dagger e^(iGx) T
    COMPLEX(dp) :: struc(nat)
-   COMPLEX(dp) :: theta0
    COMPLEX(dp) :: zdotc
-   COMPLEX(dp) :: zeta
 
    
    COMPLEX(dp) :: fact
@@ -194,7 +154,7 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
 
  
  !  --- Define a small number ---
-   eps=0.000001
+   eps=0.000001d0
 
 !  --- Recalculate FFT correspondence (see ggen.f90) ---
    DO ng=1,ngm
@@ -238,11 +198,11 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
       gpar(:)=gpar(:)
       gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
    else
-      gpar(1)=0.
-      gpar(2)=0.
-      gpar(3)=0.
-      gpar(gdir)=1./at(gdir,gdir)
-      gvec=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
+      gpar(1)=0.d0
+      gpar(2)=0.d0
+      gpar(3)=0.d0
+      gpar(gdir)=1.d0/at(gdir,gdir)
+      gvec=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
    endif
       
       
@@ -253,11 +213,11 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
       dk(3)=xk(3,2)-xk(3,1)
       dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba
    else
-      dk(1)=0.
-      dk(2)=0.
-      dk(3)=0.
-      dk(gdir)=1./at(gdir,gdir)
-      dkmod=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
+      dk(1)=0.d0
+      dk(2)=0.d0
+      dk(3)=0.d0
+      dk(gdir)=1.d0/at(gdir,gdir)
+      dkmod=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
    endif
 
    dkm(:)=-dk(:)
@@ -275,8 +235,8 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
 
 
   
-   evcm=(0.,0.)
-   evcp=(0.,0.)
+   evcm=(0.d0,0.d0)
+   evcp=(0.d0,0.d0)
  
  
 

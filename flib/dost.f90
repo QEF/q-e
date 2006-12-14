@@ -48,14 +48,14 @@ subroutine dos_t (et, nspin, nbnd, nks, ntetra, tetra, e, dost)
            e3 = etetra (3)
            e4 = etetra (4)
            if (e.lt.e4.and.e.ge.e3) then
-              dost (ns) = dost (ns) + 1.d0 / ntetra * (3.0 * (e4 - e) **2 / &
+              dost (ns) = dost (ns) + 1.d0 / ntetra * (3.0d0 * (e4 - e) **2 / &
                    (e4 - e1) / (e4 - e2) / (e4 - e3) )
            elseif (e.lt.e3.and.e.ge.e2) then
               dost (ns) = dost (ns) + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) &
-                   * (3.0 * (e2 - e1) + 6.0 * (e-e2) - 3.0 * (e3 - e1 + e4 - e2) &
+                   * (3.0d0 * (e2 - e1) + 6.0d0 * (e-e2) - 3.0d0 * (e3 - e1 + e4 - e2) &
                    / (e3 - e2) / (e4 - e2) * (e-e2) **2)
            elseif (e.lt.e2.and.e.gt.e1) then
-              dost (ns) = dost (ns) + 1.d0 / ntetra * 3.0 * (e-e1) **2 / &
+              dost (ns) = dost (ns) + 1.d0 / ntetra * 3.0d0 * (e-e1) **2 / &
                    (e2 - e1) / (e3 - e1) / (e4 - e1)
            endif
         enddo

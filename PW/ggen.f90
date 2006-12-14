@@ -33,7 +33,7 @@ SUBROUTINE ggen()
   !
   !     here a few local variables
   !
-  REAL(DP) ::  t (3), tt, swap, dnorm
+  REAL(DP) ::  t (3), tt, swap
   REAL(DP), ALLOCATABLE ::  esort (:)
   !
   INTEGER :: ngmx, n1, n2, n3, n1s, n2s, n3s

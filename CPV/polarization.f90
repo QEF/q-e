@@ -138,9 +138,9 @@
         RB2=B2(1)*B2(1) + B2(2)*B2(2) + B2(3)*B2(3)
         RB3=B3(1)*B3(1) + B3(2)*B3(2) + B3(3)*B3(3)
 
-        RB1M1=1./SQRT(RB1)
-        RB2M1=1./SQRT(RB2)
-        RB3M1=1./SQRT(RB3)
+        RB1M1=1.d0/SQRT(RB1)
+        RB2M1=1.d0/SQRT(RB2)
+        RB3M1=1.d0/SQRT(RB3)
         COST1=FAC/omega/TPIBA*RB1M1
         COST2=FAC/omega/TPIBA*RB2M1
         COST3=FAC/omega/TPIBA*RB3M1

@@ -25,7 +25,7 @@ program pw2wannier90
   use wannier
   !
   implicit none
-  integer :: ik, i, kunittmp, ios
+  integer :: ios
   CHARACTER(LEN=4) :: spin_component
   CHARACTER(len=256) :: outdir
 
@@ -241,7 +241,7 @@ subroutine setup_nnkp
   !
   use io_global, only : stdout, ionode, ionode_id
   use kinds,     only : DP
-  use constants, only : eps6, tpi
+  use constants, only : eps6, tpi, bohr => BOHR_RADIUS_ANGS
   use cell_base, only : at, bg, alat
   use gvect,     only : g, gg
   use ions_base, only : nat, tau, ityp, atm
@@ -255,7 +255,6 @@ subroutine setup_nnkp
   integer  :: ik, ib, ig, iw, ia, indexb, type
   real(DP) :: xnorm, znorm, coseno
   integer  :: exclude_bands(nbnd)
-  real(DP) :: bohr
 
   ! aam: translations between PW2Wannier90 and Wannier90
   ! pw2wannier90   <==>   Wannier90
@@ -278,8 +277,6 @@ subroutine setup_nnkp
   !    exclude_bands       exclude_bands
   !    atcart              atoms_cart
   !    atsym               atom_symbols
-
-  bohr = 0.5291772108d0
 
   allocate( kpt_latt(3,iknum) )
   allocate( atcart(3,nat), atsym(nat) )
@@ -496,7 +493,7 @@ subroutine read_nnkp
   !
   USE io_global, ONLY : stdout, ionode, ionode_id
   use kinds,     only: DP
-  use constants, only : eps6, tpi
+  use constants, only : eps6, tpi, bohr => BOHR_RADIUS_ANGS
   use cell_base, only : at, bg, alat
   use gvect,     only : g, gg
   use io_files,  only : find_free_unit
@@ -510,7 +507,7 @@ subroutine read_nnkp
   real(DP) :: g_(3), gg_
   integer :: ik, ib, ig, ipol, iw, idum, indexb
   integer numk, i, j
-  real(DP) :: bohr, xx(3), xnorm, znorm, coseno
+  real(DP) :: xx(3), xnorm, znorm, coseno
   CHARACTER(LEN=80) :: line1, line2
   logical :: have_nnkp
 
@@ -532,7 +529,6 @@ subroutine read_nnkp
   !   check the information from *.nnkp with the nscf_save data
   write(stdout,*) ' Checking info from wannier.nnkp file' 
   write(stdout,*)
-  bohr = 0.5291772108d0
   
   if (ionode) then   ! read from ionode only
 
@@ -1639,10 +1635,10 @@ subroutine ylm_wannier(ylm,l,mr,r,nr)
          if (mr==5) ylm(ir) =-bs2*p_z(cost,phi)+bs2*dz2(cost,phi)
       end if
       if (l==-5) then  ! sp3d2 hybrids
-         if (mr==1) ylm(ir) = bs6*s(cost,phi)-bs2*px(cost,phi)-bs12*dz2(cost,phi)+.5*dx2my2(cost,phi)
-         if (mr==2) ylm(ir) = bs6*s(cost,phi)+bs2*px(cost,phi)-bs12*dz2(cost,phi)+.5*dx2my2(cost,phi)
-         if (mr==3) ylm(ir) = bs6*s(cost,phi)-bs2*py(cost,phi)-bs12*dz2(cost,phi)-.5*dx2my2(cost,phi)
-         if (mr==4) ylm(ir) = bs6*s(cost,phi)+bs2*py(cost,phi)-bs12*dz2(cost,phi)-.5*dx2my2(cost,phi)
+         if (mr==1) ylm(ir) = bs6*s(cost,phi)-bs2*px(cost,phi)-bs12*dz2(cost,phi)+.5d0*dx2my2(cost,phi)
+         if (mr==2) ylm(ir) = bs6*s(cost,phi)+bs2*px(cost,phi)-bs12*dz2(cost,phi)+.5d0*dx2my2(cost,phi)
+         if (mr==3) ylm(ir) = bs6*s(cost,phi)-bs2*py(cost,phi)-bs12*dz2(cost,phi)-.5d0*dx2my2(cost,phi)
+         if (mr==4) ylm(ir) = bs6*s(cost,phi)+bs2*py(cost,phi)-bs12*dz2(cost,phi)-.5d0*dx2my2(cost,phi)
          if (mr==5) ylm(ir) = bs6*s(cost,phi)-bs2*p_z(cost,phi)+bs3*dz2(cost,phi)
          if (mr==6) ylm(ir) = bs6*s(cost,phi)+bs2*p_z(cost,phi)+bs3*dz2(cost,phi)
       end if
@@ -1656,8 +1652,8 @@ end subroutine ylm_wannier
 !======== l = 0 =====================================================================
 function s(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) :: s, cost,phi
    s = 1.d0/ sqrt(fpi)
    return
@@ -1665,16 +1661,16 @@ end function s
 !======== l = 1 =====================================================================
 function p_z(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::p_z, cost,phi
    p_z =  sqrt(3.d0/fpi) * cost
    return
 end function p_z
 function px(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::px, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    px =  sqrt(3.d0/fpi) * sint * cos(phi)
@@ -1682,8 +1678,8 @@ function px(cost,phi)
 end function px
 function py(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::py, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    py =  sqrt(3.d0/fpi) * sint * sin(phi)
@@ -1692,16 +1688,16 @@ end function py
 !======== l = 2 =====================================================================
 function dz2(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::dz2, cost, phi
    dz2 =  sqrt(1.25d0/fpi) * (3.d0* cost*cost-1.d0)
    return
 end function dz2
 function dxz(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::dxz, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    dxz =  sqrt(15.d0/fpi) * sint*cost * cos(phi)
@@ -1709,8 +1705,8 @@ function dxz(cost,phi)
 end function dxz
 function dyz(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::dyz, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    dyz =  sqrt(15.d0/fpi) * sint*cost * sin(phi)
@@ -1718,8 +1714,8 @@ function dyz(cost,phi)
 end function dyz
 function dx2my2(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::dx2my2, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    dx2my2 =  sqrt(3.75d0/fpi) * sint*sint * cos(2.d0*phi)
@@ -1727,8 +1723,8 @@ function dx2my2(cost,phi)
 end function dx2my2
 function dxy(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : fpi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::dxy, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    dxy =  sqrt(3.75d0/fpi) * sint*sint * sin(2.d0*phi)
@@ -1737,16 +1733,16 @@ end function dxy
 !======== l = 3 =====================================================================
 function fz3(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : pi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::fz3, cost, phi
    fz3 =  0.25d0*sqrt(7.d0/pi) * ( 5.d0 * cost * cost - 3.d0 ) * cost
    return
 end function fz3
 function fxz2(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : pi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::fxz2, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    fxz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * cos(phi)
@@ -1754,8 +1750,8 @@ function fxz2(cost,phi)
 end function fxz2
 function fyz2(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : pi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::fyz2, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    fyz2 =  0.25d0*sqrt(10.5d0/pi) * ( 5.d0 * cost * cost - 1.d0 ) * sint * sin(phi)
@@ -1763,8 +1759,8 @@ function fyz2(cost,phi)
 end function fyz2
 function fzx2my2(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : pi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::fzx2my2, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    fzx2my2 =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * cos(2.d0*phi)
@@ -1772,8 +1768,8 @@ function fzx2my2(cost,phi)
 end function fzx2my2
 function fxyz(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : pi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::fxyz, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    fxyz =  0.25d0*sqrt(105d0/pi) * sint * sint * cost * sin(2.d0*phi)
@@ -1781,8 +1777,8 @@ function fxyz(cost,phi)
 end function fxyz
 function fxx2m3y2(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : pi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::fxx2m3y2, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    fxx2m3y2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * cos(3.d0*phi)
@@ -1790,8 +1786,8 @@ function fxx2m3y2(cost,phi)
 end function fxx2m3y2
 function fy3x2my2(cost,phi)
    use kinds, ONLY :  DP
+   use constants, ONLY : pi
    implicit none
-   real(DP), parameter :: pi=3.14159265358979d0, fpi =4.d0*pi
    real(DP) ::fy3x2my2, cost, phi, sint
    sint = sqrt(abs(1.d0 - cost*cost))
    fy3x2my2 =  0.25d0*sqrt(17.5d0/pi) * sint * sint * sint * sin(3.d0*phi)

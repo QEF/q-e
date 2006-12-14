@@ -42,7 +42,7 @@
 !
       allocate(v(nnr))
       allocate(w(nnr))
-      ci=(0.0,1.0)
+      ci=(0.0d0,1.0d0)
       do ir = 1,nnr
          do j = 1,3
             drho(j,ir) = 0.d0
@@ -55,8 +55,8 @@
       do iss=1,nspin
 
          do ig=1,nnr
-            v(ig)=(0.0,0.0)
-            w(ig)=(0.0,0.0)
+            v(ig)=(0.0d0,0.0d0)
+            w(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ng
             v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
@@ -72,8 +72,8 @@
          end do
 !
          do ig=1,nnr
-            v(ig)=(0.0,0.0)
-            w(ig)=(0.0,0.0)
+            v(ig)=(0.0d0,0.0d0)
+            w(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ng
             v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
@@ -95,7 +95,7 @@
          end do
 
          do ig=1,nnr
-            v(ig)=(0.0,0.0)
+            v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ng
             v(np(ig))= -1.d0*tpiba**2*gx(1,ig)*gx(2,ig)*rhog(ig,iss)
@@ -107,7 +107,7 @@
          end do
 !
          do ig=1,nnr
-            v(ig)=(0.0,0.0)
+            v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ng
             v(np(ig))= -1.d0*tpiba**2*(gx(1,ig)*gx(3,ig)*rhog(ig,iss) + &

@@ -29,7 +29,7 @@ subroutine trntns (phi, at, bg, iflg)
      enddo
      do i = 1, 3
         do j = 1, 3
-           phi (i, j) = 0.0
+           phi (i, j) = 0.0d0
            do k = 1, 3
               do l = 1, 3
                  phi (i, j) = phi (i, j) + wrk (k, l) * bg (i, k) * bg (j, l)
@@ -43,7 +43,7 @@ subroutine trntns (phi, at, bg, iflg)
      !
      do i = 1, 3
         do j = 1, 3
-           wrk (i, j) = 0.0
+           wrk (i, j) = 0.0d0
            do k = 1, 3
               do l = 1, 3
                  wrk (i, j) = wrk (i, j) + phi (k, l) * at (k, i) * at (l, j)

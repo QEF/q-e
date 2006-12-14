@@ -29,9 +29,8 @@ SUBROUTINE symmetrize_field(field, iflag)
   INTEGER :: iflag
 
   !-- local variables ----------------------------------------------------
-  complex(dp), allocatable :: aux(:)
   real(dp) :: tmp(3,3)
-  integer :: i, ipol, jpol
+  integer :: i
 
   ! if no symmetries, return
   if (nsym.eq.1) return

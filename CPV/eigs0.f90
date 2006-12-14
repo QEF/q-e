@@ -105,7 +105,7 @@
             !
             !     print out eigenvalues
             !
-            WRITE( stdout,12) 0., 0., 0.
+            WRITE( stdout,12) 0.d0, 0.d0, 0.d0
             WRITE( stdout,14) ( ei( i, iss ) * autoev, i = 1, nupdwn(iss) )
 
          ENDIF

@@ -38,8 +38,8 @@ subroutine berryion( tau0,fion, tfor,ipol,evalue,enbi)
   integer is, ia
   complex(8) temp, ci
 
-  temp = (0.,0.)
-  ci = (0.,1.)
+  temp = (0.d0,0.d0)
+  ci = (0.d0,1.d0)
 
   if(ipol.eq.1) then
      gmes=a1(1)**2+a1(2)**2+a1(3)**2
@@ -88,14 +88,14 @@ end subroutine berryion
       real(8) zmas
       integer is,i,ia,isa
 !
-      zmas=0.0
+      zmas=0.0d0
       do is=1,nsp
          zmas=zmas+na(is)*zv(is)
       end do
 !
       isa = 0
       do i=1,3
-         cdz(i)=0.0
+         cdz(i)=0.0d0
          do is=1,nsp
             do ia=1,na(is)
                isa = isa + 1

@@ -48,7 +48,7 @@ subroutine solve_e
  !
   if (precondition) then
      do i = 1,npw
-        diag(i) = 1.0/max(1.d0,g2kin(i))
+        diag(i) = 1.0d0/max(1.d0,g2kin(i))
      end do
      call zvscal(npw,npwx,nbnd,diag,evc,work)
      call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)

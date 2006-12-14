@@ -22,7 +22,7 @@ subroutine d_matrix (dy1, dy2, dy3)
   ! maxl = max value of l allowed
   ! maxm = number of m components for l=maxl
   ! maxlm= number of l,m spherical harmonics for l <= maxl
-  integer :: m, n, ipol, isym
+  integer :: m, n, isym
   real(DP) :: ylm(maxm, maxlm),  yl1 (3, 3), yl2(5, 5), yl3(7,7), &
        yl1_inv (3, 3), yl2_inv(5, 5),  yl3_inv(7, 7), ylms(maxm, maxlm), &
        rl(3,maxm), rrl (maxm), srl(3,maxm), scart (3, 3), delta(7,7), capel
@@ -32,9 +32,9 @@ subroutine d_matrix (dy1, dy2, dy3)
   !  randomly distributed points on a sphere
   !
   do m = 1, maxm
-     rl (1, m) = rndm () - 0.5
-     rl (2, m) = rndm () - 0.5
-     rl (3, m) = rndm () - 0.5
+     rl (1, m) = rndm () - 0.5d0
+     rl (2, m) = rndm () - 0.5d0
+     rl (3, m) = rndm () - 0.5d0
      rrl (m) = rl (1,m)**2 + rl (2,m)**2 + rl (3,m)**2
   enddo
   call ylmr2 ( maxlm, 2*maxl+1, rl, rrl, ylm )

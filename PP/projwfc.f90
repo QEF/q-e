@@ -127,9 +127,9 @@ PROGRAM projwfc
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   filproj= ' '
   filpdos= ' '
-  Emin   =-1000000. 
-  Emax   =+1000000. 
-  DeltaE = 0.01 
+  Emin   =-1000000.d0 
+  Emax   =+1000000.d0 
+  DeltaE = 0.01d0 
   ngauss = 0
   lsym   = .true.
   degauss= 0.d0
@@ -599,7 +599,7 @@ SUBROUTINE projwave( filproj, lsym )
            ! 
            DO nwfc = 1, natomwfc 
               proj1 (nwfc) = - proj1(nwfc) 
-              IF ( ABS (proj1(nwfc)) < 0.001 ) go to 20 
+              IF ( ABS (proj1(nwfc)) < 0.001d0 ) go to 20 
            END DO
            nwfc = natomwfc + 1 
 20         nwfc = nwfc -1 
@@ -625,7 +625,7 @@ SUBROUTINE projwave( filproj, lsym )
      ! estimate partial charges (Loewdin) on each atom 
      ! 
      ALLOCATE ( charges (nat, 0:lmax_wfc, nspin ) ) 
-     charges = 0.0 
+     charges = 0.0d0 
      DO ik = 1, nkstot 
         IF ( nspin == 1 ) THEN
            current_spin = 1
@@ -674,7 +674,7 @@ SUBROUTINE projwave( filproj, lsym )
           & ", s, p, d, f = ",4f8.4) 
      !
      psum = SUM(charges(:,:,:)) / nelec 
-     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum 
+     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum 
      ! 
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995). 
      ! The spilling parameter measures the ability of the basis provided by 
@@ -1143,7 +1143,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
            ! 
            DO nwfc = 1, natomwfc 
               proj1 (nwfc) = - proj1(nwfc) 
-              IF ( ABS (proj1(nwfc)) < 0.001 ) go to 20 
+              IF ( ABS (proj1(nwfc)) < 0.001d0 ) go to 20 
            END DO
            nwfc = natomwfc + 1 
 20         nwfc = nwfc -1 
@@ -1174,7 +1174,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
         nspin0 = 2
      END IF
      ALLOCATE ( charges (nat, 0:lmax_wfc, nspin0 ) ) 
-     charges = 0.0 
+     charges = 0.0d0 
      IF (lspinorb) THEN
         DO ik = 1, nkstot 
            DO ibnd = 1, nbnd 
@@ -1234,7 +1234,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
           & ", s, p, d, f = ",4f8.4) 
      !
      psum = SUM(charges(:,:,:)) / nelec 
-     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0 - psum 
+     WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum 
      ! 
      ! Sanchez-Portal et al., Sol. State Commun.  95, 685 (1995). 
      ! The spilling parameter measures the ability of the basis provided by 
@@ -1295,7 +1295,7 @@ SUBROUTINE  partialdos (Emin, Emax, DeltaE, filpdos)
   Emin = MAX (Emin/rytoev, Elw) 
   Emax = MIN (Emax/rytoev, Eup) 
   DeltaE = DeltaE/rytoev
-  ne = NINT ( (Emax - Emin) / DeltaE+0.500001)
+  ne = NINT ( (Emax - Emin) / DeltaE+0.500001d0)
   !
   ALLOCATE (pdos(0:ne,natomwfc,nspin))
   ALLOCATE (dostot(0:ne,nspin), pdostot(0:ne,nspin), ldos(0:ne,nspin) )
@@ -1475,7 +1475,7 @@ SUBROUTINE  partialdos_nc (Emin, Emax, DeltaE, filpdos)
   Emin = MAX (Emin/rytoev, Elw) 
   Emax = MIN (Emax/rytoev, Eup) 
   DeltaE = DeltaE/rytoev
-  ne = NINT ( (Emax - Emin) / DeltaE+0.500001)
+  ne = NINT ( (Emax - Emin) / DeltaE+0.500001d0)
   !
   IF (lspinorb) THEN
      nspin0 = 1

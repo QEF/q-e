@@ -121,7 +121,7 @@ program wf
      end do
   end do
   else
-  Uall=0.0
+  Uall=0.0d0
      do i=1,n
         Uall(i,i)=1.d0
      end do 
@@ -248,6 +248,7 @@ subroutine ddyn(m,Omat,Umat)
 
   use wanpar
 
+  use constants, only : tpi, autoaf => BOHR_RADIUS_ANGS
 !  implicit none
   integer :: f3(nw), f4(nw), i,j,inw
   integer ,intent(in) :: m
@@ -267,14 +268,12 @@ subroutine ddyn(m,Omat,Umat)
   complex(kind=8), allocatable, dimension(:, :) :: X1
   complex(kind=8), allocatable, dimension(:, :, :) :: Oc
   real(kind=8) , allocatable , dimension(:) :: mt
-  real(kind=8), parameter :: autoaf=0.529177d0
-  real(kind=8) :: spread, sp, pi2, oldspread
+  real(kind=8) :: spread, sp, oldspread
   real(kind=8) :: wfc(3,n), gr(nw,3)
 
   alpha=(1.d0,0.d0)
   beta1=(0.d0,0.d0)
   ci   =(0.d0,1.d0)
-  pi2  =2.d0*3.14159265358979d0
 
   allocate(mt(nw))
   allocate(X1(m,m))
@@ -307,12 +306,12 @@ subroutine ddyn(m,Omat,Umat)
         U2=beta1
         U3=beta1
 
- oldspread=0.0
+ oldspread=0.0d0
   write(24, *) "spread: (unit \AA^2)"
   do i=1, m
      mt=1.d0-DBLE(Oc(:,i,i)*conjg(Oc(:,i,i)))
-     sp= (alat*autoaf/pi2)**2*SUM(mt*weight)
-     write(24, '(f10.7)') (alat*autoaf/pi2)**2*SUM(mt*weight)
+     sp= (alat*autoaf/tpi)**2*SUM(mt*weight)
+     write(24, '(f10.7)') (alat*autoaf/tpi)**2*SUM(mt*weight)
      oldspread=oldspread+sp
   end do
 
@@ -346,7 +345,7 @@ subroutine ddyn(m,Omat,Umat)
 
         if(adapt) then 
           if(oldt0.lt.t0) then
-            fric=fric/2.
+            fric=fric/2.d0
             A=Aminus
             Aminus=temp
           end if
@@ -443,12 +442,12 @@ subroutine ddyn(m,Omat,Umat)
     oldt0=t0
 
    end do
-241  spread=0.0
+241  spread=0.0d0
   write(24, *) "spread: (unit \AA^2)"
   do i=1, m
      mt=1.d0-DBLE(Oc(:,i,i)*conjg(Oc(:,i,i)))
-     sp= (alat*autoaf/pi2)**2*SUM(mt*weight)
-     write(24, '(f10.7)') (alat*autoaf/pi2)**2*SUM(mt*weight)
+     sp= (alat*autoaf/tpi)**2*SUM(mt*weight)
+     write(24, '(f10.7)') (alat*autoaf/tpi)**2*SUM(mt*weight)
      spread=spread+sp
   end do
 
@@ -477,7 +476,7 @@ subroutine ddyn(m,Omat,Umat)
   end do
 !  write(24, *) "wannier function centers: (unit:\AA)"
   do i=1, m
-     mt=-aimag(log(Oc(:,i,i)))/pi2
+     mt=-aimag(log(Oc(:,i,i)))/tpi
      wfc(1, i)=SUM(mt*weight*gr(:,1))
      wfc(2, i)=SUM(mt*weight*gr(:,2))
      wfc(3, i)=SUM(mt*weight*gr(:,3))
@@ -528,7 +527,7 @@ subroutine ddyn(m,Omat,Umat)
   end subroutine ddyn
 
 !-----------------------------------------------------------------------
-      subroutine searchwf(m, Omat, Umat)
+  subroutine searchwf(m, Omat, Umat)
 !-----------------------------------------------------------------------
 !    (m,m) is the size of the matrix Ospin.
 !    Ospin is input overlap matrix.
@@ -536,21 +535,20 @@ subroutine ddyn(m,Omat,Umat)
 !             Rough guess for Uspin can be carried in.
 !
   use wanpar
-
+  use constants, only : tpi, autoaf => BOHR_RADIUS_ANGS
 !
 !
 !     conjugated gradient to search maximization
 !
   implicit none
 !
-  real(kind=8), parameter :: autoaf=0.529177d0
   integer, intent(in) :: m
   complex(kind=8), intent(in) :: Omat(nw, m, m)
   real(kind=8), intent(inout) :: Umat(m,m)
 !
   integer :: i, j, k, l, ig, ierr, ti, tj, tk, inw, ir, adjust
   integer :: f3(nw), f4(nw), istep
-  real(kind=8) :: slope, slope2, t1, t2, t3, pi2, mt(nw),t21,temp1,maxdt
+  real(kind=8) :: slope, slope2, t1, t2, t3, mt(nw),t21,temp1,maxdt
   real(kind=8) :: U(m,m), wfc(3, m), Wm(m,m), schd(m,m), f2(3*m-2), gr(nw, 3)
   real(kind=8) :: Uspin2(m,m),temp2,wfdtold,oldt1,t01, d3(m,m), d4(m,m), U1(m,m)
   real(kind=8), allocatable, dimension(:) :: wr
@@ -563,7 +561,6 @@ subroutine ddyn(m,Omat,Umat)
   ci=(0.d0,1.d0)
   alpha=(1.0d0, 0.0d0)
   beta1=(0.0d0, 0.0d0)
-  pi2=2.d0*3.14159265358979d0
 !
   allocate(W(m,m), wr(m))
 
@@ -822,7 +819,7 @@ subroutine ddyn(m,Omat,Umat)
   write(24, *) "spread: (unit \AA^2)"
   do i=1, m
      mt=1.d0-DBLE(Oc(:,i,i)*conjg(Oc(:,i,i)))
-     write(24, '(f10.7)') (alat*autoaf/pi2)**2*SUM(mt*weight)
+     write(24, '(f10.7)') (alat*autoaf/tpi)**2*SUM(mt*weight)
   end do
 
 !
@@ -844,7 +841,7 @@ subroutine ddyn(m,Omat,Umat)
   end do
 ! write(24, *) "wannier function centers: (unit:\AA)"
   do i=1, m
-     mt=-aimag(log(Oc(:,i,i)))/pi2
+     mt=-aimag(log(Oc(:,i,i)))/tpi
      wfc(1, i)=SUM(mt*weight*gr(:,1))
      wfc(2, i)=SUM(mt*weight*gr(:,2))
      wfc(3, i)=SUM(mt*weight*gr(:,3))

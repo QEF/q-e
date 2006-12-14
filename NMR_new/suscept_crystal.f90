@@ -303,7 +303,7 @@ SUBROUTINE suscept_crystal
         if (mult(ib,i) == 0) cycle
 
         do ibnd = 1, nbnd_occ(ik)
-          braket = real(ZDOTC(npw, ul(1,ibnd,comp_ia), 1, &
+          braket = REAL(ZDOTC(npw, ul(1,ibnd,comp_ia), 1, &
                                    ur(1,ibnd,comp_ib), 1), DP)
           qt(ia,ib) = qt(ia,ib) + wg(ibnd,ik) * &
                       braket * mult(ia,i) * mult(ib,i)
@@ -326,7 +326,7 @@ SUBROUTINE suscept_crystal
     implicit none
     real(dp), intent(inout) :: j(nrxxs,3,3)
     complex(dp), intent(in) :: ul(npwx,nbnd), ur(npwx,nbnd,3)
-    real(dp) :: braket, fact
+    real(dp) :: fact
     integer :: ibdir, icomp, ind(3,3), mult(3,3)
 
     ! index for the cross product
@@ -338,7 +338,7 @@ SUBROUTINE suscept_crystal
     do ibdir = 1, 3
       if (i == ibdir) cycle
       icomp = ind(ibdir, i)
-      fact = real(mult(ibdir,i)*isign)
+      fact = REAL(mult(ibdir,i)*ISIGN)
       call j_para(fact, ul(1,1), ur(1,1,icomp), ik, q, j(1,1,ibdir))
     enddo
   END SUBROUTINE add_to_current

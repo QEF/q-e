@@ -6,6 +6,7 @@ all_electron.o : ld1inc.o
 ascheq.o : ../Modules/kind.o
 ascheqlocps.o : ../Modules/kind.o
 ascheqps.o : ../Modules/kind.o
+atomic_paw.o : ../Modules/constants.o
 atomic_paw.o : ../Modules/functionals.o
 atomic_paw.o : ../Modules/kind.o
 atomic_paw.o : ../Modules/parameters.o
@@ -22,8 +23,11 @@ chargeps.o : ld1inc.o
 compute_chi.o : ../Modules/kind.o
 compute_chi.o : ld1inc.o
 compute_det.o : ../Modules/kind.o
+compute_phi.o : ../Modules/constants.o
 compute_phi.o : ../Modules/kind.o
 compute_phi.o : ld1inc.o
+compute_phipot.o : ../Modules/constants.o
+compute_phipot.o : ../Modules/kind.o
 compute_phipot.o : ld1inc.o
 compute_phius.o : ld1inc.o
 compute_solution.o : ../Modules/kind.o
@@ -46,10 +50,13 @@ dvex.o : ../Modules/kind.o
 dvex.o : ld1inc.o
 el_config.o : ../Modules/kind.o
 el_config.o : parameters.o
+elsd.o : ../Modules/constants.o
 elsd.o : ../Modules/functionals.o
 elsd.o : ../Modules/kind.o
 elsd.o : ld1inc.o
+elsdps.o : ../Modules/constants.o
 elsdps.o : ../Modules/functionals.o
+elsdps.o : ../Modules/kind.o
 elsdps.o : ld1inc.o
 esic.o : ld1inc.o
 exc_t.o : ../Modules/functionals.o
@@ -96,6 +103,7 @@ outward.o : ld1inc.o
 pseudovloc.o : ld1inc.o
 read_newpseudo.o : ../Modules/functionals.o
 read_newpseudo.o : ld1inc.o
+read_pseudo.o : ../Modules/constants.o
 read_pseudo.o : ../Modules/kind.o
 read_pseudoupf.o : ../Modules/functionals.o
 read_pseudoupf.o : ../Modules/pseudo_types.o
@@ -115,6 +123,7 @@ sic_correction.o : ../Modules/functionals.o
 sic_correction.o : ld1inc.o
 start_potps.o : ld1inc.o
 starting_potential.o : ../Modules/kind.o
+test_bessel.o : ../Modules/constants.o
 test_bessel.o : ../Modules/kind.o
 test_bessel.o : ld1inc.o
 trou.o : ../Modules/kind.o
@@ -124,11 +133,14 @@ vext.o : ../Modules/kind.o
 vpack.o : ../Modules/kind.o
 vxc_t.o : ../Modules/functionals.o
 vxc_t.o : ../Modules/kind.o
+vxcgc.o : ../Modules/constants.o
 vxcgc.o : ../Modules/functionals.o
 vxcgc.o : ../Modules/kind.o
+write_cpmd.o : ../Modules/constants.o
 write_cpmd.o : ../Modules/functionals.o
 write_cpmd.o : ../Modules/kind.o
 write_paw_recon.o : ld1inc.o
+write_pseudo.o : ../Modules/constants.o
 write_pseudo.o : ../Modules/kind.o
 write_results.o : ../Modules/functionals.o
 write_results.o : ld1inc.o

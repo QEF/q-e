@@ -110,7 +110,7 @@ subroutine convert_oldcp
   use oldcp
   use upf
   implicit none
-  real(8), parameter :: rmax = 10.0
+  real(8), parameter :: rmax = 10.0d0
   real(8), allocatable :: aux(:)
   real(8) :: vll
   character (len=20):: dft  
@@ -127,7 +127,7 @@ subroutine convert_oldcp
   else
      rel = 0
   end if
-  rcloc = 0.0
+  rcloc = 0.0d0
   nwfs  = nbeta_
   allocate( els(nwfs), oc(nwfs), epseu(nwfs))
   allocate(lchi(nwfs), nns(nwfs) )
@@ -137,17 +137,17 @@ subroutine convert_oldcp
      read (5,*) els(i), oc(i)
      nns (i)  = 0
      lchi(i)  = i-1
-     rcut(i)  = 0.0
-     rcutus(i)= 0.0
-     epseu(i) = 0.0
+     rcut(i)  = 0.0d0
+     rcutus(i)= 0.0d0
+     epseu(i) = 0.0d0
   end do
   psd   = atom_name (nint(z))
   pseudotype = 'NC'
   nlcc = .false.
   zp = nint(zv)
-  etotps =0.0
-  ecutrho=0.0
-  ecutwfc=0.0
+  etotps =0.0d0
+  ecutrho=0.0d0
+  ecutwfc=0.0d0
   lmax  = nbeta_ - 1
   nbeta = nbeta_
   mesh  = mesh_

@@ -45,12 +45,13 @@ subroutine slater_rxc (rs, ex, vx)
   !        Slater exchange with alpha=2/3 and Relativistic exchange
   !
   USE kinds
+  USE constants, ONLY : pi
   IMPLICIT none
   real (DP):: rs, ex, vx
   !
   real(DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
-       OPF=1.5D0, C014=0.014D0, pi = 3.14159265358979d0
-  real (DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
+       OPF=1.5D0, C014=0.014D0
+  real (DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, xp, &
        beta, sb, alb
   !
   TRD = ONE/3
@@ -66,16 +67,16 @@ subroutine slater_rxc (rs, ex, vx)
   FZP = ZERO
   
   VXP = -3*ALP/(2*PI*A0*RS)
-  EXP = 3*VXP/4
+  XP = 3*VXP/4
   BETA = C014/RS
   SB = SQRT(1+BETA*BETA)
   ALB = LOG(BETA+SB)
   VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
-  EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
+  XP = XP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
   !  VXF = 2**TRD*VXP
-  !  EXF = 2**TRD*EXP
+  !  EXF = 2**TRD*XP
   VX = VXP
-  EX = EXP
+  EX = XP
 END SUBROUTINE slater_rxc
 
 !
@@ -129,7 +130,7 @@ subroutine vwn (rs, ec, vc)
   implicit none
   real(DP) :: rs, ec, vc
   real(DP) :: a, b, c, x0
-  parameter (a = 0.0310907, b = 3.72744, c = 12.9352, x0 = -0.10498)
+  parameter (a = 0.0310907d0, b = 3.72744d0, c = 12.9352d0, x0 = -0.10498d0)
   real(DP) :: q, f1, f2, f3, rs12, fx, qx, tx, tt
   !
   q = sqrt (4.d0 * c - b * b)
@@ -273,7 +274,7 @@ subroutine gl (rs, ec, vc)
   implicit none
   real(DP) :: rs, vc, ec
   real(DP) :: c, r, x
-  parameter (c = 0.0333, r = 11.4)
+  parameter (c = 0.0333d0, r = 11.4d0)
   ! c=0.0203, r=15.9 for the paramagnetic case
   !
   x = rs / r
@@ -493,6 +494,7 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! iflag=2  "revised' PBE: Y. Zhang et al., PRL 80, 890 (1998)
   !
   USE kinds
+  USE constants, ONLY : pi, pi34
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
   ! input: charge and squared gradient
@@ -511,9 +513,9 @@ subroutine pbex (rho, grho, iflag, sx, v1x, v2x)
   ! exchange energy gradient part
   real(DP) :: dxunif, dfx, f1, f2, f3, dfx1
   ! numerical coefficients (NB: c2=(3 pi^2)^(1/3) )
-  real(DP) :: pi, third, c1, c2, c5
-  parameter (pi = 3.14159265358979d0, third = 1.d0 / 3.d0, c1 = &
-       0.75d0 / pi, c2 = 3.093667726280136d0, c5 = 4.d0 * third)
+  real(DP) :: third, c1, c2, c5
+  parameter (third = 1.d0 / 3.d0, c1 = pi34 , &
+       c2 = 3.093667726280136d0, c5 = 4.d0 * third)
   ! parameters of the functional
   real(DP) :: k (2), mu
   data k / 0.804d0, 1.2450D0 /, mu / 0.21951d0 /
@@ -602,11 +604,11 @@ subroutine hcth(rho,grho,sx,v1x,v2x)
   !     v2x : 1/gr*d(sx)/d(gr) (eq. 0.5 * dfdza = 0.5 * dfdzb in original)
   !--------------------------------------------------------------------------
   USE kinds
+  USE constants, ONLY: pi
   implicit none
   real(DP) :: rho, grho, sx, v1x, v2x
 
-  real(DP), parameter :: pi=3.141592653589793d0, o3=1.0d0/3.0d0,&
-       o34=4.0d0/3.0d0, fr83=8.d0/3.d0
+  real(DP), parameter :: o3=1.0d0/3.0d0, o34=4.0d0/3.0d0, fr83=8.d0/3.d0
   real(DP) :: cg0(6), cg1(6), caa(6), cab(6), cx(6)
   real(DP) :: r3q2, r3pi, gr, rho_o3, rho_o34, xa, xa2, ra, rab, &
        dra_drho, drab_drho, g, dg, era1, dera1_dra, erab0, derab0_drab, &
@@ -771,6 +773,7 @@ function dpz (rs, iflg)
   !  Perdew and Zunger parameterization of the Ceperley-Alder functional
   !
   use kinds, only: DP
+  USE constants, ONLY: pi, fpi
   !
   implicit none
   !
@@ -784,7 +787,6 @@ function dpz (rs, iflg)
   real(DP), parameter :: a = 0.0311d0, b = -0.048d0, c = 0.0020d0, &
        d = -0.0116d0, gc = -0.1423d0, b1 = 1.0529d0, b2 = 0.3334d0,&
        a1 = 7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0
-  real(DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0*pi
   real(DP) :: x, den, dmx, dmrs
   !
   !

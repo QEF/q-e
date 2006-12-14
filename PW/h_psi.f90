@@ -73,7 +73,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IMPLICIT NONE
        !
-       INTEGER :: ibnd, j
+       INTEGER :: ibnd
        !
        !
        CALL start_clock( 'init' )
@@ -131,7 +131,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IMPLICIT NONE
        !
-       INTEGER :: ibnd, j
+       INTEGER :: ibnd
        ! counters
        !
        !

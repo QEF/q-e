@@ -267,7 +267,7 @@ SUBROUTINE compute_gw
   xk_s(:,:) = xk(:,1:nkpt)
   !
   OPEN(65,file='k.dat')
-  WRITE(65,'(1x,3f10.6,1x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5, ik=1,nks )
+  WRITE(65,'(1x,3f10.6,1x,f10.6)')  ( xk_s(:,ik), wk(ik)*0.5d0, ik=1,nks )
   CLOSE(unit=65)
   IF (t_form) THEN
      WRITE (io,'(I12)') nkpt
@@ -288,7 +288,7 @@ SUBROUTINE compute_gw
   !
   n = nbnd
   ALLOCATE (eig(n,nkpt), eig_s(n,nkpt))
-  eig(:,:)   = et(:,1:nkpt)*0.5
+  eig(:,:)   = et(:,1:nkpt)*0.5d0
 !  eig_s(:,:) = et(:,1:nkpt)*0.5
   IF (t_form) THEN
      WRITE (io,'(I12)') n
@@ -320,7 +320,7 @@ SUBROUTINE compute_gw
 !  focc_s(:,:) = wg(:,1:nkpt)
   do j=1,n
    do ik=1,nkpt
-    focc(j,ik)=wg(j,ik)*2.0/wk(ik)
+    focc(j,ik)=wg(j,ik)*2.0d0/wk(ik)
     enddo
   enddo
   
@@ -410,7 +410,7 @@ SUBROUTINE compute_gw
   DO iband2 = 1,n
   delta=2.0d0-focc(iband2,ik)
   IF (delta.gt.1e-4) THEN
-                rhotwx = 0.0
+                rhotwx = 0.0d0
                 DO  ig=1,igwx
                     xkgk(1)= kpg(1,ig)
                     xkgk(2)= kpg(2,ig)
@@ -424,7 +424,7 @@ SUBROUTINE compute_gw
                 rrhotwx(2)=tpiba2* real(rhotwx(2)*conjg(rhotwx(2)))
                 rrhotwx(3)=tpiba2* real(rhotwx(3)*conjg(rhotwx(3)))
                 WRITE (90,'(1x,3i5,3e16.8,2f8.4)') ik,iband1,iband2,rrhotwx(1),rrhotwx(2), &
-                rrhotwx(3),(eig(iband2,ik)-eig(iband1,ik))*27.21, &
+                rrhotwx(3),(eig(iband2,ik)-eig(iband1,ik))*27.21d0, &
                        (focc(iband1,ik)-focc(iband2,ik))
            ENDIF 
        ENDDO

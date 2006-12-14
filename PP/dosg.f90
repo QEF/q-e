@@ -34,7 +34,7 @@ subroutine dos_g (et, nspin, nbnd, nks, wk, Degauss, ngauss, E, dosg)
      else
         nk0 = nks / 2 + 1
      endif
-     dosg (ns) = 0.0
+     dosg (ns) = 0.0d0
      do ik = nk0, nk0 + nk-1
         do n = 1, nbnd
            dosg (ns) = dosg (ns) + wk (ik) * w0gauss ( (E-et (n, ik) ) &

@@ -38,7 +38,7 @@ subroutine add_vuspsi_nc (lda, n, m, psi, hpsi )
   !
   !    here the local variables
   !
-  integer :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd,ispin,ipol
+  integer :: jkb, ikb, ih, jh, na, nt, ijkb0, ibnd
   ! counters
   complex(DP), allocatable :: ps (:,:,:)
   ! the product vkb and psi

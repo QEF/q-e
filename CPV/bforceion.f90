@@ -49,7 +49,7 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
       
   if(.not. tfor) return
 
-  ci = (0.,1.)
+  ci = (0.d0,1.d0)
      
 
   if(ipol.eq.1) then
@@ -76,10 +76,10 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
               inl=ish(is)+(iv-1)*na(is)+ia
               jnl=ish(is)+(jv-1)*na(is)+ia
              
-              temp=(0.,0.)
-              temp1=(0.,0.)
-              temp2=(0.,0.)
-              temp3=(0.,0.)
+              temp=(0.d0,0.d0)
+              temp1=(0.d0,0.d0)
+              temp2=(0.d0,0.d0)
+              temp3=(0.d0,0.d0)
               do i=1,n
                  do j=1,n
 
@@ -99,10 +99,10 @@ subroutine bforceion(fion,tfor,ipol,qmatinv,bec0,becdr,gqq,evalue)
                  enddo
               enddo
 
-              fion(ipol,isa) = fion(ipol,isa) -   2.*evalue*AIMAG(temp)/gmes
-              fion(1,isa) = fion(1,isa) -   2.*evalue*AIMAG(temp1)/gmes
-              fion(2,isa) = fion(2,isa) -   2.*evalue*AIMAG(temp2)/gmes
-              fion(3,isa) = fion(3,isa) -   2.*evalue*AIMAG(temp3)/gmes
+              fion(ipol,isa) = fion(ipol,isa) -   2.d0*evalue*AIMAG(temp)/gmes
+              fion(1,isa) = fion(1,isa) -   2.d0*evalue*AIMAG(temp1)/gmes
+              fion(2,isa) = fion(2,isa) -   2.d0*evalue*AIMAG(temp2)/gmes
+              fion(3,isa) = fion(3,isa) -   2.d0*evalue*AIMAG(temp3)/gmes
            end do
         end do
      end do

@@ -188,8 +188,7 @@ subroutine start_cp
   USE mp,                    ONLY : mp_end, mp_start, mp_env
   USE check_stop,            ONLY : check_stop_init
   !
-  INTEGER                        :: mpime, nproc, gid, ionode_id, &
-       restart_cyc_counter
+  INTEGER                        :: mpime, nproc, gid, ionode_id
   INTEGER,           PARAMETER   :: root = 0
   LOGICAL                        :: ionode
   !

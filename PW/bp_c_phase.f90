@@ -200,9 +200,7 @@ SUBROUTINE c_phase
    INTEGER :: mod_elec_tot
    INTEGER :: mod_elec_up
    INTEGER :: mod_ion(nat)
-   INTEGER :: mod_ion_dw
    INTEGER :: mod_ion_tot
-   INTEGER :: mod_ion_up
    INTEGER :: mod_tot
    INTEGER :: n1
    INTEGER :: n2
@@ -236,9 +234,7 @@ SUBROUTINE c_phase
    REAL(DP) :: pdl_elec_tot
    REAL(DP) :: pdl_elec_up
    REAL(DP) :: pdl_ion(nat)
-   REAL(DP) :: pdl_ion_dw
    REAL(DP) :: pdl_ion_tot
-   REAL(DP) :: pdl_ion_up
    REAL(DP) :: pdl_tot
    REAL(DP) , ALLOCATABLE :: phik(:)
    REAL(DP) :: phidw
@@ -283,7 +279,7 @@ SUBROUTINE c_phase
    WRITE( stdout,"(15X,50('-'),/)")
 
 !  --- Check that we are working with an insulator with no empty bands ---
-   IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
+   IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
                 'Polarization only for insulators and no empty bands',1)
 
 !  --- Define a small number ---

@@ -18,8 +18,8 @@ SUBROUTINE cubicspinsym(d_spin)
   ! 
   !    here the local parameters
   !
-  REAL(DP), parameter :: cost1=0.707106781186547, cost2=0.5d0, &
-                         mcost1=-0.707106781186547, mcost2=-0.5d0 
+  REAL(DP), parameter :: cost1=0.707106781186547d0, cost2=0.5d0, &
+                         mcost1=-0.707106781186547d0, mcost2=-0.5d0 
   !
   !   and the local variables
   !

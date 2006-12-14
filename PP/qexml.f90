@@ -29,7 +29,7 @@ MODULE qexml_module
   ! some default for kinds
   !
   INTEGER,   PARAMETER :: DP = SELECTED_REAL_KIND( 14, 200 )
-  REAL(DP),  PARAMETER :: e2 = 2.0_dbl
+  REAL(DP),  PARAMETER :: e2 = 2.0_dbld0
   !
   ! internal data to be set
   !

@@ -15,7 +15,6 @@ subroutine esic
   ! output
   ! local
   integer:: n, i
-  real(DP), parameter :: fourpi=4.0_DP*3.141592653589793_DP
   real(DP) :: int_0_inf_dr,vxup,vxdw,vcup,vcdw,ex,ec,deksic  
   real(DP) :: work1(ndm),v(ndm),vsic(ndm)
   real(DP) :: egc(ndm)

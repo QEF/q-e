@@ -13,6 +13,9 @@
 # in the root directory of the present distribution,
 # or http://www.gnu.org/copyleft/gpl.txt .
 #------------------------------------------------------------------------
+# make sure there is no locale setting creating unneeded differences.
+LC_ALL=C
+export LC_ALL
 
 #
 # pwi2xsf.sh: PW-input to XSF converison

@@ -958,7 +958,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
       fint(ir) = chi( ir, ic, is ) * 2.0d0 * ap%vrps( ir, il )
     end do
     call simpson_cp90( mesh(is), fint, rab(1,is), dion(il,il,is) )
-    dion(il,il,is) = 1.0/dion(il,il,is)
+    dion(il,il,is) = 1.0d0/dion(il,il,is)
   end do
   deallocate(fint)
   !
@@ -1296,12 +1296,12 @@ END SUBROUTINE read_atomic_cc
 !     bhs 's coefficients have been turned into lengths
 !     ------------------------------------------------------------------
       read(iunps,*) wrc1(is),rc1(is),wrc2(is),rc2(is)  
-      rc1(is)=1.0/sqrt(rc1(is))
-      rc2(is)=1.0/sqrt(rc2(is))
+      rc1(is)=1.0d0/sqrt(rc1(is))
+      rc2(is)=1.0d0/sqrt(rc2(is))
       do il=1,3
          do ib=1,3
             read(iunps,*) rcl(ib,is,il),al(ib,is,il),bl(ib,is,il)
-            rcl(ib,is,il)=1.0/sqrt(rcl(ib,is,il))
+            rcl(ib,is,il)=1.0d0/sqrt(rcl(ib,is,il))
          end do
       end do
 !
@@ -1347,7 +1347,7 @@ END SUBROUTINE read_atomic_cc
 ! NB: the following is NOT the local potential: the -ze^2/r term is missing
 !
       do ir=1,mesh(is)
-         vloc_at(ir,is)=0.
+         vloc_at(ir,is)=0.d0
          do i=1,3
             vloc_at(ir,is) = vloc_at(ir,is)                             &
      &            +(al(i,is,lloc(is))+bl(i,is,lloc(is))*r(ir,is)**2)    &
@@ -1362,7 +1362,7 @@ END SUBROUTINE read_atomic_cc
       allocate(fint(mesh(is)), vnl(mesh(is)))
       do il=1,nbeta(is)
          do ir=1,mesh(is)
-            vnl(ir)=0.
+            vnl(ir)=0.d0
             do i=1,3
                vnl(ir) = vnl(ir) + (al(i,is,il)+bl(i,is,il)*r(ir,is)**2)&
      &                    * exp(-(r(ir,is)/rcl(i,is,il))**2)
@@ -1372,7 +1372,7 @@ END SUBROUTINE read_atomic_cc
             betar(ir,il,is)=vnl(ir)*betar(ir,il,is)
          end do
          call simpson_cp90(mesh(is),fint,rab(1,is),dion(il,il,is))
-         dion(il,il,is) = 1.0/dion(il,il,is)
+         dion(il,il,is) = 1.0d0/dion(il,il,is)
       end do
       deallocate(vnl, fint)
 !     
@@ -1393,9 +1393,9 @@ END SUBROUTINE read_atomic_cc
       end do
       WRITE( stdout,3030) 
 3030  format(2x,'pseudopotential parameters:')
-      WRITE( stdout,3035) wrc1(is),1.0/rc1(is)**2
+      WRITE( stdout,3035) wrc1(is),1.0d0/rc1(is)**2
 3035  format(2x,'core:',2x,'c1_c=',f7.4,' alpha1_c=',f7.4)
-      WRITE( stdout,3036) wrc2(is),1.0/rc2(is)**2
+      WRITE( stdout,3036) wrc2(is),1.0d0/rc2(is)**2
 3036  format(2x,'     ',2x,'c2_c=',f7.4,' alpha2_c=',f7.4)
       WRITE( stdout,3038)
 3038  format(2x,'other table parameters:')
@@ -1403,7 +1403,7 @@ END SUBROUTINE read_atomic_cc
          WRITE( stdout,3040) il-1
 3040     format(2x,'l=',i3)
          do i =1,3
-            alpha=1.0/rcl(i,is,il)**2
+            alpha=1.0d0/rcl(i,is,il)**2
             WRITE( stdout,3050) i,alpha,i,al(i,is,il),i+3,bl(i,is,il)
          end do
       end do

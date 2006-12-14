@@ -74,23 +74,23 @@
             if (l == 0) then
                ixr = 1
                ixi = 2
-               signre =  1.0
-               signim =  1.0
+               signre =  1.0d0
+               signim =  1.0d0
             else if (l == 1) then
                ixr = 2
                ixi = 1
-               signre =  1.0
-               signim = -1.0
+               signre =  1.0d0
+               signim = -1.0d0
             else if (l == 2) then
                ixr = 1
                ixi = 2
-               signre = -1.0
-               signim = -1.0
+               signre = -1.0d0
+               signim = -1.0d0
             else if (l == 3) then
                ixr = 2
                ixi = 1
-               signre = -1.0
-               signim =  1.0
+               signre = -1.0d0
+               signim =  1.0d0
             endif
 !
             do ia=1,na(is)
@@ -220,23 +220,23 @@
                if (l.eq.0) then
                   ixr = 2
                   ixi = 1
-                  signre =  1.0
-                  signim = -1.0
+                  signre =  1.0d0
+                  signim = -1.0d0
                else if (l.eq.1) then
                   ixr = 1
                   ixi = 2
-                  signre = -1.0
-                  signim = -1.0
+                  signre = -1.0d0
+                  signim = -1.0d0
                else if (l.eq.2) then
                   ixr = 2
                   ixi = 1
-                  signre = -1.0
-                  signim =  1.0
+                  signre = -1.0d0
+                  signim =  1.0d0
                else if (l == 3) then
                   ixr = 1
                   ixi = 2
-                  signre =  1.0
-                  signim =  1.0
+                  signre =  1.0d0
+                  signim =  1.0d0
                endif
 !    
                do ia=1,na(is)
@@ -247,7 +247,7 @@
                   end if
                   !    q > 0   components (with weight 2.0)
                   do ig=gstart,ngw
-                     arg = 2.0*gk(ig)*beta(ig,iv,is)
+                     arg = 2.0d0*gk(ig)*beta(ig,iv,is)
                      wrk2(1,ig,ia) = signre*arg*eigr(ixr,ig,ia+isa)
                      wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
                   end do
@@ -524,23 +524,23 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
               if (l == 0) then
                  ixr = 1
                  ixi = 2
-                 signre =  1.0
-                 signim =  1.0
+                 signre =  1.0d0
+                 signim =  1.0d0
               else if (l == 1) then
                  ixr = 2
                  ixi = 1
-                 signre =  1.0
-                 signim = -1.0
+                 signre =  1.0d0
+                 signim = -1.0d0
               else if (l == 2) then
                  ixr = 1
                  ixi = 2
-                 signre = -1.0
-                 signim = -1.0
+                 signre = -1.0d0
+                 signim = -1.0d0
               else if (l == 3) then
                  ixr = 2
                  ixi = 1
-                 signre = -1.0
-                 signim =  1.0
+                 signre = -1.0d0
+                 signim =  1.0d0
               else
                  CALL errore(' caldbec  ', ' l not implemented ', ABS( l ) )
               endif
@@ -553,7 +553,7 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
                  end if
                  !     q > 0   components (with weight 2.0)
                  do ig = gstart, ngw
-                    arg = 2.0*dbeta(ig,iv,is,i,j)
+                    arg = 2.0d0*dbeta(ig,iv,is,i,j)
                     wrk2(1,ig,ia) = signre*arg*eigr(ixr,ig,ia+isa)
                     wrk2(2,ig,ia) = signim*arg*eigr(ixi,ig,ia+isa)
                  end do
@@ -732,7 +732,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
               end do
            end do
 
-           fion(k,isa)=fion(k,isa)-2.*SUM(tmpdr)
+           fion(k,isa)=fion(k,isa)-2.d0*SUM(tmpdr)
 
         end do
      end do

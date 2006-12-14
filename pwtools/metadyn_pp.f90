@@ -54,7 +54,7 @@ PROGRAM metadyn_PP
   !
   IMPLICIT NONE
   !
-  INTEGER, PARAMETER :: SP = KIND( 1.0 )
+  INTEGER, PARAMETER :: SP = KIND( 1.0d0 )
   !
   INTEGER, PARAMETER :: grid_points = 100
   INTEGER, PARAMETER :: num_lev = 20
@@ -135,9 +135,9 @@ PROGRAM metadyn_PP
      sigma(2) = sigma_tmp(1)
      !
      s(1,:)  = s_tmp(1,:)
-     s(2,:)  = 0.0
+     s(2,:)  = 0.0d0
      sg(1,:) = sg_tmp(1,:)
-     sg(2,:) = 0.0
+     sg(2,:) = 0.0d0
      !
   ELSE
      !
@@ -155,10 +155,10 @@ PROGRAM metadyn_PP
   DEALLOCATE( s_tmp )
   DEALLOCATE( sg_tmp )
   !
-  x_min = MIN( MINVAL( s(1,:nstep) ), MINVAL( sg(1,:nstep) ) ) - 3.0*sigma(1)
-  y_min = MIN( MINVAL( s(2,:nstep) ), MINVAL( sg(2,:nstep) ) ) - 3.0*sigma(2)
-  x_max = MAX( MAXVAL( s(1,:nstep) ), MAXVAL( sg(1,:nstep) ) ) + 3.0*sigma(1)
-  y_max = MAX( MAXVAL( s(2,:nstep) ), MAXVAL( sg(2,:nstep) ) ) + 3.0*sigma(2)
+  x_min = MIN( MINVAL( s(1,:nstep) ), MINVAL( sg(1,:nstep) ) ) - 3.0d0*sigma(1)
+  y_min = MIN( MINVAL( s(2,:nstep) ), MINVAL( sg(2,:nstep) ) ) - 3.0d0*sigma(2)
+  x_max = MAX( MAXVAL( s(1,:nstep) ), MAXVAL( sg(1,:nstep) ) ) + 3.0d0*sigma(1)
+  y_max = MAX( MAXVAL( s(2,:nstep) ), MAXVAL( sg(2,:nstep) ) ) + 3.0d0*sigma(2)
   !
   IF ( lsym ) THEN
      !
@@ -206,9 +206,9 @@ PROGRAM metadyn_PP
   !
   tr_array(1) = x_min - delta_x
   tr_array(2) = delta_x
-  tr_array(3) = 0.0
+  tr_array(3) = 0.0d0
   tr_array(4) = y_min - delta_y
-  tr_array(5) = 0.0
+  tr_array(5) = 0.0d0
   tr_array(6) = delta_y
   !
   DO i = 1, num_lev
@@ -355,12 +355,12 @@ PROGRAM metadyn_PP
       REAL(KIND=SP) :: exponent
       !
       !
-      sum_gaussians = 0.0
+      sum_gaussians = 0.0d0
       !
       DO i = 1, nstep
          !
-         exponent = ( x - sg(1,i) )**2 / ( 2.0*sigma(1)**2 ) + &
-                    ( y - sg(2,i) )**2 / ( 2.0*sigma(2)**2 )
+         exponent = ( x - sg(1,i) )**2 / ( 2.0d0*sigma(1)**2 ) + &
+                    ( y - sg(2,i) )**2 / ( 2.0d0*sigma(2)**2 )
          !
          sum_gaussians = sum_gaussians - amp*EXP( - exponent )
          !
@@ -370,8 +370,8 @@ PROGRAM metadyn_PP
          !
          DO i = 1, nstep
             !
-            exponent = ( x - sg(2,i) )**2 / ( 2.0*sigma(2)**2 ) + &
-                       ( y - sg(1,i) )**2 / ( 2.0*sigma(1)**2 )
+            exponent = ( x - sg(2,i) )**2 / ( 2.0d0*sigma(2)**2 ) + &
+                       ( y - sg(1,i) )**2 / ( 2.0d0*sigma(1)**2 )
             !
             sum_gaussians = sum_gaussians - amp*EXP( - exponent )
             !

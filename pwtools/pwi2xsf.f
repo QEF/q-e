@@ -39,7 +39,7 @@ c maximage: maximum number of images
      $     maxtyp  = 100,
      $     maxatom = 10000,
      $     maximage = 50,
-     $     bohr    = 0.529177d0,
+     $     bohr    = 0.5291772108d0,
      $
      $     ALAT_UNIT     = 1,
      $     BOHR_UNIT     = 2,

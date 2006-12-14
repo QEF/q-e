@@ -45,7 +45,7 @@ INTEGER :: &
 
 REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3), ars
 
-INTEGER :: nclass_ref, done(48), irot, jrot, krot, iclass, i
+INTEGER :: done(48), irot, jrot, krot, iclass, i
 INTEGER :: tipo_sym, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
 REAL(DP) :: angle_rot, angle_rot_s

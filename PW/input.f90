@@ -479,7 +479,7 @@ SUBROUTINE iosys()
           nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
           multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
           ALL(starting_magnetization == sm_not_set) ) THEN
-      CALL errore(iosys,'some starting_magnetization MUST be set', 1 )
+      CALL errore('iosys','some starting_magnetization MUST be set', 1 )
   END IF
   !
   DO ia = 1, ntyp
@@ -1564,8 +1564,8 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     gamma_only = .TRUE.
     lxkcry     = .FALSE.
     nks        = 1
-    xk_(:,1)   = 0.0
-    wk_(1)     = 1.0
+    xk_(:,1)   = 0.0d0
+    wk_(1)     = 1.0d0
     !
     nk1_ = 0
     nk2_ = 0

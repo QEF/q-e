@@ -14,6 +14,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !     Numerical recursive algorithm as given in Numerical Recipes
   !
   USE kinds
+  USE constants, ONLY : pi, fpi
   implicit none
   !
   ! Input
@@ -27,8 +28,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   !
   ! local variables
   !
-  real(DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0 * pi, &
-       eps = 1.0d-9
+  real(DP), parameter :: eps = 1.0d-9
   real(DP), allocatable :: cost (:), phi (:), P(:,:,:)
   real(DP) :: c, gmod
   integer :: lmax, ig, l, m, lm

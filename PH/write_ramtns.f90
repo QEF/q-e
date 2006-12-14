@@ -9,7 +9,7 @@
 subroutine write_ramtns (iudyn, ramtns)
   !-----------------------------------------------------------------------
   USE kinds, ONLY : DP
-  USE constants, ONLY : fpi
+  USE constants, ONLY : fpi, BOHR_RADIUS_ANGS
   USE cell_base, ONLY : omega
   USE ions_base, ONLY : nat
   !
@@ -20,7 +20,7 @@ subroutine write_ramtns (iudyn, ramtns)
   ! local variables
   integer :: na, ic, jc, kc
   ! counters
-  real (DP), parameter ::   convfact = 0.529177**2
+  real (DP), parameter ::   convfact = BOHR_RADIUS_ANGS**2
   ! conversion factor from au^2 to A^2
   !
   ! write raman tensor (D chi/d tau in A^2) to iudyn

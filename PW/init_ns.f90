@@ -27,7 +27,7 @@ subroutine init_ns
 
    real(DP) :: totoc
 
-   integer :: na, nt, is, m1, majs, mins, i
+   integer :: na, nt, is, m1, majs, mins
    logical :: nm        ! true if the atom is non magnetic
 
    ns(:,:,:,:) = 0.d0

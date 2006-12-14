@@ -148,9 +148,9 @@ SUBROUTINE d_matrix_so (dyj12, dyj32, dyj52, dyj72)
   !  randomly distributed points on a sphere
   !
   DO m = 1, maxm
-     rl (1, m) = rndm () - 0.5
-     rl (2, m) = rndm () - 0.5
-     rl (3, m) = rndm () - 0.5
+     rl (1, m) = rndm () - 0.5d0
+     rl (2, m) = rndm () - 0.5d0
+     rl (3, m) = rndm () - 0.5d0
      rrl (m) = rl (1,m)**2 + rl (2,m)**2 + rl (3,m)**2
   END DO
   CALL ylmr2 ( maxlm, 2*maxl+1, rl, rrl, ylm )

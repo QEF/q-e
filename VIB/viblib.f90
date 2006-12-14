@@ -145,27 +145,27 @@ SUBROUTINE calculate_dipole (dipole, dipole_moment,tau)
   ! ... local variables
   !
   REAL (KIND=DP)                :: quadrupole
-  INTEGER                       :: nfi=10 ! ... dummy value
   LOGICAL                       :: ion_flag = .TRUE., coc_flag=.TRUE.
 #ifdef DFT_PW
-   REAL(DP)                     :: tmp_rho(nrxx,nspin)
+  REAL(DP)                      :: tmp_rho(nrxx,nspin)
 #endif
 #ifdef DFT_CP
-   REAL(DP)                     :: tmp_rho(nnrx,nspin)
+  REAL(DP)                      :: tmp_rho(nnrx,nspin)
+  INTEGER                       :: nfi=10 ! ... dummy value
 #endif
   !
   !
   !
   ! ... initiating variables
-  dipole         = 0.0
-  dipole_moment  = 0.0
+  dipole         = 0.0d0
+  dipole_moment  = 0.0d0
   !
 #ifdef DFT_CP
   !
   ! ... CP charge density
   !
-  rhog           = 0.0
-  rhos           = 0.0
+  rhog           = 0.0d0
+  rhos           = 0.0d0
   !
   CALL rhoofr(nfi,c0(:,:),irb,eigrb,bec,becsum,rhor,rhog,rhos,enl,denl,ekin,dekin6)
 #endif
@@ -224,12 +224,12 @@ SUBROUTINE orthonormalize(M,dim1,dim2)
   REAL (KIND=DP)             :: t(dim2,dim2), z
   INTEGER                    :: i,j,k
   !
-  t=0.0
+  t=0.0d0
   !
   DO k=1,dim2
      !
      ! ... normalizing vector k
-     z=0.0
+     z=0.0d0
      DO  i=1,dim1
         z=z+M(i,k)**2
      END DO
@@ -240,7 +240,7 @@ SUBROUTINE orthonormalize(M,dim1,dim2)
      ! ... from the remaining vectors k+1...dim2
      !
      DO j=k+1,dim2
-        z=0.0
+        z=0.0d0
         DO i=1,dim1
            z=z+M(i,j)*M(i,k)
         END DO
@@ -351,7 +351,7 @@ SUBROUTINE relax_wavefunction (fion)
   !
   ! ... for smooth restart in the new coordinates
   ! 
-  fion = 0.0
+  fion = 0.0d0
   dt2bye = dt2 / emass
   fccc = 1.D0 / ( 1.D0 + frice )
   CALL initbox( tau0, taub, irb )
@@ -393,8 +393,8 @@ SUBROUTINE relax_wavefunction (fion)
 #endif
   !
 #ifdef DFT_PW
-  fion = 0.0
-  force = 0.0
+  fion = 0.0d0
+  force = 0.0d0
   !call hinit0 ()
   CALL hinit1 ()
   call electrons()
@@ -442,8 +442,10 @@ subroutine set_guess_wfc ( disp_sign )
   !
   ! ... local variables
   !
+#ifdef DFT_PW
   logical                       :: exst
   REAL(kind=DP)                 :: charge
+#endif
   !
   !
 #ifdef DFT_CP
@@ -532,7 +534,7 @@ SUBROUTINE cofmass( tau, mass, nat, com )
   INTEGER,  INTENT(IN)  :: nat
 
   REAL(DP) :: tmas
-  INTEGER :: is, i, ia
+  INTEGER :: i
   !
   tmas=SUM(mass(1:nat))
   !

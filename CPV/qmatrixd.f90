@@ -48,14 +48,14 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   integer :: ipiv(nx,nx),info
   complex(8) :: work(nx)
 
-  qmat(:,:)=(0.,0.)
+  qmat(:,:)=(0.d0,0.d0)
 
   do ix=1,n
      do jx=ix,n
 
 ! first the local part
 
-        sca=(0.,0.)
+        sca=(0.d0,0.d0)
         if(ispin(ix) == ispin(jx) ) then
        
            do ig=1,ngw
@@ -96,7 +96,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
        
        !  now the non local vanderbilt part
        
-       sca =(0.,0.)
+       sca =(0.d0,0.d0)
        if(ispin(ix)==ispin(jx)) then
           do is=1,nvb!loop on vanderbilt species
              do ia=1,na(is)!loop on atoms
@@ -118,7 +118,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
   !LAPACK
   call zgetrf (n,n,qmat,nx,ipiv,info)
   !  write(6,*) 'info trf', info
-  detq=(1.,0.)
+  detq=(1.d0,0.d0)
  
   do ix=1,n
      if(ix.ne.ipiv(ix,1)) detq=-detq
@@ -133,7 +133,7 @@ subroutine qmatrixd(c0, bec0,ctable, gqq, qmat, detq)
 
   do ix=1,n
      do jx=ix+1,n
-        qmat(jx,ix)=0.5*(qmat(ix,jx)+qmat(jx,ix))
+        qmat(jx,ix)=0.5d0*(qmat(ix,jx)+qmat(jx,ix))
         qmat(ix,jx)=qmat(jx,ix)
      enddo
   enddo

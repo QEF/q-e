@@ -17,6 +17,7 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   !
   !      
   use kinds, only : DP
+  use constants, only: pi
   use ld1inc
   implicit none
 
@@ -31,7 +32,6 @@ subroutine compute_phi(lam,ik,nwf0,ns,xc,iflag,iok,occ)
   real(DP) :: &
        xc(8), occ
   !
-  real(DP), parameter :: pi=3.14159265358979_DP
   real(DP) :: &
        fae,    & ! the value of the all-electron function
        f1ae,   & ! its first derivative

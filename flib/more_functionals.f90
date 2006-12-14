@@ -37,10 +37,10 @@
       DE1A=-E1*(1.D0/3.D0*D*RM3**4/DR+1./RA-1./RHO)
       DE1B=-E1*(1.D0/3.D0*D*RM3**4/DR+1./RB-1./RHO)
       DE2A=-2.D0**(11.D0/3.D0)*CF*A*B*(DOR*RA*RB*(RA**(8.d0/3.d0)+ &
-            RB**(8.d0/3.d0))+OR*RB*(11./3.*RA**(8.d0/3.d0)+ &
+            RB**(8.d0/3.d0))+OR*RB*(11.d0/3.d0*RA**(8.d0/3.d0)+ &
             RB**(8.d0/3.d0)))
       DE2B=-2.D0**(11.D0/3.D0)*CF*A*B*(DOR*RA*RB*(RA**(8.d0/3.d0)+ &
-      RB**(8.d0/3.d0))+OR*RA*(11./3.*RB**(8.d0/3.d0)+ &
+      RB**(8.d0/3.d0))+OR*RA*(11.d0/3.d0*RB**(8.d0/3.d0)+ &
       RA**(8.d0/3.d0)))
       VALYP=DE1A+DE2A
       VBLYP=DE1B+DE2B
@@ -123,27 +123,27 @@
       OR=EXP(-C*RM3)/DR*RM3**11.D0
       DOR=-1.D0/3.D0*RM3**4*OR*(11.D0/RM3-C-D/DR)
       DER=C*RM3+D*RM3/DR
-      DDER=1./3.*(D*D*RM3**5/DR/DR-DER/RHO)
-      DLAA=-A*B*OR*(RA*RB/9.*(1.-3*DER-(DER-11.)*RA/RHO)-RB*RB)
-      DLAB=-A*B*OR*(RA*RB/9.*(47.-7.*DER)-4./3.*RHO*RHO)
-      DLBB=-A*B*OR*(RA*RB/9.*(1.-3*DER-(DER-11.)*RB/RHO)-RA*RA)
-      DLAAA=DOR/OR*DLAA-A*B*OR*(RB/9.*(1.-3*DER-(DER-11.)*RA/RHO)- &
-            RA*RB/9.*((3.+RA/RHO)*DDER+(DER-11.)*RB/RHO/RHO))
-      DLAAB=DOR/OR*DLAA-A*B*OR*(RA/9.*(1.-3.*DER-(DER-11.)*RA/RHO)- &
-            RA*RB/9.*((3.+RA/RHO)*DDER-(DER-11.)*RA/RHO/RHO)-2.*RB)
-      DLABA=DOR/OR*DLAB-A*B*OR*(RB/9.*(47.-7.*DER)-7./9.*RA*RB*DDER- &
-            8./3.*RHO)
-      DLABB=DOR/OR*DLAB-A*B*OR*(RA/9.*(47.-7.*DER)-7./9.*RA*RB*DDER- &
-            8./3.*RHO)
-      DLBBA=DOR/OR*DLBB-A*B*OR*(RB/9.*(1.-3.*DER-(DER-11.)*RB/RHO)- &
-            RA*RB/9.*((3.+RB/RHO)*DDER-(DER-11.)*RB/RHO/RHO)-2.*RA)
-      DLBBB=DOR/OR*DLBB-A*B*OR*(RA/9.*(1.-3*DER-(DER-11.)*RB/RHO)- &
-            RA*RB/9.*((3.+RB/RHO)*DDER+(DER-11.)*RA/RHO/RHO))
+      DDER=1.d0/3.d0*(D*D*RM3**5/DR/DR-DER/RHO)
+      DLAA=-A*B*OR*(RA*RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RA/RHO)-RB*RB)
+      DLAB=-A*B*OR*(RA*RB/9.d0*(47.d0-7.d0*DER)-4.d0/3.d0*RHO*RHO)
+      DLBB=-A*B*OR*(RA*RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RB/RHO)-RA*RA)
+      DLAAA=DOR/OR*DLAA-A*B*OR*(RB/9.d0*(1.d0-3*DER-(DER-11.d0)*RA/RHO)- &
+            RA*RB/9.d0*((3.d0+RA/RHO)*DDER+(DER-11.d0)*RB/RHO/RHO))
+      DLAAB=DOR/OR*DLAA-A*B*OR*(RA/9.d0*(1.d0-3.d0*DER-(DER-11.d0)*RA/RHO)- &
+            RA*RB/9.d0*((3.d0+RA/RHO)*DDER-(DER-11.d0)*RA/RHO/RHO)-2.d0*RB)
+      DLABA=DOR/OR*DLAB-A*B*OR*(RB/9.d0*(47.d0-7.d0*DER)-7.d0/9.d0*RA*RB*DDER- &
+            8.d0/3.d0*RHO)
+      DLABB=DOR/OR*DLAB-A*B*OR*(RA/9.d0*(47.d0-7.d0*DER)-7.d0/9.d0*RA*RB*DDER- &
+            8.d0/3.d0*RHO)
+      DLBBA=DOR/OR*DLBB-A*B*OR*(RB/9.d0*(1.d0-3.d0*DER-(DER-11.d0)*RB/RHO)- &
+            RA*RB/9.d0*((3.d0+RB/RHO)*DDER-(DER-11.d0)*RB/RHO/RHO)-2.d0*RA)
+      DLBBB=DOR/OR*DLBB-A*B*OR*(RA/9.d0*(1.d0-3*DER-(DER-11.d0)*RB/RHO)- &
+            RA*RB/9.d0*((3.d0+RB/RHO)*DDER+(DER-11.d0)*RA/RHO/RHO))
       SC=DLAA*GRHOAA+DLAB*GRHOAB+DLBB*GRHOBB
       V1CA=DLAAA*GRHOAA+DLABA*GRHOAB+DLBBA*GRHOBB
       V1CB=DLAAB*GRHOAA+DLABB*GRHOAB+DLBBB*GRHOBB
-      V2CA=2.*DLAA
-      V2CB=2.*DLBB
+      V2CA=2.d0*DLAA
+      V2CB=2.d0*DLBB
       V2CAB=DLAB
 !     ==--------------------------------------------------------------==
       RETURN
@@ -166,80 +166,81 @@
 !     and spin-unpolarized blyp routine of olivier parisel and 
 !     alfredo pasquarello (02/1997)  
 !
-      use constants, only: pi, fpi
+      USE kinds, ONLY : DP
+      USE constants, ONLY: pi, fpi
 !
       implicit none
 ! input
       integer nspin, nnr
-      real(8) gradr(nnr,3,nspin), rhor(nnr,nspin)
+      real(DP) gradr(nnr,3,nspin), rhor(nnr,nspin)
 ! output
 ! on output: rhor contains the exchange-correlation potential
-      real(8)  exc
+      real(DP)  exc
 ! local
       integer isdw, isup, isign, ir
 !
-      real(8) abo, agdr, agdr2, agr, agr2, agur, agur2, arodw,     &
-     &      arodw2, aroe, aroe2, aroup, aroup2, ax
-      real(8) byagdr, byagr, byagur, cden, cf, cl1, cl11, cl2,     &
-     &      cl21, cl22, cl23, cl24, cl25, cl26, cl27, clyp, csum
-      real(8) dddn, dexcdg, dexcdgd, dexcdgu, df1d, df1u, df2d,    &
-     &     df2u, dfd, dfnum1d, dfnum1u, dfnum2d, dfnum2u, dfs, dfu,     &
-     &     dfxdd, dfxdg, dfxdgd, dfxdgu, dfxdu, dilta, dilta119, dl1dn, &
-     &     dl1dnd, dl1dnu, dl2dd, dl2dg, dl2dgd, dl2dgu, dl2dn,         &
-     &     dl2dnd, dl2dnd1, dl2dnu, dl2dnu1, dl2do, dlt, dodn,          &
-     &     disign, dwsign, dys, dysd, dysu
-      real(8) ex, excupdt, exd, exu, fac1, fac2, factor1, factor2, &
-     &     fx, fxd, fxden, fxdend, fxdenu, fxnum, fxnumd, fxnumu, fxu
-      real(8) gkf, gkfd, gkfu, grdx, grdy, grdz, grux, gruy, gruz, &
-     &     grx, gry, grz
-      real(8) omiga, pd, pi2, pider2, piexch, pu
-      real(8) rhodw, rhoup, roe, roedth, roeth, roeuth, rometh
-      real(8) s, s2, sd, sd2, sddw, sdup, su, su2, sysl, sysld, syslu
-      real(8) t113, upsign, usign
-      real(8) x1124, x113, x118, x13, x143, x19, x23, x43,         &
-     &     x4718, x53, x672, x718, x772, x83
-      real(8) ys, ysd, ysl, ysld, yslu, ysr, ysrd, ysru, ysu   
+      real(DP) abo, agdr, agdr2, agr, agr2, agur, agur2, arodw,     &
+           arodw2, aroe, aroe2, aroup, aroup2, ax
+      real(DP) byagdr, byagr, byagur, cden, cf, cl1, cl11, cl2,     &
+           cl21, cl22, cl23, cl24, cl25, cl26, cl27, clyp, csum
+      real(DP) dddn, dexcdg, dexcdgd, dexcdgu, df1d, df1u, df2d,    &
+          df2u, dfd, dfnum1d, dfnum1u, dfnum2d, dfnum2u, dfs, dfu,     &
+          dfxdd, dfxdg, dfxdgd, dfxdgu, dfxdu, dilta, dilta119, dl1dn, &
+          dl1dnd, dl1dnu, dl2dd, dl2dg, dl2dgd, dl2dgu, dl2dn,         &
+          dl2dnd, dl2dnd1, dl2dnu, dl2dnu1, dl2do, dlt, dodn,          &
+          disign, dwsign, dys, dysd, dysu
+      real(DP) ex, excupdt, exd, exu, fac1, fac2, factor1, factor2, &
+          fx, fxd, fxden, fxdend, fxdenu, fxnum, fxnumd, fxnumu, fxu
+      real(DP) gkf, gkfd, gkfu, grdx, grdy, grdz, grux, gruy, gruz, &
+          grx, gry, grz
+      real(DP) omiga, pd, pi2, pider2, piexch, pu
+      real(DP) rhodw, rhoup, roe, roedth, roeth, roeuth, rometh
+      real(DP) s, s2, sd, sd2, sddw, sdup, su, su2, sysl, sysld, syslu
+      real(DP) t113, upsign, usign
+      real(DP) x1124, x113, x118, x13, x143, x19, x23, x43,         &
+          x4718, x53, x672, x718, x772, x83
+      real(DP) ys, ysd, ysl, ysld, yslu, ysr, ysrd, ysru, ysu   
 !===========================================================================
-      real(8) bb1, bb2, bb5, aa, bb, cc, dd, delt, eps
-      parameter(bb1=0.19644797,bb2=0.2742931,bb5=7.79555418,            &
-     &     aa=0.04918,                                                  &
-     &     bb=0.132,cc=0.2533,dd=0.349,delt=1.0d-12,eps=1.0d-14)
+      real(DP) bb1, bb2, bb5, aa, bb, cc, dd, delt, eps
+      parameter(bb1=0.19644797d0,bb2=0.2742931d0,bb5=7.79555418d0,            &
+          aa=0.04918d0,                                                  &
+          bb=0.132d0,cc=0.2533d0,dd=0.349d0,delt=1.0d-12,eps=1.0d-14)
 !
 !
-      x13=1.0/3.0
-      x19=1.0/9.0
-      x23=2.0/3.0
-      x43=4.0/3.0
-      x53=5.0/3.0
-      x83=8.0/3.0
-      x113=11.0/3.0
-      x4718=47.0/18.0
-      x718=7.0/18.0
-      x118=1.0/18.0
-      x1124=11.0/24.0
-      x143=14.0/3.0
-      x772=7.0/72.0
-      x672=6.0/72.0
+      x13=1.0d0/3.0d0
+      x19=1.0d0/9.0d0
+      x23=2.0d0/3.0d0
+      x43=4.0d0/3.0d0
+      x53=5.0d0/3.0d0
+      x83=8.0d0/3.0d0
+      x113=11.0d0/3.0d0
+      x4718=47.0d0/18.0d0
+      x718=7.0d0/18.0d0
+      x118=1.0d0/18.0d0
+      x1124=11.0d0/24.0d0
+      x143=14.0d0/3.0d0
+      x772=7.0d0/72.0d0
+      x672=6.0d0/72.0d0
 !     
 !     _________________________________________________________________
 !     derived parameters from pi
 !
       pi2=pi*pi
-      ax=-0.75*(3.0/pi)**x13
-      piexch=-0.75/pi 
-      pider2=(3.0*pi2)**x13
-      cf=0.3*pider2*pider2
+      ax=-0.75d0*(3.0d0/pi)**x13
+      piexch=-0.75d0/pi 
+      pider2=(3.0d0*pi2)**x13
+      cf=0.3d0*pider2*pider2
 !     _________________________________________________________________
 !     other parameters
 !
-      t113=2.0**x113
+      t113=2.0d0**x113
 !
-      rhodw=0.0
-      grdx=0.0
-      grdy=0.0
-      grdz=0.0
+      rhodw=0.0d0
+      grdx=0.0d0
+      grdy=0.0d0
+      grdz=0.0d0
 !
-      fac1=1.0
+      fac1=1.0d0
 !     _________________________________________________________________
 !     main loop
 !
@@ -256,10 +257,10 @@
             grdy=gradr(ir,2,isdw)
             grdz=gradr(ir,3,isdw)
          else
-            rhodw=0.0
-            grdx =0.0
-            grdy =0.0
-            grdz =0.0
+            rhodw=0.0d0
+            grdx =0.0d0
+            grdy =0.0d0
+            grdz =0.0d0
          endif
          roe=rhoup+rhodw
          if(roe.eq.0.0) goto 100
@@ -276,9 +277,9 @@
          agr2=grx*grx+gry*gry+grz*grz
          agr=sqrt(agr2)
          roeth=aroe**x13
-         rometh=1.0/roeth
+         rometh=1.0d0/roeth
          gkf=pider2*roeth
-         sd=1.0/(2.0*gkf*aroe)
+         sd=1.0d0/(2.0d0*gkf*aroe)
          s=agr*sd
          s2=s*s
 !     _________________________________________________________________
@@ -287,21 +288,21 @@
          if(nspin.eq.1) then
 !
 !
-            ysr=sqrt(1.0+bb5*bb5*s2)
+            ysr=sqrt(1.0d0+bb5*bb5*s2)
             ys=bb5*s+ysr
             ysl=log(ys)*bb1
             sysl=s*ysl
-            fxnum=1.0+sysl+bb2*s2
-            fxden=1.0/(1.0+sysl)
+            fxnum=1.0d0+sysl+bb2*s2
+            fxden=1.0d0/(1.0d0+sysl)
             fx=fxnum*fxden
 !
             ex=ax*fx*roeth*aroe
 !
 !     ### potential contribution ###
 !
-            dys=bb5*(1.0+bb5*s/ysr)/ys
+            dys=bb5*(1.0d0+bb5*s/ysr)/ys
             dfs=-fxnum*(ysl+bb1*s*dys)*fxden*fxden                      &
-     &           +(ysl+bb1*s*dys+2.0*s*bb2)*fxden
+     &           +(ysl+bb1*s*dys+2.0d0*s*bb2)*fxden
             dfxdu=(ax*roeth*x43)*(fx-dfs*s)
             dfxdg=ax*roeth*dfs*sd
 !
@@ -309,63 +310,63 @@
 !     
          else
 !
-            roeuth=(2.0*aroup)**x13
-            roedth=(2.0*arodw)**x13
+            roeuth=(2.0d0*aroup)**x13
+            roedth=(2.0d0*arodw)**x13
             gkfu=pider2*roeuth*aroup
             gkfd=pider2*roedth*arodw
             upsign=sign(1.d0,gkfu-eps)
             dwsign=sign(1.d0,gkfd-eps)
-            factor1=0.5*(1+upsign)/(gkfu+(1-upsign)*eps)
+            factor1=0.5d0*(1+upsign)/(gkfu+(1-upsign)*eps)
             fac1=gkfu*factor1
-            factor2=0.5*(1+dwsign)/(gkfd+(1-dwsign)*eps)
+            factor2=0.5d0*(1+dwsign)/(gkfd+(1-dwsign)*eps)
             fac2=gkfd*factor2
-            sdup=1.0/2.0*factor1
-            sddw=1.0/2.0*factor2
+            sdup=1.0d0/2.0d0*factor1
+            sddw=1.0d0/2.0d0*factor2
             su=agur*sdup
             su2=su*su
             sd=agdr*sddw
             sd2=sd*sd
 !
-            ysru=sqrt(1.0+bb5*bb5*su2)
+            ysru=sqrt(1.0d0+bb5*bb5*su2)
             ysu=bb5*su+ysru
             yslu=log(ysu)*bb1
             syslu=su*yslu
-            fxnumu=1.0+syslu+bb2*su2
-            fxdenu=1.0/(1.0+syslu)
+            fxnumu=1.0d0+syslu+bb2*su2
+            fxdenu=1.0d0/(1.0d0+syslu)
             fxu=fxnumu*fxdenu
-            exu=piexch*2.0*gkfu*fxu*fac1
+            exu=piexch*2.0d0*gkfu*fxu*fac1
 !
-            ysrd=sqrt(1.0+bb5*bb5*sd2)
+            ysrd=sqrt(1.0d0+bb5*bb5*sd2)
             ysd=bb5*sd+ysrd
             ysld=log(ysd)*bb1
             sysld=sd*ysld
-            fxnumd=1.0+sysld+bb2*sd2
-            fxdend=1.0/(1.0+sysld)
+            fxnumd=1.0d0+sysld+bb2*sd2
+            fxdend=1.0d0/(1.0d0+sysld)
             fxd=fxnumd*fxdend
-            exd=piexch*2.0*gkfd*fxd*fac2
+            exd=piexch*2.0d0*gkfd*fxd*fac2
 !
-            ex=0.5*(exu+exd)
+            ex=0.5d0*(exu+exd)
 !
 !     ### potential contribution ###
 !
-            dysu=bb5*(1.0+bb5*su/ysru)/ysu
-            pu=2.0*su*bb2
+            dysu=bb5*(1.0d0+bb5*su/ysru)/ysu
+            pu=2.0d0*su*bb2
             dfnum1u=yslu+bb1*su*dysu+pu
             df1u=dfnum1u*fxdenu
             dfnum2u=fxnumu*(yslu+bb1*su*dysu)
             df2u=dfnum2u*fxdenu*fxdenu
             dfu=df1u-df2u
-            dfxdu=ax*roeuth*x43*1.0*(fxu-dfu*su)*fac1
+            dfxdu=ax*roeuth*x43*1.0d0*(fxu-dfu*su)*fac1
             dfxdgu=ax*aroup*roeuth*dfu*sdup*fac1
 !
-            dysd=bb5*(1.0+bb5*sd/ysrd)/ysd
-            pd=2.0*sd*bb2
+            dysd=bb5*(1.0d0+bb5*sd/ysrd)/ysd
+            pd=2.0d0*sd*bb2
             dfnum1d=ysld+bb1*sd*dysd+pd
             df1d=dfnum1d*fxdend
             dfnum2d=fxnumd*(ysld+bb1*sd*dysd)
             df2d=dfnum2d*fxdend*fxdend
             dfd=df1d-df2d
-            dfxdd=ax*roedth*x43*1.0*(fxd-dfd*sd)*fac2
+            dfxdd=ax*roedth*x43*1.0d0*(fxd-dfd*sd)*fac2
             dfxdgd=ax*arodw*roedth*dfd*sddw*fac2
 !     
 !     ### end of potential contribution ###
@@ -374,7 +375,7 @@
 !     _________________________________________________________________
 !     correlation lyp(aroe,aroup,arodw,agr,agur,agdr)
 !
-         cden=1.0+dd*rometh
+         cden=1.0d0+dd*rometh
          cl1=-aa/cden
 !
          omiga=exp(-cc*rometh)/cden/aroe**x113
@@ -382,26 +383,26 @@
          aroe2=aroe*aroe
          abo=aa*bb*omiga
 !
-         dodn=x13*omiga/aroe*(dilta-11.0)
+         dodn=x13*omiga/aroe*(dilta-11.0d0)
          dddn=x13*(dd*dd*aroe**(-x53)/cden/cden-dilta/aroe)
 !
          if(nspin.eq.1) then
 !
             cl1=cl1*aroe
 !
-            cl21=4.0*cf*aroe**x83
+            cl21=4.0d0*cf*aroe**x83
             cl22=(x4718-x718*dilta)*agr2
-            cl23=(2.5-x118*dilta)*agr2/2.0
-            cl24=(dilta-11.0)/9.0*agr2/4.0
+            cl23=(2.5d0-x118*dilta)*agr2/2.0d0
+            cl24=(dilta-11.0d0)/9.0d0*agr2/4.0d0
             cl25=x1124*agr2
 !
-            cl2=-abo*aroe2*(0.25*(cl21+cl22-cl23-cl24)-cl25)
+            cl2=-abo*aroe2*(0.25d0*(cl21+cl22-cl23-cl24)-cl25)
 !
 !     ### potential contribution ###
 !
             dl1dnu=-aa*(1/cden+x13*dd*rometh/cden/cden)
 !
-            dlt=x672+2.0*x772*dilta
+            dlt=x672+2.0d0*x772*dilta
             dl2dn=-abo*aroe*(cf*x143*aroe**x83-dlt*agr2)
             dl2do=cl2/omiga
             dl2dd=abo*aroe2*x772*agr2
@@ -413,7 +414,7 @@
 !
          else
 !
-            cl11=cl1*4.0/aroe
+            cl11=cl1*4.0d0/aroe
             cl1=cl11*aroup*arodw
 !
             aroup2=aroup*aroup
@@ -421,8 +422,8 @@
 !
             cl21=t113*cf*(aroup**x83+arodw**x83)
             cl22=(x4718-x718*dilta)*agr2
-            cl23=(2.5-x118*dilta)*(agur2+agdr2)
-            dilta119=(dilta-11.0)/9.0
+            cl23=(2.5d0-x118*dilta)*(agur2+agdr2)
+            dilta119=(dilta-11.0d0)/9.0d0
             cl24=dilta119/aroe*(aroup*agur2+arodw*agdr2)
             cl25=x23*aroe2*agr2
             cl26=(x23*aroe2-aroup2)*agdr2
@@ -435,18 +436,18 @@
 !
 !     *** cl1 has changed its form! ***
 !
-            dl1dn=cl1/aroe*(x13*dd/cden*rometh-1.0)
+            dl1dn=cl1/aroe*(x13*dd/cden*rometh-1.0d0)
             dl1dnu=dl1dn+cl11*arodw
             dl1dnd=dl1dn+cl11*aroup
 !     
             dl2dnu1=arodw*csum+                                         &
      &           arodw*aroup*(t113*cf*x83*aroup**x53-                   &
      &           dilta119*arodw/aroe2*(agur2-agdr2))-x43*aroe*agr2+     &
-     &           x23*agdr2*(2.0*arodw-aroup)+x43*aroe*agur2
+     &           x23*agdr2*(2.0d0*arodw-aroup)+x43*aroe*agur2
             dl2dnd1=aroup*csum+                                         &
      &           aroup*arodw*(t113*cf*x83*arodw**x53+                   &
      &           dilta119*aroup/aroe2*(agur2-agdr2))-x43*aroe*agr2+     &
-     &           x23*agur2*(2.0*aroup-arodw)+x43*aroe*agdr2
+     &           x23*agur2*(2.0d0*aroup-arodw)+x43*aroe*agdr2
 !
             dl2do=cl2/omiga
             dl2dd=-abo*aroup*arodw*                                     &
@@ -457,12 +458,12 @@
             dl2dnd=-abo*dl2dnd1+dl2do*dodn+dl2dd*dddn
 !
             dl2dg=-abo*                                                 &
-     &           (aroup*arodw*2.0*(x4718-x718*dilta)*agr-               &
+     &           (aroup*arodw*2.0d0*(x4718-x718*dilta)*agr-               &
      &           x43*aroe2*agr) 
-            dl2dgu=-2.0*abo*agur*((x118*dilta-2.5-                      &
+            dl2dgu=-2.0d0*abo*agur*((x118*dilta-2.5d0-                      &
      &           dilta119*aroup/aroe)*aroup*arodw                       &
      &           +x23*aroe2-arodw2)
-            dl2dgd=-2.0*abo*agdr*((x118*dilta-2.5-                      &
+            dl2dgd=-2.0d0*abo*agdr*((x118*dilta-2.5d0-                      &
      &           dilta119*arodw/aroe)*aroup*arodw                       &
      &           +x23*aroe2-aroup2)
 !
@@ -482,7 +483,7 @@
 !
          rhor(ir,isup)=dfxdu+(dl1dnu+dl2dnu)*fac1
          isign=sign(1.d0,agr-delt)
-         byagr=0.5*(1+isign)/(agr+(1-isign)*delt)
+         byagr=0.5d0*(1+isign)/(agr+(1-isign)*delt)
 !
          if(nspin.eq.1) then
 !
@@ -497,8 +498,8 @@
 !
             usign =sign(1.d0,agur-delt)
             disign=sign(1.d0,agdr-delt)
-            byagur=0.5*(1+ usign)/(agur+(1- usign)*delt)
-            byagdr=0.5*(1+disign)/(agdr+(1-disign)*delt)
+            byagur=0.5d0*(1+ usign)/(agur+(1- usign)*delt)
+            byagdr=0.5d0*(1+disign)/(agdr+(1-disign)*delt)
 !
             dexcdgu=(dfxdgu+dl2dgu)*byagur
             dexcdgd=(dfxdgd+dl2dgd)*byagdr
@@ -525,24 +526,25 @@
 !     Perdew-Burke-Ernzerhof gga
 !     Perdew, et al. PRL 77, 3865, 1996
 !
+      USE kinds, ONLY: DP
       use constants, only: pi, fpi
 !
       implicit none
 ! input
       integer nspin, nnr
-      real(8)  gradr(nnr,3,nspin), rhor(nnr,nspin)
+      real(DP)  gradr(nnr,3,nspin), rhor(nnr,nspin)
 ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
 ! output: rhor:   contains the exchange-correlation potential
-      real(8)  excrho
+      real(DP)  excrho
 ! local
       integer ir, icar, iss, isup, isdw, nspinx
-      real(8) lim1, lim2
+      real(DP) lim1, lim2
       parameter ( lim1=1.d-8, lim2=1.d-8, nspinx=2 )
-      real(8) zet, arho(nspinx), grad(3,nspinx), agrad(nspinx),    &
-     &     arhotot, gradtot(3), agradtot,                               &
-     &     scl, scl1, wrkup, wrkdw,                                     &
-     &     exrho(nspinx), dexdrho(nspinx), dexdg(nspinx),               &
-     &     ecrho, decdrho(nspinx), decdg
+      real(DP) zet, arho(nspinx), grad(3,nspinx), agrad(nspinx),    &
+          arhotot, gradtot(3), agradtot,                               &
+          scl, scl1, wrkup, wrkdw,                                     &
+          exrho(nspinx), dexdrho(nspinx), dexdg(nspinx),               &
+          ecrho, decdrho(nspinx), decdg
 !
 !     main loop
 !
@@ -653,25 +655,26 @@
 ! Calculates the exchange energy density and the two functional derivative
 ! that will be used to calculate the potential
 !
+      USE kinds, ONLY: DP
       implicit none
 ! input
 ! input rho:     charge density
 ! input agrad:   abs(grad rho)
-      real(8) rho, agrad
+      real(DP) rho, agrad
 ! ouput
 ! output ex: Ex[rho,grad_rho] = \int ex dr
 ! output dexdrho: d ex / d rho
 ! output dexdg:   d ex / d grad_rho(i) = dexdg*grad_rho(i)/abs(grad_rho)
-      real(8) ex, dexdrho, dexdg
+      real(DP) ex, dexdrho, dexdg
 ! local
-      real(8) thrd, thrd4, pi32td, ax, al, um, uk, ul
+      real(DP) thrd, thrd4, pi32td, ax, al, um, uk, ul
       parameter(thrd=.33333333333333333333d0,thrd4=4.d0/3.d0)
       parameter(pi32td=3.09366772628014d0) ! pi32td=(3.d0*pi*pi)**0.333d0
       parameter(al=0.161620459673995d0)    ! al=1.0/(2.0*(pi32)**0.333d0)
       parameter(ax=-0.738558766382022405884230032680836d0)
       parameter(um=0.2195149727645171d0,uk=0.8040d0,ul=um/uk)
 !
-      real(8) rhothrd, exunif, dexunif, kf, s, s2, p0, fxpbe, fs
+      real(DP) rhothrd, exunif, dexunif, kf, s, s2, p0, fxpbe, fs
 !----------------------------------------------------------------------
 ! construct LDA exchange energy density
 !
@@ -725,11 +728,13 @@
 ! [c] J. P. Perdew and Y. Wang, Phys. Rev. B {\bf 45}, 13244 (1992).
 !----------------------------------------------------------------------
 !----------------------------------------------------------------------
+      USE kinds, ONLY: DP
+      USE constants, ONLY: pi
       implicit none
-      real(8) rho, agrad, zet, ectot, decup, decdn, decdg
+      real(DP) rho, agrad, zet, ectot, decup, decdn, decdg
       integer nspin
-      real(8) pi, pi32, alpha, thrd, thrdm, thrd2, sixthm, thrd4,  &
-     &     gam, fzz, gamma, bet, delt, eta
+      real(DP) pi32, alpha, thrd, thrdm, thrd2, sixthm, thrd4,  &
+          gam, fzz, gamma, bet, delt, eta
 ! thrd*=various multiples of 1/3
 ! numbers for use in LSD energy spin-interpolation formula, [c](9).
 !      gam= 2^(4/3)-2
@@ -739,7 +744,6 @@
 !      bet=coefficient in gradient expansion for correlation, [a](4).
 !      eta=small number to stop d phi/ dzeta from blowing up at 
 !          |zeta|=1.
-      parameter(pi=3.1415926535897932384626433832795d0)
       parameter(pi32=29.608813203268075856503472999628d0)
       parameter(alpha=1.91915829267751300662482032624669d0)
       parameter(thrd=1.d0/3.d0,thrdm=-thrd,thrd2=2.d0*thrd)
@@ -750,11 +754,11 @@
       parameter(gamma=0.03109069086965489503494086371273d0)
       parameter(bet=0.06672455060314922d0,delt=bet/gamma)
       parameter(eta=1.d-12)
-      real(8) g, fk, rs, sk, twoksg, t
-      real(8) rtrs, eu, eurs, ep, eprs, alfm, alfrsm, z4, f, ec
-      real(8) ecrs, fz, eczet, comm, vcup, vcdn, g3, pon, b, b2, t2, t4
-      real(8) q4, q5, h, g4, t6, rsthrd, gz, fac
-      real(8) bg, bec, q8, q9, hb, hrs, hz, ht, pref
+      real(DP) g, fk, rs, sk, twoksg, t
+      real(DP) rtrs, eu, eurs, ep, eprs, alfm, alfrsm, z4, f, ec
+      real(DP) ecrs, fz, eczet, comm, vcup, vcdn, g3, pon, b, b2, t2, t4
+      real(DP) q4, q5, h, g4, t6, rsthrd, gz, fac
+      real(DP) bg, bec, q8, q9, hb, hrs, hz, ht, pref
 !----------------------------------------------------------------------
       if (nspin.eq.1) then
          g=1.d0
@@ -860,9 +864,10 @@
 ! J. P. Perdew and Y. Wang, Phys. Rev. B {\bf 45}, 13244 (1992).
 ! K. Burke, May 11, 1996.
 !
+      USE kinds, ONLY : DP
       implicit none
-      real(8) a, a1, b1, b2, b3, b4, rtrs, gg, ggrs
-      real(8) q0, q1, q2, q3
+      real(DP) a, a1, b1, b2, b3, b4, rtrs, gg, ggrs
+      real(DP) q0, q1, q2, q3
 !
       q0 = -2.d0*a*(1.d0+a1*rtrs*rtrs)
       q1 = 2.d0*a*rtrs*(b1+rtrs*(b2+rtrs*(b3+b4*rtrs)))
@@ -879,51 +884,51 @@
 !     _________________________________________________________________
 !     perdew-wang gga (PW91)
 !
-      use constants, only: pi, fpi
+      USE kinds, ONLY: DP
+      use constants, only: pi, fpi, pi34
 !
       implicit none
 ! input
       integer nspin, nnr
-      real(8) gradr(nnr,3,nspin), rhor(nnr,nspin)
+      real(DP) gradr(nnr,3,nspin), rhor(nnr,nspin)
 ! output
-      real(8) exc
+      real(DP) exc
 ! local
       integer isup, isdw, ir
-      real(8) rhoup, rhodw, roe, aroe, rs, zeta
-      real(8) grxu, gryu, grzu, grhou, grxd, gryd, grzd, grhod, grho
-      real(8) ex, ec,vc, sc, v1x, v2x, v1c, v2c
-      real(8) ecrs, eczeta
-      real(8) exup, vcup, v1xup, v2xup, v1cup
-      real(8) exdw, vcdw, v1xdw, v2xdw, v1cdw
-      real(8) pi34, third, small
-      parameter (pi34=0.75d0/3.141592653589793d+00,third=1.d0/3.d0)
-      parameter(small=1.d-10)
+      real(DP) rhoup, rhodw, roe, aroe, rs, zeta
+      real(DP) grxu, gryu, grzu, grhou, grxd, gryd, grzd, grhod, grho
+      real(DP) ex, ec,vc, sc, v1x, v2x, v1c, v2c
+      real(DP) ecrs, eczeta
+      real(DP) exup, vcup, v1xup, v2xup, v1cup
+      real(DP) exdw, vcdw, v1xdw, v2xdw, v1cdw
+      real(DP) third, small
+      parameter (third=1.d0/3.d0, small=1.d-10)
 !
 !     _________________________________________________________________
 !     main loop
 !
       isup=1
       isdw=2
-      exc=0.0
+      exc=0.0d0
       do ir=1,nnr
          rhoup=rhor(ir,isup)
          if(nspin.eq.2) then
             rhodw=rhor(ir,isdw)
          else
-            rhodw=0.0
+            rhodw=0.0d0
          end if
          roe=rhoup+rhodw
          aroe=abs(roe)
          if (aroe.lt.small) then
-            rhor(ir,isup)   =0.0
-            gradr(ir,1,isup)=0.0
-            gradr(ir,2,isup)=0.0
-            gradr(ir,3,isup)=0.0
+            rhor(ir,isup)   =0.0d0
+            gradr(ir,1,isup)=0.0d0
+            gradr(ir,2,isup)=0.0d0
+            gradr(ir,3,isup)=0.0d0
             if(nspin.eq.2) then
-               rhor(ir,isdw)   =0.0
-               gradr(ir,1,isdw)=0.0
-               gradr(ir,2,isdw)=0.0
-               gradr(ir,3,isdw)=0.0
+               rhor(ir,isdw)   =0.0d0
+               gradr(ir,1,isdw)=0.0d0
+               gradr(ir,2,isdw)=0.0d0
+               gradr(ir,3,isdw)=0.0d0
             end if
             go to 100
          end if
@@ -937,10 +942,10 @@
             grzd =gradr(ir,3,isdw)
             grhod=sqrt(grxd**2+gryd**2+grzd**2)
          else
-            grxd =0.0
-            gryd =0.0
-            grzd =0.0
-            grhod=0.0
+            grxd =0.0d0
+            gryd =0.0d0
+            grzd =0.0d0
+            grhod=0.0d0
          endif
          grho=sqrt((grxu+grxd)**2+(gryu+gryd)**2+(grzu+grzd)**2)
 !
@@ -961,23 +966,23 @@
             zeta=(rhoup-rhodw)/aroe        
             zeta=min(zeta, 1.d0)
             zeta=max(zeta,-1.d0)
-            call exchpw91(2.d0*abs(rhoup),2.0*grhou,exup,v1xup,v2xup)
-            call exchpw91(2.d0*abs(rhodw),2.0*grhod,exdw,v1xdw,v2xdw)
+            call exchpw91(2.d0*abs(rhoup),2.0d0*grhou,exup,v1xup,v2xup)
+            call exchpw91(2.d0*abs(rhodw),2.0d0*grhod,exdw,v1xdw,v2xdw)
             call pwlsd(rs,zeta,ec,vcup,vcdw,ecrs,eczeta)
             call corpw91(rs,zeta,grho,ec,ecrs,eczeta,sc,v1cup,v1cdw,v2c)
             rhor(ir,isup) = vcup + v1xup + v1cup
             rhor(ir,isdw) = vcdw + v1xdw + v1cdw
-            exc = exc+roe*(0.5*((1.d0+zeta)*exup+(1.d0-zeta)*exdw)+ec) &
-    &             + sc
+            exc = exc+roe*(0.5d0*((1.d0+zeta)*exup+(1.d0-zeta)*exdw)+ec) &
+                 + sc
 !
 !     gradr = D(rho*exc)/D(|grad rho|) * (grad rho) / |grad rho|
 !
-            gradr(ir,1,isup)=grxu*(2.0*v2xup+v2c)+grxd*v2c
-            gradr(ir,2,isup)=gryu*(2.0*v2xup+v2c)+gryd*v2c
-            gradr(ir,3,isup)=grzu*(2.0*v2xup+v2c)+grzd*v2c
-            gradr(ir,1,isdw)=grxd*(2.0*v2xdw+v2c)+grxu*v2c
-            gradr(ir,2,isdw)=gryd*(2.0*v2xdw+v2c)+gryu*v2c
-            gradr(ir,3,isdw)=grzd*(2.0*v2xdw+v2c)+grzu*v2c
+            gradr(ir,1,isup)=grxu*(2.0d0*v2xup+v2c)+grxd*v2c
+            gradr(ir,2,isup)=gryu*(2.0d0*v2xup+v2c)+gryd*v2c
+            gradr(ir,3,isup)=grzu*(2.0d0*v2xup+v2c)+grzd*v2c
+            gradr(ir,1,isdw)=grxd*(2.0d0*v2xdw+v2c)+grxu*v2c
+            gradr(ir,2,isdw)=gryd*(2.0d0*v2xdw+v2c)+gryu*v2c
+            gradr(ir,3,isdw)=grzd*(2.0d0*v2xdw+v2c)+grzu*v2c
          end if
  100     continue
       end do
@@ -997,26 +1002,27 @@
 !          v1x = d(rho*exc)/drho
 !          v2x = d(rho*exc)/d|grho| * (1/|grho|)
 !
+      USE kinds, ONLY : DP
+      USE constants, ONLY : pi34
       implicit none
 !  input
-      real(8) rho, grho
+      real(DP) rho, grho
 !  output
-      real(8) ex, v1x, v2x
+      real(DP) ex, v1x, v2x
 ! local
-      real(8) ex0, kf, s, s2, s4, f, fs, p0,p1,p2,p3,p4,p5,p6,p7
+      real(DP) ex0, kf, s, s2, s4, f, fs, p0,p1,p2,p3,p4,p5,p6,p7
 ! parameters
-      real(8) a1, a2, a3, a4, a, b1, bx, pi34, thrd, thrd4
+      real(DP) a1, a2, a3, a4, a, b1, bx, thrd, thrd4
       parameter(a1=0.19645d0,a2=0.27430d0,a=7.7956d0,a4=100.d0)
 ! for becke exchange, set a3=b1=0
       parameter(a3=0.15084d0,b1=0.004d0)
 ! pi34=3/(4pi) ,  bx=(3pi^2)^(1/3)
-      parameter(pi34=0.75d0/3.141592653589793d+00, bx=3.09366773d0,    &
-     &          thrd=0.333333333333d0, thrd4=4.d0*thrd)
+      parameter(bx=3.09366773d0, thrd=0.333333333333d0, thrd4=4.d0*thrd)
 !
       if (rho.lt.1.d-10) then
-         ex =0.0
-         v1x=0.0
-         v2x=0.0
+         ex =0.0d0
+         v1x=0.0d0
+         v2x=0.0d0
       end if
 !
 !  kf=k_Fermi, ex0=Slater exchange energy
@@ -1026,7 +1032,7 @@
       if (grho.lt.1.d-10) then
          ex =ex0
          v1x=ex0*thrd4
-         v2x=0.0
+         v2x=0.0d0
       end if
       s  = grho/(2.d0*kf*rho)
       s2 = s*s
@@ -1069,24 +1075,25 @@
 !         v1c = d(rho*exc)/drho
 !         v2c = d(rho*exc)/d|grho|*(1/|grho|)
 !
+      USE kinds, ONLY : DP
+      USE constants, ONLY : pi34
       implicit none
 ! input
-      real(8) rs, grho, ec, ecrs
+      real(DP) rs, grho, ec, ecrs
 ! output
-      real(8) h, v1c, v2c
+      real(DP) h, v1c, v2c
 ! local
-      real(8) rho, t, ks,  bet, delt, pon, b, b2, t2, t4, t6
-      real(8) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
-      real(8) ccrs, rsthrd, fac, bec, coeff, cc
-      real(8) h0, h0b, h0rs, h0t, h1, h1t, h1rs, hrs, ht
+      real(DP) rho, t, ks,  bet, delt, pon, b, b2, t2, t4, t6
+      real(DP) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
+      real(DP) ccrs, rsthrd, fac, bec, coeff, cc
+      real(DP) h0, h0b, h0rs, h0t, h1, h1t, h1rs, hrs, ht
 ! parameters
-      real(8) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
-      real(8) ax, pi34
+      real(DP) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4, ax
       parameter(nu=15.75592d0,cc0=0.004235d0,cx=-0.001667212d0)
       parameter(c1=0.002568d0,c2=0.023266d0,c3=7.389d-6,c4=8.723d0)
       parameter(c5=0.472d0,c6=7.389d-2,a4=100.d0, alf=0.09d0)
 ! ax=(4*1.9191583/pi)^(1/2), where k_F=1.9191583/r_s, k_s=boh*r_s^(1/2)
-      parameter(ax=1.5631853d0, pi34=0.75d0/3.141592653589793d0)
+      parameter(ax=1.5631853d0)
 !
 !
       rs2 = rs*rs
@@ -1118,7 +1125,7 @@
       h1 = r3*r2*t2
       h = (h0+h1)*rho
 !  energy done. now the potential:
-      ccrs = (c2+2.*c3*rs)/q7 - q6*(c4+2.*c5*rs+3.*c6*rs2)/q7**2
+      ccrs = (c2+2.d0*c3*rs)/q7 - q6*(c4+2.d0*c5*rs+3.d0*c6*rs2)/q7**2
       rsthrd = rs/3.d0
       r4 = rsthrd*ccrs/coeff
       fac = delt/b+1.d0
@@ -1127,7 +1134,7 @@
       q9 = 1.d0+2.d0*b*t2
       h0b = -bet*b*t6*(2.d0+b*t2)/q8
       h0rs = -rsthrd*h0b*bec*ecrs
-      h0t = 2.*bet*q9/q8
+      h0t = 2.d0*bet*q9/q8
       h1rs = r3*r2*t2*(-r4+r1*t2/3.d0)
       h1t = 2.d0*r3*r2*(1.d0-r1*t2)
       hrs = h0rs+h1rs
@@ -1157,34 +1164,35 @@
 !         v1c** = d(rho*exc)/drho               (up and down components)
 !         v2c   = d(rho*exc)/d|grho|*(1/|grho|) (same for up and down)
 !
+      USE kinds, ONLY : DP
+      USE constants, ONLY : pi34
       implicit none
 ! input
-      real(8) rs, zeta, grho, ec, ecrs, eczeta
+      real(DP) rs, zeta, grho, ec, ecrs, eczeta
 ! output
-      real(8) h, v1cup, v1cdn, v2c
+      real(DP) h, v1cup, v1cdn, v2c
 ! local
-      real(8) rho, g, t, ks, gz, bet, delt, g3, g4, pon, b, b2, t2, t4, t6
-      real(8) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
-      real(8) ccrs, rsthrd, fac, bg, bec, coeff, cc
-      real(8) h0, h0b, h0rs, h0z, h0t, h1, h1t, h1rs, h1z
-      real(8) hz, hrs, ht, comm, pref
+      real(DP) rho, g, t, ks, gz, bet, delt, g3, g4, pon, b, b2, t2, t4, t6
+      real(DP) q4, q5, q6, q7, q8, q9, r0, r1, r2, r3, r4, rs2, rs3
+      real(DP) ccrs, rsthrd, fac, bg, bec, coeff, cc
+      real(DP) h0, h0b, h0rs, h0z, h0t, h1, h1t, h1rs, h1z
+      real(DP) hz, hrs, ht, comm, pref
 ! parameters
-      real(8) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
-      real(8) thrdm, thrd2, ax, pi34, eta
+      real(DP) nu, cc0, cx, alf, c1, c2, c3, c4, c5, c6, a4
+      real(DP) thrdm, thrd2, ax, eta
       parameter(nu=15.75592d0,cc0=0.004235d0,cx=-0.001667212d0)
       parameter(c1=0.002568d0,c2=0.023266d0,c3=7.389d-6,c4=8.723d0)
       parameter(c5=0.472d0,c6=7.389d-2,a4=100.d0, alf=0.09d0)
       parameter(thrdm=-0.333333333333d0,thrd2=0.666666666667d0)
 ! ax=(4*1.9191583/pi)^(1/2), where k_F=1.9191583/r_s, k_s=boh*r_s^(1/2)
-      parameter(ax=1.5631853d0, pi34=0.75d0/3.141592653589793d0)
-      parameter(eta=1.d-12)
+      parameter(ax=1.5631853d0,eta=1.d-12)
 !
 !
       if (grho.lt.1.d-10) then
-         h=0.0
-         v1cup=0.0
-         v1cdn=0.0
-         v2c=0.0
+         h=0.0d0
+         v1cup=0.0d0
+         v1cdn=0.0d0
+         v2c=0.0d0
       end if
       rs2 = rs*rs
       rs3 = rs2*rs
@@ -1218,7 +1226,7 @@
       h1 = r3*r2*t2
       h = (h0+h1)*rho
 !  energy done. now the potential:
-      ccrs = (c2+2.*c3*rs)/q7 - q6*(c4+2.*c5*rs+3.*c6*rs2)/q7**2
+      ccrs = (c2+2.d0*c3*rs)/q7 - q6*(c4+2.d0*c5*rs+3.d0*c6*rs2)/q7**2
       rsthrd = rs/3.d0
       r4 = rsthrd*ccrs/coeff
 !  eta is a small quantity that avoids trouble if zeta=+1 or -1
@@ -1231,7 +1239,7 @@
       h0b = -bet*g3*b*t6*(2.d0+b*t2)/q8
       h0rs = -rsthrd*h0b*bec*ecrs
       h0z = 3.d0*gz*h0/g + h0b*(bg*gz+bec*eczeta)
-      h0t = 2.*bet*g3*q9/q8
+      h0t = 2.d0*bet*g3*q9/q8
       h1rs = r3*r2*t2*(-r4+r1*t2/3.d0)
       h1z = gz*r3*r2*t2*(3.d0-4.d0*r1*t2)/g
       h1t = 2.d0*r3*r2*(1.d0-r1*t2)
@@ -1257,17 +1265,18 @@
 !          vc   potential
 !          ecrs derivatives of ec wrt rs
 !
+      USE kinds, ONLY : DP
       implicit none
 ! input
-      real(8) rs
+      real(DP) rs
 ! output
-      real(8) ec, vc, ecrs
+      real(DP) ec, vc, ecrs
 !  local
-      real(8) q0, rs12, q1, q2, q3
+      real(DP) q0, rs12, q1, q2, q3
 ! parameters
-      real(8) a, a1, b1, b2, b3, b4
+      real(DP) a, a1, b1, b2, b3, b4
       parameter(a =0.0310907d0, a1=0.21370d0, b1=7.5957d0,              &
-     &          b2=3.5876d0,    b3=1.6382d0,  b4=0.49294d0)
+                b2=3.5876d0,    b3=1.6382d0,  b4=0.49294d0)
 !
       q0 = -2.d0*a*(1.d0+a1*rs)
       rs12 = sqrt(rs)
@@ -1291,28 +1300,29 @@
 !          up- and down-spin potentials (vcup,vcdn)
 !          derivatives of ec wrt rs (ecrs) & zeta (eczeta)
 !
+      USE kinds, ONLY : DP
       implicit none
 ! input
-      real(8) rs, zeta
+      real(DP) rs, zeta
 ! output
-      real(8) ec, vcup, vcdn, ecrs, eczeta
+      real(DP) ec, vcup, vcdn, ecrs, eczeta
 ! local
-      real(8) f, eu, ep, eurs, eprs, alfm, alfrsm, z4, fz, comm
-      real(8) rs12, q0, q1, q2, q3
+      real(DP) f, eu, ep, eurs, eprs, alfm, alfrsm, z4, fz, comm
+      real(DP) rs12, q0, q1, q2, q3
 ! parameters
-      real(8) gam, fzz, thrd, thrd4
+      real(DP) gam, fzz, thrd, thrd4
       parameter(gam=0.5198421d0,fzz=1.709921d0)
       parameter(thrd=0.333333333333d0,thrd4=1.333333333333d0)
 !
-      real(8) au, au1, bu1, bu2, bu3, bu4
+      real(DP) au, au1, bu1, bu2, bu3, bu4
       parameter(au =0.0310907d0, au1=0.21370d0, bu1=7.5957d0,           &
-     &          bu2=3.5876d0,    bu3=1.6382d0,  bu4=0.49294d0)
-      real(8) ap, ap1, bp1, bp2, bp3, bp4
+                bu2=3.5876d0,    bu3=1.6382d0,  bu4=0.49294d0)
+      real(DP) ap, ap1, bp1, bp2, bp3, bp4
       parameter(ap =0.01554535d0,ap1=0.20548d0, bp1=14.1189d0,          &
-     &          bp2=6.1977d0,    bp3=3.3662d0,  bp4=0.62517d0 )
-      real(8) am, am1, bm1, bm2, bm3, bm4
+                bp2=6.1977d0,    bp3=3.3662d0,  bp4=0.62517d0 )
+      real(DP) am, am1, bm1, bm2, bm3, bm4
       parameter(am =0.0168869d0, am1=0.11125d0, bm1=10.357d0,           &
-     &          bm2=3.6231d0,    bm3=0.88026d0, bm4=0.49671d0 )
+                bm2=3.6231d0,    bm3=0.88026d0, bm4=0.49671d0 )
 !
       rs12 = sqrt(rs)
 !
@@ -1363,52 +1373,53 @@
 !     _________________________________________________________________
 !     by alfredo pasquarello 22/09/1994
 !
+      USE kinds, ONLY: DP
       use constants, only: pi, fpi
 !
       implicit none
 !
       integer nspin, nnr
-      real(8) gradr(nnr,3), rhor(nnr), exc
+      real(DP) gradr(nnr,3), rhor(nnr), exc
 !
-      real(8) bb1, bb2, bb3, bb4, bb5, alfa, beta, cc0, cc1, delt, &
-     &     c1, c2, c3, c4, c5, c6, c7, a, alfa1, bt1, bt2, bt3, bt4
-      parameter(bb1=0.19645,bb2=0.27430,bb3=-0.15084,bb4=0.004,         &
-     & bb5=7.7956,alfa=0.09,beta=0.0667263212,cc0=15.75592,             &
-     & cc1=0.003521,c1=0.001667,c2=0.002568,c3=0.023266,c4=7.389e-6,    &
-     & c5=8.723,c6=0.472,c7=7.389e-2,a=0.0621814,alfa1=0.2137,          &
-     & bt1=7.5957,bt2=3.5876,bt3=1.6382,bt4=0.49294,delt=1.0e-12) 
-      real(8) x13, x43, x76, pi2, ax, pider1, pider2, pider3,      &
-     &     abder1, abder2, abder3
+      real(DP) bb1, bb2, bb3, bb4, bb5, alfa, beta, cc0, cc1, delt, &
+           c1, c2, c3, c4, c5, c6, c7, a, alfa1, bt1, bt2, bt3, bt4
+      parameter(bb1=0.19645d0,bb2=0.27430d0,bb3=-0.15084d0,bb4=0.004d0,         &
+       bb5=7.7956d0,alfa=0.09d0,beta=0.0667263212d0,cc0=15.75592d0,             &
+       cc1=0.003521d0,c1=0.001667d0,c2=0.002568d0,c3=0.023266d0,c4=7.389d-6,    &
+       c5=8.723d0,c6=0.472d0,c7=7.389d-2,a=0.0621814d0,alfa1=0.2137d0,          &
+       bt1=7.5957d0,bt2=3.5876d0,bt3=1.6382d0,bt4=0.49294d0,delt=1.0d-12) 
+      real(DP) x13, x43, x76, pi2, ax, pider1, pider2, pider3,      &
+           abder1, abder2, abder3
       integer isign, ir
-      real(8)                                                      &
-     &     aexp, abig, abig2, agr, aroe, byagr, ccr, ccrnum, ccrden,    &
-     &     dfxd, dfxdg, dys, dfs, dh1ds, dh1dg, dh1d, dh1dt, dexcdg,    &
-     &     dexcd, dh1drs, dh0da, dadec, decdrs, decd, dh0dg, dcdrs,     &
-     &     dh0d, dh0dt, eclog, ecr, ecden, fx, fxnum, fxden, fxexp,     &
-     &     gkf, grx, gry, grz, h0, h1, h0den, h0arg, h0num,             &
-     &     roeth, roe, rs, rs12, rs2, rs3, rs32, s, sd, s2, s3, s4,     &
-     &     sysl, t, td, t2, t3, t4, xchge, ys, ysl, ysr
+      real(DP)                                                      &
+           aexp, abig, abig2, agr, aroe, byagr, ccr, ccrnum, ccrden,    &
+           dfxd, dfxdg, dys, dfs, dh1ds, dh1dg, dh1d, dh1dt, dexcdg,    &
+           dexcd, dh1drs, dh0da, dadec, decdrs, decd, dh0dg, dcdrs,     &
+           dh0d, dh0dt, eclog, ecr, ecden, fx, fxnum, fxden, fxexp,     &
+           gkf, grx, gry, grz, h0, h1, h0den, h0arg, h0num,             &
+           roeth, roe, rs, rs12, rs2, rs3, rs32, s, sd, s2, s3, s4,     &
+           sysl, t, td, t2, t3, t4, xchge, ys, ysl, ysr
 !
 !
       if (nspin.ne.1) call errore('ggapw','spin not implemented',nspin)
 !
-      x13=1.0/3.0
-      x43=4.0/3.0
-      x76=7.0/6.0
+      x13=1.0d0/3.0d0
+      x43=4.0d0/3.0d0
+      x76=7.0d0/6.0d0
 !     _________________________________________________________________
 !     derived parameters from pi
 !
       pi2=pi*pi
-      ax=-0.75*(3.0/pi)**x13
-      pider1=(0.75/pi)**x13
-      pider2=(3.0*pi2)**x13
-      pider3=(3.0*pi2/16.0)**x13
+      ax=-0.75d0*(3.0d0/pi)**x13
+      pider1=(0.75d0/pi)**x13
+      pider2=(3.0d0*pi2)**x13
+      pider3=(3.0d0*pi2/16.0d0)**x13
 !     _________________________________________________________________
 !     derived parameters from alfa and beta 
 !
-      abder1=beta*beta/(2.0*alfa)
-      abder2=1.0/abder1
-      abder3=2.0*alfa/beta
+      abder1=beta*beta/(2.0d0*alfa)
+      abder2=1.0d0/abder1
+      abder3=2.0d0*alfa/beta
 !     _________________________________________________________________
 !     main loop
 !
@@ -1423,7 +1434,7 @@
          roeth=aroe**x13 
          rs= pider1/roeth
          gkf=pider2*roeth
-         sd=1.0/(2.0*gkf*aroe)
+         sd=1.0d0/(2.0d0*gkf*aroe)
          s=agr*sd
          s2=s*s
          s3=s*s2
@@ -1431,13 +1442,13 @@
 !     _________________________________________________________________
 !     exchange 
 !
-         ysr=sqrt(1.0+bb5*bb5*s2)
+         ysr=sqrt(1.0d0+bb5*bb5*s2)
          ys=bb5*s+ysr
          ysl=log(ys)*bb1
          sysl=s*ysl
-         fxexp=exp(-100.0*s2)
-         fxnum=1.0+sysl+(bb2+bb3*fxexp)*s2
-         fxden=1.0/(1.0+sysl+bb4*s4)
+         fxexp=exp(-100.0d0*s2)
+         fxnum=1.0d0+sysl+(bb2+bb3*fxexp)*s2
+         fxden=1.0d0/(1.0d0+sysl+bb4*s4)
          fx=fxnum*fxden
          xchge=ax*fx*roeth
 !     _________________________________________________________________
@@ -1448,8 +1459,8 @@
          rs2=rs*rs
          rs3=rs*rs2
          ecden=a*(bt1*rs12+bt2*rs+bt3*rs32+bt4*rs2) 
-         eclog=log(1.0+(1.0/ecden))
-         ecr=-a*(1.0+alfa1*rs)*eclog
+         eclog=log(1.0d0+(1.0d0/ecden))
+         ecr=-a*(1.0d0+alfa1*rs)*eclog
 !     _________________________________________________________________
 !     correlation h0(t,ecr)
 !
@@ -1458,18 +1469,18 @@
          t2=t*t
          t3=t*t2
          t4=t2*t2
-         aexp=exp(-abder2*ecr)-1.0
+         aexp=exp(-abder2*ecr)-1.0d0
          abig=abder3/aexp
          abig2=abig*abig
          h0num=t2+abig*t4
-         h0den=1.0/(1.0+abig*t2+abig2*t4)
-         h0arg=1.0+abder3*h0num*h0den
+         h0den=1.0d0/(1.0d0+abig*t2+abig2*t4)
+         h0arg=1.0d0+abder3*h0num*h0den
          h0=abder1*log(h0arg)
 !     _________________________________________________________________
 !     correlation h1(t,s,aroe)
 !
          ccrnum=c2+c3*rs+c4*rs2
-         ccrden=1.0/(1.0+c5*rs+c6*rs2+c7*rs3)
+         ccrden=1.0d0/(1.0d0+c5*rs+c6*rs2+c7*rs3)
          ccr=c1+ccrnum*ccrden
          h1=cc0*(ccr-cc1)*t2*fxexp
 !     _________________________________________________________________
@@ -1479,40 +1490,40 @@
 !     _________________________________________________________________
 !     first part xc-potential from exchange  
 !     
-         dys=bb5*(1.0+bb5*s/ysr)/ys
-         dfs=-fxnum*(ysl+bb1*s*dys+4.0*bb4*s3)*fxden*fxden              &
-     &        +(ysl+bb1*s*dys+2.0*s*(bb2+bb3*fxexp)                     &
-     &        -200.0*s3*bb3*fxexp)*fxden
+         dys=bb5*(1.0d0+bb5*s/ysr)/ys
+         dfs=-fxnum*(ysl+bb1*s*dys+4.0d0*bb4*s3)*fxden*fxden              &
+     &        +(ysl+bb1*s*dys+2.0d0*s*(bb2+bb3*fxexp)                     &
+     &        -200.0d0*s3*bb3*fxexp)*fxden
          dfxd=(ax*roeth*x43)*(fx-dfs*s)
          dfxdg=ax*roeth*dfs*sd
 !     _________________________________________________________________
 !     first part xc-potential from ecr 
 !
          decdrs=-a*alfa1*eclog*rs + a*(1+alfa1*rs)                      &
-     &        *a*(0.5*bt1*rs12+bt2*rs+1.5*bt3*rs32+2.0*bt4*rs2)         &
+     &        *a*(0.5d0*bt1*rs12+bt2*rs+1.5d0*bt3*rs32+2.0d0*bt4*rs2)         &
      &        /(ecden*ecden+ecden)
          decd=-x13*decdrs
 !     _________________________________________________________________
 !     first part xc-potential from h0 
 !     
          dh0da=abder1/h0arg*abder3*h0den*                               &
-     &        (t4-h0num*h0den*(t2+2.0*abig*t4))
-         dadec=abder3*abder2*(aexp+1.0)/(aexp*aexp)
+     &        (t4-h0num*h0den*(t2+2.0d0*abig*t4))
+         dadec=abder3*abder2*(aexp+1.0d0)/(aexp*aexp)
          dh0d=dh0da*dadec*decd 
          dh0dt=abder1/h0arg*abder3*h0den                                &
-     &        *(2.0*t+4.0*abig*t3-h0num*h0den*(2.0*abig*t+4.0*abig2*t3))
+     &        *(2.0d0*t+4.0d0*abig*t3-h0num*h0den*(2.0d0*abig*t+4.0d0*abig2*t3))
          dh0d=dh0d-x76*t*dh0dt
          dh0dg=dh0dt*td
 !     _________________________________________________________________
 !     first part xc-potential from h1 
 !
-         dcdrs=(c3+2.0*c4*rs-ccrnum*ccrden*(c5+2.0*c6*rs+3.0*c7*rs2))   &
+         dcdrs=(c3+2.0d0*c4*rs-ccrnum*ccrden*(c5+2.0d0*c6*rs+3.0d0*c7*rs2))   &
      &        *ccrden
          dh1drs=cc0*t2*fxexp*dcdrs
          dh1d=-x13*rs*dh1drs
-         dh1dt=2.0*t*cc0*(ccr-cc1)*fxexp
+         dh1dt=2.0d0*t*cc0*(ccr-cc1)*fxexp
          dh1d=dh1d-x76*t*dh1dt
-         dh1ds=-200.0*s*cc0*(ccr-cc1)*t2*fxexp
+         dh1ds=-200.0d0*s*cc0*(ccr-cc1)*t2*fxexp
          dh1d=dh1d-x43*s*dh1ds
          dh1dg=dh1dt*td+dh1ds*sd
 !     _________________________________________________________________
@@ -1520,7 +1531,7 @@
 !
          dexcd=dfxd+decd+dh0d+dh1d+ecr+h0+h1
          isign=sign(1.d0,agr-delt)
-         byagr=0.5*(1+isign)/(agr+(1-isign)*delt)
+         byagr=0.5d0*(1+isign)/(agr+(1-isign)*delt)
          rhor(ir)=dexcd
 !
 !     gradr = D(rho*exc)/D(|grad rho|) * (grad rho) / |grad rho|
@@ -1580,36 +1591,37 @@
 !
 !       rhor contains rho(r) on input, vxc(r) on output
 !
+      USE kinds, ONLY : DP
       use constants, only: pi, fpi
 !
       implicit none
 !
       integer nnr, nspin
-      real(8) rhor(nnr,nspin), exc
+      real(DP) rhor(nnr,nspin), exc
 ! local variables
       integer ir, iflg, isup, isdw
-      real(8) roe, aroe, rs, rsl, rsq, ecca, vcca, eccp, vccp,    &
-     &     zeta, onemz, zp, zm, fz, dfzdz, exc1, vxc1, vxc2
+      real(DP) roe, aroe, rs, rsl, rsq, ecca, vcca, eccp, vccp,    &
+          zeta, onemz, zp, zm, fz, dfzdz, exc1, vxc1, vxc2
 ! constants
-      real(8) x76, x43, x13
+      real(DP) x76, x43, x13
       parameter(x76=7.d0/6.d0, x43=4.d0/3.d0, x13=1.d0/3.d0)
-      real(8) ax
+      real(DP) ax
       parameter (ax = -0.916330586d0)
 ! Perdew and Zunger parameters
-      real(8) ap, bp, cp, dp, af, bf, cf, df,                      &
-     &     bp1, cp1, dp1, bf1, cf1, df1
+      real(DP) ap, bp, cp, dp0, af, bf, cf, df,                      &
+          bp1, cp1, dp1, bf1, cf1, df1
       parameter                                                         &
-     &( ap=0.03110*2.0, bp=-0.0480*2.0, cp=0.0020*2.0, dp=-0.0116*2.0   &
-     &, af=0.01555*2.0, bf=-0.0269*2.0, cf=0.0007*2.0, df=-0.0048*2.0   &
-     &, bp1=bp-ap/3.0, cp1=2.0*cp/3.0, dp1=(2.0*dp-cp)/3.0              &
-     &, bf1=bf-af/3.0, cf1=2.0*cf/3.0, df1=(2.0*df-cf)/3.0 )
-      real(8) va(2), vb(2), vc(2), vd(2), vbt1(2), vbt2(2)
-      real(8)  a(2), b(2), c(2), d(2), g(2), b1(2), b2(2)
+      ( ap=0.03110d0*2.0d0, bp=-0.0480d0*2.0d0, cp=0.0020d0*2.0d0, dp0=-0.0116d0*2.0d0   &
+      , af=0.01555d0*2.0d0, bf=-0.0269d0*2.0d0, cf=0.0007d0*2.0d0, df=-0.0048d0*2.0d0   &
+      , bp1=bp-ap/3.0d0, cp1=2.0d0*cp/3.0d0, dp1=(2.0d0*dp0-cp)/3.0d0              &
+      , bf1=bf-af/3.0d0, cf1=2.0d0*cf/3.0d0, df1=(2.0d0*df-cf)/3.0d0 )
+      real(DP) va(2), vb(2), vc(2), vd(2), vbt1(2), vbt2(2)
+      real(DP)  a(2), b(2), c(2), d(2), g(2), b1(2), b2(2)
       data va/ap ,af /, vb/bp1,bf1/, vc/cp1,cf1/, vd/dp1,df1/,          &
-     &     vbt1/1.0529,1.3981/, vbt2/0.3334,0.2611/
-      data a/0.0622,0.0311/, b/-0.096,-0.0538/, c/0.0040,0.0014/,       &
-     &     d/-0.0232,-0.0096/, b1/1.0529,1.3981/, b2/0.3334,0.2611/,    &
-     &     g/-0.2846,-0.1686/
+          vbt1/1.0529d0,1.3981d0/, vbt2/0.3334d0,0.2611d0/
+      data a/0.0622d0,0.0311d0/, b/-0.096d0,-0.0538d0/, c/0.0040d0,0.0014d0/,       &
+          d/-0.0232d0,-0.0096d0/, b1/1.0529d0,1.3981d0/, b2/0.3334d0,0.2611d0/,    &
+          g/-0.2846d0,-0.1686d0/
 !
       if (nspin.eq.1) then
 !
@@ -1631,9 +1643,9 @@
                vcca=ecca*(1.d0+x76*vbt1(iflg)*rsq+x43*vbt2(iflg)*rs)/   &
      &                   (1.d0+    vbt1(iflg)*rsq+    vbt2(iflg)*rs)
             end if
-            exc1 = ( ax/rs + ecca )/2.
+            exc1 = ( ax/rs + ecca )/2.d0
             exc = exc + exc1*roe
-            rhor(ir,1)= ( x43*ax/rs + vcca )/2.
+            rhor(ir,1)= ( x43*ax/rs + vcca )/2.d0
  10         continue
          end do
       else
@@ -1671,7 +1683,7 @@
      &                   (1.d0+    vbt1(2)*rsq+    vbt2(2)*rs)
             end if
 ! exchange part
-            exc1 = ax/rs*((1.d0+zeta)*zp+(1.d0-zeta)*zm)/2.
+            exc1 = ax/rs*((1.d0+zeta)*zp+(1.d0-zeta)*zm)/2.d0
             vxc1 = x43*ax/rs*zp
             vxc2 = x43*ax/rs*zm
 ! correlation part
@@ -1679,9 +1691,9 @@
      &           + dfzdz*(eccp-ecca)*( 1.d0-zeta)
             vxc2 = vxc2 + vcca + fz*(vccp-vcca)                         &
      &           + dfzdz*(eccp-ecca)*(-1.d0-zeta)
-            exc  = exc + (exc1 + ecca+fz*(eccp-ecca))*roe/2.
-            rhor(ir,isup)=vxc1/2.
-            rhor(ir,isdw)=vxc2/2.
+            exc  = exc + (exc1 + ecca+fz*(eccp-ecca))*roe/2.d0
+            rhor(ir,isup)=vxc1/2.d0
+            rhor(ir,isdw)=vxc2/2.d0
  20         continue
          end do
       end if
@@ -2033,7 +2045,7 @@ end subroutine exch_corr_cp
         GF    = -B1*XS2/DD
         DGF   = (-2.0D0*B1*XS*DD + B1*XS2*DDD)/DD2
         sx    = GF*BR4
-        V1XA  = 4./3.*BR1*(GF-XS*DGF)
+        V1XA  = 4.d0/3.d0*BR1*(GF-XS*DGF)
         V2XA  = DGF/A
       ENDIF
       IF(ABS(RHOB).GT.SMALL) THEN
@@ -2052,7 +2064,7 @@ end subroutine exch_corr_cp
         GF    = -B1*XS2/DD
         DGF   = (-2.0D0*B1*XS*DD + B1*XS2*DDD)/DD2
         sx    = sx+GF*BR4
-        V1XB  = 4./3.*BR1*(GF-XS*DGF)
+        V1XB  = 4.d0/3.d0*BR1*(GF-XS*DGF)
         V2XB  = DGF/A
       ENDIF
 !     ==--------------------------------------------------------------==

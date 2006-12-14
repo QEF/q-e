@@ -377,7 +377,7 @@ contains
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active
 
     implicit none
-    integer :: ios, ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
+    integer :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq
     integer :: h_ibnd, half_nbnd
     COMPLEX(DP),allocatable :: temppsic(:), psic(:), tempevc(:,:)
 #ifdef __PARA
@@ -541,6 +541,7 @@ contains
     ! ... output:
     ! ...    hpsi  Vexx*psi
     !
+    USE constants, ONLY : fpi, e2
     USE cell_base, ONLY : alat, omega, bg, at
     USE symme,     ONLY : nsym, s
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
@@ -552,7 +553,7 @@ contains
     USE gvect,     ONLY : g, nl
 
     implicit none
-    INTEGER          :: lda, n, m, kpsi
+    INTEGER          :: lda, n, m
     COMPLEX(DP) :: psi(lda,m) 
     COMPLEX(DP) :: hpsi(lda,m)
 
@@ -560,11 +561,10 @@ contains
     COMPLEX(DP), allocatable :: tempphic(:), temppsic(:), result(:)
     COMPLEX(DP), allocatable :: rhoc(:), vc(:)
     real (DP),   allocatable :: fac(:)
-    integer          :: ibnd, ik, im , ig, ir,  ikq, iq, isym
-    integer          :: h_ibnd, half_nbnd, ibndp1
+    integer          :: ibnd, ik, im , ig, ikq, iq, isym
+    integer          :: h_ibnd, half_nbnd
     real(DP) :: x1, x2
-    real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
-    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, x, q(3)
+    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), x, q(3)
 
     call start_clock ('vexx')
 
@@ -751,6 +751,7 @@ contains
   function exxenergy2()
   !-----------------------------------------------------------------------
     !
+    USE constants, ONLY : fpi, e2
     USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
     USE cell_base, ONLY : alat, omega, bg, at
     USE symme,     ONLY : nsym, s
@@ -765,17 +766,15 @@ contains
 
     implicit none
     REAL (DP)   :: exxenergy2,  energy
-    INTEGER          :: n, m, kpsi
 
     ! local variables
     COMPLEX(DP), allocatable :: tempphic(:), temppsic(:)
     COMPLEX(DP), allocatable :: rhoc(:)
     real (DP),   allocatable :: fac(:)
-    integer          :: jbnd, ibnd, ik, ikk, ig, ir,  ikq, iq, isym
+    integer          :: jbnd, ibnd, ik, ikk, ig, ikq, iq, isym
     integer          :: half_nbnd, h_ibnd
     real(DP)    :: x1, x2
-    real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
-    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), alpha, vc, x, q(3)
+    real(DP) :: tpiba2, qq, xk_cryst(3), sxk(3), xkq(3), vc, x, q(3)
 
     call start_clock ('exxen2')
 
@@ -913,6 +912,7 @@ contains
 
   function exx_divergence ()
 
+     USE constants, ONLY : fpi, e2
      USE cell_base, ONLY : bg, at, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
      USE wvfct,     ONLY : gamma_only
@@ -924,7 +924,6 @@ contains
      ! local variables
      integer :: iq1,iq2,iq3, ig
      real(DP) :: div, dq1, dq2, dq3, xq(3), q_, qq, tpiba2, alpha, x, q(3)
-     real(DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, e2  = 2.d0
 
      integer :: nqq, iq
      real(DP) :: aa, dq
@@ -989,7 +988,7 @@ contains
      alpha = alpha / tpiba2
 
      nqq = 100000
-     dq = 5.0 / sqrt(alpha) /nqq
+     dq = 5.0d0 / sqrt(alpha) /nqq
      aa = 0.d0
      do iq=0,  nqq
         q_ = dq * (iq+0.5d0)

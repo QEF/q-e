@@ -13,6 +13,7 @@
 ! -------------------------------------------------------------------
 subroutine xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
   USE kinds, only : DP
+  USE constants, only : BOHR_RADIUS_ANGS
   implicit none
   integer          :: nat, ityp (nat), ounit
   character(len=3) :: atm(*)
@@ -23,7 +24,7 @@ subroutine xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
   ! convert lattice vectors to ANGSTROM units ...
   do i=1,3
      do j=1,3
-        at1(j,i) = at(j,i)*alat*0.529177d0
+        at1(j,i) = at(j,i)*alat*BOHR_RADIUS_ANGS
      enddo
   enddo
 
@@ -36,9 +37,9 @@ subroutine xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
   do n=1,nat
      ! positions are in Angstroms
      write(ounit,'(a3,3x,3f15.9)') atm(ityp(n)), &
-          tau(1,n)*alat*0.529177d0, &
-          tau(2,n)*alat*0.529177d0, &
-          tau(3,n)*alat*0.529177d0
+          tau(1,n)*alat*BOHR_RADIUS_ANGS, &
+          tau(2,n)*alat*BOHR_RADIUS_ANGS, &
+          tau(3,n)*alat*BOHR_RADIUS_ANGS
   enddo
   return
 end subroutine xsf_struct
@@ -52,6 +53,7 @@ end subroutine xsf_struct
 subroutine xsf_fast_datagrid_3d &
      (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
   USE kinds, only : DP
+  USE constants, ONLY : BOHR_RADIUS_ANGS
   implicit none
   integer       :: nrx1, nrx2, nrx3, nr1, nr2, nr3, ounit
   real(DP) :: alat, at (3, 3), rho(nrx1,nrx2,nrx3)
@@ -67,13 +69,13 @@ subroutine xsf_fast_datagrid_3d &
   ! number of points in each direction
   write(ounit,*) nr1+1, nr2+1, nr3+1
   ! origin
-  write(ounit,'(3f10.6)') 0.0, 0.0, 0.0
+  write(ounit,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
   ! 1st spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*at(i,1),i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,1),i=1,3) ! in ANSTROMS
   ! 2nd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*at(i,2),i=1,3)
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,2),i=1,3)
   ! 3rd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*at(i,3),i=1,3)
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*at(i,3),i=1,3)
 
   count=0
   do i3=0,nr3
@@ -115,6 +117,7 @@ end subroutine xsf_fast_datagrid_3d
 
 subroutine xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
   USE kinds, only : DP
+  USE constants, ONLY : BOHR_RADIUS_ANGS
   implicit none
   integer       :: nx, ny, ounit
   real(DP) :: m1, m2, alat, x0(3), e1(3), e2(3), rho(2, nx, ny)
@@ -129,11 +132,11 @@ subroutine xsf_datagrid_2d (rho, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
   ! number of points in each direction
   write(ounit,*) nx, ny
   ! origin
-  write(ounit,'(3f10.6)') (0.529177d0*alat*x0(i),i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*x0(i),i=1,3) ! in ANSTROMS
   ! 1st spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
   ! 2nd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
 
   count=0
   do iy=1,ny
@@ -160,6 +163,7 @@ end subroutine xsf_datagrid_2d
 subroutine xsf_datagrid_3d &
      (rho, nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, alat, ounit)
   USE kinds, only : DP
+  USE constants, ONLY : BOHR_RADIUS_ANGS
   implicit none
   integer       :: nx, ny, nz, ounit
   real(DP) :: m1, m2, m3, alat, x0(3), e1(3),e2(3),e3(3), rho(nx, ny, nz)
@@ -174,13 +178,13 @@ subroutine xsf_datagrid_3d &
   ! number of points in each direction
   write(ounit,*) nx, ny, nz
   ! origin
-  write(ounit,'(3f10.6)') (0.529177d0*alat*x0(i),i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*x0(i),i=1,3) ! in ANSTROMS
   ! 1st spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e1(i)*m1,i=1,3) ! in ANSTROMS
   ! 2nd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e2(i)*m2,i=1,3) ! in ANSTROMS
   ! 3rd spanning (=lattice) vector
-  write(ounit,'(3f10.6)') (0.529177d0*alat*e3(i)*m3,i=1,3)
+  write(ounit,'(3f10.6)') (BOHR_RADIUS_ANGS*alat*e3(i)*m3,i=1,3)
 
   count=0
   do iz=1,nz

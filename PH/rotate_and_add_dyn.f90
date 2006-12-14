@@ -15,6 +15,7 @@ subroutine rotate_and_add_dyn (phi, phi2, nat, isym, s, invs, irt, &
   !
 #include "f_defs.h"
   USE kinds, only : DP
+  USE constants, ONLY : tpi
   implicit none
   ! input variables
 
@@ -42,12 +43,8 @@ subroutine rotate_and_add_dyn (phi, phi2, nat, isym, s, invs, irt, &
   real(DP) :: arg
   ! argument of the phase
   complex(DP) :: phase, work
-  ! auxiliary variable
-  !
-  real(DP) :: tpi
 
 
-  parameter (tpi = 2.d0 * 3.14159265358979d0)
   ism1 = invs (isym)
   do na = 1, nat
      do nb = 1, nat

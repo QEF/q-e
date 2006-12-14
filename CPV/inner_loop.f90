@@ -213,7 +213,7 @@
               DO k= 1, nss
                 DO ig= 1, ngw
                   c0hc0( k, i, is )= c0hc0( k, i, is ) &
-                    - 2.0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
+                    - 2.0d0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
                     * h0c0( ig, i+istart-1 ) )
                 END DO
                 IF( ng0 .eq. 2 ) THEN
@@ -232,7 +232,7 @@
                 kk=k-n_blockocc(is)
                 DO ig= 1, ngw
                   c0hc0( kk, ii, is )= c0hc0( kk, ii, is ) &
-                    - 2.0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
+                    - 2.0d0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
                     * h0c0( ig, i+istart-1 ) )
                 END DO
                 IF( ng0 .eq. 2 ) THEN
@@ -462,7 +462,7 @@
               DO k= 1, nss
                 DO ig= 1, ngw
                   c0hc0( k, i, is )= c0hc0( k, i, is ) &
-                    - 2.0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
+                    - 2.0d0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
                     * h0c0( ig, i+istart-1 ) )
                 END DO
                 IF( ng0 .eq. 2 ) THEN
@@ -481,7 +481,7 @@
                 kk=k-n_blockocc(is)
                 DO ig= 1, ngw
                   c0hc0( kk, ii, is )= c0hc0( kk, ii, is ) &
-                    - 2.0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
+                    - 2.0d0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
                     * h0c0( ig, i+istart-1 ) )
                 END DO
                 IF( ng0 .eq. 2 ) THEN

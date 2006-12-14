@@ -33,6 +33,7 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
 !
 
   USE kinds,     ONLY : DP
+  USE constants, ONLY : tpi
   USE mp_global, ONLY : mpime, root
   USE mp,        ONLY : mp_bcast
   !
@@ -73,10 +74,6 @@ SUBROUTINE set_sym_irr (nat, at, bg, xq, s, invs, nsym, rtau, irt, &
   LOGICAL :: minus_q
 ! output: if true one symmetry send q -
 !
-!   here the local variables
-!
-  REAL(DP), PARAMETER :: tpi = 2.0d0 * 3.14159265358979d0
-
   INTEGER :: na, nb, imode, jmode, ipert, jpert, nsymtot, imode0, &
        irr, ipol, jpol, isymq, irot, sna
   ! counter on atoms

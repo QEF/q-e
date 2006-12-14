@@ -12,6 +12,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
   !-----------------------------------------------------------------------
   !
   use kinds, only : DP
+  use constants, only : fpi
   implicit none
   integer  ::    &
        ndm, &    ! input: the mesh dimensions
@@ -50,8 +51,6 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
 
   logical :: &
        bhstype, numeric
-
-  real(DP), parameter :: fourpi=4.0_dp*3.141592653589793_dp
 
   character(len=3)  title_pseudo*70, cdum
 
@@ -128,7 +127,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
      if (nlcc) then 
         do ir=1, mesh
            rhoc(ir)=(a_core+b_core*r2(ir))*exp(-alfa_core*r2(ir)) &
-                *r2(ir)*fourpi
+                *r2(ir)*fpi
         enddo
      else
         rhoc=0.0_dp
@@ -192,7 +191,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
         read( iunps, *, err=300, iostat=ios )  &
              ( rhoc(ir), ir=1,mesh )
         do ir=1, mesh
-           rhoc(ir)=rhoc(ir)*r2(ir)*fourpi
+           rhoc(ir)=rhoc(ir)*r2(ir)*fpi
         enddo
      else
         rhoc=0.0_dp

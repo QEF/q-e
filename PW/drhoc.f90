@@ -13,6 +13,7 @@ subroutine drhoc (ngl, gl, omega, tpiba2, numeric, a_nlcc, b_nlcc, &
   !
 #include "f_defs.h"
   USE kinds
+  USE constants, ONLY : pi, fpi
   implicit none
   !
   !    first the dummy variables
@@ -35,10 +36,6 @@ subroutine drhoc (ngl, gl, omega, tpiba2, numeric, a_nlcc, b_nlcc, &
   ! output: the fourier transform of the co
   logical :: numeric
   ! input: if true the charge is in numeric
-  !
-  !     two parameters
-  !
-  real(DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0 * pi
   !
   !     here the local variables
   !

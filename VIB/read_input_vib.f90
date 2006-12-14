@@ -65,7 +65,7 @@ SUBROUTINE read_input_vib()
      !
      ! ... set default values for variables in namelist INPUT_VIB
      !
-     displacement       = 0.05
+     displacement       = 0.05d0
      save_freq          = 1
      trans_inv_flag     = .TRUE.
      trans_rot_inv_flag = .TRUE.

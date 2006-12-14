@@ -32,7 +32,7 @@
          istart=iupdwn(iss)
          do i=1,nss
           do k=1,nss
-           fmat(k,i,iss)=0.0
+           fmat(k,i,iss)=0.0d0
            do j=1,nss
             fmat(k,i,iss)=fmat(k,i,iss)+                                   &
     &           zmat(j,k,iss)*fdiag(j+istart-1)*zmat(j,i,iss)
@@ -104,7 +104,7 @@
             do jv=1,nh(is)
              do ia=1,na(is)
               jnl=ish(is)+(jv-1)*na(is)+ia
-               becdiag(jnl,ni+istart-1)=0.0
+               becdiag(jnl,ni+istart-1)=0.0d0
                do nj=1,nss
                 becdiag(jnl,ni+istart-1)=becdiag(jnl,ni+istart-1)+        &
        &        CMPLX(z0(ni,nj,iss),0.d0)*bec(jnl,nj+istart-1)
@@ -216,7 +216,7 @@
          istart=iupdwn(iss)
          do i=1,nss
           do k=1,nss
-           fmat(k,i,iss)=0.0
+           fmat(k,i,iss)=0.0d0
            do j=1,nss
             fmat(k,i,iss)=fmat(k,i,iss)+                                  &
     &            zmat(k,j,iss)*fdiag(j+istart-1)*zmat(i,j,iss)
@@ -263,7 +263,7 @@
          if(ene1.lt.ene0) then
             passo=passop
          else 
-            passo=0.5*passop
+            passo=0.5d0*passop
          endif
       endif
 

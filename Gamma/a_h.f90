@@ -57,10 +57,10 @@ subroutine A_h(e,h,ah)
      if (ibnd.lt.nbnd) then
         ! two ffts at the same time
         do j = 1,npw
-           psic (nl (igk(j))) = evc(j,ibnd) + (0.0,1.d0)* evc(j,ibnd+1)
-           dpsic(nl (igk(j))) =   h(j,ibnd) + (0.0,1.d0)*   h(j,ibnd+1)
-           psic (nlm(igk(j)))= CONJG(evc(j,ibnd)-(0.0,1.d0)* evc(j,ibnd+1))
-           dpsic(nlm(igk(j)))= CONJG(  h(j,ibnd)-(0.0,1.d0)*   h(j,ibnd+1))
+           psic (nl (igk(j))) = evc(j,ibnd) + (0.0d0,1.d0)* evc(j,ibnd+1)
+           dpsic(nl (igk(j))) =   h(j,ibnd) + (0.0d0,1.d0)*   h(j,ibnd+1)
+           psic (nlm(igk(j)))= CONJG(evc(j,ibnd)-(0.0d0,1.d0)* evc(j,ibnd+1))
+           dpsic(nlm(igk(j)))= CONJG(  h(j,ibnd)-(0.0d0,1.d0)*   h(j,ibnd+1))
         end do
      else
         do j = 1,npw
@@ -73,7 +73,7 @@ subroutine A_h(e,h,ah)
      call cft3s( psic,nr1,nr2,nr3,nrx1,nr2,nr3,2)
      call cft3s(dpsic,nr1,nr2,nr3,nrx1,nr2,nr3,2)
      do j = 1,nrxx
-        drho(j) = drho(j) - 2.0*degspin/omega *   &
+        drho(j) = drho(j) - 2.0d0*degspin/omega *   &
               DBLE(psic(j)*CONJG(dpsic(j)))
         dpsic(j) = dpsic(j) * vrs(j,current_spin)
      end do

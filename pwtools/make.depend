@@ -1,9 +1,11 @@
+dynmat.o : ../Modules/constants.o
 dynmat.o : ../Modules/kind.o
 ev.o : ../Modules/kind.o
 ev.o : ../Modules/random_numbers.o
+matdyn.o : ../Modules/constants.o
 matdyn.o : ../Modules/kind.o
-matdyn.o : ../Modules/mp_global.o
 matdyn.o : ../Modules/mp.o
+matdyn.o : ../Modules/mp_global.o
 matdyn.o : ../Modules/parameters.o
 metadyn_pp.o : ../Modules/constants.o
 metadyn_pp.o : ../Modules/io_global.o
@@ -16,8 +18,9 @@ path_int.o : ../Modules/path_formats.o
 path_int.o : ../Modules/splinelib.o
 q2r.o : ../Modules/fft_scalar.o
 q2r.o : ../Modules/kind.o
-q2r.o : ../Modules/mp_global.o
 q2r.o : ../Modules/mp.o
+q2r.o : ../Modules/mp_global.o
+rigid.o : ../Modules/constants.o
 rigid.o : ../Modules/kind.o
 dynmat.o : ../include/f_defs.h
 matdyn.o : ../include/f_defs.h

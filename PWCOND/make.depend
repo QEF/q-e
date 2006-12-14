@@ -52,6 +52,7 @@ init_orbitals.o : ../Modules/uspp.o
 init_orbitals.o : ../PW/noncol.o
 init_orbitals.o : ../PW/pwcom.o
 init_orbitals.o : condcom.o
+integrals.o : ../Modules/constants.o
 integrals.o : ../Modules/kind.o
 jbloch.o : ../Modules/kind.o
 jbloch.o : ../PW/noncol.o

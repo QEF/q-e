@@ -14,6 +14,8 @@
 !   atomic pseudopotentials with nonlinear core correction are allowed
 !   gradient correction  allowed (A. Dal Corso fecit AD 1993)
 !
+use kinds, only: DP
+use constants, only: fpi
 use ld1inc
 use funct, only : dft_is_gradient
 implicit none
@@ -46,7 +48,6 @@ implicit none
       logical :: &
              gga                ! if true it is a gga calculation
 
-      real(DP), parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
       gga=dft_is_gradient()
       allocate(vgc(ndm,2),stat=ierr)
@@ -78,18 +79,18 @@ implicit none
          vh(i)= vh(i)*rho_tot
          !
          do is=1,nspin
-            rh(is) = rhos(i,is)/r2(i)/fourpi
+            rh(is) = rhos(i,is)/r2(i)/fpi
          enddo
          if (nlcc) then
-            rhc= rhoc(i)/r2(i)/fourpi
+            rhc= rhoc(i)/r2(i)/fpi
             call vxc_t(rh,rhc,lsd,vxcp)
             if (gga) then
                f3(i) = exc_t(rh,rhc,lsd)*(rho_tot+rhoc(i)) &
-                     + egc(i)*r2(i)*fourpi  &
+                     + egc(i)*r2(i)*fpi  &
                      - exc_t(rh0,rhc,lsd)*rhoc(i) &
-                     - egcc(i)*r2(i)*fourpi
+                     - egcc(i)*r2(i)*fpi
                f8(i) = exc_t(rh0,rhc,lsd)*rhoc(i) + &
-                       egcc(i)*r2(i)*fourpi
+                       egcc(i)*r2(i)*fpi
                f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
                       -f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)-  &
@@ -105,7 +106,7 @@ implicit none
             call vxc_t(rh,rhc,lsd,vxcp)
             if (gga) then
                f3(i) = exc_t(rh,rhc,lsd)*rho_tot + &
-                       egc(i)*r2(i)*fourpi
+                       egc(i)*r2(i)*fpi
                f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
                                  -f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)  &

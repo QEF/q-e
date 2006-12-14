@@ -1002,6 +1002,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   !-----------------------------------------------------------------------
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  USE constants, ONLY : bohr => BOHR_RADIUS_ANGS
   implicit none
   integer :: nat, ityp (nat), nx, ny, nz, ounit
   real(DP) :: alat, tau (3, nat), at (3, 3), rhomax, x0 (3), &
@@ -1009,7 +1010,6 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
   character(len=3) :: atm(*)
   !
   integer, parameter :: MAXATOMS = 999
-  real, parameter :: bohr = 0.529177
   integer :: natoms
   character(len=2) type (MAXATOMS)
   integer :: n1, n2, n3, na, i
@@ -1063,7 +1063,7 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
 10 WRITE( stdout,'(5x,"Found ",i4," atoms in the box")') natoms
   write(ounit,'("  3 2")')
   write(ounit,'(3i5)') nz,ny,nx
-  write(ounit,'(6f10.4)') 0.0,sidez,0.0,sidey,0.0,sidex
+  write(ounit,'(6f10.4)') 0.0d0,sidez,0.0d0,sidey,0.0d0,sidex
   do n3=1,nz
      do n2 = 1, ny
         do n1 = 1, nx

@@ -32,7 +32,7 @@ subroutine dvpsi_e(kpoint,ipol)
        &           gr(:,:), h(:,:)
   logical:: precondition, orthonormal,startwith0
   external H_h
-  data upol /1.0,0.0,0.0, 0.0,1.0,0.0, 0.0,0.0,1.0/
+  data upol /1.0d0,0.0d0,0.0d0, 0.0d0,1.0d0,0.0d0, 0.0d0,0.0d0,1.0d0/
   !
   call start_clock('dvpsi_e')
   !
@@ -55,7 +55,7 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   do ibnd = 1,nbnd
      do i = 1,npw
-        dpsi(i,ibnd) = gk(ipol,i)*(0.0,-2.0) * evc(i,ibnd)
+        dpsi(i,ibnd) = gk(ipol,i)*(0.0d0,-2.0d0) * evc(i,ibnd)
      end do
   end do
   !
@@ -123,7 +123,7 @@ subroutine dvpsi_e(kpoint,ipol)
   !
   if (precondition) then
      do i = 1,npw
-        q(i) = 1.0/max(1.d0,g2kin(i))
+        q(i) = 1.0d0/max(1.d0,g2kin(i))
      end do
      call zvscal(npw,npwx,nbnd,q,evc,work)
      call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)

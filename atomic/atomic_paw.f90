@@ -31,6 +31,7 @@ MODULE atomic_paw
   !============================================================================
   !
   USE kinds, ONLY: dp
+  USE constants, ONLY: pi, fpi, e2, eps8
   USE ld1_parameters, ONLY: ndm, nwfsx
   USE parameters, ONLY: lmaxx
   !
@@ -39,10 +40,6 @@ MODULE atomic_paw
   SAVE
   !
   REAL(dp), PARAMETER :: ZERO=0._dp, ONE=1._dp, TWO=2._dp, HALF=0.5_dp
-  !
-  ! TEMP, to be substituted by module constants
-  REAL(dp), PARAMETER :: &
-       PI=3.14159265358979323846_dp, FPI=4._dp*PI, E2=2._dp, EPS8=1.0e-8_dp
   !
   !============================================================================
   !

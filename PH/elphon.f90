@@ -680,7 +680,7 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !
   !     Compute DOS at E_F (states per Ry per unit cell)
   !
-  dos_ef = 0.0
+  dos_ef = 0.0d0
   DO ik = 1, nks
      DO ibnd = 1, nbnd
         dos_ef = dos_ef + wk (ik) * w0gauss ( (et (ibnd, ik) - ef) &

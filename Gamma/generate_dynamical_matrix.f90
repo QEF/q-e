@@ -68,7 +68,7 @@ subroutine generate_dynamical_matrix   &
   allocate  (done( 3*nat, 3*nat))    
   do smu_i = 1,3*nat
      do smu_j = 1,3*nat
-        dyn(smu_i,smu_j) = 0.0
+        dyn(smu_i,smu_j) = 0.0d0
         done(smu_i,smu_j)= 0
      end do
   end do

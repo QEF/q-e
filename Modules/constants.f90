@@ -19,9 +19,10 @@ MODULE constants
   !
   ! ... Mathematical constants
   ! 
-  REAL(DP), PARAMETER :: pi = 3.14159265358979323846_DP
-  REAL(DP), PARAMETER :: tpi= 2.0_DP * pi
-  REAL(DP), PARAMETER :: fpi= 4.0_DP * pi
+  REAL(DP), PARAMETER :: pi     = 3.14159265358979323846_DP 
+  REAL(DP), PARAMETER :: tpi    = 2.0_DP * pi
+  REAL(DP), PARAMETER :: fpi    = 4.0_DP * pi
+  REAL(DP), PARAMETER :: pi34   = 0.75_DP * pi
   REAL(DP), PARAMETER :: sqrtpi = 1.77245385090551602729_DP 
   REAL(DP), PARAMETER :: sqrtpm1= 1.0_DP / sqrtpi
   REAL(DP), PARAMETER :: sqrt2  = 1.41421356237309504880_DP
@@ -68,7 +69,7 @@ MODULE constants
   ! ...                                  = 0.208194346 e*A
   ! ... ( 1 esu = (0.1/c) Am, c=299792458 m/s)
   !
-  REAL(DP), PARAMETER :: DEBYE_SI         = 3.3356409519 * 1.0D-30 ! C*m 
+  REAL(DP), PARAMETER :: DEBYE_SI         = 3.3356409519d0 * 1.0D-30 ! C*m 
   REAL(DP), PARAMETER :: AU_DEBYE         = ELECTRON_SI * BOHR_RADIUS_SI / &
                                             DEBYE_SI
   !
@@ -93,9 +94,9 @@ MODULE constants
   !
   REAL(DP), PARAMETER :: amconv = AMU_RY
   REAL(DP), PARAMETER :: uakbar = RY_KBAR
-  REAL(DP), PARAMETER :: bohr_radius_cm = bohr_radius_si * 100.0
+  REAL(DP), PARAMETER :: bohr_radius_cm = bohr_radius_si * 100.0d0
   REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = bohr_radius_cm * 1.0D8
-  REAL(DP), PARAMETER :: ANGSTROM_AU = 1.0/BOHR_RADIUS_ANGS
+  REAL(DP), PARAMETER :: ANGSTROM_AU = 1.0d0/BOHR_RADIUS_ANGS
   REAL(DP), PARAMETER :: DIP_DEBYE = AU_DEBYE
   REAL(DP), PARAMETER :: AU_TERAHERTZ  = AU_PS
   REAL(DP), PARAMETER :: AU_TO_OHMCMM1 = 46000.0D0 ! (ohm cm)^-1

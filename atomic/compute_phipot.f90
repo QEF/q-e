@@ -17,6 +17,8 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
   !
   !
   !      
+  use kinds, only: DP 
+  use constants, only: pi
   use ld1inc
   implicit none
   integer :: &
@@ -27,7 +29,6 @@ subroutine compute_phipot(lam,ik,nwf0,ns,xc)
   real(DP) :: &
        xc(8)
   !
-  real(DP), parameter :: pi=3.14159265358979_dp
   real(DP) :: &
        fae,    & ! the value of the all-electron function
        ff,     & ! compute the second derivative

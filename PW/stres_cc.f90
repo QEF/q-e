@@ -63,7 +63,7 @@ subroutine stres_cc (sigmaxcc)
   ! psic contains now Vxc(G)
   !
   allocate(rhocg(ngl))
-  sigmadiag = 0.0
+  sigmadiag = 0.0d0
   if (gamma_only) then
      fact = 2.d0
   else

@@ -52,7 +52,7 @@ subroutine stres_loc (sigmaloc)
   else
      fact = 1.d0
   end if
-  evloc = 0.0
+  evloc = 0.0d0
   do nt = 1, ntyp
      if (gstart==2) evloc = evloc + &
           psic (nl (1) ) * strf (1, nt) * vloc (igtongl (1), nt)
@@ -75,7 +75,7 @@ subroutine stres_loc (sigmaloc)
         do l = 1, 3
            do m = 1, l
               sigmaloc(l, m) = sigmaloc(l, m) +  DBLE( CONJG( psic(nl(ng) ) ) &
-                    * strf (ng, nt) ) * 2.0 * dvloc (igtongl (ng) ) &
+                    * strf (ng, nt) ) * 2.0d0 * dvloc (igtongl (ng) ) &
                     * tpiba2 * g (l, ng) * g (m, ng) * fact
            enddo
         enddo

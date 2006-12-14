@@ -234,11 +234,11 @@ subroutine convert_uspp
   !     ----------------------------------------------------------
   !
   use Vanderbilt
+  use constants, only : fpi
   use upf
   implicit none
   integer i
   character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
-  real(8), parameter:: pi=3.141592653589793d0
 
   write(generated, '("Generated using Vanderbilt code, version ",3i3)') iver
   write(date_author,'("Author: unknown    Generation date:",3i5)') idmy
@@ -275,8 +275,8 @@ subroutine convert_uspp
   nlcc = ifpcor.gt.0
   zp = zp_
   etotps = etot
-  ecutrho=0.0
-  ecutwfc=0.0
+  ecutrho=0.0d0
+  ecutwfc=0.0d0
   lmax = nang - 1
   mesh = mesh_
   nbeta = nbeta_
@@ -315,7 +315,7 @@ subroutine convert_uspp
   allocate (rho_atc(mesh))
   ! Vanderbilt rho_core(r) =  4pi*r^2*rho_core(r) UPF
   rho_atc (1) = 0.d0
-  rho_atc (2:mesh) = rho_atc_(2:mesh) / 4.0 / pi / r(2:mesh)**2
+  rho_atc (2:mesh) = rho_atc_(2:mesh) / fpi / r(2:mesh)**2
   deallocate (rho_atc_)
 
   allocate (vloc0(mesh))

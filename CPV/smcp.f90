@@ -766,9 +766,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%c0,dbec,.true.)
      ENDIF
      !
-     xnhp0(:,sm_k)=0.
-     xnhpm(:,sm_k)=0.
-     vnhp(:,sm_k) =0.
+     xnhp0(:,sm_k)=0.d0
+     xnhpm(:,sm_k)=0.d0
+     vnhp(:,sm_k) =0.d0
      rep(sm_k)%fionm=0.d0
      CALL ions_vel(  rep(sm_k)%vels,  rep(sm_k)%taus,  rep(sm_k)%tausm, na, nsp, delt )
 
@@ -778,12 +778,12 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      !     kinetic energy of the electrons
      !     ======================================================
      !
-     ekincm(sm_k)=0.0
+     ekincm(sm_k)=0.0d0
      CALL elec_fakekine( ekincm(sm_k), ema0bg, emass, rep_el(sm_k)%c0, rep_el(sm_k)%cm, ngw, nbsp, 1, delt )
 
      xnhe0(sm_k)=0.
-     xnhem(sm_k)=0.
-     vnhe(sm_k) =0.
+     xnhem(sm_k)=0.d0
+     vnhe(sm_k) =0.d0
      !
      rep_el(sm_k)%lambdam=rep_el(sm_k)%lambda
      !
@@ -843,7 +843,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !     calculation of velocity of nose-hoover variables
         !
-        IF(.NOT.tsde) fccc(sm_k)=1./(1.+frice)
+        IF(.NOT.tsde) fccc(sm_k)=1.d0/(1.d0+frice)
         !
         CALL initbox ( rep(sm_k)%tau0, taub, irb )
         CALL phbox(taub,eigrb)
@@ -1194,11 +1194,11 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         pre_ekinc(sm_k) = ekinc(sm_k)
 
-        ekinc(sm_k) = 0.5 * ( ekinc0(sm_k) + ekincm(sm_k) )
+        ekinc(sm_k) = 0.5d0 * ( ekinc0(sm_k) + ekincm(sm_k) )
         !
         !     fake cell-parameters kinetic energy
         !
-        ekinh=0.
+        ekinh=0.d0
         IF(thdyn) THEN
            CALL cell_kinene( ekinh, temphh, velh )
         ENDIF

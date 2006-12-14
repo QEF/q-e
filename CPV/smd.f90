@@ -913,6 +913,7 @@ END SUBROUTINE DISTATOMS
 !
 subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key) 
 
+  USE constants, ONLY: BOHR_RADIUS_ANGS
   USE input_parameters, only: sp_pos, pos, rd_pos, &
        & stcd1 => smd_stcd1, stcd2 => smd_stcd2, stcd3 => smd_stcd3, &
        & atomic_positions 
@@ -1381,7 +1382,7 @@ subroutine init_path(sm_p,kwnp,stcd,nsp,nat,alat,nbeg,key)
      !  atomic positions in A
      !
      DO sm_k=0,sm_p
-        rep(sm_k)%tau0 = rep(sm_k)%tau0 / 0.529177
+        rep(sm_k)%tau0 = rep(sm_k)%tau0 / BOHR_RADIUS_ANGS
      ENDDO
      !
   CASE DEFAULT

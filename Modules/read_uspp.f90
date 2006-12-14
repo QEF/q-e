@@ -87,6 +87,7 @@ CONTAINS
     !     L = | l1-l2 | , | l1-l2 | +2 , ... , l1+l2 are ever used.)
     !     ------------------------------------------------------
     !
+    USE constants, ONLY : fpi
     !
     implicit none
     !
@@ -367,7 +368,7 @@ CONTAINS
     if (nlcc (is) ) then
        rho_atc(1,is) = 0.D0
        do ir=2,mesh(is)
-          rho_atc(ir,is) = rho_atc(ir,is)/4.0/3.14159265/r(ir,is)**2
+          rho_atc(ir,is) = rho_atc(ir,is)/fpi/r(ir,is)**2
        enddo
     end if
     !
@@ -535,8 +536,8 @@ CONTAINS
     !
     nblock = mesh/40
     i=1
-    r(i)=0.0
-    deltax=0.0025*0.88534138/z**(1.d0/3.d0)
+    r(i)=0.0d0
+    deltax=0.0025d0*0.88534138d0/z**(1.d0/3.d0)
     DO j=1,nblock
        DO k=1,40
           i=i+1
@@ -560,6 +561,8 @@ CONTAINS
     !
     !     Output parameters in module "uspp_param"
     !     info on DFT level in module "dft"
+    !
+    USE constants, ONLY : fpi
     !
     implicit none
     !
@@ -659,7 +662,7 @@ CONTAINS
        !
        ! oc < 0 distinguishes between bound states from unbound states
        !
-       if (oc (nb, is) <= 0.d0) oc (nb, is) = -1.0
+       if (oc (nb, is) <= 0.d0) oc (nb, is) = -1.0d0
     enddo
     !
     kkbeta(is)=0
@@ -739,7 +742,7 @@ CONTAINS
     !
     if ( nlcc(is) ) then
        do ir=1,mesh(is)
-          rho_atc(ir,is) = rho_atc(ir,is)/4.0/3.14159265d0/r(ir,is)**2
+          rho_atc(ir,is) = rho_atc(ir,is)/fpi/r(ir,is)**2
        enddo
     end if
     !

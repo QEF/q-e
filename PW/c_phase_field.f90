@@ -53,19 +53,15 @@ SUBROUTINE c_phase_field
    INTEGER :: igk1(npwx)
    INTEGER :: igk0(npwx)
    INTEGER :: ig
-   INTEGER :: ind1
    INTEGER :: info
    INTEGER :: is
    INTEGER :: istring
    INTEGER :: iv
-   INTEGER :: ivpt(nbnd)
    INTEGER :: j
    INTEGER :: jkb
    INTEGER :: jkb_bp
    INTEGER :: jkb1
-   INTEGER :: job
    INTEGER :: jv
-   INTEGER :: kindex
    INTEGER :: kort
    INTEGER :: kpar
    INTEGER :: kpoint
@@ -75,14 +71,6 @@ SUBROUTINE c_phase_field
    INTEGER :: mk2
    INTEGER :: mk3
    INTEGER , ALLOCATABLE :: mod_elec(:)
-   INTEGER :: mod_elec_dw
-   INTEGER :: mod_elec_tot
-   INTEGER :: mod_elec_up
-   INTEGER :: mod_ion(nat)
-   INTEGER :: mod_ion_dw
-   INTEGER :: mod_ion_tot
-   INTEGER :: mod_ion_up
-   INTEGER :: mod_tot
    INTEGER :: n1
    INTEGER :: n2
    INTEGER :: n3
@@ -99,7 +87,6 @@ SUBROUTINE c_phase_field
    INTEGER :: npw0
    INTEGER :: nstring
    INTEGER :: nt
-   LOGICAL :: lodd
    REAL(dp) :: dk(3)
    REAL(dp) :: dkmod
    REAL(dp) :: el_loc
@@ -112,43 +99,23 @@ SUBROUTINE c_phase_field
    REAL(dp) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
    REAL(dp), ALLOCATABLE :: loc_k(:)
    REAL(dp) , ALLOCATABLE :: pdl_elec(:)
-   REAL(dp) :: pdl_elec_dw
-   REAL(dp) :: pdl_elec_tot
-   REAL(dp) :: pdl_elec_up
-   REAL(dp) :: pdl_ion(nat)
-   REAL(dp) :: pdl_ion_dw
-   REAL(dp) :: pdl_ion_tot
-   REAL(dp) :: pdl_ion_up
-   REAL(dp) :: pdl_tot
    REAL(dp) , ALLOCATABLE :: phik(:)
-   REAL(dp) :: phidw
-   REAL(dp) :: phiup
-   REAL(dp) :: rmod
    REAL(dp) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
-   REAL(dp) :: upol(3)
    REAL(dp) :: weight
    REAL(dp), ALLOCATABLE :: wstring(:)
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    REAL(dp) :: zeta_mod
-   REAL(dp) :: chi
    REAL(dp) :: pola, pola_ion
    COMPLEX(dp) :: aux(ngm)
    COMPLEX(dp) :: aux0(ngm)
    COMPLEX(dp) :: becp0(nkb,nbnd)
    COMPLEX(dp) :: becp_bp(nkb,nbnd)
-   COMPLEX(dp) :: cdet(2)
-   COMPLEX(dp) :: cdwork(nbnd)
-   COMPLEX(dp) :: cave
-   COMPLEX(dp) :: cave_dw
-   COMPLEX(dp) :: cave_up
    COMPLEX(dp) , ALLOCATABLE :: cphik(:)
    COMPLEX(dp) :: det
-   COMPLEX(dp) :: dtheta
    COMPLEX(dp) :: mat(nbnd,nbnd)
    COMPLEX(dp) :: pref
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(dp) :: struc(nat)
-   COMPLEX(dp) :: theta0
    COMPLEX(dp) :: zdotc
    COMPLEX(dp) :: zeta
 
@@ -175,7 +142,7 @@ SUBROUTINE c_phase_field
 !   IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
 !                'Polarization only for insulators and no empty bands',1)
 
-IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
+IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
    &write(stdout,*) 'PAY ATTENTION: EL FIELD AND OCCUPATIONS'
 
 !  --- Define a small number ---
@@ -232,11 +199,11 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
       gpar(3)=(xk(3,nppstr)-xk(3,1))*DBLE(nppstr)/DBLE(nppstr-1)
       gvec=dsqrt(gpar(1)**2+gpar(2)**2+gpar(3)**2)*tpiba
    else
-      gpar(1)=0.
-      gpar(2)=0.
-      gpar(3)=0.
-      gpar(gdir)=1./at(gdir,gdir)!
-      gvec=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
+      gpar(1)=0.d0
+      gpar(2)=0.d0
+      gpar(3)=0.d0
+      gpar(gdir)=1.d0/at(gdir,gdir)!
+      gvec=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
    endif
       
       
@@ -248,11 +215,11 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
       dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba!orthorombic cell
      
    else!caso punto gamma, per adesso solo cella cubica
-      dk(1)=0.
-      dk(2)=0.
-      dk(3)=0.
-      dk(gdir)=1./at(gdir,gdir)
-      dkmod=tpiba/sqrt(at(gdir,1)**2.+at(gdir,2)**2.+at(gdir,3)**2.)
+      dk(1)=0.d0
+      dk(2)=0.d0
+      dk(3)=0.d0
+      dk(gdir)=1.d0/at(gdir,gdir)
+      dkmod=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
    endif
    
   
@@ -512,7 +479,7 @@ IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) &
 !               CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
 !               det=cdet(1)*10.**cdet(2)
 
-               det=(1.,0.)
+               det=(1.d0,0.d0)
                call zgetrf(nbnd,nbnd,mat,nbnd,ipivi,info)
                CALL errore('c_phase','error in zgetrf',abs(info))
                do ii=1,nbnd

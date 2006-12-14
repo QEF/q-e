@@ -20,6 +20,7 @@ function w0gauss (x, n)
   ! --> (n=-99): derivative of Fermi-Dirac function: 0.5/(1.0+cosh(x))
   !
   USE kinds
+  USE constants, ONLY : sqrtpm1
   implicit none
   real(DP) :: w0gauss, x
   ! output: the value of the function
@@ -30,22 +31,20 @@ function w0gauss (x, n)
   !
   !    here the local variables
   !
-  real(DP) :: a, arg, hp, hd, pi
+  real(DP) :: a, arg, hp, hd
   ! the coefficients a_n
   ! the argument of the exponential
   ! the hermite function
   ! the hermite function
-  ! pi
 
   integer :: i, ni
   ! counter on n values
   ! counter on 2n values
 
-  pi = 3.14159265358979d0
   ! Fermi-Dirac smearing
   if (n.eq. - 99) then
      if (abs (x) .le.36.0) then
-        w0gauss = 1.0d0 / (2.0 + exp ( - x) + exp ( + x) )
+        w0gauss = 1.0d0 / (2.0d0 + exp ( - x) + exp ( + x) )
         ! in order to avoid problems for large values of x in the e
      else
         w0gauss = 0.d0
@@ -56,19 +55,18 @@ function w0gauss (x, n)
   ! cold smearing  (Marzari-Vanderbilt)
   if (n.eq. - 1) then
      arg = min (200.d0, (x - 1.0d0 / sqrt (2.0d0) ) **2)
-     w0gauss = 1.0d0 / sqrt (pi) * exp ( - arg) * (2.0d0 - sqrt ( &
-          2.0d0) * x)
+     w0gauss = sqrtpm1 * exp ( - arg) * (2.0d0 - sqrt ( 2.0d0) * x)
      return
 
   endif
   ! Methfessel-Paxton
   arg = min (200.d0, x**2)
-  w0gauss = exp ( - arg) / sqrt (pi)
+  w0gauss = exp ( - arg) * sqrtpm1
   if (n.eq.0) return
   hd = 0.0d0
   hp = exp ( - arg)
   ni = 0
-  a = 1.0 / sqrt (pi)
+  a = sqrtpm1
   do i = 1, n
      hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
      ni = ni + 1

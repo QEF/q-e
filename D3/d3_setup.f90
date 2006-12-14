@@ -124,7 +124,7 @@ SUBROUTINE d3_setup()
      !
      IF (ngauss == - 99) THEN
         fac = 1.d0 / SQRT (small)
-        xmax = 2.d0 * LOG (0.5 * (fac + SQRT (fac * fac - 4.0) ) )
+        xmax = 2.d0 * LOG (0.5d0 * (fac + SQRT (fac * fac - 4.0d0) ) )
      ENDIF
      TARGET = ef + xmax * degauss
      DO ik = 1, nks

@@ -566,7 +566,7 @@
       allocate(x(ng))
       allocate(vtemp(ng))
       !
-      ci=(0.0,1.0)
+      ci=(0.0d0,1.0d0)
       !
       dexc = 0.0d0
       !
@@ -590,7 +590,7 @@
      &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,1)+      &
      &                    gx(1,ig)*drhog(ig,iss,i,j))
                   end do
-                  dexc(i,j) = dexc(i,j) + DBLE(SUM(vtemp))*2.0
+                  dexc(i,j) = dexc(i,j) + DBLE(SUM(vtemp))*2.0d0
                end do
             end do
          endif
@@ -604,9 +604,9 @@
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(2,ig)*0.5*CMPLX( DBLE(fp),AIMAG(fm))
+     &           ci*tpiba*gx(2,ig)*0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
             x(ig) = x(ig) +                                             &
-     &           ci*tpiba*gx(3,ig)*0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+     &           ci*tpiba*gx(3,ig)*0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
 !
          if(tpre) then
@@ -616,14 +616,14 @@
                      fp=v(np(ig))+v(nm(ig))
                      fm=v(np(ig))-v(nm(ig))
                      vtemp(ig) = omega*ci*                              &
-     &                    (0.5*CMPLX(DBLE(fp),-AIMAG(fm))*              &
+     &                    (0.5d0*CMPLX(DBLE(fp),-AIMAG(fm))*              &
      &                    tpiba*(-rhog(ig,iss)*gx(i,ig)*ainv(j,2)+      &
      &                    gx(2,ig)*drhog(ig,iss,i,j))+                  &
-     &                    0.5*CMPLX(AIMAG(fp),DBLE(fm))*tpiba*          &
+     &                    0.5d0*CMPLX(AIMAG(fp),DBLE(fm))*tpiba*          &
      &                    (-rhog(ig,iss)*gx(i,ig)*ainv(j,3)+            &
      &                    gx(3,ig)*drhog(ig,iss,i,j)))
                   end do
-                  dexc(i,j) = dexc(i,j) + 2.0*DBLE(SUM(vtemp))
+                  dexc(i,j) = dexc(i,j) + 2.0d0*DBLE(SUM(vtemp))
                end do
             end do
          endif
@@ -631,7 +631,7 @@
 !     second part xc-potential: 1 inverse fft
 !
          do ig=1,nnr
-            v(ig)=(0.0,0.0)
+            v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ng
             v(np(ig))=x(ig)

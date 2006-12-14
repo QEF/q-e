@@ -220,7 +220,7 @@
          do iss = 1, nspin
             fsum = 0.0d0
             do in = iupdwn ( iss ), iupdwn ( iss ) - 1 + nupdwn ( iss )
-               if ( fsum + ocp < nel ( iss ) + 0.0001 ) then
+               if ( fsum + ocp < nel ( iss ) + 0.0001d0 ) then
                   f (in) = ocp
                else
                   f (in) = max( nel ( iss ) - fsum, 0.d0 )
@@ -490,7 +490,7 @@
     implicit none
     real(8), intent(inout) :: vnhe
     real(8), intent(in) :: xnhe0, xnhem, delt 
-    vnhe=2.*(xnhe0-xnhem)/delt-vnhe
+    vnhe=2.d0*(xnhe0-xnhem)/delt-vnhe
     return
   end subroutine electrons_nosevel
 

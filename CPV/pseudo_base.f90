@@ -270,7 +270,7 @@
         real(DP) :: r2new
         integer   :: ig
         !
-        r2new = 0.25 * tpiba2 * rcmax**2
+        r2new = 0.25d0 * tpiba2 * rcmax**2
         do ig = 1, ngs
           rhops(ig) = - zv * exp( -r2new * g(ig) ) / omega
         end do
@@ -362,7 +362,7 @@
           vscr(ir) = 0.5d0 * r(ir) * vloc_at(ir) + zv * erf( r(ir) / rcmax )
         end do
         do ir = irmax + 1, mesh
-          vscr(ir)=0.0
+          vscr(ir)=0.0d0
         end do
 
         do ig = 1, ngs
@@ -378,7 +378,7 @@
               endif
             end do
             do ir = irmax + 1, mesh
-              f(ir)  = 0.0
+              f(ir)  = 0.0d0
               if( tpre ) then
                 df(ir) = 0.0d0
               end if
@@ -431,7 +431,7 @@
             !
             vps(ig)  = fpi *  figl(ig) / ( omega * xg )
             if(tpre)then
-              dvps(ig) = fpi * dfigl(ig) / ( omega * xg ) - 0.5 * vps(ig) / (xg*xg)
+              dvps(ig) = fpi * dfigl(ig) / ( omega * xg ) - 0.5d0 * vps(ig) / (xg*xg)
             endif
           end if
         end do
@@ -491,7 +491,7 @@
             ql  = 0.25d0 * r2l * g(1) * tpiba2
             el  = exp( -ql )
             par = al( ib ) + bl( ib ) * r2l * ( 1.5d0 - ql )
-            sp  = ( pi * r2l )**1.5 * el / omega
+            sp  = ( pi * r2l )**1.5d0 * el / omega
             sfp = sp * par + sfp
           end do
           vps(1) = gps + sfp

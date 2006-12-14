@@ -38,7 +38,7 @@ subroutine dielec_test
         call davcio (dpsi, lrd2w, iud2w, nrec, -1)
         tmp = 0.d0
         do ibnd = 1, nbnd_occ (ik)
-           tmp = tmp + 2.0 * w_ *                        &
+           tmp = tmp + 2.0d0 * w_ *                        &
               real (ZDOTC (npw, evc (1, ibnd), 1, dpsi (1, ibnd), 1))
         enddo
         i1 = a1j (ipol)

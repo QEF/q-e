@@ -31,7 +31,7 @@
 ! ...  declare other variables
        INTEGER i
        REAL(DP) fm
-       REAL(DP), PARAMETER :: eps = 1.0e-10
+       REAL(DP), PARAMETER :: eps = 1.0d-10
 
 !  end of declarations
 !  ----------------------------------------------
@@ -52,7 +52,7 @@
        integer nx
        integer i
        real(DP)  f(nx),temp,ent, fm,eps
-       parameter(eps=1.e-10)
+       parameter(eps=1.d-10)
 
        ent=0.d0
        do i=1,nx

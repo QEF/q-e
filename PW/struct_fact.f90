@@ -16,6 +16,7 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
 #include "f_defs.h"
   !
   USE kinds
+  USE constants, ONLY : tpi
   implicit none
   !
   !   Here the dummy variables
@@ -55,11 +56,9 @@ subroutine struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, &
   ! counter over fft dimension along z
   ! counter over polarizations
 
-  real(DP) :: tpi, arg, bgtau (3)
-  ! two times pi
+  real(DP) :: arg, bgtau (3)
   ! the argument of the exponent
   ! scalar product of bg and tau
-  parameter (tpi = 2.0d0 * 3.14159265358979d0)
 
   strf(:,:) = (0.d0,0.d0)
   do nt = 1, ntyp

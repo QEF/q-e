@@ -152,7 +152,7 @@ PROGRAM matdyn
      ! set namelist default
      !
      dos = .FALSE.
-     deltaE = 1.0
+     deltaE = 1.0d0
      ndos = 1
      nk1 = 0 
      nk2 = 0 
@@ -367,7 +367,7 @@ PROGRAM matdyn
         ! freq(i,n) = frequencies in cm^(-1), with negative sign if omega^2 is negative
         DO i=1,3*nat
            freq(i,n)= SQRT(ABS(w2(i,n))) * rydcm1
-           IF (w2(i,n) < 0.0) freq(i,n) = -freq(i,n)
+           IF (w2(i,n) < 0.0d0) freq(i,n) = -freq(i,n)
         END DO
      END DO
      !
@@ -383,8 +383,8 @@ PROGRAM matdyn
      !
      !
      IF (dos) THEN
-        Emin = 0.0 
-        Emax = 0.0
+        Emin = 0.0d0 
+        Emax = 0.0d0
         DO n=1,nq
            DO i=1, 3*nat
               Emin = MIN (Emin, freq(i,n))
@@ -395,7 +395,7 @@ PROGRAM matdyn
         if (ndos > 1) then
            DeltaE = (Emax - Emin)/(ndos-1)
         else
-           ndos = NINT ( (Emax - Emin) / DeltaE + 1.51 )  
+           ndos = NINT ( (Emax - Emin) / DeltaE + 1.51d0 )  
         end if
         OPEN (unit=2,file=fldos,status='unknown',form='formatted')
         DO n= 1, ndos  
@@ -545,6 +545,7 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
   ! force constants 
   !
   USE kinds,      ONLY : DP
+  USE constants,  ONLY : tpi
   !
   IMPLICIT NONE
   INTEGER nr1, nr2, nr3, nat, n1, n2, n3, &
@@ -553,7 +554,6 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
   REAL(DP) frc(nr1,nr2,nr3,3,3,nat,nat), tau(3,nat), q(3), arg, &
                at(3,3), bg(3,3), r(3), weight, r_ws(3),  &
                total_weight, rws(0:3,nrws)
-  REAL(DP), PARAMETER:: tpi = 2.0*3.14159265358979d0
   REAL(DP), EXTERNAL :: wsweight
   !
   DO na=1, nat
@@ -570,7 +570,7 @@ SUBROUTINE frc_blk(dyn,q,tau,nat,nr1,nr2,nr3,frc,at,bg,rws,nrws)
                     r_ws(i) = r(i) + tau(i,na)-tau(i,nb)
                  END DO
                  weight = wsweight(r_ws,rws,nrws)
-                 IF (weight .GT. 0.0) THEN
+                 IF (weight .GT. 0.0d0) THEN
                     !
                     ! FIND THE VECTOR CORRESPONDING TO R IN THE ORIGINAL CELL
                     !
@@ -615,9 +615,9 @@ SUBROUTINE setupmat (q,dyn,nat,at,bg,tau,itau_blk,nsc,alat, &
   ! compute the dynamical matrix (the analytic part only)
   !
   USE kinds,      ONLY : DP
+  USE constants,  ONLY : tpi
   !
   IMPLICIT NONE
-  REAL(DP), PARAMETER :: tpi=2.d0*3.14159265358979d0
   !
   ! I/O variables
   !
@@ -772,7 +772,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
   if(asr.eq.'simple') then
       do i=1,3
          do j=1,3
-            sum=0.0
+            sum=0.0d0
             do na=1,nat
                sum = sum + zeu(i,j,na)
             end do
@@ -912,7 +912,7 @@ SUBROUTINE set_asr (asr, nr1, nr2, nr3, frc, zeu, nat, ibrav, tau)
       do i=1,3
          do j=1,3
             do na=1,nat
-               sum=0.0
+               sum=0.0d0
                do nb=1,nat
                   do n1=1,nr1
                      do n2=1,nr2
@@ -1616,6 +1616,7 @@ SUBROUTINE a2Fdos &
   !
   USE kinds,      ONLY : DP
   USE ifconstants
+  USE constants,  ONLY : pi
   !
   IMPLICIT NONE
   !
@@ -1708,7 +1709,7 @@ SUBROUTINE a2Fdos &
                     enddo  ! j
                  enddo  ! na
               enddo  !i
-              gamma(nu,n) = gamma(nu,n) * 3.1415926d0 / 2.0d0
+              gamma(nu,n) = gamma(nu,n) * pi / 2.0d0
            enddo  ! k
         enddo  !nc
         !
@@ -1757,7 +1758,7 @@ SUBROUTINE a2Fdos &
               dos_tot = dos_tot + dos_a2F(j)
               !
            enddo
-           lambda = lambda + dos_tot/E * DeltaE / 3.1415926d0
+           lambda = lambda + dos_tot/E * DeltaE / pi
            write (ifn, 1050) E, dos_tot, (dos_a2F(j),j=1,nmodes)
         enddo  !ndos
         write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
@@ -1800,8 +1801,8 @@ subroutine setgam (q, gam, nat, at,bg,tau,itau_blk,nsc,alat, &
   ! compute the dynamical matrix (the analytic part only)
   !
   USE kinds,       ONLY : DP
+  USE constants,   ONLY : tpi
   implicit none
-  real(DP), parameter :: tpi=2.d0*3.14159265358979d0
   !
   ! I/O variables
   !

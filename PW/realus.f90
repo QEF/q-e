@@ -75,13 +75,13 @@ MODULE realus
       !
       INTEGER               :: qsdim, ia, it, mbia, iqs, iqsia
       INTEGER               :: indm, inbrx, idimension, &
-                               ilm, ih, jh, iih, ijh, lllnbnt, lllmbnt
+                               ih, jh, ijh, lllnbnt, lllmbnt
       INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
       REAL(DP), ALLOCATABLE :: buffdist(:,:)
       REAL(DP)              :: distsq, qtot_int, first, second
-      INTEGER               :: idx0, idx, indproc, ir
-      INTEGER               :: i, j, k, i0, j0, k0, ipol, lm, nb, mb, ijv, ilast
+      INTEGER               :: idx0, idx, ir
+      INTEGER               :: i, j, k, ipol, lm, nb, mb, ijv, ilast
       REAL(DP)              :: posi(3)
       REAL(DP), ALLOCATABLE :: rl(:,:), rl2(:)
       REAL(DP), ALLOCATABLE :: tempspher(:,:), qtot(:,:,:), &
@@ -470,7 +470,7 @@ MODULE realus
       IMPLICIT NONE
       !
       REAL(DP), ALLOCATABLE :: aux(:)
-      INTEGER               :: ia, ih, jh, ijh, is, ir, nt, nspin0
+      INTEGER               :: ia, ih, jh, is, ir, nt, nspin0
       INTEGER               :: mbia, nht, nhnt, iqs
       !
       IF ( .NOT. okvan ) THEN

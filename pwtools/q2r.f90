@@ -622,7 +622,7 @@ subroutine read_gamma (nqs, nat, ifn, xq, gaminp)
      READ(ifn,*)
      READ(ifn,*) 
      READ(ifn,*)
-     READ(ifn,'(11X,3F14.9)," )"')  (xq(i,iq),i=1,3)
+     READ(ifn,'(11X,3F14.9)')  (xq(i,iq),i=1,3)
      !     write(*,*) 'xq    ',iq,(xq(i,iq),i=1,3)
      READ(ifn,*)
      do na=1,nat
@@ -662,7 +662,7 @@ SUBROUTINE trasl( phid, phiq, nq, nr1, nr2, nr3, nat, m1, m2, m3 )
         DO na1=1,nat
            DO na2=1,nat
               phid(m1,m2,m3,j1,j2,na1,na2) = &
-                   0.5 * (      phiq(j1,j2,na1,na2,nq) +  &
+                   0.5d0 * (      phiq(j1,j2,na1,na2,nq) +  &
                           CONJG(phiq(j2,j1,na2,na1,nq)))
            END DO
         END DO
@@ -734,7 +734,7 @@ subroutine set_zasr ( zasr, nr1,nr2,nr3, nat, ibrav, tau, zeu)
   if(zasr.eq.'simple') then
      do i=1,3
         do j=1,3
-           sum=0.0
+           sum=0.0d0
            do na=1,nat
                sum = sum + zeu(i,j,na)
             end do

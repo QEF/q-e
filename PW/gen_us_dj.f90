@@ -52,9 +52,9 @@ subroutine gen_us_dj (ik, dvkb)
   ! atomic phase factor
   ! prefactor
 
-  integer :: na, i, l, iig, lm
+  integer :: na, l, iig, lm
   real(DP), allocatable :: djl (:,:,:), ylm (:,:), q (:), gk (:,:)
-  real(DP) ::  qt, dv, eps
+  real(DP) ::  qt, eps
   parameter (eps = 1.0d-8)
 
   complex(DP), allocatable :: sk (:)

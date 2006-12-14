@@ -203,7 +203,7 @@ MODULE input_parameters
         CHARACTER(LEN=256) :: pseudo_dir = './'
           ! specify the directory containing the pseudopotentials
 
-        REAL(DP) :: refg = 0.05
+        REAL(DP) :: refg = 0.05d0
           ! Accurancy of the interpolation table, interval between
           ! table values in Rydberg
 
@@ -458,7 +458,7 @@ MODULE input_parameters
         LOGICAL :: lda_plus_u = .FALSE.
           ! ONLY PWSCF
 
-        REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx)=-1.0
+        REAL(DP) :: starting_ns_eigenvalue(lqmax,nspinx,nsx)=-1.0d0
           ! ONLY PWSCF
 
         REAL(DP) :: hubbard_u(nsx) = 0.0d0
@@ -872,7 +872,7 @@ MODULE input_parameters
         REAL(DP)  :: etresh =0.1d-6 
           ! treshhold on energy
 
-        REAL(DP) :: passop =0.3 
+        REAL(DP) :: passop =0.3d0 
           ! small step for parabolic interpolation
 
         LOGICAL  :: l_blockocc = .false.
@@ -1146,7 +1146,7 @@ MODULE input_parameters
         INTEGER :: smd_lmfreq = 1
           ! Frequencey of computing the Lag. mul.
   
-        REAL (DP) :: smd_tol = 0.0001
+        REAL (DP) :: smd_tol = 0.0001d0
           ! Tolerance in constraints in units of
           ! [alpha(k)-alpha(k-1)] - 1/SM_P      
           !

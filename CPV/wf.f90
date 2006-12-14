@@ -691,7 +691,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !       Update C and bec
   cwf=ZERO
   !        cwf(:,:)=c(:,:,1,1)
-  becwf=0.0
+  becwf=0.0d0
   U2=Uall*ONE
   CALL ZGEMM('N','N',ngw,nbsp,nbsp,ONE,c,ngw,U2,nbsp,ZERO,cwf,ngw)
   !           call ZGEMM('nbsp','nbsp',ngw,nbsp,nbsp,ONE,cwf,ngw,U2,nbsp,ZERO,cwf,ngw)
@@ -829,7 +829,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   USE wannier_base,     ONLY : wf_friction, nsteps, tolw, adapt, wf_q, &
                                weight, nw, wfdt
   USE cell_base,        ONLY : alat
-  USE constants,        ONLY : tpi
+  USE constants,        ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
   USE electrons_base,   ONLY : nbsp
   USE control_flags,    ONLY : iprsta
   USE mp_global,        ONLY : me_image
@@ -857,7 +857,6 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   COMPLEX(DP), ALLOCATABLE, DIMENSION(:, :) :: X1
   COMPLEX(DP), ALLOCATABLE, DIMENSION(:, :, :) :: Oc
   REAL(DP) , ALLOCATABLE , DIMENSION(:) :: mt
-  REAL(DP), PARAMETER :: autoaf=0.529177d0
   REAL(DP) :: spread, sp
   REAL(DP) :: wfc(3,nbsp), gr(nw,3)
   INTEGER  :: me, iunit
@@ -928,7 +927,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      IF(adapt) THEN
         IF(oldt0.LT.t0) THEN
-           fric=fric/2.
+           fric=fric/2.d0
            A=Aminus
            Aminus=temp
         END IF
@@ -1048,7 +1047,7 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
 241 DEALLOCATE(wr, W)
 
-  spread=0.0
+  spread=0.0d0
 
   IF(me.EQ.1) THEN
      iunit = printout_base_unit( "spr" )
@@ -2611,7 +2610,7 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   USE wannier_base,           ONLY : nw, weight, nit, tolw, wfdt, maxwfdt, nsd
   USE control_flags,          ONLY : iprsta
   USE cell_base,              ONLY : alat
-  USE constants,              ONLY : tpi
+  USE constants,              ONLY : tpi, autoaf => BOHR_RADIUS_ANGS
   USE smooth_grid_dimensions, ONLY : nr1s, nr2s, nr3s
   USE mp_global,              ONLY : me_image
   USE printout_base,          ONLY : printout_base_open, printout_base_unit, &
@@ -2627,7 +2626,6 @@ SUBROUTINE wfsteep( m, Omat, Umat, b1, b2, b3 )
   !
   !     conjugated gradient to search maximization
   !
-  REAL(DP), PARAMETER :: autoaf=0.529177d0
   INTEGER, INTENT(in) :: m
   REAL(DP), INTENT(in) :: b1(3),b2(3),b3(3)
   COMPLEX(DP), INTENT(inout) :: Omat(nw, m, m)
@@ -3239,8 +3237,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ig=1,ngm
            fp=psi(np(ig))+psi(nm(ig))
            fm=psi(np(ig))-psi(nm(ig))
-           rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
-           rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+           rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+           rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
         END DO
      ENDIF
      !
@@ -3276,7 +3274,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      !              sa2=f(i+1)/omega
      !            else
      iss2=iss1  ! carlo
-     sa2=0.0
+     sa2=0.0d0
      !            end if
      DO ir=1,nnrsx
         rhos(ir,iss1)=rhos(ir,iss1) + sa1*( DBLE(psis(ir)))**2
@@ -3306,8 +3304,8 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ig=1,ngs
            fp= psis(nps(ig)) + psis(nms(ig))
            fm= psis(nps(ig)) - psis(nms(ig))
-           rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
-           rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+           rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+           rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
         END DO
      ENDIF
      !
@@ -3353,7 +3351,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      IF (gstart.NE.2) THEN
         ! in the parallel case, only one processor has G=0 ! 
         DO iss=1,nspin
-           rsumg(iss)=0.0
+           rsumg(iss)=0.0d0
         END DO
      END IF
      CALL mp_sum(rsumg, intra_image_comm)
@@ -3425,7 +3423,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
      IF (gstart.NE.2) THEN
         ! in the parallel case, only one processor has G=0 ! 
         DO iss=1,nspin
-           rsumg(iss)=0.0
+           rsumg(iss)=0.0d0
         END DO
      END IF
      CALL mp_sum(rsumg, intra_image_comm)

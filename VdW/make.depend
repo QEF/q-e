@@ -31,6 +31,7 @@ dvpsi_e.o : ../PH/phcom.o
 dvpsi_e.o : ../PW/becmod.o
 dvpsi_e.o : ../PW/pwcom.o
 dvpsi_e.o : vdwcom.o
+eff_pot.o : ../Modules/constants.o
 eff_pot.o : ../Modules/io_files.o
 eff_pot.o : ../Modules/io_global.o
 eff_pot.o : ../Modules/kind.o

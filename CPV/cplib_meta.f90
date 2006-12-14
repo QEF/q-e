@@ -33,7 +33,7 @@
       complex(8) fp,fm,ci
 !
 !
-      ci=(0.0,1.0)
+      ci=(0.0d0,1.0d0)
 !
          do ipol = 1, 3
             psi(:)=(0.d0,0.d0)
@@ -103,7 +103,7 @@
 #endif
 !
 !
-      ci=(0.0,1.0)
+      ci=(0.0d0,1.0d0)
       psi(:)=(0.d0,0.d0);
       psis(:)=(0.d0,0.d0);
       kedtaur(:,:)=0.d0
@@ -118,7 +118,7 @@
 !     important: if n is odd then nx must be .ge.n+1 and c(*,n+1)=0.
 ! 
       if (mod(n,2).ne.0) then
-         c(1:ngw,n+1)=(0.,0.)
+         c(1:ngw,n+1)=(0.d0,0.d0)
       endif
          !
       do i=1,n,2
@@ -130,7 +130,7 @@
             sa2=f(i+1)/omega
          else
             iss2=iss1
-            sa2=0.0
+            sa2=0.0d0
          end if
 
          do ipol = 1, 3
@@ -190,7 +190,7 @@
       if(nspin.eq.1)then
          iss=1
 
-         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,iss),0.)
+         psis(1:nnrsx)=CMPLX(kedtaus(1:nnrsx,iss),0.d0)
          call fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
          kedtaug(1:ngs,iss)=psis(nps(1:ngs))
 
@@ -203,8 +203,8 @@
          do ig=1,ngs
             fp= psis(nps(ig)) + psis(nms(ig))
             fm= psis(nps(ig)) - psis(nms(ig))
-            kedtaug(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
-            kedtaug(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+            kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
 
       endif
@@ -291,7 +291,7 @@
       complex(8)  fp, fm, ci
       complex(8)  v(nnr), vs(nnrs)
 !
-      ci=(0.,1.)
+      ci=(0.d0,1.d0)
 
       v(:)=(0.d0,0.d0)
 !
@@ -318,7 +318,7 @@
       if(nspin.eq.1) then
          iss=1
          do ir=1,nnr
-            v(ir)=CMPLX(kedtaur(ir,iss),0.0)
+            v(ir)=CMPLX(kedtaur(ir,iss),0.0d0)
          end do
          call fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
          !
@@ -334,8 +334,8 @@
          do ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
-            kedtaug(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
-            kedtaug(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            kedtaug(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+            kedtaug(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
          end do
 
       endif

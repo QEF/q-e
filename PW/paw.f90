@@ -95,7 +95,7 @@ CONTAINS
   implicit none
 
   character (len=256) :: filerec(ntypx)
-  integer :: l,j,i,jtyp,kkphi,nbetam
+  integer :: j,i,jtyp,kkphi,nbetam
 
   do jtyp=1,ntyp
      open(14,file=filerec(jtyp))

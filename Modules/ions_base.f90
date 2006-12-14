@@ -462,13 +462,13 @@
       REAL(DP) :: tmas
       INTEGER :: is, i, ia
 !
-      tmas=0.0
+      tmas=0.0d0
       do is=1,nsp
          tmas=tmas+na(is)*pmass(is)
       end do
 !
       do i=1,3
-         cdm(i)=0.0
+         cdm(i)=0.0d0
          do is=1,nsp
             do ia=1,na(is)
                cdm(i)=cdm(i)+tau(i,ia,is)*pmass(is)
@@ -491,13 +491,13 @@
       REAL(DP) :: tmas
       INTEGER :: is, i, ia, isa
 !
-      tmas=0.0
+      tmas=0.0d0
       do is=1,nsp
          tmas=tmas+na(is)*pmass(is)
       end do
 !
       do i=1,3
-         cdm(i)=0.0
+         cdm(i)=0.0d0
          isa = 0
          do is=1,nsp
             do ia=1,na(is)
@@ -641,7 +641,7 @@
       temps( is ) = temps( is ) / k_boltzmann_au / ( 1.5d0 * na(is) )
     end do
     !
-    ekinpr = 0.5 * ekinpr
+    ekinpr = 0.5d0 * ekinpr
     !
     IF( ndega < 1 ) THEN 
        tempp = 0.0d0

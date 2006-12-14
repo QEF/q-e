@@ -54,7 +54,7 @@ subroutine stres_har (sigmahar)
   if (gamma_only) then
      sigmahar(:,:) =       fpi * e2 * sigmahar(:,:)
   else
-     sigmahar(:,:) = 0.5 * fpi * e2 * sigmahar(:,:)
+     sigmahar(:,:) = 0.5d0 * fpi * e2 * sigmahar(:,:)
   end if
   do l = 1, 3
      sigmahar (l, l) = sigmahar (l, l) - ehart / omega

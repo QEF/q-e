@@ -19,7 +19,7 @@ subroutine ccalbec_nc (nkb, npwx, npw, npol, nbnd, bec, vkb, psi)
   !
   !   here the dummy variables
   !
-  integer :: nkb, npwx, npw, nbnd, npol,i,j
+  integer :: nkb, npwx, npw, nbnd, npol
   ! input: the total number of beta functions
   ! input: the maximum number of plane waves
   ! input: the length of the vectors

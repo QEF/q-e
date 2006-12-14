@@ -95,7 +95,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
     ! apply |\beta(k \pm dk+q)>D<\beta(k)| to |psi>
     aux = (0.d0,0.d0)
     call add_vuspsi(npwx, npw, nbnd_occ(ik), psi, aux)
-    vel_psi = vel_psi + 0.5*dble(isign) * ryd_to_hartree * aux/(2.d0*dk*tpiba)
+    vel_psi = vel_psi + 0.5d0*dble(isign) * ryd_to_hartree * aux/(2.d0*dk*tpiba)
 
 
     ! compute <\beta(k \pm dk)| and project on |psi>
@@ -110,7 +110,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
     ! apply |\beta(k+q)>D<\beta(k \pm dk)| to |psi>
     aux = (0.d0,0.d0)
     call add_vuspsi(npwx, npw, nbnd_occ(ik), psi, aux)
-    vel_psi = vel_psi + 0.5*dble(isign) * ryd_to_hartree * aux/(2.d0*dk*tpiba)
+    vel_psi = vel_psi + 0.5d0*dble(isign) * ryd_to_hartree * aux/(2.d0*dk*tpiba)
   enddo
 #endif
 

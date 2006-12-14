@@ -80,7 +80,7 @@ END DO
 ngroup=1
 istart(ngroup)=1
 DO imode=2,nmodes
-   IF (ABS(w1(imode)-w1(imode-1)) > 1.0) THEN
+   IF (ABS(w1(imode)-w1(imode-1)) > 1.0d0) THEN
       ngroup=ngroup+1
       istart(ngroup)=imode
    END IF

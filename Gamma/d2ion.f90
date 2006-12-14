@@ -16,6 +16,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
 #include "f_defs.h"
   USE kinds, only : DP
+  USE constants, ONLY : tpi, fpi, e2
   USE io_global,  ONLY : stdout
   implicit none
   integer :: nat, ntyp, ngm, ityp(nat), nmodes, has_equivalent(nat)
@@ -24,15 +25,13 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
   integer :: nu_i,nu_j, mu_i,mu_j, na,nb, nta,ntb, ng, mxr, nrm, nr, i
   parameter(mxr=50)
-  real(DP) :: facg(nat), arg, tpi, fpi, tpiba2, e2, alpha,    &
+  real(DP) :: facg(nat), arg, tpiba2, alpha,                       &
        r(3,mxr), r2(mxr), dtau(3), erfc, rmax, rr,                 &
        upperbound, charge, gt2, fac, fnat, df, d2f, ar
-  parameter(e2=2.d0, tpi=2.d0*3.14159265358979d0 )
   external erfc, rgen
   !
   !
   tpiba2 = (tpi/alat)**2
-  fpi = 2.d0*tpi
   !
   charge = 0.d0
   do na=1, nat
@@ -63,7 +62,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
      fac = -e2*fpi*tpiba2/omega*exp(-gt2/alpha/4.d0)/gt2
      do na = 1,nat
         nta= ityp(na)
-        fnat = 0.0
+        fnat = 0.0d0
         do nb= 1,nat
            ntb= ityp(nb)
            arg = tpi*(g(1,ng)*(tau(1,na)-tau(1,nb))+  &
@@ -110,7 +109,7 @@ subroutine d2ion (nat,ntyp,ityp,zv,tau,alat,omega,                &
   !
   ! R-space sum here
   !
-  rmax=5.0/sqrt(alpha)/alat
+  rmax=5.0d0/sqrt(alpha)/alat
   !
   ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-12)
   !

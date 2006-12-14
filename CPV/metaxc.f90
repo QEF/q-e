@@ -359,7 +359,7 @@ subroutine metaFX(rho,grho2,tau,fx,f1x,f2x,f3x)
   !   daldz=-0.50d0*THRD*
   !  * (tau/(2.0d0*fac1*rho**THRD*0.1250d0*sqrt(grho2)))**2.0d0 
   daldz=-5.0d0*THRD*p/z2
-  dqbdz=0.45d0*(0.50*bb*(al-1.d0)+1.d0)
+  dqbdz=0.45d0*(0.50d0*bb*(al-1.d0)+1.d0)
   dqbdz=dqbdz/(1.d0+bb*al*(al-1.d0))**1.5d0
   
   dqbdp=dqbdz*daldp+2.d0*THRD
@@ -676,7 +676,7 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   dca0da = aa*(1.74d0+aa2*(2.0d0+aa2*13.56d0))
   if(abs(aa).le.1.d0-small) then
      term3 =(1.d0+aa)**(-p43) + (1.d0-aa)**(-p43)
-     term1=(1.d0+bb*0.50*term3)
+     term1=(1.d0+bb*0.50d0*term3)
      term2=(1.d0+aa)**(-7.d0/3.d0) + (1.d0-aa)**(-7.d0/3.d0)
      cab =ca0/term1**4
      dcabda = (dca0da/ca0 + 8.d0/3.d0*bb*term2/term1)*cab

@@ -96,7 +96,7 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      lambda = - u_u / u_A_h
      ! update the gradient and the trial solution
      uu0 = u_u
-     u_u = 0.0
+     u_u = 0.0d0
      call DAXPY(2*npwx*nbnd,lambda, h,1,x,1)
      call DAXPY(2*npwx*nbnd,lambda,Ah,1,u,1)
      ! lagrange multipliers ensure orthogonality of the solution

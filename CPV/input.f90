@@ -1317,7 +1317,7 @@ MODULE input
           WRITE( stdout,513)
       ELSE IF( TRIM(electron_dynamics) == 'verlet' ) THEN
           WRITE( stdout,510)
-          frice = 0.
+          frice = 0.d0
       ELSE IF( TRIM(electron_dynamics) == 'damp' ) THEN
           tnosee = .FALSE.
           WRITE( stdout,509)

@@ -246,7 +246,7 @@ subroutine write_dipol(x0,dipol_el,quadrupol_el,tau,nat,alat,zv, &
   !  differs from the "traditional" one found in the literature. See
   !  Lento, Mozos, Nieminen, J. Phys.: Condens. Matter 14 (2002), 2637-2645
 
-  real(DP), parameter:: Madelung(3) = (/ 2.8373, 2.8883, 2.885/)
+  real(DP), parameter:: Madelung(3) = (/ 2.8373d0, 2.8883d0, 2.885d0/)
 
   !
   !   compute ion dipole moments

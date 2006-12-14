@@ -17,6 +17,7 @@ subroutine elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,   &
   !   gradient correction allowed (A. Dal Corso fecit AD 1993)
   !
   use kinds, only : DP
+  use constants, only: fpi
   use funct, only: get_iexch, dft_is_gradient
   use ld1inc, only: vx
   implicit none
@@ -30,7 +31,6 @@ subroutine elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,   &
   real(DP),allocatable :: f1(:), f2(:), f3(:), f4(:)
   real(DP),allocatable :: vgc(:,:), egc(:), rhoc(:)
   integer:: mgcx,mgcc,ierr
-  real(DP),parameter :: fourpi = 4.0_DP * 3.141592653589793_DP  
 
   gga=dft_is_gradient() 
   oep=get_iexch().eq.4
@@ -53,12 +53,12 @@ subroutine elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,   &
      f4(i)= vxt(i)       * rhotot
      vh(i)= vh (i)       * rhotot
      do is=1, nspin
-        rh(is) = rho(i,is)/r2(i)/fourpi
+        rh(is) = rho(i,is)/r2(i)/fpi
      enddo
      call vxc_t(rh,rhc,lsd,vxcp)
      if (gga) then
         f2(i) =-(vxcp(1)+vgc(i,1))*rho(i,1)-f1(i)-vh(i)-f4(i)
-        f3(i) = exc_t(rh,rhc,lsd)*rhotot+egc(i)*r2(i)*fourpi
+        f3(i) = exc_t(rh,rhc,lsd)*rhotot+egc(i)*r2(i)*fpi
         if (lsd.eq.1) f2(i)=f2(i)-(vxcp(2)+vgc(i,2))*rho(i,2)
      else
         f2(i) =-vxcp(1)*rho(i,1)-f1(i)-vh(i)-f4(i)

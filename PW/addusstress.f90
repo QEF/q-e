@@ -29,7 +29,7 @@ subroutine addusstres (sigmanlc)
   real(DP) :: sigmanlc (3, 3)
   ! the nonlocal stress
 
-  integer :: ig, ir, dim, nt, ih, jh, ijh, ipol, jpol, is, na
+  integer :: ig, nt, ih, jh, ijh, ipol, jpol, is, na
   ! counter on g vectors
   ! counter on mesh points
   ! number of composite nm components

@@ -239,7 +239,7 @@ SUBROUTINE vcsmd()
   !
   tauold(:,:,1) = tau(:,:)
   !
-  time_au = 0.0000242 * e2
+  time_au = 0.0000242d0 * e2
   !
   tempo = ( istep - 1 ) * dt * time_au
   !

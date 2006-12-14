@@ -28,6 +28,7 @@ d0rhod2v.o : ../Modules/wavefunctions.o
 d0rhod2v.o : ../PH/phcom.o
 d0rhod2v.o : ../PW/pwcom.o
 d0rhod2v.o : d3com.o
+d2mxc.o : ../Modules/constants.o
 d2mxc.o : ../Modules/kind.o
 d3_exc.o : ../Modules/io_global.o
 d3_exc.o : ../Modules/ions_base.o
@@ -215,6 +216,7 @@ read_ef.o : ../Modules/io_global.o
 read_ef.o : ../Modules/mp.o
 read_ef.o : ../PW/pwcom.o
 read_ef.o : d3com.o
+rotate_and_add_d3.o : ../Modules/constants.o
 rotate_and_add_d3.o : ../Modules/kind.o
 set_d3irr.o : ../Modules/control_flags.o
 set_d3irr.o : ../Modules/ions_base.o
@@ -227,6 +229,7 @@ set_efsh.o : ../Modules/kind.o
 set_efsh.o : ../PH/phcom.o
 set_efsh.o : ../PW/pwcom.o
 set_efsh.o : d3com.o
+set_sym_irr.o : ../Modules/constants.o
 set_sym_irr.o : ../Modules/kind.o
 set_sym_irr.o : ../Modules/mp.o
 set_sym_irr.o : ../Modules/mp_global.o
@@ -252,6 +255,7 @@ sym_def1.o : ../PW/pwcom.o
 sym_def1.o : d3com.o
 symd0rho.o : ../Modules/kind.o
 trntnsc_3.o : ../Modules/kind.o
+w_1gauss.o : ../Modules/constants.o
 w_1gauss.o : ../Modules/kind.o
 write_aux.o : ../Modules/ions_base.o
 write_aux.o : ../PH/phcom.o

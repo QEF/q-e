@@ -79,9 +79,9 @@ PROGRAM dos
      IF ( TRIM( outdir ) == ' ' ) outdir = './'
      prefix ='pwscf'
      fildos =' '
-     Emin   =-1000000.
-     Emax   = 1000000.
-     DeltaE = 0.01
+     Emin   =-1000000.d0
+     Emax   = 1000000.d0
+     DeltaE = 0.01d0
      ngauss = 0
      degauss= 0.d0
      !
@@ -145,7 +145,7 @@ PROGRAM dos
      Emin=MAX(Emin/rytoev,Elw)
      Emax=MIN(Emax/rytoev,Eup)
      DeltaE = DeltaE / rytoev
-     ndos = NINT ( (Emax - Emin) / DeltaE+0.500001)
+     ndos = NINT ( (Emax - Emin) / DeltaE+0.500001d0)
      DOSint = 0.d0
      !
      IF ( fildos == ' ' ) fildos = TRIM(prefix)//'.dos'

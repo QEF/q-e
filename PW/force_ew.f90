@@ -16,6 +16,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
 #include "f_defs.h"
   USE kinds
+  USE constants, ONLY : tpi, e2
   implicit none
   !
   !   First the dummy variables
@@ -49,10 +50,6 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   integer, parameter :: mxr=50
   ! the maximum number of R vectors
-
-  real(DP), parameter :: e2=2.d0, tpi = 2.d0 * 3.14159265358979d0
-  ! the square of the electron charge
-  ! two times pi
 
   integer :: ig, n, na, nb, nt, nrm, ipol
   ! counter on G vectos

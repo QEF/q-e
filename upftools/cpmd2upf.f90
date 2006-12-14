@@ -132,7 +132,7 @@ subroutine read_cpmd(iunps)
      read (line,*,iostat=ios) mesh_, amesh
      if ( ios /= 0) then
         read (line,*,iostat=ios) mesh_
-        amesh = -1.0
+        amesh = -1.0d0
      end if
      allocate (r_(mesh_))
      !
@@ -151,8 +151,8 @@ subroutine read_cpmd(iunps)
         read(iunps, *) r_(i),(vnl(i,l),l=0,lmax_)
      end do
      ! get amesh if not available directly
-     if (amesh < 0.0) print  "('amesh set to:',f10.6)", exp (r_(1) - r_(0))
-     if (amesh < 0.0) amesh = exp (r_(1) - r_(0))
+     if (amesh < 0.0d0) print  "('amesh set to:',f10.6)", exp (r_(1) - r_(0))
+     if (amesh < 0.0d0) amesh = exp (r_(1) - r_(0))
   else if (matches ("&WAVEFUNCTION", trim(line)) ) then
      found = found + 1
      ! read (iunps,*) mesh_, amesh
@@ -203,7 +203,7 @@ subroutine convert_cpmd
   use cpmd
   use upf
   implicit none
-  real(8), parameter :: rmax = 10.0
+  real(8), parameter :: rmax = 10.0d0
   real(8), allocatable :: aux(:)
   real(8) :: vll
   character (len=20):: dft  
@@ -236,7 +236,7 @@ subroutine convert_cpmd
   else
      rel = 0
   end if
-  rcloc = 0.0
+  rcloc = 0.0d0
   nwfs  = lmax_+1
   allocate( els(nwfs), oc(nwfs), epseu(nwfs))
   allocate(lchi(nwfs), nns(nwfs) )
@@ -246,17 +246,17 @@ subroutine convert_cpmd
      read (5,*) els(i), oc(i)
      nns (i)  = 0
      lchi(i)  = i-1
-     rcut(i)  = 0.0
-     rcutus(i)= 0.0
-     epseu(i) = 0.0
+     rcut(i)  = 0.0d0
+     rcutus(i)= 0.0d0
+     epseu(i) = 0.0d0
   end do
   psd   = atom_name (z)
   pseudotype = 'NC'
   nlcc = nlcc_
   zp = zv
-  etotps =0.0
-  ecutrho=0.0
-  ecutwfc=0.0
+  etotps =0.0d0
+  ecutrho=0.0d0
+  ecutwfc=0.0d0
   if ( lmax_ == lloc) then
      lmax = lmax_-1
   else

@@ -21,6 +21,7 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   !  input-output variables
   !
   USE kinds
+  USE constants, ONLY : tpi
   implicit none
 
   integer :: nat, s (3, 3, 48), irt (48, nat), nrot, modenum
@@ -49,7 +50,6 @@ subroutine mode_group (modenum, xq, at, bg, nat, nrot, s, irt, &
   ! counter on polarizations
   ! counter on polarizations
 
-  real(DP), parameter :: tpi = 2.0d0 * 3.14159265358979d0
   real(DP) :: arg
   ! auxiliary
 

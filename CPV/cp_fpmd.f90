@@ -488,7 +488,7 @@ end subroutine ggenb
 ! gstart is the index of the first nonzero G-vector
 ! needed in the parallel case (G=0 is found on one node only!)
 !
-      if ( g(1) < 1.e-6 ) then
+      if ( g(1) < 1.d-6 ) then
          gstart = 2
          gzero  = .TRUE.
       else
@@ -973,7 +973,7 @@ END SUBROUTINE gshcount
 !
 !     calculation of gx(3,ng)
 !
-      gmax=0.
+      gmax=0.d0
       do ig=1,ngm
          i1=mill_l(1,ig)
          i2=mill_l(2,ig)
@@ -1106,9 +1106,9 @@ END SUBROUTINE gshcount
           ecutz = qcutz
           ecsig = q2sigma
 
-          IF( refg_ < 0.0001 ) THEN
+          IF( refg_ < 0.0001d0 ) THEN
              tpstab = .FALSE.
-             refg = 0.05
+             refg = 0.05d0
           ELSE
              refg = refg_
           END IF
@@ -1740,7 +1740,7 @@ SUBROUTINE new_atomind_constraints()
    !
    DO ic = 1, SIZE( constr, 2 )
       DO ia = 1, SIZE( constr, 1 )
-         IF( constr( ia, ic ) > 0.0 ) THEN
+         IF( constr( ia, ic ) > 0.0d0 ) THEN
             iaa = NINT( constr( ia, ic ) )
             aa  = DBLE( ind_bck( iaa ) )
             constr( ia, ic ) = aa

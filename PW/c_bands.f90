@@ -56,10 +56,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
     ! average number of iterations
     ! number of iterations in Conjugate-Gradient
     ! the average of the potential
-  INTEGER :: ik, ig, ibnd, dav_iter, diis_iter, ntry, notconv
+  INTEGER :: ik, ig, dav_iter, diis_iter, ntry, notconv
     ! counter on k points
     ! counter on G vectors
-    ! counter on bands
     ! number of iterations in Davidson
     ! number of iterations in DIIS
     ! number or repeated call to diagonalization in case of non convergence

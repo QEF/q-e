@@ -14,6 +14,7 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
   !
 #include "f_defs.h"
   USE kinds
+  USE constants , ONLY : pi, fpi, e2, eps8
   implicit none
   !
   !    first the dummy variables
@@ -47,9 +48,6 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
   !
   !    and the local variables
   !
-  real(DP), parameter ::pi = 3.14159265358979d0, fpi = 4.d0 * pi, &
-       e2 = 2.d0, eps = 1.d-8
-  !
   real(DP) :: vlcp, g2a, gx
   real(DP), allocatable ::  aux (:), aux1 (:)
   real(DP), external ::  erf
@@ -61,7 +59,7 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
   ! the angular momentum
 
   ! the  G=0 component is not computed
-  if (gl (1) < eps) then
+  if (gl (1) < eps8) then
      dvloc (1) = 0.0d0
      igl0 = 2
   else
@@ -86,7 +84,7 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
         do i = 1, nnl
            do igl = igl0, ngl
               g2a = gl (igl) * tpiba2 / 4.d0 / alps (i, l)
-              vlcp = - e2 * (pi / alps (i, l) ) **1.5 * exp ( - g2a) &
+              vlcp = - e2 * (pi / alps (i, l) ) **1.5d0 * exp ( - g2a) &
                    * g2a * (aps (i, l) + aps (i + 3, l) * (2.5d0 - g2a) &
                    / alps (i, l) ) / gl (igl) / tpiba2 / omega
               dvloc (igl) = dvloc (igl) + vlcp
@@ -120,7 +118,7 @@ subroutine dvloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, &
         enddo
         call simpson (msh, aux, rab, vlcp)
         ! DV(g^2)/Dg^2 = (DV(g)/Dg)/2g
-        vlcp = fpi / omega / 2.0 / gx * vlcp
+        vlcp = fpi / omega / 2.0d0 / gx * vlcp
         ! subtract the long-range term
         g2a = gl (igl) * tpiba2 / 4.d0
         vlcp = vlcp + fpi / omega * zp * e2 * exp ( - g2a) * (g2a + &

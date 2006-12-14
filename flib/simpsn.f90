@@ -76,7 +76,7 @@ subroutine simpson_cp90( mesh, func, rab, asum )
   !
   if ( mesh < 8 ) call errore ('simpson','few mesh points',8)
 
-  c(1) = 109.0 / 48.d0
+  c(1) = 109.0d0 / 48.d0
   c(2) = -5.d0 / 48.d0
   c(3) = 63.d0 / 48.d0
   c(4) = 49.d0 / 48.d0
@@ -108,26 +108,26 @@ SUBROUTINE herman_skillman_int(mesh,func,rab,asum)
   INTEGER :: i, j, k, i1, nblock
   REAL(DP) :: a1, a2e, a2o, a2es
   !
-  a1=0.0
-  a2e=0.0
-  asum=0.0
+  a1=0.0d0
+  a2e=0.0d0
+  asum=0.0d0
   nblock=mesh/40
   i=1
-  func(1)=0.0
+  func(1)=0.0d0
   DO j=1,nblock
      DO k=1,20
         i=i+2
         i1=i-1
         a2es=a2e
-        a2o=func(i1)/12.0
-        a2e=func(i)/12.0
-        a1=a1+5.0*a2es+8.0*a2o-a2e
+        a2o=func(i1)/12.0d0
+        a2e=func(i)/12.0d0
+        a1=a1+5.0d0*a2es+8.0d0*a2o-a2e
         func(i1)=asum+a1*rab(i1)
-        a1=a1-a2es+8.0*a2o+5.0*a2e
+        a1=a1-a2es+8.0d0*a2o+5.0d0*a2e
         func(i)=asum+a1*rab(i)
      END DO
      asum=func(i)
-     a1=0.0
+     a1=0.0d0
   END DO
   !
   RETURN

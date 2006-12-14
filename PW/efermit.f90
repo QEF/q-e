@@ -55,7 +55,7 @@ FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
   !
   !      find bounds for the Fermi energy.
   !
-  nlw = max (1, nint (nelec / 2.0 - 5.0) )
+  nlw = max (1, nint (nelec / 2.0d0 - 5.0d0) )
   elw = et (nlw, 1)
   eup = et (nbnd, 1)
   do ik = 2, nks

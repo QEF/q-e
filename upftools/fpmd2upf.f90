@@ -118,7 +118,7 @@ contains
         TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
         INTEGER :: ir, mesh, lmax, l, n, il, ib, ll
         REAL(DP) :: xmin, zmesh, dx, x
-        REAL(DP) :: pi        = 3.14159265358979323846_DP
+!        REAL(DP) :: pi        = 3.14159265358979323846_DP
 
 ! ...   declare external function
         REAL(DP) :: erf, erfc
@@ -171,11 +171,11 @@ contains
 
       SUBROUTINE read_giannoz(uni, ap, ierr)
         USE pseudo_types, ONLY: pseudo_ncpp
+!        USE constants, ONLY : fpi
         IMPLICIT NONE
         TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
         INTEGER, INTENT(IN) :: uni
         INTEGER, INTENT(OUT) :: ierr
-        REAL(DP) :: pi        = 3.14159265358979323846_DP
         REAL(DP) :: chi( SIZE(ap%rps, 1), SIZE(ap%rps, 2) )
         REAL(DP) :: vnl( SIZE(ap%vnl, 1), SIZE(ap%vnl, 2) )
         REAL(DP) :: rho_core( SIZE(ap%rhoc, 1) )
@@ -267,7 +267,7 @@ contains
         ap%nrps = nwf
         ap%mesh = mesh
         ap%rps = 0.0d0
-        fac = 1.0d0/SQRT(4.0d0*pi)
+!        fac = 1.0d0/SQRT(fpi)
         fac = 1.0d0
         DO i = 1, mesh
           r = EXP(xmin+DBLE(i-1)*dx)/zmesh
@@ -806,7 +806,7 @@ program fpmd2upf
   write(date_author,'("Author: unknown    Generation date: as well")')
   comment = 'Info: automatically converted from CPMD format'
 
-  rcloc = 0.0
+  rcloc = 0.0d0
 
   allocate( els(nwfs), oc(nwfs), epseu(nwfs) )
   allocate( lchi(nwfs), nns(nwfs) )
@@ -819,15 +819,15 @@ program fpmd2upf
      oc(i)    = wfoc(i)
      lchi(i)  = i - 1
      nns (i)  = 0
-     rcut(i)  = 0.0
-     rcutus(i)= 0.0
-     epseu(i) = 0.0
+     rcut(i)  = 0.0d0
+     rcutus(i)= 0.0d0
+     epseu(i) = 0.0d0
   end do
 
   pseudotype = 'NC'
   nlcc       = ap%tnlcc
   if( ap%zv > 0.0d0 ) zp = ap%zv
-  etotps     = 0.0
+  etotps     = 0.0d0
 
   lloc  = ap%lloc 
   lmax  = MAX( MAXVAL( ap%lll( 1:ap%nbeta ) ), ap%lloc - 1 )

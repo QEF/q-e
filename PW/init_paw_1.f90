@@ -31,20 +31,19 @@ subroutine init_paw_1
   !     here a few local variables
   !
 
-  integer :: nt, ih, jh, nb, mb, l, m, ir, iq, is, startq, &
-       lastq, ilast,  na, j, n1, n2, ndm, nrs, nrc
+  integer :: nt, ih, jh, nb, l, m, ir, iq, startq, &
+       lastq, na, j, n1, n2, ndm, nrs, nrc
   ! various counters
-  real(DP), allocatable :: aux (:), aux1 (:), besr (:), qtot (:,:,:)
+  real(DP), allocatable :: aux (:), aux1 (:), besr (:)
   ! various work space
-  real(DP) :: prefr, pref, q, qi, norm
+  real(DP) :: prefr, pref, qi, norm
   ! the prefactor of the q functions
   ! the prefactor of the beta functions
   ! the modulus of g for each shell
   ! q-point grid for interpolation
   real(DP), allocatable :: ylmk0 (:), s(:,:), sinv(:,:)
   ! the spherical harmonics
-  real(DP) ::  vll (0:lmaxx),vqint
-  ! the denominator in KB case
+  real(DP) ::  vqint
   ! interpolated value
 
   real(DP) rc,rs,pow
@@ -236,7 +235,7 @@ subroutine step_f(f2,f,r,nrs,nrc,pow,mesh)
   real(DP), Intent(in) :: pow
   integer :: nrs, nrc 
 
-  Integer :: n,i
+  Integer :: i
   real(DP) :: rcp, rsp
  
   rcp = r(nrc)

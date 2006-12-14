@@ -365,7 +365,7 @@ subroutine read_pseudo_pswfc (is, iunps)
   integer :: is, iunps
   !
   character (len=75) :: dummy  
-  integer :: nb, ir, idum, ios  
+  integer :: nb, ir, ios  
   !
   do nb = 1, ntwfc(is)  
      read (iunps,*,err=100,iostat=ios) dummy  !Wavefunction labels

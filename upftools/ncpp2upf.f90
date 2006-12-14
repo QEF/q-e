@@ -75,7 +75,6 @@ subroutine read_ncpp(iunps)
   !
   character(len=1), dimension(0:3) :: convel=(/'S','P','D','F'/)
   character(len=2) :: label
-  real(8), parameter:: pi=3.141592653589793d0
   real (8) :: x, erf
   integer :: l, i, ir, nb, n
   character (len=255) line
@@ -177,7 +176,7 @@ subroutine read_ncpp(iunps)
         !
         ! convert to Rydberg
         !
-        vnl(:,l) = vnl(:,l)*2.0
+        vnl(:,l) = vnl(:,l)*2.0d0
      end do
 
      allocate(rho_atc_(mesh_))
@@ -256,7 +255,7 @@ subroutine convert_ncpp
   use upf
   use funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
   implicit none
-  real(8), parameter :: rmax = 10.0
+  real(8), parameter :: rmax = 10.0d0
   real(8), allocatable :: aux(:)
   real(8) :: vll
   integer :: kkbeta, l, iv, ir, i
@@ -270,7 +269,7 @@ subroutine convert_ncpp
   else
      rel = 0
   end if
-  rcloc = 0.0
+  rcloc = 0.0d0
   nwfs  = nchi 
   allocate( oc(nwfs), epseu(nwfs))
   allocate(lchi(nwfs), nns(nwfs) )
@@ -278,10 +277,10 @@ subroutine convert_ncpp
   do i=1, nwfs
      nns (i)  = 0
      lchi(i)  = lchi_(i)
-     rcut(i)  = 0.0
-     rcutus(i)= 0.0
+     rcut(i)  = 0.0d0
+     rcutus(i)= 0.0d0
      oc (i)   = oc_(i)
-     epseu(i) = 0.0
+     epseu(i) = 0.0d0
   end do
   deallocate (lchi_, oc_)
 
@@ -289,9 +288,9 @@ subroutine convert_ncpp
   pseudotype = 'NC'
   nlcc = nlcc_
   zp = zp_
-  etotps = 0.0
-  ecutrho=0.0
-  ecutwfc=0.0
+  etotps = 0.0d0
+  ecutrho=0.0d0
+  ecutwfc=0.0d0
   if ( lmax_ == lloc) then
      lmax = lmax_-1
   else

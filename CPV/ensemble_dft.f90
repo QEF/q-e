@@ -92,12 +92,12 @@ CONTAINS
     real(DP), intent(in) :: f
     integer, intent(in) :: nspin
     real(DP) :: f2
-    entropy=0.0
+    entropy=0.0d0
     if ((f.gt.1.0d-20).and.(f.lt.(2.0/DBLE(nspin)-1.0d-20))) then
-       f2=DBLE(nspin)*f/2.0
-       entropy=-f2*log(f2)-(1.-f2)*log(1.-f2)
+       f2=DBLE(nspin)*f/2.0d0
+       entropy=-f2*log(f2)-(1.d0-f2)*log(1.d0-f2)
     end if
-    entropy=-etemp*2.0*entropy/DBLE(nspin)
+    entropy=-etemp*2.0d0*entropy/DBLE(nspin)
   END SUBROUTINE compute_entropy
 
 
@@ -108,14 +108,14 @@ CONTAINS
     integer, intent(in) :: n, nspin
     real(DP) :: f2
     integer :: i
-    entropy=0.0
+    entropy=0.0d0
     do i=1,n
       if ((f(i).gt.1.0d-20).and.(f(i).lt.(2.0/DBLE(nspin)-1.0d-20))) then
-        f2=DBLE(nspin)*f(i)/2.0
-        entropy=entropy-f2*log(f2)-(1.-f2)*log(1.-f2)
+        f2=DBLE(nspin)*f(i)/2.0d0
+        entropy=entropy-f2*log(f2)-(1.d0-f2)*log(1.d0-f2)
       end if
     end do
-    entropy=-etemp*2.0*entropy/DBLE(nspin)
+    entropy=-etemp*2.0d0*entropy/DBLE(nspin)
     return
   END SUBROUTINE compute_entropy2
 
@@ -130,16 +130,16 @@ CONTAINS
     !     calculation of the entropy derivative at x
     do i=1,n
     if ((fx(i).gt.1.0d-200).and.(fx(i).lt.(2.0/DBLE(nspin)-1.0d-200))) then
-      ex(i)=(log((2.0/DBLE(nspin)-fx(i))/fx(i)))
+      ex(i)=(log((2.0d0/DBLE(nspin)-fx(i))/fx(i)))
     else if (fx(i).le.1.0d-200) then
       xx=1.0d-200
-      ex(i)=log(2.0/DBLE(nspin)/xx-1)
+      ex(i)=log(2.0d0/DBLE(nspin)/xx-1)
     else
       !      the calculation of ex_i is done using ex_i=-log(mf/(1-f_i)-1)
       !                                      instead of ex_i=log(mf/f_i-1)
       !      to avoid numerical errors
       xx=1.0d-200
-      ex(i)=-log(2.0/DBLE(nspin)/xx-1)
+      ex(i)=-log(2.0d0/DBLE(nspin)/xx-1)
     end if
     end do
 

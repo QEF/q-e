@@ -196,8 +196,9 @@ subroutine convert_fhi
   use fhi
   use upf
   use funct, ONLY : set_dft_from_name, get_iexch, get_icorr, get_igcx, get_igcc
+  use constants, ONLY : fpi
   implicit none
-  real(8), parameter :: rmax = 10.0
+  real(8), parameter :: rmax = 10.0d0
   real(8), allocatable :: aux(:)
   real(8) :: vll
   character (len=20):: dft  
@@ -235,7 +236,7 @@ subroutine convert_fhi
   end if
   ! reasonable assumption
   rel = 1
-  rcloc = 0.0
+  rcloc = 0.0d0
   nwfs  = lmax_+1
   allocate( els(nwfs), oc(nwfs), epseu(nwfs))
   allocate(lchi(nwfs), nns(nwfs) )
@@ -245,17 +246,17 @@ subroutine convert_fhi
      read (5,*) els(i), oc(i)
      nns (i)  = 0
      lchi(i)  = i-1
-     rcut(i)  = 0.0
-     rcutus(i)= 0.0
-     epseu(i) = 0.0
+     rcut(i)  = 0.0d0
+     rcutus(i)= 0.0d0
+     epseu(i) = 0.0d0
   end do
 
   pseudotype = 'NC'
   nlcc = nlcc_
   zp   = Zval
-  etotps = 0.0
-  ecutrho=0.0
-  ecutwfc=0.0
+  etotps = 0.0d0
+  ecutrho=0.0d0
+  ecutwfc=0.0d0
   if ( lmax_ == lloc) then
      lmax = lmax_-1
   else
@@ -283,7 +284,7 @@ subroutine convert_fhi
 
   if (nlcc) then
      allocate (rho_atc(mesh))
-     rho_atc(:) = rho_atc_(:) / (4.d0*3.141592653589793d0)
+     rho_atc(:) = rho_atc_(:) / fpi
   end if
 
   allocate (vloc0(mesh))

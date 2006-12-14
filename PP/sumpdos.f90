@@ -33,7 +33,7 @@ PROGRAM sumpdos
   CHARACTER(10)       :: cdum, str1, str2
 
   LOGICAL             :: exist
-  REAL                :: efermi = 0.0       ! translate the input grid 
+  REAL                :: efermi = 0.0d0       ! translate the input grid 
   REAL, ALLOCATABLE   :: pdos(:,:,:)     
   REAL, ALLOCATABLE   :: egrid(:)
   REAL, ALLOCATABLE   :: mysum(:,:)
@@ -44,7 +44,7 @@ PROGRAM sumpdos
 !**************************************************************
 ! User should supply input values here
 !
-efermi = 0.0
+efermi = 0.0d0
 
 !**************************************************************
 
@@ -220,7 +220,7 @@ efermi = 0.0
       CALL errore("sunpdos", "really sure NSPIN /= 1 or 2 ???", 3 )
    ENDIF
 
-   mysum = 0.0
+   mysum = 0.0d0
    DO ie=1,ngrid
       DO isp=1,nspin
          mysum(ie,isp) = SUM( pdos(ie,isp,:) )

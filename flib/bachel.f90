@@ -11,6 +11,7 @@ subroutine bachel (alps, aps, npseu, lmax)
   !----------------------------------------------------------------------
   !
   USE kinds
+  USE constants , ONLY : pi
   implicit none
   !
   !   First I/O variables
@@ -28,10 +29,6 @@ subroutine bachel (alps, aps, npseu, lmax)
   ! counter on number of pseudopot.
   ! aux. var. (max. ang. mom. of a fix. ps
   ! counter on angular momentum
-  !
-  real(DP) :: pi
-  ! pi constant
-  parameter (pi = 3.141592653589793d0)
 
   real(DP) :: s (6, 6), alpl, alpi, ail
   ! auxiliary array

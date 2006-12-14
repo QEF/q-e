@@ -55,13 +55,13 @@ function int2d(fun1, fun2, int1, int2, fact1, fact2, zk, dz1, tpiba, nz1 )
 ! This function computes the 2D integrals of beta functions with
 ! exponential
 !
-  USE kinds, only : DP 
+  USE kinds, only : DP
+  USE constants, ONLY : tpi
   implicit none
   integer ::    &
      nz1,       &  ! number of points for the slab integration 
      ik, ik1       ! counters on the slab points
   real(DP), parameter :: eps=1.d-8
-  real(DP),parameter :: tpi=2.d0*3.141592653589793d0
   real(DP) :: dz1, tpiba
   complex(DP), parameter :: cim=(0.d0,1.d0), one=(1.d0,0.d0)
   complex(DP) ::       &

@@ -33,7 +33,7 @@ subroutine gtable( ipol, ctable)
   logical :: found
   real(8) :: test
 
-  test=0.
+  test=0.d0
   do ig=1,ngw!loop on g vectors
      ! first +g
      i = mill_l(1,ig)
@@ -61,7 +61,7 @@ subroutine gtable( ipol, ctable)
         enddo
         if(.not. found)  then
            ctable(ig,1)= ngw+1
-           test=test+1.
+           test=test+1.d0
         endif
      endif
 
@@ -91,7 +91,7 @@ subroutine gtable( ipol, ctable)
         enddo
         if(.not.found) then
            ctable(ig,2)=ngw+1
-           test=test+1.
+           test=test+1.d0
         endif
      endif
   enddo
@@ -128,7 +128,7 @@ subroutine gtablein( ipol, ctabin)
   logical :: found
   real(8) :: test
 
-  test=0.
+  test=0.d0
   
   do ig=1,ngw!loop on g vectors
      i = mill_l(1,ig)

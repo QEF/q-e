@@ -59,7 +59,7 @@ subroutine kpoint_grid &
   do nk=1,nkr
      !  check if this k-point has already been found equivalent to another
      if (equiv(nk).eq.nk) then
-        wkk(nk)   = 1.0
+        wkk(nk)   = 1.0d0
         !  check if there are equivalent k-point to this in the list
         !  (excepted those previously found to be equivalent to another)
         !  check both k and -k
@@ -83,7 +83,7 @@ subroutine kpoint_grid &
               n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
               if (n.gt.nk .and. equiv(n).eq.n) then
                  equiv(n) = nk
-                 wkk(nk)=wkk(nk)+1.0
+                 wkk(nk)=wkk(nk)+1.0d0
               else
                  if (equiv(n).ne.nk .or. n.lt.nk ) call errore('kpoint_grid', &
                     'something wrong in the checking algorithm',1)
@@ -96,13 +96,13 @@ subroutine kpoint_grid &
               in_the_list=abs(xx-nint(xx)).le.eps.and.abs(yy-nint(yy)).le.eps &
                                                  .and. abs(zz-nint(zz)).le.eps 
               if (in_the_list) then
-                 i = mod ( nint (-xkr(1)*nk1 - 0.5 * k1 + 2*nk1), nk1 ) + 1
-                 j = mod ( nint (-xkr(2)*nk2 - 0.5 * k2 + 2*nk2), nk2 ) + 1
-                 k = mod ( nint (-xkr(3)*nk3 - 0.5 * k3 + 2*nk3), nk3 ) + 1
+                 i = mod ( nint (-xkr(1)*nk1 - 0.5d0 * k1 + 2*nk1), nk1 ) + 1
+                 j = mod ( nint (-xkr(2)*nk2 - 0.5d0 * k2 + 2*nk2), nk2 ) + 1
+                 k = mod ( nint (-xkr(3)*nk3 - 0.5d0 * k3 + 2*nk3), nk3 ) + 1
                  n = (k-1) + (j-1)*nk3 + (i-1)*nk2*nk3 + 1
                  if (n.gt.nk .and. equiv(n).eq.n) then
                     equiv(n) = nk
-                    wkk(nk)=wkk(nk)+1.0
+                    wkk(nk)=wkk(nk)+1.0d0
                  else
                     if (equiv(n).ne.nk.or.n.lt.nk) call errore('kpoint_grid', &
                     'something wrong in the checking algorithm',2)
@@ -116,7 +116,7 @@ subroutine kpoint_grid &
   !  count irreducible points and order them
 
   nks=0
-  fact=0.0
+  fact=0.0d0
   do nk=1,nkr
      if (equiv(nk).eq.nk) then
         nks=nks+1

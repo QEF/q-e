@@ -84,10 +84,6 @@ MODULE complex_diis_module
       INTEGER, INTENT(OUT) :: notcnv
         ! number of unconverged bands
       !
-      ! ... local variables
-      !
-      INTEGER :: ib
-      !
       !
       CALL start_clock( 'diis' )
       !
@@ -486,13 +482,12 @@ MODULE complex_diis_module
       !
       ! ... local variables
       !
-      INTEGER           :: kter, ib, jb
+      INTEGER           :: kter, ib
       INTEGER           :: notcnv
-      REAL (DP)    :: psi_norm
-      COMPLEX (DP) :: overlap
-      !
-      !
 #if defined (WINDOW_ORTHO)
+      INTEGER           :: jb
+      COMPLEX (DP)      :: overlap
+      REAL (DP)         :: psi_norm
       !
       ortho_win = MAX( ortho_win_min, &
                        0.05D0 * ( MAXVAL( e(:) - MINVAL( e(:) ) ) ) )

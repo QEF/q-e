@@ -19,6 +19,7 @@
       use electrons_base
       use ions_base
       use ions_positions, only: tau0
+      use constants, only: pi
       use parameters
       use reciprocal_vectors
       use gvecs
@@ -53,7 +54,7 @@
       real(kind=8) dx, dxx, xcc(4500)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
       real(kind=8) tauv(3,natx,nsx), tau00(3), dist
-      real(kind=8) rho_real(nnr,nspin), rhoc, pi
+      real(kind=8) rho_real(nnr,nspin), rhoc
       real(kind=8) alfa(nsx), alfa0, sigma, hgt 
       real(kind=8) pos_cry(3), pos_car(3), pos_aux(3)
       real(kind=8) pos_cry0(3), dpvdh(3,3)
@@ -87,8 +88,6 @@
       allocate(psi(nnr))
 
       call start_clock( 'vol_clu' )
-
-      pi = 3.14159265358979d0
 
       ci = (0.d0,1.d0)
 
@@ -225,7 +224,7 @@
                         end do
                         prod = prod*tpiba
                         fact = CMPLX(dcos(prod),-1.d0*dsin(prod))
-                        aux = alfa0*hgt*dexp(-0.50*alfa0**2*g(ig)*tpiba2)
+                        aux = alfa0*hgt*dexp(-0.50d0*alfa0**2*g(ig)*tpiba2)
                         rhofill(ig) = rhofill(ig) + aux*fact
                      end do 
                   end do

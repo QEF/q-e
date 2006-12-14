@@ -14,13 +14,14 @@ function d2mxc (rho)
   !  Perdew and Zunger parameterization of the C.A. functional
   !
   USE kinds, only : DP
+  USE constants, only : pi
   implicit none
 
   real (DP) :: rho, d2mxc
   ! input: the charge density ( positive )
   ! output: the second derivative of the xc potent
 
-  real (DP) :: b1, b2, gc, a, b, c, d, pi, thofpi_3, fpioth_3, &
+  real (DP) :: b1, b2, gc, a, b, c, d, thofpi_3, fpioth_3, &
        thopi_3, tm1, tm2, tm3, tm4, tm5, tm6
   ! _ parameters defining the functionals
   ! /
@@ -36,10 +37,10 @@ function d2mxc (rho)
   !    64.d0*b2*b2*b2
 
   parameter (b1 = 1.0529d0, b2 = 0.3334d0, gc = - 0.1423d0, a = &
-       0.0311d0, b = - 0.0480d0, c = 0.0020d0, d = - 0.0116d0, pi = &
-       3.14159265358979d0, fpioth_3 = 1.61199195401647d0, thofpi_3 = &
-       0.620350490899400d0, thopi_3 = 0.98474502184270d0, tm1 = &
-       36.85150d0, tm2 = 105.59107916d0, tm3 = 122.996139546115d0, tm4 = &
+       0.0311d0, b = - 0.0480d0, c = 0.0020d0, d = - 0.0116d0,  &
+       fpioth_3 = 1.61199195401647d0, thofpi_3 = 0.620350490899400d0, &
+       thopi_3 = 0.98474502184270d0, tm1 = 36.85150d0, tm2 =    &
+       105.59107916d0, tm3 = 122.996139546115d0, tm4 =          &
        71.30831794516d0, tm5 = 20.4812455967d0, tm6 = 2.371792877056d0)
 
   real (DP) :: rs, x, den

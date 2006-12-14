@@ -50,8 +50,8 @@
 
       DEALLOCATE(psi)
 
-      fioby2   = fio * 0.5
-      fieby2   = fie * 0.5
+      fioby2   = fio * 0.5d0
+      fieby2   = fie * 0.5d0
 
       DO ig = 1, SIZE(co)
         fp = dco(ig) + dce(ig)
@@ -288,11 +288,11 @@
 ! 
       IF (MOD(n,2).NE.0.AND.i.EQ.n) THEN
          DO ig=1,ngw
-            ca(ig)=(0.,0.)
+            ca(ig)=(0.d0,0.d0)
          END DO
       ENDIF
 !
-      ci=(0.0,1.0)
+      ci=(0.0d0,1.0d0)
 !
       psi (:) = (0.d0, 0.d0)
       DO ig=1,ngw
@@ -324,11 +324,11 @@
 !
    
       IF (tens) THEN
-         fi =-0.5
-         fip=-0.5
+         fi =-0.5d0
+         fip=-0.5d0
       ELSE
-         fi =-  f(i)*0.5
-         fip=-f(i+1)*0.5
+         fi =-  f(i)*0.5d0
+         fip=-f(i+1)*0.5d0
       END IF
 
       DO ig=1,ngw
@@ -614,11 +614,11 @@
       DO idx = 1, 2*NOGRP, 2
          do ig=1,ngw
             if (tens) then
-               fi = -0.5
-               fip = -0.5
+               fi = -0.5d0
+               fip = -0.5d0
             else
-               fi = -0.5*f(i+idx-1)
-               fip = -0.5*f(i+idx)
+               fi = -0.5d0*f(i+idx-1)
+               fip = -0.5d0*f(i+idx)
             endif
             fp= temp_psi(nps(ig)+eig_offset) +  temp_psi(nms(ig)+eig_offset)
             fm= temp_psi(nps(ig)+eig_offset) -  temp_psi(nms(ig)+eig_offset)
@@ -782,7 +782,7 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   ! 
   IF (MOD(nbsp,2).NE.0.AND.i.EQ.nbsp) THEN
      DO ig=1,ngw
-        ca(ig)=(0.,0.)
+        ca(ig)=(0.d0,0.d0)
      END DO
   ENDIF
   !
@@ -815,8 +815,8 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   !       in the kinetic energy because it is defined as 0.5*g**2
   !       in the potential part because of the logics
   !
-  fi =-  f(i)*0.5
-  fip=-f(i+1)*0.5
+  fi =-  f(i)*0.5d0
+  fip=-f(i+1)*0.5d0
   DO ig=1,ngw
      fp= psi(nps(ig)) + psi(nms(ig))
      fm= psi(nps(ig)) - psi(nms(ig))
@@ -828,8 +828,8 @@ SUBROUTINE dforce_field( bec, deeq, betae, i, c, ca, df, da, v, v1 )
   ! 
   IF(nkb.GT.0)THEN
      DO inl=1,nkb
-        af(inl)=0.
-        aa(inl)=0.
+        af(inl)=0.d0
+        aa(inl)=0.d0
      END DO
      !
      DO is=1,nsp

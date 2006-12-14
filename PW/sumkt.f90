@@ -23,7 +23,7 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
   integer :: nt, nk, ns, ibnd, i
 
 
-  sumkt = 0.0
+  sumkt = 0.0d0
   do ns = 1, nspin
      if (is /= 0) then
         if ( ns .ne. is) cycle
@@ -58,11 +58,11 @@ function sumkt (et, nbnd, nks, nspin, ntetra, tetra, e, is, isk)
            if (e.ge.e4) then
               sumkt = sumkt + 1.d0 / ntetra
            elseif (e.lt.e4.and.e.ge.e3) then
-              sumkt = sumkt + 1.d0 / ntetra * (1.0 - (e4 - e) **3 / (e4 - e1) &
+              sumkt = sumkt + 1.d0 / ntetra * (1.0d0 - (e4 - e) **3 / (e4 - e1) &
                    / (e4 - e2) / (e4 - e3) )
            elseif (e.lt.e3.and.e.ge.e2) then
               sumkt = sumkt + 1.d0 / ntetra / (e3 - e1) / (e4 - e1) * &
-                   ( (e2 - e1) **2 + 3.0 * (e2 - e1) * (e-e2) + 3.0 * (e-e2) **2 - &
+                   ( (e2 - e1) **2 + 3.0d0 * (e2 - e1) * (e-e2) + 3.0d0 * (e-e2) **2 - &
                    (e3 - e1 + e4 - e2) / (e3 - e2) / (e4 - e2) * (e-e2) **3)
            elseif (e.lt.e2.and.e.ge.e1) then
               sumkt = sumkt + 1.d0 / ntetra * (e-e1) **3 / (e2 - e1) / &

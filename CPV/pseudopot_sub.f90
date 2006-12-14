@@ -1202,7 +1202,7 @@
                betagl = betagx(1,iv,is)
                do i=1,3
                   do j=1,3
-                     dbeta( 1, iv, is, i, j ) = -0.5 * beta( 1, iv, is ) * ainv( j, i )    &
+                     dbeta( 1, iv, is, i, j ) = -0.5d0 * beta( 1, iv, is ) * ainv( j, i )    &
      &                                          - c * dylm( 1, lp, i, j ) * betagl         ! SEGNO
                   enddo
                enddo
@@ -1299,7 +1299,7 @@
                   jj=int(gg)+1
                   do l=1,nqlc(is)
                      if(jj.ge.mmx) then
-                        qradb(ig,ijv,l,is)=0.
+                        qradb(ig,ijv,l,is)=0.d0
                      else
                         qradb(ig,ijv,l,is)=                           &
      &                       c*qradx(jj+1,ijv,l,is)*(gg-DBLE(jj-1))+  &
@@ -1351,7 +1351,7 @@
                         gg=gb(ig)*tpibab*tpibab/refg
                         jj=int(gg)+1
                         if(jj.ge.mmx) then
-                           dqradb(ig,ijv,l,is) = 0.
+                           dqradb(ig,ijv,l,is) = 0.d0
                         else
                            dqradb(ig,ijv,l,is) =  &
                                 dqradx(jj+1,ijv,l,is)*(gg-DBLE(jj-1)) +  &
@@ -1537,7 +1537,7 @@
                betagl = betagx(1,iv,is)
                do i=1,3
                   do j=1,3
-                     dbeta(1,iv,is,i,j)=-0.5*beta(1,iv,is)*ainv(j,i)    &
+                     dbeta(1,iv,is,i,j)=-0.5d0*beta(1,iv,is)*ainv(j,i)    &
      &                                 -c*dylm(1,lp,i,j)*betagl  ! SEGNO
                   enddo
                enddo
@@ -1547,7 +1547,7 @@
                   do i=1,3
                      do j=1,3
                         dbeta(ig,iv,is,i,j)=                            &
-     &                    -0.5*beta(ig,iv,is)*ainv(j,i)                 &
+     &                    -0.5d0*beta(ig,iv,is)*ainv(j,i)                 &
      &                    -c*dylm(ig,lp,i,j)*betagl                     &  ! SEGNO
      &                    -c*ylm (ig,lp)*dbetagl*gx(i,ig)/g(ig)         &
      &                    *(gx(1,ig)*ainv(j,1)+                         &

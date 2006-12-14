@@ -160,7 +160,7 @@ END FUNCTION
       DO ig=1,ngw
          temp(ig)=DBLE(CONJG(cp(ig,i))*cp(ig,i))
       END DO
-      rsum=2.*SUM(temp)
+      rsum=2.d0*SUM(temp)
       IF (gstart == 2) rsum=rsum-temp(1)
 
       CALL mp_sum( rsum, intra_image_comm )
@@ -305,14 +305,14 @@ END FUNCTION
             DO ig=1,ngw
                temp(ig)=CONJG(cp(ig,k))*cp(ig,i)
             END DO
-            csc(k)=2.*DBLE(SUM(temp))
+            csc(k)=2.d0*DBLE(SUM(temp))
             IF (gstart == 2) csc(k)=csc(k)-DBLE(temp(1))
          END DO
 
          CALL mp_sum( csc( 1:kmax ), intra_image_comm )
 
          DO k=1,kmax
-            rsum=0.
+            rsum=0.d0
             DO is=1,nvb
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
@@ -503,8 +503,8 @@ END FUNCTION
                               sum = rhovan(ijv,isa+ifft-1,iss)
                               dsum=drhovan(ijv,isa+ifft-1,iss,i,j)
                               IF(iv.NE.jv) THEN
-                                 sum =2.*sum
-                                 dsum=2.*dsum
+                                 sum =2.d0*sum
+                                 dsum=2.d0*dsum
                               ENDIF
                               DO ig=1,ngb
                                  dqgbt(ig,ifft)=dqgbt(ig,ifft) +        &
@@ -585,8 +585,8 @@ END FUNCTION
                               sum=rhovan(ijv,isa,iss)
                               dsum =drhovan(ijv,isa,iss,i,j)
                               IF(iv.NE.jv) THEN
-                                 sum =2.*sum
-                                 dsum=2.*dsum
+                                 sum =2.d0*sum
+                                 dsum=2.d0*dsum
                               ENDIF
                               DO ig=1,ngb
                                  dqgbt(ig,iss)=dqgbt(ig,iss)  +         &
@@ -631,9 +631,9 @@ END FUNCTION
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
                   drhog(ig,isup,i,j) = drhog(ig,isup,i,j) +             &
-     &                 0.5*CMPLX( DBLE(fp),AIMAG(fm))
+     &                 0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
                   drhog(ig,isdw,i,j) = drhog(ig,isdw,i,j) +             &
-     &                 0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+     &                 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
                END DO
 !
             END DO
@@ -678,7 +678,7 @@ END FUNCTION
       REAL(DP) :: sk(n)  ! automatic array
       !
       DO i=1,n
-         sk(i)=0.0
+         sk(i)=0.0d0
          DO ig=gstart,ngw
             sk(i)=sk(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*ggp(ig)
          END DO
@@ -686,7 +686,7 @@ END FUNCTION
 
       CALL mp_sum( sk(1:n), intra_image_comm )
 
-      enkin=0.0
+      enkin=0.0d0
       DO i=1,n
          enkin=enkin+f(i)*sk(i)
       END DO
@@ -734,7 +734,7 @@ END FUNCTION
 !
 !     wz = factor for g.neq.0 because of c*(g)=c(-g)
 !
-      wz=2.0
+      wz=2.0d0
       DO is=1,nsp
          isa=0
          DO ism=1,is-1
@@ -745,7 +745,7 @@ END FUNCTION
             DO ix=1,3
                IF(nspin.EQ.1)THEN
                   iss=1
-                  IF (gstart == 2) vtemp(1)=0.0
+                  IF (gstart == 2) vtemp(1)=0.0d0
                   DO ig=gstart,ngs
                      vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
@@ -759,7 +759,7 @@ END FUNCTION
                ELSE
                   isup=1
                   isdw=2
-                  IF (gstart == 2) vtemp(1)=0.0
+                  IF (gstart == 2) vtemp(1)=0.0d0
                   DO ig=gstart,ngs
                      vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
                      cnvg=rhops(ig,is)*vcgs
@@ -798,7 +798,7 @@ END FUNCTION
       REAL(DP)    sigma, auxf
       INTEGER nband, is, ia, ig, isa
 !
-      sigma=12.0
+      sigma=12.0d0
       nband=0
 !!!      do is=1,nsp
       isa = 0
@@ -942,7 +942,7 @@ END FUNCTION
             temp(ig)=cp(1,ig,i)* DBLE(betae(ig,inl))+             &
      &               cp(2,ig,i)*AIMAG(betae(ig,inl))
          END DO
-         bec(inl,i)=2.*SUM(temp)
+         bec(inl,i)=2.d0*SUM(temp)
          IF (gstart == 2) bec(inl,i)= bec(inl,i)-temp(1)
       END DO
 
@@ -952,7 +952,7 @@ END FUNCTION
 !
       DO k=1,kmax
          IF (ispin(i).EQ.ispin(k)) THEN
-            rsum=0.
+            rsum=0.d0
             DO is=1,nvb
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
@@ -1050,7 +1050,7 @@ END FUNCTION
             temp(ig)=c(1,ig)* DBLE(betae(ig,inl))+             &
      &               c(2,ig)*AIMAG(betae(ig,inl))
          END DO
-         becc(inl)=2.*SUM(temp)
+         becc(inl)=2.d0*SUM(temp)
          IF (gstart == 2) becc(inl)= becc(inl)-temp(1)
       END DO
 
@@ -1084,7 +1084,7 @@ END FUNCTION
 !     calculate csv(k) = csv(k) + <c| SUM_nm |beta(n)><beta(m)|v(k)>,  k<i
 !
       DO k=1,n
-            rsum=0.
+            rsum=0.d0
             DO is=1,nvb
                DO iv=1,nh(is)
                   DO jv=1,nh(is)
@@ -1140,11 +1140,11 @@ END FUNCTION
             CALL DAXPY( 2*ngw, -csc(k), cp(1,k), 1, cp(1,i), 1 )
          END DO
          anorm = cscnorm( bec, nkbx, cp, ngwx, i, n )
-         CALL DSCAL( 2*ngw, 1.0/anorm, cp(1,i), 1 )
+         CALL DSCAL( 2*ngw, 1.0d0/anorm, cp(1,i), 1 )
          !
          !         these are the final bec's
          !
-         CALL DSCAL( nkbx, 1.0/anorm, bec(1,i), 1 )
+         CALL DSCAL( nkbx, 1.0d0/anorm, bec(1,i), 1 )
       END DO
 !
       DEALLOCATE( csc )
@@ -2059,7 +2059,7 @@ END FUNCTION
 !
       IF (nvb.EQ.0) RETURN
       CALL start_clock( 'rhov' )
-      ci=(0.,1.)
+      ci=(0.d0,1.d0)
 !
 !
       ALLOCATE( v( nnr ) )
@@ -2099,7 +2099,7 @@ END FUNCTION
                      DO jv=iv,nh(is)
                         ijv = (jv-1)*jv/2 + iv
                         sumrho=rhovan(ijv,isa+ifft-1,iss)
-                        IF(iv.NE.jv) sumrho=2.*sumrho
+                        IF(iv.NE.jv) sumrho=2.d0*sumrho
                         DO ig=1,ngb
                            qgbt(ig,ifft)=qgbt(ig,ifft) + sumrho*qgb(ig,ijv,is)
                         END DO
@@ -2204,7 +2204,7 @@ END FUNCTION
                      DO jv=iv,nh(is)
                         ijv = (jv-1)*jv/2 + iv
                         sumrho=rhovan(ijv,isa,iss)
-                        IF(iv.NE.jv) sumrho=2.*sumrho
+                        IF(iv.NE.jv) sumrho=2.d0*sumrho
                         DO ig=1,ngb
                            qgbt(ig,iss)=qgbt(ig,iss)+sumrho*qgb(ig,ijv,is)
                         END DO
@@ -2274,8 +2274,8 @@ END FUNCTION
          DO ig=1,ng
             fp=  v(np(ig)) + v(nm(ig))
             fm=  v(np(ig)) - v(nm(ig))
-            rhog(ig,isup)=rhog(ig,isup) + 0.5*CMPLX(DBLE(fp),AIMAG(fm))
-            rhog(ig,isdw)=rhog(ig,isdw) + 0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+            rhog(ig,isup)=rhog(ig,isup) + 0.5d0*CMPLX(DBLE(fp),AIMAG(fm))
+            rhog(ig,isdw)=rhog(ig,isdw) + 0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
          END DO
 
 !
@@ -2413,7 +2413,7 @@ END FUNCTION
 !
 ! find spin-up and spin-down states
 !
-      fup = 0.0
+      fup = 0.0d0
       DO i=iupdwn(1),nupdwn(1)
          fup = fup + f(i)
       END DO
@@ -2423,12 +2423,12 @@ END FUNCTION
 ! paranoid checks
 !
       frac= ABS(fup-nup).GT.1.0d-6
-      fup = 0.0
+      fup = 0.0d0
       DO i=1,nup
          fup = fup + f(i)
       END DO
       frac=frac.OR.ABS(fup-nup).GT.1.0d-6
-      fdw = 0.0
+      fdw = 0.0d0
       DO j=iupdwn(2),iupdwn(2)-1+ndw
          fdw = fdw + f(j)
       END DO
@@ -2438,7 +2438,7 @@ END FUNCTION
 !
 !     Becke's formula for spin polarization
 !
-      spin1 = 0.0
+      spin1 = 0.0d0
       DO ir=1,nnr
          spin1 = spin1 - MIN(rhor(ir,1),rhor(ir,2))
       END DO
@@ -2606,7 +2606,7 @@ END FUNCTION
       !
       !     wz = factor for g.neq.0 because of c*(g)=c(-g)
       !
-      wz = 2.0
+      wz = 2.0d0
       !
       ht = TRANSPOSE( h )
       !
@@ -2678,7 +2678,7 @@ END FUNCTION
       !
       !     calculation local potential energy
       !
-      vtemp=(0.,0.)
+      vtemp=(0.d0,0.d0)
       DO is=1,nsp
          DO ig=1,ngs
             vtemp(ig)=vtemp(ig)+CONJG(rhotmp(ig))*sfac(ig,is)*vps(ig,is)
@@ -2712,12 +2712,12 @@ END FUNCTION
          END DO
       END DO
       !
-      IF (gstart == 2) vtemp(1)=0.0
+      IF (gstart == 2) vtemp(1)=0.0d0
       DO ig = gstart, ng
          vtemp(ig) = CONJG( rhotmp( ig ) ) * rhotmp( ig ) / g( ig )
       END DO
 !
-      eh = DBLE( SUM( vtemp ) ) * wz * 0.5 * fpi / tpiba2
+      eh = DBLE( SUM( vtemp ) ) * wz * 0.5d0 * fpi / tpiba2
 !
       IF ( ttsic ) THEN
          !
@@ -2757,7 +2757,7 @@ END FUNCTION
       !     calculation hartree + local pseudo potential
       !
       !
-      IF (gstart == 2) vtemp(1)=(0.,0.)
+      IF (gstart == 2) vtemp(1)=(0.d0,0.d0)
       DO ig=gstart,ng
          vtemp(ig)=rhotmp(ig)*fpi/(tpiba2*g(ig))
       END DO
@@ -2824,11 +2824,11 @@ END FUNCTION
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
             IF( ttsic ) THEN
-             rhog(ig,isup)=vtemp(ig)-self_vloc(ig) +0.5*CMPLX( DBLE(fp),AIMAG(fm))
-             rhog(ig,isdw)=vtemp(ig)+self_vloc(ig) +0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+             rhog(ig,isup)=vtemp(ig)-self_vloc(ig) +0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+             rhog(ig,isdw)=vtemp(ig)+self_vloc(ig) +0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
             ELSE
-             rhog(ig,isup)=vtemp(ig)+0.5*CMPLX( DBLE(fp),AIMAG(fm))
-             rhog(ig,isdw)=vtemp(ig)+0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+             rhog(ig,isup)=vtemp(ig)+0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+             rhog(ig,isdw)=vtemp(ig)+0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
             ENDIF
          END DO
       ENDIF
@@ -2934,7 +2934,7 @@ END FUNCTION
 
       IF( dft_is_meta() ) CALL vofrho_meta( v, vs )  !METAGGA
 
-      ebac = 0.0
+      ebac = 0.0d0
       !
       eht = eh * omega + esr - eself
       !

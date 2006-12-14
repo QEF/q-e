@@ -439,8 +439,8 @@
             DO ig=1,ngm
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
-               rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
-               rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
             END DO
          ENDIF
 !
@@ -486,7 +486,7 @@
                   sa2  = f(i+1) / omega
                ELSE
                   iss2 = iss1
-                  sa2  = 0.0
+                  sa2  = 0.0d0
                END IF
                !
                DO ir = 1, nnrsx
@@ -519,8 +519,8 @@
             DO ig=1,ngs
                fp= psis(nps(ig)) + psis(nms(ig))
                fm= psis(nps(ig)) - psis(nms(ig))
-               rhog(ig,isup)=0.5*CMPLX( DBLE(fp),AIMAG(fm))
-               rhog(ig,isdw)=0.5*CMPLX(AIMAG(fp),-DBLE(fm))
+               rhog(ig,isup)=0.5d0*CMPLX( DBLE(fp),AIMAG(fm))
+               rhog(ig,isdw)=0.5d0*CMPLX(AIMAG(fp),-DBLE(fm))
             END DO
          ENDIF
 !
@@ -629,7 +629,7 @@
          IF (gstart.NE.2) THEN
             ! in the parallel case, only one processor has G=0 !
             DO iss=1,nspin
-               rsumg(iss)=0.0
+               rsumg(iss)=0.0d0
             END DO
          END IF
 
@@ -710,7 +710,7 @@
                sa2=f(i+1)/omega
             else
                iss2=iss1
-               sa2=0.0
+               sa2=0.0d0
             end if
 
             !
@@ -830,7 +830,7 @@
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
          do ig=1,nnrx
-            v(ig)=(0.0,0.0)
+            v(ig)=(0.0d0,0.0d0)
          end do
          do ig=1,ngm
             v(np(ig))= tpiba*(      ci*gx(2,ig)*rhog(ig,iss)-           &
@@ -870,15 +870,15 @@
       REAL(DP) roe
       INTEGER ir, iss
 !
-      rsum   =0.0
-      rnegsum=0.0
-      rmin   =100.
-      rmax   =0.0 
+      rsum   =0.0d0
+      rnegsum=0.0d0
+      rmin   =100.d0
+      rmax   =0.0d0 
       DO iss = 1, nspin
          DO ir = 1, nnr
             roe  = rhor(ir,iss)
             rsum = rsum + roe
-            IF ( roe < 0.0 ) rnegsum = rnegsum + roe
+            IF ( roe < 0.0d0 ) rnegsum = rnegsum + roe
             rmax = MAX( rmax, roe )
             rmin = MIN( rmin, roe )
          END DO

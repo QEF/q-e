@@ -123,11 +123,11 @@ program plotrho
      go to 10
   end if
   if (nlevels > nlevelx) then
-     WRITE( stdout, '("Too many levels, reducing to allowed max:",i4))') &
+     WRITE( stdout, '("Too many levels, reducing to allowed max:",i4)') &
           nlevelx
      nlevels = nlevelx
   else if (nlevels < 1) then
-     WRITE( stdout, '("Too few levels! assuming 1 level"))') 
+     WRITE( stdout, '("Too few levels! assuming 1 level")') 
      nlevels = 1
   end if
   if (logarithmic_scale) then
@@ -142,11 +142,11 @@ program plotrho
   endif
 
   z (nlevels) = z (nlevels - 1)
-  xdim = 15.0 * (xmax - xmin) / sqrt ( (xmax - xmin) **2 + (ymax - ymin) **2)
-  ydim = 15.0 * (ymax - ymin) / sqrt ( (xmax - xmin) **2 + (ymax - ymin) **2)
+  xdim = 15.0d0 * (xmax - xmin) / sqrt ( (xmax - xmin) **2 + (ymax - ymin) **2)
+  ydim = 15.0d0 * (ymax - ymin) / sqrt ( (xmax - xmin) **2 + (ymax - ymin) **2)
 
-  xs = 4.0
-  ys = 3.0
+  xs = 4.0d0
+  ys = 3.0d0
 
   ! uncomment the call to "cplot" if you want contour lines,
   ! plus gray levels and shading for negative values
@@ -192,7 +192,7 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   integer, parameter :: ncmax = 19
   integer :: i, j, k
   real(DP) :: gray (0:ncmax), dim
-  real(DP) :: cm = 28.453, width=0.5, gray0=1.0, deltagray=0.7
+  real(DP) :: cm = 28.453d0, width=0.5d0, gray0=1.0d0, deltagray=0.7d0
   !  cm   : number of points per cm
   !  width: linewidth of the contour plot for PostScript printer
 
@@ -201,7 +201,7 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   if (nc > ncmax .or. nc < 1) stop '  nc too big or wrong'
   if (iub > imax .or.iub < 1) stop ' iub too big or wrong'
   if (jub > jmax .or.jub < 1) stop ' jub too big or wrong'
-  if (xdim < 3.0 .or. ydim < 3.0) stop ' really too small!'
+  if (xdim < 3.0d0 .or. ydim < 3.0d0) stop ' really too small!'
   if (xdim > 20.0.or. ydim > 30.0) stop ' really too big!'
   if (abs (xs) > 20.or. abs (ys) > 30) stop ' xs or ys are weird'
   !  initializations for PostScript output
@@ -248,7 +248,7 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   write (1, '(a)') '% Comment the next line to remove the title'
 
   write (1, '(1x,f6.2," cm ",f6.2," cm moveto title cshow")') &
-       xdim / 2, ydim + 1.5
+       xdim / 2, ydim + 1.5d0
 
   call hatch (0.d0, xdim, 0.d0, ydim)
   do i = 0, iub
@@ -261,10 +261,10 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   call conrec (imax, iub, jmax, jub, x, y, d, nc, z)
   !  draw frame of size xdim by ydim
   write (1, '(a)') '1 setlinewidth 0 setgray newpath'
-  write (1, '(2f6.1," moveto")') 0.0, 0.0
-  write (1, '(2f6.1," lineto")') xdim * cm, 0.0
+  write (1, '(2f6.1," moveto")') 0.0d0, 0.0d0
+  write (1, '(2f6.1," lineto")') xdim * cm, 0.0d0
   write (1, '(2f6.1," lineto")') xdim * cm, ydim * cm
-  write (1, '(2f6.1," lineto")') 0.0, ydim * cm
+  write (1, '(2f6.1," lineto")') 0.0d0, ydim * cm
 
   write (1, '(a)') 'closepath stroke'
   !      write (1,'(a)') 'grestore'
@@ -286,7 +286,7 @@ subroutine conrec (imax, iub, jmax, jub, x, y, d, nc, z)
   character (len=4) :: triangle (0:ncmax), trapez (0:ncmax)
   real(DP) :: h (0:4), xh (0:4), yh (0:4)
   real(DP) :: x1, y1, x2, y2, x3, y3, x4, y4, dx, dy, xx, yy, dmin, dmax
-  real(DP) :: cm = 28.453
+  real(DP) :: cm = 28.453d0
   !   cm : conversion factor from cm to points for PostScript
   integer :: ish (0:4), im (0:3), jm (0:3), castab (0:2, 0:2, 0:2)
   integer :: i, j, k, m, m1, m2, m3, npoint, icase, levelin, nolevel
@@ -297,8 +297,8 @@ subroutine conrec (imax, iub, jmax, jub, x, y, d, nc, z)
        5, 2, 0, 8, 0, 0 /
  
   dy = (y (jub) - y (0) ) / (nc + 1)
-  xx = x (iub) + 1.0
-  dx = 0.5
+  xx = x (iub) + 1.0d0
+  dx = 0.5d0
 
   write (1, '(a)') '% Start of Color Code'
 
@@ -322,7 +322,7 @@ subroutine conrec (imax, iub, jmax, jub, x, y, d, nc, z)
           * cm
      write (1, '(2f6.1," lineto")') xx * cm, (yy - dy) * cm
      write (1, * ) 'closepath stroke'
-     write (1, '(2f6.1," moveto")') (x (iub) + 2.0) * cm, (yy - dy / &
+     write (1, '(2f6.1," moveto")') (x (iub) + 2.0d0) * cm, (yy - dy / &
           2) * cm
      if (k == 0) then
         write (1, '("(z<",f7.5,") show")') z (0)
@@ -578,17 +578,17 @@ subroutine atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
   real(DP) :: xdim, ydim
   integer :: n1, n2, n3, i, n
   real(DP) :: r (3), ri (3), tau1n, tau2n, delta0, r1, r2, r3
-  real(DP) :: delta = 1.0, cm = 28.453
+  real(DP) :: delta = 1.0d0, cm = 28.453d0
   !
   delta0 = delta / a0
   tau1n = sqrt (tau1 (1) **2 + tau1 (2) **2 + tau1 (3) **2)
   tau2n = sqrt (tau2 (1) **2 + tau2 (2) **2 + tau2 (3) **2)
   !  clip the rectangle
   write (1, '(a)') 'gsave newpath'
-  write (1, '(2f6.1," moveto")') 0.0, 0.0
-  write (1, '(2f6.1," lineto")') xdim * cm, 0.0
+  write (1, '(2f6.1," moveto")') 0.0d0, 0.0d0
+  write (1, '(2f6.1," lineto")') xdim * cm, 0.0d0
   write (1, '(2f6.1," lineto")') xdim * cm, ydim * cm
-  write (1, '(2f6.1," lineto")') 0.0, ydim * cm
+  write (1, '(2f6.1," lineto")') 0.0d0, ydim * cm
   write (1, '(a)') 'closepath clip stroke'
   ! really bad algorithm to generate (hopefully) all atoms
   ! that are inside the contour plane or at |z| < delta (a.u.)
@@ -644,7 +644,7 @@ subroutine hatch (x1, x2, y1, y2)
   USE kinds, only: DP
   implicit none
   real(DP) :: x1, x2, y1, y2
-  real(DP) :: cm =  28.453, delta = 0.2, dim
+  real(DP) :: cm =  28.453d0, delta = 0.2d0, dim
   integer :: nhach, n
 
   write (1, '(a)') '% Beginning of hatching'
@@ -696,7 +696,7 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
   real(DP) :: line(2,npointmax,ncontourmax), work(2,npointmax), &
        segments(2,2,npointmax*ncontourmax), yy, dy
   integer :: npoints(ncontourmax), ncontours, i, j, k, l, npts
-  real(DP), parameter :: cm = 28.453
+  real(DP), parameter :: cm = 28.453d0
   logical ::  lwork(npointmax*ncontourmax)
   character (len=256) :: filename, linetype(nmaxtypes)
   data linetype &
@@ -714,7 +714,7 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
   if(nlevels < 1)  stop '  nunmber of levels is wrong'
   if(iub > imax .or. iub < 1) stop ' iub too big or wrong'
   if(jub < 1) stop ' jub or wrong'
-  if(xdim < 3.0 .or. ydim < 3.0 ) stop ' really too small!'
+  if(xdim < 3.0d0 .or. ydim < 3.0d0 ) stop ' really too small!'
   if(xdim > 20.0.or. ydim > 30.0) stop ' really too big!'
   if(abs(xs) > 20 .or. abs(ys) > 30) stop ' xs or ys are weird'
 
@@ -739,7 +739,7 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
   write (1,'(a)') '0 setgray'
   write (1,'(1x,f6.2,'' cm '',f6.2,'' cm translate'')') xs, ys
   write (1,'(1x,f6.2,'' cm '',f6.2,'' cm moveto title cshow'')') &
-       xdim/2, ydim+1.5
+       xdim/2, ydim+1.5d0
   !
   do i=0,iub
      x(i)=xdim*DBLE(i)/iub
@@ -752,7 +752,7 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
      if (z(k).le.z(k-1)) stop ' order of levels'
   end do
 
-  yy=y(jub)*0.75
+  yy=y(jub)*0.75d0
   dy=(y(jub)-y(0))/(nlevels-1)/2
 
   do k=0,nlevels-1
@@ -760,10 +760,10 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
      write (1,'(''%% This is level '',i3)') k
      write (1,'(50a)') linetype(mod(k,nmaxtypes)+1)
      write (1,*) ' newpath '
-     write (1,'(2f6.1,'' moveto'')') (x(iub)+1.0)*cm, yy*cm
-     write (1,'(2f6.1,'' lineto'')') (x(iub)+1.8)*cm, yy*cm
+     write (1,'(2f6.1,'' moveto'')') (x(iub)+1.0d0)*cm, yy*cm
+     write (1,'(2f6.1,'' lineto'')') (x(iub)+1.8d0)*cm, yy*cm
      write (1,*) 'closepath stroke'
-     write (1,'(2f6.1,'' moveto'')') (x(iub)+2.0)*cm, yy*cm
+     write (1,'(2f6.1,'' moveto'')') (x(iub)+2.0d0)*cm, yy*cm
      write (1,'(''( z = '',f6.3,'') show'')') z(k)
      yy=yy-dy
 
@@ -780,10 +780,10 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
 
   !  draw frame of size xdim by ydim
   write (1,*) '[] 0 setdash 1 setlinewidth 0 setgray newpath'
-  write (1,'(2f6.1,'' moveto'')')     0.0,0.0
-  write (1,'(2f6.1,'' lineto'')') xdim*cm,0.0
+  write (1,'(2f6.1,'' moveto'')')     0.0d0,0.0d0
+  write (1,'(2f6.1,'' lineto'')') xdim*cm,0.0d0
   write (1,'(2f6.1,'' lineto'')') xdim*cm,ydim*cm
-  write (1,'(2f6.1,'' lineto'')')     0.0,ydim*cm
+  write (1,'(2f6.1,'' lineto'')')     0.0d0,ydim*cm
   write (1,*) 'closepath stroke'
   !      write (1,*) 'grestore'
   !      write (1,'(a)') '%%Trailer'
@@ -834,8 +834,8 @@ subroutine findcontours (d, imax, iub, jub, x, y, z, segments, work, &
 
   ncontours=0
   nleft=nsegments
-  epsx = 0.0001 * (x(1)-x(0))
-  epsy = 0.0001 * (y(1)-y(0))
+  epsx = 0.0001d0 * (x(1)-x(0))
+  epsy = 0.0001d0 * (y(1)-y(0))
   do nseg=1,nsegments
      if (.not.done(nseg)) then
         ncontours=ncontours+1
@@ -951,7 +951,7 @@ subroutine triangle ( d, x, y, z, imax, iub, jub, i0, j0, m0, found, line )
   dmin=min(h(1),h(2),h(3),h(4))
   dmax=max(h(1),h(2),h(3),h(4))
   !     return if no contour is found  in this box
-  if ( dmin > 0.0 .or. dmax < 0.0 ) then
+  if ( dmin > 0.0d0 .or. dmax < 0.0d0 ) then
      found=.false.
      return
   end if
@@ -965,13 +965,13 @@ subroutine triangle ( d, x, y, z, imax, iub, jub, i0, j0, m0, found, line )
   yh(3) = y(j0+1)
   yh(4) = y(j0+1)
   !     and this is the center of the box
-  h(0) =(h(1)+h(2)+h(3)+h(4))/4.0
-  xh(0)=(x(i0)+x(i0+1))/2.0
-  yh(0)=(y(j0)+y(j0+1))/2.0
+  h(0) =(h(1)+h(2)+h(3)+h(4))/4.0d0
+  xh(0)=(x(i0)+x(i0+1))/2.0d0
+  yh(0)=(y(j0)+y(j0+1))/2.0d0
   !     ish=+1 if h>0 ; ish=0 if h=0 ; ish=-1 if h<0 
   do m=0,4
      ish(m) = nint( sign(1.d0, h(m)) )
-     if (h(m) == 0.0) ish(m) = 0
+     if (h(m) == 0.0d0) ish(m) = 0
   end do
   !     starting triangle
   m1=m0

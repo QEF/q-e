@@ -102,6 +102,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
   !
   !  calculate dX/dtau with finite differences
   !
+  USE constants,  ONLY : BOHR_RADIUS_ANGS
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
@@ -150,7 +151,7 @@ SUBROUTINE cg_dchi(dchi_dtau)
   !
 2 CONTINUE
   !
-  convfact = 0.529177**2
+  convfact = BOHR_RADIUS_ANGS**2
   !
   DO na=na_,nat
      DO ipol=1,3
@@ -254,7 +255,7 @@ END SUBROUTINE cg_dchi
 SUBROUTINE cg_eps0dyn(w2,dynout)
   !-----------------------------------------------------------------------
   !
-
+  USE constants,  ONLY : BOHR_RADIUS_ANGS
   USE ions_base,  ONLY : nat, tau, ityp, amass
   USE io_global,  ONLY : stdout, ionode
   USE io_files,   ONLY : iunres
@@ -311,9 +312,9 @@ SUBROUTINE cg_eps0dyn(w2,dynout)
      do i=1,3
         do j=1,3
            if (i == j) then
-              chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*0.529177**3
+              chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*BOHR_RADIUS_ANGS**3
            else
-              chi(i,j) = epsilon0(i,j)*omega/fpi*0.529177**3
+              chi(i,j) = epsilon0(i,j)*omega/fpi*BOHR_RADIUS_ANGS**3
            end if
         end do
      end do
@@ -388,7 +389,8 @@ END SUBROUTINE cg_eps0dyn
 SUBROUTINE cg_neweps
   !-----------------------------------------------------------------------
   !
-  USE io_global,  ONLY :  stdout
+  USE constants, ONLY : BOHR_RADIUS_ANGS
+  USE io_global, ONLY : stdout
   USE ions_base, ONLY : nat, tau
   USE pwcom
   USE cgcom
@@ -429,9 +431,9 @@ SUBROUTINE cg_neweps
   do i=1,3
      do j=1,3
         if (i == j) then
-           chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*0.529177**3
+           chi(i,j) = (epsilon0(i,j)-1.d0)*omega/fpi*BOHR_RADIUS_ANGS**3
         else
-           chi(i,j) = epsilon0(i,j)*omega/fpi*0.529177**3
+           chi(i,j) = epsilon0(i,j)*omega/fpi*BOHR_RADIUS_ANGS**3
         end if
      end do
   end do
@@ -469,7 +471,7 @@ SUBROUTINE newscf
   lda_plus_u=.FALSE.
   doublegrid=.FALSE.
   lmovecell=.FALSE.
-  qcutz=0.0
+  qcutz=0.0d0
   istep=1
   iprint=10000
   pot_order=0
@@ -490,7 +492,7 @@ SUBROUTINE newscf
   isolve=0
   tr2 =1.d-8
   ethr=1.d-8
-  mixing_beta=0.7
+  mixing_beta=0.7d0
   nmix=4
   niter=50
   !
@@ -522,7 +524,7 @@ SUBROUTINE raman_cs(dynout,dchi_dtau)
   !
   INTEGER :: nu, na, ipol, jpol, lpol
   REAL(DP), ALLOCATABLE :: raman_activity(:,:,:)
-  REAL(DP), PARAMETER   :: r1fac = 911.444
+  REAL(DP), PARAMETER   :: r1fac = 911.444d0
   !
   !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
   !
@@ -532,7 +534,7 @@ SUBROUTINE raman_cs(dynout,dchi_dtau)
      !
      DO jpol=1,3
         DO ipol=1,3
-           raman_activity(ipol,jpol,nu) = 0.0
+           raman_activity(ipol,jpol,nu) = 0.0d0
            DO na=1,nat
               DO lpol=1,3
                  raman_activity(ipol,jpol,nu) = raman_activity(ipol,jpol,nu) +&
@@ -555,6 +557,7 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   !  calculate d X/d u  (u=phonon mode) with finite differences
   !
+  USE constants,  ONLY : BOHR_RADIUS_ANGS
   USE ions_base,  ONLY : nat, tau
   USE io_global,  ONLY :  stdout, ionode
   USE io_files,   ONLY : iunres
@@ -609,11 +612,11 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   !   conversion factor from (Ry au for mass)^(-1) to amu(-1) 
   !
-  r1fac = 911.444
+  r1fac = 911.444d0
   !
   !   conversion factor from bohr^2*(Ry au for mass)^(-1/2) to A^2 amu(-1/2)
   !
-  convfact = 0.529177**2*sqrt(r1fac)
+  convfact = BOHR_RADIUS_ANGS**2*sqrt(r1fac)
   !
   DO nu=first,last
      IF (nu.LT.nu_) go to 11
@@ -705,8 +708,8 @@ SUBROUTINE raman_cs2(w2,dynout)
   !
   !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
   !
-  rydcm1 = 13.6058*8065.5
-  cm1thz = 241.796/8065.5
+  rydcm1 = 13.6058d0*8065.5d0
+  cm1thz = 241.796d0/8065.5d0
   !
   !  derivatives of epsilon are translated into derivatives of molecular
   !  polarizabilities by assuming a Clausius-Mossotti behavior
@@ -720,13 +723,13 @@ SUBROUTINE raman_cs2(w2,dynout)
   !   1 e = 4.80324x10^(-10) esu = 4.80324 Debye/A
   !     (1 Debye = 10^(-18) esu*cm = 0.2081928 e*A)
   !
-  irfac = 4.80324**2/2.d0*r1fac
+  irfac = 4.80324d0**2/2.d0*r1fac
   !
   ALLOCATE (infrared(3*nat))    
   !
   DO nu = 1,3*nat
      DO ipol=1,3
-        polar(ipol)=0.0
+        polar(ipol)=0.0d0
      END DO
      DO na=1,nat
         DO ipol=1,3

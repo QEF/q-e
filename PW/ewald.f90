@@ -16,6 +16,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   !
   USE kinds
+  USE constants, ONLY : tpi, e2
   implicit none
   !
   !   first the dummy variables
@@ -50,9 +51,6 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   !
   integer, parameter :: mxr = 50
   ! the maximum number of R vectors included in r
-  real(DP), parameter :: tpi = 2.d0 * 3.141592653589793d0
-  real(DP), parameter :: e2 = 2.d0
-  ! the square of the electron charge (Ry atomic units)
   integer :: ng, nr, na, nb, nt, nrm, ipol
   ! counter over reciprocal G vectors
   ! counter over direct vectors
@@ -98,9 +96,9 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! Determine if this processor contains G=0 and set the constant term
   !
   if (gstart==2) then
-     ewaldg = - charge**2 / alpha / 4.0
+     ewaldg = - charge**2 / alpha / 4.0d0
   else
-     ewaldg = 0.0
+     ewaldg = 0.0d0
   endif
   if (gamma_only) then
      fact = 2.d0

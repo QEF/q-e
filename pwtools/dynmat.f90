@@ -116,7 +116,7 @@ end Module dynamical
       gamma = abs(q_(1)**2+q_(2)**2+q_(3)**2).lt.1.0d-8
       amconv = 1.66042d-24/9.1095d-28*0.5d0
       do nt=1, ntyp
-         if (amass(nt) > 0.0) then
+         if (amass(nt) > 0.0d0) then
             amass(nt)=amass(nt)*amconv
          else 
             amass(nt)=amass_(nt)
@@ -226,15 +226,15 @@ end Module dynamical
             do na=1,nat
                do j=1,3
                   do i=1,3
-                     zstar(i,j,na)=0.0
+                     zstar(i,j,na)=0.0d0
                   end do 
                end do
             end do
             do j=1,3
                do i=1,3
-                  eps0(i,j)=0.0
+                  eps0(i,j)=0.0d0
                end do
-               eps0(j,j)=1.0
+               eps0(j,j)=1.0d0
             end do
          else
             read(1,*)
@@ -283,6 +283,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
   !             dchi_dtau = derivatives of chi wrt atomic displacement
   !                         (units: A^2)
  USE kinds, ONLY: DP
+ USE constants, ONLY : fpi, BOHR_RADIUS_ANGS
  implicit none
  ! input
  integer, intent(in) :: nat
@@ -298,12 +299,14 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  !
  !  conversion factors Ry => THz, Ry=>cm^(-1) e cm^(-1)=>THz
  !
- rydcm1 = 13.6058*8065.5
- cm1thz = 241.796/8065.5
+ !  FIXME: there is more to be used from the constants module (for consistency).
+ !
+ rydcm1 = 13.6058d0*8065.5d0
+ cm1thz = 241.796d0/8065.5d0
  !
  !   conversion factor from (Ry au for mass)^(-1) to amu(-1)
  !
- r1fac = 911.444
+ r1fac = 911.444d0
  !
  !   conversion factor for IR cross sections from
  !   (Ry atomic units * e^2)  to  (Debye/A)^2/amu
@@ -311,7 +314,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  !   1 e = 4.80324x10^(-10) esu = 4.80324 Debye/A
  !     (1 Debye = 10^(-18) esu*cm = 0.2081928 e*A)
  !
- irfac = 4.80324**2/2.d0*r1fac
+ irfac = 4.80324d0**2/2.d0*r1fac
  !
  write (6,'(/5x,"Polarizability (A^3 units)")')
  !
@@ -331,7 +334,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
     end do
  end do
  do ipol=1,3
-    write (6,'(5x,3f12.6)') (chi(ipol,jpol)*0.529177**3*omega/4.0/3.1415926, &
+    write (6,'(5x,3f12.6)') (chi(ipol,jpol)*BOHR_RADIUS_ANGS**3*omega/fpi, &
          jpol=1,3)
  end do
  !
@@ -341,7 +344,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
  noraman=.true.
  do nu = 1,3*nat
     do ipol=1,3
-       polar(ipol)=0.0
+       polar(ipol)=0.0d0
     end do
     do na=1,nat
        do ipol=1,3
@@ -356,7 +359,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
     !
     do ipol=1,3
        do jpol=1,3
-          raman(ipol,jpol,nu)=0.0
+          raman(ipol,jpol,nu)=0.0d0
           do na=1,nat
              do lpol=1,3
                 raman(ipol,jpol,nu) = raman(ipol,jpol,nu) + &
@@ -473,7 +476,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
   if(asr.eq.'simple') then
      do i=1,3
         do j=1,3
-           sum=0.0
+           sum=0.0d0
            do na=1,nat
               sum = sum + zeu(i,j,na)
            end do
@@ -608,7 +611,7 @@ subroutine set_asr ( asr, axis, nat, tau, dyn, zeu )
      do i=1,3
         do j=1,3
            do na=1,nat
-              sum=0.0
+              sum=0.0d0
               do nb=1,nat
                  if (na.ne.nb) sum=sum + DBLE (dyn(i,j,na,nb))
               end do

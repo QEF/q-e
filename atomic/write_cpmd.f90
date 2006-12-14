@@ -42,6 +42,7 @@ subroutine write_cpmd &
   !-----------------------------------------------------------------------
   !
   use kinds, only : DP
+  use constants, only : fpi, e2
   implicit none
   integer :: iunps, ndm, mesh, nwfps, lmin,lmax,lloc,nlc,nnl,nwfs,lls(nwfs)
   real(DP) :: zed, zval, xmin,dx, cc(2),alpc(2),alc(6,0:3), &
@@ -49,7 +50,6 @@ subroutine write_cpmd &
        r(ndm), r2(ndm), vnl(ndm,0:3), rhoc(ndm), erf, etots
   character(len=*) :: dft
   !
-  real(DP), parameter :: fourpi=4.0_dp*3.141592653589793_dp, e2=2.0_dp
   real(DP) :: alfa_core=0.0_dp, vpsloc(ndm)
   logical nlcc, bhstype, numeric
   character(len=70) title_pseudo
@@ -111,7 +111,7 @@ subroutine write_cpmd &
      write(iunps,"('     NUMERIC')", err=300, iostat=ios)
      write(iunps,'(i4)', err=300, iostat=ios) mesh
      write(iunps,'(2e16.8)', err=300, iostat=ios) (r(i), rhoc(i), i=1,mesh)         
-!         write(iunps,'(2e16.8)') (r(i), rho_core(i)/fourpi, i=1,mesh)       
+!         write(iunps,'(2e16.8)') (r(i), rho_core(i)/fpi, i=1,mesh)       
   
      write(iunps,"('&END')", err=300, iostat=ios)
   end if

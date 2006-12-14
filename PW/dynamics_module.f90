@@ -147,7 +147,9 @@ MODULE dynamics_module
       REAL(DP) :: total_mass, temp_new, temp_av, elapsed_time
       REAL(DP) :: delta(3), ml(3), mlt
       INTEGER  :: na
+#if defined (__NPT)
       REAL(DP) :: chi, press_new
+#endif
       LOGICAL  :: file_exists, leof
       !
       REAL(DP), EXTERNAL :: DNRM2
@@ -1086,7 +1088,7 @@ MODULE dynamics_module
          !
          dist = DBLE( idx ) / DBLE( hist_len ) * dmax
          !
-         IF ( dist > dmax / SQRT( 3.0 ) ) CYCLE
+         IF ( dist > dmax / SQRT( 3.0d0 ) ) CYCLE
          !
          radial_distr(idx,:) = radial_distr(idx,:) / dist**2
          !

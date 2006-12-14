@@ -272,7 +272,7 @@ program read_bands
 !
            todo=.true.
            do i=1,nbnd_rapk(point(ilines)+1)
-              mine=1.d8
+              mine=1.e8
               do j=1,nbnd
                  if (abs(e_rap(i,point(ilines)+1)-e(j,point(ilines)))<mine &
                                                            .and. todo(j)) then
@@ -284,7 +284,7 @@ program read_bands
            end do
            todo=.true.
            do i=1,nbnd_rapk(point(ilines+1)-1)
-              mine=1.d8
+              mine=1.e8
               do j=1,nbnd
                  if (abs(e_rap(i,point(ilines+1)-1)- &
                           e(j,point(ilines+1)))<mine .and. todo(j)) then

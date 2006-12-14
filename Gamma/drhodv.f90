@@ -39,7 +39,7 @@ subroutine drhodv(nu_i)
      !
      call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi ,npwx,work)
      do ibnd = 1,nbnd
-        dynel(nu_j) = dynel(nu_j) + 2.0*wk(kpoint)*work(ibnd)
+        dynel(nu_j) = dynel(nu_j) + 2.0d0*wk(kpoint)*work(ibnd)
      end do
   end do
 #ifdef __PARA

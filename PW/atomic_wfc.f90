@@ -35,10 +35,9 @@ subroutine atomic_wfc (ik, wfcatom)
   integer :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
              i0, i1, i2, i3
   !
-  real(DP), allocatable :: qg(:), ylm (:,:), chiq (:,:,:), aux (:), &
-       gk (:,:), vchi (:)
+  real(DP), allocatable :: qg(:), ylm (:,:), chiq (:,:,:), gk (:,:)
   complex(DP), allocatable :: sk (:)
-  real(DP) :: vqint, arg, px, ux, vx, wx
+  real(DP) :: arg, px, ux, vx, wx
   complex(DP) :: kphase  , lphase
 
   call start_clock ('atomic_wfc')

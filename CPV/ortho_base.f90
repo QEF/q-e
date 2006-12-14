@@ -1141,7 +1141,7 @@ CONTAINS
          DO is=1,nvb
             DO iv=1,nh(is)
                DO jv=1,nh(is)
-                  IF(ABS(qq(iv,jv,is)) > 1.e-5) THEN
+                  IF(ABS(qq(iv,jv,is)) > 1.d-5) THEN
                      DO ia=1,na(is)
                         inl=ish(is)+(iv-1)*na(is)+ia
                         jnl=ish(is)+(jv-1)*na(is)+ia

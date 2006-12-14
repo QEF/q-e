@@ -760,8 +760,8 @@
 
               ENDIF
               if ( gstart == 2 ) then
-                 cm(1,  i+idx-1)=cmplx(real(cm(1,  i+idx-1)),0.0)
-                 cm(1,i+idx)=cmplx(real(cm(1,i+idx)),0.0)
+                 cm(1,  i+idx-1)=cmplx(real(cm(1,  i+idx-1)),0.0d0)
+                 cm(1,i+idx)=cmplx(real(cm(1,i+idx)),0.0d0)
               end if
              idx_in = idx_in+1
 

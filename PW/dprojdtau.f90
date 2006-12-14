@@ -41,9 +41,9 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
            spsi(npwx,nbnd),        &! input: S|evc>
            dproj(natomwfc,nbnd)     ! output: the derivative of the projection
 
-   INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ib, ih,jh, ldim
+   INTEGER :: ig, jkb2, na, m1, ibnd, iwf, nt, ih, jh, ldim
 
-   REAL (DP) :: gvec, a1, a2
+   REAL (DP) :: gvec
 
    COMPLEX (DP):: ZDOTC
 

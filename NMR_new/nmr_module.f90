@@ -12,6 +12,7 @@ MODULE nmr_module
   ! ... This module contains the variables used for NMR calculations
   !
   USE kinds, ONLY : DP
+  USE constants, ONLY : a0_to_cm => bohr_radius_cm
   USE parameters, ONLY: npk
   IMPLICIT NONE
   SAVE
@@ -21,9 +22,6 @@ MODULE nmr_module
 
   ! avogadro number
   REAL(DP), PARAMETER :: avogadro = 6.022142d23
-
-  ! bohrradius to cm
-  REAL(DP), PARAMETER :: a0_to_cm = 0.529177d-8
 
   ! number of occupied bands at each k-point
   INTEGER :: nbnd_occ(npk)

@@ -79,7 +79,7 @@ subroutine dielec(do_zstar)
         call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi3,npwx,work(1,3))
         do ipol = 1,3
            do ibnd = 1,nbnd
-              zstar(ipol,jpol,na) = zstar(ipol,jpol,na) + 2.0*weight*work(ibnd,ipol)
+              zstar(ipol,jpol,na) = zstar(ipol,jpol,na) + 2.0d0*weight*work(ibnd,ipol)
            end do
         end do
      end if
@@ -100,7 +100,7 @@ subroutine dielec(do_zstar)
      call pw_dot('N',npw,nbnd,dvpsi,npwx,dpsi3,npwx,work(1,3))
      do ipol = 1,3
         do ibnd = 1,nbnd
-           epsilon0(ipol,jpol) = epsilon0(ipol,jpol) + 4.0*w*work(ibnd,ipol)
+           epsilon0(ipol,jpol) = epsilon0(ipol,jpol) + 4.0d0*w*work(ibnd,ipol)
         end do
      end do
   end do
@@ -116,7 +116,7 @@ subroutine dielec(do_zstar)
   ! add the diagonal part
   !
   do ipol=1,3
-     epsilon0(ipol,ipol) = epsilon0(ipol,ipol) + 1.0
+     epsilon0(ipol,ipol) = epsilon0(ipol,ipol) + 1.0d0
      if (do_zstar) then
         do na=1,nat
            zstar(ipol,ipol,na) = zstar(ipol,ipol,na) + zv(ityp(na))

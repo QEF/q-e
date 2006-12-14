@@ -53,7 +53,7 @@ subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
   write(ounit,*) 'Cubfile created from PWScf calculation'
   write(ounit,*) ' Total SCF Density'
 !                        origin is forced to (0.0,0.0,0.0)
-  write(ounit,'(I5,3F12.6)') nat, 0.0, 0.0, 0.0
+  write(ounit,'(I5,3F12.6)') nat, 0.0d0, 0.0d0, 0.0d0
   write(ounit,'(I5,3F12.6)') nr1, (alat*at(i,1)/DBLE(nr1),i=1,3)
   write(ounit,'(I5,3F12.6)') nr2, (alat*at(i,2)/DBLE(nr2),i=1,3)
   write(ounit,'(I5,3F12.6)') nr3, (alat*at(i,3)/DBLE(nr3),i=1,3)
@@ -68,7 +68,7 @@ subroutine write_cubefile ( alat, at, bg, nat, tau, atm, ityp, rho, &
      !
      ! wrap coordinates back into cell.
      tpos = MATMUL( TRANSPOSE(bg), tau(:,i) )
-     tpos = tpos - NINT(tpos - 0.5)
+     tpos = tpos - NINT(tpos - 0.5d0)
      inpos = alat * MATMUL( at, tpos )
      write(ounit,'(I5,5F12.6)') at_num, at_chrg, inpos
   enddo

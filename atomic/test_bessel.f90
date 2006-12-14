@@ -19,12 +19,13 @@ subroutine test_bessel ( )
   !     rm is the radius R of the box
   !
   use kinds, only : dp
+  use constants, only: pi
   use ld1inc, only: lmax, lmx, mesh, r, r2, dx
   use ld1inc, only: ecutmin, ecutmax, decut, rm
   !
   implicit none
   !
-  real(kind=dp), parameter :: pi=3.141592653589793_dp, eps = 1.0d-4
+  real(kind=dp), parameter :: eps = 1.0d-4
   real(kind=dp) ::  ecut   ! kinetic-energy cutoff (equivalent to PW)
   !
   real(kind=dp), allocatable :: q(:,:) ! quantized momenta in the spherical box
@@ -88,6 +89,7 @@ subroutine q_fill ( nswx, lmax, rm, ecut, nsw, q )
   !   find quantized momenta in a box of radius R = rm
   !
   use kinds, only : dp
+  use constants, only : pi
   implicit none
   integer, intent(in) :: nswx, lmax
   real(kind=dp), intent(in)  :: rm, ecut
@@ -95,7 +97,7 @@ subroutine q_fill ( nswx, lmax, rm, ecut, nsw, q )
   real(kind=dp), intent(out) :: q(nswx,0:lmax)
   !
   integer :: i, l, iret
-  real(kind=dp), parameter :: pi=3.141592653589793_dp, eps=1.0d-10
+  real(kind=dp), parameter :: eps=1.0d-10
   real(kind=dp), external :: find_root
   !
   !   l = 0 : j_0 (qR)=0  =>  q_i = i * (2pi/R)

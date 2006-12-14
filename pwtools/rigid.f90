@@ -12,8 +12,8 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
 #include "f_defs.h"
   use kinds, only: dp
+  use constants, only: pi, fpi, e2
   implicit none
-  real(DP), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
   integer ::  nr1, nr2, nr3    !  FFT grid
   integer ::  nat              ! number of atoms 
   complex(DP) :: dyn(3,3,nat,nat) ! dynamical matrix
@@ -67,7 +67,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
   !
 !  write (*,*) 'remember to fix Gmega'
 !  write (*,*) 'remember to check diagonal-term symmetry'
-  alph = 3.0
+  alph = 3.0d0
   im = 0
   do m1 = -nrx1,nrx1
      do m2 = -nrx2,nrx2
@@ -95,7 +95,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
         !
         if (geg.gt.0.0) then
            do j=1,3
-              fnat(j) = 0.0
+              fnat(j) = 0.0d0
            end do
            do nc = 1,nat
               arg = 2*pi* (g1* (tau(1,na)-tau(1,nc))+  &
@@ -106,7 +106,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
                  fnat(j) = fnat(j) + zcg(j)*cos(arg)
               end do
            end do
-           facgd = fac*exp(-geg/alph/4.0)/geg
+           facgd = fac*exp(-geg/alph/4.0d0)/geg
            do i = 1,3
               do j = 1,3
                  dyn(i,j,na,na) = dyn(i,j,na,na) - facgd * zag(i) * fnat(j) 
@@ -140,7 +140,7 @@ subroutine rgd_blk (nr1,nr2,nr3,nat,dyn,q,tau,epsil,zeu,bg,omega,sign)
                            g2 * (tau(2,na)-tau(2,nb))+              &
                            g3 * (tau(3,na)-tau(3,nb)))
               !
-              facg = fac * exp(-geg/alph/4.0)/geg *                 &
+              facg = fac * exp(-geg/alph/4.0d0)/geg *                 &
                    CMPLX(cos(arg),sin(arg))
               do i=1,3
                  do j=1,3 
@@ -162,8 +162,8 @@ subroutine nonanal(nat, nat_blk, itau_blk, epsil, q, zeu, omega, dyn )
   !     add the nonanalytical term with macroscopic electric fields
   !
   use kinds, only: dp
+  use constants, only: pi, fpi, e2
  implicit none
- real(DP), parameter :: e2=2.d0, pi=3.14159265358979d0, fpi=4.d0*pi
  integer, intent(in) :: nat, nat_blk, itau_blk(nat)
  !  nat: number of atoms in the cell (in the supercell in the case
  !       of a dyn.mat. constructed in the mass approximation)
@@ -269,7 +269,7 @@ subroutine dyndiag (nat,ntyp,amass,ityp,dyn,w2,z)
            diff = dif1
            difrel=diff / min ( abs(dyn2(i,j)), abs(dyn2(j,i)))
         end if
-        dyn2(i,j) = 0.5* (dyn2(i,j)+CONJG(dyn2(j,i)))
+        dyn2(i,j) = 0.5d0* (dyn2(i,j)+CONJG(dyn2(j,i)))
         dyn2(j,i) = CONJG(dyn2(i,j))
      end do
   end do
@@ -333,9 +333,9 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
   !
   !  conversion factors RYD=>THZ, RYD=>1/CM e 1/CM=>THZ
   !
-  rydthz = 13.6058*241.796
-  rydcm1 = 13.6058*8065.5
-  cm1thz = 241.796/8065.5
+  rydthz = 13.6058d0*241.796d0
+  rydcm1 = 13.6058d0*8065.5d0
+  cm1thz = 241.796d0/8065.5d0
   !
   !  write frequencies and normalised displacements
   !
@@ -347,7 +347,7 @@ subroutine writemodes (nax,nat,q,w2,z,iout)
      freq(i)= sqrt(abs(w2(i)))*rydcm1
      if (w2(i).lt.0.0) freq(i) = -freq(i)
      write (iout,9010) i, freq(i)*cm1thz, freq(i)
-     znorm = 0.0
+     znorm = 0.0d0
      do j=1,nat3
         znorm=znorm+abs(z(j,i))**2
      end do
@@ -401,7 +401,7 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   end if
   nat3=3*nat
   !
-  rydcm1 = 13.6058*8065.5
+  rydcm1 = 13.6058d0*8065.5d0
   !
   !  write frequencies and normalised displacements
   !
@@ -423,7 +423,7 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   write(iout,'(''[FR-NORM-COORD]'')')
   do i = 1,nat3
      write(iout,'('' vibration'',i6)') i
-     znorm = 0.0
+     znorm = 0.0d0
      do j=1,nat3
         znorm=znorm+abs(z(j,i))**2
      end do
@@ -450,6 +450,7 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   !   write modes on output file in a xcrysden-friendly way
   !
   use kinds, only: dp
+  USE constants, ONLY : BOHR_RADIUS_ANGS
   implicit none
   ! input
   integer :: nat, ityp(nat)
@@ -477,28 +478,30 @@ subroutine writexsf (xsffile, gamma, nat, atm, a0, at, tau, ityp, z)
   write(iout,'("CRYSTAL")')
   !
   write(iout,'("PRIMVEC")')
-  write(iout,'(2(3F15.9/),3f15.9)') at(:,:)*a0*0.529177d0
+  write(iout,'(2(3F15.9/),3f15.9)') at(:,:)*a0*BOHR_RADIUS_ANGS
   !
   do i = 1,nat3
      write(iout,'("PRIMCOORD",i3)') i
      write(iout,'(3x,2i4)') nat, 1
-     znorm = 0.0
+     znorm = 0.0d0
      do j=1,nat3
        znorm=znorm+abs(z(j,i))**2
     end do
     ! empirical factor: displacement vector normalised to 0.1
-    znorm = sqrt(znorm)*10.
+    znorm = sqrt(znorm)*10.d0
     do na = 1,nat
        if (gamma) then
           write (iout,'(a6,1x,6f10.5)') atm(ityp(na)),  &
-               a0*0.529177d0*tau(1,na), a0*0.529177d0*tau(2,na), &
-               a0*0.529177d0*tau(3,na), &
-               (DBLE(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
+                      a0*BOHR_RADIUS_ANGS*tau(1,na), &
+                      a0*BOHR_RADIUS_ANGS*tau(2,na), &
+                      a0*BOHR_RADIUS_ANGS*tau(3,na), &
+                      (DBLE(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
        else
           write (iout,'(a6,1x,6f10.5)') atm(ityp(na)),  &
-               a0*0.529177d0*tau(1,na), a0*0.529177d0*tau(2,na), &
-               a0*0.529177d0*tau(3,na), &
-               ( abs(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
+                      a0*BOHR_RADIUS_ANGS*tau(1,na), &
+                      a0*BOHR_RADIUS_ANGS*tau(2,na), &
+                      a0*BOHR_RADIUS_ANGS*tau(3,na), &
+                      ( abs(z((na-1)*3+ipol,i))/znorm,ipol=1,3)
        end if
     end do
  end do

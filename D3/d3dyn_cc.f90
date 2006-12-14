@@ -68,7 +68,7 @@ subroutine d3dyn_cc
   do ir = 1, nrxx
      rhox = rho (ir, 1) + rho_core (ir)
      arhox = abs (rhox)
-     if (arhox > 1.0e-30) then
+     if (arhox > 1.0d-30) then
         call xc (arhox, ex, ec, vx, vc)
         aux (ir) = CMPLX (e2 * (vx + vc), 0.d0)
      endif

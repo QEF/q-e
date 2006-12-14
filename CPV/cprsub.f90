@@ -416,10 +416,10 @@ subroutine nlinit
       do is = 1, nsp
          WRITE( stdout, fmt="(/,3X,'Specie: ',I5)" ) is
          if ( .not. numeric(is) ) then
-            fac=1.0
+            fac=1.0d0
          else
             !     fac converts ry to hartree
-            fac=0.5
+            fac=0.5d0
          end if
          do iv = 1, nh(is)
             WRITE( stdout,901) iv, indv(iv,is), nhtol(iv,is)
@@ -521,7 +521,7 @@ subroutine qvan2b(ngy,iv,jv,is,ylm,qg)
      !     
      !       sig= (-i)^l
      !
-     sig=(0.,-1.)**(l-1)
+     sig=(0.d0,-1.d0)**(l-1)
      sig=sig*ap(lp,ivl,jvl)
      do ig=1,ngy
         qg(ig)=qg(ig)+sig*ylm(ig,lp)*qradb(ig,ijvs,l,is)

@@ -50,7 +50,7 @@ subroutine atomic_rho (rhoa, nspina)
   !
   real(DP) :: rhoneg, rhoima, gx
   real(DP), allocatable :: rhocgnt (:), aux (:)
-  complex(DP), allocatable :: rhocg (:,:), strf_at(:,:)
+  complex(DP), allocatable :: rhocg (:,:)
   integer :: ir, is, ig, igl, nt, ndm
   !
   ! superposition of atomic charges contained in the array rho_at

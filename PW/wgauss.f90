@@ -21,6 +21,7 @@ function wgauss (x, n)
   ! --> (n=-99): Fermi-Dirac case: 1.0/(1.0+exp(-x)).
   !
   USE kinds
+  USE constants, ONLY : pi
   implicit none
   real(DP) :: wgauss, x
   ! output: the value of the function
@@ -31,13 +32,12 @@ function wgauss (x, n)
   !    the local variables
   !
 
-  real(DP) :: a, hp, arg, maxarg, hd, pi, gauss_freq, erf, xp
+  real(DP) :: a, hp, arg, maxarg, hd, gauss_freq, erf, xp
   ! the coefficient a_n
   ! the hermitean function
   ! the argument of the exponential
   ! maximum value for the argument of the exponen
   ! the hermitean function
-  ! pi
   ! the freq function
   ! the erf function
   ! auxiliary variable (cold smearing)
@@ -48,7 +48,6 @@ function wgauss (x, n)
 
   parameter (maxarg = 200.d0)
 
-  pi = 3.14159265358979d0
   ! Fermi-Dirac smearing
   if (n.eq. - 99) then
      if (x.lt. - maxarg) then
@@ -56,7 +55,7 @@ function wgauss (x, n)
      elseif (x.gt.maxarg) then
         wgauss = 1.d0
      else
-        wgauss = 1.0d0 / (1.0 + exp ( - x) )
+        wgauss = 1.0d0 / (1.0d0 + exp ( - x) )
      endif
      return
 

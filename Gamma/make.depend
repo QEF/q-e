@@ -31,12 +31,14 @@ cg_setupdgc.o : cgcom.o
 cgcom.o : ../Modules/kind.o
 cgsolve.o : ../Modules/io_global.o
 cgsolve.o : ../Modules/kind.o
+d2ion.o : ../Modules/constants.o
 d2ion.o : ../Modules/io_global.o
 d2ion.o : ../Modules/kind.o
 dgcxc.o : ../Modules/functionals.o
 dgcxc.o : ../Modules/kind.o
 dgcxc_spin.o : ../Modules/functionals.o
 dgcxc_spin.o : ../Modules/kind.o
+dgradcorr.o : ../Modules/constants.o
 dgradcorr.o : ../Modules/kind.o
 dielec.o : ../Modules/ions_base.o
 dielec.o : ../PW/pwcom.o
@@ -77,6 +79,7 @@ h_h.o : cgcom.o
 macro.o : ../PW/pwcom.o
 macro.o : cgcom.o
 phcg.o : ../Modules/check_stop.o
+phcg.o : ../Modules/constants.o
 phcg.o : ../Modules/control_flags.o
 phcg.o : ../Modules/functionals.o
 phcg.o : ../Modules/io_files.o

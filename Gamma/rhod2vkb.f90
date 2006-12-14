@@ -43,13 +43,13 @@ subroutine rhod2vkb(dyn0)
      if (has_equivalent( (nu_i-1)/3+1).eq.1 ) go to 10
      do na = 1, nat
         mu_i = 3*(na-1)
-        if ( u(mu_i+1,nu_i) .eq. 0.0  .and.   &
-             u(mu_i+2,nu_i) .eq. 0.0  .and.   &
-             u(mu_i+3,nu_i) .eq. 0.0        ) go to 11
+        if ( u(mu_i+1,nu_i) .eq. 0.0d0  .and.   &
+             u(mu_i+2,nu_i) .eq. 0.0d0  .and.   &
+             u(mu_i+3,nu_i) .eq. 0.0d0        ) go to 11
         do nu_j = 1,nmodes
-           if ( u(mu_i+1,nu_j) .eq. 0.0  .and. &
-                u(mu_i+2,nu_j) .eq. 0.0  .and. &
-                u(mu_i+3,nu_j) .eq. 0.0        ) go to 12
+           if ( u(mu_i+1,nu_j) .eq. 0.0d0  .and. &
+                u(mu_i+2,nu_j) .eq. 0.0d0  .and. &
+                u(mu_i+3,nu_j) .eq. 0.0d0        ) go to 12
            do ng = 1,ngm
               gtau = tpi * ( g(1,ng)*tau(1,na) + &
                              g(2,ng)*tau(2,na) + &
@@ -94,7 +94,7 @@ subroutine rhod2vkb(dyn0)
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)(-iGu_ipol) V^*_na,l(G')( iG'u_jpol) psi_j(G')
      ! sum_G sum_G' sum_j sum_l [ psi_j*(G) V_na,l(G)  V^*_na,l(G') ( iG'u_ipol)( iG'u_jpol) psi_j(G')
      !
-     weight = 2.0*wk(kpoint)
+     weight = 2.0d0*wk(kpoint)
      call gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,psic)
      if (nks.gt.1) call davcio(evc,lrwfc,iuwfc,kpoint,-1)
      !

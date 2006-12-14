@@ -35,8 +35,8 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
      if (ibnd < m) then
         ! two ffts at the same time
         do j = 1, n
-           psic (nls (igk(j))) =       psi(j, ibnd) + (0.0,1.d0)*psi(j, ibnd+1)
-           psic (nlsm(igk(j))) = CONJG(psi(j, ibnd) - (0.0,1.d0)*psi(j, ibnd+1))
+           psic (nls (igk(j))) =       psi(j, ibnd) + (0.0d0,1.d0)*psi(j, ibnd+1)
+           psic (nlsm(igk(j))) = CONJG(psi(j, ibnd) - (0.0d0,1.d0)*psi(j, ibnd+1))
         enddo
      else
         do j = 1, n

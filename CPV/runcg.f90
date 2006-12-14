@@ -449,7 +449,7 @@
 100     IF(FB.GE.FC)THEN
           R=(BX-AX)*(FB-FC)
           Q=(BX-CX)*(FB-FA)
-          U=BX-((BX-CX)*Q-(BX-AX)*R)/(2.*SIGN(MAX(ABS(Q-R),TINY),Q-R))
+          U=BX-((BX-CX)*Q-(BX-AX)*R)/(2.d0*SIGN(MAX(ABS(Q-R),TINY),Q-R))
           ULIM=BX+GLIMIT*(CX-BX)
           IF((BX-U)*(U-CX).GT.0.)THEN
             ! FU=FUNC(U)

@@ -31,13 +31,17 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
 !
 ! local variables
 !
-  REAL(DP), ALLOCATABLE :: rrho (:), aux(:), rws(:,:)
+  REAL(DP), ALLOCATABLE :: rrho (:)
+#ifdef __PARA
+  REAL(DP), ALLOCATABLE :: aux(:), rws(:,:)
+  INTEGER  :: nrws, nrwsx
+!  REAL(DP) :: wsweight
+#endif
   REAL(DP) :: dipol_ion(3), dipol(3)
 
   INTEGER:: ipol, i, j, k, i1, j1, k11, na, is, ir
-  INTEGER:: nrws, nrwsx
   REAL(DP) :: deltax, deltay, deltaz, rijk(3), bmod, proj, x0(3)
-  REAL(DP) :: weight, wsweight
+  REAL(DP) :: weight
   !
   !  calculate ionic dipole
   !

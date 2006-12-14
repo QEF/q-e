@@ -151,7 +151,7 @@ SUBROUTINE cg_readmodes(iunit)
      nmodes = 3*nat
      u(:,:) = 0.d0
      DO nu = 1,nmodes
-        u(nu,nu) = 1.0
+        u(nu,nu) = 1.0d0
      END DO
      ! look if ASR can be exploited to reduce the number of calculations
      ! we need to locate an independent atom with no equivalent atoms

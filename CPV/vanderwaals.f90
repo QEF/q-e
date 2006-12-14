@@ -23,6 +23,7 @@
 !---------------------------------
       subroutine VdW(evdw, atoms, fion, box) 
 
+      USE constants, ONLY: au => BOHR_RADIUS_ANGS
       USE cell_base, ONLY: s_to_r, boxdimensions, pbcs
       USE mp_global, ONLY: me_image, root_image
       USE atoms_type_module, ONLY: atoms_type
@@ -47,9 +48,6 @@
 
       REAL(DP) csp11, csp12, csp22
       parameter (csp11=1.0191452D0, csp12=0.2239317D0, csp22=0.04364401D0)
-
-      REAL(DP) au
-      parameter (au=0.529177D0 )
 
       REAL(DP) sij(3),rij(3),sij_image(3) 
       REAL(DP) csp1, dist, ff,dist6,fun,fact,cont
@@ -103,7 +101,7 @@
                   tshift=ix.eq.0 .and. iy.eq.0 .and. iz.eq.0
                   if(.not.(tzero.and.tshift)) then
                     call s_to_r(sij_image,rij,box)
-                    dist = ( rij(1)**2 + rij(2)**2 + rij(3)**2 )**0.5
+                    dist = ( rij(1)**2 + rij(2)**2 + rij(3)**2 )**0.5d0
 !
 ! ...               c-c vdw coefficient
 !
@@ -149,7 +147,7 @@
             enddo !ix
           enddo !j
         enddo !i
-        evdw=evdw/2.
+        evdw=evdw/2.d0
 
         IF( me_image == root_image ) THEN
           fion( :, 1:atoms%nat ) = fion( :, 1:atoms%nat ) + force( :, 1:atoms%nat )

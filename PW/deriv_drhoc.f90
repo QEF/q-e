@@ -12,6 +12,7 @@ subroutine deriv_drhoc (ngl, gl, omega, tpiba2, numeric, a_nlcc, &
 !-----------------------------------------------------------------------
 #include "f_defs.h"
 USE kinds
+USE constants, ONLY : pi, fpi
 implicit none
 !
 !    first the dummy variables
@@ -36,11 +37,6 @@ real(DP) :: gl (ngl), r (mesh), rab (mesh), rhoc (mesh), omega, &
 logical :: numeric
                               ! input: if true the charge is in numeric
 !
-!     two parameters
-!
-real(DP) :: pi, fpi
-parameter (pi = 3.14159265358979d0, fpi = 4.d0 * pi)
-!
 !     here the local variables
 !
 
@@ -59,7 +55,7 @@ integer :: igl, igl0  ,i
 ! G=0 term
 !
 if (gl (1) .lt.1.0d-8) then
-   drhocg (1) = 0.0
+   drhocg (1) = 0.0d0
    igl0 = 2
 else
    igl0 = 1
@@ -83,10 +79,10 @@ if (numeric) then
    deallocate (aux)
 else
    do igl = igl0, ngl
-   g2a = gl (igl) * tpiba2 / 4.0 / alpha_nlcc
-   drhocg (igl) = - (pi / alpha_nlcc) **1.5 * exp ( - g2a) &
-    * (a_nlcc + b_nlcc / alpha_nlcc * (2.5 - g2a) ) * sqrt (gl ( &
-    igl) * tpiba2) / 2.0 / alpha_nlcc / omega
+   g2a = gl (igl) * tpiba2 / 4.0d0 / alpha_nlcc
+   drhocg (igl) = - (pi / alpha_nlcc) **1.5d0 * exp ( - g2a) &
+    * (a_nlcc + b_nlcc / alpha_nlcc * (2.5d0 - g2a) ) * sqrt (gl ( &
+    igl) * tpiba2) / 2.0d0 / alpha_nlcc / omega
    enddo
 
 endif

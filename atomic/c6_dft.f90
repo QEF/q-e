@@ -10,7 +10,7 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
    !--------------------------------------------------------------------
    !
    use kinds,      only : DP
-   use constants,  only : e2, pi, fpi
+   use constants,  only : e2, pi, fpi, BOHR_RADIUS_ANGS
    use ld1inc,     only : lsd, nwf, oc, nn, ll, isw, psi, enl, vpot,vxt,vh, &
                           enne, latt, ndm, rho
    !
@@ -233,10 +233,10 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
         
       end do
 
-      write (1,'(17x, f8.4, 3x, 1PE14.6, 9x, 1PE14.6)') u, pp(mesh)*0.529177**3, pp(mesh)
+      write (1,'(17x, f8.4, 3x, 1PE14.6, 9x, 1PE14.6)') u, pp(mesh)*BOHR_RADIUS_ANGS**3, pp(mesh)
       if (iu .eq. 0) & 
       write (6,'(5x, "Static polarizability: ", f10.5, " (in angstrom^3)   --->", f10.5,&
-                & "  (in e^2a0^3)")') pp(mesh)*0.529177**3, pp(mesh)
+                & "  (in e^2a0^3)")') pp(mesh)*BOHR_RADIUS_ANGS**3, pp(mesh)
 
       if (iu .eq. 0)                  factor = 0.5d0 * du1
       if (iu .gt. 0 .and. iu .lt. Nc) factor = du1

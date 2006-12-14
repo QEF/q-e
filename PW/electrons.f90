@@ -695,7 +695,7 @@ SUBROUTINE electrons()
         !   With Fermi-Dirac population factor, etot is the electronic
         !   free energy F = E - TS , demet is the -TS contribution
         !
-        IF ( degauss /= 0.0 ) WRITE( stdout, 9070 ) demet
+        IF ( degauss /= 0.0d0 ) WRITE( stdout, 9070 ) demet
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
         !

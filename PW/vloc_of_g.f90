@@ -25,6 +25,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
   !
 #include "f_defs.h"
   USE kinds
+  USE constants, ONLY : pi, fpi, e2, eps8
   implicit none
   !
   !    first the dummy variables
@@ -56,8 +57,6 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
   logical :: numeric
   ! input: if true the pseudo is numeric
   !
-  real(DP), parameter :: pi = 3.14159265358979d0, fpi= 4.d0 * pi, &
-                              e2 = 2.d0, eps= 1.d-8
   !    local variables
   !
   real(DP) :: vlcp, fac, den1, den2, g2a, gx
@@ -75,7 +74,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
 
      vloc(:) = 0.d0
      do i = 1, nlc
-        if (gl (1) < eps) then
+        if (gl (1) < eps8) then
            !
            !    This is the G=0 component of the local potential
            !    giving rise to the so-called "alpha*Z" term in the energy
@@ -105,7 +104,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
            fac = (pi / alps (i, l) ) **1.5d0 * e2 / omega
            den1 = aps (i + 3, l) / alps (i, l)
            den2 = 0.25d0 * tpiba2 / alps (i, l)
-           if (gl (1) .lt.eps) then
+           if (gl (1) .lt.eps8) then
               !
               !      first the G=0 component
               !
@@ -131,7 +130,7 @@ subroutine vloc_of_g (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
      ! subtracted in real space and added again in G space
      !
      allocate ( aux(mesh), aux1(mesh) )
-     if (gl (1) < eps) then
+     if (gl (1) < eps8) then
         !
         ! first the G=0 term
         !

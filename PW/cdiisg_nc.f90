@@ -53,7 +53,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   integer, parameter :: maxter=20
   ! maximum number of iterations
   !
-  integer :: kter, minter, nbase, ib, n, m , np
+  integer :: kter, minter, nbase, ib, n, m 
   ! counter on iterations
   ! lower extreme for iteration loop
   ! dimension of the reduced basis
@@ -76,7 +76,7 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
   ! the product of S and the best estimate of the eigenvectors evc
   real(DP), allocatable :: ew (:)
   ! eigenvalues of the reduced hamiltonian
-  real(DP) :: ec, snorm, snorm0, lam, ew0, denm, x
+  real(DP) :: ec, snorm, snorm0, lam, ew0
   ! dummy variable
   ! squared norm of current residual
   ! squared norm of initial residual calculated with the old evc
@@ -360,10 +360,10 @@ subroutine cdiisg_nc (ndim, ndmx, nvec, nvecx, evc, e, ethr, &
      ! occupied ones.
      !
      if (btype(ib) .eq. 0) then 
-        if ( (snorm.lt.snorm0*0.3 .or. abs(ec-e(ib)).lt.ethr) &
+        if ( (snorm.lt.snorm0*0.3d0 .or. abs(ec-e(ib)).lt.ethr) &
              .and. ec.le.ew0) goto 20
      else
-        if ( (snorm.lt.snorm0*0.3 .or. abs(ec-e(ib)).lt.max(ethr*50.0,1.D-4)) &
+        if ( (snorm.lt.snorm0*0.3d0 .or. abs(ec-e(ib)).lt.max(ethr*50.0d0,1.D-4)) &
              .and. ec.le.ew0) goto 20
      endif
         

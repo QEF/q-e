@@ -338,7 +338,7 @@
     integer :: i,j
     do j=1,nhpdim
        do i=1,nhpcl
-          vnhp(i,j)=2.*(xnhp0(i,j)-xnhpm(i,j))/delt-vnhp(i,j)
+          vnhp(i,j)=2.d0*(xnhp0(i,j)-xnhpm(i,j))/delt-vnhp(i,j)
        enddo
     enddo
         !
@@ -417,7 +417,7 @@
     stmp = stmp + 0.5d0 * qnp(1,j) * vnhp(1,j) * vnhp(1,j) + gkbt2nhp(j) * xnhp0(1,j)
     if (nhpcl > 1) then
        do i=2,nhpcl
-          stmp=stmp+0.5*qnp(i,j)*vnhp(i,j)*vnhp(i,j) + kbt*xnhp0(i,j)
+          stmp=stmp+0.5d0*qnp(i,j)*vnhp(i,j)*vnhp(i,j) + kbt*xnhp0(i,j)
        enddo
     endif
     enddo

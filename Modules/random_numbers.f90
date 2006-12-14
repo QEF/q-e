@@ -159,7 +159,7 @@ MODULE random_numbers
          ! ... this is 2**31-1 avoiding overflow
          !
          im  = 2 * ( 2**30 - 1 ) + 1
-         obm = 1.0 / im
+         obm = 1.0d0 / im
          ia  = 7*7*7*7*7
          iq  = im / ia
          ir  = im - ia * iq

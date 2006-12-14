@@ -118,7 +118,7 @@ PROGRAM voronoy
           nr2big, nr3big, rhobig, partial_charge)
 
      WRITE( stdout, '(" nr1, nr2, nr3 = ",3i4)') nr1big, nr2big, nr3big
-     total_charge = 0.0
+     total_charge = 0.0d0
      DO na = 1, nat
         partial_charge (na) = partial_charge (na) * omega / (nr1big * &
              nr2big * nr3big)
@@ -187,7 +187,7 @@ SUBROUTINE rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, &
   CALL cft3 (aux, nr1, nr2, nr3, nrx1, nr2, nr3, - 1)
 
   DO nr = 1, nrx1big * nr2big * nr3big
-     rhobig (nr) = 0.0
+     rhobig (nr) = 0.0d0
   ENDDO
   DO ng = 1, ngm
      rhobig (nlbig (ng) ) = aux (nl (ng) )
@@ -215,7 +215,7 @@ SUBROUTINE calculate_partial_charges (nat, tau, at, bg, nrx1big, &
   !
   !
   DO na = 1, nat
-     partial_charge (na) = 0.0
+     partial_charge (na) = 0.0d0
   ENDDO
   DO n3 = 1, nr3big
      DO n2 = 1, nr2big

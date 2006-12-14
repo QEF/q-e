@@ -1208,10 +1208,12 @@ turbo.o : ../Modules/mp.o
 turbo.o : ../Modules/mp_global.o
 util.o : ../Modules/kind.o
 vanderwaals.o : ../Modules/cell_base.o
+vanderwaals.o : ../Modules/constants.o
 vanderwaals.o : ../Modules/kind.o
 vanderwaals.o : ../Modules/mp_global.o
 vanderwaals.o : atoms_type.o
 vol_clu.o : ../Modules/cell_base.o
+vol_clu.o : ../Modules/constants.o
 vol_clu.o : ../Modules/control_flags.o
 vol_clu.o : ../Modules/electrons_base.o
 vol_clu.o : ../Modules/fft_base.o

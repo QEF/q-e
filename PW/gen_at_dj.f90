@@ -36,8 +36,8 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    !
    ! local variables
    !
-   integer :: l, na, nt, nb, iatw, iig, i, ig, i0, i1, i2 ,i3, m, lm
-   real (DP) :: eps, dv, qt, arg, px, ux, vx, wx
+   integer :: l, na, nt, nb, iatw, iig, ig, i0, i1, i2 ,i3, m, lm
+   real (DP) :: eps, qt, arg, px, ux, vx, wx
    parameter (eps=1.0d-8)
    complex (DP) :: phase, pref
    real (DP), allocatable :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)

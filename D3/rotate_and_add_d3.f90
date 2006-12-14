@@ -14,7 +14,8 @@ subroutine rotate_and_add_d3 (phi, phi2, nat, isym, s, invs, irt, &
 !  to phi2.   phi is left unmodified.
 !
 #include "f_defs.h"
-  USE kinds, only : DP
+  USE kinds, ONLY : DP
+  USE constants, ONLY : tpi
   implicit none
   !
   ! input variables
@@ -50,9 +51,6 @@ subroutine rotate_and_add_d3 (phi, phi2, nat, isym, s, invs, irt, &
   ! argument of the phase
 
   complex (DP) :: phase, work
-  ! auxiliary variable
-  real (DP) :: tpi
-  parameter (tpi = 2.0_dp * 3.14159265358979_dp)
 
 
   ism1 = invs(isym)

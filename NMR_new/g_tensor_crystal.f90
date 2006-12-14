@@ -327,7 +327,7 @@ SUBROUTINE g_tensor_crystal
 #endif
   
   delta_g_bare = delta_g_bare * d_omega
-  delta_g_bare = - delta_g_bare * g_prime / 2.d0 / c * 1.0e6
+  delta_g_bare = - delta_g_bare * g_prime / 2.d0 / c * 1.0d6
   
   !
   ! ***************** spin-other-orbit *******************
@@ -365,7 +365,7 @@ SUBROUTINE g_tensor_crystal
 #endif
   
   delta_g_soo = delta_g_soo * d_omega
-  delta_g_soo = delta_g_soo * 2 / c * 1.0e6
+  delta_g_soo = delta_g_soo * 2 / c * 1.0d6
   
   ! This is obtained using the equation (7) of Pickard et Mauri, PRL 88/086043
   if ( tcalculate_correct_delta_g_soo ) then
@@ -380,13 +380,13 @@ SUBROUTINE g_tensor_crystal
   end if
   
   delta_g_soo_2 = delta_g_soo_2 * d_omega
-  delta_g_soo_2 = delta_g_soo_2 * 2 * 1.0e6
+  delta_g_soo_2 = delta_g_soo_2 * 2 * 1.0d6
   
   !
   ! ***************** relativistic-mass-correction *******************
   !
   
-  delta_rmc = delta_rmc * units_Ry2Ha * 1.0e6
+  delta_rmc = delta_rmc * units_Ry2Ha * 1.0d6
   delta_g_rmc = 0.0_DP
   do i = 1, 3
      delta_g_rmc(i,i) = delta_rmc

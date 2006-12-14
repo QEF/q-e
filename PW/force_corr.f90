@@ -38,7 +38,7 @@ subroutine force_corr (forcescc)
   ! work space
   real(DP) ::  gx, arg, fact
   ! temp factors
-  integer :: ir, isup, isdw, ig, igl0, nt, na, ipol, ndm
+  integer :: ir, isup, isdw, ig, nt, na, ipol, ndm
   ! counters
   !
   ! vnew is V_out - V_in, psic is the temp space

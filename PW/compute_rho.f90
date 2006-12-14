@@ -12,6 +12,7 @@
 !
 #include "f_defs.h"
    USE kinds, ONLY : dp
+   USE constants, ONLY: pi
    USE io_global,  ONLY :  stdout
 
    implicit none
@@ -22,14 +23,9 @@
                  ! output: keep track of the spin direction
                  ! output: the spin up and spin down charge
 
-   complex(DP) :: umat(2,2),rhom(2,2),re(2,2)
-                    ! the rotation matrix
-                    ! the density matrix
-                    ! the rotated density matrix
+   complex(DP) :: re(2,2) ! the rotated density matrix
 
-   real(DP) :: theta,phi        ! the two angles of the rotation matrix
-   real(DP) :: ct,st,cp,sp      ! sinus and cosinus of theta or phi
-   real(DP) :: pi,eps,amag      ! pi, a small number and the atan function 
+   real(DP) :: eps,amag         ! pi, a small number and the atan function 
    real(DP) :: mx,my,mz         ! magnetization
    real(DP) :: ux,uy,uz         ! magnetization
    real(DP) :: ux0,uy0,uz0      ! magnetization
@@ -37,9 +33,7 @@
    logical :: negative
    integer :: ir           ! counter on mesh points
    integer :: it,count(3)
-   integer :: i,j,s1,s2    ! counter on spin
 
-      pi=4.d0*atan(1.d0)
       eps=1.d-12
      
       ux=0.d0

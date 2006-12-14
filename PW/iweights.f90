@@ -25,7 +25,7 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg, is, isk)
   degspin=2.d0
   if (noncolin) degspin=1.d0
   if (is /= 0) degspin = 1.d0
-  Ef = - 1.0e+20
+  Ef = - 1.0d+20
   do kpoint = 1, nks
      if (is /= 0) then
         if (isk(kpoint) .ne.  is ) cycle

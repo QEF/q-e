@@ -7,6 +7,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !     Effective  potential (V_eff) in TF+vW scheme 
   !
   USE kinds,                ONLY : DP
+  USE constants,            ONLY : fpi, e2
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : prefix, nwordwfc, iunwfc
   USE klist,                ONLY : nelec
@@ -40,8 +41,6 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
   !    local variables
   !
-  real(kind=DP), parameter  :: fpi = 4.d0 * 3.14159265358979d0, &
-                               e2  = 2.d0
   real(kind=DP) :: tpiba2, fac
   real(kind=DP), allocatable ::  aux (:,:), aux1 (:,:), psi (:,:), &
                                  psi_smooth(:,:), S(:)  

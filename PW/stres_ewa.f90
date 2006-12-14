@@ -15,6 +15,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! Ewald contribution, both real- and reciprocal-space terms are present
   !
   USE kinds
+  USE constants, only : tpi, e2, eps6
   implicit none
   !
   !   first the dummy variables
@@ -46,11 +47,6 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   !
   integer, parameter :: mxr = 50
   ! the maximum number of R vectors included in r sum
-  real(DP), parameter :: e2 = 2.d0, eps = 1.0d-6, &
-       tpi = 2.d0 * 3.141592653589793d0
-  ! e2 = e^2 (Ry atomic units)
-  ! eps = convergence tolerance
-  ! tpi = 2 times pi
   integer :: ng,  nr, na, nb, l, m, nrm
   ! counter over reciprocal G vectors
   ! counter over direct vectors
@@ -88,13 +84,13 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! choose alpha in order to have convergence in the sum over G
   ! upperbound is a safe upper bound for the error ON THE ENERGY
   !
-  alpha = 2.9
-12 alpha = alpha - 0.1
+  alpha = 2.9d0
+12 alpha = alpha - 0.1d0
   if (alpha.eq.0.0) call errore ('stres_ew', 'optimal alpha not found &
        &', 1)
   upperbound = e2 * charge**2 * sqrt (2 * alpha / tpi) * erfc (sqrt &
-       (tpiba2 * gcutm / 4.0 / alpha) )
-  if (upperbound.gt.eps) goto 12
+       (tpiba2 * gcutm / 4.0d0 / alpha) )
+  if (upperbound.gt.eps6) goto 12
   !
   ! G-space sum here
   !
@@ -137,7 +133,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! R-space sum here (only for the processor that contains G=0)
   !
   if (gstart.eq.2) then
-     rmax = 5.0 / sqrt (alpha) / alat
+     rmax = 5.0d0 / sqrt (alpha) / alat
      !
      ! with this choice terms up to ZiZj*erfc(5) are counted (erfc(5)=2x10^-1
      !
@@ -152,7 +148,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
            call rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
            do nr = 1, nrm
               rr = sqrt (r2 (nr) ) * alat
-              fac = - e2 / 2.0 / omega * alat**2 * zv (ityp (na) ) * &
+              fac = - e2 / 2.0d0 / omega * alat**2 * zv (ityp (na) ) * &
                    zv ( ityp (nb) ) / rr**3 * (erfc (sqrt (alpha) * rr) + &
                    rr * sqrt (8 * alpha / tpi) * exp ( - alpha * rr**2) )
               do l = 1, 3

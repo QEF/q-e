@@ -34,7 +34,7 @@ SUBROUTINE test_f_sum_rule
   IMPLICIT NONE
   complex(dp), allocatable, dimension(:,:,:) :: p_evc, vel_evc, g_vel_evc
   real(dp) :: f_sum(3,3), f_sum_k(3,3), q(3)
-  integer :: ik, ipol, jpol, ibnd, ig
+  integer :: ik, ipol, jpol, ibnd
   complex(dp), external :: ZDOTC
 
   ! allocate memory
@@ -77,7 +77,7 @@ SUBROUTINE test_f_sum_rule
     enddo
 
     ! k-point contribution to the f-sum rule
-    f_sum_k = 0.0
+    f_sum_k = 0.0d0
 
     ! loop over cartesian directions
     do jpol = 1, 3

@@ -14,6 +14,7 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   !
 #include "f_defs.h"
   USE kinds
+  USE constants, ONLY : tpi
   implicit none
   !
   !   first the dummy variables
@@ -51,7 +52,6 @@ subroutine force_lc (nat, tau, ityp, alat, omega, ngm, ngl, &
   real(DP), allocatable :: aux (:,:)
   ! auxiliary space for FFT
   real(DP) :: arg, fact
-  real(DP) , parameter :: tpi = 2.d0 * 3.14159265358979d0
   !
   ! contribution to the force from the local part of the bare potential
   ! F_loc = Omega \Sum_G n*(G) d V_loc(G)/d R_i

@@ -149,10 +149,10 @@ CONTAINS
 
             ALLOCATE( fi( nf + ne ), eig( nf + ne ) )
 
-            ef = ( ei_emp(1,iss) + ei(nf,iss) ) / 2.0
+            ef = ( ei_emp(1,iss) + ei(nf,iss) ) / 2.0d0
 
             DO idf = 1, nf
-               fi( idf ) = 2.0 / nspin
+               fi( idf ) = 2.0d0 / nspin
                eig( idf ) = ei( idf, iss )
                ! IF( ionode ) WRITE( stdout, fmt = '(I4,2F12.6)' ) idf, fi(idf), eig(idf)
             END DO

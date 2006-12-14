@@ -36,7 +36,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   do nu_i=1,nmodes
      do nu_j=1,nu_i-1
         dif = dif + abs(dynout(nu_i,nu_j)-dynout(nu_j,nu_i))
-        dynout(nu_j,nu_i) = 0.5*(dynout(nu_i,nu_j)+dynout(nu_j,nu_i))
+        dynout(nu_j,nu_i) = 0.5d0*(dynout(nu_i,nu_j)+dynout(nu_j,nu_i))
         dynout(nu_i,nu_j) = dynout(nu_j,nu_i)
      end do
   end do
@@ -63,7 +63,7 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !
   do nu_i = 1,nmodes
      do nu_j = 1,nmodes
-        m(nu_i,nu_j) = 0.0
+        m(nu_i,nu_j) = 0.0d0
         do mu = 1,3*nat
            na = (mu-1)/3+1
            nt = ityp(na)
@@ -80,15 +80,15 @@ subroutine dyndiar (dyn,nat3,nmodes,u,nat,ityp,amass,w2,dynout)
   !
   !  conversion factors ryd=>thz e ryd=>1/cm
   !
-  rydthz = 13.6058*241.796
-  rydcm1 = 13.6058*8065.5
+  rydthz = 13.6058d0*241.796d0
+  rydcm1 = 13.6058d0*8065.5d0
   !
   !  write frequencies
   !
   WRITE( stdout,'(5x,"diagonalizing the dynamical matrix ..."//)')
   WRITE( stdout,'(1x,74("*"))')
   !
-  dynout (:,:) = 0.0
+  dynout (:,:) = 0.0d0
   do nu_i = 1,nmodes
      w1 = sqrt(abs(w2(nu_i)))
      if (w2(nu_i).lt.0.0) w1 = -w1

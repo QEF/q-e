@@ -63,8 +63,8 @@ subroutine qqberry2( gqq,gqqm, ipol)
      do ia=1,nas
         do jv=1,nhm
            do iv=1,nhm
-              gqq(iv,jv,ia,is)=(0.,0.)
-              gqqm(iv,jv,ia,is)=(0.,0.)
+              gqq(iv,jv,ia,is)=(0.d0,0.d0)
+              gqqm(iv,jv,ia,is)=(0.d0,0.d0)
            enddo
         enddo
      enddo
@@ -144,7 +144,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !     lpx = max number of allowed y_lm
 !     lp  = composite lm to indentify them
 !
-              qgbs=(0.,0.)
+              qgbs=(0.d0,0.d0)
               do i=1,lpx(ivl,jvl)
                  lp=lpl(ivl,jvl,i)
 !
@@ -166,7 +166,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 !
 !       sig= (-i)^l
 !
-                 sig=(0.,-1.)**(l-1)
+                 sig=(0.d0,-1.d0)**(l-1)
                   
                  sig=sig*ap(lp,ivl,jvl)
                  qgbs=qgbs+sig*ylm(igi,lp)*qradb2(ivs,jvs,l,is)
@@ -234,8 +234,8 @@ subroutine qqupdate(eigr, gqqm0, gqq, gqqm, ipol)
      do ia=1,nas
         do jv=1,nhm
            do iv=1,nhm
-              gqq(iv,jv,ia,is)=(0.,0.)
-              gqqm(iv,jv,ia,is)=(0.,0.)
+              gqq(iv,jv,ia,is)=(0.d0,0.d0)
+              gqqm(iv,jv,ia,is)=(0.d0,0.d0)
            enddo
         enddo
      enddo

@@ -248,7 +248,7 @@ subroutine do_efg(Q)
         eta=(v(2)-v(3))/v(1)
      endif
 
-     Cq=v(1)*Q(ityp(na))*rytoev*2.d0*ANGSTROM_AU**2*ELECTRONVOLT_SI*1.e18/6.6262d0
+     Cq=v(1)*Q(ityp(na))*rytoev*2.d0*ANGSTROM_AU**2*ELECTRONVOLT_SI*1.d18/6.6262d0
 
      write (stdout,1200) atm(ityp(na)), na, Q(ityp(na)),Cq,eta
      write (stdout,*)

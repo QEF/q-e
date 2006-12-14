@@ -36,11 +36,9 @@ SUBROUTINE kp_strings &
    REAL(dp), INTENT(OUT) :: wk(npk)
 
 !  --- Internal definitions ---
-   INTEGER :: i
    INTEGER :: ipar
    INTEGER :: iort
    INTEGER :: kindex
-   INTEGER :: nkpol
    REAL(dp) :: dk(3)
    REAL(dp) :: xk0(3,npk)
    REAL(dp) :: wk0(npk)

@@ -115,7 +115,7 @@ program elph
               !
               ! 1 Ry = 3289.828 THz
               !
-              omega = sqrt( MAX( w2(mu),0.d0 ) ) * 3289.828
+              omega = sqrt( MAX( w2(mu),0.d0 ) ) * 3289.828d0
               alpha2F(i,ng) = alpha2F(i,ng) + &
                    wk(ik) * lambdaq(mu,ng) * omega * 0.5d0 * &
                    w0gauss((e-omega)/degaussq,ngaussq)/degaussq

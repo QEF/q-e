@@ -55,8 +55,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
   USE kinds
   implicit none
   !
-  real(DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
-  parameter (pi = 3.141592653589793d0, twopi = 2.0d0 * pi)
+  real(DP) :: zero, um, dois, tres, quatro, seis
   parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0, &
        quatro = 4.0d0, seis = 6.0d0)
   !
@@ -428,13 +427,12 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   !
   USE kinds,         only : DP
-  USE constants,     ONLY : eps16, k_boltzmann_ry
+  USE constants,     ONLY : pi, eps16, k_boltzmann_ry
   USE io_global,     ONLY : stdout
   
   implicit none
   !
-  real(DP) :: pi, twopi, zero, um, dois, tres, quatro, seis
-  parameter (pi = 3.141592653589793d0, twopi = 2.0d0 * pi)
+  real(DP) :: zero, um, dois, tres, quatro, seis
   parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0, &
        quatro = 4.0d0, seis = 6.0d0)
   !
@@ -1284,9 +1282,7 @@ subroutine updg (avec, avecd, g, gd, gm1, gmgd, sigma, vcell)
   USE kinds, only : DP
   implicit none
   !
-  real(DP) :: pi, twopi, eps, zero, um, dois, tres
-  parameter (pi = 3.141592653589793d0, twopi = 2.0d0 * pi)
-  parameter (eps = 1.0d-14)
+  real(DP) :: zero, um, dois, tres
   parameter (zero = 0.0d0, um = 1.0d0, dois = 2.0d0, tres = 3.0d0)
   !
   real(DP) :: avec (3, 3), avecd (3, 3), sigma (3, 3)

@@ -160,9 +160,9 @@ subroutine convert_rrkj
   !
   use rrkj3
   use upf
+  use constants, only : fpi
   implicit none
   integer i, n
-  real(8), parameter:: pi=3.141592653589793d0
   real(8) :: x
 
 
@@ -186,7 +186,7 @@ subroutine convert_rrkj
      rcutus(i)= rcutus_(i)
      oc (i)   = oc_(i)
      els(i)   = els_(i)
-     epseu(i) = 0.0
+     epseu(i) = 0.0d0
   end do
   deallocate (els_, oc_, rcutus_, rcut_, nns_)
 
@@ -199,8 +199,8 @@ subroutine convert_rrkj
   nlcc = nlcc_
   zp = zp_
   etotps = etotps_
-  ecutrho=0.0
-  ecutwfc=0.0
+  ecutrho=0.0d0
+  ecutwfc=0.0d0
   lmax = lmax_
   mesh = mesh_
   nbeta = nbeta_
@@ -234,7 +234,7 @@ subroutine convert_rrkj
 
   allocate (rho_atc(mesh))
   ! rrkj rho_core(r) =  4pi*r^2*rho_core(r) UPF
-  rho_atc (:) = rho_atc_(:) / 4.0 / pi / r(:)**2
+  rho_atc (:) = rho_atc_(:) / fpi / r(:)**2
   deallocate (rho_atc_)
 
   allocate (vloc0(mesh))
@@ -250,7 +250,7 @@ subroutine convert_rrkj
 !     kkbeta  = max (kkbeta , ikk2(nb) )  
 !  end do
   allocate(betar(mesh,nbeta))
-  betar = 0.0
+  betar = 0.0d0
   do i=1, nbeta
      betar(1:ikk2(i),i) = beta(1:ikk2(i),i)
   end do

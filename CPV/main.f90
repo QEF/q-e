@@ -253,7 +253,7 @@
            !
            CALL cell_nosevel( vnhh, xnhh0, xnhhm, delt )
            !
-           velh(:,:)=2.*(ht0%hmat(:,:)-htm%hmat(:,:))/delt-velh(:,:)
+           velh(:,:)=2.d0*(ht0%hmat(:,:)-htm%hmat(:,:))/delt-velh(:,:)
            !
         END IF
 

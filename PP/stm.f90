@@ -124,7 +124,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      call poolextreme (emax, 1)
 #endif
      ef = (emin + emax) * 0.5d0
-     degauss = 0.00001
+     degauss = 0.00001d0
 
      ngauss = 0
      WRITE( stdout, '(/5x,"Occupied bands: ",i6)') nbnd_ocp

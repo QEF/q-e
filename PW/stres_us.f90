@@ -67,7 +67,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! dvkb contains the derivatives of the kb potential
        COMPLEX(DP)              :: ps
        ! xyz are the three unit vectors in the x,y,z directions
-       DATA xyz / 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 /
+       DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
        !
        !
        IF ( nkb == 0 ) RETURN
@@ -274,7 +274,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        ! dvkb contains the derivatives of the kb potential
        COMPLEX(DP)              :: ps, ps_nc(2), psc
        ! xyz are the three unit vectors in the x,y,z directions
-       DATA xyz / 1.0, 0.0, 0.0, 0.0, 1.0, 0.0, 0.0, 0.0, 1.0 /
+       DATA xyz / 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0, 0.0d0, 0.0d0, 0.0d0, 1.0d0 /
        !
        !
        IF ( nkb == 0 ) RETURN

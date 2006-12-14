@@ -19,6 +19,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
   !     The units of the potential are Ryd.
   !
   use kinds, only : DP
+  use constants, only : fpi
   use funct, only : gcxc, gcx_spin, gcc_spin
   implicit none
   integer :: ndm,mesh,nspin,ndm1
@@ -30,7 +31,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw
   real(DP) :: segno, arho, grho2(2)
   real(DP) :: rh, zeta, grh2
-  real(DP),parameter :: eps=1.e-12_dp, fourpi=3.14159265358979_DP*4.0_DP
+  real(DP),parameter :: eps=1.e-12_dp
 
   real(DP), pointer :: grho(:,:), h(:,:), dh(:)
   !
@@ -48,7 +49,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
 
   do is=1,nspin
      do i=1, mesh
-        rho(i,is)=(rho(i,is)+rhoc(i)/nspin)/fourpi/r2(i)
+        rho(i,is)=(rho(i,is)+rhoc(i)/nspin)/fpi/r2(i)
      enddo
      do i=2, mesh-1
         grho(i,is)=( (r(i+1)-r(i))**2*(rho(i-1,is)-rho(i,is)) &
@@ -158,7 +159,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
 
      do i=1, mesh
         vgc(i,is)=vgc(i,is)-dh(i)/r2(i)
-        rho(i,is)=rho(i,is)*fourpi*r2(i)-rhoc(i)/nspin
+        rho(i,is)=rho(i,is)*fpi*r2(i)-rhoc(i)/nspin
         vgc(i,is)=2.0_dp*vgc(i,is)
         if (is.eq.1) egc(i)=2.0_dp*egc(i)
         !            if (is.eq.1.and.i.lt.4) write(6,'(3f20.12)') &

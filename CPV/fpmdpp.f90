@@ -810,7 +810,7 @@ SUBROUTINE write_xsf( ldynamics, lforces, lcharge, ounit, n, at, &
      ! mesh dimensions
      WRITE(ounit,*) nr1, nr2, nr3
      ! origin
-     WRITE(ounit,'(3f10.6)') 0.0, 0.0, 0.0
+     WRITE(ounit,'(3f10.6)') 0.0d0, 0.0d0, 0.0d0
      ! lattice vectors
      WRITE(ounit,'(3f10.6)') ((at(i, j), i=1,3), j=1,3)
      ! charge density

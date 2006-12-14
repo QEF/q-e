@@ -43,7 +43,7 @@ subroutine data_structure( lgamma )
   real(DP) :: amod
   ! modulus of G vectors
 
-  integer, allocatable :: st(:,:), stw(:,:), sts(:,:) 
+  integer, allocatable :: stw(:,:)
   ! sticks maps
 
   integer :: ub(3), lb(3)  
@@ -52,15 +52,15 @@ subroutine data_structure( lgamma )
   real(DP) :: gkcut
   ! cut-off for the wavefunctions
 
-  integer :: np, nps1, nq, nqs, max1, min1, max2, min2, kpoint, m1, &
-       m2, i, mc, nct_, ic, ics
+  integer :: kpoint
 
 #ifdef __PARA
-  ! counters on planes
+  integer, allocatable :: st(:,:), sts(:,:) 
+  ! sticks maps
 
   integer, allocatable :: ngc (:), ngcs (:), ngkc (:)
   integer  ::  ngp (maxproc), ngps(maxproc), ngkp (maxproc), ncp_(maxproc),&
-       j, jj, idum
+       i, j, jj, idum
   ! counters on planes
   ! indices for including meshes
   ! counter on k points
@@ -73,6 +73,7 @@ subroutine data_structure( lgamma )
   ! from smooth plane to column list
   ! number of g per processor
   ! number of column per processor
+  ! counter on processor pools
   ! counter on processors
   ! counter on processors
   ! used for swap

@@ -65,14 +65,14 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   allocate( dtemp(ngw))
 
 
-  ci=(0.,1.)
+  ci=(0.d0,1.d0)
  
 
 ! now the interaction term 
 ! first the norm-conserving part 
 
   do ig=1,ngw
-     dtemp(ig)=(0.,0.)
+     dtemp(ig)=(0.d0,0.d0)
   enddo
 
   do j=1,n
@@ -109,7 +109,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
      gmes=2*pi/SQRT(gmes)
   endif
 
-  fi=f(i)*ci/(2.*gmes)
+  fi=f(i)*ci/(2.d0*gmes)
 
   do ig=1,ngw
      df(ig)= fi*dtemp(ig)
@@ -123,7 +123,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
 
   if(nhsa.gt.0) then
      do inl=1,nhsa
-        afrc(inl)=(0.,0.)
+        afrc(inl)=(0.d0,0.d0)
      end do
  
      do is=1,nvb!loop on species
@@ -144,7 +144,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
       enddo
 
       do ig=1,ngw
-         dtemp(ig)=(0.,0.)
+         dtemp(ig)=(0.d0,0.d0)
       end do
       do inl=1,nhsa
          do ig=1,ngw
@@ -192,7 +192,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
    endif
 
    
-   enb = 2.*AIMAG(log(detq))/gmes!take care of sign
+   enb = 2.d0*AIMAG(log(detq))/gmes!take care of sign
    
    return
  end subroutine enberry

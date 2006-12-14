@@ -41,7 +41,7 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
            dproj(natomwfc,nbnd),   &! output: the derivative of the projection
            wfcatom(npwx,natomwfc), &! input: the atomic wfc
            spsi(npwx,nbnd)          ! input: S|evc>
-   INTEGER :: i, ig, jkb2, lmax_wfc, na, m1, ibnd, iwf, nt, ib, ih,jh, &
+   INTEGER :: i, ig, jkb2, lmax_wfc, na, ibnd, iwf, nt, ib, ih,jh, &
               nworddw, nworddb
    REAL (DP) :: xyz(3,3), q, eps, a1, a2
    PARAMETER (eps=1.0d-8)

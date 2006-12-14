@@ -16,7 +16,8 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   ! Determines optimal alpha. Should hopefully work for any structure.
   !
   !
-  USE kinds
+  USE kinds, ONLY : DP
+  USE constants, ONLY : tpi, e2
   implicit none
   !
   !   first the dummy variables
@@ -50,9 +51,6 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   !
   integer, parameter :: mxr = 50
   ! the maximum number of R vectors included in r
-  real(DP), parameter :: tpi = 2.d0 * 3.141592653589793d0
-  real(DP), parameter :: e2 = 2.d0
-  ! the square of the electron charge (Ry atomic units)
   integer :: ng, nr, na, nb, nt, nrm, ipol
   ! counter over reciprocal G vectors
   ! counter over direct vectors
@@ -103,7 +101,7 @@ subroutine do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
   !
   if (gstart==2) then
      do na =1,nat
-        shift_ion(na) = - charge * delta_zv(ityp(na)) /alpha/ 4.0
+        shift_ion(na) = - charge * delta_zv(ityp(na)) /alpha/ 4.0d0
      end do
   endif
   if (gamma_only) then

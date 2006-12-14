@@ -57,9 +57,9 @@ subroutine dynmatcc(dyncc)
                         g(3,ig)*tau(3,na) )
            exc = CMPLX(cos(exg),-sin(exg))*tpiba2
            work1(ig)= drhocc(ig)* exc * CONJG(vxc(nl(ig)))
-           gc(ig,1) = g(1,ig) * exc * CMPLX(0.0,-1.0)
-           gc(ig,2) = g(2,ig) * exc * CMPLX(0.0,-1.0)
-           gc(ig,3) = g(3,ig) * exc * CMPLX(0.0,-1.0)
+           gc(ig,1) = g(1,ig) * exc * CMPLX(0.0d0,-1.0d0)
+           gc(ig,2) = g(2,ig) * exc * CMPLX(0.0d0,-1.0d0)
+           gc(ig,3) = g(3,ig) * exc * CMPLX(0.0d0,-1.0d0)
         end do
         do i=1,3
            do j=1,3

@@ -43,11 +43,14 @@ subroutine diropn (unit, extension, recl, exst)
   !
   character(len=256) :: tempfile, filename
   ! complete file name
+#ifdef __T3E
   character(len=80) :: assstr
-  integer :: ios, unf_recl, ierr
+  integer :: ierr
+  ! error code
+#endif
+  integer :: ios, unf_recl
   ! used to check I/O operations
   ! length of the record
-  ! error code
   logical :: opnd
   ! if true the file is already opened
 

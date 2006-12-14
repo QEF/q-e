@@ -48,11 +48,11 @@
       READ '(a)',bravais
 !
       IF(bravais.EQ.'fcc'.OR.bravais.EQ.'FCC') THEN
-         fac = 0.25
+         fac = 0.25d0
       ELSE IF(bravais.EQ.'bcc'.OR.bravais.EQ.'BCC') THEN
-         fac = 0.50
+         fac = 0.50d0
       ELSE IF(bravais.EQ.'sc'.OR.bravais.EQ.'SC') THEN
-         fac = 1.0
+         fac = 1.0d0
       ELSE IF(bravais.EQ.'hex'.OR.bravais.EQ.'HEX') THEN
          fac = SQRT(3d0)/2d0
       ELSE
@@ -97,24 +97,24 @@
 ! par(3) = dB/dP (adimensional)
 ! par(4) = d^2B/dP^2 (in KBar^(-1), used only by 2nd order formulae)
 !
-      par(2) = 500.0          
-      par(3) = 5.0
-      par(4) = -0.01
+      par(2) = 500.0d0          
+      par(3) = 5.0d0
+      par(4) = -0.01d0
 !
-      parmin(1) = 0.0
-      parmin(2) = 0.0
-      parmin(3) = 1.0
-      parmin(4) = -1.0
+      parmin(1) = 0.0d0
+      parmin(2) = 0.0d0
+      parmin(3) = 1.0d0
+      parmin(4) = -1.0d0
 !
-      parmax(1) = 100000.
-      parmax(2) = 100000.
-      parmax(3) = 15.0
-      parmax(4) = 0.0
+      parmax(1) = 100000.d0
+      parmax(2) = 100000.d0
+      parmax(3) = 15.0d0
+      parmax(4) = 0.0d0
 !
-      deltapar(1) = 0.1
-      deltapar(2) = 100.
-      deltapar(3) = 1.0
-      deltapar(4) = 0.01
+      deltapar(1) = 0.1d0
+      deltapar(2) = 100.d0
+      deltapar(3) = 1.0d0
+      deltapar(4) = 0.01d0
 !
       CALL find_minimum &
            (npar,par,deltapar,parmin,parmax,nseek,nmin,chisq)
@@ -326,8 +326,8 @@
       c1 = 3.d0*(dk0-4.d0)/8.d0
       birch = 3.d0*k0*( (-0.5d0+  c1-  c0)*x**( -5.d0/3.d0) &
            +( 0.d5-2.d0*c1+3.0d0*c0)*x**( -7.d0/3.d0) &
-           +(       c1-3*c0)*x**( -9.0/3d0) &
-           +(            c0)*x**(-11.0/3d0) )
+           +(       c1-3*c0)*x**( -9.0d0/3d0) &
+           +(            c0)*x**(-11.0d0/3d0) )
       RETURN
       END
 !     

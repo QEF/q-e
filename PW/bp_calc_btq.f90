@@ -27,8 +27,8 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   REAL(DP)  :: ql, qr_k(nbetam,nbetam,lmaxq,ntyp)
   INTEGER :: idbes
   !
-  INTEGER :: ik, msh_bp, i, np, m, k, l
-  INTEGER :: n, ilmin, ilmax, iv, jv, ijv
+  INTEGER :: msh_bp, i, np, l
+  INTEGER :: ilmin, ilmax, iv, jv, ijv
   REAL(DP)  :: jl(ndmx), jlp1(ndmx), aux(ndmx), sum
   !
   DO np=1,ntyp

@@ -14,7 +14,9 @@ function w_1gauss (x, n)
 !
 ! --> (n=-99): second derivative of Fermi-Dirac function
 !
-USE kinds, only : DP
+USE kinds, ONLY : DP
+USE constants, ONLY : sqrtpm1
+!
 implicit none
 real (DP) :: w_1gauss, x
                        ! output: the value of the function
@@ -25,12 +27,11 @@ integer :: n
 !
 !    here the local variables
 !
-real (DP) :: a, arg, hp, hd, pi, aux1, aux2
+real (DP) :: a, arg, hp, hd, aux1, aux2
                       ! the coefficients a_n
                       ! the argument of the exponential
                       ! the hermite function
                       ! the hermite function
-                      ! pi
                       ! auxiliary variable
                       ! auxiliary variable
 integer :: i, ni
@@ -44,14 +45,13 @@ if (n.eq. - 99) then
    return
 endif
 !
-pi = 3.14159265358979d0
 arg = min (200.d0, x**2)
-w_1gauss = - 2.d0 * x * exp ( - arg) / sqrt (pi)
+w_1gauss = - 2.d0 * x * exp ( - arg) * sqrtpm1
 if (n.eq.0) return
 hd = exp ( - arg)
 hp = 2.d0 * x * exp ( - arg)
 ni = 1
-a = 1.0 / sqrt (pi)
+a = sqrtpm1
 do i = 1, n
 hd = 2.0d0 * x * hp - 2.0d0 * DBLE (ni) * hd
 ni = ni + 1

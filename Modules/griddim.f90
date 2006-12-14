@@ -441,52 +441,6 @@
 
    END  SUBROUTINE ngnr_set
 
-
-!
-!-------------------------------------------------------------------------
-      subroutine set_fft_grid(a1,a2,a3,alat,gcut,nr1,nr2,nr3)
-!-------------------------------------------------------------------------
-!
-      use fft_scalar, only: good_fft_order
-      use io_global, only: stdout
-
-      implicit none
-! input
-      real(8) a1(3), a2(3), a3(3), alat, gcut
-! input/output
-      integer nr1, nr2, nr3
-! local
-      integer minr1, minr2, minr3
-      real(8) a1n, a2n, a3n
-!
-!
-      a1n=sqrt(a1(1)**2+a1(2)**2+a1(3)**2)/alat
-      a2n=sqrt(a2(1)**2+a2(2)**2+a2(3)**2)/alat
-      a3n=sqrt(a3(1)**2+a3(2)**2+a3(3)**2)/alat
-!
-      minr1=int(2*sqrt(gcut)*a1n+1.)
-      minr2=int(2*sqrt(gcut)*a2n+1.)
-      minr3=int(2*sqrt(gcut)*a3n+1.)
-!
-      WRITE( stdout,1010) gcut,minr1,minr2,minr3
-1010  format(' set_fft_grid: gcut = ',f7.2,'  n1,n2,n3 min =',3i4)
-      if (nr1.le.0) nr1=minr1
-      if (nr2.le.0) nr2=minr2
-      if (nr3.le.0) nr3=minr3
-      nr1=good_fft_order(nr1)
-      nr2=good_fft_order(nr2)
-      nr3=good_fft_order(nr3)
-      if (minr1-nr1.gt.2)                                               &
-     &     call errore('set_fft_grid','n1 too small ?',nr1)
-      if (minr2-nr2.gt.2)                                               &
-     &     call errore('set_fft_grid','n2 too small ?',nr2)
-      if (minr3-nr3.gt.2)                                               &
-     &     call errore('set_fft_grid','n3 too small ?',nr3)
-!
-      return
-      end subroutine set_fft_grid
-!
-
 !=----------------------------------------------------------------------------=!
    END MODULE grid_subroutines
 !=----------------------------------------------------------------------------=!

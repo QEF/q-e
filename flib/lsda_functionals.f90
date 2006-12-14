@@ -11,7 +11,7 @@ subroutine pz_polarized (rs, ec, vc)
   parameter (a = 0.01555d0, b = - 0.0269d0, c = 0.0007d0, d = &
        - 0.0048d0, gc = - 0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0)
   real(DP) :: lnrs, rs12, ox, dox
-  REAL(DP), PARAMETER :: xcprefact = 0.022575584, pi34 = 0.6203504908994d0 
+  REAL(DP), PARAMETER :: xcprefact = 0.022575584d0, pi34 = 0.6203504908994d0 
   ! REAL(DP) :: betha, etha, csi, prefact
   !
   if (rs.lt.1.0d0) then
@@ -424,12 +424,13 @@ SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
   !     Slater exchange with alpha=2/3, relativistic exchange case
   !
   USE kinds
+  USE constants, ONLY : pi
   IMPLICIT none
   real (DP):: rho, ex, vxup, vxdw
   !
   real(DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
-       OPF=1.5D0, C014=0.014D0, pi = 3.14159265358979d0
-  real (DP):: rs, trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, exp, &
+       OPF=1.5D0, C014=0.014D0
+  real (DP):: rs, trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, xp, &
        beta, sb, alb, vxf, exf
 
   TRD = ONE/3
@@ -451,19 +452,19 @@ SUBROUTINE slater_rxc_spin ( rho, Z, ex, vxup, vxdw )
   ENDIF
   RS = (3 / (4*PI*rho) )**TRD
   VXP = -3*ALP/(2*PI*A0*RS)
-  EXP = 3*VXP/4
+  XP = 3*VXP/4
   
   BETA = C014/RS
   SB = SQRT(1+BETA*BETA)
   ALB = LOG(BETA+SB)
   VXP = VXP * (-PFIVE + OPF * ALB / (BETA*SB))
-  EXP = EXP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
+  XP = XP * (ONE-OPF*((BETA*SB-ALB)/BETA**2)**2)
   
   VXF = 2**TRD*VXP
-  EXF = 2**TRD*EXP
-  vxup  = VXP + FZ*(VXF-VXP) + (1-Z)*FZP*(EXF-EXP)
-  vxdw  = VXP + FZ*(VXF-VXP) - (1+Z)*FZP*(EXF-EXP)
-  EX    = EXP + FZ*(EXF-EXP)
+  EXF = 2**TRD*XP
+  vxup  = VXP + FZ*(VXF-VXP) + (1-Z)*FZP*(EXF-XP)
+  vxdw  = VXP + FZ*(VXF-VXP) - (1+Z)*FZP*(EXF-XP)
+  EX    = XP + FZ*(EXF-XP)
        
 END SUBROUTINE slater_rxc_spin
 
@@ -500,6 +501,7 @@ function dpz_polarized (rs, iflg)
   !  spin-polarized case
   !
   USE kinds, only : DP
+  USE constants, ONLY : pi, fpi
   !
   implicit none
   !
@@ -513,7 +515,6 @@ function dpz_polarized (rs, iflg)
   real(DP), parameter :: a = 0.01555d0, b = -0.0269d0, c = 0.0007d0, &
        d = -0.0048d0, gc = -0.0843d0, b1 = 1.3981d0, b2 = 0.2611d0,&
        a1 = 7.0d0 * b1 / 6.d0, a2 = 4.d0 * b2 / 3.d0
-  real(DP), parameter :: pi = 3.14159265358979d0, fpi = 4.d0*pi
   real(DP) :: x, den, dmx, dmrs
   !
   !

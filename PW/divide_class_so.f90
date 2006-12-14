@@ -52,7 +52,7 @@ REAL(DP) :: smat(3,3,nrot), cmat(3,3), ax(3)
 REAL(DP) :: smate(3,3,2*nrot)
 COMPLEX(DP) :: d_spin(2,2,48), d_spine(2,2,96), c_spin(2,2)
 
-INTEGER :: nclass_ref, done(96), irot, jrot, krot, iclass, i, j
+INTEGER :: done(96), irot, jrot, krot, iclass, i
 INTEGER :: tipo_sym, set_e, ipol, axis, axis1, axis2, ts
 REAL(DP), PARAMETER :: eps = 1.d-7
 REAL(DP) :: angle_rot, angle_rot_s, ars

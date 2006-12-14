@@ -1,7 +1,9 @@
 any2upf.o : write_upf.o
 cpmd2upf.o : write_upf.o
+fhi2upf.o : ../Modules/constants.o
 fhi2upf.o : ../Modules/functionals.o
 fhi2upf.o : write_upf.o
+fpmd2upf.o : ../Modules/constants.o
 fpmd2upf.o : ../Modules/kind.o
 fpmd2upf.o : ../Modules/parameters.o
 fpmd2upf.o : ../Modules/parser.o
@@ -12,7 +14,9 @@ ncpp2upf.o : write_upf.o
 oldcp2upf.o : write_upf.o
 read_upf_tofile.o : ../Modules/pseudo_types.o
 read_upf_tofile.o : ../Modules/read_upf.o
+rrkj2upf.o : ../Modules/constants.o
 rrkj2upf.o : write_upf.o
+vanderbilt.o : ../Modules/constants.o
 vanderbilt.o : write_upf.o
 virtual.o : ../Modules/functionals.o
 virtual.o : ../Modules/splinelib.o

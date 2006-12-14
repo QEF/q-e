@@ -23,6 +23,7 @@ function w1gauss (x, n)
   !
   !
   USE kinds
+  USE constants, ONLY : pi
   implicit none
   real(DP) :: w1gauss, x
   ! output: the value of the function
@@ -34,13 +35,12 @@ function w1gauss (x, n)
   !    here the local variables
   !
 
-  real(DP) :: a, hp, arg, hpm1, hd, pi, f, onemf, xp
+  real(DP) :: a, hp, arg, hpm1, hd, f, onemf, xp
   ! the coefficients a_n
   ! the hermite function
   ! the argument of the exponential
   ! the hermite function
   ! the hermite function
-  ! pi
   ! Fermi-Dirac occupation number
   ! 1 - f
   ! auxiliary variable (cold smearing)
@@ -49,7 +49,6 @@ function w1gauss (x, n)
   ! counter on n values
   ! counter on 2n values
 
-  pi = 3.14159265358979d0
   ! Fermi-Dirac smearing
   if (n.eq. - 99) then
      if (abs (x) .le.36.0) then

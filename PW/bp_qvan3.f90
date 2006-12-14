@@ -22,7 +22,7 @@
       real(DP) :: ylm_k(lmaxq*lmaxq)
       real(DP) :: qr(nbetam,nbetam,lmaxq,ntyp)
       
-      integer ivs,jvs,ivl,jvl,ig,lp,l,i
+      integer ivs,jvs,ivl,jvl,lp,l,i
 !       IV  = 1..8    ! s_1 p_x1 p_y1 p_z1 s_2 p_x2 p_z2 p_y2
 !       IVS = 1..4    ! s_1 s_2 p_1 p_2 d_1 d_2
 !       IVL = 1..4    ! s p_x p_y p_z

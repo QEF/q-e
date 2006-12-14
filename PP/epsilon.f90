@@ -56,7 +56,7 @@ PROGRAM epsilon
   prefix       = 'pwscf'
   shift        = 0.0d0
   outdir       = './'
-  smear        = 0.02
+  smear        = 0.02d0
   wmax         = 30.0d0
   nw           = 600
   smeartype    = 'drude'

@@ -192,12 +192,12 @@ MODULE read_namelists_module
        !
        lspinorb = .FALSE.
        noncolin = .FALSE.
-       lambda = 1.0
+       lambda = 1.0d0
        constrained_magnetization= 'none'
        fixed_magnetization = 0.d0
        B_field = 0.d0
-       angle1 = 0.0
-       angle2 = 0.0
+       angle1 = 0.0d0
+       angle2 = 0.0d0
        report = 1
        !
        assume_molsys = .FALSE.
@@ -341,7 +341,7 @@ MODULE read_namelists_module
        !
        ion_dynamics = 'none'
        ion_radius   = 0.5D0
-       ion_damping  = 0.1
+       ion_damping  = 0.1d0
        !
        ! ... ( 'default' | 'from_input' )
        !

@@ -63,8 +63,8 @@ SUBROUTINE reset_k_points()
     !
     lxkcry = .FALSE.
     nks = 1
-    xk_(:,1) = 0.0
-    wk_(1)   = 1.0
+    xk_(:,1) = 0.0d0
+    wk_(1)   = 1.0d0
     !
   ELSE
     !

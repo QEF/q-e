@@ -313,7 +313,7 @@ SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
   REAL(DP),    INTENT(IN)  :: g(3,ngm)
   REAL(DP),    INTENT(OUT) :: ga(3,nrxx)
   !
-  INTEGER                  :: n, ipol
+  INTEGER                  :: ipol
   COMPLEX(DP), ALLOCATABLE :: gaux(:)
   !
   !
@@ -371,7 +371,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   REAL(DP), INTENT(IN)  :: a(nrxx), g(3,ngm)
   REAL(DP), INTENT(OUT) :: ga(3,nrxx)
   !
-  INTEGER                  :: n, ipol
+  INTEGER                  :: ipol
   COMPLEX(DP), ALLOCATABLE :: aux(:), gaux(:)
   !
   !

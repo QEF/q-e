@@ -43,7 +43,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
   !
-  INTEGER                  :: i,j, lwork, nb, mm, info
+  INTEGER                  :: lwork, nb, mm, info
     ! mm = number of calculated eigenvectors
   INTEGER, EXTERNAL        :: ILAENV
     ! ILAENV returns optimal block size "nb"

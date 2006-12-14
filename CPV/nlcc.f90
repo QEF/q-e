@@ -467,7 +467,7 @@
       complex(8), allocatable :: qv(:)
 !
       call start_clock( 'set_cc' )
-      ci=(0.,1.)
+      ci=(0.d0,1.d0)
 !
       allocate( qv ( nnrb ) )
       allocate( wrk1 ( nnr ) )

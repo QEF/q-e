@@ -155,11 +155,10 @@ CONTAINS
     !
     ! ... local variables
     !
-    INTEGER                       :: counter,is,ia,coord,ierr
-    INTEGER                       :: dirlen, filep=200, printwfc
-    LOGICAL                       :: restart_vib, mass_file_exists
-    REAL (KIND=DP)                :: tmp_mass, dipole(3), dipole_moment
-    CHARACTER (len=256)           :: mass_file
+    INTEGER                       :: ia
+    INTEGER                       :: dirlen
+    LOGICAL                       :: restart_vib
+    REAL (KIND=DP)                :: dipole(3), dipole_moment
     !
     !-------------------------------------------------------------
     !
@@ -208,14 +207,14 @@ CONTAINS
     !
     ! (3) initiating variables ...
     !
-    U = 0.0
+    U = 0.0d0
     restart_vib = .FALSE.
     restart_cyc_counter = -1
     call flush_unit(stdout)
     !
     ! (4) Setting the T matrix (diagonal mass matrix)
     !
-    T = 0.0
+    T = 0.0d0
     do ia=1,nat
        T(3*(ia-1)+1,3*(ia-1)+1) = isotope(ia)
        T(3*(ia-1)+2,3*(ia-1)+2) = isotope(ia)
@@ -524,7 +523,7 @@ CONTAINS
                          !
                          tmp1 = (E_plus+E_minus-2*ref_etot)/(displacement*displacement)
                          tmp2 = U(idx,idx)/(2*displacement)
-                         IF( (ABS(tmp1-tmp2)/(tmp2) > 0.1) .AND. (tmp2 > eps4 ) ) THEN
+                         IF( (ABS(tmp1-tmp2)/(tmp2) > 0.1d0) .AND. (tmp2 > eps4 ) ) THEN
                             CALL infomsg('calc_hessian','Warning: consistency check',-1)
                             WRITE(stdout,*)              '    Numerical second derivative of the total energy, compared to'
                             WRITE(stdout,*)              '    first derivative of the forces, for diagonal hessian element,'
@@ -849,14 +848,14 @@ CONTAINS
     ! ... Calculate the input total system charge
     !
     tot_charge = DOT_PRODUCT(na(1:nsp),zv(1:nsp))-SUM(nel(1:nspin))
-    tot_system_charge      = 0.0
+    tot_system_charge      = 0.0d0
     tot_system_charge(1,1) = tot_charge
     tot_system_charge(2,2) = tot_charge
     tot_system_charge(3,3) = tot_charge
     !
     ! ... Test the sum of born charge tensors
     !
-    tot_born_charge=0.0
+    tot_born_charge=0.0d0
     DO i=1,nat
        tot_born_charge=tot_born_charge+born_charge(:,3*(i-1)+1:3*(i-1)+3)
     END DO
@@ -896,7 +895,7 @@ CONTAINS
     iter = 0
     max_sum = 10 !dummy value
     DO WHILE ((max_sum > trans_inv_conv_thr).AND.(iter < trans_inv_max_iter))
-       max_sum=0.0
+       max_sum=0.0d0
        iter=iter+1
        !
        ! ... imposing symmetry on the dynamical matrix
@@ -963,20 +962,20 @@ CONTAINS
        !
        ! ... converting to cm-1
        freq = sign(1.0D0,eigval_loc(i)) * &
-            SQRT(abs(eigval_loc(i)))*2.194746313709741e+05
+            SQRT(abs(eigval_loc(i)))*2.194746313709741d+05
        WRITE (mode_label,'(i3.3)') i
        WRITE (free_text,'(2x,f10.2,2x,A6)')  freq,' cm-1'
        WRITE (mode_freq_ascii,'(I4.4)') nint(freq)
        !
        ! ... generate 20 snapshots of along one vibrational period
        !
-       tau=0.0
+       tau=0.0d0
        DO it=0,19 
           DO ia=1,nat
              DO coord=1,3 !x,y,z
                 tau(coord,ia)=tau_loc(coord,ia) +        &
                      ( eigvec_loc((ia-1)*3+coord,i) *    &
-                       SIN(4.0d0*ASIN(1.0)*it/20)*SQRT(1822.9))
+                       SIN(4.0d0*ASIN(1.0d0)*it/20)*SQRT(1822.9d0))
              END DO
           END DO
           file_name='vib_anim_'//mode_label//'_'//TRIM(mode_freq_ascii)//'.xyz'
@@ -1040,9 +1039,9 @@ CONTAINS
        END DO
     END DO
     U_loc=U_loc/T_loc
-    T_loc=0.0
+    T_loc=0.0d0
     DO i=1,3*nat
-       T_loc(i,i)=1.0
+       T_loc(i,i)=1.0d0
     END DO
     !
     IF(iprsta.GT.4) THEN
@@ -1070,7 +1069,7 @@ CONTAINS
     !
     ! ... Generating the intertia tensor
     !
-    inertia_tensor=0.0
+    inertia_tensor=0.0d0
     DO i=1,nat 
        xx=tau_com(i,1)
        yy=tau_com(i,2)
@@ -1094,10 +1093,10 @@ CONTAINS
     !
     ! ... diagonalizing the inertia tensor
     !
-    dummy=0.0
-    dummy(1,1)=1.0
-    dummy(2,2)=1.0
-    dummy(3,3)=1.0
+    dummy=0.0d0
+    dummy(1,1)=1.0d0
+    dummy(2,2)=1.0d0
+    dummy(3,3)=1.0d0
     !CALL vib_rdiaghg(3,3,inertia_tensor,dummy,3,inertia_moments,inertia_eigenvecs)
     CALL vib_rdiagh(3,inertia_tensor,3,inertia_moments,inertia_eigenvecs)
     !
@@ -1389,9 +1388,9 @@ CONTAINS
              !
              !... imaginary frequency, presented as negative frequency
              !
-             eigval_loc(i)=-SQRT(-eigval_loc(i))*2.194746313709741e+05
+             eigval_loc(i)=-SQRT(-eigval_loc(i))*2.194746313709741d+05
           ELSE
-             eigval_loc(i)= SQRT( eigval_loc(i))*2.194746313709741e+05
+             eigval_loc(i)= SQRT( eigval_loc(i))*2.194746313709741d+05
           END IF
        END DO
     ELSE
@@ -1495,7 +1494,7 @@ CONTAINS
     ! ... Calculate the input total system charge
     !
     tot_charge=DOT_PRODUCT(na(1:nsp),zv(1:nsp))-SUM(nel(1:nspin))
-    tot_system_charge=0.0
+    tot_system_charge=0.0d0
     tot_system_charge(1,1)=tot_charge
     tot_system_charge(2,2)=tot_charge
     tot_system_charge(3,3)=tot_charge
@@ -1505,7 +1504,7 @@ CONTAINS
     !
     ! ... Test the sum of born charge tensors
     !
-    tot_born_charge=0.0
+    tot_born_charge=0.0d0
     DO i=1,nat
        tot_born_charge=tot_born_charge+born_charge(:,3*(i-1)+1:3*(i-1)+3)
     END DO

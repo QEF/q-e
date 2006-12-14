@@ -37,12 +37,12 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !
    ! local variables
    !
-   integer :: ig, na, nt, nb, l, lm, m, i, iig, ipol, iatw, i0, i1, i2, i3
-   real (DP) :: arg, vqint, px, ux, vx, wx
+   integer :: ig, na, nt, nb, l, lm, m, iig, ipol, iatw, i0, i1, i2, i3
+   real (DP) :: arg, px, ux, vx, wx
    complex (8) :: phase, pref
 
    real (DP), allocatable :: q(:), gk(:,:), dylm(:,:), dylm_u(:,:), &
-                   vchi(:), auxjl(:), chiq(:,:,:)
+                   chiq(:,:,:)
    !          q(npw), gk(3,npw),
    !          dylm  (npw,(lmax_wfc+1)**2),
    !          dylm_u(npw,(lmax_wfc+1)**2),
