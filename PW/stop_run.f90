@@ -16,7 +16,7 @@ SUBROUTINE stop_run( flag )
   USE io_global,          ONLY : ionode
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained
-  USE io_files,           ONLY : iunwfc, iunigk, iunefield
+  USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm, iunefieldp
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
@@ -83,8 +83,13 @@ SUBROUTINE stop_run( flag )
   IF ( lelfield ) THEN
      !
      INQUIRE( UNIT = iunefield, OPENED = opnd )
-     !
      IF ( opnd ) CLOSE( UNIT = iunefield, STATUS = 'KEEP' )
+     !
+     INQUIRE( UNIT = iunefieldm, OPENED = opnd )
+     IF ( opnd ) CLOSE( UNIT = iunefieldm, STATUS = 'KEEP' )
+     !
+     INQUIRE( UNIT = iunefieldp, OPENED = opnd )
+     IF ( opnd ) CLOSE( UNIT = iunefieldp, STATUS = 'KEEP' )
      !
   END IF
   !

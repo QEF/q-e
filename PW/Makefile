@@ -102,7 +102,8 @@ ggen.o \
 gk_sort.o \
 gradcorr.o \
 gweights.o \
-h_epsi_her.o \
+h_epsi_her_apply.o \
+h_epsi_her_set.o \
 h_1psi.o \
 h_psi.o \
 h_psi_nc.o \

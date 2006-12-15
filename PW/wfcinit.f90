@@ -407,7 +407,7 @@ SUBROUTINE wfcinit()
           IF ( isolve == 1 ) THEN
              !
              CALL cinitcgg( npwx, npw, n_starting_wfc, &
-                            nbnd, wfcatom, evc, etatom )
+                            nbnd, wfcatom, evc, etatom, .true. )
              !
           ELSE
              !

@@ -22,7 +22,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
-  USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, nwordwfc, iunefield
+  USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, nwordwfc, iunefield,&
+                                     &iunefieldp,iunefieldm
   USE cell_base,            ONLY : tpiba2 
   USE klist,                ONLY : nkstot, nks, wk, xk, nelec
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -38,7 +39,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc
-  USE bp,                   ONLY : lelfield, evcel
+  USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
   !
   IMPLICIT NONE
   !
@@ -93,7 +94,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
   END IF
   !
-  IF ( lelfield ) ALLOCATE( evcel( npwx, nbnd ) )
+  IF ( lelfield ) THEN
+    ALLOCATE( evcel( npwx, nbnd ) )
+    ALLOCATE( evcelm( npwx, nbnd ) )
+    ALLOCATE( evcelp( npwx, nbnd ) )
+    ALLOCATE( bec_evcel(nkb,nbnd) )
+  END IF
   !
   IF ( gamma_only ) THEN
      !
@@ -117,7 +123,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
   END IF
   !
-  IF ( lelfield ) DEALLOCATE( evcel )
+  IF ( lelfield ) THEN
+     DEALLOCATE( evcel )
+     DEALLOCATE( evcelm )
+     DEALLOCATE( evcelp )
+     DEALLOCATE( bec_evcel)
+  END IF
   !
   CALL stop_clock( 'c_bands' )  
   !
@@ -449,7 +460,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           ! ... read wave function for electric field
           !
-          IF ( lelfield ) CALL davcio( evcel, nwordwfc, iunefield, ik, -1 )
+          IF ( lelfield ) THEN
+             CALL davcio( evcel, nwordwfc, iunefield, ik, -1 )
+             !read projectors on disk
+            CALL davcio(evcelm,nwordwfc,iunefieldm,ik,-1)
+            CALL davcio(evcelp,nwordwfc,iunefieldp,ik,-1)
+          END IF
           !
           current_k = ik
           !
@@ -473,6 +489,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
           !
           IF ( nkb > 0 ) &
              CALL init_us_2( npw, igk, xk(1,ik), vkb )
+
+          IF(okvan.and.lelfield) THEN
+              CALL ccalbec(nkb,npwx,npw,nbnd,bec_evcel,vkb,evcel)
+          ENDIF
           !
           ! ... read in wavefunctions from the previous iteration
           !
@@ -536,7 +556,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                 !
                 IF ( iter > 1 .OR. istep > 0 .OR. ntry > 0 ) THEN
                    !
-                   CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+                   CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik),.false. )
                    !
                    avg_iter = avg_iter + 1.D0
                    !

@@ -139,7 +139,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      CALL h_1psi( ndmx, ndim, psi(1,m), hpsi, spsi )
      !
-     IF( lelfield )  CALL h_epsi_her(ndmx, ndim, 1, psi(1,m), hpsi )
+     IF( lelfield )  CALL h_epsi_her_apply(ndmx, ndim, 1, psi(1,m), hpsi )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
@@ -246,7 +246,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
         !
-        IF( lelfield ) CALL h_epsi_her( ndmx, ndim, 1, cg(1), ppsi(1) )
+        IF( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, 1, cg(1), ppsi(1) )
         !
         cg0 = DDOT( kdim2, cg(1), 1, scg(1), 1 )
         !

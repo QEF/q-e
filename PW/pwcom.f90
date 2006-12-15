@@ -624,6 +624,10 @@ MODULE bp
        nberrycyc     !numer of cycles for cobergence in electric field without changing the selfconsistent charge
   REAL(DP) :: efield ! electric field intensity in a.u.
   COMPLEX(DP), ALLOCATABLE , TARGET :: evcel(:,:) ! wave function for calculating the electric field operator
+  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelm(:,:) ! wave function for  storing projectors for  electric field operator
+  COMPLEX(DP), ALLOCATABLE , TARGET :: evcelp(:,:) ! wave function for  storing projectors for  electric field operator
+  COMPLEX(DP), ALLOCATABLE, TARGET :: fact_hepsi(:)!factors for hermitean electric field operators
+  COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:)!for storing bec's factors with evcel 
 
 !
 END MODULE bp

@@ -15,7 +15,6 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
   ! (as in Souza,et al.  PRB B 69, 085106 (2004))
   ! the output is put into hpsi
   !
-  ! evcel must contain the wavefunctions from previous iteration
   ! spin polarized systems supported only with fixed occupations
 
   USE kinds,    ONLY : DP
@@ -28,7 +27,7 @@ subroutine h_epsi_her(lda, n,nbande, psi, hpsi)
   USE gvect
   USE uspp
   USE uspp_param
-  USE bp
+  USE bp, ONLY :  gdir,nppstr,efield, evcel
   USE basis
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2

@@ -11,7 +11,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
+SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, lstart)
   !----------------------------------------------------------------------------
   !
   ! ... Hamiltonian diagonalization in the subspace spanned
@@ -36,6 +36,7 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
     ! input and output eigenvectors (may overlap) 
   REAL(DP) :: e(nbnd)
     ! eigenvalues
+  LOGICAL :: lstart !if == .true. the routine is called for initializing the wavefunctions
   !
   ! ... local variables
   !
@@ -80,7 +81,7 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e )
      !
      CALL h_1psi( ndmx, ndim, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
      !
-     IF(lelfield) call h_epsi_her(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
+     IF(lelfield .and. .not.lstart) call h_epsi_her_apply(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
      !
      CALL DGEMV( 'T', kdim2, 2, 1.D0, aux(1,1,1), &
                  kdmx2, psi(1,1,m), 1, 0.D0, rtmp, 1 )

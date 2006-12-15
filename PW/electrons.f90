@@ -54,7 +54,7 @@ SUBROUTINE electrons()
                                    pointlist, pointnum, mcons, i_cons,  &
                                    bfield, lambda, vtcon, report
   USE spin_orb,             ONLY : domag
-  USE bp,                   ONLY : lelfield, lberry, nberrycyc
+  USE bp,                   ONLY : lelfield, lberry, nberrycyc, fact_hepsi
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
   USE realus,               ONLY : tqr
@@ -225,6 +225,7 @@ SUBROUTINE electrons()
         !
         IF ( lelfield ) THEN
            !
+           ALLOCATE(fact_hepsi(nks))
            DO inberry = 1, nberrycyc
               !
               ALLOCATE( psi( npwx, nbnd ) )
@@ -238,10 +239,13 @@ SUBROUTINE electrons()
               !
               DEALLOCATE( psi )
               !
+              !set up electric field hermitean operator
+              call h_epsi_her_set
               CALL c_bands( iter, ik_, dr2 )
               !
            END DO
            !
+           DEALLOCATE(fact_hepsi)
         ELSE
            !
            CALL c_bands( iter, ik_, dr2 )
@@ -844,6 +848,7 @@ SUBROUTINE electrons()
        !
        IF ( lelfield ) THEN
           !
+          ALLOCATE(fact_hepsi(nks))
           DO inberry = 1, nberrycyc
              !
              ALLOCATE( psi( npwx, nbnd ) )
@@ -857,9 +862,13 @@ SUBROUTINE electrons()
              !
              DEALLOCATE( psi )
              !
+             !set up electric field hermitean operator
+             call h_epsi_her_set
+             !
              CALL c_bands( iter, ik_, dr2 )
              !
           END DO
+          DEALLOCATE(fact_hepsi)
           !
        ELSE
           !

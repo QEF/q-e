@@ -141,14 +141,14 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
      !
-     IF ( lelfield ) CALL h_epsi_her( ndmx, ndim, nvec, psi, hpsi )
+     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
      IF ( uspp ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
      !
   ELSE
      !
      CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
      !
-     IF ( lelfield ) CALL h_epsi_her( ndmx, ndim, nvec, psi, hpsi )
+     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
      IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
      !
   END IF
@@ -308,7 +308,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( lelfield ) &
-           CALL h_epsi_her( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( uspp ) &
            CALL s_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
@@ -318,7 +318,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( lelfield ) &
-           CALL h_epsi_her( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( uspp ) &
            CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )

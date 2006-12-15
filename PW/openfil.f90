@@ -21,7 +21,7 @@ SUBROUTINE openfil()
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc, iunefield, &
-                               tmp_dir, wfc_dir
+                               tmp_dir, wfc_dir, iunefieldm, iunefieldp
   USE pw_restart,       ONLY : pw_readfile
   USE noncollin_module, ONLY : npol
   USE mp_global,        ONLY : kunit
@@ -92,7 +92,11 @@ SUBROUTINE openfil()
   !
   ! ... open units for electric field calculations
   !
-  IF ( lelfield ) CALL diropn( iunefield, 'ewfc', nwordwfc, exst )
+  IF ( lelfield ) THEN
+      CALL diropn( iunefield, 'ewfc', nwordwfc, exst )
+      CALL diropn( iunefieldm, 'ewfcm', nwordwfc, exst )
+      CALL diropn( iunefieldp, 'ewfcp', nwordwfc, exst )
+  END IF
   !
   tmp_dir = tmp_dir_save
   !
