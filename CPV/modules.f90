@@ -351,3 +351,74 @@ CONTAINS
    END SUBROUTINE deallocate_core
    !
 END MODULE core
+!@@@@
+module elct
+  USE kinds
+  use electrons_base, only: nspin, nel, nupdwn, iupdwn
+  use electrons_base, only: n => nbnd, nx => nbndx, ispin, f
+  implicit none
+  save
+  !     f    = occupation numbers
+  !     qbac = background neutralizing charge
+  real(DP) qbac
+  !     nspin = number of spins (1=no spin, 2=LSDA)
+  !     nel(nspin) = number of electrons (up, down)
+  !     nupdwn= number of states with spin up (1) and down (2)
+  !     iupdwn=      first state with spin (1) and down (2)
+  !     n     = total number of electronic states
+  !     nx    = if n is even, nx=n ; if it is odd, nx=n+1
+  !            nx is used only to dimension arrays
+  !     ispin = spin of each state
+!  integer, allocatable:: ispin(:)
+  !
+contains
+                                                                                                 
+  subroutine deallocate_elct()
+      IF( ALLOCATED( f ) ) DEALLOCATE( f )
+      IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
+      return
+  end subroutine
+  !
+end module elct
+!
+module ldaU
+  use parameters, only: natx, nsx
+  USE kinds
+  implicit none
+  complex(DP), allocatable :: atomwfc(:,:)
+  complex(DP), allocatable :: swfcatom(:,:)
+  real(DP) :: Hubbard_U(nsx), Hubbard_lambda(nsx,2), ns0(nsx,2),   &
+     & Hubbard_alpha(nsx)
+  real(DP) :: e_hubbard, e_lambda
+  real(DP), allocatable :: ns(:,:,:,:)
+  integer Hubbard_l(nsx), Hubbard_lmax, n_atomic_wfc
+  logical lda_plus_u
+  COMPLEX(DP), allocatable::  vupsi(:,:) !@@@@
+contains
+  !
+  subroutine deallocate_lda_plus_u()
+     !
+     IF( ALLOCATED( atomwfc ) ) DEALLOCATE( atomwfc )
+     IF( ALLOCATED( swfcatom ) ) DEALLOCATE( swfcatom )
+     IF( ALLOCATED( ns ) ) DEALLOCATE( ns )
+     IF( ALLOCATED( vupsi ) ) DEALLOCATE( vupsi )
+     !
+  end subroutine
+  !
+end module ldaU
+!
+! Occupation constraint ...to be implemented...
+!
+module step_constraint
+  use parameters, only: natx_ => natx
+  USE kinds
+  implicit none
+  real(DP) :: E_con
+  real(DP) :: A_con(natx_,2), sigma_con(natx_), alpha_con(natx_)
+  logical :: step_con
+  ! complex(DP), allocatable:: vpsi_con(:,:)
+  complex(DP) :: vpsi_con(1,1)
+end module step_constraint
+!
+!@@@@
+

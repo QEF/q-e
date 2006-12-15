@@ -897,6 +897,10 @@ MODULE input_parameters
         LOGICAL :: tqr = .FALSE.
           ! US contributions are added in real space
 
+        LOGICAL :: occupation_constraints = .FALSE.
+          ! If true perform CP dynamics with constrained occupations
+          ! to be used together with penalty functional ...
+
         NAMELIST / electrons / emass, emass_cutoff, orthogonalization, &
           electron_maxstep, ortho_eps, ortho_max, electron_dynamics,   &
           electron_damping, electron_velocities, electron_temperature, &
@@ -912,7 +916,8 @@ MODULE input_parameters
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
-          efield, epol2, efield2, diago_full_acc, l_blockocc, n_blockocc
+          efield, epol2, efield2, diago_full_acc, l_blockocc,          &
+          n_blockocc, occupation_constraints
 
 !
 !=----------------------------------------------------------------------------=!

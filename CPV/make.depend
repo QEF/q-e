@@ -202,6 +202,7 @@ cplib.o : ../Modules/fft_base.o
 cplib.o : ../Modules/fft_types.o
 cplib.o : ../Modules/functionals.o
 cplib.o : ../Modules/griddim.o
+cplib.o : ../Modules/input_parameters.o
 cplib.o : ../Modules/io_global.o
 cplib.o : ../Modules/ions_base.o
 cplib.o : ../Modules/kind.o
@@ -708,6 +709,7 @@ mainvar.o : modules.o
 mainvar.o : pres_ai_mod.o
 mainvar.o : wave_types.o
 metaxc.o : ../Modules/recvec.o
+modules.o : ../Modules/electrons_base.o
 modules.o : ../Modules/kind.o
 modules.o : ../Modules/parameters.o
 move_electrons.o : ../Modules/cell_base.o
@@ -1088,6 +1090,7 @@ runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : electrons.o
 runcp.o : mainvar.o
+runcp.o : modules.o
 runcp.o : wannier.o
 rundiis.o : ../Modules/cell_base.o
 rundiis.o : ../Modules/check_stop.o

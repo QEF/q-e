@@ -32,7 +32,9 @@
       USE uspp,               ONLY : nkb
       USE gvecw,              ONLY : ngw
       USE cp_interfaces,      ONLY : runcp_ncpp, eigs, ortho, elec_fakekine, update_lambda
-
+!@@@@
+      USE ldaU,               ONLY : vupsi, lda_plus_u
+!@@@@
       IMPLICIT NONE
 
       ! ...   declare subroutine arguments
@@ -120,6 +122,9 @@
       USE control_flags,      ONLY: tsde
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gzero
+!@@@@
+      USE ldaU
+!@@@@
 
       IMPLICIT NONE
 
@@ -289,6 +294,9 @@
       USE uspp,               ONLY: nkb
       use reciprocal_vectors, only: gzero, gstart
       USE gvecw,              ONLY: ngw
+!@@@@
+      USE ldaU
+!@@@@
 
         IMPLICIT NONE
 
@@ -516,6 +524,9 @@
       use efield_module, only: dforce_efield, tefield, dforce_efield2, tefield2
 
       use gvecw, only: ngw
+!@@@@
+      USE ldaU
+!@@@@
      !
      IMPLICIT NONE
      integer, intent(in) :: nfi
@@ -531,7 +542,7 @@
      real(DP) ::  verl1, verl2, verl3
      real(DP), allocatable:: emadt2(:)
      real(DP), allocatable:: emaver(:)
-     complex(DP), allocatable:: c2(:), c3(:)
+     complex(DP), allocatable:: c2(:), c3(:), c2u(:), c3u(:)
      integer :: i
      integer :: iflag
      logical :: ttsde
@@ -553,6 +564,12 @@
 
      allocate(c2(ngw))
      allocate(c3(ngw))
+!@@@@
+     allocate(c2u(ngw))
+     allocate(c3u(ngw))
+     c2u=0.0
+     c3u=0.0
+!@@@@
      ALLOCATE( emadt2( ngw ) )
      ALLOCATE( emaver( ngw ) )
 
@@ -573,23 +590,33 @@
       else
         do i=1,n,2
            call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
+!@@@@
+           if (lda_plus_u) then
+              c2u(:)=c2(:)-vupsi(:,i)
+              c3u(:)=c3(:)-vupsi(:,i+1)
+           else 
+              c2u(:)=c2(:)
+              c3u(:)=c3(:)
+           endif
+!@@@@
            if( tefield ) then
-             CALL dforce_efield ( bec, i, c0, c2, c3, rhos)
+             CALL dforce_efield ( bec, i, c0, c2u, c3u, rhos)
            end if
            if( tefield2 ) then
-             CALL dforce_efield2 ( bec, i, c0, c2, c3, rhos)
+             CALL dforce_efield2 ( bec, i, c0, c2u, c3u, rhos)
            end if
            IF( iflag == 2 ) THEN
              cm(:,i)   = c0(:,i)
              cm(:,i+1) = c0(:,i+1)
            END IF
            if( ttsde ) then
-              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emaver, c2 )
-              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3 )
+              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emaver, c2u )
+              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3u )
            else
-              CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2 )
-              CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
+              CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2u )
+              CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3u )
            endif
+!@@@@
            if ( gstart == 2) THEN
               cm(1,  i)=CMPLX(DBLE(cm(1,  i)),0.d0)
               cm(1,i+1)=CMPLX(DBLE(cm(1,i+1)),0.d0)
@@ -599,6 +626,7 @@
 
      DEALLOCATE( emadt2 )
      DEALLOCATE( emaver )
+     deallocate(c2u,c3u)
      deallocate(c2)
      deallocate(c3)
 !
@@ -626,6 +654,9 @@
      USE mp_global,              ONLY: me_image, nogrp, me_ogrp
      USE parallel_include
      use task_groups
+!@@@@
+     USE ldaU
+!@@@@
 
      !
      IMPLICIT NONE
@@ -801,6 +832,9 @@
       USE electrons_base,   ONLY: nx=>nbnd, nupdwn, iupdwn, nbspx, nbsp
       USE mp, ONLY: mp_sum 
       USE mp_global, ONLY: intra_image_comm 
+!@@@@
+      USE ldaU
+!@@@@
   !
       IMPLICIT NONE
       INTEGER, INTENT(in) :: nfi

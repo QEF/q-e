@@ -84,6 +84,8 @@ SUBROUTINE init_run()
   USE wave_types,               ONLY : wave_descriptor_info
   USE xml_io_base,              ONLY : restart_dir, create_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
+  USE step_constraint,          ONLY : step_con
+  USE ldau
   !
   IMPLICIT NONE
   !
@@ -111,6 +113,12 @@ SUBROUTINE init_run()
   ! ... initialize atomic positions and cell
   !
   CALL init_geometry()
+  !
+  ! ... mesure performances of parallel routines
+  !
+  CALL mesure_mmul_perf( nudx )
+  !
+  CALL mesure_diag_perf( nudx )
   !
   IF ( lwf ) CALL clear_nbeg( nbeg )
   !
@@ -225,11 +233,11 @@ SUBROUTINE init_run()
   CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
   !
   CALL print_legend( )
-  !
-  CALL mesure_mmul_perf( nudx )
-  !
-  CALL mesure_diag_perf( nudx )
-  !
+!@@@@
+  step_con = .false.
+  call ldaU_init()
+!@@@@
+
   IF ( nbeg < 0 ) THEN
      !
      !======================================================================

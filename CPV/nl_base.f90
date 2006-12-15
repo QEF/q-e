@@ -199,7 +199,6 @@
 
       allocate( gk( ngw ) )
       allocate( wrk2( 2, ngw, nax ) )
-
       becdr = 0.d0
 !
       do k = 1, 3
@@ -264,9 +263,7 @@
          IF( tred .AND. ( nproc_image > 1 ) ) THEN
             CALL mp_sum( becdr(:,:,k), intra_image_comm )
          END IF
-
       end do
-
 
       deallocate( gk )
       deallocate( wrk2 )

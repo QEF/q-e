@@ -174,6 +174,13 @@ CONTAINS
        !
        CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), ngw, nupdwn(iss) )
        !
+       !DO i = iupdwn(iss), nupdwn( iss )
+       !   DO j = iupdwn(iss), nupdwn( iss )
+       !      CALL dotcsv( dum, eigr, cm(1,i), cm(1,j), ngw )
+       !      WRITE(stdout,*) i, j, dum
+       !   END DO
+       !END DO
+       !
     END DO
 
     IF( force_pairing ) cm(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cm(:,1:nupdwn(2))

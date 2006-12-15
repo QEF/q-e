@@ -59,6 +59,7 @@ SUBROUTINE deallocate_modules_var()
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE guess,                ONLY : guess_closeup
   USE kohn_sham_states,     ONLY : ks_states_closeup
+  USE ldau,                 ONLY : deallocate_lda_plus_u
   !
   IMPLICIT NONE
   !
@@ -119,6 +120,8 @@ SUBROUTINE deallocate_modules_var()
   CALL ions_nose_deallocate()
   CALL guess_closeup()
   CALL ks_states_closeup()
+  !
+  CALL deallocate_lda_plus_u()
   !
   RETURN
   !

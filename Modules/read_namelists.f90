@@ -314,6 +314,8 @@ MODULE read_namelists_module
        epol2  = 3
        efield2 = 0.d0
        ! 
+       occupation_constraints = .false.
+       ! 
        RETURN
        ! 
      END SUBROUTINE
@@ -840,6 +842,10 @@ MODULE read_namelists_module
        CALL mp_bcast( epol2,   ionode_id )
        CALL mp_bcast( efield2, ionode_id )
        !
+       ! ... occupation constraints ...
+       !
+       CALL mp_bcast( occupation_constraints, ionode_id )
+       !
        RETURN
        !
      END SUBROUTINE
@@ -1337,6 +1343,8 @@ MODULE read_namelists_module
        IF( empty_states_ethr < 0.D0 ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_ethr, less than 0 ',1)
+       IF( occupation_constraints ) &
+          CALL errore( sub_name, ' occupation_constraints not yet implemented ',1)
 
 !
        RETURN

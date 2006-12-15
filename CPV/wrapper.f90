@@ -8,6 +8,25 @@
 
 #include "f_defs.h"
 !
+!@@@@@
+      real(kind=8) function ssum(n,a,nstride)
+!
+!  wrapper routine for cray scilib function ssum
+!
+      implicit none
+      integer n, nstride
+      real(kind=8) a(*)
+      integer i
+!
+      ssum=0.d0
+      do i=1,n,nstride
+         ssum=ssum+a(i)
+      end do
+!
+      return
+      end
+!
+!@@@@@
       subroutine mxma (a,na,iad,b,nb,ibd,c,nc,icd,nar,nac,nbc)
 !
 !  wrapper routine for cray scilib matrix-matrix multiplication

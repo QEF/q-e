@@ -140,6 +140,11 @@ CONTAINS
       INTEGER  :: ldim_block
       EXTERNAL :: cclock, ldim_block
       !
+      IF( nproc_image > n ) THEN
+         use_parallel_diag = .FALSE.
+         return
+      END IF
+      !
       ALLOCATE( a( n, n ), d( n ) )
       !
       IF( me_ortho(1) >= 0 ) THEN

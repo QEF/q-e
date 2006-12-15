@@ -72,7 +72,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cdvan,                    ONLY : dbec, drhovan
   USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp
-  USE parameters,               ONLY : nsx
+  USE parameters,               ONLY : nsx, natx !@@@@@
   USE constants,                ONLY : pi, k_boltzmann_au, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
@@ -135,6 +135,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE control_flags,            ONLY : force_pairing
   USE mp,                       ONLY : mp_bcast
   USE mp_global,                ONLY : root_image, intra_image_comm
+!@@@@
+  USE ldaU,                     ONLY : lda_plus_u, vupsi
+  USE step_constraint
+!@@@@
   !
   IMPLICIT NONE
   !
@@ -163,7 +167,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP) :: ekinh, temphc, randy
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
-  INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos
+  INTEGER  :: is, nacc, ia, j, iter, i, isa, ipos, iat
   INTEGER  :: k, ii, l, m, iss
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
@@ -178,6 +182,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   CHARACTER(LEN=3) :: labelw( nat )
     ! for force_pairing
   INTEGER   :: nspin_sub 
+!@@@@@
+  real(kind=8) forceh(3,natx,nsx)
+!@@@@@
   !
   !
   dt2bye   = dt2 / emass
@@ -282,7 +289,18 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      IF ( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
      IF ( ( tfor .OR. tfirst ) .AND. tefield2 ) CALL efield_update2( eigr )
-
+!@@@@@
+     forceh=0.0
+     IF (lda_plus_u) then
+        vupsi=(0.0,0.0)
+        vpsi_con=(0.0,0.0)
+        CALL new_ns(c0,eigr,vkb,vupsi,vpsi_con,forceh)
+! vupsi     ! potentials on electrons due to Hubbard U
+! vpsi_con  ! potentials on electrons due to occupation constraints ...not yet implemented...
+! forceh    ! Forces on ions due to Hubbard U 
+     endif
+     if ((mod(nfi,iprint).eq.0).and.(lda_plus_u)) call write_ns
+!@@@@@
      !
      !=======================================================================
      !
@@ -299,8 +317,17 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ENDIF
      !
      !
+!@@@@@
      CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
                           enthal, enb, enbi, fccc, ccc, dt2bye )
+     iat=0
+     do is=1,nsp
+        do ia=1,na(is)
+           iat=iat+1
+           fion(:,iat)=fion(:,iat)+forceh(:,ia,is)
+        enddo
+     enddo
+!@@@@@
      !
      IF ( tpre ) THEN
         !
@@ -345,6 +372,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         fion_tot(:) = SUM( fion(:,:), DIM = 2 ) / DBLE( nat )
         !
         FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) - fion_tot(:)
+        write(26,*) fion_tot !DEBUG
         !
         IF ( remove_rigid_rot ) &
            CALL remove_tot_torque( nat, tau0, pmass(ityp(ind_srt(:))), fion )
@@ -870,7 +898,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
   END IF
   !
-  IF( tprojwfc )   CALL print_projwfc( c0, lambda, eigr, vkb )
+  IF( tprojwfc ) CALL print_projwfc( c0, lambda, eigr, vkb )
   !
   IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !
