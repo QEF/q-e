@@ -127,6 +127,9 @@ MODULE io_files
   !
   INTEGER :: iunefield   = 31 ! unit to store wavefunction for calculatin electric field operator
   !
+  INTEGER :: iunefieldm  = 32 !unit to store projectors for hermitean electric field potential
+  !
+  INTEGER :: iunefieldp  = 33 !unit to store projectors for hermitean electric field potential
 CONTAINS
   !
   !-----------------------------------------------------------------------
