@@ -176,8 +176,8 @@ MODULE path_base
             IF ( .NOT. file_exists ) THEN
                !
                WRITE( iunpath, &
-                      '(/,5X,"restart file ''",A,"'' not found: ", &
-                       &/,5X,"starting from scratch")' ), TRIM( path_file )
+                      & '(/,5X,"restart file ''",A,"'' not found: ", &
+                      &   /,5X,"starting from scratch")' )  TRIM( path_file )
                !
                restart_mode = "from_scratch"
                !
