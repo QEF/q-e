@@ -491,7 +491,6 @@
 !
       call start_clock( 'dforce' ) 
       !
-#ifdef __BGL
 
       ALLOCATE( psi( strd * ( NOGRP+1 ) ))
       ALLOCATE( temp_psi( 2 * (NOGRP+1) * dffts%nsw(1) * nr3sx ) )
@@ -721,7 +720,6 @@
       DEALLOCATE( temp_psi ) 
       DEALLOCATE( af, aa, dtemp )
 
-#endif
 !
       call stop_clock( 'dforce' ) 
 !

@@ -15,7 +15,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   ! ... this routine updates the electronic degrees of freedom
   !
   USE kinds,                ONLY : DP
-  USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn
+  USE control_flags,        ONLY : lwf, tfor, tprnfor, thdyn, use_task_groups
   USE cg_module,            ONLY : tcg
   USE cp_main_variables,    ONLY : eigr, bec, irb, eigrb, rhog, rhos, rhor, &
                                    ei1, ei2, ei3, sfac, ema0bg, becdr, &
@@ -139,13 +139,13 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
      ELSE
         !
-#if defined __BGL
-        CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, &
+        IF( use_task_groups ) THEN
+           CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, &
                       rhos, bec, c0, cm )
-#else
-        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
+        ELSE
+           CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
                       rhos, bec, c0, cm )
-#endif
+        END IF
         !
      ENDIF
      !

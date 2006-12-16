@@ -37,7 +37,7 @@ CONTAINS
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf, tprnfor, tortho, amprp, ampre,  &
                                      tsde, ortho_eps, ortho_max, program_name, &
-                                     force_pairing
+                                     force_pairing, use_task_groups
     USE ions_positions,       ONLY : taus, tau0, tausm, vels
     USE ions_base,            ONLY : na, nsp, randpos, zv, ions_vel, pmass
     USE ions_base,            ONLY : taui, cdmi, nat
@@ -262,13 +262,13 @@ CONTAINS
             !
          ELSE
             !
-#if defined __BGL
-            CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
+            IF( use_task_groups ) THEN
+               CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
         &                 c0(:,:), fromscra = .TRUE. )
-#else
-            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
+            ELSE
+               CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
         &                 c0(:,:), fromscra = .TRUE. )
-#endif
+            END IF
             !
          ENDIF
          !

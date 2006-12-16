@@ -640,7 +640,7 @@
    SUBROUTINE runcp_uspp_bgl_x &
       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
      !
-      USE kinds,             ONLY: DP
+     USE kinds,                  ONLY: DP
      use wave_base,              only: my_wave_steepest, my_wave_verlet
      use control_flags,          only: lwf, tsde
      use uspp,                   only: deeq, betae => vkb
@@ -671,6 +671,7 @@
      !
      !
      !
+     INTEGER, DIMENSION(NOGRP) :: recv_cnt, recv_displ
      real(8) ::  verl1, verl2, verl3
      real(8), allocatable:: emadt2(:)
      real(8), allocatable:: emaver(:)

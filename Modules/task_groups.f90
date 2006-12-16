@@ -1,23 +1,25 @@
-!-----------------------------------------
-! VARIABLES FOR TASKGROUPS
-! C. Bekas, October 2005
-!-----------------------------------------
 !
-!Variable description
-!--------------------
-!MAXGRP:        Maximum number of task-groups
+! Copyright (C) 2002-2004 PWSCF-FPMD-CP90 group
+! This file is distributed under the terms of the
+! GNU General Public License. See the file `License'
+! in the root directory of the present distribution,
+! or http://www.gnu.org/copyleft/gpl.txt .
+!
+!-----------------------------------------
+! Contributed by C. Bekas, October 2005
+! Revised by C. Cavazzoni
 !--------------------------------------------
 
 MODULE task_groups
 
-   USE kinds, ONLY: DP
-   USE parameters, ONLY: MAXCPU, MAXGRP
+   USE kinds,      ONLY: DP
+   USE parameters, ONLY: maxcpu
 
    IMPLICIT NONE
    SAVE
 
    INTEGER, DIMENSION(:), ALLOCATABLE :: ALL_Z_STICKS
-   INTEGER, DIMENSION(:), ALLOCATABLE  :: NOLIST, NPLIST, PGROUP
+   INTEGER, DIMENSION(:), ALLOCATABLE  :: NOLIST, nplist, PGROUP
    INTEGER, DIMENSION(:), ALLOCATABLE :: tmp_nsw, tmp_npp, tmp_planes, tmp_revs, recvs, tmp_ismap
    INTEGER, DIMENSION(:), ALLOCATABLE :: ngw_vec !GLOBAL VECTOR OF ALL NGW VECTORS
    COMPLEX(DP), DIMENSION(:,:),  ALLOCATABLE :: tg_betae
@@ -26,7 +28,6 @@ MODULE task_groups
    REAL(DP),  DIMENSION(:),   ALLOCATABLE :: tg_ggp
    INTEGER,  DIMENSION(:),   ALLOCATABLE  ::  nnrsx_vec !INCREASE THIS TO THE MAXIMUM NUMBER OF PROCS IF NEEDED
    REAL(DP), DIMENSION(:,:), ALLOCATABLE  ::  tmp_rhos, local_rhos
-   INTEGER  :: recv_cnt(MAXGRP), recv_displ(MAXGRP), send_cnt(MAXGRP), send_displ(MAXGRP)
    INTEGER  :: SZ, CLOCK1, CLOCK2, CLOCK3, CLOCK4
    INTEGER  :: sticks_index, eig_offset, strd       
    REAL(DP) :: tm_tg, tm_rhoofr
@@ -41,7 +42,7 @@ SUBROUTINE DEALLOCATE_GROUPS
 
    IF (ALLOCATED(ALL_Z_STICKS)) DEALLOCATE(ALL_Z_STICKS)
    IF (ALLOCATED(NOLIST))       DEALLOCATE(NOLIST)
-   IF (ALLOCATED(NPLIST))       DEALLOCATE(NPLIST)
+   IF (ALLOCATED(nplist))       DEALLOCATE(nplist)
    IF (ALLOCATED(PGROUP))       DEALLOCATE(PGROUP)
    IF (ALLOCATED(tmp_nsw))      DEALLOCATE(tmp_nsw)
    IF (ALLOCATED(tmp_npp))      DEALLOCATE(tmp_npp)
@@ -80,11 +81,14 @@ SUBROUTINE task_groups_init( dffts )
    USE mp_global,  ONLY : me_image, nproc_image, intra_image_comm, root
    USE mp_global,  ONLY : NOGRP, NPGRP, ME_OGRP, ME_PGRP  
    USE mp,         ONLY : mp_bcast
-   USE parameters, ONLY : MAXGRP
    USE io_global,  only : stdout
    USE fft_types,  only : fft_dlay_descriptor
    USE electrons_base, only: nspin
    USE parallel_include
+
+   ! T.G. 
+   ! NPGRP:      Number of processors per group
+   ! NOGRP:      Number of group
 
    IMPLICIT NONE 
 
@@ -93,18 +97,16 @@ SUBROUTINE task_groups_init( dffts )
    !----------------------------------
    !Local Variables declaration
    !----------------------------------
-   !nproc_image:      Total number of processors
-   !NPGRP:      Number of processors per group
+
    INTEGER  ::  MSGLEN, I, J, N1, LABEL, IPOS, WORLD, NEWGROUP
    INTEGER  ::  IERR
 
    !--------------------------------------------------------------
-   !Allocations
-   !--------------------------------------------------------------
    !
-   ALLOCATE( nolist( maxgrp ) )
-   ALLOCATE( nplist( maxgrp ) )
-   
+
+   WRITE( stdout, 100 ) nogrp, npgrp
+
+100 FORMAT( /,3X,'Task Groups are in use',/,3X,'groups and procs/group : ',I5,I5 )
 
    tm_tg     = 0D0
    tm_rhoofr = 0D0
@@ -122,6 +124,7 @@ SUBROUTINE task_groups_init( dffts )
 
    IF( MOD( nproc_image, nogrp ) /= 0 ) &
       CALL errore( " groups ", " nogrp should be a divisor of nproc_image ", 1 )
+
  
    ALLOCATE( pgroup( nproc_image ) )
    DO i = 1, nproc_image
@@ -150,30 +153,26 @@ SUBROUTINE task_groups_init( dffts )
    !we choose to do the latter one.
    !-------------------------------------------------------------------------------------
    !
-   ALLOCATE( ALL_Z_STICKS( SZ ) )
+   ALLOCATE( all_z_sticks( sz ) )
    !
    !ALL-Gather number of Z-sticks from all processors
    !
 #if defined __MPI
-   CALL MPI_Allgather(dffts%nsw(me_image+1), 1, MPI_INTEGER, ALL_Z_STICKS, 1, MPI_INTEGER, intra_image_comm, IERR)
+   CALL MPI_Allgather(dffts%nsw(me_image+1), 1, MPI_INTEGER, all_z_sticks, 1, MPI_INTEGER, intra_image_comm, ierr)
 #else
    all_z_sticks( 1 ) = dffts%nsw( 1 )
 #endif
-   IF (.NOT.ALLOCATED(tmp_nsw)) ALLOCATE(tmp_nsw(SZ))
+   IF (.NOT.ALLOCATED(tmp_nsw)) ALLOCATE(tmp_nsw(sz))
    IF (.NOT.ALLOCATED(tmp_npp)) THEN
-      ALLOCATE(tmp_npp(SZ))
+      ALLOCATE(tmp_npp(sz))
       tmp_npp(1)=-1
    ENDIF
 
-   IF( NOGRP == 1 ) RETURN
 
-   IF( NPGRP > MAXGRP ) THEN
-      CALL errore( "groups", "too many npgrp", 1 )
-   ENDIF
+   ALLOCATE( nplist( npgrp ) )
    !
-   IF( NOGRP > MAXGRP ) THEN
-      CALL errore( "groups", "too many nogrp", 1 )
-   ENDIF
+   ALLOCATE( nolist( nogrp ) )
+
 
    !--------------------------------------
    !LIST OF PROCESSORS IN MY ORBITAL GROUP
@@ -188,14 +187,14 @@ SUBROUTINE task_groups_init( dffts )
    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
    !-----------------------------------------
    DO I = 1, NPGRP
-      NPLIST( I ) = PGROUP( IPOS + ( I - 1 ) * NOGRP + 1 )
+      nplist( I ) = PGROUP( IPOS + ( I - 1 ) * NOGRP + 1 )
    ENDDO
 
    !-----------------
    !SET UP THE GROUPS
    !-----------------
    DO I = 1, NPGRP
-      IF( me_image .EQ. NPLIST( I ) ) LABEL = I
+      IF( me_image == nplist( I ) ) LABEL = I
    ENDDO
 
    !---------------------------------------
@@ -222,7 +221,7 @@ SUBROUTINE task_groups_init( dffts )
    !
 #if defined __MPI
    CALL MPI_COMM_GROUP( intra_image_comm, WORLD, IERR )
-   CALL MPI_GROUP_INCL( WORLD, NPGRP, NPLIST, NEWGROUP, IERR )
+   CALL MPI_GROUP_INCL( WORLD, NPGRP, nplist, NEWGROUP, IERR )
    CALL MPI_COMM_CREATE( intra_image_comm, NEWGROUP, ME_PGRP, IERR )
 #endif
 

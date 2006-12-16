@@ -135,7 +135,7 @@ SUBROUTINE get_arg_ntg( ntask_groups )
    CHARACTER(LEN=20) :: np
    INTEGER :: iargc
    !
-   ntask_groups = 1
+   ntask_groups = 0
    nargs = iargc()
    !
    DO iiarg = 1, ( nargs - 1 )

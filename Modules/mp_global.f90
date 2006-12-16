@@ -127,7 +127,9 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   END IF
   !  
   IF( PRESENT( ntask_groups_ ) ) THEN
-     nogrp = ntask_groups_
+     IF( ntask_groups_ > 0 ) THEN
+        nogrp = ntask_groups_
+     END IF
   END IF
   !  
   ! ... here we set all parallel indeces (defined in mp_global): 
@@ -202,14 +204,10 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
   CALL init_ortho_group( nproc_image, me_image, intra_image_comm )
   !
-#if defined __BGL
-  !
   IF( MOD( nproc_image, nogrp ) /= 0 ) &
       CALL errore( " init_pool ", " nogrp should be a divisor of nproc_image ", 1 )
   !
   npgrp = nproc_image / nogrp
-
-#endif
   !
   RETURN
   !

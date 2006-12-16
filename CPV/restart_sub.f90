@@ -38,7 +38,8 @@ MODULE from_restart_module
     USE control_flags,        ONLY : tranp, trane, trhor, iprsta, tpre, &
                                      tzeroc, tzerop, tzeroe, tfor, thdyn, &
                                      lwf,  tprnfor, tortho, tv0rd, amprp, &
-                                     taurdr, ortho_eps, ortho_max, nbeg, dt_old
+                                     taurdr, ortho_eps, ortho_max, nbeg, dt_old, &
+                                     use_task_groups
     USE ions_positions,       ONLY : taus, tau0, tausm, taum, vels, velsm, &
                                      ions_hmove
     USE ions_base,            ONLY : na, nat, nsp, randpos, zv, ions_vel, &
@@ -244,13 +245,13 @@ MODULE from_restart_module
              !
           ELSE
              !
-#if defined __BGL
-             CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
+             IF( use_task_groups ) THEN
+                CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
                            bec, c0, cm, restart = .TRUE. )
-#else
-             CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
+             ELSE
+                CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
                            bec, c0, cm, restart = .TRUE. )
-#endif
+             END IF
              !
           ENDIF 
 

@@ -556,7 +556,7 @@
             END DO
          ENDIF
          !
-         IF ( dft_is_meta() ) CALL kedtauofr_meta( c, psi, psis ) ! METAGGA
+         IF ( dft_is_meta() ) CALL kedtauofr_meta( c, psi, SIZE( psi ), psis, SIZE( psis ) ) ! METAGGA
          !
          !     add vanderbilt contribution to the charge density
          !     drhov called before rhov because input rho must be the smooth part

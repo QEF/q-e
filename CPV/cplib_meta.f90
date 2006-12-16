@@ -62,11 +62,11 @@
 !-----------------------------------------------------------------------
 !
 !-----------------------------------------------------------------------
-      subroutine kedtauofr_meta (c, psi, psis)
+      subroutine kedtauofr_meta (c, psi, npsi, psis, npsis )
 !-----------------------------------------------------------------------
 !
       use kinds, only: dp
-      use control_flags, only: tpre
+      use control_flags, only: tpre, use_task_groups
       use gvecs
       use gvecw, only: ngw
       use reciprocal_vectors, only: gx
@@ -84,28 +84,22 @@
       use metagga, ONLY : kedtaur, kedtaus, kedtaug, crosstaus, gradwfc, &
                           dkedtaus
       USE cp_interfaces, ONLY: fwfft, invfft
-#if defined __BGL
-      USE task_groups, ONLY: strd
-      USE mp_global,   ONLY: nogrp
-#endif
       
       implicit none
+
+      integer, intent(in) :: npsi, npsis
+      complex(8) :: c(ngw,nx)
+      complex(8) :: psi( npsi ), psis( npsis )
 
 ! local variables
       integer iss, isup, isdw, iss1, iss2, ios, i, ir, ig
       integer ipol, ix,iy, ipol2xy(3,3)
       real(8) sa1, sa2
-      complex(8) ci,fp,fm,c(ngw,nx)
-#if defined __BGL
-      complex(8) psi(strd*(NOGRP+1)), psis(strd*(NOGRP+1))
-#else
-      complex(8) psi(nnr), psis(nnrsx)
-#endif
+      complex(8) ci,fp,fm
 !
+      psi( : ) = (0.d0,0.d0)
 !
       ci=(0.0d0,1.0d0)
-      psi(:)=(0.d0,0.d0);
-      psis(:)=(0.d0,0.d0);
       kedtaur(:,:)=0.d0
       kedtaus(:,:)=0.d0
       kedtaug(:,:)=(0.d0,0.d0)
@@ -122,7 +116,6 @@
       endif
          !
       do i=1,n,2
-         psis(:) = (0,0)
          iss1=ispin(i)
          sa1=f(i)/omega
          if (i.ne.n) then
@@ -134,7 +127,7 @@
          end if
 
          do ipol = 1, 3
-            psis(:)=(0.d0,0.d0)
+            psis( : ) = (0.d0,0.d0)
             do ig=1,ngw
                psis(nps(ig))=tpiba*gx(ipol,ig)* (ci*c(ig,i) - c(ig,i+1))
                psis(nms(ig))=tpiba*gx(ipol,ig)*CONJG(ci*c(ig,i)+c(ig,i+1))
@@ -215,7 +208,7 @@
 !     ------------------------------------------------------------------
          iss=1
 
-         psi(:) = (0.d0,0.d0)
+         psi( : ) = (0.d0,0.d0)
          psi(nm(1:ngs))=CONJG(kedtaug(1:ngs,iss))
          psi(np(1:ngs))=      kedtaug(1:ngs,iss)
          call invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
@@ -228,7 +221,8 @@
          isup=1
          isdw=2
 
-         psi(:) = (0.d0,0.d0)
+         psi( : ) = (0.d0,0.d0)
+
          do ig=1,ngs
             psi(nm(ig))=CONJG(kedtaug(ig,isup))+ci*conjg(kedtaug(ig,isdw))
             psi(np(ig))=kedtaug(ig,isup)+ci*kedtaug(ig,isdw)
@@ -238,6 +232,7 @@
          kedtaur(1:nnr,isdw)=AIMAG(psi(1:nnr))
 
       endif
+
 !
       return
     end subroutine kedtauofr_meta

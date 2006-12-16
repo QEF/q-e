@@ -288,7 +288,7 @@ CONTAINS
       USE kinds,      only: DP
       USE mp_global,  only: me_image, nproc_image, me_ogrp, me_pgrp, npgrp, nogrp, &
                             intra_image_comm
-      USE fft_base,   only: fft_scatter, group_fft_scatter
+      USE fft_base,   only: fft_scatter
       USE fft_scalar, only: cft_1z, cft_2xy
       USE task_groups
       USE parallel_include
@@ -484,7 +484,7 @@ CONTAINS
             ENDIF
 
             CALL start_clock( 'SCATTER' ) 
-            call group_fft_scatter( aux, nr3x, (NOGRP+1)*strd, f, tmp_nsw, tmp_npp, sign)
+            call fft_scatter( aux, nr3x, (NOGRP+1)*strd, f, tmp_nsw, tmp_npp, sign, use_tg = .TRUE. )
             CALL stop_clock( 'SCATTER' )
 
             f(:) = (0.d0, 0.d0)
@@ -558,7 +558,7 @@ CONTAINS
                end do
             end do
 
-            call group_fft_scatter(aux,nr3x,(NOGRP+1)*strd,f,tmp_nsw,tmp_npp,sign)
+            call fft_scatter( aux, nr3x, (NOGRP+1)*strd, f, tmp_nsw, tmp_npp, sign, use_tg = .TRUE. )
             call cft_1z(aux,tmp_nsw(me),nr3,nr3x,sign,f)
 
          end if

@@ -47,12 +47,6 @@
         PUBLIC :: fft_itranspose, fft_transpose, fft_scatter
         PUBLIC :: dfftp, dffts, dfftb, fft_dlay_descriptor
 
-        !-----------------------------------------
-        !C. Bekas, IBm Research, Zurich
-        !-----------------------------------------
-        PUBLIC :: group_fft_scatter
-
-
 
 !=----------------------------------------------------------------------=!
       CONTAINS
@@ -511,7 +505,7 @@
 
 !
 !-----------------------------------------------------------------------
-subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
+subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   !-----------------------------------------------------------------------
   !
   ! transpose the fft grid across nodes
@@ -538,29 +532,50 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   !
   !  The output is overwritten on f_in ; f_aux is used as work space
   !
+  !  If optional argument "use_tg" is true the subroutines performs
+  !  the trasposition using the Task Groups distribution
+  !
 #ifdef __PARA
   USE parallel_include
 #endif
-  use mp_global, ONLY: nproc_pool, me_pool, intra_pool_comm, nproc, my_image_id
-  USE kinds, only : DP
+  use mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
+                          my_image_id, nogrp, me_pgrp
+  USE kinds,       ONLY : DP
+  USE task_groups, ONLY : nplist
+
   implicit none
 
-  integer, intent(in) :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
-  complex (DP) :: f_in (nxx_), f_aux (nxx_)
+  integer, intent(in)           :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
+  complex (DP)                  :: f_in (nxx_), f_aux (nxx_)
+  logical, optional, intent(in) :: use_tg
 
 #ifdef __PARA
 
   integer :: dest, from, k, offset1 (nproc), sendcount (nproc), &
        sdispls (nproc), recvcount (nproc), rdispls (nproc), &
-       proc, ierr, me, nprocp
+       proc, ierr, me, nprocp, gproc, gcomm
   !
+  LOGICAL :: use_tg_
 
 #if defined __HPM
      !       CALL f_hpmstart( 10, 'scatter' )
 #endif
 
+  !
+  !  Task Groups
+
+  use_tg_ = .FALSE.
+
+  IF( PRESENT( use_tg ) ) use_tg_ = use_tg
+     
   me     = me_pool + 1
-  nprocp = nproc_pool
+  !
+  IF( use_tg_ ) THEN
+    !  This is the number of procs. in the plane-wave group
+     nprocp = nproc_pool / nogrp 
+  ELSE
+     nprocp = nproc_pool
+  END IF
   !
   if (nprocp.eq.1) return
   !
@@ -569,20 +584,38 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   ! sendcount(proc): amount of data processor "me" must send to processor
   ! recvcount(proc): amount of data processor "me" must receive from
   !
-  do proc = 1, nprocp
-     sendcount (proc) = npp_ (proc) * ncp_ (me)
-     recvcount (proc) = npp_ (me) * ncp_ (proc)
-  enddo
+  IF( use_tg_ ) THEN
+     do proc = 1, nprocp
+        gproc = nplist( proc ) + 1
+        sendcount (proc) = npp_ ( gproc ) * ncp_ (me)
+        recvcount (proc) = npp_ (me) * ncp_ ( gproc )
+     end do 
+  ELSE
+     do proc = 1, nprocp
+        sendcount (proc) = npp_ (proc) * ncp_ (me)
+        recvcount (proc) = npp_ (me) * ncp_ (proc)
+     end do
+  END IF
   !
   ! offset1(proc) is used to locate the slices to be sent to proc
   ! sdispls(proc)+1 is the beginning of data that must be sent to proc
   ! rdispls(proc)+1 is the beginning of data that must be received from pr
   !
   offset1 (1) = 1
+  IF( use_tg_ ) THEN
+     do proc = 2, nprocp
+        gproc = nplist( proc - 1 ) + 1
+        offset1 (proc) = offset1 (proc - 1) + npp_ ( gproc )
+     enddo
+  ELSE
+     do proc = 2, nprocp
+        offset1 (proc) = offset1 (proc - 1) + npp_ (proc - 1)
+     enddo
+  END IF
+
   sdispls (1) = 0
   rdispls (1) = 0
   do proc = 2, nprocp
-     offset1 (proc) = offset1 (proc - 1) + npp_ (proc - 1)
      sdispls (proc) = sdispls (proc - 1) + sendcount (proc - 1)
      rdispls (proc) = rdispls (proc - 1) + recvcount (proc - 1)
   enddo
@@ -598,9 +631,14 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      do proc = 1, nprocp
         from = offset1 (proc)
         dest = 1 + sdispls (proc)
+        IF( use_tg_ ) THEN
+           gproc = nplist(proc)+1
+        ELSE
+           gproc = proc
+        END IF
         do k = 1, ncp_ (me)
-           call DCOPY (2 * npp_ (proc), f_in (from + (k - 1) * nrx3), &
-                1, f_aux (dest + (k - 1) * npp_ (proc) ), 1)
+           call DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nrx3), &
+                1, f_aux (dest + (k - 1) * npp_ ( gproc ) ), 1)
         enddo
      enddo
      !
@@ -610,9 +648,17 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      !
      ! step two: communication
      !
-     call mpi_barrier (intra_pool_comm, ierr)
+     IF( use_tg_ ) THEN
+        gcomm = me_pgrp
+     ELSE
+        gcomm = intra_pool_comm
+     END IF
+
+     !  call mpi_barrier (gcomm, ierr)  ! why barrier?
+
      call mpi_alltoallv (f_aux(1), sendcount, sdispls, MPI_DOUBLE_COMPLEX, f_in(1), &
-          recvcount, rdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm, ierr)
+          recvcount, rdispls, MPI_DOUBLE_COMPLEX, gcomm, ierr)
+
      if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
      !
   else
@@ -621,9 +667,17 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      !
      !  step two: communication
      !
-     call mpi_barrier (intra_pool_comm, ierr)
+     IF( use_tg_ ) THEN
+        gcomm = me_pgrp
+     ELSE
+        gcomm = intra_pool_comm
+     END IF
+
+     ! call mpi_barrier (gcomm, ierr)  ! why barrier
+
      call mpi_alltoallv (f_in(1), recvcount, rdispls, MPI_DOUBLE_COMPLEX, f_aux(1), &
-          sendcount, sdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm, ierr)
+          sendcount, sdispls, MPI_DOUBLE_COMPLEX, gcomm, ierr)
+
      if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
      !
      !  step one: store contiguously the columns
@@ -633,9 +687,14 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
      do proc = 1, nprocp
         from = 1 + sdispls (proc)
         dest = offset1 (proc)
+        IF( use_tg_ ) THEN
+           gproc = nplist(proc)+1
+        ELSE
+           gproc = proc
+        END IF
         do k = 1, ncp_ (me)
-           call DCOPY (2 * npp_ (proc), f_aux (from + (k - 1) * npp_ ( &
-                proc) ), 1, f_in (dest + (k - 1) * nrx3), 1)
+           call DCOPY ( 2 * npp_ ( gproc ), f_aux (from + (k - 1) * npp_ ( gproc ) ), 1, &
+                                            f_in  (dest + (k - 1) * nrx3 ), 1 )
         enddo
 
      enddo
@@ -653,220 +712,6 @@ subroutine fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
   return
 
 end subroutine fft_scatter
-
-
-!-----------------------------------------------
-!New routine for scatter in Task Groups
-!C. Bekas, IBm Research, Zurich
-!-----------------------------------------------
-!-----------------------------------------------------------------------
-subroutine group_fft_scatter (f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign)
-  !-----------------------------------------------------------------------
-  !
-  ! transpose the fft grid across nodes
-  ! a) From columns to planes (sign > 0)
-  !
-  !    "columns" (or "pencil") representation:
-  !    processor "me" has ncp_(me) contiguous columns along z
-  !    Each column has nrx3 elements for a fft of order nr3
-  !    nrx3 can be =nr3+1 in order to reduce memory conflicts.
-  !
-  !    The transpose take places in two steps:
-  !    1) on each processor the columns are divided into slices along z
-  !       that are stored contiguously. On processor "me", slices for
-  !       processor "proc" are npp_(proc)*ncp_(me) big
-  !    2) all processors communicate to exchange slices
-  !       (all columns with z in the slice belonging to "me"
-  !        must be received, all the others must be sent to "proc")
-  !    Finally one gets the "planes" representation:
-  !    processor "me" has npp_(me) complete xy planes
-  !
-  !  b) From planes to columns (sign < 0)
-  !
-  !  Quite the same in the opposite direction
-  !
-  !  The output is overwritten on f_in ; f_aux is used as work space
-  !
-
-#include "f_defs.h"
-#ifdef __PARA
-  USE parallel_include
-#endif
-  USE kinds,     only: DP
-  use mp_global, ONLY: nproc_pool, me_pool, intra_pool_comm, nproc, &
-                       my_image_id, nogrp, me_pgrp
-  USE task_groups
-
-  implicit none
-
-  integer, intent(in) :: nrx3, nxx_, sign, ncp_ (:), npp_ (:)
-  complex (kind=DP) :: f_in (nxx_), f_aux (nxx_)
-
-
-
-#ifdef __PARA
-
-  integer :: dest, from, k, offset1 (nproc/NOGRP), sendcount (nproc/NOGRP), &
-       sdispls (nproc/NOGRP), recvcount (nproc/NOGRP), rdispls (nproc/NOGRP), &
-       proc, ierr, me, nprocp, ii
-
-  !--------
-  !C. Bekas
-  !--------
-  integer :: num_sticks, num_planes
-
-#if defined __HPM
-     !       CALL f_hpmstart( 10, 'scatter' )
-#endif
-
-  !------------------------------------------------
-  !C. Bekas
-  !------------------------------------------------
-  !Set the new total number of sticks
-  !NOLIST HOLDS THE PROCS. IN MY ORBITAL GROUP
-  !NCP_ HOLDS THE NUMBER OF STICKS FOR EACH PROC.
-  !NPP_ HOLDS THE NUMBER OF PLANES FOR EACH PROC.
-  !num_sticks = 0
-  !num_planes = 0
-  !DO ii=1, NOGRP
-  !   num_sticks = num_sticks + ncp_(NOLIST(ii)+1)
-  !   num_planes = num_planes + npp_(NOLIST(ii)+1)
-  !ENDDO
-  !------------------------------------------------
-  !------------------------------------------------
-
-
-
-  me = me_pool + 1
-  !--------
-  !C. Bekas
-  !--------
-  !nprocp = nproc_pool
-  nprocp = nproc_pool / NOGRP ! This is the number of procs. in the plane-wave group
-
-  !
-  if (nprocp.eq.1) return
-  !
-  call start_clock ('fft_scatter')
-  !
-  ! sendcount(proc): amount of data processor "me" must send to processor
-  ! recvcount(proc): amount of data processor "me" must receive from
-  !
-
-  !----------------------------------------------!
-  !C. Bekas                                      !
-  !----------------------------------------------!
-
-  do proc = 1, nprocp                          !
-     sendcount (proc) = npp_ (NPLIST(proc)+1) * ncp_ (me)
-     recvcount (proc) = npp_ (me) * ncp_ (NPLIST(proc)+1)
-  enddo                                        !
-
-
-  !
-  ! offset1(proc) is used to locate the slices to be sent to proc
-  ! sdispls(proc)+1 is the beginning of data that must be sent to proc
-  ! rdispls(proc)+1 is the beginning of data that must be received from pr
-  !
-  offset1 (1) = 1
-  sdispls (1) = 0
-  rdispls (1) = 0
-  do proc = 2, nprocp
-     offset1 (proc) = offset1 (proc - 1) + npp_ (NPLIST(proc-1) +1)
-     sdispls (proc) = sdispls (proc - 1) + sendcount (proc - 1)
-     rdispls (proc) = rdispls (proc - 1) + recvcount (proc - 1)
-  enddo
-  !
-
-  ierr = 0
-  if (sign.gt.0) then
-     !
-     ! "forward" scatter from columns to planes
-     !
-     ! step one: store contiguously the slices
-     !
-     do proc = 1, nprocp
-        from = offset1 (proc)
-        dest = 1 + sdispls (proc)
-        do k = 1, ncp_ (me)
-           call DCOPY (2 * npp_ (NPLIST(proc)+1), f_in (from + (k - 1) * nrx3), &
-                1, f_aux (dest + (k - 1) * npp_ (NPLIST(proc)+1) ), 1)
-        enddo
-     enddo
-
-
-     !
-     ! maybe useless; ensures that no garbage is present in the output
-     !
-     f_in = 0.0d0
-     !
-     ! step two: communication
-     !
-
-     !--------
-     !C. Bekas
-     !--------
-     !call mpi_barrier (intra_pool_comm, ierr)
-     call mpi_barrier (ME_PGRP, ierr)
-
-
-     !--------
-     !C. Bekas
-     !--------
-     !call mpi_alltoallv (f_aux(1), sendcount, sdispls, MPI_DOUBLE_COMPLEX, f_in(1), &
-     !     recvcount, rdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm, ierr)
-
-     call mpi_alltoallv (f_aux(1), sendcount, sdispls, MPI_DOUBLE_COMPLEX, f_in(1), &
-          recvcount, rdispls, MPI_DOUBLE_COMPLEX, ME_PGRP, ierr)
-     if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
-     !
-  else
-     !
-     !  "backward" scatter from planes to columns
-     !
-     !  step two: communication
-     !
-
-     !--------
-     !C. Bekas
-     !--------
-     !call mpi_barrier (intra_pool_comm, ierr)
-     !call mpi_alltoallv (f_in(1), recvcount, rdispls, MPI_DOUBLE_COMPLEX, f_aux(1), &
-     !     sendcount, sdispls, MPI_DOUBLE_COMPLEX, intra_pool_comm, ierr)
-
-     call mpi_barrier (ME_PGRP, ierr)
-     call mpi_alltoallv (f_in(1), recvcount, rdispls, MPI_DOUBLE_COMPLEX, f_aux(1), &
-          sendcount, sdispls, MPI_DOUBLE_COMPLEX, ME_PGRP, ierr)
-
-     if( ABS(ierr) /= 0 ) call errore ('fft_scatter', 'info<>0', ABS(ierr) )
-     !
-     !  step one: store contiguously the columns
-     !
-     f_in = 0.0d0
-     !
-     do proc = 1, nprocp
-        from = 1 + sdispls (proc)
-        dest = offset1 (proc)
-        do k = 1, ncp_ (me)
-           call DCOPY (2 * npp_ (NPLIST(proc)+1), f_aux (from + (k - 1) * npp_ ( &
-                NPLIST(proc)+1) ), 1, f_in (dest + (k - 1) * nrx3), 1)
-        enddo
-
-     enddo
-
-  endif
-
-  call stop_clock ('fft_scatter')
-
-#endif
-
-#if defined __HPM
-     !       CALL f_hpmstop( 10 )
-#endif
-
-  return
-
-end subroutine group_fft_scatter
 
 !=----------------------------------------------------------------------=!
       END MODULE fft_base

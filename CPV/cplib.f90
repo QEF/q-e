@@ -1547,7 +1547,7 @@ END FUNCTION
       INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart
       REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
 
-#if defined __BGL
+#if defined __TRUE_BGL
       COMPLEX*16 :: B, A1, A2, A3, C1, C2, C3
       INTEGER :: FLP, N 
 #endif

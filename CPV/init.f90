@@ -19,30 +19,30 @@
       !     initialize G-vectors and related quantities
       !
 
-      use io_global, only: stdout, ionode
-      use control_flags, only: program_name, gamma_only
-      use grid_dimensions, only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
-      use cell_base, only: ainv, a1, a2, a3
-      use cell_base, only: omega, alat
-      use small_box, only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
-      use small_box, only: alatb, b1b, b2b, b3b
+      use io_global,                only: stdout, ionode
+      use control_flags,            only: program_name, gamma_only, use_task_groups
+      use grid_dimensions,          only: nr1, nr2, nr3, nr1x, nr2x, nr3x, nnr => nnrx
+      use cell_base,                only: ainv, a1, a2, a3
+      use cell_base,                only: omega, alat
+      use small_box,                only: a1b, a2b, a3b, omegab, ainvb, tpibab, small_box_set
+      use small_box,                only: alatb, b1b, b2b, b3b
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, nnrb => nnrbx
-      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
-      USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
-      USE reciprocal_vectors, ONLY : mill_g, g2_g, bi1, bi2, bi3
-      USE recvecs_subroutines, ONLY: recvecs_init
-      use gvecw, only: gcutw, gkcut
-      use gvecp, only: ecut => ecutp, gcut => gcutp
-      use gvecs, only: gcuts
-      use gvecb, only: gcutb
-      USE fft_base,         ONLY: dfftp, dffts
-      USE stick_base,       ONLY: pstickset
-      USE control_flags,    ONLY: tdipole
-      USE berry_phase,      ONLY: berry_setup
-      USE electrons_module, ONLY: bmeshset
-      USE problem_size,     ONLY: cpsizes
-      USE mp_global,        ONLY: nproc_image
-      USE task_groups,      ONLY: task_groups_init
+      use smooth_grid_dimensions,   only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
+      USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
+      USE reciprocal_vectors,       ONLY: mill_g, g2_g, bi1, bi2, bi3
+      USE recvecs_subroutines,      ONLY: recvecs_init
+      use gvecw,                    only: gcutw, gkcut
+      use gvecp,                    only: ecut => ecutp, gcut => gcutp
+      use gvecs,                    only: gcuts
+      use gvecb,                    only: gcutb
+      USE fft_base,                 ONLY: dfftp, dffts
+      USE stick_base,               ONLY: pstickset
+      USE control_flags,            ONLY: tdipole
+      USE berry_phase,              ONLY: berry_setup
+      USE electrons_module,         ONLY: bmeshset
+      USE problem_size,             ONLY: cpsizes
+      USE mp_global,                ONLY: nproc_image
+      USE task_groups,              ONLY: task_groups_init
 
       implicit none
 ! 
@@ -182,11 +182,11 @@
         !
       END IF
       !
-#if defined __BGL
-      !
-      CALL task_groups_init( dffts )
-      !
-#endif
+      IF( use_task_groups ) THEN
+        !
+        CALL task_groups_init( dffts )
+        !
+      END IF
       !
       !   Flush stdout
       !
