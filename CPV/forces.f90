@@ -524,10 +524,12 @@
             !strd is defined earlier in the rhoofr routine
             !---------------------------------------------
 
-            do ig=1,ngw
-               psi(nms(ig)+eig_offset*strd)=conjg( c(ig,idx) - ci*ca(ig,idx) )
-               psi(nps(ig)+eig_offset*strd)=c(ig,idx)+ci*ca(ig,idx)
-            end do
+            IF( idx + i - 1 <= n ) THEN
+               do ig=1,ngw
+                  psi(nms(ig)+eig_offset*strd)=conjg( c(ig,idx) - ci*ca(ig,idx) )
+                  psi(nps(ig)+eig_offset*strd)=c(ig,idx)+ci*ca(ig,idx)
+               end do
+            END IF
             eig_offset = eig_offset + 1
             idx = idx + 2
          end do
@@ -612,20 +614,22 @@
       eig_offset = 0
       index_df_da = 1
       DO idx = 1, 2*NOGRP, 2
-         do ig=1,ngw
-            if (tens) then
-               fi = -0.5d0
-               fip = -0.5d0
-            else
-               fi = -0.5d0*f(i+idx-1)
-               fip = -0.5d0*f(i+idx)
-            endif
-            fp= temp_psi(nps(ig)+eig_offset) +  temp_psi(nms(ig)+eig_offset)
-            fm= temp_psi(nps(ig)+eig_offset) -  temp_psi(nms(ig)+eig_offset)
-            df(index_df_da)= fi*(tpiba2 * ggp(ig) * c(ig,idx)+cmplx(real(fp), aimag(fm)))
-            da(index_df_da)= fip*(tpiba2 * ggp(ig) * ca(ig,idx)+cmplx(aimag(fp),-real(fm)))
-            index_df_da = index_df_da + 1
-         enddo
+         IF( idx + i - 1 <= n ) THEN
+            do ig=1,ngw
+               if (tens) then
+                  fi = -0.5d0
+                  fip = -0.5d0
+               else
+                  fi = -0.5d0*f(i+idx-1)
+                  fip = -0.5d0*f(i+idx)
+               endif
+               fp= temp_psi(nps(ig)+eig_offset) +  temp_psi(nms(ig)+eig_offset)
+               fm= temp_psi(nps(ig)+eig_offset) -  temp_psi(nms(ig)+eig_offset)
+               df(index_df_da)= fi*(tpiba2 * ggp(ig) * c(ig,idx)+cmplx(real(fp), aimag(fm)))
+               da(index_df_da)= fip*(tpiba2 * ggp(ig) * ca(ig,idx)+cmplx(aimag(fp),-real(fm)))
+               index_df_da = index_df_da + 1
+            enddo
+         END IF
          eig_offset = eig_offset + nr3sx * dffts%nsw(me_image+1)
          !We take into account the number of elements received from other members of the orbital group
       ENDDO
@@ -644,71 +648,56 @@
             aa(inl,:)=0.0d0
          end do
 !
-         do is=1,nsp
-            do iv=1,nh(is)
-               do jv=1,nh(is)
-                  isa=0
-                  do ism=1,is-1
-                     isa=isa+na(ism)
-                  end do
-                  do ia=1,na(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     jnl=ish(is)+(jv-1)*na(is)+ia
-                     isa=isa+1
-                     dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
-                    
-                     !-------------------------------------------------
-                     !C. Bekas
-                     !Work on all currently treated (NOGRP) eigenvalues
-                     !-------------------------------------------------
-                     ig = 1
-                     DO idx = 1, 2*NOGRP, 2
-                        if (tens) then 
-                           af(inl,ig) = af(inl,ig) -  dd*bec(jnl,  i+idx-1 )
-                        else
-                           af(inl,ig) = af(inl,ig) -  f(i+idx-1)*dd*bec(jnl,  i+idx-1 )
-                        endif
+         !-------------------------------------------------
+         !C. Bekas
+         !Work on all currently treated (NOGRP) eigenvalues
+         !-------------------------------------------------
+         ig = 1
+         DO idx = 1, 2*NOGRP, 2
+            IF( idx + i - 1 <= n ) THEN
 
-                        dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
-                      
-                        if (tens) then
-                           if ((i+idx-1).ne.n) aa(inl,ig) = aa(inl,ig) - dd*bec(jnl,i+idx)
-                        else
-                           if ((i+idx-1).ne.n) aa(inl,ig) = aa(inl,ig) - f(i+idx)*dd*bec(jnl,i+idx)
-                        endif    
-                        ig = ig + 1
-                     ENDDO
+               do is=1,nsp
+                  do iv=1,nh(is)
+                     do jv=1,nh(is)
+                        isa=0
+                        do ism=1,is-1
+                           isa=isa+na(ism)
+                        end do
+                        do ia=1,na(is)
+                           inl=ish(is)+(iv-1)*na(is)+ia
+                           jnl=ish(is)+(jv-1)*na(is)+ia
+                           isa=isa+1
+                           dd = deeq(iv,jv,isa,iss1)+dvan(iv,jv,is)
+                          
+                           if (tens) then 
+                              af(inl,ig) = af(inl,ig) -  dd*bec(jnl,  i+idx-1 )
+                           else
+                              af(inl,ig) = af(inl,ig) -  f(i+idx-1)*dd*bec(jnl,  i+idx-1 )
+                           endif
+      
+                           dd = deeq(iv,jv,isa,iss2)+dvan(iv,jv,is)
+                            
+                           if (tens) then
+                              if ((i+idx-1).ne.n) aa(inl,ig) = aa(inl,ig) - dd*bec(jnl,i+idx)
+                           else
+                              if ((i+idx-1).ne.n) aa(inl,ig) = aa(inl,ig) - f(i+idx)*dd*bec(jnl,i+idx)
+                           endif    
+                        end do
+                     end do
                   end do
                end do
-            end do
-         end do
+
+            END IF
+            ig = ig + 1
+         ENDDO
 !
-         dtemp(:,:) = 0.0d0
-
-!         call MXMA (betae, 1, 2*ngw, af, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
          call DGEMM ( 'N', 'N', 2*ngw, NOGRP, nhsa, 1.0d0, betae, 2*ngw, af, nhsa, 0.0d0, dtemp, 2*ngw)
-
-!         DO idx = 1, NOGRP
-!            DO ig = 1+(idx-1)*ngw, idx*ngw
-!               df(ig) = df(ig) + dtemp(ig,idx)
-!            END DO
-!         ENDDO
 
          DO ig = 1, NOGRP
             df(1+(ig-1)*ngw:ig*ngw) = df(1+(ig-1)*ngw:ig*ngw) + dtemp(:,ig)
          ENDDO
 
-
-         dtemp(:,:) = 0.0d0
-
-         ! call MXMA (betae, 1, 2*ngw, aa, 1, nhsa, dtemp, 1, 2*ngw, 2*ngw, nhsa, NOGRP)
          call DGEMM ( 'N', 'N', 2*ngw, NOGRP, nhsa, 1.0d0, betae, 2*ngw, aa, nhsa, 0.0d0, dtemp, 2*ngw)
-
-!         DO idx = 1, NOGRP
-!            DO ig = 1+(idx-1)*ngw, idx*ngw
-!               da(ig) = da(ig) + dtemp(ig,idx)
-!            ENDDO
-!         ENDDO
 
          DO ig = 1, NOGRP
             da(1+(ig-1)*ngw:ig*ngw) = da(1+(ig-1)*ngw:ig*ngw) + dtemp(:,ig)
