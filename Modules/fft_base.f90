@@ -539,7 +539,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
   USE parallel_include
 #endif
   use mp_global,   ONLY : nproc_pool, me_pool, intra_pool_comm, nproc, &
-                          my_image_id, nogrp, me_pgrp
+                          my_image_id, nogrp, pgrp_comm
   USE kinds,       ONLY : DP
   USE task_groups, ONLY : nplist
 
@@ -649,7 +649,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      ! step two: communication
      !
      IF( use_tg_ ) THEN
-        gcomm = me_pgrp
+        gcomm = pgrp_comm
      ELSE
         gcomm = intra_pool_comm
      END IF
@@ -668,7 +668,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !  step two: communication
      !
      IF( use_tg_ ) THEN
-        gcomm = me_pgrp
+        gcomm = pgrp_comm
      ELSE
         gcomm = intra_pool_comm
      END IF

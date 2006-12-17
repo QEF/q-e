@@ -451,7 +451,7 @@
       use funct, only: dft_is_meta
       USE task_groups
       use fft_base,  only : dffts
-      use mp_global, only : nogrp, me_image, me_ogrp
+      use mp_global, only : nogrp, me_image, ogrp_comm
       USE cp_interfaces, ONLY: fwfft, invfft
       use parallel_include
 !
@@ -475,6 +475,7 @@
       integer i
 ! local variables
       integer iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
+      INTEGER  :: eig_offset
       real(DP) fi, fip, dd
       complex(DP) fp,fm,ci
       real(DP),    ALLOCATABLE :: af(:,:), aa(:,:) 
@@ -592,7 +593,7 @@
 #if defined __MPI
       CALL MPI_Alltoallv(psi, &
            local_send_cnt, local_send_displ, MPI_DOUBLE_COMPLEX, temp_psi, &
-           local_recv_cnt, local_recv_displ, MPI_DOUBLE_COMPLEX, ME_OGRP, IERR)
+           local_recv_cnt, local_recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
 #endif
       CALL stop_clock('DFORCE_ALL')
 

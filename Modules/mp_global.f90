@@ -37,8 +37,8 @@ MODULE mp_global
   !
   INTEGER :: npool       = 1  ! number of "k-points"-pools
   INTEGER :: nimage      = 1  ! number of "path-images"-pools
-  INTEGER :: nogrp       = 1  ! number of "task groups" 
-  INTEGER :: npgrp       = 1  ! number of processor withing a "task group" 
+  INTEGER :: nogrp       = 1  ! number of proc. in an orbital "task group" 
+  INTEGER :: npgrp       = 1  ! number of proc. in a plane-wave "task group" 
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
   INTEGER :: nproc_image = 1  ! number of processor within an image
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
@@ -49,8 +49,8 @@ MODULE mp_global
   INTEGER :: intra_pool_comm  = 0  ! intra pool communicator
   INTEGER :: inter_image_comm = 0  ! inter image communicator
   INTEGER :: intra_image_comm = 0  ! intra image communicator  
-  INTEGER :: me_pgrp          = 0  ! index of the processor in plane-wave group (task grouping)
-  INTEGER :: me_ogrp          = 0  ! index of the processor in orbital group (task grouping)
+  INTEGER :: pgrp_comm        = 0  ! plane-wave group communicator (task grouping)
+  INTEGER :: ogrp_comm        = 0  ! orbital group communicarot (task grouping)
   INTEGER :: ortho_comm       = 0  ! communicator used for fast and memory saving ortho
   !
   CONTAINS

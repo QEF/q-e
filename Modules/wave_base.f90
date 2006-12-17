@@ -40,13 +40,6 @@
 
           PUBLIC :: frice, grease
 
-          !
-          ! C. Bekas
-          !
-          PUBLIC :: my_wave_steepest
-          PUBLIC :: my_wave_verlet
-
-
           INTERFACE dotp
             MODULE PROCEDURE dotp_gamma, dotp_kp, dotp_gamma_n, dotp_kp_n
           END INTERFACE
@@ -635,30 +628,42 @@
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-   SUBROUTINE wave_steepest( CP, C0, dt2m, grad)
+   SUBROUTINE wave_steepest( CP, C0, dt2m, grad, ngw, idx )
       IMPLICIT NONE
       COMPLEX(DP), INTENT(OUT) :: CP(:)
       COMPLEX(DP), INTENT(IN) :: C0(:)
       COMPLEX(DP), INTENT(IN) :: grad(:)
       REAL(DP), INTENT(IN) ::  dt2m(:)
-        CP( : )  = C0( : )  + dt2m(:) * grad(:)
+      INTEGER, OPTIONAL, INTENT(IN) :: ngw, idx
+      !
+      IF( PRESENT( ngw ) .AND. PRESENT( idx ) ) THEN
+         CP( : )  = C0( : )  + dt2m(:) * grad( (idx-1)*ngw+1 : idx*ngw )
+      ELSE
+         CP( : )  = C0( : )  + dt2m(:) * grad(:)
+      END IF
+      !
       RETURN
    END SUBROUTINE wave_steepest
 
 !==----------------------------------------------==!
 !==----------------------------------------------==!
 
-   SUBROUTINE wave_verlet( cm, c0, ver1, ver2, ver3, grad)
+   SUBROUTINE wave_verlet( cm, c0, ver1, ver2, ver3, grad, ngw, idx )
       IMPLICIT NONE
       COMPLEX(DP), INTENT(INOUT) :: cm(:)
       COMPLEX(DP), INTENT(IN) :: c0(:)
       COMPLEX(DP), INTENT(IN) :: grad(:)
       REAL(DP), INTENT(IN) ::  ver1, ver2, ver3(:)
-        cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + &
-                   ver3( : ) * grad( : )
+      INTEGER, OPTIONAL, INTENT(IN) :: ngw, idx
+      !
+      IF( PRESENT( ngw ) .AND. PRESENT( idx ) ) THEN
+         cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + ver3( : ) * grad( (idx-1)*ngw+1:idx*ngw)
+      ELSE
+         cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + ver3( : ) * grad( : )
+      END IF
+      !
       RETURN
    END SUBROUTINE wave_verlet
-
 
 !==----------------------------------------------==!
 !==----------------------------------------------==!
@@ -681,40 +686,6 @@
      wave_speed2 = ekinc
      RETURN
    END FUNCTION wave_speed2
-
-!======================
-!C. Bekas, IBM Research
-!======================
-   SUBROUTINE my_wave_steepest( CP, C0, dt2m, grad, ngw, idx)
-      IMPLICIT NONE
-
-      COMPLEX(DP), INTENT(OUT) :: CP(:)
-      COMPLEX(DP), INTENT(IN) :: C0(:)
-      COMPLEX(DP), INTENT(IN) :: grad(:)
-      REAL(DP), INTENT(IN) ::  dt2m(:)
-      INTEGER, INTENT(IN) :: ngw, idx
-       CP( : )  = C0( :  )  + dt2m(:) * grad((idx-1)*ngw+1:idx*ngw)
-      RETURN
-   END SUBROUTINE
-
-!======================
-!C. Bekas, IBM Research
-!======================
-
-   SUBROUTINE my_wave_verlet( cm, c0, ver1, ver2, ver3, grad, ngw, idx)
-      USE mp_global, ONLY: nogrp
-      IMPLICIT NONE
-      INTEGER, INTENT(IN) :: ngw, idx
-      COMPLEX(DP), INTENT(INOUT) :: cm(ngw)
-      COMPLEX(DP), INTENT(IN) :: c0(ngw)
-      COMPLEX(DP), INTENT(IN) :: grad((NOGRP+1)*ngw)
-
-      REAL(DP), INTENT(IN) ::  ver1, ver2, ver3(:)
-        cm( : )  = ver1 * c0( : ) + ver2 * cm( : ) + &
-                   ver3( : ) * grad( (idx-1)*ngw+1:idx*ngw)
-      RETURN
-   END SUBROUTINE
-
 
 
 !==----------------------------------------------==!

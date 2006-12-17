@@ -548,6 +548,7 @@
      logical :: ttsde
 
      iflag = 0
+     !
      IF( PRESENT( fromscra ) ) THEN
        IF( fromscra ) iflag = 1
      END IF
@@ -641,7 +642,7 @@
       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
      !
      USE kinds,                  ONLY: DP
-     use wave_base,              only: my_wave_steepest, my_wave_verlet
+     use wave_base,              only: wave_steepest, wave_verlet
      use control_flags,          only: lwf, tsde
      use uspp,                   only: deeq, betae => vkb
      use reciprocal_vectors,     only: gstart
@@ -651,7 +652,7 @@
      use gvecw,                  only: ngw
      use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
      USE fft_base,               ONLY: dffts
-     USE mp_global,              ONLY: me_image, nogrp, me_ogrp
+     USE mp_global,              ONLY: me_image, nogrp, ogrp_comm
      USE parallel_include
      use task_groups
 !@@@@
@@ -679,6 +680,7 @@
      integer :: i, idx_in, idx
      integer :: iflag, ierr
      logical :: ttsde
+     REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
 
      iflag = 0
      IF( PRESENT( fromscra ) ) THEN
@@ -695,8 +697,6 @@
      verl2 = 1.0d0 - verl1
      verl3 = 1.0d0 * fccc
 
-     allocate(c2(ngw))
-     allocate(c3(ngw))
      ALLOCATE( emadt2( ngw ) )
      ALLOCATE( emaver( ngw ) )
 
@@ -714,12 +714,19 @@
 
      if( lwf ) then
         !
+        allocate(c2(ngw))
+        allocate(c3(ngw))
+
         call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
+
+        deallocate(c2)
+        deallocate(c3)
         !
      else
 
-        IF (.NOT.(ALLOCATED(tg_c2))) ALLOCATE(tg_c2((NOGRP+1)*ngw))
-        IF (.NOT.(ALLOCATED(tg_c3))) ALLOCATE(tg_c3((NOGRP+1)*ngw))
+        ALLOCATE(c2((NOGRP+1)*ngw))
+        ALLOCATE(c3((NOGRP+1)*ngw))
+        ALLOCATE(tg_rhos( (NOGRP+1)*nr1sx*nr2sx*maxval(dffts%npp),nspin))
 
         !---------------------------------------------------------------
         !This loop is parallelized accross the eigenstates as well as
@@ -740,73 +747,77 @@
            recv_cnt(i) = dffts%npp(NOLIST(i)+1)*nr1sx*nr2sx
            recv_displ(i) = recv_displ(i-1) + recv_cnt(i)
         ENDDO
-        IF (.NOT.ALLOCATED(tg_rhos)) ALLOCATE(tg_rhos( (NOGRP+1)*nr1sx*nr2sx*maxval(dffts%npp),nspin))
 
-        tg_c3(:) = 0D0
-        tg_c3(:) = 0D0
+        c3(:) = 0D0
+        c3(:) = 0D0
         tg_rhos(:,:) = 0D0
 
 #if defined (__PARA) && defined (__MPI)
         DO i = 1, nspin
            CALL MPI_Allgatherv(rhos(1,i), dffts%npp(me_image+1)*nr1sx*nr2sx, MPI_DOUBLE_PRECISION, &
-                tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ME_OGRP, IERR)
+                tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
         ENDDO
 #endif
-        do i = 1, n, 2*NOGRP ! 2*NOGRP eigenvalues are treated at each iteration
+
+        DO i = 1, n, 2*NOGRP
 
            !----------------------------------------------------------------
            !The input coefficients to dforce cover eigenstates i:i+2*NOGRP-1
-           !Thus, in dforce the dummy arguments for c0(1,i,1,1) and
-           !c0(1,i+1,1,1) hold coefficients for eigenstates i,i+2*NOGRP-2,2
+           !Thus, in dforce the dummy arguments for c0(1,i) and
+           !c0(1,i+1) hold coefficients for eigenstates i,i+2*NOGRP-2,2
            !and i+1,i+2*NOGRP...for example if NOGRP is 4 then we would have
            !1-3-5-7 and 2-4-6-8
            !----------------------------------------------------------------
 
-           call dforce_bgl( bec, betae, i, c0(1,i), c0(1,i+1), tg_c2, tg_c3, tg_rhos)
+           call dforce_bgl( bec, betae, i, c0(1,i), c0(1,i+1), c2, c3, tg_rhos)
 
            !-------------------------------------------------------
            !C. Bekas: This is not implemented yet! I need to see it
            !-------------------------------------------------------
 
            if( tefield ) then
-             CALL errore( ' runcp_uspp ', ' electric field on BGL not implemented yet ', 1 )
+              CALL errore( ' runcp_uspp ', ' electric field with task group not implemented yet ', 1 )
            end if
 
            IF( iflag == 2 ) THEN
-             DO idx = 1, 2 * NOGRP, 2
-                cm(:,i+idx-1) = c0(:,i+idx-1)
-                cm(:,i+idx) = c0(:,i+idx)
-             ENDDO
+              DO idx = 1, 2*NOGRP, 2
+                 IF( i + idx - 1 <= n ) THEN
+                    cm( :, i+idx-1) = c0(:,i+idx-1)
+                    cm( :, i+idx  ) = c0(:,i+idx  )
+                 END IF
+              ENDDO
            END IF
 
            idx_in = 1
            DO idx = 1, 2*NOGRP, 2
-              IF (tsde) THEN
-                 CALL my_wave_steepest( cm(:, i+idx-1 ), c0(:, i+idx-1 ), emaver, tg_c2, ngw, idx_in )
-                 CALL my_wave_steepest( cm(:, i+idx), c0(:, i+idx), emaver, tg_c3, ngw, idx_in )
-              ELSE
-                 CALL my_wave_verlet( cm(:, i+idx-1 ), c0(:, i+idx-1 ), &
-                      verl1, verl2, emaver, tg_c2, ngw, idx_in )
-                 CALL my_wave_verlet( cm(:, i+idx), c0(:, i+idx ), &
-                      verl1, verl2, emaver, tg_c3, ngw, idx_in )
+              IF( i + idx - 1 <= n ) THEN
+                 IF (tsde) THEN
+                    CALL wave_steepest( cm(:, i+idx-1 ), c0(:, i+idx-1 ), emaver, c2, ngw, idx_in )
+                    CALL wave_steepest( cm(:, i+idx   ), c0(:, i+idx   ), emaver, c3, ngw, idx_in )
+                 ELSE
+                    CALL wave_verlet( cm(:, i+idx-1 ), c0(:, i+idx-1 ), verl1, verl2, emaver, c2, ngw, idx_in )
+                    CALL wave_verlet( cm(:, i+idx   ), c0(:, i+idx   ), verl1, verl2, emaver, c3, ngw, idx_in )
+                 ENDIF
+                 IF ( gstart == 2 ) THEN
+                    cm(1,i+idx-1) = cmplx(real(cm(1,i+idx-1)),0.0d0)
+                    cm(1,i+idx  ) = cmplx(real(cm(1,i+idx  )),0.0d0)
+                 END IF
+              END IF
+              !
+              idx_in = idx_in + 1
+              !
+           END DO 
 
-              ENDIF
-              if ( gstart == 2 ) then
-                 cm(1,  i+idx-1)=cmplx(real(cm(1,  i+idx-1)),0.0d0)
-                 cm(1,i+idx)=cmplx(real(cm(1,i+idx)),0.0d0)
-              end if
-             idx_in = idx_in+1
+        END DO ! End loop accross eigenstates
 
-           ENDDO ! End loop accross 2*NOGRP current eigenstates
+        DEALLOCATE(c2)
+        DEALLOCATE(c3)
+        DEALLOCATE(tg_rhos)
 
-        end do ! End loop accross eigenstates
-
-     end if
+     END IF
 
      DEALLOCATE( emadt2 )
      DEALLOCATE( emaver )
-     deallocate(c2)
-     deallocate(c3)
 
 
    END SUBROUTINE runcp_uspp_bgl_x

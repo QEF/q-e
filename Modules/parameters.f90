@@ -41,6 +41,4 @@ MODULE parameters
   !
   INTEGER, PARAMETER :: max_nconstr = 100
   !
-  INTEGER, PARAMETER  ::  maxcpu = 2**17  ! Maximum number of CPU
-  !
 END MODULE parameters

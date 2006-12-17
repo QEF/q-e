@@ -286,7 +286,7 @@ CONTAINS
 !   based on code written by Stefano de Gironcoli for PWSCF
 !
       USE kinds,      only: DP
-      USE mp_global,  only: me_image, nproc_image, me_ogrp, me_pgrp, npgrp, nogrp, &
+      USE mp_global,  only: me_image, nproc_image, ogrp_comm, npgrp, nogrp, &
                             intra_image_comm
       USE fft_base,   only: fft_scatter
       USE fft_scalar, only: cft_1z, cft_2xy
@@ -348,7 +348,7 @@ CONTAINS
             !-----------------------------------
 
             !-----------------------------------------
-            !ALL TO ALL IN THE ORBITAL GROUP (ME_OGRP)
+            !ALL TO ALL IN THE ORBITAL GROUP (ogrp_comm)
             !-----------------------------------------
             !
             !Find out how many elements to exchange: Each processor holds dfft%nnr complex fourier
@@ -357,7 +357,7 @@ CONTAINS
             !for 1 (one) eigenvalue
 
 #if defined __MPI
-            call MPI_ALLTOALL(f, dfft%nnr*16, MPI_BYTE, XF, dfft%nnr*16, MPI_BYTE, ME_OGRP, IERR)
+            call MPI_ALLTOALL(f, dfft%nnr*16, MPI_BYTE, XF, dfft%nnr*16, MPI_BYTE, ogrp_comm, IERR)
 #endif
 
             !-----------------------------------------------------------------------------------------
@@ -428,7 +428,7 @@ CONTAINS
 
 #if defined __MPI
             CALL MPI_Alltoallv(f, local_send_cnt, local_send_displ, MPI_DOUBLE_COMPLEX, YF, local_recv_cnt, & 
-         &                     local_recv_displ, MPI_DOUBLE_COMPLEX, ME_OGRP, IERR)  
+         &                     local_recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)  
 #endif
 
             !-----------------------------------------
@@ -440,18 +440,6 @@ CONTAINS
                num_sticks = num_sticks + dfft%nsw(NOLIST(ii)+1)
                num_planes = num_planes + dfft%npp(NOLIST(ii)+1)
             ENDDO
-
-        !    IT1 = 1
-        !    DO group_index = 1, NOGRP
-               !----------------------------------------------------------
-               !First find the global index of group_index
-               !Then look for how many sticks there are
-               !Then multiply by nr3: the number of coefficients per stick
-               !----------------------------------------------------------
-        !       HWMN = nr3 * ALL_Z_STICKS(NOLIST(group_index)+1)
-        !       CALL DCOPY(2*HWMN, XF((group_index-1)*strd+1), 1, YF(IT1), 1)
-        !       IT1 = IT1 + HWMN
-        !    ENDDO
 
 
             CALL stop_clock( 'ALLTOALL' )
@@ -475,13 +463,6 @@ CONTAINS
             !dfft%nsw(me) holds the number of Z-sticks proc. me has.
             !dfft%npp: number of planes per processor
             !-------------------------------------------------------------------------------------
-
-            IF (tmp_npp(1).EQ.-1) THEN
-#if defined __MPI
-               CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, intra_image_comm, IERR)
-               CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_image_comm, IERR)
-#endif
-            ENDIF
 
             CALL start_clock( 'SCATTER' ) 
             call fft_scatter( aux, nr3x, (NOGRP+1)*strd, f, tmp_nsw, tmp_npp, sign, use_tg = .TRUE. )
