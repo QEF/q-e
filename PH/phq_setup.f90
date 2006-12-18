@@ -48,7 +48,7 @@ subroutine phq_setup
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout
   USE ener,          ONLY : Ef
-  USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
+  USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec
   USE ktetra,        ONLY : ltetra, tetra
   USE lsda_mod,      ONLY : nspin, lsda
   USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
@@ -143,7 +143,7 @@ subroutine phq_setup
   !
   ! 5) Computes the number of occupied bands for each k point
   !
-  if (degauss.ne.0.d0) then
+  if (lgauss) then
      !
      ! discard conduction bands such that w0gauss(x,n) < small
      !
@@ -194,7 +194,7 @@ subroutine phq_setup
   ! find the minimum across pools
   call poolextreme (emin, -1)
 #endif
-  if (degauss.ne.0.d0) then
+  if (lgauss) then
      emax = target
      alpha_pv = emax - emin
   else

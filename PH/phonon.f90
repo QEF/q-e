@@ -18,7 +18,7 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode, ionode_id
   USE wvfct,           ONLY : gamma_only
-  USE klist,           ONLY : xk, wk, xqq, degauss, nks, tot_magnetization
+  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, tot_magnetization
   USE relax,           ONLY : restart_bfgs
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
   USE force_mod,       ONLY : force
@@ -175,7 +175,7 @@ PROGRAM phonon
         ! ... in the case of an insulator one has to calculate 
         ! ... the dielectric constant and the Born eff. charges
         !
-        IF ( lgamma .AND. degauss == 0.D0 ) THEN
+        IF ( lgamma .AND. .NOT. lgauss ) THEN
            !
            epsil = .TRUE.
            zue   = .TRUE.

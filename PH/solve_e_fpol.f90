@@ -130,7 +130,7 @@ subroutine solve_e_fpol ( iw )
   !
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
-  if (degauss.ne.0.d0.or..not.lgamma) call errore ('solve_e', &
+  if (lgauss.or..not.lgamma) call errore ('solve_e', &
        'called in the wrong case', 1)
   !
   if (reduce_io) then

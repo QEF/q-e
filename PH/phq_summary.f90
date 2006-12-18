@@ -22,7 +22,7 @@ subroutine phq_summary
   USE io_global,     ONLY : stdout
   USE char,          ONLY : crystal, sname
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
-  USE klist,         ONLY : degauss, ngauss, nkstot, xk, wk
+  USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
   USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
   USE symme,         ONLY : s, ftau
@@ -192,7 +192,7 @@ subroutine phq_summary
   if (doublegrid) WRITE( stdout, '(5x,"G cutoff =",f10.4,"  (", &
        &                      i7," G-vectors)","  smooth grid: (",i3, &
        &                      ",",i3,",",i3,")")') gcutms, ngms, nr1s, nr2s, nr3s
-  if (degauss.eq.0.d0) then
+  if (.NOT.lgauss) then
      WRITE( stdout, '(5x,"number of k points=",i5)') nkstot
   else
      WRITE( stdout, '(5x,"number of k points=",i5, &

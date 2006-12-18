@@ -52,7 +52,7 @@ subroutine compute_weight (wgg)
         !     and each band v' ...
         !
         do jbnd = 1, nbnd
-           if (degauss.ne.0.d0) then
+           if (lgauss) then
               theta = wgauss ( (et (jbnd,ikq) - et (ibnd,ikk) ) / degauss, 0)
               wg2 = wgauss ( (ef - et (jbnd, ikq) ) / degauss, ngauss)
            else

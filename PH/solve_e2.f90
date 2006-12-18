@@ -100,7 +100,7 @@ subroutine solve_e2
      iter0 = 0
   end if
   !
-  if (degauss.ne.0.d0 .or..not.lgamma) &
+  if (lgauss.or..not.lgamma) &
         call errore ('solve_e2', 'called in the wrong case', 1)
   !
   !   The outside loop is over the iterations 

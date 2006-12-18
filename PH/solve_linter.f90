@@ -155,7 +155,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   ! if q=0 for a metal: allocate and compute local DOS at Ef
   !
 
-  lmetq0 = degauss.ne.0.d0.and.lgamma
+  lmetq0 = lgauss.and.lgamma
   if (lmetq0) then
      allocate ( ldos ( nrxx  , nspin) )    
      allocate ( ldoss( nrxxs , nspin) )    
@@ -284,7 +284,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            !
            call start_clock ('ortho')
            !
-           if (degauss > 0.d0) then
+           if (lgauss) then
               !
               !  metallic case
               !

@@ -25,7 +25,7 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass
-  USE klist,         ONLY : xqq, xk, nks, degauss
+  USE klist,         ONLY : xqq, xk, nks, lgauss
   USE wvfct,         ONLY : gamma_only
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
@@ -261,7 +261,7 @@ SUBROUTINE phq_readin()
   IF (tfixed_occ) &
      CALL errore('phq_readin','phonon with arbitrary occupations not tested',1)
   !
-  IF (elph.AND.degauss.EQ.0.0) CALL errore ('phq_readin', 'Electron-&
+  IF (elph.AND..NOT.lgauss) CALL errore ('phq_readin', 'Electron-&
        &phonon only for metals', 1)
   IF (elph.AND.lsda) CALL errore ('phq_readin', 'El-ph and spin not &
        &implemented', 1)
@@ -294,7 +294,7 @@ SUBROUTINE phq_readin()
 
   CALL bcast_ph_input1 ( ) 
 
-  IF (epsil.AND.degauss.NE.0.D0) &
+  IF (epsil.AND.lgauss) &
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
   IF (maxirr.LT.0.OR.maxirr.GT.3 * nat) CALL errore ('phq_readin', ' &
        &Wrong maxirr ', ABS (maxirr) )
