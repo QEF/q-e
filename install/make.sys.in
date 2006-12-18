@@ -82,9 +82,9 @@ FFLAGS         = @fflags@
 FFLAGS_NOOPT   = @fflags_noopt@
 
 # Linker and linker-specific flags (if any)
-# Typically LD coincides with F90 or MPIF90 - not actually used
+# Typically LD coincides with F90 or MPIF90
 
-# LD             = @ld@
+LD             = @ld@
 LDFLAGS        = @ldflags@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
