@@ -464,7 +464,7 @@ MODULE bfgs_module
           IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
              !
              ! ... if the extrapolated direction is uphill use only the
-             ! ... last gradient and reset gdiis hystory
+             ! ... last gradient and reset gdiis history
              !
              step(:) = - ( inv_hess(:,:) .times. grad(:) )
              !
@@ -560,6 +560,7 @@ MODULE bfgs_module
          grad_p    = 0.D0
          scf_iter  = 0
          bfgs_iter = 0
+         gdiis_iter= 0
          energy_p  = energy
          step_old  = 0.D0
          !
