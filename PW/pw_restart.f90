@@ -1984,6 +1984,11 @@ MODULE pw_restart
             !
             degauss = degauss * e2
             !
+         ELSE
+            !
+            ngauss = 0
+            degauss = 0.d0
+            !
          END IF
          !
          CALL iotk_scan_dat( iunpun, "TETRAHEDRON_METHOD", ltetra, &
@@ -2000,6 +2005,10 @@ MODULE pw_restart
                                  & iotk_index( i ), tetra(1:4,i) )
                !
             END DO
+            !
+         ELSE
+            !
+            ntetra = 0
             !
          END IF
          !
