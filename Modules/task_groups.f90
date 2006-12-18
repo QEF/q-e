@@ -201,7 +201,7 @@ SUBROUTINE task_groups_init( dffts )
       CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_image_comm, IERR)
 #else
       tmp_nsw(1) = num_sticks
-      tmp_npp(1) = num_num_planes
+      tmp_npp(1) = num_planes
 #endif
    ENDIF
 
