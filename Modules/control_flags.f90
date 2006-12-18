@@ -254,7 +254,7 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: &
     nstep,            &! number of ionic steps
-    istep              ! current ionic step  
+    istep = 0          ! current ionic step  
   LOGICAL, PUBLIC :: &
     conv_ions          ! if .TRUE. ionic convergence has been reached
   REAL(DP), PUBLIC  :: &

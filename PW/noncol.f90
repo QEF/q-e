@@ -35,7 +35,7 @@ MODULE noncollin_module
       bfield(3),           &!  magnetic field used in some cases
       vtcon,               &!  contribution of the constraining fields to
                             !  the total energy
-      r_m,                 &!  Radius for local integrations
+      r_m = 0.0d0,         &!  Radius for local integrations
       lambda                !  prefactor in the penalty functional 
                             !  for constraints
   !
