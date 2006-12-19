@@ -211,7 +211,7 @@
 
       IF( use_parallel_diag ) THEN
          !
-         CALL diagonalize_parallel( 'D', nss, rhos, rhod, s )
+         CALL diagonalize_parallel( nss, rhos, rhod, s )
          !
       ELSE
          !

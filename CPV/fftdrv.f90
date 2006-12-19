@@ -298,24 +298,22 @@ CONTAINS
       INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sign
       TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
 
-      ! COMPLEX(DP), DIMENSION((NOGRP+1)*strd), INTENT(INOUT) :: f
       COMPLEX(DP), INTENT(INOUT) :: f( : )
 
-      integer  mc, i, j, ii, proc, k, nppx, me
-      integer planes(nr1x)
-      integer group_index, nnz_index, offset, ierr
+      integer  mc, i, j, ii, proc, k, me
+      integer  group_index, nnz_index, offset, ierr
 
       !--------------
       !C. Bekas
       !--------------
-      INTEGER :: HWMN, IT1, FLAG, num_planes, num_sticks
+      INTEGER :: HWMN, IT1, FLAG
       COMPLEX(DP), DIMENSION(:), ALLOCATABLE  :: XF, YF, aux 
-      INTEGER, DIMENSION(NOGRP) :: local_send_cnt, local_send_displ, local_recv_cnt, local_recv_displ
+      INTEGER, DIMENSION(NOGRP) :: send_cnt, send_displ, recv_cnt, recv_displ
       INTEGER  :: idx
 
-      ALLOCATE(XF((NOGRP+1)*strd))
-      ALLOCATE(YF((NOGRP+1)*strd))
-      ALLOCATE(aux((NOGRP+1)*strd))
+      ALLOCATE( XF ( (NOGRP+1)*strd ) )
+      ALLOCATE( YF ( (NOGRP+1)*strd ) )
+      ALLOCATE( aux( (NOGRP+1)*strd ) )
  
       !
       ! see comments in cfftp for the logic (or lack of it) of the following
@@ -329,128 +327,51 @@ CONTAINS
 
       me = me_image + 1
 
-      if ( nproc_image == 1 ) then
-         nppx = dfft%nr3x
-      else
-         nppx = dfft%npp(me)
-      end if
-
-      !-----------------------
-      !Inverse FFT
-      !-----------------------
 
       if ( sign > 0 ) then
 
+         !  Inverse FFT
+
          if ( sign /= 2 ) then
-
-            !-----------------------------------
-            !Density - Potential FFT calculation
-            !-----------------------------------
-
-            !-----------------------------------------
-            !ALL TO ALL IN THE ORBITAL GROUP (ogrp_comm)
-            !-----------------------------------------
             !
-            !Find out how many elements to exchange: Each processor holds dfft%nnr complex fourier
-            !coefficients for each eigenvalue. The exchange will move NOGRP*dfft%nnr coefficients
-            !between tasks so that each on of the NOGRP groups will hold all necessary coeficients
-            !for 1 (one) eigenvalue
-
-#if defined __MPI
-            call MPI_ALLTOALL(f, dfft%nnr*16, MPI_BYTE, XF, dfft%nnr*16, MPI_BYTE, ogrp_comm, IERR)
-#endif
-
-            !-----------------------------------------------------------------------------------------
-            !ADDED COMMENTS: C. Bekas, Oct. 2005
-            !-----------------------------------SUBROUTINE: CFT_1Z: Sequence of FFTs
-            !XF           : holds the data to be transformed: Pencils in the z-direction of the G-mesh
-            !dfft%nsp(me) : Number of different z-pencils for current processor. Multiply this by NOGRP
-            !nr3          : Length of each pencil
-            !aux          : Output of results
-            !sign         : Type of transform...+(forward)...-(inverse)
-            !nr3x         : The length of the out vecs (stride between starts of vectors in the output)
-            !------------------------------------------------------------------------------------------
-
-            call cft_1z( XF, NOGRP*dfft%nsp(me), nr3, nr3x, sign, aux)
-
-            !-----------------------------------------------------------------------------------------
-            !ADDED COMMENTS: C. Bekas, Oct. 2005
-            !-----------------------------------SUBROUTINE: FFT_SCATTER: Scatter data accros x-y planes
-            !aux          : Input data (sequence of vectors) and output (overwritten)
-            !nr3x         : Length of data across transformed z-direction (can be up to nr3+1)
-            !dfft%nnr     : FFT data size?
-            !f            : WORK space
-            !dfft%nsp     : Control sizes of contigious slices along Z direction...
-            !dfft%npp     : ...and mapping for the communication between processors
-            !sign         : Type of transform...+(pencils to planes)...-(planes to pencils)
-            !------------------------------------------------------------------------------------------
-
-            call fft_scatter( aux, nr3x, NOGRP*dfft%nnr, f, NOGRP*dfft%nsp, NOGRP*dfft%npp, sign)
-
-            !------------------------------------------------------------------------------------------
-            !ADDED COMMENTS: C. Bekas, Oct. 2005
-            !-----------------------------------Rearrange data in x-y planes:
-            f(:) = (0.d0, 0.d0)
-            do group_index = 1, NOGRP
-               do i = 1, dfft%nst! FOR EACH ONE OF THE PENCILS
-                  mc = dfft%ismap( i ) + (group_index-1)*dfft%nnr! THE POSITION OF THE PENCIL IN THE PLANE
-                  do j = 1, dfft%npp(me)! FOR EACH ONE OF MY PLANES
-                     f( mc + (j-1) * dfft%nnp ) = aux( j + (i-1) * nppx + (group_index-1)*dfft%nnr)
-                  end do
-               end do
-            end do
-            planes = dfft%iplp*NOGRP !THESE ARE THE Y PLANES TO BE FFTed
-            !
+            CALL errore( ' tg_cfft ', ' task groups are implemented only for waves ', 1 )
             !
          else
             !
-            !-----------------------------------
-            !WAVE - FUNCTION FFT calculation
-            !-----------------------------------
+            ! WAVE - FUNCTION FFT calculation
+            !
 
-            local_send_cnt(1) = nr3x*dfft%nsw(me_image+1)
-            local_send_displ(1) = 0
-            local_recv_cnt(1) = nr3x*dfft%nsw(NOLIST(1)+1)
-            local_recv_displ(1) = 0
-            DO idx=2, NOGRP
-               local_send_cnt(idx) = nr3x*dfft%nsw(me_image+1)
-               local_send_displ(idx) = local_send_displ(idx-1) + strd ! local_send_cnt(idx-1)
-
-               local_recv_cnt(idx) = nr3x*dfft%nsw(NOLIST(idx)+1)
-               local_recv_displ(idx)  = local_recv_displ(idx-1) + local_recv_cnt(idx-1)
+            send_cnt(1)   = nr3x*dfft%nsw( me_image + 1 )
+            send_displ(1) = 0
+            recv_cnt(1)   = nr3x*dfft%nsw( nolist(1) + 1 )
+            recv_displ(1) = 0
+            DO idx = 2, nogrp
+               send_cnt(idx)   = nr3x * dfft%nsw( me_image + 1 )
+               send_displ(idx) = send_displ(idx-1) + strd
+               recv_cnt(idx)   = nr3x * dfft%nsw( nolist(idx) + 1 )
+               recv_displ(idx) = recv_displ(idx-1) + recv_cnt(idx-1)
             ENDDO
-
-            !------------------------------------------------------------------------------------------
-            !ADDED COMMENTS: C. Bekas, Oct. 2005
-            !-----------------------------------ANALOGOUS TO THE COMMENTS ABOVE
 
             CALL start_clock( 'ALLTOALL' )
 
+            !
+            !  Collect all the sticks of the different states,
+            !  in "yf" processors will have all the sticks of the OGRP
+
 #if defined __MPI
-            CALL MPI_Alltoallv(f, local_send_cnt, local_send_displ, MPI_DOUBLE_COMPLEX, YF, local_recv_cnt, & 
-         &                     local_recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)  
+            CALL MPI_ALLTOALLV( f, send_cnt, send_displ, MPI_DOUBLE_COMPLEX, yf, recv_cnt, & 
+         &                     recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)  
 #endif
 
-            !-----------------------------------------
-            !We need to get rid of all the zeros in XF
-            !-----------------------------------------
-            num_sticks = 0
-            num_planes = 0
-            DO ii=1, NOGRP
-               num_sticks = num_sticks + dfft%nsw(NOLIST(ii)+1)
-               num_planes = num_planes + dfft%npp(NOLIST(ii)+1)
-            ENDDO
-
-
             CALL stop_clock( 'ALLTOALL' )
+
             !-------------------------------------------------------------
             !YF Contains all ( ~ NOGRP*dfft%nsw(me) ) Z-sticks
             !-------------------------------------------------------------
             !Do all decoupled FFTs across the Z-sticks
             !-------------------------------------------------------------
-            CALL start_clock( '1D' )
-            call cft_1z(YF, num_sticks, nr3, nr3x, sign, aux)
-            CALL stop_clock( '1D' )
+
+            call cft_1z( yf, tmp_nsw(me), nr3, nr3x, sign, aux)
 
             !-------------------------------------------------------------------------------------
             !Transpose data for the 2-D FFT on the x-y plane
@@ -464,70 +385,41 @@ CONTAINS
             !dfft%npp: number of planes per processor
             !-------------------------------------------------------------------------------------
 
-            CALL start_clock( 'SCATTER' ) 
             call fft_scatter( aux, nr3x, (NOGRP+1)*strd, f, tmp_nsw, tmp_npp, sign, use_tg = .TRUE. )
-            CALL stop_clock( 'SCATTER' )
 
             f(:) = (0.d0, 0.d0)
 
             ii=0
             do proc=1,nproc_image
-                  do i=1,dfft%nsw(proc)
-                     mc = dfft%ismap( i + dfft%iss(proc))
-                     ii = ii + 1
-                     do j=1,tmp_npp(me)
-                        f(mc+(j-1)*nr1x*nr2x) = aux(j + (ii-1)*tmp_npp(me))
-                     end do
+               do i=1,dfft%nsw(proc)
+                  mc = dfft%ismap( i + dfft%iss(proc))
+                  ii = ii + 1
+                  do j=1,tmp_npp(me)
+                     f(mc+(j-1)*nr1x*nr2x) = aux(j + (ii-1)*tmp_npp(me))
                   end do
+               end do
             end do
 
-            planes = dfft%iplw
+            call cft_2xy( f, tmp_npp(me), nr1, nr2, nr1x, nr2x, sign, dfft%iplw )
 
          end if
 
-         !------------------------------------------------------------------------------------------
-         !ADDED COMMENTS: C. Bekas, Oct. 2005
-         !-----------------------------------DO THE 2-D FFT ON THE PLANES
-         CALL start_clock( '2D' )
-         call cft_2xy( f, tmp_npp(me), nr1, nr2, nr1x, nr2x, sign, planes)
-         CALL stop_clock( '2D' )
 
-     !-----------------------
-     !FORWARD FFT
-     !-----------------------
       else
-         if (sign.ne.-2) then
-            planes = dfft%iplp
+
+         !
+         !  FORWARD FFT
+         !
+
+         if ( sign /= -2 ) then
+            !
+            CALL errore( ' tg_cfft ', ' task groups are implemented only for waves ', 1 )
+            !
          else
-            planes = dfft%iplw
-         endif
-
-!---------------------------------------------------------------------------
-!        call cft_2xy( f, dfft%npp(me), nr1, nr2, nr1x, nr2x, sign, planes)
-!---------------------------------------------------------------------------
-
-         call cft_2xy( f, tmp_npp(me), nr1, nr2, nr1x, nr2x, sign, planes)
-
-
-         !-----------------------------------
-         !Density - Potential FFT calculation
-         !-----------------------------------
-         !NOT IMPLEMENTED YET
-         !-----------------------------------
-         if (sign.ne.-2) then
-            do i=1,dfft%nst
-               mc = dfft%ismap( i )
-               do j=1,dfft%npp(me)
-                  aux(j + (i-1)*nppx) = f(mc+(j-1)*dfft%nnp)
-               end do
-            end do
-            call fft_scatter(aux,nr3x,dfft%nnr,f,dfft%nsp,dfft%npp,sign)
-            call cft_1z( aux, dfft%nsp(me), nr3, nr3x, sign, f)
-
-         !-----------------------------------
-         !WAVE - FUNCTION FFT calculation
-         !-----------------------------------
-         else
+            !
+            !  WAVE - FUNCTION FFT calculation
+            !
+            call cft_2xy( f, tmp_npp(me), nr1, nr2, nr1x, nr2x, sign, dfft%iplw )
             ii = 0
             do proc=1,nproc_image
                do i=1,dfft%nsw(proc)
@@ -543,6 +435,7 @@ CONTAINS
             call cft_1z(aux,tmp_nsw(me),nr3,nr3x,sign,f)
 
          end if
+
       end if
 !
 
@@ -550,11 +443,8 @@ CONTAINS
       DEALLOCATE(YF)
       DEALLOCATE(aux)
 
-      return
-      !--------------
-      !END
-      !--------------
-      end subroutine tg_cfft_cp
+      RETURN
+   END SUBROUTINE tg_cfft_cp
    !
    !
    !

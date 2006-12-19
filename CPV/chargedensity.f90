@@ -683,7 +683,9 @@
 
             do eig_index = 1, 2*nogrp, 2   
                !
-               IF ((i+eig_index-1).LE.n) THEN
+               !  here we pack 2*nogrp electronic states in the psis array
+               !
+               IF ( ( i + eig_index - 1 ) <= n ) THEN
                   !
                   !  Outer loop for eigenvalues
                   !  The  eig_index loop is executed only ONCE when NOGRP=1.
@@ -705,11 +707,11 @@
                !
             end do
 
+            !  2*NOGRP are trasformed at the same time
+            !  psis: holds the fourier coefficients of the current proccesor
+            !        for eigenstates i and i+2*NOGRP-1
             !
-            !psis: holds the fourier coefficients of the current proccesor
-            !      for eigenstates i and i+2*NOGRP-1
-            !
-            CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            CALL invfft( 'Wave', psis, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx )
 
             iss1=ispin(i)
             sa1=f(i)/omega
@@ -733,10 +735,10 @@
 
             !This loop goes through all components of charge density that is local
             !to each processor. In the original code this is nnrsx. In the task-groups
-            !code this should be equal to the total number of planes a processor has times the
-            !number of elements on each plane
+            !code this should be equal to the total number of planes
+            !
 
-            do ir = 1, nr1sx * nr2sx * tmp_npp(me_image+1)
+            do ir = 1, nr1sx * nr2sx * tmp_npp( me_image + 1 )
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do

@@ -70,15 +70,13 @@ CONTAINS
 !  ----------------------------------------------
 
 
-   SUBROUTINE diagonalize_parallel( tdist, n, rhos, rhod, s )
+   SUBROUTINE diagonalize_parallel( n, rhos, rhod, s )
       USE mp,        ONLY: mp_sum
       USE mp_global, ONLY: nproc_image, me_image, intra_image_comm, np_ortho, me_ortho, ortho_comm
       IMPLICIT NONE
       REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
       REAL(DP)              :: rhod(:)   !  output eigenvalues
       REAL(DP)              :: s(:,:)    !  output eigenvectors
-      CHARACTER, INTENT(IN) :: tdist     !  if tdist == 'D' matrix "s" is block distributed
-                                         !  across 2D processors grid ( ortho_comm )
       INTEGER,   INTENT(IN) :: n         !  size of the global matrix
 
       REAL(DP),   ALLOCATABLE :: diag(:,:)
@@ -91,30 +89,34 @@ CONTAINS
       !  distribute matrix rows to processors
       !
       ! IF( me_ortho(1) < 0 ) RETURN
-      ! np = np_ortho(2) * np_ortho(1)
-      ! me = me_ortho(2) + me_ortho(1) * np_ortho(2)
-      ! comm = ortho_comm
 
-      np   = nproc_image
-      me   = me_image
-      comm = intra_image_comm
+      np   = np_ortho(2) * np_ortho(1)
+      me   = me_ortho(2) + me_ortho(1) * np_ortho(1)
+      comm = ortho_comm
 
-      nrl = ldim_cyclic( n, np, me )
+      ! np   = nproc_image
+      ! me   = me_image
+      ! comm = intra_image_comm
 
-      ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
+      IF ( me >= 0 ) THEN
+         !
+         nrl = ldim_cyclic( n, np, me )
 
-      CALL prpack( n, diag, rhos, np, me )
-      !
-      CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, np, me, comm )
-      !
-      IF( tdist == 'D' .OR. tdist == 'd' ) THEN
+         ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
+
+         CALL prpack( n, diag, rhos, np, me )
+         !
+         CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, np, me, comm )
+         !
+         !  matrix "s" is block distributed
+         !  across 2D processors grid ( ortho_comm )
+         !
          CALL cyc2blk_redist( n, vv, nrl, np, me, comm, &
-                                 s, SIZE(s,1), np_ortho, me_ortho, ortho_comm )
-      ELSE
-         CALL prunpack( n, s, vv, np, me )
+                              s, SIZE(s,1), np_ortho, me_ortho, ortho_comm )
+         !
+         DEALLOCATE( diag, vv )
+         !
       END IF
-
-      DEALLOCATE( diag, vv )
 
       RETURN
    END SUBROUTINE diagonalize_parallel
@@ -129,6 +131,7 @@ CONTAINS
       USE mp_global, ONLY: np_ortho, me_ortho, ortho_comm
       USE io_global, ONLY: ionode, stdout
       USE mp,        ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
+      USE mp,        ONLY: mp_max
       !
       IMPLICIT NONE
       !
@@ -139,11 +142,6 @@ CONTAINS
       REAL(DP) :: cclock
       INTEGER  :: ldim_block
       EXTERNAL :: cclock, ldim_block
-      !
-      IF( nproc_image > n ) THEN
-         use_parallel_diag = .FALSE.
-         return
-      END IF
       !
       ALLOCATE( a( n, n ), d( n ) )
       !
@@ -166,26 +164,30 @@ CONTAINS
       CALL mp_barrier( intra_image_comm )
       t1 = cclock()
       !
-      CALL diagonalize_parallel( 'D', n, a, d, s )
+      CALL diagonalize_parallel( n, a, d, s )
       !
-      CALL mp_barrier( intra_image_comm )
       tpar = cclock() - t1
+      CALL mp_max( tpar, intra_image_comm )
 
       DEALLOCATE( s )
       ALLOCATE( s( n, n ) )
 
       CALL set_a()
       !
+      CALL mp_barrier( intra_image_comm )
       t1 = cclock()
 
       CALL diagonalize_serial( n, a, d, s )
 
       tser = cclock() - t1
+      CALL mp_max( tser, intra_image_comm )
 
       IF( ionode ) THEN
          use_parallel_diag = .FALSE.
-         WRITE( stdout, 100 ) tpar, tser
-100      FORMAT(3X,'ortho diag, time for parallel and serial driver = ', 2F9.5)
+         WRITE( stdout, 100 ) tser
+         WRITE( stdout, 110 ) tpar, np_ortho(1) * np_ortho(2)
+100      FORMAT(3X,'ortho diag, time for serial   driver = ', 1F9.5)
+110      FORMAT(3X,'ortho diag, time for parallel driver = ', 1F9.5, ' with ', I4, ' procs' )
          IF( tpar < tser ) use_parallel_diag = .TRUE.
       END IF
 
@@ -223,6 +225,7 @@ CONTAINS
                            ortho_comm, np_ortho, me_ortho, init_ortho_group
       USE io_global, ONLY: ionode, stdout
       USE mp,        ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
+      USE mp,        ONLY: mp_max
       !
       IMPLICIT NONE
       !
@@ -243,7 +246,9 @@ CONTAINS
 
       DO np = 1, npx
 
-         CALL init_ortho_group( np, me_image, intra_image_comm )
+         IF( np * np > n ) EXIT
+
+         CALL init_ortho_group( np*np, me_image, intra_image_comm )
 
          IF( me_ortho(1) >= 0 ) THEN
             !
@@ -269,8 +274,8 @@ CONTAINS
          CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, n, 0.0d0, c, nr, &
                              np_ortho, me_ortho, ortho_comm )
    
-         CALL mp_barrier( intra_image_comm )
          tcan = cclock() - t1
+         CALL mp_max( tcan, intra_image_comm )
 
          IF( tcan < tbest .OR. np == 1 ) THEN
             tbest  = tcan
@@ -287,12 +292,12 @@ CONTAINS
          !
          WRITE( stdout, 100 ) tser
          WRITE( stdout, 110 ) tbest, npbest*npbest
-100      FORMAT(3X,'ortho mmul, time for serial driver = ', 1F9.5)
-110      FORMAT(3X,'ortho mmul, best time for paralle driver = ', 1F9.5, ' with ', I4, ' procs')
+100      FORMAT(3X,'ortho mmul, time for serial        driver = ', 1F9.5)
+110      FORMAT(3X,'ortho mmul, best time for parallel driver = ', 1F9.5, ' with ', I4, ' procs')
          !
       END IF
 
-      CALL init_ortho_group( npbest, me_image, intra_image_comm )
+      CALL init_ortho_group( npbest*npbest, me_image, intra_image_comm )
 
       RETURN
 
