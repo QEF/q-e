@@ -189,9 +189,9 @@ SUBROUTINE task_groups_init( dffts )
 
    num_sticks = 0
    num_planes = 0
-   DO i=1, NOGRP
-      num_sticks = num_sticks + dffts%nsw(NOLIST(i)+1)
-      num_planes = num_planes + dffts%npp(NOLIST(i)+1)
+   DO i = 1, nogrp
+      num_sticks = num_sticks + dffts%nsw(nolist(i)+1)
+      num_planes = num_planes + dffts%npp(nolist(i)+1)
    ENDDO
 
 
