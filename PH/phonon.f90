@@ -18,7 +18,9 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode, ionode_id
   USE wvfct,           ONLY : gamma_only
-  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, tot_magnetization
+  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, tot_magnetization, &
+                              multiplicity, nelup, neldw, tot_charge,      &
+                              two_fermi_energies
   USE relax,           ONLY : restart_bfgs
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
   USE force_mod,       ONLY : force
@@ -224,6 +226,11 @@ PROGRAM phonon
         startingpot       = 'file'
         startingwfc       = 'atomic'
         tot_magnetization = -1
+        nelup             = 0.d0
+        neldw             = 0.d0
+        tot_charge        = 0.d0
+        multiplicity      = 0
+        two_fermi_energies= .FALSE.
         !
         ! ... the threshold for diagonalization ethr is calculated via
         ! ... the threshold on self-consistency tr2 - the value used
