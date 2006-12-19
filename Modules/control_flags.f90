@@ -9,7 +9,7 @@
 MODULE control_flags
   !=--------------------------------------------------------------------------=!
   !
-  ! ... this module contains all basic variables that controls the istuctions
+  ! ... this module contains all basic variables that controls the
   ! ... execution flow
   !----------------------------------------------
   !
@@ -90,8 +90,8 @@ MODULE control_flags
   LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor 
   LOGICAL :: toptical      = .FALSE. ! print out optical properties
   LOGICAL :: tcarpar       = .FALSE. ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
-  LOGICAL :: tdamp         = .FALSE. ! Use damped dinamics for electrons
-  LOGICAL :: tdampions     = .FALSE. ! Use damped dinamics for electrons
+  LOGICAL :: tdamp         = .FALSE. ! Use damped dynamics for electrons
+  LOGICAL :: tdampions     = .FALSE. ! Use damped dynamics for ions
   LOGICAL :: tatomicwfc    = .FALSE. ! Use atomic wavefunctions as starting guess for ch. density
   LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
   LOGICAL :: twfcollect    = .FALSE. ! Collect wave function in the restart file at the end of run.

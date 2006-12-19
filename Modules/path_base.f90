@@ -60,7 +60,7 @@ MODULE path_base
                                    use_masses, tangent, error, path_length, &
                                    deg_of_freedom, frozen, use_freezing, k, &
                                    k_min, tune_load_balance, grad, posold,  &
-                                   elastic_grad
+                                   elastic_grad, pending_image
       USE mp_global,        ONLY : nimage
       USE path_io_routines, ONLY : read_restart
       USE path_variables,   ONLY : path_allocation
@@ -84,6 +84,7 @@ MODULE path_base
       ! ... istep is initialised to zero
       !
       istep_path = 0
+      pending_image = 0
       conv_elec  = .TRUE.
       !
       ! ... the dimension of all "path" arrays (dim) is set here
