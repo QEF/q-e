@@ -27,7 +27,7 @@ PROGRAM phonon
   USE ions_base,       ONLY : nat
   USE lsda_mod,        ONLY : nspin
   USE gvect,           ONLY : nrx1, nrx2, nrx3
-  USE control_flags,   ONLY : restart, lphonon, tr2, &
+  USE control_flags,   ONLY : restart, lphonon, tr2, ethr, imix, nmix,  &
                               mixing_beta, lscf, lbands, david, isolve
   USE qpoint,          ONLY : xq, nksq
   USE disp,            ONLY : nqs, x_q
@@ -225,15 +225,22 @@ PROGRAM phonon
         startingwfc       = 'atomic'
         tot_magnetization = -1
         !
-        ! ... tr2 is set to a default value of 1.D-8
+        ! ... the threshold for diagonalization ethr is calculated via
+        ! ... the threshold on self-consistency tr2 - the value used
+        ! ... here should be good enough for all cases
         !
         tr2 = 1.D-8
+        ethr = 0.d0
+        mixing_beta = 0.d0
+        imix = 0
+        nmix = 0
+        !
+        ! ... Assume davidson diagonalization
+        !
+        isolve = 0
+        david = 4
         !
         IF ( .NOT. ALLOCATED( force ) ) ALLOCATE( force( 3, nat ) )
-        !
-        ! ... Set the value for davidson diagonalization
-        !
-        IF ( isolve == 0 )  david = 4
         !
         CALL init_run()
         !

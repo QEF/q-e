@@ -17,7 +17,7 @@ MODULE noncollin_module
       npol,               & !  number of coordinates of wfc
       report,             & !  print the local quantities (magnet. and rho)
                             !  every #report iterations
-      i_cons                !  indicator for contrained local quantities
+      i_cons = 0            !  indicator for constrained local quantities
   !
   INTEGER, ALLOCATABLE :: &
       pointlist(:,:),     & !  points in the integration volume
