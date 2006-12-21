@@ -499,11 +499,6 @@
 !
 !     important: if n is odd => c(*,n+1)=0.
 ! 
-      if ( MOD(n,2) .ne. 0 .and. i .eq. n ) then
-         do ig = 1, ngw
-            ca(ig,:) = 0.0d0
-         end do
-      end if
 !
       ci = ( 0.0d0, 1.0d0 )
 !
@@ -519,6 +514,8 @@
             !in the PSIS vector (in special positions) and send them with them.
             !Otherwise we can do this once at the beginning, before the loop.
             !we choose to do the latter one.
+
+            if ( ( idx + i - 1 ) == n ) ca( : , idx ) = 0.0d0
 
             !---------------------------------------------
             !strd is defined earlier in the rhoofr routine
