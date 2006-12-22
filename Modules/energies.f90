@@ -65,7 +65,7 @@
         REAL(DP)  :: EGRAND = 0.0_DP
         REAL(DP)  :: VAVE = 0.0_DP    ! average potential
         
-        REAL(DP) :: enthal, ekincm
+        REAL(DP) :: enthal = 0.0_DP, ekincm
 
         PUBLIC :: dft_energy_type, total_energy, eig_total_energy, &
                   print_energies, debug_energies

@@ -271,7 +271,7 @@ MODULE wannier_subroutines
           WRITE( stdout, * )
           WRITE( stdout, * ) "POLARIZATION CONTRIBUTION OUTPUT TO FORT.28 IN THE FOLLOWING FORMAT"
           WRITE( stdout, * )
-          WRITE( stdout, * ) "EFX, EFY, EFZ, ELECTRIC ENTHANLPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)"
+          WRITE( stdout, * ) "EFX, EFY, EFZ, ELECTRIC ENTHALPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)"
           WRITE( stdout, * )
           WRITE( stdout, '(" E0(x) = ",F10.7)' ) efx0
           WRITE( stdout, '(" E0(y) = ",F10.7)' ) efy0
@@ -642,6 +642,9 @@ MODULE wannier_subroutines
        IF( ionode ) THEN
           WRITE(28,'(f12.9,1x,f12.9,1x,f12.9,1x,f20.15,1x,f20.15)') efx, efy, efz, efe_elec,-efe_ion
        END IF
+    ELSE
+       efe_elec = 0.0_DP      
+       efe_ion  = 0.0_DP      
     END IF
     enthal=enthal+efe_elec-efe_ion
 
