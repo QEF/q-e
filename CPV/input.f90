@@ -286,14 +286,15 @@ MODULE input
      USE cp_electronic_mass, ONLY : emass_ => emass, &
                                     emaec_ => emass_cutoff
      !
-     USE efield_module, ONLY:  tefield_    => tefield,  &
-                               epol_       => epol,     &
-                               efield_     => efield,   &
-                               tefield2_    => tefield2,  &
-                               epol2_       => epol2,     &
-                               efield2_     => efield2
+     USE efield_module,      ONLY : tefield_    => tefield,  &
+                                    epol_       => epol,     &
+                                    efield_     => efield,   &
+                                    tefield2_    => tefield2,  &
+                                    epol2_       => epol2,     &
+                                    efield2_     => efield2
      !
-     USE cvan, ONLY: nvb
+     USE cvan,               ONLY : nvb
+     USE orthogonalize_base, ONLY : ortho_para_ => ortho_para
      !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
@@ -308,7 +309,8 @@ MODULE input
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
-        iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho
+        iesr_inp, vhrmax_inp, vhrmin_inp, tvhmean_inp, vhasse_inp, saverho,    &
+        ortho_para
      !
      IMPLICIT NONE
      !
@@ -547,8 +549,9 @@ MODULE input
               TRIM(orthogonalization), 1 )
       END SELECT
 
-      ortho_max_ = ortho_max
-      ortho_eps_ = ortho_eps
+      ortho_max_  = ortho_max
+      ortho_eps_  = ortho_eps
+      ortho_para_ = ortho_para
 
       ! ... Electrons initial velocity
 

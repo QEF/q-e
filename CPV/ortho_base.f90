@@ -31,6 +31,8 @@ MODULE orthogonalize_base
       REAL(DP) :: small = 1.0d-14
       LOGICAL :: use_parallel_diag 
 
+      REAL(DP), PUBLIC :: ortho_para = 0
+
       PUBLIC :: sigset, rhoset, tauset
       PUBLIC :: ortho_iterate
       PUBLIC :: ortho_alt_iterate
@@ -233,22 +235,30 @@ CONTAINS
       !
       REAL(DP), ALLOCATABLE :: c(:,:), a(:,:), b(:,:)
       REAL(DP) :: t1, tser, tcan, tbest
-      INTEGER  :: nr, nc, ir, ic, np, npx, npbest
+      INTEGER  :: nr, nc, ir, ic, np, npx, npbest, nps
       !
       REAL(DP) :: cclock
       EXTERNAL :: cclock
       INTEGER  :: ldim_block, gind_block
       EXTERNAL :: ldim_block, gind_block
       !
-      npx    = INT( SQRT( DBLE( nproc_image ) + 0.1d0 ) ) 
+      IF( ortho_para > 0 ) THEN
+         np     = ortho_para 
+         if( np > MIN( n, nproc_image ) ) np = MIN( n, nproc_image )
+         nps    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
+         npx    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
+      ELSE
+         np     = MIN( n, nproc_image )
+         nps    = 1
+         npx    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
+      END IF
+
       tbest  = 1000
       npbest = 1
 
-      DO np = 1, npx
+      DO np = nps, npx
 
-         IF( np * np > n ) EXIT
-
-         CALL init_ortho_group( np*np, me_image, intra_image_comm )
+         CALL init_ortho_group( np * np, me_image, intra_image_comm )
 
          IF( me_ortho(1) >= 0 ) THEN
             !
@@ -277,23 +287,30 @@ CONTAINS
          tcan = cclock() - t1
          CALL mp_max( tcan, intra_image_comm )
 
-         IF( tcan < tbest .OR. np == 1 ) THEN
+         IF( np == nps ) THEN
+            tser   = tcan
+            tbest  = tcan
+            npbest = np
+         ELSE IF( tcan < tbest ) THEN
             tbest  = tcan
             npbest = np
          END IF
          !
-         IF( np == 1 ) tser = tcan
-   
          DEALLOCATE( a, c, b )
 
       END DO
 
       IF( ionode ) THEN
          !
-         WRITE( stdout, 100 ) tser
-         WRITE( stdout, 110 ) tbest, npbest*npbest
-100      FORMAT(3X,'ortho mmul, time for serial        driver = ', 1F9.5)
+         IF( ortho_para == 0 )  THEN
+            WRITE( stdout, 100 ) tser
+            WRITE( stdout, 110 ) tbest, npbest*npbest
+         ELSE
+            WRITE( stdout, 120 ) tbest, npbest*npbest
+         END IF
+100      FORMAT(3X,'ortho mmul, time for serial driver        = ', 1F9.5)
 110      FORMAT(3X,'ortho mmul, best time for parallel driver = ', 1F9.5, ' with ', I4, ' procs')
+120      FORMAT(3X,'ortho mmul, time for parallel driver      = ', 1F9.5, ' with ', I4, ' procs')
          !
       END IF
 
@@ -303,64 +320,6 @@ CONTAINS
 
    END SUBROUTINE mesure_mmul_perf
    
-
-!  ----------------------------------------------
-
-
-   SUBROUTINE diagonalize_crho( n, a, d, ev )
-
-      !  this routine calls the appropriate Lapack routine for diagonalizing a
-      !  complex Hermitian matrix
-
-         USE mp_global, ONLY: nproc_image, me_image, intra_image_comm
-         USE mp, ONLY: mp_sum
-         IMPLICIT NONE
-
-         REAL(DP)             :: d(:)
-         COMPLEX(DP)          :: a(:,:), ev(:,:)
-         INTEGER, INTENT(IN)  :: n
-
-         INTEGER :: nrl
-
-         COMPLEX(DP), ALLOCATABLE :: aloc(:)
-         COMPLEX(DP), ALLOCATABLE :: ap(:,:)
-         COMPLEX(DP), ALLOCATABLE :: vp(:,:)
-         
-         IF (  nproc_image > 1  ) THEN
-
-           nrl = n/nproc_image
-           IF(me_image.LT.MOD(n,nproc_image)) THEN
-             nrl = nrl + 1
-           END IF
-
-           ALLOCATE(ap(nrl,n), vp(nrl,n))
-
-           CALL pzpack( ap, a )
-           CALL pzhpev_drv( 'V', ap, nrl, d, vp, nrl, nrl, n, nproc_image, me_image)
-           CALL pzunpack(a, vp)
-           CALL mp_sum(a, ev, intra_image_comm)
-
-           DEALLOCATE(ap, vp)
-
-         ELSE
-
-           ALLOCATE(aloc(n*(n+1)/2))
-
-           ! ...      copy the lower-diagonal part of the matrix according to the
-           ! ...      Lapack packed storage scheme for Hermitian matrices
-
-           CALL zpack(aloc, a)
-
-           ! ...      call the Lapack routine
-
-           CALL zhpev_drv('V', 'L', n, aloc, d, ev, n)
-
-           DEALLOCATE(aloc)
-
-         END IF
-
-         RETURN
-       END SUBROUTINE diagonalize_crho
 
 
 !=----------------------------------------------------------------------------=!
@@ -383,22 +342,6 @@ CONTAINS
       END SUBROUTINE prpack
 
 
-      SUBROUTINE pzpack( ap, a)
-        USE mp_global, ONLY: me_image, nproc_image
-        COMPLEX(DP), INTENT(IN) :: a(:,:)
-        COMPLEX(DP), INTENT(OUT) :: ap(:,:)
-        INTEGER :: i, j, jl
-        DO i = 1, SIZE( ap, 2)
-           j = me_image + 1
-           DO jl = 1, SIZE( ap, 1)
-             ap(jl,i) = a(j,i)
-             j = j + nproc_image
-           END DO
-        END DO
-        RETURN
-      END SUBROUTINE pzpack
-
-
       SUBROUTINE prunpack( n, a, ap, np, me )
         IMPLICIT NONE
         REAL(DP), INTENT(IN)  :: ap(:,:)
@@ -419,24 +362,6 @@ CONTAINS
       END SUBROUTINE prunpack
 
 
-      SUBROUTINE pzunpack( a, ap)
-        USE mp_global, ONLY: me_image, nproc_image
-        COMPLEX(DP), INTENT(IN) :: ap(:,:)
-        COMPLEX(DP), INTENT(OUT) :: a(:,:)
-        INTEGER :: i, j, jl
-        DO i = 1, SIZE(a, 2)
-          DO j = 1, SIZE(a, 1)
-            a(j,i) = zero
-          END DO
-          j = me_image + 1
-          DO jl = 1, SIZE(ap, 1)
-            a(j,i) = ap(jl,i)
-            j = j + nproc_image
-          END DO
-        END DO
-        RETURN
-      END SUBROUTINE pzunpack
-
       SUBROUTINE rpack( n, ap, a)
         INTEGER, INTENT(IN) :: n
         REAL(DP), INTENT(IN) :: a(:,:)
@@ -452,19 +377,6 @@ CONTAINS
         RETURN
       END SUBROUTINE rpack
 
-      SUBROUTINE zpack( ap, a)
-        COMPLEX(DP), INTENT(IN) :: a(:,:)
-        COMPLEX(DP), INTENT(OUT) :: ap(:)
-        INTEGER :: i, j, k
-        K=0
-        DO J = 1, SIZE(a, 2)
-          DO I = J, SIZE(a, 1)
-            K = K + 1
-            ap(k) = a(i,j)
-          END DO
-        END DO
-        RETURN
-      END SUBROUTINE zpack
 
 
 !=----------------------------------------------------------------------------=!
