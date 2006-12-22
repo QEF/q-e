@@ -95,7 +95,7 @@ MODULE cp_main_variables
   INTEGER :: nfi             ! counter on the electronic iterations
   INTEGER :: nprint_nfi=-1   ! counter indicating the last time data have been
                              ! printed on file ( prefix.pos, ... )
-  INTEGER :: nfi_run         ! counter on the electronic iterations,
+  INTEGER :: nfi_run=0       ! counter on the electronic iterations,
                              ! for the present run
   !
   CONTAINS

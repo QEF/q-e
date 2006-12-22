@@ -614,7 +614,7 @@
  1951   FORMAT(3X,'ekinc         : ',F14.5,F14.5,' (AU)')
  1952   FORMAT(3X,'ekin          : ',F14.5,F14.5,' (AU)')
  1953   FORMAT(3X,'epot          : ',F14.5,F14.5,' (AU)')
- 1954   FORMAT(3X,'totel energy  : ',F14.5,F14.5,' (AU)')
+ 1954   FORMAT(3X,'total energy  : ',F14.5,F14.5,' (AU)')
  1955   FORMAT(3X,'temperature   : ',F14.5,F14.5,' (K )')
  1956   FORMAT(3X,'enthalpy      : ',F14.5,F14.5,' (AU)')
  1957   FORMAT(3X,'econs         : ',F14.5,F14.5,' (AU)')

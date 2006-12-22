@@ -382,16 +382,16 @@ contains
 end module elct
 !
 module ldaU
-  use parameters, only: natx, nsx
+  use parameters, only: nsx
   USE kinds
   implicit none
   complex(DP), allocatable :: atomwfc(:,:)
   complex(DP), allocatable :: swfcatom(:,:)
   real(DP) :: Hubbard_U(nsx), Hubbard_lambda(nsx,2), ns0(nsx,2),   &
      & Hubbard_alpha(nsx)
-  real(DP) :: e_hubbard, e_lambda
+  real(DP) :: e_hubbard = 0.d0, e_lambda = 0.d0
   real(DP), allocatable :: ns(:,:,:,:)
-  integer Hubbard_l(nsx), Hubbard_lmax, n_atomic_wfc
+  integer :: Hubbard_l(nsx), Hubbard_lmax=0, n_atomic_wfc
   logical lda_plus_u
   COMPLEX(DP), allocatable::  vupsi(:,:) !@@@@
 contains

@@ -229,7 +229,6 @@ cplib_meta.o : ../Modules/kind.o
 cplib_meta.o : ../Modules/mp.o
 cplib_meta.o : ../Modules/mp_global.o
 cplib_meta.o : ../Modules/recvec.o
-cplib_meta.o : ../Modules/task_groups.o
 cplib_meta.o : cp_interfaces.o
 cplib_meta.o : modules.o
 cpr.o : ../Modules/autopilot.o
