@@ -879,14 +879,6 @@ MODULE input_parameters
 
         REAL(DP) :: passop =0.3d0 
           ! small step for parabolic interpolation
-
-        LOGICAL  :: l_blockocc = .false.
-          ! if true in ensemble DFT the lowest states in energy are taken diagonal
-
-        INTEGER  :: n_blockocc(2) 
-          ! number of states kept diagonal for spin channel
-        DATA n_blockocc /1,1/
-
         INTEGER  :: epol = 3
           ! electric field direction
 
@@ -921,8 +913,8 @@ MODULE input_parameters
           diago_thr_init, n_inner, fermi_energy, rotmass, occmass,     &
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
-          efield, epol2, efield2, diago_full_acc, l_blockocc,          &
-          n_blockocc, occupation_constraints, ortho_para
+          efield, epol2, efield2, diago_full_acc,                      &
+          occupation_constraints, ortho_para
 
 !
 !=----------------------------------------------------------------------------=!
