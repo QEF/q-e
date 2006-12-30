@@ -27,14 +27,9 @@
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
                                 nx => nbspx, n => nbsp, ispin
 
-      use ensemble_dft, only: tens, tgrand, ninner, ismear, etemp, ef,       &
-     &                tdynz, tdynf, zmass, fmass, fricz, fricf, z0, c0diag,  &
-                      becdiag, fmat0, becdrdiag, becm, bec0, fion2, atot0,   &
-                      etot0, h0c0, c0hc0, epsi0, e0, dval, z1, f1, dfmat, fmat1, &
-                      ef1, enocc, f0, fmatx, fx, zaux, zx, ex, zxt, atot1, etot1, &
-                      dedx1, dentdx1, dx, dadx1, faux, eqc, eqa, atotmin, xmin, &
-                      entropy2, f2, etot2, eqb, compute_entropy2, compute_entropy_der, &
-                      compute_entropy, l_blockocc, n_blockocc
+      use ensemble_dft, only: tens,   ef,  z0, c0diag,  &
+                      becdiag, fmat0,     &
+                        e0
 !---
       use gvecp, only: ngm
       use gvecs, only: ngs
@@ -118,13 +113,19 @@
       integer :: maxiter3
 !
 !
+      real(kind=DP), allocatable :: bec0(:,:), becm(:,:), becdrdiag(:,:,:)
+
+
+
+      allocate(bec0(nhsa,n),becm(nhsa,n), becdrdiag(nhsa,n,3))
+
+
       call start_clock('runcg_uspp')
       newscheme=.false.
       firstiter=.true.
 
       maxiter3=250
 
-      fion2=0.d0
 
       if(ionode) open(37,file='convergence.dat',status='unknown')!for debug and tuning purposes
       if(tfirst.and.ionode) write(stdout,*) 'PERFORMING CONJUGATE GRADIENT MINIMIZATION OF EL. STATES'
@@ -253,7 +254,6 @@
           if (.not.tens) then
             etotnew=etot
           else
-            call compute_entropy2( entropy, f, n, nspin )
             etotnew=etot+entropy
           end if
 
@@ -395,51 +395,22 @@
 
         else
 
-          if(.not.l_blockocc) then
-             do iss=1,nspin
-                nss=nupdwn(iss)
-                istart=iupdwn(iss)
-                do i=1,nss
-                   do j=1,nss
-                      do ig=1,ngw
-                         gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
-                      enddo
-                      if (ng0.eq.2) then
-                         gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,iss)
-                      endif
-                   enddo
-                enddo
-             enddo
-          else
-            do  iss=1,nspin
-                nss=nupdwn(iss)
-                istart=iupdwn(iss)
-                do i=1,n_blockocc(iss)
-                   do ig=1,ngw
-                      gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,i+istart-1))*f(i+istart-1)
-                   enddo
-                   if (ng0.eq.2) then
-                      gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,i+istart-1))*f(i+istart-1)
-                   endif
-                enddo
-                do i=n_blockocc(iss)+1,nss
-                   ii=i-n_blockocc(iss)
-                   do j=n_blockocc(iss)+1,nss
-                      jj=j-n_blockocc(iss)
-                      do ig=1,ngw
-                         gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(jj,ii,iss)
-                      enddo
-                      if (ng0.eq.2) then
-                         gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(jj,ii,iss)
-                      endif
-                   enddo
-                enddo
-             enddo
-       
-          endif
+           do iss=1,nspin
+              nss=nupdwn(iss)
+              istart=iupdwn(iss)
+              do i=1,nss
+                 do j=1,nss
+                    do ig=1,ngw
+                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
+                    enddo
+                    if (ng0.eq.2) then
+                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,iss)
+                    endif
+                 enddo
+              enddo
+           enddo
            call mp_sum( gamma, intra_image_comm )
            if(nvb.gt.0) then
-            if(.not. l_blockocc) then
               do iss=1,nspin
                  nss=nupdwn(iss)
                  istart=iupdwn(iss)
@@ -459,44 +430,7 @@
                     enddo
                  enddo
               enddo
-            else
-             do iss=1,nspin
-                 nss=nupdwn(iss)
-                 istart=iupdwn(iss)
-
-                 do i=1,n_blockocc(iss)
-                     do is=1,nvb
-                        do iv=1,nh(is)
-                           do jv=1,nh(is)
-                              do ia=1,na(is)
-                                 inl=ish(is)+(iv-1)*na(is)+ia
-                                 jnl=ish(is)+(jv-1)*na(is)+ia
-                                 gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,i+istart-1)*f(i+istart-1)
-                              end do
-                           end do
-                        end do
-                     enddo
-                 enddo
-                 do i=n_blockocc(iss)+1,nss
-                    ii=i-n_blockocc(iss)
-                    do j=n_blockocc(iss)+1,nss
-                       jj=j-n_blockocc(iss)
-                       do is=1,nvb
-                          do iv=1,nh(is)
-                             do jv=1,nh(is)
-                                do ia=1,na(is)
-                                   inl=ish(is)+(iv-1)*na(is)+ia
-                                   jnl=ish(is)+(jv-1)*na(is)+ia
-                                   gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,j+istart-1)*fmat0(jj,ii,iss)
-                                end do
-                             end do
-                          end do
-                       enddo
-                    enddo
-                 enddo
-              enddo
            endif
-          endif
         endif
 
 
@@ -550,75 +484,42 @@
           !in the ensamble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
           !     calculation of the kinetic energy x=xmin      
          call calcmt(f,z0,fmat0,.false.)
-         if(.not. l_blockocc) then
-           do is=1,nspin
-               nss=nupdwn(is)
-               istart=iupdwn(is)
-               do i=1,nss
-                  do j=1,nss
-                     do ig=1,ngw
-                      dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(j,i,is)
-                      dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
-                     enddo
-                     if (ng0.eq.2) then
-                      dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(j,i,is)
-                      dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
-                     end if
-                   enddo
-              enddo
+         do is=1,nspin
+            nss=nupdwn(is)
+            istart=iupdwn(is)
+            do i=1,nss
+               do j=1,nss
+                  do ig=1,ngw
+                     dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(j,i,is)
+                     dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
+                  enddo
+                  if (ng0.eq.2) then
+                     dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(j,i,is)
+                     dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
+                  end if
+               enddo
             enddo
-          else
-            do is=1,nspin
-               nss=nupdwn(is)
-               istart=iupdwn(is)
+         enddo
+      endif
 
-               do i=1,n_blockocc(iss)
-                   do ig=1,ngw
-                    dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,i+istart-1))*f(i+istart-1)
-                    dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,i+istart-1))*f(i+istart-1)
-                   enddo
-                   if (ng0.eq.2) then
-                    dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,i+istart-1))*f(i+istart-1)
-                    dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,i+istart-1))*f(i+istart-1)
-                   end if
-              enddo
-
-              do i=n_blockocc(iss)+1,nss
-                  ii=i-n_blockocc(iss)
-                  do j=n_blockocc(iss)+1,nss
-                     jj=j-n_blockocc(iss)
-                     do ig=1,ngw
-                      dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(jj,ii,is)
-                      dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(jj,ii,is)
-                     enddo
-                     if (ng0.eq.2) then
-                      dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(jj,ii,is)
-                      dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(jj,ii,is)
-                     end if
-                 enddo
-              enddo
-           enddo
-          endif
-        endif
-
-        call mp_sum( dene0, intra_image_comm )
+      call mp_sum( dene0, intra_image_comm )
 
         !if the derivative is positive, search along opposite direction
-        if(dene0.gt.0.d0) then
-          spasso=-1.D0
-        else
-          spasso=1.d0
-        endif
+      if(dene0.gt.0.d0) then
+         spasso=-1.D0
+      else
+         spasso=1.d0
+      endif
 
         !calculates wave-functions on a point on direction hi
 
-        cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passof*hi(1:ngw,1:n)
+      cm(1:ngw,1:n)=c0(1:ngw,1:n)+spasso*passof*hi(1:ngw,1:n)
 
 
         !orthonormalize
 
-        call calbec(1,nsp,eigr,cm,becm)
-        call gram(betae,becm,nhsa,cm,ngw,n)
+      call calbec(1,nsp,eigr,cm,becm)
+      call gram(betae,becm,nhsa,cm,ngw,n)
         !call calbec(1,nsp,eigr,cm,becm)
                
         !calculate energy
@@ -654,7 +555,6 @@
 
         ene1=etot
         if(tens.and.newscheme) then
-          call compute_entropy2( entropy, f, n, nspin )
           ene1=ene1+entropy
         endif
               
@@ -714,7 +614,6 @@
 
         enever=etot
         if(tens.and.newscheme) then
-          call compute_entropy2( entropy, f, n, nspin )
           enever=enever+entropy
         endif
         if(tens.and.newscheme) then
@@ -804,7 +703,6 @@
 
             enever=etot
            if(tens.and.newscheme) then
-             call compute_entropy2( entropy, f, n, nspin )
              enever=enever+entropy
            endif
 
@@ -965,35 +863,14 @@
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              if(.not. l_blockocc) then
-                do k = 1, nss
-                   do j = 1, nss
-                      do i = 1, nss
-                         lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
+              do k = 1, nss
+                 do j = 1, nss
+                    do i = 1, nss
+                       lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
                             lambda( i, k, iss ) * fmat0( k, j, iss )
-                      end do
-                   end do
-                enddo
-              else
-                 do i = 1, n_blockocc(iss)
-                   do j = 1, n_blockocc(iss)
-                         lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
-                            lambda( i, j, iss ) * f(j+istart-1)
-                   end do
-                enddo
-
-                do i = n_blockocc(iss)+1,nss
-                   do j = n_blockocc(iss)+1,nss
-                      jj=j-n_blockocc(iss)
-                      do k = 1, n_blockocc(iss)+1,nss
-                         kk=k-n_blockocc(iss)
-                         lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
-                            lambda( i, k, iss ) * fmat0( kk, jj, iss )
-                      end do
-                   end do
-                enddo
-
-              endif
+                    end do
+                 end do
+              enddo
               !
               do i = 1, nss
                  do j = 1, nss
@@ -1025,5 +902,8 @@
         deallocate( s_minus1,k_minus1)
        if(ionode) close(37)!for debug and tuning purposes
        call stop_clock('runcg_uspp')
+
+       deallocate(bec0,becm,becdrdiag)
+
        return
      END SUBROUTINE runcg_uspp

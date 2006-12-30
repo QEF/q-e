@@ -35,15 +35,10 @@
 
       USE ensemble_dft,   ONLY: tens, tgrand, ninner, ismear, etemp, &
                                 ef, z0, c0diag, becdiag, &
-                                fmat0, fion2, atot0, etot0, h0c0, &
-                                c0hc0, epsi0, e0, dval, z1, f1, &
-                                dfmat, fmat1, ef1, enocc, f0, fmatx, &
-                                fx, zaux, zx, ex, zxt, atot1, etot1, &
-                                dedx1, dentdx1, dx, dadx1, faux, eqa, &
-                                eqb, eqc, atotmin, xmin, entropy2, &
-                                f2, etot2, compute_entropy2, &
-                                compute_entropy_der, compute_entropy, &
-                                l_blockocc, n_blockocc
+                                fmat0,  &
+                                e0,   &
+                                 compute_entropy2, &
+                                compute_entropy_der, compute_entropy
       USE gvecp,          ONLY: ngm
       USE gvecs,          ONLY: ngs
       USE gvecb,          ONLY: ngb
@@ -114,15 +109,10 @@
       INTEGER                :: ia
       INTEGER                :: iv
       INTEGER                :: jv
-      INTEGER                :: il
       INTEGER                :: inl
       INTEGER                :: jnl
-      INTEGER                :: niter
-      INTEGER                :: istart
-      INTEGER                :: nss
       REAL(DP)               :: enb
       REAL(DP)               :: enbi
-      REAL(DP)               :: x
       COMPLEX(DP)            :: c2( ngw )
       COMPLEX(DP)            :: c3( ngw )
       REAL(DP)               :: gamma
@@ -133,10 +123,26 @@
       REAL(DP)               :: deltaxmin
       REAL(DP)               :: xinit
       INTEGER                :: ii,jj,kk,nrot
-      REAL(kind=DP), ALLOCATABLE :: ztmp(:,:)
+      REAL(kind=DP), ALLOCATABLE :: ztmp(:,:), dval(:), ex(:), dx(:)
+      REAL(kind=DP), ALLOCATABLE :: fion2(:,:),c0hc0(:,:,:), z1(:,:,:), zx(:,:,:), zxt(:,:,:), zaux(:,:,:)
+      COMPLEX(kind=DP), ALLOCATABLE :: h0c0(:,:)
+      REAL(kind=DP), ALLOCATABLE :: f0(:),f1(:),fx(:), faux(:), fmat1(:,:,:),fmatx(:,:,:)
+      REAL(kind=DP), ALLOCATABLE :: dfmat(:,:,:), epsi0(:,:,:)
+      REAL(kind=DP) :: atot0,atot1,atotmin,etot0,etot1, ef1, enocc
+      REAL(kind=DP) :: dadx1,dedx1,dentdx1,eqa,eqb,eqc, etot2, entropy2
+      REAL(kind=DP) :: f2,x,xmin
+      INTEGER ::  niter,nss,istart,il
    
       CALL start_clock( 'inner_loop' )
       ! initializes variables
+      allocate(fion2(3,nat))
+      allocate(c0hc0(nudx,nudx,nspin))
+      allocate(h0c0(ngw,nx))
+      allocate(z1(nudx,nudx,nspin),zx(nudx,nudx,nspin),zxt(nudx,nudx,nspin),zaux(nudx,nudx,nspin))
+      allocate(dval(nx),ex(nx),dx(nx),f0(nx),f1(nx),fx(nx),faux(nx))
+      allocate(fmat1(nudx,nudx,nspin),fmatx(nudx,nudx,nspin),dfmat(nudx,nudx,nspin))
+      allocate(epsi0(nudx,nudx,nspin))
+
       fion2( :, : )= 0.D0
       npt=10
       deltaxmin=1.D-8
@@ -185,30 +191,17 @@
 
         ! operates the Hamiltonian on the wavefunction c0
         h0c0( :, : )= 0.D0
-        if(firstiter .or. .not. l_blockocc) then
           DO i= 1, n, 2                      
             CALL dforce( bec, betae, i, c0(1,i), &
                          c0(1,i+1), h0c0(1,i), h0c0(1,i+1), &
                          rhos, ispin, f, n, nspin )
           END DO
-        else
-          do is=1,nspin
-             nss= nupdwn( is )
-            istart= iupdwn( is )
-            DO i=istart+n_blockocc(is),istart+nss-1,2
-                CALL dforce( bec, betae, i, c0(1,i), &
-                         c0(1,i+1), h0c0(1,i), h0c0(1,i+1), &
-                         rhos, ispin, f, n, nspin )
-            END DO
-          enddo
-        endif
         
         ! calculates the Hamiltonian matrix in the basis {c0}           
         c0hc0(:,:,:)=0.d0
         DO is= 1, nspin
           nss= nupdwn( is )
           istart= iupdwn( is )
-          if(firstiter .or. .not. l_blockocc) then
             DO i= 1, nss
               DO k= 1, nss
                 DO ig= 1, ngw
@@ -224,26 +217,6 @@
               END DO
             END DO
             CALL mp_sum( c0hc0( 1:nss, 1:nss, is ), intra_image_comm )
-          else
-            nrot=nss-n_blockocc(is)
-            DO i= n_blockocc(is)+1,nss
-              ii=i-n_blockocc(is)
-              DO k= n_blockocc(is)+1,nss
-                kk=k-n_blockocc(is)
-                DO ig= 1, ngw
-                  c0hc0( kk, ii, is )= c0hc0( kk, ii, is ) &
-                    - 2.0d0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
-                    * h0c0( ig, i+istart-1 ) )
-                END DO
-                IF( ng0 .eq. 2 ) THEN
-                  c0hc0( kk, ii, is )= c0hc0( kk, ii, is ) &
-                    + DBLE( CONJG( c0( 1, k+istart-1 ) ) &
-                    * h0c0( 1, i+istart-1 ) )
-                END IF
-              END DO
-            END DO
-            CALL mp_sum( c0hc0( 1:nrot, 1:nrot, is ), intra_image_comm )
-         endif
         END DO
  
         DO is= 1, nspin
@@ -256,7 +229,6 @@
         DO is= 1, nspin
           istart= iupdwn( is )
           nss= nupdwn( is ) 
-          if(firstiter .or. .not.l_blockocc) then
             IF( ionode ) THEN
               CALL ddiag( nss, nss, epsi0(1,1,is), dval(1), &
                           z1(1,1,is), 1 )
@@ -266,32 +238,6 @@
             DO i= 1, nss
               e0( i+istart-1 )= dval( i )
             END DO
-          else
-           nrot=nss-n_blockocc(is)
-           allocate(ztmp(nss,nrot))
-           IF( ionode ) THEN
-              CALL ddiag( nss, nrot, epsi0(1,1,is), dval(1), &
-                          ztmp, 1 )
-            END IF
-            CALL mp_bcast( dval, ionode_id, intra_image_comm )
-            CALL mp_bcast( ztmp(:,:), ionode_id, intra_image_comm )
-            DO i= n_blockocc(is)+1,nss
-              ii=i-n_blockocc(is)
-              e0( i+istart-1 )= dval( ii )
-            END DO
-            z1(:,:,is)=0.d0
-            do i=1,n_blockocc(is)
-              z1(i,i,is)=1.d0
-            enddo
-            do i=n_blockocc(is)+1,nss
-              ii=i-n_blockocc(is)
-              do j=n_blockocc(is)+1,nss
-                 jj=j-n_blockocc(is)
-                 z1(i,j,is)=ztmp(ii,jj)
-              enddo
-            enddo
-            deallocate(ztmp)
-          endif
         END DO
   
 
@@ -299,17 +245,6 @@
         ! end of the search direction
         CALL efermi( nelt, n, etemp, 1, f1, ef1, e0, enocc, ismear, & 
                      nspin )
-        if(l_blockocc) then
-!check occupancy of blocked states
-           do is=1,nspin
-             istart= iupdwn( is )
-             nss= nupdwn( is )
-             do i=1,n_blockocc(is)
-               write(37,*) 'Occupancy: ',i,is,f1(i+istart-1)!ATTENZIONE
-             enddo
-           enddo
-        endif
-
 
         ! fmat1_ij = \sum_k z_ik * f_k * z_jk
         CALL calcm( f1, z1, fmat1, firstiter)
@@ -318,14 +253,8 @@
         ! ( dfmat defines the search direction in occupation space)
         DO is= 1, nspin
           nss= nupdwn( is )
-          if(firstiter .or. .not. l_blockocc) then  
             dfmat( 1:nss, 1:nss, is )= - fmat0( 1:nss, 1:nss, is ) &
                                        + fmat1( 1:nss, 1:nss, is )
-          else
-            nrot=nss-n_blockocc(is)
-            dfmat( 1:nrot, 1:nrot, is )= - fmat0( 1:nrot, 1:nrot, is ) &
-                                       + fmat1( 1:nrot, 1:nrot, is )
-          endif
         END DO
             
         ! 
@@ -336,14 +265,8 @@
         x=1.D0
         DO is= 1, nspin
           nss= nupdwn( is )
-          if(firstiter .or. .not. l_blockocc) then
             fmatx( 1:nss, 1:nss, is)= fmat0( 1:nss, 1:nss, is) &
                                     + x * dfmat( 1:nss, 1:nss, is )
-          else
-            nrot=nss-n_blockocc(is)
-            fmatx( 1:nrot, 1:nrot, is)= fmat0( 1:nrot, 1:nrot, is) &
-                                    + x * dfmat( 1:nrot, 1:nrot, is )
-          endif
         END DO
                       
         ! diagonalizes fmatx 
@@ -351,7 +274,6 @@
         DO is=1, nspin
           nss= nupdwn( is )
           istart= iupdwn( is )
-          if(firstiter .or. .not. l_blockocc) then
             IF( ionode ) THEN
               CALL ddiag( nss, nss, fmatx(1,1,is), dval(1), &
                           zaux(1,1,is), 1 )
@@ -372,40 +294,6 @@
                 zxt( k, i, is )= zx( i, k, is )
               END DO
             END DO
-          else
-            nrot=nss-n_blockocc(is)
-            allocate(ztmp(nss,nrot))
-            IF( ionode ) THEN
-              CALL ddiag( nss, nrot, fmatx(1,1,is), dval(1), &
-                          ztmp, 1 )
-            END IF
-            CALL mp_bcast( dval, ionode_id, intra_image_comm )
-            CALL mp_bcast( ztmp(:,:), ionode_id, intra_image_comm )
-!now the occupancy are inverted from 0. to 1. ...
-            DO i= n_blockocc(is)+1,nss
-              ii=i-n_blockocc(is)
-              faux( i+istart-1 )= dval(ii)
-            END DO
-            zx(:,:,is)=0.d0
-            DO i= n_blockocc(is)+1,nss
-              ii=i- n_blockocc(is)
-              fx( i+istart-1 )= faux( nss-ii+istart )
-              DO j=n_blockocc(is)+1,nss
-                jj=j- n_blockocc(is)
-                zx( i, j, is )= ztmp( ii, nrot-jj+1)
-              END DO
-            END DO
-            do i=1,n_blockocc(is)
-               zx(i,i,is)=1.d0
-               fx(i+istart-1)=f(i+istart-1)
-            enddo
-            DO i= 1, nss
-              DO k= 1, nss
-                zxt( k, i, is )= zx( i, k, is )
-              END DO
-            END DO
-            deallocate(ztmp)
-          endif
         END DO
            
  
@@ -434,30 +322,17 @@
   
         ! calculates the Hamiltonian matrix
         h0c0( :, : )= 0.D0
-        if(firstiter .or. .not. l_blockocc) then
           DO i= 1, n, 2
             CALL dforce( bec, betae, i, c0(1,i), &
                          c0(1,i+1), h0c0(1,i), h0c0(1,i+1), &
                          rhos, ispin, f, n, nspin )
           END DO
-        else
-          do is=1,nspin
-            nss= nupdwn( is )
-            istart= iupdwn( is )
-            DO i=istart+n_blockocc(is),istart+nss-1,2
-                CALL dforce( bec, betae, i, c0(1,i), &
-                         c0(1,i+1), h0c0(1,i), h0c0(1,i+1), &
-                         rhos, ispin, f, n, nspin )
-            END DO
-          enddo
-        endif
         
         c0hc0(:,:,:)=0.d0
 
         DO is= 1, nspin
           nss= nupdwn( is )
           istart= iupdwn( is )
-          if(firstiter .or. .not. l_blockocc) then
             DO i= 1, nss
               DO k= 1, nss
                 DO ig= 1, ngw
@@ -473,26 +348,6 @@
               END DO
             END DO
             CALL mp_sum( c0hc0( 1:nss, 1:nss, is ), intra_image_comm )
-          else
-            nrot=nss-n_blockocc(is)
-            DO i= n_blockocc(is)+1,nss
-              ii=i-n_blockocc(is)
-              DO k= n_blockocc(is)+1,nss
-                kk=k-n_blockocc(is)
-                DO ig= 1, ngw
-                  c0hc0( kk, ii, is )= c0hc0( kk, ii, is ) &
-                    - 2.0d0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
-                    * h0c0( ig, i+istart-1 ) )
-                END DO
-                IF( ng0 .eq. 2 ) THEN
-                  c0hc0( kk, ii, is )= c0hc0( kk, ii, is ) &
-                    + DBLE( CONJG( c0( 1, k+istart-1 ) ) &
-                    * h0c0( 1, i+istart-1 ) )
-                END IF
-              END DO
-            END DO
-            CALL mp_sum( c0hc0( 1:nrot, 1:nrot, is ), intra_image_comm )
-          endif
       ENDDO
 
 
@@ -516,7 +371,6 @@
         DO is= 1,nspin
           nss= nupdwn( is )
           istart= iupdwn( is )
-          if(firstiter .or. .not.l_blockocc) then
             DO i= 1, nss
               dx( i+istart-1 )= 0.D0
               DO k= 1, nss
@@ -528,27 +382,10 @@
               END DO
               dx( i+istart-1 )= dx( i+istart-1 ) + fx( i+istart-1 )
             END DO
-          else
-            DO i= n_blockocc(is)+1,nss
-              ii=i-n_blockocc(is)
-              dx( i+istart-1 )= 0.D0
-              DO k= n_blockocc(is)+1,nss
-                kk=k-n_blockocc(is)
-                DO j= n_blockocc(is)+1,nss
-                  jj=j- n_blockocc(is)
-                  dx( i+istart-1 )= dx( i+istart-1 ) &
-                                  - zxt(i,k,is) * fmat0(kk,jj,is) &
-                                  * zxt(i,j,is)
-                END DO
-              END DO
-              dx( i+istart-1 )= dx( i+istart-1 ) + fx( i+istart-1 )
-            END DO
-         endif
         END DO
         DO is= 1, nspin
           nss= nupdwn( is )
           istart= iupdwn( is )
-          if(firstiter .or. .not.l_blockocc) then
             DO i= 1, nss
               dentdx1= dentdx1 - etemp * dx( i+istart-1 ) &
                        * ex(i+istart-1)
@@ -556,17 +393,6 @@
                 dedx1= dedx1 + dfmat( i, k, is ) * epsi0( k, i, is )
               END DO
             END DO
-          else
-            DO i= n_blockocc(is)+1,nss
-              ii=i- n_blockocc(is)
-              dentdx1= dentdx1 - etemp * dx( i+istart-1 ) &
-                       * ex(i+istart-1)
-              DO k= n_blockocc(is)+1,nss
-                kk=k-n_blockocc(is)
-                dedx1= dedx1 + dfmat( ii, kk, is ) * epsi0( kk, ii, is )
-              END DO
-            END DO
-          endif
         END DO
         dadx1 = dedx1 + dentdx1
                    
@@ -624,22 +450,12 @@
         ! calculates the occupation matrix at xmin
         DO is= 1, nspin
           nss= nupdwn( is )
-          if(firstiter .or. .not.l_blockocc) then
             DO i= 1, nss
               DO j= 1, nss
                 fmatx( i, j, is )= fmat0( i, j, is ) &
                                    + xmin * dfmat( i, j, is )
               END DO
             END DO
-          else
-            nrot=nss-n_blockocc(is)
-            DO i= 1, nrot
-              DO j= 1, nrot
-                fmatx( i, j, is )= fmat0( i, j, is ) &
-                                   + xmin * dfmat( i, j, is )
-              END DO
-            END DO
-          endif
         END DO
                
         ! diagonalizes the occupation matrix at xmin
@@ -647,7 +463,6 @@
         DO is= 1, nspin
           nss= nupdwn( is ) 
           istart= iupdwn( is )
-          if(firstiter .or. .not. l_blockocc) then
             IF(ionode) CALL ddiag( nss, nss, fmatx(1,1,is), &
                                  dval(1), zaux(1,1,is), 1 )  
             CALL mp_bcast( dval, ionode_id, intra_image_comm )
@@ -661,35 +476,6 @@
                 zx( i, j, is )= zaux( i, nss-j+1, is )
               END DO
             END DO
-          else
-            nrot=nss-n_blockocc(is)
-            allocate(ztmp(nss,nrot))
-            IF(ionode) CALL ddiag( nss, nrot, fmatx(1,1,is), &
-                                 dval(1), ztmp, 1 )
-            CALL mp_bcast( dval, ionode_id, intra_image_comm )
-            CALL mp_bcast( ztmp(:,:), ionode_id, intra_image_comm )
-
-
-!now the occupancy are inverted from 0. to 1. ...
-            DO i= n_blockocc(is)+1,nss
-              ii=i-n_blockocc(is)
-              faux( i+istart-1 )= dval(ii)
-            END DO
-            zx(:,:,is)=0.d0
-            DO i= n_blockocc(is)+1,nss
-              ii=i- n_blockocc(is)
-              fx( i+istart-1 )= faux( nss-ii+istart )
-              DO j=n_blockocc(is)+1,nss
-                jj=j- n_blockocc(is)
-                zx( i, j, is )= ztmp( ii, nrot-jj+1 )
-              END DO
-            END DO
-            do i=1,n_blockocc(is)
-               zx(i,i,is)=1.d0
-               fx(i+istart-1)=f(i+istart-1)
-            enddo
-            deallocate(ztmp)
-         endif
         END DO
     
         ! updates f
@@ -727,22 +513,11 @@
         enever=etot
         if(xmin==0.d0) exit 
      END DO INNERLOOP
-!if we use the blockocc and firstiteration bring everything into the diagonal representation
 
-     if(firstiter .and. l_blockocc) then
-        c0(:,:)=c0diag(:,:)
-        bec(:,:)=becdiag(:,:)
-        z0(:,:,:)=0.d0
-        do is=1,nspin
-           nss=nupdwn(is)
-           do i=1,nss
-              z0(i,i,is)=1.d0
-           enddo
-        enddo
-      endif
-
-
-
+     deallocate(fion2,c0hc0,h0c0,z1)
+     deallocate(zx,zxt,zaux,dval,ex,dx)
+     deallocate(f0,f1,fx,faux,fmat1,fmatx)
+     deallocate(dfmat,epsi0)
      CALL stop_clock( 'inner_loop' )
      return
 !====================================================================      

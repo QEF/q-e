@@ -37,14 +37,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        allocate_efield2, efield_update2,       &
                                        ipolp2, qmat2, gqq2, evalue2,           &
                                        berry_energy2, pberryel2, pberryion2
-  USE ensemble_dft,             ONLY : tens, tgrand, ninner, ismear, etemp,   &
-                                       ef, tdynz, tdynf, zmass, fmass, fricz, &
-                                       fricf, allocate_ensemble_dft,          &
-                                       id_matrix_init, z0, c0diag, becdiag,   &
-                                       bec0, v0s, vhxcs, becdrdiag, gibbsfe
-  USE cg_module,                ONLY : tcg, maxiter, conv_thr, passop, &
-                                       allocate_cg, cg_update, &
-                                       itercg, c0old
+  USE ensemble_dft,             ONLY : tens, z0, gibbsfe
+  USE cg_module,                ONLY : tcg,  cg_update, c0old
   USE gvecp,                    ONLY : ngm
   USE gvecs,                    ONLY : ngs
   USE gvecb,                    ONLY : ngb

@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
+SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      &                  entropy,ismear,nspin)
 !-----------------------------------------------------------------------
 !
@@ -151,97 +151,110 @@
 !-----------------------------------------------------------------------
 
 
+        
+  USE kinds, ONLY : DP
 
-
-
-
+  implicit none
  
-      IMPLICIT REAL*8(A-H,O-Z)
+  INTEGER, INTENT(IN) :: nel, nbands, nkpts
+  REAL(kind=DP), INTENT(OUT) :: occ(nbands,nkpts)
+  REAL(kind=DP), INTENT(OUT) :: ef
+  REAL(kind=DP), INTENT(IN)  :: eigval(nbands, nkpts)
+  REAL(kind=DP), INTENT(OUT) :: entropy
+  INTEGER, INTENT(IN)        :: ismear, nspin
+  REAL(kind=DP), INTENT(IN)  :: del
+  
 
-      DIMENSION SORT(nbands*nkpts)
-      DIMENSION OCC(nbands,nkpts),WEIGHT(nkpts),EIGVAL(nbands,nkpts)
-      EXTERNAL ERFC
-      EXTERNAL FERMID
-      EXTERNAL DELTHM
-      EXTERNAL POSHM
-      EXTERNAL POSHM2
-      PARAMETER ( JMAX =300, XACC=1.0D-17)
- 
+  
+  REAL(kind=DP) :: weight(nkpts), sort(nbands*nkpts)
+  REAL(kind=DP), EXTERNAL :: ERFC,FERMID,DELTHM,POSHM,POSHM2, SPLINE
+  INTEGER, PARAMETER :: JMAX =300
+  REAL(kind=DP), PARAMETER :: XACC=1.0D-17
 
-      if ((nspin.eq.1).or.(nspin.eq.2)) then
-       continue
-      else
-       write(*,*) 'ERROR: EFERMI with nspin different from 1 or 2'
-       stop
-      end if
+  INTEGER :: isppt,j,nkp,neig,nn,n, inel, nel2, j2
+  REAL(kind=DP) :: fspin, entrofac,entrospin
+  REAL(kind=DP) :: pi,ee,eesh,sq2i,piesqq,z,en
+  REAL(kind=DP) :: eigmin, eigmax, xe1,xe2,z1
+  REAL(kind=DP) :: x,fmid, f, rtbis,dx,xmid,delcor,fi,a
+  REAL(kind=DP) :: zeta,elow, test
 
-      fspin=DBLE(nspin)
-      entrofac=3.0-fspin
-      entrospin=2./fspin
 
-      if ((nspin.eq.2).and.(ismear.ne.2)) then
-       write(*,*) 'ERROR: EFERMI with nspin.eq.2 and ismear.ne.2'
-       stop
-      end if
+  if ((nspin == 1).or.(nspin == 2)) then
+     continue
+  else
+     write(*,*) 'ERROR: EFERMI with nspin different from 1 or 2'
+     stop
+  end if
+  
+  fspin=DBLE(nspin)
+  entrofac=3.d0-fspin
+  entrospin=2.d0/fspin
 
-      if (nspin.eq.1) then
-       if (2*nbands.eq.nel) then
+  if ((nspin == 2).and.(ismear == 2)) then
+     write(*,*) 'ERROR: EFERMI with nspin.eq.2 and ismear.ne.2'
+     stop
+  end if
+  
+  if (nspin == 1) then
+     if (2*nbands == nel) then
         DO ISPPT = 1, NKPTS
-         DO J = 1,NBANDS
-          OCC(J,ISPPT) = 2.0 
-         end do
+           DO J = 1,NBANDS
+              OCC(J,ISPPT) = 2.0 
+           end do
         end do
         return
-       end if
-      else
-       if (nbands.eq.nel) then
+     end if
+  else
+     if (nbands == nel) then
         DO ISPPT = 1, NKPTS
-         DO J = 1,NBANDS
-          OCC(J,ISPPT) = 1.0 
-         end do
+           DO J = 1,NBANDS
+              OCC(J,ISPPT) = 1.0 
+           end do
         end do
         return
-       end if
-      end if
- 
-      pi=acos(0.0)*2.0
-      ee=exp(1.0)
-      eesh=sqrt(ee)*0.5
-      sq2i=sqrt(2.0)*0.5
-      piesqq=sqrt(ee*pi)*0.25
+     end if
+  end if
+  
+  pi=acos(0.d0)*2.d0
+  ee=exp(1.d0)
+  eesh=sqrt(ee)*0.5d0
+  sq2i=sqrt(2.0d0)*0.5d0
+  piesqq=sqrt(ee*pi)*0.25d0
  
 ! note that this has to be changed if k-points are introduced !
 
-      do nkp=1,nkpts
-       weight(nkp)=1.0/DBLE(nkpts)
-      end do
+  do nkp=1,nkpts
+     weight(nkp)=1.d0/DBLE(nkpts)
+  end do
 
-      Z    = DBLE (NEL)
+  Z    = DBLE (NEL)
  
 ! COPY EIGVAL INTO SORT ARRAY.
  
-      NEIG = 0
-      DO 10 ISPPT = 1,NKPTS
-        DO 20  J = 1, NBANDS
-          NEIG = NEIG + 1
-20        SORT(NEIG) = EIGVAL(J,ISPPT)
-10      CONTINUE
+  NEIG = 0
+  DO  ISPPT = 1,NKPTS
+     DO   J = 1, NBANDS
+        NEIG = NEIG + 1
+        SORT(NEIG) = EIGVAL(J,ISPPT)
+     enddo
+  enddo
  
 !-----------------------------------------------------------------------
 !  THE ARRAY IS ORDERED INTO ASCENDING ORDER OF EIGENVALUE
 !-----------------------------------------------------------------------
  
-      DO 26 N=2,NKPTS*NBANDS
-        EN=SORT(N)
-        DO 22 NN=N-1,1,-1
-          IF (SORT(NN).LE.EN) GO TO 24
-          SORT(NN+1)=SORT(NN)
-  22    CONTINUE
-        NN=0
-  24    SORT(NN+1)=EN
-  26  CONTINUE
-      eigmin=sort(1)
-      eigmax=sort(NKPTS*nbands) 
+  DO N=2,NKPTS*NBANDS
+     EN=SORT(N)
+     DO NN=N-1,1,-1
+        IF (SORT(NN).LE.EN) THEN
+           EXIT
+        ENDIF
+        SORT(NN+1)=SORT(NN)
+     enddo
+     SORT(NN+1)=EN
+  end do
+  eigmin=sort(1)
+  eigmax=sort(NKPTS*nbands) 
  
 !-----------------------------------------------------------------------
 !  if the temperature is 0 (well, le.1d-9) then set manually the
@@ -249,53 +262,53 @@
 !-----------------------------------------------------------------------
 
  
-           if ((abs(del).le.1.d-9).and.(nspin.eq.1)) then
-              if ((2*(nel/2)).ne.nel) then
-                 write(*,*) 'EFERMI: etemp=0.0 but nel is odd !'
-                 stop
-              end if
-              nel2=nel/2
-              entropy=0.0
-              ef=0.5*(sort(NKPTS*nel2)+sort(NKPTS*nel2+1))
-              DO ISPPT = 1,NKPTS
-                 DO J = 1, NBANDS
-                    if (eigval(J,ISPPT).le.ef) then
-                       occ(j,isppt)=2.0
-                    else
-                       occ(j,isppt)=0.0
-                    end if
-                 end do
-              end do
-              TEST = 0.0
+  if ((abs(del).le.1.d-9).and.(nspin.eq.1)) then
+     if ((2*(nel/2)).ne.nel) then
+        write(*,*) 'EFERMI: etemp=0.0 but nel is odd !'
+        stop
+     end if
+     nel2=nel/2
+     entropy=0.d0
+     ef=0.5d0*(sort(NKPTS*nel2)+sort(NKPTS*nel2+1))
+     DO ISPPT = 1,NKPTS
+        DO J = 1, NBANDS
+           if (eigval(J,ISPPT).le.ef) then
+              occ(j,isppt)=2.d0
+           else
+              occ(j,isppt)=0.d0
+           end if
+        end do
+     end do
+     TEST = 0.d0
 !     write(*,'(a8,f12.6)') 'Efermi: ',ef
-              DO ISPPT = 1,NKPTS
-                 DO J = 1,NBANDS
+     DO ISPPT = 1,NKPTS
+        DO J = 1,NBANDS
 !     write(*,'(a8,f12.6,f10.6)') 'Eigs,f: ',
 !    &        eigval(J,ISPPT),OCC(J,ISPPT)
-                    TEST = TEST + WEIGHT(ISPPT)*OCC(J,ISPPT)
-                 end do
-              end do
+           TEST = TEST + WEIGHT(ISPPT)*OCC(J,ISPPT)
+        end do
+     end do
 !      this is commented since occ is normalized to 2
 !      test=test*2.0
-              IF ( ABS(TEST-Z) .GT. 1.0D-5) THEN
-                 WRITE(*,*) '*** WARNING *** OCCUPANCIES MANUALLY SET'
-                 DO ISPPT = 1,NKPTS
-                    DO J = 1, NBANDS
-                       if (j.le.nel2) then
-                          occ(j,isppt)=2.0
-                       else
-                          occ(j,isppt)=0.0
-                       end if
+     IF ( ABS(TEST-Z) .GT. 1.0D-5) THEN
+        WRITE(*,*) '*** WARNING *** OCCUPANCIES MANUALLY SET'
+        DO ISPPT = 1,NKPTS
+           DO J = 1, NBANDS
+              if (j.le.nel2) then
+                 occ(j,isppt)=2.d0
+              else
+                 occ(j,isppt)=0.d0
+              end if
 !         write(*,'(a8,f12.6,f10.6)') 'Eigs,f: ',
 !    &         eigval(J,ISPPT),OCC(J,ISPPT)
-                    end do
-                 end do
-              end if
-              return
-           else if ((abs(del).le.1.d-9).and.(nspin.ne.1)) then
-              write(*,*) 'ERROR: EFERMI with etemp.eq.0 and nspin.eq.2'
-              stop
-           end if
+           end do
+        end do
+     end if
+     return
+  else if ((abs(del).le.1.d-9).and.(nspin.ne.1)) then
+     write(*,*) 'ERROR: EFERMI with etemp.eq.0 and nspin.eq.2'
+     stop
+  end if
 
 
 
@@ -306,242 +319,245 @@
 !     UPPER BOUND IS ACTUALLY UPPED A BIT, JUST IN CASE
 !-----------------------------------------------------------------------
  
-      XE1=SORT(1)
-      XE2=SORT(NKPTS*NBANDS)+del*5.0
+  XE1=SORT(1)
+  XE2=SORT(NKPTS*NBANDS)+del*5.d0
 !     write(*,*) NEL,NBANDS,DEL,NKPTS,ismear
 !     write(*,*) xe1,xe2
 !
 !           WRITE(*,*) ' '
-          IF(ISMEAR.EQ.1) THEN
+  IF(ISMEAR.EQ.1) THEN
 !           WRITE(*,*) 'GAUSSIAN BROADENING'
-          ELSEIF(ISMEAR.EQ.2) THEN
+  ELSEIF(ISMEAR.EQ.2) THEN
 !           WRITE(*,*) 'FERMI-DIRAC BROADENING'
-          ELSEIF(ISMEAR.EQ.3) THEN
+  ELSEIF(ISMEAR.EQ.3) THEN
 !           WRITE(*,*) 'HERMITE-DIRAC BROADENING'
-          ELSEIF(ISMEAR.EQ.4) THEN
+  ELSEIF(ISMEAR.EQ.4) THEN
 !           WRITE(*,*) 'GAUSSIAN SPLINES BROADENING'
-          ELSEIF(ISMEAR.EQ.5) THEN
+  ELSEIF(ISMEAR.EQ.5) THEN
 !           WRITE(*,*) 'COLD SMEARING I'
-          ELSEIF(ISMEAR.EQ.6) THEN
+  ELSEIF(ISMEAR.EQ.6) THEN
 !           WRITE(*,*) 'COLD SMEARING II'
-          ENDIF       
+  ENDIF
 !
 ! FMID = FUNC(X2) in Numerical Recipes. 
 !
-      Z1=0.D0
-      DO 40 ISPPT = 1,NKPTS
-        DO 50 J = 1,NBANDS
-          X = (XE2 - EIGVAL(J,ISPPT))/DEL
-          IF(ISMEAR.EQ.1) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*( 2.0 - ERFC(X) )/fspin
-          ELSEIF(ISMEAR.EQ.2) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
-          ELSEIF(ISMEAR.EQ.3) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
-          ELSEIF(ISMEAR.EQ.4) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
-          ELSEIF(ISMEAR.EQ.5) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
-          ELSEIF(ISMEAR.EQ.6) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*POSHM2(X)/fspin
-          ENDIF
-50      CONTINUE
-40    CONTINUE
+  Z1=0.D0
+  DO  ISPPT = 1,NKPTS
+     DO  J = 1,NBANDS
+        X = (XE2 - EIGVAL(J,ISPPT))/DEL
+        IF(ISMEAR.EQ.1) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - ERFC(X) )/fspin
+        ELSEIF(ISMEAR.EQ.2) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
+        ELSEIF(ISMEAR.EQ.3) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
+        ELSEIF(ISMEAR.EQ.4) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
+        ELSEIF(ISMEAR.EQ.5) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
+        ELSEIF(ISMEAR.EQ.6) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*POSHM2(X)/fspin
+        ENDIF
+     END DO
+  END DO 
+
  
-      FMID= Z1-Z
+  FMID= Z1-Z
 !     write(*,*) fmid,z1,z
  
 ! F = FUNC(X1)
  
-      Z1=0.D0
-      DO 140 ISPPT = 1,NKPTS
-        DO 150 J = 1,NBANDS
-          X = (XE1 - EIGVAL(J,ISPPT))/DEL
-          IF(ISMEAR.EQ.1) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*( 2.0 - ERFC(X) )/fspin
-          ELSEIF(ISMEAR.EQ.2) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
-          ELSEIF(ISMEAR.EQ.3) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
-          ELSEIF(ISMEAR.EQ.4) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
-          ELSEIF(ISMEAR.EQ.5) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
-          ELSEIF(ISMEAR.EQ.6) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*POSHM2(X)/fspin
-          ENDIF
-150     CONTINUE
-140   CONTINUE
+  Z1=0.D0
+  DO ISPPT = 1,NKPTS
+     DO J = 1,NBANDS
+        X = (XE1 - EIGVAL(J,ISPPT))/DEL
+        IF(ISMEAR.EQ.1) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - ERFC(X) )/fspin
+        ELSEIF(ISMEAR.EQ.2) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
+        ELSEIF(ISMEAR.EQ.3) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
+        ELSEIF(ISMEAR.EQ.4) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
+        ELSEIF(ISMEAR.EQ.5) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
+        ELSEIF(ISMEAR.EQ.6) THEN
+           Z1 = Z1 + WEIGHT(ISPPT)*POSHM2(X)/fspin
+        ENDIF
+     END DO
+  END DO
+
  
-      F= Z1-Z
+  F= Z1-Z
 !     write(*,*) f,z1,z
  
-      IF(F*FMID .GE. 0.D0) THEN
-        WRITE(*,*) 'WARNING: NO FERMI ENERGY INSIDE EIGENVALUES ?'
-      ENDIF
-      IF(F .LT. 0.D0) THEN
-       RTBIS = XE1
-       DX = XE2 - XE1
-      ELSE
-       RTBIS = XE2
-       DX = XE1 - XE2
-      ENDIF
-      DO 42 J = 1, JMAX
-       DX = DX * 0.5D0
-       XMID = RTBIS + DX
+  IF(F*FMID .GE. 0.D0) THEN
+     WRITE(*,*) 'WARNING: NO FERMI ENERGY INSIDE EIGENVALUES ?'
+  ENDIF
+  IF(F .LT. 0.D0) THEN
+     RTBIS = XE1
+     DX = XE2 - XE1
+  ELSE
+     RTBIS = XE2
+     DX = XE1 - XE2
+  ENDIF
+
+  DO  J = 1, JMAX
+     DX = DX * 0.5D0
+     XMID = RTBIS + DX
  
 ! FMID=FUNC(XMID)
  
-      Z1=0.D0
-      DO 240 ISPPT = 1,NKPTS
-        DO 250 J2 = 1,NBANDS
-          X = (XMID - EIGVAL(J2,ISPPT))/DEL
-          IF(ISMEAR.EQ.1) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*( 2.0 - ERFC(X) )/fspin
-          ELSEIF(ISMEAR.EQ.2) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
-          ELSEIF(ISMEAR.EQ.3) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
-          ELSEIF(ISMEAR.EQ.4) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
-          ELSEIF(ISMEAR.EQ.5) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
-          ELSEIF(ISMEAR.EQ.6) THEN
-            Z1 = Z1 + WEIGHT(ISPPT)*POSHM2(X)/fspin
-          ENDIF
-250     CONTINUE
-240   CONTINUE
- 
-      FMID= Z1-Z
- 
-      IF(FMID .LE. 0.D0) RTBIS=XMID
-      IF(ABS(DX) .LT. XACC .OR. FMID .EQ. 0) THEN
-       GOTO 1042
-      ENDIF
-  42  CONTINUE
-        WRITE(*,*) 'CANNOT BISECT FOREVER, CAN I ?'
-       CALL EXIT
- 
-1042  EF = RTBIS
- 
-!170   CONTINUE
+     Z1=0.D0
+     DO ISPPT = 1,NKPTS
+        DO  J2 = 1,NBANDS
+           X = (XMID - EIGVAL(J2,ISPPT))/DEL
+           IF(ISMEAR.EQ.1) THEN
+              Z1 = Z1 + WEIGHT(ISPPT)*( 2.d0 - ERFC(X) )/fspin
+           ELSEIF(ISMEAR.EQ.2) THEN
+              Z1 = Z1 + WEIGHT(ISPPT)*FERMID(-X)/fspin
+           ELSEIF(ISMEAR.EQ.3) THEN
+              Z1 = Z1 + WEIGHT(ISPPT)*DELTHM(X)/fspin
+           ELSEIF(ISMEAR.EQ.4) THEN
+              Z1 = Z1 + WEIGHT(ISPPT)*SPLINE(-X)/fspin
+           ELSEIF(ISMEAR.EQ.5) THEN
+              Z1 = Z1 + WEIGHT(ISPPT)*POSHM(X)/fspin
+           ELSEIF(ISMEAR.EQ.6) THEN
+              Z1 = Z1 + WEIGHT(ISPPT)*POSHM2(X)/fspin
+           ENDIF
+        END DO
+     END DO
 
-!     WRITE (*,180) EF
-!180   FORMAT (' FERMI ENERGY = ',F15.8,' EV')
  
-!     FORM OCCUPATIONS OCC(NBDS,NKPTS)
-      DO 190 ISPPT = 1, NKPTS
-        DO 200 J = 1,NBANDS
-          X = ( EF-EIGVAL(J,ISPPT))/DEL
-          IF(ISMEAR.EQ.1) THEN
-            OCC(J,ISPPT) = 2.0 - ERFC(X)  
-          ELSEIF(ISMEAR.EQ.2) THEN
-            OCC(J,ISPPT) = FERMID(-X)
-          ELSEIF(ISMEAR.EQ.3) THEN
-            OCC(J,ISPPT) = DELTHM(X)
-          ELSEIF(ISMEAR.EQ.4) THEN
-            OCC(J,ISPPT) = SPLINE(-X)
-          ELSEIF(ISMEAR.EQ.5) THEN
-            OCC(J,ISPPT) = POSHM(X)
-          ELSEIF(ISMEAR.EQ.6) THEN
-            OCC(J,ISPPT) = POSHM2(X)
-          ENDIF
+     FMID= Z1-Z
+ 
+     IF(FMID .LE. 0.D0) RTBIS=XMID
+     IF(ABS(DX) .LT. XACC .OR. FMID .EQ. 0) THEN
+        EXIT
+     ENDIF
+  ENDDO
+  IF(J >= JMAX) THEN
+     WRITE(*,*) 'CANNOT BISECT FOREVER, CAN I ?'
+     CALL EXIT
+  ENDIF
+  EF = RTBIS
+ 
+
+  DO ISPPT = 1, NKPTS
+     DO J = 1,NBANDS
+        X = ( EF-EIGVAL(J,ISPPT))/DEL
+        IF(ISMEAR.EQ.1) THEN
+           OCC(J,ISPPT) = 2.d0 - ERFC(X)  
+        ELSEIF(ISMEAR.EQ.2) THEN
+           OCC(J,ISPPT) = FERMID(-X)
+        ELSEIF(ISMEAR.EQ.3) THEN
+           OCC(J,ISPPT) = DELTHM(X)
+        ELSEIF(ISMEAR.EQ.4) THEN
+           OCC(J,ISPPT) = SPLINE(-X)
+        ELSEIF(ISMEAR.EQ.5) THEN
+           OCC(J,ISPPT) = POSHM(X)
+        ELSEIF(ISMEAR.EQ.6) THEN
+           OCC(J,ISPPT) = POSHM2(X)
+        ENDIF
 ! occupations are normalized to two or one depending on nspin
-            OCC(J,ISPPT) = OCC(J,ISPPT)/fspin
-200     CONTINUE
-190   CONTINUE
+        OCC(J,ISPPT) = OCC(J,ISPPT)/fspin
+     ENDDO
+  ENDDO
+
 
 !-------------------------------------------------------------
 ! CALCULATES THE CORRECTION TERM TO GET "0 TEMPERATURE" ENERGY
 !-------------------------------------------------------------
 
-      DELCOR=0.0D0
-      DO 191 ISPPT = 1, NKPTS
-       DO 201 J = 1,NBANDS
+  DELCOR=0.0D0
+  DO ISPPT = 1, NKPTS
+     DO J = 1,NBANDS
         X = ( EF-EIGVAL(J,ISPPT))/DEL
         IF(ISMEAR.EQ.1) THEN
-         DELCOR=DELCOR &
+           DELCOR=DELCOR &
      &    -DEL*WEIGHT(ISPPT)*EXP(-X*X)/(2.D0*SQRT(pi))
         ELSEIF(ISMEAR.EQ.2) THEN
-         FI=FERMID(-X)/entrospin
-         IF(ABS(FI) .GT. 1.E-12) THEN
-          IF(ABS(FI-1.D0) .GT. 1.E-12) THEN
-           DELCOR=DELCOR+DEL*WEIGHT(ISPPT)* &
-     &     (FI*LOG(FI)+(1.D0-FI)*LOG(1.D0-FI))
-          ENDIF
-         ENDIF
+           FI=FERMID(-X)/entrospin
+           IF(ABS(FI) .GT. 1.E-12) THEN
+              IF(ABS(FI-1.D0) .GT. 1.E-12) THEN
+                 DELCOR=DELCOR+DEL*WEIGHT(ISPPT)* &
+                      &     (FI*LOG(FI)+(1.D0-FI)*LOG(1.D0-FI))
+              ENDIF
+           ENDIF
         ELSEIF(ISMEAR.EQ.3) THEN
-         DELCOR=DELCOR+DEL/2.0*WEIGHT(ISPPT)  &
+           DELCOR=DELCOR+DEL/2.0*WEIGHT(ISPPT)  &
      &    *(2.0*x*x-1)*exp(-x*x)/(2.0*sqrt(pi))
         ELSEIF(ISMEAR.EQ.4) THEN
-         x=abs(x)
-         zeta=eesh*abs(x)*exp(-(x+sq2i)**2)+piesqq*erfc(x+sq2i)
-         delcor=delcor-del*WEIGHT(ISPPT)*zeta
+           x=abs(x)
+           zeta=eesh*abs(x)*exp(-(x+sq2i)**2)+piesqq*erfc(x+sq2i)
+           delcor=delcor-del*WEIGHT(ISPPT)*zeta
         ELSEIF(ISMEAR.EQ.5) THEN
-         a=-0.5634
+           a=-0.5634d0
 !        a=-0.8165
-         DELCOR=DELCOR-DEL/2.0*WEIGHT(ISPPT) &
+           DELCOR=DELCOR-DEL/2.d0*WEIGHT(ISPPT) &
 ! NOTE g's are all intended to be normalized to 1 !
 ! this following line is -2*int_minf^x [t*g(t)]dt
-     &   *(2.0*a*x**3-2.0*x*x+1 )*exp(-x*x)/(2.0*sqrt(pi))
+     &   *(2.d0*a*x**3-2.d0*x*x+1 )*exp(-x*x)/(2.d0*sqrt(pi))
         ELSEIF(ISMEAR.EQ.6) THEN
-         DELCOR=DELCOR-DEL/2.0*WEIGHT(ISPPT) &
+         DELCOR=DELCOR-DEL/2.d0*WEIGHT(ISPPT) &
 ! NOTE g's are all intended to be normalized to 1 !
 ! this following line is -2*int_minf^x [t*g(t)]dt
-     &   *(1-sqrt(2.0)*x)*exp(-(x-1/sqrt(2.))**2)/sqrt(pi)
+     &   *(1.d0-sqrt(2.d0)*x)*exp(-(x-1.d0/sqrt(2.d0))**2)/sqrt(pi)
         ENDIF
-201    CONTINUE
-191   CONTINUE
+     END DO
+  END DO
+
 
 !--------------------------------------------------------
 !  the correction is also stored in sort, for compatibility,
 !  and -TS is stored in entropy
 !--------------------------------------------------------
 
-      sort(1)=delcor
-      entropy=entrospin*delcor
+  sort(1)=delcor
+  entropy=entrospin*delcor
  
 !--------------------------------------------------------
 !     TEST WHETHER OCCUPANCY ADDS UP TO Z
 !--------------------------------------------------------
 
-      TEST = 0.0
+  TEST = 0.d0
 !     write(*,'(a8,f12.6)') 'Efermi: ',ef
-      DO ISPPT = 1,NKPTS
-       DO J = 1,NBANDS
+  DO ISPPT = 1,NKPTS
+     DO J = 1,NBANDS
 !       write(*,'(a8,f12.6,f10.6)') 'Eigs,f: ',
 !    &       eigval(J,ISPPT),OCC(J,ISPPT)
         TEST = TEST + WEIGHT(ISPPT)*OCC(J,ISPPT)
-       end do
-      end do
+     end do
+  end do
 
-      IF ( ABS(TEST-Z) .GT. 1.0D-5) THEN
-        WRITE(*,*) '*** WARNING ***'
-        WRITE(*,220) TEST,NEL
+  IF ( ABS(TEST-Z) .GT. 1.0D-5) THEN
+     WRITE(*,*) '*** WARNING ***'
+     WRITE(*,220) TEST,NEL
 220     FORMAT(' SUM OF OCCUPANCIES =',F30.20 ,' BUT NEL =',I5)
 !      ELSE
 !
 !230     FORMAT(' TOTAL CHARGE = ',F15.8)
-      ENDIF
+  ENDIF
 !
 !     TEST WHETHER THE MATERIAL IS A SEMICONDUCTOR
 !
-      IF ( MOD( NEL, 2) .EQ. 1) RETURN
-      INEL = NEL/2
-      ELOW = EIGVAL(INEL+1,1)
-      DO 310 ISPPT = 2,NKPTS
-        ELOW =MIN( ELOW, EIGVAL(INEL+1,ISPPT))
-310   CONTINUE
-      DO 320 ISPPT = 1,NKPTS
-        IF (ELOW .LT. EIGVAL(INEL,ISPPT)) RETURN
-320   CONTINUE
+  IF ( MOD( NEL, 2) .EQ. 1) RETURN
+  INEL = NEL/2
+  ELOW = EIGVAL(INEL+1,1)
+  DO  ISPPT = 2,NKPTS
+     ELOW =MIN( ELOW, EIGVAL(INEL+1,ISPPT))
+  ENDDO
 
-      if (NKPTS.gt.1) then
-       WRITE (*,*) 'MATERIAL MAY BE A SEMICONDUCTOR'
-      end if
+  DO  ISPPT = 1,NKPTS
+     IF (ELOW .LT. EIGVAL(INEL,ISPPT)) RETURN
+  END DO
+
+  if (NKPTS.gt.1) then
+     WRITE (*,*) 'MATERIAL MAY BE A SEMICONDUCTOR'
+  end if
 !
-      RETURN
-      END SUBROUTINE efermi
+  RETURN
+END SUBROUTINE efermi
 !
 !-----------------------------------------------------------------------
 !
@@ -618,86 +634,127 @@
 !9999  RETURN
 !      END FUNCTION erfc
 !-----------------------------------------------------------------------
-      REAL*8 FUNCTION fermid(xx)
-!
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      IF(XX .GT. 30.D0) THEN
-        FERMID=0.D0
-      ELSEIF(XX .LT. -30.D0) THEN
-        FERMID=2.D0
-      ELSE
-        FERMID=2.D0/(1.D0+EXP(XX))
-      ENDIF
-!
-      RETURN
-      END FUNCTION fermid
-!-----------------------------------------------------------------------
-      REAL*8 FUNCTION delthm(xx)
-!
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      pi=3.14159265358979
-      IF(XX .GT. 10.D0) THEN
-        DELTHM=2.D0
-      ELSEIF(XX .LT. -10.D0) THEN
-        DELTHM=0.D0
-      ELSE
-        DELTHM=(2.D0-ERFC(XX))+XX*EXP(-XX*XX)/SQRT(PI)
-      ENDIF
-!
-      RETURN
-      END FUNCTION delthm
-!-----------------------------------------------------------------------
-      REAL*8 FUNCTION spline(x)
+FUNCTION fermid(xx)
+  
+  USE kinds, ONLY : DP
 
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      eesqh=sqrt(exp(1.0))*0.5
-      sq2i=sqrt(2.0)*0.5
-      if (x.ge.0.0) then
-        fx=eesqh*exp(-(x+sq2i)**2)
-      else
-        fx=1.0-eesqh*exp(-(x-sq2i)**2)
-      endif 
-      spline=2.0*fx
+  implicit none
+
+  REAL(kind=DP), INTENT(in) :: xx
+  
+  REAL(kind=DP) :: fermid
+
+  IF(XX .GT. 30.D0) THEN
+     FERMID=0.D0
+  ELSEIF(XX .LT. -30.D0) THEN
+     FERMID=2.D0
+  ELSE
+     FERMID=2.D0/(1.D0+EXP(XX))
+  ENDIF
 !
-      return
-      END FUNCTION spline
+  RETURN
+END FUNCTION fermid
 !-----------------------------------------------------------------------
-      REAL*8 FUNCTION poshm(x)
+FUNCTION delthm(xx)
+!
+  USE kinds, ONLY : DP
+
+  implicit none
+
+  REAL(kind=DP) :: delthm
+  REAL(kind=DP), INTENT(in) :: xx
+
+  REAL(kind=DP) :: pi
+
+  pi=3.14159265358979d0
+  IF(XX .GT. 10.D0) THEN
+     DELTHM=2.D0
+  ELSEIF(XX .LT. -10.D0) THEN
+     DELTHM=0.D0
+  ELSE
+     DELTHM=(2.D0-ERFC(XX))+XX*EXP(-XX*XX)/SQRT(PI)
+  ENDIF
+!
+  RETURN
+END FUNCTION delthm
+!-----------------------------------------------------------------------
+FUNCTION spline(x)
+
+  USE kinds,  ONLY : DP
+  
+  implicit none
+
+  REAL(kind=DP) :: spline
+  REAL(kind=DP), INTENT(in) :: x
+
+  REAL(kind=DP) :: eesqh,sq2i,fx
+
+  eesqh=sqrt(exp(1.d0))*0.5d0
+  sq2i=sqrt(2.d0)*0.5d0
+  if (x.ge.0.d0) then
+     fx=eesqh*exp(-(x+sq2i)**2)
+  else
+     fx=1.d0-eesqh*exp(-(x-sq2i)**2)
+  endif
+  spline=2.d0*fx
+!
+  return
+END FUNCTION spline
+!-----------------------------------------------------------------------
+FUNCTION poshm(x)
 !
 ! NOTE g's are all intended to be normalized to 1 !
 ! function = 2 * int_minf^x [g(t)] dt
 !
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      pi=3.141592653589793238
-      a=-0.5634
-!     a=-0.8165
-      IF(X .GT. 10.D0) THEN
-        POSHM=2.D0
-      ELSEIF(X .LT. -10.D0) THEN
-        POSHM=0.D0
-      ELSE
-        POSHM=(2.D0-ERFC(X))+(-2.0*a*x*x+2*x+a)*EXP(-X*X)/SQRT(PI)/2.0
-      ENDIF
+
+  USE kinds,    ONLY : DP
+
+  implicit none
+
+  REAL(kind=DP) :: poshm
+  REAL(kind=DP), INTENT(in) :: x
+
+  REAL(kind=DP) :: pi,a
+
+  pi=3.141592653589793238d0
+  a=-0.5634d0
+  !     a=-0.8165
+  IF(X .GT. 10.D0) THEN
+     POSHM=2.D0
+  ELSEIF(X .LT. -10.D0) THEN
+     POSHM=0.D0
+  ELSE
+     POSHM=(2.D0-ERFC(X))+(-2.d0*a*x*x+2*x+a)*EXP(-X*X)/SQRT(PI)/2.d0
+  ENDIF
 !
-      RETURN
-      END FUNCTION poshm
+  RETURN
+END FUNCTION poshm
 !-----------------------------------------------------------------------
-      REAL*8 FUNCTION poshm2(x)
+FUNCTION poshm2(x)
 !
 ! NOTE g's are all intended to be normalized to 1 !
 ! function = 2 * int_minf^x [g(t)] dt
 !
-      IMPLICIT DOUBLE PRECISION (A-H,O-Z)
-      pi=3.141592653589793238
-      IF(X .GT. 10.D0) THEN
-        POSHM2=2.D0
-      ELSEIF(X .LT. -10.D0) THEN
-        POSHM2=0.D0
-      ELSE
-        POSHM2=(2.D0-ERFC(X-1./sqrt(2.)))+ &
-     &  sqrt(2.)*exp(-x*x+sqrt(2.)*x-0.5)/sqrt(pi)
-      ENDIF
+
+  USE kinds,   ONLY : DP
+
+  implicit none
+
+  REAL(kind=DP) :: poshm2
+  REAL(kind=DP), INTENT(in) :: x
+
+  REAL(kind=DP) :: pi
+
+  pi=3.141592653589793238d0
+  IF(X .GT. 10.D0) THEN
+     POSHM2=2.D0
+  ELSEIF(X .LT. -10.D0) THEN
+     POSHM2=0.D0
+  ELSE
+     POSHM2=(2.D0-ERFC(X-1.d0/sqrt(2.d0)))+ &
+          &  sqrt(2.d0)*exp(-x*x+sqrt(2.d0)*x-0.5d0)/sqrt(pi)
+  ENDIF
 !
-      RETURN
-      END FUNCTION poshm2
+  RETURN
+END FUNCTION poshm2
 !-----------------------------------------------------------------------

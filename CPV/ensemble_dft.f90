@@ -26,60 +26,13 @@ MODULE ensemble_dft
                                            ! (only 2 works).
       real(DP) :: etemp      = 0       ! smearing temperature.
       real(DP) :: ef         = 0       ! Fermi energy (relevant if tgrand=.true.).
-      logical      :: tdynz      = .false. ! whether to do dynamics for the
-                                           ! rotational degrees of freedom.
-      logical      :: tdynf      = .false. ! whether to do dynamics for the
-                                           ! unitary degrees of freedom.
-      real(DP) :: zmass      = 0       ! mass for the rotational degrees of freedom
-                                           ! in CP Lagrangian.
-      real(DP) :: fmass      = 0       ! mass for the occupational degrees of freedom
-                                           ! in CP Lagrangian.
-      real(DP) :: fricz      = 0       ! unitary degrees of freedom damping.
-      real(DP) :: fricf      = 0       ! occupational degrees of freedom damping.
-      logical :: l_blockocc!if true consider lowest n_block states fixed
-      integer :: n_blockocc(2) !number of fixed states for spin channel
 
 !***ensemble-DFT
-      real(DP), allocatable::                 bec0(:,:)
-      real(DP), allocatable::                 becm(:,:)
-      real(DP), allocatable::           becdrdiag(:,:,:)
       real(DP), allocatable::                  z0(:,:,:)
-      real(DP), allocatable::                  id(:,:,:)
-      real(DP), allocatable::               fion2(:,:)
       complex(DP), allocatable::             c0diag(:,:)
       real(DP), allocatable::               becdiag(:,:)
-      real(DP), allocatable::               c0hc0(:,:,:)
-      real(DP), allocatable::              c0h0c0(:,:,:)
-      real(DP), allocatable::             c0hxcc0(:,:,:)
-      complex(DP), allocatable::               h0c0(:,:)
-      complex(DP), allocatable::              hxcc0(:,:)
-      real(DP), allocatable::                  z1(:,:,:)
-      real(DP), allocatable::                  zx(:,:,:)
-      real(DP), allocatable::                 zxt(:,:,:)
-      real(DP), allocatable::                zaux(:,:,:)
-      real(DP), allocatable::                    dval(:)
       real(DP), allocatable::                      e0(:)
-      real(DP), allocatable::                      e1(:)
-      real(DP), allocatable::                      ex(:)
-      real(DP), allocatable::                      dx(:)
-      real(DP), allocatable::                      f0(:)
-      real(DP), allocatable::                      f1(:)
-      real(DP), allocatable::                      fx(:)
-      real(DP), allocatable::                    faux(:)
       real(DP), allocatable::               fmat0(:,:,:)
-      real(DP), allocatable::               fmat1(:,:,:)
-      real(DP), allocatable::               fmatx(:,:,:)
-      real(DP), allocatable::               dfmat(:,:,:)
-      real(DP), allocatable::                     v0s(:)
-      real(DP), allocatable::                 vhxcs(:,:)
-      real(DP), allocatable::               epsi0(:,:,:)
-      real(DP) :: atot0,atot1,atotmin,etot0,etot1,etotmin
-      real(DP) :: ef1,enocc
-      real(DP) :: dadx1,dedx1,dentdx1,eqa,eqb,eqc
-      real(DP) :: etot2,entropy2
-      real(DP) :: f2,x,xx,xmin
-      complex(DP) :: c0doti,c0dotk
-      integer ::  niter,nss,istart,il
       real(DP) :: gibbsfe
 
 
@@ -153,22 +106,21 @@ CONTAINS
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nupdwn(2), nspin
     INTEGER :: is, nss, i
-      id(:,:,:)=0.0d0
+      z0(:,:,:)=0.0d0
       do  is=1,nspin
         nss=nupdwn(is)
         do i=1,nss
-          id(i,i,is)=1.d0
+          z0(i,i,is)=1.d0
         end do
       end do
-      z0 = id  ! initialize rotation matrix to a default value
     RETURN
   END SUBROUTINE id_matrix_init
 
 
   SUBROUTINE ensemble_initval &
     ( occupations_ , n_inner_ , fermi_energy_ , rotmass_ , occmass_ , rotation_damping_ , &
-      occupation_damping_ , occupation_dynamics_ , rotation_dynamics_ ,  degauss_ , smearing_ ,&
-       l_blockocc_, n_blockocc_)     
+      occupation_damping_ , occupation_dynamics_ , rotation_dynamics_ ,  degauss_ , smearing_) 
+            
     IMPLICIT NONE
     CHARACTER(LEN=*), INTENT(IN) :: occupations_
     CHARACTER(LEN=*), INTENT(IN) :: rotation_dynamics_
@@ -177,8 +129,6 @@ CONTAINS
     INTEGER, INTENT(IN) :: n_inner_
     REAL(DP), INTENT(IN) :: fermi_energy_ , rotmass_ , occmass_ , rotation_damping_
     REAL(DP), INTENT(IN) :: occupation_damping_ , degauss_
-    LOGICAL :: l_blockocc_
-    INTEGER :: n_blockocc_(2)
 
       SELECT CASE ( TRIM( occupations_ ) )
           !
@@ -200,30 +150,7 @@ CONTAINS
           ninner  = n_inner_
           etemp   = degauss_
           ef      = fermi_energy_
-          fricz   = rotation_damping_
-          fricf   = occupation_damping_
-          zmass   = rotmass_
-          fmass   = occmass_
-          l_blockocc = l_blockocc_
-          n_blockocc(1:2) = n_blockocc_(1:2)
 
-          SELECT CASE ( TRIM( rotation_dynamics_ ) )
-            CASE ( 'line-minimization','l-m','lm' )
-              tdynz = .FALSE.
-              fricz = 0.0d0
-              zmass = 0.0d0
-            CASE DEFAULT
-              CALL errore(' ensemble_initval ',' rotation_dynamics not implemented ', 1 )
-          END SELECT
-
-          SELECT CASE ( TRIM( occupation_dynamics_ ) )
-            CASE ( 'line-minimization','l-m','lm' )
-              tdynf = .FALSE.
-              fricf = 0.0d0
-              fmass = 0.0d0
-            CASE DEFAULT
-              CALL errore(' ensemble_initval ',' occupation_dynamics not implemented ', 1 )
-          END SELECT
 
           SELECT CASE ( TRIM( smearing_ ) )
             CASE ( 'gaussian','g' )
@@ -262,12 +189,8 @@ CONTAINS
     USE io_global, ONLY: stdout
       write(stdout,250) tens
       write(stdout,252) tgrand
-!     write(stdout,253) tdynz
-!     write(stdout,254) tdynf
 250   format (4x,'  ensemble-DFT calculation     =',l5)
 252   format (4x,'  grand-canonical calculation  =',l5)
-253   format (4x,'  CP rotational evolution      =',l5)
-254   format (4x,'  CP occupational evolution    =',l5)
 
       if(tens) then
          write (stdout,251) ninner,etemp,ismear,ef                         
@@ -279,10 +202,6 @@ CONTAINS
      &        /4x,'| etemp        =',f10.5,' a.u.     |'                           &
      &        /4x,'| ismear       =',i10,'          |'                             &
      &        /4x,'| fermi energy =',f10.5,' a.u.     |'                           &
-!    &        /4x,'| zmass        =',f10.5,' a.u.     |'                           &
-!    &        /4x,'| fmass        =',f10.5,' a.u.     |'                           &
-!    &        /4x,'| fricz        =',f10.5,'          |'                           &
-!    &        /4x,'| fricf        =',f10.5,'          |'                           &
      &        /4x,'=====================================')
 
     RETURN
@@ -292,39 +211,11 @@ CONTAINS
   SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat )
     IMPLICIT NONE
     INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat
-      allocate( bec0(nhsa,n))
-      allocate( becm(nhsa,n))
       allocate(c0diag(ngw,n))
-      allocate(becdrdiag(nhsa,n,3))
-      allocate(id(nudx,nudx,nspin))
       allocate(z0(nudx,nudx,nspin))
-      allocate(fion2(3,nat))
       allocate(becdiag(nhsa,n))
-      allocate(c0hc0(nudx,nudx,nspin))
-      allocate(c0h0c0(nudx,nudx,nspin))
-      allocate(c0hxcc0(nudx,nudx,nspin))
-      allocate(h0c0(ngw,nx))
-      allocate(hxcc0(ngw,nx))
-      allocate(z1(nudx,nudx,nspin))
-      allocate(zx(nudx,nudx,nspin))
-      allocate(zxt(nudx,nudx,nspin))
-      allocate(zaux(nudx,nudx,nspin))
-      allocate(dval(nx))
       allocate(e0(nx))
-      allocate(e1(nx))
-      allocate(ex(nx))
-      allocate(dx(nx))
-      allocate(f0(nx))
-      allocate(f1(nx))
-      allocate(fx(nx))
-      allocate(faux(nx))
       allocate(fmat0(nudx,nudx,nspin))
-      allocate(fmat1(nudx,nudx,nspin))
-      allocate(fmatx(nudx,nudx,nspin))
-      allocate(dfmat(nudx,nudx,nspin))
-      allocate(v0s(nnrsx))
-      allocate(vhxcs(nnrsx,nspin))
-      allocate(epsi0(nudx,nudx,nspin))
     RETURN
   END SUBROUTINE allocate_ensemble_dft
 
@@ -332,39 +223,11 @@ CONTAINS
 
   SUBROUTINE deallocate_ensemble_dft( )
     IMPLICIT NONE
-    IF( ALLOCATED( bec0 ) )  deallocate( bec0)
-    IF( ALLOCATED( becm ) )  deallocate( becm )
     IF( ALLOCATED( c0diag ) )  deallocate(c0diag )
-    IF( ALLOCATED( becdrdiag ) )  deallocate(becdrdiag )
-    IF( ALLOCATED( id ) )  deallocate(id )
     IF( ALLOCATED( z0 ) )  deallocate(z0 )
-    IF( ALLOCATED( fion2 ) )  deallocate(fion2 )
     IF( ALLOCATED( becdiag ) )  deallocate(becdiag )
-    IF( ALLOCATED( c0hc0 ) )  deallocate(c0hc0 )
-    IF( ALLOCATED( c0h0c0 ) )  deallocate(c0h0c0 )
-    IF( ALLOCATED( c0hxcc0 ) )  deallocate(c0hxcc0 )
-    IF( ALLOCATED( h0c0 ) )  deallocate(h0c0 )
-    IF( ALLOCATED( hxcc0 ) )  deallocate(hxcc0 )
-    IF( ALLOCATED( z1 ) )  deallocate(z1 )
-    IF( ALLOCATED( zx ) )  deallocate(zx )
-    IF( ALLOCATED( zxt ) )  deallocate(zxt )
-    IF( ALLOCATED( zaux ) )  deallocate(zaux )
-    IF( ALLOCATED( dval ) )  deallocate(dval )
     IF( ALLOCATED( e0 ) )  deallocate(e0 )
-    IF( ALLOCATED( e1 ) )  deallocate(e1 )
-    IF( ALLOCATED( ex ) )  deallocate(ex )
-    IF( ALLOCATED( dx ) )  deallocate(dx )
-    IF( ALLOCATED( f0 ) )  deallocate(f0 )
-    IF( ALLOCATED( f1 ) )  deallocate(f1 )
-    IF( ALLOCATED( fx ) )  deallocate(fx )
-    IF( ALLOCATED( faux ) )  deallocate(faux )
     IF( ALLOCATED( fmat0 ) )  deallocate(fmat0 )
-    IF( ALLOCATED( fmat1 ) )  deallocate(fmat1 )
-    IF( ALLOCATED( fmatx ) )  deallocate(fmatx )
-    IF( ALLOCATED( dfmat ) )  deallocate(dfmat )
-    IF( ALLOCATED( v0s ) )  deallocate(v0s )
-    IF( ALLOCATED( vhxcs ) )  deallocate(vhxcs )
-    IF( ALLOCATED( epsi0 ) )  deallocate(epsi0 )
     RETURN
   END SUBROUTINE deallocate_ensemble_dft
   
