@@ -32,25 +32,14 @@ MODULE control_flags
      !
   END TYPE convergence_criteria
   !
-  TYPE ionic_conjugate_gradient
-     !
-     LOGICAL  :: active
-     INTEGER  :: nstepix
-     INTEGER  :: nstepex
-     REAL(DP) :: ionthr
-     REAL(DP) :: elethr
-     !
-  END TYPE ionic_conjugate_gradient
-  !
   PUBLIC :: tbeg, nomore, nbeg, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
             newnfi, tnewnfi, tfor, tpre, tzeroe, tsde, tsdp, tsdc, taurdr,   &
             ndr, ndw, tortho, ortho_eps, ortho_max, tstress, tprnfor,        &
-            timing, memchk, tconjgrad, tprnsfac, toptical, tcarpar,          &
+            timing, memchk, tprnsfac, tcarpar,                               &
             trane,dt_old,ampre, tranp, amprp, tdipole, t_diis, t_diis_simple,&
             t_diis_rot, tnosee, tnosep, tnoseh, tcp, tcap, tdamp, tdampions, &
             tconvthrs, tolp, convergence_criteria, tionstep, nstepe,         &
-            tsteepdesc, ionic_conjugate_gradient, tconjgrad_ion, tatomicwfc, &
-            tscreen, gamma_only, force_pairing, tchi2
+            tsteepdesc, tatomicwfc, tscreen, gamma_only, force_pairing, tchi2
   !
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tvlocw, trhor, thdyn, iprsta, trhow
@@ -88,7 +77,6 @@ MODULE control_flags
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
   LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor 
-  LOGICAL :: toptical      = .FALSE. ! print out optical properties
   LOGICAL :: tcarpar       = .FALSE. ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
   LOGICAL :: tdamp         = .FALSE. ! Use damped dynamics for electrons
   LOGICAL :: tdampions     = .FALSE. ! Use damped dynamics for ions
@@ -115,9 +103,6 @@ MODULE control_flags
 
   LOGICAL :: tsteepdesc = .FALSE.
                             !  parameters for electronic steepest desceent
-
-  TYPE (ionic_conjugate_gradient) :: tconjgrad_ion
-                            !  conjugate gradient for ionic minimization
 
   INTEGER :: nbeg   = 0 ! internal code for initialization ( -1, 0, 1, 2, .. )
   INTEGER :: ndw    = 0 !
@@ -336,7 +321,7 @@ MODULE control_flags
       !
       tcarpar = .TRUE.
       !
-      IF ( tconjgrad .OR. t_diis .OR. tsteepdesc ) THEN
+      IF ( t_diis .OR. tsteepdesc ) THEN
          !
          tcarpar = .FALSE.
          !

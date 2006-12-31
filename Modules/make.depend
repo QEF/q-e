@@ -226,14 +226,12 @@ stick_base.o : io_global.o
 stick_base.o : kind.o
 stick_base.o : mp.o
 stick_base.o : mp_global.o
-task_groups.o : electrons_base.o
 task_groups.o : fft_types.o
 task_groups.o : io_global.o
 task_groups.o : kind.o
 task_groups.o : mp.o
 task_groups.o : mp_global.o
 task_groups.o : parallel_include.o
-task_groups.o : parameters.o
 timestep.o : kind.o
 uspp.o : constants.o
 uspp.o : kind.o

@@ -73,13 +73,6 @@ MODULE read_cards_module
        !
        tdipole_card = .FALSE.
        !
-       ! ... optical properties
-       !
-       toptical_card = .FALSE.
-       noptical      = 0
-       woptical      = 0.1D0
-       boptical      = 0.0D0
-       !
        ! ... Constraints
        !
        nconstr_inp    = 0
@@ -196,12 +189,6 @@ MODULE read_cards_module
        ELSE IF ( TRIM(card) == 'SETNFI' ) THEN
           !
           CALL card_setnfi( input_line )
-          IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
-             WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
-          !
-       ELSE IF ( TRIM(card) == 'OPTICAL' ) THEN
-          !  
-          CALL card_optical( input_line )
           IF ( ( prog == 'PW' .OR. prog == 'CP' ) .AND. ionode ) &
              WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
           !
@@ -1062,59 +1049,6 @@ MODULE read_cards_module
        !
      END SUBROUTINE card_vhmean
      !
-     !
-     !------------------------------------------------------------------------
-     !    BEGIN manual
-     !----------------------------------------------------------------------
-     !
-     ! OPTICAL
-     !
-     !  Enable the calculations of optical properties
-     !
-     ! Syntax:
-     !
-     !    OPTICAL
-     !      woptical noptical boptical
-     !
-     ! Example:
-     !
-     !   ???
-     !
-     ! Where:
-     !
-     !   woptical (REAL)     frequency maximum in eV
-     !   noptical (INTEGER)  number of intervals
-     !   boptical (REAL)     electronic temperature (in K)
-     !                       to calculate the fermi distribution function
-     !
-     !----------------------------------------------------------------------
-     !    END manual
-     !------------------------------------------------------------------------
-     !
-     SUBROUTINE card_optical( input_line )
-       ! 
-       IMPLICIT NONE
-       !
-       CHARACTER(LEN=256) :: input_line
-       LOGICAL, SAVE      :: tread = .FALSE.
-       !
-       !
-       IF ( tread ) THEN
-          CALL errore(' card_optical ', ' two occurrence ', 2 )
-       END IF
-       IF ( empty_states_nbnd < 1 ) THEN
-          CALL errore( ' card_optical ', &
-                     & ' empty states are not computed ', 2 )
-       END IF
-       toptical_card = .TRUE.
-       CALL read_line( input_line )
-       READ(input_line, *) woptical, noptical, boptical
-       !
-       tread = .TRUE.
-       !
-       RETURN
-       !
-     END SUBROUTINE card_optical
      !
      !
      !------------------------------------------------------------------------

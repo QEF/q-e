@@ -624,19 +624,18 @@ MODULE input_parameters
           ! ionic dynamics
 
         CHARACTER(LEN=80) :: electron_dynamics = 'none'
-          ! electron_dynamics = 'default' | 'sd' | 'cg' | 'damp' | 'md' | 'none' | 'diis' 
+          ! electron_dynamics = 'default' | 'sd' | 'cg' | 'damp' | 'none' | 'verlet'
           ! set how electrons shold be moved
           ! 'none'    electronic degrees of fredom (d.o.f.) are kept fixed 
           ! 'sd'      steepest descent algorithm is used to minimize electronic d.o.f. 
           ! 'cg'      conjugate gradient algorithm is used to minimize electronic d.o.f. 
-          ! 'diis'    DIIS algorithm is used to minimize electronic d.o.f. 
           ! 'damp'    damped dynamics is used to propagate electronic d.o.f. 
           ! 'verlet'  standard Verlet algorithm is used to propagate electronic d.o.f. 
           ! 'default' the value depends on variable "calculation"
 
-        CHARACTER(LEN=80) :: electron_dynamics_allowed(7)
+        CHARACTER(LEN=80) :: electron_dynamics_allowed(6)
         DATA electron_dynamics_allowed &
-          / 'default', 'sd', 'cg', 'damp', 'verlet', 'none', 'diis' /
+          / 'default', 'sd', 'cg', 'damp', 'verlet', 'none' /
 
         REAL(DP) :: electron_damping = 0.0d0
           ! meaningful only if " electron_dynamics = 'damp' "
@@ -1465,13 +1464,6 @@ MODULE input_parameters
         INTEGER :: vhnr_inp = 0, vhiunit_inp = 0
         REAL(DP)  :: vhrmin_inp = 0.0d0, vhrmax_inp = 0.0d0
         CHARACTER :: vhasse_inp = 'X'
-
-!
-!    OPTICAL
-!
-        LOGICAL :: toptical_card = .FALSE.
-        REAL(DP) :: woptical = 0.0d0, boptical = 0.0d0
-        INTEGER   :: noptical = 0
 
 !
 !    DIPOLE
