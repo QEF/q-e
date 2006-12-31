@@ -663,6 +663,7 @@ FUNCTION delthm(xx)
 
   REAL(kind=DP) :: delthm
   REAL(kind=DP), INTENT(in) :: xx
+  REAL(kind=DP), EXTERNAL :: ERFC
 
   REAL(kind=DP) :: pi
 
@@ -713,6 +714,7 @@ FUNCTION poshm(x)
 
   REAL(kind=DP) :: poshm
   REAL(kind=DP), INTENT(in) :: x
+  REAL(kind=DP), EXTERNAL :: ERFC
 
   REAL(kind=DP) :: pi,a
 
@@ -742,6 +744,7 @@ FUNCTION poshm2(x)
 
   REAL(kind=DP) :: poshm2
   REAL(kind=DP), INTENT(in) :: x
+  REAL(kind=DP), EXTERNAL :: ERFC
 
   REAL(kind=DP) :: pi
 
