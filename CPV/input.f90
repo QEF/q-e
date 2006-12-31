@@ -211,7 +211,6 @@ MODULE input
                                tstress_    => tstress, &
                                tprnfor_    => tprnfor, &
                                tprnsfac_   => tprnsfac, &
-                               toptical_   => toptical, &
                                ampre_      => ampre, &
                                trane_      => trane, &
                                newnfi_     => newnfi, &
@@ -231,11 +230,7 @@ MODULE input
                                tortho_     => tortho,   &
                                nstep_      => nstep,    &    
                                reduce_io_      => reduce_io    
-     USE control_flags, ONLY : t_diis_simple_ => t_diis_simple, &
-                               t_diis_        => t_diis, &
-                               tsde_          => tsde, &
-                               t_diis_rot_    => t_diis_rot, &
-                               tconjgrad_     => tconjgrad, &
+     USE control_flags, ONLY : tsde_          => tsde, &
                                tsteepdesc_    => tsteepdesc, &
                                tzeroe_        => tzeroe, &
                                tdamp_         => tdamp, &
@@ -248,7 +243,7 @@ MODULE input
      USE control_flags, ONLY : tdampions_ => tdampions, &
                                tfor_      => tfor, &
                                tsdp_      => tsdp, &
-                               lfixatom, tconvthrs, tconjgrad_ion
+                               lfixatom, tconvthrs
      USE control_flags, ONLY : tnosep_ => tnosep, &
                                tcap_   => tcap, &
                                tcp_    => tcp, &
@@ -297,7 +292,7 @@ MODULE input
      USE orthogonalize_base, ONLY : ortho_para_ => ortho_para
      !
      USE input_parameters,   ONLY: &
-        electron_dynamics, electron_damping, diis_rot, electron_temperature,   &
+        electron_dynamics, electron_damping, electron_temperature,   &
         ion_dynamics, ekin_conv_thr, etot_conv_thr, forc_conv_thr, ion_maxstep,&
         electron_maxstep, ion_damping, ion_temperature, ion_velocities, tranp, &
         amprp, ion_nstepe, cell_nstepe, cell_dynamics, cell_damping,           &
@@ -305,7 +300,7 @@ MODULE input
         tapos, tavel, ecutwfc, emass, emass_cutoff, taspc, trd_ht, ibrav,      &
         ortho_eps, ortho_max, ntyp, tolp, tchi2_inp, calculation, disk_io, dt, &
         tcg, ndr, ndw, iprint, isave, tstress, k_points, tprnfor, verbosity,   &
-        tdipole_card, toptical_card, tnewnfi_card, newnfi_card,                &
+        tdipole_card, tnewnfi_card, newnfi_card,                               &
         ampre, nstep, restart_mode, ion_positions, startingwfc, printwfc,      &
         orthogonalization, electron_velocities, nat, if_pos, phase_space,      &
         tefield, epol, efield, tefield2, epol2, efield2, remove_rigid_rot,     &
@@ -421,7 +416,6 @@ MODULE input
      END SELECT
      !
      tdipole_  = tdipole_card
-     toptical_ = toptical_card
      newnfi_   = newnfi_card
      tnewnfi_  = tnewnfi_card
      !
@@ -570,11 +564,7 @@ MODULE input
       ! ... Electron dynamics
 
       tdamp_          = .FALSE.
-      tconjgrad_      = .FALSE.
       tsteepdesc_     = .FALSE.
-      t_diis_        = .FALSE.
-      t_diis_simple_ = .FALSE.
-      t_diis_rot_    = .FALSE.
       frice_ = 0.d0
       SELECT CASE ( TRIM(electron_dynamics) )
         CASE ('sd', 'default')
@@ -586,22 +576,14 @@ MODULE input
           IF( program_name == 'CP90' ) THEN
              tcg = .TRUE.
           ELSE
-             tconjgrad_ = .TRUE.
+             CALL errore(' control_flags ',' conjugate gradient not yet implemented in FPMD ', 1 )
           ENDIF
         CASE ('damp')
           tsde_   = .FALSE.
           tdamp_  = .TRUE.
           frice_ = electron_damping
         CASE ('diis')
-          IF( program_name == 'CP90' ) &
-            CALL errore( "iosys ", " electron_dynamics keyword not yet implemented ", 1 )
-          tsde_   = .FALSE.
-          t_diis_ = .TRUE.
-          IF( diis_rot ) THEN
-            t_diis_rot_    = .TRUE.
-          ELSE
-            t_diis_simple_ = .TRUE.
-          END IF
+          CALL errore( "iosys ", " electron_dynamics keyword diis not yet implemented ", 1 )
         CASE ('none')
           tsde_ = .FALSE.
         CASE DEFAULT
@@ -642,11 +624,6 @@ MODULE input
       tconvthrs%ekin   = 0.0d0
       tconvthrs%derho  = 0.0d0
       tconvthrs%force  = 0.0d0
-      tconjgrad_ion%active = .FALSE.
-      tconjgrad_ion%nstepix = 1
-      tconjgrad_ion%nstepex = 1
-      tconjgrad_ion%ionthr = 1.0d+10
-      tconjgrad_ion%elethr = 1.0d+10
       SELECT CASE ( TRIM(ion_dynamics) )
         CASE ('sd')
           tsdp_  = .TRUE.
@@ -662,20 +639,7 @@ MODULE input
           tfor_  = .TRUE.
           fricp_ = 0.d0
         CASE ('cg')       ! Conjugate Gradient minimization for ions
-          tsdp_ = .FALSE.
-          tfor_ = .TRUE.
-          tconjgrad_ion%active  = .TRUE.
-          tconjgrad_ion%nstepix = ion_maxstep    ! maximum number of iteration
-          tconjgrad_ion%nstepex = electron_maxstep  ! maximum number of iteration for the electronic minimization
-          tconjgrad_ion%ionthr  = etot_conv_thr ! energy threshold for convergence
-          tconjgrad_ion%elethr  = ekin_conv_thr ! energy threshold for convergence in the electrons minimization
-          tconvthrs%ekin   = ekin_conv_thr
-          tconvthrs%derho  = etot_conv_thr
-          tconvthrs%force  = forc_conv_thr
-          tconvthrs%active = .TRUE.
-          tconvthrs%nstep  = 1
-          IF( program_name == 'CP90' ) &
-            CALL errore( "iosys ", " ion_dynamics = '//TRIM(ion_dynamics)//' not yet implemented ", 1 )
+          CALL errore( "iosys ", " ion_dynamics = '//TRIM(ion_dynamics)//' not yet implemented ", 1 )
         CASE ('damp')
           ldamped    = .TRUE.
           tsdp_      = .FALSE.
@@ -864,17 +828,9 @@ MODULE input
       IF( .NOT. tavel .AND. TRIM(ion_velocities)=='from_input' ) &
         CALL errore(' iosys ',' ION_VELOCITIES not present in stdin ', 1 )
 
-      IF( TRIM(electron_dynamics) /= 'diis' .AND. TRIM(orthogonalization) /= 'ortho' ) THEN
-        IF( emass_cutoff < ecutwfc ) &
-          CALL errore(' IOSYS ', ' FOURIER ACCELERATION WITHOUT ORTHO',0)
-      END IF
-
       IF( ( TRIM( calculation ) == 'smd' ) .AND. ( TRIM( cell_dynamics ) /= 'none' ) ) THEN
         CALL errore(' smiosys ',' cell_dynamics not implemented : '//TRIM(cell_dynamics), 1 )
       END IF
-
-      IF( toptical_ ) &
-        CALL errore(' iosys ',' Optical properties not implemented yet ',1)
 
       RETURN
    END SUBROUTINE set_control_flags
@@ -895,17 +851,14 @@ MODULE input
            ecutrho, ecfixed, qcutz, q2sigma, tk_inp, wmass,                   &
            ion_radius, emass, emass_cutoff, temph, fnoseh, nr1b, nr2b, nr3b,  &
            tempw, fnosep, nr1, nr2, nr3, nr1s, nr2s, nr3s, ekincw, fnosee,    &
-           tturbo_inp, nturbo_inp, outdir, prefix, woptical,                  &
-           noptical, boptical, k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,   &
+           tturbo_inp, nturbo_inp, outdir, prefix,                            &
+           k_points, nkstot, nk1, nk2, nk3, k1, k2, k3,                       &
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
            nhgrp, cell_units, restart_mode, sic_alpha 
 
-     USE input_parameters, ONLY: diis_achmix, diis_ethr, diis_wthr, diis_delt, &
-           diis_nreset, diis_temp, diis_nrot, diis_maxstep, diis_fthr,         &
-           diis_size, diis_hcut, diis_rothr, diis_chguess, diis_g0chmix,       &
-           diis_nchmix, diis_g1chmix, empty_states_maxstep,                    &
+     USE input_parameters, ONLY: empty_states_maxstep,                         &
            empty_states_ethr, empty_states_nbnd,                               &
            iprnks_empty, nconstr_inp, iprnks, nprnks,                          &
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
@@ -956,7 +909,6 @@ MODULE input
            nr2s_ => nr2s, &
            nr3s_ => nr3s
      USE guess,              ONLY : guess_setup
-     USE diis,               ONLY : diis_setup
      USE charge_mix,         ONLY : charge_mix_setup
      USE kohn_sham_states,   ONLY : ks_states_init
      USE electrons_module,   ONLY : electrons_setup, empty_init
@@ -970,8 +922,6 @@ MODULE input
      REAL(DP) :: alat_ , massa_totale
      REAL(DP) :: ethr_emp_inp
      ! ...   DIIS
-     REAL(DP) :: tol_diis_inp, delt_diis_inp, tolene_inp
-     LOGICAL :: o_diis_inp, oqnr_diis_inp
      INTEGER :: ia
      LOGICAL :: ltest
      !
@@ -1078,32 +1028,6 @@ MODULE input
      !
      lconstrain = ( ncolvar_inp + nconstr_inp > 0 )
      !
-
-     !
-     IF( program_name == 'FPMD' ) THEN
-        !
-        o_diis_inp        = .TRUE.
-        oqnr_diis_inp     = .TRUE.
-        tolene_inp        = etot_conv_thr
-        tol_diis_inp      = ekin_conv_thr
-        delt_diis_inp     = dt
-        !
-        IF ( diis_ethr > 0.D0 ) tolene_inp    = diis_ethr
-        IF ( diis_wthr > 0.D0 ) tol_diis_inp  = diis_wthr
-        IF ( diis_delt > 0.D0 ) delt_diis_inp = diis_delt
-        !
-        CALL diis_setup( diis_fthr, oqnr_diis_inp, o_diis_inp, diis_size,      &
-                         diis_hcut, tol_diis_inp, diis_maxstep, diis_nreset,   &
-                         delt_diis_inp, diis_temp, diis_nrot(1), diis_nrot(2), &
-                         diis_nrot(3), diis_rothr(1), diis_rothr(2),           &
-                         diis_rothr(3), tolene_inp )
-        !
-        CALL guess_setup( diis_chguess )
-        !
-        CALL charge_mix_setup( diis_achmix, diis_g0chmix, &
-                               diis_nchmix, diis_g1chmix )
-        !
-     END IF
      !
      CALL wannier_init( wf_efield, wf_switch, sw_len, efx0, efy0, efz0, &
                         efx1, efy1, efz1, wfsd, wfdt, maxwfdt, wf_q,    &
@@ -1283,8 +1207,6 @@ MODULE input
     !
     USE electrons_nose,       ONLY: electrons_nose_info
     USE electrons_module,     ONLY: empty_print_info
-    USE diis,                 ONLY: diis_print_info
-    USE runcg_module,         ONLY: runcg_info
     USE sic_module,           ONLY: sic_info
     USE wave_base,            ONLY: frice, grease
     USE ions_base,            ONLY: fricp
@@ -1312,11 +1234,7 @@ MODULE input
         WRITE( stdout,512)
       END IF
       !
-      IF(      TRIM(electron_dynamics) == 'diis' ) THEN
-          CALL diis_print_info( stdout )
-      ELSE IF( TRIM(electron_dynamics) == 'cg'  ) THEN
-          CALL runcg_info( stdout )
-      ELSE IF( TRIM(electron_dynamics) == 'sd' ) THEN
+      IF( TRIM(electron_dynamics) == 'sd' ) THEN
           WRITE( stdout,513)
       ELSE IF( TRIM(electron_dynamics) == 'verlet' ) THEN
           WRITE( stdout,510)

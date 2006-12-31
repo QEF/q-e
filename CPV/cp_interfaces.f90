@@ -17,7 +17,7 @@
    PUBLIC :: bessel3
    PUBLIC :: dforce1
    PUBLIC :: dforce2
-   PUBLIC :: dforce
+   PUBLIC :: dforce_fpmd
 
    PUBLIC :: nlin
    PUBLIC :: nlin_stress
@@ -47,12 +47,8 @@
 
    PUBLIC :: main_fpmd
 
-   PUBLIC :: runcp
    PUBLIC :: runcp_uspp
-   PUBLIC :: runcp_ncpp
-   PUBLIC :: runcp_force_pairing
    PUBLIC :: runcp_uspp_force_pairing
-   PUBLIC :: runcp_uspp_bgl
 
    PUBLIC :: newrho
 
@@ -177,8 +173,8 @@
    END INTERFACE
 
 
-   INTERFACE dforce
-      SUBROUTINE dforce_fpmd( ib, c, f, df, da, v, vkb, bec, n, noffset )
+   INTERFACE dforce_fpmd
+      SUBROUTINE dforce_fpmd_x( ib, c, f, df, da, v, vkb, bec, n, noffset )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
          INTEGER,     INTENT(IN)  :: ib     ! band index
@@ -187,7 +183,7 @@
          REAL (DP),   INTENT(IN)  :: v(:), bec(:,:), f(:)
          COMPLEX(DP), INTENT(IN)  :: vkb(:,:)
          INTEGER,     INTENT(IN)  :: n, noffset  ! number of bands, and band index offset
-      END SUBROUTINE dforce_fpmd
+      END SUBROUTINE dforce_fpmd_x
       SUBROUTINE dforce_all( c, f, cgrad, vpot, vkb, bec, n, noffset )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
@@ -503,43 +499,6 @@
    END INTERFACE
 
 
-   INTERFACE runcp
-      SUBROUTINE runcp_x &
-         ( ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc )
-         USE kinds,             ONLY: DP
-         USE cell_base,         ONLY : boxdimensions
-         IMPLICIT NONE
-         LOGICAL :: ttprint, tortho, tsde
-         COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
-         COMPLEX(DP)  ::  vkb(:,:)
-         REAL(DP), INTENT(IN)  ::  fi(:)
-         REAL(DP), INTENT(IN)  ::  bec(:,:)
-         TYPE (boxdimensions), INTENT(IN)  ::  ht
-         REAL (DP) ::  vpot(:,:)
-         REAL(DP) :: ei(:,:)
-         REAL(DP) :: ekinc
-         REAL(DP), INTENT(IN) :: fccc
-      END SUBROUTINE
-   END INTERFACE
-
-
-   INTERFACE runcp_ncpp
-      SUBROUTINE runcp_ncpp_x &
-         ( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, tlambda, fromscra, diis, restart )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
-         REAL(DP)    :: gam(:,:,:)
-         COMPLEX(DP) :: vkb(:,:)
-         REAL(DP), INTENT(IN)  ::  fi(:)
-         REAL (DP) ::  vpot(:,:)
-         REAL (DP), INTENT(IN) ::  bec(:,:)
-         REAL(DP), INTENT(IN) :: fccc
-         LOGICAL, OPTIONAL, INTENT(IN) :: tlambda, fromscra, diis, restart
-      END SUBROUTINE
-   END INTERFACE
-
-
    INTERFACE runcp_uspp
       SUBROUTINE runcp_uspp_x &
          ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
@@ -557,29 +516,10 @@
    END INTERFACE
 
 
-   INTERFACE runcp_force_pairing
-      SUBROUTINE runcp_force_pairing_x &
-         (ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc)
-         USE kinds,             ONLY : DP
-         USE cell_base,         ONLY : boxdimensions
-         IMPLICIT NONE
-         LOGICAL :: ttprint, tortho, tsde
-         COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
-         COMPLEX(DP)  ::  vkb(:,:)
-         REAL(DP), INTENT(INOUT) ::  fi(:)
-         TYPE (boxdimensions), INTENT(IN)  ::  ht
-         REAL (DP) ::  vpot(:,:)
-         REAL(DP) :: ei(:,:)
-         REAL(DP), INTENT(IN) :: bec(:,:)
-         REAL(DP) :: ekinc
-         REAL(DP), INTENT(IN) :: fccc
-      END SUBROUTINE
-   END INTERFACE
-
-
    INTERFACE runcp_uspp_force_pairing
       SUBROUTINE runcp_uspp_force_pairing_x  &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, intermed, fromscra, restart )
+         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, intermed, fromscra, &
+           restart )
          USE kinds,             ONLY: DP
          IMPLICIT NONE
          INTEGER, INTENT(in) :: nfi
@@ -594,22 +534,6 @@
       END SUBROUTINE
    END INTERFACE
 
-
-   INTERFACE runcp_uspp_bgl
-      SUBROUTINE runcp_uspp_bgl_x &
-         ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
-         USE kinds,             ONLY: DP
-         IMPLICIT NONE
-         integer, intent(in) :: nfi
-         real(DP) :: fccc, ccc
-         real(DP) :: ema0bg(:), dt2bye
-         real(DP) :: rhos(:,:)
-         real(DP) :: bec(:,:)
-         complex(DP) :: c0(:,:), cm(:,:)
-         logical, optional, intent(in) :: fromscra
-         logical, optional, intent(in) :: restart
-      END SUBROUTINE
-   END INTERFACE
 
 
    INTERFACE newrho
@@ -696,15 +620,6 @@
 
 
    INTERFACE eigs
-      SUBROUTINE rceigs_x( nei, gam, tortho, f, ei )
-         USE kinds,            ONLY: DP
-         IMPLICIT NONE
-         REAL(DP), INTENT(IN)    :: f(:)
-         LOGICAL,  INTENT(IN)    :: tortho
-         REAL(DP), INTENT(INOUT) :: gam(:,:)
-         REAL(DP)                :: ei(:)
-         INTEGER,  INTENT(IN)    :: nei
-      END SUBROUTINE
       SUBROUTINE cp_eigs_x( nfi, lambdap, lambda )
          USE kinds,            ONLY: DP
          IMPLICIT NONE

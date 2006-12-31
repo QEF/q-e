@@ -64,8 +64,8 @@
           !     
           !     lagrange multipliers
           !
-          DO i=1,nss
-             DO j=1,nss
+          DO j=1,nwfc
+             DO i=1,nwfc
                 lambda( i, j, iss ) = lambda( i, j, iss ) / ccc
              END DO
           END DO
@@ -248,8 +248,8 @@
          !
       END IF
       !
-      DO i=1,nss
-        DO j=1,nss
+      DO j=1,nss
+        DO i=1,nss
           IF (x0(i,j) /= x0(i,j)) CALL errore('ortho','ortho went bananas',2)
         END DO
       END DO
@@ -395,8 +395,8 @@
          !     
          !     lagrange multipliers
          !
-         DO i=1,nss
-            DO j=1,nss
+         DO j=1,nss
+            DO i=1,nss
                x0( i, j, iss ) = xloc(i,j) / ccc
             END DO
          END DO

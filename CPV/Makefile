@@ -25,7 +25,6 @@ cpr_mod.o \
 cpr.o \
 cprsub.o \
 dealloc.o \
-diis.o \
 dforceb.o \
 efermi.o \
 efield.o \
@@ -60,7 +59,6 @@ move_electrons.o \
 nl_base.o \
 nlcc.o \
 nl.o \
-optical.o \
 ortho_base.o \
 ortho.o \
 para.o \
@@ -81,11 +79,7 @@ read_pseudo.o \
 redis.o \
 restart.o \
 restart_sub.o \
-runcg_ion.o \
-runcg.o \
 runcp.o \
-rundiis.o \
-runsd.o \
 smcp.o \
 smd_modules.o \
 smd.o  \

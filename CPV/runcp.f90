@@ -6,683 +6,67 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-
-
-
-   SUBROUTINE runcp_x &
-      ( ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc )
-
-      !     This subroutine performs a Car-Parrinello or Steepest-Descent step
-      !     on the electronic variables, computing forces on electrons and,
-      !     when required, the eigenvalues of the Hamiltonian 
-      !
-      !     On output "cp" contains the new plave waves coefficients, while
-      !     "cm" and "c0" are not changed
-      !  ----------------------------------------------
-
-      ! ...   declare modules
-      USE kinds
-      USE electrons_module,   ONLY : nb_l
-      USE electrons_base,     ONLY : nupdwn, iupdwn, nspin, nbsp, nudx, nbspx
-      USE cp_electronic_mass, ONLY : emass
-      USE cp_main_variables,  ONLY : ema0bg, lambda
-      USE wave_base,          ONLY : hpsi
-      USE cell_base,          ONLY : boxdimensions
-      USE time_step,          ONLY : delt
-      USE uspp,               ONLY : nkb
-      USE gvecw,              ONLY : ngw
-      USE cp_interfaces,      ONLY : runcp_ncpp, eigs, ortho, elec_fakekine, update_lambda
-!@@@@
-      USE ldaU,               ONLY : vupsi, lda_plus_u
-!@@@@
-      IMPLICIT NONE
-
-      ! ...   declare subroutine arguments
-
-      LOGICAL :: ttprint, tortho, tsde
-      COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
-      COMPLEX(DP)  ::  vkb(:,:)
-      REAL(DP), INTENT(IN)  ::  fi(:)
-      REAL(DP), INTENT(IN)  ::  bec(:,:)
-      TYPE (boxdimensions), INTENT(IN)  ::  ht
-      REAL (DP) ::  vpot(:,:)
-      REAL(DP) :: ei(:,:)
-      REAL(DP) :: ekinc
-      REAL(DP), INTENT(IN) :: fccc
-
-      ! ...   declare other variables
-      INTEGER  :: ierr, is
-      REAL(DP) :: ccc
-
-      ! ...   end of declarations
-
-      ngw = SIZE( cp, 1 )
-      !
-      ekinc    = 0.0d0
-
-      !  Compute electronic forces and move electrons
-
-      CALL runcp_ncpp( cm, c0, cp, vpot, vkb, fi, bec, fccc, lambda, tlambda = ttprint )
-
-      !  Compute eigenstate
-      !
-      IF( ttprint ) THEN
-        DO is = 1, nspin
-           CALL eigs( nupdwn(is), lambda(:,:,is), tortho, fi(iupdwn(is):iupdwn(is)+nupdwn(is)-1), ei(:,is) )
-        END DO
-      END IF
-
-      !  Orthogonalize the new wave functions "cp"
-
-      IF( tortho ) THEN
-         !
-         ccc    = fccc * delt * delt / emass
-         !
-         CALL ortho( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
-         !
-         !IF( ttprint ) THEN
-         !   call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .true. , fi, nbspx, lambda, nudx )
-         !END IF
-      ELSE
-         DO is = 1, nspin
-            CALL gram( vkb, bec, nkb, cp(1,iupdwn(is)), SIZE(cp,1), nupdwn(is) )
-         END DO
-      END IF
-
-      !  Compute fictitious kinetic energy of the electrons at time t
-
-      CALL elec_fakekine( ekinc, ema0bg, emass, cp, cm, ngw, nbsp, 1, 2.0d0 * delt )
-
-      RETURN
-    END SUBROUTINE runcp_x
-
+! Written and Revised by Carlo Cavazzoni
 
 !=----------------------------------------------------------------------------------=!
-
-
-    SUBROUTINE runcp_ncpp_x &
-       ( cm, c0, cp, vpot, vkb, fi, bec, fccc, gam, tlambda, fromscra, diis, restart )
-
-       !     This subroutine performs a Car-Parrinello or Steepest-Descent step
-       !     on the electronic variables, computing forces on electrons and,
-       !     when required, the eigenvalues of the Hamiltonian 
-       !
-       !     On output "cp" contains the new plave waves coefficients, while
-       !     "cm" and "c0" are not changed
-       !  ----------------------------------------------
-
-       ! ...   declare modules
-      USE kinds
-      USE electrons_base,     ONLY: nupdwn, iupdwn, nspin, nudx
-      USE cp_electronic_mass, ONLY: emass
-      USE cp_main_variables,  ONLY: ema0bg
-      USE wave_base,          ONLY: wave_steepest, wave_verlet
-      USE time_step,          ONLY: delt
-      USE cp_interfaces,      ONLY: dforce, update_lambda
-      USE control_flags,      ONLY: tsde
-      USE gvecw,              ONLY: ngw
-      USE reciprocal_vectors, ONLY: gzero
-!@@@@
-      USE ldaU
-!@@@@
-
-      IMPLICIT NONE
-
-! ...   declare subroutine arguments
-
-      COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
-      REAL(DP)    :: gam(:,:,:)
-      COMPLEX(DP) :: vkb(:,:)
-      REAL(DP), INTENT(IN)  ::  fi(:)
-      REAL (DP) ::  vpot(:,:)
-      REAL (DP), INTENT(IN) ::  bec(:,:)
-      REAL(DP), INTENT(IN) :: fccc
-      LOGICAL, OPTIONAL, INTENT(IN) :: tlambda, fromscra, diis, restart
-
-! ...   declare other variables
-      REAL(DP) ::  svar1, svar2
-      INTEGER :: i, ig, nx, nb, ierr, is
-      INTEGER :: iflag, iwfc, nwfc
-
-      COMPLEX(DP), ALLOCATABLE :: c2(:), c3(:)
-      REAL(DP),    ALLOCATABLE :: svar3(:)
-      LOGICAL :: tlam, ttsde
-
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-      IF( PRESENT( tlambda ) ) THEN
-        tlam = tlambda
-      ELSE
-        tlam = .FALSE.
-      END IF
-
-      iflag = 0
-      IF( PRESENT( fromscra ) ) THEN
-        IF( fromscra ) iflag = 1
-      END IF
-      IF( PRESENT( restart ) ) THEN
-        IF( restart ) iflag = 2
-      END IF
-
-
-      ALLOCATE( c2(ngw), c3(ngw), svar3(ngw), STAT = ierr )
-      IF( ierr /= 0 ) CALL errore(' runcp_ncpp ', ' allocating c2, c3, svar3 ', ierr)
-
-      !
-      ! ...   determines friction dynamically according to the Nose' dynamics
-      !
-
-      IF( iflag == 0 ) THEN
-        ttsde   = tsde
-      ELSE IF ( iflag == 1 ) THEN
-        ttsde   = .TRUE.
-      ELSE IF ( iflag == 2 ) THEN
-        ttsde   = .FALSE.
-      END IF
-
-      svar1   = 2.d0 * fccc
-      svar2   = 1.d0 - svar1
-      svar3( 1:ngw ) = delt * delt * ema0bg / emass * fccc
-
-
-      DO is = 1, nspin
-
-          nx   = nupdwn( is )
-
-          nb = nx - MOD(nx, 2)
-
-          DO i = 1, nb, 2
-
-            iwfc = iupdwn(is)
-            nwfc = nupdwn(is)
-
-            CALL dforce( i, c0, fi, c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
-
-            IF( tlam ) THEN
-               CALL update_lambda( i  , gam( :, :,is), c0, c2, nwfc, iwfc, .true. )
-               CALL update_lambda( i+1, gam( :, :,is), c0, c3, nwfc, iwfc, .true. )
-            END IF
-
-            IF( iflag == 2 ) THEN
-              c0(:,i+iwfc-1) = cp(:,i+iwfc-1)
-              c0(:,i+1+iwfc-1) = cp(:,i+1+iwfc-1)
-            END IF
-
-            IF ( ttsde ) THEN
-              CALL wave_steepest( cp(:,i+iwfc-1), c0(:,i+iwfc-1), svar3, c2 )
-              CALL wave_steepest( cp(:,i+1+iwfc-1), c0(:,i+1+iwfc-1), svar3, c3 )
-            ELSE
-              cp(:,i+iwfc-1) = cm(:,i+iwfc-1)
-              cp(:,i+1+iwfc-1) = cm(:,i+1+iwfc-1)
-              CALL wave_verlet( cp(:,i+iwfc-1), c0(:,i+iwfc-1), svar1, svar2, svar3, c2 )
-              CALL wave_verlet( cp(:,i+1+iwfc-1), c0(:,i+1+iwfc-1), svar1, svar2, svar3, c3 )
-            END IF
-
-            IF( gzero ) cp(1,i+iwfc-1)  = DBLE( cp(1,i+iwfc-1) )
-            IF( gzero ) cp(1,i+1+iwfc-1)= DBLE( cp(1,i+1+iwfc-1) )
-
-          END DO
-
-          IF( MOD(nx,2) /= 0) THEN
-
-            nb = nx
-
-            iwfc = iupdwn(is)
-            nwfc = nupdwn(is)
-
-            CALL dforce( nx, c0, fi, c2, c3, vpot(:,is), vkb, bec, nupdwn(is), iupdwn(is) )
-
-            IF( tlam ) THEN
-               CALL update_lambda( nb, gam( :, :,is), c0, c2, nwfc, iwfc, .true. )
-            END IF
-
-            IF( iflag == 2 ) THEN
-              c0(:,nb+iwfc-1) = cp(:,nb+iwfc-1)
-            END IF
-
-            IF ( ttsde ) THEN
-              CALL wave_steepest( cp(:,nb+iwfc-1), c0(:,nb+iwfc-1), svar3, c2 )
-            ELSE
-              cp(:,nb+iwfc-1) = cm(:,nb+iwfc-1)
-              CALL wave_verlet( cp(:,nb+iwfc-1), c0(:,nb+iwfc-1), svar1, svar2, svar3, c2 )
-            END IF
-            IF( gzero ) cp(1,nb+iwfc-1) = DBLE( cp(1,nb+iwfc-1) )
-
-          END IF
-
-      END DO
-
-      DEALLOCATE(svar3, c2, c3, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp_ncpp ', ' deallocating 1 ', ierr)
-
-      RETURN
-    END SUBROUTINE runcp_ncpp_x
-
-
-!=----------------------------------------------------------------------------------=!
-
-
-!eigr==e^ig*r f is the occupation number
-!fnl if the factor non local
-
-    SUBROUTINE runcp_force_pairing_x &
-       (ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, fi, ekinc, ht, ei, bec, fccc)
-
-!  same as runcp, except that electrons are paired forcedly
-!  i.e. this handles a state dependant Hamiltonian for the paired and unpaired electrons
-!  unpaired is assumed to exist, to be unique, and located in highest index band
-!  ----------------------------------------------
-!  END manual
-
-! ...   declare modules
-      USE kinds
-      USE mp_global,          ONLY: intra_image_comm
-      USE mp,                 ONLY: mp_sum
-      USE electrons_module,   ONLY: nb_l
-      USE electrons_base,     ONLY: iupdwn, nupdwn, nspin
-      USE cp_electronic_mass, ONLY: emass
-      USE cp_main_variables,  ONLY: ema0bg, lambda
-      USE wave_base,          ONLY: wave_steepest, wave_verlet
-      USE wave_base,          ONLY: hpsi
-      USE cell_base,          ONLY: boxdimensions
-      USE time_step,          ONLY: delt
-      USE cp_interfaces,      ONLY: dforce, eigs, ortho, elec_fakekine, update_lambda
-      USE constants,          ONLY: autoev
-      USE io_global,          ONLY: ionode
-      USE uspp,               ONLY: nkb
-      use reciprocal_vectors, only: gzero, gstart
-      USE gvecw,              ONLY: ngw
-!@@@@
-      USE ldaU
-!@@@@
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-
-      LOGICAL :: ttprint, tortho, tsde
-      COMPLEX(DP) :: cm(:,:), c0(:,:), cp(:,:)
-      COMPLEX(DP)  ::  vkb(:,:)
-      REAL(DP), INTENT(INOUT) ::  fi(:)
-      TYPE (boxdimensions), INTENT(IN)  ::  ht
-      REAL (DP) ::  vpot(:,:)
-      REAL(DP) :: ei(:,:)
-      REAL(DP), INTENT(IN) :: bec(:,:)
-      REAL(DP) :: ekinc
-      REAL(DP), INTENT(IN) :: fccc
-
-! ...   declare other variables
-      REAL(DP) :: s3, s4
-      REAL(DP) :: svar1, svar2, etmp, ccc
-      INTEGER :: i, ig, nx, nb, j, nb_g, nb_lx, ierr, ibl
-      INTEGER :: ispin_wfc, n_unp, iwfc, nwfc 
-      REAL(DP), ALLOCATABLE :: occup(:), occdown(:), occsum(:)
-      REAL(DP) :: intermed, intermed2, ei_unp_mem, ei_unp_wfc
-      COMPLEX(DP) ::  intermed3, intermed4
-
-
-      COMPLEX(DP), ALLOCATABLE :: c2(:)
-      COMPLEX(DP), ALLOCATABLE :: c3(:)
-      COMPLEX(DP), ALLOCATABLE :: c4(:)
-      COMPLEX(DP), ALLOCATABLE :: c5(:)
-      REAL(DP),    ALLOCATABLE :: svar3(:)
-      REAL(DP),    ALLOCATABLE :: gam(:,:)
-      REAL(DP),    ALLOCATABLE :: ei_t(:,:)
-
-! ...   end of declarations
-!  ----------------------------------------------
-
-      IF( nspin == 1 ) &
-        CALL errore(' runcp_forced_pairing ',' inconsistent nspin ', 1)
-
-      ALLOCATE(c2(ngw), c3(ngw), c4(ngw), c5(ngw), svar3(ngw), STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp_forced_pairing ', ' allocating c2, c3, svar3 ', ierr)
-
-
-      svar1   = 2.d0 * fccc
-      svar2   = 1.d0 - svar1
-      svar3(1:ngw) = delt * delt * ema0bg / emass * fccc
-
-      ekinc    = 0.0d0
-
-      nx    = nupdwn(1)
-      n_unp = nupdwn(1)
-
-      IF( nupdwn(1) /= (nupdwn(2) + 1) ) &
-        CALL errore(' runcp_forced_pairing ',' inconsistent spin numbers ', 1)
-
-
-      nb_g = nupdwn(1)
-      nb_lx = MAX( nb_l(1), nb_l(2) )
-      nb_lx = MAX( nb_lx, 1 )
-
-      ALLOCATE( gam(nb_lx,nb_g), STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp_forced_pairing ', ' allocating gam, prod ', ierr)
-
-      ALLOCATE( occup(nx), occdown(nx), STAT=ierr )
-      if ( ierr/=0 ) CALL errore(' runcp_forced_pairing ', 'allocating occup, occdown', ierr)
-
-      ALLOCATE (ei_t(nx,2), STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp_forced_pairing ', 'allocating iei_t', ierr)
-
-      occup   = 0.D0
-      occdown = 0.D0
-      occup(  1:nupdwn(1) )  = fi( 1:nupdwn(1) )
-      occdown( 1:nupdwn(2) ) = fi( iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) 
-
-
-        IF( MOD( n_unp, 2 ) == 0 ) nb =  n_unp - 1
-        IF( MOD( n_unp, 2 ) /= 0 ) nb =  n_unp - 2
-
-        DO i = 1, nb, 2
-          !
-          CALL dforce( i, c0, fi, c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
-          CALL dforce( i, c0, fi, c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
-          !
-          c2 = occup(i  )* (c2 + c4)
-          c3 = occup(i+1)* (c3 + c5)
-
-          IF( ttprint ) then
-            !
-            CALL update_lambda( i  , gam( :, :), c0, c2, nupdwn(1), 1, .true. )
-            CALL update_lambda( i+1, gam( :, :), c0, c3, nupdwn(1), 1, .true. )
-
-          END IF
-
-          IF ( tsde ) THEN
-             CALL wave_steepest( cp(:,i)  , c0(:,i)  , svar3, c2 )
-             CALL wave_steepest( cp(:,i+1), c0(:,i+1), svar3, c3 )
-          ELSE
-            cp(:,i  ) = cm(:,i  )
-            cp(:,i+1) = cm(:,i+1)
-            CALL wave_verlet( cp(:,i), c0(:,i), svar1, svar2, svar3, c2 )
-            CALL wave_verlet( cp(:,i+1), c0(:,i+1), svar1, svar2, svar3, c3 )
-          END IF
-
-          IF( gzero ) cp(1,i  )  = DBLE( cp(1,i) )
-          IF( gzero ) cp(1,i+1)  = DBLE( cp(1,i+1) )
-
-        END DO ! bande
-
-
-        IF( MOD( n_unp, 2 ) /= 0 .and. n_unp > 1 ) THEN
-          !
-          nb = n_unp - 1
-          !
-          CALL dforce( nb, c0, fi, c2, c3, vpot(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
-          CALL dforce( nb, c0, fi, c4, c5, vpot(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
-
-          c2 = occup(nb)* (c2 + c4)
-
-          IF( ttprint ) THEN
-            CALL update_lambda( nb, gam( :, :), c0, c2, nupdwn(2), iupdwn(1), .true. )
-          END IF
-
-          IF ( tsde ) THEN
-             CALL wave_steepest( cp(:,nb), c0(:,nb), svar3, c2 )
-          ELSE
-             cp(:,nb) = cm(:,nb)
-             CALL wave_verlet( cp(:,nb), c0(:,nb), svar1, svar2, svar3, c2 )
-          END IF
-          IF( gzero ) cp(1,nb) = DBLE( cp(1,nb) )
-        END IF
-
-        !
-        CALL dforce( n_unp, c0, fi, c2, c3, vpot(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
-
-        intermed  = -2.d0 * sum( c2 * conjg( c0(:, n_unp ) ) )
-        IF ( gstart == 2 ) THEN
-           intermed  = intermed + 1.d0 * c2(1) * conjg( c0( 1, n_unp ) )
-         END IF
-        intermed3 = sum(c0(:,n_unp) * conjg( c0(:, n_unp)))
-
-        CALL mp_sum ( intermed, intra_image_comm )
-        CALL mp_sum ( intermed3, intra_image_comm )
-        !  Eigenvalue of unpaired
-        ei_unp_mem = intermed
-
-        !  <Phiunpaired|Phiunpaired>
-        ei_unp_wfc = intermed3
-        !write(6,*) '  <psi|psi> = ', intermed3, '  ei_unp(au) = ', intermed
-
-        IF ( tsde ) THEN
-           CALL wave_steepest( cp( :, n_unp ), c0( :, n_unp ), svar3, c2 )
-        ELSE
-          cp( :, n_unp ) = cm( :, n_unp )
-          CALL wave_verlet( cp( :, n_unp ), c0( :, n_unp ), svar1, svar2, svar3, c2 )
-        END IF
-        IF( gzero ) cp( 1, n_unp ) = DBLE( cp( 1, n_unp ) )
-
-
-        IF( ttprint ) THEN
-
-            ALLOCATE( occsum( nupdwn(1) ) )
-            occsum(:) = occup(:) + occdown(:)
-
-            CALL eigs( nupdwn(2), gam, tortho, occsum, ei(:,1) )
-
-            DEALLOCATE( occsum )
-            DO i = 1, nupdwn(2)
-               ei( i, 2 ) = ei( i , 1)
-            END DO
-
-            ei( nupdwn(1), 1) = ei_unp_mem
-            ei( nupdwn(1), 2) = 0.d0
-
-            WRITE(6,*) 'SIC EIGENVALUES(eV), dwn and up electrons Kpoint',1
-            WRITE(6,1004) ( ei( i, 2 ) * autoev, i = 1, nupdwn(2) )
-            WRITE(6,1005) ( ei( i, 1 ) * autoev, i = 1, nupdwn(1) )
-
-1004        FORMAT(/,3X,'SIC EIGENVALUES DW=',3X,10F8.2)
-1005        FORMAT(/,3X,'SIC EIGENVALUES UP=',3X,10F8.2)
-
-        ENDIF
-
-      IF( tortho ) THEN
-         !
-         ccc    = fccc * delt * delt / emass
-         !
-         CALL ortho( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
-         !
-      ELSE
-         !
-         CALL gram( vkb, bec, nkb, cp(1,1), SIZE(cp,1), nupdwn(1) )
-         cp(:,iupdwn(2):iupdwn(2)+nupdwn(2)-1) = cp(:,1:nupdwn(2))
-         !
-      END IF
-
-      !  Compute fictitious kinetic energy of the electrons at time t
-
-      CALL elec_fakekine( etmp , ema0bg, emass, cp, cm, ngw, nupdwn(1), 1, 2.0d0 * delt )
-      CALL elec_fakekine( ekinc, ema0bg, emass, cp, cm, ngw, nupdwn(2), 1, 2.0d0 * delt )
-
-      ekinc = ekinc + etmp
-
-      DEALLOCATE( ei_t, svar3, c2, c3, c4, c5, gam, occup, occdown, STAT=ierr)
-      IF( ierr /= 0 ) CALL errore(' runcp_force_pairing ', ' deallocating ', ierr)
-
-      RETURN
-    END SUBROUTINE runcp_force_pairing_x
-
-
-!=----------------------------------------------------------------------------=!
 
 
    SUBROUTINE runcp_uspp_x &
       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
       !
-      USE kinds,             ONLY: DP
-      use wave_base, only: wave_steepest, wave_verlet
-      use control_flags, only: lwf, tsde
-      !use uspp, only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
-      use uspp, only : deeq, betae => vkb
-      use reciprocal_vectors, only : gstart
-      use electrons_base, only : n=>nbsp, ispin, f, nspin
-      use wannier_subroutines, only: ef_potential
-      use efield_module, only: dforce_efield, tefield, dforce_efield2, tefield2
-
-      use gvecw, only: ngw
-!@@@@
+      !  This subroutine performs a Car-Parrinello or Steepest-Descent step
+      !  on the electronic variables, computing forces on electrons
+      ! 
+      !  on input:
+      !  c0  wave functions at time t
+      !  cm  wave functions at time t - dt 
+      !
+      !  on output:
+      !  cm  wave functions at time t + dt, not yet othogonalized 
+      !
+      USE parallel_include
+      USE kinds,               ONLY : DP
+      USE mp_global,           ONLY : nogrp, ogrp_comm, me_image
+      USE fft_base,            ONLY : dffts
+      use wave_base,           only : wave_steepest, wave_verlet
+      use control_flags,       only : lwf, tsde, use_task_groups, program_name
+      use uspp,                only : deeq, vkb
+      use reciprocal_vectors,  only : gstart
+      use electrons_base,      only : n=>nbsp, ispin, f, nspin, nupdwn, iupdwn
+      use wannier_subroutines, only : ef_potential
+      use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
+      USE task_groups,         ONLY : nolist
+      use gvecw,               only : ngw
+      USE cp_interfaces,       ONLY : dforce_fpmd
       USE ldaU
-!@@@@
-     !
-     IMPLICIT NONE
-     integer, intent(in) :: nfi
-     real(DP) :: fccc, ccc
-     real(DP) :: ema0bg(:), dt2bye
-     real(DP) :: rhos(:,:)
-     real(DP) :: bec(:,:)
-     complex(DP) :: c0(:,:), cm(:,:)
-     logical, optional, intent(in) :: fromscra
-     logical, optional, intent(in) :: restart
-     !
-     !
+      !
+      IMPLICIT NONE
+      !
+      INTEGER, INTENT(IN) :: nfi
+      REAL(DP) :: fccc, ccc
+      REAL(DP) :: ema0bg(:), dt2bye
+      REAL(DP) :: rhos(:,:)
+      REAL(DP) :: bec(:,:)
+      COMPLEX(DP) :: c0(:,:), cm(:,:)
+      LOGICAL, OPTIONAL, INTENT(IN) :: fromscra
+      LOGICAL, OPTIONAL, INTENT(IN) :: restart
+      !
+      !
      real(DP) ::  verl1, verl2, verl3
      real(DP), allocatable:: emadt2(:)
      real(DP), allocatable:: emaver(:)
-     complex(DP), allocatable:: c2(:), c3(:), c2u(:), c3u(:)
-     integer :: i
+     complex(DP), allocatable:: c2(:), c3(:)
+     REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
+     INTEGER,     ALLOCATABLE :: recv_cnt(:), recv_displ(:)
+     integer :: i, nsiz, incr, idx, idx_in, ierr
+     integer :: iwfc, nwfc, is, ii
      integer :: iflag
      logical :: ttsde
 
-     iflag = 0
-     !
-     IF( PRESENT( fromscra ) ) THEN
-       IF( fromscra ) iflag = 1
-     END IF
-     IF( PRESENT( restart ) ) THEN
-       IF( restart ) iflag = 2
-     END IF
 
-     !
-     ! ...  set verlet variables 
-     !
-     verl1 = 2.0d0 * fccc
-     verl2 = 1.0d0 - verl1
-     verl3 = 1.0d0 * fccc
-
-     allocate(c2(ngw))
-     allocate(c3(ngw))
-!@@@@
-     allocate(c2u(ngw))
-     allocate(c3u(ngw))
-     c2u=0.0
-     c3u=0.0
-!@@@@
-     ALLOCATE( emadt2( ngw ) )
-     ALLOCATE( emaver( ngw ) )
-
-     ccc    = fccc * dt2bye
-     emadt2 = dt2bye * ema0bg
-     emaver = emadt2 * verl3
-
-     IF( iflag == 0 ) THEN
-       ttsde  = tsde
-     ELSE IF( iflag == 1 ) THEN
-       ttsde = .TRUE.
-     ELSE IF( iflag == 2 ) THEN
-       ttsde = .FALSE.
-     END IF
-
-      if( lwf ) then
-        call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
-      else
-        do i=1,n,2
-           call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
-!@@@@
-           if (lda_plus_u) then
-              c2u(:)=c2(:)-vupsi(:,i)
-              c3u(:)=c3(:)-vupsi(:,i+1)
-           else 
-              c2u(:)=c2(:)
-              c3u(:)=c3(:)
-           endif
-!@@@@
-           if( tefield ) then
-             CALL dforce_efield ( bec, i, c0, c2u, c3u, rhos)
-           end if
-           if( tefield2 ) then
-             CALL dforce_efield2 ( bec, i, c0, c2u, c3u, rhos)
-           end if
-           IF( iflag == 2 ) THEN
-             cm(:,i)   = c0(:,i)
-             cm(:,i+1) = c0(:,i+1)
-           END IF
-           if( ttsde ) then
-              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emaver, c2u )
-              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3u )
-           else
-              CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2u )
-              CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3u )
-           endif
-!@@@@
-           if ( gstart == 2) THEN
-              cm(1,  i)=CMPLX(DBLE(cm(1,  i)),0.d0)
-              cm(1,i+1)=CMPLX(DBLE(cm(1,i+1)),0.d0)
-           end if
-        end do
-      end if
-
-     DEALLOCATE( emadt2 )
-     DEALLOCATE( emaver )
-     deallocate(c2u,c3u)
-     deallocate(c2)
-     deallocate(c3)
-!
-   END SUBROUTINE runcp_uspp_x
-!
-!
-!=----------------------------------------------------------------------------=!
-!
-!
-
-   SUBROUTINE runcp_uspp_bgl_x &
-      ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, fromscra, restart )
-     !
-     USE kinds,                  ONLY: DP
-     use wave_base,              only: wave_steepest, wave_verlet
-     use control_flags,          only: lwf, tsde
-     use uspp,                   only: deeq, betae => vkb
-     use reciprocal_vectors,     only: gstart
-     use electrons_base,         only: n=>nbsp, nspin
-     use wannier_subroutines,    only: ef_potential
-     use efield_module,          only: dforce_efield, tefield, dforce_efield2, tefield2
-     use gvecw,                  only: ngw
-     use smooth_grid_dimensions, only: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx, nnrsx
-     USE fft_base,               ONLY: dffts
-     USE mp_global,              ONLY: me_image, nogrp, ogrp_comm
-     USE parallel_include
-     use task_groups
-!@@@@
-     USE ldaU
-!@@@@
-
-     !
-     IMPLICIT NONE
-     integer, intent(in) :: nfi
-     real(DP) :: fccc, ccc
-     real(DP) :: ema0bg(:), dt2bye
-     real(DP) :: rhos(:,:)
-     real(DP) :: bec(:,:)
-     complex(DP) :: c0(:,:), cm(:,:)
-     logical, optional, intent(in) :: fromscra
-     logical, optional, intent(in) :: restart
-     !
-     !
-     !
-     INTEGER, DIMENSION(NOGRP) :: recv_cnt, recv_displ
-     real(8) ::  verl1, verl2, verl3
-     real(8), allocatable:: emadt2(:)
-     real(8), allocatable:: emaver(:)
-     complex(8), allocatable:: c2(:), c3(:)
-     integer :: i, idx_in, idx
-     integer :: iflag, ierr
-     logical :: ttsde
-     REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
 
      iflag = 0
+     !
      IF( PRESENT( fromscra ) ) THEN
        IF( fromscra ) iflag = 1
      END IF
@@ -712,75 +96,116 @@
        ttsde = .FALSE.
      END IF
 
-     if( lwf ) then
-        !
-        allocate(c2(ngw))
-        allocate(c3(ngw))
+     IF( lwf ) THEN
 
-        call ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
+        allocate( c2(ngw), c3(ngw) )
 
-        deallocate(c2)
-        deallocate(c3)
-        !
-     else
+        call ef_potential( nfi, rhos, bec, deeq, vkb, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
 
-        ALLOCATE(c2((NOGRP+1)*ngw))
-        ALLOCATE(c3((NOGRP+1)*ngw))
-        ALLOCATE(tg_rhos( (NOGRP+1)*nr1sx*nr2sx*maxval(dffts%npp),nspin))
+        deallocate( c2, c3 )
 
-        !---------------------------------------------------------------
-        !This loop is parallelized accross the eigenstates as well as
-        !in the FFT, similar to rhoofr
-        !---------------------------------------------------------------
+     ELSE
 
-        !------------------------------------
-        !The potential in rhos
-        !is distributed accros all processors
-        !We need to redistribute it so that
-        !it is completely contained in the
-        !processors of an orbital TASK-GROUP
-        !------------------------------------
-        !
-        recv_cnt(1)   = dffts%npp(NOLIST(1)+1)*nr1sx*nr2sx
-        recv_displ(1) = 0
-        DO i = 2, NOGRP
-           recv_cnt(i) = dffts%npp(NOLIST(i)+1)*nr1sx*nr2sx
-           recv_displ(i) = recv_displ(i-1) + recv_cnt(i)
-        ENDDO
+        IF( use_task_groups ) THEN
 
-        c3(:) = 0D0
-        c3(:) = 0D0
-        tg_rhos(:,:) = 0D0
+           allocate( c2( (nogrp+1)*ngw ), c3( (nogrp+1)*ngw ) )
+           allocate( recv_cnt( nogrp ), recv_displ( nogrp ) )
+           allocate( tg_rhos( (nogrp+1)*dffts%nr1x * dffts%nr2x*MAXVAL( dffts%npp ), nspin ) )
+
+           !
+           !  The potential in rhos is distributed accros all processors
+           !  We need to redistribute it so that it is completely contained in the
+           !  processors of an orbital TASK-GROUP
+           !
+           
+           recv_cnt(1)   = dffts%npp( nolist(1) + 1 ) * dffts%nr1x * dffts%nr2x
+           recv_displ(1) = 0
+           DO i = 2, NOGRP
+              recv_cnt(i) = dffts%npp( nolist(i) + 1 ) * dffts%nr1x * dffts%nr2x
+              recv_displ(i) = recv_displ(i-1) + recv_cnt(i)
+           ENDDO
+
+           tg_rhos(:,:) = 0D0
 
 #if defined (__PARA) && defined (__MPI)
-        DO i = 1, nspin
-           CALL MPI_Allgatherv(rhos(1,i), dffts%npp(me_image+1)*nr1sx*nr2sx, MPI_DOUBLE_PRECISION, &
-                tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
-        ENDDO
+           DO i = 1, nspin
+              nsiz = dffts%npp(me_image+1)* dffts%nr1x * dffts%nr2x
+              CALL MPI_Allgatherv( rhos(1,i), nsiz, MPI_DOUBLE_PRECISION, &
+                   tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
+           ENDDO
 #endif
+           deallocate( recv_cnt, recv_displ )
 
-        DO i = 1, n, 2*NOGRP
+           incr = 2 * nogrp
 
-           !----------------------------------------------------------------
-           !The input coefficients to dforce cover eigenstates i:i+2*NOGRP-1
-           !Thus, in dforce the dummy arguments for c0(1,i) and
-           !c0(1,i+1) hold coefficients for eigenstates i,i+2*NOGRP-2,2
-           !and i+1,i+2*NOGRP...for example if NOGRP is 4 then we would have
-           !1-3-5-7 and 2-4-6-8
-           !----------------------------------------------------------------
+        ELSE
 
-           call dforce_bgl( bec, betae, i, c0(1,i), c0(1,i+1), c2, c3, tg_rhos)
+           allocate( c2(ngw), c3(ngw) )
+           allocate( tg_rhos( 1, 1 ) )
 
-           !-------------------------------------------------------
-           !C. Bekas: This is not implemented yet! I need to see it
-           !-------------------------------------------------------
+           incr = 2
+
+        END IF
+
+        
+
+        DO i = 1, n, incr
+
+           IF( use_task_groups ) THEN
+              !
+              !The input coefficients to dforce cover eigenstates i:i+2*NOGRP-1
+              !Thus, in dforce the dummy arguments for c0(1,i) and
+              !c0(1,i+1) hold coefficients for eigenstates i,i+2*NOGRP-2,2
+              !and i+1,i+2*NOGRP...for example if NOGRP is 4 then we would have
+              !1-3-5-7 and 2-4-6-8
+              !
+
+              call dforce_bgl( bec, vkb, i, c0(1,i), c0(1,i+1), c2, c3, tg_rhos)
+
+              if( tefield .OR. tefield2 ) then
+                 CALL errore( ' runcp_uspp ', ' electric field with task group not implemented yet ', 1 )
+              end if
+              if( lda_plus_u ) then
+                 CALL errore( ' runcp_uspp ', ' lda_plus_u with task group not implemented yet ', 1 )
+              end if
+
+           ELSE
+
+              IF( program_name == 'FPMD' ) THEN
+
+                 is = ispin( i )
+                 ii = i - iupdwn(is) + 1
+                 iwfc = iupdwn(is)
+                 nwfc = nupdwn(is)
+                 
+                 CALL dforce_fpmd( ii, c0, f, c2, c3, rhos(:,is), vkb, bec, nwfc, iwfc )
+
+                 IF( ii == nwfc ) c3 = 0.0d0
+
+              ELSE
+
+                 call dforce(bec,vkb,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
+
+              END IF
+
+           END IF
+
+
+           if (lda_plus_u) then
+              c2(:)=c2(:)-vupsi(:,i)
+              c3(:)=c3(:)-vupsi(:,i+1)
+           endif
 
            if( tefield ) then
-              CALL errore( ' runcp_uspp ', ' electric field with task group not implemented yet ', 1 )
+             CALL dforce_efield ( bec, i, c0, c2, c3, rhos)
+           end if
+
+           if( tefield2 ) then
+             CALL dforce_efield2 ( bec, i, c0, c2, c3, rhos)
            end if
 
            IF( iflag == 2 ) THEN
-              DO idx = 1, 2*NOGRP, 2
+              DO idx = 1, incr, 2
                  IF( i + idx - 1 <= n ) THEN
                     cm( :, i+idx-1) = c0(:,i+idx-1)
                     cm( :, i+idx  ) = c0(:,i+idx  )
@@ -789,7 +214,7 @@
            END IF
 
            idx_in = 1
-           DO idx = 1, 2*NOGRP, 2
+           DO idx = 1, incr, 2
               IF( i + idx - 1 <= n ) THEN
                  IF (tsde) THEN
                     CALL wave_steepest( cm(:, i+idx-1 ), c0(:, i+idx-1 ), emaver, c2, ngw, idx_in )
@@ -806,37 +231,43 @@
               !
               idx_in = idx_in + 1
               !
-           END DO 
+           END DO
 
-        END DO ! End loop accross eigenstates
+        end do
 
-        DEALLOCATE(c2)
-        DEALLOCATE(c3)
-        DEALLOCATE(tg_rhos)
+        DEALLOCATE( c2, c3, tg_rhos )
 
      END IF
 
      DEALLOCATE( emadt2 )
      DEALLOCATE( emaver )
-
-
-   END SUBROUTINE runcp_uspp_bgl_x
+!
+   END SUBROUTINE runcp_uspp_x
+!
 !
 !=----------------------------------------------------------------------------=!
+!
+!
+
 !=----------------------------------------------------------------------------=!
 
     SUBROUTINE runcp_uspp_force_pairing_x  &
-       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, intermed, fromscra, restart )
+       ( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, intermed, fromscra, &
+         restart )
   !
+!  same as runcp, except that electrons are paired forcedly
+!  i.e. this handles a state dependant Hamiltonian for the paired and unpaired electrons
+!  unpaired is assumed to exist, to be unique, and located in highest index band
+
       USE kinds,               ONLY : DP
       USE wave_base,           ONLY : wave_steepest, wave_verlet
-      USE control_flags,       ONLY : lwf, tsde
-  !   use uspp,                only : nhsa=> nkb, betae => vkb, rhovan => becsum, deeq
-      USE uspp,                ONLY : deeq, betae => vkb
+      USE control_flags,       ONLY : lwf, tsde, program_name
+      USE uspp,                ONLY : deeq, vkb
       USE reciprocal_vectors,  ONLY : gstart
       USE wannier_subroutines, ONLY : ef_potential
       USE efield_module,       ONLY : dforce_efield, tefield
       USE electrons_base,      ONLY : ispin, nspin, f, n=>nbsp
+      USE cp_interfaces,       ONLY : dforce_fpmd
   !
       USE gvecw, ONLY: ngw
   !
@@ -879,6 +310,8 @@
                            'Wannier function and sic are not compatibile',1)
        IF( tefield ) CALL errore('runcp_uspp_force_pairing', &
                            'Electric field and sic are not implemented',2)
+       IF( nspin == 1 ) CALL errore(' runcp_force_pairing ',' inconsistent nspin ', 1)
+
 !       
        ALLOCATE( emadt2( ngw ) )
        ALLOCATE( emaver( ngw ) )      
@@ -911,6 +344,9 @@
        emadt2 = dt2bye * ema0bg
        emaver = emadt2 * verl3
 !
+       IF( nupdwn(1) /= (nupdwn(2) + 1) ) &
+          CALL errore(' runcp_force_pairing ',' inconsistent number of states ', 1)
+
        n_unp = nupdwn(1)
        n_dwn = nupdwn(2)
        is_dw = iupdwn(2) 
@@ -936,16 +372,22 @@
      IF( MOD(n_unp, 2) /= 0 ) npair = n_unp - 1
 
       DO i = 1, npair, 2 
-      !
-         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos(1,1),ispin,f,n,nspin)
-         CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c4,c5,rhos(1,2),ispin,f,n,nspin)
-      !
+         !
+         IF( program_name == 'FPMD' ) THEN
+            CALL dforce_fpmd( i, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
+            CALL dforce_fpmd( i, c0, f, c4, c5, rhos(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
+         ELSE
+            CALL dforce(bec,vkb,i,c0(1,i),c0(1,i+1),c2,c3,rhos(1,1),ispin,f,n,nspin)
+            CALL dforce(bec,vkb,i,c0(1,i),c0(1,i+1),c4,c5,rhos(1,2),ispin,f,n,nspin)
+         END IF
+         !
          c2 = occ( i )*(c2 + c4)  
          c3 = occ(i+1)*(c3 + c5) 
-      !
+         !
+
          IF( iflag == 2 ) THEN
-              cm(:,i)        = c0(:,i)
-              cm(:,i+1)      = c0(:,i+1)
+            cm(:,i)        = c0(:,i)
+            cm(:,i+1)      = c0(:,i+1)
          END IF
       !
          IF( ttsde ) THEN
@@ -967,11 +409,16 @@
 
          npair = n_unp - 1 
 !
-         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c2,c3,rhos(1,1),ispin,f,n,nspin)
-         CALL dforce(bec,betae,npair,c0(1,npair),c0(1,nbspx),c4,c5,rhos(1,2),ispin,f,n,nspin)
+         IF( program_name == 'FPMD' ) THEN
+            CALL dforce_fpmd( npair, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
+            CALL dforce_fpmd( npair, c0, f, c4, c5, rhos(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
+         ELSE
+            CALL dforce(bec,vkb,npair,c0(1,npair),c0(1,nbspx),c2,c3,rhos(1,1),ispin,f,n,nspin)
+            CALL dforce(bec,vkb,npair,c0(1,npair),c0(1,nbspx),c4,c5,rhos(1,2),ispin,f,n,nspin)
+         END IF
 !
          c2 = c2 + c4
-!
+         !
          IF( iflag == 2 ) cm( :, npair ) = c0( :, npair )
 !
          IF( ttsde ) THEN
@@ -997,7 +444,11 @@
 ! "TRUE" ONLY WHEN THE POT is NORM_CONSERVING
 !
 
-      CALL dforce( bec, betae, n_unp, c0(1,n_unp), c0(1,n_unp), c2, c3, rhos(1,1),ispin,f,n,nspin )
+      IF( program_name == 'FPMD' ) THEN
+         CALL dforce_fpmd( n_unp, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
+      ELSE
+         CALL dforce( bec, vkb, n_unp, c0(1,n_unp), c0(1,n_unp), c2, c3, rhos(1,1),ispin,f,n,nspin )
+      END IF
       !
       intermed  = - 2.d0 * sum(c2 * conjg(c0(:,n_unp)))
       IF ( gstart == 2 ) THEN
@@ -1005,7 +456,6 @@
       END IF
       CALL mp_sum ( intermed, intra_image_comm )
       !           
-
       IF( iflag == 2 ) cm(:, n_unp) = c0(:, n_unp) 
       !
       IF( ttsde ) THEN
@@ -1022,5 +472,5 @@
       DEALLOCATE(c2, c4)
       DEALLOCATE(c3, c5)
 
-     END SUBROUTINE runcp_uspp_force_pairing_x
+   END SUBROUTINE runcp_uspp_force_pairing_x
 

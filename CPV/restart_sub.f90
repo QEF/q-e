@@ -67,7 +67,7 @@ MODULE from_restart_module
     USE efield_module,        ONLY : efield_berry_setup, tefield, &
                                      efield_berry_setup2, tefield2
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
-                                     runcp_uspp_bgl, interpolate_lambda
+                                     interpolate_lambda
     USE energies,             ONLY : eself, enl, etot, ekin
     USE time_step,            ONLY : delt, tps
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
@@ -245,19 +245,11 @@ MODULE from_restart_module
              !
           ELSE
              !
-             IF( use_task_groups ) THEN
-                CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                           bec, c0, cm, restart = .TRUE. )
-             ELSE
-                CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
-                           bec, c0, cm, restart = .TRUE. )
-             END IF
+             CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm, restart = .TRUE. )
              !
           ENDIF 
 
        ENDIF 
-
-
        !
        ! ... nlfq needs deeq bec
        !
@@ -282,8 +274,7 @@ MODULE from_restart_module
        !
        ! ... nlfl and nlfh need: lambda (guessed) becdr
        !
-       IF ( ( tfor .OR. tprnfor ) &
-           .AND. .NOT. tcg ) CALL nlfl( bec, becdr, lambda, fion )
+       IF ( ( tfor .OR. tprnfor ) .AND. .NOT. tcg ) CALL nlfl( bec, becdr, lambda, fion )
        !
        IF ( tpre ) CALL nlfh( bec, dbec, lambda )
        !
@@ -386,7 +377,7 @@ MODULE from_restart_module
        xnhem = 0.D0
        vnhe  = 0.D0
        !
-       CALL DSWAP( 2*ngw*nbsp, c0, 1, cm, 1 )
+       CALL DSWAP( 2*SIZE(c0), c0, 1, cm, 1 )
        !
        END IF
     END IF
@@ -479,7 +470,8 @@ MODULE from_restart_module
   !--------------------------------------------------------------------------
   SUBROUTINE from_restart_fpmd( nfi, acc, rhoe, cm, c0, cdesc, &
                                 eigr, ei1, ei2, ei3, sfac, ht_m, ht_0, &
-                                atoms_m, atoms_0, bec, becdr, vpot, edft )
+                                atoms_m, atoms_0, bec, becdr, vpot, edft, &
+                                ema0bg )
     !--------------------------------------------------------------------------
     !
     ! ... this routine recreates the starting configuration from a 
@@ -510,7 +502,7 @@ MODULE from_restart_module
     USE parameters,            ONLY : nacx
     USE atoms_type_module,     ONLY : atoms_type
     USE ions_base,             ONLY : vel_srt, tau_units
-    USE cp_interfaces,         ONLY : runcp_ncpp, ortho, nlrh
+    USE cp_interfaces,         ONLY : ortho, nlrh, runcp_uspp
     USE cp_main_variables,     ONLY : lambda
     USE grid_dimensions,       ONLY : nr1, nr2, nr3
     USE reciprocal_vectors,    ONLY : mill_l
@@ -537,9 +529,10 @@ MODULE from_restart_module
     REAL(DP)                   :: becdr(:,:,:)
     REAL(DP)                   :: vpot(:,:)
     TYPE(dft_energy_type)      :: edft
+    REAL(DP)                   :: ema0bg(:)
     !
     INTEGER     :: ig, ib, i, j, k, ik, nb, is, ia, ierr, isa, iss
-    REAL(DP)    :: fccc, ccc
+    REAL(DP)    :: fccc, ccc, dt2bye
     REAL(DP)    :: stau(3), rtau(3), hinv(3,3)
     REAL(DP)    :: gam(1,1,1)
     LOGICAL     :: ttforce
@@ -703,23 +696,29 @@ MODULE from_restart_module
           !
           IF ( tcarpar .AND. ( .NOT. force_pairing ) ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, f, bec, fccc, gam, restart = .TRUE. )
+             dt2bye = delt * delt / emass
+             !
+             CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cm, restart = .TRUE. )
+             !
+             !  now cm contains the unorthogonalized "c" at time t+dt
              !
              IF ( tortho ) THEN
                 !
-                ccc = fccc * delt * delt / emass
+                ccc = fccc * dt2bye
                 !
-                CALL ortho( cm, c0, lambda, ccc, nupdwn, iupdwn, nspin )
+                CALL ortho( c0, cm, lambda, ccc, nupdwn, iupdwn, nspin )
                 !
              ELSE
                 !
                 DO iss = 1, nspin
                    ! 
-                   CALL gram( vkb, bec, nkb, c0(1,iupdwn(iss)), SIZE(c0,1), nupdwn( iss ) )
+                   CALL gram( vkb, bec, nkb, cm(1,iupdwn(iss)), SIZE(cm,1), nupdwn( iss ) )
                    ! 
                 END DO
                 !
              END IF
+             !
+             CALL DSWAP( 2*SIZE(c0), c0, 1, cm, 1 ) 
              !
           ELSE
              !

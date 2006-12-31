@@ -40,7 +40,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE ensemble_dft,         ONLY : compute_entropy2
   USE efield_module,        ONLY : berry_energy, berry_energy2
   USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
-                                   runcp_uspp_bgl, interpolate_lambda
+                                   interpolate_lambda
   USE gvecw,                ONLY : ngw
   USE orthogonalize_base,   ONLY : calphi
   USE control_flags,        ONLY : force_pairing
@@ -139,13 +139,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
      ELSE
         !
-        IF( use_task_groups ) THEN
-           CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0, cm )
-        ELSE
-           CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, &
-                      rhos, bec, c0, cm )
-        END IF
+        CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, c0, cm )
         !
      ENDIF
      !

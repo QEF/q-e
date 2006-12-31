@@ -301,8 +301,7 @@
 !=----------------------------------------------------------------------------=!
 
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint, &
-                                    toptical, tconjgrad
+      USE control_flags,      ONLY: tdipole, tnosee, tnosep, tnoseh, iprsta, iprint
       use constants,          only: k_boltzmann_au, au_gpa, amu_si, bohr_radius_cm
       use energies,           only: print_energies, dft_energy_type
       use mp_global,          only: me_image, intra_image_comm
@@ -403,7 +402,7 @@
 
       ! ...   Print physical variables to fortran units
 
-      tfirst = tprint .OR. tconjgrad
+      tfirst = tprint
       stress_tensor = stress_tensor / au_gpa
 
       ALLOCATE( tauw( 3, atoms%nat ) )

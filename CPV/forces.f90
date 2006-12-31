@@ -35,6 +35,7 @@
 
       !  end of declarations
 
+
       ALLOCATE( psi( SIZE(v) ) )
 
       IF( PRESENT( psi_stored ) ) THEN
@@ -137,7 +138,7 @@
 
      
 
-    SUBROUTINE dforce_fpmd( ib, c, f, df, da, v, vkb, bec, n, noffset )
+    SUBROUTINE dforce_fpmd_x( ib, c, f, df, da, v, vkb, bec, n, noffset )
        !
        USE kinds,              ONLY: DP
        USE reciprocal_vectors, ONLY: ggp, g, gx
@@ -179,7 +180,7 @@
        END IF
        !
        RETURN
-    END SUBROUTINE dforce_fpmd
+    END SUBROUTINE dforce_fpmd_x
 
 
 !  ----------------------------------------------

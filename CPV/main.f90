@@ -58,43 +58,40 @@
 
 ! ... declare modules
       USE kinds
-      USE cp_interfaces, ONLY : writefile, readfile, strucf, phfacs
       USE parameters, ONLY: nacx, nspinx
-      USE cp_interfaces, ONLY: runcp, runcp_force_pairing
-      USE runcg_module, ONLY: runcg
-      USE runcg_ion_module, ONLY: runcg_ion
       USE control_flags, ONLY: tbeg, nomore, tprnfor, tpre, &
                   nbeg, newnfi, tnewnfi, isave, iprint, tv0rd, nv0rd, tzeroc, tzerop, &
                   tfor, thdyn, tzeroe, tsde, tsdp, tsdc, taurdr, ndr, &
                   ndw, tortho, timing, memchk, iprsta, &
-                  tconjgrad, tprnsfac, tcarpar, &
-                  tdipole, t_diis, t_diis_simple, t_diis_rot, &
+                  tprnsfac, tcarpar, &
+                  tdipole, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
-                  tsteepdesc, ekin_conv_thr, ekin_maxiter, ionic_conjugate_gradient, &
-                  tconjgrad_ion, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
+                  ekin_conv_thr, ekin_maxiter, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
       USE cell_base, ONLY: press, boxdimensions, updatecell
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE dener, ONLY: denl6, dekin6
       USE turbo, ONLY: tturbo
+
       USE cp_interfaces, ONLY: printout, print_sfac, movecell
       USE cp_interfaces, ONLY: empty_cp
       USE cp_interfaces, ONLY: vofrhos, localisation
       USE cp_interfaces, ONLY: rhoofr, nlrh, update_wave_functions
+      USE cp_interfaces, ONLY: eigs, ortho, elec_fakekine
+      USE cp_interfaces, ONLY: writefile, readfile, strucf, phfacs
+      USE cp_interfaces, ONLY: runcp_uspp, runcp_uspp_force_pairing
+
       USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
       USE electrons_module, ONLY: ei, n_emp
-      USE diis, ONLY: allocate_diis
       USE fft_base, ONLY: dfftp, dffts
       USE check_stop, ONLY: check_stop_now
       USE time_step, ONLY: tps, delt
-      USE rundiis_module, ONLY: rundiis, runsdiis
       USE wave_types
       use wave_base, only: frice
       USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
-      USE runsd_module, ONLY: runsd
       USE input, ONLY: iosys
       USE cell_base, ONLY: alat, a1, a2, a3, cell_kinene, velh
       USE cell_base, ONLY: frich, greash
@@ -104,7 +101,7 @@
       USE sic_module, ONLY: self_interaction, nat_localisation
       USE ions_base, ONLY: if_pos, ind_srt, ions_thermal_stress
       USE constants, ONLY: au_ps
-      USE electrons_base, ONLY: nupdwn, nbnd, nspin, f
+      USE electrons_base, ONLY: nupdwn, nbnd, nspin, f, iupdwn, nbsp
       USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
                                 vnhe, xnhe0, xnhem, xnhep, qne, ekincw
       USE cell_nose, ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
@@ -150,9 +147,11 @@
       USE printout_base   , ONLY: printout_base_init
       USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, lambda, &
                                     ht0, htm, htp, rhor, vpot, wfill, &
-                                    acc, acc_this_run,  edft, nfi, bec, becdr
+                                    acc, acc_this_run,  edft, nfi, bec, becdr, &
+                                    ema0bg
       USE ions_positions,    ONLY : atoms0, atomsp, atomsm
       USE cg_module,         ONLY : tcg
+      USE cp_electronic_mass, ONLY : emass
 
       !
 
@@ -178,7 +177,7 @@
       REAL(DP) :: hgamma(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
 
-      LOGICAL :: ttforce, tstress, ttdiis
+      LOGICAL :: ttforce, tstress
       LOGICAL :: ttprint, ttsave, ttdipole, ttexit
       LOGICAL :: tstop, tconv, doions
       LOGICAL :: topen, ttcarpar, ttempst
@@ -186,15 +185,11 @@
       LOGICAL :: ttionstep
       LOGICAL :: tconv_cg
 
-      REAL(DP) :: fccc, vnosep
+      REAL(DP) :: fccc, vnosep, ccc, dt2bye, intermed
 
       !
       ! ... end of declarations
       !
-
-      IF( t_diis ) THEN 
-        CALL allocate_diis( ngw, nbnd )
-      END IF
 
       erhoold   = 1.0d+20  ! a very large number
       ekinc     = 0.0_DP
@@ -239,7 +234,6 @@
         tstress   =  thdyn .OR. ( ttprint .AND. tpre )
         ttempst   =  ttprint .AND. ( n_emp > 0 )
         ttcarpar  =  tcarpar
-        ttdiis    =  t_diis 
         doions    = .TRUE.
 
         IF( ionode .AND. ttprint ) THEN
@@ -288,57 +282,6 @@
            !
         END IF
 
-        IF( ttdiis .AND. t_diis_simple ) THEN
-           !
-           ! ...     perform DIIS minimization on electronic states
-           !
-           CALL runsdiis(ttprint, rhor, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
-                         sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, vpot, doions, edft )
-           !
-        ELSE IF (ttdiis .AND. t_diis_rot) THEN
-           !
-           ! ...     perform DIIS minimization with wavefunctions rotation
-           !
-           IF( nspin > 1 ) CALL errore(' cpmain ',' lsd+diis not allowed ',0)
-           !
-           CALL rundiis(ttprint, rhor, atoms0, bec, becdr, eigr, vkb, ei1, ei2, ei3, &
-                        sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, vpot, doions, edft )
-           !
-        ELSE IF ( tconjgrad ) THEN
-           !
-           ! ...     on entry c0 should contain the wavefunctions to be optimized
-           !
-           CALL runcg(tortho, ttprint, rhor, atoms0, bec, becdr, &
-                eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, &
-                vpot, doions, edft, ekin_maxiter, etot_conv_thr, tconv_cg )
-           !
-           ! ...     on exit c0 and cp both contain the updated wave function
-           ! ...     cm are overwritten (used as working space)
-           !
-        ELSE IF ( tsteepdesc ) THEN
-           !
-           CALL runsd(tortho, ttprint, ttforce, rhor, atoms0, bec, becdr, eigr,   &
-                vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, &
-                vpot, doions, edft, ekin_maxiter, ekin_conv_thr )
-           !
-        ELSE IF ( tconjgrad_ion%active ) THEN
-           !
-           CALL runcg_ion(nfi, tortho, ttprint, rhor, atomsp, atoms0, atomsm, bec, &
-                becdr, eigr, vkb, ei1, ei2, ei3, sfac, c0, cm, cp, wfill, thdyn, ht0, f, ei, &
-                vpot, doions, edft, tconvthrs%derho, tconvthrs%force, tconjgrad_ion%nstepix, &
-                tconvthrs%ekin, tconjgrad_ion%nstepex )
-           !
-           ! ...     when ions are being relaxed by this subroutine they 
-           ! ...     shouldn't be moved by moveions
-           !
-           doions    = .FALSE.
-           !
-        ELSE IF ( .NOT. ttcarpar ) THEN
-           !
-           CALL errore(' main ',' electron panic ',0)
-           !
-        END IF
-
         ! ...   compute nonlocal pseudopotential
         !
         atoms0%for = 0.0d0
@@ -379,21 +322,46 @@
            !    on input, c0 are the wave functions at time "t" , cm at time "t-dt"
            !    on output cp are the new wave functions at time "t+dt"
 
+           !
+           dt2bye = delt * delt / emass
+           !
+           cp = cm
+           !
            if ( force_pairing ) then 
               !
               ! unpaired electron is assumed of spinup and in highest 
               ! index band; and put equal for paired wf spin up and down
               !
-              CALL runcp_force_pairing(ttprint, tortho, tsde, cm, c0, cp, &
-                vpot, vkb, f, ekinc, ht0, ei, bec, fccc )
+              CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cp, intermed )
               !
            ELSE
               !
-              CALL runcp( ttprint, tortho, tsde, cm, c0, cp, vpot, vkb, &
-                         f, ekinc, ht0, ei, bec, fccc )
+              CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, c0, cp )
               !
            END IF
            !
+           !  Orthogonalize the new wave functions "cp"
+
+           IF( tortho ) THEN
+              !
+              ccc    = fccc * dt2bye
+              !
+              CALL ortho( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
+              !
+              IF( ttprint ) CALL eigs( nfi, lambda, lambda )
+              !
+           ELSE
+              DO is = 1, nspin
+                 CALL gram( vkb, bec, nkb, cp(1,iupdwn(is)), SIZE(cp,1), nupdwn(is) )
+              END DO
+           END IF
+
+           !  Compute fictitious kinetic energy of the electrons at time t
+
+           ekinc = 0
+
+           CALL elec_fakekine( ekinc, ema0bg, emass, cp, cm, ngw, nbsp, 1, 2.0d0 * delt )
+
            !   ...     propagate thermostat for the electronic variables
            !
            IF(tnosee) THEN
@@ -508,14 +476,9 @@
               maxfion = 0.0d0
            END IF
            !
-           IF( tconjgrad ) THEN
-              tconv = tconv_cg
-              derho = 0.0d0
-           ELSE
-              derho = ( erhoold - edft%etot )
-              tconv =             ( derho < tconvthrs%derho )
-              tconv = tconv .AND. ( ekinc < tconvthrs%ekin )
-           END IF
+           derho = ( erhoold - edft%etot )
+           tconv =             ( derho < tconvthrs%derho )
+           tconv = tconv .AND. ( ekinc < tconvthrs%ekin )
            !
            IF( .NOT. lneb ) THEN
               tconv = tconv .AND. ( maxfion < tconvthrs%force )
@@ -552,21 +515,13 @@
 
         ! ...   Update variables
 
-        IF ( .NOT. ttdiis ) THEN
-           !
-           CALL update_wave_functions( cm, c0, cp )
-           !
-           IF ( tnosee ) THEN
-              CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
-           END IF
-           !
-        ELSE
-           !
-           IF( .NOT. tfor ) THEN
-              cm = c0
-           END IF
-           !
+        !
+        CALL update_wave_functions( cm, c0, cp )
+        !
+        IF ( tnosee ) THEN
+           CALL electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
         END IF
+        !
 
         IF ( doions ) THEN
 
@@ -599,9 +554,6 @@
         ! ...   cpu time is greater than max_seconds
  
         tstop =  check_stop_now()
-
-        ! ...   stop if only the electronic minimization was required
-        !        IF(.NOT. (tfor .OR. thdyn) .AND. ttdiis ) tstop = .TRUE.
 
         tstop = tstop .OR. tconv .OR. ( nfi >= nomore )
         !

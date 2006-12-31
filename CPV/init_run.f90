@@ -288,7 +288,7 @@ SUBROUTINE init_run()
         !
         CALL from_restart( nfi, acc, rhor, cm, c0, wfill, eigr, ei1, ei2, &
                            ei3, sfac, htm, ht0, atomsm, atoms0, bec, &
-                           becdr, vpot, edft)
+                           becdr, vpot, edft, ema0bg )
         !
         velh = htm%hvel
         !

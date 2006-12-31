@@ -69,8 +69,8 @@ CONTAINS
                                      berry_energy2
     USE cg_module,            ONLY : tcg
     USE ensemble_dft,         ONLY : tens, compute_entropy
-    USE cp_interfaces,        ONLY : runcp_uspp, runcp_ncpp, runcp_uspp_force_pairing, &
-                                     runcp_uspp_bgl, strucf, phfacs
+    USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
+                                     strucf, phfacs
     USE cp_interfaces,        ONLY : rhoofr, ortho, nlrh, wave_rand_init, elec_fakekine
     USE orthogonalize_base,   ONLY : updatc, calphi
     USE atoms_type_module,    ONLY : atoms_type
@@ -262,13 +262,7 @@ CONTAINS
             !
          ELSE
             !
-            IF( use_task_groups ) THEN
-               CALL runcp_uspp_bgl( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
-        &                 c0(:,:), fromscra = .TRUE. )
-            ELSE
-               CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
-        &                 c0(:,:), fromscra = .TRUE. )
-            END IF
+            CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, c0, fromscra = .TRUE. )
             !
          ENDIF
          !
@@ -361,7 +355,7 @@ CONTAINS
           !
           IF ( .NOT. force_pairing ) THEN
              !
-             CALL runcp_ncpp( cm, cm, c0, vpot, vkb, f, bec, fccc, gam, fromscra = .TRUE. )
+             CALL runcp_uspp( nfi, fccc, ccc, ema0bg, dt2bye, vpot, bec, cm, c0, fromscra = .TRUE. )
              !
           ELSE
              !
@@ -371,7 +365,7 @@ CONTAINS
           !
           IF ( tortho .AND. ( .NOT. force_pairing ) ) THEN
              !
-             ccc = fccc * delt * delt / emass
+             ccc = fccc * dt2bye
              !
              CALL ortho( cm, c0, lambda, ccc, nupdwn, iupdwn, nspin )
              !

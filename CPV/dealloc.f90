@@ -41,7 +41,6 @@ SUBROUTINE deallocate_modules_var()
   USE fft_base,             ONLY : dfftp, dffts, dfftb
   USE stick_base,           ONLY : sticks_deallocate
   USE electrons_module,     ONLY : deallocate_electrons
-  USE diis,                 ONLY : deallocate_diis
   USE charge_mix,           ONLY : deallocate_charge_mix
   USE chi2,                 ONLY : deallocate_chi2
   USE ions_base,            ONLY : deallocate_ions_base
@@ -110,7 +109,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_pseudopotential()
   CALL deallocate_ncpp()
   CALL deallocate_turbo()
-  CALL deallocate_diis()
   !
   CALL deallocate_charge_mix()
   CALL deallocate_chi2()

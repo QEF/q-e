@@ -104,7 +104,7 @@ CONTAINS
         USE mp_global,        ONLY : intra_image_comm
         USE io_global,        ONLY : ionode, stdout
         USE ions_base,        ONLY : nsp
-        USE cp_interfaces,    ONLY : dforce, kohn_sham
+        USE cp_interfaces,    ONLY : dforce_fpmd, kohn_sham
         USE control_flags,    ONLY : force_pairing
         USE electrons_base,   ONLY : nupdwn, iupdwn, nspin, nbsp
         USE electrons_module, ONLY : n_emp, nupdwn_emp, iupdwn_emp, nb_l, n_emp_l
@@ -145,7 +145,7 @@ CONTAINS
 
               IF( nupdwn( iss ) > 0 ) THEN
 
-                 CALL dforce( cf, occ, fforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
+                 CALL dforce_fpmd( cf, occ, fforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
 
               END IF
 
@@ -198,7 +198,7 @@ CONTAINS
 
              IF( nupdwn_emp( iss ) > 0 ) THEN
 
-                CALL dforce( ce, fi, eforce, vpot(:,iss), vkb, bec_emp, nupdwn_emp( iss ), iupdwn_emp( iss ) ) 
+                CALL dforce_fpmd( ce, fi, eforce, vpot(:,iss), vkb, bec_emp, nupdwn_emp( iss ), iupdwn_emp( iss ) ) 
 
                 CALL kohn_sham( ce, ngw, eforce, nupdwn_emp( iss ), n_emp_l(iss), iupdwn_emp( iss ) )
 
