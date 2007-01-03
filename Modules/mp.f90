@@ -559,7 +559,7 @@
 #if defined __XD1
         CALL bcast_real( msg, 2 * msglen, source, group, ierr )
 #else
-        CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+        CALL mpi_bcast( msg, msglen, mpi_double_complex, source, group, ierr )
 #endif
         IF (ierr/=0) CALL mp_stop( 8038 )
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
@@ -585,7 +585,7 @@
 #if defined __XD1
         CALL bcast_real( msg, 2 * msglen, source, group, ierr )
 #else
-        CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+        CALL mpi_bcast( msg, msglen, mpi_double_complex, source, group, ierr )
 #endif
         IF (ierr/=0) CALL mp_stop( 8040 )
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen )
@@ -611,7 +611,7 @@
 #if defined __XD1
         CALL bcast_real( msg, 2 * msglen, source, group, ierr )
 #else
-        CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+        CALL mpi_bcast( msg, msglen, mpi_double_complex, source, group, ierr )
 #endif
         IF (ierr/=0) CALL mp_stop( 8042 )
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen )
@@ -638,7 +638,7 @@
 #if defined __XD1
         CALL bcast_real( msg, 2 * msglen, source, group, ierr )
 #else
-        CALL mpi_bcast(msg,msglen,mpi_double_complex,source,group,ierr)
+        CALL mpi_bcast( msg, msglen, mpi_double_complex, source, group, ierr )
 #endif
         IF (ierr/=0) CALL mp_stop( 8044 )
         mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
@@ -1668,7 +1668,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
 #else
         ALLOCATE (res(1:size(msg)),STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8143 )
@@ -1699,7 +1699,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
 #else
         m1 = size(msg(:,1))
         m2 = size(msg(1,:))
@@ -1733,7 +1733,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #  if defined __XD1
-        CALL PARALLEL_SUM_REAL_TO( msg, res, 2*msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, group, ierr )
 #  else
         CALL mpi_allreduce(msg, res, msglen, mpi_double_precision, mpi_sum, group, ierr)
 #  endif
@@ -1765,7 +1765,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
 #else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3)),STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8153 )
@@ -1799,7 +1799,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, 2*msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
 #else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3),size(msg,4)), STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8157 )
