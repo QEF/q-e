@@ -463,7 +463,7 @@ MODULE pw_restart
                filename = wfc_filename( dirname, 'eigenval1', ik, EXTENSION='xml' )
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, "Hartree", &
-                               OCC = raux(:), IK=ik, ISPIN=ispin, EF=ef )
+                               OCC = raux(:), IK=ik, ISPIN=ispin, EF=ef /e2 )
                !
                !
                !
@@ -491,7 +491,7 @@ MODULE pw_restart
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
                                "Hartree", OCC = raux(:), IK = ik,          &
-                               ISPIN = ispin, EF = ef )
+                               ISPIN = ispin, EF = ef /e2 )
                !
             ELSE
                !
@@ -513,7 +513,7 @@ MODULE pw_restart
                filename = wfc_filename( dirname, 'eigenval', ik, EXTENSION='xml' )
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
-                               "Hartree", OCC = raux(:), IK = ik, EF = ef )
+                               "Hartree", OCC = raux(:), IK = ik, EF = ef / e2 )
                !
             END IF
             !
