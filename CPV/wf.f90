@@ -68,7 +68,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   COMPLEX(DP), ALLOCATABLE :: c_msp(:,:)
   INTEGER,     ALLOCATABLE :: tagz(:)
   REAL(DP),    ALLOCATABLE :: Uspin(:,:)
-  COMPLEX(DP), ALLOCATABLE :: X(:,:), X1(:,:), Xsp(:,:), X2(:,:), X3(:,:)
+  COMPLEX(DP), ALLOCATABLE :: X(:,:), Xsp(:,:), X2(:,:), X3(:,:)
   COMPLEX(DP), ALLOCATABLE :: O(:,:,:), Ospin(:,:,:), Oa(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: qv(:)
   REAL(DP),    ALLOCATABLE :: gr(:,:), mt(:), mt0(:), wr(:), W(:,:), EW(:,:)
@@ -114,6 +114,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
 #endif
   !
+  CALL start_clock('wf_1')
+  !
   me = me_image + 1
   !
   te = 0.D0
@@ -138,21 +140,15 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   !
   ALLOCATE( ns( nproc_image ) )
   !
-  ns(1:nproc_image) = 0
+  ns = 0
   !
-  IF ( nbsp == nproc_image ) THEN
-     !
-     ns(1:nbsp)=1
-     !
-  ELSE
-     i=0
-1    DO j=1,nproc_image   
-        ns(j)=ns(j)+1
-        i=i+1
-        IF(i.GE.nbsp) GO TO 2
-     END DO
-     IF(i.LT.nbsp) GO TO 1 
-  END IF
+  i=0
+1 DO j=1,nproc_image   
+     ns(j)=ns(j)+1
+     i=i+1
+     IF(i.GE.nbsp) GO TO 2
+  END DO
+  IF(i.LT.nbsp) GO TO 1 
 2 IF(iprsta.GT.4) THEN
      DO j=1,nproc_image
         WRITE( stdout, * ) ns(j)
@@ -163,7 +159,6 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   DO proc=1,nproc_image
      ngpwpp(proc)=(dfftp%nwl(proc)+1)/2
      total=total+ngpwpp(proc)
-     !           nstat=ns(proc)
      IF(iprsta.GT.4) THEN
         WRITE( stdout, * ) "I am proceessor", proc, "and i have ",ns(me)," states."
      END IF
@@ -507,21 +502,23 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 
      DEALLOCATE( qv )
 
+
      !   Then Soft Part
-     IF(nspin.EQ.1) THEN
+     IF( nspin == 1 ) THEN
         !   Spin Unpolarized calculation
         X=0.D0   
-        IF(gstart.EQ.2) THEN
+        IF( gstart == 2 ) THEN
            c_m(1,:)=0.D0
         END IF
         !           cwf(:,:)=ZERO
         !           cwf(:,:)=c(:,:)
         CALL ZGEMM('C','N',nbsp,nbsp,ngw,ONE,c,ngw,c_p,ngw,ONE,X,nbsp)
         CALL ZGEMM('T','N',nbsp,nbsp,ngw,ONE,c,ngw,c_m,ngw,ONE,X,nbsp)
-#ifdef __PARA
+
         CALL mp_sum ( X, intra_image_comm )
-#endif
+
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
+
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "Soft Part Done"
         END IF
@@ -584,16 +581,27 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
         DEALLOCATE(Xsp,c_psp,c_msp)
         O(inw,:,:)=Oa(inw,:,:)+X(:,:)
      END IF
+
+
   END DO
+
 #ifdef __PARA
   DEALLOCATE(ns)
 #endif
 
+  CALL stop_clock('wf_1')
+
+  DEALLOCATE( X )
+  IF ( ALLOCATED( X2 ) )  DEALLOCATE( X2 )
+  IF ( ALLOCATED( X3 ) )  DEALLOCATE( X3 )
+  !
+
+  CALL start_clock('wf_2')
+
+
   IF(clwf.EQ.2) THEN
      !    output the overlap matrix to fort.38
-#ifdef __PARA
      IF(me.EQ.1) THEN
-#endif
         REWIND 38
         WRITE(38, '(i5, 2i2, i3, f9.5)') nbsp, nw, nspin, ibrav, alat
         IF (nspin.EQ.2) THEN
@@ -621,13 +629,8 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
            END DO
         END DO
         CLOSE(38)
-#ifdef __PARA
      END IF
-#endif
-#ifdef __PARA
-     CALL Mpi_finalize(ierr)
-#endif
-     STOP
+     CALL stop_run( .TRUE. )
   END IF
 
   IF(clwf.EQ.3.OR.clwf.EQ.4) THEN
@@ -711,6 +714,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   ! calculate wannier-function centers
   !
   ALLOCATE( wr(nw), W(nw,nw), gr(nw,3), EW(nw,nw), f3(nw), f4(nw), mt0(nw), mt(nw) )
+  !
   DO inw=1, nw
      gr(inw, :)=wfg(inw,1)*b1(:)+wfg(inw,2)*b2(:)+wfg(inw,3)*b3(:)
   END DO
@@ -789,7 +793,6 @@ COMB:   DO k=3**nw-1,0,-1
   END IF
   !
   !
-  IF ( nspin == 2 .AND. nvb > 0 ) DEALLOCATE( X2, X3 )
   !
   DEALLOCATE( wr, W, gr, EW, f3, f4, mt0, mt )
   !
@@ -810,7 +813,11 @@ COMB:   DO k=3**nw-1,0,-1
   !
 #endif
   !
-  DEALLOCATE( X, O, Oa, tagz )
+  DEALLOCATE( O )
+  DEALLOCATE( Oa )
+  DEALLOCATE( tagz )
+
+  CALL stop_clock('wf_2')
   !
   RETURN
   !

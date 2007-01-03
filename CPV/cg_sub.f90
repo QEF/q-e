@@ -70,7 +70,7 @@
       use mp, only: mp_sum
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
-      use cp_interfaces,            ONLY : rhoofr
+      use cp_interfaces,            ONLY : rhoofr, dforce
       USE cpr_subroutines,      ONLY : compute_stress!ATTENZIONE
       USE printout_base,    ONLY: printout_stress!ATTENZIONE
 
@@ -311,7 +311,7 @@
         call prefor(eigr,betae)!ATTENZIONE
 
         do i=1,n,2
-          call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
+          call dforce( i, bec, betae, c0,c2,c3,rhos, nnrsx, ispin,f,n,nspin)
           if(tefield .and. (evalue.ne.0.d0)) then
             call dforceb(c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)
             c2(1:ngw)=c2(1:ngw)+evalue*df(1:ngw)
@@ -789,7 +789,7 @@
   
         call prefor(eigr,betae)
         do i=1,n,2
-          call dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
+          call dforce(i,bec,betae,c0,c2,c3,rhos,nnrsx,ispin,f,n,nspin)
           if(tefield.and.(evalue .ne. 0.d0)) then
             call dforceb &
                (c0, i, betae, ipolp, bec ,ctabin(1,1,ipolp), gqq, gqqm, qmat, deeq, df)

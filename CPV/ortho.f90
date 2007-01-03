@@ -27,7 +27,7 @@
       REAL(DP),    INTENT(IN)    :: ccc
       !
       COMPLEX(DP), ALLOCATABLE :: phi(:,:)
-      INTEGER                  :: iss, nss, iwfc, nwfc, info
+      INTEGER                  :: iss, nsc, iwfc, nwfc, info
       INTEGER                  :: iter, i, j
       INTEGER                  :: ngwx, n, nx
       REAL(DP)                 :: diff
@@ -45,10 +45,10 @@
 
       CALL calphi( c0, ngwx, dum, 1, cdum, phi, n, ema0bg )
       !
-      nss = nspin
-      IF( force_pairing ) nss = 1
+      nsc = nspin
+      IF( force_pairing ) nsc = 1
       !
-      DO iss = 1, nss
+      DO iss = 1, nsc
           !
           nwfc = nupdwn(iss)
           iwfc = iupdwn(iss)

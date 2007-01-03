@@ -1251,10 +1251,10 @@ END FUNCTION
       IF( iprsta > 2 ) THEN
            isa = 1
            DO is=1,nsp
-              WRITE( stdout,'(/,2x,''species= '',i2)') is
+              WRITE( stdout, '( /, 2x, "species= ", i2 )' ) is
               DO ia=1,na(is)
                  WRITE( stdout,2000) ia, (irb(i,isa),i=1,3)
-2000             FORMAT(2x,'atom= ',i3,' irb1= ',i3,' irb2= ',i3,' irb3= ',i3)
+2000             FORMAT(2x, 'atom= ', i3, ' irb1= ', i3, ' irb2= ', i3, ' irb3= ', i3)
                  isa = isa + 1
                END DO
             END DO
@@ -1271,10 +1271,10 @@ END FUNCTION
 #endif
 !
       RETURN
-      END SUBROUTINE initbox
+   END SUBROUTINE initbox
 !
 !-------------------------------------------------------------------------
-      SUBROUTINE newd(vr,irb,eigrb,rhovan,fion)
+   SUBROUTINE newd(vr,irb,eigrb,rhovan,fion)
 !-----------------------------------------------------------------------
 !     this routine calculates array deeq:
 !         deeq_i,lm = \int V_eff(r) q_i,lm(r) dr

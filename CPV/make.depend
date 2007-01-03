@@ -342,14 +342,12 @@ efield.o : ../Modules/uspp.o
 efield.o : ions_positions.o
 eigs0.o : ../Modules/constants.o
 eigs0.o : ../Modules/electrons_base.o
-eigs0.o : ../Modules/energies.o
 eigs0.o : ../Modules/io_global.o
 eigs0.o : ../Modules/kind.o
 eigs0.o : ../Modules/mp.o
 eigs0.o : ../Modules/mp_global.o
 eigs0.o : ../Modules/ptoolkit.o
 eigs0.o : ../Modules/sic.o
-eigs0.o : cp_interfaces.o
 eigs0.o : electrons.o
 eigs0.o : ensemble_dft.o
 electrons.o : ../Modules/constants.o
@@ -425,7 +423,6 @@ forceconv.o : ../Modules/kind.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
 forces.o : ../Modules/control_flags.o
-forces.o : ../Modules/electrons_base.o
 forces.o : ../Modules/fft_base.o
 forces.o : ../Modules/functionals.o
 forces.o : ../Modules/griddim.o

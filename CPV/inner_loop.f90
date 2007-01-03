@@ -76,7 +76,7 @@
                                 passo, iter3, enesti, ninner_ef
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
-      use cp_interfaces,  only: rhoofr
+      use cp_interfaces,  only: rhoofr, dforce
 
       !
       IMPLICIT NONE
@@ -192,9 +192,7 @@
         ! operates the Hamiltonian on the wavefunction c0
         h0c0( :, : )= 0.D0
           DO i= 1, n, 2                      
-            CALL dforce( bec, betae, i, c0(1,i), &
-                         c0(1,i+1), h0c0(1,i), h0c0(1,i+1), &
-                         rhos, ispin, f, n, nspin )
+            CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, nnrsx, ispin, f, n, nspin )
           END DO
         
         ! calculates the Hamiltonian matrix in the basis {c0}           
@@ -323,9 +321,7 @@
         ! calculates the Hamiltonian matrix
         h0c0( :, : )= 0.D0
           DO i= 1, n, 2
-            CALL dforce( bec, betae, i, c0(1,i), &
-                         c0(1,i+1), h0c0(1,i), h0c0(1,i+1), &
-                         rhos, ispin, f, n, nspin )
+            CALL dforce( i, bec, betae, c0, h0c0(:,i), h0c0(:,i+1), rhos, nnrsx, ispin, f, n, nspin )
           END DO
         
         c0hc0(:,:,:)=0.d0

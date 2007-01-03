@@ -18,6 +18,7 @@
    PUBLIC :: dforce1
    PUBLIC :: dforce2
    PUBLIC :: dforce_fpmd
+   PUBLIC :: dforce
 
    PUBLIC :: nlin
    PUBLIC :: nlin_stress
@@ -196,6 +197,24 @@
       END SUBROUTINE dforce_all
    END INTERFACE
 
+
+   INTERFACE dforce 
+      SUBROUTINE dforce_x( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
+         USE kinds,              ONLY: DP
+         IMPLICIT NONE
+         INTEGER,     INTENT(IN)    :: i
+         REAL(DP)                   :: bec(:,:)
+         COMPLEX(DP)                :: vkb(:,:)
+         COMPLEX(DP)                :: c(:,:)
+         COMPLEX(DP)                :: df(:), da(:)
+         INTEGER,     INTENT(IN)    :: ldv
+         REAL(DP)                   :: v( ldv, * )
+         INTEGER                    :: ispin( : )
+         REAL(DP)                   :: f( : )
+         INTEGER,     INTENT(IN)    :: n, nspin
+         REAL(DP),    OPTIONAL      :: v1( ldv, * )
+      END SUBROUTINE dforce_x
+   END INTERFACE
 
    INTERFACE nlin
       SUBROUTINE nlin_x( wsg, wnl )

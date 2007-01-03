@@ -46,6 +46,7 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
   USE control_flags,        ONLY : force_pairing
   USE cp_interfaces,        ONLY : rhoofr
   USE electrons_base,       ONLY : nupdwn 
+  USE mp_global,            ONLY : me_image 
   !
   IMPLICIT NONE
   !
@@ -77,7 +78,6 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
      !
      CALL rhoofr( nfi, c0, irb, eigrb, bec, &
                      becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
-     !
      !
      ! ... put core charge (if present) in rhoc(r)
      !
@@ -135,7 +135,6 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         !
         CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, &
                       rhos, bec, c0, cm, ei_unp )
-!        lambda( nudx, nudx, 1) = ei_unp
         !
      ELSE
         !

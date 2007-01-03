@@ -37,7 +37,7 @@
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
       USE task_groups,         ONLY : nolist
       use gvecw,               only : ngw
-      USE cp_interfaces,       ONLY : dforce_fpmd
+      USE cp_interfaces,       ONLY : dforce_fpmd, dforce
       USE ldaU
       !
       IMPLICIT NONE
@@ -53,13 +53,13 @@
       !
       !
      real(DP) ::  verl1, verl2, verl3
-     real(DP), allocatable:: emadt2(:)
-     real(DP), allocatable:: emaver(:)
-     complex(DP), allocatable:: c2(:), c3(:)
-     REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
+     real(DP),    allocatable :: emadt2(:)
+     real(DP),    allocatable :: emaver(:)
+     complex(DP), allocatable :: c2(:), c3(:)
      INTEGER,     ALLOCATABLE :: recv_cnt(:), recv_displ(:)
+     REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
      integer :: i, nsiz, incr, idx, idx_in, ierr
-     integer :: iwfc, nwfc, is, ii
+     integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
      integer :: iflag
      logical :: ttsde
 
@@ -72,6 +72,14 @@
      END IF
      IF( PRESENT( restart ) ) THEN
        IF( restart ) iflag = 2
+     END IF
+
+     IF( use_task_groups ) THEN
+        tg_rhos_siz = (nogrp+1)*dffts%nr1x * dffts%nr2x*MAXVAL( dffts%npp )
+        c2_siz      = (nogrp+1)*ngw 
+     ELSE
+        tg_rhos_siz = 1
+        c2_siz      = ngw 
      END IF
 
      !
@@ -98,25 +106,25 @@
 
      IF( lwf ) THEN
 
-        allocate( c2(ngw), c3(ngw) )
-
-        call ef_potential( nfi, rhos, bec, deeq, vkb, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
-
-        deallocate( c2, c3 )
+        call ef_potential( nfi, rhos, bec, deeq, vkb, c0, cm, emadt2, emaver, verl1, verl2 )
 
      ELSE
 
-        IF( use_task_groups ) THEN
+        allocate( c2( c2_siz ), c3( c2_siz ) )
+        allocate( tg_rhos( tg_rhos_siz, nspin ) )
 
-           allocate( c2( (nogrp+1)*ngw ), c3( (nogrp+1)*ngw ) )
-           allocate( recv_cnt( nogrp ), recv_displ( nogrp ) )
-           allocate( tg_rhos( (nogrp+1)*dffts%nr1x * dffts%nr2x*MAXVAL( dffts%npp ), nspin ) )
+        tg_rhos = 0D0
+        c2      = 0D0
+        c3      = 0D0
+
+        IF( use_task_groups ) THEN
 
            !
            !  The potential in rhos is distributed accros all processors
            !  We need to redistribute it so that it is completely contained in the
            !  processors of an orbital TASK-GROUP
            !
+           ALLOCATE( recv_cnt( nogrp ), recv_displ( nogrp ) )
            
            recv_cnt(1)   = dffts%npp( nolist(1) + 1 ) * dffts%nr1x * dffts%nr2x
            recv_displ(1) = 0
@@ -125,8 +133,6 @@
               recv_displ(i) = recv_displ(i-1) + recv_cnt(i)
            ENDDO
 
-           tg_rhos(:,:) = 0D0
-
 #if defined (__PARA) && defined (__MPI)
            DO i = 1, nspin
               nsiz = dffts%npp(me_image+1)* dffts%nr1x * dffts%nr2x
@@ -134,14 +140,11 @@
                    tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
            ENDDO
 #endif
-           deallocate( recv_cnt, recv_displ )
+           DEALLOCATE( recv_cnt, recv_displ )
 
            incr = 2 * nogrp
 
         ELSE
-
-           allocate( c2(ngw), c3(ngw) )
-           allocate( tg_rhos( 1, 1 ) )
 
            incr = 2
 
@@ -160,14 +163,14 @@
               !1-3-5-7 and 2-4-6-8
               !
 
-              call dforce_bgl( bec, vkb, i, c0(1,i), c0(1,i+1), c2, c3, tg_rhos)
-
               if( tefield .OR. tefield2 ) then
                  CALL errore( ' runcp_uspp ', ' electric field with task group not implemented yet ', 1 )
               end if
               if( lda_plus_u ) then
                  CALL errore( ' runcp_uspp ', ' lda_plus_u with task group not implemented yet ', 1 )
               end if
+
+              CALL dforce( i, bec, vkb, c0, c2, c3, tg_rhos, tg_rhos_siz, ispin, f, n, nspin )
 
            ELSE
 
@@ -184,7 +187,7 @@
 
               ELSE
 
-                 call dforce(bec,vkb,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,n,nspin)
+                 CALL dforce( i, bec, vkb, c0, c2, c3, rhos, SIZE(rhos,1), ispin, f, n, nspin )
 
               END IF
 
@@ -267,7 +270,7 @@
       USE wannier_subroutines, ONLY : ef_potential
       USE efield_module,       ONLY : dforce_efield, tefield
       USE electrons_base,      ONLY : ispin, nspin, f, n=>nbsp
-      USE cp_interfaces,       ONLY : dforce_fpmd
+      USE cp_interfaces,       ONLY : dforce_fpmd, dforce
   !
       USE gvecw, ONLY: ngw
   !
@@ -377,8 +380,8 @@
             CALL dforce_fpmd( i, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
             CALL dforce_fpmd( i, c0, f, c4, c5, rhos(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
          ELSE
-            CALL dforce(bec,vkb,i,c0(1,i),c0(1,i+1),c2,c3,rhos(1,1),ispin,f,n,nspin)
-            CALL dforce(bec,vkb,i,c0(1,i),c0(1,i+1),c4,c5,rhos(1,2),ispin,f,n,nspin)
+            CALL dforce(i,bec,vkb,c0,c2,c3,rhos(:,1:1),SIZE(rhos,1),ispin,f,n,nspin)
+            CALL dforce(i,bec,vkb,c0,c4,c5,rhos(:,2:2),SIZE(rhos,1),ispin,f,n,nspin)
          END IF
          !
          c2 = occ( i )*(c2 + c4)  
@@ -413,8 +416,8 @@
             CALL dforce_fpmd( npair, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
             CALL dforce_fpmd( npair, c0, f, c4, c5, rhos(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
          ELSE
-            CALL dforce(bec,vkb,npair,c0(1,npair),c0(1,nbspx),c2,c3,rhos(1,1),ispin,f,n,nspin)
-            CALL dforce(bec,vkb,npair,c0(1,npair),c0(1,nbspx),c4,c5,rhos(1,2),ispin,f,n,nspin)
+            CALL dforce(npair,bec,vkb,c0,c2,c3,rhos(:,1:1),SIZE(rhos,1),ispin,f,n,nspin)
+            CALL dforce(npair,bec,vkb,c0,c4,c5,rhos(:,2:2),SIZE(rhos,1),ispin,f,n,nspin)
          END IF
 !
          c2 = c2 + c4
@@ -447,7 +450,7 @@
       IF( program_name == 'FPMD' ) THEN
          CALL dforce_fpmd( n_unp, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
       ELSE
-         CALL dforce( bec, vkb, n_unp, c0(1,n_unp), c0(1,n_unp), c2, c3, rhos(1,1),ispin,f,n,nspin )
+         CALL dforce( n_unp, bec, vkb, c0, c2, c3, rhos, SIZE(rhos,1), ispin,f,n,nspin )
       END IF
       !
       intermed  = - 2.d0 * sum(c2 * conjg(c0(:,n_unp)))

@@ -326,7 +326,7 @@
       USE time_step,            ONLY : delt
       USE check_stop,           ONLY : check_stop_now
       USE cp_interfaces,        ONLY : writeempty, readempty, gram_empty, ortho, &
-                                       wave_rand_init, elec_fakekine, crot
+                                       wave_rand_init, elec_fakekine, crot, dforce
       !
       IMPLICIT NONE
       !
@@ -492,8 +492,7 @@
 
          DO i = 1, n_emps, 2
             !
-            CALL dforce( bec_emp, vkb, i, c0_emp(1,i), c0_emp(1,i+1), c2, c3, v, &
-                         ispin_emp, f_emp, n_emps, nspin )
+            CALL dforce( i, bec_emp, vkb, c0_emp, c2, c3, v, SIZE(v,1), ispin_emp, f_emp, n_emps, nspin )
             !
             IF( tsde ) THEN
                CALL wave_steepest( cm_emp(:, i  ), c0_emp(:, i  ), emaver, c2 )

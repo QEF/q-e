@@ -456,7 +456,7 @@ MODULE wannier_subroutines
   END SUBROUTINE wf_options
   !
   !--------------------------------------------------------------------------
-  SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2, c2, c3 )
+  SUBROUTINE ef_potential( nfi, rhos, bec, deeq, betae, c0, cm, emadt2, emaver, verl1, verl2 )
     !--------------------------------------------------------------------------
     !
     USE efcalc,                 ONLY : wf_efield, efx, efy, efz, &
@@ -471,6 +471,7 @@ MODULE wannier_subroutines
     USE reciprocal_vectors,     ONLY : gstart
     USE control_flags,          ONLY : tsde
     USE wave_base,              ONLY : wave_steepest, wave_verlet
+    USE cp_interfaces,          ONLY : dforce
     !
     IMPLICIT NONE
     !
@@ -479,15 +480,19 @@ MODULE wannier_subroutines
     REAL(DP) :: bec(:,:)
     REAL(DP) :: deeq(:,:,:,:)
     COMPLEX(DP) :: betae(:,:)
-    COMPLEX(DP) :: c0( :, : ), c2( : ), c3( : )
+    COMPLEX(DP) :: c0( :, : )
     COMPLEX(DP) :: cm( :, : )
     REAL(DP) :: emadt2(:)
     REAL(DP) :: emaver(:)
     REAL(DP) :: verl1, verl2
+    COMPLEX(DP), ALLOCATABLE :: c2( : ), c3( : )
     INTEGER :: i, ir
     !
     ! ... Potential for electric field
     !
+    ALLOCATE( c2( SIZE( c0, 1 )))
+    ALLOCATE( c3( SIZE( c0, 1 )))
+
     IF(wf_efield) THEN
        IF(field_tune) THEN
           efx=e_tuned(1)
@@ -562,9 +567,9 @@ MODULE wannier_subroutines
                 rhos2(ir,:)=rhos1(ir,:)
              END IF
           END DO
-          CALL dforce_field(bec,deeq,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos1,rhos2)
+          CALL dforce(i,bec,betae,c0,c2,c3,rhos1,nnrsx,ispin,f,nbsp,nspin,rhos2)
        ELSE
-          CALL dforce(bec,betae,i,c0(1,i),c0(1,i+1),c2,c3,rhos,ispin,f,nbsp,nspin)
+          CALL dforce(i,bec,betae,c0,c2,c3,rhos,nnrsx,ispin,f,nbsp,nspin)
        END IF
        IF(tsde) THEN
           CALL wave_steepest( cm(:, i  ), c0(:, i  ), emadt2, c2 )
@@ -578,6 +583,9 @@ MODULE wannier_subroutines
           cm(1,i+1)=CMPLX(DBLE(cm(1,i+1)),0.d0)
        END IF
     END DO
+
+    DEALLOCATE( c2 )
+    DEALLOCATE( c3 )
 
     RETURN
   END SUBROUTINE ef_potential
@@ -694,6 +702,7 @@ MODULE wannier_subroutines
     REAL(DP)    :: fion(:,:), tps
     REAL(DP)    :: mat_z(:,:,:), occ_f(:), rho(:,:)
     !
+    CALL start_clock('wf_close_opt')
     !
     ! ... More Wannier Function Options
     !
@@ -721,6 +730,7 @@ MODULE wannier_subroutines
                        vnhh, velh, ecut, ecutw, delt, pmass, ibrav, celldm,   &
                        fion, tps, mat_z, occ_f, rho )
        !
+       CALL stop_clock('wf_close_opt')
        CALL stop_run( .TRUE. )
        !
     END IF
@@ -733,6 +743,8 @@ MODULE wannier_subroutines
        !
        CALL wf( calwf, c0, bec, eigr, eigrb, taub, irb, &
                 b1, b2, b3, utwf, becdr, what1, wfc, jwf, ibrav )
+       !
+       CALL stop_clock('wf_close_opt')
        !
     END IF
     !
