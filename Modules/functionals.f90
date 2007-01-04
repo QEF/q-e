@@ -1186,7 +1186,8 @@ end subroutine gcc_spin
            dmuxc_ud = dmuxc_uu
            dmuxc_dd = (vxdwp + vcdwp - vxdwm - vcdwm) / (2.d0 * dr)
            dmuxc_du = dmuxc_dd
-           dz = min (1.d-6, 1.d-4 * abs (zeta) )
+           ! dz = min (1.d-6, 1.d-4 * abs (zeta) )
+           dz = 1.d-6
            call xc_spin (rho, zeta - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
            call xc_spin (rho, zeta + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
            dmuxc_uu = dmuxc_uu + (vxupp + vcupp - vxupm - vcupm) * &
