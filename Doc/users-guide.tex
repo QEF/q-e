@@ -704,7 +704,7 @@ files \texttt{make.depend} in the various subdirectories.
 \paragraph{Note for HP PA-RISC users:} 
 
 The Makefile for HP PA-RISC workstations and parallel machines is
-based on a Makefile contributed by Sergei Lysenkov.
+based on a Makefile contributed by Sergei Lisenkov.
 It assumes that you have HP compiler with MLIB libraries installed on
 a machine running HP-UX.
 
@@ -1236,7 +1236,7 @@ either prevents compilation of \texttt{iotk}, or produces runtime
 errors in \texttt{cft3}. Update to a more patched version, or
 modify \texttt{make.sys} to explicitly perform preprocessing 
 using \texttt{/lib/cpp}, as in the following example (courtesy 
-from Sergei Lysenkov):
+from Sergei Lisenkov):
 \begin{verbatim}
 .f90.o:
         $(CPP) $(CPPFLAGS) $< -o $*.F90
