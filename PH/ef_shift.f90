@@ -26,7 +26,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE ener,                 ONLY : ef
 ! modules from phcom
   USE qpoint,               ONLY : nksq
-  USE control_ph,           ONLY : nbnd_occ
+  USE control_ph,           ONLY : nbnd_occ, lgamma_gamma
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
@@ -91,7 +91,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      !
      ! symmetrizes the Fermi energy shift
      !
-     call sym_def (def, irr)
+     if (.not.lgamma_gamma) call sym_def (def, irr)
      WRITE( stdout, '(5x,"Pert. #",i3,": Fermi energy shift (Ry) =", 2f10.4)') &
           (ipert, def (ipert) , ipert = 1, npert (irr) )
      !
