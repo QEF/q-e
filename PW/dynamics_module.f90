@@ -415,13 +415,13 @@ MODULE dynamics_module
              CASE( 'rescaling' )
                 !
                 WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"temperature is " &
+                       FMT = '(/,5X,"temperature is ", &
                               &     "controlled by rescaling velocities"/)' )
                 !
              CASE( 'andersen' )
                 !
                 WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"temperature is " &
+                       FMT = '(/,5X,"temperature is ", &
                               &     "controlled by Andersen thermostat"/)' )
                 !
              END SELECT
