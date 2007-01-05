@@ -148,17 +148,13 @@
       USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, lambda, &
                                     ht0, htm, htp, rhor, vpot, wfill, &
                                     acc, acc_this_run,  edft, nfi, bec, becdr, &
-                                    ema0bg
+                                    ema0bg, descla
       USE ions_positions,    ONLY : atoms0, atomsp, atomsm
       USE cg_module,         ONLY : tcg
       USE cp_electronic_mass, ONLY : emass
-
       !
-
       IMPLICIT NONE
-
       !
-
       REAL(DP) :: tau( :, : )
       REAL(DP) :: fion( :, : )
       REAL(DP) :: etot
@@ -346,7 +342,7 @@
               !
               ccc    = fccc * dt2bye
               !
-              CALL ortho( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
+              CALL ortho( c0, cp, lambda, descla, ccc, nupdwn, iupdwn, nspin )
               !
               IF( ttprint ) CALL eigs( nfi, lambda, lambda )
               !

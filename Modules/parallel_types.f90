@@ -6,26 +6,26 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-      MODULE parallel_types
-        USE kinds
-        IMPLICIT NONE
-        PRIVATE
-        SAVE
+   MODULE parallel_types
+      USE kinds
+      IMPLICIT NONE
+      PRIVATE
+      SAVE
 
 
-        TYPE processors_grid
-          INTEGER :: context  !  Communication handle, grid identification
-          INTEGER :: nproc    !  number of processors in the grid
-          INTEGER :: my_pe    !  process index (0 ... nproc -1)
-          INTEGER :: npx      !  Grid dimensions :  
-          INTEGER :: npy      !  (nprows, npcolumns, npplanes)
-          INTEGER :: npz      !  
-          INTEGER :: mex      !  Processor coordinates:
-          INTEGER :: mey      !  (mex, mey, mez)
-          INTEGER :: mez      !  0 <= mex < npx-1
-                              !  0 <= mey < npy-1
-                              !  0 <= mez < npz-1
-        END TYPE
+      TYPE processors_grid
+         INTEGER :: context  !  Communication handle, grid identification
+         INTEGER :: nproc    !  number of processors in the grid
+         INTEGER :: my_pe    !  process index (0 ... nproc -1)
+         INTEGER :: npx      !  Grid dimensions :  
+         INTEGER :: npy      !  (nprows, npcolumns, npplanes)
+         INTEGER :: npz      !  
+         INTEGER :: mex      !  Processor coordinates:
+         INTEGER :: mey      !  (mex, mey, mez)
+         INTEGER :: mez      !  0 <= mex < npx-1
+                             !  0 <= mey < npy-1
+                             !  0 <= mez < npz-1
+      END TYPE
 
         ! ...   Valid values for data distribution
         !
@@ -97,132 +97,14 @@
         END TYPE
         
         
-        TYPE integer_parallel_vector
-          TYPE (descriptor), POINTER :: desc
-          INTEGER, POINTER :: v(:)
-        END TYPE
-
-        TYPE real_parallel_vector
-          TYPE (descriptor), POINTER :: desc
-          REAL (DP), POINTER :: v(:)
-        END TYPE
-
-        TYPE complex_parallel_vector
-          TYPE (descriptor), POINTER :: desc
-          COMPLEX (DP), POINTER :: v(:)
-        END TYPE
-
-
-        TYPE integer_parallel_matrix
-          TYPE (descriptor), POINTER :: desc
-          INTEGER, POINTER :: m(:,:)
-        END TYPE
-
-        TYPE real_parallel_matrix
-          TYPE (descriptor), POINTER :: desc
-          REAL (DP), POINTER :: m(:,:)
-        END TYPE
-
-        TYPE complex_parallel_matrix
-          TYPE (descriptor), POINTER :: desc
-          COMPLEX (DP), POINTER :: m(:,:)
-        END TYPE
-
-
-        TYPE integer_parallel_tensor
-          TYPE (descriptor), POINTER :: desc
-          INTEGER, POINTER :: t(:,:,:)
-        END TYPE
-
-        TYPE real_parallel_tensor
-          TYPE (descriptor), POINTER :: desc
-          REAL (DP), POINTER :: t(:,:,:)
-        END TYPE
-
-        TYPE complex_parallel_tensor
-          TYPE (descriptor), POINTER :: desc
-          COMPLEX (DP), POINTER :: t(:,:,:)
-        END TYPE
-
-
-        PUBLIC :: processors_grid, descriptor, integer_parallel_vector, &
-          integer_parallel_matrix, integer_parallel_tensor, &
-          real_parallel_vector, real_parallel_matrix, real_parallel_tensor, &
-          complex_parallel_vector, complex_parallel_matrix, &
-          complex_parallel_tensor, parallel_allocate, parallel_deallocate
+        PUBLIC :: processors_grid
 
         PUBLIC ::  BLOCK_CYCLIC_DIST, BLOCK_PARTITION_DIST, &
           FREE_PATTERN_DIST, REPLICATED_DATA_DIST, CYCLIC_DIST
-
-        INTERFACE parallel_allocate
-          MODULE PROCEDURE allocate_real_vector, allocate_real_matrix, &
-            allocate_real_tensor
-        END INTERFACE
-        INTERFACE parallel_deallocate
-          MODULE PROCEDURE deallocate_real_vector, deallocate_real_matrix, &
-            deallocate_real_tensor
-        END INTERFACE
 
         INTEGER NUMROC
         EXTERNAL NUMROC
 
       CONTAINS
-
-        SUBROUTINE allocate_real_vector(v,desc)
-          TYPE (real_parallel_vector) :: v
-          TYPE (descriptor), POINTER :: desc
-          INTEGER :: locr
-          locr = NUMROC( desc%nx, desc%nxblk, desc%grid%mex, &
-                  desc%ipexs, desc%grid%npx )
-          ALLOCATE(v%v(locr))
-          v%desc => desc
-          RETURN
-        END SUBROUTINE allocate_real_vector
-
-        SUBROUTINE allocate_real_matrix(m,desc)
-          TYPE (real_parallel_matrix) :: m
-          TYPE (descriptor), POINTER :: desc
-          INTEGER :: locr, locc
-          locr = desc%ldx
-          locc = NUMROC( desc%ny, desc%nyblk, desc%grid%mey, &
-                  desc%ipeys, desc%grid%npy )
-          ALLOCATE(m%m(locr,locc))
-          m%desc => desc
-          RETURN
-        END SUBROUTINE allocate_real_matrix
-
-        SUBROUTINE allocate_real_tensor(t,desc)
-          TYPE (real_parallel_tensor) :: t
-          TYPE (descriptor), POINTER :: desc
-          INTEGER :: locr, locc, locp
-          locr = desc%ldx
-          locc = desc%ldy
-          locp = NUMROC( desc%nz, desc%nzblk, desc%grid%mez, &
-                  desc%ipezs, desc%grid%nproc  )
-          ALLOCATE(t%t(locr,locc,locp))
-          t%desc => desc
-          RETURN
-        END SUBROUTINE allocate_real_tensor
-
-        SUBROUTINE deallocate_real_vector(v)
-          TYPE (real_parallel_vector) :: v
-          DEALLOCATE(v%v)
-          NULLIFY(v%desc) 
-          RETURN
-        END SUBROUTINE deallocate_real_vector
-
-        SUBROUTINE deallocate_real_matrix(m)
-          TYPE (real_parallel_matrix) :: m
-          DEALLOCATE(m%m)
-          NULLIFY(m%desc) 
-          RETURN
-        END SUBROUTINE deallocate_real_matrix
-
-        SUBROUTINE deallocate_real_tensor(t)
-          TYPE (real_parallel_tensor) :: t
-          DEALLOCATE(t%t)
-          NULLIFY(t%desc)
-          RETURN
-        END SUBROUTINE deallocate_real_tensor
 
       END MODULE parallel_types

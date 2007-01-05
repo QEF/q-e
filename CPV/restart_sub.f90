@@ -77,6 +77,8 @@ MODULE from_restart_module
     use cp_interfaces,        only : rhoofr, ortho, elec_fakekine, strucf
     USE control_flags,        ONLY : force_pairing
     USE dener,                ONLY : denl, dekin6
+    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
+    USE cp_main_variables,    ONLY : descla
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
@@ -238,10 +240,8 @@ MODULE from_restart_module
              !
              CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, &
                            bec, c0, cm, ei_unp, restart = .TRUE. )
-             !          lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
-             !          lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
-             lambdam( 1:nupdwn(2), 1:nupdwn(2), 2) = lambdam( 1:nupdwn(2), 1:nupdwn(2), 1)
-             lambda( 1:nupdwn(2), 1:nupdwn(2), 2) =  lambda( 1:nupdwn(2), 1:nupdwn(2), 1)
+             lambdam( :, :, 2) = lambdam( :, :, 1)
+             lambda( :, :, 2) =  lambda( :, :, 1)
              !
           ELSE
              !
@@ -280,7 +280,7 @@ MODULE from_restart_module
        !
        IF ( tortho ) THEN
           !
-          CALL ortho( eigr, cm, phi, ngw, lambda, SIZE(lambda,1), &
+          CALL ortho( eigr, cm, phi, ngw, lambda, descla, &
                       bigr, iter, dt2bye, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
           !
           n_spin_start = nspin 
@@ -288,7 +288,8 @@ MODULE from_restart_module
           !
           DO iss = 1,n_spin_start !!nspin
              CALL updatc( dt2bye, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                       bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss),iupdwn(iss) )
+                       bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss),iupdwn(iss), &
+                       descla(:,iss) )
           END DO
           !
        ELSE
@@ -503,13 +504,14 @@ MODULE from_restart_module
     USE atoms_type_module,     ONLY : atoms_type
     USE ions_base,             ONLY : vel_srt, tau_units
     USE cp_interfaces,         ONLY : ortho, nlrh, runcp_uspp
-    USE cp_main_variables,     ONLY : lambda
+    USE cp_main_variables,     ONLY : lambda, descla
     USE grid_dimensions,       ONLY : nr1, nr2, nr3
     USE reciprocal_vectors,    ONLY : mill_l
     USE gvecp,                 ONLY : ngm
     USE ions_base,             ONLY : nat, tau_srt
     USE uspp,                  ONLY : vkb, nkb
     USE cp_electronic_mass,    ONLY : emass
+    USE mp_global,             ONLY : np_ortho, me_ortho, ortho_comm
     !
     IMPLICIT NONE
     !
@@ -706,7 +708,7 @@ MODULE from_restart_module
                 !
                 ccc = fccc * dt2bye
                 !
-                CALL ortho( c0, cm, lambda, ccc, nupdwn, iupdwn, nspin )
+                CALL ortho( c0, cm, lambda, descla, ccc, nupdwn, iupdwn, nspin )
                 !
              ELSE
                 !

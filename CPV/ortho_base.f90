@@ -49,19 +49,35 @@ CONTAINS
 !  ----------------------------------------------
 
 
-   SUBROUTINE diagonalize_serial( n, rhos, rhod, s )
+   SUBROUTINE diagonalize_serial( n, rhos, rhod )
       IMPLICIT NONE
-      REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
-      REAL(DP)              :: rhod(:)   !  output eigenvalues
-      REAL(DP)              :: s(:,:)    !  output eigenvectors
-      REAL(DP), ALLOCATABLE :: aux(:)
       INTEGER,  INTENT(IN)  :: n
+      REAL(DP)              :: rhos(:,:) 
+      REAL(DP)              :: rhod(:)   
+      !
+      ! inputs:
+      ! n     size of the eigenproblem
+      ! rhos  the symmetric matrix
+      ! outputs:  
+      ! rhos  eigenvectors
+      ! rhod  eigenvalues
+      !
+      REAL(DP), ALLOCATABLE :: aux(:)
+      INTEGER :: i, j, k
 
       ALLOCATE( aux( n * ( n + 1 ) / 2 ) )
 
-      CALL rpack( n, aux, rhos )   !  pack lower triangle of rho into aux
+      !  pack lower triangle of rho into aux
+      !
+      k = 0
+      DO j = 1, n
+         DO i = j, n
+            k = k + 1
+            aux( k ) = rhos( i, j )
+         END DO
+      END DO
 
-      CALL dspev_drv( 'V', 'L', n, aux, rhod, s, SIZE(s,1) )
+      CALL dspev_drv( 'V', 'L', n, aux, rhod, rhos, SIZE(rhos,1) )
 
       DEALLOCATE( aux )
 
@@ -72,35 +88,32 @@ CONTAINS
 !  ----------------------------------------------
 
 
-   SUBROUTINE diagonalize_parallel( n, rhos, rhod, s )
-      USE mp,        ONLY: mp_sum
-      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm, np_ortho, me_ortho, ortho_comm
+   SUBROUTINE diagonalize_parallel( n, rhos, rhod, s, desc )
+      USE mp,          ONLY: mp_sum
+      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm
+      USE descriptors, ONLY: la_myr_ , la_myc_ , la_comm_ , la_npr_ , la_npc_ , &
+                             lambda_node_ , ldim_cyclic
       IMPLICIT NONE
       REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
       REAL(DP)              :: rhod(:)   !  output eigenvalues
       REAL(DP)              :: s(:,:)    !  output eigenvectors
       INTEGER,   INTENT(IN) :: n         !  size of the global matrix
+      INTEGER,   INTENT(IN) :: desc(:)
 
       REAL(DP),   ALLOCATABLE :: diag(:,:)
       REAL(DP),   ALLOCATABLE :: vv(:,:)
 
       INTEGER :: nrl, me, np, comm
-      INTEGER :: ldim_cyclic
-      EXTERNAL :: ldim_cyclic
 
-      !  distribute matrix rows to processors
+      !  distribute matrix rows to processors 
+      !  Matrix is distributed on the same processors group
+      !  used for parallel matrix multiplication
       !
-      ! IF( me_ortho(1) < 0 ) RETURN
+      np   = desc( la_npr_ ) * desc( la_npc_ ) 
+      me   = desc( la_myc_ ) + desc( la_myr_ ) * desc( la_npr_ ) 
+      comm = desc( la_comm_ )
 
-      np   = np_ortho(2) * np_ortho(1)
-      me   = me_ortho(2) + me_ortho(1) * np_ortho(1)
-      comm = ortho_comm
-
-      ! np   = nproc_image
-      ! me   = me_image
-      ! comm = intra_image_comm
-
-      IF ( me >= 0 ) THEN
+      IF ( desc( lambda_node_ ) > 0 ) THEN
          !
          nrl = ldim_cyclic( n, np, me )
 
@@ -113,8 +126,7 @@ CONTAINS
          !  matrix "s" is block distributed
          !  across 2D processors grid ( ortho_comm )
          !
-         CALL cyc2blk_redist( n, vv, nrl, np, me, comm, &
-                              s, SIZE(s,1), np_ortho, me_ortho, ortho_comm )
+         CALL cyc2blk_redist( n, vv, nrl, np, me, comm, s, SIZE(s,1), desc(1) ) 
          !
          DEALLOCATE( diag, vv )
          !
@@ -129,11 +141,12 @@ CONTAINS
 
    SUBROUTINE mesure_diag_perf( n )
       !
-      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm, root_image
-      USE mp_global, ONLY: np_ortho, me_ortho, ortho_comm
-      USE io_global, ONLY: ionode, stdout
-      USE mp,        ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
-      USE mp,        ONLY: mp_max
+      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image
+      USE mp_global,   ONLY: np_ortho, me_ortho, ortho_comm
+      USE io_global,   ONLY: ionode, stdout
+      USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
+      USE mp,          ONLY: mp_max
+      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_
       !
       IMPLICIT NONE
       !
@@ -141,45 +154,37 @@ CONTAINS
       REAL(DP), ALLOCATABLE :: s(:,:), a(:,:), d(:)
       REAL(DP) :: t1, tpar, tser
       INTEGER  :: nr, nc
+      INTEGER  :: desc( descla_siz_ )
       REAL(DP) :: cclock
-      INTEGER  :: ldim_block
-      EXTERNAL :: cclock, ldim_block
+      EXTERNAL :: cclock
       !
       ALLOCATE( a( n, n ), d( n ) )
       !
-      IF( me_ortho(1) >= 0 ) THEN
-         !
-         nr = ldim_block( n, np_ortho(1), me_ortho(1) )
-         nc = ldim_block( n, np_ortho(2), me_ortho(2) )
-         !
-         ALLOCATE( s( nr, nc ) )
-         !
-      ELSE
-         !
-         ALLOCATE( s( 1, 1 ) )
-         !
-      END IF
-      !
+      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
+
+      nr = desc( nlar_ )
+      nc = desc( nlac_ )
+
+      ALLOCATE( s( nr, nc ) )
       !
       CALL set_a()
       !
       CALL mp_barrier( intra_image_comm )
       t1 = cclock()
       !
-      CALL diagonalize_parallel( n, a, d, s )
+      CALL diagonalize_parallel( n, a, d, s, desc )
       !
       tpar = cclock() - t1
       CALL mp_max( tpar, intra_image_comm )
 
       DEALLOCATE( s )
-      ALLOCATE( s( n, n ) )
-
+      !
       CALL set_a()
       !
       CALL mp_barrier( intra_image_comm )
       t1 = cclock()
 
-      CALL diagonalize_serial( n, a, d, s )
+      CALL diagonalize_serial( n, a, d )
 
       tser = cclock() - t1
       CALL mp_max( tser, intra_image_comm )
@@ -195,7 +200,7 @@ CONTAINS
 
       CALL mp_bcast( use_parallel_diag, root_image, intra_image_comm )
       
-      DEALLOCATE( a, s, d )
+      DEALLOCATE( a, d )
 
       RETURN
 
@@ -223,11 +228,12 @@ CONTAINS
 
    SUBROUTINE mesure_mmul_perf( n )
       !
-      USE mp_global, ONLY: nproc_image, me_image, intra_image_comm, root_image, &
-                           ortho_comm, np_ortho, me_ortho, init_ortho_group
-      USE io_global, ONLY: ionode, stdout
-      USE mp,        ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
-      USE mp,        ONLY: mp_max
+      USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image, &
+                             ortho_comm, np_ortho, me_ortho, init_ortho_group
+      USE io_global,   ONLY: ionode, stdout
+      USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
+      USE mp,          ONLY: mp_max
+      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_
       !
       IMPLICIT NONE
       !
@@ -235,7 +241,8 @@ CONTAINS
       !
       REAL(DP), ALLOCATABLE :: c(:,:), a(:,:), b(:,:)
       REAL(DP) :: t1, tser, tcan, tbest
-      INTEGER  :: nr, nc, ir, ic, np, npx, npbest, nps
+      INTEGER  :: nr, nc, ir, ic, np, npx, npbest, nps, lnode
+      INTEGER  :: desc( descla_siz_ )
       !
       REAL(DP) :: cclock
       EXTERNAL :: cclock
@@ -243,6 +250,9 @@ CONTAINS
       EXTERNAL :: ldim_block, gind_block
       !
       IF( ortho_para > 0 ) THEN
+         !
+         !  here the number of processors is suggested on input
+         !
          np     = ortho_para 
          if( np > MIN( n, nproc_image ) ) np = MIN( n, nproc_image )
          nps    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
@@ -253,6 +263,9 @@ CONTAINS
          npx    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
       END IF
 
+      ! np, the number of processors to be tested, is less than
+      ! the total number of bands and the total number of processors
+
       tbest  = 1000
       npbest = 1
 
@@ -260,18 +273,10 @@ CONTAINS
 
          CALL init_ortho_group( np * np, me_image, intra_image_comm )
 
-         IF( me_ortho(1) >= 0 ) THEN
-            !
-            nr = ldim_block( n, np_ortho(1), me_ortho(1) )
-            nc = ldim_block( n, np_ortho(2), me_ortho(2) )
-            !
-            ir = gind_block( 1, n, np_ortho(1), me_ortho(1) )
-            ic = gind_block( 1, n, np_ortho(2), me_ortho(2) )
-            !
-         ELSE
-            nr = 1
-            nc = 1
-         END IF
+         CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
+
+         nr = desc( nlar_ )
+         nc = desc( nlac_ )
    
          ALLOCATE( a( nr, nc ), c( nr, nc ), b( nr, nc ) )
    
@@ -281,8 +286,7 @@ CONTAINS
          CALL mp_barrier( intra_image_comm )
          t1 = cclock()
    
-         CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, n, 0.0d0, c, nr, &
-                             np_ortho, me_ortho, ortho_comm )
+         CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, n, 0.0d0, c, nr, desc)
    
          tcan = cclock() - t1
          CALL mp_max( tcan, intra_image_comm )
@@ -342,69 +346,35 @@ CONTAINS
       END SUBROUTINE prpack
 
 
-      SUBROUTINE prunpack( n, a, ap, np, me )
-        IMPLICIT NONE
-        REAL(DP), INTENT(IN)  :: ap(:,:)
-        REAL(DP), INTENT(OUT) :: a(:,:)
-        INTEGER,  INTENT(IN)  :: n, np, me
-        INTEGER :: i, j, jl
-        DO i = 1, n
-          DO j = 1, n
-            a(j,i) = zero
-          END DO
-          j = me + 1
-          DO jl = 1, SIZE(ap, 1)
-            a(j,i) = ap(jl,i)
-            j = j + np
-          END DO
-        END DO
-        RETURN
-      END SUBROUTINE prunpack
-
-
-      SUBROUTINE rpack( n, ap, a)
-        INTEGER, INTENT(IN) :: n
-        REAL(DP), INTENT(IN) :: a(:,:)
-        REAL(DP), INTENT(OUT) :: ap(:)
-        INTEGER :: i, j, k
-        K = 0
-        DO J = 1, n
-          DO I = J, n
-            K = K + 1
-            ap( k ) = a( i, j )
-          END DO
-        END DO
-        RETURN
-      END SUBROUTINE rpack
-
-
 
 !=----------------------------------------------------------------------------=!
 
 
 
-   SUBROUTINE ortho_iterate( iter, diff, u, ldx, diag, xloc, sig, rhor, rhos, tau, nx, nss )
+   SUBROUTINE ortho_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, rhos, tau, nx, nss, desc )
 
       !  this iterative loop uses Cannon's parallel matrix multiplication
       !  matrix are distributed over a square processor grid: 1x1 2x2 3x3 ...
       !  But the subroutine work with any number of processors, when
       !  nproc is not a square, some procs are left idle
 
-      USE kinds,         ONLY: DP
-      USE io_global,     ONLY: stdout
-      USE control_flags, ONLY: ortho_eps, ortho_max
-      USE mp_global,     ONLY: intra_image_comm, me_image, nproc_image, ortho_comm, &
-                               np_ortho, me_ortho
-      USE mp,            ONLY: mp_sum, mp_max
+      USE kinds,             ONLY: DP
+      USE io_global,         ONLY: stdout
+      USE control_flags,     ONLY: ortho_eps, ortho_max
+      USE mp_global,         ONLY: intra_image_comm, me_image, nproc_image
+      USE mp,                ONLY: mp_sum, mp_max
+      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
+                                   la_myr_ , la_myc_ , la_comm_
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: nx, nss, ldx
+      INTEGER, INTENT(IN) :: nx, nss, ldx, nx0
+      INTEGER, INTENT(IN) :: desc(*)
       REAL(DP) :: u   ( ldx, * )
       REAL(DP) :: diag( nx )
-      REAL(DP) :: xloc( nx, nx )
+      REAL(DP) :: xloc( nx0, nx0 )
       REAL(DP) :: rhor( ldx, * )
-      REAL(DP) :: rhos( nx, nx )
+      REAL(DP) :: rhos( ldx, * )
       REAL(DP) :: tau ( ldx, * )
       REAL(DP) :: sig ( ldx, * )
       INTEGER, INTENT(OUT) :: iter
@@ -414,12 +384,7 @@ CONTAINS
       INTEGER :: nr, nc, ir, ic
       REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:), dd(:,:), tr1(:,:), tr2(:,:)
       REAL(DP), ALLOCATABLE :: con(:,:), x1(:,:)
-      REAL(DP), ALLOCATABLE :: xx(:,:)
       !
-      integer :: ldim_block, gind_block
-      external :: ldim_block, gind_block
-
-
       IF( nss < 1 ) RETURN
 
       !
@@ -427,7 +392,7 @@ CONTAINS
       !  jump at the end of the subroutine
       !
 
-      IF( me_ortho(1) < 0 ) then
+      IF( desc( lambda_node_ ) < 0 ) then
          xloc = 0.0d0
          iter = 0
          go to 100
@@ -435,22 +400,27 @@ CONTAINS
       !
       !  Compute the size of the local block
       !
-      nr = ldim_block( nss, np_ortho(1), me_ortho(1) )
-      nc = ldim_block( nss, np_ortho(2), me_ortho(2) )
-      !
-      ir = gind_block( 1, nss, np_ortho(1), me_ortho(1) )
-      ic = gind_block( 1, nss, np_ortho(2), me_ortho(2) )
+      nr = desc( nlar_ )
+      nc = desc( nlac_ )
+      ir = desc( ilar_ )
+      ic = desc( ilac_ )
 
-      ALLOCATE( xx(nr,nc), tr1(nr,nc), tr2(nr,nc) )
+      ALLOCATE( tr1(nr,nc), tr2(nr,nc) )
       ALLOCATE( tmp1(nr,nc), tmp2(nr,nc), dd(nr,nc), x1(nr,nc), con(nr,nc) )
 
-      do j = 1, nc
-         do i = 1, nr
-            xx( i, j ) = xloc( i + ir - 1, j + ic - 1 )
+      !  Clear elements not involved in the orthogonalization
+      !
+      do j = nc + 1, nx0
+         do i = 1, nx0
+            xloc( i, j ) = 0.0d0
+         end do
+      end do
+      do j = 1, nx0
+         do i = nr + 1, nx0
+            xloc( i, j ) = 0.0d0
          end do
       end do
 
-      xloc = 0.0d0
 
       ITERATIVE_LOOP: DO iter = 1, ortho_max
          !
@@ -461,17 +431,13 @@ CONTAINS
          !                       tmp2 = x0*rhos    (4th call)
          !
 
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xx, nr, rhor, ldx, 0.0d0, tmp1, nr, &
-                             np_ortho, me_ortho, ortho_comm )
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, xx, nr, 0.0d0, tmp2, nr, &
-                             np_ortho, me_ortho, ortho_comm )
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xx, nr, tmp2, nr, 0.0d0, dd, nr, &
-                             np_ortho, me_ortho, ortho_comm )
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xx, nr, rhos(ir,ic), nx, 0.0d0, tmp2, nr, &
-                             np_ortho, me_ortho, ortho_comm )
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp1, nr, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp2, nr, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, tmp2, nr, 0.0d0, dd, nr, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhos, nr, 0.0d0, tmp2, nr, desc)
          !
-         CALL sqr_tr_cannon( nss, tmp1, nr, tr1, nr, np_ortho, me_ortho, ortho_comm )
-         CALL sqr_tr_cannon( nss, tmp2, nr, tr2, nr, np_ortho, me_ortho, ortho_comm )
+         CALL sqr_tr_cannon( nss, tmp1, nr, tr1, nr, desc )
+         CALL sqr_tr_cannon( nss, tmp2, nr, tr2, nr, desc )
          !
          DO i=1,nr
             DO j=1,nc
@@ -489,7 +455,7 @@ CONTAINS
             END DO
          END DO
 
-         CALL mp_max( diff, ortho_comm )
+         CALL mp_max( diff, desc( la_comm_ ) )
 
          IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
 
@@ -498,10 +464,8 @@ CONTAINS
          !                       tmp1 = x1*u
          !                       tmp2 = ut*x1*u
          !
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, x1, nr, u, ldx, 0.0d0, tmp1, nr, &
-                             np_ortho, me_ortho, ortho_comm )
-         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u,  ldx, tmp1,     nr, 0.0d0, tmp2, nr, &
-                             np_ortho, me_ortho, ortho_comm )
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, x1, nr,  u,    ldx, 0.0d0, tmp1, nr, desc )
+         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u,  ldx, tmp1, nr,  0.0d0, tmp2, nr, desc )
          !
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
@@ -515,26 +479,16 @@ CONTAINS
          !                       tmp2 = g*ut
          !                       x0 = u*g*ut
          !
-         CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, tmp1,     nr, u, ldx, 0.0d0, tmp2, nr, &
-                             np_ortho, me_ortho, ortho_comm )
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u, ldx, tmp2,     nr, 0.0d0, xx,   nr, &
-                             np_ortho, me_ortho, ortho_comm )
+         CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, tmp1, nr,  u,    ldx, 0.0d0, tmp2, nr, desc )
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u,    ldx, tmp2, nr,  0.0d0, xloc, nx0, desc) 
          !
       END DO ITERATIVE_LOOP
 
-      do j = 1, nc
-         do i = 1, nr
-            xloc( i + ir - 1, j + ic - 1) = xx( i, j )
-         end do
-      end do
-
-      DEALLOCATE( tmp1, tmp2, dd, x1, con, xx, tr1, tr2 )
+      DEALLOCATE( tmp1, tmp2, dd, x1, con, tr1, tr2 )
             
-100   continue
+100   CONTINUE
             
-      CALL mp_sum( xloc, intra_image_comm ) 
       CALL mp_max( iter, intra_image_comm ) 
-
 
       RETURN
    END SUBROUTINE ortho_iterate
@@ -548,21 +502,23 @@ CONTAINS
 !
 
 
-   SUBROUTINE ortho_alt_iterate( iter, diff, u, ldx, diag, xloc, sig, rhor, tau, nx, n )
+   SUBROUTINE ortho_alt_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, tau, nx, nss, desc )
 
-      USE kinds,         ONLY: DP
-      USE io_global,     ONLY: stdout
-      USE control_flags, ONLY: ortho_eps, ortho_max
-      USE mp_global,     ONLY: intra_image_comm, me_image, nproc_image, ortho_comm, &
-                               np_ortho, me_ortho
-      USE mp,            ONLY: mp_sum, mp_max
+      USE kinds,             ONLY: DP
+      USE io_global,         ONLY: stdout
+      USE control_flags,     ONLY: ortho_eps, ortho_max
+      USE mp_global,         ONLY: intra_image_comm, me_image, nproc_image
+      USE mp,                ONLY: mp_sum, mp_max
+      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
+                                   la_myr_ , la_myc_ , la_comm_
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: nx, n, ldx
+      INTEGER, INTENT(IN) :: nx, nss, ldx, nx0
+      INTEGER, INTENT(IN) :: desc(*)
       REAL(DP) :: u   ( ldx, * )
       REAL(DP) :: diag( nx )
-      REAL(DP) :: xloc( nx, nx )
+      REAL(DP) :: xloc( nx0, nx0 )
       REAL(DP) :: rhor( ldx, * )
       REAL(DP) :: tau ( ldx, * )
       REAL(DP) :: sig ( ldx, * )
@@ -572,50 +528,50 @@ CONTAINS
       INTEGER :: i, j
       INTEGER :: nr, nc, ir, ic
       REAL(DP), ALLOCATABLE :: tmp1(:,:), tmp2(:,:)
-      REAL(DP), ALLOCATABLE :: x1(:,:), xx(:,:)
+      REAL(DP), ALLOCATABLE :: x1(:,:)
       REAL(DP), ALLOCATABLE :: sigd(:)
       REAL(DP) :: den, dx
       !
-      integer  :: ldim_block, gind_block
-      external :: ldim_block, gind_block
+      IF( nss < 1 ) RETURN
 
-      IF( n < 1 ) RETURN
-
-      xloc = 0.0d0
-      iter = 0
-
-      if( me_ortho(1) < 0 ) then
+      if( desc( lambda_node_ ) < 0 ) then
+         xloc = 0.0d0
+         iter = 0
          go to 100
       endif
       !
       !  Compute the size of the local block
       !
-      nr = ldim_block( n, np_ortho(1), me_ortho(1) )
-      nc = ldim_block( n, np_ortho(2), me_ortho(2) )
-      !
-      ir = gind_block( 1, n, np_ortho(1), me_ortho(1) )
-      ic = gind_block( 1, n, np_ortho(2), me_ortho(2) )
+      nr = desc( nlar_ )
+      nc = desc( nlac_ )
+      ir = desc( ilar_ )
+      ic = desc( ilac_ )
 
       ALLOCATE( tmp1(nr,nc), tmp2(nr,nc), x1(nr,nc), sigd(nx) )
-      ALLOCATE( xx(nr,nc) )
 
+      !  Clear elements not involved in the orthogonalization
+      !
+      do j = nc + 1, nx0
+         do i = 1, nx0
+            xloc( i, j ) = 0.0d0
+         end do
+      end do
+      do j = 1, nx0
+         do i = nr + 1, nx0
+            xloc( i, j ) = 0.0d0
+         end do
+      end do
       !
       ! ...   Transform "sig", "rhoa" and "tau" in the new basis through matrix "s"
       !
-      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, sig, ldx, u, ldx, 0.0d0, tmp1, nr, &
-                          np_ortho, me_ortho, ortho_comm )
-      CALL sqr_mm_cannon( 'T', 'N', n, 1.0d0, u, ldx, tmp1, nr, 0.0d0, sig, ldx, &
-                          np_ortho, me_ortho, ortho_comm )
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, sig, ldx, u, ldx, 0.0d0, tmp1, nr, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, sig, ldx, desc)
       !
-      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, rhor, ldx, u, ldx, 0.0d0, tmp1, nr, &
-                          np_ortho, me_ortho, ortho_comm )
-      CALL sqr_mm_cannon( 'T', 'N', n, 1.0d0, u, ldx, tmp1, nr, 0.0d0, rhor, ldx, &
-                          np_ortho, me_ortho, ortho_comm )
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, rhor, ldx, u, ldx, 0.0d0, tmp1, nr, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, rhor, ldx, desc)
       !
-      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, tau, ldx, u, ldx, 0.0d0, tmp1, nr, &
-                          np_ortho, me_ortho, ortho_comm )
-      CALL sqr_mm_cannon( 'T', 'N', n, 1.0d0, u, ldx, tmp1, nr, 0.0d0, tau, ldx, &
-                          np_ortho, me_ortho, ortho_comm )
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, u, ldx, 0.0d0, tmp1, nr, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, tau, ldx, desc)
       !
       ! ...   Initialize x0 with preconditioning
       !
@@ -623,7 +579,7 @@ CONTAINS
         DO I = 1, nr
           den = ( diag( i + ir - 1 ) + diag( j + ic - 1 ) )
           IF( ABS( den ) <= small ) den = SIGN( small, den )
-          xx( i, j ) = sig( i, j ) / den
+          xloc( i, j ) = sig( i, j ) / den
         ENDDO
       ENDDO
 
@@ -633,11 +589,9 @@ CONTAINS
 
       ITERATIVE_LOOP: DO iter = 0, ortho_max
 
-        CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, xx, nr, rhor, ldx, 0.0d0, tmp2, nr, &
-                            np_ortho, me_ortho, ortho_comm )
+        CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp2, nr, desc)
 
-        CALL sqr_tr_cannon( n, tmp2, nr, tmp1, nr, &
-                            np_ortho, me_ortho, ortho_comm )
+        CALL sqr_tr_cannon( nss, tmp2, nr, tmp1, nr, desc )
 
         DO J=1,nc
           DO I=1,nr
@@ -645,23 +599,20 @@ CONTAINS
           ENDDO
         ENDDO
 !
-        CALL sqr_mm_cannon( 'T', 'N', n, 1.0d0, tau, ldx, xx, nr, 0.0d0, tmp1, nr, &
-                            np_ortho, me_ortho, ortho_comm )
+        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp1, nr, desc)
         !
         sigd = 0.0d0
-        IF( me_ortho(1) == me_ortho(2) ) THEN
+        IF( desc( la_myr_ ) == desc( la_myc_ ) ) THEN
            DO i = 1, nr
               SIGD( i + ir - 1 )   =  tmp1(i,i)
               tmp1(i,i) = -SIGD( i + ir - 1 )
            ENDDO
         END IF
-        CALL mp_sum( sigd, ortho_comm )
+        CALL mp_sum( sigd, desc( la_comm_ ) )
 
-        CALL sqr_mm_cannon( 'T', 'N', n, 1.0d0, xx, nr, tmp1, nr, 0.0d0, x1, nr, &
-                            np_ortho, me_ortho, ortho_comm )
+        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, xloc, nx0, tmp1, nr, 0.0d0, x1, nr, desc)
         !
-        CALL sqr_tr_cannon( n, x1, nr, tmp1, nr, &
-                            np_ortho, me_ortho, ortho_comm )
+        CALL sqr_tr_cannon( nss, x1, nr, tmp1, nr, desc )
 
         ! ...     X1   = SIG - tmp2 - 0.5d0 * ( X1 + X1^t )
 
@@ -674,13 +625,13 @@ CONTAINS
             IF( ABS( den ) <= small ) den = SIGN( small, den )
             x1(i,j) = sig(i,j) - tmp2(i,j) - 0.5d0 * (x1(i,j)+tmp1(i,j))
             x1(i,j) = x1(i,j) / den
-            diff = MAX( ABS( x1(i,j) - xx(i,j) ), diff )
-            xx(i,j) = x1(i,j)
+            diff = MAX( ABS( x1(i,j) - xloc(i,j) ), diff )
+            xloc(i,j) = x1(i,j)
             !
           END DO
         END DO
 
-        CALL mp_max( diff, ortho_comm )
+        CALL mp_max( diff, desc( la_comm_ ) )
 
         IF( diff < ortho_eps ) EXIT ITERATIVE_LOOP
 
@@ -688,25 +639,14 @@ CONTAINS
       !
       ! ...   Transform x0 back to the original basis
 
-      CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, u, ldx, xx, nr, 0.0d0, tmp1, nr, &
-                          np_ortho, me_ortho, ortho_comm )
-      CALL sqr_mm_cannon( 'N', 'T', n, 1.0d0, u, ldx, tmp1, nr, 0.0d0, xx, nr, &
-                          np_ortho, me_ortho, ortho_comm )
-
-      do j = 1, nc
-         do i = 1, nr
-            xloc( i + ir - 1, j + ic - 1) = xx( i, j )
-         end do
-      end do
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u, ldx, xloc, nx0, 0.0d0, tmp1, nr, desc)
+      CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, xloc, nx0, desc)
 
       DEALLOCATE( tmp1, tmp2, x1, sigd )
-      DEALLOCATE( xx )
 
-100   continue
+100   CONTINUE
 
-      CALL mp_sum( xloc, intra_image_comm )
       CALL mp_max( iter, intra_image_comm ) 
-
 
       RETURN
    END SUBROUTINE ortho_alt_iterate
@@ -917,7 +857,7 @@ CONTAINS
 
 !
 !-------------------------------------------------------------------------
-   SUBROUTINE updatc( ccc, n, x0, nudx, phi, ngwx, bephi, nkbx, becp, bec, cp, nss, istart )
+   SUBROUTINE updatc( ccc, n, x0, nx0, phi, ngwx, bephi, nkbx, becp, bec, cp, nss, istart, desc )
 !-----------------------------------------------------------------------
 !
       !     input ccc : dt**2/emass OR 1.0d0 demending on ortho
@@ -928,42 +868,62 @@ CONTAINS
       !     output cp : orthonormal cp=cp+lambda*phi
       !     output bec: bec=becp+lambda*bephi
       !
-      USE kinds,         ONLY: DP
-      USE ions_base,     ONLY: nsp, na
-      USE io_global,     ONLY: stdout
-      USE cvan,          ONLY: nvb, ish
-      USE uspp,          ONLY: nkb, nkbus
-      USE uspp_param,    ONLY: nh
-      USE gvecw,         ONLY: ngw
-      USE control_flags, ONLY: iprint, iprsta
+      USE kinds,             ONLY: DP
+      USE ions_base,         ONLY: nsp, na
+      USE io_global,         ONLY: stdout
+      USE cvan,              ONLY: nvb, ish
+      USE uspp,              ONLY: nkb, nkbus
+      USE uspp_param,        ONLY: nh
+      USE gvecw,             ONLY: ngw
+      USE control_flags,     ONLY: iprint, iprsta
+      USE mp,                ONLY: mp_sum
+      USE mp_global,         ONLY: intra_image_comm
+      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_
 !
       IMPLICIT NONE
 !
-      INTEGER, INTENT(IN) :: n, nudx, ngwx, nkbx, istart, nss
+      INTEGER, INTENT(IN) :: n, nx0, ngwx, nkbx, istart, nss
+      INTEGER, INTENT(IN) :: desc(*)
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP), INTENT(IN) :: ccc
-      REAL(DP)    :: bec( nkbx, n ), x0( nudx, nudx )
+      REAL(DP)    :: bec( nkbx, n ), x0( nx0, nx0 )
       REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
 
       ! local variables
 
-      INTEGER :: i, j, ig, is, iv, ia, inl
+      INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
+      REAL(DP),    ALLOCATABLE :: x0_repl(:,:) 
       !
       !     lagrange multipliers
       !
       IF( nss < 1 ) RETURN
       !
+      !  size of the local block
+      !
+      nr = desc( nlar_ )
+      nc = desc( nlac_ )
+      ir = desc( ilar_ )
+      ic = desc( ilac_ )
+      !
       CALL start_clock( 'updatc' )
-      
-      IF ( ccc /= 1.0d0 ) THEN
-         DO j = 1, nss
-            CALL DSCAL( nss, ccc, x0(1,j), 1 )
+
+      ALLOCATE( x0_repl( nss, nss ) )
+
+      x0_repl = 0.0d0
+
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         DO j = 1, nc
+            DO i = 1, nr
+               x0_repl( i + ir - 1, j + ic - 1 ) = x0( i, j ) * ccc
+            END DO
          END DO
       END IF
+
+      CALL mp_sum( x0_repl, intra_image_comm ) 
       !
       CALL DGEMM( 'N', 'N', 2*ngw, nss, nss, 1.0d0, phi(1,istart), 2*ngwx, &
-                  x0, nudx, 1.0d0, cp(1,istart), 2*ngwx )
+                  x0_repl, nss, 1.0d0, cp(1,istart), 2*ngwx )
       !    
       !     updating of the <beta|c(n,g)>
       !
@@ -973,7 +933,7 @@ CONTAINS
 
          ALLOCATE( wtemp( nss, nkb ) )
 
-         CALL DGEMM( 'N', 'T', nss, nkbus, nss, 1.0d0, x0, nudx, &
+         CALL DGEMM( 'N', 'T', nss, nkbus, nss, 1.0d0, x0_repl, nss, &
                   bephi( 1, istart ), nkbx, 0.0d0, wtemp, nss )
          !
          DO i = 1, nss
@@ -1003,15 +963,11 @@ CONTAINS
             WRITE( stdout,*)
          END DO
       ENDIF
-!
-      IF ( ccc /= 1.0d0 ) THEN
-         DO j=1,nss
-            CALL DSCAL(nss,1.0d0/ccc,x0(1,j),1)
-         END DO
-      END IF
-!
+      !
+      DEALLOCATE( x0_repl )
+      !
       CALL stop_clock( 'updatc' )
-!
+      !
       RETURN
    END SUBROUTINE updatc
 

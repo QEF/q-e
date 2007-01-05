@@ -51,7 +51,7 @@ MODULE cp_restart
       USE gvecs,                    ONLY : ngs, ngst, ecuts, gcuts, dual
       USE gvecw,                    ONLY : ngw, ngwt, ecutw, gcutw
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
-      USE electrons_base,           ONLY : nspin, nelt, nel
+      USE electrons_base,           ONLY : nspin, nelt, nel, nudx
       USE cell_base,                ONLY : ibrav, alat, celldm, &
                                            symm_type, s_to_r
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, &
@@ -66,6 +66,7 @@ MODULE cp_restart
       USE constants,                ONLY : pi
       USE cp_interfaces,            ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
+      USE cp_main_variables,        ONLY : collect_lambda, descla
       !
       IMPLICIT NONE
       !
@@ -141,6 +142,7 @@ MODULE cp_restart
       INTEGER               :: nbnd_tot
       INTEGER               :: nbnd_emp
       INTEGER               :: nbnd_
+      REAL(DP), ALLOCATABLE :: lambda_repl(:,:)
       !
       write_charge_density = trhow
       !
@@ -803,21 +805,37 @@ MODULE cp_restart
                   !
                END IF
                !
-               ! ... write matrix lambda to file
+            END IF
+            !
+            ! ... write matrix lambda to file
+            !
+            ALLOCATE( lambda_repl( nudx, nudx ) )
+            ! 
+            CALL collect_lambda( lambda_repl, lambda0(:,:,iss), descla(:,iss) )
+            !
+            IF ( ionode ) THEN
                !
                filename = TRIM( wfc_filename( ".", 'lambda0', ik, iss ) )
                !
                CALL iotk_link( iunpun, "LAMBDA0" // TRIM( cspin ), &
                                   filename, CREATE = .TRUE., BINARY = .TRUE. )
                !
-               CALL iotk_write_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda0(:,:,iss) )
+               CALL iotk_write_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda_repl )
+               !
+            END IF
+            !
+            CALL collect_lambda( lambda_repl, lambdam(:,:,iss), descla(:,iss) )
+            !
+            IF ( ionode ) THEN
                !
                filename = TRIM( wfc_filename( ".", 'lambdam', ik, iss ) )
                !
                CALL iotk_link( iunpun, "LAMBDAM" // TRIM( cspin ), &
                                   filename, CREATE = .TRUE., BINARY = .TRUE. )
                !
-               CALL iotk_write_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambdam(:,:,iss) )
+               CALL iotk_write_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambda_repl )
+               !
+               DEALLOCATE( lambda_repl )
                !
             END IF
             !
@@ -885,7 +903,7 @@ MODULE cp_restart
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
                                            sort_tau, ityp, ions_cofmass
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
-      USE cp_main_variables,        ONLY : nprint_nfi
+      USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla
       USE mp,                       ONLY : mp_sum
       USE mp_global,                ONLY : intra_image_comm
       USE parameters,               ONLY : nhclm, ntypx
@@ -976,6 +994,7 @@ MODULE cp_restart
       CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
       REAL(DP)              :: s1, s0, cclock
+      REAL(DP), ALLOCATABLE :: lambda_repl(:,:) 
       !
       ! ... look for an empty unit
       !
@@ -1511,22 +1530,37 @@ MODULE cp_restart
                   END IF
                END IF
                !
-               ! ... read matrix lambda to file
-               !
-               IF( ionode ) THEN
-                  CALL iotk_scan_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda0(:,:,iss), FOUND = found )
-                  IF( .NOT. found ) THEN
-                     WRITE( stdout, * ) 'WARNING lambda0 not read from restart file'
-                     lambda0(:,:,iss) = 0.0d0
-                  END IF
-                  CALL iotk_scan_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambdam(:,:,iss), FOUND = found )
-                  IF( .NOT. found ) THEN
-                     WRITE( stdout, * ) 'WARNING lambdam not read from restart file'
-                     lambdam(:,:,iss) = 0.0d0
-                  END IF
-               END IF
-               ! 
             END IF
+            !
+            ! ... read matrix lambda to file
+            !
+            ALLOCATE( lambda_repl( nudx, nudx ) )
+            !
+            IF( ionode ) THEN
+               CALL iotk_scan_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda_repl, FOUND = found )
+               IF( .NOT. found ) THEN
+                  WRITE( stdout, * ) 'WARNING lambda0 not read from restart file'
+                  lambda_repl = 0.0d0
+               END IF
+            END IF
+
+            CALL mp_bcast( lambda_repl, ionode_id, intra_image_comm )
+
+            CALL distribute_lambda( lambda_repl, lambda0(:,:,iss), descla(:,iss) )
+
+            IF( ionode ) THEN
+               CALL iotk_scan_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambda_repl, FOUND = found )
+               IF( .NOT. found ) THEN
+                  WRITE( stdout, * ) 'WARNING lambdam not read from restart file'
+                  lambda_repl = 0.0d0
+               END IF
+            END IF
+            ! 
+            CALL mp_bcast( lambda_repl, ionode_id, intra_image_comm )
+
+            CALL distribute_lambda( lambda_repl, lambdam(:,:,iss), descla(:,iss) )
+            !
+            DEALLOCATE( lambda_repl )
             !
          END DO
          !
@@ -1589,18 +1623,6 @@ MODULE cp_restart
       IF ( ionode ) &
          CALL iotk_close_read( iunpun )
 
-      !
-      DO iss = 1, nspin
-         DO ib = 1, SIZE( lambda0, 2 )
-            CALL mp_bcast( lambda0( :, ib, iss), ionode_id, intra_image_comm )
-         END DO
-      END DO
-      !
-      DO iss = 1, nspin
-         DO ib = 1, SIZE( lambda0, 2 )
-            CALL mp_bcast( lambdam( :, ib, iss), ionode_id, intra_image_comm )
-         END DO
-      END DO
       !
       s1 = cclock()
       !

@@ -156,9 +156,8 @@ SUBROUTINE move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
         CALL bforceion( fion, .TRUE. , ipolp2, qmat2, bec, becdr, gqq2, evalue2 )
      !
      IF( force_pairing ) THEN
-        lambda( nudx, nudx, 2 ) = 0.d0 
-        lambda( 1:nupdwn(2), 1:nupdwn(2), 2 ) =  lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
-        lambdam( 1:nupdwn(2), 1:nupdwn(2), 2 ) = lambdam(1:nupdwn(2), 1:nupdwn(2), 1 )
+        lambda( :, :, 2 ) =  lambda(:, :, 1 )
+        lambdam( :, :, 2 ) = lambdam(:, :, 1 )
      ENDIF
      ! 
      IF ( tfor .OR. thdyn ) then

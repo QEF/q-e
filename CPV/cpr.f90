@@ -111,7 +111,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, rhopr, bephi, becp, nfi
+                                       rhor, rhopr, bephi, becp, nfi, descla
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
@@ -128,7 +128,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
   USE mp,                       ONLY : mp_bcast
-  USE mp_global,                ONLY : root_image, intra_image_comm
+  USE mp_global,                ONLY : root_image, intra_image_comm, np_ortho, me_ortho, ortho_comm
 !@@@@
   USE ldaU,                     ONLY : lda_plus_u, vupsi
   USE step_constraint
@@ -306,8 +306,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
           c0(:,iupdwn(2):nbsp)       =     c0(:,1:nupdwn(2))
           cm(:,iupdwn(2):nbsp)       =     cm(:,1:nupdwn(2))
          phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
-      lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
-      lambda(nudx, nudx, 2) = 0.d0
+      lambda(:,:, 2) = lambda(:,:, 1)
      ENDIF
      !
      !
@@ -485,7 +484,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         IF ( tortho ) THEN
            !
-           CALL ortho( eigr, cm, phi, ngw, lambda, SIZE(lambda,1), &
+           CALL ortho( eigr, cm, phi, ngw, lambda, descla, &
                        bigr, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
            !
         ELSE
@@ -509,7 +508,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF ( tortho ) THEN
            DO iss = 1, nspin_sub
               CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                        bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss), iupdwn(iss) )
+                        bephi, SIZE(bephi,1), becp, bec, cm, nupdwn(iss), iupdwn(iss), &
+                        descla(:,iss) )
            END DO
         END IF
         !
@@ -517,8 +517,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               c0(:,iupdwn(2):nbsp)       =     c0(:,1:nupdwn(2))
               cm(:,iupdwn(2):nbsp)       =     cm(:,1:nupdwn(2))
              phi(:,iupdwn(2):nbsp)       =    phi(:,1:nupdwn(2))
-          lambda(1:nupdwn(2),1:nupdwn(2), 2) = lambda(1:nupdwn(2),1:nupdwn(2), 1)
-          lambda(nudx, nudx, 2) = 0.d0
+          lambda(:,:, 2) = lambda(:,:, 1)
         ENDIF
         !
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
@@ -616,8 +615,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         IF( force_pairing )  THEN
            lambda(:, :, 2) =  lambda(:, :, 1)
            lambdap(:, :, 2) = lambdap(:, :, 1)
-           lambda(nudx, nudx, 2) = 0.d0  
-           lambdap(nudx, nudx, 2) = 0.d0
            WRITE( stdout, '("Occupations in CPR:")' )
            WRITE( stdout, '(10F9.6)' ) ( f(i), i = 1, nbspx )  
         END IF
@@ -746,11 +743,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! ... now:  cm=c(t) c0=c(t+dt)
      !
      tfirst = .FALSE.
-     !
-     ! sync lambda and lambdam
-     !
-      CALL mp_bcast( lambda, root_image, intra_image_comm )
-      CALL mp_bcast( lambdam, root_image, intra_image_comm )
      !
      ! ... write on file ndw each isave
      !

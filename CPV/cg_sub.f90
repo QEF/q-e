@@ -45,34 +45,34 @@
       use smooth_grid_dimensions, only: nnrsx, nr1s, nr2s, nr3s
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
-      use io_global, ONLY: io_global_start, stdout, ionode, ionode_id
-      use mp_global, ONLY: intra_image_comm
+      use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
+      use mp_global,                ONLY : intra_image_comm, np_ortho, me_ortho, ortho_comm
       use dener
       use derho
       use cdvan
       use stre
-      use constants, only: pi, au_gpa
-      use io_files, only: psfile, pseudo_dir
-      use io_files, only: outdir
-
-      use uspp, only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
-      use uspp_param, only: nh
-      use cg_module, only: ltresh, itercg, etotnew, etotold, tcutoff, &
-          restartcg, passof, passov, passop, ene_ok, numok, maxiter, &
-          enever, conv_thr, ene0, esse, essenew, dene0, spasso, &
-          ene1, passo, iter3, enesti, ninner_ef
-      use ions_positions, only: tau0
-      use wavefunctions_module, only: c0, cm, phi => cp
-      use efield_module, only: tefield, evalue, ctable, qmat, detq, ipolp, &
-            berry_energy, ctabin, gqq, gqqm, df, pberryel, &
-            tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
-            berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
-      use mp, only: mp_sum
+      use constants,                only : pi, au_gpa
+      use io_files,                 only : psfile, pseudo_dir
+      use io_files,                 only : outdir
+      use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
+      use uspp_param,               only : nh
+      use cg_module,                only : ltresh, itercg, etotnew, etotold, tcutoff, &
+                                           restartcg, passof, passov, passop, ene_ok, numok, maxiter, &
+                                           enever, conv_thr, ene0, esse, essenew, dene0, spasso, &
+                                           ene1, passo, iter3, enesti, ninner_ef
+      use ions_positions,           only : tau0
+      use wavefunctions_module,     only : c0, cm, phi => cp
+      use efield_module,            only : tefield, evalue, ctable, qmat, detq, ipolp, &
+                                           berry_energy, ctabin, gqq, gqqm, df, pberryel, &
+                                           tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
+                                           berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
+      use mp,                       only : mp_sum
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
       use cp_interfaces,            ONLY : rhoofr, dforce
-      USE cpr_subroutines,      ONLY : compute_stress!ATTENZIONE
-      USE printout_base,    ONLY: printout_stress!ATTENZIONE
+      USE cpr_subroutines,          ONLY : compute_stress
+      USE printout_base,            ONLY : printout_stress
+      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla
 
 
 !
@@ -95,8 +95,8 @@
       complex(dp) :: sfac( ngs, nsp )
       real(dp) :: fion(3,nat)
       real(dp) :: ema0bg(ngw)
-      real(dp) :: lambdap(nudx,nudx,nspin)
-      real(dp) :: lambda(nudx,nudx,nspin)
+      real(dp) :: lambdap(nlax,nlax,nspin)
+      real(dp) :: lambda(nlax,nlax,nspin)
 !
 !
       integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk
@@ -108,6 +108,8 @@
       complex(dp),allocatable :: hpsi(:,:), hpsi0(:,:), gi(:,:), hi(:,:)
       real(DP), allocatable::               s_minus1(:,:)!factors for inverting US S matrix
       real(DP), allocatable::               k_minus1(:,:)!factors for inverting US preconditioning matrix 
+      real(DP), allocatable :: lambda_repl(:,:) ! replicated copy of lambda
+      real(DP), allocatable :: lambda_dist(:,:) ! replicated copy of lambda
       real(dp) :: sca, dumm(1)
       logical  :: newscheme, firstiter
       integer :: maxiter3
@@ -829,33 +831,45 @@
           end if
         enddo
 
+        ALLOCATE( lambda_repl( nudx, nudx ) )
+        !
         do is = 1, nspin
            !
            nss = nupdwn(is)
            istart = iupdwn(is)
-           lambda(:,:,is)=0.d0
+           lambda_repl = 0.d0
+           !
            !
            do i = 1, nss
               do j = i, nss
                  ii = i + istart - 1
                  jj = j + istart - 1
                  do ig = 1, ngw
-                    lambda( i, j, is ) = lambda( i, j, is ) - &
+                    lambda_repl( i, j ) = lambda_repl( i, j ) - &
                        2.d0 * DBLE( CONJG( c0( ig, ii ) ) * gi( ig, jj) )
                  enddo
                  if( ng0 == 2 ) then
-                    lambda( i, j, is ) = lambda( i, j, is ) + &
+                    lambda_repl( i, j ) = lambda_repl( i, j ) + &
                        DBLE( CONJG( c0( 1, ii ) ) * gi( 1, jj ) )
                  endif
-                 lambda( j, i, is ) = lambda( i, j, is )
+                 lambda_repl( j, i ) = lambda_repl( i, j )
               enddo
            enddo
            !
+           CALL mp_sum( lambda_repl, intra_image_comm )
+           !
+           CALL distribute_lambda( lambda_repl, lambda( :, :, is ), descla( :, is ) )
+           !
         end do
+
+        DEALLOCATE( lambda_repl )
   
-        call mp_sum( lambda, intra_image_comm )
-  
-        if(tens) then!in the ensemble case matrix labda must be multiplied with f
+        if ( tens ) then
+           !
+           ! in the ensemble case matrix labda must be multiplied with f
+
+           ALLOCATE( lambda_dist( nlax, nlax ) )
+ 
            do iss = 1, nspin
               !
               nss = nupdwn(iss)
@@ -863,27 +877,26 @@
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              do k = 1, nss
-                 do j = 1, nss
-                    do i = 1, nss
-                       lambdap( i, j, iss ) = lambdap( i, j, iss ) + &
-                            lambda( i, k, iss ) * fmat0( k, j, iss )
-                    end do
-                 end do
-              enddo
+              CALL distribute_lambda( fmat0(:,:,iss), lambda_dist, descla( :, iss ) )
               !
-              do i = 1, nss
-                 do j = 1, nss
-                    sta = lambda(i,j,iss)
-                    lambda(i,j,iss) = lambdap(i,j,iss)
-                    lambdap(i,j,iss) = sta
-                 enddo
-              enddo
+              ! Perform lambdap = lambda * fmat0
+              !
+              CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, lambda(1,1,iss), nlax, lambda_dist, nlax, &
+                                  0.0d0, lambdap(1,1,iss), nlax, descla(1,iss) )
+              !
+              lambda_dist      = lambda(:,:,iss)
+              lambda(:,:,iss)  = lambdap(:,:,iss)
+              lambdap(:,:,iss) = lambda_dist
+              !
            end do
+           !
+           DEALLOCATE( lambda_dist )
            !
            call nlsm2(ngw,nhsa,n,eigr,c0(:,:),becdr,.true.)
            !
         endif
+        !
+  
         !
         call nlfl(bec,becdr,lambda,fion)
           

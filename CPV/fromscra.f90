@@ -80,6 +80,8 @@ CONTAINS
     USE cp_interfaces,        ONLY : vofrhos
     USE grid_dimensions,      ONLY : nr1, nr2, nr3
     USE cp_interfaces,        ONLY : printout
+    USE cp_main_variables,    ONLY : setval_lambda, descla
+    USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
 
 
     !
@@ -257,8 +259,8 @@ CONTAINS
             !
             CALL runcp_uspp_force_pairing( nfi, fccc, ccc, ema0bg, dt2bye, rhos, bec, cm, &
         &                 c0, ei_unp, fromscra = .TRUE. )
-            ! lambda(nupdwn(1), nupdwn(1), 1) = ei_unp
-            lambda(nupdwn(1), nupdwn(1), 2) = 0.d0 
+            !
+            CALL setval_lambda( lambda(:,:,2), nupdwn(1), nupdwn(1), 0.d0, descla(:,1) )
             !
          ELSE
             !
@@ -280,7 +282,7 @@ CONTAINS
 
 
          if( tortho ) then
-            CALL ortho( eigr, c0, phi, ngw, lambda, SIZE(lambda,1), &
+            CALL ortho( eigr, c0, phi, ngw, lambda, descla, &
                         bigr, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn )
          else
             CALL gram( vkb, bec, nkb, c0, ngw, nbsp )
@@ -296,7 +298,8 @@ CONTAINS
          IF ( tortho ) THEN
             DO iss = 1, nspin_wfc
                CALL updatc( ccc, nbsp, lambda(:,:,iss), SIZE(lambda,1), phi, SIZE(phi,1), &
-                            bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss) )
+                            bephi, SIZE(bephi,1), becp, bec, c0, nupdwn(iss), iupdwn(iss), &
+                            descla(:,iss) )
             END DO
          END IF
          !
@@ -304,7 +307,7 @@ CONTAINS
             !
             c0 ( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) =  c0( :, 1:nupdwn(2))
             phi( :, iupdwn(2):(iupdwn(2)+nupdwn(2)-1) ) = phi( :, 1:nupdwn(2))
-            lambda(1:nupdwn(2), 1:nupdwn(2), 2) = lambda(1:nupdwn(2), 1:nupdwn(2), 1 )
+            lambda(:,:,2) = lambda(:,:,1)
             !
          ENDIF
          !
@@ -367,7 +370,7 @@ CONTAINS
              !
              ccc = fccc * dt2bye
              !
-             CALL ortho( cm, c0, lambda, ccc, nupdwn, iupdwn, nspin )
+             CALL ortho( cm, c0, lambda, descla, ccc, nupdwn, iupdwn, nspin )
              !
           ELSE
              !

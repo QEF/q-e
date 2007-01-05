@@ -10,17 +10,19 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_m( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
-!=----------------------------------------------------------------------------=!
+   SUBROUTINE ortho_m( c0, cp, lambda, descla, ccc, nupdwn, iupdwn, nspin )
       !
       USE kinds,              ONLY: DP
       USE control_flags,      ONLY: force_pairing
       USE cp_main_variables,  ONLY: ema0bg
+      USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_
       USE control_flags,      ONLY: ortho_eps, ortho_max
       USE orthogonalize_base, ONLY: calphi, updatc
+      USE cp_interfaces,      ONLY: ortho_gamma
       !
       IMPLICIT NONE
 
+      INTEGER,     INTENT(IN)    :: descla(:,:)
       INTEGER,     INTENT(IN)    :: nupdwn(:), iupdwn(:), nspin
       COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
       REAL(DP),    INTENT(INOUT) :: lambda(:,:,:)
@@ -29,7 +31,7 @@
       COMPLEX(DP), ALLOCATABLE :: phi(:,:)
       INTEGER                  :: iss, nsc, iwfc, nwfc, info
       INTEGER                  :: iter, i, j
-      INTEGER                  :: ngwx, n, nx
+      INTEGER                  :: ngwx, n, nr, nc, nx
       REAL(DP)                 :: diff
       REAL(DP)                 :: dum(2,2)
       COMPLEX(DP)              :: cdum(2,2)
@@ -53,22 +55,25 @@
           nwfc = nupdwn(iss)
           iwfc = iupdwn(iss)
           !
-          CALL ortho_gamma( 1, cp, ngwx, phi, dum, dum, 2, dum, dum, &
-                            lambda(:,:,iss), nx, diff, iter, n, nwfc, iwfc )
+          CALL ortho_gamma( 1, cp, ngwx, phi, dum, dum, 2, dum, dum, lambda(:,:,iss), nx, &
+               descla(:,iss), diff, iter, n, nwfc, iwfc )
           !
           IF ( iter > ortho_max ) THEN
              call errore(' ortho ','  itermax ',iter)
           END IF
           !
-          CALL updatc( 1.0d0, n, lambda(:,:,iss), nx, phi, ngwx, dum, 1, dum, dum, cp, nwfc, iwfc )
+          CALL updatc( 1.0d0, n, lambda(:,:,iss), nx, phi, ngwx, dum, 1, dum, dum, cp, &
+                       nwfc, iwfc, descla(:,iss) )
           !     
           !     lagrange multipliers
           !
-          DO j=1,nwfc
-             DO i=1,nwfc
-                lambda( i, j, iss ) = lambda( i, j, iss ) / ccc
+          IF( descla( lambda_node_ , iss ) > 0 ) THEN
+             DO j = 1, descla( nlac_ , iss )
+                DO i = 1, descla( nlar_ , iss )
+                   lambda( i, j, iss ) = lambda( i, j, iss ) / ccc
+                END DO
              END DO
-          END DO
+          END IF
           !
       END DO
       !
@@ -85,32 +90,30 @@
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_gamma( iopt, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
-                           x0, nx, diff, iter, n, nss, istart )
+   SUBROUTINE ortho_gamma_x( iopt, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
+                           x0, nx0, descla, diff, iter, n, nss, istart )
 !=----------------------------------------------------------------------------=!
       !
-      ! 
-      ! 
-
       USE kinds,              ONLY: DP
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate, &
-                                    ortho_alt_iterate, updatc, &
+                                    ortho_alt_iterate,  &
                                     use_parallel_diag, diagonalize_parallel, &
                                     diagonalize_serial
-      USE mp_global,          ONLY: nproc_image, np_ortho, me_ortho, ortho_comm, &
-                                    me_image, intra_image_comm
+      USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_
+      USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
 
       IMPLICIT  NONE
 
       ! ... Arguments
 
       INTEGER,  INTENT(IN)  :: iopt
-      INTEGER,  INTENT(IN)  :: ngwx, nx, nkbx
+      INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
       INTEGER,  INTENT(IN)  :: n, nss, istart
       COMPLEX(DP) :: phi( ngwx, n ), cp( ngwx, n )
       REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
       REAL(DP)    :: qbephi( nkbx, n ), qbecp( nkbx, n )
-      REAL(DP)    :: x0( nx, nx )
+      REAL(DP)    :: x0( nx0, nx0 )
+      INTEGER,  INTENT(IN)  :: descla( : )
       INTEGER,  INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff
 
@@ -118,7 +121,7 @@
 
       REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:)
       REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
-      INTEGER  :: i, j, info, nr, nc, ir, ic
+      INTEGER  :: i, j, info, nr, nc, ir, ic, nx
       LOGICAL  :: iter_node
       !
       INTEGER  :: ldim_block, gind_block
@@ -126,15 +129,15 @@
 
       ! ...   Subroutine body
 
-      IF( me_ortho(1) >= 0 ) THEN
+      IF( descla( lambda_node_ ) > 0 ) THEN
          !
          iter_node = .TRUE.
          !
-         nr = ldim_block( nss, np_ortho(1), me_ortho(1) )
-         nc = ldim_block( nss, np_ortho(2), me_ortho(2) )
+         nr = descla( nlar_ )
+         nc = descla( nlac_ )
          !
-         ir = gind_block( 1, nss, np_ortho(1), me_ortho(1) )
-         ic = gind_block( 1, nss, np_ortho(2), me_ortho(2) )
+         ir = descla( ilar_ )
+         ic = descla( ilac_ )
          !
       ELSE
          !
@@ -142,60 +145,43 @@
          !
       END IF
 
+      nx = nss
 
       ALLOCATE( wrk( nx, nx ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
-      ALLOCATE( rhos( nx, nx ), STAT = info )
-      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 2 )
       ALLOCATE( rhod( nx ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 3 )
       !
       !     rho = <s'c0|s|cp>
       !
       CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, wrk, nx )
-      !
-      !  Symmetric part of rho
-      !
-      DO j = 1, nss
-        DO i = 1, nss
 
-          rhos(i,j) = 0.5d0*(wrk(i,j)+wrk(j,i))
-          !
-          ! on some machines (IBM RS/6000 for instance) the following test allows
-          ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
-          ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
-          ! that the program goes on forever doing nothing and writing nothing.
-          !
-          IF (rhos(i,j) /= rhos(i,j)) CALL errore('ortho','ortho went bananas',1)
-
-        ENDDO
-      ENDDO
-      !
-      !  Antisymmetric part of rho, alredy distributed across ortho procs.
-      !
       IF( iter_node ) THEN
+         !
+         !  Symmetric part of rho
+         !
+	 ALLOCATE( rhos( nr, nc ) )
+         DO j = 1, nc
+            DO i = 1, nr
+               rhos( i, j ) = 0.5d0 * ( wrk( i+ir-1, j+ic-1 ) + wrk( j+ic-1, i+ir-1 ) )
+               !
+               ! on some machines (IBM RS/6000 for instance) the following test allows
+               ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
+               ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
+               ! that the program goes on forever doing nothing and writing nothing.
+               !
+               IF (rhos(i,j) /= rhos(i,j)) CALL errore('ortho','ortho went bananas',1)
+            END DO
+         END DO
+         !
+         !  Antisymmetric part of rho, alredy distributed across ortho procs.
+         !
          ALLOCATE( rhoa( nr, nc ) )
          DO j = 1, nc
             DO i = 1, nr
                rhoa( i, j ) = 0.5d0 * ( wrk( i+ir-1, j+ic-1 ) - wrk( j+ic-1, i+ir-1 ) )
             END DO
          END DO
-      ELSE
-         ALLOCATE( rhoa( 1, 1 ) )
-      END IF
-
-
-      ! ...   Diagonalize Matrix  symmetric part of rho (rhos)
-
-
-      CALL start_clock( 'rsg' )
-
-      !
-      !       Compute s and rho
-      ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
-      !
-
-      IF( iter_node ) THEN
          !
          ALLOCATE( s( nr, nc ) ) 
          ALLOCATE( sig( nr, nc ) ) 
@@ -203,53 +189,81 @@
          !
       ELSE
          !
+         ALLOCATE( rhoa( 1, 1 ) )
+         ALLOCATE( rhos( 1, 1 ) )
          ALLOCATE( s( 1, 1 ) ) 
          ALLOCATE( sig( 1, 1 ) ) 
          ALLOCATE( tau( 1, 1 ) ) 
          !
       END IF
 
+
+      !
+      !       Symmetrize wrk containing rhos
+      !
+      ! lower triangle
+      !
+      DO j = 1, nss
+         DO i = j, nss
+            wrk(i,j) = 0.5d0*(wrk(i,j)+wrk(j,i))
+         ENDDO
+      ENDDO
+      !
+      ! upper triangle
+      !
+      DO j = 1, nss
+         DO i = 1, j-1
+            wrk(i,j) = wrk(j,i)
+         ENDDO
+      ENDDO
+
+      CALL start_clock( 'rsg' )
+      !
+      ! ...   Diagonalize symmetric part of rho (rhos)
+      ! ...   "s" is the matrix of eigenvectors, "rhod" is the array of eigenvalues
+      !
       IF( use_parallel_diag ) THEN
          !
-         CALL diagonalize_parallel( nss, rhos, rhod, s )
+         CALL diagonalize_parallel( nss, wrk, rhod, s, descla )
          !
       ELSE
          !
-         CALL diagonalize_serial( nss, rhos, rhod, wrk )
+         CALL diagonalize_serial( nss, wrk, rhod )
+         !
          CALL distribute_matrix( wrk, s )
          !
       END IF
       !
-
       CALL stop_clock( 'rsg' )
-
       !
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 4 )
       !
       !     sig = 1-<cp|s|cp>
       !
       CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, wrk, nx )
+      !
       CALL distribute_matrix( wrk, sig )
       !
       !     tau = <s'c0|s|s'c0>
       !
       CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, wrk, nx )
+      !
       CALL distribute_matrix( wrk, tau )
 
       DEALLOCATE( wrk )
 
       IF( iopt == 0 ) THEN
          !
-         CALL ortho_iterate( iter, diff, s, nr, rhod, x0, sig, rhoa, rhos, tau, nx, nss )
+         CALL ortho_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, rhos, tau, nx, nss, descla)
          !
       ELSE
          !
-         CALL ortho_alt_iterate( iter, diff, s, nr, rhod, x0, sig, rhoa, tau, nx, nss )
+         CALL ortho_alt_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, tau, nx, nss, descla)
          !
       END IF
       !
-      DO j=1,nss
-        DO i=1,nss
+      DO j = 1, nc
+        DO i = 1, nr
           IF (x0(i,j) /= x0(i,j)) CALL errore('ortho','ortho went bananas',2)
         END DO
       END DO
@@ -273,13 +287,13 @@
       END SUBROUTINE
 
 
-   END SUBROUTINE ortho_gamma
+   END SUBROUTINE ortho_gamma_x
 
 
 
 
 !=----------------------------------------------------------------------------=!
-   SUBROUTINE ortho_cp( eigr, cp, phi, ngwx, x0, nudx, diff, iter, ccc, &
+   SUBROUTINE ortho_cp( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, &
                         bephi, becp, nbsp, nspin, nupdwn, iupdwn )
 !=----------------------------------------------------------------------------=!
       !
@@ -304,24 +318,27 @@
       USE control_flags,  ONLY: iprint, iprsta, ortho_max
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
+      USE cp_interfaces,  ONLY: ortho_gamma
       !
       IMPLICIT NONE
-!
-      INTEGER     :: ngwx, nudx, nbsp, nspin
-      INTEGER     :: nupdwn( nspin ), iupdwn( nspin )
+      !
+      INTEGER,    INTENT(IN) :: ngwx, nbsp, nspin
+      INTEGER,    INTENT(IN) :: nupdwn( nspin ), iupdwn( nspin )
+      INTEGER,    INTENT(IN) :: descla(:,:)
       COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
-      REAL(DP)    :: x0( nudx, nudx, nspin ), diff, ccc
+      REAL(DP)    :: x0(:,:,:), diff, ccc
       INTEGER     :: iter
       REAL(DP)    :: bephi(nkb,nbsp), becp(nkb,nbsp)
-!
+      !
       REAL(DP), ALLOCATABLE :: xloc(:,:)
       REAL(DP), ALLOCATABLE :: qbephi(:,:), qbecp(:,:)
 
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
-      INTEGER :: nspin_sub
+      INTEGER :: nspin_sub, nx0
 
       nkbx = nkb
+      nx0  = SIZE( x0, 1 )
       !
       !     calculation of becp and bephi
       !
@@ -357,8 +374,7 @@
          END DO
       END DO
       !
-      ALLOCATE( xloc( nudx, nudx ) )
-      !
+      ALLOCATE( xloc( nx0, nx0 ) )
       !
       nspin_sub = nspin 
       if( force_pairing ) nspin_sub = 1
@@ -368,47 +384,25 @@
          nss    = nupdwn(iss)
          istart = iupdwn(iss)
 
-         DO j=1,nss
-            DO i=1,nss
-               xloc(i,j) = x0( i, j, iss ) * ccc
-            END DO
-         END DO
+         xloc = x0(:,:,iss) * ccc
 
          CALL ortho_gamma( 0, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
-                           xloc, nudx, diff, iter, nbsp, nss, istart )
+                           xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
 
          IF( iter > ortho_max ) THEN
             WRITE( stdout, * ) ' diff= ',diff,' iter= ',iter
             CALL errore('ortho','max number of iterations exceeded',iter)
          END IF
 
-         IF( iprsta > 4 ) THEN
-            WRITE( stdout,*)
-            WRITE( stdout,'(26x,a)') '    lambda '
-            DO i=1,nss
-               WRITE( stdout,'(7f11.6)') (xloc(i,j)/f(i+istart-1),j=1,nss)
-            END DO
-         ENDIF
          IF( iprsta > 2 ) THEN
             WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
          ENDIF
          !     
-         !     lagrange multipliers
+         x0( :, :, iss ) = xloc / ccc
          !
-         DO j=1,nss
-            DO i=1,nss
-               x0( i, j, iss ) = xloc(i,j) / ccc
-            END DO
-         END DO
-!
       END DO
 
-      IF( force_pairing .AND. nspin > 1 ) THEN
-         !
-         x0(1:nupdwn(2), 1:nupdwn(2), 2) = x0(1:nupdwn(2), 1:nupdwn(2), 1)
-         x0(nudx, nudx, 2) = 0.d0
-         !
-      ENDIF
+      IF( force_pairing ) cp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp(:,1:nupdwn(2))
 !
       DEALLOCATE( xloc )
       DEALLOCATE(qbecp )

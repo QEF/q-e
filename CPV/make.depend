@@ -45,6 +45,7 @@ cg_sub.o : cpr_mod.o
 cg_sub.o : efield.o
 cg_sub.o : ensemble_dft.o
 cg_sub.o : ions_positions.o
+cg_sub.o : mainvar.o
 cg_sub.o : modules.o
 cg_sub.o : ortho_base.o
 cglib.o : ../Modules/constants.o
@@ -195,6 +196,7 @@ cplib.o : ../Modules/atom.o
 cplib.o : ../Modules/cell_base.o
 cplib.o : ../Modules/constants.o
 cplib.o : ../Modules/control_flags.o
+cplib.o : ../Modules/descriptors.o
 cplib.o : ../Modules/electrons_base.o
 cplib.o : ../Modules/energies.o
 cplib.o : ../Modules/fft_base.o
@@ -214,6 +216,7 @@ cplib.o : ../Modules/sic.o
 cplib.o : ../Modules/smallbox.o
 cplib.o : ../Modules/uspp.o
 cplib.o : cp_interfaces.o
+cplib.o : mainvar.o
 cplib.o : modules.o
 cplib.o : pres_ai_mod.o
 cplib_meta.o : ../Modules/cell_base.o
@@ -269,8 +272,10 @@ cpr.o : ortho_base.o
 cpr.o : pres_ai_mod.o
 cpr.o : restart_sub.o
 cpr.o : wannier.o
+cpr_mod.o : ../Modules/electrons_base.o
 cpr_mod.o : ../Modules/io_global.o
 cpr_mod.o : ../Modules/kind.o
+cpr_mod.o : mainvar.o
 cprstart.o : ../Modules/check_stop.o
 cprstart.o : ../Modules/control_flags.o
 cprstart.o : ../Modules/io_global.o
@@ -282,6 +287,7 @@ cprsub.o : ../Modules/atom.o
 cprsub.o : ../Modules/cell_base.o
 cprsub.o : ../Modules/constants.o
 cprsub.o : ../Modules/control_flags.o
+cprsub.o : ../Modules/descriptors.o
 cprsub.o : ../Modules/electrons_base.o
 cprsub.o : ../Modules/griddim.o
 cprsub.o : ../Modules/io_global.o
@@ -294,6 +300,7 @@ cprsub.o : ../Modules/recvec.o
 cprsub.o : ../Modules/uspp.o
 cprsub.o : cp_interfaces.o
 cprsub.o : cpr_mod.o
+cprsub.o : mainvar.o
 cprsub.o : modules.o
 cprsub.o : pseudo_base.o
 cprsub.o : pseudopot.o
@@ -341,6 +348,7 @@ efield.o : ../Modules/recvec.o
 efield.o : ../Modules/uspp.o
 efield.o : ions_positions.o
 eigs0.o : ../Modules/constants.o
+eigs0.o : ../Modules/descriptors.o
 eigs0.o : ../Modules/electrons_base.o
 eigs0.o : ../Modules/io_global.o
 eigs0.o : ../Modules/kind.o
@@ -350,6 +358,7 @@ eigs0.o : ../Modules/ptoolkit.o
 eigs0.o : ../Modules/sic.o
 eigs0.o : electrons.o
 eigs0.o : ensemble_dft.o
+eigs0.o : mainvar.o
 electrons.o : ../Modules/constants.o
 electrons.o : ../Modules/electrons_base.o
 electrons.o : ../Modules/io_global.o
@@ -361,6 +370,7 @@ electrons.o : cp_emass.o
 emptystates.o : ../Modules/cell_base.o
 emptystates.o : ../Modules/check_stop.o
 emptystates.o : ../Modules/control_flags.o
+emptystates.o : ../Modules/descriptors.o
 emptystates.o : ../Modules/electrons_base.o
 emptystates.o : ../Modules/griddim.o
 emptystates.o : ../Modules/io_files.o
@@ -451,6 +461,7 @@ fromscra.o : ../Modules/io_global.o
 fromscra.o : ../Modules/ions_base.o
 fromscra.o : ../Modules/ions_nose.o
 fromscra.o : ../Modules/kind.o
+fromscra.o : ../Modules/mp_global.o
 fromscra.o : ../Modules/parameters.o
 fromscra.o : ../Modules/recvec.o
 fromscra.o : ../Modules/uspp.o
@@ -465,6 +476,7 @@ fromscra.o : efield.o
 fromscra.o : electrons.o
 fromscra.o : ensemble_dft.o
 fromscra.o : ions_positions.o
+fromscra.o : mainvar.o
 fromscra.o : modules.o
 fromscra.o : ortho_base.o
 fromscra.o : wave_types.o
@@ -677,9 +689,12 @@ main_loops.o : cp_interfaces.o
 main_loops.o : path_routines.o
 mainvar.o : ../Modules/cell_base.o
 mainvar.o : ../Modules/control_flags.o
+mainvar.o : ../Modules/descriptors.o
 mainvar.o : ../Modules/energies.o
 mainvar.o : ../Modules/functionals.o
 mainvar.o : ../Modules/kind.o
+mainvar.o : ../Modules/mp.o
+mainvar.o : ../Modules/mp_global.o
 mainvar.o : ../Modules/parameters.o
 mainvar.o : modules.o
 mainvar.o : pres_ai_mod.o
@@ -695,6 +710,7 @@ move_electrons.o : ../Modules/energies.o
 move_electrons.o : ../Modules/griddim.o
 move_electrons.o : ../Modules/ions_base.o
 move_electrons.o : ../Modules/kind.o
+move_electrons.o : ../Modules/mp_global.o
 move_electrons.o : ../Modules/recvec.o
 move_electrons.o : ../Modules/uspp.o
 move_electrons.o : ../Modules/wavefunctions.o
@@ -747,6 +763,7 @@ nlcc.o : pseudo_base.o
 nlcc.o : pseudopot.o
 nlcc.o : spline.o
 ortho.o : ../Modules/control_flags.o
+ortho.o : ../Modules/descriptors.o
 ortho.o : ../Modules/electrons_base.o
 ortho.o : ../Modules/io_global.o
 ortho.o : ../Modules/ions_base.o
@@ -754,11 +771,13 @@ ortho.o : ../Modules/kind.o
 ortho.o : ../Modules/mp_global.o
 ortho.o : ../Modules/recvec.o
 ortho.o : ../Modules/uspp.o
+ortho.o : cp_interfaces.o
 ortho.o : mainvar.o
 ortho.o : modules.o
 ortho.o : ortho_base.o
 ortho_base.o : ../Modules/constants.o
 ortho_base.o : ../Modules/control_flags.o
+ortho_base.o : ../Modules/descriptors.o
 ortho_base.o : ../Modules/io_global.o
 ortho_base.o : ../Modules/ions_base.o
 ortho_base.o : ../Modules/kind.o
@@ -968,6 +987,7 @@ restart.o : cp_interfaces.o
 restart.o : cp_restart.o
 restart.o : electrons.o
 restart.o : ensemble_dft.o
+restart.o : mainvar.o
 restart_sub.o : ../Modules/cell_base.o
 restart_sub.o : ../Modules/control_flags.o
 restart_sub.o : ../Modules/electrons_base.o
@@ -977,6 +997,7 @@ restart_sub.o : ../Modules/io_global.o
 restart_sub.o : ../Modules/ions_base.o
 restart_sub.o : ../Modules/ions_nose.o
 restart_sub.o : ../Modules/kind.o
+restart_sub.o : ../Modules/mp_global.o
 restart_sub.o : ../Modules/parameters.o
 restart_sub.o : ../Modules/recvec.o
 restart_sub.o : ../Modules/timestep.o

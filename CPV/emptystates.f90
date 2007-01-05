@@ -12,7 +12,7 @@
 !
 
 
-      LOGICAL FUNCTION readempty_x( c_emp, ne )
+   LOGICAL FUNCTION readempty_x( c_emp, ne )
 
         ! ...   This subroutine reads empty states from unit emptyunit
 
@@ -105,13 +105,13 @@
         DEALLOCATE(ctmp)
 
         RETURN
-      END FUNCTION readempty_x
+   END FUNCTION readempty_x
 
 !
 !=----------------------------------------------------------------------------=!
 !
 
-      SUBROUTINE writeempty_x( c_emp, ne )
+   SUBROUTINE writeempty_x( c_emp, ne )
 
         ! ...   This subroutine writes empty states to unit emptyunit
 
@@ -175,7 +175,7 @@
         DEALLOCATE(ctmp)
 
         RETURN
-      END SUBROUTINE writeempty_x
+   END SUBROUTINE writeempty_x
 
 !
 !-------------------------------------------------------------------------
@@ -310,6 +310,7 @@
       USE control_flags,        ONLY : iprsta, tsde, program_name
       USE io_global,            ONLY : ionode, stdout
       USE cp_main_variables,    ONLY : eigr, ema0bg
+      USE descriptors,          ONLY : descla_siz_ , descla_init
       USE cell_base,            ONLY : omega
       USE uspp,                 ONLY : vkb, nkb
       USE grid_dimensions,      ONLY : nnrx
@@ -327,6 +328,8 @@
       USE check_stop,           ONLY : check_stop_now
       USE cp_interfaces,        ONLY : writeempty, readempty, gram_empty, ortho, &
                                        wave_rand_init, elec_fakekine, crot, dforce
+      USE mp,                   ONLY : mp_group_free, mp_group
+      USE mp_global,            ONLY : intra_image_comm, me_image
       !
       IMPLICIT NONE
       !
@@ -353,12 +356,45 @@
       REAL(DP),    ALLOCATABLE :: lambda_emp(:,:,:), f_emp(:)
       INTEGER,     ALLOCATABLE :: ispin_emp(:)
       !
+      INTEGER, ALLOCATABLE :: np_list(:)
+      INTEGER, SAVE :: np_emp(2), me_emp(2), emp_comm
+      INTEGER, SAVE :: desc_emp( descla_siz_ , 2 )
+      LOGICAL, SAVE :: first = .true.
+      !
       ! ...  quick exit if empty states have not to be computed
       !
       IF( n_emp < 1 ) RETURN
       !
       ekinc_old = 1.d+10
       ekinc     = 0.0d0
+      !
+      !  Here set the group of processors for empty states
+      !
+      IF( .NOT. first ) THEN
+         IF( me_emp(1) >= 0 ) CALL mp_group_free( emp_comm )
+      END IF 
+      !
+      np_emp = 1
+      !
+      ALLOCATE( np_list( np_emp(1) * np_emp(2) ) )
+      !
+      do i = 1, np_emp(1) * np_emp(2)
+         np_list( i ) = i - 1
+      end do
+      !
+      CALL mp_group( np_list, np_emp(1) * np_emp(2), intra_image_comm, emp_comm )
+      !
+      if( me_image <  np_emp(1) * np_emp(2) ) then
+          me_emp(1) = me_image / np_emp(1)
+          me_emp(2) = MOD( me_image, np_emp(1) ) 
+      else
+          me_emp(1) = -1
+          me_emp(2) = -1
+      endif
+      !
+      first = .FALSE.
+      !
+      !  Done with the group
       !
       n_occs = nupdwn( 1 )
       IF( nspin == 2 ) n_occs = n_occs + nupdwn( 2 )
@@ -368,6 +404,10 @@
       !
       n_empx = nupdwn_emp( 1 )
       IF( nspin == 2 ) n_empx = MAX( n_empx, nupdwn_emp( 2 ) )
+      !
+      DO iss = 1, nspin
+         CALL descla_init( desc_emp( :, iss ), nupdwn( iss ), n_empx, np_emp, me_emp, emp_comm )
+      END DO
       !
       ALLOCATE( c0_emp( ngw, n_empx * nspin ) )
       ALLOCATE( cm_emp( ngw, n_empx * nspin ) )
@@ -526,7 +566,7 @@
          !
          CALL calphi( c0_emp, ngw, bec_emp, nkb, vkb, phi_emp, n_emps, ema0bg )
          !
-         CALL ortho( eigr, cm_emp, phi_emp, ngw, lambda_emp, n_empx, &
+         CALL ortho( eigr, cm_emp, phi_emp, ngw, lambda_emp, desc_emp, &
                         bigr, iter_ortho, ccc, bephi_emp, becp_emp, n_emps, nspin, &
                         nupdwn_emp, iupdwn_emp )
          !
@@ -534,7 +574,7 @@
             !
             CALL updatc( ccc, n_emps, lambda_emp(:,:,iss), n_empx, phi_emp, ngw, &
                          bephi_emp, nkb, becp_emp, bec_emp, &
-                         cm_emp, nupdwn_emp(iss), iupdwn_emp(iss) )
+                         cm_emp, nupdwn_emp(iss), iupdwn_emp(iss), desc_emp(:,iss) )
             !
          END DO
          !
@@ -577,8 +617,6 @@
       ! ...   Save emptystates to disk
 
       CALL writeempty( cm_emp, n_empx * nspin )
-
-      ! CALL opticalp( nfi, omega, c_occ, wfill, c_emp, wempt, vpot, eigr, vkb, bec )
       ! 
       DEALLOCATE( ispin_emp )
       DEALLOCATE( lambda_emp )

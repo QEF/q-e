@@ -8,7 +8,7 @@
 
 !-----------------------------------------------------------------------
 
-      subroutine writefile_cp                                         &
+   SUBROUTINE writefile_cp                                         &
      &     ( ndw,h,hold,nfi,c0,cm,taus,tausm,vels,velsm,acc,           &
      &       lambda,lambdam,xnhe0,xnhem,vnhe,xnhp0,xnhpm,vnhp,nhpcl,nhpdim,ekincm,&
      &       xnhh0,xnhhm,vnhh,velh,ecut,ecutw,delt,pmass,ibrav,celldm, &
@@ -92,9 +92,6 @@
       !  Sincronize lambdas, whose replicas could diverge on
       !  different processors
       !
-      CALL mp_bcast( lambda, root_image, intra_image_comm )
-      CALL mp_bcast( lambdam, root_image, intra_image_comm )
-
       IF( tens ) THEN
         !
         CALL cp_writefile( ndw, outdir, .TRUE., nfi, tps, acc, nk, xk, wk,   &
@@ -207,8 +204,8 @@
          call employ_rules()
          event_index = event_index + 1
          if(  event_index > max_event_step ) then
-            call errore(' readfile ','maximum events exceeded for dynamic rules', 1)
-         endif
+            CALL errore( ' readfile ' , ' maximum events exceeded for dynamic rules ' , 1 )
+         end if
       enddo
       
       IF( .NOT. keep_occ ) THEN
@@ -417,10 +414,11 @@
 !------------------------------------------------------------------------------!
    SUBROUTINE set_evtot_x( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
 !------------------------------------------------------------------------------!
-      USE kinds,            ONLY: DP
-      USE electrons_base,   ONLY: nupdwn, nspin, iupdwn, nudx
-      USE electrons_module, ONLY: nupdwn_emp, ei, ei_emp, n_emp, iupdwn_emp
-      USE cp_interfaces,    ONLY: readempty, crot
+      USE kinds,             ONLY: DP
+      USE electrons_base,    ONLY: nupdwn, nspin, iupdwn, nudx
+      USE electrons_module,  ONLY: nupdwn_emp, ei, ei_emp, n_emp, iupdwn_emp
+      USE cp_interfaces,     ONLY: readempty, crot
+      USE cp_main_variables, ONLY: collect_lambda, descla
       !
       IMPLICIT NONE
       !
@@ -431,17 +429,24 @@
       !
       COMPLEX(DP), ALLOCATABLE :: cemp(:,:)
       REAL(DP),    ALLOCATABLE :: eitmp(:)
+      REAL(DP),    ALLOCATABLE :: lambda_repl(:,:)
       LOGICAL                  :: t_emp
       !
       ALLOCATE( eitmp( nudx ) )
+      ALLOCATE( lambda_repl( nudx, nudx ) )
       !
       ctot = 0.0d0
       !
-      CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(1), iupdwn_tot(1), iupdwn(1), lambda(:,:,1), nudx, eitmp )
+      CALL collect_lambda( lambda_repl, lambda(:,:,1), descla(:,1) )
+      !
+      CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(1), iupdwn_tot(1), iupdwn(1), lambda_repl, nudx, eitmp )
       !
       IF( nspin == 2 ) THEN
-         CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(2), iupdwn_tot(2), iupdwn(2), lambda(:,:,2), nudx, eitmp )
+         CALL collect_lambda( lambda_repl, lambda(:,:,2), descla(:,2) )
+         CALL crot( ctot, c0, SIZE( c0, 1 ), nupdwn(2), iupdwn_tot(2), iupdwn(2), lambda_repl, nudx, eitmp )
       END IF
+      !
+      DEALLOCATE( lambda_repl )
       !
       t_emp = .FALSE.
       !

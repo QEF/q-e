@@ -66,6 +66,7 @@
    PUBLIC :: packgam
 
    PUBLIC :: ortho
+   PUBLIC :: ortho_gamma
 
    PUBLIC :: v2gc
    PUBLIC :: exch_corr_energy
@@ -669,30 +670,50 @@
 
 
    INTERFACE ortho
-      SUBROUTINE ortho_m( c0, cp, lambda, ccc, nupdwn, iupdwn, nspin )
+      SUBROUTINE ortho_m &
+         ( c0, cp, lambda, descla, ccc, nupdwn, iupdwn, nspin )
          USE kinds,              ONLY: DP
          IMPLICIT NONE
+         INTEGER,     INTENT(IN)    :: descla(:,:)
          INTEGER,     INTENT(IN)    :: nupdwn(:), iupdwn(:), nspin
          COMPLEX(DP), INTENT(INOUT) :: c0(:,:), cp(:,:)
          REAL(DP),    INTENT(INOUT) :: lambda(:,:,:)
          REAL(DP),    INTENT(IN)    :: ccc
       END SUBROUTINE
       SUBROUTINE ortho_cp &
-         ( eigr, cp, phi, ngwx, x0, nudx, diff, iter, ccc, bephi, becp, nbsp, &
-           nspin, nupdwn, iupdwn )
+         ( eigr, cp, phi, ngwx, x0, descla, diff, iter, ccc, bephi, becp, nbsp, nspin, nupdwn, iupdwn)
          USE kinds,          ONLY: DP
          USE ions_base,      ONLY: nat
          USE uspp,           ONLY: nkb
          IMPLICIT NONE
-         INTEGER     :: ngwx, nudx, nbsp, nspin
-         INTEGER     :: nupdwn( nspin ), iupdwn( nspin )
+         INTEGER,    INTENT(IN)     :: ngwx, nbsp, nspin
+         INTEGER,    INTENT(IN)     :: nupdwn( nspin ), iupdwn( nspin )
+         INTEGER,     INTENT(IN)    :: descla(:,:)
          COMPLEX(DP) :: cp(ngwx,nbsp), phi(ngwx,nbsp), eigr(ngwx,nat)
-         REAL(DP)    :: x0( nudx, nudx, nspin ), diff, ccc
+         REAL(DP)    :: x0( :, :, : ), diff, ccc
          INTEGER     :: iter
          REAL(DP)    :: bephi(nkb,nbsp), becp(nkb,nbsp)
       END SUBROUTINE
    END INTERFACE
 
+   INTERFACE ortho_gamma
+      SUBROUTINE ortho_gamma_x &
+         ( iopt, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
+           x0, nx0, descla, diff, iter, n, nss, istart )
+         USE kinds,          ONLY: DP
+         IMPLICIT NONE
+         INTEGER,  INTENT(IN)  :: iopt
+         INTEGER,  INTENT(IN)  :: ngwx, nkbx, nx0
+         INTEGER,  INTENT(IN)  :: n, nss, istart
+         COMPLEX(DP) :: phi( ngwx, n ), cp( ngwx, n )
+         REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
+         REAL(DP)    :: qbephi( nkbx, n ), qbecp( nkbx, n )
+         REAL(DP)    :: x0( nx0, nx0 )
+         INTEGER,  INTENT(IN)  :: descla( : )
+         INTEGER,  INTENT(OUT) :: iter
+         REAL(DP), INTENT(OUT) :: diff
+      END SUBROUTINE
+   END INTERFACE
 
    INTERFACE v2gc
       SUBROUTINE v2gc_x( v2xc, grho, rhor, vpot )

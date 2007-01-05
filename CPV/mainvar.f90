@@ -67,6 +67,10 @@ MODULE cp_main_variables
   !
   REAL(DP), ALLOCATABLE :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
   !
+  INTEGER,  ALLOCATABLE :: descla(:,:) ! descriptor of the lambda distribution
+                                       ! see descriptors_module
+  INTEGER :: nlax = 0                  ! leading dimension of the distribute lambda matrix
+  !
   REAL(DP) :: acc(nacx)
   REAL(DP) :: acc_this_run(nacx)
   !
@@ -104,23 +108,27 @@ MODULE cp_main_variables
     SUBROUTINE allocate_mainvar( ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                  nr1x, nr2x, npl, nnr, nnrsx, nat, nax,  &
                                  nsp, nspin, n, nx, n_emp, nupdwn, nhsa, &
-                                 gzero, smd )
+                                 gzero, nudx, smd )
       !------------------------------------------------------------------------
+      !
+      USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm
+      USE mp,          ONLY: mp_max, mp_min
+      USE descriptors, ONLY: descla_siz_ , descla_init , nlax_
       !
       INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                        nnr, nnrsx, nat, nax, nsp, nspin, &
                                        n, nx, n_emp, nhsa, nr1x, nr2x, npl
       INTEGER,           INTENT(IN) :: nupdwn(:)
       LOGICAL,           INTENT(IN) :: gzero
+      INTEGER,           INTENT(IN) :: nudx
       LOGICAL, OPTIONAL, INTENT(IN) :: smd
-      LOGICAL                       :: nosmd
       !
-      INTEGER                       :: nudx
+      LOGICAL  :: nosmd
+      INTEGER  :: iss
       !
       ! ... allocation of all arrays not already allocated in init and nlinit
       !
       nosmd = .TRUE.
-      nudx = MAXVAL( nupdwn( 1:nspin ) )
       !
       IF ( PRESENT( smd ) ) THEN
          !
@@ -159,6 +167,19 @@ MODULE cp_main_variables
       !
       ALLOCATE( rhor( nnr, nspin ) )
       !
+      !  Compute local dimensions for lambda matrixes
+      !
+      ALLOCATE( descla( descla_siz_ , nspin ) )
+      !
+      nlax = 0
+      DO iss = 1, nspin
+         CALL descla_init( descla( :, iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm )
+         nlax = MAX( nlax, descla( nlax_ , iss ) )
+      END DO
+      !
+      !  ... End with lambda dimensins
+      !
+      !
       IF( program_name == 'CP90' ) THEN
          !
          ALLOCATE( rhopr( nnr,   nspin ) )
@@ -176,16 +197,16 @@ MODULE cp_main_variables
          !
          IF ( nosmd ) THEN
             !
-            ALLOCATE( lambda(  nudx, nudx, nspin ) )
-            ALLOCATE( lambdam( nudx, nudx, nspin ) )
-            ALLOCATE( lambdap( nudx, nudx, nspin ) )
+            ALLOCATE( lambda(  nlax, nlax, nspin ) )
+            ALLOCATE( lambdam( nlax, nlax, nspin ) )
+            ALLOCATE( lambdap( nlax, nlax, nspin ) )
             !
          END IF
          !
       ELSE IF( program_name == 'FPMD' ) THEN
          !
          ALLOCATE( vpot( nnr, nspin ) )
-         ALLOCATE( lambda(  nudx, nudx, nspin ) )
+         ALLOCATE( lambda(  nlax, nlax, nspin ) )
          !
       END IF
       !
@@ -231,9 +252,75 @@ MODULE cp_main_variables
       IF( ALLOCATED( kedtaug ) ) DEALLOCATE( kedtaug )
       IF( ALLOCATED( vpot ) )    DEALLOCATE( vpot )
       IF( ALLOCATED( taub ) )    DEALLOCATE( taub )
+      IF( ALLOCATED( descla ) )  DEALLOCATE( descla )
       !
       RETURN
       !
     END SUBROUTINE deallocate_mainvar
+    !
+    !
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE distribute_lambda( lambda_repl, lambda_dist, desc )
+       USE descriptors, ONLY: lambda_node_ , ilar_ , ilac_ , nlac_ , nlar_
+       REAL(DP), INTENT(IN)  :: lambda_repl(:,:)
+       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+       INTEGER,  INTENT(IN)  :: desc(:)
+       INTEGER :: i, j, ic, ir
+       IF( desc( lambda_node_ ) > 0 ) THEN
+          ir = desc( ilar_ )       
+          ic = desc( ilac_ )       
+          DO j = 1, desc( nlac_ )
+             DO i = 1, desc( nlar_ )
+                lambda_dist( i, j ) = lambda_repl( i + ir - 1, j + ic - 1 )
+             END DO
+          END DO
+       END IF
+       RETURN
+    END SUBROUTINE distribute_lambda
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE collect_lambda( lambda_repl, lambda_dist, desc )
+       USE mp_global,   ONLY: intra_image_comm
+       USE mp,          ONLY: mp_sum
+       USE descriptors, ONLY: lambda_node_ , ilar_ , ilac_ , nlac_ , nlar_
+       REAL(DP), INTENT(OUT) :: lambda_repl(:,:)
+       REAL(DP), INTENT(IN)  :: lambda_dist(:,:)
+       INTEGER,  INTENT(IN)  :: desc(:)
+       INTEGER :: i, j, ic, ir
+       lambda_repl = 0.0d0
+       IF( desc( lambda_node_ ) > 0 ) THEN
+          ir = desc( ilar_ )       
+          ic = desc( ilac_ )       
+          DO j = 1, desc( nlac_ )
+             DO i = 1, desc( nlar_ )
+                lambda_repl( i + ir - 1, j + ic - 1 ) = lambda_dist( i, j )
+             END DO
+          END DO
+       END IF
+       CALL mp_sum( lambda_repl, intra_image_comm )
+       RETURN
+    END SUBROUTINE collect_lambda
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE setval_lambda( lambda_dist, i, j, val, desc )
+       USE descriptors, ONLY: lambda_node_ , ilar_ , ilac_ , nlac_ , nlar_
+       REAL(DP), INTENT(OUT) :: lambda_dist(:,:)
+       INTEGER,  INTENT(IN)  :: i, j
+       REAL(DP), INTENT(IN)  :: val
+       INTEGER,  INTENT(IN)  :: desc(:)
+       IF( desc( lambda_node_ ) > 0 ) THEN
+          IF( ( i >= desc( ilar_ ) ) .AND. ( i - desc( ilar_ ) + 1 <= desc( nlar_ ) ) ) THEN
+             IF( ( j >= desc( ilac_ ) ) .AND. ( j - desc( ilac_ ) + 1 <= desc( nlac_ ) ) ) THEN
+                lambda_dist( i - desc( ilar_ ) + 1, j - desc( ilac_ ) + 1 ) = val
+             END IF
+          END IF
+       END IF
+       RETURN
+    END SUBROUTINE setval_lambda
+    !
     !
 END MODULE cp_main_variables

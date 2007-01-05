@@ -88,7 +88,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE cp_interfaces,            ONLY : runcp_uspp, strucf
   USE cp_main_variables,        ONLY : ei1, ei2, ei3, eigr, sfac, irb, taub, &
                                        eigrb, rhog, rhor, rhos, becdr, bephi, &
-                                       becp, ema0bg, allocate_mainvar, nfi
+                                       becp, ema0bg, allocate_mainvar, nfi, descla
   USE fft_base,                 ONLY : dfftp
   USE orthogonalize_base,       ONLY : updatc, calphi
   use cp_interfaces,            only : rhoofr, ortho, wave_rand_init, elec_fakekine
@@ -353,7 +353,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
 
   CALL allocate_mainvar &
        ( ngw, ngwt, ngb, ngs, ngm, nr1, nr2, nr3, dfftp%nr1x, dfftp%nr1x, dfftp%npl, &
-         nnrx, nnrsx, nat, nax, nsp, nspin, nbsp, nbspx, 0, nupdwn, nkb, gzero, smd = .TRUE. )
+         nnrx, nnrsx, nat, nax, nsp, nspin, nbsp, nbspx, 0, nupdwn, nkb, gzero,      &
+         nudx, smd = .TRUE. )
   !
   !
   CALL allocate_local_pseudo( ngs, nsp )
@@ -610,8 +611,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF(tortho) THEN
            CALL ortho  ( eigr, rep_el(sm_k)%c0, rep_el(sm_k)%phi, ngw, &
-                         rep_el(sm_k)%lambda, SIZE( rep_el(sm_k)%lambda, 1 ), &
-                         bigr, iter, ccc(sm_k), bephi, becp, nbsp, nspin, nupdwn, iupdwn)
+                         rep_el(sm_k)%lambda, descla, &
+                         bigr, iter, ccc(sm_k), bephi, becp, nbsp, nspin, nupdwn, iupdwn )
         ELSE
            CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%c0, ngw, nbsp )
            !
@@ -636,7 +637,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            DO iss = 1, nspin
               CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda(:,:,iss), SIZE( rep_el(sm_k)%lambda, 1 ), &
                         rep_el(sm_k)%phi, SIZE( rep_el(sm_k)%phi, 1 ), bephi, SIZE(bephi,1), &
-                        becp,rep_el(sm_k)%bec,rep_el(sm_k)%c0, nupdwn(iss), iupdwn(iss) )
+                        becp,rep_el(sm_k)%bec,rep_el(sm_k)%c0, nupdwn(iss), iupdwn(iss), descla(:,iss) )
            END DO
            !
            IF(ionode) WRITE( sm_file,*) ' out from updatc'
@@ -1138,7 +1139,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF(tortho) THEN
            CALL ortho ( eigr, rep_el(sm_k)%cm, rep_el(sm_k)%phi, ngw, &
-                        rep_el(sm_k)%lambda, SIZE( rep_el(sm_k)%lambda, 1 ), &
+                        rep_el(sm_k)%lambda, descla, &
                         bigr, iter, ccc(sm_k), bephi, becp, nbsp, nspin, nupdwn, iupdwn )
         ELSE
            CALL gram( vkb, rep_el(sm_k)%bec, nkb, rep_el(sm_k)%cm, ngw, nbsp )
@@ -1155,7 +1156,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            DO iss = 1, nspin
               CALL updatc( ccc(sm_k), nbsp, rep_el(sm_k)%lambda(:,:,iss), SIZE(rep_el(sm_k)%lambda,1), &
                         rep_el(sm_k)%phi, SIZE(rep_el(sm_k)%phi,1), bephi, SIZE(bephi,1), &
-                        becp, rep_el(sm_k)%bec, rep_el(sm_k)%cm, nupdwn(iss), iupdwn(iss) )
+                        becp, rep_el(sm_k)%bec, rep_el(sm_k)%cm, nupdwn(iss), iupdwn(iss), descla(:,iss) )
            END DO
         END IF
         !

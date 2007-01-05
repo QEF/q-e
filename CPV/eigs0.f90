@@ -6,28 +6,34 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-   subroutine eigs0( ei, tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nudx )
+   subroutine eigs0( ei, tprint, nspin, nupdwn, iupdwn, lf, f, nx, lambda, nudx, desc )
 !-----------------------------------------------------------------------
 !     computes eigenvalues (wr) of the real symmetric matrix lambda
 !     Note that lambda as calculated is multiplied by occupation numbers
 !     so empty states yield zero. Eigenvalues are printed out in eV
 !
-      use kinds, only            : DP
-      use io_global, only        : stdout
-      use constants, only        : autoev
-      use parallel_toolkit, only : dspev_drv
-      USE sic_module, only       : self_interaction
+      use kinds,             only : DP
+      use io_global,         only : stdout
+      use constants,         only : autoev
+      use parallel_toolkit,  only : dspev_drv
+      USE sic_module,        only : self_interaction
+      USE cp_main_variables, only : nlax
+      USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_
+      USE mp,                only : mp_sum
+      USE mp_global,         only : intra_image_comm
 
       implicit none
 ! input
       logical, intent(in) :: tprint, lf
       integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin)
-      real(DP), intent(in) :: lambda( nudx, nudx, nspin ), f( nx )
+      integer, intent(in) :: desc( descla_siz_ , 2 )
+      real(DP), intent(in) :: lambda( nlax, nlax, nspin ), f( nx )
       real(DP), intent(out) :: ei( nudx, nspin )
 ! local variables
       real(DP), allocatable :: lambdar(:), wr(:)
       real(DP) zr(1)
       integer :: iss, j, i, ierr, k, n, nspin_eig, npaired
+      INTEGER :: ir, ic, nr, nc
       logical :: tsic
 !
       tsic = ( ABS( self_interaction) /= 0 )
@@ -50,14 +56,30 @@
 
          allocate( lambdar( n * ( n + 1 ) / 2 ), wr(n) )
 
+         lambdar = 0.0d0
+
          k = 0
 
-         do i = 1, n
-            do j = i, n
-               k = k + 1
-               lambdar( k ) = lambda( j, i, iss )
+         !  lambda is distributed across processors
+
+         IF( desc( lambda_node_ , iss ) > 0 ) THEN
+            ir = desc( ilar_ , iss )
+            ic = desc( ilac_ , iss )
+            nr = desc( nlar_ , iss )
+            nc = desc( nlac_ , iss )
+            do i = 1, n
+               do j = i, n
+                  k = k + 1
+                  IF( i >= ic .AND. i - ic + 1 <= nc ) THEN
+                     IF( j >= ir .AND. j - ir + 1 <= nr ) THEN
+                        lambdar( k ) = lambda( j - ir + 1, i - ic + 1, iss )
+                     END IF
+                  END IF
+               end do
             end do
-         end do
+         END IF
+
+         CALL mp_sum( lambdar, intra_image_comm )
 
          CALL dspev_drv( 'N', 'L', n, lambdar, wr, zr, 1 )
 
@@ -267,12 +289,13 @@
    SUBROUTINE cp_eigs_x( nfi, lambdap, lambda )
 !-----------------------------------------------------------------------
 
-      USE kinds,            ONLY: DP
-      use ensemble_dft,     only: tens
-      use electrons_base,   only: nx => nbspx, f, nspin
-      use electrons_base,   only: iupdwn, nupdwn, nudx
-      use electrons_module, only: ei
-      use io_global,        only: stdout
+      USE kinds,             ONLY: DP
+      use ensemble_dft,      only: tens
+      use electrons_base,    only: nx => nbspx, f, nspin
+      use electrons_base,    only: iupdwn, nupdwn, nudx
+      use electrons_module,  only: ei
+      use io_global,         only: stdout
+      USE cp_main_variables, only: descla
 
       IMPLICIT NONE
 
@@ -280,9 +303,9 @@
       REAL(DP) :: lambda( :, :, : ), lambdap( :, :, : )
 
       if( .not. tens ) then
-         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .true. , f, nx, lambda, nudx )
+         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .true. , f, nx, lambda, nudx, descla )
       else
-         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .false. , f, nx, lambdap, nudx )
+         call eigs0( ei, .false. , nspin, nupdwn, iupdwn, .false. , f, nx, lambdap, nudx, descla )
       endif
 
       WRITE( stdout, * )

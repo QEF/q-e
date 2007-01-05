@@ -1531,121 +1531,33 @@ END FUNCTION
 !     contribution to fion due to the orthonormality constraint
 ! 
 !
-      USE kinds,          ONLY: DP
-      USE io_global,      ONLY: stdout
-      USE ions_base,      ONLY: na, nsp, nat
-      USE uspp,           ONLY: nhsa=>nkb, qq
-      USE uspp_param,     ONLY: nhm, nh
-      USE cvan,           ONLY: ish, nvb
-      USE electrons_base, ONLY: nbspx, nbsp, nudx, nspin, iupdwn, nupdwn
-      USE constants,      ONLY: pi, fpi
+      USE kinds,             ONLY: DP
+      USE io_global,         ONLY: stdout
+      USE ions_base,         ONLY: na, nsp, nat
+      USE uspp,              ONLY: nhsa=>nkb, qq
+      USE uspp_param,        ONLY: nhm, nh
+      USE cvan,              ONLY: ish, nvb
+      USE electrons_base,    ONLY: nbspx, nbsp, nudx, nspin, iupdwn, nupdwn
+      USE constants,         ONLY: pi, fpi
+      USE cp_main_variables, ONLY: nlax, descla
+      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_
+      USE mp,                ONLY: mp_sum
+      USE mp_global,         ONLY: intra_image_comm
 !
       IMPLICIT NONE
-      REAL(DP) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nudx,nudx,nspin)
+      REAL(DP) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nlax,nlax,nspin)
       REAL(DP) fion(3,nat)
 !
-      INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart
+      INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic
       REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
-
-#if defined __TRUE_BGL
-      COMPLEX*16 :: B, A1, A2, A3, C1, C2, C3
-      INTEGER :: FLP, N 
-#endif
-
+      REAL(DP), ALLOCATABLE :: fion_tmp(:,:)
       !
       CALL start_clock( 'nlfl' )
       !
-#if defined __TRUE_BGL
-      ALLOCATE( temp( nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( nudx, nhm ) )
-
-
-      do k=1, 3
-
-         isa = 0
-
-         do is=1,nvb 
-
-            do ia=1,na(is)
-
-               isa = isa + 1  
-!                       
-               DO iss = 1, nspin
-                  !
-                  nss = nupdwn( iss )
-                  istart = iupdwn( iss )
-
-                  tmpbec = 0.d0  
-                  tmpdr  = 0.d0  
-!                       
-                  do iv=1,nh(is) 
-                     do jv=1,nh(is)
-                        inl=ish(is)+(jv-1)*na(is)+ia
-                        if(abs(qq(iv,jv,is)).gt.1.e-5) then
-                           do i=1,nss
-                              tmpbec(iv,i)=tmpbec(iv,i)                    &
-     &                          + qq(iv,jv,is)*bec(inl,i+istart-1)
-                           end do
-                        endif
-                     end do
-                  end do
-
-                  DO iv=1,nh(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     DO i=1,nss
-                        tmpdr(i,iv)=becdr(inl,i+istart-1,k)
-                     END DO
-                  END DO
-
-
-                  if ( nh(is) .gt. 0 )then
-!
-
-                     CALL DGEMM &
-                          ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
-!
-!                     temp = 0d0
-!                     call MXMA                                             &
-!     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
-!
-                     !---------------------------------------------------------
-                     !BG/L 440d specific implementation:
-                     !At each inner i-loop 1 pair of two consequtive elements
-                     !of the j-th column of matrix temp are performed.
-                     !Then, a parallel fused multiply add operation is issued
-                     !Any remaining data is handled after the loop
-                     !---------------------------------------------------------
-                     B =  (0D0,0D0)
-                     A1 = (0D0,0D0)
-                     C1 = (0D0,0D0)
-   
-                     do j=1,nss
-                        do i=1,nss,2
-                           A1 =  LOADFP(temp(i,j))
-                           B  =  LOADFP(lambda(i,j,iss))
-                           B  =  FPMUL(B,(2D0,2D0))
-                           C1 =  FPMADD(C1,A1,B)
-                        end do
-                        !-------------------------
-                        !Handle any remaining data
-                        !-------------------------
-                        IF (MOD(nss,2).NE.0) THEN
-                           fion(k,isa) = fion(k,isa) + 2D0*temp(nss,j)*lambda(nss,j,iss)
-                        ENDIF
-                     end do
-                     fion(k,isa) =  fion(k,isa) + DBLE(C1)+AIMAG(C1)
-                  endif
-
-               end do
-!
-            end do
-
-         end do
-
-      end do
-
-
-#else
-
+      ALLOCATE( fion_tmp( 3, nat ) )
+      !
+      fion_tmp = 0.0d0
+      !
 
       ALLOCATE( temp( nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( nudx, nhm ) )
 
@@ -1684,18 +1596,19 @@ END FUNCTION
 !
                   IF(nh(is).GT.0)THEN
                      !
-!                     temp = 0.d0
-!                     CALL MXMA                                             &
-!     &                 (tmpdr,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
-!
                      CALL DGEMM &
                           ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
 !
-                     DO j=1,nss
-                        DO i=1,nss
-                           fion(k,isa) = fion(k,isa) + 2D0*temp(i,j)*lambda(i,j,iss)
+                     IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                        ir = descla( ilar_ , iss )
+                        ic = descla( ilac_ , iss )
+                        DO j = 1, descla( nlac_ , iss )
+                           DO i = 1, descla( nlar_ , iss )
+                              fion_tmp(k,isa) = fion_tmp(k,isa) + &
+                                                2D0 * temp( i+ir-1, j+ic-1 ) * lambda(i,j,iss)
+                           END DO
                         END DO
-                     END DO
+                     END IF
 !
                   ENDIF
 
@@ -1705,11 +1618,13 @@ END FUNCTION
          END DO
       END DO
       !
-
-#endif
-
-
       DEALLOCATE( temp, tmpbec, tmpdr )
+      !
+      CALL mp_sum( fion_tmp, intra_image_comm )
+      !
+      fion = fion + fion_tmp
+      !
+      DEALLOCATE( fion_tmp )
       !
       CALL stop_clock( 'nlfl' )
       !

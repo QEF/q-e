@@ -41,8 +41,6 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
-descriptors.o : io_global.o
-descriptors.o : parallel_types.o
 electrons_base.o : constants.o
 electrons_base.o : control_flags.o
 electrons_base.o : io_global.o
@@ -184,6 +182,7 @@ pseudo_types.o : kind.o
 pseudo_types.o : parameters.o
 pseudodata.o : kind.o
 pseudodata.o : parameters.o
+ptoolkit.o : descriptors.o
 ptoolkit.o : io_global.o
 ptoolkit.o : kind.o
 ptoolkit.o : mp.o

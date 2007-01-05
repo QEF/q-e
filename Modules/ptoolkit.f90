@@ -3894,11 +3894,19 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
 END SUBROUTINE para_ztrtri
 
 !
-SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, dims, coor, comm )
+!
+!  Cannon's algorithms for parallel matrix multiplication
+!  written by Carlo Cavazzoni
+!  
+!
+!
+SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc, desc )
    !
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
-   USE kinds,     ONLY : DP
+   USE kinds,       ONLY : DP
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , &
+                           la_comm_ , lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
    !
    IMPLICIT NONE
    !
@@ -3907,8 +3915,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    REAL(DP), INTENT(IN) :: alpha, beta
    INTEGER, INTENT(IN) :: lda, ldb, ldc
    REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-   INTEGER, INTENT(IN) :: dims(2), coor(2)
-   INTEGER, INTENT(IN) :: comm
+   INTEGER, INTENT(IN) :: desc(*)
    !
    !  performs one of the matrix-matrix operations
    !
@@ -3930,6 +3937,8 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    integer :: np
    integer :: i, j, nr, nc, nb, iter, rowid, colid
    logical :: ta, tb
+   INTEGER :: comm
+   !
    !
    real(DP), allocatable :: bblk(:,:), ablk(:,:)
    !
@@ -3939,14 +3948,13 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !
 #endif
    !
-   integer :: ldim_block, gind_block
-   external :: ldim_block, gind_block
-   
-   IF( coor(1) < 0 ) THEN
+   IF( desc( lambda_node_ ) < 0 ) THEN
       RETURN
    END IF
 
-   IF( dims(1) == 1 ) THEN 
+   np    = desc( la_npr_ )
+
+   IF( np == 1 ) THEN 
       !
       !  quick return if only one processor is used 
       !
@@ -3956,21 +3964,20 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
       !
    END IF
 
-   rowid = coor(1)
-   colid = coor(2)
-   np    = dims(1)
+   comm  = desc( la_comm_ )
+   rowid = desc( la_myr_  )
+   colid = desc( la_myc_  )
 
-   IF( dims(1) /= dims(2) ) THEN
+   IF( np /= desc( la_npc_ ) ) THEN
       CALL errore( ' sqr_mm_cannon ', ' only square processor grid is allowed ', 1 )
    END IF
 
-   nb = n / np
-   IF( MOD( n, np ) /= 0 ) nb = nb + 1
    !
    !  Compute the size of the local block
    !
-   nr = ldim_block( n, np, rowid )
-   nc = ldim_block( n, np, colid )
+   nr = desc( nlar_ ) 
+   nc = desc( nlac_ ) 
+   nb = desc( nlax_ )
    !
    allocate( ablk( nb, nb ) )
    DO j = 1, nc
@@ -3978,8 +3985,17 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
          ablk( i, j ) = a( i, j )
       END DO
    END DO
-   IF( nc < nb ) ablk( :, nb )  = 0.0d0
-   IF( nr < nb ) ablk( nb, : )  = 0.0d0
+   DO j = nc+1, nb
+      DO i = 1, nb
+         ablk( i, j ) = 0.0d0
+      END DO
+   END DO
+   DO j = 1, nb
+      DO i = nr+1, nb
+         ablk( i, j ) = 0.0d0
+      END DO
+   END DO
+   !
    !
    allocate( bblk( nb, nb ) )
    DO j = 1, nc
@@ -3987,8 +4003,17 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
          bblk( i, j ) = b( i, j )
       END DO
    END DO
-   IF( nc < nb ) bblk( :, nb )  = 0.0d0
-   IF( nr < nb ) bblk( nb, : )  = 0.0d0
+   DO j = nc+1, nb
+      DO i = 1, nb
+         bblk( i, j ) = 0.0d0
+      END DO
+   END DO
+   DO j = 1, nb
+      DO i = nr+1, nb
+         bblk( i, j ) = 0.0d0
+      END DO
+   END DO
+   !
    !
    ta = ( TRANSA == 'T' .OR. TRANSA == 't' )
    tb = ( TRANSB == 'T' .OR. TRANSB == 't' )
@@ -4193,19 +4218,20 @@ END SUBROUTINE
 !
 !
 
-SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, dims, coor, comm )
+SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    !
    !  Parallel square matrix transposition with Cannon's algorithm
    !
-   USE kinds,     ONLY : DP
+   USE kinds,       ONLY : DP
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , &
+                           la_comm_ , lambda_node_ , la_npr_ , la_myr_ , la_myc_
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP)            :: a(lda,*), b(ldb,*)
-   INTEGER, INTENT(IN) :: dims(2), coor(2)
-   INTEGER, INTENT(IN) :: comm
+   INTEGER, INTENT(IN) :: desc(*)
    !
 #if defined (__MPI)
    !
@@ -4216,6 +4242,7 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, dims, coor, comm )
    INTEGER :: ierr
    INTEGER :: np, rowid, colid
    INTEGER :: i, j, nr, nc, nb
+   INTEGER :: comm
    !
    REAL(DP), ALLOCATABLE :: ablk(:,:)
    !
@@ -4225,28 +4252,26 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, dims, coor, comm )
    !
 #endif
    !
-   integer :: ldim_block, gind_block
-   external :: ldim_block, gind_block
-   
-   IF( coor(1) < 0 ) THEN
+   IF( desc( lambda_node_ ) < 0 ) THEN
       RETURN
    END IF
 
-   IF( dims(1) == 1 ) THEN
+   IF( desc( la_npr_ ) == 1 ) THEN
       CALL mytranspose( a, lda, b, ldb, n, n )
+      RETURN
    END IF
 
-   rowid = coor(1)
-   colid = coor(2)
-   np    = dims(1)
+   comm = desc( la_comm_ )
 
-   nb = n / np
-   IF( MOD( n, np ) /= 0 ) nb = nb + 1
+   rowid = desc( la_myr_ )
+   colid = desc( la_myc_ )
+   np    = desc( la_npr_ )
    !
    !  Compute the size of the local block
    !
-   nr = ldim_block( n, np, rowid )
-   nc = ldim_block( n, np, colid )
+   nr = desc( nlar_ ) 
+   nc = desc( nlac_ ) 
+   nb = desc( nlax_ )
    !
    allocate( ablk( nb, nb ) )
    DO j = 1, nc
@@ -4254,8 +4279,16 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, dims, coor, comm )
          ablk( i, j ) = a( i, j )
       END DO
    END DO
-   IF( nc < nb ) ablk( :, nb )  = 0.0d0
-   IF( nr < nb ) ablk( nb, : )  = 0.0d0
+   DO j = nc+1, nb
+      DO i = 1, nb
+         ablk( i, j ) = 0.0d0
+      END DO
+   END DO
+   DO j = 1, nb
+      DO i = nr+1, nb
+         ablk( i, j ) = 0.0d0
+      END DO
+   END DO
    !
    !
    CALL exchange_block( ablk )
@@ -4305,21 +4338,24 @@ END SUBROUTINE
 !
 !
 
-SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, dims, coor, comm_b )
+SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    !
    !  Parallel square matrix redistribution.
    !  A (input) is cyclically distributed by rows across processors
    !  B (output) is distributed by block across 2D processors grid
    !
-   USE kinds,     ONLY : DP
+   USE kinds,       ONLY : DP
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
+                           descla_siz_
    !
    IMPLICIT NONE
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP) :: a(lda,*), b(ldb,*)
-   INTEGER, INTENT(IN) :: nproc, me, dims(2), coor(2)
-   INTEGER, INTENT(IN) :: comm_a, comm_b
+   INTEGER  :: desc(*)
+   INTEGER, INTENT(IN) :: nproc, me
+   INTEGER, INTENT(IN) :: comm_a
    !
 #if defined (__MPI)
    !
@@ -4328,68 +4364,41 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, dims, coor, com
 #endif
    !
    integer :: ierr, itag
-   integer :: np, rowid, colid, ip, iprow, ipcol
+   integer :: np, ip
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
    !
    real(DP), allocatable :: rcvbuf(:,:,:)
-   real(DP), allocatable :: sndbuf(:,:,:)
-   integer, allocatable :: irhand(:)
-   integer, allocatable :: ishand(:)
-   logical, allocatable :: rtest(:), rdone(:)
+   real(DP), allocatable :: sndbuf(:,:)
+   integer, allocatable :: ip_desc(:,:)
+   !
+   character(len=256) :: msg
    !
 #if defined (__MPI)
-   !
-   integer :: istatus( MPI_STATUS_SIZE )
-   !
-#endif
-   !
-   integer :: ldim_block, gind_block
-   external :: ldim_block, gind_block
-   integer :: ldim_cyclic, gind_cyclic, owner_cyclic
-   external :: ldim_cyclic, gind_cyclic, owner_cyclic
-   
 
-#if defined (__MPI)
+   np = desc( la_npr_ )
 
-   np = dims(1)
+   ALLOCATE( ip_desc( descla_siz_ , nproc ) )
+
+   CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
 
    !  Compute the size of the block
    !
-   nb = n / np
-   IF( MOD( n, np ) /= 0 ) nb = nb + 1
+   nb = desc( nlax_ )
    !
+   nbuf = (nb/nproc+2) * nb
    !
-   nbuf = (nb/nproc+1) * nb
-   !
-   ALLOCATE( sndbuf( nb/nproc+1, nb, np*np ) )
-   ALLOCATE( ishand( np*np ) )
-   !
-   IF( coor(1) >= 0 ) THEN
-      ALLOCATE( rcvbuf( nb/nproc+1, nb, nproc ) )
-      ALLOCATE( irhand( nproc ) )
-      ALLOCATE( rtest( nproc ) )
-      ALLOCATE( rdone( nproc ) )
-   END IF
+   ALLOCATE( sndbuf( nb/nproc+2, nb ) )
+   ALLOCATE( rcvbuf( nb/nproc+2, nb, nproc ) )
    
    DO ip = 0, nproc - 1
       !
-      IF( coor(1) >= 0 ) THEN
-         !
-         itag = coor(2) + coor(1) * np + nproc * ip
-         !
-         call mpi_irecv( rcvbuf(1,1,ip+1), nbuf, MPI_DOUBLE_PRECISION, ip, itag, &
-                comm_a, irhand(ip+1), ierr )
-      END IF
-      !
-      IF( ip < np*np ) THEN
+      IF( ip_desc( lambda_node_ , ip + 1 ) > 0 ) THEN
 
-         iprow = ip / np
-         ipcol = MOD( ip, np )
-         ip_nr = ldim_block( n, np, iprow )
-         ip_nc = ldim_block( n, np, ipcol )
-         ip_ir = gind_block( 1, n, np, iprow )
-         ip_ic = gind_block( 1, n, np, ipcol )
+         ip_nr = ip_desc( nlar_ , ip + 1) 
+         ip_nc = ip_desc( nlac_ , ip + 1) 
+         ip_ir = ip_desc( ilar_ , ip + 1) 
+         ip_ic = ip_desc( ilac_ , ip + 1) 
          !
          DO j = 1, ip_nc
             jj = j + ip_ic - 1
@@ -4397,69 +4406,53 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, dims, coor, com
             DO i = 1, ip_nr
                ii = i + ip_ir - 1
                IF( MOD( ii - 1, nproc ) == me ) THEN
-                  sndbuf( il, j, ip+1 ) = a( ( ii - 1 )/nproc + 1, jj )
+                  ! IF( il > SIZE( sndbuf, 1 ) ) CALL errore( ' debug ', msg , 1 )
+                  ! IF( j  > SIZE( sndbuf, 2 ) ) CALL errore( ' debug ', ' err ', 2 )
+                  ! IF( ( ii - 1 )/nproc + 1  > SIZE( a, 1 ) ) CALL errore( ' debug ', ' err ', 3 )
+                  ! IF( jj  > n ) CALL errore( ' debug ', ' err ', 4 )
+                  sndbuf( il, j ) = a( ( ii - 1 )/nproc + 1, jj )
                   il = il + 1
                END IF 
             END DO
          END DO
    
-         itag = ip + nproc * me
-   
-         CALL mpi_isend( sndbuf(1,1,ip+1), nbuf, MPI_DOUBLE_PRECISION, ip, itag, &
-                   comm_a, ishand(ip+1), ierr )
       END IF
+
+      CALL mpi_gather( sndbuf, nbuf, mpi_double_precision, &
+                       rcvbuf, nbuf, mpi_double_precision, ip, comm_a, ierr )
      
    END DO
 
-   IF( coor(1) >= 0 ) THEN
-      !
-      nr  = ldim_block( n, np, coor(1) )
-      nc  = ldim_block( n, np, coor(2) )
-      !
-      ir  = gind_block( 1, n, np, coor(1) )
-      ic  = gind_block( 1, n, np, coor(2) )
-      !
-      rdone = .FALSE.
 
-10    CONTINUE
-
+   IF( desc( lambda_node_ ) > 0 ) THEN
+      !
+      nr  = desc( nlar_ ) 
+      nc  = desc( nlac_ )
+      ir  = desc( ilar_ )
+      ic  = desc( ilac_ )
+      !
       DO ip = 0, nproc - 1
-         !
-         CALL mpi_test( irhand(ip+1), rtest(ip+1), istatus, ierr )
-         !
-         IF( rtest(ip+1) .AND. .NOT. rdone(ip+1) ) THEN
-            DO j = 1, nc
-               il = 1
-               DO i = 1, nr
-                  ii = i + ir - 1
-                  IF( MOD( ii - 1, nproc ) == ip ) THEN
-                     b( i, j ) = rcvbuf( il, j, ip+1 )
-                     il = il + 1
-                  END IF 
-               END DO
+         DO j = 1, nc
+            il = 1
+            DO i = 1, nr
+               ii = i + ir - 1
+               IF( MOD( ii - 1, nproc ) == ip ) THEN
+                  ! IF( i > SIZE( b, 1 ) ) CALL errore( ' debug ', ' err ', 5 )
+                  ! IF( j > SIZE( b, 1 ) ) CALL errore( ' debug ', ' err ', 6 )
+                  ! IF( il  > SIZE( rcvbuf, 1 ) ) CALL errore( ' debug ', ' err ', 7 )
+                  ! IF( j > SIZE( rcvbuf, 2) ) CALL errore( ' debug ', ' err ', 8 )
+                  b( i, j ) = rcvbuf( il, j, ip+1 )
+                  il = il + 1
+               END IF 
             END DO
-            rdone(ip+1) = .TRUE.
-         END IF
+         END DO
       END DO
-   
-      IF( .NOT. ALL( rtest ) ) GO TO 10
       !
    END IF
- 
    !
-   DO ip = 0, np*np - 1
-      CALL mpi_wait( ishand( ip+1 ), istatus, ierr)
-   END DO
-
+   DEALLOCATE( ip_desc )
+   DEALLOCATE( rcvbuf )
    DEALLOCATE( sndbuf )
-   DEALLOCATE( ishand )
-   !
-   IF( coor(1) >= 0 ) THEN
-      DEALLOCATE( rcvbuf )
-      DEALLOCATE( irhand )
-      DEALLOCATE( rtest )
-      DEALLOCATE( rdone )
-   END IF
    
 #else
 

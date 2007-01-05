@@ -180,36 +180,39 @@ subroutine nlfh( bec, dbec, lambda )
   !
   !     contribution to the internal stress tensor due to the constraints
   !
-  USE kinds,          ONLY : DP
-  use cvan,           ONLY : nvb, ish
-  use uspp,           ONLY : nkb, qq
-  use uspp_param,     ONLY : nh, nhm
-  use ions_base,      ONLY : na
-  use electrons_base, ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn
-  use cell_base,      ONLY : omega, h
-  use constants,      ONLY : pi, fpi, au_gpa
-  use stre,           ONLY : stress
-  use io_global,      ONLY : stdout
-  use control_flags,  ONLY : iprsta
+  USE kinds,             ONLY : DP
+  use cvan,              ONLY : nvb, ish
+  use uspp,              ONLY : nkb, qq
+  use uspp_param,        ONLY : nh, nhm
+  use ions_base,         ONLY : na
+  use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn
+  use cell_base,         ONLY : omega, h
+  use constants,         ONLY : pi, fpi, au_gpa
+  use stre,              ONLY : stress
+  use io_global,         ONLY : stdout
+  use control_flags,     ONLY : iprsta
+  USE cp_main_variables, ONLY : nlax, descla
+  USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_
+  USE mp,                ONLY : mp_sum
+  USE mp_global,         ONLY : intra_image_comm
+
 !
   implicit none
 
   real(DP), intent(in) ::  bec( nkb, nbsp ), dbec( nkb, nbsp, 3, 3 )
-  real(DP), intent(in) ::  lambda( nudx, nudx, nspin )
+  real(DP), intent(in) ::  lambda( nlax, nlax, nspin )
 !
   INTEGER  :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
-  INTEGER  :: jnl
+  INTEGER  :: jnl, ir, ic
   REAL(DP) :: fpre(3,3), TT, T1, T2
   !
   REAL(DP), ALLOCATABLE :: tmpbec(:,:), tmpdh(:,:), temp(:,:)
   !
-#if defined __TRUE_BGL
-  COMPLEX*16  :: A1, C1, B
-#endif
   !
   ALLOCATE ( tmpbec(nhm,nudx), tmpdh(nudx,nhm), temp(nudx,nudx) )
   !
-      fpre(:,:) = 0.d0
+  fpre = 0.d0
+  !
       do ii=1,3
          do jj=1,3
 
@@ -245,42 +248,19 @@ subroutine nlfh( bec, dbec, lambda )
 !
                      if(nh(is).gt.0)then
 
-!                        temp = 0.d0
-!                        call MXMA                                          &
-!     &                    (tmpdh,1,nudx,tmpbec,1,nhm,temp,1,nudx,nss,nh(is),nss)
-
                         CALL DGEMM &
                              ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdh, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
 
-#if defined __TRUE_BGL
-                        B  = (0D0,0D0)
-                        A1 = (0D0,0D0)
-                        C1 = (0D0,0D0)
-
-                        do j=1,nss
-                           do i=1,nss,2
-                              A1 =  LOADFP(temp(i,j))
-                              B  =  LOADFP(lambda(i,j,iss))
-                              B  =  FPMUL(B,(2D0,2D0))
-                              C1 =  FPMADD(C1,A1,B)
+                        IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                           ir = descla( ilar_ , iss )
+                           ic = descla( ilac_ , iss )
+                           do j = 1, descla( nlac_ , iss )
+                              do i = 1, descla( nlar_ , iss )
+                                 fpre(ii,jj) = fpre(ii,jj) + &
+                                               2D0 * temp( i+ir-1, j+ic-1 ) * lambda(i,j,iss)
+                              end do
                            end do
-                           !-------------------------
-                           !Handle any remaining data
-                           !-------------------------
-                           IF (MOD(nss,2).NE.0) THEN
-                              fpre(ii,jj) = fpre(ii,jj) + 2D0*temp(nss,j)*lambda(nss,j,iss)
-                           ENDIF
-                        end do
-                        fpre(ii,jj) = fpre(ii,jj) + DBLE(C1)+AIMAG(C1)
-#else
-
-
-                        do j=1,nss
-                           do i=1,nss
-                              fpre(ii,jj) = fpre(ii,jj) + 2D0*temp(i,j)*lambda(i,j,iss)
-                           end do
-                        end do
-#endif
+                        END IF
                        
                      endif
                      !
@@ -293,6 +273,8 @@ subroutine nlfh( bec, dbec, lambda )
          end do
          !
       end do
+
+      CALL mp_sum( fpre, intra_image_comm )
 
       do i=1,3
          do j=1,3
