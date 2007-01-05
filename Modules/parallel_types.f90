@@ -105,6 +105,5 @@
         INTEGER NUMROC
         EXTERNAL NUMROC
 
-      CONTAINS
 
       END MODULE parallel_types
