@@ -67,7 +67,7 @@ SUBROUTINE compute_gw
   ! tsingle must be always true 
 
   USE kinds, ONLY: DP, sgl
-  USE constants, ONLY : eps8
+  USE constants, ONLY : eps8, AUTOEV
   USE cell_base, ONLY: alat, tpiba2, at, bg
   USE char, ONLY: title
   USE symme, ONLY: s, nsym
@@ -424,7 +424,7 @@ SUBROUTINE compute_gw
                 rrhotwx(2)=tpiba2* real(rhotwx(2)*conjg(rhotwx(2)))
                 rrhotwx(3)=tpiba2* real(rhotwx(3)*conjg(rhotwx(3)))
                 WRITE (90,'(1x,3i5,3e16.8,2f8.4)') ik,iband1,iband2,rrhotwx(1),rrhotwx(2), &
-                rrhotwx(3),(eig(iband2,ik)-eig(iband1,ik))*27.21d0, &
+                rrhotwx(3),(eig(iband2,ik)-eig(iband1,ik))*AUTOEV, &
                        (focc(iband1,ik)-focc(iband2,ik))
            ENDIF 
        ENDDO
