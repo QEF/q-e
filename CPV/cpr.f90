@@ -284,10 +284,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      IF ( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
      IF ( ( tfor .OR. tfirst ) .AND. tefield2 ) CALL efield_update2( eigr )
 !@@@@@
-     forceh=0.0
+     forceh=0.0d0
      IF (lda_plus_u) then
-        vupsi=(0.0,0.0)
-        vpsi_con=(0.0,0.0)
+        vupsi=(0.0d0,0.0d0)
+        vpsi_con=(0.0d0,0.0d0)
         CALL new_ns(c0,eigr,vkb,vupsi,vpsi_con,forceh)
 ! vupsi     ! potentials on electrons due to Hubbard U
 ! vpsi_con  ! potentials on electrons due to occupation constraints ...not yet implemented...

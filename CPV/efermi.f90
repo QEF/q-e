@@ -199,7 +199,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      if (2*nbands == nel) then
         DO ISPPT = 1, NKPTS
            DO J = 1,NBANDS
-              OCC(J,ISPPT) = 2.0 
+              OCC(J,ISPPT) = 2.0d0 
            end do
         end do
         return
@@ -208,7 +208,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      if (nbands == nel) then
         DO ISPPT = 1, NKPTS
            DO J = 1,NBANDS
-              OCC(J,ISPPT) = 1.0 
+              OCC(J,ISPPT) = 1.0d0 
            end do
         end do
         return
@@ -478,15 +478,15 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      &    -DEL*WEIGHT(ISPPT)*EXP(-X*X)/(2.D0*SQRT(pi))
         ELSEIF(ISMEAR.EQ.2) THEN
            FI=FERMID(-X)/entrospin
-           IF(ABS(FI) .GT. 1.E-12) THEN
-              IF(ABS(FI-1.D0) .GT. 1.E-12) THEN
+           IF(ABS(FI) .GT. 1.d-12) THEN
+              IF(ABS(FI-1.D0) .GT. 1.d-12) THEN
                  DELCOR=DELCOR+DEL*WEIGHT(ISPPT)* &
                       &     (FI*LOG(FI)+(1.D0-FI)*LOG(1.D0-FI))
               ENDIF
            ENDIF
         ELSEIF(ISMEAR.EQ.3) THEN
-           DELCOR=DELCOR+DEL/2.0*WEIGHT(ISPPT)  &
-     &    *(2.0*x*x-1)*exp(-x*x)/(2.0*sqrt(pi))
+           DELCOR=DELCOR+DEL/2.0d0*WEIGHT(ISPPT)  &
+     &    *(2.0d0*x*x-1.d0)*exp(-x*x)/(2.0d0*sqrt(pi))
         ELSEIF(ISMEAR.EQ.4) THEN
            x=abs(x)
            zeta=eesh*abs(x)*exp(-(x+sq2i)**2)+piesqq*erfc(x+sq2i)

@@ -2959,6 +2959,7 @@ END FUNCTION
       subroutine ldaU_init
 !-----------------------------------------------------------------------
 !
+      USE constants,        ONLY: autoev
       use ldaU,             ONLY: n_atomic_wfc, atomwfc,lda_plus_u, Hubbard_U
       use ldaU,             ONLY: Hubbard_lmax, Hubbard_l, ns, vupsi
       use input_parameters, ONLY: atom_label, lda_plus_u_ => lda_plus_u
@@ -2978,13 +2979,13 @@ END FUNCTION
 
       allocate(vupsi(ngw,nx))
 
-      vupsi=(0.0,0.0)
+      vupsi=(0.0d0,0.0d0)
       ! allocate(vpsi_con(ngw,nx)) ! step_constraint 
       n_atomic_wfc=0
 
       do is=1,nsp
          !
-         Hubbard_U( is ) = Hubbard_U_( is )/27.212
+         Hubbard_U( is ) = Hubbard_U_( is )/autoev
          !
          do nb = 1,nchi(is)
             l = lchi(nb,is)
@@ -3282,6 +3283,7 @@ end function set_Hubbard_l
 ! It also write the occupation number in the output file.
 !
       USE kinds,            only: DP
+      USE constants,        ONLY: autoev
       use electrons_base,   only: nspin
       use electrons_base,   only: n => nbsp 
       use ions_base,        only: na, nat, nsp
@@ -3302,9 +3304,8 @@ end function set_Hubbard_l
   integer, parameter :: ldmx = 7
   real(DP), allocatable   :: ftemp1(:), ftemp2(:)
   real(DP) :: f1 (ldmx * ldmx), vet (ldmx, ldmx)
-  real(DP) :: lambda (ldmx), nsum, nsuma, au
+  real(DP) :: lambda (ldmx), nsum, nsuma
   write (*,*) 'enter write_ns'
-  au=27.212
 
   if ( 2 * Hubbard_lmax + 1 .gt. ldmx ) &
        call errore ('write_ns', 'ldmx is too small', 1)
@@ -3320,9 +3321,9 @@ end function set_Hubbard_l
 !        ('alpha_con(',is,') =', alpha_con(is), is=1,nsp)
 !  endif
   write (6,'(6(a,i2,a,f8.4,6x))') &
-        ('U(',is,') =', Hubbard_U(is) * au, is=1,nsp)
+        ('U(',is,') =', Hubbard_U(is) * autoev, is=1,nsp)
 !  write (6,'(6(a,i2,a,f8.4,6x))') &
-!        ('alpha(',is,') =', Hubbard_alpha(is) * au, is=1,nsp)
+!        ('alpha(',is,') =', Hubbard_alpha(is) * autoev, is=1,nsp)
       nsum = 0.d0
       allocate(ftemp1(ldmx))
       allocate(ftemp2(ldmx))
@@ -3689,16 +3690,16 @@ end function set_Hubbard_l
 !     functions with a given x_value. A and sigma are given in the
 !     input file. ... to be used in occupation_constraint...
 !
+      USE constants, ONLY : pi
       implicit none
       real(kind=8) A, sigma, x_value, g_value, step_value
-      real(kind=8) x, pi
+      real(kind=8) x
       integer i
-      pi=3.141592654
-      step_value=0.0
-      g_value=0.0
+      step_value=0.0d0
+      g_value=0.0d0
 !
       do i=1,100000
-         x=x_value + (i-100000)/100000.0*(x_value + 5.d0*sigma)
+         x=x_value + (i-100000)/100000.0d0*(x_value + 5.d0*sigma)
 !
 ! Integrate from 5 sigma before the x_value
 !
@@ -3706,7 +3707,7 @@ end function set_Hubbard_l
 !         write(6,*) 'step', step_value,'g',g_value
 !         if (g_value.le.0.0) g_value=0.0
          if ((x_value+5*sigma).ge.0.0) then
-         step_value=step_value+g_value/100000.0*(x_value+5.d0*sigma)
+         step_value=step_value+g_value/100000.0d0*(x_value+5.d0*sigma)
          end if
       end do
       return
