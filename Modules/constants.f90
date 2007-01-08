@@ -102,3 +102,35 @@ MODULE constants
   !
 
 END MODULE constants
+
+! perl script to create a program to list the available constants:
+! extract with: grep '^!XX!' constants.f90 | sed 's,!XX!,,' > mkconstlist.pl
+! then run: perl mkconstlist.pl constants.f90 > testme.f90
+! and compile and run: testme.f90
+!XX!#!/usr/bin/perl -w
+!XX!
+!XX!use strict;
+!XX!
+!XX!print <<EOF
+!XX!! list all available constants and derived values
+!XX!
+!XX!PROGRAM list_constants
+!XX!
+!XX!  USE kinds, ONLY : DP
+!XX!  USE constants
+!XX!
+!XX!EOF
+!XX!;
+!XX!
+!XX!while(<>) { 
+!XX!  if ( /REAL\s*\(DP\)\s*,\s*PARAMETER\s*::\s*([a-zA-Z_0-9]+)\s*=.*$/ )  { 
+!XX!    print "  WRITE (*,'(A18,G24.17)') '$1:',$1\n"; 
+!XX!  } 
+!XX!}
+!XX!
+!XX!print <<EOF
+!XX!
+!XX!END PROGRAM list_constants
+!XX!EOF
+!XX!;
+!XX!

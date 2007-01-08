@@ -109,11 +109,11 @@ MODULE basic_algebra_routines
        REAL(DP), INTENT(IN) :: vec(:)
        REAL(DP), INTENT(IN) :: mat(:,:)
        REAL(DP)             :: matrix_times_vector(SIZE( vec ))
-       INTEGER              :: dim
+       INTEGER              :: dim1
        !
-       dim = SIZE( vec )
+       dim1 = SIZE( vec )
        !
-       CALL DGEMV( 'N', dim, dim, 1.D0, mat, dim, &
+       CALL DGEMV( 'N', dim1, dim1, 1.D0, mat, dim1, &
                    vec, 1, 0.D0, matrix_times_vector, 1 )
        !
      END FUNCTION  matrix_times_vector
@@ -128,11 +128,11 @@ MODULE basic_algebra_routines
        REAL(DP), INTENT(IN) :: vec(:)
        REAL(DP), INTENT(IN) :: mat(:,:)
        REAL(DP)             :: vector_times_matrix(SIZE( vec ))
-       INTEGER              :: dim
+       INTEGER              :: dim1
        !
-       dim = SIZE( vec )
+       dim1 = SIZE( vec )
        !
-       CALL DGEMV( 'T', dim, dim, 1.D0, mat, dim, &
+       CALL DGEMV( 'T', dim1, dim1, 1.D0, mat, dim1, &
                    vec, 1, 0.D0, vector_times_matrix, 1 )
        !
      END FUNCTION vector_times_matrix
