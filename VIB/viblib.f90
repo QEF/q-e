@@ -436,6 +436,8 @@ subroutine set_guess_wfc ( disp_sign )
   USE io_rho_xml,           ONLY : read_rho
 #endif
   !
+  IMPLICIT NONE
+  !
   ! ... input variables
   !
   INTEGER, INTENT(IN)           :: disp_sign
@@ -445,6 +447,7 @@ subroutine set_guess_wfc ( disp_sign )
 #ifdef DFT_PW
   logical                       :: exst
   REAL(kind=DP)                 :: charge
+  INTEGER                       :: history, ik
 #endif
   !
   !

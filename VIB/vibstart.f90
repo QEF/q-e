@@ -188,6 +188,8 @@ subroutine start_cp
   USE mp,                    ONLY : mp_end, mp_start, mp_env
   USE check_stop,            ONLY : check_stop_init
   !
+  IMPLICIT NONE
+  !
   INTEGER                        :: mpime, nproc, gid, ionode_id
   INTEGER,           PARAMETER   :: root = 0
   LOGICAL                        :: ionode
@@ -234,6 +236,7 @@ end subroutine start_cp
 !----------------------------------------------------------------------------
 !
 subroutine end_cp
+  IMPLICIT NONE
   !
 #ifdef DFT_CP
   !
@@ -324,6 +327,9 @@ end subroutine start_pw
 subroutine end_pw
   !
 #ifdef DFT_PW
+  USE control_flags,      ONLY : conv_ions
+  !
+  IMPLICIT NONE
   !
   CALL stop_run( conv_ions )
   !
