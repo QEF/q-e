@@ -482,13 +482,6 @@ gradcorr.o : pwcom.o
 gweights.o : ../Modules/kind.o
 h_1psi.o : ../Modules/kind.o
 h_1psi.o : noncol.o
-h_epsi_her.o : ../Modules/cell_base.o
-h_epsi_her.o : ../Modules/constants.o
-h_epsi_her.o : ../Modules/io_files.o
-h_epsi_her.o : ../Modules/ions_base.o
-h_epsi_her.o : ../Modules/kind.o
-h_epsi_her.o : ../Modules/uspp.o
-h_epsi_her.o : pwcom.o
 h_epsi_her_apply.o : ../Modules/cell_base.o
 h_epsi_her_apply.o : ../Modules/constants.o
 h_epsi_her_apply.o : ../Modules/io_files.o
@@ -1243,7 +1236,6 @@ gen_us_dj.o : ../include/f_defs.h
 gen_us_dy.o : ../include/f_defs.h
 ggen.o : ../include/f_defs.h
 gradcorr.o : ../include/f_defs.h
-h_epsi_her.o : ../include/f_defs.h
 h_epsi_her_apply.o : ../include/f_defs.h
 h_epsi_her_set.o : ../include/f_defs.h
 init_at_1.o : ../include/f_defs.h

@@ -204,8 +204,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     df(:,:,ipos) = df(:,:,ipos) - rhocout(:,:)
-     dv(:,:,ipos) = dv(:,:,ipos) - rhocin(:,:)
+     df(:,:,ipos) = df(:,:,ipos) - rhocout(1:ngm0,:)
+     dv(:,:,ipos) = dv(:,:,ipos) - rhocin (1:ngm0,:)
      !
      IF ( lda_plus_u ) THEN
         !
