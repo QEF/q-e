@@ -752,8 +752,8 @@ MODULE cp_restart
             ib = iupdwn(iss_wfc)
             !
             CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
-                            c02( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , ig_l2g, ngw, &
-                            filename, scalef )
+                            c02( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , &
+                            ig_l2g, ngw, filename, scalef )
             !
             !  Save wave function at time t - dt
             !
@@ -787,21 +787,22 @@ MODULE cp_restart
             ib = iupdwn(iss_wfc)
             !
             CALL write_wfc( iunout, ik_eff, nk*nspin, kunit, iss, nspin, &
-                            cm2( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , ig_l2g, ngw, &
-                            filename, scalef )
+                            cm2( :, ib : ib + nbnd_ - 1 ), ngwt, nbnd_ , &
+                            ig_l2g, ngw, filename, scalef )
             !
             cspin = iotk_index( iss )
             !
             IF ( ionode ) THEN
-   
+               !
                IF(  PRESENT( mat_z ) ) THEN
-                  ! 
+                  !
                   filename = TRIM( wfc_filename( ".", 'mat_z', ik, iss ) )
                   !
                   CALL iotk_link( iunpun, "MAT_Z" // TRIM( cspin ), &
                                   filename, CREATE = .TRUE., BINARY = .TRUE. )
                   !
-                  CALL iotk_write_dat( iunpun, "MAT_Z" // TRIM( cspin ), mat_z(:,:,iss) )
+                  CALL iotk_write_dat( iunpun, &
+                                       "MAT_Z" // TRIM( cspin ), mat_z(:,:,iss) )
                   !
                END IF
                !
@@ -810,7 +811,7 @@ MODULE cp_restart
             ! ... write matrix lambda to file
             !
             ALLOCATE( lambda_repl( nudx, nudx ) )
-            ! 
+            !
             CALL collect_lambda( lambda_repl, lambda0(:,:,iss), descla(:,iss) )
             !
             IF ( ionode ) THEN
@@ -818,9 +819,10 @@ MODULE cp_restart
                filename = TRIM( wfc_filename( ".", 'lambda0', ik, iss ) )
                !
                CALL iotk_link( iunpun, "LAMBDA0" // TRIM( cspin ), &
-                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
+                               filename, CREATE = .TRUE., BINARY = .TRUE. )
                !
-               CALL iotk_write_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda_repl )
+               CALL iotk_write_dat( iunpun, &
+                                    "LAMBDA0" // TRIM( cspin ), lambda_repl )
                !
             END IF
             !
@@ -831,26 +833,23 @@ MODULE cp_restart
                filename = TRIM( wfc_filename( ".", 'lambdam', ik, iss ) )
                !
                CALL iotk_link( iunpun, "LAMBDAM" // TRIM( cspin ), &
-                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
+                               filename, CREATE = .TRUE., BINARY = .TRUE. )
                !
-               CALL iotk_write_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambda_repl )
-               !
-               DEALLOCATE( lambda_repl )
+               CALL iotk_write_dat( iunpun, &
+                                    "LAMBDAM" // TRIM( cspin ), lambda_repl )
                !
             END IF
             !
+            DEALLOCATE( lambda_repl )
+            !
          END DO
-
+         !
          IF ( ionode ) &
             CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index(ik) ) )
          !
       END DO k_points_loop2
       !
-      IF( ionode ) THEN
-        !  
-        CALL iotk_write_end( iunpun, "EIGENVECTORS" )
-        !     
-      END IF
+      IF ( ionode ) CALL iotk_write_end( iunpun, "EIGENVECTORS" )
       !
       IF ( ionode ) CALL iotk_close_write( iunpun )
       !
