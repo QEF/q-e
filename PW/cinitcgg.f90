@@ -114,8 +114,10 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, lstart)
   e(1:nbnd) = en(1:nbnd)
   !
   ! ... update the basis set
-  !
+  ! 
   DO ipol = 1, npol
+     !
+     evc(ndim+1:ndmx,:,:) = (0.d0, 0.d0)
      !
      DO i = 1, ndim
         !

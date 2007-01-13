@@ -59,7 +59,7 @@ PW
 - Add option to prevent writing the final file (Dario)
 
 - Add option to avoid reading/writing wfc all the time,
-  keep everything in memory
+  keep everything in memory (add printout of memory usage)
 
 - nscf calculations are slow. There must be a way to
   make a better usage of the available information

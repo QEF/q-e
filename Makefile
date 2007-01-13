@@ -58,7 +58,7 @@ d3 : bindir mods libs pw ph
 	( cd D3 ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
-vdw : bindir mods libs pw ph
+vdw : bindir mods libs pw ph pp
 	if test -d VdW ; then \
 	( cd VdW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
@@ -111,7 +111,7 @@ bindir :
 clean :
 	touch make.sys 
 	for dir in \
-		CPV D3 Gamma Modules PH PP PW PWCOND Raman VdW\
+		CPV D3 Gamma Modules PH PP PW PWCOND VdW\
 		atomic clib flib pwtools upftools iotk \
 	; do \
 	    if test -d $$dir ; then \
@@ -137,7 +137,7 @@ distclean veryclean : clean
 
 tar :
 	tar cvf espresso.tar \
-	    License README* */README* Makefile */Makefile */makefile.*  */make.depend \
+	    License README* */README* Makefile */Makefile */makefile.* */make.depend \
 	    configure configure.ac config.guess config.sub configure.msg.in \
             install-sh make.sys.in \
 	    makedeps.sh moduledep.sh includedep.sh ifcmods.sh \
