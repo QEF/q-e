@@ -3,7 +3,6 @@ cpmd2upf.o : write_upf.o
 fhi2upf.o : ../Modules/constants.o
 fhi2upf.o : ../Modules/functionals.o
 fhi2upf.o : write_upf.o
-fpmd2upf.o : ../Modules/constants.o
 fpmd2upf.o : ../Modules/kind.o
 fpmd2upf.o : ../Modules/parameters.o
 fpmd2upf.o : ../Modules/parser.o

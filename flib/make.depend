@@ -6,11 +6,13 @@ dylmr2.o : ../Modules/kind.o
 error.o : ../Modules/io_files.o
 error.o : ../Modules/io_global.o
 error.o : ../Modules/parallel_include.o
+functionals.o : ../Modules/constants.o
 functionals.o : ../Modules/kind.o
 invmat.o : ../Modules/kind.o
 invmat_complex.o : ../Modules/kind.o
 latgen.o : ../Modules/kind.o
 linpack.o : ../Modules/kind.o
+lsda_functionals.o : ../Modules/constants.o
 lsda_functionals.o : ../Modules/kind.o
 more_functionals.o : ../Modules/constants.o
 more_functionals.o : ../Modules/functionals.o
@@ -27,7 +29,6 @@ sph_bes.o : ../Modules/kind.o
 sph_dbes.o : ../Modules/constants.o
 sph_dbes.o : ../Modules/kind.o
 volume.o : ../Modules/kind.o
-vpack.o : ../Modules/kind.o
 ylmr2.o : ../Modules/constants.o
 ylmr2.o : ../Modules/kind.o
 dylmr2.o : ../include/f_defs.h
