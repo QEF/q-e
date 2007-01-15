@@ -6,10 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-MODULE nmr_module
+MODULE gipaw_module
   !-----------------------------------------------------------------------
   !
-  ! ... This module contains the variables used for NMR calculations
+  ! ... This module contains the variables used for GIPAW calculations
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : a0_to_cm => bohr_radius_cm
@@ -42,12 +42,12 @@ MODULE nmr_module
   REAL(DP) :: conv_threshold
   
   ! q for the perturbation (in bohrradius^{-1})
-  REAL(DP) :: q_nmr
+  REAL(DP) :: q_gipaw
 
   ! verbosity
   INTEGER :: iverbosity
 
-  ! job: nmr, g_tensor
+  ! job: gipaw, g_tensor
   CHARACTER(80) :: job
 
   ! format for a rank-2 tensor
@@ -72,25 +72,25 @@ MODULE nmr_module
 CONTAINS
   
   !-----------------------------------------------------------------------
-  ! Read in the nmr input file.
+  ! Read in the gipaw input file.
   ! Format: &inputmagn
   !              prefix = '...'     prefix of SCF calculation
   !              tmp_dir = '...'    scratch directory
   !              job = 'nmr' or 'g_tensor'
   !              conv_threshold = 1d-14
-  !              q_nmr = 0.01d0
+  !              q_gipaw = 0.01d0
   !              filcurr = '...'
   !              filfield = '...'
   !              iverbosity = 0
   !         /
   !-----------------------------------------------------------------------
-  SUBROUTINE nmr_readin()
+  SUBROUTINE gipaw_readin()
     USE io_files,      ONLY : nd_nmbr, prefix, tmp_dir  
     USE io_global,     ONLY : ionode
     IMPLICIT NONE
     INTEGER :: ios
     NAMELIST /inputmagn/ job, prefix, tmp_dir, conv_threshold, &
-                         q_nmr, iverbosity, filcurr, filfield, &
+                         q_gipaw, iverbosity, filcurr, filfield, &
                          read_recon_in_paratec_fmt, &
                          file_reconstruction
     
@@ -100,7 +100,7 @@ CONTAINS
     prefix = 'pwscf'
     tmp_dir = './scratch/'
     conv_threshold = 1d-14
-    q_nmr = 0.01d0
+    q_gipaw = 0.01d0
     iverbosity = 0
     filcurr = ''
     filfield = ''
@@ -109,19 +109,19 @@ CONTAINS
     
     read( 5, inputmagn, err = 200, iostat = ios )
     
-200 call errore( 'nmr_readin', 'reading inputmagn namelist', abs( ios ) )
+200 call errore( 'gipaw_readin', 'reading inputmagn namelist', abs( ios ) )
     
 400 continue
     
-    call nmr_bcast_input
+    call gipaw_bcast_input
     
-  END SUBROUTINE nmr_readin
+  END SUBROUTINE gipaw_readin
 
   
   !-----------------------------------------------------------------------
   ! Broadcast input data to all processors 
   !-----------------------------------------------------------------------
-  SUBROUTINE nmr_bcast_input
+  SUBROUTINE gipaw_bcast_input
 #ifdef __PARA
 #include "f_defs.h"
     USE mp,            ONLY : mp_bcast
@@ -132,21 +132,21 @@ CONTAINS
     call mp_bcast(prefix, root)
     call mp_bcast(tmp_dir, root)
     call mp_bcast(conv_threshold, root)
-    call mp_bcast(q_nmr, root)
+    call mp_bcast(q_gipaw, root)
     call mp_bcast(iverbosity, root)
     call mp_bcast(filcurr, root)
     call mp_bcast(filfield, root)
     call mp_bcast(read_recon_in_paratec_fmt, root)
     call mp_bcast(file_reconstruction, root)
 #endif
-  END SUBROUTINE nmr_bcast_input
+  END SUBROUTINE gipaw_bcast_input
 
 
 
   !-----------------------------------------------------------------------
-  ! Allocate memory for NMR
+  ! Allocate memory for GIPAW
   !-----------------------------------------------------------------------
-  SUBROUTINE nmr_allocate
+  SUBROUTINE gipaw_allocate
     USE becmod, ONLY : becp
     USE lsda_mod,      ONLY : nspin, lsda
     USE pwcom
@@ -161,45 +161,45 @@ CONTAINS
     allocate(becp(nkb,nbnd))
     allocate(j_bare(nrxxs,3,3,nspin), b_ind_r(nrxxs,3,3), b_ind(ngm,3,3))
 
-  END SUBROUTINE nmr_allocate
+  END SUBROUTINE gipaw_allocate
  
 
 
   !-----------------------------------------------------------------------
   ! Print a short summary of the calculation
   !-----------------------------------------------------------------------
-  SUBROUTINE nmr_summary
+  SUBROUTINE gipaw_summary
     USE io_global,     ONLY : stdout
     IMPLICIT NONE
 
     CALL flush_unit( stdout )
-  END SUBROUTINE nmr_summary
+  END SUBROUTINE gipaw_summary
 
 
 
   !-----------------------------------------------------------------------
-  ! Open files needed for NMR
+  ! Open files needed for GIPAW
   !-----------------------------------------------------------------------
-  SUBROUTINE nmr_openfil
+  SUBROUTINE gipaw_openfil
     USE wvfct,          ONLY : npwx
     USE uspp,           ONLY : nkb
     IMPLICIT NONE
 
-  END SUBROUTINE nmr_openfil
+  END SUBROUTINE gipaw_openfil
 
 
 
   !-----------------------------------------------------------------------
   ! Print timings
   !-----------------------------------------------------------------------
-  SUBROUTINE print_clock_nmr
+  SUBROUTINE print_clock_gipaw
     USE io_global,  ONLY : stdout
     IMPLICIT NONE
 
     WRITE( stdout, * )
-    call print_clock ('MAGN') 
+    call print_clock ('GIPAW') 
     WRITE( stdout,  * ) '    INITIALIZATION: '
-    call print_clock ('nmr_setup')
+    call print_clock ('gipaw_setup')
     WRITE( stdout, * )
     call print_clock ('greenf')
     call print_clock ('cgsolve')
@@ -229,14 +229,14 @@ CONTAINS
     call print_clock ('reduce')
     call print_clock ('poolreduce')
 #endif
-  END SUBROUTINE print_clock_nmr
+  END SUBROUTINE print_clock_gipaw
 
 
 
   !-----------------------------------------------------------------------
-  ! NMR setup
+  ! GIPAW setup
   !-----------------------------------------------------------------------
-  SUBROUTINE nmr_setup
+  SUBROUTINE gipaw_setup
     USE kinds,         ONLY : DP
     USE io_global,  ONLY : stdout
     USE ions_base,     ONLY : tau, nat, ntyp => nsp
@@ -272,7 +272,7 @@ CONTAINS
     real(dp) :: mysum1 ( 3, lmaxx ) !TMPTMPTMP
     real(dp) :: mysum2 ( 3, 1:lmaxx ) !TMPTMPTMP
     
-    call start_clock ('nmr_setup')
+    call start_clock ('gipaw_setup')
     
     ! initialize pseudopotentials
     call init_us_1
@@ -627,7 +627,7 @@ CONTAINS
     call poolextreme (emin, -1)
 #endif
     if (degauss.ne.0.d0) then
-      call errore('nmr_setup', 'implemented only for insulators', -1)
+      call errore('gipaw_setup', 'implemented only for insulators', -1)
     else
       emax = et (1, 1)
       do ik = 1, nks
@@ -644,7 +644,7 @@ CONTAINS
     ! avoid zero value for alpha_pv
     alpha_pv = max (alpha_pv, 1.0d-2)
     
-    call stop_clock('nmr_setup')
+    call stop_clock('gipaw_setup')
     
   CONTAINS
     
@@ -685,8 +685,8 @@ CONTAINS
       
     END SUBROUTINE radial_derivative
     
-  END SUBROUTINE nmr_setup
+  END SUBROUTINE gipaw_setup
  
 !-----------------------------------------------------------------------
-END MODULE nmr_module
+END MODULE gipaw_module
 !-----------------------------------------------------------------------

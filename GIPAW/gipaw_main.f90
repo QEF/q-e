@@ -6,10 +6,10 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-PROGRAM magn_main
+PROGRAM gipaw_main
   !-----------------------------------------------------------------------
   !
-  ! ... This is the main driver of the magnetic resposne program. 
+  ! ... This is the main driver of the magnetic response program. 
   ! ... It controls the initialization routines.
   ! ... Features: NMR chemical shifts
   !...            EPR g-tensor
@@ -33,7 +33,7 @@ PROGRAM magn_main
   USE klist,           ONLY : nks
   USE mp,              ONLY : mp_bcast
   USE cell_base,       ONLY : tpiba
-  USE nmr_module
+  USE gipaw_module
   USE global_version,  ONLY : version_number
   !<apsi>
   use paw,             ONLY : read_recon, read_recon_paratec
@@ -41,22 +41,22 @@ PROGRAM magn_main
   !</apsi>
   !------------------------------------------------------------------------
   IMPLICIT NONE
-  CHARACTER (LEN=9)   :: code = 'MAGN'
+  CHARACTER (LEN=9)   :: code = 'GIPAW'
   !------------------------------------------------------------------------
 
   CALL init_clocks( .TRUE. )
   
-  CALL start_clock( 'MAGN' )
+  CALL start_clock( 'GIPAW' )
   
   ! ... and begin with the initialization part
   CALL startup( nd_nmbr, code, version_number )
-  CALL nmr_readin()
+  CALL gipaw_readin()
 
   ! read ground state wavefunctions
   call read_file
   call openfil
 
-  if (gamma_only) call errore('MAGN_main', 'gamma_only == .true.', 1)
+  if (gamma_only) call errore('gipaw_main', 'gamma_only == .true.', 1)
   
   !<apsi>
   ! Read in qe format
@@ -69,14 +69,14 @@ PROGRAM magn_main
   !</apsi>
 !  write(0,*) "QQQ2: ", aephi(1,1)%psi(5), psphi(1,1)%psi(5)
   
-  CALL nmr_allocate()
-  CALL nmr_setup()
-  CALL nmr_summary()
-  CALL nmr_openfil()
-  CALL print_clock( 'MAGN' )
+  CALL gipaw_allocate()
+  CALL gipaw_setup()
+  CALL gipaw_summary()
+  CALL gipaw_openfil()
+  CALL print_clock( 'GIPAW' )
 
-  ! convert q_nmr in units of tpiba
-  q_nmr = q_nmr / tpiba
+  ! convert q_gipaw in units of tpiba
+  q_gipaw = q_gipaw / tpiba
 
   ! calculation
   select case(trim(job))
@@ -90,13 +90,13 @@ PROGRAM magn_main
       call test_f_sum_rule 
 
     case default
-      call errore('magn_main', 'wrong or undefined job in input', 1)
+      call errore('gipaw_main', 'wrong or undefined job in input', 1)
   end select
 
   ! print timings and stop the code
-  CALL print_clock_nmr()
+  CALL print_clock_gipaw()
   CALL stop_code( .TRUE. )
   
   STOP
   
-END PROGRAM magn_main
+END PROGRAM gipaw_main

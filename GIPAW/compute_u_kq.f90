@@ -17,7 +17,7 @@ SUBROUTINE compute_u_kq(ik, q)
   USE wavefunctions_module, ONLY : evc
   USE klist,                ONLY : nkstot, xk
   USE wvfct,                ONLY : nbnd, nbndx, npwx, npw, igk, g2kin, current_k, btype
-  USE nmr_module
+  USE gipaw_module
   USE gvect, only: g,ngm,ecutwfc,ngl,nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE uspp,   ONLY : nkb, vkb, okvan
   USE pwcom, ONLY : et

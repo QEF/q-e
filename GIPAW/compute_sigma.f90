@@ -19,7 +19,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   USE io_global,       ONLY : stdout
   USE symme,     ONLY : s, nsym, irt
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   ! Arguments
   REAL(DP), INTENT(IN) :: chi_bare(3,3)
@@ -99,7 +99,7 @@ SUBROUTINE compute_sigma_diamagnetic( sigma_diamagnetic )
   USE io_global,       ONLY : stdout
   USE symme,     ONLY : s, nsym, irt
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   ! Arguments
   real(dp), intent(inout) :: sigma_diamagnetic(3,3,nat)
@@ -146,7 +146,7 @@ SUBROUTINE compute_sigma_paramagnetic( sigma_paramagnetic )
   USE io_global,       ONLY : stdout
   USE symme,     ONLY : s, nsym, irt
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   ! Arguments
   real(dp), intent(inout) :: sigma_paramagnetic(3,3,nat)

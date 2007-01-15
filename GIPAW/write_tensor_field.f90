@@ -18,7 +18,7 @@ SUBROUTINE write_tensor_field(name, ispin, field)
   USE cell_base,                   ONLY : at, bg, alat
   USE ions_base,                   ONLY : nat, tau, atm, ityp
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
   !--------------------------------------------------------------------
   character*(*) name
   integer :: ispin

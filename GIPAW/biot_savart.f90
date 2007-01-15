@@ -20,7 +20,7 @@ SUBROUTINE biot_savart(jpol)
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- parameters ---------------------------------------------------------
   IMPLICIT none
@@ -75,7 +75,7 @@ SUBROUTINE field_to_reciprocal_space
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
  
   IMPLICIT NONE
   complex(dp), allocatable :: aux(:)

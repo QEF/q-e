@@ -28,7 +28,7 @@ SUBROUTINE test_f_sum_rule
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE becmod,                      ONLY : becp
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- local variables ----------------------------------------------------
   IMPLICIT NONE

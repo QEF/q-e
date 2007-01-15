@@ -27,7 +27,7 @@ SUBROUTINE suscept_crystal
   USE symme,                       ONLY : nsym, s, ftau
   USE mp_global,                   ONLY : my_pool_id, npool, me_pool, root_pool
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
   
   !<apsi>
   USE paw,                         ONLY: paw_vkb, paw_becp, paw_nkb, aephi, &
@@ -149,7 +149,7 @@ SUBROUTINE suscept_crystal
       do i = 1, 3
         ! set the q vector
         q(:) = 0.0_dp
-        q(i) = dble(isign) * q_nmr
+        q(i) = dble(isign) * q_gipaw
         !!!write(*,'(''q='',3(F12.4))') q
         
         ! compute the wfcs at k+q
@@ -220,7 +220,7 @@ SUBROUTINE suscept_crystal
   
   ! compute chi_bare both pGv and vGv terms
   chi_bare_pGv(:,:) = f_pGv(:,:,1) - 2.0_dp*f_pGv(:,:,0) + f_pGv(:,:,-1)
-  chi_bare_pGv(:,:) = -0.5_dp * chi_bare_pGv(:,:) / (c * q_nmr * tpiba)**2
+  chi_bare_pGv(:,:) = -0.5_dp * chi_bare_pGv(:,:) / (c * q_gipaw * tpiba)**2
   if (iverbosity > 0) then
     write(stdout, '(5X,''chi_bare pGv (HH) in paratec units:'')')
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) * c**2
@@ -231,7 +231,7 @@ SUBROUTINE suscept_crystal
   endif
   
   chi_bare_vGv(:,:) = f_vGv(:,:,1) - 2.0_dp*f_vGv(:,:,0) + f_vGv(:,:,-1)
-  chi_bare_vGv(:,:) = -0.5_dp * chi_bare_vGv(:,:) / (c * q_nmr * tpiba)**2
+  chi_bare_vGv(:,:) = -0.5_dp * chi_bare_vGv(:,:) / (c * q_gipaw * tpiba)**2
   if (iverbosity > 0) then
     write(stdout, '(5X,''chi_bare vGv (VV) in paratec units:'')')
     write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) * c**2
@@ -254,7 +254,7 @@ SUBROUTINE suscept_crystal
   ! now get the current, induced field and chemical shifts
   !--------------------------------------------------------------------
   chi_bare_pGv(:,:) = chi_bare_pGv(:,:) / omega
-  j_bare(:,:,:,:) = j_bare(:,:,:,:) / (2.0_dp * q_nmr * tpiba * c * omega)
+  j_bare(:,:,:,:) = j_bare(:,:,:,:) / (2.0_dp * q_gipaw * tpiba * c * omega)
   
   !nsym = 1
   ! either you symmetrize the current ...
@@ -385,7 +385,7 @@ CONTAINS
     
     USE atom,       ONLY : r, rab
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-    USE nmr_module, ONLY : c
+    USE gipaw_module, ONLY : c
     
     implicit none
     
@@ -510,7 +510,7 @@ CONTAINS
   SUBROUTINE paramagnetic_correction ( paramagnetic_tensor )
     
     USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-    USE nmr_module, ONLY : c
+    USE gipaw_module, ONLY : c
     
     implicit none
     
@@ -628,7 +628,7 @@ CONTAINS
          sigma_paramagnetic ( ipol, icomp, : ) &
               = sigma_paramagnetic ( ipol, icomp, : ) &
               + fact * paramagnetic_correction ( ipol, ibdir, : ) &
-              / ( 2 * q_nmr * tpiba )
+              / ( 2 * q_gipaw * tpiba )
          
 !   Do iq=1, 3    ! loop over all q-points
 !      ...

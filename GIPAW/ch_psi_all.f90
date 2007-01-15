@@ -18,7 +18,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   use pwcom
   use becmod
   USE kinds, only : DP
-  USE nmr_module
+  USE gipaw_module
   implicit none
 
   integer :: n, m, ik

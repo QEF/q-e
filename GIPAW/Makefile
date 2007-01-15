@@ -1,10 +1,10 @@
-# Makefile for NMR_new
+# Makefile for GIPAW
 
 include ../make.sys
 
-NMROBJS = \
-nmr_module.o \
-magn_main.o \
+GIPAWOBJS = \
+gipaw_module.o \
+gipaw_main.o \
 stop_code.o \
 apply_p.o \
 apply_vel.o \
@@ -88,18 +88,18 @@ PHOBJS = ../PH/libph.a
 
 TLDEPS=bindir ph pw mods libs libiotk
 
-all : tldeps magn.x
+all : tldeps gipaw.x
 
-magn.x : $(NMROBJS) $(PWOBJS) $(PHOBJS) $(LIBOBJS)
+gipaw.x : $(GIPAWOBJS) $(PWOBJS) $(PHOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		$(NMROBJS) $(MODULES) $(PHOBJS) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin; ln -fs ../NMR_new/$@ . )
+		$(GIPAWOBJS) $(MODULES) $(PHOBJS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin; ln -fs ../GIPAW/$@ . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f magn.x *.o *~ *.F90 *.d *.mod *.i work.pc
+	- /bin/rm -f gipaw.x *.o *~ *.F90 *.d *.mod *.i work.pc
 
 include make.depend
 

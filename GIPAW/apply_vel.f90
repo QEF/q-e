@@ -21,7 +21,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   USE wvfct,                ONLY : nbnd, npwx, npw, igk  
   USE becmod,               ONLY : becp
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- paramters ----------------------------------------------------------
   IMPLICIT NONE
@@ -45,7 +45,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   call start_clock('apply_vel')
 
   ! set dk
-  dk = q_nmr/2.d0
+  dk = q_gipaw/2.d0
   
   ! if no projectors, return
   if (nkb == 0) return

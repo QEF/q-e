@@ -21,7 +21,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE wavefunctions_module,  ONLY: psic
   USE becmod, ONLY: becp
   USE kinds, only : DP
-  use nmr_module
+  use gipaw_module
   implicit none
   !
   !     Here the local variables

@@ -16,7 +16,7 @@ SUBROUTINE j_para(fact, psi_n, psi_m, ik, q, j)
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- parameters ---------------------------------------------------------
   IMPLICIT none

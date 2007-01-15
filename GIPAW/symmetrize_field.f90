@@ -21,7 +21,7 @@ SUBROUTINE symmetrize_field(field, iflag)
   USE symme,                           ONLY : s, nsym
   USE cell_base,                       ONLY : at, bg
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- parameters ------------------------------------------------------
   IMPLICIT NONE
@@ -69,7 +69,7 @@ SUBROUTINE psymmetrize_field(field, iflag)
   USE pfft,                            ONLY : nxx
   USE mp_global,                       ONLY : me_pool
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- parameters ------------------------------------------------------
   IMPLICIT NONE

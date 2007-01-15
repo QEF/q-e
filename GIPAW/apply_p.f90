@@ -15,7 +15,7 @@ SUBROUTINE apply_p(psi, p_psi, ik, ipol, q)
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npwx, npw, igk  
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- parameters ---------------------------------------------------------
   IMPLICIT none

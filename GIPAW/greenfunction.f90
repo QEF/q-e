@@ -19,7 +19,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   USE becmod,                      ONLY : becp
   USE wavefunctions_module,        ONLY : evc
   USE pwcom
-  USE nmr_module
+  USE gipaw_module
 
   !-- parameters ---------------------------------------------------------
   IMPLICIT none
