@@ -32,14 +32,14 @@
           mp_bcast_z, mp_bcast_zv, &
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &
-          mp_bcast_lm, mp_bcast_r4d, mp_bcast_ct, mp_bcast_c4d, &
+          mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct, mp_bcast_c4d, &
           mp_bcast_i4b
 #else
         MODULE PROCEDURE mp_bcast_i1, mp_bcast_r1, mp_bcast_c1, &
           mp_bcast_z, mp_bcast_zv, &
           mp_bcast_iv, mp_bcast_rv, mp_bcast_cv, mp_bcast_l, mp_bcast_rm, &
           mp_bcast_cm, mp_bcast_im, mp_bcast_it, mp_bcast_rt, mp_bcast_lv, &
-          mp_bcast_lm, mp_bcast_r4d, mp_bcast_ct,  mp_bcast_c4d
+          mp_bcast_lm, mp_bcast_r4d, mp_bcast_r5d, mp_bcast_ct,  mp_bcast_c4d
 #endif
       END INTERFACE
 
@@ -524,6 +524,36 @@
         mp_call_sizex( 9 ) = MAX( mp_call_sizex( 9 ), msglen )
 #endif
       END SUBROUTINE mp_bcast_r4d
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_bcast_r5d(msg, source, gid)
+        IMPLICIT NONE
+        REAL (DP) :: msg(:,:,:,:,:)
+        INTEGER :: source
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen, ierr
+#if defined(__MPI)
+        ierr = 0
+        msglen = size(msg)
+        IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop( 8034 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL bcast_real( msg, msglen, source, group, ierr )
+#else
+        CALL mpi_bcast(msg, msglen, mpi_double_precision, source, group, ierr)
+#endif
+        IF (ierr/=0) CALL mp_stop( 8035 )
+        mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
+        mp_call_count( 9 ) = mp_call_count( 9 ) + 1
+        mp_call_sizex( 9 ) = MAX( mp_call_sizex( 9 ), msglen )
+#endif
+      END SUBROUTINE mp_bcast_r5d
 
 !------------------------------------------------------------------------------!
 !
