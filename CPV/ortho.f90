@@ -95,12 +95,12 @@
 !=----------------------------------------------------------------------------=!
       !
       USE kinds,              ONLY: DP
-      USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate, &
-                                    ortho_alt_iterate,  &
-                                    use_parallel_diag, diagonalize_parallel, &
-                                    diagonalize_serial
+      USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
+                                    ortho_alt_iterate, diagonalize_serial,   &
+                                    use_parallel_diag, diagonalize_parallel
       USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_
       USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
+      USE mp,                 ONLY: mp_sum
 
       IMPLICIT  NONE
 
@@ -111,7 +111,7 @@
       INTEGER,  INTENT(IN)  :: n, nss, istart
       COMPLEX(DP) :: phi( ngwx, n ), cp( ngwx, n )
       REAL(DP)    :: bephi( nkbx, n ), becp( nkbx, n )
-      REAL(DP)    :: qbephi( nkbx, n ), qbecp( nkbx, n )
+      REAL(DP)    :: qbephi( nkbx, nx0 ), qbecp( nkbx, nx0 )
       REAL(DP)    :: x0( nx0, nx0 )
       INTEGER,  INTENT(IN)  :: descla( : )
       INTEGER,  INTENT(OUT) :: iter
@@ -119,16 +119,13 @@
 
       ! ... Locals
 
-      REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:)
+      REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:), rhot(:,:)
       REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
-      INTEGER  :: i, j, info, nr, nc, ir, ic, nx
+      INTEGER  :: i, j, info, nr, nc, ir, ic
       LOGICAL  :: iter_node
       !
-      INTEGER  :: ldim_block, gind_block
-      EXTERNAL :: ldim_block, gind_block
-
       ! ...   Subroutine body
-
+      !
       IF( descla( lambda_node_ ) > 0 ) THEN
          !
          iter_node = .TRUE.
@@ -139,83 +136,63 @@
          ir = descla( ilar_ )
          ic = descla( ilac_ )
          !
-      ELSE
-         !
-         iter_node = .FALSE.
-         !
-      END IF
-
-      nx = nss
-
-      ALLOCATE( wrk( nx, nx ), STAT = info )
-      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
-      ALLOCATE( rhod( nx ), STAT = info )
-      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 3 )
-      !
-      !     rho = <s'c0|s|cp>
-      !
-      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, wrk, nx )
-
-      IF( iter_node ) THEN
-         !
-         !  Symmetric part of rho
-         !
 	 ALLOCATE( rhos( nr, nc ) )
-         DO j = 1, nc
-            DO i = 1, nr
-               rhos( i, j ) = 0.5d0 * ( wrk( i+ir-1, j+ic-1 ) + wrk( j+ic-1, i+ir-1 ) )
-               !
-               ! on some machines (IBM RS/6000 for instance) the following test allows
-               ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
-               ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
-               ! that the program goes on forever doing nothing and writing nothing.
-               !
-               IF (rhos(i,j) /= rhos(i,j)) CALL errore('ortho','ortho went bananas',1)
-            END DO
-         END DO
-         !
-         !  Antisymmetric part of rho, alredy distributed across ortho procs.
-         !
-         ALLOCATE( rhoa( nr, nc ) )
-         DO j = 1, nc
-            DO i = 1, nr
-               rhoa( i, j ) = 0.5d0 * ( wrk( i+ir-1, j+ic-1 ) - wrk( j+ic-1, i+ir-1 ) )
-            END DO
-         END DO
-         !
+         ALLOCATE( rhoa( nr, nc ) )   !   antisymmetric part of rho
          ALLOCATE( s( nr, nc ) ) 
          ALLOCATE( sig( nr, nc ) ) 
          ALLOCATE( tau( nr, nc ) ) 
          !
       ELSE
          !
-         ALLOCATE( rhoa( 1, 1 ) )
-         ALLOCATE( rhos( 1, 1 ) )
+         iter_node = .FALSE.
+         !
+	 ALLOCATE( rhos( 1, 1 ) )
+         ALLOCATE( rhoa( 1, 1 ) ) 
          ALLOCATE( s( 1, 1 ) ) 
          ALLOCATE( sig( 1, 1 ) ) 
          ALLOCATE( tau( 1, 1 ) ) 
          !
       END IF
+      !
+      ALLOCATE( rhod( nss ) )
+      !
+      !     rho = <s'c0|s|cp>
+      !
+      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nr, descla )
+      !
+      IF( iter_node ) THEN
+         !
+         ALLOCATE( rhot( nr, nc ) )   !   transpose of rho
+         !
+         !    distributed array rhos contains "rho", 
+         !    now transpose rhos and store the result in distributed array rhot
+         !
+         CALL sqr_tr_cannon( nss, rhos, nr, rhot, nr, descla )
+         !
+         !  Compute the symmetric part of rho
+         !
+         DO j = 1, nc
+            DO i = 1, nr
+               rhos( i, j ) = 0.5d0 * ( rhos( i, j ) + rhot( i, j ) )
+            END DO
+         END DO
+         !
+         !    distributed array rhos now contains symmetric part of "rho", 
+         !
+         CALL consistency_check( rhos )
+         !
+         !  Antisymmetric part of rho, alredy distributed across ortho procs.
+         !
+         DO j = 1, nc
+            DO i = 1, nr
+               rhoa( i, j ) = rhos( i, j ) - rhot( i, j )
+            END DO
+         END DO
+         !
+         DEALLOCATE( rhot )
+         !
+      END IF
 
-
-      !
-      !       Symmetrize wrk containing rhos
-      !
-      ! lower triangle
-      !
-      DO j = 1, nss
-         DO i = j, nss
-            wrk(i,j) = 0.5d0*(wrk(i,j)+wrk(j,i))
-         ENDDO
-      ENDDO
-      !
-      ! upper triangle
-      !
-      DO j = 1, nss
-         DO i = 1, j-1
-            wrk(i,j) = wrk(j,i)
-         ENDDO
-      ENDDO
 
       CALL start_clock( 'rsg' )
       !
@@ -224,13 +201,20 @@
       !
       IF( use_parallel_diag ) THEN
          !
-         CALL diagonalize_parallel( nss, wrk, rhod, s, descla )
+         CALL diagonalize_parallel( nss, rhos, rhod, s, descla )
          !
       ELSE
+         !
+         ALLOCATE( wrk( nss, nss ), STAT = info )
+         IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
+         !
+         CALL collect_matrix( wrk, rhos )
          !
          CALL diagonalize_serial( nss, wrk, rhod )
          !
          CALL distribute_matrix( wrk, s )
+         !
+         DEALLOCATE( wrk )
          !
       END IF
       !
@@ -240,35 +224,25 @@
       !
       !     sig = 1-<cp|s|cp>
       !
-      CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, wrk, nx )
-      !
-      CALL distribute_matrix( wrk, sig )
+      CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nr, descla )
       !
       !     tau = <s'c0|s|s'c0>
       !
-      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, wrk, nx )
+      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nr, descla )
       !
-      CALL distribute_matrix( wrk, tau )
-
-      DEALLOCATE( wrk )
-
       IF( iopt == 0 ) THEN
          !
-         CALL ortho_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, rhos, tau, nx, nss, descla)
+         CALL ortho_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
          !
       ELSE
          !
-         CALL ortho_alt_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, tau, nx, nss, descla)
+         CALL ortho_alt_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
          !
       END IF
       !
-      DO j = 1, nc
-        DO i = 1, nr
-          IF (x0(i,j) /= x0(i,j)) CALL errore('ortho','ortho went bananas',2)
-        END DO
-      END DO
-
       DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
+      !
+      CALL consistency_check( x0 )
 
       RETURN
 
@@ -276,6 +250,7 @@
 
       SUBROUTINE distribute_matrix( a, b )
          REAL(DP) :: a(:,:), b(:,:)
+         INTEGER :: i, j
          IF( iter_node ) THEN
             DO j = 1, nc
                DO i = 1, nr
@@ -286,6 +261,37 @@
          RETURN
       END SUBROUTINE
 
+      SUBROUTINE collect_matrix( a, b )
+         REAL(DP) :: a(:,:), b(:,:)
+         INTEGER :: i, j
+         a = 0.0d0
+         IF( iter_node ) THEN
+            DO j = 1, nc
+               DO i = 1, nr
+                  a( ir + i - 1, ic + j - 1 ) = b( i, j )
+               END DO
+            END DO
+         END IF
+         CALL mp_sum( a, intra_image_comm )
+         RETURN
+      END SUBROUTINE
+
+      SUBROUTINE consistency_check( a )
+         REAL(DP) :: a(:,:)
+         INTEGER :: i, j
+         !
+         ! on some machines (IBM RS/6000 for instance) the following test allows
+         ! to distinguish between Numbers and Sodium Nitride (NaN, Not a Number).
+         ! If a matrix of Not-Numbers is passed to rs, the most likely outcome is
+         ! that the program goes on forever doing nothing and writing nothing.
+         !
+         DO j = 1, nc
+            DO i = 1, nr
+               IF (a(i,j) /= a(i,j)) CALL errore(' ortho ',' ortho went bananas ',1)
+            END DO
+         END DO
+         RETURN
+      END SUBROUTINE
 
    END SUBROUTINE ortho_gamma_x
 
@@ -319,6 +325,7 @@
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma
+      USE descriptors,    ONLY: nlac_ , ilac_
       !
       IMPLICIT NONE
       !
@@ -331,11 +338,12 @@
       REAL(DP)    :: bephi(nkb,nbsp), becp(nkb,nbsp)
       !
       REAL(DP), ALLOCATABLE :: xloc(:,:)
-      REAL(DP), ALLOCATABLE :: qbephi(:,:), qbecp(:,:)
+      REAL(DP), ALLOCATABLE :: qbephi(:,:,:), qbecp(:,:,:)
 
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
-      INTEGER :: nspin_sub, nx0
+      INTEGER :: nspin_sub, nx0, nc, ic
+      REAL(DP) :: qqf
 
       nkbx = nkb
       nx0  = SIZE( x0, 1 )
@@ -349,8 +357,8 @@
       !
       !     calculation of qbephi and qbecp
       !
-      ALLOCATE( qbephi( nkbx, nbsp ) )
-      ALLOCATE( qbecp ( nkbx, nbsp ) )
+      ALLOCATE( qbephi( nkbx, nx0, nspin ) )
+      ALLOCATE( qbecp ( nkbx, nx0, nspin ) )
       !
       qbephi = 0.d0
       qbecp  = 0.d0
@@ -359,14 +367,20 @@
          DO iv=1,nh(is)
             DO jv=1,nh(is)
                IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                  qqf = qq(iv,jv,is)
                   DO ia=1,na(is)
                      inl=ish(is)+(iv-1)*na(is)+ia
                      jnl=ish(is)+(jv-1)*na(is)+ia
-                     DO i=1,nbsp
-                        qbephi(inl,i)= qbephi(inl,i)                    &
-     &                       +qq(iv,jv,is)*bephi(jnl,i)
-                        qbecp (inl,i)=qbecp (inl,i)                     &
-     &                       +qq(iv,jv,is)*becp (jnl,i)
+                     DO iss = 1, nspin
+                        istart = iupdwn(iss)
+                        nc     = descla( nlac_ , iss )
+                        ic     = descla( ilac_ , iss )
+                        DO i = 1, nc
+                           qbephi(inl,i,iss) = qbephi(inl,i,iss)                    &
+     &                       + qqf * bephi(jnl,i+ic-1+istart-1)
+                           qbecp (inl,i,iss) = qbecp (inl,i,iss)                     &
+     &                       + qqf * becp (jnl,i+ic-1+istart-1)
+                        END DO
                      END DO
                   END DO
                ENDIF
@@ -386,7 +400,7 @@
 
          xloc = x0(:,:,iss) * ccc
 
-         CALL ortho_gamma( 0, cp, ngwx, phi, becp, qbecp, nkbx, bephi, qbephi, &
+         CALL ortho_gamma( 0, cp, ngwx, phi, becp, qbecp(:,:,iss), nkbx, bephi, qbephi(:,:,iss), &
                            xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
 
          IF( iter > ortho_max ) THEN
@@ -403,12 +417,12 @@
       END DO
 
       IF( force_pairing ) cp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp(:,1:nupdwn(2))
-!
+      !
       DEALLOCATE( xloc )
       DEALLOCATE(qbecp )
       DEALLOCATE(qbephi)
-!
+      !
       CALL stop_clock( 'ortho' )
+      !
       RETURN
-      END SUBROUTINE ortho_cp
-
+   END SUBROUTINE ortho_cp

@@ -21,10 +21,10 @@
       !
       IMPLICIT NONE
 
-!      PRIVATE
       PUBLIC :: mp_start, mp_end, mp_env, mp_group, mp_cart_create, &
         mp_bcast, mp_stop, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
-        mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free
+        mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
+        mp_root_sum
 !
       INTERFACE mp_bcast
 #if defined __T3E
@@ -48,6 +48,10 @@
           mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
           mp_sum_rmm, mp_sum_cmm
+      END INTERFACE
+
+      INTERFACE mp_root_sum
+        MODULE PROCEDURE mp_root_sum_rm
       END INTERFACE
 
       INTERFACE mp_get
@@ -1463,7 +1467,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         ALLOCATE (res(1:msglen),STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8124 )
@@ -1487,7 +1491,7 @@
         REAL (DP), INTENT (INOUT) :: msg(:,:)
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, m1, m2, ierr, i, j, k
+        INTEGER :: msglen, m1, m2, ierr
         REAL (DP), ALLOCATABLE :: res(:,:)
         REAL (DP), ALLOCATABLE :: resv(:)
 #if defined(__MPI)
@@ -1496,13 +1500,15 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         m1 = size(msg(:,1))
         m2 = size(msg(1,:))
         ALLOCATE (res(m1,m2),STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8128 )
+        !
         CALL mpi_allreduce(msg, res, msglen, mpi_double_precision, mpi_sum, group, ierr)
+        !
         IF (ierr/=0) CALL mp_stop( 8129 )
         msg = res
         DEALLOCATE (res, STAT=ierr)
@@ -1516,8 +1522,54 @@
 #endif
 
       END SUBROUTINE mp_sum_rm
+
+
+      SUBROUTINE mp_root_sum_rm( msg, root, gid )
+        IMPLICIT NONE
+        REAL (DP), INTENT (INOUT) :: msg(:,:)
+        INTEGER, INTENT (IN) :: root
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen, m1, m2, ierr, taskid
+        REAL (DP), ALLOCATABLE :: res(:,:)
+        REAL (DP), ALLOCATABLE :: resv(:)
+#if defined(__MPI)
+        msglen = size(msg)
+        IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop( 8127 )
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+#if defined __XD1
+        CALL PARALLEL_SUM_REAL( msg, msglen, root, group, ierr )
+#else
+        m1 = size(msg(:,1))
+        m2 = size(msg(1,:))
+        ALLOCATE (res(m1,m2),STAT=ierr)
+        IF (ierr/=0) CALL mp_stop( 8128 )
+        !
+        CALL mpi_reduce(msg, res, msglen, mpi_double_precision, mpi_sum, root, group, ierr)
+        !
+        IF (ierr/=0) CALL mp_stop( 8129 )
+        CALL mpi_comm_rank( group, taskid, ierr )
+        IF( root == taskid ) THEN
+           msg = res
+        END IF
+        DEALLOCATE (res, STAT=ierr)
+#endif
+        IF (ierr/=0) CALL mp_stop( 8130 )
+
+        mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
+        mp_call_count( 36 ) = mp_call_count( 36 ) + 1
+        mp_call_sizex( 36 ) = MAX( mp_call_sizex( 36 ), msglen )
+
+#endif
+
+      END SUBROUTINE mp_root_sum_rm
+
 !
 !------------------------------------------------------------------------------!
+
+!------------------------------------------------------------------------------!
+!
 
       SUBROUTINE mp_sum_rmm(msg, res, root, gid)
         IMPLICIT NONE
@@ -1538,13 +1590,21 @@
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop( 8131 )
 
         IF( PRESENT( root ) ) THEN
-          CALL mpi_reduce(msg, res, msglen, mpi_double_precision, mpi_sum, root, group, ierr)
-        ELSE
+           !
 #if defined __XD1
-          CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, group, ierr )
+           CALL mpi_reduce(msg, res, msglen, mpi_double_precision, mpi_sum, root, group, ierr)
 #else
-          CALL mpi_allreduce(msg, res, msglen, mpi_double_precision, mpi_sum, group, ierr)
+           CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, root, group, ierr )
 #endif
+           !
+        ELSE
+           !
+#if defined __XD1
+           CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, -1, group, ierr )
+#else
+           CALL mpi_allreduce(msg, res, msglen, mpi_double_precision, mpi_sum, group, ierr)
+#endif
+           !
         END IF
         IF (ierr/=0) CALL mp_stop( 8132 )
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
@@ -1575,7 +1635,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         m1 = size(msg,1)
         m2 = size(msg,2)
@@ -1612,7 +1672,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3),size(msg,4)), STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8138 )
@@ -1668,7 +1728,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         ALLOCATE (res(1:size(msg)),STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8143 )
@@ -1699,7 +1759,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         m1 = size(msg(:,1))
         m2 = size(msg(1,:))
@@ -1733,7 +1793,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #  if defined __XD1
-        CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, -1, group, ierr )
 #  else
         CALL mpi_allreduce(msg, res, msglen, mpi_double_precision, mpi_sum, group, ierr)
 #  endif
@@ -1765,7 +1825,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3)),STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8153 )
@@ -1799,7 +1859,7 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, group, ierr )
+        CALL PARALLEL_SUM_REAL( msg, msglen, -1, group, ierr )
 #else
         ALLOCATE (res(size(msg,1),size(msg,2),size(msg,3),size(msg,4)), STAT=ierr)
         IF (ierr/=0) CALL mp_stop( 8157 )
@@ -2097,34 +2157,63 @@
       !  to break down MPI communications in smaller pieces
       !
 
-      SUBROUTINE PARALLEL_SUM_REAL( ARRAY, N, GID, ierr )
+      SUBROUTINE PARALLEL_SUM_REAL( ARRAY, N, ROOT, GID, ierr )
         IMPLICIT NONE
-        INTEGER :: N, GID, ierr
+        INTEGER :: N, GID, ierr, root
         REAL*8 ARRAY(N)
 #if defined __MPI
         INCLUDE 'mpif.h'
         INTEGER, PARAMETER :: NSIZ = __MSGSIZ_MAX
-        INTEGER :: ib, nb, ip, nn
+        INTEGER :: ib, nb, ip, nn, taskid
         REAL*8, ALLOCATABLE :: ARRAY_TMP(:)
+        !
+        IF( root >= 0 ) THEN
+           CALL MPI_COMM_RANK( gid, taskid, ierr)
+        END IF
+        !
         IF( n <= nsiz ) THEN
+          !
           ALLOCATE( ARRAY_TMP( n ) )
-          CALL MPI_ALLREDUCE(ARRAY,ARRAY_TMP,N,MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
-          ARRAY(1:n) = ARRAY_TMP(1:n)
+          IF( root < 0 ) THEN
+             CALL MPI_ALLREDUCE(ARRAY,ARRAY_TMP,N,MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
+             ARRAY(1:n) = ARRAY_TMP(1:n)
+          ELSE
+             CALL MPI_REDUCE(ARRAY,ARRAY_TMP,N,MPI_DOUBLE_PRECISION, MPI_SUM, root, GID,ierr)
+             IF( root == taskid ) THEN
+                ARRAY(1:n) = ARRAY_TMP(1:n)
+             END IF
+          END IF
           DEALLOCATE( ARRAY_TMP )
+          !
         ELSE
+          !
           ALLOCATE( ARRAY_TMP( nsiz ) )
           nb = n / nsiz
           DO ib = 1, nb
             ip = ( ib - 1 ) * nsiz + 1
             nn = ip + nsiz - 1
-            CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nsiz, MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
-            ARRAY(ip:nn) = ARRAY_TMP(1:nsiz)
+            IF( root < 0 ) THEN
+              CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nsiz, MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
+              ARRAY(ip:nn) = ARRAY_TMP(1:nsiz)
+            ELSE
+              CALL MPI_REDUCE( ARRAY(ip), ARRAY_TMP(1), nsiz, MPI_DOUBLE_PRECISION, MPI_SUM, root, GID,ierr)
+              IF( root == taskid ) THEN
+                 ARRAY(ip:nn) = ARRAY_TMP(1:nsiz)
+              END IF
+            END IF
           END DO
           nn = MOD( n, nsiz )
           IF( nn /= 0 ) THEN
             ip = nb * nsiz + 1
-            CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nn, MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
-            ARRAY(ip:n) = ARRAY_TMP(1:nn)
+            IF( root < 0 ) THEN
+              CALL MPI_ALLREDUCE( ARRAY(ip), ARRAY_TMP(1), nn, MPI_DOUBLE_PRECISION, MPI_SUM,GID,ierr)
+              ARRAY(ip:n) = ARRAY_TMP(1:nn)
+            ELSE
+              CALL MPI_REDUCE( ARRAY(ip), ARRAY_TMP(1), nn, MPI_DOUBLE_PRECISION, MPI_SUM, root, GID,ierr)
+              IF( root == taskid ) THEN
+                 ARRAY(ip:n) = ARRAY_TMP(1:nn)
+              END IF
+            END IF
           END IF
           DEALLOCATE( ARRAY_TMP )
         END IF
@@ -2171,9 +2260,9 @@
 !
 !=----------------------------------------------------------------------------=!
 !
-      SUBROUTINE PARALLEL_SUM_REAL_TO( ARRAY_IN, ARRAY_OUT, N, GID, ierr )
+      SUBROUTINE PARALLEL_SUM_REAL_TO( ARRAY_IN, ARRAY_OUT, N, ROOT, GID, ierr )
         IMPLICIT NONE
-        INTEGER :: N, GID, ierr
+        INTEGER :: N, GID, ierr, ROOT
         REAL*8  :: ARRAY_IN(N)
         REAL*8  :: ARRAY_OUT(N)
 #if defined __MPI
@@ -2181,20 +2270,34 @@
         INTEGER :: msgsiz_max = __MSGSIZ_MAX
         INTEGER :: nblk, blksiz, iblk, istart
         IF( n .LT. msgsiz_max) THEN
-          CALL MPI_ALLREDUCE(ARRAY_IN, ARRAY_OUT, N, MPI_DOUBLE_PRECISION, MPI_SUM, GID, ierr)
+           IF( ROOT < 0 ) THEN
+              CALL MPI_ALLREDUCE(ARRAY_IN, ARRAY_OUT, N, MPI_DOUBLE_PRECISION, MPI_SUM, GID, ierr)
+           ELSE
+              CALL MPI_REDUCE(ARRAY_IN, ARRAY_OUT, N, MPI_DOUBLE_PRECISION, MPI_SUM, ROOT, GID, ierr)
+           END IF
         ELSE
           nblk   = n / msgsiz_max
           blksiz = msgsiz_max
           DO iblk = 1, nblk
-            istart = (iblk-1)*msgsiz_max + 1
-            CALL MPI_ALLREDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
+             istart = (iblk-1)*msgsiz_max + 1
+             IF( ROOT < 0 ) THEN
+                CALL MPI_ALLREDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
                                MPI_DOUBLE_PRECISION, MPI_SUM, GID, ierr)
+             ELSE
+                CALL MPI_REDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
+                               MPI_DOUBLE_PRECISION, MPI_SUM, ROOT, GID, ierr)
+             END IF
           END DO
           blksiz = MOD( n, msgsiz_max )
           IF( blksiz .GT. 0 ) THEN
-            istart = nblk * msgsiz_max + 1
-            CALL MPI_ALLREDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
+             istart = nblk * msgsiz_max + 1
+             IF( ROOT < 0 ) THEN
+                CALL MPI_ALLREDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
                                MPI_DOUBLE_PRECISION, MPI_SUM, GID, ierr)
+             ELSE
+                CALL MPI_REDUCE(ARRAY_IN(istart), ARRAY_OUT(istart), blksiz, &
+                               MPI_DOUBLE_PRECISION, MPI_SUM, ROOT, GID, ierr)
+             END IF
           END IF
         END IF
 #else

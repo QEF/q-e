@@ -33,7 +33,9 @@ MODULE orthogonalize_base
 
       REAL(DP), PUBLIC :: ortho_para = 0
 
-      PUBLIC :: sigset, rhoset, tauset
+      PUBLIC :: sigset
+      PUBLIC :: tauset
+      PUBLIC :: rhoset
       PUBLIC :: ortho_iterate
       PUBLIC :: ortho_alt_iterate
       PUBLIC :: updatc, calphi
@@ -82,6 +84,7 @@ CONTAINS
       DEALLOCATE( aux )
 
       RETURN
+
    END SUBROUTINE diagonalize_serial
 
 
@@ -115,14 +118,18 @@ CONTAINS
 
       IF ( desc( lambda_node_ ) > 0 ) THEN
          !
+         !  Compute local dimension of the cyclically distributed matrix
+         !
          nrl = ldim_cyclic( n, np, me )
 
          ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
 
-         CALL prpack( n, diag, rhos, np, me )
+         ! CALL prpack( n, diag, rhos )
+         CALL blk2cyc_redist( n, diag, nrl, np, me, comm, rhos, SIZE(s,1), desc(1) ) 
          !
          CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, np, me, comm )
          !
+         !  Redistribute matrix "vv" into "s"
          !  matrix "s" is block distributed
          !  across 2D processors grid ( ortho_comm )
          !
@@ -133,6 +140,31 @@ CONTAINS
       END IF
 
       RETURN
+
+   CONTAINS
+
+      SUBROUTINE prpack( n, ap, a )
+        !
+        !  Pack "a" ( replicated ) in "ap" ( distributed )
+        !  row of "a" are distributed round-robin across procs.
+        !
+        IMPLICIT NONE
+        REAL(DP), INTENT(IN)  :: a(:,:)
+        REAL(DP), INTENT(OUT) :: ap(:,:)
+        INTEGER,  INTENT(IN)  :: n
+        INTEGER :: i, j, jl
+        !
+        DO i = 1, n
+           j = me + 1    !  my first matrix row ( me starts from 0 )
+           DO jl = 1, nrl
+             ap( jl, i ) = a( j, i )
+             j = j + np  !  my next matrix row ( np is the number of procs )
+           END DO
+        END DO
+        !
+        RETURN
+      END SUBROUTINE prpack
+
    END SUBROUTINE diagonalize_parallel
 
 
@@ -146,26 +178,30 @@ CONTAINS
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
       USE mp,          ONLY: mp_max
-      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_
+      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , &
+                             ilar_ , ilac_
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: n
       REAL(DP), ALLOCATABLE :: s(:,:), a(:,:), d(:)
       REAL(DP) :: t1, tpar, tser
-      INTEGER  :: nr, nc
+      INTEGER  :: nr, nc, ir, ic
       INTEGER  :: desc( descla_siz_ )
       REAL(DP) :: cclock
       EXTERNAL :: cclock
       !
-      ALLOCATE( a( n, n ), d( n ) )
+      ALLOCATE( d( n ) )
       !
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
 
       nr = desc( nlar_ )
       nc = desc( nlac_ )
+      ir = desc( ilar_ )
+      ic = desc( ilac_ )
 
       ALLOCATE( s( nr, nc ) )
+      ALLOCATE( a( nr, nc ) )
       !
       CALL set_a()
       !
@@ -177,7 +213,14 @@ CONTAINS
       tpar = cclock() - t1
       CALL mp_max( tpar, intra_image_comm )
 
-      DEALLOCATE( s )
+      DEALLOCATE( s, a )
+      !
+      nr = n
+      nc = n
+      ir = 1
+      ic = 1
+      !
+      ALLOCATE( a( n, n ) )
       !
       CALL set_a()
       !
@@ -207,13 +250,15 @@ CONTAINS
    CONTAINS
 
       SUBROUTINE set_a()
-         INTEGER :: i, j
-         DO j = 1, n
-            DO i = 1, n
-               IF( i == j ) THEN
-                  a(i,j) = ( DBLE( n-i+1 ) ) / DBLE( n ) + 1.0d0 / ( DBLE( i+j ) - 1.0d0 )
+         INTEGER :: i, j, ii, jj
+         DO j = 1, nc
+            DO i = 1, nr
+               ii = i + ir - 1
+               jj = j + ic - 1
+               IF( ii == jj ) THEN
+                  a(i,j) = ( DBLE( n-ii+1 ) ) / DBLE( n ) + 1.0d0 / ( DBLE( ii+jj ) - 1.0d0 )
                ELSE       
-                  a(i,j) = 1.0d0 / ( DBLE( i+j ) - 1.0d0 )
+                  a(i,j) = 1.0d0 / ( DBLE( ii+jj ) - 1.0d0 )
                END IF
             END DO        
          END DO
@@ -251,20 +296,26 @@ CONTAINS
       !
       IF( ortho_para > 0 ) THEN
          !
-         !  here the number of processors is suggested on input
+         !  Here the number of processors is suggested on input
          !
          np     = ortho_para 
          if( np > MIN( n, nproc_image ) ) np = MIN( n, nproc_image )
          nps    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
          npx    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
+         !
       ELSE
+         !
+         !  Guess a range o value to be tested
+         !
          np     = MIN( n, nproc_image )
          nps    = 1
          npx    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
+         !
       END IF
 
-      ! np, the number of processors to be tested, is less than
-      ! the total number of bands and the total number of processors
+      ! 
+      !  Now test the allowed processors mesh sizes
+      !
 
       tbest  = 1000
       npbest = 1
@@ -326,32 +377,12 @@ CONTAINS
    
 
 
-!=----------------------------------------------------------------------------=!
-
-
-      SUBROUTINE prpack( n, ap, a, np, me )
-        IMPLICIT NONE
-        REAL(DP), INTENT(IN)  :: a(:,:)
-        REAL(DP), INTENT(OUT) :: ap(:,:)
-        INTEGER,  INTENT(IN)  :: n, np, me
-        INTEGER :: i, j, jl
-        DO i = 1, SIZE( ap, 2)
-           j = me + 1
-           DO jl = 1, SIZE( ap, 1)
-             ap( jl, i ) = a( j, i )
-             j = j + np
-           END DO
-        END DO
-        RETURN
-      END SUBROUTINE prpack
-
-
 
 !=----------------------------------------------------------------------------=!
 
 
 
-   SUBROUTINE ortho_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, rhos, tau, nx, nss, desc )
+   SUBROUTINE ortho_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, rhos, tau, nss, desc )
 
       !  this iterative loop uses Cannon's parallel matrix multiplication
       !  matrix are distributed over a square processor grid: 1x1 2x2 3x3 ...
@@ -368,10 +399,10 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: nx, nss, ldx, nx0
+      INTEGER, INTENT(IN) :: nss, ldx, nx0
       INTEGER, INTENT(IN) :: desc(*)
       REAL(DP) :: u   ( ldx, * )
-      REAL(DP) :: diag( nx )
+      REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
       REAL(DP) :: rhor( ldx, * )
       REAL(DP) :: rhos( ldx, * )
@@ -502,7 +533,7 @@ CONTAINS
 !
 
 
-   SUBROUTINE ortho_alt_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, tau, nx, nss, desc )
+   SUBROUTINE ortho_alt_iterate( iter, diff, u, ldx, diag, xloc, nx0, sig, rhor, tau, nss, desc )
 
       USE kinds,             ONLY: DP
       USE io_global,         ONLY: stdout
@@ -514,10 +545,10 @@ CONTAINS
 
       IMPLICIT NONE
 
-      INTEGER, INTENT(IN) :: nx, nss, ldx, nx0
+      INTEGER, INTENT(IN) :: nss, ldx, nx0
       INTEGER, INTENT(IN) :: desc(*)
       REAL(DP) :: u   ( ldx, * )
-      REAL(DP) :: diag( nx )
+      REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
       REAL(DP) :: rhor( ldx, * )
       REAL(DP) :: tau ( ldx, * )
@@ -547,7 +578,7 @@ CONTAINS
       ir = desc( ilar_ )
       ic = desc( ilac_ )
 
-      ALLOCATE( tmp1(nr,nc), tmp2(nr,nc), x1(nr,nc), sigd(nx) )
+      ALLOCATE( tmp1(nr,nc), tmp2(nr,nc), x1(nr,nc), sigd(nss) )
 
       !  Clear elements not involved in the orthogonalization
       !
@@ -653,7 +684,7 @@ CONTAINS
 
 
 !-------------------------------------------------------------------------
-   SUBROUTINE sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, nx )
+   SUBROUTINE sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, ist, sig, ldx, desc )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), becp, qbecp
 !     computes the matrix
@@ -666,64 +697,116 @@ CONTAINS
       USE cvan,               ONLY: nvb
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_sum
+      USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_image_comm
+      USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
+                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
+                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ 
 !
       IMPLICIT NONE
 !
-      INTEGER nss, ist, ngwx, nkbx, n, nx
+      INTEGER nss, ist, ngwx, nkbx, n, ldx
       COMPLEX(DP) :: cp( ngwx, n )
-      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, n ), sig( nx, nx )
+      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, * )
+      REAL(DP)    :: sig( ldx, * )
+      INTEGER     :: desc( * )
 !
-      INTEGER :: i, j
-      REAL(DP), ALLOCATABLE :: tmp1(:,:)
+      INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
+      INTEGER :: ii, jj, root
+      INTEGER :: desc_ip( descla_siz_ )
+      INTEGER :: np( 2 ), coor_ip( 2 )
+      !
+      REAL(DP), ALLOCATABLE :: sigp(:,:)
 !
       IF( nss < 1 ) RETURN
 
-      CALL DGEMM( 'T', 'N',  nss, nss, 2*ngw, -2.0d0, cp( 1, ist ), 2*ngwx, &
-                  cp( 1, ist ), 2*ngwx, 0.0d0, sig, nx)
-      !
-      !     q = 0  components has weight 1.0
-      !
-      IF ( gstart == 2 ) THEN
-         DO j=1,nss
-            DO i=1,nss
-               sig(i,j) = sig(i,j) +                                    &
-     &              DBLE(cp(1,i+ist-1))*DBLE(cp(1,j+ist-1))
-            END DO
+      np(1) = desc( la_npr_ )
+      np(2) = desc( la_npc_ )
+
+      DO ipc = 1, np(2)
+         DO ipr = 1, np(1)
+
+            coor_ip(1) = ipr - 1
+            coor_ip(2) = ipc - 1
+
+            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ) )
+
+            nr = desc_ip( nlar_ )
+            nc = desc_ip( nlac_ )
+            ir = desc_ip( ilar_ )
+            ic = desc_ip( ilac_ )
+            !
+            root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ ) 
+
+            ALLOCATE( sigp( nr, nc ) ) 
+
+            CALL DGEMM( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
+                        cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nr )
+            !
+            !     q = 0  components has weight 1.0
+            !
+            IF ( gstart == 2 ) THEN
+               DO jj=1,nc
+                  DO ii=1,nr
+                     i = ii + ir - 1
+                     j = jj + ic - 1
+                     sigp(ii,jj) = sigp(ii,jj) + DBLE(cp(1,i+ist-1))*DBLE(cp(1,j+ist-1))
+                  END DO
+               END DO
+            END IF
+            !
+            !
+            CALL mp_root_sum( sigp, root, intra_image_comm )
+            !
+            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
+               sig(1:nr,1:nc) = sigp
+            END IF
+            !
+            DEALLOCATE( sigp )
+            !
          END DO
+         !
+      END DO
+      !
+      !
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         !
+         nr = desc( nlar_ )
+         nc = desc( nlac_ )
+         ir = desc( ilar_ )
+         ic = desc( ilac_ )
+         !
+         IF( desc( la_myr_ ) == desc( la_myc_ ) ) THEN
+            DO i = 1, nr
+               sig(i,i) = sig(i,i) + 1.0d0
+            END DO
+         END IF
+         !
+         IF( nvb > 0 ) THEN
+            CALL DGEMM( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist + ir - 1 ), nkbx, &
+                        qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
+                        !qbecp( 1, ist + ic - 1 ), nkbx, 1.0d0, sig, ldx )
+         ENDIF
+         !
+         IF(iprsta.GT.4) THEN
+            WRITE( stdout,*)
+            WRITE( stdout,'(26x,a)') '    sig '
+            DO i=1,nr
+               WRITE( stdout,'(7f11.6)') (sig(i,j),j=1,nc)
+            END DO
+         ENDIF
+         !
       END IF
       !
-      CALL mp_sum( sig, intra_image_comm )
-      !
-      DO i = 1, nss
-         sig(i,i) = sig(i,i) + 1.0d0
-      END DO
-!
-      IF( nvb > 0 ) THEN
-
-         CALL DGEMM( 'T', 'N', nss, nss, nkbus, -1.0d0, becp( 1, ist ), nkbx, &
-                  qbecp( 1, ist ), nkbx, 1.0d0, sig, nx )
-!
-      ENDIF
-
-      IF(iprsta.GT.4) THEN
-         WRITE( stdout,*)
-         WRITE( stdout,'(26x,a)') '    sig '
-         DO i=1,nss
-            WRITE( stdout,'(7f11.6)') (sig(i,j),j=1,nss)
-         END DO
-      ENDIF
-
-!
       RETURN
    END SUBROUTINE sigset
 
+
 !
 !-----------------------------------------------------------------------
-   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, nx )
+   SUBROUTINE rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, ist, rho, ldx, desc )
 !-----------------------------------------------------------------------
 !     input: cp (non-orthonormal), phi, bephi, qbecp
 !     computes the matrix
@@ -737,63 +820,115 @@ CONTAINS
       USE uspp,               ONLY: nkbus
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
-      USE mp,                 ONLY: mp_sum
+      USE mp,                 ONLY: mp_root_sum
       USE mp_global,          ONLY: intra_image_comm
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
+      USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
+                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
+                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_
+
 !
       IMPLICIT NONE
 !
-      INTEGER     :: nss, ist, ngwx, nkbx, nx, n
+      INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, n ), rho( nx, nx )
+      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, * )
+      REAL(DP)    :: rho( ldx, * )
+      INTEGER     :: desc( * )
       !
-      INTEGER     :: i, j
-      REAL(DP), ALLOCATABLE :: tmp1(:,:)
+      INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
+      INTEGER :: ii, jj, root
+      INTEGER :: desc_ip( descla_siz_ )
+      INTEGER :: np( 2 ), coor_ip( 2 )
+
+      REAL(DP), ALLOCATABLE :: rhop(:,:)
       !
       !     <phi|cp>
       !
       !
       IF( nss < 1 ) RETURN
 
-      CALL DGEMM( 'T', 'N', nss, nss, 2*ngw, 2.0d0, phi( 1, ist ), 2*ngwx, &
-                  cp( 1, ist ), 2*ngwx, 0.0d0, rho, nx)
-      !
-      !     q = 0  components has weight 1.0
-      !
-      IF (gstart == 2) THEN
-         DO j=1,nss
-            DO i=1,nss
-               rho(i,j) = rho(i,j) -                                    &
-     &              DBLE(phi(1,i+ist-1))*DBLE(cp(1,j+ist-1))
+      np(1) = desc( la_npr_ )
+      np(2) = desc( la_npc_ )
+
+      DO ipc = 1, np(2)
+         DO ipr = 1, np(1)
+
+            coor_ip(1) = ipr - 1
+            coor_ip(2) = ipc - 1
+
+            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ) )
+
+            nr = desc_ip( nlar_ )
+            nc = desc_ip( nlac_ )
+            ir = desc_ip( ilar_ )
+            ic = desc_ip( ilac_ )
+            !
+            root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ )
+
+            ALLOCATE( rhop( nr, nc ) )
+
+            CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir -1 ), 2*ngwx, &
+                  cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nr )
+            !
+            !     q = 0  components has weight 1.0
+            !
+            IF (gstart == 2) THEN
+               DO jj=1,nc
+                  DO ii=1,nr
+                     i = ii + ir - 1
+                     j = jj + ic - 1
+                     rhop(ii,jj) = rhop(ii,jj) - DBLE(phi(1,i+ist-1))*DBLE(cp(1,j+ist-1))
+                  END DO
+               END DO
+            END IF
+      
+            CALL mp_root_sum( rhop, root, intra_image_comm )
+
+            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
+               rho(1:nr,1:nc) = rhop
+            END IF
+
+            DEALLOCATE( rhop )
+
+         END DO
+      END DO
+
+
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         !
+         nr = desc( nlar_ )
+         nc = desc( nlac_ )
+         ir = desc( ilar_ )
+         ic = desc( ilac_ )
+         !
+         IF( nvb > 0 ) THEN
+            !
+            ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
+            !
+            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist + ir - 1 ), nkbx, &
+                     qbecp( 1, 1 ), nkbx, 1.0d0, rho, ldx )
+                     ! qbecp( 1, ist + ic - 1 ), nkbx, 1.0d0, rho, ldx )
+
+         END IF
+
+         IF (iprsta.GT.4) THEN
+            WRITE( stdout,*)
+            WRITE( stdout,'(26x,a)') '    rho '
+            DO i=1,nr
+               WRITE( stdout,'(7f11.6)') (rho(i,j),j=1,nc)
             END DO
-         END DO
+         END IF
+
       END IF
-
-      CALL mp_sum( rho, intra_image_comm )
-!
-      IF( nvb > 0 ) THEN
-         !
-         ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
-         !
-         CALL DGEMM( 'T', 'N', nss, nss, nkbus, 1.0d0, bephi( 1, ist ), nkbx, &
-                  qbecp( 1, ist ), nkbx, 1.0d0, rho, nx )
-
-      ENDIF
-
-      IF(iprsta.GT.4) THEN
-         WRITE( stdout,*)
-         WRITE( stdout,'(26x,a)') '    rho '
-         DO i=1,nss
-            WRITE( stdout,'(7f11.6)') (rho(i,j),j=1,nss)
-         END DO
-      ENDIF
-!
+      !
       RETURN
    END SUBROUTINE rhoset
 
+
 !-------------------------------------------------------------------------
-   SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, nx )
+   SUBROUTINE tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, ist, tau, ldx, desc )
 !-----------------------------------------------------------------------
 !     input: phi
 !     computes the matrix
@@ -806,52 +941,110 @@ CONTAINS
       USE uspp,               ONLY: nkbus
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_sum
+      USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_image_comm
+      USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
+                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
+                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_
 !
       IMPLICIT NONE
-      INTEGER :: nss, ist, ngwx, nkbx, n, nx
-      COMPLEX(DP) :: phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, n ), tau( nx, nx )
       !
-      INTEGER     :: i, j
-      REAL(DP), ALLOCATABLE :: tmp1( :, : )
+      INTEGER     :: nss, ist, ngwx, nkbx, n, ldx
+      COMPLEX(DP) :: phi( ngwx, n )
+      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, * )
+      REAL(DP)    :: tau( ldx, * )
+      INTEGER     :: desc( * )
+      !
+      INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
+      INTEGER :: ii, jj, root
+      INTEGER :: desc_ip( descla_siz_ )
+      INTEGER :: np( 2 ), coor_ip( 2 )
+
+      REAL(DP), ALLOCATABLE :: taup( :, : )
       !
       IF( nss < 1 ) RETURN
       !
-      CALL DGEMM( 'T', 'N', nss, nss, 2*ngw, 2.0d0, phi( 1, ist ), 2*ngwx, &
-                  phi( 1, ist ), 2*ngwx, 0.0d0, tau, nx)
+      !  get dimensions of the square processor grid
       !
-      !     q = 0  components has weight 1.0
+      np(1) = desc( la_npr_ )
+      np(2) = desc( la_npc_ )
       !
-      IF (gstart == 2) THEN
-         DO j=1,nss
-            DO i=1,nss
-               tau(i,j) = tau(i,j) -                                    &
-     &              DBLE(phi(1,i+ist-1))*DBLE(phi(1,j+ist-1))
-            END DO
-         END DO
-      END IF
-
-      CALL mp_sum( tau, intra_image_comm )
-!
-      IF( nvb > 0 ) THEN
+      !  loop on processors coordinates
+      !
+      DO ipc = 1, np(2)
          !
-         CALL DGEMM( 'T', 'N', nss, nss, nkbus, 1.0d0, bephi( 1, ist ), nkbx, &
-                  qbephi( 1, ist ), nkbx, 1.0d0, tau, nx )
+         DO ipr = 1, np(1)
 
-      ENDIF
+            coor_ip(1) = ipr - 1
+            coor_ip(2) = ipc - 1
 
-      IF(iprsta.GT.4) THEN
-         WRITE( stdout,*)
-         WRITE( stdout,'(26x,a)') '    tau '
-         DO i=1,nss
-            WRITE( stdout,'(7f11.6)') (tau(i,j),j=1,nss)
+            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ) )
+
+            nr = desc_ip( nlar_ )
+            nc = desc_ip( nlac_ )
+            ir = desc_ip( ilar_ )
+            ic = desc_ip( ilac_ )
+            !
+            root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ )
+            !
+            !  All processors contribute to the tau block of processor (ipr,ipc)
+            !  with their own part of wavefunctions
+            !
+            ALLOCATE( taup( nr, nc ) )
+            !
+            CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+                        phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nr )
+            !
+            !           q = 0  components has weight 1.0
+            !
+            IF (gstart == 2) THEN
+               DO jj=1,nc
+                  DO ii=1,nr
+                     i = ii + ir - 1
+                     j = jj + ic - 1
+                     taup(ii,jj) = taup(ii,jj) - DBLE(phi(1,i+ist-1))*DBLE(phi(1,j+ist-1))
+                  END DO
+               END DO
+            END IF
+            !
+            CALL mp_root_sum( taup, root, intra_image_comm )
+            !
+            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
+               tau(1:nr,1:nc) = taup
+            END IF
+            !
+            DEALLOCATE( taup )
+            !
          END DO
+         !
+      END DO
+      !
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         !
+         nr = desc( nlar_ )
+         nc = desc( nlac_ )
+         ir = desc( ilar_ )
+         ic = desc( ilac_ )
+         !
+         IF( nvb > 0 ) THEN
+            !
+            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist + ir - 1 ), nkbx, &
+                  qbephi( 1, 1 ), nkbx, 1.0d0, tau, ldx )
+                  !qbephi( 1, ist + ic - 1 ), nkbx, 1.0d0, tau, ldx )
+         END IF
+
+         IF(iprsta.GT.4) THEN
+            WRITE( stdout,*)
+            WRITE( stdout,'(26x,a)') '    tau '
+            DO i=1,nr
+               WRITE( stdout,'(7f11.6)') (tau(i,j),j=1,nc)
+            END DO
+         ENDIF
+         !
       ENDIF
-!
+      !
       RETURN
    END SUBROUTINE tauset
 
