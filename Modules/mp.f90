@@ -1592,9 +1592,9 @@
         IF( PRESENT( root ) ) THEN
            !
 #if defined __XD1
-           CALL mpi_reduce(msg, res, msglen, mpi_double_precision, mpi_sum, root, group, ierr)
-#else
            CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, root, group, ierr )
+#else
+           CALL mpi_reduce(msg, res, msglen, mpi_double_precision, mpi_sum, root, group, ierr)
 #endif
            !
         ELSE
