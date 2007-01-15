@@ -1,6 +1,0 @@
-&inputmagn
-        job = 'g_tensor'
-	prefix = 'cn'
-	tmp_dir = './scratch/'
-        iverbosity = 100
-/
