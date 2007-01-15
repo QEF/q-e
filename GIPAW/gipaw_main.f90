@@ -36,8 +36,8 @@ PROGRAM gipaw_main
   USE gipaw_module
   USE global_version,  ONLY : version_number
   !<apsi>
-  use paw,             ONLY : read_recon, read_recon_paratec
-  USE mp,                          ONLY : mp_barrier !*TMPTMPTMP
+  use paw,             ONLY : read_recon
+  use gipaw_module,    ONLY : read_recon_paratec
   !</apsi>
   !------------------------------------------------------------------------
   IMPLICIT NONE

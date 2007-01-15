@@ -18,7 +18,7 @@ compute_u_kq.o \
 suscept_crystal.o \
 j_para.o \
 biot_savart.o \
-compute_sigma_bare.o \
+compute_sigma.o \
 init_us_2_no_phase.o \
 init_paw_2_no_phase.o \
 g_tensor_crystal.o \
