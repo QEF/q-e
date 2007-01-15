@@ -37,7 +37,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                exit_file, iunexit, delete_if_present
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, dim, pending_image, &
-                               istep_path, frozen, write_save, num_of_images
+                               istep_path, frozen, write_save, num_of_images, &
+                               first_last_opt
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
                                my_image_id, nimage, root_image
@@ -52,7 +53,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   INTEGER               :: fii_, lii_      ! local copies of ini and inl
   INTEGER               :: image, istat
-  REAL(DP)              :: tcpu 
+  REAL(DP)              :: tcpu
   CHARACTER (LEN=256)   :: tmp_dir_saved
   LOGICAL               :: file_exists, opnd
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
@@ -94,6 +95,10 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         grad_pes(:,fii:lii) = 0.D0
         !
      END IF
+     !
+  END IF
+  !
+  IF ( nimage > 1 .AND. .NOT.first_last_opt ) THEN
      !
      ! ... self-consistency on the first and last images is done separately
      !
