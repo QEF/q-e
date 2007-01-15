@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic Nmr VIB VdW"
+           Gamma PH D3 atomic GIPAW VIB VdW"
 else
     dirs=$*
 fi
@@ -27,7 +27,7 @@ do
 		  DEPENDS="../include ../flib ../Modules ../iotk/src"             ;;
 	PP | PWCOND | Gamma | PH )
 		  DEPENDS="../include ../flib ../Modules ../PW ../iotk/src"       ;;
-	D3 | Nmr | VdW ) 
+	D3 | GIPAW | VdW ) 
                   DEPENDS="../include ../flib ../Modules ../PW ../PH ../iotk/src" ;;
         VIB )     DEPENDS="../include ../flib ../Modules ../PW ../iotk/src ../CPV";;
     esac
