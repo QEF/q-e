@@ -21,8 +21,15 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
   USE us,         ONLY : dq
+#ifdef USE_SPLINES
+  USE paw,        ONLY : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
+                         paw_nhtom, paw_indv, paw_nbeta, paw_tab, paw_tab_d2y
+  USE us,         ONLY : nqxq, dq
+  USE splinelib
+#else
   USE paw,        ONLY : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
                          paw_nhtom, paw_indv, paw_tab, paw_nbeta
+#endif
   !
   implicit none
   !
@@ -43,6 +50,11 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
 
   complex(DP) :: phase, pref
   complex(DP), allocatable :: sk(:)
+
+#ifdef USE_SPLINES
+  real(DP), allocatable :: xdata(:)
+  integer :: startq, lastq, iq
+#endif
   !
   !
   if (paw_lmaxkb.lt.0) return
@@ -70,11 +82,23 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
 
+#ifdef USE_SPLINES
+  call divide (nqxq, startq, lastq)
+  allocate(xdata(lastq-startq+1))
+  do iq = startq, lastq
+    xdata(iq) = (iq - 1) * dq
+  enddo
+#endif
+
   jkb = 0
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
      do nb = 1, paw_nbeta (nt)
         do ig = 1, npw_
+#ifdef USE_SPLINES
+           vq(ig) = splint(xdata, paw_tab(:,nb,nt), paw_tab_d2y(:,nb,nt), &
+                qg(ig))
+#else
            px = qg (ig) / dq - int (qg (ig) / dq)
            ux = 1.d0 - px
            vx = 2.d0 - px
@@ -87,6 +111,7 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
                      paw_tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
                      paw_tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
                      paw_tab (i3, nb, nt) * px * ux * vx / 6.d0
+#endif
         enddo
         ! add spherical harmonic part
         do ih = 1, paw_nh (nt)

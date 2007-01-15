@@ -39,6 +39,12 @@ MODULE paw
        paw_becp(:,:)             !  products of wavefunctions and proj
   REAL(DP), ALLOCATABLE :: &
        paw_tab(:,:,:)              ! interpolation table for PPs
+#ifdef USE_SPLINES
+  !<ceres>
+  REAL(DP), ALLOCATABLE :: &
+       paw_tab_d2y(:,:,:)          ! for cubic splines
+  !</ceres>
+#endif
   !
   type wfc_label
      integer  :: na , &   ! Atom number
