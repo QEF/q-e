@@ -1,5 +1,0 @@
-&inputnmr
-  filerec(1)='F.recon'
-  filerec(2)='H.recon'
-  prefix='HF'
-/
