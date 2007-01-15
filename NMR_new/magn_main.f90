@@ -35,15 +35,19 @@ PROGRAM magn_main
   USE cell_base,       ONLY : tpiba
   USE nmr_module
   USE global_version,  ONLY : version_number
+  !<apsi>
+  use paw,             ONLY : read_recon, read_recon_paratec
+  USE mp,                          ONLY : mp_barrier !*TMPTMPTMP
+  !</apsi>
   !------------------------------------------------------------------------
   IMPLICIT NONE
   CHARACTER (LEN=9)   :: code = 'MAGN'
   !------------------------------------------------------------------------
 
-
   CALL init_clocks( .TRUE. )
+  
   CALL start_clock( 'MAGN' )
-
+  
   ! ... and begin with the initialization part
   CALL startup( nd_nmbr, code, version_number )
   CALL nmr_readin()
@@ -53,7 +57,18 @@ PROGRAM magn_main
   call openfil
 
   if (gamma_only) call errore('MAGN_main', 'gamma_only == .true.', 1)
-
+  
+  !<apsi>
+  ! Read in qe format
+  IF ( read_recon_in_paratec_fmt ) THEN
+     ! Read in paratec format
+     CALL read_recon_paratec ( file_reconstruction )
+  ELSE
+     CALL read_recon ( file_reconstruction )
+  END IF
+  !</apsi>
+!  write(0,*) "QQQ2: ", aephi(1,1)%psi(5), psphi(1,1)%psi(5)
+  
   CALL nmr_allocate()
   CALL nmr_setup()
   CALL nmr_summary()
@@ -81,5 +96,7 @@ PROGRAM magn_main
   ! print timings and stop the code
   CALL print_clock_nmr()
   CALL stop_code( .TRUE. )
+  
   STOP
+  
 END PROGRAM magn_main

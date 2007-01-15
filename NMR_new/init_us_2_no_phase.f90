@@ -6,7 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-!
+
+! for the time being, don't use splines, till it is implemented
+! also in PW
+#undef SPLINES
+#define SPLINES
+
 !----------------------------------------------------------------------
 subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
   !----------------------------------------------------------------------
@@ -20,11 +25,11 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
   USE constants,  ONLY : tpi
   USE gvect,      ONLY : eigts1, eigts2, eigts3, ig1, ig2, ig3, g
   USE wvfct,      ONLY : npw, npwx, igk
-#ifdef USE_SPLINES
+#ifdef SPLINES
   USE us,         ONLY : nqxq, dq, tab, tab_d2y
   USE splinelib
 #else
-  USE us,         ONLY : dq, tab
+  USE us,         ONLY : nqxq, dq, tab
 #endif
   USE uspp,       ONLY : nkb, vkb, nhtol, nhtolm, indv
   USE uspp_param, ONLY : lmaxkb, nbeta, nhm, nh
@@ -41,18 +46,15 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
   !
   !     Local variables
   !
-  integer :: i0,i1,i2,i3, ig, l, lm, na, nt, nb, ih, jkb
+  integer :: i0,i1,i2,i3, ig, l, lm, na, nt, nb, ih, jkb, iq
+  integer :: startq, lastq
 
   real(DP) :: px, ux, vx, wx, arg
   real(DP), allocatable :: gk (:,:), qg (:), vq (:), ylm (:,:), vkb1(:,:)
 
   complex(DP) :: phase, pref
   complex(DP), allocatable :: sk(:)
-
-#ifdef USE_SPLINES
   real(DP), allocatable :: xdata(:)
-  integer :: startq, lastq, iq
-#endif
 
   !
   !
@@ -80,12 +82,16 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
 
-#ifdef USE_SPLINES
+#ifdef SPLINES
+  !<ceres>
+  startq = 1
+  lastq = nqxq
   call divide (nqxq, startq, lastq)
   allocate(xdata(lastq-startq+1))
   do iq = startq, lastq
     xdata(iq) = (iq - 1) * dq
   enddo
+  !</ceres>
 #endif
 
   jkb = 0
@@ -93,7 +99,7 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
      ! calculate beta in G-space using an interpolation table
      do nb = 1, nbeta (nt)
         do ig = 1, npw_
-#ifdef USE_SPLINES
+#ifdef SPLINES
            vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
 #else
            px = qg (ig) / dq - int (qg (ig) / dq)
@@ -104,10 +110,15 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
            i1 = i0 + 1
            i2 = i0 + 2
            i3 = i0 + 3
-           vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                     tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                     tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                     tab (i3, nb, nt) * px * ux * vx / 6.d0
+           !*apsi TMPTMPTMP
+           if ( i3 > size(tab,1) ) then
+              vq(ig) = 0.0_dp
+           else
+              vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                   tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                   tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                   tab (i3, nb, nt) * px * ux * vx / 6.d0
+           end if
 #endif
         enddo
         ! add spherical harmonic part
@@ -129,10 +140,10 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
         ! ordering: first all betas for atoms of type 1
         !           then  all betas for atoms of type 2  and so on
         if (ityp (na) .eq.nt) then
-           arg = (q_(1) * tau (1, na) + &
-                  q_(2) * tau (2, na) + &
-                  q_(3) * tau (3, na) ) * tpi
-           phase = CMPLX (cos (arg), - sin (arg) )
+           !arg = (q_(1) * tau (1, na) + &
+           !       q_(2) * tau (2, na) + &
+           !       q_(3) * tau (3, na) ) * tpi
+           !phase = CMPLX (cos (arg), - sin (arg) )
            do ig = 1, npw_
               sk (ig) = eigts1 (ig1(igk_(ig)), na) * &
                         eigts2 (ig2(igk_(ig)), na) * &
@@ -140,7 +151,7 @@ subroutine init_us_2_no_phase (npw_, igk_, q_, vkb_)
            enddo
            do ih = 1, nh (nt)
               jkb = jkb + 1
-              pref = (0.d0, -1.d0) **nhtol (ih, nt)  !!!* phase
+              pref = (0.d0, -1.d0) **nhtol (ih, nt)! * phase
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
               enddo

@@ -15,9 +15,8 @@ SUBROUTINE compute_u_kq(ik, q)
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE cell_base,            ONLY : at, bg, omega, tpiba, tpiba2
   USE wavefunctions_module, ONLY : evc
-  USE klist,                ONLY : lgauss, degauss, ngauss, nks, &
-                                   nkstot, wk, xk, nelec, nelup, neldw
-  USE wvfct,                ONLY : nbnd, nbndx, npwx, npw, igk, wg, g2kin, current_k, btype
+  USE klist,                ONLY : nkstot, xk
+  USE wvfct,                ONLY : nbnd, nbndx, npwx, npw, igk, g2kin, current_k, btype
   USE nmr_module
   USE gvect, only: g,ngm,ecutwfc,ngl,nrxx, nr1, nr2, nr3, nrx1, nrx2, nrx3
   USE uspp,   ONLY : nkb, vkb, okvan
@@ -43,6 +42,7 @@ SUBROUTINE compute_u_kq(ik, q)
   integer, parameter :: max_cg_iter = 200
   integer, parameter :: isolve = 0
   integer, parameter :: david = 4
+  complex(dp) :: ZDOTC
 
   CALL start_clock( 'u_kq' )
   v_of_0 = SUM( vltot(1:nrxx) ) / DBLE( nr1 * nr2 * nr3 )
@@ -54,7 +54,7 @@ SUBROUTINE compute_u_kq(ik, q)
 
   xk_plus_q(:) = xk(:,ik) + q(:)
   call init_us_2(npw,igk,xk_plus_q,vkb)
-
+  
   ! ... read in wavefunctions from the SCF calculation at k
   ! ... and use it as a starting guess
   CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
@@ -162,7 +162,7 @@ SUBROUTINE compute_u_kq(ik, q)
     call errore('compute_u_kq', 'diagonalization method?', -1)
 
   END IF
-
+  
   IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
     CALL errore( 'compute_u_kq', 'too many bands are not converged', 1 )
   END IF
@@ -184,4 +184,3 @@ SUBROUTINE compute_u_kq(ik, q)
 
 
 END SUBROUTINE compute_u_kq
-
