@@ -175,6 +175,7 @@ end Module dynamical
       character(len=80) :: line
       real(DP) :: celldm(6), sum, dyn0r(3,3,2)
       integer :: ibrav, nt, na, nb, naa, nbb, i, j, k
+      CHARACTER(len=9) :: symm_type
       logical :: qfinito, noraman
       !
       !
@@ -183,6 +184,11 @@ end Module dynamical
       read(1,'(a)') line
       read(1,'(a)') line
       read(1,*) ntyp,nat,ibrav,celldm
+      !
+      if (ibrav==0) then
+         read(1,'(a)') symm_type
+         read(1,*) ((at(i,j),i=1,3),j=1,3)
+      end if
       !
       allocate ( dyn (3,3,nat,nat) )
       allocate ( dchi_dtau (3,3,3,nat) )
