@@ -775,7 +775,9 @@ cell_dofree    CHARACTER ( default = 'all' )
                xz      = only the x and z axis are moved, angles are unchanged
                yz      = only the y and z axis are moved, angles are unchanged
                xyz     = x, y and z axis are moved, angles are unchanged
-
+               xyt     = x1, x2, y2 (i.e. lower triangle of the 2 vectors)
+               xyzt    = x1, x2, y2, x3, y3, z3 (i.e. lower triangle of 
+               the 3 vectors)
 
 ===============================================================================
 NAMELIST &PRESS_AI ( only if tabps = .true. )

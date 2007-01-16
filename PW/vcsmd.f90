@@ -29,7 +29,7 @@ SUBROUTINE vcsmd()
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
   USE constants,       ONLY : e2, uakbar
-  USE cell_base,       ONLY : omega, alat, at, bg
+  USE cell_base,       ONLY : omega, alat, at, bg, iforceh
   USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                               cmass, ntcheck, lmovecell
@@ -293,22 +293,22 @@ SUBROUTINE vcsmd()
      !
      enew = etot - e_start
      !
-     CALL init( ntyp, nat, ntyp, nat-fixatom, rat, ityp, avec, vcell, force,   &
+     CALL vcinit( ntyp, nat, ntyp, nat-fixatom, rat, ityp, avec, vcell, force,   &
                 sigma, calc, temperature, vx2, vy2, vz2, rms, vmean, ekin,     &
                 avmod, theta, amass, cmass, press, p, dt, aveci, avecd, avec2d,&
                 avec2di, sigmamet, sig0, avec0, v0, rati, ratd, rat2d, rat2di, &
-                enew, uta, eka, eta, ekla, utl, etl, ut, ekint, edyn )
+                enew, uta, eka, eta, ekla, utl, etl, ut, ekint, edyn, iforceh )
      !
   ELSE
      !
      enew = etot - e_start
      !
-     CALL move( ntyp, nat, ntyp, ityp, rat, avec, vcell, force,                &
+     CALL vcmove( ntyp, nat, ntyp, ityp, rat, avec, vcell, force,                &
                 sigma, calc, avmod, theta, amass, cmass, press, p, dt, avecd,  &
                 avec2d, aveci, avec2di, sigmamet, sig0, avec0, v0, ratd, rat2d,&
                 rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, ekint,  &
                 edyn, temperature, tolp, ntcheck, ntimes, istep, tnew, nzero,  &
-                nat-fixatom, acu, ack, acp, acpv, avu, avk, avp, avpv)
+                nat-fixatom, acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh)
      !
   END IF
   !

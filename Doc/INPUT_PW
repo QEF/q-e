@@ -870,6 +870,21 @@ press_cov_thr  REAL ( default = 0.5D0 Kbar )
                relaxation ('vc-relax' : note that the other convergence
                thresholds for ionic relaxation apply as well).
 
+cell_dofree    CHARACTER ( default = 'all' )
+               select which of the cell parameters should be moved
+               all     = all axis and angles are propagated
+               volume  = the cell is simply rescaled, without changing the shape
+               x       = only the x axis is moved
+               y       = only the y axis is moved
+               z       = only the z axis is moved
+               xy      = only the x and y axis are moved, angles are unchanged
+               xz      = only the x and z axis are moved, angles are unchanged
+               yz      = only the y and z axis are moved, angles are unchanged
+               xyz     = x, y and z axis are moved, angles are unchanged
+               xyt     = x1, x2, y2 (i.e. lower triangle of the 2 vectors)
+               xyzt    = x1, x2, y2, x3, y3, z3 (i.e. lower triangle of 
+               the 3 vectors)
+
 ===============================================================================
 &PHONON ( only in calculation = 'phonon' )
 

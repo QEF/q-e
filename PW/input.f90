@@ -38,7 +38,8 @@ SUBROUTINE iosys()
   !
   USE cell_base,     ONLY : at, bg, alat, omega, &
                             celldm_ => celldm, &
-                            ibrav_  => ibrav
+                            ibrav_  => ibrav, &
+                            iforceh
   !
   USE ions_base,     ONLY : if_pos, ityp, tau, &
                             ntyp_ => nsp, &
@@ -226,7 +227,8 @@ SUBROUTINE iosys()
   ! ... CELL namelist
   !
   USE input_parameters, ONLY : cell_parameters, cell_dynamics, press, wmass, &
-                               cell_temperature, cell_factor, press_conv_thr
+                               cell_temperature, cell_factor, press_conv_thr,&
+                               cell_dofree
   !
   ! ... PHONON namelist
   !
@@ -1329,17 +1331,15 @@ SUBROUTINE iosys()
   !
   IF ( wmass == 0.D0 ) THEN
      !
-     IF ( calc == 'nd' .OR. calc == 'nm' ) THEN
-        !
         wmass = SUM( amass(ityp(:)) )
+        !
+     IF ( calc == 'nd' .OR. calc == 'nm' ) THEN
         !
         wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
         !
      END IF
      !
      IF ( calc == 'cd' .OR. calc == 'cm' ) THEN
-        !
-        wmass = SUM( amass(ityp(:)) )
         !
         wmass = 0.75D0 * wmass / pi / pi
         !
@@ -1356,6 +1356,60 @@ SUBROUTINE iosys()
   ! ... unit conversion for pressure
   !
   press_ = press_ / uakbar
+  !
+  ! This is a piece from cell_base_init
+    SELECT CASE ( TRIM( cell_dofree ) )
+
+            CASE ( 'all', 'default' )
+              iforceh = 1
+            CASE ( 'volume' )
+              CALL errore(' metric_setup ', &
+                 ' cell_dofree = '//TRIM(cell_dofree)//' not yet implemented ', 1 )
+            CASE ('x')
+              iforceh      = 0
+              iforceh(1,1) = 1
+            CASE ('y')
+              iforceh      = 0
+              iforceh(2,2) = 1
+            CASE ('z')
+              iforceh      = 0
+              iforceh(3,3) = 1
+            CASE ('xy')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,2) = 1
+            CASE ('xyt')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(1,2) = 1
+              iforceh(2,2) = 1
+            CASE ('xz')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(3,3) = 1
+            CASE ('yz')
+              iforceh      = 0
+              iforceh(2,2) = 1
+              iforceh(3,3) = 1
+            CASE ('xyz')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(2,2) = 1
+              iforceh(3,3) = 1
+            CASE ('xyzt')
+              iforceh      = 0
+              iforceh(1,1) = 1
+              iforceh(1,2) = 1
+              iforceh(2,2) = 1
+              iforceh(1,3) = 1
+              iforceh(2,3) = 1
+              iforceh(3,3) = 1
+            CASE DEFAULT
+              CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
+
+    END SELECT
+    ! Below one should print out iforceh in some nice form    
+  !    write(6,*) 'iforceh= ',iforceh
   !
   ! ... read pseudopotentials
   !

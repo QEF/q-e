@@ -8,11 +8,11 @@
 !*
 #include "f_defs.h"
 !*
-subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
+subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
      vcell, force, frr, calc, temp, vx2, vy2, vz2, rms, vmean, ekin, &
      avmod, theta, atmass, cmass, press, p, dt, aveci, avecd, avec2d, &
      avec2di, sigma, sig0, avec0, v0, rati, ratd, rat2d, rat2di, enew, &
-     uta, eka, eta, ekla, utl, etl, ut, ekint, etot)
+     uta, eka, eta, ekla, utl, etl, ut, ekint, etot, iforceh)
   !
   ! rmw (18/8/99)
   !
@@ -68,7 +68,7 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
        sigav (3, 3), gmgd (3, 3), avec0 (3, 3), sig0 (3, 3), avmod (3), &
        theta (3, 3), pim (3, 3), piml (3, 3), frr (3, 3)
   !
-  integer :: ityp (mxdatm), natot
+  integer :: ityp (mxdatm), natot, iforceh(3,3)
   real(DP) :: atmass (mxdtyp), rat (3, mxdatm), ratd (3, mxdatm), &
        rati (3, mxdatm), rat2d (3, mxdatm), rat2di (3, mxdatm)
   !
@@ -359,8 +359,8 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
      do j = 1, 3
         do i = 1, 3
            aveci (i, j) = avec (i, j)
-           avec (i, j) = avec (i, j) + dt * avecd (i, j) + dt * dt * &
-                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis
+           avec (i, j) = avec (i, j) + (dt * avecd (i, j) + dt * dt * &
+                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis)  * dble(iforceh(i,j))
            avec2di (i, j) = avec2d (i, j)
         enddo
      enddo
@@ -375,15 +375,15 @@ subroutine init (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
 1001 format(/,'     new values for : kinetic energy =   ',f18.12,/, &
        &          '                      potential energy = ',f18.12,/, &
        &          '                      total energy =     ',f18.12,/)
-end subroutine init
+end subroutine vcinit
 !*
 !*
-subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
+subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      force, frr, calc, avmod, theta, atmass, cmass, press, p, dt, &
      avecd, avec2d, aveci, avec2di, sigma, sig0, avec0, v0, ratd, &
      rat2d, rati, rat2di, enew, uta, eka, eta, ekla, utl, etl, ut, &
      ekint, etot, temp, tolp, ntcheck, ntimes, nst, tnew, nzero, natot, &
-     acu, ack, acp, acpv, avu, avk, avp, avpv)
+     acu, ack, acp, acpv, avu, avk, avp, avpv, iforceh)
   !
   !      rmw (18/8/99)
   !
@@ -440,7 +440,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   integer :: mxdatm, mxdtyp
 
-  integer :: ityp (mxdatm)
+  integer :: ityp (mxdatm), iforceh(3,3)
   real(DP) :: avec (3, 3), rat (3, mxdatm)
   !
 
@@ -502,7 +502,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      enddo
      do j = 1, 3
         do i = 1, 3
-           avecd (i, j) = avecd (i, j) + dt * avec2di (i, j)
+           avecd (i, j) = avecd (i, j) + dt * avec2di (i, j) !* dble(iforceh(i,j))
         enddo
      enddo
      n_update = 19
@@ -624,8 +624,8 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
         !
         do j = 1, 3
            do i = 1, 3
-              avecd (i, j) = (avec (i, j) - aveci (i, j) ) / dt + dt * &
-                   (dois * avec2d (i, j) + avec2di (i, j) ) / seis
+              avecd (i, j) = ((avec (i, j) - aveci (i, j) ) / dt + dt * &
+                   (dois * avec2d (i, j) + avec2di (i, j) ) / seis)  * dble(iforceh(i,j))
            enddo
 
         enddo
@@ -794,7 +794,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
         if (calc (2:2) .eq.'d') then
            do k = 1, 3
               do l = 1, 3
-                 avecd (l, k) = alpha * avecd (l, k)
+                 avecd (l, k) = alpha * avecd (l, k)  !* dble(iforceh(i,j))
               enddo
            enddo
         endif
@@ -884,8 +884,8 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      do j = 1, 3
         do i = 1, 3
            aveci (i, j) = avec (i, j)
-           avec (i, j) = avec (i, j) + dt * avecd (i, j) + dt * dt * &
-                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis
+           avec (i, j) = avec (i, j) + (dt * avecd (i, j) + dt * dt * &
+                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis)  * dble(iforceh(i,j))
            avec2di (i, j) = avec2d (i, j)
         enddo
      enddo
@@ -902,7 +902,7 @@ subroutine move (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
 1001 format(/,'     new values for : kinetic energy =   ',f18.12,/, &
        &         '                      potential energy = ',f18.12,/, &
        &         '                      total energy =     ',f18.12,/)
-end subroutine move
+end subroutine vcmove
 !*
 !*
 subroutine ranv (ntype, natot, ityp, atmass, mxdtyp, mxdatm, temp, &
