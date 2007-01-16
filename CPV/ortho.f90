@@ -158,6 +158,8 @@
       !
       !     rho = <s'c0|s|cp>
       !
+      CALL start_clock( 'rhoset' )
+      !
       CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nr, descla )
       !
       IF( iter_node ) THEN
@@ -193,6 +195,8 @@
          !
       END IF
 
+      CALL stop_clock( 'rhoset' )
+
 
       CALL start_clock( 'rsg' )
       !
@@ -220,8 +224,6 @@
       !
       CALL stop_clock( 'rsg' )
       !
-      IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 4 )
-      !
       !     sig = 1-<cp|s|cp>
       !
       CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nr, descla )
@@ -229,6 +231,8 @@
       !     tau = <s'c0|s|s'c0>
       !
       CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nr, descla )
+      !
+      CALL start_clock( 'ortho_iter' )
       !
       IF( iopt == 0 ) THEN
          !
@@ -239,6 +243,8 @@
          CALL ortho_alt_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
          !
       END IF
+      !
+      CALL stop_clock( 'ortho_iter' )
       !
       DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
       !
@@ -325,7 +331,7 @@
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma
-      USE descriptors,    ONLY: nlac_ , ilac_
+      USE descriptors,    ONLY: nlac_ , ilac_ , lambda_node_
       !
       IMPLICIT NONE
       !
@@ -375,12 +381,14 @@
                         istart = iupdwn(iss)
                         nc     = descla( nlac_ , iss )
                         ic     = descla( ilac_ , iss )
-                        DO i = 1, nc
-                           qbephi(inl,i,iss) = qbephi(inl,i,iss)                    &
-     &                       + qqf * bephi(jnl,i+ic-1+istart-1)
-                           qbecp (inl,i,iss) = qbecp (inl,i,iss)                     &
-     &                       + qqf * becp (jnl,i+ic-1+istart-1)
-                        END DO
+                        IF( descla( lambda_node_ , iss ) ) THEN
+                           DO i = 1, nc
+                              qbephi(inl,i,iss) = qbephi(inl,i,iss)                    &
+                              + qqf * bephi(jnl,i+ic-1+istart-1)
+                              qbecp (inl,i,iss) = qbecp (inl,i,iss)                     &
+                              + qqf * becp (jnl,i+ic-1+istart-1)
+                           END DO
+                        END IF
                      END DO
                   END DO
                ENDIF
