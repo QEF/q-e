@@ -4620,7 +4620,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    
 #else
 
-   b( 1:n, 1:n ) = a( 1:n, 1:n )   
+   a( 1:n, 1:n ) = b( 1:n, 1:n )   
 
 #endif
 
