@@ -232,6 +232,8 @@ CONTAINS
       tser = cclock() - t1
       CALL mp_max( tser, intra_image_comm )
 
+#if defined __PARA
+
       IF( ionode ) THEN
          use_parallel_diag = .FALSE.
          WRITE( stdout, 100 ) tser
@@ -240,6 +242,12 @@ CONTAINS
 110      FORMAT(3X,'ortho diag, time for parallel driver = ', 1F9.5, ' with ', I4, ' procs' )
          IF( tpar < tser ) use_parallel_diag = .TRUE.
       END IF
+
+#else
+
+      use_parallel_diag = .FALSE.
+
+#endif
 
       CALL mp_bcast( use_parallel_diag, root_image, intra_image_comm )
       
@@ -355,6 +363,8 @@ CONTAINS
 
       END DO
 
+#if defined __PARA
+
       IF( ionode ) THEN
          !
          IF( ortho_para == 0 )  THEN
@@ -368,6 +378,12 @@ CONTAINS
 120      FORMAT(3X,'ortho mmul, time for parallel driver      = ', 1F9.5, ' with ', I4, ' procs')
          !
       END IF
+
+#else
+
+      npbest = 1
+
+#endif
 
       CALL init_ortho_group( npbest*npbest, me_image, intra_image_comm )
 
