@@ -4370,7 +4370,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    !
    USE kinds,       ONLY : DP
    USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_
+                           descla_siz_ , la_npc_ , la_n_
    !
    IMPLICIT NONE
    !
@@ -4413,7 +4413,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
       CALL errore( ' cyc2blk_redist ', ' works only with compatible processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' cyc2blk_redist ', ' n less or equal zero ', 1 )
-   IF( nb < nproc ) &
+   IF( desc( la_n_ ) < nproc ) &
       CALL errore( ' cyc2blk_redist ', ' nb less than the number of proc ', 1 )
 
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
@@ -4504,7 +4504,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    !
    USE kinds,       ONLY : DP
    USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_
+                           descla_siz_ , la_npc_ , la_n_
    !
    IMPLICIT NONE
    !
@@ -4547,7 +4547,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
       CALL errore( ' cyc2blk_redist ', ' works only with compatible processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' cyc2blk_redist ', ' n less or equal zero ', 1 )
-   IF( nb < nproc ) &
+   IF( desc( la_n_ ) < nproc ) &
       CALL errore( ' cyc2blk_redist ', ' nb less than the number of proc ', 1 )
 
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
