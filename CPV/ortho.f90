@@ -381,7 +381,7 @@
                         istart = iupdwn(iss)
                         nc     = descla( nlac_ , iss )
                         ic     = descla( ilac_ , iss )
-                        IF( descla( lambda_node_ , iss ) ) THEN
+                        IF( descla( lambda_node_ , iss ) > 0 ) THEN
                            DO i = 1, nc
                               qbephi(inl,i,iss) = qbephi(inl,i,iss)                    &
                               + qqf * bephi(jnl,i+ic-1+istart-1)
