@@ -34,6 +34,7 @@ subroutine init_paw_1
 #endif
   USE uspp,        ONLY : ap, aainit
   USE atom ,       ONLY : r, rab, msh
+  USE io_global,   ONLY : stdout
   !
   implicit none
   !
@@ -56,6 +57,8 @@ subroutine init_paw_1
   ! interpolated value
 
   real(DP) rc,rs,pow
+  
+  integer :: n_overlap_warnings
   
 #ifdef USE_SPLINES
   integer :: paw_nbeta_max
@@ -96,8 +99,9 @@ subroutine init_paw_1
   do na = 1, nat
      paw_nkb = paw_nkb + paw_nh (ityp(na))
   enddo
-
- 
+  
+  n_overlap_warnings = 0
+  
   prefr = fpi / omega
   !
   !   For each pseudopotential we initialize the indices nhtol, nhtom,
@@ -106,46 +110,45 @@ subroutine init_paw_1
   paw_nl=0
   paw_iltonh=0
   do nt = 1, ntyp
-        ih = 1
-        do nb = 1, paw_nbeta (nt)
-           l = aephi(nt,nb)%label%l
-           paw_nl(l,nt) = paw_nl(l,nt) + 1
-           paw_iltonh(l,paw_nl(l,nt) ,nt)= nb
-            do m = 1, 2 * l + 1
-              paw_nhtol (ih, nt) = l
-              paw_nhtom (ih, nt) = m
-              paw_indv (ih, nt) = nb
-              ih = ih + 1
-           enddo
+     ih = 1
+     do nb = 1, paw_nbeta (nt)
+        l = aephi(nt,nb)%label%l
+        paw_nl(l,nt) = paw_nl(l,nt) + 1
+        paw_iltonh(l,paw_nl(l,nt) ,nt)= nb
+        do m = 1, 2 * l + 1
+           paw_nhtol (ih, nt) = l
+           paw_nhtom (ih, nt) = m
+           paw_indv (ih, nt) = nb
+           ih = ih + 1
         enddo
-
-  ! Rescale the wavefunctions so that int_0^rc f|psi|^2=1
-  ! 
-  !      rc=1.6d0
-
-        pow=1.d0
-        do j = 1, paw_nbeta (nt)
-           rc=psphi(nt,j)%label%rc
-           rs=1.d0/3.d0*rc
-           nrc =  Count(r(1:msh(nt),nt).le.rc)
-           nrs =  Count(r(1:msh(nt),nt).le.rs)
-           psphi(nt,j)%label%nrc = nrc
-           aephi(nt,j)%label%nrc = nrc
-           call step_f(aux,psphi(nt,j)%psi**2,r(:,nt),nrs,nrc,pow,msh(nt))
-           call simpson (msh (nt), aux, rab (1, nt), norm )
-           
-           psphi(nt,j)%psi = psphi(nt,j)%psi/ sqrt(norm)
-           aephi(nt,j)%psi = aephi(nt,j)%psi / sqrt(norm)
-
-        enddo
+     enddo
+     
+     ! Rescale the wavefunctions so that int_0^rc f|psi|^2=1
+     ! 
+     
+     pow=1.d0
+     do j = 1, paw_nbeta (nt)
+        rc=psphi(nt,j)%label%rc
+        rs=1.d0/3.d0*rc
+        nrc =  Count(r(1:msh(nt),nt).le.rc)
+        nrs =  Count(r(1:msh(nt),nt).le.rs)
+        psphi(nt,j)%label%nrc = nrc
+        aephi(nt,j)%label%nrc = nrc
+        call step_f(aux,psphi(nt,j)%psi**2,r(:,nt),nrs,nrc,pow,msh(nt))
+        call simpson (msh (nt), aux, rab (1, nt), norm )
         
-        !
-        !   calculate the overlap matrix
-        !
-
-        aux=0.d0
-        do l=0,paw_lmaxkb
-          if (paw_nl(l,nt)>0) then
+        psphi(nt,j)%psi = psphi(nt,j)%psi/ sqrt(norm)
+        aephi(nt,j)%psi = aephi(nt,j)%psi / sqrt(norm)
+        
+     enddo
+     
+     !
+     !   calculate the overlap matrix
+     !
+     
+     aux=0.d0
+     do l=0,paw_lmaxkb
+        if (paw_nl(l,nt)>0) then
            allocate (s(paw_nl(l,nt),paw_nl(l,nt)))
            allocate (sinv(paw_nl(l,nt),paw_nl(l,nt)))
            do ih=1,paw_nl(l,nt)
@@ -155,10 +158,47 @@ subroutine init_paw_1
                  call step_f(aux,psphi(nt,n1)%psi(1:msh(nt)) * &
                       psphi(nt,n2)%psi(1:msh(nt)),r(:,nt),nrs,nrc,pow,msh(nt))
                  call simpson (msh (nt), aux, rab (1, nt), s(ih,jh))
+                 !<apsi>
+                 IF ( ih > jh ) THEN
+                    IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-5_dp ) THEN
+                       WRITE ( stdout, '( /, 2A, I3, A, 3I2, F12.8 )' ) &
+                            "projectors linearly dependent:", &
+                            " ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, &
+                            s(ih,jh)
+                            
+                       CALL errore ( "init_paw_1", &
+                            "two projectors are linearly dependent", +1 )
+                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0 ) < 1.e-1_dp ) THEN
+                       IF ( n_overlap_warnings == 0 ) THEN
+                          WRITE ( stdout, '(A)' ) ""
+                       END IF
+                       n_overlap_warnings = n_overlap_warnings + 1
+                       WRITE ( stdout, &
+                            '( 2A, /, 4X, A, I3, A, 3I2, F12.8 )' ) &
+                            "init_paw_1: ", &
+                            "projectors nearly linearly dependent:", &
+                            "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, s(ih,jh)
+                    END IF
+                 END IF
+                 !</apsi>
               enddo
            enddo
-           call invmat (paw_nl(l,nt), s, sinv, norm) 
-
+           
+#if defined ( __DEBUG_MINE_APSI )
+           !<apsi>
+           IF ( iverbatim > 5 ) THEN
+              do ih=1,paw_nl(l,nt)
+                 do jh = ih, paw_nl(l,nt)
+                    write( stdout, '( A, I3, 3I2, F12.7 )' ) &
+                         "PROJ: ", nt, l, ih, jh, s(ih,jh)
+                 end do
+              end do
+           END IF
+           !</apsi>
+#endif
+           
+           call invmat (paw_nl(l,nt), s, sinv, norm)
+           
            do ih=1,paw_nl(l,nt)
               n1=paw_iltonh(l,ih,nt)
               do jh=1,paw_nl(l,nt)
@@ -173,11 +213,14 @@ subroutine init_paw_1
            enddo
            deallocate (sinv)
            deallocate (s)
-
-          endif
-        enddo
+           
+        endif
      enddo
-
+  enddo
+  IF ( n_overlap_warnings > 0 ) THEN
+     WRITE ( stdout, '(A)' ) ""
+  END IF
+  
 !    Check the orthogonality for projectors
 !
 !     nt=1
