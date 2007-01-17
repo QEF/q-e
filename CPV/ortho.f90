@@ -248,7 +248,7 @@
       !
       DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
       !
-      CALL consistency_check( x0 )
+      IF( iter_node )  CALL consistency_check( x0 )
 
       RETURN
 
