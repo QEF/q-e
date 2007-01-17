@@ -83,6 +83,10 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
 
   integer :: na, nt, i, j, l, k, m, ntype
   !
+  real(DP) :: scaloff=1.0d0
+  !
+  IF ( COUNT( iforceh == 2 ) > 0 ) scaloff=0.5d0
+  !
   ! calculate the metric for the current step
   !
   call setg (avec, g)
@@ -359,8 +363,8 @@ subroutine vcinit (mxdtyp, mxdatm, ntype, natot, rat, ityp, avec, &
      do j = 1, 3
         do i = 1, 3
            aveci (i, j) = avec (i, j)
-           avec (i, j) = avec (i, j) + (dt * avecd (i, j) + dt * dt * &
-                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis)  * dble(iforceh(i,j))
+           avec (i, j) = avec (i, j) + dt * avecd (i, j) + (dt * dt * &
+                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis)  * dble(iforceh(i,j))*scaloff
            avec2di (i, j) = avec2d (i, j)
         enddo
      enddo
@@ -460,6 +464,11 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   logical :: symmetrize_stress
   !
   real(DP) :: force (3, mxdatm), d2 (3, 3)
+  !
+  real(DP) :: scaloff=1.0d0
+  !
+  IF ( COUNT( iforceh == 2 ) > 0 ) scaloff=0.5d0
+  !
   !
   !      zero energy components
   !
@@ -624,8 +633,8 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
         !
         do j = 1, 3
            do i = 1, 3
-              avecd (i, j) = ((avec (i, j) - aveci (i, j) ) / dt + dt * &
-                   (dois * avec2d (i, j) + avec2di (i, j) ) / seis)  * dble(iforceh(i,j))
+              avecd (i, j) = (avec (i, j) - aveci (i, j) ) / dt + (dt * &
+                   (dois * avec2d (i, j) + avec2di (i, j) ) / seis)  * dble(iforceh(i,j))*scaloff
            enddo
 
         enddo
@@ -884,8 +893,8 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
      do j = 1, 3
         do i = 1, 3
            aveci (i, j) = avec (i, j)
-           avec (i, j) = avec (i, j) + (dt * avecd (i, j) + dt * dt * &
-                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis)  * dble(iforceh(i,j))
+           avec (i, j) = avec (i, j) + dt * avecd (i, j) + (dt * dt * &
+                (quatro * avec2d (i, j) - avec2di (i, j) ) / seis)  * dble(iforceh(i,j))*scaloff
            avec2di (i, j) = avec2d (i, j)
         enddo
      enddo

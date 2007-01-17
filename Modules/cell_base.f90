@@ -606,11 +606,6 @@
               iforceh      = 0
               iforceh(1,1) = 1
               iforceh(2,2) = 1
-            CASE ('xyt')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(1,2) = 1
-              iforceh(2,2) = 1
             CASE ('xz')
               iforceh      = 0
               iforceh(1,1) = 1
@@ -624,14 +619,6 @@
               iforceh      = 0
               iforceh(1,1) = 1
               iforceh(2,2) = 1
-              iforceh(3,3) = 1
-           CASE ('xyzt')
-              iforceh      = 0
-              iforceh(1,1) = 1
-              iforceh(1,2) = 1
-              iforceh(2,2) = 1
-              iforceh(1,3) = 1
-              iforceh(2,3) = 1
               iforceh(3,3) = 1
             CASE DEFAULT
               CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )

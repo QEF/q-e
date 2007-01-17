@@ -1380,7 +1380,13 @@ SUBROUTINE iosys()
               iforceh(2,2) = 1
             CASE ('xyt')
               iforceh      = 0
+              iforceh(1,1) = 2
+              iforceh(1,2) = 1
+              iforceh(2,2) = 2
+            CASE ('xys')
+              iforceh      = 0
               iforceh(1,1) = 1
+              iforceh(2,1) = 1
               iforceh(1,2) = 1
               iforceh(2,2) = 1
             CASE ('xz')
@@ -1398,12 +1404,12 @@ SUBROUTINE iosys()
               iforceh(3,3) = 1
             CASE ('xyzt')
               iforceh      = 0
-              iforceh(1,1) = 1
+              iforceh(1,1) = 2
               iforceh(1,2) = 1
-              iforceh(2,2) = 1
+              iforceh(2,2) = 2
               iforceh(1,3) = 1
               iforceh(2,3) = 1
-              iforceh(3,3) = 1
+              iforceh(3,3) = 2
             CASE DEFAULT
               CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
 
