@@ -13,6 +13,9 @@ MODULE g_psi_mod
   !
   IMPLICIT NONE
   !
+  REAL(DP) :: &
+    v_of_0         ! V(G=0) term
+  !
   REAL(DP), ALLOCATABLE :: &
     h_diag (:),&   ! diagonal part of the Hamiltonian
     s_diag (:)     ! diagonal part of the overlap matrix

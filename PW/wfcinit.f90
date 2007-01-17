@@ -102,7 +102,7 @@ SUBROUTINE init_wfc ( ik )
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
-  USE gvect,                ONLY : g
+  USE gvect,                ONLY : g, ecfixed, qcutz, q2sigma
   USE klist,                ONLY : xk, nks
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et,&
@@ -153,15 +153,22 @@ SUBROUTINE init_wfc ( ik )
   !
   DO ig = 1, npw
      !
-     g2kin(ig) = ( xk(1,ik) + g(1,igk(ig)) )**2 + &
-                 ( xk(2,ik) + g(2,igk(ig)) )**2 + &
-                 ( xk(3,ik) + g(3,igk(ig)) )**2
+     g2kin(ig) = ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
+                   ( xk(2,ik) + g(2,igk(ig)) )**2 + &
+                   ( xk(3,ik) + g(3,igk(ig)) )**2 ) * tpiba2
      !
   END DO
   !
-  ! ... Put the correct units on the kinetic energy
-  !
-  g2kin(:) = g2kin(:) * tpiba2
+  IF ( qcutz > 0.D0 ) THEN
+     !
+     DO ig = 1, npw
+        !
+        g2kin(ig) = g2kin(ig) + qcutz * &
+             ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
+        !
+     END DO
+     !
+  END IF
   !
   ALLOCATE( wfcatom( npwx*npol, n_starting_wfc ) )
   !

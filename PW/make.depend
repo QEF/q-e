@@ -152,10 +152,6 @@ cdiaghg.o : ../Modules/kind.o
 cdiaghg.o : ../Modules/mp.o
 cdiaghg.o : ../Modules/mp_global.o
 cdiaghg.o : ../Modules/ptoolkit.o
-cdiisg_nc.o : ../Modules/io_global.o
-cdiisg_nc.o : ../Modules/kind.o
-cdiisg_nc.o : ../Modules/uspp.o
-cdiisg_nc.o : g_psi_mod.o
 cegterg.o : ../Modules/io_global.o
 cegterg.o : ../Modules/kind.o
 cegterg.o : noncol.o
@@ -172,11 +168,6 @@ cft3s.o : ../Modules/kind.o
 cft3s.o : ../Modules/mp_global.o
 cft3s.o : para.o
 cft3s.o : pwcom.o
-cgramg1.o : ../Modules/constants.o
-cgramg1.o : ../Modules/io_global.o
-cgramg1.o : ../Modules/kind.o
-cgramg1.o : pwcom.o
-cgramg1_nc.o : ../Modules/kind.o
 checkallsym.o : ../Modules/kind.o
 checksym.o : ../Modules/kind.o
 cinitcgg.o : ../Modules/kind.o

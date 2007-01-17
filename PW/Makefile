@@ -33,12 +33,9 @@ ccalbec_nc.o \
 ccgdiagg.o \
 cdiagh.o \
 cdiaghg.o \
-cdiisg_nc.o \
 cegterg.o \
 cft3.o \
 cft3s.o \
-cgramg1.o \
-cgramg1_nc.o \
 checkallsym.o \
 checksym.o \
 cinitcgg.o \
