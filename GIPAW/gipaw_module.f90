@@ -17,11 +17,14 @@ MODULE gipaw_module
   IMPLICIT NONE
   SAVE
   
+  ! alpha
+  REAL(DP), PARAMETER :: alpha = 1.0_dp / 137.03599911_dp
+  
   ! speed of light in atomic units: c = 1/alpha
-  REAL(DP), PARAMETER :: c = 137.03599911d0
+  !REAL(DP), PARAMETER :: c = 137.03599911d0
 
   ! avogadro number
-  REAL(DP), PARAMETER :: avogadro = 6.022142d23
+  REAL(DP), PARAMETER :: avogadro = 6.022142e23_dp
 
   ! number of occupied bands at each k-point
   INTEGER :: nbnd_occ(npk)
@@ -83,8 +86,8 @@ CONTAINS
   !              prefix = '...'     prefix of SCF calculation
   !              tmp_dir = '...'    scratch directory
   !              job = 'nmr' or 'g_tensor'
-  !              conv_threshold = 1d-14
-  !              q_gipaw = 0.01d0
+  !              conv_threshold = 1e-14
+  !              q_gipaw = 0.01
   !              filcurr = '...'
   !              filfield = '...'
   !              iverbosity = 0
@@ -105,8 +108,8 @@ CONTAINS
     job = ''
     prefix = 'pwscf'
     tmp_dir = './scratch/'
-    conv_threshold = 1d-14
-    q_gipaw = 0.01d0
+    conv_threshold = 1e-14_dp
+    q_gipaw = 0.01_dp
     iverbosity = 0
     filcurr = ''
     filfield = ''
@@ -324,7 +327,6 @@ CONTAINS
           kkpsi = aephi(nt,il1)%kkpsi
           
           nrc = psphi(nt,il1)%label%nrc
-          write(0,*) "ZZZtmptmptmp: ", kkpsi, nrc
           
           allocate ( work(kkpsi) )
           
@@ -336,13 +338,11 @@ CONTAINS
              !
              ! NMR shielding, diamagnetic
              !
-             !work = 0.0_dp
              do j = 1, nrc
                 work(j) = (aephi(nt,il1)%psi(j)*aephi(nt,il2)%psi(j)-&
                      psphi(nt,il1)%psi(j)*psphi(nt,il2)%psi(j))/r(j,nt)
              enddo
              
-             !work(1) = 0.0_dp
              CALL simpson( nrc, work, rab(:nrc,nt), &
                   radial_integral_diamagnetic(il1,il2,nt) )
              
@@ -352,7 +352,6 @@ CONTAINS
              ! calculate radial integration on atom site 
              ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
              !
-             !work(1) = 0.0_dp
              do j = 1, nrc
                 work(j) = &
                      ( aephi(nt,il1)%psi(j) * aephi(nt,il2)%psi(j) &
@@ -360,11 +359,13 @@ CONTAINS
                      / r(j,nt) ** 3
              end do
              
-             !work(1) = 0.0_dp
              call simpson( nrc, work, rab(:,nt), &
                   radial_integral_paramagnetic(il1,il2,nt) )
-             write(stdout,*) "WWW1: ", l2, il1, il2, &
-                  radial_integral_paramagnetic(il1,il2,nt) / c**2 * 1e6 * 4
+             if (iverbosity > 10) then
+                write(stdout,*) "WWW1: ", l2, il1, il2, &
+                     radial_integral_paramagnetic(il1,il2,nt) &
+                     * alpha ** 2 * 1e6 * 4
+             end if
              
              ! Calculate the radial integral only if the radial potential
              !    is present
@@ -385,11 +386,12 @@ CONTAINS
              end do
              DEALLOCATE ( kinetic_aephi, kinetic_psphi )
              
-             !work(1) = 0.0_dp
              CALL simpson ( nrc, work, rab(:,nt), &
                   radial_integral_rmc(il1,il2,nt) )
-             write(stdout,*) "WWW2: ", l2, il1, il2, &
-                  radial_integral_rmc(il1,il2,nt)
+             if (iverbosity > 0) then
+                write(stdout,*) "WWW2: ", l2, il1, il2, &
+                     radial_integral_rmc(il1,il2,nt)
+             end if
              
              ALLOCATE ( aephi_dvloc_dr ( nrc ), psphi_dvloc_dr ( nrc ) )
              
@@ -410,34 +412,37 @@ CONTAINS
                      * r(j,nt)
              end do
              
-             !work(1) = 0.0_dp
              call simpson( nrc, work, rab(:,nt), &
                   radial_integral_diamagnetic_so(il1,il2,nt) )
-             write(stdout,*) "WWW3: ", l2, il1, il2, &
-                  radial_integral_diamagnetic_so(il1,il2,nt) / c
+             if (iverbosity > 0) then
+                write(stdout,*) "WWW3: ", l2, il1, il2, &
+                     radial_integral_diamagnetic_so(il1,il2,nt) * alpha
+             end if
              
              !
              ! g tensor, paramagnetic
              !
-             !work(1) = 0.0_dp
              do j = 1, nrc
                 work(j) = ( aephi(nt,il1)%psi(j) * aephi_dvloc_dr(j) &
                      * aephi(nt,il2)%psi(j) - psphi(nt,il1)%psi(j) &
                      * psphi_dvloc_dr(j) * psphi(nt,il2)%psi(j) ) &
                      / r(j,nt)
              end do
-             if ( l1 == 0 ) then
-                do j = 1, nrc
-                   write(90,*) r(j,nt), work(j)*r(j,nt)**2
-                end do
-                write(90,*) ""
+             if (iverbosity > 10) then
+                if ( l1 == 0 ) then
+                   do j = 1, nrc
+                      write(90,*) r(j,nt), work(j)*r(j,nt)**2
+                   end do
+                   write(90,*) ""
+                end if
              end if
              
-             !work(1) = 0.0_dp
              call simpson( nrc,work,rab(:,nt), &
                   radial_integral_paramagnetic_so(il1,il2,nt) )
-             write(stdout,*) "WWW4: ", l2, il1, il2, &
-                  radial_integral_paramagnetic_so(il1,il2,nt) / c
+             if (iverbosity > 0) then
+                write(stdout,*) "WWW4: ", l2, il1, il2, &
+                     radial_integral_paramagnetic_so(il1,il2,nt) * alpha
+             end if
              
              DEALLOCATE ( aephi_dvloc_dr, psphi_dvloc_dr )
              
@@ -524,77 +529,41 @@ CONTAINS
        end do
     end do
     
-    write(stdout,'(A)') "lx:"
-    write(stdout,'(9F8.5)') lx
-    
-    write(stdout,'(A)') "ly:"
-    write(stdout,'(9F8.5)') ly
-    
-    write(stdout,'(A)') "lz:"
-    write(stdout,'(9F8.5)') lz
-    
-    ! Checks
-    mysum1 = 0
-    mysum2 = 0
-    do lm2 = 1, lmaxx**2
-       do lm1 = 1, lmaxx**2
-          if ( lm2l ( lm1 ) /= lm2l ( lm2 ) ) cycle
-          l = lm2l ( lm2 )
-          
-          mysum1(1,l+1) = mysum1(1,l+1) + lx(lm1,lm2)
-          mysum2(1,l+1) = mysum2(1,l+1) + lx(lm1,lm2)**2
-          mysum1(2,l+1) = mysum1(2,l+1) + ly(lm1,lm2)
-          mysum2(2,l+1) = mysum2(2,l+1) + ly(lm1,lm2)**2
-          mysum1(3,l+1) = mysum1(3,l+1) + lz(lm1,lm2)
-          mysum2(3,l+1) = mysum2(3,l+1) + lz(lm1,lm2)**2
+    if (iverbosity > 0) then
+       write(stdout,'(A)') "lx:"
+       write(stdout,'(9F8.5)') lx
+       
+       write(stdout,'(A)') "ly:"
+       write(stdout,'(9F8.5)') ly
+       
+       write(stdout,'(A)') "lz:"
+       write(stdout,'(9F8.5)') lz
+       
+       ! Checks
+       mysum1 = 0
+       mysum2 = 0
+       do lm2 = 1, lmaxx**2
+          do lm1 = 1, lmaxx**2
+             if ( lm2l ( lm1 ) /= lm2l ( lm2 ) ) cycle
+             l = lm2l ( lm2 )
+             
+             mysum1(1,l+1) = mysum1(1,l+1) + lx(lm1,lm2)
+             mysum2(1,l+1) = mysum2(1,l+1) + lx(lm1,lm2)**2
+             mysum1(2,l+1) = mysum1(2,l+1) + ly(lm1,lm2)
+             mysum2(2,l+1) = mysum2(2,l+1) + ly(lm1,lm2)**2
+             mysum1(3,l+1) = mysum1(3,l+1) + lz(lm1,lm2)
+             mysum2(3,l+1) = mysum2(3,l+1) + lz(lm1,lm2)**2
+          end do
        end do
-    end do
-    write(stdout,'(A,9F8.4)') "DDD1x: ", mysum1(1,:)
-    write(stdout,'(A,9F8.4)') "DDD1y: ", mysum1(2,:)
-    write(stdout,'(A,9F8.4)') "DDD1z: ", mysum1(3,:)
-    write(stdout,'(A,9F8.4)') "DDD2x: ", mysum2(1,:)
-    write(stdout,'(A,9F8.4)') "DDD2y: ", mysum2(2,:)
-    write(stdout,'(A,9F8.4)') "DDD2z: ", mysum2(3,:)
+       write(stdout,'(A,9F8.4)') "DDD1x: ", mysum1(1,:)
+       write(stdout,'(A,9F8.4)') "DDD1y: ", mysum1(2,:)
+       write(stdout,'(A,9F8.4)') "DDD1z: ", mysum1(3,:)
+       write(stdout,'(A,9F8.4)') "DDD2x: ", mysum2(1,:)
+       write(stdout,'(A,9F8.4)') "DDD2y: ", mysum2(2,:)
+       write(stdout,'(A,9F8.4)') "DDD2z: ", mysum2(3,:)
+    end if
     
     deallocate ( lm2l, lm2m )
-    
-    !
-    ! calculate radial integration on atom site 
-    ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
-    !
-!    allocate ( radial_integral_paramagnetic(paw_nkb,paw_nkb,ntypx) )
-!    radial_integral_paramagnetic = 0.0_dp
-!    do nt=1,ntyp
-!       do il1=1,paw_nbeta(nt)
-!          l1 = psphi(nt,il1)%label%l
-!          kkpsi = aephi(nt,il1)%kkpsi
-!          allocate ( work(kkpsi) )
-!          nrc = psphi(nt,il1)%label%nrc
-!          do il2=1,paw_nbeta(nt)
-!             l2 = psphi(nt,il2)%label%l
-!             IF ( l1 /= l2 ) CYCLE
-!             work=0.0_dp
-!             do j = 1, nrc
-!                work(j) = (aephi(nt,il1)%psi(j)*aephi(nt,il2)%psi(j)-&
-!                     psphi(nt,il1)%psi(j)*psphi(nt,il2)%psi(j))/r(j,nt)**3
-!             enddo
-!             
-!             !work(1) = 0.0_dp
-!             call simpson( nrc,work,rab(:,nt), &
-!                  radial_integral_paramagnetic(il1,il2,nt) )
-!             
-!             if ( il1 == 1 .and. il2 == 1 ) then
-!             write(stdout,*) "WWW: ", il1, il2, &
-!                  radial_integral_paramagnetic(il1,il2,nt) / c**2 * 1e6 * 4
-!             end if
-!             
-!          enddo
-!          
-!          deallocate(work)
-!       enddo
-!    enddo
-    !</apsi>
-!    stop "DONE"
     
     ! computes the total local potential (external+scf) on the smooth grid
     call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
@@ -633,7 +602,7 @@ CONTAINS
     ! find the minimum across pools
     call poolextreme (emin, -1)
 #endif
-    if (degauss.ne.0.d0) then
+    if (degauss.ne.0.0_dp) then
       call errore('gipaw_setup', 'implemented only for insulators', -1)
     else
       emax = et (1, 1)
@@ -646,7 +615,7 @@ CONTAINS
       ! find the maximum across pools
       call poolextreme (emax, + 1)
 #endif
-      alpha_pv = 2.d0 * (emax - emin)
+      alpha_pv = 2.0_dp * (emax - emin)
     endif
     ! avoid zero value for alpha_pv
     alpha_pv = max (alpha_pv, 1.0d-2)
@@ -665,7 +634,7 @@ CONTAINS
       REAL(dp) :: d1
       
       d1 = ( ydata(2) - ydata(1) ) / ( rdata(2) - rdata(1) )
-      CALL spline ( rdata, ydata, 0.d0, d1, kin_ydata )
+      CALL spline ( rdata, ydata, 0.0_dp, d1, kin_ydata )
       
       kin_ydata = - kin_ydata + l*(l+1) * ydata / rdata ** 2
       
@@ -682,7 +651,7 @@ CONTAINS
       REAL(dp) :: d1, tab_d2y ( SIZE ( ydata ) )
       
       d1 = ( ydata(2) - ydata(1) ) / ( rdata(2) - rdata(1) )
-      CALL spline ( rdata, ydata, 0.d0, d1, tab_d2y )
+      CALL spline ( rdata, ydata, 0.0_dp, d1, tab_d2y )
       
       DO j = 1, SIZE ( ydata )
          dydata_dr ( j ) = &
@@ -803,7 +772,7 @@ CONTAINS
        
        open(14,file=filerec(jtyp))
        rewind(unit=14)
-       write (stdout,*) "N_AEwfc atom",jtyp,":",paw_nbeta(jtyp), nlines(jtyp)
+       
        recphi_loop: do i=1,paw_nbeta(jtyp)
           aephi2(jtyp,i)%label%nt=jtyp
           aephi2(jtyp,i)%label%n=i
@@ -878,7 +847,7 @@ CONTAINS
           
           ! initialize spline interpolation
           d1 = (tab(2) - tab(1)) / (xdata(2) - xdata(1))
-          call spline(xdata, tab, 0.d0, d1, tab_d2y)
+          call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
           
           ! use interpolation
           allocate ( aephi(jtyp,i)%psi(msh(jtyp)) )
@@ -899,7 +868,7 @@ CONTAINS
           
           ! initialize spline interpolation
           d1 = (tab(2) - tab(1)) / (xdata(2) - xdata(1))
-          call spline(xdata, tab, 0.d0, d1, tab_d2y)
+          call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
           
           ! use interpolation
           allocate ( psphi(jtyp,i)%psi(msh(jtyp)) )
@@ -918,7 +887,7 @@ CONTAINS
              tab(:) = gipaw_ae_vloc2 ( :kkpsi, i, jtyp )
              d1 = ( gipaw_ae_vloc2 ( 2, i, jtyp ) &
                   - gipaw_ae_vloc2 ( 1, i, jtyp ) ) / ( xdata(2) - xdata(1) )
-             call spline(xdata, tab, 0.d0, d1, tab_d2y)
+             call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
              DO j = 1, msh ( jtyp )
                 gipaw_ae_vloc ( j, jtyp ) &
                      = splint ( xdata, tab, tab_d2y, r(j,jtyp))
@@ -931,7 +900,7 @@ CONTAINS
              tab(:) = gipaw_ps_vloc2 ( :kkpsi, i, jtyp )
              d1 = ( gipaw_ps_vloc2 ( 2, i, jtyp ) &
                   - gipaw_ps_vloc2 ( 1, i, jtyp ) ) / ( xdata(2) - xdata(1) )
-             call spline(xdata, tab, 0.d0, d1, tab_d2y)
+             call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
              DO j = 1, msh ( jtyp )
                 gipaw_ps_vloc ( j, jtyp ) &
                      = splint ( xdata, tab, tab_d2y, r(j,jtyp))

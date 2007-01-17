@@ -27,10 +27,13 @@ SUBROUTINE suscept_crystal
   USE symme,                       ONLY : nsym, s, ftau
   USE mp_global,                   ONLY : my_pool_id, npool, me_pool, root_pool
   USE pwcom
-  USE gipaw_module
+  USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, tens_fmt, &
+                                         q_gipaw, iverbosity, alpha, evq, &
+                                         avogadro, filcurr, filfield, &
+                                         nbnd_occ, a0_to_cm
   
   !<apsi>
-  USE paw,                         ONLY: paw_vkb, paw_becp, paw_nkb, aephi, &
+  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, aephi, &
                                          psphi, paw_nh, paw_nhtol, &
                                          paw_nhtom, paw_indv, paw_nbeta
   USE ions_base, ONLY : nat
@@ -220,25 +223,27 @@ SUBROUTINE suscept_crystal
   
   ! compute chi_bare both pGv and vGv terms
   chi_bare_pGv(:,:) = f_pGv(:,:,1) - 2.0_dp*f_pGv(:,:,0) + f_pGv(:,:,-1)
-  chi_bare_pGv(:,:) = -0.5_dp * chi_bare_pGv(:,:) / (c * q_gipaw * tpiba)**2
+  chi_bare_pGv(:,:) = -0.5_dp * chi_bare_pGv(:,:) * alpha ** 2 &
+       / ( q_gipaw * tpiba)**2
   if (iverbosity > 0) then
     write(stdout, '(5X,''chi_bare pGv (HH) in paratec units:'')')
-    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) * c**2
+    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) / alpha ** 2
   endif
   call sym_cart_tensor(chi_bare_pGv)
   if (iverbosity > 0) then
-    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) * c**2
+    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_pGv(:,:) / alpha ** 2
   endif
   
   chi_bare_vGv(:,:) = f_vGv(:,:,1) - 2.0_dp*f_vGv(:,:,0) + f_vGv(:,:,-1)
-  chi_bare_vGv(:,:) = -0.5_dp * chi_bare_vGv(:,:) / (c * q_gipaw * tpiba)**2
+  chi_bare_vGv(:,:) = -0.5_dp * chi_bare_vGv(:,:) * alpha ** 2 &
+       / ( q_gipaw * tpiba)**2
   if (iverbosity > 0) then
     write(stdout, '(5X,''chi_bare vGv (VV) in paratec units:'')')
-    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) * c**2
+    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) / alpha ** 2
   endif
   call sym_cart_tensor(chi_bare_vGv)
   if (iverbosity > 0) then
-    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) * c**2
+    write(stdout, '(3(5X,3(F12.6,2X)/))') chi_bare_vGv(:,:) / alpha ** 2
   endif
 
   ! convert from atomic units to 10^{-6} cm^3 / mol
@@ -254,7 +259,8 @@ SUBROUTINE suscept_crystal
   ! now get the current, induced field and chemical shifts
   !--------------------------------------------------------------------
   chi_bare_pGv(:,:) = chi_bare_pGv(:,:) / omega
-  j_bare(:,:,:,:) = j_bare(:,:,:,:) / (2.0_dp * q_gipaw * tpiba * c * omega)
+  j_bare(:,:,:,:) = j_bare(:,:,:,:) * alpha &
+       / ( 2.0_dp * q_gipaw * tpiba * omega )
   
   !nsym = 1
   ! either you symmetrize the current ...
@@ -283,13 +289,13 @@ SUBROUTINE suscept_crystal
   !call field_to_reciprocal_space
   
   ! compute chemical shifts
-  call compute_sigma_bare(chi_bare_pGv, sigma_bare)
+  call compute_sigma_bare( chi_bare_pGv, sigma_bare )
   
   call compute_sigma_diamagnetic( sigma_diamagnetic )
   
   call compute_sigma_paramagnetic( sigma_paramagnetic )
   
-  deallocate(p_evc, vel_evc, aux, g_vel_evc, j_bare, b_ind)
+  deallocate( p_evc, vel_evc, aux, g_vel_evc, j_bare, b_ind )
   
 CONTAINS
 
@@ -383,9 +389,9 @@ CONTAINS
   !====================================================================
   SUBROUTINE diamagnetic_correction ( diamagnetic_tensor )
     
-    USE atom,       ONLY : r, rab
-    USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-    USE gipaw_module, ONLY : c
+    USE atom,           ONLY : r, rab
+    USE ions_base,      ONLY : nat, ityp, ntyp => nsp
+    USE gipaw_module,   ONLY : radial_integral_diamagnetic
     
     implicit none
     
@@ -394,18 +400,11 @@ CONTAINS
 
     integer :: l1, m1, lm1, l2, m2, lm2, ih, ikb, nbs1, jh, jkb, nbs2
     integer :: nt, ibnd, na, lm, nrc, ijkb0
-    complex(dp) , allocatable :: efg_corr(:,:)
+    complex(dp) , allocatable :: dia_corr(:,:)
     complex(dp) :: bec_product
     
-    allocate (efg_corr(lmaxx**2,nat))
-    efg_corr = 0.0_dp
-    
-    !  rc=1.60_dp
-    !  nrc=count(r(1:msh(1),1).le.rc)
-    !
-    ! calculate radial integration on atom site 
-    ! <aephi|1/r^3|aephi>-<psphi|1/r^3|psphi>
-    !
+    allocate (dia_corr(lmaxx**2,nat))
+    dia_corr = 0.0_dp
     
     !
     !  calculation of the reconstruction part
@@ -440,25 +439,26 @@ CONTAINS
                               = diamagnetic_tensor(1,1,na) &
                               + 2.0_dp / 3.0_dp * bec_product &
                               * radial_integral_diamagnetic(nbs1,nbs2,nt) &
-                              * wg(ibnd,ik) / (2.0_dp*c**2)
+                              * wg(ibnd,ik) * alpha ** 2 / 2.0_dp
                          diamagnetic_tensor(2,2,na) &
                               = diamagnetic_tensor(2,2,na) &
                               + 2.0_dp / 3.0_dp * bec_product &
                               * radial_integral_diamagnetic(nbs1,nbs2,nt) &
-                              * wg(ibnd,ik) / (2.0_dp*c**2)
+                              * wg(ibnd,ik) * alpha ** 2 / 2.0_dp
                          diamagnetic_tensor(3,3,na) &
                               = diamagnetic_tensor(3,3,na) &
                               + 2.0_dp / 3.0_dp * bec_product &
                               * radial_integral_diamagnetic(nbs1,nbs2,nt) &
-                              * wg(ibnd,ik) / (2.0_dp*c**2)
+                              * wg(ibnd,ik) * alpha ** 2 / 2.0_dp
                       END IF
                       
                       ! 2/3 to separate the non-trace vanishing component
                       do lm = 5, 9
-                         efg_corr(lm,na) =  efg_corr(lm,na) &
+                         dia_corr(lm,na) =  dia_corr(lm,na) &
                               + bec_product / 3.0_dp &
                               * radial_integral_diamagnetic(nbs1,nbs2,nt) &
-                              * ap(lm,lm1,lm2) * wg(ibnd,ik) / (2.0_dp*c**2)
+                              * ap(lm,lm1,lm2) * wg(ibnd,ik) * alpha ** 2 &
+                              / 2.0_dp
                       enddo
                    enddo
                 enddo
@@ -468,38 +468,40 @@ CONTAINS
        enddo
     enddo
     
-!    write(6,'("DDD1",5F14.8)') efg_corr(5:9,1)
-!    write(6,'("DDD2",5F14.8)') efg_corr(5:9,2)
+    if ( iverbosity > 10 ) then
+       write(6,'("DDD1",5F14.8)') dia_corr(5:9,1)
+       write(6,'("DDD2",5F14.8)') dia_corr(5:9,MAX(1,nat))
+    end if
     
     !
     !  transform in cartesian coordinates
     !
     
-    efg_corr(5:9,:nat) = - sqrt(4.0_dp * pi/5.0_dp) * efg_corr(5:9,:nat)
+    dia_corr(5:9,:nat) = - sqrt(4.0_dp * pi/5.0_dp) * dia_corr(5:9,:nat)
     
     diamagnetic_tensor(1,1,:) = diamagnetic_tensor(1,1,:) &
-         + sqrt(3.0_dp) * efg_corr(8,:) - efg_corr(5,:)
+         + sqrt(3.0_dp) * dia_corr(8,:) - dia_corr(5,:)
     diamagnetic_tensor(2,2,:) = diamagnetic_tensor(2,2,:) &
-         - sqrt(3.0_dp) * efg_corr(8,:) - efg_corr(5,:)
+         - sqrt(3.0_dp) * dia_corr(8,:) - dia_corr(5,:)
     diamagnetic_tensor(3,3,:) = diamagnetic_tensor(3,3,:) &
-         + efg_corr(5,:) * 2.0_dp
+         + dia_corr(5,:) * 2.0_dp
     diamagnetic_tensor(1,2,:) = diamagnetic_tensor(1,2,:) &
-         +  efg_corr(9,:) * sqrt(3.0_dp)
+         +  dia_corr(9,:) * sqrt(3.0_dp)
     diamagnetic_tensor(2,1,:) = diamagnetic_tensor(1,2,:)
     diamagnetic_tensor(1,3,:) = diamagnetic_tensor(1,3,:) &
-         - efg_corr(6,:) * sqrt(3.0_dp)
+         - dia_corr(6,:) * sqrt(3.0_dp)
     diamagnetic_tensor(3,1,:) = diamagnetic_tensor(1,3,:)
     diamagnetic_tensor(2,3,:) = diamagnetic_tensor(2,3,:) &
-         - efg_corr(7,:) * sqrt(3.0_dp)
+         - dia_corr(7,:) * sqrt(3.0_dp)
     diamagnetic_tensor(3,2,:) = diamagnetic_tensor(2,3,:)
     
-    ! efg_corr(5,:) = 3z^2-1
-    ! efg_corr(6,:) = -xz
-    ! efg_corr(7,:) = -yz
-    ! efg_corr(8,:) = x^2-y^2
-    ! efg_corr(9,:) = xy
+    ! dia_corr(5,:) = 3z^2-1
+    ! dia_corr(6,:) = -xz
+    ! dia_corr(7,:) = -yz
+    ! dia_corr(8,:) = x^2-y^2
+    ! dia_corr(9,:) = xy
     
-    deallocate ( efg_corr )
+    deallocate ( dia_corr )
     
   END SUBROUTINE diamagnetic_correction
   
@@ -509,8 +511,9 @@ CONTAINS
   !====================================================================
   SUBROUTINE paramagnetic_correction ( paramagnetic_tensor )
     
-    USE ions_base,  ONLY : nat, ityp, ntyp => nsp
-    USE gipaw_module, ONLY : c
+    USE ions_base,      ONLY : nat, ityp, ntyp => nsp
+    USE gipaw_module,   ONLY : lx, ly, lz, radial_integral_paramagnetic, &
+                              paw_becp2
     
     implicit none
     
@@ -520,7 +523,7 @@ CONTAINS
     integer :: l1, m1, lm1, l2, m2, lm2, ih, ikb, nbs1, jh, jkb, nbs2
     integer :: nt, ibnd, na, lm, j, ijkb0, ipol
     complex(dp) :: bec_product
-    complex(dp) , allocatable :: efg_corr(:,:)
+    complex(dp) , allocatable :: para_corr(:,:)
     
     integer, parameter :: ng_ = 27, lmax2_ = 16
     integer :: mg, i1, i2, i3
@@ -529,7 +532,7 @@ CONTAINS
     
     !--------------------------------------------------------------------------
     
-    allocate (efg_corr(3,nat))
+    allocate (para_corr(3,nat))
     
     !
     !  calculation of the reconstruction part
@@ -542,7 +545,7 @@ CONTAINS
        call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp2, paw_vkb, &
             g_vel_evc(1,1,ipol))
        
-       efg_corr = 0.0_dp
+       para_corr = 0.0_dp
        
        do ibnd = 1, nbnd
           ijkb0 = 0
@@ -569,18 +572,18 @@ CONTAINS
                          bec_product = CONJG(paw_becp(ikb,ibnd)) &
                               * paw_becp2(jkb,ibnd)
                          
-                         efg_corr(1,na) = efg_corr(1,na) &
+                         para_corr(1,na) = para_corr(1,na) &
                               + bec_product &
                               * radial_integral_paramagnetic(nbs1,nbs2,nt) &
-                              * lx ( lm1, lm2 ) * wg(ibnd,ik) / c ** 2
-                         efg_corr(2,na) = efg_corr(2,na) &
+                              * lx ( lm1, lm2 ) * wg(ibnd,ik) * alpha ** 2
+                         para_corr(2,na) = para_corr(2,na) &
                               + bec_product &
                               * radial_integral_paramagnetic(nbs1,nbs2,nt) &
-                              * ly ( lm1, lm2 ) * wg(ibnd,ik) / c ** 2
-                         efg_corr(3,na) = efg_corr(3,na) &
+                              * ly ( lm1, lm2 ) * wg(ibnd,ik) * alpha ** 2
+                         para_corr(3,na) = para_corr(3,na) &
                               + bec_product &
                               * radial_integral_paramagnetic(nbs1,nbs2,nt) &
-                              * lz ( lm1, lm2 ) * wg(ibnd,ik) / c ** 2
+                              * lz ( lm1, lm2 ) * wg(ibnd,ik) * alpha ** 2
                          
                       enddo
                    enddo
@@ -590,16 +593,18 @@ CONTAINS
           enddo
        enddo
        
-       paramagnetic_tensor ( :, ipol, : ) = REAL ( efg_corr, dp )
+       paramagnetic_tensor ( :, ipol, : ) = REAL ( para_corr, dp )
        
-       write(6,'("DDD1",2I3,3(F16.7,2X)') &
-            ipol, i*isign, REAL ( efg_corr(1:3,1) ) * 1e6
-       !write(6,'("DDD2",2I3,3(F16.7,2X)') &
-       !     ipol, i*isign, REAL ( efg_corr(1:3,2) ) * 1e6
+       if ( iverbosity > 10 ) then
+          write(6,'("DDD1",2I3,3(F16.7,2X)') &
+               ipol, i*isign, REAL ( para_corr(1:3,1) ) * 1e6
+          write(6,'("DDD2",2I3,3(F16.7,2X)') &
+               ipol, i*isign, REAL ( para_corr(1:3,MAX(1,nat)) ) * 1e6
+       end if
        
     end do
     
-    deallocate(efg_corr)
+    deallocate( para_corr )
     
   END SUBROUTINE paramagnetic_correction
   

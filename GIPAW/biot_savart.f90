@@ -20,7 +20,7 @@ SUBROUTINE biot_savart(jpol)
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE pwcom
-  USE gipaw_module
+  USE gipaw_module,         ONLY : b_ind, b_ind_r, j_bare, alpha
 
   !-- parameters ---------------------------------------------------------
   IMPLICIT none
@@ -38,7 +38,7 @@ SUBROUTINE biot_savart(jpol)
   allocate(aux(nrxxs), j_of_g(1:ngm,3))  
 
   ! transform current to reciprocal space
-  j_of_g(:,:) = 0.d0
+  j_of_g(:,:) = 0.0_dp
   do ispin = 1, nspin
     do ipol = 1, 3
       aux(1:nrxxs) = j_bare(1:nrxxs,ipol,jpol,ispin)
@@ -49,7 +49,7 @@ SUBROUTINE biot_savart(jpol)
 
   ! compute induced field in reciprocal space
   do ig = gstart, ngm
-    fact = (0.d0,1.d0) * (fpi/c) / (gg(ig) * tpiba)
+    fact = (0.0_dp,1.0_dp) * (alpha*fpi) / (gg(ig) * tpiba)
     b_ind(ig,1,jpol) = fact * (g(2,ig)*j_of_g(ig,3) - g(3,ig)*j_of_g(ig,2))
     b_ind(ig,2,jpol) = fact * (g(3,ig)*j_of_g(ig,1) - g(1,ig)*j_of_g(ig,3))
     b_ind(ig,3,jpol) = fact * (g(1,ig)*j_of_g(ig,2) - g(2,ig)*j_of_g(ig,1))
@@ -57,7 +57,7 @@ SUBROUTINE biot_savart(jpol)
 
   ! transform induced field in real space
   do ipol = 1, 3
-    aux = (0.d0,0.d0)
+    aux = (0.0_dp,0.0_dp)
     aux(nl(1:ngm)) = b_ind(1:ngm,ipol,jpol)
     call cft3s(aux, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1)
     b_ind_r(1:nrxxs,ipol,jpol) = real(aux(1:nrxxs))
@@ -82,7 +82,7 @@ SUBROUTINE field_to_reciprocal_space
   integer :: ipol, jpol
 
   allocate(aux(nrxxs))
-  b_ind(:,:,:) = 0.d0
+  b_ind(:,:,:) = 0.0_dp
   do ipol = 1, 3
     do jpol = 1, 3
       aux(1:nrxxs) = b_ind_r(1:nrxxs,ipol,jpol)
