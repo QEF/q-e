@@ -8,88 +8,13 @@
 #include "f_defs.h"
 !-----------------------------------------------------------------------
 
-!
-! Copyright (C) 2004 PWSCF group 
-! This file is distributed under the terms of the
-! GNU General Public License. See the file `License'
-! in the root directory of the present distribution,
-! or http://www.gnu.org/copyleft/gpl.txt .
-! 
-!----------------------------------------------------------------------- 
-!program efg
-!  !-----------------------------------------------------------------------
-!  use kinds,      only : DP
-!  use io_files,   only : nd_nmbr,prefix, outdir, tmp_dir, trimcheck
-!  use parameters, only : ntypx, lmaxx
-!  use paw,        only : read_recon, paw_nbeta, aephi, psphi
-!  USE ions_base,  ONLY : ntyp => nsp
-!  USE io_global,  ONLY : ionode, ionode_id
-!  use mp,         only : mp_bcast
-!
-!  implicit none
-!  character (len=256) :: filerec(ntypx)
-!  real(DP) :: Q(ntypx), rc(ntypx,0:lmaxx)
-!  integer :: ios
-!  integer :: nt, il
-!
-!  namelist / inputpp / prefix, filerec, Q, outdir, rc
-!
-!  call start_postproc(nd_nmbr)
-!
-!  !
-!  ! set default value
-!  !
-!  prefix = 'pwscf'
-!  CALL get_env( 'ESPRESSO_TMPDIR', outdir )
-!  IF ( TRIM( outdir ) == ' ' ) outdir = './'
-!  Q=1.d0
-!  rc = 1.6d0
-!
-!  if ( ionode )  then  
-!     !
-!     read (5, inputpp, err=200, iostat=ios)
-!200  call errore('efg.x', 'reading inputpp namelist', abs(ios))
-!
-!     tmp_dir = trimcheck (outdir)
-!
-!  end if
-!  ! 
-!  ! ... Broadcast variables 
-!  ! 
-!  CALL mp_bcast( prefix, ionode_id ) 
-!  CALL mp_bcast(tmp_dir, ionode_id ) 
-!  CALL mp_bcast(filerec, ionode_id )
-!  CALL mp_bcast(      Q, ionode_id )   
-!  CALL mp_bcast(     rc, ionode_id )   
-!
-!  call read_file
-!
-!  call openfil_pp
-!
-!  call read_recon(filerec)
-!
-!  do nt=1,ntyp
-!     do il = 1,paw_nbeta(nt)
-!        psphi(nt,il)%label%rc = rc(nt,psphi(nt,il)%label%l)
-!        aephi(nt,il)%label%rc = rc(nt,aephi(nt,il)%label%l)
-!     end do
-!  end do
-!
-!  call do_efg(Q) 
-!
-!  call stop_pp
-!  stop
-!end program efg
-!
-!
-
-subroutine do_efg
-
+subroutine efg
+  
   USE io_files,     ONLY : nd_nmbr
   USE io_global,    ONLY : stdout
   USE kinds,        ONLY : dp 
   USE parameters,   ONLY : ntypx
-  USE constants,    ONLY : pi,tpi,fpi,ANGSTROM_AU,rytoev,ELECTRONVOLT_SI
+  USE constants,    ONLY : pi, tpi, fpi, angstrom_au, rytoev, electronvolt_si
   USE scf,          ONLY : rho
   USE gvect,        ONLY : nr1,nr2,nr3,nrx1,nrx2,nrx3,nrxx,&
                          g,gg,nl,gstart,ngm
@@ -107,7 +32,7 @@ subroutine do_efg
   complex(DP), allocatable:: aux(:)
   complex(DP), allocatable:: efgg_el(:,:,:),efgr_el(:,:,:)
   complex(DP), allocatable:: efg_io(:,:,:)
-  real(DP), allocatable:: zion(:), efg_corr_tens(:,:,:), efg(:,:,:)
+  real(DP), allocatable:: zion(:), efg_corr_tens(:,:,:), efg_total(:,:,:)
   real(DP):: efg_eig(3), v(3)
   complex(DP) :: work(3,3), efg_vect(3,3)
 
@@ -117,13 +42,13 @@ subroutine do_efg
   allocate(efg_io(nat,3,3))
   allocate(zion(nat))
   allocate(efg_corr_tens(3,3,nat))
-  allocate(efg(3,3,nat))
+  allocate(efg_total(3,3,nat))
   
-  !  e2 = 2.0_dp ! rydberg
+  ! e2 = 2.0_dp ! rydberg
   e2 = 1.0_dp  ! hartree
   fac= fpi * e2
-  aux(:)= rho(:,1)
-  efgg_el(:,:,:)=(0.0_dp,0.0_dp)
+  aux(:) = rho(:,1)
+  efgg_el(:,:,:) = (0.0_dp,0.0_dp)
   
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   
@@ -137,9 +62,8 @@ subroutine do_efg
         efgg_el(ig,alpha,alpha)= -trace
         
         do beta=1,3
-           efgg_el(ig,alpha,beta)=(efgg_el(ig,alpha,beta) + &
-                g(alpha,ig) * g(beta,ig)) &
-                * fac * (aux(nl(ig)))/gg(ig)
+           efgg_el(ig,alpha,beta) = ( efgg_el(ig,alpha,beta) &
+                + g(alpha,ig) * g(beta,ig)) * fac * aux(nl(ig)) / gg(ig)
         end do
      end do
   end do
@@ -163,7 +87,7 @@ subroutine do_efg
   
 #ifdef __PARA
   call reduce (2*3*3*nat, efgr_el) !2*, efgr_el is a complex array
-#end if
+#endif
   
   write ( stdout, '( / )' )
   
@@ -218,18 +142,18 @@ subroutine do_efg
   end do
   
   do na=1,nat
-     efg(:,:,na) = REAL ( 2 * efg_corr_tens(:,:,na) &
+     efg_total(:,:,na) = REAL ( 2 * efg_corr_tens(:,:,na) &
           + efgr_el(na,:,:) + efg_io(na,:,:), dp )
      
      do beta=1,3
         write (stdout,1000) atm(ityp(na)),na,"efg",&
-             (efg(alpha,beta,na),alpha=1,3)
+             (efg_total(alpha,beta,na),alpha=1,3)
      end do
      write ( stdout, '( / )' )
      
      do alpha=1,3
         do beta=1,3
-           work(beta,alpha) = CMPLX ( efg(alpha,beta,na), 0.0_dp )
+           work(beta,alpha) = CMPLX ( efg_total(alpha,beta,na), 0.0_dp )
         end do
      end do
      
@@ -264,7 +188,7 @@ subroutine do_efg
 1200 FORMAT ( 1x, a, 1x, i3, 5x, 'Q= ', f5.2, ' 10e-30 m^2', &
           5x, ' Cq=', f9.4, ' MHz', 5x, 'eta= ', f8.5 )
   
-end subroutine do_efg
+end subroutine efg
 
 subroutine efg_correction ( efg_corr_tens )
   

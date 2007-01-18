@@ -67,32 +67,34 @@ PROGRAM gipaw_main
      CALL read_recon ( file_reconstruction )
   END IF
   !</apsi>
-!  write(0,*) "QQQ2: ", aephi(1,1)%psi(5), psphi(1,1)%psi(5)
   
   CALL gipaw_allocate()
   CALL gipaw_setup()
   CALL gipaw_summary()
   CALL gipaw_openfil()
   CALL print_clock( 'GIPAW' )
-
-  ! convert q_gipaw in units of tpiba
+  
+  ! convert q_gipaw into units of tpiba
   q_gipaw = q_gipaw / tpiba
-
+  
   ! calculation
-  select case(trim(job))
-    case('nmr')
-      call suscept_crystal   
-
-    case('g_tensor')
-      call g_tensor_crystal
-
-    case('f-sum')
-      call test_f_sum_rule 
-
-    case default
-      call errore('gipaw_main', 'wrong or undefined job in input', 1)
+  select case ( trim(job) )
+  case ( 'nmr' )
+     call suscept_crystal   
+     
+  case ( 'g_tensor' )
+     call g_tensor_crystal
+     
+  case ( 'f-sum' )
+     call test_f_sum_rule 
+     
+  case ( 'efg' )
+     call efg
+     
+  case default
+     call errore('gipaw_main', 'wrong or undefined job in input', 1)
   end select
-
+  
   ! print timings and stop the code
   CALL print_clock_gipaw()
   CALL stop_code( .TRUE. )

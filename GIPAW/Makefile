@@ -22,7 +22,8 @@ compute_sigma.o \
 init_us_2_no_phase.o \
 init_paw_2_no_phase.o \
 g_tensor_crystal.o \
-write_tensor_field.o
+write_tensor_field.o \
+efg.o
 
 MODULES = \
 ../Modules/atom.o \

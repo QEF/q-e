@@ -64,11 +64,11 @@ SUBROUTINE suscept_crystal
   real(dp) :: sigma_paramagnetic(3,3,nat)
   complex(dp), external :: ZDOTC
   !-----------------------------------------------------------------------
-
+  
   ! allocate memory
   allocate ( p_evc(npwx,nbnd,3), vel_evc(npwx,nbnd,3), &
              aux(npwx,nbnd), g_vel_evc(npwx,nbnd,3) )
-
+  
   ! zero the Q tensors
   q_pGv(:,:,:) = 0.0_dp
   q_vGv(:,:,:) = 0.0_dp
@@ -403,7 +403,7 @@ CONTAINS
     complex(dp) , allocatable :: dia_corr(:,:)
     complex(dp) :: bec_product
     
-    allocate (dia_corr(lmaxx**2,nat))
+    allocate ( dia_corr(lmaxx**2,nat) )
     dia_corr = 0.0_dp
     
     !
@@ -414,7 +414,8 @@ CONTAINS
        ijkb0 = 0
        do nt = 1, ntyp
           do na = 1, nat
-             if (ityp (na) .eq.nt) then
+             
+             if ( ityp(na) == nt ) then
                 do ih = 1, paw_nh (nt)
                    ikb = ijkb0 + ih
                    nbs1=paw_indv(ih,nt)
@@ -429,7 +430,7 @@ CONTAINS
                       lm2=m2+l2**2 
                       
                       bec_product = paw_becp(jkb,ibnd) &
-                           * CONJG(paw_becp(ikb,ibnd))
+                           * CONJG( paw_becp(ikb,ibnd) )
                       
                       !<apsi> s/non-trace-zero component
                       ! 2/3 to separate the non-trace vanishing component
@@ -464,6 +465,7 @@ CONTAINS
                 enddo
                 ijkb0 = ijkb0 + paw_nh (nt)
              endif
+             
           enddo
        enddo
     enddo

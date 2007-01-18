@@ -47,15 +47,18 @@ MODULE gipaw_module
   ! q for the perturbation (in bohrradius^{-1})
   REAL(DP) :: q_gipaw
 
+  ! q for the EFG
+  REAL(DP) :: q_efg ( ntypx )
+  
   ! verbosity
   INTEGER :: iverbosity
 
-  ! job: gipaw, g_tensor
+  ! job: nmr, g_tensor, efg, hyperfine
   CHARACTER(80) :: job
-
+  
   ! format for a rank-2 tensor
   CHARACTER(*), PARAMETER :: tens_fmt = '(3(5X,3(F14.4,2X)/))'
-
+  
   ! for plotting the induced current and induced field
   CHARACTER(80) :: filcurr, filfield
   
@@ -529,7 +532,7 @@ CONTAINS
        end do
     end do
     
-    if (iverbosity > 0) then
+    if (iverbosity > 10) then
        write(stdout,'(A)') "lx:"
        write(stdout,'(9F8.5)') lx
        
@@ -564,6 +567,10 @@ CONTAINS
     end if
     
     deallocate ( lm2l, lm2m )
+    
+    ! check whether the symmetry operations map the coordinate axis to each
+    ! other - if not, remove them (how to check the k point mesh then? - oops!
+    
     
     ! computes the total local potential (external+scf) on the smooth grid
     call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
