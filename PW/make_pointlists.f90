@@ -41,7 +41,7 @@ SUBROUTINE make_pointlists
   REAL(DP), ALLOCATABLE :: tau0(:,:)
 
   IF (.NOT.(noncolin)) RETURN
-  WRITE( stdout,*) "  Generating pointlists ..."
+  WRITE( stdout,'(5x,"Generating pointlists ...")')
   ALLOCATE(tau0(3,nat))
 
   ! First, the real-space position of every point ir is needed ...
@@ -103,7 +103,7 @@ SUBROUTINE make_pointlists
      ! distance divided by 2*1.2 (so no point in space can belong to more
      ! than one atom)
      r_m = 0.5d0*distmin/1.2d0 * 0.99d0
-     WRITE( stdout,*) "    new r_m : ",r_m
+     WRITE( stdout,'(5x,"new r_m : ",f8.4)') r_m
   ENDIF
 
 

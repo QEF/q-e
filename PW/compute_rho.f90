@@ -95,8 +95,8 @@
          uy=uy0
          uz=uz0
       endif
-100   WRITE( stdout,*) 'it, count', it,count(1),count(3)
-      WRITE( stdout,*) ux,uy,uz
+100   WRITE( stdout,'(5x,"it, count:',3i5)') it,count(1),count(3)
+      WRITE( stdout,'(5x,3f12.6)') ux,uy,uz
 
       do ir=1,nrxx
          amag=sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
