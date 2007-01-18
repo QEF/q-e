@@ -105,7 +105,7 @@ subroutine add_shift_cc (shift_cc)
      endif
   enddo
 #ifdef __PARA
-  call reduce (3 * nat, shift_)
+  call reduce (nat, shift_)
 #endif
   shift_cc(:) = shift_cc(:) + shift_(:)
   deallocate (rhocg, shift_)
