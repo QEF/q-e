@@ -99,7 +99,7 @@ ELSEIF (noperation(2)==1) THEN
       IF (noperation(5)==5) code_group=22                   ! D_4h
    ELSEIF (nrot==24) THEN
       IF (noperation(5)>6) code_group=23                    ! D_6h
-      IF (noperation(5)==6) code_group=29                   ! T_h
+      IF (noperation(5)==3) code_group=29                   ! T_h
    ELSEIF (nrot==48) THEN
       code_group=32                                         ! O_h
    ELSE
