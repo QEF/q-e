@@ -678,7 +678,7 @@ MODULE from_restart_module
        !
     END IF
     !
-    IF ( tzeroe .OR. tzerop ) THEN
+    IF ( ( tzeroe .AND. .NOT. tsde ) .OR. tzerop ) THEN
        !
        ! ... set velocities to zero
        ! ... set right initial conditions when c0=cm or stau0=staum
