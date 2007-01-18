@@ -299,8 +299,6 @@ CONTAINS
       !
       REAL(DP) :: cclock
       EXTERNAL :: cclock
-      INTEGER  :: ldim_block, gind_block
-      EXTERNAL :: ldim_block, gind_block
       !
       IF( ortho_para > 0 ) THEN
          !
@@ -344,8 +342,8 @@ CONTAINS
    
          CALL mp_barrier( intra_image_comm )
          t1 = cclock()
-   
-         CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, n, 0.0d0, c, nr, desc)
+
+         CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc)
    
          tcan = cclock() - t1
          CALL mp_max( tcan, intra_image_comm )
