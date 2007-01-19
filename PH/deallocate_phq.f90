@@ -14,9 +14,10 @@ subroutine deallocate_phq
   use phcom
   USE becmod, ONLY: becp
   USE wavefunctions_module,  ONLY: evc
+  USE ramanm, ONLY: ramtns
   use el_phon
 
-
+  if(allocated(ramtns)) deallocate (ramtns)  
   if (lgamma) then
      if(associated(evq)) nullify(evq)
      if(associated(igkq)) nullify(igkq)

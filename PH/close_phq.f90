@@ -21,7 +21,8 @@ SUBROUTINE close_phq( flag )
                             iunrec, iudvscf
   USE control_ph,    ONLY : zue, epsil
   USE output,        ONLY : fildrho, fildvscf
-  !
+  USE ramanm,        ONLY : lraman, elop, iuchf, iud2w, iuba2
+  ! 
   IMPLICIT NONE
   !
   LOGICAL :: flag
@@ -57,6 +58,12 @@ SUBROUTINE close_phq( flag )
   END IF
   !
   IF ( fildvscf /= ' ' ) CLOSE( UNIT = iudvscf, STATUS = 'KEEP' )
+  !
+  IF (lraman .OR.elop) THEN
+     CLOSE ( UNIT=iuchf, STATUS = 'keep' )
+     CLOSE ( UNIT=iud2w, STATUS = 'keep' )
+     CLOSE ( UNIT=iuba2, STATUS = 'keep' )
+  ENDIF
   !
   CLOSE( UNIT = iunigk, STATUS = 'DELETE' )
   !
