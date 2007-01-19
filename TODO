@@ -1,4 +1,4 @@
-TODO LIST - December 2006
+TODO LIST - January 2007
 
 BUGS TO EXAMINE
 
@@ -9,17 +9,32 @@ BUGS TO EXAMINE
   configuration, when semicore states are in the valence
 - discrepancies between spin-unpolarized and spin=0 spin-polarized
   results with gradient corrections
+- mysterious bfgs crash(-es)
+- job by Lisenkov: charge lost after restarting
+- Misc problems found by Eduardo
 
-INSTALLATION/PORTING
+CVS/INSTALLATION/PORTING
 
+- restructuration of the CVS server, dividing it into "base libs",
+  "base QE", additional packages
 - add support for more Nec's
 - remove install/
 - put misc scripts into a Utils/ subdirectory
 - release.sh is clumsy, simplify
 - some machines do not allow to open more than 32000 directories:
-  this sets a limit to the numbe of k-points (AdC)
+  this sets a limit to the number of k-points (AdC)
 
 COMMON
+
+- reduce usage of nonscalable static and dynamical memory:
+  qfunc, qrad, uspp, etc
+
+- update iotk to new version
+
+- use qexml for xml file processing so that a single, easily
+  exportable routine, is used everywhere. Requires some though
+  on how to deal with parallelism without filling qexml with
+  parallel stuff
 
 - uniform and clear values for constants in Modules/constants.f90
 - convert all single-precision constants to double precision
@@ -53,11 +68,14 @@ COMMON
 
 - CP "small boxes" vs PW "real-space" approach
 
+- It would be nice to merge "cell_base_init" from CPV to PW,
+   and also "cellmd" module of PW into "cell_base" of CPV
+
 PW
 
 - real matrices with inversion symmetry (Dario)
-- Add option to prevent writing the final file (Dario)
 
+- Add option to prevent writing the final file (Dario)
 - Add option to avoid reading/writing wfc all the time,
   keep everything in memory (add printout of memory usage)
 
@@ -145,7 +163,6 @@ DOCUMENTATION
 - update documentation for file format
 
 - single source (xml?) for text file, GUI help file, user guide
-  (Tone?)
 
 - better automated testing procedure, quick and distinct from examples!
 
@@ -155,13 +172,9 @@ CP/FPMD:
 
 - PWGui for CP/FPMD?
 
-- reduce usage of nonscalable static and dynamical memory:
-  qfunc, qrad, uspp, etc
-
 - check on small box size
 
 - Proposals from Princeton:
-  * just one name for CP and FPMD
   * default set up for molecular calculations
   * default cutoff values as well as radii of augmented charge
     from pseudopotential files
