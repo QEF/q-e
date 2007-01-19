@@ -95,7 +95,7 @@
          uy=uy0
          uz=uz0
       endif
-100   WRITE( stdout,'(5x,"it, count:',3i5)') it,count(1),count(3)
+100   WRITE( stdout,'(5x,"it, count:",3i5)') it,count(1),count(3)
       WRITE( stdout,'(5x,3f12.6)') ux,uy,uz
 
       do ir=1,nrxx
