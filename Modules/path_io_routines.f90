@@ -207,7 +207,7 @@ MODULE path_io_routines
        USE io_files,               ONLY : iunpath, iunrestart, path_file
        USE input_parameters,       ONLY : if_pos
        USE path_variables,         ONLY : nim => num_of_images
-       USE path_variables,         ONLY : istep_path, nstep_path, frozen, dim, &
+       USE path_variables,         ONLY : istep_path, nstep_path, frozen, dim1,&
                                           pending_image, pos, pes, grad_pes,   &
                                           lquick_min, posold, Emax, Emin,      &
                                           Emax_index
@@ -288,7 +288,7 @@ MODULE path_io_routines
                 !
                 READ( UNIT = iunrestart, FMT = * )
                 !
-                DO j = 1, dim
+                DO j = 1, dim1
                    !
                    READ( UNIT = iunrestart, FMT = * ) pos(j,i), grad_pes(j,i)
                    !
@@ -305,7 +305,7 @@ MODULE path_io_routines
              !
              if_pos = 0
              !
-             DO j = 1, dim, 3 
+             DO j = 1, dim1, 3 
                 !
                 ia = ia + 1
                 !
@@ -321,7 +321,7 @@ MODULE path_io_routines
                     if_pos(3,ia) 
                 !
                 grad_pes(:,1) = grad_pes(:,1) * &
-                                DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                                DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
                 !
              END DO
              !
@@ -330,7 +330,7 @@ MODULE path_io_routines
                 READ( UNIT = iunrestart, FMT = * )
                 READ( UNIT = iunrestart, FMT = * ) pes(i)
                 !
-                DO j = 1, dim, 3 
+                DO j = 1, dim1, 3 
                    !
                    READ( UNIT = iunrestart, FMT = * ) &
                        pos(j+0,i),                    &
@@ -343,7 +343,7 @@ MODULE path_io_routines
                 END DO
                 !
                 grad_pes(:,i) = grad_pes(:,i) * &
-                                DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                                DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
                 !
              END DO
              !
@@ -364,7 +364,7 @@ MODULE path_io_routines
                       READ( UNIT = iunrestart, FMT = * )
                       READ( UNIT = iunrestart, FMT = * ) frozen(i)
                       !
-                      DO j = 1, dim
+                      DO j = 1, dim1
                          !
                          READ( UNIT = iunrestart, FMT = * ) posold(j,i)
                          !
@@ -379,7 +379,7 @@ MODULE path_io_routines
                       READ( UNIT = iunrestart, FMT = * )
                       READ( UNIT = iunrestart, FMT = * ) frozen(i)
                       !
-                      DO j = 1, dim, 3
+                      DO j = 1, dim1, 3
                          !
                          READ( UNIT = iunrestart, FMT = * ) &
                              posold(j+0,i),                    & 
@@ -389,7 +389,7 @@ MODULE path_io_routines
                       END DO
                       !
                       posold(:,i) = posold(:,i) * &
-                                    DBLE( RESHAPE( if_pos, (/ dim /) ) )
+                                    DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
                       !
                    END DO
                    !
@@ -465,7 +465,7 @@ MODULE path_io_routines
        USE io_files,         ONLY : iunrestart, path_file, tmp_dir 
        USE control_flags,    ONLY : conv_elec, lcoarsegrained
        USE path_variables,   ONLY : istep_path, nstep_path, pending_image, &
-                                    dim, num_of_images, pos, pes, grad_pes,  &
+                                    dim1, num_of_images, pos, pes, grad_pes, &
                                     posold, frozen, lquick_min
        USE path_formats,     ONLY : energy, restart_first, restart_others, &
                                     quick_min
@@ -550,7 +550,7 @@ MODULE path_io_routines
               !
               IF ( lcoarsegrained ) THEN
                  !
-                 DO j = 1, dim
+                 DO j = 1, dim1
                     !
                     WRITE( UNIT = in_unit, &
                            FMT = '(2(2X,F18.12))' ) pos(j,i), grad_pes(j,i)
@@ -563,7 +563,7 @@ MODULE path_io_routines
                  !
                  ia = 0
                  !
-                 DO j = 1, dim, 3
+                 DO j = 1, dim1, 3
                     !
                     ia = ia + 1
                     !
@@ -621,7 +621,7 @@ MODULE path_io_routines
               !
               IF ( lcoarsegrained ) THEN
                  !
-                 DO j = 1, dim
+                 DO j = 1, dim1
                     !
                     WRITE( UNIT = in_unit, &
                            FMT = '(2X,F18.12)' ) posold(j,i)
@@ -630,7 +630,7 @@ MODULE path_io_routines
                  !
               ELSE
                  !
-                 DO j = 1, dim, 3
+                 DO j = 1, dim1, 3
                     !
                     WRITE( UNIT = in_unit, FMT = quick_min ) &
                         posold(j+0,i),                          & 
@@ -660,7 +660,7 @@ MODULE path_io_routines
        USE ions_base,        ONLY : ityp, nat
        USE path_formats,     ONLY : dat_fmt, int_fmt, xyz_fmt, axsf_fmt
        USE path_variables,   ONLY : pos, grad_pes, pes, num_of_images, &
-                                    tangent, dim, error
+                                    tangent, dim1, error
        USE io_files,         ONLY : iundat, iunint, iunxyz, iunaxsf, &
                                     dat_file, int_file, xyz_file, axsf_file
        !
@@ -881,7 +881,7 @@ MODULE path_io_routines
      SUBROUTINE new_image_init( fii, outdir )
        !-----------------------------------------------------------------------
        !
-       ! ... this subroutine initializes the file needed for the 
+       ! ... this subroutine initializes the file needed for the
        ! ... parallelization among images
        !
        USE io_files,       ONLY : iunnewimage, prefix
@@ -894,7 +894,7 @@ MODULE path_io_routines
        CHARACTER(LEN=*), INTENT(IN) :: outdir
        !
        !
-       IF ( nimage == 1 .OR. .NOT. tune_load_balance ) RETURN
+       IF ( nimage == 1 .OR. .NOT.tune_load_balance ) RETURN
        !
        OPEN( UNIT = iunnewimage, FILE = TRIM( outdir ) // &
            & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
@@ -930,7 +930,7 @@ MODULE path_io_routines
        LOGICAL            :: opened
        !
        !
-       IF ( .NOT. ionode ) RETURN
+       IF ( .NOT.ionode ) RETURN
        !
        IF ( nimage > 1 ) THEN
           !

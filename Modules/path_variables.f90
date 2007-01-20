@@ -27,7 +27,7 @@ MODULE path_variables
   LOGICAL :: &
        first_last_opt,           &! if .TRUE. the first and the last image
                                   !           are optimised too.
-       use_masses,               &! if .TRUE. mass weighted coordinates are 
+       use_masses,               &! if .TRUE. mass weighted coordinates are
                                   !           used
        write_save,               &! if .TRUE. the save file is written for each
                                   !           image
@@ -36,13 +36,13 @@ MODULE path_variables
        use_freezing,             &! if .TRUE. images are optimised according
                                   !           to their error (see frozen array)
        tune_load_balance          ! if .TRUE. the load balance for image
-                                  !           parallelisation is tuned at 
+                                  !           parallelisation is tuned at
                                   !           runtime
   INTEGER :: &
-       dim,                      &! dimension of the configuration space
+       dim1,                      &! dimension of the configuration space
        num_of_images,            &! number of images
        deg_of_freedom,           &! number of degrees of freedom 
-                                  ! ( dim - #( of fixed coordinates ) )
+                                  ! ( dim1 - #( of fixed coordinates ) )
        pending_image              ! last image for which scf has not been
                                   ! achieved
   REAL(DP) :: &
@@ -57,7 +57,7 @@ MODULE path_variables
        lquick_min  = .FALSE.,    &! .TRUE. if opt_scheme = "quick-min"
        lbroyden    = .FALSE.,    &! .TRUE. if opt_scheme = "broyden"
        llangevin   = .FALSE.      ! .TRUE. if opt_scheme = "langevin"
-  INTEGER :: &                   
+  INTEGER :: &
        istep_path,               &! iteration in the optimization procedure
        nstep_path                 ! maximum number of iterations
   !
@@ -84,7 +84,7 @@ MODULE path_variables
        Emax_index                 ! index of the image with the highest energy
   !
   REAL (DP) :: &
-       k_max,                    &! 
+       k_max,                    &!
        k_min,                    &!
        Emax,                     &!
        Emin                       !
@@ -140,12 +140,12 @@ MODULE path_variables
        !
        IMPLICIT NONE
        !
-       ALLOCATE( pos( dim, num_of_images ) )
+       ALLOCATE( pos( dim1, num_of_images ) )
        !
-       ALLOCATE( posold(   dim, num_of_images ) ) 
-       ALLOCATE( grad(     dim, num_of_images ) )
-       ALLOCATE( grad_pes( dim, num_of_images ) )
-       ALLOCATE( tangent(  dim, num_of_images ) )
+       ALLOCATE( posold(   dim1, num_of_images ) )
+       ALLOCATE( grad(     dim1, num_of_images ) )
+       ALLOCATE( grad_pes( dim1, num_of_images ) )
+       ALLOCATE( tangent(  dim1, num_of_images ) )
        !
        ALLOCATE( pes(      num_of_images ) )
        ALLOCATE( k(        num_of_images ) )
@@ -153,12 +153,12 @@ MODULE path_variables
        ALLOCATE( climbing( num_of_images ) )
        ALLOCATE( frozen(   num_of_images ) )
        !
-       ALLOCATE( mass(         dim ) )
-       ALLOCATE( elastic_grad( dim ) )
+       ALLOCATE( mass(         dim1 ) )
+       ALLOCATE( elastic_grad( dim1 ) )
        !
-       ALLOCATE( lang( dim, num_of_images ) )
+       ALLOCATE( lang( dim1, num_of_images ) )
        !
-     END SUBROUTINE path_allocation     
+     END SUBROUTINE path_allocation
      !
      !
      !----------------------------------------------------------------------
@@ -175,7 +175,7 @@ MODULE path_variables
        IF ( ALLOCATED( k ) )            DEALLOCATE( k )
        IF ( ALLOCATED( mass ) )         DEALLOCATE( mass )
        IF ( ALLOCATED( elastic_grad ) ) DEALLOCATE( elastic_grad )
-       IF ( ALLOCATED( tangent ) )      DEALLOCATE( tangent ) 
+       IF ( ALLOCATED( tangent ) )      DEALLOCATE( tangent )
        IF ( ALLOCATED( error ) )        DEALLOCATE( error )
        IF ( ALLOCATED( climbing ) )     DEALLOCATE( climbing )
        IF ( ALLOCATED( frozen ) )       DEALLOCATE( frozen )

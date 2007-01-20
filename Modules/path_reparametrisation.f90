@@ -157,7 +157,7 @@ MODULE path_reparametrisation
       !
       RETURN
       !
-    END SUBROUTINE spline_interpolation_1D    
+    END SUBROUTINE spline_interpolation_1D
     !
     !--------------------------------------------------------------------
     SUBROUTINE spline_interpolation_2D( vec, ni, nf, nim )
@@ -173,13 +173,13 @@ MODULE path_reparametrisation
       !
       INTEGER                :: i, j
       INTEGER                :: nio, nfo
-      INTEGER                :: dim
+      INTEGER                :: dim1
       REAL(DP)               :: delta, length
       REAL(DP), ALLOCATABLE  :: new_vec(:,:)
       REAL(DP), ALLOCATABLE  :: old_mesh(:), new_mesh(:)
       !
       !
-      dim = SIZE( vec, 1 )
+      dim1 = SIZE( vec, 1 )
       !
       IF ( PRESENT( nim ) ) THEN
          !
@@ -195,7 +195,7 @@ MODULE path_reparametrisation
       !
       ! ... cubic spline interpolation
       !
-      ALLOCATE( new_vec( dim, ni:nf ) )
+      ALLOCATE( new_vec( dim1, ni:nf ) )
       !
       ALLOCATE( old_mesh( nio:nfo ) )
       ALLOCATE( new_mesh( ni:nf ) )
@@ -236,7 +236,7 @@ MODULE path_reparametrisation
     SUBROUTINE cubic_interpolation( ni, nf )
       !--------------------------------------------------------------------
       !
-      USE path_variables, ONLY : dim, pos
+      USE path_variables, ONLY : dim1, pos
       !
       IMPLICIT NONE
       !
@@ -246,11 +246,11 @@ MODULE path_reparametrisation
       REAL(DP)              :: r, delta, x
       REAL(DP), ALLOCATABLE :: a(:,:), b(:,:), c(:,:), d(:,:), t(:,:), s(:)
       !
-      ALLOCATE( a( dim, ni:nf-1 ) )
-      ALLOCATE( b( dim, ni:nf-1 ) )
-      ALLOCATE( c( dim, ni:nf-1 ) )
-      ALLOCATE( d( dim, ni:nf-1 ) )
-      ALLOCATE( t( dim, ni:nf ) )
+      ALLOCATE( a( dim1, ni:nf-1 ) )
+      ALLOCATE( b( dim1, ni:nf-1 ) )
+      ALLOCATE( c( dim1, ni:nf-1 ) )
+      ALLOCATE( d( dim1, ni:nf-1 ) )
+      ALLOCATE( t( dim1, ni:nf ) )
       ALLOCATE( s( ni:nf ) )
       !
       t(:,ni) = pos(:,ni+1) - pos(:,ni)

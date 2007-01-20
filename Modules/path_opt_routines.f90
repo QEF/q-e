@@ -78,7 +78,7 @@ MODULE path_opt_routines
        !
        ! ... projected Verlet algorithm
        !
-       USE path_variables, ONLY : dim, posold
+       USE path_variables, ONLY : dim1, posold
        !
        IMPLICIT NONE
        !
@@ -92,7 +92,7 @@ MODULE path_opt_routines
        !
        IF ( meta_ionode ) THEN
           !
-          ALLOCATE( vel( dim ), force_versor( dim ), step( dim ) )
+          ALLOCATE( vel( dim1 ), force_versor( dim1 ), step( dim1 ) )
           !
           vel(:) = pos(:,idx) - posold(:,idx)
           !
@@ -143,7 +143,7 @@ MODULE path_opt_routines
        !
        USE control_flags,  ONLY : lsmd
        USE io_files,       ONLY : broy_file, iunbroy, iunpath
-       USE path_variables, ONLY : dim, frozen, tangent, nim => num_of_images
+       USE path_variables, ONLY : dim1, frozen, tangent, nim => num_of_images
        !
        IMPLICIT NONE
        !
@@ -161,17 +161,17 @@ MODULE path_opt_routines
        !
        J0 = ds*ds
        !
-       ALLOCATE( g( dim*nim ) )
-       ALLOCATE( s( dim*nim, broyden_ndim ) )
-       ALLOCATE( t( dim*nim ) )
+       ALLOCATE( g( dim1*nim ) )
+       ALLOCATE( s( dim1*nim, broyden_ndim ) )
+       ALLOCATE( t( dim1*nim ) )
        !
        g(:) = 0.D0
        t(:) = 0.D0
        !
        DO i = 1, nim
           !
-          I_in  = ( i - 1 )*dim + 1
-          I_fin = i * dim
+          I_in  = ( i - 1 )*dim1 + 1
+          I_fin = i * dim1
           !
           IF ( frozen(i) ) CYCLE
           !
@@ -290,7 +290,7 @@ MODULE path_opt_routines
           !
           ! ... broyden's step
           !
-          pos(:,1:nim) = pos(:,1:nim) + RESHAPE( s(:,k), (/ dim, nim /) )
+          pos(:,1:nim) = pos(:,1:nim) + RESHAPE( s(:,k), (/ dim1, nim /) )
           !
        END IF
        !

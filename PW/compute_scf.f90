@@ -36,7 +36,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE io_files,         ONLY : prefix, tmp_dir, iunpath, iunupdate, &
                                exit_file, iunexit, delete_if_present
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
-  USE path_variables,   ONLY : pos, pes, grad_pes, dim, pending_image, &
+  USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
                                istep_path, frozen, write_save, num_of_images, &
                                first_last_opt
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
@@ -48,10 +48,10 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN)  :: fii, lii         ! indeces of first and last images
+  INTEGER, INTENT(IN)  :: fii, lii         ! indexes to first and last images
   LOGICAL, INTENT(OUT) :: stat
   !
-  INTEGER               :: fii_, lii_      ! local copies of ini and inl
+  INTEGER               :: fii_, lii_      ! local copies of fii and lii
   INTEGER               :: image, istat
   REAL(DP)              :: tcpu
   CHARACTER (LEN=256)   :: tmp_dir_saved
@@ -98,6 +98,10 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
   END IF
   !
+  ! ... all processes are syncronized (needed to have an ordered output)
+  !
+  CALL mp_barrier()
+  !
   IF ( nimage > 1 .AND. .NOT.first_last_opt ) THEN
      !
      ! ... self-consistency on the first and last images is done separately
@@ -131,16 +135,12 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
   END IF
   !
-  ! ... only the first cpu initializes the file needed by parallelization 
+  ! ... only the first cpu initializes the file needed by parallelization
   ! ... among images
   !
   IF ( meta_ionode ) CALL new_image_init( fii_, tmp_dir_saved )
   !
   image = fii_ + my_image_id
-  !
-  ! ... all processes are syncronized (needed to have an ordered output)
-  !
-  CALL mp_barrier()
   !
   scf_loop: DO
      !
@@ -371,7 +371,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       ! ... gradients are converted from rydberg/bohr to hartree/bohr
       !
-      grad_pes(:,image) = - RESHAPE( force, (/ dim /) ) / e2
+      grad_pes(:,image) = - RESHAPE( force, (/ dim1 /) ) / e2
       !
       IF ( ionode ) THEN
          !

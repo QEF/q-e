@@ -55,19 +55,19 @@ MODULE path_base
       USE metadyn_vars,     ONLY : ncolvar
       USE io_files,         ONLY : prefix, tmp_dir, path_file, dat_file, &
                                    int_file, xyz_file, axsf_file, broy_file
-      USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,   &
-                                   dim, num_of_images, pes, grad_pes, mass, &
-                                   use_masses, tangent, error, path_length, &
-                                   deg_of_freedom, frozen, use_freezing, k, &
-                                   k_min, tune_load_balance, grad, posold,  &
-                                   elastic_grad, pending_image
+      USE path_variables,   ONLY : climbing, pos, istep_path, nstep_path,    &
+                                   dim1, num_of_images, pes, grad_pes, mass, &
+                                   use_masses, tangent, error, path_length,  &
+                                   deg_of_freedom, frozen, use_freezing, k,  &
+                                   k_min, tune_load_balance, grad, posold,   &
+                                   elastic_grad, pending_image, first_last_opt
       USE mp_global,        ONLY : nimage
       USE path_io_routines, ONLY : read_restart
       USE path_variables,   ONLY : path_allocation
       !
       IMPLICIT NONE
       !
-      INTEGER :: i
+      INTEGER :: i, fii, lii
       LOGICAL :: file_exists
       !
       !
@@ -83,23 +83,23 @@ MODULE path_base
       !
       ! ... istep is initialised to zero
       !
-      istep_path = 0
+      istep_path    = 0
       pending_image = 0
-      conv_elec  = .TRUE.
+      conv_elec     = .TRUE.
       !
-      ! ... the dimension of all "path" arrays (dim) is set here
+      ! ... the dimension of all "path" arrays (dim1) is set here
       ! ... ( it corresponds to the dimension of the configurational space )
       !
       IF ( lcoarsegrained ) THEN
          !
-         dim = ncolvar
+         dim1 = ncolvar
          !
          use_masses   = .FALSE.
          use_freezing = .FALSE.
          !
       ELSE
          !
-         dim = 3 * nat
+         dim1 = 3*nat
          !
       END IF
       !
@@ -110,10 +110,24 @@ MODULE path_base
          !
          tune_load_balance = .FALSE.
          !
-         ! ... freezing allowed only with the automatic tuning of
-         ! ... the load balance
+         ! ... in the case of image-parallelisation the number of images
+         ! ... to be optimised must be larger than nimage
          !
-         use_freezing = tune_load_balance
+         IF ( first_last_opt ) THEN
+            !
+            fii = 1
+            lii = num_of_images
+            !
+         ELSE
+            !
+            fii = 2
+            lii = num_of_images - 1
+            !
+         END IF
+         !
+         IF ( nimage > ( lii - fii + 1 ) ) &
+            CALL errore( 'initialize_path', 'nimage is ' // &
+                       & 'larger than the available number of images', 1 )
          !
       END IF
       !
@@ -141,7 +155,7 @@ MODULE path_base
       !
       ! ... initialization of the allocatable arrays
       !
-      pos(:,1:input_images) = pos_(1:dim,1:input_images)
+      pos(:,1:input_images) = pos_(1:dim1,1:input_images)
       !
       pes          = 0.D0
       grad_pes     = 0.D0
@@ -247,7 +261,7 @@ MODULE path_base
       ! ... linear interpolation
       !
       USE input_parameters, ONLY : input_images
-      USE path_variables,   ONLY : pos, dim, num_of_images, path_length
+      USE path_variables,   ONLY : pos, dim1, num_of_images, path_length
       USE path_formats,     ONLY : summary_fmt
       USE io_files,         ONLY : iunpath
       !
@@ -261,8 +275,8 @@ MODULE path_base
       !
       IF ( meta_ionode ) THEN
          !
-         ALLOCATE( pos_n( dim, num_of_images ) )
-         ALLOCATE( dr( dim, input_images - 1 ) )
+         ALLOCATE( pos_n( dim1, num_of_images ) )
+         ALLOCATE( dr( dim1, input_images - 1 ) )
          ALLOCATE( image_spacing( input_images - 1 ) )
          !
          DO i = 1, input_images - 1
@@ -342,12 +356,12 @@ MODULE path_base
       !
       ! ... improved definition of the tangent (see JCP 113, 9978)
       !
-      USE path_variables, ONLY : dim, pos, num_of_images, pes
+      USE path_variables, ONLY : dim1, pos, num_of_images, pes
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: i
-      REAL(DP)            :: rtan( dim )
+      REAL(DP)            :: rtan( dim1 )
       !
       REAL(DP) :: V_previous, V_actual, V_next
       REAL(DP) :: abs_next, abs_previous
@@ -382,10 +396,10 @@ MODULE path_base
          !
       ELSE
          !
-         abs_next     = ABS( V_next     - V_actual ) 
-         abs_previous = ABS( V_previous - V_actual ) 
+         abs_next     = ABS( V_next     - V_actual )
+         abs_previous = ABS( V_previous - V_actual )
          !
-         delta_V_max = MAX( abs_next, abs_previous ) 
+         delta_V_max = MAX( abs_next, abs_previous )
          delta_V_min = MIN( abs_next, abs_previous )
          !
          IF ( V_next > V_previous ) THEN
@@ -514,7 +528,7 @@ MODULE path_base
       !-----------------------------------------------------------------------
       !
       USE ions_base,         ONLY : if_pos
-      USE path_variables,    ONLY : dim, mass, num_of_images, grad_pes, &
+      USE path_variables,    ONLY : dim1, mass, num_of_images, grad_pes, &
                                     tangent, llangevin, lang, grad, ds, &
                                     temp_req
       USE path_variables,    ONLY : climbing
@@ -538,9 +552,9 @@ MODULE path_base
                !
                ! ... the random term used in langevin dynamics is generated here
                !
-               lang(:,i) = gauss_dist( 0.D0, SQRT( 2.D0*temp_req*ds ), dim )
+               lang(:,i) = gauss_dist( 0.D0, SQRT( 2.D0*temp_req*ds ), dim1 )
                !
-               lang(:,i) = lang(:,i)*DBLE( RESHAPE( if_pos, (/ dim /) ) )
+               lang(:,i) = lang(:,i)*DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
                !
             END IF
             !
@@ -584,11 +598,11 @@ MODULE path_base
     FUNCTION new_tangent() RESULT( ntan )
       !-----------------------------------------------------------------------
       !
-      USE path_variables, ONLY : dim, num_of_images
+      USE path_variables, ONLY : dim1, num_of_images
       !
       IMPLICIT NONE
       !
-      REAL(DP) :: ntan( dim, num_of_images )
+      REAL(DP) :: ntan( dim1, num_of_images )
       !
       INTEGER :: i
       !
@@ -625,6 +639,7 @@ MODULE path_base
       INTEGER  :: i
       INTEGER  :: fii, lii, freed, num_of_scf_images
       REAL(DP) :: err_max
+      LOGICAL  :: first
       !
       !
       IF ( first_last_opt ) THEN
@@ -664,18 +679,11 @@ MODULE path_base
          IF ( use_freezing ) THEN
             !
             frozen(fii:lii) = ( error(fii:lii) < &
-                                MAX( 0.5D0 * err_max, path_thr ) )
+                                MAX( 0.5D0*err_max, path_thr ) )
             !
          END IF
          !
          IF ( nimage > 1 .AND. use_freezing ) THEN
-            !
-            ! ... in the case of image-parallelisation the number of images
-            ! ... to be optimised must be larger than nimage
-            !
-            IF ( nimage > ( lii - fii + 1 ) ) &
-               CALL errore( 'compute_error', 'nimage is ' // &
-                          & 'larger than the available number of images ', 1 )
             !
             find_scf_images: DO
                !
@@ -683,7 +691,24 @@ MODULE path_base
                !
                IF ( num_of_scf_images >= nimage ) EXIT find_scf_images
                !
-               freed = MAXLOC( error(fii:lii), 1, frozen(fii:lii) )
+               first = .TRUE.
+               !
+               search: DO i = fii, lii
+                  !
+                  IF ( .NOT.frozen(i) ) CYCLE search
+                  !
+                  IF ( first ) THEN
+                     !
+                     first = .FALSE.
+                     freed = i
+                     !
+                     CYCLE search
+                     !
+                  END IF
+                  !
+                  IF ( error(i) > error(freed) ) freed = i
+                  !
+               END DO search
                !
                frozen(freed) = .FALSE.
                !
@@ -717,9 +742,9 @@ MODULE path_base
     SUBROUTINE born_oppenheimer_pes( stat )
       !------------------------------------------------------------------------
       !
-      USE path_variables, ONLY : num_of_images, pending_image,  &
-                                 istep_path, pes, first_last_opt, &
-                                 Emin, Emax, Emax_index
+      USE path_variables, ONLY : nim => num_of_images, &
+                                 pending_image, istep_path, pes, &
+                                 first_last_opt, Emin, Emax, Emax_index
       !
       IMPLICIT NONE
       !
@@ -731,12 +756,12 @@ MODULE path_base
       IF ( istep_path == 0 .OR. first_last_opt ) THEN
          !
          fii = 1
-         lii = num_of_images
+         lii = nim
          !
       ELSE
          !
          fii = 2
-         lii = num_of_images - 1
+         lii = nim - 1
          !
       END IF
       !
@@ -746,9 +771,9 @@ MODULE path_base
       !
       IF ( .NOT. stat ) RETURN
       !
-      Emin       = MINVAL( pes(1:num_of_images) )
-      Emax       = MAXVAL( pes(1:num_of_images) )
-      Emax_index = MAXLOC( pes(1:num_of_images), 1 )
+      Emin       = MINVAL( pes(1:nim) )
+      Emax       = MAXVAL( pes(1:nim) )
+      Emax_index = MAXLOC( pes(1:nim), 1 )
       !
       RETURN
       !
