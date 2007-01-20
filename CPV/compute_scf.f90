@@ -23,7 +23,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
   USE io_global,         ONLY : stdout, ionode
   USE path_formats,      ONLY : scf_fmt
   USE path_variables,    ONLY : pos, pes, grad_pes, num_of_images, &
-                                dim, pending_image, frozen
+                                dim1, pending_image, frozen
   USE check_stop,        ONLY : check_stop_now
   USE xml_io_base,       ONLY : check_restartfile
   USE cp_interfaces,     ONLY : main_fpmd
@@ -147,7 +147,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      IF ( .NOT. conv_elec ) THEN
         !
         WRITE( iunpath, '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
-        !   
+        !
         stat = .FALSE.
         !
         RETURN
@@ -156,7 +156,7 @@ SUBROUTINE compute_scf( N_in, N_fin, stat  )
      !
      ! ... gradients already in ( hartree / bohr )
      !
-     grad_pes(:,image) = - RESHAPE( fion, (/ dim /) )
+     grad_pes(:,image) = - RESHAPE( fion, (/ dim1 /) )
      !
      ! ... energy already in hartree
      !
