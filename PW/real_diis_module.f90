@@ -338,7 +338,7 @@ MODULE real_diis_module
                !
                aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
                !
-               CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )               
+               CALL g_psi( ndmx, ndim, 1, 1, aux(1,ib), e(ib) )               
                !
             END DO
             !           
@@ -460,7 +460,7 @@ MODULE real_diis_module
             !
             aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
             !
-            CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )
+            CALL g_psi( ndmx, ndim, 1, 1, aux(1,ib), e(ib) )
             !
             psi(:,ib) = psi(:,ib) - diis_lambda * aux(:,ib)
             !
@@ -534,7 +534,7 @@ MODULE real_diis_module
       !
       ! ... preconditioning of all the residual vecotrs
       !
-      CALL g_psi( ndmx, ndim, nbnd_diis, aux, e )
+      CALL g_psi( ndmx, ndim, nbnd_diis, 1, aux, e )
       !
       ! ... new trial wavefunctions
       !
@@ -679,7 +679,7 @@ MODULE real_diis_module
             !
             aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
             !
-            CALL g_psi( ndmx, ndim, 1, aux(1,ib), e(ib) )
+            CALL g_psi( ndmx, ndim, 1, 1, aux(1,ib), e(ib) )
             !
          END DO
          !           

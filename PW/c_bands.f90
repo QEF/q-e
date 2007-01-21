@@ -33,7 +33,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc, v_of_0
+  USE g_psi_mod,            ONLY : h_diag, s_diag, v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
   USE check_stop,           ONLY : check_stop_now
   !
@@ -68,17 +68,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   CALL start_clock( 'c_bands' )
   !
-  IF ( noncolin ) THEN
-     !
-     ALLOCATE( h_diag_nc( npwx, npol ) )
-     ALLOCATE( s_diag_nc( npwx, npol ) )
-     !
-  ELSE
-     !
-     ALLOCATE( h_diag( npwx ) )
-     ALLOCATE( s_diag( npwx ) )
-     !
-  END IF
+  ALLOCATE( h_diag( npwx, npol ) )
+  ALLOCATE( s_diag( npwx, npol ) )
   !
   IF ( lelfield ) THEN
      ALLOCATE( evcel( npwx, nbnd ) )
@@ -193,17 +184,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
        ethr, avg_iter
   !
-  IF ( noncolin ) THEN
-     !
-     DEALLOCATE( s_diag_nc )
-     DEALLOCATE( h_diag_nc )
-     !
-  ELSE
-     !
-     DEALLOCATE( s_diag )
-     DEALLOCATE( h_diag )
-     !
-  END IF
+  DEALLOCATE( s_diag )
+  DEALLOCATE( h_diag )
   !
   IF ( lelfield ) THEN
      DEALLOCATE( evcel )
@@ -247,7 +229,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, istep
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE g_psi_mod,            ONLY : h_diag, s_diag, h_diag_nc, s_diag_nc, v_of_0
+  USE g_psi_mod,            ONLY : h_diag, s_diag, v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
   !
   IMPLICIT NONE
@@ -313,7 +295,7 @@ CONTAINS
        !
        FORALL( ig = 1 : npw )
           !
-          h_diag(ig) = 1.D0 + g2kin(ig) + &
+          h_diag(ig,1) = 1.D0 + g2kin(ig) + &
                SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
        END FORALL
@@ -353,7 +335,7 @@ CONTAINS
        ! ... hamiltonian used in g_psi to evaluate the correction 
        ! ... to the trial eigenvectors
        !
-       h_diag(1:npw) = g2kin(1:npw) + v_of_0
+       h_diag(1:npw, 1) = g2kin(1:npw) + v_of_0
        !
        CALL usnldiag( h_diag, s_diag )
        !
@@ -441,29 +423,14 @@ CONTAINS
        !
        ! ... h_diag is the precondition matrix
        !
-       IF ( noncolin ) THEN
+       h_diag = 1.D0
+       !
+       FORALL( ig = 1 : npwx )
           !
-          h_diag_nc = 1.D0
+          h_diag(ig,:) = 1.D0 + g2kin(ig) + &
+             SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
           !
-          FORALL( ig = 1 : npwx )
-             !
-             h_diag_nc(ig,:) = 1.D0 + g2kin(ig) + &
-                  SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
-             !
-          END FORALL
-          !
-       ELSE
-          !
-          h_diag = 1.D0
-          !
-          FORALL( ig = 1 : npw )
-             !
-             h_diag(ig) = 1.D0 + g2kin(ig) + &
-                  SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
-             !
-          END FORALL
-          !
-       END IF
+       END FORALL
        !
        ntry = 0
        !
@@ -479,19 +446,9 @@ CONTAINS
              !
           END IF
           !
-          IF ( noncolin ) THEN
-             !
-             CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                  h_diag_nc, ethr, max_cg_iter, .NOT. lscf, &
-                  notconv, cg_iter )
-             !
-          ELSE
-             !
-             CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
+          CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
                   h_diag, ethr, max_cg_iter, .NOT. lscf, &
                   notconv, cg_iter )
-             !
-          END IF
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -511,23 +468,13 @@ CONTAINS
        ! ... hamiltonian used in g_psi to evaluate the correction 
        ! ... to the trial eigenvectors
        !
-       IF ( noncolin ) THEN
+       DO ipol = 1, npol
           !
-          DO ipol = 1, npol
-             !
-             h_diag_nc(1:npw,ipol) = g2kin(1:npw) + v_of_0
-             !
-          END DO
+          h_diag(1:npw, ipol) = g2kin(1:npw) + v_of_0
           !
-          CALL usnldiag_nc( h_diag_nc, s_diag_nc )
-          !
-       ELSE
-          !
-          h_diag(1:npw) = g2kin(1:npw) + v_of_0
-          !
-          CALL usnldiag( h_diag, s_diag )
-          !
-       END IF
+       END DO
+       !
+       CALL usnldiag( h_diag, s_diag )
        !
        ntry = 0
        !

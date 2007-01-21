@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2007 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,11 +17,7 @@ MODULE g_psi_mod
     v_of_0         ! V(G=0) term
   !
   REAL(DP), ALLOCATABLE :: &
-    h_diag (:),&   ! diagonal part of the Hamiltonian
-    s_diag (:)     ! diagonal part of the overlap matrix
-  !
-  REAL(DP), ALLOCATABLE :: &
-    h_diag_nc (:,:),&   ! diagonal part of the Hamiltonian
-    s_diag_nc (:,:)     ! diagonal part of the overlap matrix
+    h_diag (:,:),&   ! diagonal part of the Hamiltonian
+    s_diag (:,:)     ! diagonal part of the overlap matrix
   !
 END MODULE g_psi_mod

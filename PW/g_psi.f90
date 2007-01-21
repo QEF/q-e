@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2003 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,82 +7,68 @@
 !
 #define TEST_NEW_PRECONDITIONING
 !
-!----------------------------------------------------------------------------
-SUBROUTINE g_psi( lda, n, m, psi, e )
-  !----------------------------------------------------------------------------
+!-----------------------------------------------------------------------
+subroutine g_psi (lda, n, m, npol, psi, e)
+  !-----------------------------------------------------------------------
   !
-  ! ... This routine computes an estimate of the inverse Hamiltonian
-  ! ... and applies it to m wavefunctions
+  !    This routine computes an estimate of the inverse Hamiltonian
+  !    and applies it to m wavefunctions
   !
-  USE kinds,     ONLY : DP
-  USE constants, ONLY : eps4
-  USE g_psi_mod, ONLY : h_diag, s_diag
+  USE kinds
+  USE g_psi_mod
+  implicit none
+  integer :: lda, n, m, npol, ipol
+  ! input: the leading dimension of psi
+  ! input: the real dimension of psi
+  ! input: the number of bands
+  ! input: the number of coordinates of psi
+  ! local variable: counter of coordinates of psi
+  real(DP) :: e (m)
+  ! input: the eigenvectors
+  complex(DP) :: psi (lda, npol, m)
+  ! inp/out: the psi vector
   !
-  IMPLICIT NONE
+  !    Local variables
   !
-  INTEGER :: lda, n, m
-    ! input: the leading dimension of psi
-    ! input: the real dimension of psi
-    ! input: the number of bands
-  REAL(DP) :: e(m)
-    ! input: the eigenvalues
-  COMPLEX(DP) :: psi(lda,m)
-    ! input/output: the psi vector
+  real(DP), parameter :: eps = 1.0d-4
+  ! a small number
+  real(DP) :: x, scala, denm
+  integer :: k, i
+  ! counter on psi functions
+  ! counter on G vectors
   !
-  ! ... Local variables
+  call start_clock ('g_psi')
   !
-  REAL(DP) :: x, scala, denm
-  INTEGER :: k, i
-    ! counter on psi functions
-    ! counter on G vectors
-  !
-  !
-  CALL start_clock( 'g_psi' )
-  !
-#if defined (TEST_NEW_PRECONDITIONING)
-  !
-  scala = 1.D0
-  !
-  DO k = 1, m
-     !
-     DO i = 1, n
-        !
-        x = ( h_diag(i) - e(k) * s_diag(i) ) * scala
-        !
-        denm = ( 1.D0 + x + &
-                 SQRT( 1.D0 + ( x - 1.D0 )*( x - 1.D0 ) ) ) / scala
-        !
-      ! denm = 1.D0 + 16.D0 * x*x*x*x / &
-      !        ( 27.D0 + 18.D0 * x + 12.D0 * x*x + 8.D0 * x*x*x )
-        !
-        psi(i,k) = psi(i,k) / denm
-        !
-     END DO
-     !
-  END DO
-  !
+#ifdef TEST_NEW_PRECONDITIONING
+  scala = 1.d0
+  do ipol=1,npol
+     do k = 1, m
+        do i = 1, n
+           x = (h_diag(i,ipol) - e(k)*s_diag(i,ipol))*scala
+           denm = (1.d0+x+sqrt(1.d0+(x-1)*(x-1.d0)))/scala
+        !         denm = 1.d0 + 16*x*x*x*x/(27.d0+18*x+12*x*x+8*x*x*x)
+           psi (i, ipol, k) = psi (i, ipol, k) / denm
+        enddo
+     enddo
+  enddo
 #else
-  !
-  DO k = 1, m
-     !
-     DO i = 1, n
+  do ipol=1,npol
+     do k = 1, m
+        do i = 1, n
+           denm = h_diag (i,ipol) - e (k) * s_diag (i,ipol)
         !
-        ! ... denm = g2+v(g=0) - e(k)
-        !        
-        denm = h_diag(i) - e(k) * s_diag(i)
+        ! denm = g2+v(g=0) - e(k)
         !
-        denm = SIGN( MAX( ABS( denm ), eps4 ), denm )
+           if (abs (denm) < eps) denm = sign (eps, denm)
         !
-        psi(i,k) = psi(i,k) / denm
+        ! denm = sign( max( abs(denm),eps ), denm )
         !
-     END DO
-     !
-  END DO
-  !
+           psi (i, ipol, k) = psi (i, ipol, k) / denm
+        enddo
+     enddo
+  enddo
 #endif
-  !
-  CALL stop_clock( 'g_psi' )
-  !
-  RETURN
-  !
-END SUBROUTINE g_psi
+
+  call stop_clock ('g_psi')
+  return
+end subroutine g_psi

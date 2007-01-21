@@ -13,58 +13,90 @@ subroutine usnldiag (h_diag, s_diag)
   !    add nonlocal pseudopotential term to diagonal part of Hamiltonian
   !    compute the diagonal part of the S matrix
   !
-  USE kinds,      ONLY : DP
-  USE ions_base,  ONLY : ntyp => nsp, nat, ityp
-  USE wvfct,      ONLY : npw
-  USE lsda_mod,   ONLY : current_spin 
-  USE uspp,       ONLY : deeq, vkb, qq
-  USE uspp_param, ONLY : nh, tvanp, newpseudo
+  USE kinds, ONLY: DP
+  USE ions_base,  ONLY : nat, ityp, ntyp => nsp
+  USE wvfct, ONLY: npw, npwx
+  USE lsda_mod, ONLY: current_spin 
+  USE uspp,  ONLY: deeq, vkb, qq, qq_so, deeq_nc
+  USE uspp_param, ONLY: nh, tvanp, newpseudo
+  USE spin_orb, ONLY: lspinorb
+  USE noncollin_module, ONLY: noncolin, npol
   !
   implicit none
   !
   !    here the dummy variables
   !
-  real(DP) :: h_diag (npw), s_diag (npw)
+  real(DP) :: h_diag (npwx,npol), s_diag (npwx,npol)
   ! input/output: the diagonal part of the hamiltonian
   ! output: the diagonal part of the S matrix
   !
   !   and here the local variables
   !
-  integer :: ikb, jkb, ih, jh, na, nt, ig, ijkb0
+  integer :: ikb, jkb, ih, jh, na, nt, ig, ijkb0, ipol
   ! counters
-  real(DP) :: ps1, ps2, ar
+  complex(DP) :: ps1(2), ps2(2), ar
   !
   ! initialise s_diag
   !
-  do ig = 1, npw
-     s_diag (ig) = 1.d0
-  enddo
+  s_diag = 1.d0
   !
   !    multiply on projectors
   !
   ijkb0 = 0
   do nt = 1, ntyp
      do na = 1, nat
-        if (ityp (na) .eq.nt) then
+        if (ityp (na) == nt) then
            do ih = 1, nh (nt)
               ikb = ijkb0 + ih
-              ps1 = deeq (ih, ih, na, current_spin)
-              ps2 = qq (ih, ih, nt)
-              do ig = 1, npw
-                 ar = vkb (ig, ikb)*CONJG(vkb (ig, ikb))
-                 h_diag (ig) = h_diag (ig) + ps1 * ar
-                 s_diag (ig) = s_diag (ig) + ps2 * ar
+              if (lspinorb) then
+                 ps1(1) = deeq_nc (ih, ih, na, 1)
+                 ps1(2) = deeq_nc (ih, ih, na, 4)
+                 ps2(1) = qq_so(ih, ih, 1, nt)
+                 ps2(2) = qq_so(ih, ih, 4, nt)
+              else if (noncolin) then
+                 ps1(1) = deeq_nc (ih, ih, na, 1)
+                 ps1(2) = deeq_nc (ih, ih, na, 4)
+                 ps2(1) = qq (ih, ih, nt)
+                 ps2(2) = qq (ih, ih, nt)
+              else
+                 ps1(1) = deeq (ih, ih, na, current_spin)
+                 ps2(1) = qq (ih, ih, nt)
+              end if
+              do ipol =1, npol
+                 do ig = 1, npw
+                    ar = vkb (ig, ikb)*CONJG(vkb (ig, ikb))
+                    h_diag (ig,ipol) = h_diag (ig,ipol) + ps1(ipol) * ar
+                    s_diag (ig,ipol) = s_diag (ig,ipol) + ps2(ipol) * ar
+                 enddo
               enddo
               if (tvanp (nt) .or.newpseudo (nt) ) then
-                 do jh = ih + 1, nh (nt)
-                    jkb = ijkb0 + jh
-                    ps1 = 2.d0 * deeq (ih, jh, na, current_spin)
-                    ps2 = 2.d0 * qq (ih, jh, nt)
-                    do ig = 1, npw
-                       ar = vkb (ig, ikb) *CONJG( vkb (ig, jkb))
-                       h_diag (ig) = h_diag (ig) + ps1 * ar
-                       s_diag (ig) = s_diag (ig) + ps2 * ar
-                    enddo
+                 do jh = 1, nh (nt)
+                    if (jh.ne.ih) then
+                       jkb = ijkb0 + jh
+                       if (lspinorb) then
+                          ps1(1) = deeq_nc (ih, jh, na, 1)
+                          ps1(2) = deeq_nc (ih, jh, na, 4)
+                          ps2(1) = qq_so(ih, jh, 1, nt)
+                          ps2(2) = qq_so(ih, jh, 4, nt)
+                       else if (noncolin) then
+                          ps1(1) = deeq_nc (ih, jh, na, 1)
+                          ps1(2) = deeq_nc (ih, jh, na, 4)
+                          ps2(1) = qq (ih, jh, nt)
+                          ps2(2) = qq (ih, jh, nt)
+                       else
+                          ps1(1) = deeq (ih, jh, na, current_spin)
+                          ps2(1) = qq (ih, jh, nt)
+                       end if
+                       do ipol = 1, npol
+                          do ig = 1, npw
+                             ar = vkb (ig, ikb) *CONJG( vkb (ig, jkb))
+                             h_diag (ig,ipol) = h_diag (ig,ipol) + &
+                                  ps1(ipol) * ar
+                             s_diag (ig,ipol) = s_diag (ig,ipol) + &
+                                  ps2(ipol) * ar
+                          enddo
+                       enddo
+                    endif
                  enddo
               endif
            enddo
@@ -72,6 +104,6 @@ subroutine usnldiag (h_diag, s_diag)
         endif
      enddo
   enddo
+
   return
 end subroutine usnldiag
-

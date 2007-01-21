@@ -89,7 +89,6 @@ force_us.o \
 forces.o \
 g_psi.o \
 g_psi_mod.o \
-g_psi_nc.o \
 gen_at_dj.o \
 gen_at_dy.o \
 gen_us_dj.o \
@@ -227,7 +226,6 @@ tweights.o \
 update_pot.o \
 upf_to_internal.o \
 usnldiag.o \
-usnldiag_nc.o \
 v_of_rho.o \
 vcsmd.o \
 vcsubs.o \

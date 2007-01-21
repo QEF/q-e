@@ -83,7 +83,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   REAL(DP), EXTERNAL :: DDOT
   !
   EXTERNAL  h_psi,    s_psi,    g_psi
-  EXTERNAL  h_psi_nc, s_psi_nc, g_psi_nc
+  EXTERNAL  h_psi_nc, s_psi_nc
     ! h_psi(ndmx,ndim,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(ndmx,ndim,nvec,spsi)
@@ -260,15 +260,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... approximate inverse iteration
      !
-     IF ( noncolin ) THEN
-        !
-        CALL g_psi_nc( ndmx, ndim, notcnv, npol, psi(1,1,nb1), ew(nb1) )
-        !
-     ELSE
-        !
-        CALL g_psi( ndmx, ndim, notcnv, psi(1,1,nb1), ew(nb1) )
-        !
-     END IF
+     CALL g_psi( ndmx, ndim, notcnv, npol, psi(1,1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization

@@ -241,7 +241,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( ndmx, ndim, notcnv, psi(1,nb1), ew(nb1) )
+     CALL g_psi( ndmx, ndim, notcnv, 1, psi(1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
