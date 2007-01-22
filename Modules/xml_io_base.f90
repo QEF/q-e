@@ -1233,7 +1233,7 @@ MODULE xml_io_base
                              nr1, nr2, nr3, nr1x, nr2x, ipp, npp )
       !------------------------------------------------------------------------
       !
-      ! ... Writes charge density rho, one plane at a time.
+      ! ... Reads charge density rho, one plane at a time.
       ! ... If ipp and npp are specified, planes are collected one by one from
       ! ... all processors, avoiding an overall collect of the charge density
       ! ... on a single proc.
@@ -1321,6 +1321,11 @@ MODULE xml_io_base
       END IF
       !
       ldr = nr1x*nr2x
+      !
+      ! ... explicit initialization to zero is needed because the physical
+      ! ... dimensions rho may exceed the true size of the FFT grid 
+      !
+      rho(:) = 0.D0
       !
       DO k = 1, nr3
          !
