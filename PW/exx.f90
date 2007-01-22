@@ -57,7 +57,7 @@ contains
      USE kinds,      ONLY : DP
      USE constants,  ONLY : pi
      USE io_files,   ONLY : iunigk, nwordwfc, iunwfc
-     USE klist,      ONLY : xk, nks, wk
+     USE klist,      ONLY : xk, nks, wk, ngk
      USE wvfct,      ONLY : nbnd, npw, npwx, igk, g2kin, wg
      USE gvect,      ONLY : g
      USE cell_base,  ONLY : tpiba2, omega
@@ -72,7 +72,8 @@ contains
 
      IF ( nks > 1 ) REWIND( iunigk )
      do ik=1,nks
-        IF ( nks > 1 ) READ( iunigk ) npw, igk
+        IF ( nks > 1 ) READ( iunigk ) igk
+        npw=ngk(ik)
         DO ig = 1, npw
            !
            g2kin(ig) = ( xk(1,ik) + g(1,igk(ig)) )**2 + &
@@ -370,7 +371,7 @@ contains
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, gamma_only
-    USE klist,                ONLY : wk
+    USE klist,                ONLY : wk, ngk
     USE symme,                ONLY : nsym, s, ftau
 
     use mp_global,            ONLY : nproc_pool, me_pool
@@ -440,8 +441,9 @@ contains
     end do
 
     DO ik = 1, nks
+       npw = ngk (ik)
        IF ( nks > 1 ) THEN
-          READ( iunigk ) npw, igk
+          READ( iunigk ) igk
           CALL davcio (tempevc, nwordwfc, iunwfc, ik, -1)
        ELSE
           tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
@@ -702,6 +704,7 @@ contains
     USE gvect,      ONLY : gstart
     USE wavefunctions_module, ONLY : evc
     USE lsda_mod,   ONLY : lsda, current_spin, isk
+    USE klist,      ONLY : ngk
 
     implicit none
     REAL (DP)   :: exxenergy,  energy
@@ -716,8 +719,9 @@ contains
     do ik=1,nks
        current_k = ik
        IF ( lsda ) current_spin = isk(ik)
+       npw = ngk (ik)
        IF ( nks > 1 ) THEN
-          READ( iunigk ) npw, igk
+          READ( iunigk ) igk
           call davcio (psi, nwordwfc, iunwfc, ik, -1)
        ELSE
           psi(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
@@ -760,7 +764,7 @@ contains
                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k, gamma_only
     USE wavefunctions_module, ONLY : evc
-    USE klist,     ONLY : xk
+    USE klist,     ONLY : xk, ngk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
 
@@ -789,8 +793,9 @@ contains
     do ikk=1,nks
        current_k = ikk
        IF ( lsda ) current_spin = isk(ikk)
+       npw = ngk (ikk)
        IF ( nks > 1 ) THEN
-          READ( iunigk ) npw, igk
+          READ( iunigk ) igk
           call davcio (evc, nwordwfc, iunwfc, ikk, -1)
        END IF
 

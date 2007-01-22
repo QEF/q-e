@@ -19,7 +19,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE atom,                 ONLY : nchi, lchi, oc
    USE ions_base,            ONLY : nat, ityp
    USE basis,                ONLY : natomwfc
-   USE klist,                ONLY : nks, xk
+   USE klist,                ONLY : nks, xk, ngk
    USE ldaU,                 ONLY : swfcatom, Hubbard_l, &
                                     Hubbard_U, Hubbard_alpha
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -75,12 +75,12 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    !
    !    we start a loop on k points
    !
-   IF (nks.GT.1) REWIND (iunigk)
+   IF (nks > 1) REWIND (iunigk)
 
    DO ik = 1, nks
       IF (lsda) current_spin = isk(ik)
-      IF (nks.GT.1) READ (iunigk) npw, igk
-
+      IF (nks > 1) READ (iunigk) igk
+      npw = ngk(ik)
       !
       ! now we need the first derivative of proj with respect to
       ! epsilon(ipol,jpol)

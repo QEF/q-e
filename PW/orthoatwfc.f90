@@ -21,7 +21,7 @@ SUBROUTINE orthoatwfc
   USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
   USE basis,      ONLY : natomwfc
-  USE klist,      ONLY : nks, xk
+  USE klist,      ONLY : nks, xk, ngk
   USE ldaU,       ONLY : swfcatom, U_projection
   USE wvfct,      ONLY : npwx, npw, igk, gamma_only
   USE uspp,       ONLY : nkb, vkb
@@ -91,7 +91,8 @@ SUBROUTINE orthoatwfc
   
   DO ik = 1, nks
      
-     IF (nks > 1) READ (iunigk) npw, igk
+     npw = ngk (ik)
+     IF (nks > 1) READ (iunigk) igk
      
      overlap(:,:) = (0.d0,0.d0)
      work(:,:) = (0.d0,0.d0)

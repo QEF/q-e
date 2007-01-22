@@ -21,7 +21,7 @@ SUBROUTINE new_ns()
   USE atom,                 ONLY : lchi, nchi, oc
   USE ions_base,            ONLY : nat, ityp
   USE basis,                ONLY : natomwfc
-  USE klist,                ONLY : nks
+  USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : ns, nsnew, Hubbard_lmax, Hubbard_l, &
                                    Hubbard_U, Hubbard_alpha, swfcatom, &
                                    eth, d1, d2, d3
@@ -82,9 +82,11 @@ SUBROUTINE new_ns()
 
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
-     IF (nks.GT.1) READ (iunigk) npw, igk
-     IF (nks.GT.1) CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
-     
+     npw = ngk (ik)
+     IF (nks > 1) THEN
+        READ (iunigk) igk
+        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+     END IF
      CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
      !
      ! make the projection

@@ -18,7 +18,7 @@ SUBROUTINE force_us( forcenl )
   USE wvfct,                ONLY : gamma_only
   USE cell_base,            ONLY : at, bg, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE klist,                ONLY : nks, xk
+  USE klist,                ONLY : nks, xk, ngk
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, qq_so, deeq_nc
   USE uspp_param,           ONLY : nh, tvanp, newpseudo
@@ -81,8 +81,9 @@ SUBROUTINE force_us( forcenl )
        DO ik = 1, nks
           IF ( lsda ) current_spin = isk(ik)
           !
+          npw = ngk (ik)
           IF ( nks > 1 ) THEN
-             READ( iunigk ) npw, igk
+             READ( iunigk ) igk
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) &
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )
@@ -220,8 +221,9 @@ SUBROUTINE force_us( forcenl )
        DO ik = 1, nks
           IF ( lsda ) current_spin = isk(ik)
           !
+          npw = ngk(ik)
           IF ( nks > 1 ) THEN
-             READ( iunigk ) npw, igk
+             READ( iunigk ) igk
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              IF ( nkb > 0 ) &
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )

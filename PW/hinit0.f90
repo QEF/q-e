@@ -47,7 +47,7 @@ SUBROUTINE hinit0()
      !
      ! ... if there is only one k-point npw and igk stay in memory
      !
-     IF ( nks > 1 ) WRITE( iunigk ) npw, igk
+     IF ( nks > 1 ) WRITE( iunigk ) igk
      !
   END DO
   !

@@ -31,7 +31,7 @@ SUBROUTINE force_hub(forceh)
    USE becmod,               ONLY : becp
    USE uspp,                 ONLY : nkb, vkb
    USE wavefunctions_module, ONLY : evc
-   USE klist,                ONLY : nks, xk
+   USE klist,                ONLY : nks, xk, ngk
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
    USE atom,                 ONLY : nchi, lchi, oc
@@ -99,8 +99,8 @@ SUBROUTINE force_hub(forceh)
       !
       ! now we need the first derivative of proj with respect to tau(alpha,ipol)
       !
-
-      IF (nks.GT.1) READ (iunigk) npw, igk
+      npw = ngk (ik)
+      IF (nks > 1) READ (iunigk) igk
 
       CALL davcio(evc,nwordwfc,iunwfc,ik,-1)
       CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)

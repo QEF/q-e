@@ -221,7 +221,8 @@ MODULE pw_restart
       !
       DO ik = 1, nks
          !
-         IF ( nks > 1 ) READ( iunigk ) npw, igk
+         npw = ngk (ik)
+         IF ( nks > 1 ) READ( iunigk ) igk
          !
          CALL gk_l2gmap( ngm, ig_l2g(1), npw, igk(1), igk_l2g(1,ik) )
          !

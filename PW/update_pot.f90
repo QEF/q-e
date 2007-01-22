@@ -411,7 +411,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
-  USE klist,                ONLY : nks
+  USE klist,                ONLY : nks, ngk
   USE control_flags,        ONLY : isolve, alpha0, beta0, wfc_order
   USE wvfct,                ONLY : nbnd, npw, npwx, igk
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
@@ -479,7 +479,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      DO ik = 1, nks
         !
-        IF ( nks > 1 ) READ( iunigk ) npw, igk
+        npw = ngk (ik)
+        IF ( nks > 1 ) READ( iunigk ) igk
         !
         CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
         CALL davcio( evc,    nwordwfc, iunwfc,    ik, - 1 )
@@ -588,7 +589,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      DO ik = 1, nks
         !
-        IF ( nks > 1 ) READ( iunigk ) npw, igk
+        npw = ngk (ik)
+        IF ( nks > 1 ) READ( iunigk ) igk
         !
         CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
         CALL davcio( evc,    nwordwfc, iunwfc,    ik, - 1 )

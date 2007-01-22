@@ -15,7 +15,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE constants,            ONLY: pi, e2
   USE cell_base,                ONLY: omega, alat, at, bg, tpiba
   USE gvect,                ONLY: qcutz, ecfixed, q2sigma, g
-  USE klist,                ONLY: nks, xk
+  USE klist,                ONLY: nks, xk, ngk
   USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
   USE symme,                ONLY: s, nsym
   USE wvfct,                ONLY: npw, npwx, nbnd, gamma_only, igk, wg
@@ -25,7 +25,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
   real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)
   real(DP), allocatable :: gk (:,:), kfac (:)
   real(DP) :: twobysqrtpi, gk2, arg
-  integer :: kpoint, l, m, i, ibnd, is
+  integer :: ik, l, m, i, ibnd, is
 
   allocate (gk(  3, npwx))    
   allocate (kfac(   npwx))    
@@ -37,15 +37,16 @@ subroutine stres_knl (sigmanlc, sigmakin)
   kfac(:) = 1.d0
 
   if (nks.gt.1) rewind (iunigk)
-  do kpoint = 1, nks
-     if (nks.gt.1) then
-        read (iunigk) npw, igk
-        call davcio (evc, nwordwfc, iunwfc, kpoint, - 1)
+  do ik = 1, nks
+     npw = ngk(ik)
+     if (nks > 1) then
+        read (iunigk) igk
+        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
      endif
      do i = 1, npw
-        gk (1, i) = (xk (1, kpoint) + g (1, igk (i) ) ) * tpiba
-        gk (2, i) = (xk (2, kpoint) + g (2, igk (i) ) ) * tpiba
-        gk (3, i) = (xk (3, kpoint) + g (3, igk (i) ) ) * tpiba
+        gk (1, i) = (xk (1, ik) + g (1, igk (i) ) ) * tpiba
+        gk (2, i) = (xk (2, ik) + g (2, igk (i) ) ) * tpiba
+        gk (3, i) = (xk (3, ik) + g (3, igk (i) ) ) * tpiba
         if (qcutz.gt.0.d0) then
            gk2 = gk (1, i) **2 + gk (2, i) **2 + gk (3, i) **2
            arg = ( (gk2 - ecfixed) / q2sigma) **2
@@ -60,12 +61,12 @@ subroutine stres_knl (sigmanlc, sigmakin)
            do ibnd = 1, nbnd
               do i = 1, npw
                  if (noncolin) then
-                    sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
+                    sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, ik) * &
                      gk (l, i) * gk (m, i) * kfac (i) * &
                      ( DBLE (CONJG(evc(i     ,ibnd))*evc(i     ,ibnd)) + &
                        DBLE (CONJG(evc(i+npwx,ibnd))*evc(i+npwx,ibnd)))
                  else
-                    sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, kpoint) * &
+                    sigmakin (l, m) = sigmakin (l, m) + wg (ibnd, ik) * &
                         gk (l, i) * gk (m, i) * kfac (i) * &
                           DBLE (CONJG(evc (i, ibnd) ) * evc (i, ibnd) )
                  end if
@@ -77,7 +78,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
      !
      !  contribution from the  nonlocal part
      !
-     call stres_us (kpoint, gk, sigmanlc)
+     call stres_us (ik, gk, sigmanlc)
 
   enddo
   !

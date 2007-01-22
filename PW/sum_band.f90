@@ -27,7 +27,7 @@ SUBROUTINE sum_band()
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE klist,                ONLY : lgauss, degauss, ngauss, nks, &
                                    nkstot, wk, xk, nelec, nelup, neldw, &
-                                   two_fermi_energies
+                                   two_fermi_energies, ngk
   USE ktetra,               ONLY : ltetra, ntetra, tetra
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
@@ -297,10 +297,11 @@ SUBROUTINE sum_band()
        k_loop: DO ik = 1, nks
           !
           IF ( lsda ) current_spin = isk(ik)
+          npw = ngk(ik)
           !
           IF ( nks > 1 ) THEN
              !
-             READ( iunigk ) npw, igk
+             READ( iunigk ) igk
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              !
           END IF
@@ -481,10 +482,11 @@ SUBROUTINE sum_band()
        k_loop: DO ik = 1, nks
           !
           IF ( lsda ) current_spin = isk(ik)
+          npw = ngk (ik)
           !
           IF ( nks > 1 ) THEN
              !
-             READ( iunigk ) npw, igk
+             READ( iunigk ) igk
              CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
              !
           END IF

@@ -20,7 +20,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ! ... ( H - e S ) * evc = 0
   !
   ! ... where H is an hermitean operator, e is a real scalar,
-  ! ... S is an uspp matrix, evc is a complex vector
+  ! ... S is an overlap matrix, evc is a complex vector
   !
   USE kinds,            ONLY : DP
   USE io_global,        ONLY : stdout
@@ -319,7 +319,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... update the reduced hamiltonian
      !
-     CALL start_clock( 'uspp' )
+     CALL start_clock( 'overlap' )
      !
      CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
                  kdmx, hpsi(1,1,nb1), kdmx, ZERO, hc(1,nb1), nvecx )
@@ -340,7 +340,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      CALL reduce( 2*nvecx*notcnv, sc(1,nb1) )
      !
-     CALL stop_clock( 'uspp' )
+     CALL stop_clock( 'overlap' )
      !
      nbase = nbase + notcnv
      !

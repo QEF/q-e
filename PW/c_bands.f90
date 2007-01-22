@@ -21,7 +21,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
                                    nwordwfc, iunefield,iunefieldp,iunefieldm
   USE cell_base,            ONLY : tpiba2 
-  USE klist,                ONLY : nkstot, nks, xk
+  USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, ecfixed, qcutz, q2sigma, nrxx, &
                                    nr1, nr2, nr3  
@@ -111,9 +111,11 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      IF ( lsda ) current_spin = isk(ik)
      !
-     ! ... Reads the Hamiltonian and the list k+G <-> G of this k point
+     ! ... Reads the list of indices k+G <-> G of this k point
      !
-     IF ( nks > 1 ) READ( iunigk ) npw, igk
+     IF ( nks > 1 ) READ( iunigk ) igk
+     !
+     npw = ngk(ik)
      !
      ! ... do not recalculate k-points if restored from a previous run
      !

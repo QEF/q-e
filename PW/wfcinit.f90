@@ -103,7 +103,7 @@ SUBROUTINE init_wfc ( ik )
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
   USE gvect,                ONLY : g, ecfixed, qcutz, q2sigma
-  USE klist,                ONLY : xk, nks
+  USE klist,                ONLY : xk, nks, ngk
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et,&
                                    wg, current_k
@@ -147,7 +147,8 @@ SUBROUTINE init_wfc ( ik )
   !
   IF ( lsda ) current_spin = isk(ik)
   !
-  IF ( nks > 1 ) READ( iunigk ) npw, igk
+  npw = ngk (ik)
+  IF ( nks > 1 ) READ( iunigk ) igk
   !
   ! ... here we compute the kinetic energy
   !
