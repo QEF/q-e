@@ -82,8 +82,8 @@ SUBROUTINE check_v_eff ( veff, charge )
   ! ... allocate arrays
   !
   ALLOCATE( vrs_ ( nrxx, nspin ) )
-  ALLOCATE( h_diag( npwx ) )    
-  ALLOCATE( s_diag( npwx ) )   
+  ALLOCATE( h_diag( npwx,1 ) )    
+  ALLOCATE( s_diag( npwx,1 ) )   
   ALLOCATE( btype(  nbnd ) )       
   ALLOCATE( evc_(npwx,nbnd ) )
   !
@@ -198,10 +198,10 @@ SUBROUTINE check_v_eff ( veff, charge )
              ! ... hamiltonian used in g_psi to evaluate the correction 
              ! ... to the trial eigenvectors
              !
-             h_diag(1:npw) = g2kin(1:npw) + v_of_0
+             h_diag(1:npw,1) = g2kin(1:npw) + v_of_0
              !
 !             CALL usnldiag( h_diag, s_diag )
-             s_diag(:) = 1.d0
+             s_diag(:,1) = 1.d0
              !
              ntry = 0
              !
