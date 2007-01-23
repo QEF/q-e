@@ -29,11 +29,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
                                    npw, current_k, btype
   USE control_flags,        ONLY : ethr, lbands, isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
-  USE scf,                  ONLY : vltot
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE g_psi_mod,            ONLY : h_diag, s_diag, v_of_0
+  USE g_psi_mod,            ONLY : h_diag, s_diag
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
   USE check_stop,           ONLY : check_stop_now
   !
@@ -94,12 +93,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   END IF
   !
   avg_iter = 0.D0
-  !
-  ! ... v_of_0 is (Vloc)(G=0)
-  !
-  v_of_0 = SUM( vltot(1:nrxx) ) / DBLE( nr1 * nr2 * nr3 )
-  !
-  CALL reduce( 1, v_of_0 )
   !
   if ( nks > 1 ) REWIND( iunigk )
   !
@@ -231,7 +224,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, istep
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE g_psi_mod,            ONLY : h_diag, s_diag, v_of_0
+  USE g_psi_mod,            ONLY : h_diag, s_diag
+  USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
   !
   IMPLICIT NONE

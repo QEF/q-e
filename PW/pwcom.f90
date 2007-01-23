@@ -396,6 +396,7 @@ MODULE scf
   !
   SAVE
   !
+  REAL(DP) :: v_of_0    ! vltot(G=0)      
   REAL(DP), ALLOCATABLE :: &
        rho(:,:),       &! the charge density in real space
        vr(:,:),        &! the Hartree + xc potential in real space

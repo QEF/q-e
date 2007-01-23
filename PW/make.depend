@@ -654,6 +654,12 @@ newd.o : ../Modules/wavefunctions.o
 newd.o : noncol.o
 newd.o : pwcom.o
 newd.o : realus.o
+non_scf.o : ../Modules/constants.o
+non_scf.o : ../Modules/control_flags.o
+non_scf.o : ../Modules/io_files.o
+non_scf.o : ../Modules/io_global.o
+non_scf.o : ../Modules/kind.o
+non_scf.o : pwcom.o
 noncol.o : ../Modules/kind.o
 noncol.o : ../Modules/parameters.o
 ns_adj.o : ../Modules/io_global.o
@@ -1241,6 +1247,7 @@ mix_rho.o : ../include/f_defs.h
 mode_group.o : ../include/f_defs.h
 new_ns.o : ../include/f_defs.h
 newd.o : ../include/f_defs.h
+non_scf.o : ../include/f_defs.h
 orthoatwfc.o : ../include/f_defs.h
 para.o : ../include/f_defs.h
 potinit.o : ../include/f_defs.h

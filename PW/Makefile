@@ -134,6 +134,7 @@ new_ns.o \
 ns_adj.o \
 newd.o \
 noncol.o \
+non_scf.o \
 openfil.o \
 orthoatwfc.o \
 output_tau.o \
