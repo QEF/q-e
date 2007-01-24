@@ -143,6 +143,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
         if (nb.eq.na) goto 50
         do ipol = 1, 3
            dtau (ipol) = tau (ipol, na) - tau (ipol, nb)
+           dtau (ipol) = dtau(ipol) - anint(dtau(ipol))
         enddo
         !
         ! generates nearest-neighbors shells r(i)=R(i)-dtau(i)

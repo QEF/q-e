@@ -136,6 +136,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
         do nb = 1, nat
            do ipol = 1, 3
               dtau (ipol) = tau (ipol, na) - tau (ipol, nb)
+              dtau (ipol) = dtau(ipol) - anint(dtau(ipol))
            enddo
            !
            ! generates nearest-neighbors shells

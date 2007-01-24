@@ -141,6 +141,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
         do nb = 1, nat
            do l = 1, 3
               dtau (l) = tau (l, na) - tau (l, nb)
+              dtau (l) = dtau(l) - anint(dtau(l))
            enddo
            !
            !     generates nearest-neighbors shells r(i)=R(i)-dtau(i)
