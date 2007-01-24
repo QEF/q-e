@@ -61,7 +61,7 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! counter on polarization
 
   real(DP) :: sumnb, arg, tpiba2, alpha, dtau (3), r (3, mxr), &
-       r2 (mxr), erfc, rmax, rr, charge, upperbound, fact, ds(3)
+       r2 (mxr), erfc, rmax, rr, charge, upperbound, fact
   ! auxiliary variable for speed
   ! the argument of the exponential
   ! 2 pi /alat
@@ -142,9 +142,6 @@ subroutine force_ew (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      do nb = 1, nat
         if (nb.eq.na) goto 50
               dtau (:) = tau (:, na) - tau (:, nb)
-              ds(:) = MATMUL( dtau(:), bg(:,:) )
-              ds(:) = ds(:) - anint(ds(:))
-              dtau(:) = MATMUL( at(:,:), ds(:) )
         !
         ! generates nearest-neighbors shells r(i)=R(i)-dtau(i)
         !

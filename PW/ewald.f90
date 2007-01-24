@@ -61,7 +61,7 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
   ! counter on polarization
 
   real(DP) :: charge, tpiba2, ewaldg, ewaldr, dtau (3), alpha, &
-       r (3, mxr), r2 (mxr), rmax, rr, upperbound, fact, ds(3)
+       r (3, mxr), r2 (mxr), rmax, rr, upperbound, fact
   ! total ionic charge in the cell
   ! length in reciprocal space
   ! ewald energy computed in reciprocal space
@@ -135,9 +135,6 @@ function ewald (alat, nat, ntyp, ityp, zv, at, bg, tau, omega, g, &
      do na = 1, nat
         do nb = 1, nat
               dtau (:) = tau (:, na) - tau (:, nb)
-              ds(:) = MATMUL( dtau(:), bg(:,:) )
-              ds(:) = ds(:) - anint(ds(:))
-              dtau(:) = MATMUL( at(:,:), ds(:) )
            !
            ! generates nearest-neighbors shells
            !

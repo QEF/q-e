@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 
-subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
+subroutine rgen (dtau_in, rmax, mxr, at, bg, r, r2, nrm)
   !-----------------------------------------------------------------------
   !
   !   generates neighbours shells (in units of alat) with length
@@ -24,8 +24,8 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
   integer :: nrm, mxr
   ! output: the number of vectors in the spher
   ! input: the maximum number of vectors
-  real(DP) :: r (3, mxr), r2 (mxr), at (3, 3), bg (3, 3), dtau (3), &
-       rmax
+  real(DP) :: r (3, mxr), r2 (mxr), at (3, 3), bg (3, 3), dtau_in (3), &
+              rmax
   ! output: coordinates of vectors R+tau_s-tau
   ! output: square modulus of vectors R+tau_s-
   ! input: direct lattice vectors
@@ -50,6 +50,7 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
   ! index of swapping
   ! used for swapping
 
+  real(DP) :: ds(3), dtau(3)
   real(DP) :: t (3), tt, swap, DNRM2
   ! buffer contains the actual r
   ! buffer cotains the modulus of actual r
@@ -59,6 +60,12 @@ subroutine rgen (dtau, rmax, mxr, at, bg, r, r2, nrm)
 
   nrm = 0
   if (rmax.eq.0.d0) return
+
+  ! convert dtau_in to the equivalent vector closest to the origin.
+  ds(:) = MATMUL( dtau_in(:), bg(:,:) )
+  ds(:) = ds(:) - anint(ds(:))
+  dtau(:) = MATMUL( at(:,:), ds(:) )
+
   allocate (irr( mxr))    
   nm1 = int (DNRM2 (3, bg (1, 1), 1) * rmax) + 2
   nm2 = int (DNRM2 (3, bg (1, 2), 1) * rmax) + 2

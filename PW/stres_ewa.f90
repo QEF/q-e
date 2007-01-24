@@ -55,7 +55,7 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
   ! counter on atoms
   ! number of R vectors included in r sum
 
-  real(DP) :: charge, arg, tpiba2, dtau (3), alpha, r (3, mxr), ds(3), &
+  real(DP) :: charge, arg, tpiba2, dtau (3), alpha, r (3, mxr), &
        r2 (mxr), rmax, rr, upperbound, fact, fac, g2, g2a, sdewald, sewald
   ! total ionic charge in the cell
   ! the argument of the phase
@@ -140,9 +140,6 @@ subroutine stres_ewa (alat, nat, ntyp, ityp, zv, at, bg, tau, &
      do na = 1, nat
         do nb = 1, nat
               dtau (:) = tau (:, na) - tau (:, nb)
-              ds(:) = MATMUL( dtau(:), bg(:,:) )
-              ds(:) = ds(:) - anint(ds(:))
-              dtau(:) = MATMUL( at(:,:), ds(:) )
            !
            !     generates nearest-neighbors shells r(i)=R(i)-dtau(i)
            !
