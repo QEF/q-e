@@ -16,10 +16,11 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE ions_base,            ONLY : nat, tau, atm, ityp
-  USE io_global,       ONLY : stdout
-  USE symme,     ONLY : s, nsym, irt
+  USE io_global,            ONLY : stdout
+  USE symme,                ONLY : s, nsym, irt
   USE pwcom
-  USE gipaw_module
+  USE gipaw_module,         ONLY : use_nmr_macroscopic_shape, &
+                                   nmr_macroscopic_shape, b_ind
 
   ! Arguments
   REAL(DP), INTENT(IN) :: chi_bare(3,3)
@@ -27,16 +28,8 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   
   ! Local
   integer :: na, ig
-  real(dp) :: macroscopic_shape(3,3)
   real(dp) :: arg, tr_sigma
   complex(dp) :: tmp_sigma(3,3)
-
-  macroscopic_shape(:,:) = 2.0_dp/3.0_dp
-  ! like in paratec:
-  macroscopic_shape(:,:) = 0.0_dp
-  do na = 1, 3 
-    macroscopic_shape(na,na) = 2.0_dp/3.0_dp
-  enddo
   
   write(stdout,'(5X,''NMR chemical bare shifts in ppm:'')')
   write(stdout,*)
@@ -50,13 +43,13 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
            + b_ind(ig,:,:) * cmplx(cos(arg),sin(arg))
     enddo
     
-#if 1
-    ! this is the G = 0 term
-    if (gstart == 2) then
-       tmp_sigma(:,:) = tmp_sigma(:,:) &
-            - (4.0_dp*pi) * macroscopic_shape(:,:) * chi_bare(:,:) !*TMPTMPTMP
+    if ( use_nmr_macroscopic_shape ) then
+       ! this is the G = 0 term
+       if (gstart == 2) then
+          tmp_sigma(:,:) = tmp_sigma(:,:) &
+               - (4.0_dp*pi) * nmr_macroscopic_shape(:,:) * chi_bare(:,:)
+       end if
     end if
-#endif
     
     sigma_bare(:,:,na) = real(tmp_sigma(:,:))
   enddo

@@ -22,37 +22,37 @@ MODULE gipaw_module
   
   ! speed of light in atomic units: c = 1/alpha
   !REAL(DP), PARAMETER :: c = 137.03599911d0
-
+  
   ! avogadro number
   REAL(DP), PARAMETER :: avogadro = 6.022142e23_dp
-
+  
   ! number of occupied bands at each k-point
   INTEGER :: nbnd_occ(npk)
-
+  
   ! alpha shift of the projector on the valence wfcs
   REAL(DP) :: alpha_pv
-
+  
   ! eigenvalues and eigenfunctions at k+q
   COMPLEX(DP), ALLOCATABLE :: evq(:,:)
-
+  
   ! induced current (bare term) and induced magnetic field
   REAL(DP), ALLOCATABLE :: j_bare(:,:,:,:), b_ind_r(:,:,:)
-
+  
   ! induced magnetic field in reciprocal space
   COMPLEX(DP), ALLOCATABLE :: b_ind(:,:,:)
-
+  
   ! convergence threshold for diagonalizationa and greenfunction
   REAL(DP) :: conv_threshold
   
   ! q for the perturbation (in bohrradius^{-1})
   REAL(DP) :: q_gipaw
-
+  
   ! q for the EFG
   REAL(DP) :: q_efg ( ntypx )
   
   ! verbosity
   INTEGER :: iverbosity
-
+  
   ! job: nmr, g_tensor, efg, hyperfine
   CHARACTER(80) :: job
   
@@ -61,6 +61,10 @@ MODULE gipaw_module
   
   ! for plotting the induced current and induced field
   CHARACTER(80) :: filcurr, filfield
+  
+  ! macroscopic shape for the NMR
+  LOGICAL :: use_nmr_macroscopic_shape
+  REAL(DP) :: nmr_macroscopic_shape ( 3, 3 )
   
   !<apsi>
   CHARACTER(256) :: file_reconstruction ( ntypx )
@@ -104,7 +108,8 @@ CONTAINS
     NAMELIST /inputgipaw/ job, prefix, tmp_dir, conv_threshold, &
                          q_gipaw, iverbosity, filcurr, filfield, &
                          read_recon_in_paratec_fmt, &
-                         file_reconstruction
+                         file_reconstruction, use_nmr_macroscopic_shape, &
+                         nmr_macroscopic_shape
     
     if ( .not. ionode ) goto 400
     
@@ -118,6 +123,7 @@ CONTAINS
     filfield = ''
     read_recon_in_paratec_fmt = .FALSE.
     file_reconstruction ( : ) = " "
+    nmr_macroscopic_shape = 2.0_dp / 3.0_dp
     
     read( 5, inputgipaw, err = 200, iostat = ios )
     
