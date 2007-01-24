@@ -15,7 +15,7 @@ SUBROUTINE allocate_wfc()
   ! ... must be called after allocate_nlpot 
   !
   USE io_global, ONLY : stdout
-  USE wvfct,     ONLY : gamma_only, npwx, nbnd, nbndx, et, wg
+  USE wvfct,     ONLY : gamma_only, npwx, nbnd, nbndx
   USE klist,     ONLY : nelec, nelup, neldw, two_fermi_energies
   USE basis,     ONLY : natomwfc
   USE gvect,     ONLY : ngl

@@ -31,7 +31,7 @@
   !
   ! ... local variables
   !
-  INTEGER :: iter = -1, i, ik, inberry, ibnd, ibnd_up, ibnd_dw, kbnd
+  INTEGER :: iter = 1, i, ik, inberry, ibnd, ibnd_up, ibnd_dw, kbnd
   !
   REAL(DP) :: dr2 = 0.d0,  ehomo, elumo ! highest occupied and lowest unoccupied levels
   !
