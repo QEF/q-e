@@ -96,9 +96,6 @@ SUBROUTINE electrons()
   REAL(DP) :: &
        tr2_min,     &! estimated error on energy coming from diagonalization
        descf         ! correction for variational energy
-  REAL(DP), ALLOCATABLE :: &
-      wg_g(:,:)      ! temporary array used to collect array wg from pools
-                     ! and then print occupations on stdout
   LOGICAL :: &
       exst, first
   !
@@ -518,6 +515,7 @@ SUBROUTINE electrons()
         CALL mp_bcast( ngk_g, root_pool, inter_pool_comm )
         !
         CALL poolrecover( et, nbnd, nkstot, nks )
+        CALL poolrecover( wg, nbnd, nkstot, nks )
         !
         DO ik = 1, nkstot
            !
@@ -538,15 +536,8 @@ SUBROUTINE electrons()
            !
            IF( iverbosity > 0 ) THEN
                !
-               ALLOCATE( wg_g( nbnd, nkstot ) )
-               !
-               wg_g = wg
-               CALL poolrecover( wg_g, nbnd, nkstot, nks )
-               !
                WRITE( stdout, 9032 )
-               WRITE( stdout, 9030 ) ( wg_g(ibnd,ik), ibnd = 1, nbnd )
-               !
-               DEALLOCATE( wg_g )
+               WRITE( stdout, 9030 ) ( wg(ibnd,ik), ibnd = 1, nbnd )
                !
            END IF
            !
