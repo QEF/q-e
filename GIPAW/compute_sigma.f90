@@ -20,7 +20,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   USE symme,                ONLY : s, nsym, irt
   USE pwcom
   USE gipaw_module,         ONLY : use_nmr_macroscopic_shape, &
-                                   nmr_macroscopic_shape, b_ind
+                                   nmr_macroscopic_shape, b_ind, tens_fmt
 
   ! Arguments
   REAL(DP), INTENT(IN) :: chi_bare(3,3)

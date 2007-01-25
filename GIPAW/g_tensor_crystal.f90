@@ -864,7 +864,7 @@ CONTAINS
        paramagnetic_tensor ( :, ipol ) = REAL ( para_corr, dp )
        
        if ( iverbosity > 10 ) then
-          write(6,'("DDD1",2I3,3(F16.7,2X)') &
+          write(6,'("DDD1",2I3,3(F16.7,2X))') &
                ipol, i*isign, REAL ( para_corr(1:3) ) * 1e6
        end if
        

@@ -283,7 +283,8 @@ CONTAINS
     integer :: il, lm, l, m, lm1, lm2, m1, m2, abs_m1, abs_m2
     integer :: sign_m1, sign_m2, il1, il2, l1, l2, j, kkpsi, nrc
     real(dp) :: alpha_lm, beta_lm
-    integer, allocatable :: lm2l ( : ), lm2m ( : ), kkpsi_max
+    integer, allocatable :: lm2l ( : ), lm2m ( : )
+    integer :: kkpsi_max
     real(dp), allocatable :: work(:), kinetic_aephi(:), kinetic_psphi(:)
     real(dp), allocatable :: aephi_dvloc_dr(:), psphi_dvloc_dr(:)
     !</apsi>

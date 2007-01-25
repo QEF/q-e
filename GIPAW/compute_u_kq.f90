@@ -25,6 +25,7 @@ SUBROUTINE compute_u_kq(ik, q)
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE g_psi_mod, ONLY : h_diag, s_diag
   USE scf,           ONLY : vrs, vltot, vr
+  USE noncollin_module,     ONLY : noncolin, npol
   USE complex_diis_module
 
   IMPLICIT NONE
@@ -33,7 +34,7 @@ SUBROUTINE compute_u_kq(ik, q)
 
   real(dp), allocatable :: etq(:)
   real(dp) :: xk_plus_q(3)
-  integer :: ig, ntry, iter, notconv
+  integer :: ig, ntry, iter, notconv, ipol
   real(dp) :: v_of_0
   real(dp) :: avg_iter, dav_iter, cg_iter, ethr
   integer :: diis_iter
@@ -73,8 +74,8 @@ SUBROUTINE compute_u_kq(ik, q)
                    ( xk_plus_q(2) + g(2,igk(1:npw)) )**2 + &
                    ( xk_plus_q(3) + g(3,igk(1:npw)) )**2 ) * tpiba2
 
-  ALLOCATE( h_diag( npwx ) )
-  ALLOCATE( s_diag( npwx ) )
+  ALLOCATE( h_diag( npwx,npol ) )
+  ALLOCATE( s_diag( npwx,npol ) )
   ALLOCATE(btype( nbnd, nkstot ) )
 
   nbndx = nbnd
@@ -93,7 +94,7 @@ SUBROUTINE compute_u_kq(ik, q)
     !!!call errore('compute_u_kq','CG not working properly?',-1)
     h_diag = 1.D0
     FORALL( ig = 1 : npw )
-      h_diag(ig) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
+      h_diag(ig,:) = 1.D0 + g2kin(ig) + SQRT( 1.D0 + ( g2kin(ig) - 1.D0 )**2 )
     END FORALL
 
     ntry = 0
@@ -119,6 +120,7 @@ SUBROUTINE compute_u_kq(ik, q)
   ELSE IF ( isolve == 2 ) THEN
     ! ... RMM-DIIS method
     call errore('compute_u_kq','DIIS not working properly?',-1)
+#if 0
     h_diag(1:npw) = g2kin(1:npw) + v_of_0
     CALL usnldiag( h_diag, s_diag )
 
@@ -133,14 +135,16 @@ SUBROUTINE compute_u_kq(ik, q)
       ! ... exit condition
       IF ( test_exit_cond() ) EXIT  RMMDIIS_loop
     END DO RMMDIIS_loop
-
+#endif
 
   ELSE IF (isolve == 0) THEN
     ! ... Davidson diagonalization
     ! ... h_diag are the diagonal matrix elements of the
     ! ... hamiltonian used in g_psi to evaluate the correction 
     ! ... to the trial eigenvectors
-    h_diag(1:npw) = g2kin(1:npw) + v_of_0
+    do ipol = 1, npol
+      h_diag(1:npw,ipol) = g2kin(1:npw) + v_of_0
+    enddo
     CALL usnldiag( h_diag, s_diag )
 
     ntry = 0
