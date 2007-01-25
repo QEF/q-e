@@ -22,12 +22,8 @@ subroutine gen_us_dj (ik, dvkb)
   USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-#ifdef USE_SPLINES
-  USE us,         ONLY : nqxq, tab, tab_d2y, dq
+  USE us,         ONLY : nqxq, tab, tab_d2y, dq, spline_ps
   USE splinelib
-#else
-  USE us,         ONLY : tab, dq
-#endif
   USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
   !
   implicit none
@@ -59,10 +55,8 @@ subroutine gen_us_dj (ik, dvkb)
 
   complex(DP), allocatable :: sk (:)
 
-#ifdef USE_SPLINES
-  integer :: startq, lastq, iq
+  integer :: iq
   real(DP), allocatable :: xdata(:)
-#endif
 
   if (nkb.eq.0) return
 
@@ -85,36 +79,35 @@ subroutine gen_us_dj (ik, dvkb)
   call stop_clock('stres_us32')
   call start_clock('stres_us33')
 
-#ifdef USE_SPLINES
-  startq = 1
-  lastq = nqxq
-  !call divide (nqxq, startq, lastq)
-  allocate(xdata(lastq-startq+1))
-  do iq = startq, lastq
-    xdata(iq) = (iq - 1) * dq
-  enddo
-#endif
+
+  if (spline_ps) then
+    allocate(xdata(nqxq))
+    do iq = 1, nqxq
+      xdata(iq) = (iq - 1) * dq
+    enddo
+  endif
 
   do nt = 1, ntyp
      do nb = 1, nbeta (nt)
         do ig = 1, npw
            qt = sqrt(q (ig)) * tpiba
-#ifdef USE_SPLINES
-           djl(ig,nb,nt) = splint_deriv(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qt)
-#else
-           px = qt / dq - int (qt / dq)
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = qt / dq + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           djl(ig,nb,nt) = ( tab (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
-                             tab (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
-                             tab (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
-                             tab (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
-#endif
+           if (spline_ps) then
+             djl(ig,nb,nt) = splint_deriv(xdata, tab(:,nb,nt), & 
+                                                 tab_d2y(:,nb,nt), qt)
+           else
+             px = qt / dq - int (qt / dq)
+             ux = 1.d0 - px
+             vx = 2.d0 - px
+             wx = 3.d0 - px
+             i0 = qt / dq + 1
+             i1 = i0 + 1
+             i2 = i0 + 2
+             i3 = i0 + 3
+             djl(ig,nb,nt) = ( tab (i0, nb, nt) * (-vx*wx-ux*wx-ux*vx)/6.d0 + &
+                               tab (i1, nb, nt) * (+vx*wx-px*wx-px*vx)/2.d0 - &
+                               tab (i2, nb, nt) * (+ux*wx-px*wx-px*ux)/2.d0 + &
+                               tab (i3, nb, nt) * (+ux*vx-px*vx-px*ux)/6.d0 )/dq
+           endif
         enddo
      enddo
   enddo

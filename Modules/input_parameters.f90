@@ -567,6 +567,9 @@ MODULE input_parameters
 
         LOGICAL :: assume_molsys = .FALSE.
 
+        ! use spline interpolation for pseudopotential
+        LOGICAL :: spline_ps = .false.
+
         NAMELIST / system / ibrav, celldm, a, b, c, cosab, cosac, cosbc, nat, &
              ntyp, nbnd, nelec, ecutwfc, ecutrho, nr1, nr2, nr3, nr1s, nr2s,  &
              nr3s, nr1b, nr2b, nr3b, nosym, starting_magnetization,           &
@@ -580,7 +583,8 @@ MODULE input_parameters
              noncolin, lspinorb, lambda, angle1, angle2, report,              &
              constrained_magnetization, B_field, fixed_magnetization,         &
              sic, sic_epsilon, force_pairing, sic_alpha,                      &
-             tot_charge, multiplicity, tot_magnetization
+             tot_charge, multiplicity, tot_magnetization, &
+             spline_ps
 
 !=----------------------------------------------------------------------------=!
 !  ELECTRONS Namelist Input Parameters

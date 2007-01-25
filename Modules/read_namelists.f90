@@ -201,6 +201,7 @@ MODULE read_namelists_module
        report = 1
        !
        assume_molsys = .FALSE.
+       spline_ps = .false.
        ! 
        RETURN
        ! 
@@ -739,6 +740,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lambda,                    ionode_id )
        !
        CALL mp_bcast( assume_molsys, ionode_id )
+       CALL mp_bcast( spline_ps, ionode_id )
        !
        RETURN
        !

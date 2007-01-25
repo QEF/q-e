@@ -26,11 +26,7 @@ SUBROUTINE clean_pw( lflag )
   USE scf,                  ONLY : rho, rhog, vr, vltot, &
                                    rho_core, rhog_core,vrs
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-#ifdef USE_SPLINES
-  USE us,                   ONLY : qrad, tab, tab_at, tab_d2y
-#else
-  USE us,                   ONLY : qrad, tab, tab_at
-#endif
+  USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
   USE ldaU,                 ONLY : ns, nsnew, swfcatom
   USE extfield,             ONLY : forcefield
@@ -88,9 +84,9 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
   IF ( ALLOCATED( psic_nc ) )    DEALLOCATE( psic_nc )
   IF ( ALLOCATED( vrs ) )        DEALLOCATE( vrs )
-#ifdef USE_SPLINES
-  IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
-#endif
+  if (spline_ps) then
+    IF ( ALLOCATED( tab_d2y) )     DEALLOCATE( tab_d2y )
+  endif
   IF ( doublegrid ) THEN
     IF ( ASSOCIATED( nls ) )     DEALLOCATE( nls )
   END IF

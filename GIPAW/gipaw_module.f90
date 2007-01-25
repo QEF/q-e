@@ -103,13 +103,14 @@ CONTAINS
   SUBROUTINE gipaw_readin()
     USE io_files,      ONLY : nd_nmbr, prefix, tmp_dir  
     USE io_global,     ONLY : ionode
+    USE us,            ONLY : spline_ps
     IMPLICIT NONE
     INTEGER :: ios
     NAMELIST /inputgipaw/ job, prefix, tmp_dir, conv_threshold, &
                          q_gipaw, iverbosity, filcurr, filfield, &
                          read_recon_in_paratec_fmt, &
                          file_reconstruction, use_nmr_macroscopic_shape, &
-                         nmr_macroscopic_shape
+                         nmr_macroscopic_shape, spline_ps
     
     if ( .not. ionode ) goto 400
     
@@ -124,6 +125,7 @@ CONTAINS
     read_recon_in_paratec_fmt = .FALSE.
     file_reconstruction ( : ) = " "
     nmr_macroscopic_shape = 2.0_dp / 3.0_dp
+    spline_ps = .true.    ! TRUE in this case!!!!!
     
     read( 5, inputgipaw, err = 200, iostat = ios )
     

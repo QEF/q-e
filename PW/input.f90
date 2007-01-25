@@ -201,7 +201,7 @@ SUBROUTINE iosys()
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
-                               assume_molsys
+                               assume_molsys, spline_ps
   !
   ! ... ELECTRONS namelist
   !
@@ -243,6 +243,7 @@ SUBROUTINE iosys()
   USE constraints_module,    ONLY : init_constraint
   USE metadyn_vars,          ONLY : init_metadyn_vars
   USE read_namelists_module, ONLY : read_namelists, sm_not_set
+  USE us, ONLY : spline_ps_ => spline_ps
   !
   IMPLICIT NONE
   !
@@ -1125,6 +1126,7 @@ SUBROUTINE iosys()
   lambda_   = lambda
   !
   assume_molsys_ = assume_molsys
+  spline_ps_     = spline_ps    
   !
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
   Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)

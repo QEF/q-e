@@ -20,12 +20,8 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   USE constants,  ONLY : tpi
   USE gvect,      ONLY : eigts1, eigts2, eigts3, ig1, ig2, ig3, g
   USE wvfct,      ONLY : npw, npwx, igk
-#ifdef USE_SPLINES
-  USE us,         ONLY : nqxq, dq, tab, tab_d2y
+  USE us,         ONLY : nqxq, dq, tab, tab_d2y, spline_ps
   USE splinelib
-#else
-  USE us,         ONLY : dq, tab
-#endif
   USE uspp,       ONLY : nkb, vkb, nhtol, nhtolm, indv
   USE uspp_param, ONLY : lmaxkb, nbeta, nhm, nh
   !
@@ -49,10 +45,8 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   complex(DP) :: phase, pref
   complex(DP), allocatable :: sk(:)
 
-#ifdef USE_SPLINES
   real(DP), allocatable :: xdata(:)
-  integer :: startq, lastq, iq
-#endif
+  integer :: iq
 
   !
   !
@@ -80,37 +74,34 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
      qg(ig) = sqrt(qg(ig))*tpiba
   enddo
 
-#ifdef USE_SPLINES
-  startq = 1
-  lastq = nqxq
-  !call divide (nqxq, startq, lastq)
-  allocate(xdata(lastq-startq+1))
-  do iq = startq, lastq
-    xdata(iq) = (iq - 1) * dq
-  enddo
-#endif
+  if (spline_ps) then
+    allocate(xdata(nqxq))
+    do iq = 1, nqxq
+      xdata(iq) = (iq - 1) * dq
+    enddo
+  endif
 
   jkb = 0
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
      do nb = 1, nbeta (nt)
         do ig = 1, npw_
-#ifdef USE_SPLINES
-           vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
-#else
-           px = qg (ig) / dq - int (qg (ig) / dq)
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = INT( qg (ig) / dq ) + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                     tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                     tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                     tab (i3, nb, nt) * px * ux * vx / 6.d0
-#endif
+           if (spline_ps) then
+             vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))
+           else
+             px = qg (ig) / dq - int (qg (ig) / dq)
+             ux = 1.d0 - px
+             vx = 2.d0 - px
+             wx = 3.d0 - px
+             i0 = INT( qg (ig) / dq ) + 1
+             i1 = i0 + 1
+             i2 = i0 + 2
+             i3 = i0 + 3
+             vq (ig) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                       tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                       tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                       tab (i3, nb, nt) * px * ux * vx / 6.d0
+           endif
         enddo
         ! add spherical harmonic part
         do ih = 1, nh (nt)

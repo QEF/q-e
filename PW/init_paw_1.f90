@@ -19,19 +19,12 @@ subroutine init_paw_1
   USE cell_base ,  ONLY : omega
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants ,  ONLY : fpi
-#ifdef USE_SPLINES
-  USE us,          ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad
+  USE us,          ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
   USE paw ,        ONLY : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, &
                           paw_iltonh, paw_tab, aephi, paw_betar, psphi, &
                           paw_indv, paw_nhtom, paw_nhtol, paw_nbeta, &
                           paw_tab_d2y
   USE splinelib
-#else
-  USE us,          ONLY : nqx, dq
-  USE paw ,        ONLY : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, &
-                          paw_iltonh, paw_tab, aephi, paw_betar, psphi, &
-                          paw_indv, paw_nhtom, paw_nhtol, paw_nbeta 
-#endif
   USE uspp,        ONLY : ap, aainit
   USE atom ,       ONLY : r, rab, msh
   USE io_global,   ONLY : stdout
@@ -60,11 +53,9 @@ subroutine init_paw_1
   
   integer :: n_overlap_warnings
   
-#ifdef USE_SPLINES
   integer :: paw_nbeta_max
   real(DP), allocatable :: xdata(:)
   real(DP) :: d1
-#endif
   
   call start_clock ('init_paw_1')
   !
@@ -270,29 +261,24 @@ subroutine init_paw_1
   call reduce (nqx * nbrx * ntyp, paw_tab)
 #endif
 
-#ifdef USE_SPLINES
-  !<ceres>
   ! initialize spline interpolation
-  paw_nbeta_max = maxval ( paw_nbeta (:) )
-  allocate ( paw_tab_d2y ( nqx, paw_nbeta_max, ntyp ) )
-  
-  paw_tab_d2y = 0.0
-  startq = 1
-  lastq = nqxq
-  allocate(xdata(lastq-startq+1))
-  do iq = startq, lastq
-    xdata(iq) = (iq - 1) * dq
-  enddo
-  do nt = 1, ntyp
-     do nb = 1, paw_nbeta (nt)
+  if (spline_ps) then
+    paw_nbeta_max = maxval ( paw_nbeta (:) )
+    allocate ( paw_tab_d2y ( nqx, paw_nbeta_max, ntyp ) )
+    paw_tab_d2y = 0.0
+    allocate(xdata(nqxq))
+    do iq = 1, nqxq
+      xdata(iq) = (iq - 1) * dq
+    enddo
+    do nt = 1, ntyp
+      do nb = 1, paw_nbeta (nt)
         l = aephi(nt, nb)%label%l
         d1 = (paw_tab(2,nb,nt) - paw_tab(1,nb,nt)) / dq
         call spline(xdata, paw_tab(:,nb,nt), 0.d0, d1, paw_tab_d2y(:,nb,nt))
-     enddo
-  enddo
-  deallocate(xdata)
-  !</ceres>
-#endif
+      enddo
+    enddo
+    deallocate(xdata)
+  endif
   
   deallocate (ylmk0)
   deallocate (besr)

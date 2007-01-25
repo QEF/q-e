@@ -35,11 +35,8 @@ subroutine allocate_nlpot
   USE ldaU,             ONLY : Hubbard_lmax, ns, nsnew
   USE noncollin_module, ONLY : noncolin
   USE wvfct,            ONLY : npwx, npw, igk, g2kin
-#ifdef USE_SPLINES
-  USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, nqxq
-#else
-  USE us,               ONLY : qrad, tab, tab_at, dq, nqx, nqxq
-#endif
+  USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
+                               nqxq, spline_ps
   USE uspp,             ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
                                nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
   USE uspp_param,       ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, nbetam,tvanp
@@ -134,10 +131,8 @@ subroutine allocate_nlpot
 
   allocate (tab( nqx , nbetam , nsp))
 
-#ifdef USE_SPLINES
   ! d2y is for the cubic splines
-  allocate (tab_d2y( nqx , nbetam , nsp))
-#endif
+  if (spline_ps) allocate (tab_d2y( nqx , nbetam , nsp))
 
   allocate (tab_at( nqx , nchix , nsp))
 

@@ -23,12 +23,8 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-#ifdef USE_SPLINES
-  USE us,         ONLY : nqxq, tab, tab_d2y, dq
+  USE us,         ONLY : nqxq, tab, tab_d2y, dq, spline_ps
   USE splinelib
-#else
-  USE us,         ONLY : tab, dq
-#endif
   USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
   !
   implicit none
@@ -49,10 +45,8 @@ subroutine gen_us_dy (ik, u, dvkb)
   complex(DP), allocatable :: sk (:)
   complex(DP) :: phase, pref
 
-#ifdef USE_SPLINES
-  integer :: startq, lastq, iq
+  integer :: iq
   real(DP), allocatable :: xdata(:)
-#endif
 
   dvkb(:,:) = (0.d0, 0.d0)
   if (lmaxkb.le.0) return
@@ -79,36 +73,34 @@ subroutine gen_us_dy (ik, u, dvkb)
      q (ig) = sqrt ( q(ig) ) * tpiba
   end do
 
-#ifdef USE_SPLINES
-  startq = 1
-  lastq = nqxq
-  !call divide (nqxq, startq, lastq)
-  allocate(xdata(lastq-startq+1))
-  do iq = startq, lastq
-    xdata(iq) = (iq - 1) * dq
-  enddo
-#endif
+  if (spline_ps) then
+    allocate(xdata(nqxq))
+    do iq = 1, nqxq
+      xdata(iq) = (iq - 1) * dq
+    enddo
+  endif
 
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
      do nb = 1, nbeta (nt)
         do ig = 1, npw
-#ifdef USE_SPLINES           
-           vkb0(ig,nb,nt) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), q(ig))
-#else
-           px = q (ig) / dq - int (q (ig) / dq)
-           ux = 1.d0 - px
-           vx = 2.d0 - px
-           wx = 3.d0 - px
-           i0 = q (ig) / dq + 1
-           i1 = i0 + 1
-           i2 = i0 + 2
-           i3 = i0 + 3
-           vkb0 (ig, nb, nt) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                               tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                               tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                               tab (i3, nb, nt) * px * ux * vx / 6.d0
-#endif
+           if (spline_ps) then
+             vkb0(ig,nb,nt) = splint(xdata, tab(:,nb,nt), &
+                                     tab_d2y(:,nb,nt), q(ig))
+           else
+             px = q (ig) / dq - int (q (ig) / dq)
+             ux = 1.d0 - px
+             vx = 2.d0 - px
+             wx = 3.d0 - px
+             i0 = q (ig) / dq + 1
+             i1 = i0 + 1
+             i2 = i0 + 2
+             i3 = i0 + 3
+             vkb0 (ig, nb, nt) = tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
+                                 tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
+                                 tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
+                                 tab (i3, nb, nt) * px * ux * vx / 6.d0
+           endif
         enddo
      enddo
   enddo

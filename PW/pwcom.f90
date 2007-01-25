@@ -489,10 +489,9 @@ MODULE us
        qrad(:,:,:,:),         &! radial FT of Q functions
        tab(:,:,:),            &! interpolation table for PPs
        tab_at(:,:,:)           ! interpolation table for atomic wfc
-#ifdef USE_SPLINES
+  LOGICAL :: spline_ps
   REAL(DP), ALLOCATABLE :: &
        tab_d2y(:,:,:)            ! for cubic splines
-#endif
   !
 END MODULE us
 !
