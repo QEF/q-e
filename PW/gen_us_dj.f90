@@ -86,7 +86,9 @@ subroutine gen_us_dj (ik, dvkb)
   call start_clock('stres_us33')
 
 #ifdef USE_SPLINES
-  call divide (nqxq, startq, lastq)
+  startq = 1
+  lastq = nqxq
+  !call divide (nqxq, startq, lastq)
   allocate(xdata(lastq-startq+1))
   do iq = startq, lastq
     xdata(iq) = (iq - 1) * dq

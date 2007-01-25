@@ -33,11 +33,11 @@ PROGRAM gipaw_main
   USE klist,           ONLY : nks
   USE mp,              ONLY : mp_bcast
   USE cell_base,       ONLY : tpiba
-  USE gipaw_module
   USE global_version,  ONLY : version_number
+  use gipaw_module
   !<apsi>
   use paw,             ONLY : read_recon
-  use gipaw_module,    ONLY : read_recon_paratec
+  !use gipaw_module,    ONLY : read_recon_paratec
   !</apsi>
   !------------------------------------------------------------------------
   IMPLICIT NONE

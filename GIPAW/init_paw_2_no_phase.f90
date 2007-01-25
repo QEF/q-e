@@ -83,7 +83,9 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
   enddo
 
 #ifdef USE_SPLINES
-  call divide (nqxq, startq, lastq)
+  startq = 1
+  lastq = nqxq
+  !call divide (nqxq, startq, lastq)
   allocate(xdata(lastq-startq+1))
   do iq = startq, lastq
     xdata(iq) = (iq - 1) * dq

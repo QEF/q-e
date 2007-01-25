@@ -375,6 +375,8 @@ subroutine init_us_1
 
 #ifdef USE_SPLINES
   ! initialize spline interpolation
+  startq = 1
+  lastq = nqxq 
   allocate(xdata(lastq-startq+1))
   do iq = startq, lastq
     xdata(iq) = (iq - 1) * dq

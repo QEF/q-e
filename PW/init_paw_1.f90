@@ -277,7 +277,8 @@ subroutine init_paw_1
   allocate ( paw_tab_d2y ( nqx, paw_nbeta_max, ntyp ) )
   
   paw_tab_d2y = 0.0
-  
+  startq = 1
+  lastq = nqxq
   allocate(xdata(lastq-startq+1))
   do iq = startq, lastq
     xdata(iq) = (iq - 1) * dq
