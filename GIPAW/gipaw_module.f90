@@ -146,6 +146,7 @@ CONTAINS
 #include "f_defs.h"
     USE mp,            ONLY : mp_bcast
     USE io_files,      ONLY : prefix, tmp_dir
+    USE us,            ONLY : spline_ps
     implicit none
     integer :: root = 0
     call mp_bcast(job, root)
@@ -158,6 +159,7 @@ CONTAINS
     call mp_bcast(filfield, root)
     call mp_bcast(read_recon_in_paratec_fmt, root)
     call mp_bcast(file_reconstruction, root)
+    call mp_bcast(spline_ps, root)
 #endif
   END SUBROUTINE gipaw_bcast_input
 
