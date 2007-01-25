@@ -269,6 +269,7 @@ SUBROUTINE summary()
      nsym_is=0
      DO isym = 1, nsym
         WRITE( stdout, '(/6x,"isym = ",i2,5x,a45/)') isym, sname(isym)
+        CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
         IF (noncolin) THEN
            IF (domag) THEN
               WRITE(stdout,*) 'Time Reversal ', t_rev(isym)
@@ -283,7 +284,6 @@ SUBROUTINE summary()
               CALL find_u(sr(1,1,isym),d_spin(1,1,isym))
            END IF
         END IF
-        CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
         IF (ftau(1,isym).NE.0.OR.ftau(2,isym).NE.0.OR.ftau(3,isym).NE.0) THEN
            ft1 = at(1,1)*ftau(1,isym)/nr1 + at(1,2)*ftau(2,isym)/nr2 + &
                  at(1,3)*ftau(3,isym)/nr3
