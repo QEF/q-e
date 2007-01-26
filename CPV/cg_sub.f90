@@ -28,8 +28,7 @@
                                 nx => nbspx, n => nbsp, ispin
 
       use ensemble_dft, only: tens,   ef,  z0, c0diag,  &
-                      becdiag, fmat0,     &
-                        e0
+                      becdiag, fmat0, e0, ismear
 !---
       use gvecp, only: ngm
       use gvecs, only: ngs
@@ -231,8 +230,13 @@
           else
 
            if(newscheme.or.firstiter) then 
-               call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                 rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter)
+              if(ismear==2) then !fermi dirac smearing
+                 call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter)
+              else ! generalized smearings
+                 call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter)
+              endif
                firstiter=.false.
            endif
             !     calculation of the rotated quantities
@@ -528,8 +532,15 @@
         if(.not.tens) then
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
-          if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+          if(newscheme) then 
+             if(ismear==2) then
+                call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
            rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+             else
+                call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )  
+             endif
+          endif
 
           !     calculation of the rotated quantities
           call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
@@ -588,8 +599,15 @@
         if(.not.tens) then
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
-          if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+          if(newscheme)  then
+             if(ismear==2) then
+                call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                     rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+             else
+                call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+             endif
+          endif
           !     calculation of the rotated quantities
           call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
           !     calculation of rho corresponding to the rotated wavefunctions
@@ -677,8 +695,15 @@
             if(.not.tens) then
               call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
             else
-              if(newscheme)  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+              if(newscheme)  then
+                 if(ismear==2) then
+                    call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
               rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+                 else
+                    call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                         rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+                 endif
+              endif
               !     calculation of the rotated quantities
               call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
               !     calculation of rho corresponding to the rotated wavefunctions
@@ -728,11 +753,15 @@
         !                 (Uij degrees of freedom)
         !
         !=======================================================================
-        if(tens.and. .not.newscheme) call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+        if(tens.and. .not.newscheme) then
+           if(ismear==2) then!fermi dirac
+              call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
            rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter  )
-
- 
-            
+           else!cold smearing and all others
+               call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter  )
+            endif
+         endif
       
           !=======================================================================
           !                 end of the inner loop
@@ -780,7 +809,7 @@
      endif
 
 
-
+     call calcmt(f,z0,fmat0,.false.)
 
       call newd(rhor,irb,eigrb,rhovan,fion)
       if (.not.tens) then

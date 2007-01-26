@@ -74,7 +74,7 @@ SUBROUTINE init_run()
   USE from_restart_module,      ONLY : from_restart  
   USE cp_interfaces,            ONLY : readfile
   USE ions_base,                ONLY : ions_cofmass
-  USE ensemble_dft,             ONLY : id_matrix_init, allocate_ensemble_dft
+  USE ensemble_dft,             ONLY : id_matrix_init, allocate_ensemble_dft, h_matrix_init
   USE efield_module,            ONLY : allocate_efield, allocate_efield2
   USE cg_module,                ONLY : allocate_cg
   USE wannier_module,           ONLY : allocate_wannier  
@@ -224,7 +224,10 @@ SUBROUTINE init_run()
   c0 = ( 0.D0, 0.D0 )
   cp = ( 0.D0, 0.D0 )
   !
-  IF ( tens ) CALL id_matrix_init( nupdwn, nspin )
+  IF ( tens ) then
+     CALL id_matrix_init( nupdwn, nspin )
+     CALL h_matrix_init(nupdwn, nspin)
+  ENDIF
   !
   IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
   !

@@ -34,7 +34,8 @@ MODULE ensemble_dft
       real(DP), allocatable::                      e0(:)
       real(DP), allocatable::               fmat0(:,:,:)
       real(DP) :: gibbsfe
-
+! variables for cold-smearing
+      real(DP), allocatable ::               psihpsi(:,:,:)!it contains the matrix <Psi|H|Psi>
 
 CONTAINS
 
@@ -115,6 +116,23 @@ CONTAINS
       end do
     RETURN
   END SUBROUTINE id_matrix_init
+
+
+  SUBROUTINE h_matrix_init( nupdwn, nspin )
+    ! initialization of the psihpsi matrix 
+    IMPLICIT NONE
+    INTEGER, INTENT(IN) :: nupdwn(2), nspin
+    INTEGER :: is, nss, i
+      psihpsi(:,:,:)=0.0d0
+      do  is=1,nspin
+        nss=nupdwn(is)
+        do i=1,nss
+          psihpsi(i,i,is)=1.d0
+        end do
+      end do
+    RETURN
+  END SUBROUTINE h_matrix_init
+
 
 
   SUBROUTINE ensemble_initval &
@@ -216,6 +234,7 @@ CONTAINS
       allocate(becdiag(nhsa,n))
       allocate(e0(nx))
       allocate(fmat0(nudx,nudx,nspin))
+      allocate(psihpsi(nudx,nudx,nspin))
     RETURN
   END SUBROUTINE allocate_ensemble_dft
 
@@ -228,7 +247,8 @@ CONTAINS
     IF( ALLOCATED( becdiag ) )  deallocate(becdiag )
     IF( ALLOCATED( e0 ) )  deallocate(e0 )
     IF( ALLOCATED( fmat0 ) )  deallocate(fmat0 )
-    RETURN
+    IF( ALLOCATED( psihpsi ) ) deallocate(psihpsi)
+   RETURN
   END SUBROUTINE deallocate_ensemble_dft
   
 
