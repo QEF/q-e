@@ -14,16 +14,17 @@
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, nberrycyc, fact_hepsi
   USE constants,            ONLY : rytoev
-  USE control_flags,        ONLY : lbands
+  USE control_flags,        ONLY : lbands, reduce_io
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
   USE klist,                ONLY : xk, wk, degauss, nelec, nks, nkstot, &
                                    lgauss, ngauss
   USE ktetra,               ONLY : ltetra, ntetra, tetra  
-  USE lsda_mod,             ONLY : lsda, nspin, isk
+  USE lsda_mod,             ONLY : lsda, nspin
   USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE wvfct,                ONLY : nbnd, et, npwx
+  USE wavefunctions_module, ONLY : evc
   !
   IMPLICIT NONE
   !
@@ -81,7 +82,23 @@
      !
   END IF
   !
+  ! ... xk, wk, isk, et, wg are distributed across pools;
+  ! ... the first node has a complete copy of xk, wk, isk,
+  ! ... while eigenvalues et and weights wg must be
+  ! ... explicitely collected to the first node
+  ! ... this is done here for et, in weights () for wg
+  !
   CALL poolrecover( et, nbnd, nkstot, nks )
+  !
+  ! ... calculate weights of Kohn-Sham orbitals 
+  ! ... may be needed in further calculations such as phonon
+  !
+  IF ( .NOT. lbands ) CALL weights  ( )
+  !
+  ! ... Note that if you want to use more k-points for the phonon
+  ! ... calculation then those needed for self-consistency, you can,
+  ! ... by performing a scf with less k-points, followed by a non-scf
+  ! ... one with additional k-points, whose weight on input is set to zero
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
@@ -103,58 +120,59 @@
      !
   END DO
   !
-  IF ( lgauss .AND. .NOT. lbands ) THEN
+  IF (.NOT. lbands) THEN
      !
-     ef = efermig( et, nbnd, nks, nelec, wk, degauss, ngauss, 0, isk )
-     !
-     WRITE( stdout, 9040 ) ef*rytoev
-     !
-  ELSE IF ( ltetra .AND. .NOT. lbands ) THEN
-     !
-     ef = efermit( et, nbnd, nks, nelec, nspin, ntetra, tetra, 0, isk )
-     !
-     WRITE( stdout, 9040 ) ef*rytoev
-     !
-  ELSE IF (.NOT. lbands) THEN
-     !
-     IF ( tfixed_occ ) THEN
-        ibnd = 0
-        DO kbnd = 1, nbnd
-           IF ( nspin == 1 .OR. nspin == 4 ) THEN
-              IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
-           ELSE
-              IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
-              IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
-           END IF
-        END DO
-     ELSE
-        IF ( nspin == 1 ) THEN
-           ibnd = NINT( nelec ) / 2
-        ELSE
-           ibnd = NINT( nelec )
-        END IF
-     END IF
-     !
-     IF ( ionode .AND. nbnd > ibnd ) THEN
+     IF ( lgauss .OR. ltetra ) THEN
         !
-        IF ( nspin == 1 .OR. nspin == 4 ) THEN
-           ehomo = MAXVAL( et(ibnd  ,1:nkstot) )
-           elumo = MINVAL( et(ibnd+1,1:nkstot) )
-           !
+        WRITE( stdout, 9040 ) ef*rytoev
+        !
+     ELSE
+        !
+        IF ( tfixed_occ ) THEN
+           ibnd = 0
+           DO kbnd = 1, nbnd
+              IF ( nspin == 1 .OR. nspin == 4 ) THEN
+                 IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
+              ELSE
+                 IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
+                 IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
+              END IF
+           END DO
         ELSE
-           ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
-                MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
-           elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
+           IF ( nspin == 1 ) THEN
+              ibnd = NINT( nelec ) / 2
+           ELSE
+              ibnd = NINT( nelec )
+           END IF
         END IF
-        IF ( ehomo < elumo ) &
-             WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+        !
+        IF ( ionode .AND. nbnd > ibnd ) THEN
+           !
+           IF ( nspin == 1 .OR. nspin == 4 ) THEN
+              ehomo = MAXVAL( et(ibnd  ,1:nkstot) )
+              elumo = MINVAL( et(ibnd+1,1:nkstot) )
+           ELSE
+              ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
+                   MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
+              elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
+                   MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
+           END IF
+           !
+           IF ( ehomo < elumo ) &
+                WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
+           !
+        END IF
         !
      END IF
      !
   END IF
   !
   CALL flush_unit( stdout )
+  !
+  ! ... save converged wfc if they have not been written previously
+  !
+  IF ( nks == 1 .AND. reduce_io ) &
+        CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
   !
   ! ... do a Berry phase polarization calculation if required
   !

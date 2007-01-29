@@ -239,7 +239,8 @@ w1gauss.o \
 wfcinit.o \
 wgauss.o \
 write_ns.o \
-wsweight.o
+wsweight.o \
+weights.o
 
 MODULES = \
 ../Modules/atom.o \

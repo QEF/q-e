@@ -16,19 +16,15 @@ SUBROUTINE sum_band()
   ! ... this version works also for metals (gaussian spreading technique)  
   !
   USE kinds,                ONLY : DP
+  USE ener,                 ONLY : eband
   USE wvfct,                ONLY : gamma_only
   USE control_flags,        ONLY : diago_full_acc
   USE cell_base,            ONLY : at, bg, omega
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE ener,                 ONLY : eband, demet, ef, ef_up, ef_dw
-  USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-  USE klist,                ONLY : lgauss, degauss, ngauss, nks, &
-                                   nkstot, wk, xk, nelec, nelup, neldw, &
-                                   two_fermi_energies, ngk
-  USE ktetra,               ONLY : ltetra, ntetra, tetra
+  USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE scf,                  ONLY : rho
@@ -37,7 +33,7 @@ SUBROUTINE sum_band()
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : nh, tvanp, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-  USE noncollin_module,     ONLY : noncolin, bfield, npol
+  USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
   USE mp_global,            ONLY : intra_image_comm, me_image, &
@@ -56,104 +52,17 @@ SUBROUTINE sum_band()
     ! counter on g vectors
     ! counter on bands
     ! counter on k points  
-  real (DP) demet_up, demet_dw
   !
   !
   CALL start_clock( 'sum_band' )
   !
   becsum(:,:,:) = 0.D0
   rho(:,:)      = 0.D0
-  eband         = 0.D0
-  demet         = 0.D0
+  eband         = 0.D0  
   !
-  IF ( .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) THEN
-     !
-     ! ... calculate weights for the insulator case
-     !
-     IF ( two_fermi_energies ) THEN
-        !
-        CALL iweights( nks, wk, nbnd, nelup, et, ef_up, wg, 1, isk )
-        CALL iweights( nks, wk, nbnd, neldw, et, ef_dw, wg, 2, isk )
-        !
-     ELSE
-        !
-        CALL iweights( nks, wk, nbnd, nelec, et, ef,    wg, 0, isk )
-        !
-     END IF
-     !
-  ELSE IF ( ltetra ) THEN
-     !
-     ! ... calculate weights for the metallic case
-     !
-     CALL poolrecover( et, nbnd, nkstot, nks )
-     !
-     IF ( me_image == root_image ) THEN
-        !
-        IF (two_fermi_energies) THEN
-           !
-           CALL tweights( nkstot, nspin, nbnd, nelup, &
-                          ntetra, tetra, et, ef_up, wg, 1, isk )
-           CALL tweights( nkstot, nspin, nbnd, neldw, &
-                          ntetra, tetra, et, ef_dw, wg, 2, isk )
-           !
-        ELSE
-           !
-           CALL tweights( nkstot, nspin, nbnd, nelec, &
-                          ntetra, tetra, et, ef, wg, 0, isk )
-           !
-        END IF
-       !
-     END IF
-     !
-     CALL poolscatter( nbnd, nkstot, wg, nks, wg )
-     !
-     CALL mp_bcast( ef, root_image, intra_image_comm )
-     !
-  ELSE IF ( lgauss ) THEN
-     !
-     IF ( two_fermi_energies ) THEN
-        !
-        CALL gweights( nks, wk, nbnd, nelup, degauss, &
-                       ngauss, et, ef_up, demet_up, wg, 1, isk )
-        CALL gweights( nks, wk, nbnd, neldw, degauss, &
-                       ngauss, et, ef_dw, demet_dw, wg, 2, isk )
-        !
-        demet = demet_up + demet_dw
-        !
-        bfield(3) = 0.5D0*( ef_up - ef_dw )
-        !
-     ELSE
-        !
-        CALL gweights( nks, wk, nbnd, nelec, degauss, &
-                       ngauss, et, ef, demet, wg, 0, isk)
-     END IF
-     !
-  ELSE IF ( tfixed_occ ) THEN
-     !
-     IF ( npool == 1 ) THEN
-        !
-        wg = f_inp
-        !
-     ELSE
-        !
-        wg(:,1) = f_inp(:,my_pool_id+1)
-        wg(:,2) = f_inp(:,my_pool_id+1)
-        !
-     END IF
-     !
-     ef = - 1.D+20
-     !
-     DO is = 1, nspin
-        !
-        DO ibnd = 1, nbnd
-           !
-           IF ( wg(ibnd,is) > 0.D0 ) ef = MAX( ef, et(ibnd,is) )
-           !
-        END DO
-        !
-     END DO
-     !
-  END IF
+  ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
+  !
+  CALL weights ( )
   !
   IF ( diago_full_acc ) THEN
      !
@@ -212,7 +121,6 @@ SUBROUTINE sum_band()
   IF ( noncolin .AND. .NOT. domag ) rho(:,2:4)=0.D0
   !
   CALL poolreduce( 1, eband )
-  CALL poolreduce( 1, demet )
   !
   ! ... symmetrization of the charge density (and local magnetization)
   !

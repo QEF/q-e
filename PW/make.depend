@@ -659,6 +659,7 @@ non_scf.o : ../Modules/control_flags.o
 non_scf.o : ../Modules/io_files.o
 non_scf.o : ../Modules/io_global.o
 non_scf.o : ../Modules/kind.o
+non_scf.o : ../Modules/wavefunctions.o
 non_scf.o : pwcom.o
 noncol.o : ../Modules/kind.o
 noncol.o : ../Modules/parameters.o
@@ -721,14 +722,10 @@ psymrho.o : para.o
 psymrho_mag.o : ../Modules/kind.o
 psymrho_mag.o : ../Modules/mp_global.o
 psymrho_mag.o : para.o
-punch.o : ../Modules/control_flags.o
 punch.o : ../Modules/io_files.o
 punch.o : ../Modules/io_global.o
-punch.o : ../Modules/wavefunctions.o
 punch.o : a2fmod.o
-punch.o : noncol.o
 punch.o : pw_restart.o
-punch.o : pwcom.o
 pw_gemm.o : ../Modules/kind.o
 pw_gemm.o : pwcom.o
 pw_restart.o : ../Modules/cell_base.o
@@ -1143,6 +1140,11 @@ w0gauss.o : ../Modules/constants.o
 w0gauss.o : ../Modules/kind.o
 w1gauss.o : ../Modules/constants.o
 w1gauss.o : ../Modules/kind.o
+weights.o : ../Modules/kind.o
+weights.o : ../Modules/mp.o
+weights.o : ../Modules/mp_global.o
+weights.o : noncol.o
+weights.o : pwcom.o
 wfcinit.o : ../Modules/cell_base.o
 wfcinit.o : ../Modules/constants.o
 wfcinit.o : ../Modules/control_flags.o
@@ -1309,4 +1311,5 @@ vhpsi.o : ../include/f_defs.h
 vhpsi_nc.o : ../include/f_defs.h
 vloc_of_g.o : ../include/f_defs.h
 vloc_psi.o : ../include/f_defs.h
+weights.o : ../include/f_defs.h
 wfcinit.o : ../include/f_defs.h

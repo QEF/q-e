@@ -257,6 +257,14 @@ SUBROUTINE electrons()
         !
         deband = delta_e()
         !
+        ! ... xk, wk, isk, et, wg are distributed across pools;
+        ! ... the first node has a complete copy of xk, wk, isk,
+        ! ... while eigenvalues et and weights wg must be
+        ! ... explicitely collected to the first node
+        ! ... this is done here for et, in sum_band for wg
+        !
+        CALL poolrecover( et, nbnd, nkstot, nks )
+        !
         ! ... the new density is computed here
         !
         CALL sum_band()
@@ -513,9 +521,6 @@ SUBROUTINE electrons()
         !
         CALL mp_bcast( ngk_g, root_pool, intra_pool_comm )
         CALL mp_bcast( ngk_g, root_pool, inter_pool_comm )
-        !
-        CALL poolrecover( et, nbnd, nkstot, nks )
-        CALL poolrecover( wg, nbnd, nkstot, nks )
         !
         DO ik = 1, nkstot
            !
