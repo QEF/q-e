@@ -120,7 +120,7 @@ SUBROUTINE init_wfc ( ik )
   !
   INTEGER :: is, ibnd, ig, ipol, ig2, n_starting_wfc, n_starting_atomic_wfc
   !
-  REAL(DP) :: rr, arg
+  REAL(DP) :: rr, arg, erf
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:) ! atomic wfcs for initialization
   !
