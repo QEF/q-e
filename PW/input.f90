@@ -247,7 +247,7 @@ SUBROUTINE iosys()
   !
   IMPLICIT NONE
   !
-  INTEGER  :: ia, image, nt
+  INTEGER  :: ia, image, nt, it
   REAL(DP) :: theta, phi
   !
   !
@@ -378,6 +378,7 @@ SUBROUTINE iosys()
         CALL errore( 'iosys', 'nelup + neldw must be equal to nelec', 1 )
      !
   END IF
+
   !
   SELECT CASE( TRIM( constrained_magnetization ) )
   CASE( 'none' )
@@ -456,6 +457,7 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
+
   IF ( B_field(1) /= 0.D0 .OR. &
        B_field(2) /= 0.D0 .OR. &
        B_field(3) /= 0.D0 ) THEN
@@ -1333,8 +1335,14 @@ SUBROUTINE iosys()
   !
   IF ( wmass == 0.D0 ) THEN
      !
-        wmass = SUM( amass(ityp(:)) )
-        !
+#if defined __PGI
+     DO it = 1, nat_
+        wmass = wmass + amass( ityp(it) )
+     END DO
+#else
+     wmass = SUM( amass(ityp(:)) )
+#endif
+     !
      IF ( calc == 'nd' .OR. calc == 'nm' ) THEN
         !
         wmass = 0.75D0 * wmass / pi / pi / omega**( 2.D0 / 3.D0 )
