@@ -121,11 +121,9 @@ c_bands.o : ../Modules/kind.o
 c_bands.o : ../Modules/uspp.o
 c_bands.o : ../Modules/wavefunctions.o
 c_bands.o : becmod.o
-c_bands.o : complex_diis_module.o
 c_bands.o : g_psi_mod.o
 c_bands.o : noncol.o
 c_bands.o : pwcom.o
-c_bands.o : real_diis_module.o
 c_phase_field.o : ../Modules/cell_base.o
 c_phase_field.o : ../Modules/constants.o
 c_phase_field.o : ../Modules/io_files.o
@@ -168,6 +166,10 @@ cft3s.o : ../Modules/kind.o
 cft3s.o : ../Modules/mp_global.o
 cft3s.o : para.o
 cft3s.o : pwcom.o
+cgramg1.o : ../Modules/constants.o
+cgramg1.o : ../Modules/io_global.o
+cgramg1.o : ../Modules/kind.o
+cgramg1.o : pwcom.o
 checkallsym.o : ../Modules/kind.o
 checksym.o : ../Modules/kind.o
 cinitcgg.o : ../Modules/kind.o
@@ -1190,6 +1192,7 @@ cdiaghg.o : ../include/f_defs.h
 cegterg.o : ../include/f_defs.h
 cft3.o : ../include/f_defs.h
 cft3s.o : ../include/f_defs.h
+cgramg1.o : ../include/f_defs.h
 checkallsym.o : ../include/f_defs.h
 cinitcgg.o : ../include/f_defs.h
 complex_diis_module.o : ../include/f_defs.h

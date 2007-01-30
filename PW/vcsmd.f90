@@ -37,7 +37,7 @@ SUBROUTINE vcsmd()
   USE ions_base,       ONLY : fixatom, amass
   USE relax,           ONLY : epse, epsf, epsp
   USE force_mod,       ONLY : force, sigma
-  USE control_flags,   ONLY : istep, tolp, conv_ions 
+  USE control_flags,   ONLY : nstep, istep, tolp, conv_ions 
   USE parameters,      ONLY : ntypx
   USE ener,            ONLY : etot
   USE io_files,        ONLY : prefix, delete_if_present
@@ -90,10 +90,10 @@ SUBROUTINE vcsmd()
   CHARACTER(LEN=3) :: ios          ! status (old or new) for I/O files
   CHARACTER(LEN=6) :: ipos         ! status ('append' or 'asis') for I/O files
   LOGICAL :: exst
-  INTEGER :: idone, na, nst, ipol, i, j, k
-    ! last completed time step
-    ! counter on atoms
-    ! counter on completed moves
+  INTEGER, SAVE :: idone = 0
+    ! counter on completed moves on this run
+  INTEGER :: na, nst, ipol, i, j, k
+    ! counters
   !
   ! ... I/O units
   !
@@ -125,8 +125,6 @@ SUBROUTINE vcsmd()
      IF ( istep /= 0 ) &
         CALL errore( 'vcsmd', 'previous MD history got lost', 1 )
      !
-     istep = 1
-     !
      tnew  = 0.D0
      acu   = 0.D0
      ack   = 0.D0
@@ -145,22 +143,23 @@ SUBROUTINE vcsmd()
      !
   ELSE
      !
-     ! ... read MD run history (idone is the last completed MD step)
+     ! ... read MD run history
      !
      READ( 4, * ) rati, ratd, rat2d, rat2di, tauold
      READ( 4, * ) aveci, avecd, avec2d, avec2di
      READ( 4, * ) avec0, sig0, v0, e_start, eold
      READ( 4, * ) acu, ack, acp, acpv, avu, avk, avp, avpv, sigmamet
-     READ( 4, * ) idone, nzero, ntimes
+     READ( 4, * ) istep, nzero, ntimes
      !
      CLOSE( UNIT = 4, STATUS = 'KEEP' )
-     !
-     istep = idone + 1
      !
      tauold(:,:,3) = tauold(:,:,2)
      tauold(:,:,2) = tauold(:,:,1)     
      !
   END IF
+  !
+  idone = idone + 1
+  istep = istep + 1
   !
   ! ... check if convergence for structural minimization is achieved
   !
@@ -180,8 +179,19 @@ SUBROUTINE vcsmd()
                FMT = '(/,5X,"Damped Dynamics: convergence achieved, Efinal=", &
                       &F15.8)' ) etot
         !
-        CALL output_tau( .TRUE. )
+     ELSE IF ( idone == nstep ) THEN
         !
+        WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Damped Dynamics: ",i4," iterations ", &
+                    &       "completed, stopping")' ) nstep
+        !
+        conv_ions = .TRUE.
+        !
+     END IF
+     ! 
+     IF ( conv_ions) THEN
+        !
+        CALL output_tau( .TRUE. )
         RETURN
         !
      END IF
@@ -218,6 +228,23 @@ SUBROUTINE vcsmd()
            WRITE( UNIT = stdout, &
                   FMT = '(/5X,"Wentzcovitch Damped Dynamics: ", &
                             & "convergence achieved, Efinal=", F15.8)' ) etot
+        !
+     ELSE IF ( idone == nstep ) THEN
+        !
+        IF ( calc == 'cm' ) &
+           WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"P-R Damped Dynamics: ",i4," iterations ", &
+                     &      "completed, stopping")' ) nstep
+        IF ( calc == 'nm' ) &
+           WRITE( UNIT = stdout, &
+               FMT = '(/,5X,"Wentzcovitch Damped Dynamics: ",i4," iterations",&
+                     &     " completed, stopping")' ) nstep
+        !
+        conv_ions = .TRUE.
+        !
+     END IF
+     !
+     IF ( conv_ions ) THEN
         !                    
         WRITE( UNIT = stdout, &
                FMT = '(/72("-")//5X,"Final estimate of lattice vectors ", &
@@ -243,18 +270,23 @@ SUBROUTINE vcsmd()
   !
   tempo = ( istep - 1 ) * dt * time_au
   !
-  IF ( istep == 1 .AND. calc == 'mm' ) &
-     WRITE( stdout,'(/5X,"Damped Dynamics Minimization",/5X, &
+  IF ( istep == 1 ) THEN
+     !
+     IF ( calc == 'mm' ) THEN
+        WRITE( stdout,'(/5X,"Damped Dynamics Minimization",/5X, &
              & "convergence thresholds: EPSE = ",E8.2,"  EPSF = ",E8.2)' ) &
                epse, epsf
-  IF ( istep == 1 .AND. calc == 'cm' ) &
-     WRITE( stdout,'(/5X,"Parrinello-Rahman Damped Cell-Dynamics Minimization", &
-             & /5X, "convergence thresholds: EPSE = ",E8.2,"  EPSF = ", &
-             & E8.2,"  EPSP = ",E8.2 )' ) epse, epsf, epsp
-  IF ( istep == 1 .AND. calc == 'nm' ) &
-     WRITE( stdout,'(/5X,"Wentzcovitch Damped Cell-Dynamics Minimization", /5x, &
-             & "convergence thresholds: EPSE = ",E8.2,"  EPSF = ",E8.2, &
+     ELSE IF ( calc == 'cm' ) THEN
+        WRITE( stdout,'(/5X,"Parrinello-Rahman Damped Cell-Dynamics", &
+             & " Minimization", /5X, "convergence thresholds: EPSE = ", &
+             & E8.2,"  EPSF = ", E8.2,"  EPSP = ",E8.2 )' ) epse, epsf, epsp
+     ELSE IF ( calc == 'nm' ) THEN
+        WRITE( stdout,'(/5X,"Wentzcovitch Damped Cell-Dynamics Minimization", &
+             & /5x, "convergence thresholds: EPSE = ",E8.2,"  EPSF = ",E8.2, &
              & "  EPSP = ",E8.2 )' ) epse, epsf, epsp
+     END IF
+     !
+  END IF
   !
   WRITE( stdout, '(/5X,"Entering Dynamics;  it = ",I5,"   time = ", &
        &                          F8.5," pico-seconds"/)' ) istep, tempo

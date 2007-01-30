@@ -54,12 +54,9 @@ d_matrix.o \
 data_structure.o \
 davcio.o \
 deriv_drhoc.o \
-diis_base.o \
 divide_class.o \
 divide_class_so.o \
-real_diis_module.o \
 realus.o \
-complex_diis_module.o \
 diropn.o \
 divide.o \
 divide_et_impera.o \
@@ -241,6 +238,13 @@ wgauss.o \
 write_ns.o \
 wsweight.o \
 weights.o
+
+# not actually used
+DIIS_OBJS=\
+diis_base.o \
+cgramg1.o \
+real_diis_module.o \
+complex_diis_module.o
 
 MODULES = \
 ../Modules/atom.o \

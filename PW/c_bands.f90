@@ -275,7 +275,7 @@ CONTAINS
     ! ... Diagonalization of a real Hamiltonian
     !
     USE becmod,           ONLY : rbecp
-    USE real_diis_module, ONLY : rdiisg
+    !USE real_diis_module, ONLY : rdiisg
     !
     IMPLICIT NONE
     !
@@ -376,7 +376,7 @@ CONTAINS
     ! ... Complex Hamiltonian diagonalization
     !
     USE becmod,              ONLY : becp, becp_nc
-    USE complex_diis_module, ONLY : cdiisg
+    !USE complex_diis_module, ONLY : cdiisg
     !
     IMPLICIT NONE
     !

@@ -104,7 +104,6 @@ SUBROUTINE electrons()
   !
   COMPLEX(DP), ALLOCATABLE :: rhognew(:,:)
   REAL(DP),    ALLOCATABLE :: rhonew(:,:)
-  REAL(DP),    ALLOCATABLE :: vaux(:,:)
   !
   ! ... variables needed for electric field calculation
   !
@@ -420,21 +419,16 @@ SUBROUTINE electrons()
            !
         ELSE
            !
-           ALLOCATE( vaux( nrxx, nspin ) )
-           !
            ! ... convergence reached:
-           ! ... 1) the new HXC-potential is temporarily stored in vaux and
-           ! ...    then copied into vr.
+           ! ... 1) the output HXC-potential is saved in vr
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
+           vnew(:,:) = vr(:,:)
+           !
            CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
-                          ehart, etxc, vtxc, etotefield, charge, vaux )
+                          ehart, etxc, vtxc, etotefield, charge, vr )
            !
-           vnew(:,:) = vaux(:,:) - vr(:,:)
-           !
-           vr(:,:) = vaux(:,:)
-           !
-           DEALLOCATE( vaux )
+           vnew(:,:) = vr(:,:) - vnew(:,:)
            !
            ! ... note that rho is the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed

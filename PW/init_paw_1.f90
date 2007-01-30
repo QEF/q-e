@@ -159,7 +159,7 @@ subroutine init_paw_1
                             
                        CALL errore ( "init_paw_1", &
                             "two projectors are linearly dependent", +1 )
-                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0 ) < 1.e-1_dp ) THEN
+                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0d0 ) < 1.d-1 ) THEN
                        IF ( n_overlap_warnings == 0 ) THEN
                           WRITE ( stdout, '(A)' ) ""
                        END IF
@@ -265,7 +265,7 @@ subroutine init_paw_1
   if (spline_ps) then
     paw_nbeta_max = maxval ( paw_nbeta (:) )
     allocate ( paw_tab_d2y ( nqx, paw_nbeta_max, ntyp ) )
-    paw_tab_d2y = 0.0
+    paw_tab_d2y = 0.0d0
     allocate(xdata(nqxq))
     do iq = 1, nqxq
       xdata(iq) = (iq - 1) * dq
