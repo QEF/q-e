@@ -77,7 +77,7 @@ SUBROUTINE test_f_sum_rule
     enddo
 
     ! k-point contribution to the f-sum rule
-    f_sum_k = 0.0
+    f_sum_k = 0.0d0
 
     ! loop over cartesian directions
     do jpol = 1, 3

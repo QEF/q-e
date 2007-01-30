@@ -768,6 +768,7 @@ ortho.o : ../Modules/electrons_base.o
 ortho.o : ../Modules/io_global.o
 ortho.o : ../Modules/ions_base.o
 ortho.o : ../Modules/kind.o
+ortho.o : ../Modules/mp.o
 ortho.o : ../Modules/mp_global.o
 ortho.o : ../Modules/recvec.o
 ortho.o : ../Modules/uspp.o

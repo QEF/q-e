@@ -1384,7 +1384,7 @@ CONTAINS
        ! ... converting from omega [a.u.] to f in [cm^-1] (omega=2*pi*f)
        !
        DO i=1,dim
-          IF(eigval_loc(i).LT.0.0) THEN
+          IF(eigval_loc(i).LT.0.0d0) THEN
              !
              !... imaginary frequency, presented as negative frequency
              !
@@ -1398,7 +1398,7 @@ CONTAINS
        ! ... omega in a.u.
        !
        DO i=1,dim
-          IF(eigval_loc(i).LT.0.0) THEN
+          IF(eigval_loc(i).LT.0.0d0) THEN
              !
              !... imaginary frequency, presented as negative frequency
              !

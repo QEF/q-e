@@ -121,7 +121,7 @@
       allocate(zaux(nudx,nudx,nspin))
 
 
-      lambdap=0.3!small step for free-energy calculation
+      lambdap=0.3d0!small step for free-energy calculation
       
  
 

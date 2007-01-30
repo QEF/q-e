@@ -97,10 +97,10 @@ SUBROUTINE g_tensor_crystal
   
   ! Select majority and minority spin components
   rho_diff = SUM ( rho ( :, 1 ) - rho ( :, nspin ) )
-  if ( rho_diff > +1.0e-3 ) then
+  if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
-  else if ( rho_diff < -1.0e-3 ) then
+  else if ( rho_diff < -1.0d-3 ) then
      s_maj = nspin
      s_min = 1
   else
@@ -156,7 +156,7 @@ SUBROUTINE g_tensor_crystal
     !<apsi>
     call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
-    diamagnetic_corr_tensor = 0.0
+    diamagnetic_corr_tensor = 0.0d0
     call diamagnetic_correction ( diamagnetic_corr_tensor )
     delta_g_diamagn = delta_g_diamagn + s_weight * diamagnetic_corr_tensor
     !</apsi>
@@ -361,7 +361,7 @@ SUBROUTINE g_tensor_crystal
 #endif
   
   delta_g_bare = delta_g_bare * d_omega
-  delta_g_bare = - delta_g_bare * g_prime / 2.0_dp * alpha * 1.0e6
+  delta_g_bare = - delta_g_bare * g_prime / 2.0_dp * alpha * 1.0d6
   
   !
   ! ***************** spin-other-orbit *******************
@@ -399,7 +399,7 @@ SUBROUTINE g_tensor_crystal
 #endif
   
   delta_g_soo = delta_g_soo * d_omega
-  delta_g_soo = delta_g_soo * 2 * alpha * 1.0e6
+  delta_g_soo = delta_g_soo * 2 * alpha * 1.0d6
   
   ! This is obtained using the equation (7) of Pickard et Mauri, PRL 88/086043
   if ( tcalculate_correct_delta_g_soo ) then
@@ -414,13 +414,13 @@ SUBROUTINE g_tensor_crystal
   end if
   
   delta_g_soo_2 = delta_g_soo_2 * d_omega
-  delta_g_soo_2 = delta_g_soo_2 * 2 * 1.0e6
+  delta_g_soo_2 = delta_g_soo_2 * 2 * 1.0d6
   
   !
   ! ***************** relativistic-mass-correction *******************
   !
   
-  delta_rmc = delta_rmc * alpha ** 2 * g_e * units_Ry2Ha * 1.0e6
+  delta_rmc = delta_rmc * alpha ** 2 * g_e * units_Ry2Ha * 1.0d6
   delta_g_rmc = 0.0_DP
   do i = 1, 3
      delta_g_rmc(i,i) = delta_rmc

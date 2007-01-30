@@ -233,7 +233,7 @@
                     &''murnaghan.        chisq = '',d10.4)') chisq
       END IF
 
-      IF(istat.EQ.1 .OR. istat.EQ.4) par(4) = 0.0
+      IF(istat.EQ.1 .OR. istat.EQ.4) par(4) = 0.0d0
 
       IF(istat.EQ.1 .OR. istat.EQ.2) THEN
          DO i=1,npt

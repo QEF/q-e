@@ -3411,7 +3411,7 @@ end function set_Hubbard_l
       do ig=1,ngw
          q(ig) = sqrt(g(ig))*tpiba
       end do
-      if (ng0.eq.2) gxn(1,:)=0.0
+      if (ng0.eq.2) gxn(1,:)=0.0d0
       do ig=ng0,ngw
          gxn(:,ig) = gx(:,ig)/sqrt(g(ig)) !ik<=>ig
       end do
@@ -3706,7 +3706,7 @@ end function set_Hubbard_l
          g_value=A*dexp(-x*x/(2*sigma*sigma))/(sigma*dsqrt(2*pi))
 !         write(6,*) 'step', step_value,'g',g_value
 !         if (g_value.le.0.0) g_value=0.0
-         if ((x_value+5*sigma).ge.0.0) then
+         if ((x_value+5*sigma).ge.0.0d0) then
          step_value=step_value+g_value/100000.0d0*(x_value+5.d0*sigma)
          end if
       end do

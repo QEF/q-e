@@ -410,7 +410,7 @@ subroutine writemolden (flmol, gamma, nat, atm, a0, tau, ityp, w2, z)
   write(iout,'(''[FREQ]'')')
   do i = 1,nat3
      freq(i)= sqrt(abs(w2(i)))*rydcm1
-     if (w2(i).lt.0.0) freq(i) = 0.0
+     if (w2(i).lt.0.0d0) freq(i) = 0.0d0
      write (iout,'(f8.2)') freq(i)
   end do
   !

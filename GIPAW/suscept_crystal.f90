@@ -107,7 +107,7 @@ SUBROUTINE suscept_crystal
     !<apsi>
     call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
-    diamagnetic_corr_tensor = 0.0
+    diamagnetic_corr_tensor = 0.0d0
     call diamagnetic_correction ( diamagnetic_corr_tensor )
     sigma_diamagnetic = sigma_diamagnetic + diamagnetic_corr_tensor
     !</apsi>
