@@ -13,16 +13,12 @@
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry, nberrycyc, fact_hepsi
-  USE constants,            ONLY : rytoev
   USE control_flags,        ONLY : lbands, reduce_io
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
-  USE klist,                ONLY : xk, wk, degauss, nelec, nks, nkstot, &
-                                   lgauss, ngauss
-  USE ktetra,               ONLY : ltetra, ntetra, tetra  
+  USE klist,                ONLY : xk, wk, nks, nkstot
   USE lsda_mod,             ONLY : lsda, nspin
-  USE fixed_occ,            ONLY : f_inp, tfixed_occ
   USE wvfct,                ONLY : nbnd, et, npwx
   USE wavefunctions_module, ONLY : evc
   !
@@ -106,68 +102,7 @@
   !
   ! ... write band eigenvalues
   !
-  DO ik = 1, nkstot
-     !
-     IF ( lsda ) THEN
-        !   
-        IF ( ik == 1 ) WRITE( stdout, 9015 )
-        IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016 )
-        !
-     END IF
-     !
-     WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-     WRITE( stdout, 9030 ) ( et(ibnd,ik)*rytoev, ibnd = 1, nbnd )
-     !
-  END DO
-  !
-  IF (.NOT. lbands) THEN
-     !
-     IF ( lgauss .OR. ltetra ) THEN
-        !
-        WRITE( stdout, 9040 ) ef*rytoev
-        !
-     ELSE
-        !
-        IF ( tfixed_occ ) THEN
-           ibnd = 0
-           DO kbnd = 1, nbnd
-              IF ( nspin == 1 .OR. nspin == 4 ) THEN
-                 IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
-              ELSE
-                 IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
-                 IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
-              END IF
-           END DO
-        ELSE
-           IF ( nspin == 1 ) THEN
-              ibnd = NINT( nelec ) / 2
-           ELSE
-              ibnd = NINT( nelec )
-           END IF
-        END IF
-        !
-        IF ( ionode .AND. nbnd > ibnd ) THEN
-           !
-           IF ( nspin == 1 .OR. nspin == 4 ) THEN
-              ehomo = MAXVAL( et(ibnd  ,1:nkstot) )
-              elumo = MINVAL( et(ibnd+1,1:nkstot) )
-           ELSE
-              ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
-                   MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
-              elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                   MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
-           END IF
-           !
-           IF ( ehomo < elumo ) &
-                WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
-           !
-        END IF
-        !
-     END IF
-     !
-  END IF
-  !
-  CALL flush_unit( stdout )
+  CALL print_ks_energies ( ) 
   !
   ! ... save converged wfc if they have not been written previously
   !

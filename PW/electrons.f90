@@ -20,7 +20,7 @@ SUBROUTINE electrons()
   ! ... the separate contributions.
   !
   USE kinds,                ONLY : DP
-  USE constants,            ONLY : eps8, rytoev
+  USE constants,            ONLY : eps8
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau
@@ -28,22 +28,17 @@ SUBROUTINE electrons()
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, nlm, g, gg, ecutwfc, gcutm
   USE gsmooth,              ONLY : doublegrid, ngms
-  USE klist,                ONLY : xk, wk, degauss, nelec, ngk, nks, nkstot, &
-                                   lgauss, ngauss, two_fermi_energies, &
-                                   nelup, neldw
+  USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
-  USE ktetra,               ONLY : ltetra, ntetra, tetra  
   USE vlocal,               ONLY : strf, vnew  
-  USE wvfct,                ONLY : nbnd, et, gamma_only, wg, npwx
-  USE fixed_occ,            ONLY : f_inp, tfixed_occ
+  USE wvfct,                ONLY : nbnd, et, gamma_only, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
-                                   vtxc, etxc, etxcc, ewld, demet, ef,     &
-                                   ef_up, ef_dw 
+                                   vtxc, etxc, etxcc, ewld, demet
   USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
                                    vr, vltot, vrs 
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
-                                   lbands, restart, reduce_io, iverbosity
+                                   restart, reduce_io
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, Hubbard_lmax, &
@@ -62,8 +57,8 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
-  USE mp_global,            ONLY : root_pool, intra_pool_comm, inter_pool_comm
-  USE mp,                   ONLY : mp_sum, mp_bcast
+  USE mp_global,            ONLY : intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -73,23 +68,16 @@ SUBROUTINE electrons()
   REAL(DP) :: dexx
   REAL(DP) :: fock0, fock1, fock2
 #endif
-  INTEGER, ALLOCATABLE :: &
-      ngk_g(:)       ! number of plane waves summed on all nodes
   CHARACTER(LEN=256) :: &
       flmix          !
   REAL(DP) :: &
       dr2,          &! the norm of the diffence between potential
       charge,       &! the total charge
-      mag,          &! local magnetization
-      ehomo, elumo   ! highest occupied and lowest unoccupied levels
+      mag           ! local magnetization
   INTEGER :: &
       i,            &! counter on polarization
       is,           &! counter on spins
       ik,           &! counter on k points
-      kbnd,         &! counter on bands
-      ibnd_up,      &! counter on bands
-      ibnd_dw,    &! counter on bands
-      ibnd,         &! counter on bands
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
       ik_            ! used to read ik from restart file
@@ -501,109 +489,9 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec ) WRITE( stdout, 9101 )
      !
-     CALL flush_unit( stdout )
-     !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
-        ALLOCATE ( ngk_g (nkstot) ) 
-        !
-        ngk_g(1:nks) = ngk(:)
-        !
-        CALL mp_sum( ngk_g(1:nks), intra_pool_comm )
-        !
-        CALL ipoolrecover( ngk_g, 1, nkstot, nks )
-        !
-        CALL mp_bcast( ngk_g, root_pool, intra_pool_comm )
-        CALL mp_bcast( ngk_g, root_pool, inter_pool_comm )
-        !
-        DO ik = 1, nkstot
-           !
-           IF ( lsda ) THEN
-              !
-              IF ( ik == 1 ) WRITE( stdout, 9015)
-              IF ( ik == ( 1 + nkstot / 2 ) ) WRITE( stdout, 9016)
-              !
-           END IF
-           !
-           IF ( conv_elec ) THEN
-              WRITE( stdout, 9021 ) ( xk(i,ik), i = 1, 3 ), ngk_g(ik)
-           ELSE
-              WRITE( stdout, 9020 ) ( xk(i,ik), i = 1, 3 )
-           END IF
-           !
-           WRITE( stdout, 9030 ) ( et(ibnd,ik) * rytoev, ibnd = 1, nbnd )
-           !
-           IF( iverbosity > 0 ) THEN
-               !
-               WRITE( stdout, 9032 )
-               WRITE( stdout, 9030 ) ( wg(ibnd,ik), ibnd = 1, nbnd )
-               !
-           END IF
-           !
-        END DO
-        !
-        DEALLOCATE ( ngk_g )
-        !
-        IF ( lgauss .OR. ltetra ) THEN
-           !
-           IF ( two_fermi_energies ) THEN
-              WRITE( stdout, 9041 ) ef_up*rytoev, ef_dw*rytoev
-           ELSE
-              WRITE( stdout, 9040 ) ef*rytoev
-           END IF
-           !
-        ELSE
-           !
-           IF ( tfixed_occ ) THEN
-              ibnd = 0
-              DO kbnd = 1, nbnd
-                 IF ( nspin == 1 .OR. nspin == 4 ) THEN
-                    IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
-                 ELSE
-                    IF ( f_inp(kbnd,1) > 0.D0 ) ibnd_up   = kbnd
-                    IF ( f_inp(kbnd,2) > 0.D0 ) ibnd_dw = kbnd
-                 END IF
-              END DO
-           ELSE
-              IF ( nspin == 1 ) THEN
-                 ibnd = NINT( nelec ) / 2
-              ELSE
-                 ibnd    = NINT( nelec )
-                 ibnd_up = NINT( nelup )
-                 ibnd_dw = NINT( neldw )
-              END IF
-           END IF
-           !
-           IF ( ionode .AND. nbnd > ibnd ) THEN
-              !
-              IF ( nspin == 1 .OR. nspin == 4 ) THEN
-                 ehomo = MAXVAL( et(ibnd,  1:nkstot) )
-                 elumo = MINVAL( et(ibnd+1,1:nkstot) )
-              ELSE
-                 IF ( ibnd_up == 0 ) THEN
-                    !
-                    ehomo = MAXVAL( et(ibnd_dw,1:nkstot/2) )
-                    elumo = MINVAL( et(ibnd_up+1,nkstot/2+1:nkstot) )
-                    !
-                 ELSE IF ( ibnd_dw == 0 ) THEN
-                    !
-                    ehomo = MAXVAL( et(ibnd_up,1:nkstot/2) )
-                    elumo = MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) )
-                    !
-                 ELSE
-                    !
-                    ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
-                                 MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
-                    elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                                 MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
-                    !
-                 END IF
-              END IF
-              !
-              WRITE( stdout, 9042 ) ehomo*rytoev, elumo*rytoev
-              !
-           END IF
-        END IF
+        call print_ks_energies ( )
         !
      END IF
      !
@@ -689,7 +577,7 @@ SUBROUTINE electrons()
         !   With Fermi-Dirac population factor, etot is the electronic
         !   free energy F = E - TS , demet is the -TS contribution
         !
-        IF ( degauss /= 0.0d0 ) WRITE( stdout, 9070 ) demet
+        IF ( lgauss ) WRITE( stdout, 9070 ) demet
         !
      ELSE IF ( conv_elec .AND. lmd ) THEN
         !
@@ -771,19 +659,10 @@ SUBROUTINE electrons()
 9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
 9001 FORMAT(/'     Self-consistent Calculation' )
 9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' Ry',5X,'beta=',F4.2 )
-9015 FORMAT(/' ------ SPIN UP ------------'/ )
-9016 FORMAT(/' ------ SPIN DOWN ----------'/ )
 9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
             /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9018 FORMAT(/'     total magnetization       =',3f9.2,' Bohr mag/cell' &
        &   ,/'     absolute magnetization    =', f9.2,' Bohr mag/cell' )
-9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
-9021 FORMAT(/'          k =',3F7.4,' (',I6,' PWs)   bands (ev):'/ )
-9030 FORMAT( '  ',8F9.4 )
-9032 FORMAT(/'     occupation numbers ' )
-9042 FORMAT(/'     highest occupied, lowest unoccupied level (ev): ',2F10.4 )
-9041 FORMAT(/'     the spin up/dw Fermi energies are ',2F10.4,' ev' )
-9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
 9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
             /'     one-electron contribution =',F15.8,' Ry' &

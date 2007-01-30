@@ -139,6 +139,7 @@ para.o \
 paw.o \
 potinit.o \
 print_clock_pw.o \
+print_ks_energies.o \
 psymrho.o \
 psymrho_mag.o \
 punch.o \
