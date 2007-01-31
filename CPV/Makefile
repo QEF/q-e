@@ -213,6 +213,6 @@ tldeps:
 
 clean :
 	- /bin/rm -f cppp.x *.o *.mod cpver.h *.i core* *.F90 fort* \
-		*.cpp *.d work.pc *.a *.s cp.x
+		*.cpp *.d *.L *.a *.s cp.x
 
 include make.depend

@@ -1113,7 +1113,7 @@
       REAL(DP), ALLOCATABLE :: zv2(:,:)
       REAL(DP), ALLOCATABLE :: rc(:,:)  
       REAL(DP), ALLOCATABLE :: fionloc(:,:) 
-      REAL(DP)  :: RXLM(3), SXLM(3)
+      REAL(DP)  :: rxlm(3), sxlm(3)
       REAL(DP)  :: xlm, ylm, zlm, erre2, rlm, arg, esrtzero
       REAL(DP)  :: addesr, addpre, repand, fxx
       REAL(DP)  :: rckj_m1
@@ -1233,15 +1233,15 @@
         END IF
 
         DO IX=-IESR,IESR
-          SXLM(1) = XLM + DBLE(IX)
+          sxlm(1) = XLM + DBLE(IX)
           DO IY=-IESR,IESR
-            SXLM(2) = YLM + DBLE(IY)
+            sxlm(2) = YLM + DBLE(IY)
             DO IZ=-IESR,IESR
               TSHIFT= IX.EQ.0 .AND. IY.EQ.0 .AND. IZ.EQ.0
               IF( .NOT. ( TZERO .AND. TSHIFT ) ) THEN
-                SXLM(3) = ZLM + DBLE(IZ)
-                CALL S_TO_R( SXLM, RXLM, hmat )
-                ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
+                sxlm(3) = ZLM + DBLE(IZ)
+                CALL S_TO_R( sxlm, rxlm, hmat )
+                ERRE2 = rxlm(1)**2 + rxlm(2)**2 + rxlm(3)**2
                 RLM   = SQRT(ERRE2)
                 ARG   = RLM * rckj_m1
                 IF (TZERO) THEN

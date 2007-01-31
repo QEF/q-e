@@ -240,7 +240,7 @@
 !      REAL(DP)  distanza
 !      integer i,j,k,ix,iy,iz,infm,m,l,ishft,im
 !      REAL(DP) XLM, YLM, ZLM, ZERO
-!      REAL(DP) SXLM(3),RXLM(3),ERRE2,RLM,ADDEVDW,ADDPRE
+!      REAL(DP) sxlm(3),rxlm(3),ERRE2,RLM,ADDEVDW,ADDPRE
 !      REAL(DP) FXX, REPAND
 !      REAL(DP) molbar(3,NAX)
 !      REAL(DP) molecola(3,NAX),tau(3),rdis
@@ -297,11 +297,11 @@
 !              DO IZ=-IESR,IESR
 !                ISHFT=IX*IX+IY*IY+IZ*IZ
 !                IF(.NOT.(TZERO.AND.ISHFT.EQ.0)) THEN
-!                  SXLM(1) = XLM + DBLE(IX)
-!                  SXLM(2) = YLM + DBLE(IY)
-!                  SXLM(3) = ZLM + DBLE(IZ)
-!                  CALL S_TO_R(SXLM,RXLM)
-!                  ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
+!                  sxlm(1) = XLM + DBLE(IX)
+!                  sxlm(2) = YLM + DBLE(IY)
+!                  sxlm(3) = ZLM + DBLE(IZ)
+!                  CALL S_TO_R(sxlm,rxlm)
+!                  ERRE2 = rxlm(1)**2 + rxlm(2)**2 + rxlm(3)**2
 !                  RLM   = SQRT(ERRE2)
 !                  IF (TZERO) THEN
 !                    ZERO=0.5D0
@@ -313,7 +313,7 @@
 !                  ADDPRE = - 6.0D0 * C6 /RLM**8
 !                  REPAND = ZERO*(ADDEVDW + ADDPRE)
 !                  DO I=1,3
-!                    FXX = REPAND*RXLM(I)
+!                    FXX = REPAND*rxlm(I)
 !                    FMOL(I,L) = FMOL(I,L) + FXX
 !                    FMOL(I,M) = FMOL(I,M) - FXX
 !                  END DO
@@ -353,7 +353,7 @@
 !      REAL(DP)  distanza
 !      integer i,j,k,ix,iy,iz,infm,m,l,ishft,im
 !      REAL(DP) XLM, YLM, ZLM, ZERO
-!      REAL(DP) SXLM(3),RXLM(3),ERRE2,RLM,ADDEVDW,ADDPRE
+!      REAL(DP) sxlm(3),rxlm(3),ERRE2,RLM,ADDEVDW,ADDPRE
 !      REAL(DP) FXX, REPAND
 !      REAL(DP) molbar(3,NAX)
 !      REAL(DP) molecola(3,NAX),tau(3),rdis
@@ -422,11 +422,11 @@
 !              DO IZ=-IESR,IESR
 !                ISHFT=IX*IX+IY*IY+IZ*IZ
 !                IF(.NOT.(TZERO.AND.ISHFT.EQ.0)) THEN
-!                  SXLM(1) = XLM + DBLE(IX)
-!                  SXLM(2) = YLM + DBLE(IY)
-!                  SXLM(3) = ZLM + DBLE(IZ)
-!                  CALL S_TO_R(SXLM,RXLM)
-!                  ERRE2 = RXLM(1)**2 + RXLM(2)**2 + RXLM(3)**2
+!                  sxlm(1) = XLM + DBLE(IX)
+!                  sxlm(2) = YLM + DBLE(IY)
+!                  sxlm(3) = ZLM + DBLE(IZ)
+!                  CALL S_TO_R(SXLM,rxlm)
+!                  ERRE2 = rxlm(1)**2 + rxlm(2)**2 + rxlm(3)**2
 !                  RLM   = SQRT(ERRE2)
 !                  IF (TZERO) THEN
 !                    ZERO=0.5D0
@@ -436,7 +436,7 @@
 !                  ADDPRE = - 6.0D0 * C6 /RLM**8
 !                  REPAND = ZERO * ADDPRE
 !                  DO I=1,6
-!                    FXX = REPAND*RXLM(ALPHA(I))*RXLM(BETA(I))
+!                    FXX = REPAND*rxlm(ALPHA(I))*rxlm(BETA(I))
 !                    DVDW(I) = DVDW(I) - FXX
 !                  END DO
 !                END IF
