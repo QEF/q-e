@@ -107,10 +107,10 @@ SUBROUTINE setup()
   zv(1:ntyp) = zp(1:ntyp)
   !
 #if defined (__PGI)
+     ionic_charge = - tot_charge
      DO na = 1, nat
         ionic_charge = ionic_charge + zv( ityp(na) )
      END DO
-     ionic_charge = ionic_charge - tot_charge
 #else
      ionic_charge = SUM( zv(ityp(1:nat)) ) - tot_charge
 #endif

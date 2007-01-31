@@ -95,6 +95,7 @@ ggen.o \
 gk_sort.o \
 gradcorr.o \
 gweights.o \
+g2_kin.o \
 h_epsi_her_apply.o \
 h_epsi_her_set.o \
 h_1psi.o \
@@ -322,7 +323,7 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f pw.x *.o *.a *~ *.F90 *.d *.mod *.i work.pc
+	- /bin/rm -f pw.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 
 include make.depend
 

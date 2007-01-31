@@ -16,12 +16,14 @@ SUBROUTINE wfcinit()
   !
   USE io_global,            ONLY : stdout
   USE basis,                ONLY : natomwfc, startingwfc
-  USE klist,                ONLY : nks
+  USE klist,                ONLY : xk, nks, ngk
   USE control_flags,        ONLY : reduce_io, lscf
-  USE ldaU,                 ONLY : lda_plus_u
-  USE io_files,             ONLY : nwordwfc, iunwfc, iunigk
+  USE ldaU,                 ONLY : swfcatom, lda_plus_u
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE io_files,             ONLY : nwordwfc, nwordatwfc, iunwfc, iunigk, iunsat
+  USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
-  USE wvfct,                ONLY : nbnd
+  USE wvfct,                ONLY : nbnd, npw, current_k, igk
   !
   IMPLICIT NONE
   !
@@ -77,7 +79,29 @@ SUBROUTINE wfcinit()
   !
   DO ik = 1, nks
      !
+     ! ... various initializations: k, spin, number of PW, indices
+     !
+     current_k = ik
+     IF ( lsda ) current_spin = isk(ik)
+     npw = ngk (ik)
+     IF ( nks > 1 ) READ( iunigk ) igk
+     !
+     call g2_kin (ik)
+     !
+     ! ... Calculate nonlocal pseudopotential projectors |beta>
+     !
+     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     !
+     ! ... LDA+U: read atomic wavefunctions for U term in Hamiltonian
+     !
+     IF ( lda_plus_u ) &
+         CALL davcio( swfcatom, nwordatwfc, iunsat, ik, - 1 )
+     !
+     ! ... calculate starting wavefunctions
+     !
      CALL init_wfc ( ik )
+     !
+     ! ... write  starting wavefunctions to file
      !
      IF ( nks > 1 .OR. .NOT. reduce_io ) &
          CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
@@ -102,15 +126,11 @@ SUBROUTINE init_wfc ( ik )
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
-  USE gvect,                ONLY : g, ecfixed, qcutz, q2sigma
-  USE klist,                ONLY : xk, nks, ngk
-  USE lsda_mod,             ONLY : lsda, current_spin, isk
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, g2kin, et,&
-                                   wg, current_k
-  USE uspp,                 ONLY : nkb, vkb
-  USE ldaU,                 ONLY : swfcatom, lda_plus_u
+  USE gvect,                ONLY : g
+  USE klist,                ONLY : xk
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, et
+  USE uspp,                 ONLY : nkb
   USE noncollin_module,     ONLY : noncolin, npol
-  USE io_files,             ONLY : iunsat, nwordwfc, iunwfc, iunigk, nwordatwfc
   USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : rndm
   !
@@ -120,7 +140,7 @@ SUBROUTINE init_wfc ( ik )
   !
   INTEGER :: is, ibnd, ig, ipol, ig2, n_starting_wfc, n_starting_atomic_wfc
   !
-  REAL(DP) :: rr, arg, erf
+  REAL(DP) :: rr, arg
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:) ! atomic wfcs for initialization
   !
@@ -140,34 +160,6 @@ SUBROUTINE init_wfc ( ik )
      !!! CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
      CALL errore ( 'init_wfc', &
           'invalid value for startingwfc: ' // TRIM ( startingwfc ) , 1 )
-     !
-  END IF
-  !
-  current_k = ik
-  !
-  IF ( lsda ) current_spin = isk(ik)
-  !
-  npw = ngk (ik)
-  IF ( nks > 1 ) READ( iunigk ) igk
-  !
-  ! ... here we compute the kinetic energy
-  !
-  DO ig = 1, npw
-     !
-     g2kin(ig) = ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
-                   ( xk(2,ik) + g(2,igk(ig)) )**2 + &
-                   ( xk(3,ik) + g(3,igk(ig)) )**2 ) * tpiba2
-     !
-  END DO
-  !
-  IF ( qcutz > 0.D0 ) THEN
-     !
-     DO ig = 1, npw
-        !
-        g2kin(ig) = g2kin(ig) + qcutz * &
-             ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
-        !
-     END DO
      !
   END IF
   !
@@ -212,15 +204,6 @@ SUBROUTINE init_wfc ( ik )
      END DO
      !
   END DO
-  !
-  ! ... Calculate nonlocal pseudopotential projectors |beta>
-  !
-  IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-  !
-  ! ... LDA+U: read atomic wavefunctions for U term in Hamiltonian
-  !
-  IF ( lda_plus_u ) &
-       CALL davcio( swfcatom, nwordatwfc, iunsat, ik, - 1 )
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !

@@ -20,13 +20,10 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
                                    nwordwfc, iunefield,iunefieldp,iunefieldm
-  USE cell_base,            ONLY : tpiba2 
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
-  USE gvect,                ONLY : g, ecfixed, qcutz, q2sigma, nrxx, &
-                                   nr1, nr2, nr3  
-  USE wvfct,                ONLY : g2kin, et, nbnd, npwx, igk, &
-                                   npw, current_k, btype
+  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
+  USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k, btype
   USE control_flags,        ONLY : ethr, lbands, isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
@@ -53,9 +50,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   INTEGER :: ik, ig
   ! counter on k points
   ! counter on G vectors
-  !
-  REAL(DP), EXTERNAL :: erf
-  ! error function  
   !
   IF ( ik_ == nks ) THEN
      !
@@ -114,11 +108,17 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      IF ( ik <= ik_ ) THEN
         !
-        CALL save_in_cbands( iter, ik, dr2 )
-        !
         CYCLE k_loop
         !
      END IF
+     !
+     ! ... various initializations
+     !
+     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     !
+     ! ... kinetic energy
+     !
+     call g2_kin( ik )
      !
      ! ... read in wavefunctions from the previous iteration
      !
@@ -128,27 +128,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      ! ... Needed for LDA+U
      !
      IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
-     !
-     ! ... various initializations
-     !
-     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
-     !
-     ! ... kinetic energy
-     !
-     g2kin(1:npw) = ( ( xk(1,ik) + g(1,igk(1:npw)) )**2 + &
-                      ( xk(2,ik) + g(2,igk(1:npw)) )**2 + &
-                      ( xk(3,ik) + g(3,igk(1:npw)) )**2 ) * tpiba2
-     !
-     IF ( qcutz > 0.D0 ) THEN
-        !
-        DO ig = 1, npw
-           !
-           g2kin(ig) = g2kin(ig) + qcutz * &
-                ( 1.D0 + erf( ( g2kin(ig) - ecfixed ) / q2sigma ) )
-           !
-        END DO
-        !
-     END IF
      !
      ! ... diagonalization of bands for k-point ik
      !
