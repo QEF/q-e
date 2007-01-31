@@ -18,7 +18,8 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode, ionode_id
   USE wvfct,           ONLY : gamma_only
-  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, tot_magnetization, &
+  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, nkstot,            &
+                              tot_magnetization,                           &
                               multiplicity, nelup, neldw, tot_charge,      &
                               two_fermi_energies
   USE relax,           ONLY : restart_bfgs
@@ -127,13 +128,17 @@ PROGRAM phonon
      !
      ! ... Save the starting k points 
      !
-     nks_start = nks
+     nks_start = nkstot
      !
      IF ( .NOT. ALLOCATED( xk_start ) ) ALLOCATE( xk_start( 3, nks_start ) )
      IF ( .NOT. ALLOCATED( wk_start ) ) ALLOCATE( wk_start( nks_start ) )
      !
+#ifdef __PARA
+     CALL xk_wk_collect( xk_start, wk_start, xk, wk, nkstot, nks )
+#else
      xk_start(:,1:nks_start) = xk(:,1:nks_start)
      wk_start(1:nks_start)   = wk(1:nks_start)
+#endif
      !
      ! ... do always a non-scf calculation
      !
@@ -198,10 +203,12 @@ PROGRAM phonon
         CALL mp_bcast( zue,    ionode_id )
         CALL mp_bcast( lgamma, ionode_id )
         !
-        nks = nks_start
-        !
-        xk(:,1:nks_start) = xk_start(:,1:nks_start)
-        wk(1:nks_start)   = wk_start(1:nks_start)
+        IF (.NOT. lgamma ) THEN
+           nks = nks_start
+           !
+           xk(:,1:nks_start) = xk_start(:,1:nks_start)
+           wk(1:nks_start)   = wk_start(1:nks_start)
+        END IF
         !
      END IF
      !
