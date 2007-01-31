@@ -117,6 +117,7 @@ close_phq.o : ../Modules/io_files.o
 close_phq.o : ../Modules/mp_global.o
 close_phq.o : ../Modules/uspp.o
 close_phq.o : phcom.o
+close_phq.o : ramanm.o
 compute_alphasum.o : ../Modules/ions_base.o
 compute_alphasum.o : ../Modules/kind.o
 compute_alphasum.o : ../Modules/uspp.o
@@ -166,6 +167,7 @@ deallocate_phq.o : ../Modules/wavefunctions.o
 deallocate_phq.o : ../PW/becmod.o
 deallocate_phq.o : elph.o
 deallocate_phq.o : phcom.o
+deallocate_phq.o : ramanm.o
 dgcxc.o : ../Modules/functionals.o
 dgcxc.o : ../Modules/kind.o
 dgcxc_spin.o : ../Modules/functionals.o
@@ -331,7 +333,6 @@ h_psiq.o : ../PW/pwcom.o
 h_psiq.o : phcom.o
 hdiag.o : ../Modules/kind.o
 hdiag.o : ../Modules/wavefunctions.o
-hdiag.o : ../PW/g_psi_mod.o
 hdiag.o : ../PW/pwcom.o
 hdiag.o : ramanm.o
 incdrhoscf.o : ../Modules/ions_base.o

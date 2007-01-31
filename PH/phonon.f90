@@ -253,8 +253,6 @@ PROGRAM phonon
         !
         CALL electrons()
         !
-        CALL sum_band()
-        !
         CALL close_files()
         !
      END IF
