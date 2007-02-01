@@ -63,9 +63,9 @@ SUBROUTINE setup()
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym
   USE pseud,              ONLY : zp
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
-  USE control_flags,      ONLY : tr2, ethr, alpha0, beta0, lscf, lmd, lpath, &
-                                 lphonon, david, isolve, niter, noinv, nosym, &
-                                 modenum, lbands, use_para_diago
+  USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
+                                 isolve, niter, noinv, nosym, modenum, lbands, &
+                                 use_para_diago
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : psd, nbeta, jjj, tvanp
@@ -150,7 +150,7 @@ SUBROUTINE setup()
      !
      ! ... Set the nomag variable to make a spin-orbit calculation with zero
      ! ... magnetization
-     ! 
+     !
      IF ( lspinorb ) THEN
         !
         domag = .FALSE.
@@ -270,7 +270,7 @@ SUBROUTINE setup()
       CALL infomsg( 'setup', 'the system is metallic, specify occupations', -1 )
   !
   ! ... Check: spin-polarized calculations require tetrahedra or broadening
-  !            or fixed occupation - the simple filling of levels is not 
+  !            or fixed occupation - the simple filling of levels is not
   !            implemented right now (it will yield an unpolarized system)
   !
   IF ( lscf .AND. lsda &
@@ -345,9 +345,9 @@ SUBROUTINE setup()
         !
         ethr = 0.1D0 * MIN( 1.D-2, tr2 / nelec )
         !
-     END IF   
+     END IF
      !
-  ELSE   
+  ELSE
      !
      IF ( ltest ) THEN
         !
@@ -370,12 +370,12 @@ SUBROUTINE setup()
         !
      END IF
      !
-  END IF   
+  END IF
   !
   IF (nat==0) THEN
      ethr=1.0D-8
 !
-!  In this case, print the Hatree-Fock energy of free electrons per cell 
+!  In this case, print the Hatree-Fock energy of free electrons per cell
 !  (not per electron).
 !
      CALL set_dft_from_name('sla-noc-nogx-nogc')
@@ -550,13 +550,13 @@ SUBROUTINE setup()
   !
   ! ...  allocate space for irt
   !
-  ALLOCATE( irt( 48, nat ) )    
+  ALLOCATE( irt( 48, nat ) )
   !
   ! ... "sgama" eliminates rotations that are not symmetry operations
   ! ... Input k-points are assumed to be  given in the IBZ of the Bravais
   ! ... lattice, with the full point symmetry of the lattice.
   ! ... If some symmetries of the lattice are missing in the crystal,
-  ! ... "sgama" computes the missing k-points. 
+  ! ... "sgama" computes the missing k-points.
   !
   input_nks = nks
   !
@@ -603,7 +603,7 @@ SUBROUTINE setup()
      !
      ntetra = 6 * nk1 * nk2 * nk3
      !
-     ALLOCATE( tetra( 4, ntetra ) )    
+     ALLOCATE( tetra( 4, ntetra ) )
      !
      CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
           nk1, nk2, nk3, nks, xk, wk, ntetra, tetra )
@@ -612,7 +612,7 @@ SUBROUTINE setup()
   !
   ! ... phonon calculation: add k+q to the list of k
   !
-  IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nks, npk ) 
+  IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nks, npk )
   !
 #if defined (EXX)
   IF ( dft_is_hybrid() ) CALL exx_grid_init()
@@ -620,7 +620,7 @@ SUBROUTINE setup()
   !
   IF ( lsda ) THEN
      !
-     ! ... LSDA case: two different spin polarizations, 
+     ! ... LSDA case: two different spin polarizations,
      ! ...            each with its own kpoints
      !
      if (nspin /= 2) call errore ('setup','nspin should be 2; check iosys',1)
@@ -681,11 +681,6 @@ SUBROUTINE setup()
   !
   okvan = ANY( tvanp(1:ntyp) )
   !
-  ! ... initialize parameters for charge density extrapolation during dynamics
-  !
-  alpha0 = 1.D0
-  beta0  = 0.D0
-  !
   ! ... Needed for LDA+U
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
@@ -717,7 +712,7 @@ SUBROUTINE setup()
                    & 'lda_plus_u calculation but Hubbard_l not set', 1 )
      !
      CALL d_matrix( d1, d2, d3 )
-     ! 
+     !
   ELSE
      !
      Hubbard_lmax = 0
@@ -799,8 +794,8 @@ SUBROUTINE check_para_diag_efficiency()
   !
   IMPLICIT NONE
   !
-  INTEGER                  :: dim, dim_pool, i, j, m, m_min
-  REAL(DP)                 :: time_para, time_serial, delta_t, delta_t_old
+  INTEGER                  :: dim1, dim_pool, i, j, m, m_min
+  REAL(DP)                 :: time_para, time_serial, t_incr, t_incr_old
   LOGICAL                  :: lfirst
   REAL(DP),    ALLOCATABLE :: ar(:,:), br(:,:), vr(:,:)
   COMPLEX(DP), ALLOCATABLE :: ac(:,:), bc(:,:), vc(:,:)
@@ -834,24 +829,24 @@ SUBROUTINE check_para_diag_efficiency()
   !
   lfirst = .TRUE.
   !
-  DO dim = m_min, nbndx, m
+  dim_loop: DO dim1 = m_min, nbndx, m
      !
-     dim_pool = dim / nproc_pool
+     dim_pool = dim1 / nproc_pool
      !
-     ALLOCATE( e( dim ) )
+     ALLOCATE( e( dim1 ) )
      !
      IF ( gamma_only ) THEN
         !
-        ALLOCATE( ar( dim, dim ) )
-        ALLOCATE( br( dim, dim ) )
-        ALLOCATE( vr( dim, dim ) )
+        ALLOCATE( ar( dim1, dim1 ) )
+        ALLOCATE( br( dim1, dim1 ) )
+        ALLOCATE( vr( dim1, dim1 ) )
         !
         ar(:,:) = 0.D0
         br(:,:) = 0.D0
         !
         DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
            !
-           DO j = i, dim
+           DO j = i, dim1
               !
               ar(i,j) = rranf() - 0.5D0
               ar(j,i) = ar(i,j)
@@ -860,22 +855,22 @@ SUBROUTINE check_para_diag_efficiency()
            !
         END DO
         !
-        CALL reduce( dim*dim, ar )
+        CALL reduce( dim1*dim1, ar )
         !
-        FORALL( i = 1:dim ) br(i,i) = 1.D0
+        FORALL( i = 1:dim1 ) br(i,i) = 1.D0
         !
      ELSE
         !
-        ALLOCATE( ac( dim, dim ) )
-        ALLOCATE( bc( dim, dim ) )
-        ALLOCATE( vc( dim, dim ) )
+        ALLOCATE( ac( dim1, dim1 ) )
+        ALLOCATE( bc( dim1, dim1 ) )
+        ALLOCATE( vc( dim1, dim1 ) )
         !
         ac(:,:) = ( 0.D0, 0.D0 )
         bc(:,:) = ( 0.D0, 0.D0 )
         !
         DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
            !
-           DO j = i, dim
+           DO j = i, dim1
               !
               ac(i,j) = CMPLX( rranf() - 0.5D0, rranf() - 0.5D0 )
               ac(j,i) = ac(i,j)
@@ -884,9 +879,9 @@ SUBROUTINE check_para_diag_efficiency()
            !
         END DO
         !
-        CALL reduce( 2*dim*dim, ac )
+        CALL reduce( 2*dim1*dim1, ac )
         !
-        FORALL( i = 1:dim ) bc(i,i) = ( 1.D0, 0.D0 )
+        FORALL( i = 1:dim1 ) bc(i,i) = ( 1.D0, 0.D0 )
         !
      END IF
      !
@@ -902,7 +897,7 @@ SUBROUTINE check_para_diag_efficiency()
      CALL do_test()
      !
      IF ( ionode ) &
-        time_para = ( scnds() - time_para ) / DBLE( nbndx / dim )
+        time_para = ( scnds() - time_para ) / DBLE( nbndx / dim1 )
      !
      ! ... serial diagonalizer
      !
@@ -913,7 +908,7 @@ SUBROUTINE check_para_diag_efficiency()
      CALL do_test()
      !
      IF ( ionode ) &
-        time_serial = ( scnds() - time_serial ) / DBLE( nbndx / dim )
+        time_serial = ( scnds() - time_serial ) / DBLE( nbndx / dim1 )
      !
      IF ( gamma_only ) THEN
         DEALLOCATE( ar, br, vr, e )
@@ -922,35 +917,35 @@ SUBROUTINE check_para_diag_efficiency()
      END IF
      !
      IF ( ionode ) &
-        WRITE( stdout, '(5X,I5,2(6X,F12.8))' ) dim, time_para, time_serial
+        WRITE( stdout, '(5X,I5,2(6X,F12.8))' ) dim1, time_para, time_serial
      !
      CALL mp_bcast( time_para,   ionode_id )
      CALL mp_bcast( time_serial, ionode_id )
      !
-     delta_t = time_para - time_serial
+     t_incr = ( time_para - time_serial ) / time_serial
      !
      IF ( time_para < time_serial ) THEN
         !
         use_para_diago = .TRUE.
-        para_diago_dim = dim
+        para_diago_dim = dim1
         !
-        EXIT
+        EXIT dim_loop
         !
-     ELSE IF ( .NOT.lfirst ) THEN
+     ELSE IF ( .NOT.lfirst .AND. t_incr > t_incr_old ) THEN
         !
         ! ... the parallel diagonalizer is getting slower and slower
         !
         use_para_diago = .FALSE.
         !
-        IF ( delta_t > delta_t_old ) EXIT
+        EXIT dim_loop
         !
      END IF
      !
      lfirst = .FALSE.
      !
-     delta_t_old = delta_t
+     t_incr_old = t_incr
      !
-  END DO
+  END DO dim_loop
   !
   IF ( ionode ) THEN
      !
@@ -973,12 +968,12 @@ SUBROUTINE check_para_diag_efficiency()
       !
       IMPLICIT NONE
       !
-      DO i = 1, nbndx / dim
+      DO i = 1, nbndx / dim1
          !
          IF ( gamma_only ) THEN
-            CALL rdiaghg( dim, dim, ar, br, dim, e, vr )
+            CALL rdiaghg( dim1, dim1, ar, br, dim1, e, vr )
          ELSE
-            CALL cdiaghg( dim, dim, ac, bc, dim, e, vc )
+            CALL cdiaghg( dim1, dim1, ac, bc, dim1, e, vc )
          END IF
       END DO
       !

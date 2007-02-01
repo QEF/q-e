@@ -40,7 +40,7 @@ SUBROUTINE update_pot()
   ! ... wave-functions extrapolation :
   !
   ! ... wfc_order = 0   nothing is done
-  !  
+  !
   ! ... wfc_order = 2   first order extrapolation :
   !
   ! ...                   |psi(t+dt)> = 2*|psi(t)> - |psi(t-dt)>
@@ -52,9 +52,9 @@ SUBROUTINE update_pot()
   ! ...                               + beta0* ( |psi(t-dt)> - |psi(t-2*dt)> )
   !
   !
-  ! ...  alpha0 and beta0 are calculated in "find_alpha_and_beta()" so that 
-  ! ...  |tau'-tau(t+dt)| is minimum; 
-  ! ...  tau' and tau(t+dt) are respectively the atomic positions at time 
+  ! ...  alpha0 and beta0 are calculated in "find_alpha_and_beta()" so that
+  ! ...  |tau'-tau(t+dt)| is minimum;
+  ! ...  tau' and tau(t+dt) are respectively the atomic positions at time
   ! ...  t+dt and the extrapolated one:
   !
   ! ...  tau(t+dt) = tau(t) + alpha0*( tau(t) - tau(t-dt) )
@@ -82,7 +82,13 @@ SUBROUTINE update_pot()
   !
   IF ( ionode ) THEN
      !
-     CALL seqopn( iunupdate, 'update', 'FORMATTED', exists ) 
+     ! ... default values for extrapolation coefficients (if history < 3 they
+     ! ... will not be used )
+     !
+     alpha0 = 1.D0
+     beta0  = 0.D0
+     !
+     CALL seqopn( iunupdate, 'update', 'FORMATTED', exists )
      !
      IF ( exists ) THEN
         !
@@ -113,7 +119,7 @@ SUBROUTINE update_pot()
   CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
   CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
   !
-  ! ... determines the maximum effective order of the extrapolation on the 
+  ! ... determines the maximum effective order of the extrapolation on the
   ! ... basis of the files that are really available
   !
   ! ... for the charge density
@@ -146,7 +152,7 @@ SUBROUTINE update_pot()
   !
   IF ( ionode ) THEN
      !
-     wfc_extr = MIN( 1, history, wfc_order ) 
+     wfc_extr = MIN( 1, history, wfc_order )
      !
      INQUIRE( FILE = TRIM( tmp_dir ) // &
             & TRIM( prefix ) // '.oldwfc' // nd_nmbr, EXIST = exists )
@@ -156,7 +162,7 @@ SUBROUTINE update_pot()
         wfc_extr = MIN( 2, history, wfc_order  )
         !
         INQUIRE( FILE = TRIM( tmp_dir ) // &
-               & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )     
+               & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )
         !
         IF ( exists ) wfc_extr = MIN( 3, history, wfc_order )
         !
@@ -229,8 +235,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
   work = 0.D0
   !
   ! ... in the lsda case the magnetization will follow rigidly the density
-  ! ... keeping fixed the value of zeta = mag / rho_tot. 
-  ! ... zeta is set here and put in rho(:,2) while rho(:,1) will contain the 
+  ! ... keeping fixed the value of zeta = mag / rho_tot.
+  ! ... zeta is set here and put in rho(:,2) while rho(:,1) will contain the
   ! ... total valence charge
   !
   IF ( lsda ) CALL rho2zeta( rho, rho_core, nrxx, nspin, 1 )
@@ -266,8 +272,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   IF ( rho_extr == 1 ) THEN
      !
-     ! ... if rho_extr = 1  update the potential subtracting to the charge 
-     ! ...                  density the "old" atomic charge and summing the 
+     ! ... if rho_extr = 1  update the potential subtracting to the charge
+     ! ...                  density the "old" atomic charge and summing the
      ! ...                  new one
      !
      WRITE( UNIT = stdout, FMT = '(/5X, &
@@ -284,8 +290,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      CALL read_rho( work, 1, 'old' )
      !
-     ! ...   rho   ->  oldrho          
-     ! ...   work  ->  oldrho2     
+     ! ...   rho   ->  oldrho
+     ! ...   work  ->  oldrho2
      !
      CALL write_rho( rho,  1, 'old' )
      CALL write_rho( work, 1, 'old2' )
@@ -294,7 +300,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      rho(:,1) = 2.D0*rho(:,1) - work(:,1)
      !
-  ELSE IF ( rho_extr == 3 ) THEN  
+  ELSE IF ( rho_extr == 3 ) THEN
      !
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"second order charge density extrapolation")' )
@@ -309,13 +315,11 @@ SUBROUTINE extrapolate_charge( rho_extr )
      CALL read_rho( work1, 1, 'old2' )
      CALL read_rho( work,  1, 'old' )
      !
-     ! ...   rho   ->  oldrho     
-     ! ...   work  ->  oldrho2     
+     ! ...   rho   ->  oldrho
+     ! ...   work  ->  oldrho2
      !
      CALL write_rho( rho,  1, 'old' )
      CALL write_rho( work, 1, 'old2' )
-     !
-     ! ... alpha0 and beta0 have been calculated in move_ions
      !
      rho(:,1) = rho(:,1) + alpha0*( rho(:,1) - work(:,1) ) + &
                             beta0*( work(:,1) - work1(:,1) )
@@ -351,7 +355,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
         !
         WHERE( rho(:,1) > eps32 )
            !
-           rho(:,is) = rho(:,is) * rho(:,1)
+           rho(:,is) = rho(:,is)*rho(:,1)
            !
         ELSEWHERE
            !
@@ -384,8 +388,8 @@ SUBROUTINE extrapolate_charge( rho_extr )
             '(/,5X,"extrapolated charge ",F10.5,", renormalised to ",F10.5)') &
          charge, nelec
      !
-     rho  = rho  / charge * nelec
-     rhog = rhog / charge * nelec
+     rho  = rho  / charge*nelec
+     rhog = rhog / charge*nelec
      !
   END IF
   !
@@ -483,7 +487,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
                     evcold, npwx, evc, npwx, ZERO, s_m, nbnd )
-        !            
+        !
         CALL reduce( 2*nbnd*nbnd, s_m )
         !
         ! ... construct sp_m
@@ -495,7 +499,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         END DO
         !
         ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29) by means the
-        ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m 
+        ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m
         ! ... becomes u_m * w_m
         !
         CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
@@ -525,10 +529,10 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         CALL davcio( evc, nwordwfc, iunoldwfc, ik, - 1 )
         !
-        ! ... extrapolate the wfc's (note that evcold contains wavefcts 
+        ! ... extrapolate the wfc's (note that evcold contains wavefcts
         ! ... at (t) and evc contains wavefcts at (t-dt) )
         !
-        evc = 2.D0 * evcold - evc
+        evc = 2.D0*evcold - evc
         !
         ! ... move the files: "old" -> "old1" and "now" -> "old"
         !
@@ -551,7 +555,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      IF ( zero_ew > 0 ) &
         WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,  &
                         &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
-                        &  I2," zero eigenvalues")' ) zero_ew     
+                        &  I2," zero eigenvalues")' ) zero_ew
      !
      DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
      !
@@ -559,7 +563,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
      !
-     IF ( wfc_order > 2 ) CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )     
+     IF ( wfc_order > 2 ) CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )
      !
   ELSE
      !
@@ -572,7 +576,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      WRITE( stdout, '(5X,"second order wave-functions extrapolation")' )
      !
-     lwork = 5 * nbnd
+     lwork = 5*nbnd
      !
      ALLOCATE( s_m(nbnd,nbnd), sp_m(nbnd,nbnd), u_m(nbnd,nbnd), &
                w_m(nbnd,nbnd), work(lwork), ew(nbnd), rwork(lwork) )
@@ -593,19 +597,19 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
                     evcold, npwx, evc, npwx, ZERO, s_m, nbnd )
-        !            
+        !
         CALL reduce( 2*nbnd*nbnd, s_m )
         !
         ! ... construct sp_m
         !
         DO i = 1, nbnd
-          ! 
+          !
           sp_m(:,i) = CONJG( s_m(i,:) )
           !
         END DO
         !
         ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29) by means the
-        ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m 
+        ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m
         ! ... becomes u_m * w_m
         !
         CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
@@ -637,13 +641,12 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... extrapolate the wfc's :
         ! ... if wfc_extr == 3 use the second order extrapolation formula
-        ! ... alpha0 and beta0 are calculated in "move_ions"
         !
-        evc = ( 1 + alpha0 ) * evcold + ( beta0 - alpha0 ) * evc
+        evc = ( 1 + alpha0 )*evcold + ( beta0 - alpha0 )*evc
         !
         CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, - 1 )
         !
-        evc = evc - beta0 * evcold 
+        evc = evc - beta0*evcold
         !
         ! ... move the files: "old" -> "old1" and "now" -> "old"
         !
@@ -661,7 +664,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      IF ( zero_ew > 0 ) &
         WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,  &
                         &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
-                        &  I2," zero eigenvalues")' ) zero_ew     
+                        &  I2," zero eigenvalues")' ) zero_ew
      !
      DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
      !
@@ -701,18 +704,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
   REAL(DP) :: a11, a12, a21, a22, b1, b2, c, det
   !
   !
-  IF ( history < 2 ) THEN
-     !
-     RETURN
-     !
-  ELSE IF ( history == 2 ) THEN  
-     !
-     alpha0 = 1.D0
-     beta0  = 0.D0
-     !
-     RETURN
-     !
-  END IF
+  IF ( history <= 2 ) RETURN
   !
   ! ... solution of the linear system
   !
@@ -740,7 +732,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
         !
         b2 = b2 - ( tauold(ipol,na,1) - tau(ipol,na) ) * &
                   ( tauold(ipol,na,2) - tauold(ipol,na,3) )
-        ! 
+        !
         c = c + ( tauold(ipol,na,1) - tau(ipol,na) )**2
         !
      END DO
@@ -759,7 +751,7 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
      WRITE( UNIT = stdout, &
             FMT = '(5X,"WARNING: in find_alpha_and_beta  det = ",F10.6)' ) det
      !
-  END IF   
+  END IF
   !
   ! ... case det > 0:  a well defined minimum exists
   !
@@ -770,8 +762,8 @@ SUBROUTINE find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
      !
   ELSE
      !
-     ! ... case det = 0 : the two increments are linearly dependent, 
-     ! ...                chose solution with alpha = b1 / a11 and beta = 0 
+     ! ... case det = 0 : the two increments are linearly dependent,
+     ! ...                chose solution with alpha = b1 / a11 and beta = 0
      ! ...                ( discard oldest configuration )
      !
      alpha0 = 0.D0
