@@ -76,15 +76,9 @@ SUBROUTINE update_pot()
   LOGICAL               :: exists
   !
   !
-  CALL start_clock( 'update_pot' )
+  IF ( pot_order == 0 .AND. wfc_order == 0 ) RETURN
   !
-  IF ( pot_order == 0 .AND. wfc_order == 0 ) THEN
-     !
-     CALL stop_clock( 'update_pot' )
-     !
-     RETURN
-     !
-  END IF 
+  CALL start_clock( 'update_pot' )
   !
   IF ( ionode ) THEN
      !

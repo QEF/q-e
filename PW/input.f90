@@ -844,11 +844,11 @@ SUBROUTINE iosys()
      !
      pot_order = 1
      !
-  CASE( 'first_order' )
+  CASE( 'first_order', 'first-order', 'first order' )
      !
      pot_order = 2
      !
-  CASE( 'second_order' )
+  CASE( 'second_order', 'second-order', 'second order' )
      !
      pot_order = 3
      !
@@ -863,11 +863,11 @@ SUBROUTINE iosys()
      !
      wfc_order = 0
      !
-  CASE( 'first_order' )
+  CASE( 'first_order', 'first-order', 'first order' )
      !
      wfc_order = 2
      !
-  CASE( 'second_order' )
+  CASE( 'second_order', 'second-order', 'second order' )
      !
      wfc_order = 3
      !

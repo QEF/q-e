@@ -112,7 +112,6 @@ bp_qvan3.o : ../Modules/kind.o
 bp_qvan3.o : ../Modules/uspp.o
 bp_qvan3.o : pwcom.o
 bp_strings.o : ../Modules/kind.o
-c_bands.o : ../Modules/cell_base.o
 c_bands.o : ../Modules/check_stop.o
 c_bands.o : ../Modules/control_flags.o
 c_bands.o : ../Modules/io_files.o
@@ -416,6 +415,9 @@ forces.o : ../Modules/io_global.o
 forces.o : ../Modules/ions_base.o
 forces.o : ../Modules/kind.o
 forces.o : pwcom.o
+g2_kin.o : ../Modules/cell_base.o
+g2_kin.o : ../Modules/kind.o
+g2_kin.o : pwcom.o
 g_psi.o : ../Modules/kind.o
 g_psi.o : g_psi_mod.o
 g_psi_mod.o : ../Modules/kind.o
@@ -656,7 +658,6 @@ newd.o : ../Modules/wavefunctions.o
 newd.o : noncol.o
 newd.o : pwcom.o
 newd.o : realus.o
-non_scf.o : ../Modules/constants.o
 non_scf.o : ../Modules/control_flags.o
 non_scf.o : ../Modules/io_files.o
 non_scf.o : ../Modules/io_global.o
@@ -718,6 +719,13 @@ print_clock_pw.o : ../Modules/control_flags.o
 print_clock_pw.o : ../Modules/io_global.o
 print_clock_pw.o : ../Modules/mp_global.o
 print_clock_pw.o : pwcom.o
+print_ks_energies.o : ../Modules/constants.o
+print_ks_energies.o : ../Modules/control_flags.o
+print_ks_energies.o : ../Modules/io_global.o
+print_ks_energies.o : ../Modules/kind.o
+print_ks_energies.o : ../Modules/mp.o
+print_ks_energies.o : ../Modules/mp_global.o
+print_ks_energies.o : pwcom.o
 psymrho.o : ../Modules/kind.o
 psymrho.o : ../Modules/mp_global.o
 psymrho.o : para.o
@@ -1225,6 +1233,7 @@ force_hub.o : ../include/f_defs.h
 force_lc.o : ../include/f_defs.h
 force_us.o : ../include/f_defs.h
 forces.o : ../include/f_defs.h
+g2_kin.o : ../include/f_defs.h
 gen_at_dj.o : ../include/f_defs.h
 gen_at_dy.o : ../include/f_defs.h
 gen_us_dj.o : ../include/f_defs.h
@@ -1256,6 +1265,7 @@ non_scf.o : ../include/f_defs.h
 orthoatwfc.o : ../include/f_defs.h
 para.o : ../include/f_defs.h
 potinit.o : ../include/f_defs.h
+print_ks_energies.o : ../include/f_defs.h
 psymrho.o : ../include/f_defs.h
 psymrho_mag.o : ../include/f_defs.h
 pw_gemm.o : ../include/f_defs.h

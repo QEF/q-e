@@ -28,6 +28,7 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'PWSCF' )
    CALL print_clock( 'init_run' )
    CALL print_clock( 'electrons' )
+   CALL print_clock( 'update_pot' )
    !
    IF ( lforce ) CALL print_clock( 'forces' )
    IF ( lstres ) CALL print_clock( 'stress' )
