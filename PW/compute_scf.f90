@@ -22,8 +22,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   USE kinds,            ONLY : DP
   USE input_parameters, ONLY : startingwfc, startingpot, diago_thr_init
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, istep, history, &
-                               alpha0, beta0, ethr, pot_order
+  USE control_flags,    ONLY : conv_elec, istep, history, ethr, pot_order
   USE check_stop,       ONLY : check_stop_now
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
@@ -280,7 +279,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       IF ( ionode ) THEN
          !
-         ! ... the file containing old positions is opened 
+         ! ... the file containing old positions is opened
          ! ... ( needed for extrapolation )
          !
          CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists )
@@ -313,21 +312,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
          ! ... we are starting a new self-consistency ( scf on the
          ! ... previous image was achieved )
          !
-         IF ( ionode ) THEN 
-            !
-            ! ... find the best coefficients for the extrapolation of 
-            ! ... the potential
-            !
-            CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
-            !
-         END IF
-         !
-         CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
-         CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
-         !
          IF ( pot_order > 0 ) THEN
             !
-            ! ... structure factors of the old positions are computed 
+            ! ... structure factors of the old positions are computed
             ! ... (needed for the old atomic charge)
             !
             CALL struc_fact( nat, tauold(:,:,1), nsp, ityp, ngm, g, bg, &
@@ -384,7 +371,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
          !
          history = MIN( 3, ( history + 1 ) )
          !
-         CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists ) 
+         CALL seqopn( iunupdate, 'update', 'FORMATTED', file_exists )
          !
          WRITE( UNIT = iunupdate, FMT = * ) history
          WRITE( UNIT = iunupdate, FMT = * ) tauold
