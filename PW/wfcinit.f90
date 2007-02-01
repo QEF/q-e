@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-! 
+!
 !----------------------------------------------------------------------------
 SUBROUTINE wfcinit()
   !----------------------------------------------------------------------------
@@ -47,13 +47,15 @@ SUBROUTINE wfcinit()
      IF ( nks == 1 .AND. reduce_io ) &
         CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
      !
+     CALL stop_clock( 'wfcinit' )
+     !
      RETURN
      !
   ELSE IF ( startingwfc == 'atomic' ) THEN
      !
      IF ( natomwfc >= nbnd ) THEN
         !
-        WRITE( stdout, '(5X,"Starting wfc are atomic")' ) 
+        WRITE( stdout, '(5X,"Starting wfc are atomic")' )
         !
      ELSE
         !
@@ -108,12 +110,12 @@ SUBROUTINE wfcinit()
      !
   END DO
   !
-  CALL stop_clock( 'wfcinit' )  
+  CALL stop_clock( 'wfcinit' )
   !
   RETURN
   !
 END SUBROUTINE wfcinit
-! 
+!
 !----------------------------------------------------------------------------
 SUBROUTINE init_wfc ( ik )
   !----------------------------------------------------------------------------
@@ -181,7 +183,7 @@ SUBROUTINE init_wfc ( ik )
      !
   END IF
   !
-  ! ... if not enough atomic wfc are available, 
+  ! ... if not enough atomic wfc are available,
   ! ... fill missing wfcs with random numbers
   !
   DO ibnd = n_starting_atomic_wfc + 1, n_starting_wfc
@@ -226,8 +228,8 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE wfcinit_gamma()
     !-----------------------------------------------------------------------
-    ! 
-    ! ... gamma version       
+    !
+    ! ... gamma version
     !
     USE gvect,  ONLY : gstart
     USE becmod, ONLY : rbecp
@@ -235,7 +237,7 @@ CONTAINS
     USE uspp, ONLY: okvan
     !
     IMPLICIT NONE
-    !       
+    !
     REAL(DP), ALLOCATABLE :: etatom(:)
     ! atomic eigenvalues
     !
@@ -272,7 +274,7 @@ CONTAINS
   SUBROUTINE wfcinit_k()
     !-----------------------------------------------------------------------
     !
-    ! ... k-points version       
+    ! ... k-points version
     !
     USE becmod, ONLY : becp, becp_nc
     USE control_flags,  ONLY : isolve
