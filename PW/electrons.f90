@@ -57,7 +57,7 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
-  USE mp_global,            ONLY : intra_pool_comm
+  USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
@@ -403,7 +403,7 @@ SUBROUTINE electrons()
            !
            ! ... write the charge density to file
            !
-           CALL write_rho( rho, nspin )
+           if (mod(nkstot,npool) == 0) CALL write_rho( rho, nspin )
            !
         ELSE
            !
