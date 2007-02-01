@@ -26,7 +26,7 @@ compute_u_kq.o : ../Modules/kind.o
 compute_u_kq.o : ../Modules/uspp.o
 compute_u_kq.o : ../Modules/wavefunctions.o
 compute_u_kq.o : ../PW/becmod.o
-compute_u_kq.o : ../PW/complex_diis_module.o
+compute_u_kq.o : ../PW/diis_base.o
 compute_u_kq.o : ../PW/g_psi_mod.o
 compute_u_kq.o : ../PW/noncol.o
 compute_u_kq.o : ../PW/pwcom.o

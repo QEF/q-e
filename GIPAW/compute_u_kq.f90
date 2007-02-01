@@ -26,7 +26,7 @@ SUBROUTINE compute_u_kq(ik, q)
   USE g_psi_mod, ONLY : h_diag, s_diag
   USE scf,           ONLY : vrs, vltot, vr
   USE noncollin_module,     ONLY : noncolin, npol
-  USE complex_diis_module
+  USE diis_base
 
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: ik
