@@ -11,8 +11,11 @@
   SUBROUTINE non_scf (ik_)
   !-----------------------------------------------------------------------
   !
+  ! ... diagonalization of the KS hamiltonian with electric fields
+  !
+  !
   USE kinds,                ONLY : DP
-  USE bp,                   ONLY : lelfield, lberry, nberrycyc, fact_hepsi
+  USE bp,                   ONLY : lelfield, lberry
   USE control_flags,        ONLY : lbands, reduce_io
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
@@ -28,13 +31,9 @@
   !
   ! ... local variables
   !
-  INTEGER :: iter = 1, i, ik, inberry, ibnd, ibnd_up, ibnd_dw, kbnd
-  !
-  REAL(DP) :: dr2 = 0.d0,  ehomo, elumo ! highest occupied and lowest unoccupied levels
-  !
-  REAL(DP), EXTERNAL :: efermit, efermig, get_clock
-  !
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
+  INTEGER :: iter = 1, i, ik
+  REAL(DP) :: dr2 = 0.d0
+  REAL(DP), EXTERNAL :: get_clock
   !
   !
   CALL start_clock( 'electrons' )
@@ -43,34 +42,9 @@
   !
   CALL flush_unit( stdout )
   !
-  ! ... diagonalization of the KS hamiltonian
-  !
-  IF ( lelfield ) THEN
+  IF ( lelfield) THEN
      !
-     ALLOCATE(fact_hepsi(nks))
-     !
-     DO inberry = 1, nberrycyc
-        !
-        ALLOCATE( psi( npwx, nbnd ) )
-        !
-        DO ik=1,nks
-           !
-           CALL davcio( psi, nwordwfc, iunwfc,    ik, -1 )
-           CALL davcio( psi, nwordwfc, iunefield, ik,  1 )
-           !
-        END DO
-        !
-        DEALLOCATE( psi )
-        !
-        !...set up electric field hermitean operator
-        !
-        CALL h_epsi_her_set ( )
-        !
-        CALL c_bands( iter, ik_, dr2 )
-        !
-     END DO
-     !
-     DEALLOCATE(fact_hepsi)
+     CALL c_bands_efield ( iter, ik_, dr2 )
      !
   ELSE
      !
@@ -81,7 +55,7 @@
   ! ... xk, wk, isk, et, wg are distributed across pools;
   ! ... the first node has a complete copy of xk, wk, isk,
   ! ... while eigenvalues et and weights wg must be
-  ! ... explicitely collected to the first node
+  ! ... explicitly collected to the first node
   ! ... this is done here for et, in weights () for wg
   !
   CALL poolrecover( et, nbnd, nkstot, nks )
@@ -117,12 +91,6 @@
   !
 9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
 9002 FORMAT(/'     Band Structure Calculation' )
-9015 FORMAT(/' ------ SPIN UP ------------'/ )
-9016 FORMAT(/' ------ SPIN DOWN ----------'/ )
-9020 FORMAT(/'          k =',3F7.4,'     band energies (ev):'/ )
-9030 FORMAT( '  ',8F9.4 )
-9040 FORMAT(/'     the Fermi energy is ',F10.4,' ev' )
-9042 FORMAT(/'     Highest occupied, lowest unoccupied level (ev): ',2F10.4 )
 9102 FORMAT(/'     End of band structure calculation' )
   !
 END SUBROUTINE non_scf

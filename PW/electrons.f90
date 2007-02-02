@@ -49,7 +49,7 @@ SUBROUTINE electrons()
                                    pointlist, pointnum, mcons, i_cons,  &
                                    bfield, lambda, vtcon, report
   USE spin_orb,             ONLY : domag
-  USE bp,                   ONLY : lelfield, nberrycyc, fact_hepsi
+  USE bp,                   ONLY : lelfield
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
   USE realus,               ONLY : tqr
@@ -92,11 +92,6 @@ SUBROUTINE electrons()
   !
   COMPLEX(DP), ALLOCATABLE :: rhognew(:,:)
   REAL(DP),    ALLOCATABLE :: rhonew(:,:)
-  !
-  ! ... variables needed for electric field calculation
-  !
-  INTEGER                  :: inberry
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   !
   ! ... external functions
   !
@@ -209,27 +204,8 @@ SUBROUTINE electrons()
         !
         IF ( lelfield ) THEN
            !
-           ALLOCATE(fact_hepsi(nks))
-           DO inberry = 1, nberrycyc
-              !
-              ALLOCATE( psi( npwx, nbnd ) )
-              !
-              DO ik = 1, nks
-                 !
-                 CALL davcio( psi, nwordwfc, iunwfc,    ik, -1 )
-                 CALL davcio( psi, nwordwfc, iunefield, ik,  1 )
-                 !
-              END DO
-              !
-              DEALLOCATE( psi )
-              !
-              !set up electric field hermitean operator
-              call h_epsi_her_set
-              CALL c_bands( iter, ik_, dr2 )
-              !
-           END DO
+           CALL c_bands_efield ( iter, ik_, dr2 )
            !
-           DEALLOCATE(fact_hepsi)
         ELSE
            !
            CALL c_bands( iter, ik_, dr2 )

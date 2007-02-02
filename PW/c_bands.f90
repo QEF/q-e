@@ -1,4 +1,4 @@
-!
+
 ! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -19,7 +19,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
-                                   nwordwfc, iunefield,iunefieldp,iunefieldm
+                                   nwordwfc
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
@@ -29,7 +29,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE g_psi_mod,            ONLY : h_diag, s_diag
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
   USE check_stop,           ONLY : check_stop_now
   !
@@ -60,9 +59,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   END IF
   !
   CALL start_clock( 'c_bands' )
-  !
-  ALLOCATE( h_diag( npwx, npol ) )
-  ALLOCATE( s_diag( npwx, npol ) )
   !
   IF ( lelfield ) THEN
      ALLOCATE( evcel( npwx, nbnd ) )
@@ -158,9 +154,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
        ethr, avg_iter
   !
-  DEALLOCATE( s_diag )
-  DEALLOCATE( h_diag )
-  !
   IF ( lelfield ) THEN
      DEALLOCATE( evcel )
      DEALLOCATE( evcelm )
@@ -224,6 +217,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   LOGICAL :: lrot
   ! .TRUE. if the wfc have already be rotated
   !
+  ALLOCATE( h_diag( npwx, npol ) )
+  ALLOCATE( s_diag( npwx, npol ) )
+  !
   IF ( gamma_only ) THEN
      !
      CALL c_bands_gamma()
@@ -233,6 +229,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
      CALL c_bands_k()
      !
   END IF
+  !
+  DEALLOCATE( s_diag )
+  DEALLOCATE( h_diag )
   !
   IF ( notconv > MAX( 5, nbnd / 4 ) ) THEN
      !
@@ -516,3 +515,52 @@ CONTAINS
   END FUNCTION test_exit_cond
   !     
 END SUBROUTINE diag_bands
+!
+!----------------------------------------------------------------------------
+SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Driver routine for Hamiltonian diagonalization under an electric field
+  !
+  USE kinds,                ONLY : DP
+  USE bp,                   ONLY : nberrycyc, fact_hepsi
+  USE klist,                ONLY : nks
+  USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
+  USE wvfct,                ONLY : nbnd, npwx
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT (in) :: iter, ik_
+  REAL(DP), INTENT (in) :: dr2
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
+  !
+  INTEGER :: inberry, ik
+  !
+  !
+  ALLOCATE(fact_hepsi(nks))
+  !
+  DO inberry = 1, nberrycyc
+     !
+     ALLOCATE( psi( npwx, nbnd ) )
+     !
+     DO ik=1,nks
+        !
+        CALL davcio( psi, nwordwfc, iunwfc,    ik, -1 )
+        CALL davcio( psi, nwordwfc, iunefield, ik,  1 )
+        !
+     END DO
+     !
+     DEALLOCATE( psi )
+     !
+     !...set up electric field hermitean operator
+     !
+     CALL h_epsi_her_set ( )
+     !
+     CALL c_bands( iter, ik_, dr2 )
+     !
+  END DO
+  !
+  RETURN
+  !
+END SUBROUTINE c_bands_efield
+
