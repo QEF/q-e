@@ -1754,11 +1754,11 @@ SUBROUTINE a2Fdos &
               dos_a2F(j) = 0.0d0
               CALL dos_gam(nmodes, nq, j, ntetra, tetra, &
                    gamma, freq, E, dos_a2F(j))
-              dos_a2F(j) = dos_a2F(j) / dos_ee(isig)
+              dos_a2F(j) = dos_a2F(j) / dos_ee(isig) / 2.d0 / pi
               dos_tot = dos_tot + dos_a2F(j)
               !
            enddo
-           lambda = lambda + dos_tot/E * DeltaE / pi
+           lambda = lambda + 2.d0 * dos_tot/E * DeltaE 
            write (ifn, 1050) E, dos_tot, (dos_a2F(j),j=1,nmodes)
         enddo  !ndos
         write(ifn,*) " lambda =",lambda,'   Delta = ',DeltaE
