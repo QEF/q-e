@@ -17,9 +17,10 @@ else
     dirs=$*
 fi
 
-for DIR in $dirs
+for DIR_ in $dirs
 do
     # set inter-directory dependencies
+    DIR=`echo $DIR_ | sed 's?/??' `
     case $DIR in
 	Modules | clib )
 		  DEPENDS="../include ../flib ../iotk/src"                        ;;

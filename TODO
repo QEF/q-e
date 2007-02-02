@@ -9,18 +9,30 @@ BUGS TO EXAMINE
   configuration, when semicore states are in the valence
 - discrepancies between spin-unpolarized and spin=0 spin-polarized
   results with gradient corrections
-- mysterious bfgs crash(-es)
-- job by Lisenkov: charge lost after restarting
-- Misc problems found by Eduardo
+- mysterious bfgs crash(-es) with ndim=3
+- Lisenkov:
+> Did anybody else report that pw.x hangs sometimes without any explicit 
+> reason? I see it very often recently (after realizing 3.2 version) on 
+> different machines (xeon em64t, cray xd1, cray xt3, altix,..). It usually
+> happens when the number of scf steps is being large (~100). I didn't see
+> such problem with earlier versions, but I need to use the latest one due 
+> to using LDA+U method
+- Sara Furlan:
+> sto usando cpvib.x dell'espresso versione 3.2.
+> Mi sono accorta che se in input si danno le ATOMIC_POSITIONS
+> con un ordine diverso dagli ATOMIC_SPECIES si ottengono delle
+> frequenze improbabili.
+
+- Davide: npools not a divisor on nk => mpi hangs
+- Misc problems found by Eduardo: pw => cp with atoms out of the cell
 
 CVS/INSTALLATION/PORTING
 
 - restructuration of the CVS server, dividing it into "base libs",
-  "base QE", additional packages
+  "base QE", additional packages - release.sh is clumsy, simplify
 - add support for more Nec's
-- remove install/
+- remove obsolete stuff from install/
 - put misc scripts into a Utils/ subdirectory
-- release.sh is clumsy, simplify
 - some machines do not allow to open more than 32000 directories:
   this sets a limit to the number of k-points (AdC)
 
@@ -37,11 +49,14 @@ COMMON
   parallel stuff
 
 - uniform and clear values for constants in Modules/constants.f90
+  Almost done: now they have to be used everywhere!
+
 - convert all single-precision constants to double precision
+  (mostly done)
 
 - check whether license is written in the header of the file
 
-- pseudopotentials: support new format (XML) if/when ready
+- pseudopotentials: support new format (xml) if/when ready
 
 - adding/removing/modifying input variables is too complex
   Why are some checks on input variables performed in read_namelist,
@@ -69,11 +84,15 @@ COMMON
 - CP "small boxes" vs PW "real-space" approach
 
 - It would be nice to merge "cell_base_init" from CPV to PW,
-   and also "cellmd" module of PW into "cell_base" of CPV
+  and also "cellmd" module of PW into "cell_base" of CPV
+
+- there should be a single function or routine for periodic
+  boundary conditions (i.e. bringing all atoms inside the unit
+  cell)
 
 PW
 
-- real matrices with inversion symmetry (Dario)
+- inversion symmetry should allow real hamiltonian and wavefunctions (Dario)
 
 - Add option to prevent writing the final file (Dario)
 - Add option to avoid reading/writing wfc all the time,
@@ -125,12 +144,9 @@ POSTPROCESSING
 
 - stm_wfc_matching not working
 
-- the dynamical matrix written by the phonon code does not contain
-  the information on lattice basis vectors if ibrav=0.
-  As a consequence most postprocessing codes will not work.
-  The file format should be reconsidered: XML ?
+- Move to a xml-based format for the dynamical matrix files
 
-- chdens in parallel execution
+- chdens in parallel execution?
 
 - pwtools: add example of a plot of phonon dispersions
   Fix fqha.f90
@@ -155,12 +171,9 @@ PH, D3, Gamma
   have any infrastructure for stopping like this)
   Phonon restart is inefficient in some cases
 
-
 DOCUMENTATION
 
 - move to wiki-based documentation
-
-- update documentation for file format
 
 - single source (xml?) for text file, GUI help file, user guide
 

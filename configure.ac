@@ -61,7 +61,7 @@ AC_CANONICAL_BUILD
 # !!! this relies on undocumented Autoconf behavior !!! 
 
 # This is used to distinguish between true and fake cross compilation
-# (only on NEC SX6 actually)
+# (only on NEC SX8 actually)
 if test "$host" != "" ; then ranlib=echo; fi
 
 cross_compiling=yes
@@ -83,7 +83,10 @@ then
 		powerpc-apple-darwin* ) arch=macppc ;;
 		i686-apple-darwin* )    arch=mac686 ;;
 		*-pc-cygwin )           arch=cygwin ;;
-		sx*-nec-superux* )      arch=necsx ;;
+		sx*-nec* )              arch=necsx  ;;
+                * )                     AC_MSG_WARN(incorrect host name ?)
+        ;;
+
 	esac
 fi
 echo checking architecture... $arch
@@ -102,6 +105,7 @@ try_f90="g95 gfortran f90"
 case $arch in
 ia64 | amd64 )
 	try_f90="ifort ifc efc pgf90 pathf95 $try_f90"
+        try_dflags=""
 	;;
 ia32 )
 	try_f90="ifort ifc pgf90 pathf95 $try_f90"
@@ -145,11 +149,20 @@ mac686 | cygwin )
 	try_f90="ifort $try_f90"
 	;;
 necsx )
+	sxopt=`echo $host|awk '{print substr($1,1,3)}'`
+	echo $sxopt $host
 	try_mpif90="sxmpif90"
 	try_f90="sxf90"
 	try_ar="sxar"
 	try_arflags="rv"
   	try_arflags_dynamic="rv"
+        try_dflags='-D__SX6 ' 
+        impose_use_fft_asl=0
+        impose_use_fft_mathkeysan=1
+        impose_use_fft_para=0
+        try_dflags_fft_asl='-DASL'
+        try_dflags_fft_mathkeysan='-DNEC_MATHKEISAN_1D'
+        try_dflags_fft_para='-D__USE_3D_FFT'
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture?)
@@ -273,9 +286,9 @@ crayx1:ftn )
 macppc:xlf90 )
 	try_f77="xlf f77 $f90"
 	;;
-necsx:sxf90 )
+necsx:* )
 	try_cc="sxcc"
-	try_f77="sxf90"
+	try_f77="$f90"
 	;;
 esac
 
@@ -474,14 +487,20 @@ macppc:* )
 	xlf_flags=1
 	;;
 
-necsx:sxf90 )
-	try_f90flags="-float0 -Ep -P stack -sx6 -USX -eab -R5 -C hopt -Wf\" -P nh -ptr byte -pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack -fusion -O noif -init stack=zero heap=zero -Ncont -A dbl4\" "
-	try_fflags="-f0 \$(F90FLAGS)"
-	try_fflags_noopt="\$(F90FLAGS) -C debug"
-	try_ldflags="-float0 -P stack -sx6 -USX -eab -R5 -Wl\" -f zero \" "
-	try_dflags=" -DLANGUAGE_FORTRAN -D__SX6 -USX -D__USE_3D_FFT "
-	try_fdflags="\"\$(DFLAGS)\" "
-	pre_fdflags="-Wp"
+necsx:* )
+        try_fflags='      -float0 -Chopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
+        try_f90flags='    -float0 -Chopt -eab -R5 -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
+        try_f90flags="-$sxopt $try_f90flags"
+        try_fflags_noopt='-float0   '
+        try_f90flags_noopt='-float0 -eab -R5 -C debug  -Wf,-Ncont,-A dbl4,-P nh ,ptr byte,-init stack=nan heap=nan'
+        try_f90flags_noopt="$try_f90flags_noopt"
+        try_f90flags_inline='   -float0 -Chopt -eab -R5 -pi noauto incdir exp=w0gauss -Wf,-Ncont,-A dbl4,-P nh,-ptr byte,-pvctl noifopt loopcnt=9999999 expand=12 fullmsg vwork=stack,-fusion,-O noif,-init stack=nan heap=nan'
+        try_f90flags_inline="$try_f90flags_inline"
+        try_ldflags_static='-P static'
+        try_ldflags='-Wl,-f zero'
+        try_ldflags="-p $try_ldflags"
+        have_cpp=1
+        pre_fdflags=""
 	;;
 * )
 	# unknown, try these
@@ -536,9 +555,9 @@ crayx1:cc )
 macppc:xlc* | macppc:mpcc* )
 	try_cflags="-O4"
 	;;
-necsx:sxcc )
-	try_cpp="sxcpp"
-	try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
+necsx:* )
+	#try_cflags="-D__SX6 \$(IFLAGS) \$(MODFLAGS)"
+        try_cflags=""
 	try_ar="sxar"
 	;;
 esac
@@ -635,7 +654,8 @@ then
 	# build list of directories to search
 	case "$arch" in
 	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
-	*)       try_libdirs="/usr/local/lib"         ;;
+        necsx )     try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0" ;;
+	*)          try_libdirs="/usr/local/lib"         ;;
 	esac
 
 	# search
@@ -808,16 +828,26 @@ then
 			       blas_libs="-xlic_lib=sunperf $LIBS")
 		;;
 	necsx:* )
-		# check for blas in /SX/usr/lib
-		unset ac_cv_search_dgemm # clear cached value
-		try_libdirs="/SX/usr/lib/"
-		try_libdirs="$try_libdirs $ld_library_path"
-		FFLAGS=""
-		LDFLAGS=""
-		LIBS=""
-		AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="-lblas",exit)
-		;;
-
+                #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib 
+                #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
+                for dir in none $try_libdirs
+                do
+                        unset ac_cv_search_dgemm # clear cached value
+                        if test "$dir" = "none"
+                        then
+                                try_loption=
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$test_ldflags $try_loption"
+                        LIBS=""
+                        AC_SEARCH_LIBS(dgemm, blas, have_blas=1 blas_libs="$try_loption $LIBS")
+                        if test "$ac_cv_search_dgemm" != "no"
+                        then break ; fi
+                 done
+                 ;;
 	esac
 
 	if test "$have_blas" -eq 0
@@ -900,7 +930,8 @@ then
 	# build list of directories to search
 	case "$arch" in
 	macppc )    try_libdirs="/usr/local/lib /sw/lib" ;;
-	*)       try_libdirs="/usr/local/lib"         ;;
+        necsx  )    try_libdirs="/SX/usr/lib /SX/opt/mathkeisan/inst/lib0" ;;
+	*)          try_libdirs="/usr/local/lib"         ;;
 	esac
 
 	# search
@@ -965,16 +996,27 @@ then
                 fi
 		;;
 	necsx:* )
-		# check lapack
-		try_libdirs="/SX/usr/lib/"
-		try_libdirs="$try_libdirs $ld_library_path"
-		unset ac_cv_search_zggev # clear cached value
-		FFLAGS=""
-		LDFLAGS=""
-		LIBS="$blas_libs"
-		AC_SEARCH_LIBS(zggev, lapack, have_lapack=1 lapack_libs="-llapack")
-		AC_SEARCH_LIBS(zhegvx, lapack, try_dflags="$try_dflags -DHAS_ZHEGVX")
-		;;
+                #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
+                #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
+                for dir in none $try_libdirs
+                do
+                        unset ac_cv_search_zggev # clear cached value
+                        if test "$dir" = "none"
+                        then
+                                try_loption=
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$test_ldflags $try_loption"
+                        LIBS="-llapack $blas_libs"
+                        AC_SEARCH_LIBS(zggev, lapack, have_lapack=1
+                                       lapack_libs="$try_loption $LIBS")
+                        if test "$ac_cv_search_zggev" != "no"
+                        then break ; fi
+                done
+                ;;
 	esac
 
 	if test "$have_lapack" -eq 0
@@ -1090,15 +1132,64 @@ then
 			       fft_libs="-xlic_lib=sunperf $LIBS")
 		;;
 	necsx )
-		# check for ASL and/or MathKeisan libs
-		unset ac_cv_search_zfc3fb # clear cached value
-		unset ac_cv_search_zzfft3d # clear cached value
-		FFLAGS=""
-		LDFLAGS=""
-		LIBS="$libs"
-		AC_SEARCH_LIBS(zfc3fb, asl, try_dflags="$try_dflags -DASL" fft_libs="$LIBS")
-		AC_SEARCH_LIBS(zzfft3d, fft, have_fft=1 fft_libs="$LIBS",have_fft=0)
-		;;
+                if test "$impose_use_fft_mathkeysan" -ne 0
+                then
+                   #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
+                   #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
+                   #check for Mathkeisan (Cray simple precision )
+                   #search for initialization subroutine
+                   echo $ECHO_N  "Searching in Mathkeisan" $ECHO_C
+                   for dir in none $try_libdirs
+                   do
+                        unset ac_cv_search_zftfax # clear cached value
+                        if test "$dir" = "none"
+                        then
+                                try_loption=
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$test_ldflags $try_loption"
+                        LIBS=""
+                        AC_SEARCH_LIBS(zftfax, fft, have_fft=1
+                             try_dflags="$try_dflags $try_dflags_fft_mathkeysan"
+                                       fft_libs="$try_loption $LIBS")
+                        if test "$ac_cv_search_zftfax" != "no"
+                        then break ; fi
+                   done
+                fi
+                if test "$impose_use_fft_asl" -ne 0
+                then
+                   #check for asl in (/SX)/usr/lib 
+                   #search for initialization subroutine
+                   echo $ECHO_N  "Searching in Asl" $ECHO_C
+                   for dir in none $try_libdirs
+                   do
+                        unset ac_cv_search_zfc3cl # clear cached value
+                        if test "$dir" = "none"
+                        then
+                                try_loption=
+                        else
+                                echo $ECHO_N "in $dir: " $ECHO_C
+                                try_loption="-L$dir"
+                        fi
+                        FFLAGS="$test_fflags"
+                        LDFLAGS="$test_ldflags $try_loption"
+                        LIBS=""
+                        AC_SEARCH_LIBS(zfc3cl, asl, have_fft=1 
+                             asl_libs="$try_loption $LIBS" 
+                             try_dflags="$try_dflags $try_dflags_fft_asl"
+                             fft_libs="$fft_libs $asl_libs")
+                        if test "$ac_cv_search_zfc3cl" != "no"
+                        then break ; fi
+                   done
+                fi
+                if test "$impose_use_fft_para" -ne 0
+                then
+                   try_dflags="$try_dflags $try_dflags_fft_para"
+                fi
+                ;;
 	esac
 
 	if test "$have_fft" -eq 0
