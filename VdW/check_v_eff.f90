@@ -38,7 +38,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, &
                                    isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
-  USE scf,                  ONLY : rho, vltot, vrs
+  USE scf,                  ONLY : rho, vltot, vrs, v_of_0
   USE lsda_mod,             ONLY : nspin, current_spin, lsda, isk
   USE wavefunctions_module, ONLY : psic , evc 
   USE g_psi_mod,            ONLY : h_diag, s_diag
@@ -54,7 +54,7 @@ SUBROUTINE check_v_eff ( veff, charge )
   !
   ! ... local variables
   !
-  REAL(KIND=DP) :: avg_iter, v_of_0
+  REAL(KIND=DP) :: avg_iter
     ! average number of iterations
     ! the average of the potential
   REAL(KIND=DP), ALLOCATABLE :: k_gamma(:)
@@ -122,12 +122,6 @@ SUBROUTINE check_v_eff ( veff, charge )
 !       WRITE( stdout, '(5X,"Davidson diagonalization (with overlap)")')
        !
        avg_iter = 0.D0
-       !
-       ! ... v_of_0 is (Vloc)(G=0)
-       !
-       v_of_0 = SUM( vltot(1:nrxx) ) / REAL( nr1 * nr2 * nr3 )
-       !
-       CALL reduce( 1, v_of_0 )
        !
        nks = 1  ! for TF+vW
        !

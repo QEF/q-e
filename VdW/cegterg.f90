@@ -89,7 +89,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
     ! s_psi(ndmx,ndim,nvec,spsi)
     !     calculates S|psi> (if needed)
     !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
-    ! g_psi(ndmx,ndim,notcnv,psi,e)
+    ! g_psi(ndmx,ndim,notcnv,npol,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
@@ -220,7 +220,7 @@ SUBROUTINE cegterg_vdw( ndim, ndmx, nvec, nvecx, evc, &
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( ndmx, ndim, notcnv, psi(1,nbase+1), ew(nbase+1) )
+     CALL g_psi( ndmx, ndim, notcnv, 1, psi(1,nbase+1), ew(nbase+1) )
      !
      ! ... "normalize" correction vectors psi(:,nbase+1:nbase+notcnv) in order
      ! ... to improve numerical stability of subspace diagonalization cdiaghg
