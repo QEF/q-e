@@ -101,11 +101,13 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   !
   !    Here we find the true symmetries of the crystal
   !
-  IF (.NOT. noncolin) &
-     call sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
-       irt, ftau)
-  IF (noncolin) CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
+  IF (noncolin.and.domag) THEN
+     CALL sgam_at_mag (nrot, s, nat, tau, ityp, at, bg, &
                   nr1, nr2, nr3, sym, irt, ftau, m_loc, sname, t_rev)
+  ELSE
+     CALL sgam_at (nrot, s, nat, tau, ityp, at, bg, nr1, nr2, nr3, sym, &
+       irt, ftau)
+  END IF
   !
   !    If xq.ne.(0,0,0) this is a preparatory run for a linear response
   !    calculation at xq. The relevant point group is therefore only the
