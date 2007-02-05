@@ -306,7 +306,7 @@
 
 !ATTENZIONE
 !the following is of capital importance
-      ene_ok= .FALSE.
+      ene_ok= .TRUE.
 !but it would be better to avoid it
 
 
