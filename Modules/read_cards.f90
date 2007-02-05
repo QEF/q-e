@@ -220,7 +220,11 @@ MODULE read_cards_module
           !
        ELSE IF ( TRIM(card) == 'K_POINTS' ) THEN
           !
-          CALL card_kpoints( input_line )
+          IF ( prog == 'CP' ) THEN
+             IF( ionode ) WRITE( stdout,'(A)') 'Warning: card '//trim(input_line)//' ignored'
+          ELSE
+             CALL card_kpoints( input_line )
+          END IF
           !
        ELSE IF ( TRIM(card) == 'NEIGHBOURS' ) THEN
           !
