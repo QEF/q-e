@@ -918,6 +918,8 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'dforce' )
   CALL print_clock( 'calphi' )
   CALL print_clock( 'ortho' )
+  CALL print_clock( 'ortho_iter' )
+  CALL print_clock( 'rhoset' )
   CALL print_clock( 'updatc' )
   CALL print_clock( 'gram' )
   CALL print_clock( 'newd' )
@@ -947,8 +949,6 @@ SUBROUTINE terminate_run()
      CALL print_clock( '2D' )
      CALL print_clock( 'SCATTER' )
      CALL print_clock( 'ALLTOALL' )
-     CALL print_clock( 'ortho1' )
-     CALL print_clock( 'iterate' )
      !
   END IF
   !

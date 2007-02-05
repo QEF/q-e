@@ -309,7 +309,7 @@
       USE kinds,                ONLY : DP
       USE control_flags,        ONLY : iprsta, tsde, program_name
       USE io_global,            ONLY : ionode, stdout
-      USE cp_main_variables,    ONLY : eigr, ema0bg
+      USE cp_main_variables,    ONLY : eigr, ema0bg, collect_lambda
       USE descriptors,          ONLY : descla_siz_ , descla_init
       USE cell_base,            ONLY : omega
       USE uspp,                 ONLY : vkb, nkb
@@ -354,6 +354,7 @@
       REAL(DP),    ALLOCATABLE :: becp_emp(:,:)
       REAL(DP),    ALLOCATABLE :: bec_occ(:,:)
       REAL(DP),    ALLOCATABLE :: lambda_emp(:,:,:), f_emp(:)
+      REAL(DP),    ALLOCATABLE :: lambda_rep(:,:)
       INTEGER,     ALLOCATABLE :: ispin_emp(:)
       !
       INTEGER, ALLOCATABLE :: np_list(:)
@@ -607,12 +608,17 @@
 
       ! ...  Compute eigenvalues and bring wave functions on Kohn-Sham orbitals
 
+      ALLOCATE( lambda_rep( n_empx, n_empx ) )
+      !
       DO iss = 1, nspin
          i = iupdwn_emp(iss)
          n = nupdwn_emp(iss)
-         CALL crot( cm_emp, c0_emp, ngw, n, i, i, lambda_emp(:,:,iss), n_empx, ei_emp(:,iss) )
+         CALL collect_lambda( lambda_rep, lambda_emp(:,:,iss), desc_emp( :, iss ) )
+         CALL crot( cm_emp, c0_emp, ngw, n, i, i, lambda_rep, n_empx, ei_emp(:,iss) )
          ei_emp( 1:n, iss ) = ei_emp( 1:n, iss ) / f_emp( i : i + n - 1 )
       END DO
+      !
+      DEALLOCATE( lambda_rep )
 
       ! ...   Save emptystates to disk
 
