@@ -369,14 +369,9 @@ MODULE input
      !
      trhor_  = ( TRIM( calculation ) == 'nscf' )
      tvlocw_ = ( TRIM( disk_io ) == 'high' )     !  warning this is not working
-     ! for now use reduce_io in CP to specify if the charge density is saved
      !
      reduce_io_ = .NOT.( TRIM( disk_io ) == 'high' )
-     trhow_     = .NOT. reduce_io_
-     ! 
-     !   saverho overwrites disk_io
-     !
-     IF( saverho ) trhow_ = .TRUE.
+     trhow_     = saverho
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
