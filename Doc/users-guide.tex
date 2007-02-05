@@ -861,8 +861,6 @@ The utility programs in \texttt{pwtools/} are:
         wave vector using the IFC file calculated by \texttt{q2r.x}; 
         may also calculate phonon DOS
   \item \texttt{fqha.x} for quasi-harmonic calculations
-  \item \texttt{lambda.x} calculates the electron-phonon coefficient
-        $\lambda$ and the function $\alpha^2F(\omega)$
   \item \texttt{dist.x} calculates distances and angles between
         atoms in a cell, taking into account periodicity
   \item \texttt{ev.x} fits energy-vs-volume data to an equation of
@@ -3498,7 +3496,6 @@ $nr1b=(2*r_{cut})/L_x*nr1$,
 where $r_{cut}$ is the cut-off radius for the largest element and $L_x$ 
 is the physical length of your box along the $x$ axis. You have to round 
 your result to the nearest larger integer.'' (info by Nicola Marzari)
-\end{itemize}
 
 \item {\em How can I calculate magnetic moments for each atom?}
 
@@ -3512,4 +3509,26 @@ your result to the nearest larger integer.'' (info by Nicola Marzari)
  decomposition of Lowdin charges on angular momentum and spin component 
  of each atom."
 
+\item {\em What is the order of $Y_{lm}$ components in projected DOS /
+projection of atomic wavefunctions ?}
+
+"The order is, I think:
+
+\begin{tabular}{rl}
+1& $P_{0,0}(t)$           \\
+2& $P_{1,0}(t)$           \\
+3& $P_{1,1}(t) \cos\phi$ \\
+4& $P_{1,1}(t) \sin\phi$ \\
+5& $P_{2,0}(t)$           \\
+6& $P_{2,1}(t) \cos\phi$ \\
+7& $P_{2,1}(t) \sin\phi$ \\
+8& $P_{2,2}(t) \cos 2\phi$\\
+9& $P_{2,2}(t) \sin 2\phi$\\
+\end{tabular}
+
+and so on; $P_{l,m}=$Legendre Polynomials, $t=\cos\theta=z/r$, $\phi=\mbox{atan}(y/x)$.
+No warranty. Anybody really interested in knowing for sure which
+spherical harmonic combination is which should look into routine
+\texttt{ylmr2} in \texttt{flib/ylmr2.f90}"
+\end{itemize}
 \end{document}

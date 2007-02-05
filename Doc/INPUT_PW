@@ -163,8 +163,14 @@ forc_conv_thr  REAL ( default = 1.0D-3 )
                forc_conv_thr.
                See also etot_conv_thr - both criteria must be satisfied
 
-disk_io        CHARACTER
-               'high', 'default', 'low', 'minimal'
+disk_io        CHARACTER ( default='default')
+               Specifies the amount of disk I/O activity
+               'high':    save all data at each SCF step 
+               'default': save wavefunctions at each SCF step unless
+                          there is a single k-point per process
+               If restarting from an interrupted calculation, the code
+               will try to figure out what is available on disk. The
+               more you write, the more complete the restart will be.
 
 pseudo_dir     CHARACTER ( default = value of the $ESPRESSO_PSEUDO environment
                variable if set; '$HOME/espresso/pseudo/' otherwise )
@@ -1029,7 +1035,7 @@ CELL_PARAMETERS
 
   Syntax:
   
-    CELL_PARAMETERS
+    CELL_PARAMETERS { cubic | hexagonal }
       a(1,1) a(2,1) a(3,1)
       a(1,2) a(2,2) a(3,2)
       a(1,3) a(2,3) a(3,3)
@@ -1037,7 +1043,9 @@ CELL_PARAMETERS
   a(:,1) = crystal axis 1    alat units   if celldm(1) was specified
       2                 2    a.u.         if celldm(1)=0
       3                 3
-
+  Keyword "cubic" or "hexagonal" specify if you want to look for symmetries
+  derived from the cubic symmetry group (default) or from the hexagonal
+  symmetry group (assuming c axis as the z axis, a axis along the x axis)
 -------------------------------------------------------------------------------
 
 CLIMBING_IMAGES
