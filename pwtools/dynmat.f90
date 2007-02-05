@@ -385,7 +385,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
     write (6,'(5x,"Raman cross sections are in A^4/amu units")')
     write (6,'(5x,"multiply Raman by",f9.6," for Clausius-Mossotti", &
          & " correction")') cmfac**2
-    write (6,'(/"#  mode   [cm-1]     [THz]      IR       Raman     depol")')
+    write (6,'(/"#  mode   [cm-1]     [THz]      IR           Raman     depol")')
  end if
  !
  do nu = 1,3*nat
@@ -404,7 +404,7 @@ subroutine RamanIR (nat, omega, w2, z, zstar, eps0, dchi_dtau)
                  (raman(1,1,nu) - raman(3,3,nu))**2 + &
                  (raman(2,2,nu) - raman(3,3,nu))**2 + 6.d0 * &
           (raman(1,2,nu)**2 + raman(1,3,nu)**2 + raman(2,3,nu)**2) )/2.d0
-       write (6,'(i5,f10.2,2f10.4,f11.4,f10.4)') &
+       write (6,'(i5,f10.2,2f10.4,f15.4,f10.4)') &
             nu, freq, freq*cm1thz, infrared(nu), &
             (45.d0*alpha**2 + 7.0d0*beta2)*r1fac, &
              3.d0*beta2/(45.d0*alpha**2 + 4.0d0*beta2)
