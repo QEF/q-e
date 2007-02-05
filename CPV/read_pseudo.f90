@@ -142,7 +142,7 @@ SUBROUTINE check_types_order( )
   !
   IF( ANY( upf(1:nsp)%tvanp  ) ) THEN
     CALL errore( &
-           ' check_types_order ', ' vanderbilt pseudo, not yet implemened in FPMD ', 1 )
+           ' check_types_order ', ' vanderbilt pseudo, not yet implemented in FPMD ', 1 )
   END IF
   !
   !   non-local species must be ahead the local one,

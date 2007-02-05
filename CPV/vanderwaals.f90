@@ -425,7 +425,7 @@
 !                  sxlm(1) = XLM + DBLE(IX)
 !                  sxlm(2) = YLM + DBLE(IY)
 !                  sxlm(3) = ZLM + DBLE(IZ)
-!                  CALL S_TO_R(SXLM,rxlm)
+!                  CALL S_TO_R(sxlm,rxlm)
 !                  ERRE2 = rxlm(1)**2 + rxlm(2)**2 + rxlm(3)**2
 !                  RLM   = SQRT(ERRE2)
 !                  IF (TZERO) THEN
