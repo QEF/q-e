@@ -560,6 +560,8 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
      !
   END DO
   !
+  DEALLOCATE(fact_hepsi)
+  !
   RETURN
   !
 END SUBROUTINE c_bands_efield
