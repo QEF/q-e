@@ -414,7 +414,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            !
            weight = wk (ikk)
            call incdrhoscf (drhoscf(1,current_spin,ipert), weight, ik, &
-                            dbecsum(1,1,current_spin,ipert), mode)
+                            dbecsum(1,1,current_spin,ipert))
            ! on perturbations
         enddo
         ! on k-points

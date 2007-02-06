@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
+subroutine incdrhoscf (drhoscf, weight, ik, dbecsum)
   !-----------------------------------------------------------------------
   !
   !     This routine computes the change of the charge density due to the
@@ -31,7 +31,6 @@ subroutine incdrhoscf (drhoscf, weight, ik, dbecsum, mode)
   complex(DP) :: drhoscf (nrxxs), dbecsum (nhm*(nhm+1)/2,nat)
   ! output: the change of the charge densit
   ! inp/out: the accumulated dbec
-  integer :: mode
   !
   !   here the local variable
   !

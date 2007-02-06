@@ -79,8 +79,7 @@ subroutine zstar_eu_us
      do jpol = 1, 3
         nrec = (jpol - 1) * nksq + ik
         call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
-        call incdrhoscf (dvscf(1,1,jpol),weight,ik,  &
-             dbecsum(1,1,1,jpol), 1)
+        call incdrhoscf (dvscf(1,1,jpol),weight,ik, dbecsum(1,1,1,jpol))
      end do
   end do
 
