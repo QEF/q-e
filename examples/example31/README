@@ -49,7 +49,7 @@ To perform a calculations with an electric field, an estimate of
 the optimized wavefunctions is needed to build the electric field
 operator (See: I. Souza, J.Iniguez and D. Vanderbilt, PRB 69, 085106,
 2004). Therefore when lelfield ==.true. a copy of the wavefunctions
-is read from disk (i.e. restart_mode must be 'restart').
+is read from disk (i.e. startingwfc should be 'file').
 The parameters GDIR defines the direction of the electric field.
 The k_points must be given as a series of k-points-strings.
 A k-points-string is a series of NPPSTR uniform spaced k-points
@@ -110,10 +110,9 @@ without electric field. The second calculation turns on the field
 but with 0 a.u. intensity. The third calculation applies a field
 of 0.001 a.u..
 
-After the second calculation the electronic dipole D[0.a.u.] at 0 field reads:
-Electronic Dipole per cell (a.u.) -2.502553344652915E-004
-After the third calculation the electronic dipole D[0.001 a.u.] at 0.001 a.u. field reads:
-Electronic Dipole per cell (a.u.)  0.934898995836340
+The electronic dipole D[0.a.u.] at 0 field is a small number in the
+order of 1.0d-4.  After the third calculation the electronic dipole
+D[0.001 a.u.] at 0.001 a.u. field is 0.931.
 
 The high-frequency dielectric constant eps_inf is then given by
 
@@ -128,8 +127,4 @@ eps_inf=12.14
 The result 12.14 is not fully converged on nppstr, for a discussion
 on convergence see:
 P.Umari and A. Pasquarello, PRB 68, 085114 (2003).
-
-
-
-
 

@@ -11,7 +11,7 @@ $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x to perform electronic structure"
-$ECHO "calculations in the presence of a finite homgenous electric field "
+$ECHO "calculations in the presence of a finite homogeneous electric field "
 $ECHO "described through the modern theory of the polarization. The example"
 $ECHO "shows how to calculate high-frequency dielectric constant of bulk Silicon"
 
@@ -186,7 +186,7 @@ $ECHO " done"
 cat > si.scf.efield.in << EOF
  &control
     calculation='scf'
-    restart_mode='restart',
+    restart_mode='from_scratch',
     prefix='silicon',
     gdir=3,
     nppstr=7,
@@ -203,7 +203,8 @@ cat > si.scf.efield.in << EOF
     diagonalization='david',
     conv_thr =  1.0d-8,
     mixing_beta = 0.5,
-    startingwfc='random',
+    startingwfc='file',
+    startingpot='file',
     efield=0.
  /
 ATOMIC_SPECIES
@@ -289,7 +290,7 @@ $ECHO " done"
 cat > si.scf.efield2.in << EOF 
  &control
     calculation='scf'
-    restart_mode='restart',
+    restart_mode='from_scratch',
     prefix='silicon',
     gdir=3,
     nppstr=7,
@@ -307,7 +308,8 @@ cat > si.scf.efield2.in << EOF
     diagonalization='david',
     conv_thr =  1.0d-8,
     mixing_beta = 0.5,
-    startingwfc='random',
+    startingwfc='file',
+    startingpot='file',
     efield=0.001
  /
 ATOMIC_SPECIES
