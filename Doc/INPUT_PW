@@ -691,15 +691,26 @@ tolp           REAL ( default = 1.D-3 )
                calculations.
 
 delta_t        REAL ( default = 1.D0 )
-               delta_t = 1                 : every 'nraise' step the actual 
-                                             temperature is rescaled to tempw
-               delta_t /= 1 && delta_T > 0 : at each step the temperature is 
-                                             multiplied by delta_t; this is 
-                                             done rescaling all the velocities.
-               delta_t < 0                 : every 'nraise' steps temperature
-                                             is reduced by -delta_T
+               delta_t = 1                 : every 'nraise' steps the average
+                                             temperature, computed from the last
+                                             nraise steps, is rescaled to tempw
+               delta_t /= 1 && delta_T > 0 : at each step the instantaneous 
+                                             temperature is multiplied by 
+                                             delta_t; this is done rescaling all
+                                             the velocities. See comment below.
+               delta_t < 0                 : every 'nraise' steps the 
+                                             instantaneous temperature is 
+                                             reduced by -delta_T.
+                                             See comment below.
                This keyword is NOT used in the case of variable cell
                calculations.
+               The instantaneous temperature is calculated at the end of every
+               ionic move and BEFORE rescaling. This is the temperature reported
+               in the main output.
+               For delta_t /= 1, the actual average rate of heating or cooling
+               should be roughly C*delta_t/(nraise*dt) (C=1 for an
+               ideal gas, C=0.5 for a harmonic solid, theorem of energy
+               equipartition between all quadratic degrees of freedom).
 
 nraise         INTEGER ( default = 100 )
                the temperature is reduced of -delta_T every 'nraise' steps.
