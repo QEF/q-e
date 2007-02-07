@@ -117,8 +117,17 @@ SUBROUTINE summary()
   IF ( lmd .OR. lbfgs .OR. lpath ) &
      WRITE( stdout, '(5X,"nstep                     = ",I12,/)' ) nstep
   !
-  IF ( lspinorb ) &
-     WRITE( stdout, '(5X,"Noncollinear calculation with spin-orbit",/)' )
+  IF (noncolin) THEN
+     IF (lspinorb) THEN
+        IF (domag) THEN
+           WRITE( stdout, '(5X, "Noncollinear calculation with spin-orbit",/)')
+        ELSE
+           WRITE( stdout, '(5X, "Non magnetic calculation with spin-orbit",/)')
+        ENDIF
+     ELSE
+        WRITE( stdout, '(5X, "Noncollinear calculation without spin-orbit",/)')
+     END IF
+  END IF
   !
   IF ( qcutz > 0.D0 ) THEN
      !
