@@ -1,8 +1,9 @@
 This example shows how to use pw.x to calculate the total energy
 and the band structure of fcc-Pt with a fully relativistic US-PP
 which includes spin-orbit effects.
-It tests also pwcond.x for the calculation of complex bands of a 
-system with spin-orbit.
+It tests pwcond.x for the calculation of the complex bands and of the
+transmission of a system with spin-orbit.
+It tests ph.x for the calculation of the phonons in the spin-orbit case.
 
 The calculation proceeds as follows:
 
@@ -12,8 +13,29 @@ The calculation proceeds as follows:
 2) make a band structure calculation for Pt (input=pt.band.in,
    output=pt.band.out).
 
-3) make a self-consistent calculation for Pt in a tetragonal cell 
+3) use the bands.x program to check the band symmetry (input=pt.bands.in,
+   output=pt.bands.out).
+
+4) make a self-consistent calculation for fcc-Pt with few k-points
+   (input=pt.scf_ph.in, output=pt.scf_ph.out).
+
+5) make a phonon calculation at the Gamma point (input=pt.ph.in,
+   output=pt.ph.out).
+
+6) make a non scf calculation for the bands at k and k+q, to prepare
+   a phonon calculation at X (input=pt.nscf_ph.in, output=pt.nscf_ph.out).
+
+7) make a phonon calculation at X (input=pt.phX.in, output=pt.phX.out).
+
+8) make a self-consistent calculation for Pt in a tetragonal cell 
    (input=pt.tet.in, output=pt.tet.out).
 
-4) make a calculation with pwcond for the complex bands at the Fermi
+9) make a calculation with pwcond.x for the complex bands at the Fermi
    level (input=pt.cond.in, output=pt.cond.out).
+
+10) make a self-consistent calculation for Pt in a tetragonal cell with 4 atoms
+   (input=pt.tet4.in, output=pt.tet4.out).
+
+11) make a calculation of transmission with pwcond.x, with the cell calculated
+    at point 9 (input=pt.cond_t.in, output=pt.cond_t.out).
+

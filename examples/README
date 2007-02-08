@@ -218,7 +218,8 @@ example22:
     This example shows how to use pw.x to calculate the total energy
     and the band structure of fcc-Pt with a fully relativistic US-PP
     which includes spin-orbit effects. pwcond.x is used to calculate the 
-    complex bands including spin-orbit coupling.
+    complex bands including spin-orbit coupling. ph.x is used to calculate
+    the phonon frequencies at Gamma and X of fcc-Pt.
 
 example23:
     This example shows how to use cp.x to calculate Wannier functions
