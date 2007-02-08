@@ -36,7 +36,8 @@ MODULE xml_io_base
             save_print_counter, read_print_counter, set_kpoints_vars,    &
             write_header,                                                &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
-            write_efield, write_spin, write_xc, write_occ, write_bz,     &
+            write_efield, write_spin, write_init_mag, write_xc,          &
+            write_occ, write_bz,     &
             write_phonon, write_rho_xml, write_wfc, write_eig,           &
             read_wfc, read_rho_xml
   !
@@ -919,6 +920,34 @@ MODULE xml_io_base
       CALL iotk_write_end( iunpun, "SPIN" )
       !
     END SUBROUTINE write_spin
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE write_init_mag(starting_magnetization, angle1, angle2, ntyp )
+    !------------------------------------------------------------------------
+      USE constants, ONLY : pi
+
+      IMPLICIT NONE
+      INTEGER, INTENT(IN):: ntyp
+      REAL(DP), INTENT(IN) :: starting_magnetization(ntyp), &
+                              angle1(ntyp), angle2(ntyp)
+      INTEGER :: ityp
+      !
+      CALL iotk_write_begin( iunpun, "STARTING_MAG" )
+      CALL iotk_write_dat( iunpun, "NTYP", ntyp) 
+
+      DO ityp=1,ntyp
+         CALL iotk_write_dat( iunpun, "STARTING_MAGNETIZATION",  &
+                                       starting_magnetization(ityp) )
+         CALL iotk_write_dat( iunpun, "ANGLE1", &
+                                       angle1(ityp)*180.d0/pi )
+         CALL iotk_write_dat( iunpun, "ANGLE2", &
+                                       angle2(ityp)*180.d0/pi )
+      END DO
+      CALL iotk_write_end( iunpun, "STARTING_MAG" )
+      !
+    RETURN
+    !
+    END SUBROUTINE write_init_mag
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_xc( dft, nsp, lda_plus_u, &

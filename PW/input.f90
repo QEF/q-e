@@ -282,6 +282,18 @@ SUBROUTINE iosys()
   tfixed_occ = .FALSE.
   ltetra     = .FALSE.
   !
+  IF (noncolin) THEN
+     DO nt = 1, ntyp
+        !
+        angle1(nt) = pi * angle1(nt) / 180.D0
+        angle2(nt) = pi * angle2(nt) / 180.D0
+        !
+     END DO
+  ELSE
+     angle1=0.d0
+     angle2=0.d0
+  ENDIF
+
   SELECT CASE( TRIM( occupations ) )
   CASE( 'fixed' )
      !
@@ -425,8 +437,8 @@ SUBROUTINE iosys()
      !
      DO nt = 1, ntyp
         !
-        theta = pi * angle1(nt) / 180.D0
-        phi   = pi * angle2(nt) / 180.D0
+        theta = angle1(nt)
+        phi   = angle2(nt) 
         !
         mcons(1,nt) = starting_magnetization(nt) * SIN( theta ) * COS( phi )
         mcons(2,nt) = starting_magnetization(nt) * SIN( theta ) * SIN( phi )
@@ -444,7 +456,7 @@ SUBROUTINE iosys()
      !
      DO nt = 1, ntyp
         !
-        theta = pi * angle1(nt) / 180.D0
+        theta = angle1(nt) 
         !
         mcons(3,nt) = cos(theta)
         !

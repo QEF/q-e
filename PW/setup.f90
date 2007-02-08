@@ -141,12 +141,12 @@ SUBROUTINE setup()
      !
      ! ... transform angles to radiants
      !
-     DO nt = 1, ntyp
+!     DO nt = 1, ntyp
         !
-        angle1(nt) = pi * angle1(nt) / 180.D0
-        angle2(nt) = pi * angle2(nt) / 180.D0
-        !
-     END DO
+!        angle1(nt) = pi * angle1(nt) / 180.D0
+!        angle2(nt) = pi * angle2(nt) / 180.D0
+!        !
+!     END DO
      !
      ! ... Set the nomag variable to make a spin-orbit calculation with zero
      ! ... magnetization

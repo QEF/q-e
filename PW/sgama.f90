@@ -118,8 +118,8 @@ subroutine sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym,&
   call smallg_q (xq, modenum, at, bg, nrot, s, ftau, sym, minus_q)
   IF (noncolin.and.domag) THEN
      minus_q=.false.
-     IF ( ABS(DOT_PRODUCT(xq,xq)) > 1.0D-07 ) CALL errore ('sgama', &
-          'phonon not implemented with non collinear magnetism', 1)
+!     IF ( ABS(DOT_PRODUCT(xq,xq)) > 1.0D-07 ) CALL errore ('sgama', &
+!          'phonon not implemented with non collinear magnetism', 1)
      ! If somebody want to implement phononic calculation in non 
      ! collinear magnetic case he has to pay attention to the fact
      ! that in non collinear case the symmetry k -> -k is not

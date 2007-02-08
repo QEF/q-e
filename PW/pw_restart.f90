@@ -40,6 +40,7 @@ MODULE pw_restart
              lpw_read     = .FALSE., &
              lions_read   = .FALSE., &
              lspin_read   = .FALSE., &
+             lstarting_mag_read   = .FALSE., &
              lxc_read     = .FALSE., &
              locc_read    = .FALSE., &
              lbz_read     = .FALSE., &
@@ -85,7 +86,8 @@ MODULE pw_restart
       USE spin_orb,             ONLY : lspinorb, domag
       USE symme,                ONLY : nsym, invsym, s, ftau, irt, t_rev
       USE char,                 ONLY : sname
-      USE lsda_mod,             ONLY : nspin, isk, lsda
+      USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
+      USE noncollin_module,     ONLY : angle1, angle2
       USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
@@ -331,6 +333,8 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL write_spin( lsda, noncolin, npol, lspinorb, domag )
+         !
+         CALL write_init_mag(starting_magnetization, angle1, angle2, nsp )
          !
 !-------------------------------------------------------------------------------
 ! ... EXCHANGE_CORRELATION
@@ -807,7 +811,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       !
       CHARACTER(LEN=256) :: dirname
-      LOGICAL            :: lexist, lcell, lpw, lions, lspin, &
+      LOGICAL            :: lexist, lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, &
                             lsymm, lph, lrho, lefield
       !
@@ -827,6 +831,7 @@ MODULE pw_restart
       lpw     = .FALSE.
       lions   = .FALSE.
       lspin   = .FALSE.
+      linit_mag = .FALSE.
       lxc     = .FALSE.
       locc    = .FALSE.
       lbz     = .FALSE.
@@ -868,6 +873,7 @@ MODULE pw_restart
          lpw     = .TRUE.
          lions   = .TRUE.
          lspin   = .TRUE.
+         linit_mag   = .TRUE.
          lxc     = .TRUE.
          locc    = .TRUE.
          lbz     = .TRUE.
@@ -882,6 +888,7 @@ MODULE pw_restart
          lpw     = .TRUE.
          lions   = .TRUE.
          lspin   = .TRUE.
+         linit_mag  = .TRUE.
          lxc     = .TRUE.
          locc    = .TRUE.
          lbz     = .TRUE.
@@ -898,6 +905,7 @@ MODULE pw_restart
          lpw_read     = .FALSE.
          lions_read   = .FALSE.
          lspin_read   = .FALSE.
+         lstarting_mag_read   = .FALSE.
          lxc_read     = .FALSE.
          locc_read    = .FALSE.
          lbz_read     = .FALSE.
@@ -937,6 +945,12 @@ MODULE pw_restart
          IF ( ierr > 0 ) RETURN
          !
       END IF
+      IF (linit_mag) THEN
+         !
+         CALL read_init_mag( dirname, ierr )
+         IF ( ierr > 0 ) RETURN
+         !
+      ENDIF
       IF ( lxc ) THEN
          !
          CALL read_xc( dirname, ierr )
@@ -1771,6 +1785,63 @@ MODULE pw_restart
       RETURN
       !
     END SUBROUTINE read_spin
+    !
+    !--------------------------------------------------------------------------
+    SUBROUTINE read_init_mag( dirname, ierr )
+      !------------------------------------------------------------------------
+      !
+      USE constants,        ONLY : pi
+      USE lsda_mod,         ONLY : starting_magnetization
+      USE noncollin_module, ONLY : angle1, angle2
+      !
+      IMPLICIT NONE
+      !
+      CHARACTER(LEN=*), INTENT(IN)  :: dirname
+      INTEGER,          INTENT(OUT) :: ierr
+      !
+      LOGICAL :: found
+      INTEGER :: ityp, ntyp
+      !
+      IF ( lstarting_mag_read ) RETURN
+      !
+      IF ( ionode ) &
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "STARTING_MAG" )
+         !
+         CALL iotk_scan_dat( iunpun, "NTYP", ntyp )
+         !
+         DO ityp=1,ntyp
+            CALL iotk_scan_dat( iunpun, "STARTING_MAGNETIZATION", &
+              starting_magnetization(ityp) )
+            CALL iotk_scan_dat( iunpun, "ANGLE1", angle1(ityp) )
+            CALL iotk_scan_dat( iunpun, "ANGLE2", angle2(ityp) )
+            angle1(ityp)=angle1(ityp)*pi/180.d0
+            angle2(ityp)=angle2(ityp)*pi/180.d0
+         END DO
+
+         CALL iotk_scan_end( iunpun, "STARTING_MAG" )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      CALL mp_bcast( starting_magnetization,  ionode_id, intra_image_comm )
+      CALL mp_bcast( angle1,        ionode_id, intra_image_comm )
+      CALL mp_bcast( angle2,        ionode_id, intra_image_comm )
+      !
+      lstarting_mag_read = .TRUE.
+      !
+      RETURN
+      !
+    END SUBROUTINE read_init_mag
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_xc( dirname, ierr )

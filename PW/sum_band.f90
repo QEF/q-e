@@ -371,15 +371,19 @@ SUBROUTINE sum_band()
        COMPLEX(DP), ALLOCATABLE :: becp(:,:), becp_nc(:,:,:)
        ! contains <beta|psi>
        !
-       COMPLEX(DP), ALLOCATABLE :: be1(:,:), be2(:,:)
+       COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
        !
-       INTEGER :: ipol, kh, kkb, is1, is2
+       INTEGER :: ipol, kh, kkb, is1, is2, js
        !
-       IF (noncolin) THEN
-          ALLOCATE( becp_nc( nkb, npol, nbnd ) )
-          IF (lspinorb) ALLOCATE(be1(nhm,2), be2(nhm,2))
-       ELSE
-          ALLOCATE( becp( nkb, nbnd ) )
+
+       IF (okvan) THEN
+          IF (noncolin) THEN
+             ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
+             becsum_nc=(0.d0, 0.d0)
+             ALLOCATE( becp_nc( nkb, npol, nbnd ) )
+          ELSE
+             ALLOCATE( becp( nkb, nbnd ) )
+          END IF
        ENDIF
        !
        ! ... here we sum for each k point the contribution
@@ -504,30 +508,6 @@ SUBROUTINE sum_band()
                       !
                       IF (ityp(na)==np) THEN
                          !
-                         IF (so(np)) THEN
-                            be1=(0.d0,0.d0)
-                            be2=(0.d0,0.d0)
-                            DO ih = 1, nh(np)
-                               ikb = ijkb0 + ih
-                               DO kh = 1, nh(np)
-                                  IF ((nhtol(kh,np)==nhtol(ih,np)).AND. &
-                                  (nhtoj(kh,np)==nhtoj(ih,np)).AND.     &
-                                  (indv(kh,np)==indv(ih,np))) THEN
-                                     kkb=ijkb0 + kh
-                                     DO is1=1,2
-                                        DO is2=1,2
-                                           be1(ih,is1)=be1(ih,is1)+  &
-                                               fcoef(ih,kh,is1,is2,np)*  &
-                                                    becp_nc(kkb,is2,ibnd)
-                                           be2(ih,is1)=be2(ih,is1)+ &
-                                               fcoef(kh,ih,is2,is1,np)* &
-                                               CONJG(becp_nc(kkb,is2,ibnd))
-                                        END DO
-                                     END DO
-                                  END IF
-                               END DO
-                            END DO
-                         END IF
                          ijh = 1
                          !
                          DO ih = 1, nh(np)
@@ -536,46 +516,24 @@ SUBROUTINE sum_band()
                             !
                             IF (noncolin) THEN
                                !
-                               IF (so(np)) THEN
-                                  becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*&
-                                     (be1(ih,1)*be2(ih,1)+ be1(ih,2)*be2(ih,2))
-                                  IF (domag) THEN
-                                     becsum(ijh,na,2)=becsum(ijh,na,2)+ w1*&
-                                     (be1(ih,2)*be2(ih,1)+ be1(ih,1)*be2(ih,2))
-                                     becsum(ijh,na,3)=becsum(ijh,na,3)+ &
-                                               w1*(0.d0,-1.d0)*      &  
-                                     (be1(ih,2)*be2(ih,1)-be1(ih,1)*be2(ih,2))
-                                     becsum(ijh,na,4)=becsum(ijh,na,4)+ w1* &
-                                     (be1(ih,1)*be2(ih,1)-be1(ih,2)*be2(ih,2))
-                                  ENDIF
-                               ELSE
-                                  becsum(ijh,na,1) = becsum(ijh,na,1)   &
-                                    + w1*( CONJG(becp_nc(ikb,1,ibnd))   &
-                                                *becp_nc(ikb,1,ibnd)    &
-                                    +      CONJG(becp_nc(ikb,2,ibnd))   &
-                                                *becp_nc(ikb,2,ibnd) )
-                                  IF (domag) THEN
-                                     becsum(ijh,na,2)=becsum(ijh,na,2)  &
-                                     + w1*(CONJG(becp_nc(ikb,2,ibnd))   &
-                                                 *becp_nc(ikb,1,ibnd)   &
-                                     +     CONJG(becp_nc(ikb,1,ibnd))   &
-                                                 *becp_nc(ikb,2,ibnd) )
-                                     becsum(ijh,na,3)=becsum(ijh,na,3)  &
-                                          + w1*2.d0     &
-                                      *AIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
-                                                   becp_nc(ikb,2,ibnd) )
-                                     becsum(ijh,na,4) = becsum(ijh,na,4)    &
-                                          + w1*( CONJG(becp_nc(ikb,1,ibnd)) &
-                                                      *becp_nc(ikb,1,ibnd)  &
-                                          -      CONJG(becp_nc(ikb,2,ibnd)) &
-                                                      *becp_nc(ikb,2,ibnd) )
-                                  END IF
-                               END IF
+                               DO is=1,npol
+                                  !
+                                  DO js=1,npol
+                                     becsum_nc(ijh,na,is,js) =         &
+                                         becsum_nc(ijh,na,is,js)+w1 *  &
+                                          CONJG(becp_nc(ikb,is,ibnd)) * &
+                                                becp_nc(ikb,js,ibnd)
+                                  END DO
+                                  !
+                               END DO
+                               !
                             ELSE
+                               !
                                becsum(ijh,na,current_spin) = &
                                         becsum(ijh,na,current_spin) + &
                                         w1 * DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                           becp(ikb,ibnd) )
+                               !
                             END IF                       
                             !
                             ijh = ijh + 1
@@ -585,59 +543,24 @@ SUBROUTINE sum_band()
                                jkb = ijkb0 + jh
                                !
                                IF (noncolin) THEN
-                                  IF (so(np)) THEN
-                                     becsum(ijh,na,1)=becsum(ijh,na,1)+ w1*(  &
-                                   (be1(jh,1)*be2(ih,1)+be1(jh,2)*be2(ih,2))+ &
-                                   (be1(ih,1)*be2(jh,1)+be1(ih,2)*be2(jh,2)))
-                                     IF (domag) THEN
-                                       becsum(ijh,na,2)=becsum(ijh,na,2)+w1*( &
-                                     (be1(jh,2)*be2(ih,1)+be1(jh,1)*be2(ih,2))+&
-                                     (be1(ih,2)*be2(jh,1)+be1(ih,1)*be2(jh,2)))
-                                       becsum(ijh,na,3)=becsum(ijh,na,3)+ &
-                                          w1*(0.d0,-1.d0)*((be1(jh,2)*&
-                                          be2(ih,1)-be1(jh,1)*be2(ih,2))+ &
-                                         (be1(ih,2)*be2(jh,1)-be1(ih,1)*&
-                                                    be2(jh,2)) )
-                                       becsum(ijh,na,4)=becsum(ijh,na,4)+ &
-                                              w1*((be1(jh,1)*be2(ih,1)- &
-                                             be1(jh,2)*be2(ih,2))+  &
-                                             (be1(ih,1)*be2(jh,1)-  &
-                                              be1(ih,2)*be2(jh,2)) )
-                                     END IF
-                                  ELSE
-                                     becsum(ijh,na,1)= becsum(ijh,na,1)+ &
-                                                      w1*2.d0* &
-                                     DBLE(CONJG(becp_nc(ikb,1,ibnd))* &
-                                                becp_nc(jkb,1,ibnd) + &
-                                          CONJG(becp_nc(ikb,2,ibnd))* &
-                                                becp_nc(jkb,2,ibnd) )
-                                     IF (domag) THEN
-                                        becsum(ijh,na,2)=becsum(ijh,na,2)+ &
-                                                          w1*2.d0* &
-                                           DBLE(CONJG(becp_nc(ikb,2,ibnd))* &
-                                                      becp_nc(jkb,1,ibnd) + &
-                                                CONJG(becp_nc(ikb,1,ibnd))* &
-                                                      becp_nc(jkb,2,ibnd) )
-                                        becsum(ijh,na,3)=becsum(ijh,na,3)+ &
-                                                       w1*2.d0* &
-                                            AIMAG(CONJG(becp_nc(ikb,1,ibnd))* &
-                                                        becp_nc(jkb,2,ibnd) + &
-                                                  CONJG(becp_nc(ikb,1,ibnd))* &
-                                                        becp_nc(jkb,2,ibnd) )
-                                        becsum(ijh,na,4)=becsum(ijh,na,4)+ &
-                                                       w1*2.d0* &
-                                            DBLE(CONJG(becp_nc(ikb,1,ibnd))* &
-                                                       becp_nc(jkb,1,ibnd) - &
-                                                 CONJG(becp_nc(ikb,2,ibnd))* &
-                                                       becp_nc(jkb,2,ibnd) )
-                                     END IF
-                                  END IF
+                                  !
+                                  DO is=1,npol
+                                     !
+                                     DO js=1,npol
+                                        becsum_nc(ijh,na,is,js) =         &
+                                           becsum_nc(ijh,na,is,js) + w1 * &
+                                           CONJG(becp_nc(ikb,is,ibnd)) *  &
+                                                 becp_nc(jkb,js,ibnd)
+                                     END DO
+                                     !
+                                  END DO
+                                  !
                                ELSE
-                               !
-                                   becsum(ijh,na,current_spin) = &
+                                  !
+                                  becsum(ijh,na,current_spin) = &
                                      becsum(ijh,na,current_spin) + w1 * 2.D0 * &
                                      DBLE( CONJG( becp(ikb,ibnd) ) * &
-                                           becp(jkb,ibnd) )
+                                                  becp(jkb,ibnd) )
                                ENDIF
                                !            
                                ijh = ijh + 1
@@ -669,13 +592,31 @@ SUBROUTINE sum_band()
           CALL stop_clock( 'becsum' )
           !
        END DO k_loop
+
+       IF (noncolin.and.okvan) THEN
+          DO np = 1, ntyp
+             IF ( tvanp(np) ) THEN
+                DO na = 1, nat
+                   IF (ityp(na)==np) THEN
+                      IF (so(np)) THEN
+                         CALL transform_becsum_so(becsum_nc,becsum,na)
+                      ELSE
+                         CALL transform_becsum_nc(becsum_nc,becsum,na)
+                      END IF
+                   END IF
+                END DO
+             END IF
+          END DO
+       END IF
        !
-       IF (noncolin) THEN
-          DEALLOCATE( becp_nc )
-          IF (lspinorb) DEALLOCATE(be1, be2)
-       ELSE
-          DEALLOCATE( becp )
-       ENDIF
+       IF (okvan) THEN
+          IF (noncolin) THEN
+             DEALLOCATE( becsum_nc )
+             DEALLOCATE( becp_nc )
+          ELSE
+             DEALLOCATE( becp )
+          ENDIF
+       END IF
        !
        RETURN
        !
