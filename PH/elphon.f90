@@ -446,7 +446,7 @@ SUBROUTINE elphsum ( )
      ! recalculate Ef = effit and DOS at Ef N(Ef) = dosfit using dense grid 
      ! for value "deg" of gaussian broadening
      !
-     deg(isig) = 0.01d0*isig
+     deg(isig) = isig * 0.005d0
      !
      effit(isig) = efermig &
           ( etfit, nbnd, nksfit, nelec, wkfit, deg(isig), ngauss1, 0, isk)
