@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2 - Tue Jan 16 15:19:40 CET 2007                          
+     Version: 3.2 - Mon Dec 18 10:46:55 CET 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  11: 0:11  18Jan2007               
+   This run was started on:   3:31:10   8Feb2007               
 
    Serial Build
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /sfs/sanfs/home/usercin/acv0/espresso-serial/espresso/pseudo/O.BLYP.UPF
+   /home/giannozz/espresso/pseudo/O.BLYP.UPF
    file type is 20: UPF
  
    Type is UPF        and NONLOCAL. 
@@ -49,7 +49,7 @@
    Warning XC functionals forced to be: BLYP                
 
    Reading pseudopotential for specie #  2 from file :
-   /sfs/sanfs/home/usercin/acv0/espresso-serial/espresso/pseudo/H.fpmd.UPF
+   /home/giannozz/espresso/pseudo/H.fpmd.UPF
    file type is 20: UPF
  
    Type is UPF        and LOCAL. 
@@ -282,8 +282,8 @@
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
 
-   reading restart file: /scratch/acv0/tmp//h2o_mol_51.save
-   restart file read in    0.045 sec.
+   reading restart file: /home/giannozz/tmp//h2o_mol_51.save
+   restart file read in    0.049 sec.
 
  nprint_nfi=           -2
  nprint_nfi=           50
@@ -345,7 +345,7 @@
 
   -25.36  -13.15   -9.36   -6.35
  
-   Allocated memory (kb) =      1917
+   Allocated memory (kb) =      1922
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -425,7 +425,7 @@
 
   -25.16  -12.97   -9.26   -6.53
  
-   Allocated memory (kb) =      1917
+   Allocated memory (kb) =      1922
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -505,7 +505,7 @@
 
   -25.04  -12.87   -9.18   -6.66
  
-   Allocated memory (kb) =      1917
+   Allocated memory (kb) =      1922
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -585,7 +585,7 @@
 
   -24.98  -12.81   -9.13   -6.74
  
-   Allocated memory (kb) =      1917
+   Allocated memory (kb) =      1922
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -665,7 +665,7 @@
 
   -24.94  -12.78   -9.08   -6.79
  
-   Allocated memory (kb) =      1917
+   Allocated memory (kb) =      1922
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -706,8 +706,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00010    0.0    0.0   -17.17808   -17.17808   -17.17808   -17.17798  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scratch/acv0/tmp//h2o_mol_51.save
-   restart file written in    0.178 sec.
+   writing restart file: /home/giannozz/tmp//h2o_mol_51.save
+   restart file written in    0.170 sec.
 
 
 
@@ -724,28 +724,30 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     2.15s CPU
-     main_loop    :    43.72s CPU (      50 calls,   0.874 s avg)
-     formf        :     1.20s CPU
-     rhoofr       :     3.60s CPU (      50 calls,   0.072 s avg)
-     vofrho       :    32.82s CPU (      50 calls,   0.656 s avg)
-     calphi       :     0.06s CPU (      50 calls,   0.001 s avg)
-     ortho        :     0.31s CPU (      50 calls,   0.006 s avg)
-     updatc       :     0.06s CPU (      50 calls,   0.001 s avg)
+     initialize   :     2.51s CPU
+     main_loop    :    72.72s CPU (      50 calls,   1.454 s avg)
+     formf        :     1.45s CPU
+     rhoofr       :     6.52s CPU (      50 calls,   0.130 s avg)
+     vofrho       :    54.81s CPU (      50 calls,   1.096 s avg)
+     calphi       :     0.11s CPU (      50 calls,   0.002 s avg)
+     ortho        :     0.32s CPU (      50 calls,   0.006 s avg)
+     ortho_iter   :     0.00s CPU (      50 calls,   0.000 s avg)
+     rhoset       :     0.04s CPU (      50 calls,   0.001 s avg)
+     updatc       :     0.07s CPU (      50 calls,   0.001 s avg)
      prefor       :     0.00s CPU
-     strucf       :     0.01s CPU
-     nlsm1        :     0.01s CPU (      50 calls,   0.000 s avg)
-     nlsm2        :     0.00s CPU (       5 calls,   0.000 s avg)
-     fft          :    15.23s CPU (     400 calls,   0.038 s avg)
-     fftw         :     7.81s CPU (     300 calls,   0.026 s avg)
-     rsg          :     0.01s CPU (      50 calls,   0.000 s avg)
+     strucf       :     0.02s CPU
+     nlsm1        :     0.04s CPU (      50 calls,   0.001 s avg)
+     nlsm2        :     0.01s CPU (       5 calls,   0.002 s avg)
+     fft          :    33.68s CPU (     400 calls,   0.084 s avg)
+     fftw         :    13.73s CPU (     300 calls,   0.046 s avg)
+     rsg          :     0.00s CPU (      50 calls,   0.000 s avg)
  
  
  
-     CP           :    46.05s CPU time,   50.85s wall time
+     CP           :  1m15.53s CPU time,     1m26.55s wall time
 
  
-   This run was terminated on:  11: 1: 2  18Jan2007            
+   This run was terminated on:   3:32:37   8Feb2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
