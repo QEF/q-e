@@ -32,7 +32,7 @@ module funct
 !                      exx_is_active
 !
 !  XC computation drivers: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
-!  derivatives of XC computation drivers: dmxc, dmxc_spin
+!  derivatives of XC computation drivers: dmxc, dmxc_spin, dmxc_nc
 !
   USE io_global, ONLY: stdout
   USE kinds,     ONLY: DP
@@ -48,7 +48,7 @@ module funct
   PUBLIC  :: start_exx, stop_exx, get_exx_fraction, exx_is_active
   ! driver subroutines computing XC
   PUBLIC  :: xc, xc_spin, gcxc, gcx_spin, gcc_spin, gcc_spin_more
-  PUBLIC  :: dmxc, dmxc_spin
+  PUBLIC  :: dmxc, dmxc_spin, dmxc_nc
   !
   ! PRIVATE variables defining the DFT functional
   !
@@ -1211,4 +1211,124 @@ end subroutine gcc_spin
         
       end subroutine dmxc_spin
 
+      !-----------------------------------------------------------------------
+      subroutine dmxc_nc (rho, mx, my, mz, dmuxc)
+      !-----------------------------------------------------------------------
+        !  derivative of the xc potential with respect to the local density
+        !  and magnetization
+        !  non colinear case
+        !
+        implicit none
+        !
+        real(DP), intent(in) :: rho, mx, my, mz
+        ! input: charge density and magnetization
+        real(DP), intent(out) :: dmuxc(4,4)
+        ! output: derivative of XC functional
+        !
+        ! local variables
+        !
+        REAL(DP) :: zeta, ex, vx, ec, vc, dr, dz, vxupm, vxdwm, vcupm, &
+              vcdwm, vxupp, vxdwp, vcupp, vcdwp, vxup, vxdw, vcup, vcdw
+        REAL(DP) :: amag, vs, dvxc_rho, dvxc_mx, dvxc_my, dvxc_mz,  &
+                    dbx_rho, dbx_mx, dbx_my, dbx_mz, dby_rho, dby_mx, &
+                    dby_my, dby_mz, dbz_rho, dbz_mx, dbz_my, dbz_mz
+        REAL(DP), PARAMETER :: small = 1.d-30, e2 = 2.d0
+        !
+        !
+        dmuxc = 0.d0
+        !
+        IF (rho <= small) RETURN
+        amag = sqrt(mx**2+my**2+mz**2) 
+        zeta = amag / rho
+        
+        IF (abs (zeta) > 1.d0) RETURN
+        CALL xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
+        vs=0.5d0*(vxup+vcup-vxdw-vcdw)
+   
+        dr = min (1.d-6, 1.d-4 * rho)
+        CALL xc_spin (rho - dr, zeta, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
+        CALL xc_spin (rho + dr, zeta, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
+        dvxc_rho = ((vxupp + vcupp - vxupm - vcupm)+     &
+                    (vxdwp + vcdwp - vxdwm - vcdwm)) / (4.d0 * dr)
+        IF (amag > 1.d-10) THEN
+           dbx_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
+                       (vxdwp + vcdwp - vxdwm - vcdwm))* mx / (4.d0*dr*amag)
+           dby_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
+                       (vxdwp + vcdwp - vxdwm - vcdwm))* my / (4.d0*dr*amag)
+           dbz_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
+                       (vxdwp + vcdwp - vxdwm - vcdwm))* mz / (4.d0*dr*amag)
+!           dz = min (1.d-6, 1.d-4 * abs (zeta) )
+           dz = 1.d-6
+           CALL xc_spin (rho, zeta - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
+           CALL xc_spin (rho, zeta + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
+
+!  The variables are rho and m, so zeta depends on rho
+!
+           dvxc_rho=dvxc_rho- ((vxupp + vcupp - vxupm - vcupm)+     &
+                         (vxdwp + vcdwp - vxdwm - vcdwm))*zeta/rho/(4.d0 * dz)
+           dbx_rho  = dbx_rho-((vxupp + vcupp - vxupm - vcupm)-     &
+                    (vxdwp + vcdwp - vxdwm - vcdwm))*mx*zeta/rho/(4.d0*dz*amag)
+           dby_rho  = dby_rho-((vxupp + vcupp - vxupm - vcupm)-     &
+                    (vxdwp + vcdwp - vxdwm - vcdwm))*my*zeta/rho/(4.d0*dz*amag)
+           dbz_rho  = dbz_rho-((vxupp + vcupp - vxupm - vcupm)-     &
+                    (vxdwp + vcdwp - vxdwm - vcdwm))*mz*zeta/rho/(4.d0*dz*amag)
+!
+! here the derivatives with respect to m
+!
+           dvxc_mx = ((vxupp + vcupp - vxupm - vcupm) + &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx/rho/(4.d0*dz*amag)
+           dvxc_my = ((vxupp + vcupp - vxupm - vcupm) + &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*my/rho/(4.d0*dz*amag)
+           dvxc_mz = ((vxupp + vcupp - vxupm - vcupm) + &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mz/rho/(4.d0*dz*amag)
+           dbx_mx  = (((vxupp + vcupp - vxupm - vcupm) -                 &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx**2*amag/rho/       &
+                      (4.d0*dz) + vs*(my**2+mz**2))/amag**3
+           dbx_my  = (((vxupp + vcupp - vxupm - vcupm) -                 &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx*my*amag/rho/       &
+                      (4.d0*dz) - vs*(mx*my))/amag**3
+           dbx_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx*mz*amag/rho/       &
+                      (4.d0*dz) - vs*(mx*mz))/amag**3
+           dby_mx  = dbx_my
+           dby_my  = (((vxupp + vcupp - vxupm - vcupm) -                 &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*my**2*amag/rho/       &
+                      (4.d0*dz) + vs*(mx**2+mz**2))/amag**3
+           dby_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*my*mz*amag/rho/  &
+                      (4.d0*dz) - vs*(my*mz))/amag**3
+           dbz_mx  = dbx_mz
+           dbz_my  = dby_mz
+           dbz_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mz**2*amag/rho/       &
+                      (4.d0*dz) + vs*(mx**2+my**2))/amag**3
+           dmuxc(1,1)=dvxc_rho
+           dmuxc(1,2)=dvxc_mx 
+           dmuxc(1,3)=dvxc_my 
+           dmuxc(1,4)=dvxc_mz 
+           dmuxc(2,1)=dbx_rho
+           dmuxc(2,2)=dbx_mx 
+           dmuxc(2,3)=dbx_my 
+           dmuxc(2,4)=dbx_mz 
+           dmuxc(3,1)=dby_rho
+           dmuxc(3,2)=dby_mx 
+           dmuxc(3,3)=dby_my 
+           dmuxc(3,4)=dby_mz 
+           dmuxc(4,1)=dbz_rho
+           dmuxc(4,2)=dbz_mx
+           dmuxc(4,3)=dbz_my
+           dmuxc(4,4)=dbz_mz
+        ELSE
+           dmuxc(1,1)=dvxc_rho
+        ENDIF
+        !
+        ! bring to rydberg units
+        !
+        dmuxc = e2 * dmuxc
+        !
+        RETURN
+        
+      end subroutine dmxc_nc
+
 end module funct
+
