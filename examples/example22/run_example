@@ -15,6 +15,8 @@ $ECHO "and the band structure of fcc-Pt with a fully relativistic "
 $ECHO "pseudo-potential including spin-orbit coupling."
 $ECHO "pwcond.x is used to calculate the complex bands"
 $ECHO "including spin-orbit coupling."
+$ECHO "ph.x is used to calculate the phonons at X and Gamma of fcc-Pt"
+$ECHO "including spin-orbit coupling."
 
 # set the needed environment variables
 . ../environment_variables
@@ -69,10 +71,12 @@ $ECHO " done"
 
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
+PH_COMMAND="$PARA_PREFIX $BIN_DIR/ph.x $PARA_POSTFIX"
 PWCOND_COMMAND="$PARA_PREFIX $BIN_DIR/pwcond.x $PARA_POSTFIX"
 BANDS_COMMAND="$PARA_PREFIX $BIN_DIR/bands.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
+$ECHO "  running ph.x as: $PH_COMMAND"
 $ECHO "  running bands.x as: $BANDS_COMMAND"
 $ECHO "  running pwcond.x as: $PWCOND_COMMAND"
 $ECHO
@@ -179,6 +183,123 @@ EOF
 $ECHO "  running the symmetry analysis for Pt bands...\c"
 $BANDS_COMMAND < pt.bands.in > pt.bands.out
 $ECHO " done"
+
+# self-consistent calculation
+cat > pt.scf_ph.in << EOF
+Pt
+Pt
+ &control
+    calculation = 'scf'
+    restart_mode='from_scratch',
+    prefix='Pt',
+    tprnfor = .true.,
+    tstress =.true.,
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system    
+    ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
+    lspinorb=.true.,
+    noncolin=.true.,
+    starting_magnetization=0.0,
+    occupations='smearing',
+    degauss=0.02,
+    smearing='mp',
+    ecutwfc =30.0, 
+    ecutrho =250.0, 
+ /
+ &electrons
+    mixing_beta = 0.7, 
+    conv_thr =  1.0d-8
+ /
+ATOMIC_SPECIES
+Pt  79.90    Ptrel.RRKJ3.UPF
+ATOMIC_POSITIONS
+Pt  0.0000000   0.00000000   0.0  
+K_POINTS AUTOMATIC
+2 2 2 1 1 1 
+EOF
+$ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
+$PW_COMMAND < pt.scf_ph.in > pt.scf_ph.out
+$ECHO " done"
+
+
+
+cat > pt.ph.in << EOF
+phonons of Pt at Gamma
+ &inputph
+
+  amass(1)=195.078,
+
+  prefix='Pt',
+  outdir='$TMP_DIR'
+  fildyn='ptdyn',
+  tr2_ph=1.0d-16,
+ /
+0.0 0.0 0.0
+EOF
+$ECHO "  running the phonon calculation for Pt with spin-orbit coupling...\c"
+$PH_COMMAND < pt.ph.in > pt.ph.out
+$ECHO " done"
+
+cat > pt.nscf_ph.in << EOF
+Pt
+Pt
+ &control
+    calculation = 'phonon'
+    restart_mode='from_scratch',
+    prefix='Pt',
+    pseudo_dir = '$PSEUDO_DIR/',
+    outdir='$TMP_DIR/'
+ /
+ &system    
+    ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
+    lspinorb=.true.,
+    noncolin=.true.,
+    starting_magnetization=0.0,
+    occupations='smearing',
+    degauss=0.02,
+    smearing='mp',
+    ecutwfc =30.0, 
+    ecutrho =250.0, 
+ /
+ &electrons
+    mixing_beta = 0.7, 
+    conv_thr =  1.0d-8
+ /
+ &phonon
+ xqq(1)=1.d0,
+ xqq(2)=0.d0,
+ xqq(3)=0.d0,
+ /
+ATOMIC_SPECIES
+Pt  79.90    Ptrel.RRKJ3.UPF
+ATOMIC_POSITIONS
+Pt  0.0000000   0.00000000   0.0  
+K_POINTS AUTOMATIC
+2 2 2 1 1 1 
+EOF
+$ECHO "  running the nscf calculation for Pt with spin-orbit coupling...\c"
+$PW_COMMAND < pt.nscf_ph.in > pt.nscf_ph.out
+$ECHO " done"
+
+cat > pt.phX.in << EOF
+phonons of Pt at X
+ &inputph
+
+  amass(1)=195.078,
+
+  prefix='Pt',
+  outdir='$TMP_DIR'
+  fildyn='ptdyn',
+  tr2_ph=1.0d-16,
+ /
+1.0 0.0 0.0
+EOF
+$ECHO "  running the phonon calculation at X for Pt with spin-orbit coupling...\c"
+$PH_COMMAND < pt.phX.in > pt.phX.out
+$ECHO " done"
+
 
 # a self-consistent calculation of Pt in a tetragonal cell
 cat > pt.tet.in << EOF

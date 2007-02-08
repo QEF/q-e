@@ -1,0 +1,237 @@
+
+     Program PHONON    v.3.2    starts ...
+     Today is  8Feb2007 at 15:10:40 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     nbndx  =    18  nbnd   =    18  natomwfc =    18  npwx   =     289
+     nelec  =  10.00  nkb   =    26  ngl    =     119
+
+     Check: negative/imaginary core charge=   -0.000004    0.000000
+
+                                                                                
+
+     crystal is                     
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =       7.4200  a.u.
+     unit-cell volume          =     102.1296 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     kinetic-energy cut-off    =      30.0000  Ry
+     charge density cut-off    =     250.0000  Ry
+     convergence threshold     =      1.0E-16
+     beta                      =       0.7000
+     number of iterations used =            4
+
+     Non magnetic calculation with spin-orbit
+
+     celldm(1)=    7.42000  celldm(2)=    0.00000  celldm(3)=    0.00000
+     celldm(4)=    0.00000  celldm(5)=    0.00000  celldm(6)=    0.00000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.5000  0.0000  0.5000 )  
+               a(2) = (  0.0000  0.5000  0.5000 )  
+               a(3) = ( -0.5000  0.5000  0.0000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.0000 -1.0000  1.0000 )  
+               b(2) = (  1.0000  1.0000  1.0000 )  
+               b(3) = ( -1.0000  1.0000 -1.0000 )  
+
+
+     Atoms inside the unit cell: 
+
+   Cartesian axes
+
+     site n.  atom      mass           positions (a_0 units)
+        1        Pt 195.0780   tau( 1) = (    0.00000    0.00000    0.00000  )
+
+     Computing dynamical matrix for 
+                    q = (    0.00000    0.00000    0.00000 )
+ 
+     49 Sym.Ops. (with q -> -q+G )
+
+
+     G cutoff =  348.6487  (   6855 G-vectors)     FFT grid: ( 27, 27, 27)
+     G cutoff =  167.3514  (   2229 G-vectors)  smooth grid: ( 20, 20, 20)
+     number of k points=    2  gaussian broad. (Ry)=  0.0200     ngauss =   1
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (  -0.2500000   0.2500000   0.2500000), wk =   0.2500000
+        k(    2) = (   0.2500000  -0.2500000   0.7500000), wk =   0.7500000
+
+     pseudo 1 is Pt (US)    zval = 10.0   lmax= 2   lloc= 0
+     Version   0  0  0 of US pseudo code
+
+     Using log mesh of  1277 points
+
+     The pseudopotential has  6 beta functions with: 
+
+                l(1) =   2
+                l(2) =   2
+                l(3) =   2
+                l(4) =   2
+                l(5) =   1
+                l(6) =   1
+
+     Q(r) pseudized with  0 coefficients,  rinner =    0.000   0.000   0.000
+                                                             0.000   0.000
+
+
+     Atomic displacements:
+     There are   1 irreducible representations
+
+     Representation     1      3 modes - To be done
+     PHONON       :     7.00s CPU time,    8.28s wall time
+
+
+     Alpha used in Ewald sum =   2.6000
+
+
+     Representation #  1 modes #   1  2  3
+
+     Self-consistent Calculation
+ 
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
+
+      iter #   1 total cpu time :    11.8 secs   av.it.:   6.3
+      thresh= 0.100E-01 alpha_mix =  0.700 |ddv_scf|^2 =  0.387E-07
+ 
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
+
+      iter #   2 total cpu time :    15.9 secs   av.it.:  14.5
+      thresh= 0.197E-04 alpha_mix =  0.700 |ddv_scf|^2 =  0.114E-08
+ 
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
+
+      iter #   3 total cpu time :    19.8 secs   av.it.:  13.7
+      thresh= 0.337E-05 alpha_mix =  0.700 |ddv_scf|^2 =  0.436E-10
+ 
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
+
+      iter #   4 total cpu time :    23.6 secs   av.it.:  12.7
+      thresh= 0.660E-06 alpha_mix =  0.700 |ddv_scf|^2 =  0.124E-13
+ 
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
+
+      iter #   5 total cpu time :    27.5 secs   av.it.:  13.3
+      thresh= 0.111E-07 alpha_mix =  0.700 |ddv_scf|^2 =  0.185E-15
+ 
+     Pert. #  1: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  2: Fermi energy shift (Ry) =    0.0000    0.0000
+     Pert. #  3: Fermi energy shift (Ry) =    0.0000    0.0000
+
+      iter #   6 total cpu time :    31.2 secs   av.it.:  12.5
+      thresh= 0.136E-08 alpha_mix =  0.700 |ddv_scf|^2 =  0.216E-17
+
+     End of self-consistent calculation
+
+     Convergence has been achieved 
+ 
+     Number of q in the star =    1
+     List of q in the star:
+          1   0.000000000   0.000000000   0.000000000
+
+     Diagonalizing the dynamical matrix
+
+     q = (    0.000000000   0.000000000   0.000000000 ) 
+
+ **************************************************************************
+     omega( 1) =      -0.091191 [THz] =      -3.041838 [cm-1]
+     omega( 2) =      -0.091191 [THz] =      -3.041838 [cm-1]
+     omega( 3) =      -0.091191 [THz] =      -3.041838 [cm-1]
+ **************************************************************************
+
+     Mode symmetry, O_h (m-3m)  point group:
+
+     omega(  1 -  3) =         -3.0  [cm-1]   --> T_1u G_15  G_4-
+
+ **************************************************************************
+ 
+     PHONON       :    31.31s CPU time,   37.03s wall time
+
+     INITIALIZATION: 
+     phq_setup    :     0.03s CPU
+     phq_init     :     6.14s CPU
+ 
+     phq_init     :     6.14s CPU
+     set_drhoc    :     2.11s CPU (       3 calls,   0.703 s avg)
+     init_vloc    :     0.02s CPU (       2 calls,   0.009 s avg)
+     init_us_1    :     2.25s CPU
+     newd         :     0.24s CPU
+     dvanqq       :     0.96s CPU
+     drho         :     1.40s CPU
+ 
+     DYNAMICAL MATRIX:
+     dynmat0      :     1.55s CPU
+     phqscf       :    22.74s CPU
+     dynmatrix    :     0.02s CPU
+ 
+     phqscf       :    22.74s CPU
+     solve_linter :    22.68s CPU
+     drhodv       :     0.06s CPU
+ 
+     dynmat0      :     1.55s CPU
+     dynmat_us    :     0.13s CPU
+     d2ionq       :     0.00s CPU
+     dynmatcc     :     1.41s CPU
+ 
+     dynmat_us    :     0.13s CPU
+     addusdynmat  :     0.06s CPU
+ 
+     phqscf       :    22.74s CPU
+     solve_linter :    22.68s CPU
+ 
+     solve_linter :    22.68s CPU
+     dvqpsi_us    :     0.30s CPU (       6 calls,   0.050 s avg)
+     ortho        :     0.20s CPU (      36 calls,   0.006 s avg)
+     cgsolve      :    12.42s CPU (      36 calls,   0.345 s avg)
+     incdrhoscf   :     0.75s CPU (      36 calls,   0.021 s avg)
+     addusddens   :     1.92s CPU (       7 calls,   0.275 s avg)
+     vpsifft      :     0.55s CPU (      30 calls,   0.018 s avg)
+     dv_of_drho   :     0.40s CPU (      18 calls,   0.022 s avg)
+     mix_pot      :     0.43s CPU (       6 calls,   0.072 s avg)
+     ef_shift     :     0.10s CPU (       7 calls,   0.014 s avg)
+     localdos     :     0.42s CPU
+     symdvscf     :     1.40s CPU (       6 calls,   0.234 s avg)
+     newdq        :     3.24s CPU (       6 calls,   0.540 s avg)
+     adddvscf     :     0.10s CPU (      30 calls,   0.003 s avg)
+     drhodvus     :     0.00s CPU
+ 
+     dvqpsi_us    :     0.30s CPU (       6 calls,   0.050 s avg)
+     dvqpsi_us_on :     0.11s CPU (       6 calls,   0.019 s avg)
+ 
+     cgsolve      :    12.42s CPU (      36 calls,   0.345 s avg)
+     ch_psi       :    12.08s CPU (     595 calls,   0.020 s avg)
+ 
+     ch_psi       :    12.08s CPU (     595 calls,   0.020 s avg)
+     h_psiq       :    10.42s CPU (     595 calls,   0.018 s avg)
+     last         :     1.64s CPU (     595 calls,   0.003 s avg)
+ 
+     h_psiq       :    10.42s CPU (     595 calls,   0.018 s avg)
+     firstfft     :     4.33s CPU (    4964 calls,   0.001 s avg)
+     secondfft    :     3.87s CPU (    4964 calls,   0.001 s avg)
+     add_vuspsi   :     0.58s CPU (     595 calls,   0.001 s avg)
+ 
+     incdrhoscf   :     0.75s CPU (      36 calls,   0.021 s avg)
+ 
+     drhodvus     :     0.00s CPU
+ 
+      General routines
+     ccalbec      :     1.16s CPU (    1314 calls,   0.001 s avg)
+     cft3         :     0.88s CPU (     332 calls,   0.003 s avg)
+     cft3s        :     8.86s CPU (   23607 calls,   0.000 s avg)
+     cinterpolate :     0.62s CPU (     151 calls,   0.004 s avg)
+     davcio       :     0.01s CPU (     204 calls,   0.000 s avg)
+     write_rec    :     0.00s CPU (       6 calls,   0.001 s avg)
+ 
