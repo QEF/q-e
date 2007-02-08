@@ -18,14 +18,17 @@ subroutine drho
   !
   !
   !
-  USE ions_base, ONLY : nat
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp
   use pwcom
+  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
-  USE uspp_param, only: nhm
+  USE uspp_param, only: nhm, tvanp
+  USE uspp, only : okvan
   use phcom
   implicit none
 
-  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j
+  integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, &
+             nspin0
   ! counter on atomic types
   ! counter on modes
   ! counter on atoms and polarizations
@@ -41,8 +44,9 @@ subroutine drho
 
   complex(DP) :: ZDOTC, wdyn (3 * nat, 3 * nat)
   complex(DP), pointer :: becq (:,:,:), alpq (:,:,:,:)
+  complex(DP), pointer :: becq_nc (:,:,:,:), alpq_nc (:,:,:,:,:)
   complex(DP), allocatable :: dvlocin (:), drhous (:,:,:),&
-       drhoust (:,:,:), dbecsum(:,:,:,:)
+       drhoust (:,:,:), dbecsum(:,:,:,:), dbecsum_nc(:,:,:,:,:)
   ! auxiliary to store bec at k+q
   ! auxiliary to store alphap at
   ! the change of the local potential
@@ -59,41 +63,69 @@ subroutine drho
   !    due to the displacement of the augmentation charge
   !
   call compute_becsum
-
+  !
   call compute_alphasum
   !
   !    then compute the weights
   !
   allocate (wgg (nbnd ,nbnd , nksq))    
-  if (lgamma) then
-     becq => becp1
-     alpq => alphap
-  else
-     allocate (becq ( nkb, nbnd , nksq))    
-     allocate (alpq ( nkb, nbnd, 3, nksq))    
-  endif
+  IF (noncolin) THEN
+     if (lgamma) then
+        becq_nc => becp1_nc
+        alpq_nc => alphap_nc
+     else
+        allocate (becq_nc ( nkb, npol, nbnd , nksq))    
+        allocate (alpq_nc ( nkb, npol, nbnd, 3, nksq))    
+     endif
+  ELSE
+     if (lgamma) then
+        becq => becp1
+        alpq => alphap
+     else
+        allocate (becq ( nkb, nbnd , nksq))    
+        allocate (alpq ( nkb, nbnd, 3, nksq))    
+     endif
+  ENDIF
   call compute_weight (wgg)
-  !
-  !   we need the scalar products of the beta with the wavefunctions at k+
-  !
-
-  if (.not.lgamma) call compute_becalp (becq, alpq)
   !
   !    becq and alpq are sufficient to compute the part of C^3 (See Eq. 37
   !    which does not contain the local potential
   !
-  call compute_nldyn (dyn00, wgg, becq, alpq)
+  IF (.not.lgamma) THEN
+     IF (noncolin) THEN
+        call compute_becalp (becq_nc, alpq_nc)
+     ELSE
+        call compute_becalp (becq, alpq)
+     ENDIF
+  END IF
+  IF (noncolin) THEN
+     call compute_nldyn (dyn00, wgg, becq_nc, alpq_nc)
+  ELSE
+     call compute_nldyn (dyn00, wgg, becq, alpq)
+  END IF
   !
   !   now we compute the change of the charge density due to the change of
   !   the orthogonality constraint
   !
-  allocate (drhous ( nrxxs , nspin , 3 * nat))    
+  allocate (drhous ( nrxx , nspin , 3 * nat))    
   allocate (dbecsum( nhm * (nhm + 1) /2 , nat , nspin , 3 * nat))    
+  dbecsum=(0.d0,0.d0)
+  IF (noncolin) THEN
+     allocate (dbecsum_nc( nhm, nhm, nat, nspin, 3 * nat))    
+     dbecsum_nc=(0.d0,0.d0)
+     call compute_drhous_nc (drhous, dbecsum_nc, wgg, becq_nc, alpq_nc)
+  ELSE
+     call compute_drhous (drhous, dbecsum, wgg, becq, alpq)
+  ENDIF
 
-  call compute_drhous (drhous, dbecsum, wgg, becq, alpq)
   if (.not.lgamma) then
-     deallocate (alpq)
-     deallocate (becq)
+     IF (noncolin) THEN
+        deallocate (alpq_nc)
+        deallocate (becq_nc)
+     ELSE
+        deallocate (alpq)
+        deallocate (becq)
+     END IF
   endif
   deallocate (wgg)
   !
@@ -102,12 +134,14 @@ subroutine drho
   !
   allocate (dvlocin( nrxxs))    
 
+  nspin0=nspin
+  if (nspin==4) nspin0=1
   wdyn (:,:) = (0.d0, 0.d0)
   nrstot = nr1s * nr2s * nr3s
   do nu_i = 1, 3 * nat
      call compute_dvloc (nu_i, dvlocin)
      do nu_j = 1, 3 * nat
-        do is = 1, nspin
+        do is = 1, nspin0
            wdyn (nu_j, nu_i) = wdyn (nu_j, nu_i) + &
                 ZDOTC (nrxxs, drhous(1,is,nu_j), 1, dvlocin, 1) * &
                 omega / DBLE (nrstot)
@@ -141,19 +175,47 @@ subroutine drho
   !    add the augmentation term to the charge density and save it
   !
   allocate (drhoust( nrxx , nspin , npertx))    
-  call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, dbecsum, 1)
+  drhoust=(0.d0,0.d0)
+  IF (noncolin) THEN
+     call DSCAL (2 * nhm * nhm * 3 * nat * nspin * nat, 0.5d0, dbecsum_nc, 1)
+  ELSE
+     call DSCAL (nhm * (nhm + 1) * 3 * nat * nspin * nat, 0.5d0, dbecsum, 1)
+  ENDIF
 #ifdef __PARA
   !
   !  The calculation of dbecsum is distributed across processors (see addusdbec)
   !  Sum over processors the contributions coming from each slice of bands
   !
-  call reduce (nhm * (nhm + 1) * nat * nspin * 3 * nat, dbecsum)
+  IF (noncolin) THEN
+     call reduce (2 * nhm * nhm * nat * nspin * 3 * nat, dbecsum_nc)
+  ELSE
+     call reduce (nhm * (nhm + 1) * nat * nspin * 3 * nat, dbecsum)
+  END IF
 #endif
+
+  IF (noncolin) THEN
+     DO nt = 1, ntyp
+        IF ( tvanp(nt) ) THEN
+           DO na = 1, nat
+              IF (ityp(na)==nt) THEN
+                 IF (so(nt)) THEN
+                    CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na,3*nat)
+                 ELSE
+                    CALL transform_dbecsum_nc(dbecsum_nc,dbecsum,na,3*nat)
+                 END IF
+              END IF
+           END DO
+        END IF
+     END DO
+  END IF
+
   mode = 0
+  nspin0=nspin
+  if (nspin==4.and..not.domag) nspin0=1
   do irr = 1, nirr
      npe = npert (irr)
      if (doublegrid) then
-        do is = 1, nspin
+        do is = 1, nspin0
            do iper = 1, npe
               call cinterpolate (drhoust(1,is,iper), drhous(1,is,mode+iper), 1)
            enddo
@@ -175,6 +237,7 @@ subroutine drho
   deallocate (drhoust)
   deallocate (dvlocin)
   deallocate (dbecsum)
+  if (noncolin) deallocate(dbecsum_nc)
   deallocate (drhous)
 
   call stop_clock ('drho')

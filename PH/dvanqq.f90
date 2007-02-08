@@ -20,6 +20,7 @@ subroutine dvanqq
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
+  use noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   use phcom
   USE uspp_param, ONLY: lmaxq, nh, tvanp
@@ -28,8 +29,9 @@ subroutine dvanqq
   !   And the local variables
   !
 
-  integer :: na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is
+  integer :: nt, na, nb, ig, nta, ntb, ir, ih, jh, ijh, ipol, jpol, is, nspin0
   ! counters
+  integer :: is1, is2, ijs, lh, kh, find_ijh
 
   real(DP), allocatable :: qmod (:), qmodg (:), qpg (:,:), &
        ylmkq (:,:), ylmk0 (:,:)
@@ -47,9 +49,12 @@ subroutine dvanqq
   complex(DP), pointer :: qgmq (:)
   ! the augmentation function at q+G
 
+  if (.not.okvan) return
+
   if (recover.and..not.ldisp) return
 
-  if (.not.okvan) return
+  nspin0=nspin
+  if (nspin==4.and..not.domag) nspin0=1
 
   call start_clock ('dvanqq')
   int1(:,:,:,:,:) = (0.d0, 0.d0)
@@ -92,9 +97,15 @@ subroutine dvanqq
   !
   allocate (veff ( nrxx , nspin))    
   do is = 1, nspin
-     do ir = 1, nrxx
-        veff (ir, is) = CMPLX (vltot (ir) + vr (ir, is), 0.d0)
-     enddo
+     if (nspin.ne.4.or.is==1) then
+        do ir = 1, nrxx
+           veff (ir, is) = CMPLX (vltot (ir) + vr (ir, is), 0.d0)
+        enddo
+     else
+        do ir = 1, nrxx
+           veff (ir, is) = CMPLX (vr (ir, is), 0.d0)
+        enddo
+     endif
      call cft3 (veff (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   enddo
   !
@@ -165,7 +176,7 @@ subroutine dvanqq
                                                * eigts3 (ig3 (ig), nb)
                        enddo
                     endif
-                    do is = 1, nspin
+                    do is = 1, nspin0
                        do ipol = 1, 3
                           do ig = 1, ngm
                              aux2 (ig) = veff (nl (ig), is) * g (ipol, ig)
@@ -217,6 +228,28 @@ subroutine dvanqq
   call reduce (2 * SIZE( int4 ), int4)
   call reduce (2 * SIZE( int5 ), int5)
 #endif
+  IF (noncolin) THEN
+     CALL set_int12_nc(0)
+     int4_nc = (0.d0, 0.d0)
+     IF (lspinorb) int5_so = (0.d0, 0.d0)
+     DO nt = 1, ntyp
+        IF ( tvanp(nt) ) THEN
+           DO na = 1, nat
+              IF (ityp(na)==nt) THEN
+                 IF (so(nt)) THEN
+                    CALL transform_int4_so(int4,na)
+                    CALL transform_int5_so(int5,na)
+                 ELSE
+                    CALL transform_int4_nc(int4,na)
+                    IF (lspinorb) CALL transform_int5_nc(int5,na)
+                 END IF
+              END IF
+           END DO
+        END IF
+     END DO
+  END IF
+
+
   !      do ih=1,nh(1)
   !         do jh=1,nh(1)
   !            do ipol=1,3

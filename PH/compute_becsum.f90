@@ -20,6 +20,7 @@ subroutine compute_becsum
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
+  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   USE uspp_param, ONLY: nh, tvanp
   use phcom
@@ -27,10 +28,12 @@ subroutine compute_becsum
 
   integer :: ik, ikk, ikq, ijkb0, ijh, ikb, jkb, ih, jh, na, nt, ibnd
   ! counter on k points, beta functions, atoms and bands
+  integer :: ijs, is1, is2
   real(DP) :: wgg1 ! auxiliary weight
 
   if (.not.okvan) return
-  becsum (:,:,:) = 0.d0
+  IF (noncolin) becsum_nc = (0.d0,0.d0)
+  becsum = 0.d0
   do ik = 1, nksq
      if (lgamma) then
         ikk = ik
@@ -51,21 +54,41 @@ subroutine compute_becsum
                     ijh = ijh + 1
                     do ibnd = 1, nbnd_occ (ikk)
                        wgg1 = wg (ibnd, ikk)
-                       becsum(ijh,na,current_spin) = &
+                       IF (noncolin) THEN
+                          DO is1=1,npol
+                             DO is2=1,npol
+                                becsum_nc(ijh,na,is1,is2) = &
+                                   becsum_nc(ijh,na,is1,is2) + wgg1* &
+                                   CONJG(becp1_nc(ikb,is1,ibnd,ik))* &
+                                         becp1_nc(ikb,is2,ibnd,ik) 
+                             END DO
+                          END DO
+                       ELSE
+                          becsum(ijh,na,current_spin) = &
                             becsum(ijh,na,current_spin) + wgg1 * &
-                             DBLE ( CONJG(becp1(ikb,ibnd,ik)) * becp1(ikb,ibnd,ik) )
+                         DBLE ( CONJG(becp1(ikb,ibnd,ik)) * becp1(ikb,ibnd,ik) )
+                       END IF
                     enddo
-                    do jh = 1, nh (nt)
+                    do jh = ih+1, nh (nt)
                        jkb = ijkb0 + jh
-                       if (jh > ih) ijh = ijh + 1
+                       ijh = ijh + 1
                        do ibnd = 1, nbnd
-                          if (jh > ih) then
-                             wgg1 = wg (ibnd, ikk)
+                          wgg1 = wg (ibnd, ikk)
+                          IF (noncolin) THEN
+                             DO is1=1,npol
+                                DO is2=1,npol
+                                   becsum_nc(ijh,na,is1,is2) = &
+                                      becsum_nc(ijh,na,is1,is2)+ wgg1 * &
+                                      (CONJG(becp1_nc(ikb,is1,ibnd,ik)) * &
+                                             becp1_nc(jkb,is2,ibnd,ik)  )
+                                END DO
+                             END DO
+                          ELSE
                              becsum(ijh,na,current_spin) = &
-                                  becsum(ijh,na,current_spin) + wgg1 * 2.d0 * &
-                                   DBLE ( CONJG(becp1(ikb,ibnd,ik)) * &
-                                  becp1(jkb,ibnd,ik) )
-                          endif
+                                 becsum(ijh,na,current_spin)+wgg1 * 2.d0 * &
+                                DBLE ( CONJG(becp1(ikb,ibnd,ik)) * &
+                               becp1(jkb,ibnd,ik) )
+                          END IF
                        enddo
                     enddo
                  enddo
@@ -79,6 +102,23 @@ subroutine compute_becsum
         endif
      enddo
   enddo
+
+  IF (noncolin.and.okvan) THEN
+     DO nt = 1, ntyp
+        IF ( tvanp(nt) ) THEN
+           DO na = 1, nat
+              IF (ityp(na)==nt) THEN
+                 IF (so(nt)) THEN
+                    CALL transform_becsum_so(becsum_nc,becsum,na)
+                 ELSE
+                    CALL transform_becsum_nc(becsum_nc,becsum,na)
+                 END IF
+              END IF
+           END DO
+        END IF
+     END DO
+  END IF
+
   !      do na=1,nat
   !         nt=ityp(na)
   !         do ijh=1,nh(nt)*(nh(nt)+1)/2

@@ -20,13 +20,14 @@ subroutine compute_alphasum
 
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
+  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   USE uspp_param, ONLY: nh, tvanp
   use phcom
   implicit none
 
   integer :: ik, ikk, ikq, ijkb0, ijh, ikb, jkb, ih, jh, na, nt, &
-       ipol, ibnd
+       ipol, ibnd, is1, is2
   ! counter on k points
   ! counters on beta functions
   ! counters on beta functions
@@ -40,7 +41,8 @@ subroutine compute_alphasum
 
   if (.not.okvan) return
 
-  alphasum (:,:,:,:) = 0.d0
+  alphasum  = 0.d0
+  IF (noncolin) alphasum_nc=(0.d0,0.d0)
   do ik = 1, nksq
      if (lgamma) then
         ikk = ik
@@ -62,28 +64,53 @@ subroutine compute_alphasum
                     do ibnd = 1, nbnd_occ (ikk)
                        wgg1 = wg (ibnd, ikk)
                        do ipol = 1, 3
-                          alphasum(ijh,ipol,na,current_spin) = &
+                          IF (noncolin) THEN
+                             DO is1=1,npol
+                                DO is2=1,npol
+                                   alphasum_nc(ijh,ipol,na,is1,is2) =         &
+                                      alphasum_nc(ijh,ipol,na,is1,is2)+wgg1*  &
+                                      (CONJG(alphap_nc(ikb,is1,ibnd,ipol,ik))*&
+                                             becp1_nc(ikb,is2,ibnd,ik) +      &
+                                       CONJG(becp1_nc(ikb,is1,ibnd,ik))*      &
+                                             alphap_nc(ikb,is2,ibnd,ipol,ik))
+                                END DO
+                             END DO
+                          ELSE
+                             alphasum(ijh,ipol,na,current_spin) = &
                                alphasum(ijh,ipol,na,current_spin) + 2.d0*wgg1*&
                                 DBLE (CONJG(alphap (ikb,ibnd,ipol,ik) ) * &
                                becp1  (ikb,ibnd,ik) )
+                          END IF
                        enddo
                     enddo
-                    do jh = 1, nh (nt)
+                    do jh = ih+1, nh (nt)
                        jkb = ijkb0 + jh
-                       if (jh > ih) ijh = ijh + 1
+                       ijh = ijh + 1
                        do ibnd = 1, nbnd
-                          if (jh > ih) then
-                             wgg1 = wg (ibnd, ikk)
-                             do ipol = 1, 3
-                                alphasum(ijh,ipol,na,current_spin) = &
-                                     alphasum(ijh,ipol,na,current_spin) + &
-                                     2.d0 * wgg1 * &
+                          wgg1 = wg (ibnd, ikk)
+                          do ipol = 1, 3
+                             IF (noncolin) THEN
+                                DO is1=1,npol
+                                   DO is2=1,npol
+                                      alphasum_nc(ijh,ipol,na,is1,is2) =     &
+                                         alphasum_nc(ijh,ipol,na,is1,is2)    &
+                                            +wgg1*  &
+                                      (CONJG(alphap_nc(ikb,is1,ibnd,ipol,ik))* &
+                                              becp1_nc(jkb,is2,ibnd,ik)+      &
+                                       CONJG(becp1_nc(ikb,is1,ibnd,ik))*      &
+                                             alphap_nc(jkb,is2,ibnd,ipol,ik) ) 
+                                   END DO
+                                END DO
+                             ELSE
+                                  alphasum(ijh,ipol,na,current_spin) = &
+                                    alphasum(ijh,ipol,na,current_spin) + &
+                                    2.d0 * wgg1 * &
                                       DBLE (CONJG(alphap(ikb,ibnd,ipol,ik) )*&
                                      becp1 (jkb,ibnd,ik)         + &
                                      CONJG( becp1 (ikb,ibnd,ik) ) *       &
                                      alphap (jkb,ibnd,ipol,ik) )
-                             enddo
-                          endif
+                             END IF
+                          enddo
                        enddo
                     enddo
                  enddo
@@ -97,6 +124,23 @@ subroutine compute_alphasum
         endif
      enddo
   enddo
+
+  IF (noncolin.and.okvan) THEN
+     DO nt = 1, ntyp
+        IF ( tvanp(nt) ) THEN
+           DO na = 1, nat
+              IF (ityp(na)==nt) THEN
+                 IF (so(nt)) THEN
+                    CALL transform_alphasum_so(alphasum_nc,na)
+                 ELSE
+                    CALL transform_alphasum_nc(alphasum_nc,na)
+                 END IF
+              END IF
+           END DO
+        END IF
+     END DO
+  END IF
+
   !      do na=1,nat
   !         nt=ityp(na)
   !         do ijh=1,nh(nt)*(nh(nt)+1)/2

@@ -20,7 +20,8 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
-  USE wavefunctions_module,  ONLY: evc, psic
+  USE noncollin_module, ONLY : noncolin, npol
+  USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE kinds, only : DP
   USE uspp_param, ONLY: nh, nhm, tvanp
   use phcom
@@ -38,7 +39,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   integer :: ikb, jkb, ijkb0, ih, jh, na, ijh, nt
   ! counters
   real(DP), allocatable :: becsum1 (:,:,:)
-  complex(DP), allocatable :: becp(:,:)
+  complex(DP), allocatable :: becp(:,:), becp_nc(:,:,:), becsum1_nc(:,:,:,:)
   !
   ! local variables
   !
@@ -46,7 +47,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   ! weights
   real(DP), external :: w0gauss
   !
-  integer :: ik, is, ig, ibnd, j
+  integer :: ik, is, ig, ibnd, j, is1, is2
   ! counters
   integer :: ios
   ! status flag for i/o
@@ -54,7 +55,14 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !  initialize ldos and dos_ef
   !
   call start_clock ('localdos')
-  allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin), becp(nkb,nbnd) )  
+  allocate (becsum1( (nhm * (nhm + 1)) / 2, nat, nspin))
+  IF (noncolin) THEN
+     allocate (becp_nc(nkb,npol,nbnd) )  
+     allocate (becsum1_nc( (nhm * (nhm + 1)) / 2, nat, npol, npol))
+     becsum1_nc=(0.d0,0.d0)
+  ELSE
+     allocate (becp(nkb,nbnd) )  
+  ENDIF
 
   becsum1 (:,:,:) = 0.d0
   ldos (:,:) = (0d0, 0.0d0)
@@ -77,22 +85,41 @@ subroutine localdos (ldos, ldoss, dos_ef)
      if (nksq > 1) call davcio (evc, lrwfc, iuwfc, ik, - 1)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      !
-     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     IF (noncolin) THEN
+        call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
+     ELSE
+        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+     END IF
      do ibnd = 1, nbnd_occ (ik)
         wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss
+        w1 = weight * wdelta / omega
         !
         ! unperturbed wf from reciprocal to real space
         !
-        psic (:) = (0.d0, 0.d0)
-        do ig = 1, npw
-           psic (nls (igk (ig) ) ) = evc (ig, ibnd)
-        enddo
-        call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
-        w1 = weight * wdelta / omega
-        do j = 1, nrxxs
-           ldoss (j, current_spin) = ldoss (j, current_spin) + &
-                 w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
-        enddo
+        IF (noncolin) THEN
+           psic_nc = (0.d0, 0.d0)
+           do ig = 1, npw
+              psic_nc (nls (igk (ig)), 1 ) = evc (ig, ibnd)
+              psic_nc (nls (igk (ig)), 2 ) = evc (ig+npwx, ibnd)
+           enddo
+           call cft3s (psic_nc, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+           call cft3s (psic_nc(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+           do j = 1, nrxxs
+              ldoss (j, current_spin) = ldoss (j, current_spin) + &
+                    w1 * ( DBLE(psic_nc(j,1))**2+AIMAG(psic_nc(j,1))**2 + &
+                           DBLE(psic_nc(j,2))**2+AIMAG(psic_nc(j,2))**2)
+           enddo
+        ELSE
+           psic (:) = (0.d0, 0.d0)
+           do ig = 1, npw
+              psic (nls (igk (ig) ) ) = evc (ig, ibnd)
+           enddo
+           call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
+           do j = 1, nrxxs
+              ldoss (j, current_spin) = ldoss (j, current_spin) + &
+                    w1 * ( DBLE ( psic (j) ) **2 + AIMAG (psic (j) ) **2)
+           enddo
+        END IF
         !
         !    If we have a US pseudopotential we compute here the becsum term
         !
@@ -105,15 +132,37 @@ subroutine localdos (ldos, ldoss, dos_ef)
                     ijh = 1
                     do ih = 1, nh (nt)
                        ikb = ijkb0 + ih
-                       becsum1 (ijh, na, current_spin) = &
+                       IF (noncolin) THEN
+                          DO is1=1,npol
+                             DO is2=1,npol
+                                becsum1_nc (ijh, na, is1, is2) = &
+                                becsum1_nc (ijh, na, is1, is2) + w1 * &
+                                 (CONJG(becp_nc(ikb,is1,ibnd))* &
+                                        becp_nc(ikb,is2,ibnd))
+                             END DO
+                          END DO
+                       ELSE
+                          becsum1 (ijh, na, current_spin) = &
                             becsum1 (ijh, na, current_spin) + w1 * &
                              DBLE (CONJG(becp(ikb,ibnd))*becp(ikb,ibnd) )
+                       ENDIF
                        ijh = ijh + 1
                        do jh = ih + 1, nh (nt)
                           jkb = ijkb0 + jh
-                          becsum1 (ijh, na, current_spin) = &
+                          IF (noncolin) THEN
+                             DO is1=1,npol
+                                DO is2=1,npol
+                                   becsum1_nc(ijh,na,is1,is2) = &
+                                      becsum1_nc(ijh,na,is1,is2) + w1* &
+                                      (CONJG(becp_nc(ikb,is1,ibnd))* &
+                                             becp_nc(jkb,is2,ibnd) )
+                                END DO
+                             END DO
+                          ELSE
+                             becsum1 (ijh, na, current_spin) = &
                                becsum1 (ijh, na, current_spin) + w1 * 2.d0 * &
                                 DBLE(CONJG(becp(ikb,ibnd))*becp(jkb,ibnd) )
+                          END IF
                           ijh = ijh + 1
                        enddo
                     enddo
@@ -138,6 +187,22 @@ subroutine localdos (ldos, ldoss, dos_ef)
      ldos (:,:) = ldoss (:,:) 
   endif
 
+  IF (noncolin.and.okvan) THEN
+     DO nt = 1, ntyp
+        IF ( tvanp(nt) ) THEN
+           DO na = 1, nat
+              IF (ityp(na)==nt) THEN
+                 IF (so(nt)) THEN
+                    CALL transform_becsum_so(becsum1_nc,becsum1,na)
+                 ELSE
+                    CALL transform_becsum_nc(becsum1_nc,becsum1,na)
+                 END IF
+              END IF
+           END DO
+        END IF
+     END DO
+  END IF
+
   call addusldos (ldos, becsum1)
 #ifdef __PARA
   !
@@ -157,7 +222,13 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !      WRITE( stdout,*) ' check ', check, dos_ef
   !check
   !
-  deallocate(becsum1, becp)
+  deallocate(becsum1)
+  IF (noncolin) THEN
+     deallocate(becp_nc)
+     deallocate(becsum1_nc)
+  ELSE
+     deallocate(becp)
+  ENDIF
   call stop_clock ('localdos')
   return
 end subroutine localdos

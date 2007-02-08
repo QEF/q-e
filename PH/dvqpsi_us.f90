@@ -19,6 +19,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !
   USE ions_base, ONLY : nat, ityp
   use pwcom
+  USE noncollin_module, ONLY : npol
   use atom, only: nlcc
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
@@ -38,7 +39,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !   And the local variables
   !
 
-  integer :: na, mu, ikk, ig, nt, ibnd, ir, is
+  integer :: na, mu, ikk, ig, nt, ibnd, ir, is, ip
   ! counter on atoms
   ! counter on modes
   ! the point k
@@ -148,23 +149,37 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   !
   call cft3s (aux1, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 1)
   do ibnd = 1, nbnd
-     aux2(:) = (0.d0, 0.d0)
-     do ig = 1, npw
-        aux2 (nls (igk (ig) ) ) = evc (ig, ibnd)
-     enddo
-     !
-     !  This wavefunction is computed in real space
-     !
-     call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
-     do ir = 1, nrxxs
-        aux2 (ir) = aux2 (ir) * aux1 (ir)
-     enddo
-     !
-     ! and finally dV_loc/dtau * psi is transformed in reciprocal space
-     !
-     call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
-     do ig = 1, npwq
-        dvpsi (ig, ibnd) = aux2 (nls (igkq (ig) ) )
+     do ip=1,npol
+        aux2(:) = (0.d0, 0.d0)
+        if (ip==1) then
+           do ig = 1, npw
+              aux2 (nls (igk (ig) ) ) = evc (ig, ibnd)
+           enddo
+        else
+           do ig = 1, npw
+              aux2 (nls (igk (ig) ) ) = evc (ig+npwx, ibnd)
+           enddo
+        end if
+        !
+        !  This wavefunction is computed in real space
+        !
+        call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, + 2)
+        do ir = 1, nrxxs
+           aux2 (ir) = aux2 (ir) * aux1 (ir)
+        enddo
+        !
+        ! and finally dV_loc/dtau * psi is transformed in reciprocal space
+        !
+        call cft3s (aux2, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, - 2)
+        if (ip==1) then
+           do ig = 1, npwq
+              dvpsi (ig, ibnd) = aux2 (nls (igkq (ig) ) )
+           enddo
+        else
+           do ig = 1, npwq
+              dvpsi (ig+npwx, ibnd) = aux2 (nls (igkq (ig) ) )
+           enddo
+        end if
      enddo
   enddo
   !

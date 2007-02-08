@@ -22,11 +22,12 @@ subroutine adddvscf (ipert, ik)
 ! modules from pwcom
   USE lsda_mod,   ONLY : lsda, current_spin, isk
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp
-  USE wvfct,      ONLY : nbnd
+  USE wvfct,      ONLY : nbnd, npwx
+  USE noncollin_module, ONLY : noncolin, npol
 ! modules from phcom
   USE control_ph, ONLY : lgamma
   USE qpoint,     ONLY : npwq
-  USE phus,       ONLY : int3, becp1
+  USE phus,       ONLY : int3, int3_nc, becp1, becp1_nc
   USE eqv,        ONLY : dvpsi
   implicit none
   !
@@ -38,7 +39,7 @@ subroutine adddvscf (ipert, ik)
   !
   !   And the local variables
   !
-  integer :: na, nt, ibnd, ih, jh, ijkb0, ikk, ikb, jkb
+  integer :: na, nt, ibnd, ih, jh, ijkb0, ikk, ikb, jkb, ip
   ! counter on atoms
   ! counter on atomic types
   ! counter on bands
@@ -48,7 +49,7 @@ subroutine adddvscf (ipert, ik)
   ! counter on the k points
   ! counter on vkb
   ! counter on vkb
-  complex(DP) :: sum
+  complex(DP) :: sum, sum_nc(npol)
   ! auxiliary variable
 
   if (.not.okvan) return
@@ -70,14 +71,36 @@ subroutine adddvscf (ipert, ik)
               do ibnd = 1, nbnd
                  do ih = 1, nh (nt)
                     ikb = ijkb0 + ih
-                    sum = (0.d0, 0.d0)
+                    IF (noncolin) THEN
+                       sum_nc = (0.d0, 0.d0)
+                    ELSE
+                       sum = (0.d0, 0.d0)
+                    END IF
                     do jh = 1, nh (nt)
                        jkb = ijkb0 + jh
-                       sum = sum + int3 (ih, jh, ipert, na, current_spin) * &
+                       IF (noncolin) THEN
+                          sum_nc(1)=sum_nc(1)+                     &
+                                     int3_nc(ih,jh,ipert,na,1)*    &
+                                     becp1_nc (jkb, 1, ibnd, ik)+  &
+                                     int3_nc(ih,jh,ipert,na,2)*    &
+                                     becp1_nc (jkb, 2, ibnd, ik)
+                          sum_nc(2)=sum_nc(2)+                     &
+                                     int3_nc(ih,jh,ipert,na,3)*    &
+                                     becp1_nc (jkb, 1, ibnd, ik)+  &
+                                     int3_nc(ih,jh,ipert,na,4)*    &
+                                     becp1_nc (jkb, 2, ibnd, ik)
+                       ELSE
+                          sum = sum + int3 (ih, jh, ipert, na, current_spin)*&
                                    becp1 (jkb, ibnd, ik)
+                       END IF
                     enddo
-                    !                        sum=sum*eigqts(na)
-                    call ZAXPY (npwq, sum, vkb (1, ikb), 1, dvpsi (1, ibnd),1)
+                    IF (noncolin) THEN
+                       call ZAXPY(npwq,sum_nc(1),vkb(1,ikb),1,dvpsi(1,ibnd),1)
+                       call ZAXPY(npwq,sum_nc(2),vkb(1,ikb),1, &
+                                                 dvpsi(1+npwx,ibnd),1)
+                    ELSE
+                       call ZAXPY(npwq,sum,vkb(1,ikb),1,dvpsi(1,ibnd),1)
+                    END IF
                  enddo
               enddo
               ijkb0 = ijkb0 + nh (nt)

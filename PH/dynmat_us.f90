@@ -17,7 +17,7 @@ SUBROUTINE dynmat_us()
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp, tau
-  USE uspp,                 ONLY : deeq, nkb, vkb, qq
+  USE uspp,                 ONLY : deeq, deeq_nc, nkb, vkb, qq, qq_so
   USE scf,                  ONLY : rho
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE gvect,                ONLY : g, ngm, nl, igtongl
@@ -29,12 +29,16 @@ SUBROUTINE dynmat_us()
   USE cell_base,            ONLY : omega, tpiba2
   USE io_files,             ONLY : iunigk
   USE uspp_param,           ONLY : nh
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE spin_orb,             ONLY : lspinorb
   USE phcom
+  USE io_global,            ONLY : stdout
   USE mp_global,            ONLY : my_pool_id
 
   IMPLICIT NONE
   INTEGER :: icart, jcart, na_icart, na_jcart, na, nb, ng, nt, ik, &
-       ig, ir, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk
+       ig, ir, is, ibnd, nu_i, nu_j, ijkb0, ikb, jkb, ih, jh, ikk, nspin0, &
+       js,  ijs
   ! counters
   ! ikk: record position of wfc at k
 
@@ -43,20 +47,26 @@ SUBROUTINE dynmat_us()
   ! auxiliary variable
   ! the true weight of a K point
 
-  COMPLEX(DP) :: work, dynwrk (3 * nat, 3 * nat)
+  COMPLEX(DP) :: work, dynwrk (3 * nat, 3 * nat), fact
   ! work space
-  COMPLEX(DP), ALLOCATABLE :: rhog (:), &
-       gammap (:,:,:,:), aux1 (:,:), work1 (:), work2 (:)
+  COMPLEX(DP), ALLOCATABLE :: rhog (:), gammap(:,:,:,:), &
+       gammap_nc (:,:,:,:,:), aux1 (:,:), work1 (:), work2 (:)
   ! fourier transform of rho
   ! the second derivative of the beta
   ! work space
 
   CALL start_clock ('dynmat_us')
+  nspin0=nspin
+  if (nspin==4) nspin0=1
   ALLOCATE (rhog  ( nrxx))    
   ALLOCATE (work1 ( npwx))    
   ALLOCATE (work2 ( npwx))    
-  ALLOCATE (aux1  ( npwx , nbnd))    
-  ALLOCATE (gammap(  nkb, nbnd , 3 , 3))    
+  ALLOCATE (aux1  ( npwx*npol , nbnd))    
+  IF (noncolin) THEN
+     ALLOCATE (gammap_nc(  nkb, npol, nbnd , 3 , 3))    
+  ELSE
+     ALLOCATE (gammap(  nkb, nbnd , 3 , 3))    
+  END IF
 
   dynwrk (:,:) = (0.d0, 0.0d0)
   !
@@ -68,7 +78,7 @@ SUBROUTINE dynmat_us()
 
   !
   rhog (:) = (0.d0, 0.d0)
-  DO is = 1, nspin
+  DO is = 1, nspin0
      rhog (:) = rhog (:) + CMPLX (rho (:, is), 0.d0)
   ENDDO
 
@@ -100,7 +110,6 @@ SUBROUTINE dynmat_us()
   ! each pool contributes to next term
   !
 100 CONTINUE
-  !      goto 500
   !
   ! Here we compute  the nonlocal Ultra-soft contribution
   !
@@ -125,19 +134,36 @@ SUBROUTINE dynmat_us()
      !
      DO icart = 1, 3
         DO jcart = 1, icart
+           aux1=(0.d0,0.d0)
            DO ibnd = 1, nbnd
               DO ig = 1, npw
                  aux1 (ig, ibnd) = - evc (ig, ibnd) * tpiba2 * &
                       (xk (icart, ikk) + g (icart, igk (ig) ) ) * &
                       (xk (jcart, ikk) + g (jcart, igk (ig) ) )
               ENDDO
+              IF (noncolin) THEN
+                 DO ig = 1, npw
+                    aux1 (ig+npwx, ibnd) = - evc (ig+npwx, ibnd) * tpiba2 * &
+                      (xk (icart, ikk) + g (icart, igk (ig) ) ) * &
+                      (xk (jcart, ikk) + g (jcart, igk (ig) ) )
+                 ENDDO
+              END IF
            ENDDO
 
-           CALL ccalbec(nkb,npwx,npw,nbnd,gammap(1,1,icart,jcart),vkb,aux1)
-           IF (jcart < icart) THEN
-               CALL ZCOPY (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
+           IF (noncolin) THEN
+              CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd, &
+                              gammap_nc(1,1,1,icart,jcart),vkb,aux1)
+              IF (jcart < icart) THEN
+                 CALL ZCOPY (nkb*nbnd*npol, gammap_nc(1,1,1,icart,jcart),1, &
+                                      gammap_nc (1, 1, 1, jcart, icart), 1)
+              END IF
+           ELSE
+              CALL ccalbec(nkb,npwx,npw,nbnd,gammap(1,1,icart,jcart),vkb,aux1)
+              IF (jcart < icart) THEN
+                 CALL ZCOPY (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
                                        gammap (1, 1, jcart, icart), 1)
-            END IF
+              END IF
+           END IF
         ENDDO
      ENDDO
      !
@@ -158,7 +184,33 @@ SUBROUTINE dynmat_us()
                           ikb = ijkb0 + ih
                           DO jh = 1, nh (nt)
                              jkb = ijkb0 + jh
-                             dynwrk(na_icart,na_jcart) = &
+                             IF (noncolin) THEN
+                                ijs=0
+                                DO is=1,npol
+                                   DO js=1,npol 
+                                     ijs=ijs+1
+                                     fact=deeq_nc (ih, jh, na, ijs)
+                                     IF (lspinorb) THEN
+                                        fact=fact-et(ibnd,ikk)* &
+                                                  qq_so(ih,jh,ijs,nt)
+                                     ELSE IF (is==js) THEN
+                                           fact=fact-et(ibnd,ikk)*qq(ih,jh,nt)
+                                     ENDIF
+                                     dynwrk(na_icart,na_jcart) = &
+                                        dynwrk(na_icart,na_jcart) + &
+                                            fact*wgg* &
+                                    (CONJG(gammap_nc(ikb,is,ibnd,icart,jcart))*&
+                                     becp1_nc (jkb, js, ibnd, ik) + &
+                                     CONJG(becp1_nc(ikb, is, ibnd, ik) ) * &
+                                     gammap_nc (jkb, js, ibnd, icart, jcart) + &
+                                     CONJG(alphap_nc(ikb,is,ibnd,icart,ik) ) * &
+                                     alphap_nc (jkb, js, ibnd, jcart, ik) + &
+                                     CONJG(alphap_nc(ikb,is,ibnd,jcart,ik) ) * &
+                                     alphap_nc(jkb, js, ibnd, icart, ik) )
+                                   END DO
+                                END DO
+                             ELSE
+                                dynwrk(na_icart,na_jcart) = &
                                   dynwrk(na_icart,na_jcart) + &
                                   (deeq (ih, jh, na, current_spin) - &
                                    et (ibnd, ikk) * qq (ih,jh,nt) ) * wgg * &
@@ -170,6 +222,7 @@ SUBROUTINE dynmat_us()
                                    alphap (jkb, ibnd, jcart, ik) + &
                                    CONJG (alphap (ikb, ibnd, jcart, ik) ) * &
                                    alphap (jkb, ibnd, icart, ik) )
+                             END IF
                           ENDDO
                        ENDDO
                     ENDDO
@@ -187,6 +240,7 @@ SUBROUTINE dynmat_us()
   !
   CALL addusdynmat (dynwrk)
   !
+500 continue
   CALL poolreduce (18 * nat * nat, dynwrk)
   !
   !      do na = 1,nat
@@ -194,8 +248,8 @@ SUBROUTINE dynmat_us()
   !           WRITE( stdout, '(2i3)') na,nb
   !            do icart = 1,3
   !              na_icart = 3*(na-1)+icart
-  !               WRITE( stdout,'(6f13.8)')
-  !     +               (dynwrk(na_icart,3*(nb-1)+jcart), jcart=1,3)
+  !               WRITE( stdout,'(6f13.8)')  &
+  !                     (dynwrk(na_icart,3*(nb-1)+jcart), jcart=1,3)
   !            end do
   !         end do
   !      end do
@@ -217,7 +271,11 @@ SUBROUTINE dynmat_us()
      ENDDO
 
   ENDDO
-  DEALLOCATE (gammap)
+  IF (noncolin) THEN
+     DEALLOCATE (gammap_nc)
+  ELSE
+     DEALLOCATE (gammap)
+  END IF
   DEALLOCATE (aux1)
   DEALLOCATE (work2)
   DEALLOCATE (work1)

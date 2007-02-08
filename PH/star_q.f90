@@ -8,7 +8,7 @@
 !-----------------------------------------------------------------------
 subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
      nr1, nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq, noinv, &
-     modenum)
+     modenum,noncolin,domag)
   !-----------------------------------------------------------------------
   ! generate the star of q vectors that are equivalent to the input one
   ! and return their list along with the symmetry ops. needed to obtain
@@ -21,6 +21,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
 #include "f_defs.h"
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
+  USE noncollin_module, ONLY : m_loc
   implicit none
   !-input variables
   integer :: ibrav, nat, ityp (nat), modenum, nr1, nr2, nr3
@@ -38,8 +39,10 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   character (len=9) :: symm_type
   ! input: 'cubic' or 'hexagonal' when ibrav=0
 
-  logical :: noinv
+  logical :: noinv, noncolin, domag
   ! input: if true eliminates symmetries z <-> -z
+  ! input: true if this is a noncollinear calculation
+  ! input: true if the magnetization is calculated
   !-output variables
   integer :: nsym, s (3, 3, 48), invs (48), irt (48, nat), nq, isq (48), imq
   ! output: number of symmetry operations
@@ -133,7 +136,7 @@ subroutine star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, &
   nosym = .false.
   call sgama (nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1, &
        nr2, nr3, irt, ftau, npk, nks, xk0, wk, invsym, minus_q, zero, &
-       modenum, .false., .false., mdum)
+       modenum, noncolin, domag, m_loc)
   do isym = 1, nsym
      sym (isym) = .true.
   enddo

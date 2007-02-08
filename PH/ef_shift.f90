@@ -21,12 +21,13 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, gg, nl
   USE gsmooth,              ONLY : nrxxs
   USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : npw, et
+  USE wvfct,                ONLY : npw, npwx, et
   USE klist,                ONLY : degauss, ngauss, ngk
   USE ener,                 ONLY : ef
 ! modules from phcom
   USE qpoint,               ONLY : nksq
   USE control_ph,           ONLY : nbnd_occ, lgamma_gamma
+  USE noncollin_module,     ONLY : noncolin, npol
   USE units_ph,             ONLY : lrwfc, iuwfc, lrdwf, iudwf
   USE eqv,                  ONLY : dpsi
   USE modes,                ONLY : npert
@@ -64,7 +65,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   real(DP), external :: w0gauss
   ! the smeared delta function
 
-  integer :: ibnd, ik, is, ipert, nrec, ikrec
+  integer :: ibnd, ik, is, ipert, nrec, ikrec, nspin0
   ! counter on occupied bands
   ! counter on k-point
   ! counter on spin polarizations
@@ -76,11 +77,13 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
   ! determines Fermi energy shift (such that each pertubation is neutral)
   !
   call start_clock ('ef_shift')
+  nspin0=nspin
+  if (nspin==4) nspin0=1
   if (.not.flag) then
      WRITE( stdout, * )
      do ipert = 1, npert (irr)
         delta_n = (0.d0, 0.d0)
-        do is = 1, nspin
+        do is = 1, nspin0
            call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
            if (gg(1).lt.1.0d-8) delta_n = delta_n + omega*drhoscf(nl(1),is,ipert)
            call cft3 (drhoscf(1,is,ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, +1)
@@ -98,7 +101,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
      ! corrects the density response accordingly...
      !
      do ipert = 1, npert (irr)
-        call ZAXPY (nrxx*nspin, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
+        call ZAXPY (nrxx*nspin0, def(ipert), ldos, 1, drhoscf(1,1,ipert), 1)
      enddo
   else
      !
@@ -121,7 +124,11 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
            do ibnd = 1, nbnd_occ (ik)
               wfshift = 0.5d0 * def(ipert) * &
                    w0gauss( (ef-et(ibnd,ik))/degauss, ngauss) / degauss
-              call ZAXPY (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
+              IF (noncolin) THEN
+                 call ZAXPY (npwx*npol,wfshift,evc(1,ibnd),1,dpsi(1,ibnd),1)
+              ELSE
+                 call ZAXPY (npw, wfshift, evc(1,ibnd), 1, dpsi(1,ibnd), 1)
+              ENDIF
            enddo
            !
            ! writes corrected delta_psi to iunit iudwf, k=kpoint,
@@ -131,7 +138,7 @@ subroutine ef_shift (drhoscf, ldos, ldoss, dos_ef, irr, npe, flag)
         enddo
      enddo
      do ipert = 1, npert (irr)
-        do is = 1, nspin
+        do is = 1, nspin0
            call ZAXPY (nrxxs, def(ipert), ldoss(1,is), 1, drhoscf(1,is,ipert), 1)
         enddo
      enddo

@@ -10,18 +10,20 @@ subroutine compute_becalp (becq, alpq)
   !---------------------------------------------------------------------
   !
   !     This routine is used only if .not.lgamma and in this case
-  !     computes the scalar product of vkb and psi_{k+q}
+  !     computes the scalar product of vkb and psi_{k+q}, and of
+  !     the derivative of vkb and psi_{k+q}
   !
 #include "f_defs.h"
 
 
   use pwcom
+  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
   implicit none
 
-  complex(DP) :: becq(nkb, nbnd, nksq), alpq(nkb,nbnd,3,nksq)
+  complex(DP) :: becq(nkb, npol, nbnd, nksq), alpq(nkb,npol,nbnd,3,nksq)
   ! the becp with psi_{k+q}
   ! the alphap with psi_{k+q}
 
@@ -35,7 +37,7 @@ subroutine compute_becalp (becq, alpq)
   !
   if (lgamma) return
 
-  allocate (aux ( npwx , nbnd))    
+  allocate (aux ( npwx*npol , nbnd))    
   if (nksq.gt.1) rewind (iunigk)
   do ik = 1, nksq
 
@@ -50,22 +52,36 @@ subroutine compute_becalp (becq, alpq)
      endif
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
      call davcio (evq, lrwfc, iuwfc, ikq, - 1)
-     call ccalbec (nkb, npwx, npwq, nbnd, becq (1, 1, ik), vkb, evq)
+     IF (noncolin) THEN
+        call ccalbec_nc(nkb,npwx,npwq,npol,nbnd,becq(1,1,1,ik),vkb,evq)
+     ELSE
+        call ccalbec (nkb, npwx, npwq, nbnd, becq(1, 1, 1,ik), vkb, evq)
+     END IF
      do ipol = 1, 3
+        aux=(0.d0,0.d0)
         do ibnd = 1, nbnd
            do ig = 1, npwq
               aux (ig, ibnd) = evq (ig, ibnd) * &
                    (xk (ipol, ikq) + g (ipol, igkq(ig) ) )
            enddo
-
+           IF (noncolin) THEN
+              do ig = 1, npwq
+                 aux (ig+npwx, ibnd) = evq (ig+npwx, ibnd) * &
+                   (xk (ipol, ikq) + g (ipol, igkq(ig) ) )
+              enddo
+           ENDIF
         enddo
 
-        call ccalbec (nkb, npwx, npwq, nbnd, alpq(1, 1, ipol, ik),vkb, aux)
+        IF (noncolin) THEN
+           call ccalbec_nc(nkb,npwx,npwq,npol,nbnd,alpq(1,1,1,ipol,ik),vkb, aux)
+        ELSE
+           call ccalbec (nkb, npwx, npwq, nbnd, alpq(1,1,1,ipol,ik),vkb, aux)
+        END IF
      enddo
   enddo
   fact = CMPLX (0.d0, tpiba)
 
-  call ZSCAL (nkb * nbnd * 3 * nksq, fact, alpq, 1)
+  call ZSCAL (nkb * nbnd * 3 * nksq * npol, fact, alpq, 1)
   deallocate (aux)
   return
 end subroutine compute_becalp
