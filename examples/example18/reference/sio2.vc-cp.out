@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
+     Version: 3.2 - Mon Dec 18 10:46:55 CET 2006                          
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:53:51   8Nov2006               
+   This run was started on:   3:28:44   8Feb2007               
 
    Serial Build
 
@@ -21,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scr/giannozz/espresso/pseudo/O.LDA.US.RRKJ3.UPF
+   /home/giannozz/espresso/pseudo/O.LDA.US.RRKJ3.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /scr/giannozz/espresso/pseudo/Si.vbc.UPF
+   /home/giannozz/espresso/pseudo/Si.vbc.UPF
    file type is 20: UPF
 
 
@@ -310,12 +310,9 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00098
-   ortho mmul, best time for paralle driver =   0.00098 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00203  0.00481
 
-   reading restart file: /scr/giannozz/tmp//cp_92.save
-   restart file read in    0.059 sec.
+   reading restart file: /home/giannozz/tmp//cp_92.save
+   restart file read in    0.062 sec.
 
 
    formf: eself= 210.64152
@@ -368,7 +365,7 @@
    -5.64   -5.24   -5.19   -4.80   -4.78   -4.41   -4.38   -4.35   -4.18   -4.03
    -4.00   -3.97   -3.68   -3.63   -3.26   -3.25   -3.17   -2.99
  
-   Allocated memory (kb) =      1608
+   Allocated memory (kb) =      1650
  
    CELL_PARAMETERS
     9.29233466    0.00001358   -0.00000632
@@ -381,9 +378,9 @@
    Center of mass square displacement (a.u.):   0.000013
 
    Total stress (GPa)
-        4.25030203         0.02844086        -0.00442890
-        0.02844086        -0.41898457        -1.03022953
-       -0.00442890        -1.03022956       -10.66244440
+        4.25030203         0.02844086        -0.00442891
+        0.02844086        -0.41898457        -1.03022955
+       -0.00442889        -1.03022956       -10.66244449
    ATOMIC_POSITIONS
    O    0.318877E+01  0.148330E+02  0.122703E+01
    O    0.783403E+01  0.678799E+01  0.122727E+01
@@ -421,7 +418,7 @@
    Si  -0.373225E-05 -0.419059E-06  0.640342E-06
    Si  -0.114299E-05 -0.951199E-06  0.187200E-05
    Si  -0.118520E-05 -0.138231E-05  0.166447E-05
-   Si  -0.139168E-05 -0.329994E-06 -0.165438E-05
+   Si  -0.139168E-05 -0.329995E-06 -0.165438E-05
    Si  -0.121908E-05  0.214796E-06 -0.203388E-05
  
    Forces acting on atoms (au):
@@ -454,8 +451,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
    10  0.00003   34.8    2.1  -211.98271  -211.93083  -211.93016  -211.93013  0.0000 -0.0005 -0.0001 -0.0033
 
-   writing restart file: /scr/giannozz/tmp//cp_93.save
-   restart file written in    0.217 sec.
+   writing restart file: /home/giannozz/tmp//cp_93.save
+   restart file written in    0.221 sec.
 
 
 
@@ -464,7 +461,7 @@
    ekinc         :        0.00001       0.00001 (AU)
    ekin          :       94.60245      94.60245 (AU)
    epot          :     -343.05137    -343.05137 (AU)
-   totel energy  :     -211.98234    -211.98234 (AU)
+   total energy  :     -211.98234    -211.98234 (AU)
    temperature   :        0.75870       0.75870 (K )
    enthalpy      :     -211.93045    -211.93045 (AU)
    econs         :     -211.93020    -211.93020 (AU)
@@ -472,36 +469,38 @@
    volume        :     1526.61517    1526.61517 (AU)
 
 
-     initialize   :     8.73s CPU
-     total_time   :    17.24s CPU (      10 calls,   1.724 s avg)
-     formf        :     0.72s CPU (      11 calls,   0.065 s avg)
-     rhoofr       :     6.29s CPU (      10 calls,   0.629 s avg)
-     vofrho       :     1.79s CPU (      10 calls,   0.179 s avg)
-     dforce       :     2.61s CPU (     240 calls,   0.011 s avg)
-     calphi       :     0.10s CPU (      10 calls,   0.010 s avg)
-     ortho        :     0.59s CPU (      10 calls,   0.059 s avg)
-     updatc       :     0.03s CPU (      10 calls,   0.003 s avg)
-     newd         :     1.73s CPU (      10 calls,   0.173 s avg)
-     calbec       :     0.11s CPU (      11 calls,   0.010 s avg)
-     prefor       :     0.06s CPU (      21 calls,   0.003 s avg)
-     strucf       :     0.02s CPU (      11 calls,   0.002 s avg)
-     nlfl         :     0.00s CPU (      10 calls,   0.000 s avg)
-     nlfq         :     0.83s CPU (      10 calls,   0.083 s avg)
-     rhov         :     0.43s CPU (      10 calls,   0.043 s avg)
+     initialize   :     8.79s CPU
+     total_time   :    17.30s CPU (      10 calls,   1.730 s avg)
+     formf        :     0.80s CPU (      11 calls,   0.073 s avg)
+     rhoofr       :     6.05s CPU (      10 calls,   0.605 s avg)
+     vofrho       :     1.83s CPU (      10 calls,   0.183 s avg)
+     dforce       :     2.76s CPU (     240 calls,   0.011 s avg)
+     calphi       :     0.08s CPU (      10 calls,   0.008 s avg)
+     ortho        :     0.58s CPU (      10 calls,   0.058 s avg)
+     ortho_iter   :     0.05s CPU (      10 calls,   0.005 s avg)
+     rhoset       :     0.04s CPU (      10 calls,   0.004 s avg)
+     updatc       :     0.04s CPU (      10 calls,   0.004 s avg)
+     newd         :     1.69s CPU (      10 calls,   0.169 s avg)
+     calbec       :     0.12s CPU (      11 calls,   0.011 s avg)
+     prefor       :     0.04s CPU (      21 calls,   0.002 s avg)
+     strucf       :     0.04s CPU (      11 calls,   0.004 s avg)
+     nlfl         :     0.02s CPU (      10 calls,   0.002 s avg)
+     nlfq         :     0.89s CPU (      10 calls,   0.089 s avg)
+     rhov         :     0.37s CPU (      10 calls,   0.037 s avg)
      nlsm1        :     0.51s CPU (      31 calls,   0.016 s avg)
-     nlsm2        :     0.83s CPU (      10 calls,   0.083 s avg)
-     fft          :     3.37s CPU (     130 calls,   0.026 s avg)
-     ffts         :     0.13s CPU (      20 calls,   0.007 s avg)
-     fftw         :     2.77s CPU (     720 calls,   0.004 s avg)
-     fftb         :     1.33s CPU (    2940 calls,   0.000 s avg)
-     rsg          :     0.03s CPU (      10 calls,   0.003 s avg)
+     nlsm2        :     0.87s CPU (      10 calls,   0.087 s avg)
+     fft          :     3.12s CPU (     130 calls,   0.024 s avg)
+     ffts         :     0.20s CPU (      20 calls,   0.010 s avg)
+     fftw         :     2.87s CPU (     720 calls,   0.004 s avg)
+     fftb         :     1.17s CPU (    2940 calls,   0.000 s avg)
+     rsg          :     0.02s CPU (      10 calls,   0.002 s avg)
  
  
  
-     CP           :    26.10s CPU time,   26.96s wall time
+     CP           :    26.30s CPU time,   27.51s wall time
 
  
-   This run was terminated on:   3:54:18   8Nov2006            
+   This run was terminated on:   3:29:11   8Feb2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
