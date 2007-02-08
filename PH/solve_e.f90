@@ -254,7 +254,7 @@ subroutine solve_e
            conv_root = .true.
 
            call cgsolve_all (ch_psi_all,cg_psi,et(1,ik),dvpsi,dpsi, &
-              h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik) )
+              h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik),1 )
 
            ltaver = ltaver + lter
            lintercall = lintercall + 1

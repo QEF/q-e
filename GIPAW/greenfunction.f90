@@ -124,7 +124,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   ! solve linear system  
   call cgsolve_all (ch_psi_all, cg_psi, et(1,ik), psi, g_psi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
-       nbnd_occ(ik) )
+       nbnd_occ(ik), 1 )
   !!write(stdout, '(5X,''cgsolve_all converged in '',I3,'' iterations'')') &
   !!      lter
 

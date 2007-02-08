@@ -42,7 +42,7 @@ subroutine d3matrix
   !
   call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
        nr2, nr3, nsym, s, invs, irt, rtau, nq, sxq, isq, imq, noinv, &
-       modenum)
+       modenum,.false.,.false.)
   !
   ! Write on file information on the system
   !

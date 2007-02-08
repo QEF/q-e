@@ -242,7 +242,7 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
 
         call cgsolve_all (ch_psi_all2, cg_psi, et (1, ikk), dvpsi, dpsi, &
              h_diag, npwx, npwq, thresh, ik, lter, conv_root, anorm, &
-             nbnd_occ (ikk) )
+             nbnd_occ (ikk), 1 )
 
         ltaver = ltaver + lter
         lintercall = lintercall + 1

@@ -313,6 +313,8 @@ SUBROUTINE elphsum ( )
   USE ktetra, ONLY: nk1, nk2, nk3
   USE symme, ONLY: s, irt, nsym
   USE wvfct, ONLY: nbnd, et
+  USE spin_orb,  ONLY : domag
+  USE noncollin_module, ONLY : noncolin
   USE phcom
   USE el_phon
   USE io_global, ONLY : stdout, ionode, ionode_id
@@ -634,7 +636,7 @@ SUBROUTINE elphsum ( )
   !
   call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
        nr2, nr3, nsymloc, sloc, invsloc, irtloc, rtauloc, nqloc, sxqloc, &
-       isqloc, imqloc, noinv, modenum)
+       isqloc, imqloc, noinv, modenum,noncolin,domag)
   !
   do isig=1,nsig
      write(name,"(A7,I2)") 'a2Fq2r.',50 + isig

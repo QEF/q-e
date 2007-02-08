@@ -205,7 +205,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
   !
   call cgsolve_all (ch_psi_all, cg_psi, et (1, kpoint), dpsi, dvpsi, &
        h_diag, npwx, npw, thresh, kpoint, lter, conv_root, anorm, &
-       nbnd_occ (kpoint) )
+       nbnd_occ (kpoint),1 )
   !
   if (.not.conv_root) WRITE( stdout, '(5x,"kpoint",i4," ibnd",i4, &
        & " linter: root not converged ",e10.3)') &

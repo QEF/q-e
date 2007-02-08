@@ -111,7 +111,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
 
   call cgsolve_all( ch_psi_all, cg_psi, et_, dvpsi, dpsi, h_diag, &
                     npwx, npw, thresh, ik, lter, conv_root, anorm, &
-                    nbnd_occ(ik) )
+                    nbnd_occ(ik), 1 )
 
   avg_iter = avg_iter + DBLE (lter)
   if (.not.conv_root) write(6, &
