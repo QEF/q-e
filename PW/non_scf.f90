@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,8 +11,7 @@
   SUBROUTINE non_scf (ik_)
   !-----------------------------------------------------------------------
   !
-  ! ... diagonalization of the KS hamiltonian with electric fields
-  !
+  ! ... diagonalization of the KS hamiltonian in the non-scf case
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield, lberry
@@ -48,7 +47,7 @@
      !
   ELSE
      !
-     CALL c_bands( iter, ik_, dr2 )
+     CALL c_bands_nscf ( ik_ )
      !
   END IF
   !

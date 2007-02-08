@@ -16,6 +16,7 @@ SUBROUTINE wfcinit()
   !
   USE io_global,            ONLY : stdout
   USE basis,                ONLY : natomwfc, startingwfc
+  USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk
   USE control_flags,        ONLY : reduce_io, lscf
   USE ldaU,                 ONLY : swfcatom, lda_plus_u
@@ -42,15 +43,6 @@ SUBROUTINE wfcinit()
      !
      WRITE( stdout, '(5X,"Starting wfc from file")' )
      !
-     ! ... read the wavefunction into memory (if it is not done in c_bands)
-     !
-     IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
-     !
-     CALL stop_clock( 'wfcinit' )
-     !
-     RETURN
-     !
   ELSE IF ( startingwfc == 'atomic' ) THEN
      !
      IF ( natomwfc >= nbnd ) THEN
@@ -70,10 +62,31 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
-  !!! ... TODO: for non-scf calculations, the starting wavefunctions are
-  !!! ... not written to file but calculated just before diagonalization
+  ! ... for non-scf calculations, the starting wavefunctions are not 
+  ! ... calculated here but immediately before diagonalization
   !
-  !!! IF ( .NOT. lscf ) RETURN
+  IF ( .NOT. lscf .AND. .NOT. lelfield ) THEN
+     !
+     CALL stop_clock( 'wfcinit' )
+     !
+     RETURN
+     !
+  END IF
+  !
+  IF ( startingwfc == 'file' ) THEN
+     !
+     ! ... wavefunctions are to be read from file: store wavefunction into
+     ! ... memory if c_bands will not do it (for a single k-point);
+     ! ... return and do nothing otherwise (c_bands will read wavefunctions)
+     !
+     IF ( nks == 1 .AND. reduce_io ) &
+        CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
+     !
+     CALL stop_clock( 'wfcinit' )
+     !
+     RETURN
+     !
+  END IF
   !
   IF ( nks > 1 ) REWIND( iunigk )
   !

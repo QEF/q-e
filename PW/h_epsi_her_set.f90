@@ -11,10 +11,10 @@
 subroutine h_epsi_her_set
   !-----------------------------------------------------------------------
   !
-  ! this subrutine  build the hermitean operators  w_k w_k*, 
+  ! this subroutine  builds the hermitean operators  w_k w_k*, 
   ! (as in Souza,et al.  PRB B 69, 085106 (2004))
   !
-  ! evcel must contain the wavefunctions from previous iteration
+  ! wavefunctions from previous iteration are read into 'evcel'
   ! spin polarized systems supported only with fixed occupations
 
   USE kinds,    ONLY : DP
@@ -27,12 +27,12 @@ subroutine h_epsi_her_set
   USE gvect
   USE uspp
   USE uspp_param
-  USE bp, ONLY :  gdir,nppstr,efield,fact_hepsi
+  USE bp, ONLY :  gdir,nppstr,efield,fact_hepsi,evcel,evcp=>evcelp,evcm=>evcelm
   USE basis
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
-  USE io_files, ONLY: iunefield, nwordwfc, iunefieldm, iunefieldp
+  USE io_files, ONLY: iunwfc, nwordwfc, iunefieldm, iunefieldp
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   !
@@ -42,9 +42,6 @@ subroutine h_epsi_her_set
   !  --- Internal definitions ---
 
    COMPLEX(DP), ALLOCATABLE  :: evct(:,:)!for temporary wavefunctios
-   COMPLEX(DP), ALLOCATABLE  :: evcp(:,:)!for  gradient term ik+1
-   COMPLEX(DP), ALLOCATABLE  :: evcm(:,:)!for  gradient term ik-1
-   COMPLEX(DP), ALLOCATABLE  :: evcel(:,:)
    INTEGER :: i
    INTEGER :: igk1(npwx)
    INTEGER :: igk0(npwx)
@@ -123,9 +120,6 @@ subroutine h_epsi_her_set
 !  -------------------------------------------------------------------------   !
 
    ALLOCATE( evct(npwx,nbndx))
-   ALLOCATE( evcp(npwx,nbndx))
-   ALLOCATE( evcm(npwx,nbndx))
-   ALLOCATE( evcel(npwx,nbndx))
    ALLOCATE( map_g(npwx))
   
 
@@ -133,7 +127,7 @@ subroutine h_epsi_her_set
 
    DO ik=1,nks
   
-      CALL davcio( evcel, nwordwfc, iunefield, ik, -1 )
+      CALL davcio( evcel, nwordwfc, iunwfc, ik, -1 )
 
       if(nspin==2) then
          if(ik <= nks/2) then
@@ -311,7 +305,7 @@ subroutine h_epsi_her_set
          
          CALL gk_sort(xk(1,ik-1),ngm,g,ecutwfc/tpiba2, &
               &    npw0,igk0,g2kin_bp) 
-         CALL davcio(evct,nwordwfc,iunefield,ik-1,-1)
+         CALL davcio(evct,nwordwfc,iunwfc,ik-1,-1)
 !        
 !           --- Calculate dot products between wavefunctions
 
@@ -483,7 +477,7 @@ subroutine h_epsi_her_set
 
          CALL gk_sort(xk(1,ik+nppstr-1),ngm,g,ecutwfc/tpiba2, &
            &   npw0,igk0,g2kin_bp) 
-         CALL davcio(evct,nwordwfc,iunefield,ik+nppstr-1,-1)
+         CALL davcio(evct,nwordwfc,iunwfc,ik+nppstr-1,-1)
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -701,7 +695,7 @@ subroutine h_epsi_her_set
          
          CALL gk_sort(xk(1,ik+1),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
-         CALL davcio(evct,nwordwfc,iunefield,ik+1,-1)
+         CALL davcio(evct,nwordwfc,iunwfc,ik+1,-1)
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -870,7 +864,7 @@ subroutine h_epsi_her_set
        
       CALL gk_sort(xk(1,ik-nppstr+1),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
-      CALL davcio(evct,nwordwfc,iunefield,ik-nppstr+1,-1)
+      CALL davcio(evct,nwordwfc,iunwfc,ik-nppstr+1,-1)
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -1123,7 +1117,7 @@ subroutine h_epsi_her_set
             endif
          enddo
       enddo
-      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb si relative to the last ik read
+      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
            npwx, ps, nkb, (1.d0, 0.d0) , evcm, npwx)
 
 
@@ -1139,9 +1133,6 @@ subroutine h_epsi_her_set
 
 
   DEALLOCATE( evct)
-  DEALLOCATE( evcp)
-  DEALLOCATE( evcm)
-  DEALLOCATE( evcel)
   DEALLOCATE( map_g)
 
 

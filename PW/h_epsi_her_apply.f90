@@ -33,7 +33,6 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
-  USE io_files, ONLY: iunefield, nwordwfc
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   !

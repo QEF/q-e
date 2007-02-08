@@ -27,7 +27,6 @@ subroutine diropn (unit, extension, recl, exst)
   use io_files, only: prefix, tmp_dir, nd_nmbr
   use mp_global, only: mpime
   implicit none
-
   !
   !    first the input variables
   !
@@ -43,18 +42,12 @@ subroutine diropn (unit, extension, recl, exst)
   !
   character(len=256) :: tempfile, filename
   ! complete file name
-#ifdef __T3E
-  character(len=80) :: assstr
-  integer :: ierr
-  ! error code
-#endif
   integer :: ios, unf_recl
   ! used to check I/O operations
   ! length of the record
   logical :: opnd
   ! if true the file is already opened
-
-
+  !
   if (unit < 0) call errore ('diropn', 'wrong unit', 1)
   !
   !    we first check that the file is not already openend
@@ -65,18 +58,9 @@ subroutine diropn (unit, extension, recl, exst)
   !
   !      then we check the filename extension
   !
-
   if (extension == ' ') call errore ('diropn','filename extension not given',2)
   filename = trim(prefix) // "." // trim(extension)
   tempfile = trim(tmp_dir) // trim(filename) //nd_nmbr
-  ! debug
-  !write(200+mpime,*) trim(tmp_dir)
-  !write(200+mpime,*) trim(filename)
-  !write(200+mpime,*) nd_nmbr
-  !write(200+mpime,*) tempfile
-  !close(200+mpime)
-  !return
-  ! end debug
   inquire (file = tempfile, exist = exst)
   !
   !      the unit for record length is unfortunately machine-dependent
@@ -84,21 +68,6 @@ subroutine diropn (unit, extension, recl, exst)
   unf_recl = DIRECT_IO_FACTOR * recl
   if (unf_recl <= 0) call errore ('diropn', 'wrong record length', 3)
   !
-  !     on T3E reduce the size of the buffer if it is too large
-  !
-#ifdef __T3E
-  if (unf_recl.gt.5000000) then
-     if (unit < 10) then
-        write (assstr, '("assign -b 1 u:",i1)') unit
-     else if(unit < 100) then
-        write (assstr, '("assign -b 1 u:",i2)') unit
-     else
-        call errore ('diropn', 'unit too large', 1)
-     endif
-     call assign (assstr, ierr)
-  endif
-#endif
-
   open (unit, file = tempfile, iostat = ios, form = 'unformatted', &
        status = 'unknown', access = 'direct', recl = unf_recl)
 

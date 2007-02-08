@@ -23,13 +23,13 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
-  USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k, btype
+  USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, lbands, isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
+  USE bp,                   ONLY : lelfield
   USE check_stop,           ONLY : check_stop_now
   !
   IMPLICIT NONE
@@ -59,13 +59,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   END IF
   !
   CALL start_clock( 'c_bands' )
-  !
-  IF ( lelfield ) THEN
-     ALLOCATE( evcel( npwx, nbnd ) )
-     ALLOCATE( evcelm( npwx, nbnd ) )
-     ALLOCATE( evcelp( npwx, nbnd ) )
-     ALLOCATE( bec_evcel(nkb,nbnd) )
-  END IF
   !
   IF ( isolve == 0 ) THEN
      !
@@ -154,13 +147,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
        ethr, avg_iter
   !
-  IF ( lelfield ) THEN
-     DEALLOCATE( evcel )
-     DEALLOCATE( evcelm )
-     DEALLOCATE( evcelp )
-     DEALLOCATE( bec_evcel)
-  END IF
-  !
   CALL stop_clock( 'c_bands' )  
   !
   RETURN
@@ -188,7 +174,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
-  USE io_files,             ONLY : nwordwfc, iunefield,iunefieldp,iunefieldm
+  USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, npw, &
@@ -374,19 +360,22 @@ CONTAINS
        !
     END IF
     !
-    ! ... read wave function for electric field
-    !
     IF ( lelfield ) THEN
        !
-       CALL davcio( evcel, nwordwfc, iunefield, ik, -1 )
+       ! ... save wave functions from previous iteration for electric field
+       !
+       evcel = evc
        !
        !... read projectors from disk
        !
        CALL davcio(evcelm,nwordwfc,iunefieldm,ik,-1)
        CALL davcio(evcelp,nwordwfc,iunefieldp,ik,-1)
-       !          
+       !
        IF ( okvan ) THEN
+          !
+          ALLOCATE( bec_evcel ( nkb, nbnd ) )
           CALL ccalbec(nkb,npwx,npw,nbnd,bec_evcel,vkb,evcel)
+          !
        ENDIF
        !
     END IF
@@ -492,6 +481,8 @@ CONTAINS
        !
     END IF
     !
+    IF ( lelfield .AND. okvan ) DEALLOCATE( bec_evcel )
+    !
     RETURN
     !
   END SUBROUTINE c_bands_k
@@ -523,34 +514,25 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
   ! ... Driver routine for Hamiltonian diagonalization under an electric field
   !
   USE kinds,                ONLY : DP
-  USE bp,                   ONLY : nberrycyc, fact_hepsi
+  USE bp,                   ONLY : nberrycyc, fact_hepsi, &
+                                   evcel, evcelp, evcelm
   USE klist,                ONLY : nks
-  USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
   USE wvfct,                ONLY : nbnd, npwx
   !
   IMPLICIT NONE
   !
   INTEGER, INTENT (in) :: iter, ik_
   REAL(DP), INTENT (in) :: dr2
-  COMPLEX(DP), ALLOCATABLE :: psi(:,:)
   !
   INTEGER :: inberry, ik
   !
   !
-  ALLOCATE(fact_hepsi(nks))
+  ALLOCATE( evcel ( npwx, nbnd ) )
+  ALLOCATE( evcelm( npwx, nbnd ) )
+  ALLOCATE( evcelp( npwx, nbnd ) )
+  ALLOCATE( fact_hepsi(nks) )
   !
   DO inberry = 1, nberrycyc
-     !
-     ALLOCATE( psi( npwx, nbnd ) )
-     !
-     DO ik=1,nks
-        !
-        CALL davcio( psi, nwordwfc, iunwfc,    ik, -1 )
-        CALL davcio( psi, nwordwfc, iunefield, ik,  1 )
-        !
-     END DO
-     !
-     DEALLOCATE( psi )
      !
      !...set up electric field hermitean operator
      !
@@ -560,9 +542,153 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
      !
   END DO
   !
-  DEALLOCATE(fact_hepsi)
+  DEALLOCATE( fact_hepsi )
+  DEALLOCATE( evcelp )
+  DEALLOCATE( evcelm )
+  DEALLOCATE( evcel  )
   !
   RETURN
   !
 END SUBROUTINE c_bands_efield
-
+!
+!----------------------------------------------------------------------------
+SUBROUTINE c_bands_nscf( ik_ )
+  !----------------------------------------------------------------------------
+  !
+  ! ... Driver routine for Hamiltonian diagonalization routines
+  ! ... specialized to non-self-consistent calculations (no electric field)
+  !
+  USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
+  USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
+                                   nwordwfc
+  USE basis,                ONLY : startingwfc
+  USE klist,                ONLY : nkstot, nks, xk, ngk
+  USE uspp,                 ONLY : vkb, nkb
+  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
+  USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
+  USE control_flags,        ONLY : ethr, lbands, isolve
+  USE ldaU,                 ONLY : lda_plus_u, swfcatom
+  USE lsda_mod,             ONLY : current_spin, lsda, isk
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE wavefunctions_module, ONLY : evc
+  USE check_stop,           ONLY : check_stop_now
+  !
+  IMPLICIT NONE
+  !
+  ! ... First the I/O variables
+  !
+  INTEGER :: ik_
+  ! k-point already done
+  !
+  ! ... local variables
+  !
+  REAL(DP) :: avg_iter, dr2=0.d0
+  ! average number of H*psi products
+  INTEGER :: ik, ig, iter=1
+  ! counter on k points
+  ! counter on G vectors
+  !
+  IF ( ik_ == nks ) THEN
+     !
+     ik_ = 0
+     !
+     RETURN
+     !
+  END IF
+  !
+  CALL start_clock( 'c_bands' )
+  !
+  IF ( isolve == 0 ) THEN
+     !
+     WRITE( stdout, '(5X,"Davidson diagonalization with overlap")' )
+     !
+  ELSE IF ( isolve == 1 ) THEN
+     !
+     WRITE( stdout, '(5X,"CG style diagonalization")')
+     !
+  ELSE
+     !
+     CALL errore ( 'c_bands', 'invalid type of diagonalization', isolve)
+     !!! WRITE( stdout, '(5X,"DIIS style diagonalization")')
+     !
+  END IF
+  !
+  avg_iter = 0.D0
+  !
+  if ( nks > 1 ) REWIND( iunigk )
+  !
+  ! ... For each k point diagonalizes the hamiltonian
+  !
+  k_loop: DO ik = 1, nks
+     !
+     current_k = ik
+     !
+     IF ( lsda ) current_spin = isk(ik)
+     !
+     ! ... Reads the list of indices k+G <-> G of this k point
+     !
+     IF ( nks > 1 ) READ( iunigk ) igk
+     !
+     npw = ngk(ik)
+     !
+     ! ... do not recalculate k-points if restored from a previous run
+     !
+     IF ( ik <= ik_ ) THEN
+        !
+        CYCLE k_loop
+        !
+     END IF
+     !
+     ! ... various initializations
+     !
+     IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+     !
+     ! ... kinetic energy
+     !
+     call g2_kin( ik )
+     !
+     ! ... Needed for LDA+U
+     !
+     IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
+     !   
+     ! ... calculate starting  wavefunctions
+     !
+     IF ( startingwfc == 'file' ) THEN
+        !
+        CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+        !
+     ELSE
+        !
+        CALL init_wfc ( ik ) 
+        !
+     END IF
+     !
+     ! ... diagonalization of bands for k-point ik
+     !
+     call diag_bands ( iter, ik, avg_iter )
+     !
+     ! ... save wave-functions
+     !
+     CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+     !
+     ! ... save restart information
+     !
+     CALL save_in_cbands( iter, ik, dr2 )
+     !
+     IF ( check_stop_now() )  call stop_run(.FALSE.)
+     !
+  END DO k_loop
+  !
+  CALL poolreduce( 1, avg_iter )
+  avg_iter = avg_iter / nkstot
+  !
+  WRITE( stdout, &
+       '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
+       ethr, avg_iter
+  !
+  CALL stop_clock( 'c_bands' )  
+  !
+  RETURN
+  !
+END SUBROUTINE c_bands_nscf
