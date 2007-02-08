@@ -13,6 +13,7 @@ adddvscf.o \
 addnlcc.o \
 addnlcc_zstar_eu_us.o \
 addusdbec.o \
+addusdbec_nc.o \
 addusddens.o \
 addusddense.o \
 addusdynmat.o \
@@ -32,6 +33,7 @@ compute_alphasum.o \
 compute_becalp.o \
 compute_becsum.o \
 compute_drhous.o \
+compute_drhous_nc.o \
 compute_dvloc.o \
 compute_nldyn.o \
 compute_weight.o \
@@ -68,7 +70,9 @@ generate_dynamical_matrix_c.o \
 gmressolve_all.o \
 h_psiq.o \
 incdrhoscf.o \
+incdrhoscf_nc.o \
 incdrhous.o \
+incdrhous_nc.o \
 io_pattern.o \
 localdos.o \
 newdq.o \
@@ -85,6 +89,7 @@ print_clock_ph.o \
 psidspsi.o \
 psymdvscf.o \
 psyme.o \
+psym_dmag.o \
 punch_plot_e.o \
 punch_plot_ph.o \
 q_points.o \
@@ -93,6 +98,7 @@ random_matrix.o \
 rotate_and_add_dyn.o \
 set_asr_c.o \
 set_drhoc.o \
+set_int12_nc.o \
 set_irr.o \
 set_irr_mode.o \
 set_irr_nosym.o \
@@ -107,11 +113,18 @@ star_q.o \
 stop_ph.o \
 sym_and_write_zue.o \
 sym_def.o \
+sym_dmag.o \
 symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \
 syme.o \
 symm.o \
+transform_int_so.o \
+transform_int_nc.o \
+transform_alphasum_nc.o \
+transform_alphasum_so.o \
+transform_dbecsum_so.o \
+transform_dbecsum_nc.o \
 tra_write_matrix.o \
 trntnsc.o \
 xk_wk_collect.o \
