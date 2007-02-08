@@ -545,10 +545,13 @@
         celldm(1) = a / bohr_radius_angs
         celldm(2) = b / a
         celldm(3) = c / a
-        celldm(4) = cosab
-        celldm(5) = cosac
-        celldm(6) = cosbc
-
+        IF ( ibrav /= 14 ) THEN
+           celldm(4) = cosab
+        ELSE
+           celldm(4) = cosbc
+           celldm(5) = cosac
+           celldm(6) = cosab
+        END IF
       END IF
 
       !

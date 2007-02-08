@@ -1212,14 +1212,23 @@ SUBROUTINE iosys()
   !
   IF ( celldm_(1) == 0.D0 .AND. a /= 0.D0 ) THEN
      !
-     IF ( ibrav_ == 0 ) ibrav = 14
-     !
      celldm_(1) = a / bohr_radius_angs
      celldm_(2) = b / a
      celldm_(3) = c / a
-     celldm_(4) = cosab
-     celldm_(5) = cosac
-     celldm_(6) = cosbc
+     !
+     IF ( ibrav_ /= 14 ) THEN
+        !
+        ! ... trigonal and monoclinic lattices
+        !
+        celldm_(4) = cosab
+     ELSE
+        !
+        ! ... triclinic lattice 
+        !
+        celldm_(4) = cosbc
+        celldm_(5) = cosac
+        celldm_(6) = cosab
+     END IF
      !
   ELSE IF ( celldm_(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
      !

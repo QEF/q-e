@@ -222,19 +222,20 @@ nberrycyc      INTEGER ( default = 1 )
 NAMELIST &SYSTEM
 
 ibrav          INTEGER
-               bravais-lattice index (must be specified)
-               see at the end of this file
+               bravais-lattice index - see at the end of this file
 
 celldm(i)      REAL, DIMENSION(6)                        
                crystallographic constants - see at the end of this file
                alat = celldm(1) is the lattice parameter "a" (in BOHR)
                only needed celldm (depending on ibrav) must be specified
+               If ibrav=0 only alat = celldm(1) is used (if present)
 
 a, b, c, cosab, cosac, cosbc: 
                REAL
 	       traditional crystallographic constants (a,b,c in ANGSTROM,
                cosab = cosine of the angle between axis a and b
                specify either these OR celldm but NOT both
+               If ibrav=0 only alat = a is used (if present)
  
 nat            INTEGER
                 number of atoms in the unit cell - must be specified
@@ -1042,7 +1043,7 @@ K_POINTS { tpiba | automatic | crystal | gamma }
 
 CELL_PARAMETERS
 
-  optional card, needed only if ibrav = 0 is specified
+  optional card, needed only if ibrav = 0 is specified, ignored otherwise
 
   Syntax:
   
