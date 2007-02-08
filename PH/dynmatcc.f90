@@ -40,7 +40,7 @@ subroutine dynmatcc
   !
   call v_xc (rho, rhog, rho_core, rhog_core, etxcd, vtxcd, v)
   !
-  if (nspin == 1) then
+  if (nspin == 1 .OR. nspin==4) then
      is=1
      do ir = 1, nrxx
         vxc(ir) = v(ir,is)

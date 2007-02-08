@@ -17,11 +17,13 @@ subroutine allocate_phq
 
   USE ions_base, ONLY : nat, ntyp => nsp
   use pwcom
+  USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
+  USE spin_orb, ONLY : lspinorb
   use phcom
   use el_phon
-  USE becmod, ONLY: becp
+  USE becmod, ONLY: becp, becp_nc
   USE uspp_param, ONLY: nhm
   USE ramanm, ONLY: ramtns, lraman
   implicit none
@@ -38,12 +40,12 @@ subroutine allocate_phq
      !
      !  q!=0 : evq, igkq are allocated and calculated at point k+q
      !
-     allocate (evq ( npwx , nbnd))    
+     allocate (evq ( npwx*npol , nbnd))    
      allocate (igkq ( npwx))    
   endif
   !
-  allocate (dvpsi ( npwx , nbnd))    
-  allocate ( dpsi ( npwx , nbnd))    
+  allocate (dvpsi ( npwx*npol , nbnd))    
+  allocate ( dpsi ( npwx*npol , nbnd))    
   !
   allocate (vlocq ( ngm , ntyp))    
   allocate (dmuxc ( nrxx , nspin , nspin))    
@@ -69,14 +71,33 @@ subroutine allocate_phq
      allocate (int4 ( nhm * (nhm + 1)/2,  3 , 3 , nat, nspin))    
      allocate (int5 ( nhm * (nhm + 1)/2 , 3 , 3 , nat , nat))    
      allocate (dpqq( nhm, nhm, 3, ntyp))    
+     IF (noncolin) THEN
+        ALLOCATE(int1_nc( nhm, nhm, 3, nat, nspin))    
+        ALLOCATE(int3_nc( nhm, nhm, max_irr_dim , nat , nspin))    
+        ALLOCATE(int4_nc( nhm, nhm, 3, 3, nat, nspin))    
+        ALLOCATE(becsum_nc( nhm*(nhm+1)/2, nat, npol, npol))    
+        ALLOCATE(alphasum_nc( nhm*(nhm+1)/2, 3, nat, npol, npol))    
+        IF (lspinorb) THEN
+           ALLOCATE(int2_so( nhm, nhm, 3, nat , nat, nspin))    
+           ALLOCATE(int5_so( nhm, nhm, 3, 3, nat , nat, nspin))    
+!           allocate(dpqq_so( nhm, nhm, nspin, 3, ntyp))    
+        END IF
+     END IF
      allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin))    
      allocate (this_dvkb3_is_on_file(nksq))    
      this_dvkb3_is_on_file(:)=.false.
   endif
   allocate (this_pcxpsi_is_on_file(nksq,3))
   this_pcxpsi_is_on_file(:,:)=.false.
-  allocate ( alphap ( nkb , nbnd , 3 , nksq))    
-  allocate ( becp1 (nkb, nbnd, nksq), becp(nkb, nbnd) )
+  IF (noncolin) THEN
+     ALLOCATE(alphap_nc(nkb, npol, nbnd , 3 , nksq))    
+     ALLOCATE(becp1_nc(nkb, npol, nbnd, nksq)) 
+     ALLOCATE(becp_nc(nkb, npol, nbnd) )
+  ELSE
+     ALLOCATE( alphap ( nkb , nbnd , 3 , nksq) )    
+     ALLOCATE( becp1 (nkb, nbnd, nksq) ) 
+     ALLOCATE( becp(nkb, nbnd) )
+  END IF
   if (elph) allocate (el_ph_mat( nbnd, nbnd, nks, 3*nat))    
   if (lraman) allocate ( ramtns (3, 3, 3, nat) )
   return

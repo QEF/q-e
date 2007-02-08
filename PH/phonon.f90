@@ -29,6 +29,7 @@ PROGRAM phonon
   USE mp,              ONLY : mp_bcast
   USE ions_base,       ONLY : nat
   USE lsda_mod,        ONLY : nspin
+  USE noncollin_module, ONLY : noncolin
   USE gvect,           ONLY : nrx1, nrx2, nrx3
   USE control_flags,   ONLY : restart, lphonon, tr2, ethr, imix, nmix,  &
                               mixing_beta, lscf, lbands, david, isolve
@@ -295,6 +296,7 @@ PROGRAM phonon
      !
      IF ( epsil .AND. irr0 <=  0 ) THEN
         !
+        IF (noncolin) CALL errore('phonon','epsil and noncolin not programed',1)
         IF (fpol) THEN    ! calculate freq. dependent polarizability
            !
            WRITE( stdout, '(/,5X,"Frequency Dependent Polarizability Calculation",/)' )
@@ -327,7 +329,7 @@ PROGRAM phonon
            !
            ! ... calculate the effective charges Z(E,Us) (E=scf,Us=bare)
            !
-           IF (.NOT.(lrpa.OR.lnoloc)) CALL zstar_eu()
+           IF (.NOT.(lrpa.OR.lnoloc).AND..NOT.noncolin) CALL zstar_eu()
            !
            IF ( fildrho /= ' ' ) CALL punch_plot_e()
            !
@@ -337,7 +339,7 @@ PROGRAM phonon
            !
         END IF
         !
-        IF ( lraman .OR. elop ) CALL raman()
+        IF (( lraman .OR. elop ).AND..NOT.noncolin) CALL raman()
         !
      END IF
      !
@@ -352,6 +354,7 @@ PROGRAM phonon
      !
      IF ( elph ) THEN
         !
+        IF (noncolin) CALL errore('phonon','e-ph and noncolin not programed',1)
         IF ( .NOT. trans ) THEN
            ! 
            CALL dvanqq()

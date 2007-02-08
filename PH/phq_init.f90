@@ -40,6 +40,7 @@ SUBROUTINE phq_init()
   USE atom,                 ONLY : numeric, mesh, msh, r , rab
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : DP
+  USE noncollin_module,     ONLY : noncolin, npol
   USE uspp_param,           ONLY : vloc_at
   USE phcom
   !
@@ -64,7 +65,7 @@ SUBROUTINE phq_init()
   !
   CALL start_clock( 'phq_init' )
   !
-  ALLOCATE( aux1( npwx, nbnd ) )    
+  ALLOCATE( aux1( npwx*npol, nbnd ) )    
   !
   ! ... initialize structure factor array
   !
@@ -167,19 +168,35 @@ SUBROUTINE phq_init()
      ! ... e) we compute the becp terms which are used in the rest of
      ! ...    the code
      !
-     CALL ccalbec( nkb, npwx, npw, nbnd, becp1(1,1,ik), vkb, evc )
+     IF (noncolin) THEN
+        CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd,becp1_nc(1,1,1,ik),vkb,evc )
+     ELSE
+        CALL ccalbec( nkb, npwx, npw, nbnd, becp1(1,1,ik), vkb, evc )
+     ENDIF
      !
      ! ... e') we compute the derivative of the becp term with respect to an
      !         atomic displacement
      !
      DO ipol = 1, 3
+        aux1=(0.d0,0.d0)
         DO ibnd = 1, nbnd
            DO ig = 1, npw
               aux1(ig,ibnd) = evc(ig,ibnd) * tpiba * ( 0.D0, 1.D0 ) * & 
                               ( xk(ipol,ikk) + g(ipol,igk(ig)) )
            END DO
+           IF (noncolin) THEN
+              DO ig = 1, npw
+                 aux1(ig+npwx,ibnd)=evc(ig+npwx,ibnd)*tpiba*(0.D0,1.D0)*& 
+                           ( xk(ipol,ikk) + g(ipol,igk(ig)) )
+              END DO
+           END IF
         END DO
-        CALL ccalbec( nkb, npwx, npw, nbnd, alphap(1,1,ipol,ik), vkb, aux1 )
+        IF (noncolin) THEN
+           CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd,alphap_nc(1,1,1,ipol,ik),&
+                                                           vkb,aux1)
+        ELSE
+           CALL ccalbec(nkb,npwx,npw,nbnd,alphap(1,1,ipol,ik),vkb,aux1)
+        END IF
      END DO
      !
      ! ... if there is only one k-point the k+q wavefunctions are 
@@ -196,8 +213,10 @@ SUBROUTINE phq_init()
   CALL dvanqq()
   CALL drho()
   !
-  IF ( ( epsil .OR. zue ) .AND. okvan ) &
+  IF ( ( epsil .OR. zue ) .AND. okvan ) THEN
      CALL compute_qdipol(dpqq)
+!     IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
+  END IF
   !
   CALL stop_clock( 'phq_init' )
   !

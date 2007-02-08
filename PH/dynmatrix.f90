@@ -24,6 +24,8 @@ subroutine dynmatrix
   USE gvect,         ONLY : nr1, nr2, nr3
   USE symme,         ONLY : s, irt, nsym
   USE printout_base, ONLY : title
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,      ONLY : domag
   use phcom
   USE ramanm,        ONLY: lraman, ramtns
   implicit none
@@ -114,7 +116,7 @@ subroutine dynmatrix
   !
   call star_q (xq, at, bg, ibrav, symm_type, nat, tau, ityp, nr1, &
        nr2, nr3, nsym_, s_, invs_, irt_, rtau_, nq, sxq, isq, imq,&
-       noinv, modenum)
+       noinv, modenum, noncolin, domag)
   !
   ! write on file information on the system
   !

@@ -27,6 +27,7 @@ SUBROUTINE phq_readin()
   USE ions_base,     ONLY : amass
   USE klist,         ONLY : xqq, xk, nks, lgauss
   USE wvfct,         ONLY : gamma_only
+  USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin
   USE printout_base, ONLY : title
@@ -44,6 +45,7 @@ SUBROUTINE phq_readin()
   USE control_flags, ONLY : iverbosity, reduce_io, modenum
   USE io_global,     ONLY : ionode
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
+  USE funct,         ONLY : dft_is_gradient
   USE freq_ph
   !
   IMPLICIT NONE
@@ -233,8 +235,10 @@ SUBROUTINE phq_readin()
   IF (gamma_only) CALL errore('phq_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
 
-  IF (noncolin) CALL errore('phq_readin', &
-     'The non collinear phonon code is not yet available',1)
+  IF (noncolin.and.dft_is_gradient()) CALL errore('phq_readin', &
+     'The non collinear phonon code with GGA is not yet available',1)
+  IF (noncolin.and..not.trans.and.okvan) CALL errore('phq_readin', &
+     'The non collinear US dieletric constant is not yet available',1)
   !
   !  set masses to values read from input, if available;
   !  leave values read from file otherwise
@@ -248,9 +252,11 @@ SUBROUTINE phq_readin()
      amass(it) = amconv * amass(it)
   ENDDO
   lgamma_gamma=.FALSE.
-  IF (nspin==nks) lgamma_gamma=lgamma.AND.xk(1,1).EQ.0.D0 &
-                                     .AND.xk(2,1).EQ.0.D0 &
-                                     .AND.xk(3,1).EQ.0.D0
+  IF (nks==1.OR.(nks==2.AND.nspin==2)) THEN
+     lgamma_gamma=(lgamma.AND.(ABS(xk(1,1))<1.D-12) &
+                         .AND.(ABS(xk(2,1))<1.D-12) &
+                         .AND.(ABS(xk(3,1))<1.D-12) )
+  ENDIF
   !
   IF (lgamma) THEN
      nksq = nks

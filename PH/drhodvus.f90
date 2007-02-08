@@ -20,6 +20,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
   USE ions_base, ONLY : nat
   use pwcom
+  USE io_global, ONLY : stdout
   USE kinds, only : DP
   use phcom
   implicit none
@@ -32,7 +33,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   complex(DP) :: dvscfin (nrxx, nspin, npe)
   ! input: the change of V_Hxc
 
-  integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot
+  integer :: ipert, irr1, mode0, mu, is, nu_i, nu_j, nrtot, nspin0
   ! counters
   ! mode0: starting position of the represention
   ! nrtot: the total number of mesh points
@@ -44,6 +45,8 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   complex(DP), external :: ZDOTC
 
   if (.not.okvan) return
+  nspin0=nspin
+  if (nspin==4.and..not.domag) nspin0=1
   call start_clock ('drhodvus')
   allocate (drhous ( nrxx , nspin, npertx))    
   dyn1 (:,:) = (0.d0, 0.d0)
@@ -58,7 +61,7 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
         nu_j = mode0 + ipert
         do mu = 1, npert (irr)
            nu_i = imode0 + mu
-           do is = 1, nspin
+           do is = 1, nspin0
               dyn1 (nu_i, nu_j) = dyn1 (nu_i, nu_j) + &
                    ZDOTC (nrxx, dvscfin (1,is,mu), 1, drhous (1,is,ipert), 1) &
                    * omega / DBLE (nrtot)

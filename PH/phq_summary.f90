@@ -32,6 +32,8 @@ subroutine phq_summary
   USE uspp_param,    ONLY : psd, lll, iver, nbeta, nqf, rinner, nqlc, &
        tvanp
   USE constants,     ONLY : amconv
+  USE noncollin_module, ONLY : noncolin
+  USE spin_orb,      ONLY : lspinorb, domag
   USE printout_base, ONLY : title
   use phcom
   USE control_flags, ONLY : iverbosity
@@ -80,6 +82,20 @@ subroutine phq_summary
        &     'convergence threshold     = ',1pe12.1,/,5x, &
        &     'beta                      = ',0pf12.4,/,5x, &
        &     'number of iterations used = ',i12,/)
+  !
+  !  Here add a message if this is a noncollinear or a spin_orbit calculation
+  !
+  IF (noncolin) THEN
+     IF (lspinorb) THEN
+        IF (domag) THEN 
+           WRITE( stdout, '(5x, "Noncollinear calculation with spin-orbit",/)')
+        ELSE
+           WRITE( stdout, '(5x, "Non magnetic calculation with spin-orbit",/)')
+        ENDIF
+     ELSE
+        WRITE( stdout, '(5x, "Noncollinear calculation without spin-orbit",/)')
+     END IF
+  END IF
   !
   !    and here more detailed information. Description of the unit cell
   !

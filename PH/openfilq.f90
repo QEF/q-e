@@ -24,6 +24,7 @@ SUBROUTINE openfilq()
   USE lsda_mod,       ONLY : nspin
   USE uspp,           ONLY : nkb, okvan
   USE io_files,       ONLY : prefix, iunigk
+  USE noncollin_module, ONLY : npol
   USE control_flags,  ONLY : twfcollect
   USE mp_global,      ONLY : me_pool, kunit
   USE io_global,      ONLY : ionode
@@ -49,7 +50,7 @@ SUBROUTINE openfilq()
   !     The file with the wavefunctions
   !
   iuwfc = 20
-  lrwfc = 2 * nbnd * npwx
+  lrwfc = 2 * nbnd * npwx * npol
   CALL diropn (iuwfc, 'wfc', lrwfc, exst)
   IF (.NOT.exst) THEN
      CALL errore ('openfilq', 'file '//trim(prefix)//'.wfc not found', 1)
@@ -58,7 +59,7 @@ SUBROUTINE openfilq()
   !    The file with deltaV_{bare} * psi
   !
   iubar = 21
-  lrbar = 2 * nbnd * npwx
+  lrbar = 2 * nbnd * npwx * npol
   CALL diropn (iubar, 'bar', lrbar, exst)
   IF (recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.bar not found', 1)
@@ -66,7 +67,7 @@ SUBROUTINE openfilq()
   !    The file with the solution delta psi
   !
   iudwf = 22
-  lrdwf = 2 * nbnd * npwx
+  lrdwf = 2 * nbnd * npwx * npol
   CALL diropn (iudwf, 'dwf', lrdwf, exst)
   IF (recover.AND..NOT.exst) &
      CALL errore ('openfilq','file '//trim(prefix)//'.dwf not found', 1)
@@ -129,7 +130,7 @@ SUBROUTINE openfilq()
   !
   IF (okvan .AND. (epsil .OR. zue)) THEN
      iucom = 28
-     lrcom = 2 * nbnd * npwx
+     lrcom = 2 * nbnd * npwx * npol
      CALL diropn (iucom, 'com', lrcom, exst)
      IF (recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.com not found', 1)
@@ -138,14 +139,14 @@ SUBROUTINE openfilq()
   !    of kb projectors
   !  
      iudvkb3 = 29
-     lrdvkb3 = 2 * npwx * nkb * 3
+     lrdvkb3 = 2 * npwx * npol * nkb * 3
      CALL diropn (iudvkb3, 'dvkb3', lrdvkb3, exst)
      IF (recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.dvkb3 not found', 1)
   ENDIF
   IF (epsil .OR. zue) THEN
      iuebar = 30
-     lrebar = 2 * nbnd * npwx
+     lrebar = 2 * nbnd * npwx * npol
      CALL diropn (iuebar, 'ebar', lrebar, exst)
      IF (recover.AND..NOT.exst) &
         CALL errore ('openfilq','file '//trim(prefix)//'.ebar not found', 1)
@@ -155,15 +156,15 @@ SUBROUTINE openfilq()
   !
   IF (lraman .OR.elop) THEN
      iuchf = 31
-     lrchf = 2 * nbnd * npwx
+     lrchf = 2 * nbnd * npwx * npol
      CALL diropn (iuchf, 'cwf', lrchf, exst)
 
      iud2w = 32
-     lrd2w = 2 * nbnd * npwx
+     lrd2w = 2 * nbnd * npwx * npol
      CALL diropn (iud2w, 'd2w', lrd2w, exst)
 
      iuba2 = 33
-     lrba2 = 2 * nbnd * npwx
+     lrba2 = 2 * nbnd * npwx * npol
      CALL diropn(iuba2, 'ba2', lrba2, exst)
   ENDIF
 

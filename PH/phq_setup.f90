@@ -44,25 +44,28 @@ subroutine phq_setup
 #include "f_defs.h"
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : tau, nat, ntyp => nsp
+  USE ions_base,     ONLY : tau, nat, ntyp => nsp, ityp
   USE cell_base,     ONLY : at, bg  
   USE io_global,     ONLY : stdout
   USE ener,          ONLY : Ef
   USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec
   USE ktetra,        ONLY : ltetra, tetra
-  USE lsda_mod,      ONLY : nspin, lsda
+  USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization
   USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
-  USE symme,         ONLY : nsym, s, ftau, irt
+  USE symme,         ONLY : nsym, s, ftau, irt, t_rev
   USE atom,          ONLY : nlcc
+  USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
+  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2
   USE wvfct,         ONLY : nbnd, et
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                    char_mat, name_rap, gname, name_class
+  USE rap_point_group_is,   ONLY : code_group_is, gname_is
   use phcom
   USE control_flags, ONLY : iverbosity, modenum
-  USE funct,         ONLY : dmxc, dmxc_spin  
+  USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc
   implicit none
 
   real(DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, emax
@@ -74,10 +77,10 @@ subroutine phq_setup
   ! minimum band energy
   ! maximum band energy
 
-  real(DP) :: sr(3,3,48)
+  real(DP) :: sr(3,3,48), sr_is(3,3,48)
 
   integer :: ir, table (48, 48), isym, jsym, irot, ik, ibnd, ipol, &
-       mu, nu, imode0, irr, ipert, na, it, nt
+       mu, nu, imode0, irr, ipert, na, it, nt, is, js, nsym_is
   ! counter on mesh points
   ! the multiplication table of the point g
   ! counter on symmetries
@@ -92,6 +95,8 @@ subroutine phq_setup
   ! counter on atoms
   ! counter on iterations
   ! counter on atomic type
+
+  real(DP) :: auxdmuxc(4,4)
 
   logical :: sym (48), is_symmorphic
   ! the symmetry operations
@@ -121,11 +126,23 @@ subroutine phq_setup
                                       dmuxc(ir,1,2), dmuxc(ir,2,2) )
      enddo
   else
-     do ir = 1, nrxx
-        rhotot = rho (ir, nspin) + rho_core (ir)
-        if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
-        if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
-     enddo
+     IF (noncolin.and.domag) THEN
+        do ir = 1, nrxx
+           rhotot = rho (ir, 1) + rho_core (ir)
+           call dmxc_nc (rhotot, rho(ir,2), rho(ir,3), rho(ir,4), auxdmuxc)
+           DO is=1,nspin
+              DO js=1,nspin
+                 dmuxc(ir,is,js)=auxdmuxc(is,js)
+              END DO
+           END DO
+        enddo
+     ELSE
+        do ir = 1, nrxx
+           rhotot = rho (ir, 1) + rho_core (ir)
+           if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
+           if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
+        enddo
+     END IF
   endif
   !
   ! 3.1) Setup all gradient correction stuff
@@ -177,9 +194,13 @@ subroutine phq_setup
      call errore('phq_setup','phonon + tetrahedra not implemented', 1)
   else
      if (lsda) call infomsg('phq_setup','occupation numbers probably wrong', -1)
-     do ik = 1, nks
-        nbnd_occ (ik) = nint (nelec) / degspin
-     enddo
+     if (noncolin) then
+        nbnd_occ = nint (nelec) 
+     else
+        do ik = 1, nks
+           nbnd_occ (ik) = nint (nelec) / degspin
+        enddo
+     endif
   endif
   !
   ! 6) Computes alpha_pv
@@ -264,6 +285,16 @@ subroutine phq_setup
      CALL find_group(nsym,sr,gname,code_group)
      CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class)
      CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
+     IF (noncolin .and. domag) THEN
+        nsym_is=0.d0
+        DO isym=1,nsym
+           IF (t_rev(isym)==0) THEN
+              nsym_is=nsym_is+1
+              CALL s_axis_to_cart (s(1,1,isym), sr_is(1,1,nsym_is), at, bg)
+           ENDIF
+        END DO
+        CALL find_group(nsym_is,sr_is,gname_is,code_group_is)
+     ENDIF
   ENDIF
 
   IF (lgamma_gamma) THEN
@@ -429,6 +460,23 @@ subroutine phq_setup
      done_irr (irr) = 0
      npertx = max (npertx, npert (irr) )
   enddo
+  !
+  !  10) If necessary calculate the local magnetization. This information is
+  !      needed in sgama 
+  !
+  IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
+  IF (noncolin.and.domag) THEN
+     DO na = 1, nat
+        !
+        m_loc(1,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
+        m_loc(2,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
+        m_loc(3,na) = starting_magnetization(ityp(na)) * &
+                      COS( angle1(ityp(na)) )
+     END DO
+  ENDIF
+
   call stop_clock ('phq_setup')
   return
 end subroutine phq_setup

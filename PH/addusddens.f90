@@ -10,8 +10,8 @@
 subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !----------------------------------------------------------------------
   !
-  !  This routine adds to the change of the charge density the part
-  !  which is due to the US augmentation.
+  !  This routine adds to the change of the charge and of the
+  !  magnetization densities the part due to the US augmentation.
   !  It assumes that the array dbecsum has already accumulated the
   !  change of the becsum term.
   !
@@ -44,7 +44,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !     here the local variables
   !
 
-  integer :: ig, na, nt, ih, jh, ir, mu, mode, ipert, is, ijh
+  integer :: ig, na, nt, ih, jh, ir, mu, mode, ipert, is, ijh, nspin0
   ! counter on G vectors
   ! counter on atoms
   ! counter on atomic type
@@ -71,6 +71,8 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   ! auxiliary variable for drho(G)
 
   if (.not.okvan) return
+  nspin0=nspin
+  if (nspin==4.and..not.domag) nspin0=1
   call start_clock ('addusddens')
   allocate (aux(  ngm , nspin , npertx))    
   allocate (sk (  ngm))    
@@ -119,7 +121,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
                     !  And qgmq and becp and dbecq
                     !
                     do ipert = 1, npert (irr)
-                       do is = 1, nspin
+                       do is = 1, nspin0
                           mode = mode0 + ipert
                           zsum = dbecsum (ijh, na, is, ipert)
                           u1 = u (mu + 1, mode)
@@ -158,7 +160,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   !
   do ipert = 1, npert (irr)
      mu = mode0 + ipert
-     do is = 1, nspin
+     do is = 1, nspin0
         psic(:) = (0.d0, 0.d0)
         do ig = 1, ngm
            psic (nl (ig) ) = aux (ig, is, ipert)

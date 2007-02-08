@@ -12,7 +12,8 @@ subroutine deallocate_phq
 !  deallocates the variables allocated by allocate_phq
 !
   use phcom
-  USE becmod, ONLY: becp
+  USE noncollin_module, ONLY : m_loc
+  USE becmod, ONLY: becp, becp_nc
   USE wavefunctions_module,  ONLY: evc
   USE ramanm, ONLY: ramtns
   use el_phon
@@ -54,15 +55,29 @@ subroutine deallocate_phq
   if(allocated(int4)) deallocate (int4)
   if(allocated(int5)) deallocate (int5)
   if(allocated(dpqq)) deallocate (dpqq)
+  if(allocated(int1_nc)) deallocate(int1_nc)
+  if(allocated(int3_nc)) deallocate(int3_nc)
+  if(allocated(int4_nc)) deallocate(int4_nc)
+  if(allocated(becsum_nc)) deallocate(becsum_nc)
+  if(allocated(alphasum_nc)) deallocate(alphasum_nc)
+  if(allocated(int2_so)) deallocate(int2_so)
+  if(allocated(int5_so)) deallocate(int5_so)
+!  if (allocated(dpqq_so)) deallocate(dpqq_so)
+
   if(allocated(alphasum)) deallocate (alphasum)
   if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)    
 
 
   if(allocated(this_pcxpsi_is_on_file)) deallocate (this_pcxpsi_is_on_file)
+  if(allocated(alphap_nc))    deallocate (alphap_nc)
+  if(allocated(becp1_nc))     deallocate(becp1_nc)
+  if(allocated(becp_nc))      deallocate(becp_nc)
+
   if(allocated(alphap))    deallocate (alphap)    
   if(allocated(becp1))     deallocate(becp1) 
   if(allocated(becp))      deallocate(becp)
   if(allocated(el_ph_mat)) deallocate (el_ph_mat)    
+  if(allocated(m_loc))     deallocate(m_loc)
 
   if(allocated(drc)) deallocate(drc)
 

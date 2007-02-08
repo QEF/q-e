@@ -30,7 +30,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   logical :: flag
   ! input: if true add core charge
 
-  integer :: ir, is, is1, ig
+  integer :: ir, is, is1, ig, nspin0
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
@@ -44,6 +44,10 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !  the change of the core charge
 
   call start_clock ('dv_of_drho')
+
+  nspin0=nspin
+  if (nspin==4) nspin0=1
+
   allocate (dvaux( nrxx,  nspin))    
   allocate (drhoc( nrxx))    
   !
@@ -52,10 +56,10 @@ subroutine dv_of_drho (mode, dvscf, flag)
   dvaux (:,:) = (0.d0, 0.d0)
   if (lrpa) goto 111
 
-  fac = 1.d0 / DBLE (nspin)
+  fac = 1.d0 / DBLE (nspin0)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
-     do is = 1, nspin
+     do is = 1, nspin0
         rho(:, is) = rho(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
@@ -76,7 +80,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
        dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
        alat, omega, dvaux)
   if (nlcc_any.and.flag) then
-     do is = 1, nspin
+     do is = 1, nspin0
         rho(:, is) = rho(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
@@ -93,7 +97,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   ! hartree contribution is computed in reciprocal space
   !
-  do is = 1, nspin
+  do is = 1, nspin0
      call cft3 (dvaux (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
      do ig = 1, ngm
         qg2 = (g(1,ig)+xq(1))**2 + (g(2,ig)+xq(2))**2 + (g(3,ig)+xq(3))**2

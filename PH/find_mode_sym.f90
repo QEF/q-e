@@ -16,8 +16,11 @@ SUBROUTINE find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, xq, rtau, &
 #include "f_defs.h"
 USE io_global,  ONLY : stdout
 USE kinds, ONLY : DP
+USE noncollin_module, ONLY : noncolin
+USE spin_orb, ONLY : domag
 USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                             char_mat, name_rap, name_class, gname
+USE rap_point_group_is, ONLY : gname_is
 IMPLICIT NONE
 INTEGER ::                  &
           nat, nsym,        & 
@@ -80,7 +83,7 @@ END DO
 ngroup=1
 istart(ngroup)=1
 DO imode=2,nmodes
-   IF (ABS(w1(imode)-w1(imode-1)) > 1.0d0) THEN
+   IF (ABS(w1(imode)-w1(imode-1)) > 5.0d-2) THEN
       ngroup=ngroup+1
       istart(ngroup)=imode
    END IF
@@ -107,7 +110,13 @@ END DO
 !  And now use the character table to identify the symmetry representation
 !  of each group of modes
 !
-WRITE(stdout,'(/,5x,"Mode symmetry, ",a11," point group:",/)') gname
+IF (noncolin.and.domag) THEN
+   WRITE(stdout,  &
+    '(/,5x,"Mode symmetry, ",a11," [",a11,"] magnetic point group:",/)') &
+                   gname, gname_is
+ELSE
+   WRITE(stdout,'(/,5x,"Mode symmetry, ",a11," point group:",/)') gname
+END IF
 
 DO igroup=1,ngroup
    DO irap=1,nclass
@@ -120,17 +129,17 @@ DO igroup=1,ngroup
       times=times/nsym
       IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
           (ABS(AIMAG(times)) > eps) ) THEN
-            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x, "-->   ?")') &
+            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x, "-->   ?")') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup))
       ENDIF
 
       IF (ABS(times) > eps) THEN
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
-            WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x,"--> ",a15)') &
+            WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a15)') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
                                 name_rap(irap)
          ELSE
-            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.5,2x,"[cm-1]",3x,"--> ",i3,a15)') &
+            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",i3,a15)') &
               istart(igroup), istart(igroup+1)-1, &
               w1(istart(igroup)), NINT(DBLE(times)), name_rap(irap)
          END IF

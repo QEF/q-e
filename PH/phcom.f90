@@ -186,10 +186,20 @@ MODULE phus
        int2(:,:,:,:,:),     &! nhm, nhm, 3,nat, nat),&
        int3(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
        int4(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nspin),&
-       int5(:,:,:,:,:)       ! nhm*(nhm+1)/2, 3, 3, nat, nat),&
+       int5(:,:,:,:,:),     &! nhm*(nhm+1)/2, 3, 3, nat, nat),&
+       int1_nc(:,:,:,:,:),     &! nhm, nhm, 3, nat, nspin),&
+       int2_so(:,:,:,:,:,:),   &! nhm, nhm, 3,nat,nat,nspin),&
+       int3_nc(:,:,:,:,:),     &! nhm, nhm, max_irr_dim, nat, nspin),&
+       int4_nc(:,:,:,:,:,:),   &! nhm, nhm, 3, 3, nat, nspin),&
+       int5_so(:,:,:,:,:,:,:), &! nhm*(nhm+1)/2, 3, 3, nat, nat, nspin),&
+       becsum_nc(:,:,:,:),     &! nhm*(nhm+1)/2,nat,npol,npol)
+       alphasum_nc(:,:,:,:,:)   ! nhm*(nhm+1)/2,3,nat,npol,npol)
+
   COMPLEX (DP), ALLOCATABLE, TARGET :: &
        becp1(:,:,:),        &! nkbtot, nbnd, nksq),&
-       alphap(:,:,:,:)       ! nkbtot, nbnd, 3, nksq)
+       becp1_nc(:,:,:,:),   &! nkbtot, npol, nbnd, nksq),&
+       alphap(:,:,:,:),     &! nkbtot, nbnd, 3, nksq)
+       alphap_nc(:,:,:,:,:)  ! nkbtot, npol, nbnd, 3, nksq)
   ! integrals of dQ and V_eff
   ! integrals of dQ and V_loc
   ! integrals of Q and dV_Hxc
