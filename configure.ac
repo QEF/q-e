@@ -256,16 +256,13 @@ case "$arch:$f90" in
 *:pathf95 )
 	try_cc="pathcc $try_cc"
 	;;
-ia32:* | ia64:* | amd64:* )
-	try_f77="f77 $f90"
-	;;
 aix:*xlf*_r )
 	try_cc="xlc_r $try_cc"
-	try_f77="xlf_r f77 $f90"
+	try_f77="xlf_r $f90"
 	;;
 aix:*xlf* )
 	try_cc="xlc $try_cc"
-	try_f77="xlf f77 $f90"
+	try_f77="xlf $f90"
 	;;
 mips:* )
 	try_f77="f77 $f90"
@@ -275,7 +272,6 @@ alpha:* )
 	;;
 alinux:* )
 	try_cc="ccc $try_cc"
-	try_f77="fort g77 f77 $f90"
 	;;
 sparc:* )
 	try_f77="f77 $f90"
@@ -284,11 +280,10 @@ crayx1:ftn )
 	try_cc="cc"
 	;;
 macppc:xlf90 )
-	try_f77="xlf f77 $f90"
+	try_f77="xlf $f90"
 	;;
 necsx:* )
 	try_cc="sxcc"
-	try_f77="$f90"
 	;;
 esac
 

@@ -42,7 +42,7 @@ IFLAGS         = @iflags@ @includefftw@
 
 # MODFLAGS = flag used by f90 compiler to locate modules
 # You need to search for modules in ./, in ../iotk/src, in ../Modules
-# Some applications also neeed modules in ../PW, ../PH, ../CPV
+# Some applications also need modules in ../PW, ../PH, ../CPV
 
 MODFLAGS       = @imod@./  @imod@../Modules  @imod@../iotk/src \
                  @imod@../PW  @imod@../PH  @imod@../CPV

@@ -2274,16 +2274,13 @@ case "$arch:$f90" in
 *:pathf95 )
 	try_cc="pathcc $try_cc"
 	;;
-ia32:* | ia64:* | amd64:* )
-	try_f77="f77 $f90"
-	;;
 aix:*xlf*_r )
 	try_cc="xlc_r $try_cc"
-	try_f77="xlf_r f77 $f90"
+	try_f77="xlf_r $f90"
 	;;
 aix:*xlf* )
 	try_cc="xlc $try_cc"
-	try_f77="xlf f77 $f90"
+	try_f77="xlf $f90"
 	;;
 mips:* )
 	try_f77="f77 $f90"
@@ -2293,7 +2290,6 @@ alpha:* )
 	;;
 alinux:* )
 	try_cc="ccc $try_cc"
-	try_f77="fort g77 f77 $f90"
 	;;
 sparc:* )
 	try_f77="f77 $f90"
@@ -2302,11 +2298,10 @@ crayx1:ftn )
 	try_cc="cc"
 	;;
 macppc:xlf90 )
-	try_f77="xlf f77 $f90"
+	try_f77="xlf $f90"
 	;;
 necsx:* )
 	try_cc="sxcc"
-	try_f77="$f90"
 	;;
 esac
 
@@ -4096,7 +4091,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4099:" \
+echo "$as_me:4094:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4616,7 +4611,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4619: \"$ac_link\") >&5
+(eval echo $as_me:4614: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4694,7 +4689,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4697: \"$ac_link\") >&5
+(eval echo $as_me:4692: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS

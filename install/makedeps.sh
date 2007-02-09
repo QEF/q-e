@@ -21,16 +21,15 @@ for DIR_ in $dirs
 do
     # set inter-directory dependencies
     DIR=`echo $DIR_ | sed 's?/??' `
-    case $DIR in
-	Modules | clib )
-		  DEPENDS="../include ../flib ../iotk/src"                        ;;
+    DEPENDS="../include ../flib ../iotk/src"
+    case $DIR in 
 	PW | CPV | flib | pwtools | upftools | atomic )
-		  DEPENDS="../include ../flib ../Modules ../iotk/src"             ;;
+		  DEPENDS="$DEPENDS ../Modules"             ;;
 	PP | PWCOND | Gamma | PH )
-		  DEPENDS="../include ../flib ../Modules ../PW ../iotk/src"       ;;
+		  DEPENDS="$DEPENDS ../Modules ../PW"       ;;
 	D3 | GIPAW | VdW ) 
-                  DEPENDS="../include ../flib ../Modules ../PW ../PH ../iotk/src" ;;
-        VIB )     DEPENDS="../include ../flib ../Modules ../PW ../iotk/src ../CPV";;
+                  DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
+        VIB )     DEPENDS="$DEPENDS ../Modules ../PW ../CPV";;
     esac
 
     # generate dependencies file
