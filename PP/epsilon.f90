@@ -28,11 +28,11 @@ CONTAINS
   SUBROUTINE grid_build(nw,wmax,wmin)
   !----------------------------------
   !
-  USE wvfct,    ONLY : nbnd, wg
-  USE klist,    ONLY : nks,wk,nelec
   USE kinds,    ONLY : DP
-  USE uspp,     ONLY : okvan
+  USE wvfct,    ONLY : nbnd, wg
+  USE klist,    ONLY : nks, wk, nelec
   USE lsda_mod, ONLY : nspin
+  USE uspp,     ONLY : okvan
   !
   IMPLICIT NONE
   !
@@ -52,28 +52,36 @@ CONTAINS
   !
   ! spin is not implemented
   !
-  IF( nspin > 1 ) CALL errore('epsilon','Spin polarization not implemented',1)
+  IF( nspin > 1 ) CALL errore('grid_build','Spin polarization not implemented',1)
 
   !
   ! USPP are not implemented (dipole matrix elements are not trivial at all)
   !
-  IF ( okvan ) CALL errore('epsilon','USPP are not implemented',1)
+  IF ( okvan ) CALL errore('grid_build','USPP are not implemented',1)
 
-  ALLOCATE (focc(nbnd,nks), STAT=ierr)
-  IF (ierr/=0) CALL errore('grid_built','allocating focc', ABS(ierr))
+  ALLOCATE ( focc( nbnd, nks), STAT=ierr )
+  IF (ierr/=0) CALL errore('grid_build','allocating focc', ABS(ierr))
   !
-  ALLOCATE(wgrid(nw),STAT=ierr)
-  IF (ierr/=0) CALL errore('grid_built','allocating wgrid', ABS(ierr))
+  ALLOCATE( wgrid( nw ), STAT=ierr )
+  IF (ierr/=0) CALL errore('grid_build','allocating wgrid', ABS(ierr))
 
+  !
+  ! check on k point weights, no symmetry operations are allowed 
+  !
+  DO ik = 2, nks
+     !
+     IF ( ABS( wk(1) - wk(ik) ) > 1.0d-8 ) &
+        CALL errore('grid_build','non unifrom kpt grid', ik )
+     !
+  ENDDO
   !
   ! occupation numbers
   !
   DO ik = 1,nks
   DO i  = 1,nbnd
-       focc(i,ik)= wg(i,ik) * 2.0_DP/wk(ik)
+       focc(i,ik)= wg(i, ik ) * 2.0_DP/wk( ik )
   ENDDO
   ENDDO
-
   !
   ! set the energy grid
   !
@@ -92,8 +100,12 @@ END SUBROUTINE grid_build
   IMPLICIT NONE
   INTEGER :: ierr
   !
-  DEALLOCATE ( focc, wgrid, STAT=ierr)
-  CALL errore('grid_destroy','deallocating grid stuff',ABS(ierr))
+  IF ( ALLOCATED( focc) ) THEN
+      !
+      DEALLOCATE ( focc, wgrid, STAT=ierr)
+      CALL errore('grid_destroy','deallocating grid stuff',ABS(ierr))
+      !
+  ENDIF
   !
 END SUBROUTINE grid_destroy
 
@@ -121,7 +133,7 @@ PROGRAM epsilon
   USE io_files,    ONLY : nd_nmbr, tmp_dir, prefix, outdir, trimcheck
   USE constants,   ONLY : RYTOEV
   USE ener,        ONLY : ef
-  USE klist,       ONLY : lgauss 
+  USE klist,       ONLY : lgauss  
   USE ktetra,      ONLY : ltetra
   ! 
   IMPLICIT NONE
@@ -160,7 +172,7 @@ PROGRAM epsilon
   prefix       = 'pwscf'
   shift        = 0.0d0
   outdir       = './'
-  intersmear   = 0.02
+  intersmear   = 0.136
   wmin         = 0.0d0
   wmax         = 30.0d0
   nw           = 600
@@ -220,9 +232,8 @@ PROGRAM epsilon
   !
   ! few conversions
   !
-  ef=ef*RYTOEV
   
-  IF (ionode) WRITE(stdout,"(2/, 5x, 'Fermi energy [eV] is: ',f8.5)") ef 
+  IF (ionode) WRITE(stdout,"(2/, 5x, 'Fermi energy [eV] is: ',f8.5)") ef *RYTOEV
 
   IF (lgauss .OR. ltetra) THEN 
       metalcalc=.true. 
@@ -290,8 +301,9 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   USE cell_base,            ONLY : tpiba2, omega
   USE wvfct,                ONLY : nbnd, wg, et
   USE ener,                 ONLY : efermi => ef
-  USE klist,                ONLY : nks, nkstot, nelec
+  USE klist,                ONLY : nks, nkstot, nelec, degauss
   USE io_global,            ONLY : ionode, ionode_id, stdout
+  !
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy                
   ! 
   IMPLICIT NONE
@@ -346,14 +358,14 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   ! main kpt loop
   !
   kpt_loop: &
-  DO ik = 1, nks  
+  DO ik = 1, nks
      !
      ! For every single k-point: order k+G for
      !                           read and distribute wavefunctions
      !                           compute dipole matrix 3 x nbnd x nbnd parallel over g 
      !                           recover g parallelism getting the total dipole matrix
      ! 
-     CALL dipole_calc(ik,dipole_aux)
+     CALL dipole_calc( ik, dipole_aux)
      !
      dipole(:,:,:)= tpiba2 * REAL( dipole_aux(:,:,:) * CONJG(dipole_aux(:,:,:)), DP ) 
 
@@ -403,7 +415,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
      ENDDO
 
      !
-     !Intraband(only if metalcalc is true)
+     !Intraband (only if metalcalc is true)
      !
      IF (metalcalc) THEN
      DO iband1 = 1,nbnd
@@ -420,14 +432,14 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
                    !
 
                    epsi(:,iw) = epsi(:,iw) - 1/2 * dipole(:,iband1,iband1) * intrasmear * w* &
-                                RYTOEV**3 * (2*EXP((et(iband1,ik)*RYTOEV-efermi)/intrasmear ))/  &
-                    (( w**4 + intrasmear**2 * w**2 )*(1+EXP((et(iband1,ik)*RYTOEV-efermi)/ & 
-                    intrasmear))**2*intrasmear) 
+                                RYTOEV**3 * (2*EXP((et(iband1,ik)-efermi)/degauss ))/  &
+                    (( w**4 + intrasmear**2 * w**2 )*(1+EXP((et(iband1,ik)-efermi)/ & 
+                    degauss))**2*degauss * RYTOEV) 
                                    
                    epsr(:,iw) = epsr(:,iw) + 1/2 * dipole(:,iband1,iband1) * RYTOEV**3 * &
-                                             (2*EXP((et(iband1,ik)*RYTOEV-efermi)/intrasmear )) * w**2 / & 
-                    (( w**4 + intrasmear**2 * w**2 )*(1+EXP((et(iband1,ik)*RYTOEV-efermi)/ &
-                    intrasmear))**2*intrasmear )
+                                             (2*EXP((et(iband1,ik)-efermi)/degauss )) * w**2 / & 
+                    (( w**4 + intrasmear**2 * w**2 )*(1+EXP((et(iband1,ik)-efermi)/ &
+                    degauss))**2*degauss *RYTOEV )
                ENDDO
 
          ENDIF
@@ -477,7 +489,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   ! check  dielectric function  normalizzation via sumrule  
   !
  DO i=1,3  
-  renorm(i) = alpha * SUM( epsi(i,:) * wgrid(:) ) 
+     renorm(i) = alpha * SUM( epsi(i,:) * wgrid(:) ) 
  ENDDO
   !
   IF ( ionode ) THEN
@@ -534,7 +546,6 @@ SUBROUTINE jdos_calc ( smeartype, intersmear,intrasmear, nw, wmax, wmin, shift )
   USE constants,            ONLY : PI, RYTOEV
   USE cell_base,            ONLY : tpiba2, omega
   USE wvfct,                ONLY : nbnd, et
-  USE ener,                 ONLY : efermi => ef
   USE klist,                ONLY : nks, nkstot, nelec
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy                
@@ -714,7 +725,7 @@ END SUBROUTINE jdos_calc
 
 !-----------------------------------------------------------------------------
 SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
-                      metalcalc )
+                          metalcalc )
   !-----------------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
@@ -722,7 +733,7 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   USE cell_base,            ONLY : tpiba2, omega
   USE wvfct,                ONLY : nbnd, et
   USE ener,                 ONLY : efermi => ef
-  USE klist,                ONLY : nks, nkstot, nelec
+  USE klist,                ONLY : nks, nkstot, nelec, degauss
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy                
   ! 
@@ -819,7 +830,7 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
      ENDDO
      ENDDO
      !
-     !Intraband(only if metalcalc is true)
+     !Intraband (only if metalcalc is true)
      !
      IF (metalcalc) THEN
      DO iband1 = 1,nbnd
@@ -834,9 +845,9 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
                    w = wgrid(iw)
                    !
                    epstot(:,:,iw) = epstot(:,:,iw) + 1/2 * dipoletot(:,:,iband1,iband1)* &
-                                RYTOEV**3 * (2*EXP((et(iband1,ik)*RYTOEV-efermi)/intrasmear ))/  &
-                    (( w**2 + (0,1)*intrasmear*w)*(1+EXP((et(iband1,ik)*RYTOEV-efermi)/ &
-                    intrasmear))**2*intrasmear)
+                                RYTOEV**3 * (2*EXP((et(iband1,ik)-efermi)/degauss ))/  &
+                    (( w**2 + (0,1)*intrasmear*w)*(1+EXP((et(iband1,ik)-efermi)/ &
+                    degauss))**2*degauss *RYTOEV)
                ENDDO
 
          ENDIF
@@ -916,7 +927,7 @@ END SUBROUTINE offdiag_calc
 
 
 !------------------------------------
-SUBROUTINE dipole_calc(ik,dipole_aux)
+SUBROUTINE dipole_calc( ik, dipole_aux)
   !----------------------------------
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : npw, nbnd, igk, g2kin
