@@ -6,6 +6,7 @@ AC_INIT(ESPRESSO, 3.2, , espresso)
 # default choices
 # set each variable to 0 (false) or 1 (true)
 use_parallel=1
+set_use_parallel=0
 use_shared=1
 
 # -----------------------------
@@ -41,7 +42,9 @@ pgplot_libs=$PGPLOT_LIBS
 # command-line arguments
 for arg in $*
 do
-	if   test "$arg" = "--enable-parallel"  ; then use_parallel=1
+	if   test "$arg" = "--enable-parallel"  ; then 
+           use_parallel=1
+           set_use_parallel=1
 	elif test "$arg" = "--disable-parallel" ; then use_parallel=0
 	elif test "$arg" = "--enable-shared"    ; then use_shared=1
 	elif test "$arg" = "--disable-shared"   ; then use_shared=0
@@ -157,11 +160,14 @@ necsx )
 	try_arflags="rv"
   	try_arflags_dynamic="rv"
         try_dflags='-D__SX6 ' 
-        impose_use_fft_asl=0
-        impose_use_fft_mathkeysan=1
-        impose_use_fft_para=0
+        use_fft_asl=0
+        use_fft_mathkeisan=1
+        use_fft_para=0
+# default for Nec: no parallel unless explicitly required
+        if test "$set_use_parallel" -ne 1 ; then use_parallel=0 ; fi
+        if test "$use_parallel" -eq 1 ; then use_fft_para=1 ; fi
         try_dflags_fft_asl='-DASL'
-        try_dflags_fft_mathkeysan='-DNEC_MATHKEISAN_1D'
+        try_dflags_fft_mathkeisan=' '
         try_dflags_fft_para='-D__USE_3D_FFT'
 	;;
 * )
@@ -1127,7 +1133,7 @@ then
 			       fft_libs="-xlic_lib=sunperf $LIBS")
 		;;
 	necsx )
-                if test "$impose_use_fft_mathkeysan" -ne 0
+                if test "$use_fft_mathkeisan" -ne 0
                 then
                    #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib
                    #sx8-nec-idris: check in /SX/opt/mathkeisan/inst/lib0
@@ -1148,13 +1154,13 @@ then
                         LDFLAGS="$test_ldflags $try_loption"
                         LIBS=""
                         AC_SEARCH_LIBS(zftfax, fft, have_fft=1
-                             try_dflags="$try_dflags $try_dflags_fft_mathkeysan"
+                             try_dflags="$try_dflags $try_dflags_fft_mathkeisan"
                                        fft_libs="$try_loption $LIBS")
                         if test "$ac_cv_search_zftfax" != "no"
                         then break ; fi
                    done
                 fi
-                if test "$impose_use_fft_asl" -ne 0
+                if test "$use_fft_asl" -ne 0
                 then
                    #check for asl in (/SX)/usr/lib 
                    #search for initialization subroutine
@@ -1180,7 +1186,7 @@ then
                         then break ; fi
                    done
                 fi
-                if test "$impose_use_fft_para" -ne 0
+                if test "$use_fft_para" -ne 0
                 then
                    try_dflags="$try_dflags $try_dflags_fft_para"
                 fi

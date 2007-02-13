@@ -1,4 +1,4 @@
-TODO LIST - January 2007
+TODO LIST - February 2007
 
 BUGS TO EXAMINE
 
@@ -24,7 +24,10 @@ BUGS TO EXAMINE
 > frequenze improbabili.
 
 - Davide: npools not a divisor on nk => mpi hangs
-- Misc problems found by Eduardo: pw => cp with atoms out of the cell
+- Misc problems found by Eduardo: 
+  pw => cp with atoms out of the cell
+  extrapolation of wfcs
+  temperature control
 
 CVS/INSTALLATION/PORTING
 
@@ -92,6 +95,8 @@ COMMON
 
 PW
 
+- nks vs nkstot: cleanup?
+
 - inversion symmetry should allow real hamiltonian and wavefunctions (Dario)
 
 - Add option to prevent writing the final file (Dario)
@@ -136,6 +141,8 @@ PW
 Low priority:
 
 - add traceback in error (error_handler module)
+
+- printout of cpu times not very informative
 
 POSTPROCESSING
 
