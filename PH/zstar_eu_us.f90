@@ -33,8 +33,7 @@ subroutine zstar_eu_us
   ! the becsum with dpsi
   ! auxillary work space for fft
   complex(DP) , pointer ::      &
-      dvscf(:,:,:), &
-      dvscfins (:,:,:)    ! change of the scf potential (smooth)
+      dvscf(:,:,:)
   complex(DP), allocatable :: pdsp(:,:)
   complex(DP), allocatable :: drhoscfh (:,:,:)
   complex(DP), allocatable :: dbecsum2 (:,:,:,:)
@@ -52,12 +51,6 @@ subroutine zstar_eu_us
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))
   allocate (aux1(  nrxxs))
   allocate (pdsp(nbnd,nbnd))
-
-  if (doublegrid) then
-     allocate (dvscfins(  nrxxs, nspin, 3))    
-  else
-     dvscfins => dvscf
-  endif
   !
   ! Set the initial values to zero
   !
@@ -128,13 +121,6 @@ subroutine zstar_eu_us
   call syme (dvscf)
 #endif
 
-  if (doublegrid) then
-     do is=1,nspin
-        do ipol = 1, 3
-           call cinterpolate (dvscf(1,is,ipol),dvscfins(1,is,ipol),-1)
-        enddo
-     enddo
-  endif
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_3')
   call start_clock('zstar_us_4')
@@ -253,7 +239,6 @@ subroutine zstar_eu_us
   deallocate (dbecsum)
   deallocate (dvscf)
   deallocate (aux1)
-  if (doublegrid) deallocate (dvscfins)
 
 #ifdef TIMINIG_ZSTAR_US
   call stop_clock('zstar_us_5')

@@ -56,7 +56,7 @@ subroutine psidspsi (ik, uact, pdsp)
 
   real(DP), parameter :: eps = 1.d-12
 
-  complex(DP), ALLOCATABLE :: ps1 (:,:), ps2 (:,:,:), aux (:), aux1(:,:), dspsi(:,:)
+  complex(DP), ALLOCATABLE :: ps1 (:,:), ps2 (:,:,:), aux (:), dspsi(:,:)
   ! the scalar product
   ! the scalar product
   ! a mesh space for psi
@@ -82,22 +82,6 @@ subroutine psidspsi (ik, uact, pdsp)
   ps2(:,:,:) = (0.d0, 0.d0)
   pdsp(:,:)   = (0.d0, 0.d0)
   dspsi = (0.d0,0.d0)
-  !
-  ! We first compute the scalar products of the betas with the psis
-  !
-  allocate (aux1( npwx , nbnd)) 
-  do ipol = 1, 3
-     do ibnd = 1, nbnd
-        do ig = 1, npw
-           aux1 (ig, ibnd) = evc(ig,ibnd) * tpiba * (0.d0,1.d0) * & 
-                ( xk(ipol,ik) + g(ipol,igk(ig)) )
-        enddo
-     enddo
-     call ccalbec (nkb, npwx, npw, nbnd, alphap(1,1,ipol,ik), vkb, aux1)
-  enddo
-  deallocate (aux1)
-
-  call ccalbec (nkb, npwx, npw, nbnd, becp1(1, 1, ik), vkb, evc)
   !
   !
   ijkb0 = 0
