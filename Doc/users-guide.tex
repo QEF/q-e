@@ -1174,8 +1174,14 @@ to produce a binary that runs on different machines, compile it
 on the oldest machine you have (i.e. the one with the oldest verison
 of the operating system).
 
-\paragraph{Linux PCs with Portland Group compiler (pgf90)}
+\paragraph{Linux PCs with g95 compiler}
 
+If you get messages about missing routines with strange names 
+(like \texttt{s\_wsfe, do\_fio}...) at linking stage, you
+have most likely used g77 (or f77) as fortran-77 compiler.
+Use g95 instead.
+
+\paragraph{Linux PCs with Portland Group compiler (pgf90)}
 \hfill\break
 Quantum-ESPRESSO does not work reliably, or not at all, with many
 versions of the Portland Group compiler (in particular, v.5.2
@@ -1368,20 +1374,27 @@ your fortran compiler, or to use the internal (slow) copy.
 AMD Athlon CPUs can be basically treated like Intel Pentium CPUs.
 You can use the Intel compiler and MKL with Pentium-3 optimization.
 
-Konstantin Kudin reports that the best results in terms of
-performances are obtained with ATLAS optimized BLAS/LAPACK 
-libraries, using AMD Core Math Library (ACML) for the missing 
-libraries. ACML can be freely downloaded from AMD web site.
-Beware: some versions of ACML -- i.e. the GCC version with SSE2 -- 
-crash PWscf. The ``\_nosse2'' version appears to be stable. 
-Load first ATLAS, then ACML, then \texttt{-lg2c}, as in the 
-following example (replace what follows \texttt{-L} with 
-something appropriate to your configuration):
+For AMD Opterons, you can use the optimized ACML (Core Math Library)
+replacement for BLAS/LAPACK. ACML can be freely downloaded from AMD 
+web site. Beware: some versions of ACML -- i.e. the GCC version with 
+SSE2 -- crash PWscf. The ``\_nosse2'' version appears to be stable. 
+
+The best performances have been reported with the optimized BLAS 
+by Kazushige Goto:
+\htmladdnormallink%
+{\texttt{http://www.cs.utexas.edu/users/flame/goto/}}%
+{http://www.cs.utexas.edu/users/flame/goto/}.
+
+One can also get good performances with ATLAS, using ACML for the
+missing libraries (info by K. Kudin). Load first ATLAS, then ACML, 
+then \texttt{-lg2c}, as in the following example (replace what 
+follows \texttt{-L} with something appropriate to your configuration):
 \begin{verbatim}
  -L/location/of/fftw/lib/ -lfftw \
  -L/location/of/atlas/lib -lf77blas -llapack -lcblas -latlas \
  -L/location/of/gnu32_nosse2/lib -lacml -lg2c
 \end{verbatim}
+
 64-bit CPUs like the AMD Opteron and the Intel Itanium are
 supported and should work both in 32-bit emulation and in
 64-bit mode (in the latter case, \texttt{-D\_\_LINUX64} is 
