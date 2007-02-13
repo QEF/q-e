@@ -86,6 +86,7 @@ SUBROUTINE setup()
   USE exx,                ONLY : exx_grid_init
   USE funct,              ONLY : dft_is_hybrid
 #endif
+  USE funct,              ONLY : dft_is_meta
   !
   IMPLICIT NONE
   !
@@ -97,6 +98,13 @@ SUBROUTINE setup()
   LOGICAL, EXTERNAL :: lchk_tauxk ! tests that atomic coordinates do not overlap
   !
   !
+  IF (dft_is_meta()) THEN
+     DO nt=1,ntyp
+        IF ( tvanp(nt) ) &
+             CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
+     END DO
+  END IF
+
   ALLOCATE( m_loc( 3, nat ) )
   !
   IF ( nimage > 1 .AND. .NOT. lpath ) &

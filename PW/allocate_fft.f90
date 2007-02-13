@@ -20,12 +20,14 @@ subroutine allocate_fft
   USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
-  USE scf,       ONLY : rho, rhog, vr, vltot, vrs, rho_core, rhog_core
+  USE scf,       ONLY : rho, rhog, vr, vltot, vrs, rho_core, rhog_core, &
+                        tauk, taukg, tauk_old, kedtau, kedtaur
   USE vlocal,    ONLY : vnew
   USE wvfct,     ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, pointnum, r_loc, &
       report, i_cons, noncolin, npol
   USE wavefunctions_module, ONLY : psic, psic_nc
+  USE funct,     ONLY: dft_is_meta
   implicit none
   !
   !     determines the data structure for fft arrays
@@ -66,6 +68,19 @@ subroutine allocate_fft
   allocate (vltot( nrxx))    
   allocate (vnew  ( nrxx, nspin))    
   allocate (rho_core( nrxx))
+  if (dft_is_meta() ) then
+     allocate ( tauk(nrxx,nspin) )
+     allocate ( tauk_old(nrxx,nspin) )
+     allocate ( kedtau(nrxxs,nspin) )
+     allocate ( kedtaur(nrxx,nspin) )
+     ALLOCATE ( taukg( ngm, nspin ) )
+  else
+     allocate ( tauk(1,nspin) )
+     allocate ( tauk_old(1,nspin) )
+     allocate ( kedtau(1,nspin) )
+     allocate ( kedtaur(1,nspin) )
+     ALLOCATE ( taukg( 1, nspin ) )
+  end if
   ALLOCATE( rhog_core( ngm ) )
   allocate (psic( nrxx))    
   allocate (vrs( nrxx, nspin))    

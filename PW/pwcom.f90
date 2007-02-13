@@ -402,10 +402,19 @@ MODULE scf
        vr(:,:),        &! the Hartree + xc potential in real space
        vltot(:),       &! the local potential in real space
        vrs(:,:),       &! the total pot. in real space (smooth grig)
-       rho_core(:)      ! the core charge in real space
+       rho_core(:),    &! the core charge in real space
+       tauk(:,:),      &! kinetic energy density in real space (dense grid)
+       tauk_old(:,:),  &! kinetic energy density in real space (dense grid)
+       kedtau(:,:),    &! position dependent kinetic energy enhancement factor
+                        ! used in META-GGA in real space (smooth grid)
+       kedtaur(:,:)     ! position dependent kinetic energy enhancement factor
+                        ! used in META-GGA in real space (dense grid)
+
   COMPLEX(DP), ALLOCATABLE :: &
        rhog(:,:),      &! the charge density in reciprocal space
-       rhog_core(:)     ! the core charge in reciprocal space
+       rhog_core(:),   &! the core charge in reciprocal space
+       taukg(:,:)       ! the kinetic energy density in reciprocal space
+
   !
 END MODULE scf
 !

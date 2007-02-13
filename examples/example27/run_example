@@ -10,14 +10,14 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use cp.x to perform SCF"
+$ECHO "This example shows how to use cp.x and pw.x to perform SCF"
 $ECHO "simulation of C4H6 with TPSS metaGGA Exc."
 
 # set the needed environment variables 
 . ../environment_variables
 
 # required executables and pseudopotentials
-BIN_LIST="cp.x"
+BIN_LIST="cp.x pw.x"
 PSEUDO_LIST="C.meta.tm.UPF Hmeta.tm.UPF"
 
 $ECHO
@@ -65,8 +65,10 @@ $ECHO " done"
 
 # how to run executables
 CP_COMMAND="$PARA_PREFIX $BIN_DIR/cp.x $PARA_POSTFIX"
+PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running cp.x as: $CP_COMMAND"
+$ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
 
 # clean TMP_DIR
@@ -109,8 +111,42 @@ ATOMIC_POSITIONS  bohr
  C  0.154872E+01  -0.143358E+01   0.510627E+00
  C  0.109484E+01   0.137081E+01  -0.496954E+00
 EOF
-$ECHO "  running the SCF calculation...\c"
+$ECHO "  running the cp.x SCF calculation...\c"
 $CP_COMMAND < c4h6.cp.metaGGA.in > c4h6.cp.metaGGA.out
+$ECHO " done"
+cat > c4h6.pw.metaGGA.in << EOF
+ &control
+    calculation='scf',
+    restart_mode='from_scratch',
+    pseudo_dir='$PSEUDO_DIR/',
+    outdir='$TMP_DIR/',
+    tprnfor=.true.
+ /
+ &system
+    ibrav=1, celldm(1)=8.00,
+    nat=10, ntyp=2, nbnd=11, nelec=22,
+    ecutwfc=30.0,
+ /
+ &electrons
+ /
+ATOMIC_SPECIES
+ H 1.007825035 Hmeta.tm.UPF
+ C 12.00 C.meta.tm.UPF
+ATOMIC_POSITIONS  bohr
+ H  -0.271695E+01  -0.245822E+01   0.236174E+01
+ H  -0.291292E+01   0.249129E+01   0.952936E+00
+ H  0.203629E+01  -0.270414E+01  -0.104887E+01
+ H  0.310911E+01  -0.162987E+01   0.189331E+01
+ H  0.244815E+01   0.263846E+01   0.332670E+00
+ H  0.940835E+00   0.160187E+01  -0.258377E+01
+ C -0.121505E+01  -0.130902E+01   0.131661E+01
+ C -0.136126E+01   0.116614E+01   0.825189E+00
+ C  0.154872E+01  -0.143358E+01   0.510627E+00
+ C  0.109484E+01   0.137081E+01  -0.496954E+00
+K_POINTS Gamma
+EOF
+$ECHO "  running the cp.x SCF calculation...\c"
+$PW_COMMAND < c4h6.pw.metaGGA.in > c4h6.pw.metaGGA.out
 $ECHO " done"
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

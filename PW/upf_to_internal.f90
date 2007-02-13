@@ -57,8 +57,6 @@ subroutine set_pseudo_upf (is, upf)
   nlcc(is) = upf%nlcc
   call set_dft_from_name( upf%dft )
   !
-  IF ( dft_is_meta() ) &
-    CALL errore( 'upf_to_internals ', 'META-GGA not implemented in PWscf', 1 )
 #if defined (EXX)
 #else
   IF ( dft_is_hybrid() ) &

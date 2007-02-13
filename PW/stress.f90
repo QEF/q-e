@@ -25,6 +25,7 @@ subroutine stress
   USE scf,           ONLY : rho, rho_core
   USE control_flags, ONLY : iverbosity
   USE wvfct,         ONLY : gamma_only
+  USE funct,         ONLY : dft_is_meta
   !
   implicit none
   !
@@ -36,6 +37,8 @@ subroutine stress
   call start_clock ('stress')
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
 
+  IF (dft_is_meta()) &
+     CALL errore ('stress','Meta-GGA and stress not implemented yet ',1)
   !
   !   contribution from local  potential
   !

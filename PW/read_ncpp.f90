@@ -115,8 +115,6 @@ subroutine read_ncpp (np, iunps)
   !
   call set_dft_from_name( dft_name )
   !
-  IF ( dft_is_meta() ) &
-    CALL errore( 'read_ncpp ', 'META-GGA not implemented in PWscf', 1 )
 #if defined (EXX)
 #else
   IF ( dft_is_hybrid() ) &

@@ -19,15 +19,15 @@ SUBROUTINE sum_band()
   USE ener,                 ONLY : eband
   USE wvfct,                ONLY : gamma_only
   USE control_flags,        ONLY : diago_full_acc
-  USE cell_base,            ONLY : at, bg, omega
+  USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, g
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE scf,                  ONLY : rho
+  USE scf,                  ONLY : rho, tauk
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
@@ -39,6 +39,7 @@ SUBROUTINE sum_band()
   USE mp_global,            ONLY : intra_image_comm, me_image, &
                                    root_image, npool, my_pool_id
   USE mp,                   ONLY : mp_bcast
+  USE funct,                ONLY : dft_is_meta
   !
   IMPLICIT NONE
   !
@@ -46,12 +47,13 @@ SUBROUTINE sum_band()
   !
   INTEGER :: ikb, jkb, ijkb0, ih, jh, ijh, na, np
     ! counters on beta functions, atoms, pseudopotentials  
-  INTEGER :: ir, is, ig, ibnd, ik
+  INTEGER :: ir, is, ig, ibnd, ik, j
     ! counter on 3D r points
     ! counter on spin polarizations
     ! counter on g vectors
     ! counter on bands
     ! counter on k points  
+  real (DP), allocatable :: kplusg (:)
   !
   !
   CALL start_clock( 'sum_band' )
@@ -59,6 +61,9 @@ SUBROUTINE sum_band()
   becsum(:,:,:) = 0.D0
   rho(:,:)      = 0.D0
   eband         = 0.D0  
+  tauk(:,:)     = 0.D0
+  if ( dft_is_meta() ) allocate (kplusg(npwx))
+
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
   !
@@ -109,6 +114,7 @@ SUBROUTINE sum_band()
      DO is = 1, nspin
         !
         CALL interpolate( rho(1,is), rho(1,is), 1 )
+        if (dft_is_meta() ) CALL interpolate( tauk(1,is), tauk(1,is), 1 )
         !
      END DO
      !
@@ -129,6 +135,7 @@ SUBROUTINE sum_band()
   ! ... reduce charge density across pools
   !
   CALL poolreduce( nspin * nrxx, rho )
+  if (dft_is_meta() ) CALL poolreduce( nspin * nrxx, tauk )
   !
   IF ( noncolin ) THEN
      !
@@ -137,6 +144,7 @@ SUBROUTINE sum_band()
      IF ( domag ) &
         CALL psymrho_mag( rho(1,2), nrx1, nrx2, nrx3, &
                           nr1, nr2, nr3, nsym, s, ftau, bg, at )
+
      !
   ELSE
      !
@@ -144,6 +152,8 @@ SUBROUTINE sum_band()
         !
         CALL psymrho( rho(1,is), nrx1, nrx2, nrx3, &
                       nr1, nr2, nr3, nsym, s, ftau )
+        if (dft_is_meta() ) CALL psymrho( tauk(1,is), nrx1, nrx2, nrx3, &
+                                          nr1, nr2, nr3, nsym, s, ftau )
         !
      END DO
      !
@@ -164,12 +174,16 @@ SUBROUTINE sum_band()
      DO is = 1, nspin
         !
         CALL symrho( rho(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+        if (dft_is_meta() ) CALL symrho( tauk(1,is), nrx1, nrx2, nrx3, &
+                                         nr1, nr2, nr3, nsym, s, ftau )
+
         !
      END DO
      !
   END IF
   !
 #endif
+  if (dft_is_meta() ) deallocate (kplusg)
   !  
   CALL stop_clock( 'sum_band' )      
   !
@@ -274,6 +288,41 @@ SUBROUTINE sum_band()
                                        w2 * AIMAG( psic(ir) )**2
                 !
              END DO
+             !
+             IF (dft_is_meta()) THEN
+                DO j=1,3
+                   psic(:) = ( 0.D0, 0.D0 )
+                   !
+                   kplusg (1:npw) = (xk(j,ik)+g(j,igk(1:npw))) * tpiba
+
+                   IF ( ibnd < nbnd ) THEN
+                      ! ... two ffts at the same time
+                      psic(nls(igk(1:npw))) = CMPLX (0d0, kplusg(1:npw)) * &
+                                            ( evc(1:npw,ibnd) + &
+                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
+                      psic(nlsm(igk(1:npw))) = CMPLX (0d0, -kplusg(1:npw)) * &
+                                       CONJG( evc(1:npw,ibnd) - &
+                                            ( 0.D0, 1.D0 ) * evc(1:npw,ibnd+1) )
+                   ELSE
+                      psic(nls(igk(1:npw))) = CMPLX (0d0, kplusg(1:npw)) * &
+                                              evc(1:npw,ibnd) 
+                      psic(nlsm(igk(1:npw))) = CMPLX (0d0, -kplusg(1:npw)) * &
+                                       CONJG( evc(1:npw,ibnd) )
+                   END IF
+                   !
+                   CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+                   !
+                   ! ... increment the kinetic energy density ...
+                   !
+                   DO ir = 1, nrxxs
+                      tauk(ir,current_spin) = tauk(ir,current_spin) + &
+                                           w1 *  DBLE( psic(ir) )**2 + &
+                                           w2 * AIMAG( psic(ir) )**2
+                   END DO
+                   !
+                END DO
+             END IF
+             !
              !
           END DO
           !
@@ -465,7 +514,6 @@ SUBROUTINE sum_band()
                 !
                 CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
                 !
-                !
                 ! ... increment the charge density ...
                 !
                 DO ir = 1, nrxxs
@@ -475,6 +523,27 @@ SUBROUTINE sum_band()
                                                   AIMAG( psic(ir) )**2 )
                    !
                 END DO
+                !
+                IF (dft_is_meta()) THEN
+                   DO j=1,3
+                      psic(:) = ( 0.D0, 0.D0 )
+                      !
+                      kplusg (1:npw) = (xk(j,ik)+g(j,igk(1:npw))) * tpiba
+                      psic(nls(igk(1:npw))) = CMPLX (0d0, kplusg(1:npw)) * &
+                                              evc(1:npw,ibnd)
+                      !
+                      CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
+                      !
+                      ! ... increment the kinetic energy density ...
+                      !
+                      DO ir = 1, nrxxs
+                         tauk(ir,current_spin) = tauk(ir,current_spin) + &
+                                                w1 * ( DBLE( psic(ir) )**2 + &
+                                                      AIMAG( psic(ir) )**2 )
+                      END DO
+                      !
+                   END DO
+                END IF
                 !
              END IF
              !

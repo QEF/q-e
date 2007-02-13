@@ -30,6 +30,7 @@ kind.o \
 mp.o \
 mp_global.o \
 mp_wave.o \
+metagga.o \
 metadyn_base.o \
 metadyn_io.o \
 metadyn_vars.o \

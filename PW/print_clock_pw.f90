@@ -110,6 +110,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'firstfft' )
       CALL print_clock( 'secondfft' )
       CALL print_clock( 'add_vuspsi' )
+      CALL print_clock( 'h_psi_meta' )
       CALL print_clock( 's_psi' )
       !
    ELSE IF ( isolve == 1 ) THEN
@@ -125,6 +126,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'firstfft' )
       CALL print_clock( 'secondfft' )
       CALL print_clock( 'add_vuspsi' )
+      CALL print_clock( 'h_psi_meta' )
       !
    ELSE
       !
@@ -141,6 +143,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock( 'firstfft' )
       CALL print_clock( 'secondfft' )
       CALL print_clock( 'add_vuspsi' )
+      CALL print_clock( 'h_psi_meta' )
       !   
    END IF
    !

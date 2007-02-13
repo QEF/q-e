@@ -34,6 +34,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE exx,      ONLY : vexx
   USE funct,    ONLY : exx_is_active
 #endif
+  USE funct,    ONLY : dft_is_meta
 
   !
   IMPLICIT NONE
@@ -73,7 +74,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IMPLICIT NONE
        !
-       INTEGER :: ibnd
+       INTEGER :: ibnd, j
        !
        !
        CALL start_clock( 'init' )
@@ -92,6 +93,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        END DO
        !
        CALL stop_clock( 'init' )
+        
+       if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
        !
        ! ... Here we add the Hubbard potential times psi
        !
@@ -131,7 +134,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IMPLICIT NONE
        !
-       INTEGER :: ibnd
+       INTEGER :: ibnd, j
        ! counters
        !
        !
@@ -146,6 +149,8 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        END DO
        !
        CALL stop_clock( 'init' )
+        
+       if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
        !
        ! ... Here we add the Hubbard potential times psi
        !

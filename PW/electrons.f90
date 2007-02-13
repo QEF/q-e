@@ -35,7 +35,8 @@ SUBROUTINE electrons()
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet
   USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
-                                   vr, vltot, vrs 
+                                   vr, vltot, vrs, &
+                                   tauk, taukg, tauk_old, kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, reduce_io
@@ -57,6 +58,7 @@ SUBROUTINE electrons()
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
+  USE funct,                ONLY : dft_is_meta
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
@@ -68,8 +70,6 @@ SUBROUTINE electrons()
   REAL(DP) :: dexx
   REAL(DP) :: fock0, fock1, fock2
 #endif
-  CHARACTER(LEN=256) :: &
-      flmix          !
   REAL(DP) :: &
       dr2,          &! the norm of the diffence between potential
       charge,       &! the total charge
@@ -90,8 +90,8 @@ SUBROUTINE electrons()
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
   !
-  COMPLEX(DP), ALLOCATABLE :: rhognew(:,:)
-  REAL(DP),    ALLOCATABLE :: rhonew(:,:)
+  COMPLEX(DP), ALLOCATABLE :: rhognew(:,:), taukgnew(:,:)
+  REAL(DP),    ALLOCATABLE :: rhonew(:,:), tauknew(:,:)
   !
   ! ... external functions
   !
@@ -138,16 +138,6 @@ SUBROUTINE electrons()
   ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !               
-  IF ( reduce_io ) THEN
-     !
-     flmix = ' '
-     !
-  ELSE
-     !
-     flmix = 'mix'
-     !
-  END IF
-  !
   ! ... Convergence threshold for iterative diagonalization
   !
   ! ... for the first scf iteration of each ionic step (after the first),
@@ -167,6 +157,8 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
+  tauk_old(:,:)=0.d0
+
   DO idum = 1, niter
      !
      IF ( idum > 1 .AND. check_stop_now() ) RETURN
@@ -264,6 +256,37 @@ SUBROUTINE electrons()
            END IF
            !
         END DO
+        ! ... the same for tauk -> rhognew
+        IF ( dft_is_meta()) then
+           ALLOCATE( taukgnew( ngm, nspin ) )
+           DO is = 1, nspin
+              !
+              psic(:) = tauk(:,is)
+              !
+              CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+              !
+              taukgnew(:,is) = psic(nl(:))
+              !
+              IF ( okvan .AND. tqr ) THEN
+                 !
+                 ! ... in case the augmentation terms are computed in real space
+                 ! ... we apply an FFT filter to the density in real space to
+                 ! ... remove features that are not compatible with the FFT grid
+                 !
+                 psic(:) = ( 0.D0, 0.D0 )
+                 !
+                 psic(nl(:)) = taukgnew(:,is)
+                 !
+                 IF ( gamma_only ) psic(nlm(:)) = CONJG( taukgnew(:,is) )
+                 !
+                 CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+                 !
+                 tauk(:,is) = psic(:)
+                 !
+              END IF
+              !
+           END DO
+        END IF
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
@@ -291,8 +314,8 @@ SUBROUTINE electrons()
         ! 
         deband = delta_e()
         !
-        CALL mix_rho( rhognew, rhog, nsnew, ns, mixing_beta, &
-                      dr2, tr2_min, iter, nmix, flmix, conv_elec )
+        CALL mix_rho( rhognew, rhog, taukgnew, taukg, nsnew, ns, mixing_beta, &
+                      dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
@@ -309,10 +332,12 @@ SUBROUTINE electrons()
            ! ... R-space, the other in G-space
            !
            rhog(:,:) = rhognew(:,:)
+           IF ( dft_is_meta() ) taukg(:,:) = taukgnew(:,:)
            !
         END IF
         !
         DEALLOCATE( rhognew )
+        IF ( dft_is_meta() ) DEALLOCATE( taukgnew )
         !
         IF ( first .and. nat > 0) THEN
            !
@@ -356,6 +381,26 @@ SUBROUTINE electrons()
               !
            END DO
            !
+           ! the same for the kinetic energy density (tauknew)
+           !
+           IF ( dft_is_meta() ) THEN
+              ALLOCATE( tauknew( nrxx, nspin ) )
+              DO is = 1, nspin
+                 !
+                 psic(:) = ( 0.D0, 0.D0 )
+                 !
+                 psic(nl(:)) = taukg(:,is)
+                 !
+                 IF ( gamma_only ) psic(nlm(:)) = CONJG( taukg(:,is) )
+                 !
+                 CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+                 !
+                 tauknew(:,is) = psic(:)
+                 !
+              END DO
+              !
+           END IF
+           !
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate) 
            !
@@ -374,8 +419,13 @@ SUBROUTINE electrons()
            ! ... now rho contains the mixed charge density in R-space
            !
            rho(:,:) = rhonew(:,:)
-           !
            DEALLOCATE( rhonew )
+           !
+           IF ( dft_is_meta() ) THEN
+              tauk(:,:) = tauknew(:,:)
+              DEALLOCATE( tauknew )
+           END IF
+
            !
            ! ... write the charge density to file
            !
@@ -780,6 +830,7 @@ SUBROUTINE electrons()
        !-----------------------------------------------------------------------
        !
        ! ... delta_e = - \int rho(r) V_scf(r)
+       !               - \int tauk(r) Kedtau(r) [for Meta-GGA]
        !
        USE kinds, ONLY : DP
        !
@@ -798,6 +849,12 @@ SUBROUTINE electrons()
           !
        END DO
        !
+       IF ( dft_is_meta() ) THEN
+          DO ipol = 1, nspin
+             delta_e = delta_e - SUM( tauk(:,ipol)*kedtaur(:,ipol) )
+          END DO
+       END IF
+       !
        delta_e = omega * delta_e / ( nr1*nr2*nr3 )
        !
        CALL mp_sum( delta_e, intra_pool_comm )
@@ -811,6 +868,7 @@ SUBROUTINE electrons()
        !-----------------------------------------------------------------------
        !
        ! ... delta_escf = - \int \delta rho(r) V_scf(r)
+       !                  - \int \delta tauk(r) Kedtau(r) [for Meta-GGA]
        ! ... calculates the difference between the Hartree and XC energy
        ! ... at first order in the charge density difference \delta rho(r) 
        !
@@ -831,6 +889,13 @@ SUBROUTINE electrons()
                        SUM( ( rhonew(:,ipol) - rho(:,ipol) )*vr(:,ipol) )
           !
        END DO
+       !
+       IF ( dft_is_meta() ) THEN
+          DO ipol = 1, nspin
+             delta_escf = delta_escf - &
+                       SUM( (tauknew(:,ipol)-tauk(:,ipol) )*kedtaur(:,ipol))
+          END DO
+       END IF
        !
        delta_escf = omega * delta_escf / ( nr1*nr2*nr3 )
        !

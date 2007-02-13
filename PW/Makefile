@@ -101,6 +101,7 @@ h_epsi_her_set.o \
 h_1psi.o \
 h_psi.o \
 h_psi_nc.o \
+h_psi_meta.o \
 hexsym.o \
 hinit0.o \
 hinit1.o \
@@ -276,6 +277,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
+../Modules/metagga.o \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \
