@@ -30,6 +30,9 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE bp,                   ONLY : lelfield
+#ifdef __PARA
+  USE mp_global,            ONLY : npool, kunit
+#endif
   USE check_stop,           ONLY : check_stop_now
   !
   IMPLICIT NONE
@@ -46,7 +49,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   REAL(DP) :: avg_iter
   ! average number of H*psi products
-  INTEGER :: ik, ig
+  INTEGER :: ik, ig, nkdum
   ! counter on k points
   ! counter on G vectors
   !
@@ -133,7 +136,16 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      CALL save_in_cbands( iter, ik, dr2 )
      !
-     IF ( lbands .AND. check_stop_now() )  call stop_run(.FALSE.)
+     IF ( lbands ) THEN
+#ifdef __PARA
+        nkdum  = kunit * ( nkstot / kunit / npool )
+        IF (ik .le. nkdum) THEN
+           IF (check_stop_now())  call stop_run(.FALSE.)
+        ENDIF
+#else
+       IF ( check_stop_now() )  call stop_run(.FALSE.)
+#endif
+     ENDIF
      !
   END DO k_loop
   !
