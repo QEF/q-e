@@ -145,7 +145,9 @@ epsilon.o : ../Modules/kind.o
 epsilon.o : ../Modules/mp.o
 epsilon.o : ../Modules/uspp.o
 epsilon.o : ../Modules/wavefunctions.o
+epsilon.o : ../Modules/xml_io_base.o
 epsilon.o : ../PW/pwcom.o
+epsilon.o : ../iotk/src/iotk_module.o
 ggen1d.o : ../Modules/cell_base.o
 ggen1d.o : ../Modules/kind.o
 ggen1d.o : ../PW/pwcom.o
@@ -186,9 +188,7 @@ local_dos_mag.o : ../PW/noncol.o
 local_dos_mag.o : ../PW/pwcom.o
 openfil_pp.o : ../Modules/control_flags.o
 openfil_pp.o : ../Modules/io_files.o
-openfil_pp.o : ../Modules/io_global.o
 openfil_pp.o : ../Modules/kind.o
-openfil_pp.o : ../Modules/mp_global.o
 openfil_pp.o : ../PW/noncol.o
 openfil_pp.o : ../PW/pwcom.o
 plan_avg.o : ../Modules/cell_base.o

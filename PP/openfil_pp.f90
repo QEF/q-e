@@ -14,22 +14,15 @@ SUBROUTINE openfil_pp()
   ! ... sets various file names, units, record lengths
   !
   USE kinds,          ONLY : DP
-  USE io_global,      ONLY : stdout
-  USE basis,          ONLY : natomwfc
   USE wvfct,          ONLY : nbnd, npwx
-  USE ldaU,           ONLY : lda_plus_U
-  use control_flags,  only: twfcollect
-  USE io_files,       ONLY : prefix, iunsat, iunwfc, &
-                             iunigk, nwordwfc, nwordatwfc
-  USE mp_global,        ONLY : kunit
+  use control_flags,  ONLY:  twfcollect
+  USE io_files,       ONLY : prefix, iunwfc, nwordwfc
   USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !
   LOGICAL       :: exst
-  INTEGER       :: ndr, kunittmp, ierr
-  REAL(DP) :: edum(1,1), wdum(1,1)
-  
+  !
   twfcollect=.false.
   !
   ! ... nwordwfc is the record length for the direct-access file

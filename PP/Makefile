@@ -207,6 +207,6 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i work.pc
+	- /bin/rm -f *.x *.o *~ *.F90 *.d *.mod *.i *.L
 
 include make.depend

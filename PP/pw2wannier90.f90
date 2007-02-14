@@ -301,7 +301,7 @@ subroutine setup_nnkp
   enddo
 
   ! MP grid dimensions
-  call find_mp_grid(kpt_latt,mp_grid(3))
+  call find_mp_grid ( )
 
   write(stdout,'("  - Number of atoms is (",i3,")")') nat 
 
@@ -430,7 +430,7 @@ subroutine run_wannier
 end subroutine run_wannier
 !-----------------------------------------------------------------------
 !
-subroutine find_mp_grid
+subroutine find_mp_grid ( )
   !-----------------------------------------------------------------------
   !
   use io_global, only : stdout
