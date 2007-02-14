@@ -145,7 +145,7 @@ ATOMIC_POSITIONS  bohr
  C  0.109484E+01   0.137081E+01  -0.496954E+00
 K_POINTS Gamma
 EOF
-$ECHO "  running the cp.x SCF calculation...\c"
+$ECHO "  running the pw.x SCF calculation...\c"
 $PW_COMMAND < c4h6.pw.metaGGA.in > c4h6.pw.metaGGA.out
 $ECHO " done"
 $ECHO
