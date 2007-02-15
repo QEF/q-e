@@ -80,6 +80,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
+../Modules/metagga.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
@@ -113,6 +114,6 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod work.pc
+	- /bin/rm -f d3.x *.o *~ *.F90 *.d *.i *.mod *.L
 
 include make.depend
