@@ -1519,7 +1519,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   USE wvfct,              ONLY : gamma_only
   USE cell_base,          ONLY : at, ibrav, symm_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm
-  USE klist,              ONLY : nks
+  USE klist,              ONLY : nkstot_ => nkstot
   USE ktetra,             ONLY : nk1_   => nk1, &
                                  nk2_   => nk2, &
                                  nk3_   => nk3, &
@@ -1602,7 +1602,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     !
     gamma_only = .FALSE.
     lxkcry     = .FALSE.
-    nks        = 0
+    nkstot_    = 0
     !
     ! ... nk1,nk2,nk3 and k1,k2,k3 are initialized even when not used
     !
@@ -1619,9 +1619,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     !
     gamma_only   = .FALSE.
     lxkcry       = .FALSE.
-    nks          = nkstot
-    xk_(:,1:nks) = xk(:,1:nks)
-    wk_(1:nks)   = wk(1:nks)
+    nkstot_      = nkstot
+    xk_(:,1:nkstot_) = xk(:,1:nkstot_)
+    wk_(1:nkstot_)   = wk(1:nkstot_)
     !
     nk1_ = 0
     nk2_ = 0
@@ -1636,9 +1636,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     !
     gamma_only   = .FALSE.
     lxkcry       = .TRUE.
-    nks          = nkstot
-    xk_(:,1:nks) = xk(:,1:nks)
-    wk_(1:nks)   = wk(1:nks)
+    nkstot_          = nkstot
+    xk_(:,1:nkstot_) = xk(:,1:nkstot_)
+    wk_(1:nkstot_)   = wk(1:nkstot_)
     !
     nk1_ = 0
     nk2_ = 0
@@ -1654,7 +1654,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     !
     gamma_only = .TRUE.
     lxkcry     = .FALSE.
-    nks        = 1
+    nkstot_    = 1
     xk_(:,1)   = 0.0d0
     wk_(1)     = 1.0d0
     !
@@ -1671,9 +1671,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
     !
     gamma_only   = .FALSE.
     lxkcry       = .FALSE.
-    nks          = nkstot
-    xk_(:,1:nks) = xk(:,1:nks)
-    wk_(1:nks)   = wk(1:nks)
+    nkstot_          = nkstot
+    xk_(:,1:nkstot_) = xk(:,1:nkstot_)
+    wk_(1:nkstot_)   = wk(1:nkstot_)
     !
     nk1_ = 0
     nk2_ = 0
@@ -1686,7 +1686,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   IF ( tfixed_occ ) THEN
      !
-     IF ( nks > 1 .OR. ( nk1 * nk2 * nk3 ) > 1 ) &
+     IF ( nkstot_ > 1 .OR. ( nk1 * nk2 * nk3 ) > 1 ) &
         CALL errore( 'read_cards', &
                    & 'only one k point with fixed occupations', 1 )
      !

@@ -67,13 +67,6 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
                        ( psic(nls(igk(1:np))) + CONJG(psic(nlsm(igk(1:np)))) )
               hpsi(1:np,im+1)= hpsi(1:np,im+1) - kplusg(1:np) * 0.5d0 * &
                        ( psic(nls(igk(1:np))) - CONJG(psic(nlsm(igk(1:np)))) )
-!  alternative way
-!              hpsi(1:np,im)  = hpsi(1:np,im)   - ci * kplusg(1:np) * 0.5d0 * &
-!                  CMPLX( DBLE(psic(nls(igk(1:np))) + psic(nlsm(igk(1:np)))), &
-!                        AIMAG(psic(nls(igk(1:np))) - psic(nlsm(igk(1:np)))) )
-!              hpsi(1:np,im+1)= hpsi(1:np,im+1) - ci * kplusg(1:np) * 0.5d0 * &
-!                  CMPLX(AIMAG(psic(nls(igk(1:np))) + psic(nlsm(igk(1:np)))), &
-!                        -DBLE(psic(nls(igk(1:np))) - psic(nlsm(igk(1:np)))) )
            else
               hpsi(1:np,im) = hpsi(1:np,im) - ci * kplusg(1:np) * &
                                                       psic(nls(igk(1:np)))

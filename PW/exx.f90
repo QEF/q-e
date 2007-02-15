@@ -12,7 +12,6 @@
 
 module exx
 
-  USE klist,    ONLY :  nks 
   USE kinds,    ONLY : DP
   implicit none
 
@@ -112,6 +111,7 @@ contains
 ! parallel stuff
 !
   USE mp_global,  ONLY : nproc, npool
+  USE klist,      ONLY : nkstot 
 
   implicit none
   integer :: iq1, iq2, iq3, isym, ik, ikq, iq, max_nk, temp_nkqs
@@ -150,7 +150,7 @@ contains
   ! set a safe limit as the maximum number of auxiliary points we may need
   ! and allocate auxiliary arrays
   !
-  max_nk = nks * min(48, 2 * nsym)
+  max_nk = nkstot * min(48, 2 * nsym)
   allocate ( temp_index_xk(max_nk), temp_index_sym(max_nk) )
   allocate ( temp_index_ikq(max_nk), new_ikq(max_nk) )
   allocate ( temp_xkq(3,max_nk) )
@@ -159,7 +159,7 @@ contains
   !
   temp_nkqs = 0
   do isym=1,nsym
-     do ik =1, nks
+     do ik =1, nkstot
         xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
         sxk(:) = s(:,1,isym)*xk_cryst(1) + &
                  s(:,2,isym)*xk_cryst(2) + &
@@ -208,18 +208,18 @@ contains
   dq2= 1.d0/DBLE(nq2)
   dq3= 1.d0/DBLE(nq3)
   !
-  ! allocate and fill the array index_xkq(nks,nqs)
+  ! allocate and fill the array index_xkq(nkstot,nqs)
   !
   if ( nspin == 2 ) then
-     allocate ( index_xkq(2*nks,nqs) )
-     allocate ( x_occupation(nbnd,2*nks) )
+     allocate ( index_xkq(2*nkstot,nqs) )
+     allocate ( x_occupation(nbnd,2*nkstot) )
   else
-     allocate ( index_xkq(nks,nqs) )
-     allocate ( x_occupation(nbnd,nks) )
+     allocate ( index_xkq(nkstot,nqs) )
+     allocate ( x_occupation(nbnd,nkstot) )
   end if
   nkqs = 0
   new_ikq(:) = 0
-  do ik=1,nks
+  do ik=1,nkstot 
      xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
 
      iq = 0
@@ -287,14 +287,15 @@ contains
   !
   ! check that everything is what it should be
   !
-  call exx_grid_check
+  call exx_grid_check () 
+  !
   call stop_clock ('exx_grid')
-
+  !
   return
   end subroutine exx_grid_init
 
   !------------------------------------------------------------------------
-  subroutine exx_grid_check
+  subroutine exx_grid_check ( )
   !------------------------------------------------------------------------
   USE symme,     ONLY : nsym, s
   USE cell_base, ONLY : bg, at
@@ -310,7 +311,7 @@ contains
   dq2= 1.d0/DBLE(nq2)
   dq3= 1.d0/DBLE(nq3)
 
-  do ik =1, nks
+  do ik =1, nkstot
      xk_cryst(:) = at(1,:)*xk(1,ik) + at(2,:)*xk(2,ik) + at(3,:)*xk(3,ik)
 
      iq = 0
@@ -371,7 +372,7 @@ contains
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, gamma_only
-    USE klist,                ONLY : wk, ngk
+    USE klist,                ONLY : wk, ngk, nks
     USE symme,                ONLY : nsym, s, ftau
 
     use mp_global,            ONLY : nproc_pool, me_pool
@@ -704,7 +705,7 @@ contains
     USE gvect,      ONLY : gstart
     USE wavefunctions_module, ONLY : evc
     USE lsda_mod,   ONLY : lsda, current_spin, isk
-    USE klist,      ONLY : ngk
+    USE klist,      ONLY : ngk, nks
 
     implicit none
     REAL (DP)   :: exxenergy,  energy
@@ -764,7 +765,7 @@ contains
                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
     USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k, gamma_only
     USE wavefunctions_module, ONLY : evc
-    USE klist,     ONLY : xk, ngk
+    USE klist,     ONLY : xk, ngk, nks
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
 

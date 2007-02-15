@@ -448,7 +448,7 @@ SUBROUTINE setup()
   ! ... If  lxkcry = .TRUE. , the input k-point components in crystal
   ! ... axis are transformed in cartesian coordinates
   !
-  IF ( lxkcry ) CALL cryst_to_cart( nks, xk, bg, 1 )
+  IF ( lxkcry ) CALL cryst_to_cart( nkstot, xk, bg, 1 )
   !
   ! ... Test that atoms do not overlap
   !
@@ -531,17 +531,17 @@ SUBROUTINE setup()
   !
   ! ... Automatic generation of k-points (if required)
   !
-  IF ( nks < 0 ) THEN
+  IF ( nkstot < 0 ) THEN
      !
-     CALL setupkpoint( s, nrot, xk, wk, nks, npk, nk1, &
+     CALL setupkpoint( s, nrot, xk, wk, nkstot, npk, nk1, &
                        nk2, nk3, k1, k2, k3, at, bg, tipo )
      !
-  ELSE IF ( nks == 0 ) THEN
+  ELSE IF ( nkstot == 0 ) THEN
      !
      IF ( lberry ) THEN
         !
         CALL kp_strings( nppstr, gdir, nrot, s, bg, npk, &
-                         k1, k2, k3, nk1, nk2, nk3, nks, xk, wk )
+                         k1, k2, k3, nk1, nk2, nk3, nkstot, xk, wk )
         !
         nosym = .TRUE.
         nrot  = 1
@@ -550,7 +550,7 @@ SUBROUTINE setup()
      ELSE
         !
         CALL kpoint_grid( nrot, s, bg, npk, k1, k2, k3, &
-                          nk1, nk2, nk3, nks, xk, wk )
+                          nk1, nk2, nk3, nkstot, xk, wk )
         !
      END IF
      !
@@ -566,11 +566,11 @@ SUBROUTINE setup()
   ! ... If some symmetries of the lattice are missing in the crystal,
   ! ... "sgama" computes the missing k-points.
   !
-  input_nks = nks
+  input_nks = nkstot
   !
   IF (nat>0) THEN
      CALL sgama( nrot, nat, s, sname, t_rev, at, bg, tau, ityp, nsym, nr1,&
-          nr2, nr3, irt, ftau, npk, nks, xk, wk, invsym, minus_q,  &
+          nr2, nr3, irt, ftau, npk, nkstot, xk, wk, invsym, minus_q,  &
           xqq, modenum, noncolin, domag, m_loc )
   ELSE
      nsym=nrot
@@ -595,7 +595,7 @@ SUBROUTINE setup()
      ! ... if calculating bands, we leave k-points unchanged and read the
      ! Fermi energy
      !
-     nks = input_nks
+     nkstot = input_nks
      CALL pw_readfile( 'reset', ierr )
      CALL pw_readfile( 'ef',   ierr )
      CALL errore( 'setup ', 'problem reading ef from file ' // &
@@ -614,13 +614,13 @@ SUBROUTINE setup()
      ALLOCATE( tetra( 4, ntetra ) )
      !
      CALL tetrahedra( nsym, s, minus_q, at, bg, npk, k1, k2, k3, &
-          nk1, nk2, nk3, nks, xk, wk, ntetra, tetra )
+          nk1, nk2, nk3, nkstot, xk, wk, ntetra, tetra )
      !
   END IF
   !
   ! ... phonon calculation: add k+q to the list of k
   !
-  IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nks, npk )
+  IF ( lphonon ) CALL set_kplusq( xk, wk, xqq, nkstot, npk )
   !
 #if defined (EXX)
   IF ( dft_is_hybrid() ) CALL exx_grid_init()
@@ -633,7 +633,7 @@ SUBROUTINE setup()
      !
      if (nspin /= 2) call errore ('setup','nspin should be 2; check iosys',1)
      !
-     CALL set_kup_and_kdw( xk, wk, isk, nks, npk )
+     CALL set_kup_and_kdw( xk, wk, isk, nkstot, npk )
      !
   ELSE IF ( noncolin ) THEN
      !
@@ -646,7 +646,7 @@ SUBROUTINE setup()
      !
      ! ... LDA case: the two spin polarizations are identical
      !
-     wk(1:nks)    = wk(1:nks) * degspin
+     wk(1:nkstot)    = wk(1:nkstot) * degspin
      current_spin = 1
      !
      IF ( nspin /= 1 ) &
@@ -654,7 +654,7 @@ SUBROUTINE setup()
      !
   END IF
   !
-  IF ( nks > npk ) CALL errore( 'setup', 'too many k points', nks )
+  IF ( nkstot > npk ) CALL errore( 'setup', 'too many k points', nkstot )
   !
 #ifdef __PARA
   !
@@ -671,7 +671,7 @@ SUBROUTINE setup()
      !
   ENDIF
   !
-  ! ... distribute the k-points (and their weights and spin indices)
+  ! ... distribute k-points (and their weights and spin indices)
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
@@ -679,9 +679,7 @@ SUBROUTINE setup()
   !
 #else
   !
-  ! ... set nkstot which is used to write results for all k-points
-  !
-  nkstot = nks
+  nks = nkstot
   !
 #endif
   !

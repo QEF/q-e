@@ -99,7 +99,7 @@ SUBROUTINE read_file()
   !
   ! ... parallel execution: distribute across pools k-points and
   ! ... related variables (not a smart implementation):
-  ! ... nks and nkstot are redefined by the following routine
+  ! ... nks is redefined by the following routine
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
@@ -233,7 +233,6 @@ SUBROUTINE read_file()
       USE cell_base, ONLY : alat, tpiba, tpiba2
       USE gvect,     ONLY : ecutwfc, dual, gcutm
       USE gsmooth,   ONLY : gcutms, doublegrid
-      USE klist,     ONLY : nks, nkstot
       !
       !
       ! ... Set the units in real and reciprocal space
@@ -256,8 +255,6 @@ SUBROUTINE read_file()
          gcutms = gcutm
          !
       END IF
-      !
-      nks = nkstot
       !
     END SUBROUTINE set_dimensions
     !

@@ -45,6 +45,7 @@ addusstress.o : ../Modules/ions_base.o
 addusstress.o : ../Modules/kind.o
 addusstress.o : ../Modules/uspp.o
 addusstress.o : pwcom.o
+allocate_fft.o : ../Modules/functionals.o
 allocate_fft.o : ../Modules/io_global.o
 allocate_fft.o : ../Modules/ions_base.o
 allocate_fft.o : ../Modules/wavefunctions.o
@@ -117,6 +118,7 @@ c_bands.o : ../Modules/control_flags.o
 c_bands.o : ../Modules/io_files.o
 c_bands.o : ../Modules/io_global.o
 c_bands.o : ../Modules/kind.o
+c_bands.o : ../Modules/mp_global.o
 c_bands.o : ../Modules/uspp.o
 c_bands.o : ../Modules/wavefunctions.o
 c_bands.o : becmod.o
@@ -476,7 +478,6 @@ h_1psi.o : ../Modules/kind.o
 h_1psi.o : noncol.o
 h_epsi_her_apply.o : ../Modules/cell_base.o
 h_epsi_her_apply.o : ../Modules/constants.o
-h_epsi_her_apply.o : ../Modules/io_files.o
 h_epsi_her_apply.o : ../Modules/ions_base.o
 h_epsi_her_apply.o : ../Modules/kind.o
 h_epsi_her_apply.o : ../Modules/uspp.o
@@ -495,6 +496,10 @@ h_psi.o : ../Modules/wavefunctions.o
 h_psi.o : becmod.o
 h_psi.o : exx.o
 h_psi.o : pwcom.o
+h_psi_meta.o : ../Modules/cell_base.o
+h_psi_meta.o : ../Modules/kind.o
+h_psi_meta.o : ../Modules/wavefunctions.o
+h_psi_meta.o : pwcom.o
 h_psi_nc.o : ../Modules/uspp.o
 h_psi_nc.o : ../Modules/wavefunctions.o
 h_psi_nc.o : becmod.o
@@ -618,6 +623,7 @@ mix_pot.o : ../Modules/mp_global.o
 mix_rho.o : ../Modules/cell_base.o
 mix_rho.o : ../Modules/constants.o
 mix_rho.o : ../Modules/control_flags.o
+mix_rho.o : ../Modules/functionals.o
 mix_rho.o : ../Modules/io_files.o
 mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
@@ -1040,6 +1046,7 @@ stres_us.o : pwcom.o
 stress.o : ../Modules/cell_base.o
 stress.o : ../Modules/constants.o
 stress.o : ../Modules/control_flags.o
+stress.o : ../Modules/functionals.o
 stress.o : ../Modules/io_global.o
 stress.o : ../Modules/ions_base.o
 stress.o : ../Modules/kind.o
@@ -1048,6 +1055,7 @@ struct_fact.o : ../Modules/constants.o
 struct_fact.o : ../Modules/kind.o
 sum_band.o : ../Modules/cell_base.o
 sum_band.o : ../Modules/control_flags.o
+sum_band.o : ../Modules/functionals.o
 sum_band.o : ../Modules/io_files.o
 sum_band.o : ../Modules/ions_base.o
 sum_band.o : ../Modules/kind.o
@@ -1084,6 +1092,16 @@ symvect.o : ../Modules/kind.o
 symz.o : ../Modules/kind.o
 tabd.o : ../Modules/kind.o
 tabd.o : ../Modules/uspp.o
+transform_becsum_nc.o : ../Modules/ions_base.o
+transform_becsum_nc.o : ../Modules/kind.o
+transform_becsum_nc.o : ../Modules/uspp.o
+transform_becsum_nc.o : noncol.o
+transform_becsum_nc.o : pwcom.o
+transform_becsum_so.o : ../Modules/ions_base.o
+transform_becsum_so.o : ../Modules/kind.o
+transform_becsum_so.o : ../Modules/uspp.o
+transform_becsum_so.o : noncol.o
+transform_becsum_so.o : pwcom.o
 trntns.o : ../Modules/kind.o
 trnvecc.o : ../Modules/kind.o
 trnvect.o : ../Modules/kind.o
@@ -1242,6 +1260,7 @@ ggen.o : ../include/f_defs.h
 gradcorr.o : ../include/f_defs.h
 h_epsi_her_apply.o : ../include/f_defs.h
 h_epsi_her_set.o : ../include/f_defs.h
+h_psi_meta.o : ../include/f_defs.h
 init_at_1.o : ../include/f_defs.h
 init_ns.o : ../include/f_defs.h
 init_paw_1.o : ../include/f_defs.h
@@ -1317,6 +1336,8 @@ symscalar.o : ../include/f_defs.h
 symtns.o : ../include/f_defs.h
 symvect.o : ../include/f_defs.h
 symz.o : ../include/f_defs.h
+transform_becsum_nc.o : ../include/f_defs.h
+transform_becsum_so.o : ../include/f_defs.h
 trnvecc.o : ../include/f_defs.h
 update_pot.o : ../include/f_defs.h
 vcsubs.o : ../include/f_defs.h

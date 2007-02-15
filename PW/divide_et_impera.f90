@@ -24,13 +24,15 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
   IMPLICIT NONE
   !
-  LOGICAL :: lsda
+  LOGICAL, INTENT(IN) :: lsda
     ! logical for local spin density approx.
-  INTEGER :: nkstot, nks, isk(nks)
+  INTEGER, INTENT(IN)  :: nkstot
     ! total number of k-points
-    ! number of k-points per pool
+  INTEGER, INTENT(INOUT) :: isk(nkstot)
     ! spin index of each kpoint (when lsda=.t.)
-  REAL (DP) :: xk(3,nks), wk(nks)
+  INTEGER, INTENT(OUT)  :: nks
+    ! number of k-points per pool
+  REAL (DP), INTENT(INOUT) :: xk(3,nkstot), wk(nkstot)
     ! k-points
     ! k-point weights
 #if defined (EXX)
@@ -42,10 +44,9 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   INTEGER :: ik, nbase, rest
   !
   !
-  IF ( MOD( nks, kunit ) /= 0 ) &
-     CALL errore( 'd_&_i', ' nks/kunit is not an integer', nks )
+  IF ( MOD( nkstot, kunit ) /= 0 ) &
+     CALL errore( 'd_&_i', ' nkstot/kunit is not an integer', nkstot )
   !
-  nkstot = nks
   nks    = kunit * ( nkstot / kunit / npool )
   !
   IF ( nks == 0 ) CALL errore( 'd_&_i', ' some nodes have no k-points', 1 )
@@ -90,7 +91,12 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
         
      END IF
 #endif
+  !
   END IF
+  !
+#else
+  !
+  nks = nkstot
   !
 #endif
   !
