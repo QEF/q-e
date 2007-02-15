@@ -71,6 +71,6 @@ xml_io_base.o
 all : $(MODULES)
 
 clean :
-	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod work.pc
+	- /bin/rm -f *.o *.d *.i *~ *.F90 *.mod *.L
 
 include make.depend

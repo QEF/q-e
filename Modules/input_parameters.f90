@@ -234,7 +234,7 @@ MODULE input_parameters
 
         CHARACTER(LEN=80) :: disk_io = 'default' 
           ! disk_io = 'high', 'default', 'low', 'minimal'
-          ! Specify the amount of I/O activities ( not used in FPMD )
+          ! Specify the amount of I/O activities 
 
         LOGICAL :: tefield  = .FALSE. 
           ! if .TRUE. a finite electric field is added to the local potential

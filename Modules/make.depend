@@ -110,6 +110,7 @@ metadyn_io.o : xml_io_base.o
 metadyn_vars.o : control_flags.o
 metadyn_vars.o : input_parameters.o
 metadyn_vars.o : kind.o
+metagga.o : kind.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
