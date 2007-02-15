@@ -51,6 +51,7 @@ MODULES = \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
 ../Modules/metadyn_vars.o \
+../Modules/metagga.o \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
@@ -100,7 +101,7 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f gipaw.x *.o *~ *.F90 *.d *.mod *.i work.pc
+	- /bin/rm -f gipaw.x *.o *~ *.F90 *.d *.mod *.i *.L
 
 include make.depend
 
