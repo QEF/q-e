@@ -404,7 +404,6 @@ MODULE scf
        vrs(:,:),       &! the total pot. in real space (smooth grig)
        rho_core(:),    &! the core charge in real space
        tauk(:,:),      &! kinetic energy density in real space (dense grid)
-       tauk_old(:,:),  &! kinetic energy density in real space (dense grid)
        kedtau(:,:),    &! position dependent kinetic energy enhancement factor
                         ! used in META-GGA in real space (smooth grid)
        kedtaur(:,:)     ! position dependent kinetic energy enhancement factor

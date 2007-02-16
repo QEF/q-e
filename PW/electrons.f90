@@ -36,7 +36,7 @@ SUBROUTINE electrons()
                                    vtxc, etxc, etxcc, ewld, demet
   USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
                                    vr, vltot, vrs, &
-                                   tauk, taukg, tauk_old, kedtau, kedtaur
+                                   tauk, taukg, kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, reduce_io
@@ -157,8 +157,6 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !
-  tauk_old(:,:)=0.d0
-
   DO idum = 1, niter
      !
      IF ( idum > 1 .AND. check_stop_now() ) RETURN

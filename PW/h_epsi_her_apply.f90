@@ -20,7 +20,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx, ik => current_k
+  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, ik => current_k
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
@@ -48,7 +48,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   COMPLEX(DP), EXTERNAL :: zdotc
   
   COMPLEX(DP), ALLOCATABLE  :: evct(:,:)!temporary array
-  COMPLEX(DP) :: ps(nkb,nbndx)
+  COMPLEX(DP) :: ps(nkb,nbnd)
 
   COMPLEX(DP) :: becp0(nkb,nbnd)
 
@@ -61,7 +61,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   INTEGER :: jkb_bp,nt,ig, ijkb0,ibnd,jh,ih,ikb
 
 
-  ALLOCATE( evct(npwx,nbndx))
+  ALLOCATE( evct(npwx,nbnd))
 
   if(okvan) then
 !  --- Initialize arrays ---

@@ -21,7 +21,7 @@ subroutine allocate_fft
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
   USE scf,       ONLY : rho, rhog, vr, vltot, vrs, rho_core, rhog_core, &
-                        tauk, taukg, tauk_old, kedtau, kedtaur
+                        tauk, taukg, kedtau, kedtaur
   USE vlocal,    ONLY : vnew
   USE wvfct,     ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, pointnum, r_loc, &
@@ -70,13 +70,11 @@ subroutine allocate_fft
   allocate (rho_core( nrxx))
   if (dft_is_meta() ) then
      allocate ( tauk(nrxx,nspin) )
-     allocate ( tauk_old(nrxx,nspin) )
      allocate ( kedtau(nrxxs,nspin) )
      allocate ( kedtaur(nrxx,nspin) )
      ALLOCATE ( taukg( ngm, nspin ) )
   else
      allocate ( tauk(1,nspin) )
-     allocate ( tauk_old(1,nspin) )
      allocate ( kedtau(1,nspin) )
      allocate ( kedtaur(1,nspin) )
      ALLOCATE ( taukg( 1, nspin ) )

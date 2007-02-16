@@ -19,7 +19,7 @@ subroutine h_epsi_her_set
 
   USE kinds,    ONLY : DP
   USE us
-  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd, nbndx
+  USE wvfct,    ONLY : igk, g2kin, npwx, npw, nbnd
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,     ONLY : lda_plus_u
   USE lsda_mod, ONLY : current_spin, nspin
@@ -105,7 +105,7 @@ subroutine h_epsi_her_set
 
    
    COMPLEX(dp) :: sca,sca1
-   COMPLEX(dp) :: ps(nkb,nbndx)
+   COMPLEX(dp) :: ps(nkb,nbnd)
    INTEGER :: ijkb0,  ibnd,jh, ih, ikb, ik
 
 
@@ -119,7 +119,7 @@ subroutine h_epsi_her_set
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
 
-   ALLOCATE( evct(npwx,nbndx))
+   ALLOCATE( evct(npwx,nbnd))
    ALLOCATE( map_g(npwx))
   
 
