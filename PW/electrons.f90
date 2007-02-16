@@ -80,7 +80,8 @@ SUBROUTINE electrons()
       ik,           &! counter on k points
       idum,         &! dummy counter on iterations
       iter,         &! counter on iterations
-      ik_            ! used to read ik from restart file
+      ik_,          &! used to read ik from restart file
+      kilobytes
   REAL(DP) :: &
        tr2_min,     &! estimated error on energy coming from diagonalization
        descf         ! correction for variational energy
@@ -119,6 +120,10 @@ SUBROUTINE electrons()
   !
   WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
   !
+  CALL memstat( kilobytes )
+  !
+  IF ( kilobytes > 0 ) WRITE( stdout, 9001 ) kilobytes/1000.0
+  !
   CALL flush_unit( stdout )
   !
   IF ( .NOT. lscf ) THEN
@@ -149,7 +154,7 @@ SUBROUTINE electrons()
   !
   IF ( istep > 0 ) ethr = 1.D-6
   !
-  WRITE( stdout, 9001 )
+  WRITE( stdout, 9002 )
   !
   CALL flush_unit( stdout )
   !
@@ -681,7 +686,8 @@ SUBROUTINE electrons()
   ! ... formats
   !
 9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
-9001 FORMAT(/'     Self-consistent Calculation' )
+9001 FORMAT(/'     per-process dynamical memory: ',f7.1,' Mb' )
+9002 FORMAT(/'     Self-consistent Calculation' )
 9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' Ry',5X,'beta=',F4.2 )
 9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
             /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )

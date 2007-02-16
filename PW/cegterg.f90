@@ -23,7 +23,6 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ! ... S is an overlap matrix, evc is a complex vector
   !
   USE kinds,            ONLY : DP
-  USE io_global,        ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol
   USE bp,               ONLY : lelfield
   !
@@ -406,8 +405,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
            !
            ! ... last iteration, some roots not converged: return
            !
-           WRITE( stdout, '(5X,"WARNING: ",I5, &
-                &   " eigenvalues not converged")' ) notcnv
+           !!!WRITE( stdout, '(5X,"WARNING: ",I5, &
+           !!!     &   " eigenvalues not converged")' ) notcnv
            !
            CALL stop_clock( 'last' )
            !

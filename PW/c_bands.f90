@@ -136,8 +136,15 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      CALL save_in_cbands( iter, ik, dr2 )
      !
+     ! ... FIXME: in nscf case, stopping here will make trouble in phonon
+     !
      IF ( lbands ) THEN
 #ifdef __PARA
+        !
+        ! ... beware: with pools, if the number of k-points on different 
+        ! ... porls differs, make sure that all processors are still in
+        ! ... the loop on k-points before checking for stop condition
+        !
         nkdum  = kunit * ( nkstot / kunit / npool )
         IF (ik .le. nkdum) THEN
            IF (check_stop_now())  call stop_run(.FALSE.)
@@ -185,6 +192,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   !
   USE kinds,                ONLY : DP
+  USE io_global,            ONLY : stdout
   USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
   USE uspp,                 ONLY : vkb, nkb, okvan
@@ -235,6 +243,11 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
      !
      CALL errore( 'c_bands', &
           & 'too many bands are not converged', 1 )
+     !
+  ELSE IF ( notconv > 0 ) THEN
+     !
+     WRITE( stdout, '(5X,"c_bands: ",I2, &
+               &   " eigenvalues not converged")' ) notconv
      !
   END IF
   !
