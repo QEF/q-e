@@ -205,8 +205,8 @@ PROGRAM phonon
         CALL mp_bcast( lgamma, ionode_id )
         !
         IF (.NOT. lgamma ) THEN
-           nks = nks_start
            !
+           nkstot = nks_start
            xk(:,1:nks_start) = xk_start(:,1:nks_start)
            wk(1:nks_start)   = wk_start(1:nks_start)
         END IF
