@@ -142,7 +142,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
 #ifdef __PARA
         !
         ! ... beware: with pools, if the number of k-points on different 
-        ! ... porls differs, make sure that all processors are still in
+        ! ... pools differs, make sure that all processors are still in
         ! ... the loop on k-points before checking for stop condition
         !
         nkdum  = kunit * ( nkstot / kunit / npool )

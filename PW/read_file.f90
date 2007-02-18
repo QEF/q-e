@@ -97,12 +97,6 @@ SUBROUTINE read_file()
   !
   CALL set_dimensions()
   !
-  ! ... parallel execution: distribute across pools k-points and
-  ! ... related variables (not a smart implementation):
-  ! ... nks is redefined by the following routine
-  !
-  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
-  !
   ! ... check whether LSDA
   !
   IF ( lsda ) THEN
@@ -139,11 +133,16 @@ SUBROUTINE read_file()
   !
   CALL pw_readfile( 'nowave', ierr )
   !
+  ! ... parallel execution: distribute across pools k-points and
+  ! ... related variables. nks is defined by the following routine
+  ! ... as the number of k-points in the current pool
+  !
+  CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
+  !
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
   !
-  IF (nat>0) &
-  CALL checkallsym( nsym, s, nat, tau, &
+  IF (nat > 0) CALL checkallsym( nsym, s, nat, tau, &
                     ityp, at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
   !
   ! ... read pseudopotentials
