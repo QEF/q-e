@@ -136,23 +136,22 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      CALL save_in_cbands( iter, ik, dr2 )
      !
-     ! ... FIXME: in nscf case, stopping here will make trouble in phonon
-     !
-     IF ( lbands ) THEN
+     ! IF ( lbands) THEN
 #ifdef __PARA
-        !
         ! ... beware: with pools, if the number of k-points on different 
         ! ... pools differs, make sure that all processors are still in
         ! ... the loop on k-points before checking for stop condition
         !
-        nkdum  = kunit * ( nkstot / kunit / npool )
-        IF (ik .le. nkdum) THEN
-           IF (check_stop_now())  call stop_run(.FALSE.)
-        ENDIF
+        ! ... FIXME: stopping here will make trouble in phonon
+        !
+        !!!nkdum  = kunit * ( nkstot / kunit / npool )
+        !!!IF (ik .le. nkdum) THEN
+        !!!   IF (check_stop_now())  call stop_run(.FALSE.)
+        !!!ENDIF
 #else
-       IF ( check_stop_now() )  call stop_run(.FALSE.)
+        !!!IF ( check_stop_now() )  call stop_run(.FALSE.)
 #endif
-     ENDIF
+     !ENDIF
      !
   END DO k_loop
   !
@@ -701,7 +700,9 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      CALL save_in_cbands( iter, ik, dr2 )
      !
-     IF ( check_stop_now() )  call stop_run(.FALSE.)
+     ! ... FIXME: this call is a source of trouble with phonons
+     !
+     !!! IF ( check_stop_now() )  call stop_run(.FALSE.)
      !
   END DO k_loop
   !

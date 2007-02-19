@@ -151,7 +151,6 @@ cdiaghg.o : ../Modules/kind.o
 cdiaghg.o : ../Modules/mp.o
 cdiaghg.o : ../Modules/mp_global.o
 cdiaghg.o : ../Modules/ptoolkit.o
-cegterg.o : ../Modules/io_global.o
 cegterg.o : ../Modules/kind.o
 cegterg.o : noncol.o
 cegterg.o : pwcom.o

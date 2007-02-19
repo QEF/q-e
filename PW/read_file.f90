@@ -121,11 +121,6 @@ SUBROUTINE read_file()
   cell_factor = 1.D0
   lmovecell = .FALSE.
   !
-  ! ... allocate memory for G- and R-space fft arrays
-  !
-  CALL allocate_fft()
-  CALL ggen()
-  !
   ! ... allocate memory for eigenvalues and weights (read from file)
   !
   nbndx = nbnd
@@ -133,14 +128,16 @@ SUBROUTINE read_file()
   !
   CALL pw_readfile( 'nowave', ierr )
   !
-  ! ... parallel execution: distribute across pools k-points and
-  ! ... related variables. nks is defined by the following routine
-  ! ... as the number of k-points in the current pool
+  ! ... distribute across pools k-points and related variables.
+  ! ... nks is defined by the following routine as the number 
+  !yy ... of k-points in the current pool
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
   CALL poolscatter( nbnd, nkstot, et, nks, et )
   CALL poolscatter( nbnd, nkstot, wg, nks, wg )
+  !
+  ! ... check on symmetry
   !
   IF (nat > 0) CALL checkallsym( nsym, s, nat, tau, &
                     ityp, at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
@@ -168,6 +165,11 @@ SUBROUTINE read_file()
   END DO
   !
   IF ( .NOT. lspinorb ) CALL average_pp ( nsp )
+  !
+  ! ... allocate memory for G- and R-space fft arrays
+  !
+  CALL allocate_fft()
+  CALL ggen()
   !
   ! ... allocate the potential and wavefunctions
   !

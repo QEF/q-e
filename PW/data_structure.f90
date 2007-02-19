@@ -10,9 +10,9 @@
 !-----------------------------------------------------------------------
 subroutine data_structure( lgamma )
   !-----------------------------------------------------------------------
-  ! this routine sets the data structure for the fft arrays.
-  ! In the parallel case distributes columns to processes, too
-  ! This version computes also the smooth and hard mesh
+  ! this routine sets the data structure for the fft arrays
+  ! (both the smooth and the hard mesh)
+  ! In the parallel case, it distributes columns to processes, too
   !
   USE io_global,  ONLY : stdout
   USE sticks,     ONLY : dfftp, dffts
@@ -51,8 +51,6 @@ subroutine data_structure( lgamma )
 
   real(DP) :: gkcut
   ! cut-off for the wavefunctions
-
-  integer :: kpoint
 
 #ifdef __PARA
   integer, allocatable :: st(:,:), sts(:,:) 
@@ -123,13 +121,6 @@ subroutine data_structure( lgamma )
 
   call calculate_gkcut()  
 
-  !
-  ! find maximum among the nodes
-  !
-
-  call poolextreme (gkcut, + 1)
-
-  !
 #ifdef DEBUG
   WRITE( stdout, '(5x,"ecutrho & ecutwfc",2f12.2)') tpiba2 * gcutm, &
        tpiba2 * gkcut
@@ -386,23 +377,31 @@ subroutine data_structure( lgamma )
 contains
 
   subroutine calculate_gkcut()
-    if (nks.eq.0) then
+    !
+    integer :: kpoint
+    !
+    if (nks == 0) then
        !
        ! if k-points are automatically generated (which happens later)
        ! use max(bg)/2 as an estimate of the largest k-point
        !
-       gkcut = sqrt (ecutwfc) / tpiba + 0.5d0 * max (sqrt (bg ( &
-          1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2), sqrt (bg (1, 2) ** &
-          2 + bg (2, 2) **2 + bg (3, 2) **2), sqrt (bg (1, 3) **2 + bg ( &
-          2, 3) **2 + bg (3, 3) **2) )
+       gkcut = sqrt (ecutwfc) / tpiba + 0.5d0 * max ( &
+          sqrt (bg (1, 1) **2 + bg (2, 1) **2 + bg (3, 1) **2), &
+          sqrt (bg (1, 2) **2 + bg (2, 2) **2 + bg (3, 2) **2), &
+          sqrt (bg (1, 3) **2 + bg (2, 3) **2 + bg (3, 3) **2) )
     else
        gkcut = 0.0d0
        do kpoint = 1, nks
-          gkcut = max (gkcut, sqrt (ecutwfc) / tpiba + sqrt (xk ( &
-               1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, kpoint) **2) )
+          gkcut = max (gkcut, sqrt (ecutwfc) / tpiba + sqrt ( &
+             xk (1, kpoint) **2 + xk (2, kpoint) **2 + xk (3, kpoint) **2) )
        enddo
     endif
-    gkcut = gkcut * gkcut
+    gkcut = gkcut**2 
+    !
+    ! ... find maximum value among all the processors
+    !
+    call poolextreme (gkcut, + 1)
+    !
     return
   end subroutine calculate_gkcut
 
