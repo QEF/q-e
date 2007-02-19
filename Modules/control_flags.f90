@@ -44,6 +44,7 @@ MODULE control_flags
   PUBLIC :: fix_dependencies, check_flags
   PUBLIC :: tvlocw, trhor, thdyn, iprsta, trhow
   PUBLIC :: twfcollect, printwfc
+  PUBLIC :: lkpoint_dir
   PUBLIC :: tuspp
   PUBLIC :: program_name
   !
@@ -83,6 +84,7 @@ MODULE control_flags
   LOGICAL :: tatomicwfc    = .FALSE. ! Use atomic wavefunctions as starting guess for ch. density
   LOGICAL :: tscreen       = .FALSE. ! Use screened coulomb potentials for cluster calculations
   LOGICAL :: twfcollect    = .FALSE. ! Collect wave function in the restart file at the end of run.
+  LOGICAL :: lkpoint_dir   = .TRUE.  ! save each k point in a different directory
   LOGICAL :: tuspp         = .FALSE. ! Ultra-soft pseudopotential are being used
   INTEGER :: printwfc      = -1      ! Print wave functions, temporarely used only by ensemble-dft
   LOGICAL :: force_pairing = .FALSE. ! Force pairing

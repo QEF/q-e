@@ -56,7 +56,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions, &
-                                       lscf
+                                       lscf, lkpoint_dir
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
@@ -147,11 +147,13 @@ MODULE pw_restart
       !
       ! ... create the k-points subdirectories
       !
-      DO i = 1, nkstot
-         !
-         CALL create_directory( kpoint_dir( dirname, i ) )
-         !
-      END DO
+      IF (lkpoint_dir) THEN
+         DO i = 1, nkstot
+            !
+            CALL create_directory( kpoint_dir( dirname, i ) )
+            !
+         END DO
+      END IF
       !
       IF ( nkstot > 0 ) THEN
          !
@@ -450,7 +452,8 @@ MODULE pw_restart
                !
                ispin = 1
                !
-               filename = wfc_filename( ".", 'eigenval1', ik, EXTENSION='xml' )
+               filename = wfc_filename( ".", 'eigenval1', ik, EXTENSION='xml',&
+                                         DIR=lkpoint_dir )
                !
                CALL iotk_link( iunpun, "DATAFILE.1", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
@@ -465,10 +468,11 @@ MODULE pw_restart
                   !
                END IF
                !
-               filename = wfc_filename( dirname, 'eigenval1', ik, EXTENSION='xml' )
+               filename = wfc_filename( dirname, 'eigenval1', ik, &
+                                   EXTENSION='xml',  DIR=lkpoint_dir )
                !
-               CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, "Hartree", &
-                               OCC = raux(:), IK=ik, ISPIN=ispin, EF=ef /e2 )
+               CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
+                     "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin, EF=ef /e2 )
                !
                !
                !
@@ -476,7 +480,8 @@ MODULE pw_restart
                !
                ik_eff = ik + num_k_points
                !
-               filename = wfc_filename( ".", 'eigenval2', ik, EXTENSION='xml' )
+               filename = wfc_filename( ".", 'eigenval2', ik, &
+                          EXTENSION='xml',  DIR=lkpoint_dir )
                !
                CALL iotk_link( iunpun, "DATAFILE.2", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
@@ -491,8 +496,8 @@ MODULE pw_restart
                   !
                END IF
                !
-               filename = wfc_filename( dirname, &
-                                        'eigenval2', ik, EXTENSION = 'xml' )
+               filename = wfc_filename( dirname, 'eigenval2', ik, &
+                             EXTENSION = 'xml',  DIR=lkpoint_dir )
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
                                "Hartree", OCC = raux(:), IK = ik,          &
@@ -500,7 +505,8 @@ MODULE pw_restart
                !
             ELSE
                !
-               filename = wfc_filename( ".", 'eigenval', ik, EXTENSION='xml' )
+               filename = wfc_filename( ".", 'eigenval', ik, &
+                          EXTENSION='xml',  DIR=lkpoint_dir )
                !
                CALL iotk_link( iunpun, "DATAFILE", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
@@ -515,7 +521,8 @@ MODULE pw_restart
                   !
                END IF
                !
-               filename = wfc_filename( dirname, 'eigenval', ik, EXTENSION='xml' )
+               filename = wfc_filename( dirname, 'eigenval', ik, &
+                          EXTENSION='xml',  DIR=lkpoint_dir )
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
                                "Hartree", OCC = raux(:), IK = ik, EF = ef / e2 )
@@ -558,12 +565,13 @@ MODULE pw_restart
                !
                CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngk_g(ik) )
                !
-               filename = wfc_filename( ".", 'gkvectors', ik )
+               filename = wfc_filename( ".", 'gkvectors', ik, DIR=lkpoint_dir )
                !
                CALL iotk_link( iunpun, "GK-VECTORS", &
                                filename, CREATE = .FALSE., BINARY = .TRUE. )
                !
-               filename = wfc_filename( dirname, 'gkvectors', ik )
+               filename = wfc_filename( dirname, 'gkvectors', ik, &
+                                         DIR=lkpoint_dir )
                !
             END IF
             !
@@ -587,12 +595,14 @@ MODULE pw_restart
                !
                IF ( ionode ) THEN
                   !
-                  filename = wfc_filename( ".", 'evc', ik, ispin )
+                  filename = wfc_filename( ".", 'evc', ik, ispin, &
+                                                       DIR=lkpoint_dir )
                   !
                   CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ), &
                                   filename, CREATE = .FALSE., BINARY = .TRUE. )
                   !
-                  filename = wfc_filename( dirname, 'evc', ik, ispin )
+                  filename = wfc_filename( dirname, 'evc', ik, ispin, & 
+                                           DIR=lkpoint_dir )
                   !
                END IF
                !
@@ -612,12 +622,14 @@ MODULE pw_restart
                !
                IF ( ionode ) THEN
                   !
-                  filename = wfc_filename( ".", 'evc', ik, ispin )
+                  filename = wfc_filename( ".", 'evc', ik, ispin, &
+                                                       DIR=lkpoint_dir )
                   !
                   CALL iotk_link( iunpun, "WFC"//TRIM( iotk_index( ispin ) ), &
                                   filename, CREATE = .FALSE., BINARY = .TRUE. )
                   !
-                  filename = wfc_filename( dirname, 'evc', ik, ispin )
+                  filename = wfc_filename( dirname, 'evc', ik, ispin, &
+                              DIR=lkpoint_dir )
                   !
                END IF
                !
@@ -639,12 +651,14 @@ MODULE pw_restart
                      !
                      IF ( ionode ) THEN
                         !
-                        filename = wfc_filename( ".", 'evc', ik, ipol )
+                        filename = wfc_filename( ".", 'evc', ik, ipol, &
+                                                DIR=lkpoint_dir )
                         !
-                        CALL iotk_link( iunpun, "WFC"//TRIM( iotk_index( ipol ) ), &
-                                        filename, CREATE = .FALSE., BINARY = .TRUE. )
+                        CALL iotk_link(iunpun,"WFC"//TRIM(iotk_index(ipol)), &
+                                 filename, CREATE = .FALSE., BINARY = .TRUE. )
                         !
-                        filename = wfc_filename( dirname, 'evc', ik, ipol )
+                        filename = wfc_filename( dirname, 'evc', ik, ipol, &
+                               DIR=lkpoint_dir)
                         !
                      END IF
                      !
@@ -664,17 +678,18 @@ MODULE pw_restart
                   !
                   IF ( ionode ) THEN
                      !
-                     filename = wfc_filename( ".", 'evc', ik )
+                     filename = wfc_filename( ".", 'evc', ik, DIR=lkpoint_dir )
                      !
                      CALL iotk_link( iunpun, "WFC", filename, &
                                      CREATE = .FALSE., BINARY = .TRUE. )
                      !
-                     filename = wfc_filename( dirname, 'evc', ik )
+                     filename = wfc_filename( dirname, 'evc', ik, &
+                                                        DIR=lkpoint_dir )
                      !
                   END IF
                   !
                   CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
-                                  evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
+                                  evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),  &
                                   ngk(ik-iks+1), filename, 1.D0 )
                   !
                END IF
@@ -2277,7 +2292,7 @@ MODULE pw_restart
       ! ... This routines reads wavefunctions from the new file format and
       ! ... writes them into the old format
       !
-      USE control_flags,        ONLY : twfcollect
+      USE control_flags,        ONLY : twfcollect, lkpoint_dir
       USE cell_base,            ONLY : tpiba2
       USE lsda_mod,             ONLY : nspin, isk
       USE klist,                ONLY : nkstot, wk, nelec, nks, xk, ngk
@@ -2486,7 +2501,8 @@ MODULE pw_restart
             !
             IF ( ionode ) THEN
                !
-               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin, &
+                                  DIR=lkpoint_dir ) )
                !
             END IF
             !
@@ -2506,7 +2522,8 @@ MODULE pw_restart
             !
             IF ( ionode ) THEN
                !
-               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin ) )
+               filename = TRIM( wfc_filename( dirname, 'evc', ik, ispin, &
+                                DIR=lkpoint_dir ) )
                !
             END IF
             !
@@ -2530,7 +2547,8 @@ MODULE pw_restart
                   !
                   IF ( ionode ) THEN
                      !
-                     filename = TRIM( wfc_filename( dirname, 'evc', ik, ipol ) )
+                     filename = TRIM( wfc_filename( dirname, 'evc', ik, ipol, &
+                                         DIR=lkpoint_dir ) )
                      !
                   END IF
                   !
@@ -2548,7 +2566,8 @@ MODULE pw_restart
                !
                IF ( ionode ) THEN
                   !
-                  filename = TRIM( wfc_filename( dirname, 'evc', ik ) )
+                  filename = TRIM( wfc_filename( dirname, 'evc', ik, &
+                                         DIR=lkpoint_dir ) )
                   !
                END IF
                !

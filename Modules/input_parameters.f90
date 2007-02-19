@@ -285,12 +285,14 @@ MODULE input_parameters
         LOGICAL :: tabps = .FALSE. ! for ab-initio pressure and/or surface
                                    ! calculations
 
+        LOGICAL :: lkpoint_dir = .TRUE. ! opens a directory for each k point
+
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &
           prefix, wfcdir, max_seconds, ekin_conv_thr, etot_conv_thr,      &
           forc_conv_thr, pseudo_dir, disk_io, tefield, dipfield, lberry,  &
           gdir, nppstr, wf_collect, printwfc, lelfield, nberrycyc, refg,  &
-          tefield2, saverho, tabps
+          tefield2, saverho, tabps, lkpoint_dir
 
 !
 !=----------------------------------------------------------------------------=!

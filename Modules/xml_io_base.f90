@@ -110,7 +110,7 @@ MODULE xml_io_base
     END FUNCTION kpoint_dir
     !
     !------------------------------------------------------------------------
-    FUNCTION wfc_filename( basedir, name, ik, ipol, tag, extension )
+    FUNCTION wfc_filename( basedir, name, ik, ipol, tag, extension, dir )
       !------------------------------------------------------------------------
       !
       CHARACTER(LEN=256)                 :: wfc_filename
@@ -120,13 +120,16 @@ MODULE xml_io_base
       INTEGER,      OPTIONAL, INTENT(IN) :: ipol
       CHARACTER(*), OPTIONAL, INTENT(IN) :: tag
       CHARACTER(*), OPTIONAL, INTENT(IN) :: extension
+      LOGICAL,      OPTIONAL, INTENT(IN) :: dir
       !    
       CHARACTER(LEN=256) :: filename, tag_, ext_
+      LOGICAL :: dir_true
       !
       !
       filename = ''
       tag_     = ''
       ext_     = '.dat'
+      dir_true = .true.
       !
       IF ( PRESENT( tag ) )         tag_ = '_'//TRIM(tag)
       IF ( PRESENT( extension ) )   ext_ = '.'//TRIM(extension)
@@ -136,9 +139,15 @@ MODULE xml_io_base
          WRITE( filename, FMT = '( I1 )' ) ipol
          !
       END IF
+      IF ( PRESENT( dir )) dir_true=dir
       !
-      filename = TRIM( kpoint_dir( basedir, ik ) ) // '/' // &
+      IF (dir_true) THEN
+         filename = TRIM( kpoint_dir( basedir, ik ) ) // '/' // &
                  & TRIM( name ) // TRIM( filename ) // TRIM( tag_ ) // TRIM( ext_)
+      ELSE
+         filename = TRIM( kpoint_dir( basedir, ik ) ) // '_' // &
+                 & TRIM( name ) // TRIM( filename ) // TRIM( tag_ ) // TRIM( ext_)
+      ENDIF
       !
       wfc_filename = TRIM( filename )
       !

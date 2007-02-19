@@ -103,6 +103,7 @@ MODULE read_namelists_module
        printwfc = -1
        lelfield = .FALSE.
        nberrycyc  = 1
+       lkpoint_dir = .TRUE.
        !
        saverho = .TRUE.
        !
@@ -646,6 +647,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lberry,        ionode_id )
        CALL mp_bcast( gdir,          ionode_id )
        CALL mp_bcast( nppstr,        ionode_id )
+       CALL mp_bcast( lkpoint_dir,   ionode_id )
        CALL mp_bcast( wf_collect,    ionode_id )
        CALL mp_bcast( printwfc,      ionode_id )
        CALL mp_bcast( lelfield,      ionode_id )

@@ -135,6 +135,7 @@ SUBROUTINE iosys()
                             iprint_           => iprint, &
                             nosym_            => nosym, &
                             modenum_          => modenum, &
+                            lkpoint_dir_      => lkpoint_dir, &
                             reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb,  &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
@@ -182,7 +183,7 @@ SUBROUTINE iosys()
                                wfcdir, prefix, etot_conv_thr, forc_conv_thr, &
                                pseudo_dir, disk_io, tefield, dipfield, lberry, &
                                gdir, nppstr, wf_collect,lelfield, efield, &
-                               nberrycyc
+                               nberrycyc, lkpoint_dir
   !
   ! ... SYSTEM namelist
   !
@@ -1097,6 +1098,7 @@ SUBROUTINE iosys()
   tqr_        = tqr
   !
   title_      = title
+  lkpoint_dir_=lkpoint_dir
   dt_         = dt
   tefield_    = tefield
   dipfield_   = dipfield
