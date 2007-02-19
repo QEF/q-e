@@ -24,16 +24,12 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
-  USE control_flags,        ONLY : ethr, lbands, isolve, reduce_io
+  USE control_flags,        ONLY : ethr, isolve, reduce_io
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE bp,                   ONLY : lelfield
-#ifdef __PARA
-  USE mp_global,            ONLY : npool, kunit
-#endif
-  USE check_stop,           ONLY : check_stop_now
   !
   IMPLICIT NONE
   !
@@ -135,23 +131,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      ! ... save restart information
      !
      CALL save_in_cbands( iter, ik, dr2 )
-     !
-     ! IF ( lbands) THEN
-#ifdef __PARA
-        ! ... beware: with pools, if the number of k-points on different 
-        ! ... pools differs, make sure that all processors are still in
-        ! ... the loop on k-points before checking for stop condition
-        !
-        ! ... FIXME: stopping here will make trouble in phonon
-        !
-        !!!nkdum  = kunit * ( nkstot / kunit / npool )
-        !!!IF (ik .le. nkdum) THEN
-        !!!   IF (check_stop_now())  call stop_run(.FALSE.)
-        !!!ENDIF
-#else
-        !!!IF ( check_stop_now() )  call stop_run(.FALSE.)
-#endif
-     !ENDIF
      !
   END DO k_loop
   !
@@ -591,12 +570,11 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
-  USE control_flags,        ONLY : ethr, lbands, isolve
+  USE control_flags,        ONLY : ethr, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE check_stop,           ONLY : check_stop_now
   !
   IMPLICIT NONE
   !
@@ -699,10 +677,6 @@ SUBROUTINE c_bands_nscf( ik_ )
      ! ... save restart information
      !
      CALL save_in_cbands( iter, ik, dr2 )
-     !
-     ! ... FIXME: this call is a source of trouble with phonons
-     !
-     !!! IF ( check_stop_now() )  call stop_run(.FALSE.)
      !
   END DO k_loop
   !

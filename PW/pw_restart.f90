@@ -147,12 +147,20 @@ MODULE pw_restart
       !
       ! ... create the k-points subdirectories
       !
+      IF ( nspin == 2 ) THEN
+         num_k_points = nkstot / 2
+      ELSE
+         num_k_points = nkstot
+      END IF
+      !
       IF (lkpoint_dir) THEN
-         DO i = 1, nkstot
+         !
+         DO i = 1, num_k_points
             !
             CALL create_directory( kpoint_dir( dirname, i ) )
             !
          END DO
+         !
       END IF
       !
       IF ( nkstot > 0 ) THEN
@@ -357,10 +365,6 @@ MODULE pw_restart
                          TETRA = tetra, TFIXED_OCC = tfixed_occ, LSDA = lsda, &
                          NELUP = nbnd, NELDW = nbnd, F_INP = f_inp )
       END IF
-      !
-      num_k_points = nkstot
-      !
-      IF ( nspin == 2 ) num_k_points = nkstot / 2
       !
       IF ( ionode ) THEN
          !
@@ -584,6 +588,8 @@ MODULE pw_restart
             ! ... wavefunctions
             !
             IF ( nspin == 2 ) THEN
+               !
+               ! ... beware: with pools, this is correct only on ionode
                !
                ispin = isk(ik)
                !
@@ -2497,7 +2503,10 @@ MODULE pw_restart
          IF ( nspin == 2 ) THEN
             !
             ispin = 1 
-            isk(ik) = 1
+            !
+            ! ... no need to read isk here: they are read from band structure
+            ! ... and correctly distributed across pools in read_file
+            !!! isk(ik) = 1
             !
             IF ( ionode ) THEN
                !
@@ -2518,7 +2527,9 @@ MODULE pw_restart
             !
             ispin = 2
             ik_eff = ik + num_k_points
-            isk(ik_eff) = 2
+            !
+            ! ... no need to read isk here (see above why)
+            !isk(ik_eff) = 2
             !
             IF ( ionode ) THEN
                !
@@ -2539,7 +2550,8 @@ MODULE pw_restart
             !
          ELSE
             !
-            isk(ik) = 1
+            ! ... no need to read isk here (see above why)
+            !isk(ik) = 1
             !
             IF ( noncolin ) THEN
                !
