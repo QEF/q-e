@@ -723,11 +723,18 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
+		        if test "$ifort_version" != "" ; then
+		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
+# ifort 9 and following - according to Axel
+			      LIBS=""
+			      LDFLAGS="-i-static -openmp $LDFLAGS"
+                           fi
+                        fi
 			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
-		done
+		
 		;;
 
 	amd64:* )
@@ -748,6 +755,12 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
+		        if test "$ifort_version" != "" ; then
+		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
+# ifort 9 and following - according to Axel
+			      LIBS=""
+			      LDFLAGS="-i-static -openmp $LDFLAGS"
+                           fi
 			AC_SEARCH_LIBS(dgemm, mkl_em64t, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
@@ -775,6 +788,12 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
+		        if test "$ifort_version" != "" ; then
+		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
+# ifort 9 and following - according to Axel
+			      LIBS=""
+			      LDFLAGS="-i-static -openmp $LDFLAGS"
+                           fi
 			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"

@@ -5759,6 +5759,13 @@ fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
+		        if test "$ifort_version" != "" ; then
+		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
+# ifort 9 and following - according to Axel
+			      LIBS=""
+			      LDFLAGS="-i-static -openmp $LDFLAGS"
+                           fi
+                        fi
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -5854,7 +5861,7 @@ fi
 
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
-		done
+
 		;;
 
 	amd64:* )
@@ -5875,6 +5882,12 @@ fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
+		        if test "$ifort_version" != "" ; then
+		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
+# ifort 9 and following - according to Axel
+			      LIBS=""
+			      LDFLAGS="-i-static -openmp $LDFLAGS"
+                           fi
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -5993,6 +6006,12 @@ fi
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags $try_loption"
 			LIBS="-lguide -lpthread"
+		        if test "$ifort_version" != "" ; then
+		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
+# ifort 9 and following - according to Axel
+			      LIBS=""
+			      LDFLAGS="-i-static -openmp $LDFLAGS"
+                           fi
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then

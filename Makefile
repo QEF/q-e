@@ -11,7 +11,6 @@ default :
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
 	@echo '  vdw          vdW calculation'
-	@echo '  vib          vibrational analysis of isolated systems'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
@@ -61,11 +60,6 @@ d3 : bindir mods libs pw ph
 vdw : bindir mods libs pw ph pp
 	if test -d VdW ; then \
 	( cd VdW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
-	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
-
-vib : bindir mods libs cp pw
-	if test -d VIB ; then \
-	( cd VIB ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
 tools : bindir mods libs pw

@@ -36,8 +36,6 @@ CVS/INSTALLATION/PORTING
 - add support for more Nec's
 - remove obsolete stuff from install/
 - put misc scripts into a Utils/ subdirectory
-- some machines do not allow to open more than 32000 directories:
-  this sets a limit to the number of k-points (AdC)
 
 COMMON
 
@@ -95,13 +93,9 @@ COMMON
 
 PW
 
-- nks vs nkstot: cleanup?
-
 - inversion symmetry should allow real hamiltonian and wavefunctions (Dario)
 
 - Add option to prevent writing the final file (Dario)
-- Add option to avoid reading/writing wfc all the time,
-  keep everything in memory (add printout of memory usage)
 
 - nscf calculations are slow. There must be a way to
   make a better usage of the available information
@@ -159,6 +153,10 @@ POSTPROCESSING
   Fix fqha.f90
 
 PH, D3, Gamma
+
+- C(R) might be calculated at the end of a dispersion run
+
+- any possibility to merge the various solve_* ?
 
 - use charge mixing instead of potential mixing
 
