@@ -20,10 +20,11 @@ subroutine init_paw_1
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants ,  ONLY : fpi
   USE us,          ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
-  USE paw ,        ONLY : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, &
-                          paw_iltonh, paw_tab, aephi, paw_betar, psphi, &
-                          paw_indv, paw_nhtom, paw_nhtol, paw_nbeta, &
-                          paw_tab_d2y
+!  USE paw ,        ONLY : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, &
+!                          paw_iltonh, paw_tab, aephi, paw_betar, psphi, &
+!                          paw_indv, paw_nhtom, paw_nhtol, paw_nbeta, &
+!                          paw_tab_d2y
+  USE paw ,        ONLY : paw_recon, paw_nkb, paw_lmaxkb
   USE splinelib
   USE uspp,        ONLY : ap, aainit
   USE atom ,       ONLY : r, rab, msh
@@ -34,8 +35,8 @@ subroutine init_paw_1
   !     here a few local variables
   !
 
-  integer :: nt, ih, jh, nb, l, m, ir, iq, startq, &
-       lastq, na, j, n1, n2, ndm, nrs, nrc
+  integer :: nt, ih, jh, nb, l, m, ir, iq, startq
+  INTEGER :: lastq, na, j, n1, n2, ndm, nrs, nrc, lmaxkb
   ! various counters
   real(DP), allocatable :: aux (:), aux1 (:), besr (:)
   ! various work space
@@ -44,7 +45,7 @@ subroutine init_paw_1
   ! the prefactor of the beta functions
   ! the modulus of g for each shell
   ! q-point grid for interpolation
-  real(DP), allocatable :: ylmk0 (:), s(:,:), sinv(:,:)
+  real(DP), allocatable :: s(:,:), sinv(:,:)
   ! the spherical harmonics
   real(DP) ::  vqint
   ! interpolated value
@@ -53,7 +54,6 @@ subroutine init_paw_1
   
   integer :: n_overlap_warnings
   
-  integer :: paw_nbeta_max
   real(DP), allocatable :: xdata(:)
   real(DP) :: d1
   
@@ -61,35 +61,37 @@ subroutine init_paw_1
   !
   !    Initialization of the variables
   !
-  ndm = MAXVAL (msh(1:ntyp))
-  paw_nhm = 0
-  paw_nh = 0
+  ndm = MAXVAL ( msh(1:ntyp) )
+  allocate ( aux(ndm) )
+  allocate ( aux1(ndm) )
+  allocate ( besr(ndm) )
+  
   paw_lmaxkb = 0
   do nt = 1, ntyp
-     do nb = 1, paw_nbeta (nt)
-        paw_nh (nt) = paw_nh (nt) + 2 * aephi(nt,nb)%label%l + 1
-        paw_lmaxkb = max (paw_lmaxkb,  aephi(nt,nb)%label%l)
-     enddo
-     if (paw_nh (nt) .gt.paw_nhm) paw_nhm = paw_nh (nt)
-  enddo
-
-  allocate (aux ( ndm))    
-  allocate (aux1( ndm))    
-  allocate (besr( ndm))    
-  allocate (ylmk0( (paw_lmaxkb+1) ** 2 ))    
-  allocate (paw_nhtol(paw_nhm, ntyp))
-  allocate (paw_nhtom(paw_nhm, ntyp))
-  allocate (paw_indv(paw_nhm, ntyp))
-  allocate (paw_tab(nqx, nbrx, ntyp))
-  allocate (paw_nl(0:paw_lmaxkb, ntyp))
-  allocate (paw_iltonh(0:paw_lmaxkb,paw_nhm, ntyp))
-
+     lmaxkb = 0
+     paw_recon(nt)%paw_nh = 0
+     do nb = 1, paw_recon(nt)%paw_nbeta
+        l = paw_recon(nt)%aephi(nb)%label%l
+        paw_recon(nt)%paw_nh = paw_recon(nt)%paw_nh + 2 * l + 1
+        lmaxkb = max ( lmaxkb, l )
+     end do
+     paw_lmaxkb = max ( paw_lmaxkb, lmaxkb )
+     
+     allocate ( paw_recon(nt)%paw_nhtol(paw_recon(nt)%paw_nh) )
+     allocate ( paw_recon(nt)%paw_nhtom(paw_recon(nt)%paw_nh) )
+     allocate ( paw_recon(nt)%paw_indv(paw_recon(nt)%paw_nh) )
+     allocate ( paw_recon(nt)%paw_tab(nqx,nbrx) )
+     allocate ( paw_recon(nt)%paw_nl(0:lmaxkb) )
+     allocate ( paw_recon(nt)%paw_iltonh(0:lmaxkb,paw_recon(nt)%paw_nh) )
+  END DO
+  
   ! calculate the number of beta functions of the solid
   !
   paw_nkb = 0
   do na = 1, nat
-     paw_nkb = paw_nkb + paw_nh (ityp(na))
-  enddo
+     nt = ityp(na)
+     paw_nkb = paw_nkb + paw_recon(nt)%paw_nh
+  end do
   
   n_overlap_warnings = 0
   
@@ -98,68 +100,76 @@ subroutine init_paw_1
   !   For each pseudopotential we initialize the indices nhtol, nhtom,
   !   indv, 
   !
-  paw_nl=0
-  paw_iltonh=0
   do nt = 1, ntyp
+     paw_recon(nt)%paw_nl = 0
+     paw_recon(nt)%paw_iltonh = 0
      ih = 1
-     do nb = 1, paw_nbeta (nt)
-        l = aephi(nt,nb)%label%l
-        paw_nl(l,nt) = paw_nl(l,nt) + 1
-        paw_iltonh(l,paw_nl(l,nt) ,nt)= nb
+     do nb = 1, paw_recon(nt)%paw_nbeta
+        l = paw_recon(nt)%aephi(nb)%label%l
+        paw_recon(nt)%paw_nl(l) = paw_recon(nt)%paw_nl(l) + 1
+        paw_recon(nt)%paw_iltonh(l,paw_recon(nt)%paw_nl(l)) = nb
         do m = 1, 2 * l + 1
-           paw_nhtol (ih, nt) = l
-           paw_nhtom (ih, nt) = m
-           paw_indv (ih, nt) = nb
+           paw_recon(nt)%paw_nhtol(ih) = l
+           paw_recon(nt)%paw_nhtom(ih) = m
+           paw_recon(nt)%paw_indv(ih) = nb
            ih = ih + 1
-        enddo
-     enddo
+        end do
+     end do
      
+     !
      ! Rescale the wavefunctions so that int_0^rc f|psi|^2=1
      ! 
      
-     pow=1.d0
-     do j = 1, paw_nbeta (nt)
-        rc=psphi(nt,j)%label%rc
-        rs=1.d0/3.d0*rc
-        nrc =  Count(r(1:msh(nt),nt).le.rc)
-        nrs =  Count(r(1:msh(nt),nt).le.rs)
-        psphi(nt,j)%label%nrc = nrc
-        aephi(nt,j)%label%nrc = nrc
-        call step_f(aux,psphi(nt,j)%psi**2,r(:,nt),nrs,nrc,pow,msh(nt))
-        call simpson (msh (nt), aux, rab (1, nt), norm )
+     pow = 1.0_dp
+     do j = 1, paw_recon(nt)%paw_nbeta
+        rc = paw_recon(nt)%psphi(j)%label%rc
+        rs = 1.0_dp / 3.0_dp * rc
+write(0,*) "ZZZ: ", rc, rs
+        nrc = Count ( r(1:msh(nt),nt) <= rc )
+        nrs = Count ( r(1:msh(nt),nt) <= rs )
+        IF ( nrc < 1 .OR. nrc > msh(nt) ) &
+             CALL errore ( "init_paw_1", "impossible value for nrc", 1 )
+        IF ( nrs < 1 .OR. nrs > msh(nt) ) &
+             CALL errore ( "init_paw_1", "impossible value for nrs", 1 )
+        paw_recon(nt)%psphi(j)%label%nrc = nrc
+        paw_recon(nt)%aephi(j)%label%nrc = nrc
+        call step_f(aux,paw_recon(nt)%psphi(j)%psi**2,r(:,nt),nrs,nrc,pow,msh(nt))
+        call simpson ( msh(nt), aux, rab(1,nt), norm )
         
-        psphi(nt,j)%psi = psphi(nt,j)%psi/ sqrt(norm)
-        aephi(nt,j)%psi = aephi(nt,j)%psi / sqrt(norm)
+        paw_recon(nt)%psphi(j)%psi = paw_recon(nt)%psphi(j)%psi / sqrt(norm)
+        paw_recon(nt)%aephi(j)%psi = paw_recon(nt)%aephi(j)%psi / sqrt(norm)
         
-     enddo
+     end do
      
      !
      !   calculate the overlap matrix
      !
      
-     aux=0.d0
-     do l=0,paw_lmaxkb
-        if (paw_nl(l,nt)>0) then
-           allocate (s(paw_nl(l,nt),paw_nl(l,nt)))
-           allocate (sinv(paw_nl(l,nt),paw_nl(l,nt)))
-           do ih=1,paw_nl(l,nt)
-              n1=paw_iltonh(l,ih,nt)
-              do jh=1,paw_nl(l,nt)
-                 n2=paw_iltonh(l,jh,nt)
-                 call step_f(aux,psphi(nt,n1)%psi(1:msh(nt)) * &
-                      psphi(nt,n2)%psi(1:msh(nt)),r(:,nt),nrs,nrc,pow,msh(nt))
-                 call simpson (msh (nt), aux, rab (1, nt), s(ih,jh))
+     aux = 0.0_dp
+     do l = 0, paw_lmaxkb
+        if ( paw_recon(nt)%paw_nl(l) > 0 ) then
+           allocate ( s(paw_recon(nt)%paw_nl(l),paw_recon(nt)%paw_nl(l)) )
+           allocate ( sinv(paw_recon(nt)%paw_nl(l),paw_recon(nt)%paw_nl(l)) )
+           do ih = 1, paw_recon(nt)%paw_nl(l)
+              n1 = paw_recon(nt)%paw_iltonh(l,ih)
+              do jh = 1, paw_recon(nt)%paw_nl(l)
+                 n2 = paw_recon(nt)%paw_iltonh(l,jh)
+                 call step_f ( aux, paw_recon(nt)%psphi(n1)%psi(1:msh(nt)) &
+                      * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), r(:,nt), &
+                      nrs, nrc, pow, msh(nt) )
+                 call simpson ( msh(nt), aux, rab(1,nt), s(ih,jh) )
                  !<apsi>
+                 
                  IF ( ih > jh ) THEN
                     IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-5_dp ) THEN
                        WRITE ( stdout, '( /, 2A, I3, A, 3I2, F12.8 )' ) &
                             "projectors linearly dependent:", &
                             " ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, &
                             s(ih,jh)
-                            
+                       
                        CALL errore ( "init_paw_1", &
                             "two projectors are linearly dependent", +1 )
-                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0d0 ) < 1.d-1 ) THEN
+                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.00_dp ) < 1.e-1_dp ) THEN
                        IF ( n_overlap_warnings == 0 ) THEN
                           WRITE ( stdout, '(A)' ) ""
                        END IF
@@ -172,14 +182,14 @@ subroutine init_paw_1
                     END IF
                  END IF
                  !</apsi>
-              enddo
-           enddo
+              end do
+           end do
            
 #if defined ( __DEBUG_MINE_APSI )
            !<apsi>
            IF ( iverbatim > 5 ) THEN
-              do ih=1,paw_nl(l,nt)
-                 do jh = ih, paw_nl(l,nt)
+              do ih = 1, paw_recon(nt)%paw_nl(l)
+                 do jh = ih, paw_recon(nt)%paw_nl(l)
                     write( stdout, '( A, I3, 3I2, F12.7 )' ) &
                          "PROJ: ", nt, l, ih, jh, s(ih,jh)
                  end do
@@ -188,26 +198,28 @@ subroutine init_paw_1
            !</apsi>
 #endif
            
-           call invmat (paw_nl(l,nt), s, sinv, norm)
+           call invmat ( paw_recon(nt)%paw_nl(l), s, sinv, norm)
            
-           do ih=1,paw_nl(l,nt)
-              n1=paw_iltonh(l,ih,nt)
-              do jh=1,paw_nl(l,nt)
-                 n2=paw_iltonh(l,jh,nt)
+           do ih = 1, paw_recon(nt)%paw_nl(l)
+              n1 = paw_recon(nt)%paw_iltonh(l,ih)
+              do jh = 1, paw_recon(nt)%paw_nl(l)
+                 n2 = paw_recon(nt)%paw_iltonh(l,jh)
                  
-                 paw_betar(1:msh(nt),n1,nt)=paw_betar(1:msh(nt),n1,nt)+ &
-                      sinv(ih,jh) * psphi(nt,n2)%psi(1:msh(nt))
-              enddo
-              call step_f(aux, &
-                   paw_betar(1:msh(nt),n1,nt),r(:,nt),nrs,nrc,pow,msh(nt))
-              paw_betar(1:ndm,n1,nt)=aux(1:ndm)
-           enddo
+                 paw_recon(nt)%paw_betar(1:msh(nt),n1) &
+                      = paw_recon(nt)%paw_betar(1:msh(nt),n1) &
+                      + sinv(ih,jh) * paw_recon(nt)%psphi(n2)%psi(1:msh(nt))
+              end do
+              call step_f ( aux, &
+                   paw_recon(nt)%paw_betar(1:msh(nt),n1),r(:,nt), &
+                   nrs,nrc,pow,msh(nt))
+              paw_recon(nt)%paw_betar(1:ndm,n1) = aux(1:ndm)
+           end do
            deallocate (sinv)
            deallocate (s)
            
-        endif
-     enddo
-  enddo
+        end if
+     end do
+  end do
   IF ( n_overlap_warnings > 0 ) THEN
      WRITE ( stdout, '(A)' ) ""
   END IF
@@ -233,61 +245,63 @@ subroutine init_paw_1
   !
   !  compute Clebsch-Gordan coefficients
   !
-
-  call aainit (lmaxx+1)
-
+  
+  call aainit ( lmaxx+1 )
+  
   !
   !     fill the interpolation table tab
   !
-  pref = fpi / sqrt (omega)
-  call divide (nqx, startq, lastq)
-  paw_tab (:,:,:) = 0.d0
+  pref = fpi / sqrt ( omega )
+  call divide ( nqx, startq, lastq )
   do nt = 1, ntyp
-     do nb = 1, paw_nbeta (nt)
-        l = aephi(nt, nb)%label%l
+     paw_recon(nt)%paw_tab (:,:) = 0.0_dp
+     
+     do nb = 1, paw_recon(nt)%paw_nbeta
+        l = paw_recon(nt)%aephi(nb)%label%l
         do iq = startq, lastq
-           qi = (iq - 1) * dq
-           call sph_bes (msh(nt), r (1, nt), qi, l, besr)
+           qi = ( iq - 1 ) * dq
+           call sph_bes ( msh(nt), r(1,nt), qi, l, besr )
            do ir = 1, msh(nt)
-              aux (ir) = paw_betar (ir, nb, nt) * besr (ir) * r (ir, nt)
-           enddo
-           call simpson (msh (nt), aux, rab (1, nt), vqint)
-           paw_tab (iq, nb, nt) = vqint * pref
-        enddo
-     enddo
-  enddo
-
-#ifdef __PARA
-  call reduce (nqx * nbrx * ntyp, paw_tab)
-#endif
-
-  ! initialize spline interpolation
-  if (spline_ps) then
-    paw_nbeta_max = maxval ( paw_nbeta (:) )
-    allocate ( paw_tab_d2y ( nqx, paw_nbeta_max, ntyp ) )
-    paw_tab_d2y = 0.0d0
-    allocate(xdata(nqxq))
-    do iq = 1, nqxq
-      xdata(iq) = (iq - 1) * dq
-    enddo
-    do nt = 1, ntyp
-      do nb = 1, paw_nbeta (nt)
-        l = aephi(nt, nb)%label%l
-        d1 = (paw_tab(2,nb,nt) - paw_tab(1,nb,nt)) / dq
-        call spline(xdata, paw_tab(:,nb,nt), 0.d0, d1, paw_tab_d2y(:,nb,nt))
-      enddo
-    enddo
-    deallocate(xdata)
-  endif
+              aux(ir) = paw_recon(nt)%paw_betar(ir,nb) * besr(ir) * r(ir,nt)
+           end do
+           call simpson ( msh(nt), aux, rab(1,nt), vqint )
+           paw_recon(nt)%paw_tab(iq,nb) = vqint * pref
+        end do
+     end do
   
-  deallocate (ylmk0)
+#ifdef __PARA
+     call reduce ( nqx * nbrx, paw_recon(nt)%paw_tab )
+#endif
+     
+  end do
+  
+  ! initialize spline interpolation
+  if ( spline_ps ) then
+     allocate(xdata(nqxq))
+     do iq = 1, nqxq
+        xdata(iq) = (iq - 1) * dq
+     end do
+     do nt = 1, ntyp
+        allocate ( paw_recon(nt)%paw_tab_d2y(nqx,paw_recon(nt)%paw_nbeta) )
+        paw_recon(nt)%paw_tab_d2y = 0.0_dp
+        do nb = 1, paw_recon(nt)%paw_nbeta
+           l = paw_recon(nt)%aephi(nb)%label%l
+           d1 = ( paw_recon(nt)%paw_tab(2,nb) - paw_recon(nt)%paw_tab(1,nb) ) &
+                / dq
+           call spline ( xdata, paw_recon(nt)%paw_tab(:,nb), 0.0_dp, d1, &
+                paw_recon(nt)%paw_tab_d2y(:,nb) )
+        end do
+     end do
+     deallocate ( xdata )
+  end if
+  
   deallocate (besr)
   deallocate (aux1)
   deallocate (aux)
-
+  
   call stop_clock ('init_paw_1')
   return
-
+  
 end subroutine init_paw_1
 
 subroutine step_f(f2,f,r,nrs,nrc,pow,mesh)
@@ -320,8 +334,8 @@ subroutine step_f(f2,f,r,nrs,nrc,pow,mesh)
                   2.d0*((r(i)-rsp)/(rcp-rsp))**3)**pow
           Else
              f2(i)=0.d0
-          Endif
-       Endif
+          End If
+       End If
 
     End Do
 

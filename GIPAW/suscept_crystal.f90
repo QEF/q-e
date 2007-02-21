@@ -33,9 +33,11 @@ SUBROUTINE suscept_crystal
                                          nbnd_occ, a0_to_cm
   
   !<apsi>
-  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, aephi, &
-                                         psphi, paw_nh, paw_nhtol, &
-                                         paw_nhtom, paw_indv, paw_nbeta
+!  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, aephi, &
+!                                         psphi, paw_nh, paw_nhtol, &
+!                                         paw_nhtom, paw_indv, paw_nbeta
+  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, &
+                                          paw_recon
   USE ions_base, ONLY : nat
   !</apsi>
 
@@ -416,17 +418,17 @@ CONTAINS
           do na = 1, nat
              
              if ( ityp(na) == nt ) then
-                do ih = 1, paw_nh (nt)
+                do ih = 1, paw_recon(nt)%paw_nh
                    ikb = ijkb0 + ih
-                   nbs1=paw_indv(ih,nt)
-                   l1=paw_nhtol(ih,nt)
-                   m1=paw_nhtom(ih,nt)
-                   lm1=m1+l1**2
-                   do jh = 1, paw_nh (nt) 
+                   nbs1 = paw_recon(nt)%paw_indv(ih)
+                   l1 = paw_recon(nt)%paw_nhtol(ih)
+                   m1 = paw_recon(nt)%paw_nhtom(ih)
+                   lm1 = m1 + l1**2
+                   do jh = 1, paw_recon(nt)%paw_nh
                       jkb = ijkb0 + jh
-                      nbs2=paw_indv(jh,nt)
-                      l2=paw_nhtol(jh,nt)
-                      m2=paw_nhtom(jh,nt)
+                      nbs2 = paw_recon(nt)%paw_indv(jh)
+                      l2 = paw_recon(nt)%paw_nhtol(jh)
+                      m2 = paw_recon(nt)%paw_nhtom(jh)
                       lm2=m2+l2**2 
                       
                       bec_product = paw_becp(jkb,ibnd) &
@@ -463,7 +465,7 @@ CONTAINS
                       enddo
                    enddo
                 enddo
-                ijkb0 = ijkb0 + paw_nh (nt)
+                ijkb0 = ijkb0 + paw_recon(nt)%paw_nh
              endif
              
           enddo
@@ -555,18 +557,18 @@ CONTAINS
              do na = 1, nat
                 
                 if (ityp (na) .eq.nt) then
-                   do ih = 1, paw_nh (nt)
+                   do ih = 1, paw_recon(nt)%paw_nh
                       ikb = ijkb0 + ih
-                      nbs1=paw_indv(ih,nt)
-                      l1=paw_nhtol(ih,nt)
-                      m1=paw_nhtom(ih,nt)
-                      lm1=m1+l1**2
+                      nbs1 = paw_recon(nt)%paw_indv(ih)
+                      l1 = paw_recon(nt)%paw_nhtol(ih)
+                      m1 = paw_recon(nt)%paw_nhtom(ih)
+                      lm1 = m1 + l1**2
                       
-                      do jh = 1, paw_nh (nt) 
+                      do jh = 1, paw_recon(nt)%paw_nh
                          jkb = ijkb0 + jh
-                         nbs2=paw_indv(jh,nt)
-                         l2=paw_nhtol(jh,nt)
-                         m2=paw_nhtom(jh,nt)
+                         nbs2 = paw_recon(nt)%paw_indv(jh)
+                         l2 = paw_recon(nt)%paw_nhtol(jh)
+                         m2 = paw_recon(nt)%paw_nhtom(jh)
                          lm2=m2+l2**2
                          
                          if ( l1 /= l2 ) cycle
@@ -589,7 +591,7 @@ CONTAINS
                          
                       enddo
                    enddo
-                   ijkb0 = ijkb0 + paw_nh (nt)
+                   ijkb0 = ijkb0 + paw_recon(nt)%paw_nh
                 endif
              enddo
           enddo

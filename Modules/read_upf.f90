@@ -50,15 +50,22 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   ierr = 1  
   ios = 0
   upf%has_so=.true.
+  upf%has_paw = .false.
+  upf%has_gipaw = .false.
   addinfo_loop: do while (ios == 0)  
      read (iunps, *, iostat = ios, err = 200) dummy  
-     if (matches ("<PP_ADDINFO>", dummy) ) then  
+     if (matches ("<PP_ADDINFO>", dummy) ) then
         ierr = 0
-        exit addinfo_loop
+     endif
+     if ( matches ( "<PP_PAW>", dummy ) ) then
+        upf%has_paw = .true.
+     endif
+     if ( matches ( "<PP_GIPAW_RECONSTRUCTION_DATA>", dummy ) ) then
+        upf%has_gipaw = .true.
      endif
   enddo addinfo_loop
   if (ierr == 1) upf%has_so=.false. 
-
+  
   !------->Search for Header
   !     This version doesn't use the new routine scan_begin
   !     because this search must set extra flags for
@@ -117,8 +124,14 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
      call read_pseudo_addinfo (upf, iunps)  
      call scan_end (iunps, "ADDINFO")  
   endif
+  !-------->PAW data
+  if ( upf%has_paw ) then
+     call scan_begin ( iunps, "PAW", .true. )
+     call read_pseudo_paw ( upf, iunps )
+     call scan_end ( iunps, "PAW" )
+  endif
 
-200 return  
+200 return
 
 end subroutine read_pseudo_upf
 !---------------------------------------------------------------------
@@ -539,6 +552,204 @@ subroutine read_pseudo_addinfo (upf, iunps)
   return
 100 call errore ('read_pseudo_addinfo','Reading pseudo file', 1)
 end subroutine read_pseudo_addinfo
+
+
+!<apsi>
+!---------------------------------------------------------------------
+SUBROUTINE read_pseudo_paw ( upf, iunps )
+  !---------------------------------------------------------------------
+  !
+  USE kinds
+  USE pseudo_types, ONLY : pseudo_upf
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iunps
+  TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
+  !
+  INTEGER :: nb, ir
+  
+  CALL scan_begin ( iunps, "PAW_FORMAT_VERSION", .false. )
+  READ ( iunps, *, err=100, end=100 ) upf%paw_data_format
+  CALL scan_end ( iunps, "PAW_FORMAT_VERSION" )
+  
+  IF ( upf%paw_data_format /= 0.1_dp ) THEN
+     CALL errore ( 'read_pseudo_paw', 'UPF/PAW in unknown format', 1 )
+  END IF
+  
+  IF ( upf%has_gipaw ) then
+     CALL scan_begin ( iunps, "GIPAW_RECONSTRUCTION_DATA", .false. )
+     CALL read_pseudo_gipaw ( upf, iunps )
+     CALL scan_end ( iunps, "GIPAW_RECONSTRUCTION_DATA" )
+  END IF
+  
+  RETURN
+  
+100 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file', 1 )
+END SUBROUTINE read_pseudo_paw
+
+!---------------------------------------------------------------------
+SUBROUTINE read_pseudo_gipaw ( upf, iunps )
+  !---------------------------------------------------------------------
+  !
+  USE kinds
+  USE pseudo_types, ONLY : pseudo_upf
+  !
+  implicit none
+  !
+  INTEGER :: iunps
+  TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
+  !
+  INTEGER :: nb, ir
+  
+  CALL scan_begin ( iunps, "GIPAW_FORMAT_VERSION", .false. )
+  READ ( iunps, *, err=100, end=100 ) upf%gipaw_data_format
+  CALL scan_end ( iunps, "GIPAW_FORMAT_VERSION" )
+  
+  IF ( upf%gipaw_data_format == 0.1_dp ) THEN
+     CALL read_pseudo_gipaw_core_orbitals ( upf, iunps )
+     CALL read_pseudo_gipaw_local ( upf, iunps )
+     CALL read_pseudo_gipaw_orbitals ( upf, iunps )
+  ELSE
+     CALL errore ( 'read_pseudo_gipaw', 'UPF/GIPAW in unknown format', 1 )
+  END IF
+  
+  RETURN
+  
+100 CALL errore ( 'read_pseudo_gipaw', 'Reading pseudo file', 1 )
+END SUBROUTINE read_pseudo_gipaw
+
+!---------------------------------------------------------------------
+SUBROUTINE read_pseudo_gipaw_core_orbitals ( upf, iunps )
+  !---------------------------------------------------------------------
+  !
+  USE kinds
+  USE pseudo_types, ONLY : pseudo_upf
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iunps
+  TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
+  !
+  CHARACTER ( LEN = 75 ) :: dummy1, dummy2
+  INTEGER :: nb, ir
+  
+  CALL scan_begin ( iunps, "GIPAW_CORE_ORBITALS", .false. )
+  READ ( iunps, *, err=100, end=100 ) upf%gipaw_ncore_orbitals
+  
+  ALLOCATE ( upf%gipaw_core_orbital_n(upf%gipaw_ncore_orbitals) )
+  ALLOCATE ( upf%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
+  ALLOCATE ( upf%gipaw_core_orbital_el(upf%gipaw_ncore_orbitals) )
+  ALLOCATE ( upf%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
+  upf%gipaw_core_orbital = 0.0_dp
+  
+  DO nb = 1, upf%gipaw_ncore_orbitals
+     CALL scan_begin ( iunps, "GIPAW_CORE_ORBITAL", .false. )
+     READ (iunps, *, err=100, end=100) &
+          upf%gipaw_core_orbital_n(nb), upf%gipaw_core_orbital_l(nb), &
+          dummy1, dummy2, upf%gipaw_core_orbital_el(nb)
+     READ ( iunps, *, err=100, end=100 ) &
+          ( upf%gipaw_core_orbital(ir,nb), ir = 1, upf%mesh )
+     CALL scan_end ( iunps, "GIPAW_CORE_ORBITAL" )
+  END DO
+  
+  CALL scan_end ( iunps, "GIPAW_CORE_ORBITALS" )
+  
+  RETURN
+  
+100 CALL errore ( 'read_pseudo_gipaw_core_orbitals', 'Reading pseudo file', 1 )
+END SUBROUTINE read_pseudo_gipaw_core_orbitals
+
+!---------------------------------------------------------------------
+SUBROUTINE read_pseudo_gipaw_local ( upf, iunps )
+  !---------------------------------------------------------------------
+  !
+  USE kinds
+  USE pseudo_types, ONLY : pseudo_upf
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iunps
+  TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
+  !
+  CHARACTER ( LEN = 75 ) :: dummy
+  INTEGER :: nb, ir
+  
+  CALL scan_begin ( iunps, "GIPAW_LOCAL_DATA", .false. )
+  
+  ALLOCATE ( upf%gipaw_vlocal_ae(upf%mesh) )
+  ALLOCATE ( upf%gipaw_vlocal_ps(upf%mesh) )
+  
+  CALL scan_begin ( iunps, "GIPAW_VLOCAL_AE", .false. )
+  
+  READ ( iunps, *, err=100, end=100 ) &
+       ( upf%gipaw_vlocal_ae(ir), ir = 1, upf%mesh )
+  
+  CALL scan_end ( iunps, "GIPAW_VLOCAL_AE" )
+  
+  CALL scan_begin ( iunps, "GIPAW_VLOCAL_PS", .false. )
+  
+  READ ( iunps, *, err=100, end=100 ) &
+       ( upf%gipaw_vlocal_ps(ir), ir = 1, upf%mesh )
+  
+  CALL scan_end ( iunps, "GIPAW_VLOCAL_PS" )
+  
+  CALL scan_end ( iunps, "GIPAW_LOCAL_DATA" )
+  
+  RETURN
+  
+100 CALL errore ( 'read_pseudo_gipaw_local', 'Reading pseudo file', 1 )
+END SUBROUTINE read_pseudo_gipaw_local
+
+!---------------------------------------------------------------------
+SUBROUTINE read_pseudo_gipaw_orbitals ( upf, iunps )
+  !---------------------------------------------------------------------
+  !
+  USE kinds
+  USE pseudo_types, ONLY : pseudo_upf
+  !
+  IMPLICIT NONE
+  !
+  INTEGER :: iunps
+  TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
+  !
+  CHARACTER ( LEN = 75 ) :: dummy
+  INTEGER :: nb, ir
+  
+  CALL scan_begin ( iunps, "GIPAW_ORBITALS", .false. )
+  READ ( iunps, *, err=100, end=100 ) upf%gipaw_wfs_nchannels
+  
+  ALLOCATE ( upf%gipaw_wfs_el(upf%gipaw_wfs_nchannels) )
+  ALLOCATE ( upf%gipaw_wfs_ll(upf%gipaw_wfs_nchannels) )
+  ALLOCATE ( upf%gipaw_wfs_rcut(upf%gipaw_wfs_nchannels) )
+  ALLOCATE ( upf%gipaw_wfs_rcutus(upf%gipaw_wfs_nchannels) )
+  ALLOCATE ( upf%gipaw_wfs_ae(upf%mesh,upf%gipaw_wfs_nchannels) )
+  ALLOCATE ( upf%gipaw_wfs_ps(upf%mesh,upf%gipaw_wfs_nchannels) )
+  
+  inquire ( unit = iunps, name = dummy )
+  DO nb = 1, upf%gipaw_wfs_nchannels
+     CALL scan_begin ( iunps, "GIPAW_AE_ORBITAL", .false. )
+     READ (iunps, *, err=100, end=100) &
+          upf%gipaw_wfs_el(nb), upf%gipaw_wfs_ll(nb)
+     READ ( iunps, *, err=100, end=100 ) &
+          ( upf%gipaw_wfs_ae(ir,nb), ir = 1, upf%mesh )
+     CALL scan_end ( iunps, "GIPAW_AE_ORBITAL" )
+     
+     CALL scan_begin ( iunps, "GIPAW_PS_ORBITAL", .false. )
+     READ (iunps, *, err=100, end=100) &
+          upf%gipaw_wfs_rcut(nb), upf%gipaw_wfs_rcutus(nb)
+     READ ( iunps, *, err=100, end=100 ) &
+          ( upf%gipaw_wfs_ps(ir,nb), ir = 1, upf%mesh )
+     CALL scan_end ( iunps, "GIPAW_PS_ORBITAL" )
+  END DO
+  
+  CALL scan_end ( iunps, "GIPAW_ORBITALS" )
+  
+  RETURN
+  
+100 CALL errore ( 'read_pseudo_gipaw_orbitals', 'Reading pseudo file', 1 )
+END SUBROUTINE read_pseudo_gipaw_orbitals
+!</apsi>
 
 !=----------------------------------------------------------------------------=!
       END MODULE read_upf_module

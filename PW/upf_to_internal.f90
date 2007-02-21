@@ -37,9 +37,14 @@ subroutine set_pseudo_upf (is, upf)
        rinner, nbeta, kkbeta, lll, jjj, psd, tvanp
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
-  USE ions_base, ONLY: zv
+  USE ions_base, ONLY: zv, ntyp => nsp
   USE spin_orb, ONLY: lspinorb
   USE pseudo_types
+  !
+!  USE paw, ONLY : paw_nbeta, aephi, psphi, gipaw_ae_vloc, gipaw_ps_vloc, &
+!                  vloc_present, gipaw_data_in_upf_file, &
+!                  gipaw_ncore_orbital, gipaw_core_orbital
+  USE paw, ONLY : paw_recon
   !
   implicit none
   !
@@ -121,7 +126,56 @@ subroutine set_pseudo_upf (is, upf)
   vloc_at(1:upf%mesh,is) = upf%vloc(1:upf%mesh)
 
   zv(is) = zp(is)  !!! maybe not needed: it is done in setup
-
+  
+  !<apsi>
+  IF ( upf%has_gipaw ) THEN
+     IF ( .NOT. ALLOCATED ( paw_recon ) ) THEN
+        ALLOCATE ( paw_recon(ntyp) )
+     END IF
+     
+     paw_recon(is)%paw_nbeta = upf%gipaw_wfs_nchannels
+     paw_recon(is)%vloc_present = .TRUE.
+     paw_recon(is)%gipaw_data_in_upf_file = .TRUE.
+     
+     paw_recon(is)%gipaw_ncore_orbital = upf%gipaw_ncore_orbitals
+     ALLOCATE ( paw_recon(is)%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
+     paw_recon(is)%gipaw_core_orbital(:upf%mesh,:upf%gipaw_ncore_orbitals) &
+          = upf%gipaw_core_orbital(:upf%mesh,:upf%gipaw_ncore_orbitals)
+     
+     ALLOCATE ( paw_recon(is)%gipaw_ae_vloc(upf%mesh) )
+     ALLOCATE ( paw_recon(is)%gipaw_ps_vloc(upf%mesh) )
+     paw_recon(is)%gipaw_ae_vloc(:upf%mesh) = upf%gipaw_vlocal_ae(:upf%mesh)
+     paw_recon(is)%gipaw_ps_vloc(:upf%mesh) = upf%gipaw_vlocal_ps(:upf%mesh)
+     
+     ALLOCATE ( paw_recon(is)%aephi(upf%gipaw_wfs_nchannels) )
+     ALLOCATE ( paw_recon(is)%psphi(upf%gipaw_wfs_nchannels) )
+     
+     DO nb = 1, upf%gipaw_wfs_nchannels
+        ALLOCATE ( paw_recon(is)%aephi(nb)%psi(mesh(is)) )
+        paw_recon(is)%aephi(nb)%label%nt = is
+        paw_recon(is)%aephi(nb)%label%n = nb
+        paw_recon(is)%aephi(nb)%label%l = upf%gipaw_wfs_ll(nb)
+        !paw_recon(is)%aephi(nb)%label%m = 
+        paw_recon(is)%aephi(nb)%label%nrc = upf%mesh
+        paw_recon(is)%aephi(nb)%kkpsi = upf%mesh
+        paw_recon(is)%aephi(nb)%label%rc = -1.0_dp
+        paw_recon(is)%aephi(nb)%psi(:upf%mesh) = upf%gipaw_wfs_ae(:upf%mesh,nb)
+        
+        ALLOCATE ( paw_recon(is)%psphi(nb)%psi(mesh(is)) )
+        paw_recon(is)%psphi(nb)%label%nt = is
+        paw_recon(is)%psphi(nb)%label%n = nb
+        paw_recon(is)%psphi(nb)%label%l = upf%gipaw_wfs_ll(nb)
+        !paw_recon(is)%psphi(nb)%label%m = 
+        paw_recon(is)%psphi(nb)%label%nrc = upf%mesh
+        paw_recon(is)%psphi(nb)%kkpsi = upf%mesh
+        paw_recon(is)%psphi(nb)%label%rc = upf%gipaw_wfs_rcutus(nb)
+        paw_recon(is)%psphi(nb)%psi(:upf%mesh) = upf%gipaw_wfs_ps(:upf%mesh,nb)
+     END DO
+  ELSE
+     paw_recon(is)%gipaw_data_in_upf_file = .FALSE.
+  END IF
+  !</apsi>
+  
 end subroutine set_pseudo_upf
 
 !=----------------------------------------------------------------------------=!

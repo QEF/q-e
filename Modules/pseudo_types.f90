@@ -75,6 +75,25 @@
           REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
           REAL(DP), POINTER :: chi(:,:) !  chi(mesh,nwfc)
           REAL(DP), POINTER :: rho_at(:) !  rho_at(mesh)
+          
+          LOGICAL :: has_paw              ! Whether PAW data is included
+          REAL(DP) :: paw_data_format     ! The version of the format
+          LOGICAL :: has_gipaw            ! Whether GIPAW data is included
+          REAL(DP) :: gipaw_data_format   ! The version of the format
+          INTEGER :: gipaw_ncore_orbitals
+          REAL(DP), POINTER :: gipaw_core_orbital_n(:)
+          REAL(DP), POINTER :: gipaw_core_orbital_l(:)
+          CHARACTER(LEN=2), POINTER :: gipaw_core_orbital_el(:)
+          REAL(DP), POINTER :: gipaw_core_orbital(:,:)
+          REAL(DP), POINTER :: gipaw_vlocal_ae(:)
+          REAL(DP), POINTER :: gipaw_vlocal_ps(:)
+          INTEGER :: gipaw_wfs_nchannels
+          CHARACTER(LEN=2), POINTER :: gipaw_wfs_el(:)
+          INTEGER, POINTER :: gipaw_wfs_ll(:)
+          REAL(DP), POINTER :: gipaw_wfs_ae(:,:)
+          REAL(DP), POINTER :: gipaw_wfs_rcut(:)
+          REAL(DP), POINTER :: gipaw_wfs_rcutus(:)
+          REAL(DP), POINTER :: gipaw_wfs_ps(:,:)
         END TYPE
 
 
@@ -133,6 +152,18 @@
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
+          NULLIFY ( upf%gipaw_core_orbital_n )
+          NULLIFY ( upf%gipaw_core_orbital_l )
+          NULLIFY ( upf%gipaw_core_orbital_el )
+          NULLIFY ( upf%gipaw_core_orbital )
+          NULLIFY ( upf%gipaw_vlocal_ae )
+          NULLIFY ( upf%gipaw_vlocal_ps )
+          NULLIFY ( upf%gipaw_wfs_el )
+          NULLIFY ( upf%gipaw_wfs_ll )
+          NULLIFY ( upf%gipaw_wfs_ae )
+          NULLIFY ( upf%gipaw_wfs_rcut )
+          NULLIFY ( upf%gipaw_wfs_rcutus )
+          NULLIFY ( upf%gipaw_wfs_ps )
           RETURN
         END SUBROUTINE nullify_pseudo_upf
 
@@ -162,6 +193,30 @@
           IF( ASSOCIATED( upf%qfcoef ) ) DEALLOCATE( upf%qfcoef )
           IF( ASSOCIATED( upf%chi ) ) DEALLOCATE( upf%chi )
           IF( ASSOCIATED( upf%rho_at ) ) DEALLOCATE( upf%rho_at )
+          IF ( ASSOCIATED ( upf%gipaw_core_orbital_n ) ) &
+               DEALLOCATE ( upf%gipaw_core_orbital_n )
+          IF ( ASSOCIATED ( upf%gipaw_core_orbital_l ) ) &
+               DEALLOCATE ( upf%gipaw_core_orbital_l )
+          IF ( ASSOCIATED ( upf%gipaw_core_orbital_el ) ) &
+               DEALLOCATE ( upf%gipaw_core_orbital_el )
+          IF ( ASSOCIATED ( upf%gipaw_core_orbital ) ) &
+               DEALLOCATE ( upf%gipaw_core_orbital )
+          IF ( ASSOCIATED ( upf%gipaw_vlocal_ae ) ) &
+               DEALLOCATE ( upf%gipaw_vlocal_ae )
+          IF ( ASSOCIATED ( upf%gipaw_vlocal_ps ) ) &
+               DEALLOCATE ( upf%gipaw_vlocal_ps )
+          IF ( ASSOCIATED ( upf%gipaw_wfs_el ) ) &
+               DEALLOCATE ( upf%gipaw_wfs_el )
+          IF ( ASSOCIATED ( upf%gipaw_wfs_ll ) ) &
+               DEALLOCATE ( upf%gipaw_wfs_ll )
+          IF ( ASSOCIATED ( upf%gipaw_wfs_ae ) ) &
+               DEALLOCATE ( upf%gipaw_wfs_ae )
+          IF ( ASSOCIATED ( upf%gipaw_wfs_rcut ) ) &
+               DEALLOCATE ( upf%gipaw_wfs_rcut )
+          IF ( ASSOCIATED ( upf%gipaw_wfs_rcutus ) ) &
+               DEALLOCATE ( upf%gipaw_wfs_rcutus )
+          IF ( ASSOCIATED ( upf%gipaw_wfs_ps ) ) &
+               DEALLOCATE ( upf%gipaw_wfs_ps )
           RETURN
         END SUBROUTINE deallocate_pseudo_upf
 

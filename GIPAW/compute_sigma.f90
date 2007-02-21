@@ -70,10 +70,9 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
   
   do na = 1, nat
     tr_sigma = (sigma_bare(1,1,na)+sigma_bare(2,2,na)+sigma_bare(3,3,na))/3.0_dp
-    write(stdout, &
-     '(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),'')  sigma: '', F14.4)') &
-     na, atm(ityp(na)), tau(:,na), tr_sigma*1d6
-    write(stdout, tens_fmt) sigma_bare(:,:,na) * 1d6
+    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
+          '')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+    write(stdout, tens_fmt) sigma_bare(:,:,na) * 1e6_dp
   enddo
   
 end subroutine compute_sigma_bare
@@ -118,10 +117,9 @@ SUBROUTINE compute_sigma_diamagnetic( sigma_diamagnetic )
   do na = 1, nat
     tr_sigma = (sigma_diamagnetic(1,1,na)+sigma_diamagnetic(2,2,na) &
          +sigma_diamagnetic(3,3,na))/3.0_dp
-    write(stdout, &
-      '(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),'')  sigma: '',F14.4)') &
-       na, atm(ityp(na)), tau(:,na), tr_sigma*1d6
-    write(stdout, tens_fmt) sigma_diamagnetic(:,:,na) * 1d6
+    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
+          '')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+    write(stdout, tens_fmt) sigma_diamagnetic(:,:,na) * 1e6_dp
   enddo
 
 end subroutine compute_sigma_diamagnetic
@@ -165,10 +163,9 @@ SUBROUTINE compute_sigma_paramagnetic( sigma_paramagnetic )
   do na = 1, nat
     tr_sigma = (sigma_paramagnetic(1,1,na)+sigma_paramagnetic(2,2,na) &
          +sigma_paramagnetic(3,3,na))/3.0_dp
-    write(stdout, &
-      '(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),'')  sigma: '',F14.4)') &
-       na, atm(ityp(na)), tau(:,na), tr_sigma*1d6
-    write(stdout, tens_fmt) sigma_paramagnetic(:,:,na) * 1d6
+    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
+          '')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+    write(stdout, tens_fmt) sigma_paramagnetic(:,:,na) * 1e6_dp
   enddo
 
 end subroutine compute_sigma_paramagnetic

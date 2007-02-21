@@ -35,9 +35,10 @@ SUBROUTINE g_tensor_crystal
                                          iverbosity
   
   !<apsi>
-  USE paw,                         ONLY: paw_vkb, paw_becp, paw_nkb, aephi, &
-                                         psphi, paw_nh, paw_nhtol, &
-                                         paw_nhtom, paw_indv, paw_nbeta
+!  USE paw,                         ONLY: paw_vkb, paw_becp, paw_nkb, aephi, &
+!                                         psphi, paw_nh, paw_nhtol, &
+!                                         paw_nhtom, paw_indv, paw_nbeta
+  USE paw,                         ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE ions_base, ONLY : nat
   !</apsi>
   
@@ -621,25 +622,25 @@ CONTAINS
        ijkb0 = 0
        do nt = 1, ntyp
           do na = 1, nat
-             if (ityp (na) .eq.nt) then
-                do ih = 1, paw_nh (nt)
+             if (ityp (na) == nt) then
+                do ih = 1, paw_recon(nt)%paw_nh
                    ikb = ijkb0 + ih
-                   nbs1=paw_indv(ih,nt)
-                   l1=paw_nhtol(ih,nt)
-                   m1=paw_nhtom(ih,nt)
+                   nbs1=paw_recon(nt)%paw_indv(ih)
+                   l1=paw_recon(nt)%paw_nhtol(ih)
+                   m1=paw_recon(nt)%paw_nhtom(ih)
                    lm1=m1+l1**2
-                   do jh = 1, paw_nh (nt) 
+                   do jh = 1, paw_recon(nt)%paw_nh
                       jkb = ijkb0 + jh
-                      nbs2=paw_indv(jh,nt)
-                      l2=paw_nhtol(jh,nt)
-                      m2=paw_nhtom(jh,nt)
+                      nbs2=paw_recon(nt)%paw_indv(jh)
+                      l2=paw_recon(nt)%paw_nhtol(jh)
+                      m2=paw_recon(nt)%paw_nhtom(jh)
                       lm2=m2+l2**2
                       
                       IF ( l1 /= l2 ) CYCLE
                       IF ( m1 /= m2 ) CYCLE
                       
                       bec_product = paw_becp(jkb,ibnd) &
-                           * CONJG(paw_becp(ikb,ibnd))
+                           * CONJG( paw_becp(ikb,ibnd) )
                       
                       rmc_corr = rmc_corr &
                               + bec_product &
@@ -648,7 +649,7 @@ CONTAINS
                       
                    enddo
                 enddo
-                ijkb0 = ijkb0 + paw_nh (nt)
+                ijkb0 = ijkb0 + paw_recon(nt)%paw_nh
              endif
           enddo
        enddo
@@ -685,22 +686,22 @@ CONTAINS
        ijkb0 = 0
        do nt = 1, ntyp
           do na = 1, nat
-             if (ityp (na) .eq.nt) then
-                do ih = 1, paw_nh (nt)
+             if (ityp (na) == nt) then
+                do ih = 1, paw_recon(nt)%paw_nh
                    ikb = ijkb0 + ih
-                   nbs1=paw_indv(ih,nt)
-                   l1=paw_nhtol(ih,nt)
-                   m1=paw_nhtom(ih,nt)
-                   lm1=m1+l1**2
-                   do jh = 1, paw_nh (nt) 
+                   nbs1 = paw_recon(nt)%paw_indv(ih)
+                   l1 = paw_recon(nt)%paw_nhtol(ih)
+                   m1 = paw_recon(nt)%paw_nhtom(ih)
+                   lm1 = m1+l1**2
+                   do jh = 1, paw_recon(nt)%paw_nh
                       jkb = ijkb0 + jh
-                      nbs2=paw_indv(jh,nt)
-                      l2=paw_nhtol(jh,nt)
-                      m2=paw_nhtom(jh,nt)
-                      lm2=m2+l2**2
+                      nbs2 = paw_recon(nt)%paw_indv(jh)
+                      l2 = paw_recon(nt)%paw_nhtol(jh)
+                      m2 = paw_recon(nt)%paw_nhtom(jh)
+                      lm2 = m2 + l2**2
                       
                       bec_product = paw_becp(jkb,ibnd) &
-                           * CONJG(paw_becp(ikb,ibnd))
+                           * CONJG( paw_becp(ikb,ibnd) )
                       
                       !<apsi> s/non-trace-zero component
                       ! 2/3 to separate the non-trace vanishing component
@@ -732,7 +733,7 @@ CONTAINS
                       enddo
                    enddo
                 enddo
-                ijkb0 = ijkb0 + paw_nh (nt)
+                ijkb0 = ijkb0 + paw_recon(nt)%paw_nh
              endif
           enddo
        enddo
@@ -811,8 +812,8 @@ CONTAINS
        
        if ( ipol == i ) cycle !TESTTESTTEST
        
-       call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp2, paw_vkb, &
-            g_vel_evc(1,1,ipol))
+       call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp2, paw_vkb, &
+            g_vel_evc(1,1,ipol) )
        
        para_corr = 0.0_dp
        
@@ -821,20 +822,20 @@ CONTAINS
           do nt = 1, ntyp
              do na = 1, nat
                 
-                if (ityp (na) .eq.nt) then
-                   do ih = 1, paw_nh (nt)
+                if (ityp (na) == nt) then
+                   do ih = 1, paw_recon(nt)%paw_nh
                       ikb = ijkb0 + ih
-                      nbs1=paw_indv(ih,nt)
-                      l1=paw_nhtol(ih,nt)
-                      m1=paw_nhtom(ih,nt)
-                      lm1=m1+l1**2
+                      nbs1 = paw_recon(nt)%paw_indv(ih)
+                      l1 = paw_recon(nt)%paw_nhtol(ih)
+                      m1 = paw_recon(nt)%paw_nhtom(ih)
+                      lm1 = m1 + l1**2
                       
-                      do jh = 1, paw_nh (nt) 
+                      do jh = 1, paw_recon(nt)%paw_nh
                          jkb = ijkb0 + jh
-                         nbs2=paw_indv(jh,nt)
-                         l2=paw_nhtol(jh,nt)
-                         m2=paw_nhtom(jh,nt)
-                         lm2=m2+l2**2
+                         nbs2 = paw_recon(nt)%paw_indv(jh)
+                         l2 = paw_recon(nt)%paw_nhtol(jh)
+                         m2 = paw_recon(nt)%paw_nhtom(jh)
+                         lm2 = m2 + l2**2
                          
                          if ( l1 /= l2 ) cycle
                          
@@ -855,7 +856,7 @@ CONTAINS
                               * lz ( lm1, lm2 ) * wg(ibnd,ik) * alpha ** 2
                       enddo
                    enddo
-                   ijkb0 = ijkb0 + paw_nh (nt)
+                   ijkb0 = ijkb0 + paw_recon(nt)%paw_nh
                 endif
              enddo
           enddo

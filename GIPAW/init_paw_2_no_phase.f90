@@ -21,8 +21,9 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
   USE us,         ONLY : dq
-  USE paw,        ONLY : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
-                         paw_nhtom, paw_indv, paw_nbeta, paw_tab, paw_tab_d2y
+!  USE paw,        ONLY : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
+!                         paw_nhtom, paw_indv, paw_nbeta, paw_tab, paw_tab_d2y
+  USE paw,        ONLY : paw_nkb, paw_recon, paw_lmaxkb
   USE us,         ONLY : nqxq, dq, spline_ps
   USE splinelib
   !
@@ -52,7 +53,6 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
   !
   if (paw_lmaxkb.lt.0) return
   call start_clock ('init_paw_2')
-  allocate (vkb1( npw_,paw_nhm))    
   allocate (  sk( npw_))    
   allocate (  qg( npw_))    
   allocate (  vq( npw_))    
@@ -84,12 +84,14 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
 
   jkb = 0
   do nt = 1, ntyp
+     allocate ( vkb1(npw_,paw_recon(nt)%paw_nh) )
+     
      ! calculate beta in G-space using an interpolation table
-     do nb = 1, paw_nbeta (nt)
+     do nb = 1, paw_recon(nt)%paw_nbeta
         do ig = 1, npw_
            if (spline_ps) then
-             vq(ig) = splint(xdata, paw_tab(:,nb,nt), &
-                             paw_tab_d2y(:,nb,nt), qg(ig))
+             vq(ig) = splint ( xdata, paw_recon(nt)%paw_tab(:,nb), &
+                  paw_recon(nt)%paw_tab_d2y(:,nb), qg(ig) )
            else
              px = qg (ig) / dq - int (qg (ig) / dq)
              ux = 1.d0 - px
@@ -99,19 +101,19 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
              i1 = i0 + 1
              i2 = i0 + 2
              i3 = i0 + 3
-             vq (ig) = paw_tab (i0, nb, nt) * ux * vx * wx / 6.d0 + &
-                       paw_tab (i1, nb, nt) * px * vx * wx / 2.d0 - &
-                       paw_tab (i2, nb, nt) * px * ux * wx / 2.d0 + &
-                       paw_tab (i3, nb, nt) * px * ux * vx / 6.d0
+             vq (ig) = paw_recon(nt)%paw_tab(i0,nb) * ux * vx * wx / 6.d0 + &
+                       paw_recon(nt)%paw_tab(i1,nb) * px * vx * wx / 2.d0 - &
+                       paw_recon(nt)%paw_tab(i2,nb) * px * ux * wx / 2.d0 + &
+                       paw_recon(nt)%paw_tab(i3,nb) * px * ux * vx / 6.d0
            endif
         enddo
         ! add spherical harmonic part
-        do ih = 1, paw_nh (nt)
-           if (nb.eq.paw_indv (ih, nt) ) then
-              l = paw_nhtol (ih, nt)
-              lm = l * l + paw_nhtom (ih, nt)
+        do ih = 1, paw_recon(nt)%paw_nh
+           if ( nb == paw_recon(nt)%paw_indv(ih) ) then
+              l = paw_recon(nt)%paw_nhtol(ih)
+              lm = l * l + paw_recon(nt)%paw_nhtom(ih)
               do ig = 1, npw_
-                 vkb1 (ig,ih) = ylm (ig, lm) * vq (ig)
+                 vkb1(ig,ih) = ylm(ig,lm) * vq(ig)
               enddo 
            endif
         enddo
@@ -133,9 +135,9 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
                         eigts2 (ig2(igk_(ig)), na) * &
                         eigts3 (ig3(igk_(ig)), na)
            enddo
-           do ih = 1, paw_nh(nt)
+           do ih = 1, paw_recon(nt)%paw_nh
               jkb = jkb + 1
-              pref = (0.d0, -1.d0) ** paw_nhtol (ih, nt) ! * phase
+              pref = (0.d0, -1.d0) ** paw_recon(nt)%paw_nhtol(ih) ! * phase
               do ig = 1, npw_
                  vkb_(ig, jkb) = vkb1 (ig,ih) * sk (ig) * pref
               enddo
@@ -144,13 +146,15 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
         endif
  
      enddo
+     
+     deallocate (vkb1)
   enddo
+  
   deallocate (gk)
   deallocate (ylm)
   deallocate (vq)
   deallocate (qg)
   deallocate (sk)
-  deallocate (vkb1)
 
   call stop_clock ('init_paw_2')
   return

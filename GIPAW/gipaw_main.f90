@@ -34,11 +34,12 @@ PROGRAM gipaw_main
   USE mp,              ONLY : mp_bcast
   USE cell_base,       ONLY : tpiba
   USE global_version,  ONLY : version_number
-  use gipaw_module
-  !<apsi>
-  use paw,             ONLY : read_recon
-  !use gipaw_module,    ONLY : read_recon_paratec
-  !</apsi>
+  USE gipaw_module,    ONLY : job, &
+                              q_gipaw, &
+                              gipaw_readin, gipaw_allocate, gipaw_setup, &
+                              gipaw_openfil, print_clock_gipaw, &
+                              gipaw_summary
+  
   !------------------------------------------------------------------------
   IMPLICIT NONE
   CHARACTER (LEN=9)   :: code = 'GIPAW'
@@ -49,24 +50,14 @@ PROGRAM gipaw_main
   CALL start_clock( 'GIPAW' )
   
   ! ... and begin with the initialization part
-  CALL startup( nd_nmbr, code, version_number )
+  CALL startup ( nd_nmbr, code, version_number )
   CALL gipaw_readin()
-
+  
   ! read ground state wavefunctions
   call read_file
   call openfil
-
-  if (gamma_only) call errore('gipaw_main', 'gamma_only == .true.', 1)
   
-  !<apsi>
-  ! Read in qe format
-  IF ( read_recon_in_paratec_fmt ) THEN
-     ! Read in paratec format
-     CALL read_recon_paratec ( file_reconstruction )
-  ELSE
-     CALL read_recon ( file_reconstruction )
-  END IF
-  !</apsi>
+  if ( gamma_only ) call errore ( 'gipaw_main', 'gamma_only == .true.', 1 )
   
   CALL gipaw_allocate()
   CALL gipaw_setup()

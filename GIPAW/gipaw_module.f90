@@ -13,7 +13,8 @@ MODULE gipaw_module
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : a0_to_cm => bohr_radius_cm
-  USE parameters, ONLY: npk, ntypx, lmaxx
+  USE parameters, ONLY : npk, ntypx, lmaxx
+  
   IMPLICIT NONE
   SAVE
   
@@ -77,12 +78,6 @@ MODULE gipaw_module
   REAL(dp), ALLOCATABLE :: radial_integral_paramagnetic_so(:,:,:)
   REAL(dp), ALLOCATABLE :: radial_integral_diamagnetic_so(:,:,:)
   REAL(dp), ALLOCATABLE :: radial_integral_rmc(:,:,:)
-
-  LOGICAL, ALLOCATABLE :: vloc_present ( : )
-  REAL(dp), ALLOCATABLE :: gipaw_ae_vloc ( :, : ), gipaw_ps_vloc ( :, : )
-  
-  PUBLIC :: read_recon_paratec
-  
   !<apsi>
   
 CONTAINS
@@ -159,33 +154,32 @@ CONTAINS
     call mp_bcast(filfield, root)
     call mp_bcast(read_recon_in_paratec_fmt, root)
     call mp_bcast(file_reconstruction, root)
+    call mp_bcast(use_nmr_macroscopic_shape, root)
+    call mp_bcast(nmr_macroscopic_shape, root)
     call mp_bcast(spline_ps, root)
 #endif
   END SUBROUTINE gipaw_bcast_input
-
 
 
   !-----------------------------------------------------------------------
   ! Allocate memory for GIPAW
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_allocate
-    USE becmod, ONLY : becp
+    USE becmod,        ONLY : becp
     USE lsda_mod,      ONLY : nspin, lsda
     USE pwcom
+    USE ions_base,     ONLY : ntyp => nsp
+    USE paw,           ONLY : paw_recon
     
-    !<apsi>
-    USE paw, only: paw_vkb, paw_becp, paw_nkb
-    !</apsi>
-
     IMPLICIT NONE
-  
+    
     allocate(evq(npwx,nbnd))
     allocate(becp(nkb,nbnd))
     allocate(j_bare(nrxxs,3,3,nspin), b_ind_r(nrxxs,3,3), b_ind(ngm,3,3))
-
+    allocate ( paw_recon(ntyp) )
+    
   END SUBROUTINE gipaw_allocate
- 
-
+  
 
   !-----------------------------------------------------------------------
   ! Print a short summary of the calculation
@@ -196,8 +190,7 @@ CONTAINS
 
     CALL flush_unit( stdout )
   END SUBROUTINE gipaw_summary
-
-
+  
 
   !-----------------------------------------------------------------------
   ! Open files needed for GIPAW
@@ -208,7 +201,6 @@ CONTAINS
     IMPLICIT NONE
 
   END SUBROUTINE gipaw_openfil
-
 
 
   !-----------------------------------------------------------------------
@@ -271,11 +263,12 @@ CONTAINS
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
     USE constants,     ONLY : degspin, pi
     !<apsi>
-    USE paw,           ONLY : paw_nbeta, aephi, psphi, paw_vkb, &
-                              paw_becp, paw_nkb
+!    USE paw,           ONLY : paw_nbeta, aephi, psphi, paw_vkb, &
+!                              paw_becp, paw_nkb
+    USE paw,           ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
+                              read_recon, read_recon_paratec
     USE atom,          ONLY : r, rab
-!    USE gipaw_module,  ONLY : gipaw_ae_vloc, gipaw_ps_vloc
-
+    
     !</apsi>
     
     IMPLICIT none
@@ -291,10 +284,11 @@ CONTAINS
     integer :: kkpsi_max
     real(dp), allocatable :: work(:), kinetic_aephi(:), kinetic_psphi(:)
     real(dp), allocatable :: aephi_dvloc_dr(:), psphi_dvloc_dr(:)
-    !</apsi>
     
     real(dp) :: mysum1 ( 3, lmaxx ) !TMPTMPTMP
     real(dp) :: mysum2 ( 3, 1:lmaxx ) !TMPTMPTMP
+    logical :: vloc_set
+    !</apsi>
     
     call start_clock ('gipaw_setup')
     
@@ -302,26 +296,49 @@ CONTAINS
     call init_us_1
     
     !<apsi>
+    
+    ! Read in qe format
+    DO nt = 1, ntyp
+       IF ( read_recon_in_paratec_fmt ) THEN
+          
+          ! Read in paratec format
+          CALL read_recon_paratec ( file_reconstruction(nt), nt, &
+               paw_recon(nt), vloc_set )
+          IF ( .NOT. vloc_set .AND. job == "g-tensor" ) THEN
+             CALL errore ( "gipaw_setup", &
+                  "no local potential set in read_recon_paratec", 1 )
+             stop
+          END IF
+          
+       ELSE
+          CALL read_recon ( file_reconstruction(nt), nt, paw_recon(nt) )
+       END IF
+    END DO
+    
     ! initialize paw
-    do nt=1,ntyp
-       do il = 1,paw_nbeta(nt)
-          IF ( psphi(nt,il)%label%rc < -0.99_dp ) THEN
-             rc(nt,psphi(nt,il)%label%l) = 1.6_dp
-             rc(nt,aephi(nt,il)%label%l) = 1.6_dp
-             psphi(nt,il)%label%rc = rc(nt,psphi(nt,il)%label%l)
-             aephi(nt,il)%label%rc = rc(nt,aephi(nt,il)%label%l)
+    do nt = 1, ntyp
+       do il = 1, paw_recon(nt)%paw_nbeta
+          IF ( paw_recon(nt)%psphi(il)%label%rc < -0.99_dp ) THEN
+             rc(nt,paw_recon(nt)%psphi(il)%label%l) = 1.6_dp
+             rc(nt,paw_recon(nt)%aephi(il)%label%l) = 1.6_dp
+             paw_recon(nt)%psphi(il)%label%rc &
+                  = rc(nt,paw_recon(nt)%psphi(il)%label%l)
+             paw_recon(nt)%aephi(il)%label%rc &
+                  = rc(nt,paw_recon(nt)%aephi(il)%label%l)
           ELSE
-             rc(nt,psphi(nt,il)%label%l) = psphi(nt,il)%label%rc
-             rc(nt,aephi(nt,il)%label%l) = aephi(nt,il)%label%rc
+             rc(nt,paw_recon(nt)%psphi(il)%label%l) &
+                  = paw_recon(nt)%psphi(il)%label%rc
+             rc(nt,paw_recon(nt)%aephi(il)%label%l) &
+                  = paw_recon(nt)%aephi(il)%label%rc
           END IF
        enddo
     enddo
     
-    call init_paw_1
+    call init_paw_1()
     
-    allocate (paw_vkb( npwx,  paw_nkb))
-    allocate (paw_becp(paw_nkb, nbnd))
-    allocate (paw_becp2(paw_nkb, nbnd))
+    allocate ( paw_vkb(npwx,paw_nkb) )
+    allocate ( paw_becp(paw_nkb,nbnd) )
+    allocate ( paw_becp2(paw_nkb,nbnd) )
     
     !<apsi>
     allocate ( radial_integral_diamagnetic(paw_nkb,paw_nkb,ntypx) )
@@ -334,18 +351,19 @@ CONTAINS
     radial_integral_diamagnetic_so = 0.0_dp
     radial_integral_paramagnetic_so = 0.0_dp
     radial_integral_rmc = 0.0_dp
+    
     do nt=1, ntyp
        
-       do il1=1, paw_nbeta(nt)
-          l1 = psphi(nt,il1)%label%l
-          kkpsi = aephi(nt,il1)%kkpsi
+       do il1=1, paw_recon(nt)%paw_nbeta
+          l1 = paw_recon(nt)%psphi(il1)%label%l
+          kkpsi = paw_recon(nt)%aephi(il1)%kkpsi
           
-          nrc = psphi(nt,il1)%label%nrc
+          nrc = paw_recon(nt)%psphi(il1)%label%nrc
           
           allocate ( work(kkpsi) )
           
-          do il2 = 1, paw_nbeta(nt)
-             l2 = psphi(nt,il2)%label%l
+          do il2 = 1, paw_recon(nt)%paw_nbeta
+             l2 = paw_recon(nt)%psphi(il2)%label%l
              
              IF ( l1 /= l2 ) CYCLE
              
@@ -353,8 +371,8 @@ CONTAINS
              ! NMR shielding, diamagnetic
              !
              do j = 1, nrc
-                work(j) = (aephi(nt,il1)%psi(j)*aephi(nt,il2)%psi(j)-&
-                     psphi(nt,il1)%psi(j)*psphi(nt,il2)%psi(j))/r(j,nt)
+                work(j) = (paw_recon(nt)%aephi(il1)%psi(j)*paw_recon(nt)%aephi(il2)%psi(j)-&
+                     paw_recon(nt)%psphi(il1)%psi(j)*paw_recon(nt)%psphi(il2)%psi(j))/r(j,nt)
              enddo
              
              CALL simpson( nrc, work, rab(:nrc,nt), &
@@ -368,8 +386,8 @@ CONTAINS
              !
              do j = 1, nrc
                 work(j) = &
-                     ( aephi(nt,il1)%psi(j) * aephi(nt,il2)%psi(j) &
-                     - psphi(nt,il1)%psi(j) * psphi(nt,il2)%psi(j) ) &
+                     ( paw_recon(nt)%aephi(il1)%psi(j) * paw_recon(nt)%aephi(il2)%psi(j) &
+                     - paw_recon(nt)%psphi(il1)%psi(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
                      / r(j,nt) ** 3
              end do
              
@@ -383,20 +401,20 @@ CONTAINS
              
              ! Calculate the radial integral only if the radial potential
              !    is present
-             IF ( .NOT. vloc_present ( nt ) ) CYCLE
+             IF ( .NOT. paw_recon(nt)%vloc_present ) CYCLE
              
              !
              ! g tensor, relativistic mass correction
              !
              ALLOCATE ( kinetic_aephi ( kkpsi ), kinetic_psphi ( kkpsi ) )
              CALL radial_kinetic_energy ( l2, r(:nrc,nt), &
-                  aephi(nt,il2)%psi(:nrc), kinetic_aephi(:nrc) )
+                  paw_recon(nt)%aephi(il2)%psi(:nrc), kinetic_aephi(:nrc) )
              CALL radial_kinetic_energy ( l2, r(:nrc,nt), &
-                  psphi(nt,il2)%psi(:nrc), kinetic_psphi(:nrc) )
+                  paw_recon(nt)%psphi(il2)%psi(:nrc), kinetic_psphi(:nrc) )
              
              do j = 1, nrc
-                work(j) = ( aephi(nt,il1)%psi(j) * kinetic_aephi(j) &
-                     - psphi(nt,il1)%psi(j) * kinetic_psphi(j) )
+                work(j) = ( paw_recon(nt)%aephi(il1)%psi(j) * kinetic_aephi(j) &
+                     - paw_recon(nt)%psphi(il1)%psi(j) * kinetic_psphi(j) )
              end do
              DEALLOCATE ( kinetic_aephi, kinetic_psphi )
              
@@ -410,19 +428,19 @@ CONTAINS
              ALLOCATE ( aephi_dvloc_dr ( nrc ), psphi_dvloc_dr ( nrc ) )
              
              CALL radial_derivative ( r(:nrc,nt), &
-                  gipaw_ae_vloc ( :nrc, nt ), &
-                  aephi_dvloc_dr ( :nrc ) )
+                  paw_recon(nt)%gipaw_ae_vloc(:nrc), &
+                  aephi_dvloc_dr(:nrc) )
              CALL radial_derivative ( r(:nrc,nt), &
-                  gipaw_ps_vloc ( :nrc, nt ), &
+                  paw_recon(nt)%gipaw_ps_vloc(:nrc), &
                   psphi_dvloc_dr ( :nrc ) )
              
              !
              ! g tensor, diamagnetic
              !
              do j = 1, nrc
-                work(j) = ( aephi(nt,il1)%psi(j) * aephi_dvloc_dr(j) &
-                     * aephi(nt,il2)%psi(j) - psphi(nt,il1)%psi(j) &
-                     * psphi_dvloc_dr(j) * psphi(nt,il2)%psi(j) ) &
+                work(j) = ( paw_recon(nt)%aephi(il1)%psi(j) * aephi_dvloc_dr(j) &
+                     * paw_recon(nt)%aephi(il2)%psi(j) - paw_recon(nt)%psphi(il1)%psi(j) &
+                     * psphi_dvloc_dr(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
                      * r(j,nt)
              end do
              
@@ -437,9 +455,9 @@ CONTAINS
              ! g tensor, paramagnetic
              !
              do j = 1, nrc
-                work(j) = ( aephi(nt,il1)%psi(j) * aephi_dvloc_dr(j) &
-                     * aephi(nt,il2)%psi(j) - psphi(nt,il1)%psi(j) &
-                     * psphi_dvloc_dr(j) * psphi(nt,il2)%psi(j) ) &
+                work(j) = ( paw_recon(nt)%aephi(il1)%psi(j) * aephi_dvloc_dr(j) &
+                     * paw_recon(nt)%aephi(il2)%psi(j) - paw_recon(nt)%psphi(il1)%psi(j) &
+                     * psphi_dvloc_dr(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
                      / r(j,nt)
              end do
              if (iverbosity > 10) then
@@ -680,272 +698,6 @@ CONTAINS
     END SUBROUTINE radial_derivative
     
   END SUBROUTINE gipaw_setup
-  
-  !****************************************************************************
-  
-  subroutine read_recon_paratec(filerec)
-    
-    !
-    ! Read all-electron and pseudo atomic wavefunctions 
-    !  needed for PAW reconstruction
-    !
-    
-    use read_upf_module, only: scan_begin, scan_end
-    USE ions_base,          ONLY : ntyp => nsp
-    use atom, only: mesh, msh, r, rab
-    use kinds, only: DP
-    use parameters, only : ntypx
-    USE io_global,  ONLY : stdout
-    use splinelib
-    USE uspp_param,    ONLY : vloc_at
-    USE paw,           ONLY : at_wfc, paw_nbeta, wfc_label, aephi, psphi, &
-                              paw_wfc_init
-    
-    implicit none
-    
-    character (len=256), intent ( in ) :: filerec(ntypx)
-    
-    character (len=256) :: readline
-    logical :: file_exists, new_file_format
-    integer :: iostatus, nlines ( ntypx )
-    integer :: l,j,i,jtyp,kkpsi,nbetam
-    real(dp) :: d1, test1, test2
-    INTEGER :: local_component ( ntyp )
-    LOGICAL :: vloc_set
-    
-    type at_wfc_r
-       type(wfc_label)          :: label
-       integer                  :: kkpsi
-       real(DP)  , pointer :: r(:)
-    end type at_wfc_r
-    
-    real(dp), allocatable :: xdata(:), tab(:), tab_d2y(:)
-    real(dp), allocatable :: gipaw_ae_vloc2 ( :, :, : )
-    real(dp), allocatable :: gipaw_ps_vloc2 ( :, :, : )
-    type(at_wfc_r), allocatable :: aephi2_r ( :, : ), psphi2_r ( :, : )
-    type(at_wfc),pointer :: aephi2(:,:), psphi2(:,:) ! Atom
-    
-    do jtyp = 1, ntyp
-       if ( TRIM ( filerec(jtyp) ) == "" ) then
-          ! No reconstruction asked for this species
-          paw_nbeta ( jtyp ) = 0
-          nlines ( jtyp ) = 0
-          cycle
-       end if
-       
-       inquire ( file = filerec(jtyp), exist = file_exists )
-       if ( .not. file_exists ) then
-          call errore("reconstruction file does not exist",TRIM(filerec(jtyp)),1)
-          stop
-       end if
-       
-       open(14,file=filerec(jtyp))
-       
-       paw_nbeta(jtyp) = 0
-       nlines ( jtyp ) = 0
-       do
-          READ ( UNIT = 14, FMT = '( 256A )', IOSTAT = iostatus ) readline
-          IF ( iostatus /= 0 ) THEN
-             EXIT
-          END IF
-          IF ( INDEX ( readline, "#core wavefunctions" ) /= 0 ) THEN
-             EXIT
-          END IF
-          IF ( INDEX ( readline, "#" ) /= 0 ) THEN
-             nlines ( jtyp ) = 0
-          END IF
-          IF ( INDEX ( readline, "&" ) /= 0 ) THEN
-             paw_nbeta(jtyp) = paw_nbeta(jtyp) + 1
-          END IF
-          IF ( INDEX ( readline, "&" ) == 0 .AND. &
-               INDEX ( readline, "#" ) == 0 ) THEN
-             nlines ( jtyp ) = nlines ( jtyp ) + 1
-          END IF
-       end do
-       close(14)
-    enddo
-    
-    nbetam = maxval(paw_nbeta(:ntyp))
-    allocate( psphi2(ntyp,nbetam) )
-    allocate( aephi2(ntyp,nbetam) )
-    allocate( psphi2_r(ntyp,nbetam) )
-    allocate( aephi2_r(ntyp,nbetam) )
-    
-    allocate ( gipaw_ae_vloc2(MAXVAL(nlines),nbetam,ntyp) )
-    allocate ( gipaw_ps_vloc2(MAXVAL(nlines),nbetam,ntyp) )
-    
-    call paw_wfc_init(psphi2)
-    call paw_wfc_init(aephi2)
-    
-    ALLOCATE ( vloc_present ( ntyp ) )
-    vloc_present ( : ) = .FALSE.
-    
-    recphi_read: do jtyp=1,ntyp
-       if ( TRIM ( filerec(jtyp) ) == "" ) then
-          ! No reconstruction asked for this species
-          write ( stdout, '( A, I3 )' ) &
-               "No recontruction data for species ", jtyp
-          cycle
-       end if
-       
-       open(14,file=filerec(jtyp))
-       rewind(unit=14)
-       
-       recphi_loop: do i=1,paw_nbeta(jtyp)
-          aephi2(jtyp,i)%label%nt=jtyp
-          aephi2(jtyp,i)%label%n=i
-          kkpsi = nlines ( jtyp )
-          aephi2(jtyp,i)%kkpsi=kkpsi
-          allocate(aephi2(jtyp,i)%psi(kkpsi),aephi2_r(jtyp,i)%r(kkpsi))
-          allocate(psphi2(jtyp,i)%psi(kkpsi),psphi2_r(jtyp,i)%r(kkpsi))
-          read(14,*) readline
-          IF ( i == 1 ) new_file_format = .FALSE.
-          read(14, FMT = '( 256A )' ) readline
-          IF ( readline(1:6) == "#local" ) THEN
-             new_file_format = .TRUE.
-             vloc_present ( jtyp ) = .TRUE.
-             READ ( readline(8:8), * ) local_component ( jtyp )
-             read(14, FMT = '( 256A )' ) readline
-          END IF
-          IF ( readline(1:3) /= "#l=" ) THEN
-             WRITE ( UNIT = stdout, FMT = '( 2A, ":" )' ) &
-                  "Wrong control string in file ", TRIM ( filerec(jtyp) )
-             WRITE ( UNIT = stdout, FMT = '( A )' ) TRIM ( readline )
-             CALL errore ( "read_recon_paratec", "wrong control string", 1 )
-             stop
-          END IF
-          read(readline(4:4), FMT = * ) aephi2(jtyp,i)%label%l
-          read(readline(12:), FMT = * ) aephi2(jtyp,i)%label%rc
-          
-          IF ( new_file_format ) THEN
-             DO j = 1, kkpsi
-                read(14,*) aephi2_r(jtyp,i)%r(j), aephi2(jtyp,i)%psi(j), &
-                     psphi2(jtyp,i)%psi(j), &
-                     gipaw_ae_vloc2(j,i,jtyp), gipaw_ps_vloc2(j,i,jtyp)
-             END DO
-          ELSE
-             DO j = 1, kkpsi
-                read(14,*) aephi2_r(jtyp,i)%r(j), aephi2(jtyp,i)%psi(j), &
-                     psphi2(jtyp,i)%psi(j)
-             END DO
-          END IF
-          
-          psphi2(jtyp,i)%label%nt=jtyp
-          psphi2(jtyp,i)%label%n=i
-          psphi2(jtyp,i)%label%l=aephi2(jtyp,i)%label%l
-          psphi2(jtyp,i)%label%rc=aephi2(jtyp,i)%label%rc
-          psphi2(jtyp,i)%kkpsi=kkpsi
-          psphi2_r(jtyp,i)%r(:) = aephi2_r(jtyp,i)%r(:)
-       end do recphi_loop
-       close(14)
-    end do recphi_read
-    
-    allocate( psphi(ntyp,nbetam) )
-    allocate( aephi(ntyp,nbetam) )
-    
-    call paw_wfc_init(psphi)
-    call paw_wfc_init(aephi)
-    
-    IF ( ANY ( vloc_present ( : ) ) ) THEN
-       ALLOCATE ( gipaw_ae_vloc ( MAXVAL ( msh(:ntyp) ), ntyp ) )
-       ALLOCATE ( gipaw_ps_vloc ( MAXVAL ( msh(:ntyp) ), ntyp ) )
-    END IF
-    
-    do jtyp=1, ntyp
-       
-       vloc_set = .FALSE.
-       
-       do i = 1, paw_nbeta (jtyp)
-          
-          ! AE
-          kkpsi = aephi2(jtyp,i)%kkpsi
-          allocate( xdata(kkpsi), tab(kkpsi), tab_d2y(kkpsi) )
-          xdata(:) = aephi2_r(jtyp,i)%r(:)
-          tab(:) = aephi2(jtyp,i)%psi(:)
-          
-          ! initialize spline interpolation
-          d1 = (tab(2) - tab(1)) / (xdata(2) - xdata(1))
-          call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
-          
-          ! use interpolation
-          allocate ( aephi(jtyp,i)%psi(msh(jtyp)) )
-          aephi(jtyp,i)%label%nt = jtyp
-          aephi(jtyp,i)%label%n = i
-          aephi(jtyp,i)%label%l = aephi2(jtyp,i)%label%l
-          aephi(jtyp,i)%label%rc = aephi2(jtyp,i)%label%rc
-          aephi(jtyp,i)%kkpsi = msh(jtyp)
-          !aephi(jtyp,i)%r(1:msh(jtyp)) = r(1:msh(jtyp),jtyp)
-          do j = 1, msh(jtyp)
-             aephi(jtyp,i)%psi(j) = splint(xdata, tab, tab_d2y, r(j,jtyp))
-          end do
-          
-          ! PS        
-          allocate ( psphi(jtyp,i)%psi(msh(jtyp)) )
-          xdata(:) = psphi2_r(jtyp,i)%r(:)
-          tab(:) = psphi2(jtyp,i)%psi(:)
-          
-          ! initialize spline interpolation
-          d1 = (tab(2) - tab(1)) / (xdata(2) - xdata(1))
-          call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
-          
-          ! use interpolation
-          allocate ( psphi(jtyp,i)%psi(msh(jtyp)) )
-          psphi(jtyp,i)%label%nt = jtyp
-          psphi(jtyp,i)%label%n = i
-          psphi(jtyp,i)%label%l = psphi2(jtyp,i)%label%l
-          psphi(jtyp,i)%label%rc = psphi2(jtyp,i)%label%rc
-          psphi(jtyp,i)%kkpsi = msh(jtyp)
-          !psphi(jtyp,i)%r(1:msh(jtyp)) = r(1:msh(jtyp),jtyp)
-          do j = 1, msh(jtyp)
-             psphi(jtyp,i)%psi(j) = splint(xdata, tab, tab_d2y, r(j,jtyp))
-          end do
-          
-          ! for the local potential; it is the same for all components, choose 1
-          IF ( vloc_present ( jtyp ) .AND. i == 1 ) THEN
-             tab(:) = gipaw_ae_vloc2 ( :kkpsi, i, jtyp )
-             d1 = ( gipaw_ae_vloc2 ( 2, i, jtyp ) &
-                  - gipaw_ae_vloc2 ( 1, i, jtyp ) ) / ( xdata(2) - xdata(1) )
-             call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
-             DO j = 1, msh ( jtyp )
-                gipaw_ae_vloc ( j, jtyp ) &
-                     = splint ( xdata, tab, tab_d2y, r(j,jtyp))
-             END DO
-          END IF
-          
-          IF ( vloc_present ( jtyp ) &
-               .AND. aephi(jtyp,i)%label%l == local_component ( jtyp ) &
-               .AND. .NOT. vloc_set ) THEN
-             tab(:) = gipaw_ps_vloc2 ( :kkpsi, i, jtyp )
-             d1 = ( gipaw_ps_vloc2 ( 2, i, jtyp ) &
-                  - gipaw_ps_vloc2 ( 1, i, jtyp ) ) / ( xdata(2) - xdata(1) )
-             call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
-             DO j = 1, msh ( jtyp )
-                gipaw_ps_vloc ( j, jtyp ) &
-                     = splint ( xdata, tab, tab_d2y, r(j,jtyp))
-             END DO
-             
-             vloc_set = .TRUE.
-          END IF
-          
-          deallocate( xdata, tab, tab_d2y)
-       enddo
-       
-       IF ( .NOT. vloc_set .AND. job == "g-tensor" ) THEN
-          CALL errore ( "read_recon_paratec", "no local potential set", 1 )
-          stop
-       END IF
-       
-    enddo
-    
-    deallocate( psphi2 )
-    deallocate( aephi2 )
-    deallocate( psphi2_r )
-    deallocate( aephi2_r )
-    
-    DEALLOCATE ( gipaw_ae_vloc2 )
-    DEALLOCATE ( gipaw_ps_vloc2 )
-    
-  end subroutine read_recon_paratec
   
  
 !-----------------------------------------------------------------------
