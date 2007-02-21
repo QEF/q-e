@@ -131,6 +131,7 @@ subroutine set_pseudo_upf (is, upf)
   IF ( upf%has_gipaw ) THEN
      IF ( .NOT. ALLOCATED ( paw_recon ) ) THEN
         ALLOCATE ( paw_recon(ntyp) )
+        paw_recon(:)%gipaw_data_in_upf_file = .FALSE.
      END IF
      
      paw_recon(is)%paw_nbeta = upf%gipaw_wfs_nchannels
@@ -171,8 +172,6 @@ subroutine set_pseudo_upf (is, upf)
         paw_recon(is)%psphi(nb)%label%rc = upf%gipaw_wfs_rcutus(nb)
         paw_recon(is)%psphi(nb)%psi(:upf%mesh) = upf%gipaw_wfs_ps(:upf%mesh,nb)
      END DO
-  ELSE
-     paw_recon(is)%gipaw_data_in_upf_file = .FALSE.
   END IF
   !</apsi>
   
