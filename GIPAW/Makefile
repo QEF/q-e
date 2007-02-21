@@ -9,10 +9,10 @@ stop_code.o \
 apply_p.o \
 apply_vel.o \
 greenfunction.o \
-h_psiq.o \
-ch_psi_all.o \
+h_psiq2.o \
 sym_cart_tensor.o \
 symmetrize_field.o \
+ch_psi_all2.o \
 test_sum_rule.o \
 compute_u_kq.o \
 suscept_crystal.o \
@@ -24,6 +24,8 @@ init_paw_2_no_phase.o \
 g_tensor_crystal.o \
 write_tensor_field.o \
 efg.o
+
+
 
 MODULES = \
 ../Modules/atom.o \

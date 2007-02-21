@@ -7,7 +7,7 @@
 !
 
 !-----------------------------------------------------------------------
-subroutine ch_psi_all (n, h, ah, e, ik, m)
+subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   !-----------------------------------------------------------------------
   !
   ! This routine applies the operator ( H - \epsilon S + alpha_pv P_v)
@@ -17,8 +17,9 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
 
   use pwcom
   use becmod
+  USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
-  USE gipaw_module
+  use phcom
   implicit none
 
   integer :: n, m, ik
@@ -29,7 +30,7 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   real(DP) :: e (m)
   ! input: the eigenvalue
 
-  complex(DP) :: h (npwx, m), ah (npwx, m)
+  complex(DP) :: h (npwx*npol, m), ah (npwx*npol, m)
   ! input: the vector
   ! output: the operator applied to the vector
   !
@@ -47,56 +48,85 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
 
   call start_clock ('ch_psi')
   allocate (ps  ( nbnd , m))    
-  allocate (hpsi( npwx , m))    
-  allocate (spsi( npwx , m))    
+  allocate (hpsi( npwx*npol , m))    
+  allocate (spsi( npwx*npol , m))    
   hpsi (:,:) = (0.d0, 0.d0)
   spsi (:,:) = (0.d0, 0.d0)
   !
   !   compute the product of the hamiltonian with the h vector
   !
-  call h_psiq (npwx, n, m, h, hpsi, spsi)
+  call h_psiq2 (npwx, n, m, h, hpsi, spsi)
 
   call start_clock ('last')
   !
   !   then we compute the operator H-epsilon S
   !
+  ah=(0.d0,0.d0)
   do ibnd = 1, m
      do ig = 1, n
         ah (ig, ibnd) = hpsi (ig, ibnd) - e (ibnd) * spsi (ig, ibnd)
      enddo
   enddo
+  IF (noncolin) THEN
+     do ibnd = 1, m
+        do ig = 1, n
+           ah (ig+npwx,ibnd)=hpsi(ig+npwx,ibnd)-e(ibnd)*spsi(ig+npwx,ibnd)
+        end do
+     end do
+  END IF
   !
   !   Here we compute the projector in the valence band
   !
-  !!!if (lgamma) then
+  if (lgamma) then
      ikq = ik
-  !!!else
-  !!!   ikq = 2 * ik
-  !!!endif
+  else
+     ikq = 2 * ik
+  endif
   ps (:,:) = (0.d0, 0.d0)
 
-  call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
+  IF (noncolin) THEN
+     call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, npwx*npol, (1.d0, 0.d0) , evq, &
+       npwx*npol, spsi, npwx*npol, (0.d0, 0.d0) , ps, nbnd)
+  ELSE
+     call ZGEMM ('C', 'N', nbnd_occ (ikq) , m, n, (1.d0, 0.d0) , evq, &
        npwx, spsi, npwx, (0.d0, 0.d0) , ps, nbnd)
+  ENDIF
   ps (:,:) = ps(:,:) * alpha_pv
 #ifdef __PARA
   call reduce (2 * nbnd * m, ps)
 #endif
 
   hpsi (:,:) = (0.d0, 0.d0)
-  call ZGEMM ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
-       npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
+  IF (noncolin) THEN
+     call ZGEMM ('N', 'N', npwx*npol, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+          npwx*npol, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx*npol)
+  ELSE
+     call ZGEMM ('N', 'N', n, m, nbnd_occ (ikq) , (1.d0, 0.d0) , evq, &
+          npwx, ps, nbnd, (1.d0, 0.d0) , hpsi, npwx)
+  END IF
   spsi(:,:) = hpsi(:,:)
   !
   !    And apply S again
   !
-  call ccalbec (nkb, npwx, n, m, becp, vkb, hpsi)
-
-  call s_psi (npwx, n, m, hpsi, spsi)
+  IF (noncolin) THEN
+     call ccalbec_nc (nkb, npwx, n, npol, m, becp_nc, vkb, hpsi)
+     call s_psi_nc (npwx, n, m, hpsi, spsi)
+  ELSE
+     call ccalbec (nkb, npwx, n, m, becp, vkb, hpsi)
+     call s_psi (npwx, n, m, hpsi, spsi)
+  END IF
   do ibnd = 1, m
      do ig = 1, n
         ah (ig, ibnd) = ah (ig, ibnd) + spsi (ig, ibnd)
      enddo
   enddo
+  IF (noncolin) THEN
+     do ibnd = 1, m
+        do ig = 1, n
+           ah (ig+npwx, ibnd) = ah (ig+npwx, ibnd) + spsi (ig+npwx, ibnd)
+        enddo
+     enddo
+  END IF
 
   deallocate (spsi)
   deallocate (hpsi)
@@ -104,4 +134,4 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   call stop_clock ('last')
   call stop_clock ('ch_psi')
   return
-end subroutine ch_psi_all
+end subroutine ch_psi_all2
