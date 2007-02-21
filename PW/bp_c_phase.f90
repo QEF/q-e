@@ -154,6 +154,7 @@ SUBROUTINE c_phase
    USE kinds,                ONLY : DP
    USE io_global,            ONLY : stdout
    USE io_files,             ONLY : iunwfc, nwordwfc
+   USE buffers,              ONLY : get_buffer
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
@@ -440,7 +441,7 @@ SUBROUTINE c_phase
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
                CALL gk_sort(xk(1,kpoint-1),ngm,g,ecutwfc/tpiba2, &
                             npw0,igk0,g2kin_bp) 
-               CALL davcio(psi,nwordwfc,iunwfc,kpoint-1,-1)
+               CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
                CALL ccalbec(nkb, npwx, npw, nbnd, becp0, vkb, psi)
 
@@ -448,14 +449,14 @@ SUBROUTINE c_phase
                IF (kpar /= nppstr) THEN
                   CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)        
-                  CALL davcio(evc,nwordwfc,iunwfc,kpoint,-1)
+                  CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
                   CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
                   CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
                ELSE
                   kstart = kpoint-nppstr+1
                   CALL gk_sort(xk(1,kstart),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)  
-                  CALL davcio(evc,nwordwfc,iunwfc,kstart,-1)
+                  CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
                   CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
                   CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
                ENDIF

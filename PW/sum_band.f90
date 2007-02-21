@@ -30,6 +30,7 @@ SUBROUTINE sum_band()
   USE scf,                  ONLY : rho, tauk
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
   USE uspp_param,           ONLY : nh, tvanp, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -224,7 +225,7 @@ SUBROUTINE sum_band()
           IF ( nks > 1 ) THEN
              !
              READ( iunigk ) igk
-             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
              !
           END IF
           !
@@ -448,7 +449,7 @@ SUBROUTINE sum_band()
           IF ( nks > 1 ) THEN
              !
              READ( iunigk ) igk
-             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
              !
           END IF
           !

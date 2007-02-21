@@ -11,12 +11,13 @@ subroutine stres_knl (sigmanlc, sigmakin)
   !-----------------------------------------------------------------------
   !
 #include "f_defs.h"
-  USE kinds,           ONLY: DP
+  USE kinds,                ONLY: DP
   USE constants,            ONLY: pi, e2
-  USE cell_base,                ONLY: omega, alat, at, bg, tpiba
+  USE cell_base,            ONLY: omega, alat, at, bg, tpiba
   USE gvect,                ONLY: qcutz, ecfixed, q2sigma, g
   USE klist,                ONLY: nks, xk, ngk
   USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
+  USE buffers,              ONLY: get_buffer
   USE symme,                ONLY: s, nsym
   USE wvfct,                ONLY: npw, npwx, nbnd, gamma_only, igk, wg
   USE noncollin_module,     ONLY: noncolin, npol
@@ -41,7 +42,7 @@ subroutine stres_knl (sigmanlc, sigmakin)
      npw = ngk(ik)
      if (nks > 1) then
         read (iunigk) igk
-        call davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        call get_buffer (evc, nwordwfc, iunwfc, ik)
      endif
      do i = 1, npw
         gk (1, i) = (xk (1, ik) + g (1, igk (i) ) ) * tpiba

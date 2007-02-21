@@ -34,6 +34,7 @@ SUBROUTINE force_hub(forceh)
    USE klist,                ONLY : nks, xk, ngk
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
+   USE buffers,              ONLY : get_buffer
    USE atom,                 ONLY : nchi, lchi, oc
 
    IMPLICIT NONE
@@ -102,7 +103,7 @@ SUBROUTINE force_hub(forceh)
       npw = ngk (ik)
       IF (nks > 1) READ (iunigk) igk
 
-      CALL davcio(evc,nwordwfc,iunwfc,ik,-1)
+      CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL davcio(swfcatom,nwordatwfc,iunsat,ik,-1)
       c_one= (1.d0, 0.d0)
       c_zero = (0.d0, 0.d0)

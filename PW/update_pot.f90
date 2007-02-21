@@ -414,6 +414,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE wvfct,                ONLY : nbnd, npw, npwx, igk
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
                                    iunoldwfc2, prefix
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : evc
   !
@@ -443,14 +444,14 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   IF ( wfc_extr == 1 ) THEN
      !
-     CALL diropn( iunoldwfc, 'oldwfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc, 'oldwfc', 2*nwordwfc, exst )
      !
      DO ik = 1, nks
         !
         ! ... "now"  -> "old"
         !
-        CALL davcio( evc, nwordwfc, iunwfc,    ik, - 1 )
-        CALL davcio( evc, nwordwfc, iunoldwfc, ik, + 1 )
+        CALL get_buffer ( evc, nwordwfc, iunwfc,    ik)
+        CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, + 1 )
         !
      END DO
      !
@@ -458,9 +459,9 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
   ELSE IF ( wfc_extr == 2 ) THEN
      !
-     CALL diropn( iunoldwfc, 'oldwfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc, 'oldwfc', 2*nwordwfc, exst )
      !
-     IF ( wfc_order > 2 ) CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
+     IF ( wfc_order > 2 ) CALL diropn( iunoldwfc2, 'old2wfc', 2*nwordwfc, exst )
      !
      ALLOCATE( evcold( npwx, nbnd ) )
      !
@@ -480,8 +481,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         npw = ngk (ik)
         IF ( nks > 1 ) READ( iunigk ) igk
         !
-        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
-        CALL davcio( evc,    nwordwfc, iunwfc,    ik, - 1 )
+        CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, - 1 )
+        CALL get_buffer ( evc,    nwordwfc, iunwfc,    ik)
         !
         ! ... construct s_m = <evcold|evc>
         !
@@ -521,13 +522,13 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
                     evc, npwx, sp_m, nbnd, ZERO, evcold, npwx )
         !
-        ! ... save on file the aligned wavefcts
+        ! ... save to file the aligned wavefcts
         !
-        CALL davcio( evcold, nwordwfc, iunwfc, ik, + 1 )
+        CALL save_buffer ( evcold, nwordwfc, iunwfc, ik )
         !
         ! ... re-read from file the wavefcts at (t-dt)
         !
-        CALL davcio( evc, nwordwfc, iunoldwfc, ik, - 1 )
+        CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, - 1 )
         !
         ! ... extrapolate the wfc's (note that evcold contains wavefcts
         ! ... at (t) and evc contains wavefcts at (t-dt) )
@@ -538,17 +539,17 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         IF ( wfc_order > 2 ) THEN
            !
-           CALL davcio( evcold, nwordwfc, iunoldwfc,  ik, - 1 )
-           CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, + 1 )
+           CALL davcio( evcold, 2*nwordwfc, iunoldwfc,  ik, - 1 )
+           CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, + 1 )
            !
         END IF
         !
-        CALL davcio( evcold, nwordwfc, iunwfc,    ik, - 1 )
-        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, + 1 )
+        CALL get_buffer ( evcold, nwordwfc, iunwfc,    ik )
+        CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, + 1 )
         !
-        ! ... save evc on file iunwfc
+        ! ... save evc to file iunwfc
         !
-        CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         !
      END DO
      !
@@ -569,8 +570,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      ! ... case :  wfc_extr = 3
      !
-     CALL diropn( iunoldwfc,  'oldwfc',  nwordwfc, exst )
-     CALL diropn( iunoldwfc2, 'old2wfc', nwordwfc, exst )
+     CALL diropn( iunoldwfc,  'oldwfc',  2*nwordwfc, exst )
+     CALL diropn( iunoldwfc2, 'old2wfc', 2*nwordwfc, exst )
      !
      ALLOCATE( evcold(npwx,nbnd) )
      !
@@ -590,8 +591,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         npw = ngk (ik)
         IF ( nks > 1 ) READ( iunigk ) igk
         !
-        CALL davcio( evcold, nwordwfc, iunoldwfc, ik, - 1 )
-        CALL davcio( evc,    nwordwfc, iunwfc,    ik, - 1 )
+        CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, - 1 )
+        CALL get_buffer ( evc,    nwordwfc, iunwfc,    ik )
         !
         ! ... construct s_m = <evcold|evc>
         !
@@ -631,33 +632,33 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
                     evc, npwx, sp_m, nbnd, ZERO, evcold, npwx )
         !
-        ! ... save on file the aligned wavefcts
+        ! ... save to file the aligned wavefcts
         !
-        CALL davcio( evcold, nwordwfc, iunwfc, ik, + 1 )
+        CALL save_buffer ( evcold, nwordwfc, iunwfc, ik )
         !
         ! ... re-read from file the wavefcts at (t-dt)
         !
-        CALL davcio( evc, nwordwfc, iunoldwfc, ik, - 1 )
+        CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, - 1 )
         !
         ! ... extrapolate the wfc's :
         ! ... if wfc_extr == 3 use the second order extrapolation formula
         !
         evc = ( 1 + alpha0 )*evcold + ( beta0 - alpha0 )*evc
         !
-        CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, - 1 )
+        CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, - 1 )
         !
         evc = evc - beta0*evcold
         !
         ! ... move the files: "old" -> "old1" and "now" -> "old"
         !
-        CALL davcio( evcold, nwordwfc, iunoldwfc,  ik, - 1 )
-        CALL davcio( evcold, nwordwfc, iunoldwfc2, ik, + 1 )
-        CALL davcio( evcold, nwordwfc, iunwfc,     ik, - 1 )
-        CALL davcio( evcold, nwordwfc, iunoldwfc,  ik, + 1 )
+        CALL davcio( evcold, 2*nwordwfc, iunoldwfc,  ik, - 1 )
+        CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, + 1 )
+        CALL get_buffer ( evcold, nwordwfc, iunwfc,     ik )
+        CALL davcio( evcold, 2*nwordwfc, iunoldwfc,  ik, + 1 )
         !
-        ! ... save evc on file iunwfc
+        ! ... save evc to file iunwfc
         !
-        CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
         !
      END DO
      !

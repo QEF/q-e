@@ -31,6 +31,7 @@ SUBROUTINE new_ns()
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
+  USE buffers,              ONLY : get_buffer
 
   IMPLICIT NONE
   !
@@ -78,14 +79,14 @@ SUBROUTINE new_ns()
   !    we start a loop on k points
   !
 
-  IF (nks.GT.1) REWIND (iunigk)
+  IF (nks > 1) REWIND (iunigk)
 
   DO ik = 1, nks
      IF (lsda) current_spin = isk(ik)
      npw = ngk (ik)
      IF (nks > 1) THEN
         READ (iunigk) igk
-        CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
+        CALL get_buffer  (evc, nwordwfc, iunwfc, ik)
      END IF
      CALL davcio (swfcatom, nwordatwfc, iunsat, ik, - 1)
      !

@@ -61,6 +61,7 @@ contains
      USE gvect,      ONLY : g
      USE cell_base,  ONLY : tpiba2, omega
      USE wavefunctions_module, ONLY : evc
+     USE buffers,    ONLY : save_buffer
 
      implicit none
      integer :: ik, ig
@@ -91,7 +92,7 @@ contains
 !        write (*,*) "NORM  ", ik, norm
 !        evc(:,1) = evc(:,1)/sqrt(norm)
 
-        CALL davcio( evc, nwordwfc, iunwfc, ik, 1)
+        CALL save_buffer ( evc, nwordwfc, iunwfc, ik)
 
      END DO
 
@@ -363,11 +364,10 @@ contains
     !It saves the wavefunctions for the right density matrix. in real space
     !It saves all the wavefunctions in a single file called prefix.exx
     USE wavefunctions_module, ONLY : evc  
-    USE io_files,             ONLY : find_free_unit
-    USE io_files,             ONLY : nwordwfc
-    USE io_files,             ONLY : prefix
-    USE io_files,             ONLY : tmp_dir, iunwfc, iunigk
+    USE io_files,             ONLY : find_free_unit, nwordwfc, io_files, &
+                                     prefix, tmp_dir, iunwfc, iunigk
     USE io_global,            ONLY : stdout
+    USE buffers,              ONLY : get_buffer
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
@@ -445,7 +445,7 @@ contains
        npw = ngk (ik)
        IF ( nks > 1 ) THEN
           READ( iunigk ) igk
-          CALL davcio (tempevc, nwordwfc, iunwfc, ik, -1)
+          CALL get_buffer  (tempevc, nwordwfc, iunwfc, ik)
        ELSE
           tempevc(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
        ENDIF
@@ -701,6 +701,7 @@ contains
     ! This function is called to correct the deband value and have 
     ! the correct energy 
     USE io_files,   ONLY : iunigk,iunwfc, nwordwfc
+    USE buffers,    ONLY : get_buffer
     USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, current_k, gamma_only
     USE gvect,      ONLY : gstart
     USE wavefunctions_module, ONLY : evc
@@ -723,7 +724,7 @@ contains
        npw = ngk (ik)
        IF ( nks > 1 ) THEN
           READ( iunigk ) igk
-          call davcio (psi, nwordwfc, iunwfc, ik, -1)
+          call get_buffer  (psi, nwordwfc, iunwfc, ik)
        ELSE
           psi(1:npwx,1:nbnd) = evc(1:npwx,1:nbnd)
        END IF
@@ -758,6 +759,7 @@ contains
     !
     USE constants, ONLY : fpi, e2
     USE io_files,  ONLY : iunigk,iunwfc, nwordwfc
+    USE buffers,   ONLY : get_buffer
     USE cell_base, ONLY : alat, omega, bg, at
     USE symme,     ONLY : nsym, s
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
@@ -797,7 +799,7 @@ contains
        npw = ngk (ikk)
        IF ( nks > 1 ) THEN
           READ( iunigk ) igk
-          call davcio (evc, nwordwfc, iunwfc, ikk, -1)
+          call get_buffer (evc, nwordwfc, iunwfc, ikk)
        END IF
 
        do jbnd=1, nbnd !for each band of psi (the k cycle is outside band)

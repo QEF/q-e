@@ -28,6 +28,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE becmod,               ONLY : becp
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
+   USE buffers,              ONLY : get_buffer
    IMPLICIT NONE
    !
    ! I/O variables first
@@ -85,7 +86,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       ! now we need the first derivative of proj with respect to
       ! epsilon(ipol,jpol)
       !
-      CALL davcio(evc,nwordwfc,iunwfc,ik,-1)
+      CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
       CALL ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
 
@@ -93,7 +94,6 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
 !      CALL atomic_wfc( ik, wfcatom )
 ! read atomic wfc instead
       CALL davcio(wfcatom,nwordatwfc,iunat,ik,-1)
-
 
       dproj(:,:) = (0.d0,0.d0)
 

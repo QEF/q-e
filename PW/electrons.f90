@@ -42,6 +42,7 @@ SUBROUTINE electrons()
                                    restart, reduce_io
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield
+  USE buffers,              ONLY : save_buffer
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u  
   USE extfield,             ONLY : tefield, etotefield  
@@ -497,7 +498,7 @@ SUBROUTINE electrons()
      ! ... save converged wfc if they have not been written previously
      !     
      IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
+        CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
      !
      ! ... calculate the polarization
      !

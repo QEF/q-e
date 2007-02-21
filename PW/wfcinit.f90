@@ -22,6 +22,7 @@ SUBROUTINE wfcinit()
   USE ldaU,                 ONLY : swfcatom, lda_plus_u
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordatwfc, iunwfc, iunigk, iunsat
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb
   USE wavefunctions_module, ONLY : evc
   USE wvfct,                ONLY : nbnd, npw, current_k, igk
@@ -80,7 +81,7 @@ SUBROUTINE wfcinit()
      ! ... return and do nothing otherwise (c_bands will read wavefunctions)
      !
      IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio( evc, nwordwfc, iunwfc, 1, -1 )
+        CALL get_buffer ( evc, nwordwfc, iunwfc, 1 )
      !
      CALL stop_clock( 'wfcinit' )
      !
@@ -119,7 +120,7 @@ SUBROUTINE wfcinit()
      ! ... write  starting wavefunctions to file
      !
      IF ( nks > 1 .OR. .NOT. reduce_io ) &
-         CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+         CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
   END DO
   !

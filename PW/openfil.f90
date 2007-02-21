@@ -18,6 +18,7 @@ SUBROUTINE openfil()
   USE io_global,        ONLY : stdout
   USE basis,            ONLY : natomwfc, startingwfc
   USE wvfct,            ONLY : nbnd, npwx
+  USE klist,            ONLY : nks
   USE ldaU,             ONLY : lda_plus_U
   USE io_files,         ONLY : prefix, iunpun, iunat, iunsat, iunwfc, iunigk, &
                                nwordwfc, nwordatwfc, iunefield, &
@@ -26,23 +27,19 @@ SUBROUTINE openfil()
   USE noncollin_module, ONLY : npol
   USE mp_global,        ONLY : kunit
   USE bp,               ONLY : lelfield
+  USE buffers,          ONLY : open_buffer
   !
   IMPLICIT NONE
   !
   LOGICAL            :: exst
   INTEGER            :: ierr
-  REAL(DP)           :: edum(1,1), wdum(1,1)
   CHARACTER(LEN=256) :: tmp_dir_save
   !
-  !
-  ! ... nwordwfc is the record length for the direct-access file
-  ! ... containing wavefunctions
-  !
-  ! ... we'll swap wfc_dir for tmp_dir for large files
+  ! ... tmp_dir may be replaced by wfc_dir  for large files
   !
   tmp_dir_save = tmp_dir
   !
-  IF ( .NOT. ( wfc_dir == 'undefined' ) ) THEN
+  IF ( wfc_dir /= 'undefined' ) THEN
      !
      WRITE( stdout, '(5X,"writing wfc files to a dedicated directory")' )
      !
@@ -50,9 +47,12 @@ SUBROUTINE openfil()
      !
   END IF
   !
-  nwordwfc = 2*nbnd*npwx*npol
+  ! ... nwordwfc is the record length (IN COMPLEX WORDS)
+  ! ... for the direct-access file containing wavefunctions
   !
-  CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
+  nwordwfc = nbnd*npwx*npol
+  !
+  CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
   IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
      !
@@ -93,9 +93,9 @@ SUBROUTINE openfil()
   ! ... open units for electric field calculations
   !
   IF ( lelfield ) THEN
-      CALL diropn( iunefield, 'ewfc', nwordwfc, exst )
-      CALL diropn( iunefieldm, 'ewfcm', nwordwfc, exst )
-      CALL diropn( iunefieldp, 'ewfcp', nwordwfc, exst )
+      CALL diropn( iunefield , 'ewfc' , 2*nwordwfc, exst )
+      CALL diropn( iunefieldm, 'ewfcm', 2*nwordwfc, exst )
+      CALL diropn( iunefieldp, 'ewfcp', 2*nwordwfc, exst )
   END IF
   !
   tmp_dir = tmp_dir_save

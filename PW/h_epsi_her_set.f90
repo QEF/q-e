@@ -33,6 +33,7 @@ subroutine h_epsi_her_set
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
   USE io_files, ONLY: iunwfc, nwordwfc, iunefieldm, iunefieldp
+  USE buffers,  ONLY: get_buffer
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   !
@@ -127,7 +128,7 @@ subroutine h_epsi_her_set
 
    DO ik=1,nks
   
-      CALL davcio( evcel, nwordwfc, iunwfc, ik, -1 )
+      CALL get_buffer ( evcel, nwordwfc, iunwfc, ik )
 
       if(nspin==2) then
          if(ik <= nks/2) then
@@ -305,7 +306,7 @@ subroutine h_epsi_her_set
          
          CALL gk_sort(xk(1,ik-1),ngm,g,ecutwfc/tpiba2, &
               &    npw0,igk0,g2kin_bp) 
-         CALL davcio(evct,nwordwfc,iunwfc,ik-1,-1)
+         CALL get_buffer (evct,nwordwfc,iunwfc,ik-1)
 !        
 !           --- Calculate dot products between wavefunctions
 
@@ -477,7 +478,7 @@ subroutine h_epsi_her_set
 
          CALL gk_sort(xk(1,ik+nppstr-1),ngm,g,ecutwfc/tpiba2, &
            &   npw0,igk0,g2kin_bp) 
-         CALL davcio(evct,nwordwfc,iunwfc,ik+nppstr-1,-1)
+         CALL get_buffer (evct,nwordwfc,iunwfc,ik+nppstr-1)
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -695,7 +696,7 @@ subroutine h_epsi_her_set
          
          CALL gk_sort(xk(1,ik+1),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
-         CALL davcio(evct,nwordwfc,iunwfc,ik+1,-1)
+         CALL get_buffer (evct,nwordwfc,iunwfc,ik+1)
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -864,7 +865,7 @@ subroutine h_epsi_her_set
        
       CALL gk_sort(xk(1,ik-nppstr+1),ngm,g,ecutwfc/tpiba2, &
            &    npw0,igk0,g2kin_bp) 
-      CALL davcio(evct,nwordwfc,iunwfc,ik-nppstr+1,-1)
+      CALL get_buffer (evct,nwordwfc,iunwfc,ik-nppstr+1)
 !        
 
 !           --- Calculate dot products between wavefunctions
@@ -1123,10 +1124,9 @@ subroutine h_epsi_her_set
 
    endif
 
-
-!writes projectors on disk 
-   call davcio(evcm,nwordwfc,iunefieldm,ik,1)
-   call davcio(evcp,nwordwfc,iunefieldp,ik,1)
+!writes projectors to disk 
+   call davcio(evcm, 2*nwordwfc,iunefieldm,ik,1)
+   call davcio(evcp, 2*nwordwfc,iunefieldp,ik,1)
 
   END  DO !on ik
 

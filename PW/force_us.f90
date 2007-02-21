@@ -29,6 +29,7 @@ SUBROUTINE force_us( forcenl )
   USE noncollin_module,     ONLY : npol, noncolin
   USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
+  USE buffers,              ONLY : get_buffer
   !
   IMPLICIT NONE
   !
@@ -84,7 +85,7 @@ SUBROUTINE force_us( forcenl )
           npw = ngk (ik)
           IF ( nks > 1 ) THEN
              READ( iunigk ) igk
-             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
              IF ( nkb > 0 ) &
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
@@ -224,7 +225,7 @@ SUBROUTINE force_us( forcenl )
           npw = ngk(ik)
           IF ( nks > 1 ) THEN
              READ( iunigk ) igk
-             CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+             CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
              IF ( nkb > 0 ) &
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF

@@ -20,6 +20,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
                                    nwordwfc
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
@@ -111,7 +112,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      ! ... read in wavefunctions from the previous iteration
      !
      IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
-          CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+          CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
      !   
      ! ... Needed for LDA+U
      !
@@ -126,7 +127,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      ! ... and for rho calculation
      !
      IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
-          CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... save restart information
      !
@@ -371,8 +372,8 @@ CONTAINS
        !
        !... read projectors from disk
        !
-       CALL davcio(evcelm,nwordwfc,iunefieldm,ik,-1)
-       CALL davcio(evcelp,nwordwfc,iunefieldp,ik,-1)
+       CALL davcio(evcelm, 2*nwordwfc,iunefieldm,ik,-1)
+       CALL davcio(evcelp, 2*nwordwfc,iunefieldp,ik,-1)
        !
        IF ( okvan ) THEN
           !
@@ -565,6 +566,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
                                    nwordwfc
+  USE buffers,              ONLY : get_buffer, save_buffer
   USE basis,                ONLY : startingwfc
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
@@ -662,7 +664,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      IF ( startingwfc == 'file' ) THEN
         !
-        CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+        CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         !
      ELSE
         !
@@ -676,7 +678,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      ! ... save wave-functions
      !
-     CALL davcio( evc, nwordwfc, iunwfc, ik, 1 )
+     CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... save restart information
      !

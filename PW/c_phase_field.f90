@@ -27,6 +27,7 @@ SUBROUTINE c_phase_field
    USE kinds,                ONLY : DP
    USE io_global,            ONLY : stdout
    USE io_files,             ONLY : iunwfc, nwordwfc
+   USE buffers,              ONLY : get_buffer
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
@@ -318,7 +319,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
                CALL gk_sort(xk(1,kpoint-1),ngm,g,ecutwfc/tpiba2, &
                             npw0,igk0,g2kin_bp) 
-               CALL davcio(psi,nwordwfc,iunwfc,kpoint-1,-1)
+               CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if(okvan) then
                   CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
                   CALL ccalbec(nkb, npwx, npw0, nbnd, becp0, vkb, psi)
@@ -328,7 +329,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                IF (kpar /= (nppstr+1)) THEN
                   CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)        
-                  CALL davcio(psi1,nwordwfc,iunwfc,kpoint,-1)
+                  CALL get_buffer (psi1,nwordwfc,iunwfc,kpoint)
                   if(okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
                      CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,psi1)
@@ -337,7 +338,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                   kstart = kpoint-(nppstr+1)+1
                   CALL gk_sort(xk(1,kstart),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)  
-                  CALL davcio(psi1,nwordwfc,iunwfc,kstart,-1)
+                  CALL get_buffer (psi1,nwordwfc,iunwfc,kstart)
                   if(okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
                      CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,psi1)

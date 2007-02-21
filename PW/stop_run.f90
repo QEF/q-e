@@ -17,6 +17,7 @@ SUBROUTINE stop_run( flag )
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
                                  lcoarsegrained
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm, iunefieldp
+  USE buffers,            ONLY : close_buffer
   USE path_variables,     ONLY : path_deallocation
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
@@ -48,15 +49,11 @@ SUBROUTINE stop_run( flag )
   !
   IF ( twfcollect .AND. flag ) THEN
      !
-     INQUIRE( UNIT = iunwfc, OPENED = opnd )
-     !
-     IF ( opnd ) CLOSE( UNIT = iunwfc, STATUS = 'DELETE' )
+     call close_buffer ( iunwfc, 'DELETE' )
      !
   ELSE
      !
-     INQUIRE( UNIT = iunwfc, OPENED = opnd )
-     !
-     IF ( opnd ) CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+     call close_buffer ( iunwfc, 'KEEP' )
      !
   END IF
   !      

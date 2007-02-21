@@ -26,6 +26,7 @@ bp_qvan3.o \
 bp_radin.o \
 bp_strings.o \
 bp_ylm_q.o \
+buffers.o \
 c_bands.o \
 c_phase_field.o \
 ccalbec.o \

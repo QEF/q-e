@@ -19,6 +19,7 @@
   USE ener,                 ONLY : ef
   USE io_global,            ONLY : stdout, ionode
   USE io_files,             ONLY : iunwfc, nwordwfc, iunefield
+  USE buffers,              ONLY : save_buffer
   USE klist,                ONLY : xk, wk, nks, nkstot
   USE lsda_mod,             ONLY : lsda, nspin
   USE wvfct,                ONLY : nbnd, et, npwx
@@ -80,7 +81,7 @@
   ! ... save converged wfc if they have not been written previously
   !
   IF ( nks == 1 .AND. reduce_io ) &
-        CALL davcio( evc, nwordwfc, iunwfc, nks, 1 )
+        CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
   !
   ! ... do a Berry phase polarization calculation if required
   !

@@ -35,6 +35,7 @@ SUBROUTINE read_file()
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
+  USE buffers,              ONLY : open_buffer, close_buffer
   USE uspp_param,           ONLY : nbeta, jjj, tvanp
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_global,            ONLY : kunit
@@ -214,13 +215,13 @@ SUBROUTINE read_file()
   ! ... reads the wavefunctions and writes them in 'distributed' form 
   ! ... to unit iunwfc (for compatibility)
   !
-  nwordwfc = 2*nbnd*npwx*npol
+  nwordwfc = nbnd*npwx*npol
   !
-  CALL diropn( iunwfc, 'wfc', nwordwfc, exst )
+  CALL open_buffer ( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
   CALL pw_readfile( 'wave', ierr )
   !
-  CLOSE( UNIT = iunwfc, STATUS = 'KEEP' )
+  CALL close_buffer  ( iunwfc, 'KEEP' )
   !
   RETURN
   !

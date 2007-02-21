@@ -64,6 +64,7 @@ MODULE pw_restart
       USE ions_base,            ONLY : nsp, ityp, atm, nat, tau, if_pos
       USE noncollin_module,     ONLY : noncolin, npol
       USE io_files,             ONLY : nwordwfc, iunwfc, iunigk, psfile
+      USE buffers,              ONLY : get_buffer
       USE input_parameters,     ONLY : pseudo_dir 
                                      ! warning, pseudo_dir in the data-file
                                      ! should always point to the original
@@ -595,7 +596,7 @@ MODULE pw_restart
                !
                IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                   !
-                  CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), -1 )
+                  CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                   !
                END IF
                !
@@ -622,7 +623,7 @@ MODULE pw_restart
                !
                IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                   !
-                  CALL davcio( evc, nwordwfc, iunwfc, (ik_eff-iks+1), -1 )
+                  CALL get_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
                   !
                END IF
                !
@@ -647,7 +648,7 @@ MODULE pw_restart
                !
                IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                   !
-                  CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), -1 )
+                  CALL get_buffer( evc, nwordwfc, iunwfc, (ik-iks+1) )
                   !
                END IF
                !
@@ -2306,6 +2307,7 @@ MODULE pw_restart
       USE wavefunctions_module, ONLY : evc
       USE reciprocal_vectors,   ONLY : ig_l2g
       USE io_files,             ONLY : nwordwfc, iunwfc
+      USE buffers,              ONLY : save_buffer
       USE gvect,                ONLY : ngm, ngm_g, ig1, ig2, ig3, g, ecutwfc
       USE noncollin_module,     ONLY : noncolin, npol
       USE mp_global,            ONLY : kunit, nproc, nproc_pool, me_pool
@@ -2326,11 +2328,13 @@ MODULE pw_restart
       REAL(DP)             :: scalef
       !
       !
-      INQUIRE( UNIT = iunwfc, OPENED = opnd )
-      !
-      IF ( .NOT. opnd ) &
-         CALL errore( 'read_wavefunctions', &
+      IF ( iunwfc > 0 ) THEN
+         !
+         INQUIRE( UNIT = iunwfc, OPENED = opnd )
+         !
+         IF ( .NOT. opnd ) CALL errore( 'read_wavefunctions', &
                     & 'wavefunctions unit (iunwfc) is not opened', 1 )
+      END IF
       !
       IF ( ionode ) THEN
          !
@@ -2521,7 +2525,7 @@ MODULE pw_restart
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
-               CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
+               CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                !
             END IF
             !
@@ -2544,7 +2548,7 @@ MODULE pw_restart
             !
             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
                !
-               CALL davcio( evc, nwordwfc, iunwfc, (ik_eff-iks+1), + 1 )
+               CALL save_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
                !
             END IF
             !
@@ -2593,7 +2597,7 @@ MODULE pw_restart
             !
             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
                !
-               CALL davcio( evc, nwordwfc, iunwfc, (ik-iks+1), + 1 )
+               CALL save_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
                !
                ! the following two line can be used to debug read_wfc
                ! WRITE(200+10*ik+me_pool,fmt="(2D18.10)") evc
