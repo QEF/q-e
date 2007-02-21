@@ -432,7 +432,7 @@ SUBROUTINE electrons()
            !
            ! ... write the charge density to file
            !
-           if (mod(nkstot,npool) == 0) CALL write_rho( rho, nspin )
+           CALL write_rho( rho, nspin )
            !
         ELSE
            !
