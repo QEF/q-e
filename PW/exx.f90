@@ -364,7 +364,7 @@ contains
     !It saves the wavefunctions for the right density matrix. in real space
     !It saves all the wavefunctions in a single file called prefix.exx
     USE wavefunctions_module, ONLY : evc  
-    USE io_files,             ONLY : find_free_unit, nwordwfc, io_files, &
+    USE io_files,             ONLY : find_free_unit, nwordwfc, &
                                      prefix, tmp_dir, iunwfc, iunigk
     USE io_global,            ONLY : stdout
     USE buffers,              ONLY : get_buffer
