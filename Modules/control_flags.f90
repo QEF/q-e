@@ -42,7 +42,7 @@ MODULE control_flags
             tsteepdesc, tatomicwfc, tscreen, gamma_only, force_pairing, tchi2
   !
   PUBLIC :: fix_dependencies, check_flags
-  PUBLIC :: tvlocw, trhor, thdyn, iprsta, trhow
+  PUBLIC :: tksw, trhor, thdyn, iprsta, trhow
   PUBLIC :: twfcollect, printwfc
   PUBLIC :: lkpoint_dir
   PUBLIC :: tuspp
@@ -56,9 +56,9 @@ MODULE control_flags
                                           !                 'CPVC'  cp
                                           !                 'SMCP'  smcp
   !
-  LOGICAL :: tvlocw    = .FALSE. ! write potential to unit 46 (only cp, seldom used)
-  LOGICAL :: trhor     = .FALSE. ! read rho from      unit 47 (only cp, seldom used)
+  LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
+  LOGICAL :: tksw      = .FALSE. ! CP: write Kohn-Sham states to restart dir
   !
   LOGICAL :: tsde          = .FALSE. ! electronic steepest descent
   LOGICAL :: tzeroe        = .FALSE. ! set to zero the electronic velocities

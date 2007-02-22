@@ -29,14 +29,13 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
   USE kinds,                ONLY : DP
-  USE control_flags,        ONLY : reduce_io
   USE becmod,               ONLY : becp, becp_nc  
   use pwcom
   USE uspp_param,           ONLY : nhm, tvanp
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_ph,           ONLY : irr0, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
-                                   nbnd_occ, alpha_mix, ldisp
+                                   nbnd_occ, alpha_mix, ldisp, reduce_io
   USE nlcc_ph,              ONLY : nlcc_any
   USE units_ph,             ONLY : iudrho, lrdrho, iudwf, lrdwf, iubar, lrbar, &
                                    iuwfc, lrwfc, iunrec, iudvscf

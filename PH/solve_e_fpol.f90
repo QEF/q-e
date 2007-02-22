@@ -30,7 +30,6 @@ subroutine solve_e_fpol ( iw )
   USE becmod,                ONLY : becp
   USE uspp_param,            ONLY : nhm
   use phcom
-  USE control_flags,         ONLY : reduce_io
   
   implicit none
 

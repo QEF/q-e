@@ -32,7 +32,7 @@ SUBROUTINE phq_readin()
   USE lsda_mod,      ONLY : lsda, nspin
   USE printout_base, ONLY : title
   USE control_ph,    ONLY : maxter, alpha_mix, lgamma, lgamma_gamma, epsil, &
-                            zue, trans, &
+                            zue, trans, reduce_io, &
                             elph, tr2_ph, niter_ph, nmix_ph, maxirr, lnscf, &
                             ldisp, recover, lrpa, lnoloc
   USE gamma_gamma,   ONLY : asr
@@ -42,7 +42,7 @@ SUBROUTINE phq_readin()
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : noncolin
-  USE control_flags, ONLY : iverbosity, reduce_io, modenum
+  USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : ionode
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE funct,         ONLY : dft_is_gradient

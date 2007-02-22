@@ -602,7 +602,6 @@ setup_dgc.o : ../PW/pwcom.o
 setup_dgc.o : phcom.o
 smallgq.o : ../Modules/kind.o
 solve_e.o : ../Modules/check_stop.o
-solve_e.o : ../Modules/control_flags.o
 solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/ions_base.o
@@ -613,7 +612,6 @@ solve_e.o : ../PW/becmod.o
 solve_e.o : ../PW/pwcom.o
 solve_e.o : phcom.o
 solve_e2.o : ../Modules/check_stop.o
-solve_e2.o : ../Modules/control_flags.o
 solve_e2.o : ../Modules/io_files.o
 solve_e2.o : ../Modules/io_global.o
 solve_e2.o : ../Modules/ions_base.o
@@ -625,7 +623,6 @@ solve_e2.o : ../PW/pwcom.o
 solve_e2.o : phcom.o
 solve_e2.o : ramanm.o
 solve_e_fpol.o : ../Modules/check_stop.o
-solve_e_fpol.o : ../Modules/control_flags.o
 solve_e_fpol.o : ../Modules/io_files.o
 solve_e_fpol.o : ../Modules/io_global.o
 solve_e_fpol.o : ../Modules/ions_base.o
@@ -642,7 +639,6 @@ solve_e_nscf.o : ../PW/pwcom.o
 solve_e_nscf.o : phcom.o
 solve_linter.o : ../Modules/check_stop.o
 solve_linter.o : ../Modules/constants.o
-solve_linter.o : ../Modules/control_flags.o
 solve_linter.o : ../Modules/io_files.o
 solve_linter.o : ../Modules/io_global.o
 solve_linter.o : ../Modules/ions_base.o

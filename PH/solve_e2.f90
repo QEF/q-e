@@ -18,7 +18,6 @@ subroutine solve_e2
   USE io_global, ONLY : stdout
   use pwcom
   use becmod
-  USE control_flags, ONLY: reduce_io
   USE io_files, ONLY: prefix, iunigk
   USE ions_base, ONLY: nat
   USE uspp_param, ONLY : nhm

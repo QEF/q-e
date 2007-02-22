@@ -272,22 +272,21 @@ MODULE control_ph
   ! the mixing parameter
   ! CPU time up to now
   ! the alpha value for shifting the bands
-  LOGICAL :: lgamma, lgamma_gamma, convt, epsil, trans, elph, zue, recover, &
-             lrpa, &       !  if .TRUE. calculates the RPA dielectric constant
-             lnoloc, &     !  if .TRUE. calculates the dielectric constant
-                           !  neglecting local field effects
-             search_sym    !  if .TRUE. search the mode symmetry
-  ! lgamma: if .TRUE. this is a q=0 computation
-  ! lgamma_gamma: if .TRUE. this is a q=0 computation with k=0 only 
-  ! convt : if .TRUE. the phonon has converged
-  ! epsil : if .TRUE. computes dielec. const and eff. charges
-  ! trans : if .TRUE. computes phonons
-  ! elph  : if .TRUE. computes electron-phonon interaction coefficients
-  ! zue   : if .TRUE. computes eff. charges. as induced polarization
-  ! recover:if .TRUE. the run restarts
-  logical :: lnscf, ldisp
-  ! lnscf : if .TRUE. the run makes first a nscf calculation
-  ! ldisp : if .TRUE. the run calculates the q-points for a full dispersion
+  LOGICAL :: lgamma,      &! if .TRUE. this is a q=0 computation
+             lgamma_gamma,&! if .TRUE. this is a q=0 computation with k=0 only 
+             convt,       &! if .TRUE. the phonon has converged
+             epsil,       &! if .TRUE. computes dielec. const and eff. charges
+             trans,       &! if .TRUE. computes phonons
+             elph,        &! if .TRUE. computes electron-ph interaction coeffs
+             zue,         &! if .TRUE. computes eff. charges as induced polarization
+             recover,     &! if .TRUE. the run restarts
+             lrpa,        &! if .TRUE. calculates the RPA dielectric constant
+             lnoloc,      &! if .TRUE. calculates the dielectric constant
+                           ! neglecting local field effects
+             search_sym,  &! if .TRUE. search the mode symmetry
+             lnscf,       &! if .TRUE. the run makes first a nscf calculation
+             ldisp,       &! if .TRUE. the run calculates full phonon dispersion
+             reduce_io     ! if .TRUE. reduces needed I/O
   !
 END MODULE control_ph
 !

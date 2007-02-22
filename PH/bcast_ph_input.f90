@@ -20,7 +20,7 @@ subroutine bcast_ph_input ( )
   use phcom
   use mp, only: mp_bcast
   use io_files
-  USE control_flags, only: iverbosity, reduce_io
+  USE control_flags, only: iverbosity
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE input_parameters, ONLY: max_seconds
   USE ions_base,     ONLY : amass
