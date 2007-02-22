@@ -734,7 +734,7 @@ then
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
-		
+		done
 		;;
 
 	amd64:* )
@@ -761,6 +761,7 @@ then
 			      LIBS=""
 			      LDFLAGS="-i-static -openmp $LDFLAGS"
                            fi
+                        fi
 			AC_SEARCH_LIBS(dgemm, mkl_em64t, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
@@ -794,6 +795,7 @@ then
 			      LIBS=""
 			      LDFLAGS="-i-static -openmp $LDFLAGS"
                            fi
+                        fi
 			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"

@@ -5861,7 +5861,7 @@ fi
 
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
-
+		done
 		;;
 
 	amd64:* )
@@ -5888,6 +5888,7 @@ fi
 			      LIBS=""
 			      LDFLAGS="-i-static -openmp $LDFLAGS"
                            fi
+                        fi
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -6012,6 +6013,7 @@ fi
 			      LIBS=""
 			      LDFLAGS="-i-static -openmp $LDFLAGS"
                            fi
+                        fi
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
