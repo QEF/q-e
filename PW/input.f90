@@ -136,7 +136,7 @@ SUBROUTINE iosys()
                             nosym_            => nosym, &
                             modenum_          => modenum, &
                             lkpoint_dir_      => lkpoint_dir, &
-                            reduce_io, ethr, lscf, lbfgs, lmd, lpath, lneb,  &
+                            io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
                             use_para_diago
@@ -560,11 +560,11 @@ SUBROUTINE iosys()
   SELECT CASE( TRIM( disk_io ) )
   CASE( 'high' )
      !
-     reduce_io = .FALSE.
+     io_level = 2
      !
   CASE DEFAULT
      !
-     reduce_io = .TRUE.
+     io_level = 1
      restart   = .FALSE.
      !
   END SELECT

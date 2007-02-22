@@ -12,7 +12,7 @@ subroutine save_in_electrons (iter, dr2)
   USE io_files, ONLY: iunres, prefix
   USE ener,  ONLY: etot
   USE klist, ONLY: nks
-  USE control_flags, ONLY: reduce_io, conv_elec, tr2, ethr
+  USE control_flags, ONLY: io_level, conv_elec, tr2, ethr
   USE wvfct, ONLY: nbnd, et
   USE vlocal, ONLY: vnew
   implicit none
@@ -26,7 +26,7 @@ subroutine save_in_electrons (iter, dr2)
 
 
   real(DP) :: dr2
-  if (reduce_io) return
+  if ( io_level < 2 ) return
   !
   ! open recover file
   !

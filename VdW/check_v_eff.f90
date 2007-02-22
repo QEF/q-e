@@ -35,8 +35,7 @@ SUBROUTINE check_v_eff ( veff, charge )
                                    npw
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid  
-  USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, &
-                                   isolve, reduce_io
+  USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE scf,                  ONLY : rho, vltot, vrs, v_of_0
   USE lsda_mod,             ONLY : nspin, current_spin, lsda, isk

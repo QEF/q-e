@@ -453,7 +453,7 @@ SUBROUTINE newscf
   USE noncollin_module, ONLY: report
 !  USE funct, only :
   USE io_files,      ONLY : iunigk, iunwfc, input_drho, output_drho
-  USE control_flags, ONLY : restart, reduce_io, lscf, istep, iprint, &
+  USE control_flags, ONLY : restart, io_level, lscf, istep, iprint, &
                             pot_order, wfc_order, david, max_cg_iter, &
                             isolve, tr2, ethr, mixing_beta, nmix, niter
   !
@@ -466,7 +466,7 @@ SUBROUTINE newscf
   !
 !  dft='Same as Before'
   restart  =.FALSE.
-  reduce_io=.TRUE.
+  io_level = 0
   lscf=.TRUE.
   lda_plus_u=.FALSE.
   doublegrid=.FALSE.

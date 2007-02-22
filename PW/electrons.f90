@@ -39,7 +39,7 @@ SUBROUTINE electrons()
                                    tauk, taukg, kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
-                                   restart, reduce_io
+                                   restart, io_level
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield
   USE buffers,              ONLY : save_buffer
@@ -497,7 +497,7 @@ SUBROUTINE electrons()
      !
      ! ... save converged wfc if they have not been written previously
      !     
-     IF ( nks == 1 .AND. reduce_io ) &
+     IF ( nks == 1 .AND. (io_level < 2) ) &
         CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
      !
      ! ... calculate the polarization

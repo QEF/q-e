@@ -32,7 +32,6 @@ subroutine solve_e_vdw ( iu )
   USE becmod,                ONLY : becp
   USE uspp_param,            ONLY : nhm
   use phcom
-  USE control_flags,         ONLY : reduce_io
   USE phus,                  ONLY : becp1 
   USE eff_v,                 ONLY : nelecr, veff, et_c, dvext,  evc => evc_veff, &
                                     dpsi_eff

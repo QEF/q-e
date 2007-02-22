@@ -25,7 +25,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
-  USE control_flags,        ONLY : ethr, isolve, reduce_io
+  USE control_flags,        ONLY : ethr, isolve, io_level
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
@@ -111,7 +111,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      ! ... read in wavefunctions from the previous iteration
      !
-     IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
+     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
      !   
      ! ... Needed for LDA+U
@@ -126,7 +126,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      ! ... iterative diagonalization of the next scf iteration 
      ! ... and for rho calculation
      !
-     IF ( nks > 1 .OR. .NOT. reduce_io .OR. lelfield ) &
+     IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
           CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... save restart information

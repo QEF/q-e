@@ -18,7 +18,7 @@ SUBROUTINE wfcinit()
   USE basis,                ONLY : natomwfc, startingwfc
   USE bp,                   ONLY : lelfield
   USE klist,                ONLY : xk, nks, ngk
-  USE control_flags,        ONLY : reduce_io, lscf
+  USE control_flags,        ONLY : io_level, lscf
   USE ldaU,                 ONLY : swfcatom, lda_plus_u
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE io_files,             ONLY : nwordwfc, nwordatwfc, iunwfc, iunigk, iunsat
@@ -80,7 +80,7 @@ SUBROUTINE wfcinit()
      ! ... memory if c_bands will not do it (for a single k-point);
      ! ... return and do nothing otherwise (c_bands will read wavefunctions)
      !
-     IF ( nks == 1 .AND. reduce_io ) &
+     IF ( nks == 1 .AND. (io_level < 2) ) &
         CALL get_buffer ( evc, nwordwfc, iunwfc, 1 )
      !
      CALL stop_clock( 'wfcinit' )
@@ -119,7 +119,7 @@ SUBROUTINE wfcinit()
      !
      ! ... write  starting wavefunctions to file
      !
-     IF ( nks > 1 .OR. .NOT. reduce_io ) &
+     IF ( nks > 1 .OR. (io_level > 1) ) &
          CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
   END DO

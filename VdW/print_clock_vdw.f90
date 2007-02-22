@@ -11,7 +11,6 @@ subroutine print_clock_vdw
 
   USE io_global,  ONLY : stdout
   USE uspp, only: okvan
-  USE control_ph
   USE ramanm, ONLY: lraman, elop
   USE nlcc_ph, ONLY: nlcc_any
   implicit none

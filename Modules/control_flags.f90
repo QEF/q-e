@@ -260,8 +260,8 @@ MODULE control_flags
   !
   ! ... printout control
   !
-  LOGICAL, PUBLIC :: &
-    reduce_io          ! if .TRUE. reduce the I/O to the strict minimum
+  INTEGER, PUBLIC :: &
+    io_level           ! variable controlling the amount of I/O to file
   INTEGER, PUBLIC :: &
     iverbosity         ! type of printing ( 0 few, 1 all )
   !
@@ -293,7 +293,7 @@ MODULE control_flags
   ! ... Parameter for plotting Vh average
   !
   LOGICAL,          PUBLIC :: tvhmean = .FALSE.  
-                              !  if TRUE save Vh averag to file Vh_mean.out
+                              !  if TRUE save Vh average to file Vh_mean.out
   REAL(DP),         PUBLIC :: vhrmin = 0.0d0
                               !  starting "radius" for plotting
   REAL(DP),         PUBLIC :: vhrmax = 1.0d0

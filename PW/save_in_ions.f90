@@ -11,7 +11,7 @@ subroutine save_in_ions
   USE kinds, ONLY: DP
   USE io_files, ONLY: iunres, prefix
   USE klist, ONLY: nks
-  USE control_flags, ONLY: reduce_io, lscf, tr2, ethr
+  USE control_flags, ONLY: io_level, lscf, tr2, ethr
   USE wvfct, ONLY: nbnd, et
   implicit none
   character :: where * 20
@@ -21,10 +21,9 @@ subroutine save_in_ions
   ! last completed kpoint
   ! last completed iteration
   logical :: exst
-
-
   real(DP) :: dr2
-  if (reduce_io.or..not.lscf) return
+  !
+  if ( io_level < 2 .or. .not.lscf ) return
   !
   ! open recover file
   !

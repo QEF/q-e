@@ -11,7 +11,7 @@ subroutine save_in_cbands (iter, ik_, dr2)
   USE kinds, ONLY: DP
   USE io_files, ONLY: iunres, prefix
   USE klist, ONLY: nks
-  USE control_flags, ONLY: reduce_io, tr2, ethr
+  USE control_flags, ONLY: io_level, tr2, ethr
   USE wvfct, ONLY: nbnd, et
    implicit none
   character :: where * 20
@@ -23,7 +23,7 @@ subroutine save_in_cbands (iter, ik_, dr2)
   logical :: exst
 
   real(DP) :: dr2
-  if (reduce_io) return
+  if ( io_level < 2 ) return
   !
   ! open recover file
   !

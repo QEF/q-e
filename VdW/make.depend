@@ -65,7 +65,6 @@ print_clock_vdw.o : ../PH/phcom.o
 print_clock_vdw.o : ../PH/ramanm.o
 solve_e.o : ../Modules/cell_base.o
 solve_e.o : ../Modules/check_stop.o
-solve_e.o : ../Modules/control_flags.o
 solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/ions_base.o

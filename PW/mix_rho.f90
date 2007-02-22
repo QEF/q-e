@@ -27,7 +27,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
   USE ldaU,           ONLY : lda_plus_u, Hubbard_lmax
   USE funct,          ONLY : dft_is_meta
   USE lsda_mod,       ONLY : nspin
-  USE control_flags,  ONLY : imix, ngm0, tr2, reduce_io
+  USE control_flags,  ONLY : imix, ngm0, tr2, io_level
   USE io_files,       ONLY : find_free_unit
   USE cell_base,      ONLY : omega
   !
@@ -119,7 +119,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
   !
   IF ( lda_plus_u ) ldim = 2 * Hubbard_lmax + 1
   !
-  savetofile = .not. reduce_io
+  savetofile = (io_level > 1)
   !
   rhocout(:,:) = rhocout(:,:) - rhocin(:,:)
   tmeta = dft_is_meta()

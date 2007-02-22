@@ -189,9 +189,11 @@ clean_pw.o : ../Modules/wavefunctions.o
 clean_pw.o : dynamics_module.o
 clean_pw.o : noncol.o
 clean_pw.o : pwcom.o
+close_files.o : ../Modules/control_flags.o
 close_files.o : ../Modules/io_files.o
 close_files.o : ../Modules/mp.o
 close_files.o : ../Modules/mp_global.o
+close_files.o : buffers.o
 close_files.o : pwcom.o
 complex_diis_module.o : ../Modules/constants.o
 complex_diis_module.o : ../Modules/control_flags.o
@@ -721,6 +723,8 @@ paw.o : ../Modules/ions_base.o
 paw.o : ../Modules/kind.o
 paw.o : ../Modules/parameters.o
 paw.o : ../Modules/read_upf.o
+paw.o : ../Modules/splinelib.o
+paw.o : ../Modules/uspp.o
 potinit.o : ../Modules/cell_base.o
 potinit.o : ../Modules/control_flags.o
 potinit.o : ../Modules/io_files.o
@@ -830,6 +834,7 @@ read_file.o : ../Modules/mp_global.o
 read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
 read_file.o : ../Modules/xml_io_base.o
+read_file.o : buffers.o
 read_file.o : noncol.o
 read_file.o : pw_restart.o
 read_file.o : pwcom.o
@@ -1143,6 +1148,7 @@ upf_to_internal.o : ../Modules/ions_base.o
 upf_to_internal.o : ../Modules/parameters.o
 upf_to_internal.o : ../Modules/pseudo_types.o
 upf_to_internal.o : ../Modules/uspp.o
+upf_to_internal.o : paw.o
 upf_to_internal.o : pwcom.o
 usnldiag.o : ../Modules/ions_base.o
 usnldiag.o : ../Modules/kind.o
