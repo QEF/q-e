@@ -28,6 +28,7 @@ SUBROUTINE openfil()
   USE mp_global,        ONLY : kunit
   USE bp,               ONLY : lelfield
   USE buffers,          ONLY : open_buffer
+  USE control_flags,    ONLY : io_level
   !
   IMPLICIT NONE
   !
@@ -52,12 +53,20 @@ SUBROUTINE openfil()
   !
   nwordwfc = nbnd*npwx*npol
   !
+  ! ... iunwfc=10: read/write wfc from/to file
+  ! ... iunwfc=-1: copy wfc to/from RAM 
+  !
+  IF ( io_level > 0 ) THEN
+     iunwfc = 10
+  ELSE
+     iunwfc = -1
+  END IF
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
   IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
      !
-     ! ... wavefunctions are read from the "save" file and rewritten (directly
-     ! ... in pw_readfile) using the internal format
+     ! ... wavefunctions are read from the "save" file and rewritten
+     ! ... (directly in pw_readfile) using the internal format
      !
      CALL pw_readfile( 'wave', ierr )
      !

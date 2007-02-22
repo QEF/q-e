@@ -168,6 +168,8 @@ disk_io        CHARACTER ( default='default')
                'high':    save all data at each SCF step 
                'default': save wavefunctions at each SCF step unless
                           there is a single k-point per process
+               'low' :    store wfc in memory, save only at the end
+               'none':    do not save anything, not even at the end
                If restarting from an interrupted calculation, the code
                will try to figure out what is available on disk. The
                more you write, the more complete the restart will be.

@@ -180,7 +180,7 @@ outdir         CHARACTER ( default =  value of the ESPRESSO_TMPDIR environment
                this directory.
 
 disk_io        CHARACTER
-               'high', 'default', 'minimal'
+               'high', 'default'
                'high'
                   CP code will write Kohn-Sham wf files and additional 
                   informations in data-file.xml in order to restart 

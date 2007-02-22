@@ -562,10 +562,20 @@ SUBROUTINE iosys()
      !
      io_level = 2
      !
+  CASE ( 'low' )
+     !
+     io_level = 0
+     restart  = .FALSE.
+     !
+  CASE ( 'none' )
+     !
+     io_level = -1
+     restart  = .FALSE.
+     !
   CASE DEFAULT
      !
      io_level = 1
-     restart   = .FALSE.
+     restart  = .FALSE.
      !
   END SELECT
   !
