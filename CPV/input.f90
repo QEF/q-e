@@ -228,15 +228,14 @@ MODULE input
                                tatomicwfc_ => tatomicwfc, &
                                printwfc_   => printwfc, &
                                tortho_     => tortho,   &
-                               nstep_      => nstep,    &    
-                               reduce_io_      => reduce_io    
+                               nstep_      => nstep
      USE control_flags, ONLY : tsde_          => tsde, &
                                tsteepdesc_    => tsteepdesc, &
                                tzeroe_        => tzeroe, &
                                tdamp_         => tdamp, &
                                trhor_         => trhor, &
                                trhow_         => trhow, &
-                               tvlocw_        => tvlocw, &
+                               tksw_          => tksw,  &
                                ortho_eps_     => ortho_eps, &
                                ortho_max_     => ortho_max, &
                                tnosee_        => tnosee
@@ -367,11 +366,9 @@ MODULE input
           ! Print on file STRUCTURE_FACTOR the structure factor
           ! gvectors and charge density, in reciprocal space.
      !
-     trhor_  = ( TRIM( calculation ) == 'nscf' )
-     tvlocw_ = ( TRIM( disk_io ) == 'high' )     !  warning this is not working
-     !
-     reduce_io_ = .NOT.( TRIM( disk_io ) == 'high' )
-     trhow_     = saverho
+     trhor_ = ( TRIM( calculation ) == 'nscf' )
+     trhow_ = saverho
+     tksw_  = ( TRIM( disk_io ) == 'high' )
      !
      SELECT CASE( TRIM( verbosity ) )
        CASE( 'minimal' )
@@ -1197,7 +1194,7 @@ MODULE input
       orthogonalization
 
     USE control_flags, ONLY:  program_name, tortho, tnosee, trane, ampre, &
-                              trhor, tvlocw, tfor, tnosep, iprsta, &
+                              trhor, tksw, tfor, tnosep, iprsta, &
                               thdyn, tnoseh
     !
     USE electrons_nose,       ONLY: electrons_nose_info
@@ -1260,7 +1257,7 @@ MODULE input
       IF ( trhor ) THEN
          WRITE( stdout,720)
       ENDIF
-      IF( tvlocw )THEN
+      IF( tksw )THEN
          WRITE( stdout,722)
       ENDIF
       !
@@ -1310,7 +1307,7 @@ MODULE input
     !
 700 FORMAT( /,3X, 'Verbosity: iprsta = ',i2,/)
 720 FORMAT(   3X, 'charge density is read from file')
-722 FORMAT(   3X, 'warning tvlocw has no effect vloc is not written to file')
+722 FORMAT(   3X, 'Wavefunctions will be written to file as Kohn-Sham states')
     !
   END SUBROUTINE modules_info
   !

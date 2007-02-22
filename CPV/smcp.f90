@@ -14,8 +14,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   ! ... main subroutine for SMD by Yosuke Kanai
   !
   USE kinds,                    ONLY : DP
-  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, &
-                                       iprsta, tfor, tvlocw,      &
+  USE control_flags,            ONLY : iprint, isave, thdyn, tpre, iprsta,tfor,&
                                        taurdr, tprnfor, tsdc, ndr, ndw, nbeg,  &
                                        nomore, tsde, tortho, tnosee, tnosep,   &
                                        trane, tranp, tsdp, tcp, tcap, ampre,   &

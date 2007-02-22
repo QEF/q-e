@@ -253,7 +253,7 @@
 !     rhos output: total potential on smooth real space grid
 !
       use kinds, only: dp
-      use control_flags, only: iprint, tvlocw, iprsta, thdyn, tpre, tfor, tprnfor
+      use control_flags, only: iprint, iprsta, thdyn, tpre, tfor, tprnfor
       use io_global, only: stdout
       use ions_base, only: nas => nax, nsp, na, nat
       use gvecs

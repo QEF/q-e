@@ -40,7 +40,7 @@ MODULE cp_restart
                              iupdwn_tot, nupdwn_tot, mat_z )
       !------------------------------------------------------------------------
       !
-      USE control_flags,            ONLY : gamma_only, force_pairing, trhow, reduce_io
+      USE control_flags,            ONLY : gamma_only, force_pairing, trhow, tksw
       USE io_files,                 ONLY : psfile, pseudo_dir
       USE mp_global,                ONLY : intra_image_comm, me_image, nproc_image
       USE printout_base,            ONLY : title
@@ -590,7 +590,7 @@ MODULE cp_restart
                !
                dtmp = 0.0d0
                !
-               IF( .NOT. reduce_io ) THEN
+               IF( tksw ) THEN
                   ! 
                   !  writes data required by postproc and PW
                   !
@@ -676,7 +676,7 @@ MODULE cp_restart
             iss_wfc = iss
             if( force_pairing ) iss_wfc = 1   ! only the WF for the first spin is allocated
             !
-            IF( .NOT. reduce_io ) THEN 
+            IF( tksw ) THEN 
                ! 
                !   Save additional WF, 
                !   orthogonal KS states to be used for post processing and PW
