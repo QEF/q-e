@@ -104,7 +104,7 @@ SUBROUTINE suscept_crystal
     
     ! read wfcs from file and compute becp
     call davcio (evc, nwordwfc, iunwfc, ik, -1)
-    call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+    !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
     
     !<apsi>
     call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
@@ -119,7 +119,7 @@ SUBROUTINE suscept_crystal
     !!!write(*,'(''q='',3(F12.4))') q
     
     call compute_u_kq(ik, q)
-    evc = evq
+    !!evc = evq
     
     ! compute p_k|evc>, v_k|evc> and G_k v_{k,k}|evc>
     call apply_operators

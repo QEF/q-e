@@ -44,13 +44,12 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
 
   ! allocate memory
   allocate (work(npwx), ps(nbnd,nbnd), h_diag(npwx,nbnd), &
-            eprec(nbnd))
+            eprec(nbnd), becp(nkb,nbnd))
 
   ! check if |q| is zero
   q_is_zero = .false.
   if (sqrt(q(1)*q(1)+q(2)*q(2)+q(3)*q(3)) < 1d-8) q_is_zero = .true.  
   if (q_is_zero) evq = evc
-
 
   !====================================================================
   ! apply -Q_{k+q} to the r.h.s.
@@ -85,8 +84,15 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   ! solve the linear system (apply G_{k+q})
   !====================================================================
   ! convergence treshold
-  !thresh = 1d-12
   thresh = sqrt(conv_threshold)   ! sqrt(of that of PARATEC)
+
+  ! use the hamiltonian at k+q
+  do ig = 1, npw
+    gk(1) = (xk(1,ik) + g(1,igk(ig)) + q(1)) * tpiba
+    gk(2) = (xk(2,ik) + g(2,igk(ig)) + q(2)) * tpiba
+    gk(3) = (xk(3,ik) + g(3,igk(ig)) + q(3)) * tpiba
+    g2kin (ig) = gk(1)**2 + gk(2)**2 + gk(3)**2
+  enddo
 
   ! preconditioning of the linear system
   do ibnd = 1, nbnd_occ (ik)
@@ -104,28 +110,26 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
      enddo
   enddo
 
-  ! use the hamiltonian at k+q
-  do ig = 1, npw
-    gk(1) = (xk(1,ik) + g(1,igk(ig)) + q(1)) * tpiba
-    gk(2) = (xk(2,ik) + g(2,igk(ig)) + q(2)) * tpiba
-    gk(3) = (xk(3,ik) + g(3,igk(ig)) + q(3)) * tpiba
-    g2kin (ig) = gk(1)**2 + gk(2)**2 + gk(3)**2
-  enddo
-
   if (.not. q_is_zero) then
     dxk = xk(:,ik) + q
     call init_us_2(npw, igk, dxk, vkb)
-    call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
+    !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
+  else
+    call init_us_2(npw, igk, xk(1,ik), vkb)
   endif
+  !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
     
   ! initial guess
   g_psi(:,:) = (0.d0, 0.d0)
 
   ! solve linear system  
   conv_root = .true.
+  !!PRINT*, et(1:nbnd,ik)*13.6056982d0
   call cgsolve_all (ch_psi_all2, cg_psi, et(1,ik), psi, g_psi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
        nbnd_occ(ik), 1 )
+
+  ! debug  
   !!write(stdout, '(5X,''cgsolve_all converged in '',I3,'' iterations'')') &
   !!      lter
 
@@ -140,6 +144,6 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   call stop_clock('greenf')
 
   ! free memory
-  deallocate (work, h_diag, eprec, ps)
+  deallocate (work, h_diag, eprec, ps, becp)
 
 END SUBROUTINE greenfunction

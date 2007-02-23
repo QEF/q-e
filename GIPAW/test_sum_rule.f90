@@ -26,7 +26,6 @@ SUBROUTINE test_f_sum_rule
   USE wvfct,                       ONLY : nbnd, npwx, npw, igk, wg, g2kin, &
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
-  USE becmod,                      ONLY : becp
   USE pwcom
   USE gipaw_module
 
@@ -60,15 +59,9 @@ SUBROUTINE test_f_sum_rule
     g2kin(:) = g2kin(:) * tpiba2
     call init_us_2(npw,igk,xk(1,ik),vkb)
 
-    ! read wfcs from file and compute becp
-    CALL davcio (evc, nwordwfc, iunwfc, ik, -1)
-    call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+    ! read wfcs from file
+    call davcio (evc, nwordwfc, iunwfc, ik, -1)
 
-    !q = 0.d0; q(1) = 0.0d0
-    !write(stdout, '(5X,''computing wfcs at k + q'')')
-    !call compute_u_kq(ik, q)
-    !evc = evq
- 
     ! compute p_k|evc>, v_k|evc> and G_k v_k|evc>
     do ipol = 1, 3
       call apply_p(evc, p_evc(1,1,ipol), ik, ipol, q)
@@ -84,8 +77,12 @@ SUBROUTINE test_f_sum_rule
       do ipol = 1, 3
         do ibnd = 1, nbnd_occ (ik)
           f_sum_k(ipol,jpol) = f_sum_k(ipol,jpol) + wg(ibnd,ik) * &
-            2.d0 * real(ZDOTC(npw, p_evc(1,ibnd,ipol), 1, &
+            2.d0 * real(ZDOTC(npw, evc(1,ibnd), 1, &
+!!            2.d0 * real(ZDOTC(npw, p_evc(1,ibnd,ipol), 1, &
                                    g_vel_evc(1,ibnd,jpol), 1))
+          PRINT*, ibnd,ipol,jpol, 2.d0 * real(ZDOTC(npw, evc(1,ibnd), 1, &
+                                   g_vel_evc(1,ibnd,jpol), 1))
+
         enddo
       enddo   ! ipol
     enddo   ! jpol

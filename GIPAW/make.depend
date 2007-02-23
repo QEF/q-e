@@ -21,14 +21,13 @@ compute_sigma.o : ../Modules/kind.o
 compute_sigma.o : ../PW/pwcom.o
 compute_sigma.o : gipaw_module.o
 compute_u_kq.o : ../Modules/cell_base.o
+compute_u_kq.o : ../Modules/control_flags.o
 compute_u_kq.o : ../Modules/io_files.o
 compute_u_kq.o : ../Modules/io_global.o
 compute_u_kq.o : ../Modules/kind.o
 compute_u_kq.o : ../Modules/uspp.o
 compute_u_kq.o : ../Modules/wavefunctions.o
 compute_u_kq.o : ../PW/becmod.o
-compute_u_kq.o : ../PW/diis_base.o
-compute_u_kq.o : ../PW/g_psi_mod.o
 compute_u_kq.o : ../PW/noncol.o
 compute_u_kq.o : ../PW/pwcom.o
 compute_u_kq.o : gipaw_module.o
@@ -58,6 +57,7 @@ g_tensor_crystal.o : ../PW/paw.o
 g_tensor_crystal.o : ../PW/pwcom.o
 g_tensor_crystal.o : gipaw_module.o
 gipaw_main.o : ../Modules/cell_base.o
+gipaw_main.o : ../Modules/control_flags.o
 gipaw_main.o : ../Modules/io_files.o
 gipaw_main.o : ../Modules/io_global.o
 gipaw_main.o : ../Modules/kind.o

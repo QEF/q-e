@@ -77,11 +77,7 @@ subroutine ch_psi_all2 (n, h, ah, e, ik, m)
   !
   !   Here we compute the projector in the valence band
   !
-  if (lgamma) then
-     ikq = ik
-  else
-     ikq = 2 * ik
-  endif
+  ikq = ik
   ps (:,:) = (0.d0, 0.d0)
 
   IF (noncolin) THEN

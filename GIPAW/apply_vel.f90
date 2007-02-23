@@ -63,6 +63,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   ! compute (1/2|dk|) ( V^{NL}_{k+dk+q,k+dk} |psi> - 
   !                     V^{NL}_{k-dk+q,k-dk} |psi> )
   !====================================================================
+  allocate(becp(nkb,nbnd))
   do isign = -1,1,2
     dxk(:) = xk(:,ik)
     dxk(ipol) = dxk(ipol) + isign * dk     ! k + dk
@@ -82,6 +83,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
     call add_vuspsi(npwx, npw, nbnd_occ(ik), psi, aux)
     vel_psi = vel_psi + dble(isign) * ryd_to_hartree * aux/(2.d0*dk*tpiba)
   enddo
+  deallocate(becp)
 #else
 
   do isign = -1,1,2
