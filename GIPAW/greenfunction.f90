@@ -18,6 +18,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   USE io_global,                   ONLY : stdout  
   USE becmod,                      ONLY : becp
   USE wavefunctions_module,        ONLY : evc
+  USE noncollin_module,            ONLY : npol
   USE pwcom
   USE gipaw_module
 
@@ -30,19 +31,19 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
 
   !-- local variables ----------------------------------------------------
   real(dp), parameter :: ryd_to_hartree = 0.5d0
-  complex(dp), allocatable :: ps(:,:), work (:,:)
+  complex(dp), allocatable :: ps(:,:), work (:)
   real(dp), allocatable :: h_diag (:,:), eprec (:)
   real(dp) :: anorm, thresh, gk(3), dxk(3)
   integer :: ibnd, ig, lter
   logical :: conv_root, q_is_zero
   complex(dp), external :: ZDOTC
-  external ch_psi_all, cg_psi
+  external ch_psi_all2, cg_psi
  
 
   call start_clock ('greenf')
 
   ! allocate memory
-  allocate (work(npwx, MAX(nkb,1)), ps(nbnd,nbnd), h_diag(npwx,nbnd), &
+  allocate (work(npwx), ps(nbnd,nbnd), h_diag(npwx,nbnd), &
             eprec(nbnd))
 
   ! check if |q| is zero
@@ -89,9 +90,8 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
 
   ! preconditioning of the linear system
   do ibnd = 1, nbnd_occ (ik)
-     conv_root = .true.
      do ig = 1, npw
-        work (ig,1) = g2kin (ig) * evc (ig, ibnd)
+        work (ig) = g2kin (ig) * evc (ig, ibnd)
      enddo
      eprec (ibnd) = 1.35d0 * ZDOTC (npw, evq (1, ibnd), 1, work, 1)
   enddo
@@ -122,7 +122,8 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   g_psi(:,:) = (0.d0, 0.d0)
 
   ! solve linear system  
-  call cgsolve_all (ch_psi_all, cg_psi, et(1,ik), psi, g_psi, &
+  conv_root = .true.
+  call cgsolve_all (ch_psi_all2, cg_psi, et(1,ik), psi, g_psi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
        nbnd_occ(ik), 1 )
   !!write(stdout, '(5X,''cgsolve_all converged in '',I3,'' iterations'')') &

@@ -39,7 +39,8 @@ PROGRAM gipaw_main
                               gipaw_readin, gipaw_allocate, gipaw_setup, &
                               gipaw_openfil, print_clock_gipaw, &
                               gipaw_summary
-  
+  USE control_flags,   ONLY : io_level
+
   !------------------------------------------------------------------------
   IMPLICIT NONE
   CHARACTER (LEN=9)   :: code = 'GIPAW'
@@ -52,7 +53,8 @@ PROGRAM gipaw_main
   ! ... and begin with the initialization part
   CALL startup ( nd_nmbr, code, version_number )
   CALL gipaw_readin()
-  
+  io_level = 1
+ 
   ! read ground state wavefunctions
   call read_file
   call openfil
