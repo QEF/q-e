@@ -225,8 +225,10 @@ MODULE rap_point_group
    COMPLEX(DP) :: char_mat(12,12)       ! the character tables
 
    CHARACTER(LEN=15) :: name_rap(12)  ! the name of the representation
-   CHARACTER(LEN=11) :: gname           ! the name of the group
-   CHARACTER(LEN=5) :: name_class(12)  ! the name of the class
+   CHARACTER(LEN=3)  :: ir_ram(12)    ! a string I, R or I+R for infrared,
+                                      !  Raman, or infrared+raman modes.
+   CHARACTER(LEN=11) :: gname         ! the name of the group
+   CHARACTER(LEN=5) :: name_class(12) ! the name of the class
    !
 END MODULE rap_point_group
 

@@ -19,8 +19,9 @@ USE kinds, ONLY : DP
 USE noncollin_module, ONLY : noncolin
 USE spin_orb, ONLY : domag
 USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
-                            char_mat, name_rap, name_class, gname
+                            char_mat, name_rap, name_class, gname, ir_ram
 USE rap_point_group_is, ONLY : gname_is
+USE control_ph, ONLY : lgamma
 IMPLICIT NONE
 INTEGER ::                  &
           nat, nsym,        & 
@@ -54,6 +55,7 @@ COMPLEX(DP) :: ZDOTC, times              ! safe dimension
                                          ! in case of accidental degeneracy 
 REAL(DP), ALLOCATABLE :: w1(:)
 COMPLEX(DP), ALLOCATABLE ::  rmode(:), trace(:,:), z(:,:)
+CHARACTER(3) :: cdum
 !
 !    Divide the modes on the basis of the mode degeneracy.
 !
@@ -127,6 +129,8 @@ DO igroup=1,ngroup
 !         write(6,*) igroup, irap, iclass, which_irr(iclass)
       ENDDO
       times=times/nsym
+      cdum="   "
+      IF (lgamma) cdum=ir_ram(irap)
       IF ((ABS(NINT(DBLE(times))-DBLE(times)) > 1.d-4).OR. &
           (ABS(AIMAG(times)) > eps) ) THEN
             WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x, "-->   ?")') &
@@ -135,13 +139,14 @@ DO igroup=1,ngroup
 
       IF (ABS(times) > eps) THEN
          IF (ABS(NINT(DBLE(times))-1.d0) < 1.d-4) THEN
-            WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a15)') &
+            WRITE(stdout,'(5x, "omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",a19)') &
               istart(igroup), istart(igroup+1)-1, w1(istart(igroup)), &
-                                name_rap(irap)
+                                name_rap(irap)//" "//cdum
          ELSE
-            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",i3,a15)') &
+            WRITE(stdout,'(5x,"omega(",i3," -",i3,") = ",f12.1,2x,"[cm-1]",3x,"--> ",i3,a19)') &
               istart(igroup), istart(igroup+1)-1, &
-              w1(istart(igroup)), NINT(DBLE(times)), name_rap(irap)
+              w1(istart(igroup)), NINT(DBLE(times)), &
+                                  name_rap(irap)//" "//cdum
          END IF
       END IF
    END DO

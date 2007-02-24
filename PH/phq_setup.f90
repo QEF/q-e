@@ -61,7 +61,7 @@ subroutine phq_setup
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2
   USE wvfct,         ONLY : nbnd, et
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
-                                   char_mat, name_rap, gname, name_class
+                                  char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
   use phcom
   USE control_flags, ONLY : iverbosity, modenum
@@ -283,7 +283,7 @@ subroutine phq_setup
         CALL s_axis_to_cart (s(1,1,isym), sr(1,1,isym), at, bg)
      END DO
      CALL find_group(nsym,sr,gname,code_group)
-     CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class)
+     CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class,ir_ram)
      CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
      IF (noncolin .and. domag) THEN
         nsym_is=0.d0

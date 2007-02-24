@@ -24,7 +24,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE symme,                ONLY : s, ftau, nsym, t_rev
   USE char,                 ONLY : sname
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr, &
-                                   char_mat, name_rap, name_class, gname
+                                   char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so,   ONLY : nrap, nelem_so, elem_so, has_e, &
                                    which_irr_so, char_mat_so, name_rap_so, &
                                    name_class_so, d_spin, name_class_so1
@@ -153,7 +153,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
                             nelem_so,elem_so,which_irr_so)
         END IF
      ELSE
-        CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class)
+        CALL set_irr_rap(code_group,nclass,char_mat,name_rap,name_class,ir_ram)
         CALL divide_class(code_group,nsymk,sr,nclass,nelem,elem,which_irr)
      END IF
 

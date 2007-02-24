@@ -36,7 +36,7 @@ SUBROUTINE summary()
                               a_nlcc, b_nlcc, alpha_nlcc
   USE symme,           ONLY : nsym, invsym, s, t_rev, ftau
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
-                              char_mat, name_rap, name_class, gname
+                              char_mat, name_rap, name_class, gname, ir_ram
   USE rap_point_group_so, ONLY : nrap, nelem_so, elem_so, has_e, which_irr_so, &
                               char_mat_so, name_rap_so, name_class_so, d_spin, &
                               name_class_so1
@@ -343,7 +343,8 @@ SUBROUTINE summary()
            IF (nclass.ne.nclass_ref) CALL errore('summary', &
                                                 'point double group ?',1)
         ELSE
-           CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap,name_class)
+           CALL set_irr_rap(code_group,nclass_ref,char_mat,name_rap, &
+                            name_class,ir_ram)
            CALL divide_class(code_group,nsym,sr,nclass,nelem,elem,which_irr)
            IF (nclass.ne.nclass_ref) CALL errore('summary','point group ?',1)
         ENDIF

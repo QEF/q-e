@@ -1063,7 +1063,8 @@ END FUNCTION angle_rot_s
 
 
 !-----------------------------------------------------------------------------
-SUBROUTINE set_irr_rap(code_group,nclass_ref,char_mat,name_rap,name_class)
+SUBROUTINE set_irr_rap(code_group,nclass_ref,char_mat,name_rap, &
+                       name_class,ir_ram)
 !-----------------------------------------------------------------------------
 !
 !  This subroutine collects the character tables of the 32 crystallographic
@@ -1074,6 +1075,9 @@ SUBROUTINE set_irr_rap(code_group,nclass_ref,char_mat,name_rap,name_class)
 !  from the book of P.W. Atkins, M.S. Child, and C.S.G. Phillips, 
 !  "Tables for group theory".
 !   D, G, L, S are used for Delta, Gamma, Lambda and Sigma.
+!   Representations which correspond to infrared or raman active modes
+!   are identified with the string in ir_ram: I (infrared active), 
+!   R (Raman active), I+R (Infrared and Raman active).
 !   
 !
 USE kinds, ONLY : DP
@@ -1084,6 +1088,7 @@ INTEGER :: nclass_ref, &    ! Output: number of irreducible representation
 
 CHARACTER(LEN=15) :: name_rap(12)   ! Output: name of the representations
 CHARACTER(LEN=5) :: name_class(12) ! Output: name of the classes
+CHARACTER(LEN=3) :: ir_ram(12)
 
 COMPLEX(DP) :: char_mat(12,12) ! Output: character matrix
 
@@ -1095,6 +1100,8 @@ char_mat=(1.d0,0.d0)
 
 name_class(1)="E   "
 
+ir_ram="   "
+
 IF (code_group==1) THEN
 !
 ! C_1
@@ -1102,6 +1109,7 @@ IF (code_group==1) THEN
    nclass_ref=1
 
    name_rap(1)="A    "
+   ir_ram(1)="I+R"
 
 ELSEIF (code_group==2) THEN
 !
@@ -1111,8 +1119,10 @@ ELSEIF (code_group==2) THEN
    name_class(2)="i    "
 
    name_rap(1)="A_g "
+   ir_ram(1)="R"
 
    name_rap(2)="A_u "
+   ir_ram(2)="I"
    char_mat(2,2)=(-1.d0,0.d0)
 
 ELSEIF (code_group==3) THEN
@@ -1123,8 +1133,10 @@ ELSEIF (code_group==3) THEN
    name_class(2)="s    "
 
    name_rap(1)="A'  "
+   ir_ram(1)="I+R"
 
    name_rap(2)="A'' "
+   ir_ram(2)="I+R"
    char_mat(2,2)=(-1.d0,0.d0)
 
 ELSEIF (code_group==4) THEN
@@ -1135,8 +1147,10 @@ ELSEIF (code_group==4) THEN
    name_class(2)="C2   "
 
    name_rap(1)="A   "
+   ir_ram(1)="I+R"
 
    name_rap(2)="B   "
+   ir_ram(2)="I+R"
    char_mat(2,2)=(-1.d0,0.d0)
 
 ELSEIF (code_group==5) THEN
@@ -1148,12 +1162,15 @@ ELSEIF (code_group==5) THEN
    name_class(3)="C3^2 "
 
    name_rap(1)="A   "
+   ir_ram(1)="I+R"
 
    name_rap(2)="E   "
+   ir_ram(2)="I+R"
    char_mat(2,2)=CMPLX(-0.5d0,sqr3d2)
    char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
    
    name_rap(3)="E*  "
+   ir_ram(3)="I+R"
    char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
 
@@ -1168,17 +1185,21 @@ ELSEIF (code_group==6) THEN
    name_class(4)="C4^3 "
 
    name_rap(1)="A   "
+   ir_ram(1)="I+R"
 
    name_rap(2)="B   "
+   ir_ram(2)="R"
    char_mat(2,2)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
 
    name_rap(3)="E   "
+   ir_ram(3)="I+R"
    char_mat(3,2)=( 0.d0,1.d0)
    char_mat(3,3)=(-1.d0,0.d0)
    char_mat(3,4)=( 0.d0,-1.d0)
 
    name_rap(4)="E*  "
+   ir_ram(4)="I+R"
    char_mat(4,2)=( 0.d0,-1.d0)
    char_mat(4,3)=(-1.d0,0.d0)
    char_mat(4,4)=( 0.d0,1.d0)
@@ -1196,6 +1217,7 @@ ELSEIF (code_group==7) THEN
    name_class(6)="C6^5 "
 
    name_rap(1)="A   "
+   ir_ram(1)="I+R"
 
    name_rap(2)="B   "
    char_mat(2,2)=(-1.d0,0.d0)
@@ -1203,6 +1225,7 @@ ELSEIF (code_group==7) THEN
    char_mat(2,6)=(-1.d0,0.d0)
 
    name_rap(3)="E_1 "
+   ir_ram(3)="I+R"
    char_mat(3,2)=CMPLX( 0.5d0,sqr3d2)
    char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
    char_mat(3,4)=(-1.d0,0.d0)
@@ -1210,6 +1233,7 @@ ELSEIF (code_group==7) THEN
    char_mat(3,6)=CMPLX( 0.5d0,-sqr3d2)
 
    name_rap(4)="E_1*"
+   ir_ram(4)="I+R"
    char_mat(4,2)=CMPLX( 0.5d0,-sqr3d2)
    char_mat(4,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(4,4)=(-1.d0,0.d0)
@@ -1217,12 +1241,14 @@ ELSEIF (code_group==7) THEN
    char_mat(4,6)=CMPLX( 0.5d0,sqr3d2)
 
    name_rap(5)="E_2 "
+   ir_ram(5)="R"
    char_mat(5,2)=CMPLX(-0.5d0,sqr3d2)
    char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(5,5)=CMPLX(-0.5d0,sqr3d2)
    char_mat(5,6)=CMPLX(-0.5d0,-sqr3d2)
 
    name_rap(6)="E_2*"
+   ir_ram(6)="R"
    char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(6,3)=CMPLX(-0.5d0,sqr3d2)
    char_mat(6,5)=CMPLX(-0.5d0,-sqr3d2)
@@ -1238,16 +1264,20 @@ ELSEIF (code_group==8) THEN
    name_class(4)="C2x  "
 
    name_rap(1)="A   "
+   ir_ram(1)="R"
 
    name_rap(2)="B_1 "
+   ir_ram(2)="I+R"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
 
    name_rap(3)="B_2 "
+   ir_ram(3)="I+R"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,4)=(-1.d0,0.d0)
 
    name_rap(4)="B_3 "
+   ir_ram(4)="I+R"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
 
@@ -1260,11 +1290,14 @@ ELSEIF (code_group==9) THEN
    name_class(3)="3C2' "
 
    name_rap(1)="A_1 "
+   ir_ram(1)="R"
 
    name_rap(2)="A_2 "
+   ir_ram(2)="I"
    char_mat(2,3)=(-1.d0,0.d0)
 
    name_rap(3)="E   "
+   ir_ram(3)="I+R"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -1280,20 +1313,25 @@ ELSEIF (code_group==10) THEN
    name_class(5)="2C2''"
 
    name_rap(1)="A_1 "
+   ir_ram(1)="R"
 
    name_rap(2)="A_2 "
+   ir_ram(2)="I"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
    name_rap(3)="B_1 "
+   ir_ram(3)="R"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
 
    name_rap(4)="B_2 "
+   ir_ram(4)="R"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
 
    name_rap(5)="E   "
+   ir_ram(5)="I+R"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -1312,8 +1350,10 @@ ELSEIF (code_group==11) THEN
    name_class(6)="3C2''"
 
    name_rap(1)="A_1 "
+   ir_ram(1)="R"
 
    name_rap(2)="A_2 "
+   ir_ram(2)="I"
    char_mat(2,5)=(-1.d0,0.d0)
    char_mat(2,6)=(-1.d0,0.d0)
 
@@ -1328,6 +1368,7 @@ ELSEIF (code_group==11) THEN
    char_mat(4,5)=(-1.d0,0.d0)
 
    name_rap(5)="E_1 "
+   ir_ram(5)="I+R"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,3)=(-1.d0,0.d0)
    char_mat(5,4)=(-2.d0,0.d0)
@@ -1335,6 +1376,7 @@ ELSEIF (code_group==11) THEN
    char_mat(5,6)=( 0.d0,0.d0)
 
    name_rap(6)="E_2 "
+   ir_ram(6)="R"
    char_mat(6,1)=( 2.d0,0.d0)
    char_mat(6,2)=(-1.d0,0.d0)
    char_mat(6,3)=(-1.d0,0.d0)
@@ -1352,16 +1394,20 @@ ELSEIF (code_group==12) THEN
    name_class(4)="s_yz "
 
    name_rap(1)="A_1  D_1  S_1"
-
+   ir_ram(1)="I+R"
+ 
    name_rap(2)="A_2  D_2  S_2"
+   ir_ram(2)="R"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
 
    name_rap(3)="B_1  D_3  S_3"
+   ir_ram(3)="I+R"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,4)=(-1.d0,0.d0)
 
    name_rap(4)="B_2  D_4  S_4"
+   ir_ram(4)="I+R"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
 
@@ -1374,11 +1420,13 @@ ELSEIF (code_group==13) THEN
    name_class(3)="3s_v "
 
    name_rap(1)="A_1  L_1"
+   ir_ram(1)="I+R"
 
    name_rap(2)="A_2  L_2"
    char_mat(2,3)=(-1.d0,0.d0)
 
    name_rap(3)="E    L_3"
+   ir_ram(3)="I+R"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -1394,20 +1442,24 @@ ELSEIF (code_group==14) THEN
    name_class(5)="2s_d "
 
    name_rap(1)="A_1  G_1 D_1"
+   ir_ram(1)="I+R"
 
    name_rap(2)="A_2  G_2 D_1'"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
    name_rap(3)="B_1  G_3 D_2"
+   ir_ram(3)="R"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
 
    name_rap(4)="B_2  G_4 D_2'"
+   ir_ram(4)="R"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
 
    name_rap(5)="E    G_5 D_5"
+   ir_ram(5)="I+R"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -1426,6 +1478,7 @@ ELSEIF (code_group==15) THEN
    name_class(6)="3s_d "
 
    name_rap(1)="A_1 "
+   ir_ram(1)="I+R"
 
    name_rap(2)="A_2 "
    char_mat(2,5)=(-1.d0,0.d0)
@@ -1442,6 +1495,7 @@ ELSEIF (code_group==15) THEN
    char_mat(4,5)=(-1.d0,0.d0)
 
    name_rap(5)="E_1 "
+   ir_ram(5)="I+R"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,3)=(-1.d0,0.d0)
    char_mat(5,4)=(-2.d0,0.d0)
@@ -1449,6 +1503,7 @@ ELSEIF (code_group==15) THEN
    char_mat(5,6)=( 0.d0,0.d0)
 
    name_rap(6)="E_2 "
+   ir_ram(6)="R"
    char_mat(6,1)=( 2.d0,0.d0)
    char_mat(6,2)=(-1.d0,0.d0)
    char_mat(6,3)=(-1.d0,0.d0)
@@ -1466,16 +1521,20 @@ ELSEIF (code_group==16) THEN
    name_class(4)="s_h  "
 
    name_rap(1)="A_g "
+   ir_ram(1)="R"
 
    name_rap(2)="B_g "
+   ir_ram(2)="R"
    char_mat(2,2)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
 
    name_rap(3)="A_u "
+   ir_ram(3)="I"
    char_mat(3,3)=(-1.d0,0.d0)
    char_mat(3,4)=(-1.d0,0.d0)
 
    name_rap(4)="B_u "
+   ir_ram(4)="I"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
 
@@ -1491,25 +1550,30 @@ ELSEIF (code_group==17) THEN
    name_class(6)="S3^5 "
 
    name_rap(1)="A'  "
-
+   ir_ram(1)="R"
+ 
    name_rap(2)="E'  "
+   ir_ram(2)="I+R"
    char_mat(2,2)=CMPLX(-0.5d0,sqr3d2)
    char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(2,5)=CMPLX(-0.5d0,sqr3d2)
    char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2)
 
    name_rap(3)="E'* "
+   ir_ram(3)="I+R"
    char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
    char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,6)=CMPLX(-0.5d0,sqr3d2)
 
    name_rap(4)="A'' "
+   ir_ram(4)="I"
    char_mat(4,4)=(-1.d0,0.d0)
    char_mat(4,5)=(-1.d0,0.d0)
    char_mat(4,6)=(-1.d0,0.d0)
 
    name_rap(5)="E'' "
+   ir_ram(5)="R"
    char_mat(5,2)=CMPLX(-0.5d0,sqr3d2)
    char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(5,4)=(-1.d0,0.d0)
@@ -1517,6 +1581,7 @@ ELSEIF (code_group==17) THEN
    char_mat(5,6)=CMPLX(0.5d0,sqr3d2)
 
    name_rap(6)="E''*"
+   ir_ram(6)="R"
    char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(6,3)=CMPLX(-0.5d0,sqr3d2)
    char_mat(6,4)=(-1.d0,0.d0)
@@ -1538,14 +1603,17 @@ ELSEIF (code_group==18) THEN
    name_class(8)="S4   "
 
    name_rap(1)="A_g "
+   ir_ram(1)="R"
 
    name_rap(2)="B_g "
+   ir_ram(2)="R"
    char_mat(2,2)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,6)=(-1.d0,0.d0)
    char_mat(2,8)=(-1.d0,0.d0)
 
    name_rap(3)="E_g "
+   ir_ram(3)="R"
    char_mat(3,2)=( 0.d0,1.d0)
    char_mat(3,3)=(-1.d0,0.d0)
    char_mat(3,4)=( 0.d0,-1.d0)
@@ -1554,6 +1622,7 @@ ELSEIF (code_group==18) THEN
    char_mat(3,8)=( 0.d0,-1.d0)
 
    name_rap(4)="E_g*"
+   ir_ram(4)="R"
    char_mat(4,2)=(0.d0,-1.d0)
    char_mat(4,3)=(-1.d0,0.d0)
    char_mat(4,4)=( 0.d0,1.d0)
@@ -1562,6 +1631,7 @@ ELSEIF (code_group==18) THEN
    char_mat(4,8)=( 0.d0,1.d0)
 
    name_rap(5)="A_u "
+   ir_ram(5)="I"
    char_mat(5,5)=(-1.d0,0.d0)
    char_mat(5,6)=(-1.d0,0.d0)
    char_mat(5,7)=(-1.d0,0.d0)
@@ -1574,6 +1644,7 @@ ELSEIF (code_group==18) THEN
    char_mat(6,7)=(-1.d0,0.d0)
 
    name_rap(7)="E_u "
+   ir_ram(7)="I"
    char_mat(7,2)=( 0.d0,1.d0)
    char_mat(7,3)=(-1.d0,0.d0)
    char_mat(7,4)=( 0.d0,-1.d0)
@@ -1582,6 +1653,7 @@ ELSEIF (code_group==18) THEN
    char_mat(7,8)=( 0.d0,1.d0)
 
    name_rap(8)="E_u*"
+   ir_ram(8)="I"
    char_mat(8,2)=( 0.d0,-1.d0)
    char_mat(8,3)=(-1.d0,0.d0)
    char_mat(8,4)=( 0.d0,1.d0)
@@ -1607,6 +1679,7 @@ ELSEIF (code_group==19) THEN
    name_class(12)="S3  "
 
    name_rap(1)="A_g "
+   ir_ram(1)="R"
 
    name_rap(2)="B_g "
    char_mat(2,2)=(-1.d0,0.d0)
@@ -1617,6 +1690,7 @@ ELSEIF (code_group==19) THEN
    char_mat(2,12)=(-1.d0,0.d0)
 
    name_rap(3)="E_1g"
+   ir_ram(3)="R"
    char_mat(3,2)=CMPLX( 0.5d0, sqr3d2)
    char_mat(3,3)=CMPLX(-0.5d0, sqr3d2)
    char_mat(3,4)=(-1.d0,0.d0)
@@ -1629,6 +1703,7 @@ ELSEIF (code_group==19) THEN
    char_mat(3,12)=CMPLX( 0.5d0,-sqr3d2)
 
    name_rap(4)="E1g*"
+   ir_ram(4)="R"
    char_mat(4,2)=CMPLX( 0.5d0,-sqr3d2)
    char_mat(4,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(4,4)=(-1.d0,0.d0)
@@ -1641,6 +1716,7 @@ ELSEIF (code_group==19) THEN
    char_mat(4,12)=CMPLX( 0.5d0,sqr3d2)
 
    name_rap(5)="E_2g"
+   ir_ram(5)="R"
    char_mat(5,2)=CMPLX(-0.5d0, sqr3d2)
    char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(5,5)=CMPLX(-0.5d0, sqr3d2)
@@ -1651,6 +1727,7 @@ ELSEIF (code_group==19) THEN
    char_mat(5,12)=CMPLX(-0.5d0,-sqr3d2)
 
    name_rap(6)="E2g*"
+   ir_ram(6)="R"
    char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(6,3)=CMPLX(-0.5d0, sqr3d2)
    char_mat(6,5)=CMPLX(-0.5d0,-sqr3d2)
@@ -1661,6 +1738,7 @@ ELSEIF (code_group==19) THEN
    char_mat(6,12)=CMPLX(-0.5d0, sqr3d2)
 
    name_rap(7)="A_u "
+   ir_ram(7)="I"
    char_mat(7,7)=(-1.d0,0.d0)
    char_mat(7,8)=(-1.d0,0.d0)
    char_mat(7,9)=(-1.d0,0.d0)
@@ -1677,6 +1755,7 @@ ELSEIF (code_group==19) THEN
    char_mat(8,11)=(-1.d0,0.d0)
 
    name_rap(9)="E_1u"
+   ir_ram(9)="I"
    char_mat(9,2)=CMPLX( 0.5d0, sqr3d2)
    char_mat(9,3)=CMPLX(-0.5d0, sqr3d2)
    char_mat(9,4)=(-1.d0,0.d0)
@@ -1689,6 +1768,7 @@ ELSEIF (code_group==19) THEN
    char_mat(9,12)=CMPLX(-0.5d0, sqr3d2)
 
    name_rap(10)="E1u*"
+   ir_ram(10)="I"
    char_mat(10,2)=CMPLX( 0.5d0,-sqr3d2)
    char_mat(10,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(10,4)=(-1.d0,0.d0)
@@ -1738,20 +1818,24 @@ ELSEIF (code_group==20) THEN
    name_class(8)="s_yz "
 
    name_rap(1)="A_g "
-
+   ir_ram(1)="R"
+ 
    name_rap(2)="B_1g"
+   ir_ram(2)="R"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,7)=(-1.d0,0.d0)
    char_mat(2,8)=(-1.d0,0.d0)
 
    name_rap(3)="B_2g"
+   ir_ram(3)="R"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,4)=(-1.d0,0.d0)
    char_mat(3,6)=(-1.d0,0.d0)
    char_mat(3,8)=(-1.d0,0.d0)
 
    name_rap(4)="B_3g"
+   ir_ram(4)="R"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
    char_mat(4,6)=(-1.d0,0.d0)
@@ -1764,18 +1848,21 @@ ELSEIF (code_group==20) THEN
    char_mat(5,8)=(-1.d0,0.d0)
 
    name_rap(6)="B_1u"
+   ir_ram(6)="I"
    char_mat(6,3)=(-1.d0,0.d0)
    char_mat(6,4)=(-1.d0,0.d0)
    char_mat(6,5)=(-1.d0,0.d0)
    char_mat(6,6)=(-1.d0,0.d0)
 
    name_rap(7)="B_2u"
+   ir_ram(7)="I"
    char_mat(7,2)=(-1.d0,0.d0)
    char_mat(7,4)=(-1.d0,0.d0)
    char_mat(7,5)=(-1.d0,0.d0)
    char_mat(7,7)=(-1.d0,0.d0)
 
    name_rap(8)="B_3u"
+   ir_ram(8)="I"
    char_mat(8,2)=(-1.d0,0.d0)
    char_mat(8,3)=(-1.d0,0.d0)
    char_mat(8,5)=(-1.d0,0.d0)
@@ -1793,12 +1880,14 @@ ELSEIF (code_group==21) THEN
    name_class(6)="3s_v "
 
    name_rap(1)="A'_1"
+   ir_ram(1)="R"
 
    name_rap(2)="A'_2"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,6)=(-1.d0,0.d0)
 
    name_rap(3)="E'  "
+   ir_ram(3)="I+R"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -1812,11 +1901,13 @@ ELSEIF (code_group==21) THEN
    char_mat(4,6)=(-1.d0,0.d0)
 
    name_rap(5)="A''2"
+   ir_ram(5)="I"
    char_mat(5,3)=(-1.d0,0.d0)
    char_mat(5,4)=(-1.d0,0.d0)
    char_mat(5,5)=(-1.d0,0.d0)
 
    name_rap(6)="E'' "
+   ir_ram(6)="R"
    char_mat(6,1)=( 2.d0,0.d0)
    char_mat(6,2)=(-1.d0,0.d0)
    char_mat(6,3)=( 0.d0,0.d0)
@@ -1840,6 +1931,7 @@ ELSEIF (code_group==22) THEN
 
 
    name_rap(1)="A_1g X_1  M_1"
+   ir_ram(1)="R"
 
    name_rap(2)="A_2g X_4  M_4"
    char_mat(2,4)=(-1.d0,0.d0)
@@ -1848,18 +1940,21 @@ ELSEIF (code_group==22) THEN
    char_mat(2,10)=(-1.d0,0.d0)
 
    name_rap(3)="B_1g X_2  M_2"
+   ir_ram(3)="R"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
    char_mat(3,7)=(-1.d0,0.d0)
    char_mat(3,10)=(-1.d0,0.d0)
 
    name_rap(4)="B_2g X_3  M_3"
+   ir_ram(4)="R"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
    char_mat(4,7)=(-1.d0,0.d0)
    char_mat(4,9)=(-1.d0,0.d0)
 
    name_rap(5)="E_g  X_5  M_5"
+   ir_ram(5)="R"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -1879,6 +1974,7 @@ ELSEIF (code_group==22) THEN
    char_mat(6,10)=(-1.d0,0.d0)
 
    name_rap(7)="A_2u X_4' M_4'"
+   ir_ram(7)="I"
    char_mat(7,4)=(-1.d0,0.d0)
    char_mat(7,5)=(-1.d0,0.d0)
    char_mat(7,6)=(-1.d0,0.d0)
@@ -1900,6 +1996,7 @@ ELSEIF (code_group==22) THEN
    char_mat(9,10)=(-1.d0,0.d0)
 
    name_rap(10)="E_u  X_5' M_5'"
+   ir_ram(10)="I"
    char_mat(10,1)=( 2.d0,0.d0)
    char_mat(10,2)=( 0.d0,0.d0)
    char_mat(10,3)=(-2.d0,0.d0)
@@ -1929,7 +2026,8 @@ ELSEIF (code_group==23) THEN
    name_class(12)="3s_v "
 
    name_rap(1)="A_1g"
-
+   ir_ram(1)="R"
+ 
    name_rap(2)="A_2g"
    char_mat(2,5)=(-1.d0,0.d0)
    char_mat(2,6)=(-1.d0,0.d0)
@@ -1953,6 +2051,7 @@ ELSEIF (code_group==23) THEN
    char_mat(4,11)=(-1.d0,0.d0)
 
    name_rap(5)="E_1g"
+   ir_ram(5)="R"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,3)=(-1.d0,0.d0)
    char_mat(5,4)=(-2.d0,0.d0)
@@ -1965,6 +2064,7 @@ ELSEIF (code_group==23) THEN
    char_mat(5,12)=( 0.d0,0.d0)
 
    name_rap(6)="E_2g"
+   ir_ram(6)="R"
    char_mat(6,1)=( 2.d0,0.d0)
    char_mat(6,2)=(-1.d0,0.d0)
    char_mat(6,3)=(-1.d0,0.d0)
@@ -1987,6 +2087,7 @@ ELSEIF (code_group==23) THEN
    char_mat(7,12)=(-1.d0,0.d0)
 
    name_rap(8)="A_2u"
+   ir_ram(8)="I"
    char_mat(8,5)=(-1.d0,0.d0)
    char_mat(8,6)=(-1.d0,0.d0)
    char_mat(8,7)=(-1.d0,0.d0)
@@ -2011,6 +2112,7 @@ ELSEIF (code_group==23) THEN
    char_mat(10,12)=(-1.d0,0.d0)
 
    name_rap(11)="E_1u"
+   ir_ram(11)="I"
    char_mat(11,1)=( 2.d0,0.d0)
    char_mat(11,3)=(-1.d0,0.d0)
    char_mat(11,4)=(-2.d0,0.d0)
@@ -2045,20 +2147,24 @@ ELSEIF (code_group==24) THEN
    name_class(5)="2s_d "
 
    name_rap(1)="A_1  X_1  W_1"
+   ir_ram(1)="R"
 
    name_rap(2)="A_2  X_4  W_2'"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
    name_rap(3)="B_1  X_2  W_1'"
+   ir_ram(3)="R"
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,5)=(-1.d0,0.d0)
 
    name_rap(4)="B_2  X_3  W_2"
+   ir_ram(4)="I+R"
    char_mat(4,2)=(-1.d0,0.d0)
    char_mat(4,4)=(-1.d0,0.d0)
 
    name_rap(5)="E    X_5  W_3"
+   ir_ram(5)="I+R"
    char_mat(5,1)=( 2.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-2.d0,0.d0)
@@ -2077,12 +2183,14 @@ ELSEIF (code_group==25) THEN
    name_class(6)="3s_d "
 
    name_rap(1)="A_1g L_1"
+   ir_ram(1)="R"
 
    name_rap(2)="A_2g L_2"
    char_mat(2,3)=(-1.d0,0.d0)
    char_mat(2,6)=(-1.d0,0.d0)
 
    name_rap(3)="E_g  L_3"
+   ir_ram(3)="R"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -2096,11 +2204,13 @@ ELSEIF (code_group==25) THEN
    char_mat(4,6)=(-1.d0,0.d0)
 
    name_rap(5)="A_2u L_2'"
+   ir_ram(5)="I"
    char_mat(5,3)=(-1.d0,0.d0)
    char_mat(5,4)=(-1.d0,0.d0)
    char_mat(5,5)=(-1.d0,0.d0)
 
    name_rap(6)="E_u  L_3'"
+   ir_ram(6)="I"
    char_mat(6,1)=( 2.d0,0.d0)
    char_mat(6,2)=(-1.d0,0.d0)
    char_mat(6,3)=( 0.d0,0.d0)
@@ -2117,17 +2227,21 @@ ELSEIF (code_group==26) THEN
    name_class(4)="S4^3 "
 
    name_rap(1)="A    W_1"
+   ir_ram(1)="R"
 
    name_rap(2)="B    W_3"
+   ir_ram(2)="I+R"
    char_mat(2,2)=(-1.d0,0.d0)
    char_mat(2,4)=(-1.d0,0.d0)
 
    name_rap(3)="E    W_4"
+   ir_ram(3)="I+R"
    char_mat(3,2)=( 0.d0, 1.d0)
    char_mat(3,3)=(-1.d0,0.d0)
    char_mat(3,4)=( 0.d0,-1.d0)
 
    name_rap(4)="E*   W_2"
+   ir_ram(4)="I+R"
    char_mat(4,2)=( 0.d0,-1.d0)
    char_mat(4,3)=(-1.d0,0.d0)
    char_mat(4,4)=( 0.d0, 1.d0)
@@ -2145,25 +2259,30 @@ ELSEIF (code_group==27) THEN
 
 
    name_rap(1)="A_g "
+   ir_ram(1)="R"
 
    name_rap(2)="E_g "
+   ir_ram(2)="R"
    char_mat(2,2)=CMPLX(-0.5d0,sqr3d2)
    char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(2,5)=CMPLX(-0.5d0,sqr3d2)
    char_mat(2,6)=CMPLX(-0.5d0,-sqr3d2)
 
    name_rap(3)="E_g*"
+   ir_ram(3)="R"
    char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,3)=CMPLX(-0.5d0,sqr3d2)
    char_mat(3,5)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,6)=CMPLX(-0.5d0,sqr3d2)
 
    name_rap(4)="A_u "
+   ir_ram(4)="I"
    char_mat(4,4)=(-1.d0,0.d0)
    char_mat(4,5)=(-1.d0,0.d0)
    char_mat(4,6)=(-1.d0,0.d0)
 
    name_rap(5)="E_u "
+   ir_ram(5)="I"
    char_mat(5,2)=CMPLX(-0.5d0,sqr3d2)
    char_mat(5,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(5,4)=(-1.d0,0.d0)
@@ -2171,6 +2290,7 @@ ELSEIF (code_group==27) THEN
    char_mat(5,6)=CMPLX( 0.5d0, sqr3d2)
 
    name_rap(6)="E_u*"
+   ir_ram(6)="I"
    char_mat(6,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(6,3)=CMPLX(-0.5d0,sqr3d2)
    char_mat(6,4)=(-1.d0,0.d0)
@@ -2188,16 +2308,20 @@ ELSEIF (code_group==28) THEN
    name_class(4)="3C2  "
 
    name_rap(1)="A   "
+   ir_ram(1)="R"
 
    name_rap(2)="E   "
+   ir_ram(2)="R"
    char_mat(2,2)=CMPLX(-0.5d0, sqr3d2)
    char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
 
    name_rap(3)="E*  "
+   ir_ram(3)="R"
    char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,3)=CMPLX(-0.5d0, sqr3d2)
 
    name_rap(4)="T   "
+   ir_ram(4)="I+R"
    char_mat(4,1)=( 3.0d0,0.d0)
    char_mat(4,2)=( 0.0d0,0.d0)
    char_mat(4,3)=( 0.0d0,0.d0)
@@ -2217,20 +2341,24 @@ ELSEIF (code_group==29) THEN
    name_class(8)="3s_h "
 
    name_rap(1)="A_g "
+   ir_ram(1)="R"
 
    name_rap(2)="E_g "
+   ir_ram(2)="R"
    char_mat(2,2)=CMPLX(-0.5d0, sqr3d2)
    char_mat(2,3)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(2,6)=CMPLX(-0.5d0, sqr3d2)
    char_mat(2,7)=CMPLX(-0.5d0,-sqr3d2)
 
    name_rap(3)="E_g*"
+   ir_ram(3)="R"
    char_mat(3,2)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,3)=CMPLX(-0.5d0, sqr3d2)
    char_mat(3,6)=CMPLX(-0.5d0,-sqr3d2)
    char_mat(3,7)=CMPLX(-0.5d0, sqr3d2)
 
    name_rap(4)="T_g "
+   ir_ram(4)="R"
    char_mat(4,1)=( 3.0d0,0.d0)
    char_mat(4,2)=( 0.0d0,0.d0)
    char_mat(4,3)=( 0.0d0,0.d0)
@@ -2263,6 +2391,7 @@ ELSEIF (code_group==29) THEN
    char_mat(7,8)=(-1.0d0,0.d0)
 
    name_rap(8)="T_u "
+   ir_ram(8)="I"
    char_mat(8,1)=( 3.0d0,0.d0)
    char_mat(8,2)=( 0.0d0,0.d0)
    char_mat(8,3)=( 0.0d0,0.d0)
@@ -2283,12 +2412,14 @@ ELSEIF (code_group==30) THEN
    name_class(5)="6s_d "
 
    name_rap(1)="A_1  G_1  P_1"
+   ir_ram(1)="R"
 
    name_rap(2)="A_2  G_2  P_2"
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
    name_rap(3)="E    G_12 P_3"
+   ir_ram(3)="R"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 2.d0,0.d0)
@@ -2302,6 +2433,7 @@ ELSEIF (code_group==30) THEN
    char_mat(4,5)=(-1.d0,0.d0)
 
    name_rap(5)="T_2  G_15 P_4"
+   ir_ram(5)="I+R"
    char_mat(5,1)=( 3.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-1.d0,0.d0)
@@ -2318,12 +2450,14 @@ ELSEIF (code_group==31) THEN
    name_class(5)="6C4  "
 
    name_rap(1)="A_1 "
+   ir_ram(1)="R"
 
    name_rap(2)="A_2 "
    char_mat(2,4)=(-1.d0,0.d0)
    char_mat(2,5)=(-1.d0,0.d0)
 
    name_rap(3)="E   "
+   ir_ram(3)="R"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 2.d0,0.d0)
@@ -2331,12 +2465,14 @@ ELSEIF (code_group==31) THEN
    char_mat(3,5)=( 0.d0,0.d0)
 
    name_rap(4)="T_1 "
+   ir_ram(4)="I"
    char_mat(4,1)=( 3.d0,0.d0)
    char_mat(4,2)=( 0.d0,0.d0)
    char_mat(4,3)=(-1.d0,0.d0)
    char_mat(4,5)=(-1.d0,0.d0)
 
    name_rap(5)="T_2 "
+   ir_ram(5)="R"
    char_mat(5,1)=( 3.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,3)=(-1.d0,0.d0)
@@ -2358,6 +2494,7 @@ ELSEIF (code_group==32) THEN
    name_class(10)="6s_d "
 
    name_rap(1)="A_1g G_1   G_1+"
+   ir_ram(1)="R"
 
    name_rap(2)="A_2g G_2   G_2+"
    char_mat(2,3)=(-1.d0,0.d0)
@@ -2366,6 +2503,7 @@ ELSEIF (code_group==32) THEN
    char_mat(2,10)=(-1.d0,0.d0)
 
    name_rap(3)="E_g  G_12  G_3+"
+   ir_ram(3)="R"
    char_mat(3,1)=( 2.d0,0.d0)
    char_mat(3,2)=(-1.d0,0.d0)
    char_mat(3,3)=( 0.d0,0.d0)
@@ -2389,6 +2527,7 @@ ELSEIF (code_group==32) THEN
 
 
    name_rap(5)="T_2g G_25' G_5+"
+   ir_ram(5)="R"
    char_mat(5,1)=( 3.d0,0.d0)
    char_mat(5,2)=( 0.d0,0.d0)
    char_mat(5,4)=(-1.d0,0.d0)
@@ -2424,6 +2563,7 @@ ELSEIF (code_group==32) THEN
    char_mat(8,10)=( 0.d0,0.d0)
 
    name_rap(9)="T_1u G_15  G_4-"
+   ir_ram(9)="I"
    char_mat(9,1)=( 3.d0,0.d0)
    char_mat(9,2)=( 0.d0,0.d0)
    char_mat(9,3)=(-1.d0,0.d0)
