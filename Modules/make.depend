@@ -243,6 +243,13 @@ wave_base.o : mp.o
 wave_base.o : mp_global.o
 wave_base.o : random_numbers.o
 wavefunctions.o : kind.o
+xml_input.o : ../iotk/src/iotk_module.o
+xml_input.o : input_parameters.o
+xml_input.o : io_files.o
+xml_input.o : io_global.o
+xml_input.o : kind.o
+xml_input.o : version.o
+xml_input.o : xml_io_base.o
 xml_io_base.o : ../iotk/src/iotk_module.o
 xml_io_base.o : constants.o
 xml_io_base.o : io_files.o

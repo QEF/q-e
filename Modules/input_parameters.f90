@@ -117,7 +117,6 @@ MODULE input_parameters
           ! 'fpmd-neb' = NEB using fpmd as scf engine
           ! 'metadyn'  = meta-dynamics (Laio-Parrinello dynamics)
 
-
         CHARACTER(LEN=80) :: calculation_allowed(16)
         DATA calculation_allowed / 'scf', 'nscf', 'relax', 'md', 'cp', &
           'vc-relax', 'vc-md', 'vc-cp', 'phonon', 'bands', 'neb', 'smd', &
@@ -128,6 +127,8 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: verbosity = 'default'
           ! verbosity = 'high' | 'default'* | 'low' | 'minimal' | 'default+projwfc'
           ! define the verbosity of the code output
+        CHARACTER(LEN=80) :: verbosity_allowed(5)
+        DATA verbosity_allowed / 'high' , 'default' , 'low' , 'minimal' , 'default+projwfc' /
 
         CHARACTER(LEN=80) :: restart_mode = 'restart'
           ! restart_mode = 'from_scratch' | 'restart'* | 'reset_counters' 
@@ -143,6 +144,8 @@ MODULE input_parameters
           !   'reset_counters'  continue a previous simulation,
           !                     performs  "nstep" new steps, resetting
           !                     the counter and averages
+        CHARACTER(LEN=80) :: restart_mode_allowed(3)
+        DATA restart_mode_allowed / 'from_scratch', 'restart', 'reset_counters' /
  
         INTEGER :: nstep = 10
           ! number of simulation steps, see "restart_mode"

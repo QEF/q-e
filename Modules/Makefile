@@ -66,6 +66,7 @@ uspp.o \
 wave_base.o \
 wavefunctions.o \
 wannier.o \
+xml_input.o \
 xml_io_base.o
 
 all : $(MODULES)
