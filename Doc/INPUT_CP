@@ -169,8 +169,8 @@ prefix         CHARACTER ( default = 'cp' )
                basename prepended to input/output filenames. 
                
 verbosity      CHARACTER
-               'high' | 'default' | 'low' | 'minimal' | 'default+projwc'
-               'default+projwc' 
+               'high' | 'default' | 'low' | 'minimal' | 'default+projwfc'
+               'default+projwfc' 
                   the codes prints the dafault output quantities
                   and the projections of the wave functions on atomic wfc  
 
