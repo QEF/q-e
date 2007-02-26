@@ -259,7 +259,6 @@ program pp_punch
   !   single_file  one-file output is produced
   !   ascii        ....
   !
-  !   ntype        number of species
   !   pseudo_dir   pseudopotential directory
   !   psfile(:)    name of the pp file for each species 
   !   
