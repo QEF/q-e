@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! written by Carlo Cavazzoni
 
 !=----------------------------------------------------------------------------=!
    MODULE cp_interfaces
@@ -15,9 +16,6 @@
 
    PUBLIC :: bessel2
    PUBLIC :: bessel3
-   PUBLIC :: dforce1
-   PUBLIC :: dforce2
-   PUBLIC :: dforce_fpmd
    PUBLIC :: dforce
 
    PUBLIC :: nlin
@@ -145,57 +143,6 @@
          REAL(DP), INTENT(OUT)  ::  FINT(:,:)
          INTEGER, INTENT(IN) ::  INDL(:), LNL, MMAX
       END SUBROUTINE BESSEL3_x
-   END INTERFACE
-
-
-   INTERFACE dforce1
-      SUBROUTINE dforce1_x( co, ce, dco, dce, fio, fie, hg, v, psi_stored )
-         USE kinds,      ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(OUT) :: dco(:), dce(:)
-         COMPLEX(DP), INTENT(IN)  :: co(:), ce(:)
-         REAL(DP),    INTENT(IN)  :: fio, fie
-         REAL(DP),    INTENT(IN)  :: v(:)
-         REAL(DP),    INTENT(IN)  :: hg(:)
-         COMPLEX(DP), OPTIONAL    :: psi_stored(:)
-      END SUBROUTINE dforce1_x
-   END INTERFACE
-
-
-   INTERFACE dforce2
-      SUBROUTINE dforce2_x( fio, fie, df, da, vkb, beco, bece )
-         USE kinds,           ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP), INTENT(IN) :: vkb(:,:)
-         REAL(DP), INTENT(IN) :: fio, fie
-         COMPLEX(DP)  :: df(:), da(:)
-         REAL(DP), INTENT(IN) :: beco(:)
-         REAL(DP), INTENT(IN) :: bece(:)
-      END SUBROUTINE dforce2_x
-   END INTERFACE
-
-
-   INTERFACE dforce_fpmd
-      SUBROUTINE dforce_fpmd_x( ib, c, f, df, da, v, vkb, bec, n, noffset )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         INTEGER,     INTENT(IN)  :: ib     ! band index
-         COMPLEX(DP), INTENT(IN)  :: c(:,:)
-         COMPLEX(DP), INTENT(OUT) :: df(:), da(:)
-         REAL (DP),   INTENT(IN)  :: v(:), bec(:,:), f(:)
-         COMPLEX(DP), INTENT(IN)  :: vkb(:,:)
-         INTEGER,     INTENT(IN)  :: n, noffset  ! number of bands, and band index offset
-      END SUBROUTINE dforce_fpmd_x
-      SUBROUTINE dforce_all( c, f, cgrad, vpot, vkb, bec, n, noffset )
-         USE kinds,              ONLY: DP
-         IMPLICIT NONE
-         COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
-         REAL(DP),              INTENT(IN)    :: vpot(:), f(:)
-         COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
-         COMPLEX(DP),           INTENT(IN)    :: vkb(:,:)
-         REAL(DP),              INTENT(IN)    :: bec(:,:)
-         INTEGER,               INTENT(IN)    :: n, noffset
-      END SUBROUTINE dforce_all
    END INTERFACE
 
 
@@ -488,7 +435,7 @@
       END SUBROUTINE writefile_cp
       SUBROUTINE writefile_fpmd  &
          ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-           ht_0, rho, vpot, lambda )
+           ht_0, rho, vpot, lambda, tlast )
          USE kinds,             ONLY: DP
           USE cell_base,         ONLY: boxdimensions
          USE atoms_type_module, ONLY: atoms_type
@@ -504,6 +451,7 @@
          REAL(DP),             INTENT(IN)    :: acc(:), cdmi(:)
          REAL(DP),             INTENT(IN)    :: trutime
          REAL(DP),             INTENT(IN)    :: lambda(:,:,:)
+         LOGICAL,              INTENT(IN)    :: tlast
       END SUBROUTINE writefile_fpmd
    END INTERFACE
  

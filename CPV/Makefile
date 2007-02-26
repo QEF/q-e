@@ -171,6 +171,7 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
+../Modules/xml_input.o \
 ../Modules/xml_io_base.o
 
 WRAPPERS = wrapper.o

@@ -890,10 +890,8 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
   DO inw=1, nw
      X1(:, :)=Omat(inw, :, :)
      U3=ZERO
-     !    call ZGEMUL(U2, m, 'T', X1, m, 'nbsp', U3, m, m,m,m) 
      CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
      X1=ZERO
-     !    call ZGEMUL(U3, m, 'nbsp', U2, m, 'nbsp', X1, m, m,m,m) 
      CALL ZGEMM ('N','N', m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
      Oc(inw, :, :)=X1(:, :)
   END DO
@@ -919,13 +917,9 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      END DO
 
      IF(ABS(t0-oldt0).LT.tolw) THEN
-#ifdef __PARA
         IF(me.EQ.1) THEN
-#endif
            WRITE(27,*) "MLWF Generated at Step",ini
-#ifdef __PARA
         END IF
-#endif
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Generated at Step",ini
         END IF
@@ -996,10 +990,8 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      !   U=z*exp(d)*z+
      !   
      U3=ZERO
-     !    call ZGEMUL(z, m, 'nbsp', d, m, 'nbsp', U3, m, m,m,m)
      CALL ZGEMM ('N', 'N', m,m,m,ONE,z,m,d,m,ZERO,U3,m)  
      U2=ZERO
-     !    call ZGEMUL(U3, m, 'nbsp', z, m, 'c', U2, m, m,m,m)
      CALL ZGEMM ('N','C', m,m,m,ONE,U3,m,z,m,ZERO,U2,m)
      U=DBLE(U2)
      U2=ZERO
@@ -1012,7 +1004,6 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
      !   update Umat
      !
-     !    call DGEMUL(Umat, m, 'nbsp', U, m, 'nbsp', U1, m, m,m,m) 
      U1=ZERO
      CALL DGEMM ('N', 'N', m,m,m,ONE,Umat,m,U,m,ZERO,U1,m)
 
@@ -1024,10 +1015,8 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      U3=ZERO
      DO inw=1, nw
         X1(:, :)=Omat(inw, :, :)
-        !    call ZGEMUL(U2, m, 'T', X1, m, 'nbsp', U3, m, m,m,m)
         CALL ZGEMM ('T', 'N', m,m,m,ONE,U2,m,X1,m,ZERO,U3,m)
         X1=ZERO
-        !    call ZGEMUL(U3, m, 'nbsp', U2, m, 'nbsp', X1, m, m,m,m)
         CALL ZGEMM ('N','N',m,m,m,ONE,U3,m,U2,m,ZERO,X1,m)
         Oc(inw, :, :)=X1(:, :)
      END DO
@@ -1035,13 +1024,9 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
      U3=ZERO
 
      IF(ABS(t0-oldt0).GE.tolw.AND.ini.GE.nsteps) THEN
-#ifdef __PARA
         IF(me.EQ.1) THEN
-#endif 
            WRITE(27,*) "MLWF Not generated after",ini,"Steps." 
-#ifdef __PARA
         END IF
-#endif
         IF(iprsta.GT.4) THEN
            WRITE( stdout, * ) "MLWF Not generated after",ini,"Steps." 
         END IF
@@ -1082,14 +1067,10 @@ SUBROUTINE ddyn( m, Omat, Umat, b1, b2, b3 )
 
   spread=spread/m
 
-#ifdef __PARA
   IF(me.EQ.1) THEN
-#endif
      WRITE(24, '(f10.7)') spread
      WRITE(27,*) "Average spread = ", spread
-#ifdef __PARA
   END IF
-#endif
   Omat=Oc
   IF(iprsta.GT.4) THEN
      WRITE( stdout, * ) "Average spread = ", spread
@@ -1236,9 +1217,8 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
        root_image, intra_image_comm, ierr)
   IF (ierr.NE.0) CALL errore('wfunc_init','MPI_GATHERV' , ierr)
 #endif
-#ifdef __PARA
+
   IF(me.EQ.1) THEN
-#endif
      IF(clwf.EQ.5) THEN
 #ifdef __PARA
         DO ii=1,ntot
@@ -1251,9 +1231,7 @@ SUBROUTINE wfunc_init( clwf, b1, b2, b3, ibrav )
 #endif
         CLOSE(21)
      END IF
-#ifdef __PARA 
   END IF
-#endif
 
   DO inw=1,nw1
      IF(i_1(inw).EQ.0.AND.j_1(inw).EQ.0) THEN

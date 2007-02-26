@@ -37,7 +37,7 @@
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
       USE task_groups,         ONLY : nolist
       use gvecw,               only : ngw
-      USE cp_interfaces,       ONLY : dforce_fpmd, dforce
+      USE cp_interfaces,       ONLY : dforce
       USE ldaU
       !
       IMPLICIT NONE
@@ -118,7 +118,6 @@
         c3      = 0D0
 
         IF( use_task_groups ) THEN
-
            !
            !  The potential in rhos is distributed accros all processors
            !  We need to redistribute it so that it is completely contained in the
@@ -174,38 +173,23 @@
 
            ELSE
 
-              IF( program_name == 'FPMD' ) THEN
-
-                 is = ispin( i )
-                 ii = i - iupdwn(is) + 1
-                 iwfc = iupdwn(is)
-                 nwfc = nupdwn(is)
-                 
-                 CALL dforce_fpmd( ii, c0, f, c2, c3, rhos(:,is), vkb, bec, nwfc, iwfc )
-
-                 IF( ii == nwfc ) c3 = 0.0d0
-
-              ELSE
-
-                 CALL dforce( i, bec, vkb, c0, c2, c3, rhos, SIZE(rhos,1), ispin, f, n, nspin )
-
-              END IF
+              CALL dforce( i, bec, vkb, c0, c2, c3, rhos, SIZE(rhos,1), ispin, f, n, nspin )
 
            END IF
 
 
-           if (lda_plus_u) then
-              c2(:)=c2(:)-vupsi(:,i)
-              c3(:)=c3(:)-vupsi(:,i+1)
-           endif
+           IF ( lda_plus_u ) THEN
+              c2(:) = c2(:) - vupsi(:,i)
+              c3(:) = c3(:) - vupsi(:,i+1)
+           END IF
 
-           if( tefield ) then
+           IF( tefield ) THEN
              CALL dforce_efield ( bec, i, c0, c2, c3, rhos)
-           end if
+           END IF
 
-           if( tefield2 ) then
+           IF( tefield2 ) THEN
              CALL dforce_efield2 ( bec, i, c0, c2, c3, rhos)
-           end if
+           END IF
 
            IF( iflag == 2 ) THEN
               DO idx = 1, incr, 2
@@ -270,7 +254,7 @@
       USE wannier_subroutines, ONLY : ef_potential
       USE efield_module,       ONLY : dforce_efield, tefield
       USE electrons_base,      ONLY : ispin, nspin, f, n=>nbsp
-      USE cp_interfaces,       ONLY : dforce_fpmd, dforce
+      USE cp_interfaces,       ONLY : dforce
   !
       USE gvecw, ONLY: ngw
   !
@@ -376,23 +360,17 @@
 
       DO i = 1, npair, 2 
          !
-         IF( program_name == 'FPMD' ) THEN
-            CALL dforce_fpmd( i, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
-            CALL dforce_fpmd( i, c0, f, c4, c5, rhos(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
-         ELSE
-            CALL dforce(i,bec,vkb,c0,c2,c3,rhos(:,1:1),SIZE(rhos,1),ispin,f,n,nspin)
-            CALL dforce(i,bec,vkb,c0,c4,c5,rhos(:,2:2),SIZE(rhos,1),ispin,f,n,nspin)
-         END IF
+         CALL dforce(i,bec,vkb,c0,c2,c3,rhos(:,1:1),SIZE(rhos,1),ispin,f,n,nspin)
+         CALL dforce(i,bec,vkb,c0,c4,c5,rhos(:,2:2),SIZE(rhos,1),ispin,f,n,nspin)
          !
          c2 = occ( i )*(c2 + c4)  
          c3 = occ(i+1)*(c3 + c5) 
          !
-
          IF( iflag == 2 ) THEN
             cm(:,i)        = c0(:,i)
             cm(:,i+1)      = c0(:,i+1)
          END IF
-      !
+         !
          IF( ttsde ) THEN
              CALL wave_steepest( cm(:, i  ), c0(:, i  ), emaver, c2 )
              CALL wave_steepest( cm(:, i+1), c0(:, i+1), emaver, c3 )
@@ -400,7 +378,7 @@
              CALL wave_verlet( cm(:, i  ), c0(:, i  ), verl1, verl2, emaver, c2 )
              CALL wave_verlet( cm(:, i+1), c0(:, i+1), verl1, verl2, emaver, c3 )
          END IF
-      !
+         !
          IF ( gstart == 2 ) THEN
                 cm(1,  i)    = CMPLX(DBLE(cm(1,  i)),0.d0)
                 cm(1, i+1)   = CMPLX(DBLE(cm(1,  i+1)),0.d0)
@@ -412,13 +390,8 @@
 
          npair = n_unp - 1 
 !
-         IF( program_name == 'FPMD' ) THEN
-            CALL dforce_fpmd( npair, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(2), iupdwn(1) )
-            CALL dforce_fpmd( npair, c0, f, c4, c5, rhos(:,2), vkb, bec, nupdwn(2), iupdwn(1) )
-         ELSE
-            CALL dforce(npair,bec,vkb,c0,c2,c3,rhos(:,1:1),SIZE(rhos,1),ispin,f,n,nspin)
-            CALL dforce(npair,bec,vkb,c0,c4,c5,rhos(:,2:2),SIZE(rhos,1),ispin,f,n,nspin)
-         END IF
+         CALL dforce(npair,bec,vkb,c0,c2,c3,rhos(:,1:1),SIZE(rhos,1),ispin,f,n,nspin)
+         CALL dforce(npair,bec,vkb,c0,c4,c5,rhos(:,2:2),SIZE(rhos,1),ispin,f,n,nspin)
 !
          c2 = c2 + c4
          !
@@ -447,11 +420,7 @@
 ! "TRUE" ONLY WHEN THE POT is NORM_CONSERVING
 !
 
-      IF( program_name == 'FPMD' ) THEN
-         CALL dforce_fpmd( n_unp, c0, f, c2, c3, rhos(:,1), vkb, bec, nupdwn(1), iupdwn(1) )
-      ELSE
-         CALL dforce( n_unp, bec, vkb, c0, c2, c3, rhos, SIZE(rhos,1), ispin,f,n,nspin )
-      END IF
+      CALL dforce( n_unp, bec, vkb, c0, c2, c3, rhos, SIZE(rhos,1), ispin,f,n,nspin )
       !
       intermed  = - 2.d0 * sum(c2 * conjg(c0(:,n_unp)))
       IF ( gstart == 2 ) THEN

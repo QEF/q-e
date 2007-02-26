@@ -13,229 +13,6 @@
 #include "f_defs.h"
 
 
-    SUBROUTINE dforce1_x( co, ce, dco, dce, fio, fie, hg, v, psi_stored )
-
-      USE kinds,      ONLY: DP
-      USE fft_base,   ONLY: dffts
-      USE gvecw,      ONLY: ngw
-      USE cp_interfaces, ONLY: fwfft, invfft
-      USE cell_base,  ONLY: tpiba2
-
-      IMPLICIT NONE
-
-      ! ... declare subroutine arguments
-      COMPLEX(DP), INTENT(OUT) :: dco(:), dce(:)
-      COMPLEX(DP), INTENT(IN)  :: co(:), ce(:)
-      REAL(DP),    INTENT(IN)  :: fio, fie
-      REAL(DP),    INTENT(IN)  :: v(:)
-      REAL(DP),    INTENT(IN)  :: hg(:)
-      COMPLEX(DP), OPTIONAL    :: psi_stored(:)
-
-      ! ... declare other variables
-      !
-      COMPLEX(DP), ALLOCATABLE :: psi(:)
-      COMPLEX(DP) :: fp, fm, aro, are
-      REAL(DP)    :: fioby2, fieby2, arg
-      INTEGER      :: ig
-
-      !  end of declarations
-
-
-      ALLOCATE( psi( SIZE(v) ) )
-
-      IF( PRESENT( psi_stored ) ) THEN
-        psi = psi_stored * CMPLX(v, 0.0d0)
-      ELSE
-        CALL c2psi( psi, dffts%nnr, co, ce, ngw, 2 )
-        CALL invfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-        psi = psi * CMPLX(v, 0.0d0)
-      END IF
-
-      CALL fwfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-      CALL psi2c( psi, dffts%nnr, dco, dce, ngw, 2 )
-
-      DEALLOCATE(psi)
-
-      fioby2   = fio * 0.5d0
-      fieby2   = fie * 0.5d0
-
-      DO ig = 1, SIZE(co)
-        fp = dco(ig) + dce(ig)
-        fm = dco(ig) - dce(ig)
-        aro = CMPLX(  DBLE(fp), AIMAG(fm) )
-        are = CMPLX( AIMAG(fp), -DBLE(fm))
-        arg = tpiba2 * hg(ig)
-        dco(ig) = -fioby2 * (arg * co(ig) + aro)
-        dce(ig) = -fieby2 * (arg * ce(ig) + are)
-      END DO
-
-    RETURN
-    END SUBROUTINE dforce1_x
-
-
-!=----------------------------------------------------------------------------=!
-
-
-    SUBROUTINE dforce2_x( fio, fie, df, da, vkb, beco, bece )
-
-        !  this routine computes:
-        !  the generalized force df=CMPLX(dfr,dfi) acting on the i-th
-        !  electron state at the ik-th point of the Brillouin zone
-        !  represented by the vector c=CMPLX(cr,ci)
-        !  ----------------------------------------------
-
-      USE kinds,                   ONLY: DP
-      USE ions_base,               ONLY: na
-      USE read_pseudo_module_fpmd, ONLY: nspnl
-      USE uspp_param,              ONLY: nh
-      USE uspp,                    ONLY: nhtol, nhtolm, indv, beta, dvan, nkb
-      use cvan,                    ONLY: ish
-      !
-
-      IMPLICIT NONE
-
-! ... declare subroutine arguments
-      COMPLEX(DP), INTENT(IN) :: vkb(:,:)
-      REAL(DP), INTENT(IN) :: fio, fie
-      COMPLEX(DP)  :: df(:), da(:)
-      REAL(DP), INTENT(IN) :: beco(:)
-      REAL(DP), INTENT(IN) :: bece(:)
-
-! ... declare other variables
-      REAL(DP) :: to, te
-      INTEGER  :: l, is, ig, ngw, iv, inl, isa
-
-      ! ----------------------------------------------
-
-      ngw  = SIZE(df)
-
-      isa = 1
-      
-      DO is = 1, nspnl
-        !
-        DO iv = 1, nh( is )
-          !
-          inl = ish(is) + (iv-1) * na(is) + 1
-
-          to = - fio * dvan( iv, iv, is )
-          !
-          te = - fie * dvan( iv, iv, is )
-
-          CALL DGEMV('N', 2*ngw, na(is), to, vkb( 1, inl ), &
-               2*SIZE(vkb,1), beco( inl ), 1, 1.0d0, df, 1)
-          !
-          CALL DGEMV('N', 2*ngw, na(is), te, vkb( 1, inl ), &
-               2*SIZE(vkb,1), bece( inl ), 1, 1.0d0, da, 1)
-          !
-        END DO
-        !
-        isa = isa + na( is )
-        !
-      END DO
-      !
-
-      RETURN
-    END SUBROUTINE dforce2_x
-
-
-
-!=----------------------------------------------------------------------------=!
-
-     
-
-    SUBROUTINE dforce_fpmd_x( ib, c, f, df, da, v, vkb, bec, n, noffset )
-       !
-       USE kinds,              ONLY: DP
-       USE reciprocal_vectors, ONLY: ggp, g, gx
-       USE cp_interfaces
-       !
-       IMPLICIT NONE
-       !
-       INTEGER,     INTENT(IN)  :: ib     ! band index
-       COMPLEX(DP), INTENT(IN)  :: c(:,:)
-       COMPLEX(DP), INTENT(OUT) :: df(:), da(:)
-       REAL (DP),   INTENT(IN)  :: v(:), bec(:,:), f(:)
-       COMPLEX(DP), INTENT(IN)  :: vkb(:,:)
-       INTEGER,     INTENT(IN)  :: n, noffset  ! number of bands, and band index offset
-       !
-       COMPLEX(DP), ALLOCATABLE :: dum( : )   
-       !
-       INTEGER :: in
-       !
-       IF( ib > n ) CALL errore( ' dforce ', ' ib out of range ', 1 )
-       !
-       in = noffset + ib - 1 
-       !
-       IF( ib == n ) THEN
-          !
-          ALLOCATE( dum( SIZE( df ) ) )
-          !
-          CALL dforce1( c( :, in ), c( :, in ), df, dum, f( in ), f( in ), ggp, v )
-          !
-          CALL dforce2( f( in ), f( in ), df , dum , vkb, bec( :, in ), bec( :, in ) )
-          !
-          DEALLOCATE( dum )
-          !
-       ELSE
-          !
-          CALL dforce1( c( :, in ), c( :, in+1 ), df, da, f( in ), f(in+1), ggp, v )
-          !
-          CALL dforce2( f(in), f(in+1), df, da, vkb, bec( :, in ), bec( :, in+1 ) )
-          !
-       END IF
-       !
-       RETURN
-    END SUBROUTINE dforce_fpmd_x
-
-
-!  ----------------------------------------------
-  
-
-    SUBROUTINE dforce_all( c, f, cgrad, vpot, vkb, bec, n, noffset )
-       !
-       USE kinds,              ONLY: DP
-       USE cp_interfaces
-
-       IMPLICIT NONE
-
-       COMPLEX(DP),           INTENT(INOUT) :: c(:,:)
-       REAL(DP),              INTENT(IN)    :: vpot(:), f(:)
-       COMPLEX(DP),           INTENT(OUT)   :: cgrad(:,:)
-       COMPLEX(DP),           INTENT(IN)    :: vkb(:,:)
-       REAL(DP),              INTENT(IN)    :: bec(:,:)
-       INTEGER,               INTENT(IN)    :: n, noffset
-       
-       INTEGER :: ib, in
-       !
-       IF( n > 0 ) THEN
-          !
-          !   Process two states at the same time
-          !
-          DO ib = 1, n-1, 2
-             !
-             in = ib + noffset - 1
-             !
-             CALL dforce_fpmd( ib, c, f, cgrad(:,in), cgrad(:,in+1), vpot, vkb, bec, n, noffset )
-             !
-          END DO
-          !
-          !   and now process the last state in case that n is odd
-          !
-          IF( MOD( n, 2 ) /= 0 ) THEN
-             !
-             in = n + noffset - 1
-             !
-             CALL dforce_fpmd( n, c, f, cgrad(:,in), cgrad(:,in), vpot, vkb, bec, n, noffset )
-             !
-          END IF
-          !
-       END IF
-       !
-       RETURN
-    END SUBROUTINE dforce_all
-
-
-
 !
 !-------------------------------------------------------------------------
       SUBROUTINE dforce_x ( i, bec, vkb, c, df, da, v, ldv, ispin, f, n, nspin, v1 )
@@ -250,7 +27,7 @@
 !
       USE parallel_include
       USE kinds,                  ONLY: dp
-      USE control_flags,          ONLY: iprint, use_task_groups
+      USE control_flags,          ONLY: iprint, use_task_groups, program_name
       USE gvecs,                  ONLY: nms, nps
       USE cvan,                   ONLY: ish
       USE uspp,                   ONLY: nhsa=>nkb, dvan, deeq
@@ -484,6 +261,18 @@
                !
                DO is = 1, nsp
                   DO iv = 1, nh(is)
+                     IF( program_name == 'FPMD' ) THEN
+                        ivoff = ish(is) + (iv-1) * na(is)
+                        dd = dvan( iv, iv, is )
+                        DO inl = ivoff + 1, ivoff + na(is)
+                           af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(inl,i+idx-1)
+                        END DO
+                        IF( i + idx - 1 /= n ) THEN
+                           DO inl = ivoff + 1, ivoff + na(is)
+                              aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(inl,i+idx)
+                           END DO
+                        END IF
+                     ELSE
                      DO jv = 1, nh(is)
                         isa = 0
                         DO ism = 1, is-1
@@ -511,6 +300,7 @@
                            END DO
                         END IF
                      END DO
+                     END IF
                   END DO
                END DO
       

@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! written by Carlo Cavazzoni
 
 !-----------------------------------------------------------------------
 
@@ -227,7 +228,7 @@
 
    SUBROUTINE writefile_fpmd &
      ( nfi, trutime, c0, cm, occ, atoms_0, atoms_m, acc, taui, cdmi, ht_m, &
-       ht_0, rho, vpot, lambda )
+       ht_0, rho, vpot, lambda, tlast )
                                                                         
         USE kinds,             ONLY: DP
         USE cell_base,         ONLY: boxdimensions, r_to_s
@@ -245,6 +246,7 @@
         USE io_files,          ONLY: outdir
         USE grid_dimensions,   ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
         USE cp_interfaces,     ONLY: set_evtot, set_eitot
+        USE kohn_sham_states,  ONLY: print_all_states
 
         IMPLICIT NONE 
  
@@ -259,6 +261,7 @@
         REAL(DP),             INTENT(IN)    :: acc(:), cdmi(:) 
         REAL(DP),             INTENT(IN)    :: trutime
         REAL(DP),             INTENT(IN)    :: lambda(:,:,:)
+        LOGICAL,              INTENT(IN)    :: tlast
 
         REAL(DP) :: ekincm
         INTEGER   :: i, j, k, ir
@@ -290,6 +293,8 @@
            ALLOCATE( ctot( SIZE( c0, 1 ), nupdwn_tot(1) * nspin ) )
            !
            CALL set_evtot( c0, ctot, lambda, iupdwn_tot, nupdwn_tot )
+           !
+           IF( tlast ) CALL print_all_states( ctot, iupdwn_tot, nupdwn_tot )
            !
         END IF
         !

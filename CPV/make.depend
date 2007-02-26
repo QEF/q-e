@@ -446,7 +446,6 @@ forces.o : ../Modules/uspp.o
 forces.o : cp_interfaces.o
 forces.o : ensemble_dft.o
 forces.o : modules.o
-forces.o : read_pseudo.o
 fpmdpp.o : ../Modules/constants.o
 fpmdpp.o : ../Modules/io_files.o
 fpmdpp.o : ../Modules/kind.o
@@ -620,6 +619,7 @@ input.o : ../Modules/read_namelists.o
 input.o : ../Modules/sic.o
 input.o : ../Modules/timestep.o
 input.o : ../Modules/wave_base.o
+input.o : ../Modules/xml_input.o
 input.o : cg.o
 input.o : chargemix.o
 input.o : cp_emass.o
@@ -647,18 +647,15 @@ ions.o : ../Modules/timestep.o
 ions.o : atoms_type.o
 ions_positions.o : ../Modules/kind.o
 ions_positions.o : atoms_type.o
-ksstates.o : ../Modules/control_flags.o
 ksstates.o : ../Modules/electrons_base.o
 ksstates.o : ../Modules/fft_base.o
 ksstates.o : ../Modules/griddim.o
 ksstates.o : ../Modules/io_files.o
 ksstates.o : ../Modules/io_global.o
-ksstates.o : ../Modules/ions_base.o
 ksstates.o : ../Modules/kind.o
 ksstates.o : ../Modules/mp.o
 ksstates.o : ../Modules/mp_global.o
 ksstates.o : ../Modules/recvec.o
-ksstates.o : ../Modules/uspp.o
 ksstates.o : ../Modules/xml_io_base.o
 ksstates.o : cp_interfaces.o
 ksstates.o : electrons.o
@@ -692,7 +689,6 @@ main.o : electrons.o
 main.o : input.o
 main.o : ions.o
 main.o : ions_positions.o
-main.o : ksstates.o
 main.o : mainvar.o
 main.o : modules.o
 main.o : polarization.o
@@ -1008,6 +1004,7 @@ restart.o : cp_interfaces.o
 restart.o : cp_restart.o
 restart.o : electrons.o
 restart.o : ensemble_dft.o
+restart.o : ksstates.o
 restart.o : mainvar.o
 restart_sub.o : ../Modules/cell_base.o
 restart_sub.o : ../Modules/control_flags.o

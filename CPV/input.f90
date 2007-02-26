@@ -37,6 +37,7 @@ MODULE input
                                        program_name
      USE printout_base,         ONLY : title_ => title
      USE io_global,             ONLY : meta_ionode, stdout
+     USE xml_input,             ONLY : xml_input_dump
      !
      IMPLICIT NONE
      !
@@ -45,7 +46,10 @@ MODULE input
      !
      prog = 'CP'
      !
-     IF ( meta_ionode ) CALL input_from_file()
+     IF ( meta_ionode ) THEN
+        CALL xml_input_dump()
+        CALL input_from_file()
+     END IF
      !
      ! ... Read NAMELISTS 
      !
@@ -832,7 +836,7 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE control_flags,    ONLY : program_name, lconstrain, lneb, lmetadyn, &
-                                  tpre, thdyn
+                                  tpre, thdyn, tksw
 
      USE constants,        ONLY : amu_au, pi
      !
@@ -914,7 +918,7 @@ MODULE input
      REAL(DP) :: alat_ , massa_totale
      REAL(DP) :: ethr_emp_inp
      ! ...   DIIS
-     INTEGER :: ia
+     INTEGER :: ia, iss
      LOGICAL :: ltest
      !
      !   Subroutine Body
@@ -1002,6 +1006,13 @@ MODULE input
 
      !
      CALL ks_states_init( nspin, nprnks, iprnks, nprnks_empty, iprnks_empty )
+     !
+     !  kohn-sham states implies disk-io = 'high' 
+     !
+     DO iss = 1, nspin
+        tksw = tksw .OR. ( nprnks(iss) > 0 )
+        tksw = tksw .OR. ( nprnks_empty(iss) > 0 )
+     END DO
 
      CALL electrons_base_initval( zv, na_inp, ntyp, nelec, nelup,         &
                                   neldw, nbnd, nspin, occupations, f_inp, &

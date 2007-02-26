@@ -28,7 +28,7 @@ MODULE kohn_sham_states
    INTEGER, ALLOCATABLE :: n_ksout_emp(:)       ! (spin indxs)
 
    PUBLIC :: ks_states_init, ks_states_closeup
-   PUBLIC :: n_ksout, indx_ksout, ks_states, tksout
+   PUBLIC :: n_ksout, indx_ksout, tksout, print_all_states
 
 !  ----------------------------------------------
 CONTAINS
@@ -95,138 +95,9 @@ CONTAINS
    END SUBROUTINE ks_states_closeup
 
 !  ----------------------------------------------
-
-
-      SUBROUTINE ks_states(cf, occ, vpot, eigr, vkb, bec )
-
-        ! ...   declare modules
-        USE kinds
-        USE mp_global,        ONLY : intra_image_comm
-        USE io_global,        ONLY : ionode, stdout
-        USE ions_base,        ONLY : nsp
-        USE cp_interfaces,    ONLY : dforce_fpmd, kohn_sham
-        USE control_flags,    ONLY : force_pairing
-        USE electrons_base,   ONLY : nupdwn, iupdwn, nspin, nbsp
-        USE electrons_module, ONLY : n_emp, nupdwn_emp, iupdwn_emp, nb_l, n_emp_l
-        USE gvecw,            ONLY : ngw
-        USE cp_interfaces,    ONLY : readempty
-        USE uspp,             ONLY : nkb
-
-        IMPLICIT NONE
-
-        ! ...   declare subroutine arguments
-        COMPLEX(DP), INTENT(INOUT) :: cf(:,:)
-        COMPLEX(DP)  ::  eigr(:,:)
-        COMPLEX(DP)  ::  vkb(:,:)
-        REAL(DP), INTENT(IN)  ::  occ(:), bec(:,:)
-        REAL(DP) ::  vpot(:,:)
-
-        ! ...   declare other variables
-        INTEGER  :: i, ib, ig, nb_g, iss, iks
-        INTEGER  :: n_emps
-        LOGICAL  :: tortho = .TRUE.
-        LOGICAL  :: exist 
-
-        COMPLEX(DP), ALLOCATABLE :: fforce(:,:)
-        COMPLEX(DP), ALLOCATABLE :: eforce(:,:)
-        COMPLEX(DP), ALLOCATABLE :: ce(:,:)
-        REAL(DP), ALLOCATABLE :: bec_emp(:,:)
-        REAL(DP), ALLOCATABLE :: fi(:)
-
-        CHARACTER (LEN=6), EXTERNAL :: int_to_char
-
-        ! ...   end of declarations
-
-        IF( tksout ) THEN
-
-           ALLOCATE( fforce( ngw, SIZE( cf, 2 ) ) )
-
-           DO iss = 1, nspin
-
-              IF( nupdwn( iss ) > 0 ) THEN
-
-                 CALL dforce_fpmd( cf, occ, fforce, vpot(:,iss), vkb, bec, nupdwn(iss), iupdwn(iss) )
-
-              END IF
-
-           END DO
-
-           IF( force_pairing ) THEN 
-              DO i = 1, nupdwn(2)
-                 fforce(:,i) = occ(i) * fforce(:,i) + occ(i+iupdwn(2)-1) * fforce(:,i+iupdwn(2)-1)
-              END DO
-              DO i = nupdwn(2)+1, nupdwn(1)
-                 fforce(:,i) = occ(i) * fforce(:,i)
-              END DO
-              DO i = iupdwn(2), iupdwn(2) + nupdwn(2) - 1
-                 fforce(:,i) = fforce(:,i-iupdwn(2)+1)
-              END DO
-           END IF
-
-           DO iss = 1, nspin
-              CALL kohn_sham( cf, ngw, fforce, nupdwn( iss ), nb_l(iss), iupdwn( iss ) )
-           END DO
-
-           DEALLOCATE( fforce )
-
-        END IF
-
-
-        IF( tksout_emp ) THEN
-
-          n_emps = nupdwn_emp( 1 )
-          IF( nspin == 2 ) n_emps = n_emps + nupdwn_emp( 2 )
-
-          ALLOCATE( ce( ngw,  n_emp * nspin ) )
-          !
-          ALLOCATE( bec_emp( nkb, n_emps ) )
-
-          exist = readempty( ce, n_emp * nspin )
-
-          IF( .NOT. exist ) &
-             CALL errore( ' ks_states ', ' empty states file not found', 1 )
-
-          CALL nlsm1 ( n_emps, 1, nsp, eigr, ce, bec_emp )
-
-          ALLOCATE( eforce( ngw, SIZE( ce, 2 ) ) )
-
-          ALLOCATE( fi( SIZE( ce, 2 ) ) )
-
-          fi = 2.0d0 / nspin
-
-          DO iss = 1, nspin
-
-             IF( nupdwn_emp( iss ) > 0 ) THEN
-
-                CALL dforce_fpmd( ce, fi, eforce, vpot(:,iss), vkb, bec_emp, nupdwn_emp( iss ), iupdwn_emp( iss ) ) 
-
-                CALL kohn_sham( ce, ngw, eforce, nupdwn_emp( iss ), n_emp_l(iss), iupdwn_emp( iss ) )
-
-             END IF
-
-          END DO
-
-          DEALLOCATE( fi )
-
-          DEALLOCATE( eforce )
-
-          DEALLOCATE( bec_emp )
-
-        END IF
-
-        CALL print_all_states( cf, ce )
-
-        IF( tksout_emp ) THEN
-          DEALLOCATE( ce )
-        END IF
-
-        RETURN
-        !
-      END SUBROUTINE ks_states
-
 !  ----------------------------------------------
 
-      SUBROUTINE print_all_states( cf, ce )
+      SUBROUTINE print_all_states( ctot, iupdwn_tot, nupdwn_tot )
 
         USE kinds,            ONLY : DP
         USE mp_global,        ONLY : intra_image_comm
@@ -238,10 +109,12 @@ CONTAINS
         IMPLICIT NONE
 
         ! ...   declare subroutine arguments
-        COMPLEX(DP),            INTENT(INOUT) :: cf(:,:), ce(:,:)
+        COMPLEX(DP), INTENT(IN) :: ctot(:,:)
+        INTEGER,     INTENT(IN) :: iupdwn_tot(2)
+        INTEGER,     INTENT(IN) :: nupdwn_tot(2)
 
         ! ...   declare other variables
-        INTEGER ::  i, iss, iks
+        INTEGER ::  i, iss, iks, itot
 
         CHARACTER(LEN=256) :: file_name
         CHARACTER(LEN=10), DIMENSION(2) :: spin_name
@@ -268,9 +141,10 @@ CONTAINS
               DO i = 1, n_ksout(iss)
                 iks = indx_ksout(i, iss)
                 IF( ( iks > 0 ) .AND. ( iks <= nupdwn( iss ) ) ) THEN
+                  itot = iks + iupdwn_tot(iss) - 1 
                   file_name = TRIM( ks_file ) // &
                             & trim(spin_name(iss)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( cf(:,iks+iupdwn(iss)-1), file_name )
+                  CALL print_ks_states( ctot( :, itot ), file_name )
                 END IF
               END DO
             END IF
@@ -278,9 +152,10 @@ CONTAINS
               DO i = 1, n_ksout_emp(iss)
                 iks = indx_ksout_emp(i, iss)
                 IF( ( iks > 0 ) .AND. ( iks <= nupdwn_emp( iss ) ) ) THEN
+                  itot = iks + iupdwn_tot(iss) + nupdwn( iss ) - 1 
                   file_name = TRIM( ks_emp_file ) // &
                             & trim(spin_name(iss)) // trim( int_to_char( iks ) )
-                  CALL print_ks_states( ce(:,iupdwn_emp(iss)+iks-1), file_name )
+                  CALL print_ks_states( ctot( :, itot ), file_name )
                 END IF
               END DO
             END IF

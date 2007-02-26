@@ -89,7 +89,6 @@
       USE time_step, ONLY: tps, delt
       USE wave_types
       use wave_base, only: frice
-      USE kohn_sham_states, ONLY: ks_states, tksout, n_ksout, indx_ksout, ks_states_closeup
       USE io_global, ONLY: ionode
       USE io_global, ONLY: stdout
       USE input, ONLY: iosys
@@ -585,7 +584,7 @@
         !
         IF( ttsave .OR. ttexit ) THEN
           CALL writefile( nfi, tps, c0, cm, f, atoms0, atomsm, acc,  &
-                          taui, cdmi, htm, ht0, rhor, vpot, lambda )
+                          taui, cdmi, htm, ht0, rhor, vpot, lambda, ttexit )
         END IF
 
         ! ...   loop back
@@ -606,8 +605,6 @@
         END DO
       END IF
       !
-      CALL ks_states(c0, f, vpot, eigr, vkb, bec )
-
       IF(tprnsfac) THEN
         CALL print_sfac(rhor, sfac)
       END IF
