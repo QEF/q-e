@@ -261,7 +261,7 @@ MODULE control_flags
   ! ... printout control
   !
   INTEGER, PUBLIC :: &
-    io_level           ! variable controlling the amount of I/O to file
+    io_level = 1       ! variable controlling the amount of I/O to file
   INTEGER, PUBLIC :: &
     iverbosity         ! type of printing ( 0 few, 1 all )
   !
