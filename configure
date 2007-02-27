@@ -2224,17 +2224,26 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 		pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 		eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
 		g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+		# for MKL libraries
+	        MKL_LIBS="-lguide -lpthread"
+	        MKL_FLAGS=""
 		if test "$ifort_version" != ""
 		then
 			version=`$mpif90 -V 2>&1 | grep Version |
 				 sed 's/.*Version//' | awk '{print $1}'`
-			if test `echo $version | sed 's/\..*//'` -lt 8
-			then
+			if test `echo $version | sed 's/\..*//'` -lt 8; then
+			# ifc up to version 7
 				try_f90="ifc efc"
 				echo "${ECHO_T}ifc $version"
 			else
+			# ifort v.8 and later
 				try_f90="ifort efc"
 				echo "${ECHO_T}ifort $version"
+			fi
+			# flags for MKL according to Axel - ifort 9 and later
+			if test `echo $version | sed 's/\..*//'` -gt 8; then
+				MKL_LIBS=""
+				MKL_FLAGS="-i-static -openmp $LDFLAGS"
 			fi
 		elif test "$pgf_version" != ""
 		then
@@ -4097,7 +4106,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4100:" \
+echo "$as_me:4109:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4617,7 +4626,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4620: \"$ac_link\") >&5
+(eval echo $as_me:4629: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4695,7 +4704,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4698: \"$ac_link\") >&5
+(eval echo $as_me:4707: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -5757,15 +5766,8 @@ fi
 				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-lguide -lpthread"
-		        if test "$ifort_version" != "" ; then
-		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
-# ifort 9 and following - according to Axel
-			      LIBS=""
-			      LDFLAGS="-i-static -openmp $LDFLAGS"
-                           fi
-                        fi
+			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+			LIBS="$MKL_LIBS"
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -5880,15 +5882,8 @@ fi
 				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-lguide -lpthread"
-		        if test "$ifort_version" != "" ; then
-		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
-# ifort 9 and following - according to Axel
-			      LIBS=""
-			      LDFLAGS="-i-static -openmp $LDFLAGS"
-                           fi
-                        fi
+			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+			LIBS="$MKL_LIBS"
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -6005,15 +6000,8 @@ fi
 				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-lguide -lpthread"
-		        if test "$ifort_version" != "" ; then
-		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
-# ifort 9 and following - according to Axel
-			      LIBS=""
-			      LDFLAGS="-i-static -openmp $LDFLAGS"
-                           fi
-                        fi
+			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+			LIBS="$MKL_LIBS"
 			echo "$as_me:$LINENO: checking for library containing dgemm" >&5
 echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
 if test "${ac_cv_search_dgemm+set}" = set; then
@@ -6913,6 +6901,7 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags"
 			LIBS="$blas_libs"
+			LDFLAGS="$MKL_FLAGS $test_ldflags"
 			echo "$as_me:$LINENO: checking for library containing zggev" >&5
 echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6
 if test "${ac_cv_search_zggev+set}" = set; then
@@ -7115,7 +7104,7 @@ fi
 		then
 			unset ac_cv_search_zggev # clear cached value
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags"
+			LDFLAGS="$MKL_FLAGS $test_ldflags"
 			LIBS="$blas_libs"
 			echo "$as_me:$LINENO: checking for library containing zggev" >&5
 echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6

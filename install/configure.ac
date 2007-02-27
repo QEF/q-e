@@ -206,17 +206,26 @@ else
 		pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
 		eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
 		g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+		# for MKL libraries
+	        MKL_LIBS="-lguide -lpthread"
+	        MKL_FLAGS=""
 		if test "$ifort_version" != ""
 		then
 			version=`$mpif90 -V 2>&1 | grep Version |
 				 sed 's/.*Version//' | awk '{print $1}'`
-			if test `echo $version | sed 's/\..*//'` -lt 8
-			then
+			if test `echo $version | sed 's/\..*//'` -lt 8; then
+			# ifc up to version 7
 				try_f90="ifc efc"
 				echo "${ECHO_T}ifc $version"
-			else
+			else 
+			# ifort v.8 and later
 				try_f90="ifort efc"
 				echo "${ECHO_T}ifort $version"
+			fi
+			# flags for MKL according to Axel - ifort 9 and later
+			if test `echo $version | sed 's/\..*//'` -gt 8; then
+				MKL_LIBS=""
+				MKL_FLAGS="-i-static -openmp $LDFLAGS"
 			fi
 		elif test "$pgf_version" != ""
 		then
@@ -721,15 +730,8 @@ then
 				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-lguide -lpthread"
-		        if test "$ifort_version" != "" ; then
-		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
-# ifort 9 and following - according to Axel
-			      LIBS=""
-			      LDFLAGS="-i-static -openmp $LDFLAGS"
-                           fi
-                        fi
+			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+			LIBS="$MKL_LIBS"
 			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
@@ -753,15 +755,8 @@ then
 				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-lguide -lpthread"
-		        if test "$ifort_version" != "" ; then
-		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
-# ifort 9 and following - according to Axel
-			      LIBS=""
-			      LDFLAGS="-i-static -openmp $LDFLAGS"
-                           fi
-                        fi
+			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+			LIBS="$MKL_LIBS"
 			AC_SEARCH_LIBS(dgemm, mkl_em64t, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
@@ -787,15 +782,8 @@ then
 				try_loption="-L$dir"
 			fi
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags $try_loption"
-			LIBS="-lguide -lpthread"
-		        if test "$ifort_version" != "" ; then
-		   	   if test `echo $version | sed 's/\..*//'` -gt 8 ; then
-# ifort 9 and following - according to Axel
-			      LIBS=""
-			      LDFLAGS="-i-static -openmp $LDFLAGS"
-                           fi
-                        fi
+			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
+			LIBS="$MKL_LIBS"
 			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS")
 			if test "$ac_cv_search_dgemm" != "no"
@@ -967,6 +955,7 @@ then
 			FFLAGS="$test_fflags"
 			LDFLAGS="$test_ldflags"
 			LIBS="$blas_libs"
+			LDFLAGS="$MKL_FLAGS $test_ldflags"
 			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
 				       lapack_libs="-lmkl_lapack")
 		fi
@@ -987,7 +976,7 @@ then
 		then
 			unset ac_cv_search_zggev # clear cached value
 			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags"
+			LDFLAGS="$MKL_FLAGS $test_ldflags"
 			LIBS="$blas_libs"
 			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
 				       lapack_libs="-lmkl_lapack")
