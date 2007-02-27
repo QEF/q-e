@@ -24,15 +24,15 @@
 
 CONTAINS
 
-!------------------------------------
-  SUBROUTINE grid_build(nw,wmax,wmin)
-  !----------------------------------
+!---------------------------------------------
+  SUBROUTINE grid_build(nw, wmax, wmin)
+  !-------------------------------------------
   !
-  USE kinds,    ONLY : DP
-  USE wvfct,    ONLY : nbnd, wg
-  USE klist,    ONLY : nks, wk, nelec
-  USE lsda_mod, ONLY : nspin
-  USE uspp,     ONLY : okvan
+  USE kinds,     ONLY : DP
+  USE wvfct,     ONLY : nbnd, wg
+  USE klist,     ONLY : nks, wk, nelec
+  USE lsda_mod,  ONLY : nspin
+  USE uspp,      ONLY : okvan
   !
   IMPLICIT NONE
   !
@@ -41,7 +41,7 @@ CONTAINS
   REAL(DP), INTENT(IN) :: wmax ,wmin
   !
   ! local vars
-  INTEGER :: iw,ik,i,ierr 
+  INTEGER         :: iw,ik,i,ierr
  
   !
   ! check on the number of bands: we need to include empty bands in order to allow
@@ -141,7 +141,7 @@ PROGRAM epsilon
   !
   ! input variables
   !
-  INTEGER                 :: nw,ierr
+  INTEGER                 :: nw
   REAL(DP)                :: intersmear,intrasmear,wmax,wmin,shift
   CHARACTER(10)           :: calculation,smeartype
   LOGICAL                 :: metalcalc
@@ -179,7 +179,6 @@ PROGRAM epsilon
   smeartype    = 'gauss'
   intrasmear   = 0.0d0 
   metalcalc    = .FALSE.  
-
  
   !
   ! this routine allows the user to redirect the input using -input 
@@ -201,7 +200,7 @@ PROGRAM epsilon
      IF (ios/=0) CALL errore('epsilon', 'reading namelist ENERGY_GRID', ABS(ios))
      !
      tmp_dir = trimcheck(outdir)
-     ! 
+     !
   ENDIF
   
   ! 
@@ -257,11 +256,15 @@ PROGRAM epsilon
       !
   CASE ( 'jdos' )
       !
-      CALL jdos_calc ( smeartype, intersmear, intrasmear, nw, wmax, wmin, shift )
+      CALL jdos_calc ( smeartype, intersmear, nw, wmax, wmin, shift )
       !
   CASE ( 'offdiag' )
       !
       CALL offdiag_calc ( intersmear, intrasmear, nw, wmax, wmin, shift, metalcalc )
+      !
+  CASE ( 'occ' )
+      !
+      CALL occ_calc ()
       !
   CASE DEFAULT
       !
@@ -299,10 +302,10 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   USE kinds,                ONLY : DP
   USE constants,            ONLY : PI, RYTOEV
   USE cell_base,            ONLY : tpiba2, omega
-  USE wvfct,                ONLY : nbnd, wg, et
+  USE wvfct,                ONLY : nbnd, et
   USE ener,                 ONLY : efermi => ef
-  USE klist,                ONLY : nks, nkstot, nelec, degauss
-  USE io_global,            ONLY : ionode, ionode_id, stdout
+  USE klist,                ONLY : nks, nkstot, degauss
+  USE io_global,            ONLY : ionode, stdout
   !
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy                
   ! 
@@ -317,10 +320,9 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   !
   ! local variables
   !
-  INTEGER       :: i, ig, ik, iband1, iband2 
+  INTEGER       :: i, ik, iband1, iband2 
   INTEGER       :: iw, iwp, ierr
   REAL(DP)      :: etrans, const, w, renorm(3)
-  COMPLEX(DP)   :: caux 
   !
   REAL(DP), ALLOCATABLE    :: epsr(:,:), epsi(:,:)
   REAL(DP), ALLOCATABLE    :: ieps(:,:), eels(:,:)
@@ -334,7 +336,7 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   !
   ! perform some consistency checks, calculate occupation numbers and setup w grid
   !
-  CALL grid_build(nw,wmax,wmin)
+  CALL grid_build(nw, wmax, wmin )
   !   
   ! allocate main spectral and auxiliary quantities   
   !   
@@ -365,11 +367,11 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
      !                           compute dipole matrix 3 x nbnd x nbnd parallel over g 
      !                           recover g parallelism getting the total dipole matrix
      ! 
-     CALL dipole_calc( ik, dipole_aux)
+     CALL dipole_calc( ik, dipole_aux, metalcalc)
      !
      dipole(:,:,:)= tpiba2 * REAL( dipole_aux(:,:,:) * CONJG(dipole_aux(:,:,:)), DP ) 
-
-     ! 
+      
+     !
      ! Calculation of real and immaginary parts 
      ! of the macroscopic dielettric function from dipole
      ! approximation. 
@@ -396,7 +398,9 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
                    !
                    w = wgrid(iw)
                    !
-
+                   ! We used (focc(iband1,ik)-focc(iband2,ik)) instead of focc(iband1,ik) 
+                   ! because we need to avoid the interaction of (k,n) with it self
+                   ! 
                    epsi(:,iw) = epsi(:,iw) + dipole(:,iband1,iband2) * intersmear * w* &
                                              RYTOEV**3 * (focc(iband1,ik)-focc(iband2,ik))/  &
                                   (( (etrans**2 -w**2 )**2 + intersmear**2 * w**2 )* etrans ) 
@@ -432,14 +436,14 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
                    !
 
                    epsi(:,iw) = epsi(:,iw) - 1/2 * dipole(:,iband1,iband1) * intrasmear * w* &
-                                RYTOEV**3 * (2*EXP((et(iband1,ik)-efermi)/degauss ))/  &
+                                RYTOEV**2 * (2*EXP((et(iband1,ik)-efermi)/degauss ))/  &
                     (( w**4 + intrasmear**2 * w**2 )*(1+EXP((et(iband1,ik)-efermi)/ & 
-                    degauss))**2*degauss * RYTOEV) 
+                    degauss))**2*degauss ) 
                                    
-                   epsr(:,iw) = epsr(:,iw) + 1/2 * dipole(:,iband1,iband1) * RYTOEV**3 * &
+                   epsr(:,iw) = epsr(:,iw) + 1/2 * dipole(:,iband1,iband1) * RYTOEV**2 * &
                                              (2*EXP((et(iband1,ik)-efermi)/degauss )) * w**2 / & 
                     (( w**4 + intrasmear**2 * w**2 )*(1+EXP((et(iband1,ik)-efermi)/ &
-                    degauss))**2*degauss *RYTOEV )
+                    degauss))**2*degauss )
                ENDDO
 
          ENDIF
@@ -495,8 +499,8 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   IF ( ionode ) THEN
       !
       WRITE(stdout,"(/,5x, 'The bulk xx plasmon frequency [eV] is: ',f15.9 )")  SQRT(renorm(1) * 2.0d0 / PI)
-      WRITE(stdout,"(/,5x, 'The bulk yy plasmon frequency [eV] is: ',f15.9 )")  SQRT(renorm(2) * 2.0d0 / PI)
-      WRITE(stdout,"(/,5x, 'The bulk zz plasmon frequency [eV] is: ',f15.9 )")  SQRT(renorm(3) * 2.0d0 / PI)
+      WRITE(stdout,"(5x, 'The bulk yy plasmon frequency [eV] is: ',f15.9 )")  SQRT(renorm(2) * 2.0d0 / PI)
+      WRITE(stdout,"(5x, 'The bulk zz plasmon frequency [eV] is: ',f15.9 )")  SQRT(renorm(3) * 2.0d0 / PI)
       WRITE(stdout,"(/,5x, 'Writing output on file...' )")
       !
       ! write results on data files
@@ -538,16 +542,15 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
 
 END SUBROUTINE eps_calc
  
-!-----------------------------------------------------------------------------
-SUBROUTINE jdos_calc ( smeartype, intersmear,intrasmear, nw, wmax, wmin, shift )
-  !-----------------------------------------------------------------------------
+!----------------------------------------------------------------------------------------
+SUBROUTINE jdos_calc ( smeartype, intersmear, nw, wmax, wmin, shift )
+  !--------------------------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : PI, RYTOEV
-  USE cell_base,            ONLY : tpiba2, omega
   USE wvfct,                ONLY : nbnd, et
-  USE klist,                ONLY : nks, nkstot, nelec
-  USE io_global,            ONLY : ionode, ionode_id, stdout
+  USE klist,                ONLY : nks
+  USE io_global,            ONLY : ionode, stdout
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy                
   ! 
   IMPLICIT NONE
@@ -556,14 +559,14 @@ SUBROUTINE jdos_calc ( smeartype, intersmear,intrasmear, nw, wmax, wmin, shift )
   ! input variables
   !
   INTEGER,         INTENT(IN) :: nw
-  REAL(DP),        INTENT(IN) :: wmax, wmin, intersmear,intrasmear, shift
+  REAL(DP),        INTENT(IN) :: wmax, wmin, intersmear, shift
   CHARACTER(*),    INTENT(IN) :: smeartype
   !
   ! local variables
   !
-  INTEGER       :: i, ik, iband1, iband2 
-  INTEGER       :: iw, iwp, ierr, count
-  REAL(DP)      :: etrans, const, w, renorm
+  INTEGER       :: ik, iband1, iband2 
+  INTEGER       :: iw, ierr
+  REAL(DP)      :: etrans, w, renorm, count
   !
   REAL(DP), ALLOCATABLE    :: jdos(:)
 !
@@ -577,7 +580,7 @@ SUBROUTINE jdos_calc ( smeartype, intersmear,intrasmear, nw, wmax, wmin, shift )
   !
   ! perform some consistency checks, calculate occupation numbers and setup w grid
   !
-  CALL grid_build(nw,wmax,wmin)
+  CALL grid_build(nw, wmax, wmin )
   !
   ! allocate main spectral and auxiliary quantities
   !
@@ -589,7 +592,7 @@ SUBROUTINE jdos_calc ( smeartype, intersmear,intrasmear, nw, wmax, wmin, shift )
   jdos(:)=0.0_DP
 
   ! Initialising a counter for the number of transition
-  count=0
+  count=0.0_DP
 
   !
   ! main kpt loop
@@ -611,7 +614,7 @@ SUBROUTINE jdos_calc ( smeartype, intersmear,intrasmear, nw, wmax, wmin, shift )
                  !
                  ! transition energy
                  !
-                 etrans = ( et(iband2,ik) -et(iband1,ik) ) * RYTOEV
+                 etrans = ( et(iband2,ik) -et(iband1,ik) ) * RYTOEV  + shift
                  !
                  IF( etrans < 1.0d-10 ) CYCLE
 
@@ -653,7 +656,7 @@ SUBROUTINE jdos_calc ( smeartype, intersmear,intrasmear, nw, wmax, wmin, shift )
                  !
                  ! transition energy
                  !
-                 etrans = ( et(iband2,ik) -et(iband1,ik) ) * RYTOEV
+                 etrans = ( et(iband2,ik) -et(iband1,ik) ) * RYTOEV  + shift
                  !
                  IF( etrans < 1.0d-10 ) CYCLE
 
@@ -733,9 +736,9 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   USE cell_base,            ONLY : tpiba2, omega
   USE wvfct,                ONLY : nbnd, et
   USE ener,                 ONLY : efermi => ef
-  USE klist,                ONLY : nks, nkstot, nelec, degauss
-  USE io_global,            ONLY : ionode, ionode_id, stdout
-  USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy                
+  USE klist,                ONLY : nks, nkstot, degauss
+  USE grid_module,          ONLY : focc, wgrid, grid_build, grid_destroy
+  USE io_global,            ONLY : ionode, stdout
   ! 
   IMPLICIT NONE
 
@@ -748,10 +751,9 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   !
   ! local variables
   !
-  INTEGER       :: i, ig, ik, iband1, iband2 
-  INTEGER       :: iw, iwp, ierr,it1,it2
-  REAL(DP)      :: etrans, const, w, renorm
-  COMPLEX(DP)   :: caux 
+  INTEGER       :: ik, iband1, iband2 
+  INTEGER       :: iw, ierr, it1, it2
+  REAL(DP)      :: etrans, const, w
   !
   COMPLEX(DP), ALLOCATABLE :: dipole_aux(:,:,:)
   COMPLEX(DP), ALLOCATABLE :: epstot(:,:,:),dipoletot(:,:,:,:)
@@ -762,7 +764,7 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
   !
   ! perform some consistency checks, calculate occupation numbers and setup w grid
   !
-  CALL grid_build(nw,wmax,wmin)
+  CALL grid_build(nw, wmax, wmin )
   !
   ! allocate main spectral and auxiliary quantities
   !
@@ -789,7 +791,7 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
      !                           compute dipole matrix 3 x nbnd x nbnd parallel over g 
      !                           recover g parallelism getting the total dipole matrix
      ! 
-     CALL dipole_calc(ik,dipole_aux)
+     CALL dipole_calc( ik, dipole_aux, metalcalc )
      !
      DO it2 = 1, 3
         DO it1 = 1, 3
@@ -845,9 +847,9 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
                    w = wgrid(iw)
                    !
                    epstot(:,:,iw) = epstot(:,:,iw) + 1/2 * dipoletot(:,:,iband1,iband1)* &
-                                RYTOEV**3 * (2*EXP((et(iband1,ik)-efermi)/degauss ))/  &
+                                RYTOEV**2 * (2*EXP((et(iband1,ik)-efermi)/degauss ))/  &
                     (( w**2 + (0,1)*intrasmear*w)*(1+EXP((et(iband1,ik)-efermi)/ &
-                    degauss))**2*degauss *RYTOEV)
+                    degauss))**2*degauss ) 
                ENDDO
 
          ENDIF
@@ -926,9 +928,9 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, shift, &
 END SUBROUTINE offdiag_calc
 
 
-!------------------------------------
-SUBROUTINE dipole_calc( ik, dipole_aux)
-  !----------------------------------
+!-------------------------------------------------
+SUBROUTINE dipole_calc( ik, dipole_aux, metalcalc )
+  !-----------------------------------------------
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : npw, nbnd, igk, g2kin
   USE wavefunctions_module, ONLY : evc
@@ -943,6 +945,7 @@ IMPLICIT NONE
   ! global variables
   INTEGER, INTENT(IN)        :: ik
   COMPLEX(DP), INTENT(INOUT) :: dipole_aux(3,nbnd,nbnd)
+  LOGICAL, INTENT(IN)        :: metalcalc
   !
   ! local variables
   INTEGER :: iband1,iband2,ig
@@ -986,6 +989,25 @@ IMPLICIT NONE
   ENDDO
   ENDDO
   !
+  ! The diagonal terms are taken into account only if the system is treated like a metal, not
+  ! in the intraband therm. Because of this we can recalculate the diagonal component of the dipole 
+  ! tensor directly as we need it for the intraband therm, without interference with interband one.
+  !
+  IF (metalcalc) THEN
+     !
+     DO iband1 = 1,nbnd
+        DO  ig=1,npw
+          !
+          caux= CONJG(evc(ig,iband1))*evc(ig,iband1) 
+          !
+          dipole_aux(:,iband1,iband1) = dipole_aux(:,iband1,iband1) + &
+                                        ( g(:,igk(ig))+ xk(:,ik) ) * caux
+          !
+        ENDDO
+     ENDDO
+     !
+  ENDIF
+  !
   ! recover over G parallelization (intra_pool)
   !
   CALL reduce( 2 * 3 * nbnd * nbnd, dipole_aux ) 
@@ -993,3 +1015,52 @@ IMPLICIT NONE
   CALL stop_clock( 'dipole_calc' )
   !
 END SUBROUTINE dipole_calc
+
+
+!-------------------------------------------------
+SUBROUTINE occ_calc ()
+  !-------------------------------------------------
+  !
+  USE kinds,     ONLY : DP
+  USE klist,     ONLY : nks, wk, degauss
+  USE wvfct,     ONLY : nbnd, wg, et
+  USE ener,      ONLY : ef
+  USE mp_global, ONLY : me_pool
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP), ALLOCATABLE  :: focc(:,:),foccp(:,:)
+  CHARACTER(25)          :: filename 
+  INTEGER                :: ierr, i, ik
+  ! 
+  ALLOCATE ( focc( nbnd, nks), STAT=ierr )
+  IF (ierr/=0) CALL errore('grid_build','allocating focc', ABS(ierr))
+  !
+  ALLOCATE ( foccp( nbnd, nks), STAT=ierr )
+  IF (ierr/=0) CALL errore('grid_build','allocating foccp', ABS(ierr))
+
+  IF (me_pool==0) THEN
+      !
+      WRITE(filename,"(I3,'.occupation.dat')")me_pool
+      OPEN (unit=50, file=TRIM(filename))
+      WRITE(50,*) '#energy (Ry)      occupation factor       derivative'
+    
+      DO ik = 1,nks
+      DO i  = 1,nbnd
+           focc(i,ik)= wg(i, ik ) * 2.0_DP/wk( ik )
+           foccp(i,ik)= 2* EXP((et(i,ik)-ef)/degauss)/((1+EXP((et(i,ik)-ef)/degauss))**2*degauss)
+           WRITE(50,*)et(i,ik),focc(i,ik),foccp(i,ik) 
+      ENDDO
+      ENDDO
+    
+      CLOSE (50) 
+      !
+  ENDIF
+  !
+  DEALLOCATE ( focc, STAT=ierr)
+  CALL errore('grid_destroy','deallocating grid stuff',ABS(ierr))
+  !
+  DEALLOCATE ( foccp, STAT=ierr)
+  CALL errore('grid_destroy','deallocating grid stuff',ABS(ierr))
+
+END SUBROUTINE occ_calc
