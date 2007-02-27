@@ -584,126 +584,7 @@ MODULE pw_restart
          !
          IF ( lgvec ) CALL write_gk( iunout, ik, filename )
          !
-         IF ( lwfc ) THEN
-            !
-            ! ... wavefunctions
-            !
-            IF ( nspin == 2 ) THEN
-               !
-               ! ... beware: with pools, this is correct only on ionode
-               !
-               ispin = isk(ik)
-               !
-               IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-                  !
-                  CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
-                  !
-               END IF
-               !
-               IF ( ionode ) THEN
-                  !
-                  filename = wfc_filename( ".", 'evc', ik, ispin, &
-                                                       DIR=lkpoint_dir )
-                  !
-                  CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ), &
-                                  filename, CREATE = .FALSE., BINARY = .TRUE. )
-                  !
-                  filename = wfc_filename( dirname, 'evc', ik, ispin, & 
-                                           DIR=lkpoint_dir )
-                  !
-               END IF
-               !
-               CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
-                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
-                               ngk(ik-iks+1), filename, 1.D0 )
-               !
-               ik_eff = ik + num_k_points
-               !
-               ispin = isk(ik_eff)
-               !
-               IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
-                  !
-                  CALL get_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
-                  !
-               END IF
-               !
-               IF ( ionode ) THEN
-                  !
-                  filename = wfc_filename( ".", 'evc', ik, ispin, &
-                                                       DIR=lkpoint_dir )
-                  !
-                  CALL iotk_link( iunpun, "WFC"//TRIM( iotk_index( ispin ) ), &
-                                  filename, CREATE = .FALSE., BINARY = .TRUE. )
-                  !
-                  filename = wfc_filename( dirname, 'evc', ik, ispin, &
-                              DIR=lkpoint_dir )
-                  !
-               END IF
-               !
-               CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
-                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
-                               ngk(ik_eff-iks+1), filename, 1.D0 )
-               !
-            ELSE
-               !
-               IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
-                  !
-                  CALL get_buffer( evc, nwordwfc, iunwfc, (ik-iks+1) )
-                  !
-               END IF
-               !
-               IF ( noncolin ) THEN
-                  !
-                  DO ipol = 1, npol
-                     !
-                     IF ( ionode ) THEN
-                        !
-                        filename = wfc_filename( ".", 'evc', ik, ipol, &
-                                                DIR=lkpoint_dir )
-                        !
-                        CALL iotk_link(iunpun,"WFC"//TRIM(iotk_index(ipol)), &
-                                 filename, CREATE = .FALSE., BINARY = .TRUE. )
-                        !
-                        filename = wfc_filename( dirname, 'evc', ik, ipol, &
-                               DIR=lkpoint_dir)
-                        !
-                     END IF
-                     !
-                     !!! TEMP
-                     nkl=(ipol-1)*npwx+1
-                     nkr= ipol   *npwx
-                     CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
-                                     evc(nkl:nkr,:), npw_g, nbnd,             &
-                                     igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
-                                     filename, 1.D0 )
-                     !
-                  END DO
-                  !
-               ELSE
-                  !
-                  ispin = 1
-                  !
-                  IF ( ionode ) THEN
-                     !
-                     filename = wfc_filename( ".", 'evc', ik, DIR=lkpoint_dir )
-                     !
-                     CALL iotk_link( iunpun, "WFC", filename, &
-                                     CREATE = .FALSE., BINARY = .TRUE. )
-                     !
-                     filename = wfc_filename( dirname, 'evc', ik, &
-                                                        DIR=lkpoint_dir )
-                     !
-                  END IF
-                  !
-                  CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
-                                  evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),  &
-                                  ngk(ik-iks+1), filename, 1.D0 )
-                  !
-               END IF
-               !
-            END IF
-            !
-         END IF
+         IF ( lwfc ) CALL write_this_wfc ( iunout, ik )
          !
          IF ( ionode ) THEN
             !
@@ -817,6 +698,134 @@ MODULE pw_restart
           !
         END SUBROUTINE write_gk
         !
+        !--------------------------------------------------------------------
+        SUBROUTINE write_this_wfc ( iun, ik )
+          !--------------------------------------------------------------------
+          !
+          IMPLICIT NONE
+          !
+          INTEGER, INTENT(IN) :: iun, ik
+          CHARACTER(LEN=256)  :: filename
+          !
+          ! ... wavefunctions
+          !
+          IF ( nspin == 2 ) THEN
+             !
+             ! ... beware: with pools, this is correct only on ionode
+             !
+             ispin = isk(ik)
+             !
+             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+                !
+                CALL get_buffer ( evc, nwordwfc, iunwfc, (ik-iks+1) )
+                !
+             END IF
+             !
+             IF ( ionode ) THEN
+                !
+                filename = wfc_filename( ".", 'evc', ik, ispin, &
+                                                     DIR=lkpoint_dir )
+                !
+                CALL iotk_link( iunpun, "WFC" // TRIM( iotk_index (ispin) ), &
+                                  filename, CREATE = .FALSE., BINARY = .TRUE. )
+                !
+                filename = wfc_filename( dirname, 'evc', ik, ispin, & 
+                                           DIR=lkpoint_dir )
+                !
+             END IF
+             !
+             CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
+                             evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),   &
+                             ngk(ik-iks+1), filename, 1.D0 )
+             !
+             ik_eff = ik + num_k_points
+             !
+             ispin = isk(ik_eff)
+             !
+             IF ( ( ik_eff >= iks ) .AND. ( ik_eff <= ike ) ) THEN
+                !
+                CALL get_buffer ( evc, nwordwfc, iunwfc, (ik_eff-iks+1) )
+                !
+             END IF
+             !
+             IF ( ionode ) THEN
+                !
+                filename = wfc_filename( ".", 'evc', ik, ispin, &
+                                                     DIR=lkpoint_dir )
+                !
+                CALL iotk_link( iunpun, "WFC"//TRIM( iotk_index( ispin ) ), &
+                                filename, CREATE = .FALSE., BINARY = .TRUE. )
+                !
+                filename = wfc_filename( dirname, 'evc', ik, ispin, &
+                            DIR=lkpoint_dir )
+                !
+             END IF
+             !
+             CALL write_wfc( iunout, ik_eff, nkstot, kunit, ispin, nspin, &
+                             evc, npw_g, nbnd, igk_l2g_kdip(:,ik_eff-iks+1), &
+                             ngk(ik_eff-iks+1), filename, 1.D0 )
+             !
+           ELSE
+             !
+             IF ( ( ik >= iks ) .AND. ( ik <= ike ) ) THEN
+                !
+                CALL get_buffer( evc, nwordwfc, iunwfc, (ik-iks+1) )
+                !
+             END IF
+             !
+             IF ( noncolin ) THEN
+                !
+                DO ipol = 1, npol
+                   !
+                   IF ( ionode ) THEN
+                      !
+                      filename = wfc_filename( ".", 'evc', ik, ipol, &
+                                              DIR=lkpoint_dir )
+                      !
+                      CALL iotk_link(iunpun,"WFC"//TRIM(iotk_index(ipol)), &
+                               filename, CREATE = .FALSE., BINARY = .TRUE. )
+                      !
+                      filename = wfc_filename( dirname, 'evc', ik, ipol, &
+                             DIR=lkpoint_dir)
+                      !
+                   END IF
+                   !
+                   !!! TEMP
+                   nkl=(ipol-1)*npwx+1
+                   nkr= ipol   *npwx
+                   CALL write_wfc( iunout, ik, nkstot, kunit, ipol, npol,   &
+                                   evc(nkl:nkr,:), npw_g, nbnd,             &
+                                   igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1), &
+                                   filename, 1.D0 )
+                   !
+                END DO
+                !
+             ELSE
+                !
+                ispin = 1
+                !
+                IF ( ionode ) THEN
+                   !
+                   filename = wfc_filename( ".", 'evc', ik, DIR=lkpoint_dir )
+                   !
+                   CALL iotk_link( iunpun, "WFC", filename, &
+                                   CREATE = .FALSE., BINARY = .TRUE. )
+                   !
+                   filename = wfc_filename( dirname, 'evc', ik, &
+                                                      DIR=lkpoint_dir )
+                   !
+                END IF
+                !
+                CALL write_wfc( iunout, ik, nkstot, kunit, ispin, nspin, &
+                                evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),  &
+                                ngk(ik-iks+1), filename, 1.D0 )
+                !
+             END IF
+             !
+          END IF
+          !
+       END SUBROUTINE write_this_wfc
+       !
     END SUBROUTINE pw_writefile
     !
     !------------------------------------------------------------------------
