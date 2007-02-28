@@ -2241,10 +2241,11 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 				echo "${ECHO_T}ifort $version"
 			fi
 			# flags for MKL according to Axel - ifort 9 and later
-			if test `echo $version | sed 's/\..*//'` -gt 8; then
-				MKL_LIBS=""
-				MKL_FLAGS="-i-static -openmp $LDFLAGS"
-			fi
+			# TEMPORARILY DISABLED - problems with older mkl?
+			#if test `echo $version | sed 's/\..*//'` -gt 8; then
+				#MKL_LIBS=""
+				#MKL_FLAGS="-i-static -openmp"
+			#fi
 		elif test "$pgf_version" != ""
 		then
 			version=`echo $pgf_version | awk '{print $2}'`
@@ -4106,7 +4107,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4109:" \
+echo "$as_me:4110:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4626,7 +4627,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4629: \"$ac_link\") >&5
+(eval echo $as_me:4630: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4704,7 +4705,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4707: \"$ac_link\") >&5
+(eval echo $as_me:4708: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -5859,6 +5860,7 @@ if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
   have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS"
+                                       ldflags="$MKL_FLAGS $ldflags"
 fi
 
 			if test "$ac_cv_search_dgemm" != "no"
@@ -5975,6 +5977,7 @@ if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
   have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS"
+                                       ldflags="$MKL_FLAGS $ldflags"
 fi
 
 			if test "$ac_cv_search_dgemm" != "no"
@@ -6093,6 +6096,7 @@ if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
   have_blas=1 have_mkl=1
 				       blas_libs="$try_loption $LIBS"
+                                       ldflags="$MKL_FLAGS $ldflags"
 fi
 
 			if test "$ac_cv_search_dgemm" != "no"

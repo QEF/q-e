@@ -223,10 +223,11 @@ else
 				echo "${ECHO_T}ifort $version"
 			fi
 			# flags for MKL according to Axel - ifort 9 and later
-			if test `echo $version | sed 's/\..*//'` -gt 8; then
-				MKL_LIBS=""
-				MKL_FLAGS="-i-static -openmp $LDFLAGS"
-			fi
+			# TEMPORARILY DISABLED - problems with older mkl?
+			#if test `echo $version | sed 's/\..*//'` -gt 8; then
+				#MKL_LIBS=""
+				#MKL_FLAGS="-i-static -openmp"
+			#fi
 		elif test "$pgf_version" != ""
 		then
 			version=`echo $pgf_version | awk '{print $2}'`
@@ -733,7 +734,8 @@ then
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
 			AC_SEARCH_LIBS(dgemm, mkl_ipf, have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS")
+				       blas_libs="$try_loption $LIBS"
+                                       ldflags="$MKL_FLAGS $ldflags")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
@@ -758,7 +760,8 @@ then
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
 			AC_SEARCH_LIBS(dgemm, mkl_em64t, have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS")
+				       blas_libs="$try_loption $LIBS"
+                                       ldflags="$MKL_FLAGS $ldflags")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
@@ -785,7 +788,8 @@ then
 			LDFLAGS="$MKL_FLAGS $test_ldflags $try_loption"
 			LIBS="$MKL_LIBS"
 			AC_SEARCH_LIBS(dgemm, mkl_ia32, have_blas=1 have_mkl=1
-				       blas_libs="$try_loption $LIBS")
+				       blas_libs="$try_loption $LIBS"
+                                       ldflags="$MKL_FLAGS $ldflags")
 			if test "$ac_cv_search_dgemm" != "no"
 			then break ; fi
 		done
