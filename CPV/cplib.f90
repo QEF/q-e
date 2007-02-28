@@ -3057,7 +3057,7 @@ end function set_Hubbard_l
 ! It also calculates the contribution of the Hubbard Hamiltonian to the
 ! electronic potential and to the forces acting on ions.
 !
-      use control_flags,      ONLY: tfor
+      use control_flags,      ONLY: tfor, tprnfor
       use kinds,              ONLY: DP        
       use parameters,         ONLY: natx, nsx
       use ions_base,          only: na, nat, nsp
@@ -3214,7 +3214,7 @@ end function set_Hubbard_l
 ! Calculate the contribution to forces on ions due to U and constraint
 !
       forceh=0.d0
-      if (tfor) then
+      if ((tfor).or.(tprnfor)) then
         allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
         allocate(dns(nat,nspin,ldmx,ldmx))
         allocate (spsi(ngw,n))
@@ -3848,10 +3848,10 @@ end function set_Hubbard_l
                !
                DO m = 1,2*l+1
                   lm = l**2 + m
-                  DO ia = 1 + isa, na(is) + isa
-                     natwfc = natwfc + 1
-                     wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia)* ylm(:,lm)*chiq(:)
-                  ENDDO
+                  !DO ia = 1 + isa, na(is) + isa
+                  natwfc = natwfc + 1
+                  wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia)* ylm(:,lm)*chiq(:)
+                  !ENDDO
                ENDDO
             ENDDO
          ENDDO
