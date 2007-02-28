@@ -407,7 +407,7 @@
       IF( nspin == 2 ) n_empx = MAX( n_empx, nupdwn_emp( 2 ) )
       !
       DO iss = 1, nspin
-         CALL descla_init( desc_emp( :, iss ), nupdwn( iss ), n_empx, np_emp, me_emp, emp_comm )
+         CALL descla_init( desc_emp( :, iss ), nupdwn_emp( iss ), n_empx, np_emp, me_emp, emp_comm )
       END DO
       !
       ALLOCATE( c0_emp( ngw, n_empx * nspin ) )
