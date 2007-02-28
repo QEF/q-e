@@ -215,10 +215,6 @@
 
       DEALLOCATE( occ_ )
 
-      h     = TRANSPOSE( ht )
-      hold  = TRANSPOSE( htm )
-      velh  = TRANSPOSE( htvel )
-
       return
       end subroutine readfile_cp
 
@@ -372,12 +368,6 @@
           xnhp0, xnhpm, nhpcl, nhpdim, occ, occ, lambda, lambda, b1, b2,   &
           b3, xnhe0, xnhem, vnhe, ekincm, c0, cm )
 
-        IF( .NOT. tbeg ) THEN
-          CALL cell_init( ht_0, hp0_ )
-          CALL cell_init( ht_m, hm1_ )
-          ht_0%hvel = hvel_  !  set cell velocity
-          ht_0%gvel = gvel_  !  set cell velocity
-        END IF
 
         RETURN 
         END SUBROUTINE readfile_fpmd

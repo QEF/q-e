@@ -3215,59 +3215,59 @@ end function set_Hubbard_l
 !
       forceh=0.d0
       if (tfor) then
-      allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
-      allocate(dns(nat,nspin,ldmx,ldmx))
-      allocate (spsi(ngw,n))
-      allocate(force_con(3,natx,nsx))
-      force_con=0.d0
+        allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
+        allocate(dns(nat,nspin,ldmx,ldmx))
+        allocate (spsi(ngw,n))
+        allocate(force_con(3,natx,nsx))
+        force_con=0.d0
 !
-      call nlsm1 (n,1,nsp,eigr,c,bp)
-      call s_wfc(n,bp,betae,c,spsi)
-      call nlsm2(ngw,nhsa,n,eigr,c,dbp,.true.)
+        call nlsm1 (n,1,nsp,eigr,c,bp)
+        call s_wfc(n,bp,betae,c,spsi)
+        call nlsm2(ngw,nhsa,n,eigr,c,dbp,.true.)
 !      call nlsm2_ns(eigr,c,dbp)
-      call nlsm2(ngw,nhsa,n_atomic_wfc,eigr,wfc,wdb,.true.)
+        call nlsm2(ngw,nhsa,n_atomic_wfc,eigr,wfc,wdb,.true.)
 !      call nlsmat(eigr,wfc,wdb)
 !
-      alpha=0
-      do alpha_s = 1, nsp
-       do alpha_a = 1, na(alpha_s)
-          alpha=alpha+1
-          do ipol = 1,3
-             call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,        &
-     &                  offset,c,wfc,eigr,                              &
-     &                  betae,proj,                                     &
-     &                  ipol,dns)
-             iat=0
-             do is = 1, nsp
-                do ia=1, na(is)
-                   iat = iat + 1
-                   if (Hubbard_U(is).ne.0.d0) then
-                      do isp = 1,nspin
-                         do m2 = 1,2*Hubbard_l(is) + 1
+        alpha=0
+        do alpha_s = 1, nsp
+         do alpha_a = 1, na(alpha_s)
+            alpha=alpha+1
+            do ipol = 1,3
+               call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,      &
+     &                    offset,c,wfc,eigr,                            &
+     &                    betae,proj,                                   &
+     &                    ipol,dns)
+               iat=0
+               do is = 1, nsp
+                  do ia=1, na(is)
+                     iat = iat + 1
+                     if (Hubbard_U(is).ne.0.d0) then
+                        do isp = 1,nspin
+                           do m2 = 1,2*Hubbard_l(is) + 1
                               forceh(ipol,alpha_a,alpha_s) =            &
      &                        forceh(ipol,alpha_a,alpha_s) -            &
      &                        Hubbard_U(is) * 0.5d0 * dns(iat,isp,m2,m2)
-                            do m1 = 1,2*Hubbard_l(is) + 1
-                               forceh(ipol,alpha_a,alpha_s) =           &
-     &                         forceh(ipol,alpha_a,alpha_s) +           &
-     &                         Hubbard_U(is)*ns(iat,isp,m2,m1)*         &
-     &                         dns(iat,isp,m1,m2)
-                            end do
-                         end do
-                      end do
-                   end if
+                              do m1 = 1,2*Hubbard_l(is) + 1
+                                 forceh(ipol,alpha_a,alpha_s) =         &
+     &                           forceh(ipol,alpha_a,alpha_s) +         &
+     &                           Hubbard_U(is)*ns(iat,isp,m2,m1)*       &
+     &                           dns(iat,isp,m1,m2)
+                              end do
+                           end do
+                        end do
+                     end if
 ! Occupation constraint add here
-                end do
-             end do
-          end do
-       end do
-      end do
-      if (nspin.eq.1) then
-         forceh(:,:,:) = 2.d0 * forceh(:,:,:)
-         force_con(:,:,:) =2.d0 * force_con(:,:,:)
-      end if
+                  end do
+               end do
+            end do
+         end do
+        end do
+        if (nspin.eq.1) then
+           forceh(:,:,:) = 2.d0 * forceh(:,:,:)
+           force_con(:,:,:) =2.d0 * force_con(:,:,:)
+        end if
 !
-      deallocate ( wfc, becwfc, spsi, proj, offset, swfc, dns, bp,      &
+        deallocate ( wfc, becwfc, spsi, proj, offset, swfc, dns, bp,    &
      &             dbp, wdb, force_con)
       end if
       return
@@ -3832,24 +3832,26 @@ end function set_Hubbard_l
          !   radial fourier transform of the chi functions
          !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
          !
-         DO nb = 1,nchi(is)
-            l = lchi(nb,is)
-            DO i=1,ngw
-               CALL sph_bes (mesh(is), r(1,is), q(i), l, jl)
-               DO ir=1,mesh(is)
-                  vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
+         DO ia = 1 + isa, na(is) + isa
+            DO nb = 1,nchi(is)
+               l = lchi(nb,is)
+               DO i=1,ngw
+                  CALL sph_bes (mesh(is), r(1,is), q(i), l, jl)
+                  DO ir=1,mesh(is)
+                     vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
+                  ENDDO
+                  CALL simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
                ENDDO
-               CALL simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
-            ENDDO
-            !
-            !   multiply by angular part and structure factor
-            !   NOTA BENE: the factor i^l MUST be present!!!
-            !
-            DO m = 1,2*l+1
-               lm = l**2 + m
-               DO ia = 1 + isa, na(is) + isa
-                  natwfc = natwfc + 1
-                  wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia)* ylm(:,lm)*chiq(:)
+               !
+               !   multiply by angular part and structure factor
+               !   NOTA BENE: the factor i^l MUST be present!!!
+               !
+               DO m = 1,2*l+1
+                  lm = l**2 + m
+                  DO ia = 1 + isa, na(is) + isa
+                     natwfc = natwfc + 1
+                     wfc(:,natwfc) = (0.d0,1.d0)**l * eigr(:,ia)* ylm(:,lm)*chiq(:)
+                  ENDDO
                ENDDO
             ENDDO
          ENDDO

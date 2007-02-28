@@ -106,7 +106,8 @@ SUBROUTINE init_run()
   !
   CALL create_directory( dirname )
   !
-  ! ... initialize g-vectors, fft grids
+  ! ... initialize g-vectors, fft grids 
+  ! ... The number of g-vectors are based on the input celldm!
   !
   CALL init_dimensions()
   !

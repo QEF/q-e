@@ -113,7 +113,6 @@ MODULE from_restart_module
     REAL(DP)                 :: delt0 = 0.D0
     REAL(DP)                 :: ei_unp 
     INTEGER                  :: n_spin_start 
-
     !
     !
     ! ... We are restarting from file recompute ainv
@@ -551,12 +550,6 @@ MODULE from_restart_module
     ttforce = tfor  .OR. tprnfor
     tstress = thdyn .OR. tpre
     fccc    = 0.5d0
-    !
-    IF ( .NOT. tbeg ) THEN
-       !
-       CALL newinit( ht_0%hmat )
-       !
-    END IF
     !
     CALL occn_info( f )
     !

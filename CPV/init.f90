@@ -239,6 +239,8 @@
                 3X,'------------------------------' )
       END IF
 
+      ! Set ht0 and htm, cell at time t and t-dt
+      !
       CALL cell_init( ht0, a1, a2, a3 )
       CALL cell_init( htm, a1, a2, a3 )
 
@@ -293,7 +295,6 @@
         !
         ! geometry is set to the cell parameters read from stdin ( a1, a2, a3 )
         !
-
         do i = 1, 3
             h(i,1) = a1(i)
             h(i,2) = a2(i)
@@ -303,14 +304,11 @@
         hold = h
 
       end if
-
-!
-!     ==============================================================
-!     ==== generate true g-space                                ====
-!     ==============================================================
-!
-      call newinit( h )
-!
+      !
+      !   generate true g-space
+      !
+      call newinit( ht0%hmat )
+      !
       !
  344  format(3X,'ibrav = ',i4,'       cell parameters ',/)
  345  format(3(4x,f10.5))
@@ -328,16 +326,24 @@
       !     a1,a2,a3, ainv, and corresponding quantities for small boxes
       !     are recalculated according to the value of cell parameter h
       !
+      USE kinds,                 ONLY : DP
       USE cell_base,             ONLY : a1, a2, a3, omega, alat, cell_base_reinit
       USE control_flags,         ONLY : program_name
+      USE io_global,             ONLY : stdout, ionode
       !
       implicit none
       !
-      real(8) :: h(3,3)
+      REAL(DP) :: h(3,3)
+      INTEGER   :: i, j
 
       ! local
       !
-      real(8) :: gmax, b1(3), b2(3), b3(3)
+      REAL(DP) :: gmax, b1(3), b2(3), b3(3)
+      !
+      !WRITE( stdout, 344 ) 
+      !do i=1,3
+      !   WRITE( stdout, 345 ) (h(i,j),j=1,3)
+      !enddo
       !
       !  re-initialize the cell base module with the new geometry
       !
@@ -352,4 +358,6 @@
       call newgb( a1, a2, a3, omega, alat )
       !
       return
+ 344  format(4x,'h from newinit')
+ 345  format(3(4x,f12.7))
     end subroutine newinit
