@@ -37,7 +37,8 @@ MODULE dynamics_module
        dt,          &! time step
        temperature, &! starting temperature
        virial,      &! virial (used for the pressure)
-       delta_t       ! rate of thermalization
+       delta_t,     &! rate of thermalization
+       t_rise        ! parameter (ps) used in Berendsen thermostat
   INTEGER :: &
        nraise,      &! the frequency of temperature raising
        ndof          ! the number of degrees of freedom
@@ -117,17 +118,6 @@ MODULE dynamics_module
       ! ...              to the starting temperature, in random directions.
       ! ...              The initial velocity distribution is therefore a 
       ! ...              constant.
-      !
-      ! ... delta_t, nraise are used to change the temperature as follows:
-      !
-      ! ... delta_t = 1 :                   every 'nraise' step the actual 
-      ! ...                                 temperature is rescaled to the
-      ! ...                                 initial value.
-      ! ... delta_t /= 1 and delta_t > 0 :  at each step the actual temperature
-      ! ...                                 is multiplied by delta_t; this is
-      ! ...                                 done rescaling all the velocities.
-      ! ... delta_t < 0 :                   every 'nraise' step the temperature
-      ! ...                                 reduced by -delta_t.
       !
       ! ... Dario Alfe' 1997  and  Carlo Sbraccia 2004-2006
       !
@@ -415,8 +405,14 @@ MODULE dynamics_module
              CASE( 'rescaling' )
                 !
                 WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"temperature is ", &
-                              &     "controlled by rescaling velocities"/)' )
+                       FMT = '(/,5X,"temperature is controlled by ", &
+                              &     "velocity rescaling"/)' )
+                !
+             CASE( 'berendsen' )
+                !
+                WRITE( UNIT = stdout, &
+                       FMT = '(/,5X,"temperature is controlled by ", &
+                              &     "velocity rescaling (Berendsen)"/)' )
                 !
              CASE( 'andersen' )
                 !
@@ -490,10 +486,30 @@ MODULE dynamics_module
           !
           vel(:,:) = tau(:,:) - tau_old(:,:)
           !
+          ! ... delta_t, nraise are used to change the temperature as follows:
+          !
+          ! ... delta_t = 1 :       every 'nraise' step the actual temperature
+          ! ...                     is rescaled to the desired value (tempw)
+          ! ... 0 < delta_t /= 1 :  at each step the actual temperature is 
+          ! ...                     multiplied by delta_t; this is done by
+          ! ...                     rescaling all the velocities.
+          ! ... delta_t < 0 :       every 'nraise' step the temperature
+          ! ...                     reduced by -delta_t.
+          !
           SELECT CASE( TRIM( thermostat ) )
           CASE( 'rescaling' )
              !
-             IF ( MOD( istep, nraise ) == 0 ) THEN
+             IF ( delta_t /= 1.D0 .AND. delta_t >= 0 ) THEN
+                !
+                temperature = temp_new*delta_t
+                !
+                WRITE( UNIT = stdout, &
+                       FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
+                                  & ", T = ",F6.1)' ) delta_t, temperature
+                !
+                CALL thermalize( temp_new, temperature )
+                !
+             ELSE IF ( MOD( istep, nraise ) == 0 ) THEN
                 !
                 IF ( delta_t == 1.D0 ) THEN
                    !
@@ -515,17 +531,11 @@ MODULE dynamics_module
                    !
                 END IF
                 !
-             ELSE IF ( delta_t /= 1.D0 .AND. delta_t >= 0 ) THEN
-                !
-                temperature = temp_new*delta_t
-                !
-                WRITE( UNIT = stdout, &
-                       FMT = '(/,5X,"Thermalization: delta_t = ",F6.3, &
-                                  & ", T = ",F6.1)' ) delta_t, temperature
-                !
-                CALL thermalize( temp_new, temperature )
-                !
              END IF
+             !
+          CASE( 'berendsen' )
+             !
+             CALL soft_thermalize( t_rise, temp_new, temperature )
              !
           CASE( 'andersen' )
              !
@@ -1392,7 +1402,7 @@ MODULE dynamics_module
       !
       RETURN
       !
-    END SUBROUTINE start_therm 
+    END SUBROUTINE start_therm
     !
     !-----------------------------------------------------------------------
     SUBROUTINE thermalize( system_temp, required_temp )
@@ -1412,7 +1422,7 @@ MODULE dynamics_module
          !
       ELSE
          !
-         aux = 0.D0
+         aux = 0.d0
          !
       END IF
       !
@@ -1421,5 +1431,52 @@ MODULE dynamics_module
       RETURN
       !
     END SUBROUTINE thermalize
+    !
+    !-----------------------------------------------------------------------
+    SUBROUTINE soft_thermalize( t_rise, system_temp, required_temp )
+      !-----------------------------------------------------------------------
+      !
+      IMPLICIT NONE
+      !
+      REAL(DP), INTENT(IN) :: t_rise, system_temp, required_temp
+      !
+      REAL(DP) :: aux
+      !
+      IF ( t_rise > 0.d0 ) THEN
+         !
+         ! ... Berendsen rescaling (Eq. 7.59 of Allen & Tildesley)
+         !
+         IF ( system_temp > 0.D0 .AND. required_temp > 0.D0 ) THEN
+            !
+            aux = SQRT( 1.d0 + (required_temp / system_temp - 1.d0) * &
+                                (dt*2.D0*au_ps / t_rise) )
+            !
+         ELSE
+            !
+            aux = 0.d0
+            !
+         END IF
+         !
+      ELSE
+         !
+         ! ... rescale the velocities by a factor 3 / 2KT / Ek
+         !
+         IF ( system_temp > 0.D0 .AND. required_temp > 0.D0 ) THEN
+            !
+            aux = SQRT( required_temp / system_temp )
+            !
+         ELSE
+            !
+            aux = 0.d0
+            !
+         END IF
+         !
+      END IF
+      !
+      vel(:,:) = vel(:,:) * aux
+      !
+      RETURN
+      !
+    END SUBROUTINE soft_thermalize
     !
 END MODULE dynamics_module

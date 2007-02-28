@@ -1054,11 +1054,12 @@ MODULE input_parameters
         LOGICAL :: remove_rigid_rot = .FALSE.
         
         !
-        ! ... delta_T, nraise are used to change the temperature in PWscf
+        ! ... delta_T, t_rise, nraise are used to change temperature in PWscf
         !
         
         REAL(DP) :: delta_t = 1.D0
-        
+        REAL(DP) :: t_rise = 0.D0
+
         INTEGER :: nraise
         
         !
@@ -1196,7 +1197,7 @@ MODULE input_parameters
                           tempw, fnosep, nhgrp, nhpcl, nhptyp, ndega, tranp,   &
                           amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
-                          wfc_extrapolation, nraise, remove_rigid_rot,         &
+                          wfc_extrapolation, t_rise, nraise, remove_rigid_rot, &
                           num_of_images, CI_scheme, opt_scheme, use_masses,    &
                           first_last_opt, ds, k_max, k_min, write_save,        &
                           temp_req, path_thr, fixed_tan, use_freezing,         &

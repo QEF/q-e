@@ -353,7 +353,8 @@ MODULE read_namelists_module
        !
        ion_velocities = 'default' 
        !
-       ! ... ( 'nose' | 'not_controlled' | 'rescaling' | 'langevin' )
+       ! ... ( 'nose' | 'not_controlled' | 'rescaling' | 'berendsen' |
+       !       'andersen' | 'langevin' )
        !
        ion_temperature = 'not_controlled'
        !
@@ -370,6 +371,7 @@ MODULE read_namelists_module
        ion_nstepe  = 1
        ion_maxstep = 100
        delta_t     = 1.D0
+       t_rise      = 0.D0
        nraise      = 100
        !
        refold_pos       = .FALSE.
@@ -886,6 +888,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ion_nstepe,        ionode_id )
        CALL mp_bcast( ion_maxstep,       ionode_id )
        CALL mp_bcast( delta_t,           ionode_id )
+       CALL mp_bcast( t_rise,            ionode_id )
        CALL mp_bcast( nraise,            ionode_id )
        CALL mp_bcast( refold_pos,        ionode_id )
        CALL mp_bcast( remove_rigid_rot,  ionode_id )
