@@ -365,7 +365,6 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         fion_tot(:) = SUM( fion(:,:), DIM = 2 ) / DBLE( nat )
         !
         FORALL( ia = 1:nat ) fion(:,ia) = fion(:,ia) - fion_tot(:)
-        write(26,*) fion_tot !DEBUG
         !
         IF ( remove_rigid_rot ) &
            CALL remove_tot_torque( nat, tau0, pmass(ityp(ind_srt(:))), fion )
