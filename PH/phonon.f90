@@ -145,6 +145,15 @@ PROGRAM phonon
      !
      lnscf = .TRUE.
      !
+  ELSE IF ( lnscf ) THEN
+     !
+     ! ... xqq is the q-point for   phonon calculation (read from input)
+     ! ... xq  is the q-point for the nscf calculation (read from data file)
+     ! ... if the nscf calculation is to be performed, discard the latter
+     !
+     xqq = xq
+     nqs = 1
+     !
   ELSE
      !
      nqs = 1

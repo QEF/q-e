@@ -362,6 +362,7 @@ find_mode_sym.o : ../Modules/io_global.o
 find_mode_sym.o : ../Modules/kind.o
 find_mode_sym.o : ../PW/noncol.o
 find_mode_sym.o : ../PW/pwcom.o
+find_mode_sym.o : phcom.o
 generate_dynamical_matrix_c.o : ../Modules/kind.o
 gmressolve_all.o : ../Modules/kind.o
 h_psiq.o : ../Modules/kind.o
