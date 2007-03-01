@@ -30,10 +30,10 @@
         REAL(8) :: buf(bsiz, bsiz), bswp
 
         if( n>ldx ) then
-          write(6,fmt='("trasponi: inconsistent ldx and n")')
+          write(6,fmt='("trasponi: inconsistent ldx and n: ",2I6)') ldx, n
         end if
         if( m>ldy ) then
-          write(6,fmt='("trasponi: inconsistent ldy and m")')
+          write(6,fmt='("trasponi: inconsistent ldy and m: ",2I6)') ldy, m
         end if
 
         nb = n / bsiz 
