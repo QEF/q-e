@@ -1897,7 +1897,7 @@ MODULE read_namelists_module
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
           CALL errore( ' read_namelists ', &
-                     & ' reading namelist cell ', ABS(ios) )
+                     & ' reading namelist phonon ', ABS(ios) )
        END IF
        !
        CALL phonon_bcast()
