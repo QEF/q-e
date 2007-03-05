@@ -23,7 +23,7 @@
       USE constants,         ONLY : au_gpa, amu_si, bohr_radius_cm, &
                                     amu_au, BOHR_RADIUS_ANGS, pi
       USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
-                                    cdm_displacement, ions_displacement
+                                    cdm_displacement, ions_displacement, label_srt
       USE cell_base,         ONLY : s_to_r, get_volume
       USE efield_module,     ONLY : tefield, pberryel, pberryion, &
                                     tefield2, pberryel2, pberryion2
@@ -63,11 +63,8 @@
       REAL(DP) :: totalmass
       INTEGER  :: isa, is, ia, kilobytes
       REAL(DP),         ALLOCATABLE :: tauw( :, : )
-      CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       LOGICAL  :: tsic, tfile
       LOGICAL, PARAMETER :: nice_output_files=.false.
-      !
-      ALLOCATE( labelw( nat ) )
       !
       ! avoid double printing to files by refering to nprint_nfi
       !
@@ -144,17 +141,15 @@
             !
             ! ... write out a standard XYZ file in angstroms
             !
-            labelw( ind_bck(1:nat) ) = atm( ityp(1:nat) )
-            !
             CALL printout_pos( stdout, tau0, nat, what = 'pos', &
-                               label = labelw, sort = ind_bck )
+                               label = label_srt, sort = ind_bck )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
                   CALL printout_pos( 35, tau0, nat, nfi = nfi, tps = tps )
                else
                   CALL printout_pos( 35, tau0, nat, what = 'xyz', &
-                               nfi = nfi, tps = tps, label = labelw, &
+                               nfi = nfi, tps = tps, label = label_srt, &
                                fact= BOHR_RADIUS_ANGS ,sort = ind_bck )
                endif
             END IF
@@ -178,28 +173,28 @@
             WRITE( stdout, * )
             !
             CALL printout_pos( stdout, tauw, nat, &
-                               what = 'vel', label = labelw, sort = ind_bck )
+                               what = 'vel', label = label_srt, sort = ind_bck )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
                   CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps )
                else
                   CALL printout_pos( 34, tauw, nat, nfi = nfi, tps = tps, &
-                               what = 'vel', label = labelw, sort = ind_bck )
+                               what = 'vel', label = label_srt, sort = ind_bck )
                endif
             END IF
             !
             WRITE( stdout, * )
             !
             CALL printout_pos( stdout, fion, nat, &
-                               what = 'for', label = labelw, sort = ind_bck )
+                               what = 'for', label = label_srt, sort = ind_bck )
             !
             IF( tfile ) then
                if (.not.nice_output_files) then
                   CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps )
                else
                   CALL printout_pos( 37, fion, nat, nfi = nfi, tps = tps, &
-                       what = 'for', label = labelw, sort = ind_bck )
+                       what = 'for', label = label_srt, sort = ind_bck )
                endif
             END IF
             !
@@ -274,10 +269,7 @@
       IF( tefield2) THEN
          IF(ionode) write(stdout,'( A14,F12.6,2X,A14,F12.6)') 'Elct. dipole 2',-pberryel2,'Ionic dipole 2',-pberryion2
       ENDIF
-
       !
-      !
-      DEALLOCATE( labelw )
       !
 255   FORMAT( '     ',A5,A8,3(1X,A12),A6 )
 256   FORMAT( 'Step ',I5,1X,I7,1X,F12.5,1X,F12.5,1X,F12.5,1X,I5 )
@@ -340,7 +332,6 @@
       REAL(DP) :: epot
       !!REAL(DP) :: dis( nsp )
       LOGICAL   :: tfile, topen, tsic, tfirst
-      CHARACTER(LEN=3), ALLOCATABLE :: labelw( : )
       REAL(DP), ALLOCATABLE :: tauw( :, : )
       INTEGER   :: old_nfi = -1
 
@@ -357,7 +348,7 @@
 
       ! ...   Stress tensor (in GPa) and pressure (in GPa)
 
-      stress_tensor = MATMUL( ht%pail(:,:), ht%a(:,:) ) * au_gpa / ht%deth
+      stress_tensor = ht%paiu(:,:) * au_gpa / ht%deth
       !
       out_press = ( stress_tensor(1,1) + stress_tensor(2,2) + stress_tensor(3,3) ) / 3.0d0
 

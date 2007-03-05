@@ -1276,6 +1276,7 @@ END FUNCTION
 !-------------------------------------------------------------------------
    SUBROUTINE newd(vr,irb,eigrb,rhovan,fion)
 !-----------------------------------------------------------------------
+!
 !     this routine calculates array deeq:
 !         deeq_i,lm = \int V_eff(r) q_i,lm(r) dr
 !     and the corresponding term in forces
@@ -2993,10 +2994,9 @@ END FUNCTION
          end do
          !
       end do
-!      allocate(swfcatom(ngw,n_atomic_wfc))
 !
       allocate(atomwfc(ngw,n_atomic_wfc))
-!      call genatwfc(n_atomic_wfc,atomwfc)
+
       if (lda_plus_u) then
          Hubbard_lmax = -1
          do is=1,nsp
@@ -3081,13 +3081,13 @@ end function set_Hubbard_l
       complex(DP), intent(in) :: c(ngw,nx), eigr(ngw,nat),      &
      &                               betae(ngw,nhsa)
       complex(DP), intent(out) :: hpsi(ngw,nx), hpsi_con(1,1)
-      real(DP) forceh(3,natx,nsx)
+      real(DP) forceh(3,nat)
 !
       complex(DP), allocatable:: wfc(:,:), swfc(:,:),dphi(:,:,:),   &
      &                               spsi(:,:)
       real(DP), allocatable   :: becwfc(:,:), bp(:,:),              &
      &                               dbp(:,:,:), wdb(:,:,:)
-      real(DP), allocatable   :: dns(:,:,:,:), force_con(:,:,:)
+      real(DP), allocatable   :: dns(:,:,:,:)
       real(DP), allocatable   :: e(:), z(:,:),                      &
      &                               proj(:,:), temp(:)
       real(DP), allocatable   :: ftemp1(:), ftemp2(:)
@@ -3218,15 +3218,11 @@ end function set_Hubbard_l
         allocate (bp(nhsa,n), dbp(nhsa,n,3), wdb(nhsa,n_atomic_wfc,3))
         allocate(dns(nat,nspin,ldmx,ldmx))
         allocate (spsi(ngw,n))
-        allocate(force_con(3,natx,nsx))
-        force_con=0.d0
 !
         call nlsm1 (n,1,nsp,eigr,c,bp)
         call s_wfc(n,bp,betae,c,spsi)
         call nlsm2(ngw,nhsa,n,eigr,c,dbp,.true.)
-!      call nlsm2_ns(eigr,c,dbp)
         call nlsm2(ngw,nhsa,n_atomic_wfc,eigr,wfc,wdb,.true.)
-!      call nlsmat(eigr,wfc,wdb)
 !
         alpha=0
         do alpha_s = 1, nsp
@@ -3234,9 +3230,7 @@ end function set_Hubbard_l
             alpha=alpha+1
             do ipol = 1,3
                call dndtau(alpha_a,alpha_s,becwfc,spsi,bp,dbp,wdb,      &
-     &                    offset,c,wfc,eigr,                            &
-     &                    betae,proj,                                   &
-     &                    ipol,dns)
+     &                    offset,c,wfc,eigr,betae,proj,ipol,dns)
                iat=0
                do is = 1, nsp
                   do ia=1, na(is)
@@ -3244,12 +3238,10 @@ end function set_Hubbard_l
                      if (Hubbard_U(is).ne.0.d0) then
                         do isp = 1,nspin
                            do m2 = 1,2*Hubbard_l(is) + 1
-                              forceh(ipol,alpha_a,alpha_s) =            &
-     &                        forceh(ipol,alpha_a,alpha_s) -            &
+                              forceh(ipol,alpha) = forceh(ipol,alpha) -            &
      &                        Hubbard_U(is) * 0.5d0 * dns(iat,isp,m2,m2)
                               do m1 = 1,2*Hubbard_l(is) + 1
-                                 forceh(ipol,alpha_a,alpha_s) =         &
-     &                           forceh(ipol,alpha_a,alpha_s) +         &
+                                 forceh(ipol,alpha) = forceh(ipol,alpha) +         &
      &                           Hubbard_U(is)*ns(iat,isp,m2,m1)*       &
      &                           dns(iat,isp,m1,m2)
                               end do
@@ -3263,12 +3255,10 @@ end function set_Hubbard_l
          end do
         end do
         if (nspin.eq.1) then
-           forceh(:,:,:) = 2.d0 * forceh(:,:,:)
-           force_con(:,:,:) =2.d0 * force_con(:,:,:)
+           forceh = 2.d0 * forceh
         end if
 !
-        deallocate ( wfc, becwfc, spsi, proj, offset, swfc, dns, bp,    &
-     &             dbp, wdb, force_con)
+        deallocate ( wfc, becwfc, spsi, proj, offset, swfc, dns, bp, dbp, wdb)
       end if
       return
       end subroutine new_ns

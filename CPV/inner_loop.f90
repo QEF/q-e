@@ -10,7 +10,7 @@
 !====================================================================
    SUBROUTINE inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter)
+                          sfac, c0, bec, firstiter, vpot )
 !====================================================================
       !
       ! minimizes the total free energy with respect to the
@@ -63,7 +63,6 @@
       USE dener
       USE derho
       USE cdvan
-      USE stre
       USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
@@ -94,6 +93,7 @@
       INTEGER                :: irb( 3, nat )
       COMPLEX (DP)           :: eigrb( ngb, nat )
       REAL(DP)               :: rhor( nnr, nspin )
+      REAL(DP)               :: vpot( nnr, nspin )
       COMPLEX(DP)            :: rhog( ngm, nspin )
       REAL(DP)               :: rhos( nnrsx, nspin )
       REAL(DP)               :: rhoc( nnr )
@@ -162,9 +162,11 @@
                      rhor, rhog, rhos, enl, denl, ekin, dekin6 )
         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
   
+        vpot = rhor
+
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
-        CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, &
+        CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                      tau0, fion2 )
         
@@ -183,7 +185,7 @@
       ! calculateas the energy contribution associated with 
       ! the augmentation charges and the 
       ! corresponding contribution to the ionic force
-      CALL newd( rhor, irb, eigrb, rhovan, fion2 )
+      CALL newd( vpot, irb, eigrb, rhovan, fion2 )
       CALL prefor( eigr, betae ) ! ATTENZIONE
   
       ! iterates on niter
@@ -311,9 +313,10 @@
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
                      rhor, rhog, rhos, enl, denl, ekin, dekin6 ) 
         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
-        CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
+        vpot = rhor
+        CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, tlast, &
                      ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion2 )
-        CALL newd( rhor, irb, eigrb, rhovan, fion2 )
+        CALL newd( vpot, irb, eigrb, rhovan, fion2 )
         CALL prefor( eigr, betae )
         atot1=etot+entropy
         etot1=etot
@@ -495,9 +498,10 @@
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, &
                      rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin6 ) 
         IF(nlcc_any) CALL set_cc(irb,eigrb,rhoc)
-        CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, tlast, &
+        vpot = rhor
+        CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, tlast, &
                      ei1, ei2, ei3, irb, eigrb, sfac, tau0, fion2 )
-        CALL newd( rhor, irb, eigrb, rhovan, fion2 )
+        CALL newd( vpot, irb, eigrb, rhovan, fion2 )
         CALL compute_entropy2( entropy, f, n, nspin )
         CALL prefor( eigr, betae )
         ene_ok= .TRUE.

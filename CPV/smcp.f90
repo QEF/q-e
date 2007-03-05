@@ -52,7 +52,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE dener,                    ONLY : detot, denl, dekin6
   USE derho,                    ONLY : drhog, drhor
   USE cdvan,                    ONLY : dbec, drhovan
-  USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp, ecutw
   USE gvecp,                    ONLY : ecutp
   USE cp_interfaces,            ONLY : writefile, readfile
@@ -63,8 +62,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE wave_base,                ONLY : wave_speed2, frice, grease
   USE control_flags,            ONLY : conv_elec, tconvthrs
   USE check_stop,               ONLY : check_stop_now
-  USE cpr_subroutines,          ONLY : print_atomic_var, print_lambda, &
-                                       compute_stress
+  USE printout_base,            ONLY : printout_pos
   USE ions_positions,           ONLY : ions_hmove, ions_move
   USE cell_base,                ONLY : cell_kinene, cell_move, cell_gamma, &
                                        cell_hmove
@@ -84,10 +82,10 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE smd_ene,                  ONLY : etot_ar, ekin_ar, eht_ar, epseu_ar, &
                                        exc_ar, esr_ar, deallocate_smd_ene
   USE from_restart_module,      ONLY : from_restart
-  USE cp_interfaces,            ONLY : runcp_uspp, strucf
+  USE cp_interfaces,            ONLY : runcp_uspp, strucf, compute_stress, nlfh, print_lambda
   USE cp_main_variables,        ONLY : ei1, ei2, ei3, eigr, sfac, irb, taub, &
                                        eigrb, rhog, rhor, rhos, becdr, bephi, &
-                                       becp, ema0bg, allocate_mainvar, nfi, descla
+                                       becp, ema0bg, allocate_mainvar, nfi, descla, vpot
   USE fft_base,                 ONLY : dfftp
   USE orthogonalize_base,       ONLY : updatc, calphi
   use cp_interfaces,            only : rhoofr, ortho, wave_rand_init, elec_fakekine
@@ -131,7 +129,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   ! work variables, 2
   !
-  REAL(DP) :: fcell(3,3), hgamma(3,3)
+  REAL(DP) :: fcell(3,3), hgamma(3,3), stress(3,3)
   REAL(DP) :: cdm(3)
   REAL(DP) :: qr(3)
   REAL(DP) :: temphh(3,3)
@@ -559,8 +557,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF ( ANY( nlcc ) ) CALL set_cc(irb,eigrb,rhoc)
         !
+        vpot = rhor
         !
-        CALL vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+        CALL vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
              &        ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
 
         IF( ionode .AND. &
@@ -578,13 +577,15 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !
         IF(iprsta.GT.0 .AND. ionode) WRITE( sm_file,*) ' out from vofrho'
-        IF(iprsta.GT.2) CALL print_atomic_var( rep(sm_k)%fion, na, nsp, ' fion ', iunit = sm_file )
+        IF(iprsta.GT.2) THEN
+           CALL printout_pos( sm_file, rep(sm_k)%fion, nat, head = ' fion ' )
+        END IF
         ! 
         !     forces for eigenfunctions
         !
         !     newd calculates deeq and a contribution to fion
         !
-        CALL newd(rhor,irb,eigrb,rep_el(sm_k)%rhovan,rep(sm_k)%fion)
+        CALL newd(vpot,irb,eigrb,rep_el(sm_k)%rhovan,rep(sm_k)%fion)
 
         CALL prefor(eigr,vkb)
         !
@@ -628,7 +629,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         IF(iprsta.GE.3) CALL print_lambda( rep_el(sm_k)%lambda, nbsp, 9, ccc(sm_k), iunit = sm_file )
         !
         IF(tpre) THEN
-           CALL nlfh(rep_el(sm_k)%bec,dbec,rep_el(sm_k)%lambda)
+           CALL nlfh( stress, rep_el(sm_k)%bec,dbec,rep_el(sm_k)%lambda)
            WRITE( stdout,*) ' out from nlfh'
         ENDIF
         !
@@ -886,8 +887,9 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF(.NOT. tfirst) esr = esr_ar(sm_k)
         !
+        vpot = rhor
 
-        CALL vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,                 &
+        CALL vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,                 &
                     ei1,ei2,ei3,irb,eigrb,sfac,rep(sm_k)%tau0,rep(sm_k)%fion)
 
         IF( ionode .AND. &
@@ -907,7 +909,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         enthal(sm_k)=etot+press*omega
         !
         !
-        CALL newd(rhor,irb,eigrb,rep_el(sm_k)%rhovan,rep(sm_k)%fion)
+        CALL newd(vpot,irb,eigrb,rep_el(sm_k)%rhovan,rep(sm_k)%fion)
         !
         CALL prefor(eigr,vkb)
 
@@ -948,7 +950,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !     This part is not compatible with SMD.
         !
         IF(tpre) THEN
-           CALL nlfh(rep_el(sm_k)%bec,dbec,rep_el(sm_k)%lambda)
+           CALL nlfh( stress, rep_el(sm_k)%bec,dbec,rep_el(sm_k)%lambda)
            CALL ions_thermal_stress( thstress, pmass, omega, h, rep(sm_k)%vels, nsp, na )
            stress = stress + thstress
         ENDIF

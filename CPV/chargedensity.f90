@@ -338,7 +338,6 @@
       USE task_groups,        ONLY: strd, tmp_npp, nolist
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
-      USE cp_main_variables,  ONLY: rhopr
       USE cp_interfaces,      ONLY: fwfft, invfft, stress_kin
       USE fft_base,           ONLY: dffts
       USE cp_interfaces,      ONLY: checkrho
@@ -401,13 +400,7 @@
          !   non self-consistent calculation  
          !   charge density is read from unit 47
          !
-         IF( first ) THEN
-            CALL read_rho( nspin, rhor )
-            rhopr = rhor
-            first = .FALSE.
-         ELSE
-            rhor = rhopr
-         END IF
+         CALL read_rho( nspin, rhor )
 
          ALLOCATE( psi( nnrx ) )
 !
@@ -567,8 +560,6 @@
          IF ( tpre ) CALL drhov( irb, eigrb, rhovan, rhog, rhor )
          !
          CALL rhov( irb, eigrb, rhovan, rhog, rhor )
-
-         rhopr = rhor
 
       ENDIF
 

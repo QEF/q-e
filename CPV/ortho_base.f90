@@ -236,8 +236,10 @@ CONTAINS
 
       IF( ionode ) THEN
          use_parallel_diag = .FALSE.
+         WRITE( stdout,  90 ) 
          WRITE( stdout, 100 ) tser
          WRITE( stdout, 110 ) tpar, np_ortho(1) * np_ortho(2)
+ 90      FORMAT(/,3X,'Diagonalization Performances')
 100      FORMAT(3X,'ortho diag, time for serial   driver = ', 1F9.5)
 110      FORMAT(3X,'ortho diag, time for parallel driver = ', 1F9.5, ' with ', I4, ' procs' )
          IF( tpar < tser ) use_parallel_diag = .TRUE.
@@ -371,6 +373,7 @@ CONTAINS
          ELSE
             WRITE( stdout, 120 ) tbest, npbest*npbest
          END IF
+ 90      FORMAT(/,3X,'Matrix Multiplication Performances')
 100      FORMAT(3X,'ortho mmul, time for serial driver        = ', 1F9.5)
 110      FORMAT(3X,'ortho mmul, best time for parallel driver = ', 1F9.5, ' with ', I4, ' procs')
 120      FORMAT(3X,'ortho mmul, time for parallel driver      = ', 1F9.5, ' with ', I4, ' procs')

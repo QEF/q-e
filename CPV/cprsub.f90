@@ -175,7 +175,7 @@ SUBROUTINE newnlinit()
 END SUBROUTINE newnlinit
 !
 !-----------------------------------------------------------------------
-subroutine nlfh( bec, dbec, lambda )
+subroutine nlfh_x( stress, bec, dbec, lambda )
   !-----------------------------------------------------------------------
   !
   !     contribution to the internal stress tensor due to the constraints
@@ -188,7 +188,6 @@ subroutine nlfh( bec, dbec, lambda )
   use electrons_base,    ONLY : nbspx, nbsp, nudx, nspin, nupdwn, iupdwn
   use cell_base,         ONLY : omega, h
   use constants,         ONLY : pi, fpi, au_gpa
-  use stre,              ONLY : stress
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
   USE cp_main_variables, ONLY : nlax, descla
@@ -199,8 +198,9 @@ subroutine nlfh( bec, dbec, lambda )
 !
   implicit none
 
-  real(DP), intent(in) ::  bec( nkb, nbsp ), dbec( nkb, nbsp, 3, 3 )
-  real(DP), intent(in) ::  lambda( nlax, nlax, nspin )
+  REAL(DP), INTENT(INOUT) :: stress(3,3) 
+  REAL(DP), INTENT(IN)    :: bec( :, : ), dbec( :, :, :, : )
+  REAL(DP), INTENT(IN)    :: lambda( :, :, : )
 !
   INTEGER  :: i, j, ii, jj, inl, iv, jv, ia, is, iss, nss, istart
   INTEGER  :: jnl, ir, ic
@@ -300,7 +300,7 @@ subroutine nlfh( bec, dbec, lambda )
      &       1x,f12.5,1x,f12.5,1x,f12.5//)
 
   return
-end subroutine nlfh
+end subroutine nlfh_x
 
 
 !-----------------------------------------------------------------------
@@ -658,3 +658,41 @@ subroutine dylmr2_( nylm, ngy, g, gg, ainv, dylm )
   return
   !
 end subroutine dylmr2_
+
+
+SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
+    USE kinds, ONLY : DP
+    USE io_global,         ONLY: stdout, ionode
+    USE cp_main_variables, ONLY: collect_lambda, descla
+    USE electrons_base,    ONLY: nudx
+    IMPLICIT NONE
+    real(DP), intent(in) :: lambda(:,:,:), ccc
+    integer, intent(in) :: n, nshow
+    integer, intent(in), optional :: iunit
+    !
+    integer :: nnn, j, un, i, is
+    real(DP), allocatable :: lambda_repl(:,:)
+    if( present( iunit ) ) then
+      un = iunit
+    else
+      un = stdout
+    end if
+    nnn = min( nudx, nshow )
+    ALLOCATE( lambda_repl( nudx, nudx ) )
+    IF( ionode ) WRITE( un,*)
+    DO is = 1, SIZE( lambda, 3 )
+       CALL collect_lambda( lambda_repl, lambda(:,:,is), descla(:,is) )
+       IF( ionode ) THEN
+          WRITE( un,3370) '    lambda   nudx, spin = ', nudx, is
+          IF( nnn < n ) WRITE( un,3370) '    print only first ', nnn
+          DO i=1,nnn
+             WRITE( un,3380) (lambda_repl(i,j)*ccc,j=1,nnn)
+          END DO
+       END IF
+    END DO
+    DEALLOCATE( lambda_repl )
+3370   FORMAT(26x,a,i4)
+3380   FORMAT(9f8.4)
+    RETURN
+END SUBROUTINE print_lambda_x
+

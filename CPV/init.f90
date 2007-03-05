@@ -208,7 +208,7 @@
       use mp_global,        only: nproc_image
       USE io_files,         ONLY: outdir     
       use ions_base,        only: na, nsp, nat, tau_srt, ind_srt, if_pos, atm
-      use cell_base,        only: a1, a2, a3, r_to_s, cell_init
+      use cell_base,        only: a1, a2, a3, r_to_s, cell_init, deth
 
       use cell_base,        only: ibrav, ainv, h, hold, tcell_base_init
       USE ions_positions,   ONLY: allocate_ions_positions, &
@@ -309,6 +309,7 @@
       !
       call newinit( ht0%hmat )
       !
+      CALL invmat( 3, h, ainv, deth )
       !
  344  format(3X,'ibrav = ',i4,'       cell parameters ',/)
  345  format(3(4x,f10.5))

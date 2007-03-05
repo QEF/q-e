@@ -64,7 +64,6 @@ ortho_base.o \
 ortho.o \
 para.o \
 path_routines.o \
-periodic.o \
 phasefactor.o \
 polarization.o \
 potentials.o \

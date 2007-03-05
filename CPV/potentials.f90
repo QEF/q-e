@@ -13,7 +13,7 @@
 
 
 
-      SUBROUTINE potential_print_info( iunit )
+    SUBROUTINE potential_print_info( iunit )
 
         USE control_flags, ONLY: iesr
 
@@ -26,10 +26,10 @@
   115   FORMAT(   3X,'Ewald sum over ',I1,'*',I1,'*',I1,' cells')
 
         RETURN
-      END SUBROUTINE potential_print_info
+   END SUBROUTINE potential_print_info
      
 
-      SUBROUTINE vofmean_x( sfac, rhops, rhoeg )
+   SUBROUTINE vofmean_x( sfac, rhops, rhoeg )
 
         USE kinds,              ONLY: DP
         USE control_flags,      ONLY: vhrmin, vhrmax, vhasse
@@ -127,7 +127,7 @@
 
       SUBROUTINE kspotential_x &
         ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
-          ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft )
+          ei1, ei2, ei3, sfac, c0, tcel, ht, fi, vpot, edft )
 
         USE kinds,             ONLY: DP
         USE cp_interfaces,     ONLY: rhoofr, nlrh, vofrhos
@@ -152,7 +152,6 @@
         COMPLEX(DP) :: ei3(:,:)
         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
         COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
-        TYPE (wave_descriptor),  INTENT(IN) :: cdesc
         LOGICAL   :: tcel
         TYPE (boxdimensions), INTENT(INOUT) ::  ht
         REAL(DP), INTENT(IN) :: fi(:)
@@ -164,7 +163,7 @@
         CALL rhoofr( nfi, tstress, c0, fi, rhoe, ht%deth, edft%ekin, dekin6 )
 
         CALL vofrhos( tprint, tforce, tstress, rhoe, atoms, vpot, bec, &
-                      c0, cdesc, fi, eigr, ei1, ei2, ei3, sfac, &
+                      c0, fi, eigr, ei1, ei2, ei3, sfac, &
                       ht, edft )
 
         RETURN
@@ -173,7 +172,7 @@
 !=----------------------------------------------------------------------------=!
 
    SUBROUTINE vofrhos_x &
-      ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, cdesc, fi, &
+      ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, fi, &
         eigr, ei1, ei2, ei3, sfac, box, edft )
 
       !  this routine computes:
@@ -253,7 +252,6 @@
       COMPLEX(DP) :: eigr(:,:)
       COMPLEX(DP),   INTENT(IN) :: c0(:,:)
       TYPE (atoms_type), INTENT(INOUT) :: atoms
-      TYPE (wave_descriptor), INTENT(IN) :: cdesc
       TYPE (boxdimensions),    INTENT(INOUT) :: box
       TYPE (dft_energy_type) :: edft
       REAL(DP) :: rhoe(:,:)
@@ -662,7 +660,10 @@
       ! ... sum up stress tensor
       !
       IF( tstress ) THEN
-         CALL pstress( box%pail, desr, dekin6, denl6, deps, deht, dexc, box )
+         IF( iprsta >= 2 ) THEN
+            CALL stress_debug( dekin6, deht, dexc, desr, deps, denl6, box%m1 )
+         END IF
+         CALL pstress( box%paiu, desr, dekin6, denl6, deps, deht, dexc )
       END IF
 
 

@@ -55,7 +55,6 @@ SUBROUTINE init_run()
                                        edft, nfi, vpot, ht0, htm
   USE cp_main_variables,        ONLY : allocate_mainvar
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
-  USE stre,                     ONLY : stress
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
   USE electrons_nose,           ONLY : xnhe0, xnhem, vnhe
@@ -66,7 +65,6 @@ SUBROUTINE init_run()
   USE pseudopotential,          ONLY : nsanl
   !
   USE efcalc,                   ONLY : clear_nbeg
-  USE cpr_subroutines,          ONLY : print_atomic_var
   USE local_pseudo,             ONLY : allocate_local_pseudo
   USE cp_electronic_mass,       ONLY : emass_precond
   USE wannier_subroutines,      ONLY : wannier_startup
@@ -85,6 +83,7 @@ SUBROUTINE init_run()
   USE xml_io_base,              ONLY : restart_dir, create_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE step_constraint,          ONLY : step_con
+  USE ions_module,              ONLY : set_reference_positions
   USE ldau
   !
   IMPLICIT NONE
@@ -122,11 +121,6 @@ SUBROUTINE init_run()
   CALL mesure_diag_perf( nudx )
   !
   IF ( lwf ) CALL clear_nbeg( nbeg )
-  !
-  ! ... more initialization requiring atomic positions
-  !
-  IF ( iprsta > 1 ) &
-     CALL print_atomic_var( tau0, na, nsp, ' tau0 from init_run ' )
   !
   !=======================================================================
   !     allocate and initialize nonlocal potentials
@@ -237,10 +231,10 @@ SUBROUTINE init_run()
   CALL emass_precond( ema0bg, ggp, ngw, tpiba2, emass_cutoff )
   !
   CALL print_legend( )
-!@@@@
-  step_con = .false.
-  call ldaU_init()
-!@@@@
+
+  step_con = .FALSE.
+
+  CALL ldau_init()
 
   IF ( nbeg < 0 ) THEN
      !
@@ -250,13 +244,10 @@ SUBROUTINE init_run()
      !
      nfi = 0
      !
-     CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr, .TRUE.,    &
-                        eself, fion, taub, irb, eigrb, b1, b2, b3, nfi,   &
-                        rhog, rhor, rhos, rhoc, enl, ekin, stress, detot, &
-                        enthal, etot, lambda, lambdam, lambdap, ema0bg,   &
-                        dbec, delt, bephi, becp, velh, dt2/emass, iforce, &
-                        fionm, xnhe0, xnhem, vnhe, ekincm, atoms0, edft,   &
-                        ht0, wfill, vpot )
+     CALL from_scratch( sfac, eigr, ei1, ei2, ei3, bec, becdr,    &
+                        taub, irb, eigrb, b1, b2, b3, nfi,   &
+                        rhog, rhor, rhos, rhoc, lambda, lambdam, lambdap, ema0bg,   &
+                        dbec, bephi, becp, atoms0, edft, ht0, vpot )
      !
   ELSE
      !
@@ -280,23 +271,10 @@ SUBROUTINE init_run()
         !
      END IF
      !
-     IF( program_name == 'CP90' ) THEN
-        !
-        CALL from_restart( sfac, eigr, ei1, ei2, ei3, bec, becdr, .TRUE., fion, &
-                           taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, &
-                           rhoc, stress, detot, enthal, lambda, lambdam,        &
-                           lambdap, ema0bg, dbec, bephi, becp, velh, dt2/emass, &
-                           fionm, ekincm )
-        !
-     ELSE IF( program_name == 'FPMD' ) THEN
-        !
-        CALL from_restart( nfi, acc, rhor, cm, c0, wfill, eigr, ei1, ei2, &
-                           ei3, sfac, htm, ht0, atomsm, atoms0, bec, &
-                           becdr, vpot, edft, ema0bg )
-        !
-        velh = htm%hvel
-        !
-     END IF
+     CALL from_restart( sfac, eigr, ei1, ei2, ei3, bec, becdr, &
+                        taub, irb, eigrb, b1, b2, b3, nfi, rhog, rhor, rhos, &
+                        rhoc, lambda, lambdam, lambdap, ema0bg, dbec, bephi, becp, &
+                        htm, ht0, vpot, atoms0, edft )
      !
   END IF
   !
@@ -308,17 +286,20 @@ SUBROUTINE init_run()
   !
   IF ( lwf ) CALL ions_cofmass( tau0, pmass, na, nsp, cdmi )
   !
+  ! ... reset some variables if nbeg < 0 
+  ! ... ( new simulation or step counter reset to 0 )
+  !
   IF ( nbeg <= 0 ) THEN
      !
      acc = 0.D0
      nfi = 0
      !
+     CALL set_reference_positions( cdmi, taui, atoms0, ht0 )
+     !
   END IF
   !
   IF ( .NOT. tfor .AND. .NOT. tprnfor ) fion(:,:) = 0.D0
   !
-  IF ( .NOT. tpre ) stress = 0.D0
-  !         
   IF ( tnewnfi ) nfi = newnfi 
   !
   nomore = nomore + nfi

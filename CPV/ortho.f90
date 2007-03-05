@@ -354,6 +354,7 @@
       nkbx = nkb
       nx0  = SIZE( x0, 1 )
       !
+      !
       !     calculation of becp and bephi
       !
       CALL start_clock( 'ortho' )

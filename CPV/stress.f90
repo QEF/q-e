@@ -9,32 +9,24 @@
 #include "f_defs.h"
 
 !------------------------------------------------------------------------------!
-   SUBROUTINE pstress_x( pail, desr, dekin, denl, deps, deht, dexc, box )
+   SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc )
 !------------------------------------------------------------------------------!
 
       !  this routine sum up stress tensor from partial contributions
 
       USE kinds,         ONLY: DP
-      USE cell_base,     ONLY: boxdimensions
       USE mp_global,     ONLY: intra_image_comm
       USE mp,            ONLY: mp_sum
-      USE control_flags, ONLY: iprsta
       USE stress_param,  ONLY: alpha, beta
 
       IMPLICIT NONE
 
       ! ... declare subroutine arguments
 
-      REAL(DP) :: pail(3,3)
-      TYPE (boxdimensions), INTENT(IN) :: box
+      REAL(DP) :: paiu(3,3)
       REAL(DP) :: desr(6), dekin(6), denl(6), deps(6), deht(6), dexc(6)
 
-      REAL(DP) :: paiu(3,3)
       INTEGER  :: k
-
-      IF( iprsta >= 2 ) THEN
-         CALL stress_debug(dekin, deht, dexc, desr, deps, denl, box%m1 )
-      END IF
 
       ! ... total stress (pai-lowercase)
 
@@ -43,13 +35,7 @@
         paiu( beta(k),  alpha(k) ) = paiu(alpha(k),beta(k))
       END DO
 
-      pail(:,:) = matmul( paiu(:,:), box%m1(:,:) )
-    
-      CALL mp_sum( pail, intra_image_comm )
-  
- 50   FORMAT(6X,3(F20.12))
- 60   FORMAT(6X,6(F20.12))
-100   FORMAT(6X,A3,10X,F8.4)
+      CALL mp_sum( paiu, intra_image_comm )
 
       RETURN
    END SUBROUTINE pstress_x

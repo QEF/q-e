@@ -49,7 +49,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        ions_temp, ions_thermal_stress, if_pos
   USE ions_base,                ONLY : ions_vrescal, fricp, greasp, &
                                        iforce, ndfrz, ions_shiftvar, ityp, &
-                                       atm, ind_bck, cdm, cdms
+                                       atm, ind_bck, cdm, cdms, ions_cofmsub
   USE cell_base,                ONLY : a1, a2, a3, b1, b2, b3, ainv, frich, &
                                        greash, tpiba2, omega, alat, ibrav,  &
                                        celldm, h, hold, hnew, velh, deth,   &
@@ -64,9 +64,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE dener,                    ONLY : detot
   USE derho,                    ONLY : drhor, drhog
   USE cdvan,                    ONLY : dbec, drhovan
-  USE stre,                     ONLY : stress
   USE gvecw,                    ONLY : ggp
-  USE parameters,               ONLY : nsx, natx !@@@@@
   USE constants,                ONLY : pi, k_boltzmann_au, au_ps
   USE io_files,                 ONLY : psfile, pseudo_dir
   USE wave_base,                ONLY : wave_steepest, wave_verlet
@@ -90,11 +88,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        electrons_nosevel, electrons_noseupd
   USE pres_ai_mod,              ONLY : P_ext, P_in, P_fin, pvar, volclu, &
                                        surfclu, Surf_t, abivol, abisur
-  USE from_scratch_module,      ONLY : from_scratch
-  USE from_restart_module,      ONLY : from_restart
   USE wavefunctions_module,     ONLY : c0, cm, phi => cp
   USE wannier_module,           ONLY : allocate_wannier
-  USE cp_interfaces,            ONLY : printout_new
+  USE cp_interfaces,            ONLY : printout_new, move_electrons
   USE printout_base,            ONLY : printout_base_open, &
                                        printout_base_close, &
                                        printout_pos, printout_cell, &
@@ -107,16 +103,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE gvecw,                    ONLY : ecutw
   USE gvecp,                    ONLY : ecutp
   USE time_step,                ONLY : delt, tps, dt2, dt2by2, twodelt
-  USE cp_interfaces,            ONLY : cp_print_rho
+  USE cp_interfaces,            ONLY : cp_print_rho, nlfh, print_lambda
   USE cp_main_variables,        ONLY : acc, bec, lambda, lambdam, lambdap, &
                                        ema0bg, sfac, eigr, ei1, ei2, ei3,  &
                                        irb, becdr, taub, eigrb, rhog, rhos, &
-                                       rhor, rhopr, bephi, becp, nfi, descla
+                                       rhor, bephi, becp, nfi, descla
   USE autopilot,                ONLY : event_step, event_index, &
                                        max_event_step, restart_p
   USE cell_base,                ONLY : s_to_r, r_to_s
-  USE cpr_subroutines,          ONLY : print_lambda, print_atomic_var, &
-                                       ions_cofmsub
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
   USE cp_interfaces,            ONLY : readfile, writefile, eigs, strucf
@@ -128,11 +122,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE orthogonalize_base,       ONLY : updatc
   USE control_flags,            ONLY : force_pairing
   USE mp,                       ONLY : mp_bcast
-  USE mp_global,                ONLY : root_image, intra_image_comm, np_ortho, me_ortho, ortho_comm
-!@@@@
+  USE mp_global,                ONLY : root_image, intra_image_comm, np_ortho, me_ortho, ortho_comm, &
+                                       me_image
   USE ldaU,                     ONLY : lda_plus_u, vupsi
   USE step_constraint
-!@@@@
   !
   IMPLICIT NONE
   !
@@ -157,7 +150,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP) :: tempp, savee, saveh, savep, epot, epre, &
               enow, econs, econt, fccc, ccc, bigr, dt2bye
   REAL(DP) :: ekinc0, ekinp, ekinpr, ekinc
-  REAL(DP) :: temps(nsx)
+  REAL(DP) :: temps(nat)
   REAL(DP) :: ekinh, temphc, randy
   REAL(DP) :: delta_etot
   REAL(DP) :: ftmp, enb, enbi
@@ -166,7 +159,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   REAL(DP) :: hgamma(3,3), temphh(3,3)
   REAL(DP) :: fcell(3,3)
   REAL(DP) :: deltaP
-  REAL(DP) :: stress_gpa(3,3), thstress(3,3)
+  REAL(DP) :: stress_gpa(3,3), thstress(3,3), stress(3,3)
   !
   REAL(DP), ALLOCATABLE :: usrt_tau0(:,:), usrt_taup(:,:), usrt_fion(:,:)
     ! temporary array used to store unsorted positions and forces for
@@ -176,9 +169,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   CHARACTER(LEN=3) :: labelw( nat )
     ! for force_pairing
   INTEGER   :: nspin_sub 
-!@@@@@
-  real(kind=8) forceh(3,natx,nsx)
-!@@@@@
+  !
+  REAL(DP), ALLOCATABLE :: forceh(:,:)
   !
   !
   dt2bye   = dt2 / emass
@@ -201,6 +193,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      nomore = nomore
      !
   END IF
+  !
+  IF ( lda_plus_u ) ALLOCATE( forceh( 3, nat ) )
   !
   !======================================================================
   !
@@ -279,22 +273,20 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! Autopilot (Dynamic Rules) Implimentation    
      !
      call pilot(nfi)
-    
      !
      IF ( ( tfor .OR. tfirst ) .AND. tefield ) CALL efield_update( eigr )
      IF ( ( tfor .OR. tfirst ) .AND. tefield2 ) CALL efield_update2( eigr )
-!@@@@@
-     forceh=0.0d0
-     IF (lda_plus_u) then
+     !
+     IF ( lda_plus_u ) then
+        ! forceh    ! Forces on ions due to Hubbard U 
+        forceh=0.0d0
+        ! vupsi     ! potentials on electrons due to Hubbard U
         vupsi=(0.0d0,0.0d0)
+        ! vpsi_con  ! potentials on electrons due to occupation constraints ...not yet implemented...
         vpsi_con=(0.0d0,0.0d0)
         CALL new_ns(c0,eigr,vkb,vupsi,vpsi_con,forceh)
-! vupsi     ! potentials on electrons due to Hubbard U
-! vpsi_con  ! potentials on electrons due to occupation constraints ...not yet implemented...
-! forceh    ! Forces on ions due to Hubbard U 
+        if ( mod(nfi,iprint).eq.0 ) call write_ns
      endif
-     if ((mod(nfi,iprint).eq.0).and.(lda_plus_u)) call write_ns
-!@@@@@
      !
      !=======================================================================
      !
@@ -310,21 +302,14 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ENDIF
      !
      !
-!@@@@@
      CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, fion, &
-                          enthal, enb, enbi, fccc, ccc, dt2bye )
-     iat=0
-     do is=1,nsp
-        do ia=1,na(is)
-           iat=iat+1
-           fion(:,iat)=fion(:,iat)+forceh(:,ia,is)
-        enddo
-     enddo
-!@@@@@
+                          enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+     !
+     IF (lda_plus_u) fion = fion + forceh
      !
      IF ( tpre ) THEN
         !
-        CALL nlfh( bec, dbec, lambda )
+        CALL nlfh( stress, bec, dbec, lambda )
         !
         CALL ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
         !
@@ -386,8 +371,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
               ! ... constrain gradient (this constitutes the initial guess 
               ! ... for the lagrange multiplier)
               !
-              CALL remove_constr_force( nat, usrt_tau0, &
-                                        if_pos, ityp, 1.D0, usrt_fion )
+              CALL remove_constr_force( nat, usrt_tau0, if_pos, ityp, 1.D0, usrt_fion )
               !
               fion(:,:) = usrt_fion(:,ind_srt(:))
               !
@@ -435,7 +419,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         CALL ions_cofmass( tausp, pmass, na, nsp, cdm )
         !
         IF ( ndfrz == 0 ) &
-           CALL ions_cofmsub( tausp, iforce, na, nsp, cdm, cdms )
+           CALL ions_cofmsub( tausp, iforce, nat, cdm, cdms )
         !
         CALL s_to_r( tausp, taup, na, nsp, hnew )
         !
@@ -733,7 +717,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            lambdam = lambda
            !
            CALL move_electrons( nfi, tfirst, tlast, b1, b2, b3, &
-                                fion, enthal, enb, enbi, fccc, ccc, dt2bye )
+                                fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
            !
         END IF
         !
@@ -753,7 +737,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                           xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, &
-                          celldm, fion, tps, z0, f, rhopr )
+                          celldm, fion, tps, z0, f, rhor )
            !
         ELSE
            !
@@ -761,7 +745,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
                            xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
-                           ibrav, celldm, fion, tps, z0, f, rhopr )
+                           ibrav, celldm, fion, tps, z0, f, rhor )
            !
         END IF
         !
@@ -831,7 +815,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutp,    &
-                                 ecutw, delt, celldm, fion, tps, z0, f, rhopr )
+                                 ecutw, delt, celldm, fion, tps, z0, f, rhor )
      !
      IF ( ( nfi >= nomore ) .OR. tstop ) EXIT main_loop
      !
@@ -871,7 +855,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                      velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
                      xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh,     &
                      velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion,     &
-                     tps, z0, f, rhopr )
+                     tps, z0, f, rhor )
      !
   ELSE
      !
@@ -879,7 +863,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                      vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
                      xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
                      vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,     &
-                     fion, tps, z0, f, rhopr )
+                     fion, tps, z0, f, rhor )
      !
   END IF
   !
@@ -887,6 +871,8 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   IF( iprsta > 1 ) CALL print_lambda( lambda, nbsp, nbsp, 1.D0 )
   !
+  IF (lda_plus_u) DEALLOCATE( forceh )
+
   RETURN
   !
 END SUBROUTINE cprmain

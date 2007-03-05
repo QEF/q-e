@@ -10,7 +10,7 @@
 !====================================================================
    SUBROUTINE inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter)
+                          sfac, c0, bec, firstiter, vpot )
 !====================================================================
       !
       ! minimizes the total free energy
@@ -62,7 +62,6 @@
       USE dener
       USE derho
       USE cdvan
-      USE stre
       USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
@@ -93,6 +92,7 @@
       INTEGER                :: irb( 3, nat )
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
       REAL(kind=DP)               :: rhor( nnr, nspin )
+      REAL(kind=DP)               :: vpot( nnr, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
       REAL(kind=DP)               :: rhos( nnrsx, nspin )
       REAL(kind=DP)               :: rhoc( nnr )
@@ -144,7 +144,8 @@
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
-        CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, &
+        vpot = rhor
+        CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                      tau0, fion2 )
        !entropy value already  been calculated
@@ -162,7 +163,7 @@
       ! the augmentation charges and the 
       ! corresponding contribution to the ionic force
        
-         CALL newd( rhor, irb, eigrb, rhovan, fion2 )
+         CALL newd( vpot, irb, eigrb, rhovan, fion2 )
 
          ! operates the Hamiltonian on the wavefunction c0
          h0c0( :, : )= 0.D0
@@ -199,12 +200,12 @@
 !calculates free energy at lamda=1.
          CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter,psihpsi,c0hc0,1.d0,atot1)
+                          sfac, c0, bec, firstiter,psihpsi,c0hc0,1.d0,atot1, vpot)
 !calculates free energy at lamda=lambdap
        
          CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter,psihpsi,c0hc0,lambdap,atotl)
+                          sfac, c0, bec, firstiter,psihpsi,c0hc0,lambdap,atotl, vpot)
 !find minimum point lambda
         
          CALL three_point_min(atot0,atotl,atot1,lambdap,lambda,atotmin)
@@ -282,7 +283,8 @@
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
-         CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, &
+         vpot = rhor
+         CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                      tau0, fion2 )
        !entropy value already  been calculated
@@ -330,7 +332,8 @@
 
    SUBROUTINE inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter,c0hc0,c1hc1,lambda,free_energy)
+                          sfac, c0, bec, firstiter,c0hc0,c1hc1,lambda,  &
+                          free_energy, vpot )
     
 !this subroutine for the energy matrix (1-lambda)c0hc0+labda*c1hc1
 !calculates the corresponding free energy
@@ -377,7 +380,6 @@
       USE dener
       USE derho
       USE cdvan
-      USE stre
       USE io_files,       ONLY: psfile, pseudo_dir, outdir
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
@@ -408,6 +410,7 @@
       INTEGER                :: irb( 3, nat )
       COMPLEX (kind=DP)           :: eigrb( ngb, nat )
       REAL(kind=DP)               :: rhor( nnr, nspin )
+      REAL(kind=DP)               :: vpot( nnr, nspin )
       COMPLEX(kind=DP)            :: rhog( ngm, nspin )
       REAL(kind=DP)               :: rhos( nnrsx, nspin )
       REAL(kind=DP)               :: rhoc( nnr )
@@ -499,7 +502,8 @@
   
         ! calculates the SCF potential, the total energy
         ! and the ionic forces
-         CALL vofrho( nfi, rhor, rhog, rhos, rhoc, tfirst, &
+         vpot = rhor
+         CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                      tau0, fion2 )
        !entropy value already  been calculated

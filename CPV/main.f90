@@ -68,13 +68,13 @@
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
                   ekin_conv_thr, ekin_maxiter, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
-      USE cell_base, ONLY: press, boxdimensions, updatecell
+      USE cell_base, ONLY: press, wmass, boxdimensions, updatecell, cell_force, cell_move, gethinv
       USE polarization, ONLY: ddipole
       USE energies, ONLY: dft_energy_type, debug_energies
       USE dener, ONLY: denl6, dekin6
       USE turbo, ONLY: tturbo
 
-      USE cp_interfaces, ONLY: printout, print_sfac, movecell
+      USE cp_interfaces, ONLY: printout, print_sfac
       USE cp_interfaces, ONLY: empty_cp
       USE cp_interfaces, ONLY: vofrhos, localisation
       USE cp_interfaces, ONLY: rhoofr, nlrh, update_wave_functions
@@ -82,34 +82,34 @@
       USE cp_interfaces, ONLY: writefile, readfile, strucf, phfacs
       USE cp_interfaces, ONLY: runcp_uspp, runcp_uspp_force_pairing
 
-      USE ions_module, ONLY: moveions, max_ion_forces, update_ions, resort_position
-      USE electrons_module, ONLY: ei, n_emp
-      USE fft_base, ONLY: dfftp, dffts
-      USE check_stop, ONLY: check_stop_now
-      USE time_step, ONLY: tps, delt
+      USE ions_module,              ONLY: moveions, max_ion_forces, update_ions, resort_position
+      USE electrons_module,         ONLY: ei, n_emp
+      USE fft_base,                 ONLY: dfftp, dffts
+      USE check_stop,               ONLY: check_stop_now
+      USE time_step,                ONLY: tps, delt
       USE wave_types
-      use wave_base, only: frice
-      USE io_global, ONLY: ionode
-      USE io_global, ONLY: stdout
-      USE input, ONLY: iosys
-      USE cell_base, ONLY: alat, a1, a2, a3, cell_kinene, velh
-      USE cell_base, ONLY: frich, greash
-      USE stick_base, ONLY: pstickset
+      use wave_base,                only: frice
+      USE io_global,                ONLY: ionode
+      USE io_global,                ONLY: stdout
+      USE input,                    ONLY: iosys
+      USE cell_base,                ONLY: alat, a1, a2, a3, cell_kinene, velh
+      USE cell_base,                ONLY: frich, greash, iforceh
+      USE stick_base,               ONLY: pstickset
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b
-      USE ions_base, ONLY: taui, cdmi, nat, nsp
-      USE sic_module, ONLY: self_interaction, nat_localisation
-      USE ions_base, ONLY: if_pos, ind_srt, ions_thermal_stress
-      USE constants, ONLY: au_ps
-      USE electrons_base, ONLY: nupdwn, nbnd, nspin, f, iupdwn, nbsp
-      USE electrons_nose, ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
-                                vnhe, xnhe0, xnhem, xnhep, qne, ekincw
-      USE cell_nose, ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
-                           vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
-      USE cell_base, ONLY: cell_gamma
-      USE grid_subroutines, ONLY: realspace_grids_init, realspace_grids_para
-      USE uspp,             ONLY: vkb, nkb
+      USE ions_base,                ONLY: taui, cdmi, nat, nsp
+      USE sic_module,               ONLY: self_interaction, nat_localisation
+      USE ions_base,                ONLY: if_pos, ind_srt, ions_thermal_stress
+      USE constants,                ONLY: au_ps
+      USE electrons_base,           ONLY: nupdwn, nbnd, nspin, f, iupdwn, nbsp
+      USE electrons_nose,           ONLY: electrons_nosevel, electrons_nose_shiftvar, electrons_noseupd, &
+                                          vnhe, xnhe0, xnhem, xnhep, qne, ekincw
+      USE cell_nose,                ONLY: cell_nosevel, cell_noseupd, cell_nose_shiftvar, &
+                                          vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
+      USE cell_base,                ONLY: cell_gamma
+      USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
+      USE uspp,                     ONLY: vkb, nkb
       !
-      USE reciprocal_vectors, ONLY: &
+      USE reciprocal_vectors,       ONLY: &
            g,      & ! G-vectors square modulus
            gx,     & ! G-vectors component
            mill_l, & ! G-vectors generators
@@ -123,34 +123,30 @@
            ngm,    & !
            ngs
       !
-      USE recvecs_subroutines, ONLY: recvecs_init
+      USE recvecs_subroutines,      ONLY: recvecs_init
       !
-      USE wavefunctions_module, ONLY: & ! electronic wave functions
+      USE wavefunctions_module,     ONLY: & ! electronic wave functions
            c0, & ! c0(:,:)  ! wave functions at time t
            cm, & ! cm(:,:)  ! wave functions at time t-delta t
            cp    ! cp(:,:)  ! wave functions at time t+delta t
       !
-      USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
-      USE smooth_grid_dimensions, ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
+      USE grid_dimensions,          ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
+      USE smooth_grid_dimensions,   ONLY: nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx
       !
-      USE ions_nose, ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
-                           ions_noseupd, qnp, gkbt, kbt, nhpcl, nhpdim, nhpend, gkbt2nhp, ekin2nhp
-
-      !
-      USE uspp_param      , ONLY: nhm
-      !
-      USE core            , ONLY: deallocate_core
-      USE local_pseudo    , ONLY: deallocate_local_pseudo
-      !
-      USE io_files        , ONLY: outdir, prefix
-      USE printout_base   , ONLY: printout_base_init
-      USE cp_main_variables, ONLY : ei1, ei2, ei3, eigr, sfac, lambda, &
-                                    ht0, htm, htp, rhor, vpot, wfill, &
-                                    acc, acc_this_run,  edft, nfi, bec, becdr, &
-                                    ema0bg, descla
-      USE ions_positions,    ONLY : atoms0, atomsp, atomsm
-      USE cg_module,         ONLY : tcg
-      USE cp_electronic_mass, ONLY : emass
+      USE ions_nose,                ONLY: ions_nose_shiftvar, vnhp, xnhpp, xnhp0, xnhpm, ions_nosevel, &
+                                          ions_noseupd, qnp, gkbt, kbt, nhpcl, nhpdim, nhpend, gkbt2nhp, ekin2nhp
+      USE uspp_param,               ONLY: nhm
+      USE core,                     ONLY: deallocate_core
+      USE local_pseudo,             ONLY: deallocate_local_pseudo
+      USE io_files,                 ONLY: outdir, prefix
+      USE printout_base,            ONLY: printout_base_init
+      USE cp_main_variables,        ONLY: ei1, ei2, ei3, eigr, sfac, lambda, &
+                                          ht0, htm, htp, rhor, vpot, wfill, &
+                                          acc, acc_this_run,  edft, nfi, bec, becdr, &
+                                          ema0bg, descla
+      USE ions_positions,           ONLY: atoms0, atomsp, atomsm
+      USE cg_module,                ONLY: tcg
+      USE cp_electronic_mass,       ONLY: emass
       !
       IMPLICIT NONE
       !
@@ -170,7 +166,10 @@
       REAL(DP) :: derho
       REAL(DP) :: ekmt(3,3) = 0.0d0
       REAL(DP) :: hgamma(3,3) = 0.0d0
+      REAL(DP) :: gcm1(3,3) = 0.0d0
+      REAL(DP) :: gcdot(3,3) = 0.0d0
       REAL(DP) :: temphh(3,3) = 0.0d0
+      REAL(DP) :: fcell(3,3)
 
       LOGICAL :: ttforce, tstress
       LOGICAL :: ttprint, ttsave, ttdipole, ttexit
@@ -288,10 +287,10 @@
         CALL rhoofr( nfi, tstress, c0, f, rhor, ht0%deth, edft%ekin, dekin6 )
 
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
-        ! ...   ionc forces "fion" and stress "pail".
+        ! ...   ionc forces "fion" and stress "paiu".
         !
         CALL vofrhos(ttprint, ttforce, tstress, rhor, atoms0, &
-          vpot, bec, c0, wfill, f, eigr, ei1, ei2, ei3, sfac, ht0, edft)
+          vpot, bec, c0, f, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
         ! CALL debug_energies( edft ) ! DEBUG
 
@@ -375,7 +374,7 @@
            END IF
            !
         END IF
-
+        !
         ! ...   Ions Dynamics
         !
         ekinp  = 0.d0  ! kinetic energy of ions
@@ -391,7 +390,16 @@
            !
            ! ...     move ionic degrees of freedom
            !
-           ekinp = moveions(tsdp, thdyn, nfi, atomsm, atoms0, atomsp, htm, ht0, vnosep)
+           hgamma = 0.0d0
+
+           IF( thdyn ) THEN
+              gcm1  = MATMUL( ht0%m1, TRANSPOSE( ht0%m1 ) )
+              gcdot = 2.0d0 * ( ht0%g - htm%g ) / delt - ht0%gvel
+              hgamma = MATMUL( gcm1, gcdot )
+           END IF
+
+           ekinp = moveions(tsdp, thdyn, nfi, atomsm, atoms0, atomsp, ht0, hgamma, vnosep)
+           !
            IF (tnosep) THEN
               !
               ! below one really should have atoms0%ekint and NOT ekin2nhp
@@ -399,12 +407,9 @@
               !
            END IF
            !
-           !   Add thermal stress to pail
+           !   Add thermal stress to paiu
            !
-           ekmt = 0.0d0
-           CALL ions_thermal_stress( ekmt, atoms0%m, 1.0d0, ht0%hmat, atoms0%vels, atoms0%nsp, atoms0%na )
-           !
-           ht0%pail = ht0%pail + MATMUL( ekmt, ht0%m1(:,:) )
+           CALL ions_thermal_stress( ht0%paiu, atoms0%m, 1.0d0, ht0%hmat, atoms0%vels, atoms0%nsp, atoms0%na )
            !
         END IF
 
@@ -416,12 +421,19 @@
 
            !   move cell coefficients
            !
-           CALL movecell(tsdc, htm, ht0, htp, velh)
+           CALL cell_force( fcell, ht0%m1, ht0%paiu, ht0%omega, press, wmass )
 
+           CALL cell_move( htp%hmat, ht0%hmat, htm%hmat, delt, &
+                   iforceh, fcell, frich, tnoseh, vnhh, velh, tsdc )
+
+           htp%a    = TRANSPOSE( htp%hmat(:,:) )
+           CALL gethinv( htp )
+           htp%g    = MATMUL( htp%a(:,:), htp%hmat(:,:) )
+           htp%gvel = ( htp%g(:,:) - htm%g(:,:) ) / ( 2.0d0 * delt )
            velh(:,:) = ( htp%hmat(:,:) - htm%hmat(:,:) ) / ( 2.0d0 * delt )
            ht0%hvel = velh
 
-           CALL cell_gamma( hgamma, ht0%hinv, ht0%hmat, velh )
+           ! CALL cell_gamma( hgamma, ht0%hinv, ht0%hmat, velh )
 
            !   Kinetic energy of the box
 
@@ -432,6 +444,7 @@
            END IF
 
         END IF
+
 
         call stop_clock( 'main_loop' )
 

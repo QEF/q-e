@@ -72,6 +72,7 @@
    PUBLIC :: stress_gc
 
    PUBLIC :: nlrh
+   PUBLIC :: nlfh
 
    PUBLIC :: pstress
    PUBLIC :: pseudo_stress
@@ -120,8 +121,17 @@
    PUBLIC :: set_evtot
    !
    PUBLIC :: print_projwfc
+   PUBLIC :: print_lambda
    !
-   PUBLIC :: movecell
+   PUBLIC :: from_restart_x
+   !
+   PUBLIC :: move_electrons
+   !
+   PUBLIC :: compute_stress
+
+
+   ! ------------------------------------ !
+
 
    INTERFACE bessel2
       SUBROUTINE bessel2_x(XG, RW, FINT, LNL, INDL, MMAX)
@@ -732,12 +742,10 @@
 
 
    INTERFACE pstress
-      SUBROUTINE pstress_x( pail, desr, dekin, denl, deps, deht, dexc, box )
+      SUBROUTINE pstress_x( paiu, desr, dekin, denl, deps, deht, dexc )
          USE kinds,         ONLY: DP
-         USE cell_base,     ONLY: boxdimensions
          IMPLICIT NONE
-         REAL(DP) :: pail(3,3)
-         TYPE (boxdimensions), INTENT(IN) :: box
+         REAL(DP) :: paiu(3,3)
          REAL(DP) :: desr(6), dekin(6), denl(6), deps(6), deht(6), dexc(6)
       END SUBROUTINE
    END INTERFACE
@@ -1086,7 +1094,7 @@
    INTERFACE kspotential
       SUBROUTINE kspotential_x &
          ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
-          ei1, ei2, ei3, sfac, c0, cdesc, tcel, ht, fi, vpot, edft )
+          ei1, ei2, ei3, sfac, c0, tcel, ht, fi, vpot, edft )
          USE kinds,             ONLY: DP
          USE energies,          ONLY: dft_energy_type
          USE cell_base,         ONLY: boxdimensions
@@ -1105,7 +1113,6 @@
          COMPLEX(DP) :: ei3(:,:)
          COMPLEX(DP), INTENT(IN) :: sfac(:,:)
          COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
-         TYPE (wave_descriptor),  INTENT(IN) :: cdesc
          LOGICAL   :: tcel
          TYPE (boxdimensions), INTENT(INOUT) ::  ht
          REAL(DP), INTENT(IN) :: fi(:)
@@ -1117,7 +1124,7 @@
 
    INTERFACE vofrhos
       SUBROUTINE vofrhos_x &
-         ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, cdesc, fi, &
+         ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, fi, &
            eigr, ei1, ei2, ei3, sfac, box, edft )
          USE kinds,             ONLY: DP
          USE energies,          ONLY: dft_energy_type
@@ -1131,7 +1138,6 @@
          REAL(DP)            :: vpot(:,:)
          REAL(DP)    :: bec(:,:)
          COMPLEX(DP),   INTENT(IN) :: c0(:,:)
-         TYPE (wave_descriptor), INTENT(IN) :: cdesc
          REAL(DP),    INTENT(IN) :: fi(:)
          COMPLEX(DP) :: eigr(:,:)
          COMPLEX(DP) :: ei1(:,:)
@@ -1257,17 +1263,80 @@
    END INTERFACE
 
 
-   INTERFACE movecell
-      SUBROUTINE movecell_x( tsdc, box_tm1, box_t0, box_tp1, velh )
+
+   INTERFACE from_restart_x
+      SUBROUTINE from_restart_x( &
+         ht0, htm, phi, c0, cm, lambdap, lambda, lambdam, ei1, ei2, ei3, eigr, &
+         sfac, vkb, nkb, bec, dbec, taub, irb, eigrb )
          USE kinds,         ONLY: DP
          USE cell_base,     ONLY: boxdimensions
          IMPLICIT NONE
-         LOGICAL              :: tsdc
-         TYPE (boxdimensions) :: box_tm1, box_t0, box_tp1
-         REAL(DP)             :: velh(3,3)
+         TYPE (boxdimensions) :: ht0, htm
+         COMPLEX(DP)          :: phi(:,:)
+         COMPLEX(DP)          :: c0(:,:)
+         COMPLEX(DP)          :: cm(:,:)
+         REAL(DP)             :: lambda(:,:,:), lambdam(:,:,:), lambdap(:,:,:)
+         COMPLEX(DP)          :: ei1(:,:)
+         COMPLEX(DP)          :: ei2(:,:)
+         COMPLEX(DP)          :: ei3(:,:)
+         COMPLEX(DP)          :: eigr(:,:)
+         COMPLEX(DP)          :: sfac(:,:)
+         COMPLEX(DP)          :: vkb(:,:)
+         INTEGER, INTENT(IN)  :: nkb
+         REAL(DP)             :: bec(:,:)
+         REAL(DP)             :: dbec(:,:,:,:)
+         REAL(DP)             :: taub(:,:)
+         INTEGER              :: irb(:,:)
+         COMPLEX(DP)          :: eigrb(:,:)
       END SUBROUTINE
    END INTERFACE
 
+   INTERFACE move_electrons
+      SUBROUTINE move_electrons_x( &
+         nfi, tfirst, tlast, b1, b2, b3, fion, enthal, enb, enbi, fccc, ccc, dt2bye, stress )
+         USE kinds,         ONLY: DP
+         IMPLICIT NONE
+         INTEGER,  INTENT(IN)    :: nfi
+         LOGICAL,  INTENT(IN)    :: tfirst, tlast
+         REAL(DP), INTENT(IN)    :: b1(3), b2(3), b3(3)
+         REAL(DP)                :: fion(:,:)
+         REAL(DP), INTENT(IN)    :: dt2bye
+         REAL(DP)                :: fccc, ccc
+         REAL(DP)                :: enb, enbi
+         REAL(DP)                :: enthal
+         REAL(DP)                :: ei_unp
+         REAL(DP)                :: stress(3,3)
+      END SUBROUTINE
+   END INTERFACE
+
+   INTERFACE compute_stress
+      SUBROUTINE compute_stress_x( stress, detot, h, omega )
+         USE kinds, ONLY : DP
+         IMPLICIT NONE
+         REAL(DP), INTENT(OUT) :: stress(3,3)
+         REAL(DP), INTENT(IN)  :: detot(3,3), h(3,3), omega
+      END SUBROUTINE
+   END INTERFACE
+
+   INTERFACE nlfh
+      SUBROUTINE nlfh_x( stress, bec, dbec, lambda )
+         USE kinds, ONLY : DP
+         IMPLICIT NONE
+         REAL(DP), INTENT(INOUT) :: stress(3,3) 
+         REAL(DP), INTENT(IN)    :: bec( :, : ), dbec( :, :, :, : )
+         REAL(DP), INTENT(IN)    :: lambda( :, :, : )
+      END SUBROUTINE
+   END INTERFACE
+
+   INTERFACE print_lambda
+      SUBROUTINE print_lambda_x( lambda, n, nshow, ccc, iunit )
+         USE kinds, ONLY : DP
+         IMPLICIT NONE
+         REAL(DP), INTENT(IN) :: lambda(:,:,:), ccc
+         INTEGER, INTENT(IN) :: n, nshow
+         INTEGER, INTENT(IN), OPTIONAL :: iunit
+      END SUBROUTINE
+   END INTERFACE
 
 !=----------------------------------------------------------------------------=!
    END MODULE

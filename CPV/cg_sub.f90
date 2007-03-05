@@ -11,7 +11,7 @@
 !
    subroutine runcg_uspp( nfi, tfirst, tlast, eigr, bec, irb, eigrb, &
       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac, fion, ema0bg, becdr, &
-      lambdap, lambda  )
+      lambdap, lambda, vpot  )
 
       use kinds, only: dp
       use control_flags, only: iprint, thdyn, tpre, iprsta, &
@@ -49,7 +49,6 @@
       use dener
       use derho
       use cdvan
-      use stre
       use constants,                only : pi, au_gpa
       use io_files,                 only : psfile, pseudo_dir
       use io_files,                 only : outdir
@@ -68,8 +67,7 @@
       use mp,                       only : mp_sum
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
-      use cp_interfaces,            ONLY : rhoofr, dforce
-      USE cpr_subroutines,          ONLY : compute_stress
+      use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
       USE printout_base,            ONLY : printout_stress
       USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla
 
@@ -85,6 +83,7 @@
       integer irb(3,nat)
       complex(dp) :: eigrb(ngb,nat)
       real(dp) :: rhor(nnr,nspin)
+      real(dp) :: vpot(nnr,nspin)
       complex(dp) :: rhog(ngm,nspin)
       real(dp) :: rhos(nnrsx,nspin)
       real(dp) :: rhoc(nnr)
@@ -232,10 +231,10 @@
            if(newscheme.or.firstiter) then 
               if(ismear==2) then !fermi dirac smearing
                  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter)
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter,vpot)
               else ! generalized smearings
                  call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter)
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter,vpot)
               endif
                firstiter=.false.
            endif
@@ -255,7 +254,9 @@
           !
           !---ensemble-DFT
 
-          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+          vpot = rhor
+
+          call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
                  &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
           if (.not.tens) then
             etotnew=etot
@@ -311,7 +312,7 @@
 
         !update d
 
-        call newd(rhor,irb,eigrb,rhovan,fion)
+        call newd(vpot,irb,eigrb,rhovan,fion)
 
 
         call prefor(eigr,betae)!ATTENZIONE
@@ -535,10 +536,10 @@
           if(newscheme) then 
              if(ismear==2) then
                 call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+                        rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.,vpot  )
              else
                 call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )  
+                        rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )  
              endif
           endif
 
@@ -553,8 +554,10 @@
         !     put core charge (if present) in rhoc(r)
         !
         if (nlcc_any) call set_cc(irb,eigrb,rhoc)
-!
-        call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+        !
+        vpot = rhor
+        !
+        call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
                       &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
         if( tefield  ) then!to be bettered
@@ -602,10 +605,10 @@
           if(newscheme)  then
              if(ismear==2) then
                 call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                     rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+                     rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.,vpot  )
              else
                 call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
              endif
           endif
           !     calculation of the rotated quantities
@@ -619,8 +622,10 @@
         !     put core charge (if present) in rhoc(r)
         !
         if (nlcc_any) call set_cc(irb,eigrb,rhoc)
-!
-        call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+        !
+        vpot = rhor
+        !
+        call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
                        &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
         if( tefield )  then!to be bettered
@@ -698,10 +703,10 @@
               if(newscheme)  then
                  if(ismear==2) then
                     call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-              rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
                  else
                     call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                         rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.  )
+                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
                  endif
               endif
               !     calculation of the rotated quantities
@@ -715,8 +720,10 @@
             !     put core charge (if present) in rhoc(r)
             !
             if (nlcc_any) call set_cc(irb,eigrb,rhoc)
-  !
-            call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+            !
+            vpot = rhor
+            !
+            call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
                         &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
             if( tefield)  then !to be bettered
@@ -756,13 +763,13 @@
         if(tens.and. .not.newscheme) then
            if(ismear==2) then!fermi dirac
               call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter  )
+                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter, vpot  )
            else!cold smearing and all others
-               call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter  )
-            endif
+              call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter, vpot  )
+           endif
 !the following sets up the new energy
-            enever=etot
+           enever=etot
          endif
       
           !=======================================================================
@@ -803,7 +810,9 @@
           !
           !---ensemble-DFT
 
-          call vofrho(nfi,rhor,rhog,rhos,rhoc,tfirst,tlast,             &
+          vpot = rhor
+
+          call vofrho(nfi,vpot,rhog,rhos,rhoc,tfirst,tlast,             &
                  &        ei1,ei2,ei3,irb,eigrb,sfac,tau0,fion)
 
    
@@ -813,7 +822,7 @@
 
      call calcmt(f,z0,fmat0,.false.)
 
-      call newd(rhor,irb,eigrb,rhovan,fion)
+      call newd(vpot,irb,eigrb,rhovan,fion)
       if (.not.tens) then
         if (tfor .or. tprnfor) call nlfq(c0,eigr,bec,becdr,fion)
       else

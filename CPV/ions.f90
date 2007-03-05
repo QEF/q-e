@@ -7,23 +7,10 @@
 !
 #include "f_defs.h"
 
-!  --------------------------------------------------------------------------  !
-!  --------------------------------------------------------------------------  !
-!  AB INITIO COSTANT PRESSURE MOLECULAR DYNAMICS
-!  ----------------------------------------------
-!  Car-Parrinello Parallel Program
-!  Carlo Cavazzoni - Gerardo Ballabio
-!  SISSA, Trieste, Italy - 1997-99
-!  Last modified: Wed Nov 17 07:24:21 MET 1999
-!  ----------------------------------------------
-!  BEGIN manual
 
    MODULE ions_module
 
-!  (describe briefly what this module does...)
-!  ----------------------------------------------
 !  routines in this module:
-!  SUBROUTINE print_scaled_positions(unit)
 !  SUBROUTINE displacement(ht)
 !  SUBROUTINE set_reference_positions(cdm_ref, tau_ref, atoms, ht)
 !  SUBROUTINE ions_print_info(tfor,tsdp,tzerop,tv0rd,nv0rd,nbeg, &
@@ -32,8 +19,6 @@
 !  REAL(DP) FUNCTION moveions(tsdp,thdyn,nfi,htm,ht0)
 !  SUBROUTINE update_ions
 !  SUBROUTINE velocity_scaling(nfi,delt,ht)
-!  ----------------------------------------------
-!  END manual
 
 
 ! ...   declare modules
@@ -41,8 +26,8 @@
         USE atoms_type_module
         USE ions_base, ONLY: nsp, nax, nat, na, pmass, &
              tions_base_init, ions_cofmass, ions_vel, ions_kinene, &
-             ions_thermal_stress, ions_vrescal
-        USE io_global, ONLY: stdout
+             ions_thermal_stress, ions_vrescal, label_srt
+        USE io_global, ONLY: stdout, ionode
 
         !  nsp   number of atomic species
         !  nax   maximum number of atoms per specie
@@ -56,8 +41,7 @@
         PRIVATE
 
 
-        PUBLIC :: neighbo, print_scaled_positions, displacement
-        PUBLIC :: set_velocities
+        PUBLIC :: neighbo, displacement
         PUBLIC :: set_reference_positions, atoms_init
         PUBLIC :: update_ions
         PUBLIC :: velocity_scaling
@@ -154,31 +138,6 @@
         RETURN
       END SUBROUTINE neighbo
 
-
-!  BEGIN manual -------------------------------------------------------------   
-
-        SUBROUTINE print_scaled_positions(atoms, unit, string)
-
-!  Print onto "unit" the scaled positions of every atoms                        
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-          INTEGER :: unit
-          TYPE (atoms_type) :: atoms
-          CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: string
-          INTEGER :: is,ia,k
-          IF(PRESENT(string)) WRITE(unit,100) string
-          DO is = 1, atoms%nsp
-            WRITE(unit,1300) is, atoms%na(is)
-            DO ia = atoms%isa(is), atoms%isa(is) + atoms%na(is) - 1
-              WRITE(unit,555) atoms%label(is), (atoms%taus(k,ia), k = 1,3)
-            END DO
-          END DO
-          RETURN
- 100      FORMAT(/,3X,'Scaled atomic positions ',A50)
- 1300     FORMAT(3X,'Species ',I3,' atoms = ',I4)
-  555     FORMAT(3X, A4, 3(1X,F12.6), 3L6)
-        END SUBROUTINE print_scaled_positions
 
 
 !  BEGIN manual -------------------------------------------------------------   
@@ -284,42 +243,6 @@
 
 
 
-!  BEGIN manual -------------------------------------------------------------   
-
-      SUBROUTINE set_velocities(atoms_m, atoms_0, vel_srt, ht_0, delt)
-
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-        USE cell_base, ONLY: boxdimensions
-        USE cell_base, ONLY: r_to_s, s_to_r
-        USE constants, ONLY: angstrom_au
-
-        TYPE (atoms_type) :: atoms_m, atoms_0
-        TYPE (boxdimensions) :: ht_0
-        REAL(DP), INTENT(IN) :: delt
-        REAL(DP), INTENT(IN) :: vel_srt( :, : )
-        
-        INTEGER :: i, ia, nat
-        REAL(DP) :: sv0( 3 )
-
-        nat = atoms_0%nat
-
-        DO ia = 1, nat
-          atoms_m%taus( :, ia ) = atoms_0%taus( :, ia )
-          atoms_m%taur( :, ia ) = atoms_0%taur( :, ia )
-          CALL r_to_s( vel_srt(:,ia), sv0(:), ht_0)
-          DO i = 1, 3
-            IF( atoms_0%mobile( i, ia ) > 0 ) THEN
-              atoms_0%taus( i, ia ) = atoms_0%taus( i, ia ) + sv0( i ) * delt
-            END IF
-          ENDDO
-          CALL s_to_r( atoms_0%taus( :, ia ), atoms_0%taur( :, ia ), ht_0 )
-        END DO
-
-        RETURN
-      END SUBROUTINE set_velocities
-
 
 
 !  BEGIN manual -------------------------------------------------------------   
@@ -364,6 +287,8 @@
 
          !   Allocate and fill the three atoms structure using scaled position an cell
 
+         USE printout_base, ONLY : printout_pos
+
          IMPLICIT NONE
 !
          TYPE (atoms_type)    :: atoms_0, atoms_p, atoms_m
@@ -395,18 +320,24 @@
          CALL atoms_type_init(atoms_0, stau, ismb, atml, pmass, na, nsp, h)
          CALL atoms_type_init(atoms_p, stau, ismb, atml, pmass, na, nsp, h)
 
-         CALL print_scaled_positions( atoms_0, stdout, 'from standard input')
+         IF( ionode ) THEN
+            !
+            WRITE( stdout, * )
 
-         IF( .NOT. nofx ) THEN
-           WRITE( stdout, 10 )
- 10        FORMAT( /, &
-                   3X, 'Position components with 0 are kept fixed', /, &
-                   3X, '  ia  x  y  z ' )
-           DO isa = 1, nat
-             ia = ind_srt( isa )
-             WRITE( stdout, 20 ) isa, if_pos( 1, ia ), if_pos( 2, ia ), if_pos( 3, ia )
-           END DO
- 20        FORMAT( 3X, I4, I3, I3, I3 )
+            CALL printout_pos( stdout, stau, nat, label = label_srt, &
+                 head = 'Scaled positions from standard input' )
+
+            IF( .NOT. nofx ) THEN
+               WRITE( stdout, 10 )
+ 10            FORMAT( /, &
+                      3X, 'Position components with 0 are kept fixed', /, &
+                      3X, '  ia  x  y  z ' )
+               DO isa = 1, nat
+                  ia = ind_srt( isa )
+                  WRITE( stdout, 20 ) isa, if_pos( 1, ia ), if_pos( 2, ia ), if_pos( 3, ia )
+               END DO
+ 20            FORMAT( 3X, I4, I3, I3, I3 )
+            END IF
          END IF
 
          DEALLOCATE( ismb )
@@ -416,13 +347,13 @@
 
 !  --------------------------------------------------------------------------   
 
-   REAL(DP) FUNCTION moveions(TSDP, thdyn, NFI, atoms_m, atoms_0, atoms_p, htm, ht0, vnosep)
+   REAL(DP) FUNCTION moveions(TSDP, thdyn, NFI, atoms_m, atoms_0, atoms_p, ht0, hgamma, vnosep)
 
       !  Moves the ions
 
 ! ... declare modules
       USE constants,          ONLY : amu_au
-      USE cell_base,          ONLY : dgcell, r_to_s, s_to_r, boxdimensions
+      USE cell_base,          ONLY : r_to_s, s_to_r, boxdimensions
       use control_flags,      ONLY : tnosep, tcap, tcp, tdampions, lconstrain
       use time_step,          ONLY : delt
       use ions_base,          ONLY : fricp, iforce
@@ -433,13 +364,13 @@
 ! ... declare subroutine arguments
       LOGICAL, INTENT(IN) :: tsdp, thdyn
       INTEGER, INTENT(IN) :: nfi
-      TYPE (boxdimensions), INTENT(IN)    :: htm
       TYPE (boxdimensions), INTENT(INOUT) :: ht0
+      REAL(DP), INTENT(IN)    :: hgamma(3,3)
       TYPE (atoms_type) :: atoms_m, atoms_0, atoms_p
       REAL(DP), INTENT(IN) :: vnosep
 
 ! ... declare other variables
-      REAL(DP), DIMENSION(3,3) :: annep, svarps, tmat, svarpd, gcm1, gcdot
+      REAL(DP), DIMENSION(3,3) :: annep, svarps, tmat, svarpd
       REAL(DP), DIMENSION(3)   :: fions, svel, rvel, stp, tau_diff
       REAL(DP)                 :: const, dumm, vrnos, gfact, ffact, dt2bym
       REAL(DP)                 :: fordt2, dt2, delthal
@@ -452,13 +383,6 @@
       fordt2  = 4.0d0 * dt2
       delthal = 0.5d0 * delt
  
-      ! ...   Determines DGCELL/DT dynamically and GCM1
-
-      IF( thdyn ) THEN
-        CALL invmat( 3, ht0%g, gcm1, dumm )
-        CALL dgcell( gcdot, htm, ht0, delt )
-      END IF
-
       IF( tnosep ) THEN
         vrnos = vnosep
       ELSE
@@ -492,7 +416,7 @@
       ELSE IF( tsdp ) THEN
 
           IF(thdyn) THEN
-            annep = MATMUL(gcm1,gcdot)
+            annep = hgamma
           ELSE
             annep = 0.D0
           END IF
@@ -544,13 +468,7 @@
               annep(j,j) = 1.0d0 + vrnos * delthal
             END DO
             IF(thdyn) THEN
-              DO j = 1, 3
-                DO i = 1, 3
-                  DO k = 1, 3
-                    annep(i,j) = annep(i,j) + gcm1(i,k) * gcdot(k,j) * delthal
-                  END DO
-                END DO
-              END DO
+              annep = annep + hgamma * delthal
             END IF
             CALL invmat ( 3, annep, svarpd, dumm )
 
@@ -774,3 +692,25 @@
 
 
    END MODULE ions_module
+
+
+
+      SUBROUTINE set_velocities( tausm, taus0, vels, iforce, nat, delt)
+         USE kinds, ONLY : DP
+         IMPLICIT NONE
+         INTEGER,  INTENT(IN) :: nat
+         REAL(DP)             :: tausm( 3, nat ), taus0( 3, nat )
+         REAL(DP), INTENT(IN) :: delt
+         REAL(DP), INTENT(IN) :: vels( 3, nat )
+         INTEGER,  INTENT(IN) :: iforce( 3, nat )
+         INTEGER :: i, ia
+         DO ia = 1, nat
+           tausm( :, ia ) = taus0( :, ia )
+           DO i = 1, 3
+             IF( iforce( i, ia ) > 0 ) THEN
+               taus0( i, ia ) = taus0( i, ia ) + vels( i, ia ) * delt
+             END IF
+           ENDDO
+         END DO
+         RETURN
+      END SUBROUTINE set_velocities

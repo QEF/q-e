@@ -83,13 +83,10 @@ MODULE cp_main_variables
   ! rhog  = charge density in g space
   ! rhor  = charge density in r space (dense grid)
   ! rhos  = charge density in r space (smooth grid)
-  ! rhopr   since rhor is overwritten in vofrho,
-  !         this array is used to save rhor for restart file
   ! vpot  = potential in r space (dense grid)
   !
   COMPLEX(DP), ALLOCATABLE :: rhog(:,:)
   REAL(DP),    ALLOCATABLE :: rhor(:,:), rhos(:,:)
-  REAL(DP),    ALLOCATABLE :: rhopr(:,:)  
   REAL(DP),    ALLOCATABLE :: vpot(:,:)
   !
   TYPE (wave_descriptor) :: wfill     ! wave function descriptor for filled
@@ -166,6 +163,7 @@ MODULE cp_main_variables
       ALLOCATE( ema0bg( ngw ) )
       !
       ALLOCATE( rhor( nnr, nspin ) )
+      ALLOCATE( vpot( nnr, nspin ) )
       !
       !  Compute local dimensions for lambda matrixes
       !
@@ -182,7 +180,6 @@ MODULE cp_main_variables
       !
       IF( program_name == 'CP90' ) THEN
          !
-         ALLOCATE( rhopr( nnr,   nspin ) )
          ALLOCATE( rhos( nnrsx, nspin ) )
          ALLOCATE( rhog( ng,    nspin ) )
          !
@@ -205,7 +202,6 @@ MODULE cp_main_variables
          !
       ELSE IF( program_name == 'FPMD' ) THEN
          !
-         ALLOCATE( vpot( nnr, nspin ) )
          ALLOCATE( lambda(  nlax, nlax, nspin ) )
          !
       END IF
@@ -235,7 +231,6 @@ MODULE cp_main_variables
       IF( ALLOCATED( sfac ) )    DEALLOCATE( sfac )
       IF( ALLOCATED( eigrb ) )   DEALLOCATE( eigrb )
       IF( ALLOCATED( irb ) )     DEALLOCATE( irb )
-      IF( ALLOCATED( rhopr ) )   DEALLOCATE( rhopr )
       IF( ALLOCATED( rhor ) )    DEALLOCATE( rhor )
       IF( ALLOCATED( rhos ) )    DEALLOCATE( rhos )
       IF( ALLOCATED( rhog ) )    DEALLOCATE( rhog )

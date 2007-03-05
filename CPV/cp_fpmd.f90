@@ -1751,3 +1751,19 @@ SUBROUTINE new_atomind_constraints()
    RETURN
    !
 END SUBROUTINE new_atomind_constraints
+
+
+SUBROUTINE compute_stress_x( stress, detot, h, omega )
+   USE kinds, ONLY : DP
+   IMPLICIT NONE
+   REAL(DP), INTENT(OUT) :: stress(3,3)
+   REAL(DP), INTENT(IN)  :: detot(3,3), h(3,3), omega
+   integer :: i, j
+   do i=1,3 
+      do j=1,3
+         stress(i,j)=-1.d0/omega*(detot(i,1)*h(j,1)+              &
+     &                      detot(i,2)*h(j,2)+detot(i,3)*h(j,3))
+      enddo
+   enddo
+   return
+END SUBROUTINE compute_stress_x
