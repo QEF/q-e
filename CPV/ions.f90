@@ -12,7 +12,6 @@
 
 !  routines in this module:
 !  SUBROUTINE displacement(ht)
-!  SUBROUTINE set_reference_positions(cdm_ref, tau_ref, atoms, ht)
 !  SUBROUTINE ions_print_info(tfor,tsdp,tzerop,tv0rd,nv0rd,nbeg, &
 !                             taurdr,iunit)
 !  SUBROUTINE deallocate_ions
@@ -42,7 +41,7 @@
 
 
         PUBLIC :: neighbo, displacement
-        PUBLIC :: set_reference_positions, atoms_init
+        PUBLIC :: atoms_init
         PUBLIC :: update_ions
         PUBLIC :: velocity_scaling
         PUBLIC :: max_ion_forces, moveions
@@ -243,45 +242,9 @@
 
 
 
-
-
-!  BEGIN manual -------------------------------------------------------------   
-
-      SUBROUTINE set_reference_positions(cdm_ref, tau_ref, atoms, ht)
-
-!  Calculate the real position of atoms relative to the center of mass (cdm)
-!  and store them in tau_ref
-!    cdm_ref: initial position of the center of mass (cdm) in scaled units  
-!  --------------------------------------------------------------------------   
-!  END manual ---------------------------------------------------------------   
-
-
-! ...   declare modules
-        USE cell_base, ONLY: S_TO_R
-        USE cell_base, ONLY: boxdimensions
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        TYPE(boxdimensions), INTENT(IN) :: ht
-        TYPE (atoms_type) :: atoms
-        REAL(DP) :: cdm_ref(:), tau_ref(:,:)
-
-! ...   declare other variables
-        REAL(DP) :: sdist(3)
-        INTEGER :: isa
-
-        CALL ions_cofmass(atoms%taus, atoms%m, atoms%na, atoms%nsp, cdm_ref)
-        DO isa = 1, atoms%nat
-          sdist( 1:3 ) = atoms%taus( 1:3 , isa ) - cdm_ref( 1:3 )
-          CALL s_to_r( sdist, tau_ref(:,isa), ht )
-        END DO
-
-        RETURN
-      END SUBROUTINE set_reference_positions
-
-
 !   -------------------------------------------------------------   
+
+
 
        SUBROUTINE atoms_init(atoms_m, atoms_0, atoms_p, stau, ind_srt, if_pos, atml, h)
 

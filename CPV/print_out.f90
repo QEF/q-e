@@ -22,8 +22,8 @@
                                     printout_pos, printout_cell, printout_stress
       USE constants,         ONLY : au_gpa, amu_si, bohr_radius_cm, &
                                     amu_au, BOHR_RADIUS_ANGS, pi
-      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, &
-                                    cdm_displacement, ions_displacement, label_srt
+      USE ions_base,         ONLY : na, nsp, nat, ind_bck, atm, ityp, pmass, cdmi, &
+                                    ions_cofmass, ions_displacement, label_srt
       USE cell_base,         ONLY : s_to_r, get_volume
       USE efield_module,     ONLY : tefield, pberryel, pberryion, &
                                     tefield2, pberryel2, pberryion2
@@ -58,6 +58,7 @@
       REAL(DP), INTENT(IN) :: epot ! ( epseu + eht + exc )
       !
       REAL(DP) :: stress_gpa( 3, 3 )
+      REAL(DP) :: cdm0( 3 )
       REAL(DP) :: dis( nsp )
       REAL(DP) :: out_press, volume
       REAL(DP) :: totalmass
@@ -128,10 +129,12 @@
             END DO
             totalmass = totalmass / volume * 11.2061d0 ! AMU_SI * 1000.0 / BOHR_RADIUS_CM**3 
             WRITE( stdout, fmt='(/,3X,"System Density [g/cm^3] : ",F10.4,/)' ) totalmass
-
-            CALL cdm_displacement( dis(1), tau0 )
             !
-            WRITE( stdout,1000) dis(1)
+            ! Compute Center of mass displacement since the initialization of step counter
+            !
+            CALL ions_cofmass( tau0, pmass, na, nsp, cdm0 )
+            !
+            WRITE( stdout,1000) SUM( ( cdm0(:)-cdmi(:) )**2 ) 
             !
             CALL ions_displacement( dis, tau0 )
             !
@@ -302,8 +305,7 @@
       USE electrons_nose,     ONLY: electrons_nose_nrg, xnhe0, vnhe, qne, ekincw
       USE sic_module,         ONLY: ind_localisation, pos_localisation, nat_localisation, &
                                     self_interaction, sic_rloc
-      !!USE ions_base,        ONLY: ions_displacement, cdm_displacement
-      USE ions_base,          ONLY: ions_temp, cdmi, taui, nsp
+      USE ions_base,          ONLY: ions_temp, nsp
       USE ions_nose,          ONLY: ndega, ions_nose_nrg, xnhp0, vnhp, qnp, gkbt, &
                                     kbt, nhpcl, nhpdim, atm2nhp, ekin2nhp, gkbt2nhp
       USE cell_nose,          ONLY: cell_nose_nrg, qnh, temph, xnhh0, vnhh

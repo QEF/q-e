@@ -19,8 +19,7 @@ SUBROUTINE init_run()
                                        ndr, tfor, tprnfor, tpre, program_name, &
                                        force_pairing, newnfi, tnewnfi, ndw
   USE cp_electronic_mass,       ONLY : emass, emass_cutoff
-  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, &
-                                       cdmi, ityp, taui, cdms
+  USE ions_base,                ONLY : na, nax, nat, nsp, iforce, pmass, ityp, cdms
   USE ions_positions,           ONLY : tau0, taum, taup, taus, tausm, tausp, &
                                        vels, velsm, velsp, fion, fionm,      &
                                        atoms0, atomsm, atomsp
@@ -83,7 +82,7 @@ SUBROUTINE init_run()
   USE xml_io_base,              ONLY : restart_dir, create_directory
   USE orthogonalize_base,       ONLY : mesure_diag_perf, mesure_mmul_perf
   USE step_constraint,          ONLY : step_con
-  USE ions_module,              ONLY : set_reference_positions
+  USE ions_base,                ONLY : ions_reference_positions, cdmi, taui
   USE ldau
   !
   IMPLICIT NONE
@@ -282,10 +281,6 @@ SUBROUTINE init_run()
   !     restart with new averages and nfi=0
   !=======================================================================
   !
-  ! ... Fix. Center of Mass - M.S
-  !
-  IF ( lwf ) CALL ions_cofmass( tau0, pmass, na, nsp, cdmi )
-  !
   ! ... reset some variables if nbeg < 0 
   ! ... ( new simulation or step counter reset to 0 )
   !
@@ -293,8 +288,6 @@ SUBROUTINE init_run()
      !
      acc = 0.D0
      nfi = 0
-     !
-     CALL set_reference_positions( cdmi, taui, atoms0, ht0 )
      !
   END IF
   !
@@ -307,6 +300,12 @@ SUBROUTINE init_run()
   !  Set center of mass for scaled coordinates
   !
   CALL ions_cofmass( taus, pmass, na, nsp, cdms )
+  !
+  IF ( nbeg <= 0 .OR. lwf ) THEN
+     !
+     CALL ions_reference_positions( tau0 )
+     !
+  END IF
   !
   CALL stop_clock( 'initialize' )
   !
