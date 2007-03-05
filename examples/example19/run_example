@@ -117,22 +117,14 @@ cat > h2o-mol1.in << EOF
     ortho_eps = 5.d-8,
     ortho_max = 15,
     electron_dynamics = 'sd',
-    ! electron_damping = 0.3,
-    electron_velocities = 'zero',
-    electron_temperature = 'not_controlled',
  /
  &ions
     ion_dynamics = 'none',
-    ion_damping = 0.2,
     ion_radius(1) = 0.8d0,
     ion_radius(2) = 0.8d0,
-    ion_velocities = 'zero',
-    ion_temperature = 'not_controlled',
-    ! ion_nstepe = 10
  /
  &cell
     cell_dynamics = 'none',
-    cell_velocities = 'zero',
     press = 0.0d0,
  /
 ATOMIC_SPECIES
@@ -190,22 +182,14 @@ cat > h2o-mol2.in << EOF
     ortho_eps = 5.d-8,
     ortho_max = 15,
     electron_dynamics = 'sd',
-    ! electron_damping = 0.3,
-    electron_velocities = 'zero',
-    electron_temperature = 'not_controlled',
  /
  &ions
     ion_dynamics = 'none',
-    ion_damping = 0.2,
     ion_radius(1) = 0.8d0,
     ion_radius(2) = 0.8d0,
-    ion_velocities = 'zero',
-    ion_temperature = 'not_controlled',
-    ! ion_nstepe = 10
  /
  &cell
     cell_dynamics = 'none',
-    cell_velocities = 'zero',
     press = 0.0d0,
  /
 ATOMIC_SPECIES
@@ -262,22 +246,17 @@ cat > h2o-mol3.in << EOF
     ortho_eps = 5.d-8,
     ortho_max = 15,
     electron_dynamics = 'verlet',
-    ! electron_damping = 0.3,
     electron_velocities = 'zero',
     electron_temperature = 'not_controlled',
  /
  &ions
     ion_dynamics = 'verlet',
-    ! ion_damping = 0.2,
     ion_radius(1) = 0.8d0,
     ion_radius(2) = 0.8d0,
     ion_velocities = 'zero',
-    ion_temperature = 'not_controlled',
-    ! ion_nstepe = 10
  /
  &cell
     cell_dynamics = 'none',
-    cell_velocities = 'zero',
     press = 0.0d0,
  /
 ATOMIC_SPECIES
