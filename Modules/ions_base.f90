@@ -88,10 +88,6 @@
          MODULE PROCEDURE ions_vel3, ions_vel2
       END INTERFACE
 
-      INTERFACE ions_cofmass
-         MODULE PROCEDURE cofmass1, cofmass2
-      END INTERFACE
-!
 
 !------------------------------------------------------------------------------!
   CONTAINS
@@ -423,12 +419,15 @@
     !-------------------------------------------------------------------------
     SUBROUTINE ions_vel3( vel, taup, taum, na, nsp, dt )
       !-------------------------------------------------------------------------
+      USE constants, ONLY : eps8
       IMPLICIT NONE
       REAL(DP) :: vel(:,:), taup(:,:), taum(:,:)
       INTEGER :: na(:), nsp
       REAL(DP) :: dt
       INTEGER :: ia, is, i, isa
       REAL(DP) :: fac
+      IF( dt < eps8 ) &
+         CALL errore( ' ions_vel3 ', ' dt <= 0 ', 1 )
       fac  = 1.0d0 / ( dt * 2.0d0 )
       isa = 0
       DO is = 1, nsp
@@ -445,12 +444,15 @@
 !------------------------------------------------------------------------------!
 
     SUBROUTINE ions_vel2( vel, taup, taum, nat, dt )
+      USE constants, ONLY : eps8
       IMPLICIT NONE
       REAL(DP) :: vel(:,:), taup(:,:), taum(:,:)
       INTEGER :: nat
       REAL(DP) :: dt
       INTEGER :: ia, i
       REAL(DP) :: fac
+      IF( dt < eps8 ) &
+         CALL errore( ' ions_vel3 ', ' dt <= 0 ', 1 )
       fac  = 1.0d0 / ( dt * 2.0d0 )
       DO ia = 1, nat
         DO i = 1, 3
@@ -462,36 +464,8 @@
 
 !------------------------------------------------------------------------------!
 
-    SUBROUTINE cofmass1( tau, pmass, na, nsp, cdm )
-      IMPLICIT NONE
-      REAL(DP), INTENT(IN) :: tau(:,:,:), pmass(:)
-      REAL(DP), INTENT(OUT) :: cdm(3)
-      INTEGER, INTENT(IN) :: na(:), nsp
-
-      REAL(DP) :: tmas
-      INTEGER :: is, i, ia
-!
-      tmas=0.0d0
-      do is=1,nsp
-         tmas=tmas+na(is)*pmass(is)
-      end do
-!
-      do i=1,3
-         cdm(i)=0.0d0
-         do is=1,nsp
-            do ia=1,na(is)
-               cdm(i)=cdm(i)+tau(i,ia,is)*pmass(is)
-            end do
-         end do
-         cdm(i)=cdm(i)/tmas
-      end do
-!
-      RETURN
-    END SUBROUTINE cofmass1
-
-!------------------------------------------------------------------------------!
-
-    SUBROUTINE cofmass2( tau, pmass, na, nsp, cdm )
+    SUBROUTINE ions_cofmass( tau, pmass, na, nsp, cdm )
+      USE constants, ONLY : eps8
       IMPLICIT NONE
       REAL(DP), INTENT(IN) :: tau(:,:), pmass(:)
       REAL(DP), INTENT(OUT) :: cdm(3)
@@ -504,6 +478,9 @@
       do is=1,nsp
          tmas=tmas+na(is)*pmass(is)
       end do
+
+      if( tmas < eps8 ) &
+         call errore(' ions_cofmass ', ' total mass <= 0 ', 1 )
 !
       do i=1,3
          cdm(i)=0.0d0
@@ -518,7 +495,7 @@
       end do
 !
       RETURN
-    END SUBROUTINE cofmass2
+    END SUBROUTINE ions_cofmass
 
 !------------------------------------------------------------------------------!
 
@@ -645,7 +622,9 @@
        ekin2nhp(is) = ekin2nhp(is) * 0.5d0
     enddo
     !
+    !
     do is = 1, nsp
+      if( na(is) < 1 ) call errore(' ions_temp ', ' 0 number of atoms ', 1 )
       temps( is ) = temps( is ) * 0.5d0
       temps( is ) = temps( is ) / k_boltzmann_au / ( 1.5d0 * na(is) )
     end do
@@ -664,11 +643,13 @@
 !------------------------------------------------------------------------------!
 
   subroutine ions_thermal_stress( stress, pmass, omega, h, vels, nsp, na )
+    USE constants, ONLY : eps8
     REAL(DP), intent(inout) :: stress(3,3)
     REAL(DP), intent(in)  :: pmass(:), omega, h(3,3), vels(:,:)
     integer, intent(in) :: nsp, na(:)
     integer :: i, j, is, ia, isa
     isa    = 0
+    if( omega < eps8 ) call errore(' ions_thermal_stress ', ' omega <= 0 ', 1 )
     do is = 1, nsp
       do ia = 1, na(is)
         isa = isa + 1
@@ -688,7 +669,7 @@
 
   subroutine ions_vrescal( tcap, tempw, tempp, taup, tau0, taum, na, nsp, fion, iforce, &
                            pmass, delt )
-    use constants, only: pi, k_boltzmann_au
+    use constants, only: pi, k_boltzmann_au, eps8
     USE random_numbers, ONLY : randy
     implicit none
     logical, intent(in) :: tcap
@@ -707,6 +688,7 @@
     nat = SUM( na( 1:nsp ) )
 
     if(.not.tcap) then
+      if( tempp < eps8 ) call errore(' ions_vrescal ', ' tempp <= 0 ', 1 )
       alfap=.5d0*sqrt(tempw/tempp)
       isa = 0
       do is=1,nsp
@@ -759,28 +741,27 @@
     return
   end subroutine ions_shiftvar
 
-
 !------------------------------------------------------------------------------!
 
+  SUBROUTINE ions_reference_positions( tau )
 
-   SUBROUTINE cdm_displacement( dis, tau )
+     !  Calculate the real position of atoms relative to the center of mass (cdm)
+     !  and store them in taui
+     !    cdmi: initial position of the center of mass (cdm) in cartesian coor.  
 
-      !  Calculate the quadratic displacements of the cdm at the current time step
-      !    with respect to the initial position
-      !    cdmi: initial center of mass (real space)
+     IMPLICIT NONE
 
-      IMPLICIT NONE
+     REAL(DP) :: tau( :, : )
 
-      REAL(DP) :: dis
-      REAL(DP) :: tau( :, : )      ! position in real space
+     INTEGER  :: isa
 
-      REAL(DP)  ::  cdm(3)
+     CALL ions_cofmass( tau, pmass, na, nsp, cdmi )
+     DO isa = 1, nat
+        taui(:,isa) = tau(:,isa) - cdmi(:)
+     END DO
 
-      CALL ions_cofmass(tau, pmass, na, nsp, cdm)
-
-      dis = SUM( (cdm(:)-cdmi(:))**2 )
-
-   END SUBROUTINE cdm_displacement
+     RETURN
+  END SUBROUTINE ions_reference_positions
 
 
 !------------------------------------------------------------------------------!
