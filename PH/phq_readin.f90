@@ -38,7 +38,7 @@ SUBROUTINE phq_readin()
   USE gamma_gamma,   ONLY : asr
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
-  USE output,        ONLY : fildyn, filelph, fildvscf, fildrho
+  USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : noncolin
@@ -70,9 +70,9 @@ SUBROUTINE phq_readin()
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
-                       prefix, fildyn, filelph, fildvscf, fildrho,   &
+                       prefix, fildyn, fildvscf, fildrho,            &
                        lnscf, ldisp, nq1, nq2, nq3,                  &
-                       eth_rps, eth_ns, lraman, elop, dek, recover, &
+                       eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc
   ! tr2_ph       : convergence threshold
   ! amass        : atomic masses
@@ -94,7 +94,6 @@ SUBROUTINE phq_readin()
   ! reduce_io    : reduce I/O to the strict minimum
   ! prefix       : the prefix of files produced by pwscf
   ! fildyn       : output file for the dynamical matrix
-  ! filelph      : output file for electron-phonon coefficients
   ! fildvscf     : output file containing deltavsc
   ! fildrho      : output file containing deltarho
   ! eth_rps      : threshold for calculation of  Pc R |psi> (Raman)
@@ -143,7 +142,6 @@ SUBROUTINE phq_readin()
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
   prefix       = 'pwscf'
-  filelph      = ' '
   fildyn       = 'matdyn'
   fildrho      = ' '
   fildvscf     = ' '

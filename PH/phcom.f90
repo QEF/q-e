@@ -349,9 +349,8 @@ MODULE output
   !
   SAVE
   !
-  CHARACTER (LEN=256) :: fildyn, filelph, fildvscf, fildrho
+  CHARACTER (LEN=256) :: fildyn, fildvscf, fildrho
   ! output file for the dynamical matrix
-  ! output file for electron-phonon coefficie
   ! output file for deltavscf
   ! output file for deltarho
   !
