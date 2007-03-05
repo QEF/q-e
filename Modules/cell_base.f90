@@ -26,7 +26,8 @@
           REAL(DP) :: omega     ! cell volume = determinant of a
           REAL(DP) :: g(3,3)    ! metric tensor
           REAL(DP) :: gvel(3,3) ! metric velocity
-          REAL(DP) :: pail(3,3) ! stress tensor
+          REAL(DP) :: pail(3,3) ! stress tensor ( scaled coor. )
+          REAL(DP) :: paiu(3,3) ! stress tensor ( cartesian coor. )
           REAL(DP) :: hmat(3,3) ! cell parameters ( transpose of "a" )
           REAL(DP) :: hvel(3,3) ! cell velocity
           REAL(DP) :: hinv(3,3)
@@ -127,20 +128,7 @@
           RETURN
         END SUBROUTINE updatecell
 
-!------------------------------------------------------------------------------!
 
-        SUBROUTINE dgcell( gcdot, box_tm1, box_t0, delt )
-          REAL(DP), INTENT(OUT) :: GCDOT(3,3)
-          REAL(DP), INTENT(IN) :: delt
-          type (boxdimensions), intent(in) :: box_tm1, box_t0
-            !
-            GCDOT = 2.0d0 * ( box_t0%g - box_tm1%g ) / delt - box_t0%gvel
-            !
-            ! this is equivalent to:
-            ! GCDOT = (3.D0*box_t0%G - 4.D0*box_tm1%G + box_tm2%G)/ (2.0d0 * delt )
-            !
-          RETURN 
-        END SUBROUTINE dgcell
 
 !------------------------------------------------------------------------------!
 ! ...     set box
@@ -160,6 +148,7 @@
             box%gvel = 0.0d0
             box%hvel = 0.0d0
             box%pail = 0.0d0
+            box%paiu = 0.0d0
           RETURN
         END SUBROUTINE cell_init_ht
           
@@ -178,6 +167,7 @@
               box%hmat(I,3) = A3(I)
             END DO
             box%pail = 0.0d0
+            box%paiu = 0.0d0
             box%hvel = 0.0d0
             CALL gethinv(box)
             box%g    = MATMUL( box%a(:,:), box%hmat(:,:) )
@@ -814,6 +804,7 @@
 !------------------------------------------------------------------------------!
 
   subroutine cell_force( fcell, ainv, stress, omega, press, wmass )
+    USE constants, ONLY : eps8
     REAL(DP), intent(out) :: fcell(3,3)
     REAL(DP), intent(in) :: stress(3,3), ainv(3,3)
     REAL(DP), intent(in) :: omega, press, wmass
@@ -828,6 +819,8 @@
         fcell(i,j) = fcell(i,j) - ainv(j,i) * press
       end do
     end do
+    IF( wmass < eps8 ) &
+       CALL errore( ' movecell ',' cell mass is less than 0 ! ', 1 )
     fcell = omega * fcell / wmass
     return
   end subroutine cell_force
@@ -861,25 +854,28 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine cell_gamma( hgamma, ainv, h, velh )
-    implicit none
-    REAL(DP) :: hgamma(3,3)
-    REAL(DP), intent(in) :: ainv(3,3), h(3,3), velh(3,3)
-    integer :: i,j,k,l,m
-         do i=1,3
-            do j=1,3
-               do k=1,3
-                  do l=1,3
-                     do m=1,3
-                        hgamma(i,j)=hgamma(i,j)+ainv(i,l)*ainv(k,l)*    &
-     &                       (velh(m,k)*h(m,j)+h(m,k)*velh(m,j))
-                     enddo
-                  enddo
-               enddo
-            enddo
-         enddo
-    return
-  end subroutine cell_gamma
+  SUBROUTINE cell_gamma( hgamma, ainv, h, velh )
+    !
+    ! Compute hgamma = g^-1 * dg/dt
+    ! that enters in the ions equation of motion
+    !
+    IMPLICIT NONE
+    REAL(DP), INTENT(OUT) :: hgamma(3,3)
+    REAL(DP), INTENT(IN)  :: ainv(3,3), h(3,3), velh(3,3)
+    REAL(DP) :: gm1(3,3), gdot(3,3)
+    ! 
+    !  g^-1 inverse of metric tensor
+    !
+    gm1    = MATMUL( ainv, TRANSPOSE( ainv ) )  
+    ! 
+    !  dg/dt = d(ht*h)/dt = dht/dt*h + ht*dh/dt ! derivative of metrix tensor
+    !
+    gdot   = MATMUL( TRANSPOSE( velh ), h ) + MATMUL( TRANSPOSE( h ), velh )
+    !
+    hgamma = MATMUL( gm1, gdot )
+    !
+    RETURN
+  END SUBROUTINE cell_gamma
 
 !------------------------------------------------------------------------------!
 

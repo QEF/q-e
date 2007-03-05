@@ -46,6 +46,7 @@
       INTEGER,  ALLOCATABLE :: ind_srt(:)   !  index of tau sorted by specie
       INTEGER,  ALLOCATABLE :: ind_bck(:)   !  reverse of ind_srt
       CHARACTER(LEN=3)      :: atm( ntypx ) 
+      CHARACTER(LEN=3), ALLOCATABLE :: label_srt( : ) 
       CHARACTER(LEN=80)     :: tau_units
 
 
@@ -239,6 +240,7 @@
       ALLOCATE( if_pos( 3, nat ) )
       ALLOCATE( iforce( 3, nat ) )
       ALLOCATE( taui( 3, nat ) )
+      ALLOCATE( label_srt( nat ) )
       !
       ityp(1:nat)     = ityp_(1:nat)
       vel(:,1:nat)    = vel_(:,1:nat)
@@ -316,6 +318,12 @@
       CALL sort_tau( tau_srt, ind_srt, tau, ityp, nat, nsp )
       !
       vel_srt(:,:) = vel(:,ind_srt(:))
+      !
+      DO ia = 1, nat
+         !
+         label_srt( ia ) = atm( ityp( ind_srt( ia ) ) )
+         !
+      END DO
       !
       ! ... generate ind_bck from ind_srt (reverse sort list)
       !
@@ -404,6 +412,7 @@
       IF ( ALLOCATED( if_pos ) )  DEALLOCATE( if_pos )
       IF ( ALLOCATED( iforce ) )  DEALLOCATE( iforce )
       IF ( ALLOCATED( taui ) )    DEALLOCATE( taui )
+      IF ( ALLOCATED( label_srt ) ) DEALLOCATE( label_srt )
       !
       tions_base_init = .FALSE.
       !
@@ -815,6 +824,33 @@
 
       RETURN
    END SUBROUTINE ions_displacement
+
+  !--------------------------------------------------------------------------
+  SUBROUTINE ions_cofmsub( tausp, iforce, nat, cdm, cdm0 )
+    !--------------------------------------------------------------------------
+    !
+    IMPLICIT NONE
+    !
+    REAL(DP), INTENT(INOUT) :: tausp(:,:)
+    INTEGER,  INTENT(IN)    :: iforce(:,:)
+    INTEGER,  INTENT(IN)    :: nat
+    REAL(DP), INTENT(IN)    :: cdm(:), cdm0(:)
+    !
+    INTEGER :: i, ia
+    !
+    DO ia = 1, nat
+       !
+       DO i = 1, 3
+          !
+          tausp(i,ia) = tausp(i,ia) + DBLE( iforce(i,ia) ) * ( cdm0(i) - cdm(i) )
+          !
+       END DO
+       !
+    END DO
+    !
+    RETURN
+    !
+  END SUBROUTINE ions_cofmsub
 
 
 !------------------------------------------------------------------------------!

@@ -180,7 +180,7 @@ CONTAINS
   END SUBROUTINE printout_base_close
 
   
-  SUBROUTINE printout_pos( iunit, tau, nat, what, nfi, tps, label, fact, sort )
+  SUBROUTINE printout_pos( iunit, tau, nat, what, nfi, tps, label, fact, sort, head )
     !
     USE kinds
     !
@@ -192,6 +192,7 @@ CONTAINS
     CHARACTER(LEN=3), INTENT(IN), OPTIONAL :: label( : )
     REAL(DP),        INTENT(IN), OPTIONAL :: fact
     INTEGER,          INTENT(IN), OPTIONAL :: sort( : )
+    CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: head
     !
     INTEGER   :: ia, k
     REAL(DP) :: f
@@ -200,6 +201,10 @@ CONTAINS
        f = fact
     ELSE
        f = 1.0d0
+    END IF
+    !
+    IF( PRESENT( head ) ) THEN
+       WRITE( iunit, 10 ) head
     END IF
     !
     IF( PRESENT( what ) ) THEN
@@ -233,6 +238,7 @@ CONTAINS
          WRITE( iunit, 252 ) (tau(k,ia),k = 1,3)
        END DO
     END IF
+ 10 FORMAT(3X,A)
  30 FORMAT(I7,1X,F11.8)
  40 FORMAT(3X,'ATOMIC_POSITIONS')
  50 FORMAT(3X,'ATOMIC_VELOCITIES')
