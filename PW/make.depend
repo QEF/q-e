@@ -690,6 +690,7 @@ ns_adj.o : ../Modules/io_global.o
 ns_adj.o : ../Modules/ions_base.o
 ns_adj.o : ../Modules/kind.o
 ns_adj.o : pwcom.o
+openfil.o : ../Modules/control_flags.o
 openfil.o : ../Modules/io_files.o
 openfil.o : ../Modules/io_global.o
 openfil.o : ../Modules/kind.o

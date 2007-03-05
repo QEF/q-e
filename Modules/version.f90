@@ -12,6 +12,6 @@ MODULE global_version
   !
   SAVE
   !
-  CHARACTER (LEN=6) :: version_number = '3.2   '
+  CHARACTER (LEN=6) :: version_number = '3.2cvs'
   !
 END MODULE global_version

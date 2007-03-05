@@ -626,6 +626,7 @@ ion_dynamics   CHARACTER
                CASE ( calculation = 'md' )
                  'verlet' : (default)   use Verlet algorithm to integrate 
 		                        Newton's equation
+                 'langevin'             ion dynamics is over-damped Langevin
                CASE ( calculation = 'vc-relax' )
                  'damp' :   (default)   use damped (Beeman) dynamics for 
 		                        structural relaxation
@@ -674,51 +675,62 @@ remove_rigid_rot
                but the relaxation itself should be faster.
 
 !
-! ... keywords used for moleculer dynamics
+! ... keywords used for molecular dynamics
 !
 
 ion_temperature   
                CHARACTER
-               'rescaling'     : velocity rescaling
-               'langevin'      : ion dynamics is over-damped Langevin
-               'not_controlled': default
+               'rescaling'   control ionic temperature via velocity rescaling
+                             (first method) see parameters "tempw" and "tolp"
+                             This is the only method implemented in VC-MD
+               'rescale-v'   control ionic temperature via velocity rescaling
+                             (second method) see parameters "tempw" and "nraise"
+               'rescale-T'   control ionic temperature via velocity rescaling
+                             (third method) see parameter "delta_t"
+               'reduce-T'    reduce ionic temperature every "nraise" steps
+                             by the (negative) value "delta_t"
+               'berendsen'   control ionic temperature using "soft" velocity
+                             rescaling - see parameters "tempw" and "nraise"
+               'andersen'    control ionic temperature using Andersen thermostat
+                             see parameters "tempw" and "nraise"
+               'not_controlled' (default) ionic temperature is not controlled
 
 tempw          REAL ( default = 300.D0 )
-               starting temperature (Kelvin) in MD runs 
+               starting temperature (Kelvin) in MD runs
+               target temperature for most thermostats
 
-tolp           REAL ( default = 1.D-3 )
-               tolerance for velocity rescaling. Velocities are not rescaled 
-               if the ratio of the run-averaged and target temperature differs
-               from unit less than tolp.
-               This keyword is used only in the case of variable cell
-               calculations.
+tolp           REAL ( default = 100.D0 )
+               tolerance for velocity rescaling. Velocities are rescaled if
+               the run-averaged and target temperature differ more than tolp.
 
 delta_t        REAL ( default = 1.D0 )
-               delta_t = 1                 : every 'nraise' steps the average
-                                             temperature, computed from the last
-                                             nraise steps, is rescaled to tempw
-               delta_t /= 1 && delta_T > 0 : at each step the instantaneous 
-                                             temperature is multiplied by 
-                                             delta_t; this is done rescaling all
-                                             the velocities. See comment below.
-               delta_t < 0                 : every 'nraise' steps the 
-                                             instantaneous temperature is 
-                                             reduced by -delta_T.
-                                             See comment below.
-               This keyword is NOT used in the case of variable cell
-               calculations.
-               The instantaneous temperature is calculated at the end of every
-               ionic move and BEFORE rescaling. This is the temperature reported
-               in the main output.
-               For delta_t /= 1, the actual average rate of heating or cooling
+               if ion_temperature='rescale-T':
+                  at each step the instantaneous temperature is multiplied 
+                  by delta_t; this is done rescaling all the velocities.
+               if ion_temperature='reduce-T':
+                  every 'nraise' steps the instantaneous temperature is 
+                  reduced by -delta_T (.e. delta_t is added to the temperature)
+               The instantaneous temperature is calculated at the end of 
+               every ionic move and BEFORE rescaling. This is the temperature
+               reported in the main output.
+               For delta_t < 0, the actual average rate of heating or cooling
                should be roughly C*delta_t/(nraise*dt) (C=1 for an
                ideal gas, C=0.5 for a harmonic solid, theorem of energy
                equipartition between all quadratic degrees of freedom).
 
-nraise         INTEGER ( default = 100 )
-               the temperature is reduced of -delta_T every 'nraise' steps.
-               This keyword is NOT used in the case of variable cell
-               calculations.
+nraise         INTEGER ( default = 1 )
+               if ion_temperature='reduce-T':
+                  every 'nraise' steps the instantaneous temperature is 
+                  reduced by -delta_T (.e. delta_t is added to the temperature)
+               if ion_temperature='rescale-v':
+                  every 'nraise' steps the average temperature, computed from 
+                  the last nraise steps, is rescaled to tempw
+               if ion_temperature='berendsen':
+                  the "rise time" parameter is given in units of the time step:
+                  tau = nraise*dt, so dt/tau = 1/nraise
+               if ion_temperature='andersen':
+                  the "collision frequency" parameter is given as nu=1/tau
+                  defined above, so nu*dt = 1/nraise
 
 refold_pos     LOGICAL ( default = .FALSE. )
                this keyword applies only in the case of molecular dynamics or

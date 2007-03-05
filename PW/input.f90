@@ -60,7 +60,6 @@ SUBROUTINE iosys()
   USE dynamics_module, ONLY : control_temp, temperature, amass, thermostat, &
                               dt_         => dt, &
                               delta_t_    => delta_t, &
-                              t_rise_     => t_rise, &
                               nraise_     => nraise, &
                               refold_pos_ => refold_pos
   !
@@ -217,7 +216,7 @@ SUBROUTINE iosys()
   ! ... IONS namelist
   !
   USE input_parameters, ONLY : phase_space, ion_dynamics, ion_positions, tolp, &
-                               tempw, delta_t, t_rise, nraise, ion_temperature,&
+                               tempw, delta_t, nraise, ion_temperature,        &
                                refold_pos, remove_rigid_rot, upscale,          &
                                pot_extrapolation,  wfc_extrapolation,          &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
@@ -1027,7 +1026,7 @@ SUBROUTINE iosys()
   END IF
   !
   SELECT CASE( TRIM( ion_temperature ) )
-  CASE( 'not_controlled' )
+  CASE( 'not_controlled', 'not-controlled', 'not controlled' )
      !
      control_temp = .FALSE.
      !
@@ -1038,18 +1037,39 @@ SUBROUTINE iosys()
      temperature  = tempw
      tolp_        = tolp
      !
-  CASE( 'berendsen' )
+  CASE( 'rescale-v', 'rescale-V', 'rescale_v', 'rescale_V' )
      !
      control_temp = .TRUE.
      thermostat   = TRIM( ion_temperature )
      temperature  = tempw
-     t_rise_      = t_rise
+     nraise_      = nraise
      !
-  CASE( 'andersen' )
+  CASE( 'reduce-T', 'reduce-t', 'reduce_T', 'reduce_t' )
+     !
+     control_temp = .TRUE.
+     thermostat   = TRIM( ion_temperature )
+     delta_t_     = delta_t
+     nraise_      = nraise
+     !
+  CASE( 'rescale-T', 'rescale-t', 'rescale_T', 'rescale_t' )
+     !
+     control_temp = .TRUE.
+     thermostat   = TRIM( ion_temperature )
+     delta_t_     = delta_t
+     !
+  CASE( 'berendsen', ' Berendsen' )
      !
      control_temp = .TRUE.
      thermostat   = TRIM( ion_temperature )
      temperature  = tempw
+     nraise_      = nraise
+     !
+  CASE( 'andersen', 'Andersen' )
+     !
+     control_temp = .TRUE.
+     thermostat   = TRIM( ion_temperature )
+     temperature  = tempw
+     nraise_      = nraise
      !
   CASE DEFAULT
      !
@@ -1190,8 +1210,6 @@ SUBROUTINE iosys()
   !
   remove_rigid_rot_ = remove_rigid_rot
   upscale_          = upscale
-  delta_t_          = delta_t
-  nraise_           = nraise
   refold_pos_       = refold_pos
   press_            = press
   cell_factor_      = cell_factor

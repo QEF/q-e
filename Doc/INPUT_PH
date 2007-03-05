@@ -34,11 +34,8 @@ fildyn      file where the dynamical matrix is written           'matdyn'
 
 fildrho     file where the charge density responses are written     ' '
 
-filelph     file where electron-phonon matrix elements are written  ' '
-
 fildvscf    file where the the potential variation is written       ' '
             (for later use in electron-phonon calculation)
-
 
 epsil       if .true. in a q=0 calculation for a non metal the      .false.
             macroscopic dielectric constant of the system is 

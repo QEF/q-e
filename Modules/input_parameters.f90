@@ -982,13 +982,23 @@ MODULE input_parameters
           ! 'zero'       restart the simulation with atomic velocities set to zero
 
         CHARACTER(LEN=80) :: ion_temperature = 'not_controlled' 
-          ! ion_temperature = 'nose' | 'not_controlled'* | 'rescaling'
+          ! ion_temperature = 'nose' | 'not_controlled'* | 'rescaling' |
+          !    'berendsen' | 'andersen' | 'rescale-v' | 'rescale-T' | 'reduce-T'
+          !
           ! 'nose'           control ionic temperature using Nose thermostat
           !                  see parameters "fnosep" and "tempw"
-          ! 'rescaling'      control ionic temperature via velocities rescaling 
-          !                  see parameter "tolp"
+          ! 'rescaling'      control ionic temperature via velocity rescaling 
+          !                  see parameters "tempw" and "tolp"
+          ! 'rescale-v'      control ionic temperature via velocity rescaling 
+          !                  see parameters "tempw" and "nraise" 
+          ! 'rescale-T'      control ionic temperature via velocity rescaling 
+          !                  see parameter "delta_t"
+          ! 'reduce-T'       reduce ionic temperature
+          !                  see parameters "nraise", delta_t"
+          ! 'berendsen'      control ionic temperature using "soft" velocity
+          !                  rescaling - see parameters "tempw" and "nraise"
           ! 'andersen'       control ionic temperature using Andersen thermostat
-          !
+          !                  see parameters "tempw" and "nraise"
           ! 'not_controlled' ionic temperature is not controlled
 
         REAL(DP) :: tempw = 300.0d0
@@ -1054,13 +1064,12 @@ MODULE input_parameters
         LOGICAL :: remove_rigid_rot = .FALSE.
         
         !
-        ! ... delta_T, t_rise, nraise are used to change temperature in PWscf
+        ! ... delta_T, nraise, tolp are used to change temperature in PWscf
         !
         
         REAL(DP) :: delta_t = 1.D0
-        REAL(DP) :: t_rise = 0.D0
 
-        INTEGER :: nraise
+        INTEGER :: nraise = 1
         
         !
         ! ... variables added for "path" calculations
@@ -1197,7 +1206,7 @@ MODULE input_parameters
                           tempw, fnosep, nhgrp, nhpcl, nhptyp, ndega, tranp,   &
                           amprp, greasp, tolp, ion_nstepe, ion_maxstep,        &
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
-                          wfc_extrapolation, t_rise, nraise, remove_rigid_rot, &
+                          wfc_extrapolation, nraise, remove_rigid_rot,         &
                           num_of_images, CI_scheme, opt_scheme, use_masses,    &
                           first_last_opt, ds, k_max, k_min, write_save,        &
                           temp_req, path_thr, fixed_tan, use_freezing,         &

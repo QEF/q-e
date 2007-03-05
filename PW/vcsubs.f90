@@ -773,19 +773,20 @@ subroutine vcmove (mxdtyp, mxdatm, ntype, ityp, rat, avec, vcell, &
   !
   !       careful with zero temperature
   !
-  if (temp.lt.1d-14) then
-     ts = zero
-     tolp = zero
-  else
-     ts = dabs (tnew / temp - um)
-  endif
-  !      WRITE( stdout,*) ts
+  !if (temp.lt.1d-14) then
+  !   ts = zero
+  !else
+  !   ts = dabs (tnew / temp - um)
+  !endif
   !
   !       rescale velocities
   !
   !      WRITE( stdout,*) ' ekla', ekla, tolp,ts, nst, ntcheck, ntimes
   if (mod (nst, ntcheck) .eq.0) then
-     if ( (ts.gt.tolp) .and. (ntimes.gt.0) ) then
+     !       with the new definition of tolp, this is the test to perform
+     !
+     ts = dabs ( tnew - temp ) 
+     if ( ( ts > tolp) .and. ( ntimes > 0 ) ) then
         !           WRITE( stdout,*) ' ekkkeka ! non dovrei essere qui !'
         !           WRITE( stdout,*) 'nst,ntcheck, ts, tolp,ntimes'
         !           WRITE( stdout,*) nst,ntcheck, ts, tolp,ntimes
