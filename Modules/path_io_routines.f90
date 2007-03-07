@@ -532,9 +532,9 @@ MODULE path_io_routines
            !
            WRITE( UNIT = in_unit, FMT = '("RESTART INFORMATION")' )
            !
-           WRITE( UNIT = in_unit, FMT = '(I4)' ) istep_path
-           WRITE( UNIT = in_unit, FMT = '(I4)' ) nstep_path
-           WRITE( UNIT = in_unit, FMT = '(I4)' ) pending_image
+           WRITE( UNIT = in_unit, FMT = '(I8)' ) istep_path
+           WRITE( UNIT = in_unit, FMT = '(I8)' ) nstep_path
+           WRITE( UNIT = in_unit, FMT = '(I8)' ) pending_image
            WRITE( UNIT = in_unit, FMT = '(L1)' ) conv_elec
            !
            WRITE( UNIT = in_unit, FMT = '("NUMBER OF IMAGES")' )
