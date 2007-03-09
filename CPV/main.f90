@@ -607,7 +607,7 @@
       END DO MAIN_LOOP
 
 
-      conv_elec = tconv
+      conv_elec = tconv .OR. ttexit
       etot      = edft%etot
       !
       CALL resort_position( tau, fion, atoms0, ind_srt, ht0 )
