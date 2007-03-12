@@ -59,31 +59,6 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   !
   CALL flush_unit( iunpath )
   !
-  filename = TRIM( prefix ) // "_" // &
-           & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf"
-  !
-  OPEN( UNIT = iunaxsf, FILE = filename, ACTION = "WRITE" )
-  !
-  IF ( meta_ionode ) THEN
-     !
-     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I5)' ) num_of_images
-     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
-     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,1)*alat*bohr_radius_angs, &
-          at(2,1)*alat*bohr_radius_angs, &
-          at(3,1)*alat*bohr_radius_angs
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,2)*alat*bohr_radius_angs, &
-          at(2,2)*alat*bohr_radius_angs, &
-          at(3,2)*alat*bohr_radius_angs
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,3)*alat*bohr_radius_angs, &
-          at(2,3)*alat*bohr_radius_angs, &
-          at(3,3)*alat*bohr_radius_angs
-     !
-  END IF
-  !
   tmp_dir_saved = tmp_dir
   ldamped_saved = ldamped
   !
@@ -333,8 +308,6 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
         !
         CALL write_restart( 'done', 0 )
         !
-        CALL write_axsf_file( image, tau, alat )
-        !
      END IF
      !
      ! ... the new image is obtained (by ionode only)
@@ -357,8 +330,6 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
   END DO fes_loop
   !
-  CLOSE( UNIT = iunaxsf )
-  !
   CALL mp_barrier()
   !
   IF ( meta_ionode ) THEN
@@ -369,7 +340,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      DO image = fii, lii
         !
         tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // &
-                  "_" // TRIM( int_to_char( image ) ) // "/"
+                & "_" // TRIM( int_to_char( image ) ) // "/"
         !
         filename = TRIM( tmp_dir ) // "therm_average.restart"
         !
@@ -386,6 +357,50 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
         CALL write_restart( 'tobedone', 0 )
         !
      END DO
+     !
+     ! ... here the meta_ionode writes the axsf file for this iteration
+     ! ... by reading the postions from the restart-file
+     !
+     filename = TRIM( prefix ) // "_" // &
+              & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf"
+     !
+     OPEN( UNIT = iunaxsf, FILE = filename, ACTION = "WRITE" )
+     !
+     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I5)' ) num_of_images
+     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,1)*alat*bohr_radius_angs, &
+          at(2,1)*alat*bohr_radius_angs, &
+          at(3,1)*alat*bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,2)*alat*bohr_radius_angs, &
+          at(2,2)*alat*bohr_radius_angs, &
+          at(3,2)*alat*bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,3)*alat*bohr_radius_angs, &
+          at(2,3)*alat*bohr_radius_angs, &
+          at(3,3)*alat*bohr_radius_angs
+     !
+     DO image = 1, num_of_images
+        !
+        tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // &
+                & "_" // TRIM( int_to_char( image ) ) // "/"
+        !
+        filename = TRIM( tmp_dir ) // "therm_average.restart"
+        !
+        OPEN( UNIT = 1000, FILE = filename )
+        !
+        READ( 1000, * ) stage
+        READ( 1000, * ) tau(:,:)
+        !
+        CLOSE( UNIT = 1000 )
+        !
+        CALL write_axsf_file( image, tau, alat )
+        !
+     END DO
+     !
+     CLOSE( UNIT = iunaxsf )
      !
   END IF
   !
@@ -701,6 +716,7 @@ SUBROUTINE electronic_scf( lfirst_scf, stat )
   !
   USE control_flags, ONLY : conv_elec, ethr
   USE io_files,      ONLY : iunpath
+  USE io_global,     ONLY : ionode
   !
   IMPLICIT NONE
   !
@@ -720,10 +736,11 @@ SUBROUTINE electronic_scf( lfirst_scf, stat )
   !
   stat = conv_elec
   !
-  IF ( .NOT. conv_elec ) THEN
+  IF ( .NOT.conv_elec ) THEN
      !
-     WRITE( UNIT = iunpath, &
-            FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
+     IF ( ionode ) &
+        WRITE( UNIT = iunpath, &
+               FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
      !
      RETURN
      !

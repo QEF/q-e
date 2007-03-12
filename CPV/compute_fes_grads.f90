@@ -70,32 +70,6 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   !
   CALL flush_unit( iunpath )
   !
-  filename = TRIM( prefix ) // "_" // &
-           & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf"
-  !
-  OPEN( UNIT = iunaxsf, &
-        FILE = filename, STATUS = "UNKNOWN", ACTION = "WRITE" )
-  !
-  IF ( meta_ionode ) THEN
-     !
-     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I5)' ) num_of_images
-     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
-     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,1) * alat * bohr_radius_angs, &
-          at(2,1) * alat * bohr_radius_angs, &
-          at(3,1) * alat * bohr_radius_angs
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,2) * alat * bohr_radius_angs, &
-          at(2,2) * alat * bohr_radius_angs, &
-          at(3,2) * alat * bohr_radius_angs
-     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
-          at(1,3) * alat * bohr_radius_angs, &
-          at(2,3) * alat * bohr_radius_angs, &
-          at(3,3) * alat * bohr_radius_angs
-     !
-  END IF
-  !
   outdir_saved = outdir
   tnosep_saved = tnosep
   !
@@ -403,19 +377,17 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
   END DO fes_loop
   !
-  CLOSE( UNIT = iunaxsf )
-  !
   CALL mp_barrier()
   !
   IF ( meta_ionode ) THEN
      !
-     ! ... when all the images are done the stage is changed from 
+     ! ... when all the images are done the stage is changed from
      ! ... 'done' to 'tobedone'
      !
      DO image = fii, lii
         !
-        outdir = TRIM( outdir_saved ) // TRIM( prefix ) // &
-                 "_" // TRIM( int_to_char( image ) ) // "/"
+        outdir = TRIM(outdir_saved ) // TRIM( prefix ) // &
+               & "_" // TRIM( int_to_char( image ) ) // "/"
         !
         filename = TRIM( outdir ) // "therm_average.restart"
         !
@@ -432,6 +404,50 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
         CALL write_restart( 'tobedone', 0 )
         !
      END DO
+     !
+     ! ... here the meta_ionode writes the axsf file for this iteration
+     ! ... by reading the postions from the restart-file
+     !
+     filename = TRIM( prefix ) // "_" // &
+              & TRIM( int_to_char( istep_path + 1 ) ) // ".axsf"
+     !
+     OPEN( UNIT = iunaxsf, FILE = filename, ACTION = "WRITE" )
+     !
+     WRITE( UNIT = iunaxsf, FMT = '(" ANIMSTEPS ",I5)' ) num_of_images
+     WRITE( UNIT = iunaxsf, FMT = '(" CRYSTAL ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(" PRIMVEC ")' )
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,1)*alat*bohr_radius_angs, &
+          at(2,1)*alat*bohr_radius_angs, &
+          at(3,1)*alat*bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,2)*alat*bohr_radius_angs, &
+          at(2,2)*alat*bohr_radius_angs, &
+          at(3,2)*alat*bohr_radius_angs
+     WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
+          at(1,3)*alat*bohr_radius_angs, &
+          at(2,3)*alat*bohr_radius_angs, &
+          at(3,3)*alat*bohr_radius_angs
+     !
+     DO image = 1, num_of_images
+        !
+        outdir = TRIM( outdir_saved ) // TRIM( prefix ) // &
+               & "_" // TRIM( int_to_char( image ) ) // "/"
+        !
+        filename = TRIM( outdir ) // "therm_average.restart"
+        !
+        OPEN( UNIT = 1000, FILE = filename )
+        !
+        READ( 1000, * ) stage
+        READ( 1000, * ) tauout(:,:)
+        !
+        CLOSE( UNIT = 1000 )
+        !
+        CALL write_axsf_file( image, tauout, 1.D0 )
+        !
+     END DO
+     !
+     CLOSE( UNIT = iunaxsf )
      !
   END IF
   !

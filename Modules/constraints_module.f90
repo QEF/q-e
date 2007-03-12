@@ -16,7 +16,7 @@ MODULE constraints_module
   !----------------------------------------------------------------------------
   !
   ! ... variables and methods for constraint Molecular Dynamics and
-  ! ... constrained ionic relaxations (the SHAKE algorithm based on 
+  ! ... constrained ionic relaxations (the SHAKE algorithm based on
   ! ... lagrange multipliers) are defined here.
   !
   ! ... most of these variables and methods are also used for meta-dynamics
@@ -47,6 +47,7 @@ MODULE constraints_module
   PUBLIC :: init_constraint,       &
             check_constraint,      &
             remove_constr_force,   &
+            remove_constr_vec,     &
             deallocate_constraint, &
             compute_dmax,          &
             pbc
@@ -63,7 +64,7 @@ MODULE constraints_module
   !
   ! ... global variables
   !
-  INTEGER               :: nconstr 
+  INTEGER               :: nconstr
   REAL(DP)              :: constr_tol
   INTEGER,  ALLOCATABLE :: constr_type(:)
   REAL(DP), ALLOCATABLE :: constr(:,:)
@@ -122,10 +123,10 @@ MODULE constraints_module
        !
        ALLOCATE( constr( nc_fields, nconstr ) )
        !
-       ! ... setting constr to 0 to findout which elements have
-       !     been set to an atomic index. This is required for CP.
+       ! ... setting constr to 0 to findout which elements have been
+       ! ... set to an atomic index. This is required for CP.
        !
-       constr = 0.0d0
+       constr = 0.D0
        !
        ! ... NB: the first "ncolvar" constraints are collective variables (used
        ! ...     for meta-dynamics and free-energy smd), the remaining are real
@@ -1254,7 +1255,7 @@ MODULE constraints_module
        REAL(DP), EXTERNAL :: DDOT, DNRM2
        !
        !
-       dim = 3 * nat
+       dim = 3*nat
        !
        lagrange(:) = 0.D0
        !
@@ -1298,7 +1299,7 @@ MODULE constraints_module
                 dgidgj = DDOT( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
                 !
                 dg_matrix(i,j) = dgidgj
-                dg_matrix(j,i) = dgidgj  
+                dg_matrix(j,i) = dgidgj
                 !
              END DO
              !
@@ -1309,7 +1310,7 @@ MODULE constraints_module
           !
           IF ( i /= 0 ) &
              CALL errore( 'remove_constr_force', &
-                          'error in the solution of the linear system', 1 )
+                          'error in the solution of the linear system', i )
           !
           DO i = 1, nconstr
              !
@@ -1352,6 +1353,99 @@ MODULE constraints_module
 #endif
        !
      END SUBROUTINE remove_constr_force
+     !
+     !-----------------------------------------------------------------------
+     SUBROUTINE remove_constr_vec( nat, tau, &
+                                   if_pos, ityp, tau_units, vec )
+       !-----------------------------------------------------------------------
+       !
+       ! ... the component of a displacement vector that is orthogonal to the
+       ! ... ipersurface defined by the constraint equations is removed
+       ! ... and the corresponding value of the lagrange multiplier computed
+       !
+       IMPLICIT NONE
+       !
+       INTEGER,  INTENT(IN)    :: nat
+       REAL(DP), INTENT(IN)    :: tau(:,:)
+       INTEGER,  INTENT(IN)    :: if_pos(:,:)
+       INTEGER,  INTENT(IN)    :: ityp(:)
+       REAL(DP), INTENT(IN)    :: tau_units
+       REAL(DP), INTENT(INOUT) :: vec(:,:)
+       !
+       INTEGER               :: i, j, dim
+       REAL(DP)              :: g, ndg, dgidgj
+       REAL(DP), ALLOCATABLE :: dg(:,:,:), dg_matrix(:,:), lambda(:)
+       INTEGER,  ALLOCATABLE :: iwork(:)
+       !
+       REAL(DP), EXTERNAL :: DDOT, DNRM2
+       !
+       !
+       dim = 3*nat
+       !
+       ALLOCATE( lambda( nconstr ) )
+       ALLOCATE( dg( 3, nat, nconstr ) )
+       !
+       IF ( nconstr == 1 ) THEN
+          !
+          CALL constraint_grad( 1, nat, tau, &
+                                if_pos, ityp, tau_units, g, dg(:,:,1) )
+          !
+          lambda(1) = DDOT( dim, vec, 1, dg(:,:,1), 1 )
+          !
+          ndg = DDOT( dim, dg(:,:,1), 1, dg(:,:,1), 1 )
+          !
+          vec(:,:) = vec(:,:) - lambda(1)*dg(:,:,1)/ndg
+          !
+       ELSE
+          !
+          ALLOCATE( dg_matrix( nconstr, nconstr ) )
+          ALLOCATE( iwork( nconstr ) )
+          !
+          DO i = 1, nconstr
+             !
+             CALL constraint_grad( i, nat, tau, &
+                                   if_pos, ityp, tau_units, g, dg(:,:,i) )
+             !
+          END DO
+          !
+          DO i = 1, nconstr
+             !
+             dg_matrix(i,i) = DDOT( dim, dg(:,:,i), 1, dg(:,:,i), 1 )
+             !
+             lambda(i) = DDOT( dim, vec, 1, dg(:,:,i), 1 )
+             !
+             DO j = i + 1, nconstr
+                !
+                dgidgj = DDOT( dim, dg(:,:,i), 1, dg(:,:,j), 1 )
+                !
+                dg_matrix(i,j) = dgidgj
+                dg_matrix(j,i) = dgidgj
+                !
+             END DO
+             !
+          END DO
+          !
+          CALL DGESV( nconstr, 1, dg_matrix, &
+                      nconstr, iwork, lambda, nconstr, i )
+          !
+          IF ( i /= 0 ) &
+             CALL errore( 'remove_constr_vec', &
+                          'error in the solution of the linear system', i )
+          !
+          DO i = 1, nconstr
+             !
+             vec(:,:) = vec(:,:) - lambda(i)*dg(:,:,i)
+             !
+          END DO
+          !
+          DEALLOCATE( dg_matrix )
+          DEALLOCATE( iwork )
+          !
+       END IF
+       !
+       DEALLOCATE( lambda, dg )
+       !
+     END SUBROUTINE remove_constr_vec
      !
      !-----------------------------------------------------------------------
      SUBROUTINE deallocate_constraint()
@@ -1418,7 +1512,6 @@ MODULE constraints_module
        dmax = norm( MATMUL( at(:,:), x(:) ) )
        !
        dmax = MIN( dmax, norm( MATMUL( at(:,:), y(:) ) ) )
-       !
        dmax = MIN( dmax, norm( MATMUL( at(:,:), z(:) ) ) )
        !
        dmax = dmax*alat
