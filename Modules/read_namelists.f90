@@ -48,15 +48,15 @@ MODULE read_namelists_module
        !
        !
        IF ( prog == 'PW' ) THEN
-          title = ' ' 
-          calculation = 'scf' 
+          title = ' '
+          calculation = 'scf'
        ELSE
-          title = 'MD Simulation' 
-          calculation = 'cp' 
+          title = 'MD Simulation'
+          calculation = 'cp'
        END IF
        verbosity = 'default'
-       IF( prog == 'PW' ) restart_mode = 'from_scratch' 
-       IF( prog == 'CP' ) restart_mode = 'restart' 
+       IF( prog == 'PW' ) restart_mode = 'from_scratch'
+       IF( prog == 'CP' ) restart_mode = 'restart'
        nstep  = 50
        IF( prog == 'PW' ) iprint = 100000
        IF( prog == 'CP' ) iprint = 10
@@ -73,13 +73,13 @@ MODULE read_namelists_module
        ndr = 50
        ndw = 50
        !
-       ! ... use the path specified as outdir and the filename prefix 
+       ! ... use the path specified as outdir and the filename prefix
        ! ... to store output data
        !
        CALL get_env( 'ESPRESSO_TMPDIR', outdir )
        IF ( TRIM( outdir ) == ' ' ) outdir = './'
-       IF( prog == 'PW' ) prefix = 'pwscf'  
-       IF( prog == 'CP' ) prefix = 'cp' 
+       IF( prog == 'PW' ) prefix = 'pwscf'
+       IF( prog == 'CP' ) prefix = 'cp'
        !
        ! ... directory containing the pseudopotentials
        !
@@ -124,11 +124,11 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       ! 
+       !
        !
        ibrav  = -1
        celldm = (/ 0.D0, 0.D0, 0.D0, 0.D0, 0.D0, 0.D0 /)
-       a = 0.D0 
+       a = 0.D0
        b = 0.D0
        c = 0.D0
        cosab = 0.D0
@@ -168,7 +168,7 @@ MODULE read_namelists_module
 ! ... set starting_magnetization to an invalid value:
 ! ... in PW starting_magnetization MUST be set for at least one atomic type
 ! ... (unless the magnetization is set in other ways)
-! ... in CP starting_magnetization MUST REMAIN UNSET 
+! ... in CP starting_magnetization MUST REMAIN UNSET
 !
        starting_magnetization = sm_not_set
 
@@ -201,11 +201,12 @@ MODULE read_namelists_module
        angle2 = 0.0d0
        report = 1
        !
-       assume_molsys = .FALSE.
+       assume_isolated = .FALSE.
+       !
        spline_ps = .false.
-       ! 
+       !
        RETURN
-       ! 
+       !
      END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
@@ -221,7 +222,7 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       ! 
+       !
        !
        emass = 400.D0
        emass_cutoff = 2.5D0
@@ -233,16 +234,16 @@ MODULE read_namelists_module
        !
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' )
        !
-       electron_dynamics = 'none'  
+       electron_dynamics = 'none'
        electron_damping = 0.1D0
        !
        ! ... ( 'zero' | 'default' )
        !
-       electron_velocities = 'default' 
+       electron_velocities = 'default'
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling')
        !
-       electron_temperature = 'not_controlled' 
+       electron_temperature = 'not_controlled'
        ekincw = 0.001D0
        fnosee = 1.D0
        ampre  = 0.D0
@@ -250,8 +251,8 @@ MODULE read_namelists_module
        IF ( prog == 'PW' ) THEN
           !
           startingwfc = 'atomic'
-          startingpot = 'atomic'          
-          !      
+          startingpot = 'atomic'
+          !
        ELSE
           !
           startingwfc = 'random'
@@ -290,11 +291,11 @@ MODULE read_namelists_module
        diago_diis_ndim = 3
        diago_full_acc = .FALSE.
        !
-       sic = 'none' 
+       sic = 'none'
        sic_epsilon = 0.D0
        sic_alpha = 0.D0
        force_pairing = .false.
-       ! 
+       !
        fermi_energy = 0.D0
        n_inner = 2
        rotation_dynamics = "line-minimization"
@@ -313,11 +314,11 @@ MODULE read_namelists_module
        efield = 0.D0
        epol2  = 3
        efield2 = 0.d0
-       ! 
+       !
        occupation_constraints = .false.
-       ! 
+       !
        RETURN
-       ! 
+       !
      END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
@@ -351,7 +352,7 @@ MODULE read_namelists_module
        !
        ! ... ( 'zero' | 'default' | 'from_input' )
        !
-       ion_velocities = 'default' 
+       ion_velocities = 'default'
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' | 'berendsen' |
        !       'andersen' | 'langevin' )
@@ -385,7 +386,7 @@ MODULE read_namelists_module
        !
        num_of_images  = 0
        first_last_opt = .FALSE.
-       use_masses     = .FALSE.       
+       use_masses     = .FALSE.
        write_save     = .FALSE.
        use_freezing   = .FALSE.
        opt_scheme     = 'quick-min'
@@ -456,7 +457,7 @@ MODULE read_namelists_module
        IMPLICIT NONE
        !
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
-       ! 
+       !
        !
        cell_parameters = 'default'
        !
@@ -466,7 +467,7 @@ MODULE read_namelists_module
        !
        ! ... ( 'zero' | 'default' )
        !
-       cell_velocities = 'default' 
+       cell_velocities = 'default'
        press = 0.D0
        wmass = 0.D0
        !
@@ -479,7 +480,7 @@ MODULE read_namelists_module
        !
        ! ... ('all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz' )
        !
-       cell_dofree = 'all' 
+       cell_dofree = 'all'
        cell_factor = 0.D0
        cell_nstepe = 1
        cell_damping = 0.D0
@@ -549,7 +550,7 @@ MODULE read_namelists_module
        !
        modenum = 0
        xqq = 0.D0
-       ! 
+       !
        RETURN
        !
      END SUBROUTINE
@@ -569,31 +570,31 @@ MODULE read_namelists_module
        !
        wf_efield = .FALSE.
        wf_switch = .FALSE.
-       !   
+       !
        sw_len = 1
-       !   
+       !
        efx0 = 0.D0
        efy0 = 0.D0
        efz0 = 0.D0
        efx1 = 0.D0
        efy1 = 0.D0
        efz1 = 0.D0
-       !   
+       !
        wfsd = .FALSE.
        !
        wfdt        = 5.D0
        maxwfdt     = 0.3D0
        wf_q        = 1500.D0
        wf_friction = 0.3D0
-       !   
+       !
        nit    = 10
        nsd    = 10
        nsteps = 20
-       !   
+       !
        tolw = 1.D-8
        !
        adapt = .TRUE.
-       !   
+       !
        calwf  = 3
        nwf    = 0
        wffort = 40
@@ -602,7 +603,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE     
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -654,7 +655,7 @@ MODULE read_namelists_module
        CALL mp_bcast( lelfield,      ionode_id )
        CALL mp_bcast( nberrycyc,     ionode_id )
        CALL mp_bcast( saverho,       ionode_id )
-       ! 
+       !
        RETURN
        !
      END SUBROUTINE
@@ -706,7 +707,7 @@ MODULE read_namelists_module
        CALL mp_bcast( nelup,             ionode_id )
        CALL mp_bcast( neldw,             ionode_id )
        CALL mp_bcast( nspin,             ionode_id )
-       CALL mp_bcast( nosym,             ionode_id ) 
+       CALL mp_bcast( nosym,             ionode_id )
        CALL mp_bcast( ecfixed,           ionode_id )
        CALL mp_bcast( qcutz,             ionode_id )
        CALL mp_bcast( q2sigma,           ionode_id )
@@ -718,12 +719,12 @@ MODULE read_namelists_module
        CALL mp_bcast( nqx2,                  ionode_id )
        CALL mp_bcast( nqx3,                  ionode_id )
 #endif
-       CALL mp_bcast( starting_magnetization, ionode_id ) 
-       CALL mp_bcast( starting_ns_eigenvalue, ionode_id ) 
-       CALL mp_bcast( U_projection_type,      ionode_id ) 
-       CALL mp_bcast( lda_plus_U,             ionode_id ) 
-       CALL mp_bcast( Hubbard_U,              ionode_id ) 
-       CALL mp_bcast( Hubbard_alpha,          ionode_id ) 
+       CALL mp_bcast( starting_magnetization, ionode_id )
+       CALL mp_bcast( starting_ns_eigenvalue, ionode_id )
+       CALL mp_bcast( U_projection_type,      ionode_id )
+       CALL mp_bcast( lda_plus_U,             ionode_id )
+       CALL mp_bcast( Hubbard_U,              ionode_id )
+       CALL mp_bcast( Hubbard_alpha,          ionode_id )
        CALL mp_bcast( edir,                   ionode_id )
        CALL mp_bcast( emaxpos,                ionode_id )
        CALL mp_bcast( eopreg,                 ionode_id )
@@ -742,8 +743,8 @@ MODULE read_namelists_module
        CALL mp_bcast( fixed_magnetization,       ionode_id )
        CALL mp_bcast( lambda,                    ionode_id )
        !
-       CALL mp_bcast( assume_molsys, ionode_id )
-       CALL mp_bcast( spline_ps, ionode_id )
+       CALL mp_bcast( assume_isolated, ionode_id )
+       CALL mp_bcast( spline_ps,       ionode_id )
        !
        RETURN
        !
@@ -817,7 +818,7 @@ MODULE read_namelists_module
        CALL mp_bcast( sic_epsilon ,         ionode_id )
        CALL mp_bcast( sic_alpha   ,         ionode_id )
        CALL mp_bcast( force_pairing ,       ionode_id )
-       ! 
+       !
        ! ... ensemble-DFT
        !
        CALL mp_bcast( fermi_energy,       ionode_id )
@@ -840,7 +841,7 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( epol,   ionode_id )
        CALL mp_bcast( efield, ionode_id )
-       ! 
+       !
        CALL mp_bcast( epol2,   ionode_id )
        CALL mp_bcast( efield2, ionode_id )
        !
@@ -920,7 +921,7 @@ MODULE read_namelists_module
        CALL mp_bcast( w_2,              ionode_id )
        !
        CALL mp_bcast( sic_rloc, ionode_id )
-       ! 
+       !
        ! ... SMD broadcast (Y.K. 15/04/2004)
        !
        CALL mp_bcast( smd_polm,    ionode_id )
@@ -981,7 +982,7 @@ MODULE read_namelists_module
        CALL mp_bcast( cell_nstepe,      ionode_id )
        CALL mp_bcast( cell_damping,     ionode_id )
        CALL mp_bcast( press_conv_thr,   ionode_id )
-       ! 
+       !
        RETURN
        !
      END SUBROUTINE
@@ -1048,7 +1049,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE     
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------------=!
      !
@@ -1091,7 +1092,7 @@ MODULE read_namelists_module
        !
        RETURN
        !
-     END SUBROUTINE 
+     END SUBROUTINE
      !
      !=----------------------------------------------------------------------=!
      !
@@ -1109,7 +1110,7 @@ MODULE read_namelists_module
        CHARACTER(LEN=20) :: sub_name = ' control_checkin '
        INTEGER           :: i
        LOGICAL           :: allowed = .FALSE.
-       ! 
+       !
        !
        DO i = 1, SIZE( calculation_allowed )
           IF( TRIM(calculation) == calculation_allowed(i) ) allowed = .TRUE.
@@ -1138,7 +1139,7 @@ MODULE read_namelists_module
          IF( isave < 1 ) &
            CALL errore( sub_name,' isave out of range ', 1 )
        END IF
- 
+
        IF( dt < 0.D0 ) &
           CALL errore( sub_name,' dt out of range ', 1 )
        IF( max_seconds < 0.D0 ) &
@@ -1147,7 +1148,7 @@ MODULE read_namelists_module
        IF( ekin_conv_thr < 0.D0 ) THEN
           IF( prog == 'PW' ) THEN
             CALL infomsg( sub_name,' ekin_conv_thr not used in PW ', 1 )
-          ELSE 
+          ELSE
             CALL errore( sub_name,' ekin_conv_thr out of range ', 1 )
           END IF
        END IF
@@ -1157,9 +1158,9 @@ MODULE read_namelists_module
        IF( forc_conv_thr < 0.D0 ) &
           CALL errore( sub_name,' force_conv_thr out of range ', 1 )
        IF( prog == 'CP' ) THEN
-          IF( dipfield ) & 
+          IF( dipfield ) &
              CALL infomsg( sub_name,' dipfield not implemented yet ', -1)
-          IF( lberry ) & 
+          IF( lberry ) &
              CALL infomsg( sub_name,' lberry not implemented yet ', -1)
           IF( gdir /= 0 ) &
              CALL infomsg( sub_name,' gdir not used ', -1)
@@ -1261,7 +1262,7 @@ MODULE read_namelists_module
           IF ( diagonalization == 'diis' ) &
              CALL errore( sub_name ,' diis not allowed with noncolin ', 1 )
           !
-       END IF       
+       END IF
        !
        ! ... control on SIC variables
        !
@@ -1292,7 +1293,7 @@ MODULE read_namelists_module
           IF ( nelup /= (neldw + 1) )   &
              CALL errore( sub_name, &
                   & ' invalid nelup /= (neldwn +1) spin with sic activated', 1 )
-          !  
+          !
        ENDIF
        !
        RETURN
@@ -1426,7 +1427,7 @@ MODULE read_namelists_module
              IF ( calculation /= 'neb' .AND. calculation /= 'smd' ) &
                 CALL errore( sub_name, &
                            & ' coarse-grained phase-space is presently' // &
-                           & ' allowed only for neb or smd ', 1 )        
+                           & ' allowed only for neb or smd ', 1 )
              !
           ELSE
              !
@@ -1442,7 +1443,7 @@ MODULE read_namelists_module
        IF ( k_max < 0.D0 )  CALL errore( sub_name, 'k_max out of range', 1 )
        IF ( k_min < 0.D0 )  CALL errore( sub_name, 'k_min out of range', 1 )
        IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
-       ! 
+       !
        allowed = .FALSE.
        DO i = 1, SIZE( CI_scheme_allowed )
           IF ( TRIM( CI_scheme ) == CI_scheme_allowed(i) ) allowed = .TRUE.
@@ -1460,7 +1461,7 @@ MODULE read_namelists_module
        IF ( smd_polm .AND. smd_kwnp < 3 ) &
           CALL infomsg( sub_name,' smd_kwnp < 3 for smd_polm ', -1)
        !
-       IF ( smd_stcd .AND. (smd_stcd1==0 .OR. smd_stcd2==0 .OR. smd_stcd3==0) ) & 
+       IF ( smd_stcd .AND. (smd_stcd1==0 .OR. smd_stcd2==0 .OR. smd_stcd3==0) ) &
           CALL infomsg( sub_name,' smd_stcd not specified ', -1)
        !
        IF( smd_smcp .AND. (smd_smopt .OR. smd_smlm) ) &
@@ -1567,7 +1568,7 @@ MODULE read_namelists_module
      !
      !-----------------------------------------------------------------------
      SUBROUTINE fixval( prog )
-       !----------------------------------------------------------------------- 
+       !-----------------------------------------------------------------------
        !
        USE constants, ONLY : e2
        !
@@ -1677,13 +1678,13 @@ MODULE read_namelists_module
              !
           CASE DEFAULT
              !
-             CALL errore( sub_name,' calculation '// & 
+             CALL errore( sub_name,' calculation '// &
                         & TRIM(calculation)//' not implemented ', 1 )
              !
        END SELECT
-       !              
+       !
        IF ( prog == 'PW' ) THEN
-          !       
+          !
           IF ( calculation == 'nscf' .OR. &
                calculation == 'bands'.OR. &
                calculation == 'phonon' ) THEN
@@ -1703,13 +1704,13 @@ MODULE read_namelists_module
           ELSE
              !
              startingwfc = 'file'
-             startingpot = 'file'             
+             startingpot = 'file'
              !
           END IF
           !
-       END IF                   
+       END IF
        !
-       IF ( TRIM( sic ) /= 'none' ) THEN 
+       IF ( TRIM( sic ) /= 'none' ) THEN
          IF ( nspin == 2 .AND. nelec > 1 .AND. &
               ( nelup == neldw .OR. nelup == neldw+1 ) ) force_pairing = .TRUE.
        END IF
@@ -1750,7 +1751,7 @@ MODULE read_namelists_module
                                   !     prog = 'CP'  cpr
        !
        ! ... declare other variables
-       ! 
+       !
        INTEGER :: ios
        !
        ! ... end of declarations
@@ -1763,7 +1764,7 @@ MODULE read_namelists_module
        !
        ! ... default settings for all namelists
        !
-       CALL control_defaults( prog )       
+       CALL control_defaults( prog )
        CALL system_defaults( prog )
        CALL electrons_defaults( prog )
        CALL ions_defaults( prog )
@@ -1776,7 +1777,7 @@ MODULE read_namelists_module
        !
        ios = 0
        IF( ionode ) THEN
-          READ( 5, control, iostat = ios ) 
+          READ( 5, control, iostat = ios )
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
@@ -1793,10 +1794,10 @@ MODULE read_namelists_module
        CALL fixval( prog )
        !
        ! ... SYSTEM namelist
-       !       
+       !
        ios = 0
        IF( ionode ) THEN
-          READ( 5, system, iostat = ios ) 
+          READ( 5, system, iostat = ios )
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
@@ -1814,7 +1815,7 @@ MODULE read_namelists_module
        !
        ios = 0
        IF( ionode ) THEN
-          READ( 5, electrons, iostat = ios ) 
+          READ( 5, electrons, iostat = ios )
        END IF
        CALL mp_bcast( ios, ionode_id )
        IF( ios /= 0 ) THEN
@@ -1825,7 +1826,7 @@ MODULE read_namelists_module
        CALL electrons_bcast( )
        CALL electrons_checkin( prog )
        !
-       ! ... IONS namelist   
+       ! ... IONS namelist
        !
        ios = 0
        !
@@ -1842,7 +1843,7 @@ MODULE read_namelists_module
                TRIM( calculation ) == 'neb'      .OR. &
                TRIM( calculation ) == 'fpmd'     .OR. &
                TRIM( calculation ) == 'fpmd-neb' .OR. &
-               TRIM( calculation ) == 'metadyn' ) READ( 5, ions, iostat = ios ) 
+               TRIM( calculation ) == 'metadyn' ) READ( 5, ions, iostat = ios )
           !
        END IF
        CALL mp_bcast( ios, ionode_id )
@@ -1864,7 +1865,7 @@ MODULE read_namelists_module
               TRIM( calculation ) == 'fpmd'     .OR. &
               TRIM( calculation ) == 'fpmd-neb' .OR. &
               TRIM( calculation ) == 'vc-md' ) THEN
-             READ( 5, cell, iostat = ios ) 
+             READ( 5, cell, iostat = ios )
           END IF
        END IF
        CALL mp_bcast( ios, ionode_id )

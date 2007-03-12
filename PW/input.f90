@@ -4,7 +4,7 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-! 
+!
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
@@ -16,7 +16,7 @@ SUBROUTINE iosys()
   ! ...  may be useful if you have trouble reading from standard input
   ! ...  ---------------------------------------------------------------
   !
-  ! ...  access the modules renaming the variables that have the same name 
+  ! ...  access the modules renaming the variables that have the same name
   ! ...  as the input parameters, this is required in order to use a code
   ! ...  independent input parser
   !
@@ -125,7 +125,7 @@ SUBROUTINE iosys()
   !
   USE control_flags, ONLY : diis_ndim, isolve, max_cg_iter, david, tr2, imix, &
                             nmix, iverbosity, niter, pot_order, wfc_order, &
-                            assume_molsys_    => assume_molsys, &
+                            assume_isolated_  => assume_isolated, &
                             remove_rigid_rot_ => remove_rigid_rot, &
                             diago_full_acc_   => diago_full_acc, &
                             tolp_             => tolp, &
@@ -153,7 +153,7 @@ SUBROUTINE iosys()
                              CI_scheme_       => CI_scheme, &
                              fixed_tan_       => fixed_tan, &
                              use_freezing_    => use_freezing, &
-                             k_max_           => k_max, & 
+                             k_max_           => k_max, &
                              k_min_           => k_min, &
                              num_of_images_   => num_of_images, &
                              first_last_opt_  => first_last_opt, &
@@ -173,7 +173,7 @@ SUBROUTINE iosys()
                             trust_radius_max_ => trust_radius_max, &
                             trust_radius_min_ => trust_radius_min, &
                             trust_radius_ini_ => trust_radius_ini, &
-                            w_1_              => w_1, & 
+                            w_1_              => w_1, &
                             w_2_              => w_2
   !
   ! ... CONTROL namelist
@@ -202,7 +202,7 @@ SUBROUTINE iosys()
                                edir, emaxpos, eopreg, eamp, noncolin, lambda, &
                                angle1, angle2, constrained_magnetization,     &
                                B_field, fixed_magnetization, report, lspinorb,&
-                               assume_molsys, spline_ps
+                               assume_isolated, spline_ps
   !
   ! ... ELECTRONS namelist
   !
@@ -353,7 +353,7 @@ SUBROUTINE iosys()
      CALL errore( 'iosys', 'neldw less than 0', 1 )
   !
   SELECT CASE( nspin )
-  CASE( 1 ) 
+  CASE( 1 )
      !
      IF ( noncolin ) nspin = 4
      !
@@ -368,7 +368,7 @@ SUBROUTINE iosys()
      !
      noncolin = .TRUE.
      !
-  CASE DEFAULT 
+  CASE DEFAULT
      !
      CALL errore( 'iosys', 'wrong input value for nspin', 1 )
      !
@@ -439,7 +439,7 @@ SUBROUTINE iosys()
      DO nt = 1, ntyp
         !
         theta = angle1(nt)
-        phi   = angle2(nt) 
+        phi   = angle2(nt)
         !
         mcons(1,nt) = starting_magnetization(nt) * SIN( theta ) * COS( phi )
         mcons(2,nt) = starting_magnetization(nt) * SIN( theta ) * SIN( phi )
@@ -457,7 +457,7 @@ SUBROUTINE iosys()
      !
      DO nt = 1, ntyp
         !
-        theta = angle1(nt) 
+        theta = angle1(nt)
         !
         mcons(3,nt) = cos(theta)
         !
@@ -505,7 +505,7 @@ SUBROUTINE iosys()
      IF ( starting_magnetization(ia) == sm_not_set ) &
         starting_magnetization(ia) = 0.D0
      !
-  END DO  
+  END DO
   !
   IF ( ecutrho <= 0.D0 ) THEN
      !
@@ -614,7 +614,7 @@ SUBROUTINE iosys()
   SELECT CASE( TRIM( calculation ) )
   CASE( 'scf' )
      !
-     lscf  = .TRUE.   
+     lscf  = .TRUE.
      nstep = 1
      !
   CASE( 'nscf' )
@@ -650,7 +650,7 @@ SUBROUTINE iosys()
         !
         IF ( epse <= 20.D0 * ( tr2 / upscale ) ) &
            CALL errore( 'iosys', 'required etot_conv_thr is too small:' // &
-                      & ' conv_thr must be reduced', 1 )   
+                      & ' conv_thr must be reduced', 1 )
         !
      CASE ( 'damp' )
         !
@@ -973,13 +973,13 @@ SUBROUTINE iosys()
           ( CI_scheme /= "manual" ) ) THEN
         !
         CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
-                   & ': unknown CI_scheme', 1 )  
-        !   
+                   & ': unknown CI_scheme', 1 )
+        !
      END IF
      !
      ! ... initialization of logical variables
      !
-     lsteep_des  = .FALSE.     
+     lsteep_des  = .FALSE.
      lquick_min  = .FALSE.
      lbroyden    = .FALSE.
      !
@@ -1019,9 +1019,9 @@ SUBROUTINE iosys()
      CASE default
         !
         CALL errore( 'iosys','calculation=' // TRIM( calculation ) // &
-                   & ': unknown opt_scheme', 1 )  
+                   & ': unknown opt_scheme', 1 )
         !
-     END SELECT             
+     END SELECT
      !
   END IF
   !
@@ -1147,7 +1147,7 @@ SUBROUTINE iosys()
   !
   celldm_  = celldm
   ibrav_   = ibrav
-  nat_     = nat 
+  nat_     = nat
   ntyp_    = ntyp
   edir_    = edir
   emaxpos_ = emaxpos
@@ -1179,8 +1179,9 @@ SUBROUTINE iosys()
   report_   = report
   lambda_   = lambda
   !
-  assume_molsys_ = assume_molsys
-  spline_ps_     = spline_ps    
+  assume_isolated_ = assume_isolated
+  !
+  spline_ps_ = spline_ps
   !
   Hubbard_U_(1:ntyp)      = hubbard_u(1:ntyp)
   Hubbard_alpha_(1:ntyp)  = hubbard_alpha(1:ntyp)
@@ -1225,11 +1226,11 @@ SUBROUTINE iosys()
   write_save_     = write_save
   use_freezing_   = use_freezing
   temp_req_       = temp_req
-  path_thr_       = path_thr 
+  path_thr_       = path_thr
   CI_scheme_      = CI_scheme
-  k_max_          = k_max 
+  k_max_          = k_max
   k_min_          = k_min
-  fixed_tan_      = fixed_tan 
+  fixed_tan_      = fixed_tan
   !
   ! ... BFGS specific
   !
@@ -1273,7 +1274,7 @@ SUBROUTINE iosys()
         celldm_(4) = cosab
      ELSE
         !
-        ! ... triclinic lattice 
+        ! ... triclinic lattice
         !
         celldm_(4) = cosbc
         celldm_(5) = cosac
@@ -1347,7 +1348,7 @@ SUBROUTINE iosys()
         !
         pos(1:3*nat_,image) = RESHAPE( tau, (/ 3 * nat_ /) ) * alat
         !
-     END DO 
+     END DO
      !
   ELSE
      !
@@ -1483,7 +1484,7 @@ SUBROUTINE iosys()
               CALL errore(' metric_setup ',' unknown cell_dofree '//TRIM(cell_dofree), 1 )
 
     END SELECT
-    ! Below one should print out iforceh in some nice form    
+    ! Below one should print out iforceh in some nice form
   !    write(6,*) 'iforceh= ',iforceh
   !
   ! ... read pseudopotentials
@@ -1626,8 +1627,8 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      !
   END DO
   !
-  ! ... The constrain on fixed coordinates is implemented using the array 
-  ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1 
+  ! ... The constrain on fixed coordinates is implemented using the array
+  ! ... if_pos whose value is 0 when the coordinate is to be kept fixed, 1
   ! ... otherwise. fixatom is maintained for compatibility. ( C.S. 15/10/2003 )
   !
   if_pos_(:,:) = if_pos(:,1:nat)
@@ -1736,7 +1737,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   IF ( trd_ht ) THEN
     !
-    symm_type = cell_symmetry 
+    symm_type = cell_symmetry
     at        = TRANSPOSE( rd_ht )
     tcell     = .TRUE.
     !
@@ -1863,8 +1864,8 @@ SUBROUTINE verify_tmpdir( tmp_dir )
         OPEN( UNIT = 4, FILE = TRIM( tmp_dir ) // TRIM( prefix ) // &
             & TRIM( int_to_char( mpime ) ), &
             & STATUS = 'UNKNOWN', FORM = 'UNFORMATTED', IOSTAT = ios )
-        CLOSE( UNIT = 4, STATUS = 'DELETE' ) 
-        ! 
+        CLOSE( UNIT = 4, STATUS = 'DELETE' )
+        !
         IF ( ios /= 0 ) &
            CALL errore( 'outdir: ', TRIM( tmp_dir ) // &
                       & ' non existent or non writable', 1 )

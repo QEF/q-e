@@ -73,11 +73,11 @@ MODULE control_flags
   LOGICAL :: tsdc          = .FALSE. ! cell geometry steepest descent
   LOGICAL :: tzeroc        = .FALSE. ! set to zero the cell geometry velocities
   LOGICAL :: tstress       = .FALSE. ! print stress to standard output
-  LOGICAL :: tortho        = .FALSE. ! use iterative orthogonalization 
+  LOGICAL :: tortho        = .FALSE. ! use iterative orthogonalization
   LOGICAL :: tconjgrad     = .FALSE. ! use conjugate gradient electronic minimization
   LOGICAL :: timing        = .FALSE. ! print out timing information
   LOGICAL :: memchk        = .FALSE. ! check for memory leakage
-  LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor 
+  LOGICAL :: tprnsfac      = .FALSE. ! print out structure factor
   LOGICAL :: tcarpar       = .FALSE. ! tcarpar is set TRUE for a "pure" Car Parrinello simulation
   LOGICAL :: tdamp         = .FALSE. ! Use damped dynamics for electrons
   LOGICAL :: tdampions     = .FALSE. ! Use damped dynamics for ions
@@ -91,16 +91,16 @@ MODULE control_flags
   LOGICAL :: tchi2         = .FALSE. ! Compute Chi^2
   !
   TYPE (convergence_criteria) :: tconvthrs
-                              !  thresholds used to check GS convergence 
+                              !  thresholds used to check GS convergence
   !
   ! ... Ionic vs Electronic step frequency
-  ! ... When "ion_nstep > 1" and "electron_dynamics = 'md' | 'sd' ", ions are 
-  ! ... propagated every "ion_nstep" electronic step only if the electronic 
+  ! ... When "ion_nstep > 1" and "electron_dynamics = 'md' | 'sd' ", ions are
+  ! ... propagated every "ion_nstep" electronic step only if the electronic
   ! ... "ekin" is lower than "ekin_conv_thr"
   !
   LOGICAL :: tionstep = .FALSE.
-  INTEGER :: nstepe   = 1  
-                            !  parameters to control how many electronic steps 
+  INTEGER :: nstepe   = 1
+                            !  parameters to control how many electronic steps
                             !  between ions move
 
   LOGICAL :: tsteepdesc = .FALSE.
@@ -196,10 +196,6 @@ MODULE control_flags
     lcoarsegrained, &! if .TRUE. a coarse-grained phase-space is used
     restart          ! if .TRUE. restart from results of a preceding run
   !
-  LOGICAL, PUBLIC :: &
-    remove_rigid_rot     ! if .TRUE. the total torque acting on the atoms is
-                         ! removed
-  !
   ! ... pw self-consistency
   !
   INTEGER, PUBLIC :: &
@@ -216,7 +212,7 @@ MODULE control_flags
   ! ... pw diagonalization
   !
   REAL(DP), PUBLIC  :: &
-    ethr               ! the convergence threshold for eigenvalues  
+    ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
     david,            &! used on Davidson diagonalization
     isolve,           &! Davidson or CG or DIIS diagonalization
@@ -241,7 +237,7 @@ MODULE control_flags
   !
   INTEGER, PUBLIC :: &
     nstep,            &! number of ionic steps
-    istep = 0          ! current ionic step  
+    istep = 0          ! current ionic step
   LOGICAL, PUBLIC :: &
     conv_ions          ! if .TRUE. ionic convergence has been reached
   REAL(DP), PUBLIC  :: &
@@ -268,15 +264,18 @@ MODULE control_flags
   ! ... miscellany
   !
   LOGICAL, PUBLIC :: &
-    use_para_diago = .FALSE.  ! if .TRUE. a parallel Householder algorithm 
+    use_para_diago = .FALSE.  ! if .TRUE. a parallel Householder algorithm
                               ! can be used
   INTEGER, PUBLIC :: &
     para_diago_dim = 0        ! minimum matrix dimension above which a parallel
                               ! algorithm is used
   !
   LOGICAL, PUBLIC :: &
-    assume_molsys = .FALSE.   ! if .TRUE. the system is assumed to be an
-                              ! isolated molecular one (molecule in supercell)
+    remove_rigid_rot = .FALSE.  ! if .TRUE. the total torque acting on the atoms is
+                                ! removed
+  LOGICAL, PUBLIC :: &
+    assume_isolated = .FALSE.   ! if .TRUE. the system is assumed to be an
+                                ! isolated molecule or cluster (in a supercell)
   !
   INTEGER  :: ortho_max = 0    ! maximum number of iterations in routine ortho
   REAL(DP) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho
@@ -292,14 +291,14 @@ MODULE control_flags
   !
   ! ... Parameter for plotting Vh average
   !
-  LOGICAL,          PUBLIC :: tvhmean = .FALSE.  
+  LOGICAL,          PUBLIC :: tvhmean = .FALSE.
                               !  if TRUE save Vh average to file Vh_mean.out
   REAL(DP),         PUBLIC :: vhrmin = 0.0d0
                               !  starting "radius" for plotting
   REAL(DP),         PUBLIC :: vhrmax = 1.0d0
                               !  maximum "radius" for plotting
   CHARACTER(LEN=1), PUBLIC :: vhasse = 'Z'
-                              !  averaging axis 
+                              !  averaging axis
 
   LOGICAL,          PUBLIC :: tprojwfc = .FALSE.
                               !  in CP controls the printing of wave function projections
@@ -308,7 +307,7 @@ MODULE control_flags
 
   !
   ! ...  end of module-scope declarations
-  ! 
+  !
   !=--------------------------------------------------------------------------=!
   CONTAINS
   !=--------------------------------------------------------------------------=!
@@ -316,7 +315,7 @@ MODULE control_flags
     !------------------------------------------------------------------------
     SUBROUTINE fix_dependencies()
       !------------------------------------------------------------------------
-      ! 
+      !
       IMPLICIT NONE
       !
       ! ... Car Parrinello simulation
@@ -330,7 +329,7 @@ MODULE control_flags
       END IF
       !
       ! ... if thdyn = .FALSE. set TSDC and TZEROC to .FALSE. too.
-      !    
+      !
       IF ( .NOT. thdyn ) THEN
          !
          tsdc   = .FALSE.

@@ -124,6 +124,7 @@ iweights.o \
 kpoint_grid.o \
 lchk_tauxk.o \
 make_pointlists.o \
+makov_payne.o \
 mix_pot.o \
 mix_rho.o \
 mode_group.o \

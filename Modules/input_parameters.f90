@@ -12,7 +12,7 @@ MODULE input_parameters
 !
 !=----------------------------------------------------------------------------=!
 !
-!  this module contains 
+!  this module contains
 !  1) the definitions of all input parameters
 !     (both those read from namelists and those read from cards)
 !  2) the definitions of all namelists
@@ -33,16 +33,16 @@ MODULE input_parameters
   !
 !=----------------------------------------------------------------------------=!
 ! BEGIN manual
-! 
 !
-! * DESCRIPTION OF THE INPUT FILE 
-!  (to be given as standard input) 
+!
+! * DESCRIPTION OF THE INPUT FILE
+!  (to be given as standard input)
 !
 !  The input file has the following layout:
 !
 !     &CONTROL
-!       control_parameter_1, 
-!       control_parameter_2, 
+!       control_parameter_1,
+!       control_parameter_2,
 !       .......
 !       control_parameter_Lastone
 !     /
@@ -95,10 +95,10 @@ MODULE input_parameters
 !       ( when appropriate default values are marked with a "*" )
 !
 
-        CHARACTER(LEN=80) :: title = ' ' 
+        CHARACTER(LEN=80) :: title = ' '
           ! title = 'title for this simulation'
 
-        CHARACTER(LEN=80) :: calculation = 'none'  
+        CHARACTER(LEN=80) :: calculation = 'none'
           ! Specify the type of the simulation
           ! 'scf'      = electron minimization/selfconsistency
           ! 'nscf'     = nonselfconsistent calculation of electron states
@@ -131,7 +131,7 @@ MODULE input_parameters
         DATA verbosity_allowed / 'high' , 'default' , 'low' , 'minimal' , 'default+projwfc' /
 
         CHARACTER(LEN=80) :: restart_mode = 'restart'
-          ! restart_mode = 'from_scratch' | 'restart'* | 'reset_counters' 
+          ! restart_mode = 'from_scratch' | 'restart'* | 'reset_counters'
           ! specify how to start/restart the simulation
           !   'from_scratch'    start a new simulation from scratch,
           !                     with random wave functions
@@ -146,12 +146,12 @@ MODULE input_parameters
           !                     the counter and averages
         CHARACTER(LEN=80) :: restart_mode_allowed(3)
         DATA restart_mode_allowed / 'from_scratch', 'restart', 'reset_counters' /
- 
+
         INTEGER :: nstep = 10
           ! number of simulation steps, see "restart_mode"
 
         INTEGER :: iprint = 10
-          ! number of steps between successive writings of relevant physical 
+          ! number of steps between successive writings of relevant physical
           ! quantities to standard output and to files "fort.3?" or "prefix.???"
           ! depending on "prefix" parameter.
           ! In PW iprint is compared also with convergence iterations, and
@@ -164,21 +164,21 @@ MODULE input_parameters
 
         LOGICAL :: tstress = .TRUE.
           ! This flag controls the printing of the stress, its value is overwritten
-          ! and set to ".TRUE." when the cell is moving 
+          ! and set to ".TRUE." when the cell is moving
           !  .TRUE.  write the stress tensor to standard output every "iprint" steps
           !  .FALSE. do not write the stress tensor stdout
 
         LOGICAL :: tprnfor = .TRUE.
-          ! This flag controls the printing of the interatomic forces, 
-          ! its value is overwritten and set to ".TRUE." the ions are moving 
+          ! This flag controls the printing of the interatomic forces,
+          ! its value is overwritten and set to ".TRUE." the ions are moving
           !  .TRUE.  write the atomic forces to standard output every "iprint" steps
           !  .FALSE. do not write atomic forces to stdout
 
         REAL(DP) :: dt = 1.0d0
-          ! time step of the CP molecular dynamics simulation, 
+          ! time step of the CP molecular dynamics simulation,
           ! in atomic units ( 1 a.u. of time = 2.4189 * 10^-17 s ),
           ! for non CP calculations, this represents the time advancing parameter.
-          ! Note: typical values for CP simulations are between 1 and 10 a.u. 
+          ! Note: typical values for CP simulations are between 1 and 10 a.u.
           ! In PW dt is used for Born-Oppenheimer molecular dynamics, and
           ! its value is usually larger than for CP dynamics, since it is related
           ! only to the mass of ions.
@@ -189,12 +189,12 @@ MODULE input_parameters
           ! and it is opened in the running directory.
 
         INTEGER :: ndw = 50
-          ! Fortran unit to which the code writes the restart file 
+          ! Fortran unit to which the code writes the restart file
           ! at the end of the simulation, its value should be greather than 50
           ! and it is opened in the running directory.
 
         CHARACTER(LEN=256) :: outdir = './'
-          ! specify the directory where the code opens output and restart 
+          ! specify the directory where the code opens output and restart
           ! files. When possible put this directory in the fastest available
           ! filesystem ( not NFS! )
 
@@ -212,7 +212,7 @@ MODULE input_parameters
 
         CHARACTER(LEN=256) :: wfcdir = 'undefined'
           ! scratch directory that is hopefully local to the node
-          ! to store large, usually temporary files. 
+          ! to store large, usually temporary files.
 
         REAL(DP) :: max_seconds = 1.0d+7
           ! smoothly terminate program after the specified number of seconds
@@ -220,7 +220,7 @@ MODULE input_parameters
           ! the queuing system.
 
         REAL(DP) :: ekin_conv_thr = 1.0d-5
-          ! convergence criterion, minimizing the electrons this criterion is met 
+          ! convergence criterion, minimizing the electrons this criterion is met
           ! when "ekin < ekin_conv_thr"
           ! convergence is achieved when all criteria are met
 
@@ -235,11 +235,11 @@ MODULE input_parameters
           ! when "MAXVAL(fion) < forc_conv_thr", where fion are the atomic forces
           ! convergence is achieved when all criteria are met
 
-        CHARACTER(LEN=80) :: disk_io = 'default' 
+        CHARACTER(LEN=80) :: disk_io = 'default'
           ! disk_io = 'high', 'default', 'low', 'minimal'
-          ! Specify the amount of I/O activities 
+          ! Specify the amount of I/O activities
 
-        LOGICAL :: tefield  = .FALSE. 
+        LOGICAL :: tefield  = .FALSE.
           ! if .TRUE. a finite electric field is added to the local potential
           ! only used in PW
 
@@ -248,11 +248,11 @@ MODULE input_parameters
           ! only used in PW
 
 
-        LOGICAL :: dipfield = .FALSE. 
+        LOGICAL :: dipfield = .FALSE.
           ! if .TRUE. the dipole field is subtracted
           ! only used in PW
 
-        LOGICAL :: lberry = .FALSE. 
+        LOGICAL :: lberry = .FALSE.
           ! if .TRUE., calculate polarization
 
         INTEGER :: gdir = 0
@@ -266,7 +266,7 @@ MODULE input_parameters
           !if true a static homogeneous electric field is present
 
 
-        INTEGER  :: nberrycyc = 1 
+        INTEGER  :: nberrycyc = 1
           !number of covergence cycles on electric field
 
 
@@ -319,11 +319,11 @@ MODULE input_parameters
           !     14      Triclinic P                        1, <1>
           !
           ! Note: in variable cell CP molecular dynamics, usually one do not want
-          !       to put constraints on the cell symmetries, therefore an 
+          !       to put constraints on the cell symmetries, therefore an
           !       ibrav = 14 is used
 
         REAL(DP) :: celldm(6) = 0.0d0
-          ! dimensions of the cell 
+          ! dimensions of the cell
           !   celldm(1) = a
           !   celldm(2) = b/a
           !   celldm(3) = c/a
@@ -353,21 +353,21 @@ MODULE input_parameters
           ! may be fractionary in PW, but not in CP and FPMD !
 
         REAL(DP):: tot_charge = 0.0d0
-          ! total system charge 
+          ! total system charge
 
         INTEGER :: multiplicity = 0
           ! spin multiplicity (2s+1), 1 for singlet, 2 for doublet etc.
           ! when multiplicity = 0, it is unspecified
 
         INTEGER :: tot_magnetization = -1
-          ! majority - minority spin. 
+          ! majority - minority spin.
           ! A value < 0 ==> unspecified
 !
 ! A comment about variables nelup, neldw, multiplicity and tot_magnetization:
 ! All these variables contain the same information and must be kept harmonized.
 ! Variables nelup and neldw will be removed in future versions of the code.
-! Variables multiplicity and tot_magnetization, though redundent will probably 
-! coexist since multiplicity is the more natural way (?)for defining the spin 
+! Variables multiplicity and tot_magnetization, though redundent will probably
+! coexist since multiplicity is the more natural way (?)for defining the spin
 ! configuratio in the quantum-chemistry community while tot_magnetization is
 ! more natural (?) when dealing with extended systems.
 !
@@ -423,7 +423,7 @@ MODULE input_parameters
           ! "nspin = 4" for NON COLLINEAR simulations
 
         REAL(DP) :: nelup = 0.d0, neldw = 0.d0
-          ! meaningful only if "nspin = 2", 
+          ! meaningful only if "nspin = 2",
           ! "nelup" is the number of electrons with spin up
           ! "neldw" is the number of electrons with spin down
           ! Remember the following relation hold "nelec = nelup + neldw"
@@ -434,13 +434,13 @@ MODULE input_parameters
 
         REAL(DP) :: ecfixed = 0.0d0, qcutz = 0.0d0, q2sigma = 0.0d0
           ! parameters for constant cut-off simulations
-          ! "ecfixed" is the value (in Rydbergs) of the constant-cutoff 
-          ! "qcutz" and "q2sigma" are the height and the width (in Rydbergs) 
-          !   of the energy step for reciprocal vector whose square modulus 
+          ! "ecfixed" is the value (in Rydbergs) of the constant-cutoff
+          ! "qcutz" and "q2sigma" are the height and the width (in Rydbergs)
+          !   of the energy step for reciprocal vector whose square modulus
           !   is greater than  "ecfixed"
 
         CHARACTER(LEN=80) :: input_dft = 'none'
-          ! Variable used to overwrite dft definition contained in 
+          ! Variable used to overwrite dft definition contained in
           ! pseudopotential files .
           ! Default value is 'none' meaning that DFT is take from pseudos.
           ! Allowed values: any legal DFT value as defined in pseudopotentials.
@@ -498,12 +498,12 @@ MODULE input_parameters
         REAL(DP) :: cosbc = 0.0d0
 
         INTEGER   :: edir = 0
- 
+
         REAL(DP) :: emaxpos = 0.0d0
 
         REAL(DP) :: eopreg = 0.0d0
 
-        REAL(DP) :: eamp = 0.0d0 
+        REAL(DP) :: eamp = 0.0d0
 
         LOGICAL :: noncolin = .FALSE.
 
@@ -511,14 +511,14 @@ MODULE input_parameters
 
         REAL(DP) :: lambda = 1.0D0
 
-        REAL(DP) :: fixed_magnetization(3) = 0.0D0 
+        REAL(DP) :: fixed_magnetization(3) = 0.0D0
 
         REAL(DP) :: angle1(nsx) = 0.0D0
 
         REAL(DP) :: angle2(nsx) = 0.0D0
 
         INTEGER :: report = 1
-  
+
         CHARACTER(LEN=80) :: constrained_magnetization = 'none'
 !
 ! Used to perform constrained calculations in magnetic systems
@@ -545,7 +545,7 @@ MODULE input_parameters
 !          of angle1, and the penalty functional is:
 !  - LAMBDA * SUM_{itype} ( mag_mom(3,itype)/mag_mom_tot - cos(angle1(ityp) )**2
 !
-        REAL(DP) :: B_field(3) = 0.0D0 
+        REAL(DP) :: B_field(3) = 0.0D0
 !
 ! A fixed magnetic field defined by the vector B_field is added
 ! to the exchange and correlation magnetic field.
@@ -553,24 +553,24 @@ MODULE input_parameters
 ! Only B_field(3) can be used if nspin=2.
 !
         CHARACTER(LEN=80) :: sic = 'none'
-          ! sic = 'none' | 'sic_mac' 
-          ! 'none'          no SIC 
-          ! 'sic_mac'       SIC correction: Exc[rhoup,rhodown] 
-          !                         - sic_alpha * ( Exc[rhoup, rhodwn] - Exc[ rhodwn, rhodwn ] ) 
+          ! sic = 'none' | 'sic_mac'
+          ! 'none'          no SIC
+          ! 'sic_mac'       SIC correction: Exc[rhoup,rhodown]
+          !                         - sic_alpha * ( Exc[rhoup, rhodwn] - Exc[ rhodwn, rhodwn ] )
           !                         + Uhartree[rhoup+rhodown] - sic_epsilon * Uhartree[rhoup-rhodown]
 
         REAL(DP) :: sic_epsilon = 0.0d0
         REAL(DP) :: sic_alpha   = 0.0d0
 
         LOGICAL   :: force_pairing = .FALSE.
-          !  FORCEPAIRING 
+          !  FORCEPAIRING
           !      paires electrons forcedly in two spin channels calculation
           !      works for stuctures with at most one unpaired eletron
           ! just a comment: nelu is the number of el with spin up
           ! while neld== number of el with spin down
           ! define the unpaired el with spin up
 
-        LOGICAL :: assume_molsys = .FALSE.
+        LOGICAL :: assume_isolated = .FALSE.
 
         ! use spline interpolation for pseudopotential
         LOGICAL :: spline_ps = .false.
@@ -581,7 +581,7 @@ MODULE input_parameters
              occupations, degauss, nelup, neldw, nspin, ecfixed,              &
              qcutz, q2sigma, xc_type, lda_plus_U, Hubbard_U, Hubbard_alpha,   &
              edir, emaxpos, eopreg, eamp, smearing, starting_ns_eigenvalue,   &
-             U_projection_type, input_dft, la2F, assume_molsys,               &
+             U_projection_type, input_dft, la2F, assume_isolated,             &
 #if defined (EXX)
              x_gamma_extrapolation, nqx1, nqx2, nqx3,                         &
 #endif
@@ -596,21 +596,21 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 
         REAL(DP) :: emass = 0.0d0
-          ! effective electron mass in the CP Lagrangian, 
+          ! effective electron mass in the CP Lagrangian,
           ! in atomic units ( 1 a.u. of mass = 1/1822.9 a.m.u. = 9.10939 * 10^-31 kg )
           ! Typical values in CP simulation are between 100. and 1000.
 
         REAL(DP) :: emass_cutoff = 0.0d0
           ! mass cut-off (in Rydbergs) for the Fourier acceleration
-          ! effective mass is rescaled for "G" vector components with kinetic 
-          ! energy above "emass_cutoff" 
+          ! effective mass is rescaled for "G" vector components with kinetic
+          ! energy above "emass_cutoff"
           ! Use a value grether than "ecutwfc" to disable Fourier acceleration.
 
-        CHARACTER(LEN=80) :: orthogonalization = 'ortho'  
+        CHARACTER(LEN=80) :: orthogonalization = 'ortho'
           ! orthogonalization = 'Gram-Schmidt' | 'ortho'*
           ! selects the orthonormalization method for electronic wave functions
           !  'Gram-Schmidt'  use Gram-Schmidt algorithm
-          !  'ortho'         use iterative algorithm 
+          !  'ortho'         use iterative algorithm
 
         REAL(DP) :: ortho_eps = 1.d-8
           ! meaningful only if orthogonalization = 'ortho'
@@ -635,11 +635,11 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: electron_dynamics = 'none'
           ! electron_dynamics = 'default' | 'sd' | 'cg' | 'damp' | 'none' | 'verlet'
           ! set how electrons shold be moved
-          ! 'none'    electronic degrees of fredom (d.o.f.) are kept fixed 
-          ! 'sd'      steepest descent algorithm is used to minimize electronic d.o.f. 
-          ! 'cg'      conjugate gradient algorithm is used to minimize electronic d.o.f. 
-          ! 'damp'    damped dynamics is used to propagate electronic d.o.f. 
-          ! 'verlet'  standard Verlet algorithm is used to propagate electronic d.o.f. 
+          ! 'none'    electronic degrees of fredom (d.o.f.) are kept fixed
+          ! 'sd'      steepest descent algorithm is used to minimize electronic d.o.f.
+          ! 'cg'      conjugate gradient algorithm is used to minimize electronic d.o.f.
+          ! 'damp'    damped dynamics is used to propagate electronic d.o.f.
+          ! 'verlet'  standard Verlet algorithm is used to propagate electronic d.o.f.
           ! 'default' the value depends on variable "calculation"
 
         CHARACTER(LEN=80) :: electron_dynamics_allowed(6)
@@ -650,8 +650,8 @@ MODULE input_parameters
           ! meaningful only if " electron_dynamics = 'damp' "
           ! damping frequency times delta t, optimal values could be
           ! calculated with the formula
-          !        sqrt(0.5*log((E1-E2)/(E2-E3))) 
-          ! where E1 E2 E3 are successive values of the DFT total energy 
+          !        sqrt(0.5*log((E1-E2)/(E2-E3)))
+          ! where E1 E2 E3 are successive values of the DFT total energy
           ! in a steepest descent simulations
 
         CHARACTER(LEN=80) :: electron_velocities = 'default'
@@ -659,11 +659,11 @@ MODULE input_parameters
           ! 'zero'    restart setting electronic velocities to zero
           ! 'default' restart using electronic velocities of the previous run
 
-        CHARACTER(LEN=80) :: electron_temperature = 'not_controlled' 
+        CHARACTER(LEN=80) :: electron_temperature = 'not_controlled'
           ! electron_temperature = 'nose' | 'not_controlled'* | 'rescaling'
           ! 'nose'           control electronic temperature using Nose thermostat
           !                  see parameter "fnosee" and "ekincw"
-          ! 'rescaling'      control electronic temperature via velocities rescaling 
+          ! 'rescaling'      control electronic temperature via velocities rescaling
           ! 'not_controlled' electronic temperature is not controlled
 
         REAL(DP) :: ekincw = 0.0d0
@@ -673,7 +673,7 @@ MODULE input_parameters
 
         REAL(DP) :: fnosee = 0.0d0
           ! meaningful only with "electron_temperature = 'nose' "
-          ! oscillation frequency of the nose thermostat (in terahertz) 
+          ! oscillation frequency of the nose thermostat (in terahertz)
 
         CHARACTER(LEN=80) :: startingwfc = 'random'
           ! startingwfc = 'atomic' | 'random'* | 'none'
@@ -695,7 +695,7 @@ MODULE input_parameters
         INTEGER :: empty_states_nbnd = 0
           ! number of empty states to be calculated every iprint steps
           ! default value is zero
-        
+
         INTEGER :: empty_states_maxstep = 100
           ! meaningful only with "empty_states_nbnd > 0 "
           ! maximum number of iteration in the empty states calculation
@@ -724,7 +724,7 @@ MODULE input_parameters
 
         REAL(DP) :: diis_wthr = 1.d-4
           ! meaningful only with " electron_dynamics = 'diis' "
-          ! convergence threshold for wave function 
+          ! convergence threshold for wave function
           ! this criterion is satisfied when the maximum change
           ! in the wave functions component between two diis steps
           ! is less than this threshold
@@ -747,7 +747,7 @@ MODULE input_parameters
 
         REAL(DP) :: diis_fthr = 1.d-3
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
-          ! convergence threshold for ionic force 
+          ! convergence threshold for ionic force
           ! this criterion is satisfied when the maximum change
           ! in the atomic force between two diis steps
           ! is less than this threshold
@@ -802,7 +802,7 @@ MODULE input_parameters
         LOGICAL :: diis_chguess = .FALSE.
           ! meaningful only with "electron_dynamics='diis' " and "diis_rot=.TRUE."
           ! if "diis_chguess = .TRUE." enable charge density guess
-          ! between two diis step, defaut value is "diis_chguess = .FALSE." 
+          ! between two diis step, defaut value is "diis_chguess = .FALSE."
 
         CHARACTER(LEN=80) :: mixing_mode = 'default'
           ! mixing = ????
@@ -876,21 +876,21 @@ MODULE input_parameters
         REAL(DP) :: rotation_damping = 0
           ! damping for the occupational degrees of freedom.
 
-        LOGICAL :: tcg = .true. 
+        LOGICAL :: tcg = .true.
           ! if true perform in cpv conjugate gradient minimization of electron energy
 
         INTEGER :: maxiter = 40
           ! man number of conjugate gradient iterations
 
-        REAL(DP)  :: etresh =0.1d-6 
+        REAL(DP)  :: etresh =0.1d-6
           ! treshhold on energy
 
-        REAL(DP) :: passop =0.3d0 
+        REAL(DP) :: passop =0.3d0
           ! small step for parabolic interpolation
         INTEGER  :: epol = 3
           ! electric field direction
 
-        REAL(DP) :: efield =0.d0 
+        REAL(DP) :: efield =0.d0
           ! electric field intensity in atomic units
 
        INTEGER  :: epol2 = 3
@@ -931,18 +931,18 @@ MODULE input_parameters
 !
         CHARACTER(LEN=80) :: phase_space = 'full'
           ! phase_space = 'full' | 'coarse-grained'
-          ! 'full'             the full phase-space is used for the ionic 
+          ! 'full'             the full phase-space is used for the ionic
           !                    dynamics
-          ! 'coarse-grained'   a coarse-grained phase-space, defined by a set 
+          ! 'coarse-grained'   a coarse-grained phase-space, defined by a set
           !                    of constraints, is used for the ionic dynamics
-        
+
         CHARACTER(LEN=80) :: phase_space_allowed(2)
         DATA phase_space_allowed / 'full', 'coarse-grained' /
 
-        CHARACTER(LEN=80) :: ion_dynamics = 'none' 
-          ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'bfgs' | 'none'*  
+        CHARACTER(LEN=80) :: ion_dynamics = 'none'
+          ! ion_dynamics = 'sd' | 'cg' | 'damp' | 'verlet' | 'bfgs' | 'none'*
           ! set how ions shold be moved
-          ! 'none'     ions are kept fixed 
+          ! 'none'     ions are kept fixed
           ! 'bfgs'     a BFGS algorithm is used to minimize ionic configuration
           ! 'sd'       steepest descent algorithm is used to minimize ionic configuration
           ! 'cg'       conjugate gradient algorithm is used to minimize ionic configuration
@@ -961,19 +961,19 @@ MODULE input_parameters
           ! meaningful only if " ion_dynamics = 'damp' "
           ! damping frequency times delta t, optimal values could be
           ! calculated with the formula
-          !        sqrt(0.5*log((E1-E2)/(E2-E3))) 
-          ! where E1 E2 E3 are successive values of the DFT total energy 
+          !        sqrt(0.5*log((E1-E2)/(E2-E3)))
+          ! where E1 E2 E3 are successive values of the DFT total energy
           ! in a ionic steepest descent simulation
 
-        CHARACTER(LEN=80) :: ion_positions = 'default' 
-          ! ion_positions = 'default'* | 'from_input' 
+        CHARACTER(LEN=80) :: ion_positions = 'default'
+          ! ion_positions = 'default'* | 'from_input'
           ! 'default'    restart the simulation with atomic positions read
           !              from the restart file
           ! 'from_input' restart the simulation with atomic positions read
           !              from standard input ( see the card 'ATOMIC_POSITIONS' )
 
-        CHARACTER(LEN=80) :: ion_velocities = 'default' 
-          ! ion_velocities = 'zero' | 'default'* | 'random' | 'from_input' 
+        CHARACTER(LEN=80) :: ion_velocities = 'default'
+          ! ion_velocities = 'zero' | 'default'* | 'random' | 'from_input'
           ! 'default'    restart the simulation with atomic velocities read
           !              from the restart file
           ! 'random'     start the simulation with random atomic velocities
@@ -981,17 +981,17 @@ MODULE input_parameters
           !              from standard input (see the card 'ATOMIC_VELOCITIES' )
           ! 'zero'       restart the simulation with atomic velocities set to zero
 
-        CHARACTER(LEN=80) :: ion_temperature = 'not_controlled' 
+        CHARACTER(LEN=80) :: ion_temperature = 'not_controlled'
           ! ion_temperature = 'nose' | 'not_controlled'* | 'rescaling' |
           !    'berendsen' | 'andersen' | 'rescale-v' | 'rescale-T' | 'reduce-T'
           !
           ! 'nose'           control ionic temperature using Nose thermostat
           !                  see parameters "fnosep" and "tempw"
-          ! 'rescaling'      control ionic temperature via velocity rescaling 
+          ! 'rescaling'      control ionic temperature via velocity rescaling
           !                  see parameters "tempw" and "tolp"
-          ! 'rescale-v'      control ionic temperature via velocity rescaling 
-          !                  see parameters "tempw" and "nraise" 
-          ! 'rescale-T'      control ionic temperature via velocity rescaling 
+          ! 'rescale-v'      control ionic temperature via velocity rescaling
+          !                  see parameters "tempw" and "nraise"
+          ! 'rescale-T'      control ionic temperature via velocity rescaling
           !                  see parameter "delta_t"
           ! 'reduce-T'       reduce ionic temperature
           !                  see parameters "nraise", delta_t"
@@ -1008,7 +1008,7 @@ MODULE input_parameters
 
         REAL(DP) :: fnosep( nhclm )  = 50.0d0
           ! meaningful only with "ion_temperature = 'nose' "
-          ! oscillation frequency of the nose thermostat (in terahertz) 
+          ! oscillation frequency of the nose thermostat (in terahertz)
           ! nhclm is a max length for the chain
 
         INTEGER   ::  nhpcl = 0
@@ -1059,35 +1059,35 @@ MODULE input_parameters
         CHARACTER(LEN=80) :: pot_extrapolation = 'default', &
                              wfc_extrapolation = 'default'
           !  These variables are used only by PWSCF
-        
+
         LOGICAL :: refold_pos
         LOGICAL :: remove_rigid_rot = .FALSE.
-        
+
         !
         ! ... delta_T, nraise, tolp are used to change temperature in PWscf
         !
-        
+
         REAL(DP) :: delta_t = 1.D0
 
         INTEGER :: nraise = 1
-        
+
         !
         ! ... variables added for "path" calculations
         !
-        
+
         !
         ! ... these are two auxiliary variables used in read_cards to
         ! ... distinguish among neb and smd done in the full phase-space
         ! ... or in the coarse-grained phase-space
         !
-        LOGICAL :: full_phs_path_flag = .FALSE. 
-        LOGICAL :: cg_phs_path_flag   = .FALSE.        
+        LOGICAL :: full_phs_path_flag = .FALSE.
+        LOGICAL :: cg_phs_path_flag   = .FALSE.
         !
         INTEGER :: input_images = 0
         !
         INTEGER :: num_of_images = 0
         !
-        CHARACTER(LEN=80) :: CI_scheme = 'no-CI' 
+        CHARACTER(LEN=80) :: CI_scheme = 'no-CI'
           ! CI_scheme = 'no-CI' | 'auto' | 'manual'
           ! set the Climbing Image scheme
           ! 'no-CI'       Climbing Image is not used
@@ -1103,8 +1103,8 @@ MODULE input_parameters
         LOGICAL :: fixed_tan      = .FALSE.
         LOGICAL :: write_save     = .FALSE.
         !
-        CHARACTER(LEN=80) :: opt_scheme = 'quick-min' 
-          ! minimization_scheme = 'quick-min' | 'damped-dyn' | 
+        CHARACTER(LEN=80) :: opt_scheme = 'quick-min'
+          ! minimization_scheme = 'quick-min' | 'damped-dyn' |
           !                       'mol-dyn'   | 'sd'
           ! set the minimization algorithm
           ! 'quick-min'   projected molecular dynamics
@@ -1113,7 +1113,7 @@ MODULE input_parameters
           ! 'langevin'    langevin dynamics
         !
         CHARACTER(LEN=80) :: opt_scheme_allowed(4)
-        DATA opt_scheme_allowed / 'quick-min', 'broyden', 'sd', 'langevin' /  
+        DATA opt_scheme_allowed / 'quick-min', 'broyden', 'sd', 'langevin' /
         !
         REAL (DP)  :: temp_req = 0.D0
           ! meaningful only when minimization_scheme = 'sim-annealing'
@@ -1126,55 +1126,55 @@ MODULE input_parameters
         !
         ! ... variables added for new BFGS algorithm
         !
-        
+
         INTEGER ::  bfgs_ndim = 1
-                            
+
         REAL(DP)  :: trust_radius_max = 0.8D0
         REAL(DP)  :: trust_radius_min = 1.D-3
         REAL(DP)  :: trust_radius_ini = 0.5D0
-                               
+
         REAL(DP)  :: w_1 = 0.5D-1
-        REAL(DP)  :: w_2 = 0.5D0 
+        REAL(DP)  :: w_2 = 0.5D0
 
         REAL(DP)  :: sic_rloc = 0.0d0
 
         !
         ! ...  variable added for SMD  ( Y.K. 04/15/2004 )
         !
-  
+
         LOGICAL :: smd_polm = .FALSE.
           ! polynomial interpolation for the initial path.
-        
+
         INTEGER :: smd_kwnp = 2
           ! # of known points for polm. interp.
-  
+
         LOGICAL :: smd_linr = .FALSE.
-          ! linear interpolation for the initial path. 
-  
+          ! linear interpolation for the initial path.
+
         LOGICAL :: smd_stcd = .FALSE.
           ! for molecular reactions, make the 6 degrees of
           ! the same to prevent rotation and translation
-          ! at the initial state.  
-  
-        INTEGER :: smd_stcd1, smd_stcd2, smd_stcd3  
+          ! at the initial state.
+
+        INTEGER :: smd_stcd1, smd_stcd2, smd_stcd3
           ! for STCD = .true.
-  
+
         INTEGER :: smd_codf = 50, smd_forf = 50, smd_smwf = 1
           ! Frequency of writing coord, force, replica
           ! files
-  
+
         INTEGER :: smd_lmfreq = 1
           ! Frequencey of computing the Lag. mul.
-  
+
         REAL (DP) :: smd_tol = 0.0001d0
           ! Tolerance in constraints in units of
-          ! [alpha(k)-alpha(k-1)] - 1/SM_P      
+          ! [alpha(k)-alpha(k-1)] - 1/SM_P
           !
-        
+
         INTEGER :: smd_maxlm = 10
           ! Max number of iterations for calculating
           ! Lag. mul.
-  
+
         LOGICAL :: smd_smcp = .TRUE.
         LOGICAL :: smd_smopt = .FALSE.
         LOGICAL :: smd_smlm = .FALSE.
@@ -1184,16 +1184,16 @@ MODULE input_parameters
          !       state
          ! smlm  for SMD.
          ! splc  for future sp locater using SMD.
-  
+
         REAL (DP) :: smd_ene_ini = 1.D0
         REAL (DP) :: smd_ene_fin = 1.D0
         !
         REAL (DP) :: smd_spal = 1.D0
-        
+
         !
         ! ... variable for meta-dynamics
         !
-        
+
         INTEGER  :: fe_nstep = 100
         INTEGER  :: sw_nstep = 10
         INTEGER  :: eq_nstep = 0
@@ -1223,18 +1223,18 @@ MODULE input_parameters
 !=----------------------------------------------------------------------------=!
 !
 
-        CHARACTER(LEN=80) :: cell_parameters = 'default' 
-          ! cell_parameters = 'default'* | 'from_input' 
+        CHARACTER(LEN=80) :: cell_parameters = 'default'
+          ! cell_parameters = 'default'* | 'from_input'
           ! 'default'    restart the simulation with cell parameters read
-          !              from the restart file or "celldm" if 
+          !              from the restart file or "celldm" if
           !              "restart = 'from_scratch'"
           ! 'from_input' restart the simulation with cell parameters
           !              from standard input ( see the card 'CELL_PARAMETERS' )
 
         CHARACTER(LEN=80) :: cell_dynamics  = 'none'
-          ! cell_dynamics = 'sd' | 'pr' | 'none'*  
+          ! cell_dynamics = 'sd' | 'pr' | 'none'*
           ! set how cell shold be moved
-          ! 'none'   cell is kept fixed 
+          ! 'none'   cell is kept fixed
           ! 'sd'     steepest descent algorithm is used to minimize the cell
           ! 'pr'     standard Verlet algorithm is used to propagate the cell
 
@@ -1260,7 +1260,7 @@ MODULE input_parameters
           ! cell_temperature = 'nose' | 'not_controlled'* | 'rescaling'
           ! 'nose'           control cell temperature using Nose thermostat
           !                  see parameters "fnoseh" and "temph"
-          ! 'rescaling'      control cell temperature via velocities rescaling 
+          ! 'rescaling'      control cell temperature via velocities rescaling
           ! 'not_controlled' cell temperature is not controlled
           ! NOT used in FPMD
 
@@ -1271,7 +1271,7 @@ MODULE input_parameters
 
         REAL(DP) :: fnoseh = 1.0d0
           ! meaningful only with "cell_temperature = 'nose' "
-          ! oscillation frequency of the nose thermostat (in terahertz) 
+          ! oscillation frequency of the nose thermostat (in terahertz)
 
         REAL(DP) :: greash = 0.0d0
           ! same as "grease", for cell damped dynamics
@@ -1299,8 +1299,8 @@ MODULE input_parameters
           ! meaningful only if " cell_dynamics = 'damp' "
           ! damping frequency times delta t, optimal values could be
           ! calculated with the formula
-          !        sqrt(0.5*log((E1-E2)/(E2-E3))) 
-          ! where E1 E2 E3 are successive values of the DFT total energy 
+          !        sqrt(0.5*log((E1-E2)/(E2-E3)))
+          ! where E1 E2 E3 are successive values of the DFT total energy
           ! in a ionic steepest descent simulation
 
         REAL(DP) :: press_conv_thr = 0.5D0
@@ -1350,13 +1350,13 @@ MODULE input_parameters
 !
 
         INTEGER :: modenum = 0
-        
+
         REAL(DP) :: xqq(3) = 0.0d0
           ! coordinates of q point for phonon calculation
 
         NAMELIST / phonon / modenum, xqq
 
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !  WANNIER Namelist Input Parameters
 !=----------------------------------------------------------------------------=!
 
@@ -1401,9 +1401,9 @@ MODULE input_parameters
 ! ----------------------------------------------------------------
 ! BEGIN manual
 !
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !  CARDS parameters
-!=----------------------------------------------------------------------------=!  
+!=----------------------------------------------------------------------------=!
 !
 !  Note: See file read_cards.f90 for card syntax and usage
 !
@@ -1419,8 +1419,8 @@ MODULE input_parameters
 !    ATOMIC_POSITIONS
 !
         REAL(DP), ALLOCATABLE :: rd_pos(:,:)  ! unsorted positions from input
-        INTEGER,  ALLOCATABLE :: sp_pos(:)   
-        INTEGER,  ALLOCATABLE :: if_pos(:,:) 
+        INTEGER,  ALLOCATABLE :: sp_pos(:)
+        INTEGER,  ALLOCATABLE :: if_pos(:,:)
         INTEGER,  ALLOCATABLE :: id_loc(:)
         INTEGER,  ALLOCATABLE :: na_inp(:)
         LOGICAL  :: tapos = .FALSE.
@@ -1433,7 +1433,7 @@ MODULE input_parameters
         !
         REAL(DP), ALLOCATABLE :: pos(:,:)
         !
-        ! ... workaround for IBM xlf bug, compiler can't manage large 
+        ! ... workaround for IBM xlf bug, compiler can't manage large
         !     array initialization
 
 !
@@ -1517,7 +1517,7 @@ MODULE input_parameters
 !
 !    CONSTRAINTS
 !
-      INTEGER :: nc_fields = 4   ! max number of fields that is allowed to 
+      INTEGER :: nc_fields = 4   ! max number of fields that is allowed to
                                  ! define a constraint
 
       INTEGER  :: nconstr_inp    = 0
@@ -1581,28 +1581,28 @@ CONTAINS
     !
     INTEGER, INTENT(IN) :: ntyp, nat
     !
-    IF( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
-    IF( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
-    IF( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
-    IF( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
-    IF( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
-    IF( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
-    IF( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
+    IF ( ALLOCATED( rd_pos ) ) DEALLOCATE( rd_pos )
+    IF ( ALLOCATED( sp_pos ) ) DEALLOCATE( sp_pos )
+    IF ( ALLOCATED( if_pos ) ) DEALLOCATE( if_pos )
+    IF ( ALLOCATED( id_loc ) ) DEALLOCATE( id_loc )
+    IF ( ALLOCATED( na_inp ) ) DEALLOCATE( na_inp )
+    IF ( ALLOCATED( rd_vel ) ) DEALLOCATE( rd_vel )
+    IF ( ALLOCATED( sp_vel ) ) DEALLOCATE( sp_vel )
     !
-    ALLOCATE( rd_pos(3,nat) )
-    ALLOCATE( sp_pos(nat)   )
-    ALLOCATE( if_pos(3,nat) )
-    ALLOCATE( id_loc(nat)   )
-    ALLOCATE( na_inp(ntyp)  )
-    ALLOCATE( rd_vel(3,nat) )
-    ALLOCATE( sp_vel(nat)   )
+    ALLOCATE( rd_pos( 3, nat ) )
+    ALLOCATE( sp_pos( nat)   )
+    ALLOCATE( if_pos( 3, nat ) )
+    ALLOCATE( id_loc( nat)   )
+    ALLOCATE( na_inp( ntyp)  )
+    ALLOCATE( rd_vel( 3, nat ) )
+    ALLOCATE( sp_vel( nat)   )
     !
-    rd_pos = 0.D0 
+    rd_pos = 0.D0
     sp_pos = 0
     if_pos = 1
     id_loc = 0
     na_inp = 0
-    rd_vel = 0.0d0
+    rd_vel = 0.D0
     sp_vel = 0
     !
     RETURN
@@ -1611,10 +1611,10 @@ CONTAINS
 
   SUBROUTINE allocate_input_constr()
     !
-    IF( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp ) 
-    IF( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
-    IF( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
-    IF( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
+    IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
+    IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
+    IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
+    IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
     !
     ALLOCATE( constr_type_inp(   nconstr_inp ) )
     ALLOCATE( constr_target(     nconstr_inp ) )
@@ -1633,10 +1633,10 @@ CONTAINS
 
   SUBROUTINE allocate_input_colvar()
     !
-    IF( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp ) 
-    IF( ALLOCATED( colvar_inp ) )        DEALLOCATE( colvar_inp )
-    IF( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
-    IF( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
+    IF ( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp )
+    IF ( ALLOCATED( colvar_inp ) )        DEALLOCATE( colvar_inp )
+    IF ( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
+    IF ( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )
     !
     ALLOCATE( colvar_type_inp(   ncolvar_inp ) )
     ALLOCATE( colvar_target(     ncolvar_inp ) )
@@ -1694,12 +1694,12 @@ CONTAINS
     IF ( ALLOCATED( pos )    )   DEALLOCATE( pos )
     IF ( ALLOCATED( climbing ) ) DEALLOCATE( climbing )
     !
-    IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp ) 
+    IF ( ALLOCATED( constr_type_inp ) )   DEALLOCATE( constr_type_inp )
     IF ( ALLOCATED( constr_inp ) )        DEALLOCATE( constr_inp )
     IF ( ALLOCATED( constr_target ) )     DEALLOCATE( constr_target )
     IF ( ALLOCATED( constr_target_set ) ) DEALLOCATE( constr_target_set )
     !
-    IF ( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp ) 
+    IF ( ALLOCATED( colvar_type_inp ) )   DEALLOCATE( colvar_type_inp )
     IF ( ALLOCATED( colvar_inp ) )        DEALLOCATE( colvar_inp )
     IF ( ALLOCATED( colvar_target ) )     DEALLOCATE( colvar_target )
     IF ( ALLOCATED( colvar_target_set ) ) DEALLOCATE( colvar_target_set )

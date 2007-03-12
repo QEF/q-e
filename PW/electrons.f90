@@ -4,7 +4,7 @@
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!  
+!
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
@@ -30,7 +30,7 @@ SUBROUTINE electrons()
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
-  USE vlocal,               ONLY : strf, vnew  
+  USE vlocal,               ONLY : strf, vnew
   USE wvfct,                ONLY : nbnd, et, gamma_only, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet
@@ -39,13 +39,13 @@ SUBROUTINE electrons()
                                    tauk, taukg, kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
-                                   restart, io_level
+                                   restart, io_level, assume_isolated
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield
   USE buffers,              ONLY : save_buffer
   USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, Hubbard_lmax, &
-                                   niter_with_fixed_ns, lda_plus_u  
-  USE extfield,             ONLY : tefield, etotefield  
+                                   niter_with_fixed_ns, lda_plus_u
+  USE extfield,             ONLY : tefield, etotefield
   USE wavefunctions_module, ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, npol, magtot_nc, factlist, &
                                    pointlist, pointnum, mcons, i_cons,  &
@@ -56,7 +56,7 @@ SUBROUTINE electrons()
   USE uspp,                 ONLY : okvan
   USE realus,               ONLY : tqr
 #if defined (EXX)
-  USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2 
+  USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
   USE funct,                ONLY : dft_is_meta
@@ -66,7 +66,7 @@ SUBROUTINE electrons()
   IMPLICIT NONE
   !
   ! ... a few local variables
-  !  
+  !
 #if defined (EXX)
   REAL(DP) :: dexx
   REAL(DP) :: fock0, fock1, fock2
@@ -143,15 +143,15 @@ SUBROUTINE electrons()
   !
   ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
-  !               
-  ! ... Convergence threshold for iterative diagonalization
-  !
-  ! ... for the first scf iteration of each ionic step (after the first),
-  ! ... the threshold is fixed to a default value of 1.D-6
   !
 #if defined (EXX)
 10 CONTINUE
 #endif
+  !
+  ! ... Convergence threshold for iterative diagonalization
+  !
+  ! ... for the first scf iteration of each ionic step (after the first),
+  ! ... the threshold is fixed to a default value of 1.D-6
   !
   IF ( istep > 0 ) ethr = 1.D-6
   !
@@ -165,8 +165,8 @@ SUBROUTINE electrons()
   !
   DO idum = 1, niter
      !
-     IF ( idum > 1 .AND. check_stop_now() ) RETURN
-     !  
+     IF ( check_stop_now() ) RETURN
+     !
      iter = iter + 1
      !
      WRITE( stdout, 9010 ) iter, ecutwfc, mixing_beta
@@ -180,21 +180,20 @@ SUBROUTINE electrons()
         !
         IF ( iter == 2 ) ethr = 1.D-2
         !
-        ethr = MAX( MIN( ethr , ( dr2 / nelec * 0.1D0 ) ) , &
-                       ( tr2 / nelec * 0.01D0 ) )
+        ethr = MIN( ethr, 0.1D0*dr2 / MAX( 1.D0, nelec ) )
         !
      END IF
      !
      first = ( iter == 1 )
      !
-     scf_step: DO 
+     scf_step: DO
         !
         ! ... tr2_min is set to an estimate of the error on the energy
-        ! ... due to diagonalization - used only in the first scf iteration
+        ! ... due to diagonalization - used only for the first scf iteration
         !
         tr2_min = 0.D0
         !
-        IF ( first ) tr2_min = nelec * ethr
+        IF ( first ) tr2_min = ethr*MAX( 1.D0, nelec )
         !
         ! ... diagonalization of the KS hamiltonian
         !
@@ -208,7 +207,7 @@ SUBROUTINE electrons()
            !
         END IF
         !
-        IF ( iter > 1 .AND. check_stop_now() ) RETURN
+        IF ( check_stop_now() ) RETURN
         !
         ! ... deband = - \sum_v <\psi_v | V_h + V_xc |\psi_v> is calculated a
         ! ... first time here using the input density and potential ( to be
@@ -260,8 +259,10 @@ SUBROUTINE electrons()
            END IF
            !
         END DO
+        !
         ! ... the same for tauk -> rhognew
-        IF ( dft_is_meta()) then
+        !
+        IF ( dft_is_meta()) THEN
            ALLOCATE( taukgnew( ngm, nspin ) )
            DO is = 1, nspin
               !
@@ -304,7 +305,7 @@ SUBROUTINE electrons()
            IF ( first .AND. istep == 0 .AND. &
                 startingpot == 'atomic' ) CALL ns_adj()
            !
-           IF ( iter <= niter_with_fixed_ns ) nsnew = ns 
+           IF ( iter <= niter_with_fixed_ns ) nsnew = ns
            !
         END IF
         !
@@ -315,7 +316,7 @@ SUBROUTINE electrons()
         ! ... eband  = \sum_v \epsilon_v    is calculated by sum_band
         ! ... deband = - \sum_v <\psi_v | V_h + V_xc |\psi_v>
         ! ... eband + deband = \sum_v <\psi_v | T + Vion |\psi_v>
-        ! 
+        !
         deband = delta_e()
         !
         CALL mix_rho( rhognew, rhog, taukgnew, taukg, nsnew, ns, mixing_beta, &
@@ -357,7 +358,7 @@ SUBROUTINE electrons()
                                &    "too large:",/,5X,                      &
                                & "Diagonalizing with lowered threshold",/)' )
               !
-              ethr = dr2 / nelec
+              ethr = 0.1D0*dr2 / MAX( 1.D0, nelec )
               !
               CYCLE scf_step
               !
@@ -406,7 +407,7 @@ SUBROUTINE electrons()
            END IF
            !
            ! ... no convergence yet: calculate new potential from mixed
-           ! ... charge density (i.e. the new estimate) 
+           ! ... charge density (i.e. the new estimate)
            !
            CALL v_of_rho( rhonew, rhog, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
@@ -468,6 +469,8 @@ SUBROUTINE electrons()
         END IF
 #endif
         !
+        ! ... if we didn't cycle before we can exit the do-loop
+        !
         EXIT scf_step
         !
      END DO scf_step
@@ -476,7 +479,7 @@ SUBROUTINE electrons()
      !
      CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
      !
-     IF ( lda_plus_u ) THEN  
+     IF ( lda_plus_u ) THEN
         !
         IF ( ionode ) THEN
            !
@@ -496,7 +499,7 @@ SUBROUTINE electrons()
      CALL newd()
      !
      ! ... save converged wfc if they have not been written previously
-     !     
+     !
      IF ( nks == 1 .AND. (io_level < 2) ) &
         CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
      !
@@ -521,7 +524,7 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
-        call print_ks_energies ( )
+        CALL print_ks_energies()
         !
      END IF
      !
@@ -582,7 +585,7 @@ SUBROUTINE electrons()
      END IF
      !
      IF ( ( conv_elec .OR. MOD( iter, iprint ) == 0 ) .AND. .NOT. lmd ) THEN
-        !  
+        !
         IF ( dr2 > eps8 ) THEN
            WRITE( stdout, 9081 ) etot, hwf_energy, dr2
         ELSE
@@ -604,8 +607,8 @@ SUBROUTINE electrons()
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
         IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
         !
-        !   With Fermi-Dirac population factor, etot is the electronic
-        !   free energy F = E - TS , demet is the -TS contribution
+        ! ... With Fermi-Dirac population factor, etot is the electronic
+        ! ... free energy F = E - TS , demet is the -TS contribution
         !
         IF ( lgauss ) WRITE( stdout, 9070 ) demet
         !
@@ -656,6 +659,10 @@ SUBROUTINE electrons()
         END IF
 #endif
         !
+        ! ... if system is charged add a Makov-Payne correction to the energy
+        !
+        IF ( assume_isolated ) CALL makov_payne( etot )
+        !
         WRITE( stdout, 9110 )
         !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
@@ -666,7 +673,7 @@ SUBROUTINE electrons()
         !
      END IF
      !
-     ! ... uncomment the following line if you wish to monitor the evolution 
+     ! ... uncomment the following line if you wish to monitor the evolution
      ! ... of the force calculation during self-consistency
      !
      !CALL forces()
@@ -689,11 +696,11 @@ SUBROUTINE electrons()
 9000 FORMAT(/'     total cpu time spent up to now is ',F9.2,' secs' )
 9001 FORMAT(/'     per-process dynamical memory: ',f7.1,' Mb' )
 9002 FORMAT(/'     Self-consistent Calculation' )
-9010 FORMAT(/'     iteration #',I3,'     ecut=',F9.2,' Ry',5X,'beta=',F4.2 )
+9010 FORMAT(/'     iteration #',I3,'     ecut=', F9.2,' Ry',5X,'beta=',F4.2 )
 9017 FORMAT(/'     total magnetization       =', F9.2,' Bohr mag/cell', &
             /'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
-9018 FORMAT(/'     total magnetization       =',3f9.2,' Bohr mag/cell' &
-       &   ,/'     absolute magnetization    =', f9.2,' Bohr mag/cell' )
+9018 FORMAT(/'     total magnetization       =',3F9.2,' Bohr mag/cell' &
+       &   ,/'     absolute magnetization    =', F9.2,' Bohr mag/cell' )
 9050 FORMAT(/'     WARNING: integrated charge=',F15.8,', expected=',F15.8 )
 9060 FORMAT(/'     The total energy is the sum of the following terms:',/,&
             /'     one-electron contribution =',F15.8,' Ry' &
@@ -744,7 +751,7 @@ SUBROUTINE electrons()
           absmag = 0.D0
           !
           DO ir = 1, nrxx
-             !   
+             !
              mag = rho(ir,1) - rho(ir,2)
              !
              magtot = magtot + mag
@@ -788,7 +795,7 @@ SUBROUTINE electrons()
           !
           absmag = absmag * omega / ( nr1*nr2*nr3 )
           !
-       ENDIF
+       END IF
        !
        RETURN
        !
@@ -808,25 +815,15 @@ SUBROUTINE electrons()
        INTEGER :: unit
        !
        !
-       IF ( lpath ) THEN  
-          !
-          unit = iunpath
-          !  
-       ELSE
-          !
-          unit = stdout
-          !   
-       END IF
+       unit = stdout
+       !
+       IF ( lpath ) unit = iunpath
        !
        check_stop_now = global_check_stop_now( unit )
        !
-       IF ( check_stop_now ) THEN
-          !  
-          conv_elec = .FALSE.
-          !
-          RETURN          
-          !
-       END IF              
+       IF ( check_stop_now ) conv_elec = .FALSE.
+       !
+       RETURN
        !
      END FUNCTION check_stop_now
      !
@@ -837,13 +834,10 @@ SUBROUTINE electrons()
        ! ... delta_e = - \int rho(r) V_scf(r)
        !               - \int tauk(r) Kedtau(r) [for Meta-GGA]
        !
-       USE kinds, ONLY : DP
-       !
        IMPLICIT NONE
-       !   
-       REAL(DP) :: delta_e
        !
-       INTEGER :: ipol
+       REAL(DP) :: delta_e
+       INTEGER  :: ipol
        !
        !
        delta_e = 0.D0
@@ -875,15 +869,12 @@ SUBROUTINE electrons()
        ! ... delta_escf = - \int \delta rho(r) V_scf(r)
        !                  - \int \delta tauk(r) Kedtau(r) [for Meta-GGA]
        ! ... calculates the difference between the Hartree and XC energy
-       ! ... at first order in the charge density difference \delta rho(r) 
-       !
-       USE kinds, ONLY : DP
+       ! ... at first order in the charge density difference \delta rho(r)
        !
        IMPLICIT NONE
-       !   
-       REAL(DP) :: delta_escf
        !
-       INTEGER :: ipol
+       REAL(DP) :: delta_escf
+       INTEGER  :: ipol
        !
        !
        delta_escf = 0.D0
