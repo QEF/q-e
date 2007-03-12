@@ -302,7 +302,7 @@ MODULE realus
          END DO
       END DO
       !      
-      PRINT *, "QSAVE SIZE : ", qsdim
+!      PRINT *, "QSAVE SIZE : ", qsdim
       !
       ALLOCATE( qsave( qsdim ) )
       !
