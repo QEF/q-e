@@ -113,7 +113,7 @@ subroutine h_epsi_her_set
    LOGICAL l_cal!flag for doing mat calculation, used for spin polarized systems
    INTEGER, ALLOCATABLE  :: map_g(:)
 
-  
+   REAL(dp) :: dkfact
 
 
 !  -------------------------------------------------------------------------   !
@@ -212,6 +212,11 @@ subroutine h_epsi_her_set
          dkmod=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
       endif
 
+     
+      call factor_a(gdir,at,dkfact)
+      dkfact=tpiba/dkfact/dble(nppstr)
+     
+
       dkm(:)=-dk(:)
 
 !calculates fact factor
@@ -219,9 +224,11 @@ subroutine h_epsi_her_set
 !the factor (-i)/2 comes form operator Im
 
       if(nspin == 1) then
-         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
+         !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
+         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkfact
       else
-         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
+         !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
+         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkfact/DBLE(nspin)
       endif
 
 
@@ -1143,3 +1150,45 @@ subroutine h_epsi_her_set
  END SUBROUTINE h_epsi_her_set
 
 !==============================================================================!
+
+ SUBROUTINE factor_a(dir, a,fact)
+
+   USE kinds, ONLY : DP
+
+   IMPLICIT NONE
+   
+   REAL(kind=DP):: a(3,3),fact
+   INTEGER :: dir
+
+   INTEGER :: d1,d2
+   REAL(kind=DP) :: v(3), sca
+   
+   if(dir==1) then
+      d1=2
+      d2=3
+   else if(dir==2) then
+      d1=1
+      d2=3
+   else if(dir==3) then
+      d1=1
+      d2=2
+   endif
+      
+   
+   !calculate vect(a(d1,:) X a(d2,:)
+   
+   v(1)=a(d1,2)*a(d2,3)-a(d1,3)*a(d2,2)
+   v(2)=-a(d1,1)*a(d2,3)+a(d1,3)*a(d2,1)
+   v(3)=a(d1,1)*a(d2,2)-a(d1,2)*a(d2,1)
+
+
+  !normalize v
+
+   sca=sqrt(v(1)**2.d0+v(2)**2.d0+v(3)**2.d0)
+   v(:)=v(:)/sca
+
+   !calculate a(dir:)*v(:)
+   fact=v(1)*a(dir,1)+v(2)*a(dir,2)+v(3)*a(dir,3)
+
+   return
+ END SUBROUTINE factor_a

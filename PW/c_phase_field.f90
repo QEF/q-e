@@ -130,6 +130,7 @@ SUBROUTINE c_phase_field
    LOGICAL l_cal!flag for doing mat calculation
    INTEGER, ALLOCATABLE :: map_g(:)
 
+   REAL(dp) ::dkfact
 
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
@@ -521,11 +522,13 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 !-----calculate polarization
 !-----the factor 2. is because of spin
    if(nspin==1) pola=pola*2.d0
-   pola=pola/(gpar(gdir)*tpiba)
+   !pola=pola/(gpar(gdir)*tpiba)
+   call factor_a(gdir,at,dkfact)
+   pola=pola/tpiba*dkfact
 
 !write output
    write(stdout,*)
-   write(stdout,*) "    Expectation value of exp(iGx):",zeta
+   write(stdout,*) "    Expectation value of exp(iGx):",zeta,dkfact
    write(stdout,*) "    Electronic Dipole per cell (a.u.)",pola
  
 
