@@ -572,7 +572,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
-  USE control_flags,        ONLY : ethr, lbands, isolve
+  USE control_flags,        ONLY : ethr, lbands, isolve, io_level
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
@@ -676,9 +676,9 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      call diag_bands ( iter, ik, avg_iter )
      !
-     ! ... save wave-functions
+     ! ... save wave-functions (unless instructed not to save them)
      !
-     CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( io_level > -1) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... save restart information
      !

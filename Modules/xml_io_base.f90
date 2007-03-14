@@ -1637,7 +1637,7 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_eig( iuni, filename, nbnd, eig, energy_units, &
-                          occ, ik, ispin, ef )
+                          occ, ik, ispin )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -1646,7 +1646,7 @@ MODULE xml_io_base
       INTEGER,            INTENT(IN) :: nbnd
       REAL(DP),           INTENT(IN) :: eig(:)
       CHARACTER(*),       INTENT(IN) :: energy_units
-      REAL(DP), OPTIONAL, INTENT(IN) :: occ(:), ef
+      REAL(DP), OPTIONAL, INTENT(IN) :: occ(:)
       INTEGER,  OPTIONAL, INTENT(IN) :: ik, ispin
       CHARACTER(LEN=256), INTENT(IN) :: filename
       !
@@ -1661,12 +1661,6 @@ MODULE xml_io_base
          !
          CALL iotk_write_attr ( attr, "UNITS", TRIM(energy_units), FIRST = .TRUE. )
          CALL iotk_write_empty( iuni, "UNITS_FOR_ENERGIES", ATTR=attr)
-         !
-         IF ( PRESENT( ef ) ) THEN
-            !
-            CALL iotk_write_dat( iuni, "FERMI_ENERGY", ef)
-            !
-         ENDIF
          !
          CALL iotk_write_dat( iuni, "EIGENVALUES", eig(:) )
          !

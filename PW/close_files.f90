@@ -12,7 +12,7 @@ SUBROUTINE close_files()
   ! ... Close all files and synchronize processes for a new scf calculation.
   !
   USE ldaU,          ONLY : lda_plus_u
-  USE control_flags, ONLY : twfcollect
+  USE control_flags, ONLY : twfcollect, io_level
   USE io_files,      ONLY : prefix, iunwfc, iunigk, iunat, iunsat
   USE buffers,       ONLY : close_buffer
   USE mp_global,     ONLY : intra_image_comm
@@ -24,7 +24,7 @@ SUBROUTINE close_files()
   !  ... close buffer/file containing wavefunctions: discard if
   !  ... wavefunctions are written in xml format, save otherwise
   !
-  IF ( twfcollect ) THEN
+  IF ( twfcollect .OR. io_level < 0 ) THEN
      CALL close_buffer ( iunwfc, 'DELETE' )
   ELSE
      CALL close_buffer ( iunwfc, 'KEEP' )

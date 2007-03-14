@@ -80,7 +80,7 @@
   !
   ! ... save converged wfc if they have not been written previously
   !
-  IF ( nks == 1 .AND. (io_level < 2) ) &
+  IF ( nks == 1 .AND. (io_level < 2) .AND. (io_level > -1) ) &
         CALL save_buffer ( evc, nwordwfc, iunwfc, nks )
   !
   ! ... do a Berry phase polarization calculation if required

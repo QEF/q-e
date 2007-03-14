@@ -571,6 +571,11 @@ SUBROUTINE iosys()
      !
      io_level = -1
      restart  = .FALSE.
+     IF ( twfcollect ) THEN
+        CALL infomsg( 'iosys', &
+                      'minimal I/O required, wf_collect reset to FALSE', -1 )
+        twfcollect= .FALSE.
+     END IF
      !
   CASE DEFAULT
      !

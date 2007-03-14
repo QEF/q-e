@@ -110,17 +110,15 @@ MODULE pw_restart
       INTEGER               :: ike, iks, npw_g, ispin
       INTEGER,  ALLOCATABLE :: ngk_g(:)
       INTEGER,  ALLOCATABLE :: igk_l2g(:,:), igk_l2g_kdip(:,:), itmp(:,:)
-      LOGICAL               :: lgvec, lwfc
+      LOGICAL               :: lwfc
       REAL(DP), ALLOCATABLE :: rhoaux(:), raux(:)
       !
       !
-      lgvec = .FALSE.
       lwfc  = .FALSE.
       !
       SELECT CASE( what )
       CASE( "all" )
          !
-         lgvec = .TRUE.
          lwfc  = twfcollect
          !
       CASE DEFAULT
@@ -337,7 +335,7 @@ MODULE pw_restart
          !
          CALL write_planewaves( ecutwfc, dual, npwx_g, gamma_only, nr1, nr2, &
                                 nr3, ngm_g, nr1s, nr2s, nr3s, ngms_g, nr1, &
-                                nr2, nr3, itmp, lgvec )
+                                nr2, nr3, itmp, lwfc )
          !
 !-------------------------------------------------------------------------------
 ! ... SPIN
@@ -477,7 +475,7 @@ MODULE pw_restart
                                    EXTENSION='xml',  DIR=lkpoint_dir )
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
-                     "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin, EF=ef /e2 )
+                     "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin )
                !
                !
                !
@@ -505,8 +503,7 @@ MODULE pw_restart
                              EXTENSION = 'xml',  DIR=lkpoint_dir )
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
-                               "Hartree", OCC = raux(:), IK = ik,          &
-                               ISPIN = ispin, EF = ef /e2 )
+                               "Hartree", OCC = raux(:), IK = ik, ISPIN = ispin)
                !
             ELSE
                !
@@ -530,7 +527,7 @@ MODULE pw_restart
                           EXTENSION='xml',  DIR=lkpoint_dir )
                !
                CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
-                               "Hartree", OCC = raux(:), IK = ik, EF = ef / e2 )
+                               "Hartree", OCC = raux(:), IK = ik )
                !
             END IF
             !
@@ -564,11 +561,11 @@ MODULE pw_restart
             !
             CALL iotk_write_begin( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
             !
-            IF ( lgvec ) THEN
-               !
-               ! ... G+K vectors
-               !
-               CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngk_g(ik) )
+            ! ... G+K vectors
+            !
+            CALL iotk_write_dat( iunpun, "NUMBER_OF_GK-VECTORS", ngk_g(ik) )
+            !
+            IF ( lwfc ) THEN
                !
                filename = wfc_filename( ".", 'gkvectors', ik, DIR=lkpoint_dir )
                !
@@ -577,14 +574,17 @@ MODULE pw_restart
                !
                filename = wfc_filename( dirname, 'gkvectors', ik, &
                                          DIR=lkpoint_dir )
-               !
             END IF
             !
          END IF
          !
-         IF ( lgvec ) CALL write_gk( iunout, ik, filename )
-         !
-         IF ( lwfc ) CALL write_this_wfc ( iunout, ik )
+         IF ( lwfc ) THEN
+           !
+           CALL write_gk( iunout, ik, filename )
+           !
+           CALL write_this_wfc ( iunout, ik )
+           !
+         END IF
          !
          IF ( ionode ) THEN
             !

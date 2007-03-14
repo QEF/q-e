@@ -169,7 +169,7 @@ disk_io        CHARACTER ( default='default')
                'default': save wavefunctions at each SCF step unless
                           there is a single k-point per process
                'low' :    store wfc in memory, save only at the end
-               'none':    do not save anything, not even at the end
+               'none':    do not save wfc, not even at the end
                If restarting from an interrupted calculation, the code
                will try to figure out what is available on disk. The
                more you write, the more complete the restart will be.
@@ -1306,5 +1306,5 @@ COLLECTIVE_VARS
                      - cos(alpha)^2-cos(beta)^2-cos(gamma)^2 )/sin(gamma) )
   where alpha is the angle between axis b and c
          beta is the angle between axis a and c
-        gamm  is the angle between axis a and b
+        gamma is the angle between axis a and b
 ----------------------------------------------------------------------

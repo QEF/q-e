@@ -614,7 +614,7 @@ MODULE cp_restart
                   dtmp ( 1:nupdwn( iss ) ) = occ0( iupdwn( iss ) : iupdwn( iss ) + nupdwn( iss ) - 1 ) / wk(ik)
                   !
                   CALL write_eig( iunout, filename, nbnd_tot, et( 1:nbnd_tot, iss) , "Hartree", &
-                               OCC = dtmp(:), IK=ik, ISPIN=iss, EF=0.0d0 )
+                               OCC = dtmp(:), IK=ik, ISPIN=iss )
                   !
                END IF
                !

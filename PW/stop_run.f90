@@ -15,7 +15,7 @@ SUBROUTINE stop_run( flag )
   !
   USE io_global,          ONLY : ionode
   USE control_flags,      ONLY : lpath, twfcollect, lconstrain, &
-                                 lcoarsegrained
+                                 lcoarsegrained, io_level
   USE io_files,           ONLY : iunwfc, iunigk, iunefield, iunefieldm, iunefieldp
   USE buffers,            ONLY : close_buffer
   USE path_variables,     ONLY : path_deallocation
@@ -47,7 +47,7 @@ SUBROUTINE stop_run( flag )
   ! ... the execution - close the file and save it (or delete it 
   ! ... if the wavefunctions are already stored in the .save file)
   !
-  IF ( twfcollect .AND. flag ) THEN
+  IF ( flag .AND. ( io_level < 0 .OR. twfcollect ) ) THEN
      !
      call close_buffer ( iunwfc, 'DELETE' )
      !
