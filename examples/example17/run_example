@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# function to test the exit status of a job
+function check_failure() {
+    # usage: check_failure $?
+    if test $1 != 0; then
+        $ECHO "Error condition encountered during test: exit status = $1"
+        $ECHO "Aborting"
+        exit 1
+    fi
+}
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -52,7 +62,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -71,7 +81,7 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running cp.x as: $CP_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -111,7 +121,7 @@ cat > H2+H.in << EOF
   CI_scheme         = "auto",
   pot_extrapolation = "second_order",
   wfc_extrapolation = "second_order",
-  path_thr          = 0.1D0,  
+  path_thr          = 0.1D0,
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
@@ -122,8 +132,8 @@ H    0.00000000      0.00000000      0.00000000  0  0  0
 H    1.55776676      0.00000000      0.00000000  1  0  0
 last_image
 H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000 
-H    4.56670009      0.00000000      0.00000000 
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
 K_POINTS { gamma }
 CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
@@ -132,6 +142,7 @@ CELL_PARAMETERS { cubic }
 EOF
 $ECHO "  running the NEB calculation with pw.x for H2+H => H+H2...\c"
 $PW_COMMAND < H2+H.in > H2+H.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -183,8 +194,8 @@ H    0.00000000      0.00000000      0.00000000  0  0  0
 H    1.55776676      0.00000000      0.00000000  1  0  0
 last_image
 H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000 
-H    4.56670009      0.00000000      0.00000000 
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
 K_POINTS { gamma }
 CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
@@ -193,6 +204,7 @@ CELL_PARAMETERS { cubic }
 EOF
 $ECHO "  running the NEB calculation with pw.x for symmetric H2+H => H+H2...\c"
 $PW_COMMAND < symmetric_H2+H.in > symmetric_H2+H.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -201,7 +213,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # the name of the restart file is changed in order to conform to the
-# prefix of the new run 
+# prefix of the new run
 # the restart file asymmetric_H2+H.neb is modified (second row)
 # since a new simulation (from the old path) is started
 cat symmetric_H2+H.path | \
@@ -254,8 +266,8 @@ H    0.00000000      0.00000000      0.00000000  0  0  0
 H    1.55776676      0.00000000      0.00000000  1  0  0
 last_image
 H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000 
-H    4.56670009      0.00000000      0.00000000 
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
 K_POINTS { gamma }
 CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
@@ -264,6 +276,7 @@ CELL_PARAMETERS { cubic }
 EOF
 $ECHO "  running the NEB calculation with pw.x for asymmetric H2+H => H+H2...\c"
 $PW_COMMAND < asymmetric_H2+H.in > asymmetric_H2+H.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -310,7 +323,7 @@ cat > H2+H-cp.in << EOF
   k_max             = 0.3D0,
   k_min             = 0.2D0,
   CI_scheme         = "auto",
-  path_thr          = 0.1D0,  
+  path_thr          = 0.1D0,
 /
 ATOMIC_SPECIES
 H  1.00794  HUSPBE.RRKJ3
@@ -321,8 +334,8 @@ H    0.00000000      0.00000000      0.00000000  0  0  0
 H    1.55776676      0.00000000      0.00000000  1  0  0
 last_image
 H   -1.55776676      0.00000000      0.00000000
-H    0.00000000      0.00000000      0.00000000 
-H    4.56670009      0.00000000      0.00000000 
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
 K_POINTS { gamma }
 CELL_PARAMETERS { cubic }
   12.00000  0.00000  0.00000
@@ -331,6 +344,7 @@ CELL_PARAMETERS { cubic }
 EOF
 $ECHO "  running the NEB calculation with cp.x for H2+H => H+H2...\c"
 $CP_COMMAND < H2+H-cp.in > H2+H-cp.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

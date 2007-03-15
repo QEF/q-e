@@ -1,5 +1,15 @@
 #!/bin/sh
 
+# function to test the exit status of a job
+function check_failure() {
+    # usage: check_failure $?
+    if test $1 != 0; then
+        $ECHO "Error condition encountered during test: exit status = $1"
+        $ECHO "Aborting"
+        exit 1
+    fi
+}
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -53,7 +63,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -72,7 +82,7 @@ $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running cp.x as: $CP_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -135,6 +145,7 @@ K_POINTS gamma
 EOF
 $ECHO "  running meta-dynamics calculation ( T = 0 K ) with pw.x ...\c"
 $PW_COMMAND < metadyn-pw.in > metadyn-pw.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -200,6 +211,7 @@ Si       1.192211325  -1.124755647  -0.000001100
 EOF
 $ECHO "  running meta-dynamics calculation ( T = 0 K ) with cp.x ...\c"
 $CP_COMMAND < metadyn-cp.in > metadyn-cp.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -268,6 +280,7 @@ Si      1.0884612946     -1.2202229970      0.1139207771
 EOF
 $ECHO "  running meta-dynamics calculation ( T = 300 K ) with cp.x ...\c"
 $CP_COMMAND < metadyn-cp-T=300K.in > metadyn-cp-T=300K.out
+check_failure $?
 $ECHO " done"
 
 $ECHO
