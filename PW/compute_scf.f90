@@ -19,17 +19,17 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   !
   ! ... Written by Carlo Sbraccia (2003-2006)
   !
+  USE input_parameters, ONLY : startingwfc, startingpot
+  USE basis,            ONLY : startingwfc_ => startingwfc, &
+                               startingpot_ => startingpot
   USE kinds,            ONLY : DP
-  USE input_parameters, ONLY : startingwfc, startingpot, diago_thr_init
   USE constants,        ONLY : e2
-  USE control_flags,    ONLY : conv_elec, istep, history, ethr, pot_order
+  USE control_flags,    ONLY : conv_elec, istep, history, pot_order
   USE check_stop,       ONLY : check_stop_now
   USE vlocal,           ONLY : strf
   USE cell_base,        ONLY : bg, alat
   USE gvect,            ONLY : ngm, g, nr1, nr2, nr3, eigts1, eigts2, eigts3
   USE ions_base,        ONLY : tau, nat, nsp, ityp
-  USE basis,            ONLY : startingwfc_ => startingwfc, &
-                               startingpot_ => startingpot
   USE ener,             ONLY : etot
   USE force_mod,        ONLY : force
   USE io_files,         ONLY : prefix, tmp_dir, iunpath, iunupdate, &
@@ -228,6 +228,10 @@ SUBROUTINE compute_scf( fii, lii, stat  )
     SUBROUTINE do_scf( image, istat )
       !-----------------------------------------------------------------------
       !
+      USE input_parameters, ONLY : diago_thr_init, nkstot
+      USE control_flags,    ONLY : ethr
+      USE klist,            ONLY : nkstot_ => nkstot
+      !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN)    :: image
@@ -387,6 +391,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... input values are restored at the end of each iteration ( they are
       ! ... modified by init_run )
       !
+      nkstot_      = nkstot
       startingpot_ = startingpot
       startingwfc_ = startingwfc
       !
