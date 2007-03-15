@@ -67,7 +67,7 @@ SUBROUTINE init_h()
   !
   CALL newd()
   !
-  CALL wfcinit()  
+  CALL wfcinit()
   !
   RETURN
   !

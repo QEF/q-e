@@ -23,7 +23,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE buffers,              ONLY : get_buffer, save_buffer
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
-  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
+  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, isolve, io_level
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
@@ -113,7 +113,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
           CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
-     !   
+     !
      ! ... Needed for LDA+U
      !
      IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
@@ -123,7 +123,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      call diag_bands ( iter, ik, avg_iter )
      !
      ! ... save wave-functions to be used as input for the
-     ! ... iterative diagonalization of the next scf iteration 
+     ! ... iterative diagonalization of the next scf iteration
      ! ... and for rho calculation
      !
      IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
@@ -145,7 +145,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
        '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
        ethr, avg_iter
   !
-  CALL stop_clock( 'c_bands' )  
+  CALL stop_clock( 'c_bands' )
   !
   RETURN
   !
@@ -239,7 +239,7 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE c_bands_gamma()
     !-----------------------------------------------------------------------
-    !  
+    !
     ! ... Diagonalization of a real Hamiltonian
     !
     USE becmod,           ONLY : rbecp
@@ -283,7 +283,7 @@ CONTAINS
           !
           avg_iter = avg_iter + cg_iter
           !
-          ntry = ntry + 1                
+          ntry = ntry + 1
           !
           ! ... exit condition
           !
@@ -295,8 +295,8 @@ CONTAINS
        !
        ! ... Davidson diagonalization
        !
-       ! ... h_diag are the diagonal matrix elements of the 
-       ! ... hamiltonian used in g_psi to evaluate the correction 
+       ! ... h_diag are the diagonal matrix elements of the
+       ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
        h_diag(1:npw, 1) = g2kin(1:npw) + v_of_0
@@ -318,7 +318,7 @@ CONTAINS
           !avg_iter = avg_iter + diis_iter
           !
           avg_iter = avg_iter + dav_iter
-          !   
+          !
           ntry = ntry + 1
           !
           ! ... exit condition
@@ -336,7 +336,7 @@ CONTAINS
     RETURN
     !
   END SUBROUTINE c_bands_gamma
-  !     
+  !
   !-----------------------------------------------------------------------
   SUBROUTINE c_bands_k()
     !-----------------------------------------------------------------------
@@ -419,7 +419,7 @@ CONTAINS
           !
           avg_iter = avg_iter + cg_iter
           !
-          ntry = ntry + 1                
+          ntry = ntry + 1
           !
           ! ... exit condition
           !
@@ -432,7 +432,7 @@ CONTAINS
        ! ... Davidson diagonalization
        !
        ! ... h_diag are the diagonal matrix elements of the
-       ! ... hamiltonian used in g_psi to evaluate the correction 
+       ! ... hamiltonian used in g_psi to evaluate the correction
        ! ... to the trial eigenvectors
        !
        DO ipol = 1, npol
@@ -460,14 +460,14 @@ CONTAINS
           avg_iter = avg_iter + dav_iter
           !
           ! ... save wave-functions to be used as input for the
-          ! ... iterative diagonalization of the next scf iteration 
+          ! ... iterative diagonalization of the next scf iteration
           ! ... and for rho calculation
           !
-          ntry = ntry + 1                
+          ntry = ntry + 1
           !
           ! ... exit condition
           !
-          IF ( test_exit_cond() ) EXIT david_loop                
+          IF ( test_exit_cond() ) EXIT david_loop
           !
        END DO david_loop
        !
@@ -506,9 +506,9 @@ CONTAINS
     test_exit_cond = .NOT. ( ( ntry <= 5 ) .AND. &
          ( ( .NOT. lscf .AND. ( notconv > 0 ) ) .OR. &
          (       lscf .AND. ( notconv > 5 ) ) ) )
-    !                          
+    !
   END FUNCTION test_exit_cond
-  !     
+  !
 END SUBROUTINE diag_bands
 !
 !----------------------------------------------------------------------------
@@ -570,7 +570,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE basis,                ONLY : startingwfc
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
-  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
+  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
   USE control_flags,        ONLY : ethr, lbands, isolve, io_level
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
@@ -659,7 +659,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      ! ... Needed for LDA+U
      !
      IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
-     !   
+     !
      ! ... calculate starting  wavefunctions
      !
      IF ( startingwfc == 'file' ) THEN
@@ -668,7 +668,7 @@ SUBROUTINE c_bands_nscf( ik_ )
         !
      ELSE
         !
-        CALL init_wfc ( ik ) 
+        CALL init_wfc ( ik )
         !
      END IF
      !
@@ -688,7 +688,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      IF ( lbands) THEN
 #ifdef __PARA
-        ! ... beware: with pools, if the number of k-points on different 
+        ! ... beware: with pools, if the number of k-points on different
         ! ... pools differs, make sure that all processors are still in
         ! ... the loop on k-points before checking for stop condition
         !
@@ -710,7 +710,7 @@ SUBROUTINE c_bands_nscf( ik_ )
        '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
        ethr, avg_iter
   !
-  CALL stop_clock( 'c_bands' )  
+  CALL stop_clock( 'c_bands' )
   !
   RETURN
   !

@@ -53,7 +53,7 @@ SUBROUTINE potinit()
   IMPLICIT NONE
   !
   REAL(DP)              :: charge           ! the starting charge
-  REAL(DP)              :: etotefield       ! 
+  REAL(DP)              :: etotefield       !
   INTEGER               :: is, ios
   INTEGER               :: ldim             ! integer variable for I/O control
   LOGICAL               :: exst 
@@ -71,7 +71,7 @@ SUBROUTINE potinit()
   CALL mp_bcast( exst, ionode_id, intra_image_comm )
   !
   IF ( startingpot == 'file' .AND. exst ) THEN
-     ! 
+     !
      ! ... Cases a) and b): the charge density is read from file
      !
      CALL pw_readfile( 'rho', ios )
@@ -100,9 +100,9 @@ SUBROUTINE potinit()
      ! ... The occupations ns also need to be read in order to build up 
      ! ... the potential
      !
-     IF ( lda_plus_u ) THEN  
+     IF ( lda_plus_u ) THEN
         !
-        ldim = 2 * Hubbard_lmax + 1
+        ldim = 2*Hubbard_lmax + 1
         !
         IF ( ionode ) THEN
            !
@@ -111,20 +111,20 @@ SUBROUTINE potinit()
            CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
            !
         ELSE
-           !  
+           !
            ns(:,:,:,:) = 0.D0
            !
         END IF
         !
-        CALL reduce( ( ldim * ldim * nspin * nat ), ns )  
-        CALL poolreduce( ( ldim * ldim * nspin * nat ), ns )  
+        CALL reduce( ldim*ldim*nspin*nat, ns )
+        CALL poolreduce( ldim*ldim*nspin*nat, ns )
         !
         nsnew = ns
         !
      END IF
      !
   ELSE
-     !   
+     !
      ! ... Case c): the potential is built from a superposition 
      ! ... of atomic charges contained in the array rho_at
      !
@@ -138,7 +138,7 @@ SUBROUTINE potinit()
      !
      IF ( lda_plus_u ) THEN
         !
-        CALL init_ns()  
+        CALL init_ns()
         !
         nsnew = ns
         !
