@@ -13,9 +13,11 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
   !
   USE kinds,              ONLY : DP
   USE constants,          ONLY : e2
-  USE input_parameters,   ONLY : startingwfc, startingpot, diago_thr_init
+  USE input_parameters,   ONLY : startingwfc, startingpot, diago_thr_init, &
+                                 nkstot
   USE basis,              ONLY : startingwfc_ => startingwfc, &
                                  startingpot_ => startingpot
+  USE klist,              ONLY : nkstot_ => nkstot
   USE metadyn_vars,       ONLY : ncolvar, dfe_acc, new_target, to_target, &
                                  to_new_target, sw_nstep, fe_nstep, eq_nstep
   USE path_variables,     ONLY : grad_fes => grad_pes, &
@@ -75,7 +77,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      !
   END IF
   !
-  ! ... only the first cpu initializes the file needed by parallelization 
+  ! ... only the first cpu initializes the file needed by parallelization
   ! ... among images
   !
   IF ( meta_ionode ) CALL new_image_init( fii, tmp_dir_saved )
@@ -319,6 +321,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
      ! ... input values are restored at the end of each iteration ( they are
      ! ... modified by init_run )
      !
+     nkstot_      = nkstot
      startingpot_ = startingpot
      startingwfc_ = startingwfc
      !
