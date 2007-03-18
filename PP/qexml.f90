@@ -13,7 +13,7 @@ MODULE qexml_module
   ! in XML format the data produced by Quantum-ESPRESSO package
   !
   ! written by Andrea Ferretti (2006)
-  ! using large part of implementation by Carlo Sbraccia (2005)
+  ! based upon the implementation by Carlo Sbraccia (2005)
   !
   USE iotk_module
   IMPLICIT NONE

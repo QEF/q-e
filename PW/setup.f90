@@ -61,14 +61,13 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym
-  USE pseud,              ONLY : zp
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
                                  use_para_diago
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
-  USE uspp_param,         ONLY : psd, nbeta, jjj, tvanp
+  USE uspp_param,         ONLY : zp, psd, nbeta, jjj, tvanp
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax
@@ -84,9 +83,8 @@ SUBROUTINE setup()
   USE input_parameters,   ONLY : restart_mode
 #if defined (EXX)
   USE exx,                ONLY : exx_grid_init
-  USE funct,              ONLY : dft_is_hybrid
 #endif
-  USE funct,              ONLY : dft_is_meta
+  USE funct,              ONLY : dft_is_meta, dft_is_hybrid
   !
   IMPLICIT NONE
   !
@@ -404,6 +402,9 @@ SUBROUTINE setup()
      !
      so(nt) = ( nbeta(nt) > 0 )
      !
+     IF ( lspinorb .AND. ALL ( ABS( jjj(1:nbeta(nt),nt) ) < 1.D-7 ) ) &
+        CALL infomsg ('setup','At least one non s.o. pseudo', nt)
+     !
      DO nb = 1, nbeta(nt)
         !
         so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
@@ -624,7 +625,11 @@ SUBROUTINE setup()
   !
 #if defined (EXX)
   IF ( dft_is_hybrid() ) CALL exx_grid_init()
+#else
+  IF ( dft_is_hybrid() ) CALL errore( 'setup ', &
+                         'HYBRID XC not implemented in PWscf', 1 )
 #endif
+
   !
   IF ( lsda ) THEN
      !

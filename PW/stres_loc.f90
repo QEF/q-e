@@ -18,12 +18,12 @@ subroutine stres_loc (sigmaloc)
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
-  USE pseud,                ONLY : aps, alps,alpc, cc, lloc, lmax, nlc, nnl, zp
+  USE pseud,                ONLY : aps, alps,alpc, cc, lloc, lmax, nlc, nnl
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE uspp_param,           ONLY : vloc_at
+  USE uspp_param,           ONLY : vloc_at, zp
   !
   implicit none
   !

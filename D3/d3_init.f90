@@ -12,7 +12,7 @@ SUBROUTINE d3_init
   !
   USE ions_base,  ONLY : nat, ntyp => nsp
   USE pwcom
-  USE uspp_param, ONLY : vloc_at
+  USE uspp_param, ONLY : vloc_at, zp
   USE atom,       ONLY: numeric, mesh, msh, rab, r
   USE phcom
   USE d3com

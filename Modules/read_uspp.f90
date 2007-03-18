@@ -20,11 +20,10 @@ MODULE read_uspp_module
   !
   ! Variables above are not modified, variables below are
   !
-  USE uspp_param, ONLY: qfunc, qfcoef, qqq, betar, dion, vloc_at, &
+  USE uspp_param, ONLY: zp, qfunc, qfcoef, qqq, betar, dion, vloc_at, &
        rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp, oldvan, iver, psd
   USE atom, ONLY: zmesh, nchi, chi, lchi, r, rab, mesh, nlcc, oc, &
         rho_at, rho_atc, xmin, dx
-  USE ions_base, ONLY: zv
   !
   IMPLICIT NONE
   SAVE
@@ -146,14 +145,14 @@ CONTAINS
          call errore('readvan','wrong file version read',1)
     !
     read( iunps, '(a20,3f15.9)', err=100, iostat=ios ) &
-         title, zmesh(is), zv(is), exfact 
+         title, zmesh(is), zp(is), exfact 
     !
     psd (is) = title(1:2)
     !
     if ( zmesh(is) < 1 .or. zmesh(is) > 100.d0) &
          call errore( 'readvan','wrong zmesh read', is )
-    if ( zv(is) <= 0.d0 .or. zv(is) > 100.d0) &
-         call errore('readvan','wrong zv read', is )
+    if ( zp(is) <= 0.d0 .or. zp(is) > 100.d0) &
+         call errore('readvan','wrong atomic charge read', is )
     if ( exfact < -6 .or. exfact > 6) &
          &     call errore('readvan','Wrong xc in pseudopotential',1)
     ! convert from "our" conventions to Vanderbilt conventions
@@ -402,7 +401,7 @@ CONTAINS
 300 format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
     WRITE( stdout,400) title, dft_name
 400 format (4x,'|  ',2a20,' exchange-corr  |')
-    WRITE( stdout,500) zmesh(is), is, zv(is), exfact
+    WRITE( stdout,500) zmesh(is), is, zp(is), exfact
 500 format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
          &     f10.5, 9x,'|')
     WRITE( stdout,600) ifpcor, etotpseu
@@ -632,8 +631,8 @@ CONTAINS
     call set_dft_from_indices(iexch,icorr,igcx,igcc)
 
     read( iunps, '(2e17.11,i5)') &
-         zv(is), etotps, lmax
-    if ( zv(is) < 1 .or. zv(is) > 100 ) &
+         zp(is), etotps, lmax
+    if ( zp(is) < 1 .or. zp(is) > 100 ) &
          call errore('readrrkj','wrong potential read',is)
     !
     read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &

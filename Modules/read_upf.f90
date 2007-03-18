@@ -23,7 +23,7 @@
       CONTAINS
 !
 !---------------------------------------------------------------------
-subroutine read_pseudo_upf (iunps, upf, ierr)  
+subroutine read_pseudo_upf (iunps, upf, ierr, header_only)  
   !---------------------------------------------------------------------
   !
   !   read pseudopotential "upf" in the Unified Pseudopotential Format
@@ -33,7 +33,9 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
   !
   implicit none
   !
-  integer :: iunps, ierr 
+  INTEGER, INTENT(IN) :: iunps
+  INTEGER, INTENT(OUT) :: ierr 
+  LOGICAL, INTENT(IN), OPTIONAL :: header_only
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
   !     Local variables
@@ -82,7 +84,9 @@ subroutine read_pseudo_upf (iunps, upf, ierr)
      endif
   enddo header_loop
 
-
+  IF ( PRESENT (header_only) ) THEN
+     IF ( header_only ) RETURN
+  END IF
   if (ierr .ne. 0) return
   
   call scan_end (iunps, "HEADER")  

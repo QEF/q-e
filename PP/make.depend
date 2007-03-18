@@ -118,19 +118,6 @@ dos.o : ../Modules/mp.o
 dos.o : ../PW/noncol.o
 dos.o : ../PW/pwcom.o
 dosg.o : ../Modules/kind.o
-efg.o : ../Modules/atom.o
-efg.o : ../Modules/cell_base.o
-efg.o : ../Modules/constants.o
-efg.o : ../Modules/io_files.o
-efg.o : ../Modules/io_global.o
-efg.o : ../Modules/ions_base.o
-efg.o : ../Modules/kind.o
-efg.o : ../Modules/mp.o
-efg.o : ../Modules/parameters.o
-efg.o : ../Modules/uspp.o
-efg.o : ../Modules/wavefunctions.o
-efg.o : ../PW/paw.o
-efg.o : ../PW/pwcom.o
 elf.o : ../Modules/cell_base.o
 elf.o : ../Modules/constants.o
 elf.o : ../Modules/io_files.o
@@ -143,6 +130,7 @@ epsilon.o : ../Modules/io_files.o
 epsilon.o : ../Modules/io_global.o
 epsilon.o : ../Modules/kind.o
 epsilon.o : ../Modules/mp.o
+epsilon.o : ../Modules/mp_global.o
 epsilon.o : ../Modules/uspp.o
 epsilon.o : ../Modules/wavefunctions.o
 epsilon.o : ../Modules/xml_io_base.o

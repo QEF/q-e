@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,9 +20,9 @@ SUBROUTINE summary()
   USE io_global,       ONLY : stdout
   USE kinds,           ONLY : DP
   USE constants,       ONLY : amconv
-  USE atom,            ONLY : numeric, xmin, dx, nlcc, mesh
   USE cell_base,       ONLY : alat, ibrav, omega, at, bg, celldm
   USE ions_base,       ONLY : nat, atm, zv, tau, ntyp => nsp, ityp
+  USE uspp_param,      ONLY : psd
   USE char,            ONLY : title, sname
   USE cellmd,          ONLY : calc, cmass
   USE ions_base,       ONLY : amass
@@ -32,8 +32,6 @@ SUBROUTINE summary()
   USE lsda_mod,        ONLY : lsda, starting_magnetization
   USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk
   USE ktetra,          ONLY : ltetra
-  USE pseud,           ONLY : zp, alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
-                              a_nlcc, b_nlcc, alpha_nlcc
   USE symme,           ONLY : nsym, invsym, s, t_rev, ftau
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                               char_mat, name_rap, name_class, gname, ir_ram
@@ -44,7 +42,6 @@ SUBROUTINE summary()
                                  sname_is, code_group_is
   USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, diis_ndim, &
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
-  USE uspp_param,      ONLY : nqf, rinner, nqlc, nbeta, iver, lll, psd, tvanp
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
   USE funct,           ONLY : write_dft_name
@@ -83,8 +80,7 @@ SUBROUTINE summary()
   REAL(DP) :: xkg(3)
     ! coordinates of the k point in crystal axes
   CHARACTER :: mixing_style * 9
-  CHARACTER :: ps * 5, group_name*11
-    ! name of pseudo type
+  CHARACTER :: group_name*11
   REAL(DP) :: xp
     ! fraction contributing to a given atom type (obsolescent)
   !
@@ -112,7 +108,7 @@ SUBROUTINE summary()
        &     'beta                      = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')
   !
-  call write_dft_name
+  call write_dft_name ( ) 
   !
   IF ( lmd .OR. lbfgs .OR. lpath ) &
      WRITE( stdout, '(5X,"nstep                     = ",I12,/)' ) nstep
@@ -166,77 +162,8 @@ SUBROUTINE summary()
        &            3(15x,"b(",i1,") = (",3f10.6," )  ",/ ) )')  (apol,&
        &  (bg (ipol, apol) , ipol = 1, 3) , apol = 1, 3)
   !
-  DO nt = 1, ntyp
-     !
-     IF ( tvanp(nt) ) THEN
-        !
-        ps = '(US)'
-        WRITE( stdout, '(/5x,"PSEUDO",i2," is ",a2, &
-             &        1x,a5,"   zval =",f5.1,"   lmax=",i2, &
-             &        "   lloc=",i2)') nt, psd (nt) , ps, zp (nt) , lmax (nt) &
-             &, lloc (nt)
-        WRITE( stdout, '(5x,"Version ", 3i3, " of US pseudo code")') &
-             (iver (i, nt) , i = 1, 3)
-        WRITE( stdout, '(5x,"Using log mesh of ", i5, " points")') mesh (nt)
-        WRITE( stdout, '(5x,"The pseudopotential has ",i2, &
-             &       " beta functions with: ")') nbeta (nt)
-        DO ib = 1, nbeta (nt)
-           WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
-        END DO
-        WRITE( stdout, '(5x,"Q(r) pseudized with ", &
-             &          i2," coefficients,  rinner = ",3f8.3,/ &
-             &          52x,3f8.3,/ &
-             &          52x,3f8.3)') nqf(nt), (rinner(i,nt), i=1,nqlc(nt) )
-        !
-     ELSE
-        !
-        IF ( nlc(nt) == 1 .AND. nnl(nt) == 1 ) THEN
-           !
-           ps = '(vbc)'
-           !
-        ELSE IF ( nlc(nt) == 2 .AND. nnl(nt) == 3 ) THEN
-           !
-           ps = '(bhs)'
-           !
-        ELSE IF ( nlc(nt) == 1 .AND. nnl(nt) == 3 ) THEN
-           !
-           ps = '(our)'
-           !
-        ELSE
-           !
-           ps = '     '
-           !
-        END IF
-        !
-        WRITE( stdout, '(/5x,"PSEUDO",i2," is ",a2, 1x,a5,"   zval =",f5.1,&
-             &      "   lmax=",i2,"   lloc=",i2)') &
-                        nt, psd(nt), ps, zp(nt), lmax(nt), lloc(nt)
-        IF (numeric (nt) ) THEN
-           WRITE( stdout, '(5x,"(in numerical form: ",i5,&
-                &" grid points",", xmin = ",f5.2,", dx = ",f6.4,")")')&
-                & mesh (nt) , xmin (nt) , dx (nt)
-        ELSE
-           WRITE( stdout, '(/14x,"i=",7x,"1",13x,"2",10x,"3")')
-           WRITE( stdout, '(/5x,"core")')
-           WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alpc (i, nt) , i = 1, 2)
-           WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (cc (i, nt) , i = 1, 2)
-           DO l = 0, lmax(nt)
-              WRITE( stdout, '(/5x,"l = ",i2)') l
-              WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alps (i, l, nt) , &
-                   i = 1, 3)
-              WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (aps (i, l, nt) , i = 1,3)
-              WRITE( stdout, '(5x,"a(i+3)=",4x,3g13.5)') (aps (i, l, nt) , i= 4, 6)
-           ENDDO
-           IF ( nlcc(nt) ) WRITE( stdout, 200) a_nlcc(nt), b_nlcc(nt), alpha_nlcc(nt)
-200        FORMAT(/5x,'nonlinear core correction: ', &
-                &     'rho(r) = ( a + b r^2) exp(-alpha r^2)', &
-                & /,5x,'a    =',4x,g11.5, &
-                & /,5x,'b    =',4x,g11.5, &
-                & /,5x,'alpha=',4x,g11.5)
-        ENDIF
-     ENDIF
-
-  ENDDO
+  CALL print_ps_info ( )
+  !
   WRITE( stdout, '(/5x, "atomic species   valence    mass     pseudopotential")')
   xp = 1.d0
   DO nt = 1, ntyp
@@ -457,3 +384,80 @@ SUBROUTINE summary()
   RETURN
   !
 END SUBROUTINE summary
+!
+!-----------------------------------------------------------------------
+SUBROUTINE print_ps_info
+  !-----------------------------------------------------------------------
+  !
+  USE io_global,       ONLY : stdout
+  USE io_files,        ONLY : psfile
+  USE ions_base,       ONLY : ntyp => nsp
+  USE atom,            ONLY : nlcc, mesh
+  USE pseud,           ONLY : alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
+                              a_nlcc, b_nlcc, alpha_nlcc
+  USE uspp_param,      ONLY : zp, nqf, rinner, nqlc, nbeta, iver, lll, &
+                              psd, tvanp
+  !
+  INTEGER :: nt
+  CHARACTER :: ps*35
+  !
+  DO nt = 1, ntyp
+     !
+     IF ( tvanp(nt) ) THEN
+        ps='Ultrasoft'
+     ELSE
+        ps='Norm-conserving'
+     END IF
+     !
+     IF ( nlcc (nt) ) ps = TRIM(ps) // ' + core correction'
+     !
+     WRITE( stdout, '(/5x,"PseudoPot. #",i2," for ",a2," read from file ",a)')&
+             nt, psd(nt), TRIM (psfile(nt))
+     !
+     WRITE( stdout, '( 5x,"Pseudo is ",a,", Zval =",f5.1)') &
+            TRIM (ps), zp (nt)
+     !
+     IF ( iver (1, nt) > 0 ) & 
+         WRITE( stdout, '(5x,"Generated by v. ", 3i3, " of US pseudo code")') &
+         (iver (i, nt) , i = 1, 3)
+     WRITE( stdout, '(5x,"Using radial grid of ", i4, " points, ", &
+         &i2," beta functions with: ")') mesh (nt), nbeta (nt)
+     DO ib = 1, nbeta (nt)
+        WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
+     END DO
+     IF ( tvanp(nt) ) THEN
+        WRITE( stdout, '(5x,"Q(r) pseudized with ", &
+           &          i2," coefficients,  rinner = ",3f8.3,/ &
+           &          52x,3f8.3,/ &
+           &          52x,3f8.3)') nqf(nt), (rinner(i,nt), i=1,nqlc(nt) )
+        !
+     ELSE
+        !
+        ! ... the following is for obsolete formats
+        !
+        IF ( lloc(nt) > -1 ) WRITE( stdout, &
+             '(/5x,"Channel chosen as local reference: L=",i2)') lloc(nt)
+        IF ( nlc(nt) > 0 .OR. nnl(nt) > 0 ) THEN
+           WRITE( stdout, '(/5x,"PseudoPot in analytical form:")')
+           WRITE( stdout, '(14x,"i=",7x,"1",13x,"2",10x,"3")')
+           WRITE( stdout, '(/5x,"core")')
+           WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alpc (i, nt) , i = 1, 2)
+           WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (cc (i, nt) , i = 1, 2)
+           DO l = 0, lmax(nt)
+              WRITE( stdout, '(/5x,"l = ",i2)') l
+              WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alps (i, l, nt) , &
+                   i = 1, 3)
+              WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (aps (i, l, nt) , i = 1,3)
+              WRITE( stdout, '(5x,"a(i+3)=",4x,3g13.5)') (aps (i, l, nt) , i= 4, 6)
+           ENDDO
+           IF ( nlcc(nt) ) WRITE( stdout, 200) a_nlcc(nt), b_nlcc(nt), alpha_nlcc(nt)
+200        FORMAT(/5x,'nonlinear core correction: ', &
+                &     'rho(r) = ( a + b r^2) exp(-alpha r^2)', &
+                & /,5x,'a    =',4x,g11.5, &
+                & /,5x,'b    =',4x,g11.5, &
+                & /,5x,'alpha=',4x,g11.5)
+        ENDIF
+     ENDIF
+
+  ENDDO
+END SUBROUTINE print_ps_info

@@ -285,7 +285,6 @@ MODULE pseud
   REAL(DP) :: &
        cc(2,npsx),            &! the coefficients of the erf functions
        alpc(2,npsx),          &! the alpha of the erf functions
-       zp(npsx),              &! the charge of the pseudopotential
        aps(6,0:3,npsx),       &! the a_l coefficient
        alps(3,0:3,npsx)        ! the b_l coefficient
   REAL(DP) :: &

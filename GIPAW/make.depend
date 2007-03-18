@@ -137,7 +137,6 @@ test_sum_rule.o : ../Modules/io_files.o
 test_sum_rule.o : ../Modules/io_global.o
 test_sum_rule.o : ../Modules/kind.o
 test_sum_rule.o : ../Modules/wavefunctions.o
-test_sum_rule.o : ../PW/becmod.o
 test_sum_rule.o : ../PW/pwcom.o
 test_sum_rule.o : gipaw_module.o
 write_tensor_field.o : ../Modules/cell_base.o

@@ -14,7 +14,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   !   Rydberg atomic units are  used.
   !
   USE kinds, ONLY: DP
-  USE atom, ONLY: r, rab, dx
+  USE atom, ONLY: r, rab
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY: omega
   USE parameters, ONLY:  ndmx
@@ -73,11 +73,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
                     jlp1(i) = jl(i)*aux(i)
                  ENDDO
                  !                        if (tlog(np)) then
-                 IF(tvanp(np)) THEN
-                    CALL radlg1(msh_bp,jlp1,rab(1,np),sum) 
-                 ELSE
-                    CALL radlg(msh_bp,jlp1,r(1,np),dx(np),sum)
-                 ENDIF
+                 CALL radlg1(msh_bp,jlp1,rab(1,np),sum) 
 
                  qr_k(iv,jv,l+1,np) = sum*fpi/omega
                  qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)

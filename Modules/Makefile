@@ -62,6 +62,7 @@ stick_base.o \
 task_groups.o \
 timestep.o \
 version.o \
+upf_to_internal.o \
 uspp.o \
 wave_base.o \
 wavefunctions.o \

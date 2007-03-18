@@ -538,7 +538,6 @@ init_run.o : efield.o
 init_run.o : electrons.o
 init_run.o : ensemble_dft.o
 init_run.o : fromscra.o
-init_run.o : ions.o
 init_run.o : ions_positions.o
 init_run.o : mainvar.o
 init_run.o : modules.o
@@ -963,6 +962,7 @@ read_pseudo.o : ../Modules/parser.o
 read_pseudo.o : ../Modules/pseudo_types.o
 read_pseudo.o : ../Modules/read_upf.o
 read_pseudo.o : ../Modules/read_uspp.o
+read_pseudo.o : ../Modules/upf_to_internal.o
 read_pseudo.o : ../Modules/uspp.o
 read_pseudo.o : modules.o
 redis.o : ../Modules/ions_base.o

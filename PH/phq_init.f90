@@ -41,7 +41,7 @@ SUBROUTINE phq_init()
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
-  USE uspp_param,           ONLY : vloc_at
+  USE uspp_param,           ONLY : vloc_at, zp
   USE phcom
   !
   IMPLICIT NONE

@@ -38,7 +38,7 @@
         TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
 
         PUBLIC :: ap, upf, nspnl, readpp
-        PUBLIC :: upf2internal, pseudo_filename, check_file_type
+        PUBLIC :: pseudo_filename, check_file_type
 
 !=----------------------------------------------------------------------------=!
    CONTAINS
@@ -193,14 +193,15 @@ END FUNCTION calculate_dx
 
       USE mp, ONLY: mp_bcast, mp_sum
       USE io_global, ONLY: stdout, ionode, ionode_id
-      USE uspp_param, ONLY : tvanp, oldvan
+      USE uspp_param, ONLY : zp, tvanp, oldvan
       USE atom, ONLY: numeric, nlcc, oc, lchi, nchi
       USE cvan, ONLY: nvb
-      use ions_base, only: nsp
+      use ions_base, only: zv, nsp
       use read_upf_module, only: read_pseudo_upf
       use read_uspp_module, only: readvan, readrrkj
       use control_flags, only: program_name, tuspp
       use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
+      USE upf_to_internal, ONLY: set_pseudo_upf
 
       IMPLICIT NONE
 
@@ -312,7 +313,7 @@ END FUNCTION calculate_dx
            IF ( ierr /= 0 ) THEN
              CALL deallocate_pseudo_upf( upf(is) )
            ELSE
-             call upf2internal( upf( is ), is, ierr )
+             call set_pseudo_upf( is, upf( is ) )
              !
              IF( upf(is)%tvanp ) THEN
                tuspp = .TRUE.
@@ -355,6 +356,11 @@ END FUNCTION calculate_dx
 
         CLOSE( pseudounit )
 
+        ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
+        ! ... is set equal to Zp = pseudo-charge of the pseudopotential
+ 
+        zv(is) = zp(is)
+
         CALL mp_sum( ierr )
         IF( ierr /= 0 ) THEN
           CALL errore(' readpseudo ', error_msg, ABS(ierr) )
@@ -394,8 +400,6 @@ END FUNCTION calculate_dx
           !
           dft_name = TRIM( xc_type )
           CALL set_dft_from_name( dft_name )
-          IF ( dft_is_hybrid() ) &
-             CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
 
           WRITE( stdout, fmt="(/,3X,'Warning XC functionals forced to be: ',A)" ) dft_name
           !
@@ -415,6 +419,9 @@ END FUNCTION calculate_dx
             end if
           end if
         end if
+ 
+        IF ( dft_is_hybrid() ) &
+            CALL errore( 'readpp', 'HYBRID XC not implemented in CPV', 1 )
 
       END DO
 
@@ -779,99 +786,6 @@ END SUBROUTINE read_numeric_pp
 !=----------------------------------------------------------------------------=!
 !
 !
-
-!
-!---------------------------------------------------------------------
-subroutine upf2internal ( upf, is, ierr )
-  !---------------------------------------------------------------------
-  !
-  !   convert and copy "is"-th pseudopotential in the Unified Pseudopotential 
-  !   Format to internal PWscf variables
-  !   return error code in "ierr" (success: ierr=0)
-  !
-  ! CP90 modules
-  !
-  use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
-                   lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
-  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric, oc
-  use ions_base, only: zv
-  use funct, only: set_dft_from_name, dft_is_hybrid
-  !
-  use pseudo_types
-  !
-  implicit none
-  !
-  integer :: ierr 
-  INTEGER, INTENT(IN) :: is
-  TYPE (pseudo_upf), INTENT(INOUT) :: upf
-  !
-  !     Local variables
-  !
-  integer :: nb, mb, ijv, exfact
-  !
-  zv(is)  = upf%zp
-  ! psd (is)= upf%psd
-  tvanp(is) = upf%tvanp
-  nlcc(is)  = .FALSE.
-  nlcc(is)  = upf%nlcc
-  !
-  call set_dft_from_name( upf%dft )
-  IF ( dft_is_hybrid() ) &
-     CALL errore( 'read_pseudo', 'HYBRID XC not implemented in CPV', 1 )
-
-  !
-  mesh(is) = upf%mesh
-  if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
-  !
-  nchi(is) = upf%nwfc
-  lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)
-  oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
-  chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
-
-  !
-  nbeta(is)= upf%nbeta
-  kkbeta(is)=0
-  do nb=1,upf%nbeta
-     kkbeta(is)=max(upf%kkbeta(nb),kkbeta(is))
-  end do
-  betar(1:upf%mesh, 1:upf%nbeta, is) = upf%beta(1:upf%mesh, 1:upf%nbeta)
-  dion(1:upf%nbeta, 1:upf%nbeta, is) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
-  !
-
-  ! lmax(is) = upf%lmax
-  nqlc(is) = upf%nqlc
-  nqf (is) = upf%nqf
-  lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
-  rinner(1:upf%nqlc,is) = upf%rinner(1:upf%nqlc)
-  qqq(1:upf%nbeta,1:upf%nbeta,is) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-  do nb = 1, upf%nbeta
-     do mb = nb, upf%nbeta
-        ijv = mb * (mb-1) /2 + nb
-        qfunc (1:upf%mesh, ijv, is) = upf%qfunc(1:upf%mesh, nb, mb)
-     end do
-  end do
-  qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
-       upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
-
-  !
-  r  (1:upf%mesh, is) = upf%r  (1:upf%mesh)
-  rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
-  !
-  if ( upf%nlcc) then
-     rho_atc (1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
-  else
-     rho_atc (:,is) = 0.d0
-  end if
-  !
-  ! rsatom (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
-  ! lloc(is) = 1
-  !
-  vloc_at (1:upf%mesh, is) = upf%vloc(1:upf%mesh)
-  !
-  return
-end subroutine upf2internal
-
-
 !
 !---------------------------------------------------------------------
 subroutine ncpp2internal ( ap, is, xc_type, ierr )
@@ -883,10 +797,9 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   !
   ! CP90 modules
   !
-  use uspp_param, only: qfunc, qfcoef, rinner, qqq, vloc_at, &
+  use uspp_param, only: zp, qfunc, qfcoef, rinner, qqq, vloc_at, &
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
   use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric, oc
-  use ions_base, only: zv
   use funct, only: set_dft_from_name, dft_is_hybrid
   !
   use pseudo_types
@@ -903,7 +816,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   integer :: il, ir, ic
   real(DP), allocatable :: fint(:)
   !
-  zv(is)     = ap%zv
+  zp(is)     = ap%zv
   tvanp(is)  = .FALSE.
   nlcc(is)   = ap%tnlcc
   mesh(is)   = ap%mesh
@@ -1244,10 +1157,9 @@ END SUBROUTINE read_atomic_cc
 !---------------------------------------------------------------------
 !
       use atom, only: rab, r, mesh, nlcc, rho_atc, numeric
-      use uspp_param, only: betar, dion, vloc_at, lll, nbeta, kkbeta
+      use uspp_param, only: zp, betar, dion, vloc_at, lll, nbeta, kkbeta
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: set_dft_from_name, dft_is_hybrid
-      use ions_base, only: zv
       use io_global, only: stdout
 
 !
@@ -1264,8 +1176,8 @@ END SUBROUTINE read_atomic_cc
 !
       numeric(is) = .false.
       nlcc(is)=.false.
-      read(iunps,*) z,zv(is),nbeta(is),lloc(is),exfact
-      if (zv(is) < 1 .or. zv(is) > 100 ) then
+      read(iunps,*) z,zp(is),nbeta(is),lloc(is),exfact
+      if (zp(is) < 1 .or. zp(is) > 100 ) then
          call errore('readbhs','wrong potential read',15)
       endif
 
@@ -1379,7 +1291,7 @@ END SUBROUTINE read_atomic_cc
 !     ------------------------------------------------------------------
 !     output: pp info 
 !     ------------------------------------------------------------------
-      WRITE( stdout,3000) z,zv(is)
+      WRITE( stdout,3000) z,zp(is)
 3000  format(2x,'bhs pp for z=',f3.0,2x,'zv=',f3.0)
 
       WRITE( stdout,'(2x,a20)') dft_name

@@ -157,7 +157,7 @@ rdiaghg.o \
 read_conf_from_file.o \
 read_file.o \
 read_ncpp.o \
-readin.o \
+read_pseudo.o \
 regterg.o \
 remove_atomic_rho.o \
 report_mag.o \
@@ -229,7 +229,6 @@ trnvecc.o \
 trnvect.o \
 tweights.o \
 update_pot.o \
-upf_to_internal.o \
 usnldiag.o \
 v_of_rho.o \
 vcsmd.o \
@@ -306,6 +305,7 @@ MODULES = \
 ../Modules/stick_base.o \
 ../Modules/task_groups.o \
 ../Modules/timestep.o \
+../Modules/upf_to_internal.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \

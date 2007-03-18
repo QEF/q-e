@@ -53,6 +53,7 @@ MODULES = \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
 ../Modules/timestep.o \
+../Modules/upf_to_internal.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \

@@ -69,12 +69,10 @@ d3_setup.o : ../Modules/mp_global.o
 d3_setup.o : ../PH/phcom.o
 d3_setup.o : ../PW/pwcom.o
 d3_setup.o : d3com.o
-d3_summary.o : ../Modules/atom.o
 d3_summary.o : ../Modules/control_flags.o
 d3_summary.o : ../Modules/io_global.o
 d3_summary.o : ../Modules/ions_base.o
 d3_summary.o : ../Modules/kind.o
-d3_summary.o : ../Modules/uspp.o
 d3_summary.o : ../PH/phcom.o
 d3_summary.o : ../PW/pwcom.o
 d3_summary.o : d3com.o

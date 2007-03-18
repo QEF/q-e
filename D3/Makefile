@@ -95,6 +95,7 @@ MODULES = \
 ../Modules/task_groups.o \
 ../Modules/splinelib.o \
 ../Modules/stick_base.o \
+../Modules/upf_to_internal.o \
 ../Modules/uspp.o \
 ../Modules/timestep.o \
 ../Modules/version.o \

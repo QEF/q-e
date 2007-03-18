@@ -26,11 +26,6 @@ subroutine phq_summary
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
   USE gsmooth,       ONLY : doublegrid, nr1s, nr2s, nr3s, gcutms, ngms
   USE symme,         ONLY : s, ftau
-  USE pseud,         ONLY : zp, lmax, lloc, cc, aps, nlc, nnl, alpc, alps, &
-       a_nlcc, b_nlcc, alpha_nlcc
-  USE atom,          ONLY : numeric, mesh, msh, dx, r , rab, xmin, nlcc
-  USE uspp_param,    ONLY : psd, lll, iver, nbeta, nqf, rinner, nqlc, &
-       tvanp
   USE constants,     ONLY : amconv
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,      ONLY : lspinorb, domag
@@ -65,8 +60,6 @@ subroutine phq_summary
   ! the symmetry matrix in cartesian coord
   ! k point in crystal coordinates
 
-  character :: ps * 5
-  ! the name of the pseudo
   !
   WRITE( stdout, 100) title, crystal, ibrav, alat, omega, nat, ntyp, &
        ecutwfc, ecutwfc * dual, tr2_ph, alpha_mix (1), &
@@ -224,86 +217,20 @@ subroutine phq_summary
      WRITE( stdout, '(/23x,"cryst. coord.")')
      do ik = 1, nkstot
         do ipol = 1, 3
-           ! xkg are the compone
            xkg (ipol) = at (1, ipol) * xk (1, ik) + at (2, ipol) * xk (2, &
                 ik) + at (3, ipol) * xk (3, ik)
-           ! of xk in the crysta
-           ! rec. lattice basis
+           ! xkg are the components  of xk in the reciprocal lattice basis
         enddo
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') &
              ik, (xkg (ipol) , ipol = 1, 3) , wk (ik)
      enddo
 
   endif
-  do nt = 1, ntyp
-     if (tvanp (nt) ) then
-        ps = '(US)'
-        WRITE( stdout, '(/5x,"pseudo",i2," is ",a2, &
-             &        1x,a5,"   zval =",f5.1,"   lmax=",i2, &
-             &        "   lloc=",i2)') nt, psd (nt) , ps, zp (nt) , lmax (nt) &
-             &, lloc (nt)
-        WRITE( stdout, '(5x,"Version ", 3i3, " of US pseudo code")') &
-             (iver (i, nt) , i = 1, 3)
-        WRITE( stdout, '(/,5x,"Using log mesh of ", i5, " points",/)') &
-             mesh (nt)
-        WRITE( stdout, '(5x,"The pseudopotential has ",i2, &
-             &       " beta functions with: ",/)') nbeta (nt)
-        do ib = 1, nbeta (nt)
-           WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
 
-        enddo
-        WRITE( stdout, '(/,5x,"Q(r) pseudized with ", &
-             &          i2," coefficients,  rinner = ",3f8.3, /, &
-             &          58x,2f8.3)') nqf (nt) ,  (rinner (i, nt) , i = 1, nqlc ( &
-             &nt) )
-     else
-        if (nlc (nt) .eq.1.and.nnl (nt) .eq.1) then
-           ps = '(vbc)'
-        elseif (nlc (nt) .eq.2.and.nnl (nt) .eq.3) then
-           ps = '(bhs)'
-        elseif (nlc (nt) .eq.1.and.nnl (nt) .eq.3) then
-           ps = '(our)'
-        else
-           ps = '     '
+  CALL print_ps_info ( )
 
-        endif
-
-        WRITE( stdout, '(/5x,"pseudo",i2," is ",a2, &
-             &        1x,a5,"   zval =",f5.1,"   lmax=",i2, &
-             &        "   lloc=",i2)') nt, psd (nt) , ps, zp (nt) , lmax (nt) &
-             &, lloc (nt)
-        if (numeric (nt) ) then
-           WRITE( stdout, '(5x,"(in numerical form: ",i4,&
-                &" grid points",", xmin = ",f5.2,", dx = ",&
-                &f6.4,")")' )  mesh (nt) , xmin (nt) , dx (nt)
-        else
-           WRITE( stdout, '(/14x,"i=",7x,"1",13x,"2",10x,"3")')
-           WRITE( stdout, '(/5x,"core")')
-           WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alpc (i, nt) , i = &
-                1, 2)
-           WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)')  (cc (i, nt) , i = 1, 2)
-           do l = 0, lmax (nt)
-              WRITE( stdout, '(/5x,"l = ",i2)') l
-              WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alps (i, l, nt) , &
-                   i = 1, 3)
-              WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)')  (aps (i, l, nt) , i = 1, &
-                   &3)
-              WRITE( stdout, '(5x,"a(i+3)=",4x,3g13.5)') (aps (i, l, nt) , i &
-                   = 4, 6)
-           enddo
-           if (nlcc (nt) ) WRITE( stdout, 200) a_nlcc (nt), b_nlcc (nt), &
-                alpha_nlcc (nt)
-200        format(/5x,'nonlinear core correction: ', &
-                &          'rho(r) = ( a + b r^2) exp(-alpha r^2)', &
-                &          /,5x,'a    =',4x,g11.5, &
-                &          /,5x,'b    =',4x,g11.5, &
-                &          /,5x,'alpha=',4x,g11.5)
-        endif
-     endif
-  enddo
   WRITE( stdout, '(//5x,"Atomic displacements:")')
-  WRITE( stdout, '(5x,"There are ",i3," irreducible representations") &
-       &') nirr
+  WRITE( stdout, '(5x,"There are ",i3," irreducible representations")') nirr
   imode0 = 0
   do irr = 1, nirr
      if (done_irr (irr) .eq.1) then

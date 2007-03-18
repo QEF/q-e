@@ -18,8 +18,8 @@ MODULE atom
   !
   REAL(DP) :: &
        zmesh(npsx),              &! the atomic charge for mesh generation
-       xmin(npsx),               &! initial linear mesh point
-       dx(npsx),                 &! linear interval for logaritmic mesh
+       xmin(npsx),               &! initial linear mesh point (obsolescent)
+       dx(npsx),                 &! linear interval for logaritmic mesh (obs.)
        r(ndmx,npsx),             &! radial logaritmic mesh
        rab(ndmx,npsx),           &! derivative of the radial mesh
        jchi(nchix,npsx),         &! total angular momentum of atomic orbitals
@@ -33,7 +33,8 @@ MODULE atom
        nchi(npsx),               &! number of atomic orbitals
        lchi(nchix,npsx)           ! angular momentum of atomic orbitals
   LOGICAL :: &
-       numeric(npsx),            &! if .TRUE. the potential is in numeric form
-       nlcc(npsx)                 ! if .TRUE. the atom has nlcc
+       numeric(npsx),            &! .TRUE. for pot. in numeric form (ie always)
+       nlcc(npsx)                 ! .TRUE. if the potential has nonlinear
+                                  !        core correction
   !
 END MODULE atom

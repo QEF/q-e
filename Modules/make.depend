@@ -206,7 +206,6 @@ read_uspp.o : atom.o
 read_uspp.o : constants.o
 read_uspp.o : functionals.o
 read_uspp.o : io_global.o
-read_uspp.o : ions_base.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
 read_uspp.o : uspp.o
@@ -233,6 +232,11 @@ task_groups.o : mp.o
 task_groups.o : mp_global.o
 task_groups.o : parallel_include.o
 timestep.o : kind.o
+upf_to_internal.o : atom.o
+upf_to_internal.o : functionals.o
+upf_to_internal.o : parameters.o
+upf_to_internal.o : pseudo_types.o
+upf_to_internal.o : uspp.o
 uspp.o : constants.o
 uspp.o : kind.o
 uspp.o : parameters.o

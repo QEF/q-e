@@ -17,6 +17,7 @@ MODULE uspp_param
   CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
 
   REAL(DP) :: &
+       zp(npsx),                   &! the charge of the pseudopotential
        dion(nbrx,nbrx,npsx),       &! D_{mu,nu} parameters (in the atomic case)
        betar(ndmx,nbrx,npsx),      &! radial beta_{mu} functions
        jjj(nbrx,npsx),             &! total angular momentum of the beta function

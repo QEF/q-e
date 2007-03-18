@@ -802,8 +802,8 @@ CONTAINS
          END IF
          !
          IF( nvb > 0 ) THEN
-            CALL DGEMM( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist + ir - 1 ), nkbx, &
-                        qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
+            CALL DGEMM( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist+ir-1 ), &
+                         nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
                         !qbecp( 1, ist + ic - 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
@@ -924,8 +924,8 @@ CONTAINS
             !
             ! rho(i,j) = rho(i,j) + SUM_b bephi( b, i ) * qbecp( b, j ) 
             !
-            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist + ir - 1 ), nkbx, &
-                     qbecp( 1, 1 ), nkbx, 1.0d0, rho, ldx )
+            CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist+ir-1 ), &
+                        nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, rho, ldx )
                      ! qbecp( 1, ist + ic - 1 ), nkbx, 1.0d0, rho, ldx )
 
          END IF
@@ -1198,7 +1198,7 @@ CONTAINS
       USE mp_global,      ONLY: intra_image_comm
       USE cvan,           ONLY: ish, nvb
       USE uspp_param,     ONLY: nh
-      USE uspp,           ONLY: nhsavb=>nkbus, qq
+      USE uspp,           ONLY: nkbus, qq
       USE gvecw,          ONLY: ngw
       USE constants,      ONLY: pi, fpi
       USE control_flags,  ONLY: iprint, iprsta
@@ -1223,7 +1223,7 @@ CONTAINS
       !
       IF ( nvb > 0 ) THEN
 
-         ALLOCATE( qtemp( nhsavb, n ) )
+         ALLOCATE( qtemp( nkbus, n ) )
 
          qtemp (:,:) = 0.d0
          DO is=1,nvb
@@ -1243,8 +1243,8 @@ CONTAINS
             END DO
          END DO
 !
-         CALL DGEMM &
-              ( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngwx, qtemp, nhsavb, 0.0d0, phi, 2*ngwx )
+         CALL DGEMM ( 'N', 'N', 2*ngw, n, nkbus, 1.0d0, betae, &
+                       2*ngwx, qtemp, nkbus, 0.0d0, phi, 2*ngwx )
 
          DEALLOCATE( qtemp )
 
