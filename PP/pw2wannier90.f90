@@ -1296,7 +1296,7 @@ subroutine write_plot
             do k=1,nr3s,2
                do j=1,nr2s,2
                   do i=1,nr1s,2
-                     idx = (k-1)*nr3s*nr2s + (j-1)*nr2s + i
+                     idx = (k-1)*nr2s*nr1s + (j-1)*nr1s + i
                      pos=pos+1
                      psic_small(pos) = psic_all(idx) 
                   enddo
@@ -1323,7 +1323,7 @@ subroutine write_plot
             do k=1,nr3s,2
                do j=1,nr2s,2
                   do i=1,nr1s,2
-                     idx = (k-1)*nr3s*nr2s + (j-1)*nr2s + i
+                     idx = (k-1)*nr2s*nr1s + (j-1)*nr1s + i
                      pos=pos+1
                      psic_small(pos) = psic(idx) 
                   enddo
