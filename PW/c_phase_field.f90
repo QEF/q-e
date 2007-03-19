@@ -130,7 +130,8 @@ SUBROUTINE c_phase_field
    LOGICAL l_cal!flag for doing mat calculation
    INTEGER, ALLOCATABLE :: map_g(:)
 
-   REAL(dp) ::dkfact
+   REAL(dp) :: dkfact
+   COMPLEX(dp) :: zeta_tot
 
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
@@ -139,6 +140,7 @@ SUBROUTINE c_phase_field
   allocate(map_g(npwx))
 
   pola=0.d0!set to 0 electronic polarization   
+  zeta_tot=(1.d0,0.d0)
 
 !  --- Check that we are working with an insulator with no empty bands ---
 !   IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
@@ -502,6 +504,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 
 !        --- End loop over parallel k-points ---
          END DO 
+         zeta_tot=zeta_tot*(zeta_loc**wstring(istring))
          pola=pola+wstring(istring)*aimag(log(zeta_loc))
 
          kpoint=kpoint-1
@@ -521,6 +524,9 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
    END DO
 !-----calculate polarization
 !-----the factor 2. is because of spin
+!new system for avoiding phases problem
+   pola=aimag(log(zeta_tot))
+
    if(nspin==1) pola=pola*2.d0
    !pola=pola/(gpar(gdir)*tpiba)
    call factor_a(gdir,at,dkfact)
