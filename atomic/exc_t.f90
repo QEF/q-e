@@ -44,7 +44,5 @@ function exc_t(rho,rhoc,lsd)
      endif
   endif
 
-  exc_t=e2*(ex+ec)
-
   return
 end function exc_t
