@@ -9,10 +9,12 @@ stop_code.o \
 apply_p.o \
 apply_vel.o \
 greenfunction.o \
-h_psiq2.o \
+h_psiq.o \
+cg_psi.o \
+cgsolve_all.o \
 sym_cart_tensor.o \
 symmetrize_field.o \
-ch_psi_all2.o \
+ch_psi_all.o \
 test_sum_rule.o \
 compute_u_kq.o \
 suscept_crystal.o \
@@ -89,15 +91,13 @@ MODULES = \
 
 PWOBJS = ../PW/libpw.a
 
-PHOBJS = ../PH/libph.a
-
-TLDEPS=bindir ph pw mods libs libiotk
+TLDEPS=bindir pw mods libs libiotk
 
 all : tldeps gipaw.x
 
-gipaw.x : $(GIPAWOBJS) $(PWOBJS) $(PHOBJS) $(LIBOBJS)
+gipaw.x : $(GIPAWOBJS) $(PWOBJS) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
-		$(GIPAWOBJS) $(MODULES) $(PHOBJS) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		$(GIPAWOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../GIPAW/$@ . )
 
 tldeps:
