@@ -114,15 +114,21 @@
 !
 !
       real(kind=DP), allocatable :: bec0(:,:), becm(:,:), becdrdiag(:,:,:)
-
+      real(kind=DP), allocatable :: ave_ene(:)!average kinetic energy for preconditioning
+      
+      logical :: pre_state!if .true. does preconditioning state by state
 
 
       allocate(bec0(nhsa,n),becm(nhsa,n), becdrdiag(nhsa,n,3))
+      allocate (ave_ene(n))
+
 
 
       call start_clock('runcg_uspp')
       newscheme=.false.
       firstiter=.true.
+
+      pre_state=.true.!ATTENZIONE
 
       maxiter3=250
 
@@ -344,6 +350,8 @@
           end if
         enddo
 
+        if(pre_state) call ave_kin(c0,SIZE(c0,1),n,ave_ene)
+
                
         call pcdaga2(c0,phi,hpsi)
                
@@ -361,7 +369,11 @@
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
 !        call kminus1(gi,betae,ema0bg)
-        call xminus1(gi,betae,ema0bg,becm,k_minus1,.true.)
+        if(.not.pre_state) then
+           call xminus1(gi,betae,ema0bg,becm,k_minus1,.true.)
+        else
+           call xminus1_state(gi,betae,ema0bg,becm,k_minus1,.true.,ave_ene)
+        endif
         call calbec(1,nsp,eigr,gi,becm)
         call pc2(c0,bec,gi,becm)
 
@@ -957,6 +969,7 @@
        call stop_clock('runcg_uspp')
 
        deallocate(bec0,becm,becdrdiag)
+       deallocate(ave_ene)
 
        return
      END SUBROUTINE runcg_uspp

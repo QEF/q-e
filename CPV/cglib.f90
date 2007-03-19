@@ -518,6 +518,8 @@ subroutine pc2(a,beca,b,becb)
       real(dp) becktmp
 !      real(dp) qtemp(nhsavb,n) ! automatic array
 !
+      
+      logical :: mat_par=.true.!if true uses parallel routines      
 
       call start_clock('xminus1')
       if (nvb.gt.0) then
@@ -548,25 +550,16 @@ subroutine pc2(a,beca,b,becb)
       allocate(phi(ngw,n))
       allocate(qtemp(nhsavb,n))
       phi(1:ngw,1:n) = 0.0d0
-      qtemp = 0.0d0
-         do is=1,nvb
-            do iv=1,nh(is)
-               do js=1,nvb
-                  do jv=1,nh(js)
-                     do ia=1,na(is)
-                        do ja=1,na(js)
-                          inl=ish(is)+(iv-1)*na(is)+ia
-                          jnl=ish(js)+(jv-1)*na(js)+ja
-                           do i=1,n
-                             qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                   m_minus1(inl,jnl)*beck(jnl,i)
-                           end do
-                        enddo
-                     end do
-                  end do
-               end do
-            end do
-         end do
+      qtemp(:,:) = 0.0d0
+      if(.not.mat_par) then
+         call dgemm( 'N', 'N', nhsavb, n, nhsavb, 1.0d0, m_minus1,nhsavb ,    &
+                    beck, nhsa, 0.0d0, qtemp,nhsavb )
+      else
+         call para_dgemm( 'N', 'N', nhsavb, n, nhsavb, 1.0d0, m_minus1,nhsavb ,    &
+                    beck, nhsa, 0.0d0, qtemp,nhsavb,intra_image_comm )
+      endif
+
+
 !NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
 !         call MXMA                                                     &
 !     &       (betae,1,2*ngw,qtemp,1,nhsavb,phi,1,2*ngw,2*ngw,nhsavb,n)
@@ -620,3 +613,164 @@ subroutine pc2(a,beca,b,becb)
       RETURN
       END SUBROUTINE emass_precond_tpa
 
+      subroutine ave_kin( c, ngwx, n, ene_ave )
+!this subroutine calculates the average kinetic energy of
+!each state , to be used for preconditioning
+
+
+      USE kinds,              ONLY: DP
+      USE constants,          ONLY: pi, fpi
+      USE gvecw,              ONLY: ngw
+      USE reciprocal_vectors, ONLY: gstart
+      USE gvecw,              ONLY: ggp
+      USE mp,                 ONLY: mp_sum
+      USE mp_global,          ONLY: intra_image_comm
+      USE cell_base,          ONLY: tpiba2
+                                                                                                                             
+      IMPLICIT NONE
+                                                                                                                            
+                                                                                                                             
+      ! input
+                                                                                                                             
+      INTEGER,     INTENT(IN) :: ngwx, n
+      COMPLEX(kind=DP), INTENT(IN) :: c( ngwx, n )
+      REAL(kind=DP), INTENT(out) :: ene_ave(n)!average kinetic energy to be calculated
+      !
+      ! local
+                                                                                                                             
+      INTEGER  :: ig, i
+
+      !
+      DO i=1,n
+         ene_ave(i)=0.d0
+         DO ig=gstart,ngw
+            ene_ave(i)=ene_ave(i)+DBLE(CONJG(c(ig,i))*c(ig,i))*ggp(ig)
+         END DO
+      END DO
+
+
+      CALL mp_sum( ene_ave(1:n), intra_image_comm )
+      ene_ave=ene_ave*tpiba2
+                                                                                                                             
+      RETURN
+    END subroutine ave_kin
+
+
+
+      subroutine xminus1_state(c0,betae,ema0bg,beck,m_minus1,do_k,ave_kin)
+! if (do_k) then
+!-----------------------------------------------------------------------
+!     input: c0 , bec=<c0|beta>, betae=|beta>
+!     computes the matrix phi (with the old positions)
+!       where  |phi> = K^{-1}|c0>
+! else
+!-----------------------------------------------------------------------
+!     input: c0 , bec=<c0|beta>, betae=|beta>
+!     computes the matrix phi (with the old positions)
+!       where  |phi> = s^{-1}|c0>
+! endif
+!adapted for state by state
+      use kinds, only: dp
+      use ions_base, only: na, nsp
+      use io_global, only: stdout
+      use mp_global, only: intra_image_comm
+      use cvan
+      use uspp_param, only: nh
+      use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
+      use electrons_base, only: n => nbsp
+      use gvecw, only: ngw
+      use constants, only: pi, fpi
+      use control_flags, only: iprint, iprsta
+      use mp, only: mp_sum
+      use reciprocal_vectors, only: ng0 => gstart
+      USE gvecw,              ONLY: ggp
+      USE cell_base,          ONLY: tpiba2
+
+
+!
+      implicit none
+      complex(dp) c0(ngw,n), betae(ngw,nhsa)
+      real(dp)    beck(nhsa,n), ema0bg(ngw)
+      real(DP)    :: m_minus1(nhsavb,nhsavb)
+      logical :: do_k
+      real(kind=DP) :: ave_kin(n)!average kinetic energy per state
+! local variables
+      complex(dp), allocatable :: phi(:,:)
+      real(dp) , allocatable   :: qtemp(:,:)
+      integer is, iv, jv, ia, inl, jnl, i, j, js, ja,ig
+      real(dp) becktmp
+      real(kind=DP) :: prec_fact, x
+!      real(dp) qtemp(nhsavb,n) ! automatic array
+!
+ 
+      call start_clock('xminus1')
+      if (nvb.gt.0) then
+!calculates beck
+         if (do_k) then
+            beck(:,:) = 0.d0
+ 
+            do is=1,nvb
+               do iv=1,nh(is)
+                  do ia=1,na(is)
+                     inl=ish(is)+(iv-1)*na(is)+ia
+                     do i=1,n
+                        becktmp = 0.0d0
+                        do ig=1,ngw
+                           becktmp=becktmp+ema0bg(ig)*DBLE(CONJG(betae(ig,inl))*c0(ig,i))
+                        enddo
+                        becktmp = becktmp*2.0d0
+                        if (ng0.eq.2) becktmp = becktmp-ema0bg(1)*DBLE(CONJG(betae(1,inl))*c0(1,i))
+                        beck(inl,i) = beck(inl,i) + becktmp
+                     enddo
+                  enddo
+               enddo
+            enddo
+            call mp_sum( beck, intra_image_comm )
+         endif
+!
+!
+      allocate(phi(ngw,n))
+      allocate(qtemp(nhsavb,n))
+      phi(1:ngw,1:n) = 0.0d0
+      qtemp(:,:) = 0.0d0
+      call dgemm( 'N', 'N', nhsavb, n, nhsavb, 1.0d0, m_minus1,nhsavb ,    &
+                    beck, nhsa, 0.0d0, qtemp,nhsavb )
+ 
+ 
+ 
+!NB nhsavb is the total number of US projectors, it works because the first pseudos are the vanderbilt's ones
+
+      CALL DGEMM( 'N', 'N', 2*ngw, n, nhsavb, 1.0d0, betae, 2*ngw,    &
+           qtemp, nhsavb, 0.0d0, phi, 2*ngw )
+      if (do_k) then
+         do j=1,n
+            do ig=1,ngw
+               x=tpiba2*ggp(i)/ave_kin(j)
+               prec_fact = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
+                c0(ig,j)=c0(ig,j)*prec_fact
+               !c0(ig,j)=(phi(ig,j)+c0(ig,j))*ema0bg(ig)
+            end do
+         end do
+      else
+         do j=1,n
+            do i=1,ngw
+               c0(i,j)=(phi(i,j)+c0(i,j))
+            end do
+         end do
+      endif
+      deallocate(qtemp,phi)
+      
+   else
+      if (do_k) then
+         do j=1,n
+            do ig=1,ngw
+               x=tpiba2*ggp(i)/ave_kin(j)
+               prec_fact = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
+               c0(ig,j)=c0(ig,j)*prec_fact
+            end do
+         end do
+      endif
+   endif
+   call stop_clock('xminus1')
+   return
+ end subroutine xminus1_state
