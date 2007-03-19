@@ -25,9 +25,9 @@ do
     case $DIR in 
 	PW | CPV | flib | pwtools | upftools | atomic )
 		  DEPENDS="$DEPENDS ../Modules"             ;;
-	PP | PWCOND | Gamma | PH )
+	PP | PWCOND | Gamma | PH | GIPAW )
 		  DEPENDS="$DEPENDS ../Modules ../PW"       ;;
-	D3 | GIPAW | VdW ) 
+	D3 | VdW ) 
                   DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
         VIB )     DEPENDS="$DEPENDS ../Modules ../PW ../CPV";;
     esac
