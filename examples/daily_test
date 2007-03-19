@@ -141,7 +141,7 @@ do
     echo "# CHECKING EXAMPLE # " $N >> $OUT
     echo "#" >> $OUT
 
-    if /bin/grep "HIGH WERBOSITY EXAMPLE" < run_example > /dev/null ; then
+    if /bin/grep "HIGH VERBOSITY EXAMPLE" < run_example > /dev/null ; then
        # high verbosity example: check only exit status
        if test $exit_status -eq 0; then
           echo "exit status = $exit_status :  everything seems OK" >> $OUT
