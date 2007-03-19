@@ -211,10 +211,12 @@ subroutine pc2(a,beca,b,becb)
       use control_flags, only: iprint, iprsta
       use reciprocal_vectors, only: ng0 => gstart
       use mp, only: mp_sum
-      use electrons_base, only: n => nbsp, ispin
+      use electrons_base, only: n => nbsp, ispin,  nupdwn, iupdwn, nspin
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb
       use uspp, only :qq
+      use parallel_toolkit, only : rep_matmul_drv
+      
                            
       implicit none        
                            
@@ -224,61 +226,80 @@ subroutine pc2(a,beca,b,becb)
 ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
       real(kind=DP) sca
-      real(DP), allocatable:: scar(:), bectmp(:,:)
-!      real(kind=DP)  becp(nhsa)
+      real(DP), allocatable :: bectmp(:,:)
+      real(DP), allocatable :: qq_tmp(:,:), qqb_tmp(:,:)
+      complex(DP), allocatable :: zbectmp(:,:)
+      integer :: nl_max
+      integer :: nss,iss, istart
+
+      logical :: mat_par=.true.!if true uses parallel routines
+
       CALL start_clock( 'pc2' )
-      allocate(scar(n))
-      allocate(bectmp(n,n))
-      bectmp = 0.0d0
-      !      write(6,*) 'mpime= ',mpime,'n=',n,'ngw=',ngw
-         !         becp(:)=0.d0
-         do j=1,n
-            do i=1,n
-               sca=0.d0
-               if(ispin(j) == ispin(i)) then
-                  if (ng0.eq.2) b(1,i)=cmplx(dble(b(1,i)),0.0d0)
-                  do  ig=1,ngw           !loop on g vectors
-                     sca=sca+DBLE(CONJG(a(ig,j))*b(ig,i))
-                  enddo
-                  sca = sca*2.0d0 !2. for real wavefunctions
-                  if (ng0.eq.2) sca=sca-DBLE(a(1,j))*DBLE(b(1,i))
-               endif
-               scar(i) = sca
-            enddo
-            call mp_sum( scar, intra_image_comm )
 
-            do i=1,n
-               if(ispin(j) == ispin(i)) then
-                  sca = scar(i)
-                  if (nvb.gt.0) then
+      do iss= 1, nspin
+         nss= nupdwn( iss )
+         istart= iupdwn( iss )
 
-                     do is=1,nvb
-                        do iv=1,nh(is)
-                           do jv=1,nh(is)
-                              do ia=1,na(is)
-                                 inl=ish(is)+(iv-1)*na(is)+ia
-                                 jnl=ish(is)+(jv-1)*na(is)+ia
-                                 sca=sca+ qq(iv,jv,is)*beca(inl,j)*becb(jnl,i)  
-                              end do
-                           end do
-                        end do
-                     end do
-                  end if
+         allocate(bectmp(nss,nss))
+         allocate(zbectmp(nss,nss))
+         bectmp(:,:)=0.d0
 
-                  do ig=1,ngw
-                     b(ig,i)=b(ig,i)-sca*a(ig,j)
-                  enddo
-                  ! this to prevent numerical errors
-                  if (ng0.eq.2) b(1,i)=cmplx(dble(b(1,i)),0.0d0)
-                  bectmp(j,i) = sca
-               endif
+         call zgemm('C','N',nss,nss,ngw,(1.d0,0.d0),a(:,istart),ngw,b(:,istart),ngw,(0.d0,0.d0),zbectmp,nss)
+
+         do j=1,nss
+            do i=1,nss
+               bectmp(i,j)=2.d0*dble(zbectmp(i,j))
+               if(ng0.eq.2) bectmp(i,j)=bectmp(i,j)-DBLE(a(1,j))*DBLE(b(1,i))
+               
             enddo
          enddo
-         call dgemm('N','N',nhsa,n,n,1.0d0,beca,nhsa,bectmp,n,1.0d0,becb,nhsa)
-         deallocate(bectmp,scar)
-         CALL stop_clock( 'pc2' )
+         deallocate(zbectmp)
+         call mp_sum( bectmp(:,:))
+         if(nvb >= 0) then
+
+            nl_max=0
+            do is=1,nvb
+               nl_max=nl_max+nh(is)*na(is)
+            enddo
+            allocate (qq_tmp(nl_max,nl_max))
+            allocate (qqb_tmp(nl_max,nss))
+            qq_tmp(:,:)=0.d0
+            do is=1,nvb
+               do iv=1,nh(is)
+                  do jv=1,nh(is)
+                     do ia=1,na(is)
+                        inl=ish(is)+(iv-1)*na(is)+ia
+                        jnl=ish(is)+(jv-1)*na(is)+ia
+                        qq_tmp(inl,jnl)=qq(iv,jv,is)
+                     enddo
+                  enddo
+               enddo
+            enddo
+            if(.not. mat_par)  then
+               call dgemm('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nhsa,0.d0,qqb_tmp,nl_max)
+               call dgemm('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nhsa,qqb_tmp,nl_max,1.d0,bectmp,nss)
+            else
+               call para_dgemm &
+& ('N','N',nl_max,nss,nl_max,1.d0,qq_tmp,nl_max,becb(:,istart),nhsa,0.d0,qqb_tmp,nl_max, intra_image_comm)
+               call para_dgemm &
+&('T','N',nss,nss,nl_max,1.d0,beca(:,istart),nhsa,qqb_tmp,nl_max,1.d0,bectmp,nss, intra_image_comm)
+            endif
+            deallocate(qq_tmp,qqb_tmp)
+         endif
+         allocate(zbectmp(nss,nss))
+         do i=1,nss
+            do j=1,nss
+               zbectmp(i,j)=cmplx(bectmp(i,j),0.d0)
+            enddo
+         enddo
+         call zgemm('N','N',ngw,nss,nss,(-1.d0,0.d0),a(:,istart),ngw,zbectmp,nss,(1.d0,0.d0),b(:,istart),ngw)
+         deallocate(zbectmp)
+         call dgemm('N','N',nhsa,nss,nss,1.0d0,beca(:,istart),nhsa,bectmp,nss,1.0d0,becb(:,istart),nhsa)
+         deallocate(bectmp)
+      enddo!on spin
+      CALL stop_clock( 'pc2' )
       return
-      end subroutine pc2
+    end subroutine pc2
 
 
       subroutine pcdaga2(a,as ,b )
