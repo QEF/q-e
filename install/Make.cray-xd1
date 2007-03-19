@@ -46,8 +46,7 @@ MASS_LIBS      =
 
 # See include/defs.h.README for a list of precompilation options
 # (possible arguments to -D or -U) and their meaning
-#DFLAGS         = -D__LINUX64 -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW -D__MPI -D__PARA -D__NOSMD
-DFLAGS         = -D__LINUX64 -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW -D__MPI -D__PARA
+DFLAGS         = -D__XD1 -D__PGI -D__FFTW -D__USE_INTERNAL_FFTW -D__MPI -D__PARA
 FDFLAGS        = $(DFLAGS)
 IFLAGS         = -I../include 
 MODFLAGS       = -I. -I../Modules -I../PW -I../PH -I../iotk/src -I../CPV

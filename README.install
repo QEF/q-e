@@ -303,9 +303,9 @@ machines;
   altix       SGI Altix 350/3000 with Linux, Intel compiler
   beo_ifc     Linux clusters of PCs, Intel compiler
   beowulf     Linux clusters of PCs, Portland compiler
-  bgl         IBM BG/L 
+  bgl         IBM BlueGene/L 
   cray-xd1    CRAY XD1
-  cray-xt3    CRAY XTr3
+  cray-xt3    CRAY XT3
   cygwin      Windows PC, Intel compiler
   fujitsu     Fujitsu vector machines
   gfortran    GNU gfortran

@@ -76,6 +76,7 @@ Hardware/Compiler:
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __INTEL     Intel ifc and ifort compilers (workaround for compiler 
                   bugs, in iotk/include/iotk_config.h only)
+      __XD1       Specialized code for Cray XD1
 OS:
 Parallel execution:
       __PARA      Parallel execution, in general

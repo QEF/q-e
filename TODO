@@ -23,17 +23,14 @@ BUGS TO EXAMINE
 > con un ordine diverso dagli ATOMIC_SPECIES si ottengono delle
 > frequenze improbabili.
 
-- Davide: npools not a divisor on nk => mpi hangs
-- Misc problems found by Eduardo: 
-  pw => cp with atoms out of the cell
-  extrapolation of wfcs
-  temperature control
+- Problems found by Eduardo: 
+  - pw => cp with atoms out of the cell
+  - extrapolation of wfcs
 
 CVS/INSTALLATION/PORTING
 
 - restructuration of the CVS server, dividing it into "base libs",
   "base QE", additional packages - release.sh is clumsy, simplify
-- add support for more Nec's
 - remove obsolete stuff from install/
 - put misc scripts into a Utils/ subdirectory
 
@@ -87,9 +84,8 @@ COMMON
 - It would be nice to merge "cell_base_init" from CPV to PW,
   and also "cellmd" module of PW into "cell_base" of CPV
 
-- there should be a single function or routine for periodic
-  boundary conditions (i.e. bringing all atoms inside the unit
-  cell)
+- there should be a single function or routine for periodic boundary 
+  conditions (i.e. bringing all atoms inside the unit cell)
 
 PW
 
@@ -97,12 +93,10 @@ PW
 
 - Add option to prevent writing the final file (Dario)
 
-- nscf calculations are slow. There must be a way to
-  make a better usage of the available information
-  from the scf calculation: wavefunctions are just 
-  discarded. Same for phonon calculation: it shouldn't
-  be needed to recalculate everything almost from scratch
-  at each different q-points
+- nscf calculations are slow. There must be a way to make a better usage
+  of the available information from the scf calculation: wavefunctions
+  are just discarded. Same for phonon calculation: it shouldn't be needed 
+  to recalculate everything almost from scratch at each different q-points
 
 - DIIS still doesn't work!
 
@@ -132,11 +126,11 @@ PW
 - some symmetry-related routines such as sgama are too complex
   Verify that a group is a group (call multable again in sgama)
 
-Low priority:
+- printout of cpu times not very informative
+
+- better memory estimate
 
 - add traceback in error (error_handler module)
-
-- printout of cpu times not very informative
 
 POSTPROCESSING
 
