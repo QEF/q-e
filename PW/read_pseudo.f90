@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,14 +18,15 @@ subroutine readpp
   USE read_upf_module , ONLY : read_pseudo_upf
   USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal,  ONLY : set_pseudo_upf
+  USE paw,              ONLY : set_paw_upf
   USE atom,       ONLY : chi, nchi, oc, mesh, msh, r, rab, numeric, xmin, dx
-  USE uspp_param, ONLY : iver, tvanp, newpseudo
+  USE uspp_param, ONLY : zp, iver, tvanp, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE io_files,   ONLY : pseudo_dir, psfile
   USE io_global,  ONLY : stdout
-  use ions_base,  only: zv
-  use pseud,      only: zp, lmax, lloc
+  USE ions_base,  ONLY : zv
+  USE pseud,      ONLY : lmax, lloc
   USE uspp_param, ONLY : lll, nbeta
   implicit none
   !
@@ -45,19 +46,19 @@ subroutine readpp
   l = len_trim (pseudo_dir)
   do nt = 1, ntyp
      !
-     ! iver, xmin, dx are not read from UPF format
+     ! obsolescent variables, not read from UPF format, no longer used
      !
      iver(:,nt) = 0
      xmin(nt) = 0.d0
      dx(nt) = 0.d0
-     !
-     ! obsolescent variables
-     !
      lmax(nt) = -1
      lloc(nt) = -1
+     ! 
+     ! for compatibility - numeric is read by read_ncpp
+     !
      numeric (nt) = .true.
      !
-     ! add / if needed
+     ! add slash at the end if needed
      !
      if (pseudo_dir (l:l) .ne.'/') then
         file_pseudo = pseudo_dir (1:l) //'/'//psfile (nt)
@@ -76,9 +77,12 @@ subroutine readpp
      !
      if (isupf == 0) then
         call set_pseudo_upf (nt, upf)
+        call set_paw_upf (nt, upf)
         CALL deallocate_pseudo_upf( upf )
-        ! UPF is RRKJ3-like
+        ! for compatibility with old formats
         newpseudo (nt) = .true.
+        lmax(nt) = max ( lmax(nt), MAXVAL( lll( 1:nbeta(nt), nt) ) )
+        !
      else
         rewind (unit = iunps)
         !
@@ -102,20 +106,22 @@ subroutine readpp
               call readvan (nt, iunps)
            endif
            !
-           zp (nt) = zv (nt)
            lmax(nt) = max ( lmax(nt), MAXVAL( lll( 1:nbeta(nt), nt) ) )
            !
         else
            tvanp (nt) = .false.
            newpseudo (nt) = .false.
-           ! numeric is read inside read_ncpp
+           ! 
            call read_ncpp (nt, iunps)
-           !
-           zv(nt)=zp(nt)
            !
         endif
      endif
      close (iunps)
+     !
+     ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
+     ! ... is set equal to Zp = pseudo-charge of the pseudopotential
+     !
+     zv(nt) = zp(nt)
      !
      if (nt == 1) then
         iexch_ = get_iexch()
@@ -131,7 +137,7 @@ subroutine readpp
      !
      ! the radial grid is defined up to r(mesh) but we introduce 
      ! an auxiliary variable msh to limit the grid up to rcut=10 a.u. 
-     ! This is used to cut off the numerical mnoise arising from the
+     ! This is used to cut off the numerical noise arising from the
      ! large-r tail in cases like the integration of V_loc-Z/r
      !
      do ir = 1, mesh (nt)
