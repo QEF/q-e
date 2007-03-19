@@ -1,5 +1,11 @@
 #!/bin/sh
 
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -7,13 +13,16 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x to calculate the total energy of FeO"
 $ECHO "using LDA+U approximation. Read file README for more details"
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -28,7 +37,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -77,8 +86,8 @@ $ECHO " done"
 
 # self-consistent calculation with standard LDA
 cat > feo_LDA.in << EOF
-FeO 
-FeO Wustite in LDA 
+FeO
+FeO Wustite in LDA
  &control
     calculation = 'scf'
     restart_mode='from_scratch',
@@ -90,7 +99,7 @@ FeO Wustite in LDA
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
     ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
     starting_magnetization(1)= 0.0,
-    starting_magnetization(2)= 0.5, 
+    starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='gauss', degauss=0.01,
     nspin=2,
@@ -98,7 +107,7 @@ FeO Wustite in LDA
  /
  &electrons
     mixing_mode = 'plain'
-    mixing_beta = 0.3 
+    mixing_beta = 0.3
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
@@ -113,13 +122,14 @@ ATOMIC_SPECIES
 ATOMIC_POSITIONS {crystal}
  O1  0.25 0.25 0.25
  O1  0.75 0.75 0.75
- Fe1 0.0  0.0  0.0 
+ Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
 K_POINTS {automatic}
 2 2 2 0 0 0
 EOF
 $ECHO "  running scf for FeO in LDA ...\c"
 $PW_COMMAND < feo_LDA.in > feo_LDA.out
+check_failure $?
 $ECHO " done"
 
 
@@ -130,7 +140,7 @@ $ECHO " done"
 
 # self-consistent calculation with standard ns initial value
 cat > feo_standard.in << EOF
-FeO 
+FeO
 FeO Wustite whithin LDA+U using standard initial ns matrices
  &control
     calculation = 'scf'
@@ -143,7 +153,7 @@ FeO Wustite whithin LDA+U using standard initial ns matrices
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
     ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
     starting_magnetization(1)= 0.0,
-    starting_magnetization(2)= 0.5, 
+    starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='gauss', degauss=0.01,
     nspin=2,
@@ -151,7 +161,7 @@ FeO Wustite whithin LDA+U using standard initial ns matrices
  /
  &electrons
     mixing_mode = 'plain'
-    mixing_beta = 0.3 
+    mixing_beta = 0.3
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
@@ -166,13 +176,14 @@ ATOMIC_SPECIES
 ATOMIC_POSITIONS {crystal}
  O1  0.25 0.25 0.25
  O1  0.75 0.75 0.75
- Fe1 0.0  0.0  0.0 
+ Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
 K_POINTS {automatic}
 2 2 2 0 0 0
 EOF
 $ECHO "  running scf for FeO in LDA+U using standard ns initial matrices...\c"
 $PW_COMMAND < feo_standard.in > feo_standard.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -195,7 +206,7 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
     ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
     starting_magnetization(1)= 0.0,
-    starting_magnetization(2)= 0.5, 
+    starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='gauss', degauss=0.01,
     nspin=2,
@@ -205,7 +216,7 @@ FeO Wustite whithin LDA+U with user-defined ns initial matrices
  /
  &electrons
     mixing_mode = 'plain'
-    mixing_beta = 0.3 
+    mixing_beta = 0.3
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
@@ -220,17 +231,18 @@ ATOMIC_SPECIES
 ATOMIC_POSITIONS {crystal}
  O1  0.25 0.25 0.25
  O1  0.75 0.75 0.75
- Fe1 0.0  0.0  0.0 
+ Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
 K_POINTS {automatic}
 2 2 2 0 0 0
 EOF
 $ECHO "  running scf for FeO in LDA+U using user-defined ns initial matrices...\c"
 $PW_COMMAND < feo_user_ns.in > feo_user_ns.out
+check_failure $?
 $ECHO " done"
 
 # again self-consistent calculation with standard LDA
-$ECHO 
+$ECHO
 $ECHO "  use LDA+U projecting on wannier function: "
 $ECHO "  1) running again scf for FeO using LDA ...\c"
 $PW_COMMAND < feo_LDA.in > feo_LDA_again.out
@@ -238,13 +250,15 @@ $ECHO " done"
 $ECHO "  2) running poormanwannier post-processing to build Wannier projectors ...\c"
 cat > pmw.in << EOF
  &inputpp
-    outdir='$TMP_DIR/', 
+    outdir='$TMP_DIR/',
     prefix='feo_af',
-    first_band=9, last_band=20, 
+    first_band=9, last_band=20,
  /
 EOF
 $PMW_COMMAND < pmw.in > pmw.out
+check_failure $?
 $ECHO " done"
+
 # self-consistent calculation with user defined ns + Wannier
 cat > feo_wannier.in << EOF
 FeO
@@ -260,7 +274,7 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier
     ibrav=  0, celldm(1)=8.19, nat=  4, ntyp= 3,
     ecutwfc = 30.0, ecutrho = 240.0, nbnd=20,
     starting_magnetization(1)= 0.0,
-    starting_magnetization(2)= 0.5, 
+    starting_magnetization(2)= 0.5,
     starting_magnetization(3)=-0.5,
     occupations='smearing', smearing='gauss', degauss=0.01,
     nspin=2,
@@ -271,7 +285,7 @@ FeO Wustite whithin LDA+U with user defined ns + Wannier
  /
  &electrons
     mixing_mode = 'plain'
-    mixing_beta = 0.3 
+    mixing_beta = 0.3
     conv_thr =  1.0d-6
     mixing_fixed_ns = 0
  /
@@ -286,13 +300,14 @@ ATOMIC_SPECIES
 ATOMIC_POSITIONS {crystal}
  O1  0.25 0.25 0.25
  O1  0.75 0.75 0.75
- Fe1 0.0  0.0  0.0 
+ Fe1 0.0  0.0  0.0
  Fe2 0.5  0.5  0.5
 K_POINTS {automatic}
 2 2 2 0 0 0
 EOF
 $ECHO "  3) running scf for FeO in LDA+U using Wannier projectors...\c"
 $PW_COMMAND < feo_wannier.in > feo_wannier.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

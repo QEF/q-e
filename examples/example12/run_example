@@ -1,12 +1,21 @@
 #!/bin/sh
-                                                                                
+
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -52,7 +61,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -71,7 +80,7 @@ $ECHO
 $ECHO "  running pw.x as:     $PW_COMMAND"
 $ECHO "  running pwcond.x as: $PWCOND_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -87,14 +96,14 @@ cat > al.scf.in << EOF
     prefix='al'
  /
  &system
-    ibrav = 6, 
-    celldm(1) =5.3, 
-    celldm(3) =1.414, 
-    nat= 2, 
+    ibrav = 6,
+    celldm(1) =5.3,
+    celldm(3) =1.414,
+    nat= 2,
     ntyp= 1,
-    ecutwfc = 15.0, 
-    occupations='smearing', 
-    smearing='methfessel-paxton', 
+    ecutwfc = 15.0,
+    occupations='smearing',
+    smearing='methfessel-paxton',
     degauss=0.01
  /
  &electrons
@@ -102,24 +111,25 @@ cat > al.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Al 26.98 Al.vbc.UPF 
+ Al 26.98 Al.vbc.UPF
 ATOMIC_POSITIONS
  Al 0. 0. 0.0
  Al 0.5 0.5 0.707
 K_POINTS (automatic)
- 4 4 4 1 1 1                
+ 4 4 4 1 1 1
 EOF
 $ECHO "  running the scf calculation for Al...\c"
-$PW_COMMAND < al.scf.in > al.scf.out 
+$PW_COMMAND < al.scf.in > al.scf.out
+check_failure $?
 $ECHO " done"
 
 # complex bands of Al along the 001 direction K_perp=0
 cat > al.cond.in << EOF
  &inputcond
-    outdir='$TMP_DIR/'     
+    outdir='$TMP_DIR/'
     prefixl='al'
     band_file ='bands.al'
-    ikind=0  
+    ikind=0
     energy0=10.d0
     denergy=-0.4d0
     ewind=1.d0
@@ -132,7 +142,8 @@ cat > al.cond.in << EOF
     60
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Al...\c"
-$PWCOND_COMMAND < al.cond.in > al.cond.out 
+$PWCOND_COMMAND < al.cond.in > al.cond.out
+check_failure $?
 $ECHO " done"
 
 # self-consistent calculation for Al monatomic wire
@@ -145,15 +156,15 @@ cat > alwire.scf.in << EOF
     prefix='alw'
  /
  &system
-    ibrav = 6, 
-    celldm(1) =12.0, 
-    celldm(3) =0.375, 
-    nat= 1, 
+    ibrav = 6,
+    celldm(1) =12.0,
+    celldm(3) =0.375,
+    nat= 1,
     ntyp= 1,
-    nspin = 1,  
-    ecutwfc = 15.0, 
-    occupations='smearing', 
-    smearing='methfessel-paxton', 
+    nspin = 1,
+    ecutwfc = 15.0,
+    occupations='smearing',
+    smearing='methfessel-paxton',
     degauss=0.01
  /
  &electrons
@@ -161,39 +172,41 @@ cat > alwire.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Al 26.98 Al.vbc.UPF 
+ Al 26.98 Al.vbc.UPF
 ATOMIC_POSITIONS
- Al 0.0 0.0 0.000 
+ Al 0.0 0.0 0.000
 K_POINTS (automatic)
- 1 1 15 0 0 0                
+ 1 1 15 0 0 0
 EOF
 $ECHO "  running the scf calculation for Al monatomic wire...\c"
-$PW_COMMAND < alwire.scf.in > alwire.scf.out 
+$PW_COMMAND < alwire.scf.in > alwire.scf.out
+check_failure $?
 $ECHO " done"
 
 # complex bands of the Al monatomic wire
 cat > alwire.cond.in << EOF
  &inputcond
-    outdir='$TMP_DIR/'     
+    outdir='$TMP_DIR/'
     prefixl='alw'
     band_file='bands.alwire'
-    ikind=0  
+    ikind=0
     energy0=7.0d0
     denergy=-0.2d0
     ewind=1.d0
     epsproj=1.d-3
     nz1=3
-    cutplot = 1.d0 
+    cutplot = 1.d0
  /
     1
-    0. 0. 1.0 
+    0. 0. 1.0
     71
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Al wire...\c"
-$PWCOND_COMMAND < alwire.cond.in > alwire.cond.out 
+$PWCOND_COMMAND < alwire.cond.in > alwire.cond.out
+check_failure $?
 $ECHO " done"
 
-# self-consistent calculation for bulk Ni 
+# self-consistent calculation for bulk Ni
 cat > ni.scf.in << EOF
  &control
     calculation='scf'
@@ -203,17 +216,17 @@ cat > ni.scf.in << EOF
     prefix='ni'
  /
  &system
-    ibrav = 6, 
-    celldm(1) =4.57, 
-    celldm(3) =1.414, 
-    nat= 2, 
+    ibrav = 6,
+    celldm(1) =4.57,
+    celldm(3) =1.414,
+    nat= 2,
     ntyp= 1,
-    nspin = 2,  
+    nspin = 2,
     starting_magnetization(1)=0.7,
-    ecutwfc = 25.0, 
+    ecutwfc = 25.0,
     ecutrho = 250.0
-    occupations='smearing', 
-    smearing='methfessel-paxton', 
+    occupations='smearing',
+    smearing='methfessel-paxton',
     degauss=0.01
  /
  &electrons
@@ -221,24 +234,25 @@ cat > ni.scf.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Ni 58.69 NiUS.RRKJ3.UPF 
+ Ni 58.69 NiUS.RRKJ3.UPF
 ATOMIC_POSITIONS
- Ni 0. 0. 0. 
+ Ni 0. 0. 0.
  Ni 0.5 0.5 0.707
 K_POINTS (automatic)
- 4 4 3 1 1 1                
+ 4 4 3 1 1 1
 EOF
 $ECHO "  running the scf calculation for Ni bulk...\c"
-$PW_COMMAND < ni.scf.in > ni.scf.out 
+$PW_COMMAND < ni.scf.in > ni.scf.out
+check_failure $?
 $ECHO " done"
 
 # complex bands of Ni
 cat > ni.cond.in << EOF
  &inputcond
-    outdir='$TMP_DIR/'     
+    outdir='$TMP_DIR/'
     prefixl='ni'
     band_file = 'bands.ni_down'
-    ikind=0  
+    ikind=0
     iofspin = 2
     energy0=1.d0
     denergy=-0.2d0
@@ -251,7 +265,8 @@ cat > ni.cond.in << EOF
     30
 EOF
 $ECHO "  running pwcond.x to calculate the complex bands of Ni...\c"
-$PWCOND_COMMAND < ni.cond.in > ni.cond.out 
+$PWCOND_COMMAND < ni.cond.in > ni.cond.out
+check_failure $?
 $ECHO " done"
 
 # self-consistent calculation for Al monatomic wire
@@ -288,9 +303,9 @@ K_POINTS (automatic)
  2 2 24 1 1 1
 EOF
 $ECHO "  running the scf calculation for Al monatomic wire...\c"
-$PW_COMMAND < alwire1.scf.in > alwire1.scf.out 
+$PW_COMMAND < alwire1.scf.in > alwire1.scf.out
+check_failure $?
 $ECHO " done"
-
 
 # self-consistent calculation for  Al-H-Al system
 cat > AlwireH.scf.in << EOF
@@ -331,10 +346,11 @@ K_POINTS (automatic)
  2 2 2 1 1 1
 EOF
 $ECHO "  running the scf calculation for Al wire with H impurity...\c"
-$PW_COMMAND < AlwireH.scf.in > AlwireH.scf.out 
+$PW_COMMAND < AlwireH.scf.in > AlwireH.scf.out
+check_failure $?
 $ECHO " done"
 
-# transmission calculation for the perfect Al wire 
+# transmission calculation for the perfect Al wire
 cat > AlwireAl.cond.in << EOF
  &inputcond
     outdir='$TMP_DIR/',
@@ -353,7 +369,8 @@ cat > AlwireAl.cond.in << EOF
     100
 EOF
 $ECHO "  running pwcond.x to calculate transmission of a perfect Al wire ...\c"
-$PWCOND_COMMAND < AlwireAl.cond.in > AlwireAl.cond.out 
+$PWCOND_COMMAND < AlwireAl.cond.in > AlwireAl.cond.out
+check_failure $?
 $ECHO " done"
 
 # transmission calculation for the Al-C-Al
@@ -393,7 +410,8 @@ cat > AlwireH.cond.in << EOF
  -6.45
 EOF
 $ECHO "  running pwcond.x to calculate transmission of an Al wire with H...\c"
-$PWCOND_COMMAND < AlwireH.cond.in > AlwireH.cond.out 
+$PWCOND_COMMAND < AlwireH.cond.in > AlwireH.cond.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

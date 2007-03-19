@@ -6,7 +6,10 @@ EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -53,7 +56,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -87,7 +90,7 @@ cat > si.scf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav = 2, celldm(1) =10.20, nat=  2, ntyp= 1,
     ecutwfc = 18.0
  /
@@ -98,8 +101,8 @@ cat > si.scf.in << EOF
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
 ATOMIC_POSITIONS
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS
   10
    0.1250000  0.1250000  0.1250000   1.00
@@ -115,6 +118,7 @@ K_POINTS
 EOF
 $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < si.scf.in > si.scf.out
+check_failure $?
 $ECHO " done"
 
 # phonon calculation at Gamma
@@ -142,9 +146,9 @@ cat > si.nscfX.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
-    ecutwfc =18.0, 
+    ecutwfc =18.0,
  /
  &electrons
     conv_thr =  1.0d-8
@@ -155,8 +159,8 @@ cat > si.nscfX.in << EOF
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
 ATOMIC_POSITIONS
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS
   10
    0.1250000  0.1250000  0.1250000   1.00
@@ -172,6 +176,7 @@ K_POINTS
 EOF
 $ECHO "  running the nscf calculation at X...\c"
 $PW_COMMAND < si.nscfX.in > si.nscfX.out
+check_failure $?
 $ECHO " done"
 
 # phonon calculation at X
@@ -188,6 +193,7 @@ phonons of si at X
 EOF
 $ECHO "  running the phonon calculation at X...\c"
 $PH_COMMAND < si.phX.in > si.phX.out
+check_failure $?
 $ECHO " done"
 
 # non self-consistent calculation at X for a single mode
@@ -198,9 +204,9 @@ cat > si.nscfXsingle.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
-    ecutwfc =18.0, 
+    ecutwfc =18.0,
  /
  &electrons
     conv_thr =  1.0d-8
@@ -211,8 +217,8 @@ cat > si.nscfXsingle.in << EOF
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
 ATOMIC_POSITIONS
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS
   10
    0.1250000  0.1250000  0.1250000   1.00
@@ -228,6 +234,7 @@ K_POINTS
 EOF
 $ECHO "  running the nscf calculation at X for a single mode...\c"
 $PW_COMMAND < si.nscfXsingle.in > si.nscfXsingle.out
+check_failure $?
 $ECHO " done"
 
 # phonon calculation at X
@@ -243,6 +250,7 @@ phonons of si at X, single mode
 EOF
 $ECHO "  running the phonon calculation at X for a single mode...\c"
 $PH_COMMAND < si.phXsingle.in > si.phXsingle.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -259,7 +267,7 @@ cat > c.scf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav = 2, celldm(1) =6.74, nat=  2, ntyp= 1,
     nr1=32,
     nr2=32,
@@ -274,13 +282,14 @@ cat > c.scf.in << EOF
 ATOMIC_SPECIES
  C   12.0107  C.pz-rrkjus.UPF
 ATOMIC_POSITIONS
- C  0.00 0.00 0.00 
- C  0.25 0.25 0.25 
+ C  0.00 0.00 0.00
+ C  0.25 0.25 0.25
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
 EOF
 $ECHO "  running the scf calculation for C...\c"
 $PW_COMMAND < c.scf.in > c.scf.out
+check_failure $?
 $ECHO " done"
 
 # phonon calculation at G
@@ -298,6 +307,7 @@ phonons of C at Gamma
 EOF
 $ECHO "  running the phonon calculation at Gamma...\c"
 $PH_COMMAND < c.phG.in > c.phG.out
+check_failure $?
 $ECHO " done"
 
 
@@ -311,7 +321,7 @@ cat > ni.scf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=2, celldm(1) =6.65, nat=  1, ntyp= 1,
     nspin=2,
     starting_magnetization(1)=0.5,
@@ -328,12 +338,13 @@ cat > ni.scf.in << EOF
 ATOMIC_SPECIES
  Ni  58.6934  Ni.pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS
- Ni 0.00 0.00 0.00 
+ Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
 $PW_COMMAND < ni.scf.in > ni.scf.out
+check_failure $?
 $ECHO " done"
 
 # non self-consistent calculation for phonon at X of Ni with US-PP
@@ -346,7 +357,7 @@ cat > ni.nscf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =6.65, nat=  1, ntyp= 1,
     nspin=2,
     starting_magnetization(1)=0.5,
@@ -366,12 +377,13 @@ cat > ni.nscf.in << EOF
 ATOMIC_SPECIES
  Ni  58.6934  Ni.pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS
- Ni 0.00 0.00 0.00 
+ Ni 0.00 0.00 0.00
 K_POINTS AUTOMATIC
 4 4 4 1 1 1
 EOF
 $ECHO "  running the non-scf calculation for phonon at X of Ni...\c"
 $PW_COMMAND < ni.nscf.in > ni.nscf.out
+check_failure $?
 $ECHO " done"
 
 # phonon calculation at X
@@ -388,6 +400,7 @@ phonons of Ni at X
 EOF
 $ECHO "  running the phonon calculation at X...\c"
 $PH_COMMAND < ni.phX.in > ni.phX.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR

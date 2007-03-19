@@ -1,12 +1,21 @@
 #!/bin/sh
-                                                                                
+
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -51,7 +60,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -72,7 +81,7 @@ $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO "  running ph.x as: $PH_COMMAND"
 $ECHO "  running d3.x as: $D3_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -89,24 +98,25 @@ cat > si.scf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
-    ecutwfc =24.0, 
+    ecutwfc =24.0,
  /
  &electrons
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
 ATOMIC_POSITIONS
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS {automatic}
  4 4 4  1 1 1
 EOF
 $ECHO "  running the scf calculation for Si...\c"
 $PW_COMMAND < si.scf.in > si.scf.out
+check_failure $?
 $ECHO " done"
 
 # calculation of the dynamical matrix at Gamma
@@ -116,7 +126,7 @@ phonons of Si at Gamma
   tr2_ph=1.0d-12,
   prefix='si',
   epsil=.false.,
-  trans=.true., 
+  trans=.true.,
   zue=.false.,
   amass(1)=28.0855,
   amass(2)=28.0855,
@@ -128,13 +138,14 @@ phonons of Si at Gamma
 EOF
 $ECHO "  running the phonon calculation for Si at Gamma...\c"
 $PH_COMMAND < si.phG.in > si.phG.out
+check_failure $?
 $ECHO " done"
 
 # calculation of the anharmonic tensor at Gamma
 cat > si.d3G.in << EOF
 Anharm at Gamma
 &inputph
-   prefix = 'si', 
+   prefix = 'si',
    fildrho = 'si.drho_G',
    fild0rho = 'si.drho_G',
    amass(1) = 28.0855,
@@ -145,6 +156,7 @@ Anharm at Gamma
 EOF
 $ECHO "  running the calculation of D3(0,0,0)...\c"
 $D3_COMMAND < si.d3G.in > si.d3G.out
+check_failure $?
 $ECHO " done"
 
 # NSCF calculation for the X-point phonon calculation
@@ -158,7 +170,7 @@ cat > si.nscf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     nosym = .false.,
     ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
     ecutwfc =24.0
@@ -173,13 +185,14 @@ cat > si.nscf.in << EOF
 ATOMIC_SPECIES
  Si  28.0855  Si.vbc.UPF
 ATOMIC_POSITIONS
- Si 0.00 0.00 0.00 
- Si 0.25 0.25 0.25 
+ Si 0.00 0.00 0.00
+ Si 0.25 0.25 0.25
 K_POINTS {automatic}
  4 4 4 1 1 1
 EOF
 $ECHO "  running the nscf calculation for Si...\c"
 $PW_COMMAND < si.nscf.in > si.nscf.out
+check_failure $?
 $ECHO " done"
 
 # calculation of the dynamical matrix at the X-point
@@ -188,7 +201,7 @@ phonons of Si at the X-point
  &inputph
   tr2_ph=1.0d-12,
   prefix='si',
-  trans=.true., 
+  trans=.true.,
   amass(1)=28.0855,
   amass(2)=28.0855,
   outdir='$TMP_DIR/',
@@ -199,13 +212,14 @@ phonons of Si at the X-point
 EOF
 $ECHO "  running the phonon calculation for Si at X...\c"
 $PH_COMMAND < si.phX.in > si.phX.out
+check_failure $?
 $ECHO " done"
 
 # calculation of the anharmonic tensor at X
 cat > si.d3X.in << EOF
 Anharm at the X-point
 &inputph
-   prefix = 'si', 
+   prefix = 'si',
    fildrho = 'si.drho_X',
    fild0rho = 'si.drho_G',
    amass(1) = 28.0855,
@@ -216,6 +230,7 @@ Anharm at the X-point
 EOF
 $ECHO "  running the calculation of D3(0,X,-X)...\c"
 $D3_COMMAND < si.d3X.in > si.d3X.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

@@ -1,11 +1,20 @@
 #!/bin/sh
 
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
@@ -16,7 +25,7 @@ $ECHO "molecule in vacuum. The coordinates of the atoms in the molecule are"
 $ECHO "already in a good ground state configuration, no geometry optimization"
 $ECHO "is required."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -31,7 +40,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -66,13 +75,13 @@ for FILE in $PSEUDO_LIST ; do
 done
 $ECHO " done"
 
- 
+
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/cpvib.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running cpvib.x as: $PW_COMMAND"
 $ECHO
- 
+
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
@@ -140,6 +149,7 @@ EOF
 
 $ECHO "  running the CPVIB calculation for water molecule in vacuum ...\c"
 $PW_COMMAND < h2o.cp.in > h2o.cp.out
+check_failure $?
 $ECHO " done"
 
 $ECHO "  copying to local directory: h2o.vib.inp h2o.vib.analysis"

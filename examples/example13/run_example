@@ -1,12 +1,15 @@
 #!/bin/sh
-                                                                                
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -53,7 +56,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -70,7 +73,7 @@ PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -121,9 +124,10 @@ K_POINTS
 EOF
 $ECHO "  running the scf calculation for Fe...\c"
 $PW_COMMAND < fe.scf.in > fe.scf.out
+check_failure $?
 $ECHO " done"
 
-# band structure calculation 
+# band structure calculation
 cat > fe.band.in << EOF
 Fe
 Iron
@@ -183,6 +187,7 @@ K_POINTS
 EOF
 $ECHO "  running band structure calculation for Fe...\c"
 $PW_COMMAND < fe.band.in > fe.band.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -235,6 +240,7 @@ K_POINTS
 EOF
 $ECHO "  running scf calculation for Fe with penalty functional...\c"
 $PW_COMMAND < fe.pen.in > fe.pen.out
+check_failure $?
 $ECHO " done"
 
 # scf calculation with penalty functional (angle with z-axis constrained)
@@ -282,6 +288,7 @@ K_POINTS
 EOF
 $ECHO "  running the scf calculation for Fe with constrained angle...\c"
 $PW_COMMAND < fe.angl.in > fe.angl.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -326,6 +333,7 @@ K_POINTS AUTOMATIC
 EOF
 $ECHO "  running the scf calculation for Fe with constrained magnetization...\c"
 $PW_COMMAND < fe.total.in > fe.total.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -353,7 +361,7 @@ cat > cu.scf.in << EOF
  /
  &electrons
     conv_thr = 1.0e-8
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Cu 63.55 Cu.pz-d-rrkjus.UPF
@@ -364,6 +372,7 @@ K_POINTS (automatic)
 EOF
 $ECHO "  running the scf calculation for Cu...\c"
 $PW_COMMAND < cu.scf.in > cu.scf.out
+check_failure $?
 $ECHO " done"
 
 # band structure calculation along delta, sigma and lambda lines
@@ -421,6 +430,7 @@ K_POINTS
 EOF
 $ECHO "  running the band-structure calculation for Cu...\c"
 $PW_COMMAND < cu.band.in > cu.band.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -460,6 +470,7 @@ K_POINTS (automatic)
 EOF
 $ECHO "  running the scf calculation for Cu with cg diagonalization...\c"
 $PW_COMMAND < cu.cg.in > cu.cg.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -467,7 +478,7 @@ $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
 $ECHO " done"
 
-# self-consistent calculation with diis diagonalization 
+# self-consistent calculation with diis diagonalization
 cat > cu.diis.in << EOF
  &control
     calculation='scf'
@@ -499,6 +510,7 @@ K_POINTS (automatic)
 EOF
 # $ECHO "  running the scf calculation for Cu with diis diagonalization...\c"
 # $PW_COMMAND < cu.diis.in > cu.diis.out
+# check_failure $?
 # $ECHO " done"
 
 # clean TMP_DIR
@@ -526,7 +538,7 @@ cat > ni.scf.in << EOF
  /
  &electrons
     conv_thr = 1.0e-8
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 Ni.pbe-nd-rrkjus.UPF
@@ -597,6 +609,7 @@ K_POINTS
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
 $PW_COMMAND < ni.scf.in > ni.scf.out
+check_failure $?
 $ECHO " done"
 
 # band structure calculation along delta, sigma and lambda lines
@@ -622,7 +635,7 @@ cat > ni.band.in << EOF
 ATOMIC_SPECIES
  Ni 58.69 Ni.pbe-nd-rrkjus.UPF
 ATOMIC_POSITIONS
- Ni 0.0 0.0 0.0 
+ Ni 0.0 0.0 0.0
 K_POINTS
  28
    0.0 0.0 0.0 1.0
@@ -656,6 +669,7 @@ K_POINTS
 EOF
 $ECHO "  running the band-structure calculation for Ni...\c"
 $PW_COMMAND < ni.band.in > ni.band.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -691,8 +705,8 @@ cat > o2.relax.in << EOF
  &ions
  /
 ATOMIC_SPECIES
- O1 55.847 O.pbe-rrkjus.UPF  
- O2 55.847 O.pbe-rrkjus.UPF  
+ O1 55.847 O.pbe-rrkjus.UPF
+ O2 55.847 O.pbe-rrkjus.UPF
 ATOMIC_POSITIONS
  O1 0.0 0.0 0.0
  O2 0.20 0.20 0.20
@@ -702,6 +716,7 @@ K_POINTS
 EOF
 $ECHO "  running scf calculation with relax for oxygen molecule...\c"
 $PW_COMMAND < o2.relax.in > o2.relax.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

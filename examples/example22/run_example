@@ -1,12 +1,15 @@
 #!/bin/sh
-                                                                                
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -57,7 +60,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -80,7 +83,7 @@ $ECHO "  running ph.x as: $PH_COMMAND"
 $ECHO "  running bands.x as: $BANDS_COMMAND"
 $ECHO "  running pwcond.x as: $PWCOND_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -99,7 +102,7 @@ Pt
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
     lspinorb=.true.,
     noncolin=.true.,
@@ -107,22 +110,23 @@ Pt
     occupations='smearing',
     degauss=0.02,
     smearing='mp',
-    ecutwfc =30.0, 
-    ecutrho =250.0, 
+    ecutwfc =30.0,
+    ecutrho =250.0,
  /
  &electrons
-    mixing_beta = 0.7, 
+    mixing_beta = 0.7,
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
 Pt  79.90    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
-Pt  0.0000000   0.00000000   0.0  
+Pt  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
-4 4 4 1 1 1 
+4 4 4 1 1 1
 EOF
 $ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
 $PW_COMMAND < pt.scf.in > pt.scf.out
+check_failure $?
 $ECHO " done"
 
 # a non self-consistent calculation
@@ -137,7 +141,7 @@ Pt
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
     lspinorb=.true.,
     noncolin=.true.,
@@ -145,18 +149,18 @@ Pt
     occupations='smearing',
     degauss=0.02,
     smearing='mp',
-    ecutwfc =30.0, 
-    ecutrho =250.0, 
+    ecutwfc =30.0,
+    ecutrho =250.0,
  /
  &electrons
-    mixing_beta = 0.7, 
+    mixing_beta = 0.7,
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
 Pt  79.90    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
-Pt  0.0000000   0.00000000   0.0  
-K_POINTS 
+Pt  0.0000000   0.00000000   0.0
+K_POINTS
 8
 0.0 0.0 0.0 1.0
 0.1 0.0 0.0 1.0
@@ -169,6 +173,7 @@ K_POINTS
 EOF
 $ECHO "  running the non-scf calculation for Pt with spin-orbit coupling...\c"
 $PW_COMMAND < pt.nscf.in > pt.nscf.out
+check_failure $?
 $ECHO " done"
 
 cat > pt.bands.in << EOF
@@ -197,7 +202,7 @@ Pt
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
     lspinorb=.true.,
     noncolin=.true.,
@@ -205,25 +210,24 @@ Pt
     occupations='smearing',
     degauss=0.02,
     smearing='mp',
-    ecutwfc =30.0, 
-    ecutrho =250.0, 
+    ecutwfc =30.0,
+    ecutrho =250.0,
  /
  &electrons
-    mixing_beta = 0.7, 
+    mixing_beta = 0.7,
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
 Pt  79.90    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
-Pt  0.0000000   0.00000000   0.0  
+Pt  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
-2 2 2 1 1 1 
+2 2 2 1 1 1
 EOF
 $ECHO "  running the scf calculation for Pt with spin-orbit coupling...\c"
 $PW_COMMAND < pt.scf_ph.in > pt.scf_ph.out
+check_failure $?
 $ECHO " done"
-
-
 
 cat > pt.ph.in << EOF
 phonons of Pt at Gamma
@@ -240,6 +244,7 @@ phonons of Pt at Gamma
 EOF
 $ECHO "  running the phonon calculation for Pt with spin-orbit coupling...\c"
 $PH_COMMAND < pt.ph.in > pt.ph.out
+check_failure $?
 $ECHO " done"
 
 cat > pt.nscf_ph.in << EOF
@@ -252,7 +257,7 @@ Pt
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =7.42, nat=  1, ntyp= 1,
     lspinorb=.true.,
     noncolin=.true.,
@@ -260,11 +265,11 @@ Pt
     occupations='smearing',
     degauss=0.02,
     smearing='mp',
-    ecutwfc =30.0, 
-    ecutrho =250.0, 
+    ecutwfc =30.0,
+    ecutrho =250.0,
  /
  &electrons
-    mixing_beta = 0.7, 
+    mixing_beta = 0.7,
     conv_thr =  1.0d-8
  /
  &phonon
@@ -275,12 +280,13 @@ Pt
 ATOMIC_SPECIES
 Pt  79.90    Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
-Pt  0.0000000   0.00000000   0.0  
+Pt  0.0000000   0.00000000   0.0
 K_POINTS AUTOMATIC
-2 2 2 1 1 1 
+2 2 2 1 1 1
 EOF
 $ECHO "  running the nscf calculation for Pt with spin-orbit coupling...\c"
 $PW_COMMAND < pt.nscf_ph.in > pt.nscf_ph.out
+check_failure $?
 $ECHO " done"
 
 cat > pt.phX.in << EOF
@@ -298,8 +304,8 @@ phonons of Pt at X
 EOF
 $ECHO "  running the phonon calculation at X for Pt with spin-orbit coupling...\c"
 $PH_COMMAND < pt.phX.in > pt.phX.out
+check_failure $?
 $ECHO " done"
-
 
 # a self-consistent calculation of Pt in a tetragonal cell
 cat > pt.tet.in << EOF
@@ -312,18 +318,18 @@ cat > pt.tet.in << EOF
     prefix='ptt',
  /
  &system
-    ibrav = 6, 
-    celldm(1) =5.23, 
-    celldm(3) =1.4142, 
-    nat= 2, 
+    ibrav = 6,
+    celldm(1) =5.23,
+    celldm(3) =1.4142,
+    nat= 2,
     ntyp= 1,
     noncolin=.true.,
     lspinorb=.true.,
     starting_magnetization(1)=0.0,
-    ecutwfc = 30.0, 
+    ecutwfc = 30.0,
     ecutrho = 250.0,
-    occupations='smearing', 
-    smearing='methfessel-paxton', 
+    occupations='smearing',
+    smearing='methfessel-paxton',
     degauss=0.02
  /
  &electrons
@@ -331,24 +337,25 @@ cat > pt.tet.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Pt 58.69 Ptrel.RRKJ3.UPF 
+ Pt 58.69 Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
- Pt 0.  0.  0. 
+ Pt 0.  0.  0.
  Pt 0.5 0.5 0.7071
 K_POINTS (automatic)
- 4 4 3 1 1 1                
+ 4 4 3 1 1 1
 EOF
 $ECHO "  running the scf calculation for Pt with tetragonal cell...\c"
 $PW_COMMAND < pt.tet.in > pt.tet.out
+check_failure $?
 $ECHO " done"
 
-# Calculation of the complex bands of Pt 
+# Calculation of the complex bands of Pt
 cat > pt.cond.in << EOF
  &inputcond
-    outdir='$TMP_DIR/'     
+    outdir='$TMP_DIR/'
     prefixl='ptt'
     band_file = 'bands.pt'
-    ikind=0  
+    ikind=0
     energy0=0.0d0
     denergy=-0.2d0
     ewind=4.d0
@@ -360,6 +367,7 @@ cat > pt.cond.in << EOF
 EOF
 $ECHO "  running the calculation of the complex bands of Pt...\c"
 $PWCOND_COMMAND < pt.cond.in > pt.cond.out
+check_failure $?
 $ECHO " done"
 
 cat > pt4.in << EOF
@@ -371,17 +379,17 @@ cat > pt4.in << EOF
     prefix='pt4',
  /
  &system
-    ibrav = 6, 
-    celldm(1) =5.23, 
-    celldm(3) =2.8284, 
-    nat= 4, 
+    ibrav = 6,
+    celldm(1) =5.23,
+    celldm(3) =2.8284,
+    nat= 4,
     ntyp= 1,
     noncolin=.true.,
     lspinorb=.true.,
-    ecutwfc = 25.0, 
+    ecutwfc = 25.0,
     ecutrho = 150.0,
-    occupations='smearing', 
-    smearing='methfessel-paxton', 
+    occupations='smearing',
+    smearing='methfessel-paxton',
     degauss=0.02
  /
  &electrons
@@ -389,26 +397,27 @@ cat > pt4.in << EOF
     mixing_beta = 0.7
  /
 ATOMIC_SPECIES
- Pt 58.69 Ptrel.RRKJ3.UPF 
+ Pt 58.69 Ptrel.RRKJ3.UPF
 ATOMIC_POSITIONS
- Pt 0.  0.  0. 
+ Pt 0.  0.  0.
  Pt 0.5 0.5 0.7071
- Pt 0.  0.  1.4142 
+ Pt 0.  0.  1.4142
  Pt 0.5 0.5 2.1213
 K_POINTS (automatic)
- 2 2 1 1 1 1                
+ 2 2 1 1 1 1
 EOF
 $ECHO "  running the self-consistent calculation of fcc-Pt with 4 atoms...\c"
 $PW_COMMAND < pt4.in > pt4.out
+check_failure $?
 $ECHO " done"
 
-# Calculation of the transmission of Pt 
+# Calculation of the transmission of Pt
 cat > pt.cond_t.in << EOF
  &inputcond
-    outdir='$TMP_DIR/'     
+    outdir='$TMP_DIR/'
     prefixt='pt4'
     bdl=1.4142,
-    ikind=1  
+    ikind=1
     energy0=0.0d0
     denergy=-0.2d0
     ewind=4.d0
@@ -420,6 +429,7 @@ cat > pt.cond_t.in << EOF
 EOF
 $ECHO "  running the calculation of the transmission of fcc Pt...\c"
 $PWCOND_COMMAND < pt.cond_t.in > pt.cond_t.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

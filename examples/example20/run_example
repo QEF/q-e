@@ -7,13 +7,16 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use cp.x to perform molecular dynamics"
 $ECHO "simulation of NH3."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -28,7 +31,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -83,7 +86,7 @@ cat > nh3.in << EOF
     ndr = 51,
     ndw = 51,
     nstep  = 100,
-    iprint = 10, 
+    iprint = 10,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -95,13 +98,13 @@ cat > nh3.in << EOF
     outdir='$TMP_DIR/',
  /
  &system
-    ibrav = 14, 
-    celldm(1) = 12.0, 
-    celldm(2) = 1.0, 
-    celldm(3) = 1.0, 
-    celldm(4) = 0.0, 
-    celldm(5) = 0.0, 
-    celldm(6) = 0.0, 
+    ibrav = 14,
+    celldm(1) = 12.0,
+    celldm(2) = 1.0,
+    celldm(3) = 1.0,
+    celldm(4) = 0.0,
+    celldm(5) = 0.0,
+    celldm(6) = 0.0,
     nat  = 4,
     ntyp = 2,
     nbnd = 4,
@@ -149,6 +152,7 @@ ATOMIC_POSITIONS (bohr)
 EOF
 $ECHO "  running the damped dynamics calculation...\c"
 $FPMD_COMMAND < nh3.in > nh3.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

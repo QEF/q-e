@@ -6,14 +6,17 @@ EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use vdw.x to calculate dynamic"
-$ECHO "polarizability of methane molecule in simplified version 
-       of the one in ph.x (see example33) by using Thomas-Fermi 
-       and von Weizsaecker approximation" 
+$ECHO "polarizability of methane molecule in simplified version
+       of the one in ph.x (see example33) by using Thomas-Fermi
+       and von Weizsaecker approximation"
 
 # set the needed environment variables
 . ../environment_variables
@@ -54,7 +57,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -120,9 +123,10 @@ EOF
 #
 $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < ch4.scf.in > ch4.scf.out
+check_failure $?
 $ECHO " done"
 #
-# dynamic polarizability calculation 
+# dynamic polarizability calculation
 #
 cat > ch4.vdw.in << EOF
 
@@ -141,5 +145,8 @@ EOF
 #
 $ECHO "  running the dynamic polarizability calculation ...\c"
 $PH_COMMAND < ch4.vdw.in > ch4.vdw.out
+check_failure $?
 $ECHO " done"
 
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"

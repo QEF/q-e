@@ -1,5 +1,11 @@
 #!/bin/sh
-#
+
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # 30 min
 # contributed by Y. Kanai (ykanai@princeton.edu)
 # reference: JCP 121, 3359 (2004)
@@ -11,6 +17,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -19,7 +28,7 @@ $ECHO "(MEP) using string method (smd)."
 $ECHO
 $ECHO " This script runs a sequence of CP-SMD calculations to get the MEP"
 $ECHO " 1. Minimize electronic degrees of freedom"
-$ECHO " 2. Locate the MEP" 
+$ECHO " 2. Locate the MEP"
 
 # set the needed environment variables
 . ../environment_variables
@@ -132,9 +141,9 @@ cat > smd1.in << EOF
     smd_maxlm = 100,
     smd_codf = 50,
     smd_forf = 50,
-    smd_smwf = 1, 
-    smd_ene_ini = -1.63640, 
-    smd_ene_fin = -1.63640  
+    smd_smwf = 1,
+    smd_ene_ini = -1.63640,
+    smd_ene_fin = -1.63640
  /
 ATOMIC_SPECIES
 H   1.0  H_US.van  1
@@ -152,6 +161,7 @@ $ECHO "  running first SMD calculation ...\c"
 if test "0$2" -ge 1 ; then
  if test "0$1" -le 1 ; then
     $CP_COMMAND < smd1.in > smd1.out
+    check_failure $?
     $ECHO " done"
  else
     $ECHO " skipped"
@@ -223,6 +233,7 @@ $ECHO "  running second SMD calculation ...\c"
 if test "0$2" -ge 2 ; then
  if test "0$1" -le 2 ; then
     $CP_COMMAND < smd2.in > smd2.out
+    check_failure $?
     $ECHO " done"
  else
     $ECHO " skipped"
@@ -294,6 +305,7 @@ $ECHO "  running third SMD calculation ...\c"
 if test "0$2" -ge 3 ; then
  if test "0$1" -le 3 ; then
     $CP_COMMAND < smd3.in > smd3.out
+    check_failure $?
     $ECHO " done"
  else
     $ECHO " skipped"
@@ -365,6 +377,7 @@ $ECHO "  running fourth SMD calculation ...\c"
 if test "0$2" -ge 4 ; then
  if test "0$1" -le 4 ; then
     $CP_COMMAND < smd4.in > smd4.out
+    check_failure $?
     $ECHO " done"
  else
     $ECHO " skipped"
@@ -436,6 +449,7 @@ $ECHO "  running fifth SMD calculation ...\c"
 if test "0$2" -ge 5 ; then
  if test "0$1" -le 5 ; then
     $CP_COMMAND < smd5.in > smd5.out
+    check_failure $?
     $ECHO " done"
  else
     $ECHO " skipped"
@@ -507,6 +521,7 @@ $ECHO "  running sixth SMD calculation ...\c"
 if test "0$2" -ge 6 ; then
  if test "0$1" -le 6 ; then
     $CP_COMMAND < smd6.in > smd6.out
+    check_failure $?
     $ECHO " done"
  else
     $ECHO " skipped"
@@ -578,6 +593,7 @@ $ECHO "  running seventh SMD calculation ...\c"
 if test "0$2" -ge 7 ; then
  if test "0$1" -le 7 ; then
     $CP_COMMAND < smd7.in > smd7.out
+    check_failure $?
     $ECHO " done"
  else
     $ECHO " skipped"

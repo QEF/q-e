@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -14,7 +17,7 @@ $ECHO "This example shows how to use efg.x to calculate "
 $ECHO "the electric field gradient tensor and the quadrupolar parameters"
 $ECHO "of a NMR experiment "
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -29,7 +32,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -118,6 +121,7 @@ EOF
 
     $ECHO "  running the scf calculation for quartz...\c"
     $PW_COMMAND < quartz.scf.in > quartz.scf.out
+    check_failure $?
     $ECHO " done"
 
     # electic field gradient calculation
@@ -138,6 +142,7 @@ EFG_COMMAND="$PARA_PREFIX $BIN_DIR/efg.x $PARA_POSTFIX"
 
     $ECHO "  running efg calculation for quartz...\c"
     $EFG_COMMAND < quartz.efg.in > quartz.efg.out
+    check_failure $?
     $ECHO " done"
 
     # clean TMP_DIR

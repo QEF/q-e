@@ -1,14 +1,10 @@
 #!/bin/sh
 
-# function to test the exit status of a job
-function check_failure() {
-    # usage: check_failure $?
-    if test $1 != 0; then
-        $ECHO "Error condition encountered during test: exit status = $1"
-        $ECHO "Aborting"
-        exit 1
-    fi
-}
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
 
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
@@ -16,6 +12,9 @@ EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"

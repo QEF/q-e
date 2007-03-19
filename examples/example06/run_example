@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -51,7 +54,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -74,7 +77,7 @@ $ECHO "  running ph.x as:     $PH_COMMAND"
 $ECHO "  running q2r.x as:    $Q2R_COMMAND"
 $ECHO "  running matdyn.x as: $MATDYN_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -91,7 +94,7 @@ cat > alas.scf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     ibrav=  2, celldm(1) =10.50, nat=  2, ntyp= 2,
     ecutwfc =16.0
  /
@@ -103,8 +106,8 @@ ATOMIC_SPECIES
  Al  26.98  Al.vbc.UPF
  As  74.92  As.gon.UPF
 ATOMIC_POSITIONS
- Al 0.00 0.00 0.00 
- As 0.25 0.25 0.25 
+ Al 0.00 0.00 0.00
+ As 0.25 0.25 0.25
 K_POINTS
  2
  0.25 0.25 0.25 1.0
@@ -112,11 +115,12 @@ K_POINTS
 EOF
 $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < alas.scf.in > alas.scf.out
+check_failure $?
 $ECHO " done"
 
 # phonon calculation on a (444) uniform grid of q-points
 cat > alas.ph.in << EOF
-phonons of AlAs 
+phonons of AlAs
  &inputph
   tr2_ph=1.0d-12,
   prefix='alas',
@@ -130,6 +134,7 @@ phonons of AlAs
 EOF
 $ECHO "  running the phonon calculation ...\c"
 $PH_COMMAND < alas.ph.in > alas.ph.out
+check_failure $?
 $ECHO " done"
 
 cat > q2r.in <<EOF
@@ -140,38 +145,41 @@ EOF
 
 $ECHO "  transforming C(q) => C(R)...\c"
 $Q2R_COMMAND < q2r.in > q2r.out
+check_failure $?
 $ECHO " done"
 
 cat > matdyn.in <<EOF
  &input
-    asr='simple',  amass(1)=26.98, amass(2)=74.922, 
+    asr='simple',  amass(1)=26.98, amass(2)=74.922,
     flfrc='alas444.fc', flfrq='alas.freq'
  /
  9
-  0.000 0.0 0.0  0.0 
-  0.125 0.0 0.0  0.0  
-  0.250 0.0 0.0  0.0  
-  0.375 0.0 0.0  0.0  
-  0.500 0.0 0.0  0.0  
-  0.625 0.0 0.0  0.0  
-  0.750 0.0 0.0  0.0  
-  0.875 0.0 0.0  0.0  
-  1.000 0.0 0.0  0.0  
+  0.000 0.0 0.0  0.0
+  0.125 0.0 0.0  0.0
+  0.250 0.0 0.0  0.0
+  0.375 0.0 0.0  0.0
+  0.500 0.0 0.0  0.0
+  0.625 0.0 0.0  0.0
+  0.750 0.0 0.0  0.0
+  0.875 0.0 0.0  0.0
+  1.000 0.0 0.0  0.0
 EOF
 
 $ECHO "  recalculating omega(q) from C(R)...\c"
 $MATDYN_COMMAND < matdyn.in > matdyn.out
+check_failure $?
 $ECHO " done"
 
 cat > phdos.in <<EOF
  &input
-    asr='simple',  dos=.true. amass(1)=26.98, amass(2)=74.922, 
+    asr='simple',  dos=.true. amass(1)=26.98, amass(2)=74.922,
     flfrc='alas444.fc', fldos='alas.phdos', nk1=6,nk2=6,nk3=6
  /
 EOF
 
 $ECHO "  calculating phonon DOS ...\c"
 $MATDYN_COMMAND < phdos.in > phdos.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

@@ -1,5 +1,11 @@
 #!/bin/sh
 
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -7,13 +13,16 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use pw.x and ph.x to calculate"
 $ECHO "the Raman tensor for AlAs."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -90,7 +99,7 @@ cat > alas.scf.in << EOF
     pseudo_dir = '$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
  /
- &system    
+ &system
     nosym = .false.,
     ibrav=  2, celldm(1) =10.575, nat=  2, ntyp= 2,
     ecutwfc = 10.0
@@ -103,17 +112,18 @@ ATOMIC_SPECIES
  Al  26.98  Al.vbc.UPF
  As  74.92  As.gon.UPF
 ATOMIC_POSITIONS
- Al 0.00 0.00 0.00 
- As 0.25 0.25 0.25 
+ Al 0.00 0.00 0.00
+ As 0.25 0.25 0.25
 K_POINTS {automatic}
- 4 4 4 1 1 1  
+ 4 4 4 1 1 1
 EOF
 
 $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < alas.scf.in > alas.scf.out
+check_failure $?
 $ECHO " done"
 
-# response calculation 
+# response calculation
 
 cat > alas.ph.in << EOF
 phonons of AlAs at Gamma
@@ -135,6 +145,7 @@ EOF
 
 $ECHO "  running the response calculation...\c"
 $PH_COMMAND < alas.ph.in > alas.ph.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

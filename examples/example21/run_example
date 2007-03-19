@@ -1,5 +1,11 @@
 #!/bin/sh
 
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -7,13 +13,16 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use cp.x to perform molecular dynamics"
 $ECHO "simulation of medium to large systems."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -28,7 +37,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -83,7 +92,7 @@ cat > h2o-32.in << EOF
     ndr = 50,
     ndw = -1,
     nstep  = 10,
-    iprint = 10, 
+    iprint = 10,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -94,13 +103,13 @@ cat > h2o-32.in << EOF
     outdir='$TMP_DIR/',
  /
  &system
-    ibrav = 14, 
-    celldm(1) = 18.65, 
-    celldm(2) = 1.0, 
-    celldm(3) = 1.0, 
-    celldm(4) = 0.0, 
-    celldm(5) = 0.0, 
-    celldm(6) = 0.0, 
+    ibrav = 14,
+    celldm(1) = 18.65,
+    celldm(2) = 1.0,
+    celldm(3) = 1.0,
+    celldm(4) = 0.0,
+    celldm(5) = 0.0,
+    celldm(6) = 0.0,
     nat = 96,
     ntyp = 2,
     nbnd = 128,
@@ -241,6 +250,7 @@ EOF
 $ECHO "  running the calculation with 32 H2O molecules...\c"
 if test "0$1" -ge 32 ; then
     $FPMD_COMMAND < h2o-32.in > h2o-32.out
+    check_failure $?
     $ECHO " done"
 else
     $ECHO " skipped" # too big, don't run
@@ -255,7 +265,7 @@ cat > h2o-64.in << EOF
     ndr = 50,
     ndw = -1,
     nstep  = 10,
-    iprint = 10, 
+    iprint = 10,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -266,13 +276,13 @@ cat > h2o-64.in << EOF
     outdir='$TMP_DIR/',
  /
  &system
-    ibrav = 14, 
-    celldm(1) = 18.65, 
-    celldm(2) = 1.0, 
-    celldm(3) = 2.0, 
-    celldm(4) = 0.0, 
-    celldm(5) = 0.0, 
-    celldm(6) = 0.0, 
+    ibrav = 14,
+    celldm(1) = 18.65,
+    celldm(2) = 1.0,
+    celldm(3) = 2.0,
+    celldm(4) = 0.0,
+    celldm(5) = 0.0,
+    celldm(6) = 0.0,
     nat = 192,
     ntyp = 2,
     nbnd = 256,
@@ -506,6 +516,7 @@ EOF
 $ECHO "  running the calculation with 64 H2O molecules...\c"
 if test "0$1" -ge 64 ; then
     $FPMD_COMMAND < h2o-64.in > h2o-64.out
+    check_failure $?
     $ECHO " done"
 else
     $ECHO " skipped" # too big, don't run
@@ -520,7 +531,7 @@ cat > h2o-128.in << EOF
     ndr = 50,
     ndw = -1,
     nstep  = 10,
-    iprint = 10, 
+    iprint = 10,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -531,13 +542,13 @@ cat > h2o-128.in << EOF
     outdir='$TMP_DIR/',
  /
  &system
-    ibrav = 14, 
-    celldm(1) = 18.65, 
-    celldm(2) = 2.0, 
-    celldm(3) = 2.0, 
-    celldm(4) = 0.0, 
-    celldm(5) = 0.0, 
-    celldm(6) = 0.0, 
+    ibrav = 14,
+    celldm(1) = 18.65,
+    celldm(2) = 2.0,
+    celldm(3) = 2.0,
+    celldm(4) = 0.0,
+    celldm(5) = 0.0,
+    celldm(6) = 0.0,
     nat = 384,
     ntyp = 2,
     nbnd = 512,
@@ -963,6 +974,7 @@ EOF
 $ECHO "  running the calculation with 128 H2O molecules...\c"
 if test "0$1" -ge 128 ; then
     $FPMD_COMMAND < h2o-128.in > h2o-128.out
+    check_failure $?
     $ECHO " done"
 else
     $ECHO " skipped" # too big, don't run
@@ -977,7 +989,7 @@ cat > h2o-256.in << EOF
     ndr = 50,
     ndw = -1,
     nstep  = 10,
-    iprint = 10, 
+    iprint = 10,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -988,13 +1000,13 @@ cat > h2o-256.in << EOF
     outdir='$TMP_DIR/',
  /
  &system
-    ibrav = 14, 
-    celldm(1) = 37.30, 
-    celldm(2) = 1.0, 
-    celldm(3) = 1.0, 
-    celldm(4) = 0.0, 
-    celldm(5) = 0.0, 
-    celldm(6) = 0.0, 
+    ibrav = 14,
+    celldm(1) = 37.30,
+    celldm(2) = 1.0,
+    celldm(3) = 1.0,
+    celldm(4) = 0.0,
+    celldm(5) = 0.0,
+    celldm(6) = 0.0,
     nat = 768,
     ntyp = 2,
     nbnd = 1024,
@@ -1804,6 +1816,7 @@ EOF
 $ECHO "  running the calculation with 256 H2O molecules...\c"
 if test "0$1" -ge 256 ; then
     $FPMD_COMMAND < h2o-256.in > h2o-256.out
+    check_failure $?
     $ECHO " done"
 else
     $ECHO " skipped" # too big, don't run
@@ -1818,7 +1831,7 @@ cat > h2o-384.in << EOF
     ndr = 50,
     ndw = -1,
     nstep  = 10,
-    iprint = 10, 
+    iprint = 10,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -1829,13 +1842,13 @@ cat > h2o-384.in << EOF
     outdir='$TMP_DIR/',
  /
  &system
-    ibrav = 14, 
-    celldm(1) = 37.30, 
-    celldm(2) = 1.0, 
-    celldm(3) = 1.5, 
-    celldm(4) = 0.0, 
-    celldm(5) = 0.0, 
-    celldm(6) = 0.0, 
+    ibrav = 14,
+    celldm(1) = 37.30,
+    celldm(2) = 1.0,
+    celldm(3) = 1.5,
+    celldm(4) = 0.0,
+    celldm(5) = 0.0,
+    celldm(6) = 0.0,
     nat = 1152,
     ntyp = 2,
     nbnd = 1536,
@@ -3029,6 +3042,7 @@ EOF
 $ECHO "  running the calculation with 384 H2O molecules...\c"
 if test "0$1" -ge 384 ; then
     $FPMD_COMMAND < h2o-384.in > h2o-384.out
+    check_failure $?
     $ECHO " done"
 else
     $ECHO " skipped" # too big, don't run
@@ -3043,7 +3057,7 @@ cat > h2o-512.in << EOF
     ndr = 50,
     ndw = -1,
     nstep  = 10,
-    iprint = 10, 
+    iprint = 10,
     isave  = 100,
     tstress = .TRUE.,
     tprnfor = .TRUE.,
@@ -3054,13 +3068,13 @@ cat > h2o-512.in << EOF
     outdir='$TMP_DIR/',
  /
  &system
-    ibrav = 14, 
-    celldm(1) = 37.30, 
-    celldm(2) = 1.0, 
-    celldm(3) = 2.0, 
-    celldm(4) = 0.0, 
-    celldm(5) = 0.0, 
-    celldm(6) = 0.0, 
+    ibrav = 14,
+    celldm(1) = 37.30,
+    celldm(2) = 1.0,
+    celldm(3) = 2.0,
+    celldm(4) = 0.0,
+    celldm(5) = 0.0,
+    celldm(6) = 0.0,
     nat = 1536,
     ntyp = 2,
     nbnd = 2048,
@@ -4638,6 +4652,7 @@ EOF
 $ECHO "  running the calculation with 512 H2O molecules...\c"
 if test "0$1" -ge 512 ; then
     $FPMD_COMMAND < h2o-512.in > h2o-512.out
+    check_failure $?
     $ECHO " done"
 else
     $ECHO " skipped" # too big, don't run

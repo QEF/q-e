@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -15,7 +18,7 @@ $ECHO "calculations in the presence of a finite homogeneous electric field "
 $ECHO "described through the modern theory of the polarization. The example"
 $ECHO "shows how to calculate high-frequency dielectric constant of bulk Silicon"
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -30,7 +33,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -65,13 +68,13 @@ for FILE in $PSEUDO_LIST ; do
 done
 $ECHO " done"
 
- 
+
 # how to run executables
 PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
- 
+
 
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
@@ -182,7 +185,9 @@ K_POINTS
 EOF
 $ECHO "  running the PW calculation for bulk Si no electric field ...\c"
 $PW_COMMAND < si.scf.in > si.scf.out
+check_failure $?
 $ECHO " done"
+
 cat > si.scf.efield.in << EOF
  &control
     calculation='scf'
@@ -286,8 +291,10 @@ K_POINTS
 EOF
 $ECHO "  running the PW calculation for bulk Si E_field=0.0  a.u. ...\c"
 $PW_COMMAND < si.scf.efield.in > si.scf.efield.out
+check_failure $?
 $ECHO " done"
-cat > si.scf.efield2.in << EOF 
+
+cat > si.scf.efield2.in << EOF
  &control
     calculation='scf'
     restart_mode='from_scratch',
@@ -298,7 +305,7 @@ cat > si.scf.efield2.in << EOF
     nberrycyc=3
     pseudo_dir='$PSEUDO_DIR/',
     outdir='$TMP_DIR/'
- 
+
  /
  &system
     ibrav= 1, celldm(1)=10.18, nat=  8, ntyp= 1,
@@ -391,6 +398,7 @@ K_POINTS
 EOF
 $ECHO "  running the PW calculation for bulk Si E_field=0.001  a.u. ...\c"
 $PW_COMMAND < si.scf.efield2.in > si.scf.efield2.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

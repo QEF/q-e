@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -50,7 +53,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -71,7 +74,7 @@ $ECHO "  running pw.x as:      $PW_COMMAND"
 $ECHO "  running pp.x as:      $PP_COMMAND"
 $ECHO "  running plotrho.x as: $PLOTRHO_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -95,7 +98,7 @@ cat > AlAs110re.scf.in << EOF
  /
  &electrons
     mixing_mode = 'plain'
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
     conv_thr =  1.0d-6
  /
  ATOMIC_SPECIES
@@ -121,6 +124,7 @@ K_POINTS {automatic}
 EOF
 $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < AlAs110re.scf.in > AlAs110re.scf.out
+check_failure $?
 $ECHO " done"
 
 cat > AlAs110re.nonscf.in << EOF
@@ -136,12 +140,12 @@ cat > AlAs110re.nonscf.in << EOF
     ibrav=  8, celldm(1) =7.424621202, celldm(2)=1.414213576,
     celldm(3)= 6.00000,
     nat= 14, ntyp= 2,
-    occupations='smearing', smearing='gaussian', degauss=0.01, nbnd=34, 
+    occupations='smearing', smearing='gaussian', degauss=0.01, nbnd=34,
     ecutwfc =14.0,
  /
  &electrons
     mixing_mode = 'plain'
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
     conv_thr =  1.0d-6
  /
  ATOMIC_SPECIES
@@ -167,6 +171,7 @@ K_POINTS {automatic}
 EOF
 $ECHO "  running the non-scf calculation...\c"
 $PW_COMMAND < AlAs110re.nonscf.in > AlAs110re.nonscf.out
+check_failure $?
 $ECHO " done"
 
 # post-processing for stm images (sample bias given in Ry!)
@@ -185,27 +190,29 @@ cat > AlAs110.pp_stm-.in << EOF
    weight(1)=1.0
    iflag=2
    output_format=2
-   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
+   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0
    e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
    x0(1)=0.0, x0(2)=-0.18,   x0(3)=3.25
-   nx=36 ,ny=56     
+   nx=36 ,ny=56
    fileout='AlAs110-1.0'
  /
 EOF
 $ECHO
 $ECHO "  running the post-processing phase, negative bias...\c"
 $PP_COMMAND < AlAs110.pp_stm-.in > AlAs110.pp_stm-.out
+check_failure $?
 $ECHO " done"
 
 # run plotrho to do the figure
 cat > AlAs110.plotrho-.in << EOF
 AlAs110-1.0
 AlAs110-1.0eV.ps
-n  
-0.00005 0.0078  8 
+n
+0.00005 0.0078  8
 EOF
 $ECHO "  running plotrho on negative bias data...\c"
 $PLOTRHO_COMMAND < AlAs110.plotrho-.in > AlAs110.plotrho-.out
+check_failure $?
 $ECHO " done"
 
 # post-processing for stm images (as before, but positive bias)
@@ -224,27 +231,29 @@ cat > AlAs110.pp_stm+.in << EOF
    weight(1)=1.0
    iflag=2
    output_format=2
-   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0      
+   e1(1)=7.0, e1(2)=0.0,     e1(3)=0.0
    e2(1)=0.0, e2(2)=7.07107, e2(3)=0.0
    x0(1)=0.0, x0(2)=-0.18,   x0(3)=3.25
-   nx=36 ,ny=56     
+   nx=36 ,ny=56
    fileout='AlAs110+1.0'
  /
 EOF
 $ECHO "  running the post-processing phase, positive bias...\c"
 $PP_COMMAND < AlAs110.pp_stm+.in > AlAs110.pp_stm+.out
+check_failure $?
 $ECHO " done"
 
 # plotrho
 cat > AlAs110.plotrho+.in << EOF
 AlAs110+1.0
 AlAs110+1.0eV.ps
-n  
-0.00002 0.0021  8 
+n
+0.00002 0.0021  8
 EOF
 $ECHO "  running plotrho on positive bias data...\c"
 $PLOTRHO_COMMAND < AlAs110.plotrho+.in > AlAs110.plotrho+.out
+check_failure $?
 $ECHO " done"
 
-$ECHO 
+$ECHO
 $ECHO " $EXAMPLE_DIR: done"

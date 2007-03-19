@@ -1,4 +1,11 @@
 #!/bin/sh
+
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
@@ -6,13 +13,16 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to calculate electron-phonon interaction"
 $ECHO "coefficients for fcc Al."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 # required executables and pseudopotentials
 BIN_LIST="pw.x ph.x q2r.x matdyn.x"
@@ -54,7 +64,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -84,7 +94,7 @@ rm -rf $TMP_DIR/*
 $ECHO "  done"
 
 #
-# SCF at dense k-mesh, good enough for electronic DOS  
+# SCF at dense k-mesh, good enough for electronic DOS
 #
 cat > al.scf.fit.in << EOF
  &control
@@ -96,9 +106,9 @@ cat > al.scf.fit.in << EOF
  /
  &system
     ibrav=  2, celldm(1) =7.5, nat= 1, ntyp= 1,
-    ecutwfc =15.0,   
+    ecutwfc =15.0,
     occupations='smearing', smearing='methfessel-paxton', degauss=0.05,
-    la2F = .true., 
+    la2F = .true.,
  /
  &electrons
     conv_thr =  1.0d-8
@@ -107,12 +117,13 @@ cat > al.scf.fit.in << EOF
 ATOMIC_SPECIES
  Al  26.98 Al.vbc.UPF
 ATOMIC_POSITIONS
- Al 0.00 0.00 0.00 
+ Al 0.00 0.00 0.00
 K_POINTS {automatic}
  16 16 16  0 0 0
 EOF
 $ECHO "  running the scf calculation with dense k-point grid...\c"
 $PW_COMMAND  < al.scf.fit.in > al.scf.fit.out
+check_failure $?
 $ECHO "  done"
 #
 #  SCF at k-mesh good enough for phonons
@@ -127,7 +138,7 @@ cat > al.scf.in << EOF
  /
  &system
     ibrav=  2, celldm(1) =7.5, nat= 1, ntyp= 1,
-    ecutwfc =15.0, 
+    ecutwfc =15.0,
     occupations='smearing', smearing='methfessel-paxton', degauss=0.05
  /
  &electrons
@@ -137,12 +148,13 @@ cat > al.scf.in << EOF
 ATOMIC_SPECIES
  Al  26.98 Al.vbc.UPF
 ATOMIC_POSITIONS
- Al 0.00 0.00 0.00 
+ Al 0.00 0.00 0.00
 K_POINTS {automatic}
  8 8 8  0 0 0
 EOF
 $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < al.scf.in > al.scf.out
+check_failure $?
 $ECHO "  done"
 #
 cat > al.elph.in << EOF
@@ -162,25 +174,27 @@ Electron-phonon coefficients for Al
 EOF
 $ECHO "  running the el-ph calculation...\c"
 $PH_COMMAND < al.elph.in > al.elph.out
+check_failure $?
 $ECHO "  done"
 #
 #   q2r and matdyn
 #
-cat > q2r.in << EOF 
+cat > q2r.in << EOF
  &input
   zasr='simple',  fildyn='al.dyn', flfrc='Al444.fc', la2F=.true.
  /
 EOF
 $ECHO "  running q2r...\c"
 $Q2R_COMMAND < q2r.in > q2r.out
+check_failure $?
 $ECHO "  done"
 #
 #
 #
-cat > matdyn.in.freq << EOF 
+cat > matdyn.in.freq << EOF
  &input
     asr='simple',  amass(1)=26.98,
-    flfrc='Al444.fc', flfrq='Al444.freq', la2F=.true., dos=.false. 
+    flfrc='Al444.fc', flfrq='Al444.freq', la2F=.true., dos=.false.
  /
   19
   0.000 0.0 0.0     0.0
@@ -205,19 +219,21 @@ cat > matdyn.in.freq << EOF
 EOF
 $ECHO "  running matdyn for frequency calculation...\c"
 $MATDYN_COMMAND < matdyn.in.freq > matdyn.out.freq
+check_failure $?
 $ECHO "  done"
 #
 #
 #
-cat > matdyn.in.dos << EOF 
+cat > matdyn.in.dos << EOF
  &input
     asr='simple',  amass(1)=26.98,
-    flfrc='Al444.fc', flfrq='Al444.freq', la2F=.true., dos=.true. 
+    flfrc='Al444.fc', flfrq='Al444.freq', la2F=.true., dos=.true.
     fldos='phonon.dos', nk1=10, nk2=10, nk3=10, ndos=50
  /
 EOF
 $ECHO "  running matdyn for a2F(omega) calculation...\c"
 $MATDYN_COMMAND < matdyn.in.dos > matdyn.out.dos
+check_failure $?
 $ECHO "  done"
 
 

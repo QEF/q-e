@@ -7,13 +7,16 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use cp.x to perform molecular dynamics"
 $ECHO "simulation of SiO2."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -28,7 +31,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -126,6 +129,7 @@ Si  6.77884003  11.85881642   6.85202747
 EOF
 $ECHO "  running the calculation with fixed ions...\c"
 $CP_COMMAND < sio2.cp.start.in > sio2.cp.start.out
+check_failure $?
 $ECHO " done"
 
 # molecular dynamics calculation
@@ -179,6 +183,7 @@ Si  6.77884003  11.85881642   6.85202747
 EOF
 $ECHO "  running the calculation with fixed ions, restart...\c"
 $CP_COMMAND < sio2.cp.restart.in > sio2.cp.restart.out
+check_failure $?
 $ECHO " done"
 
 # molecular dynamics calculation
@@ -237,6 +242,7 @@ Si  6.77884003  11.85881642   6.85202747
 EOF
 $ECHO "  running the variable-cell calculation...\c"
 $CP_COMMAND < sio2.vc-cp.in > sio2.vc-cp.out
+check_failure $?
 $ECHO " done"
 
 # molecular dynamics calculation
@@ -296,6 +302,7 @@ EOF
 
 $ECHO "  running the variable-cell calculation, restart...\c"
 $CP_COMMAND < sio2.vc-cp.restart.in >  sio2.vc-cp.restart.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

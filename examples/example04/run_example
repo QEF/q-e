@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -51,7 +54,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -101,12 +104,13 @@ ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
 ATOMIC_POSITIONS
  Si -0.123 -0.123 -0.123
- Si  0.123  0.123  0.123 
+ Si  0.123  0.123  0.123
 K_POINTS {automatic}
  1 1 1 0 0 0
 EOF
 $ECHO "  running the MD calculation for Si in a 2 atom cell. G-point...\c"
 $PW_COMMAND < si.md2.in > si.md2.out
+check_failure $?
 $ECHO " done"
 
 awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md2.out > MD2
@@ -155,6 +159,7 @@ K_POINTS {automatic}
 EOF
 $ECHO "  running the MD calculation for Si in a 8 atom cell. G-point...\c"
 $PW_COMMAND < si.md8.in > si.md8.out
+check_failure $?
 $ECHO " done"
 
 awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md8.out > MD8
@@ -191,7 +196,7 @@ ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
 ATOMIC_POSITIONS
  Si -0.123 -0.123 -0.123
- Si  0.123  0.123  0.123 
+ Si  0.123  0.123  0.123
 K_POINTS
  4
  0.0 0.0 0.0 1.0
@@ -201,9 +206,11 @@ K_POINTS
 EOF
 $ECHO "  running the MD calculation for Si in a 2 atom cell. G3X-points...\c"
 $PW_COMMAND < si.md2_G3X.in > si.md2_G3X.out
+check_failure $?
 $ECHO " done"
 
-awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et}/Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md2_G3X.out > MD2_G3X
+awk '/Ekin/{ek=$3;et=$11; print it,time,ek,u,et} \
+     /Dynamics/{it=$5;time=$8}/^\!/{u=$5}' si.md2_G3X.out > MD2_G3X
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

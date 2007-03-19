@@ -7,13 +7,16 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
 $ECHO "This example shows how to use cp.x and pw.x to perform SCF"
 $ECHO "simulation of C4H6 with TPSS metaGGA Exc."
 
-# set the needed environment variables 
+# set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
@@ -28,7 +31,7 @@ $ECHO "  checking that needed directories and files exist...\c"
 
 # check for directories
 for DIR in "$BIN_DIR" "$PSEUDO_DIR" ; do
-    if test ! -d $DIR ; then 
+    if test ! -d $DIR ; then
         $ECHO
         $ECHO "ERROR: $DIR not existent or not a directory"
         $ECHO "Aborting"
@@ -113,7 +116,9 @@ ATOMIC_POSITIONS  bohr
 EOF
 $ECHO "  running the cp.x SCF calculation...\c"
 $CP_COMMAND < c4h6.cp.metaGGA.in > c4h6.cp.metaGGA.out
+check_failure $?
 $ECHO " done"
+
 cat > c4h6.pw.metaGGA.in << EOF
  &control
     calculation='scf',
@@ -147,6 +152,8 @@ K_POINTS Gamma
 EOF
 $ECHO "  running the pw.x SCF calculation...\c"
 $PW_COMMAND < c4h6.pw.metaGGA.in > c4h6.pw.metaGGA.out
+check_failure $?
 $ECHO " done"
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"

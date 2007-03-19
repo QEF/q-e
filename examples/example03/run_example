@@ -6,7 +6,10 @@ EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -55,7 +58,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -88,9 +91,9 @@ cat > co.rx.in << EOF
 /
 &SYSTEM
   ibrav     = 0,
-  nat       = 2, 
+  nat       = 2,
   ntyp      = 2,
-  ecutwfc   = 24.D0, 
+  ecutwfc   = 24.D0,
   ecutrho   = 144.D0,
 /
 &ELECTRONS
@@ -110,11 +113,12 @@ O  1.00  O.LDA.US.RRKJ3.UPF
 C  1.00  C.pz-rrkjus.UPF
 ATOMIC_POSITIONS {bohr}
 C  2.256  0.0  0.0
-O  0.000  0.0  0.0  0 0 0 
+O  0.000  0.0  0.0  0 0 0
 K_POINTS {Gamma}
 EOF
 $ECHO "  running the geometry relaxation for CO...\c"
 $PW_COMMAND < co.rx.in > co.rx.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -130,9 +134,9 @@ cat > al001.rx.in << EOF
   outdir      = "$TMP_DIR",
 /
 &SYSTEM
-  ibrav       = 6, 
+  ibrav       = 6,
   celldm(1)   = 5.3033D0,
-  celldm(3)   = 8.D0, 
+  celldm(3)   = 8.D0,
   nat         = 7,
   ntyp        = 1,
   ecutwfc     = 12.D0,
@@ -167,6 +171,7 @@ K_POINTS
 EOF
 $ECHO "  running the geometry relaxation for Al (001) using BFGS...\c"
 $PW_COMMAND < al001.rx.in > al001.rx.out
+check_failure $?
 $ECHO " done"
 
 # clean TMP_DIR
@@ -175,7 +180,7 @@ rm -rf $TMP_DIR/*
 $ECHO " done"
 
 # self-consistent calculation
-rm -f e eal ave p avec tv 
+rm -f e eal ave p avec tv
 cat > al001.mm.in << EOF
 &CONTROL
   calculation = "relax",
@@ -184,9 +189,9 @@ cat > al001.mm.in << EOF
   outdir      = "$TMP_DIR",
 /
 &SYSTEM
-  ibrav       = 6, 
+  ibrav       = 6,
   celldm(1)   = 5.3033D0,
-  celldm(3)   = 8.D0, 
+  celldm(3)   = 8.D0,
   nat         = 7,
   ntyp        = 1,
   ecutwfc     = 12.D0,
@@ -221,6 +226,7 @@ K_POINTS
 EOF
 $ECHO "  running the geometry relaxation for Al (001) using damped MD...\c"
 $PW_COMMAND < al001.mm.in > al001.mm.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

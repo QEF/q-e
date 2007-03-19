@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -52,7 +55,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -69,7 +72,7 @@ PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -99,15 +102,16 @@ cat > al.in << EOF
  /
 ATOMIC_SPECIES
 Al     26.98154    Al.vbc.UPF
-ATOMIC_POSITIONS   
+ATOMIC_POSITIONS
 Al      0.0000000000   0.0000000000     0.000
 K_POINTS  AUTOMATIC
 1   1   1   0   0   0
 OCCUPATIONS
-2.0 0.3333333333333 0.333333333333 0.3333333333333 0.0 0.0 
+2.0 0.3333333333333 0.333333333333 0.3333333333333 0.0 0.0
 EOF
 $ECHO "  running self-consistent calculation for Al atom...\c"
 $PW_COMMAND < al.in > al.out
+check_failure $?
 $ECHO " done"
 
 # self consistent calculation for the spin polarized O atom
@@ -137,16 +141,17 @@ cat > O.in << EOF
  /
 ATOMIC_SPECIES
 O     15.99994   O.pbe-rrkjus.UPF
-ATOMIC_POSITIONS   
-O   0.000000000   0.000000000   0.000000000  
+ATOMIC_POSITIONS
+O   0.000000000   0.000000000   0.000000000
 K_POINTS AUTOMATIC
 1   1   1   0   0   0
 OCCUPATIONS
-1.0 1.0 1.0 1.0 0.0 0.0 
-1.0 0.33333333333 0.33333333333 0.33333333333 0.0 0.0 
+1.0 1.0 1.0 1.0 0.0 0.0
+1.0 0.33333333333 0.33333333333 0.33333333333 0.0 0.0
 EOF
 $ECHO "  running calculation for O atom...\c"
 $PW_COMMAND < O.in > O.out
+check_failure $?
 $ECHO " done"
 
 #
@@ -176,15 +181,16 @@ cat > O_gamma.in << EOF
  /
 ATOMIC_SPECIES
 O     15.99994   O.pbe-rrkjus.UPF
-ATOMIC_POSITIONS   
-O   0.000000000   0.000000000   0.000000000  
+ATOMIC_POSITIONS
+O   0.000000000   0.000000000   0.000000000
 K_POINTS (gamma)
 OCCUPATIONS
-1.0 1.0 1.0 1.0 0.0 0.0 
-1.0 0.33333333333 0.33333333333 0.33333333333 0.0 0.0 
+1.0 1.0 1.0 1.0 0.0 0.0
+1.0 0.33333333333 0.33333333333 0.33333333333 0.0 0.0
 EOF
 $ECHO "  running calculation for O atom, Gamma-only...\c"
 $PW_COMMAND < O_gamma.in > O_gamma.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

@@ -1,11 +1,20 @@
 #!/bin/sh
 
+###############################################################################
+##
+##  HIGH WERBOSITY EXAMPLE
+##
+###############################################################################
+
 # run from directory where this script is
 cd `echo $0 | sed 's/\(.*\)\/.*/\1/'` # extract pathname
 EXAMPLE_DIR=`pwd`
 
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
+
+# function to test the exit status of a job
+. ../check_failure.sh
 
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
@@ -53,7 +62,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -76,7 +85,7 @@ $ECHO "  running ph.x     as: $PH_COMMAND"
 $ECHO "  running phcg.x   as: $PHCG_COMMAND"
 $ECHO "  running dynmat.x as: $DYNMAT_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -114,6 +123,7 @@ K_POINTS (gamma)
 EOF
 $ECHO "  running the scf calculation for SiH4...\c"
 $PW_COMMAND < sih4.scf.in > sih4.scf.out
+check_failure $?
 $ECHO " done"
 
 # normal mode calculation for SiH4
@@ -124,7 +134,7 @@ normal modes for sih4
   prefix='sih4',
   amass(1)=28.086,
   amass(2)=1.008,
-  outdir='$TMP_DIR/', 
+  outdir='$TMP_DIR/',
   epsil=.true.,
   trans=.true., asr=.true.
   raman=.false.
@@ -134,6 +144,7 @@ normal modes for sih4
 EOF
 $ECHO "  running normal mode calculation for SiH4...\c"
 $PHCG_COMMAND < sih4.nm.in > sih4.nm.out
+check_failure $?
 $ECHO " done"
 
 # IR cross sections  for SiH4
@@ -143,6 +154,7 @@ EOF
 
 $ECHO "  running IR cross section calculation for SiH4...\c"
 $DYNMAT_COMMAND < sih4.dyn.in > sih4.dyn.out
+check_failure $?
 $ECHO " done"
 
 # Self consistent calculation for CH4
@@ -157,16 +169,16 @@ ch4 molecule in a cubic box
     pseudo_dir = '$PSEUDO_DIR',
     outdir='$TMP_DIR'
  /
- &system    
-    ibrav=  1, 
-    celldm(1) =15.0, 
-    nat=5, 
+ &system
+    ibrav=  1,
+    celldm(1) =15.0,
+    nat=5,
     ntyp= 2,
-    ecutwfc =25.0, 
-    ecutrho =100.0, 
+    ecutwfc =25.0,
+    ecutrho =100.0,
  /
  &electrons
-    mixing_beta = 0.5, 
+    mixing_beta = 0.5,
     conv_thr =  1.0d-8
  /
 ATOMIC_SPECIES
@@ -184,6 +196,7 @@ K_POINTS
 EOF
 $ECHO "  running the scf calculation for CH4...\c"
 $PW_COMMAND < ch4.scf.in > ch4.scf.out
+check_failure $?
 $ECHO " done"
 
 # normal mode calculation for CH4
@@ -203,8 +216,8 @@ vibrations of ch4
 EOF
 $ECHO "  running normal mode calculation for CH4...\c"
 $PH_COMMAND < ch4.nm.in > ch4.nm.out
+check_failure $?
 $ECHO " done"
-
 
 $ECHO
 $ECHO "$EXAMPLE_DIR: done"

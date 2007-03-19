@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -50,7 +53,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -75,7 +78,7 @@ $ECHO "  running projwfc.x as: $PROJWFC_COMMAND"
 $ECHO "  running kvecs_FS.x as:  $KVECS_COMMAND"
 $ECHO "  running bands_FS.x as:  $BANDS_COMMAND"
 $ECHO
- 
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -98,7 +101,7 @@ cat > ni.scf.in << EOF
  /
  &electrons
     conv_thr = 1.0e-8
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
@@ -169,6 +172,7 @@ K_POINTS
 EOF
 $ECHO "  running the scf calculation for Ni...\c"
 $PW_COMMAND < ni.scf.in > ni.scf.out
+check_failure $?
 $ECHO " done"
 
 # DOS calculation for Ni
@@ -187,7 +191,7 @@ cat > ni.dos.in << EOF
  /
  &electrons
     conv_thr = 1.0e-8
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
@@ -208,7 +212,9 @@ EOF
 
 $ECHO "  running DOS calculation for Ni...\c"
 $PW_COMMAND < ni.dos.in > ni.dos.out
+check_failure $?
 $DOS_COMMAND < ni.dos2.in > ni.dos2.out
+check_failure $?
 $ECHO " done"
 
 cat > ni.pdos.in << EOF
@@ -221,6 +227,7 @@ cat > ni.pdos.in << EOF
 EOF
 $ECHO "  running PDOS calculation for Ni...\c"
 $PROJWFC_COMMAND < ni.pdos.in > ni.pdos.out
+check_failure $?
 $ECHO " done"
 
 $ECHO "  Fermi Surface plot ...\c"
@@ -241,17 +248,18 @@ cat > ni.scf.in << EOF
  /
  &electrons
     conv_thr = 1.0e-8
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
 ATOMIC_POSITIONS
  Ni 0.0 0.0 0.0
 K_POINTS {automatic}
- 8 8 8 0 0 0 
+ 8 8 8 0 0 0
 EOF
 $ECHO "  running the scf calculation (no spin) ... \c"
 $PW_COMMAND < ni.scf.in > ni.scf0.out
+check_failure $?
 $ECHO " done"
 
 #
@@ -263,7 +271,7 @@ nabc=' 12 12 12 '
 n_start=3
 n_last=6
 #
-E_Fermi=`grep Fermi ni.scf0.out | cut -c 26-36` 
+E_Fermi=`grep Fermi ni.scf0.out | cut -c 26-36`
 a1=`grep 'b(1)' ni.scf.out | cut -c 24-54`
 a2=`grep 'b(2)' ni.scf.out | cut -c 24-54`
 a3=`grep 'b(3)' ni.scf.out | cut -c 24-54`
@@ -277,6 +285,7 @@ $Sysname
 EOF
 
 $KVECS_COMMAND < kvecs_FS.in > kvecs_FS.out
+check_failure $?
 
 cat > ni.fs.in << EOF
  &control
@@ -291,7 +300,7 @@ cat > ni.fs.in << EOF
  /
  &electrons
     conv_thr = 1.0e-8
-    mixing_beta = 0.7 
+    mixing_beta = 0.7
  /
 ATOMIC_SPECIES
  Ni 58.69 NiUS.RRKJ3.UPF
@@ -304,7 +313,8 @@ cat  kvecs_$Sysname >> ni.fs.in
 
 # input file ni.fs.in ready
 $ECHO "  running the Fermi Surface calculation ... \c"
-$PW_COMMAND   < ni.fs.in > ni.fs.out 
+$PW_COMMAND   < ni.fs.in > ni.fs.out
+check_failure $?
 $ECHO " done"
 
 # prepare input data (input_FS, Bands.out) for bands_FS
@@ -323,7 +333,8 @@ $a3
 EOF
 
 $BANDS_COMMAND > bands_fs.out
-mv Bands.bxsf  ni.fs.bxsf 
+check_failure $?
+mv Bands.bxsf  ni.fs.bxsf
 
 $ECHO "  Fermi surface plot: use 'xcrysden --bxsf ni.fs.bxsf' to plot ...\c"
 $ECHO " done"

@@ -7,6 +7,9 @@ EXAMPLE_DIR=`pwd`
 # check whether echo has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -51,7 +54,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -68,7 +71,7 @@ PW_COMMAND="$PARA_PREFIX $BIN_DIR/pw.x $PARA_POSTFIX"
 $ECHO
 $ECHO "  running pw.x as: $PW_COMMAND"
 $ECHO
-                                                                                
+
 # clean TMP_DIR
 $ECHO "  cleaning $TMP_DIR...\c"
 rm -rf $TMP_DIR/*
@@ -101,16 +104,17 @@ ATOMIC_SPECIES
   Ti    47.867    Ti.vdb.UPF
   O     15.9994   O.vdb.UPF
 ATOMIC_POSITIONS
-  Pb    0.000    0.000    0.010 
-  Ti    0.500    0.500    0.500 
-  O     0.000    0.500    0.500 
-  O     0.500    0.500    0.000 
-  O     0.500    0.000    0.500 
+  Pb    0.000    0.000    0.010
+  Ti    0.500    0.500    0.500
+  O     0.000    0.500    0.500
+  O     0.500    0.500    0.000
+  O     0.500    0.000    0.500
 K_POINTS {automatic}
   4 4 4 1 1 1
 EOF
 $ECHO "  running self-consistent calculation in PbTiO3...\c"
 $PW_COMMAND < chg.in > chg.out
+check_failure $?
 $ECHO " done"
 
 # Berry Phase calculation
@@ -142,16 +146,17 @@ ATOMIC_SPECIES
   Ti    47.867    Ti.vdb.UPF
   O     15.9994   O.vdb.UPF
 ATOMIC_POSITIONS
-  Pb    0.000    0.000    0.010 
-  Ti    0.500    0.500    0.500 
-  O     0.000    0.500    0.500 
-  O     0.500    0.500    0.000 
-  O     0.500    0.000    0.500 
+  Pb    0.000    0.000    0.010
+  Ti    0.500    0.500    0.500
+  O     0.000    0.500    0.500
+  O     0.500    0.500    0.000
+  O     0.500    0.000    0.500
 K_POINTS {automatic}
   4 4 7  1 1 1
 EOF
 $ECHO "  running Berry Phase calculation for PbTiO3...\c"
 $PW_COMMAND < BP.in > BP.out
+check_failure $?
 $ECHO " done"
 
 $ECHO

@@ -6,7 +6,10 @@ EXAMPLE_DIR=`pwd`
 
 # check whether ECHO has the -e option
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
-                                                                                
+
+# function to test the exit status of a job
+. ../check_failure.sh
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
@@ -52,7 +55,7 @@ for FILE in $BIN_LIST ; do
         exit 1
     fi
 done
- 
+
 # check for pseudopotentials
 for FILE in $PSEUDO_LIST ; do
     if test ! -r $PSEUDO_DIR/$FILE ; then
@@ -118,9 +121,10 @@ EOF
 #
 $ECHO "  running the scf calculation...\c"
 $PW_COMMAND < ch4.scf.in > ch4.scf.out
+check_failure $?
 $ECHO " done"
 #
-# dynamic polarizability calculation 
+# dynamic polarizability calculation
 #
 cat > ch4.fpol.in << EOF
 
@@ -145,5 +149,8 @@ EOF
 #
 $ECHO "  running the dynamic polarizability calculation ...\c"
 $PH_COMMAND < ch4.fpol.in > ch4.fpol.out
+check_failure $?
 $ECHO " done"
 
+$ECHO
+$ECHO "$EXAMPLE_DIR : done"
