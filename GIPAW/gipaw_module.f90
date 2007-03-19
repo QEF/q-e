@@ -165,7 +165,6 @@ CONTAINS
   ! Allocate memory for GIPAW
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_allocate
-    USE becmod,        ONLY : becp
     USE lsda_mod,      ONLY : nspin, lsda
     USE pwcom
     USE ions_base,     ONLY : ntyp => nsp
@@ -174,9 +173,6 @@ CONTAINS
     IMPLICIT NONE
     
     allocate(evq(npwx,nbnd))
-    ! DO NOT not allocate becp here! it's allocated and deallocated
-    ! by a lot of routines (crazy!)
-    ! allocate(becp(nkb,nbnd))
     allocate(j_bare(nrxxs,3,3,nspin), b_ind_r(nrxxs,3,3), b_ind(ngm,3,3))
     allocate ( paw_recon(ntyp) )
     
@@ -296,7 +292,7 @@ CONTAINS
     
     ! initialize pseudopotentials
     call init_us_1
-    
+
     !<apsi>
     
     ! Read in qe format
@@ -604,6 +600,7 @@ CONTAINS
     
     
     ! computes the total local potential (external+scf) on the smooth grid
+    call setlocal
     call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
 
     ! compute the D for the pseudopotentials

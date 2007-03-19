@@ -396,7 +396,7 @@ subroutine efg_correction ( efg_corr_tens )
 !                                    paw_nhtom, paw_indv, paw_nbeta
   USE paw,                   ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE constants,             ONLY : pi
-  
+  USE buffers
   implicit none
   
   ! Argument
@@ -458,7 +458,7 @@ subroutine efg_correction ( efg_corr_tens )
   do ik = 1, nks
      
      call gk_sort ( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
-     call davcio ( evc, nwordwfc, iunwfc, ik, -1 )
+     call get_buffer ( evc, nwordwfc, iunwfc, ik)
      
      call init_paw_2 ( npw, igk, xk(1,ik), paw_vkb )
      call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc )

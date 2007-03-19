@@ -29,6 +29,7 @@ compute_u_kq.o : ../Modules/kind.o
 compute_u_kq.o : ../Modules/uspp.o
 compute_u_kq.o : ../Modules/wavefunctions.o
 compute_u_kq.o : ../PW/becmod.o
+compute_u_kq.o : ../PW/buffers.o
 compute_u_kq.o : ../PW/noncol.o
 compute_u_kq.o : ../PW/pwcom.o
 compute_u_kq.o : gipaw_module.o
@@ -42,6 +43,7 @@ efg.o : ../Modules/kind.o
 efg.o : ../Modules/parameters.o
 efg.o : ../Modules/uspp.o
 efg.o : ../Modules/wavefunctions.o
+efg.o : ../PW/buffers.o
 efg.o : ../PW/paw.o
 efg.o : ../PW/pwcom.o
 efg.o : gipaw_module.o
@@ -120,6 +122,7 @@ suscept_crystal.o : ../Modules/kind.o
 suscept_crystal.o : ../Modules/mp_global.o
 suscept_crystal.o : ../Modules/wavefunctions.o
 suscept_crystal.o : ../PW/becmod.o
+suscept_crystal.o : ../PW/buffers.o
 suscept_crystal.o : ../PW/paw.o
 suscept_crystal.o : ../PW/pwcom.o
 suscept_crystal.o : gipaw_module.o
@@ -137,6 +140,7 @@ test_sum_rule.o : ../Modules/io_files.o
 test_sum_rule.o : ../Modules/io_global.o
 test_sum_rule.o : ../Modules/kind.o
 test_sum_rule.o : ../Modules/wavefunctions.o
+test_sum_rule.o : ../PW/buffers.o
 test_sum_rule.o : ../PW/pwcom.o
 test_sum_rule.o : gipaw_module.o
 write_tensor_field.o : ../Modules/cell_base.o

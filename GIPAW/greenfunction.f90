@@ -20,6 +20,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   USE wavefunctions_module,        ONLY : evc
   USE noncollin_module,            ONLY : npol
   USE pwcom
+  USE io_files,              ONLY : nwordwfc, iunwfc
   USE gipaw_module
 
   !-- parameters ---------------------------------------------------------
@@ -37,9 +38,9 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   integer :: ibnd, ig, lter
   logical :: conv_root, q_is_zero
   complex(dp), external :: ZDOTC
-  external ch_psi_all2, cg_psi
+  external ch_psi_all, cg_psi
  
-
+  ! start clock
   call start_clock ('greenf')
 
   ! allocate memory
@@ -49,7 +50,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   ! check if |q| is zero
   q_is_zero = .false.
   if (sqrt(q(1)*q(1)+q(2)*q(2)+q(3)*q(3)) < 1d-8) q_is_zero = .true.  
-  if (q_is_zero) evq = evc
+  if (q_is_zero) evq(:,:) = evc(:,:)
 
   !====================================================================
   ! apply -Q_{k+q} to the r.h.s.
@@ -97,7 +98,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   ! preconditioning of the linear system
   do ibnd = 1, nbnd_occ (ik)
      do ig = 1, npw
-        work (ig) = g2kin (ig) * evc (ig, ibnd)
+        work (ig) = g2kin (ig) * evq (ig, ibnd)
      enddo
      eprec (ibnd) = 1.35d0 * ZDOTC (npw, evq (1, ibnd), 1, work, 1)
   enddo
@@ -113,23 +114,21 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   if (.not. q_is_zero) then
     dxk = xk(:,ik) + q
     call init_us_2(npw, igk, dxk, vkb)
-    !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
   else
     call init_us_2(npw, igk, xk(1,ik), vkb)
   endif
-  !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
+  call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
     
   ! initial guess
   g_psi(:,:) = (0.d0, 0.d0)
 
   ! solve linear system  
   conv_root = .true.
-  !!PRINT*, et(1:nbnd,ik)*13.6056982d0
-  call cgsolve_all (ch_psi_all2, cg_psi, et(1,ik), psi, g_psi, &
+  call cgsolve_all (ch_psi_all, cg_psi, et(1,ik), psi, g_psi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
-       nbnd_occ(ik), 1 )
+       nbnd_occ(ik) )
 
-  ! debug  
+  !! debug  
   !!write(stdout, '(5X,''cgsolve_all converged in '',I3,'' iterations'')') &
   !!      lter
 
@@ -142,7 +141,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
 
   call flush_unit( stdout )
   call stop_clock('greenf')
-
+ 
   ! free memory
   deallocate (work, h_diag, eprec, ps, becp)
 

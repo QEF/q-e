@@ -39,6 +39,7 @@ SUBROUTINE suscept_crystal
   USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, &
                                           paw_recon
   USE ions_base, ONLY : nat
+  USE buffers
   !</apsi>
 
   !-- local variables ----------------------------------------------------
@@ -103,7 +104,7 @@ SUBROUTINE suscept_crystal
     call init_us_2(npw,igk,xk(1,ik),vkb)
     
     ! read wfcs from file and compute becp
-    call davcio (evc, nwordwfc, iunwfc, ik, -1)
+    call get_buffer (evc, nwordwfc, iunwfc, ik)
     !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
     
     !<apsi>

@@ -22,7 +22,7 @@ SUBROUTINE compute_u_kq(ik, q)
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, g2kin, &
                                    current_k, nbndx, btype
-  USE control_flags,        ONLY : ethr, isolve, io_level
+  USE control_flags,        ONLY : ethr, isolve, io_level, lscf
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
@@ -34,6 +34,7 @@ SUBROUTINE compute_u_kq(ik, q)
   USE control_flags,        ONLY : iverbosity
   USE becmod,               ONLY : becp
   USE control_flags,        ONLY : ethr, isolve, max_cg_iter
+  USE buffers
   USE gipaw_module
   IMPLICIT NONE
   INTEGER :: ik, iter       ! k-point, current iterations
@@ -49,17 +50,19 @@ SUBROUTINE compute_u_kq(ik, q)
   iter = 1
   max_cg_iter = 200
   isolve = 1  ! CG
+  nbndx = nbnd
   ethr = conv_threshold
   if (allocated(btype)) deallocate(btype)
-  allocate(btype(nkstot,nbndx))
+  allocate(btype(nbnd,nkstot))
   btype(:,:) = 1
+  lscf = .false.
   !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 
   ! save eigenvalues
   allocate( et_old(nbnd,nkstot) )
   et_old = et
 
-  ! debug 
+  !! debug 
   !!WRITE(stdout, '(5X,"compute_u_kq: q = (",F10.4,",",F10.4,",",F10.4,")")') q
   !!WRITE(stdout, '(5X,"  isolve = ", I2)') isolve
 
@@ -83,7 +86,7 @@ SUBROUTINE compute_u_kq(ik, q)
 
   ! read in wavefunctions from the previous iteration
   !!IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
-  CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+  CALL get_buffer( evc, nwordwfc, iunwfc, ik)
 
   ! Needed for LDA+U
   IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
@@ -94,21 +97,20 @@ SUBROUTINE compute_u_kq(ik, q)
   call poolreduce( 1, avg_iter )
   avg_iter = avg_iter / nkstot
 
-  ! debug
-  !!WRITE( stdout, &
+  !! debug
+  !!write( stdout, &
   !!     '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
   !!     ethr, avg_iter
 
   ! restore the k-point and eigenvalues
-  print*, et(1:nbnd,ik)*13.6056982d0
+  !print*, et(1:nbnd,ik)*13.6056982d0
   xk(:,ik) = xkold(:)
   et = et_old
   deallocate(et_old)
 
   ! restore wavefunctions
-  !!evq = evc
-  !!IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
-  !!  CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+  evq = evc
+  CALL get_buffer( evc, nwordwfc, iunwfc, ik)
 
   CALL stop_clock( 'c_bands' )  
   RETURN
