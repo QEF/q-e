@@ -112,11 +112,12 @@ subroutine ld1_readin
   deld=0.03_dp
 
   rel = 5 
-  lsd   = 0
-  dft= 'LDA'
-  latt  = 0
+  lsd = 0
+  dft = 'LDA'
+  isic= 0
+  latt= 0
   title = ' '
-  config=' '
+  config= ' '
 
   lpaw = .false.
 

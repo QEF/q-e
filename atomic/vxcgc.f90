@@ -27,7 +27,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
        vgc(ndm,2), egc(ndm)
 
   integer :: i, is, ierr
-  real(DP) :: sx,sc,v1x,v2x,v1c,v2c,aux,gaux
+  real(DP) :: sx,sc,v1x,v2x,v1c,v2c
   real(DP) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw
   real(DP) :: segno, arho, grho2(2)
   real(DP) :: rh, zeta, grh2
