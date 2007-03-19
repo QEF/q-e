@@ -57,6 +57,22 @@ N.B.
  (ii) Multiple CPUs: distribution of k-points (the -npool command line option)
       is not yet supported, only G-vectors.
 
+ (iii) To run in library mode, pw2wannier90 must be linked to the wannier
+       library. To do so, compile the Wannier90 library, libwannier.a, 
+       following the instructions in the Wannier90 documentation (for the 
+       impatient, type 'make lib' in the Wannier90 root directory). Then make 
+       the following changes to the espresso make.sys file, and recompile 
+       pw2wannier90:
+
+         + Add -D__WANLIB to the DFLAGS variable
+           DFLAGS = -D__WANLIB ...
+
+         + Add a new variable WANLIB to specify location of Wannier library
+           WANLIB = -L/path/of/wannier/library -lwannier
+
+         + Add $(WANLIB) to the LIBS variable
+           LIBS   = $(WANLIB) $(LAPACK_LIBS) $(BLAS_LIBS) ...
+
 Input variables for pw2wannier90:
 
 outdir         : location of temporary output files
