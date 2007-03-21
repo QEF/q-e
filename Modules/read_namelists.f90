@@ -298,6 +298,8 @@ MODULE read_namelists_module
        !
        fermi_energy = 0.D0
        n_inner = 2
+       niter_cold_restart=1
+       lambda_cold=0.03
        rotation_dynamics = "line-minimization"
        occupation_dynamics = "line-minimization"
        rotmass = 0.D0
@@ -308,6 +310,7 @@ MODULE read_namelists_module
        tcg     = .FALSE.
        maxiter = 40
        passop  = 0.3D0
+       niter_cg_restart = 20
        etresh  = 1.D-6
        !
        epol   = 3
@@ -823,6 +826,8 @@ MODULE read_namelists_module
        !
        CALL mp_bcast( fermi_energy,       ionode_id )
        CALL mp_bcast( n_inner,            ionode_id )
+       CALL mp_bcast( niter_cold_restart, ionode_id )
+       CALL mp_bcast( lambda_cold,        ionode_id )
        CALL mp_bcast( rotation_dynamics,  ionode_id )
        CALL mp_bcast( occupation_dynamics,ionode_id )
        CALL mp_bcast( rotmass,            ionode_id )
@@ -836,6 +841,7 @@ MODULE read_namelists_module
        CALL mp_bcast( maxiter, ionode_id )
        CALL mp_bcast( etresh,  ionode_id )
        CALL mp_bcast( passop,  ionode_id )
+       CALL mp_bcast( niter_cg_restart, ionode_id )
        !
        ! ... electric field
        !

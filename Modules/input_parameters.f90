@@ -852,6 +852,13 @@ MODULE input_parameters
         INTEGER :: n_inner = 2
           ! number of inner loop per CG iteration.
 
+        INTEGER :: niter_cold_restart = 1
+          !frequency of full cold smearing inner cycle (in iterations)
+
+        REAL(DP) :: lambda_cold
+         !step for not complete cold smearing inner cycle
+
+
         LOGICAL :: tgrand = .FALSE.
           ! whether to do grand-canonical calculations.
 
@@ -887,6 +894,10 @@ MODULE input_parameters
 
         REAL(DP) :: passop =0.3d0
           ! small step for parabolic interpolation
+
+        INTEGER :: niter_cg_restart
+          !frequency of restart for the conjugate gradient algorithm in iterations
+
         INTEGER  :: epol = 3
           ! electric field direction
 
@@ -922,7 +933,8 @@ MODULE input_parameters
           rotation_damping, occupation_damping, rotation_dynamics,     &
           occupation_dynamics, tcg, maxiter, etresh, passop, epol,     &
           efield, epol2, efield2, diago_full_acc,                      &
-          occupation_constraints, ortho_para
+          occupation_constraints, ortho_para, niter_cg_restart,        &
+          niter_cold_restart, lambda_cold
 
 !
 !=----------------------------------------------------------------------------=!

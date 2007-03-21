@@ -467,6 +467,14 @@ n_inner        INTEGER ( default = 2 )
                number of internal cycles for every conjugate gradient 
                iteration only for ensemble DFT
 
+ninter_cold_restart INTEGER( default = 1) 
+               frequency in iterations at which a full inner cycle, only
+               for cold smearing, is performed
+
+lambda_cold    REAL (default = 0.03d0)
+               step for inner cycle with cold smearing, used when a not full
+               cycle is performed
+  
 epol           INTEGER ( default = 3 )
                direction of the finite electric field (only if tefield == .TRUE.)
                In the case of a PARALLEL calculation only the case epol==3
@@ -476,6 +484,9 @@ efield         REAL ( default = 0.d0 )
                intensity in a.u. of the finite electric field 
                (only if tefield == .TRUE.)
 
+niter_cg_restart INTEGER ( default = 20 )
+               frequency in iterations for which the conjugate-gradient algorithm
+               for electronic relaxation is restarted
 
 ===============================================================================
 NAMELIST &IONS  ( only if calculation = 'cp', 'relax',
