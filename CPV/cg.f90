@@ -17,41 +17,48 @@ MODULE cg_module
       integer      :: maxiter    = 100      ! maximum number of iterations
       real(DP) :: conv_thr    = 1.d-5   !energy treshold 
       real(DP) :: passop    =0.3d0    !small step for conjugate gradient
+      integer :: niter_cg_restart = 20!frequency (in iterations) for restarting the cg algorith
 
 !***
 !***  Conjugate Gradient
 !***
-      real(DP)  esse,essenew !factors in c.g.
+     
       COMPLEX(DP), ALLOCATABLE :: c0old(:,:)!old wfcs for extrapolation
-      real(DP)  ene0,ene1,dene0,enever,enesti !energy terms for linear minimization along hi
-      real(DP)  passof,passov !step to minimum: effective, estimated
-      integer itercg !iteration number
-      logical ltresh!flag for convergence on energy
-      real(DP) passo!step to minimum
-      real(DP) etotnew,etotold!energies
-      real(DP) spasso!sign of small step
-      logical tcutoff!
-      logical restartcg!if .true. restart again the CG algorithm, performing a SD step
-      integer numok!counter on converged iterations
-      real(DP) pcnum,pcden
-      integer iter3
-      real(DP) ebanda
       logical ene_ok!if .true. do not recalculate energy
+      REAL(DP) :: enever!used to pass data to/from inner_loop
+      INTEGER :: itercg!number of cg iterations
+
+   !   real(DP)  ene0,ene1,dene0,enever,enesti !energy terms for linear minimization along hi
+   !   real(DP)  passof,passov !step to minimum: effective, estimated
+   !   integer itercg !iteration number
+   !   logical ltresh!flag for convergence on energy
+   !   real(DP) passo!step to minimum
+   !   real(DP) etotnew,etotold!energies
+   !   real(DP) spasso!sign of small step
+   !   logical tcutoff!
+   !   logical restartcg!if .true. restart again the CG algorithm, performing a SD step
+   !   integer numok!counter on converged iterations
+   !   real(DP) pcnum,pcden
+   !   integer iter3
+   !   real(DP) ebanda
+     
       integer ninner_ef
 
 
 CONTAINS
 
 
-  SUBROUTINE cg_init( tcg_ , maxiter_ , conv_thr_ , passop_ )
+  SUBROUTINE cg_init( tcg_ , maxiter_ , conv_thr_ , passop_ ,niter_cg_restart_)
     USE kinds, ONLY: DP
     LOGICAL, INTENT(IN) :: tcg_
     INTEGER, INTENT(IN) :: maxiter_
     REAL(DP), INTENT(IN) :: conv_thr_ , passop_
+    INTEGER :: niter_cg_restart_
     tcg=tcg_
     maxiter=maxiter_
     conv_thr=conv_thr_
     passop=passop_
+    niter_cg_restart=niter_cg_restart_
     IF (tcg) CALL cg_info()
     RETURN
   END SUBROUTINE cg_init
@@ -59,7 +66,7 @@ CONTAINS
   SUBROUTINE cg_info()
     USE io_global, ONLY: stdout 
     if(tcg) then
-       write (stdout,400) maxiter,conv_thr,passop                         
+       write (stdout,400) maxiter,conv_thr,passop,niter_cg_restart                        
     endif
 400 format (/4x,'========================================'                          &
    &        /4x,'|  CONJUGATE GRADIENT                  |'                          &
@@ -67,6 +74,7 @@ CONTAINS
    &        /4x,'| iterations   =',i14,'         |'                             &
    &        /4x,'| conv_thr     =',f14.11,' a.u.    |'                           &
    &        /4x,'| passop       =',f14.5,' a.u.    |'                           &
+   &        /4x,'| niter_cg_restart =',i4,'      |'                           &
    &        /4x,'========================================')
     RETURN
   END SUBROUTINE cg_info

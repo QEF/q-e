@@ -28,7 +28,7 @@
                                 nx => nbspx, n => nbsp, ispin
 
       use ensemble_dft, only: tens,   ef,  z0, c0diag,  &
-                      becdiag, fmat0, e0, ismear
+                      becdiag, fmat0, e0, ismear, id_matrix_init
 !---
       use gvecp, only: ngm
       use gvecs, only: ngs
@@ -54,10 +54,8 @@
       use io_files,                 only : outdir
       use uspp,                     only : nhsa=> nkb, nhsavb=> nkbus, betae => vkb, rhovan => becsum, deeq,qq
       use uspp_param,               only : nh
-      use cg_module,                only : ltresh, itercg, etotnew, etotold, tcutoff, &
-                                           restartcg, passof, passov, passop, ene_ok, numok, maxiter, &
-                                           enever, conv_thr, ene0, esse, essenew, dene0, spasso, &
-                                           ene1, passo, iter3, enesti, ninner_ef
+      use cg_module,                only : ene_ok,  maxiter,niter_cg_restart, &
+                                           conv_thr, passop, enever, itercg
       use ions_positions,           only : tau0
       use wavefunctions_module,     only : c0, cm, phi => cp
       use efield_module,            only : tefield, evalue, ctable, qmat, detq, ipolp, &
@@ -118,6 +116,17 @@
       
       logical :: pre_state!if .true. does preconditioning state by state
 
+      real(DP)  esse,essenew !factors in c.g.
+      logical ltresh!flag for convergence on energy
+      real(DP) passo!step to minimum
+      real(DP) etotnew,etotold!energies
+      real(DP) spasso!sign of small step
+      logical restartcg!if .true. restart again the CG algorithm, performing a SD step
+      integer numok!counter on converged iterations
+      integer iter3
+      real(DP)  passof,passov !step to minimum: effective, estimated
+      real(DP)  ene0,ene1,dene0,enesti !energy terms for linear minimization along hi
+   
 
       allocate(bec0(nhsa,n),becm(nhsa,n), becdrdiag(nhsa,n,3))
       allocate (ave_ene(n))
@@ -128,7 +137,7 @@
       newscheme=.false.
       firstiter=.true.
 
-      pre_state=.true.!ATTENZIONE
+      pre_state=.false.!normally is disabled
 
       maxiter3=250
 
@@ -145,7 +154,6 @@
       ltresh    = .false.
       itercg    = 1
       etotold   = 1.d8
-      tcutoff   = .false.
       restartcg = .true.
       passof = passop
       ene_ok = .false.
@@ -250,6 +258,17 @@
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
                      &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           endif
+           
+!when cycle is restarted go to diagonal representation
+
+          if(mod(itercg,niter_cg_restart)==1 .and. itercg >=2) then
+
+              call rotate(z0,c0(:,:),bec,c0diag,becdiag,.false.)
+              c0(:,:)=c0diag(:,:)
+              bec(:,:)=becdiag(:,:)
+              call id_matrix_init( nupdwn, nspin )
+           endif
+        
 
           !calculates the potential
           !
@@ -386,10 +405,9 @@
         gamma=0.d0
         
         if(.not.tens) then
-           
            do i=1,n
               do ig=1,ngw
-                 gamma=gamma+2*DBLE(CONJG(gi(ig,i))*hpsi(ig,i))
+                 gamma=gamma+2.d0*DBLE(CONJG(gi(ig,i))*hpsi(ig,i))
               enddo
               if (ng0.eq.2) then
                  gamma=gamma-DBLE(CONJG(gi(1,i))*hpsi(1,i))
@@ -420,7 +438,7 @@
               do i=1,nss
                  do j=1,nss
                     do ig=1,ngw
-                       gamma=gamma+2*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
+                       gamma=gamma+2.d0*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
                     enddo
                     if (ng0.eq.2) then
                        gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,iss)
@@ -453,9 +471,11 @@
         endif
 
 
+
+
         !case of first iteration
 
-        if(itercg==1.or.(mod(itercg,20).eq.1).or.restartcg) then
+        if(itercg==1.or.(mod(itercg,niter_cg_restart).eq.1).or.restartcg) then
 
           restartcg=.false.
           passof=passop

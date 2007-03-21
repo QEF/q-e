@@ -33,11 +33,12 @@
       USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &
                                 nelt, nx => nbspx, n => nbsp, ispin 
 
-      USE ensemble_dft,   ONLY: tens, tgrand, ninner, ismear, etemp, &
+      USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                 ef, z0, c0diag, becdiag, &
                                 fmat0,  &
                                 e0, psihpsi, compute_entropy2, &
-                                compute_entropy_der, compute_entropy
+                                compute_entropy_der, compute_entropy, &
+                                niter_cold_restart, lambda_cold
       USE gvecp,          ONLY: ngm
       USE gvecs,          ONLY: ngs
       USE gvecb,          ONLY: ngb
@@ -66,15 +67,11 @@
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh
-      USE cg_module,      ONLY: ltresh, itercg, etotnew, etotold, &
-                                tcutoff, restartcg, passof, passov, &
-                                passop, ene_ok, numok, maxiter, &
-                                enever, conv_thr, ene0, &
-                                esse, essenew, dene0, spasso, ene1, &
-                                passo, iter3, enesti, ninner_ef
+      USE cg_module,      ONLY: ene_ok
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
-      use cp_interfaces,  only: rhoofr, dforce
+      USE cp_interfaces,  ONLY: rhoofr, dforce
+      USE cg_module,      ONLY: itercg
 
       !
       IMPLICIT NONE
@@ -196,21 +193,25 @@
          END DO
 
        
-
+         if(mod(itercg,niter_cold_restart) == 0) then
 !calculates free energy at lamda=1.
-         CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter,psihpsi,c0hc0,1.d0,atot1, vpot)
+            CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                 rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
+                 sfac, c0, bec, firstiter,psihpsi,c0hc0,1.d0,atot1, vpot)
 !calculates free energy at lamda=lambdap
        
-         CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
-                          sfac, c0, bec, firstiter,psihpsi,c0hc0,lambdap,atotl, vpot)
+            CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                 rhor, rhog, rhos, rhoc, ei1, ei2, ei3, &
+                 sfac, c0, bec, firstiter,psihpsi,c0hc0,lambdap,atotl, vpot)
 !find minimum point lambda
         
-         CALL three_point_min(atot0,atotl,atot1,lambdap,lambda,atotmin)
+            CALL three_point_min(atot0,atotl,atot1,lambdap,lambda,atotmin)
         
-
+         else
+            atotl=atot0
+            atot1=atot0
+            lambda=lambda_cold
+         endif
 
 !calculates free energy and rho at lambda
         
@@ -354,7 +355,7 @@
       USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &
                                 nelt, nx => nbspx, n => nbsp, ispin 
 
-      USE ensemble_dft,   ONLY: tens, tgrand, ninner, ismear, etemp, &
+      USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
                                  c0diag, becdiag
       USE gvecp,          ONLY: ngm
       USE gvecs,          ONLY: ngs
@@ -384,12 +385,7 @@
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh
-      USE cg_module,      ONLY: ltresh, itercg, etotnew, etotold, &
-                                tcutoff, restartcg, passof, passov, &
-                                passop, ene_ok, numok, maxiter, &
-                                enever, conv_thr, ene0, &
-                                esse, essenew, dene0, spasso, ene1, &
-                                passo, iter3, enesti, ninner_ef
+      USE cg_module,      ONLY: ene_ok
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce

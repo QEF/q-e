@@ -23,9 +23,11 @@ MODULE ensemble_dft
                                            !  4 => gaussian splines
                                            !  5 => cold smearing i
                                            !  6 => cold smearing ii
-                                           ! (only 2 works).
       real(DP) :: etemp      = 0       ! smearing temperature.
       real(DP) :: ef         = 0       ! Fermi energy (relevant if tgrand=.true.).
+      
+      integer :: niter_cold_restart !frequency for accuarate cold smearing (in iterations)
+      real(DP) :: lambda_cold !step for cold smearing for not accurate iterations     
 
 !***ensemble-DFT
       real(DP), allocatable::                  z0(:,:,:)
@@ -136,7 +138,7 @@ CONTAINS
 
 
   SUBROUTINE ensemble_initval &
-    ( occupations_ , n_inner_ , fermi_energy_ , rotmass_ , occmass_ , rotation_damping_ , &
+    ( occupations_ , n_inner_ , fermi_energy_ ,niter_cold_restart_, lambda_cold_, rotmass_ , occmass_ , rotation_damping_ , &
       occupation_damping_ , occupation_dynamics_ , rotation_dynamics_ ,  degauss_ , smearing_) 
             
     IMPLICIT NONE
@@ -147,6 +149,8 @@ CONTAINS
     INTEGER, INTENT(IN) :: n_inner_
     REAL(DP), INTENT(IN) :: fermi_energy_ , rotmass_ , occmass_ , rotation_damping_
     REAL(DP), INTENT(IN) :: occupation_damping_ , degauss_
+    INTEGER, INTENT(in) :: niter_cold_restart_
+    REAL(DP), INTENT(in) :: lambda_cold_
 
       SELECT CASE ( TRIM( occupations_ ) )
           !
@@ -168,7 +172,8 @@ CONTAINS
           ninner  = n_inner_
           etemp   = degauss_
           ef      = fermi_energy_
-
+          niter_cold_restart = niter_cold_restart_
+          lambda_cold = lambda_cold_
 
           SELECT CASE ( TRIM( smearing_ ) )
             CASE ( 'gaussian','g' )
@@ -221,6 +226,11 @@ CONTAINS
      &        /4x,'| ismear       =',i10,'          |'                             &
      &        /4x,'| fermi energy =',f10.5,' a.u.     |'                           &
      &        /4x,'=====================================')
+
+      if(tens.and. ismear /= 2) then
+         write(stdout,*) 'Full inner-cycle every: ', niter_cold_restart, ' Iterations'
+         write(stdout, *) 'With step :', lambda_cold
+      endif
 
     RETURN
   END SUBROUTINE ensemble_dft_info

@@ -650,7 +650,7 @@ subroutine pc2(a,beca,b,becb)
 
 
       CALL mp_sum( ene_ave(1:n), intra_image_comm )
-      ene_ave=ene_ave*tpiba2
+      ene_ave(:)=ene_ave(:)*tpiba2
                                                                                                                              
       RETURN
     END subroutine ave_kin
@@ -764,7 +764,7 @@ subroutine pc2(a,beca,b,becb)
       if (do_k) then
          do j=1,n
             do ig=1,ngw
-               x=tpiba2*ggp(i)/ave_kin(j)
+               x=tpiba2*ggp(ig)/ave_kin(j)
                prec_fact = 1.d0/(1.d0+(16.d0*x**4)/(27.d0+18.d0*x+12.d0*x**2+8.d0*x**3))
                c0(ig,j)=c0(ig,j)*prec_fact
             end do

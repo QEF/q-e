@@ -67,12 +67,8 @@
       USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
                                 rhovan => becsum, deeq
       USE uspp_param,     ONLY: nh
-      USE cg_module,      ONLY: ltresh, itercg, etotnew, etotold, &
-                                tcutoff, restartcg, passof, passov, &
-                                passop, ene_ok, numok, maxiter, &
-                                enever, conv_thr, ene0, &
-                                esse, essenew, dene0, spasso, ene1, &
-                                passo, iter3, enesti, ninner_ef
+      USE cg_module,      ONLY:  ene_ok, &
+                                enever
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce

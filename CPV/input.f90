@@ -852,7 +852,8 @@ MODULE input
            xk, wk, occupations, n_inner, fermi_energy, rotmass, occmass,      &
            rotation_damping, occupation_damping, occupation_dynamics,         &
            rotation_dynamics, degauss, smearing, nhpcl, nhptyp, ndega,        &
-           nhgrp, cell_units, restart_mode, sic_alpha 
+           nhgrp, cell_units, restart_mode, sic_alpha , niter_cold_restart,   &
+           lambda_cold
 
      USE input_parameters, ONLY: empty_states_maxstep,                         &
            empty_states_ethr, empty_states_nbnd,                               &
@@ -860,7 +861,8 @@ MODULE input
            etot_conv_thr, ekin_conv_thr, nspin, f_inp, nelup, neldw, nbnd,     &
            nelec, press, cell_damping, cell_dofree, tf_inp, nprnks_empty,      &
            refg, greash, grease, greasp, epol, efield, tcg, maxiter, conv_thr, &
-           passop, tot_charge, multiplicity, tot_magnetization, ncolvar_inp
+           passop, tot_charge, multiplicity, tot_magnetization, ncolvar_inp,   &
+           niter_cg_restart
      !
      USE input_parameters, ONLY : wf_efield, wf_switch, sw_len, efx0, efy0,    &
                                   efz0, efx1, efy1, efz1, wfsd, wfdt, maxwfdt, &
@@ -989,7 +991,7 @@ MODULE input
 
      CALL efield_init( epol, efield )
 
-     CALL cg_init( tcg , maxiter , conv_thr , passop )
+     CALL cg_init( tcg , maxiter , conv_thr , passop ,niter_cg_restart)
 
      !
      IF( ( TRIM( sic ) /= 'none' ) .and. ( tpre .or. thdyn ) ) &
@@ -1020,7 +1022,8 @@ MODULE input
 
      CALL electrons_setup( empty_states_nbnd, emass, emass_cutoff )
 
-     CALL ensemble_initval( occupations, n_inner, fermi_energy, rotmass, &
+     CALL ensemble_initval( occupations, n_inner, fermi_energy,&
+                            niter_cold_restart, lambda_cold, rotmass, &
                             occmass, rotation_damping, occupation_damping, &
                             occupation_dynamics, rotation_dynamics, degauss, &
                             smearing )
