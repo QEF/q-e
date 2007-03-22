@@ -228,7 +228,7 @@ subroutine h_epsi_her_set
          fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkfact
       else
          !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
-         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkfact/DBLE(nspin)
+         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkfact
       endif
 
 
@@ -1177,9 +1177,10 @@ subroutine h_epsi_her_set
    
    !calculate vect(a(d1,:) X a(d2,:)
    
-   v(1)=a(d1,2)*a(d2,3)-a(d1,3)*a(d2,2)
-   v(2)=-a(d1,1)*a(d2,3)+a(d1,3)*a(d2,1)
-   v(3)=a(d1,1)*a(d2,2)-a(d1,2)*a(d2,1)
+   v(1)=a(2,d1)*a(3,d2)-a(3,d1)*a(2,d2)
+   v(2)=-a(1,d1)*a(3,d2)+a(3,d1)*a(1,d2)
+   v(3)=a(1,d1)*a(2,d2)-a(2,d1)*a(1,d2)
+ 
 
 
   !normalize v
@@ -1188,7 +1189,7 @@ subroutine h_epsi_her_set
    v(:)=v(:)/sca
 
    !calculate a(dir:)*v(:)
-   fact=v(1)*a(dir,1)+v(2)*a(dir,2)+v(3)*a(dir,3)
+ fact=v(1)*a(1,dir)+v(2)*a(2,dir)+v(3)*a(3,dir)
 
    return
  END SUBROUTINE factor_a

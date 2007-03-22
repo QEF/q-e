@@ -240,7 +240,6 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
          wstring(istring)=wk(nppstr*istring)
          weight=weight+wstring(istring)
       END DO
-      weight=weight/dble(nspin)
       DO kort=1,nkort
          istring=kort+(is-1)*nkort
          wstring(istring)=wstring(istring)/weight
@@ -537,7 +536,6 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
    write(stdout,*) "    Expectation value of exp(iGx):",zeta,dkfact
    write(stdout,*) "    Electronic Dipole per cell (a.u.)",pola
  
-
 
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
