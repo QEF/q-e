@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.2    starts ...
-     Today is  8Nov2006 at  2:35:46 
+     Program PWSCF     v.3.2cvs starts ...
+     Today is 23Mar2007 at  2:34:56 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -35,8 +35,11 @@
                b(3) = ( -1.000000  1.000000 -1.000000 )  
 
 
-     PSEUDO 1 is Al         zval =  3.0   lmax= 1   lloc= 0
-     (in numerical form:   171 grid points, xmin =  0.00, dx = 0.0000)
+     PseudoPot. # 1 for Al read from file Al.vbc.UPF
+     Pseudo is Norm-conserving, Zval =  3.0
+     Using radial grid of  171 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
 
      atomic species   valence    mass     pseudopotential
         Al             3.00    26.98000     Al( 1.00)
@@ -90,13 +93,15 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is      0.27 secs
+     total cpu time spent up to now is      0.11 secs
+
+     per-process dynamical memory:     0.6 Mb
 
      Band Structure Calculation
      CG style diagonalization
      ethr =  3.33E-08,  avg # of iterations =  7.5
 
-     total cpu time spent up to now is      1.18 secs
+     total cpu time spent up to now is      1.34 secs
 
      End of band structure calculation
 
@@ -106,43 +111,43 @@
 
           k = 0.0000 0.0000 0.1000     band energies (ev):
 
-    -3.0960  20.2345  20.2345  20.4975  22.3538  23.6411  23.6411  27.1548
+    -3.0960  20.2345  20.2345  20.4975  22.3537  23.6411  23.6411  27.1548
 
           k = 0.0000 0.0000 0.2000     band energies (ev):
 
-    -2.8098  18.9731  18.9731  19.2306  21.8284  24.6166  25.3243  25.3243
+    -2.8098  18.9731  18.9731  19.2306  21.8284  24.6166  25.3242  25.3242
 
           k = 0.0000 0.0000 0.3000     band energies (ev):
 
-    -2.3374  17.8217  17.8217  17.9494  21.1220  21.9035  27.1376  27.1376
+    -2.3374  17.8217  17.8217  17.9494  21.1220  21.9036  27.1376  27.1376
 
           k = 0.0000 0.0000 0.4000     band energies (ev):
 
-    -1.6744  16.7876  16.8290  16.8290  19.2414  20.3615  28.9856  28.9856
+    -1.6744  16.7876  16.8290  16.8290  19.2414  20.3615  28.9855  28.9855
 
           k = 0.0000 0.0000 0.5000     band energies (ev):
 
-    -0.8359  15.7868  15.9782  15.9782  16.6942  19.6301  30.7665  30.7665
+    -0.8358  15.7868  15.9782  15.9782  16.6943  19.6301  30.7665  30.7665
 
           k = 0.0000 0.0000 0.6000     band energies (ev):
 
-     0.1793  14.2789  14.9597  15.2838  15.2838  18.9639  31.6188  32.4007
+     0.1793  14.2790  14.9597  15.2838  15.2838  18.9639  31.6188  32.4007
 
           k = 0.0000 0.0000 0.7000     band energies (ev):
 
-     1.3651  12.0072  14.3128  14.7456  14.7456  18.4256  32.6725  33.8805
+     1.3651  12.0073  14.3128  14.7456  14.7456  18.4256  32.6725  33.8804
 
           k = 0.0000 0.0000 0.8000     band energies (ev):
 
-     2.7094   9.8878  13.8492  14.3624  14.3624  18.0252  33.7772  35.2252
+     2.7094   9.8878  13.8492  14.3624  14.3624  18.0253  33.7772  35.2252
 
           k = 0.0000 0.0000 0.9000     band energies (ev):
 
-     4.1819   7.9475  13.5676  14.1319  14.1319  17.7783  34.7373  36.3497
+     4.1819   7.9476  13.5676  14.1319  14.1319  17.7783  34.7373  36.3496
 
           k = 0.0000 0.0000 1.0000     band energies (ev):
 
-     5.3310   6.6438  13.4746  14.0553  14.0553  17.6952  35.1698  36.8707
+     5.3310   6.6439  13.4746  14.0553  14.0553  17.6952  35.1698  36.8707
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
@@ -150,11 +155,11 @@
 
           k = 0.0000 0.1000 0.1000     band energies (ev):
 
-    -3.0011  18.9136  19.5392  21.3627  22.6654  23.4717  23.9539  26.8835
+    -3.0010  18.9137  19.5392  21.3627  22.6653  23.4717  23.9539  26.8835
 
           k = 0.0000 0.2000 0.2000     band energies (ev):
 
-    -2.4300  16.1143  17.2993  21.9193  22.8616  24.0951  24.5795  25.4076
+    -2.4299  16.1143  17.2993  21.9193  22.8616  24.0951  24.5795  25.4076
 
           k = 0.0000 0.3000 0.3000     band energies (ev):
 
@@ -166,11 +171,11 @@
 
           k = 0.0000 0.5000 0.5000     band energies (ev):
 
-     1.4593   9.5217  11.1700  17.9574  19.9890  25.7807  26.2524  27.3595
+     1.4594   9.5217  11.1700  17.9574  19.9890  25.7807  26.2524  27.3595
 
           k = 0.0000 0.6000 0.6000     band energies (ev):
 
-     3.4333   8.0054   9.6038  16.5473  18.4499  27.7656  27.8169  29.0388
+     3.4334   8.0054   9.6038  16.5473  18.4499  27.7656  27.8169  29.0388
 
           k = 0.0000 0.7000 0.7000     band energies (ev):
 
@@ -178,7 +183,7 @@
 
           k = 0.0000 0.8000 0.8000     band energies (ev):
 
-     5.9965   7.2958   8.4235  14.6759  16.2200  22.4583  31.8163  33.2437
+     5.9965   7.2958   8.4235  14.6760  16.2200  22.4583  31.8163  33.2437
 
           k = 0.0000 0.9000 0.9000     band energies (ev):
 
@@ -186,7 +191,7 @@
 
           k = 0.0000 1.0000 1.0000     band energies (ev):
 
-     5.3310   6.6438  13.4746  14.0553  14.0553  17.6952  35.1698  36.8707
+     5.3310   6.6439  13.4746  14.0553  14.0553  17.6952  35.1698  36.8707
 
           k = 0.0000 0.0000 0.0000     band energies (ev):
 
@@ -194,11 +199,11 @@
 
           k = 0.1000 0.1000 0.1000     band energies (ev):
 
-    -2.9062  17.7709  20.4032  20.4032  23.7478  23.7478  27.0024  27.0024
+    -2.9062  17.7709  20.4032  20.4032  23.7477  23.7477  27.0024  27.0024
 
           k = 0.2000 0.2000 0.2000     band energies (ev):
 
-    -2.0533  13.7137  19.6279  19.6279  24.2363  24.2363  26.4754  26.4754
+    -2.0533  13.7137  19.6279  19.6279  24.2362  24.2362  26.4754  26.4754
 
           k = 0.3000 0.3000 0.3000     band energies (ev):
 
@@ -210,40 +215,40 @@
 
           k = 0.5000 0.5000 0.5000     band energies (ev):
 
-     3.5956   3.8189  19.8981  19.8981  19.9671  19.9671  34.4316  34.4316
+     3.5956   3.8189  19.8981  19.8981  19.9672  19.9672  34.4315  34.4315
 
      Writing output data file al.save
  
-     PWSCF        :     1.27s CPU time,    1.42s wall time
+     PWSCF        :     1.40s CPU time,    1.99s wall time
 
-     init_run     :     0.27s CPU
-     electrons    :     0.92s CPU
+     init_run     :     0.11s CPU
+     electrons    :     1.23s CPU
  
  
-     electrons    :     0.92s CPU
-     c_bands      :     0.91s CPU
+     electrons    :     1.23s CPU
+     c_bands      :     1.23s CPU
      v_of_rho     :     0.00s CPU
      v_h          :     0.00s CPU
      v_xc         :     0.00s CPU
  
-     c_bands      :     0.91s CPU
-     init_us_2    :     0.00s CPU (      56 calls,   0.000 s avg)
-     ccgdiagg     :     0.91s CPU (      29 calls,   0.031 s avg)
+     c_bands      :     1.23s CPU
+     init_us_2    :     0.00s CPU (      28 calls,   0.000 s avg)
+     ccgdiagg     :     1.07s CPU (      29 calls,   0.037 s avg)
  
  
      wfcrot1      :     0.16s CPU (      29 calls,   0.006 s avg)
-     h_1psi       :     1.01s CPU (    1935 calls,   0.001 s avg)
-     s_1psi       :     0.00s CPU (    1675 calls,   0.000 s avg)
+     h_1psi       :     1.19s CPU (    1935 calls,   0.001 s avg)
+     s_1psi       :     0.02s CPU (    1675 calls,   0.000 s avg)
  
-     h_1psi       :     1.01s CPU (    1935 calls,   0.001 s avg)
+     h_1psi       :     1.19s CPU (    1935 calls,   0.001 s avg)
      init         :     0.00s CPU (    1935 calls,   0.000 s avg)
-     firstfft     :     0.37s CPU (    1935 calls,   0.000 s avg)
-     secondfft    :     0.49s CPU (    1935 calls,   0.000 s avg)
-     add_vuspsi   :     0.02s CPU (    1935 calls,   0.000 s avg)
+     firstfft     :     0.56s CPU (    1935 calls,   0.000 s avg)
+     secondfft    :     0.55s CPU (    1935 calls,   0.000 s avg)
+     add_vuspsi   :     0.03s CPU (    1935 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.02s CPU (    3610 calls,   0.000 s avg)
+     ccalbec      :     0.01s CPU (    3610 calls,   0.000 s avg)
      cft3         :     0.00s CPU (       3 calls,   0.000 s avg)
-     cft3s        :     0.85s CPU (    3870 calls,   0.000 s avg)
-     davcio       :     0.00s CPU (      85 calls,   0.000 s avg)
+     cft3s        :     1.08s CPU (    3870 calls,   0.000 s avg)
+     davcio       :     0.00s CPU (      28 calls,   0.000 s avg)
  
