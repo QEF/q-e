@@ -108,8 +108,7 @@ subroutine dynmatrix
      do nu = 1, 3 * nat
         WRITE( stdout, '(5x,2i5,2f10.6)') modenum, nu, dyn (modenum, nu)
      enddo
-     call stop_ph (.false.)
-
+     call stop_ph (.true.)
   endif
   !
   !   Generates the star of q
