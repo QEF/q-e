@@ -183,8 +183,8 @@ example14:
     third-order expansion coefficients of the total energy of Si.
 
 example15:
-    This example shows how to use pw.x, ph.x, and ram.x to calculate
-    the Raman tensor for AlAs.
+    This example shows how to use pw.x and ph.x to calculate the Raman
+    tensor for AlAs.
 
 example16:
     This example shows a calculation of STM maps.

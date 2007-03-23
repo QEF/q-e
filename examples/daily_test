@@ -1,10 +1,5 @@
 #!/bin/sh
 
-# cp does not write the restart file to outdir but to the current directory.
-# All other restart files are either written to outdir and cleaned by this
-# script or ignored, but if this is found the code will restart from last run
-/bin/rm -r /scr/giannozz/espresso/examples/example28/results/metadyn-cp_50.save/
-
 # In order to use this script, you must be logged to anonymous cvs:
 # $ cvs login
 # (password: cvsanon)
@@ -13,8 +8,14 @@
 # the code is in     PWROOT=$ROOT/espresso
 # temporary files in TMPDIR=$ROOT/tmp
 
-ROOT=/scr/giannozz
+ROOT=/home/giannozz
 MAILTO=p.giannozzi@sns.it
+
+# cp does not write the restart file to outdir but to the current directory.
+# All other restart files are either written to outdir and cleaned by this
+# script or ignored, but if this is found the code will restart from last run
+
+/bin/rm -r $ROOT/espresso/examples/example28/results/metadyn-cp_50.save/
 
 # choose setting for the compiler you want to use
 . /opt/intel_fc_80/bin/ifortvars.sh
@@ -22,7 +23,9 @@ MAILTO=p.giannozzi@sns.it
 # export CONFIG_OPTS="--disable-parallel F90=g95"
 # for ifort:
 . /opt/intel_fc_80/bin/ifortvars.sh
-export CONFIG_OPTS="--disable-parallel"
+# use fortran lapack: weird things may occasionally occur with mkl
+export CONFIG_OPTS="--disable-parallel LAPACK_LIBS=../flib/lapack.a"
+
 #
 # choose if you want to update an existing cvs (update=1)
 #                 or to download a new one     (update=0)
@@ -55,7 +58,9 @@ else
    cd $PWROOT
    cvs update -d >& cvs.log
 fi
-conflicts=`grep -c '^C ' cvs.log`
+# conflicts=`grep -c '^C ' cvs.log`
+# do not consider conflicts in examples: some of them may be bogus
+conflicts=`grep -v  '^C examples/' cvs.log | grep -c '^C'`
 if test "$conflicts" != "0" ; then
    echo "#" >> $OUT
    echo "# CONFLICTS IN CVS CHECKOUT " >> $OUT
@@ -97,6 +102,7 @@ else
    exit $errors
 fi
 cd examples
+./make_clean
 echo "#" >> $OUT
 echo "# RUNNING ALL EXAMPLES " >> $OUT
 echo "#" >> $OUT
@@ -133,23 +139,35 @@ do
 
     # get the exit status of the script run_example
     exit_status=$?
+    N=`echo $example | sed 's/example//'`
+    if test $exit_status -eq 0; then
+       echo "example $N finished OK" >> $OUT
+    else
+       echo "example $N ERROR EXIT (exit status = $exit_status)" >> $OUT
+    fi
 
     cat run.log >> ../run.log
     /bin/rm run.log
+
+done
+
+for example in $example_list
+do
+
+    cd $PWROOT/examples/$example
+
     N=`echo $example | sed 's/example//'`
-    echo "#" >> $OUT
-    echo "# CHECKING EXAMPLE # " $N >> $OUT
-    echo "#" >> $OUT
 
     if /bin/grep "HIGH VERBOSITY EXAMPLE" < run_example > /dev/null ; then
-       # high verbosity example: check only exit status
-       if test $exit_status -eq 0; then
-          echo "exit status = $exit_status :  everything seems OK" >> $OUT
-       else
-          echo "exit status = $exit_status :  something went wrong" >> $OUT
-       fi
+       # high verbosity example: do not check
+       echo "#" >> $OUT
+       echo "# CHECK OF EXAMPLE # " $N " SKIPPED">> $OUT
+       echo "#" >> $OUT
     else
        # low-verbosity example: do a full check
+       echo "#" >> $OUT
+       echo "# CHECKING EXAMPLE # " $N >> $OUT
+       echo "#" >> $OUT
        ../check_example ./ >> $OUT
     fi
 done
