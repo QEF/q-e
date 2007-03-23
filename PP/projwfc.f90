@@ -274,6 +274,7 @@ SUBROUTINE projwave( filproj, lsym )
   REAL(DP) :: psum, totcharge(nspinx)
   INTEGER  :: nksinit, nkslast
   CHARACTER(LEN=256) :: filename
+  CHARACTER (len=1)  :: l_label(0:3)=(/'s','p','d','f'/) 
   INTEGER, ALLOCATABLE :: idx(:) 
   LOGICAL :: lsym
   ! 
@@ -573,7 +574,7 @@ SUBROUTINE projwave( filproj, lsym )
              nwfc, nlmchi(nwfc)%na, atm(ityp(nlmchi(nwfc)%na)), & 
              nlmchi(nwfc)%n, nlmchi(nwfc)%l, nlmchi(nwfc)%m 
      END DO
-1000 FORMAT (5x,"state #",i3,": atom ",i3," (",a3,"), wfc ",i2, &
+1000 FORMAT (5x,"state #",i4,": atom ",i3," (",a3,"), wfc ",i2, &
                 " (l=",i1," m=",i2,")") 
      ! 
      ALLOCATE(idx(natomwfc), proj1 (natomwfc) ) 
@@ -581,11 +582,6 @@ SUBROUTINE projwave( filproj, lsym )
         WRITE( stdout, '(/" k = ",3f14.10)') (xk (i, ik) , i = 1, 3) 
         DO ibnd = 1, nbnd 
            WRITE( stdout, '(5x,"e = ",f11.5," eV")') et (ibnd, ik) * rytoev
-!          previously eigenvalues were printed with 8 decimal digits ...
-!          WRITE( stdout, '(5x,"e = ",f14.8," eV")') et (ibnd, ik) * rytoev
-! projections are printed to sdout with 3 decimal digids.
-! projections differing by less than 1.d-4 are considered equal
-! so that output does not depend on phase of the moon
            ! 
            ! sort projections by magnitude, in decreasing order 
            ! 
@@ -593,6 +589,9 @@ SUBROUTINE projwave( filproj, lsym )
               idx (nwfc) = 0 
               proj1 (nwfc) = - proj (nwfc, ibnd, ik) 
            END DO
+           !
+           ! projections differing by less than 1.d-4 are considered equal
+           !
            CALL hpsort_eps (natomwfc, proj1, idx, eps4) 
            ! 
            !  only projections that are larger than 0.001 are written 
@@ -606,10 +605,10 @@ SUBROUTINE projwave( filproj, lsym )
            ! 
            ! fancy (?!?) formatting 
            ! 
-           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i3,"]+"))') & 
+           WRITE( stdout, '(5x,"psi = ",5(f5.3,"*[#",i4,"]+"))') & 
                 (proj1 (i), idx(i), i = 1, MIN(5,nwfc)) 
            DO j = 1, (nwfc-1)/5 
-              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i3,"]+"))') & 
+              WRITE( stdout, '(10x,"+",5(f5.3,"*[#",i4,"]+"))') & 
                    (proj1 (i), idx(i), i = 5*j+1, MIN(5*(j+1),nwfc)) 
            END DO
            psum = 0.d0 
@@ -652,26 +651,22 @@ SUBROUTINE projwave( filproj, lsym )
         END DO
         IF ( nspin == 1) THEN
            WRITE( stdout, 2000) na, totcharge(1), &
-                ( charges(na,l,1), l= 0,lmax_wfc)
+                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc)
         ELSE IF ( nspin == 2) THEN 
            WRITE( stdout, 2000) na, totcharge(1) + totcharge(2), &
-                ( charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
+                ( l_label(l), charges(na,l,1) + charges(na,l,2), l=0,lmax_wfc)
            WRITE( stdout, 2001) totcharge(1), &
-                ( charges(na,l,1), l= 0,lmax_wfc) 
+                ( l_label(l), charges(na,l,1), l= 0,lmax_wfc) 
            WRITE( stdout, 2002) totcharge(2), &
-                ( charges(na,l,2), l= 0,lmax_wfc) 
+                ( l_label(l), charges(na,l,2), l= 0,lmax_wfc) 
            WRITE( stdout, 2003) totcharge(1) - totcharge(2), &
-                 ( charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
+                ( l_label(l), charges(na,l,1) - charges(na,l,2), l=0,lmax_wfc)
         END IF
      END DO 
-2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4 ,&
-          & ", s, p, d, f = ",4f8.4) 
-2001 FORMAT (15x,"  spin up      = ",f8.4 , &
-          & ", s, p, d, f = ",4f8.4) 
-2002 FORMAT (15x,"  spin down    = ",f8.4 , &
-          & ", s, p, d, f = ",4f8.4) 
-2003 FORMAT (15x,"  polarization = ",f8.4 , &
-          & ", s, p, d, f = ",4f8.4) 
+2000 FORMAT (5x,"Atom # ",i3,": total charge = ",f8.4,4(", ",a1," =",f8.4))
+2001 FORMAT (15x,"  spin up      = ",f8.4,4(", ",a1," =",f8.4))
+2002 FORMAT (15x,"  spin down    = ",f8.4,4(", ",a1," =",f8.4))
+2003 FORMAT (15x,"  polarization = ",f8.4,4(", ",a1," =",f8.4))
      !
      psum = SUM(charges(:,:,:)) / nelec 
      WRITE( stdout, '(5x,"Spilling Parameter: ",f8.4)') 1.0d0 - psum 
