@@ -86,12 +86,12 @@ subroutine h_epsi_her_set
    REAL(dp) :: gpar(3)
    REAL(dp) :: gtr(3)
    REAL(dp) :: gvec
-   REAL(dp) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
-   REAL(dp) :: ln0(-nr1:nr1,-nr2:nr2,-nr3:nr3)!map g-space global to g-space k-point dependent
+   REAL(dp), ALLOCATABLE :: ln(:,:,:)
+   REAL(dp), ALLOCATABLE  :: ln0(:,:,:)!map g-space global to g-space k-point dependent
    REAL(dp) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
-   COMPLEX(dp) :: aux(ngm)
-   COMPLEX(dp) :: aux0(ngm)
+   COMPLEX(dp), ALLOCATABLE :: aux(:)
+   COMPLEX(dp), ALLOCATABLE  :: aux0(:)
    COMPLEX(dp) :: becp0(nkb,nbnd)
    COMPLEX(dp) :: becp_bp(nkb,nbnd)
    COMPLEX(dp) :: becp1(nkb,nbnd) 
@@ -122,8 +122,12 @@ subroutine h_epsi_her_set
 
    ALLOCATE( evct(npwx,nbnd))
    ALLOCATE( map_g(npwx))
-  
 
+   
+
+   allocate( ln(-nr1:nr1,-nr2:nr2,-nr3:nr3),ln0(-nr1:nr1,-nr2:nr2,-nr3:nr3))
+   allocate(aux(ngm),aux0(ngm))
+  
 !determines the spin polarization
 
    DO ik=1,nks
@@ -1141,7 +1145,8 @@ subroutine h_epsi_her_set
 
   DEALLOCATE( evct)
   DEALLOCATE( map_g)
-
+  deallocate(ln,ln0)
+  DEALLOCATE(aux,aux0)
 
   
 !  --

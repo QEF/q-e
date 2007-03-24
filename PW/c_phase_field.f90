@@ -97,7 +97,7 @@ SUBROUTINE c_phase_field
    REAL(dp) :: gpar(3)
    REAL(dp) :: gtr(3)
    REAL(dp) :: gvec
-   REAL(dp) :: ln(-nr1:nr1,-nr2:nr2,-nr3:nr3)
+   REAL(dp), ALLOCATABLE :: ln(:,:,:)
    REAL(dp), ALLOCATABLE :: loc_k(:)
    REAL(dp) , ALLOCATABLE :: pdl_elec(:)
    REAL(dp) , ALLOCATABLE :: phik(:)
@@ -107,8 +107,8 @@ SUBROUTINE c_phase_field
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    REAL(dp) :: zeta_mod
    REAL(dp) :: pola, pola_ion
-   COMPLEX(dp) :: aux(ngm)
-   COMPLEX(dp) :: aux0(ngm)
+   COMPLEX(dp), ALLOCATABLE :: aux(:)
+   COMPLEX(dp), ALLOCATABLE :: aux0(:)
    COMPLEX(dp) :: becp0(nkb,nbnd)
    COMPLEX(dp) :: becp_bp(nkb,nbnd)
    COMPLEX(dp) , ALLOCATABLE :: cphik(:)
@@ -138,6 +138,8 @@ SUBROUTINE c_phase_field
 !  -------------------------------------------------------------------------   !
 
   allocate(map_g(npwx))
+  allocate(aux(ngm),aux0(ngm))
+  allocate(ln(-nr1:nr1,-nr2:nr2,-nr3:nr3))
 
   pola=0.d0!set to 0 electronic polarization   
   zeta_tot=(1.d0,0.d0)
@@ -533,7 +535,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 
 !write output
    write(stdout,*)
-   write(stdout,*) "    Expectation value of exp(iGx):",zeta,dkfact
+   write(stdout,*) "    Expectation value of exp(iGx):",zeta_tot,dkfact
    write(stdout,*) "    Electronic Dipole per cell (a.u.)",pola
  
 
@@ -559,7 +561,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
    DEALLOCATE(phik)
    DEALLOCATE(cphik)
    DEALLOCATE(map_g)
-
+   DEALLOCATE(aux,aux0,ln)
 !------------------------------------------------------------------------------!
 
 END SUBROUTINE c_phase_field
