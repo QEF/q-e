@@ -57,14 +57,13 @@ PROGRAM gipaw_main
  
   ! read ground state wavefunctions
   call read_file
-  call openfil
+  call gipaw_openfil
   
   if ( gamma_only ) call errore ( 'gipaw_main', 'gamma_only == .true.', 1 )
   
   CALL gipaw_allocate()
   CALL gipaw_setup()
   CALL gipaw_summary()
-  CALL gipaw_openfil()
   CALL print_clock( 'GIPAW' )
   
   ! convert q_gipaw into units of tpiba

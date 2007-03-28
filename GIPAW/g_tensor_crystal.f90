@@ -33,7 +33,7 @@ SUBROUTINE g_tensor_crystal
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, q_gipaw, &
                                          evq, alpha, nbnd_occ, &
                                          iverbosity
-  
+  USE buffers,                     ONLY : get_buffer
   !<apsi>
 !  USE paw,                         ONLY: paw_vkb, paw_becp, paw_nkb, aephi, &
 !                                         psphi, paw_nh, paw_nhtol, &
@@ -151,7 +151,7 @@ SUBROUTINE g_tensor_crystal
     call init_us_2(npw,igk,xk(1,ik),vkb)
     
     ! read wfcs from file and compute becp
-    call davcio (evc, nwordwfc, iunwfc, ik, -1)
+    call get_buffer (evc, nwordwfc, iunwfc, ik)
     call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
     
     !<apsi>

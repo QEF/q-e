@@ -194,10 +194,47 @@ CONTAINS
   ! Open files needed for GIPAW
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_openfil
-    USE wvfct,          ONLY : npwx
-    USE uspp,           ONLY : nkb
-    IMPLICIT NONE
+    USE io_global,        ONLY : stdout
+    USE basis,            ONLY : natomwfc, startingwfc
+    USE wvfct,            ONLY : nbnd, npwx
+    USE ldaU,             ONLY : lda_plus_U  
+    USE klist,            ONLY : nks
+    USE io_files,         ONLY : prefix, iunat, iunsat, iunwfc, iunigk, &
+                                 nwordwfc, nwordatwfc, tmp_dir, wfc_dir
+    USE noncollin_module, ONLY : npol
+    USE mp_global,        ONLY : kunit
+    USE buffers,          ONLY : open_buffer
+    USE control_flags,    ONLY : io_level    
+    IMPLICIT NONE  
+    LOGICAL            :: exst
+    ! ... nwordwfc is the record length (IN COMPLEX WORDS)
+    ! ... for the direct-access file containing wavefunctions
+    nwordwfc = nbnd*npwx*npol
 
+    ! ... iunwfc=10: read/write wfc from/to file
+    ! ... iunwfc=-1: copy wfc to/from RAM 
+    IF ( io_level > 0 ) THEN
+      iunwfc = 10
+    ELSE
+      iunwfc = -1
+    END IF
+    CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
+
+    ! ... Needed for LDA+U
+    ! ... iunat  contains the (orthogonalized) atomic wfcs 
+    ! ... iunsat contains the (orthogonalized) atomic wfcs * S
+    ! ... iunocc contains the atomic occupations computed in new_ns
+    ! ... it is opened and closed for each reading-writing operation  
+    nwordatwfc = 2*npwx*natomwfc*npol
+    IF ( lda_plus_u ) then
+       CALL diropn( iunat,  'atwfc',  nwordatwfc, exst )
+       CALL diropn( iunsat, 'satwfc', nwordatwfc, exst )
+    END IF
+
+    ! ... iunigk contains the number of PW and the indices igk
+    ! ... Note that unit 15 is reserved for error messages 
+    CALL seqopn( iunigk, 'igk', 'UNFORMATTED', exst )
+    RETURN
   END SUBROUTINE gipaw_openfil
 
 

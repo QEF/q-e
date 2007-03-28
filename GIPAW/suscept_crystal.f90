@@ -473,10 +473,10 @@ CONTAINS
        enddo
     enddo
     
-    if ( iverbosity > 10 ) then
-       write(6,'("DDD1",5F14.8)') dia_corr(5:9,1)
-       write(6,'("DDD2",5F14.8)') dia_corr(5:9,MAX(1,nat))
-    end if
+    !if ( iverbosity > 10 ) then
+    !   write(6,'("DDD1",5F14.8)') dia_corr(5:9,1)
+    !   write(6,'("DDD2",5F14.8)') dia_corr(5:9,MAX(1,nat))
+    !end if
     
     !
     !  transform in cartesian coordinates
@@ -603,8 +603,8 @@ CONTAINS
        if ( iverbosity > 10 ) then
           write(6,'("DDD1",2I3,3(F16.7,2X))') &
                ipol, i*isign, REAL ( para_corr(1:3,1) ) * 1e6
-          write(6,'("DDD2",2I3,3(F16.7,2X))') &
-               ipol, i*isign, REAL ( para_corr(1:3,MAX(1,nat)) ) * 1e6
+          !write(6,'("DDD2",2I3,3(F16.7,2X))') &
+          !     ipol, i*isign, REAL ( para_corr(1:3,MAX(1,nat)) ) * 1e6
        end if
        
     end do
