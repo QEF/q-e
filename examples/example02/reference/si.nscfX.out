@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.2    starts ...
-     Today is  8Nov2006 at  2:37:26 
+     Program PWSCF     v.3.2cvs starts ...
+     Today is 24Mar2007 at  2:36:43 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -35,8 +35,11 @@
                b(3) = ( -1.000000  1.000000 -1.000000 )  
 
 
-     PSEUDO 1 is Si         zval =  4.0   lmax= 1   lloc= 0
-     (in numerical form:   431 grid points, xmin =  0.00, dx = 0.0000)
+     PseudoPot. # 1 for Si read from file Si.vbc.UPF
+     Pseudo is Norm-conserving, Zval =  4.0
+     Using radial grid of  431 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
 
      atomic species   valence    mass     pseudopotential
         Si             4.00    28.08600     Si( 1.00)
@@ -103,13 +106,15 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is      0.64 secs
+     total cpu time spent up to now is      0.10 secs
+
+     per-process dynamical memory:     1.3 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
      ethr =  1.25E-10,  avg # of iterations = 11.6
 
-     total cpu time spent up to now is      3.65 secs
+     total cpu time spent up to now is      3.68 secs
 
      End of band structure calculation
 
@@ -275,42 +280,41 @@
 
      Writing output data file si.save
  
-     PWSCF        :     3.92s CPU time,    4.08s wall time
+     PWSCF        :     3.76s CPU time,    4.21s wall time
 
-     init_run     :     0.63s CPU
-     electrons    :     3.01s CPU
+     init_run     :     0.09s CPU
+     electrons    :     3.58s CPU
  
  
-     electrons    :     3.01s CPU
-     c_bands      :     3.01s CPU
-     sum_band     :     0.15s CPU
+     electrons    :     3.58s CPU
+     c_bands      :     3.58s CPU
      v_of_rho     :     0.00s CPU
      v_h          :     0.00s CPU
      v_xc         :     0.00s CPU
  
-     c_bands      :     3.01s CPU
-     init_us_2    :     0.02s CPU (     120 calls,   0.000 s avg)
-     cegterg      :     2.99s CPU (      40 calls,   0.075 s avg)
+     c_bands      :     3.58s CPU
+     init_us_2    :     0.02s CPU (      40 calls,   0.001 s avg)
+     cegterg      :     3.03s CPU (      40 calls,   0.076 s avg)
  
-     sum_band     :     0.15s CPU
  
-     wfcrot       :     0.52s CPU (      40 calls,   0.013 s avg)
-     cegterg      :     2.99s CPU (      40 calls,   0.075 s avg)
-     h_psi        :     3.05s CPU (     544 calls,   0.006 s avg)
-     g_psi        :     0.04s CPU (     464 calls,   0.000 s avg)
+     wfcrot       :     0.53s CPU (      40 calls,   0.013 s avg)
+     cegterg      :     3.03s CPU (      40 calls,   0.076 s avg)
+     h_psi        :     3.20s CPU (     544 calls,   0.006 s avg)
+     g_psi        :     0.03s CPU (     464 calls,   0.000 s avg)
+     overlap      :     0.07s CPU (     464 calls,   0.000 s avg)
      diaghg       :     0.10s CPU (     504 calls,   0.000 s avg)
      update       :     0.09s CPU (     464 calls,   0.000 s avg)
-     last         :     0.05s CPU (     158 calls,   0.000 s avg)
+     last         :     0.04s CPU (     158 calls,   0.000 s avg)
  
-     h_psi        :     3.05s CPU (     544 calls,   0.006 s avg)
-     init         :     0.03s CPU (     544 calls,   0.000 s avg)
-     firstfft     :     1.38s CPU (    2040 calls,   0.001 s avg)
-     secondfft    :     1.46s CPU (    2040 calls,   0.001 s avg)
-     add_vuspsi   :     0.03s CPU (     544 calls,   0.000 s avg)
+     h_psi        :     3.20s CPU (     544 calls,   0.006 s avg)
+     init         :     0.00s CPU (     544 calls,   0.000 s avg)
+     firstfft     :     1.64s CPU (    2040 calls,   0.001 s avg)
+     secondfft    :     1.45s CPU (    2040 calls,   0.001 s avg)
+     add_vuspsi   :     0.01s CPU (     544 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.03s CPU (     544 calls,   0.000 s avg)
+     ccalbec      :     0.04s CPU (     544 calls,   0.000 s avg)
      cft3         :     0.00s CPU (       3 calls,   0.000 s avg)
-     cft3s        :     2.86s CPU (    4240 calls,   0.001 s avg)
-     davcio       :     0.00s CPU (     160 calls,   0.000 s avg)
+     cft3s        :     3.00s CPU (    4080 calls,   0.001 s avg)
+     davcio       :     0.00s CPU (      40 calls,   0.000 s avg)
  
