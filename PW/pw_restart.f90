@@ -1845,28 +1845,36 @@ MODULE pw_restart
       !
       IF ( ionode ) THEN
          !
-         CALL iotk_scan_begin( iunpun, "STARTING_MAG" )
+         CALL iotk_scan_begin( iunpun, "STARTING_MAG", FOUND = found )
          !
-         CALL iotk_scan_dat( iunpun, "NTYP", ntyp )
-         !
-         DO ityp=1,ntyp
-            CALL iotk_scan_dat( iunpun, "STARTING_MAGNETIZATION", &
-              starting_magnetization(ityp) )
-            CALL iotk_scan_dat( iunpun, "ANGLE1", angle1(ityp) )
-            CALL iotk_scan_dat( iunpun, "ANGLE2", angle2(ityp) )
-            angle1(ityp)=angle1(ityp)*pi/180.d0
-            angle2(ityp)=angle2(ityp)*pi/180.d0
-         END DO
-
-         CALL iotk_scan_end( iunpun, "STARTING_MAG" )
+         IF( found ) THEN
+            !
+            CALL iotk_scan_dat( iunpun, "NTYP", ntyp )
+            !
+            DO ityp=1,ntyp
+               CALL iotk_scan_dat( iunpun, "STARTING_MAGNETIZATION", &
+                 starting_magnetization(ityp) )
+               CALL iotk_scan_dat( iunpun, "ANGLE1", angle1(ityp) )
+               CALL iotk_scan_dat( iunpun, "ANGLE2", angle2(ityp) )
+               angle1(ityp)=angle1(ityp)*pi/180.d0
+               angle2(ityp)=angle2(ityp)*pi/180.d0
+            END DO
+   
+            CALL iotk_scan_end( iunpun, "STARTING_MAG" )
+            !
+         END IF
          !
          CALL iotk_close_read( iunpun )
          !
       END IF
       !
-      CALL mp_bcast( starting_magnetization,  ionode_id, intra_image_comm )
-      CALL mp_bcast( angle1,        ionode_id, intra_image_comm )
-      CALL mp_bcast( angle2,        ionode_id, intra_image_comm )
+      CALL mp_bcast( found,  ionode_id, intra_image_comm )
+      !
+      IF( found ) THEN
+         CALL mp_bcast( starting_magnetization,  ionode_id, intra_image_comm )
+         CALL mp_bcast( angle1,        ionode_id, intra_image_comm )
+         CALL mp_bcast( angle2,        ionode_id, intra_image_comm )
+      END IF
       !
       lstarting_mag_read = .TRUE.
       !
