@@ -123,10 +123,14 @@ subroutine init_paw_1
      pow = 1.0_dp
      do j = 1, paw_recon(nt)%paw_nbeta
         rc = paw_recon(nt)%psphi(j)%label%rc
-        rs = 1.0_dp / 3.0_dp * rc
-write(0,*) "ZZZ: ", rc, rs
+        !rs = 1.0_dp / 3.0_dp * rc
+        rs = 2.0_dp / 3.0_dp * rc
+        rs = r(2,nt)
         nrc = Count ( r(1:msh(nt),nt) <= rc )
         nrs = Count ( r(1:msh(nt),nt) <= rs )
+        !<debug>
+        write(stdout,*) "ZZZ: ", rc, rs, nrc, nrs
+        !</debug>
         IF ( nrc < 1 .OR. nrc > msh(nt) ) &
              CALL errore ( "init_paw_1", "impossible value for nrc", 1 )
         IF ( nrs < 1 .OR. nrs > msh(nt) ) &
@@ -162,11 +166,12 @@ write(0,*) "ZZZ: ", rc, rs
                  
                  IF ( ih > jh ) THEN
                     IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-5_dp ) THEN
-                       WRITE ( stdout, '( /, 2A, I3, A, 3I2, F12.8 )' ) &
+                       WRITE ( stdout, '(5X,2A,/,5X,A,I3,A,3I2,F12.8)' ) &
+                            "init_paw_1: ", &
                             "projectors linearly dependent:", &
-                            " ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, &
+                            "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, &
                             s(ih,jh)
-                       
+                       call flush(stdout)
                        CALL errore ( "init_paw_1", &
                             "two projectors are linearly dependent", +1 )
                     ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.00_dp ) < 1.e-1_dp ) THEN
@@ -174,11 +179,11 @@ write(0,*) "ZZZ: ", rc, rs
                           WRITE ( stdout, '(A)' ) ""
                        END IF
                        n_overlap_warnings = n_overlap_warnings + 1
-                       WRITE ( stdout, &
-                            '( 2A, /, 4X, A, I3, A, 3I2, F12.8 )' ) &
+                       WRITE ( stdout, '(5X,2A,/,5X,A,I3,A,3I2,F12.8)' ) &
                             "init_paw_1: ", &
                             "projectors nearly linearly dependent:", &
                             "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, s(ih,jh)
+                       call flush(stdout)
                     END IF
                  END IF
                  !</apsi>
