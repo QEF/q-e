@@ -174,7 +174,7 @@ CONTAINS
     
     allocate(evq(npwx,nbnd))
     allocate(j_bare(nrxxs,3,3,nspin), b_ind_r(nrxxs,3,3), b_ind(ngm,3,3))
-    allocate ( paw_recon(ntyp) )
+    if (.not. allocated(paw_recon) ) allocate ( paw_recon(ntyp) )
     
   END SUBROUTINE gipaw_allocate
   

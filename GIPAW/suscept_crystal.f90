@@ -297,6 +297,8 @@ SUBROUTINE suscept_crystal
   call compute_sigma_diamagnetic( sigma_diamagnetic )
   
   call compute_sigma_paramagnetic( sigma_paramagnetic )
+
+  call print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic )
   
   deallocate( p_evc, vel_evc, aux, g_vel_evc, j_bare, b_ind )
   

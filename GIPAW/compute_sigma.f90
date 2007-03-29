@@ -169,3 +169,40 @@ SUBROUTINE compute_sigma_paramagnetic( sigma_paramagnetic )
   enddo
 
 end subroutine compute_sigma_paramagnetic
+
+
+
+!-----------------------------------------------------------------------
+SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, tau, atm, ityp
+  USE io_global,       ONLY : stdout
+  USE pwcom
+  USE gipaw_module
+
+  ! Arguments
+  real(dp), intent(in) :: sigma_bare(3,3,nat)
+  real(dp), intent(in) :: sigma_paramagnetic(3,3,nat)
+  real(dp), intent(in) :: sigma_diamagnetic(3,3,nat)
+  
+  ! Local
+  integer :: na
+  real(dp) :: tmp(3,3), tr_sigma
+
+  write(stdout,*)
+  write(stdout,'(5X,''Total isotropic NMR chemical shifts in ppm:'')')
+  write(stdout,*)
+  
+  do na = 1, nat
+    tmp(:,:) = sigma_bare(:,:,na) + sigma_paramagnetic(:,:,na) + &
+               sigma_diamagnetic(:,:,na)
+    tr_sigma = (tmp(1,1) + tmp(2,2) + tmp(3,3))/3.0_dp
+    write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
+         &'')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+  enddo
+  write(stdout,*)
+  write(stdout,*)
+
+end subroutine print_sigma_total
