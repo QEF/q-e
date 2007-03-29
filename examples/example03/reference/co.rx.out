@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.2    starts ...
-     Today is  8Nov2006 at  2:42: 6 
+     Program PWSCF     v.3.2cvs starts ...
+     Today is 29Mar2007 at  2:41:53 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -40,10 +40,9 @@
                b(3) = (  0.000000  0.000000  1.000000 )  
 
 
-     PSEUDO 1 is O  (US)    zval =  6.0   lmax= 2   lloc= 0
-     Version   0  0  0 of US pseudo code
-     Using log mesh of  1269 points
-     The pseudopotential has  4 beta functions with: 
+     PseudoPot. # 1 for O  read from file O.LDA.US.RRKJ3.UPF
+     Pseudo is Ultrasoft, Zval =  6.0
+     Using radial grid of 1269 points,  4 beta functions with: 
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
@@ -51,10 +50,9 @@
      Q(r) pseudized with  0 coefficients,  rinner =    0.000   0.000   0.000
                                                        0.000   0.000
 
-     PSEUDO 2 is C  (US)    zval =  4.0   lmax= 2   lloc= 0
-     Version   0  0  0 of US pseudo code
-     Using log mesh of  1425 points
-     The pseudopotential has  4 beta functions with: 
+     PseudoPot. # 2 for C  read from file C.pz-rrkjus.UPF
+     Pseudo is Ultrasoft, Zval =  4.0
+     Using radial grid of 1425 points,  4 beta functions with: 
                 l(1) =   0
                 l(2) =   0
                 l(3) =   1
@@ -93,7 +91,9 @@
      negative rho (up, down):  0.399E-02 0.000E+00
      Starting wfc are atomic
 
-     total cpu time spent up to now is      2.70 secs
+     total cpu time spent up to now is      2.74 secs
+
+     per-process dynamical memory:    12.1 Mb
 
      Self-consistent Calculation
 
@@ -103,7 +103,7 @@
 
      negative rho (up, down):  0.600E-02 0.000E+00
 
-     total cpu time spent up to now is      3.56 secs
+     total cpu time spent up to now is      3.62 secs
 
      total energy              =   -43.00811269 Ry
      Harris-Foulkes estimate   =   -43.14060715 Ry
@@ -115,7 +115,7 @@
 
      negative rho (up, down):  0.111E-01 0.000E+00
 
-     total cpu time spent up to now is      4.47 secs
+     total cpu time spent up to now is      4.55 secs
 
      total energy              =   -42.97497349 Ry
      Harris-Foulkes estimate   =   -43.21695642 Ry
@@ -127,7 +127,7 @@
 
      negative rho (up, down):  0.522E-02 0.000E+00
 
-     total cpu time spent up to now is      5.37 secs
+     total cpu time spent up to now is      5.45 secs
 
      total energy              =   -43.09485892 Ry
      Harris-Foulkes estimate   =   -43.09784087 Ry
@@ -139,7 +139,7 @@
 
      negative rho (up, down):  0.497E-02 0.000E+00
 
-     total cpu time spent up to now is      6.20 secs
+     total cpu time spent up to now is      6.30 secs
 
      total energy              =   -43.09564663 Ry
      Harris-Foulkes estimate   =   -43.09615369 Ry
@@ -151,7 +151,7 @@
 
      negative rho (up, down):  0.499E-02 0.000E+00
 
-     total cpu time spent up to now is      7.09 secs
+     total cpu time spent up to now is      7.21 secs
 
      total energy              =   -43.09623471 Ry
      Harris-Foulkes estimate   =   -43.09644052 Ry
@@ -163,7 +163,7 @@
 
      negative rho (up, down):  0.501E-02 0.000E+00
 
-     total cpu time spent up to now is      7.93 secs
+     total cpu time spent up to now is      8.04 secs
 
      total energy              =   -43.09621832 Ry
      Harris-Foulkes estimate   =   -43.09627579 Ry
@@ -175,7 +175,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is      8.81 secs
+     total cpu time spent up to now is      8.87 secs
 
      total energy              =   -43.09627392 Ry
      Harris-Foulkes estimate   =   -43.09627493 Ry
@@ -187,7 +187,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is      9.73 secs
+     total cpu time spent up to now is      9.78 secs
 
      total energy              =   -43.09627626 Ry
      Harris-Foulkes estimate   =   -43.09627629 Ry
@@ -199,7 +199,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is     10.53 secs
+     total cpu time spent up to now is     10.64 secs
 
      total energy              =   -43.09627587 Ry
      Harris-Foulkes estimate   =   -43.09627649 Ry
@@ -211,7 +211,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is     11.43 secs
+     total cpu time spent up to now is     11.57 secs
 
      total energy              =   -43.09627643 Ry
      Harris-Foulkes estimate   =   -43.09627656 Ry
@@ -223,7 +223,7 @@
 
      negative rho (up, down):  0.502E-02 0.000E+00
 
-     total cpu time spent up to now is     12.20 secs
+     total cpu time spent up to now is     12.37 secs
 
      End of self-consistent calculation
 
@@ -276,7 +276,9 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.524E-02 0.000E+00
 
-     total cpu time spent up to now is     13.40 secs
+     total cpu time spent up to now is     13.54 secs
+
+     per-process dynamical memory:    12.2 Mb
 
      Self-consistent Calculation
 
@@ -286,7 +288,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.715E-02 0.000E+00
 
-     total cpu time spent up to now is     14.53 secs
+     total cpu time spent up to now is     14.71 secs
 
      total energy              =   -42.78473741 Ry
      Harris-Foulkes estimate   =   -42.89200540 Ry
@@ -298,7 +300,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.635E-02 0.000E+00
 
-     total cpu time spent up to now is     15.41 secs
+     total cpu time spent up to now is     15.59 secs
 
      total energy              =   -42.81873670 Ry
      Harris-Foulkes estimate   =   -42.82551583 Ry
@@ -310,7 +312,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.622E-02 0.000E+00
 
-     total cpu time spent up to now is     16.27 secs
+     total cpu time spent up to now is     16.48 secs
 
      total energy              =   -42.82122104 Ry
      Harris-Foulkes estimate   =   -42.82222045 Ry
@@ -322,7 +324,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.606E-02 0.000E+00
 
-     total cpu time spent up to now is     17.10 secs
+     total cpu time spent up to now is     17.33 secs
 
      total energy              =   -42.82168258 Ry
      Harris-Foulkes estimate   =   -42.82179765 Ry
@@ -334,7 +336,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.607E-02 0.000E+00
 
-     total cpu time spent up to now is     17.96 secs
+     total cpu time spent up to now is     18.16 secs
 
      total energy              =   -42.82172910 Ry
      Harris-Foulkes estimate   =   -42.82173482 Ry
@@ -346,7 +348,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.607E-02 0.000E+00
 
-     total cpu time spent up to now is     18.81 secs
+     total cpu time spent up to now is     19.05 secs
 
      total energy              =   -42.82173556 Ry
      Harris-Foulkes estimate   =   -42.82173886 Ry
@@ -358,7 +360,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.607E-02 0.000E+00
 
-     total cpu time spent up to now is     19.60 secs
+     total cpu time spent up to now is     19.86 secs
 
      End of self-consistent calculation
 
@@ -416,7 +418,9 @@ O        0.000000000   0.000000000   0.000000000
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
 
-     total cpu time spent up to now is     20.72 secs
+     total cpu time spent up to now is     21.02 secs
+
+     per-process dynamical memory:    12.2 Mb
 
      Self-consistent Calculation
 
@@ -426,7 +430,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.260E-02 0.000E+00
 
-     total cpu time spent up to now is     21.84 secs
+     total cpu time spent up to now is     22.21 secs
 
      total energy              =   -42.93685071 Ry
      Harris-Foulkes estimate   =   -43.35618203 Ry
@@ -438,7 +442,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.438E-02 0.000E+00
 
-     total cpu time spent up to now is     22.72 secs
+     total cpu time spent up to now is     23.10 secs
 
      total energy              =   -43.08399132 Ry
      Harris-Foulkes estimate   =   -43.14688894 Ry
@@ -450,7 +454,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.460E-02 0.000E+00
 
-     total cpu time spent up to now is     23.61 secs
+     total cpu time spent up to now is     24.01 secs
 
      total energy              =   -43.10666875 Ry
      Harris-Foulkes estimate   =   -43.11283354 Ry
@@ -462,7 +466,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.504E-02 0.000E+00
 
-     total cpu time spent up to now is     24.49 secs
+     total cpu time spent up to now is     24.91 secs
 
      total energy              =   -43.10950779 Ry
      Harris-Foulkes estimate   =   -43.10956502 Ry
@@ -474,7 +478,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.512E-02 0.000E+00
 
-     total cpu time spent up to now is     25.39 secs
+     total cpu time spent up to now is     25.84 secs
 
      total energy              =   -43.10951708 Ry
      Harris-Foulkes estimate   =   -43.10970347 Ry
@@ -486,7 +490,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.510E-02 0.000E+00
 
-     total cpu time spent up to now is     26.24 secs
+     total cpu time spent up to now is     26.70 secs
 
      total energy              =   -43.10960424 Ry
      Harris-Foulkes estimate   =   -43.10960695 Ry
@@ -498,7 +502,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     27.15 secs
+     total cpu time spent up to now is     27.60 secs
 
      total energy              =   -43.10960628 Ry
      Harris-Foulkes estimate   =   -43.10960723 Ry
@@ -510,7 +514,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     28.00 secs
+     total cpu time spent up to now is     28.44 secs
 
      End of self-consistent calculation
 
@@ -546,7 +550,7 @@ O        0.000000000   0.000000000   0.000000000
 
      CASE: energy_new < energy_old
 
-     new trust radius        =       0.0072183820 bohr
+     new trust radius        =       0.0072183821 bohr
      new conv_thr            =       0.0000001000 Ry
 
 
@@ -568,7 +572,9 @@ O        0.000000000   0.000000000   0.000000000
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
 
-     total cpu time spent up to now is     29.15 secs
+     total cpu time spent up to now is     29.59 secs
+
+     per-process dynamical memory:    12.2 Mb
 
      Self-consistent Calculation
 
@@ -578,7 +584,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     30.17 secs
+     total cpu time spent up to now is     30.57 secs
 
      total energy              =   -43.10962943 Ry
      Harris-Foulkes estimate   =   -43.10964603 Ry
@@ -590,7 +596,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.512E-02 0.000E+00
 
-     total cpu time spent up to now is     31.10 secs
+     total cpu time spent up to now is     31.50 secs
 
      total energy              =   -43.10963266 Ry
      Harris-Foulkes estimate   =   -43.10966609 Ry
@@ -602,7 +608,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.512E-02 0.000E+00
 
-     total cpu time spent up to now is     31.96 secs
+     total cpu time spent up to now is     32.41 secs
 
      total energy              =   -43.10964530 Ry
      Harris-Foulkes estimate   =   -43.10964556 Ry
@@ -614,7 +620,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.512E-02 0.000E+00
 
-     total cpu time spent up to now is     32.87 secs
+     total cpu time spent up to now is     33.32 secs
 
      total energy              =   -43.10964562 Ry
      Harris-Foulkes estimate   =   -43.10964565 Ry
@@ -626,7 +632,7 @@ O        0.000000000   0.000000000   0.000000000
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     33.65 secs
+     total cpu time spent up to now is     34.10 secs
 
      End of self-consistent calculation
 
@@ -640,7 +646,7 @@ O        0.000000000   0.000000000   0.000000000
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =   -66.76570954 Ry
+     one-electron contribution =   -66.76570955 Ry
      hartree contribution      =    34.45973127 Ry
      xc contribution           =    -9.88114383 Ry
      ewald contribution        =    -0.92252350 Ry
@@ -662,7 +668,7 @@ O        0.000000000   0.000000000   0.000000000
 
      CASE: energy_new < energy_old
 
-     new trust radius        =       0.0013235172 bohr
+     new trust radius        =       0.0013235168 bohr
      new conv_thr            =       0.0000000100 Ry
 
 
@@ -684,7 +690,9 @@ O        0.000000000   0.000000000   0.000000000
      Message from extrapolate_wfcs: 
      the matrix <psi(t-dt)|psi(t)> has  1 zero eigenvalues
 
-     total cpu time spent up to now is     34.79 secs
+     total cpu time spent up to now is     35.26 secs
+
+     per-process dynamical memory:    12.2 Mb
 
      Self-consistent Calculation
 
@@ -696,211 +704,68 @@ O        0.000000000   0.000000000   0.000000000
      Diagonalizing with lowered threshold
 
      Davidson diagonalization with overlap
-     ethr =  2.62E-07,  avg # of iterations =  2.0
+     ethr =  2.62E-08,  avg # of iterations =  4.0
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     36.25 secs
+     total cpu time spent up to now is     36.82 secs
 
-     total energy              =   -43.10964675 Ry
-     Harris-Foulkes estimate   =   -43.10429425 Ry
-     estimated scf accuracy    <     0.00000037 Ry
+     total energy              =   -43.10964747 Ry
+     Harris-Foulkes estimate   =   -43.10429448 Ry
+     estimated scf accuracy    <     0.00000006 Ry
 
      iteration #  2     ecut=    24.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.67E-09,  avg # of iterations =  4.0
+     ethr =  5.50E-10,  avg # of iterations =  4.0
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     37.18 secs
+     total cpu time spent up to now is     37.76 secs
 
-     total energy              =   -43.10964733 Ry
-     Harris-Foulkes estimate   =   -43.10964830 Ry
-     estimated scf accuracy    <     0.00000363 Ry
+     total energy              =   -43.10964748 Ry
+     Harris-Foulkes estimate   =   -43.10964754 Ry
+     estimated scf accuracy    <     0.00000015 Ry
 
      iteration #  3     ecut=    24.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     ethr =  3.67E-09,  avg # of iterations =  3.0
+     ethr =  5.50E-10,  avg # of iterations =  3.0
 
      negative rho (up, down):  0.511E-02 0.000E+00
 
-     total cpu time spent up to now is     38.09 secs
-
-     total energy              =   -43.10964752 Ry
-     Harris-Foulkes estimate   =   -43.10964759 Ry
-     estimated scf accuracy    <     0.00000041 Ry
-
-     iteration #  4     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  3.67E-09,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     38.93 secs
-
-     total energy              =   -43.10964751 Ry
-     Harris-Foulkes estimate   =   -43.10964753 Ry
-     estimated scf accuracy    <     0.00000020 Ry
-
-     iteration #  5     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  2.02E-09,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     39.74 secs
-
-     total energy              =   -43.10964751 Ry
-     Harris-Foulkes estimate   =   -43.10964752 Ry
-     estimated scf accuracy    <     0.00000015 Ry
-
-     iteration #  6     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  1.52E-09,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     40.59 secs
-
-     total energy              =   -43.10964752 Ry
-     Harris-Foulkes estimate   =   -43.10964752 Ry
-     estimated scf accuracy    <     0.00000012 Ry
-
-     iteration #  7     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  1.16E-09,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     41.42 secs
-
-     total energy              =   -43.10964752 Ry
-     Harris-Foulkes estimate   =   -43.10964752 Ry
-     estimated scf accuracy    <     0.00000011 Ry
-
-     iteration #  8     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  1.06E-09,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     42.27 secs
-
-     total energy              =   -43.10964752 Ry
-     Harris-Foulkes estimate   =   -43.10964752 Ry
-     estimated scf accuracy    <     0.00000010 Ry
-
-     iteration #  9     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  9.73E-10,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     43.11 secs
-
-     total energy              =   -43.10964752 Ry
-     Harris-Foulkes estimate   =   -43.10964752 Ry
-     estimated scf accuracy    <     0.00000010 Ry
-
-     iteration # 10     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  9.68E-10,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     43.95 secs
-
-     total energy              =   -43.10964750 Ry
-     Harris-Foulkes estimate   =   -43.10964752 Ry
-     estimated scf accuracy    <     0.00000007 Ry
-
-     iteration # 11     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  7.31E-10,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     44.74 secs
-
-     total energy              =   -43.10964751 Ry
-     Harris-Foulkes estimate   =   -43.10964751 Ry
-     estimated scf accuracy    <     0.00000003 Ry
-
-     iteration # 12     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  3.40E-10,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     45.57 secs
-
-     total energy              =   -43.10964751 Ry
-     Harris-Foulkes estimate   =   -43.10964751 Ry
-     estimated scf accuracy    <     0.00000003 Ry
-
-     iteration # 13     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  2.92E-10,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     46.43 secs
-
-     total energy              =   -43.10964751 Ry
-     Harris-Foulkes estimate   =   -43.10964751 Ry
-     estimated scf accuracy    <     0.00000004 Ry
-
-     iteration # 14     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  2.92E-10,  avg # of iterations =  1.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     47.25 secs
-
-     total energy              =   -43.10964749 Ry
-     Harris-Foulkes estimate   =   -43.10964751 Ry
-     estimated scf accuracy    <     0.00000004 Ry
-
-     iteration # 15     ecut=    24.00 Ry     beta=0.70
-     Davidson diagonalization with overlap
-     ethr =  2.92E-10,  avg # of iterations =  3.0
-
-     negative rho (up, down):  0.511E-02 0.000E+00
-
-     total cpu time spent up to now is     48.09 secs
+     total cpu time spent up to now is     38.58 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  1704 PWs)   bands (ev):
 
-   -28.8190 -13.3827 -11.3909 -11.3909  -8.3785
+   -28.8191 -13.3828 -11.3910 -11.3910  -8.3783
 
-!    total energy              =   -43.10964750 Ry
+!    total energy              =   -43.10964751 Ry
      Harris-Foulkes estimate   =   -43.10964751 Ry
-     estimated scf accuracy    <        5.2E-09 Ry
+     estimated scf accuracy    <        2.1E-10 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =   -66.74307135 Ry
-     hartree contribution      =    34.44932733 Ry
-     xc contribution           =    -9.87986130 Ry
+     one-electron contribution =   -66.74330134 Ry
+     hartree contribution      =    34.44960174 Ry
+     xc contribution           =    -9.87990572 Ry
      ewald contribution        =    -0.93604219 Ry
 
      convergence has been achieved
 
      Forces acting on atoms (Ry/au):
 
-     atom   1 type  2   force =    -0.00001406    0.00000000    0.00000000
-     atom   2 type  1   force =     0.00001406    0.00000000    0.00000000
+     atom   1 type  2   force =     0.00000950    0.00000000    0.00000000
+     atom   2 type  1   force =    -0.00000950    0.00000000    0.00000000
 
-     Total force =     0.000014     Total SCF correction =     0.000071
+     Total force =     0.000010     Total SCF correction =     0.000020
+     SCF correction compared to forces is too large, reduce conv_thr
 
      bfgs converged in   5 scf cycles and   3 bfgs steps
 
      End of BFGS Geometry Optimization
 
-     Final energy =     -43.1096475024 Ry
+     Final energy =     -43.1096475054 Ry
 
 CELL_PARAMETERS (alat)
    1.000000000   0.000000000   0.000000000
@@ -915,46 +780,47 @@ O        0.000000000   0.000000000   0.000000000
 
      Writing output data file CO.save
  
-     PWSCF        :    48.64s CPU time,   53.58s wall time
+     PWSCF        :    39.11s CPU time,   55.95s wall time
 
-     init_run     :     2.58s CPU
-     electrons    :    40.78s CPU (       5 calls,   8.156 s avg)
-     forces       :     2.46s CPU (       5 calls,   0.492 s avg)
+     init_run     :     2.61s CPU
+     electrons    :    31.20s CPU (       5 calls,   6.240 s avg)
+     update_pot   :     1.34s CPU (       4 calls,   0.335 s avg)
+     forces       :     2.45s CPU (       5 calls,   0.490 s avg)
  
  
-     electrons    :    40.78s CPU (       5 calls,   8.156 s avg)
-     c_bands      :     8.59s CPU (      47 calls,   0.183 s avg)
-     sum_band     :    14.15s CPU (      47 calls,   0.301 s avg)
-     v_of_rho     :     2.75s CPU (      51 calls,   0.054 s avg)
-     v_h          :     1.65s CPU (      51 calls,   0.032 s avg)
-     v_xc         :     1.10s CPU (      51 calls,   0.022 s avg)
-     newd         :    10.76s CPU (      51 calls,   0.211 s avg)
-     mix_rho      :     0.41s CPU (      47 calls,   0.009 s avg)
+     electrons    :    31.20s CPU (       5 calls,   6.240 s avg)
+     c_bands      :     7.23s CPU (      35 calls,   0.207 s avg)
+     sum_band     :    10.69s CPU (      35 calls,   0.305 s avg)
+     v_of_rho     :     2.14s CPU (      39 calls,   0.055 s avg)
+     v_h          :     1.26s CPU (      39 calls,   0.032 s avg)
+     v_xc         :     0.88s CPU (      39 calls,   0.023 s avg)
+     newd         :     8.22s CPU (      39 calls,   0.211 s avg)
+     mix_rho      :     0.18s CPU (      35 calls,   0.005 s avg)
  
-     c_bands      :     8.59s CPU (      47 calls,   0.183 s avg)
-     init_us_2    :     0.28s CPU (      95 calls,   0.003 s avg)
-     cegterg      :     8.41s CPU (      47 calls,   0.179 s avg)
+     c_bands      :     7.23s CPU (      35 calls,   0.207 s avg)
+     init_us_2    :     0.14s CPU (      71 calls,   0.002 s avg)
+     cegterg      :     7.01s CPU (      35 calls,   0.200 s avg)
  
-     sum_band     :    14.15s CPU (      47 calls,   0.301 s avg)
-     becsum       :     0.00s CPU (      47 calls,   0.000 s avg)
-     addusdens    :     9.10s CPU (      47 calls,   0.194 s avg)
+     sum_band     :    10.69s CPU (      35 calls,   0.305 s avg)
+     becsum       :     0.00s CPU (      35 calls,   0.000 s avg)
+     addusdens    :     6.84s CPU (      35 calls,   0.195 s avg)
  
-     cegterg      :     8.41s CPU (      47 calls,   0.179 s avg)
-     h_psi        :     8.06s CPU (     168 calls,   0.048 s avg)
-     g_psi        :     0.08s CPU (     120 calls,   0.001 s avg)
-     diaghg       :     0.04s CPU (     162 calls,   0.000 s avg)
-     update       :     0.06s CPU (     120 calls,   0.000 s avg)
-     last         :     0.03s CPU (      54 calls,   0.001 s avg)
+     cegterg      :     7.01s CPU (      35 calls,   0.200 s avg)
+     h_psi        :     6.53s CPU (     144 calls,   0.045 s avg)
+     g_psi        :     0.05s CPU (     108 calls,   0.000 s avg)
+     diaghg       :     0.03s CPU (     138 calls,   0.000 s avg)
+     update       :     0.07s CPU (     108 calls,   0.001 s avg)
+     last         :     0.03s CPU (      41 calls,   0.001 s avg)
  
-     h_psi        :     8.06s CPU (     168 calls,   0.048 s avg)
-     init         :     0.02s CPU (     168 calls,   0.000 s avg)
-     add_vuspsi   :     0.09s CPU (     168 calls,   0.001 s avg)
-     s_psi        :     0.13s CPU (     168 calls,   0.001 s avg)
+     h_psi        :     6.53s CPU (     144 calls,   0.045 s avg)
+     init         :     0.01s CPU (     144 calls,   0.000 s avg)
+     add_vuspsi   :     0.16s CPU (     144 calls,   0.001 s avg)
+     s_psi        :     0.21s CPU (     144 calls,   0.001 s avg)
  
      General routines
-     ccalbec      :     0.05s CPU (      47 calls,   0.001 s avg)
-     cft3         :     8.98s CPU (     369 calls,   0.024 s avg)
-     cft3s        :     8.32s CPU (    1097 calls,   0.008 s avg)
-     interpolate  :     4.10s CPU (      98 calls,   0.042 s avg)
-     davcio       :     0.00s CPU (      82 calls,   0.000 s avg)
+     ccalbec      :     0.05s CPU (      35 calls,   0.001 s avg)
+     cft3         :     6.81s CPU (     285 calls,   0.024 s avg)
+     cft3s        :     6.52s CPU (     889 calls,   0.007 s avg)
+     interpolate  :     3.02s CPU (      74 calls,   0.041 s avg)
+     davcio       :     0.00s CPU (      65 calls,   0.000 s avg)
  
