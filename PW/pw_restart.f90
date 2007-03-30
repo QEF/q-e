@@ -2170,7 +2170,16 @@ MODULE pw_restart
       !
       CALL mp_bcast( tfixed_occ, ionode_id, intra_image_comm )
       !
-      IF ( tfixed_occ ) CALL mp_bcast( f_inp, ionode_id, intra_image_comm )
+      IF ( tfixed_occ ) THEN
+         IF ( .NOT. ALLOCATED( f_inp ) ) THEN
+            IF ( nspin == 4 ) THEN
+               ALLOCATE( f_inp( nbnd, 1 ) )
+            ELSE
+               ALLOCATE( f_inp( nbnd, nspin ) )
+            END IF
+         END IF
+         CALL mp_bcast( f_inp, ionode_id, intra_image_comm )
+      END IF
       !
       locc_read = .TRUE.
       !
@@ -2195,7 +2204,6 @@ MODULE pw_restart
       !
       INTEGER :: ik, ik_eff, num_k_points
       LOGICAL :: found
-      !
       !
       IF ( lbs_read ) RETURN
       !
@@ -2232,12 +2240,15 @@ MODULE pw_restart
             ef = 0.d0
          END IF
          !
-         num_k_points = nkstot
-         !
-         IF ( lsda ) num_k_points = nkstot / 2
-         !
          CALL iotk_scan_end( iunpun, "BAND_STRUCTURE_INFO" )
          !
+      END IF
+      !
+      num_k_points = nkstot
+      !
+      IF ( lsda ) num_k_points = nkstot / 2
+      !
+      IF ( ionode ) THEN
          !
          CALL iotk_scan_begin( iunpun, "EIGENVALUES" )
          !
