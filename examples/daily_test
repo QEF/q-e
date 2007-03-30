@@ -69,7 +69,8 @@ if test "$conflicts" != "0" ; then
    mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
    exit 1
 fi
-changes=` grep -c -e '^U ' -e'^P ' cvs.log`
+# do not re-run everything if only examples have changed
+changes=` grep -e '^U ' -e'^P ' cvs.log | grep -c -v -e 'U examples' -e '^P examples' `
 if test  "$changes" = "0" ; then
    #
    # no changes to cvs, do nothing
