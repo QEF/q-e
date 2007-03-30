@@ -14,6 +14,7 @@ SUBROUTINE compute_u_kq(ik, q)
   ! ... diagonalize at k+q
   !
   USE kinds,                ONLY : DP
+  USE constants,            ONLY : RytoeV
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
                                    nwordwfc
@@ -22,7 +23,8 @@ SUBROUTINE compute_u_kq(ik, q)
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, g2kin, &
                                    current_k, nbndx, btype
-  USE control_flags,        ONLY : ethr, isolve, io_level, lscf
+  USE control_flags,        ONLY : ethr, io_level, lscf, istep, max_cg_iter
+  USE control_flags,        ONLY : cntrl_isolve => isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
@@ -33,30 +35,36 @@ SUBROUTINE compute_u_kq(ik, q)
   USE bp,                   ONLY : lelfield
   USE control_flags,        ONLY : iverbosity
   USE becmod,               ONLY : becp
-  USE control_flags,        ONLY : ethr, isolve, max_cg_iter
   USE buffers
   USE gipaw_module
   IMPLICIT NONE
   INTEGER :: ik, iter       ! k-point, current iterations
   REAL(DP) :: q(3)          ! q-vector
   REAL(DP) :: avg_iter
-  INTEGER :: ig
+  INTEGER :: ig, i
   REAL(DP) :: xkold(3)
   REAL(DP), allocatable :: et_old(:,:)
 
   CALL start_clock( 'c_bands' )
 
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-  iter = 1
+  ! Initialize the diagonalization
+  if (isolve == 1) then
+    nbndx = nbnd ! CG
+  elseif (isolve == 0) then
+    nbndx = 4*nbnd ! Davidson
+  else
+    call errore('compute_u_kq', &
+                'Don''t even try to use this isolve!', abs(isolve))
+  endif
+  cntrl_isolve = isolve
   max_cg_iter = 200
-  isolve = 1  ! CG
-  nbndx = nbnd
+  iter = 1
+  istep = 0
   ethr = conv_threshold
-  if (allocated(btype)) deallocate(btype)
-  allocate(btype(nbnd,nkstot))
-  btype(:,:) = 1
   lscf = .false.
-  !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+  if (allocated(btype)) deallocate(btype)
+  allocate(btype(nbndx,nkstot))
+  btype(1:nbnd,:) = 1
 
   ! save eigenvalues
   allocate( et_old(nbnd,nkstot) )
@@ -98,12 +106,21 @@ SUBROUTINE compute_u_kq(ik, q)
   avg_iter = avg_iter / nkstot
 
   !! debug
-  !!write( stdout, &
-  !!     '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
+  !!write(stdout,'(5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1)') &
   !!     ethr, avg_iter
 
+  ! check if diagonalization was ok
+  !!write(stdout,'(8F9.4)') et_old(1:nbnd,ik)*RytoeV
+  !!write(stdout,'(8F9.4)') et(1:nbnd,ik)*RytoeV
+  do i = 1, nbnd
+    if (abs(et(i,ik) - et_old(i,ik))*RytoeV > 0.2d0) then
+      write(stdout,'(5X,''ATTENTION: ik='',I4,''  ibnd='',I3,$)') ik, i
+      write(stdout,'(2X,''eigenvalues differ too much!'')')
+      write(stdout,'(5X,2(F10.4,2X))') et_old(i,ik)*RytoeV, et(i,ik)*RytoeV
+    endif
+  enddo
+
   ! restore the k-point and eigenvalues
-  !print*, et(1:nbnd,ik)*13.6056982d0
   xk(:,ik) = xkold(:)
   et = et_old
   deallocate(et_old)

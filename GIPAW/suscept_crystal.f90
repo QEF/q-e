@@ -30,7 +30,8 @@ SUBROUTINE suscept_crystal
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, tens_fmt, &
                                          q_gipaw, iverbosity, alpha, evq, &
                                          avogadro, filcurr, filfield, &
-                                         nbnd_occ, a0_to_cm
+                                         nbnd_occ, a0_to_cm, isolve, &
+                                         conv_threshold
   
   !<apsi>
 !  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, aephi, &
@@ -83,7 +84,8 @@ SUBROUTINE suscept_crystal
   sigma_diamagnetic = 0.0_dp
   sigma_paramagnetic = 0.0_dp
   
-  write(stdout, '(5X,''Computing the magnetic susceptibility'')')
+  write(stdout, '(5X,''Computing the magnetic susceptibility'',$)')
+  write(stdout, '(5X,''isolve='',I1,4X,''ethr='',E10.4)') isolve, conv_threshold
   !====================================================================
   ! loop over k-points
   !====================================================================

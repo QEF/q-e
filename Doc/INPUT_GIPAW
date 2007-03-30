@@ -23,6 +23,9 @@ conv_threshold  REAL (default = 1.d-14)
          convergence threshold for the diagonalization and for the Green's
          function solver
 
+isolve   INTEGER (default = 0)
+         diagonalization method (0 = Davidson, 1 = CG)
+
 q_gipaw  REAL (default = 0.01)
          small vector for long wavelength linear response
 

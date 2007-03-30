@@ -53,7 +53,10 @@ MODULE gipaw_module
   
   ! verbosity
   INTEGER :: iverbosity
-  
+ 
+  ! diagonalization method
+  INTEGER :: isolve
+ 
   ! job: nmr, g_tensor, efg, hyperfine
   CHARACTER(80) :: job
   
@@ -105,7 +108,7 @@ CONTAINS
                          q_gipaw, iverbosity, filcurr, filfield, &
                          read_recon_in_paratec_fmt, &
                          file_reconstruction, use_nmr_macroscopic_shape, &
-                         nmr_macroscopic_shape, spline_ps
+                         nmr_macroscopic_shape, spline_ps, isolve
     
     if ( .not. ionode ) goto 400
     
@@ -121,7 +124,8 @@ CONTAINS
     file_reconstruction ( : ) = " "
     nmr_macroscopic_shape = 2.0_dp / 3.0_dp
     spline_ps = .true.    ! TRUE in this case!!!!!
-    
+    isolve = 0
+
     read( 5, inputgipaw, err = 200, iostat = ios )
     
 200 call errore( 'gipaw_readin', 'reading inputgipaw namelist', abs( ios ) )
@@ -157,6 +161,7 @@ CONTAINS
     call mp_bcast(use_nmr_macroscopic_shape, root)
     call mp_bcast(nmr_macroscopic_shape, root)
     call mp_bcast(spline_ps, root)
+    call mp_bcast(isolve, root)
 #endif
   END SUBROUTINE gipaw_bcast_input
 
@@ -347,6 +352,7 @@ CONTAINS
           
        ELSE
           CALL read_recon ( file_reconstruction(nt), nt, paw_recon(nt) )
+          !!!paw_recon(nt)%paw_nbeta = 0
        END IF
     END DO
     
@@ -455,7 +461,7 @@ CONTAINS
              
              CALL simpson ( nrc, work, rab(:,nt), &
                   radial_integral_rmc(il1,il2,nt) )
-             if (iverbosity > 0) then
+             if (iverbosity > 10) then
                 write(stdout,*) "WWW2: ", l2, il1, il2, &
                      radial_integral_rmc(il1,il2,nt)
              end if
@@ -481,7 +487,7 @@ CONTAINS
              
              call simpson( nrc, work, rab(:,nt), &
                   radial_integral_diamagnetic_so(il1,il2,nt) )
-             if (iverbosity > 0) then
+             if (iverbosity > 10) then
                 write(stdout,*) "WWW3: ", l2, il1, il2, &
                      radial_integral_diamagnetic_so(il1,il2,nt) * alpha
              end if
@@ -506,7 +512,7 @@ CONTAINS
              
              call simpson( nrc,work,rab(:,nt), &
                   radial_integral_paramagnetic_so(il1,il2,nt) )
-             if (iverbosity > 0) then
+             if (iverbosity > 10) then
                 write(stdout,*) "WWW4: ", l2, il1, il2, &
                      radial_integral_paramagnetic_so(il1,il2,nt) * alpha
              end if
