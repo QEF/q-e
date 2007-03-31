@@ -149,7 +149,7 @@ subroutine init_paw_1
      !
      
      aux = 0.0_dp
-     do l = 0, paw_lmaxkb
+     do l = 0, ubound(paw_recon(nt)%paw_nl,1)
         if ( paw_recon(nt)%paw_nl(l) > 0 ) then
            allocate ( s(paw_recon(nt)%paw_nl(l),paw_recon(nt)%paw_nl(l)) )
            allocate ( sinv(paw_recon(nt)%paw_nl(l),paw_recon(nt)%paw_nl(l)) )
