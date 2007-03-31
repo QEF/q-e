@@ -125,7 +125,6 @@ subroutine init_paw_1
         rc = paw_recon(nt)%psphi(j)%label%rc
         !rs = 1.0_dp / 3.0_dp * rc
         rs = 2.0_dp / 3.0_dp * rc
-        rs = r(2,nt)
         nrc = Count ( r(1:msh(nt),nt) <= rc )
         nrs = Count ( r(1:msh(nt),nt) <= rs )
         !<debug>

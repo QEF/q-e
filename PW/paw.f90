@@ -505,7 +505,6 @@ CONTAINS
      ALLOCATE ( paw_recon(is)%psphi(upf%gipaw_wfs_nchannels) )
      
      DO nb = 1, upf%gipaw_wfs_nchannels
-        PRINT*, 'CCC: nb=', nb
         ALLOCATE ( paw_recon(is)%aephi(nb)%psi(mesh(is)) )
         paw_recon(is)%aephi(nb)%label%nt = is
         paw_recon(is)%aephi(nb)%label%n = nb
@@ -514,7 +513,6 @@ CONTAINS
         paw_recon(is)%aephi(nb)%label%nrc = upf%mesh
         paw_recon(is)%aephi(nb)%kkpsi = upf%mesh
         paw_recon(is)%aephi(nb)%label%rc = upf%gipaw_wfs_rcut(nb)
-        print*, 'CCC:', upf%gipaw_wfs_rcut(nb)
         paw_recon(is)%aephi(nb)%psi(:upf%mesh) = upf%gipaw_wfs_ae(:upf%mesh,nb)
         
         ALLOCATE ( paw_recon(is)%psphi(nb)%psi(mesh(is)) )

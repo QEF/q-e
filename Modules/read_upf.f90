@@ -742,7 +742,6 @@ SUBROUTINE read_pseudo_gipaw_orbitals ( upf, iunps )
      CALL scan_begin ( iunps, "GIPAW_PS_ORBITAL", .false. )
      READ (iunps, *, err=100, end=100) &
           upf%gipaw_wfs_rcut(nb), upf%gipaw_wfs_rcutus(nb)
-     print*,'CCC2', nb, upf%gipaw_wfs_rcut(nb), upf%gipaw_wfs_rcutus(nb)
      READ ( iunps, *, err=100, end=100 ) &
           ( upf%gipaw_wfs_ps(ir,nb), ir = 1, upf%mesh )
      CALL scan_end ( iunps, "GIPAW_PS_ORBITAL" )
