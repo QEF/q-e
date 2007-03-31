@@ -14,7 +14,7 @@ SUBROUTINE compute_u_kq(ik, q)
   ! ... diagonalize at k+q
   !
   USE kinds,                ONLY : DP
-  USE constants,            ONLY : RytoeV
+  USE constants,            ONLY : RytoeV, tpi
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk, nwordatwfc, iunsat, iunwfc, &
                                    nwordwfc
@@ -35,6 +35,7 @@ SUBROUTINE compute_u_kq(ik, q)
   USE bp,                   ONLY : lelfield
   USE control_flags,        ONLY : iverbosity
   USE becmod,               ONLY : becp
+  USE random_numbers,       ONLY : rndm
   USE buffers
   USE gipaw_module
   IMPLICIT NONE
@@ -44,6 +45,7 @@ SUBROUTINE compute_u_kq(ik, q)
   INTEGER :: ig, i
   REAL(DP) :: xkold(3)
   REAL(DP), allocatable :: et_old(:,:)
+  REAL(DP) :: rr, arg
 
   CALL start_clock( 'c_bands' )
 
@@ -95,6 +97,15 @@ SUBROUTINE compute_u_kq(ik, q)
   ! read in wavefunctions from the previous iteration
   !!IF ( nks > 1 .OR. (io_level > 1) .OR. lelfield ) &
   CALL get_buffer( evc, nwordwfc, iunwfc, ik)
+
+  ! randomize a little bit
+  do i = 1, nbnd
+    do ig = 1, npw
+      rr = 0.1d0*(2.d0*rndm() - 1.d0)
+      arg = tpi * rndm()
+      evc(ig,i) = evc(ig,i) + CMPLX(rr*cos(arg),rr*sin(arg))/(g2kin(ig)+1.d0)
+    enddo
+  enddo
 
   ! Needed for LDA+U
   IF ( lda_plus_u ) CALL davcio( swfcatom, nwordatwfc, iunsat, ik, -1 )
