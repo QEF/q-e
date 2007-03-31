@@ -1,0 +1,10 @@
+This example shows how to use gipaw.x to calculate the magnetic susceptibility
+and NMR chemical shift of fcc Si, diamond, and of two molecules: CH4 and C2H4.
+
+ATTENTION! 
+This example is for illustrative purposes. In production calculation one
+would need:
+1) higher cutoff
+2) more k-points for bulks
+3) larger supercells for molecules
+4) at least two GIPAW projectors per angular momentum channel
