@@ -103,7 +103,7 @@ SUBROUTINE compute_u_kq(ik, q)
     do ig = 1, npw
       rr = 0.1d0*(2.d0*rndm() - 1.d0)
       arg = tpi * rndm()
-      evc(ig,i) = evc(ig,i) + CMPLX(rr*cos(arg),rr*sin(arg))/(g2kin(ig)+1.d0)
+      evc(ig,i) = evc(ig,i)*CMPLX(1.d0+rr*cos(arg),rr*sin(arg))
     enddo
   enddo
 
