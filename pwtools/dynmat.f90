@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2007 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -174,7 +174,7 @@ end Module dynamical
       !
       character(len=80) :: line
       real(DP) :: celldm(6), sum, dyn0r(3,3,2)
-      integer :: ibrav, nt, na, nb, naa, nbb, i, j, k
+      integer :: ibrav, nt, na, nb, naa, nbb, i, j, k, ios
       CHARACTER(len=9) :: symm_type
       logical :: qfinito, noraman
       !
@@ -224,11 +224,14 @@ end Module dynamical
             dyn(:,:,na,nb) = CMPLX ( dyn0r(:,:,1), dyn0r(:,:,2) )
          end do
       end do
+      write(6,'(5x,a)') '...Force constants read'
       !
       if (.not.qfinito) then
-         read(1,*)
-         read(1,'(a)') line
-         if (line(1:23).ne.'     Dielectric Tensor:') then
+         ios=0
+         read(1,*,iostat=ios)
+         read(1,'(a)',iostat=ios) line
+         if (ios .ne. 0 .or. line(1:23).ne.'     Dielectric Tensor:') then
+            write(6,'(5x,a)') '...epsilon and Z* not read (not found on file)'
             do na=1,nat
                do j=1,3
                   do i=1,3
@@ -252,6 +255,7 @@ end Module dynamical
                read(1,*)
                read(1,*) ((zstar(i,j,na), j=1,3),i=1,3)
             end do
+            write(6,'(5x,a)') '...epsilon and Z* read'
  20         read(1,'(a)',end=10,err=10) line
             if (line(1:10) == '     Raman') go to 25
             go to 20
@@ -263,7 +267,7 @@ end Module dynamical
                        ((dchi_dtau(k,j,i,na), j=1,3), k=1,3)
                end do
             end do
-            write(6,'(5x,a)') 'Raman cross sections read'
+            write(6,'(5x,a)') '...Raman cross sections read'
             noraman=.false.
 10          continue
          end if
