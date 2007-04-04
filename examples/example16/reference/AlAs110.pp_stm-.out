@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.3.2    starts ...
-     Today is  8Nov2006 at  3:44:49 
+     Program POST-PROC v.3.2cvs starts ...
+     Today is  3Apr2007 at  3:57: 7 
 
      nbndx  =    34  nbnd   =    34  natomwfc =    91  npwx   =    3109
      nelec  =  56.00  nkb   =    56  ngl    =    2793
@@ -15,7 +15,7 @@
      Use the true wfcs
      Sample bias          = -1.0000 eV
 
-     STM:      1.08s cpu time
+     STM:      1.04s cpu time
      Writing data to file  AlAsresm-1.0
      Reading header from file  AlAsresm-1.0
      Reading data from file  AlAsresm-1.0

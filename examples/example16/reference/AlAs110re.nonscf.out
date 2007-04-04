@@ -1,6 +1,6 @@
 
-     Program PWSCF     v.3.2    starts ...
-     Today is  8Nov2006 at  3:40:31 
+     Program PWSCF     v.3.2cvs starts ...
+     Today is  3Apr2007 at  3:51:25 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -38,11 +38,17 @@
                b(3) = (  0.000000  0.000000  0.166667 )  
 
 
-     PSEUDO 1 is Al         zval =  3.0   lmax= 1   lloc= 0
-     (in numerical form:   171 grid points, xmin =  0.00, dx = 0.0000)
+     PseudoPot. # 1 for Al read from file Al.vbc.UPF
+     Pseudo is Norm-conserving, Zval =  3.0
+     Using radial grid of  171 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
 
-     PSEUDO 2 is As         zval =  5.0   lmax= 1   lloc= 0
-     (in numerical form:   525 grid points, xmin =  0.00, dx = 0.0000)
+     PseudoPot. # 2 for As read from file As.gon.UPF
+     Pseudo is Norm-conserving, Zval =  5.0
+     Using radial grid of  525 points,  2 beta functions with: 
+                l(1) =   0
+                l(2) =   1
 
      atomic species   valence    mass     pseudopotential
         Al             3.00    26.98000     Al( 1.00)
@@ -103,34 +109,15 @@
 
      Starting wfc are atomic
 
-     total cpu time spent up to now is     37.74 secs
+     total cpu time spent up to now is      0.38 secs
+
+     per-process dynamical memory:    12.7 Mb
 
      Band Structure Calculation
      Davidson diagonalization with overlap
-     WARNING:     3 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     3 eigenvalues not converged
-     WARNING:     3 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     5 eigenvalues not converged
-     WARNING:     3 eigenvalues not converged
-     WARNING:     2 eigenvalues not converged
-     WARNING:     4 eigenvalues not converged
-     WARNING:     2 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     2 eigenvalues not converged
-     WARNING:     2 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     2 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
-     WARNING:     1 eigenvalues not converged
      ethr =  1.79E-09,  avg # of iterations = 26.6
 
-     total cpu time spent up to now is    247.17 secs
+     total cpu time spent up to now is    336.81 secs
 
      End of band structure calculation
 
@@ -306,42 +293,41 @@
 
      Writing output data file AlAs110.save
  
-     PWSCF        :  4m13.93s CPU time,     4m17.63s wall time
+     PWSCF        :  5m36.99s CPU time,     5m42.06s wall time
 
-     init_run     :    37.72s CPU
-     electrons    :   209.43s CPU
+     init_run     :     0.37s CPU
+     electrons    :   336.43s CPU
  
  
-     electrons    :   209.43s CPU
-     c_bands      :   209.43s CPU
-     sum_band     :     6.49s CPU
-     v_of_rho     :     0.03s CPU
-     v_h          :     0.02s CPU
+     electrons    :   336.43s CPU
+     c_bands      :   336.43s CPU
+     v_of_rho     :     0.02s CPU
+     v_h          :     0.01s CPU
      v_xc         :     0.01s CPU
  
-     c_bands      :   209.43s CPU
-     init_us_2    :     0.40s CPU (      63 calls,   0.006 s avg)
-     cegterg      :   209.14s CPU (      42 calls,   4.980 s avg)
+     c_bands      :   336.43s CPU
+     init_us_2    :     0.11s CPU (      21 calls,   0.005 s avg)
+     cegterg      :   287.06s CPU (      42 calls,   6.835 s avg)
  
-     sum_band     :     6.49s CPU
  
-     wfcrot       :    36.91s CPU (      21 calls,   1.758 s avg)
-     cegterg      :   209.14s CPU (      42 calls,   4.980 s avg)
-     h_psi        :   200.84s CPU (     622 calls,   0.323 s avg)
-     g_psi        :     1.42s CPU (     559 calls,   0.003 s avg)
-     diaghg       :     8.85s CPU (     580 calls,   0.015 s avg)
-     update       :    11.23s CPU (     559 calls,   0.020 s avg)
-     last         :     5.66s CPU (     105 calls,   0.054 s avg)
+     wfcrot       :    48.84s CPU (      21 calls,   2.326 s avg)
+     cegterg      :   287.06s CPU (      42 calls,   6.835 s avg)
+     h_psi        :   222.36s CPU (     622 calls,   0.357 s avg)
+     g_psi        :     1.61s CPU (     559 calls,   0.003 s avg)
+     overlap      :    40.90s CPU (     559 calls,   0.073 s avg)
+     diaghg       :    10.90s CPU (     580 calls,   0.019 s avg)
+     update       :    24.47s CPU (     559 calls,   0.044 s avg)
+     last         :    19.87s CPU (     105 calls,   0.189 s avg)
  
-     h_psi        :   200.84s CPU (     622 calls,   0.323 s avg)
-     init         :     0.67s CPU (     622 calls,   0.001 s avg)
-     firstfft     :    88.24s CPU (   11025 calls,   0.008 s avg)
-     secondfft    :    88.20s CPU (   11025 calls,   0.008 s avg)
-     add_vuspsi   :     6.75s CPU (     622 calls,   0.011 s avg)
+     h_psi        :   222.36s CPU (     622 calls,   0.357 s avg)
+     init         :     0.76s CPU (     622 calls,   0.001 s avg)
+     firstfft     :    88.36s CPU (   11025 calls,   0.008 s avg)
+     secondfft    :    85.06s CPU (   11025 calls,   0.008 s avg)
+     add_vuspsi   :    18.00s CPU (     622 calls,   0.029 s avg)
  
      General routines
-     ccalbec      :     5.22s CPU (     622 calls,   0.008 s avg)
+     ccalbec      :    17.87s CPU (     622 calls,   0.029 s avg)
      cft3         :     0.03s CPU (       3 calls,   0.010 s avg)
-     cft3s        :   168.71s CPU (   22764 calls,   0.007 s avg)
-     davcio       :     0.01s CPU (     105 calls,   0.000 s avg)
+     cft3s        :   159.90s CPU (   22050 calls,   0.007 s avg)
+     davcio       :     0.00s CPU (      21 calls,   0.000 s avg)
  
