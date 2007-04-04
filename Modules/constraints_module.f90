@@ -157,7 +157,7 @@ MODULE constraints_module
           SELECT CASE ( colvar_type_inp(ia) )
           CASE( 'type_coord' )
              !
-             ! ... constraint on global coordination-number, i.e. the average 
+             ! ... constraint on global coordination-number, i.e. the average
              ! ... number of atoms of type B surrounding the atoms of type A
              !
              constr_type(ia) = 1
@@ -176,7 +176,7 @@ MODULE constraints_module
              !
           CASE( 'atom_coord' )
              !
-             ! ... constraint on local coordination-number, i.e. the average 
+             ! ... constraint on local coordination-number, i.e. the average
              ! ... number of atoms of type A surrounding a specific atom
              !
              constr_type(ia) = 2
@@ -226,7 +226,7 @@ MODULE constraints_module
              !
           CASE( 'planar_angle' )
              !
-             ! ... constraint on planar angle (for the notation used here see 
+             ! ... constraint on planar angle (for the notation used here see
              ! ... Appendix C of the Allen-Tildesley book)
              !
              constr_type(ia) = 4
@@ -249,7 +249,7 @@ MODULE constraints_module
              !
           CASE( 'torsional_angle' )
              !
-             ! ... constraint on torsional angle (for the notation used here 
+             ! ... constraint on torsional angle (for the notation used here
              ! ... see Appendix C of the Allen-Tildesley book)
              !
              constr_type(ia) = 5
@@ -308,7 +308,7 @@ MODULE constraints_module
              !
           CASE( 'bennett_proj' )
              !
-             ! ... constraint on the projection onto a given direction of the 
+             ! ... constraint on the projection onto a given direction of the
              ! ... vector defined by the position of one atom minus the center
              ! ... of mass of the others
              ! ... ( Ch.H. Bennett in Diffusion in Solids, Recent Developments,
@@ -346,7 +346,7 @@ MODULE constraints_module
           SELECT CASE ( constr_type_inp(n) )
           CASE( 'type_coord' )
              !
-             ! ... constraint on global coordination-number, i.e. the average 
+             ! ... constraint on global coordination-number, i.e. the average
              ! ... number of atoms of type B surrounding the atoms of type A
              !
              constr_type(ia) = 1
@@ -365,7 +365,7 @@ MODULE constraints_module
              !
           CASE( 'atom_coord' )
              !
-             ! ... constraint on local coordination-number, i.e. the average 
+             ! ... constraint on local coordination-number, i.e. the average
              ! ... number of atoms of type A surrounding a specific atom
              !
              constr_type(ia) = 2
@@ -415,7 +415,7 @@ MODULE constraints_module
              !
           CASE( 'planar_angle' )
              !
-             ! ... constraint on planar angle (for the notation used here see 
+             ! ... constraint on planar angle (for the notation used here see
              ! ... Appendix C of the Allen-Tildesley book)
              !
              constr_type(ia) = 4
@@ -438,7 +438,7 @@ MODULE constraints_module
              !
           CASE( 'torsional_angle' )
              !
-             ! ... constraint on torsional angle (for the notation used here 
+             ! ... constraint on torsional angle (for the notation used here
              ! ... see Appendix C of the Allen-Tildesley book)
              !
              constr_type(ia) = 5
@@ -497,7 +497,7 @@ MODULE constraints_module
              !
           CASE( 'bennett_proj' )
              !
-             ! ... constraint on the projection onto a given direction of the 
+             ! ... constraint on the projection onto a given direction of the
              ! ... vector defined by the position of one atom minus the center
              ! ... of mass of the others
              ! ... ( Ch.H. Bennett in Diffusion in Solids, Recent Developments,
@@ -746,8 +746,8 @@ MODULE constraints_module
                                  if_pos, ityp, tau_units, g, dg )
        !-----------------------------------------------------------------------
        !
-       ! ... this routine computes the value of the constraint equation and 
-       ! ... the corresponding constraint gradient 
+       ! ... this routine computes the value of the constraint equation and
+       ! ... the corresponding constraint gradient
        !
        IMPLICIT NONE
        !
@@ -910,7 +910,7 @@ MODULE constraints_module
           !
        CASE( 5 )
           !
-          ! ... constraint on torsional angle (for the notation used here 
+          ! ... constraint on torsional angle (for the notation used here
           ! ... see Appendix C of the Allen-Tildesley book)
           !
           ia0 = ANINT( constr(1,idx) )
@@ -1091,14 +1091,14 @@ MODULE constraints_module
                                   force, if_pos, ityp, tau_units, dt, massconv )
        !-----------------------------------------------------------------------
        !
-       ! ... update taup (predicted positions) so that the constraint equation 
+       ! ... update taup (predicted positions) so that the constraint equation
        ! ... g=0 is satisfied, using the recursion formula:
        !
        ! ...                       g(taup)
        ! ... taup = taup - ----------------------- * dg(tau0)
        ! ...               M^-1<dg(taup)|dg(tau0)>
        !
-       ! ... in normal cases the constraint equation should be satisfied at 
+       ! ... in normal cases the constraint equation should be satisfied at
        ! ... the very first iteration.
        !
        USE ions_base, ONLY : amass
@@ -1166,7 +1166,7 @@ MODULE constraints_module
                 !
              END IF
              !
-             ! ... if  gp <> 0  find new taup and check again 
+             ! ... if  gp <> 0  find new taup and check again
              ! ... ( gp is in bohr and taup in tau_units )
              !
              DO na = 1, nat

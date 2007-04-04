@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,7 +7,7 @@
 !
 ! ... original code written by Giovanni Cantele and Paolo Cazzato; adapted to
 ! ... work in the parallel case by Carlo Sbraccia
-! ... code for the calculation of the vacuum level
+! ... code for the calculation of the vacuum level written by Carlo Sbraccia
 !
 !#define _PRINT_ON_FILE
 !
@@ -258,11 +258,11 @@ SUBROUTINE write_dipole( etot, x0, dipole_el, quadrupole_el, qq )
   aa = quadrupole
   bb = dipole(1)**2 + dipole(2)**2 + dipole(3)**2
   !
-  corr2 = ( 4.D0 / 3.D0 * pi)*( qq*aa - bb ) / alat**3
+  corr2 = ( 4.D0 / 3.D0 * pi )*( qq*aa - bb ) / alat**3
   !
   ! ... print the Makov-Payne correction
   !
-  WRITE( stdout, '(/,5X,"*********    MAKOV-PAYNE CORRECTION    ********")' )
+  WRITE( stdout, '(/,5X,"*********    MAKOV-PAYNE CORRECTION    *********")' )
   WRITE( stdout, &
          '(/5X,"Makov-Payne correction with Madelung constant = ",F8.4)' ) &
       madelung(ibrav)
@@ -305,7 +305,7 @@ SUBROUTINE vacuum_level( x0, zion )
   REAL(DP), INTENT(IN) :: x0(3)
   REAL(DP), INTENT(IN) :: zion
   !
-  INTEGER                  :: i, ir, ig
+  INTEGER                  :: i, ir, ig, first_point
   REAL(DP)                 :: r, dr, rmax, rg, phase, sinxx
   COMPLEX(DP), ALLOCATABLE :: vg(:)
   COMPLEX(DP)              :: vgig, qgig
@@ -360,7 +360,12 @@ SUBROUTINE vacuum_level( x0, zion )
      !
   END DO
   !
+  first_point = npts
+  !
 #if defined _PRINT_ON_FILE
+  !
+  first_point = 1
+  !
   IF ( ionode ) THEN
      !
      OPEN( UNIT = 123, FILE = TRIM( prefix ) // ".E_vac.dat" )
@@ -370,9 +375,10 @@ SUBROUTINE vacuum_level( x0, zion )
                   &8X,"E_vac (eV)",6X,"integrated charge")' )
      !
   END IF
+  !
 #endif
   !
-  DO ir = 1, npts
+  DO ir = first_point, npts
      !
      ! ... r is in atomic units
      !
