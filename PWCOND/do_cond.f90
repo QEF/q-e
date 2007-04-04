@@ -248,6 +248,20 @@ ELSE
   ENDIF
 ENDIF
 
+IF (lwrite_cond) then
+  call save_cond (.true.,1,efl,nrzl,nocrosl,noinsl,         &
+                  norbl,rl,rabl,betarl)
+  if(ikind.gt.0) call save_cond (.true.,2,efs,nrzs,-1,      &
+                             noinss,norbs,rs,rabs,betars)
+  if(ikind.gt.1) call save_cond (.true.,3,efr,nrzr,nocrosr,&
+                             noinsr,norbr,rr,rabr,betarr)
+  write(stdout,*) 'information needed for PWCOND has been written in file'
+  CALL stop_clock('init')
+  CALL print_clock_pwcond()
+  CALL stop_clock('PWCOND')
+  return
+endif
+
 IF (lorb.and.okvan) call errore('do_cond','lorb not working with US-PP',1)
 #ifdef __PARA
    IF (lorb) call errore('do_cond','lorb not working in parallel',1)
@@ -265,16 +279,6 @@ IF (nkpts==0) THEN
    CALL mp_bcast( xyk, ionode_id )
    CALL mp_bcast( wkpt, ionode_id )
 ENDIF
-
-
-IF (lwrite_cond) then
-  call save_cond (.true.,1,efl,nrzl,nocrosl,noinsl,         &
-                  norbl,rl,rabl,betarl)
-  if(ikind.gt.0) call save_cond (.true.,2,efs,nrzs,-1,      &
-                             noinss,norbs,rs,rabs,betars)
-  if(ikind.gt.1) call save_cond (.true.,3,efr,nrzr,nocrosr,&
-                             noinsr,norbr,rr,rabr,betarr)
-endif
 
   CALL cond_out
 

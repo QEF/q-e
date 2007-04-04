@@ -55,32 +55,44 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     allocate( taunew(4,norb) )
     allocate( tblm(4,norb) )
     allocate( cros(norb, nrz) )
-    allocate( zpseu(2, norb, norb) )
-    if (noncolin) allocate(zpseu_nc(2, norb, norb, nspin))
+    if (noncolin) then
+      allocate(zpseu_nc(2, norb, norb, nspin))
+    else
+      allocate( zpseu(2, norb, norb) )
+    endif
     if(lsr.eq.1) then
       vppot = vppotl
       z = zl
       taunew = taunewl
       tblm = tblml
       cros = crosl
-      zpseu = zpseul
-      if (noncolin) zpseu_nc = zpseul_nc 
+      if (noncolin) then 
+         zpseu_nc = zpseul_nc 
+      else
+         zpseu = zpseul
+      endif
     elseif(lsr.eq.2) then
       vppot = vppots
       z = zs
       taunew = taunews
       tblm = tblms
       cros = cross
-      zpseu = zpseus
-      if (noncolin) zpseu_nc = zpseus_nc
+      if (noncolin) then
+         zpseu_nc = zpseus_nc
+      else
+         zpseu = zpseus
+      endif
     elseif(lsr.eq.3) then
       vppot = vppotr
       z = zr
       taunew = taunewr
       tblm = tblmr
       cros = crosr
-      zpseu = zpseur
-      if (noncolin) zpseu_nc = zpseur_nc
+      if (noncolin) then
+         zpseu_nc = zpseur_nc
+      else
+         zpseu = zpseur
+      endif
     endif
     open (3,file=trim(save_file)//ext,form='formatted', &
                       status='unknown')
@@ -97,32 +109,33 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     write(3,'(120i1)') ((cros(j,i),i=1,nrz),j=1,norb)
     write(3,'(6f20.14)') ((taunew(i,j),i=1,4),j=1,norb)
 !   write zpseu
-    allocate( ind(3,2*norb*norb) )
-    allocate( c(2*norb*norb) )
-    m=0
-    do i=1, 2
-      do j=1, norb
-        do k=1, norb
-          if(abs(zpseu(i,j,k)).gt.1.d-12) then
-            m = m+1
-            ind(1,m) = i
-            ind(2,m) = j
-            ind(3,m) = k
-            c(m) = zpseu(i,j,k)
-          endif
-        enddo
-      enddo
-    enddo
-    write(3,*) m
-    write(3,'(25i5)') ((ind(i,j),i=1,3),j=1,m)
-    write(3,'(6f20.14)') (c(i),i=1,m)
-    deallocate(ind)
-    deallocate(c)
     if(noncolin) then
       write(3,'(6f20.14)') (((( DBLE(zpseu_nc(i,j,k,l)),i=1,2),     &
             j=1,norb),k=1,norb),l=1,nspin)
       write(3,'(6f20.14)') ((((AIMAG(zpseu_nc(i,j,k,l)),i=1,2),     &
             j=1,norb),k=1,norb),l=1,nspin)
+    else
+      allocate( ind(3,2*norb*norb) )
+      allocate( c(2*norb*norb) )
+      m=0
+      do i=1, 2
+        do j=1, norb
+          do k=1, norb
+            if(abs(zpseu(i,j,k)).gt.1.d-12) then
+              m = m+1
+              ind(1,m) = i
+              ind(2,m) = j
+              ind(3,m) = k
+              c(m) = zpseu(i,j,k)
+            endif
+          enddo
+        enddo
+      enddo
+      write(3,*) m
+      write(3,'(25i5)') ((ind(i,j),i=1,3),j=1,m)
+      write(3,'(6f20.14)') (c(i),i=1,m)
+      deallocate(ind)
+      deallocate(c)
     endif
     write(3,'(6f20.14)') (z(i), i=1, nrz+1)
     write(3,'(6f20.14)') (((( DBLE(vppot(i,j,k,l)),i=1,nrz),        &
@@ -207,23 +220,15 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     allocate( taunew(4,norb) )
     allocate( tblm(4,norb) )
     allocate( cros(norb, nrz) )
-    allocate( zpseu(2, norb, norb) )
-    if (noncolin) allocate(zpseu_nc(2, norb, norb, nspin))
+    if (noncolin) then 
+       allocate(zpseu_nc(2, norb, norb, nspin))
+    else
+       allocate( zpseu(2, norb, norb) )
+    endif
     read(3,'(40i3)') ((tblm(i,j),i=1,4),j=1,norb)
     read(3,'(120i1)') ((cros(j,i),i=1,nrz),j=1,norb)
     read(3,'(6f20.14)') ((taunew(i,j),i=1,4),j=1,norb)
 !   read zpseu
-    read(3,*) m
-    allocate( ind(3,m) )
-    allocate( c(m) )
-    read(3,'(25i5)') ((ind(i,j),i=1,3),j=1,m)
-    read(3,'(6f20.14)') (c(i),i=1,m)
-    zpseu = 0.d0
-    do i=1, m
-      zpseu(ind(1,i),ind(2,i),ind(3,i)) = c(i)
-    enddo
-    deallocate(ind)
-    deallocate(c)
     if(noncolin) then
       allocate ( re(2,norb,norb,nspin) )
       allocate ( im(2,norb,norb,nspin) )
@@ -234,7 +239,20 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       zpseu_nc = CMPLX(re,im)
       deallocate(re)
       deallocate(im)
+    else
+      read(3,*) m
+      allocate( ind(3,m) )
+      allocate( c(m) )
+      read(3,'(25i5)') ((ind(i,j),i=1,3),j=1,m)
+      read(3,'(6f20.14)') (c(i),i=1,m)
+      zpseu = 0.d0
+      do i=1, m
+        zpseu(ind(1,i),ind(2,i),ind(3,i)) = c(i)
+      enddo
+      deallocate(ind)
+      deallocate(c)
     endif
+!-------------
     read(3,'(6f20.14)') (z(i), i=1, nrz+1)
     allocate ( re(nrz,nrx*nry,npol,npol) )
     allocate ( im(nrz,nrx*nry,npol,npol) )
@@ -288,45 +306,63 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
       allocate( taunewl(4,norb) )
       allocate( tblml(4,norb) )
       allocate( crosl(norb, nrz) )
-      allocate( zpseul(2, norb, norb) )
-      if (noncolin) allocate(zpseul_nc(2, norb, norb, nspin))
+      if (noncolin) then 
+        allocate(zpseul_nc(2, norb, norb, nspin))
+      else
+        allocate( zpseul(2, norb, norb) )
+      endif
       vppotl = vppot
       zl = z
       taunewl = taunew
       tblml = tblm
       crosl = cros
-      zpseul = zpseu
-      if (noncolin) zpseul_nc = zpseu_nc
+      if (noncolin) then
+        zpseul_nc = zpseu_nc
+      else
+        zpseul = zpseu
+      endif
     elseif(lsr.eq.2) then
       allocate( vppots(nrz, nrx * nry, npol, npol) )
       allocate( zs(nrz+1) )
       allocate( taunews(4,norb) )
       allocate( tblms(4,norb) )
       allocate( cross(norb, nrz) )
-      allocate( zpseus(2, norb, norb) )
-      if (noncolin) allocate(zpseus_nc(2, norb, norb, nspin))
+      if (noncolin) then 
+        allocate(zpseus_nc(2, norb, norb, nspin))
+      else
+        allocate( zpseus(2, norb, norb) )
+      endif
       vppots = vppot
       zs = z
       taunews = taunew
       tblms = tblm
       cross = cros
-      zpseus = zpseu
-      if (noncolin) zpseus_nc = zpseu_nc
+      if (noncolin) then 
+        zpseus_nc = zpseu_nc
+      else
+        zpseus = zpseu
+      endif
     elseif(lsr.eq.3) then
       allocate( vppotr(nrz, nrx * nry, npol, npol) )
       allocate( zr(nrz+1) )
       allocate( taunewr(4,norb) )
       allocate( tblmr(4,norb) )
       allocate( crosr(norb, nrz) )
-      allocate( zpseur(2, norb, norb) )
-      if (noncolin) allocate(zpseur_nc(2, norb, norb, nspin))
+      if (noncolin) then 
+        allocate(zpseur_nc(2, norb, norb, nspin))
+      else
+        allocate( zpseur(2, norb, norb) )
+      endif
       vppotr = vppotr
       zr = z
       taunewr = taunew
       tblmr = tblm
       crosr = cros
-      zpseur = zpseu
-      if (noncolin) zpseur_nc = zpseu_nc
+      if (noncolin) then 
+        zpseur_nc = zpseu_nc
+      else
+        zpseur = zpseu
+      endif
     endif
   endif
 
@@ -335,8 +371,11 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
     deallocate( taunew )
     deallocate( tblm )
     deallocate( cros )
-    deallocate( zpseu )
-    if (noncolin) deallocate(zpseu_nc)
+    if (noncolin) then 
+      deallocate(zpseu_nc)
+    else
+      deallocate( zpseu )
+    endif
  
     call stop_clock('save_cond')
 
