@@ -3,16 +3,19 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2 - Mon Dec 18 10:46:55 CET 2006                          
+     Version: 3.2cvs - Mon Dec 18 10:46:55 CET 2006                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:29:40   8Feb2007               
+   This run was started on:   4:15:53   3Apr2007               
 
    Serial Build
+
+   Dumping input parameters
+
 
    Job Title:  Water Molecule
 
@@ -233,13 +236,11 @@
 
    System geometry initialization
    ------------------------------
-
-   Scaled atomic positions                                from standard input
-   Species   1 atoms =    1
-    O       0.000825     0.000825     0.000000
-   Species   2 atoms =    2
-    H       0.152708    -0.018692    -0.000008
-    H      -0.018692     0.152708     0.000017
+ 
+   Scaled positions from standard input
+   O    0.825000E-03  0.825000E-03  0.000000E+00
+   H    0.152708E+00 -0.186917E-01 -0.833333E-05
+   H   -0.186917E-01  0.152708E+00  0.166667E-04
 
    Position components with 0 are kept fixed
      ia  x  y  z 
@@ -333,7 +334,7 @@
 
   -46.65  -35.83    1.89    6.01
  
-   Allocated memory (kb) =      1922
+   Allocated memory (kb) =     27840
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -413,7 +414,7 @@
 
   -32.04  -20.07   -9.05   -3.37
  
-   Allocated memory (kb) =      1922
+   Allocated memory (kb) =     27840
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -493,7 +494,7 @@
 
   -28.01  -15.75   -9.65   -4.84
  
-   Allocated memory (kb) =      1922
+   Allocated memory (kb) =     27840
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -573,7 +574,7 @@
 
   -26.48  -14.19   -9.61   -5.59
  
-   Allocated memory (kb) =      1922
+   Allocated memory (kb) =     27840
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -653,7 +654,7 @@
 
   -25.74  -13.49   -9.48   -6.06
  
-   Allocated memory (kb) =      1922
+   Allocated memory (kb) =     27840
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -695,7 +696,7 @@
    50  0.00357    0.0    0.0   -17.08765   -17.08765   -17.08765   -17.08408  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /home/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.193 sec.
+   restart file written in    0.186 sec.
 
 
 
@@ -712,31 +713,32 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.69s CPU
-     main_loop    :    75.71s CPU (      50 calls,   1.514 s avg)
-     formf        :     1.47s CPU
-     rhoofr       :     6.50s CPU (      51 calls,   0.127 s avg)
-     vofrho       :    59.71s CPU (      51 calls,   1.171 s avg)
-     calphi       :     0.06s CPU (      51 calls,   0.001 s avg)
-     ortho        :     0.39s CPU (      51 calls,   0.008 s avg)
+     initialize   :     4.64s CPU
+     main_loop    :    73.66s CPU (      50 calls,   1.473 s avg)
+     formf        :     1.37s CPU
+     rhoofr       :     6.42s CPU (      51 calls,   0.126 s avg)
+     vofrho       :    57.36s CPU (      51 calls,   1.125 s avg)
+     dforce       :    10.84s CPU (     102 calls,   0.106 s avg)
+     calphi       :     0.07s CPU (      51 calls,   0.001 s avg)
+     ortho        :     0.44s CPU (      51 calls,   0.009 s avg)
      ortho_iter   :     0.00s CPU (      51 calls,   0.000 s avg)
-     rhoset       :     0.14s CPU (      51 calls,   0.003 s avg)
-     updatc       :     0.14s CPU (      51 calls,   0.003 s avg)
-     gram         :     0.01s CPU
+     rhoset       :     0.08s CPU (      51 calls,   0.002 s avg)
+     updatc       :     0.09s CPU (      51 calls,   0.002 s avg)
+     gram         :     0.00s CPU
      prefor       :     0.00s CPU
      strucf       :     0.00s CPU
-     nlsm1        :     0.03s CPU (      51 calls,   0.001 s avg)
+     nlsm1        :     0.04s CPU (      51 calls,   0.001 s avg)
      nlsm2        :     0.02s CPU (       6 calls,   0.003 s avg)
-     fft          :    33.81s CPU (     408 calls,   0.083 s avg)
-     fftw         :    13.90s CPU (     306 calls,   0.045 s avg)
+     fft          :    33.64s CPU (     408 calls,   0.082 s avg)
+     fftw         :    14.29s CPU (     306 calls,   0.047 s avg)
      rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m20.66s CPU time,     1m30.62s wall time
+     CP           :  1m18.53s CPU time,     1m28.00s wall time
 
  
-   This run was terminated on:   3:31:10   8Feb2007            
+   This run was terminated on:   4:17:21   3Apr2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
