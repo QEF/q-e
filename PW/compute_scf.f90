@@ -184,6 +184,10 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   startingpot_ = startingpot
   startingwfc_ = startingwfc
   !
+  ! ... here we write all the data required to restart
+  !
+  CALL punch( 'all' )
+  !
   DEALLOCATE( tauold )
   !
   CALL mp_barrier()
@@ -416,7 +420,13 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       interrupt_run = ( istat == 1 )
       !
+      ! ... early return if the run has to continue
+      !
       IF ( istat == 0 ) RETURN
+      !
+      ! ... here we write all the data required to restart
+      !
+      CALL punch( 'all' )
       !
       DEALLOCATE( tauold )
       !

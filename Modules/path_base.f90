@@ -179,7 +179,7 @@ MODULE path_base
       !
       ! ... initial path is read from file ( restart_mode == "restart" ) or
       ! ... generated from the input images ( restart_mode = "from_scratch" )
-      ! ... It is always read from file in the case of "free-energy" 
+      ! ... It is always read from file in the case of "free-energy"
       ! ... calculations
       !
       IF ( restart_mode == "restart" ) THEN
@@ -404,7 +404,7 @@ MODULE path_base
          !
          IF ( V_next > V_previous ) THEN
             !
-            rtan(:) = ( pos(:,i+1) - pos(:,i) ) * delta_V_max + & 
+            rtan(:) = ( pos(:,i+1) - pos(:,i) ) * delta_V_max + &
                       ( pos(:,i) - pos(:,i-1) ) * delta_V_min
             !
          ELSE IF ( V_next < V_previous ) THEN
@@ -429,7 +429,7 @@ MODULE path_base
     !------------------------------------------------------------------------
     SUBROUTINE elastic_constants()
       !------------------------------------------------------------------------
-      ! 
+      !
       USE path_variables, ONLY : num_of_images, Emax, Emin, &
                                  k_max, k_min, k, pes
       !
@@ -451,7 +451,7 @@ MODULE path_base
       !
       IF ( delta_E > eps32 ) THEN
          !
-         DO i = 1, num_of_images 
+         DO i = 1, num_of_images
             !
             k(i) = 0.5D0*( k_sum - k_diff * &
                            COS( pi * ( pes(i) - Emin ) / delta_E ) )
@@ -495,7 +495,7 @@ MODULE path_base
                !
             END IF
             !
-            ! ... total gradient on each image ( climbing image is used if 
+            ! ... total gradient on each image ( climbing image is used if
             ! ... required ) only the component of the pes gradient orthogonal
             ! ... to the path is used
             !
@@ -567,7 +567,7 @@ MODULE path_base
                !
             ELSE IF ( i > 1 .AND. i < num_of_images ) THEN
                !
-               ! ... projection of the pes gradients 
+               ! ... projection of the pes gradients
                !
                grad(:,i) = grad(:,i) - &
                            tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
@@ -667,7 +667,7 @@ MODULE path_base
          !
          DO i = 1, num_of_images
             !
-            ! ... the error is given by the largest component of the gradient 
+            ! ... the error is given by the largest component of the gradient
             ! ... vector ( PES + SPRINGS in the neb case )
             !
             error(i) = MAXVAL( ABS( grad(:,i) ) ) / bohr_radius_angs * autoev
@@ -925,6 +925,15 @@ MODULE path_base
       !
       optimisation: DO
          !
+         ! ... new positions are saved on file:  it has to be done here
+         ! ... because, in the event of an unexpected crash the new positions
+         ! ... would be lost. At this stage the forces and the energies are
+         ! ... not yet known (but are not necessary for restarting); the
+         ! ... restart file is written again as soon as the energies and
+         ! ... forces have been computed.
+         !
+         CALL write_restart()
+         !
          IF ( meta_ionode ) &
             WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep_path + 1
          !
@@ -968,7 +977,7 @@ MODULE path_base
          istep_path = istep_path + 1
          !
          ! ... the new tangent is computed here :
-         ! ... the improved definition of tangent requires the energies 
+         ! ... the improved definition of tangent requires the energies
          !
          IF ( .NOT. fixed_tan ) tangent(:,:) = new_tangent()
          !
@@ -1071,7 +1080,7 @@ MODULE path_base
       !
       ! ... the program checks if the convergence has been achieved
       !
-      exit_condition = ( .NOT.llangevin .AND. & 
+      exit_condition = ( .NOT.llangevin .AND. &
                          ( num_of_images == num_of_images_inp ) .AND. &
                          ( err_max <= path_thr ) )
       !

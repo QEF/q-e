@@ -62,7 +62,7 @@ MODULE path_io_routines
        !
        ionode_id = root_image
        !
-       ! ... stdout is connected to a file ( different for each image ) 
+       ! ... stdout is connected to a file ( different for each image )
        ! ... via unit 117 ( only root_image performes I/O )
        !
        IF ( me_image == root_image ) stdout = 117
@@ -82,7 +82,7 @@ MODULE path_io_routines
        IMPLICIT NONE
        !
        !
-       ! ... the original I/O node is set again 
+       ! ... the original I/O node is set again
        !
        CALL io_global_start( mpime, root )
        !
@@ -185,7 +185,7 @@ MODULE path_io_routines
           DO i = 2, num_of_images
              !
              IF ( climbing(i) ) outline = TRIM( outline ) // ' ' // &
-                                        & TRIM( int_to_char( i ) ) // ',' 
+                                        & TRIM( int_to_char( i ) ) // ','
              !
           END DO
           !
@@ -244,7 +244,7 @@ MODULE path_io_routines
              READ( UNIT = iunrestart, FMT = * ) pending_image
              READ( UNIT = iunrestart, FMT = * ) conv_elec
              !
-          ELSE   
+          ELSE
              !
              ! ... mandatory fields
              !
@@ -301,11 +301,11 @@ MODULE path_io_routines
              READ( UNIT = iunrestart, FMT = * )
              READ( UNIT = iunrestart, FMT = * ) pes(1)
              !
-             ia = 0  
+             ia = 0
              !
              if_pos = 0
              !
-             DO j = 1, dim1, 3 
+             DO j = 1, dim1, 3
                 !
                 ia = ia + 1
                 !
@@ -318,7 +318,7 @@ MODULE path_io_routines
                     grad_pes(j+2,1),               &
                     if_pos(1,ia),                  &
                     if_pos(2,ia),                  &
-                    if_pos(3,ia) 
+                    if_pos(3,ia)
                 !
                 grad_pes(:,1) = grad_pes(:,1) * &
                                 DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
@@ -330,7 +330,7 @@ MODULE path_io_routines
                 READ( UNIT = iunrestart, FMT = * )
                 READ( UNIT = iunrestart, FMT = * ) pes(i)
                 !
-                DO j = 1, dim1, 3 
+                DO j = 1, dim1, 3
                    !
                    READ( UNIT = iunrestart, FMT = * ) &
                        pos(j+0,i),                    &
@@ -382,7 +382,7 @@ MODULE path_io_routines
                       DO j = 1, dim1, 3
                          !
                          READ( UNIT = iunrestart, FMT = * ) &
-                             posold(j+0,i),                    & 
+                             posold(j+0,i),                    &
                              posold(j+1,i),                    &
                              posold(j+2,i)
                          !
@@ -461,8 +461,8 @@ MODULE path_io_routines
      SUBROUTINE write_restart()
        !-----------------------------------------------------------------------
        !
-       USE input_parameters, ONLY : if_pos       
-       USE io_files,         ONLY : iunrestart, path_file, tmp_dir 
+       USE input_parameters, ONLY : if_pos
+       USE io_files,         ONLY : iunrestart, path_file, tmp_dir
        USE control_flags,    ONLY : conv_elec, lcoarsegrained
        USE path_variables,   ONLY : istep_path, nstep_path, pending_image, &
                                     dim1, num_of_images, pos, pes, grad_pes, &
@@ -489,12 +489,12 @@ MODULE path_io_routines
           IF (  lquick_min ) THEN
              !
              CALL write_quick_min_fields( iunrestart )
-             ! 
+             !
           END IF
           !
           CLOSE( iunrestart )
           !
-          ! ... then, if pending_image == 0, it is also written on the 
+          ! ... then, if pending_image == 0, it is also written on the
           ! ... scratch direcoty (a backup copy at each iteration)
           !
           IF ( pending_image == 0 ) THEN
@@ -510,10 +510,10 @@ MODULE path_io_routines
              IF (  lquick_min ) THEN
                 !
                 CALL write_quick_min_fields( iunrestart )
-                ! 
+                !
              END IF
              !
-             CLOSE( iunrestart )          
+             CLOSE( iunrestart )
              !
           END IF
           !
@@ -578,7 +578,7 @@ MODULE path_io_routines
                            grad_pes(j+2,i),                         &
                            if_pos(1,ia),                            &
                            if_pos(2,ia),                            &
-                           if_pos(3,ia) 
+                           if_pos(3,ia)
                        !
                     ELSE
                        !
@@ -587,7 +587,7 @@ MODULE path_io_routines
                            pos(j+1,i),                               &
                            pos(j+2,i),                               &
                            grad_pes(j+0,i),                          &
-                           grad_pes(j+1,i),                          & 
+                           grad_pes(j+1,i),                          &
                            grad_pes(j+2,i)
                        !
                     END IF
@@ -633,7 +633,7 @@ MODULE path_io_routines
                  DO j = 1, dim1, 3
                     !
                     WRITE( UNIT = in_unit, FMT = quick_min ) &
-                        posold(j+0,i),                          & 
+                        posold(j+0,i),                          &
                         posold(j+1,i),                          &
                         posold(j+2,i)
                     !
@@ -769,7 +769,7 @@ MODULE path_io_routines
                  pos(3*ia-1,i) * bohr_radius_angs, &
                  pos(3*ia-0,i) * bohr_radius_angs
              !
-          END DO   
+          END DO
           !
        END DO
        !
@@ -786,7 +786,7 @@ MODULE path_io_routines
        WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
            at(1,1) * alat * bohr_radius_angs, &
            at(2,1) * alat * bohr_radius_angs, &
-           at(3,1) * alat * bohr_radius_angs  
+           at(3,1) * alat * bohr_radius_angs
        WRITE( UNIT = iunaxsf, FMT = '(3F14.10)' ) &
            at(1,2) * alat * bohr_radius_angs, &
            at(2,2) * alat * bohr_radius_angs, &
@@ -812,7 +812,7 @@ MODULE path_io_routines
                  - grad_pes(3*ia-1,i) / bohr_radius_angs, &
                  - grad_pes(3*ia-0,i) / bohr_radius_angs
              !
-          END DO   
+          END DO
           !
        END DO
        !
@@ -838,7 +838,7 @@ MODULE path_io_routines
        REAL (DP) :: inter_image_distance
        !
        !
-       IF ( .NOT. meta_ionode ) RETURN 
+       IF ( .NOT. meta_ionode ) RETURN
        !
        WRITE( UNIT = iunpath, &
               FMT = '(/,5X,"activation energy (->) = ",F10.6," eV")' ) &
@@ -900,7 +900,7 @@ MODULE path_io_routines
            & TRIM( prefix ) // '.newimage' , STATUS = 'UNKNOWN' )
        !
        WRITE( iunnewimage, * ) fii + nimage
-       ! 
+       !
        CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
        !
        RETURN
@@ -912,8 +912,8 @@ MODULE path_io_routines
        !-----------------------------------------------------------------------
        !
        ! ... this subroutine is used to get the new image to work on
-       ! ... the "prefix.LOCK" file is needed to avoid (when present) that 
-       ! ... other jobs try to read/write on file "prefix.newimage" 
+       ! ... the "prefix.LOCK" file is needed to avoid (when present) that
+       ! ... other jobs try to read/write on file "prefix.newimage"
        !
        USE io_files,       ONLY : iunnewimage, iunlock, prefix
        USE io_global,      ONLY : ionode
@@ -960,7 +960,7 @@ MODULE path_io_routines
                        & TRIM( prefix ) // '.newimage' , STATUS = 'NEW' )
                    !
                    WRITE( iunnewimage, * ) image + 1
-                   ! 
+                   !
                    CLOSE( UNIT = iunnewimage, STATUS = 'KEEP' )
                    !
                    EXIT open_loop
