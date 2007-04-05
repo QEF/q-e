@@ -1113,7 +1113,6 @@ MODULE input_parameters
         LOGICAL :: use_masses     = .FALSE.
         LOGICAL :: use_freezing   = .FALSE.
         LOGICAL :: fixed_tan      = .FALSE.
-        LOGICAL :: write_save     = .FALSE.
         !
         CHARACTER(LEN=80) :: opt_scheme = 'quick-min'
           ! minimization_scheme = 'quick-min' | 'damped-dyn' |
@@ -1220,8 +1219,8 @@ MODULE input_parameters
                           refold_pos, upscale, delta_t, pot_extrapolation,     &
                           wfc_extrapolation, nraise, remove_rigid_rot,         &
                           num_of_images, CI_scheme, opt_scheme, use_masses,    &
-                          first_last_opt, ds, k_max, k_min, write_save,        &
-                          temp_req, path_thr, fixed_tan, use_freezing,         &
+                          first_last_opt, ds, k_max, k_min, temp_req,          &
+                          path_thr, fixed_tan, use_freezing,                   &
                           trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
                           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &

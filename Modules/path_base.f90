@@ -891,7 +891,6 @@ MODULE path_base
                                    err_max, pes, climbing, CI_scheme,  &
                                    Emax_index, fixed_tan, tangent
       USE path_io_routines, ONLY : write_restart, write_dat_files, write_output
-      USE check_stop,       ONLY : check_stop_now
       USE path_formats,     ONLY : scf_iter_fmt
       !
       USE path_reparametrisation
@@ -936,19 +935,6 @@ MODULE path_base
          !
          IF ( meta_ionode ) &
             WRITE( UNIT = iunpath, FMT = scf_iter_fmt ) istep_path + 1
-         !
-         IF ( check_stop_now() ) THEN
-            !
-            ! ... the programs checks if the user has required a soft
-            ! ... exit or if if maximum CPU time has been exceeded
-            !
-            CALL write_restart()
-            !
-            conv_path = .FALSE.
-            !
-            RETURN
-            !
-         END IF
          !
          ! ... energies and gradients acting on each image of the path (in real
          ! ... space) are computed calling a driver for the scf calculations

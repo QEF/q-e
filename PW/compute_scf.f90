@@ -36,7 +36,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
                                exit_file, iunexit, delete_if_present
   USE path_formats,     ONLY : scf_fmt, scf_fmt_para
   USE path_variables,   ONLY : pos, pes, grad_pes, dim1, pending_image, &
-                               istep_path, frozen, write_save, num_of_images, &
+                               istep_path, frozen, num_of_images, &
                                first_last_opt
   USE io_global,        ONLY : stdout, ionode, ionode_id, meta_ionode
   USE mp_global,        ONLY : inter_image_comm, intra_image_comm, &
@@ -59,7 +59,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
    ! previous positions of atoms (needed for extrapolation)
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
-  REAL(DP),         EXTERNAL :: get_clock
   !
   !
   fii_ = fii
@@ -111,7 +110,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
            !
            CALL do_scf( 1, istat )
            !
-           IF ( interrupt_run( istat ) ) RETURN
+           IF ( istat /= 0 ) GOTO 1
            !
         END IF
         !
@@ -124,7 +123,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
            !
            CALL do_scf( num_of_images, istat )
            !
-           IF ( interrupt_run( istat ) ) RETURN
+           IF ( istat /= 0 ) GOTO 1
            !
         END IF
         !
@@ -149,22 +148,9 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
      pending_image = image
      !
-     IF ( check_stop_now( iunpath ) ) THEN
-        !
-        istat = 1
-        !
-        ! ... in case of parallelization on images a stop signal
-        ! ... is sent via the "EXIT" file
-        !
-        IF ( nimage > 1 ) CALL stop_other_images()
-        !
-        EXIT scf_loop
-        !
-     END IF
-     !
      CALL do_scf( image, istat )
      !
-     IF ( interrupt_run( istat ) ) RETURN
+     IF ( istat /= 0 ) GOTO 1
      !
      ! ... the new image is obtained (by ionode only)
      !
@@ -174,8 +160,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
   END DO scf_loop
   !
-  tmp_dir = tmp_dir_saved
-  !
   ! ... after the first call to compute_scf the input values of startingpot
   ! ... and startingwfc are both set to 'file'
   !
@@ -184,13 +168,11 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   startingpot_ = startingpot
   startingwfc_ = startingwfc
   !
-  ! ... here we write all the data required to restart
+  ! ... finalization of the job
   !
-  CALL punch( 'all' )
+1 CALL mp_barrier()
   !
   DEALLOCATE( tauold )
-  !
-  CALL mp_barrier()
   !
   IF ( nimage > 1 ) THEN
      !
@@ -222,7 +204,29 @@ SUBROUTINE compute_scf( fii, lii, stat  )
         !
      END IF
      !
+     IF ( meta_ionode ) THEN
+        !
+        ! ... some image didn't converge:  extrapolation is no longer
+        ! ...                              possible, files are removed
+        !
+        WRITE( UNIT = iunpath, &
+               FMT = '(/,5X,"cleaning-up extrapolation files"/)' )
+        !
+        DO image = pending_image, lii
+           !
+           tmp_dir = TRIM( tmp_dir_saved ) // TRIM( prefix ) // "_" // &
+                     TRIM( int_to_char( image ) ) // "/"
+           !
+           CALL delete_if_present( TRIM( tmp_dir ) // &
+                                   TRIM( prefix ) // '.update' )
+           !
+        END DO
+        !
+     END IF
+     !
   END IF
+  !
+  tmp_dir = tmp_dir_saved
   !
   RETURN
   !
@@ -240,6 +244,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       INTEGER, INTENT(IN)    :: image
       INTEGER, INTENT(INOUT) :: istat
+      !
+      REAL(DP), EXTERNAL :: get_clock
       !
       ! ... self-consistency ( for non-frozen images only )
       !
@@ -314,7 +320,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       CALL mp_bcast( history, ionode_id, intra_image_comm )
       CALL mp_bcast( tauold,  ionode_id, intra_image_comm )
       !
-      IF ( conv_elec .AND. history > 0 ) THEN
+      IF ( history > 0 ) THEN
          !
          ! ... potential and wavefunctions are extrapolated only if
          ! ... we are starting a new self-consistency ( scf on the
@@ -338,14 +344,17 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       !
       CALL electrons()
       !
-      ! ... scf convergence is checked
+      CALL punch( 'all' )
+      !
+      ! ... scf convergence is checked here
       !
       IF ( .NOT.conv_elec ) THEN
          !
          istat = 1
          !
          WRITE( UNIT = iunpath, &
-                FMT = '(/,5X,"WARNING :  scf convergence NOT achieved",/)' )
+                FMT = '(/,5X,"WARNING :  scf convergence ", &
+                       &     "NOT achieved on image ",I3)' ) image
          !
          ! ... in case of parallelization on images a stop signal
          ! ... is sent via the "EXIT" file
@@ -388,10 +397,6 @@ SUBROUTINE compute_scf( fii, lii, stat  )
          !
       END IF
       !
-      ! ... the save file is written ( if required )
-      !
-      IF ( write_save ) CALL punch( 'all' )
-      !
       ! ... input values are restored at the end of each iteration ( they are
       ! ... modified by init_run )
       !
@@ -408,54 +413,5 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       RETURN
       !
     END SUBROUTINE do_scf
-    !
-    !-----------------------------------------------------------------------
-    FUNCTION interrupt_run( istat )
-      !-----------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      !
-      INTEGER, INTENT(INOUT) :: istat
-      LOGICAL                :: interrupt_run
-      !
-      interrupt_run = ( istat == 1 )
-      !
-      ! ... early return if the run has to continue
-      !
-      IF ( istat == 0 ) RETURN
-      !
-      ! ... here we write all the data required to restart
-      !
-      CALL punch( 'all' )
-      !
-      DEALLOCATE( tauold )
-      !
-      CALL mp_barrier()
-      !
-      IF ( nimage > 1 ) THEN
-         !
-         ! ... pes and grad_pes are communicated among "image" pools
-         !
-         CALL mp_sum( pes(fii:lii),        inter_image_comm )
-         CALL mp_sum( grad_pes(:,fii:lii), inter_image_comm )
-         CALL mp_sum( istat,               inter_image_comm )
-         !
-      END IF
-      !
-      ! ... global status is computed here
-      !
-      stat = .FALSE.
-      !
-      IF ( nimage > 1 ) THEN
-         !
-         CALL mp_min( pending_image, inter_image_comm )
-         !
-         IF ( meta_ionode ) CALL delete_if_present( exit_file )
-         !
-      END IF
-      !
-      RETURN
-      !
-    END FUNCTION interrupt_run
     !
 END SUBROUTINE compute_scf

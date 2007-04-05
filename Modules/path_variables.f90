@@ -29,8 +29,6 @@ MODULE path_variables
                                   !           are optimised too.
        use_masses,               &! if .TRUE. mass weighted coordinates are
                                   !           used
-       write_save,               &! if .TRUE. the save file is written for each
-                                  !           image
        fixed_tan,                &! if. TRUE. the projection is done using the
                                   !           tangent of the average path
        use_freezing,             &! if .TRUE. images are optimised according
@@ -41,7 +39,7 @@ MODULE path_variables
   INTEGER :: &
        dim1,                      &! dimension of the configuration space
        num_of_images,            &! number of images
-       deg_of_freedom,           &! number of degrees of freedom 
+       deg_of_freedom,           &! number of degrees of freedom
                                   ! ( dim1 - #( of fixed coordinates ) )
        pending_image              ! last image for which scf has not been
                                   ! achieved
@@ -71,7 +69,7 @@ MODULE path_variables
        grad_pes(:,:),            &! gradients acting on the path
        tangent(:,:)               ! tangent to the path
   LOGICAL, ALLOCATABLE :: &
-       frozen(:)                  ! .TRUE. if the image or mode has not 
+       frozen(:)                  ! .TRUE. if the image or mode has not
                                   !        to be optimized
   !
   ! ... "neb specific" variables :

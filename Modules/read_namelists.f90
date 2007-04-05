@@ -390,7 +390,6 @@ MODULE read_namelists_module
        num_of_images  = 0
        first_last_opt = .FALSE.
        use_masses     = .FALSE.
-       write_save     = .FALSE.
        use_freezing   = .FALSE.
        opt_scheme     = 'quick-min'
        temp_req       = 0.D0
@@ -908,7 +907,6 @@ MODULE read_namelists_module
        CALL mp_bcast( use_masses,         ionode_id )
        CALL mp_bcast( use_freezing,       ionode_id )
        CALL mp_bcast( fixed_tan,          ionode_id )
-       CALL mp_bcast( write_save,         ionode_id )
        CALL mp_bcast( CI_scheme,          ionode_id )
        CALL mp_bcast( opt_scheme,         ionode_id )
        CALL mp_bcast( temp_req,           ionode_id )

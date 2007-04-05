@@ -148,7 +148,6 @@ SUBROUTINE iosys()
   USE path_variables, ONLY : nstep_path, lsteep_des, lquick_min, lbroyden, &
                              llangevin, &
                              ds_              => ds, &
-                             write_save_      => write_save, &
                              use_masses_      => use_masses, &
                              CI_scheme_       => CI_scheme, &
                              fixed_tan_       => fixed_tan, &
@@ -221,7 +220,7 @@ SUBROUTINE iosys()
                                pot_extrapolation,  wfc_extrapolation,          &
                                num_of_images, path_thr, CI_scheme, opt_scheme, &
                                use_masses, first_last_opt, temp_req, k_max,    &
-                               k_min, ds, use_freezing, fixed_tan, write_save, &
+                               k_min, ds, use_freezing, fixed_tan,             &
                                w_1, w_2, trust_radius_max, trust_radius_min,   &
                                trust_radius_ini, bfgs_ndim
   !
@@ -1228,7 +1227,6 @@ SUBROUTINE iosys()
   num_of_images_  = num_of_images
   first_last_opt_ = first_last_opt
   use_masses_     = use_masses
-  write_save_     = write_save
   use_freezing_   = use_freezing
   temp_req_       = temp_req
   path_thr_       = path_thr

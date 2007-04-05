@@ -392,7 +392,7 @@ MODULE read_cards_module
      !    O     0.0099    0.0099    0.0000  0 0 0
      !    H     1.8325   -0.2243   -0.0001  1 1 1
      !    H    -0.2243    1.8325    0.0002  1 1 1
-     !  
+     !
      ! Where:
      !
      !   units_option == crystal   position are given in scaled units
@@ -504,7 +504,7 @@ MODULE read_cards_module
                              'end of file reading atomic positions (path)', 1 )
              !
              IF ( matches( "first_image", input_line ) ) THEN
-                !                
+                !
                 input_images = 1
                 !
                 CALL path_read_images( input_images )
@@ -514,9 +514,9 @@ MODULE read_cards_module
                 CALL errore( 'read_cards', &
                              'first_image missing in ATOMIC_POSITION', 1 )
                 !
-             END IF      
+             END IF
              !
-             read_conf_loop: DO 
+             read_conf_loop: DO
                 !
                 CALL read_line( input_line, end_of_file = tend )
                 !
@@ -524,7 +524,7 @@ MODULE read_cards_module
                    CALL errore( 'read_cards', 'end of file reading ' // &
                               & 'atomic positions (path)', input_images + 1 )
                 !
-                input_images = input_images + 1             
+                input_images = input_images + 1
                 !
                 IF ( input_images > num_of_images ) &
                    CALL errore( 'read_cards', &
@@ -572,11 +572,11 @@ MODULE read_cards_module
                             'ATOMIC_POSITIONS with sic, 8 columns required', 1 )
              !
              IF ( nfield == 4 ) THEN
-                !     
+                !
                 READ(input_line,*) lb_pos, ( rd_pos(k,ia), k = 1, 3 )
                 !
              ELSE IF ( nfield == 7 ) THEN
-                !     
+                !
                 READ(input_line,*) lb_pos, rd_pos(1,ia), &
                                            rd_pos(2,ia), &
                                            rd_pos(3,ia), &
@@ -598,7 +598,7 @@ MODULE read_cards_module
                 !
                 CALL errore( 'read_cards', 'wrong number of columns' // &
                            & 'in ATOMIC_POSITIONS', sp_pos(ia) )
-                !           
+                !
              END IF
              !
              lb_pos = ADJUSTL( lb_pos )
@@ -618,7 +618,7 @@ MODULE read_cards_module
                 !
                 CALL errore( 'read_cards', &
                            & 'wrong index in ATOMIC_POSITIONS', ia )
-                !           
+                !
              END IF
              !
              is = sp_pos(ia)
@@ -627,7 +627,7 @@ MODULE read_cards_module
              !
           END DO
           !
-       END IF      
+       END IF
        !
        tapos = .TRUE.
        tread = .TRUE.
@@ -669,7 +669,7 @@ MODULE read_cards_module
                     !
                     CALL errore( 'read_cards', &
                                & 'wrong number of columns in ' // &
-                               & 'ATOMIC_POSITIONS', sp_pos(ia) )                    
+                               & 'ATOMIC_POSITIONS', sp_pos(ia) )
                     !
                  END IF
                  !
@@ -685,7 +685,7 @@ MODULE read_cards_module
                  CALL errore( 'read_cards', &
                             & 'wrong number of columns in ' // &
                             & 'ATOMIC_POSITIONS', sp_pos(ia) )
-                 !           
+                 !
               END IF
               !
               IF ( image == 1 ) THEN
@@ -705,17 +705,17 @@ MODULE read_cards_module
                  END DO match_label_path
                  !
                  IF ( ( sp_pos(ia) < 1 ) .OR. ( sp_pos(ia) > ntyp ) ) THEN
-                    !     
+                    !
                     CALL errore( 'read_cards', &
                                  'wrong index in ATOMIC_POSITIONS', ia )
-                    !    
+                    !
                  END IF
                  !
                  is = sp_pos(ia)
                  !
                  na_inp( is ) = na_inp( is ) + 1
                  !
-              END IF     
+              END IF
               !
            END DO
            !

@@ -203,7 +203,7 @@ MODULE path_io_routines
      SUBROUTINE read_restart()
        !-----------------------------------------------------------------------
        !
-       USE control_flags,          ONLY : conv_elec, lsmd, lcoarsegrained
+       USE control_flags,          ONLY : lsmd, lcoarsegrained
        USE io_files,               ONLY : iunpath, iunrestart, path_file
        USE input_parameters,       ONLY : if_pos
        USE path_variables,         ONLY : nim => num_of_images
@@ -242,7 +242,6 @@ MODULE path_io_routines
              READ( UNIT = iunrestart, FMT = * ) istep_path
              READ( UNIT = iunrestart, FMT = * ) nstep_path
              READ( UNIT = iunrestart, FMT = * ) pending_image
-             READ( UNIT = iunrestart, FMT = * ) conv_elec
              !
           ELSE
              !
@@ -432,10 +431,9 @@ MODULE path_io_routines
        !
        ! ... broadcast to all nodes
        !
-       CALL mp_bcast( istep_path,      meta_ionode_id )
-       CALL mp_bcast( nstep_path,      meta_ionode_id )
+       CALL mp_bcast( istep_path,    meta_ionode_id )
+       CALL mp_bcast( nstep_path,    meta_ionode_id )
        CALL mp_bcast( pending_image, meta_ionode_id )
-       CALL mp_bcast( conv_elec,       meta_ionode_id )
        !
        CALL mp_bcast( pos,      meta_ionode_id )
        CALL mp_bcast( if_pos,   meta_ionode_id )
@@ -535,7 +533,6 @@ MODULE path_io_routines
            WRITE( UNIT = in_unit, FMT = '(I8)' ) istep_path
            WRITE( UNIT = in_unit, FMT = '(I8)' ) nstep_path
            WRITE( UNIT = in_unit, FMT = '(I8)' ) pending_image
-           WRITE( UNIT = in_unit, FMT = '(L1)' ) conv_elec
            !
            WRITE( UNIT = in_unit, FMT = '("NUMBER OF IMAGES")' )
            !

@@ -842,10 +842,6 @@ use_freezing   LOGICAL ( default = .FALSE. )
                only those images with an error larger than half of the largest
                are optimised. The other images are kept frozen.
 
-write_save     LOGICAL ( default = .FALSE. )
-               used to write the prefix.save file for each image ( needed for
-               post-processing )
-
 !
 ! ... keywords used only in meta-dynamics calculations ( see also the card
 ! ... COLLECTIVE_VARS )
