@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2006 Quantum-ESPRESSO group
+! Copyright (C) 2002-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -400,14 +400,12 @@ SUBROUTINE compute_scf( fii, lii, stat  )
       ! ... input values are restored at the end of each iteration ( they are
       ! ... modified by init_run )
       !
-      nkstot_      = nkstot
       startingpot_ = startingpot
       startingwfc_ = startingwfc
       !
       ethr = diago_thr_init
       !
       CALL close_files()
-      !
       CALL reset_k_points()
       !
       RETURN

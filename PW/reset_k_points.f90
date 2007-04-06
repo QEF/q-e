@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,13 +18,15 @@ SUBROUTINE reset_k_points()
                                 k2_    => k2,  &
                                 k3_    => k3
   USE klist,             ONLY : lxkcry, &
-                                xk_    => xk, &
-                                wk_    => wk
+                                xk_     => xk, &
+                                wk_     => wk, &
+                                nkstot_ => nkstot
   USE input_parameters,  ONLY : k_points, xk, wk, nk1, nk2, nk3, &
                                 k1, k2, k3, nkstot
   !
   IMPLICIT NONE
   !
+  nkstot_ = nkstot
   ! 
   IF ( k_points == 'automatic' ) THEN
     !
