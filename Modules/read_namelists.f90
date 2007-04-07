@@ -1881,10 +1881,15 @@ MODULE read_namelists_module
        CALL cell_bcast()
        CALL cell_checkin( prog )
        !
+       ios = 0
        IF( ionode ) THEN
           if (tabps) then
              READ( 5, press_ai, iostat = ios )
           end if
+       END IF
+       IF( ios /= 0 ) THEN
+          CALL errore( ' read_namelists ', &
+                     & ' reading namelist press_ai ', ABS(ios) )
        END IF
        !
        CALL press_ai_bcast()
