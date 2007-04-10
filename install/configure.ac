@@ -344,7 +344,7 @@ have_cpp=1
 xlf_flags=0
 
 case "$arch:$f90" in
-ia64:ifort* | amd64:ifort* )
+ia32:ifort* | ia64:ifort* | amd64:ifort* | mac686:ifort*  )
 	try_fflags="-O2 -assume byterecl"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0 -assume byterecl"
@@ -353,7 +353,7 @@ ia64:ifort* | amd64:ifort* )
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
 	;;
-ia64:ifc* )
+ia32:ifc* | ia64:ifc* | amd64:ifc*)
 	try_fflags="-Vaxlib -O2"
 	try_f90flags="\$(FFLAGS) -nomodule"
 	try_fflags_noopt="-O0"
@@ -361,43 +361,6 @@ ia64:ifc* )
 	try_ldflags_static="-static"
 	try_dflags="$try_dflags -D__INTEL"
 	pre_fdflags="-fpp "
-	;;
-ia64:pgf* | amd64:pgf* )
-	try_fflags="-fast -r8"
-	try_f90flags="\$(FFLAGS)"
-	try_fflags_noopt="-O0"
-	try_ldflags=""
-	try_ldflags_static="-Bstatic"
-	try_dflags="$try_dflags -D__PGI"
-	have_cpp=0
-	;;
-ia64:path* | amd64:path* )
-	try_fflags="-march=auto -O2"
-	try_f90flags="\$(FFLAGS)"
-	try_fflags_noopt="-O0"
-	try_ldflags=""
-	try_ldflags_static="-static"
-	try_dflags="$try_dflags -D__EKO"
-	have_cpp=0
-	;;
-ia32:ifort* )
-        try_fflags="-O2 -tpp6 -assume byterecl"
-	try_f90flags="\$(FFLAGS) -nomodule"
-	try_fflags_noopt="-O0 -assume byterecl"
-	try_ldflags=""
-	try_ldflags_static="-static"
-	try_dflags="$try_dflags -D__INTEL"
-	pre_fdflags="-fpp "
-	;;
-ia32:ifc* )
-        try_fflags="-Vaxlib -O2 -tpp6"
-	try_f90flags="\$(FFLAGS) -nomodule"
-	try_fflags_noopt="-O0"
-	try_ldflags="-Vaxlib"
-	try_ldflags_static="-static"
-	try_dflags="$try_dflags -D__INTEL"
-	pre_fdflags="-fpp "
-
 	if test `echo $version | sed 's/\..*//'` -lt 7
 	then
 		# old versions of ifc require this stuff
@@ -408,7 +371,7 @@ ia32:ifc* )
                 fi
 	fi
 	;;
-ia32:pgf* )
+ia32:pgf* | ia64:pgf* | amd64:pgf* )
 	try_fflags="-fast -r8"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"
@@ -417,7 +380,7 @@ ia32:pgf* )
 	try_dflags="$try_dflags -D__PGI"
 	have_cpp=0
 	;;
-ia32:path* )
+ia32:path* | ia64:path* | amd64:path* )
 	try_fflags="-march=auto -O2"
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0"

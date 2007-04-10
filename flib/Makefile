@@ -76,6 +76,6 @@ ptools.a : $(POBJS)
 	$(RANLIB) $@
 
 clean :
-	- /bin/rm -f *.a *.o *.mod *.i *.F90 core* work.pc
+	- /bin/rm -f *.a *.o *.mod *.i *.F90 core* *.L
 
 include make.depend

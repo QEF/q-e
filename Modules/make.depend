@@ -126,7 +126,6 @@ parser.o : kind.o
 parser.o : mp.o
 parser.o : mp_global.o
 path_base.o : basic_algebra_routines.o
-path_base.o : check_stop.o
 path_base.o : constants.o
 path_base.o : constraints_module.o
 path_base.o : control_flags.o

@@ -47,6 +47,7 @@ cg_sub.o : ions_positions.o
 cg_sub.o : mainvar.o
 cg_sub.o : modules.o
 cg_sub.o : ortho_base.o
+cglib.o : ../Modules/cell_base.o
 cglib.o : ../Modules/constants.o
 cglib.o : ../Modules/control_flags.o
 cglib.o : ../Modules/electrons_base.o
