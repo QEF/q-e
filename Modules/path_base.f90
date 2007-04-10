@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003-2006 Quantum-ESPRESSO group
+! Copyright (C) 2003-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,8 +11,20 @@
 MODULE path_base
   !---------------------------------------------------------------------------
   !
-  ! ... This module contains all subroutines and functions needed for
+  ! ... This module contains most of the subroutines and functions needed by
   ! ... the implementation of "NEB" and "SMD" methods into Quantum-ESPRESSO
+  !
+  ! ... Other relevant files are:
+  !
+  ! ... Modules/path_variables.f90
+  ! ... Modules/path_io_routines.f90
+  ! ... Modules/path_opt_routines.f90
+  ! ... Modules/path_reparametrisation.f90
+  ! ... Modules/path_formats.f90
+  ! ... PW/compute_scf.f90
+  ! ... PW/compute_fes_grads.f90
+  ! ... CPV/compute_scf.f90
+  ! ... CPV/compute_fes_grads.f90
   !
   ! ... The code is based on the NEB algorithm described in :
   !
@@ -20,11 +32,11 @@ MODULE path_base
   ! ...     J.Chem.Phys., 113, 9901, (2000)
   ! ...  2) G. Henkelman, and H. Jonsson; J.Chem.Phys., 113, 9978, (2000)
   !
-  ! ... More details about the implementation can be found in :
+  ! ... More details about the implementation can be found at
   !
-  ! ...  http://www.sissa.it/cm/thesis/2005/sbraccia.pdf
+  ! ...    http://www.sissa.it/cm/thesis/2005/sbraccia.pdf
   !
-  ! ... Written by Carlo Sbraccia ( 2003-2006 )
+  ! ... Code written and maintained by Carlo Sbraccia ( 2003-2007 )
   !
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps32, pi, autoev, bohr_radius_angs, eV_to_kelvin
@@ -69,7 +81,6 @@ MODULE path_base
       !
       INTEGER :: i, fii, lii
       LOGICAL :: file_exists
-      !
       !
       ! ... output files are set
       !
@@ -219,6 +230,12 @@ MODULE path_base
          END IF
          !
          IF ( nstep > nstep_path ) nstep_path = nstep
+         !
+         ! ... in case first_last_opt has been set to true, reset the frozen
+         ! ... array to false (all the images have to be optimized, at least
+         ! ... on the first iteration)
+         !
+         IF ( first_last_opt ) frozen = .FALSE.
          !
          ! ... path length is computed here
          !

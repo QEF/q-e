@@ -56,7 +56,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   CHARACTER (LEN=256)   :: tmp_dir_saved
   LOGICAL               :: file_exists, opnd
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-   ! previous positions of atoms (needed for extrapolation)
+   ! previous positions of atoms (needed by extrapolation)
   !
   CHARACTER(LEN=6), EXTERNAL :: int_to_char
   !
@@ -96,7 +96,7 @@ SUBROUTINE compute_scf( fii, lii, stat  )
      !
   END IF
   !
-  ! ... all processes are syncronized (needed to have an ordered output)
+  ! ... all processes are syncronized (needed to have a readable output)
   !
   CALL mp_barrier()
   !
@@ -168,7 +168,8 @@ SUBROUTINE compute_scf( fii, lii, stat  )
   startingpot_ = startingpot
   startingwfc_ = startingwfc
   !
-  ! ... finalization of the job
+  ! ... finalization of the job (this point is also reached in case of error
+  ! ... condition)
   !
 1 CALL mp_barrier()
   !
