@@ -195,7 +195,7 @@ SUBROUTINE new_ns()
         DO is = 1, nspin  
            DO m1 = 1, 2 * Hubbard_l(nt) + 1  
               DO m2 = m1, 2 * Hubbard_l(nt) + 1  
-                 psum = ABS ( nsnew(m1,m2,is,na) - nsnew(m1,m2,is,na) )  
+                 psum = ABS ( nsnew(m1,m2,is,na) - nsnew(m2,m1,is,na) )  
                  IF (psum.GT.1.d-10) THEN  
                     WRITE( stdout, * ) na, is, m1, m2  
                     WRITE( stdout, * ) nsnew (m1, m2, is, na)  
