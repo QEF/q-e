@@ -184,17 +184,18 @@ module ld1inc
   !
   real(DP) :: &
        etot,       &    ! total energy
-       etot0,      &    ! save the total energy
+       etot0,      &    ! saved value of the total energy
        ekin,       &    ! kinetic energy
        encl,       &    ! nuclear Coulomb energy
        ehrt,       &    ! Hartree energy
-       ecxc,       &    ! exchange energy
+       ecxc,       &    ! exchange-correlation energy
+       ecc,        &    ! core-only contribution to the energy
        evxt,       &    ! external field energy 
        epseu,      &    ! pseudopotential energy
        dhrsic,     &    ! Hartree sic energy
        dxcsic,     &    ! exchange sic energy
        etots,      &    ! total pseudopotential energy
-       etots0           ! save the total pseudopotential energy
+       etots0           ! saved value of the total pseudopotential energy
   !
   !  variable for nlcc
   !

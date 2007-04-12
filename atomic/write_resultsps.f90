@@ -82,6 +82,8 @@ subroutine write_resultsps
 1271 format (5x,'Ehrt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
   write(6,1281) ecxc, ecxc*0.5_dp, ecxc*13.6058_dp
 1281 format (5x,'Ecxc =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
+  if (nlcc) write(6,1282) ecc, ecc*0.5_dp, ecc*13.6058_dp
+1282 format (5x,'(Ecc =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV)')
   write(6,1291) evxt, evxt*0.5_dp, evxt*13.6058_dp
 1291 format(5x,'Evxt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
   write(6,1292) epseu, epseu*0.5_dp, epseu*13.6058_dp

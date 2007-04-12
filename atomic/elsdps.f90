@@ -26,7 +26,6 @@ implicit none
              vxc,           &   ! the exchange correlation potential
              exc,           &   ! the exchange correlation energy
              exc_t,         &   ! the exchange correlation energy
-             ecc,           &   ! the core correction energy
              vxcp(2),       &   
              rho_tot,       &   !
              gi(ndm),       &  ! 
@@ -86,9 +85,7 @@ implicit none
             call vxc_t(rh,rhc,lsd,vxcp)
             if (gga) then
                f3(i) = exc_t(rh,rhc,lsd)*(rho_tot+rhoc(i)) &
-                     + egc(i)*r2(i)*fpi  &
-                     - exc_t(rh0,rhc,lsd)*rhoc(i) &
-                     - egcc(i)*r2(i)*fpi
+                     + egc(i)*r2(i)*fpi 
                f8(i) = exc_t(rh0,rhc,lsd)*rhoc(i) + &
                        egcc(i)*r2(i)*fpi
                f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
@@ -96,8 +93,7 @@ implicit none
                if (lsd.eq.1) f2(i)=f2(i)-  &
                               (vgc(i,2)+vxcp(2))*rhos(i,2)
             else
-               f3(i) = exc_t(rh,rhc,lsd) * (rho_tot+rhoc(i)) &
-                     - exc_t(rh0,rhc,lsd)*rhoc(i)
+               f3(i) = exc_t(rh,rhc,lsd) * (rho_tot+rhoc(i)) 
                f8(i) = exc_t(rh0,rhc,lsd)*rhoc(i)
                f2(i) =-vxcp(1)*rhos(i,1)-f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)-vxcp(2)*rhos(i,2)
@@ -125,7 +121,8 @@ implicit none
       evxt=    int_0_inf_dr(f4,r,r2,dx,mesh,2)
       if (nlcc) then
          ecc=    int_0_inf_dr(f8,r,r2,dx,mesh,2)
-         write(6,'(5x,''Core only energy '',f15.8 )') ecc
+      else
+         ecc= 0.d0
       endif
 !
       epseu=0.0_DP
