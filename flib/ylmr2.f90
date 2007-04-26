@@ -36,7 +36,6 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   real(DP), allocatable :: cost (:), sent(:), phi (:), Q(:,:,:)
   real(DP) :: c, gmod
   integer :: lmax, ig, l, m, lm
-  integer(DP), external:: fact, semifact
   !
   if (ng < 1 .or. lmax2 < 1) return
   do lmax = 0, 25
