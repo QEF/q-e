@@ -37,7 +37,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        allocate_efield2, efield_update2,       &
                                        ipolp2, qmat2, gqq2, evalue2,           &
                                        berry_energy2, pberryel2, pberryion2
-  USE ensemble_dft,             ONLY : tens, z0, gibbsfe
+  USE ensemble_dft,             ONLY : tens, z0t, gibbsfe
   USE cg_module,                ONLY : tcg,  cg_update, c0old
   USE gvecp,                    ONLY : ngm
   USE gvecs,                    ONLY : ngs
@@ -113,7 +113,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE cell_base,                ONLY : s_to_r, r_to_s
   USE wannier_subroutines,      ONLY : wannier_startup, wf_closing_options, &
                                        ef_enthalpy
-  USE cp_interfaces,            ONLY : readfile, writefile, eigs, strucf
+  USE cp_interfaces,            ONLY : readfile, writefile, eigs, strucf, phfacs
   USE cp_interfaces,            ONLY : empty_cp, ortho, elec_fakekine, print_projwfc
   USE constraints_module,       ONLY : check_constraint, remove_constr_force
   USE metadyn_base,             ONLY : set_target, mean_force
@@ -126,6 +126,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                        me_image
   USE ldaU,                     ONLY : lda_plus_u, vupsi
   USE step_constraint
+  USE small_box,                ONLY : ainvb
   !
   IMPLICIT NONE
   !
@@ -209,18 +210,18 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      nfi     = nfi + 1
      tlast   = ( nfi == nomore )
      ttprint = ( MOD( nfi, iprint ) == 0 ).or.tlast
-     tfile = ( MOD( nfi, iprint ) == 0 )
+     tfile   = ( MOD( nfi, iprint ) == 0 )
      !
-     if (abivol) then
-        if (pvar) then
-           if (nfi.eq.1) then
+     IF ( abivol ) THEN
+        IF ( pvar ) THEN
+           IF ( nfi .EQ. 1 ) THEN
               deltaP = (P_fin - P_in) / DBLE(nomore)
               P_ext = P_in
-           else
+           ELSE
               P_ext = P_ext + deltaP
-           end if
-        end if
-     end if
+           END IF
+        END IF
+     END IF
      !
      IF ( ionode .AND. ttprint ) &
         WRITE( stdout, '(/," * Physical Quantities at step:",I6)' ) nfi
@@ -233,7 +234,11 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      !
      ! ... calculation of velocity of nose-hoover variables
      !
-     IF ( tnosep ) CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
+     IF ( tnosep ) THEN
+        !
+        CALL ions_nosevel( vnhp, xnhp0, xnhpm, delt, nhpcl, nhpdim )
+        !
+     END IF
      !
      IF ( tnosee ) THEN
         !
@@ -253,22 +258,35 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ! 
      IF ( tfor .OR. thdyn .OR. tfirst ) THEN
         !
-        CALL initbox( tau0, taub, irb )
-        CALL phbox( taub, eigrb )
+        CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
+        !
+        CALL phbox( taub, eigrb, ainvb )
         !
      END IF
      !
-     IF ( tfor .OR. thdyn ) CALL phfac( tau0, ei1, ei2, ei3, eigr ) 
+     IF ( tfor .OR. thdyn ) THEN
+        !
+        CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
+        !
+        ! ... strucf calculates the structure factor sfac
+        !
+        CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
+        !
+     END IF
      !
-     ! ... strucf calculates the structure factor sfac
-     !
-     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
-     !
-     IF ( thdyn ) CALL formf( tfirst, eself )
+     IF ( thdyn ) THEN
+        !
+        CALL formf( tfirst, eself )
+        !
+     END IF
      !
      ! ... why this call ??? from Paolo Umari
      !
-     IF ( tefield.or.tefield2 ) CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
+     IF ( tefield .or. tefield2 ) THEN
+        !
+        CALL calbec( 1, nsp, eigr, c0, bec ) ! ATTENZIONE  
+        !
+     END IF
      !
      ! Autopilot (Dynamic Rules) Implimentation    
      !
@@ -451,7 +469,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         ! ... phfac calculates eigr
         !
-        CALL phfac( taup, ei1, ei2, ei3, eigr )
+        CALL phfacs( ei1, ei2, ei3, eigr, mill_l, tausp, nr1, nr2, nr3, nat ) 
         !
         ! ... prefor calculates vkb
         !
@@ -478,13 +496,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            !
         END IF
         !
-     END IF
-     !
-     !--------------------------------------------------------------------------
-     !                   correction to displacement of ions
-     !--------------------------------------------------------------------------
-     !
-     IF ( .NOT. tcg ) THEN
+        !  correction to displacement of ions
         !
         IF ( iprsta >= 3 ) CALL print_lambda( lambda, nbsp, 9, 1.D0 )
         !
@@ -505,8 +517,9 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL calbec( nvb+1, nsp, eigr, cm, bec )
         !
-        IF ( tpre ) &
+        IF ( tpre ) THEN
            CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .TRUE. )
+        END IF
         !
         IF ( iprsta >= 3 ) CALL dotcsc( eigr, cm, ngw, nbsp )
         !
@@ -524,7 +537,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
      ekinc = 0.0d0
      !
      !
-     ! ... ionic kinetic energy 
+     ! ... ionic kinetic energy and temperature
      !
      IF ( tfor ) THEN
         !
@@ -532,13 +545,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
         CALL ions_kinene( ekinp, vels, na, nsp, hold, pmass )
         !
-     END IF
-     !
-     ! ... ionic temperature
-     !
-     IF ( tfor ) &
         CALL ions_temp( tempp, temps, ekinpr, vels, na, nsp, &
                         hold, pmass, ndega, nhpdim, atm2nhp, ekin2nhp )
+        !
+     END IF
      !
      ! ... fake electronic kinetic energy
      !
@@ -549,13 +559,16 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         ekinc = ekinc0
         !
      END IF
-     
      !
      ! ... fake cell-parameters kinetic energy
      !
      ekinh = 0.D0
      !
-     IF ( thdyn ) CALL cell_kinene( ekinh, temphh, velh )
+     IF ( thdyn ) THEN
+        !
+        CALL cell_kinene( ekinh, temphh, velh )
+        !
+     END IF
      !
      IF ( COUNT( iforceh == 1 ) > 0 ) THEN
         !
@@ -705,9 +718,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            ! ... in this case optimize c0 and lambda for smooth
            ! ... restart with CP
            !
-           CALL initbox( tau0, taub, irb )
-           CALL phbox( taub, eigrb )
-           CALL phfac( tau0, ei1, ei2, ei3, eigr )
+           CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
+           CALL phbox( taub, eigrb, ainvb )
+           CALL r_to_s( tau0, taus, na, nsp, ainv )
+           CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
            CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
            !
            IF ( thdyn )    CALL formf( tfirst, eself )
@@ -737,7 +751,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                           vels, velsm, acc, lambda, lambdam, xnhe0, xnhem,     &
                           vnhe, xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0,&
                           xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, &
-                          celldm, fion, tps, z0, f, rhor )
+                          celldm, fion, tps, z0t, f, rhor )
            !
         ELSE
            !
@@ -745,7 +759,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                            tausm, vels, velsm, acc,  lambda, lambdam, xnhe0,   &
                            xnhem, vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm,&
                            xnhh0, xnhhm, vnhh, velh, ecutp, ecutw, delt, pmass,&
-                           ibrav, celldm, fion, tps, z0, f, rhor )
+                           ibrav, celldm, fion, tps, z0t, f, rhor )
            !
         END IF
         !
@@ -815,7 +829,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
                                  velsm, acc, lambda, lambdam, xnhe0, xnhem,  &
                                  vnhe, xnhp0, xnhpm, vnhp, nhpcl, nhpdim,    &
                                  ekincm, xnhh0, xnhhm, vnhh, velh, ecutp,    &
-                                 ecutw, delt, celldm, fion, tps, z0, f, rhor )
+                                 ecutw, delt, celldm, fion, tps, z0t, f, rhor )
      !
      IF ( ( nfi >= nomore ) .OR. tstop ) EXIT main_loop
      !
@@ -849,23 +863,13 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   !
   conv_elec = .TRUE.
   !
-  IF ( tcg ) THEN
-     !
-     CALL writefile( ndw, h, hold, nfi, c0, c0old, taus, tausm, vels, &
-                     velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe, xnhp0,   &
-                     xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm, vnhh,     &
-                     velh, ecutp, ecutw, delt, pmass, ibrav, celldm, fion,     &
-                     tps, z0, f, rhor )
-     !
-  ELSE
-     !
-     CALL writefile( ndw, h, hold, nfi, c0, cm, taus, tausm, &
-                     vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
-                     xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
-                     vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,     &
-                     fion, tps, z0, f, rhor )
-     !
-  END IF
+  IF ( tcg ) cm = c0old
+  !
+  CALL writefile( ndw, h, hold, nfi, c0, cm, taus, tausm, &
+                  vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, vnhe,    &
+                  xnhp0, xnhpm, vnhp, nhpcl,nhpdim,ekincm, xnhh0, xnhhm,    &
+                  vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,     &
+                  fion, tps, z0t, f, rhor )
   !
   IF( tprojwfc ) CALL print_projwfc( c0, lambda, eigr, vkb )
   !

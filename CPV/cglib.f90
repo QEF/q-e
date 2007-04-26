@@ -9,42 +9,84 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine calcmt(fdiag,zmat,fmat,firstiter)
+      subroutine calcmt( fdiag, zmat, fmat, firstiter)
 !-----------------------------------------------------------------------
 !
-!  constructs fmat=zmat^t.fdiag.zmat
+!  constructs fmat=z0^t.fdiag.z0    zmat = z0^t
 !
-      use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx
+      USE kinds,             ONLY: DP
+      use electrons_base,    ONLY: nudx, nspin, nupdwn, iupdwn, nx => nbspx
+      USE cp_main_variables, ONLY: descla, nlax, nrlx
+      USE descriptors,       ONLY: la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , &
+                                   lambda_node_ , ldim_cyclic
+      USE mp,                ONLY: mp_sum, mp_bcast
 
       implicit none
       logical firstiter
 
-      integer iss, nss, istart, i, j, k, ii, jj, kk
-      real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),        &
-   &                fdiag(nx)
+      real(DP) :: zmat( nrlx, nudx, nspin ), fmat( nrlx, nudx, nspin ), fdiag( nx )
+                  !  NOTE: zmat and fmat are distributed by row across processors
+                  !        fdiag is replicated
+
+      integer  :: iss, nss, istart, i, j, k, ii, jj, kk
+      integer  :: np_rot, me_rot, nrl, comm_rot, ip, nrl_ip
+
+      real(DP), ALLOCATABLE :: mtmp(:,:)
+      real(DP) :: f_z0t
 
 
       call start_clock('calcmt')
-        do iss=1,nspin
-         nss=nupdwn(iss)
-         istart=iupdwn(iss)
-         do i=1,nss
-          do k=1,nss
-           fmat(k,i,iss)=0.0d0
-           do j=1,nss
-            fmat(k,i,iss)=fmat(k,i,iss)+                                   &
-    &           zmat(j,k,iss)*fdiag(j+istart-1)*zmat(j,i,iss)
-           end do
-          end do
-         end do
-        end do
+
+      fmat = 0.0d0
+
+      DO iss = 1, nspin
+
+         nss      = nupdwn( iss )
+         istart   = iupdwn( iss )
+         np_rot   = descla( la_npr_  , iss ) * descla( la_npc_ , iss )
+         me_rot   = descla( la_me_   , iss )
+         nrl      = descla( la_nrl_  , iss )
+         comm_rot = descla( la_comm_ , iss )
+
+         IF( descla( lambda_node_ , iss ) > 0 ) THEN
+
+            ALLOCATE( mtmp( nrlx, nudx ) )
+
+            DO ip = 1, np_rot
+
+               IF( me_rot == ( ip - 1 ) ) THEN
+                  mtmp = zmat(:,:,iss)
+               END IF
+               nrl_ip = ldim_cyclic( nss, np_rot, ip - 1 )
+               CALL mp_bcast( mtmp , ip - 1 , comm_rot )
+
+               DO j = 1, nss
+                  ii = ip
+                  DO i = 1, nrl_ip
+                     f_z0t = fdiag( j + istart - 1 ) * mtmp( i, j )
+                     DO k = 1, nrl
+                        fmat( k, ii, iss ) = fmat( k, ii, iss )+ zmat( k, j, iss ) * f_z0t 
+                     END DO
+                     ii = ii + np_rot
+                  END DO
+               END DO
+
+            END DO
+
+            DEALLOCATE( mtmp )
+
+         END IF
+
+      END DO
+
       call stop_clock('calcmt')
-      return
-      end subroutine calcmt
+
+      RETURN
+      END SUBROUTINE calcmt
 
 
 !-----------------------------------------------------------------------
-      subroutine rotate(z0,c0,bec,c0diag,becdiag,firstiter)
+      subroutine rotate( z0, c0, bec, c0diag, becdiag, firstiter )
 !-----------------------------------------------------------------------
       use kinds, only: dp
       use cvan
@@ -52,45 +94,31 @@
       use uspp_param, only: nh
       use uspp, only :nhsa=>nkb, nhsavb=>nkbus, qq
       use gvecw, only: ngw
-      use ions_base, only: nas => nax, nsp, na
+      use ions_base, only: nsp, na
+      USE cp_main_variables, ONLY: descla, nlax, nrlx
+      USE descriptors,       ONLY: la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_
+      USE cp_interfaces,     ONLY: protate
 
       implicit none
-      integer iss, nss, istart, i, j, k, ni, nj, is, jv, ia, jnl
-      real(kind=DP) z0(nudx,nudx,nspin)
-      real(kind=DP) bec(nhsa,n), becdiag(nhsa,n)
-      complex(kind=DP) c0(ngw,nx), c0diag(ngw,nx)
+      integer iss, nss, istart
+      integer :: np_rot, me_rot, nrl, comm_rot
+      real(kind=DP)    z0( nrlx, nudx, nspin )
+      real(kind=DP)    bec( nhsa, n ), becdiag( nhsa, n )
+      complex(kind=DP) c0( ngw, nx ), c0diag( ngw, nx )
       logical firstiter
   
-      real(kind=DP), allocatable :: z1(:,:)
-      integer :: nii,njj,nrot
-
       CALL start_clock( 'rotate' )
-        c0diag(1:ngw,1:nx)=0.d0
-          do iss=1,nspin
-           nss=nupdwn(iss)
-           istart=iupdwn(iss)
-            call DGEMM( 'N', 'T', 2*ngw, nss, nss, 1.0d0, c0(1,istart), 2*ngw, z0(1,1,iss), nudx, &
-                        0.0d0, c0diag(1,istart), 2*ngw )
-          end do
 
-          do iss=1,nspin
-          nss=nupdwn(iss)
-          istart=iupdwn(iss)
-          do ni=1,nss
-           do is=1,nsp
-            do jv=1,nh(is)
-             do ia=1,na(is)
-              jnl=ish(is)+(jv-1)*na(is)+ia
-               becdiag(jnl,ni+istart-1)=0.0d0
-               do nj=1,nss
-                becdiag(jnl,ni+istart-1)=becdiag(jnl,ni+istart-1)+        &
-       &        CMPLX(z0(ni,nj,iss),0.d0)*bec(jnl,nj+istart-1)
-               end do
-             end do
-            end do
-           end do
-           end do
-          end do
+      DO iss = 1, nspin
+         istart   = iupdwn( iss )
+         nss      = nupdwn( iss )
+         np_rot   = descla( la_npr_  , iss ) * descla( la_npc_ , iss )
+         me_rot   = descla( la_me_   , iss )
+         nrl      = descla( la_nrl_  , iss )
+         comm_rot = descla( la_comm_ , iss )
+         CALL protate ( c0, bec, c0diag, becdiag, ngw, nss, istart, z0(:,:,iss), nrl, &
+                        na, nsp, ish, nh, np_rot, me_rot, comm_rot )
+      END DO
 
       CALL stop_clock( 'rotate' )
       return
@@ -144,7 +172,10 @@
       real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
     &   fdiag(nx)
 
+      call errore(" calcm ", " subroutine not updated ", 1)
+
       call start_clock('calcm')
+
 
         do iss=1,nspin
          nss=nupdwn(iss)
@@ -302,7 +333,7 @@ subroutine pc2(a,beca,b,becb)
     end subroutine pc2
 
 
-      subroutine pcdaga2(a,as ,b )
+    subroutine pcdaga2(a,as ,b )
 
 ! this function applies the operator Pc
 

@@ -34,8 +34,7 @@
                                 nelt, nx => nbspx, n => nbsp, ispin 
 
       USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
-                                ef, z0, c0diag, becdiag, &
-                                fmat0,  &
+                                ef, z0t, c0diag, becdiag, &
                                 e0, psihpsi, compute_entropy2, &
                                 compute_entropy_der, compute_entropy, &
                                 niter_cold_restart, lambda_cold
@@ -44,7 +43,7 @@
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE reciprocal_vectors, &
-                          ONLY: ng0 => gstart
+                          ONLY: gstart
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
@@ -69,9 +68,16 @@
       USE uspp_param,     ONLY: nh
       USE cg_module,      ONLY: ene_ok
       USE ions_positions, ONLY: tau0
-      USE mp,             ONLY: mp_sum,mp_bcast
-      USE cp_interfaces,  ONLY: rhoofr, dforce
+      USE mp,             ONLY: mp_sum,mp_bcast, mp_root_sum
+
+      USE cp_interfaces,  ONLY: rhoofr, dforce, protate
       USE cg_module,      ONLY: itercg
+      USE cp_main_variables, ONLY: distribute_lambda, descla, nlax, collect_lambda
+      USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
+                                   descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
+                                   nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , la_me_ , la_nrl_
+      USE parallel_toolkit,  ONLY: pdspev_drv, dspev_drv
+
 
       !
       IMPLICIT NONE
@@ -102,25 +108,25 @@
 !local variables
       REAL(kind=DP) :: atot0, atot1, atotl, atotmin
       REAL(kind=DP), ALLOCATABLE :: fion2(:,:), c0hc0(:,:,:)
+      REAL(kind=DP), ALLOCATABLE :: mtmp(:,:)
       COMPLEX(kind=DP), ALLOCATABLE :: h0c0(:,:)
       INTEGER :: niter
-      INTEGER :: i,k, is, nss, istart, ig
+      INTEGER :: i,k, is, nss, istart, ig, iss
       REAL(kind=DP) :: lambda, lambdap
-      REAL(kind=DP), ALLOCATABLE :: epsi0(:,:,:), dval(:), zaux(:,:,:)
+      REAL(kind=DP), ALLOCATABLE :: epsi0(:,:)
+
+      INTEGER :: np(2), coor_ip(2), ipr, ipc, nr, nc, ir, ic, ii, jj, root, j
+      INTEGER :: desc_ip( descla_siz_ )
+      INTEGER :: np_rot, me_rot, comm_rot, nrl
 
       CALL start_clock( 'inner_loop')
 
       allocate(fion2(3,nat))
-      allocate(c0hc0(nudx,nudx,nspin))
+      allocate(c0hc0(nlax,nlax,nspin))
       allocate(h0c0(ngw,nx))
-      allocate(epsi0(nudx,nudx,nspin))
-      allocate(dval(nx))
-      allocate(zaux(nudx,nudx,nspin))
 
 
       lambdap=0.3d0!small step for free-energy calculation
-      
- 
 
 
       ! calculates the initial free energy if necessary
@@ -132,7 +138,8 @@
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      
-        CALL rotate( z0, c0(:,:), bec, c0diag, becdiag, firstiter)
+
+        CALL rotate( z0t, c0, bec, c0diag, becdiag, .false. )
   
         ! calculates the electronic charge density
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
@@ -170,29 +177,60 @@
 
     
           
-        ! calculates the Hamiltonian matrix in the basis {c0}           
+         ! calculates the Hamiltonian matrix in the basis {c0}           
          c0hc0(:,:,:)=0.d0
+         !
          DO is= 1, nspin
+
             nss= nupdwn( is )
             istart= iupdwn( is )
-            DO i= 1, nss
-               DO k= 1, nss
-                  DO ig= 1, ngw
-                     c0hc0( k, i, is )= c0hc0( k, i, is ) &
-                          - 2.0d0*DBLE( CONJG( c0( ig,k+istart-1 ) ) &
-                          * h0c0( ig, i+istart-1 ) )
-                  END DO
-                  IF( ng0 .eq. 2 ) THEN
-                     c0hc0( k, i, is )= c0hc0( k, i, is ) &
-                          + DBLE( CONJG( c0( 1, k+istart-1 ) ) &
-                          * h0c0( 1, i+istart-1 ) )
+
+            np(1) = descla( la_npr_ , is )
+            np(2) = descla( la_npc_ , is )
+
+            DO ipc = 1, np(2)
+               DO ipr = 1, np(1)
+
+                  coor_ip(1) = ipr - 1
+                  coor_ip(2) = ipc - 1
+                  CALL descla_init( desc_ip, descla( la_n_ , is ), descla( la_nx_ , is ), np, coor_ip, descla( la_comm_ , is ) )
+
+                  nr = desc_ip( nlar_ )
+                  nc = desc_ip( nlac_ )
+                  ir = desc_ip( ilar_ )
+                  ic = desc_ip( ilac_ )
+
+                  root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ )
+
+                  ALLOCATE( mtmp( nr, nc ) )
+                  mtmp = 0.0d0
+
+                  CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, - 2.0d0, c0( 1, istart + ir - 1 ), 2*ngw, &
+                              h0c0( 1, istart + ic - 1 ), 2*ngw, 0.0d0, mtmp, nr )
+
+                  IF (gstart == 2) THEN
+                     DO jj = 1, nc
+                        DO ii = 1, nr
+                           i = ii + ir - 1
+                           j = jj + ic - 1
+                           mtmp(ii,jj) = mtmp(ii,jj) + DBLE( c0( 1, i + istart - 1 ) ) * DBLE( h0c0( 1, j + istart - 1 ) )
+                        END DO
+                     END DO
                   END IF
+
+                  CALL mp_root_sum( mtmp, root, intra_image_comm )
+
+                  IF( coor_ip(1) == descla( la_myr_ , is ) .AND. coor_ip(2) == descla( la_myc_ , is ) ) THEN
+                     c0hc0(1:nr,1:nc,is) = mtmp
+                  END IF
+
+                  DEALLOCATE( mtmp )
+
                END DO
             END DO
-            CALL mp_sum( c0hc0( 1:nss, 1:nss, is ), intra_image_comm )
          END DO
 
-       
+
          if(mod(itercg,niter_cold_restart) == 0) then
 !calculates free energy at lamda=1.
             CALL inner_loop_lambda( nfi, tfirst, tlast, eigr,  irb, eigrb, &
@@ -216,65 +254,24 @@
 !calculates free energy and rho at lambda
         
 
-!calculates the new matrix psihpsi
+         ! calculates the new matrix psihpsi
          
          DO is= 1, nspin
-            nss= nupdwn( is )
-            psihpsi(:,:,is)=(1.d0-lambda)*psihpsi(:,:,is)+lambda*c0hc0(:,:,is)
+            psihpsi(:,:,is) = (1.d0-lambda) * psihpsi(:,:,is) + lambda * c0hc0(:,:,is)
          END DO
-!diagonalize and calculates energies
+
+         ! diagonalize and calculates energies
          
-         DO is= 1, nspin
-            nss= nupdwn( is )
-            epsi0( 1:nss, 1:nss, is )= psihpsi( 1:nss, 1:nss, is )
-         END DO
-          
-     
-         
-        ! diagonalizes the Hamiltonian matrix
          e0( : )= 0.D0 
-         DO is= 1, nspin
-            istart= iupdwn( is )
-            nss= nupdwn( is )
-!only one processor diagonalizes TO BE PARALLELIZED!!! 
-            IF( ionode ) THEN
-               CALL ddiag( nss, nss, epsi0(:,:,is), dval, &
-                          zaux(:,:,is), 1 )
-            END IF
-            CALL mp_bcast( dval, ionode_id, intra_image_comm )
-            CALL mp_bcast( zaux(:,:,is), ionode_id, intra_image_comm )
-            DO i= 1, nss
-               e0( i+istart-1 )= dval( i )
-            END DO
-         END DO
-  
-!NB zaux is transposed
 
-!calculates fro e0 the new occupation and the entropy        
+         CALL  inner_loop_diag( c0, bec, psihpsi, z0t, e0 )
 
-       
+         !calculates fro e0 the new occupation and the entropy        
 
-         CALL efermi( nelt, n, etemp, 1, f, ef, e0, entropy, ismear, & 
-                     nspin )
-
-!alculates z0
-         do is=1,nspin
-            nss=nupdwn(is)
-            do i=1,nss
-               do k=1,nss
-                  z0(k,i,is)=zaux(i,k,is)
-               enddo
-            enddo
-         enddo
+         CALL efermi( nelt, n, etemp, 1, f, ef, e0, entropy, ismear, nspin )
 
 
-!calculates new charge and new energy
-! rotates the wavefunctions c0 and the overlaps bec
-! (the occupation matrix f_ij becomes diagonal f_i)      
-
-         CALL rotate( z0, c0(:,:), bec, c0diag, becdiag, firstiter)
-  
-
+        !calculates new charge and new energy
         
 
         ! calculates the electronic charge density
@@ -316,10 +313,6 @@
       DEALLOCATE(fion2)
       DEALLOCATE(c0hc0)
       DEALLOCATE(h0c0)
-      DEALLOCATE(epsi0)
-      deallocate(dval)
-      deallocate(zaux)
-
 
       CALL stop_clock( 'inner_loop' )
       return
@@ -362,7 +355,7 @@
       USE gvecb,          ONLY: ngb
       USE gvecw,          ONLY: ngw
       USE reciprocal_vectors, &
-                          ONLY: ng0 => gstart
+                          ONLY: gstart
       USE cvan,           ONLY: nvb, ish
       USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
       USE grid_dimensions, &
@@ -389,6 +382,7 @@
       USE ions_positions, ONLY: tau0
       USE mp,             ONLY: mp_sum,mp_bcast
       use cp_interfaces,  only: rhoofr, dforce
+      USE cp_main_variables, ONLY: descla, nlax, nrlx
 
       !
       IMPLICIT NONE
@@ -415,7 +409,8 @@
       COMPLEX(kind=DP)            :: ei3( nr3:nr3, nat )
       COMPLEX(kind=DP)            :: sfac( ngs, nsp )
   
-      REAL(kind=DP), INTENT(in)   :: c0hc0(nudx,nudx,nspin),c1hc1(nudx,nudx,nspin)
+      REAL(kind=DP), INTENT(in)   :: c0hc0(nlax,nlax,nspin)
+      REAL(kind=DP), INTENT(in)   :: c1hc1(nlax,nlax,nspin)
       REAL(kind=DP), INTENT(in)   :: lambda
       REAL(kind=DP), INTENT(out)  :: free_energy
 
@@ -423,102 +418,57 @@
 !local variables
       REAL(kind=DP), ALLOCATABLE  :: clhcl(:,:,:), fion2(:,:)
       INTEGER :: i,k, is, nss, istart, ig
-      REAL(kind=DP), ALLOCATABLE :: eaux(:),faux(:),zaux(:,:,:), dval(:),zauxt(:,:,:)
+      REAL(kind=DP), ALLOCATABLE :: eaux(:), faux(:), zauxt(:,:,:)
       REAL(kind=DP) :: entropy_aux, ef_aux
 
+      CALL start_clock( 'inner_lambda')
       
-      allocate(clhcl(nudx,nudx,nspin))
+      allocate(clhcl(nlax,nlax,nspin))
       allocate(eaux(nx))
       allocate(faux(nx))
-      allocate(zaux(nudx,nudx,nspin))
-      allocate(zauxt(nudx,nudx,nspin))
-      allocate(dval(nx))
+      allocate(zauxt(nrlx,nudx,nspin))
       allocate(fion2(3,nat))
 
 
 !calculates the matrix clhcl
          
       DO is= 1, nspin
-         nss= nupdwn( is )
          clhcl(:,:,is)=(1.d0-lambda)*c0hc0(:,:,is)+lambda*c1hc1(:,:,is)
       END DO
 
+      CALL inner_loop_diag( c0, bec, clhcl, zauxt, eaux )
       
-! diagonalizes the Hamiltonian matrix
-      DO is= 1, nspin
-         istart= iupdwn( is )
-         nss= nupdwn( is )
-!only one processor diagonalizes TO BE PARALLELIZED!!! 
-         IF( ionode ) THEN
-            CALL ddiag( nss, nss, clhcl(:,:,is), dval, &
-                 zaux(:,:,is), 1 )
-         END IF
-         CALL mp_bcast( dval, ionode_id, intra_image_comm )
-         CALL mp_bcast( zaux(:,:,is), ionode_id, intra_image_comm )
-         DO i= 1, nss
-            eaux( i+istart-1 )= dval( i )
-         END DO
-      END DO
-  
-!NB zaux is transposed
-
-!calculates fro e0 the new occupation and the entropy        
-
-!rhoofr uses array f
-!  we save it
-
       faux(:)=f(:)
 
-      CALL efermi( nelt, n, etemp, 1, f, ef_aux, eaux, entropy_aux, ismear, & 
-           nspin )
-
-!calculates transposed matrix
-         do is=1,nspin
-            nss=nupdwn(is)
-            do i=1,nss
-               do k=1,nss
-                  zauxt(k,i,is)=zaux(i,k,is)
-               enddo
-            enddo
-         enddo
+      CALL efermi( nelt, n, etemp, 1, f, ef_aux, eaux, entropy_aux, ismear, nspin )
 
 
-!calculates new charge and new energy
-! rotates the wavefunctions c0 and the overlaps bec
-! (the occupation matrix f_ij becomes diagonal f_i)      
-
-         CALL rotate( zauxt, c0(:,:), bec, c0diag, becdiag, firstiter)
+      ! calculates the electronic charge density
+      CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
+                   rhor, rhog, rhos, enl, denl, ekin, dekin6 )
+      IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
   
+      ! calculates the SCF potential, the total energy
+      ! and the ionic forces
+      vpot = rhor
+      CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
+                   tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
+                   tau0, fion2 )
+      !entropy value already  been calculated
 
-
-        ! calculates the electronic charge density
-         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
-                     rhor, rhog, rhos, enl, denl, ekin, dekin6 )
-         IF(nlcc_any) CALL set_cc( irb, eigrb, rhoc )
-  
-        ! calculates the SCF potential, the total energy
-        ! and the ionic forces
-         vpot = rhor
-         CALL vofrho( nfi, vpot, rhog, rhos, rhoc, tfirst, &
-                     tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
-                     tau0, fion2 )
-       !entropy value already  been calculated
-
-         free_energy=etot+entropy_aux
+      free_energy=etot+entropy_aux
          
-         f(:)=faux(:)
-
+      f(:)=faux(:)
 
       deallocate(clhcl)
-      deallocate(dval)
-      deallocate(zaux)
       deallocate(faux)
       deallocate(eaux)
       deallocate(zauxt)
       deallocate(fion2)
 
-      return
+      CALL stop_clock( 'inner_lambda')
 
+      return
 
     END SUBROUTINE inner_loop_lambda
 
@@ -572,3 +522,149 @@
        return
 
      END SUBROUTINE three_point_min
+
+
+!====================================================================
+   SUBROUTINE inner_loop_diag( c0, bec, psihpsi, z0t, e0 )
+!====================================================================
+      !
+      ! minimizes the total free energy
+      ! using cold smearing,
+      !
+      ! declares modules
+      USE kinds,          ONLY: dp
+      USE control_flags,  ONLY: iprint, thdyn, tpre, iprsta, &
+                                tfor, taurdr, &
+                                tprnfor, ndr, ndw, nbeg, nomore, &
+                                tsde, tortho, tnosee, tnosep, trane, &
+                                tranp, tsdp, tcp, tcap, ampre, &
+                                amprp, tnoseh
+      USE atom,           ONLY: nlcc
+      USE core,           ONLY: nlcc_any
+      USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
+                                ekin, atot, entropy, egrand
+      USE electrons_base, ONLY: f, nspin, nel, iupdwn, nupdwn, nudx, &
+                                nelt, nx => nbspx, n => nbsp, ispin 
+
+      USE ensemble_dft,   ONLY: tens,  ninner, ismear, etemp, &
+                                ef, c0diag, becdiag, &
+                                compute_entropy2, &
+                                compute_entropy_der, compute_entropy, &
+                                niter_cold_restart, lambda_cold
+      USE gvecp,          ONLY: ngm
+      USE gvecs,          ONLY: ngs
+      USE gvecb,          ONLY: ngb
+      USE gvecw,          ONLY: ngw
+      USE reciprocal_vectors, &
+                          ONLY: gstart
+      USE cvan,           ONLY: nvb, ish
+      USE ions_base,      ONLY: na, nat, pmass, nax, nsp, rcmax
+      USE grid_dimensions, &
+                          ONLY: nnr => nnrx, nr1, nr2, nr3
+      USE cell_base,      ONLY: ainv, a1, a2, a3
+      USE cell_base,      ONLY: omega, alat
+      USE cell_base,      ONLY: h, hold, deth, wmass, tpiba2
+      USE smooth_grid_dimensions, &
+                          ONLY: nnrsx, nr1s, nr2s, nr3s
+      USE smallbox_grid_dimensions, &
+                          ONLY: nnrb => nnrbx, nr1b, nr2b, nr3b
+      USE local_pseudo,   ONLY: vps, rhops
+      USE io_global,      ONLY: io_global_start, stdout, ionode, &
+                                ionode_id
+      USE mp_global,      ONLY: intra_image_comm
+      USE dener
+      USE derho
+      USE cdvan
+      USE io_files,       ONLY: psfile, pseudo_dir, outdir
+      USE uspp,           ONLY: nhsa=> nkb, betae => vkb, &
+                                rhovan => becsum, deeq
+      USE uspp_param,     ONLY: nh
+      USE cg_module,      ONLY: ene_ok
+      USE ions_positions, ONLY: tau0
+      USE mp,             ONLY: mp_sum,mp_bcast, mp_root_sum
+
+      USE cp_interfaces,  ONLY: rhoofr, dforce, protate
+      USE cg_module,      ONLY: itercg
+      USE cp_main_variables, ONLY: distribute_lambda, descla, nlax, collect_lambda, nrlx
+      USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
+                                   descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
+                                   nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , &
+                                   la_me_ , la_nrl_ 
+      USE parallel_toolkit,  ONLY: pdspev_drv, dspev_drv
+
+
+      !
+      IMPLICIT NONE
+
+      COMPLEX(kind=DP)            :: c0( ngw, n )
+      REAL(kind=DP)               :: bec( nhsa, n )
+      REAL(kind=DP)               :: psihpsi( nlax, nlax, nspin )
+      REAL(kind=DP)               :: z0t( nrlx, nudx, nspin )
+      REAL(kind=DP)               :: e0( nx )
+
+      INTEGER :: i,k, is, nss, istart, ig
+      REAL(kind=DP), ALLOCATABLE :: epsi0(:,:), dval(:), zaux(:,:), mtmp(:,:)
+
+      INTEGER :: np(2), coor_ip(2), ipr, ipc, nr, nc, ir, ic, ii, jj, root, j
+      INTEGER :: np_rot, me_rot, comm_rot, nrl, kk
+
+      CALL start_clock( 'inner_diag')
+      
+      e0( : )= 0.D0 
+
+      DO is = 1, nspin
+ 
+            istart   = iupdwn( is )
+            nss      = nupdwn( is )
+            np_rot   = descla( la_npr_ , is )  * descla( la_npc_ , is )
+            me_rot   = descla( la_me_ , is )
+            nrl      = descla( la_nrl_ , is )
+            comm_rot = descla( la_comm_ , is )
+
+            allocate( dval( nx ) )
+
+            dval = 0.0d0
+
+            IF( descla( lambda_node_ , is ) > 0 ) THEN
+               !
+               ALLOCATE( epsi0( nrl, nss ), zaux( nrl, nss ) )
+
+               CALL blk2cyc_redist( nss, epsi0, nrl, psihpsi(1,1,is), SIZE(psihpsi,1), descla(1,is) )
+
+               CALL pdspev_drv( 'V', epsi0, nrl, dval, zaux, nrl, nrl, nss, np_rot, me_rot, comm_rot )
+               !
+               IF( me_rot /= 0 ) dval = 0.0d0
+               !
+            ELSE
+
+               ALLOCATE( epsi0( 1, 1 ), zaux( 1, 1 ) )
+
+            END IF
+            
+            CALL mp_sum( dval, intra_image_comm )
+
+            DO i = 1, nss
+               e0( i+istart-1 )= dval( i )
+            END DO
+
+            z0t = 0.0d0
+
+            IF( descla( lambda_node_ , is ) > 0 ) THEN
+               !NB zaux is transposed
+               ALLOCATE( mtmp( nudx, nudx ) )
+               z0t( 1:nrl , 1:nss, is ) = zaux( 1:nrl, 1:nss )
+            END IF
+
+            DEALLOCATE( epsi0 , zaux, dval )
+
+   END DO
+
+   ! rotates the wavefunctions c0 and the overlaps bec
+   ! (the occupation matrix f_ij becomes diagonal f_i)      
+
+   CALL rotate ( z0t, c0, bec, c0diag, becdiag, .false. )
+
+   CALL stop_clock( 'inner_diag')
+     
+   RETURN
+END SUBROUTINE

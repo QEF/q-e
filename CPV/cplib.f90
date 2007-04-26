@@ -1155,7 +1155,7 @@ END FUNCTION
       END SUBROUTINE gram
 !
 !-----------------------------------------------------------------------
-      SUBROUTINE initbox ( tau0, taub, irb )
+      SUBROUTINE initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
 !-----------------------------------------------------------------------
 !
 !     sets the indexes irb and positions taub for the small boxes 
@@ -1164,7 +1164,6 @@ END FUNCTION
       USE kinds,                    ONLY: DP
       USE ions_base,                ONLY: nsp, na, nat
       USE grid_dimensions,          ONLY: nr1, nr2, nr3
-      USE cell_base,                ONLY: ainv, a1, a2, a3
       USE smallbox_grid_dimensions, ONLY: nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
       USE control_flags,            ONLY: iprsta
       USE io_global,                ONLY: stdout
@@ -1179,6 +1178,11 @@ END FUNCTION
 ! output
       INTEGER,  INTENT(out) :: irb(3,nat)
       REAL(DP), INTENT(out) :: taub(3,nat)
+! input
+      REAL(DP), INTENT(in)  :: ainv(3,3)
+      REAL(DP), INTENT(in)  :: a1(3)
+      REAL(DP), INTENT(in)  :: a2(3)
+      REAL(DP), INTENT(in)  :: a3(3)
 ! local
       REAL(DP) :: x(3), xmod
       INTEGER  :: nr(3), nrb(3), xint, is, ia, i, isa

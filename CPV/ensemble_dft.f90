@@ -30,7 +30,7 @@ MODULE ensemble_dft
       real(DP) :: lambda_cold !step for cold smearing for not accurate iterations     
 
 !***ensemble-DFT
-      real(DP), allocatable::                  z0(:,:,:)
+      real(DP), allocatable::                 z0t(:,:,:)   ! transpose of z0
       complex(DP), allocatable::             c0diag(:,:)
       real(DP), allocatable::               becdiag(:,:)
       real(DP), allocatable::                      e0(:)
@@ -104,33 +104,50 @@ CONTAINS
 
 
 
-  SUBROUTINE id_matrix_init( nupdwn, nspin )
+  SUBROUTINE id_matrix_init( descla, nspin )
     ! initialization of the matrix identity
+    USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
+                                 la_comm_ ,  la_me_ , la_nrl_
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nupdwn(2), nspin
-    INTEGER :: is, nss, i
-      z0(:,:,:)=0.0d0
-      do  is=1,nspin
-        nss=nupdwn(is)
-        do i=1,nss
-          z0(i,i,is)=1.d0
-        end do
-      end do
+    INTEGER, INTENT(IN) :: nspin
+    INTEGER, INTENT(IN) :: descla( descla_siz_ , nspin )
+    INTEGER :: is, i, ii
+    INTEGER :: np, me
+    z0t(:,:,:)=0.0d0
+    do is = 1, nspin
+       np = descla( la_npc_ , is ) * descla( la_npr_ , is )
+       me = descla( la_me_ , is )
+       IF( descla( lambda_node_ , is ) > 0 ) THEN
+          ii = me + 1
+          DO i = 1, descla( la_nrl_ , is )
+             z0t( i, ii , is ) = 1.d0
+             ii = ii + np
+          END DO
+       END IF
+    end do
     RETURN
   END SUBROUTINE id_matrix_init
 
 
-  SUBROUTINE h_matrix_init( nupdwn, nspin )
+  SUBROUTINE h_matrix_init( descla, nspin )
     ! initialization of the psihpsi matrix 
+    USE descriptors, ONLY: lambda_node_ , nlar_ , la_myr_ , la_myc_
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nupdwn(2), nspin
-    INTEGER :: is, nss, i
+    INTEGER, INTENT(IN) :: nspin
+    INTEGER, INTENT(IN) :: descla(:,:)
+    INTEGER :: is, i, nr
       psihpsi(:,:,:)=0.0d0
-      do  is=1,nspin
-        nss=nupdwn(is)
-        do i=1,nss
-          psihpsi(i,i,is)=1.d0
-        end do
+      do is = 1, nspin
+         IF( descla( lambda_node_ , is ) > 0 ) THEN
+            !
+            nr = descla( nlar_ )
+            !
+            IF( descla( la_myr_ ) == descla( la_myc_ ) ) THEN
+               DO i = 1, nr
+                  psihpsi(i,i,is) = 1.0d0
+               END DO
+            END IF
+         END IF
       end do
     RETURN
   END SUBROUTINE h_matrix_init
@@ -236,15 +253,15 @@ CONTAINS
   END SUBROUTINE ensemble_dft_info
 
 
-  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat )
+  SUBROUTINE allocate_ensemble_dft( nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat, nlax, nrlx )
     IMPLICIT NONE
-    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat
+    INTEGER, INTENT(IN) :: nhsa, n, ngw, nudx, nspin, nx, nnrsx, nat, nlax, nrlx
       allocate(c0diag(ngw,n))
-      allocate(z0(nudx,nudx,nspin))
+      allocate(z0t(nrlx,nudx,nspin))
       allocate(becdiag(nhsa,n))
       allocate(e0(nx))
-      allocate(fmat0(nudx,nudx,nspin))
-      allocate(psihpsi(nudx,nudx,nspin))
+      allocate(fmat0(nrlx,nudx,nspin))
+      allocate(psihpsi(nlax,nlax,nspin))
     RETURN
   END SUBROUTINE allocate_ensemble_dft
 
@@ -253,7 +270,7 @@ CONTAINS
   SUBROUTINE deallocate_ensemble_dft( )
     IMPLICIT NONE
     IF( ALLOCATED( c0diag ) )  deallocate(c0diag )
-    IF( ALLOCATED( z0 ) )  deallocate(z0 )
+    IF( ALLOCATED( z0t ) )  deallocate(z0t )
     IF( ALLOCATED( becdiag ) )  deallocate(becdiag )
     IF( ALLOCATED( e0 ) )  deallocate(e0 )
     IF( ALLOCATED( fmat0 ) )  deallocate(fmat0 )

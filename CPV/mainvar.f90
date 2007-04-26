@@ -69,7 +69,8 @@ MODULE cp_main_variables
   !
   INTEGER,  ALLOCATABLE :: descla(:,:) ! descriptor of the lambda distribution
                                        ! see descriptors_module
-  INTEGER :: nlax = 0                  ! leading dimension of the distribute lambda matrix
+  INTEGER :: nlax = 0                  ! leading dimension of the distribute (by block) lambda matrix 
+  INTEGER :: nrlx = 0                  ! leading dimension of the distribute (by row  ) lambda matrix
   !
   REAL(DP) :: acc(nacx)
   REAL(DP) :: acc_this_run(nacx)
@@ -110,7 +111,7 @@ MODULE cp_main_variables
       !
       USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm
       USE mp,          ONLY: mp_max, mp_min
-      USE descriptors, ONLY: descla_siz_ , descla_init , nlax_
+      USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_
       !
       INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                        nnr, nnrsx, nat, nax, nsp, nspin, &
@@ -170,9 +171,11 @@ MODULE cp_main_variables
       ALLOCATE( descla( descla_siz_ , nspin ) )
       !
       nlax = 0
+      nrlx = 0
       DO iss = 1, nspin
          CALL descla_init( descla( :, iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm )
          nlax = MAX( nlax, descla( nlax_ , iss ) )
+         nrlx = MAX( nrlx, descla( la_nrlx_ , iss ) )
       END DO
       !
       !  ... End with lambda dimensins
@@ -277,6 +280,28 @@ MODULE cp_main_variables
     !
     !
     !------------------------------------------------------------------------
+    SUBROUTINE distribute_zmat( zmat_repl, zmat_dist, desc )
+       USE descriptors, ONLY: lambda_node_ , la_nrl_ , la_me_ , la_npr_ , la_npc_ , la_n_
+       REAL(DP), INTENT(IN)  :: zmat_repl(:,:)
+       REAL(DP), INTENT(OUT) :: zmat_dist(:,:)
+       INTEGER,  INTENT(IN)  :: desc(:)
+       INTEGER :: i, ii, j, me, np
+       me = desc( la_me_ )
+       np = desc( la_npc_ ) * desc( la_npr_ )
+       IF( desc( lambda_node_ ) > 0 ) THEN
+          DO j = 1, desc( la_n_ )
+             ii = me + 1
+             DO i = 1, desc( la_nrl_ )
+                zmat_dist( i, j ) = zmat_repl( ii, j )
+                ii = ii + np
+             END DO
+          END DO
+       END IF
+       RETURN
+    END SUBROUTINE distribute_zmat
+    !
+    !
+    !------------------------------------------------------------------------
     SUBROUTINE collect_lambda( lambda_repl, lambda_dist, desc )
        USE mp_global,   ONLY: intra_image_comm
        USE mp,          ONLY: mp_sum
@@ -298,6 +323,33 @@ MODULE cp_main_variables
        CALL mp_sum( lambda_repl, intra_image_comm )
        RETURN
     END SUBROUTINE collect_lambda
+    !
+    !
+    !------------------------------------------------------------------------
+    SUBROUTINE collect_zmat( zmat_repl, zmat_dist, desc )
+       USE mp_global,   ONLY: intra_image_comm
+       USE mp,          ONLY: mp_sum
+       USE descriptors, ONLY: lambda_node_ , la_nrl_ , la_me_ , la_npr_ , la_npc_ , la_n_
+       REAL(DP), INTENT(OUT) :: zmat_repl(:,:)
+       REAL(DP), INTENT(IN)  :: zmat_dist(:,:)
+       INTEGER,  INTENT(IN)  :: desc(:)
+       INTEGER :: i, ii, j, me, np, nrl
+       zmat_repl = 0.0d0
+       me = desc( la_me_ )
+       np = desc( la_npc_ ) * desc( la_npr_ )
+       nrl = desc( la_nrl_ )
+       IF( desc( lambda_node_ ) > 0 ) THEN
+          DO j = 1, desc( la_n_ )
+             ii = me + 1
+             DO i = 1, nrl
+                zmat_repl( ii, j ) = zmat_dist( i, j )
+                ii = ii + np
+             END DO
+          END DO
+       END IF
+       CALL mp_sum( zmat_repl, intra_image_comm )
+       RETURN
+    END SUBROUTINE collect_zmat
     !
     !
     !------------------------------------------------------------------------

@@ -27,7 +27,7 @@
       use electrons_base, only: f, nspin, nel, iupdwn, nupdwn, nudx, nelt, &
                                 nx => nbspx, n => nbsp, ispin
 
-      use ensemble_dft, only: tens,   ef,  z0, c0diag,  &
+      use ensemble_dft, only: tens,   ef,  z0t, c0diag,  &
                       becdiag, fmat0, e0, ismear, id_matrix_init
 !---
       use gvecp, only: ngm
@@ -45,7 +45,7 @@
       use smallbox_grid_dimensions, only: nnrb => nnrbx, nr1b, nr2b, nr3b
       use local_pseudo, only: vps, rhops
       use io_global,                ONLY : io_global_start, stdout, ionode, ionode_id
-      use mp_global,                ONLY : intra_image_comm, np_ortho, me_ortho, ortho_comm
+      use mp_global,                ONLY : intra_image_comm, np_ortho, me_ortho, ortho_comm, me_image
       use dener
       use derho
       use cdvan
@@ -62,12 +62,13 @@
                                            berry_energy, ctabin, gqq, gqqm, df, pberryel, &
                                            tefield2, evalue2, ctable2, qmat2, detq2, ipolp2, &
                                            berry_energy2, ctabin2, gqq2, gqqm2, pberryel2
-      use mp,                       only : mp_sum
+      use mp,                       only : mp_sum, mp_bcast
       use cp_electronic_mass,       ONLY : emass_cutoff
       use orthogonalize_base,       ONLY : calphi
       use cp_interfaces,            ONLY : rhoofr, dforce, compute_stress
       USE printout_base,            ONLY : printout_stress
-      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla
+      USE cp_main_variables,        ONLY : nlax, collect_lambda, distribute_lambda, descla, nrlx
+      USE descriptors,              ONLY : la_npc_ , la_npr_ , la_comm_ , la_me_ , la_nrl_ , ldim_cyclic
 
 
 !
@@ -95,8 +96,8 @@
       real(dp) :: lambda(nlax,nlax,nspin)
 !
 !
-      integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk
-      integer :: inl, jnl, niter, istart, nss
+      integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip
+      integer :: inl, jnl, niter, istart, nss, nrl, me_rot, np_rot , comm
       real(dp) :: enb, enbi, x
       complex(dp) :: c2( ngw )
       complex(dp) :: c3( ngw )
@@ -113,6 +114,7 @@
 !
       real(kind=DP), allocatable :: bec0(:,:), becm(:,:), becdrdiag(:,:,:)
       real(kind=DP), allocatable :: ave_ene(:)!average kinetic energy for preconditioning
+      real(kind=DP), allocatable :: fmat_(:,:)!average kinetic energy for preconditioning
       
       logical :: pre_state!if .true. does preconditioning state by state
 
@@ -183,51 +185,6 @@
          allocate( k_minus1(1,1))
       endif  
 
-
-!-------------verifica
-!      do i=1,n
-!      do ig=1,ngw
-!         phi(ig,i,1,1)=phi(ig,i,1,1)+c0(ig,i,1,1)*(1.d0/ema0bg(ig)-1.d0)
-!      enddo
-!      enddo
-!      !call calbec(1,nsp,eigr,phi,becm)
-!      !call sminus1(phi,becm,betae)
-!      call kminus1(phi,betae,ema0bg)
-!      call calbec(1,nsp,eigr,phi,becm)
-!      do i=1,n
-!         do j=1,n
-!             sca=0.d0
-!                do ig=1,ngw
-!                 sca=sca+2*DBLE(CONJG(phi(ig,i,1,1))*phi(ig,j,1,1))
-!              enddo
-!              if (ng0.eq.2) then
-!                 sca=sca-DBLE(CONJG(phi(1,i,1,1))*phi(1,j,1,1))
-!              endif
-
-
-!           if (nvb.gt.0) then
-!              do is=1,nvb
-!                 do iv=1,nh(is)
-!                    do jv=1,nh(is)
-!                       do ia=1,na(is)
-!                          inl=ish(is)+(iv-1)*na(is)+ia
-!                          jnl=ish(is)+(jv-1)*na(is)+ia
-!                          sca=sca+ qq(iv,jv,is)*becm(inl,i)*becm(jnl,j)
-!                       end do
-!                    end do
-!                 end do
-!              end do
-!           endif
-!            write(6,*) 'VERIFCA S :',i,j,sca
-!         enddo
-!       enddo
-
-
-
-
-
-
- 
       !set index on number of converged iterations
 
       numok = 0
@@ -239,11 +196,11 @@
         ENERGY_CHECK: if(.not. ene_ok ) then
           call calbec(1,nsp,eigr,c0,bec)
           if(.not.tens) then
-            call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
+             call rhoofr(nfi,c0(:,:),irb,eigrb,bec,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
           else
 
-           if(newscheme.or.firstiter) then 
-              if(ismear==2) then !fermi dirac smearing
+            if(newscheme.or.firstiter) then 
+               if(ismear==2) then !fermi dirac smearing
                  call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter,vpot)
               else ! generalized smearings
@@ -251,22 +208,23 @@
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter,vpot)
               endif
                firstiter=.false.
-           endif
+            endif
             !     calculation of the rotated quantities
-            call rotate(z0,c0(:,:),bec,c0diag,becdiag,.false.)
+
+            call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
                      &                    ,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
-          endif
+         endif
            
 !when cycle is restarted go to diagonal representation
 
           if(mod(itercg,niter_cg_restart)==1 .and. itercg >=2) then
 
-              call rotate(z0,c0(:,:),bec,c0diag,becdiag,.false.)
+              call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
               c0(:,:)=c0diag(:,:)
               bec(:,:)=becdiag(:,:)
-              call id_matrix_init( nupdwn, nspin )
+              call id_matrix_init( descla, nspin )
            endif
         
 
@@ -397,7 +355,7 @@
         call pc2(c0,bec,gi,becm)
 
         
-        if(tens) call calcmt(f,z0,fmat0,.false.)
+        if(tens) call calcmt( f, z0t, fmat0, .false. )
 
         call calbec(1,nsp,eigr,hpsi,bec0) 
 
@@ -435,39 +393,66 @@
            do iss=1,nspin
               nss=nupdwn(iss)
               istart=iupdwn(iss)
-              do i=1,nss
-                 do j=1,nss
-                    do ig=1,ngw
-                       gamma=gamma+2.d0*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,j+istart-1))*fmat0(j,i,iss)
+              me_rot = descla( la_me_ , iss )
+              np_rot = descla( la_npc_ , iss ) * descla( la_npr_ , iss )
+              allocate( fmat_ ( nrlx, nudx ) )
+              do ip = 1, np_rot
+                 if( me_rot == ( ip - 1 ) ) then
+                    fmat_ = fmat0(:,:,iss)
+                 end if
+                 nrl = ldim_cyclic( nss, np_rot, ip - 1 )
+                 CALL mp_bcast( fmat_ , ip - 1 , intra_image_comm )
+                 do i=1,nss
+                    jj = ip
+                    do j=1,nrl
+                       do ig=1,ngw
+                          gamma=gamma+2.d0*DBLE(CONJG(gi(ig,i+istart-1))*hpsi(ig,jj+istart-1))*fmat_(j,i)
+                       enddo
+                       if (ng0.eq.2) then
+                          gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,jj+istart-1))*fmat_(j,i)
+                       endif
+                       jj = jj + np_rot
                     enddo
-                    if (ng0.eq.2) then
-                       gamma=gamma-DBLE(CONJG(gi(1,i+istart-1))*hpsi(1,j+istart-1))*fmat0(j,i,iss)
-                    endif
                  enddo
               enddo
+              deallocate( fmat_ )
            enddo
-           call mp_sum( gamma, intra_image_comm )
            if(nvb.gt.0) then
               do iss=1,nspin
                  nss=nupdwn(iss)
                  istart=iupdwn(iss)
-                 do i=1,nss
-                    do j=1,nss
-                       do is=1,nvb
-                          do iv=1,nh(is)
-                             do jv=1,nh(is)
-                                do ia=1,na(is)
-                                   inl=ish(is)+(iv-1)*na(is)+ia
-                                   jnl=ish(is)+(jv-1)*na(is)+ia
-                                   gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,j+istart-1)*fmat0(j,i,iss)
+                 me_rot = descla( la_me_ , iss )
+                 np_rot = descla( la_npc_ , iss ) * descla( la_npr_ , iss )
+                 allocate( fmat_ ( nrlx, nudx ) )
+                 do ip = 1, np_rot
+                    if( me_rot == ( ip - 1 ) ) then
+                       fmat_ = fmat0(:,:,iss)
+                    end if
+                    nrl = ldim_cyclic( nss, np_rot, ip - 1 )
+                    CALL mp_bcast( fmat_ , ip - 1 , intra_image_comm )
+
+                    do i=1,nss
+                       jj = ip 
+                       do j=1,nrl
+                          do is=1,nvb
+                             do iv=1,nh(is)
+                                do jv=1,nh(is)
+                                   do ia=1,na(is)
+                                      inl=ish(is)+(iv-1)*na(is)+ia
+                                      jnl=ish(is)+(jv-1)*na(is)+ia
+                                      gamma=gamma+ qq(iv,jv,is)*becm(inl,i+istart-1)*bec0(jnl,jj+istart-1)*fmat_(j,i)
+                                   end do
                                 end do
                              end do
-                          end do
+                          enddo
+                          jj = jj + np_rot
                        enddo
                     enddo
-                 enddo
+                 end do
+                 deallocate( fmat_ )
               enddo
            endif
+           call mp_sum( gamma, intra_image_comm )
         endif
 
 
@@ -522,22 +507,35 @@
         else
           !in the ensamble case the derivative is Sum_ij (<hi|H|Psi_j>+ <Psi_i|H|hj>)*f_ji
           !     calculation of the kinetic energy x=xmin      
-         call calcmt(f,z0,fmat0,.false.)
-         do is=1,nspin
-            nss=nupdwn(is)
-            istart=iupdwn(is)
-            do i=1,nss
-               do j=1,nss
-                  do ig=1,ngw
-                     dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,j+istart-1))*fmat0(j,i,is)
-                     dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,j+istart-1))*fmat0(j,i,is)
+         call calcmt( f, z0t, fmat0, .false. )
+         do iss = 1, nspin
+            nss    = nupdwn(iss)
+            istart = iupdwn(iss)
+            me_rot = descla( la_me_ , iss )
+            np_rot = descla( la_npc_ , iss ) * descla( la_npr_ , iss )
+            allocate( fmat_ ( nrlx, nudx ) )
+            do ip = 1, np_rot
+               if( me_rot == ( ip - 1 ) ) then
+                  fmat_ = fmat0(:,:,iss)
+               end if
+               nrl = ldim_cyclic( nss, np_rot, ip - 1 )
+               CALL mp_bcast( fmat_ , ip - 1 , intra_image_comm )
+               do i=1,nss
+                  jj = ip
+                  do j=1,nrl
+                     do ig=1,ngw
+                        dene0=dene0-2.d0*DBLE(CONJG(hi(ig,i+istart-1))*hpsi0(ig,jj+istart-1))*fmat_(j,i)
+                        dene0=dene0-2.d0*DBLE(CONJG(hpsi0(ig,i+istart-1))*hi(ig,jj+istart-1))*fmat_(j,i)
+                     enddo
+                     if (ng0.eq.2) then
+                        dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,jj+istart-1))*fmat_(j,i)
+                        dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,jj+istart-1))*fmat_(j,i)
+                     end if
+                     jj = jj + np_rot
                   enddo
-                  if (ng0.eq.2) then
-                     dene0=dene0+DBLE(CONJG(hi(1,i+istart-1))*hpsi0(1,j+istart-1))*fmat0(j,i,is)
-                     dene0=dene0+DBLE(CONJG(hpsi0(1,i+istart-1))*hi(1,j+istart-1))*fmat0(j,i,is)
-                  end if
                enddo
-            enddo
+            end do
+            deallocate( fmat_ )
          enddo
       endif
 
@@ -576,7 +574,7 @@
           endif
 
           !     calculation of the rotated quantities
-          call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
+          call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
           !     calculation of rho corresponding to the rotated wavefunctions
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         endif
@@ -644,7 +642,7 @@
              endif
           endif
           !     calculation of the rotated quantities
-          call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
+          call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
           !     calculation of rho corresponding to the rotated wavefunctions
           call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         endif
@@ -742,7 +740,7 @@
                  endif
               endif
               !     calculation of the rotated quantities
-              call rotate(z0,cm(:,:),becm,c0diag,becdiag,.false.)
+              call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
               !     calculation of rho corresponding to the rotated wavefunctions
               call rhoofr(nfi,c0diag,irb,eigrb,becdiag,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
             endif
@@ -826,7 +824,7 @@
           else
 
             !     calculation of the rotated quantities
-            call rotate(z0,c0(:,:),bec,c0diag,becdiag,.false.)
+            call rotate( z0t, c0(:,:), bec, c0diag, becdiag, .false. )
             !     calculation of rho corresponding to the rotated wavefunctions
             call  caldbec( ngw, nhsa, n, 1, nsp, eigr, c0diag, dbec, .true. )
             call rhoofr(nfi,c0diag,irb,eigrb,becdiag                         &
@@ -852,7 +850,7 @@
      endif
 
 
-     call calcmt(f,z0,fmat0,.false.)
+     call calcmt( f, z0t, fmat0, .false. )
 
       call newd(vpot,irb,eigrb,rhovan,fion)
       if (.not.tens) then
@@ -944,12 +942,11 @@
  
            do iss = 1, nspin
               !
-              nss = nupdwn(iss)
-              istart = iupdwn(iss)
+              nss    = nupdwn( iss )
               !
               lambdap(:,:,iss) = 0.0d0
               !
-              CALL distribute_lambda( fmat0(:,:,iss), lambda_dist, descla( :, iss ) )
+              CALL cyc2blk_redist( nss, fmat0(1,1,iss), nrlx, lambda_dist, nlax, descla(1,iss) )
               !
               ! Perform lambdap = lambda * fmat0
               !
@@ -992,4 +989,5 @@
        deallocate(ave_ene)
 
        return
+
      END SUBROUTINE runcg_uspp

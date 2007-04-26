@@ -95,7 +95,7 @@ CONTAINS
       USE mp,          ONLY: mp_sum
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm
       USE descriptors, ONLY: la_myr_ , la_myc_ , la_comm_ , la_npr_ , la_npc_ , &
-                             lambda_node_ , ldim_cyclic
+                             lambda_node_ , la_nrl_ , la_me_
       IMPLICIT NONE
       REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
       REAL(DP)              :: rhod(:)   !  output eigenvalues
@@ -112,20 +112,18 @@ CONTAINS
       !  Matrix is distributed on the same processors group
       !  used for parallel matrix multiplication
       !
-      np   = desc( la_npr_ ) * desc( la_npc_ ) 
-      me   = desc( la_myc_ ) + desc( la_myr_ ) * desc( la_npr_ ) 
+      np   = desc( la_npr_ ) * desc( la_npc_ )
+      me   = desc( la_me_ )
+      nrl  = desc( la_nrl_ )
       comm = desc( la_comm_ )
 
       IF ( desc( lambda_node_ ) > 0 ) THEN
          !
          !  Compute local dimension of the cyclically distributed matrix
          !
-         nrl = ldim_cyclic( n, np, me )
-
          ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
-
-         ! CALL prpack( n, diag, rhos )
-         CALL blk2cyc_redist( n, diag, nrl, np, me, comm, rhos, SIZE(s,1), desc(1) ) 
+         !
+         CALL blk2cyc_redist( n, diag, nrl, rhos, SIZE(s,1), desc(1) ) 
          !
          CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, np, me, comm )
          !
@@ -133,37 +131,13 @@ CONTAINS
          !  matrix "s" is block distributed
          !  across 2D processors grid ( ortho_comm )
          !
-         CALL cyc2blk_redist( n, vv, nrl, np, me, comm, s, SIZE(s,1), desc(1) ) 
+         CALL cyc2blk_redist( n, vv, nrl, s, SIZE(s,1), desc(1) ) 
          !
          DEALLOCATE( diag, vv )
          !
       END IF
 
       RETURN
-
-   CONTAINS
-
-      SUBROUTINE prpack( n, ap, a )
-        !
-        !  Pack "a" ( replicated ) in "ap" ( distributed )
-        !  row of "a" are distributed round-robin across procs.
-        !
-        IMPLICIT NONE
-        REAL(DP), INTENT(IN)  :: a(:,:)
-        REAL(DP), INTENT(OUT) :: ap(:,:)
-        INTEGER,  INTENT(IN)  :: n
-        INTEGER :: i, j, jl
-        !
-        DO i = 1, n
-           j = me + 1    !  my first matrix row ( me starts from 0 )
-           DO jl = 1, nrl
-             ap( jl, i ) = a( j, i )
-             j = j + np  !  my next matrix row ( np is the number of procs )
-           END DO
-        END DO
-        !
-        RETURN
-      END SUBROUTINE prpack
 
    END SUBROUTINE diagonalize_parallel
 

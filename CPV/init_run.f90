@@ -38,7 +38,7 @@ SUBROUTINE init_run()
   USE wavefunctions_module,     ONLY : c0, cm, cp
   USE cdvan,                    ONLY : dbec, drhovan
   USE derho,                    ONLY : drhor, drhog
-  USE ensemble_dft,             ONLY : tens, z0
+  USE ensemble_dft,             ONLY : tens, z0t
   USE cg_module,                ONLY : tcg
   USE electrons_base,           ONLY : nudx, nbnd
   USE parameters,               ONLY : nspinx
@@ -52,7 +52,7 @@ SUBROUTINE init_run()
                                        irb, eigrb, rhog, rhos, rhor, bephi,    &
                                        becp, acc, acc_this_run, wfill, &
                                        edft, nfi, vpot, ht0, htm
-  USE cp_main_variables,        ONLY : allocate_mainvar
+  USE cp_main_variables,        ONLY : allocate_mainvar, nlax, descla, nrlx
   USE energies,                 ONLY : eself, enl, ekin, etot, enthal, ekincm
   USE dener,                    ONLY : detot
   USE time_step,                ONLY : dt2, delt, tps
@@ -191,8 +191,7 @@ SUBROUTINE init_run()
   IF ( lwf ) CALL allocate_wannier( nbsp, nnrsx, nspin, ngm )
   !
   IF ( tens .OR. tcg ) &
-     CALL allocate_ensemble_dft( nkb, nbsp, ngw, &
-                                 nudx, nspin, nbspx, nnrsx, nat )
+     CALL allocate_ensemble_dft( nkb, nbsp, ngw, nudx, nspin, nbspx, nnrsx, nat, nlax, nrlx )
   !
   IF ( tcg ) CALL allocate_cg( ngw, nbspx,nkbus )
   !
@@ -219,8 +218,8 @@ SUBROUTINE init_run()
   cp = ( 0.D0, 0.D0 )
   !
   IF ( tens ) then
-     CALL id_matrix_init( nupdwn, nspin )
-     CALL h_matrix_init(nupdwn, nspin)
+     CALL id_matrix_init( descla, nspin )
+     CALL h_matrix_init( descla, nspin )
   ENDIF
   !
   IF ( lwf ) CALL wannier_startup( ibrav, alat, a1, a2, a3, b1, b2, b3 )
@@ -261,7 +260,7 @@ SUBROUTINE init_run()
                        tausm, vels, velsm, acc, lambda, lambdam, xnhe0, xnhem, &
                        vnhe, xnhp0, xnhpm, vnhp,nhpcl,nhpdim,ekincm, xnhh0, xnhhm,&
                        vnhh, velh, ecutp, ecutw, delt, pmass, ibrav, celldm,   &
-                       fion, tps, z0, f )
+                       fion, tps, z0t, f )
         !
      ELSE IF( program_name == 'FPMD' ) THEN
         !

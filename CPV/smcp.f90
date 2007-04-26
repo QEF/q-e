@@ -88,7 +88,8 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
                                        becp, ema0bg, allocate_mainvar, nfi, descla, vpot
   USE fft_base,                 ONLY : dfftp
   USE orthogonalize_base,       ONLY : updatc, calphi
-  use cp_interfaces,            only : rhoofr, ortho, wave_rand_init, elec_fakekine
+  use cp_interfaces,            only : rhoofr, ortho, wave_rand_init, elec_fakekine, phfacs
+  use small_box,                only : ainvb
   !
 #if ! defined __NOSMD
   !
@@ -408,10 +409,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   !
   CALL flush_unit( stdout )
   !
-
-666 CONTINUE
-  !
-  !
   DO sm_k=0,smd_p
      p_tau0(sm_k)%d3 => rep(sm_k)%tau0
      IF(tfor) THEN
@@ -469,34 +466,17 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
      !
      IF ( nbeg < 0 ) THEN 
 
-        !======================================================================
-        !    nbeg = -1 
-        !======================================================================
-
-        ! IF( trdwfc ) THEN  ! add a new flag
-        !   CALL readfile                                            &
-        !         &     ( 0, sm_ndr,h,hold,nfi,rep_el(sm_k)%cm,rep_el(sm_k)%cm,rep(sm_k)%taus,  &
-        !         &       rep(sm_k)%tausm,rep(sm_k)%vels,rep(sm_k)%velsm,rep(sm_k)%acc,         &
-        !         &       rep_el(sm_k)%lambda,rep_el(sm_k)%lambdam,                             &
-        !         &       xnhe0(sm_k),xnhem(sm_k),vnhe(sm_k),xnhp0(:,sm_k),xnhpm(:,sm_k),vnhp(:,sm_k),&
-        !         &       nhpcl, ekincm(sm_k),                           &
-        !         &       xnhh0,xnhhm,vnhh,velh,ecutp,ecutw,delt,pmass,ibrav,celldm,rep(sm_k)%fion, &
-        !         &       tps, mat_z, f )
-        ! ENDIF
-        !     
-
         IF( tsde ) THEN
            fccc = 1.0d0
         ELSE
            fccc = 0.5d0
         END IF
 
-
-        CALL phfac( rep(sm_k)%tau0, ei1, ei2, ei3, eigr )
+        CALL phfacs( ei1, ei2, ei3, eigr, mill_l, rep(sm_k)%taus, nr1, nr2, nr3, nat )
         !
-        CALL initbox ( rep(sm_k)%tau0, taub, irb )
+        CALL initbox ( rep(sm_k)%tau0, taub, irb, ainv, a1, a2, a3 )
         !
-        CALL phbox( taub, eigrb )
+        CALL phbox( taub, eigrb, ainvb )
         !
         IF(trane) THEN    
            IF(sm_k == 1) THEN
@@ -762,7 +742,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   INI2_REP_LOOP : DO sm_k=1,smpm   ! >>>>>>>>>>>>>>>>>>>>>> !
 
      IF(tfor .OR. smd_lm) THEN  
-        CALL phfac(rep(sm_k)%tau0,ei1,ei2,ei3,eigr)
+        CALL phfacs( ei1, ei2, ei3, eigr, mill_l, rep(sm_k)%taus, nr1, nr2, nr3, nat )
         CALL calbec (1,nsp,eigr,rep_el(sm_k)%c0,rep_el(sm_k)%bec)
         IF (tpre) CALL caldbec(ngw,nkb,nbsp,1,nsp,eigr,rep_el(sm_k)%c0,dbec,.true.)
      ENDIF
@@ -846,9 +826,10 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         IF(.NOT.tsde) fccc(sm_k)=1.d0/(1.d0+frice)
         !
-        CALL initbox ( rep(sm_k)%tau0, taub, irb )
-        CALL phbox(taub,eigrb)
-        CALL phfac( rep(sm_k)%tau0,ei1,ei2,ei3,eigr) 
+        CALL initbox ( rep(sm_k)%tau0, taub, irb, ainv, a1, a2, a3 )
+        CALL phbox(taub,eigrb,ainvb)
+        CALL r_to_s( rep(sm_k)%tau0, rep(sm_k)%taus, na, nsp, ainv)
+        CALL phfacs( ei1, ei2, ei3, eigr, mill_l, rep(sm_k)%taus, nr1, nr2, nr3, nat )
         !
         !     strucf calculates the structure factor sfac
         !
@@ -1122,11 +1103,13 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
            ENDIF
            !        ... phfac calculates eigr
            !
-           CALL phfac(rep(sm_k)%taup,ei1,ei2,ei3,eigr)
+           CALL r_to_s( rep(sm_k)%taup, rep(sm_k)%tausp, na, nsp, ainv)
+           CALL phfacs( ei1, ei2, ei3, eigr, mill_l, rep(sm_k)%tausp, nr1, nr2, nr3, nat )
            !
         ELSE 
            !
-           CALL phfac(rep(sm_k)%tau0,ei1,ei2,ei3,eigr)
+           CALL r_to_s( rep(sm_k)%tau0, rep(sm_k)%taus, na, nsp, ainv)
+           CALL phfacs( ei1, ei2, ei3, eigr, mill_l, rep(sm_k)%taus, nr1, nr2, nr3, nat )
            !
         END IF
         !

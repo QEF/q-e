@@ -66,7 +66,7 @@ MODULE cp_restart
       USE constants,                ONLY : pi
       USE cp_interfaces,            ONLY : n_atom_wfc
       USE global_version,           ONLY : version_number
-      USE cp_main_variables,        ONLY : collect_lambda, descla
+      USE cp_main_variables,        ONLY : collect_lambda, descla, collect_zmat
       !
       IMPLICIT NONE
       !
@@ -142,7 +142,7 @@ MODULE cp_restart
       INTEGER               :: nbnd_tot
       INTEGER               :: nbnd_emp
       INTEGER               :: nbnd_
-      REAL(DP), ALLOCATABLE :: lambda_repl(:,:)
+      REAL(DP), ALLOCATABLE :: mrepl(:,:)
       !
       write_charge_density = trhow
       !
@@ -792,27 +792,11 @@ MODULE cp_restart
             !
             cspin = iotk_index( iss )
             !
-            IF ( ionode ) THEN
-               !
-               IF(  PRESENT( mat_z ) ) THEN
-                  !
-                  filename = TRIM( wfc_filename( ".", 'mat_z', ik, iss ) )
-                  !
-                  CALL iotk_link( iunpun, "MAT_Z" // TRIM( cspin ), &
-                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
-                  !
-                  CALL iotk_write_dat( iunpun, &
-                                       "MAT_Z" // TRIM( cspin ), mat_z(:,:,iss) )
-                  !
-               END IF
-               !
-            END IF
-            !
             ! ... write matrix lambda to file
             !
-            ALLOCATE( lambda_repl( nudx, nudx ) )
+            ALLOCATE( mrepl( nudx, nudx ) )
             !
-            CALL collect_lambda( lambda_repl, lambda0(:,:,iss), descla(:,iss) )
+            CALL collect_lambda( mrepl, lambda0(:,:,iss), descla(:,iss) )
             !
             IF ( ionode ) THEN
                !
@@ -822,11 +806,11 @@ MODULE cp_restart
                                filename, CREATE = .TRUE., BINARY = .TRUE. )
                !
                CALL iotk_write_dat( iunpun, &
-                                    "LAMBDA0" // TRIM( cspin ), lambda_repl )
+                                    "LAMBDA0" // TRIM( cspin ), mrepl )
                !
             END IF
             !
-            CALL collect_lambda( lambda_repl, lambdam(:,:,iss), descla(:,iss) )
+            CALL collect_lambda( mrepl, lambdam(:,:,iss), descla(:,iss) )
             !
             IF ( ionode ) THEN
                !
@@ -836,11 +820,28 @@ MODULE cp_restart
                                filename, CREATE = .TRUE., BINARY = .TRUE. )
                !
                CALL iotk_write_dat( iunpun, &
-                                    "LAMBDAM" // TRIM( cspin ), lambda_repl )
+                                    "LAMBDAM" // TRIM( cspin ), mrepl )
                !
             END IF
             !
-            DEALLOCATE( lambda_repl )
+            IF( PRESENT( mat_z ) ) THEN
+               !
+               CALL collect_zmat( mrepl, mat_z(:,:,iss), descla(:,iss) )
+               !
+               IF ( ionode ) THEN
+                  !
+                  filename = TRIM( wfc_filename( ".", 'mat_z', ik, iss ) )
+                  !
+                  CALL iotk_link( iunpun, "MAT_Z" // TRIM( cspin ), &
+                                  filename, CREATE = .TRUE., BINARY = .TRUE. )
+                  !
+                  CALL iotk_write_dat( iunpun, "MAT_Z" // TRIM( cspin ), mrepl )
+                  !
+               END IF
+               !
+            END IF
+            !
+            DEALLOCATE( mrepl )
             !
          END DO
          !
@@ -902,7 +903,7 @@ MODULE cp_restart
       USE ions_base,                ONLY : nsp, nat, na, atm, zv, pmass, &
                                            sort_tau, ityp, ions_cofmass
       USE reciprocal_vectors,       ONLY : ig_l2g, mill_l
-      USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla
+      USE cp_main_variables,        ONLY : nprint_nfi, distribute_lambda, descla, distribute_zmat
       USE mp,                       ONLY : mp_sum
       USE mp_global,                ONLY : intra_image_comm
       USE parameters,               ONLY : nhclm, ntypx
@@ -993,7 +994,7 @@ MODULE cp_restart
       CHARACTER(LEN=256)    :: psfile_(ntypx)
       CHARACTER(LEN=80)     :: pos_unit
       REAL(DP)              :: s1, s0, cclock
-      REAL(DP), ALLOCATABLE :: lambda_repl(:,:) 
+      REAL(DP), ALLOCATABLE :: mrepl(:,:) 
       !
       ! ... look for an empty unit
       !
@@ -1519,47 +1520,51 @@ MODULE cp_restart
          !
          DO iss = 1, nspin
             !
-            IF( ionode ) THEN
-               !
-               IF ( PRESENT( mat_z ) ) THEN
-                  CALL iotk_scan_dat( iunpun, "MAT_Z" // TRIM( iotk_index( iss ) ), mat_z(:,:,iss), FOUND = found )
-                  IF( .NOT. found ) THEN
-                     WRITE( stdout, * ) 'WARNING mat_z not read from restart file'
-                     mat_z(:,:,iss) = 0.0d0
-                  END IF
-               END IF
-               !
-            END IF
-            !
             ! ... read matrix lambda to file
             !
-            ALLOCATE( lambda_repl( nudx, nudx ) )
+            ALLOCATE( mrepl( nudx, nudx ) )
             !
             IF( ionode ) THEN
-               CALL iotk_scan_dat( iunpun, "LAMBDA0" // TRIM( cspin ), lambda_repl, FOUND = found )
+               CALL iotk_scan_dat( iunpun, "LAMBDA0" // TRIM( cspin ), mrepl, FOUND = found )
                IF( .NOT. found ) THEN
                   WRITE( stdout, * ) 'WARNING lambda0 not read from restart file'
-                  lambda_repl = 0.0d0
+                  mrepl = 0.0d0
                END IF
             END IF
 
-            CALL mp_bcast( lambda_repl, ionode_id, intra_image_comm )
+            CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
 
-            CALL distribute_lambda( lambda_repl, lambda0(:,:,iss), descla(:,iss) )
+            CALL distribute_lambda( mrepl, lambda0(:,:,iss), descla(:,iss) )
 
             IF( ionode ) THEN
-               CALL iotk_scan_dat( iunpun, "LAMBDAM" // TRIM( cspin ), lambda_repl, FOUND = found )
+               CALL iotk_scan_dat( iunpun, "LAMBDAM" // TRIM( cspin ), mrepl, FOUND = found )
                IF( .NOT. found ) THEN
                   WRITE( stdout, * ) 'WARNING lambdam not read from restart file'
-                  lambda_repl = 0.0d0
+                  mrepl = 0.0d0
                END IF
             END IF
             ! 
-            CALL mp_bcast( lambda_repl, ionode_id, intra_image_comm )
+            CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
 
-            CALL distribute_lambda( lambda_repl, lambdam(:,:,iss), descla(:,iss) )
+            CALL distribute_lambda( mrepl, lambdam(:,:,iss), descla(:,iss) )
             !
-            DEALLOCATE( lambda_repl )
+            IF ( PRESENT( mat_z ) ) THEN
+               !
+               IF( ionode ) THEN
+                  CALL iotk_scan_dat( iunpun, "MAT_Z" // TRIM( iotk_index( iss ) ), mrepl, FOUND = found )
+                  IF( .NOT. found ) THEN
+                     WRITE( stdout, * ) 'WARNING mat_z not read from restart file'
+                     mrepl = 0.0d0
+                  END IF
+               END IF
+
+               CALL mp_bcast( mrepl, ionode_id, intra_image_comm )
+
+               CALL distribute_zmat( mrepl, mat_z(:,:,iss), descla(:,iss) )
+               !
+            END IF
+            !
+            DEALLOCATE( mrepl )
             !
          END DO
          !

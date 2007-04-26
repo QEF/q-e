@@ -129,6 +129,7 @@
    !
    PUBLIC :: compute_stress
 
+   PUBLIC :: protate
 
    ! ------------------------------------ !
 
@@ -1336,6 +1337,23 @@
          INTEGER, INTENT(IN) :: n, nshow
          INTEGER, INTENT(IN), OPTIONAL :: iunit
       END SUBROUTINE
+   END INTERFACE
+
+   INTERFACE protate
+      SUBROUTINE protate_x ( c0, bec, c0rot, becrot, ngwl, nss, noff, lambda, nrl, &
+                           na, nsp, ish, nh, np_rot, me_rot, comm_rot  )
+         USE kinds,            ONLY: DP
+         IMPLICIT NONE
+         INTEGER, INTENT(IN) :: ngwl, nss, nrl, noff
+         INTEGER, INTENT(IN) :: na(:), nsp, ish(:), nh(:)
+         INTEGER, INTENT(IN) :: np_rot, me_rot, comm_rot  
+         COMPLEX(DP), INTENT(IN) :: c0(:,:)
+         COMPLEX(DP), INTENT(OUT) :: c0rot(:,:)
+         REAL(DP), INTENT(IN) :: lambda(:,:)
+         REAL(DP), INTENT(IN) :: bec(:,:)
+         REAL(DP), INTENT(OUT) :: becrot(:,:)
+      END SUBROUTINE
+
    END INTERFACE
 
 !=----------------------------------------------------------------------------=!

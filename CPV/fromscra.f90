@@ -40,7 +40,8 @@ CONTAINS
     USE ions_nose,            ONLY : xnhp0, xnhpm, vnhp
     USE cell_base,            ONLY : ainv, h, s_to_r, ibrav, omega, press, &
                                      hold, r_to_s, deth, wmass, iforceh,   &
-                                     cell_force, boxdimensions, velh
+                                     cell_force, boxdimensions, velh, a1,  &
+                                     a2, a3
     USE cell_nose,            ONLY : xnhh0, xnhhm, vnhh
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
     use electrons_base,       ONLY : nbsp, f, nspin, nupdwn, iupdwn
@@ -75,6 +76,7 @@ CONTAINS
     USE time_step,            ONLY : delt
     USE cp_main_variables,    ONLY : setval_lambda, descla
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm
+    USE small_box,            ONLY : ainvb
 
 
     !
@@ -147,9 +149,9 @@ CONTAINS
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     !     
-    CALL initbox ( tau0, taub, irb )
+    CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
     !     
-    CALL phbox( taub, eigrb )
+    CALL phbox( taub, eigrb, ainvb )
     !
     !     random initialization
     !     
@@ -214,9 +216,6 @@ CONTAINS
 
          CALL calbec ( 1, nsp, eigr, cm, bec )
          if (tpre) CALL caldbec( ngw, nkb, nbsp, 1, nsp, eigr, cm, dbec, .true. )
-
-         CALL initbox ( tau0, taub, irb )
-         CALL phbox( taub, eigrb )
          !
          CALL rhoofr ( nfi, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, enl, denl, ekin, dekin6 )
          !

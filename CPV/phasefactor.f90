@@ -191,7 +191,7 @@
 
 !-----------------------------------------------------------------------
 
-   subroutine phfac( tau0, ei1, ei2, ei3, eigr)
+   subroutine phfac_x( tau0, ei1, ei2, ei3, eigr)
 
       !-----------------------------------------------------------------------
       !  this subroutine generates the complex matrices ei1, ei2, and ei3
@@ -233,28 +233,29 @@
       deallocate( taus )
 !
       return
-   end subroutine phfac
+   end subroutine phfac_x
 
 
 !-----------------------------------------------------------------------
-      subroutine phbox(taub,eigrb)
+      SUBROUTINE phbox( taub, eigrb, ainvb )
 !-----------------------------------------------------------------------
 !     calculates the phase factors for the g's of the little box
 !     eigrt=exp(-i*g*tau) .
 !     Uses the same logic for fast calculation as in phfac (see below)
 !        
+      USE kinds,         only: DP
       use io_global,     only: stdout
       use control_flags, only: iprsta
       use ions_base,     only: nsp, na, nat
       use gvecb,         only: ngb, mill_b
       use cell_base,     only: r_to_s
-      use small_box,     only: ainvb
       use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b
       use cp_interfaces, only: phfacs
 !                 
-      implicit none    
-      real(8) :: taub(3,nat)
-      complex(8) :: eigrb(ngb,nat)
+      IMPLICIT NONE    
+      REAL(DP)    :: taub(3,nat)
+      COMPLEX(DP) :: eigrb(ngb,nat)
+      REAL(DP)    :: ainvb(3,3)
 ! local           
       integer :: i,j,k, is, ia, ig, isa
       complex(8), allocatable:: ei1b(:,:), ei2b(:,:), ei3b(:,:)
@@ -302,6 +303,6 @@
       deallocate(ei1b)
       deallocate( taus )
 !
-      return
-      end subroutine phbox
+      RETURN
+      END SUBROUTINE phbox
 

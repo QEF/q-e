@@ -67,7 +67,7 @@ MODULE from_restart_module
                                      efield_berry_setup2, tefield2
     USE cp_interfaces,        ONLY : runcp_uspp, runcp_uspp_force_pairing, &
                                      interpolate_lambda, from_restart_x, nlrh, vofrhos, &
-                                     nlfh
+                                     nlfh, phfacs
     USE energies,             ONLY : eself, enl, etot, ekin, dft_energy_type, enthal, ekincm
     USE time_step,            ONLY : delt, tps
     USE electrons_nose,       ONLY : xnhe0, xnhem, vnhe
@@ -80,6 +80,7 @@ MODULE from_restart_module
     USE mp_global,            ONLY : np_ortho, me_ortho, ortho_comm, me_image
     USE cp_main_variables,    ONLY : descla
     USE atoms_type_module,    ONLY : atoms_type
+    USE grid_dimensions,      ONLY : nr1, nr2, nr3
     !
     COMPLEX(DP) :: eigr(:,:), ei1(:,:), ei2(:,:), ei3(:,:)
     COMPLEX(DP) :: eigrb(:,:)
@@ -270,7 +271,7 @@ MODULE from_restart_module
              !
              CALL s_to_r( taus, tau0, na, nsp, h )
              !
-             CALL phfac( tau0, ei1, ei2, ei3, eigr )
+             CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
              !
              CALL calbec( 1, nsp, eigr, c0, bec )
              !
@@ -313,6 +314,7 @@ MODULE from_restart_module
           CALL DSWAP( 2*SIZE(c0), c0, 1, cm, 1 )
           !
           END IF
+          !
        END IF
        !
        ! dt_old should be -1.0 here if untouched ...
@@ -408,8 +410,9 @@ MODULE from_restart_module
     USE reciprocal_vectors,   ONLY : gstart, mill_l
     USE gvecs,                ONLY : ngs
     USE gvecw,                ONLY : ngw
-    USE cp_interfaces,        ONLY : strucf
+    USE cp_interfaces,        ONLY : strucf, phfacs
     USE cdvan,                ONLY : dbec
+    USE grid_dimensions,      ONLY : nr1, nr2, nr3
     !
     IMPLICIT NONE
     !
@@ -441,7 +444,7 @@ MODULE from_restart_module
        !
     END IF
     !
-    CALL phfac( tau0, ei1, ei2, ei3, eigr )
+    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     !
@@ -483,7 +486,7 @@ SUBROUTINE from_restart_x( &
    USE electrons_base,        ONLY : nspin, iupdwn, nupdwn, f, nbsp
    USE io_global,             ONLY : ionode, ionode_id, stdout
    USE cell_base,             ONLY : ainv, h, hold, deth, r_to_s, s_to_r, boxdimensions, &
-                                     velh
+                                     velh, a1, a2, a3
    USE ions_base,             ONLY : na, nsp, iforce, vel_srt, nat, randpos
    USE time_step,             ONLY : tps, delt
    USE ions_positions,        ONLY : taus, tau0, tausm, taum, vels, fion, fionm
@@ -498,6 +501,7 @@ SUBROUTINE from_restart_x( &
    USE mp_global,             ONLY : me_image
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
+   USE small_box,             ONLY : ainvb
    !
    IMPLICIT NONE
    !
@@ -643,18 +647,11 @@ SUBROUTINE from_restart_x( &
    ! ... computes form factors and initializes nl-pseudop. according
    ! ... to starting cell (from ndr or again standard input)
    !
-   IF( program_name == 'CP90' ) THEN
-      !
-      CALL initbox( tau0, taub, irb )
-      CALL phbox( taub, eigrb )
-      !
-   END IF
+   CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
    !
-   IF( program_name == 'FPMD' ) THEN
-      CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
-   ELSE
-      CALL phfac( tau0, ei1, ei2, ei3, eigr )
-   END IF
+   CALL phbox( taub, eigrb, ainvb )
+   !
+   CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
    !
    CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
    !

@@ -34,7 +34,7 @@
                                 nelt, nx => nbspx, n => nbsp, ispin 
 
       USE ensemble_dft,   ONLY: tens, tgrand, ninner, ismear, etemp, &
-                                ef, z0, c0diag, becdiag, &
+                                ef, z0t, c0diag, becdiag, &
                                 fmat0,  &
                                 e0,   &
                                  compute_entropy2, &
@@ -128,6 +128,8 @@
       REAL(kind=DP) :: dadx1,dedx1,dentdx1,eqa,eqb,eqc, etot2, entropy2
       REAL(kind=DP) :: f2,x,xmin
       INTEGER ::  niter,nss,istart,il
+
+      CALL errore( " inner_loop ", " sub. not updated ", 1 )
    
       CALL start_clock( 'inner_loop' )
       ! initializes variables
@@ -151,7 +153,7 @@
  
         ! rotates the wavefunctions c0 and the overlaps bec
         ! (the occupation matrix f_ij becomes diagonal f_i)      
-        CALL rotate( z0, c0(:,:), bec, c0diag, becdiag, firstiter)
+        CALL rotate( z0t, c0(:,:), bec, c0diag, becdiag, firstiter)
   
         ! calculates the electronic charge density
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, rhovan, &
@@ -176,7 +178,7 @@
 
       ! calculates the occupation matrix 
       ! fmat_ij = \sum_k z_ki * f_k * z_kj
-      CALL calcmt( f, z0, fmat0,firstiter )
+      CALL calcmt( f, z0t, fmat0,firstiter )
    
       ! calculateas the energy contribution associated with 
       ! the augmentation charges and the 
@@ -478,19 +480,19 @@
   
  300    CONTINUE
          
-        ! updates z0
+        ! updates z0t
         DO is= 1, nspin
           nss= nupdwn( is )
           DO i= 1, nss
             DO k= 1, nss
-              z0( k, i, is )= zx( i, k, is )
+              z0t( k, i, is )= zx( k, i, is )
             END DO
           END DO
         END DO
         
         ! calculates the total free energy
-        CALL calcmt( f, z0, fmat0, firstiter)
-        CALL rotate( z0, c0(:,:), bec, c0diag, becdiag, firstiter )
+        CALL calcmt( f, z0t, fmat0, firstiter)
+        CALL rotate( z0t, c0(:,:), bec, c0diag, becdiag, firstiter )
         CALL rhoofr( nfi, c0diag, irb, eigrb, becdiag, &
                      rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin6 ) 
         IF(nlcc_any) CALL set_cc(irb,eigrb,rhoc)

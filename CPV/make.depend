@@ -25,6 +25,7 @@ cg_sub.o : ../Modules/atom.o
 cg_sub.o : ../Modules/cell_base.o
 cg_sub.o : ../Modules/constants.o
 cg_sub.o : ../Modules/control_flags.o
+cg_sub.o : ../Modules/descriptors.o
 cg_sub.o : ../Modules/electrons_base.o
 cg_sub.o : ../Modules/energies.o
 cg_sub.o : ../Modules/griddim.o
@@ -50,6 +51,7 @@ cg_sub.o : ortho_base.o
 cglib.o : ../Modules/cell_base.o
 cglib.o : ../Modules/constants.o
 cglib.o : ../Modules/control_flags.o
+cglib.o : ../Modules/descriptors.o
 cglib.o : ../Modules/electrons_base.o
 cglib.o : ../Modules/io_global.o
 cglib.o : ../Modules/ions_base.o
@@ -59,6 +61,8 @@ cglib.o : ../Modules/mp_global.o
 cglib.o : ../Modules/ptoolkit.o
 cglib.o : ../Modules/recvec.o
 cglib.o : ../Modules/uspp.o
+cglib.o : cp_interfaces.o
+cglib.o : mainvar.o
 cglib.o : modules.o
 chargedensity.o : ../Modules/cell_base.o
 chargedensity.o : ../Modules/constants.o
@@ -251,6 +255,7 @@ cpr.o : ../Modules/mp.o
 cpr.o : ../Modules/mp_global.o
 cpr.o : ../Modules/printout_base.o
 cpr.o : ../Modules/recvec.o
+cpr.o : ../Modules/smallbox.o
 cpr.o : ../Modules/timestep.o
 cpr.o : ../Modules/uspp.o
 cpr.o : ../Modules/wave_base.o
@@ -383,6 +388,7 @@ emptystates.o : electrons.o
 emptystates.o : mainvar.o
 emptystates.o : modules.o
 emptystates.o : ortho_base.o
+ensemble_dft.o : ../Modules/descriptors.o
 ensemble_dft.o : ../Modules/io_global.o
 ensemble_dft.o : ../Modules/kind.o
 entropy.o : ../Modules/kind.o
@@ -455,6 +461,7 @@ fromscra.o : ../Modules/kind.o
 fromscra.o : ../Modules/mp_global.o
 fromscra.o : ../Modules/printout_base.o
 fromscra.o : ../Modules/recvec.o
+fromscra.o : ../Modules/smallbox.o
 fromscra.o : ../Modules/timestep.o
 fromscra.o : ../Modules/uspp.o
 fromscra.o : ../Modules/wave_base.o
@@ -569,6 +576,7 @@ inner_loop.o : modules.o
 inner_loop_cold.o : ../Modules/atom.o
 inner_loop_cold.o : ../Modules/cell_base.o
 inner_loop_cold.o : ../Modules/control_flags.o
+inner_loop_cold.o : ../Modules/descriptors.o
 inner_loop_cold.o : ../Modules/electrons_base.o
 inner_loop_cold.o : ../Modules/energies.o
 inner_loop_cold.o : ../Modules/griddim.o
@@ -578,12 +586,14 @@ inner_loop_cold.o : ../Modules/ions_base.o
 inner_loop_cold.o : ../Modules/kind.o
 inner_loop_cold.o : ../Modules/mp.o
 inner_loop_cold.o : ../Modules/mp_global.o
+inner_loop_cold.o : ../Modules/ptoolkit.o
 inner_loop_cold.o : ../Modules/recvec.o
 inner_loop_cold.o : ../Modules/uspp.o
 inner_loop_cold.o : cg.o
 inner_loop_cold.o : cp_interfaces.o
 inner_loop_cold.o : ensemble_dft.o
 inner_loop_cold.o : ions_positions.o
+inner_loop_cold.o : mainvar.o
 inner_loop_cold.o : modules.o
 input.o : ../Modules/autopilot.o
 input.o : ../Modules/cell_base.o
@@ -823,7 +833,6 @@ phasefactor.o : ../Modules/io_global.o
 phasefactor.o : ../Modules/ions_base.o
 phasefactor.o : ../Modules/kind.o
 phasefactor.o : ../Modules/recvec.o
-phasefactor.o : ../Modules/smallbox.o
 phasefactor.o : cp_interfaces.o
 polarization.o : ../Modules/berry_phase.o
 polarization.o : ../Modules/cell_base.o
@@ -1003,6 +1012,7 @@ restart_sub.o : ../Modules/kind.o
 restart_sub.o : ../Modules/mp_global.o
 restart_sub.o : ../Modules/printout_base.o
 restart_sub.o : ../Modules/recvec.o
+restart_sub.o : ../Modules/smallbox.o
 restart_sub.o : ../Modules/timestep.o
 restart_sub.o : ../Modules/uspp.o
 restart_sub.o : ../Modules/wave_base.o
@@ -1033,6 +1043,26 @@ runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : modules.o
 runcp.o : wannier.o
+rundamp.o : ../Modules/cell_base.o
+rundamp.o : ../Modules/control_flags.o
+rundamp.o : ../Modules/electrons_base.o
+rundamp.o : ../Modules/energies.o
+rundamp.o : ../Modules/griddim.o
+rundamp.o : ../Modules/io_global.o
+rundamp.o : ../Modules/ions_base.o
+rundamp.o : ../Modules/kind.o
+rundamp.o : ../Modules/mp_global.o
+rundamp.o : ../Modules/recvec.o
+rundamp.o : ../Modules/timestep.o
+rundamp.o : ../Modules/uspp.o
+rundamp.o : ../Modules/wave_base.o
+rundamp.o : ../Modules/wavefunctions.o
+rundamp.o : cp_emass.o
+rundamp.o : cp_interfaces.o
+rundamp.o : ions_positions.o
+rundamp.o : mainvar.o
+rundamp.o : modules.o
+rundamp.o : ortho_base.o
 smcp.o : ../Modules/atom.o
 smcp.o : ../Modules/cell_base.o
 smcp.o : ../Modules/check_stop.o
@@ -1051,6 +1081,7 @@ smcp.o : ../Modules/parameters.o
 smcp.o : ../Modules/path_variables.o
 smcp.o : ../Modules/printout_base.o
 smcp.o : ../Modules/recvec.o
+smcp.o : ../Modules/smallbox.o
 smcp.o : ../Modules/timestep.o
 smcp.o : ../Modules/uspp.o
 smcp.o : ../Modules/wave_base.o
@@ -1229,6 +1260,7 @@ pseudo_base.o : ../include/f_defs.h
 pseudopot.o : ../include/f_defs.h
 pseudopot_sub.o : ../include/f_defs.h
 read_pseudo.o : ../include/f_defs.h
+rundamp.o : ../include/f_defs.h
 smcp.o : ../include/f_defs.h
 stress.o : ../include/f_defs.h
 vol_clu.o : ../include/f_defs.h
