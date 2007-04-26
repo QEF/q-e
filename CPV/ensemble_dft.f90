@@ -140,9 +140,9 @@ CONTAINS
       do is = 1, nspin
          IF( descla( lambda_node_ , is ) > 0 ) THEN
             !
-            nr = descla( nlar_ )
+            nr = descla( nlar_ , is )
             !
-            IF( descla( la_myr_ ) == descla( la_myc_ ) ) THEN
+            IF( descla( la_myr_ , is ) == descla( la_myc_ , is ) ) THEN
                DO i = 1, nr
                   psihpsi(i,i,is) = 1.0d0
                END DO
