@@ -2366,6 +2366,34 @@
         RETURN
       END SUBROUTINE BCAST_REAL 
 
+      SUBROUTINE BCAST_INTEGER( array, n, root, gid, ierr )
+        IMPLICIT NONE
+        INTEGER :: array(*)
+        INTEGER :: n, root, gid, ierr
+#if defined __MPI
+        INCLUDE 'mpif.h'
+        INTEGER :: msgsiz_max = __MSGSIZ_MAX
+        INTEGER :: nblk, blksiz, msgsiz, iblk, istart, i
+        IF( n <= msgsiz_max ) THEN
+           CALL MPI_BCAST( array, n, MPI_INTEGER, root, gid, ierr )
+        ELSE
+           nblk   = n / msgsiz_max
+           blksiz = msgsiz_max
+           DO iblk = 1, nblk
+              istart = (iblk-1)*msgsiz_max + 1
+              CALL MPI_BCAST( array( istart ), blksiz, MPI_INTEGER, root, gid, ierr )
+           END DO
+           blksiz = MOD( n, msgsiz_max )
+           IF( blksiz > 0 ) THEN
+              istart = nblk * msgsiz_max + 1
+              CALL MPI_BCAST( array( istart ), blksiz, MPI_INTEGER, root, gid, ierr )
+           END IF
+        END IF
+#endif
+        RETURN
+      END SUBROUTINE BCAST_INTEGER
+
+
 
 
 #endif

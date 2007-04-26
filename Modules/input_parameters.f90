@@ -243,7 +243,7 @@ MODULE input_parameters
           ! if .TRUE. a finite electric field is added to the local potential
           ! only used in PW
 
-          LOGICAL :: tefield2  = .FALSE.
+        LOGICAL :: tefield2  = .FALSE.
           ! if .TRUE. a second finite electric field is added to the local potential
           ! only used in PW
 
@@ -285,10 +285,11 @@ MODULE input_parameters
           !  .TRUE.  save charge density to restart dir
           !  .FALSE. do not save charge density
 
-        LOGICAL :: tabps = .FALSE. ! for ab-initio pressure and/or surface
-                                   ! calculations
+        LOGICAL :: tabps = .FALSE. 
+          ! for ab-initio pressure and/or surface calculations
 
-        LOGICAL :: lkpoint_dir = .TRUE. ! opens a directory for each k point
+        LOGICAL :: lkpoint_dir = .TRUE. 
+          ! opens a directory for each k point
 
         NAMELIST / control / title, calculation, verbosity, restart_mode, &
           nstep, iprint, isave, tstress, tprnfor, dt, ndr, ndw, outdir,   &

@@ -4362,7 +4362,7 @@ END SUBROUTINE
 !
 !
 
-SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
+SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
    !
    !  Parallel square matrix redistribution.
    !  A (input) is cyclically distributed by rows across processors
@@ -4370,7 +4370,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    !
    USE kinds,       ONLY : DP
    USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_ , la_n_
+                           descla_siz_ , la_npc_ , la_n_ , la_me_ , la_comm_
    !
    IMPLICIT NONE
    !
@@ -4378,8 +4378,6 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP) :: a(lda,*), b(ldb,*)
    INTEGER  :: desc(*)
-   INTEGER, INTENT(IN) :: nproc, me
-   INTEGER, INTENT(IN) :: comm_a
    !
 #if defined (__MPI)
    !
@@ -4388,7 +4386,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
 #endif
    !
    integer :: ierr, itag
-   integer :: np, ip
+   integer :: np, ip, me, nproc, comm_a
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
    !
@@ -4406,11 +4404,12 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
 
    np = desc( la_npr_ )  !  dimension of the processor mesh
    nb = desc( nlax_ )    !  leading dimension of the local matrix block
+   me = desc( la_me_ )   !  my processor id (starting from 0)
+   comm_a = desc( la_comm_ )
+   nproc  = desc( la_npr_ ) * desc( la_npc_ )
 
    IF( np /= desc( la_npc_ ) ) &
       CALL errore( ' cyc2blk_redist ', ' works only with square processor mesh ', 1 )
-   IF( np * np /= nproc ) &
-      CALL errore( ' cyc2blk_redist ', ' works only with compatible processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' cyc2blk_redist ', ' n less or equal zero ', 1 )
    IF( desc( la_n_ ) < nproc ) &
@@ -4496,7 +4495,7 @@ SUBROUTINE cyc2blk_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
 END SUBROUTINE cyc2blk_redist
 
 
-SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
+SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
    !
    !  Parallel square matrix redistribution.
    !  A (output) is cyclically distributed by rows across processors
@@ -4504,7 +4503,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    !
    USE kinds,       ONLY : DP
    USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , lambda_node_ , la_npr_ , &
-                           descla_siz_ , la_npc_ , la_n_
+                           descla_siz_ , la_npc_ , la_n_ , la_me_ , la_comm_
    !
    IMPLICIT NONE
    !
@@ -4512,8 +4511,6 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    INTEGER, INTENT(IN) :: lda, ldb
    REAL(DP) :: a(lda,*), b(ldb,*)
    INTEGER  :: desc(*)
-   INTEGER, INTENT(IN) :: nproc, me
-   INTEGER, INTENT(IN) :: comm_a
    !
 #if defined (__MPI)
    !
@@ -4522,7 +4519,7 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
 #endif
    !
    integer :: ierr, itag
-   integer :: np, ip
+   integer :: np, ip, me, comm_a, nproc
    integer :: ip_ir, ip_ic, ip_nr, ip_nc, il, nbuf, ip_irl
    integer :: i, ii, j, jj, nr, nc, nb, nrl, irl, ir, ic
    !
@@ -4540,15 +4537,16 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
 
    np = desc( la_npr_ )  !  dimension of the processor mesh
    nb = desc( nlax_ )    !  leading dimension of the local matrix block
+   me = desc( la_me_ )   !  my processor id (starting from 0)
+   comm_a = desc( la_comm_ )
+   nproc  = desc( la_npr_ ) * desc( la_npc_ )
 
    IF( np /= desc( la_npc_ ) ) &
-      CALL errore( ' cyc2blk_redist ', ' works only with square processor mesh ', 1 )
-   IF( np * np /= nproc ) &
-      CALL errore( ' cyc2blk_redist ', ' works only with compatible processor mesh ', 1 )
+      CALL errore( ' blk2cyc_redist ', ' works only with square processor mesh ', 1 )
    IF( n < 1 ) &
-      CALL errore( ' cyc2blk_redist ', ' n less or equal zero ', 1 )
+      CALL errore( ' blk2cyc_redist ', ' n less or equal zero ', 1 )
    IF( desc( la_n_ ) < nproc ) &
-      CALL errore( ' cyc2blk_redist ', ' nb less than the number of proc ', 1 )
+      CALL errore( ' blk2cyc_redist ', ' nb less than the number of proc ', 1 )
 
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
@@ -4558,7 +4556,6 @@ SUBROUTINE blk2cyc_redist( n, a, lda, nproc, me, comm_a, b, ldb, desc )
    !
    ALLOCATE( sndbuf( nb/nproc+2, nb ) )
    ALLOCATE( rcvbuf( nb/nproc+2, nb, nproc ) )
-
    !
    nr  = desc( nlar_ ) 
    nc  = desc( nlac_ )

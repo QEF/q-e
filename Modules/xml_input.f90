@@ -35,6 +35,8 @@ MODULE xml_input
       CHARACTER(LEN=256) :: filename
       INTEGER            :: ierr
 
+      return
+
       filename = 'qe_input.xml'
       
       IF ( ionode ) THEN
@@ -48,6 +50,12 @@ MODULE xml_input
       END IF
 
       IF ( ionode ) THEN
+
+         CALL iotk_write_attr( attr, "targetNamespace", "http://www.deisa.org/pwscf/3_2", FIRST = .TRUE. )
+         CALL iotk_write_attr( attr, "elementFormDefault", "qualified" )
+         CALL iotk_write_attr( attr, "xmlns", "http://www.w3.org/2001/XMLSchema" )
+         CALL iotk_write_attr( attr, "xmlns:tns", "http://www.deisa.org/pwscf/3_2" )
+         CALL iotk_write_begin( iunpun, "schema", attr )
 
          CALL write_header( "Quantum-ESPRESSO", TRIM(version_number) )
 
@@ -88,6 +96,8 @@ MODULE xml_input
          CALL iotk_write_attr( attr, "section_type", "card", FIRST = .TRUE. )
          CALL iotk_write_begin( iunpun, "K_POINTS", attr )
          CALL iotk_write_end( iunpun, "K_POINTS" )
+
+         CALL iotk_write_end( iunpun, "schema" )
 
       END IF
 
