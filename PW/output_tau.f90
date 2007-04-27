@@ -13,7 +13,7 @@ SUBROUTINE output_tau( plot_lattice )
   USE kinds,     ONLY : DP
   USE constants, ONLY : bohr_radius_angs
   USE cell_base, ONLY : alat, at, bg
-  USE ions_base, ONLY : nat, tau, ityp, atm
+  USE ions_base, ONLY : nat, tau, ityp, atm, if_pos
   USE basis,     ONLY : atomic_positions
   !
   IMPLICIT NONE
@@ -72,7 +72,13 @@ SUBROUTINE output_tau( plot_lattice )
   !
   DO na = 1, nat
      !
-     WRITE( stdout,'(A3,3X,3F14.9)') atm(ityp(na)), tau_out(:,na)
+     IF ( ANY( if_pos(:,na) == 0 ) ) THEN
+        WRITE( stdout,'(A3,3X,3F14.9,X,3i4)') &
+                        atm(ityp(na)), tau_out(:,na), if_pos(:,na)
+     ELSE
+        WRITE( stdout,'(A3,3X,3F14.9)') &
+                        atm(ityp(na)), tau_out(:,na)
+     END IF
      !
   END DO
   !
