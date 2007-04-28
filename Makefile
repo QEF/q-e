@@ -11,6 +11,7 @@ default :
 	@echo '  pwcond       ballistic conductance'
 	@echo '  d3           third-order derivatives'
 	@echo '  vdw          vdW calculation'
+	@echo '  gipaw        magnetic response (NMR, EPR, ...)'
 	@echo '  tools        misc tools for data analysis'
 	@echo '  ld1          utilities for pseudopotential generation'
 	@echo '  upf          utilities for pseudopotential conversion'
@@ -62,6 +63,11 @@ vdw : bindir mods libs pw ph pp
 	( cd VdW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
 	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
 
+gipaw : bindir mods libs pw
+	if test -d GIPAW ; then \
+	( cd GIPAW ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
+	else $(MAKE) $(MFLAGS) TLDEPS= all ; fi ) ; fi
+
 tools : bindir mods libs pw
 	if test -d pwtools ; then \
 	( cd pwtools ; if test "$(MAKE)" = "" ; then make $(MFLAGS) TLDEPS= all ; \
@@ -106,7 +112,7 @@ clean :
 	touch make.sys 
 	for dir in \
 		CPV D3 Gamma Modules PH PP PW PWCOND VdW\
-		atomic clib flib pwtools upftools iotk \
+		atomic clib flib pwtools upftools iotk GIPAW \
 	; do \
 	    if test -d $$dir ; then \
 		( cd $$dir ; \
