@@ -10,9 +10,7 @@
 SUBROUTINE g_tensor_crystal
   !-----------------------------------------------------------------------
   !
-  ! ... Compute the "bare" susceptibility as in Eq.(64-65) of
-  ! ... PRB 63, 245101 (2001)
-  ! ... add more comments
+  ! ... Compute the g-tensor: PRL 88, 086403 (2002)
   !
   USE kinds,                       ONLY : DP
   USE io_global,                   ONLY : stdout
@@ -45,7 +43,7 @@ SUBROUTINE g_tensor_crystal
   !-- local variables ----------------------------------------------------
   IMPLICIT NONE
   complex(dp), allocatable, dimension(:,:,:) :: p_evc, vel_evc, g_vel_evc
-  complex(dp), allocatable :: aux(:,:)
+  complex(dp), allocatable :: aux(:,:), aux1(:)
 
   ! Q tensor of eq. (65) (pGv => HH in Paratec, vGv => VV in Paratec)
   real(dp) :: q_pGv(3,3,-1:1), q_vGv(3,3,-1:1)
@@ -66,7 +64,7 @@ SUBROUTINE g_tensor_crystal
   integer :: s_maj, s_min
   real(dp) :: e_hartree, charge, s_weight, rho_diff, d_omega
   real(dp), allocatable :: grad_vr(:,:), v_local(:,:)
-  real(dp), allocatable :: grad_vh(:,:), vh(:)
+  real(dp), allocatable :: grad_vh(:,:), vh(:,:), rho1(:,:)
   real(dp), dimension ( 3, 3 ) :: delta_g_rmc, delta_g_bare, delta_g_soo, &
        delta_g_soo_2, delta_g_paramagn, delta_g_diamagn, delta_g_total, &
        delta_g_rmc_gipaw
@@ -80,11 +78,9 @@ SUBROUTINE g_tensor_crystal
   
   !-----------------------------------------------------------------------
   
-  !<apsi> TMPTMPTMP Until the reconstruction has been implemented
   delta_g_paramagn = 0.0_DP
   delta_g_diamagn = 0.0_DP
-  !</apsi>
-  
+
   g_prime = 2 * ( g_e - 1 )
   
   !<apsi> TMPTMPTMP Move to input or make it default?
@@ -152,7 +148,7 @@ SUBROUTINE g_tensor_crystal
     
     ! read wfcs from file and compute becp
     call get_buffer (evc, nwordwfc, iunwfc, ik)
-    call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+    !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
     
     !<apsi>
     call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
@@ -167,7 +163,7 @@ SUBROUTINE g_tensor_crystal
     !!!write(*,'(''q='',3(F12.4))') q
     
     call compute_u_kq(ik, q)
-    evc = evq
+    !!evc = evq
     
     do ibnd = 1, nbnd_occ(ik)
        delta_rmc = delta_rmc - s_weight &
@@ -213,9 +209,6 @@ SUBROUTINE g_tensor_crystal
       
       ! loop over cartesian directions
       do i = 1, 3
-        if (iverbosity > 10) then
-          write(stdout,*) "  QQQ: ", i * isign
-        end if
         ! set the q vector
         q(:) = 0.0_dp
         q(i) = real(isign,dp) * q_gipaw
@@ -246,13 +239,23 @@ SUBROUTINE g_tensor_crystal
       
     enddo  ! isign
   enddo  ! ik
+
+#ifdef __PARA
+  call reduce(9, f_sum)
+  call reduce(9, q_pGv)
+  call reduce(9, q_vGv)
+  !<ceres> other reductions? </ceres>
+#endif
   
-  ! TODO: put a lot of poolreduce here
 #ifdef __PARA
   call poolreduce(9, f_sum)
   call poolreduce(9, q_pGv)
   call poolreduce(9, q_vGv)
-  ! TODO: non working yet in parallel!!!
+  call poolreduce(9, delta_g_diamagn)
+  call poolreduce(9, delta_g_paramagn)
+  call poolreduce(9, delta_rmc)
+  call poolreduce(9, gipaw_delta_rmc)
+  call poolreduce(nrxxs*nspin*9, j_bare)  ! or nrxx?
 #endif
   
   !====================================================================
@@ -338,8 +341,9 @@ SUBROUTINE g_tensor_crystal
   do ispin = 1, nspin
      v_local(:,ispin) = vltot(:) + vr(:,ispin)
   end do
+  ! <ceres> which spin channel? </ceres>
   call gradient ( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, v_local, &
-       ngm, g, nl, alat, grad_vr )
+       ngm, g, nl, grad_vr )
   grad_vr = grad_vr * units_Ry2Ha
   deallocate ( v_local )
   ! </apsi>
@@ -372,13 +376,19 @@ SUBROUTINE g_tensor_crystal
   
   ! calculate the spin-other-orbit term a'la paratec:
   !   int_r j_up(r) x v_h[n_unpaired] d^3r
-  allocate ( grad_vh ( 3, nrxx ), vh ( nrxx ) )
-  call v_h( rho(:,s_maj)-rho(:,s_min), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-       nl, ngm, gg, gstart, 1, alat, omega, e_hartree, charge, vh )
+  allocate(grad_vh(3,nrxx), vh(nrxx,nspin), aux1(nrxx))
+  ! transform rho to G-space
+  aux1(:) = rho(:,s_maj)-rho(:,s_min)
+  CALL cft3( aux1, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+  rhog(:,1) = aux1(nl(:))
+  rhog(:,2) = 0.d0
+  vh = 0.d0
+  call v_h(rhog, e_hartree, charge, vh)
+  ! <ceres> which spin channel? </ceres>
   call gradient ( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, vh, &
-       ngm, g, nl, alat, grad_vh )
+       ngm, g, nl, grad_vh )
   grad_vh = grad_vh * units_Ry2Ha
-  deallocate ( vh )
+  deallocate(vh, aux1)
   
   ! -2*j_bare_dw(r) because of the self-interaction correction:
   !   j_bare(r) - [j_bare_up(r)-j_bare_dw(r)] = -2*j_bare_dw(r)
@@ -427,88 +437,95 @@ SUBROUTINE g_tensor_crystal
      delta_g_rmc(i,i) = delta_rmc
   end do
   
-  !
   ! ***************** relativistic-mass-correction gipaw *******************
-  !
-  
   gipaw_delta_rmc = gipaw_delta_rmc * alpha ** 2 * g_e * units_Ry2Ha * 1e6
   delta_g_rmc_gipaw = 0.0_DP
   do i = 1, 3
      delta_g_rmc_gipaw(i,i) = gipaw_delta_rmc
   end do
   
-  !
   ! ***************** diamagnetic reconstruction *******************
-  !
-  
-  ! symmetrize tensors
-  !call trntns (delta_g_diamagn, at, bg, -1)
-  !call symz(delta_g_diamagn, nsym, s, 1, irt)
-  !call trntns (delta_g_diamagn, at, bg, 1)
-  
   delta_g_diamagn(:,:) = delta_g_diamagn(:,:) &
        * g_prime / 4 * units_Ry2Ha * 1e6
   
-  !
   ! ***************** paramagnetic reconstruction *******************
-  !
-  
-  ! symmetrize tensors
-  !call trntns (delta_g_paramagn, at, bg, -1)
-  !call symz(delta_g_paramagn, nsym, s, 1, irt)
-  !call trntns (delta_g_paramagn, at, bg, 1)
-  
   delta_g_paramagn(:,:) = delta_g_paramagn(:,:) * g_prime / 2 * 1e6 &
        * units_Ry2Ha
   
-  !
   ! ***************** total delta_g *******************
-  !
-  
   delta_g_total = delta_g_rmc + delta_g_rmc_gipaw + delta_g_bare &
        + delta_g_diamagn + delta_g_paramagn + delta_g_soo 
   
+
+  ! print results
   write (stdout,*)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - relativistic-mass-correction'
   write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_rmc(:,:)
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_rmc(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - relativistic-mass-correction gipaw'
   write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_rmc_gipaw(:,:)
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_rmc_gipaw(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-orbit-bare'
-  write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_bare(:,:)
+  write (stdout,*)
+  if (iverbosity > 0) &
+    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_bare(:,:)
+  call sym_cart_tensor(delta_g_bare) 
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_bare(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-orbit diamagnetic correction (GIPAW)'
   write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_diamagn(:,:)
+  if (iverbosity > 0) &
+    write ( stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_diamagn(:,:)
+  call sym_cart_tensor(delta_g_diamagn) 
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_diamagn(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-orbit paramagnetic correction (GIPAW)'
   write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_paramagn(:,:)
+  if (iverbosity > 0) &
+    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_paramagn(:,:)
+  call sym_cart_tensor(delta_g_paramagn) 
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_paramagn(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-other-orbit'
   write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_soo(:,:)
+  if (iverbosity > 0) &
+    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_soo(:,:)
+  call sym_cart_tensor(delta_g_soo) 
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_soo(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-other-orbit, version 2'
   write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_soo_2(:,:)
+  if (iverbosity > 0) &
+    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_soo_2(:,:)
+  call sym_cart_tensor(delta_g_soo_2) 
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_soo_2(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - total'
   write (stdout,*) 
-  write ( stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_total(:,:)
+  if (iverbosity > 0) &
+    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_total(:,:)
+  call sym_cart_tensor(delta_g_total) 
+  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_total(:,:)
+
   write (stdout,*) '**********************************************'
   write (stdout,*)
   
@@ -919,3 +936,4 @@ CONTAINS
   END SUBROUTINE add_to_sigma_para
   
 END SUBROUTINE g_tensor_crystal
+
