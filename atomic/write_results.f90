@@ -107,9 +107,6 @@ subroutine write_results
   write(6,&
        '(5x,''Evxt ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        evxt, evxt*0.5_dp, evxt*13.6058_dp
-  write(6,&
-       '(5x,''Epseu='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       epseu, epseu*0.5_dp, epseu*13.6058_dp
   if (isic.ne.0) then
      write(6,*)
      write(6,'(5x,"SIC information:")') 
