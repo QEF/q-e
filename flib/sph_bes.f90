@@ -27,7 +27,7 @@ subroutine sph_bes (msh, r, q, l, jl)
   real(DP) :: r (msh), q, jl (msh)
   !
   ! xseries = convergence radius of the series for small x of j_l(x)
-  real(DP) :: x, xl, xseries = 0.01_dp
+  real(DP) :: x, xl, xseries = 0.05_dp
   integer :: ir, ir0
   integer, external:: semifact
   !
