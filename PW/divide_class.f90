@@ -363,7 +363,7 @@ ELSEIF (code_group==18) THEN
 DO iclass=2,nclass
    ts=tipo_sym(smat(1,1,elem(1,iclass)))
    IF (ts==3) THEN
-      IF (angle_rot(smat(1,1,elem(1,iclass))-90.d0)<eps) THEN
+      IF (angle_rot(smat(1,1,elem(1,iclass)))-90.d0<eps) THEN
          which_irr(iclass)=2
       ELSE
          which_irr(iclass)=4
@@ -375,7 +375,7 @@ DO iclass=2,nclass
    ELSEIF (ts==5) THEN
       which_irr(iclass)=7
    ELSEIF (ts==6) THEN
-      IF (angle_rot_s(smat(1,1,elem(1,iclass))-90.d0)<eps) THEN
+      IF (angle_rot_s(smat(1,1,elem(1,iclass)))-90.d0<eps) THEN
          which_irr(iclass)=8
       ELSE
          which_irr(iclass)=6
