@@ -25,24 +25,17 @@ SUBROUTINE suscept_crystal
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
   USE becmod,                      ONLY : becp  
   USE symme,                       ONLY : nsym, s, ftau
-  USE mp_global,                   ONLY : my_pool_id, npool, me_pool, root_pool
+  USE mp_global,                   ONLY : my_pool_id, me_pool, root_pool
   USE pwcom
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, tens_fmt, &
                                          q_gipaw, iverbosity, alpha, evq, &
                                          avogadro, filcurr, filfield, &
                                          nbnd_occ, a0_to_cm, isolve, &
                                          conv_threshold
+  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, paw_recon
+  USE ions_base,                   ONLY : nat
+  USE buffers,                     ONLY : get_buffer
   
-  !<apsi>
-!  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, aephi, &
-!                                         psphi, paw_nh, paw_nhtol, &
-!                                         paw_nhtom, paw_indv, paw_nbeta
-  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, &
-                                          paw_recon
-  USE ions_base, ONLY : nat
-  USE buffers
-  !</apsi>
-
   !-- local variables ----------------------------------------------------
   IMPLICIT NONE
   complex(dp), allocatable, dimension(:,:,:) :: p_evc, vel_evc, g_vel_evc
