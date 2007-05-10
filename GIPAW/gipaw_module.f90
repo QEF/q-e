@@ -13,7 +13,7 @@ MODULE gipaw_module
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : a0_to_cm => bohr_radius_cm
-  USE parameters, ONLY : npk, ntypx, lmaxx
+  USE parameters, ONLY : npk, ntypx, lmaxx, natx
   
   IMPLICIT NONE
   SAVE
@@ -70,6 +70,12 @@ MODULE gipaw_module
   LOGICAL :: use_nmr_macroscopic_shape
   REAL(DP) :: nmr_macroscopic_shape ( 3, 3 )
   
+  ! parametres for hyper-fine interaction
+  CHARACTER ( LEN = 10 ) :: hfi_input_unit
+  CHARACTER ( LEN = 10 ) :: hfi_output_unit
+  INTEGER :: hfi_isotope(natx)
+  REAL ( dp ) :: hfi_nuclear_g_factor(natx)
+  
   !<apsi>
   CHARACTER(256) :: file_reconstruction ( ntypx )
   LOGICAL :: read_recon_in_paratec_fmt
@@ -108,7 +114,9 @@ CONTAINS
                          q_gipaw, iverbosity, filcurr, filfield, &
                          read_recon_in_paratec_fmt, &
                          file_reconstruction, use_nmr_macroscopic_shape, &
-                         nmr_macroscopic_shape, spline_ps, isolve
+                         nmr_macroscopic_shape, spline_ps, isolve, &
+                         hfi_output_unit, hfi_isotope, &
+                         hfi_nuclear_g_factor
     
     if ( .not. ionode ) goto 400
     
@@ -125,7 +133,11 @@ CONTAINS
     nmr_macroscopic_shape = 2.0_dp / 3.0_dp
     spline_ps = .true.    ! TRUE in this case!!!!!
     isolve = 0
-
+    
+    hfi_output_unit = 'MHz'
+    hfi_isotope ( : ) = 0
+    hfi_nuclear_g_factor ( : ) = 0.0
+    
     read( 5, inputgipaw, err = 200, iostat = ios )
     
 200 call errore( 'gipaw_readin', 'reading inputgipaw namelist', abs( ios ) )
@@ -162,6 +174,9 @@ CONTAINS
     call mp_bcast(nmr_macroscopic_shape, root)
     call mp_bcast(spline_ps, root)
     call mp_bcast(isolve, root)
+    call mp_bcast ( hfi_output_unit, root )
+    call mp_bcast ( hfi_isotope, root )
+    call mp_bcast ( hfi_nuclear_g_factor, root )
 #endif
   END SUBROUTINE gipaw_bcast_input
 
@@ -183,7 +198,7 @@ CONTAINS
     
   END SUBROUTINE gipaw_allocate
   
-
+  
   !-----------------------------------------------------------------------
   ! Print a short summary of the calculation
   !-----------------------------------------------------------------------
@@ -645,20 +660,20 @@ CONTAINS
     ! computes the total local potential (external+scf) on the smooth grid
     call setlocal
     call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
-
+    
     ! compute the D for the pseudopotentials
     call newd
-
+    
     ! set non linear core correction stuff
     nlcc_any = .false.
     do nt = 1, ntyp
        nlcc_any = nlcc_any.or.nlcc (nt)
     enddo
     !!if (nlcc_any) allocate (drc( ngm, ntyp))
-
+    
     !! setup all gradient correction stuff
     !!call setup_dgc
-
+    
     ! computes the number of occupied bands for each k point
     nbnd_occ (:) = 0
     do ik = 1, nks
@@ -668,7 +683,7 @@ CONTAINS
           end if
        end do
     end do
-
+    
     ! computes alpha_pv
     emin = et (1, 1)
     do ik = 1, nks

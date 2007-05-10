@@ -83,6 +83,9 @@ PROGRAM gipaw_main
   case ( 'efg' )
      call efg
      
+  case ( 'hyperfine' )
+     call hyperfine
+     
   case default
      call errore('gipaw_main', 'wrong or undefined job in input', 1)
   end select
