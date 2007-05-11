@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,16 +21,17 @@ program plotrho
   USE io_global,  ONLY : stdout
   USE kinds, only : DP
   implicit none
-  integer, parameter :: nwrk = 10000, nximax = 64, nyimax = 64, &
-       nxmax = 128, nymax = 128, nlevelx = 19, nax = 130
-  integer :: ityp (nax), nxi, nyi, nx, ny, i, j, k, nlevels, na, &
-       nat, ierr, ilen
-  real(DP) :: rhoi (0:nximax, 0:nyimax), xi (0:nximax), yi (0: &
-       nyimax), rhoo (0:nxmax, 0:nymax), x (0:nxmax), y (0:nymax), &
-       z (0:nlevelx), wrk (nwrk), xmin, xmax, ymin, ymax, rhomin, &
-       rhomax, rhoomin, rhoomax
-  real(DP) :: xdim, ydim, xs, ys
-  real(DP) :: r0 (3), tau1 (3), tau2 (3), tau (3, nax)
+  ! for spline interpolation using essl toutines
+  integer, parameter :: nwrk = 10000
+  real(DP) :: wrk (nwrk)
+  integer, allocatable :: ityp (:)
+  integer :: nxi, nyi, nx, ny, i, j, k, nlevels, na, nat, ierr, ilen
+  real(DP), allocatable :: rhoi(:,:), xi(:), yi(:)
+  real(DP), allocatable :: rhoo(:,:), x (:), y (:)
+  real(DP), allocatable ::  z (:)
+  real(DP) :: xmin, xmax, ymin, ymax, rhomin, rhomax, rhoomin, rhoomax
+  real(DP) :: xdim, ydim, xs, ys, r0 (3), tau1 (3), tau2 (3)
+  real(DP), allocatable :: tau (:,:)
   real(DP) :: at (3, 3), a0
   character (len=256) :: filename, fileout, ans * 1
   logical :: logarithmic_scale
@@ -40,10 +41,7 @@ program plotrho
   open (unit = 1, file = filename, form = 'formatted', status = 'old')
 
   read (1, * ) nxi, nyi
-  if (nxi > nximax .or. nyi > nyimax) then
-     WRITE( stdout, '("Error: nx or ny too big ")')
-     stop
-  endif
+  allocate ( xi(0:nxi), yi(0:nyi), rhoi(0:nxi,0:nyi) )
   read (1, * ) (xi (i), i = 0, nxi)
   read (1, * ) (yi (j), j = 0, nyi)
   read (1, * ) ( (rhoi (i, j), i = 0, nxi), j = 0, nyi)
@@ -51,10 +49,11 @@ program plotrho
   read (1, * ) tau1
   read (1, * ) tau2
   read (1, * ) nat
-  if (nat > nax) then
-     WRITE( stdout, '("Error: too many atoms (",i4,", max:",i4,")")') nat, nax
+  if (nat < 0 .or. nat > 1000000) then
+     WRITE( stdout, '("Error: unlikely number of atoms ",i4)') nat
      stop
   endif
+  allocate (tau (3,nat), ityp(nat) )
   read (1, * ) ( (tau (j, na), j = 1, 3), ityp (na), na = 1, nat)
   read (1, * ) a0
   read (1, * ) at
@@ -78,14 +77,11 @@ program plotrho
   !
   WRITE( stdout, '("nx, ny (output) > ",$)')
   read (5, * ) nx, ny
-  if (nx > nxmax .or. ny > nymax) then
-     WRITE( stdout, '("Error: nx or ny too big ")')
-     stop
-  endif
 #else
   nx = nxi
   ny = nyi
 #endif
+  allocate ( x(0:nx), y(0:ny), rhoo(0:nx,0:ny) ) 
   xmin = xi (0)
   xmax = xi (nxi)
   do i = 0, nx
@@ -98,8 +94,8 @@ program plotrho
      y (i) = (yi (nyi) - yi (0) ) * DBLE (i) / DBLE (ny)
   enddo
 #ifdef __ESSL
-  call dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nximax + 1, x, y, nx &
-       + 1, ny + 1, rhoo, nxmax + 1, wrk, nwrk)
+  call dcsin2 (xi, yi, rhoi, nxi + 1, nyi + 1, nxi + 1, x, y, &
+               nx + 1, ny + 1, rhoo, nx + 1, wrk, nwrk)
 #else
   rhoo (0:nx, 0:ny) = rhoi (0:nx, 0:ny)
 #endif
@@ -122,14 +118,14 @@ program plotrho
      WRITE( stdout, '("Out of Bounds! try again")')
      go to 10
   end if
-  if (nlevels > nlevelx) then
-     WRITE( stdout, '("Too many levels, reducing to allowed max:",i4)') &
-          nlevelx
-     nlevels = nlevelx
+  if (nlevels > 1000) then
+     WRITE( stdout, '("Are you sure you really need ",i8," levels?")') &
+          nlevels
   else if (nlevels < 1) then
      WRITE( stdout, '("Too few levels! assuming 1 level")') 
      nlevels = 1
   end if
+  allocate (z(0:nlevels))
   if (logarithmic_scale) then
      do k = 0, nlevels - 1
         z (k) = exp (log (rhoomin) + (log (rhoomax) - log (rhoomin) ) &
@@ -151,17 +147,21 @@ program plotrho
   ! uncomment the call to "cplot" if you want contour lines,
   ! plus gray levels and shading for negative values
 
-  call cplot (rhoo, nxmax, nymax, x, xmin, xmax, nx, y, ymin, ymax, &
+  call cplot (rhoo, nx, ny, x, xmin, xmax, nx, y, ymin, ymax, &
        ny, nlevels, z, xdim, ydim, xs, ys, filename, fileout)
 
   ! uncomment the call to "psplot" if you want contour lines
   ! of various kinds: solid, dashed, etc
 
-  ! call psplot ( rhoo, nxmax, x, nx, y, ny, nlevels, z, xdim, ydim, &
+  ! call psplot ( rhoo, nx, x, nx, y, ny, nlevels, z, xdim, ydim, &
   !      xs, ys, fileout)
 
   call atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
 20 stop
+   deallocate (z)
+   deallocate (rhoo, x , y )
+   deallocate (tau, ityp, z)
+   deallocate (rhoi, xi, yi)
 end program plotrho
 !
 !-----------------------------------------------------------------------
