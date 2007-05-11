@@ -1248,6 +1248,7 @@ then
 			CPPFLAGS="$test_cppflags $try_ifftw"
 			LDFLAGS="$c_ldflags"
 			LIBS="$fft_libs"
+                        includefftw="$try_ifftw"
 			AC_CHECK_HEADER(fftw.h, have_fftw_h=1
 					try_iflags="$try_iflags $try_ifftw")
 			if test "$ac_cv_header_fftw_h" != "no"

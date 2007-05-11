@@ -8491,6 +8491,7 @@ fi
 			CPPFLAGS="$test_cppflags $try_ifftw"
 			LDFLAGS="$c_ldflags"
 			LIBS="$fft_libs"
+                        includefftw="$try_ifftw"
 			if test "${ac_cv_header_fftw_h+set}" = set; then
   echo "$as_me:$LINENO: checking for fftw.h" >&5
 echo $ECHO_N "checking for fftw.h... $ECHO_C" >&6
