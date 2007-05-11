@@ -73,7 +73,7 @@ SUBROUTINE output_tau( plot_lattice )
   DO na = 1, nat
      !
      IF ( ANY( if_pos(:,na) == 0 ) ) THEN
-        WRITE( stdout,'(A3,3X,3F14.9,X,3i4)') &
+        WRITE( stdout,'(A3,3X,3F14.9,1X,3i4)') &
                         atm(ityp(na)), tau_out(:,na), if_pos(:,na)
      ELSE
         WRITE( stdout,'(A3,3X,3F14.9)') &
