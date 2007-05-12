@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------------
-subroutine compute_chi(lam,ik,ns,xc,lbes4)
+subroutine compute_chi(lam,ik,ikk_in,phi_in,chi_out,xc,e,lbes4)
   !--------------------------------------------------------------------------
   !
   !     This routine computes the chi functions:
@@ -19,41 +19,30 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   implicit none
   integer :: &
        ik,    & ! the point corresponding to rc
+       ikk_in,& ! the point after which the chi should be zero
        ns,    & ! the wavefunction
        lam      ! the angular momentum
   logical :: &
        lbes4 
+
   real(DP) :: &
-       xc(8)
+       e,     &       ! input: the energy
+       xc(8), &       ! input: the coefficients of the bessel function
+       phi_in(ndm), & ! input: pseudo wavefunction
+       chi_out(ndm)   ! output: the chi function
   !
   real(DP) :: &
-       j1(ndm),aux(ndm), &
+       j1(ndm), aux(ndm), gi(ndm),&
        b(4),c(4), arow(ndm),brow(ndm),crow(ndm),drow(ndm), &
        b0e, g0, g1, g2, &
-       ddx12, &
-       x4l6, &
-       x6l12, dpoly
-  real(DP), external :: pr, d2pr, dpr
+       ddx12,           &
+       x4l6,            &
+       x6l12,           &
+       int_0_inf_dr,    &
+       integral
 
   integer :: &
-       n, nstart
-
-  !
-  !   Troullier-Martins: use the analytic formula
-  !
-  if (tm) then
-     do n=1,ik
-        dpoly = dpr(xc,xc(7),r(n))
-        ! dpr =  first derivate of polynomial pr
-        ! d2pr= second derivate of polynomial pr
-        chis(n,ns) = (enls(ns) + (2*lam+2)/r(n)*dpoly + &
-             d2pr(xc,xc(7),r(n)) + dpoly**2 - vpsloc(n))*phis(n,ns)
-     enddo
-     do n = ik+1,mesh
-        chis(n,ns) = (vpot(n,1) - vpsloc(n))*phis(n,ns)
-     enddo
-     return
-  end if
+       n, nstart, nst
   !
   !   RRKJ: first expand in a taylor series the phis function
   !   Since we know that the phis functions are a sum of Bessel 
@@ -66,7 +55,7 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   x6l12=6*lam+12
 
   do n=1,6
-     j1(n)=phis(n,ns)/r(n)**(lam+1)
+     j1(n)=phi_in(n)/r(n)**(lam+1)
   enddo
   call seriesbes(j1,r,r2,6,c)
   !
@@ -127,14 +116,14 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !
   !   and compute the taylor expansion of the chis
   !
-  b0e=(b(1)-enls(ns))
+  b0e=(b(1)-e)
 
   g0=x4l6*c(3)-b0e*c(1)
   g1=x6l12*c(4)-c(1)*b(2)
   g2=-(b0e*c(3)+b(3)*c(1))
   nstart=5
   do n=1,nstart-1
-     chis(n,ns)= (g0+r(n)*(g1+g2*r(n)))*r(n)**(lam+3)/sqr(n)
+     chi_out(n)= (g0+r(n)*(g1+g2*r(n)))*r(n)**(lam+3)/sqr(n)
   enddo
   do n=1,mesh
      aux(n)= (g0+r(n)*(g1+g2*r(n)))
@@ -143,53 +132,52 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !    set up the equation
   !
   do n=1,mesh
-     phis(n,ns)=phis(n,ns)/sqr(n)
+     gi(n)=phi_in(n)/sqr(n)
   enddo
   do n=1,mesh
-     j1(n)=r2(n)*(vpsloc(n)-enls(ns))+(lam+0.5_dp)**2
+     j1(n)=r2(n)*(vpsloc(n)-e)+(lam+0.5_dp)**2
      j1(n)=1.0_dp-ddx12*j1(n)
   enddo
 
   do n=nstart,mesh-3
-     drow(n)= phis(n+1,ns)*j1(n+1)   &
-          + phis(n,ns)*(-12.0_dp+10.0_dp*j1(n))+ &
-          phis(n-1,ns)*j1(n-1)
+     drow(n)= gi(n+1)*j1(n+1)   &
+            + gi(n)*(-12.0_dp+10.0_dp*j1(n))+ &
+              gi(n-1)*j1(n-1)
 
      brow(n)=10.0_dp*ddx12
      crow(n)=ddx12
      arow(n)=ddx12
   enddo
-  drow(nstart)=drow(nstart)-ddx12*chis(nstart-1,ns)
-  chis(mesh-2,ns)=0.0_dp
-  chis(mesh-1,ns)=0.0_dp
-  chis(mesh,ns)=0.0_dp
+  drow(nstart)=drow(nstart)-ddx12*chi_out(nstart-1)
+  chi_out(mesh-2)=0.0_dp
+  chi_out(mesh-1)=0.0_dp
+  chi_out(mesh)=0.0_dp
   !
   !    and solve it
   !
   call tridiag(arow(nstart),brow(nstart),crow(nstart), &
-       drow(nstart),chis(nstart,ns),mesh-3-nstart)
+       drow(nstart),chi_out(nstart),mesh-3-nstart)
   !
   !   put the correct normalization and r dependence
   !  
   do n=1,mesh
-     phis(n,ns)=phis(n,ns)*sqr(n)
-     chis(n,ns)=chis(n,ns)*sqr(n)/r2(n)
+     chi_out(n)=chi_out(n)*sqr(n)/r2(n)
      !         if(lam.eq.0)
      !     +    write(*,'(5(e20.13,1x))')
-     !     +          r(n),chis(n,ns),chis(n,ns)/r(n)**(lam+1),
+     !     +          r(n),chi_out(n),chi_out(n)/r(n)**(lam+1),
      !     +          aux(n),aux(n)*r(n)**(lam+1)
   enddo
   !
   !    smooth close to the origin with asymptotic expansion
   !
   do n=nstart,mesh
-     if (abs(chis(n,ns)/r(n)**(lam+1)-aux(n))  &
+     if (abs(chi_out(n)/r(n)**(lam+1)-aux(n))  &
           .lt.1.e-3_dp*abs(aux(n)) ) goto 100
-     chis(n,ns)=aux(n)*r(n)**(lam+1)
+     chi_out(n)=aux(n)*r(n)**(lam+1)
   enddo
 
 100 if (n.eq.mesh+1.or.r(n).gt.0.05_dp)then
-     print*,lam,ns,n,mesh,r(n)
+     print*,lam,n,mesh,r(n)
      call errore('compute_chi','n is too large',1)
   endif
   !
@@ -197,9 +185,28 @@ subroutine compute_chi(lam,ik,ns,xc,lbes4)
   !
   do n=mesh,1,-1
      if (r(n).lt.9.0_dp) goto 200
-     chis(n,ns)=0.0_dp
+     chi_out(n)=0.0_dp
   enddo
 200 continue
+     !    check that the chi are zero beyond ikk
+  nst=0
+  gi=0.0_dp
+  do n=ikk_in+1,mesh
+     gi(n)=chi_out(n)**2
+  enddo
+  do n=min(ikk_in+20,mesh),mesh
+     chi_out(n)=0.0_dp
+  enddo
+  integral=int_0_inf_dr(gi,r,r2,dx,mesh,nst)
+  if (integral > 2.e-6_dp) then
+     write(6, '(5x,''ns='',i4,'' l='',i4, '' integral='',f15.9, &
+          & '' r(ikk) '',f15.9)') ns, lam, integral, r(ikk_in)
+     call infomsg ('gener_pseudo ','chi too large beyond r_c', -1)
+     do n=ikk_in,mesh
+        write(6,*) r(n),gi(n)
+     enddo
+     stop
+  endif
   return
 end subroutine compute_chi
 

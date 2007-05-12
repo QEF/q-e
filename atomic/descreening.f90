@@ -18,7 +18,6 @@ subroutine descreening
   use ld1inc
   implicit none
 
-
   integer ::  &
        ns,    &  ! counter on pseudo functions
        ns1,   &  ! counter on pseudo functions
@@ -45,61 +44,23 @@ subroutine descreening
   !     a test configuration equal to the one used for pseudopotential
   !     generation is strongly suggested
   !
-  nc=1
-  nwfts=nwftsc(nc)
+!  nc=1
+!  nwfts=nwftsc(nc)
   do n=1,nwfts
-     nnts(n)=nntsc(n,nc)
-     llts(n)=lltsc(n,nc)
-     elts(n)=eltsc(n,nc)
-     !         rcutts(n)=rcut(n)
-     !         rcutusts(n)=rcutus(n)
-     jjts(n) = jjtsc(n,nc)
-     iswts(n)=iswtsc(n,nc)
-     octs(n)=octsc(n,nc)
-     nstoae(n)=nstoaec(n,nc)
-     enlts(n)=enl(nstoae(n))
-     new(n)=.false.
-  enddo
-
-  do ns=1,nwfs
-     do n=1,mesh
-        phist(n,ns)=phis(n,ns)
-     enddo
+!     nnts(n)=nntsc(n,nc)
+!     llts(n)=lltsc(n,nc)
+!     elts(n)=eltsc(n,nc)
+!     jjts(n) = jjtsc(n,nc)
+!     iswts(n)=iswtsc(n,nc)
+!     octs(n)=octsc(n,nc)
+!     nstoaets(n)=nstoaec(n,nc)
+     enlts(n)=enl(nstoaets(n))
+!     new(n)=.false.
   enddo
   !
   !    compute the pseudowavefunctions in the test configuration
   !
-  if (pseudotype.eq.1) then
-     nbf=0
-  else
-     nbf=nbeta
-  endif
-
-  do ns=1,nwfts
-     if (octs(ns).gt.0.0_dp) then
-        is=iswts(ns)
-        if (pseudotype ==1) then
-           if ( rel < 2 .or. llts(ns) == 0 .or. &
-                abs(jjts(ns)-llts(ns)+0.5_dp) < 0.001_dp) then
-              ind=1
-           else if ( rel == 2 .and. llts(ns) > 0 .and. &
-                abs(jjts(ns)-llts(ns)-0.5_dp) < 0.001_dp) then
-              ind=2
-           endif
-           do n=1,mesh
-              vaux(n,1)=vpsloc(n)+vnl(n,llts(ns),ind)
-           enddo
-        else
-           do n=1,mesh
-              vaux(n,1)=vpsloc(n)
-           enddo
-        endif
-        call ascheqps(nnts(ns),llts(ns),jjts(ns),enlts(ns),    &
-             mesh,ndm,dx,r,r2,sqr,vaux,thresh,phis(1,ns), & 
-             betas,bmat,qq,nbf,nwfsx,lls,jjs,ikk)
-        !            write(6,*) ns, nnts(ns),llts(ns), jjts(ns), enlts(ns)
-     endif
-  enddo
+  call ascheqps_drv(vpsloc, 1, thresh, .false.)
   !
   !    descreening the D coefficients
   !
@@ -127,8 +88,7 @@ subroutine descreening
   !    descreening the local pseudopotential
   !
   iwork=1
-  call normalize
-  call chargeps(nwfts,llts,jjts,octs,iwork)
+  call chargeps(rhos,phits,nwfts,llts,jjts,octs,iwork)
 
   call new_potential(ndm,mesh,r,r2,sqr,dx,0.0_dp,vxt,lsd,nlcc,latt,enne, &
        rhoc,rhos,vh,vaux)
@@ -148,14 +108,6 @@ subroutine descreening
      enddo
      close(20)
   endif
-  !
-  !  copy the phis used to construct the pseudopotential
-  !
-  do ns=1,nwfs
-     do n=1,mesh
-        phis(n,ns)=phist(n,ns)
-     enddo
-  enddo
 
   return
 end subroutine descreening

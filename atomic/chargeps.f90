@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2007 QUANTUM-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,22 +7,23 @@
 !
 !
 !---------------------------------------------------------------
-subroutine chargeps(nwff,lli,jji,oci,iswfi)
+subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   !---------------------------------------------------------------
   !
-  !   calculate the (spherical) pseudo charge density and
-  !   spin polarization
+  !   calculate the (spherical) pseudo charge density 
   !
   use ld1inc
 
   integer :: &
-       nwff,       & ! input: the number of wavefunctions
-       iswfi(nwff),& ! input: their spin
-       lli(nwff)     ! input: their angular momentum
+       nwf_i,        & ! input: the number of wavefunctions
+       iswf_i(nwfsx),& ! input: their spin
+       ll_i(nwfsx)     ! input: their angular momentum
 
   real(DP) ::  &
-       jji(nwff), & ! input: their total angular momentum
-       oci(nwff)    ! input: the occupation
+       jj_i(nwfsx), & ! input: their total angular momentum
+       oc_i(nwfsx), & ! input: the occupation
+       phi_i(ndm,nwfsx), & ! input: the functions to add
+       rho_i(ndm,2)   ! output: the (nspin) components of the charge
 
   integer ::     &
        is,     &   ! counter on spin
@@ -35,15 +36,15 @@ subroutine chargeps(nwff,lli,jji,oci,iswfi)
        gi(ndm)        ! used to compute the integrals
 
 
-  rhos=0.0_dp
+  rho_i=0.0_dp
   !
   !    compute the square modulus of the eigenfunctions
   !
-  do ns=1,nwff
-     if (oci(ns).gt.0.0_dp) then
-        is=iswfi(ns)
+  do ns=1,nwf_i
+     if (oc_i(ns).gt.0.0_dp) then
+        is=iswf_i(ns)
         do n=1,mesh
-           rhos(n,is)=rhos(n,is)+oci(ns)*phis(n,ns)**2
+           rho_i(n,is)=rho_i(n,is)+oc_i(ns)*phi_i(n,ns)**2
         end do
      endif
   enddo
@@ -51,16 +52,16 @@ subroutine chargeps(nwff,lli,jji,oci,iswfi)
   !    if US pseudopotential compute the augmentation part
   !
   if (pseudotype.eq.3) then
-     do ns=1,nwff
-        if (oci(ns).gt.0.0_dp) then
-           is=iswfi(ns)
+     do ns=1,nwf_i
+        if (oc_i(ns).gt.0.0_dp) then
+           is=iswf_i(ns)
            do n1=1,nbeta
-              if (lli(ns).eq.lls(n1).and. &
-                   abs(jji(ns)-jjs(n1)).lt.1.e-7_dp) then
-                 nst=(lli(ns)+1)*2
+              if (ll_i(ns).eq.lls(n1).and. &
+                   abs(jj_i(ns)-jjs(n1)).lt.1.e-7_dp) then
+                 nst=(ll_i(ns)+1)*2
                  ikl=ikk(n1)
                  do n=1,ikl
-                    gi(n)=betas(n,n1)*phis(n,ns)
+                    gi(n)=betas(n,n1)*phi_i(n,ns)
                  enddo
                  work(n1)=int_0_inf_dr(gi,r,r2,dx,ikl,nst)
               else
@@ -73,7 +74,7 @@ subroutine chargeps(nwff,lli,jji,oci,iswfi)
            do n1=1,nbeta
               do n2=1,nbeta
                  do n=1,mesh
-                    rhos(n,is)=rhos(n,is)+qvan(n,n1,n2)*oci(ns)* &
+                    rho_i(n,is)=rho_i(n,is)+qvan(n,n1,n2)*oc_i(ns)* &
                          work(n1)*work(n2)
                  enddo
               enddo

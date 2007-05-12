@@ -37,12 +37,12 @@ subroutine write_resultsps
           '       e PS (Ry)    De AE-PS (Ry) ')
      write(6,1100) &
           (nnts(n),llts(n),elts(n),iswts(n),octs(n), &
-          enl(nstoae(n)),enls(n), &
-          enl(nstoae(n))-enls(n),  n=1,nwfts)
+          enl(nstoaets(n)),enlts(n), &
+          enl(nstoaets(n))-enlts(n),  n=1,nwfts)
      write(13,1100)  &
           (nnts(n),llts(n),elts(n),iswts(n),octs(n), &
-          enl(nstoae(n)),enls(n),  &
-          enl(nstoae(n))-enls(n),  n=1,nwfts)
+          enl(nstoaets(n)),enlts(n),  &
+          enl(nstoaets(n))-enlts(n),  n=1,nwfts)
 1100 format(4x,2i2,5x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5)
   else
      write(6,1001)
@@ -50,12 +50,12 @@ subroutine write_resultsps
           '       e PS (Ry)    De AE-PS (Ry) ')
      write(6,1101) &
           (nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
-          enl(nstoae(n)),enls(n), &
-          enl(nstoae(n))-enls(n),  n=1,nwfts)
+          enl(nstoaets(n)),enlts(n), &
+          enl(nstoaets(n))-enlts(n),  n=1,nwfts)
      write(13,1101)  &
           (nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
-          enl(nstoae(n)),enls(n),  &
-          enl(nstoae(n))-enls(n),  n=1,nwfts)
+          enl(nstoaets(n)),enlts(n),  &
+          enl(nstoaets(n))-enlts(n),  n=1,nwfts)
 1101 format(4x,2i2,f4.1,1x,a2,i4,'(',f5.2,')',f15.5,f15.5,f15.5)
   endif
   write(6,1200) eps0,iter

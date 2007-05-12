@@ -36,6 +36,7 @@ subroutine pseudovloc
        xc(8),              &  ! the coefficients of the fit
        bm(2),              &  ! the derivative of the bessel
        vaux(ndm,2),        &  ! keeps the potential
+       psi_in(ndm),        &  ! auxiliary
        j1(ndm,4)              ! the bessel functions
 
   real(DP) :: &
@@ -44,6 +45,7 @@ subroutine pseudovloc
 
   integer ::         &
        n,        &  ! counter on mesh points
+       ns,       &  ! auxiliary
        indi,rep, &  ! auxiliary
        indns(0:1), & ! auxiliary
        nc           ! counter on bessel
@@ -63,55 +65,14 @@ subroutine pseudovloc
      if (mod(ik,2) == 0) ik=ik+1
      if (ik <= 1 .or. ik > mesh) &
           call errore('pseudovloc','wrong matching point',1)
-     !
-     !    compute first and second derivative
-     !
-     fae=vpot(ik,1)
-     f1ae=deriv_7pts(vpot,ik,r(ik),dx)
-     f2ae=deriv2_7pts(vpot,ik,r(ik),dx)
-     !
-     !    find the q_i of the bessel functions
-     !      
-     call find_qi(f1ae/fae,xc(3),ik,0,2,0,iok)
-     if (iok /= 0) &
-          call errore('pseudovloc','problems with find_qi',1)
-     !
-     !    compute the functions
-     !
-     do nc=1,2
-        call sph_bes(ik+1,r,xc(2+nc),0,j1(1,nc))
-        jnor=j1(ik,nc)
-        do n=1,ik+1
-           j1(n,nc)=j1(n,nc)*vpot(ik,1)/jnor
-        enddo
-     enddo
-     !
-     !    compute the second derivative and impose continuity of zero, 
-     !    first and second derivative
-     !
+!
+!  smooth the potential before ik.
+!
 
-     do nc=1,2
-        p1aep1=(j1(ik+1,nc)-j1(ik,nc))/(r(ik+1)-r(ik))
-        p1aem1=(j1(ik,nc)-j1(ik-1,nc))/(r(ik)-r(ik-1))
-        bm(nc)=(p1aep1-p1aem1)*2.0_dp/(r(ik+1)-r(ik-1))
-     enddo
-
-     xc(2)=(f2ae-bm(1))/(bm(2)-bm(1))
-     xc(1)=1.0_dp-xc(2)
-     write(6, 110) rcloc,xc(4)**2 
+     call compute_potps(ik,vpot,vpsloc,xc)
+     write(6, 110) r(ik),xc(5)**2 
 110  format (/5x, ' Local pseudo, rcloc=',f6.3, &
           ' Estimated cut-off energy= ', f8.2,' Ry')
-     !
-     !    define the local pseudopotential
-     !
-     do n=1,ik
-        vpsloc(n)=xc(1)*j1(n,1)+xc(2)*j1(n,2)
-     enddo
-
-     do n=ik+1,mesh
-        vpsloc(n)=vpot(n,1)
-     enddo
-
   else
      !
      !    if a given angular momentum gives the local component this is done 
@@ -134,8 +95,7 @@ subroutine pseudovloc
      vaux=0.0_dp
      do indi=0,rep
         nwf0=nstoae(nsloc+indi)
-        if (enls(nsloc+indi) == 0.0_dp) &
-             enls(nsloc+indi)=enl(nstoae(nsloc+indi))
+        if (enls(nsloc+indi) == 0.0_dp)  enls(nsloc+indi)=enl(nwf0)
         !
         !    compute the ik closer to r_cut
         !
@@ -154,7 +114,7 @@ subroutine pseudovloc
            if (rel==2) then
               write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
                   &', j=',f5.2,', matching radius rcloc = ',f8.4)") &
-                  lloc, lloc-0.5+indi, rcloc
+                  lloc, lloc-0.5d0+indi, rcloc
            else
               write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
                   &', spin=',i1,', matching radius rcloc = ',f8.4)") &
@@ -164,7 +124,17 @@ subroutine pseudovloc
         !
         !   compute the phi functions
         !
-        call compute_phipot(lloc,ik,nwf0,indns(indi),xc)
+        ns=indns(indi)
+        if (new(ns)) then
+           call set_psi_in(ik,lloc,jjs(ns),enls(ns),psi_in)
+        else
+           psi_in(:)=psi(:,1,nwf0)
+        endif
+        !
+        !  compute the phi and chi functions
+        !
+        call compute_phi_tm(lloc,ik,psi_in,phis(1,ns),0,xc,enls(ns),els(ns))
+        call compute_chi_tm(lloc,ik,ik+10,phis(1,ns),chis(1,ns),xc,enls(ns))
         !
         !     set the local potential equal to the all-electron one at large r
         !
@@ -172,7 +142,7 @@ subroutine pseudovloc
            if (r(n) > rcloc) then
               vaux(n,indi+1)=vpot(n,1)
            else
-              vaux(n,indi+1)=chis(n,indns(indi))/phis(n,indns(indi))
+              vaux(n,indi+1)=chis(n,ns)/phis(n,ns)
            endif
         enddo
      enddo

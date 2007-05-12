@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2004 PWSCF group
 ! This file is distributed under the terms of the
@@ -6,7 +7,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !--------------------------------------------------------------------------
-      subroutine compute_phius(lam,ik,ns,xc,iflag)
+      subroutine compute_phius(lam,ik,psi_in,phi_out,xc,iflag,els_in)
 !--------------------------------------------------------------------------
 !
 !     This routine computes the phi functions by pseudizing the
@@ -20,6 +21,12 @@ use ld1inc
   implicit none
 
       real(DP) :: &
+             psi_in(ndm), & ! input: the norm conserving wavefunction
+             phi_out(ndm)   ! output: the us wavefunction
+
+      character(len=2) :: els_in
+
+      real(DP) :: &
                fae,    & ! the value of the all-electron function
                f1ae,   & ! its first derivative
                xc(8),  & ! the coefficients of the fit
@@ -28,20 +35,19 @@ use ld1inc
       integer :: &
                ik, &     ! the point corresponding to rc
                ns, &     ! the function to pseudize
-               iflag,&   ! if 1 print
-               iok,  &   ! if 0 there are no problem
+               iflag, &  ! if 1 print
+               iok,   &  ! if 0 there are no problem
                lam       ! the angular momentum
 
 
       real(DP) :: &
                f1aep1,f1aem1,jnor, &  ! auxilairy quantities
                bm(2),  &              ! the derivative of the bessel
-               ff,     &              ! contain deltah corrections
                fact(2), &             ! factor of normalization
                j1(ndm,8)             ! the bessel functions
      
       real(DP) :: &
-            deriv_7pts, deriv2_7pts
+            deriv_7pts, deriv2_7pts,  p1aep1,  p1aem1
 
 
       integer :: &
@@ -51,18 +57,9 @@ use ld1inc
 !
 !    compute first and second derivative
 !
-      ff=1-dx**2/48.0_dp
-!      fae=(psipsus(ik+1,ns)+psipsus(ik,ns))*0.5_dp
-!      f1aep1=psipsus(ik+1,ns)*ff/sqr(ik+1)
-!      f1ae=psipsus(ik,ns)*(-12.0_dp+10.0_dp*ff)/sqr(ik)
-!      f1aem1=psipsus(ik-1,ns)*ff/sqr(ik-1)
-!      f2ae=(f1aep1+f1ae+f1aem1)/dx**2
-!      f1ae=(psipsus(ik+1,ns)-psipsus(ik,ns))/(r(ik+1)-r(ik))
-
-      fae=psipsus(ik,ns)
-      f1ae=deriv_7pts(psipsus(1,ns),ik,r(ik),dx)
-      f2ae=deriv2_7pts(psipsus(1,ns),ik,r(ik),dx)
-
+      fae=psi_in(ik)
+      f1ae=deriv_7pts(psi_in,ik,r(ik),dx)
+      f2ae=deriv2_7pts(psi_in,ik,r(ik),dx)
 !
 !    find the q_i of the bessel functions
 !      
@@ -74,7 +71,7 @@ use ld1inc
 !
       do nc=1,2
          call sph_bes(ik+5,r,xc(3+nc),lam,j1(1,nc))
-         fact(nc)=psipsus(ik,ns)/(j1(ik,nc)*r(ik))
+         fact(nc)=psi_in(ik)/(j1(ik,nc)*r(ik))
          do n=1,ik+5
             j1(n,nc)=j1(n,nc)*r(n)*fact(nc)
          enddo
@@ -85,17 +82,13 @@ use ld1inc
 !
        
       do nc=1,2
-!          f1aep1=j1(ik+1,nc)*ff/sqr(ik+1)
-!          f1ae=j1(ik,nc)*(-12.0_dp+10.0_dp*ff)/sqr(ik)
-!          f1aem1=j1(ik-1,nc)*ff/sqr(ik-1)
-!          bm(nc)=(f1aep1+f1ae+f1aem1)/dx**2
-         bm(nc)=deriv2_7pts(j1(1,nc),ik,r(ik),dx)
+            bm(nc)=deriv2_7pts(j1(1,nc),ik,r(ik),dx)
       enddo
 
       xc(2)=(f2ae-bm(1))/(bm(2)-bm(1))
       xc(1)=1.0_dp-xc(2)
       if (iflag.eq.1) then
-         write(6,110) els(ns),rcutus(ns),2.0_dp*xc(5)**2
+         write(6,110) els_in,r(ik),2.0_dp*xc(5)**2
 110      format (5x, ' Wfc-us ',a3,' rcutus=',f6.3, &
                 '  Estimated cut-off energy= ', f8.2,' Ry')
       endif
@@ -103,11 +96,11 @@ use ld1inc
 !    define the phis function
 !
       do n=1,ik
-         phis(n,ns)=xc(1)*j1(n,1)+xc(2)*j1(n,2)
+         phi_out(n)=xc(1)*j1(n,1)+xc(2)*j1(n,2)
       enddo
 
       do n=ik+1,mesh
-         phis(n,ns)=psipsus(n,ns)
+         phi_out(n)=psi_in(n)
       enddo
 
       do nc=1,2

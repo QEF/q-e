@@ -64,6 +64,21 @@ subroutine ld1_setup
           &     //eltsc(n,nc)//' not found',nc)
         enddo
      enddo
+! 
+!  set the test configuration for descreening
+!
+     if (iswitch == 3) then 
+        nwfts=nwftsc(1)
+        do n=1,nwfts
+           nnts(n)=nntsc(n,1)
+           llts(n)=lltsc(n,1)
+           elts(n)=eltsc(n,1)
+           jjts(n) = jjtsc(n,1)
+           iswts(n)=iswtsc(n,1)
+           octs(n)=octsc(n,1)
+           nstoaets(n)=nstoaec(n,1)
+        enddo
+     endif
   endif
   !
   new(:)=.false.

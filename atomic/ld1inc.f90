@@ -136,6 +136,7 @@ module ld1inc
        nnts(nwfsx),  &   ! the main quantum number of pseudopotential
        llts(nwfsx),  &   ! the angular momentum of pseudopotential
        iswts(nwfsx), &   ! spin of the wfc. if(.not.lsd) all 1 (default)
+       nstoaets(nwfsx), & ! for each test wavefunction the all-electron
        nwfts             ! the number of pseudo wavefunctions
 
   real(DP) ::        &

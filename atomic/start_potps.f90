@@ -13,8 +13,6 @@ subroutine start_potps
   !     This routine computes an initial estimate of the screening
   !     potential
   !
-  !
-  !
   use ld1inc
   implicit none
 
@@ -38,7 +36,7 @@ subroutine start_potps
   do ns=1,nwfts
      if (octs(ns).gt.0.0_dp) then
         lam=llts(ns)
-        nwf0=nstoae(ns)
+        nwf0=nstoaets(ns)
         !
         !        compute the ik closer to r_cut
         !
@@ -55,7 +53,13 @@ subroutine start_potps
         !
         !    compute the phi functions
         !
-        call compute_phi(lam,ik,nwf0,ns,xc,0,nnode,octs(ns))
+        if (tm) then
+           call compute_phi_tm(lam,ik,psi(1,1,nwf0),phis(1,ns),0,xc,   &
+                                                    enls(ns),els(ns))
+        else
+           call compute_phi(lam,ik,psi(1,1,nwf0),phis(1,ns),xc,0,octs(ns), &
+                                enl(nwf0),'  ')
+        endif
         if (pseudotype.eq.3) then
            !
            !   US only on the components where ikus <> ik
@@ -63,20 +67,21 @@ subroutine start_potps
            do n=1,mesh
               psipsus(n,ns)=phis(n,ns)
            enddo
-           if (ikus.ne.ik) call compute_phius(lam,ikus,ns,xc,0)
+           if (ikus.ne.ik) call compute_phius(lam,ikus,psipsus(1,ns), &
+                                                       phis(1,ns),xc,0,'  ')
         endif
+        call normalize(phis(1,ns),llts(ns),jjts(ns))
      endif
   enddo
 
-  call normalize
-  call chargeps(nwfts,llts,jjts,octs,iswts)
+  call chargeps(rhos,phis,nwfts,llts,jjts,octs,iswts)
   call new_potential(ndm,mesh,r,r2,sqr,dx,0.0_dp,vxt,lsd,nlcc, &
        latt,enne,rhoc,rhos,vh,vnew)
 
   do is=1,nspin
      do n=1,mesh
         vpstot(n,is)=vpsloc(n)+vnew(n,is)
-        !      if (is.eq.1.and.nspin.eq.1.and.n.lt.420.and.n.gt.410) &
+        !      if (is.eq.1) &
         !                  write(6,'(3f25.16)') r(n), rhos(n,1),vpstot(n,1)
         !      if (is.eq.2.and.nspin.eq.2)  &
         !            write(6,'(3f25.16)') 2.0_dp*rhos(n,1),vpstot(n,1),vpstot(n,2)

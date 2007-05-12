@@ -56,10 +56,7 @@ program ld1
      !
      call all_electron(.false.)
      call gener_pseudo ( )
-     ! save energies used to generate PP (run_test overwrites them)
-     enlts(1:nwfs) = enls(1:nwfs)
      call run_test ( )
-     enls(1:nwfs) = enlts(1:nwfs) 
      call ld1_writeout ( )
      !
   else

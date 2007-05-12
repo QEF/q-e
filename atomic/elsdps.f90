@@ -28,7 +28,7 @@ implicit none
              exc_t,         &   ! the exchange correlation energy
              vxcp(2),       &   
              rho_tot,       &   !
-             gi(ndm),       &  ! 
+             gi(ndm),       &   ! 
              work(nwfsx)        ! 
 
       real(DP),allocatable :: &
@@ -139,7 +139,7 @@ implicit none
             lam=llts(ns)
             if (octs(ns).gt.0.0_DP) then
                do n=1, mesh
-                  f1(n,1) = f1(n,1) + phis(n,ns)**2 * octs(ns)
+                  f1(n,1) = f1(n,1) + phits(n,ns)**2 * octs(ns)
                enddo
             endif
             do n=1,mesh
@@ -157,7 +157,7 @@ implicit none
                      nst=(llts(ns)+1)*2
                      ikl=ikk(n1)
                      do n=1,ikl
-                        gi(n)=betas(n,n1)*phis(n,ns)
+                        gi(n)=betas(n,n1)*phits(n,ns)
                      enddo
                      work(n1)=int_0_inf_dr(gi,r,r2,dx,ikl,nst)
                   else
@@ -176,7 +176,7 @@ implicit none
       ekin = int_0_inf_dr(f2,r,r2,dx,mesh,2) - epseu
       do ns=1,nwfts
          if (octs(ns).gt.0.0_DP) then
-            ekin=ekin+octs(ns)*enls(ns)
+            ekin=ekin+octs(ns)*enlts(ns)
          endif
       end do
 

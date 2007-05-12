@@ -67,8 +67,8 @@ subroutine run_test
         iswts(n)=iswtsc(n,nc)
         octs(n)=octsc(n,nc)
         if (rel==2) jjts(n)=jjtsc(n,nc)
-        nstoae(n)=nstoaec(n,nc)
-        oc(nstoae(n))=octs(n)
+        nstoaets(n)=nstoaec(n,nc)
+        oc(nstoaets(n))=octs(n)
      enddo
      call all_electron(.true.)
      if (nc.eq.1) etot0=etot
@@ -87,27 +87,27 @@ subroutine run_test
         dum=0.0_dp
         im=2
         do ir=1,mesh-1
-           dum=abs(psi(ir+1,1,nstoae(n)))
-           if(dum.gt.abs(psi(ir,1,nstoae(n)))) im=ir+1
+           dum=abs(psi(ir+1,1,nstoaets(n)))
+           if(dum.gt.abs(psi(ir,1,nstoaets(n)))) im=ir+1
         enddo
         if (pseudotype.lt.3) then
            rcutts(n)=r(im)*1.1_dp
            rcutusts(n)=r(im)*1.1_dp
         else
-           if (ll(nstoae(n)).eq.0) then
+           if (ll(nstoaets(n)).eq.0) then
               rcutts(n)=r(im)*1.6_dp
               rcutusts(n)=r(im)*1.7_dp
-           elseif (ll(nstoae(n)).eq.1) then
+           elseif (ll(nstoaets(n)).eq.1) then
               rcutts(n)=r(im)*1.6_dp
               rcutusts(n)=r(im)*1.7_dp
-              if (el(nstoae(n)).eq.'2P') then
+              if (el(nstoaets(n)).eq.'2P') then
                  rcutts(n)=r(im)*1.7_dp
                  rcutusts(n)=r(im)*1.8_dp
               endif
-           elseif (ll(nstoae(n)).eq.2) then
+           elseif (ll(nstoaets(n)).eq.2) then
               rcutts(n)=r(im)*2.0_dp
               rcutusts(n)=r(im)*2.2_dp
-              if (el(nstoae(n)).eq.'3D') then
+              if (el(nstoaets(n)).eq.'3D') then
                  rcutts(n)=r(im)*2.5_dp
                  rcutusts(n)=r(im)*3.0_dp
               endif

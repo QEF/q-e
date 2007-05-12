@@ -45,7 +45,9 @@ subroutine gener_pseudo
 
   real(DP) ::    &
        xc(8),        &  ! parameters of bessel functions
+       psi_in(ndm),  &  ! the all_electron wavefunction
        gi(ndm,2),    &  ! auxiliary to compute the integrals
+       occ,          &
        sum, db, work(nwfsx) ! work space
 
   real(DP), allocatable :: &
@@ -131,47 +133,40 @@ subroutine gener_pseudo
      else
         ikk(ns)=max(ik+10,ikloc+5)
      endif
+
+     if (new(ns)) then
+        call set_psi_in(ik,lam,jjs(ns),enls(ns),psi_in)
+        occ=1.d0
+     else
+        psi_in(:)=psi(:,1,nwf0)
+        occ=ocs(ns)
+     endif
+     !
+     !   save the all-electron function for the PAW setup
+     !
+     if (lpaw) psipaw(1:mesh,ns) = psi_in(1:mesh)
      !
      !  compute the phi functions
      !
-     nnode=0
-     call compute_phi(lam,ik,nwf0,ns,xc,1,nnode,ocs(ns))
-     if (nnode.ne.0) call errore('gener_pseudo','too many nodes',1)
+     if (tm) then
+        call compute_phi_tm(lam,ik,psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
+     else
+        call compute_phi(lam,ik,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+     endif
      !
      !   US only on the components where ikus <> ik
      ! 
-     do n=1,mesh
-        psipsus(n,ns)=phis(n,ns) 
-     enddo
+     psipsus(:,ns)=phis(:,ns) 
      if (ikus.ne.ik) then
-        call compute_phius(lam,ikus,ns,xc,1)
+        call compute_phius(lam,ikus,psipsus(1,ns),phis(1,ns),xc,1,els(ns))
         lbes4=.true.
      else
         lbes4=.false.
      endif
-     call compute_chi(lam,ik,ns,xc,lbes4)
-     !
-     !    check that the chi are zero beyond ikk
-     nst=0
-     do n=1,mesh
-        gi(n,1)=0.0_dp
-     enddo
-     !   do n=ikk(ns)+1,min(ikk(ns)+20,mesh)
-     do n=ikk(ns)+1,mesh
-        gi(n,1)=chis(n,ns)**2
-     enddo
-     do n=min(ikk(ns)+20,mesh),mesh
-        chis(n,ns)=0.0_dp
-     enddo
-     sum=int_0_inf_dr(gi,r,r2,dx,mesh,nst)
-     if (sum > 2.e-6_dp) then
-        write(6, '(5x,''ns='',i4,'' l='',i4, '' sum='',f15.9, &
-             & '' r(ikk) '',f15.9)') ns, lam, sum, r(ikk(ns))
-        call infomsg ('gener_pseudo ','chi too large beyond r_c', -1)
-        do n=ikk(ns),mesh  
-           write(6,*) r(n),gi(n,1)
-        enddo
-        stop
+     if (tm) then
+        call compute_chi_tm(lam,ik,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns))
+     else
+        call compute_chi(lam,ik,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns),lbes4)
      endif
   enddo
 
