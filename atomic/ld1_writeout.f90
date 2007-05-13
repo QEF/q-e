@@ -71,14 +71,14 @@ subroutine ld1_writeout
           call write_cpmd &
                (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
                dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
-               rhoc,vnl,phis,vpsloc,elts,llts,octs,rcut,etots,nwfts)
+               rhoc,vnl,phits,vpsloc,elts,llts,octs,rcut,etots,nwfts)
        else
        ! write old "NC" format (semilocal)
        !
           call write_pseudo &
                (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
                dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
-               rhoc,vnl,phis,vpsloc,elts,llts,octs,etots,nwfts)
+               rhoc,vnl,phits,vpsloc,elts,llts,octs,etots,nwfts)
        end if
      else
        !

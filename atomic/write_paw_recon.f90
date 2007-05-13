@@ -55,9 +55,9 @@ implicit none
 
          wmax=0.0_dp
          do n=1,mesh
-            if(abs(phis(n,i)).gt.wmax.and.r(n).lt.4.0_dp)then
-               wmax=abs(phis(n,i))
-               if(phis(n,i).lt.0.0_dp)then
+            if(abs(phits(n,i)).gt.wmax.and.r(n).lt.4.0_dp)then
+               wmax=abs(phits(n,i))
+               if(phits(n,i).lt.0.0_dp)then
                   isign=-1
                else
                   isign=+1
@@ -66,7 +66,7 @@ implicit none
          enddo
 
 
-         write (51,'(1p4e19.11)') (isign*phis(n,i) , n=1,mesh )
+         write (51,'(1p4e19.11)') (isign*phits(n,i) , n=1,mesh )
          write (51,*) '</PP_REC_PS>'
          write (51,*) '</PP_REC>'
          iae=iae-1

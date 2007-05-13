@@ -26,8 +26,7 @@ subroutine descreening
        ind
 
   real(DP) :: &
-       vaux(ndm,2),&   ! work space
-       phist(ndm,nwfsx)! auxiliary to save the phi
+       vaux(ndm,2)     ! work space
 
   real(DP), external :: int_0_inf_dr ! the integral function
 
