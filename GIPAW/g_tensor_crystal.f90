@@ -64,7 +64,7 @@ SUBROUTINE g_tensor_crystal
   integer :: s_maj, s_min
   real(dp) :: e_hartree, charge, s_weight, rho_diff, d_omega
   real(dp), allocatable :: grad_vr(:,:), v_local(:,:)
-  real(dp), allocatable :: grad_vh(:,:), vh(:,:), rho1(:,:)
+  real(dp), allocatable :: grad_vh(:,:), vh(:,:)
   real(dp), dimension ( 3, 3 ) :: delta_g_rmc, delta_g_bare, delta_g_soo, &
        delta_g_soo_2, delta_g_paramagn, delta_g_diamagn, delta_g_total, &
        delta_g_rmc_gipaw
@@ -148,8 +148,12 @@ SUBROUTINE g_tensor_crystal
     
     ! read wfcs from file and compute becp
     call get_buffer (evc, nwordwfc, iunwfc, ik)
-    !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
     
+    ! this is the case q = 0 (like the case of the f-sum rule)
+    q(:) = 0.0_dp
+    !!!write(*,'(''q='',3(F12.4))') q
+    call compute_u_kq(ik, q)
+
     !<apsi>
     call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
@@ -157,13 +161,6 @@ SUBROUTINE g_tensor_crystal
     call diamagnetic_correction ( diamagnetic_corr_tensor )
     delta_g_diamagn = delta_g_diamagn + s_weight * diamagnetic_corr_tensor
     !</apsi>
-    
-    ! this is the case q = 0 (like the case of the f-sum rule)
-    q(:) = 0.0_dp
-    !!!write(*,'(''q='',3(F12.4))') q
-    
-    call compute_u_kq(ik, q)
-    !!evc = evq
     
     do ibnd = 1, nbnd_occ(ik)
        delta_rmc = delta_rmc - s_weight &

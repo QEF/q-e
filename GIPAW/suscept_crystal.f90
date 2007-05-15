@@ -100,7 +100,11 @@ SUBROUTINE suscept_crystal
     
     ! read wfcs from file and compute becp
     call get_buffer (evc, nwordwfc, iunwfc, ik)
-    !!call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+
+    ! this is the case q = 0 (like the case of the f-sum rule)
+    q(:) = 0.0_dp
+    !!!write(*,'(''q='',3(F12.4))') q
+    call compute_u_kq(ik, q)
     
     !<apsi>
     call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
@@ -109,13 +113,6 @@ SUBROUTINE suscept_crystal
     call diamagnetic_correction ( diamagnetic_corr_tensor )
     sigma_diamagnetic = sigma_diamagnetic + diamagnetic_corr_tensor
     !</apsi>
-    
-    ! this is the case q = 0 (like the case of the f-sum rule)
-    q(:) = 0.0_dp
-    !!!write(*,'(''q='',3(F12.4))') q
-    
-    call compute_u_kq(ik, q)
-    !!evc = evq
     
     ! compute p_k|evc>, v_k|evc> and G_k v_{k,k}|evc>
     call apply_operators
