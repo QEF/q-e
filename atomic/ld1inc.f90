@@ -75,7 +75,7 @@ module ld1inc
        nns(nwfsx), & ! the main quantum number of pseudopotential
        lls(nwfsx), & ! the angular momentum of pseudopotential
        isws(nwfsx),& ! the spin of each pseudo-wavefunctions (not used)
-       ikk(nwfsx), & ! the maximum ik of each wavefunctions
+       ikk(nwfsx), & ! the maximum ik of each beta functions
        nwfs,       & ! the number of pseudo wavefunctions 
        nbeta,      & ! the number of projectors
        nsloc,      & ! the wavefunction which correspond to the loc pot
@@ -93,6 +93,8 @@ module ld1inc
        rcut(nwfsx),      & ! the cut-off radius for pseudowavefunctions
        rcutus(nwfsx),    & ! the cut-off radius for us-pseudowavefunctions
        rcloc,            & ! cut-off for local potential
+       ecutrho,          & ! suggested cut-off for the change 
+       ecutwfc,          & ! suggested cut-off for the wavefunctions
        zval,             & ! the ionic pseudo charge
        phis(ndm,nwfsx),  & ! the pseudo wavefunctions
        psipsus(ndm,nwfx),& ! the all-electron wavefunctions for us pseudo
@@ -244,7 +246,10 @@ module ld1inc
        file_core,            & ! core charge
        file_recon              ! information for paw reconstruction
   ! the following filenames are determined by "prefix", not read from input
-  character(len=256) ::      & ! output files, conatining:
+  character(len=256) ::      & ! output files, containing:
+       file_wfcaegen,        & ! all-electron wavefunctions for generation
+       file_wfcncgen,        & ! norm-conserving wavefunctions for generation
+       file_wfcusgen,        & ! ultra-soft wavefunctions for generation
        file_wavefunctions,   & ! all-electron results for orbitals
        file_wavefunctionsps, & ! pseudopotential results for orbitals
        file_logder,          & ! all-electron logarithmic derivatives
@@ -254,6 +259,7 @@ module ld1inc
   ! vdw calculation
   !
   logical :: vdw        ! optional variable
+  !
   real(DP) :: um,     & ! maximum frequency
               du,     & ! step of frequency
               tr_s    ! threshold for scf solution of modified Sternheimer equation

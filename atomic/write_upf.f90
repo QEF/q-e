@@ -97,7 +97,6 @@ end subroutine write_upf
     character (len=4) :: shortname
     character (len=2), external :: atom_name
     character (len=20) :: dft
-    real(DP) ecutrho, ecutwfc
     integer :: nb, ios, nv  
     integer :: iexch, icorr, igcx, igcc
     !
@@ -130,9 +129,7 @@ end subroutine write_upf
          dft, shortname," Exchange-Correlation functional"
     write (ounps, '(f17.11,t24,a)') zval , "Z valence"  
     write (ounps, '(f17.11,t24,a)') etots, "Total energy"  
-    ecutrho=0.0_DP
-    ecutwfc=0.0_DP
-    write (ounps, '(2f11.7,t24,a)') ecutrho, ecutwfc, &
+    write (ounps, '(2f11.3,t24,a)') ecutwfc, ecutrho, &
          "Suggested cutoff for wfc and rho"  
 
     write (ounps, '(i5,t24,a)') lmax, "Max angular momentum component"  
@@ -357,7 +354,8 @@ end subroutine write_upf
   subroutine write_pseudo_addinfo (ounps)  
 !---------------------------------------------------------------------
 !
-!     This routine writes the atomic charge density to the new UPF file
+!     This routine writes the additional informations needed for the
+!     fully relativistic pseudo-potential in the new UPF file
 !
     use ld1inc
     implicit none

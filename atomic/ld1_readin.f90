@@ -80,6 +80,12 @@ subroutine ld1_readin
        file_beta,     & ! output file for the beta functions
        file_chi,      & ! outpu  file for the chi functions
        file_qvan,     & ! output file for the qvan functions
+       file_wfcaegen, & ! output file where the all-electron wfc used for 
+                        !        pseudo generation are written
+       file_wfcncgen, & ! output file where the norm-conserving wfc used for 
+                        !        pseudo generation are written
+       file_wfcusgen, & ! output file where the ultra-soft wfc used for 
+                        !        pseudo generation are written
        file_recon       ! output file needed for the paw reconstruction
        
    !
@@ -92,6 +98,9 @@ subroutine ld1_readin
   file_chi     = ' '
   file_beta    = ' '
   file_qvan    = ' '
+  file_wfcaegen = ' '
+  file_wfcncgen = ' '
+  file_wfcusgen = ' '
   !
   !   set default values 
   !

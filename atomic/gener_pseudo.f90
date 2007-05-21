@@ -109,6 +109,8 @@ subroutine gener_pseudo
   !   compute the pseudowavefunctions by expansion in spherical
   !   bessel function before r_c
   !
+  ecutrho=0.0_dp
+  ecutwfc=0.0_dp
   do ns=1,nbeta
      lam=lls(ns)
      nst=(lam+1)*2
@@ -144,7 +146,7 @@ subroutine gener_pseudo
      !
      !   save the all-electron function for the PAW setup
      !
-     if (lpaw) psipaw(1:mesh,ns) = psi_in(1:mesh)
+     psipaw(1:mesh,ns) = psi_in(1:mesh)
      !
      !  compute the phi functions
      !
@@ -152,6 +154,7 @@ subroutine gener_pseudo
         call compute_phi_tm(lam,ik,psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
      else
         call compute_phi(lam,ik,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+        ecutrho=max(ecutrho,8.0_dp*xc(6)**2)
      endif
      !
      !   US only on the components where ikus <> ik
@@ -159,9 +162,11 @@ subroutine gener_pseudo
      psipsus(:,ns)=phis(:,ns) 
      if (ikus.ne.ik) then
         call compute_phius(lam,ikus,psipsus(1,ns),phis(1,ns),xc,1,els(ns))
+        ecutwfc=max(ecutwfc,2.0_dp*xc(5)**2)
         lbes4=.true.
      else
         lbes4=.false.
+        if (.not.tm) ecutwfc=max(ecutwfc,2.0_dp*xc(6)**2)
      endif
      if (tm) then
         call compute_chi_tm(lam,ik,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns))
@@ -391,6 +396,30 @@ subroutine gener_pseudo
         enddo
         close(19)
      enddo
+  endif
+  if (file_wfcaegen .ne. ' ') then
+     open(unit=19,file=file_wfcaegen, status='unknown', iostat=ios, err=800)
+800  call errore('gener_pseudo','opening file '//file_wfcaegen,abs(ios))
+     do n=1,mesh
+        write(19,'(8f12.6)') r(n), (psipaw(n,ns), ns=1,nwfs)
+     enddo
+     close(19)
+  endif
+  if (file_wfcncgen .ne. ' ') then
+     open(unit=19,file=file_wfcncgen, status='unknown', iostat=ios, err=900)
+900  call errore('gener_pseudo','opening file '//file_wfcncgen,abs(ios))
+     do n=1,mesh
+        write(19,'(8f12.6)') r(n), (psipsus(n,ns), ns=1,nwfs)
+     enddo
+     close(19)
+  endif
+  if (file_wfcusgen .ne. ' ') then
+     open(unit=19,file=file_wfcusgen, status='unknown', iostat=ios, err=1000)
+1000  call errore('gener_pseudo','opening file '//file_wfcusgen,abs(ios))
+     do n=1,mesh
+        write(19,'(8f12.6)') r(n), (phis(n,ns), ns=1,nwfs)
+     enddo
+     close(19)
   endif
 
   write(6,"(/,5x,19('-'),' End of pseudopotential generation ',19('-'),/)")
