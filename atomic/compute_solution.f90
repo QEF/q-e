@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
+subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
      r2,sqr,vpot, &
      y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk)
   !---------------------------------------------------------------
@@ -24,7 +24,6 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
   implicit none
 
   integer :: &
-       nn, &       ! main quantum number for node number
        lam, &      ! l angular momentum
        mesh,&      ! size of radial mesh
        ndm, &      ! maximum radial mesh 
@@ -77,7 +76,6 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
        ns,  &   ! counter on beta functions
        l1,  &   ! lam+1
        nst, &   ! used in the integration routine
-       ndcr,&    ! the required number of nodes
        npt, &   ! number of points for energy intervals
        ninter,& ! number of possible energy intervals
        icountn,& ! counter on energy intervals 
@@ -100,8 +98,6 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
   x4l6=4*lam+6
   x6l12=6*lam+12
   x8l20=8*lam+20
-
-  ndcr=nn-lam-1
   !
   !  series developement of the potential near the origin
   !
@@ -111,7 +107,7 @@ subroutine compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
   enddo
   call series(y,r,r2,b)
 
-  !      write(6,*) 'eneter nn,lam,eup,elw,e',nn,lam,nbeta,eup,elw,e
+  !      write(6,*) 'eneter lam,eup,elw,e',lam,nbeta,eup,elw,e
   !
   !  set up the f-function and determine the position of its last
   !  change of sign

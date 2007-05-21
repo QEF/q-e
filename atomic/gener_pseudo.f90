@@ -171,7 +171,7 @@ subroutine gener_pseudo
      if (tm) then
         call compute_chi_tm(lam,ik,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns))
      else
-        call compute_chi(lam,ik,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns),lbes4)
+        call compute_chi(lam,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns),lbes4)
      endif
   enddo
 

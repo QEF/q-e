@@ -7,7 +7,7 @@
 !
 !
 !--------------------------------------------------------------------------
-subroutine compute_chi(lam,ik,ikk_in,phi_in,chi_out,xc,e,lbes4)
+subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   !--------------------------------------------------------------------------
   !
   !     This routine computes the chi functions:
@@ -18,7 +18,6 @@ subroutine compute_chi(lam,ik,ikk_in,phi_in,chi_out,xc,e,lbes4)
 
   implicit none
   integer :: &
-       ik,    & ! the point corresponding to rc
        ikk_in,& ! the point after which the chi should be zero
        ns,    & ! the wavefunction
        lam      ! the angular momentum

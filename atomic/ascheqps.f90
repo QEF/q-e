@@ -220,7 +220,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      write(6,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
      nosol=.true.
   else
-     call compute_solution(nn,lam,jam,e,mesh,ndm,dx,r, &
+     call compute_solution(lam,jam,e,mesh,ndm,dx,r, &
           r2,sqr,vpot,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk)
   endif
   !
