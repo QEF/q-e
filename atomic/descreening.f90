@@ -43,18 +43,8 @@ subroutine descreening
   !     a test configuration equal to the one used for pseudopotential
   !     generation is strongly suggested
   !
-!  nc=1
-!  nwfts=nwftsc(nc)
   do n=1,nwfts
-!     nnts(n)=nntsc(n,nc)
-!     llts(n)=lltsc(n,nc)
-!     elts(n)=eltsc(n,nc)
-!     jjts(n) = jjtsc(n,nc)
-!     iswts(n)=iswtsc(n,nc)
-!     octs(n)=octsc(n,nc)
-!     nstoaets(n)=nstoaec(n,nc)
      enlts(n)=enl(nstoaets(n))
-!     new(n)=.false.
   enddo
   !
   !    compute the pseudowavefunctions in the test configuration

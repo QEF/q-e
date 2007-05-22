@@ -54,6 +54,7 @@ use ld1inc
                n, &        ! counter on mesh points
                nc         ! counter on bessel
 
+      xc=0.0_dp
 !
 !    compute first and second derivative
 !
@@ -106,10 +107,6 @@ use ld1inc
       do nc=1,2
          xc(nc)=xc(nc)*fact(nc)
       enddo
-      xc(3)=0.0_dp
-      xc(6)=0.0_dp
-      xc(7)=0.0_dp
-      xc(8)=0.0_dp
 
       return
       end subroutine compute_phius
