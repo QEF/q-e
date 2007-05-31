@@ -11,7 +11,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   !--------------------------------------------------------------------------
   !
   !     This routine computes the chi functions:
-  !          |chi> = (\epsilon -T -V_{loc)) |psi>
+  !          |chi> = (\epsilon -T -V_{loc}) |psi>
   !      
   use kinds, only : DP
   use ld1inc
@@ -111,7 +111,12 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   do n=1,4
      j1(n)=vpsloc(n)
   enddo
-  call series(j1,r,r2,b)
+  if (abs(j1(1)-j1(4))>1.d-12) then
+      call series(j1,r,r2,b)
+  else
+     b=0.0_dp
+     b(1)=j1(1)
+  endif
   !
   !   and compute the taylor expansion of the chis
   !
