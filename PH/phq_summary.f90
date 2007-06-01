@@ -29,6 +29,7 @@ subroutine phq_summary
   USE constants,     ONLY : amconv
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,      ONLY : lspinorb, domag
+  USE funct,         ONLY : write_dft_name
   USE printout_base, ONLY : title
   use phcom
   USE control_flags, ONLY : iverbosity
@@ -74,7 +75,10 @@ subroutine phq_summary
        &     'charge density cut-off    = ',f12.4,'  Ry',/,5x, &
        &     'convergence threshold     = ',1pe12.1,/,5x, &
        &     'beta                      = ',0pf12.4,/,5x, &
-       &     'number of iterations used = ',i12,/)
+       &     'number of iterations used = ',i12)
+
+  CALL write_dft_name ( )
+
   !
   !  Here add a message if this is a noncollinear or a spin_orbit calculation
   !

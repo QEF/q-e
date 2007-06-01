@@ -157,6 +157,10 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       file_qvan  =   file containing output PP qvan functions      (' ')
       file_screen=   file containing output screening potential    (' ')
       file_core  =   file containing output total and core charge  (' ')
+      file_wfcaegen = file with the all-electron wfc for generation (' ')
+      file_wfcncgen = file with the norm-conserving wfc for generation (' ')
+      file_wfcusgen = file with the ultra-soft wfc for generation    (' ')
+
 
   2.1) additional cards for PP generation
 
