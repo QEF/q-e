@@ -31,6 +31,11 @@ PROGRAM pwscf
   !
   CHARACTER (LEN=9) :: code = 'PWSCF'
   !
+#if defined __INTEL
+  ! ... Intel compilers v .ge.8 allocate a lot of stack space
+  ! ... Stack limit is often small, thus causing SIGSEGV and crash
+  CALL remove_stack_limit ( )
+#endif
   !
   ! ... use ".FALSE." to disable all clocks except the total cpu time clock
   ! ... use ".TRUE."  to enable clocks

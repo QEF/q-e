@@ -3,6 +3,7 @@
 include ../make.sys
 
 OBJS = \
+stack.o \
 c_mkdir.o \
 cptimer.o \
 fft_stick.o \

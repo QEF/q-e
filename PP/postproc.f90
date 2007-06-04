@@ -27,6 +27,12 @@ PROGRAM postproc
   IMPLICIT NONE
   CHARACTER(len=256) :: filplot
   !
+#if defined __INTEL
+  ! ... Intel compilers v .ge.8 allocate a lot of stack space
+  ! ... Stack limit is often small, thus causing SIGSEGV and crash
+  CALL remove_stack_limit ( )
+#endif
+  !
   ! initialise parallel environment
   !
   CALL start_postproc (nd_nmbr)

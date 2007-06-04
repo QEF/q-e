@@ -537,7 +537,7 @@ MODULE dynamics_module
              !
              WRITE( UNIT = stdout, &
                     FMT = '(/,5X,"Soft velocity rescaling with tau=",i3, &
-                               &"*time step: T_new = ",F6.1,"K ")' ) temp_new
+                        & "*time step: T_new = ",F6.1,"K ")' ) nraise,temp_new
              !
              CALL thermalize( nraise, temp_new, temperature )
              !

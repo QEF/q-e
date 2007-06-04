@@ -1,4 +1,4 @@
-TODO LIST - February 2007
+TODO LIST - May 2007
 
 BUGS TO EXAMINE
 
@@ -39,8 +39,6 @@ COMMON
 - reduce usage of nonscalable static and dynamical memory:
   qfunc, qrad, uspp, etc
 
-- update iotk to new version
-
 - use qexml for xml file processing so that a single, easily
   exportable routine, is used everywhere. Requires some though
   on how to deal with parallelism without filling qexml with
@@ -52,15 +50,15 @@ COMMON
 - convert all single-precision constants to double precision
   (mostly done)
 
-- check whether license is written in the header of the file
-
 - pseudopotentials: support new format (xml) if/when ready
+  add default cutoff values as well as radii of augmented charge
+  in pseudopotential files
 
 - adding/removing/modifying input variables is too complex
   Why are some checks on input variables performed in read_namelist,
   while others apparently similar are in */input.f90?
 
-- time steps in fs (both in input and in output)
+- time steps in ps/fs (both in input and in output)
 
 - fix shift in eigenvalues between CP/FPMD and PW
   The eigenvalues should be the same
@@ -91,12 +89,13 @@ PW
 
 - inversion symmetry should allow real hamiltonian and wavefunctions (Dario)
 
-- Add option to prevent writing the final file (Dario)
-
 - nscf calculations are slow. There must be a way to make a better usage
   of the available information from the scf calculation: wavefunctions
   are just discarded. Same for phonon calculation: it shouldn't be needed 
   to recalculate everything almost from scratch at each different q-points
+
+- atomic coordinates should be read from file and only optionally 
+  from input in non-scf calculations: the present method is error-prone
 
 - DIIS still doesn't work!
 
@@ -141,7 +140,7 @@ POSTPROCESSING
 
 - Move to a xml-based format for the dynamical matrix files
 
-- chdens in parallel execution?
+- fix pp.x in parallel execution
 
 - pwtools: add example of a plot of phonon dispersions
   Fix fqha.f90
@@ -188,8 +187,6 @@ CP/FPMD:
 
 - Proposals from Princeton:
   * default set up for molecular calculations
-  * default cutoff values as well as radii of augmented charge
-    from pseudopotential files
   * default choice for spin restricted and spin unrestricted configurations
     for neutral systems (maybe already there?)
   * automatic FFT grids from cutoff

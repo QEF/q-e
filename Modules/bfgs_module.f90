@@ -608,7 +608,6 @@ MODULE bfgs_module
       REAL(DP), ALLOCATABLE :: Hy(:), yH(:)
       REAL(DP)              :: sdoty
       !
-      !
       ALLOCATE( y( n ), s( n ), Hy( n ), yH( n ) )
       !
       s(:) = pos(:)  - pos_p(:)
@@ -620,7 +619,7 @@ MODULE bfgs_module
          !
          ! ... the history is reset
          !
-         WRITE( stdout, '(/,5X,"WARINIG: unexpected ", &
+         WRITE( stdout, '(/,5X,"WARNING: unexpected ", &
                          &     "behaviour in update_inverse_hessian")' )
          WRITE( stdout, '(  5X,"         resetting bfgs history",/)' )
          !
@@ -636,8 +635,8 @@ MODULE bfgs_module
       ! ... BFGS update
       !
       inv_hess = inv_hess + 1.D0 / sdoty * &
-                      ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
-                        ( matrix( s, yH ) +  matrix( Hy, s ) ) )
+                 ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
+                  ( matrix( s, yH ) +  matrix( Hy, s ) ) )
       !
       DEALLOCATE( y, s, Hy, yH )
       !
