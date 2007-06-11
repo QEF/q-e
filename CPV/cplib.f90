@@ -700,86 +700,6 @@ END FUNCTION
    END FUNCTION enkin
 !
 !
-!
-!-----------------------------------------------------------------------
-      SUBROUTINE force_ps(rhotemp,rhog,vtemp,ei1,ei2,ei3,fion1)
-!-----------------------------------------------------------------------
-!
-! Contribution to ionic forces from local pseudopotential
-!
-      USE kinds,              ONLY: dp
-      USE constants,          ONLY: pi, fpi
-      USE electrons_base,     ONLY: nspin
-      USE gvecs,              ONLY: ngs
-      USE gvecp,              ONLY: ng => ngm
-      USE reciprocal_vectors, ONLY: gstart, gx, mill_l, g
-      USE cell_base,          ONLY: omega, tpiba, tpiba2
-      USE ions_base,          ONLY: nsp, na, nat
-      USE grid_dimensions,    ONLY: nr1, nr2, nr3
-      USE local_pseudo,       ONLY: vps, rhops
-!
-      IMPLICIT NONE
-! input
-      COMPLEX(DP) rhotemp(ng), rhog(ng,nspin), vtemp(ng),           &
-     &           ei1(-nr1:nr1,nat),                                 &
-     &           ei2(-nr2:nr2,nat),                                 &
-     &           ei3(-nr3:nr3,nat)
-! output
-      REAL(DP) fion1(3,nat)
-! local
-      INTEGER ig, is, isa, ism, ia, ix, iss, isup, isdw
-      INTEGER i, j, k
-      REAL(DP)  wz
-      COMPLEX(DP) eigrx, vcgs, cnvg, cvn
-!
-!     wz = factor for g.neq.0 because of c*(g)=c(-g)
-!
-      wz=2.0d0
-      DO is=1,nsp
-         isa=0
-         DO ism=1,is-1
-            isa=isa+na(ism)
-         END DO
-         DO ia=1,na(is)
-            isa=isa+1
-            DO ix=1,3
-               IF(nspin.EQ.1)THEN
-                  iss=1
-                  IF (gstart == 2) vtemp(1)=0.0d0
-                  DO ig=gstart,ngs
-                     vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
-                     cnvg=rhops(ig,is)*vcgs
-                     cvn=vps(ig,is)*CONJG(rhog(ig,iss))
-                     i = mill_l(1,ig)
-                     j = mill_l(2,ig)
-                     k = mill_l(3,ig)
-                     eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
-                     vtemp(ig)=eigrx*(cnvg+cvn)*CMPLX(0.d0,gx(ix,ig)) 
-                  END DO
-               ELSE
-                  isup=1
-                  isdw=2
-                  IF (gstart == 2) vtemp(1)=0.0d0
-                  DO ig=gstart,ngs
-                     vcgs=CONJG(rhotemp(ig))*fpi/(tpiba2*g(ig))
-                     cnvg=rhops(ig,is)*vcgs
-                     cvn=vps(ig,is)*CONJG(rhog(ig,isup)                 &
-     &                                   +rhog(ig,isdw))
-                     i = mill_l(1,ig)
-                     j = mill_l(2,ig)
-                     k = mill_l(3,ig)
-                     eigrx=ei1(i,isa)*ei2(j,isa)*ei3(k,isa)
-                     vtemp(ig)=eigrx*(cnvg+cvn)*CMPLX(0.d0,gx(ix,ig)) 
-                  END DO
-               ENDIF
-               fion1(ix,isa) = fion1(ix,isa) + tpiba*omega* wz*DBLE(SUM(vtemp))
-            END DO
-         END DO
-      END DO
-!
-      RETURN
-      END SUBROUTINE force_ps
-!
 !-----------------------------------------------------------------------
       SUBROUTINE gausin(eigr,cm)
 !-----------------------------------------------------------------------
@@ -2476,7 +2396,7 @@ END FUNCTION
       USE sic_module,       ONLY: self_interaction, sic_epsilon, sic_alpha
       USE energies,         ONLY: self_exc, self_ehte
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
-                                  add_drhoph, stress_local
+                                  add_drhoph, stress_local, force_loc
 !@@@@@
       USE ldaU,             ONLY: e_hubbard
 !@@@@@
@@ -2512,6 +2432,7 @@ END FUNCTION
       REAL(DP)                 :: detmp2( 3, 3 )
       REAL(DP)                 :: ht( 3, 3 )
       REAL(DP)                 :: deht( 6 )
+      COMPLEX(DP)              :: screen_coul( 1 )
 !
       INTEGER, DIMENSION(6), PARAMETER :: alpha = (/ 1,2,3,2,3,3 /)
       INTEGER, DIMENSION(6), PARAMETER :: beta  = (/ 1,1,1,2,2,3 /)
@@ -2672,9 +2593,12 @@ END FUNCTION
       fion1 = 0.d0
       !
       IF( tprnfor .OR. tfor .OR. tpre) THEN
-          CALL force_ps(rhotmp,rhog,vtemp,ei1,ei2,ei3,fion1)
+          vtemp( 1:ng ) = rhog( 1:ng, 1 )
+          IF( nspin == 2 ) THEN
+             vtemp( 1:ng ) = vtemp(1:ng) + rhog( 1:ng, 2 )
+          END IF
+          CALL force_loc( .false., vtemp, fion1, rhops, vps, ei1, ei2, ei3, sfac, omega, screen_coul )
       END IF
-
       !
       !     calculation hartree + local pseudo potential
       !
@@ -2698,6 +2622,7 @@ END FUNCTION
       IF ( nlcc_any ) CALL add_cc( rhoc, rhog, rhor )
 !
       CALL exch_corr_h( nspin, rhog, rhor, rhoc, sfac, exc, dxc, self_exc )
+
 
 !
 !     rhor contains the xc potential in r-space

@@ -415,7 +415,7 @@
 
       IF( tforce ) THEN
          !
-         CALL force_loc( tscreen, rhog, fion, rhops, vps, eigr, &
+         CALL force_loc( tscreen, rhog, fion, rhops, vps, &
                          ei1, ei2, ei3, sfac, box%deth, screen_coul )
          !
       END IF
@@ -506,6 +506,7 @@
       END IF
 
       CALL exch_corr_energy( rhoetr, grho, vpot, exc, vxc, v2xc )
+
 
       self_exc  = 0.d0
       self_vxc  = 0.d0
@@ -965,7 +966,7 @@
   END SUBROUTINE vofloc_x
 
 
-  SUBROUTINE force_loc_x( tscreen, rhoeg, fion, rhops, vps, eigr, ei1, ei2, ei3, &
+  SUBROUTINE force_loc_x( tscreen, rhoeg, fion, rhops, vps, ei1, ei2, ei3, &
                         sfac, omega, screen_coul )
 
       !  this routine computes:
@@ -992,6 +993,7 @@
       USE reciprocal_vectors, ONLY: mill_l, gstart, gx, g
       USE ions_base,          ONLY: nat, nsp, na
       USE gvecp,              ONLY: ngm
+      USE gvecs,              ONLY: ngs
 
       IMPLICIT NONE
 
@@ -1005,7 +1007,6 @@
       COMPLEX(DP) :: ei1(-nr1:nr1,nat)
       COMPLEX(DP) :: ei2(-nr2:nr2,nat)
       COMPLEX(DP) :: ei3(-nr3:nr3,nat)
-      COMPLEX(DP) :: eigr(:,:)
       REAL(DP)    :: omega
       COMPLEX(DP) :: screen_coul(:)
 
@@ -1023,7 +1024,7 @@
       
       ftmp = 0.0d0
 
-      DO IG = gstart, ngm 
+      DO ig = gstart, ngs 
 
         RP   = (0.D0,0.D0)
         DO IS = 1, nsp

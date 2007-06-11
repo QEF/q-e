@@ -1183,7 +1183,7 @@
    END INTERFACE
 
    INTERFACE force_loc
-      SUBROUTINE force_loc_x( tscreen, rhoeg, fion, rhops, vps, eigr, ei1, ei2, ei3, &
+      SUBROUTINE force_loc_x( tscreen, rhoeg, fion, rhops, vps, ei1, ei2, ei3, &
                         sfac, omega, screen_coul )
          USE kinds,              ONLY: DP
          USE grid_dimensions,    ONLY: nr1, nr2, nr3
@@ -1197,7 +1197,6 @@
             COMPLEX(DP) :: ei1(-nr1:nr1,nat)
          COMPLEX(DP) :: ei2(-nr2:nr2,nat)
          COMPLEX(DP) :: ei3(-nr3:nr3,nat)
-         COMPLEX(DP) :: eigr(:,:)
          REAL(DP)    :: omega
          COMPLEX(DP) :: screen_coul(:)
       END SUBROUTINE
