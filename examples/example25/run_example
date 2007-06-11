@@ -27,7 +27,7 @@ $ECHO "using LDA+U approximation. Read file README for more details"
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x pmw.x"
-PSEUDO_LIST="O.LDA.US.RRKJ3.UPF Fe.pz-nd-rrkjus.UPF"
+PSEUDO_LIST="O.pz-rrkjus.UPF Fe.pz-nd-rrkjus.UPF"
 
 $ECHO
 $ECHO "  executables directory: $BIN_DIR"
@@ -116,7 +116,7 @@ CELL_PARAMETERS
 0.50 1.00 0.50
 1.00 0.50 0.50
 ATOMIC_SPECIES
- O1   1.  O.LDA.US.RRKJ3.UPF
+ O1   1.  O.pz-rrkjus.UPF
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
  Fe2  1.  Fe.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}
@@ -170,7 +170,7 @@ CELL_PARAMETERS
 0.50 1.00 0.50
 1.00 0.50 0.50
 ATOMIC_SPECIES
- O1   1.  O.LDA.US.RRKJ3.UPF
+ O1   1.  O.pz-rrkjus.UPF
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
  Fe2  1.  Fe.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}
@@ -225,7 +225,7 @@ CELL_PARAMETERS
 0.50 1.00 0.50
 1.00 0.50 0.50
 ATOMIC_SPECIES
- O1   1.  O.LDA.US.RRKJ3.UPF
+ O1   1.  O.pz-rrkjus.UPF
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
  Fe2  1.  Fe.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}
@@ -294,7 +294,7 @@ CELL_PARAMETERS
 0.50 1.00 0.50
 1.00 0.50 0.50
 ATOMIC_SPECIES
- O1   1.  O.LDA.US.RRKJ3.UPF
+ O1   1.  O.pz-rrkjus.UPF
  Fe1  1.  Fe.pz-nd-rrkjus.UPF
  Fe2  1.  Fe.pz-nd-rrkjus.UPF
 ATOMIC_POSITIONS {crystal}

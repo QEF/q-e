@@ -24,7 +24,7 @@ $ECHO "2) using a damped dynamics algorithm."
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x"
-PSEUDO_LIST=" O.LDA.US.RRKJ3.UPF C.pz-rrkjus.UPF Al.vbc.UPF "
+PSEUDO_LIST=" O.pz-rrkjus.UPF C.pz-rrkjus.UPF Al.vbc.UPF "
 
 
 $ECHO
@@ -109,7 +109,7 @@ CELL_PARAMETERS cubic
  0.0 12.0  0.0
  0.0  0.0 12.0
 ATOMIC_SPECIES
-O  1.00  O.LDA.US.RRKJ3.UPF
+O  1.00  O.pz-rrkjus.UPF
 C  1.00  C.pz-rrkjus.UPF
 ATOMIC_POSITIONS {bohr}
 C  2.256  0.0  0.0
