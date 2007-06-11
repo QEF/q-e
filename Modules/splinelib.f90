@@ -49,9 +49,9 @@ MODULE splinelib
       DO  i = 2, ydim - 1
          !
          sig    = ( xdata(i) - xdata(i-1) ) / ( xdata(i+1) - xdata(i-1) ) 
-         p      = sig * d2y(i- 1) + 2.D0 
-         d2y(i) = ( sig - 1.D0 ) / p 
-         u(i)   = ( 6.D0 * ( ( ydata(i+1) - ydata(i) ) / &
+         p      = sig * d2y(i- 1) + 2.0_DP 
+         d2y(i) = ( sig - 1.0_DP ) / p 
+         u(i)   = ( 6.0_DP * ( ( ydata(i+1) - ydata(i) ) / &
                     ( xdata(i+1) - xdata(i) ) - ( ydata(i) - ydata(i-1) ) / &
                     ( xdata(i) - xdata(i-1) ) ) / &
                     ( xdata(i+1) - xdata(i-1) ) - sig * u(i-1) ) / p 
@@ -100,7 +100,7 @@ MODULE splinelib
       !
       splint = a * ydata(klo) + b * ydata(khi) + &
                ( ( a**3 - a ) * d2y(klo) + ( b**3 - b ) * d2y(khi) ) * &
-               ( h**2 ) / 6.D0
+               ( h**2 ) / 6.0_DP
 
       END FUNCTION splint
 
@@ -132,13 +132,13 @@ MODULE splinelib
       !
       a = ( xdata(khi) - x ) / h
       b = ( x - xdata(klo) ) / h
-      da = -1.d0 / h
-      db = 1.d0 / h
+      da = -1.0_DP / h
+      db = 1.0_DP / h
       !
       splint_deriv = da * ydata(klo) + db * ydata(khi) + &
-               ( ( 3.d0*a**2 - 1.d0 ) * da * d2y(klo) + &
-                 ( 3.d0*b**2 - 1.d0 ) * db * d2y(khi) ) * &
-               ( h**2 ) / 6.D0
+               ( ( 3.0_DP*a**2 - 1.0_DP ) * da * d2y(klo) + &
+                 ( 3.0_DP*b**2 - 1.0_DP ) * db * d2y(khi) ) * &
+               ( h**2 ) / 6.0_DP
 
       END FUNCTION splint_deriv
 
@@ -226,7 +226,7 @@ MODULE splinelib
       !
       d2y = 0
       !
-      CALL spline( old_mesh , old_vec(:), 0.D0, 0.D0, d2y  ) 
+      CALL spline( old_mesh , old_vec(:), 0.0_DP, 0.0_DP, d2y  ) 
       !
       DO i = 1, new_dim
          !
@@ -276,7 +276,7 @@ MODULE splinelib
          ! 
          d2y = 0
          !
-         CALL spline( old_mesh , old_vec(i,:), 0.D0, 0.D0, d2y  ) 
+         CALL spline( old_mesh , old_vec(i,:), 0.0_DP, 0.0_DP, d2y  ) 
          !
          DO j = 1, new_dim
             !

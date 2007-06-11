@@ -13,7 +13,6 @@ berry_phase.o : recvec.o
 berry_phase.o : stick_base.o
 bfgs_module.o : basic_algebra_routines.o
 bfgs_module.o : constants.o
-bfgs_module.o : constraints_module.o
 bfgs_module.o : io_files.o
 bfgs_module.o : kind.o
 cell_base.o : constants.o

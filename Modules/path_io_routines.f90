@@ -156,10 +156,10 @@ MODULE path_io_routines
           k_ratio = k_min / k_max
           !
           WRITE( UNIT = iunpath, FMT = '(5X,"suggested k_max",T35, &
-               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.D0
+               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.0_DP
           !
           WRITE( UNIT = iunpath, FMT = '(5X,"suggested k_min",T35, &
-               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.D0 * k_ratio
+               & " = ",1X,F6.4," a.u.")' ) ( pi / ds )**2 / 16.0_DP * k_ratio
           !
        END IF
        !
@@ -686,7 +686,7 @@ MODULE path_io_routines
        ALLOCATE( f( num_of_images ) )
        ALLOCATE( s( num_of_images ) )
        !
-       f(:) = 0.D0
+       f(:) = 0.0_DP
        !
        DO i = 2, num_of_images - 1
           !
@@ -694,7 +694,7 @@ MODULE path_io_routines
           !
        END DO
        !
-       s(1) = 0.D0
+       s(1) = 0.0_DP
        !
        DO i = 1, num_of_images - 1
           !
@@ -704,9 +704,9 @@ MODULE path_io_routines
           !
           ! ... cubic interpolation
           !
-          a(i) = 2.D0*( pes(i) - pes(i+1) ) / r**3 - ( f(i) + f(i+1) ) / r**2
+          a(i) = 2.0_DP*( pes(i) - pes(i+1) ) / r**3 - ( f(i) + f(i+1) ) / r**2
           !
-          b(i) = 3.D0*( pes(i+1) - pes(i) ) / r**2 + ( 2.D0*f(i) + f(i+1) ) / r
+          b(i) = 3.0_DP*( pes(i+1) - pes(i) ) / r**2 + ( 2.0_DP*f(i) + f(i+1) ) / r
           !
           c(i) = - f(i)
           !
@@ -846,7 +846,7 @@ MODULE path_io_routines
        !
        WRITE( UNIT = iunpath, FMT = run_info )
        !
-       path_length = 0.D0
+       path_length = 0.0_DP
        !
        DO image = 1, num_of_images
           !

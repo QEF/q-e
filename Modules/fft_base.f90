@@ -92,7 +92,7 @@
             nsx_l = MAXVAL( dfft%nsp( : ) )
           END IF
 
-          zero = 0.0d0
+          zero = 0.0_DP
 
           msgsiz = nsx_l * nz_lx 
           ALLOCATE( mp_snd_buffer( msgsiz * npz ) )
@@ -100,7 +100,7 @@
 
           IF ( iopt < 1 ) THEN
 
-            r( 1 : ldx * ldy * dfft%npp( me ) ) = 0.0d0
+            r( 1 : ldx * ldy * dfft%npp( me ) ) = 0.0_DP
 
             k_start = 1
             DO ipz = 1, npz
@@ -335,7 +335,7 @@
               k_start = k_start + nz_l
             END DO
 
-            r( 1 : ldx*ldy*dfft%npp( me ) ) = 0.0d0
+            r( 1 : ldx*ldy*dfft%npp( me ) ) = 0.0_DP
             rdone = .FALSE.
 
    111      CONTINUE
@@ -461,7 +461,7 @@
 
           IF ( iopt < 0 ) THEN
 
-            r( 1 : ldx*ldy*nz ) = CMPLX(0.0d0,0.0d0)
+            r( 1 : ldx*ldy*nz ) = CMPLX(0.0_DP,0.0_DP)
 
             IF( iopt == 2 ) THEN
               ns = dfft%nsw( me )
@@ -644,7 +644,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      ! maybe useless; ensures that no garbage is present in the output
      !
-     f_in = 0.0d0
+     f_in = 0.0_DP
      !
      ! step two: communication
      !
@@ -682,7 +682,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
      !
      !  step one: store contiguously the columns
      !
-     f_in = 0.0d0
+     f_in = 0.0_DP
      !
      do proc = 1, nprocp
         from = 1 + sdispls (proc)

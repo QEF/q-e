@@ -30,17 +30,17 @@ subroutine tpsscxc(rho,grho,tau, &
 
   real(DP) :: rho, grho, tau,sx, sc, v1x, v2x,v3x,v1c,v2c,v3c
   real(DP) :: small  
-  parameter (small = 1.d-10) 
+  parameter (small = 1.E-10_DP) 
   ! exchange
   if (rho.le.small) then  
-     sx = 0.0d0  
-     v1x = 0.0d0  
-     v2x = 0.0d0  
-     sc = 0.0d0  
-     v1c = 0.0d0  
-     v2c = 0.0d0  
-     v3x = 0.0d0
-     v3c=0.d0
+     sx = 0.0_DP  
+     v1x = 0.0_DP  
+     v2x = 0.0_DP 
+     sc = 0.0_DP
+     v1c = 0.0_DP
+     v2c = 0.0_DP
+     v3x = 0.0_DP
+     v3c=0.0_DP
      return
   end if
   call metax(rho,grho,tau,sx,v1x,v2x,v3x)
@@ -68,16 +68,16 @@ subroutine metax(rho,grho2,tau,ex,v1x,v2x,v3x)
   !  input grho2 is |\nabla rho|^2
   implicit none
   !  INPUT
-  real(DP) rho,grho2,tau,rs
+  real(DP) :: rho,grho2,tau,rs
   !  OUTPUT
-  real(DP) ex,v1x,v2x,v3x
+  real(DP) :: ex,v1x,v2x,v3x
   !  LOCAL
-  real(DP) vx_unif,ex_unif
+  real(DP) :: vx_unif,ex_unif
   !  ex_unif:   lda \epsilon_x(rho)
   !  ec_unif:   lda \epsilon_c(rho)
-  real(DP) small, pi34, third
-  parameter (small=1.d-10)
-  parameter (pi34 = 0.6203504908994d0, third = 1.d0 / 3.d0)
+  real(DP) :: small, pi34, third
+  parameter (small=1.E-10_DP)
+  parameter (pi34 = 0.6203504908994_DP, third = 1.0_DP / 3.0_DP)
   !  fx=Fx(p,z)
   !  fxp=d Fx / d p
   !  fxz=d Fx / d z
@@ -85,10 +85,10 @@ subroutine metax(rho,grho2,tau,ex,v1x,v2x,v3x)
  
   !  ==--------------------------------------------------------------==
   if(abs(tau).lt.small) then
-    ex=0.d0
-    v1x=0.d0
-    v2x=0.d0
-    v3x=0.d0
+    ex=0.0_DP
+    v1x=0.0_DP
+    v2x=0.0_DP
+    v3x=0.0_DP
     return
   endif
   rs = pi34/rho**third
@@ -111,55 +111,55 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
   USE kinds,            ONLY : DP
   implicit none
   !  INPUT
-  real(DP) rho, grho2, tau
+  real(DP) :: rho, grho2, tau
   !  OUTPUT
-  real(DP) ec, v1c,v2c,v3c
+  real(DP) :: ec, v1c,v2c,v3c
   !  LOCAL
-  real(DP) z,z2,tauw,ec_rev,rs
-  real(DP) d1rev, d2rev, d3rev
+  real(DP) :: z,z2,tauw,ec_rev,rs
+  real(DP) :: d1rev, d2rev, d3rev
   !  d1ec=  D ec_rev / D rho
   !  d2ec=  D ec_rev / D |D rho/ D r| / |\nabla rho|
   !  d3ec=  D ec_rev / D tau
-  real(DP) cf1,cf2,cf3
-  real(DP) v1c_pbe, v2c_pbe, ec_pbe
-  real(DP) v1c_sum, v2c_sum, ec_sum
-  real(DP) vc_unif,ec_unif
-  real(DP) dd,cab,cabone
-  real(DP) rhoup,grhoup,dummy
-  real(DP) small, pi34,third
-  parameter(small=1.0d-10)
-  parameter (pi34= 0.75d0/3.141592653589793d+00, &
-       third=1.d0/3.d0)
-  parameter (dd=2.80d0)  !in unit of Hartree^-1
-  parameter (cab=0.53d0, cabone=1.d0+cab)
+  real(DP) :: cf1,cf2,cf3
+  real(DP) :: v1c_pbe, v2c_pbe, ec_pbe
+  real(DP) :: v1c_sum, v2c_sum, ec_sum
+  real(DP) :: vc_unif,ec_unif
+  real(DP) :: dd,cab,cabone
+  real(DP) :: rhoup,grhoup,dummy
+  real(DP) :: small, pi34,third
+  parameter(small=1.0E-10_DP)
+  parameter (pi34= 0.75_DP/3.141592653589793_DP, &
+       third=1.0_DP/3.0_DP)
+  parameter (dd=2.80_DP)  !in unit of Hartree^-1
+  parameter (cab=0.53_DP, cabone=1.0_DP+cab)
   !
    if(abs(tau).lt.small) then
-     ec=0.d0
-     v1c=0.d0
-     v2c=0.d0
-     v3c=0.d0
+     ec=0.0_DP
+     v1c=0.0_DP
+     v2c=0.0_DP
+     v3c=0.0_DP
      return
   endif
-  rhoup=0.5d0*rho
-  grhoup=0.5d0*sqrt(grho2)
+  rhoup=0.5_DP*rho
+  grhoup=0.5_DP*SQRT(grho2)
   if(rhoup.gt.small) then
-     call pw_spin((pi34/rhoup)**third,1.d0,ec_unif,vc_unif,dummy)
+     call pw_spin((pi34/rhoup)**third,1.0_DP,ec_unif,vc_unif,dummy)
      if(abs(grhoup).gt.small) then
-!1.d0-small to avoid pow_e of 0 in pbec_spin
-        call pbec_spin(rhoup,1.d0-small,grhoup**2, & 
+!1.0_DP-small to avoid pow_e of 0 in pbec_spin
+        call pbec_spin(rhoup,1.0_DP-small,grhoup**2, & 
              ec_sum,v1c_sum,dummy,v2c_sum)
      else
-        ec_sum=0.d0
-        v1c_sum=0.d0
-        v2c_sum=0.d0
+        ec_sum=0.0_DP
+        v1c_sum=0.0_DP
+        v2c_sum=0.0_DP
      endif
      ec_sum = ec_sum/rhoup + ec_unif
      v1c_sum = (v1c_sum + vc_unif-ec_sum)/rho !rho, not rhoup
-     v2c_sum = v2c_sum/(2.d0*rho)
+     v2c_sum = v2c_sum/(2.0_DP*rho)
   else
-     ec_sum=0.d0
-     v1c_sum=0.d0
-     v2c_sum=0.d0
+     ec_sum=0.0_DP
+     v1c_sum=0.0_DP
+     v2c_sum=0.0_DP
   endif
   !
   rs = (pi34/rho)**third
@@ -179,27 +179,27 @@ subroutine metac(rho,grho2,tau,ec,v1c,v2c,v3c)
      v2c_sum= v2c_pbe
   endif
   !
-  tauw=0.1250d0*grho2/rho
+  tauw=0.1250_DP*grho2/rho
   z=tauw/tau
   z2=z*z
   !  
   ec_rev=ec_pbe*(1+cab*z2)-cabone*z2*ec_sum
   d1rev = v1c_pbe + (cab*v1c_pbe-cabone*v1c_sum)*z2  &
-       -(ec_pbe*cab - ec_sum*cabone)*2.d0*z2/rho
+       -(ec_pbe*cab - ec_sum*cabone)*2.0_DP*z2/rho
   d2rev = v2c_pbe + (cab*v2c_pbe-cabone*v2c_sum)*z2  &
-       +(ec_pbe*cab - ec_sum*cabone)*4.d0*z2/grho2
-  d3rev = -(ec_pbe*cab - ec_sum*cabone)*2.d0*z2/tau
+       +(ec_pbe*cab - ec_sum*cabone)*4.0_DP*z2/grho2
+  d3rev = -(ec_pbe*cab - ec_sum*cabone)*2.0_DP*z2/tau
   !
-  cf1=1.d0+dd*ec_rev*z2*z
-  cf2=rho*(1.d0+2.d0*z2*z*dd*ec_rev)
-  cf3=ec_rev*ec_rev*3.d0*dd*z2*z
+  cf1=1.0_DP+dd*ec_rev*z2*z
+  cf2=rho*(1.0_DP+2.0_DP*z2*z*dd*ec_rev)
+  cf3=ec_rev*ec_rev*3.0_DP*dd*z2*z
   v1c=ec_rev*cf1 + cf2*d1rev-cf3
   !
   cf3=cf3*rho
-  v2c=cf2*d2rev + cf3*2.d0/grho2
+  v2c=cf2*d2rev + cf3*2.0_DP/grho2
   v3c=cf2*d3rev - cf3/tau
 
-  ec=rho*ec_rev*(1.d0+dd*ec_rev*z2*z)  !-rho*ec_unif
+  ec=rho*ec_rev*(1.0_DP+dd*ec_rev*z2*z)  !-rho*ec_unif
   v1c=v1c !-vc_unif
   !  ==--------------------------------------------------------------==
   return
@@ -228,81 +228,81 @@ subroutine metaFX(rho,grho2,tau,fx,f1x,f2x,f3x)
   real(DP) xfac1, xfac2, xfac3,xfac4,xfac5,xfac6,xfac7,z2
   !
   real(DP) pi, THRD, ee, cc, kk, bb,miu,fac1,small
-  parameter(pi=3.141592653589793d0)
-  parameter(THRD=0.3333333333333333d0)
-  parameter(ee=1.537d0)
-  parameter(cc=1.59096d0)
-  parameter(kk=0.804d0)
-  parameter(bb=0.40d0)
-  parameter(miu=0.21951d0)
-  parameter(fac1=9.57078000062731d0) !fac1=(3*pi^2)^(2/3)
-  parameter(small=1.00e-6)
+  parameter(pi=3.141592653589793_DP)
+  parameter(THRD=0.3333333333333333_DP)
+  parameter(ee=1.537_DP)
+  parameter(cc=1.59096_DP)
+  parameter(kk=0.804_DP)
+  parameter(bb=0.40_DP)
+  parameter(miu=0.21951_DP)
+  parameter(fac1=9.57078000062731_DP) !fac1=(3*pi^2)^(2/3)
+  parameter(small=1.0E-6_DP)
   !==------------------------------------------------------------- 
-  tauw=0.125d0*grho2/rho
+  tauw=0.125_DP*grho2/rho
   z=tauw/tau
   
   p=sqrt(grho2)/rho**THRD/rho
-  p=p*p/(fac1*4.0d0)
-  tau_unif=0.3d0*fac1*rho**(5.0d0/3.0d0)
+  p=p*p/(fac1*4.0_DP)
+  tau_unif=0.3_DP*fac1*rho**(5.0_DP/3.0_DP)
   al=(tau-tauw)/tau_unif
-  al=abs(al)  !make sure al is always .gt. 0.d0
-  qb=0.45d0*(al-1.d0)/sqrt(1.d0+bb*al*(al-1.d0))
-  qb=qb+2.0d0*THRD*p
+  al=abs(al)  !make sure al is always .gt. 0.0_DP
+  qb=0.45_DP*(al-1.0_DP)/sqrt(1.0_DP+bb*al*(al-1.0_DP))
+  qb=qb+2.0_DP*THRD*p
   
   !  calculate x(p,z) and fx
   z2=z*z
-  xf1=10.0d0/81.0d0
-  xfac1=xf1+cc*z2/(1+z2)**2.d0
-  xfac2=146.0d0/2025.0d0
-  xfac3=sqrt(0.5d0*(0.36d0*z2+p*p))
+  xf1=10.0_DP/81.0_DP
+  xfac1=xf1+cc*z2/(1+z2)**2.0_DP
+  xfac2=146.0_DP/2025.0_DP
+  xfac3=sqrt(0.5_DP*(0.36_DP*z2+p*p))
   xfac4=xf1*xf1/kk
-  xfac5=2.d0*sqrt(ee)*xf1*0.36d0
-  xfac6=xfac1*p+xfac2*qb**2.0d0-73.0d0/405.0d0*qb*xfac3
-  xfac6=xfac6+xfac4*p**2.0d0+xfac5*z2+ee*miu*p**3.d0
+  xfac5=2.0_DP*sqrt(ee)*xf1*0.36_DP
+  xfac6=xfac1*p+xfac2*qb**2.0_DP-73.0_DP/405.0_DP*qb*xfac3
+  xfac6=xfac6+xfac4*p**2.0_DP+xfac5*z2+ee*miu*p**3.0_DP
   xfac7=(1+sqrt(ee)*p)
   x=xfac6/(xfac7*xfac7)
-  !  fx=kk-kk/(1.d0+x/kk)
-  fx=1.d0 + kk-kk/(1.d0+x/kk)
+  !  fx=kk-kk/(1.0_DP+x/kk)
+  fx=1.0_DP + kk-kk/(1.0_DP+x/kk)
   
   !  calculate the derivatives of fx w.r.t p and z
-  dfdx=(kk/(kk+x))**2.d0
-  daldp=5.0d0*THRD*(tau/tauw-1.0d0)
-  !   daldz=-0.50d0*THRD*
-  !  * (tau/(2.0d0*fac1*rho**THRD*0.1250d0*sqrt(grho2)))**2.0d0 
-  daldz=-5.0d0*THRD*p/z2
-  dqbdz=0.45d0*(0.50d0*bb*(al-1.d0)+1.d0)
-  dqbdz=dqbdz/(1.d0+bb*al*(al-1.d0))**1.5d0
+  dfdx=(kk/(kk+x))**2.0_DP
+  daldp=5.0_DP*THRD*(tau/tauw-1.0_DP)
+  !   daldz=-0.50_DP*THRD*
+  !  * (tau/(2.0_DP*fac1*rho**THRD*0.1250_DP*sqrt(grho2)))**2.0_DP
+  daldz=-5.0_DP*THRD*p/z2
+  dqbdz=0.45_DP*(0.50_DP*bb*(al-1.0_DP)+1.0_DP)
+  dqbdz=dqbdz/(1.0_DP+bb*al*(al-1.0_DP))**1.5_DP
   
-  dqbdp=dqbdz*daldp+2.d0*THRD
+  dqbdp=dqbdz*daldp+2.0_DP*THRD
   dqbdz=dqbdz*daldz
   !  calculate d x /d p
-  xf1=73.0d0/405.0d0/xfac3*0.50d0*qb
-  xf2=2.0d0*xfac2*qb-73.0d0/405.d0*xfac3
+  xf1=73.0_DP/405.0_DP/xfac3*0.50_DP*qb
+  xf2=2.0_DP*xfac2*qb-73.0_DP/405.0_DP*xfac3
   
   dxdp=-xf1*p
   dxdp=dxdp+xfac1+xf2*dqbdp
-  dxdp=dxdp+2.0d0*xfac4*p
-  dxdp=dxdp+3.0d0*ee*miu*p*p
-  dxdp=dxdp/(xfac7*xfac7)-2.0d0*x*sqrt(ee)/xfac7
+  dxdp=dxdp+2.0_DP*xfac4*p
+  dxdp=dxdp+3.0_DP*ee*miu*p*p
+  dxdp=dxdp/(xfac7*xfac7)-2.0_DP*x*sqrt(ee)/xfac7
   !  d x/ dz
-  dxdz=-xf1*0.36d0*z
-  xfac1=cc*2.0d0*z*(1-z2)/(1+z2)**3.0d0
+  dxdz=-xf1*0.36_DP*z
+  xfac1=cc*2.0_DP*z*(1-z2)/(1+z2)**3.0_DP
   dxdz=dxdz+xfac1*p+xf2*dqbdz
-  dxdz=dxdz+xfac5*2.0d0*z
+  dxdz=dxdz+xfac5*2.0_DP*z
   dxdz=dxdz/(xfac7*xfac7)
   
   fxp=dfdx*dxdp
   fxz=dfdx*dxdz
   !  calculate f1x
-  localdp=-8.0d0*THRD*p/rho  ! D p /D rho
+  localdp=-8.0_DP*THRD*p/rho  ! D p /D rho
   dz=-z/rho             ! D z /D rho
   f1x=fxp*localdp+fxz*dz
   !  f2x
-  localdp=2.0d0/(fac1*4.0d0*rho**(8.0d0/3.0d0))
-  dz=2.0d0*0.125d0/(rho*tau)
+  localdp=2.0_DP/(fac1*4.0_DP*rho**(8.0_DP/3.0_DP))
+  dz=2.0_DP*0.125_DP/(rho*tau)
   f2x=fxp*localdp + fxz*dz
   !   f3x
-  localdp=0.d0
+  localdp=0.0_DP
   dz=-z/tau
   f3x=fxz*dz
   
@@ -335,34 +335,34 @@ subroutine tpsscx_spin(rhoup,rhodw,grhoup2,grhodw2,tauup,taudw,sx,&
   real(DP):: tauup,taudw, &! up and down kinetic energy density 
        v3xup,v3xdw         ! derivatives of exchange wr. tau
   real(DP) :: small  
-  parameter (small = 1.d-10)  
+  parameter (small = 1.E-10_DP)  
   real(DP) :: rho, sxup, sxdw  
   !
   ! exchange
   rho = rhoup + rhodw  
   if (rhoup.gt.small.and.sqrt(abs(grhoup2)).gt.small &
        .and. abs(tauup).gt.small) then
-     call metax(2.d0*rhoup,4.d0*grhoup2, &
-          2.0d0*tauup,sxup,v1xup,v2xup,v3xup)
+     call metax(2.0_DP*rhoup,4.0_DP*grhoup2, &
+          2.0_DP*tauup,sxup,v1xup,v2xup,v3xup)
   else
-     sxup=0.d0
-     v1xup=0.d0
-     v2xup=0.d0
-     v3xup=0.d0
+     sxup=0.0_DP
+     v1xup=0.0_DP
+     v2xup=0.0_DP
+     v3xup=0.0_DP
   endif
   if (rhodw.gt.small.and.sqrt(abs(grhodw2)).gt.small &
        .and. abs(taudw).gt.small) then
-     call metax(2.d0*rhodw,4.d0*grhodw2,  &
-          2.0d0*taudw,sxdw,v1xdw,v2xdw,v3xdw)
+     call metax(2.0_DP*rhodw,4.0_DP*grhodw2,  &
+          2.0_DP*taudw,sxdw,v1xdw,v2xdw,v3xdw)
   else
-     sxdw=0.d0
-     v1xdw=0.d0
-     v2xdw=0.d0
-     v3xdw=0.d0
+     sxdw=0.0_DP
+     v1xdw=0.0_DP
+     v2xdw=0.0_DP
+     v3xdw=0.0_DP
   endif
-  sx=0.5d0*(sxup+sxdw)
-  v2xup=2.d0*v2xup
-  v2xdw=2.d0*v2xdw
+  sx=0.5_DP*(sxup+sxdw)
+  v2xup=2.0_DP*v2xup
+  v2xdw=2.0_DP*v2xdw
   !
   return  
 end subroutine tpsscx_spin
@@ -388,25 +388,25 @@ subroutine tpsscc_spin(rho,zeta,grhoup,grhodw, &
   real(DP) :: atau,v2cup(3),v2cdw(3),v3c,grho_vec(3),grho !grho=grho2
   real(DP) :: small  
   integer :: ipol
-  parameter (small = 1.d-10)  
+  parameter (small = 1.E-10_DP)  
   !
   !
 ! vector
   grho_vec=grhoup+grhodw
-  grho=0.d0
+  grho=0.0_DP
   do ipol=1,3
      grho = grho + grho_vec(ipol)**2
   end do
 !
 !
-  if (rho.le.small.or.abs (zeta) .gt.1.d0.or.sqrt (abs (grho) ) &
+  if (rho.le.small.or.abs (zeta) .gt.1.0_DP.or.sqrt (abs (grho) ) &
        .le.small.or.abs(atau).lt.small) then
-     sc = 0.0d0  
-     v1cup = 0.0d0  
-     v1cdw = 0.0d0  
-     v2cup(:) = 0.0d0  
-     v2cdw(:) = 0.0d0
-     v3c = 0.d0
+     sc = 0.0_DP
+     v1cup = 0.0_DP
+     v1cdw = 0.0_DP
+     v2cup(:) = 0.0_DP
+     v2cdw(:) = 0.0_DP
+     v3c = 0.0_DP
   else
      call metac_spin(rho,zeta,grhoup,grhodw, &
           atau,sc,v1cup,v1cdw,v2cup,v2cdw,v3c)
@@ -447,18 +447,18 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   real(DP) :: v1up_uptil, v1up_dwtil, v2up_uptil(3),v2up_dwtil(3)
   real(DP) :: v1dw_uptil, v1dw_dwtil, v2dw_uptil(3),v2dw_dwtil(3)
   real(DP) :: small, pi34, p43, third, fac
-  parameter(small=1.0d-10, &
-       fac=3.09366772628013593097d0**2)
+  parameter(small=1.0E-10_DP, &
+       fac=3.09366772628013593097_DP**2)
 !     fac = (3*PI**2)**(2/3)
-  parameter (pi34= 0.75d0 / 3.141592653589793d+00, &
-       p43=4.0d0/3.d0,third=1.d0/3.d0)
+  parameter (pi34= 0.75_DP / 3.141592653589793_DP, &
+       p43=4.0_DP/3.0_DP,third=1.0_DP/3.0_DP)
   integer:: ipol
 !-----------
-  rhoup=(1+zeta)*0.50d0*rho
-  rhodw=(1-zeta)*0.50d0*rho
-  grho2=0.d0
-  grhoup2=0.d0
-  grhodw2=0.d0
+  rhoup=(1+zeta)*0.5_DP*rho
+  rhodw=(1-zeta)*0.5_DP*rho
+  grho2=0.0_DP
+  grhoup2=0.0_DP
+  grhodw2=0.0_DP
   do ipol=1,3
      grhovec(ipol)=grhoup(ipol)+grhodw(ipol)
      grho2=grho2+grhovec(ipol)**2
@@ -468,16 +468,16 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   grho=sqrt(grho2)
 !     
   if(rho.gt.small) then
-     v2_tmp=0.d0
+     v2_tmp=0.0_DP
      call pw_spin((pi34/rho)**third,zeta,ec_u,vcup_u,vcdw_u)
-     if((abs(grho).gt.small) .and. (zeta .le. 1.d0)) then
+     if((abs(grho).gt.small) .and. (zeta .le. 1.0_DP)) then
         call pbec_spin(rho,zeta,grho2, &
              ec_pbe,v1up_pbe,v1dw_pbe,v2_tmp)
      else
-        ec_pbe=0.d0
-        v1up_pbe=0.d0
-        v1dw_pbe=0.d0
-        v2up_pbe=0.d0
+        ec_pbe=0.0_DP
+        v1up_pbe=0.0_DP
+        v1dw_pbe=0.0_DP
+        v2up_pbe=0.0_DP
      endif
      ec_pbe = ec_pbe/rho+ec_u
 !     v1xx_pbe = D_epsilon_c/ D_rho_xx   :xx= up, dw
@@ -488,39 +488,39 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
 !    v2dw === v2up for PBE
      v2dw_pbe = v2up_pbe
   else
-     ec_pbe=0.d0
-     v1up_pbe=0.d0
-     v1dw_pbe=0.d0
-     v2up_pbe=0.d0
-     v2dw_pbe=0.d0
+     ec_pbe=0.0_DP
+     v1up_pbe=0.0_DP
+     v1dw_pbe=0.0_DP
+     v2up_pbe=0.0_DP
+     v2dw_pbe=0.0_DP
   endif
 !     ec_pbe(rhoup,0,grhoup,0)
   if(rhoup.gt.small) then
-     v2_tmp=0.d0
-     call pw_spin((pi34/rhoup)**third,1.d0,ec_u,vcup_u,vcdw_u)
+     v2_tmp=0.0_DP
+     call pw_spin((pi34/rhoup)**third,1.0_DP,ec_u,vcup_u,vcdw_u)
      if(sqrt(grhoup2).gt.small) then
-        call pbec_spin(rhoup,1.d0-small,grhoup2,&
+        call pbec_spin(rhoup,1.0_DP-small,grhoup2,&
              ecup_0,v1up_0,v1dw_0,v2_tmp)
      else
-        ecup_0=0.d0
-        v1up_0=0.d0
-        v2up_0=0.d0
+        ecup_0=0.0_DP
+        v1up_0=0.0_DP
+        v2up_0=0.0_DP
      endif
      ecup_0 = ecup_0/rhoup + ec_u
      v1up_0 = (v1up_0 + vcup_u-ecup_0)/rhoup
      v2up_0 = v2_tmp/rhoup*grhoup
   else
-     ecup_0 = 0.d0
-     v1up_0 = 0.d0
-     v2up_0=0.d0
+     ecup_0 = 0.0_DP
+     v1up_0 = 0.0_DP
+     v2up_0 = 0.0_DP
   endif
 !
   if(ecup_0.gt.ec_pbe) then
      ecup_til = ecup_0
      v1up_uptil=v1up_0
      v2up_uptil=v2up_0
-     v1up_dwtil=0.d0
-     v2up_dwtil=0.d0
+     v1up_dwtil=0.0_DP
+     v2up_dwtil=0.0_DP
   else
      ecup_til = ec_pbe
      v1up_uptil= v1up_pbe
@@ -529,33 +529,33 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
      v2up_dwtil= v2up_pbe
   endif
 !     ec_pbe(rhodw,0,grhodw,0)
-!     zeta = 1.d0
+!     zeta = 1.0_DP
   if(rhodw.gt.small) then
-     v2_tmp=0.d0
-     call pw_spin((pi34/rhodw)**third,-1.d0,ec_u,vcup_u,vcdw_u)
+     v2_tmp=0.0_DP
+     call pw_spin((pi34/rhodw)**third,-1.0_DP,ec_u,vcup_u,vcdw_u)
      if(sqrt(grhodw2).gt.small) then
-        call pbec_spin(rhodw,-1.d0+small,grhodw2,&
+        call pbec_spin(rhodw,-1.0_DP+small,grhodw2,&
              ecdw_0,v1up_0,v1dw_0,v2_tmp)
      else
-        ecdw_0=0.d0
-        v1dw_0=0.d0
-        v2dw_0=0.d0
+        ecdw_0=0.0_DP
+        v1dw_0=0.0_DP
+        v2dw_0=0.0_DP
      endif
      ecdw_0 = ecdw_0/rhodw + ec_u
      v1dw_0 = (v1dw_0 + vcdw_u-ecdw_0)/rhodw
      v2dw_0 = v2_tmp/rhodw*grhodw
   else
-     ecdw_0 = 0.d0
-     v1dw_0 = 0.d0
-     v2dw_0 = 0.d0
+     ecdw_0 = 0.0_DP
+     v1dw_0 = 0.0_DP
+     v2dw_0 = 0.0_DP
   endif
 !     
   if(ecdw_0.gt.ec_pbe) then
      ecdw_til = ecdw_0
      v1dw_dwtil=v1dw_0
      v2dw_dwtil=v2dw_0
-     v1dw_uptil=0.d0
-     v2dw_uptil=0.d0
+     v1dw_uptil=0.0_DP
+     v2dw_uptil=0.0_DP
   else
      ecdw_til = ec_pbe
      v1dw_dwtil= v1dw_pbe
@@ -575,40 +575,40 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
 !ccccccccccccccccccccccccccccccccccccccccc---------checked
   aa=zeta
 !  bb=(rho*(grhoup-grhodw) - (rhoup-rhodw)*grho)**2 &
-!       /(4.d0*fac*rho**(14.d0/3.d0))
-  bb=0.d0
+!       /(4.0_DP*fac*rho**(14.0_DP/3.0_DP))
+  bb=0.0_DP
   do ipol=1,3
      term(ipol)= rhodw*grhoup(ipol)-rhoup*grhodw(ipol)
      bb=bb+ term(ipol)**2
   end do
 !vector
-  term=term/(fac*rho**(14.d0/3.d0))   
-  bb=bb/(fac*rho**(14.d0/3.d0))
-!      bb=(rhodw*grhoup-rhoup*grhodw)**2/fac*rho**(-14.0d0/3.d0)
+  term=term/(fac*rho**(14.0_DP/3.0_DP))   
+  bb=bb/(fac*rho**(14.0_DP/3.0_DP))
+!      bb=(rhodw*grhoup-rhoup*grhodw)**2/fac*rho**(-14.0_DP/3.0_DP)
   aa2=aa*aa
-  ca0=0.53d0+aa2*(0.87d0+aa2*(0.50d0+aa2*2.26d0))
-  dca0da = aa*(1.74d0+aa2*(2.0d0+aa2*13.56d0))
-  if(abs(aa).le.1.d0-small) then
-     term3 =(1.d0+aa)**(-p43) + (1.d0-aa)**(-p43)
-     term1=(1.d0+bb*0.50d0*term3)
-     term2=(1.d0+aa)**(-7.d0/3.d0) + (1.d0-aa)**(-7.d0/3.d0)
+  ca0=0.53_DP+aa2*(0.87_DP+aa2*(0.50_DP+aa2*2.26_DP))
+  dca0da = aa*(1.74_DP+aa2*(2.0_DP+aa2*13.56_DP))
+  if(abs(aa).le.1.0_DP-small) then
+     term3 =(1.0_DP+aa)**(-p43) + (1.0_DP-aa)**(-p43)
+     term1=(1.0_DP+bb*0.50_DP*term3)
+     term2=(1.0_DP+aa)**(-7.0_DP/3.0_DP) + (1.0_DP-aa)**(-7.0_DP/3.0_DP)
      cab =ca0/term1**4
-     dcabda = (dca0da/ca0 + 8.d0/3.d0*bb*term2/term1)*cab
-     dcabdb = -2.d0*cab*term3/term1
+     dcabda = (dca0da/ca0 + 8.0_DP/3.0_DP*bb*term2/term1)*cab
+     dcabdb = -2.0_DP*cab*term3/term1
   else
-     cab=0.d0
-     dcabda=0.d0
-     dcabdb=0.d0
+     cab=0.0_DP
+     dcabda=0.0_DP
+     dcabdb=0.0_DP
   endif
-  da1up=2.d0*rhodw/rho**2
-  da1dw=-2.d0*rhoup/rho**2
-  db1up=-2.d0*(grhodw(1)*term(1)+grhodw(2)*term(2)+grhodw(3)*term(3)) &
-       -14.d0/3.d0*bb/rho
-  db1dw= 2.d0*(grhoup(1)*term(1)+grhoup(2)*term(2)+grhoup(3)*term(3)) &
-       -14.d0/3.d0*bb/rho
+  da1up=2.0_DP*rhodw/rho**2
+  da1dw=-2.0_DP*rhoup/rho**2
+  db1up=-2.0_DP*(grhodw(1)*term(1)+grhodw(2)*term(2)+grhodw(3)*term(3)) &
+       -14.0_DP/3.0_DP*bb/rho
+  db1dw= 2.0_DP*(grhoup(1)*term(1)+grhoup(2)*term(2)+grhoup(3)*term(3)) &
+       -14.0_DP/3.0_DP*bb/rho
   !vector, not scalar
-  db2up= term*rhodw*2.d0
-  db2dw=-term*rhoup*2.d0
+  db2up= term*rhodw*2.0_DP
+  db2dw=-term*rhoup*2.0_DP
 !
   dcab1up = dcabda*da1up + dcabdb*db1up
   dcab1dw = dcabda*da1dw + dcabdb*db1dw
@@ -616,39 +616,39 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   dcab2up = dcabdb*db2up
   dcab2dw = dcabdb*db2dw
 !cccccccccccccccccccccccccccccccccccccccccccccccccccccc------checked
-  tauw=0.1250d0*grho2/rho
+  tauw=0.1250_DP*grho2/rho
   z=tauw/tau
   z2=z*z
 !     
-  term1=1.d0+cab*z2
-  term2=(1.d0+cab)*z2
+  term1=1.0_DP+cab*z2
+  term2=(1.0_DP+cab)*z2
   ec_rev = ec_pbe*term1-term2*sum
 !     
   drev1up=v1up_pbe*term1 + &
-       ec_pbe*(z2*dcab1up - 2.d0*cab*z2/rho) &
-       + (2.d0*term2/rho - z2*dcab1up)*sum &
+       ec_pbe*(z2*dcab1up - 2.0_DP*cab*z2/rho) &
+       + (2.0_DP*term2/rho - z2*dcab1up)*sum &
        - term2*dsum1up 
 !     
   drev1dw=v1dw_pbe*term1 + &
-       ec_pbe*(z2*dcab1dw - 2.d0*cab*z2/rho)  &
-       + (2.d0*term2/rho - z2*dcab1dw)*sum  &
+       ec_pbe*(z2*dcab1dw - 2.0_DP*cab*z2/rho)  &
+       + (2.0_DP*term2/rho - z2*dcab1dw)*sum  &
        - term2*dsum1dw
 !
 ! vector, not scalar
   drev2up=v2up_pbe*term1 + &
-       ec_pbe*(z2*dcab2up+0.5d0*cab*z/(rho*tau)*grhovec)& 
-       - (term2*4.d0/grho2*grhovec + z2*dcab2up)*sum &
+       ec_pbe*(z2*dcab2up+0.5_DP*cab*z/(rho*tau)*grhovec)& 
+       - (term2*4.0_DP/grho2*grhovec + z2*dcab2up)*sum &
        - term2*dsum2up
   drev2dw=v2dw_pbe*term1 +  &
-       ec_pbe*(z2*dcab2dw+0.5d0*cab*z/(rho*tau)*grhovec) &
-       - (term2*4.d0/grho2*grhovec + z2*dcab2dw)*sum  &
+       ec_pbe*(z2*dcab2dw+0.5_DP*cab*z/(rho*tau)*grhovec) &
+       - (term2*4.0_DP/grho2*grhovec + z2*dcab2dw)*sum  &
        - term2*dsum2dw
 !
-  drev3 = ((1.d0+cab)*sum-ec_pbe*cab)*2.d0*z2/tau
+  drev3 = ((1.0_DP+cab)*sum-ec_pbe*cab)*2.0_DP*z2/tau
 !ccccccccccccccccccccccccccccccccccccccccccccccccccc----checked
-  term1=ec_rev*(1.d0+2.8d0*ec_rev*z2*z)
-  term2=(1.d0+5.6d0*ec_rev*z2*z)*rho
-  term3=-8.4d0*ec_rev*ec_rev*z2*z
+  term1=ec_rev*(1.0_DP+2.8_DP*ec_rev*z2*z)
+  term2=(1.0_DP+5.6_DP*ec_rev*z2*z)*rho
+  term3=-8.4_DP*ec_rev*ec_rev*z2*z
 !
   v1up = term1 + term2*drev1up + term3
   v1dw = term1 + term2*drev1dw + term3
@@ -656,13 +656,13 @@ subroutine metac_spin(rho,zeta,grhoup,grhodw, &
   term3=term3*rho
   v3   = term2*drev3 + term3/tau
 !
-  term3=-2.d0*term3/grho2    !grho/|grho|^2 = 1/grho
+  term3=-2.0_DP*term3/grho2    !grho/|grho|^2 = 1/grho
   v2up = term2*drev2up + term3*grhovec
   v2dw = term2*drev2dw + term3*grhovec
   !
   !
   !  call pw_spin((pi34/rho)**third,zeta,ec_u,vcup_u,vcdw_u)
-  sc=rho*ec_rev*(1.d0+2.8d0*ec_rev*z2*z) !-rho*ec_u
+  sc=rho*ec_rev*(1.0_DP+2.8_DP*ec_rev*z2*z) !-rho*ec_u
   !  v1up=v1up-vcup_u
   !  v1dw=v1dw-vcdw_u
   

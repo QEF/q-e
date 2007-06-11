@@ -618,7 +618,7 @@
       ALLOCATE( mp_rcv_buffer( icsize * nproc ) )
       ALLOCATE( my_buffer( ngw ) )
       ALLOCATE( ibuf( nproc ) )
-      ctmp = CMPLX( 0.0d0, 0.d0 )
+      ctmp = CMPLX( 0.0_DP, 0.0_DP )
 
       ! WRITE( stdout,*) 'D: ', nproc, mpime, group
 
@@ -653,7 +653,7 @@
           ibuf(isour) = ibuf(isour) + 1
           CTMP(ig) = my_buffer(ibuf(isour))
         else
-          CTMP(ig) = (0.0d0,0.0d0)
+          CTMP(ig) = (0.0_DP,0.0_DP)
         end if
       end do
 

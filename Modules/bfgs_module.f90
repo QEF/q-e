@@ -217,13 +217,13 @@ MODULE bfgs_module
          !
          IF ( den > eps16 ) THEN
             !
-            trust_radius = - 0.5D0*dE0s*trust_radius_old / den
+            trust_radius = - 0.5_DP*dE0s*trust_radius_old / den
             !
          ELSE
             !
             ! ... no quadratic interpolation is possible: we use bisection
             !
-            trust_radius = 0.5D0*trust_radius_old
+            trust_radius = 0.5_DP*trust_radius_old
             !
          END IF
          !
@@ -284,8 +284,8 @@ MODULE bfgs_module
             !
             ! ... first iteration
             !
-            IF ( grad_error < 0.01D0 ) &
-               trust_radius_ini = MIN( 0.2D0, trust_radius_ini )
+            IF ( grad_error < 0.01_DP ) &
+               trust_radius_ini = MIN( 0.2_DP, trust_radius_ini )
             !
             step_accepted = .FALSE.
             !
@@ -316,7 +316,7 @@ MODULE bfgs_module
             !
          END IF
          !
-         IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
+         IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
             !
             WRITE( UNIT = stdout, &
                    FMT = '(5X,"uphill step: resetting bfgs history",/)' )
@@ -399,7 +399,7 @@ MODULE bfgs_module
           ALLOCATE( overlap( k_m, k_m ) )
           ALLOCATE( work( k_m ), iwork( k_m ) )
           !
-          work(:)  = 0.D0
+          work(:)  = 0.0_DP
           iwork(:) = 0
           !
           ! ... the new direction is added to the workspace
@@ -416,17 +416,17 @@ MODULE bfgs_module
           !
           ! ... |res_i> = H^-1 \times |g_i>
           !
-          CALL DGEMM( 'N', 'N', n, k, n, 1.D0, &
-                      inv_hess, n, grad_old, n, 0.D0, res, n )
+          CALL DGEMM( 'N', 'N', n, k, n, 1.0_DP, &
+                      inv_hess, n, grad_old, n, 0.0_DP, res, n )
           !
           ! ... overlap_ij = <grad_i|res_j>
           !
-          CALL DGEMM( 'T', 'N', k, k, n, 1.D0, &
-                      res, n, res, n, 0.D0, overlap, k_m )
+          CALL DGEMM( 'T', 'N', k, k, n, 1.0_DP, &
+                      res, n, res, n, 0.0_DP, overlap, k_m )
           !
-          overlap( :, k_m) = 1.D0
-          overlap(k_m, : ) = 1.D0
-          overlap(k_m,k_m) = 0.D0
+          overlap( :, k_m) = 1.0_DP
+          overlap(k_m, : ) = 1.0_DP
+          overlap(k_m,k_m) = 0.0_DP
           !
           ! ... overlap is inverted via Bunch-Kaufman diagonal pivoting method
           !
@@ -440,8 +440,8 @@ MODULE bfgs_module
           FORALL( i = 1:k_m, &
                   j = 1:k_m, j > i ) overlap(j,i) = overlap(i,j)
           !
-          pos_best(:) = 0.D0
-          step(:)     = 0.D0
+          pos_best(:) = 0.0_DP
+          step(:)     = 0.0_DP
           !
           DO i = 1, k
              !
@@ -457,7 +457,7 @@ MODULE bfgs_module
           !
           step(:) = step(:) + ( pos_best(:) - pos(:) )
           !
-          IF ( ( grad(:) .dot. step(:) ) > 0.D0 ) THEN
+          IF ( ( grad(:) .dot. step(:) ) > 0.0_DP ) THEN
              !
              ! ... if the extrapolated direction is uphill use only the
              ! ... last gradient and reset gdiis history
@@ -544,18 +544,18 @@ MODULE bfgs_module
          !
          inv_hess(:,:) = identity( n )
          !
-         pos_p      = 0.D0
-         grad_p     = 0.D0
+         pos_p      = 0.0_DP
+         grad_p     = 0.0_DP
          scf_iter   = 0
          bfgs_iter  = 0
          gdiis_iter = 0
          energy_p   = energy
-         step_old   = 0.D0
+         step_old   = 0.0_DP
          !
          trust_radius_old = trust_radius_ini
          !
-         pos_old(:,:)  = 0.D0
-         grad_old(:,:) = 0.D0
+         pos_old(:,:)  = 0.0_DP
+         grad_old(:,:) = 0.0_DP
          !
          tr_min_hit = .FALSE.
          !
@@ -634,8 +634,8 @@ MODULE bfgs_module
       !
       ! ... BFGS update
       !
-      inv_hess = inv_hess + 1.D0 / sdoty * &
-                 ( ( 1.D0 + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
+      inv_hess = inv_hess + 1.0_DP / sdoty * &
+                 ( ( 1.0_DP + ( y .dot. Hy ) / sdoty ) * matrix( s, s ) - &
                   ( matrix( s, yH ) +  matrix( Hy, s ) ) )
       !
       DEALLOCATE( y, s, Hy, yH )
@@ -683,17 +683,17 @@ MODULE bfgs_module
       !
       IF ( ltest ) THEN
          !
-         a = 1.5D0
+         a = 1.5_DP
          !
       ELSE
          !
-         a = 1.1D0
+         a = 1.1_DP
          !
       END IF
       !
       IF ( lwolfe ) THEN
          !
-         trust_radius = MIN( trust_radius_max, 2.D0*a*trust_radius_old )
+         trust_radius = MIN( trust_radius_max, 2.0_DP*a*trust_radius_old )
          !
       ELSE
          !

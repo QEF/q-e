@@ -135,11 +135,11 @@
       DO I = N, 2, -1 
 
          L     = I - 1         ! primo elemeto
-         H     = 0.0d0
+         H     = 0.0_DP
 
          IF ( L > 1 ) THEN
 
-           SCALEF = 0.0D0
+           SCALEF = 0.0_DP
            DO K = 1, is(l)
               SCALEF = SCALEF + DABS( A(K,I) )
            END DO
@@ -152,7 +152,7 @@
 #  endif
 #endif
 
-           IF ( SCALEF .EQ. 0.0D0 )  THEN
+           IF ( SCALEF .EQ. 0.0_DP )  THEN
              IF (RI(L).EQ.ME) THEN
                E(I) = A(is(L),I) 
              END IF
@@ -160,8 +160,8 @@
 
              !  ......  CALCOLO DI SIGMA E DI H
 
-             ONE_OVER_SCALE = 1.0d0/SCALEF
-             SIGMA = 0.0D0
+             ONE_OVER_SCALE = 1.0_DP/SCALEF
+             SIGMA = 0.0_DP
              DO k = 1,is(L)
                A(k,I) = A(k,I) * ONE_OVER_SCALE
                SIGMA  = SIGMA + A(k,I)**2 
@@ -170,7 +170,7 @@
              IF( ri(l) .eq. me ) THEN
                F = A( is(l), i )
              ELSE
-               F = 0.0d0
+               F = 0.0_DP
              END IF
 
 #if defined __PARA
@@ -185,13 +185,13 @@
 
              G          = -SIGN(SQRT(SIGMA),F)
              H          = SIGMA - F*G
-             ONE_OVER_H = 1.0d0/H
+             ONE_OVER_H = 1.0_DP/H
              E(I)       = SCALEF*G
 
 !  ......  COSTRUZIONE DEL VETTORE U
 
              DO k = 1,L          
-               vtmp(k) = 0.0d0 
+               vtmp(k) = 0.0_DP 
              END DO
 
              k = ME + 1
@@ -217,11 +217,11 @@
 
 !  ......  COSTRUZIONE DEL VETTORE P
 
-             KAPPA = 0.0d0
+             KAPPA = 0.0_DP
 
              DO J = 1,L
 
-               vtmp(j) = 0.0d0
+               vtmp(j) = 0.0_DP
 
                DO KL = 1, IS(J)
                  vtmp(J) = vtmp(J) + A(KL,J) * UL(KL)
@@ -235,7 +235,7 @@
                END IF
 
                vtmp(J) = vtmp(J) * ONE_OVER_H
-               KAPPA = KAPPA + vtmp(J) * U(J) * 0.5d0 * ONE_OVER_H
+               KAPPA = KAPPA + vtmp(J) * U(J) * 0.5_DP * ONE_OVER_H
              END DO 
 
 #if defined __PARA
@@ -249,8 +249,8 @@
 #endif
 
              CALL DAXPY( l, -kappa, u, 1, p, 1 )
-             CALL DGER( is(l), l, -1.0d0, ul, 1, p, 1, a, lda )
-             CALL DGER( is(l), l, -1.0d0, p( me + 1 ), nproc, u, 1, a, lda )
+             CALL DGER( is(l), l, -1.0_DP, ul, 1, p, 1, a, lda )
+             CALL DGER( is(l), l, -1.0_DP, p( me + 1 ), nproc, u, 1, a, lda )
 
              ! k = me + 1
              ! DO kl = 1,is(l)          
@@ -289,23 +289,23 @@
 
       END DO
       
-      E(1) = 0.0d0
-      D(1) = 0.0d0
+      E(1) = 0.0_DP
+      D(1) = 0.0_DP
 
       DO J = 1,N
         DO I = 1,NRL
-          V(I,J) = 0.0d0
+          V(I,J) = 0.0_DP
         END DO
         IF(RI(J).EQ.ME) THEN
-          V(IS(J),J) = 1.0d0
+          V(IS(J),J) = 1.0_DP
         END IF
       END DO
 
       DO I = 2,N
         L = I - 1
         LLOC = IS(L)
-        IF(D(I).NE.0.0d0) THEN
-          ONE_OVER_H = 1.0d0/D(I)
+        IF(D(I).NE.0.0_DP) THEN
+          ONE_OVER_H = 1.0_DP/D(I)
           DO J = 1, L
             P(J) = DDOT(LLOC,V(1,J),1,A(1,I),1)
           END DO
@@ -328,7 +328,7 @@
 
 
       DO I = 1,N
-        U(I) = 0.0d0
+        U(I) = 0.0_DP
         IF(RI(I).eq.ME) then
           U(I) = A(IS(I),I) 
         END IF
@@ -466,26 +466,26 @@
             call errore(' tqli ',' too many iterations ', iter)
           end if
           iter=iter+1
-          g=(d(l+1)-d(l))/(2.0d0*e(l))
-          r=pythag(g,1.0d0)
+          g=(d(l+1)-d(l))/(2.0_DP*e(l))
+          r=pythag(g,1.0_DP)
           g=d(m)-d(l)+e(l)/(g+sign(r,g))
-          s=1.0d0
-          c=1.0d0
-          p=0.0d0
+          s=1.0_DP
+          c=1.0_DP
+          p=0.0_DP
           do i=m-1,l,-1
             f=s*e(i)
             b=c*e(i)
             r=pythag(f,g)
             e(i+1)=r
-            if(r.eq.0.0d0)then
+            if(r.eq.0.0_DP)then
               d(i+1)=d(i+1)-p
-              e(m)=0.0d0
+              e(m)=0.0_DP
               goto 1
             endif
             c=g/r
             g=d(i+1)-p
             s=f/r
-            r=(d(i)-g)*s+2.0d0*c*b
+            r=(d(i)-g)*s+2.0_DP*c*b
             p=s*r
             d(i+1)=g+p
             g=c*r-b
@@ -510,7 +510,7 @@
 
           d(l)=d(l)-p
           e(l)=g
-          e(m)=0.0d0
+          e(m)=0.0_DP
           goto 1
 
         endif
@@ -581,12 +581,12 @@
       absa=abs(a)
       absb=abs(b)
       if(absa.gt.absb)then
-        pythag=absa*sqrt(1.0d0+(absb/absa)**2)
+        pythag=absa*sqrt(1.0_DP+(absb/absa)**2)
       else
-        if(absb.eq.0.0d0)then
-          pythag=0.0d0
+        if(absb.eq.0.0_DP)then
+          pythag=0.0_DP
         else
-          pythag=absb*sqrt(1.0d0+(absa/absb)**2)
+          pythag=absb*sqrt(1.0_DP+(absa/absb)**2)
         endif
       endif
       return
@@ -1105,10 +1105,10 @@
 !     .. Parameters ..
 
       COMPLEX(DP)  ONE, ZERO, HALF
-      PARAMETER   ( ONE = ( 1.0D+0, 0.0D+0 ),ZERO = ( 0.0D+0, 0.0D+0 ),  &
-     &             HALF = ( 0.5D+0, 0.0D+0 ) )
+      PARAMETER   ( ONE = ( 1.0_DP, 0.0_DP ),ZERO = ( 0.0_DP, 0.0_DP ),  &
+     &             HALF = ( 0.5_DP, 0.0_DP ) )
       REAL(DP)      RONE, RZERO
-      PARAMETER   ( RONE = 1.0D+0, RZERO = 0.0D+0 ) 
+      PARAMETER   ( RONE = 1.0_DP, RZERO = 0.0_DP ) 
 
       INTEGER QI
       INTEGER IL(N+1)
@@ -1194,7 +1194,7 @@
                 IF( NI1 .GT. 0 ) THEN
                    XNORM = DZNRM2( NI1, AP( I2, I ), 1 )
                 ELSE
-                   XNORM = 0.0d0
+                   XNORM = 0.0_DP
                 END IF
 #if defined __PARA
                 XNORM = XNORM ** 2 
@@ -1205,7 +1205,7 @@
                 XNORM = SQRT(TMP)
 #endif
               ELSE
-                XNORM = 0.0D0
+                XNORM = 0.0_DP
               ENDIF
 
               ALPHR = DBLE( ALPHA )
@@ -1241,7 +1241,7 @@
                     XNORM = SQRT(TMP)
 #endif
                   ELSE
-                    XNORM = 0.0D0
+                    XNORM = 0.0_DP
                   ENDIF
 
                   ALPHA = CMPLX( ALPHR, ALPHI )
@@ -1364,7 +1364,7 @@
                IF ( NI1 > 0 ) THEN
                   ALPHA = -HALF*TAUI*ZDOTC(NI1,TAUL(1),1,AP(I1,I),1)
                ELSE
-                  ALPHA = 0.D0
+                  ALPHA = 0.0_DP
                END IF
 
 #if defined __PARA
@@ -1552,7 +1552,7 @@
 !     .. Parameters ..
 
       COMPLEX(DP)         ONE, ZERO
-      PARAMETER          ( ONE = (1.0D+0,0.0D+0), ZERO = (0.0D+0,0.0D+0) ) 
+      PARAMETER          ( ONE = (1.0_DP,0.0_DP), ZERO = (0.0_DP,0.0_DP) ) 
 
       INTEGER QI
       INTEGER IL(N+1)
@@ -1807,10 +1807,10 @@
 !
 !     .. Parameters ..
       REAL(DP)  RZERO, RONE, TWO, THREE, CTEMP, STEMP
-      PARAMETER          ( RZERO = 0.0D0, RONE = 1.0D0, TWO = 2.0D0, &
-     &                   THREE = 3.0D0 )
+      PARAMETER          ( RZERO = 0.0_DP, RONE = 1.0_DP, TWO = 2.0_DP, &
+     &                   THREE = 3.0_DP )
       COMPLEX(DP)         ZERO, ONE,ZTEMP
-      PARAMETER          ( ZERO = ( 0.0D0, 0.0D0 ), ONE = ( 1.0D0, 0.0D0 ) )
+      PARAMETER          ( ZERO = ( 0.0_DP, 0.0_DP ), ONE = ( 1.0_DP, 0.0_DP ) )
       INTEGER            MAXIT
       PARAMETER          ( MAXIT = 30 )
 !     ..
@@ -2592,10 +2592,10 @@ SUBROUTINE matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
   nr  = NUMROC( m, nb, coor(1), 0, dims(1) )  ! local row of C
   nc  = NUMROC( n, nb, coor(2), 0, dims(2) )  ! local colum of C 
 
-  IF( beta == 0.0d0 ) THEN
+  IF( beta == 0.0_DP ) THEN
     do j = 1, nc
       do i = 1, nr
-        c(i,j) = 0.0d0
+        c(i,j) = 0.0_DP
       end do
     end do 
   ELSE
@@ -2790,7 +2790,7 @@ SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, 
         j = ( jb - 1 ) * nb + 1
         jl = INDXG2L( j, nb, coor(2), 0, dims(2) )
         nj = MIN( nb, n - j + 1 )
-        call dgemm( 'n', 'n', ni, nj, nk, alpha, abuf( ii, 1 ), nra, bbuf( 1, jj ), nk, 1.0d0, c( il, jl ), ldc )
+        call dgemm( 'n', 'n', ni, nj, nk, alpha, abuf( ii, 1 ), nra, bbuf( 1, jj ), nk, 1.0_DP, c( il, jl ), ldc )
         jj = jj + nj
       end do
       ii = ii + ni
@@ -2929,7 +2929,7 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
      !call mytranspose( A( 1, ioff + 1 ), lda, auxa(1), ldx, m, nb)
   END IF
 
-  IF( beta /= 0.0d0 ) THEN
+  IF( beta /= 0.0_DP ) THEN
      ibuf = 0
      ioff = ib_s - 1
      DO J = 1, n
@@ -3089,7 +3089,7 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
      !call mytranspose( A( 1, ioff + 1 ), lda, auxa(1), ldx, m, nb)
   END IF
 
-  IF( beta /= 0.0d0 ) THEN
+  IF( beta /= 0.0_DP ) THEN
      ibuf = 0
      ioff = ib_s - 1
      DO J = 1, n
@@ -3187,7 +3187,7 @@ SUBROUTINE para_dgemm( transa, transb, m, n, k, &
   ! ... quick return if possible
   !
   IF ( m == 0 .OR. n == 0 .OR. &
-       ( ( alpha == 0.D0 .OR. k == 0 ) .AND. beta == 1.D0 ) ) RETURN
+       ( ( alpha == 0.0_DP .OR. k == 0 ) .AND. beta == 1.0_DP ) ) RETURN
   !
 #if defined (__XD1)
   !
@@ -3279,7 +3279,7 @@ SUBROUTINE para_zgemm( transa, transb, m, n, k, &
   ! ... quick return if possible
   !
   IF ( m == 0 .OR. n == 0 .OR. &
-       ( ( alpha == 0.D0 .OR. k == 0 ) .AND. beta == ONE ) ) RETURN
+       ( ( alpha == 0.0_DP .OR. k == 0 ) .AND. beta == ONE ) ) RETURN
   !
 #if defined (__XD1)
   !
@@ -3370,7 +3370,7 @@ SUBROUTINE para_dgemv( trans, m, n, alpha, &
   ! ... quick return if possible
   !
   IF ( m == 0 .OR. n == 0 .OR. &
-       ( alpha == 0.D0 .AND. beta == 1.D0 ) ) RETURN
+       ( alpha == 0.0_DP .AND. beta == 1.0_DP ) ) RETURN
   !
 #if defined (__MPI)
   !
@@ -3491,7 +3491,7 @@ SUBROUTINE para_zgemv( trans, m, n, alpha, &
   ! ... quick return if possible
   !
   IF ( m == 0 .OR. n == 0 .OR. &
-       ( alpha == 0.D0 .AND. beta == 1.D0 ) ) RETURN
+       ( alpha == 0.0_DP .AND. beta == 1.0_DP ) ) RETURN
   !
 #if defined (__MPI)
   !
@@ -3608,7 +3608,7 @@ SUBROUTINE para_dcholdc( n, a, lda, comm )
      !
      aii = a(i,i) - DDOT( i-1, a(i,1), lda, a(i,1), lda )
      !
-     IF ( aii < 0.D0 ) &
+     IF ( aii < 0.0_DP ) &
         CALL errore( 'para_dcholdc', 'a is not positive definite', i )
      !
      aii = SQRT( aii )
@@ -3617,16 +3617,16 @@ SUBROUTINE para_dcholdc( n, a, lda, comm )
      !
      IF ( i < n ) THEN
         !
-        CALL para_dgemv( 'N', n-i, i-1, -1.D0, a(i+1,1), &
-                         lda, a(i,1), lda, 1.D0, a(i+1,i), 1, comm )
+        CALL para_dgemv( 'N', n-i, i-1, -1.0_DP, a(i+1,1), &
+                         lda, a(i,1), lda, 1.0_DP, a(i+1,i), 1, comm )
         !
-        CALL DSCAL( n-i, 1.D0 / aii, a(i+1,i), 1 )
+        CALL DSCAL( n-i, 1.0_DP / aii, a(i+1,i), 1 )
         !
      END IF
      !
   END DO
   !
-  FORALL( i = 1:n, j = 1:n, j > i ) a(i,j) = 0.D0
+  FORALL( i = 1:n, j = 1:n, j > i ) a(i,j) = 0.0_DP
   !
   RETURN
   !
@@ -3659,7 +3659,7 @@ SUBROUTINE para_zcholdc( n, a, lda, comm )
      !
      aii = REAL( a(i,i) ) - ZDOTC( i-1, a(i,1), lda, a(i,1), lda )
      !
-     IF ( aii < 0.D0 ) &
+     IF ( aii < 0.0_DP ) &
         CALL errore( 'para_zcholdc', 'a is not positive definite', i )
      !
      aii = SQRT( aii )
@@ -3728,13 +3728,13 @@ SUBROUTINE para_dtrtri( n, a, lda, comm )
   !
   ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
   !
-  an = 1.D0 / DBLE( nproc )
+  an = 1.0_DP / DBLE( nproc )
   !
   i0a(0) = 1
   !
   DO i = 0, nproc - 2
      !
-     xfrac = 1.D0 - SQRT( 1.D0 - DBLE( i+1 )*an )
+     xfrac = 1.0_DP - SQRT( 1.0_DP - DBLE( i+1 )*an )
      !
      i1a(i)   = ANINT( xfrac*n )
      i0a(i+1) = i1a(i) + 1
@@ -3748,15 +3748,15 @@ SUBROUTINE para_dtrtri( n, a, lda, comm )
   !
   ALLOCATE( inva( n, i0:i1 ) )
   !
-  inva(:,:) = 0.D0
+  inva(:,:) = 0.0_DP
   !
   DO i = i0, i1
      !
-     inva(i,i) = 1.D0 / a(i,i)
+     inva(i,i) = 1.0_DP / a(i,i)
      !
      DO j = i + 1, n
         !
-        sum = 0.D0
+        sum = 0.0_DP
         !
         DO k = i, j - 1
            !
@@ -3770,7 +3770,7 @@ SUBROUTINE para_dtrtri( n, a, lda, comm )
      !
   END DO
   !
-  a(1:lda,1:n) = 0.D0
+  a(1:lda,1:n) = 0.0_DP
   a(1:n,i0:i1) = inva(:,:)
   !
   DEALLOCATE( inva )
@@ -3834,13 +3834,13 @@ SUBROUTINE para_ztrtri( n, a, lda, comm )
   !
   ALLOCATE( i0a( 0:nproc-1 ), i1a( 0:nproc-1 ) )
   !
-  an = 1.D0 / DBLE( nproc )
+  an = 1.0_DP / DBLE( nproc )
   !
   i0a(0) = 1
   !
   DO i = 0, nproc - 2
      !
-     xfrac = 1.D0 - SQRT( 1.D0 - DBLE( i+1 )*an )
+     xfrac = 1.0_DP - SQRT( 1.0_DP - DBLE( i+1 )*an )
      !
      i1a(i)   = ANINT( xfrac*n )
      i0a(i+1) = i1a(i) + 1
@@ -4000,12 +4000,12 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !
    DO j = nc+1, nb
       DO i = 1, nb
-         ablk( i, j ) = 0.0d0
+         ablk( i, j ) = 0.0_DP
       END DO
    END DO
    DO j = 1, nb
       DO i = nr+1, nb
-         ablk( i, j ) = 0.0d0
+         ablk( i, j ) = 0.0_DP
       END DO
    END DO
    !
@@ -4021,12 +4021,12 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !
    DO j = nc+1, nb
       DO i = 1, nb
-         bblk( i, j ) = 0.0d0
+         bblk( i, j ) = 0.0_DP
       END DO
    END DO
    DO j = 1, nb
       DO i = nr+1, nb
-         bblk( i, j ) = 0.0d0
+         bblk( i, j ) = 0.0_DP
       END DO
    END DO
    !
@@ -4066,7 +4066,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
       !
       !  Accumulate on C
       !
-      CALL dgemm( TRANSA, TRANSB, nr, nc, nb, alpha, ablk, nb, bblk, nb, 1.0d0, c, ldc)
+      CALL dgemm( TRANSA, TRANSB, nr, nc, nb, alpha, ablk, nb, bblk, nb, 1.0_DP, c, ldc)
       !
    END DO
 
@@ -4306,12 +4306,12 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    END DO
    DO j = nc+1, nb
       DO i = 1, nb
-         ablk( i, j ) = 0.0d0
+         ablk( i, j ) = 0.0_DP
       END DO
    END DO
    DO j = 1, nb
       DO i = nr+1, nb
-         ablk( i, j ) = 0.0d0
+         ablk( i, j ) = 0.0_DP
       END DO
    END DO
    !

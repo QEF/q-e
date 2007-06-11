@@ -91,14 +91,14 @@ subroutine set_pseudo_upf (is, upf)
      jchi(1:upf%nwfc, is) = upf%jchi(1:upf%nwfc)
      jjj(1:upf%nbeta, is) = upf%jjj(1:upf%nbeta)
   else
-     jchi(1:upf%nwfc, is) = 0.d0
-     jjj(1:upf%nbeta, is) = 0.d0
+     jchi(1:upf%nwfc, is) = 0.0_DP
+     jjj(1:upf%nbeta, is) = 0.0_DP
   endif
   !
   if ( upf%nlcc) then
      rho_atc(1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
   else
-     rho_atc(:,is) = 0.d0
+     rho_atc(:,is) = 0.0_DP
   end if
   rho_at (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
   vloc_at(1:upf%mesh,is) = upf%vloc(1:upf%mesh)

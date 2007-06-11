@@ -16,7 +16,7 @@ MODULE mytime
   SAVE
   !
   INTEGER,  PARAMETER :: maxclock = 100
-  REAL(DP), PARAMETER :: notrunning = - 1.D0
+  REAL(DP), PARAMETER :: notrunning = - 1.0_DP
   ! 
   REAL(DP)          :: cputime(maxclock), t0cpu(maxclock)
   REAL(DP)          :: walltime, t0wall
@@ -50,14 +50,14 @@ SUBROUTINE init_clocks( go )
   DO n = 1, maxclock
      !
      called(n)      = 0
-     cputime(n)     = 0.D0
+     cputime(n)     = 0.0_DP
      t0cpu(n)       = notrunning
      clock_label(n) = ' '
      !
   END DO
   !
-  t0wall = 0.D0
-  walltime = 0.D0
+  t0wall = 0.0_DP
+  walltime = 0.0_DP
   !
   RETURN
   !

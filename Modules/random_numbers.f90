@@ -38,7 +38,7 @@ MODULE random_numbers
       m = m * konst
       m = m - 2796203 * ( m / 2796203 )
       !
-      rranf = DBLE( m ) / 2796203.D0
+      rranf = DBLE( m ) / 2796203.0_DP
       !
       RETURN
       !
@@ -63,7 +63,7 @@ MODULE random_numbers
                               ia   = 1366, &
                               ic   = 150889, &
                               ntab = 97
-      REAL(DP), PARAMETER  :: rm = 1.D0 / m
+      REAL(DP), PARAMETER  :: rm = 1.0_DP / m
       INTEGER              :: ir(ntab), iff, idum, j, iy
       DATA iff /0/, idum/0/
       SAVE iff, idum, iy, ir
@@ -159,7 +159,7 @@ MODULE random_numbers
          ! ... this is 2**31-1 avoiding overflow
          !
          im  = 2 * ( 2**30 - 1 ) + 1
-         obm = 1.0d0 / im
+         obm = 1.0_DP / im
          ia  = 7*7*7*7*7
          iq  = im / ia
          ir  = im - ia * iq
@@ -224,16 +224,16 @@ MODULE random_numbers
       !
       gaussian_loop: DO
          !
-         x1 = 2.D0 * rndm() - 1.D0
-         x2 = 2.D0 * rndm() - 1.D0
+         x1 = 2.0_DP * rndm() - 1.0_DP
+         x2 = 2.0_DP * rndm() - 1.0_DP
          !
          w = x1 * x1 + x2 * x2
          !
-         IF ( w < 1.D0 ) EXIT gaussian_loop
+         IF ( w < 1.0_DP ) EXIT gaussian_loop
          !
       END DO gaussian_loop
       !
-      w = SQRT( ( - 2.D0 * LOG( w ) ) / w )
+      w = SQRT( ( - 2.0_DP * LOG( w ) ) / w )
       !
       gauss_dist_scal = x1 * w * sigma + mu
       !
@@ -263,16 +263,16 @@ MODULE random_numbers
          !
          gaussian_loop: DO
             !
-            x1 = 2.D0 * rndm() - 1.D0
-            x2 = 2.D0 * rndm() - 1.D0
+            x1 = 2.0_DP * rndm() - 1.0_DP
+            x2 = 2.0_DP * rndm() - 1.0_DP
             !
             w = x1 * x1 + x2 * x2
             !
-            IF ( w < 1.D0 ) EXIT gaussian_loop
+            IF ( w < 1.0_DP ) EXIT gaussian_loop
             !
          END DO gaussian_loop
          !
-         w = SQRT( ( - 2.D0 * LOG( w ) ) / w )
+         w = SQRT( ( - 2.0_DP * LOG( w ) ) / w )
          !
          gauss_dist_vect(i) = x1 * w * sigma
          !

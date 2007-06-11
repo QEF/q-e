@@ -184,14 +184,14 @@ MODULE metadyn_base
       !
       ALLOCATE( delta( ncolvar ) )
       !
-      dfe_acc = 0.D0
+      dfe_acc = 0.0_DP
       !
       DO i = 1, iter - 1
          !
          delta = metadyn_history(:,iter) - metadyn_history(:,i)
          !
          dfe_acc(:) = dfe_acc(:) + delta(:) / fe_step(:)**2 * &
-                      EXP( - SUM( delta(:)**2 / ( 2.D0*fe_step(:)**2 ) ) )
+                      EXP( - SUM( delta(:)**2 / ( 2.0_DP*fe_step(:)**2 ) ) )
          !
       END DO
       !
@@ -222,11 +222,11 @@ MODULE metadyn_base
       INTEGER  :: i
       REAL(DP) :: a, inv_s
       !
-      REAL(DP), PARAMETER :: coord_sigma = 0.050D0
-      REAL(DP), PARAMETER :: stfac_sigma = 0.005D0
+      REAL(DP), PARAMETER :: coord_sigma = 0.050_DP
+      REAL(DP), PARAMETER :: stfac_sigma = 0.005_DP
       !
       !
-      a = 12.D0*g_amplitude
+      a = 12.0_DP*g_amplitude
       !
       DO i = 1, ncolvar
          !
@@ -235,7 +235,7 @@ MODULE metadyn_base
             !
             ! ... coordination must always be larger than a minimum threshold
             !
-            inv_s = 1.D0 / constr_target(i)
+            inv_s = 1.0_DP / constr_target(i)
             !
             fe_grad(i) = fe_grad(i) - a*inv_s*( coord_sigma*inv_s )**11
             !
@@ -244,11 +244,11 @@ MODULE metadyn_base
             ! ... the square modulus of the structure factor is never negative
             ! ... or larger than one
             !
-            inv_s = 1.D0 / constr_target(i)
+            inv_s = 1.0_DP / constr_target(i)
             !
             fe_grad(i) = fe_grad(i) - a*inv_s*( stfac_sigma*inv_s )**11
             !
-            inv_s = 1.D0 / ( 1.D0 - constr_target(i) )
+            inv_s = 1.0_DP / ( 1.0_DP - constr_target(i) )
             !
             fe_grad(i) = fe_grad(i) - a*inv_s*( stfac_sigma*inv_s )**11
             !
@@ -285,13 +285,13 @@ MODULE metadyn_base
       IF ( norm_fe_grad < eps32 ) &
          CALL errore( 'evolve_collective_vars', 'norm( fe_grad ) = 0', 1 )
       !
-      IF ( g_amplitude > 0.D0 ) fe_grad(:) = fe_grad(:) / norm_fe_grad
+      IF ( g_amplitude > 0.0_DP ) fe_grad(:) = fe_grad(:) / norm_fe_grad
       !
       DO i = 1, ncolvar
          !
          gaussian_pos(i) = constr_target(i) - fe_step(i)*fe_grad(i)
          !
-         step = ( 1.D0 + 0.5D0*rndm() )*fe_step(i)
+         step = ( 1.0_DP + 0.5_DP*rndm() )*fe_step(i)
          !
          new_target(i) = constr_target(i) - step*fe_grad(i)
          !
@@ -333,15 +333,15 @@ MODULE metadyn_base
             ! ... constraints_module.f90 for its definition )
             !
             IF ( new_target(i) > dmax ) &
-               new_target(i) = 2.D0*dmax - new_target(i)
+               new_target(i) = 2.0_DP*dmax - new_target(i)
             !
          CASE( 4, 5 )
             !
             ! ... the cosine of the angle (planar or torsional) must be
             ! ... within -1 and 1
             !
-            IF ( new_target(i) > +1.D0 ) new_target(i) = +2.D0 - new_target(i)
-            IF ( new_target(i) < -1.D0 ) new_target(i) = -2.D0 - new_target(i)
+            IF ( new_target(i) > +1.0_DP ) new_target(i) = +2.0_DP - new_target(i)
+            IF ( new_target(i) < -1.0_DP ) new_target(i) = -2.0_DP - new_target(i)
             !
          CASE( 6 )
             !
@@ -350,15 +350,15 @@ MODULE metadyn_base
             !
             new_target(i) = ABS( new_target(i) )
             !
-            IF ( new_target(i) > 1.D0 ) new_target(i) = 2.D0 - new_target(i)
+            IF ( new_target(i) > 1.0_DP ) new_target(i) = 2.0_DP - new_target(i)
             !
          CASE( 7 )
             !
             ! ... the spherical average of the structure factor must be within
             ! ... -1 and 1
             !
-            IF ( new_target(i) > +1.D0 ) new_target(i) = +2.D0 - new_target(i)
-            IF ( new_target(i) < -1.D0 ) new_target(i) = -2.D0 - new_target(i)
+            IF ( new_target(i) > +1.0_DP ) new_target(i) = +2.0_DP - new_target(i)
+            IF ( new_target(i) < -1.0_DP ) new_target(i) = -2.0_DP - new_target(i)
             !
          END SELECT
          !

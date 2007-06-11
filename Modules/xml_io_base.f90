@@ -948,9 +948,9 @@ MODULE xml_io_base
          CALL iotk_write_dat( iunpun, "STARTING_MAGNETIZATION",  &
                                        starting_magnetization(ityp) )
          CALL iotk_write_dat( iunpun, "ANGLE1", &
-                                       angle1(ityp)*180.d0/pi )
+                                       angle1(ityp)*180.0_DP/pi )
          CALL iotk_write_dat( iunpun, "ANGLE2", &
-                                       angle2(ityp)*180.d0/pi )
+                                       angle2(ityp)*180.0_DP/pi )
       END DO
       CALL iotk_write_end( iunpun, "STARTING_MAG" )
       !
@@ -1363,7 +1363,7 @@ MODULE xml_io_base
       ! ... explicit initialization to zero is needed because the physical
       ! ... dimensions rho may exceed the true size of the FFT grid 
       !
-      rho(:) = 0.D0
+      rho(:) = 0.0_DP
       !
       DO k = 1, nr3
          !
@@ -1479,7 +1479,7 @@ MODULE xml_io_base
       !
       ALLOCATE( wtmp( MAX( igwx, 1 ) ) )
       !
-      wtmp = 0.D0
+      wtmp = 0.0_DP
       !
       DO j = 1, nbnd
          !
@@ -1601,7 +1601,7 @@ MODULE xml_io_base
                CALL iotk_scan_dat( iuni, &
                                    "evc" // iotk_index( j ), wtmp(1:igwx_) )
                !
-               IF ( igwx > igwx_ ) wtmp((igwx_+1):igwx) = 0.D0
+               IF ( igwx > igwx_ ) wtmp((igwx_+1):igwx) = 0.0_DP
                !
             END IF
             !

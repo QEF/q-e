@@ -126,7 +126,7 @@ MODULE constraints_module
        ! ... setting constr to 0 to findout which elements have been
        ! ... set to an atomic index. This is required for CP.
        !
-       constr = 0.D0
+       constr = 0.0_DP
        !
        ! ... NB: the first "ncolvar" constraints are collective variables (used
        ! ...     for meta-dynamics and free-energy smd), the remaining are real
@@ -236,8 +236,8 @@ MODULE constraints_module
                 ! ... the input value of target for the torsional angle (given
                 ! ... in degrees) is converted to the cosine of the angle
                 !
-                constr_target(ia) = COS( ( 180.D0 - &
-                                           colvar_target(ia) )*tpi/360.D0 )
+                constr_target(ia) = COS( ( 180.0_DP - &
+                                           colvar_target(ia) )*tpi/360.0_DP )
                 !
                 CYCLE
                 !
@@ -259,7 +259,7 @@ MODULE constraints_module
                 ! ... the input value of target for the torsional angle (given
                 ! ... in degrees) is converted to the cosine of the angle
                 !
-                constr_target(ia) = COS( colvar_target(ia)*tpi/360.D0 )
+                constr_target(ia) = COS( colvar_target(ia)*tpi/360.0_DP )
                 !
                 CYCLE
                 !
@@ -425,8 +425,8 @@ MODULE constraints_module
                 ! ... the input value of target for the torsional angle (given
                 ! ... in degrees) is converted to the cosine of the angle
                 !
-                constr_target(ia) = COS( ( 180.D0 - &
-                                           constr_target_(n) )*tpi/360.D0 )
+                constr_target(ia) = COS( ( 180.0_DP - &
+                                           constr_target_(n) )*tpi/360.0_DP )
                 !
                 CYCLE
                 !
@@ -448,7 +448,7 @@ MODULE constraints_module
                 ! ... the input value of target for the torsional angle (given
                 ! ... in degrees) is converted to the cosine of the angle
                 !
-                constr_target(ia) = COS( constr_target_(n)*tpi/360.D0 )
+                constr_target(ia) = COS( constr_target_(n)*tpi/360.0_DP )
                 !
                 CYCLE
                 !
@@ -541,9 +541,9 @@ MODULE constraints_module
            !
            r_c  = constr(3,ia)
            !
-           smoothing = 1.D0 / constr(4,ia)
+           smoothing = 1.0_DP / constr(4,ia)
            !
-           constr_target(ia) = 0.D0
+           constr_target(ia) = 0.0_DP
            !
            n_type_coord1 = 0
            !
@@ -561,8 +561,8 @@ MODULE constraints_module
                  !
                  norm_dtau = norm( dtau(:) )
                  !
-                 constr_target(ia) = constr_target(ia) + 1.D0 / &
-                                ( EXP( smoothing*( norm_dtau - r_c ) ) + 1.D0 )
+                 constr_target(ia) = constr_target(ia) + 1.0_DP / &
+                                ( EXP( smoothing*( norm_dtau - r_c ) ) + 1.0_DP )
                  !
               END DO
               !
@@ -585,9 +585,9 @@ MODULE constraints_module
            !
            r_c = constr(3,ia)
            !
-           smoothing = 1.D0 / constr(4,ia)
+           smoothing = 1.0_DP / constr(4,ia)
            !
-           constr_target(ia) = 0.D0
+           constr_target(ia) = 0.0_DP
            !
            DO ia2 = 1, nat
               !
@@ -599,8 +599,8 @@ MODULE constraints_module
               !
               norm_dtau = norm( dtau(:) )
               !
-              constr_target(ia) = constr_target(ia) + 1.D0 / &
-                                ( EXP( smoothing*( norm_dtau - r_c ) ) + 1.D0 )
+              constr_target(ia) = constr_target(ia) + 1.0_DP / &
+                                ( EXP( smoothing*( norm_dtau - r_c ) ) + 1.0_DP )
               !
            END DO
            !
@@ -665,7 +665,7 @@ MODULE constraints_module
            k(2) = constr(2,ia) * tpi / tau_units
            k(3) = constr(3,ia) * tpi / tau_units
            !
-           struc_fac = ( 0.D0, 0.D0 )
+           struc_fac = ( 0.0_DP, 0.0_DP )
            !
            DO i = 1, nat
               !
@@ -689,7 +689,7 @@ MODULE constraints_module
            !
            norm_k = constr(1,ia)*tpi/tau_units
            !
-           constr_target(ia) = 0.D0
+           constr_target(ia) = 0.0_DP
            !
            DO i = 1, nat - 1
               !
@@ -703,7 +703,7 @@ MODULE constraints_module
                  !
                  IF ( phase < eps32 ) THEN
                     !
-                    constr_target(ia) = constr_target(ia) + 1.D0
+                    constr_target(ia) = constr_target(ia) + 1.0_DP
                     !
                  ELSE
                     !
@@ -715,7 +715,7 @@ MODULE constraints_module
               !
            END DO
            !
-           constr_target(ia) = 2.D0 * fpi * constr_target(ia) / DBLE( nat )
+           constr_target(ia) = 2.0_DP * fpi * constr_target(ia) / DBLE( nat )
            !
          END SUBROUTINE set_sph_structure_factor
          !
@@ -775,7 +775,7 @@ MODULE constraints_module
        REAL(DP), EXTERNAL :: DDOT
        !
        !
-       dg(:,:) = 0.D0
+       dg(:,:) = 0.0_DP
        !
        SELECT CASE ( constr_type(idx) )
        CASE( 1 )
@@ -787,9 +787,9 @@ MODULE constraints_module
           !
           r_c = constr(3,idx)
           !
-          smoothing = 1.D0 / constr(4,idx)
+          smoothing = 1.0_DP / constr(4,idx)
           !
-          g = 0.D0
+          g = 0.0_DP
           !
           n_type_coord1 = 0
           !
@@ -811,9 +811,9 @@ MODULE constraints_module
                 !
                 expo = EXP( smoothing*( norm_dtau - r_c ) )
                 !
-                g = g + 1.D0 / ( expo + 1.D0 )
+                g = g + 1.0_DP / ( expo + 1.0_DP )
                 !
-                dtau(:) = dtau(:) * smoothing*expo / ( expo + 1.D0 )**2
+                dtau(:) = dtau(:) * smoothing*expo / ( expo + 1.0_DP )**2
                 !
                 dg(:,ia2) = dg(:,ia2) + dtau(:)
                 dg(:,ia1) = dg(:,ia1) - dtau(:)
@@ -838,9 +838,9 @@ MODULE constraints_module
           !
           r_c = constr(3,idx)
           !
-          smoothing = 1.D0 / constr(4,idx)
+          smoothing = 1.0_DP / constr(4,idx)
           !
-          g = 0.D0
+          g = 0.0_DP
           !
           DO ia1 = 1, nat
              !
@@ -856,9 +856,9 @@ MODULE constraints_module
              !
              expo = EXP( smoothing*( norm_dtau - r_c ) )
              !
-             g = g + 1.D0 / ( expo + 1.D0 )
+             g = g + 1.0_DP / ( expo + 1.0_DP )
              !
-             dtau(:) = dtau(:) * smoothing * expo / ( expo + 1.D0 )**2
+             dtau(:) = dtau(:) * smoothing * expo / ( expo + 1.0_DP )**2
              !
              dg(:,ia1) = dg(:,ia1) + dtau(:)
              dg(:,ia)  = dg(:,ia)  - dtau(:)
@@ -900,7 +900,7 @@ MODULE constraints_module
           C01 = d0(:) .dot. d1(:)
           C11 = d1(:) .dot. d1(:)
           !
-          inv_den = 1.D0 / SQRT( C00*C11 )
+          inv_den = 1.0_DP / SQRT( C00*C11 )
           !
           g = ( C01 * inv_den - constr_target(idx) )
           !
@@ -935,12 +935,12 @@ MODULE constraints_module
           IF ( ABS( D01 ) < eps32 .OR. ABS( D12 ) < eps32 ) &
              CALL errore( 'constraint_grad', 'either D01 or D12 is zero', 1 )
           !
-          invD01 = 1.D0 / D01
-          invD12 = 1.D0 / D12
+          invD01 = 1.0_DP / D01
+          invD12 = 1.0_DP / D12
           !
           fac = C01*C12 - C02*C11
           !
-          inv_den = 1.D0 / SQRT( D01*D12 )
+          inv_den = 1.0_DP / SQRT( D01*D12 )
           !
           g = ( ( C01*C12 - C02*C11 )*inv_den - constr_target(idx) )
           !
@@ -948,7 +948,7 @@ MODULE constraints_module
                         invD01*fac*( C11*d0(:) - C01*d1(:) ) )*inv_den
           !
           dg(:,ia2) = ( C01*( d1(:) - d2(:) ) - &
-                        ( C11 + C12 )*d0(:) + 2.D0*C02*d1(:) - &
+                        ( C11 + C12 )*d0(:) + 2.0_DP*C02*d1(:) - &
                         invD12*fac*( ( C11 + C12 )*d2(:) - &
                                          ( C12 + C22 )*d1(:) ) - &
                         invD01*fac*( C01*d0(:) - C00*d1(:) ) )*inv_den
@@ -966,7 +966,7 @@ MODULE constraints_module
           k(2) = constr(2,idx)*tpi/tau_units
           k(3) = constr(3,idx)*tpi/tau_units
           !
-          struc_fac = ( 1.D0, 0.D0 )
+          struc_fac = ( 1.0_DP, 0.0_DP )
           !
           r0(:) = tau(:,1)
           !
@@ -999,7 +999,7 @@ MODULE constraints_module
           !
           g = ( g - constr_target(idx) )
           !
-          dg(:,:) = dg(:,:)*2.D0/DBLE( nat*nat )
+          dg(:,:) = dg(:,:)*2.0_DP/DBLE( nat*nat )
           !
        CASE( 7 )
           !
@@ -1008,7 +1008,7 @@ MODULE constraints_module
           !
           norm_k = constr(1,idx)*tpi/tau_units
           !
-          g = 0.D0
+          g = 0.0_DP
           !
           DO i = 1, nat - 1
              !
@@ -1026,7 +1026,7 @@ MODULE constraints_module
                 !
                 IF ( phase < eps32 ) THEN
                    !
-                   g = g + 1.D0
+                   g = g + 1.0_DP
                    !
                 ELSE
                    !
@@ -1045,9 +1045,9 @@ MODULE constraints_module
              !
           END DO
           !
-          g = ( 2.D0*fpi*g / DBLE( nat ) - constr_target(idx) )
+          g = ( 2.0_DP*fpi*g / DBLE( nat ) - constr_target(idx) )
           !
-          dg(:,:) = 4.D0*fpi*dg(:,:) / DBLE( nat )
+          dg(:,:) = 4.0_DP*fpi*dg(:,:) / DBLE( nat )
           !
        CASE( 8 )
           !
@@ -1065,10 +1065,10 @@ MODULE constraints_module
           !
           g = ( d1(:) .dot. d2(:) ) / tau_units - constr_target( idx )
           !
-          dg = 0.D0
+          dg = 0.0_DP
           !
-          C00 = ( 1.D0 / DBLE( nat - 1 ) ) / tau_units
-          C01 = -1.D0 / tau_units
+          C00 = ( 1.0_DP / DBLE( nat - 1 ) ) / tau_units
+          C01 = -1.0_DP / tau_units
           !
           DO i = 1, nat
              !
@@ -1132,7 +1132,7 @@ MODULE constraints_module
        ALLOCATE( gp(    nconstr ) )
        ALLOCATE( ltest( nconstr ) )
        !
-       invdtsq  = 1.D0 / dt**2
+       invdtsq  = 1.0_DP / dt**2
        !
        dim = 3*nat
        !
@@ -1257,7 +1257,7 @@ MODULE constraints_module
        !
        dim = 3*nat
        !
-       lagrange(:) = 0.D0
+       lagrange(:) = 0.0_DP
        !
 #if defined (__REMOVE_CONSTRAINT_FORCE)
        !
@@ -1505,9 +1505,9 @@ MODULE constraints_module
        !
        IMPLICIT NONE
        !
-       REAL(DP), PARAMETER :: x(3) = (/ 0.5D0, 0.0D0, 0.0D0 /), &
-                              y(3) = (/ 0.0D0, 0.5D0, 0.0D0 /), &
-                              z(3) = (/ 0.0D0, 0.0D0, 0.5D0 /)
+       REAL(DP), PARAMETER :: x(3) = (/ 0.5_DP, 0.0_DP, 0.0_DP /), &
+                              y(3) = (/ 0.0_DP, 0.5_DP, 0.0_DP /), &
+                              z(3) = (/ 0.0_DP, 0.0_DP, 0.5_DP /)
        !
        dmax = norm( MATMUL( at(:,:), x(:) ) )
        !

@@ -200,7 +200,7 @@ CONTAINS
     IF( PRESENT( fact ) ) THEN 
        f = fact
     ELSE
-       f = 1.0d0
+       f = 1.0_DP
     END IF
     !
     IF( PRESENT( head ) ) THEN

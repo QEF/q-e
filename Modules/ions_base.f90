@@ -29,10 +29,10 @@
       !     pmass(is) = mass (converted to a.u.) of ions
       !     rcmax(is) = Ewald radius (for ion-ion interactions)
 
-      REAL(DP) :: zv(ntypx)    = 0.0d0
-      REAL(DP) :: pmass(ntypx) = 0.0d0
-      REAL(DP) :: amass(ntypx) = 0.0d0
-      REAL(DP) :: rcmax(ntypx) = 0.0d0
+      REAL(DP) :: zv(ntypx)    = 0.0_DP
+      REAL(DP) :: pmass(ntypx) = 0.0_DP
+      REAL(DP) :: amass(ntypx) = 0.0_DP
+      REAL(DP) :: rcmax(ntypx) = 0.0_DP
 
       !     ityp( i ) = the type of i-th atom in stdin
       !     atm( j )  = name of the type of the j-th atomic specie
@@ -248,7 +248,7 @@
          !
          rcmax(is) = rcmax_(is)
          !
-         IF( rcmax(is) <= 0.D0 ) &
+         IF( rcmax(is) <= 0.0_DP ) &
             CALL errore( 'ions_base_init ', 'invalid rcmax', is )
          !
       END DO
@@ -373,7 +373,7 @@
       !
       amass(1:nsp) = amass_(1:nsp)
       !
-      IF ( ANY( amass(1:nsp) <= 0.D0 ) ) &
+      IF ( ANY( amass(1:nsp) <= 0.0_DP ) ) &
          CALL errore( 'ions_base_init ', 'invalid  mass', 1 ) 
       !
       pmass(1:nsp) = amass_(1:nsp) * amu_au
@@ -428,7 +428,7 @@
       REAL(DP) :: fac
       IF( dt < eps8 ) &
          CALL errore( ' ions_vel3 ', ' dt <= 0 ', 1 )
-      fac  = 1.0d0 / ( dt * 2.0d0 )
+      fac  = 1.0_DP / ( dt * 2.0_DP )
       isa = 0
       DO is = 1, nsp
         DO ia = 1, na(is)
@@ -453,7 +453,7 @@
       REAL(DP) :: fac
       IF( dt < eps8 ) &
          CALL errore( ' ions_vel3 ', ' dt <= 0 ', 1 )
-      fac  = 1.0d0 / ( dt * 2.0d0 )
+      fac  = 1.0_DP / ( dt * 2.0_DP )
       DO ia = 1, nat
         DO i = 1, 3
           vel(i,ia) = ( taup(i,ia) - taum(i,ia) ) * fac
@@ -474,7 +474,7 @@
       REAL(DP) :: tmas
       INTEGER :: is, i, ia, isa
 !
-      tmas=0.0d0
+      tmas=0.0_DP
       do is=1,nsp
          tmas=tmas+na(is)*pmass(is)
       end do
@@ -483,7 +483,7 @@
          call errore(' ions_cofmass ', ' total mass <= 0 ', 1 )
 !
       do i=1,3
-         cdm(i)=0.0d0
+         cdm(i)=0.0_DP
          isa = 0
          do is=1,nsp
             do ia=1,na(is)
@@ -525,7 +525,7 @@
              DO isa = isa_s, isa_e
                oldp = tau(:,isa)
                CALL RANDOM_NUMBER( rand_disp )
-               rand_disp = amprp(is) * ( rand_disp - 0.5d0 )
+               rand_disp = amprp(is) * ( rand_disp - 0.5_DP )
                rdisp     = rand_disp
                CALL r_to_s( rdisp(:), rand_disp(:), hinv )
                DO k = 1, 3
@@ -554,7 +554,7 @@
     REAL(DP), intent(in) :: h(:,:)     !  simulation cell
     integer, intent(in) :: na(:), nsp
     integer :: i, j, is, ia, ii, isa
-    ekinp = 0.0d0
+    ekinp = 0.0_DP
     isa = 0
     do is=1,nsp
       do ia=1,na(is)
@@ -568,7 +568,7 @@
         end do
       end do
     end do
-    ekinp=0.5d0*ekinp
+    ekinp=0.5_DP*ekinp
     return
   END SUBROUTINE ions_kinene
 
@@ -595,16 +595,16 @@
     !
     nat = SUM( na(1:nsp) )
     !
-    ekinpr             = 0.0d0
-    temps( 1:nsp )     = 0.0d0
-    ekin2nhp(1:nhpdim) = 0.0d0
+    ekinpr             = 0.0_DP
+    temps( 1:nsp )     = 0.0_DP
+    ekin2nhp(1:nhpdim) = 0.0_DP
     !
     do i=1,3
       do j=1,3
         do ii=1,3
           isa = 0
           do is=1,nsp
-            eks = 0.0d0
+            eks = 0.0_DP
             do ia=1,na(is)
               isa = isa + 1
               eks1 = pmass(is)*h(j,i)*(vels(i,isa)-cdmvel(i))*h(j,ii)*(vels(ii,isa)-cdmvel(ii))
@@ -619,22 +619,22 @@
     end do
     !
     do is = 1, nhpdim
-       ekin2nhp(is) = ekin2nhp(is) * 0.5d0
+       ekin2nhp(is) = ekin2nhp(is) * 0.5_DP
     enddo
     !
     !
     do is = 1, nsp
       if( na(is) < 1 ) call errore(' ions_temp ', ' 0 number of atoms ', 1 )
-      temps( is ) = temps( is ) * 0.5d0
-      temps( is ) = temps( is ) / k_boltzmann_au / ( 1.5d0 * na(is) )
+      temps( is ) = temps( is ) * 0.5_DP
+      temps( is ) = temps( is ) / k_boltzmann_au / ( 1.5_DP * na(is) )
     end do
     !
-    ekinpr = 0.5d0 * ekinpr
+    ekinpr = 0.5_DP * ekinpr
     !
     IF( ndega < 1 ) THEN 
-       tempp = 0.0d0
+       tempp = 0.0_DP
     ELSE
-       tempp  = ekinpr / k_boltzmann_au * 2.0d0 / DBLE( ndega )
+       tempp  = ekinpr / k_boltzmann_au * 2.0_DP / DBLE( ndega )
     END IF
     !
     return
@@ -683,13 +683,13 @@
     REAL(DP) :: dt2by2
     integer :: i, ia, is, nat, isa
 
-    dt2by2 = .5d0 * delt * delt
+    dt2by2 = 0.5_DP * delt * delt
     gausp = delt * sqrt( tempw * k_boltzmann_au )
     nat = SUM( na( 1:nsp ) )
 
     if(.not.tcap) then
       if( tempp < eps8 ) call errore(' ions_vrescal ', ' tempp <= 0 ', 1 )
-      alfap=.5d0*sqrt(tempw/tempp)
+      alfap = 0.5_DP * sqrt(tempw/tempp)
       isa = 0
       do is=1,nsp
         do ia=1,na(is)
@@ -703,12 +703,12 @@
       end do
     else
       do i=1,3
-        qr(i)=0.d0
+        qr(i)=0.0_DP
         isa = 0
         do is=1,nsp
           do ia=1,na(is)
             isa = isa + 1
-            alfar=gausp/sqrt(pmass(is))*cos(2.d0*pi*randy())*sqrt(-2.d0*log(randy()))
+            alfar=gausp/sqrt(pmass(is))*cos(2.0_DP*pi*randy())*sqrt(-2.0_DP*log(randy()))
             taup(i,isa)=alfar
             qr(i)=qr(i)+alfar
           end do

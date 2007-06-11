@@ -20,21 +20,21 @@
 
         !  a1, a2 and a3 are the simulation cell base vector as calculated from celldm
 
-      REAL(DP) :: a1b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(DP) :: a2b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(DP) :: a3b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: a1b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+      REAL(DP) :: a2b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+      REAL(DP) :: a3b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
 
-      REAL(DP) :: b1b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(DP) :: b2b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-      REAL(DP) :: b3b(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+      REAL(DP) :: b1b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+      REAL(DP) :: b2b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+      REAL(DP) :: b3b(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
 
-      REAL(DP) :: ainvb(3,3) = 0.0d0
+      REAL(DP) :: ainvb(3,3) = 0.0_DP
 
-      REAl(DP) :: omegab = 0.0d0  !  volume of the small boxes 
+      REAl(DP) :: omegab = 0.0_DP  !  volume of the small boxes 
 
-      REAL(DP) :: tpibab = 0.0d0
+      REAL(DP) :: tpibab = 0.0_DP
 
-      REAL(DP) :: alatb  = 0.0d0
+      REAL(DP) :: alatb  = 0.0_DP
 
 !------------------------------------------------------------------------------!
    CONTAINS
@@ -48,8 +48,8 @@
        REAL(DP), INTENT(IN) :: alat, omega, a1(3), a2(3), a3(3), rat1, rat2, rat3
 
        alatb  = alat * rat1
-       IF( alatb <= 0.0d0 ) CALL errore(' small_box_set ', ' alatb <= 0 ', 1 )
-       tpibab = 2.d0 * pi / alatb
+       IF( alatb <= 0.0_DP ) CALL errore(' small_box_set ', ' alatb <= 0 ', 1 )
+       tpibab = 2.0_DP * pi / alatb
        a1b = a1 * rat1
        a2b = a2 * rat2
        a3b = a3 * rat3

@@ -113,9 +113,9 @@
           REAL(DP), INTENT(IN) :: ei(:)
           INTEGER :: i
           REAL(DP) etot_band, EII
-          eband = 0.0d0
+          eband = 0.0_DP
           do i = 1, SIZE(ei)
-            eband = eband + ei(i) * 2.0d0 
+            eband = eband + ei(i) * 2.0_DP
           end do
           EII = ehti + ESR - ESELF
           etot_band = eband - ehte + (exc-vxc) + eii

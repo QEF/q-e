@@ -22,7 +22,7 @@ MODULE check_stop
   !
   SAVE
   !
-  REAL(DP) :: max_seconds = 1.D+7
+  REAL(DP) :: max_seconds = 1.E+7_DP
   !
   LOGICAL, PRIVATE :: tinit = .FALSE.
   !
@@ -53,7 +53,7 @@ MODULE check_stop
        !
        exit_file = TRIM( prefix ) // '.EXIT'
        !
-       IF ( max_seconds_ > 0.D0 ) max_seconds = max_seconds_
+       IF ( max_seconds_ > 0.0_DP ) max_seconds = max_seconds_
        !
        IF ( meta_ionode ) THEN
           !

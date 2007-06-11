@@ -56,7 +56,7 @@
            delthal = 0.5_DP * delt
            twodelt = 2.0_DP * delt
            dt2by2  = 0.5_DP * dt2
-           tps     = 0.0d0 
+           tps     = 0.0_DP 
 
            RETURN
         END SUBROUTINE set_time_step

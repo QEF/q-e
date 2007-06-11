@@ -149,9 +149,9 @@ CONTAINS
     !
     psd (is) = title(1:2)
     !
-    if ( zmesh(is) < 1 .or. zmesh(is) > 100.d0) &
+    if ( zmesh(is) < 1 .or. zmesh(is) > 100.0_DP) &
          call errore( 'readvan','wrong zmesh read', is )
-    if ( zp(is) <= 0.d0 .or. zp(is) > 100.d0) &
+    if ( zp(is) <= 0.0_DP .or. zp(is) > 100.0_DP) &
          call errore('readvan','wrong atomic charge read', is )
     if ( exfact < -6 .or. exfact > 6) &
          &     call errore('readvan','Wrong xc in pseudopotential',1)
@@ -227,7 +227,7 @@ CONTAINS
             (rinner(lp,is), lp=1,2*nang-1 )
        !
        do lp = 1, 2*nang-1
-          if (rinner(lp,is) < 0.d0) &
+          if (rinner(lp,is) < 0.0_DP) &
                call errore('readvan','Wrong rinner read', is )
        enddo
     else if (iver(1,is) > 3) then
@@ -365,7 +365,7 @@ CONTAINS
     !     for compatibility with rho_atc in the non-US case)
     !
     if (nlcc (is) ) then
-       rho_atc(1,is) = 0.D0
+       rho_atc(1,is) = 0.0_DP
        do ir=2,mesh(is)
           rho_atc(ir,is) = rho_atc(ir,is)/fpi/r(ir,is)**2
        enddo
@@ -487,8 +487,8 @@ CONTAINS
              ! least square minimization: find
              ! qrl = sum_i c_i r^{l+1}r^{2i-2} for r < rinner
              !
-             a(:,:) = 0.d0
-             b(:)   = 0.d0
+             a(:,:) = 0.0_DP
+             b(:)   = 0.0_DP
              do i = 1, nqf(is)
                 do ir=1,irinner
                    b(i) = b(i) + r(ir,is)**(2*i-2+l+1) * qrl(ir,l)
@@ -523,20 +523,21 @@ CONTAINS
     !-----------------------------------------------------------------------
     !
     !     generate Herman-Skillman radial grid (obsolescent)
-    !     c    - 0.8853418/z**(1/3)
+    !     c    - 0.88534138/z**(1/3)
     !
     IMPLICIT NONE
     !
     INTEGER mesh
-    REAL(DP) z, r(mesh), rab(mesh)
+    REAL(DP) :: z, r(mesh), rab(mesh)
     !
-    REAL(DP) deltax
-    INTEGER nblock,i,j,k
+    REAL(DP) :: deltax,pi
+    INTEGER :: nblock,i,j,k
     !
+    pi=4.0_DP*ATAN(1.0_DP)
     nblock = mesh/40
     i=1
-    r(i)=0.0d0
-    deltax=0.0025d0*0.88534138d0/z**(1.d0/3.d0)
+    r(i)=0.0_DP
+    deltax=0.0025_DP*0.5_DP*(3.0_DP*pi/4.0_DP)**(2.0_DP/3.0_DP)/z**(1.0_DP/3.0_DP)
     DO j=1,nblock
        DO k=1,40
           i=i+1
@@ -661,7 +662,7 @@ CONTAINS
        !
        ! oc < 0 distinguishes between bound states from unbound states
        !
-       if (oc (nb, is) <= 0.d0) oc (nb, is) = -1.0d0
+       if (oc (nb, is) <= 0.0_DP) oc (nb, is) = -1.0_DP
     enddo
     !
     kkbeta(is)=0
@@ -671,7 +672,7 @@ CONTAINS
        read ( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
             ( betar(ir,nb,is), ir=1,ikk)
        do ir=ikk+1,mesh(is)
-          betar(ir,nb,is)=0.d0
+          betar(ir,nb,is)=0.0_DP
        enddo
        do mb=1,nb
           ! 
@@ -689,10 +690,10 @@ CONTAINS
              read(iunps,'(1p4e19.11)',err=100,iostat=ios) &
                   (qfunc(n,ijv,is),n=1,mesh(is))
           else
-             qqq(nb,mb,is)=0.d0
-             qqq(mb,nb,is)=0.d0
+             qqq(nb,mb,is)=0.0_DP
+             qqq(mb,nb,is)=0.0_DP
              do n=1,mesh(is)
-                qfunc(n,ijv,is)=0.d0
+                qfunc(n,ijv,is)=0.0_DP
              enddo
           endif
        enddo
@@ -726,14 +727,14 @@ CONTAINS
     if ( nqlc(is) > lqmax .or. nqlc(is) < 0 ) &
          call errore(' readrrkj', 'Wrong  nqlc', nqlc(is) )
     do l=1,nqlc(is)
-       rinner(l,is)=0.d0
+       rinner(l,is)=0.0_DP
     enddo
     !
     !    compute the radial mesh
     !
     do ir = 1, mesh(is)
        x = xmin(is) + DBLE(ir-1) * dx (is)
-       r(ir,is) = exp(x) / zmesh(is)
+       r(ir,is) = EXP(x) / zmesh(is)
        rab(ir,is) = dx(is) * r(ir,is)
     end do
     !

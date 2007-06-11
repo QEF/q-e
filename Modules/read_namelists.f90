@@ -22,7 +22,7 @@ MODULE read_namelists_module
   !
   PRIVATE
   !
-  REAL(DP), PARAMETER :: sm_not_set = -20.D0
+  REAL(DP), PARAMETER :: sm_not_set = -20.0_DP
   !
   PUBLIC :: read_namelists, sm_not_set
   !
@@ -67,8 +67,8 @@ MODULE read_namelists_module
        tprnfor = .FALSE.
        tabps = .FALSE.
        !
-       IF( prog == 'PW' ) dt  = 20.D0
-       IF( prog == 'CP' ) dt  =  1.D0
+       IF( prog == 'PW' ) dt  = 20.0_DP
+       IF( prog == 'CP' ) dt  =  1.0_DP
        !
        ndr = 50
        ndw = 50
@@ -89,11 +89,11 @@ MODULE read_namelists_module
           pseudo_dir = TRIM( pseudo_dir ) // '/espresso/pseudo/'
        END IF
        !
-       refg          = 0.05d0
-       max_seconds   = 1.D+7
-       ekin_conv_thr = 1.D-6
-       etot_conv_thr = 1.D-4
-       forc_conv_thr = 1.D-3
+       refg          = 0.05_DP
+       max_seconds   = 1.E+7_DP
+       ekin_conv_thr = 1.E-6_DP
+       etot_conv_thr = 1.E-4_DP
+       forc_conv_thr = 1.E-3_DP
        disk_io  = 'default'
        dipfield = .FALSE.
        lberry   = .FALSE.
@@ -127,22 +127,22 @@ MODULE read_namelists_module
        !
        !
        ibrav  = -1
-       celldm = (/ 0.D0, 0.D0, 0.D0, 0.D0, 0.D0, 0.D0 /)
-       a = 0.D0
-       b = 0.D0
-       c = 0.D0
-       cosab = 0.D0
-       cosac = 0.D0
-       cosbc = 0.D0
+       celldm = (/ 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP /)
+       a = 0.0_DP
+       b = 0.0_DP
+       c = 0.0_DP
+       cosab = 0.0_DP
+       cosac = 0.0_DP
+       cosbc = 0.0_DP
        nat    = 0
        ntyp   = 0
        nbnd   = 0
-       nelec  = 0.D0
-       tot_charge = 0.D0
+       nelec  = 0.0_DP
+       tot_charge = 0.0_DP
        tot_magnetization = -1
        multiplicity = 0
-       ecutwfc = 0.D0
-       ecutrho = 0.D0
+       ecutwfc = 0.0_DP
+       ecutrho = 0.0_DP
        nr1  = 0
        nr2  = 0
        nr3  = 0
@@ -154,14 +154,14 @@ MODULE read_namelists_module
        nr3b = 3
        occupations = 'fixed'
        smearing = 'gaussian'
-       degauss = 0.D0
-       nelup = 0.D0
-       neldw = 0.D0
+       degauss = 0.0_DP
+       nelup = 0.0_DP
+       neldw = 0.0_DP
        nspin = 1
        nosym = .FALSE.
-       ecfixed = 0.D0
-       qcutz   = 0.D0
-       q2sigma = 0.01D0
+       ecfixed = 0.0_DP
+       qcutz   = 0.0_DP
+       q2sigma = 0.01_DP
        xc_type = 'none'
        input_dft = 'none'
 !
@@ -174,17 +174,17 @@ MODULE read_namelists_module
 
        IF ( prog == 'PW' ) THEN
           !
-          starting_ns_eigenvalue = -1.D0
+          starting_ns_eigenvalue = -1.0_DP
           U_projection_type = 'atomic'
           !
        END IF
        lda_plus_U = .FALSE.
-       Hubbard_U = 0.D0
-       Hubbard_alpha = 0.D0
+       Hubbard_U = 0.0_DP
+       Hubbard_alpha = 0.0_DP
        edir = 1
-       emaxpos = 0.5D0
-       eopreg = 0.1D0
-       eamp = 1.0D-3
+       emaxpos = 0.5_DP
+       eopreg = 0.1_DP
+       eamp = 1.0E-3_DP
        !
        !  ... postprocessing of DOS & phonons & el-ph
        la2F = .FALSE.
@@ -193,12 +193,12 @@ MODULE read_namelists_module
        !
        lspinorb = .FALSE.
        noncolin = .FALSE.
-       lambda = 1.0d0
+       lambda = 1.0_DP
        constrained_magnetization= 'none'
-       fixed_magnetization = 0.d0
-       B_field = 0.d0
-       angle1 = 0.0d0
-       angle2 = 0.0d0
+       fixed_magnetization = 0.0_DP
+       B_field = 0.0_DP
+       angle1 = 0.0_DP
+       angle2 = 0.0_DP
        report = 1
        !
        assume_isolated = .FALSE.
@@ -224,10 +224,10 @@ MODULE read_namelists_module
        CHARACTER(LEN=2) :: prog   ! ... specify the calling program
        !
        !
-       emass = 400.D0
-       emass_cutoff = 2.5D0
+       emass = 400.0_DP
+       emass_cutoff = 2.5_DP
        orthogonalization = 'ortho'
-       ortho_eps = 1.D-8
+       ortho_eps = 1.E-8_DP
        ortho_max = 20
        ortho_para = 0
        electron_maxstep = 100
@@ -235,7 +235,7 @@ MODULE read_namelists_module
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'diis' )
        !
        electron_dynamics = 'none'
-       electron_damping = 0.1D0
+       electron_damping = 0.1_DP
        !
        ! ... ( 'zero' | 'default' )
        !
@@ -244,10 +244,10 @@ MODULE read_namelists_module
        ! ... ( 'nose' | 'not_controlled' | 'rescaling')
        !
        electron_temperature = 'not_controlled'
-       ekincw = 0.001D0
-       fnosee = 1.D0
-       ampre  = 0.D0
-       grease = 1.D0
+       ekincw = 0.001_DP
+       fnosee = 1.0_DP
+       ampre  = 0.0_DP
+       grease = 1.0_DP
        IF ( prog == 'PW' ) THEN
           !
           startingwfc = 'atomic'
@@ -259,64 +259,64 @@ MODULE read_namelists_module
           startingpot = ' '
           !
        END IF
-       conv_thr = 1.D-6
+       conv_thr = 1.E-6_DP
        empty_states_nbnd = 0
        empty_states_maxstep = 100
-       empty_states_ethr = 0.D0
+       empty_states_ethr = 0.0_DP
        diis_size = 4
        diis_nreset = 3
-       diis_hcut = 1.D0
-       diis_wthr = 0.D0
-       diis_delt = 0.D0
+       diis_hcut = 1.0_DP
+       diis_wthr = 0.0_DP
+       diis_delt = 0.0_DP
        diis_maxstep = 100
        diis_rot = .FALSE.
-       diis_fthr = 0.D0
-       diis_temp = 0.D0
-       diis_achmix = 0.D0
-       diis_g0chmix = 0.D0
-       diis_g1chmix = 0.D0
+       diis_fthr = 0.0_DP
+       diis_temp = 0.0_DP
+       diis_achmix = 0.0_DP
+       diis_g0chmix = 0.0_DP
+       diis_g1chmix = 0.0_DP
        diis_nchmix = 3
        diis_nrot = 3
-       diis_rothr  = 0.D0
-       diis_ethr   = 0.D0
+       diis_rothr  = 0.0_DP
+       diis_ethr   = 0.0_DP
        diis_chguess = .FALSE.
        mixing_mode = 'plain'
        mixing_fixed_ns = 0
-       mixing_beta = 0.7D0
+       mixing_beta = 0.7_DP
        mixing_ndim = 8
        diagonalization = ' '
-       diago_thr_init = 0.D0
+       diago_thr_init = 0.0_DP
        diago_cg_maxiter = 20
        diago_david_ndim = 4
        diago_diis_ndim = 3
        diago_full_acc = .FALSE.
        !
        sic = 'none'
-       sic_epsilon = 0.D0
-       sic_alpha = 0.D0
+       sic_epsilon = 0.0_DP
+       sic_alpha = 0.0_DP
        force_pairing = .false.
        !
-       fermi_energy = 0.D0
+       fermi_energy = 0.0_DP
        n_inner = 2
        niter_cold_restart=1
-       lambda_cold=0.03
+       lambda_cold=0.03_DP
        rotation_dynamics = "line-minimization"
        occupation_dynamics = "line-minimization"
-       rotmass = 0.D0
-       occmass = 0.D0
-       rotation_damping = 0.D0
-       occupation_damping = 0.D0
+       rotmass = 0.0_DP
+       occmass = 0.0_DP
+       rotation_damping = 0.0_DP
+       occupation_damping = 0.0_DP
        !
        tcg     = .FALSE.
        maxiter = 40
-       passop  = 0.3D0
+       passop  = 0.3_DP
        niter_cg_restart = 20
-       etresh  = 1.D-6
+       etresh  = 1.E-6_DP
        !
        epol   = 3
-       efield = 0.D0
+       efield = 0.0_DP
        epol2  = 3
-       efield2 = 0.d0
+       efield2 = 0.0_DP
        !
        occupation_constraints = .false.
        !
@@ -346,8 +346,8 @@ MODULE read_namelists_module
        ! ... ( 'sd' | 'cg' | 'damp' | 'verlet' | 'none' | 'bfgs' | 'beeman' )
        !
        ion_dynamics = 'none'
-       ion_radius   = 0.5D0
-       ion_damping  = 0.1d0
+       ion_radius   = 0.5_DP
+       ion_damping  = 0.1_DP
        !
        ! ... ( 'default' | 'from_input' )
        !
@@ -362,25 +362,25 @@ MODULE read_namelists_module
        !
        ion_temperature = 'not_controlled'
        !
-       tempw       = 300.D0
-       fnosep      = -1.0D0
-       fnosep(1)   = 1.0D0
+       tempw       = 300.0_DP
+       fnosep      = -1.0_DP
+       fnosep(1)   = 1.0_DP
        nhpcl       = 0
        nhptyp      = 0
        ndega       = 0
        tranp       = .FALSE.
-       amprp       = 0.D0
-       greasp      = 1.D0
-       tolp        = 100.D0
+       amprp       = 0.0_DP
+       greasp      = 1.0_DP
+       tolp        = 100.0_DP
        ion_nstepe  = 1
        ion_maxstep = 100
-       delta_t     = 1.D0
+       delta_t     = 1.0_DP
        nraise      = 1
        !
        refold_pos       = .FALSE.
        remove_rigid_rot = .FALSE.
        !
-       upscale           = 10.D0
+       upscale           = 10.0_DP
        pot_extrapolation = 'atomic'
        wfc_extrapolation = 'none'
        !
@@ -392,24 +392,24 @@ MODULE read_namelists_module
        use_masses     = .FALSE.
        use_freezing   = .FALSE.
        opt_scheme     = 'quick-min'
-       temp_req       = 0.D0
-       ds             = 1.D0
-       path_thr       = 0.05D0
+       temp_req       = 0.0_DP
+       ds             = 1.0_DP
+       path_thr       = 0.05_DP
        CI_scheme      = 'no-CI'
-       k_max          = 0.1D0
-       k_min          = 0.1D0
+       k_max          = 0.1_DP
+       k_min          = 0.1_DP
        fixed_tan      = .FALSE.
        !
        ! ... BFGS defaults
        !
        bfgs_ndim        = 1
-       trust_radius_max = 0.8D0  ! bohr
-       trust_radius_min = 1.D-4  ! bohr
-       trust_radius_ini = 0.5D0  ! bohr
-       w_1              = 0.01D0
-       w_2              = 0.50D0
+       trust_radius_max = 0.8_DP   ! bohr
+       trust_radius_min = 1.E-4_DP ! bohr
+       trust_radius_ini = 0.5_DP   ! bohr
+       w_1              = 0.01_DP
+       w_2              = 0.50_DP
        !
-       sic_rloc = 0.D0
+       sic_rloc = 0.0_DP
        !
        ! ... SMD defaults (Y.K. 15/04/2004 )
        !
@@ -424,23 +424,23 @@ MODULE read_namelists_module
        smd_forf    = 50
        smd_smwf    = 1
        smd_lmfreq  = 1
-       smd_tol     = 1.D-4
+       smd_tol     = 1.E-4_DP
        smd_maxlm   = 10
        smd_smcp    = .TRUE.
        smd_smopt   = .FALSE.
        smd_smlm    = .FALSE.
        smd_splc    = .FALSE.
-       smd_spal    = 1.D0
-       smd_ene_ini = 1.D0
-       smd_ene_fin = 1.D0
+       smd_spal    = 1.0_DP
+       smd_ene_ini = 1.0_DP
+       smd_ene_fin = 1.0_DP
        !
        ! ... meta-dynamics defaults
        !
-       fe_step     = 0.4D0
+       fe_step     = 0.4_DP
        fe_nstep    = 100
        sw_nstep    = 10
        eq_nstep    = 0
-       g_amplitude = 0.005D0
+       g_amplitude = 0.005_DP
        !
        RETURN
        !
@@ -470,23 +470,23 @@ MODULE read_namelists_module
        ! ... ( 'zero' | 'default' )
        !
        cell_velocities = 'default'
-       press = 0.D0
-       wmass = 0.D0
+       press = 0.0_DP
+       wmass = 0.0_DP
        !
        ! ... ( 'nose' | 'not_controlled' | 'rescaling' )
        !
        cell_temperature = 'not_controlled'
-       temph = 0.D0
-       fnoseh = 1.D0
-       greash = 1.D0
+       temph = 0.0_DP
+       fnoseh = 1.0_DP
+       greash = 1.0_DP
        !
        ! ... ('all'* | 'volume' | 'x' | 'y' | 'z' | 'xy' | 'xz' | 'yz' | 'xyz' )
        !
        cell_dofree = 'all'
-       cell_factor = 0.D0
+       cell_factor = 0.0_DP
        cell_nstepe = 1
-       cell_damping = 0.D0
-       press_conv_thr = 0.5D0
+       cell_damping = 0.0_DP
+       press_conv_thr = 0.5_DP
        !
        RETURN
        !
@@ -515,17 +515,17 @@ MODULE read_namelists_module
        t_gauss = .false.
        jellium = .false.
 
-       P_ext = 0.d0
-       P_in = 0.d0
-       P_fin = 0.d0
-       Surf_t = 0.d0
-       rho_thr = 0.d0
-       dthr = 0.d0
-       step_rad = 0.d0
-       delta_eps = 0.d0
-       delta_sigma = 0.d0
-       R_j = 0.d0
-       h_j = 0.d0
+       P_ext = 0.0_DP
+       P_in = 0.0_DP
+       P_fin = 0.0_DP
+       Surf_t = 0.0_DP
+       rho_thr = 0.0_DP
+       dthr = 0.0_DP
+       step_rad = 0.0_DP
+       delta_eps = 0.0_DP
+       delta_sigma = 0.0_DP
+       R_j = 0.0_DP
+       h_j = 0.0_DP
 
        n_cntr = 0
        axis = 3
@@ -551,7 +551,7 @@ MODULE read_namelists_module
        !
        !
        modenum = 0
-       xqq = 0.D0
+       xqq = 0.0_DP
        !
        RETURN
        !
@@ -575,25 +575,25 @@ MODULE read_namelists_module
        !
        sw_len = 1
        !
-       efx0 = 0.D0
-       efy0 = 0.D0
-       efz0 = 0.D0
-       efx1 = 0.D0
-       efy1 = 0.D0
-       efz1 = 0.D0
+       efx0 = 0.0_DP
+       efy0 = 0.0_DP
+       efz0 = 0.0_DP
+       efx1 = 0.0_DP
+       efy1 = 0.0_DP
+       efz1 = 0.0_DP
        !
        wfsd = .FALSE.
        !
-       wfdt        = 5.D0
-       maxwfdt     = 0.3D0
-       wf_q        = 1500.D0
-       wf_friction = 0.3D0
+       wfdt        = 5.0_DP
+       maxwfdt     = 0.30_DP
+       wf_q        = 1500.0_DP
+       wf_friction = 0.3_DP
        !
        nit    = 10
        nsd    = 10
        nsteps = 20
        !
-       tolw = 1.D-8
+       tolw = 1.E-8_DP
        !
        adapt = .TRUE.
        !
@@ -1144,12 +1144,12 @@ MODULE read_namelists_module
            CALL errore( sub_name,' isave out of range ', 1 )
        END IF
 
-       IF( dt < 0.D0 ) &
+       IF( dt < 0.0_DP ) &
           CALL errore( sub_name,' dt out of range ', 1 )
-       IF( max_seconds < 0.D0 ) &
+       IF( max_seconds < 0.0_DP ) &
           CALL errore( sub_name,' max_seconds out of range ', 1 )
 
-       IF( ekin_conv_thr < 0.D0 ) THEN
+       IF( ekin_conv_thr < 0.0_DP ) THEN
           IF( prog == 'PW' ) THEN
             CALL infomsg( sub_name,' ekin_conv_thr not used in PW ', 1 )
           ELSE
@@ -1157,9 +1157,9 @@ MODULE read_namelists_module
           END IF
        END IF
 
-       IF( etot_conv_thr < 0.D0 ) &
+       IF( etot_conv_thr < 0.0_DP ) &
           CALL errore( sub_name,' etot_conv_thr out of range ', 1 )
-       IF( forc_conv_thr < 0.D0 ) &
+       IF( forc_conv_thr < 0.0_DP ) &
           CALL errore( sub_name,' force_conv_thr out of range ', 1 )
        IF( prog == 'CP' ) THEN
           IF( dipfield ) &
@@ -1204,7 +1204,7 @@ MODULE read_namelists_module
        IF( ibrav < 0 .OR. ibrav > 14 ) &
           CALL errore( sub_name ,' ibrav out of range ', MAX( 1, ibrav) )
        !
-       IF( ( ibrav /= 0 ) .AND. ( celldm(1) == 0.d0 ) .AND. ( a == 0.d0 ) ) &
+       IF( ( ibrav /= 0 ) .AND. ( celldm(1) == 0.0_DP ) .AND. ( a == 0.0_DP ) ) &
            CALL errore( ' iosys ', &
                       & ' invalid lattice parameters ( celldm or a )', 1 )
        !
@@ -1220,25 +1220,25 @@ MODULE read_namelists_module
        IF( nspin < 1 .OR. nspin > nspinx ) &
           CALL errore( sub_name ,' nspin out of range ', MAX(nspin, 1 ) )
        !
-       IF( ecutwfc <= 0.D0 ) &
+       IF( ecutwfc <= 0.0_DP ) &
           CALL errore( sub_name ,' ecutwfc out of range ',1)
-       IF( ecutrho < 0.D0 ) &
+       IF( ecutrho < 0.0_DP ) &
           CALL errore( sub_name ,' ecutrho out of range ',1)
        !
        IF( prog == 'CP' ) THEN
-          IF( degauss /= 0.D0 ) &
+          IF( degauss /= 0.0_DP ) &
              CALL infomsg( sub_name ,' degauss is not used in CP ', -1)
        END IF
        !
-       IF( nelup < 0.d0 .OR. nelup > nelec ) &
+       IF( nelup < 0.0_DP .OR. nelup > nelec ) &
           CALL errore( sub_name ,' nelup out of range ',1)
-       IF( neldw < 0.d0 .OR. neldw > nelec ) &
+       IF( neldw < 0.0_DP .OR. neldw > nelec ) &
           CALL errore( sub_name ,' neldw out of range ',1)
-       IF( ecfixed < 0.D0 ) &
+       IF( ecfixed < 0.0_DP ) &
           CALL errore( sub_name ,' ecfixed out of range ',1)
-       IF( qcutz < 0.D0 ) &
+       IF( qcutz < 0.0_DP ) &
           CALL errore( sub_name ,' qcutz out of range ',1)
-       IF( q2sigma < 0.D0 ) &
+       IF( q2sigma < 0.0_DP ) &
           CALL errore( sub_name ,' q2sigma out of range ',1)
        IF( prog == 'CP' ) THEN
           IF( ANY(starting_magnetization /= SM_NOT_SET ) ) &
@@ -1248,9 +1248,9 @@ MODULE read_namelists_module
              CALL infomsg( sub_name ,' lda_plus_U is not used in CP ', -1)
           IF( la2F ) &
              CALL infomsg( sub_name ,' la2F is not used in CP ', -1)
-          IF( ANY(Hubbard_U /= 0.D0) ) &
+          IF( ANY(Hubbard_U /= 0.0_DP) ) &
              CALL infomsg( sub_name ,' Hubbard_U is not used in CP ', -1)
-          IF( ANY(Hubbard_alpha /= 0.D0) ) &
+          IF( ANY(Hubbard_alpha /= 0.0_DP) ) &
              CALL infomsg( sub_name ,' Hubbard_alpha is not used in CP ', -1)
           IF( nosym ) &
              CALL infomsg( sub_name ,' nosym not implemented in CP ', -1)
@@ -1272,16 +1272,16 @@ MODULE read_namelists_module
        !
        IF ( sic /= 'none' ) THEN
           !
-          IF (sic_epsilon > 1.D0 )  &
+          IF (sic_epsilon > 1.0_DP )  &
              CALL errore( sub_name, &
                         & ' invalid sic_epsilon, greater than 1.',1 )
-          IF (sic_epsilon < 0.d0 )  &
+          IF (sic_epsilon < 0.0_DP )  &
              CALL errore( sub_name, &
                         & ' invalid sic_epsilon, less than 0 ',1 )
-          IF (sic_alpha > 1.D0 )  &
+          IF (sic_alpha > 1.0_DP )  &
              CALL errore( sub_name, &
                         & ' invalid sic_alpha, greater than 1.',1 )
-          IF (sic_alpha < 0.d0 )  &
+          IF (sic_alpha < 0.0_DP )  &
              CALL errore( sub_name, &
                         & ' invalid sic_alpha, less than 0 ',1 )
           !
@@ -1329,19 +1329,19 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' electron_dynamics '''//&
                        & TRIM(electron_dynamics)//''' not allowed ',1)
-       IF( emass <= 0.D0 ) &
+       IF( emass <= 0.0_DP ) &
           CALL errore( sub_name, ' emass less or equal 0 ',1)
-       IF( emass_cutoff <= 0.D0 ) &
+       IF( emass_cutoff <= 0.0_DP ) &
           CALL errore( sub_name, ' emass_cutoff less or equal 0 ',1)
-       IF( ortho_eps <= 0.D0 ) &
+       IF( ortho_eps <= 0.0_DP ) &
           CALL errore( sub_name, ' ortho_eps less or equal 0 ',1)
        IF( ortho_max < 1 ) &
           CALL errore( sub_name, ' ortho_max less than 1 ',1)
        IF( ortho_para < 0 ) &
           CALL errore( sub_name, ' ortho_para less than 0 ',1)
-       IF( fnosee <= 0.D0 ) &
+       IF( fnosee <= 0.0_DP ) &
           CALL errore( sub_name, ' fnosee less or equal 0 ',1)
-       IF( ekincw <= 0.D0 ) &
+       IF( ekincw <= 0.0_DP ) &
           CALL errore( sub_name, ' ekincw less or equal 0 ',1)
        IF( empty_states_nbnd < 0 ) &
           CALL errore( sub_name, &
@@ -1349,7 +1349,7 @@ MODULE read_namelists_module
        IF( empty_states_maxstep < 0 ) &
           CALL errore( sub_name,&
                        & ' invalid empty_states_maxstep, less than 0 ',1)
-       IF( empty_states_ethr < 0.D0 ) &
+       IF( empty_states_ethr < 0.0_DP ) &
           CALL errore( sub_name, &
                        & ' invalid empty_states_ethr, less than 0 ',1)
        IF( occupation_constraints ) &
@@ -1391,9 +1391,9 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' ion_dynamics '''// &
                        & TRIM(ion_dynamics)//''' not allowed ',1)
-       IF( tempw <= 0.D0 ) &
+       IF( tempw <= 0.0_DP ) &
           CALL errore( sub_name,' tempw out of range ',1)
-       IF( fnosep( 1 ) <= 0.D0 ) &
+       IF( fnosep( 1 ) <= 0.0_DP ) &
           CALL errore( sub_name,' fnosep out of range ',1)
        IF( nhpcl > nhclm ) &
           CALL infomsg ( sub_name,' nhpcl should be less than nhclm', -1)
@@ -1406,9 +1406,9 @@ MODULE read_namelists_module
        !
        ! ... general "path" variables checkin
        !
-       IF ( ds < 0.D0 ) &
+       IF ( ds < 0.0_DP ) &
           CALL errore( sub_name,' ds out of range ',1)
-       IF ( temp_req < 0.D0 ) &
+       IF ( temp_req < 0.0_DP ) &
           CALL errore( sub_name,' temp_req out of range ',1)
        !
        allowed = .FALSE.
@@ -1444,8 +1444,8 @@ MODULE read_namelists_module
        !
        ! ... NEB specific checkin
        !
-       IF ( k_max < 0.D0 )  CALL errore( sub_name, 'k_max out of range', 1 )
-       IF ( k_min < 0.D0 )  CALL errore( sub_name, 'k_min out of range', 1 )
+       IF ( k_max < 0.0_DP )  CALL errore( sub_name, 'k_max out of range', 1 )
+       IF ( k_min < 0.0_DP )  CALL errore( sub_name, 'k_min out of range', 1 )
        IF ( k_max < k_min ) CALL errore( sub_name, 'k_max < k_min', 1 )
        !
        allowed = .FALSE.
@@ -1477,7 +1477,7 @@ MODULE read_namelists_module
        IF( smd_smlm .AND. (smd_smcp .OR. smd_smopt) ) &
           CALL infomsg( sub_name,' smlm ? ', -1)
        !
-       IF (sic /= 'none' .and. sic_rloc == 0.d0) &
+       IF (sic /= 'none' .and. sic_rloc == 0.0_DP) &
           CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )
        !
        RETURN
@@ -1509,10 +1509,10 @@ MODULE read_namelists_module
        IF( .NOT. allowed ) &
           CALL errore( sub_name, ' cell_dynamics '''// &
                        TRIM(cell_dynamics)//''' not allowed ',1)
-       IF( wmass < 0.D0 ) &
+       IF( wmass < 0.0_DP ) &
           CALL errore( sub_name,' wmass out of range ',1)
        IF( prog == 'CP' ) THEN
-          IF( cell_factor /= 0.D0 ) &
+          IF( cell_factor /= 0.0_DP ) &
              CALL infomsg( sub_name,' cell_factor not used in CP ', -1)
        END IF
        IF( cell_nstepe <= 0 ) &

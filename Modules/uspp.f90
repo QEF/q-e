@@ -150,10 +150,10 @@ CONTAINS
     allocate (ylm( llx, llx ))    
     allocate (mly( llx, llx ))    
 
-    r(:,:)   = 0.d0
-    ylm(:,:) = 0.d0
-    mly(:,:) = 0.d0
-    ap(:,:,:)= 0.d0
+    r(:,:)   = 0.0_DP
+    ylm(:,:) = 0.0_DP
+    mly(:,:) = 0.0_DP
+    ap(:,:,:)= 0.0_DP
 
     ! - generate an array of random vectors (uniform deviate on unitary sphere)
 
@@ -215,13 +215,13 @@ CONTAINS
     real(DP) :: costheta, sintheta, phi
     
     do ir = 1, llx
-       costheta = 2.d0 * rndm() - 1.d0
-       sintheta = sqrt ( 1.d0 - costheta*costheta)
+       costheta = 2.0_DP * rndm() - 1.0_DP
+       sintheta = SQRT ( 1.0_DP - costheta*costheta)
        phi = tpi * rndm()
        r (1,ir) = sintheta * cos(phi)
        r (2,ir) = sintheta * sin(phi)
        r (3,ir) = costheta
-       rr(ir)   = 1.d0
+       rr(ir)   = 1.0_DP
     end do
     
     return
@@ -248,7 +248,7 @@ CONTAINS
     !
     integer :: ir
     
-    compute_ap = 0.d0
+    compute_ap = 0.0_DP
     do ir = 1,llx
        compute_ap = compute_ap + mly(l,ir)*ylm(ir,li)*ylm(ir,lj)
     end do

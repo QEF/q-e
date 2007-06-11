@@ -463,11 +463,11 @@
 
 #elif defined __ESSL
 
-       tscale = 1.0d0 / nz
+       tscale = 1.0_DP / nz
        CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl,  1, &
           tscale, fw_tablez(1, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, -1, &
-          1.0d0, bw_tablez(1, icurrent), ltabl, work(1), lwork)
+          1.0_DP, bw_tablez(1, icurrent), ltabl, work(1), lwork)
 
 #elif defined __COMPLIB
 
@@ -481,7 +481,7 @@
 
 #elif defined __SCSL
 
-       CALL ZZFFTM (0, nz, 0, 0.0D0, DUMMY, 1, DUMMY, 1, &
+       CALL ZZFFTM (0, nz, 0, 0.0_DP, DUMMY, 1, DUMMY, 1, &
                     tablez (1, icurrent), DUMMY, isys)
 
 #elif defined __SUN
@@ -497,7 +497,7 @@
          Status =  DftiFreeDescriptor(Desc_Handle(icurrent)) 
        ENDIF
 
-       tscale = 1.0d0 / nz
+       tscale = 1.0_DP / nz
        !write(*,*) "Creating Descriptor",icurrent
       
        Status = DftiCreateDescriptor(Desc_Handle(icurrent) , &
@@ -574,10 +574,10 @@
 
      IF ( isign < 0 ) THEN
         idir   = -1
-        tscale = 1.0d0 / nz
+        tscale = 1.0_DP / nz
      ELSE IF ( isign > 0 ) THEN
         idir   = 1
-        tscale = 1.0d0
+        tscale = 1.0_DP
      END IF
      IF (isign /= 0) CALL ZZFFTM (idir, nz, nsl, tscale, c(1), ldz, &
           cout(1), ldz, tablez (1, ip), work, isys)
@@ -589,12 +589,12 @@
 
      IF( isign < 0 ) THEN
         idir   =+1
-        tscale = 1.0d0 / nz
+        tscale = 1.0_DP / nz
         CALL DCFT (0, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, idir, &
              tscale, fw_tablez(1, ip), ltabl, work, lwork)
      ELSE IF( isign > 0 ) THEN
         idir   =-1
-        tscale = 1.0d0
+        tscale = 1.0_DP
         CALL DCFT (0, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, idir, &
              tscale, bw_tablez(1, ip), ltabl, work, lwork)
      END IF
@@ -812,15 +812,15 @@
 
 #elif defined __ESSL
 
-       tscale = 1.0d0 / ( nx * ny )
-       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1,  1, 1.0d0, &
+       tscale = 1.0_DP / ( nx * ny )
+       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1,  1, 1.0_DP, &
           fw_tabley( 1, icurrent), ltabl, work(1), lwork )
-       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1, -1, 1.0d0, &
+       CALL DCFT ( 1, r(1), ldx, 1, r(1), ldx, 1, ny, 1, -1, 1.0_DP, &
           bw_tabley(1, icurrent), ltabl, work(1), lwork )
        CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny,  1, &
           tscale, fw_tablex( 1, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny, -1, &
-          1.0d0, bw_tablex(1, icurrent), ltabl, work(1), lwork)
+          1.0_DP, bw_tablex(1, icurrent), ltabl, work(1), lwork)
 
 #elif defined __COMPLIB
 
@@ -829,9 +829,9 @@
 
 #elif defined __SCSL
 
-       CALL ZZFFTMR (0, ny, 0, 0.0D0, DUMMY, 1, DUMMY, 1,               &
+       CALL ZZFFTMR (0, ny, 0, 0.0_DP, DUMMY, 1, DUMMY, 1,               &
                      tabley (1, icurrent), DUMMY, isys)
-       CALL ZZFFTM  (0, nx, 0, 0.0D0, DUMMY, 1, DUMMY, 1,               &
+       CALL ZZFFTM  (0, nx, 0, 0.0_DP, DUMMY, 1, DUMMY, 1,               &
                      tablex (1, icurrent), DUMMY, isys)
 
 #elif defined __SUN
@@ -850,7 +850,7 @@
          if(Desc_Handley(icurrent) /= 0) then
            Status =  DftiFreeDescriptor(Desc_Handley(icurrent)) 
          endif
-         tscale = 1.0d0 / ( nx * ny )
+         tscale = 1.0_DP / ( nx * ny )
 
       
        
@@ -893,7 +893,7 @@
          
          StrideArray(2) = 1 
          StrideArray(3) = nx
-         tscale = 1.0d0 / ( nx * ny ) 
+         tscale = 1.0_DP / ( nx * ny ) 
          !Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_FORWARD_SCALE, tscale)
          Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_PLACEMENT, DFTI_INPLACE)
 
@@ -939,7 +939,7 @@
            END IF
          end do
        end do
-       tscale = 1.0d0 / ( nx * ny )
+       tscale = 1.0_DP / ( nx * ny )
        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
 
      ELSE IF( isign > 0 ) THEN
@@ -972,7 +972,7 @@
                  END IF
               end do
            end do
-           tscale = 1.0d0 / ( nx * ny )
+           tscale = 1.0_DP / ( nx * ny )
            CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
         ELSE IF( isign > 0 ) THEN
            do i = 1, nx
@@ -991,7 +991,7 @@
      ELSE
         IF( isign < 0 ) THEN
            call dfftw_execute_dft( fw_plan( 1, ip), r(1:), r(1:))
-           tscale = 1.0d0 / ( nx * ny )
+           tscale = 1.0_DP / ( nx * ny )
            CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
         ELSE IF( isign > 0 ) THEN
            call dfftw_execute_dft( bw_plan( 1, ip), r(1:), r(1:))
@@ -1006,7 +1006,7 @@
    IF( isign < 0 ) THEN
 
       idir = 1
-      tscale = 1.0d0 / ( nx * ny )
+      tscale = 1.0_DP / ( nx * ny )
       do k = 1, nzl
          kk = 1 + ( k - 1 ) * ldx * ldy
          CALL DCFT ( 0, r(kk), 1, ldx, r(kk), 1, ldx, nx, ny, idir, &
@@ -1015,7 +1015,7 @@
             IF( dofft( i ) ) THEN
                kk = i + ( k - 1 ) * ldx * ldy
                call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
-                    idir, 1.0d0, fw_tabley(1, ip), ltabl, work( 1 ), lwork)
+                    idir, 1.0_DP, fw_tabley(1, ip), ltabl, work( 1 ), lwork)
             END IF
          end do
       end do
@@ -1028,12 +1028,12 @@
             IF( dofft( i ) ) THEN
                kk = i + ( k - 1 ) * ldx * ldy
                call DCFT ( 0, r( kk ), ldx, 1, r( kk ), ldx, 1, ny, 1, &
-                    idir, 1.0d0, bw_tabley(1, ip), ltabl, work( 1 ), lwork)
+                    idir, 1.0_DP, bw_tabley(1, ip), ltabl, work( 1 ), lwork)
             END IF
          end do
          kk = 1 + ( k - 1 ) * ldx * ldy
          CALL DCFT ( 0, r( kk ), 1, ldx, r( kk ), 1, ldx, nx, ny, idir, &
-              1.0d0, bw_tablex(1, ip), ltabl, work( 1 ), lwork)
+              1.0_DP, bw_tablex(1, ip), ltabl, work( 1 ), lwork)
       END DO
       
    END IF
@@ -1051,7 +1051,7 @@
            call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, tabley (1, ip) )
          END IF
        end do
-       tscale = 1.0d0 / ( nx * ny )
+       tscale = 1.0_DP / ( nx * ny )
        CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
      ELSE IF( isign > 0 ) THEN
        idir = 1
@@ -1071,7 +1071,7 @@
       IF( isign < 0 ) THEN
 
        idir = -1
-       tscale = 1.0d0 / (nx * ny)
+       tscale = 1.0_DP / (nx * ny)
        DO k = 0, nzl-1
           kk = k * ldx * ldy
 ! FORWARD: ny FFTs in the X direction
@@ -1085,7 +1085,7 @@
                 DO j = 0, ny-1
                    XY(j+1) = r(i + (j) * ldx + kk)
                 END DO
-                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, tabley (1, ip),      &
+                CALL ZZFFT(idir, ny, 1.0_DP, XY, XY, tabley (1, ip),      &
                            work(1), isys)
 !DIR$IVDEP
 !DIR$LOOP COUNT (50)
@@ -1099,7 +1099,7 @@
      ELSE IF ( isign > 0 ) THEN
 
        idir = 1
-       tscale = 1.0d0
+       tscale = 1.0_DP
        DO k = 0, nzl-1
 ! BACKWARD: nx FFTs in the Y direction
           kk = (k) * ldx * ldy
@@ -1110,7 +1110,7 @@
                 DO j = 0, ny-1
                    XY(j+1) = r(i + (j) * ldx + kk)
                 END DO
-                CALL ZZFFT(idir, ny, 1.0D0, XY, XY, tabley (1, ip),      &
+                CALL ZZFFT(idir, ny, 1.0_DP, XY, XY, tabley (1, ip),      &
                            work(1), isys)
 !DIR$IVDEP
 !DIR$LOOP COUNT (50)
@@ -1145,7 +1145,7 @@
               END DO
            END IF
         END DO
-        CALL ZDSCAL ( ldx * ny * nzl, 1d0/(nx * ny), r, 1)
+        CALL ZDSCAL ( ldx * ny * nzl, 1.0_DP/(nx * ny), r, 1)
 
      ELSE IF (isign > 0) THEN
 
@@ -1182,7 +1182,7 @@
                  END IF
               end do
            end do
-           tscale = 1.0d0 / ( nx * ny )
+           tscale = 1.0_DP / ( nx * ny )
            CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
 
           ELSE IF( isign > 0 ) THEN
@@ -1202,7 +1202,7 @@
        ELSE
          IF( isign < 0 ) THEN
            Status = DftiComputeForWard( Desc_Handlex(ip), r(1:), r(1:))
-           tscale = 1.0d0 / ( nx * ny )
+           tscale = 1.0_DP / ( nx * ny )
            CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
         ELSE IF( isign > 0 ) THEN
            Status = DftiComputeBackWard( Desc_Handlex( ip), r(1:), r(1:))
@@ -1400,7 +1400,7 @@
 
 #elif defined __SCSL
 
-       CALL zzfft3d (0, nx, ny, nz, 0.0D0, DUMMY, 1, 1, DUMMY, 1, 1, &
+       CALL zzfft3d (0, nx, ny, nz, 0.0_DP, DUMMY, 1, 1, DUMMY, 1, 1, &
                      table(1,icurrent), work(1), isys)
 
 #elif defined __SUN
@@ -1415,7 +1415,7 @@
        DimArray(2) = ny
        DimArray(3) = nz
 
-       tscale = 1.0d0 / (nx * ny * nz)
+       tscale = 1.0_DP / (nx * ny * nz)
 
        Status = DftiCreateDescriptor(Desc_Handle(icurrent) , &
                     DFTI_DOUBLE,DFTI_COMPLEX,3,DimArray)
@@ -1440,7 +1440,7 @@
              iw0(1,icurrent), auxp(1,icurrent), cw2(1), err)
 #    endif
 #  else
-       CALL ZZFFT3D (0, nx,ny,nz, 1.d0, f(1), ldx, ldy, &
+       CALL ZZFFT3D (0, nx,ny,nz, 1.0_DP, f(1), ldx, ldy, &
           &             f(1), ldx, ldy, auxp(1,icurrent), cw2(1), err)
 #  endif
 
@@ -1477,7 +1477,7 @@
 #if defined __FFTW
      IF( isign < 0 ) THEN
        call FFTW_INPLACE_DRV_3D( fw_plan(ip), 1, f(1), 1, 1 )
-       tscale = 1.0d0 / DBLE( nx * ny * nz )
+       tscale = 1.0_DP / DBLE( nx * ny * nz )
        call ZDSCAL( nx * ny * nz, tscale, f(1), 1)
  
      ELSE IF( isign > 0 ) THEN
@@ -1487,7 +1487,7 @@
 
    IF( isign < 0 ) THEN
       call dfftw_execute_dft( fw_plan(ip), f(1:), f(1:))
-      tscale = 1.0d0 / DBLE( nx * ny * nz )
+      tscale = 1.0_DP / DBLE( nx * ny * nz )
       call ZDSCAL( nx * ny * nz, tscale, f(1), 1)
 
    ELSE IF( isign > 0 ) THEN
@@ -1499,10 +1499,10 @@
 #elif defined __ESSL
 
      IF ( isign < 0 ) THEN
-       tscale = 1.0d0 / ( nx * ny * nz )
+       tscale = 1.0_DP / ( nx * ny * nz )
        idir = +1
      ELSE IF( isign > 0 ) THEN
-       tscale = 1.0d0
+       tscale = 1.0_DP
        idir = -1
      END IF
 
@@ -1516,7 +1516,7 @@
         IF( isign > 0 ) idir = +1
         CALL zfft3d( idir, nx, ny, nz, f(1), ldx, ldy, table(1,ip) )
         IF( isign < 0 ) THEN
-           tscale = 1.0d0 / DBLE( nx * ny * nz )
+           tscale = 1.0_DP / DBLE( nx * ny * nz )
            call ZDSCAL( ldx * ldy * ldz, tscale, f(1), 1)
         END IF
      END IF
@@ -1526,10 +1526,10 @@
      IF ( isign /= 0 ) THEN
         IF ( isign < 0 ) THEN
            idir = -1
-           tscale = 1.0D0 / DBLE( nx * ny * nz )
+           tscale = 1.0_DP / DBLE( nx * ny * nz )
         ELSE IF ( isign > 0 ) THEN
            idir = 1
-           tscale = 1.0D0
+           tscale = 1.0_DP
         END IF
         CALL ZZFFT3D ( idir, nx, ny, nz, tscale, f(1), ldx, ldy,   &
                        f(1), ldx, ldy, table(1,ip), work(1), isys )
@@ -1539,7 +1539,7 @@
 
      IF( isign < 0 ) THEN
         CALL zfft3f ( nx, ny, nz, f(1), ldx, ldy, table(1,ip), ltabl )
-        tscale = 1.0D0 / DBLE( nx * ny * nz )
+        tscale = 1.0_DP / DBLE( nx * ny * nz )
         CALL ZDSCAL ( ldx*ldy*ldz, tscale, f(1), 1 )
      ELSE IF( isign > 0 ) THEN
         CALL zfft3b ( nx, ny, nz, f(1), ldx, ldy, table(1,ip), ltabl )
@@ -1568,11 +1568,11 @@
           -isign, iw0(1,ip), auxp(1,ip), cw2(1), err)     
 #    endif
 #  else
-     CALL ZZFFT3D (isign, nx,ny,nz, 1.d0, f(1), ldx,ldy, &
+     CALL ZZFFT3D (isign, nx,ny,nz, 1.0_DP, f(1), ldx,ldy, &
           f(1), ldx,ldy, auxp(1,ip), cw2(1), err)
 #   endif
      IF ( isign < 0) THEN
-        tscale = 1.0d0 / DBLE( nx * ny * nz )
+        tscale = 1.0_DP / DBLE( nx * ny * nz )
         call ZDSCAL( ldx * ldy * ldz, tscale, f(1), 1)
      END IF
      IF (err /= 0) CALL errore('cfft3d','FFT returned an error ', err)
@@ -1583,7 +1583,7 @@
      IF ( isign < 0) THEN
         CALL zfft_apply_3d ('C', 'C', 'f', f, f, ldx, ldy, &
              fft_struct (ip) , 1, 1, 1)
-        tscale = 1.0D0 / DBLE( nx * ny * nz )
+        tscale = 1.0_DP / DBLE( nx * ny * nz )
         CALL ZDSCAL ( ldx*ldy*ldz, tscale, f(1), 1 )
      ELSE IF ( isign > 0) THEN
         CALL zfft_apply_3d ('C', 'C', 'b', f, f, ldx, ldy, &
@@ -1667,7 +1667,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 #endif
 
-  tscale = 1.d0
+  tscale = 1.0_DP
 
   !
   ! ESSL sign convention for fft's is the opposite of the "usual" one
@@ -1755,24 +1755,24 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 #elif defined __ESSL
 
-       tscale = 1.0d0 
+       tscale = 1.0_DP
        !  x - direction
        incx1 = 1; incx2 = ldx; m = 1
-       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nx, m,  1, 1.0d0, &
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nx, m,  1, 1.0_DP, &
           fw_table( 1, 1, icurrent), ltabl, work(1), lwork )
-       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nx, m, -1, 1.0d0, &
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nx, m, -1, 1.0_DP, &
           bw_table(1, 1, icurrent), ltabl, work(1), lwork )
        !  y - direction
        incx1 = ldx; incx2 = 1; m = nx;
-       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, ny, m,  1, 1.0d0, &
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, ny, m,  1, 1.0_DP, &
           fw_table( 1, 2, icurrent), ltabl, work(1), lwork )
-       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, ny, m, -1, 1.0d0, &
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, ny, m, -1, 1.0_DP, &
           bw_table(1, 2, icurrent), ltabl, work(1), lwork )
        !  z - direction
        incx1 = ldx * ldy; incx2 = 1; m = ldx * ny
-       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nz, m,  1, 1.0d0, &
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nz, m,  1, 1.0_DP, &
           fw_table(1, 3, icurrent), ltabl, work(1), lwork )
-       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nz, m, -1, 1.0d0, &
+       CALL DCFT ( 1, f(1), incx1, incx2, f(1), incx1, incx2, nz, m, -1, 1.0_DP, &
           bw_table(1, 3, icurrent), ltabl, work(1), lwork )
 
 
@@ -1791,7 +1791,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
           Status =  DftiFreeDescriptor(Desc_Handlez(icurrent))
        ENDIF
 
-       tscale = 1.0d0 / ( nx * ny * nz)
+       tscale = 1.0_DP / ( nx * ny * nz)
 
        Status = DftiCreateDescriptor(Desc_Handlex(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,nx)
        Status = DftiCreateDescriptor(Desc_Handley(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,ny)
@@ -1861,7 +1861,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
                 call dfftw_execute_dft( bw_plan( 1, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
-                  -isign, 1.0d0, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
+                  -isign, 1.0_DP, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
 #elif defined __FFTMKL8
                 Status = DftiComputeForward(Desc_Handlex(ip) , f( ii: ) , f( ii: ))
 #else
@@ -1886,7 +1886,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call dfftw_execute_dft( bw_plan( 2, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
-               -isign, 1.0d0, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
+               -isign, 1.0_DP, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
 #elif defined __FFTMKL8
                 Status = DftiComputeBackWard(Desc_Handley(ip) , f( ii: ) , f( ii: ))
 
@@ -1908,7 +1908,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         call dfftw_execute_dft( bw_plan( 3, ip), f(1:), f(1:) )
 #elif defined __ESSL
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
-          -isign, 1.0d0, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+          -isign, 1.0_DP, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
 #elif defined __FFTMKL8
         Status =  DftiComputeBackWard(Desc_Handlez(ip) , f( 1: ) , f( 1: )) 
 #endif
@@ -1927,7 +1927,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
         call dfftw_execute_dft( fw_plan( 3, ip), f(1:), f(1:) )
 #elif defined __ESSL
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
-          -isign, 1.0d0, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
+          -isign, 1.0_DP, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
 #elif defined __FFTMKL8
         Status = DftiComputeForWard(Desc_Handlez(ip) , f( 1: ) , f( 1: ))
 #endif
@@ -1947,7 +1947,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              call dfftw_execute_dft( fw_plan( 2, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
-               -isign, 1.0d0, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
+               -isign, 1.0_DP, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
 #elif defined __FFTMKL8
         Status = DftiComputeForWard(Desc_Handley(ip) , f( ii: ) , f( ii: ))
 
@@ -1974,7 +1974,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
                 call dfftw_execute_dft( fw_plan( 1, ip), f( ii: ), f( ii: ) )
 #elif defined __ESSL
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
-                   -isign, 1.0d0, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
+                   -isign, 1.0_DP, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
 #elif defined __FFTMKL8
         Status = DftiComputeForWard(Desc_Handlex(ip) , f( ii: ) , f( ii: ))
 
@@ -1985,7 +1985,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
            enddo
         enddo
 
-        call DSCAL (2 * ldx * ldy * nz, 1.0d0/(nx * ny * nz), f(1), 1)
+        call DSCAL (2 * ldx * ldy * nz, 1.0_DP/(nx * ny * nz), f(1), 1)
 
      END IF
      RETURN
@@ -2064,7 +2064,7 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #endif
 
       isign = -sgn
-      tscale = 1.d0
+      tscale = 1.0_DP
 
       if ( isign > 0 ) then
          call errore('cft_b','not implemented',isign)
@@ -2192,11 +2192,11 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
 #elif defined __SCSL
 
-         CALL ZZFFT (0, nz, 0.0D0, DUMMY, 1, bw_coeffz(1, icurrent),    &
+         CALL ZZFFT (0, nz, 0.0_DP, DUMMY, 1, bw_coeffz(1, icurrent),    &
                      work(1), isys)
-         CALL ZZFFT (0, ny, 0.0D0, DUMMY, 1, bw_coeffy(1, icurrent),    &
+         CALL ZZFFT (0, ny, 0.0_DP, DUMMY, 1, bw_coeffy(1, icurrent),    &
                      work(1), isys)
-         CALL ZZFFT (0, nx, 0.0D0, DUMMY, 1, bw_coeffx(1, icurrent),    &
+         CALL ZZFFT (0, nx, 0.0_DP, DUMMY, 1, bw_coeffx(1, icurrent),    &
                      work(1), isys)
 
 #else

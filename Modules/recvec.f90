@@ -23,20 +23,20 @@
      INTEGER :: ng0  = 0  ! first G-vector with nonzero modulus
                        ! needed in the parallel case (G=0 is on one node only!)
 
-     REAL(DP) :: ecutw = 0.0d0
-     REAL(DP) :: gcutw = 0.0d0
+     REAL(DP) :: ecutw = 0.0_DP
+     REAL(DP) :: gcutw = 0.0_DP
 
      !   values for costant cut-off computations
 
-     REAL(DP) :: ecfix = 0.0d0     ! value of the constant cut-off
-     REAL(DP) :: ecutz = 0.0d0     ! height of the penalty function (above ecfix)
-     REAL(DP) :: ecsig = 0.0d0     ! spread of the penalty function around ecfix
+     REAL(DP) :: ecfix = 0.0_DP     ! value of the constant cut-off
+     REAL(DP) :: ecutz = 0.0_DP     ! height of the penalty function (above ecfix)
+     REAL(DP) :: ecsig = 0.0_DP     ! spread of the penalty function around ecfix
      LOGICAL   :: tecfix = .FALSE.  ! .TRUE. if constant cut-off is in use
 
      ! augmented cut-off for k-point calculation
 
-     REAL(DP) :: ekcut = 0.0d0  
-     REAL(DP) :: gkcut = 0.0d0
+     REAL(DP) :: ekcut = 0.0_DP
+     REAL(DP) :: gkcut = 0.0_DP
     
      ! array of G vectors module plus penalty function for constant cut-off 
      ! simulation.
@@ -70,8 +70,8 @@
      INTEGER :: ngml = 0  ! number of G-vector shells up to ngw
      INTEGER :: ngmx = 0  ! maximum local number of G vectors
 
-     REAL(DP) :: ecutp = 0.0d0
-     REAL(DP) :: gcutp = 0.0d0
+     REAL(DP) :: ecutp = 0.0_DP
+     REAL(DP) :: gcutp = 0.0_DP
 
 !=----------------------------------------------------------------------------=!
    END MODULE gvecp
@@ -94,10 +94,10 @@
 
      INTEGER, ALLOCATABLE :: nps(:), nms(:)
 
-     REAL(DP) :: ecuts = 0.0d0
-     REAL(DP) :: gcuts = 0.0d0
+     REAL(DP) :: ecuts = 0.0_DP
+     REAL(DP) :: gcuts = 0.0_DP
 
-     REAL(DP) :: dual = 0.0d0
+     REAL(DP) :: dual = 0.0_DP
      LOGICAL   :: doublegrid = .FALSE.
 
    CONTAINS
@@ -130,8 +130,8 @@
      INTEGER, ALLOCATABLE :: npb(:), nmb(:), iglb(:)
      INTEGER, ALLOCATABLE :: mill_b(:,:)
 
-     REAL(DP) :: ecutb = 0.0d0
-     REAL(DP) :: gcutb = 0.0d0
+     REAL(DP) :: ecutb = 0.0_DP
+     REAL(DP) :: gcutb = 0.0_DP
 
    CONTAINS
 
@@ -220,9 +220,9 @@
 
      !     bi  = base vector used to generate the reciprocal space
      !
-     REAL(DP) :: bi1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-     REAL(DP) :: bi2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-     REAL(DP) :: bi3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+     REAL(DP) :: bi1(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+     REAL(DP) :: bi2(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+     REAL(DP) :: bi3(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
 
    CONTAINS
 

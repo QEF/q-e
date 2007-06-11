@@ -40,10 +40,10 @@
       REAL(DP), ALLOCATABLE :: vnhp(:), xnhp0(:), xnhpm(:), xnhpp(:), &
       ekin2nhp(:), gkbt2nhp(:), qnp(:), qnp_(:)
 
-      REAL(DP) :: gkbt = 0.0d0
-      REAL(DP) :: kbt = 0.0d0
-      REAL(DP) :: tempw = 0.0d0
-      REAL(DP) :: fnosep( nhclm ) = 0.0d0
+      REAL(DP) :: gkbt = 0.0_DP
+      REAL(DP) :: kbt = 0.0_DP
+      REAL(DP) :: tempw = 0.0_DP
+      REAL(DP) :: fnosep( nhclm ) = 0.0_DP
 
 !------------------------------------------------------------------------------!
   CONTAINS 
@@ -146,16 +146,16 @@
       kbt  = tempw * k_boltzmann_au
 
       fnosep(1) = fnosep_ (1)
-      if( fnosep(1) > 0.0d0 ) then
-        qnp_(1) = 2.d0 * gkbt / ( fnosep(1) * ( 2.d0 * pi ) * au_terahertz )**2
+      if( fnosep(1) > 0.0_DP ) then
+        qnp_(1) = 2.0_DP * gkbt / ( fnosep(1) * ( 2.0_DP * pi ) * au_terahertz )**2
       end if
 
       if ( nhpcl > 1 ) then
         do i = 2, nhpcl
           fnosep(i) = fnosep_ (i)
-          if( fnosep(i) > 0.0d0 ) then
-            qnp_(i) = 2.d0 * tempw  * k_boltzmann_au / &
-                 ( fnosep(i) * ( 2.d0 * pi ) * au_terahertz )**2
+          if( fnosep(i) > 0.0_DP ) then
+            qnp_(i) = 2.0_DP * tempw  * k_boltzmann_au / &
+                 ( fnosep(i) * ( 2.0_DP * pi ) * au_terahertz )**2
           else
             qnp_(i) = qnp_(1) / DBLE(ndega)
           endif
@@ -247,12 +247,12 @@
     IF ( .NOT. ALLOCATED( qnp ) )      ALLOCATE( qnp( nhpcl*nhpdim ) )
     IF ( .NOT. ALLOCATED( qnp_ ) )     ALLOCATE( qnp_( nhpcl ) )
     !
-    vnhp  = 0.D0
-    xnhp0 = 0.D0
-    xnhpm = 0.D0
-    xnhpp = 0.D0
-    qnp   = 0.D0
-    qnp_  = 0.D0
+    vnhp  = 0.0_DP
+    xnhp0 = 0.0_DP
+    xnhpm = 0.0_DP
+    xnhpp = 0.0_DP
+    qnp   = 0.0_DP
+    qnp_  = 0.0_DP
     !
     RETURN
     !
@@ -292,13 +292,13 @@
 
       IF( tnosep ) THEN
         !
-        IF( fnosep(1) <= 0.D0) &
+        IF( fnosep(1) <= 0.0_DP) &
           CALL errore(' ions_nose_info ', ' fnosep less than zero ', 1)
-        IF( delt <= 0.D0) &
+        IF( delt <= 0.0_DP) &
           CALL errore(' ions_nose_info ', ' delt less than zero ', 1)
 
-        wnosep = fnosep(1) * ( 2.d0 * pi ) * au_terahertz
-        nsvar  = ( 2.d0 * pi ) / ( wnosep * delt )
+        wnosep = fnosep(1) * ( 2.0_DP * pi ) * au_terahertz
+        nsvar  = ( 2.0_DP * pi ) / ( wnosep * delt )
 
         WRITE( stdout,563) tempw, nhpcl, ndega, nsvar
         WRITE( stdout,564) (fnosep(i),i=1,nhpcl)
@@ -338,12 +338,12 @@
     integer :: i,j
     do j=1,nhpdim
        do i=1,nhpcl
-          vnhp(i,j)=2.d0*(xnhp0(i,j)-xnhpm(i,j))/delt-vnhp(i,j)
-       enddo
-    enddo
+          vnhp(i,j)=2.0_DP * (xnhp0(i,j)-xnhpm(i,j)) / delt-vnhp(i,j)
+       end do
+    end do
         !
         !  this is equivalent to:
-        !  velocity = ( 3.D0 * xnos0(1) - 4.D0 * xnosm(1) + xnos2m(1) ) / ( 2.0d0 * delt )
+        !  velocity = ( 3.0_DP * xnos0(1) - 4.0_DP * xnosm(1) + xnos2m(1) ) / ( 2.0_DP * delt )
         !  but we do not need variables at time t-2dt ( xnos2m )
         !
     return
@@ -360,36 +360,36 @@
     real(DP) :: dt2, zetfrc, vp1dlt, ekinend, vp1dend
 
 
-    ekinend = 0.0d0
-    vp1dend = 0.0d0
-    if (nhpend.eq.1) vp1dend = 0.5d0*delt*vnhp(1,nhpdim)
+    ekinend = 0.0_DP
+    vp1dend = 0.0_DP
+    if ( nhpend == 1 ) vp1dend = 0.5_DP * delt * vnhp(1,nhpdim)
     dt2 = delt**2
     do j=1,nhpdim
-    zetfrc = dt2*(2.0d0*ekin2nhp(j)-gkbt2nhp(j))
-    If (nhpcl.gt.1) then
+    zetfrc = dt2 * ( 2.0_DP * ekin2nhp(j) - gkbt2nhp(j) )
+    if ( nhpcl > 1 ) then
        do i=1,(nhpcl-1)
-          vp1dlt = 0.5d0*delt*vnhp(i+1,j)
-          xnhpp(i,j)=(2.d0*xnhp0(i,j)-(1.d0-vp1dlt)*xnhpm(i,j)+zetfrc/qnp(i,j))&
-               &   /(1.d0+vp1dlt)
+          vp1dlt = 0.5_DP * delt * vnhp(i+1,j)
+          xnhpp(i,j)=(2.0_DP * xnhp0(i,j)-(1.0_DP-vp1dlt)*xnhpm(i,j)+zetfrc/qnp(i,j))&
+               &   /(1.0_DP+vp1dlt)
 !           xnhpp(i,j)=(4.d0*xnhp0(i,j)-(2.d0-delt*vnhp(i+1,j))*xnhpm(i,j)+2.0d0*dt2*zetfrc/qnp(i,j))&
 !                &   /(2.d0+delt*vnhp(i+1,j))
-          vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
+          vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0_DP * delt )
           zetfrc = dt2*(qnp(i,j)*vnhp(i,j)**2-kbt)
-       enddo
-    endif
+       end do
+    end if
     ! Last variable
     i = nhpcl
-    if (nhpend.eq.0) then
-       xnhpp(i,j)=2.d0*xnhp0(i,j)-xnhpm(i,j)+ zetfrc / qnp(i,j)
-       vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
-    elseif (nhpend.eq.1) then
-       xnhpp(i,j)=(2.d0*xnhp0(i,j)-(1.d0-vp1dend)*xnhpm(i,j)+zetfrc/qnp(i,j))&
-            &   /(1.d0+vp1dend)       
-       vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0d0 * delt )
+    if ( nhpend == 0 ) then
+       xnhpp(i,j)=2.0_DP * xnhp0(i,j)-xnhpm(i,j) + zetfrc / qnp(i,j)
+       vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0_DP * delt )
+    elseif (nhpend == 1) then
+       xnhpp(i,j)=(2.0_DP*xnhp0(i,j)-(1.0_DP-vp1dend)*xnhpm(i,j)+zetfrc/qnp(i,j))&
+            &   /(1.0_DP+vp1dend)       
+       vnhp(i,j) =(xnhpp(i,j)-xnhpm(i,j))/( 2.0_DP * delt )
        ekinend = ekinend + (qnp(i,j)*vnhp(i,j)**2)
        if (j.eq.(nhpdim-nhpend)) then
-          ekin2nhp(nhpdim) = 0.5d0*ekinend       
-          vp1dend = 0.0d0
+          ekin2nhp(nhpdim) = 0.5_DP*ekinend       
+          vp1dend = 0.0_DP
        endif
     endif
     enddo
@@ -412,12 +412,12 @@
     integer :: i,j
     real(DP) :: stmp
     !
-    stmp = 0.0d0
+    stmp = 0.0_DP
     do j=1,nhpdim
-    stmp = stmp + 0.5d0 * qnp(1,j) * vnhp(1,j) * vnhp(1,j) + gkbt2nhp(j) * xnhp0(1,j)
+    stmp = stmp + 0.5_DP * qnp(1,j) * vnhp(1,j) * vnhp(1,j) + gkbt2nhp(j) * xnhp0(1,j)
     if (nhpcl > 1) then
        do i=2,nhpcl
-          stmp=stmp+0.5d0*qnp(i,j)*vnhp(i,j)*vnhp(i,j) + kbt*xnhp0(i,j)
+          stmp = stmp + 0.5_DP * qnp(i,j) * vnhp(i,j) * vnhp(i,j) + kbt * xnhp0(i,j)
        enddo
     endif
     enddo

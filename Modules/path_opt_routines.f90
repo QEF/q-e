@@ -87,7 +87,7 @@ MODULE path_opt_routines
        REAL(DP), ALLOCATABLE :: vel(:), force_versor(:), step(:)
        REAL(DP)              :: projection, norm_grad, norm_vel, norm_step
        !
-       REAL(DP), PARAMETER :: max_step = 0.6D0  ! in bohr
+       REAL(DP), PARAMETER :: max_step = 0.6_DP  ! in bohr
        !
        !
        IF ( meta_ionode ) THEN
@@ -106,11 +106,11 @@ MODULE path_opt_routines
              !
              projection = ( vel(:) .dot. force_versor(:) )
              !
-             vel(:) = MAX( 0.D0, projection ) * force_versor(:)
+             vel(:) = MAX( 0.0_DP, projection ) * force_versor(:)
              !
           ELSE
              !
-             vel(:) = 0.D0
+             vel(:) = 0.0_DP
              !
           END IF
           !
@@ -153,7 +153,7 @@ MODULE path_opt_routines
        REAL(DP)              :: J0
        LOGICAL               :: exists
        !
-       REAL(DP), PARAMETER   :: step_max = 0.6D0
+       REAL(DP), PARAMETER   :: step_max = 0.6_DP
        INTEGER,  PARAMETER   :: broyden_ndim = 5
        !
        !
@@ -165,8 +165,8 @@ MODULE path_opt_routines
        ALLOCATE( s( dim1*nim, broyden_ndim ) )
        ALLOCATE( t( dim1*nim ) )
        !
-       g(:) = 0.D0
-       t(:) = 0.D0
+       g(:) = 0.0_DP
+       t(:) = 0.0_DP
        !
        DO i = 1, nim
           !
@@ -183,7 +183,7 @@ MODULE path_opt_routines
        !
        norm_g = MAXVAL( ABS( g ) )
        !
-       IF ( norm_g == 0.D0 ) RETURN
+       IF ( norm_g == 0.0_DP ) RETURN
        !
        IF ( meta_ionode ) THEN
           !
@@ -213,7 +213,7 @@ MODULE path_opt_routines
              !
           ELSE 
              !
-             s(:,:) = 0.D0
+             s(:,:) = 0.0_DP
              !
              k = 1
              !
@@ -227,7 +227,7 @@ MODULE path_opt_routines
              !
              ! ... the Broyden's subspace is swapped and the projection of 
              ! ... s along the current tangent is removed (this last thing 
-             ! ... in the smd case only, otherwise t = 0.D0)
+             ! ... in the smd case only, otherwise t = 0.0_DP)
              !
              k = broyden_ndim
              !
@@ -260,7 +260,7 @@ MODULE path_opt_routines
              !
           END IF
           !
-          IF ( ( s(:,k) .dot. g(:) ) > 0.D0 ) THEN
+          IF ( ( s(:,k) .dot. g(:) ) > 0.0_DP ) THEN
              !
              ! ... uphill step :  history reset
              !
@@ -269,7 +269,7 @@ MODULE path_opt_routines
              !
              k = 1
              !
-             s(:,:) = 0.D0
+             s(:,:) = 0.0_DP
              s(:,k) = - J0 * g(:)
              !
           END IF

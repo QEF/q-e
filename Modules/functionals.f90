@@ -137,7 +137,7 @@ module funct
   integer :: icorr = notset
   integer :: igcx  = notset
   integer :: igcc  = notset
-  real(DP):: exx_fraction = 0.d0
+  real(DP):: exx_fraction = 0.0_DP
   logical :: isgradient  = .false.
   logical :: ismeta      = .false.
   logical :: ishybrid    = .false.
@@ -346,12 +346,12 @@ CONTAINS
     ismeta     =  (igcx == 7) .or. (igcx == 6 )
 
     ! PBE0
-    IF ( iexch==6 .or. igcx==8 ) exx_fraction = 0.25d0
+    IF ( iexch==6 .or. igcx==8 ) exx_fraction = 0.25_DP
     ! HF or OEP
-    IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.d0
+    IF ( iexch==4 .or. iexch==5 ) exx_fraction = 1.0_DP
     !B3LYP
-    IF ( matches( 'B3LP',dft ) ) exx_fraction = 0.2d0
-    ishybrid = ( exx_fraction /= 0.d0 )
+    IF ( matches( 'B3LP',dft ) ) exx_fraction = 0.2_DP
+    ishybrid = ( exx_fraction /= 0.0_DP )
 
     return
   end subroutine set_auxiliary_flags
@@ -570,15 +570,15 @@ subroutine xc (rho, ex, ec, vx, vc)
 
   real(DP) :: rho, ec, vc, ex, vx
   !
-  real(DP), parameter :: small = 1.d-10,  third = 1.d0 / 3.d0, &
-       pi34 = 0.6203504908994d0  ! pi34=(3/4pi)^(1/3)
+  real(DP), parameter :: small = 1.E-10_DP,  third = 1.0_DP / 3.0_DP, &
+       pi34 = 0.6203504908994_DP  ! pi34=(3/4pi)^(1/3)
   real(DP) :: rs
   !
   if (rho <= small) then
-     ec = 0.0d0
-     vc = 0.0d0
-     ex = 0.0d0
-     vx = 0.0d0
+     ec = 0.0_DP
+     vc = 0.0_DP
+     ex = 0.0_DP
+     vx = 0.0_DP
      return
   else
      rs = pi34 / rho**third
@@ -593,26 +593,26 @@ subroutine xc (rho, ex, ec, vx, vc)
      CALL slater_rxc(rs, ex, vx)
   ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
      IF (exx_started) then
-        ex = 0.0d0
-        vx = 0.0d0
+        ex = 0.0_DP
+        vx = 0.0_DP
      else
         call slater (rs, ex, vx)
      endif
   ELSEIF (iexch == 6) THEN         !  'pb0x'
      CALL slater(rs, ex, vx)
      if (exx_started) then
-        ex = 0.75d0 * ex 
-        vx = 0.75d0 * vx 
+        ex = 0.75_DP * ex 
+        vx = 0.75_DP * vx 
      end if
   ELSEIF (iexch == 7) THEN         !  'b3lyp'
      CALL slater(rs, ex, vx)
      if (exx_started) then
-        ex = 0.8d0 * ex 
-        vx = 0.8d0 * vx 
+        ex = 0.8_DP * ex 
+        vx = 0.8_DP * vx 
      end if
   else
-     ex = 0.0d0
-     vx = 0.0d0
+     ex = 0.0_DP
+     vx = 0.0_DP
   endif
   !..correlation
   if (icorr == 1) then
@@ -636,8 +636,8 @@ subroutine xc (rho, ex, ec, vx, vc)
   elseif (icorr ==10) then ! b3lyp
      call vwn (rs, ec, vc)
   else
-     ec = 0.0d0
-     vc = 0.0d0
+     ec = 0.0_DP
+     vc = 0.0_DP
   endif
   !
   return
@@ -659,17 +659,17 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
 
   real(DP) :: rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw
   !
-  real(DP), parameter :: small= 1.d-10, third = 1.d0/3.d0, &
-       pi34= 0.6203504908994d0 ! pi34=(3/4pi)^(1/3)
+  real(DP), parameter :: small= 1.E-10_DP, third = 1.0_DP/3.0_DP, &
+       pi34= 0.6203504908994_DP ! pi34=(3/4pi)^(1/3)
   real(DP) :: rs
   !
   if (rho <= small) then
-     ec = 0.0d0
-     vcup = 0.0d0
-     vcdw = 0.0d0
-     ex = 0.0d0
-     vxup = 0.0d0
-     vxdw = 0.0d0
+     ec = 0.0_DP
+     vcup = 0.0_DP
+     vcdw = 0.0_DP
+     ex = 0.0_DP
+     vxup = 0.0_DP
+     vxdw = 0.0_DP
      return
   else
      rs = pi34 / rho**third
@@ -683,36 +683,36 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
      call slater_rxc_spin ( rho, zeta, ex, vxup, vxdw )
   ELSEIF ((iexch == 4).or.(iexch==5)) THEN  ! 'oep','hf'
      IF (exx_started) then
-        ex   = 0.d0
-        vxup = 0.d0 
-        vxdw = 0.d0 
+        ex   = 0.0_DP
+        vxup = 0.0_DP 
+        vxdw = 0.0_DP 
      else
         call slater_spin (rho, zeta, ex, vxup, vxdw)
      endif
   ELSEIF (iexch == 6) THEN  ! 'pb0x'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
      if (exx_started) then
-        ex   = 0.75d0 * ex
-        vxup = 0.75d0 * vxup 
-        vxdw = 0.75d0 * vxdw 
+        ex   = 0.75_DP * ex
+        vxup = 0.75_DP * vxup 
+        vxdw = 0.75_DP * vxdw 
      end if
   ELSEIF (iexch == 7) THEN  ! 'b3lyp'
      call slater_spin (rho, zeta, ex, vxup, vxdw)
      if (exx_started) then
-        ex   = 0.8d0 * ex
-        vxup = 0.8d0 * vxup 
-        vxdw = 0.8d0 * vxdw 
+        ex   = 0.8_DP * ex
+        vxup = 0.8_DP * vxup 
+        vxdw = 0.8_DP * vxdw 
      end if
   ELSE
-     ex = 0.0d0
-     vxup = 0.0d0
-     vxdw = 0.0d0
+     ex = 0.0_DP
+     vxup = 0.0_DP
+     vxdw = 0.0_DP
   ENDIF
   !..correlation
   if (icorr == 0) then
-     ec = 0.0d0
-     vcup = 0.0d0
-     vcdw = 0.0d0
+     ec = 0.0_DP
+     vcup = 0.0_DP
+     vcdw = 0.0_DP
   elseif (icorr == 1) then
      call pz_spin (rs, zeta, ec, vcup, vcdw)
   elseif (icorr == 3) then
@@ -753,13 +753,13 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   implicit none
 
   real(DP) :: rho, grho, sx, sc, v1x, v2x, v1c, v2c
-  real(DP), parameter:: small = 1.d-10
+  real(DP), parameter:: small = 1.E-10_DP
 
   ! exchange
   if (rho <= small) then
-     sx = 0.0d0
-     v1x = 0.0d0
-     v2x = 0.0d0
+     sx = 0.0_DP
+     v1x = 0.0_DP
+     v2x = 0.0_DP
   elseif (igcx == 1) then
      call becke88 (rho, grho, sx, v1x, v2x)
   elseif (igcx == 2) then
@@ -775,27 +775,27 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   elseif (igcx == 8) then ! 'pbe0'
      call pbex (rho, grho, 1, sx, v1x, v2x)
      if (exx_started) then
-        sx  = 0.75d0 * sx
-        v1x = 0.75d0 * v1x
-        v2x = 0.75d0 * v2x
+        sx  = 0.75_DP * sx
+        v1x = 0.75_DP * v1x
+        v2x = 0.75_DP * v2x
      end if
   elseif (igcx == 9) then ! 'brlyp'
      call becke88 (rho, grho, sx, v1x, v2x)
      if (exx_started) then
-        sx  = 0.72d0 * sx
-        v1x = 0.72d0 * v1x
-        v2x = 0.72d0 * v2x
+        sx  = 0.72_DP * sx
+        v1x = 0.72_DP * v1x
+        v2x = 0.72_DP * v2x
      end if
   else
-     sx = 0.0d0
-     v1x = 0.0d0
-     v2x = 0.0d0
+     sx = 0.0_DP
+     v1x = 0.0_DP
+     v2x = 0.0_DP
   endif
   ! correlation
   if (rho.le.small) then
-     sc = 0.0d0
-     v1c = 0.0d0
-     v2c = 0.0d0
+     sc = 0.0_DP
+     v1c = 0.0_DP
+     v2c = 0.0_DP
   elseif (igcc == 1) then
      call perdew86 (rho, grho, sc, v1c, v2c)
   elseif (igcc == 2) then
@@ -807,15 +807,15 @@ subroutine gcxc (rho, grho, sx, sc, v1x, v2x, v1c, v2c)
   elseif (igcc == 7) then !'B3LYP'
      call glyp (rho, grho, sc, v1c, v2c)
      if (exx_started) then
-        sc  = 0.81d0 * sc
-        v1c = 0.81d0 * v1c
-        v2c = 0.81d0 * v2c
+        sc  = 0.81_DP * sc
+        v1c = 0.81_DP * v1c
+        v2c = 0.81_DP * v2c
      end if
   else
      ! note that if igcc == 5 the hcth functional is called above
-     sc = 0.0d0
-     v1c = 0.0d0
-     v2c = 0.0d0
+     sc = 0.0_DP
+     v1c = 0.0_DP
+     v2c = 0.0_DP
   endif
   !
   return
@@ -841,7 +841,7 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
   ! derivatives of exchange wr. rho
   ! derivatives of exchange wr. grho
   !
-  real(DP), parameter :: small = 1.d-10
+  real(DP), parameter :: small = 1.E-10_DP
   real(DP) :: rho, sxup, sxdw
   integer :: iflag
   !
@@ -849,45 +849,45 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
   ! exchange
   rho = rhoup + rhodw
   if (rho <= small .or. igcx == 0) then
-     sx = 0.0d0
-     v1xup = 0.0d0
-     v2xup = 0.0d0
-     v1xdw = 0.0d0
-     v2xdw = 0.0d0
+     sx = 0.0_DP
+     v1xup = 0.0_DP
+     v2xup = 0.0_DP
+     v1xdw = 0.0_DP
+     v2xdw = 0.0_DP
   elseif (igcx == 1) then
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)
      else
-        sxup = 0.d0
-        v1xup = 0.d0
-        v2xup = 0.d0
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
      endif
      if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
         call becke88_spin (rhodw, grhodw2, sxdw, v1xdw, v2xdw)
      else
-        sxdw = 0.d0
-        v1xdw = 0.d0
-        v2xdw = 0.d0
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
      endif
      sx = sxup + sxdw
   elseif (igcx == 2) then
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
-        call ggax (2.d0 * rhoup, 4.d0 * grhoup2, sxup, v1xup, v2xup)
+        call ggax (2.0_DP * rhoup, 4.0_DP * grhoup2, sxup, v1xup, v2xup)
      else
-        sxup = 0.d0
-        v1xup = 0.d0
-        v2xup = 0.d0
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
      endif
      if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
-        call ggax (2.d0 * rhodw, 4.d0 * grhodw2, sxdw, v1xdw, v2xdw)
+        call ggax (2.0_DP * rhodw, 4.0_DP * grhodw2, sxdw, v1xdw, v2xdw)
      else
-        sxdw = 0.d0
-        v1xdw = 0.d0
-        v2xdw = 0.d0
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
      endif
-     sx = 0.5d0 * (sxup + sxdw)
-     v2xup = 2.d0 * v2xup
-     v2xdw = 2.d0 * v2xdw
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
   elseif (igcx == 3 .or. igcx == 4 .or. igcx == 8) then
      ! igcx=3: PBE, igcx=4: revised PBE, igcx=8 PBE0
      if (igcx == 4) then
@@ -896,52 +896,52 @@ subroutine gcx_spin (rhoup, rhodw, grhoup2, grhodw2, &
         iflag = 1
      endif
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
-        call pbex (2.d0 * rhoup, 4.d0 * grhoup2, iflag, sxup, v1xup, v2xup)
+        call pbex (2.0_DP * rhoup, 4.0_DP * grhoup2, iflag, sxup, v1xup, v2xup)
      else
-        sxup = 0.d0
-        v1xup = 0.d0
-        v2xup = 0.d0
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
      endif
      if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
-        call pbex (2.d0 * rhodw, 4.d0 * grhodw2, iflag, sxdw, v1xdw, v2xdw)
+        call pbex (2.0_DP * rhodw, 4.0_DP * grhodw2, iflag, sxdw, v1xdw, v2xdw)
      else
-        sxdw = 0.d0
-        v1xdw = 0.d0
-        v2xdw = 0.d0
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
      endif
-     sx = 0.5d0 * (sxup + sxdw)
-     v2xup = 2.d0 * v2xup
-     v2xdw = 2.d0 * v2xdw
+     sx = 0.5_DP * (sxup + sxdw)
+     v2xup = 2.0_DP * v2xup
+     v2xdw = 2.0_DP * v2xdw
      if (igcx == 8 .and. exx_started ) then
-       sx = 0.75d0 * sx
-       v1xup = 0.75d0 * v1xup
-       v1xdw = 0.75d0 * v1xdw
-       v2xup = 0.75d0 * v2xup
-       v2xdw = 0.75d0 * v2xdw
+       sx = 0.75_DP * sx
+       v1xup = 0.75_DP * v1xup
+       v1xdw = 0.75_DP * v1xdw
+       v2xup = 0.75_DP * v2xup
+       v2xdw = 0.75_DP * v2xdw
      end if
   elseif (igcx == 9) then
      if (rhoup > small .and. sqrt (abs (grhoup2) ) > small) then
         call becke88_spin (rhoup, grhoup2, sxup, v1xup, v2xup)
      else
-        sxup = 0.d0
-        v1xup = 0.d0
-        v2xup = 0.d0
+        sxup = 0.0_DP
+        v1xup = 0.0_DP
+        v2xup = 0.0_DP
      endif
      if (rhodw > small .and. sqrt (abs (grhodw2) ) > small) then
         call becke88_spin (rhodw, grhodw2, sxdw, v1xdw, v2xdw)
      else
-        sxdw = 0.d0
-        v1xdw = 0.d0
-        v2xdw = 0.d0
+        sxdw = 0.0_DP
+        v1xdw = 0.0_DP
+        v2xdw = 0.0_DP
      endif
      sx = sxup + sxdw
 
      if (exx_started ) then
-       sx = 0.72d0 * sx
-       v1xup = 0.72d0 * v1xup
-       v1xdw = 0.72d0 * v1xdw
-       v2xup = 0.72d0 * v2xup
-       v2xdw = 0.72d0 * v2xdw
+       sx = 0.72_DP * sx
+       v1xup = 0.72_DP * v1xup
+       v1xdw = 0.72_DP * v1xdw
+       v2xup = 0.72_DP * v2xup
+       v2xdw = 0.72_DP * v2xdw
      end if
 
   else
@@ -969,26 +969,26 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   ! derivatives of correlation wr. rho
   ! derivatives of correlation wr. grho
 
-  real(DP), parameter :: small = 1.d-10, epsr=1.d-6
+  real(DP), parameter :: small = 1.E-10_DP, epsr=1.E-6_DP
   !
   !
-  if ( abs(zeta) > 1.d0 ) then
-     sc = 0.0d0
-     v1cup = 0.0d0
-     v1cdw = 0.0d0
-     v2c = 0.0d0
+  if ( abs(zeta) > 1.0_DP ) then
+     sc = 0.0_DP
+     v1cup = 0.0_DP
+     v1cdw = 0.0_DP
+     v2c = 0.0_DP
      return
   else
      !
      ! ... ( - 1.0 + epsr )  <  zeta  <  ( 1.0 - epsr )
-     zeta = SIGN( MIN( ABS( zeta ), ( 1.D0 - epsr ) ) , zeta )
+     zeta = SIGN( MIN( ABS( zeta ), ( 1.0_DP - epsr ) ) , zeta )
   endif
 
   if (rho <= small .or. sqrt(abs(grho)) <= small) then
-     sc = 0.0d0
-     v1cup = 0.0d0
-     v1cdw = 0.0d0
-     v2c = 0.0d0
+     sc = 0.0_DP
+     v1cup = 0.0_DP
+     v1cdw = 0.0_DP
+     v2c = 0.0_DP
   elseif (igcc == 1) then
      call perdew86_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   elseif (igcc == 2) then
@@ -998,10 +998,10 @@ subroutine gcc_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   elseif (igcc == 4) then
         call pbec_spin (rho, zeta, grho, sc, v1cup, v1cdw, v2c)
   else
-     sc = 0.0d0
-     v1cup = 0.0d0
-     v1cdw = 0.0d0
-     v2c = 0.0d0
+     sc = 0.0_DP
+     v1cup = 0.0_DP
+     v1cdw = 0.0_DP
+     v2c = 0.0_DP
   endif
   !
   return
@@ -1027,14 +1027,14 @@ end subroutine gcc_spin
       ! ... Gradient Correction for correlation
 
       REAL(DP) :: SMALL, RHO
-      PARAMETER(SMALL=1.D-20)
+      PARAMETER(SMALL=1.E-20_DP)
 
-      SC=0.0D0
-      V1CA=0.0D0
-      V2CA=0.0D0
-      V1CB=0.0D0
-      V2CB=0.0D0
-      V2CAB=0.0D0
+      SC=0.0_DP
+      V1CA=0.0_DP
+      V2CA=0.0_DP
+      V1CB=0.0_DP
+      V2CB=0.0_DP
+      V2CAB=0.0_DP
       IF( igcc == 3 ) THEN
         RHO=RHOA+RHOB
         IF(RHO.GT.SMALL)  CALL LSD_GLYP(RHOA,RHOB,GRHOAA,GRHOAB,GRHOBB,SC,&
@@ -1070,10 +1070,10 @@ end subroutine gcc_spin
         real(DP), external :: dpz
         integer :: iflg
         !
-        real(DP), parameter :: small = 1.d-30, e2 = 2.d0, &
-             pi34 = 0.75d0 / 3.141592653589793d+00, third = 1.d0 /3.d0
+        real(DP), parameter :: small = 1.E-30_DP, e2 = 2.0_DP, &
+             pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP /3.0_DP
         !
-        dmxc = 0.d0
+        dmxc = 0.0_DP
         if (rho < small) then
            return
         endif
@@ -1084,19 +1084,19 @@ end subroutine gcc_spin
            rs = (pi34 / rho) **third
            !..exchange
            call slater (rs, ex, vx)
-           dmxc = vx / (3.d0 * rho)
+           dmxc = vx / (3.0_DP * rho)
            !..correlation
            iflg = 2
-           if (rs < 1.0d0) iflg = 1
+           if (rs < 1.0_DP) iflg = 1
            dmxc = dmxc + dpz (rs, iflg)
         else
            !
            !     second case: numerical derivatives
            !
-           dr = min (1.d-6, 1.d-4 * rho)
+           dr = min (1.E-6_DP, 1.E-4_DP * rho)
            call xc (rho + dr, ex, ec, vxp, vcp)
            call xc (rho - dr, ex, ec, vxm, vcm)
-           dmxc = (vxp + vcp - vxm - vcm) / (2.d0 * dr)
+           dmxc = (vxp + vcp - vxm - vcm) / (2.0_DP * dr)
         endif
         !
         ! bring to rydberg units
@@ -1129,75 +1129,75 @@ end subroutine gcc_spin
         real(DP), external :: dpz, dpz_polarized
         integer :: iflg
         !
-        real(DP), parameter :: small = 1.d-30, e2 = 2.d0, &
-             pi34 = 0.75d0 / 3.141592653589793d+00, third = 1.d0/3.d0, &
-             p43 = 4.d0 / 3.d0, p49 = 4.d0 / 9.d0, m23 = -2.d0 / 3.d0
+        real(DP), parameter :: small = 1.E-30_DP, e2 = 2.0_DP, &
+             pi34 = 0.75_DP / 3.141592653589793_DP, third = 1.0_DP/3.0_DP, &
+             p43 = 4.0_DP / 3.0_DP, p49 = 4.0_DP / 9.0_DP, m23 = -2.0_DP / 3.0_DP
         !
-        dmuxc_uu = 0.d0
-        dmuxc_du = 0.d0
-        dmuxc_ud = 0.d0
-        dmuxc_dd = 0.d0
+        dmuxc_uu = 0.0_DP
+        dmuxc_du = 0.0_DP
+        dmuxc_ud = 0.0_DP
+        dmuxc_dd = 0.0_DP
         !
         rhotot = rhoup + rhodw
         if (rhotot <= small) return
         zeta = (rhoup - rhodw) / rhotot
         
-        if (abs (zeta) > 1.d0) return
+        if (abs (zeta) > 1.0_DP) return
         if (get_iexch() == 1 .and. get_icorr() == 1) then
            !
            !    first case: analytical derivative available
            !
            !..exchange
-           rs = (pi34 / (2.d0 * rhoup) ) **third
+           rs = (pi34 / (2.0_DP * rhoup) ) **third
            call slater (rs, ex, vx)
-           dmuxc_uu = vx / (3.d0 * rhoup)
-           rs = (pi34 / (2.d0 * rhodw) ) **third
+           dmuxc_uu = vx / (3.0_DP * rhoup)
+           rs = (pi34 / (2.0_DP * rhodw) ) **third
            call slater (rs, ex, vx)
-           dmuxc_dd = vx / (3.d0 * rhodw)
+           dmuxc_dd = vx / (3.0_DP * rhodw)
            !..correlation
            rs = (pi34 / rhotot) **third
            iflg = 2
-           if (rs < 1.0d0) iflg = 1
+           if (rs < 1.0_DP) iflg = 1
            dmcu = dpz (rs, iflg)
            dmcp = dpz_polarized (rs, iflg)
            call pz (rs, 1, ecu, vcu)
            call pz_polarized (rs, ecp, vcp)
-           fz = ( (1.d0 + zeta) **p43 + (1.d0 - zeta) **p43 - 2.d0) &
-                / (2.d0**p43 - 2.d0)
-           fz1 = p43 * ( (1.d0 + zeta) **third- (1.d0 - zeta) **third) &
-                / (2.d0**p43 - 2.d0)
-           fz2 = p49 * ( (1.d0 + zeta) **m23 + (1.d0 - zeta) **m23) &
-                / (2.d0**p43 - 2.d0)
+           fz = ( (1.0_DP + zeta) **p43 + (1.0_DP - zeta) **p43 - 2.0_DP) &
+                / (2.0_DP**p43 - 2.0_DP)
+           fz1 = p43 * ( (1.0_DP + zeta) **third- (1.0_DP - zeta) **third) &
+                / (2.0_DP**p43 - 2.0_DP)
+           fz2 = p49 * ( (1.0_DP + zeta) **m23 + (1.0_DP - zeta) **m23) &
+                / (2.0_DP**p43 - 2.0_DP)
            aa = dmcu + fz * (dmcp - dmcu)
-           bb = 2.d0 * fz1 * (vcp - vcu - (ecp - ecu) ) / rhotot
+           bb = 2.0_DP * fz1 * (vcp - vcu - (ecp - ecu) ) / rhotot
            cc = fz2 * (ecp - ecu) / rhotot
-           dmuxc_uu = dmuxc_uu + aa + (1.d0 - zeta) * bb + (1.d0 - zeta)**2 * cc
-           dmuxc_du = dmuxc_du + aa + ( - zeta) * bb + (zeta**2 - 1.d0) * cc
+           dmuxc_uu = dmuxc_uu + aa + (1.0_DP - zeta) * bb + (1.0_DP - zeta)**2 * cc
+           dmuxc_du = dmuxc_du + aa + ( - zeta) * bb + (zeta**2 - 1.0_DP) * cc
            dmuxc_ud = dmuxc_du
-           dmuxc_dd = dmuxc_dd+aa - (1.d0 + zeta) * bb + (1.d0 + zeta)**2 * cc
+           dmuxc_dd = dmuxc_dd+aa - (1.0_DP + zeta) * bb + (1.0_DP + zeta)**2 * cc
            
         else
            
            rho = rhoup + rhodw
-           dr = min (1.d-6, 1.d-4 * rho)
+           dr = min (1.E-6_DP, 1.E-4_DP * rho)
            call xc_spin (rho - dr, zeta, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
            call xc_spin (rho + dr, zeta, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
-           dmuxc_uu = (vxupp + vcupp - vxupm - vcupm) / (2.d0 * dr)
+           dmuxc_uu = (vxupp + vcupp - vxupm - vcupm) / (2.0_DP * dr)
            dmuxc_ud = dmuxc_uu
-           dmuxc_dd = (vxdwp + vcdwp - vxdwm - vcdwm) / (2.d0 * dr)
+           dmuxc_dd = (vxdwp + vcdwp - vxdwm - vcdwm) / (2.0_DP * dr)
            dmuxc_du = dmuxc_dd
            ! dz = min (1.d-6, 1.d-4 * abs (zeta) )
-           dz = 1.d-6
+           dz = 1.E-6_DP
            call xc_spin (rho, zeta - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
            call xc_spin (rho, zeta + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
            dmuxc_uu = dmuxc_uu + (vxupp + vcupp - vxupm - vcupm) * &
-                (1.d0 - zeta) / rho / (2.d0 * dz)
+                (1.0_DP - zeta) / rho / (2.0_DP * dz)
            dmuxc_ud = dmuxc_ud- (vxupp + vcupp - vxupm - vcupm) * &
-                (1.d0 + zeta) / rho / (2.d0 * dz)
+                (1.0_DP + zeta) / rho / (2.0_DP * dz)
            dmuxc_du = dmuxc_du + (vxdwp + vcdwp - vxdwm - vcdwm) * &
-                (1.d0 - zeta) / rho / (2.d0 * dz)
+                (1.0_DP - zeta) / rho / (2.0_DP * dz)
            dmuxc_dd = dmuxc_dd- (vxdwp + vcdwp - vxdwm - vcdwm) * &
-                (1.d0 + zeta) / rho / (2.d0 * dz)
+                (1.0_DP + zeta) / rho / (2.0_DP * dz)
         endif
         !
         ! bring to rydberg units
@@ -1232,76 +1232,76 @@ end subroutine gcc_spin
         REAL(DP) :: amag, vs, dvxc_rho, dvxc_mx, dvxc_my, dvxc_mz,  &
                     dbx_rho, dbx_mx, dbx_my, dbx_mz, dby_rho, dby_mx, &
                     dby_my, dby_mz, dbz_rho, dbz_mx, dbz_my, dbz_mz
-        REAL(DP), PARAMETER :: small = 1.d-30, e2 = 2.d0
+        REAL(DP), PARAMETER :: small = 1.E-30_DP, e2 = 2.0_DP
         !
         !
-        dmuxc = 0.d0
+        dmuxc = 0.0_DP
         !
         IF (rho <= small) RETURN
         amag = sqrt(mx**2+my**2+mz**2) 
         zeta = amag / rho
         
-        IF (abs (zeta) > 1.d0) RETURN
+        IF (abs (zeta) > 1.0_DP) RETURN
         CALL xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
-        vs=0.5d0*(vxup+vcup-vxdw-vcdw)
+        vs=0.5_DP*(vxup+vcup-vxdw-vcdw)
    
-        dr = min (1.d-6, 1.d-4 * rho)
+        dr = min (1.E-6_DP, 1.E-4_DP * rho)
         CALL xc_spin (rho - dr, zeta, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
         CALL xc_spin (rho + dr, zeta, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
         dvxc_rho = ((vxupp + vcupp - vxupm - vcupm)+     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm)) / (4.d0 * dr)
-        IF (amag > 1.d-10) THEN
+                    (vxdwp + vcdwp - vxdwm - vcdwm)) / (4.0_DP * dr)
+        IF (amag > 1.E-10_DP) THEN
            dbx_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
-                       (vxdwp + vcdwp - vxdwm - vcdwm))* mx / (4.d0*dr*amag)
+                       (vxdwp + vcdwp - vxdwm - vcdwm))* mx / (4.0_DP*dr*amag)
            dby_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
-                       (vxdwp + vcdwp - vxdwm - vcdwm))* my / (4.d0*dr*amag)
+                       (vxdwp + vcdwp - vxdwm - vcdwm))* my / (4.0_DP*dr*amag)
            dbz_rho  = ((vxupp + vcupp - vxupm - vcupm)-     &
-                       (vxdwp + vcdwp - vxdwm - vcdwm))* mz / (4.d0*dr*amag)
+                       (vxdwp + vcdwp - vxdwm - vcdwm))* mz / (4.0_DP*dr*amag)
 !           dz = min (1.d-6, 1.d-4 * abs (zeta) )
-           dz = 1.d-6
+           dz = 1.0E-6_DP
            CALL xc_spin (rho, zeta - dz, ex, ec, vxupm, vxdwm, vcupm, vcdwm)
            CALL xc_spin (rho, zeta + dz, ex, ec, vxupp, vxdwp, vcupp, vcdwp)
 
 !  The variables are rho and m, so zeta depends on rho
 !
            dvxc_rho=dvxc_rho- ((vxupp + vcupp - vxupm - vcupm)+     &
-                         (vxdwp + vcdwp - vxdwm - vcdwm))*zeta/rho/(4.d0 * dz)
+                         (vxdwp + vcdwp - vxdwm - vcdwm))*zeta/rho/(4.0_DP * dz)
            dbx_rho  = dbx_rho-((vxupp + vcupp - vxupm - vcupm)-     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm))*mx*zeta/rho/(4.d0*dz*amag)
+                    (vxdwp + vcdwp - vxdwm - vcdwm))*mx*zeta/rho/(4.0_DP*dz*amag)
            dby_rho  = dby_rho-((vxupp + vcupp - vxupm - vcupm)-     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm))*my*zeta/rho/(4.d0*dz*amag)
+                    (vxdwp + vcdwp - vxdwm - vcdwm))*my*zeta/rho/(4.0_DP*dz*amag)
            dbz_rho  = dbz_rho-((vxupp + vcupp - vxupm - vcupm)-     &
-                    (vxdwp + vcdwp - vxdwm - vcdwm))*mz*zeta/rho/(4.d0*dz*amag)
+                    (vxdwp + vcdwp - vxdwm - vcdwm))*mz*zeta/rho/(4.0_DP*dz*amag)
 !
 ! here the derivatives with respect to m
 !
            dvxc_mx = ((vxupp + vcupp - vxupm - vcupm) + &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx/rho/(4.d0*dz*amag)
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mx/rho/(4.0_DP*dz*amag)
            dvxc_my = ((vxupp + vcupp - vxupm - vcupm) + &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*my/rho/(4.d0*dz*amag)
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*my/rho/(4.0_DP*dz*amag)
            dvxc_mz = ((vxupp + vcupp - vxupm - vcupm) + &
-                      (vxdwp + vcdwp - vxdwm - vcdwm))*mz/rho/(4.d0*dz*amag)
+                      (vxdwp + vcdwp - vxdwm - vcdwm))*mz/rho/(4.0_DP*dz*amag)
            dbx_mx  = (((vxupp + vcupp - vxupm - vcupm) -                 &
                       (vxdwp + vcdwp - vxdwm - vcdwm))*mx**2*amag/rho/       &
-                      (4.d0*dz) + vs*(my**2+mz**2))/amag**3
+                      (4.0_DP*dz) + vs*(my**2+mz**2))/amag**3
            dbx_my  = (((vxupp + vcupp - vxupm - vcupm) -                 &
                       (vxdwp + vcdwp - vxdwm - vcdwm))*mx*my*amag/rho/       &
-                      (4.d0*dz) - vs*(mx*my))/amag**3
+                      (4.0_DP*dz) - vs*(mx*my))/amag**3
            dbx_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
                       (vxdwp + vcdwp - vxdwm - vcdwm))*mx*mz*amag/rho/       &
-                      (4.d0*dz) - vs*(mx*mz))/amag**3
+                      (4.0_DP*dz) - vs*(mx*mz))/amag**3
            dby_mx  = dbx_my
            dby_my  = (((vxupp + vcupp - vxupm - vcupm) -                 &
                       (vxdwp + vcdwp - vxdwm - vcdwm))*my**2*amag/rho/       &
-                      (4.d0*dz) + vs*(mx**2+mz**2))/amag**3
+                      (4.0_DP*dz) + vs*(mx**2+mz**2))/amag**3
            dby_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
                       (vxdwp + vcdwp - vxdwm - vcdwm))*my*mz*amag/rho/  &
-                      (4.d0*dz) - vs*(my*mz))/amag**3
+                      (4.0_DP*dz) - vs*(my*mz))/amag**3
            dbz_mx  = dbx_mz
            dbz_my  = dby_mz
            dbz_mz  = (((vxupp + vcupp - vxupm - vcupm) -                 &
                       (vxdwp + vcdwp - vxdwm - vcdwm))*mz**2*amag/rho/       &
-                      (4.d0*dz) + vs*(mx**2+my**2))/amag**3
+                      (4.0_DP*dz) + vs*(mx**2+my**2))/amag**3
            dmuxc(1,1)=dvxc_rho
            dmuxc(1,2)=dvxc_mx 
            dmuxc(1,3)=dvxc_my 

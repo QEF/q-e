@@ -28,15 +28,15 @@ MODULE constants
   !
   ! ... Physical constants, SI (NIST CODATA 2002)
   !
-  REAL(DP), PARAMETER :: H_PLANCK_SI      = 6.6260693D-34    ! J s
-  REAL(DP), PARAMETER :: K_BOLTZMANN_SI   = 1.3806505D-23    ! J K^-1 
-  REAL(DP), PARAMETER :: ELECTRON_SI      = 1.60217653D-19   ! C
-  REAL(DP), PARAMETER :: ELECTRONVOLT_SI  = 1.60217653D-19   ! J  
-  REAL(DP), PARAMETER :: ELECTRONMASS_SI  = 9.1093826D-31    ! Kg
-  REAL(DP), PARAMETER :: HARTREE_SI       = 4.35974417D-18   ! J
-  REAL(DP), PARAMETER :: RYDBERG_SI       = HARTREE_SI/2.0_DP! J
-  REAL(DP), PARAMETER :: BOHR_RADIUS_SI   = 0.5291772108D-10 ! m
-  REAL(DP), PARAMETER :: AMU_SI           = 1.66053886D-27   ! Kg
+  REAL(DP), PARAMETER :: H_PLANCK_SI      = 6.6260693E-34_DP    ! J s
+  REAL(DP), PARAMETER :: K_BOLTZMANN_SI   = 1.3806505E-23_DP    ! J K^-1 
+  REAL(DP), PARAMETER :: ELECTRON_SI      = 1.60217653E-19_DP   ! C
+  REAL(DP), PARAMETER :: ELECTRONVOLT_SI  = 1.60217653E-19_DP   ! J  
+  REAL(DP), PARAMETER :: ELECTRONMASS_SI  = 9.1093826E-31_DP    ! Kg
+  REAL(DP), PARAMETER :: HARTREE_SI       = 4.35974417E-18_DP   ! J
+  REAL(DP), PARAMETER :: RYDBERG_SI       = HARTREE_SI/2.0_DP   ! J
+  REAL(DP), PARAMETER :: BOHR_RADIUS_SI   = 0.5291772108E-10_DP ! m
+  REAL(DP), PARAMETER :: AMU_SI           = 1.66053886E-27_DP   ! Kg
   !
   ! ... Physical constants, atomic units:
   ! ... AU for "Hartree" atomic units (e = m = hbar = 1)
@@ -55,20 +55,20 @@ MODULE constants
   ! ... Unit conversion factors: atomic unit of time, in s and ps
   !
   REAL(DP), PARAMETER :: AU_SEC           = H_PLANCK_SI/tpi/HARTREE_SI
-  REAL(DP), PARAMETER :: AU_PS            = AU_SEC * 1.0D+12
+  REAL(DP), PARAMETER :: AU_PS            = AU_SEC * 1.0E+12_DP
   !
   ! ... Unit conversion factors: pressure (1 Pa = 1 J/m^3, 1GPa = 10 Kbar )
   !
   REAL(DP), PARAMETER :: AU_GPA           = HARTREE_SI / BOHR_RADIUS_SI ** 3 &
-                                            / 1.0D+9 
-  REAL(DP), PARAMETER :: RY_KBAR          = 10.0_dp * AU_GPA / 2.0_dp
+                                            / 1.0E+9_DP 
+  REAL(DP), PARAMETER :: RY_KBAR          = 10.0_DP * AU_GPA / 2.0_DP
   !
   ! ... Unit conversion factors: 1 debye = 10^-18 esu*cm 
   ! ...                                  = 3.3356409519*10^-30 C*m 
   ! ...                                  = 0.208194346 e*A
   ! ... ( 1 esu = (0.1/c) Am, c=299792458 m/s)
   !
-  REAL(DP), PARAMETER :: DEBYE_SI         = 3.3356409519d0 * 1.0D-30 ! C*m 
+  REAL(DP), PARAMETER :: DEBYE_SI         = 3.3356409519_DP * 1.0E-30_DP ! C*m 
   REAL(DP), PARAMETER :: AU_DEBYE         = ELECTRON_SI * BOHR_RADIUS_SI / &
                                             DEBYE_SI
   !
@@ -77,28 +77,28 @@ MODULE constants
   !
   ! ... zero up to a given accuracy
   !
-  REAL(DP), PARAMETER :: eps4  = 1.0D-4
-  REAL(DP), PARAMETER :: eps6  = 1.0D-6
-  REAL(DP), PARAMETER :: eps8  = 1.0D-8
-  REAL(DP), PARAMETER :: eps14 = 1.0D-14
-  REAL(DP), PARAMETER :: eps16 = 1.0D-16
-  REAL(DP), PARAMETER :: eps32 = 1.0D-32
+  REAL(DP), PARAMETER :: eps4  = 1.0E-4_DP
+  REAL(DP), PARAMETER :: eps6  = 1.0E-6_DP
+  REAL(DP), PARAMETER :: eps8  = 1.0E-8_DP
+  REAL(DP), PARAMETER :: eps14 = 1.0E-14_DP
+  REAL(DP), PARAMETER :: eps16 = 1.0E-16_DP
+  REAL(DP), PARAMETER :: eps32 = 1.0E-32_DP
   !
-  REAL(DP), PARAMETER :: gsmall = 1.0d-12
+  REAL(DP), PARAMETER :: gsmall = 1.0E-12_DP
   !
-  REAL(DP), PARAMETER :: e2 = 2.D0      ! the square of the electron charge
-  REAL(DP), PARAMETER :: degspin = 2.D0 ! the number of spins per level
+  REAL(DP), PARAMETER :: e2 = 2.0_DP      ! the square of the electron charge
+  REAL(DP), PARAMETER :: degspin = 2.0_DP ! the number of spins per level
   !
   !!!!!! COMPATIBIILITY
   !
   REAL(DP), PARAMETER :: amconv = AMU_RY
   REAL(DP), PARAMETER :: uakbar = RY_KBAR
-  REAL(DP), PARAMETER :: bohr_radius_cm = bohr_radius_si * 100.0d0
-  REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = bohr_radius_cm * 1.0D8
-  REAL(DP), PARAMETER :: ANGSTROM_AU = 1.0d0/BOHR_RADIUS_ANGS
+  REAL(DP), PARAMETER :: bohr_radius_cm = bohr_radius_si * 100.0_DP
+  REAL(DP), PARAMETER :: BOHR_RADIUS_ANGS = bohr_radius_cm * 1.0E8_DP
+  REAL(DP), PARAMETER :: ANGSTROM_AU = 1.0_DP/BOHR_RADIUS_ANGS
   REAL(DP), PARAMETER :: DIP_DEBYE = AU_DEBYE
   REAL(DP), PARAMETER :: AU_TERAHERTZ  = AU_PS
-  REAL(DP), PARAMETER :: AU_TO_OHMCMM1 = 46000.0D0 ! (ohm cm)^-1
+  REAL(DP), PARAMETER :: AU_TO_OHMCMM1 = 46000.0_DP ! (ohm cm)^-1
   !
 
 END MODULE constants

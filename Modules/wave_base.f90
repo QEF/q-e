@@ -26,9 +26,9 @@
           SAVE
           PRIVATE
 
-          REAL(DP) :: frice  = 0.0d0   !  friction parameter for electronic 
+          REAL(DP) :: frice  = 0.0_DP   !  friction parameter for electronic 
                                         !  damped dynamics
-          REAL(DP) :: grease = 0.0d0   !  friction parameter for electronic 
+          REAL(DP) :: grease = 0.0_DP   !  friction parameter for electronic 
                                         !  damped dynamics
 
           PUBLIC :: dotp, hpsi, rande_base, gram_kp_base, gram_gamma_base
@@ -60,10 +60,10 @@
         USE mp, ONLY: mp_sum
         COMPLEX(DP) :: wf(:,:)
         INTEGER, INTENT(IN) :: gid
-        COMPLEX(DP), PARAMETER :: one  = ( 1.d0,0.d0)
-        COMPLEX(DP), PARAMETER :: onem = (-1.d0,0.d0)
-        COMPLEX(DP), PARAMETER :: zero = ( 0.d0,0.d0)
-        REAL(DP), PARAMETER :: small = 1.d-16
+        COMPLEX(DP), PARAMETER :: one  = ( 1.0_DP,0.0_DP)
+        COMPLEX(DP), PARAMETER :: onem = (-1.0_DP,0.0_DP)
+        COMPLEX(DP), PARAMETER :: zero = ( 0.0_DP,0.0_DP)
+        REAL(DP), PARAMETER :: small = 1.e-16_DP
         COMPLEX(DP), ALLOCATABLE :: s(:)
         REAL(DP)    :: anorm
         INTEGER      :: ib, ngw, nb
@@ -81,7 +81,7 @@
           END IF
           anorm = SUM( DBLE( wf(:,ib) * CONJG(wf(:,ib)) ) )
           CALL mp_sum(anorm, gid)
-          anorm = 1.0d0 / MAX( SQRT(anorm), small )
+          anorm = 1.0_DP / MAX( SQRT(anorm), small )
           CALL ZDSCAL(ngw, anorm, wf(1,ib), 1)
         END DO
         DEALLOCATE( s )
@@ -118,11 +118,11 @@
         INTEGER, INTENT(IN) :: gid
         LOGICAL, INTENT(IN) :: gzero
 
-        REAL(DP), PARAMETER :: one  =  1.d0
-        REAL(DP), PARAMETER :: two  =  2.d0
-        REAL(DP), PARAMETER :: onem = -1.d0
-        REAL(DP), PARAMETER :: zero =  0.d0
-        REAL(DP), PARAMETER :: small = 1.d-16
+        REAL(DP), PARAMETER :: one  =  1.0_DP
+        REAL(DP), PARAMETER :: two  =  2.0_DP
+        REAL(DP), PARAMETER :: onem = -1.0_DP
+        REAL(DP), PARAMETER :: zero =  0.0_DP
+        REAL(DP), PARAMETER :: small = 1.e-16_DP
         REAL(DP)  :: DNRM2
         REAL(DP), ALLOCATABLE  :: s(:)
         REAL(DP)  :: anorm, wftmp
@@ -148,13 +148,13 @@
           END IF
           IF(gzero) THEN
             anorm = DNRM2( 2*(ngw-1), wf(2,ib), 1)
-            anorm = 2.d0 * anorm**2 + DBLE( wf(1,ib) * CONJG(wf(1,ib)) )
+            anorm = 2.0_DP * anorm**2 + DBLE( wf(1,ib) * CONJG(wf(1,ib)) )
           ELSE
             anorm = DNRM2( 2*ngw, wf(1,ib), 1)
-            anorm = 2.d0 * anorm**2
+            anorm = 2.0_DP * anorm**2
           END IF
           CALL mp_sum(anorm, gid)
-          anorm = 1.0d0 / MAX( small, SQRT(anorm) )
+          anorm = 1.0_DP / MAX( small, SQRT(anorm) )
           CALL DSCAL( 2*ngw, anorm, wf(1,ib), 1)
         END DO
         DEALLOCATE( s )
@@ -219,11 +219,11 @@
       IF(gzero) THEN
         DO j = 1, n
           hpsi_gamma(j) = &
-            - DBLE( (2.d0 * ZDOTC(ngw-1, c(2,j+noff-1), 1, dc(2), 1) + c(1,j+noff-1)*dc(1)) )
+            - DBLE( (2.0_DP * ZDOTC(ngw-1, c(2,j+noff-1), 1, dc(2), 1) + c(1,j+noff-1)*dc(1)) )
         END DO
       ELSE
         DO j = 1, n
-          hpsi_gamma(j) = - DBLE( (2.d0 * ZDOTC(ngw, c(1,j+noff-1), 1, dc(1), 1)) )
+          hpsi_gamma(j) = - DBLE( (2.0_DP * ZDOTC(ngw, c(1,j+noff-1), 1, dc(1), 1)) )
         END DO
       END IF
       RETURN
@@ -263,8 +263,8 @@
         ngw     = SIZE( cgrad, 1)
         nb      = SIZE( cgrad, 2)
 
-        gemax_l = 0.d0
-        cnorm   = 0.d0
+        gemax_l = 0.0_DP
+        cnorm   = 0.0_DP
 
         DO i = 1, nb
           imx = IZAMAX( ngw, cgrad(1, i, 1), 1 )
@@ -319,11 +319,11 @@
         nb  = SIZE( cgrad, 2)
         nk  = SIZE( cgrad, 3)
  
-        gemax_l = 0.d0
-        cnorm   = 0.d0
+        gemax_l = 0.0_DP
+        cnorm   = 0.0_DP
  
         DO ik = 1, nk
-          cnormk  = 0.d0
+          cnormk  = 0.0_DP
           DO i = 1, nb
             iabs = IZAMAX( ngw, cgrad(1,i,ik), 1)
             IF( gemax_l < ABS( cgrad(iabs,i,ik) ) ) THEN
@@ -368,9 +368,9 @@
 
             IF (gzero) THEN
               wdot_gamma = DDOT( 2*(n-1), a(2), 1, b(2), 1)
-              wdot_gamma = 2.0d0 * wdot_gamma + DBLE( a(1) ) * DBLE( b(1) ) 
+              wdot_gamma = 2.0_DP * wdot_gamma + DBLE( a(1) ) * DBLE( b(1) ) 
             ELSE
-              wdot_gamma = 2.0d0 * DDOT( 2*n, a(1), 1, b(1), 1)
+              wdot_gamma = 2.0_DP * DDOT( 2*n, a(1), 1, b(1), 1)
             END IF 
 
             RETURN
@@ -411,10 +411,10 @@
 !
             IF (gzero) THEN
               dot_tmp = DDOT( 2*(n-1), a(2), 1, b(2), 1)
-              dot_tmp = 2.0d0 * dot_tmp + DBLE( a(1) ) * DBLE( b(1) ) 
+              dot_tmp = 2.0_DP * dot_tmp + DBLE( a(1) ) * DBLE( b(1) ) 
             ELSE
               dot_tmp = DDOT( 2*n, a(1), 1, b(1), 1)
-              dot_tmp = 2.0d0*dot_tmp
+              dot_tmp = 2.0_DP*dot_tmp
             END IF 
 
             CALL mp_sum( dot_tmp, intra_image_comm )
@@ -560,8 +560,8 @@
 !  ----------------------------------------------
       DO i = 1, SIZE(wf, 2)
         DO j = 1, SIZE( wf, 1)
-          rranf1 = 0.5d0 - rranf()
-          rranf2 = 0.5d0 - rranf()
+          rranf1 = 0.5_DP - rranf()
+          rranf2 = 0.5_DP - rranf()
           wf(j,i) = wf(j,i) + ampre * CMPLX(rranf1, rranf2)
         END DO
       END DO
@@ -585,8 +585,8 @@
 ! ... end of declarations
 !  ----------------------------------------------
       DO j = 1, SIZE( wf )
-        rranf1 = 0.5d0 - rranf()
-        rranf2 = 0.5d0 - rranf()
+        rranf1 = 0.5_DP - rranf()
+        rranf2 = 0.5_DP - rranf()
         wf(j) = wf(j) + ampre * CMPLX(rranf1, rranf2)
       END DO
       RETURN
@@ -609,7 +609,7 @@
          REAL(DP) :: rsc
 
          ngw = MIN( SIZE(rr1), SIZE(rr2), SIZE(metric) )
-         rsc = 0.d0
+         rsc = 0.0_DP
 
          gstart = 1
          IF (gzero) gstart = 2

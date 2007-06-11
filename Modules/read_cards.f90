@@ -67,7 +67,7 @@ MODULE read_cards_module
        ! ... Simulation cell from standard input
        !
        trd_ht = .FALSE.
-       rd_ht  = 0.0d0
+       rd_ht  = 0.0_DP
        !
        ! ... dipole
        !
@@ -76,11 +76,11 @@ MODULE read_cards_module
        ! ... Constraints
        !
        nconstr_inp    = 0
-       constr_tol_inp = 1.D-6
+       constr_tol_inp = 1.E-6_DP
        !
        ! ... ionic mass initialization
        !
-       atom_mass = 0.0d0
+       atom_mass = 0.0_DP
        !
        ! ... dimension of the real space Ewald summation
        !
@@ -101,7 +101,7 @@ MODULE read_cards_module
        ! ... neighbours
        !
        tneighbo   =  .FALSE.
-       neighbo_radius =  0.d0
+       neighbo_radius =  0.0_DP
        !
        ! ... Turbo
        !
@@ -121,8 +121,8 @@ MODULE read_cards_module
        tvhmean_inp = .false.
        vhnr_inp    = 0
        vhiunit_inp = 0
-       vhrmin_inp  = 0.0d0
-       vhrmax_inp  = 0.0d0
+       vhrmin_inp  = 0.0_DP
+       vhrmax_inp  = 0.0_DP
        vhasse_inp  = 'K'
        !
        ! ... tchi
@@ -310,8 +310,8 @@ MODULE read_cards_module
      ! Example:
      !
      ! ATOMIC_SPECIES
-     !  O 16.0d0 O.BLYP.UPF
-     !  H 1.00d0 H.fpmd.UPF
+     !  O 16.0 O.BLYP.UPF
+     !  H 1.00 H.fpmd.UPF
      !
      ! Where:
      !
@@ -351,7 +351,7 @@ MODULE read_cards_module
           lb_pos         = ADJUSTL( lb_pos )
           atom_label(is) = TRIM( lb_pos )
           !
-          IF ( atom_mass(is) <= 0.D0 ) THEN
+          IF ( atom_mass(is) <= 0.0_DP ) THEN
              CALL errore( ' card_atomic_species ',' invalid  atom_mass ', is )
           END IF
           DO ip = 1, is - 1
@@ -442,7 +442,7 @@ MODULE read_cards_module
        if_pos = 1
        !
        sp_pos = 0
-       rd_pos = 0.D0
+       rd_pos = 0.0_DP
        na_inp = 0
        !
        IF ( matches( "CRYSTAL", input_line ) ) THEN
@@ -470,7 +470,7 @@ MODULE read_cards_module
           !
           ALLOCATE( pos( 3*nat, num_of_images ) )
           !
-          pos(:,:) = 0.D0
+          pos(:,:) = 0.0_DP
           !
           IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
              !
@@ -840,8 +840,8 @@ MODULE read_cards_module
        ELSE IF ( k_points == 'gamma' ) THEN
           !
           nkstot = 1
-          xk(:,1) = 0.0D0
-          wk(1) = 1.0D0
+          xk(:,1) = 0.0_DP
+          wk(1) = 1.0_DP
           !
        END IF
        !
@@ -1372,7 +1372,7 @@ MODULE read_cards_module
                      & ' ATOMIC_SPECIES must be present before ', 2 )
        END IF
        !
-       rd_vel = 0.d0
+       rd_vel = 0.0_DP
        sp_vel = 0
        !
        IF ( ion_velocities == 'from_input' ) THEN
@@ -1684,7 +1684,7 @@ MODULE read_cards_module
           !
           ALLOCATE( pos( ncolvar_inp, input_images ) )
           !
-          pos(:,:) = 0.D0
+          pos(:,:) = 0.0_DP
           !
        END IF
        !

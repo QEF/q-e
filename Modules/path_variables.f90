@@ -121,8 +121,8 @@ MODULE path_variables
   REAL(DP) :: &
        smd_tol,                  &! tolrance on const in terms of
                                   ! [alpha(k) - alpha(k-1)] - 1/sm_P
-       smd_ene_ini = 1.D0,       &!
-       smd_ene_fin = 1.D0         !
+       smd_ene_ini = 1.0_DP,       &!
+       smd_ene_fin = 1.0_DP         !
   !
   TYPE smd_ptr
     !

@@ -125,7 +125,7 @@
        REAL(DP), INTENT(IN) :: gcutd, gcuts
        INTEGER, INTENT(OUT) :: ng, ngs
        !
-       REAL(DP) :: qk(3) = 0.0d0
+       REAL(DP) :: qk(3) = 0.0_DP
 
        IF( nr1 == 0 .OR. nr2 == 0 .OR. nr3 == 0 ) THEN
          ! ... This subroutines calculates the size of the real and reciprocal dense grids
@@ -317,11 +317,11 @@
 ! ... verify that, for G<gcut, coordinates never exceed nr
 ! ... (increase nr if needed)
       CALL vec_prod(c,b1,b2)
-      nr3tab=nint(2.0d0*sqgc/abs(dot_prod(c,b3))*vec_mod(c))
+      nr3tab=nint(2.0_DP*sqgc/abs(dot_prod(c,b3))*vec_mod(c))
       CALL vec_prod(c,b3,b1)
-      nr2tab=nint(2.0d0*sqgc/abs(dot_prod(c,b2))*vec_mod(c))
+      nr2tab=nint(2.0_DP*sqgc/abs(dot_prod(c,b2))*vec_mod(c))
       CALL vec_prod(c,b2,b3)
-      nr1tab=nint(2.0d0*sqgc/abs(dot_prod(c,b1))*vec_mod(c))
+      nr1tab=nint(2.0_DP*sqgc/abs(dot_prod(c,b1))*vec_mod(c))
       nr = max(nr,nr3tab)
       nr = max(nr,nr2tab)
       nr = max(nr,nr1tab)
@@ -330,7 +330,7 @@
       ng     = 0
       nb     = 0
 
-      IF( ALL( qk == 0.0d0 ) ) THEN
+      IF( ALL( qk == 0.0_DP ) ) THEN
         tqk = .FALSE.
       ELSE
         tqk = .TRUE.
@@ -393,9 +393,9 @@
 !  this function calculates the dot product of two vectors
 !  ----------------------------------------------
       
-      REAL(DP) dot_prod
+      REAL(DP) :: dot_prod
 ! ... declare function arguments
-      REAL(DP) a(3),b(3)     
+      REAL(DP) :: a(3),b(3)     
 
 ! ... evaluate dot product
       dot_prod=a(1)*b(1)+a(2)*b(2)+a(3)*b(3)
@@ -410,9 +410,9 @@
 !  this function calculates the norm of a vector
 !  ----------------------------------------------
 
-      REAL(DP) vec_mod
+      REAL(DP) :: vec_mod
 ! ... declare function argument
-      REAL(DP) a(3)
+      REAL(DP) :: a(3)
 
 ! ... evaluate norm
       vec_mod=sqrt(a(1)*a(1)+a(2)*a(2)+a(3)*a(3))
@@ -429,7 +429,7 @@
 !  ----------------------------------------------
 
 ! ... declare subroutine arguments
-      REAL(DP) a(3),b(3),c(3)
+      REAL(DP) :: a(3),b(3),c(3)
 
 ! ... evaluate cross product
       c(1) = a(2)*b(3)-a(3)*b(2)

@@ -160,7 +160,7 @@ MODULE path_base
          !
       ELSE
          !
-         mass = 1.D0
+         mass = 1.0_DP
          !
       END IF
       !
@@ -168,12 +168,12 @@ MODULE path_base
       !
       pos(:,1:input_images) = pos_(1:dim1,1:input_images)
       !
-      pes          = 0.D0
-      grad_pes     = 0.D0
-      elastic_grad = 0.D0
-      tangent      = 0.D0
-      grad         = 0.D0
-      error        = 0.D0
+      pes          = 0.0_DP
+      grad_pes     = 0.0_DP
+      elastic_grad = 0.0_DP
+      tangent      = 0.0_DP
+      grad         = 0.0_DP
+      error        = 0.0_DP
       frozen       = .FALSE.
       !
       k = k_min
@@ -239,7 +239,7 @@ MODULE path_base
          !
          ! ... path length is computed here
          !
-         path_length = 0.D0
+         path_length = 0.0_DP
          !
          DO i = 1, ( num_of_images - 1 )
             !
@@ -315,7 +315,7 @@ MODULE path_base
          pos_n(:,1) = pos(:,1)
          !
          i = 1
-         s = 0.D0
+         s = 0.0_DP
          !
          DO j = 2, num_of_images - 1
             !
@@ -340,7 +340,7 @@ MODULE path_base
          !
          pos(:,:) = pos_n(:,:)
          !
-         path_length = 0.D0
+         path_length = 0.0_DP
          !
          DO i = 1, num_of_images - 1
             !
@@ -470,14 +470,14 @@ MODULE path_base
          !
          DO i = 1, num_of_images
             !
-            k(i) = 0.5D0*( k_sum - k_diff * &
+            k(i) = 0.5_DP*( k_sum - k_diff * &
                            COS( pi * ( pes(i) - Emin ) / delta_E ) )
             !
          END DO
          !
       END IF
       !
-      k(:) = 0.5D0*k(:)
+      k(:) = 0.5_DP*k(:)
       !
       RETURN
       !
@@ -506,7 +506,7 @@ MODULE path_base
                ! ... elastic gradient only along the path ( variable elastic
                ! ... consatnt is used ) NEB recipe
                !
-               elastic_grad = tangent(:,i) * 0.5D0 * &
+               elastic_grad = tangent(:,i) * 0.5_DP * &
                        ( ( k(i) + k(i-1) ) * norm( pos(:,i) - pos(:,(i-1)) ) - &
                          ( k(i) + k(i+1) ) * norm( pos(:,(i+1)) - pos(:,i) ) )
                !
@@ -521,7 +521,7 @@ MODULE path_base
             IF ( climbing(i) ) THEN
                !
                grad(:,i) = grad(:,i) - &
-                           2.D0*tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
+                           2.0_DP*tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
                !
             ELSE IF ( i > 1 .AND. i < num_of_images ) THEN
                !
@@ -558,8 +558,8 @@ MODULE path_base
       !
       IF ( meta_ionode ) THEN
          !
-         grad(:,:) = 0.D0
-         lang(:,:) = 0.D0
+         grad(:,:) = 0.0_DP
+         lang(:,:) = 0.0_DP
          !
          ! ... we project pes gradients and gaussian noise
          !
@@ -569,7 +569,7 @@ MODULE path_base
                !
                ! ... the random term used in langevin dynamics is generated here
                !
-               lang(:,i) = gauss_dist( 0.D0, SQRT( 2.D0*temp_req*ds ), dim1 )
+               lang(:,i) = gauss_dist( 0.0_DP, SQRT( 2.0_DP*temp_req*ds ), dim1 )
                !
                lang(:,i) = lang(:,i)*DBLE( RESHAPE( if_pos, (/ dim1 /) ) )
                !
@@ -580,7 +580,7 @@ MODULE path_base
             IF ( climbing(i) ) THEN
                !
                grad(:,i) = grad(:,i) - &
-                           2.D0*tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
+                           2.0_DP*tangent(:,i)*( grad(:,i) .dot. tangent(:,i) )
                !
             ELSE IF ( i > 1 .AND. i < num_of_images ) THEN
                !
@@ -696,7 +696,7 @@ MODULE path_base
          IF ( use_freezing ) THEN
             !
             frozen(fii:lii) = ( error(fii:lii) < &
-                                MAX( 0.5D0*err_max, path_thr ) )
+                                MAX( 0.5_DP*err_max, path_thr ) )
             !
          END IF
          !
@@ -843,11 +843,11 @@ MODULE path_base
       INTEGER :: i
       !
       !
-      pes(:) = 0.D0
+      pes(:) = 0.0_DP
       !
       DO i = 2, nim
          !
-         pes(i) = pes(i-1) + 0.5D0*( ( pos(:,i) - pos(:,i-1) ) .dot. &
+         pes(i) = pes(i-1) + 0.5_DP*( ( pos(:,i) - pos(:,i-1) ) .dot. &
                                      ( grad_pes(:,i) + grad_pes(:,i-1) ) )
          !
       END DO

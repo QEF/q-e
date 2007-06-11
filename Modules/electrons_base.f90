@@ -32,7 +32,7 @@
                                      ! the occupations calculated in initval
 
       REAL(DP), ALLOCATABLE :: f(:)   ! occupation numbers ( at gamma )
-      REAL(DP) :: qbac = 0.0d0        ! background neutralizing charge
+      REAL(DP) :: qbac = 0.0_DP       ! background neutralizing charge
       INTEGER, ALLOCATABLE :: ispin(:) ! spin of each state
 !
 !------------------------------------------------------------------------------!
@@ -64,7 +64,7 @@
       IF( nelec_ /= 0 ) THEN
         nelec = nelec_
       ELSE
-        nelec = 0.0d0
+        nelec = 0.0_DP
         DO i = 1, nsp_
           nelec = nelec + na_ ( i ) * zv_ ( i )
         END DO 
@@ -116,7 +116,7 @@
 
       ALLOCATE( f     ( nbspx ) )
       ALLOCATE( ispin ( nbspx ) )
-      f     = 0.0d0
+      f     = 0.0_DP
       ispin = 0
 
       iupdwn ( 1 ) = 1
@@ -153,8 +153,8 @@
          !
          IF( nspin == 1 ) THEN
             nelec = SUM( f_inp( :, 1 ) )
-            nelup = nelec / 2.0d0
-            neldw = nelec / 2.0d0
+            nelup = nelec / 2.0_DP
+            neldw = nelec / 2.0_DP
          ELSE
             nelup = SUM ( f_inp ( :, 1 ) )
             neldw = SUM ( f_inp ( :, 2 ) )
@@ -167,10 +167,10 @@
          nupdwn (2) = 0
          DO i = 1, nbnd
            IF( nspin == 1 ) THEN
-             IF( f_inp( i, 1 ) > 0.0d0 ) nupdwn (1) = nupdwn (1) + 1
+             IF( f_inp( i, 1 ) > 0.0_DP ) nupdwn (1) = nupdwn (1) + 1
            ELSE
-             IF( f_inp( i, 1 ) > 0.0d0 ) nupdwn (1) = nupdwn (1) + 1
-             IF( f_inp( i, 2 ) > 0.0d0 ) nupdwn (2) = nupdwn (2) + 1
+             IF( f_inp( i, 1 ) > 0.0_DP ) nupdwn (1) = nupdwn (1) + 1
+             IF( f_inp( i, 2 ) > 0.0_DP ) nupdwn (2) = nupdwn (2) + 1
            END IF
          END DO
          !
@@ -213,17 +213,17 @@
 !              ' must use nspin=2 for odd number of electrons', 1 )
          
          ! ocp = 2 for spinless systems, ocp = 1 for spin-polarized systems
-         ocp = 2.d0 / nspin
+         ocp = 2.0_DP / nspin
          !
          ! default filling: attribute ocp electrons to each states
          !                  until the good number of electrons is reached
          do iss = 1, nspin
-            fsum = 0.0d0
+            fsum = 0.0_DP
             do in = iupdwn ( iss ), iupdwn ( iss ) - 1 + nupdwn ( iss )
-               if ( fsum + ocp < nel ( iss ) + 0.0001d0 ) then
+               if ( fsum + ocp < nel ( iss ) + 0.0001_DP ) then
                   f (in) = ocp
                else
-                  f (in) = max( nel ( iss ) - fsum, 0.d0 )
+                  f (in) = max( nel ( iss ) - fsum, 0.0_DP )
                end if
                 fsum = fsum + f(in)
             end do
@@ -295,7 +295,7 @@
       IF( ( 2 * nbnd ) < nelt ) &
         CALL errore(' electrons_base_initval ',' too few states ',  1  )
 
-      IF( nbsp < INT( nelec * nspin / 2.0d0 ) ) &
+      IF( nbsp < INT( nelec * nspin / 2.0_DP ) ) &
         CALL errore(' electrons_base_initval ',' too many electrons ', 1 )
 
 
@@ -320,13 +320,13 @@
       !
       !
       !
-      IF( nelup_ > 0.0d0 .AND. neldw_ > 0.0d0 ) THEN
+      IF( nelup_ > 0.0_DP .AND. neldw_ > 0.0_DP ) THEN
         nelup_loc= nelup_
         neldw_loc= neldw_
-      ELSE IF( nelup_ > 0.0d0 .AND. neldw_ == 0.0d0 ) THEN
+      ELSE IF( nelup_ > 0.0_DP .AND. neldw_ == 0.0_DP ) THEN
         nelup_loc= nelup_
         neldw_loc= nelec_ - nelup_
-      ELSE IF( nelup_ == 0.0d0 .AND. neldw_ > 0.0d0 ) THEN
+      ELSE IF( nelup_ == 0.0_DP .AND. neldw_ > 0.0_DP ) THEN
         neldw_loc= neldw_
         nelup_loc= nelec_ - neldw_
       ELSE
@@ -432,14 +432,14 @@
       IMPLICIT NONE
       SAVE
 
-      REAL(DP) :: fnosee   = 0.0d0   !  frequency of the thermostat ( in THz )
-      REAL(DP) :: qne      = 0.0d0   !  mass of teh termostat
-      REAL(DP) :: ekincw   = 0.0d0   !  kinetic energy to be kept constant
+      REAL(DP) :: fnosee   = 0.0_DP   !  frequency of the thermostat ( in THz )
+      REAL(DP) :: qne      = 0.0_DP   !  mass of teh termostat
+      REAL(DP) :: ekincw   = 0.0_DP   !  kinetic energy to be kept constant
 
-      REAL(DP) :: xnhe0   = 0.0d0   
-      REAL(DP) :: xnhep   = 0.0d0   
-      REAL(DP) :: xnhem   = 0.0d0   
-      REAL(DP) :: vnhe    = 0.0d0
+      REAL(DP) :: xnhe0   = 0.0_DP  
+      REAL(DP) :: xnhep   = 0.0_DP
+      REAL(DP) :: xnhem   = 0.0_DP
+      REAL(DP) :: vnhe    = 0.0_DP
       
 !
 !------------------------------------------------------------------------------!
@@ -450,14 +450,14 @@
      USE constants, ONLY: pi, au_terahertz
      REAL(DP), INTENT(IN) :: ekincw_, fnosee_
      ! set thermostat parameter for electrons
-     qne     = 0.0d0
+     qne     = 0.0_DP
      ekincw  = ekincw_
      fnosee  = fnosee_
-     xnhe0   = 0.0d0
-     xnhep   = 0.0d0
-     xnhem   = 0.0d0
-     vnhe    = 0.0d0
-     if( fnosee > 0.0d0 ) qne = 4.d0 * ekincw / ( fnosee * ( 2.d0 * pi ) * au_terahertz )**2
+     xnhe0   = 0.0_DP
+     xnhep   = 0.0_DP
+     xnhem   = 0.0_DP
+     vnhe    = 0.0_DP
+     if( fnosee > 0.0_DP ) qne = 4.0_DP * ekincw / ( fnosee * ( 2.0_DP * pi ) * au_terahertz )**2
     return
   end subroutine electrons_nose_init
 
@@ -468,7 +468,7 @@
     real(8) :: electrons_nose_nrg
     real(8), intent(in) :: xnhe0, vnhe, qne, ekincw
       !
-      electrons_nose_nrg = 0.5d0 * qne * vnhe * vnhe + 2.0d0 * ekincw * xnhe0
+      electrons_nose_nrg = 0.5_DP * qne * vnhe * vnhe + 2.0_DP * ekincw * xnhe0
       !
     return
   end function electrons_nose_nrg
@@ -490,7 +490,7 @@
     implicit none
     real(8), intent(inout) :: vnhe
     real(8), intent(in) :: xnhe0, xnhem, delt 
-    vnhe=2.d0*(xnhe0-xnhem)/delt-vnhe
+    vnhe=2.0_DP*(xnhe0-xnhem)/delt-vnhe
     return
   end subroutine electrons_nosevel
 
@@ -498,8 +498,8 @@
     implicit none
     real(8), intent(out) :: xnhep, vnhe
     real(8), intent(in) :: xnhe0, xnhem, delt, qne, ekinc, ekincw
-    xnhep = 2.0d0 * xnhe0 - xnhem + 2.0d0 * ( delt**2 / qne ) * ( ekinc - ekincw )
-    vnhe  = ( xnhep - xnhem ) / ( 2.0d0 * delt )
+    xnhep = 2.0_DP * xnhe0 - xnhem + 2.0_DP * ( delt**2 / qne ) * ( ekinc - ekincw )
+    vnhe  = ( xnhep - xnhem ) / ( 2.0_DP * delt )
     return
   end subroutine electrons_noseupd
 
@@ -518,13 +518,13 @@
 
       IF( tnosee ) THEN
         !
-        IF( fnosee <= 0.D0) &
+        IF( fnosee <= 0.0_DP) &
           CALL errore(' electrons_nose_info ', ' fnosee less than zero ', 1)
-        IF( delt <= 0.D0) &
+        IF( delt <= 0.0_DP) &
           CALL errore(' electrons_nose_info ', ' delt less than zero ', 1)
 
-        wnosee = fnosee * ( 2.d0 * pi ) * au_terahertz
-        nsvar  = ( 2.d0 * pi ) / ( wnosee * delt )
+        wnosee = fnosee * ( 2.0_DP * pi ) * au_terahertz
+        nsvar  = ( 2.0_DP * pi ) / ( wnosee * delt )
 
         WRITE( stdout,563) ekincw, nsvar, fnosee, qne
       END IF

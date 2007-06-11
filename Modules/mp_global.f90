@@ -238,7 +238,7 @@ SUBROUTINE init_ortho_group( nproc_try, me_try, comm_try )
 
    !  find the square closer (but lower) to nproc_try
    !
-   np_ortho = INT( SQRT( DBLE( nproc_try ) + 0.1d0 ) )
+   np_ortho = INT( SQRT( DBLE( nproc_try ) + 0.1_DP ) )
 
    !  here we choose the first processors, but on some machine other choices may be better
    !

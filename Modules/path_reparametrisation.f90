@@ -127,8 +127,8 @@ MODULE path_reparametrisation
       ALLOCATE( old_mesh( nio:nfo ) )
       ALLOCATE( new_mesh( ni:nf ) )
       !
-      old_mesh(:) = 0.D0
-      new_mesh(:) = 0.D0
+      old_mesh(:) = 0.0_DP
+      new_mesh(:) = 0.0_DP
       !
       DO i = nio, nfo - 1
          !
@@ -200,8 +200,8 @@ MODULE path_reparametrisation
       ALLOCATE( old_mesh( nio:nfo ) )
       ALLOCATE( new_mesh( ni:nf ) )
       !
-      old_mesh(:) = 0.D0
-      new_mesh(:) = 0.D0
+      old_mesh(:) = 0.0_DP
+      new_mesh(:) = 0.0_DP
       !
       DO i = nio, nfo - 1
          !
@@ -258,11 +258,11 @@ MODULE path_reparametrisation
       !
       DO i = ni+1, nf - 1
          !
-         t(:,i) = ( pos(:,i+1) - pos(:,i-1) ) / 2.D0
+         t(:,i) = ( pos(:,i+1) - pos(:,i-1) ) / 2.0_DP
          !
       END DO
       !
-      s(ni) = 0.D0
+      s(ni) = 0.0_DP
       !
       DO i = ni, nf - 1
          !
@@ -272,11 +272,11 @@ MODULE path_reparametrisation
          !
          ! ... cubic interpolation
          !
-         a(:,i) = 2.D0*( pos(:,i) - pos(:,i+1) ) / r**3 + &
+         a(:,i) = 2.0_DP *( pos(:,i) - pos(:,i+1) ) / r**3 + &
                            ( t(:,i) + t(:,i+1) ) / r**2
          !
-         b(:,i) = 3.D0*( pos(:,i+1) - pos(:,i) ) / r**2 - &
-                      ( 2.D0*t(:,i) + t(:,i+1) ) / r
+         b(:,i) = 3.0_DP *( pos(:,i+1) - pos(:,i) ) / r**2 - &
+                      ( 2.0_DP*t(:,i) + t(:,i+1) ) / r
          !
          c(:,i) = t(:,i)
          !

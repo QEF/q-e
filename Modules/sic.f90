@@ -16,7 +16,7 @@
 !  Thus, we introduce the parameters sic_alpha and sic_epsilon to correct the
 !  exchange-correlation and the electronic hartree potentials, respectively.
 !  They are two empirical parameters, thus to remain in a ab-initio
-!  set them equal to 1.0d0.
+!  set them equal to 1.0_DP.
 !  Sprik et al. showed that, in same cases, i.e. OH radical, it should be better
 !  to under estimate the correction to ex-ch, since in same way the exch already
 !  corrects the electronic hartree part.
@@ -44,9 +44,9 @@
       INTEGER :: nat_localisation = 0 
       LOGICAL :: print_localisation = .FALSE. ! Calculates hartree energy around specified atoms
       INTEGER :: self_interaction = 0 
-      REAL(DP) :: sic_epsilon = 0.0d0
-      REAL(DP) :: sic_alpha = 0.0d0
-      REAL(DP) :: sic_rloc = 0.0d0
+      REAL(DP) :: sic_epsilon = 0.0_DP
+      REAL(DP) :: sic_alpha = 0.0_DP
+      REAL(DP) :: sic_rloc = 0.0_DP
       REAL(DP), ALLOCATABLE :: pos_localisation(:,:)
 
 !------------------------------------------------------------------------------!

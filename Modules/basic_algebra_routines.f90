@@ -113,8 +113,8 @@ MODULE basic_algebra_routines
        !
        dim1 = SIZE( vec )
        !
-       CALL DGEMV( 'N', dim1, dim1, 1.D0, mat, dim1, &
-                   vec, 1, 0.D0, matrix_times_vector, 1 )
+       CALL DGEMV( 'N', dim1, dim1, 1.0_DP, mat, dim1, &
+                   vec, 1, 0.0_DP, matrix_times_vector, 1 )
        !
      END FUNCTION  matrix_times_vector
      !
@@ -132,8 +132,8 @@ MODULE basic_algebra_routines
        !
        dim1 = SIZE( vec )
        !
-       CALL DGEMV( 'T', dim1, dim1, 1.D0, mat, dim1, &
-                   vec, 1, 0.D0, vector_times_matrix, 1 )
+       CALL DGEMV( 'T', dim1, dim1, 1.0_DP, mat, dim1, &
+                   vec, 1, 0.0_DP, vector_times_matrix, 1 )
        !
      END FUNCTION vector_times_matrix
      !
@@ -151,9 +151,9 @@ MODULE basic_algebra_routines
        dim1 = SIZE( vec1 )
        dim2 = SIZE( vec2 )
        !
-       matrix = 0.D0
+       matrix = 0.0_DP
        !
-       CALL DGER( dim1, dim2, 1.D0, vec1, 1, vec2, 1, matrix, dim1 )
+       CALL DGER( dim1, dim2, 1.0_DP, vec1, 1, vec2, 1, matrix, dim1 )
        !
      END FUNCTION matrix
      !
@@ -168,9 +168,9 @@ MODULE basic_algebra_routines
        REAL(DP)            :: identity(dim,dim)
        INTEGER             :: i
        !
-       identity = 0.D0
+       identity = 0.0_DP
        !
-       FORALL( i = 1:dim ) identity(i,i) = 1.D0
+       FORALL( i = 1:dim ) identity(i,i) = 1.0_DP
        !
      END FUNCTION identity
      !    

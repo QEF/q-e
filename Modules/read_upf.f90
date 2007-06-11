@@ -104,7 +104,7 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      call scan_end (iunps, "NLCC")  
   else
      allocate( upf%rho_atc( 0:upf%mesh ) )
-     upf%rho_atc = 0.0d0
+     upf%rho_atc = 0.0_DP
   endif
   !-------->Search for Local potential
   call scan_begin (iunps, "LOCAL", .true.)  
@@ -253,8 +253,8 @@ subroutine read_pseudo_mesh (upf, iunps)
   integer :: ir
 
   ALLOCATE( upf%r( 0:upf%mesh ), upf%rab( 0:upf%mesh ) )
-  upf%r   = 0.0d0
-  upf%rab = 0.0d0
+  upf%r   = 0.0_DP
+  upf%rab = 0.0_DP
 
   call scan_begin (iunps, "R", .false.)  
   read (iunps, *, err = 100, end = 100) (upf%r(ir), ir=1,upf%mesh )
@@ -285,7 +285,7 @@ subroutine read_pseudo_nlcc (upf, iunps)
   integer :: ir
   !
   ALLOCATE( upf%rho_atc( 0:upf%mesh ) )
-  upf%rho_atc = 0.0d0
+  upf%rho_atc = 0.0_DP
 
   read (iunps, *, err = 100, end = 100) (upf%rho_atc(ir), ir=1,upf%mesh )
   !
@@ -310,7 +310,7 @@ subroutine read_pseudo_local (upf, iunps)
   integer :: ir
   !
   ALLOCATE( upf%vloc( 0:upf%mesh ) )
-  upf%vloc = 0.0d0
+  upf%vloc = 0.0_DP
 
   read (iunps, *, err=100, end=100) (upf%vloc(ir) , ir=1,upf%mesh )
 
@@ -363,10 +363,10 @@ subroutine read_pseudo_nl (upf, iunps)
 
   upf%kkbeta = 0  
   upf%lll    = 0  
-  upf%beta   = 0.0d0
-  upf%dion   = 0.0d0
-  upf%rcut   = 0.0d0
-  upf%rcutus = 0.0d0
+  upf%beta   = 0.0_DP
+  upf%dion   = 0.0_DP
+  upf%rcut   = 0.0_DP
+  upf%rcutus = 0.0_DP
   upf%els_beta = '  '
 
   do nb = 1, upf%nbeta 
@@ -400,10 +400,10 @@ subroutine read_pseudo_nl (upf, iunps)
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
      ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta, upf%nbeta ) )
      ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
-     upf%rinner = 0.0d0
-     upf%qqq    = 0.0d0
-     upf%qfunc  = 0.0d0
-     upf%qfcoef = 0.0d0
+     upf%rinner = 0.0_DP
+     upf%qqq    = 0.0_DP
+     upf%qfunc  = 0.0_DP
+     upf%qfcoef = 0.0_DP
      if ( upf%nqf /= 0) then
         call scan_begin (iunps, "RINNER", .false.)  
         read (iunps,*,err=103,end=103) ( idum, upf%rinner(i), i=1,upf%nqlc )
@@ -449,10 +449,10 @@ subroutine read_pseudo_nl (upf, iunps)
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
      ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta, upf%nbeta ) )
      ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta ) )
-     upf%rinner = 0.0d0
-     upf%qqq    = 0.0d0
-     upf%qfunc  = 0.0d0
-     upf%qfcoef = 0.0d0
+     upf%rinner = 0.0_DP
+     upf%qqq    = 0.0_DP
+     upf%qfunc  = 0.0_DP
+     upf%qfcoef = 0.0_DP
   endif
 
 
@@ -484,7 +484,7 @@ subroutine read_pseudo_pswfc (upf, iunps)
   integer :: nb, ir
 
   ALLOCATE( upf%chi( 0:upf%mesh, MAX( upf%nwfc, 1 ) ) )
-  upf%chi = 0.0d0
+  upf%chi = 0.0_DP
   do nb = 1, upf%nwfc  
      read (iunps, *, err=100, end=100) dummy  !Wavefunction labels
      read (iunps, *, err=100, end=100) ( upf%chi(ir,nb), ir=1,upf%mesh )
@@ -510,7 +510,7 @@ subroutine read_pseudo_rhoatom (upf, iunps)
   integer :: ir
   !
   ALLOCATE( upf%rho_at( 0:upf%mesh ) )
-  upf%rho_at = 0.0d0
+  upf%rho_at = 0.0_DP
   read (iunps,*,err=100,end=100) ( upf%rho_at(ir), ir=1,upf%mesh )
   !
   return  
@@ -539,14 +539,14 @@ subroutine read_pseudo_addinfo (upf, iunps)
   ALLOCATE( upf%jjj(upf%nbeta) )
 
   upf%nn=0
-  upf%epseu=0.d0
-  upf%jchi=0.d0
+  upf%epseu=0.0_DP
+  upf%jchi=0.0_DP
   do nb = 1, upf%nwfc
      read (iunps, *,err=100,end=100) upf%els(nb),  &
           upf%nn(nb), upf%lchi(nb), upf%jchi(nb), upf%oc(nb)
   enddo
   
-  upf%jjj=0.d0
+  upf%jjj=0.0_DP
   do nb = 1, upf%nbeta
      read (iunps, *, err=100,end=100) upf%lll(nb), upf%jjj(nb)
   enddo

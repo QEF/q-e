@@ -124,17 +124,17 @@ MODULE control_flags
   !
   ! This variable is used whenever a timestep change is requested
   !
-  REAL(DP) :: dt_old = -1.0D0
+  REAL(DP) :: dt_old = -1.0_DP
   !
   ! ... Wave function randomization
   !
   LOGICAL  :: trane = .FALSE.
-  REAL(DP) :: ampre = 0.D0
+  REAL(DP) :: ampre = 0.0_DP
   !
   ! ... Ionic position randomization
   !
   LOGICAL  :: tranp(nsx) = .FALSE.
-  REAL(DP) :: amprp(nsx) = 0.D0
+  REAL(DP) :: amprp(nsx) = 0.0_DP
   !
   ! ... Read the cell from standard input
   !
@@ -163,12 +163,12 @@ MODULE control_flags
   LOGICAL  :: tnosep = .FALSE.
   LOGICAL  :: tcap   = .FALSE.
   LOGICAL  :: tcp    = .FALSE.
-  REAL(DP) :: tolp   = 0.D0   !  tolerance for temperature variation
+  REAL(DP) :: tolp   = 0.0_DP   !  tolerance for temperature variation
   !
   REAL(DP), PUBLIC :: &
-       ekin_conv_thr = 0.D0, &!  conv. threshold for fictitious e. kinetic energy
-       etot_conv_thr = 0.D0, &!  conv. threshold for DFT energy
-       forc_conv_thr = 0.D0   !  conv. threshold for atomic forces
+       ekin_conv_thr = 0.0_DP, &!  conv. threshold for fictitious e. kinetic energy
+       etot_conv_thr = 0.0_DP, &!  conv. threshold for DFT energy
+       forc_conv_thr = 0.0_DP   !  conv. threshold for atomic forces
   INTEGER, PUBLIC :: &
        ekin_maxiter = 100,   &!  max number of iter. for ekin convergence
        etot_maxiter = 100,   &!  max number of iter. for etot convergence
@@ -277,8 +277,8 @@ MODULE control_flags
     assume_isolated = .FALSE.   ! if .TRUE. the system is assumed to be an
                                 ! isolated molecule or cluster (in a supercell)
   !
-  INTEGER  :: ortho_max = 0    ! maximum number of iterations in routine ortho
-  REAL(DP) :: ortho_eps = 0.D0 ! threshold for convergence in routine ortho
+  INTEGER  :: ortho_max = 0      ! maximum number of iterations in routine ortho
+  REAL(DP) :: ortho_eps = 0.0_DP ! threshold for convergence in routine ortho
   !
   ! ... Task Groups parallelization
   !
@@ -293,9 +293,9 @@ MODULE control_flags
   !
   LOGICAL,          PUBLIC :: tvhmean = .FALSE.
                               !  if TRUE save Vh average to file Vh_mean.out
-  REAL(DP),         PUBLIC :: vhrmin = 0.0d0
+  REAL(DP),         PUBLIC :: vhrmin = 0.0_DP
                               !  starting "radius" for plotting
-  REAL(DP),         PUBLIC :: vhrmax = 1.0d0
+  REAL(DP),         PUBLIC :: vhrmax = 1.0_DP
                               !  maximum "radius" for plotting
   CHARACTER(LEN=1), PUBLIC :: vhasse = 'Z'
                               !  averaging axis

@@ -35,32 +35,32 @@
           INTEGER :: perd(3)
         END TYPE boxdimensions
 
-        REAL(DP) :: alat = 0.0d0   !  lattice parameter, often used to scale quantities
+        REAL(DP) :: alat = 0.0_DP   !  lattice parameter, often used to scale quantities
                                     !  or in combination to other parameters/constants
                                     !  to define new units
 
         !  celldm are che simulation cell parameters
 
-        REAL(DP) :: celldm(6) = (/ 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: celldm(6) = (/ 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP, 0.0_DP /)
 
         !  a1, a2 and a3 are the simulation cell base vector as calculated from celldm
 
-        REAL(DP) :: a1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(DP) :: a2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(DP) :: a3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: a1(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+        REAL(DP) :: a2(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+        REAL(DP) :: a3(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
         
         !  b1, b2 and b3 are the simulation reciprocal lattice vectors
 
-        REAL(DP) :: b1(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(DP) :: b2(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
-        REAL(DP) :: b3(3) = (/ 0.0d0, 0.0d0, 0.0d0 /)
+        REAL(DP) :: b1(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+        REAL(DP) :: b2(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
+        REAL(DP) :: b3(3) = (/ 0.0_DP, 0.0_DP, 0.0_DP /)
 
-        REAL(DP) :: ainv(3,3) = 0.0d0
+        REAL(DP) :: ainv(3,3) = 0.0_DP
 
-        REAl(DP) :: omega = 0.0d0  !  volume of the simulation cell
+        REAl(DP) :: omega = 0.0_DP  !  volume of the simulation cell
 
-        REAL(DP) :: tpiba  = 0.0d0   !  = 2 PI / alat
-        REAL(DP) :: tpiba2 = 0.0d0   !  = ( 2 PI / alat ) ** 2
+        REAL(DP) :: tpiba  = 0.0_DP   !  = 2 PI / alat
+        REAL(DP) :: tpiba2 = 0.0_DP   !  = ( 2 PI / alat ) ** 2
 
         !  direct lattice vectors and reciprocal lattice vectors
         !  The folloving relations should alwais be kept valid
@@ -73,28 +73,28 @@
         !  bg( :, 2 ) = b2( : )
         !  bg( :, 3 ) = b3( : )
 
-        REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
-        REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0d0 /), (/ 3, 3 /), (/ 0.0d0 /) )
+        REAL(DP) :: at(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
+        REAL(DP) :: bg(3,3) = RESHAPE( (/ 0.0_DP /), (/ 3, 3 /), (/ 0.0_DP /) )
 
         INTEGER          :: ibrav      ! index of the bravais lattice
         CHARACTER(len=9) :: symm_type  ! 'cubic' or 'hexagonal' when ibrav=0
 
-        REAL(DP) :: h(3,3)    = 0.0d0 ! simulation cell at time t 
-        REAL(DP) :: hold(3,3) = 0.0d0 ! simulation cell at time t-delt
-        REAL(DP) :: hnew(3,3) = 0.0d0 ! simulation cell at time t+delt
-        REAL(DP) :: velh(3,3) = 0.0d0 ! simulation cell velocity
-        REAL(DP) :: deth      = 0.0d0 ! determinant of h ( cell volume )
+        REAL(DP) :: h(3,3)    = 0.0_DP ! simulation cell at time t 
+        REAL(DP) :: hold(3,3) = 0.0_DP ! simulation cell at time t-delt
+        REAL(DP) :: hnew(3,3) = 0.0_DP ! simulation cell at time t+delt
+        REAL(DP) :: velh(3,3) = 0.0_DP ! simulation cell velocity
+        REAL(DP) :: deth      = 0.0_DP ! determinant of h ( cell volume )
 
         INTEGER   :: iforceh(3,3) = 1  ! if iforceh( i, j ) = 0 then h( i, j ) 
                                        ! is not allowed to move
         LOGICAL   :: thdiag = .FALSE.  ! True if only cell diagonal elements 
                                        ! should be updated
 
-        REAL(DP) :: wmass = 0.0d0     ! cell fictitious mass
-        REAL(DP) :: press = 0.0d0     ! external pressure 
+        REAL(DP) :: wmass = 0.0_DP     ! cell fictitious mass
+        REAL(DP) :: press = 0.0_DP     ! external pressure 
 
-        REAL(DP) :: frich  = 0.0d0    ! firction parameter for cell damped dynamics
-        REAL(DP) :: greash = 1.0d0    ! greas parameter for damped dynamics
+        REAL(DP) :: frich  = 0.0_DP    ! firction parameter for cell damped dynamics
+        REAL(DP) :: greash = 1.0_DP    ! greas parameter for damped dynamics
 
         LOGICAL :: tcell_base_init = .FALSE.
 
@@ -145,10 +145,10 @@
             box%hmat = TRANSPOSE( ht )
             CALL gethinv( box )
             box%g = MATMUL( box%a(:,:), box%hmat(:,:) )
-            box%gvel = 0.0d0
-            box%hvel = 0.0d0
-            box%pail = 0.0d0
-            box%paiu = 0.0d0
+            box%gvel = 0.0_DP
+            box%hvel = 0.0_DP
+            box%pail = 0.0_DP
+            box%paiu = 0.0_DP
           RETURN
         END SUBROUTINE cell_init_ht
           
@@ -166,12 +166,12 @@
               box%hmat(I,2) = A2(I)
               box%hmat(I,3) = A3(I)
             END DO
-            box%pail = 0.0d0
-            box%paiu = 0.0d0
-            box%hvel = 0.0d0
+            box%pail = 0.0_DP
+            box%paiu = 0.0_DP
+            box%hvel = 0.0_DP
             CALL gethinv(box)
             box%g    = MATMUL( box%a(:,:), box%hmat(:,:) )
-            box%gvel = 0.0d0
+            box%gvel = 0.0_DP
           RETURN
         END SUBROUTINE cell_init_a
 
@@ -183,7 +183,7 @@
           type (boxdimensions), intent(in) :: box
           integer i,j
           DO I=1,3
-            S(I) = 0.D0
+            S(I) = 0.0_DP
             DO J=1,3
               S(I) = S(I) + R(J)*box%m1(J,I)
             END DO
@@ -204,7 +204,7 @@
             DO ia = 1, na(is)
               isa = isa + 1
               DO I=1,3
-                S(I,isa) = 0.D0
+                S(I,isa) = 0.0_DP
                 DO J=1,3
                   S(I,isa) = S(I,isa) + R(J,isa)*hinv(i,j)
                 END DO
@@ -222,7 +222,7 @@
           REAL(DP), intent(in) :: hinv(:,:)    ! hinv = TRANSPOSE( box%m1 )
           integer :: i, j
           DO I=1,3
-            S(I) = 0.D0
+            S(I) = 0.0_DP
             DO J=1,3
               S(I) = S(I) + R(J)*hinv(i,j)
             END DO
@@ -239,7 +239,7 @@
           type (boxdimensions), intent(in) :: box
           integer i,j
           DO I=1,3
-            R(I) = 0.D0
+            R(I) = 0.0_DP
             DO J=1,3
               R(I) = R(I) + S(J)*box%a(J,I)
             END DO
@@ -255,7 +255,7 @@
           REAL(DP), intent(in) :: h(:,:)    ! h = TRANSPOSE( box%a )
           integer i,j
           DO I=1,3
-            R(I) = 0.D0
+            R(I) = 0.0_DP
             DO J=1,3
               R(I) = R(I) + S(J)*h(I,j)
             END DO
@@ -276,7 +276,7 @@
             DO ia = 1, na(is)
               isa = isa + 1
               DO I = 1, 3
-                R(I,isa) = 0.D0
+                R(I,isa) = 0.0_DP
                 DO J = 1, 3
                   R(I,isa) = R(I,isa) + S(J,isa) * h(I,j)
                 END DO
@@ -441,7 +441,7 @@
     IF ( ibrav /= 0 .AND. trd_ht ) &
       CALL errore( ' cell_base_init ', ' redundant data for cell parameters', 2 )
 
-    IF ( celldm(1) /= 0.D0 .AND. a /= 0.D0 ) THEN
+    IF ( celldm(1) /= 0.0_DP .AND. a /= 0.0_DP ) THEN
       CALL errore( ' cell_base_init ', ' do not specify both celldm and a,b,c!', 1 )
     END IF
 
@@ -455,8 +455,8 @@
 110 format(  3X,'external pressure       = ',f15.2,' [GPa]')
 
     wmass  = wc_
-    IF( wmass == 0.d0 ) THEN
-      wmass = 3.d0 / (4.d0 * pi**2 ) * total_ions_mass
+    IF( wmass == 0.0_DP ) THEN
+      wmass = 3.0_DP / (4.0_DP * pi**2 ) * total_ions_mass
       wmass = wmass * AMU_AU
       WRITE( stdout,130) wmass
     ELSE
@@ -465,7 +465,7 @@
 120 format(3X,'wmass (read from input) = ',f15.2,' [AU]')
 130 format(3X,'wmass (calculated)      = ',f15.2,' [AU]')
 
-    IF( wmass <= 0.0d0 ) &
+    IF( wmass <= 0.0_DP ) &
       CALL errore(' cell_base_init ',' wmass out of range ',0)
 
 
@@ -476,15 +476,15 @@
       !
       SELECT CASE ( TRIM( cell_units ) )
         CASE ( 'bohr' )
-          units = 1.0d0
+          units = 1.0_DP
         CASE ( 'angstrom' )
-          units = 1.0d0 / BOHR_RADIUS_ANGS
+          units = 1.0_DP / BOHR_RADIUS_ANGS
         CASE ( 'alat' )
-          IF( celldm( 1 ) == 0.0d0 ) &
+          IF( celldm( 1 ) == 0.0_DP ) &
             CALL errore( ' cell_base_init ', ' cell_parameter in alat without celldm(1) ', 1 )
           units = celldm( 1 )
         CASE DEFAULT
-          units = 1.0d0
+          units = 1.0_DP
       END SELECT
       !
       symm_type = cell_symmetry
@@ -499,14 +499,14 @@
       !
       IF ( ANY( celldm(1:6) /= 0 ) .AND. TRIM( cell_units ) /= 'alat' ) THEN
         WRITE( stdout, 230 )
-        celldm(1:6) = 0.0d0
+        celldm(1:6) = 0.0_DP
       END IF
       !
       IF ( a /= 0 ) THEN
         WRITE( stdout, 240 )
-        a = 0.0d0
-        b = 0.0d0
-        c = 0.0d0
+        a = 0.0_DP
+        b = 0.0_DP
+        c = 0.0_DP
       END IF
       !
 210   format(3X,'initial cell from CELL_PARAMETERS card')
@@ -515,7 +515,7 @@
 240   format(3X,'a, b, c are ignored')
       !
 
-      IF ( celldm(1) == 0.D0 ) THEN
+      IF ( celldm(1) == 0.0_DP ) THEN
         !
         ! ... input at are in atomic units: define alat
         !
@@ -530,7 +530,7 @@
 
     ELSE 
 
-      IF( a /= 0.D0 ) THEN
+      IF( a /= 0.0_DP ) THEN
 
         celldm(1) = a / bohr_radius_angs
         celldm(2) = b / a
@@ -661,7 +661,7 @@
     INTEGER   :: j
 
     alat   =  sqrt( ht(1,1)*ht(1,1) + ht(1,2)*ht(1,2) + ht(1,3)*ht(1,3) )
-    tpiba  = 2.d0 * pi / alat
+    tpiba  = 2.0_DP * pi / alat
     tpiba2 = tpiba * tpiba
     !
     !    The matrix "ht" in FPMD correspond to the transpose of matrix "at" in PW
@@ -761,20 +761,20 @@
     dt2 = delt * delt
 
     IF( tnoseh ) THEN
-      ftmp = 0.0d0
+      ftmp = 0.0_DP
       htmp = hnos
     ELSE
       ftmp = frich
-      htmp = 0.0d0
+      htmp = 0.0_DP
     END IF
 
-    verl1 = 2.d0 / ( 1.d0 + ftmp )
-    verl2 = 1.d0 - verl1
-    verl3 = dt2 / ( 1.d0 + ftmp )
+    verl1 = 2.0_DP / ( 1.0_DP + ftmp )
+    verl2 = 1.0_DP - verl1
+    verl3 = dt2 / ( 1.0_DP + ftmp )
   
     DO j=1,3
       DO i=1,3
-        hnew(i,j) = h(i,j) + ( ( verl1 - 1.0d0 ) * h(i,j)               &
+        hnew(i,j) = h(i,j) + ( ( verl1 - 1.0_DP ) * h(i,j)               &
      &     + verl2 * hold(i,j) + &
              verl3 * ( fcell(i,j) - htmp(i,j) ) ) * iforceh(i,j)
       ENDDO
@@ -791,7 +791,7 @@
     integer, intent(in) :: iforceh(3,3)
     REAL(DP) :: dt2by2, fac
     integer :: i, j
-    dt2by2 = .5d0 * delt * delt
+    dt2by2 = 0.5_DP * delt * delt
     fac = dt2by2
     do i=1,3
       do j=1,3
@@ -840,7 +840,7 @@
     if( tnoseh ) then
       hnos = vnhh * velh
     else
-      hnos = 0.0d0
+      hnos = 0.0_DP
     end if
 !
     IF( tsdc ) THEN
@@ -885,10 +885,10 @@
     REAL(DP), intent(out) :: ekinh, temphh(3,3)
     REAL(DP), intent(in)  :: velh(3,3)
     integer :: i,j
-    ekinh = 0.0d0
+    ekinh = 0.0_DP
     do j=1,3
        do i=1,3
-          ekinh = ekinh + 0.5d0*wmass*velh(i,j)*velh(i,j)
+          ekinh = ekinh + 0.5_DP*wmass*velh(i,j)*velh(i,j)
           temphh(i,j) = wmass*velh(i,j)*velh(i,j)/k_boltzmann_au
        end do
     end do
@@ -920,13 +920,13 @@
       IMPLICIT NONE
       SAVE
 
-      REAL(DP) :: xnhh0(3,3) = 0.0d0
-      REAL(DP) :: xnhhm(3,3) = 0.0d0
-      REAL(DP) :: xnhhp(3,3) = 0.0d0
-      REAL(DP) :: vnhh(3,3)  = 0.0d0
-      REAL(DP) :: temph      = 0.0d0  !  Thermostat temperature (from input)
-      REAL(DP) :: fnoseh     = 0.0d0  !  Thermostat frequency (from input)
-      REAL(DP) :: qnh        = 0.0d0  !  Thermostat mass (computed)
+      REAL(DP) :: xnhh0(3,3) = 0.0_DP
+      REAL(DP) :: xnhhm(3,3) = 0.0_DP
+      REAL(DP) :: xnhhp(3,3) = 0.0_DP
+      REAL(DP) :: vnhh(3,3)  = 0.0_DP
+      REAL(DP) :: temph      = 0.0_DP  !  Thermostat temperature (from input)
+      REAL(DP) :: fnoseh     = 0.0_DP  !  Thermostat frequency (from input)
+      REAL(DP) :: qnh        = 0.0_DP  !  Thermostat mass (computed)
 
 CONTAINS
 
@@ -934,19 +934,19 @@ CONTAINS
      USE constants, ONLY: pi, au_terahertz, k_boltzmann_au
      REAL(DP), INTENT(IN) :: temph_init, fnoseh_init
      ! set thermostat parameter for cell
-     qnh    = 0.0d0
+     qnh    = 0.0_DP
      temph  = temph_init
      fnoseh = fnoseh_init
-     if( fnoseh > 0.0d0 ) qnh = 2.d0 * ( 3 * 3 ) * temph * k_boltzmann_au / &
-          (fnoseh*(2.d0*pi)*au_terahertz)**2
+     if( fnoseh > 0.0_DP ) qnh = 2.0_DP * ( 3 * 3 ) * temph * k_boltzmann_au / &
+          (fnoseh*(2.0_DP*pi)*au_terahertz)**2
     return
   end subroutine cell_nose_init
 
   subroutine cell_nosezero( vnhh, xnhh0, xnhhm )
     real(DP), intent(out) :: vnhh(3,3), xnhh0(3,3), xnhhm(3,3)
-    xnhh0=0.0d0
-    xnhhm=0.0d0
-    vnhh =0.0d0
+    xnhh0=0.0_DP
+    xnhhm=0.0_DP
+    vnhh =0.0_DP
     return
   end subroutine cell_nosezero
 
@@ -954,7 +954,7 @@ CONTAINS
     implicit none
     REAL(DP), intent(inout) :: vnhh(3,3)
     REAL(DP), intent(in) :: xnhh0(3,3), xnhhm(3,3), delt
-    vnhh(:,:)=2.d0*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
+    vnhh(:,:)=2.0_DP*(xnhh0(:,:)-xnhhm(:,:))/delt-vnhh(:,:)
     return
   end subroutine cell_nosevel
 
@@ -966,9 +966,9 @@ CONTAINS
     integer :: i, j
     do j=1,3
       do i=1,3
-        xnhhp(i,j) = 2.d0*xnhh0(i,j)-xnhhm(i,j) + &
+        xnhhp(i,j) = 2.0_DP*xnhh0(i,j)-xnhhm(i,j) + &
              (delt**2/qnh)* k_boltzmann_au * (temphh(i,j)-temph)
-        vnhh(i,j) =(xnhhp(i,j)-xnhhm(i,j))/( 2.0d0 * delt )
+        vnhh(i,j) =(xnhhp(i,j)-xnhhm(i,j))/( 2.0_DP * delt )
       end do
     end do
     return
@@ -982,10 +982,10 @@ CONTAINS
     integer :: iforceh( 3, 3 )
     integer :: i, j
     REAL(DP) :: enij
-    cell_nose_nrg = 0.0d0
+    cell_nose_nrg = 0.0_DP
     do i=1,3
       do j=1,3
-        enij = 0.5d0*qnh*vnhh(i,j)*vnhh(i,j)+temph*k_boltzmann_au*xnhh0(i,j)
+        enij = 0.5_DP*qnh*vnhh(i,j)*vnhh(i,j)+temph*k_boltzmann_au*xnhh0(i,j)
         cell_nose_nrg = cell_nose_nrg + iforceh( i, j ) * enij
       enddo
     enddo
@@ -1018,13 +1018,13 @@ CONTAINS
 
       IF( tnoseh ) THEN
         !
-        IF( fnoseh <= 0.D0) &
+        IF( fnoseh <= 0.0_DP) &
           CALL errore(' cell_nose_info ', ' fnoseh less than zero ', 1)
-        IF( delt <= 0.D0) &
+        IF( delt <= 0.0_DP) &
           CALL errore(' cell_nose_info ', ' delt less than zero ', 1)
 
-        wnoseh = fnoseh * ( 2.d0 * pi ) * au_terahertz
-        nsvar  = ( 2.d0 * pi ) / ( wnoseh * delt )
+        wnoseh = fnoseh * ( 2.0_DP * pi ) * au_terahertz
+        nsvar  = ( 2.0_DP * pi ) / ( wnoseh * delt )
 
         WRITE( stdout,563) temph, nsvar, fnoseh, qnh
       END IF
