@@ -93,6 +93,7 @@ Libraries:
       __SUN       FFT routines from SUN sunperf scientific library
       DXML        FFT routines from hp-compaq cxml (formerly dxml) library
       __ESSL      use blas/lapack/fft routines from IBM ESSL library
+      __LINUX_ESSL  use blas/lapack/fft routines from IBM ESSL library (linux version)
       __MASS      use mathematical routines from IBM MASS library
       ASL, MICRO  SX-6 specific libraries
       ADD_BLAS_TWO_UNDERSCORES

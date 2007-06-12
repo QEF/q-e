@@ -93,7 +93,7 @@
 
       call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
 
-# elif defined __ESSL || __FFTW  || __FFTW3
+# elif defined __ESSL || __LINUX_ESSL || __FFTW  || __FFTW3
 
       IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
           grid_type == 'Box' ) THEN
@@ -175,7 +175,7 @@
 
       call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
 
-# elif defined __ESSL || __FFTW  || __FFTW3
+# elif defined __ESSL || __LINUX_ESSL || __FFTW  || __FFTW3
 
       IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' ) THEN
          call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
