@@ -25,6 +25,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE uspp,                 ONLY : nkb, vkb, okvan
   USE becmod,               ONLY : becp, becp_nc
   USE noncollin_module,     ONLY : noncolin, npol
+  USE ldaU,                 ONLY : lda_plus_u
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, stdout
   !
@@ -36,6 +37,8 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   COMPLEX(DP), ALLOCATABLE :: ppsi(:,:), ppsi_us(:,:), matp(:,:,:) 
   CHARACTER (LEN=256) :: filp, namefile
   !
+  IF (lda_plus_u) CALL errore('write_p_avg', &
+                       'write_p_avg not working with LDA+U',1)
   ALLOCATE(matp(nbnd,nbnd,3))
   IF (noncolin) THEN
      ALLOCATE(becp_nc(nkb,npol,nbnd))

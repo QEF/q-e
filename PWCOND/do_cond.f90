@@ -263,6 +263,8 @@ IF (lwrite_cond) then
 endif
 
 IF (lorb.and.okvan) call errore('do_cond','lorb not working with US-PP',1)
+IF (lda_plus_u) call errore('do_cond','PWCOND not working with LDA+U',1)
+
 #ifdef __PARA
    IF (lorb) call errore('do_cond','lorb not working in parallel',1)
 #endif

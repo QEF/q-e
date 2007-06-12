@@ -42,6 +42,7 @@ SUBROUTINE phq_readin()
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : noncolin
+  USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : ionode
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
@@ -237,6 +238,8 @@ SUBROUTINE phq_readin()
      'The non collinear phonon code with GGA is not yet available',1)
   IF (noncolin.and..not.trans.and.okvan) CALL errore('phq_readin', &
      'The non collinear US dieletric constant is not yet available',1)
+  IF (lda_plus_u) CALL errore('phq_readin',&
+     'The phonon code with LDA+U is not yet available',1)
   !
   !  set masses to values read from input, if available;
   !  leave values read from file otherwise
