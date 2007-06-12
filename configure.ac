@@ -87,6 +87,7 @@ then
 		i686-apple-darwin* )    arch=mac686 ;;
 		*-pc-cygwin )           arch=cygwin ;;
 		sx*-nec* )              arch=necsx  ;;
+		powerpc64-*-linux-gnu ) arch=ppc64  ;;
                 * )                     AC_MSG_WARN(incorrect host name ?)
         ;;
 
@@ -169,6 +170,13 @@ necsx )
         try_dflags_fft_asl='-DASL'
         try_dflags_fft_mathkeisan=' '
         try_dflags_fft_para='-D__USE_3D_FFT'
+	;;
+ppc64 )
+	try_mpif90="mpxlf90_r mpf90_r"
+	try_f90="xlf90_r $try_f90"
+	try_dflags="-D__XLF"
+	try_arflags="ruv"
+	try_arflags_dynamic="ruv"
 	;;
 * )
 	AC_MSG_WARN(unsupported architecture?)
@@ -300,6 +308,10 @@ macppc:xlf90 )
 	;;
 necsx:* )
 	try_cc="sxcc"
+	;;
+ppc64:*xlf* )
+	try_cc="xlc_r $try_cc"
+	try_f77="xlf_r $f90"
 	;;
 esac
 
@@ -476,6 +488,16 @@ necsx:* )
         have_cpp=1
         pre_fdflags=""
 	;;
+
+ppc64:*xlf* )
+	try_fflags="-O4 -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q"
+	try_f90flags="\$(FFLAGS) -qfree=f90"
+	try_fflags_noopt="-O0"
+	try_ldflags=""
+	pre_fdflags="-WF,"
+	xlf_flags=1
+	;;
+
 * )
 	# unknown, try these
 	try_fflags="-O"
@@ -484,6 +506,7 @@ necsx:* )
 	try_ldflags=""
 	have_cpp=0
 	;;
+
 esac
 if test "$use_shared" -eq 0 ; then
 try_ldflags="$try_ldflags $try_ldflags_static" ; fi
@@ -825,6 +848,22 @@ then
                         then break ; fi
                  done
                  ;;
+	ppc64:* )
+		# check for essl
+		unset ac_cv_search_dgemm # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS=""
+		AC_SEARCH_LIBS(dgemm, essl, have_blas=1
+			       blas_libs="$LIBS" )
+                # notice that some IBM machines may not need -lessl
+                # to load blas so the above test may fail
+                if test "`echo $blas_libs | grep essl`" != ""
+                then
+                    have_essl=1 
+                    try_dflags="$try_dflags -D__LINUX_ESSL"
+                fi
+		;;
 	esac
 
 	if test "$have_blas" -eq 0
@@ -1168,6 +1207,14 @@ then
                    try_dflags="$try_dflags $try_dflags_fft_para"
                 fi
                 ;;
+	ppc64 )
+		# check for essl
+		unset ac_cv_search_dcft # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$fft_libs"
+		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
+	    ;;     
 	esac
 
 	if test "$have_fft" -eq 0
@@ -1311,6 +1358,32 @@ then
 			if test "$ac_cv_search_vexp" = "-lmassvp4" \
 				-o "$ac_cv_search_vexp" = "-lmassv"
 			then mass_libs="$try_loption $ac_cv_search_vexp -lmass"
+			fi
+			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
+		done
+		;;
+
+	ppc64 )
+		# check for mass (in several directories)
+		try_libdirs="/usr/local/lib /opt/ibmcmp/xlmass/4.3/lib64"
+		try_libdirs="$libdirs $try_libdirs $ld_library_path"
+
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_vexp # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS=""
+			AC_SEARCH_LIBS(vexp, massvp4_64, , , -lmass_64)
+			if test "$ac_cv_search_vexp" = "-lmassvp4_64"
+			then mass_libs="$try_loption $ac_cv_search_vexp -lmass_64"
 			fi
 			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
 		done
