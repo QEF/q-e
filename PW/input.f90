@@ -43,7 +43,8 @@ SUBROUTINE iosys()
   !
   USE ions_base,     ONLY : if_pos, ityp, tau, &
                             ntyp_ => nsp, &
-                            nat_  => nat
+                            nat_  => nat, &
+                            amass
   !
   USE basis,         ONLY : atomic_positions, startingconfig, &
                             startingwfc_ => startingwfc, &
@@ -57,7 +58,7 @@ SUBROUTINE iosys()
                             press_       => press, &
                             calc, lmovecell
   !
-  USE dynamics_module, ONLY : control_temp, temperature, amass, thermostat, &
+  USE dynamics_module, ONLY : control_temp, temperature, thermostat, &
                               dt_         => dt, &
                               delta_t_    => delta_t, &
                               nraise_     => nraise, &
