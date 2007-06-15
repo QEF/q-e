@@ -28,13 +28,13 @@ SUBROUTINE vcsmd()
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout
-  USE constants,       ONLY : e2, uakbar
+  USE constants,       ONLY : e2, uakbar, amconv
   USE cell_base,       ONLY : omega, alat, at, bg, iforceh
   USE ions_base,       ONLY : tau, nat, ntyp => nsp, ityp, atm
   USE cellmd,          ONLY : nzero, ntimes, calc, press, at_old, omega_old, &
                               cmass, ntcheck, lmovecell
   USE dynamics_module, ONLY : dt, temperature
-  USE ions_base,       ONLY : fixatom, amass
+  USE ions_base,       ONLY : fixatom, amass_ => amass 
   USE relax,           ONLY : epse, epsf, epsp
   USE force_mod,       ONLY : force, sigma
   USE control_flags,   ONLY : nstep, istep, tolp, conv_ions 
@@ -70,6 +70,7 @@ SUBROUTINE vcsmd()
                    sig0(3,3),    & ! sigma at t=0
                    v0              ! volume at t=0
   REAL(DP), ALLOCATABLE ::      &
+                   amass(:),     & ! scaled atomic masses
                    rat(:,:),     & ! atomic positions (lattice coord)
                    rati(:,:),    & ! rat at previous step
                    ratd(:,:),    & ! rat derivatives at current step
@@ -107,6 +108,8 @@ SUBROUTINE vcsmd()
   !
   ! ... Allocate work arrays
   !
+  ALLOCATE( amass(ntyp) )
+  amass(1:ntyp) = amass_(1:ntyp) * amconv
   ALLOCATE( rat(3,nat) )
   ALLOCATE( rati(3,nat) )
   ALLOCATE( ratd(3,nat) )
@@ -452,7 +455,7 @@ SUBROUTINE vcsmd()
   !
   ! ... Deallocate
   !
-  DEALLOCATE( rat, rati, ratd, rat2d, rat2di, tauold )
+  DEALLOCATE( amass, rat, rati, ratd, rat2d, rat2di, tauold )
   !
   RETURN
   !

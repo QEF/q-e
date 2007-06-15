@@ -1392,7 +1392,7 @@ SUBROUTINE iosys()
   !
   ! ... Renata's dynamics uses masses in atomic units
   !
-  IF ( calc /= ' ' ) amass = amass * amconv
+  IF ( calc /= ' ' ) amass = amass ! * amconv
   !
   ! ... set default value of wmass
   !
@@ -1405,6 +1405,8 @@ SUBROUTINE iosys()
 #else
      wmass = SUM( amass(ityp(:)) )
 #endif
+     !
+     wmass = wmass * amconv
      !
      IF ( calc == 'nd' .OR. calc == 'nm' ) THEN
         !
