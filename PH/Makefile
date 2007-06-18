@@ -221,12 +221,27 @@ PWOBJS = ../PW/libpw.a
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps libph.a ph.x
+all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x 
 
 ph.x : phonon.o libph.a $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o ph.x phonon.o \
 		$(MODULES) libph.a $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
+
+dynmat.x : dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+                dynmat.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		matdyn.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+
+q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
+	$(MPIF90) $(LDFLAGS) -o $@ \
+		q2r.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :

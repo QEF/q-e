@@ -30,8 +30,8 @@ MODULES = \
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps band_plot.x dist.x dynmat.x ev.x fqha.x kpoints.x matdyn.x \
-      path_int.x pwi2xsf.x q2r.x bands_FS.x kvecs_FS.x metadyn_pp.x
+all : tldeps band_plot.x dist.x ev.x fqha.x kpoints.x \
+      path_int.x pwi2xsf.x bands_FS.x kvecs_FS.x metadyn_pp.x
 
 band_plot.x : band_plot.o $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ band_plot.o $(LIBOBJS) $(LIBS)
@@ -40,11 +40,6 @@ band_plot.x : band_plot.o $(LIBOBJS)
 dist.x : dist.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ \
 		dist.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
-dynmat.x : dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
-		dynmat.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 ev.x : ev.o $(PWOBJS) $(MODULES) $(LIBOBJS)
@@ -66,11 +61,6 @@ lambda.x : lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 		lambda.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
-		matdyn.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
-
 metadyn_pp.x : metadyn_pp.o $(LIBOBJS)
 	$(MPIF90) $(LDFLAGS) -o $@ metadyn_pp.o $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
@@ -85,10 +75,6 @@ pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 		pwi2xsf.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
-q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
-		q2r.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 # Isaev
 bands_FS.x : bands_FS.o
 	$(MPIF90) $(LDFLAGS) -o $@ bands_FS.o $(LIBS)
