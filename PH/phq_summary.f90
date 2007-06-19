@@ -92,6 +92,8 @@ subroutine phq_summary
      ELSE
         WRITE( stdout, '(5x, "Noncollinear calculation without spin-orbit",/)')
      END IF
+  ELSE
+     WRITE(stdout,'(/)') 
   END IF
   !
   !    and here more detailed information. Description of the unit cell

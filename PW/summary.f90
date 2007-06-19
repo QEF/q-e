@@ -426,10 +426,14 @@ SUBROUTINE print_ps_info
         WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
      END DO
      IF ( tvanp(nt) ) THEN
-        WRITE( stdout, '(5x,"Q(r) pseudized with ", &
+        IF (nqf(nt)==0) THEN
+           WRITE( stdout, '(5x,"Q(r) pseudized with 0 coefficients: ",/)') 
+        ELSE
+           WRITE( stdout, '(5x,"Q(r) pseudized with ", &
            &          i2," coefficients,  rinner = ",3f8.3,/ &
            &          52x,3f8.3,/ &
            &          52x,3f8.3)') nqf(nt), (rinner(i,nt), i=1,nqlc(nt) )
+        END IF
         !
      ELSE
         !

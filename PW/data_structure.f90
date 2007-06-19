@@ -17,7 +17,7 @@ subroutine data_structure( lgamma )
   USE io_global,  ONLY : stdout
   USE sticks,     ONLY : dfftp, dffts
   USE kinds,      ONLY : DP
-  USE cell_base,  ONLY : bg,  tpiba
+  USE cell_base,  ONLY : bg, tpiba, tpiba2
   USE klist,      ONLY : xk, nks
   USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                          ngm, ngm_l, ngm_g, gcutm, ecutwfc
@@ -121,6 +121,7 @@ subroutine data_structure( lgamma )
 
   call calculate_gkcut()  
 
+#define DEBUG
 #ifdef DEBUG
   WRITE( stdout, '(5x,"ecutrho & ecutwfc",2f12.2)') tpiba2 * gcutm, &
        tpiba2 * gkcut
