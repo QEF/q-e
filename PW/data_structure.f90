@@ -121,7 +121,6 @@ subroutine data_structure( lgamma )
 
   call calculate_gkcut()  
 
-#define DEBUG
 #ifdef DEBUG
   WRITE( stdout, '(5x,"ecutrho & ecutwfc",2f12.2)') tpiba2 * gcutm, &
        tpiba2 * gkcut
