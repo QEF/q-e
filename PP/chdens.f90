@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-SUBROUTINE chdens (filplot)
+SUBROUTINE chdens (filplot,plot_num)
   !-----------------------------------------------------------------------
   !      Writes the charge density (or potential, or polarisation)
   !      into a file format suitable for plotting
@@ -16,8 +16,9 @@ SUBROUTINE chdens (filplot)
   !      DESCRIPTION of the INPUT: see file INPUT_PP in Docs/
   !
 #include "f_defs.h"
-  USE io_global,  ONLY : stdout
+  USE io_global,  ONLY : stdout, ionode, ionode_id
   USE mp_global,  ONLY : nproc_pool
+  USE mp,         ONLY : mp_bcast
   USE parameters, ONLY : ntypx
   USE constants,  ONLY :  pi, fpi
   USE cell_base
@@ -32,14 +33,22 @@ SUBROUTINE chdens (filplot)
   implicit none
   character (len=256), INTENT(in) :: filplot
   !
+  ! If plot_num=-1 the dimensions and structural data are read from the charge
+  ! or potential file, otherwise it uses the data already read from
+  ! the files in outdir.
+  !
+  INTEGER, INTENT(IN) :: plot_num
+  !
   integer, parameter :: nfilemax = 7
   ! maximum number of files with charge
 
   integer :: ounit, iflag, ios, ipol, nfile, ifile, nx, ny, nz, &
-       na, ir, i, j, ig, output_format, plot_num
+       na, ir, i, j, ig, output_format, idum
 
   real(DP) :: e1(3), e2(3), e3(3), x0 (3), radius, m1, m2, m3, &
        weight (nfilemax), epsilon
+
+  real(DP), allocatable :: aux(:)
 
   character (len=256) :: fileout, filename (nfilemax)
   character (len=13), dimension(0:6) :: formatname = &
@@ -71,7 +80,7 @@ SUBROUTINE chdens (filplot)
 
   namelist /plot/  &
        nfile, filepp, weight, iflag, e1, e2, e3, nx, ny, nz, x0, &
-       output_format, fileout
+       radius, output_format, fileout
 
   !
   !   set the DEFAULT values
@@ -79,7 +88,7 @@ SUBROUTINE chdens (filplot)
   nfile         = 1
   filepp(1)     = filplot
   weight(1)     = 1.0d0
-  iflag         = -0
+  iflag         = 0
   radius        = 1.0d0
   output_format = -1
   fileout       = ' '
@@ -95,8 +104,11 @@ SUBROUTINE chdens (filplot)
   !
   ! reading the namelist 'plot'
   !
-  read (5, plot, iostat = ios)
+  if (ionode) read (5, plot, iostat = ios)
   !
+  CALL mp_bcast( ios, ionode_id )
+  CALL mp_bcast( nfile, ionode_id )
+
   if (ios /= 0) then
      if (nfile > nfilemax) then
         ! if this happens the reading of the namelist will fail
@@ -107,6 +119,21 @@ SUBROUTINE chdens (filplot)
      endif
      return
   end if
+
+  CALL mp_bcast( filepp, ionode_id )
+  CALL mp_bcast( weight, ionode_id )
+  CALL mp_bcast( iflag, ionode_id )
+  CALL mp_bcast( radius, ionode_id )
+  CALL mp_bcast( output_format, ionode_id )
+  CALL mp_bcast( fileout, ionode_id )
+  CALL mp_bcast( e1, ionode_id )
+  CALL mp_bcast( e2, ionode_id )
+  CALL mp_bcast( e3, ionode_id )
+  CALL mp_bcast( x0, ionode_id )
+  CALL mp_bcast( nx, ionode_id )
+  CALL mp_bcast( ny, ionode_id )
+  CALL mp_bcast( nz, ionode_id )
+
   if (output_format == -1 .or. iflag == -1) then
      call infomsg ('chdens', 'output format not set, exiting', -1 )
      return
@@ -165,57 +192,75 @@ SUBROUTINE chdens (filplot)
   !
   ! Read the header and allocate objects
   !
+  IF (plot_num==-1) then
+     IF (ionode) &
+        CALL read_io_header(filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
+                nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
+                idum )
+     CALL mp_bcast( title, ionode_id )
+     CALL mp_bcast( nrx1, ionode_id )
+     CALL mp_bcast( nrx2, ionode_id )
+     CALL mp_bcast( nrx3, ionode_id )
+     CALL mp_bcast( nr1, ionode_id )
+     CALL mp_bcast( nr2, ionode_id )
+     CALL mp_bcast( nr3, ionode_id )
+     CALL mp_bcast( nat, ionode_id )
+     CALL mp_bcast( ntyp, ionode_id )
+     CALL mp_bcast( ibrav, ionode_id )
+     CALL mp_bcast( celldm, ionode_id )
+     CALL mp_bcast( at, ionode_id )
+     CALL mp_bcast( gcutm, ionode_id )
+     CALL mp_bcast( dual, ionode_id )
+     CALL mp_bcast( ecutwfc, ionode_id )
+     !
+     ! ... see comment above
+     !
+     allocate(tau (3, nat))
+     allocate(ityp(nat))
+     !
+     call latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
+     alat = celldm (1) ! define alat
+     at = at / alat    ! bring at in units of alat
 
-  call read_io_header(filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num )
-  !
-  ! ... see comment above
-  !
-  allocate(tau (3, nat))
-  allocate(ityp(nat))
-  allocate(rhor(nrx1*nrx2*nrx3))
-  !
-  call latgen (ibrav, celldm, at(1,1), at(1,2), at(1,3), omega )
-  alat = celldm (1) ! define alat
-  at = at / alat    ! bring at in units of alat
+     tpiba = 2.d0 * pi / alat
+     tpiba2 = tpiba**2
+     doublegrid = dual.gt.4.0d0
+     if (doublegrid) then
+        gcutms = 4.d0 * ecutwfc / tpiba2
+     else
+        gcutms = gcutm
+     endif
 
-  tpiba = 2.d0 * pi / alat
-  tpiba2 = tpiba**2
-  doublegrid = dual.gt.4.0d0
-  if (doublegrid) then
-     gcutms = 4.d0 * ecutwfc / tpiba2
-  else
-     gcutms = gcutm
-  endif
+     nspin = 1
 
-  nspin = 1
+     call recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
+     call volume (alat, at(1,1), at(1,2), at(1,3), omega)
 
-  call recips (at(1,1), at(1,2), at(1,3), bg(1,1), bg(1,2), bg(1,3) )
-  call volume (alat, at(1,1), at(1,2), at(1,3), omega)
+     call set_fft_dim
+  END IF
 
-  call set_fft_dim
+  ALLOCATE  (rhor(nrx1*nrx2*nrx3))
+  ALLOCATE  (rhos(nrx1*nrx2*nrx3))
+  ALLOCATE  (taus( 3 , nat))
+  ALLOCATE  (ityps( nat))
   !
-  ! Read first file
+  rhor (:) = 0.0_DP
   !
-  call plot_io (filepp (1), title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
-                nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-                plot_num, atm, ityp, zv, tau, rhor, -1)
-  !
-  rhor (:) = weight (1) * rhor (:)
-  !
-  ! Read following files (if any), verify consistency
+  ! Read files, verify consistency
   ! Note that only rho is read; all other quantities are discarded
   !
-  if (nfile > 1) then
-     allocate  (rhos(nrx1*nrx2*nrx3))
-     allocate  (taus( 3 , nat))    
-     allocate  (ityps( nat))    
-  end if
-  do ifile = 2, nfile
+  do ifile = 1, nfile
      !
      call plot_io (filepp (ifile), title, nrx1sa, nrx2sa, nrx3sa, &
           nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
-          duals, ecuts, plot_num, atms, ityps, zvs, taus, rhos, - 1)
+          duals, ecuts, idum, atms, ityps, zvs, taus, rhos, - 1)
+
+     IF (ifile==1.and.plot_num==-1) THEN
+        atm=atms
+        ityp=ityps
+        zv=zvs
+        tau=taus
+     ENDIF
      !
      if (nats.gt.nat) call errore ('chdens', 'wrong file order? ', 1)
      if (nrx1.ne.nrx1sa.or.nrx2.ne.nrx2sa) call &
@@ -223,7 +268,8 @@ SUBROUTINE chdens (filplot)
      if (nr1.ne.nr1sa.or.nr2.ne.nr2sa.or.nr3.ne.nr3sa) call &
           errore ('chdens', 'incompatible nr1 or nr2 or nr3', 1)
      if (ibravs.ne.ibrav) call errore ('chdens', 'incompatible ibrav', 1)
-     if (gcutmsa.ne.gcutm.or.duals.ne.dual.or.ecuts.ne.ecutwfc ) &
+     if (abs(gcutmsa-gcutm)>1.d-8.or.abs(duals-dual)>1.d-8.or.&
+         abs(ecuts-ecutwfc)>1.d-8) &
           call errore ('chdens', 'incompatible gcutm or dual or ecut', 1)
      do i = 1, 6
         if (abs( celldm (i)-celldms (i) ) .gt. 1.0d-7 ) call errore &
@@ -232,21 +278,21 @@ SUBROUTINE chdens (filplot)
      !
      rhor (:) = rhor (:) + weight (ifile) * rhos (:)
   enddo
-  if (nfile > 1) then
-     deallocate (ityps)
-     deallocate (taus)
-     deallocate (rhos)
-  end if
+  DEALLOCATE (ityps)
+  DEALLOCATE (taus)
+  DEALLOCATE (rhos)
   !
   ! open output file, i.e., "fileout"
   !
-  if (fileout /= ' ') then
-     ounit = 1
-     open (unit=ounit, file=fileout, form='formatted', status='unknown')
-     WRITE( stdout, '(/5x,"Writing data to be plotted to file ",a)') &
-          TRIM(fileout)
-  else
-     ounit = 6
+  if (ionode) then
+     if (fileout /= ' ') then
+        ounit = 1
+        open (unit=ounit, file=fileout, form='formatted', status='unknown')
+        WRITE( stdout, '(/5x,"Writing data to be plotted to file ",a)') &
+             TRIM(fileout)
+     else
+        ounit = 6
+     endif
   endif
 
   !
@@ -291,21 +337,29 @@ SUBROUTINE chdens (filplot)
   !
   !    Initialise FFT for rho(r) => rho(G) conversion if needed
   !
-  if (.NOT. ( iflag == 3 .AND. ( output_format == 5 .OR. &
+  IF (.NOT. ( iflag == 3 .AND. ( output_format == 5 .OR. &
                                  output_format == 6 .OR. &
                                  fast3d ) ) ) THEN
-     !
-     nproc_pool=1
-     !
-     call allocate_fft()
-     !
-     !    and rebuild G-vectors in reciprocal space
-     !
-     call ggen()
-     !
-     !    here we compute the fourier components of the quantity to plot
-     !
-     psic(:) = CMPLX (rhor(:), 0.d0)
+     if (plot_num==-1) then
+        !
+!        nproc_pool=1
+        !
+        call allocate_fft()
+        !
+        !    and rebuild G-vectors in reciprocal space
+        !
+        call ggen()
+        !
+        !    here we compute the fourier components of the quantity to plot
+        !
+     endif
+     allocate(aux(nrxx))
+#ifdef __PARA
+     call scatter(rhor, aux)
+#else
+     aux=rhor
+#endif
+     psic(:) = CMPLX (aux(:), 0.d0)
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
      !
      !    we store the fourier components in the array rhog
@@ -325,7 +379,7 @@ SUBROUTINE chdens (filplot)
 
      call plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
           at, nat, tau, atm, ityp, output_format, ounit)
-     if (output_format == 2) then
+     if (output_format == 2.and.ionode) then
         write (ounit, '(i4)') nat
         write (ounit, '(3f8.4,i3)') ( (tau(ipol,na), ipol=1,3), 1, na=1,nat)
         write (ounit, '(f10.6)') celldm (1)
@@ -334,7 +388,7 @@ SUBROUTINE chdens (filplot)
 
   elseif (iflag == 3) then
 
-     if (output_format == 4) then
+     if (output_format == 4.and.ionode) then
 
         ! gopenmol wants the coordinates in a separate file
 
@@ -351,7 +405,7 @@ SUBROUTINE chdens (filplot)
      endif
 
 
-     if (output_format == 5) then
+     if (output_format == 5.and.ionode) then
         !
         ! XCRYSDEN FORMAT
         !
@@ -359,7 +413,7 @@ SUBROUTINE chdens (filplot)
         call xsf_fast_datagrid_3d &
              (rhor, nr1, nr2, nr3, nrx1, nrx2, nrx3, at, alat, ounit)
 
-     elseif (output_format == 6 ) then
+     elseif (output_format == 6.and.ionode ) then
         !
         ! GAUSSIAN CUBE FORMAT
         !
@@ -370,7 +424,7 @@ SUBROUTINE chdens (filplot)
         !
         ! GOPENMOL FORMAT
         !
-        if (fast3d) then
+        if (fast3d.and.ionode) then
 
            call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
                 nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
@@ -395,10 +449,11 @@ SUBROUTINE chdens (filplot)
 
   endif
   !
-  print '(5x,"Plot Type: ",a,"   Output format: ",a)', &
+  write(stdout, '(5x,"Plot Type: ",a,"   Output format: ",a)') &
        plotname(iflag), formatname(output_format)
   !
   if (allocated(rhog)) deallocate(rhog)
+  deallocate(aux)
   deallocate(rhor)
   deallocate(tau)
   deallocate(ityp)
@@ -411,6 +466,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   !
   USE kinds, only : DP
   use constants, only:  pi
+  USE io_global, only : stdout, ionode
   implicit none
   integer :: nx, ngm, iflag, ounit
   ! number of points along the line
@@ -428,7 +484,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   complex(DP) :: rhog (ngm)
   ! rho or polarization in G space
   integer :: i, ig
-  real(DP) :: rhomin, rhomax, rhoint, rhoim, xi, yi, zi, deltax, arg, gr
+  real(DP) :: rhomin, rhomax, rhoint, rhoim, xi, yi, zi, deltax, arg, gr, gg
   ! minimum value of the charge
   ! maximum value of the charge
   ! integrated charge
@@ -464,9 +520,12 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
      !     rho0(r) = 4pi \sum_G rho(G) j_0(|G||r|)
      !
      !     G =0 term
-     do i = 1, nx
-        carica (i) = 4.d0 * pi * rhog (1)
-     enddo
+     gg=SQRT(g(1,1)**2+g(2,1)**2+g(3,1)**2)
+     if (gg<1.d-10) then
+        do i = 1, nx
+           carica (i) = 4.d0 * pi * rhog (1)
+        enddo
+     endif
      !     G!=0 terms
      do ig = 2, ngm
         arg = 2.d0 * pi * ( x0(1)*g(1,ig) + x0(2)*g(2,ig) + x0(3)*g(3,ig) )
@@ -485,6 +544,7 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   else
      call errore ('plot_1d', ' bad type of plot', 1)
   endif
+  call reduce(2*nx,carica)
   !
   !    Here we check the value of the resulting charge
   !
@@ -499,25 +559,27 @@ subroutine plot_1d (nx, m1, x0, e, ngm, g, rhog, alat, iflag, ounit)
   enddo
 
   rhoim = rhoim / nx
-  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, rhomax, rhoim
+  write(stdout, '(5x,"Min, Max, imaginary charge: ",3f12.6)') &
+                                          rhomin, rhomax, rhoim
   !
   !       we print the charge on output
   !
-  if (iflag == 1) then
-     do i = 1, nx
-        write (ounit, '(2f20.10)') deltax*DBLE(i-1), DBLE(carica(i))
-     enddo
-  else
-     rhoint = 0.d0
-     do i = 1, nx
-        !
-        !       simple trapezoidal rule: rhoint=int carica(i) r^2(i) dr
-        !
-        rhoint = rhoint + DBLE(carica(i)) * (i-1)**2 * (deltax*alat)**3 
-        write (ounit, '(3f20.10)') deltax*DBLE(i-1), DBLE(carica(i)), rhoint
-     enddo
-
-  endif
+  if (ionode) then
+     if (iflag == 1) then
+        do i = 1, nx
+           write (ounit, '(2f20.10)') deltax*DBLE(i-1), DBLE(carica(i))
+        enddo
+     else
+        rhoint = 0.d0
+        do i = 1, nx
+           !
+           !       simple trapezoidal rule: rhoint=int carica(i) r^2(i) dr
+           !
+           rhoint = rhoint + DBLE(carica(i)) * (i-1)**2 * (deltax*alat)**3 
+           write (ounit, '(3f20.10)') deltax*DBLE(i-1), DBLE(carica(i)), rhoint
+        enddo
+     end if
+  end if
 
   return
 
@@ -530,6 +592,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   !
   USE kinds, only : DP
   use constants, only : pi
+  use io_global, only : stdout, ionode
   implicit none
   integer :: nx, ny, ngm, nat, ityp (nat), output_format, ounit
   ! number of points along x
@@ -588,6 +651,7 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
         enddo
      enddo
   enddo
+  call reduce(2*nx*ny,carica) 
   !
   !    Here we check the value of the resulting charge
   !
@@ -605,46 +669,49 @@ subroutine plot_2d (nx, ny, m1, m2, x0, e1, e2, ngm, g, rhog, alat, &
   enddo
 
   rhoim = rhoim / nx / ny
-  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, rhomax, rhoim
+  write(stdout, '(5x,"Min, Max, imaginary charge: ",3f12.6)') &
+                 rhomin, rhomax, rhoim
 
   !
   !     and we print the charge on output
   !
-  if (output_format == 0) then
-     !
-     !     gnuplot format
-     !
-     !         write(ounit,'(2i6)') nx,ny
-     do i = 1, nx
-        write (ounit, '(e25.14)') (  DBLE(carica(i,j)), j = 1, ny )
-        write (ounit, * )
-     enddo
-  elseif (output_format == 1) then
-     !
-     !     contour.x format
-     !
-     write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( (  DBLE(carica(i,j)), j = 1, ny ), i = 1, nx )
-  elseif (output_format == 2) then
-     !
-     !     plotrho format
-     !
-     write (ounit, '(2i4)') nx - 1, ny - 1
-     write (ounit, '(8f8.4)') (deltax * (i - 1) , i = 1, nx)
-     write (ounit, '(8f8.4)') (deltay * (j - 1) , j = 1, ny)
-     write (ounit, '(6e12.4)') ( (  DBLE(carica(i,j)), i = 1, nx ), j = 1, ny )
-     write (ounit, '(3f8.4)') x0
-     write (ounit, '(3f8.4)') (m1 * e1 (i) , i = 1, 3)
-     write (ounit, '(3f8.4)') (m2 * e2 (i) , i = 1, 3)
+  if (ionode) then
+     if (output_format == 0) then
+        !
+        !     gnuplot format
+        !
+        !         write(ounit,'(2i6)') nx,ny
+        do i = 1, nx
+           write (ounit, '(e25.14)') (  DBLE(carica(i,j)), j = 1, ny )
+           write (ounit, * )
+        enddo
+     elseif (output_format == 1) then
+        !
+        !     contour.x format
+        !
+        write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
+        write (ounit, '(4e25.14)') ( (  DBLE(carica(i,j)), j = 1, ny ), i = 1, nx )
+     elseif (output_format == 2) then
+        !
+        !     plotrho format
+        !
+        write (ounit, '(2i4)') nx - 1, ny - 1
+        write (ounit, '(8f8.4)') (deltax * (i - 1) , i = 1, nx)
+        write (ounit, '(8f8.4)') (deltay * (j - 1) , j = 1, ny)
+        write (ounit, '(6e12.4)') ( (  DBLE(carica(i,j)), i = 1, nx ), j = 1, ny )
+        write (ounit, '(3f8.4)') x0
+        write (ounit, '(3f8.4)') (m1 * e1 (i) , i = 1, 3)
+        write (ounit, '(3f8.4)') (m2 * e2 (i) , i = 1, 3)
 
-  elseif (output_format == 3) then
-     !
-     ! XCRYSDEN's XSF format
-     !
-     call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
-     call xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
-  else
-     call errore('plot_2d', 'wrong output_format', 1)
+     elseif (output_format == 3) then
+        !
+        ! XCRYSDEN's XSF format
+        !
+        call xsf_struct (alat, at, nat, tau, atm, ityp, ounit)
+        call xsf_datagrid_2d (carica, nx, ny, m1, m2, x0, e1, e2, alat, ounit)
+     else
+        call errore('plot_2d', 'wrong output_format', 1)
+     endif
   endif
 
   deallocate (carica)
@@ -658,6 +725,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   !-----------------------------------------------------------------------
   USE kinds, only : DP
   use constants, only:  pi
+  use io_global, only : stdout, ionode
   !
   implicit none
   integer :: nx, ny, ngm, ounit, output_format
@@ -716,6 +784,7 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
         enddo
      enddo
   enddo
+  call reduce(2*nx*ny,carica)
   !
   !    Here we check the value of the resulting charge
   !
@@ -733,27 +802,30 @@ subroutine plot_2ds (nx, ny, x0, ngm, g, rhog, output_format, ounit)
   enddo
 
   rhoim = rhoim / nx / ny
-  print '(5x,"Min, Max, imaginary charge: ",3f12.6)', rhomin, rhomax, rhoim
+  write(stdout, '(5x,"Min, Max, imaginary charge: ",3f12.6)') &
+                  rhomin, rhomax, rhoim
   !
   !     and we print the charge on output
   !
-  if (output_format.eq.0) then
-     !
-     !     gnuplot format
-     !
-     write (ounit, '(2i8)') nx, ny
-     do i = 1, nx
-        write (ounit, '(e25.14)') (  DBLE(carica(i,j)), j = 1, ny )
-     enddo
-  elseif (output_format.eq.1) then
-     !
-     !     contour.x format
-     !
-     write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
-     write (ounit, '(4e25.14)') ( (  DBLE(carica(i,j)), j = 1, ny ), i = 1, nx )
-  else
-     call errore ('plot_2ds', 'not implemented plot', 1)
+  if (ionode) then
+     if (output_format.eq.0) then
+        !
+        !     gnuplot format
+        !
+        write (ounit, '(2i8)') nx, ny
+        do i = 1, nx
+           write (ounit, '(e25.14)') (  DBLE(carica(i,j)), j = 1, ny )
+        enddo
+     elseif (output_format.eq.1) then
+        !
+        !     contour.x format
+        !
+        write (ounit, '(3i5,2e25.14)') nx, ny, 1, deltax, deltay
+        write (ounit, '(4e25.14)') ( (  DBLE(carica(i,j)), j = 1, ny ), i = 1, nx )
+     else
+        call errore ('plot_2ds', 'not implemented plot', 1)
 
+     endif
   endif
   deallocate (carica)
   deallocate (r)
@@ -769,6 +841,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   !
   USE kinds, only : DP
   use constants, only:  pi 
+  use io_global, only : stdout, ionode
   implicit none
   integer :: nat, ityp (nat), ngm, nx, ny, nz, output_format, ounit
   ! number of atoms
@@ -839,6 +912,7 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
      enddo
 
   enddo
+  call reduce(nx*ny*nz,carica)
   !
   !    Here we check the value of the resulting charge
   !
@@ -850,26 +924,28 @@ subroutine plot_3d (alat, at, nat, tau, atm, ityp, ngm, g, rhog, &
   rhotot = SUM (carica(:,:,:)) * omega * deltax * deltay * deltaz
   rhoabs = SUM (ABS(carica(:,:,:))) * omega * deltax * deltay * deltaz
 
-  print '(/5x,"Min, Max, Total, Abs charge: ",2f10.6,2x, 2f10.4)',&
+  write(stdout, '(/5x,"Min, Max, Total, Abs charge: ",2f10.6,2x, 2f10.4)')&
      rhomin, rhomax, rhotot, rhoabs
 
-  if (output_format == 4) then
-     !
-     ! "gOpenMol" file
-     !
+  if (ionode) then
+     if (output_format == 4) then
+        !
+        ! "gOpenMol" file
+        !
 
-     call write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
-          m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
-  else
-     ! user has calculated for very long, be nice and write some output even
-     ! if the output_format is wrong; use XSF format as default
+        call write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
+             m1, m2, m3, nx, ny, nz, rhomax, carica, ounit)
+     else
+        ! user has calculated for very long, be nice and write some output even
+        ! if the output_format is wrong; use XSF format as default
 
-     !
-     ! XCRYSDEN's XSF format
-     !
-     call xsf_struct      (alat, at, nat, tau, atm, ityp, ounit)
-     call xsf_datagrid_3d &
-          (carica, nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, alat, ounit)
+        !
+        ! XCRYSDEN's XSF format
+        !
+        call xsf_struct      (alat, at, nat, tau, atm, ityp, ounit)
+        call xsf_datagrid_3d &
+             (carica, nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, alat, ounit)
+     endif
   endif
 
   deallocate (carica)
@@ -973,7 +1049,7 @@ subroutine plot_fast (alat, at, nat, tau, atm, ityp,&
   rhotot = SUM (carica(:,:,:)) * omega * deltax * deltay * deltaz
   rhoabs = SUM (ABS(carica(:,:,:))) * omega * deltax * deltay * deltaz
 
-  print '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)', rhomin, &
+  write(stdout, '(/5x,"Min, Max, Total, Abs charge: ",4f10.6)') rhomin, &
        rhomax, rhotot, rhoabs
 
   if (output_format == 4) then
@@ -1042,8 +1118,8 @@ subroutine write_openmol_file (alat, at, nat, tau, atm, ityp, x0, &
                    z.gt.0d0 .and. z.lt.sidez) then
                  natoms = natoms + 1
                  if (natoms.gt.MAXATOMS) then
-                    print '(" MAXATOMS (",i4,") Exceeded, " &
-                         &       ,"Truncating " )', MAXATOMS
+                    write(stdout, '(" MAXATOMS (",i4,") Exceeded, " &
+                         &       ,"Truncating " )') MAXATOMS
                     natoms = MAXATOMS
                     goto 10
                  endif

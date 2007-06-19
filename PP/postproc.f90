@@ -26,6 +26,7 @@ PROGRAM postproc
   !
   IMPLICIT NONE
   CHARACTER(len=256) :: filplot
+  INTEGER :: plot_num
   !
 #if defined __INTEL
   ! ... Intel compilers v .ge.8 allocate a lot of stack space
@@ -38,20 +39,16 @@ PROGRAM postproc
   CALL start_postproc (nd_nmbr)
   IF ( ionode )  CALL input_from_file ( )
   !
-  call extract (filplot) 
+  call extract (filplot, plot_num) 
   !
-  call clean_pw( .TRUE. )
-  !
-  ! chdens should be called on just one processor
-  !
-  IF ( ionode ) call chdens (filplot)
+  call chdens (filplot, plot_num)
   !
   call stop_pp()
   !
 END PROGRAM postproc
 !
 !-----------------------------------------------------------------------
-SUBROUTINE extract (filplot)
+SUBROUTINE extract (filplot,plot_num)
   !-----------------------------------------------------------------------
   !
   !    This subroutine reads the data for the output file produced by pw.x
@@ -72,8 +69,9 @@ SUBROUTINE extract (filplot)
 
   IMPLICIT NONE
   CHARACTER(len=256), INTENT(out) :: filplot
+  INTEGER, INTENT(out) :: plot_num
 
-  INTEGER :: plot_num, kpoint, kband, spin_component, ios, flen
+  INTEGER :: kpoint, kband, spin_component, ios, flen
   LOGICAL :: stm_wfc_matching, lsign
 
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
