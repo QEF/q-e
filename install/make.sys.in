@@ -81,11 +81,12 @@ FFLAGS         = @fflags@
 
 FFLAGS_NOOPT   = @fflags_noopt@
 
-# Linker and linker-specific flags (if any)
-# Typically LD coincides with F90 or MPIF90
+# Linker, linker-specific flags (if any)
+# Typically LD coincides with F90 or MPIF90, LD_LIBS is empty
 
 LD             = @ld@
 LDFLAGS        = @ldflags@
+LD_LIBS        = @ld_libs@
 
 # External Libraries (if any) : blas, lapack, fft, MPI
 
@@ -120,9 +121,9 @@ MASS_LIBS      = @mass_libs@
 PGPLOT_LIBS    = @pgplot_libs@
 
 # ar command and flags - for most architectures: AR = ar, ARFLAGS = ruv
-# ARFLAGS_DYNAMICS is used in iotk to produce a dynamical library,
+# ARFLAGS_DYNAMIC is used in iotk to produce a dynamical library,
 # for Mac OS-X with PowerPC and xlf compiler. In all other cases
-# ARFLAGS_DYNAMICS = $(ARFLAGS)
+# ARFLAGS_DYNAMIC = $(ARFLAGS)
 
 AR             = @ar@
 ARFLAGS        = @arflags@
@@ -136,5 +137,5 @@ RANLIB         = @ranlib@
 # all internal and external libraries - do not modify
 
 LIBOBJS        = ../flib/ptools.a ../flib/flib.a ../clib/clib.a ../iotk/src/libiotk.a
-LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS)
+LIBS           = $(LAPACK_LIBS) $(BLAS_LIBS) $(FFT_LIBS) $(MPI_LIBS) $(MASS_LIBS) $(PGPLOT_LIBS) $(LD_LIBS)
 

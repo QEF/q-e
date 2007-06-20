@@ -34,54 +34,54 @@ all : tldeps band_plot.x dist.x ev.x fqha.x kpoints.x \
       path_int.x pwi2xsf.x bands_FS.x kvecs_FS.x metadyn_pp.x
 
 band_plot.x : band_plot.o $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ band_plot.o $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ band_plot.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 dist.x : dist.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		dist.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 ev.x : ev.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		ev.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 fqha.x : fqha.o $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ fqha.o $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ fqha.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 kpoints.x : kpoints.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		kpoints.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 lambda.x : lambda.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		lambda.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 metadyn_pp.x : metadyn_pp.o $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ metadyn_pp.o $(MODULES) $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ metadyn_pp.o $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 path_int.x : path_int.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		path_int.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 pwi2xsf.x : pwi2xsf.o $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		pwi2xsf.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 # Isaev
 bands_FS.x : bands_FS.o
-	$(MPIF90) $(LDFLAGS) -o $@ bands_FS.o $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ bands_FS.o $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 kvecs_FS.x : kvecs_FS.o
-	$(MPIF90) $(LDFLAGS) -o $@ kvecs_FS.o $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ kvecs_FS.o $(LIBS)
 	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
 
 tldeps:

@@ -181,7 +181,7 @@ all : cp
 cp : tldeps libcp.a cp.x cppp.x
 
 cp.x : cprstart.o libcp.a $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o cp.x \
+	$(LD) $(LDFLAGS) -o cp.x \
 		cprstart.o $(MODULES) libcp.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../CPV/cp.x . )
 
@@ -207,7 +207,7 @@ PPOBJS = \
 ../Modules/parameters.o ../Modules/parallel_include.o ../Modules/constants.o
 
 cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
 	- (cd ../bin ; ln -fs ../CPV/cppp.x . )
 
 tldeps:

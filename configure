@@ -1452,6 +1452,7 @@ then
 		i686-apple-darwin* )    arch=mac686 ;;
 		*-pc-cygwin )           arch=cygwin ;;
 		sx*-nec* )              arch=necsx  ;;
+		powerpc64-*-linux-gnu ) arch=ppc64  ;;
                 * )                     { echo "$as_me:$LINENO: WARNING: incorrect host name ?" >&5
 echo "$as_me: WARNING: incorrect host name ?" >&2;}
         ;;
@@ -1535,6 +1536,13 @@ necsx )
         try_dflags_fft_asl='-DASL'
         try_dflags_fft_mathkeisan=' '
         try_dflags_fft_para='-D__USE_3D_FFT'
+	;;
+ppc64 )
+	try_mpif90="mpxlf90_r mpf90_r"
+	try_f90="xlf90_r $try_f90"
+	try_dflags="-D__XLF"
+	try_arflags="ruv"
+	try_arflags_dynamic="ruv"
 	;;
 * )
 	{ echo "$as_me:$LINENO: WARNING: unsupported architecture?" >&5
@@ -1642,7 +1650,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1645:" \
+echo "$as_me:1653:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2070,7 +2078,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2073:" \
+echo "$as_me:2081:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2318,6 +2326,10 @@ macppc:xlf90 )
 	;;
 necsx:* )
 	try_cc="sxcc"
+	;;
+ppc64:*xlf* )
+	try_cc="xlc_r $try_cc"
+	try_f77="xlf_r $f90"
 	;;
 esac
 
@@ -4107,7 +4119,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4110:" \
+echo "$as_me:4122:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4392,6 +4404,16 @@ necsx:* )
         have_cpp=1
         pre_fdflags=""
 	;;
+
+ppc64:*xlf* )
+	try_fflags="-O4 -qsuffix=cpp=f90 -qdpc -qalias=nointptr -Q"
+	try_f90flags="\$(FFLAGS) -qfree=f90"
+	try_fflags_noopt="-O0"
+	try_ldflags=""
+	pre_fdflags="-WF,"
+	xlf_flags=1
+	;;
+
 * )
 	# unknown, try these
 	try_fflags="-O"
@@ -4400,6 +4422,7 @@ necsx:* )
 	try_ldflags=""
 	have_cpp=0
 	;;
+
 esac
 if test "$use_shared" -eq 0 ; then
 try_ldflags="$try_ldflags $try_ldflags_static" ; fi
@@ -4590,7 +4613,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4593: \"$ac_link\") >&5
+(eval echo $as_me:4616: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4668,7 +4691,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4671: \"$ac_link\") >&5
+(eval echo $as_me:4694: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -6589,6 +6612,113 @@ fi
                         then break ; fi
                  done
                  ;;
+	ppc64:* )
+		# check for essl
+		unset ac_cv_search_dgemm # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS=""
+		echo "$as_me:$LINENO: checking for library containing dgemm" >&5
+echo $ECHO_N "checking for library containing dgemm... $ECHO_C" >&6
+if test "${ac_cv_search_dgemm+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_dgemm=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dgemm="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_dgemm" = no; then
+  for ac_lib in essl; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dgemm
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dgemm="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_dgemm" >&5
+echo "${ECHO_T}$ac_cv_search_dgemm" >&6
+if test "$ac_cv_search_dgemm" != no; then
+  test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
+  have_blas=1
+			       blas_libs="$LIBS"
+fi
+
+                # notice that some IBM machines may not need -lessl
+                # to load blas so the above test may fail
+                if test "`echo $blas_libs | grep essl`" != ""
+                then
+                    have_essl=1
+                    try_dflags="$try_dflags -D__LINUX_ESSL"
+                fi
+		;;
 	esac
 
 	if test "$have_blas" -eq 0
@@ -8115,6 +8245,105 @@ fi
                    try_dflags="$try_dflags $try_dflags_fft_para"
                 fi
                 ;;
+	ppc64 )
+		# check for essl
+		unset ac_cv_search_dcft # clear cached value
+		FFLAGS="$test_fflags"
+		LDFLAGS="$test_ldflags"
+		LIBS="$fft_libs"
+		echo "$as_me:$LINENO: checking for library containing dcft" >&5
+echo $ECHO_N "checking for library containing dcft... $ECHO_C" >&6
+if test "${ac_cv_search_dcft+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_dcft=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dcft
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dcft="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_dcft" = no; then
+  for ac_lib in essl; do
+    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call dcft
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_dcft="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_dcft" >&5
+echo "${ECHO_T}$ac_cv_search_dcft" >&6
+if test "$ac_cv_search_dcft" != no; then
+  test "$ac_cv_search_dcft" = "none required" || LIBS="$ac_cv_search_dcft $LIBS"
+  have_fft=1 fft_libs="$LIBS"
+fi
+
+	    ;;
 	esac
 
 	if test "$have_fft" -eq 0
@@ -8791,6 +9020,123 @@ fi
 			if test "$ac_cv_search_vexp" = "-lmassvp4" \
 				-o "$ac_cv_search_vexp" = "-lmassv"
 			then mass_libs="$try_loption $ac_cv_search_vexp -lmass"
+			fi
+			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
+		done
+		;;
+
+	ppc64 )
+		# check for mass (in several directories)
+		try_libdirs="/usr/local/lib /opt/ibmcmp/xlmass/4.3/lib64"
+		try_libdirs="$libdirs $try_libdirs $ld_library_path"
+
+		for dir in none $try_libdirs
+		do
+			unset ac_cv_search_vexp # clear cached value
+			if test "$dir" = "none"
+			then
+				try_loption=
+			else
+				echo $ECHO_N "in $dir: " $ECHO_C
+				try_loption="-L$dir"
+			fi
+			FFLAGS="$test_fflags"
+			LDFLAGS="$test_ldflags $try_loption"
+			LIBS=""
+			echo "$as_me:$LINENO: checking for library containing vexp" >&5
+echo $ECHO_N "checking for library containing vexp... $ECHO_C" >&6
+if test "${ac_cv_search_vexp+set}" = set; then
+  echo $ECHO_N "(cached) $ECHO_C" >&6
+else
+  ac_func_search_save_LIBS=$LIBS
+ac_cv_search_vexp=no
+cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call vexp
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_vexp="none required"
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+if test "$ac_cv_search_vexp" = no; then
+  for ac_lib in massvp4_64; do
+    LIBS="-l$ac_lib -lmass_64 $ac_func_search_save_LIBS"
+    cat >conftest.$ac_ext <<_ACEOF
+      program main
+      call vexp
+      end
+_ACEOF
+rm -f conftest.$ac_objext conftest$ac_exeext
+if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
+  (eval $ac_link) 2>conftest.er1
+  ac_status=$?
+  grep -v '^ *+' conftest.er1 >conftest.err
+  rm -f conftest.er1
+  cat conftest.err >&5
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); } &&
+	 { ac_try='test -z "$ac_f77_werror_flag"
+			 || test ! -s conftest.err'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; } &&
+	 { ac_try='test -s conftest$ac_exeext'
+  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
+  (eval $ac_try) 2>&5
+  ac_status=$?
+  echo "$as_me:$LINENO: \$? = $ac_status" >&5
+  (exit $ac_status); }; }; then
+  ac_cv_search_vexp="-l$ac_lib"
+break
+else
+  echo "$as_me: failed program was:" >&5
+sed 's/^/| /' conftest.$ac_ext >&5
+
+fi
+rm -f conftest.err conftest.$ac_objext \
+      conftest$ac_exeext conftest.$ac_ext
+  done
+fi
+LIBS=$ac_func_search_save_LIBS
+fi
+echo "$as_me:$LINENO: result: $ac_cv_search_vexp" >&5
+echo "${ECHO_T}$ac_cv_search_vexp" >&6
+if test "$ac_cv_search_vexp" != no; then
+  test "$ac_cv_search_vexp" = "none required" || LIBS="$ac_cv_search_vexp $LIBS"
+
+fi
+
+			if test "$ac_cv_search_vexp" = "-lmassvp4_64"
+			then mass_libs="$try_loption $ac_cv_search_vexp -lmass_64"
 			fi
 			if test "$ac_cv_search_vexp" != "no" ; then break ; fi
 		done

@@ -32,21 +32,18 @@ function wgauss (x, n)
   !    the local variables
   !
 
-  real(DP) :: a, hp, arg, maxarg, hd, gauss_freq, erf, xp
+  real(DP) :: a, hp, arg, hd, xp
   ! the coefficient a_n
   ! the hermitean function
   ! the argument of the exponential
-  ! maximum value for the argument of the exponen
   ! the hermitean function
-  ! the freq function
-  ! the erf function
   ! auxiliary variable (cold smearing)
   integer :: i, ni
   ! counter on the n indices
   ! counter on 2n
-  external gauss_freq, erf
-
-  parameter (maxarg = 200.d0)
+  real(DP), external :: gauss_freq, erf
+  real(DP), parameter :: maxarg = 200.d0
+  ! maximum value for the argument of the exponential
 
   ! Fermi-Dirac smearing
   if (n.eq. - 99) then

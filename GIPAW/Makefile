@@ -96,7 +96,7 @@ TLDEPS=bindir pw mods libs libiotk
 all : tldeps gipaw.x
 
 gipaw.x : $(GIPAWOBJS) $(PWOBJS) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		$(GIPAWOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../GIPAW/$@ . )
 

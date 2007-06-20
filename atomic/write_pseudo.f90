@@ -19,7 +19,7 @@ subroutine write_pseudo &
   integer :: ndm, mesh, nwfps, lmin,lmax,lloc,nlc,nnl,nwfs,lls(nwfs)
   real(DP) :: zed, zval, xmin,dx, cc(2),alpc(2),alc(6,0:3), &
        alps(3,0:3), phis(ndm,nwfs), ocs(nwfs), &
-       r(ndm), r2(ndm), vnl(ndm,0:3), rhoc(ndm), erf, etots
+       r(ndm), r2(ndm), vnl(ndm,0:3), rhoc(ndm), etots
   integer ios, mdum, i, l, k, n, ir, iunps, nb, ldum
   real(DP) :: zdum, vnloc,a_core, b_core,  &
        alfa_core, dum, xdum, dxdum, rdum, vpsloc(ndm)

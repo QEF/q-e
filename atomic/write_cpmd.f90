@@ -47,7 +47,7 @@ subroutine write_cpmd &
   integer :: iunps, ndm, mesh, nwfps, lmin,lmax,lloc,nlc,nnl,nwfs,lls(nwfs)
   real(DP) :: zed, zval, xmin,dx, cc(2),alpc(2),alc(6,0:3), &
        alps(3,0:3), phis(ndm,nwfs), ocs(nwfs), rcuts(nwfs), &
-       r(ndm), r2(ndm), vnl(ndm,0:3), rhoc(ndm), erf, etots
+       r(ndm), r2(ndm), vnl(ndm,0:3), rhoc(ndm), etots
   character(len=*) :: dft
   !
   real(DP) :: alfa_core=0.0_dp, vpsloc(ndm)

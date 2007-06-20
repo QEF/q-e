@@ -108,7 +108,7 @@ TLDEPS= bindir mods libs
 all: tldeps ld1.x
 
 ld1.x: $(LD1OBJS) ld1.o $(LD1MODS) $(MODULES) $(PHOBJS) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o ld1.x \
+	$(LD) $(LDFLAGS) -o ld1.x \
 		ld1.o $(LD1OBJS) $(LD1MODS) $(MODULES) $(PHOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../atomic/ld1.x . )
 

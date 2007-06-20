@@ -77,7 +77,7 @@ TLDEPS= bindir mods libs pw ph pp
 all : tldeps vdw.x
  
 vdw.x : vdw.o $(VdWOBJS) $(PPOBJS) $(PWOBJS) $(PHOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		vdw.o $(VdWOBJS) $(MODULES) $(PPOBJS) $(PHOBJS) $(PWOBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../VdW/$@ . )

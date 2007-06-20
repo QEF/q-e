@@ -94,109 +94,109 @@ all : tldeps average.x bands.x dos.x plotband.x plotproj.x \
       voronoy.x initial_state.x dipole.x sumpdos.x plan_avg.x pw2gw.x
 
 average.x : average.o $(PPOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		average.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 bands.x : bands.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		bands.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 dipole.x : dipole.o $(PPOBJS) $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		dipole.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 dos.x : dos.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		dos.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plan_avg.x : plan_avg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		plan_avg.o $(PPOBJS) $(MODULES) $(PWOBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plotband.x : plotband.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		plotband.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plotproj.x : plotproj.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		plotproj.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 plotrho.x : plotrho.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		plotrho.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pmw.x : poormanwannier.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		poormanwannier.o $(PPOBJS) $(MODULES) $(PWOBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 xctest.x : xctest.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		xctest.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pp.x : postproc.o chdens.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		postproc.o chdens.o $(PPOBJS) $(MODULES) $(PWOBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 projwfc.x : projwfc.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		projwfc.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pw2casino.x : pw2casino.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		pw2casino.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pw2wannier90.x : pw2wannier90.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		pw2wannier90.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 voronoy.x : voronoy.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		voronoy.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 initial_state.x : initial_state.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		initial_state.o $(PPOBJS) $(MODULES) $(PWOBJS) \
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pw2gw.x : pw2gw.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		pw2gw.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pw_export.x : pw_export.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		pw_export.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 wfdd.x : wfdd.o
-	$(MPIF90) $(LDFLAGS) -o $@ wfdd.o $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 sumpdos.x : sumpdos.o 
-	$(MPIF90) $(LDFLAGS) -o $@ sumpdos.o
+	$(LD) $(LDFLAGS) -o $@ sumpdos.o
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 epsilon.x : epsilon.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ epsilon.o $(PPOBJS) $(MODULES) $(PWOBJS) \
+	$(LD) $(LDFLAGS) -o $@ epsilon.o $(PPOBJS) $(MODULES) $(PWOBJS) \
 	$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
  

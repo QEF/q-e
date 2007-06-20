@@ -317,7 +317,7 @@ TLDEPS=bindir mods libs libiotk
 all : tldeps pw.x
 
 pw.x : pwscf.o libpw.a $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o $@ \
+	$(LD) $(LDFLAGS) -o $@ \
 		pwscf.o $(MODULES) libpw.a $(LIBOBJS) $(LIBS)
 	- ( cd ../bin; ln -fs ../PW/$@ . )
 

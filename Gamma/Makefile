@@ -96,7 +96,7 @@ TLDEPS= bindir mods libs pw
 all : tldeps phcg.x
 
 phcg.x : $(PWOBJS) $(CGOBJS) $(MODULES) $(LIBOBJS)
-	$(MPIF90) $(LDFLAGS) -o phcg.x \
+	$(LD) $(LDFLAGS) -o phcg.x \
 		$(CGOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../Gamma/phcg.x . )
 tldeps:
