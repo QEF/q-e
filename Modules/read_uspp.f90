@@ -604,9 +604,9 @@ CONTAINS
     !     We first check the input variables
     !
     if (is <= 0 .or. is >= nsx) &
-         call errore('readvan','routine called with wrong 1st argument', 1)
+         call errore('readrrkj','routine called with wrong 1st argument', 1)
     if (iunps <= 0 .or. iunps >= 100000) &
-         call errore('readvan','routine called with wrong 2nd argument', 1)
+         call errore('readrrkj','routine called with wrong 2nd argument', 1)
     !
     read( iunps, '(a75)', err=100, iostat=ios ) &
          titleps
