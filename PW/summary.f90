@@ -423,11 +423,15 @@ SUBROUTINE print_ps_info
      WRITE( stdout, '(5x,"Using radial grid of ", i4, " points, ", &
          &i2," beta functions with: ")') mesh (nt), nbeta (nt)
      DO ib = 1, nbeta (nt)
-        WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
+        IF (ib<10) THEN
+           WRITE( stdout, '(15x," l(",i1,") = ",i3)') ib, lll (ib, nt)
+        ELSE
+           WRITE( stdout, '(14x," l(",i2,") = ",i3)') ib, lll (ib, nt)
+        ENDIF
      END DO
      IF ( tvanp(nt) ) THEN
         IF (nqf(nt)==0) THEN
-           WRITE( stdout, '(5x,"Q(r) pseudized with 0 coefficients: ",/)') 
+           WRITE( stdout, '(5x,"Q(r) pseudized with 0 coefficients ",/)') 
         ELSE
            WRITE( stdout, '(5x,"Q(r) pseudized with ", &
            &          i2," coefficients,  rinner = ",3f8.3,/ &

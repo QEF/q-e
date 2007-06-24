@@ -66,9 +66,6 @@ PROGRAM pwscf
   !
   CALL check_stop_init()
   !
-  IF ( ionode .AND. noncolin ) &
-    WRITE( UNIT = stdout, &
-         & FMT = '(/,5X,"non-colinear magnetization allowed",/)' )
   IF ( ionode .AND. gamma_only ) &
     WRITE( UNIT = stdout, &
          & FMT = '(/,5X,"gamma-point specific algorithms are used",/)' )

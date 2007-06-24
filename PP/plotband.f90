@@ -367,7 +367,7 @@ program read_bands
      if (etic >= emin .and. etic <= emax) then
         write (1,'(2(f8.3,1x)," moveto -5 0 rlineto stroke")') &
              0.0,(etic-emin)*ydim/(emax-emin)
-        write (1,'(2(f8.3,1x)," moveto (",f4.1,") show")')   &
+        write (1,'(2(f8.3,1x)," moveto (",f5.1,") show")')   &
              -30.,(etic-emin)*ydim/(emax-emin), etic-eref
      end if
   end do
