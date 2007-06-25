@@ -26,7 +26,7 @@ subroutine solve_e_vdw ( iu )
   USE io_global,             ONLY : stdout
   USE io_files,              ONLY : iunigk, prefix, iunwfc, nwordwfc
   use pwcom
-  USE check_stop,            ONLY : time_max => max_seconds
+  USE check_stop,            ONLY : check_stop_now
 !  USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp
@@ -400,16 +400,14 @@ subroutine solve_e_vdw ( iu )
 !     close (unit = iunrec, status = 'keep')
      tcpu = get_clock ('VdW')
 
-     if (convt.or.tcpu.gt.time_max) goto 155
+     if (check_stop_now()) then
+        call stop_ph (.false.)
+     endif
+     if (convt) goto 155
+
   enddo ! of iteration
   !
 155 continue
-  
-  if (tcpu.gt.time_max) then
-     WRITE( stdout, "(/,5x,'Stopping for time limit ',2f10.0)") tcpu, &
-          time_max
-     call stop_ph (.false.)
-  endif
   !
   deallocate (eprec)
   deallocate (h_diag)

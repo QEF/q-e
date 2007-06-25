@@ -24,7 +24,6 @@ PROGRAM phcg
 
   REAL(DP), ALLOCATABLE :: dchi_dtau(:,:,:,:), dynout(:,:)
   REAL(DP), ALLOCATABLE :: w2(:)
-  REAL(DP):: max_seconds = 1.D+6
   CHARACTER(len=9) :: cdate, ctime, code = 'PHCG'
   LOGICAL :: exst
   INTEGER :: i

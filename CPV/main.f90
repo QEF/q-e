@@ -558,8 +558,8 @@
 
         frich = frich * greash
 
-        ! ...   stop the code if either the file .cp_stop is present or the
-        ! ...   cpu time is greater than max_seconds
+        ! ...   stop the code if either the file .cp_stop is present or if 
+        ! ...   the cpu time exceeds the limit set in input (max_seconds)
  
         tstop =  check_stop_now()
 

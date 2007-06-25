@@ -32,7 +32,7 @@ MODULE path_routines
       USE input_parameters, ONLY : pos, CI_scheme, opt_scheme, num_of_images, &
                                    first_last_opt, temp_req, ds, k_max,       &
                                    k_min, path_thr, restart_mode, nstep,      &
-                                   calculation, max_seconds, use_freezing,    &
+                                   calculation, use_freezing,                 &
                                    phase_space, ion_dynamics, etot_conv_thr,  &
                                    forc_conv_thr
       !

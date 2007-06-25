@@ -18,7 +18,6 @@ SUBROUTINE phqscf
   !
 
   USE io_global,  ONLY : stdout, ionode
-!  USE check_stop, ONLY: max_seconds
   USE pwcom
   USE kinds, ONLY : DP
   USE phcom
@@ -90,7 +89,6 @@ SUBROUTINE phqscf
         ENDIF
         !
         tcpu = get_clock ('PHONON')
-        ! if (tcpu > max_second) then
         !
         !   We test here if we have done the appropriate number of
         !   representation

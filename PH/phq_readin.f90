@@ -138,7 +138,7 @@ SUBROUTINE phq_readin()
   elph         = .FALSE.
   lraman       = .FALSE.
   elop         = .FALSE.
-  max_seconds  = 10000000.D0
+  max_seconds  =  1.E+7_DP
   reduce_io    = .FALSE.
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
