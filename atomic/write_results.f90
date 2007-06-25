@@ -8,6 +8,7 @@
 !--------------------------------------------------------------
 subroutine write_results 
   !--------------------------------------------------------------
+  use constants, only : rytoev
   use ld1inc
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -40,7 +41,7 @@ subroutine write_results
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
      write(6,1100) &
           (nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
-          enl(n)*13.6058_dp, n=1,nwf)
+          enl(n)*rytoev, n=1,nwf)
      if (oep) then
         enl(1:nwf) = enl(1:nwf) + enzero(isw(1:nwf))
         write(6,*) 
@@ -48,10 +49,10 @@ subroutine write_results
         write(6,'(5x,a)') "OEP WARNING: printed eigenvalues were shifted by"
         if (nspin==1) write(6,'(17x,a,3f15.4)') ( "shift :", &
                             enzero(is), enzero(is)*0.5_dp, &
-                            enzero(is)*13.6058_dp, is=1,nspin)
+                            enzero(is)*rytoev, is=1,nspin)
         if (nspin==2) write(6,'(8x,a,i2,3x,a,3f15.4)') ( "spin",is,"shift :", &
                             enzero(is), enzero(is)*0.5_dp, &
-                            enzero(is)*13.6058_dp, is=1,nspin)
+                            enzero(is)*rytoev, is=1,nspin)
      end if
   else
      write(6,1001)
@@ -60,7 +61,7 @@ subroutine write_results
      write(6,'(5x,"Spin orbit split results")')
      write(6,1120) &
           (nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
-          enl(n)*13.6058_dp, n=1,nwf)
+          enl(n)*rytoev, n=1,nwf)
      write(6,'(5x,"Averaged results")')
      ok=.true.
      do n=1,nwf
@@ -68,12 +69,12 @@ subroutine write_results
            ene=(enl(n)*2.0_dp*ll(n) &
                 + enl(n+1)*(2.0_dp*ll(n)+2.0_dp))/(4.0_dp*ll(n)+2.0_dp)
            write(6,1100) nn(n),ll(n),el(n), isw(n),oc(n)+oc(n+1), &
-                ene,ene*0.5_dp, ene*13.6058_dp
+                ene,ene*0.5_dp, ene*rytoev
            ok=.false.
         else
            if (ll(n).eq.0) &
                 write(6,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
-                enl(n),enl(n)*0.5_dp,enl(n)*13.6058_dp
+                enl(n),enl(n)*0.5_dp,enl(n)*rytoev
            ok=.true.
         endif
      enddo
@@ -84,7 +85,7 @@ subroutine write_results
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
   write(6,*)
   write(6,'(5x,''Etot ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       etot, etot*0.5_dp, etot*13.6058_dp
+       etot, etot*0.5_dp, etot*rytoev
   if (lsd.eq.1) then
      mm=0.d0
      do n=1,nwf
@@ -96,30 +97,30 @@ subroutine write_results
      write(6,'(5x,''Total magnetization:'',f8.2,'' Bohr mag. '')') mm
   endif
   write(6,'(/,5x,''Ekin ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
-       ekin, ekin*0.5_dp,  ekin*13.6058_dp
+       ekin, ekin*0.5_dp,  ekin*rytoev
   write(6,'(5x,''Encl ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
-       encl, encl*0.5_dp, encl*13.6058_dp
+       encl, encl*0.5_dp, encl*rytoev
   write(6,'(5x,''Eh   ='',f15.6,'' Ry,'',f15.6, '' Ha,'',f15.6,'' eV'')') &
-       ehrt, ehrt*0.5_dp, ehrt*13.6058_dp
+       ehrt, ehrt*0.5_dp, ehrt*rytoev
   write(6,&
        '(5x,''Exc  ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       ecxc, ecxc*0.5_dp, ecxc*13.6058_dp
+       ecxc, ecxc*0.5_dp, ecxc*rytoev
   write(6,&
        '(5x,''Evxt ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
-       evxt, evxt*0.5_dp, evxt*13.6058_dp
+       evxt, evxt*0.5_dp, evxt*rytoev
   if (isic.ne.0) then
      write(6,*)
      write(6,'(5x,"SIC information:")') 
-     write(6,1300) dhrsic, dhrsic*0.5_dp, dhrsic*13.6058_dp  
-     write(6,2310) dxcsic, dxcsic*0.5_dp, dxcsic*13.6058_dp
-     write(6,2320) dxcsic+dhrsic,(dxcsic+dhrsic)*0.5_dp,(dxcsic+dhrsic)*13.6058_dp  
+     write(6,1300) dhrsic, dhrsic*0.5_dp, dhrsic*rytoev 
+     write(6,2310) dxcsic, dxcsic*0.5_dp, dxcsic*rytoev
+     write(6,2320) dxcsic+dhrsic,(dxcsic+dhrsic)*0.5_dp,(dxcsic+dhrsic)*rytoev 
      write(6,*)
      write(6,2311) ecxc-dxcsic-dhrsic, &
-          &               (ecxc-dxcsic-dhrsic)*0.5_dp, (ecxc-dxcsic-dhrsic)*13.6058_dp  
+          &        (ecxc-dxcsic-dhrsic)*0.5_dp, (ecxc-dxcsic-dhrsic)*rytoev  
      write(6,2312) ecxc-dhrsic, &
-          &               (ecxc-dhrsic)*0.5_dp, (ecxc-dhrsic)*13.6058_dp 
+          &               (ecxc-dhrsic)*0.5_dp, (ecxc-dhrsic)*rytoev 
      write(6,2313) ehrt+dhrsic, &
-          &              (ehrt+dhrsic)*0.5_dp, (ehrt+dhrsic)*13.6058_dp 
+          &              (ehrt+dhrsic)*0.5_dp, (ehrt+dhrsic)*rytoev
 1300 format(5x,'Esich=',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
 2310 format(5x,'Esicxc=',f14.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
 2311 format(5x,'tot-Exc=',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 

@@ -8,6 +8,7 @@
 !--------------------------------------------------------------
 subroutine write_resultsps 
   !--------------------------------------------------------------
+  use constants, only : rytoev
   use ld1inc
   use funct, only: get_dft_name
   implicit none
@@ -61,9 +62,9 @@ subroutine write_resultsps
   write(6,1200) eps0,iter
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
   write(6,*)
-  write(6,1211) etot, etot*0.5_dp, etot*13.6058_dp
+  write(6,1211) etot, etot*0.5_dp, etot*rytoev
 1211 format (5x,'Etot =',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV')
-  write(6,1221) etots, etots*0.5_dp, etots*13.6058_dp
+  write(6,1221) etots, etots*0.5_dp, etots*rytoev
 1221 format (5x,'Etotps =',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
   write(6,1231) etot-etot0
 1231 format (5x,'dEtot_ae =',f15.6,' Ry') 
@@ -73,20 +74,20 @@ subroutine write_resultsps
   write(13,'(5x,''dEtot_ps ='',f15.6,'' Ry,'',''   Delta E='', f15.6 )') &
        etots-etots0, etot-etot0-(etots-etots0)
 
-  write(6,1251) ekin, ekin*0.5_dp, ekin*13.6058_dp
+  write(6,1251) ekin, ekin*0.5_dp, ekin*rytoev
 1251 format (/,5x,'Ekin =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
 
-  write(6,1261) encl, encl*0.5_dp, encl*13.6058_dp
+  write(6,1261) encl, encl*0.5_dp, encl*rytoev
 1261 format (5x,'Encl =',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV') 
-  write(6,1271) ehrt, ehrt*0.5_dp, ehrt*13.6058_dp
+  write(6,1271) ehrt, ehrt*0.5_dp, ehrt*rytoev
 1271 format (5x,'Ehrt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-  write(6,1281) ecxc, ecxc*0.5_dp, ecxc*13.6058_dp
+  write(6,1281) ecxc, ecxc*0.5_dp, ecxc*rytoev
 1281 format (5x,'Ecxc =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
-  if (nlcc) write(6,1282) ecc, ecc*0.5_dp, ecc*13.6058_dp
+  if (nlcc) write(6,1282) ecc, ecc*0.5_dp, ecc*rytoev
 1282 format (5x,'(Ecc =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV)')
-  write(6,1291) evxt, evxt*0.5_dp, evxt*13.6058_dp
+  write(6,1291) evxt, evxt*0.5_dp, evxt*rytoev
 1291 format(5x,'Evxt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
-  write(6,1292) epseu, epseu*0.5_dp, epseu*13.6058_dp
+  write(6,1292) epseu, epseu*0.5_dp, epseu*rytoev
 1292 format (5x,'Epseu=',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV') 
   if(isic.ne.0) write(6,1300) dhrsic+dxcsic, dhrsic, dxcsic
 1300 format(5x,'desic:'/5x,0pf12.4,24x,2(0pf12.4))

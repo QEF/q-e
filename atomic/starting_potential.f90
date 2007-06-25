@@ -20,18 +20,20 @@ subroutine starting_potential &
   implicit none
   integer :: nwf, nn(nwf), ll(nwf), ndm, mesh, n, i, nspin
   real(DP) :: r(ndm), vpot(ndm,2), vxt(ndm), enl(nwf), oc(nwf), &
-       zed, zval, zz, zen, enne, t,x, vext
+       zed, zval, zz, zen, enne, t,x, vext, oce
   real(DP), parameter :: e2 = 2.0_dp
   external vext
   !
   enne = 0.0_dp
   zz = max(zed,zval)
   do  n=1,nwf
-     enne = enne + oc(n)
+     oce=max(0.0_dp, oc(n))
+     enne = enne + oce
      zen= 0.0_dp
      do  i=1,nwf
-        if(nn(i).lt.nn(n)) zen=zen+oc(i)
-        if(nn(i).eq.nn(n).and.ll(i).le.ll(n)) zen=zen+oc(i)
+        oce=max(0.0_dp, oc(i))
+        if(nn(i).lt.nn(n)) zen=zen+oce
+        if(nn(i).eq.nn(n).and.ll(i).le.ll(n)) zen=zen+oce
      end do
      zen = max(zz-zen+1.0_dp,1.0_dp)
      enl(n) =-(zen/nn(n))**2
