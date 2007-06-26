@@ -2,25 +2,27 @@
 
 work=./results
 reference=./reference
-ld1dir=../../atomic/
+. ../../examples/environment_variables
+BIN_DIR=../../bin
 
 mkdir $work
 rm -f $work/*
 
-$ld1dir/ld1.x < o.in > $work/o.out
-$ld1dir/ld1.x < al.in > $work/al.out
-$ld1dir/ld1.x < as.in > $work/as.out
-$ld1dir/ld1.x < pt.in > $work/pt.out
-$ld1dir/ld1.x < si_nc.in > $work/si_nc.out
-$ld1dir/ld1.x < si_nc_paw.in > $work/si_nc_paw.out
+ld1_command="$PARA_PREFIX $BIN_DIR/ld1.x $PARA_POSTFIX"
+
+echo "ld1_command =" $ld1_command
 
 if test -e difference ; then /bin/rm difference > /dev/null ; fi
 touch difference
 
-for file in o.out al.out as.out pt.out si_nc.out si_nc_paw.out ; do
-    echo "diff -wib ./results/$file ./reference/$file" >> difference
-    diff -wib $work/$file $reference/ >> difference
+for atom in o al as pt si_nc si_nc_paw ; do
+    $ld1_command < $atom.in > $work/$atom.out
+    echo "diff -wib ./results/$atom.out ./reference/$atom.out" >> difference
+    diff -wib $work/$atom.out $reference/ >> difference
 done
+
+/bin/rm ld1.wfc
+
 
 for file in OPBE.RRKJ3 Al.rrkj3 Asrel.RRKJ3.UPF Ptrel.RRKJ3.UPF SiPBE_nc Si.recon ; do
     echo "-------------------------------------------------" >> difference

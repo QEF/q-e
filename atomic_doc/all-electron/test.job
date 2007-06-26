@@ -2,18 +2,23 @@
 
 work=./results
 reference=./reference
-ld1dir=../../atomic/
+. ../../examples/environment_variables
+BIN_DIR=../../bin
 
 mkdir $work
 rm -f $work/*
+
+ld1_command="$PARA_PREFIX $BIN_DIR/ld1.x $PARA_POSTFIX"
+
+echo "ld1_command =" $ld1_command
 
 if test -e difference ; then /bin/rm difference > /dev/null ; fi
 touch difference
 
 for atom in ar f he cu cu1 h pt mg u u1 w ne_oep c_oep ; do
-    $ld1dir/ld1.x < $atom.in > $work/$atom.out
+    $ld1_command < $atom.in > $work/$atom.out
     echo "diff -wib ./results/$atom.out ./reference/$atom.out" >> difference
     diff -wib $work/$atom.out $reference/ >> difference
 done
 
-/bin/rm ld1.wfc
+/bin/rm ld1.wfc out_* >& /dev/null

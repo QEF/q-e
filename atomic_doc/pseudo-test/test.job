@@ -2,19 +2,27 @@
 
 work=./results
 reference=./reference
-ld1dir=../../atomic
+. ../../examples/environment_variables
+BIN_DIR=../../bin
 
 mkdir $work
 rm -f $work/*
 
-$ld1dir/ld1.x < s.in > $work/s.out 
-$ld1dir/ld1.x < ni.in > $work/ni.out
-$ld1dir/ld1.x < rh.in > $work/rh.out 
-$ld1dir/ld1.x < al.in > $work/al.out 
-$ld1dir/ld1.x < ga.in > $work/ga.out 
-$ld1dir/ld1.x < as.in > $work/as.out 
+ld1_command="$PARA_PREFIX $BIN_DIR/ld1.x $PARA_POSTFIX"
 
-diff -wib $work/  $reference > difference
+echo "ld1_command =" $ld1_command
+
+
+if test -e difference ; then /bin/rm difference > /dev/null ; fi
+touch difference
+
+for atom in s ni rh al ga as o ; do
+    $ld1_command < $atom.in > $work/$atom.out
+    echo "diff -wib ./results/$atom.out ./reference/$atom.out" >> difference
+    diff -wib $work/$atom.out $reference/ >> difference
+done
+
+/bin/rm ld1*.wfc ld1*.dlog 
 
 # mv Garel.tm.UPF $work
 # diff $work/Garel.tm.UPF $reference/Garel.tm.UPF   >> difference
