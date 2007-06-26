@@ -340,7 +340,7 @@ PROGRAM matdyn
            IF (qh /= 0.d0) qhat(:) = qhat(:) / qh
            IF (qh /= 0.d0 .AND. .NOT. has_zstar) CALL infomsg  &
                 ('matdyn','Z* not found in file '//TRIM(flfrc)// &
-                          ', TO-LO splitting at q=0 will be absent!', -1)
+                          ', TO-LO splitting at q=0 will be absent!')
            !
            CALL nonanal (nat, nat_blk, itau_blk, epsil, qhat, zeu, omega, dyn)
            !
@@ -1584,7 +1584,7 @@ SUBROUTINE gen_qpoints (ibrav, at, bg, nat, tau, ityp, nk1, nk2, nk3, &
      elseif (symm_type=='hexagonal') then
         CALL hexsym (at, s, sname, nrot)  
      else
-        CALL infomsg ('gen_qpoints', 'symm_type missing: assuming cubic symmetry', -1)  
+        CALL infomsg ('gen_qpoints', 'symm_type missing: assuming cubic symmetry')  
         CALL cubicsym (at, s, sname, nrot)  
      end if
 

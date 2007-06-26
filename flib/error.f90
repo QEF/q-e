@@ -20,10 +20,10 @@ SUBROUTINE errore( calling_routine, message, ierr )
   ! ... all other nodes have unit 6 redirected to nothing (/dev/null).
   ! ... As a consequence an error not occurring on the first node
   ! ... will be invisible. For T3E and ORIGIN machines, this problem
-  ! ... is solved by writing an error messagee to unit * instead of 6.
-  ! ... Whenever possible (IBM SP machines), we write to the standard error, 
-  ! ... unit 0 (the message will appear in the error files produced by 
-  ! ... loadleveler).
+  ! ... is solved by writing an error message to unit * instead of 6.
+  ! ... Whenever possible (IBM SP machines), we write to the standard
+  ! ... error, unit 0 (the message will appear in the error files 
+  ! ... produced by loadleveler).
   !
   USE io_global, ONLY : stdout
   USE io_files,  ONLY : crashunit, crash_file
@@ -54,7 +54,7 @@ SUBROUTINE errore( calling_routine, message, ierr )
   !
 #if defined (__PARA) && defined (__AIX)
   !
-  ! ... in the cas of ibm machines it is also written on the "0" unit
+  ! ... in the case of ibm machines it is also written on the "0" unit
   ! ... which is automatically connected to stderr
   !
   WRITE( UNIT = 0, FMT = '(/,1X,78("%"))')
@@ -107,30 +107,23 @@ SUBROUTINE errore( calling_routine, message, ierr )
 END SUBROUTINE errore
 !
 !----------------------------------------------------------------------
-SUBROUTINE infomsg( routine, message, info )
+SUBROUTINE infomsg( routine, message )
   !----------------------------------------------------------------------
   !
   ! ... This is a simple routine which writes an info message 
   ! ... from a given routine to output. 
-  ! ... if info <  0 it prints the message,
-  ! ... if info >= 0 it does nothing.
   !
   USE io_global,  ONLY : stdout, ionode
   !
   IMPLICIT NONE
   !
   CHARACTER (LEN=*) :: routine, message
-    ! the name of the calling routine
-    ! the output message
-  INTEGER :: info
-    ! the info code
-  !
-  !
-  IF ( info >= 0 ) RETURN
+  ! the name of the calling routine
+  ! the output message
   !
   IF ( ionode ) THEN
      !
-     WRITE( stdout , '(5X,"from ",A," : info #",I10)' ) routine, info
+     WRITE( stdout , '(5X,"Message from routine ",A,":")' ) routine
      WRITE( stdout , '(5X,A)' ) message
      !
   END IF

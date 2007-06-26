@@ -92,7 +92,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
            goto 100
         endif
      enddo
-     call infomsg ('find_qi','qmax not found ', -1)
+     call infomsg ('find_qi','qmax not found ')
      iok=1
      return
 100  continue

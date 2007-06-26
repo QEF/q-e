@@ -60,7 +60,7 @@ SUBROUTINE phqscf
            WRITE( stdout, '(//,5x,"Representation #", i3," mode # ",i3)') &
                               irr, imode0 + 1
         ELSE
-           WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",4i3)') &
+           WRITE( stdout, '(//,5x,"Representation #", i3," modes # ",8i3)') &
                               irr, (imode0+irr1, irr1=1,npert(irr))
         ENDIF
         !

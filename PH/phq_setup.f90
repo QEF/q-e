@@ -193,7 +193,7 @@ subroutine phq_setup
   else if (ltetra) then
      call errore('phq_setup','phonon + tetrahedra not implemented', 1)
   else
-     if (lsda) call infomsg('phq_setup','occupation numbers probably wrong', -1)
+     if (lsda) call infomsg('phq_setup','occupation numbers probably wrong')
      if (noncolin) then
         nbnd_occ = nint (nelec) 
      else

@@ -362,7 +362,7 @@ MODULE dynamics_module
          mlt = norm( ml(:) )
          !
          IF ( mlt > eps8 ) &
-            CALL infomsg( 'dynamics', 'Total linear momentum <> 0', -1 )
+            CALL infomsg( 'dynamics', 'Total linear momentum <> 0' )
          !
          WRITE( stdout, '(/,5X,"Linear momentum :",3(2X,F14.10))' ) ml(:)
          !

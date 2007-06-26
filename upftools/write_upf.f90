@@ -184,7 +184,7 @@ end subroutine write_upf
 
     write (ounps, '(a12)', err = 100, iostat = ios) "</PP_HEADER>"
     return
-100 write(6,'("write_pseudo_header: errore writing pseudopotential file")')
+100 write(6,'("write_pseudo_header: error writing pseudopotential file")')
     stop
 
   end subroutine write_pseudo_header
@@ -216,7 +216,7 @@ end subroutine write_upf
 
     return
 
-100 write(6,'("write_pseudo_mesh: errore writing pseudopotential file")')
+100 write(6,'("write_pseudo_mesh: error writing pseudopotential file")')
     stop
 
   end subroutine write_pseudo_mesh
@@ -243,7 +243,7 @@ end subroutine write_upf
     write (ounps, '(a10)', err = 100, iostat = ios) "</PP_NLCC>"  
     return
 
-100 write(6,'("write_pseudo_nlcc: errore writing pseudopotential file")')
+100 write(6,'("write_pseudo_nlcc: error writing pseudopotential file")')
     stop
 
   end subroutine write_pseudo_nlcc
@@ -266,7 +266,7 @@ end subroutine write_upf
                                 ( vloc0(ir), ir = 1, mesh )
     write (ounps, '(a11)', err = 100, iostat = ios) "</PP_LOCAL>"  
     return
-100 write(6,'("write_pseudo_local: errore writing pseudopotential file")')
+100 write(6,'("write_pseudo_local: error writing pseudopotential file")')
     stop
 
   end subroutine write_pseudo_local
@@ -347,7 +347,7 @@ end subroutine write_upf
     write (ounps, '(a14)', err = 100, iostat = ios) "</PP_NONLOCAL>"  
     return
 
-100 write(6,'("write_pseudo_nl: errore writing pseudopotential file")')
+100 write(6,'("write_pseudo_nl: error writing pseudopotential file")')
     stop
 
   end subroutine write_pseudo_nl
@@ -377,7 +377,7 @@ end subroutine write_upf
     write (ounps, '(a11)', err = 100, iostat = ios) "</PP_PSWFC>"  
     return
 
-100 write(6,'("write_pseudo_pswfc: errore writing pseudopotential file")')
+100 write(6,'("write_pseudo_pswfc: error writing pseudopotential file")')
     stop
 
   end subroutine write_pseudo_pswfc
@@ -401,7 +401,7 @@ end subroutine write_upf
     write (ounps, '(a13)', err = 100, iostat = ios) "</PP_RHOATOM>"  
     return
 
-100 write(6,'("write_pseudo_rhoatom: errore writing pseudopotential file")')
+100 write(6,'("write_pseudo_rhoatom: error writing pseudopotential file")')
     stop
 
   end subroutine write_pseudo_rhoatom

@@ -100,7 +100,7 @@ subroutine mix_potential (ndim, vout, vin, alphamix, dr2, tr2, &
      endif
      call diropn (iunmix, file_extension, ndim, exst)
      if (iter.gt.1.and..not.exst) then
-        call infomsg ('mix_potential', 'file not found, restarting', -1)
+        call infomsg ('mix_potential', 'file not found, restarting')
         iter = 1
      endif
      allocate (df( ndim , n_iter))    

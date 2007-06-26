@@ -48,7 +48,7 @@ MODULE buffers
      IF ( ALLOCATED ( buffer1 ) ) THEN
         !
         exst = .TRUE.
-        CALL infomsg ('open_buffer', 'buffer already allocated', unit)
+        CALL infomsg ('open_buffer', 'buffer already allocated')
         !
      ELSE
         !
@@ -197,7 +197,7 @@ SUBROUTINE close_buffer ( unit, status )
         !
      ELSE
         !
-        CALL infomsg ('close_buffer', 'buffer not allocated', unit)
+        CALL infomsg ('close_buffer', 'buffer not allocated')
         !
      END IF
      !
@@ -209,7 +209,7 @@ SUBROUTINE close_buffer ( unit, status )
      !
   ELSE
      !
-     CALL infomsg ('get_buffer', 'incorrect unit specified',-ABS(unit))
+     CALL infomsg ('get_buffer', 'incorrect unit specified')
      !
   END IF
   !

@@ -60,7 +60,7 @@ subroutine normalize(phi,l,j)
      enddo
   enddo
   if (abs(work1) < 1e-10_dp) then
-     call infomsg('normalize','zero norm: not a true US PP ?',-1)   
+     call infomsg('normalize','zero norm: not a true US PP ?')   
      work1=1.0_dp
   else if (work1 < -1e-10_dp) then
      call errore('normalize','negative norm?',1)   

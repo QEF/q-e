@@ -375,7 +375,7 @@
                !
                ! various checks
                call infomsg(' set_nelup_neldw ',                           &
-                    'specify EITHER tot_magnetization OR multiplicity, not both!', -1)
+                    'specify EITHER tot_magnetization OR multiplicity, not both!')
                ! compatibility check
                if ( (tot_magnetization_+1) .NE. multiplicity_ ) &
                     CALL errore(' set_nelup_neldw ', &

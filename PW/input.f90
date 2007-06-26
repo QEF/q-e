@@ -572,8 +572,7 @@ SUBROUTINE iosys()
      io_level = -1
      restart  = .FALSE.
      IF ( twfcollect ) THEN
-        CALL infomsg( 'iosys', &
-                      'minimal I/O required, wf_collect reset to FALSE', -1 )
+        CALL infomsg('iosys', 'minimal I/O required, wf_collect reset to FALSE')
         twfcollect= .FALSE.
      END IF
      !
@@ -798,7 +797,7 @@ SUBROUTINE iosys()
   !
   IF ( startingpot /= 'atomic' .AND. startingpot /= 'file' ) THEN
      !
-     CALL infomsg( 'iosys', 'wrong startingpot: use default', -1 )
+     CALL infomsg( 'iosys', 'wrong startingpot: use default (1)' )
      !
      IF (       lscf ) startingpot = 'atomic'
      IF ( .NOT. lscf ) startingpot = 'file'
@@ -807,7 +806,7 @@ SUBROUTINE iosys()
   !
   IF ( .NOT. lscf .AND. startingpot /= 'file' ) THEN
      !
-     CALL infomsg( 'iosys', 'wrong startingpot: use default', -2 )
+     CALL infomsg( 'iosys', 'wrong startingpot: use default (2)' )
      !
      startingpot = 'file'
      !
@@ -817,7 +816,7 @@ SUBROUTINE iosys()
        startingwfc /= 'random' .AND. &
        startingwfc /= 'file' ) THEN
      !
-     CALL infomsg( 'iosys', 'wrong startingwfc: use default', -1 )
+     CALL infomsg( 'iosys', 'wrong startingwfc: use default' )
      !
      startingwfc = 'atomic'
      !

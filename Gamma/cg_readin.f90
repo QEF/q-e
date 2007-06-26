@@ -166,7 +166,7 @@ SUBROUTINE cg_readmodes(iunit)
  1      CONTINUE
      END IF
   ELSE
-     IF (asr) CALL infomsg ('readin','warning: asr disabled', -1)
+     IF (asr) CALL infomsg ('readin','warning: asr disabled')
      nasr=0
      !
      ! ... otherwise read normal modes from input

@@ -37,7 +37,7 @@ SUBROUTINE davcio( vect, nword, unit, nrec, io )
   IF ( unit  <= 0 ) CALL errore(  'davcio', 'wrong unit', 1 )
   IF ( nrec  <= 0 ) CALL errore(  'davcio', 'wrong record number', 2 )
   IF ( nword <= 0 ) CALL errore(  'davcio', 'wrong record length', 3 )
-  IF ( io    == 0 ) CALL infomsg( 'davcio', 'nothing to do?', -1 )
+  IF ( io    == 0 ) CALL infomsg( 'davcio', 'nothing to do?' )
   !
   INQUIRE( UNIT = unit, OPENED = opnd )
   !

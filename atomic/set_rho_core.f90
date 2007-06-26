@@ -63,7 +63,7 @@ subroutine set_rho_core
      do ik=1,mesh
         if (r(ik) > rcore) go to 100
      enddo
-     call infomsg('set_rho_core','rcore too big', -1)
+     call infomsg('set_rho_core','rcore too big')
      return
   else
      !      rcore determined by the condition  rhoc(rcore) = 2*rhov(rcore)
@@ -81,7 +81,7 @@ subroutine set_rho_core
   !      rhoc(r) = r^2 a sin(b r)/r   for r < rcore
   !
   if (drho > 0.0_dp) then
-     call infomsg('set_rho_core','d rho/ d r > 0', -1)
+     call infomsg('set_rho_core','d rho/ d r > 0')
      return
   endif
   const= r(ik)*drho / ( rhoc(ik)/r2(ik) ) + 1.0_dp

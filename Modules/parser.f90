@@ -156,7 +156,7 @@ MODULE parser
     IF( PRESENT(end_of_file) ) THEN
        end_of_file = tend
     ELSE IF( tend ) THEN
-       CALL infomsg(' read_line ', ' end of file ', -1 )
+       CALL infomsg(' read_line ', ' end of file ' )
     ELSE
        IF( PRESENT(field) ) CALL field_compare( line, nfield, field )
     END IF

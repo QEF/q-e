@@ -136,7 +136,7 @@ SUBROUTINE d3_setup()
              & i4,3f10.5)') ik,  (xk (ipol, ik) , ipol = 1, 3)
      ENDDO
   ELSE
-     IF (lsda) CALL infomsg ('d3_setup', 'occupation numbers probably wrong', -1)
+     IF (lsda) CALL infomsg ('d3_setup', 'occupation numbers probably wrong')
      DO ik = 1, nks
         nbnd_occ (ik) = NINT (nelec) / degspin
      ENDDO

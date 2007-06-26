@@ -70,7 +70,7 @@ subroutine add_for_charges (ik, uact)
      ikk = ik
      ikq = ik
   else
-     call infomsg ('add_for_charges', 'called for lgamma .eq. false', -1)
+     call infomsg ('add_for_charges', 'called for lgamma .eq. false')
   endif
   if (lsda) current_spin = isk (ikk)
   !

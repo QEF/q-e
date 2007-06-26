@@ -273,7 +273,7 @@ SUBROUTINE setup()
   !
   IF ( lscf .AND. ABS( NINT( nelec / 2.D0 ) - nelec / 2.D0 ) > eps8 &
             .AND. .NOT. lgauss .AND. .NOT. ltetra .AND. .NOT. tfixed_occ ) &
-      CALL infomsg( 'setup', 'the system is metallic, specify occupations', -1 )
+      CALL infomsg( 'setup', 'the system is metallic, specify occupations' )
   !
   ! ... Check: spin-polarized calculations require tetrahedra or broadening
   !            or fixed occupation - the simple filling of levels is not
@@ -403,7 +403,7 @@ SUBROUTINE setup()
      so(nt) = ( nbeta(nt) > 0 )
      !
      IF ( lspinorb .AND. ALL ( ABS( jjj(1:nbeta(nt),nt) ) < 1.D-7 ) ) &
-        CALL infomsg ('setup','At least one non s.o. pseudo', nt)
+        CALL infomsg ('setup','At least one non s.o. pseudo')
      !
      DO nb = 1, nbeta(nt)
         !
@@ -587,7 +587,7 @@ SUBROUTINE setup()
   !
   IF ( lmd .AND. ( nsym == 2 .AND. .NOT. invsym .OR. nsym > 2 ) &
            .AND. .NOT. ( calc == 'mm' .OR. calc == 'nm' ) ) &
-       CALL infomsg( 'setup', 'Dynamics, you should have no symmetries', -1 )
+       CALL infomsg( 'setup', 'Dynamics, you should have no symmetries' )
   !
   ntetra = 0
   !

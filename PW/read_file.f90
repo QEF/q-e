@@ -55,7 +55,7 @@ SUBROUTINE read_file()
   !
   IF ( .NOT. pp_check_file() ) &
      CALL infomsg( 'read_file', 'file ' // TRIM( tmp_dir ) // TRIM( prefix ) &
-               & // '.save not guaranteed to be safe for post-processing', -1 )
+               & // '.save not guaranteed to be safe for post-processing' )
   !
   ! ... here we read the variables that dimension the system
   ! ... in parallel execution, only root proc reads the file

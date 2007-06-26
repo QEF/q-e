@@ -78,7 +78,7 @@ subroutine find_coefficients &
              aenorm,c2,c,c2,lam,r,dx,ndm)**2
         write(prec,'(e10.4)') newvalue
         call infomsg('find_coeff','giving up minimization, ', &
-             'the error is still '//prec,-1)
+             'the error is still '//prec)
         return
      end if
   end if

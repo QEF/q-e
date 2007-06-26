@@ -113,9 +113,9 @@ SUBROUTINE chdens (filplot,plot_num)
      if (nfile > nfilemax) then
         ! if this happens the reading of the namelist will fail
         ! tell to user why
-        call infomsg('chdens ', 'nfile is too large, exiting', -1)
+        call infomsg('chdens ', 'nfile is too large, exiting')
      else
-        call infomsg ('chdens', 'namelist plot not found or invalid, exiting', -1)     
+        call infomsg ('chdens', 'namelist plot not found or invalid, exiting')     
      endif
      return
   end if
@@ -135,7 +135,7 @@ SUBROUTINE chdens (filplot,plot_num)
   CALL mp_bcast( nz, ionode_id )
 
   if (output_format == -1 .or. iflag == -1) then
-     call infomsg ('chdens', 'output format not set, exiting', -1 )
+     call infomsg ('chdens', 'output format not set, exiting' )
      return
   end if
   !

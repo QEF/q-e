@@ -74,7 +74,7 @@ FUNCTION efermit (et, nbnd, nks, nelec, nspin, ntetra, tetra, is, isk)
      ! we don't stop because this may occasionally happen in nonscf
      ! calculations where it may be completely irrelevant
      !
-     call infomsg ('efermit', 'internal error, cannot braket Ef',-1)
+     call infomsg ('efermit', 'internal error, cannot braket Ef')
      efermit = better
      return
   end if

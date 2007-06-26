@@ -222,7 +222,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      IF (tefield) THEN
          CALL add_efield(rho,raux,dummy,1)
      ELSE
-         CALL infomsg ('punch_plot','e_field is not calculated', -1)
+         CALL infomsg ('punch_plot','e_field is not calculated')
      ENDIF
 
   ELSEIF (plot_num == 13) THEN
@@ -246,7 +246,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSE
 
-     CALL infomsg ('punch_plot', 'plot_num not implemented', -1)
+     CALL infomsg ('punch_plot', 'plot_num not implemented')
 
   ENDIF
 

@@ -172,7 +172,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      !
      IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
         !
-        CALL infomsg( 'mix_rho', 'file not found, restarting', -1 )
+        CALL infomsg( 'mix_rho', 'file not found, restarting' )
         mixrho_iter = 1
         !
      END IF

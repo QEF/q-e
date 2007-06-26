@@ -79,6 +79,6 @@ subroutine restart_in_electrons (iter, ik_, dr2)
   ! in case of problems
   !
 
-10 call infomsg ('restart_e', 'problems in reading recover file', -1)
+10 call infomsg ('restart_e', 'problems in reading recover file')
   return
 end subroutine restart_in_electrons

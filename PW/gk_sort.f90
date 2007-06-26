@@ -89,7 +89,7 @@ SUBROUTINE gk_sort( k, ngm, g, ecut, ngk, igk, gk )
   END DO
   !
   IF ( ng > ngm ) &
-     CALL infomsg( 'gk_sort', 'unexpected exit from do-loop', -1 )
+     CALL infomsg( 'gk_sort', 'unexpected exit from do-loop')
   !
   ! ... order vector gk keeping initial position in index
   !

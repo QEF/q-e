@@ -1439,7 +1439,7 @@ MODULE pw_restart
          CALL mp_bcast( pseudo_dir, ionode_id, intra_image_comm )
          !
          CALL infomsg( 'read_ions ', &
-                     & 'PP will be read from ' // TRIM( pseudo_dir ), -1 )
+                     & 'PP will be read from ' // TRIM( pseudo_dir ) )
          !
       END IF
       !

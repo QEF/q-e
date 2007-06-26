@@ -110,10 +110,10 @@ subroutine data_structure( lgamma )
   ! check the number of plane per process
   !
   if ( nr3 < nproc_pool ) &
-    call infomsg ('data_structure', 'some processors have no planes ', -1)
+    call infomsg ('data_structure', 'some processors have no planes ')
 
   if ( nr3s < nproc_pool ) &
-    call infomsg ('data_structure', 'some processors have no smooth planes ', -1)
+    call infomsg ('data_structure', 'some processors have no smooth planes ')
 
   !
   ! compute gkcut calling an internal procedure

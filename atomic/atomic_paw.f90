@@ -257,7 +257,7 @@ CONTAINS
 !!! spherical symmetry only, ie only the zero-th moment is conserved)
 !#define __TEST_AUGFUN__
 #if defined __TEST_AUGFUN__
-    CALL infomsg ('us2paw','Use for tests only!', -1)
+    CALL infomsg ('us2paw','Use for tests only!')
     ! a gaussian
     aux(1:mesh)=EXP(-(r(1:mesh)**2)/(TWO*0.25_dp**2))
     DO ns=1,nbeta

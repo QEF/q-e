@@ -165,7 +165,7 @@ SUBROUTINE do_initial_state (excite)
   !
   ! ... The ionic contribution is computed here
   !
-!  call infomsg ('do_initial_state',' EWALD term is still missing', -1)
+!  call infomsg ('do_initial_state',' EWALD term is still missing')
   call do_shift_ew (alat, nat, ntyp, ityp, zv, delta_zv, at, bg, tau, &
      omega, g, gg, ngm, gcutm, gstart, gamma_only, shift_ion)
   !

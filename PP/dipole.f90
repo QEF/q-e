@@ -55,7 +55,7 @@ PROGRAM dipole
      !
      READ (5, inputpp, iostat = ios)
      IF ( ios /= 0 ) &
-        CALL infomsg ('dipole', 'reading inputpp namelist', -ABS(ios) )
+        CALL infomsg ('dipole', 'reading inputpp namelist')
      !
      tmp_dir = trimcheck ( outdir )
      !

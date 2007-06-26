@@ -1138,7 +1138,7 @@ MODULE read_namelists_module
 
        IF( prog == 'PW' ) THEN
          IF( isave > 0 ) &
-           CALL infomsg( sub_name,' isave not used in PW ', 1 )
+           CALL infomsg( sub_name,' isave not used in PW ' )
        ELSE
          IF( isave < 1 ) &
            CALL errore( sub_name,' isave out of range ', 1 )
@@ -1151,7 +1151,7 @@ MODULE read_namelists_module
 
        IF( ekin_conv_thr < 0.0_DP ) THEN
           IF( prog == 'PW' ) THEN
-            CALL infomsg( sub_name,' ekin_conv_thr not used in PW ', 1 )
+            CALL infomsg( sub_name,' ekin_conv_thr not used in PW ')
           ELSE
             CALL errore( sub_name,' ekin_conv_thr out of range ', 1 )
           END IF
@@ -1163,19 +1163,18 @@ MODULE read_namelists_module
           CALL errore( sub_name,' force_conv_thr out of range ', 1 )
        IF( prog == 'CP' ) THEN
           IF( dipfield ) &
-             CALL infomsg( sub_name,' dipfield not implemented yet ', -1)
+             CALL infomsg( sub_name,' dipfield not yet implemented ')
           IF( lberry ) &
-             CALL infomsg( sub_name,' lberry not implemented yet ', -1)
+             CALL infomsg( sub_name,' lberry not implemented yet ')
           IF( gdir /= 0 ) &
-             CALL infomsg( sub_name,' gdir not used ', -1)
+             CALL infomsg( sub_name,' gdir not used ')
           IF( nppstr /= 0 ) &
-             CALL infomsg( sub_name,' nppstr not used ', -1)
+             CALL infomsg( sub_name,' nppstr not used ')
        END IF
        !
        IF( prog == 'PW' .AND. TRIM( restart_mode ) == 'reset_counters' ) THEN
-         CALL infomsg ( sub_name, &
-                    & ' restart_mode == reset_counters' // &
-                    & ' not implemented in PW ', -1 )
+         CALL infomsg ( sub_name, ' restart_mode == reset_counters' // &
+                    & ' not implemented in PW ' )
        END IF
        !
        IF( refg < 0 ) &
@@ -1227,7 +1226,7 @@ MODULE read_namelists_module
        !
        IF( prog == 'CP' ) THEN
           IF( degauss /= 0.0_DP ) &
-             CALL infomsg( sub_name ,' degauss is not used in CP ', -1)
+             CALL infomsg( sub_name ,' degauss is not used in CP ')
        END IF
        !
        IF( nelup < 0.0_DP .OR. nelup > nelec ) &
@@ -1243,17 +1242,17 @@ MODULE read_namelists_module
        IF( prog == 'CP' ) THEN
           IF( ANY(starting_magnetization /= SM_NOT_SET ) ) &
              CALL infomsg( sub_name ,&
-                          & ' starting_magnetization is not used in CP ', -1)
+                          & ' starting_magnetization is not used in CP ')
           IF( lda_plus_U ) &
-             CALL infomsg( sub_name ,' lda_plus_U is not used in CP ', -1)
+             CALL infomsg( sub_name ,' lda_plus_U is not used in CP ')
           IF( la2F ) &
-             CALL infomsg( sub_name ,' la2F is not used in CP ', -1)
+             CALL infomsg( sub_name ,' la2F is not used in CP ')
           IF( ANY(Hubbard_U /= 0.0_DP) ) &
-             CALL infomsg( sub_name ,' Hubbard_U is not used in CP ', -1)
+             CALL infomsg( sub_name ,' Hubbard_U is not used in CP ')
           IF( ANY(Hubbard_alpha /= 0.0_DP) ) &
-             CALL infomsg( sub_name ,' Hubbard_alpha is not used in CP ', -1)
+             CALL infomsg( sub_name ,' Hubbard_alpha is not used in CP ')
           IF( nosym ) &
-             CALL infomsg( sub_name ,' nosym not implemented in CP ', -1)
+             CALL infomsg( sub_name ,' nosym not implemented in CP ')
        END IF
        !
        ! ... non collinear check
@@ -1396,9 +1395,9 @@ MODULE read_namelists_module
        IF( fnosep( 1 ) <= 0.0_DP ) &
           CALL errore( sub_name,' fnosep out of range ',1)
        IF( nhpcl > nhclm ) &
-          CALL infomsg ( sub_name,' nhpcl should be less than nhclm', -1)
+          CALL infomsg ( sub_name,' nhpcl should be less than nhclm')
        IF( nhpcl < 0 ) &
-          CALL infomsg ( sub_name,' nhpcl out of range ', -1)
+          CALL infomsg ( sub_name,' nhpcl out of range ')
        IF( ion_nstepe <= 0 ) &
           CALL errore( sub_name,' ion_nstepe out of range ',1)
        IF( ion_maxstep < 0 ) &
@@ -1460,22 +1459,22 @@ MODULE read_namelists_module
        ! ... SMD checking ( Y.K. 15/04/2004 )
        !
        IF ( smd_polm .AND. smd_linr ) &
-          CALL infomsg( sub_name,' smd_polm & smd_linr  both true ', -1)
+          CALL infomsg( sub_name,' smd_polm & smd_linr  both true ')
        !
        IF ( smd_polm .AND. smd_kwnp < 3 ) &
-          CALL infomsg( sub_name,' smd_kwnp < 3 for smd_polm ', -1)
+          CALL infomsg( sub_name,' smd_kwnp < 3 for smd_polm ')
        !
        IF ( smd_stcd .AND. (smd_stcd1==0 .OR. smd_stcd2==0 .OR. smd_stcd3==0) ) &
-          CALL infomsg( sub_name,' smd_stcd not specified ', -1)
+          CALL infomsg( sub_name,' smd_stcd not specified ')
        !
        IF( smd_smcp .AND. (smd_smopt .OR. smd_smlm) ) &
-          CALL infomsg( sub_name,' smcp ? ', -1)
+          CALL infomsg( sub_name,' smcp ? ')
        !
        IF( smd_smopt .AND. (smd_smcp .OR. smd_smlm) ) &
-          CALL infomsg( sub_name,' smopt ? ', -1)
+          CALL infomsg( sub_name,' smopt ? ')
        !
        IF( smd_smlm .AND. (smd_smcp .OR. smd_smopt) ) &
-          CALL infomsg( sub_name,' smlm ? ', -1)
+          CALL infomsg( sub_name,' smlm ? ')
        !
        IF (sic /= 'none' .and. sic_rloc == 0.0_DP) &
           CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )
@@ -1513,7 +1512,7 @@ MODULE read_namelists_module
           CALL errore( sub_name,' wmass out of range ',1)
        IF( prog == 'CP' ) THEN
           IF( cell_factor /= 0.0_DP ) &
-             CALL infomsg( sub_name,' cell_factor not used in CP ', -1)
+             CALL infomsg( sub_name,' cell_factor not used in CP ')
        END IF
        IF( cell_nstepe <= 0 ) &
           CALL errore( sub_name,' cell_nstepe out of range ',1)
