@@ -180,7 +180,7 @@ MODULE bfgs_module
       !
       ! ... quick return if possible
       !
-      IF ( stop_bfgs ) RETURN
+      IF ( stop_bfgs ) GOTO 1000
       !
       ! ... some output is written
       !
@@ -367,6 +367,7 @@ MODULE bfgs_module
       !
       ! ... work-space deallocation
       !
+ 1000 CONTINUE
       DEALLOCATE( pos_p )
       DEALLOCATE( grad_p )
       DEALLOCATE( pos_old )
@@ -375,13 +376,14 @@ MODULE bfgs_module
       DEALLOCATE( step )
       DEALLOCATE( step_old )
       DEALLOCATE( pos_best )
+      RETURN
       !
       CONTAINS
         !
         !--------------------------------------------------------------------
         SUBROUTINE gdiis_step()
           !--------------------------------------------------------------------
-          !
+          USE basic_algebra_routines
           IMPLICIT NONE
           !
           REAL(DP), ALLOCATABLE :: res(:,:), overlap(:,:), work(:)
