@@ -108,6 +108,39 @@ subroutine gener_pseudo
      if (enls(n) == 0.0_dp) enls(n)=enl(nstoae(n))
   enddo
   !
+  ! Set the all-electron wavefunctions, calculating those at user supplied
+  ! energies. The wavefunctions are written on file at this point, so
+  ! the user can check them also when the pseudopotential generation is  
+  ! unsuccessful
+  ! 
+  psipaw=0.0_dp
+  do ns=1,nbeta
+     ik=0
+     nwf0=nstoae(ns)
+     do n=1,mesh
+        if (r(n).lt.rcut(ns)) ik=n
+     enddo
+     if (mod(ik,2) == 0) ik=ik+1
+     if (new(ns)) then
+        call set_psi_in(ik,lls(ns),jjs(ns),enls(ns),psipaw(1,ns))
+     else
+        psipaw(:,ns)=psi(:,1,nwf0)
+     endif
+  enddo
+
+  if (file_wfcaegen .ne. ' ') then
+     if (ionode) &
+        open(unit=19,file=file_wfcaegen, status='unknown', iostat=ios, err=800)
+800  call mp_bcast(ios, ionode_id)
+     call errore('gener_pseudo','opening file '//file_wfcaegen,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(19,'(8f12.6)') r(n), (psipaw(n,ns), ns=1,nwfs)
+        enddo
+        close(19)
+     endif
+  endif
+  !
   !   compute the pseudowavefunctions by expansion in spherical
   !   bessel function before r_c
   !
@@ -139,16 +172,14 @@ subroutine gener_pseudo
      endif
 
      if (new(ns)) then
-        call set_psi_in(ik,lam,jjs(ns),enls(ns),psi_in)
-        occ=1.d0
+        occ=1.0_DP
      else
-        psi_in(:)=psi(:,1,nwf0)
         occ=ocs(ns)
      endif
      !
      !   save the all-electron function for the PAW setup
      !
-     psipaw(1:mesh,ns) = psi_in(1:mesh)
+     psi_in(1:mesh) = psipaw(1:mesh,ns) 
      !
      !  compute the phi functions
      !
@@ -399,8 +430,6 @@ subroutine gener_pseudo
         else
            write(indqvan,'(".",i3)') ns1
         endif
-
-
         if (ionode) &
            open(unit=19,file=TRIM(file_qvan)//TRIM(indqvan), status='unknown', &
              iostat=ios, err=700)
@@ -415,18 +444,6 @@ subroutine gener_pseudo
      enddo
   endif
 
-  if (file_wfcaegen .ne. ' ') then
-     if (ionode) &
-        open(unit=19,file=file_wfcaegen, status='unknown', iostat=ios, err=800)
-800  call mp_bcast(ios, ionode_id)
-     call errore('gener_pseudo','opening file '//file_wfcaegen,abs(ios))
-     if (ionode) then
-        do n=1,mesh
-           write(19,'(8f12.6)') r(n), (psipaw(n,ns), ns=1,nwfs)
-        enddo
-        close(19)
-     endif
-  endif
 
   if (file_wfcncgen .ne. ' ') then
      if (ionode) & 
