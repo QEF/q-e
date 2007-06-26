@@ -4,6 +4,7 @@ subroutine add_exchange ( energy )
 !--------------------------------------------------------------------
 #undef DEBUG
    !  
+   use io_global, only: stdout
    use kinds,  only: DP
    use constants, only: e2
    use ld1inc, only: ndm, nwfx, nwf, mesh, oc, psi, vx, sl3, ll, nn, enl, el, &
@@ -85,7 +86,7 @@ subroutine add_exchange ( energy )
 
 #ifdef DEBUG
    write (*,*) enzero
-   write(6,1100) (nn(nu),ll(nu),el(nu),oc(nu),enl(nu)-enzero(isw(nu)), &
+   write(stdout,1100) (nn(nu),ll(nu),el(nu),oc(nu),enl(nu)-enzero(isw(nu)), &
                   enl(nu)-enzhf(nu), nu=1,nwf)
 
 1100 format(4x,2i2,5x,a2,'(',f5.2,')',2f11.4)

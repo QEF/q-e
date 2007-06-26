@@ -13,6 +13,7 @@ subroutine start_potps
   !     This routine computes an initial estimate of the screening
   !     potential
   !
+  use io_global, only : stdout
   use ld1inc
   implicit none
 
@@ -82,9 +83,9 @@ subroutine start_potps
      do n=1,mesh
         vpstot(n,is)=vpsloc(n)+vnew(n,is)
         !      if (is.eq.1) &
-        !                  write(6,'(3f25.16)') r(n), rhos(n,1),vpstot(n,1)
+        !           write(stdout,'(3f25.16)') r(n), rhos(n,1),vpstot(n,1)
         !      if (is.eq.2.and.nspin.eq.2)  &
-        !            write(6,'(3f25.16)') 2.0_dp*rhos(n,1),vpstot(n,1),vpstot(n,2)
+        !   write(stdout,'(3f25.16)') 2.0_dp*rhos(n,1),vpstot(n,1),vpstot(n,2)
      enddo
   enddo
   !

@@ -37,6 +37,7 @@ subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,dx,snl,r,rab,ruae)
 !
 !----------------------------------------------------------------------------
 !
+use io_global, only : stdout
 use kinds, only : DP
 implicit none
 integer :: idim1 
@@ -135,9 +136,9 @@ do iter = 1,itmax
 240   continue
 
   if ( nctp .gt. mesh - 10 ) then 
-!     write(6,*) 'State nlk=', ncur, lcur, kcur, nctp, mesh
-!     write(6,*) 'ecur, ecurmax=', ecur, ruae(mesh-10)/r(mesh-10)
-     write(6,*) 'classical turning point too close to mesh',ncur,lcur,kcur
+!     write(stdout,*) 'State nlk=', ncur, lcur, kcur, nctp, mesh
+!     write(stdout,*) 'ecur, ecurmax=', ecur, ruae(mesh-10)/r(mesh-10)
+     write(stdout,*) 'classical turning point too close to mesh',ncur,lcur,kcur
      e0=0.0_DP
      goto 700
   endif
@@ -252,8 +253,8 @@ do iter = 1,itmax
   if ( nodes .lt. ncur - lcur - 1 ) then
 !           energy is too low
      emin = ecur
-!         write(6,*) 'energy too low'
-!         write(6,'(i5,3f12.5,2i5)') &
+!         write(stdout,*) 'energy too low'
+!         write(stdout,'(i5,3f12.5,2i5)') &
 !    &         iter,emin,ecur,emax,nodes,ncur-lcur-1
      if ( ecur * 0.9_DP .gt. emax ) then
          ecur = 0.5_DP * ecur + 0.5_DP * emax 
@@ -267,8 +268,8 @@ do iter = 1,itmax
 !           energy is too high
      emax = ecur
 !         
-!         write(6,*) 'energy too high'
-!         write(6,'(i5,3f12.5,2i5)') &
+!         write(stdout,*) 'energy too high'
+!         write(stdout,'(i5,3f12.5,2i5)') &
 !    &         iter,emin,ecur,emax,nodes,ncur-lcur-1
      if ( ecur * 1.1_DP .lt. emin ) then
         ecur = 0.5_DP * ecur + 0.5_DP * emin
@@ -306,7 +307,7 @@ do iter = 1,itmax
       decurp=-min(-decur,-0.2_DP*ecur,0.7_DP*(ecur-emin))
    endif
 !
-!         write(6,'(i5,3f12.5,1p2e12.4)') &
+!         write(stdout,'(i5,3f12.5,1p2e12.4)') &
 !    &         iter,emin,ecur,emax,decur,decurp
 !
 !         test to see whether eigenvalue converged
@@ -324,11 +325,11 @@ do iter = 1,itmax
    if ( iter .eq. itmax ) then
 !           eigenfunction has not converged in allowed number of iterations
             
-!      write(6,999) it,ncur,lcur,jcur,e0,ecur
+!      write(stdout,999) it,ncur,lcur,jcur,e0,ecur
 !999   format('iter',i4,' state',i4,i4,f4.1,' could not be converged.',/,   &
 !    &      ' starting energy for calculation was',f10.5, &
 !    &      ' and end value =',f10.5)
-       write(6,*) 'state nlj',ncur,lcur,jcur, ' not converged'
+       write(stdout,*) 'state nlj',ncur,lcur,jcur, ' not converged'
       goto 700
    endif
 !

@@ -18,6 +18,7 @@ subroutine test_bessel ( )
   !     energy cutoff Ecut, such that q^2 <= Ecut (in Ry a.u.)
   !     rm is the radius R of the box
   !
+  use io_global, only : stdout
   use kinds, only : dp
   use constants, only: pi
   use ld1inc, only: lmax, lmx, mesh, r, r2, dx
@@ -38,10 +39,10 @@ subroutine test_bessel ( )
   if ( ecutmin < eps .or. ecutmax < eps .or. ecutmax < ecutmin + eps .or. &
        decut < eps .or. rm < 5.0_dp ) return
   !
-  write (6, "(/,5x,14('-'), ' Test with a basis set of Bessel functions ',&
+  write (stdout, "(/,5x,14('-'), ' Test with a basis set of Bessel functions ',&
        & 10('-'),/)")
   !
-  write (6, "(5x,'Box size (a.u.) : ',f6.1)" ) rm
+  write (stdout, "(5x,'Box size (a.u.) : ',f6.1)" ) rm
   ncut = nint ( ( ecutmax-ecutmin ) / decut ) + 1
   !
   !  we redo everything for each cutoff: not really a smart implementation
@@ -71,14 +72,14 @@ subroutine test_bessel ( )
      !
      !   fill and diagonalize Kohn-Sham pseudo-hamiltonian
      !
-     write (6, "(/5x,'Cutoff (Ry) : ',f6.1)" ) ecut
+     write (stdout, "(/5x,'Cutoff (Ry) : ',f6.1)" ) ecut
      call h_diag ( mesh_, nswx, nsw, lmax, q )
      !
      deallocate ( q )
      !
   end do
   !
-  write (6, "(/,5x,14('-'), ' End of Bessel function test ',24('-'),/)")
+  write (stdout, "(/,5x,14('-'), ' End of Bessel function test ',24('-'),/)")
   !
 end subroutine test_bessel
 !
@@ -184,6 +185,7 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
   ! in the basis of spherical bessel functions
   ! Requires the self-consistent potential from a previous calculation!
   !
+  use io_global, only : stdout
   use kinds, only : dp
   use ld1inc, only: lmx, r, r2, dx
   use ld1inc, only: nbeta, betas, qq, ddd, vpstot, vnl, lls, jjs, &
@@ -211,7 +213,7 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
   allocate ( jlq ( mesh_, nswx ), work (mesh_), vaux (mesh_) )
   if ( pseudotype > 2 ) allocate ( s(nswx, nswx) )
   !
-  write(6,"( 20x,3(7x,'N = ',i1) )" ) (n, n=1,n_states)
+  write(stdout,"( 20x,3(7x,'N = ',i1) )" ) (n, n=1,n_states)
   !
   do l=0,lmax
      !
@@ -361,13 +363,16 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
            end if
            !
            if ( nspin == 2 ) then
-              write(6,"( 5x,'E(L=',i1,',spin 'a2,') =',4(f10.4,' Ry') )" ) &
+              write(stdout, &
+                  "( 5x,'E(L=',i1,',spin 'a2,') =',4(f10.4,' Ry') )" ) &
                    l, spin(is), (enl(n), n=1,n_states)
            else if ( rel == 2 ) then
-              write(6,"( 5x,'E(L=',i1,',J=',f3.1,') =',4(f10.4,' Ry') )" ) &
+              write(stdout, &
+                  "( 5x,'E(L=',i1,',J=',f3.1,') =',4(f10.4,' Ry') )" ) &
                    l, j, (enl(n), n=1,n_states)
            else 
-              write(6,"( 5x,'E(L=',i1,') =',5x,4(f10.4,' Ry') )" ) &
+              write(stdout, &
+                  "( 5x,'E(L=',i1,') =',5x,4(f10.4,' Ry') )" ) &
                    l, (enl(n), n=1,n_states)
            end if
         end do

@@ -38,6 +38,7 @@ subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv)
   !     b = x(l+1) = new input vector (potential)
   !     r2 = mean-square of (a(i)-b(i))**2
 
+  use io_global, only : stdout
   use kinds, only : DP
   implicit none
   integer :: nmsh, id, in, ierr
@@ -85,7 +86,7 @@ subroutine dmixp (nmsh,a,b,beta,tr2,in,id,r2,conv)
      return
 
   else if(id.lt.1.or.id.gt.3.or.in.lt.1) then
-     write(6,'('' *** stop in dmixp *** id,in = '',2i6 )') id,in
+     write(stdout,'('' *** stop in dmixp *** id,in = '',2i6 )') id,in
   end if
 
   if (in.eq.1) then

@@ -30,6 +30,7 @@ MODULE atomic_paw
   !
   !============================================================================
   !
+  USE io_global, ONLY: stdout
   USE kinds, ONLY: dp
   USE constants, ONLY: pi, fpi, e2, eps8
   USE ld1_parameters, ONLY: ndm, nwfsx
@@ -322,10 +323,10 @@ CONTAINS
     ! Generate the paw hamiltonian for test (should be equal to the US one)
     CALL new_paw_hamiltonian (vps, ddd, etot, &
        pawset_, pawset_%nwfc, pawset_%l, nspin, spin, pawset_%oc, pawset_%pswfc, pawset_%enl)
-    WRITE(6,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ry'
-    WRITE(6,'(/5x,A)') 'The PAW screened D coefficients'
+    WRITE(stdout,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ry'
+    WRITE(stdout,'(/5x,A)') 'The PAW screened D coefficients'
     DO ns1=1,pawset_%nwfc
-       WRITE(6,'(6f12.5)') (ddd(ns1,ns,1),ns=1,pawset_%nwfc)
+       WRITE(stdout,'(6f12.5)') (ddd(ns1,ns,1),ns=1,pawset_%nwfc)
     END DO
     !
   END SUBROUTINE us2paw

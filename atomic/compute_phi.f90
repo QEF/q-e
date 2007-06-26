@@ -16,6 +16,7 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   !
   !
   !      
+  use io_global, only : stdout
   use kinds, only : DP
   use constants, only: pi
   use ld1inc
@@ -163,7 +164,7 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
      deter=b**2-4.0_dp*a*c
      if (deter < 0.0_dp) then
         call infomsg ('compute phi','negative determinant', -1) 
-        write(6,100) f1ae/fae, f2ae, faenor
+        write(stdout,100) f1ae/fae, f2ae, faenor
 100        format(/5x,' ld= ',f10.6,' f2ae',f10.6,' faenor',f10.6)
         iok=1
         return
@@ -199,7 +200,7 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
      deter=b**2-4.0_dp*a*c
      if (deter < 0.0_dp) then
         call infomsg ('compute phi','negative determinant', -1) 
-        write(6,110) f1ae/fae, f2ae, faenor
+        write(stdout,110) f1ae/fae, f2ae, faenor
 110        format (/5x,' ld= ',f10.6,' f2ae',f10.6, ' faenor',f10.6)
         iok=1
         return
@@ -234,18 +235,18 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
 
   if (iflag == 1) then
      if (tm) then
-        write(6,120) els_in, r(ik)
+        write(stdout,120) els_in, r(ik)
 120     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
           '  Using Troullier-Martins method ')
      else
-        write(6,130) els_in,r(ik),2.0_dp*xc(6)**2 
+        write(stdout,130) els_in,r(ik),2.0_dp*xc(6)**2 
 130     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
           '  Estimated cut-off energy= ', f11.2,' Ry')
-        if (nbes == 4) write(6,140) rho0
+        if (nbes == 4) write(stdout,140) rho0
 140        format (5x,' Using 4 Bessel functions for this wfc,', &
                 ' rho(0) =',f6.3)
      end if
-     ! write(6,'(5x," AE norm = ",f6.3,"  PS norm = ",f6.3)') faenor, psnor
+     ! write(stdout,'(5x," AE norm = ",f6.3,"  PS norm = ",f6.3)') faenor, psnor
   end if
   !
   !      check for absence of nodes in the pseudo wavefunction
@@ -253,13 +254,13 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   nnode=0  
   do n=1,ik+1
      if ( phi_out(n) .ne. sign(phi_out(n),phi_out(n+1)) ) then
-        if (iflag==1) write(6,150) lam,r(n)
+        if (iflag==1) write(stdout,150) lam,r(n)
 150     format (5x,'l=',i4,' Node at ',f10.8)
         nnode=nnode+1
      endif
   enddo
   iok=nnode
-  if (iflag == 1) write(6,160) nnode,r(ik)
+  if (iflag == 1) write(stdout,160) nnode,r(ik)
 160 format (5x,' This function has ',i4,' nodes', ' for 0 < r < ',f8.3)
 
   return

@@ -9,6 +9,7 @@
 subroutine hartree(k,nst,mesh,r,r2,sqr,dx,f,vh)
   !---------------------------------------------------------------
   !
+  use io_global, only : stdout
   use kinds, only : DP
   implicit none
   integer ::       & 
@@ -58,20 +59,16 @@ subroutine hartree(k,nst,mesh,r,r2,sqr,dx,f,vh)
   !
   allocate(d(mesh),stat=ierr)
   allocate(e(mesh),stat=ierr)
-
-  if (ierr.ne.0) then
-     write(6,'('' Error allocating d or e '')')
-     stop
-  endif
+  call errore('hartree', 'allocating d or e ', ierr)
   !
   !    Find the series expansion of the solution close to r=0
   !
   k21=2*k+1
   nk1=nst-k-1
   if(nk1.le.0) then
-     write(6,100) k,nst
+     write(stdout,100) k,nst
 100  format(5x,'stop in "hartree": k=',i3,'  nst=',i3)
-     stop
+     call errore('hartree', 'wrong k or nst ', 1)
   else if(nk1.ge.4) then
      c2=0.0_dp
      c3=0.0_dp
@@ -138,10 +135,7 @@ subroutine hartree(k,nst,mesh,r,r2,sqr,dx,f,vh)
   !   solve the linear system with lapack routine dptsv
   !
   call dptsv(mesh-2,1,d(2),e(2),vh(2),mesh-2,ierr)
-  if (ierr.ne.0) then
-     write(6,'(''Error in lapack, info= '',i5)') ierr
-     stop
-  endif
+  call errore('hartree', 'problem in lapack ', ierr)
   !
   ! Set the value of the solution at the first and last point
   ! First, find c0 from the solution in the second point

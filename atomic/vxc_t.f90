@@ -12,6 +12,7 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
   !  this function returns the XC potential in LDA or LSDA approximation
   !
 
+  use io_global, only : stdout
   use kinds, only : DP
   use funct, only : xc, xc_spin
   implicit none
@@ -41,7 +42,8 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
      if (arho.gt.eps) then      
         zeta = (rho(1)-rho(2)) / arho
         if (abs(zeta).gt.1.0_dp) then 
-           write(6,*) 'zeta= me', zeta, rho(1),rho(2),rhoc
+           write(stdout,*) 'zeta, rho_up, rho_dw, rhoc', zeta, &
+                           rho(1),rho(2),rhoc
         else
            call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
            vxc(1) = e2*(vx(1)+vc(1))

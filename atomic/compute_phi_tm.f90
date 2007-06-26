@@ -16,6 +16,7 @@ subroutine compute_phi_tm(lam,ik,chir,phi_out,iflag,xc,e,els_in)
   !
   !
   !      
+  use io_global, only : stdout
   use kinds, only : DP
   use constants, only: pi
   use ld1inc
@@ -81,10 +82,10 @@ subroutine compute_phi_tm(lam,ik,chir,phi_out,iflag,xc,e,els_in)
 !     gi(n)=phi_out(n)**2
 !  enddo
 !  psnor=int_0_inf_dr(gi,r,r2,dx,ik,nst)
-! write(6,'(5x," AE norm = ",f6.3,"  PS norm = ",f6.3)') faenor, psnor
+! write(stdout,'(5x," AE norm = ",f6.3,"  PS norm = ",f6.3)') faenor, psnor
 
   if (iflag == 1) then
-     write(6,120) els_in, r(ik)
+     write(stdout,120) els_in, r(ik)
 120  format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
        '  Using Troullier-Martins method ')
   end if

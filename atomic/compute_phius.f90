@@ -17,6 +17,7 @@
 !
 !
 !
+use io_global, only : stdout
 use ld1inc
   implicit none
 
@@ -89,7 +90,7 @@ use ld1inc
       xc(2)=(f2ae-bm(1))/(bm(2)-bm(1))
       xc(1)=1.0_dp-xc(2)
       if (iflag.eq.1) then
-         write(6,110) els_in,r(ik),2.0_dp*xc(5)**2
+         write(stdout,110) els_in,r(ik),2.0_dp*xc(5)**2
 110      format (5x, ' Wfc-us ',a3,' rcutus=',f6.3, &
                 '  Estimated cut-off energy= ', f8.2,' Ry')
       endif

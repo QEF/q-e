@@ -20,6 +20,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   !  operator. Therefore it can solve a general schroedinger
   !  equation necessary to solve a US pseudopotential
   !
+  use io_global, only : stdout
   use kinds, only : DP
   implicit none
 
@@ -107,7 +108,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   enddo
   call series(y,r,r2,b)
 
-  !      write(6,*) 'eneter lam,eup,elw,e',lam,nbeta,eup,elw,e
+  !      write(stdout,*) 'eneter lam,eup,elw,e',lam,nbeta,eup,elw,e
   !
   !  set up the f-function and determine the position of its last
   !  change of sign
@@ -123,12 +124,10 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   if (ik.eq.0.and.nbeta.eq.0) ik=mesh*3/4
 
   if(ik.ge.mesh-2) then
-     call errore('compute_solution', &
-          'No point found for matching',-1)
      do n=1,mesh
-        write(6,*) r(n), vpot(n), f(n)
+        write(stdout,*) r(n), vpot(n), f(n)
      enddo
-     stop
+     call errore('compute_solution', 'No point found for matching',1)
   endif
   !
   !     determine if ik is sufficiently large

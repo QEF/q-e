@@ -15,6 +15,7 @@ subroutine pseudovloc
   !     vpsloc: the local pseudopotential
   !
   !      
+  use io_global, only : stdout
   use ld1inc
   implicit none
 
@@ -56,8 +57,9 @@ subroutine pseudovloc
      !
      !   Compute the ik which correspond to this cutoff radius
      !
-     write(6,"(/,5x,' Generating local potential from pseudized AE ', &
-          & 'potential, matching radius rcloc = ',f8.4)") rcloc
+     write(stdout, &
+          "(/,5x,' Generating local potential from pseudized AE potential:',&
+            &  /,5x,' Matching radius rcloc = ',f8.4)") rcloc
      ik=0
      do n=1,mesh
         if (r(n) < rcloc) ik=n
@@ -70,7 +72,7 @@ subroutine pseudovloc
 !
 
      call compute_potps(ik,vpot,vpsloc,xc)
-     write(6, 110) r(ik),xc(5)**2 
+     write(stdout, 110) r(ik),xc(5)**2 
 110  format (/5x, ' Local pseudo, rcloc=',f6.3, &
           ' Estimated cut-off energy= ', f8.2,' Ry')
   else
@@ -108,15 +110,15 @@ subroutine pseudovloc
            call errore('pseudovloc','wrong matching point',1)
         rcloc=rcut(nsloc+indi)
         if (rep == 0) then
-           write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
+           write(stdout,"(/,5x,' Generating local pot.: lloc=',i1, &
                   & ', matching radius rcloc = ',f8.4)") lloc, rcloc
         else
            if (rel==2) then
-              write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
+              write(stdout,"(/,5x,' Generating local pot.: lloc=',i1, &
                   &', j=',f5.2,', matching radius rcloc = ',f8.4)") &
                   lloc, lloc-0.5d0+indi, rcloc
            else
-              write(6,"(/,5x,' Generating local pot.: lloc=',i1, &
+              write(stdout,"(/,5x,' Generating local pot.: lloc=',i1, &
                   &', spin=',i1,', matching radius rcloc = ',f8.4)") &
                   lloc, indi+1, rcloc
            endif

@@ -122,7 +122,7 @@ implicit none
       if (nlcc) then
          ecc=    int_0_inf_dr(f8,r,r2,dx,mesh,2)
       else
-         ecc= 0.d0
+         ecc= 0.0_DP
       endif
 !
       epseu=0.0_DP

@@ -20,6 +20,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !  equation as in the US pseudopotential case. The other
   !  pseudopotentials are particular cases
   !
+  use io_global, only : stdout
   use kinds, only : DP
   implicit none
 
@@ -94,7 +95,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      !    if an asintote has been found use bisection
      !
      if (abs(de).gt.1.e3_dp*abs(eold)) then
-        ! write(*,*) 'BISECTION'
+        ! write(stdout,*) 'BISECTION'
         goto 800
      endif
      !
@@ -143,7 +144,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
           beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
           detup)
-     if (detup*detlw.lt.0.0_DP) write(*,*) 'count0 = ', count0
+     if (detup*detlw.lt.0.0_DP) write(stdout,*) 'count0 = ', count0
      if (detup*detlw.lt.0.0_DP) goto 100
      elw=eup
      detlw=detup  
@@ -160,8 +161,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      call compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
           beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk,det)
 
-     !         write(6,'(i11,3f20.10)') iter,detlw,det,detup
-     !         write(6,'(''energy'',i5,3f20.10)') iter,elw,e,eup
+     !         write(stdout,'(i11,3f20.10)') iter,detlw,det,detup
+     !         write(stdout,'(''energy'',i5,3f20.10)') iter,elw,e,eup
      !
      !     convergence check
      !
@@ -208,7 +209,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
         e=(eup+elw)*0.5_DP
      endif
   enddo
-  write(6,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
+  write(stdout,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
   nosol=.true.
 900 continue
   !
@@ -217,7 +218,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   if (e.gt.0.0_DP) then
      e=0.0_DP
      y=0.0_DP
-     write(6,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
+     write(stdout,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
      nosol=.true.
   else
      call compute_solution(lam,jam,e,mesh,ndm,dx,r, &
