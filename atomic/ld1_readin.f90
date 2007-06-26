@@ -11,6 +11,8 @@ subroutine ld1_readin
   !
   !     This routine reads the input parameters of the calculation
   !
+  USE io_global,  ONLY : ionode, ionode_id
+  USE mp,         ONLY : mp_bcast
   use ld1inc
   use funct, only : set_dft_from_name
   use atomic_paw, only : paw_io, paw2us
@@ -134,8 +136,13 @@ subroutine ld1_readin
   
   ! read the namelist input
 
-  read(5,input,err=100,iostat=ios) 
-100 call errore('ld1_readin','reading input namelist ',abs(ios))
+  if (ionode) read(5,input,err=100,iostat=ios) 
+100  call mp_bcast(ios, ionode_id)
+  call errore('ld1_readin','reading input namelist ',abs(ios))
+  call bcast_input()
+  call mp_bcast(atom, ionode_id )
+  call mp_bcast(config, ionode_id )
+  call mp_bcast(dft, ionode_id )
 
   call set_dft_from_name(dft)
 
@@ -193,7 +200,8 @@ subroutine ld1_readin
   endif
 
   if (config == ' ') then
-     call read_config (rel, lsd, nwf, el, nn, ll, oc, isw, jj)
+     if (ionode) call read_config (rel, lsd, nwf, el, nn, ll, oc, isw, jj)
+     call bcast_config()
   else
      call el_config (config, rel, lsd, .true., nwf, el, nn, ll, oc, isw, jj)
   end if
@@ -234,8 +242,10 @@ subroutine ld1_readin
      pseudotype=0
      jjs=0.0_dp
 
-     read(5,inputp,err=500,iostat=ios)
-500  call errore('ld1_readin','reading inputp',abs(ios))
+     if (ionode) read(5,inputp,err=500,iostat=ios)
+500  call mp_bcast(ios, ionode_id)
+     call errore('ld1_readin','reading inputp',abs(ios))
+     call bcast_inputp()
 
      if (lloc < 0 .and. rcloc <=0.0_dp) &
           call errore('ld1_readin','rcloc must be positive',1)
@@ -246,8 +256,10 @@ subroutine ld1_readin
                   &     ' pseudotype=1 not allowed',1)
 
      !
-     call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
-          isws, jjs, enls, rcut, rcutus )
+     if (ionode) &
+        call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
+             isws, jjs, enls, rcut, rcutus )
+     call bcast_psconfig()
      !
      if (rel==2) call occ_spinorbps &
           (nwfs,nwfsx,els,nns,lls,jjs,ocs,rcut,rcutus,enls,isws)
@@ -315,8 +327,12 @@ subroutine ld1_readin
   decut   = 5.0_dp
   rm      =30.0_dp
 
-  read(5,test,err=300,iostat=ios)
-300 continue
+  if (ionode) read(5,test,err=300,iostat=ios)
+300  call mp_bcast(ios, ionode_id)
+
+  if (iswitch==2) call errore('ld1_readin','reading inputp',abs(ios))
+  call bcast_test()
+  call mp_bcast(configts, ionode_id)
   !
   !  PP generation: if namelist test is not found, use defaults
   !
@@ -360,14 +376,19 @@ subroutine ld1_readin
   !  
   do nc=1,nconf
      if (configts(nc) == ' ') then
+        if (ionode) &
         call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
              nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
              jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
+        call mp_bcast(eltsc(:,nc),ionode_id)
      else
         call el_config( configts(nc), rel, lsd, .false., nwftsc(nc), &
              eltsc(1,nc), nntsc(1,nc), lltsc(1,nc), octsc(1,nc), &
              iswtsc(1,nc), jjtsc(1,nc))
      endif
+  enddo
+  call bcast_pstsconfig()
+  do nc=1,nconf
      !
      !  adjust the occupations of the test cases if this is a lsd run
      !
@@ -445,7 +466,7 @@ subroutine ld1_readin
         enddo
      endif
      !
-  end if
+  endif
   !
   if (lpaw) then
      if (pseudotype /= 3) call errore('ld1_readin', &
@@ -456,8 +477,146 @@ subroutine ld1_readin
           'Latter correction not implemented in PAW' ,latt)
      call errore('ld1_readin', &
           'PAW dataset generation and test is experimental' ,-1)
-  end if
+  endif
 
   return
 
 end subroutine ld1_readin
+
+subroutine bcast_input()
+  USE io_global,  ONLY : ionode_id
+  USE mp,         ONLY : mp_bcast
+  use ld1inc
+
+implicit none
+#ifdef __PARA
+   call mp_bcast( xmin, ionode_id )
+   call mp_bcast( dx, ionode_id )
+   call mp_bcast( rmax, ionode_id )
+   call mp_bcast( zed, ionode_id )
+   call mp_bcast( beta, ionode_id )
+   call mp_bcast( tr2, ionode_id )
+   call mp_bcast( iswitch, ionode_id )
+   call mp_bcast( nld, ionode_id )
+   call mp_bcast( rlderiv, ionode_id )
+   call mp_bcast( eminld, ionode_id )
+   call mp_bcast( emaxld, ionode_id )
+   call mp_bcast( deld, ionode_id )
+   call mp_bcast( lsd, ionode_id )
+   call mp_bcast( rel, ionode_id )
+   call mp_bcast( isic, ionode_id )
+   call mp_bcast( latt, ionode_id )
+   call mp_bcast( title, ionode_id )
+   call mp_bcast( prefix, ionode_id )
+   call mp_bcast( vdw, ionode_id )
+#endif
+return
+end subroutine bcast_input
+
+subroutine bcast_inputp()
+  USE io_global,  ONLY : ionode_id
+  USE mp,         ONLY : mp_bcast
+  use ld1inc
+
+implicit none
+#ifdef __PARA
+  call mp_bcast( pseudotype, ionode_id )
+  call mp_bcast( tm,  ionode_id ) 
+  call mp_bcast( rho0,  ionode_id )
+  call mp_bcast( zval,  ionode_id )
+  call mp_bcast( lloc,  ionode_id )
+  call mp_bcast( nlcc,  ionode_id )
+  call mp_bcast( rcore, ionode_id )
+  call mp_bcast( rcloc, ionode_id )
+  call mp_bcast( lpaw,  ionode_id )
+  call mp_bcast( file_pseudopw, ionode_id )
+  call mp_bcast( file_screen, ionode_id ) 
+  call mp_bcast( file_core, ionode_id )
+  call mp_bcast( file_beta, ionode_id )
+  call mp_bcast( file_chi, ionode_id )
+  call mp_bcast( file_qvan, ionode_id )
+  call mp_bcast( file_wfcaegen, ionode_id )
+  call mp_bcast( file_wfcncgen, ionode_id )
+  call mp_bcast( file_wfcusgen, ionode_id )
+  call mp_bcast( file_recon,  ionode_id )
+#endif
+  return
+end subroutine bcast_inputp
+
+subroutine bcast_test()
+  USE io_global,  ONLY : ionode_id
+  USE mp,         ONLY : mp_bcast
+  use ld1inc
+
+implicit none
+#ifdef __PARA
+   call mp_bcast( nconf, ionode_id ) 
+   call mp_bcast( file_pseudo, ionode_id )
+   call mp_bcast( ecutmin, ionode_id ) 
+   call mp_bcast( ecutmax, ionode_id ) 
+   call mp_bcast( decut, ionode_id ) 
+   call mp_bcast( rm, ionode_id )      
+#endif
+return
+end subroutine bcast_test
+
+subroutine bcast_config()
+  USE io_global,  ONLY : ionode_id
+  USE mp,         ONLY : mp_bcast
+  use ld1inc
+
+implicit none
+#ifdef __PARA
+  call mp_bcast( nwf, ionode_id )
+  call mp_bcast( el, ionode_id )
+  call mp_bcast( nn, ionode_id )
+  call mp_bcast( ll, ionode_id )
+  call mp_bcast( oc, ionode_id )
+  call mp_bcast( isw, ionode_id )
+  call mp_bcast( jj, ionode_id )
+#endif
+return
+end subroutine bcast_config
+
+subroutine bcast_psconfig()
+  USE io_global,  ONLY : ionode_id
+  USE mp,         ONLY : mp_bcast
+  use ld1inc
+
+implicit none
+#ifdef __PARA
+  call mp_bcast( nwfs, ionode_id )
+  call mp_bcast( els, ionode_id )
+  call mp_bcast( nns, ionode_id )
+  call mp_bcast( lls, ionode_id )
+  call mp_bcast( ocs, ionode_id )
+  call mp_bcast( jjs, ionode_id )
+  call mp_bcast( isws, ionode_id )
+  call mp_bcast( enls, ionode_id )
+  call mp_bcast( rcut, ionode_id )
+  call mp_bcast( rcutus, ionode_id )
+#endif
+return
+end subroutine bcast_psconfig
+
+subroutine bcast_pstsconfig()
+  USE io_global,  ONLY : ionode_id
+  USE mp,         ONLY : mp_bcast
+  use ld1inc
+
+implicit none
+#ifdef __PARA
+  call mp_bcast( nwftsc, ionode_id )
+  call mp_bcast( nntsc, ionode_id )
+  call mp_bcast( lltsc, ionode_id )
+  call mp_bcast( octsc, ionode_id )
+  call mp_bcast( jjtsc, ionode_id )
+  call mp_bcast( iswtsc, ionode_id )
+  call mp_bcast( rcuttsc, ionode_id ) 
+  call mp_bcast( rcutustsc, ionode_id )
+#endif
+return
+end subroutine bcast_pstsconfig
+
+
+

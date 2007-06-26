@@ -13,6 +13,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   !     This routine computes the chi functions:
   !          |chi> = (\epsilon -T -V_{loc}) |psi>
   !      
+  use io_global, only : stdout, ionode
   use kinds, only : DP
   use ld1inc
 
@@ -167,7 +168,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   do n=1,mesh
      chi_out(n)=chi_out(n)*sqr(n)/r2(n)
      !         if(lam.eq.0)
-     !     +    write(*,'(5(e20.13,1x))')
+     !     +    write(stdout,'(5(e20.13,1x))')
      !     +          r(n),chi_out(n),chi_out(n)/r(n)**(lam+1),
      !     +          aux(n),aux(n)*r(n)**(lam+1)
   enddo
@@ -181,7 +182,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   enddo
 
 100 if (n.eq.mesh+1.or.r(n).gt.0.05_dp)then
-     print*,lam,n,mesh,r(n)
+     write(stdout,*),lam,n,mesh,r(n)
      call errore('compute_chi','n is too large',1)
   endif
   !
@@ -203,13 +204,12 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   enddo
   integral=int_0_inf_dr(gi,r,r2,dx,mesh,nst)
   if (integral > 2.e-6_dp) then
-     write(6, '(5x,''ns='',i4,'' l='',i4, '' integral='',f15.9, &
+     write(stdout, '(5x,''ns='',i4,'' l='',i4, '' integral='',f15.9, &
           & '' r(ikk) '',f15.9)') ns, lam, integral, r(ikk_in)
-     call infomsg ('gener_pseudo ','chi too large beyond r_c', -1)
      do n=ikk_in,mesh
-        write(6,*) r(n),gi(n)
+        write(stdout,*) r(n),gi(n)
      enddo
-     stop
+     call errore ('gener_pseudo ','chi too large beyond r_c', 1)
   endif
   return
 end subroutine compute_chi

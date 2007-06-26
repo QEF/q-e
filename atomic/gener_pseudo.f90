@@ -29,6 +29,8 @@ subroutine gener_pseudo
   !
   !     The construction of a PAW dataset can also be done (experimental)
   !      
+  use io_global, only : stdout, ionode, ionode_id
+  use mp,        only : mp_bcast
   use ld1inc
   use atomic_paw, only : us2paw, paw2us
   implicit none
@@ -72,13 +74,13 @@ subroutine gener_pseudo
 
 
   if (lpaw) then
-     write(6, &
+     write(stdout, &
           '(/,5x,21(''-''),'' Generating PAW atomic setup '',20(''-''),/)')
   elseif (pseudotype == 1.or.pseudotype == 2) then
-     write(6, &
+     write(stdout, &
           '(/,5x,21(''-''),'' Generating NC pseudopotential '',21(''-''),/)')
   elseif (pseudotype == 3) then
-     write(6, &
+     write(stdout, &
           '(/,5x,21(''-''),'' Generating US pseudopotential '',21(''-''),/)')
   else
      call errore('gener_pseudo','pseudotype not programmed',1)
@@ -175,8 +177,9 @@ subroutine gener_pseudo
      endif
   enddo
 
+
   !      do n=1,mesh
-  !         write(6,'(5e15.7)') r(n),psipsus(n,1),chis(n,1),
+  !         write(stdout,'(5e15.7)') r(n),psipsus(n,1),chis(n,1),
   !     +                            psipsus(n,2),chis(n,2)
   !      enddo
   !      stop
@@ -301,13 +304,13 @@ subroutine gener_pseudo
            endif
         enddo
      enddo
-     write(6,'(/5x,'' The bmat matrix'')')
+     write(stdout,'(/5x,'' The bmat matrix'')')
      do ns1=1,nbeta
-        write(6,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
+        write(stdout,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
      enddo
-     write(6,'(/5x,'' The qq matrix'')')
+     write(stdout,'(/5x,'' The qq matrix'')')
      do ns1=1,nbeta
-        write(6,'(6f12.5)') (qq(ns1,ns),ns=1,nbeta)
+        write(stdout,'(6f12.5)') (qq(ns1,ns),ns=1,nbeta)
      enddo
   endif
 
@@ -363,20 +366,28 @@ subroutine gener_pseudo
   !     print the main functions on files
   !
   if (file_beta .ne. ' ') then
-     open(unit=19,file=file_beta, status='unknown', iostat=ios, err=400)
-400  call errore('gener_pseudo','opening file '//file_beta,abs(ios))
-     do n=1,mesh
-        write(19,'(8f12.6)') r(n), (betas(n,ns), ns=1,nbeta)
-     enddo
-     close(19)
+     if (ionode) &
+        open(unit=19,file=file_beta, status='unknown', iostat=ios, err=400)
+400  call mp_bcast(ios, ionode_id)
+     call errore('gener_pseudo','opening file '//file_beta,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(19,'(8f12.6)') r(n), (betas(n,ns), ns=1,nbeta)
+        enddo
+        close(19)
+     endif
   endif
   if (file_chi .ne. ' ') then
-     open(unit=19,file=file_chi, status='unknown', iostat=ios, err=600)
-600  call errore('gener_pseudo','opening file '//file_chi,abs(ios))
-     do n=1,mesh
-        write(19,'(8f12.6)') r(n), (chis(n,ns), ns=1,nbeta)
-     enddo
-     close(19)
+     if (ionode) &
+        open(unit=19,file=file_chi, status='unknown', iostat=ios, err=600)
+600  call mp_bcast(ios, ionode_id)
+     call errore('gener_pseudo','opening file '//file_chi,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(19,'(8f12.6)') r(n), (chis(n,ns), ns=1,nbeta)
+        enddo
+        close(19)
+     endif
   endif
   if (file_qvan .ne. ' ') then
      do ns1=1,nbeta
@@ -388,41 +399,62 @@ subroutine gener_pseudo
         else
            write(indqvan,'(".",i3)') ns1
         endif
-        open(unit=19,file=TRIM(file_qvan)//TRIM(indqvan), status='unknown', &
+
+
+        if (ionode) &
+           open(unit=19,file=TRIM(file_qvan)//TRIM(indqvan), status='unknown', &
              iostat=ios, err=700)
-700     call errore('gener_pseudo','opening file '//file_qvan,abs(ios))
-        do n=1,mesh
-           write(19,'(8f12.6)') r(n), (qvan(n,ns,ns1), ns=1,ns1)
-        enddo
-        close(19)
+700     call mp_bcast(ios, ionode_id)
+        call errore('gener_pseudo','opening file '//file_qvan,abs(ios))
+        if (ionode) then
+           do n=1,mesh
+              write(19,'(8f12.6)') r(n), (qvan(n,ns,ns1), ns=1,ns1)
+           enddo
+           close(19)
+        endif
      enddo
-  endif
-  if (file_wfcaegen .ne. ' ') then
-     open(unit=19,file=file_wfcaegen, status='unknown', iostat=ios, err=800)
-800  call errore('gener_pseudo','opening file '//file_wfcaegen,abs(ios))
-     do n=1,mesh
-        write(19,'(8f12.6)') r(n), (psipaw(n,ns), ns=1,nwfs)
-     enddo
-     close(19)
-  endif
-  if (file_wfcncgen .ne. ' ') then
-     open(unit=19,file=file_wfcncgen, status='unknown', iostat=ios, err=900)
-900  call errore('gener_pseudo','opening file '//file_wfcncgen,abs(ios))
-     do n=1,mesh
-        write(19,'(8f12.6)') r(n), (psipsus(n,ns), ns=1,nwfs)
-     enddo
-     close(19)
-  endif
-  if (file_wfcusgen .ne. ' ') then
-     open(unit=19,file=file_wfcusgen, status='unknown', iostat=ios, err=1000)
-1000  call errore('gener_pseudo','opening file '//file_wfcusgen,abs(ios))
-     do n=1,mesh
-        write(19,'(8f12.6)') r(n), (phis(n,ns), ns=1,nwfs)
-     enddo
-     close(19)
   endif
 
-  write(6,"(/,5x,19('-'),' End of pseudopotential generation ',19('-'),/)")
+  if (file_wfcaegen .ne. ' ') then
+     if (ionode) &
+        open(unit=19,file=file_wfcaegen, status='unknown', iostat=ios, err=800)
+800  call mp_bcast(ios, ionode_id)
+     call errore('gener_pseudo','opening file '//file_wfcaegen,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(19,'(8f12.6)') r(n), (psipaw(n,ns), ns=1,nwfs)
+        enddo
+        close(19)
+     endif
+  endif
+
+  if (file_wfcncgen .ne. ' ') then
+     if (ionode) & 
+        open(unit=19,file=file_wfcncgen, status='unknown', iostat=ios,err=900)
+900  call mp_bcast(ios, ionode_id)
+     call errore('gener_pseudo','opening file '//file_wfcncgen,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(19,'(8f12.6)') r(n), (psipsus(n,ns), ns=1,nwfs)
+        enddo
+        close(19)
+     endif
+  endif
+
+  if (file_wfcusgen .ne. ' ') then
+     if (ionode) & 
+        open(unit=19,file=file_wfcusgen, status='unknown', iostat=ios,err=1000)
+1000 call mp_bcast(ios, ionode_id)
+     call errore('gener_pseudo','opening file '//file_wfcusgen,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(19,'(8f12.6)') r(n), (phis(n,ns), ns=1,nwfs)
+        enddo
+        close(19)
+     endif
+  endif
+
+  write(stdout,"(/,5x,19('-'),' End of pseudopotential generation ',19('-'),/)")
 
   return
 end subroutine gener_pseudo

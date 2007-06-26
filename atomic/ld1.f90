@@ -17,19 +17,18 @@ program ld1
   !                       The same applies to the core charge
   !---------------------------------------------------------------
   !
-  USE global_version,     ONLY : version_number
+  USE global_version,    ONLY : version_number
+  USE io_files,          ONLY : nd_nmbr
+  USE mp,                ONLY : mp_barrier, mp_end
   USE ld1inc
   !
   implicit none
   character :: day*9, hour*9
-
+  CHARACTER (LEN=9) :: code = 'LD1'
   !
   !   write initialization information
   !
-  call date_and_tim(day,hour)
-  write(6,100)  version_number, day, hour
-100 format(/5x,'program ld1 starts. version ',a6 &
-       /5x,'today is ',a9,' at ',a9/)
+  call startup( nd_nmbr, code, version_number )
   !
   !    read input, possible pseudopotential and set the main variables
   !
@@ -62,5 +61,7 @@ program ld1
   else
      call errore('ld1','iswitch not implemented',1)
   endif
+  call mp_barrier()
+  call mp_end()
 
 end program ld1

@@ -14,6 +14,8 @@ subroutine lderivps
   !  computing logarithmic derivatives for pseudo-potentials
   !  multiple nonlocal projectors are allowed
   !
+  use io_global, only : stdout, ionode, ionode_id
+  use mp,        only : mp_bcast
   use ld1inc
   implicit none
 
@@ -46,6 +48,7 @@ subroutine lderivps
 
   integer :: &
        ib,jb,iib,jjb, &  ! counters on beta functions
+       ikmin,         &  ! minimum value of ik
        nst,nstop,     &  ! auxiliary for integrals
        ios,           &  ! used for I/O control
        is, ind           ! counters on index
@@ -65,10 +68,16 @@ subroutine lderivps
   enddo
   call errore('lderivps','wrong rlderiv?',1)
 10 ikrld = n-1
-  write(6,'(5x,''Computing logarithmic derivative in'',f10.5)') &
+  write(stdout,'(5x,''Computing logarithmic derivative in'',f10.5)') &
        (r(ikrld)+r(ikrld+1))*0.5_dp
   npte= (emaxld-eminld)/deld + 1
   allocate ( dlchis(npte,nld) )
+  ikmin=ikrld+5
+  if (nbeta>0) then
+     do nbf=1,nbeta
+        ikmin=max(ikmin,ikk(nbeta))
+     enddo
+  endif
   do is=1,nspin
      do nc=1,nld
         if (rel < 2) then
@@ -95,7 +104,7 @@ subroutine lderivps
            do n=1,mesh
               vaux(n) = vpstot(n,is) + vnl(n,lam,ind)
            enddo
-           nbf=0.0
+           nbf=0
         else
            do n=1,mesh
               vaux(n) = vpstot(n,is)
@@ -131,7 +140,7 @@ subroutine lderivps
            enddo
 
            call integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,al, &
-                b,aux,betas,ddd,qq,nbf,nwfsx,lls,jjs,ikrld+5)
+                b,aux,betas,ddd,qq,nbf,nwfsx,lls,jjs,ikmin)
 
            !
            !    compute the logarithmic derivative and save in dlchi
@@ -151,14 +160,18 @@ subroutine lderivps
      else
         flld = trim(file_logderps)
      end if
-     open(unit=25, file=flld, status='unknown', iostat=ios, err=300 )
-300  call errore('lderivps','opening file '//flld, abs(ios))
+     if (ionode) &
+        open(unit=25, file=flld, status='unknown', iostat=ios, err=300 )
+300  call mp_bcast(ios, ionode_id)
+     call errore('lderivps','opening file '//flld, abs(ios))
 
-     do ie=1,npte
-        e= eminld+deld*(ie-1)
-        write(25,'(10f14.6)') e, (dlchis(ie,nc),nc=1,nld)
-     enddo
-     close(unit=25)
+     if (ionode) then
+        do ie=1,npte
+           e= eminld+deld*(ie-1)
+           write(25,'(10f14.6)') e, (dlchis(ie,nc),nc=1,nld)
+        enddo
+        close(unit=25)
+     endif
   enddo
 
   deallocate(dlchis)

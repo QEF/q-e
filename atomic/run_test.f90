@@ -12,6 +12,8 @@ subroutine run_test
   !   This routine is a driver to the tests of the pseudopotential
   !---------------------------------------------------------------
   !
+  use io_global, only : ionode, ionode_id
+  use mp,        only : mp_bcast
 
   use ld1inc
   implicit none
@@ -33,8 +35,10 @@ subroutine run_test
   enddo
 
   file_tests = trim(prefix)//'.test'
-  open(unit=13, file=file_tests, iostat=ios, err=1111, status='unknown')
-1111 call errore('ld1_setup','opening file_tests',abs(ios))
+  if (ionode) &
+     open(unit=13, file=file_tests, iostat=ios, err=1111, status='unknown')
+1111 call mp_bcast(ios, ionode_id)
+     call errore('ld1_setup','opening file_tests',abs(ios))
 
   do nc=1,nconf
      if (nconf == 1) then
@@ -129,7 +133,7 @@ subroutine run_test
      call test_bessel ( )
      !
   enddo
-  close (unit = 13)  
+  if (ionode) close (unit = 13)  
 
   return
 end subroutine run_test

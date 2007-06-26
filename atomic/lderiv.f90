@@ -14,6 +14,8 @@ subroutine lderiv
   !  computing logarithmic derivatives for Coulomb potential
   !
   !
+  use io_global, only : stdout, ionode, ionode_id
+  use mp,        only : mp_bcast
   use ld1inc
 
   implicit none
@@ -54,7 +56,7 @@ subroutine lderiv
   enddo
   call errore('lderiv','wrong rlderiv?',1)
 10 ikrld = n-1
-  write(6,'(5x,''Computing logarithmic derivative in'',f10.5)') &
+  write(stdout,'(5x,''Computing logarithmic derivative in'',f10.5)') &
        (r(ikrld)+r(ikrld+1))*0.5_dp
 
   npte= (emaxld-eminld)/deld + 1
@@ -92,7 +94,7 @@ subroutine lderiv
            dlchi(ie, nc) = compute_log(aux(ikrld-3),r(ikrld),dx)
         enddo
      enddo
-
+      
      if (nspin == 2 .and. is == 1) then
         flld = trim(file_logder)//'up'
      else if (nspin == 2 .and. is == 2) then
@@ -100,15 +102,17 @@ subroutine lderiv
      else
         flld = trim(file_logder)
      end if
-     open(unit=25, file=flld, status='unknown', iostat=ios, err=300 )
-300  call errore('lderivps','opening file '//flld, abs(ios))
-
-     do ie=1,npte
-        e= eminld+deld*(ie-1)
-        write(25,'(10f14.6)') e, (dlchi(ie,nc),nc=1,nld)
-     enddo
-     close(unit=25)
-
+     if (ionode) &
+        open(unit=25, file=flld, status='unknown', iostat=ios, err=300 )
+300  call mp_bcast(ios,ionode_id)
+     call errore('lderivps','opening file '//flld, abs(ios))
+     if (ionode) then
+        do ie=1,npte
+           e= eminld+deld*(ie-1)
+           write(25,'(10f14.6)') e, (dlchi(ie,nc),nc=1,nld)
+        enddo
+        close(unit=25)
+     endif
   enddo
   deallocate (dlchi)
   return

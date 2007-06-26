@@ -13,6 +13,8 @@ subroutine set_rho_core
   !      input : all-electron wavefunctions + valence states
   !      output: smoothed core charge for r > rcore
   !
+  use io_global, only : stdout, ionode, ionode_id
+  use mp,        only : mp_bcast
   use ld1inc
   implicit none
 
@@ -23,9 +25,9 @@ subroutine set_rho_core
   integer :: i, ik, n, ns, ios
 
   if (nlcc) then
-     write(6,'(/,5x,'' Computing core charge for nlcc: '')')
+     write(stdout,'(/,5x,'' Computing core charge for nlcc: '')')
   else
-     if (lpaw) write(6,'(/,5x,'' Computing core charge for PAW: '')')
+     if (lpaw) write(stdout,'(/,5x,'' Computing core charge for PAW: '')')
   end if
   pi = 4.0_dp*atan(1.0_dp)
   allocate (rhov(mesh), rhoco(mesh))
@@ -52,7 +54,7 @@ subroutine set_rho_core
      enddo
   enddo
 !  totrho = int_0_inf_dr(rhoc,r,r2,dx,mesh,2)
-!  write(6,'("Integrated core charge",f15.10)') totrho
+!  write(stdout,'("Integrated core charge",f15.10)') totrho
   rhoco(:) = rhoc(1:mesh)
   if (lpaw) aeccharge(1:mesh) = rhoc(1:mesh)
   !
@@ -109,23 +111,26 @@ subroutine set_rho_core
      rhoc(n) = a*sin(b*r(n))/r(n) * r2(n)
   end do
   if (lpaw) psccharge(1:mesh) = rhoc(1:mesh)
-  write(6,'(/,5x,''  r > '',f4.2,'' : true rho core'')') r(ik)
-  write(6,110) r(ik), a, b
+  write(stdout,'(/,5x,''  r > '',f4.2,'' : true rho core'')') r(ik)
+  write(stdout,110) r(ik), a, b
 110 format (5x, '  r < ',f4.2,' : rho core = a sin(br)/r', &
        '    a=',f7.2,'  b=',f7.2/)
   if (file_core .ne. ' ') then
-     write(6,*) '***Writing file ',trim(file_core),' ***'
-     open(unit=26,file=file_core, status='unknown', iostat=ios, &
-          err=300 )
-300  call errore('set_rho_core','opening file '//file_core,abs(ios))
-     do n=1,mesh
-        write(26,'(4f20.10)') r(n),rhoc(n),rhov(n),rhoco(n)
-     enddo
-     close(26)
+     write(stdout,*) '***Writing file ',trim(file_core),' ***'
+     if (ionode) &
+        open(unit=26,file=file_core, status='unknown', iostat=ios, err=300 )
+300  call mp_bcast(ios, ionode_id)
+     call errore('set_rho_core','opening file '//file_core,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(26,'(4f20.10)') r(n),rhoc(n),rhov(n),rhoco(n)
+        enddo
+        close(26)
+     endif
   endif
   deallocate (rhoco, rhov)
   totrho = int_0_inf_dr(rhoc,r,r2,dx,mesh,2)
-  write(6,'(13x,''integrated core pseudo-charge : '',f6.2)')  totrho
+  write(stdout,'(13x,''integrated core pseudo-charge : '',f6.2)')  totrho
   if (.not.nlcc) rhoc(1:mesh) = 0.0_dp
   return
 end subroutine set_rho_core

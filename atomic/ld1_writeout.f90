@@ -14,6 +14,8 @@ subroutine ld1_writeout
   !     a multiprojector pseudopotential. It can be in the
   !     Vanderbilt form or in the norm-conserving form
   !
+  use io_global, only : stdout, ionode, ionode_id
+  use mp,        only : mp_bcast
   use ld1inc
   use funct, only : get_dft_name
   use atomic_paw, only : paw_io
@@ -51,49 +53,54 @@ subroutine ld1_writeout
   end if
 
   iunps=28
-  open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
-       form='formatted', err=50, iostat=ios)
-50 call errore('ld1_writeout','opening file_pseudopw',abs(ios))
+  if (ionode) &
+     open(unit=iunps, file=trim(file_pseudopw), status='unknown',  &
+          form='formatted', err=50, iostat=ios)
+50  call mp_bcast(ios, ionode_id)
+  call errore('ld1_writeout','opening file_pseudopw',abs(ios))
 
-  if (lpaw) then
-     !
-     ! write experimental PAW setup
-     !
-     call paw_io(pawsetup,iunps,"OUT")
-     !
-  else if (oldformat) then
-     !
-     if (pseudotype == 1) then
-       dft_name = get_dft_name()
-       !
-       ! write in CPMD format 
-       if ( matches('.psp',file_pseudopw) ) then
-          call write_cpmd &
-               (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
-               dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
-               rhoc,vnl,phits,vpsloc,elts,llts,octs,rcut,etots,nwfts)
-       else
-       ! write old "NC" format (semilocal)
-       !
-          call write_pseudo &
-               (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
-               dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
-               rhoc,vnl,phits,vpsloc,elts,llts,octs,etots,nwfts)
-       end if
+  if (ionode) then
+     if (lpaw) then
+        !
+        ! write experimental PAW setup
+        !
+        call paw_io(pawsetup,iunps,"OUT")
+        !
+     else if (oldformat) then
+        !
+        if (pseudotype == 1) then
+          dft_name = get_dft_name()
+          !
+          ! write in CPMD format 
+          if ( matches('.psp',file_pseudopw) ) then
+             call write_cpmd &
+                  (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
+                  dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
+                  rhoc,vnl,phits,vpsloc,elts,llts,octs,rcut,etots,nwfts)
+          else
+          !
+          ! write old "NC" format (semilocal)
+          !
+             call write_pseudo &
+                  (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
+                  dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
+                  rhoc,vnl,phits,vpsloc,elts,llts,octs,etots,nwfts)
+          end if
+        else
+          !
+          ! write old "RRKJ" format (nonlocal)
+          !
+           call write_rrkj ( iunps )
+        end if
+        !
      else
-       !
-       ! write old "RRKJ" format (nonlocal)
-       !
-        call write_rrkj ( iunps )
-     end if
+        !
+        call write_upf(iunps)
+        !
+     endif
      !
-  else
-     !
-     call write_upf(iunps)
-     !
+     close(iunps)
   endif
-  !
-  close(iunps)
   !
   return
 end subroutine ld1_writeout

@@ -15,6 +15,8 @@ subroutine descreening
   !     The charge density is computed with the test configuration,
   !     not the one used to generate the pseudopotential
   !      
+  use io_global, only : stdout, ionode, ionode_id
+  use mp,        only : mp_bcast
   use ld1inc
   implicit none
 
@@ -68,9 +70,9 @@ subroutine descreening
            bmat(jb,ib)=bmat(ib,jb)
         enddo
      enddo
-     write(6,'(/5x,'' The ddd matrix'')')
+     write(stdout,'(/5x,'' The ddd matrix'')')
      do ns1=1,nbeta
-        write(6,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
+        write(stdout,'(6f12.5)') (bmat(ns1,ns),ns=1,nbeta)
      enddo
   endif
   !
@@ -88,14 +90,17 @@ subroutine descreening
   enddo
 
   if (file_screen .ne.' ') then
-     open(unit=20,file=file_screen, status='unknown', iostat=ios, &
-          err=100 )
-100  call errore('descreening','opening file'//file_screen,abs(ios))
-     do n=1,mesh
-        write(20,'(i5,7e12.4)') n,r(n), vpsloc(n)+vaux(n,1), vpsloc(n), &
-             vaux(n,1),   rhos(n,1)
-     enddo
-     close(20)
+     if (ionode) &
+        open(unit=20,file=file_screen, status='unknown', iostat=ios, err=100 )
+100  call mp_bcast(ios, ionode_id)
+     call errore('descreening','opening file'//file_screen,abs(ios))
+     if (ionode) then
+        do n=1,mesh
+           write(20,'(i5,7e12.4)') n,r(n), vpsloc(n)+vaux(n,1), vpsloc(n), &
+                vaux(n,1),   rhos(n,1)
+        enddo
+        close(20)
+     endif
   endif
 
   return
