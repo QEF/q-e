@@ -85,7 +85,7 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   jkb = 0
   do nt = 1, ntyp
      
-     allocate ( vkb1(npw_,paw_recon(nt)%paw_nbeta) )
+     allocate ( vkb1(npw_,paw_recon(nt)%paw_nh) )
      
      ! calculate beta in G-space using an interpolation table
      do nb = 1, paw_recon(nt)%paw_nbeta
