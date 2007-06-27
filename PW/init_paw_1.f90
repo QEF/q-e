@@ -125,8 +125,8 @@ subroutine init_paw_1
         rc = paw_recon(nt)%psphi(j)%label%rc
         !rs = 1.0_dp / 3.0_dp * rc
         rs = 2.0_dp / 3.0_dp * rc
-        nrc = Count ( r(1:msh(nt),nt) <= rc )
-        nrs = Count ( r(1:msh(nt),nt) <= rs )
+        nrc = COUNT ( r(1:msh(nt),nt) <= rc )
+        nrs = COUNT ( r(1:msh(nt),nt) <= rs )
         !<debug>
         write(stdout,*) "ZZZ: ", rc, rs, nrc, nrs
         !</debug>
@@ -136,6 +136,8 @@ subroutine init_paw_1
              CALL errore ( "init_paw_1", "impossible value for nrs", 1 )
         paw_recon(nt)%psphi(j)%label%nrc = nrc
         paw_recon(nt)%aephi(j)%label%nrc = nrc
+        paw_recon(nt)%psphi(j)%label%nrs = nrs
+        paw_recon(nt)%aephi(j)%label%nrs = nrs
         call step_f(aux,paw_recon(nt)%psphi(j)%psi**2,r(:,nt),nrs,nrc,pow,msh(nt))
         call simpson ( msh(nt), aux, rab(1,nt), norm )
         
@@ -157,12 +159,18 @@ subroutine init_paw_1
               n1 = paw_recon(nt)%paw_iltonh(l,ih)
               do jh = 1, paw_recon(nt)%paw_nl(l)
                  n2 = paw_recon(nt)%paw_iltonh(l,jh)
+                 
+                 nrc = MIN ( paw_recon(nt)%psphi(n1)%label%nrc, &
+                      paw_recon(nt)%psphi(n2)%label%nrc )
+                 nrs = MIN ( paw_recon(nt)%psphi(n1)%label%nrs, &
+                      paw_recon(nt)%psphi(n2)%label%nrs )
+                 
                  call step_f ( aux, paw_recon(nt)%psphi(n1)%psi(1:msh(nt)) &
                       * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), r(:,nt), &
                       nrs, nrc, pow, msh(nt) )
                  call simpson ( msh(nt), aux, rab(1,nt), s(ih,jh) )
-                 !<apsi>
                  
+                 !<apsi>
                  IF ( ih > jh ) THEN
                     IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-5_dp ) THEN
                        WRITE ( stdout, '(5X,2A,/,5X,A,I3,A,3I2,F12.8)' ) &
@@ -186,6 +194,7 @@ subroutine init_paw_1
                     END IF
                  END IF
                  !</apsi>
+                 
               end do
            end do
            
@@ -213,6 +222,10 @@ subroutine init_paw_1
                       = paw_recon(nt)%paw_betar(1:msh(nt),n1) &
                       + sinv(ih,jh) * paw_recon(nt)%psphi(n2)%psi(1:msh(nt))
               end do
+              
+              nrc = paw_recon(nt)%psphi(n1)%label%nrc
+              nrs = paw_recon(nt)%psphi(n1)%label%nrs
+              
               call step_f ( aux, &
                    paw_recon(nt)%paw_betar(1:msh(nt),n1),r(:,nt), &
                    nrs,nrc,pow,msh(nt))

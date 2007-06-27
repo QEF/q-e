@@ -50,7 +50,8 @@ MODULE paw
           n  ,        &   ! Chi index
           l  ,        &   ! l
           m  ,        &   ! m
-          nrc             ! indice of core radius in mesh
+          nrc,        &   ! index of core radius on mesh
+          nrs             ! index of inner core radius (where "f_step" starts)
      real(DP) :: rc  ! paw core radius
   end type wfc_label
 
