@@ -32,13 +32,8 @@ SUBROUTINE g_tensor_crystal
                                          evq, alpha, nbnd_occ, &
                                          iverbosity
   USE buffers,                     ONLY : get_buffer
-  !<apsi>
-!  USE paw,                         ONLY: paw_vkb, paw_becp, paw_nkb, aephi, &
-!                                         psphi, paw_nh, paw_nhtol, &
-!                                         paw_nhtom, paw_indv, paw_nbeta
   USE paw,                         ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE ions_base, ONLY : nat
-  !</apsi>
   
   !-- local variables ----------------------------------------------------
   IMPLICIT NONE
