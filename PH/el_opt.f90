@@ -106,16 +106,13 @@ subroutine el_opt
      if ( rhotot.lt.-1.d-30 ) d2muxc(ir)=-d2mxc(-rhotot)
   enddo
 
-!  do ipa = 1, 3
-!     do ipb = 1, ipa
-!        do ipc = 1, ipb
   do ipa = 1, 3
      do ipb = 1, 3
         do ipc = 1, 3
            tmp = (0.d0, 0.d0)
            do ir = 1, nrxx
-              tmp = tmp + d2muxc (ir) * aux3 (1, ipa) *   &
-                        aux3 (1, ipb) * aux3 (1, ipc)
+              tmp = tmp + d2muxc (ir) * aux3 (ir, ipa) *   &
+                       aux3 (ir, ipb) * aux3 (ir, ipc)
            enddo
            ps3 (ipa, ipb, ipc) =  DBLE(tmp)
         enddo
@@ -123,21 +120,6 @@ subroutine el_opt
   enddo
 
   call DSCAL (27, omega / (nr1 * nr2 * nr3), ps3, 1)
-
-!  do ipa = 2, 3
-!     do ipb = 1, ipa-1
-!        ps3 (ipa, ipb, ipa ) = ps3 (ipa, ipa, ipb)
-!        ps3 (ipb, ipa, ipa ) = ps3 (ipa, ipa, ipb)
-!        ps3 (ipb, ipa, ipb ) = ps3 (ipa, ipb, ipb)
-!        ps3 (ipb, ipb, ipa ) = ps3 (ipa, ipb, ipb)
-!     enddo
-!  enddo
-!
-!  ps3 (1,2,3) = ps3 (3,2,1)
-!  ps3 (2,1,3) = ps3 (3,2,1)
-!  ps3 (1,3,2) = ps3 (3,2,1)
-!  ps3 (3,1,2) = ps3 (3,2,1)
-!  ps3 (2,3,1) = ps3 (3,2,1)
 
   deallocate (d2muxc )
   deallocate (aux3   )
