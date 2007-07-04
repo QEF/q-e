@@ -20,7 +20,7 @@ MODULE ramanm
   ! delta_xk used for wavefunctions derivation
 
   LOGICAL :: lraman, elop
-  INTEGER :: iud2w, iuba2, lrd2w, lrba2
+  INTEGER :: iuchf, iud2w, iuba2, lrchf, lrd2w, lrba2
   ! unit for chi-wavefuntion
   ! unit for the second derivative of the wavefunction
   ! unit for nscf part of the potential in scf calc.
