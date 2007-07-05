@@ -6,3 +6,4 @@ fftw.o :
 fftw.o : 
 indici.o : ../include/c_defs.h
 memstat.o : ../include/c_defs.h
+stack.o : ../include/c_defs.h

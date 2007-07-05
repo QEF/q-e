@@ -3,6 +3,7 @@ bachel.o : ../Modules/constants.o
 bachel.o : ../Modules/kind.o
 dost.o : ../Modules/kind.o
 dylmr2.o : ../Modules/kind.o
+erf.o : ../Modules/kind.o
 error.o : ../Modules/io_files.o
 error.o : ../Modules/io_global.o
 error.o : ../Modules/parallel_include.o

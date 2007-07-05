@@ -294,6 +294,8 @@ dvqpsi_us_only.o : ../PW/pwcom.o
 dvqpsi_us_only.o : phcom.o
 dyndia.o : ../Modules/io_global.o
 dyndia.o : ../Modules/kind.o
+dynmat.o : ../Modules/constants.o
+dynmat.o : ../Modules/kind.o
 dynmat0.o : ../Modules/cell_base.o
 dynmat0.o : ../Modules/control_flags.o
 dynmat0.o : ../Modules/ions_base.o
@@ -411,6 +413,11 @@ localdos.o : ../Modules/wavefunctions.o
 localdos.o : ../PW/noncol.o
 localdos.o : ../PW/pwcom.o
 localdos.o : phcom.o
+matdyn.o : ../Modules/constants.o
+matdyn.o : ../Modules/kind.o
+matdyn.o : ../Modules/mp.o
+matdyn.o : ../Modules/mp_global.o
+matdyn.o : ../Modules/parameters.o
 newdq.o : ../Modules/ions_base.o
 newdq.o : ../Modules/kind.o
 newdq.o : ../Modules/uspp.o
@@ -492,6 +499,7 @@ phq_setup.o : phcom.o
 phq_summary.o : ../Modules/cell_base.o
 phq_summary.o : ../Modules/constants.o
 phq_summary.o : ../Modules/control_flags.o
+phq_summary.o : ../Modules/functionals.o
 phq_summary.o : ../Modules/io_global.o
 phq_summary.o : ../Modules/ions_base.o
 phq_summary.o : ../Modules/printout_base.o
@@ -549,6 +557,10 @@ punch_plot_ph.o : ../Modules/kind.o
 punch_plot_ph.o : ../PW/pwcom.o
 punch_plot_ph.o : phcom.o
 q2qstar_ph.o : ../Modules/kind.o
+q2r.o : ../Modules/fft_scalar.o
+q2r.o : ../Modules/kind.o
+q2r.o : ../Modules/mp.o
+q2r.o : ../Modules/mp_global.o
 q_points.o : ../Modules/cell_base.o
 q_points.o : ../Modules/io_global.o
 q_points.o : ../Modules/kind.o
@@ -568,6 +580,8 @@ raman_mat.o : ramanm.o
 ramanm.o : ../Modules/kind.o
 random_matrix.o : ../Modules/kind.o
 random_matrix.o : ../Modules/random_numbers.o
+rigid.o : ../Modules/constants.o
+rigid.o : ../Modules/kind.o
 rotate_and_add_dyn.o : ../Modules/constants.o
 rotate_and_add_dyn.o : ../Modules/kind.o
 set_asr_c.o : ../Modules/kind.o
@@ -801,6 +815,7 @@ dvpsi_e2.o : ../include/f_defs.h
 dvqpsi_us.o : ../include/f_defs.h
 dvqpsi_us_only.o : ../include/f_defs.h
 dyndia.o : ../include/f_defs.h
+dynmat.o : ../include/f_defs.h
 dynmat0.o : ../include/f_defs.h
 dynmat_us.o : ../include/f_defs.h
 dynmatcc.o : ../include/f_defs.h
@@ -817,6 +832,7 @@ incdrhoscf_nc.o : ../include/f_defs.h
 incdrhous.o : ../include/f_defs.h
 incdrhous_nc.o : ../include/f_defs.h
 localdos.o : ../include/f_defs.h
+matdyn.o : ../include/f_defs.h
 newdq.o : ../include/f_defs.h
 pcgreen.o : ../include/f_defs.h
 phq_init.o : ../include/f_defs.h
@@ -834,9 +850,11 @@ psyme2.o : ../include/f_defs.h
 punch_plot_e.o : ../include/f_defs.h
 punch_plot_ph.o : ../include/f_defs.h
 q2qstar_ph.o : ../include/f_defs.h
+q2r.o : ../include/f_defs.h
 raman.o : ../include/f_defs.h
 raman_mat.o : ../include/f_defs.h
 random_matrix.o : ../include/f_defs.h
+rigid.o : ../include/f_defs.h
 rotate_and_add_dyn.o : ../include/f_defs.h
 set_asr_c.o : ../include/f_defs.h
 set_drhoc.o : ../include/f_defs.h

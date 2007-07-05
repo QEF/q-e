@@ -59,6 +59,7 @@ chdens.o : ../Modules/io_files.o
 chdens.o : ../Modules/io_global.o
 chdens.o : ../Modules/ions_base.o
 chdens.o : ../Modules/kind.o
+chdens.o : ../Modules/mp.o
 chdens.o : ../Modules/mp_global.o
 chdens.o : ../Modules/parameters.o
 chdens.o : ../Modules/wavefunctions.o
