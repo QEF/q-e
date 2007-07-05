@@ -2600,7 +2600,7 @@ MODULE pw_restart
                   nkl=(ipol-1)*npwx+1
                   nkr= ipol   *npwx
                   CALL read_wfc( iunout, ik, nkstot, kunit, ispin,          &
-                                 nspin, evc(nkl:nkr,:), npw_g, nbnd,        &
+                                 npol, evc(nkl:nkr,:), npw_g, nbnd,         &
                                  igk_l2g_kdip(:,ik-iks+1), ngk(ik-iks+1),   &
                                  filename, scalef )
                   !
