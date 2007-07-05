@@ -300,6 +300,8 @@ occupations    CHARACTER
                                (see PRB49, 16223 (1994))
                                Requires uniform grid of k-points,
                                automatically generated (see below)
+                               Not suitable (because not variational) for
+                               force/optimization/dynamics calculations
                'fixed' :       for insulators with a gap
                'from_input' :  The occupation are read from input file.
                                Presently works only with one k-point
@@ -964,12 +966,19 @@ Description:
 
 -------------------------------------------------------------------------------
 
-ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
+ATOMIC_POSITIONS { alat | bohr | angstrom | crystal }
 
-   alat    : atomic positions are in units of alat (default)
-   bohr    : atomic positions are in a.u.
-   crystal : atomic positions are in crystal coordinates (see below)
-   angstrom: atomic positions are in A
+   alat    : atomic positions are in cartesian coordinates,
+             in units of the lattice parameter "a" (default)
+
+   bohr    : atomic positions are in cartesian coordinate, 
+             in atomic units (i.e. Bohr)
+
+   angstrom: atomic positions are in cartesian coordinates, 
+             in Angstrom
+
+   crystal : atomic positions are in crystal coordinates, i.e.
+             in relative coordinates of the primitive lattice vectors (see below)
 
 - in all cases EXCEPT calculation = 'neb' or 'smd' :
 
@@ -1025,10 +1034,7 @@ ATOMIC_POSITIONS { alat | bohr | crystal | angstrom }
 
 K_POINTS { tpiba | automatic | crystal | gamma }
 
-   gamma    : use k = 0 ( do not read anything after this card )
-              Note that a set of subroutines optimized for calculations
-              at the gamma point are used so that both memory and cpu
-              requirements are reduced
+   tpiba    : read k-points in cartesian coordinates, in units of 2 pi/a (default)
    automatic: automatically generated uniform grid of k-points
               next card:
    nk1, nk2, nk3, k1, k2, k3
@@ -1038,8 +1044,14 @@ K_POINTS { tpiba | automatic | crystal | gamma }
               by half a grid step in the corresponding direction )
               BEWARE: only grids having the full symmetry of the crystal
               work with tetrahedra. Some grids with offset may not work.
-   crystal  : read k-points in crystal coordinates
-   tpiba    : read k-points in 2pi/a units ( default )
+   crystal  : read k-points in crystal coordinates, i.e. in relative
+              coordinates of the reciprocal lattive vectors
+   gamma    : use k = 0 (no need to list k-point specifications after card)
+              In this case wavefunctions can be chosen as real, 
+              and specialized subroutines optimized for calculations
+              at the gamma point are used (memory and cpu requirements 
+              are reduced by approximately one half)
+
               next card:
    nks
               number of supplied special points
