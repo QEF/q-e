@@ -37,7 +37,6 @@ POBJS = \
 blockset.o \
 flush_unit.o \
 gridsetup.o \
-hangup.o \
 ilcm.o \
 indxg2l.o \
 indxg2p.o \

@@ -1907,10 +1907,6 @@ subroutine exch_corr_wrapper(nnr, nspin, grhor, rhor, etxc, v, h)
 
   end if
 
-  !write(6,*) 'debug 2 = ', sx_dbg, sc_dbg
-  !call hangup
-  !stop
-
   return
 end subroutine exch_corr_wrapper
 
