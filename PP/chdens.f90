@@ -353,13 +353,14 @@ SUBROUTINE chdens (filplot,plot_num)
         !    here we compute the fourier components of the quantity to plot
         !
      endif
-     allocate(aux(nrxx))
 #ifdef __PARA
+     allocate(aux(nrxx))
      call scatter(rhor, aux)
-#else
-     aux=rhor
-#endif
      psic(:) = CMPLX (aux(:), 0.d0)
+     deallocate(aux)
+#else
+     psic(:) = CMPLX (rhor(:), 0.d0)
+#endif
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1)
      !
      !    we store the fourier components in the array rhog
@@ -453,7 +454,6 @@ SUBROUTINE chdens (filplot,plot_num)
        plotname(iflag), formatname(output_format)
   !
   if (allocated(rhog)) deallocate(rhog)
-  deallocate(aux)
   deallocate(rhor)
   deallocate(tau)
   deallocate(ityp)
