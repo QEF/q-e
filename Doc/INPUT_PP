@@ -44,7 +44,7 @@
   !                4=local density of electronic entropy
   !                5=STM images
   !                6=spin polarization (rho(up)-rho(down))
-  !                7=|psi|^2 (See below)
+  !                7=|psi|^2
   !                8=electron localization function (ELF)
   !                9=planar average of all |psi|^2
   !               10=integrated local density of states (ILDOS)
@@ -54,47 +54,48 @@
   !               12=the electric field potential
   !               13=the noncollinear magnetization.
   !
-  !
-  !     plot_num=7 in the noncollinear case, plot the contribution of the
-  !                given state to the charge or to the magnetization
-  !                along the direction indicated by spin_component
-  !                (0 = charge, 1 = x, 2 = y, 3 = z ).
-  !
-  !
-  !             Options for total charge 
+  !             Options for total charge (plot_num=0):
   !
   ! spin_component 0=total charge (default value),
   !                1=spin up charge,
   !                2=spin down charge.
   !
-  !             Options for total potential 
+  !             Options for total potential (plot_num=1):
   !
   ! spin_component 0=spin averaged potential (default value),
   !                1=spin up potential,
   !                2=spin down potential.
   !
-  !             Options for STM images:
+  !             Options for STM images (plot_num=5):
   !
-  ! sample_bias    the bias of the sample (Ryd) in stm images
+  ! sample_bias    the bias of the sample (Ry) in stm images
   ! stm_wfc_matching     if .t. match the wavefunctions to 
   !                      an exponentially vanishing function
+  !                      PRESENTLY DISABLED
   !                      if .t. specify also (in celldm(1) units):
   !                 z    height of matching
   !                dz    distance of next stm image calculation
   !
-  !             Options for |psi|^2:
+  !             Options for |psi|^2 (plot_num=7):
   !
-  ! kpoint      which k-point
-  ! kband       which band
-  ! lsign       if true and k point is Gamma, save |psi|^2 sign(psi)
+  ! kpoint          unpolarized and noncollinear case: k-point to be plotted
+  !                 LSDA: k-point and spin polarization to be plotted
+  !                 (spin-up and spin-down correspond to different k-points!)
+  ! kband           band to be plotted
+  ! lsign           if true and k point is Gamma, save |psi|^2 sign(psi)
+  ! spin_component  noncollinear case only: plot the contribution of the
+  !                 given state to the charge or to the magnetization
+  !                 along the direction indicated by spin_component:
+  !                 0 = charge (default), 1 = x, 2 = y, 3 = z.
+  !                 Ignored in unpolarized or LSDA case
   !
-  !             Options for ILDOS:
+  !             Options for ILDOS (plot_num=10):
   !
   ! emin        lower energy boundary (in eV)
   ! emax        upper energy boundary (in eV), i.e. compute 
   !             ILDOS from emin to emax
   !
-  !             Options for noncollinear magnetization 
+  !             Options for noncollinear magnetization (plot_num=13): 
   !
   ! spin_component 0=absolute value (default value)
   !                1=x component of the magnetization
