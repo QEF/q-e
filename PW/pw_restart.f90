@@ -2535,6 +2535,7 @@ MODULE pw_restart
          IF ( nspin == 2 ) THEN
             !
             ispin = 1 
+            evc=(0.0_DP, 0.0_DP)
             !
             ! ... no need to read isk here: they are read from band structure
             ! ... and correctly distributed across pools in read_file
@@ -2559,6 +2560,7 @@ MODULE pw_restart
             !
             ispin = 2
             ik_eff = ik + num_k_points
+            evc=(0.0_DP, 0.0_DP)
             !
             ! ... no need to read isk here (see above why)
             !isk(ik_eff) = 2
@@ -2585,6 +2587,7 @@ MODULE pw_restart
             ! ... no need to read isk here (see above why)
             !isk(ik) = 1
             !
+            evc=(0.0_DP, 0.0_DP)
             IF ( noncolin ) THEN
                !
                DO ipol = 1, npol
@@ -2614,8 +2617,6 @@ MODULE pw_restart
                                          DIR=lkpoint_dir ) )
                   !
                END IF
-               !
-               evc = 0.0d0
                !
                CALL read_wfc( iunout, ik, nkstot, kunit, ispin, nspin,         &
                               evc, npw_g, nbnd, igk_l2g_kdip(:,ik-iks+1),      &
