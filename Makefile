@@ -177,7 +177,7 @@ links : bindir
 	    ../D3/d3.x \
 	    ../CPV/cppp.x \
 	    ../Gamma/phcg.x \
-	    ../PH/ph.x \
+	    ../PH/ph.x ../PH/dynmat.x ../PH/matdyn.x ../PH/q2r.x \
 	    ../PP/average.x ../PP/bands.x ../PP/dos.x \
 	      ../PP/efg.x ../PP/plotband.x ../PP/plotrho.x ../PP/pmw.x \
 	      ../PP/pp.x ../PP/projwfc.x ../PP/pw2casino.x ../PP/pw2wan.x \
@@ -185,10 +185,9 @@ links : bindir
 	    ../PW/pw.x \
 	    ../PWCOND/pwcond.x \
 	    ../atomic/ld1.x \
-	    ../pwtools/band_plot.x ../pwtools/dist.x ../pwtools/dynmat.x \
+	    ../pwtools/band_plot.x ../pwtools/dist.x \
 	      ../pwtools/ev.x ../pwtools/fqha.x ../pwtools/kpoints.x \
-	      ../pwtools/matdyn.x ../pwtools/path_int.x ../pwtools/pwi2xsf.x \
-	      ../pwtools/q2r.x \
+	      ../pwtools/path_int.x ../pwtools/pwi2xsf.x \
 	; do \
 	      if test -f $$exe ; then ln -fs $$exe . ; fi \
 	done \
