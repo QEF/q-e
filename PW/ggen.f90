@@ -63,11 +63,11 @@ SUBROUTINE ggen()
   !
   !    and computes all the g vectors inside a sphere
   !
+  ALLOCATE( ig_l2g( ngm_l ) )
+  ALLOCATE( mill_g( 3, ngm_g ) )
   ALLOCATE( igsrt( ngm_g ) )
   ALLOCATE( g2sort_g( ngm_g ) )
   g2sort_g(:) = 1.0d20
-  ALLOCATE( mill_g( 3, ngm_g ) )
-  ALLOCATE( ig_l2g( ngm_l ) )
   !
   n1 = nr1 + 1
   n2 = nr2 + 1
@@ -126,6 +126,7 @@ SUBROUTINE ggen()
 
   igsrt(1) = 0
   CALL hpsort_eps( ngm_g, g2sort_g, igsrt, eps8 )
+  DEALLOCATE( g2sort_g )
   DO ng = 1, ngm_g-1
     indsw = ng
 7   IF(igsrt(indsw) /= ng) THEN
@@ -286,6 +287,8 @@ SUBROUTINE ggen()
         ENDIF
      ENDDO
      !
+     DEALLOCATE( mill_g )
+     !
      ! calculate number of G shells: ngl
      !
      IF (lmovecell) THEN
@@ -327,10 +330,6 @@ SUBROUTINE ggen()
         IF (igl.NE.ngl) CALL errore ('setup', 'igl <> ngl', ngl)
 
      ENDIF
-
-
-     DEALLOCATE( g2sort_g )
-     DEALLOCATE( mill_g )
 
      CALL index_minusg()
 

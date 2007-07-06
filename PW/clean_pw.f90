@@ -12,7 +12,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... This routine deallocates all dynamically allocated arrays
   !
   USE ions_base,            ONLY : deallocate_ions_base
-  USE gvect,                ONLY : g, gg, nl, nlm, igtongl, ig1, ig2, ig3, &
+  USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
   USE fixed_occ,            ONLY : f_inp
@@ -61,6 +61,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in ggen.f90
   !
   IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
+  IF ( ASSOCIATED( gl ) )        DEALLOCATE( gl )
   !
   ! ... arrays allocated in allocate_fft.f90 ( and never deallocated )
   !
