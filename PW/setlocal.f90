@@ -14,9 +14,10 @@ subroutine setlocal
   !    This routine computes the local potential in real space vltot(ir)
   !
   USE kinds,     ONLY : DP
+  USE constants, ONLY : eps8
   USE ions_base, ONLY : ntyp => nsp
   USE extfield,  ONLY : tefield, dipfield, etotefield
-  USE gvect,     ONLY : igtongl
+  USE gvect,     ONLY : igtongl, gg
   USE scf,       ONLY : rho, v_of_0, vltot
   USE vlocal,    ONLY : strf, vloc
   USE wvfct,     ONLY : gamma_only
@@ -45,7 +46,9 @@ subroutine setlocal
   !
   ! ... v_of_0 is (Vloc)(G=0)
   !
-  v_of_0 = DBLE ( aux (nl(1)) )
+  v_of_0=0.0_DP
+  if (gg(1) < eps8) v_of_0 = DBLE ( aux (nl(1)) )
+  call reduce(1,v_of_0)
   !
   ! ... aux = potential in G-space . FFT to real space
   !
