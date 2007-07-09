@@ -22,7 +22,7 @@ void F77_FUNC(memstat,MEMSTAT)(int *kilobytes)
   info = mallinfo();
 
 #if defined(__AIX)
-  *kilobytes = (info.ordblks + info.smblks) / 1024 ;
+  *kilobytes = (info.arena) / 1024 ;
 #else
   *kilobytes = (info.arena + info.hblkhd) / 1024 ;
 #endif
