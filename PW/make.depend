@@ -181,6 +181,7 @@ cinitcgg.o : ../Modules/kind.o
 cinitcgg.o : noncol.o
 cinitcgg.o : pwcom.o
 clean_pw.o : ../Modules/fft_types.o
+clean_pw.o : ../Modules/input_parameters.o
 clean_pw.o : ../Modules/ions_base.o
 clean_pw.o : ../Modules/recvec.o
 clean_pw.o : ../Modules/stick_base.o

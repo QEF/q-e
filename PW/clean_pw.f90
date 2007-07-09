@@ -12,6 +12,7 @@ SUBROUTINE clean_pw( lflag )
   ! ... This routine deallocates all dynamically allocated arrays
   !
   USE ions_base,            ONLY : deallocate_ions_base
+  USE input_parameters,     ONLY : deallocate_input_parameters
   USE gvect,                ONLY : g, gg, gl, nl, nlm, igtongl, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3
   USE gsmooth,              ONLY : nls, nlsm, doublegrid
@@ -148,6 +149,8 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated for dynamics
   !
   CALL deallocate_dyn_vars()
+  !
+  CALL deallocate_input_parameters()
   !
   RETURN
   !
