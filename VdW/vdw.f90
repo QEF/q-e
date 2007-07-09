@@ -28,6 +28,7 @@ PROGRAM vdw
   USE phcom
   USE qpoint,          ONLY : nksq
   USE control_vdw,     ONLY : thresh_veff
+  USE check_stop,      ONLY : check_stop_init
   !
   IMPLICIT NONE
   REAL (KIND=DP) :: charge, vstart
@@ -42,6 +43,7 @@ PROGRAM vdw
   !
   call vdw_init ( ) 
   !
+  CALL check_stop_init()
   CALL start_clock( 'VdW' )
   !
   nbnd = 1

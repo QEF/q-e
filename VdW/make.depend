@@ -81,6 +81,7 @@ stop_vdw.o : ../Modules/io_files.o
 stop_vdw.o : ../Modules/mp.o
 stop_vdw.o : ../Modules/parallel_include.o
 vdw.o : ../Modules/cell_base.o
+vdw.o : ../Modules/check_stop.o
 vdw.o : ../Modules/io_files.o
 vdw.o : ../Modules/io_global.o
 vdw.o : ../Modules/ions_base.o
