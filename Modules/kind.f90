@@ -9,8 +9,6 @@
     MODULE kinds
 !------------------------------------------------------------------------------!
 
-      USE io_global,  ONLY : stdout
-      
       IMPLICIT NONE
       SAVE
 ! ... kind definitions
@@ -27,11 +25,13 @@
 !------------------------------------------------------------------------------!
 !
 !!   Print information about the used data types.
-      SUBROUTINE print_kind_info
+!
+      SUBROUTINE print_kind_info (stdout)
 !
 !------------------------------------------------------------------------------!
 !
         IMPLICIT NONE
+        INTEGER, INTENT(IN) :: stdout
 !
         WRITE( stdout,'(/,T2,A)') 'DATA TYPE INFORMATION:'
 !
