@@ -234,22 +234,24 @@ subroutine data_structure( lgamma )
   WRITE( stdout, '(/5x,"Planes per process (thick) : nr3 =", &
        &        i3," npp = ",i3," ncplane =",i5)') nr3, npp (me_pool + 1) , ncplane
 
-  if ( nr3s /= nr3 ) WRITE( stdout, '(/5x,"Planes per process (smooth): nr3s=",&
+  if ( nr3s /= nr3 ) WRITE( stdout, '(5x,"Planes per process (smooth): nr3s=",&
        &i3," npps= ",i3," ncplanes=",i5)') nr3s, npps (me_pool + 1) , ncplanes
 
   WRITE( stdout,*)
-  WRITE( stdout,'(                                                        &
-    & '' Proc/  planes cols    G   planes cols    G    columns  G''/    &
-    & '' Pool       (dense grid)      (smooth grid)   (wavefct grid)'')')
+  WRITE( stdout,'(5X,                                                     &
+    & "Proc/  planes cols     G    planes cols    G      columns  G"/5X,  &
+    & "Pool       (dense grid)       (smooth grid)      (wavefct grid)")')
   do i=1,nproc_pool
-    WRITE( stdout,'(i3,2x,3(i5,2i7))') i, npp(i), ncp(i), ngp(i),          &
+    WRITE( stdout,'(5x,i3,2x,2(i5,i7,i9),i7,i9)') i, npp(i), ncp(i), ngp(i), &
       &        npps(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
   end do
-  WRITE( stdout,'(i3,2x,3(i5,2i7))') 0, SUM(npp(1:nproc_pool)), SUM(ncp(1:nproc_pool)), &
-    &   SUM(ngp(1:nproc_pool)), SUM(npps(1:nproc_pool)), SUM(ncps(1:nproc_pool)), &
-    &   SUM(ngps(1:nproc_pool)), SUM(nkcp(1:nproc_pool)), SUM(ngkp(1:nproc_pool))
+  IF ( nproc_pool > 1 ) THEN
+      WRITE( stdout,'(5x,"tot",2x,2(i5,i7,i9),i7,i9)') &
+      SUM(npp(1:nproc_pool)), SUM(ncp(1:nproc_pool)), SUM(ngp(1:nproc_pool)), &
+      SUM(npps(1:nproc_pool)),SUM(ncps(1:nproc_pool)),SUM(ngps(1:nproc_pool)),&
+      SUM(nkcp(1:nproc_pool)), SUM(ngkp(1:nproc_pool))
+  END IF
   WRITE( stdout,*)
-
 
   DEALLOCATE( stw, st, sts, in1, in2, idx, ngc, ngcs, ngkc )
 

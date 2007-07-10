@@ -125,6 +125,7 @@ kpoint_grid.o \
 lchk_tauxk.o \
 make_pointlists.o \
 makov_payne.o \
+memory_report.o \
 mix_pot.o \
 mix_rho.o \
 mode_group.o \
@@ -243,8 +244,7 @@ wfcinit.o \
 wgauss.o \
 write_ns.o \
 wsweight.o \
-weights.o \
-memory_report.o
+weights.o
 
 # not actually used
 DIIS_OBJS=\

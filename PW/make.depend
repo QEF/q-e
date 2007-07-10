@@ -60,7 +60,6 @@ allocate_nlpot.o : ../Modules/uspp.o
 allocate_nlpot.o : noncol.o
 allocate_nlpot.o : pwcom.o
 allocate_wfc.o : ../Modules/io_global.o
-allocate_wfc.o : ../Modules/uspp.o
 allocate_wfc.o : ../Modules/wavefunctions.o
 allocate_wfc.o : noncol.o
 allocate_wfc.o : pwcom.o
@@ -641,6 +640,12 @@ makov_payne.o : ../Modules/mp.o
 makov_payne.o : ../Modules/mp_global.o
 makov_payne.o : para.o
 makov_payne.o : pwcom.o
+memory_report.o : ../Modules/control_flags.o
+memory_report.o : ../Modules/io_global.o
+memory_report.o : ../Modules/uspp.o
+memory_report.o : ../Modules/wavefunctions.o
+memory_report.o : noncol.o
+memory_report.o : pwcom.o
 mix_pot.o : ../Modules/kind.o
 mix_pot.o : ../Modules/mp.o
 mix_pot.o : ../Modules/mp_global.o
@@ -985,6 +990,7 @@ set_rhoc.o : ../Modules/ions_base.o
 set_rhoc.o : ../Modules/kind.o
 set_rhoc.o : pwcom.o
 set_vrs.o : ../Modules/kind.o
+setlocal.o : ../Modules/constants.o
 setlocal.o : ../Modules/ions_base.o
 setlocal.o : ../Modules/kind.o
 setlocal.o : pwcom.o
@@ -1308,6 +1314,7 @@ irrek.o : ../include/f_defs.h
 kpoint_grid.o : ../include/f_defs.h
 lchk_tauxk.o : ../include/f_defs.h
 make_pointlists.o : ../include/f_defs.h
+memory_report.o : ../include/f_defs.h
 mix_pot.o : ../include/f_defs.h
 mix_rho.o : ../include/f_defs.h
 mode_group.o : ../include/f_defs.h
