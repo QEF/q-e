@@ -231,17 +231,17 @@ ph.x : phonon.o libph.a $(LIBOBJS)
 dynmat.x : dynmat.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
                 dynmat.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
 matdyn.x : matdyn.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		matdyn.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
 q2r.x : q2r.o rigid.o $(PWOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
 		q2r.o rigid.o $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
-	- ( cd ../bin ; ln -fs ../pwtools/$@ . )
+	- ( cd ../bin ; ln -fs ../PH/$@ . )
 
 tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
