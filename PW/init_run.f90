@@ -36,6 +36,7 @@ SUBROUTINE init_run()
   CALL allocate_nlpot()
   CALL allocate_locpot()
   CALL allocate_wfc()
+  CALL memory_report()
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )
   !

@@ -243,7 +243,8 @@ wfcinit.o \
 wgauss.o \
 write_ns.o \
 wsweight.o \
-weights.o
+weights.o \
+memory_report.o
 
 # not actually used
 DIIS_OBJS=\

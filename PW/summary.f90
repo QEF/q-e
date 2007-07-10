@@ -30,7 +30,8 @@ SUBROUTINE summary()
                               ngm, gcutm, qcutz
   USE gsmooth,         ONLY : nr1s, nr2s, nr3s, doublegrid, ngms, gcutms
   USE lsda_mod,        ONLY : lsda, starting_magnetization
-  USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk
+  USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk, &
+                              nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
   USE symme,           ONLY : nsym, invsym, s, t_rev, ftau
   USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
@@ -66,7 +67,7 @@ SUBROUTINE summary()
     ! counter on beta functions
     ! counter on types
     ! counter on angular momenta
-    ! total number of G-vectors (parallel executio
+    ! total number of G-vectors (parallel execution)
   INTEGER :: &
           nclass_ref   ! The number of classes of the point group
   LOGICAL :: is_complex, is_complex_so
@@ -92,20 +93,31 @@ SUBROUTINE summary()
   !
   IF ( title /= ' ') WRITE( stdout, "(/,5X,'Title: ',/,5X,A75)" ) title
   !
-  WRITE( stdout, 100) ibrav, alat, omega, nat, ntyp, &
-                      ecutwfc, dual * ecutwfc, tr2,  &
-                      mixing_beta, nmix, mixing_style
+  WRITE( stdout, 100) ibrav, alat, omega, nat, ntyp
+  IF ( two_fermi_energies ) THEN
+     WRITE( stdout, 101) nelec, nelup, neldw
+  ELSE
+     WRITE( stdout, 102) nelec
+  END IF
+  WRITE( stdout, 103) nbnd, ecutwfc, dual*ecutwfc,  &
+                     tr2, mixing_beta, nmix, mixing_style
   !
 100 FORMAT( /,/,5X, &
        &     'bravais-lattice index     = ',I12,/,5X, &
        &     'lattice parameter (a_0)   = ',F12.4,'  a.u.',/,5X, &
        &     'unit-cell volume          = ',F12.4,' (a.u.)^3',/,5X, &
        &     'number of atoms/cell      = ',I12,/,5X, &
-       &     'number of atomic types    = ',I12,/,5X, &
+       &     'number of atomic types    = ',I12)
+101 FORMAT(5X, &
+       &     'number of electrons       = ',F12.2,' (up:',f7.2,', down:',f7.2,')')
+102 FORMAT(5X, &
+       &     'number of electrons       = ',f12.2)
+103 FORMAT(5X, &
+       &     'number of Kohn-Sham states= ',I12,/,5X, &
        &     'kinetic-energy cutoff     = ',F12.4,'  Ry',/,5X, &
        &     'charge density cutoff     = ',F12.4,'  Ry',/,5X, &
        &     'convergence threshold     = ',1PE12.1,/,5X, &
-       &     'beta                      = ',0PF12.4,/,5X, &
+       &     'mixing beta               = ',0PF12.4,/,5X, &
        &     'number of iterations used = ',I12,2X,A,' mixing')
   !
   call write_dft_name ( ) 
@@ -149,7 +161,7 @@ SUBROUTINE summary()
   !
   ! ... and here more detailed information. Description of the unit cell
   !
-  WRITE( stdout, '(2(3X,3(2X,"celldm(",I1,")=",F11.6),/))' ) &
+  WRITE( stdout, '(/2(3X,3(2X,"celldm(",I1,")=",F11.6),/))' ) &
        ( i, celldm(i), i = 1, 6 )
   !
   WRITE( stdout, '(5X, &

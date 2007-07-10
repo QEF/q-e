@@ -15,11 +15,8 @@ SUBROUTINE allocate_wfc()
   ! ... must be called after allocate_nlpot 
   !
   USE io_global, ONLY : stdout
-  USE wvfct,     ONLY : gamma_only, npwx, nbnd, nbndx
-  USE klist,     ONLY : nelec, nelup, neldw, two_fermi_energies
+  USE wvfct,     ONLY : npwx, nbnd, nbndx
   USE basis,     ONLY : natomwfc
-  USE gvect,     ONLY : ngl
-  USE uspp,      ONLY : nkb
   USE ldaU,      ONLY : swfcatom, lda_plus_u
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
@@ -35,15 +32,6 @@ SUBROUTINE allocate_wfc()
      IF ( lda_plus_u ) ALLOCATE( swfcatom( npwx, natomwfc) )    
   ENDIF
   !
-  WRITE( stdout, 100) nbndx, nbnd, natomwfc, npwx, nelec, nkb, ngl
-  IF (two_fermi_energies) WRITE( stdout, 101) nelup, neldw
-  !
-
-100 FORMAT(/5X,'nbndx  = ',I5,'  nbnd   = ',I5,'  natomwfc = ',I5, &
-       &       '  npwx   = ',I7, &
-       &   /5X,'nelec  =',F7.2,'  nkb   = ',I5,'  ngl    = ',I7)
-101 FORMAT( 5X,'nelup  =',F7.2,' neldw  =',F7.2)
-  !       
   RETURN
   !
 END subroutine allocate_wfc

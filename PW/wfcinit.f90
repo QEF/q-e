@@ -48,12 +48,12 @@ SUBROUTINE wfcinit()
      !
      IF ( natomwfc >= nbnd ) THEN
         !
-        WRITE( stdout, '(5X,"Starting wfc are atomic")' )
+        WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic wfcs")' ) natomwfc
         !
      ELSE
         !
-        WRITE( stdout, '(5X,"Starting wfc are atomic + ",I3," random wfc")' ) &
-              nbnd-natomwfc
+        WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic + ", &
+             &           I4," random wfc")' ) natomwfc, nbnd-natomwfc
         !
      END IF
      !
