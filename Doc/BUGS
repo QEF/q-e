@@ -1,3 +1,49 @@
+Fixed in CVS version:
+
+  *  various glitches with wf_collect option in the noncollinear case
+
+  *  mix_rho was not working properly for lsda with data saved to file
+     and double grid
+
+Fixed in version 3.2.1-3.2.3:
+
+  *  various phonon glitches: pools and lsda, pools and dispersions,
+     option lnscf, were not working
+
+  *  incorrect exchange-correlation contribution to the electro-optical 
+     coefficient
+
+  *  check for stop condition was unsafe with pools and could hang pw.x
+
+  *  fixed occupations in parallel: array not allocated on all processors
+
+  *  Yet another problem of poor accuracy of routines calculating spherical 
+     bessel functions - harmless except in some cases of pseudopotential 
+     generation 
+
+  *  DOS EOF characters present in some files could cause trouble
+     during installation
+
+  *  restart in phonon calculations was not always properly working
+
+  *  possible divide-by-zero error in dV_xc/dz (spin polarized case)
+
+  *  gamma_gamma symmetry was not working for open-shell molecules
+
+  *  T_h group not correctly identified in postprocessing
+
+  *  missing initialization of rho could lead to serious trouble
+     if the physical and true dimensions of FFT grid did not coincide
+
+  *  Ewald real-space term could have been incorrectly calculated 
+     if an atom was far away from the unit cell
+
+  *  Some variables were used before they were initialized - this could
+     lead to crashes or unpredictable behaviour on some machines
+
+  *  lattice parameters a,b,c,cosab,cosac,cosbc were not properly 
+     copied to the celldm in the case of triclinic lattice
+
 Fixed in version 3.2:
 
   *  In same cases the energy under an external sawtooth potential
