@@ -22,7 +22,7 @@ $ECHO "two molecules: CH4 and C2H4"
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x gipaw.x"
-PSEUDO_LIST="C.pz-tm-gipaw.upf  H.pz-tm-gipaw.upf  Si.pz-tm-gipaw.upf"
+PSEUDO_LIST="C.pbe-tm-gipaw.UPF  H.pbe-tm-gipaw.UPF  Si.pbe-tm-gipaw.UPF"
 PSEUDO_DIR=$EXAMPLE_DIR/pseudo
 
 $ECHO
@@ -111,7 +111,7 @@ cat > si.scf.in << EOF
     conv_thr =  1.0d-14
  /
 ATOMIC_SPECIES
-Si  28.086  Si.pz-tm-gipaw.upf
+Si  28.086  Si.pbe-tm-gipaw.UPF
 
 ATOMIC_POSITIONS crystal
 Si   0.00   0.00   0.00
@@ -174,7 +174,7 @@ cat > c.scf.in << EOF
     conv_thr =  1.0d-14
  /
 ATOMIC_SPECIES
-C  12.000  C.pz-tm-gipaw.upf
+C  12.000  C.pbe-tm-gipaw.UPF
 
 ATOMIC_POSITIONS crystal
 C   0.00   0.00   0.00
@@ -198,7 +198,7 @@ cat > c.nmr.in << EOF
 	iverbosity = 1
         q_gipaw = 0.01
         spline_ps = .true.
-	use_nmr_macroscopic_shape = .true.
+	use_nmr_macroscopic_shape = .false.
 /
 EOF
 $ECHO "  running the magnetic response calculation for C...\c"
@@ -241,15 +241,15 @@ cat > ch4.scf.in << EOF
     ion_dynamics = 'none'
  /
 ATOMIC_SPECIES
-C  12.000  C.pz-tm-gipaw.upf
-H   2.000  H.pz-tm-gipaw.upf
+C  12.000  C.pbe-tm-gipaw.UPF
+H   2.000  H.pbe-tm-gipaw.UPF
 
-ATOMIC_POSITIONS
+ATOMIC_POSITIONS (alat)
 C        0.000000000   0.000000000   0.000000000
-H        0.115675895   0.115675895   0.115675895
-H        0.115675895  -0.115675895  -0.115675895
-H       -0.115675895  -0.115675895   0.115675895
-H       -0.115675895   0.115675895  -0.115675895
+H        0.115286703   0.115286703   0.115286703
+H        0.115286703  -0.115286703  -0.115286703
+H       -0.115286703  -0.115286703   0.115286703
+H       -0.115286703   0.115286703  -0.115286703
 
 K_POINTS automatic
 2 2 2   1 1 1
@@ -312,8 +312,8 @@ cat > c2h4.scf.in << EOF
     ion_dynamics = 'bfgs'
  /
 ATOMIC_SPECIES
-C  12.000  C.pz-tm-gipaw.upf
-H   2.000  H.pz-tm-gipaw.upf
+C  12.000  C.pbe-tm-gipaw.UPF
+H   2.000  H.pbe-tm-gipaw.UPF
 
 ATOMIC_POSITIONS
 C        1.378952955   0.000000000   0.000000000
