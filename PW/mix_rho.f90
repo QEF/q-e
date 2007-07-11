@@ -230,12 +230,12 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         !
      END IF
      !
-     df(:,:,ipos) = df(:,:,ipos) - rhocout(:,:)
-     dv(:,:,ipos) = dv(:,:,ipos) - rhocin(:,:)
+     df(:,:,ipos) = df(:,:,ipos) - rhocout(1:ngm0,:)
+     dv(:,:,ipos) = dv(:,:,ipos) - rhocin (1:ngm0,:)
      !
      IF ( tmeta) THEN
-        df_k(:,:,ipos) = df_k(:,:,ipos) - taukout(:,:)
-        dv_k(:,:,ipos) = dv_k(:,:,ipos) - taukin(:,:)
+        df_k(:,:,ipos) = df_k(:,:,ipos) - taukout(1:ngm0,:)
+        dv_k(:,:,ipos) = dv_k(:,:,ipos) - taukin (1:ngm0,:)
      END IF
      !
      IF ( lda_plus_u ) THEN
@@ -269,9 +269,15 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         END IF
         !
      END DO
-     !
-     CALL davcio( rhocout, 2*ngm0*nspin, iunmix, 1, 1 )
-     CALL davcio( rhocin,  2*ngm0*nspin, iunmix, 2, 1 )
+     ! not good if ngm0 != ngm 
+     !! CALL davcio( rhocout, 2*ngm0*nspin, iunmix, 1, 1 )
+     !! CALL davcio( rhocin,  2*ngm0*nspin, iunmix, 2, 1 )
+     ! use instead:
+     ALLOCATE( rhoinsave( ngm0, nspin ) )
+     rhoinsave(:,:) = rhocout(1:ngm0,:)
+     CALL davcio( rhoinsave, 2*ngm0*nspin, iunmix, 1, 1 )
+     rhoinsave(:,:) = rhocin(1:ngm0,:)
+     CALL davcio( rhoinsave,  2*ngm0*nspin, iunmix, 2, 1 )
      !
      IF ( mixrho_iter > 1 ) THEN
         !
@@ -282,8 +288,12 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      !
      IF ( tmeta ) THEN
         !
-        CALL davcio( taukout, 2*ngm0*nspin, iunmix2, 1, 1 )
-        CALL davcio( taukin,  2*ngm0*nspin, iunmix2, 2, 1 )
+        !! CALL davcio( taukout, 2*ngm0*nspin, iunmix2, 1, 1 )
+        !! CALL davcio( taukin,  2*ngm0*nspin, iunmix2, 2, 1 )
+        rhoinsave(:,:) = taukout(1:ngm0,:)
+        CALL davcio( rhoinsave, 2*ngm0*nspin, iunmix2, 1, 1 )
+        rhoinsave(:,:) = taukin(1:ngm0,:)
+        CALL davcio( rhoinsave,  2*ngm0*nspin, iunmix2, 2, 1 )
         !
         IF ( mixrho_iter > 1 ) THEN
            !
@@ -293,6 +303,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         END IF
         !
      END IF
+     !
+     DEALLOCATE( rhoinsave )
      !
      IF ( lda_plus_u ) THEN
         !
