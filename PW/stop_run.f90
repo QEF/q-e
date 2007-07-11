@@ -113,7 +113,7 @@ SUBROUTINE stop_run( flag )
   !
   CALL clean_pw( .TRUE. )
   !
-  CALL dealloacte_input_parameters () 
+  CALL deallocate_input_parameters () 
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !
