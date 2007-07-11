@@ -37,55 +37,47 @@
       character*100 line 
       character*13 dummy3
       character*24 nkpt
-      character*4 n_bands
+      character*33 n_bands
       character*32 Band_structure
       character*13 kpoint
       character*80 sysname
       character*5 Calc_type
 !
-      nkpt='     number of k points='         
-      n_bands='nbnd'
+      nkpt='     number of k points='
+      n_bands='     number of Kohn-Sham states='
       Band_structure='     Band Structure Calculation'
       kpoint='          k ='
-!     
+!
       open(9,file='Bands.out')               
 
       do while( .true. )
-         read(9,'(a)') line
-         if(line(1:24).eq.nkpt) then 
-            print*, line(1:24)
-            backspace(9)
-            read(9,'(24x,i5)') n_kpoints
-            print*,n_kpoints
-            goto 100
-         endif
-      enddo
- 100  continue
-
-      do while( .true. )
          read(9,'(a)') line  
-         if(line(22:25).eq.n_bands) then
-            print*, line(22:25)
-            backspace(9)
-            read(9,'(29x,i6)') nbands
-            print*,'nbands=',nbands
-            goto 101
+         if(line(1:32).eq.n_bands) then
+            read(line(33:45), *) nbands
+            print *,'nbands=',nbands
+            goto 100
          endif 
       enddo
- 101  continue
-
-      if(n_kpoints.gt.max_kpoints) then
-         stop 'Toooooooo many k-points'
-      endif
-
-      if(nbands.gt.max_bands) then
+ 100  if(nbands.gt.max_bands) then
          stop 'Toooooooo many bands'
       endif
       
       do while( .true. )
+         read(9,'(a)') line
+         if(line(1:24).eq.nkpt) then 
+            read(line(1:24),'(24x,i5)') n_kpoints
+            print *,n_kpoints
+            goto 101
+         endif
+      enddo
+ 101  if(n_kpoints.gt.max_kpoints) then
+         stop 'Toooooooo many k-points'
+      endif
+
+      do while( .true. )
          read(9,'(a)') line  
          if(line(1:31).eq.Band_structure) then
-            print*, line(1:31)
+            print *, line(1:31)
             goto 102
          endif 
       enddo
@@ -94,7 +86,7 @@
       do while( .true. )
          read(9,'(a)') line  
          if(line(1:13).eq.kpoint) then
-            print*, line(1:13)
+            print *, line(1:13)
             backspace(9)
             goto 103
          endif 
