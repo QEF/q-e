@@ -180,7 +180,6 @@ cinitcgg.o : ../Modules/kind.o
 cinitcgg.o : noncol.o
 cinitcgg.o : pwcom.o
 clean_pw.o : ../Modules/fft_types.o
-clean_pw.o : ../Modules/input_parameters.o
 clean_pw.o : ../Modules/ions_base.o
 clean_pw.o : ../Modules/recvec.o
 clean_pw.o : ../Modules/stick_base.o
@@ -1031,6 +1030,7 @@ startup.o : ../Modules/mp_global.o
 startup.o : para.o
 stop_run.o : ../Modules/constraints_module.o
 stop_run.o : ../Modules/control_flags.o
+stop_run.o : ../Modules/input_parameters.o
 stop_run.o : ../Modules/io_files.o
 stop_run.o : ../Modules/io_global.o
 stop_run.o : ../Modules/metadyn_vars.o

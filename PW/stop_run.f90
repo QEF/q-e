@@ -22,6 +22,7 @@ SUBROUTINE stop_run( flag )
   USE path_io_routines,   ONLY : io_path_stop
   USE constraints_module, ONLY : deallocate_constraint
   USE metadyn_vars,       ONLY : deallocate_metadyn_vars
+  USE input_parameters,   ONLY : deallocate_input_parameters
   USE mp,                 ONLY : mp_barrier, mp_end
   USE bp,                 ONLY : lelfield
   !
@@ -111,6 +112,8 @@ SUBROUTINE stop_run( flag )
 #endif
   !
   CALL clean_pw( .TRUE. )
+  !
+  CALL dealloacte_input_parameters () 
   !
   IF ( lconstrain ) CALL deallocate_constraint()
   !
