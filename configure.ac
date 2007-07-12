@@ -205,59 +205,54 @@ else
 	if test "$mpif90" = "" ; then mpif90="$try_mpif90 $f90" ; fi
 	AC_PROG_F77($mpif90)
 	mpif90=$F77
-
-	case "$arch" in
-	ia32 | ia64 | amd64 )
-		# check which compiler does mpif90 wrap
-		echo $ECHO_N "checking version of $mpif90... $ECHO_C"
-		ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
-		pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
-		eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
-		g95_version=`$mpif90 -v 2>&1 | grep "g95"`
-		# for MKL libraries
-	        MKL_LIBS="-lguide -lpthread"
-	        MKL_FLAGS=""
-		if test "$ifort_version" != ""
-		then
-			version=`$mpif90 -V 2>&1 | grep Version |
-				 sed 's/.*Version//' | awk '{print $1}'`
-			if test `echo $version | sed 's/\..*//'` -lt 8; then
-			# ifc up to version 7
-				try_f90="ifc efc"
-				echo "${ECHO_T}ifc $version"
-			else 
-			# ifort v.8 and later
-				try_f90="ifort efc"
-				echo "${ECHO_T}ifort $version"
-			fi
-			# flags for MKL according to Axel - ifort 9 and later
-			# TEMPORARILY DISABLED - problems with older mkl?
-			#if test `echo $version | sed 's/\..*//'` -gt 8; then
-				#MKL_LIBS=""
-				#MKL_FLAGS="-i-static -openmp"
-			#fi
-		elif test "$pgf_version" != ""
-		then
-			version=`echo $pgf_version | awk '{print $2}'`
-			try_f90="pgf90"
-			echo "${ECHO_T}pgf90 $version"
-		elif test "$eko_version" != ""
-		then
-			version=`echo $eko_version | awk '{print $6}'`
-			try_f90="pathf95"
-			echo "${ECHO_T}pathf95 $version"
-		elif test "$g95_version" != ""
-		then
-			version=`echo $g95_version | awk '{print $3}'`
-			try_f90="g95"
-			echo "${ECHO_T}g95 $version"
-		else
-			echo "${ECHO_T}unknown"
-		fi
-		;;
-	esac
-
 fi
+
+# check which compiler does mpif90 wrap
+ 
+case "$arch" in
+	ia32 | ia64 | amd64 )
+	echo $ECHO_N "checking version of $mpif90... $ECHO_C"
+	ifort_version=`$mpif90 -V 2>&1 | grep "Intel(R)"`
+	pgf_version=`$mpif90 -V 2>&1 | grep "^pgf"`
+	eko_version=`$mpif90 -version 2>&1 | grep "EKOPath"`
+	g95_version=`$mpif90 -v 2>&1 | grep "g95"`
+	# for MKL libraries
+        MKL_LIBS="-lguide -lpthread"
+        MKL_FLAGS=""
+	if test "$ifort_version" != ""
+	then
+		version=`$mpif90 -V 2>&1 | grep Version |
+			 sed 's/.*Version//' | awk '{print $1}'`
+		if test `echo $version | sed 's/\..*//'` -lt 8; then
+		# ifc up to version 7
+			echo "${ECHO_T}ifc $version"
+		else 
+		# ifort v.8 and later
+			echo "${ECHO_T}ifort $version"
+		fi
+		# flags for MKL according to Axel - ifort 9 and later
+		# TEMPORARILY DISABLED - problems with older mkl?
+		#if test `echo $version | sed 's/\..*//'` -gt 8; then
+			#MKL_LIBS=""
+			#MKL_FLAGS="-i-static -openmp"
+		#fi
+	elif test "$pgf_version" != ""
+	then
+		version=`echo $pgf_version | awk '{print $2}'`
+		echo "${ECHO_T}pgf90 $version"
+	elif test "$eko_version" != ""
+	then
+		version=`echo $eko_version | awk '{print $6}'`
+		echo "${ECHO_T}pathf95 $version"
+	elif test "$g95_version" != ""
+	then
+		version=`echo $g95_version | awk '{print $3}'`
+		echo "${ECHO_T}g95 $version"
+	else
+		echo "${ECHO_T}unknown"
+	fi
+	;;
+esac
 
 echo setting F90... $f90
 echo setting MPIF90... $mpif90
