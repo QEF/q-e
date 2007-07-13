@@ -31,7 +31,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
     ! dimension of the matrix to be diagonalized
     ! number of eigenstates to be calculated
     ! leading dimension of h, as declared in the calling pgm unit
-  REAL(DP), INTENT(IN) :: h(ldh,n), s(ldh,n)
+  REAL(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
     ! matrix to be diagonalized
     ! overlap matrix
   !
@@ -42,24 +42,21 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   INTEGER               :: i, j, lwork, nb, mm, info
     ! mm = number of calculated eigenvectors
+  REAL(DP)              :: abstol
   INTEGER,  ALLOCATABLE :: iwork(:), ifail(:)
-  REAL(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:), vdum(:,:), work(:)
+  REAL(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:), vdum(:,:)
+  REAL(DP), ALLOCATABLE :: work(:), sdiag(:), hdiag(:)
   LOGICAL               :: all_eigenvalues
-  INTEGER, EXTERNAL     :: ILAENV
+ ! REAL(DP), EXTERNAL    :: DLAMCH
+  INTEGER,  EXTERNAL    :: ILAENV
     ! ILAENV returns optimal block size "nb"
   !
   !
   CALL start_clock( 'diaghg' )
   !
-  ALLOCATE( sdum( n, n ) )
-  !
-  ! ... input s and (see below) h are copied so that they are not destroyed
-  !
-  sdum(:,:) = s(1:n,:)
-  !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     ALLOCATE( hdum( n, n ), vdum( n, n ) )
+     ALLOCATE( hdum( n, n ), sdum( n, n ), vdum( n, n ) )
      !
      hdum(:,:) = h(1:n,:)
      !
@@ -105,13 +102,20 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL stop_clock( 'paragemm' )
      !
-     DEALLOCATE( hdum, vdum )
+     DEALLOCATE( hdum, sdum, vdum )
      !
-  ELSE  
+  ELSE
      !
      ! ... only the first processor diagonalize the matrix
      !
      IF ( me_pool == root_pool ) THEN
+        !
+        ! ... save the diagonal of input S (it will be overwritten)
+        !
+        ALLOCATE( sdiag( n ) )
+        DO i = 1, n
+           sdiag(i) = s(i,i)
+        END DO
         !
         all_eigenvalues = ( m == n )
         !
@@ -127,7 +131,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
            !
            lwork = ( nb + 3 )*n
            !
-        END IF     
+        END IF
         !
         ALLOCATE( work( lwork ) )
         !
@@ -141,37 +145,70 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
            !
            ! ... there is a name conflict between essl and lapack ...
            !
-           CALL DSYGV( 1, v, ldh, sdum, n, e, v, ldh, n, work, lwork )
+           CALL DSYGV( 1, v, ldh, s, ldh, e, v, ldh, n, work, lwork )
            !
            info = 0
 #else
-           CALL DSYGV( 1, 'V', 'U', n, v, &
-                       ldh, sdum, n, e, work, lwork, info )
+           CALL DSYGV( 1, 'V', 'U', n, v, ldh, s, ldh, e, work, lwork, info )
 #endif
            !
         ELSE
            !
-           ALLOCATE( hdum( n, n ) )
+           ! ... calculate only m lowest eigenvalues
+           !
            ALLOCATE( iwork( 5*n ) )
            ALLOCATE( ifail( n ) )
            !
-           ! ... calculate only m lowest eigenvalues
+           ! ... save the diagonal of input H (it will be overwritten)
            !
-           hdum(:,:) = h(1:n,:)
+           ALLOCATE( hdiag( n ) )
+           DO i = 1, n
+              hdiag(i) = h(i,i)
+           END DO
            !
-           CALL DSYGVX( 1, 'V', 'I', 'U', n, hdum, n, sdum,  &
-                        n, 0.D0, 0.D0, 1, m, 0.D0, mm, e, v, &
-                        ldh, work, lwork, iwork, ifail, info )
+           abstol = 0.D0
+          ! abstol = 2.D0*DLAMCH( 'S' )
+           !
+           CALL DSYGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
+                        0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
+                        work, lwork, iwork, ifail, info )
            !
            DEALLOCATE( ifail )
            DEALLOCATE( iwork )
-           DEALLOCATE( hdum )
+           !
+           ! ... restore input H matrix from saved diagonal and lower triangle
+           !
+           DO i = 1, n
+              h(i,i) = hdiag(i)
+              DO j = i + 1, n
+                 h(i,j) = h(j,i)
+              END DO
+              DO j = n + 1, ldh
+                 h(j,i) = 0.0_DP
+              END DO
+           END DO
+           !
+           DEALLOCATE( hdiag )
            !
         END IF
         !
         DEALLOCATE( work )
         !
         CALL errore( 'rdiaghg', 'info =/= 0', ABS( info ) )
+        !
+        ! ... restore input S matrix from saved diagonal and lower triangle
+        !
+        DO i = 1, n
+           s(i,i) = sdiag(i)
+           DO j = i + 1, n
+              s(i,j) = s(j,i)
+           END DO
+           DO j = n + 1, ldh
+              s(j,i) = 0.0_DP
+           END DO
+        END DO
+        !
+        DEALLOCATE( sdiag )
         !
      END IF
      !
@@ -181,8 +218,6 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      CALL mp_bcast( v, root_pool, intra_pool_comm )
      !
   END IF
-  !
-  DEALLOCATE( sdum )
   !
   CALL stop_clock( 'diaghg' )
   !

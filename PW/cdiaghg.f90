@@ -26,7 +26,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   USE parallel_toolkit, ONLY : cdiagonalize
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, &
-                               root_pool, intra_pool_comm
+                               root_pool, intra_pool_comm, &
+                               MPIME
   !
   IMPLICIT NONE
   !
@@ -45,8 +46,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   INTEGER                  :: lwork, nb, mm, info, i, j
     ! mm = number of calculated eigenvectors
-  INTEGER, EXTERNAL        :: ILAENV
-    ! ILAENV returns optimal block size "nb"
+  REAL(DP)                 :: abstol
   INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
   REAL(DP),    ALLOCATABLE :: rwork(:), sdiag(:), hdiag(:)
   COMPLEX(DP), ALLOCATABLE :: work(:)
@@ -54,6 +54,9 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   COMPLEX(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:), vdum(:,:)
     ! work space used only in parallel diagonalization
   LOGICAL                  :: all_eigenvalues
+ ! REAL(DP), EXTERNAL       :: DLAMCH
+  INTEGER,  EXTERNAL       :: ILAENV
+    ! ILAENV returns optimal block size "nb"
   !
   !
   CALL start_clock( 'diaghg' )
@@ -73,6 +76,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      ! ... Cholesky decomposition of sdum ( L is stored in sdum )
      !
      CALL para_zcholdc( n, sdum, n, intra_pool_comm )
+    ! CALL ZPOTRF( 'L', n, sdum, n, info )
+    ! FORALL( i = 1:n, j = 1:n, j > i ) sdum(i,j) = ZERO
      !
      CALL stop_clock( 'choldc' )
      !
@@ -81,6 +86,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      CALL start_clock( 'inversion' )
      !
      CALL para_ztrtri( n, sdum, n, intra_pool_comm )
+    ! CALL ZTRTRI( 'L', 'N', n, sdum, n, info )
      !
      CALL stop_clock( 'inversion' )
      !
@@ -90,11 +96,13 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL para_zgemm( 'N', 'N', n, n, n, ONE, sdum, &
                       n, hdum, n, ZERO, vdum, n, intra_pool_comm )
+    ! CALL ZGEMM( 'N', 'N', n, n, n, ONE, sdum, n, hdum, n, ZERO, vdum, n )
      !
      ! ... hdum = ( L^-1*H )*(L^-1)^T
      !
      CALL para_zgemm( 'N', 'C', n, n, n, ONE, vdum, n, &
                       sdum, n, ZERO, hdum, n, intra_pool_comm )
+    ! CALL ZGEMM( 'N', 'C', n, n, n, ONE, vdum, n, sdum, n, ZERO, hdum, n )
      !
      CALL stop_clock( 'paragemm' )
      !
@@ -107,6 +115,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL para_zgemm( 'C', 'N', n, m, n, ONE, sdum, n, &
                       vdum, n, ZERO, v, ldh, intra_pool_comm )
+    ! CALL ZGEMM( 'C', 'N', n, m, n, ONE, sdum, n, vdum, n, ZERO, v, ldh )
      !
      CALL stop_clock( 'paragemm' )
      !
@@ -118,12 +127,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
      IF ( me_pool == root_pool ) THEN
         !
-        ALLOCATE( sdiag( n ) )
-        !
         ! ... save the diagonal of input S (it will be overwritten)
         !
+        ALLOCATE( sdiag( n ) )
         DO i = 1, n
-           sdiag(i) = DBLE ( s(i,i) )
+           sdiag(i) = DBLE( s(i,i) )
         END DO
         !
         all_eigenvalues = ( m == n )
@@ -159,13 +167,13 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
            !
         ELSE
            !
-           ALLOCATE( rwork( 7*n ) )  
+           ALLOCATE( rwork( 7*n ) )
            !
            ! ... save the diagonal of input H (it will be overwritten)
            !
            ALLOCATE( hdiag( n ) )
            DO i = 1, n
-              hdiag(i) = DBLE ( h(i,i) )
+              hdiag(i) = DBLE( h(i,i) )
            END DO
            !
            ALLOCATE( iwork( 5*n ) )
@@ -173,22 +181,25 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
            !
            ! ... calculate only m lowest eigenvalues
            !
+           abstol = 0.D0
+          ! abstol = 2.D0*DLAMCH( 'S' )
+           !
            CALL ZHEGVX( 1, 'V', 'I', 'U', n, h, ldh, s, ldh, &
-                        0.D0, 0.D0, 1, m, 0.D0, mm, e, v, ldh, &
+                        0.D0, 0.D0, 1, m, abstol, mm, e, v, ldh, &
                         work, lwork, rwork, iwork, ifail, info )
            !
            DEALLOCATE( ifail )
            DEALLOCATE( iwork )
            !
-           ! ... restore input H matrix from saved diagonal and lower triangle 
+           ! ... restore input H matrix from saved diagonal and lower triangle
            !
            DO i = 1, n
-              h(i,i) = CMPLX ( hdiag (i), 0.0_DP )
+              h(i,i) = CMPLX( hdiag(i), 0.0_DP )
               DO j = i + 1, n
-                 h(i,j) = CONJG ( h(j,i) )
+                 h(i,j) = CONJG( h(j,i) )
               END DO
               DO j = n + 1, ldh
-                 h(i,j) = ( 0.0_DP, 0.0_DP )
+                 h(j,i) = ( 0.0_DP, 0.0_DP )
               END DO
            END DO
            !
@@ -201,15 +212,15 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !
         CALL errore( 'cdiaghg', 'info =/= 0', ABS( info ) )
         !
-        ! ... restore input S matrix from saved diagonal and lower triangle 
+        ! ... restore input S matrix from saved diagonal and lower triangle
         !
         DO i = 1, n
-           s(i,i) = CMPLX ( sdiag (i), 0.0_DP )
+           s(i,i) = CMPLX( sdiag(i), 0.0_DP )
            DO j = i + 1, n
-              s(i,j) = CONJG ( s(j,i) )
+              s(i,j) = CONJG( s(j,i) )
            END DO
            DO j = n + 1, ldh
-              s(i,j) = ( 0.0_DP, 0.0_DP )
+              s(j,i) = ( 0.0_DP, 0.0_DP )
            END DO
         END DO
         !
