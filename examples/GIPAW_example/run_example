@@ -13,16 +13,17 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 $ECHO
 $ECHO "$EXAMPLE_DIR : starting"
 $ECHO
-$ECHO "This example shows how to use gipaw.x to calculate the magnetic"
-$ECHO "susceptibility and NMR chemical shift of fcc Si, diamond, and of"
-$ECHO "two molecules: CH4 and C2H4"
+$ECHO "This example shows how to use gipaw.x to calculate:"
+$ECHO "1) susceptibility and NMR chemical shift of Si and diamond"
+$ECHO "2) NMR chemical shift of two molecules: CH4 and C2H4"
+$ECHO "3) electric field gradients (EFG) in bulk quartz (this was example24)"
 
 # set the needed environment variables
 . ../environment_variables
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x gipaw.x"
-PSEUDO_LIST="C.pbe-tm-gipaw.UPF  H.pbe-tm-gipaw.UPF  Si.pbe-tm-gipaw.UPF"
+PSEUDO_LIST="C.pbe-tm-gipaw.UPF H.pbe-tm-gipaw.UPF Si.pbe-tm-gipaw.UPF O.pbe-tm-gipaw.UPF"
 PSEUDO_DIR=$EXAMPLE_DIR/pseudo
 
 $ECHO
@@ -351,5 +352,76 @@ $ECHO " done"
 
 
 ########################################################################
+# quartz
+########################################################################
+# self-consistent calculation
+cat > quartz.scf.in << EOF
+&control
+        calculation = 'scf'
+        restart_mode = 'from_scratch'
+        prefix = 'quartz'
+        pseudo_dir = '$PSEUDO_DIR/'
+        outdir = '$TMP_DIR/'
+ /
+ &system
+        ibrav = 0
+        celldm(1) = 1.
+        nat = 9 
+	ntyp = 2
+        ecutwfc = 70
+ /
+ &electrons
+	diagonalization = 'cg'
+        diago_thr_init = 1e-4
+        conv_thr = 1e-8
+        mixing_beta = 0.3
+ /
+ATOMIC_SPECIES
+Si 28.086  Si.pbe-tm-gipaw.UPF
+O  15.999  O.pbe-tm-gipaw.UPF
+
+ATOMIC_POSITIONS crystal
+Si    0.4701     0.0000      0.3333333333
+Si    0.0000     0.4701      0.6666666667
+Si   -0.4701    -0.4701      0.0000000000
+O     0.4139     0.2674      0.2144
+O     -0.2674    0.1465      0.5477333333
+O     -0.1465   -0.4139      0.8810666667
+O      0.2674    0.4139     -0.2144
+O      0.1465   -0.2674      0.4522666667
+O     -0.4139   -0.1465      0.1189333333
+
+CELL_PARAMETERS hexagonal
+4.6415377      -8.0393791       0.0000000
+4.6415377       8.0393791       0.0000000
+0.0000000       0.0000000      10.2118000
+
+K_POINTS automatic
+2 2 2   1 1 1
+
+EOF
+$ECHO "  running the SCF calculation for quartz...\c"
+$PW_COMMAND < quartz.scf.in > quartz.scf.out
+check_failure $?
+$ECHO " done"
+
+# EFG
+cat > quartz.efg.in << EOF
+&inputgipaw
+        job = 'efg'
+	prefix = 'quartz'
+	tmp_dir = '$TMP_DIR/'
+        iverbosity = 1
+        spline_ps = .true.
+        Q_efg(1)=0.0
+        Q_efg(2)=2.55
+/
+EOF
+$ECHO "  running the EFG calculation for quartz...\c"
+$GIPAW_COMMAND < quartz.efg.in > quartz.efg.out
+check_failure $?
+$ECHO " done"
+
+
 $ECHO
 $ECHO "$EXAMPLE_DIR : done"
