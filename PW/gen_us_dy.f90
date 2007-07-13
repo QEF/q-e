@@ -23,7 +23,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE wvfct,      ONLY : npw, npwx, igk
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
-  USE us,         ONLY : nqxq, tab, tab_d2y, dq, spline_ps
+  USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
   USE splinelib
   USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
   !
@@ -74,8 +74,8 @@ subroutine gen_us_dy (ik, u, dvkb)
   end do
 
   if (spline_ps) then
-    allocate(xdata(nqxq))
-    do iq = 1, nqxq
+    allocate(xdata(nqx))
+    do iq = 1, nqx
       xdata(iq) = (iq - 1) * dq
     enddo
   endif

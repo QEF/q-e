@@ -19,7 +19,7 @@ subroutine init_paw_1
   USE cell_base ,  ONLY : omega
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants ,  ONLY : fpi
-  USE us,          ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
+  USE us,          ONLY : dq, nqx, tab, tab_d2y, qrad, spline_ps
 !  USE paw ,        ONLY : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, &
 !                          paw_iltonh, paw_tab, aephi, paw_betar, psphi, &
 !                          paw_indv, paw_nhtom, paw_nhtol, paw_nbeta, &
@@ -294,8 +294,8 @@ subroutine init_paw_1
   
   ! initialize spline interpolation
   if ( spline_ps ) then
-     allocate(xdata(nqxq))
-     do iq = 1, nqxq
+     allocate(xdata(nqx))
+     do iq = 1, nqx
         xdata(iq) = (iq - 1) * dq
      end do
      do nt = 1, ntyp

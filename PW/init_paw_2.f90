@@ -24,7 +24,7 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
 !  USE paw,        ONLY : paw_nkb, paw_lmaxkb, paw_nh, paw_nhtol, &
 !                         paw_nhtom, paw_indv, paw_nbeta, paw_tab, paw_tab_d2y
   USE paw,        ONLY : paw_recon, paw_nkb, paw_lmaxkb
-  USE us,         ONLY : nqxq, dq, spline_ps
+  USE us,         ONLY : nqx, dq, spline_ps
   USE splinelib
   !
   implicit none
@@ -76,8 +76,8 @@ subroutine init_paw_2 (npw_, igk_, q_, vkb_)
   end do
   
   if (spline_ps) then
-    allocate(xdata(nqxq))
-    do iq = 1, nqxq
+    allocate(xdata(nqx))
+    do iq = 1, nqx
       xdata(iq) = (iq - 1) * dq
     end do
   end if

@@ -369,11 +369,10 @@ subroutine init_us_1
   call reduce (nqx * nbetam * ntyp, tab)
 #endif
 
-
   ! initialize spline interpolation
   if (spline_ps) then
-  allocate( xdata(nqxq) )
-  do iq = 1, nqxq
+  allocate( xdata(nqx) )
+  do iq = 1, nqx
     xdata(iq) = (iq - 1) * dq
   enddo
   do nt = 1, ntyp
