@@ -115,7 +115,7 @@ CONTAINS
                          read_recon_in_paratec_fmt, &
                          file_reconstruction, use_nmr_macroscopic_shape, &
                          nmr_macroscopic_shape, spline_ps, isolve, &
-                         hfi_output_unit, hfi_isotope, &
+                         q_efg, hfi_output_unit, hfi_isotope, &
                          hfi_nuclear_g_factor
     
     if ( .not. ionode ) goto 400
@@ -137,7 +137,8 @@ CONTAINS
     hfi_output_unit = 'MHz'
     hfi_isotope ( : ) = 0
     hfi_nuclear_g_factor ( : ) = 0.0
-    
+    q_efg = 0.0
+ 
     read( 5, inputgipaw, err = 200, iostat = ios )
     
 200 call errore( 'gipaw_readin', 'reading inputgipaw namelist', abs( ios ) )

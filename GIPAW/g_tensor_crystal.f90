@@ -29,8 +29,8 @@ SUBROUTINE g_tensor_crystal
   USE mp_global,                   ONLY : my_pool_id
   USE pwcom
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, q_gipaw, &
-                                         evq, alpha, nbnd_occ, &
-                                         iverbosity
+                                          evq, alpha, nbnd_occ, iverbosity, &
+                                          isolve, conv_threshold
   USE buffers,                     ONLY : get_buffer
   USE paw,                         ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE ions_base, ONLY : nat
@@ -114,8 +114,8 @@ SUBROUTINE g_tensor_crystal
   delta_rmc = 0.0_DP
   gipaw_delta_rmc = 0.0_DP
   
-  write(stdout, '(5X,''Computing the magnetic susceptibility'')')
-  
+  write(stdout, '(5X,''Computing the magnetic susceptibility'',$)')
+  write(stdout, '(5X,''isolve='',I1,4X,''ethr='',E10.4)') isolve, conv_threshold
   !====================================================================
   ! loop over k-points
   !====================================================================
@@ -456,67 +456,67 @@ SUBROUTINE g_tensor_crystal
   write (stdout,*)
   write (stdout,*) 'Delta g - relativistic-mass-correction'
   write (stdout,*) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_rmc(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_rmc(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - relativistic-mass-correction gipaw'
   write (stdout,*) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_rmc_gipaw(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_rmc_gipaw(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-orbit-bare'
   write (stdout,*)
   if (iverbosity > 0) &
-    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_bare(:,:)
+    write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_bare(:,:)
   call sym_cart_tensor(delta_g_bare) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_bare(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_bare(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-orbit diamagnetic correction (GIPAW)'
   write (stdout,*) 
   if (iverbosity > 0) &
-    write ( stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_diamagn(:,:)
+    write ( stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_diamagn(:,:)
   call sym_cart_tensor(delta_g_diamagn) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_diamagn(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_diamagn(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-orbit paramagnetic correction (GIPAW)'
   write (stdout,*) 
   if (iverbosity > 0) &
-    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_paramagn(:,:)
+    write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_paramagn(:,:)
   call sym_cart_tensor(delta_g_paramagn) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_paramagn(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_paramagn(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-other-orbit'
   write (stdout,*) 
   if (iverbosity > 0) &
-    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_soo(:,:)
+    write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_soo(:,:)
   call sym_cart_tensor(delta_g_soo) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_soo(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_soo(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - spin-other-orbit, version 2'
   write (stdout,*) 
   if (iverbosity > 0) &
-    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_soo_2(:,:)
+    write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_soo_2(:,:)
   call sym_cart_tensor(delta_g_soo_2) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_soo_2(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_soo_2(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)
   write (stdout,*) 'Delta g - total'
   write (stdout,*) 
   if (iverbosity > 0) &
-    write (stdout, '(3(5X,3(F12.6,2X)/),/)' ) delta_g_total(:,:)
+    write (stdout, '(3(5X,3(F12.4,2X)/),/)' ) delta_g_total(:,:)
   call sym_cart_tensor(delta_g_total) 
-  write (stdout, '(3(5X,3(F12.6,2X)/))' ) delta_g_total(:,:)
+  write (stdout, '(3(5X,3(F12.4,2X)/))' ) delta_g_total(:,:)
 
   write (stdout,*) '**********************************************'
   write (stdout,*)

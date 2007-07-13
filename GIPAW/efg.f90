@@ -551,6 +551,7 @@ subroutine efg_correction ( efg_corr_tens )
                    / r(j,nt) ** 3
            end do
            call simpson(nrc,work,rab(:,nt),at_efg(il1,il2,nt))
+           !!!print*, nt, il1, il2, at_efg(il1,il2,nt)
         end do
      end do
      
@@ -574,6 +575,7 @@ subroutine efg_correction ( efg_corr_tens )
      end if
      
      call gk_sort ( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
+     g2kin(:) = g2kin(:) * tpiba2
      call get_buffer ( evc, nwordwfc, iunwfc, ik)
      
      call init_paw_2 ( npw, igk, xk(1,ik), paw_vkb )
@@ -600,7 +602,7 @@ subroutine efg_correction ( efg_corr_tens )
                        
                        bec_product = paw_becp(jkb,ibnd) &
                             * CONJG( paw_becp(ikb,ibnd) )
-                       
+
                        do lm = 5, 9
                           efg_corr(lm,na) = efg_corr(lm,na) &
                                + s_weight * bec_product &
