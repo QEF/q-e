@@ -1,0 +1,31 @@
+&CONTROL
+  calculation = "scf",
+  pseudo_dir  = "/Users/giannozz/espresso/pseudo",
+  outdir      = "/Users/giannozz/tmp",
+/
+&SYSTEM
+  ibrav       = 1, 
+  celldm(1)   = 7.67000000D0, 
+  nat         = 4,
+  ntyp        = 1,
+  ecutwfc     = 25.D0,
+  occupations = "smearing",
+  smearing    = "m-v",
+  degauss     = 0.05D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-10,
+  mixing_beta = 0.7D0,
+/
+
+ATOMIC_SPECIES
+Al  1.0  Al.pbe-rrkj.UPF
+
+ATOMIC_POSITIONS
+Al   0.0000000      0.0000000      0.000000
+Al   0.5000000      0.5000000      0.000000
+Al   0.0000000      0.5000000      0.500000
+Al   0.5000000      0.0000000      0.500000
+
+K_POINTS {automatic}
+3 3 3 1 1 1

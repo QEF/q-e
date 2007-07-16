@@ -1,0 +1,10 @@
+&inputPP
+   outdir='/Users/giannozz/tmp',
+   plot_num=11
+   filplot = 'Albulkrefpot'
+/
+ 
+&plot
+   iflag=3,
+   output_format=3
+/ 

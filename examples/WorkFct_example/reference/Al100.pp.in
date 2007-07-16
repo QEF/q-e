@@ -1,0 +1,10 @@
+&inputPP
+   outdir='/Users/giannozz/tmp',
+   plot_num=11
+   filplot = 'Al100.pot'
+/
+ 
+&plot
+   iflag=3,
+   output_format=3
+/ 
