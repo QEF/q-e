@@ -132,6 +132,7 @@ subroutine pseudovloc
         else
            psi_in(:)=psi(:,1,nwf0)
         endif
+        psipaw(:,ns)=psi_in(:)
         !
         !  compute the phi and chi functions
         !
@@ -147,6 +148,7 @@ subroutine pseudovloc
               vaux(n,indi+1)=chis(n,ns)/phis(n,ns)
            endif
         enddo
+        psipsus(:,ns)=phis(:,ns)
      enddo
      if (rep==0) then
         do n=1,mesh

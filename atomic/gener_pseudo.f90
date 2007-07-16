@@ -91,6 +91,8 @@ subroutine gener_pseudo
        'not programmed' ,3)
   if (pseudotype /= 3.and. lpaw) call errore('gener_pseudo', &
        'please start from a US for generating a PAW dataset' ,pseudotype)
+  psipaw=0.0_dp
+  phis=0.0_dp
   !
   !   compute the local potential from the all-electron potential
   !
@@ -113,7 +115,6 @@ subroutine gener_pseudo
   ! the user can check them also when the pseudopotential generation is  
   ! unsuccessful
   ! 
-  psipaw=0.0_dp
   do ns=1,nbeta
      ik=0
      nwf0=nstoae(ns)

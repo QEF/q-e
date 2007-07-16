@@ -61,6 +61,7 @@ subroutine ld1_readin
        nconf,         & ! the number of configurations
        configts,      & ! the configurations of the tests
        file_pseudo,   & ! input file containing the pseudopotential
+       file_pseudopw, & ! output file containing the pseudopotential
        ecutmin,       & ! for test with spherical Bessel functions:
        ecutmax,       & ! min and max energy cutoff for j_l(qr),
        decut,         & ! step: ecut = ecutmin, ecutmin+decut, ... , ecutmax
@@ -330,7 +331,7 @@ subroutine ld1_readin
   if (ionode) read(5,test,err=300,iostat=ios)
 300  call mp_bcast(ios, ionode_id)
 
-  if (iswitch==2) call errore('ld1_readin','reading inputp',abs(ios))
+  if (iswitch==2) call errore('ld1_readin','reading test',abs(ios))
   call bcast_test()
   call mp_bcast(configts, ionode_id)
   !
@@ -366,8 +367,6 @@ subroutine ld1_readin
      return
      !
   endif
-  !
-  call errore('ld1_readin','reading test',abs(ios))
   !
   if (nconf > ncmax1.or.nconf < 1) &
        call errore('ld1_readin','nconf is wrong',1)

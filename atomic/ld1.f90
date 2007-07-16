@@ -48,6 +48,7 @@ program ld1
      !   pseudopotential test
      !
      call run_test ( )
+     call ld1_writeout ( )
      !
   elseif (iswitch.eq.3) then
      !
