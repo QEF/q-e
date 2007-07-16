@@ -59,6 +59,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      ALLOCATE( hdum( n, n ), sdum( n, n ), vdum( n, n ) )
      !
      hdum(:,:) = h(1:n,:)
+     sdum(:,:) = s(1:n,:)
      !
      CALL start_clock( 'choldc' )
      !
