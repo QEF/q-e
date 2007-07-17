@@ -25,7 +25,8 @@ subroutine stress
   USE scf,           ONLY : rho, rho_core
   USE control_flags, ONLY : iverbosity
   USE wvfct,         ONLY : gamma_only
-  USE funct,         ONLY : dft_is_meta
+  USE noncollin_module, ONLY : noncolin
+  USE funct,         ONLY : dft_is_meta, dft_is_gradient
   !
   implicit none
   !
@@ -39,6 +40,14 @@ subroutine stress
 
   IF (dft_is_meta()) &
      CALL errore ('stress','Meta-GGA and stress not implemented yet ',1)
+
+  if ( .not. dft_is_gradient() ) return
+  if (noncolin.and.dft_is_gradient()) then
+    call infomsg('stres', 'noncollinear stress + GGA not implemented')
+    call stop_clock ('stress')
+    return
+  endif
+
   !
   !   contribution from local  potential
   !
