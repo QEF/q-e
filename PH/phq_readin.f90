@@ -67,6 +67,8 @@ SUBROUTINE phq_readin()
   LOGICAL                    :: tend
   LOGICAL                    :: end_of_file
   INTEGER                    :: i
+  INTEGER, EXTERNAL :: atomic_number
+  REAL(DP), EXTERNAL :: atom_weight
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
@@ -245,7 +247,10 @@ SUBROUTINE phq_readin()
   !  leave values read from file otherwise
   !
   DO it = 1, ntyp
+     IF (amass_input(it) < 0.0_DP) amass_input(it)= &
+              atom_weight(atomic_number(TRIM(atm(it))))
      IF (amass_input(it) > 0.D0) amass(it) = amass_input(it)
+
      IF (amass(it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
      !
      !  convert masses to a.u.

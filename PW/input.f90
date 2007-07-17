@@ -1555,6 +1555,7 @@ END SUBROUTINE iosys
 SUBROUTINE read_cards( psfile, atomic_positions_ )
   !----------------------------------------------------------------------------
   !
+  USE kinds,              ONLY : DP
   USE input_parameters,   ONLY : atom_label, atom_pfile, atom_mass, taspc, &
                                  tapos, rd_pos, atomic_positions, if_pos,  &
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
@@ -1585,6 +1586,8 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   !
   CHARACTER (LEN=256) :: psfile(ntyp)
   CHARACTER (LEN=30)  :: atomic_positions_
+  INTEGER, EXTERNAL :: atomic_number
+  REAL(DP), EXTERNAL :: atom_weight
   !
   LOGICAL :: tcell = .FALSE.
   INTEGER :: is, ia
@@ -1605,6 +1608,9 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
      psfile(is) = atom_pfile(is)
      atm(is)    = atom_label(is)
      !
+     IF ( amass(is) <= 0.0_DP ) amass(is)= &
+              atom_weight(atomic_number(TRIM(atm(is))))
+
      IF ( amass(is) <= 0.D0 ) CALL errore( 'read_cards', 'invalid  mass', is )
      !
   END DO

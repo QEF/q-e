@@ -351,9 +351,9 @@ MODULE read_cards_module
           lb_pos         = ADJUSTL( lb_pos )
           atom_label(is) = TRIM( lb_pos )
           !
-          IF ( atom_mass(is) <= 0.0_DP ) THEN
-             CALL errore( ' card_atomic_species ',' invalid  atom_mass ', is )
-          END IF
+!          IF ( atom_mass(is) <= 0.0_DP ) THEN
+!             CALL errore( ' card_atomic_species ',' invalid  atom_mass ', is )
+!          END IF
           DO ip = 1, is - 1
              IF ( atom_label(ip) == atom_label(is) ) THEN
                 CALL errore( ' card_atomic_species ', &
