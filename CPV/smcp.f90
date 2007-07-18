@@ -22,7 +22,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
   USE atom,                     ONLY : nlcc
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm
-  USE uspp,                     ONLY : nkb, vkb, rhovan => becsum, deeq
+  USE uspp,                     ONLY : nkb, vkb, rhovan => becsum, deeq, okvan
   USE cvan,                     ONLY : nvb
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, ekin, &
                                        esr, print_energies
@@ -474,9 +474,10 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
 
         CALL phfacs( ei1, ei2, ei3, eigr, mill_l, rep(sm_k)%taus, nr1, nr2, nr3, nat )
         !
-        CALL initbox ( rep(sm_k)%tau0, taub, irb, ainv, a1, a2, a3 )
-        !
-        CALL phbox( taub, eigrb, ainvb )
+        IF ( okvan ) THEN
+           CALL initbox ( rep(sm_k)%tau0, taub, irb, ainv, a1, a2, a3 )
+           CALL phbox( taub, eigrb, ainvb )
+        END IF
         !
         IF(trane) THEN    
            IF(sm_k == 1) THEN

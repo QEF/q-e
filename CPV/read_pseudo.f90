@@ -193,13 +193,14 @@ END FUNCTION calculate_dx
 
       USE mp, ONLY: mp_bcast, mp_sum
       USE io_global, ONLY: stdout, ionode, ionode_id
+      USE uspp, ONLY : okvan
       USE uspp_param, ONLY : zp, tvanp, oldvan
       USE atom, ONLY: numeric, nlcc, oc, lchi, nchi
       USE cvan, ONLY: nvb
       use ions_base, only: zv, nsp
       use read_upf_module, only: read_pseudo_upf
       use read_uspp_module, only: readvan, readrrkj
-      use control_flags, only: program_name, tuspp
+      use control_flags, only: program_name
       use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
       USE upf_to_internal, ONLY: set_pseudo_upf
 
@@ -315,10 +316,7 @@ END FUNCTION calculate_dx
            ELSE
              call set_pseudo_upf( is, upf( is ) )
              !
-             IF( upf(is)%tvanp ) THEN
-               tuspp = .TRUE.
-             ELSE
-               tuspp = .FALSE.
+             IF( .NOT. upf(is)%tvanp ) THEN
                CALL upf2ncpp( upf(is), ap(is) )
              END IF
              !
@@ -391,7 +389,7 @@ END FUNCTION calculate_dx
           !     count u-s vanderbilt species 
           !
           if (tvanp(is)) nvb=nvb+1
-
+          !
         END IF
 
         if ( xc_type /= 'none' ) then
@@ -428,6 +426,8 @@ END FUNCTION calculate_dx
       IF( program_name == 'FPMD' ) THEN
         CALL check_types_order()
       END IF
+
+      okvan = ( nvb > 0 )
 
       RETURN
       END SUBROUTINE readpp

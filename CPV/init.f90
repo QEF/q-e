@@ -159,18 +159,21 @@
       !
       !     generation of little box g-vectors
       !
-      !  sets the small box parameters
+      IF ( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
 
-      rat1 = DBLE( nr1b ) / DBLE( nr1 )
-      rat2 = DBLE( nr2b ) / DBLE( nr2 )
-      rat3 = DBLE( nr3b ) / DBLE( nr3 )
-      CALL small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
+         !  sets the small box parameters
 
-      !  now set gcutb
-      !
-      gcutb = ecut / tpibab / tpibab
-      !
-      CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
+         rat1 = DBLE( nr1b ) / DBLE( nr1 )
+         rat2 = DBLE( nr2b ) / DBLE( nr2 )
+         rat3 = DBLE( nr3b ) / DBLE( nr3 )
+         CALL small_box_set( alat, omega, a1, a2, a3, rat1, rat2, rat3 )
+
+         !  now set gcutb
+
+         gcutb = ecut / tpibab / tpibab
+         !
+         CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
+      END IF
 
       ! ... printout g vector distribution summary
       !

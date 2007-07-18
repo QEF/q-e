@@ -49,7 +49,7 @@ CONTAINS
     USE energies,             ONLY : entropy, eself, enl, ekin, enthal, etot, ekincm
     USE energies,             ONLY : dft_energy_type, debug_energies
     USE dener,                ONLY : denl, denl6, dekin6, detot
-    USE uspp,                 ONLY : vkb, becsum, deeq, nkb
+    USE uspp,                 ONLY : vkb, becsum, deeq, nkb, okvan
     USE io_global,            ONLY : stdout, ionode
     USE core,                 ONLY : nlcc_any
     USE gvecw,                ONLY : ngw
@@ -149,11 +149,12 @@ CONTAINS
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     !     
-    CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
-    !     
-    CALL phbox( taub, eigrb, ainvb )
+    IF ( okvan ) THEN
+       CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
+       CALL phbox( taub, eigrb, ainvb )
+    END IF
     !
-    !     random initialization
+    !     wfc initialization with random numbers
     !     
     CALL wave_rand_init( cm, nbsp, 1 )
     !

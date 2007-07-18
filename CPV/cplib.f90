@@ -1107,6 +1107,13 @@ END FUNCTION
       REAL(DP) :: x(3), xmod
       INTEGER  :: nr(3), nrb(3), xint, is, ia, i, isa
 !
+      IF ( nr1b < 1) CALL errore &
+         ('initbox', 'incorrect value for box grid dimensions', 1)
+      IF ( nr2b < 1) CALL errore &
+         ('initbox', 'incorrect value for box grid dimensions', 2)
+      IF ( nr3b < 1) CALL errore &
+         ('initbox', 'incorrect value for box grid dimensions', 3)
+
       nr (1)=nr1
       nr (2)=nr2
       nr (3)=nr3

@@ -161,15 +161,21 @@
           CALL errore(' realspace_grids_init ', ' smooth grid larger than dense grid?',1)
        END IF
 
-       IF( nr1b < 1 ) nr1b = 1
-       IF( nr2b < 1 ) nr2b = 1
-       IF( nr3b < 1 ) nr3b = 1
+       ! no default values for grid box: if nr*b=0, ignore
 
-       nr1b = good_fft_order( nr1b ) ! small box is not parallelized
-       nr2b = good_fft_order( nr2b ) ! small box is not parallelized
-       nr3b = good_fft_order( nr3b ) ! small box is not parallelized
-     
-       nr1bx = good_fft_dimension( nr1b )
+       IF( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
+
+          nr1b = good_fft_order( nr1b ) ! small box is not parallelized
+          nr2b = good_fft_order( nr2b )
+          nr3b = good_fft_order( nr3b )
+          nr1bx = good_fft_dimension( nr1b )
+
+       ELSE
+ 
+          nr1bx = nr1b
+
+       END IF
+
        nr2bx = nr2b
        nr3bx = nr3b
        nnrbx = nr1bx * nr2bx * nr3bx
@@ -253,13 +259,16 @@
         WRITE( stdout,*) '  Number of x-y planes for each processors: '
         WRITE( stdout, fmt = '( 3X, "nr3sl = ", 10I5 )' ) ( dffts%npp( i ), i = 1, nproc_image )
 
-        WRITE( stdout,*)
-        WRITE( stdout,*) '  Small Box Real Mesh'
-        WRITE( stdout,*) '  -------------------'
-        WRITE( stdout,1000) nr1b, nr2b, nr3b, nr1bl, nr2bl, nr3bl, 1, 1, 1
-        WRITE( stdout,1010) nr1bx, nr2bx, nr3bx
-        WRITE( stdout,1020) nnrbx
+        IF ( nr1b > 0 .AND. nr2b > 0 .AND. nr3b > 0 ) THEN
 
+           WRITE( stdout,*)
+           WRITE( stdout,*) '  Small Box Real Mesh'
+           WRITE( stdout,*) '  -------------------'
+           WRITE( stdout,1000) nr1b, nr2b, nr3b, nr1bl, nr2bl, nr3bl, 1, 1, 1
+           WRITE( stdout,1010) nr1bx, nr2bx, nr3bx
+           WRITE( stdout,1020) nnrbx
+
+        END IF
       END IF
 
 1000  FORMAT(3X, &

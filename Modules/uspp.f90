@@ -80,7 +80,7 @@ MODULE uspp
        nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
   !
   LOGICAL :: &
-       okvan              ! if .TRUE. at least one pseudo is Vanderbilt
+       okvan = .FALSE.    ! if .TRUE. at least one pseudo is Vanderbilt
   !
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        vkb(:,:)                ! all beta functions in reciprocal space

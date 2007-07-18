@@ -149,9 +149,9 @@ MODULE read_namelists_module
        nr1s = 0
        nr2s = 0
        nr3s = 0
-       nr1b = 3
-       nr2b = 3
-       nr3b = 3
+       nr1b = 0
+       nr2b = 0
+       nr3b = 0
        occupations = 'fixed'
        smearing = 'gaussian'
        degauss = 0.0_DP

@@ -66,7 +66,7 @@
                   tprnsfac, tcarpar, &
                   tdipole, &
                   tnosee, tnosep, force_pairing, tconvthrs, convergence_criteria, tionstep, nstepe, &
-                  ekin_conv_thr, ekin_maxiter, conv_elec, lneb, tnoseh, tuspp, etot_conv_thr, tdamp
+                  ekin_conv_thr, ekin_maxiter, conv_elec, lneb, tnoseh, etot_conv_thr, tdamp
       USE atoms_type_module, ONLY: atoms_type
       USE cell_base, ONLY: press, wmass, boxdimensions, updatecell, cell_force, cell_move, gethinv
       USE polarization, ONLY: ddipole
@@ -107,7 +107,7 @@
                                           vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
       USE cell_base,                ONLY: cell_gamma
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
-      USE uspp,                     ONLY: vkb, nkb
+      USE uspp,                     ONLY: vkb, nkb, okvan
       !
       USE reciprocal_vectors,       ONLY: &
            g,      & ! G-vectors square modulus

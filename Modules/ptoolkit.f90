@@ -3588,7 +3588,7 @@ SUBROUTINE para_dcholdc( n, a, lda, comm )
   !----------------------------------------------------------------------------
   !
   ! ... trivial parallelization (using a parallel version of DGEMV) of
-  ! ... the Cholesky deconposition (equivalent to DPOTF2)
+  ! ... the Cholesky decomposition (equivalent to DPOTF2)
   !
   USE kinds, ONLY : DP
   !
@@ -3637,7 +3637,7 @@ SUBROUTINE para_zcholdc( n, a, lda, comm )
   !----------------------------------------------------------------------------
   !
   ! ... trivial parallelization (using a parallel version of ZGEMV) of
-  ! ... the Cholesky deconposition (equivalent to ZPOTF2)
+  ! ... the Cholesky decomposition (equivalent to ZPOTF2)
   !
   USE kinds, ONLY : DP
   !
@@ -3691,7 +3691,7 @@ END SUBROUTINE para_zcholdc
 SUBROUTINE para_dtrtri( n, a, lda, comm )
   !----------------------------------------------------------------------------
   !
-  ! ... parallel inversion of a lower trinagular matrix done distributing
+  ! ... parallel inversion of a lower triangular matrix done distributing
   ! ... by columns ( the number of columns assigned to each processor are
   ! ... chosen to optimize the load balance )
   !
@@ -3795,7 +3795,7 @@ END SUBROUTINE para_dtrtri
 SUBROUTINE para_ztrtri( n, a, lda, comm )
   !----------------------------------------------------------------------------
   !
-  ! ... parallel inversion of a lower trinagular matrix done distributing
+  ! ... parallel inversion of a lower triangular matrix done distributing
   ! ... by columns ( the number of columns assigned to each processor are
   ! ... chosen to optimize the load balance in the limit of large matrices )
   !

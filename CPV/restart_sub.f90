@@ -502,6 +502,7 @@ SUBROUTINE from_restart_x( &
    USE efield_module,         ONLY : efield_berry_setup,  tefield, &
                                      efield_berry_setup2, tefield2
    USE small_box,             ONLY : ainvb
+   USE uspp,                  ONLY : okvan
    !
    IMPLICIT NONE
    !
@@ -647,9 +648,10 @@ SUBROUTINE from_restart_x( &
    ! ... computes form factors and initializes nl-pseudop. according
    ! ... to starting cell (from ndr or again standard input)
    !
-   CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
-   !
-   CALL phbox( taub, eigrb, ainvb )
+   IF ( okvan) THEN
+      CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
+      CALL phbox( taub, eigrb, ainvb )
+   END IF
    !
    CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
    !

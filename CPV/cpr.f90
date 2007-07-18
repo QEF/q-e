@@ -24,7 +24,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm, nh
   USE cvan,                     ONLY : nvb, ish
-  USE uspp,                     ONLY : nkb, vkb, becsum, deeq
+  USE uspp,                     ONLY : nkb, vkb, becsum, deeq, okvan
   USE energies,                 ONLY : eht, epseu, exc, etot, eself, enl, &
                                        ekin, atot, entropy, egrand, enthal, &
                                        ekincm, print_energies
@@ -256,7 +256,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      ! 
-     IF ( tfor .OR. thdyn .OR. tfirst ) THEN
+     IF ( okvan .AND. (tfor .OR. thdyn .OR. tfirst) ) THEN
         !
         CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
         !
@@ -718,8 +718,10 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            ! ... in this case optimize c0 and lambda for smooth
            ! ... restart with CP
            !
-           CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
-           CALL phbox( taub, eigrb, ainvb )
+           IF ( okvan) THEN
+              CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
+              CALL phbox( taub, eigrb, ainvb )
+           END IF
            CALL r_to_s( tau0, taus, na, nsp, ainv )
            CALL phfacs( ei1, ei2, ei3, eigr, mill_l, taus, nr1, nr2, nr3, nat )
            CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
