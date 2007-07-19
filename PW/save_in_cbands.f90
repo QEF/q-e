@@ -23,7 +23,6 @@ subroutine save_in_cbands (iter, ik_, dr2)
   logical :: exst
 
   real(DP) :: dr2
-  if ( io_level < 2 ) return
   !
   ! open recover file
   !

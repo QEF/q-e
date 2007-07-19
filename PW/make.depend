@@ -1092,6 +1092,7 @@ stress.o : ../Modules/functionals.o
 stress.o : ../Modules/io_global.o
 stress.o : ../Modules/ions_base.o
 stress.o : ../Modules/kind.o
+stress.o : noncol.o
 stress.o : pwcom.o
 struct_fact.o : ../Modules/constants.o
 struct_fact.o : ../Modules/kind.o

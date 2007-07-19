@@ -131,7 +131,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
      !
      ! ... save restart information
      !
-     CALL save_in_cbands( iter, ik, dr2 )
+     IF ( io_level > 1 ) CALL save_in_cbands( iter, ik, dr2 )
      !
   END DO k_loop
   !
@@ -572,7 +572,7 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE uspp,                 ONLY : vkb, nkb
   USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, current_k
-  USE control_flags,        ONLY : ethr, lbands, isolve, io_level
+  USE control_flags,        ONLY : ethr, lbands, isolve, io_level, iverbosity
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE noncollin_module,     ONLY : noncolin, npol
@@ -596,6 +596,8 @@ SUBROUTINE c_bands_nscf( ik_ )
   INTEGER :: ik, ig, nkdum, iter=1
   ! counter on k points
   ! counter on G vectors
+  !
+  REAL(DP), EXTERNAL :: get_clock
   !
   IF ( ik_ == nks ) THEN
      !
@@ -629,6 +631,8 @@ SUBROUTINE c_bands_nscf( ik_ )
   ! ... For each k point diagonalizes the hamiltonian
   !
   k_loop: DO ik = 1, nks
+     !
+     IF ( iverbosity > 0 ) WRITE( stdout, 9001 ) ik
      !
      current_k = ik
      !
@@ -678,11 +682,11 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      ! ... save wave-functions (unless instructed not to save them)
      !
-     IF ( io_level > -1) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
+     IF ( io_level > -1 ) CALL save_buffer ( evc, nwordwfc, iunwfc, ik )
      !
      ! ... save restart information
      !
-     CALL save_in_cbands( iter, ik, dr2 )
+     IF ( io_level > 0 ) CALL save_in_cbands( iter, ik, dr2 )
      !
      ! ... check is performed only if not interfering with phonon calc.
      !
@@ -701,17 +705,32 @@ SUBROUTINE c_bands_nscf( ik_ )
 #endif
      ENDIF
      !
+     ! report about timing
+     !
+     IF ( iverbosity > 0 ) THEN
+        !
+        WRITE( stdout, 9000 ) get_clock( 'PWSCF' )
+        !
+        CALL flush_unit( stdout )
+        !
+     ENDIF
+     !
   END DO k_loop
   !
   CALL poolreduce( 1, avg_iter )
   avg_iter = avg_iter / nkstot
   !
-  WRITE( stdout, &
-       '( 5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
+  WRITE( stdout, '( /,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
        ethr, avg_iter
   !
   CALL stop_clock( 'c_bands' )
   !
+  !
   RETURN
+  !
+  ! formats
+  !
+9001 FORMAT(/'     Computing kpt #: ',I5 )
+9000 FORMAT( '     total cpu time spent up to now is ',F9.2,' secs' )
   !
 END SUBROUTINE c_bands_nscf
