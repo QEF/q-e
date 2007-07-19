@@ -1693,11 +1693,7 @@ MODULE read_namelists_module
                calculation == 'phonon' ) THEN
              !
              startingpot = 'file'
-             IF (restart_mode == "restart") THEN
-                startingwfc = 'file'
-             ELSE
-                startingwfc = 'atomic'
-             END IF
+             startingwfc = 'atomic'
              !
           ELSE IF ( restart_mode == "from_scratch" ) THEN
              !

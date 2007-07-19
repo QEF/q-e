@@ -579,7 +579,8 @@ SUBROUTINE iosys()
   CASE DEFAULT
      !
      io_level = 1
-     restart  = .FALSE.
+     !
+     IF ( lscf ) restart  = .FALSE.
      !
   END SELECT
   !

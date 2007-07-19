@@ -632,8 +632,6 @@ SUBROUTINE c_bands_nscf( ik_ )
   !
   k_loop: DO ik = 1, nks
      !
-     IF ( iverbosity > 0 ) WRITE( stdout, 9001 ) ik
-     !
      current_k = ik
      !
      IF ( lsda ) current_spin = isk(ik)
@@ -651,6 +649,9 @@ SUBROUTINE c_bands_nscf( ik_ )
         CYCLE k_loop
         !
      END IF
+     !
+     !
+     IF ( iverbosity > 0 ) WRITE( stdout, 9001 ) ik
      !
      ! ... various initializations
      !
@@ -697,6 +698,7 @@ SUBROUTINE c_bands_nscf( ik_ )
         ! ... the loop on k-points before checking for stop condition
         !
         nkdum  = kunit * ( nkstot / kunit / npool )
+        !
         IF (ik .le. nkdum) THEN
            IF (check_stop_now())  call stop_run(.FALSE.)
         ENDIF
