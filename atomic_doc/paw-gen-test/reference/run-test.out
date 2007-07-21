@@ -1,4 +1,4 @@
-Today is: mar feb  8 15:53:17 CET 2005
+Today is: Sat Jul 21 20:06:43 CEST 2007
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 !!!                          Doing tests for Oxygen                          !!!
@@ -10,22 +10,22 @@ Pseudopotential generated in the (1s2) 2s2 2p4 configuration
 
 Testing pseudo LDA for O with nlcc=.false. ...
 Pseudopotential generated in the (1s2) 2s2 2p4 configuration
-  Pseudo energy =  -40.138650 Ryd
+  Pseudo energy =  -40.138651 Ryd
 Pseudopotential tested in the (1s2) 2s0 2p6 configuration
-  Pseudo energy =  -37.997817 Ryd
+  Pseudo energy =  -37.997818 Ryd
   Error         =   -0.000498 Ryd
 Pseudopotential tested in the (1s2) 2s0 2p4 configuration
   Pseudo energy =  -34.278773 Ryd
-  Error         =   -0.001619 Ryd
+  Error         =   -0.001618 Ryd
 
 Testing pseudo LDA for O with nlcc=.false. ...
 Pseudopotential generated in the (1s2) 2s2 2p4 configuration
-  Pseudo energy =  -40.138650 Ryd
+  Pseudo energy =  -40.138651 Ryd
 Pseudopotential tested in the (1s2) 2s0 2s0 2p3 2p3 configuration
-  Pseudo energy =  -37.997817 Ryd
-  Error         =   -0.000497 Ryd
+  Pseudo energy =  -37.997818 Ryd
+  Error         =   -0.000498 Ryd
 Pseudopotential tested in the (1s2) 2s1 2s1 2p1 2p3 configuration
-  Pseudo energy =  -40.242160 Ryd
+  Pseudo energy =  -40.242161 Ryd
   Error         =   -0.000069 Ryd
 
 
@@ -48,7 +48,7 @@ Pseudopotential generated in the (1s2) 2s2 2p4 configuration
   Pseudo energy =  -41.130397 Ryd
 Pseudopotential tested in the (1s2) 2s0 2s0 2p3 2p3 configuration
   Pseudo energy =  -38.937600 Ryd
-  Error         =   -0.000443 Ryd
+  Error         =   -0.000444 Ryd
 Pseudopotential tested in the (1s2) 2s1 2s1 2p1 2p3 configuration
   Pseudo energy =  -41.241839 Ryd
   Error         =   -0.000100 Ryd
@@ -67,7 +67,7 @@ Pseudopotential generated in the (1s2 2s2 2p6 3s2 3p6) 3d10 4s1 configuration
   Pseudo energy = -207.078160 Ryd
 Pseudopotential tested in the (1s2 2s2 2p6 3s2 3p6) 3d9.7 4s1 configuration
   Pseudo energy = -206.915990 Ryd
-  Error         =   -0.000558 Ryd
+  Error         =   -0.000552 Ryd
 
 !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
 

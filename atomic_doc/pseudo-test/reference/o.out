@@ -1,0 +1,71 @@
+
+     Program LD1       v.3.2cvs starts ...
+     Today is 21Jul2007 at 17:26:55 
+     Message from routine scf:
+     errors in KS equations
+     --------------------------- All-electron run ----------------------------
+
+     O                                                                          
+
+     atomic number is  8.00
+     dft = SLA  PW   PBE  PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
+     2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
+     3 2     3D 1( 0.00)        -0.0391        -0.0195        -0.5319
+
+     eps = 5.1E-15  iter = 14
+ 
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370775 eV
+
+     Ekin =     149.468653 Ry,      74.734327 Ha,    2033.624502 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.796969 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780235 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978542 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1997  <r2> =    0.0539  r(max) =   0.1298
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
+     s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
+     s(3D/3D) =  1.000000  <r> =  13.1782  <r2> =  209.2540  r(max) =  10.0549
+
+     ------------------------ End of All-electron run ------------------------
+
+     Computing logarithmic derivative in   1.49455
+     Computing logarithmic derivative in   1.49455
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     O                                                                          
+
+     atomic number is  8.00   valence charge is  6.00
+     dft = SLA  PW   PBE  PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     2S   1( 2.00)       -1.75770       -1.75783        0.00013
+     2 1     2P   1( 4.00)       -0.66426       -0.66423       -0.00003
+
+     eps = 4.2E-15  iter = 11
+ 
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370775 eV
+     Etotps =   -31.376650 Ry,     -15.688325 Ha,    -426.901052 eV
+     dEtot_ae =       0.000000 Ry
+     dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
+
+     Ekin =      11.634539 Ry,       5.817269 Ha,     158.295953 eV
+     Encl =     -71.744648 Ry,     -35.872324 Ha,    -976.135597 eV
+     Ehrt =      27.107741 Ry,      13.553870 Ha,     368.819579 eV
+     Ecxc =      -6.463014 Ry,      -3.231507 Ha,     -87.933786 eV
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       8.088732 Ry,       4.044366 Ha,     110.052800 eV
+
+     ---------------------- End of pseudopotential test ----------------------
+

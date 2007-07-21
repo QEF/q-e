@@ -1,14 +1,7 @@
 
-     program ld1 starts. version 08-Feb-05
-     today is  8Feb2005 at 15:53:18 
-
-
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-     from ld1_readin : error #        -1
-     PAW dataset generation and test is experimental
- %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-
-     -------------------- All-electron run ------------------------------
+     Program LD1       v.3.2cvs starts ...
+     Today is 21Jul2007 at 19:46: 4 
+     --------------------------- All-electron run ----------------------------
 
      O                                                                          
 
@@ -16,22 +9,21 @@
      dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
 
-     n l     nl                  e(Ryd)         e(Ha)          e(eV)
-     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2628
-     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9149
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
      2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
      3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 5.7E-15  iter = 14
+     eps = 4.0E-15  iter = 14
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386923 eV
+     Etot =    -149.890996 Ry,     -74.945498 Ha,   -2039.370774 eV
 
-     Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640596 eV
-     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835274 eV
-     Eh   =      72.821009 Ry,      36.410504 Ha,     990.788079 eV
-     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.980324 eV
+     Ekin =     149.468653 Ry,      74.734327 Ha,    2033.624500 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.796966 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780235 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978542 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
 
 
      normalization and overlap integrals
@@ -40,15 +32,14 @@
      s(1S/2S) =  0.000000
      s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
      s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
-     s(3D/3D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.0434
 
-     -------------------- End of All-electron run ----------------------
-
-
-     ---------------  Generating PAW atomic setup  ---------------
+     ------------------------ End of All-electron run ------------------------
 
 
-      Generating local potential: lloc=2, matching radius rcloc =   1.4000
+     --------------------- Generating PAW atomic setup --------------------
+
+
+      Generating local pot.: lloc=2, matching radius rcloc =   1.4000
 
       Computing core charge for nlcc: 
 
@@ -58,28 +49,28 @@
              integrated core pseudo-charge :   0.27
 
 
-      Wfc   2S  rcut= 1.400  Estimated cut-off energy=       64.20 Ry
+      Wfc   2S  rcut= 1.413  Estimated cut-off energy=       64.20 Ry
       This function has    0 nodes for 0 < r <    1.413
-      Wfc-us  2S rcutus= 1.700  Estimated cut-off energy=    17.92 Ry
+      Wfc-us  2S rcutus= 1.683  Estimated cut-off energy=    17.92 Ry
 
 
-      Wfc   2S  rcut= 1.400  Estimated cut-off energy=       79.41 Ry
+      Wfc   2S  rcut= 1.413  Estimated cut-off energy=       79.41 Ry
       This function has    0 nodes for 0 < r <    1.413
-      Wfc-us  2S rcutus= 1.700  Estimated cut-off energy=    33.87 Ry
+      Wfc-us  2S rcutus= 1.683  Estimated cut-off energy=    33.87 Ry
 
 
-      Wfc   2P  rcut= 1.400  Estimated cut-off energy=       88.65 Ry
+      Wfc   2P  rcut= 1.413  Estimated cut-off energy=       88.65 Ry
       This function has    0 nodes for 0 < r <    1.413
-      Wfc-us  2P rcutus= 1.700  Estimated cut-off energy=    28.04 Ry
+      Wfc-us  2P rcutus= 1.683  Estimated cut-off energy=    28.04 Ry
 
 
-      Wfc   2P  rcut= 1.400  Estimated cut-off energy=       92.81 Ry
+      Wfc   2P  rcut= 1.413  Estimated cut-off energy=       92.81 Ry
       This function has    0 nodes for 0 < r <    1.413
-      Wfc-us  2P rcutus= 1.700  Estimated cut-off energy=    35.27 Ry
+      Wfc-us  2P rcutus= 1.683  Estimated cut-off energy=    35.27 Ry
 
       The bmat matrix
      1.70454    -7.81041     0.00000     0.00000
-    -7.81154    30.67195     0.00000     0.00000
+    -7.81154    30.67194     0.00000     0.00000
      0.00000     0.00000    -0.60782    -0.61066
      0.00000     0.00000    -0.61063    -0.59259
 
@@ -89,11 +80,11 @@
      0.00000     0.00000     0.26804     0.31907
      0.00000     0.00000     0.31907     0.38051
 
-     Estimated PAW energy =  -41.130251 Ryd
+     Estimated PAW energy =  -41.130251 Ry
 
      The PAW screened D coefficients
      1.70454    -7.81044     0.00000     0.00000
-    -7.81044    30.67195     0.00000     0.00000
+    -7.81044    30.67194     0.00000     0.00000
      0.00000     0.00000    -0.60782    -0.61065
      0.00000     0.00000    -0.61065    -0.59259
 
@@ -103,32 +94,31 @@
      0.00000     0.00000     1.66336     2.13020
      0.00000     0.00000     2.13020     2.71871
 
-     ------------ End of pseudopotential generation --------------------
+     ------------------- End of pseudopotential generation -------------------
 
-     -------------------- All-electron run ------------------------------
+     --------------------------- All-electron run ----------------------------
 
      O                                                                          
 
      atomic number is  8.00
-     dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
 
-     n l     nl                  e(Ryd)         e(Ha)          e(eV)
-     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2628
-     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9149
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
      2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
      3 2     3D 1(-1.00)         0.0000         0.0000         0.0000
 
-     eps = 5.7E-15  iter = 14
+     eps = 4.0E-15  iter = 14
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386923 eV
+     Etot =    -149.890996 Ry,     -74.945498 Ha,   -2039.370774 eV
 
-     Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640596 eV
-     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835274 eV
-     Eh   =      72.821009 Ry,      36.410504 Ha,     990.788079 eV
-     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.980324 eV
+     Ekin =     149.468653 Ry,      74.734327 Ha,    2033.624500 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.796966 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780235 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978542 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
 
 
      normalization and overlap integrals
@@ -137,36 +127,36 @@
      s(1S/2S) =  0.000000
      s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
      s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
-     s(3D/3D) =  0.000000  <r> =   0.0000  <r2> =    0.0000  r(max) =  99.0434
 
-     -------------------- End of All-electron run ----------------------
+     ------------------------ End of All-electron run ------------------------
 
 
-     -------------- Testing the pseudopotential ------------------------
+     ---------------------- Testing the pseudopotential ----------------------
 
      O                                                                          
 
      atomic number is  8.00   valence charge is  6.00
-     dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
 
-     n l     nl             e AE (Ryd)       e PS (Ryd)   De AE-PS (Ryd) 
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
      1 0     2S   1( 2.00)       -1.75770       -1.75785        0.00015
      2 1     2P   1( 4.00)       -0.66426       -0.66425       -0.00001
 
-     eps = 7.7E-15  iter =  4
+     eps = 7.2E-15  iter =  4
  
-     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.386923 eV
-     Etotps =   -41.130397 Ry,     -20.565198 Ha,    -559.611955 eV
+     Etot =    -149.890996 Ry,     -74.945498 Ha,   -2039.370774 eV
+     Etotps =   -41.130397 Ry,     -20.565198 Ha,    -559.607521 eV
      dEtot_ae =       0.000000 Ry
      dEtot_ps =       0.000000 Ry,   Delta E=       0.000000
 
-     Ekin =     149.468653 Ry,      74.734326 Ha,    2033.640596 eV
-     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.835274 eV
-     Ehrt =      72.821009 Ry,      36.410504 Ha,     990.788079 eV
-     Ecxc =     -16.535619 Ry,      -8.267809 Ha,    -224.980324 eV
+     Ekin =     149.468653 Ry,      74.734327 Ha,    2033.624500 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.796966 eV
+     Ehrt =      72.821009 Ry,      36.410504 Ha,     990.780235 eV
+     Ecxc =     -16.535619 Ry,      -8.267809 Ha,    -224.978542 eV
+     (Ecc =       0.000000 Ry,       0.000000 Ha,       0.000000 eV)
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
      Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
 
-     -------------- End of pseudopotential test ------------------------
+     ---------------------- End of pseudopotential test ----------------------
 
