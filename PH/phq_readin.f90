@@ -45,6 +45,8 @@ SUBROUTINE phq_readin()
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : ionode
+  USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
+  USE control_flags, ONLY : twfcollect
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE funct,         ONLY : dft_is_gradient
   USE freq_ph
@@ -69,6 +71,7 @@ SUBROUTINE phq_readin()
   INTEGER                    :: i
   INTEGER, EXTERNAL :: atomic_number
   REAL(DP), EXTERNAL :: atom_weight
+
   !
   NAMELIST / INPUTPH / tr2_ph, amass, alpha_mix, niter_ph, nmix_ph,  &
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
@@ -236,12 +239,22 @@ SUBROUTINE phq_readin()
   IF (gamma_only) CALL errore('phq_readin',&
      'cannot start from pw.x data file using Gamma-point tricks',1)
 
-  IF (noncolin.and.dft_is_gradient()) CALL errore('phq_readin', &
-     'The non collinear phonon code with GGA is not yet available',1)
-  IF (noncolin.and..not.trans.and.okvan) CALL errore('phq_readin', &
-     'The non collinear US dieletric constant is not yet available',1)
   IF (lda_plus_u) CALL errore('phq_readin',&
      'The phonon code with LDA+U is not yet available',1)
+
+  IF (noncolin.and.dft_is_gradient()) CALL errore('phq_readin', &
+     'The non collinear phonon code with GGA is not yet available',1)
+
+  IF (noncolin.and..not.trans.and.okvan) CALL errore('phq_readin', &
+     'The non collinear US dieletric constant is not yet available',1)
+
+  IF (nproc /= nproc_file .and. .not. twfcollect)  &
+     CALL errore('phq_readin',&
+     'pw.x run with a different number of processors. Use twfcollect=.true.',1)
+
+  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+     CALL errore('phq_readin',&
+     'pw.x run with a different number of pools. Use twfcollect=.true.',1)
   !
   !  set masses to values read from input, if available;
   !  leave values read from file otherwise
@@ -250,7 +263,6 @@ SUBROUTINE phq_readin()
      IF (amass_input(it) < 0.0_DP) amass_input(it)= &
               atom_weight(atomic_number(TRIM(atm(it))))
      IF (amass_input(it) > 0.D0) amass(it) = amass_input(it)
-
      IF (amass(it) <= 0.D0) CALL errore ('phq_readin', 'Wrong masses', it)
      !
      !  convert masses to a.u.

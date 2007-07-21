@@ -363,9 +363,6 @@ MODULE pw_restart
                          DEGAUSS = degauss, LTETRA = ltetra, NTETRA = ntetra, &
                          TETRA = tetra, TFIXED_OCC = tfixed_occ, LSDA = lsda, &
                          NELUP = nbnd, NELDW = nbnd, F_INP = f_inp )
-      END IF
-      !
-      IF ( ionode ) THEN
          !
 !-------------------------------------------------------------------------------
 ! ... BRILLOUIN_ZONE
@@ -388,11 +385,13 @@ MODULE pw_restart
          CALL iotk_write_dat( iunpun, &
                               "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
          !
-         CALL iotk_write_end( iunpun, "PARALLELISM" )
+         CALL iotk_write_dat( iunpun, &
+                              "NUMBER_OF_PROCESSORS", nproc )
          !
-      END IF
-      !
-      IF ( ionode ) THEN
+         CALL iotk_write_dat( iunpun, &
+                              "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool )
+         !
+         CALL iotk_write_end( iunpun, "PARALLELISM" )
          !
 !-------------------------------------------------------------------------------
 ! ... CHARGE DENSITY
@@ -1058,7 +1057,7 @@ MODULE pw_restart
       USE ktetra,           ONLY : ntetra
       USE klist,            ONLY : nkstot, nelec
       USE wvfct,            ONLY : nbnd, npwx, gamma_only
-      USE mp_global,        ONLY : kunit
+      USE mp_global,        ONLY : kunit, nproc_file, nproc_pool_file
       !
       IMPLICIT NONE
       !
@@ -1183,11 +1182,19 @@ MODULE pw_restart
          IF ( .NOT. found ) THEN
             !
             kunit = 1
+            nproc_file=1
+            nproc_pool_file=1
             !
          ELSE
             !
             CALL iotk_scan_dat( iunpun, &
                  "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
+            !
+            CALL iotk_scan_dat( iunpun, &
+                              "NUMBER_OF_PROCESSORS", nproc_file )
+            !
+            CALL iotk_scan_dat( iunpun, &
+                            "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool_file)
             !
             CALL iotk_scan_end( iunpun, "PARALLELISM" )
             !
@@ -1219,6 +1226,8 @@ MODULE pw_restart
       CALL mp_bcast( nelec,      ionode_id, intra_image_comm )
       CALL mp_bcast( nbnd,       ionode_id, intra_image_comm )
       CALL mp_bcast( kunit,      ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_file, ionode_id, intra_image_comm )
+      CALL mp_bcast( nproc_pool_file, ionode_id, intra_image_comm )
       !
       RETURN
       !

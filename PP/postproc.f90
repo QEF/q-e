@@ -65,6 +65,8 @@ SUBROUTINE extract (filplot,plot_num)
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
+  USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
+  USE control_flags, ONLY : twfcollect
   USE mp,        ONLY : mp_bcast
 
   IMPLICIT NONE
@@ -72,7 +74,7 @@ SUBROUTINE extract (filplot,plot_num)
   INTEGER, INTENT(out) :: plot_num
 
   INTEGER :: kpoint, kband, spin_component, ios, flen
-  LOGICAL :: stm_wfc_matching, lsign
+  LOGICAL :: stm_wfc_matching, lsign, needwf
 
   REAL(DP) :: emin, emax, sample_bias, z, dz, epsilon
   ! directory for temporary files
@@ -147,6 +149,18 @@ SUBROUTINE extract (filplot,plot_num)
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file ( )
+
+  needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
+         (plot_num==8).or.(plot_num==10)
+  IF (nproc /= nproc_file .and. .not. twfcollect .and. needwf)  &
+     CALL errore('phq_readin',&
+     'pw.x run with a different number of processors. Use twfcollect=.true.',1)
+
+  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect .and. needwf)  &
+     CALL errore('phq_readin',&
+     'pw.x run with a different number of pools. Use twfcollect=.true.',1)
+
+
   CALL openfil_pp ( )
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
        strf, eigts1, eigts2, eigts3)

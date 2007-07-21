@@ -22,6 +22,8 @@ MODULE mp_global
   INTEGER :: mpime = 0  ! absolute processor index starting from 0
   INTEGER :: root  = 0  ! index of the absolute root processor
   INTEGER :: nproc = 1  ! absolute number of processor
+  INTEGER :: nproc_file = 1  ! absolute number of processor written in the 
+                             ! xml punch file
   INTEGER :: world_comm = 0  ! communicator of all processor
   INTEGER :: kunit = 1  ! granularity of k-point distribution
   !
@@ -40,6 +42,8 @@ MODULE mp_global
   INTEGER :: nogrp       = 1  ! number of proc. in an orbital "task group" 
   INTEGER :: npgrp       = 1  ! number of proc. in a plane-wave "task group" 
   INTEGER :: nproc_pool  = 1  ! number of processor within a pool
+  INTEGER :: nproc_pool_file  = 1  ! number of processor within a pool of
+                              !   written in the xml punch file
   INTEGER :: nproc_image = 1  ! number of processor within an image
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
   !

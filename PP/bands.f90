@@ -12,7 +12,8 @@ PROGRAM bands
   !-----------------------------------------------------------------------
   !
   USE io_files,  ONLY : nd_nmbr, prefix, tmp_dir, trimcheck
-  USE mp_global, ONLY : npool
+  USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, nproc_pool_file
+  USE control_flags, ONLY : twfcollect
   USE wvfct,     ONLY : nbnd
   USE klist,     ONLY : nkstot
   USE io_global, ONLY : ionode, ionode_id, stdout
@@ -76,6 +77,15 @@ PROGRAM bands
   !   Now allocate space for pwscf variables, read and check them.
   !
   CALL read_file()
+
+  IF (nproc /= nproc_file .and. .not. twfcollect)  &
+     CALL errore('phq_readin',&
+     'pw.x run with a different number of processors. Use twfcollect=.true.',1)
+
+  IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
+     CALL errore('phq_readin',&
+     'pw.x run with a different number of pools. Use twfcollect=.true.',1)
+
   CALL openfil_pp()
   CALL init_us_1()
   CALL newd()
