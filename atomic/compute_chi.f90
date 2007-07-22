@@ -182,7 +182,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   enddo
 
 100 if (n.eq.mesh+1.or.r(n).gt.0.05_dp)then
-     write(stdout,*),lam,n,mesh,r(n)
+     write(stdout,*) lam,n,mesh,r(n)
      call errore('compute_chi','n is too large',1)
   endif
   !
