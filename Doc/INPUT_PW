@@ -426,6 +426,13 @@ U_projection_type   CHARACTER   (default='atomic')
                Currently available choices:
                'atomic': use atomic wfc's (as they are) to build the projector
                'ortho-atomic': use Lowdin orthogonalized atomic wfc's
+               'norm-atomic': Lowdin normalization of atomic wfc. Keep in mind:
+                              atomic wfc are not orthogonalized in this case.
+                              This is a "quick and dirty" trick to be used when
+                              atomic wfc from the pseudopotential are not
+                              normalized (and thus produce occupation whose
+                              value exceeds unity). If orthogonalized wfc are
+                              not needed always try 'atomic' first.
                'file': use the information from file "prefix".atwfc that must
                        have been generated previously, for instance by pmw.x
                        (see PP/poormanwannier.f90 for details)

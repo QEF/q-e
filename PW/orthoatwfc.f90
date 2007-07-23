@@ -71,6 +71,13 @@ SUBROUTINE orthoatwfc
         WRITE( stdout,*) 'Gamma-only calculation for this case not implemented'
         STOP
      END IF
+  ELSE IF (U_projection=="norm-atomic") THEN
+     orthogonalize_wfc = .TRUE.
+     WRITE( stdout,*) 'Atomic wfc used for LDA+U Projector are normalized but NOT orthogonalized'
+     IF (gamma_only) THEN
+        WRITE( stdout,*) 'Gamma-only calculation for this case not implemented'
+        STOP
+     END IF
   ELSE
      WRITE( stdout,*) "U_projection_type =", U_projection
      CALL errore ("orthoatwfc"," this U_projection_type is not valid",1)
@@ -140,14 +147,14 @@ SUBROUTINE orthoatwfc
 #ifdef __PARA
      CALL reduce (2 * natomwfc * natomwfc, overlap)
 #endif
-  !   IF (.not.orthogonalize_wfc) THEN
-  !      DO i = 1, natomwfc
-  !         DO j = i+1, natomwfc
-  !            overlap(i,j) = cmplx(0.d0,0.d0)
-  !            overlap(j,i) = cmplx(0.d0,0.d0)
-  !         ENDDO
-  !      ENDDO
-  !   END IF
+     IF (U_projection=="norm-atomic") THEN
+        DO i = 1, natomwfc
+           DO j = i+1, natomwfc
+              overlap(i,j) = cmplx(0.d0,0.d0)
+              overlap(j,i) = cmplx(0.d0,0.d0)
+           ENDDO
+        ENDDO
+     END IF
      !
      ! find O^-.5
      !
