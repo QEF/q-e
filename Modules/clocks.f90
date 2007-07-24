@@ -81,7 +81,7 @@ SUBROUTINE start_clock( label )
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
-  WRITE( *, '("mpime = ",I2,", TRACE Start: ",A12)') mpime, label
+  WRITE( stdout, '("mpime = ",I2,", TRACE Start: ",A12)') mpime, label
 #endif
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
@@ -144,7 +144,7 @@ SUBROUTINE stop_clock( label )
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
-  WRITE( *, '("mpime = ",I2,", TRACE End: ",A12)') mpime, label
+  WRITE( stdout, '("mpime = ",I2,", TRACE End: ",A12)') mpime, label
 #endif
   !
   IF ( no ) RETURN
