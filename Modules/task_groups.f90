@@ -19,7 +19,8 @@ MODULE task_groups
 
    INTEGER,  ALLOCATABLE :: nolist(:), nplist(:), pgroup(:)
    INTEGER,  ALLOCATABLE :: tmp_nsw(:), tmp_npp(:)
-   INTEGER   :: strd       
+   INTEGER   :: strd
+   INTEGER   :: nswx  ! maximum number of stick per processor
 
 CONTAINS
 
@@ -165,8 +166,10 @@ SUBROUTINE task_groups_init( dffts )
 #if defined __MPI
    CALL MPI_Allgather(dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_image_comm, IERR)
    strd = MAXVAL( nnrsx_vec( 1:nproc_image ) )
+   nswx = MAXVAL( dffts%nsw( 1:nproc_image ) )
 #else
    strd = dffts%nnr 
+   nswx = dffts%nsw(1)
 #endif
 
    DEALLOCATE( nnrsx_vec )
