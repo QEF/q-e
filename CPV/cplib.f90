@@ -1480,7 +1480,7 @@ END FUNCTION
       REAL(DP) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nlax,nlax,nspin)
       REAL(DP) fion(3,nat)
 !
-      INTEGER k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic
+      INTEGER :: k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic, nr, nc
       REAL(DP), ALLOCATABLE :: temp(:,:), tmpbec(:,:),tmpdr(:,:) 
       REAL(DP), ALLOCATABLE :: fion_tmp(:,:)
       !
@@ -1491,7 +1491,7 @@ END FUNCTION
       fion_tmp = 0.0d0
       !
 
-      ALLOCATE( temp( nudx, nudx ), tmpbec( nhm, nudx ), tmpdr( nudx, nhm ) )
+      ALLOCATE( temp( nlax, nlax ), tmpbec( nhm, nlax ), tmpdr( nlax, nhm ) )
 
       DO k=1,3
          isa = 0
@@ -1507,37 +1507,46 @@ END FUNCTION
                   tmpbec = 0.d0
                   tmpdr  = 0.d0
 !
-                  DO iv=1,nh(is)
-                     DO jv=1,nh(is)
-                        inl=ish(is)+(jv-1)*na(is)+ia
-                        IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
-                           DO i=1,nss
-                              tmpbec(iv,i)=tmpbec(iv,i)                    &
-     &                             + qq(iv,jv,is)*bec(inl,i+istart-1)
-                           END DO
-                        ENDIF
+                  IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                     ic = descla( ilac_ , iss )
+                     nc = descla( nlac_ , iss )
+                     DO iv=1,nh(is)
+                        DO jv=1,nh(is)
+                           inl=ish(is)+(jv-1)*na(is)+ia
+                           IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
+                              DO i=1,nc
+                                 tmpbec(iv,i)=tmpbec(iv,i) + qq(iv,jv,is)*bec(inl,i+istart-1+ic-1)
+                              END DO
+                           ENDIF
+                        END DO
                      END DO
-                  END DO
+                  END IF
 !
-                  DO iv=1,nh(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     DO i=1,nss
-                        tmpdr(i,iv)=becdr(inl,i+istart-1,k)
+                  IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                     ir = descla( ilar_ , iss )
+                     nr = descla( nlar_ , iss )
+                     DO iv=1,nh(is)
+                        inl=ish(is)+(iv-1)*na(is)+ia
+                        DO i=1,nr
+                           tmpdr(i,iv)=becdr(inl,i+istart-1+ir-1,k)
+                        END DO
                      END DO
-                  END DO
+                  END IF
 !
                   IF(nh(is).GT.0)THEN
                      !
-                     CALL DGEMM &
-                          ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
-!
+                     !  CALL DGEMM &
+                     !  ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
+                     !
                      IF( descla( lambda_node_ , iss ) > 0 ) THEN
                         ir = descla( ilar_ , iss )
                         ic = descla( ilac_ , iss )
-                        DO j = 1, descla( nlac_ , iss )
-                           DO i = 1, descla( nlar_ , iss )
-                              fion_tmp(k,isa) = fion_tmp(k,isa) + &
-                                                2D0 * temp( i+ir-1, j+ic-1 ) * lambda(i,j,iss)
+                        nr = descla( nlar_ , iss )
+                        nc = descla( nlac_ , iss )
+                        CALL DGEMM( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nlax )
+                        DO j = 1, nc
+                           DO i = 1, nr
+                              fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * lambda( i, j, iss )
                            END DO
                         END DO
                      END IF
