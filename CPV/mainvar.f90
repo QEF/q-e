@@ -109,7 +109,7 @@ MODULE cp_main_variables
                                  gzero, nudx, smd )
       !------------------------------------------------------------------------
       !
-      USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm
+      USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm, me_image
       USE mp,          ONLY: mp_max, mp_min
       USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_
       !
@@ -168,6 +168,7 @@ MODULE cp_main_variables
       !
       !  Compute local dimensions for lambda matrixes
       !
+
       ALLOCATE( descla( descla_siz_ , nspin ) )
       !
       nlax = 0
@@ -177,6 +178,9 @@ MODULE cp_main_variables
          nlax = MAX( nlax, descla( nlax_ , iss ) )
          nrlx = MAX( nrlx, descla( la_nrlx_ , iss ) )
       END DO
+      !
+      call mp_max( nlax, intra_image_comm )
+      call mp_max( nrlx, intra_image_comm )
       !
       !  ... End with lambda dimensins
       !
