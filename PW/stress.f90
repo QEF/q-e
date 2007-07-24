@@ -38,16 +38,15 @@ subroutine stress
   call start_clock ('stress')
   WRITE( stdout, '(//5x,"entering subroutine stress ..."/)')
 
-  IF (dft_is_meta()) &
-     CALL errore ('stress','Meta-GGA and stress not implemented yet ',1)
-
-  if ( .not. dft_is_gradient() ) return
-  if (noncolin.and.dft_is_gradient()) then
-    call infomsg('stres', 'noncollinear stress + GGA not implemented')
-    call stop_clock ('stress')
-    return
-  endif
-
+  IF ( dft_is_meta() ) THEN
+     CALL infomsg ('stress','Meta-GGA and stress not implemented')
+     CALL stop_clock ('stress')
+     RETURN
+  ELSE if ( noncolin .AND. dft_is_gradient() ) then
+     CALL infomsg('stres', 'noncollinear stress + GGA not implemented')
+     CALL stop_clock ('stress')
+     RETURN
+  END IF
   !
   !   contribution from local  potential
   !
