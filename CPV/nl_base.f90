@@ -670,9 +670,14 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   use uspp_param,     only : nhm, nh
   use cvan,           only : ish, nvb
   use ions_base,      only : nax, nat, nsp, na
-  use electrons_base, only : n => nbsp, ispin, f
+  use electrons_base, only : n => nbsp, ispin, f, nspin, iupdwn, nupdwn
   use gvecw,          only : ngw
   use constants,      only : pi, fpi
+  use mp_global,      only : me_image, intra_image_comm, nproc_image
+  use mp,             only : mp_sum
+  USE cp_main_variables, ONLY: nlax, descla
+  USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
+                               la_myr_ , la_myc_
   !
   implicit none
   !
@@ -681,61 +686,91 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   complex(DP), intent(in)  :: eigr( ngw, nat )
   real(DP),    intent(out) :: fion( 3, nat )
   !
-  integer   :: k, is, ia, isa, iss, inl, iv, jv, i
+  integer   :: k, is, ia, isa, iss, inl, iv, jv, i, ir, nr, nss, istart, ioff
   real(DP) :: temp
   !
   real(DP), allocatable :: tmpbec(:,:), tmpdr(:,:) 
+  real(DP), allocatable :: fion_loc(:,:)
   !
   call start_clock( 'nlfq' )
   !
-  allocate ( tmpbec(nhm,n), tmpdr(nhm,n) )
   !
   !     nlsm2 fills becdr
   !
-  call nlsm2(ngw,nkb,n,eigr,c,becdr,.true.)
+  call nlsm2( ngw, nkb, n, eigr, c, becdr, .true. )
   !
+  allocate ( fion_loc( 3, nat ) )
   !
-  do k=1,3
+  fion_loc = 0.0d0
+
+  allocate ( tmpbec( nhm, nlax ), tmpdr( nhm, nlax ) )
+  !
+  DO k=1,3
 
      isa=0
-     do is=1,nsp
-        do ia=1,na(is)
+     DO is=1,nsp
+        DO ia=1,na(is)
+
            isa=isa+1
 
-           tmpbec = 0.d0
-           tmpdr  = 0.d0
+           DO iss = 1, nspin
 
-           do iv=1,nh(is)
-              do jv=1,nh(is)
-                 inl=ish(is)+(jv-1)*na(is)+ia
-                 do i=1,n
-                    iss=ispin(i)
-                    temp=dvan(iv,jv,is)+deeq(jv,iv,isa,iss)
-                    tmpbec(iv,i)=tmpbec(iv,i)+temp*bec(inl,i)
+              nss = nupdwn( iss )
+              istart = iupdwn( iss )
+
+              IF( ( descla( lambda_node_ , iss ) > 0 ) .AND. &
+                  ( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) ) ) THEN
+
+                 ! only processors on the diagonal of the square proc grid enter here.
+                 ! This is to distribute the load among different multi-core nodes,
+                 ! and maximize the memory bandwith per core.
+
+                 tmpbec = 0.d0
+                 tmpdr  = 0.d0
+
+                 ir = descla( ilar_ , iss )
+                 nr = descla( nlar_ , iss )
+
+                 ioff = istart-1+ir-1
+
+                 do iv=1,nh(is)
+                    do jv=1,nh(is)
+                       inl=ish(is)+(jv-1)*na(is)+ia
+                       temp=dvan(iv,jv,is)+deeq(jv,iv,isa,iss)
+                       do i=1,nr
+                          tmpbec(iv,i)=tmpbec(iv,i)+temp*bec(inl,i+ioff)
+                       end do
+                    end do
                  end do
-              end do
-           end do
 
-           do iv=1,nh(is)
-              inl=ish(is)+(iv-1)*na(is)+ia
-              do i=1,n
-                 tmpdr(iv,i)=f(i)*becdr(inl,i,k)
-              end do
-           end do
+                 do iv=1,nh(is)
+                    inl=ish(is)+(iv-1)*na(is)+ia
+                    do i=1,nr
+                       tmpdr(iv,i)=f(i+ioff)*becdr(inl,i+ioff,k)
+                    end do
+                 end do
 
-           do i=1,n
-              do iv=1,nh(is)
-                 tmpdr(iv,i)=tmpdr(iv,i)*tmpbec(iv,i)
-              end do
-           end do
+                 do i=1,nr
+                    do iv=1,nh(is)
+                       tmpdr(iv,i)=tmpdr(iv,i)*tmpbec(iv,i)
+                    end do
+                 end do
 
-           fion(k,isa)=fion(k,isa)-2.d0*SUM(tmpdr)
+                 fion_loc(k,isa) = fion_loc(k,isa)-2.d0*SUM(tmpdr)
 
-        end do
-     end do
-  end do
+              END IF
+           END DO
+        END DO
+     END DO
+  END DO
+  !
+  CALL mp_sum( fion_loc, intra_image_comm )
+  !
+  fion = fion + fion_loc
   !
   !     end of x/y/z loop
+  !
+  deallocate ( fion_loc )
   !
   deallocate ( tmpbec, tmpdr )
 
