@@ -283,11 +283,11 @@ CONTAINS
          np     = ortho_para 
          if( np > MIN( n, nproc_image ) ) np = MIN( n, nproc_image )
          nps    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
-         npx    = INT( SQRT( DBLE( np ) + 0.1d0 ) ) 
+         npx    = nps
          !
       ELSE
          !
-         !  Guess a range o value to be tested
+         !  Guess a range or value to be tested
          !
          np     = MIN( n, nproc_image )
          nps    = 1
@@ -688,7 +688,7 @@ CONTAINS
       USE cvan,               ONLY: nvb
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_root_sum
+      USE mp,                 ONLY: mp_root_sum, mp_max, mp_barrier
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_image_comm
@@ -698,7 +698,7 @@ CONTAINS
 !
       IMPLICIT NONE
 !
-      INTEGER nss, ist, ngwx, nkbx, n, ldx
+      INTEGER nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: cp( ngwx, n )
       REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, * )
       REAL(DP)    :: sig( ldx, * )
@@ -716,6 +716,12 @@ CONTAINS
       np(1) = desc( la_npr_ )
       np(2) = desc( la_npc_ )
 
+      nx = desc( nlar_ )
+      nx = MAX( nx, desc( nlac_ ) )
+      CALL mp_max( nx, intra_image_comm )
+
+      ALLOCATE( sigp( nx, nx ) ) 
+
       DO ipc = 1, np(2)
          DO ipr = 1, np(1)
 
@@ -731,10 +737,8 @@ CONTAINS
             !
             root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ ) 
 
-            ALLOCATE( sigp( nr, nc ) ) 
-
             CALL DGEMM( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
-                        cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nr )
+                        cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
             !
             !     q = 0  components has weight 1.0
             !
@@ -752,15 +756,16 @@ CONTAINS
             CALL mp_root_sum( sigp, root, intra_image_comm )
             !
             IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
-               sig(1:nr,1:nc) = sigp
+               sig(1:nr,1:nc) = sigp(1:nr,1:nc)
             END IF
-            !
-            DEALLOCATE( sigp )
             !
          END DO
          !
       END DO
       !
+      CALL mp_barrier( intra_image_comm )
+      !
+      DEALLOCATE( sigp )
       !
       IF( desc( lambda_node_ ) > 0 ) THEN
          !
@@ -811,8 +816,8 @@ CONTAINS
       USE uspp,               ONLY: nkbus
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
-      USE mp,                 ONLY: mp_root_sum
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp,                 ONLY: mp_root_sum, mp_barrier, mp_max
+      USE mp_global,          ONLY: intra_image_comm, me_image
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
@@ -829,7 +834,7 @@ CONTAINS
       INTEGER     :: desc( * )
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
-      INTEGER :: ii, jj, root
+      INTEGER :: ii, jj, root, nx
       INTEGER :: desc_ip( descla_siz_ )
       INTEGER :: np( 2 ), coor_ip( 2 )
 
@@ -838,10 +843,19 @@ CONTAINS
       !     <phi|cp>
       !
       !
+
       IF( nss < 1 ) RETURN
 
       np(1) = desc( la_npr_ )
       np(2) = desc( la_npc_ )
+
+      nx = desc( nlar_ )
+      nx = MAX( nx, desc( nlac_ ) )
+      CALL mp_max( nx, intra_image_comm )
+
+      ALLOCATE( rhop( nx, nx ) )
+     
+      rhop = 0.0d0
 
       DO ipc = 1, np(2)
          DO ipr = 1, np(1)
@@ -858,10 +872,8 @@ CONTAINS
             !
             root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ )
 
-            ALLOCATE( rhop( nr, nc ) )
-
-            CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir -1 ), 2*ngwx, &
-                  cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nr )
+            CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
+                  cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
             !
             !     q = 0  components has weight 1.0
             !
@@ -874,18 +886,19 @@ CONTAINS
                   END DO
                END DO
             END IF
-      
+
             CALL mp_root_sum( rhop, root, intra_image_comm )
 
             IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
-               rho(1:nr,1:nc) = rhop
+               rho(1:nr,1:nc) = rhop(1:nr,1:nc)
             END IF
-
-            DEALLOCATE( rhop )
 
          END DO
       END DO
+ 
+      CALL mp_barrier( intra_image_comm )
 
+      DEALLOCATE( rhop )
 
       IF( desc( lambda_node_ ) > 0 ) THEN
          !
@@ -932,7 +945,7 @@ CONTAINS
       USE uspp,               ONLY: nkbus
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_root_sum
+      USE mp,                 ONLY: mp_root_sum, mp_max, mp_barrier
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_image_comm
@@ -942,7 +955,7 @@ CONTAINS
 !
       IMPLICIT NONE
       !
-      INTEGER     :: nss, ist, ngwx, nkbx, n, ldx
+      INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: phi( ngwx, n )
       REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, * )
       REAL(DP)    :: tau( ldx, * )
@@ -961,6 +974,12 @@ CONTAINS
       !
       np(1) = desc( la_npr_ )
       np(2) = desc( la_npc_ )
+      !
+      nx = desc( nlar_ )
+      nx = MAX( nx, desc( nlac_ ) )
+      CALL mp_max( nx, intra_image_comm )
+      !
+      ALLOCATE( taup( nx, nx ) )
       !
       !  loop on processors coordinates
       !
@@ -983,10 +1002,8 @@ CONTAINS
             !  All processors contribute to the tau block of processor (ipr,ipc)
             !  with their own part of wavefunctions
             !
-            ALLOCATE( taup( nr, nc ) )
-            !
             CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
-                        phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nr )
+                        phi( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, taup, nx )
             !
             !           q = 0  components has weight 1.0
             !
@@ -1003,14 +1020,16 @@ CONTAINS
             CALL mp_root_sum( taup, root, intra_image_comm )
             !
             IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
-               tau(1:nr,1:nc) = taup
+               tau(1:nr,1:nc) = taup(1:nr,1:nc)
             END IF
-            !
-            DEALLOCATE( taup )
             !
          END DO
          !
       END DO
+      !
+      CALL mp_barrier( intra_image_comm )
+      !
+      DEALLOCATE( taup )
       !
       IF( desc( lambda_node_ ) > 0 ) THEN
          !
