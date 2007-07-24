@@ -1543,7 +1543,7 @@ END FUNCTION
                         ic = descla( ilac_ , iss )
                         nr = descla( nlar_ , iss )
                         nc = descla( nlac_ , iss )
-                        CALL DGEMM( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nlax )
+                        CALL DGEMM( 'N', 'N', nr, nc, nh(is), 1.0d0, tmpdr, nlax, tmpbec, nhm, 0.0d0, temp, nlax )
                         DO j = 1, nc
                            DO i = 1, nr
                               fion_tmp(k,isa) = fion_tmp(k,isa) + 2D0 * temp( i, j ) * lambda( i, j, iss )
