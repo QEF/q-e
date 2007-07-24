@@ -43,7 +43,7 @@
       USE funct,                  ONLY: dft_is_meta
       USE cp_interfaces,          ONLY: fwfft, invfft
       USE mp_global,              ONLY: nogrp, me_image, ogrp_comm
-      USE task_groups,            ONLY: tmp_npp, nolist, strd
+      USE task_groups,            ONLY: tmp_npp, nolist, strd, nswx
 !
       IMPLICIT NONE
 !
@@ -65,7 +65,7 @@
       INTEGER     :: iv, jv, ia, is, isa, ism, ios, iss1, iss2, ir, ig, inl, jnl
       INTEGER     :: ivoff, jvoff, igoff, igno, igrp, ierr
       INTEGER     :: idx, eig_offset, eig_index, nogrp_
-      REAL(DP)    :: fi, fip, dd
+      REAL(DP)    :: fi, fip, dd, dv
       COMPLEX(DP) :: fp, fm, ci
       REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : ) ! automatic arrays
       COMPLEX(DP), ALLOCATABLE :: psi(:)
@@ -78,7 +78,7 @@
       IF( use_task_groups ) THEN
          nogrp_ = nogrp
          ALLOCATE( psi( strd * ( nogrp + 1 ) ) )
-         ALLOCATE( temp_psi( 2 * ( nogrp + 1 ) * dffts%nsw(1) * nr3sx ) )
+         ALLOCATE( temp_psi( 2 * ( nogrp + 1 ) * nswx * nr3sx ) )
       ELSE
          nogrp_ = 1
          ALLOCATE( psi( nnrsx ) )
@@ -117,7 +117,6 @@
       END DO
 
       CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
-!     
       !
       ! the following avoids a potential out-of-bounds error
       !
@@ -230,7 +229,6 @@
       ENDDO
 
       !
-
       IF(dft_is_meta()) THEN
          CALL dforce_meta(c(1,i),c(1,i+1),df,da,psi,iss1,iss2,fi,fip) !METAGGA
       END IF
@@ -278,6 +276,7 @@
                         DO ism = 1, is-1
                            isa = isa + na( ism )
                         END DO
+                        dv = dvan(iv,jv,is)
                         ivoff = ish(is)+(iv-1)*na(is)
                         jvoff = ish(is)+(jv-1)*na(is)
                         IF( i + idx - 1 /= n ) THEN
@@ -285,9 +284,9 @@
                               inl = ivoff + ia
                               jnl = jvoff + ia
                               isa = isa + 1
-                              dd = deeq(iv,jv,isa,iss1) + dvan(iv,jv,is)
+                              dd = deeq(iv,jv,isa,iss1) + dv
                               af(inl,igrp) = af(inl,igrp) - fi  * dd * bec(jnl,i+idx-1)
-                              dd = deeq(iv,jv,isa,iss2) + dvan(iv,jv,is)
+                              dd = deeq(iv,jv,isa,iss2) + dv
                               aa(inl,igrp) = aa(inl,igrp) - fip * dd * bec(jnl,i+idx)
                            END DO
                         ELSE
@@ -295,7 +294,7 @@
                               inl = ivoff + ia
                               jnl = jvoff + ia
                               isa = isa + 1
-                              dd = deeq(iv,jv,isa,iss1) + dvan(iv,jv,is)
+                              dd = deeq(iv,jv,isa,iss1) + dv
                               af(inl,igrp) = af(inl,igrp) - fi * dd * bec(jnl,i+idx-1)
                            END DO
                         END IF
