@@ -226,7 +226,7 @@ SUBROUTINE init_ortho_group( nproc_try, me_try, comm_try )
     
    INTEGER, INTENT(IN) :: nproc_try, me_try, comm_try
     
-   LOGICAL :: first = .true.
+   LOGICAL, SAVE :: first = .true.
    INTEGER :: np_list( nproc_try )
    INTEGER :: i
     

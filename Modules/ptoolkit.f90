@@ -3989,6 +3989,10 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    nc    = desc( nlac_ ) 
    nb    = desc( nlax_ )
    !
+#if defined (__MPI)
+   CALL MPI_BARRIER( comm, ierr )
+#endif
+   !
    allocate( ablk( nb, nb ) )
    DO j = 1, nc
       DO i = 1, nr
@@ -4201,34 +4205,6 @@ CONTAINS
    END SUBROUTINE
 
 
-   SUBROUTINE exchange_block( blk )
-      !
-      !   Block exchange ( transpose )
-      !
-      IMPLICIT NONE
-      REAL(DP) :: blk( :, : )
-      !
-      INTEGER :: icdst, irdst, icsrc, irsrc, idest, isour
-      !
-      irdst = colid
-      icdst = rowid
-      irsrc = colid
-      icsrc = rowid
-      !
-      idest = icdst + np * irdst
-      isour = icsrc + np * irsrc
-      !
-#if defined (__MPI)
-      !
-      CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
-           idest, np+np+1, isour, np+np+1, comm, istatus, ierr)
-      !
-#endif
-
-      RETURN
-   END SUBROUTINE
-
-
 END SUBROUTINE
 
 !
@@ -4288,6 +4264,7 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
 
    comm = desc( la_comm_ )
 
+
    rowid = desc( la_myr_ )
    colid = desc( la_myc_ )
    np    = desc( la_npr_ )
@@ -4316,6 +4293,10 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    END DO
    !
    CALL exchange_block( ablk )
+   !
+#if defined (__MPI)
+   CALL MPI_BARRIER( comm, ierr )
+#endif
    !
    DO j = 1, nr
       DO i = 1, nc
