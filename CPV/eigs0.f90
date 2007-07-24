@@ -35,6 +35,7 @@
       integer :: iss, j, i, ierr, k, n, nspin_eig, npaired
       INTEGER :: ir, ic, nr, nc
       logical :: tsic
+      CHARACTER(LEN=80) :: msg
 !
       tsic = ( ABS( self_interaction) /= 0 )
 
@@ -95,8 +96,11 @@
          !
          !     store eigenvalues
          !
-         IF( SIZE( ei, 1 ) < nupdwn(iss) ) &
-            CALL errore( ' eigs0 ', ' wrong dimension array ei ', 1 )
+         IF( nudx < nupdwn(iss) ) THEN 
+            WRITE( msg, 100 ) nudx, SIZE( ei, 1 ), nupdwn(iss)
+100         FORMAT( ' wrong dimension array ei = ', 3I10 )
+            CALL errore( ' eigs0 ', msg, 1 )
+         END IF
 
          ei( 1:n, iss ) = wr( 1:n )
 
