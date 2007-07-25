@@ -65,7 +65,7 @@
       do while( .true. )
          read(9,'(a)') line
          if(line(1:24).eq.nkpt) then 
-            read(line(1:24),'(24x,i5)') n_kpoints
+            read(line,'(24x,i5)') n_kpoints
             print *,n_kpoints
             goto 101
          endif
