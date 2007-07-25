@@ -20,7 +20,7 @@ subroutine phq_summary
   !
   USE ions_base,     ONLY : nat, ityp, atm, tau, ntyp => nsp, amass
   USE io_global,     ONLY : stdout
-  USE char,          ONLY : crystal, sname
+  USE char,          ONLY : sname
   USE cell_base,     ONLY : at, bg, ibrav, alat, omega, celldm
   USE klist,         ONLY : lgauss, degauss, ngauss, nkstot, xk, wk
   USE gvect,         ONLY : ecutwfc, dual, nr1, nr2, nr3, gcutm, ngm
@@ -62,10 +62,10 @@ subroutine phq_summary
   ! k point in crystal coordinates
 
   !
-  WRITE( stdout, 100) title, crystal, ibrav, alat, omega, nat, ntyp, &
+  WRITE( stdout, 100) title, ibrav, alat, omega, nat, ntyp, &
        ecutwfc, ecutwfc * dual, tr2_ph, alpha_mix (1), &
        nmix_ph
-100 format (/,5x,a75,/,/,5x, 'crystal is ',a20,/,/,5x, &
+100 format (/,5x,a75,/,/,5x, &
        &     'bravais-lattice index     = ',i12,/,5x, &
        &     'lattice parameter (a_0)   = ',f12.4,'  a.u.',/,5x, &
        &     'unit-cell volume          = ',f12.4,' (a.u.)^3',/,5x, &

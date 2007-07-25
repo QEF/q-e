@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,8 +13,14 @@ subroutine el_opt
   !
 #include "f_defs.h"
   use kinds, only : DP
+  USE cell_base,  ONLY : omega, at, bg
+  USE constants,  ONLY : e2, fpi
+  USE gvect,      ONLY : nr1, nr2, nr3, nrxx
+  USE klist,      ONLY : wk, ngk
   USE ions_base,  ONLY : nat
-  use pwcom
+  USE scf,        ONLY : rho, rho_core
+  USE symme,      ONLY : nsym, irt, s
+  USE wvfct,      ONLY : nbnd, npw, npwx
   use phcom
   USE ramanm
   USE io_global, ONLY: ionode_id
@@ -31,39 +37,37 @@ subroutine el_opt
   ! external function
   ! total charge on a point
   real(DP), allocatable :: d2muxc (:)
-  complex(DP) :: ps(3, 6), ZDOTC, tmp
+  complex(DP) :: ps(3, 6), tmp
   complex(DP) , allocatable :: chif(:,:,:), depsi (:,:,:), aux3 (:,:)
 
   call start_clock('el_opt')
-  elop_(:,:,:,:) = 0.d0
+  elop_(:,:,:,:) = 0.0_dp
 
-  allocate (chif      (npwx,nbnd,6) )
-  allocate (depsi     (npwx,nbnd,3) )
+  allocate (depsi(npwx, nbnd, 3) )
+  allocate (chif (npwx, nbnd, 6) )
 
   do ik = 1, nksq
      weight = wk(ik)
+     npw = ngk(ik)
+     do ipa = 1, 3
+        nrec = (ipa - 1) * nksq + ik
+        call davcio (depsi(1,1,ipa), lrdwf, iudwf, nrec, -1)
+     enddo
+     do ipb = 1, 6
+        nrec = (ipb - 1) * nksq + ik
+        call davcio (chif(1,1,ipb), lrchf, iuchf, nrec, -1)
+     enddo
 
-     do ipa = 1, 3
-        nrec = (ipa - 1) * nksq + ik
-        call davcio (depsi (1, 1, ipa), lrdwf, iudwf, nrec, -1)
-     enddo
-     do ipa = 1, 6
-        nrec = (ipa - 1) * nksq + ik
-        call davcio (chif (1, 1, ipa), lrchf, iuchf, nrec, -1)
-     enddo
-     ps(:,:) = (0.d0, 0.d0)
-     do ipa = 1, 3
-        do ipb = 1, 6
-           do ibnd = 1, nbnd_occ (ik)
-                 ps (ipa, ipb) =  ps (ipa, ipb) +           &
-                      ZDOTC (npw, depsi (1, ibnd, ipa), 1,  &
-                                   chif (1, ibnd, ipb), 1 )
-           enddo
-        enddo
-     enddo
-#ifdef __PARA
-!     call reduce (2 * 3 * 6, ps)
-#endif
+     ! ps (ipa,ipb) = \sum_i < depsi_i(ipa) | chif_i(ipb) >
+     !       do ibnd = 1, nbnd_occ (ik)
+     !             ps (ipa, ipb) =  ps (ipa, ipb) +           &
+     !                  ZDOTC (npw, depsi (1, ibnd, ipa), 1,  &
+     !                               chif (1, ibnd, ipb), 1 )
+     !       end do
+
+     CALL ZGEMM( 'C', 'N', 3, 6, npwx*nbnd_occ(ik), (1.0_dp,0.0_dp),  &
+                 depsi, npwx*nbnd, chif, npwx*nbnd, &
+                 (0.0_dp,0.0_dp), ps, 3 )
 
      do ipa = 1, 3
         do ipb = 1, 3
@@ -75,7 +79,6 @@ subroutine el_opt
            enddo
         enddo
      enddo
-
   enddo
 
 #ifdef __PARA
@@ -99,7 +102,7 @@ subroutine el_opt
      call davcio_drho (aux3 (1, ipa), lrdrho, iudrho, ipa, -1)
   enddo
 
-  d2muxc (:) = 0.d0
+  d2muxc (:) = 0.0_dp
   do ir = 1, nrxx
      rhotot = rho(ir,1) + rho_core(ir)
      if ( rhotot.gt. 1.d-30 ) d2muxc(ir)= d2mxc( rhotot)
@@ -109,17 +112,14 @@ subroutine el_opt
   do ipa = 1, 3
      do ipb = 1, 3
         do ipc = 1, 3
-           tmp = (0.d0, 0.d0)
-           do ir = 1, nrxx
-              tmp = tmp + d2muxc (ir) * aux3 (ir, ipa) *   &
-                       aux3 (ir, ipb) * aux3 (ir, ipc)
-           enddo
-           ps3 (ipa, ipb, ipc) =  DBLE(tmp)
+           ps3 (ipa, ipb, ipc) = SUM ( DBLE ( d2muxc(:)   * &
+                                              aux3(:,ipa) * &
+                                              aux3(:,ipb) * &
+                                              aux3(:,ipc) ) ) * &
+                                 omega / (nr1*nr2*nr3) 
         enddo
      enddo
   enddo
-
-  call DSCAL (27, omega / (nr1 * nr2 * nr3), ps3, 1)
 
   deallocate (d2muxc )
   deallocate (aux3   )
@@ -129,26 +129,25 @@ subroutine el_opt
   call mp_bcast(ps3, ionode_id)
 #endif
 
-  call DCOPY (27, elop_ (1,1,1,1), 1, elop_ (1,1,1,2), 1)
-  call DAXPY (27, 1.d0, ps3, 1, elop_ (1,1,1,1), 1)
-  call DCOPY (27, ps3, 1, elop_ (1,1,1,3), 1)
+  elop_(:,:,:,2) = elop_(:,:,:,1)
+  elop_(:,:,:,3) =   ps3(:,:,:)
+  elop_(:,:,:,1) = elop_(:,:,:,2) + elop_(:,:,:,3)
 
   !
-  ! Using fac=e2**1.5d0, calculates the third derivative of the
+  ! Using fac=e2**1.5, calculates the third derivative of the
   !   energy with respect to electric fields.
   !
-  ! Using fac=e2**1.5d0*fpi/omega, calculates the derivative
+  ! Using fac=e2**1.5*fpi/omega, calculates the derivative
   !   of the dielectric constants with respect to electric fields.
   ! NB: The result written in output is in Rydberg units, to convert
   !   to pico-meters/Volt you have to multiply per 2.7502
   ! To obtain the static chi^2 multiply by 1/2
-  fac = -e2**1.5d0 * fpi / omega
-
-  call DSCAL (27*3, fac, elop_, 1)
+  fac = -e2**1.5_dp * fpi / omega
+  elop_(:,:,:,:) =  elop_(:,:,:,:) * fac
   !
   ! wr_all =.true. ==> writes separately the two contributions
   !
-  wr_all = .false.
+  wr_all = .true.
 
   ntm = 1
   if (wr_all ) ntm = 3
