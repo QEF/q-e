@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is 23Mar2007 at  2:34:40 
+     Today is 25Jul2007 at  2:37:46 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -15,12 +15,15 @@
      unit-cell volume          =     265.3020 (a.u.)^3
      number of atoms/cell      =            2
      number of atomic types    =            1
+     number of electrons       =         8.00
+     number of Kohn-Sham states=            4
      kinetic-energy cutoff     =      18.0000  Ry
      charge density cutoff     =      72.0000  Ry
      convergence threshold     =      1.0E-08
-     beta                      =       0.7000
+     mixing beta               =       0.7000
      number of iterations used =            8  plain     mixing
      Exchange-correlation      =  SLA  PZ   NOGX NOGC (1100)
+
      celldm(1)=  10.200000  celldm(2)=   0.000000  celldm(3)=   0.000000
      celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
 
@@ -68,17 +71,25 @@
 
      G cutoff =  189.7462  (   2733 G-vectors)     FFT grid: ( 20, 20, 20)
 
-     nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     350
-     nelec  =   8.00  nkb   =     8  ngl    =      65
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.02 Mb     (    350,   4)
+        NL pseudopotentials             0.04 Mb     (    350,   8)
+        Each V/rho on FFT grid          0.12 Mb     (   8000)
+        Each G-vector array             0.02 Mb     (   2733)
+        G-vector shells                 0.00 Mb     (     65)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Each subspace H/S matrix        0.00 Mb     (      4,   4)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,   4)
+        Arrays for rho mixing           0.98 Mb     (   8000,   8)
 
      Initial potential from superposition of free atoms
 
      starting charge    7.99901, renormalised to    8.00000
-     Starting wfc are atomic
+     Starting wfc are    8 atomic wfcs
 
-     total cpu time spent up to now is      0.24 secs
+     total cpu time spent up to now is      0.21 secs
 
-     per-process dynamical memory:     1.1 Mb
+     per-process dynamical memory:     1.2 Mb
 
      Self-consistent Calculation
 
@@ -92,7 +103,7 @@
      CG style diagonalization
      ethr =  7.77E-04,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.65 secs
+     total cpu time spent up to now is      0.62 secs
 
      total energy              =   -15.84092282 Ry
      Harris-Foulkes estimate   =   -16.07551633 Ry
@@ -102,7 +113,7 @@
      CG style diagonalization
      ethr =  7.69E-04,  avg # of iterations =  3.0
 
-     total cpu time spent up to now is      0.89 secs
+     total cpu time spent up to now is      0.87 secs
 
      total energy              =   -15.84402284 Ry
      Harris-Foulkes estimate   =   -15.84433371 Ry
@@ -112,7 +123,7 @@
      CG style diagonalization
      ethr =  2.70E-05,  avg # of iterations =  3.8
 
-     total cpu time spent up to now is      1.18 secs
+     total cpu time spent up to now is      1.14 secs
 
      total energy              =   -15.84450634 Ry
      Harris-Foulkes estimate   =   -15.84454253 Ry
@@ -122,7 +133,7 @@
      CG style diagonalization
      ethr =  9.44E-07,  avg # of iterations =  4.0
 
-     total cpu time spent up to now is      1.49 secs
+     total cpu time spent up to now is      1.45 secs
 
      total energy              =   -15.84452598 Ry
      Harris-Foulkes estimate   =   -15.84452965 Ry
@@ -132,7 +143,7 @@
      CG style diagonalization
      ethr =  1.02E-07,  avg # of iterations =  3.9
 
-     total cpu time spent up to now is      1.79 secs
+     total cpu time spent up to now is      1.73 secs
 
      total energy              =   -15.84452722 Ry
      Harris-Foulkes estimate   =   -15.84452726 Ry
@@ -142,7 +153,7 @@
      CG style diagonalization
      ethr =  8.22E-10,  avg # of iterations =  4.4
 
-     total cpu time spent up to now is      2.11 secs
+     total cpu time spent up to now is      2.06 secs
 
      End of self-consistent calculation
 
@@ -217,41 +228,41 @@
 
      Writing output data file silicon.save
  
-     PWSCF        :     2.24s CPU time,    7.09s wall time
+     PWSCF        :     2.20s CPU time,    4.43s wall time
 
-     init_run     :     0.24s CPU
-     electrons    :     1.88s CPU
+     init_run     :     0.20s CPU
+     electrons    :     1.85s CPU
      forces       :     0.01s CPU
      stress       :     0.06s CPU
  
  
-     electrons    :     1.88s CPU
-     c_bands      :     1.56s CPU (       7 calls,   0.223 s avg)
-     sum_band     :     0.27s CPU (       7 calls,   0.039 s avg)
-     v_of_rho     :     0.03s CPU (       7 calls,   0.004 s avg)
-     v_h          :     0.02s CPU (       7 calls,   0.003 s avg)
+     electrons    :     1.85s CPU
+     c_bands      :     1.55s CPU (       7 calls,   0.221 s avg)
+     sum_band     :     0.22s CPU (       7 calls,   0.031 s avg)
+     v_of_rho     :     0.02s CPU (       7 calls,   0.003 s avg)
+     v_h          :     0.01s CPU (       7 calls,   0.001 s avg)
      v_xc         :     0.01s CPU (       7 calls,   0.001 s avg)
-     mix_rho      :     0.00s CPU (       7 calls,   0.000 s avg)
+     mix_rho      :     0.01s CPU (       7 calls,   0.001 s avg)
  
-     c_bands      :     1.56s CPU (       7 calls,   0.223 s avg)
-     init_us_2    :     0.02s CPU (     170 calls,   0.000 s avg)
-     ccgdiagg     :     1.18s CPU (      70 calls,   0.017 s avg)
+     c_bands      :     1.55s CPU (       7 calls,   0.221 s avg)
+     init_us_2    :     0.06s CPU (     170 calls,   0.000 s avg)
+     ccgdiagg     :     1.22s CPU (      70 calls,   0.017 s avg)
  
-     sum_band     :     0.27s CPU (       7 calls,   0.039 s avg)
+     sum_band     :     0.22s CPU (       7 calls,   0.031 s avg)
  
-     wfcrot1      :     0.53s CPU (      60 calls,   0.009 s avg)
-     h_1psi       :     1.66s CPU (    1044 calls,   0.002 s avg)
+     wfcrot1      :     0.46s CPU (      60 calls,   0.008 s avg)
+     h_1psi       :     1.64s CPU (    1044 calls,   0.002 s avg)
      s_1psi       :     0.01s CPU (     764 calls,   0.000 s avg)
  
-     h_1psi       :     1.66s CPU (    1044 calls,   0.002 s avg)
+     h_1psi       :     1.64s CPU (    1044 calls,   0.002 s avg)
      init         :     0.00s CPU (    1044 calls,   0.000 s avg)
-     firstfft     :     0.80s CPU (    1044 calls,   0.001 s avg)
+     firstfft     :     0.78s CPU (    1044 calls,   0.001 s avg)
      secondfft    :     0.76s CPU (    1044 calls,   0.001 s avg)
      add_vuspsi   :     0.04s CPU (    1044 calls,   0.000 s avg)
  
      General routines
-     ccalbec      :     0.03s CPU (    1828 calls,   0.000 s avg)
-     cft3         :     0.02s CPU (      27 calls,   0.001 s avg)
-     cft3s        :     1.73s CPU (    2368 calls,   0.001 s avg)
+     ccalbec      :     0.04s CPU (    1828 calls,   0.000 s avg)
+     cft3         :     0.05s CPU (      27 calls,   0.002 s avg)
+     cft3s        :     1.62s CPU (    2368 calls,   0.001 s avg)
      davcio       :     0.00s CPU (     240 calls,   0.000 s avg)
  
