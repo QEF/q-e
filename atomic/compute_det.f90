@@ -17,6 +17,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !     potential
   !
   !
+  use io_global, only : stdout
   use kinds, only : DP
   implicit none
 
@@ -54,6 +55,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        c1,c2,c3,c4,b0e, & ! auxiliary for expansion of wavefunction
        rr1,rr2,   &  ! values of y in the first points
        int_0_inf_dr, & ! the integral function
+       deriv_7pts,   & ! compute the derivative
        wron1          ! the value of the wronskian
 
   real(DP),allocatable :: &
@@ -70,7 +72,6 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        ik,   &  ! matching point
        ns,   &  ! counter on beta functions
        l1,   &  ! lam+1
-       nst,  &  ! integration terms
        ib,jb,kb, &
        ierr,    &  ! used to control allocation
        iib,jjb,kkb, &! indeces for beta functions
@@ -90,7 +91,6 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
 
   ddx12=dx*dx/12.0_dp
   l1=lam+1
-  nst=l1*2
   sqlhf=(DBLE(lam)+0.5_dp)**2
   xl1=lam+1
   x4l6=4*lam+6
@@ -120,7 +120,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
 
   if(ik.ge.mesh-2) then
      do n=1,mesh
-        write(6,*) r(n), vpot(n), f(n)
+        write(stdout,*) r(n), vpot(n), f(n)
      enddo
      call errore('compute_det','No point found for matching',1)
      stop
@@ -170,12 +170,15 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   !       compute the wronskian
   !
-  n=20
-  wron1= ((y(n)*sqr(n)) &
-       *( yi(n+1)*sqr(n+1)-yi(n)*sqr(n) )  &
-       -( yi(n)*sqr(n) ) &
-       *( y(n+1)*sqr(n+1)-y(n)*sqr(n)) ) &
-       /(r(n+1)-r(n))
+  do n=1,mesh
+     yi(n)=yi(n)*sqr(n)
+  enddo
+  do n=1,ik-1
+     y(n)=y(n)*sqr(n)
+  enddo
+
+  n=max(20,ik-30)
+  wron1= (y(n)*deriv_7pts(yi,n,r(n),dx)-yi(n)*deriv_7pts(y,n,r(n),dx))
   !
   !    compute the vector h, and the unsymmetrized bm
   !     
@@ -184,21 +187,22 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   do ib=1,nbeta
      if (lls(ib).eq.lam.and.jjs(ib).eq.jam) then
         iib=iib+1
+        el=0.0_dp
         c(1)= 0.0_dp
         do n=1,ikk(ib)
-           el(n)=y(n)*sqr(n)*beta(n,ib)
-        enddo
-        do n=ikk(ib)+1,nstart
-           el(n)=0.0_dp
+           el(n)=y(n)*beta(n,ib)
         enddo
         do n=2,nstart-1,2
            c(n+1)=c(n-1)+(el(n-1)*r(n-1)+ &
                 4.0_dp*el(n)*r(n) + el(n+1)*r(n+1))*dx/3.0_dp
-           c(n)=c(n-1)+(r(n)-r(n-1))*(c(n+1)-c(n-1))/ &
-                (r(n+1)-r(n-1))
+        enddo
+        c(2)=c(1)+(r(2)-r(1))*(c(3)-c(1))/(r(3)-r(1))
+        do n=3,nstart-1,2
+           c(n+1)=c(n-1)+(el(n-1)*r(n-1)+ &
+                4.0_dp*el(n)*r(n) + el(n+1)*r(n+1))*dx/3.0_dp
         enddo
         !            do n=1,nstart
-        !               write(6,*) r(n),c(n),c(n+1)
+        !               write(stdout,*) r(n),c(n),c(n+1)
         !            enddo
         !            stop
 
@@ -206,12 +210,11 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
         do jb=1,nbeta
            if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
               jjb=jjb+1
-              nst=2*(lam+2)
               do n=1,ikk(jb)
-                 el(n)=sqr(n)*yi(n)*c(n)*beta(n,jb)
+                 el(n)=yi(n)*c(n)*beta(n,jb)
               enddo
               bm(jjb,iib)=0.0_dp
-              do n=3,ikk(jb)-1,2
+              do n=2,ikk(jb)-1,2
                  bm(jjb,iib)=bm(jjb,iib)+(el(n-1)*r(n-1)+ &
                       4.0_dp*el(n)*r(n) + el(n+1)*r(n+1))*dx/3.0_dp
               enddo
@@ -224,7 +227,7 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   !    symmetrize b
   !
-  !      write(6,*) iib,2.0_DP*bm(1,1),ddd(1,1),qq(1,1)
+  !      write(stdout,*) iib,2.0_DP*bm(1,1),ddd(1,1),qq(1,1)
   do ib=1,iib
      do jb=1,ib
         bm(ib,jb)=(bm(ib,jb)+bm(jb,ib))/wron1
@@ -267,12 +270,19 @@ subroutine compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   !    compute the determinant of A-1
   !      
-  !      write(6,*) 'amat alla fine',iib,amat(1,1)
+
+  do ib=1,iib
+     amat(ib,ib)=amat(ib,ib)-1.0_dp
+  enddo
 
   if (iib == 1) then
-     det=amat(1,1)-1.0_dp
+     det=amat(1,1)
   elseif (iib == 2) then
-     det=(amat(1,1)-1.0_dp)*(amat(2,2)-1.0_dp)-amat(2,1)*amat(1,2)
+     det=amat(1,1)*amat(2,2)-amat(2,1)*amat(1,2)
+  elseif (iib == 3) then
+     det=amat(1,1)*(amat(2,2)*amat(3,3) - amat(3,2)*amat(2,3)) -       &
+         amat(1,2)*(amat(2,1)*amat(3,3) - amat(3,1)*amat(2,3)) +       &
+         amat(1,3)*(amat(2,1)*amat(3,2) - amat(3,1)*amat(2,2)) 
   elseif (iib == 0) then
      det=wron1
   else
