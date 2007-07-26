@@ -72,7 +72,6 @@
           INTEGER :: npz, nz_l, ns_l, ns_lp, nz_lx
           INTEGER :: nsx_l, msgsiz
           INTEGER :: mc1, mc2, mc3, mc4, is_offset, ns1, ierr
-          COMPLEX (DP) :: zero
           COMPLEX (DP) :: bswp( ldz * 4 )
           COMPLEX (DP), ALLOCATABLE :: mp_snd_buffer(:)
           COMPLEX (DP), ALLOCATABLE :: mp_rcv_buffer(:)
@@ -92,15 +91,13 @@
             nsx_l = MAXVAL( dfft%nsp( : ) )
           END IF
 
-          zero = 0.0_DP
-
           msgsiz = nsx_l * nz_lx 
           ALLOCATE( mp_snd_buffer( msgsiz * npz ) )
           ALLOCATE( mp_rcv_buffer( msgsiz * npz ) )
 
           IF ( iopt < 1 ) THEN
 
-            r( 1 : ldx * ldy * dfft%npp( me ) ) = 0.0_DP
+            r( 1 : dfft%nnr ) = 0.0_DP
 
             k_start = 1
             DO ipz = 1, npz
@@ -136,7 +133,7 @@
                 DO is = 1, ns1
                   mc1 = dfft%ismap( is   + is_offset )
                   DO k = 1 , nz_l
-                    r( mc1 + (k-1)*ldx*ldy ) = mp_rcv_buffer( k + offset )
+                    r( mc1 + (k-1)*dfft%nnp ) = mp_rcv_buffer( k + offset )
                   END DO
                   offset = offset + nz_l
                 END DO
@@ -165,10 +162,10 @@
                   END DO
                   offset = offset + nz_l
                   DO k = 1 , nz_l
-                    r( mc1 + (k-1)*ldx*ldy ) = bswp( k          )
-                    r( mc2 + (k-1)*ldx*ldy ) = bswp( k +   nz_l )
-                    r( mc3 + (k-1)*ldx*ldy ) = bswp( k + 2*nz_l )
-                    r( mc4 + (k-1)*ldx*ldy ) = bswp( k + 3*nz_l )
+                    r( mc1 + (k-1)*dfft%nnp ) = bswp( k          )
+                    r( mc2 + (k-1)*dfft%nnp ) = bswp( k +   nz_l )
+                    r( mc3 + (k-1)*dfft%nnp ) = bswp( k + 2*nz_l )
+                    r( mc4 + (k-1)*dfft%nnp ) = bswp( k + 3*nz_l )
                   END DO
                 END DO
               END IF
@@ -190,7 +187,7 @@
                 DO is = 1, ns1
                   mc1 = dfft%ismap( is   + is_offset )
                   DO k = 1 , nz_l
-                    mp_snd_buffer( k + offset ) = r( mc1 + (k-1)*ldx*ldy )
+                    mp_snd_buffer( k + offset ) = r( mc1 + (k-1)*dfft%nnp )
                   END DO
                   offset = offset + nz_l
                 END DO
@@ -203,10 +200,10 @@
                   mc3 = dfft%ismap( is+2 + is_offset )
                   mc4 = dfft%ismap( is+3 + is_offset )
                   DO k = 1, nz_l
-                    bswp( k          ) = r( mc1 + (k-1)*ldx*ldy )
-                    bswp( k +   nz_l ) = r( mc2 + (k-1)*ldx*ldy )
-                    bswp( k + 2*nz_l ) = r( mc3 + (k-1)*ldx*ldy )
-                    bswp( k + 3*nz_l ) = r( mc4 + (k-1)*ldx*ldy )
+                    bswp( k          ) = r( mc1 + (k-1)*dfft%nnp )
+                    bswp( k +   nz_l ) = r( mc2 + (k-1)*dfft%nnp )
+                    bswp( k + 2*nz_l ) = r( mc3 + (k-1)*dfft%nnp )
+                    bswp( k + 3*nz_l ) = r( mc4 + (k-1)*dfft%nnp )
                   END DO
                   DO k = 1 , nz_l
                     mp_snd_buffer( k + offset ) = bswp( k )
@@ -335,7 +332,7 @@
               k_start = k_start + nz_l
             END DO
 
-            r( 1 : ldx*ldy*dfft%npp( me ) ) = 0.0_DP
+            r( 1 : dfft%nnr ) = 0.0_DP
             rdone = .FALSE.
 
    111      CONTINUE
@@ -461,7 +458,7 @@
 
           IF ( iopt < 0 ) THEN
 
-            r( 1 : ldx*ldy*nz ) = CMPLX(0.0_DP,0.0_DP)
+            r( 1 : dfft%nnr ) = CMPLX(0.0_DP,0.0_DP)
 
             IF( iopt == 2 ) THEN
               ns = dfft%nsw( me )

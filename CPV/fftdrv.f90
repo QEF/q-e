@@ -29,7 +29,7 @@ MODULE fft_cp
   IMPLICIT NONE
   SAVE
 
-  INTEGER, PRIVATE :: what_scatter = 0
+  INTEGER, PRIVATE :: what_scatter = 1
 
 CONTAINS
 
@@ -142,9 +142,9 @@ CONTAINS
          IF( iopt == 2 ) THEN
             !
             IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
+               call fft_transpose ( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
             ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
+               call fft_itranspose( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
             ELSE 
                if ( nproc_image == 1 ) then
                   nppx = dfft%nr3x
@@ -199,9 +199,9 @@ CONTAINS
          IF( iopt == -2 ) THEN
             !
             IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
+               call fft_transpose ( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
             ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
+               call fft_itranspose( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
             ELSE 
                if ( nproc_image == 1 ) then
                   nppx = dfft%nr3x
