@@ -133,7 +133,7 @@ PROGRAM main
   CALL mp_bcast( nimage,       meta_ionode_id, world )
   CALL mp_bcast( ntask_groups, meta_ionode_id, world )
   !
-  IF( ntask_groups > 0 ) THEN
+  IF( ntask_groups > 1 ) THEN
      use_task_groups = .TRUE.
   END IF
   !
