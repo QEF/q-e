@@ -1,13 +1,9 @@
 
      Program POST-PROC v.3.2cvs starts ...
-     Today is 29Mar2007 at  2:50: 0 
-
-     nbndx  =     4  nbnd   =     4  natomwfc =     8  npwx   =     350
-     nelec  =   8.00  nkb   =     8  ngl    =      65
+     Today is 26Jul2007 at  2:52:25 
 
      Calling punch_plot, plot_num =   0
      Writing data to file  sicharge
-     Reading header from file  sicharge
      Reading data from file  sicharge
 
      Writing data to be plotted to file si.rho.dat
