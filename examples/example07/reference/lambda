@@ -1,13 +1,13 @@
  
   Electron-phonon coupling constant, lambda 
  
- Broadening   0.0100 lambda       0.3845 dos_el   1.8818
- Broadening   0.0200 lambda       0.3745 dos_el   2.2498
- Broadening   0.0300 lambda       0.3448 dos_el   2.3960
- Broadening   0.0400 lambda       0.3448 dos_el   2.5079
- Broadening   0.0500 lambda       0.3517 dos_el   2.5896
- Broadening   0.0600 lambda       0.3557 dos_el   2.6381
- Broadening   0.0700 lambda       0.3554 dos_el   2.6616
- Broadening   0.0800 lambda       0.3518 dos_el   2.6709
- Broadening   0.0900 lambda       0.3465 dos_el   2.6737
- Broadening   0.1000 lambda       0.3406 dos_el   2.6743
+ Broadening   0.0050 lambda       0.2057 dos_el   1.3387
+ Broadening   0.0100 lambda       0.3846 dos_el   1.8818
+ Broadening   0.0150 lambda       0.3961 dos_el   2.1232
+ Broadening   0.0200 lambda       0.3747 dos_el   2.2498
+ Broadening   0.0250 lambda       0.3549 dos_el   2.3298
+ Broadening   0.0300 lambda       0.3450 dos_el   2.3960
+ Broadening   0.0350 lambda       0.3429 dos_el   2.4552
+ Broadening   0.0400 lambda       0.3450 dos_el   2.5079
+ Broadening   0.0450 lambda       0.3486 dos_el   2.5530
+ Broadening   0.0500 lambda       0.3520 dos_el   2.5896
