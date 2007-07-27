@@ -1,9 +1,6 @@
 
-     Program POST-PROC v.3.2    starts ...
-     Today is  8Nov2006 at  3: 6:12 
-
-     nbndx  =     6  nbnd   =     6  natomwfc =     9  npwx   =     654
-     nelec  =   3.00  nkb   =     4  ngl    =     320
+     Program POST-PROC v.3.2cvs starts ...
+     Today is 27Jul2007 at  3:14:51 
  
 ===== INPUT FILE containing the left lead =====
 
@@ -474,14 +471,14 @@
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
  
-     PWCOND       :    13.89s CPU time,   13.99s wall time
+     PWCOND       :    13.00s CPU time,   13.17s wall time
 
-     init         :     0.33s CPU
-     poten        :     0.01s CPU
-     local        :     0.54s CPU
+     init         :     0.36s CPU
+     poten        :     0.00s CPU
+     local        :     0.55s CPU
  
-     scatter_forw :     9.48s CPU (      71 calls,   0.134 s avg)
+     scatter_forw :     8.36s CPU (      71 calls,   0.118 s avg)
  
-     compbs       :     3.52s CPU (      71 calls,   0.050 s avg)
-     compbs_2     :     3.20s CPU (      71 calls,   0.045 s avg)
+     compbs       :     3.72s CPU (      71 calls,   0.052 s avg)
+     compbs_2     :     3.44s CPU (      71 calls,   0.048 s avg)
  

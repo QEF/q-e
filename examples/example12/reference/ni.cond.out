@@ -1,9 +1,6 @@
 
-     Program POST-PROC v.3.2    starts ...
-     Today is  8Nov2006 at  3: 6:43 
-
-     nbndx  =    14  nbnd   =    14  natomwfc =    12  npwx   =     288
-     nelec  =  20.00  nkb   =    36  ngl    =     662
+     Program POST-PROC v.3.2cvs starts ...
+     Today is 27Jul2007 at  3:15:26 
 
      Check: negative/imaginary core charge=   -0.000002    0.000000
  
@@ -233,8 +230,8 @@
  
   -0.2627518   0.0000000  -1.0000000
   -0.3490327   0.0000000  -1.0000000
-   0.4856731   0.0000000  -1.0000000
-   0.4856731   0.0000000  -1.0000000
+   0.4856730   0.0000000  -1.0000000
+   0.4856730   0.0000000  -1.0000000
  Nchannels of the left tip =            4
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
@@ -317,14 +314,14 @@
  
   -0.2224989   0.0000000  -4.8000000
  
-     PWCOND       :    38.18s CPU time,   38.50s wall time
+     PWCOND       :    26.59s CPU time,   26.95s wall time
 
-     init         :     1.89s CPU
-     poten        :     0.00s CPU
-     local        :     0.09s CPU
+     init         :     1.97s CPU
+     poten        :     0.01s CPU
+     local        :     0.10s CPU
  
-     scatter_forw :    32.90s CPU (      30 calls,   1.097 s avg)
+     scatter_forw :    21.07s CPU (      30 calls,   0.702 s avg)
  
-     compbs       :     3.28s CPU (      30 calls,   0.109 s avg)
-     compbs_2     :     2.76s CPU (      30 calls,   0.092 s avg)
+     compbs       :     3.45s CPU (      30 calls,   0.115 s avg)
+     compbs_2     :     2.92s CPU (      30 calls,   0.097 s avg)
  
