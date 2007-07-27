@@ -393,7 +393,8 @@ SUBROUTINE setup()
   !
   !   check if spin-orbit is possible
   !
-  lspinorb = lspinorb .AND. noncolin
+  IF (lspinorb.and..not.noncolin)  CALL errore( 'setup ',  &
+         'spin orbit requires a non collinear calculation', ierr )
   !
   ! ... if this is not a spin-orbit calculation, all spin-orbit pseudopotentials
   ! ... are transformed into standard pseudopotentials
