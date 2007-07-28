@@ -113,7 +113,11 @@ subroutine run_test
               rcutusts(n)=r(im)*2.2_dp
               if (el(nstoaets(n)).eq.'3D') then
                  rcutts(n)=r(im)*2.5_dp
-                 rcutusts(n)=r(im)*3.0_dp
+                 if (zed>28) then
+                    rcutusts(n)=r(im)*3.4_dp
+                 else
+                    rcutusts(n)=r(im)*3.0_dp
+                 endif
               endif
            endif
         endif
