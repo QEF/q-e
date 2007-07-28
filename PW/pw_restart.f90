@@ -71,7 +71,8 @@ MODULE pw_restart
                                      ! dir specified in the input.
       USE wavefunctions_module, ONLY : evc
       USE klist,                ONLY : nks, nkstot, xk, ngk, wk, &
-                                       lgauss, ngauss, degauss, nelec, xqq
+                                       lgauss, ngauss, degauss, nelec, xqq, &
+                                       two_fermi_energies, nelup, neldw
       USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, ngm, ngm_g, &
                                        g, ig1, ig2, ig3, ecutwfc, dual
       USE basis,                ONLY : natomwfc
@@ -80,7 +81,7 @@ MODULE pw_restart
                                        ntetra, tetra, ltetra
       USE wvfct,                ONLY : gamma_only, npw, npwx, g2kin, et, wg, &
                                        igk, nbnd
-      USE ener,                 ONLY : ef
+      USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
@@ -88,7 +89,8 @@ MODULE pw_restart
       USE symme,                ONLY : nsym, invsym, s, ftau, irt, t_rev
       USE char,                 ONLY : sname
       USE lsda_mod,             ONLY : nspin, isk, lsda, starting_magnetization
-      USE noncollin_module,     ONLY : angle1, angle2
+      USE noncollin_module,     ONLY : angle1, angle2, i_cons, mcons, bfield, &
+                                       lambda
       USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
@@ -343,7 +345,9 @@ MODULE pw_restart
          !
          CALL write_spin( lsda, noncolin, npol, lspinorb, domag )
          !
-         CALL write_init_mag(starting_magnetization, angle1, angle2, nsp )
+         CALL write_magnetization(starting_magnetization, angle1, angle2, nsp, &
+                             two_fermi_energies, i_cons, mcons, bfield, &
+                             ef_up, ef_dw, nelup, neldw, lambda)
          !
 !-------------------------------------------------------------------------------
 ! ... EXCHANGE_CORRELATION
@@ -977,7 +981,7 @@ MODULE pw_restart
       END IF
       IF (linit_mag) THEN
          !
-         CALL read_init_mag( dirname, ierr )
+         CALL read_magnetization( dirname, ierr )
          IF ( ierr > 0 ) RETURN
          !
       ENDIF
@@ -1827,12 +1831,15 @@ MODULE pw_restart
     END SUBROUTINE read_spin
     !
     !--------------------------------------------------------------------------
-    SUBROUTINE read_init_mag( dirname, ierr )
+    SUBROUTINE read_magnetization( dirname, ierr )
       !------------------------------------------------------------------------
       !
       USE constants,        ONLY : pi
+      USE klist,            ONLY : two_fermi_energies, nelup, neldw
+      USE ener,             ONLY : ef_up, ef_dw
       USE lsda_mod,         ONLY : starting_magnetization
-      USE noncollin_module, ONLY : angle1, angle2
+      USE noncollin_module, ONLY : angle1, angle2, i_cons, mcons, bfield, &
+                                   lambda
       !
       IMPLICIT NONE
       !
@@ -1858,6 +1865,8 @@ MODULE pw_restart
          !
          IF( found ) THEN
             !
+            CALL iotk_scan_dat(iunpun,"CONSTRAINT_MAG", i_cons)
+
             CALL iotk_scan_dat( iunpun, "NTYP", ntyp )
             !
             DO ityp=1,ntyp
@@ -1867,8 +1876,33 @@ MODULE pw_restart
                CALL iotk_scan_dat( iunpun, "ANGLE2", angle2(ityp) )
                angle1(ityp)=angle1(ityp)*pi/180.d0
                angle2(ityp)=angle2(ityp)*pi/180.d0
+               IF (i_cons==1.OR.i_cons==2) THEN
+                  CALL iotk_scan_dat( iunpun, "CONSTRANT_1", mcons(1,ityp) )
+                  CALL iotk_scan_dat( iunpun, "CONSTRANT_2", mcons(2,ityp) )
+                  CALL iotk_scan_dat( iunpun, "CONSTRANT_3", mcons(3,ityp) )
+               END IF
             END DO
-   
+
+            IF (i_cons==3) THEN
+               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_1", mcons(1,1) )
+               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_2", mcons(2,1) )
+               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION_3", mcons(3,1) )
+            ELSE IF (i_cons==4) THEN
+               CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_1", bfield(1) )
+               CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_2", bfield(2) )
+               CALL iotk_scan_dat( iunpun, "MAGNETIC_FIELD_3", bfield(3) )
+            END IF
+
+            CALL iotk_scan_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
+            IF (two_fermi_energies) THEN
+               CALL iotk_scan_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
+               CALL iotk_scan_dat( iunpun, "ELECTRONS_UP", nelup )
+               CALL iotk_scan_dat( iunpun, "ELECTRONS_DOWN", neldw )
+               CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
+               CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_up )
+            ENDIF
+            IF (i_cons>0) CALL iotk_scan_dat(iunpun,"LAMBDA",lambda)
+            ! 
             CALL iotk_scan_end( iunpun, "STARTING_MAG" )
             !
          END IF
@@ -1883,13 +1917,22 @@ MODULE pw_restart
          CALL mp_bcast( starting_magnetization,  ionode_id, intra_image_comm )
          CALL mp_bcast( angle1,        ionode_id, intra_image_comm )
          CALL mp_bcast( angle2,        ionode_id, intra_image_comm )
+         CALL mp_bcast( two_fermi_energies,  ionode_id, intra_image_comm )
+         CALL mp_bcast( i_cons,  ionode_id, intra_image_comm )
+         CALL mp_bcast( mcons,  ionode_id, intra_image_comm )
+         CALL mp_bcast( bfield,  ionode_id, intra_image_comm )
+         CALL mp_bcast( nelup,  ionode_id, intra_image_comm )
+         CALL mp_bcast( neldw,  ionode_id, intra_image_comm )
+         CALL mp_bcast( ef_up,  ionode_id, intra_image_comm )
+         CALL mp_bcast( ef_dw,  ionode_id, intra_image_comm )
+         CALL mp_bcast( lambda,  ionode_id, intra_image_comm )
       END IF
       !
       lstarting_mag_read = .TRUE.
       !
       RETURN
       !
-    END SUBROUTINE read_init_mag
+    END SUBROUTINE read_magnetization
     !
     !------------------------------------------------------------------------
     SUBROUTINE read_xc( dirname, ierr )

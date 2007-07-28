@@ -36,7 +36,7 @@ MODULE xml_io_base
             save_print_counter, read_print_counter, set_kpoints_vars,    &
             write_header,                                                &
             write_cell, write_ions, write_symmetry, write_planewaves,    &
-            write_efield, write_spin, write_init_mag, write_xc,          &
+            write_efield, write_spin, write_magnetization, write_xc,     &
             write_occ, write_bz,     &
             write_phonon, write_rho_xml, write_wfc, write_eig,           &
             read_wfc, read_rho_xml
@@ -931,17 +931,24 @@ MODULE xml_io_base
     END SUBROUTINE write_spin
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_init_mag(starting_magnetization, angle1, angle2, ntyp )
+    SUBROUTINE write_magnetization(starting_magnetization, angle1, angle2, &
+                ntyp, two_fermi_energies, i_cons, mcons, bfield, &
+                             ef_up, ef_dw, nelup, neldw, lambda)
     !------------------------------------------------------------------------
       USE constants, ONLY : pi
 
       IMPLICIT NONE
-      INTEGER, INTENT(IN):: ntyp
+      INTEGER, INTENT(IN):: ntyp, i_cons
       REAL(DP), INTENT(IN) :: starting_magnetization(ntyp), &
-                              angle1(ntyp), angle2(ntyp)
+                              angle1(ntyp), angle2(ntyp), mcons(3,ntyp), &
+                              bfield(3), ef_up, ef_dw, nelup, neldw, lambda
+      LOGICAL, INTENT(IN) :: two_fermi_energies
       INTEGER :: ityp
       !
       CALL iotk_write_begin( iunpun, "STARTING_MAG" )
+
+      CALL iotk_write_dat(iunpun,"CONSTRAINT_MAG", i_cons)
+
       CALL iotk_write_dat( iunpun, "NTYP", ntyp) 
 
       DO ityp=1,ntyp
@@ -951,12 +958,40 @@ MODULE xml_io_base
                                        angle1(ityp)*180.0_DP/pi )
          CALL iotk_write_dat( iunpun, "ANGLE2", &
                                        angle2(ityp)*180.0_DP/pi )
+         IF (i_cons==1.OR.i_cons==2) THEN
+            CALL iotk_write_dat( iunpun, "CONSTRANT_1", mcons(1,ityp) )
+            CALL iotk_write_dat( iunpun, "CONSTRANT_2", mcons(2,ityp) )
+            CALL iotk_write_dat( iunpun, "CONSTRANT_3", mcons(3,ityp) )
+         END IF
       END DO
+
+      IF (i_cons==3) THEN
+         CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION_1", mcons(1,1) )
+         CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION_2", mcons(2,1) )
+         CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION_3", mcons(3,1) )
+      ELSE IF (i_cons==4) THEN
+         CALL iotk_write_dat( iunpun, "MAGNETIC_FIELD_1", bfield(1) )
+         CALL iotk_write_dat( iunpun, "MAGNETIC_FIELD_2", bfield(2) )
+         CALL iotk_write_dat( iunpun, "MAGNETIC_FIELD_3", bfield(3) )
+      END IF
+      !
+      CALL iotk_write_dat(iunpun,"TWO_FERMI_ENERGIES",two_fermi_energies)
+      !
+      IF (two_fermi_energies) THEN
+         CALL iotk_write_dat( iunpun, "FIXED_MAGNETIZATION", mcons(3,1) )
+         CALL iotk_write_dat( iunpun, "ELECTRONS_UP", nelup )
+         CALL iotk_write_dat( iunpun, "ELECTRONS_DOWN", neldw )
+         CALL iotk_write_dat( iunpun, "FERMI_ENERGY_UP", ef_up )
+         CALL iotk_write_dat( iunpun, "FERMI_ENERGY_DOWN", ef_up )
+      ENDIF
+      !
+      IF (i_cons>0) CALL iotk_write_dat(iunpun,"LAMBDA",lambda)
+      !
       CALL iotk_write_end( iunpun, "STARTING_MAG" )
       !
     RETURN
     !
-    END SUBROUTINE write_init_mag
+    END SUBROUTINE write_magnetization
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_xc( dft, nsp, lda_plus_u, &

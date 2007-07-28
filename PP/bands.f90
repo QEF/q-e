@@ -15,7 +15,8 @@ PROGRAM bands
   USE mp_global, ONLY : npool, nproc, nproc_pool, nproc_file, nproc_pool_file
   USE control_flags, ONLY : twfcollect
   USE wvfct,     ONLY : nbnd
-  USE klist,     ONLY : nkstot
+  USE klist,     ONLY : nkstot, two_fermi_energies
+  USE noncollin_module, ONLY : i_cons
   USE io_global, ONLY : ionode, ionode_id, stdout
   USE mp,        ONLY : mp_bcast
 
@@ -79,12 +80,16 @@ PROGRAM bands
   CALL read_file()
 
   IF (nproc /= nproc_file .and. .not. twfcollect)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of processors. Use twfcollect=.true.',1)
+     CALL errore('bands',&
+     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
 
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of pools. Use twfcollect=.true.',1)
+     CALL errore('bands',&
+     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
+
+  IF (two_fermi_energies.or.i_cons /= 0) &
+     CALL errore('bands',&
+     'The bands code with constrained magnetization has not been tested',1)
 
   CALL openfil_pp()
   CALL init_us_1()

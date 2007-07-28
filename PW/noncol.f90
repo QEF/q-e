@@ -30,9 +30,9 @@ MODULE noncollin_module
   REAL (DP) :: &
       angle1(ntypx),       &!  Define the polar coordinates of the starting
       angle2(ntypx),       &!  magnetization's direction for each atom
-      mcons(3,ntypx),      &!  constrained values for local variables
+      mcons(3,ntypx)=0.d0, &!  constrained values for local variables
       magtot_nc(3),        &!  total magnetization
-      bfield(3),           &!  magnetic field used in some cases
+      bfield(3)=0.d0,      &!  magnetic field used in some cases
       vtcon,               &!  contribution of the constraining fields to
                             !  the total energy
       r_m = 0.0d0,         &!  Radius for local integrations

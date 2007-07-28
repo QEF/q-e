@@ -17,7 +17,7 @@ SUBROUTINE do_cond(nodenumber)
   USE pwcom
   USE cond 
   USE io_files 
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
 
   USE mp
@@ -246,6 +246,10 @@ ELSE
     CALL init_cond(1,'r')
     CALL clean_pw(.true.)
   ENDIF
+
+  IF (two_fermi_energies.or.i_cons /= 0) &
+     CALL errore('pwcond',&
+     'The pwcond code with constrained magnetization is not yet available',1)
 ENDIF
 
 IF (lwrite_cond) then

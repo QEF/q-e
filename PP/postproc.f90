@@ -62,11 +62,13 @@ SUBROUTINE extract (filplot,plot_num)
   USE ener,      ONLY : ef
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau
   USE gvect
+  USE klist,     ONLY : two_fermi_energies
   USE vlocal,    ONLY : strf
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
   USE control_flags, ONLY : twfcollect
+  USE noncollin_module, ONLY : i_cons
   USE mp,        ONLY : mp_bcast
 
   IMPLICIT NONE
@@ -153,13 +155,16 @@ SUBROUTINE extract (filplot,plot_num)
   needwf=(plot_num==3).or.(plot_num==4).or.(plot_num==5).or.(plot_num==7).or. &
          (plot_num==8).or.(plot_num==10)
   IF (nproc /= nproc_file .and. .not. twfcollect .and. needwf)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of processors. Use twfcollect=.true.',1)
+     CALL errore('postproc',&
+     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
 
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect .and. needwf)  &
-     CALL errore('phq_readin',&
-     'pw.x run with a different number of pools. Use twfcollect=.true.',1)
+     CALL errore('postproc',&
+     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
 
+  IF (two_fermi_energies.or.i_cons /= 0) &
+     CALL errore('postproc',&
+     'Post-processing with constrained magnetization is not available yet',1)
 
   CALL openfil_pp ( )
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &

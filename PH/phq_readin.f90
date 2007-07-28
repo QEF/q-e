@@ -25,7 +25,7 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass, atm
-  USE klist,         ONLY : xqq, xk, nks, lgauss
+  USE klist,         ONLY : xqq, xk, nks, lgauss, two_fermi_energies
   USE wvfct,         ONLY : gamma_only
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -41,7 +41,7 @@ SUBROUTINE phq_readin()
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
-  USE noncollin_module, ONLY : noncolin
+  USE noncollin_module, ONLY : noncolin, i_cons
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : ionode
@@ -250,11 +250,15 @@ SUBROUTINE phq_readin()
 
   IF (nproc /= nproc_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
-     'pw.x run with a different number of processors. Use twfcollect=.true.',1)
+     'pw.x run with a different number of processors. Use wf_collect=.true.',1)
 
   IF (nproc_pool /= nproc_pool_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&
-     'pw.x run with a different number of pools. Use twfcollect=.true.',1)
+     'pw.x run with a different number of pools. Use wf_collect=.true.',1)
+
+  IF (two_fermi_energies.or.i_cons /= 0) &
+     CALL errore('phq_readin',&
+     'The phonon code with constrained magnetization is not yet available',1)
   !
   !  set masses to values read from input, if available;
   !  leave values read from file otherwise
