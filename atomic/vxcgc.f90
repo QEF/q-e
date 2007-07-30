@@ -81,13 +81,6 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
            !            if (i.lt.4) write(6,'(f20.12,e20.12,2f20.12)') &
            !                          rho(i,1), grho(i,1)**2,  &
            !                          vgc(i,1),h(i,1)
-        else if (i.gt.mesh/2) then
-           !
-           ! these are asymptotic formulae (large r) 
-           !
-           vgc(i,1)=-1.0_dp/r2(i)
-           egc(i)=-0.0_dp/(2.0_dp*r(i))
-           h(i,1)=h(i-1,1)
         else
            vgc(i,1)=0.0_dp
            egc(i)=0.0_dp
