@@ -43,7 +43,7 @@ end subroutine write_upf
     call date_and_tim(day,hour)
     generated='Generated using "atomic" code by A. Dal Corso &
              & (espresso distribution)'
-    date_author='Author: anonymous   Generation date: '// day 
+    date_author='Author: '//TRIM(author)//'   Generation date: '// day 
     comment=title
 
     write (ounps, '(a9)', err = 100, iostat = ios) "<PP_INFO>"  

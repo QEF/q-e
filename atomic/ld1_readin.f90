@@ -77,6 +77,7 @@ subroutine ld1_readin
        rcore, &    ! the core radius for nlcc
        rcloc, &    ! the local cut-off for pseudo
        lpaw,  &    ! if true create a PAW dataset
+       author, &   ! the author of the PP
        file_pseudopw, & ! output file where the pseudopotential is written
        file_screen,   & ! output file for the screening potential
        file_core,     & ! output file for total and core charge
@@ -132,6 +133,7 @@ subroutine ld1_readin
   config= ' '
 
   lpaw = .false.
+  author='anonymous'
 
   vdw  = .false.
   

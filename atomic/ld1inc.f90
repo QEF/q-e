@@ -234,6 +234,7 @@ module ld1inc
   !  file names
   !
   character(len=75)  :: title  ! the title of the run
+  character(len=75)  :: author ! the author of the pseudopotential
   character(len=240) :: prefix ! prefix for file names
   character(len=256) ::      & ! 
        file_pseudo,          & ! input file containing the pseudopotential
