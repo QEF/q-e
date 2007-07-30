@@ -152,6 +152,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              Typical values are in the order of 0.01-0.02       (default 0.0)
       lpaw =.true. : produce a PAW dataset, experimental feature
              only for pseudotype=3 (default .false.)
+      author     =   name of the author (default 'anonymous') 
       file_chi   =   file containing output PP chi functions       (' ')
       file_beta  =   file containing output PP beta functions      (' ')
       file_qvan  =   file containing output PP qvan functions      (' ')
