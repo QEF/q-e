@@ -10,7 +10,7 @@ subroutine write_resultsps
   !--------------------------------------------------------------
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use constants, only : rytoev
+  use constants, only : rytoev, eps6
   use ld1inc
   use funct, only: get_dft_name
   implicit none
@@ -38,10 +38,12 @@ subroutine write_resultsps
      write(stdout,1000)
 1000 format(/5x,'n l     nl             e AE (Ry) ',  &
           '       e PS (Ry)    De AE-PS (Ry) ')
-     write(stdout,1100) &
-          (nnts(n),llts(n),elts(n),iswts(n),octs(n), &
-          enl(nstoaets(n)),enlts(n), &
-          enl(nstoaets(n))-enlts(n),  n=1,nwfts)
+     do n=1,nwfts
+        if (octs(n)>-eps6) write(stdout,1100) &
+             nnts(n),llts(n),elts(n),iswts(n),octs(n), &
+             enl(nstoaets(n)),enlts(n), &
+             enl(nstoaets(n))-enlts(n)
+     enddo
      if (ionode) write(13,1100)  &
           (nnts(n),llts(n),elts(n),iswts(n),octs(n), &
           enl(nstoaets(n)),enlts(n),  &
@@ -51,10 +53,11 @@ subroutine write_resultsps
      write(stdout,1001)
 1001 format(/5x,'n l  j  nl             e AE (Ry)',  &
           '       e PS (Ry)    De AE-PS (Ry) ')
-     write(stdout,1101) &
-          (nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
-          enl(nstoaets(n)),enlts(n), &
-          enl(nstoaets(n))-enlts(n),  n=1,nwfts)
+     do n=1,nwfts
+        if(octs(n)>-eps6) write(stdout,1101) &
+             nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
+             enl(nstoaets(n)),enlts(n), enl(nstoaets(n))-enlts(n)
+     enddo
      if (ionode) write(13,1101)  &
           (nnts(n),llts(n),jjts(n),elts(n),iswts(n),octs(n), &
           enl(nstoaets(n)),enlts(n),  &

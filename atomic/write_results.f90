@@ -10,7 +10,7 @@ subroutine write_results
   !--------------------------------------------------------------
   use io_global, only : stdout, ionode_id, ionode
   use mp,        only : mp_bcast
-  use constants, only : rytoev
+  use constants, only : rytoev, eps6
   use ld1inc
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -41,9 +41,11 @@ subroutine write_results
 
      oep = get_iexch() .eq. 4
      if (oep) enl(1:nwf) = enl(1:nwf) - enzero(isw(1:nwf))
-     write(stdout,1100) &
-          (nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
-          enl(n)*rytoev, n=1,nwf)
+     do n=1,nwf
+        if (oc(n)>-eps6) write(stdout,1100) &
+             nn(n),ll(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+             enl(n)*rytoev
+     enddo
      if (oep) then
         enl(1:nwf) = enl(1:nwf) + enzero(isw(1:nwf))
         write(stdout,*) 
@@ -61,23 +63,27 @@ subroutine write_results
 1001 format(/5x, &
           'n l j   nl                  e(Ry) ','         e(Ha)          e(eV)')
      write(stdout,'(5x,"Spin orbit split results")')
-     write(stdout,1120) &
-          (nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
-          enl(n)*rytoev, n=1,nwf)
+     do n=1,nwf
+        if (oc(n)>-eps6) write(stdout,1120) &
+            nn(n),ll(n),jj(n),el(n),isw(n),oc(n),enl(n),enl(n)*0.5_dp, &
+            enl(n)*rytoev
+     enddo
      write(stdout,'(5x,"Averaged results")')
      ok=.true.
      do n=1,nwf
-        if (ll(n).gt.0.and.ok) then
-           ene=(enl(n)*2.0_dp*ll(n) &
-                + enl(n+1)*(2.0_dp*ll(n)+2.0_dp))/(4.0_dp*ll(n)+2.0_dp)
-           write(stdout,1100) nn(n),ll(n),el(n), isw(n),oc(n)+oc(n+1), &
-                ene,ene*0.5_dp, ene*rytoev
-           ok=.false.
-        else
-           if (ll(n).eq.0) &
-                write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
-                enl(n),enl(n)*0.5_dp,enl(n)*rytoev
-           ok=.true.
+        if (oc(n)+oc(n+1)>-eps6) then
+           if (ll(n).gt.0.and.ok) then
+              ene=(enl(n)*2.0_dp*ll(n) &
+                   + enl(n+1)*(2.0_dp*ll(n)+2.0_dp))/(4.0_dp*ll(n)+2.0_dp)
+              write(stdout,1100) nn(n),ll(n),el(n), isw(n),oc(n)+oc(n+1), &
+                   ene,ene*0.5_dp, ene*rytoev
+              ok=.false.
+           else
+              if (ll(n).eq.0) &
+                   write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
+                   enl(n),enl(n)*0.5_dp,enl(n)*rytoev
+              ok=.true.
+           endif
         endif
      enddo
   endif
