@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2 - Fri Oct 6 02:32:59 CEST 2006                          
+     Version: 3.2cvs - Wed Jul 11 14:42:47 CEST 2007                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   3:59: 0   8Nov2006               
+   This run was started on:   4:21:56  31Jul2007               
 
    Serial Build
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /scr/giannozz/espresso/pseudo/N.BLYP.UPF
+   /home/giannozz/espresso/pseudo/N.BLYP.UPF
    file type is 20: UPF
  
    Type is UPF        and NONLOCAL. 
@@ -49,7 +49,7 @@
    Warning XC functionals forced to be: BLYP                
 
    Reading pseudopotential for specie #  2 from file :
-   /scr/giannozz/espresso/pseudo/H.fpmd.UPF
+   /home/giannozz/espresso/pseudo/H.fpmd.UPF
    file type is 20: UPF
  
    Type is UPF        and LOCAL. 
@@ -241,14 +241,12 @@
 
    System geometry initialization
    ------------------------------
-
-   Scaled atomic positions                                from standard input
-   Species   1 atoms =    1
-    N       0.000825     0.000825     0.000000
-   Species   2 atoms =    3
-    H       0.159883    -0.020358    -0.018400
-    H      -0.019208     0.160117    -0.017867
-    H      -0.014958    -0.015058     0.160300
+ 
+   Scaled positions from standard input
+   N    0.825000E-03  0.825000E-03  0.000000E+00
+   H    0.159883E+00 -0.203583E-01 -0.184000E-01
+   H   -0.192083E-01  0.160117E+00 -0.178667E-01
+   H   -0.149583E-01 -0.150583E-01  0.160300E+00
 
 
    Pseudopotentials initialization
@@ -278,9 +276,6 @@
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
  
-   ortho mmul, time for serial driver =   0.00074
-   ortho mmul, best time for paralle driver =   0.00074 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00004  0.00354
 
 
    Wave Initialization: random initial wave-functions
@@ -324,6 +319,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -346,9 +342,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -18.84   -1.04   17.27   25.45
+  -34.40  -18.09   -0.14    7.99
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -416,6 +412,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -438,9 +435,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -22.45  -10.25   -7.74   -2.25
+  -23.23  -13.34   -9.54   -2.60
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -508,6 +505,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -530,9 +528,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -21.68  -10.59   -9.90   -4.72
+  -21.73  -11.96   -9.89   -4.66
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -600,6 +598,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -622,9 +621,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -21.17  -10.70  -10.37   -5.43
+  -21.17  -11.45  -10.05   -5.39
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -692,6 +691,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -714,9 +714,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -20.94  -10.77  -10.44   -5.74
+  -20.95  -11.16  -10.19   -5.72
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -784,6 +784,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -806,9 +807,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -20.84  -10.77  -10.46   -5.88
+  -20.84  -10.98  -10.30   -5.87
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -876,6 +877,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -898,9 +900,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -20.79  -10.75  -10.47   -5.96
+  -20.79  -10.87  -10.37   -5.95
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -968,6 +970,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -990,9 +993,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -20.77  -10.73  -10.48   -5.99
+  -20.77  -10.80  -10.42   -5.99
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1060,6 +1063,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = F
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -1082,9 +1086,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -20.75  -10.71  -10.48   -6.01
+  -20.75  -10.75  -10.45   -6.01
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1152,6 +1156,7 @@
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
+ 
    MAIN: doions = T
 
    MAIN:          EKINC   (thr)          DETOT   (thr)       MAXFORCE   (thr)
@@ -1174,9 +1179,9 @@
 
    Eigenvalues (eV), kp =   1 , spin =  1
 
-  -20.74  -10.70  -10.49   -6.02
+  -20.74  -10.72  -10.47   -6.02
  
-   Allocated memory (kb) =      1924
+   Allocated memory (kb) =     28203
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1220,8 +1225,8 @@
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00007    0.0    0.0   -11.71674   -11.71674   -11.71673   -11.71667  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /scr/giannozz/tmp//nh3_mol_51.save
-   restart file written in    0.187 sec.
+   writing restart file: /home/giannozz/tmp//nh3_mol_51.save
+   restart file written in    0.184 sec.
 
 
 
@@ -1230,7 +1235,7 @@
    ekinc         :        0.37191       0.37191 (AU)
    ekin          :       12.22257      12.22257 (AU)
    epot          :      -21.15517     -21.15517 (AU)
-   totel energy  :       -7.94137      -7.94137 (AU)
+   total energy  :       -7.94137      -7.94137 (AU)
    temperature   :        0.00019       0.00019 (K )
    enthalpy      :       -7.94137      -7.94137 (AU)
    econs         :       -7.94137      -7.94137 (AU)
@@ -1238,29 +1243,32 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.72s CPU
-     main_loop    :   149.45s CPU (     100 calls,   1.495 s avg)
-     formf        :     1.52s CPU
-     rhoofr       :    12.58s CPU (     101 calls,   0.125 s avg)
-     vofrho       :   115.00s CPU (     101 calls,   1.139 s avg)
-     calphi       :     0.12s CPU (     101 calls,   0.001 s avg)
-     ortho        :     0.73s CPU (     101 calls,   0.007 s avg)
-     updatc       :     0.21s CPU (     101 calls,   0.002 s avg)
-     gram         :     0.01s CPU
-     prefor       :     0.02s CPU (     101 calls,   0.000 s avg)
-     strucf       :     0.94s CPU (     101 calls,   0.009 s avg)
-     nlsm1        :     0.06s CPU (     101 calls,   0.001 s avg)
-     nlsm2        :     0.27s CPU (     101 calls,   0.003 s avg)
-     fft          :    67.18s CPU (     808 calls,   0.083 s avg)
-     fftw         :    27.74s CPU (     606 calls,   0.046 s avg)
-     rsg          :     0.00s CPU (     101 calls,   0.000 s avg)
+     initialize   :     4.69s CPU
+     main_loop    :   150.60s CPU (     100 calls,   1.506 s avg)
+     formf        :     1.34s CPU
+     rhoofr       :    13.08s CPU (     101 calls,   0.130 s avg)
+     vofrho       :   115.70s CPU (     101 calls,   1.146 s avg)
+     dforce       :    20.95s CPU (     202 calls,   0.104 s avg)
+     calphi       :     0.14s CPU (     101 calls,   0.001 s avg)
+     ortho        :     0.70s CPU (     101 calls,   0.007 s avg)
+     ortho_iter   :     0.01s CPU (     101 calls,   0.000 s avg)
+     rhoset       :     0.11s CPU (     101 calls,   0.001 s avg)
+     updatc       :     0.22s CPU (     101 calls,   0.002 s avg)
+     gram         :     0.00s CPU
+     prefor       :     0.05s CPU (     101 calls,   0.000 s avg)
+     strucf       :     0.91s CPU (     101 calls,   0.009 s avg)
+     nlsm1        :     0.03s CPU (     101 calls,   0.000 s avg)
+     nlsm2        :     0.18s CPU (     101 calls,   0.002 s avg)
+     fft          :    68.66s CPU (     808 calls,   0.085 s avg)
+     fftw         :    28.00s CPU (     606 calls,   0.046 s avg)
+     rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
  
  
  
-     CP           :  2m34.54s CPU time,     2m47.80s wall time
+     CP           :  2m35.66s CPU time,     3m 5.43s wall time
 
  
-   This run was terminated on:   4: 1:48   8Nov2006            
+   This run was terminated on:   4:25: 1  31Jul2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
