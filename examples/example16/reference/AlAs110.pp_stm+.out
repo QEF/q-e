@@ -1,9 +1,6 @@
 
      Program POST-PROC v.3.2cvs starts ...
-     Today is  3Apr2007 at  3:57:11 
-
-     nbndx  =    34  nbnd   =    34  natomwfc =    91  npwx   =    3109
-     nelec  =  56.00  nkb   =    56  ngl    =    2793
+     Today is 31Jul2007 at  3:56:32 
 
      Calling punch_plot, plot_num =   5
 
@@ -15,9 +12,8 @@
      Use the true wfcs
      Sample bias          =  1.0000 eV
 
-     STM:      0.20s cpu time
+     STM:      0.23s cpu time
      Writing data to file  AlAsresm+1.0
-     Reading header from file  AlAsresm+1.0
      Reading data from file  AlAsresm+1.0
 
      Writing data to be plotted to file AlAs110+1.0
