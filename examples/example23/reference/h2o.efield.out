@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2 - Mon Nov 20 16:30:51 CET 2006                          
+     Version: 3.2cvs - Wed Jul 11 14:42:47 CEST 2007                      
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  17:13:57  20Nov2006               
+   This run was started on:   5:23: 8   1Aug2007               
 
    Serial Build
 
@@ -21,7 +21,7 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /Users/giannozz/espresso/pseudo/O_US.van
+   /home/giannozz/espresso/pseudo/O_US.van
    file type is  1: Vanderbilt US PP
 
     ============================================================
@@ -45,7 +45,7 @@
     ============================================================
 
    Reading pseudopotential for specie #  2 from file :
-   /Users/giannozz/espresso/pseudo/H_US.van
+   /home/giannozz/espresso/pseudo/H_US.van
    file type is  1: Vanderbilt US PP
 
     ============================================================
@@ -84,7 +84,7 @@
    a1    =    20.00000000    0.00000000    0.00000000
    a2    =     0.00000000   20.00000000    0.00000000
    a3    =     0.00000000    0.00000000   20.00000000
-
+ 
    b1    =     0.05000000    0.00000000    0.00000000
    b2    =     0.00000000    0.05000000    0.00000000
    b3    =     0.00000000    0.00000000    0.05000000
@@ -156,15 +156,15 @@
    1    20.0000    0.0000    0.0000              1.0000    0.0000    0.0000
    2     0.0000   20.0000    0.0000              0.0000    1.0000    0.0000
    3     0.0000    0.0000   20.0000              0.0000    0.0000    1.0000
-
+ 
    Stick Mesh
    ----------
    nst =  1591,  nstw =   397, nsts =  1591
         PEs    n.st   n.stw   n.sts    n.g    n.gw   n.gs
           1    3181     793    3181  135043   16879  135043
           0    3181     793    3181  135043   16879  135043
-
-
+ 
+ 
    Real Mesh
    ---------
    Global Dimensions   Local  Dimensions   Processor Grid
@@ -174,7 +174,7 @@
    Local number of cell to store the grid ( nnrx ) =     262144
    Number of x-y planes for each processors: 
    nr3l =    64
-
+ 
    Smooth Real Mesh
    ----------------
    Global Dimensions   Local  Dimensions   Processor Grid
@@ -184,7 +184,7 @@
    Local number of cell to store the grid ( nnrx ) =     262144
    Number of x-y planes for each processors: 
    nr3sl =    64
-
+ 
    Small Box Real Mesh
    -------------------
    Global Dimensions   Local  Dimensions   Processor Grid
@@ -192,13 +192,13 @@
     10    10    10      10    10    10       1     1     1
    Array leading dimensions ( nr1x, nr2x, nr3x )   =     10    10    10
    Local number of cell to store the grid ( nnrx ) =       1000
-
+ 
    unit vectors of box grid cell
    in real space:                         in reciprocal space:
        3.1250    0.0000    0.0000              1.0000    0.0000    0.0000
        0.0000    3.1250    0.0000              0.0000    1.0000    0.0000
        0.0000    0.0000    3.1250              0.0000    0.0000    1.0000
-
+ 
    Reciprocal Space Mesh
    ---------------------
                 Large Mesh
@@ -217,19 +217,17 @@
 
    System geometry initialization
    ------------------------------
-
-   Scaled atomic positions                                from standard input
-   Species   1 atoms =    1
-    O       0.500000     0.500000     0.500000
-   Species   2 atoms =    2
-    H       0.586625     0.483785     0.500000
-    H       0.483785     0.586625     0.500000
+ 
+   Scaled positions from standard input
+   O    0.500000E+00  0.500000E+00  0.500000E+00
+   H    0.586625E+00  0.483785E+00  0.500000E+00
+   H    0.483785E+00  0.586625E+00  0.500000E+00
    ibrav =    1       cell parameters 
 
       20.00000       0.00000       0.00000
        0.00000      20.00000       0.00000
        0.00000       0.00000      20.00000
-
+ 
 
      !----------------------------------!
      !                                  !
@@ -241,19 +239,21 @@
 
    Pseudopotentials initialization
    -------------------------------
-  nlinit  nh(is), ngb, is, kkbeta, lmaxq =  8 243 1 519 3
-
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            8         243           1
+         519           3
+ 
                         qqq 
   -0.2814  -0.1752   0.0000   0.0000
   -0.1752  -0.1519   0.0000   0.0000
    0.0000   0.0000   3.4543  -1.8676
    0.0000   0.0000  -1.8676   0.9140
-
-  nlinit  nh(is), ngb, is, kkbeta, lmaxq =  1 243 2 271 1
-
+ 
+  nlinit  nh(is), ngb, is, kkbeta, lmaxq =            1         243           2
+         271           1
+ 
                         qqq 
    9.4958
-
+ 
 
 
    Common initialization
@@ -267,7 +267,7 @@
    6  indv=  4   ang. mom=  1
    7  indv=  4   ang. mom=  1
    8  indv=  4   ang. mom=  1
-
+ 
                         dion 
    1.1855  -0.0482   0.0000   0.0000
   -0.0482  -0.1194   0.0000   0.0000
@@ -276,7 +276,7 @@
 
    Specie:     2
    1  indv=  1   ang. mom=  0
-
+ 
                         dion 
    3.3279
  ------------------------DYNAMICS IN THE WANNIER BASIS--------------------------
@@ -284,34 +284,34 @@
  FICTITIOUS MASS PARAMETER USED FOR SPREAD OPTIMIZATION            =  1500.0
  TIME STEP USED FOR DAMPED DYNAMICS                                =  5.0000000
  DAMPING COEFFICIENT USED FOR WANNIER FUNCTION SPREAD OPTIMIZATION =  0.3000000
- 20 STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD
+          20 STEPS OF DAMPED MOLECULAR DYNAMICS FOR OPTIMIZATION OF THE SPREAD
  AVERAGE WANNIER FUNCTION SPREAD WRITTEN TO     FORT.24
- INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  /Users/giannozz/tmp//h2o_mol.spr
- WANNIER CENTERS WRITTEN TO                     /Users/giannozz/tmp//h2o_mol.wfc
+ INDIVIDUAL WANNIER FUNCTION SPREAD WRITTEN TO  /home/giannozz/tmp//h2o_mol.spr
+ WANNIER CENTERS WRITTEN TO                     /home/giannozz/tmp//h2o_mol.wfc
  SOME PERTINENT RUN-TIME INFORMATION WRITTEN TO FORT.27
  -------------------------------------------------------------------------------
-
- IBRAV SELECTED: 1
+ 
+ IBRAV SELECTED:           1
  WANNIER SETUP : check G vectors and weights
 inw = 1:   1   0   0   1.000000
 inw = 2:   0   1   0   1.000000
 inw = 3:   0   0   1   1.000000
- Translations to be done 3
- ibrav selected: 1
- 1 : 1 0 0
- 2 : 0 1 0
- 3 : 0 0 1
- Translation 1 for 8440 G vectors
- Translation 2 for 8440 G vectors
- Translation 3 for 8440 G vectors
-
+ Translations to be done           3
+ ibrav selected:           1
+           1 :           1           0           0
+           2 :           0           1           0
+           3 :           0           0           1
+ Translation           1 for        8440 G vectors
+ Translation           2 for        8440 G vectors
+ Translation           3 for        8440 G vectors
+ 
  GRID MAPPING DONE
  DYNAMICS IN THE PRESENCE OF AN EXTERNAL ELECTRIC FIELD
-
+ 
  POLARIZATION CONTRIBUTION OUTPUT TO FORT.28 IN THE FOLLOWING FORMAT
-
- EFX, EFY, EFZ, ELECTRIC ENTHANLPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)
-
+ 
+ EFX, EFY, EFZ, ELECTRIC ENTHALPY(ELECTRONIC), ELECTRIC ENTHALPY(IONIC)
+ 
  E0(x) =  0.0000000
  E0(y) =  0.0000000
  E0(z) =  0.0000000
@@ -319,8 +319,8 @@ inw = 3:   0   0   1   1.000000
  E1(y) =  0.0000000
  E1(z) =  0.0050000
  FIELD WILL BE TURNED ON ADIBATICALLY OVER   100 STEPS
-
-
+ 
+ 
    Short Legend and Physical Units in the Output
    ---------------------------------------------
    NFI    [int]          - step index
@@ -331,13 +331,10 @@ inw = 3:   0   0   1   1.000000
    ENTHAL [HARTREE A.U.] - Enthalpy ( ETOT + P * V )
    ECONS  [HARTREE A.U.] - Enthalpy + kinetic energy of ions and cell
    ECONT  [HARTREE A.U.] - Constant of motion for the CP lagrangian
+ 
 
-   ortho mmul, time for serial driver =   0.00001
-   ortho mmul, best time for paralle driver =   0.00001 with    1 procs
-   ortho diag, time for parallel and serial driver =   0.00005  0.00008
-
-   reading restart file: /Users/giannozz/tmp//h2o_mol_50.save
-   restart file read in    0.076 sec.
+   reading restart file: /home/giannozz/tmp//h2o_mol_50.save
+   restart file read in    0.043 sec.
 
 
    formf: eself=  30.31961
@@ -345,7 +342,7 @@ inw = 3:   0   0   1   1.000000
    formf: sum_g vps(g)=  -0.4490836 sum_g rhops(g)=  -4.2852036
    formf:     vps(g=0)=  -0.0000709     rhops(g=0)=  -0.0001250
    formf: sum_g vps(g)=  -0.7398336 sum_g rhops(g)=  -0.7142006
-
+ 
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
     1  0.00000    0.0    0.7   -17.20048   -17.20048   -17.20047   -17.20047  0.0000  0.0000  0.0000  0.0000
     2  0.00001    0.0    6.0   -17.20016   -17.20016   -17.20008   -17.20007  0.0000  0.0000  0.0000  0.0000
@@ -451,7 +448,7 @@ inw = 3:   0   0   1   1.000000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-
+ 
 
 
                 total energy =      -17.20337 Hartree a.u.
@@ -469,8 +466,9 @@ inw = 3:   0   0   1   1.000000
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -25.50  -12.80   -9.50   -7.19
-
-
+ 
+   Allocated memory (kb) =     52999
+ 
    CELL_PARAMETERS
    20.00000000    0.00000000    0.00000000
     0.00000000   20.00000000    0.00000000
@@ -482,36 +480,36 @@ inw = 3:   0   0   1   1.000000
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -0.00000000        -0.00000000        -0.00000000
-       -0.00000000        -0.00000000        -0.00000000
-       -0.00000000        -0.00000000        -0.00000000
+        0.00000000         0.00000000         0.00000000
+        0.00000000         0.00000000         0.00000000
+        0.00000000         0.00000000         0.00000000
    ATOMIC_POSITIONS
    O    0.997384E+01  0.997384E+01  0.100000E+02
    H    0.117766E+02  0.984081E+01  0.100003E+02
    H    0.984085E+01  0.117767E+02  0.999973E+01
-
+ 
    ATOMIC_VELOCITIES
    O   -0.914210E-04 -0.913682E-04  0.233414E-06
    H    0.827931E-03 -0.969419E-04  0.842079E-06
    H   -0.965636E-04  0.827887E-03 -0.270939E-05
-
+ 
    Forces acting on atoms (au):
    O   -0.176425E-01 -0.176238E-01  0.274729E-02
    H    0.331248E-01 -0.154807E-01 -0.134912E-02
    H   -0.154823E-01  0.331045E-01 -0.139817E-02
-
+ 
 
 
    Partial temperatures (for each ionic specie) 
    Species  Temp (K)   Mean Square Displacement (a.u.)
         1      51.29     0.0014
         2     266.63     0.0292
-
+ 
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   100  0.00019    0.0  194.8   -17.20337   -17.30364   -17.30086   -17.30067  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /Users/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.121 sec.
+   writing restart file: /home/giannozz/tmp//h2o_mol_51.save
+   restart file written in    0.185 sec.
 
   101  0.00028    0.0  220.0   -17.20373   -16.70398   -16.70084   -16.70057  0.0000  0.0000  0.0000  0.0000
   102  0.00029    0.0  243.8   -17.20410   -16.70436   -16.70089   -16.70060  0.0000  0.0000  0.0000  0.0000
@@ -617,7 +615,7 @@ inw = 3:   0   0   1   1.000000
 
    from rhoofr: total integrated electronic density
    in g-space =    8.000000   in r-space =   8.000000
-
+ 
 
 
                 total energy =      -17.20497 Hartree a.u.
@@ -635,8 +633,9 @@ inw = 3:   0   0   1   1.000000
    Eigenvalues (eV), kp =   1 , spin =  1
 
   -24.90  -13.13   -8.82   -7.07
-
-
+ 
+   Allocated memory (kb) =     52999
+ 
    CELL_PARAMETERS
    20.00000000    0.00000000    0.00000000
     0.00000000   20.00000000    0.00000000
@@ -648,36 +647,36 @@ inw = 3:   0   0   1   1.000000
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-       -0.00000000        -0.00000000        -0.00000000
-       -0.00000000        -0.00000000        -0.00000000
-       -0.00000000        -0.00000000        -0.00000000
+        0.00000000         0.00000000         0.00000000
+        0.00000000         0.00000000         0.00000000
+        0.00000000         0.00000000         0.00000000
    ATOMIC_POSITIONS
    O    0.999211E+01  0.999216E+01  0.100000E+02
    H    0.118289E+02  0.964196E+01  0.100024E+02
    H    0.964243E+01  0.118290E+02  0.999756E+01
-
+ 
    ATOMIC_VELOCITIES
    O   -0.823051E-04 -0.822689E-04  0.643465E-06
    H    0.103717E-02 -0.379607E-03  0.377913E-05
    H   -0.378725E-03  0.103776E-02 -0.892684E-05
-
+ 
    Forces acting on atoms (au):
    O   -0.445179E-02 -0.448405E-02  0.335873E-02
    H   -0.571082E-02  0.101833E-01 -0.167294E-02
    H    0.101626E-01 -0.569925E-02 -0.168579E-02
-
+ 
 
 
    Partial temperatures (for each ionic specie) 
    Species  Temp (K)   Mean Square Displacement (a.u.)
         1      41.58     0.0001
         2     468.23     0.0104
-
+ 
   nfi    ekinc  temph  tempp        etot      enthal       econs       econt    vnhh   xnhh0    vnhp   xnhp0
   200  0.00025    0.0  326.0   -17.20497   -17.30521   -17.30057   -17.30032  0.0000  0.0000  0.0000  0.0000
 
-   writing restart file: /Users/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.291 sec.
+   writing restart file: /home/giannozz/tmp//h2o_mol_51.save
+   restart file written in    0.119 sec.
 
 
 
@@ -686,7 +685,7 @@ inw = 3:   0   0   1   1.000000
    ekinc         :        0.00018       0.00018 (AU)
    ekin          :        7.82053       7.82053 (AU)
    epot          :      -29.53578     -29.53578 (AU)
-   totel energy  :      -17.20285     -17.20285 (AU)
+   total energy  :      -17.20285     -17.20285 (AU)
    temperature   :      201.05256     201.05256 (K )
    enthalpy      :      -16.90456     -16.90456 (AU)
    econs         :      -16.90170     -16.90170 (AU)
@@ -694,35 +693,38 @@ inw = 3:   0   0   1   1.000000
    volume        :     8000.00000    8000.00000 (AU)
 
 
-     initialize   :     3.60s CPU
-     total_time   :   282.09s CPU (     200 calls,   1.410 s avg)
-     formf        :     0.27s CPU
-     rhoofr       :    34.41s CPU (     200 calls,   0.172 s avg)
-     vofrho       :   171.20s CPU (     200 calls,   0.856 s avg)
-     calphi       :     0.68s CPU (     200 calls,   0.003 s avg)
-     ortho        :     1.60s CPU (     200 calls,   0.008 s avg)
-     updatc       :     0.15s CPU (     200 calls,   0.001 s avg)
-     newd         :     0.78s CPU (     200 calls,   0.004 s avg)
-     calbec       :     0.01s CPU (     201 calls,   0.000 s avg)
-     prefor       :     0.46s CPU (     401 calls,   0.001 s avg)
-     strucf       :     0.99s CPU (     201 calls,   0.005 s avg)
-     nlfl         :     0.00s CPU (     200 calls,   0.000 s avg)
-     nlfq         :     1.66s CPU (     200 calls,   0.008 s avg)
-     rhov         :     8.07s CPU (     200 calls,   0.040 s avg)
-     nlsm1        :     1.12s CPU (     601 calls,   0.002 s avg)
-     nlsm2        :     1.66s CPU (     200 calls,   0.008 s avg)
-     fft          :    55.14s CPU (    1800 calls,   0.031 s avg)
-     ffts         :    12.33s CPU (     400 calls,   0.031 s avg)
-     fftw         :    20.63s CPU (    1200 calls,   0.017 s avg)
-     fftb         :     1.45s CPU (   31914 calls,   0.000 s avg)
+     initialize   :     2.94s CPU
+     total_time   :   349.60s CPU (     200 calls,   1.748 s avg)
+     formf        :     0.38s CPU
+     rhoofr       :    72.15s CPU (     200 calls,   0.361 s avg)
+     vofrho       :   200.71s CPU (     200 calls,   1.004 s avg)
+     dforce       :    35.84s CPU (     400 calls,   0.090 s avg)
+     calphi       :     0.92s CPU (     200 calls,   0.005 s avg)
+     ortho        :     2.04s CPU (     200 calls,   0.010 s avg)
+     ortho_iter   :     0.01s CPU (     200 calls,   0.000 s avg)
+     rhoset       :     0.21s CPU (     200 calls,   0.001 s avg)
+     updatc       :     0.26s CPU (     200 calls,   0.001 s avg)
+     newd         :     1.15s CPU (     200 calls,   0.006 s avg)
+     calbec       :     0.00s CPU (     201 calls,   0.000 s avg)
+     prefor       :     0.80s CPU (     401 calls,   0.002 s avg)
+     strucf       :     1.26s CPU (     201 calls,   0.006 s avg)
+     nlfl         :     0.01s CPU (     200 calls,   0.000 s avg)
+     nlfq         :     2.54s CPU (     200 calls,   0.013 s avg)
+     rhov         :    16.10s CPU (     200 calls,   0.081 s avg)
+     nlsm1        :     1.49s CPU (     601 calls,   0.002 s avg)
+     nlsm2        :     2.53s CPU (     200 calls,   0.013 s avg)
+     fft          :   123.69s CPU (    1800 calls,   0.069 s avg)
+     ffts         :    27.41s CPU (     400 calls,   0.069 s avg)
+     fftw         :    47.78s CPU (    1200 calls,   0.040 s avg)
+     fftb         :     2.72s CPU (   31914 calls,   0.000 s avg)
      rsg          :     0.00s CPU (     200 calls,   0.000 s avg)
+ 
+ 
+ 
+     CP           :  5m58.42s CPU time,     6m25.16s wall time
 
-
-
-     CP           :  4m49.68s CPU time,     5m 9.44s wall time
-
-
-   This run was terminated on:  17:19: 6  20Nov2006            
+ 
+   This run was terminated on:   5:29:33   1Aug2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
