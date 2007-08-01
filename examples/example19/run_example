@@ -110,7 +110,6 @@ cat > h2o-mol1.in << EOF
     nbnd = 4,
     nelec = 8,
     ecutwfc = 80.0,
-    nr1b= 10, nr2b = 10, nr3b = 10,
     xc_type = 'BLYP'
  /
  &electrons
@@ -176,7 +175,6 @@ cat > h2o-mol2.in << EOF
     nbnd = 4,
     nelec = 8,
     ecutwfc = 80.0,
-    nr1b= 10, nr2b = 10, nr3b = 10,
     xc_type = 'BLYP'
  /
  &electrons
@@ -241,7 +239,6 @@ cat > h2o-mol3.in << EOF
     nbnd = 4,
     nelec = 8,
     ecutwfc = 80.0,
-    nr1b= 10, nr2b = 10, nr3b = 10,
     xc_type = 'BLYP'
  /
  &electrons
