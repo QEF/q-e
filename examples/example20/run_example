@@ -113,7 +113,6 @@ cat > nh3.in << EOF
 !    ecfixed = 68.0,
 !    qcutz = 68.0,
 !    q2sigma = 8.0,
-    nr1b= 10, nr2b = 10, nr3b = 10,
     xc_type = 'BLYP'
  /
  &electrons

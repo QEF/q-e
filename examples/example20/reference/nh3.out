@@ -10,7 +10,7 @@
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:21:56  31Jul2007               
+   This run was started on:  10:34:53   1Aug2007               
 
    Serial Build
 
@@ -204,20 +204,6 @@
    Number of x-y planes for each processors: 
    nr3sl =    72
  
-   Small Box Real Mesh
-   -------------------
-   Global Dimensions   Local  Dimensions   Processor Grid
-   .X.   .Y.   .Z.     .X.   .Y.   .Z.     .X.   .Y.   .Z.
-    10    10    10      10    10    10       1     1     1
-   Array leading dimensions ( nr1x, nr2x, nr3x )   =     10    10    10
-   Local number of cell to store the grid ( nnrx ) =       1000
- 
-   unit vectors of box grid cell
-   in real space:                         in reciprocal space:
-       1.6667    0.0000    0.0000              1.0000    0.0000    0.0000
-       0.0000    1.6667    0.0000              0.0000    1.0000    0.0000
-       0.0000    0.0000    1.6667              0.0000    0.0000    1.0000
- 
    Reciprocal Space Mesh
    ---------------------
                 Large Mesh
@@ -231,12 +217,12 @@
     1          10408          10408          10408
 
                 Small box Mesh
-   ngb =          231 not distributed to processors
+   ngb =            0 not distributed to processors
 
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :     52093112
+   dimension of the problem (byte/pe) :     52074632
 
 
    System geometry initialization
@@ -344,7 +330,7 @@
 
   -34.40  -18.09   -0.14    7.99
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -437,7 +423,7 @@
 
   -23.23  -13.34   -9.54   -2.60
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -530,7 +516,7 @@
 
   -21.73  -11.96   -9.89   -4.66
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -623,7 +609,7 @@
 
   -21.17  -11.45  -10.05   -5.39
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -716,7 +702,7 @@
 
   -20.95  -11.16  -10.19   -5.72
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -809,7 +795,7 @@
 
   -20.84  -10.98  -10.30   -5.87
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -902,7 +888,7 @@
 
   -20.79  -10.87  -10.37   -5.95
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -995,7 +981,7 @@
 
   -20.77  -10.80  -10.42   -5.99
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1088,7 +1074,7 @@
 
   -20.75  -10.75  -10.45   -6.01
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1181,7 +1167,7 @@
 
   -20.74  -10.72  -10.47   -6.02
  
-   Allocated memory (kb) =     28203
+   Allocated memory (kb) =     28067
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1226,7 +1212,7 @@
   100  0.00007    0.0    0.0   -11.71674   -11.71674   -11.71673   -11.71667  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /home/giannozz/tmp//nh3_mol_51.save
-   restart file written in    0.184 sec.
+   restart file written in    0.188 sec.
 
 
 
@@ -1243,32 +1229,32 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.69s CPU
-     main_loop    :   150.60s CPU (     100 calls,   1.506 s avg)
-     formf        :     1.34s CPU
-     rhoofr       :    13.08s CPU (     101 calls,   0.130 s avg)
-     vofrho       :   115.70s CPU (     101 calls,   1.146 s avg)
-     dforce       :    20.95s CPU (     202 calls,   0.104 s avg)
-     calphi       :     0.14s CPU (     101 calls,   0.001 s avg)
-     ortho        :     0.70s CPU (     101 calls,   0.007 s avg)
-     ortho_iter   :     0.01s CPU (     101 calls,   0.000 s avg)
-     rhoset       :     0.11s CPU (     101 calls,   0.001 s avg)
+     initialize   :     4.64s CPU
+     main_loop    :   145.76s CPU (     100 calls,   1.458 s avg)
+     formf        :     1.37s CPU
+     rhoofr       :    12.31s CPU (     101 calls,   0.122 s avg)
+     vofrho       :   111.26s CPU (     101 calls,   1.102 s avg)
+     dforce       :    21.22s CPU (     202 calls,   0.105 s avg)
+     calphi       :     0.20s CPU (     101 calls,   0.002 s avg)
+     ortho        :     0.76s CPU (     101 calls,   0.008 s avg)
+     ortho_iter   :     0.00s CPU (     101 calls,   0.000 s avg)
+     rhoset       :     0.12s CPU (     101 calls,   0.001 s avg)
      updatc       :     0.22s CPU (     101 calls,   0.002 s avg)
-     gram         :     0.00s CPU
-     prefor       :     0.05s CPU (     101 calls,   0.000 s avg)
-     strucf       :     0.91s CPU (     101 calls,   0.009 s avg)
-     nlsm1        :     0.03s CPU (     101 calls,   0.000 s avg)
-     nlsm2        :     0.18s CPU (     101 calls,   0.002 s avg)
-     fft          :    68.66s CPU (     808 calls,   0.085 s avg)
-     fftw         :    28.00s CPU (     606 calls,   0.046 s avg)
-     rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
+     gram         :     0.01s CPU
+     prefor       :     0.09s CPU (     101 calls,   0.001 s avg)
+     strucf       :     0.86s CPU (     101 calls,   0.009 s avg)
+     nlsm1        :     0.05s CPU (     101 calls,   0.000 s avg)
+     nlsm2        :     0.26s CPU (     101 calls,   0.003 s avg)
+     fft          :    64.59s CPU (     808 calls,   0.080 s avg)
+     fftw         :    27.64s CPU (     606 calls,   0.046 s avg)
+     rsg          :     0.00s CPU (     101 calls,   0.000 s avg)
  
  
  
-     CP           :  2m35.66s CPU time,     3m 5.43s wall time
+     CP           :  2m30.64s CPU time,     2m54.71s wall time
 
  
-   This run was terminated on:   4:25: 1  31Jul2007            
+   This run was terminated on:  10:37:48   1Aug2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
