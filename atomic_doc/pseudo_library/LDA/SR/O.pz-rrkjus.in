@@ -1,0 +1,20 @@
+ &input
+    title='O',
+    zed=8.0,
+    rel=1,
+    config='[He] 2s2.0 2p4.0 3d-2.0',
+    iswitch=3,
+    dft='LDA',
+ /
+ &inputp
+   lloc=2,
+   pseudotype=3,
+   file_pseudopw='O.pz-rrkjus.UPF',
+   author='ADC',
+ /
+5
+2S  1  0  2.00  0.00  1.40  1.60
+2S  1  0  0.00  0.05  1.40  1.60
+2P  2  1  4.00  0.00  1.40  1.60
+2P  2  1  0.00  0.05  1.40  1.60
+3D  3  2 -2.00  0.15  1.40  1.40

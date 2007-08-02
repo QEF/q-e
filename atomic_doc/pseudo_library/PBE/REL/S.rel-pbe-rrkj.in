@@ -1,0 +1,20 @@
+ &input
+    title='S',
+    zed=16.0,
+    rel=2,
+    config='[Ne] 3s2 3p4 3d-1'
+    iswitch=3,
+    dft='PBE',
+ /
+ &inputp
+   lloc=2,
+   pseudotype=2,
+   file_pseudopw='S.rel-pbe-rrkj.UPF',
+   author='ADC',
+ /
+5
+3S  1  0  2.00  0.00  1.90  1.90  0.50
+3P  2  1  2.00  0.00  2.10  2.10  0.50
+3P  2  1  2.00  0.00  2.10  2.10  1.50
+3D  3  2 -2.00  0.25  1.90  1.90  1.50
+3D  3  2 -2.00  0.25  1.90  1.90  2.50

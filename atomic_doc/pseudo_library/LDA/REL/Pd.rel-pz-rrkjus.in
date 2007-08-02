@@ -1,0 +1,24 @@
+ &input
+    zed=46.,
+    title='Pd',
+    rel=2,
+    config='[Kr] 4d9.0 5s1.0 5p0',
+    iswitch=3,
+    dft='LDA'
+ /
+ &inputp
+   lloc=0,
+   pseudotype=3,
+   file_pseudopw='Pd.rel-pz-rrkjus.UPF',
+   nlcc=.true.,
+   rcore=0.9,
+   author='ADC',
+ /
+7
+5P  2  1  0.00  0.00  2.40  2.40  0.5
+5P  2  1  0.00  0.00  2.40  2.40  1.5
+4D  3  2  4.00  0.00  1.80  2.40  1.5
+4D  3  2  0.00 -0.20  1.80  2.40  1.5
+4D  3  2  5.00  0.00  1.80  2.40  2.5
+4D  3  2  0.00 -0.20  1.80  2.40  2.5
+5S  1  0  1.00  0.00  2.40  2.40  0.5

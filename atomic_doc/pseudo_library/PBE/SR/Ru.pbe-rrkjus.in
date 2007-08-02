@@ -1,0 +1,21 @@
+ &input
+    title='Ru',
+    zed=44.,
+    rel=1,
+    config='[Kr] 4d6.0 5s2.0 5p0.0',
+    iswitch=3,
+    dft='PBE'
+ /
+ &inputp
+   lloc=0,
+   pseudotype=3,
+   file_pseudopw='Ru.pbe-rrkjus.UPF',
+   nlcc=.true.,
+   rcore=0.9,
+   author='ADC',
+ /
+4
+5P  2  1  0.00  0.70  2.40  2.40  1
+4D  3  2  6.00  0.00  1.90  2.20  1
+4D  3  2  0.00 -0.30  1.90  2.20  1
+5S  1  0  2.00  0.00  2.30  2.30  1

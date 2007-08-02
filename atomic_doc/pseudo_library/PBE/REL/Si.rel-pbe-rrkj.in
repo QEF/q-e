@@ -1,0 +1,20 @@
+ &input
+    title='Si',
+    zed=14.0,
+    rel=2,
+    config="[Ne] 3s2.0 3p2.0 3d-2.0"
+    iswitch=3,
+    dft='PBE',
+ /
+ &inputp
+   lloc=2,
+   pseudotype=2,
+   file_pseudopw='Si.rel-pbe-rrkj.UPF',
+   author='ADC',
+ /
+5
+3S  1  0  2.00  0.00  2.20  2.20  0.5
+3P  2  1  2.00  0.00  2.40  2.40  0.5
+3P  2  1  0.00  0.00  2.40  2.40  1.5
+3D  3  2 -2.00  0.20  2.40  2.40  1.5
+3D  3  2 -2.00  0.20  2.40  2.40  2.5

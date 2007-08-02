@@ -1,0 +1,20 @@
+ &input
+    title='Br'
+    zed=35.
+    rel=2,
+    config='[Ar] 3d10.0 4s2.0 4p5.0 4d-2.0'
+    iswitch=3,
+    dft='PBE'
+ /
+ &inputp
+   lloc=2,
+   pseudotype=2,
+   file_pseudopw='Br.rel-pbe-rrkj.UPF',
+   author='ADC',
+ /
+5
+4S  1  0  2.00  0.00  2.00  2.00  0.50
+4P  2  1  2.00  0.00  1.80  1.80  0.50
+4P  2  1  3.00  0.00  1.80  1.80  1.50
+4D  3  2 -2.00  0.20  1.80  1.80  1.50
+4D  3  2 -2.00  0.20  1.80  1.80  2.50

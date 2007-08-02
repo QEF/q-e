@@ -1,0 +1,20 @@
+ &input
+    title='Se'
+    zed=34.
+    rel=2,
+    config='[Ar] 3d10.0 4s2.0 4p4.0 4d-2.0'
+    iswitch=3,
+    dft='LDA'
+ /
+ &inputp
+   lloc=2,
+   pseudotype=2,
+   file_pseudopw='Se.rel-pz-rrkj.UPF',
+   author='ADC',
+ /
+5
+4S  1  0  2.00  0.00  2.00  2.00  0.50
+4P  2  1  2.00  0.00  2.20  2.20  0.50
+4P  2  1  2.00  0.00  2.20  2.20  1.50
+4D  3  2 -2.00  0.20  2.30  2.30  1.50
+4D  3  2 -2.00  0.20  2.30  2.30  2.50

@@ -1,0 +1,21 @@
+#!/bin/bash
+
+PWDIR='../../../../'
+work=./WORK
+. $PWDIR/examples/environment_variables
+BIN_DIR=$PWDIR/bin
+
+mkdir $work >& /dev/null
+rm -f $work/*
+mkdir PSEUDOPOTENTIALS >& /dev/null
+
+ld1_command="$PARA_PREFIX $BIN_DIR/ld1.x $PARA_POSTFIX"
+
+echo "ld1_command =" $ld1_command
+
+for atom in *.in ; do
+    $ld1_command < $atom > $work/$atom.out
+done
+
+mv *.UPF PSEUDOPOTENTIALS
+\rm -f ld1* 

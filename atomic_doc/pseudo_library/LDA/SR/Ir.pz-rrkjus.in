@@ -1,0 +1,21 @@
+ &input
+    title='Ir',
+    zed=77.,
+    rel=1,
+    config='[Xe] 4f14.0 5d7.0 6s2.0 6p0.0',
+    iswitch=3,
+    dft='LDA'
+ /
+ &inputp
+   lloc=0,
+   pseudotype=3,
+   file_pseudopw='Ir.pz-rrkjus.UPF',
+   nlcc=.true.,
+   rcore=0.9,
+   author='ADC',
+ /
+4
+6P  2  1  0.00 -0.10  3.60  3.60  1
+5D  3  2  7.00  0.00  1.90  2.30  1
+5D  3  2  0.00 -0.20  1.90  2.30  1
+6S  1  0  2.00  0.00  2.70  2.70  1

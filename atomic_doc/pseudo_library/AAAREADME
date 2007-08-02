@@ -1,0 +1,25 @@
+This library collects inputs for the atomic code ld1.x.
+The pseudopotentials are separated into four directories:
+
+LDA/REL contains fully relativistic LDA pseudopotentials.
+LDA/SR  contains scalar relativistic LDA pseudopotentials.
+PBE/REL contains fully relativistic PBE-GGA pseudopotentials.
+PBE/SR  contains scalar relativistic PBE-GGA pseudopotentials.
+
+Some of these inputs have been used to generate the pseudopotentials
+distributed with QUANTUM-ESPRESSO, others have been written 
+recently and need extensive tests. Please help to improve this
+library by testing these pseudopotentials, reporting strange or 
+unexpected results, or by adding missing pseudopotentials.
+
+These pseudopotentials are not optimized for systems under pressure.
+For systems with short bonds you may try to decrease the core radii.
+The pseudopotentials are not optimized with respect to the cut-off
+energy. Often you can create smoother pseudopotentials by increasing the
+core radii. The suggested cut-off for the kinetic energy is indicated in 
+the pseudopotential file. Note that this is intended as a high accuracy
+cut-off, often a smaller cut-off will suffice.
+
+Be careful, this library is still experimental. 
+
+ADC (August 2007)

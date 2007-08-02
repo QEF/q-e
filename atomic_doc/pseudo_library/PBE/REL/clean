@@ -1,0 +1,2 @@
+\rm -f *.UPF ld1* *.out CRASH >& /dev/null
+\rm -rf WORK PSEUDOPOTENTIALS >& /dev/null

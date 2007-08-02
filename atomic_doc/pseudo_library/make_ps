@@ -1,0 +1,11 @@
+!#/bin/bash
+
+cd LDA/REL
+. make_ps
+cd ../SR
+. make_ps
+cd ../../PBE/REL
+. make_ps
+cd ../SR
+. make_ps
+cd ../../

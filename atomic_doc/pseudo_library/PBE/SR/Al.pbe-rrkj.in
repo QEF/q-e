@@ -1,0 +1,18 @@
+ &input
+    title='Al',
+    zed=13.0,
+    rel=1,
+    config='[Ne] 3s2 3p1 3d-1'
+    iswitch=3,
+    dft='PBE',
+ /
+ &inputp
+   lloc=2,
+   pseudotype=2,
+   file_pseudopw='Al.pbe-rrkj.UPF',
+   author='ADC',
+ /
+3
+3S  1  0  2.00  0.00  2.40  2.40
+3P  2  1  1.00  0.00  2.70  2.70
+3D  3  2 -2.00  0.25  2.30  2.30

@@ -1,0 +1,19 @@
+ &input
+    title='Hg',
+    zed=80.0,
+    rel=1,
+    config='[Xe] 4f14. 5d9.5 6s2 6p0.5',
+    iswitch=3,
+    dft='LDA'
+ /
+ &inputp
+    lloc=0,
+    pseudotype=3,
+    file_pseudopw='Hg.pz-rrkjus.UPF',
+    author='ADC',
+ /
+4
+6P  2  1  0.50  0.00  3.20  3.20  1
+5D  3  2  9.50  0.00  1.80  2.40  1
+5D  3  2  0.00 -0.70  1.80  2.40  1
+6S  1  0  2.00  0.00  2.30  2.30  1
