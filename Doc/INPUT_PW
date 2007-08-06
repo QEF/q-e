@@ -141,10 +141,13 @@ wfcdir         CHARACTER ( by default same as outdir )
                the files necessary for restarting still go into 'outdir'
                (for now only works for stand alone PW )
 
-
 prefix         CHARACTER ( default = 'pwscf' )
                prepended to input/output filenames:
                prefix.wfc, prefix.rho, etc.
+
+lkpoint_dir    LOGICAL (default=.true.)
+               If .false. it does not open a subdirectory for each k_point 
+               in the prefix.save directory. 
 
 max_seconds    REAL ( default : 1.D+7, or 150 days, i.e. no time limit )
                jobs stops after max_seconds CPU time
