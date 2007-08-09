@@ -33,6 +33,7 @@ MODULES = \
 ../Modules/constants.o \
 ../Modules/constraints_module.o \
 ../Modules/control_flags.o \
+../Modules/descriptors.o \
 ../Modules/electrons_base.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
@@ -66,7 +67,8 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
-../Modules/xml_io_base.o
+../Modules/xml_io_base.o \
+../Modules/zhpev_drv.o
 
 PWOBJS = ../PW/libpw.a
 
