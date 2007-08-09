@@ -9,7 +9,7 @@ MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
        ../Modules/mp.o ../Modules/parallel_include.o ../Modules/constants.o
 SPLINE = ../Modules/splinelib.o
 FUNCT = ../Modules/functionals.o
-UPF_MOD =../Modules/read_upf.o ../flib/flush_unit.o ../flib/matches.o ../flib/error.o
+UPF_MOD =../Modules/read_upf.o ../flib/flush_unit.o ../flib/matches.o ../flib/error.o ../flib/gridsetup.o
 TLDEPS = mods libs libiotk
 
 all : tldeps cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \
