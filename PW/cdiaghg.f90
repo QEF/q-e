@@ -23,11 +23,13 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : use_para_diago, para_diago_dim
-  USE parallel_toolkit, ONLY : cdiagonalize
-  USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : npool, nproc_pool, me_pool, &
-                               root_pool, intra_pool_comm, &
-                               MPIME
+  USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier
+  USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
+                               intra_pool_comm, MPIME, init_ortho_group, &
+                               ortho_comm, np_ortho, me_ortho
+  USE zhpev_module,     ONLY : pzhpev_drv
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , &
+                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_
   !
   IMPLICIT NONE
   !
@@ -44,19 +46,23 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   COMPLEX(DP), INTENT(OUT) :: v(ldh,m)
     ! eigenvectors (column-wise)
   !
-  INTEGER                  :: lwork, nb, mm, info, i, j
+  INTEGER                  :: lwork, nb, mm, info, i, j, k
     ! mm = number of calculated eigenvectors
+  INTEGER                  :: nr, nc, ir, ic, nx, nrl
+    ! local block size
   REAL(DP)                 :: abstol
   INTEGER,     ALLOCATABLE :: iwork(:), ifail(:)
   REAL(DP),    ALLOCATABLE :: rwork(:), sdiag(:), hdiag(:)
   COMPLEX(DP), ALLOCATABLE :: work(:)
     ! various work space
-  COMPLEX(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:), vdum(:,:)
+  COMPLEX(DP), ALLOCATABLE :: sl(:,:), hl(:,:), vl(:,:)
+  COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
     ! work space used only in parallel diagonalization
   LOGICAL                  :: all_eigenvalues
  ! REAL(DP), EXTERNAL       :: DLAMCH
   INTEGER,  EXTERNAL       :: ILAENV
     ! ILAENV returns optimal block size "nb"
+  INTEGER                  :: desc( descla_siz_ )
   !
   !
   CALL start_clock( 'diaghg' )
@@ -64,62 +70,135 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     ALLOCATE( hdum( n, n ), sdum( n, n ), vdum( n, n) )
+     CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
      !
      ! ... input s and h are copied so that they are not destroyed
      !
-     sdum(:,:) = s(1:n,:)
-     hdum(:,:) = h(1:n,:)
-     !
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        ir  = desc( ilar_ )
+        ic  = desc( ilac_ )
+        nr  = desc( nlar_ )
+        nc  = desc( nlac_ )
+        nx  = desc( la_nx_ )
+        nrl = desc( la_nrl_ )
+        ALLOCATE( sl( nx , nx ) )
+        ALLOCATE( vl( nx , nx ) )
+        ALLOCATE( hl( nx , nx ) )
+        DO j = 1, nc
+           DO i = 1, nr
+              sl( i, j ) = s( i + ir - 1, j + ic - 1 )
+           END DO
+           DO i = nr+1, nx
+              sl( i, j ) = 0.0d0
+           END DO
+        END DO
+        DO j = nc + 1, nx
+           DO i = 1, nx
+              sl( i, j ) = 0.0d0
+           END DO
+        END DO
+        DO j = 1, nc
+           DO i = 1, nr
+              hl( i, j ) = h( i + ir - 1, j + ic - 1 )
+           END DO
+           DO i = nr+1, nx
+              hl( i, j ) = 0.0d0
+           END DO
+        END DO
+        DO j = nc + 1, nx
+           DO i = 1, nx
+              hl( i, j ) = 0.0d0
+           END DO
+        END DO
+     END IF
+
      CALL start_clock( 'choldc' )
      !
-     ! ... Cholesky decomposition of sdum ( L is stored in sdum )
+     ! ... Cholesky decomposition of sl ( L is stored in sl )
      !
-     CALL para_zcholdc( n, sdum, n, intra_pool_comm )
-    ! CALL ZPOTRF( 'L', n, sdum, n, info )
-    ! FORALL( i = 1:n, j = 1:n, j > i ) sdum(i,j) = ZERO
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL pzpotf( sl, nx, n, desc )
+        !
+     END IF
      !
      CALL stop_clock( 'choldc' )
      !
-     ! ... L is inverted ( sdum = L^-1 )
+     ! ... L is inverted ( sl = L^-1 )
      !
      CALL start_clock( 'inversion' )
      !
-     CALL para_ztrtri( n, sdum, n, intra_pool_comm )
-    ! CALL ZTRTRI( 'L', 'N', n, sdum, n, info )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL pztrtri( sl, nx, n, desc )
+        !
+     END IF
      !
      CALL stop_clock( 'inversion' )
      !
-     ! ... vdum = L^-1*H
+     ! ... vl = L^-1*H
      !
      CALL start_clock( 'paragemm' )
      !
-     CALL para_zgemm( 'N', 'N', n, n, n, ONE, sdum, &
-                      n, hdum, n, ZERO, vdum, n, intra_pool_comm )
-    ! CALL ZGEMM( 'N', 'N', n, n, n, ONE, sdum, n, hdum, n, ZERO, vdum, n )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_zmm_cannon( 'N', 'N', n, ONE, sl, nx, hl, nx, ZERO, vl, nx, desc )
+        !
+     END IF
      !
-     ! ... hdum = ( L^-1*H )*(L^-1)^T
+     ! ... hl = ( L^-1*H )*(L^-1)^T
      !
-     CALL para_zgemm( 'N', 'C', n, n, n, ONE, vdum, n, &
-                      sdum, n, ZERO, hdum, n, intra_pool_comm )
-    ! CALL ZGEMM( 'N', 'C', n, n, n, ONE, vdum, n, sdum, n, ZERO, hdum, n )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_zmm_cannon( 'N', 'C', n, ONE, vl, nx, sl, nx, ZERO, hl, nx, desc )
+        !
+     END IF
      !
      CALL stop_clock( 'paragemm' )
      !
-     CALL cdiagonalize( 1, hdum, n, e, vdum, n, n, &
-                        nproc_pool, me_pool, intra_pool_comm )
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        ! 
+        !  Compute local dimension of the cyclically distributed matrix
+        !
+        ALLOCATE( diag( nrl, n ) )
+        ALLOCATE( vv( nrl, n ) )
+        !
+        CALL blk2cyc_zredist( n, diag, nrl, hl, nx, desc )
+        !
+        CALL pzhpev_drv( 'V', diag, nrl, e, vv, nrl, nrl, n, &
+             desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+        !
+        CALL cyc2blk_zredist( n, vv, nrl, vl, nx, desc )
+        !
+        DEALLOCATE( diag )
+        DEALLOCATE( vv )
+        !
+     END IF
      !
      ! ... v = (L^T)^-1 v
      !
      CALL start_clock( 'paragemm' )
      !
-     CALL para_zgemm( 'C', 'N', n, m, n, ONE, sdum, n, &
-                      vdum, n, ZERO, v, ldh, intra_pool_comm )
-    ! CALL ZGEMM( 'C', 'N', n, m, n, ONE, sdum, n, vdum, n, ZERO, v, ldh )
+     v(1:n,1:n) = 0.0d0
+     !
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_zmm_cannon( 'C', 'N', n, ONE, sl, nx, vl, nx, ZERO, hl, nx, desc )
+        !
+        DO j = 1, nc
+           DO i = 1, nr
+              v( i + ir - 1, j + ic - 1 ) = hl( i, j )
+           END DO
+        END DO
+        !
+        DEALLOCATE( sl, vl, hl )
+        !
+     END IF
+     !
+     CALL mp_bcast( e, root_pool, intra_pool_comm )
+     CALL mp_sum( v, intra_pool_comm )
      !
      CALL stop_clock( 'paragemm' )
-     !
-     DEALLOCATE( vdum, sdum, hdum )
      !
   ELSE
      !

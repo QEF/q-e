@@ -19,7 +19,7 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
   USE mp_global,        ONLY : nproc, npool, nproc_pool, me_pool, &
                                root_pool, intra_pool_comm, my_image_id
   USE mp,               ONLY : mp_bcast
-  USE parallel_toolkit, ONLY : diagonalize
+  USE dspev_module,     ONLY : diagonalize
   !
   IMPLICIT NONE
   !

@@ -65,6 +65,7 @@ SUBROUTINE setup()
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
                                  use_para_diago
+  USE control_flags,      ONLY : para_diago_dim   ! debug
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : zp, psd, nbeta, jjj, tvanp
@@ -798,10 +799,10 @@ SUBROUTINE check_para_diag_efficiency()
   !
   USE kinds,            ONLY : DP
   USE wvfct,            ONLY : nbnd, nbndx, gamma_only
-  USE control_flags,    ONLY : use_para_diago, para_diago_dim, isolve
+  USE control_flags,    ONLY : use_para_diago, para_diago_dim, isolve, ortho_para
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE random_numbers,   ONLY : rranf
-  USE mp_global,        ONLY : nproc_pool, me_pool, intra_pool_comm
+  USE mp_global,        ONLY : nproc_pool, me_pool, intra_pool_comm, init_ortho_group
   USE mp,               ONLY : mp_bcast, mp_barrier
   !
   IMPLICIT NONE
@@ -815,8 +816,24 @@ SUBROUTINE check_para_diag_efficiency()
   !
   REAL(DP), EXTERNAL :: scnds
   !
-  !
   use_para_diago = .FALSE.
+  !
+  !  here we initialize the sub group of processors that will take part
+  !  in the matrix diagonalization. 
+  !  NOTE that the maximum number of processors could not be the optimal one,
+  !  and ortho_para input keyword can be used to force a given number of proc
+  !
+  IF( ortho_para < 1 ) THEN
+     ! 
+     !  use all the available processors
+     !
+     CALL init_ortho_group( nproc_pool, intra_pool_comm )
+     !
+  ELSE
+     !
+     CALL init_ortho_group( ortho_para, intra_pool_comm )
+     !
+  END IF
   !
   IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
   !
@@ -958,6 +975,9 @@ SUBROUTINE check_para_diag_efficiency()
      t_incr_old = t_incr
      !
   END DO dim_loop
+  !
+  ! use_para_diago = .TRUE.  !  debug
+  ! para_diago_dim = 100     !  debug
   !
   IF ( ionode ) THEN
      !

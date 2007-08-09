@@ -265,6 +265,8 @@ MODULES = \
 ../Modules/constants.o \
 ../Modules/constraints_module.o \
 ../Modules/control_flags.o \
+../Modules/descriptors.o \
+../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
@@ -311,7 +313,8 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
-../Modules/xml_io_base.o
+../Modules/xml_io_base.o \
+../Modules/zhpev_drv.o 
 
 TLDEPS=bindir mods libs libiotk
 

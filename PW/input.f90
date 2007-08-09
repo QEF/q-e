@@ -141,6 +141,7 @@ SUBROUTINE iosys()
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
                             use_para_diago
+  USE control_flags, ONLY : ortho_para_ => ortho_para
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
   !
@@ -212,6 +213,7 @@ SUBROUTINE iosys()
                                diago_david_ndim, diago_diis_ndim,          &
                                diagonalization, diago_full_acc,            &
                                startingwfc, startingpot
+  USE input_parameters, ONLY : ortho_para
   !
   ! ... IONS namelist
   !
@@ -851,6 +853,8 @@ SUBROUTINE iosys()
      david = diago_david_ndim
      !
      use_para_diago = .TRUE.
+     !
+     ortho_para_ = ortho_para
      !
   CASE DEFAULT
      !

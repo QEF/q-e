@@ -20,7 +20,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : use_para_diago, para_diago_dim
-  USE parallel_toolkit, ONLY : diagonalize
+  USE dspev_module,     ONLY : diagonalize
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, &
                                root_pool, intra_pool_comm
