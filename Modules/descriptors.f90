@@ -64,11 +64,35 @@
 
    !------------------------------------------------------------------------
    !
+   SUBROUTINE descla_local_dims( i2g, nl, n, nx, np, me )
+      IMPLICIT NONE
+      INTEGER, INTENT(OUT) :: i2g  !  global index of the first local element
+      INTEGER, INTENT(OUT) :: nl   !  local number of elements
+      INTEGER, INTENT(IN)  :: n    !  number of actual element in the global array
+      INTEGER, INTENT(IN)  :: nx   !  dimension of the global array (nx>=n) to be distributed
+      INTEGER, INTENT(IN)  :: np   !  number of processors
+      INTEGER, INTENT(IN)  :: me   !  taskid for which i2g and nl are computed
+      !
+      !  note that we can distribute a global array which is larger than the
+      !  number of actual elements. This could be required for performance
+      !  reasons, and to have an equal partition of matrix having different size
+      !  like matrixes of spin-up and spin-down 
+      !
+      nl  = ldim_block( nx, np, me )
+      i2g = gind_block( 1, nx, np, me )
+      IF( i2g + nl - 1 > n ) nl = n - i2g + 1
+      RETURN
+      !
+   END SUBROUTINE descla_local_dims
+   !
+   !
    SUBROUTINE descla_init( desc, n, nx, np, me, comm )
       !
       IMPLICIT NONE  
       INTEGER, INTENT(OUT) :: desc(:)
-      INTEGER, INTENT(IN)  :: n, nx
+      INTEGER, INTENT(IN)  :: n   !  the size of this matrix
+      INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing 
+                                  !  this descriptor or the same data distribution
       INTEGER, INTENT(IN)  :: np(2), me(2), comm
       INTEGER  :: ir, nr, ic, nc, lnode, nlax, nrl, nrlx
       INTEGER  :: ip, npp
@@ -77,7 +101,7 @@
          CALL errore( ' descla_init ', ' only square grid of proc are allowed ', 2 )
       END IF
 
-      IF( me(1) >= 0 ) THEN
+      IF( me(1) >= 0 .AND. me(2) >= 0 .AND. me(1) < np(1) .AND. me(2) < np(2) ) THEN
          !
          nr = ldim_block( nx, np(1), me(1) )
          nc = ldim_block( nx, np(2), me(2) )
@@ -133,7 +157,7 @@
 
       !  Compute local dimension of the cyclically distributed matrix
       !
-      IF( me(1) >= 0 ) THEN
+      IF( me(1) >= 0 .AND. me(1) < np(1) ) THEN
          nrl  = ldim_cyclic( n, npp, desc( la_me_ ) )
       ELSE
          nrl = 1

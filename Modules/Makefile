@@ -14,6 +14,7 @@ constants.o \
 constraints_module.o \
 control_flags.o \
 descriptors.o \
+dspev_drv.o \
 electrons_base.o \
 energies.o \
 fft_base.o \
@@ -68,7 +69,8 @@ wave_base.o \
 wavefunctions.o \
 wannier.o \
 xml_input.o \
-xml_io_base.o
+xml_io_base.o \
+zhpev_drv.o \
 
 all : $(MODULES)
 

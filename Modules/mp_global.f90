@@ -113,7 +113,7 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
   ! ... This routine initialize the pool :  MPI division in pools and images
   !
-  USE mp,        ONLY : mp_barrier, mp_bcast, mp_group
+  USE mp,        ONLY : mp_barrier, mp_bcast
   USE parallel_include
   !
   IMPLICIT NONE
@@ -206,7 +206,7 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
 #endif
   !
-  CALL init_ortho_group( nproc_image, me_image, intra_image_comm )
+  CALL init_ortho_group( nproc_pool, intra_pool_comm )
   !
   IF( MOD( nproc_image, nogrp ) /= 0 ) &
       CALL errore( " init_pool ", " nogrp should be a divisor of nproc_image ", 1 )
@@ -218,50 +218,66 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
 END SUBROUTINE init_pool
 !
 !
-SUBROUTINE init_ortho_group( nproc_try, me_try, comm_try )
+SUBROUTINE init_ortho_group( nproc_try, comm_try )
    !
-   USE mp, ONLY : mp_group_free, mp_group
+   USE mp, ONLY : mp_group_free, mp_comm_group, mp_group_create, mp_comm_create, &
+                  mp_comm_free
    !
    IMPLICIT NONE
     
-   INTEGER, INTENT(IN) :: nproc_try, me_try, comm_try
+   INTEGER, INTENT(IN) :: nproc_try, comm_try
     
    LOGICAL, SAVE :: first = .true.
-   INTEGER :: np_list( nproc_try )
-   INTEGER :: i
+   INTEGER :: ierr, color, key, me_try, newid, nproc_all
     
 #if defined __MPI
+
+   CALL MPI_COMM_RANK( comm_try, me_try, ierr )
+   CALL MPI_COMM_SIZE( comm_try, nproc_all, ierr )
+
+   IF( nproc_try > nproc_all ) THEN
+      CALL errore( " init_ortho_group ", " argument 1 out of range ", nproc_try )
+   END IF
 
    IF( .NOT. first ) THEN
       !  
       !  free resources associated to the communicator
       !
-      IF( me_ortho(1) >= 0 ) CALL mp_group_free( ortho_comm )
+      CALL mp_comm_free( ortho_comm )
       !
    END IF
 
    !  find the square closer (but lower) to nproc_try
    !
-   np_ortho = INT( SQRT( DBLE( nproc_try ) + 0.1_DP ) )
-
+   CALL grid2d_dims( 'S', nproc_try, np_ortho(1), np_ortho(2) )
+   !
    !  here we choose the first processors, but on some machine other choices may be better
    !
-   do i = 1, np_ortho(1) * np_ortho(2)
-      np_list( i ) = i - 1
-   end do
-
+   IF( me_try < np_ortho(1) * np_ortho(2) ) THEN
+      color = 1
+   ELSE 
+      color = 0
+   END IF
+   !
+   key   = me_try
+   !
    !  initialize the communicator for the new group
    !
-   CALL mp_group( np_list, np_ortho(1) * np_ortho(2), comm_try, ortho_comm )
+   CALL MPI_COMM_SPLIT( comm_try, color, key, ortho_comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " init_ortho_group ", " error splitting communicator ", ierr )
    !
    !  Computes coordinates of the processors, in row maior order
    !
-   if( me_try <  np_ortho(1) * np_ortho(2) ) then
-       me_ortho(1) = me_try / np_ortho(1)
-       me_ortho(2) = MOD( me_try, np_ortho(1) )
+   CALL MPI_COMM_RANK( ortho_comm, newid, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " init_ortho_group ", " error in getting proc rank ", ierr )
+   !
+   if( color == 1 ) then
+       CALL GRID2D_COORDS( 'R', newid, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
    else
-       me_ortho(1) = -1
-       me_ortho(2) = -1
+       me_ortho(1) = newid + np_ortho(1) * np_ortho(2)
+       me_ortho(2) = newid + np_ortho(1) * np_ortho(2)
    endif
 
 #endif

@@ -21,10 +21,11 @@
       !
       IMPLICIT NONE
 
-      PUBLIC :: mp_start, mp_end, mp_env, mp_group, mp_cart_create, &
+      PUBLIC :: mp_start, mp_end, mp_env, &
         mp_bcast, mp_stop, mp_sum, mp_max, mp_min, mp_rank, mp_size, &
         mp_gather, mp_get, mp_put, mp_barrier, mp_report, mp_group_free, &
-        mp_root_sum
+        mp_root_sum, mp_comm_free, mp_comm_create, mp_comm_group, mp_group_create, &
+        mp_comm_split
 !
       INTERFACE mp_bcast
 #if defined __T3E
@@ -208,69 +209,94 @@
 
         RETURN
       END SUBROUTINE mp_env
+
 !------------------------------------------------------------------------------!
 !..mp_group
-      SUBROUTINE mp_group(group_list, group_size, old_comm, new_comm)
+
+      SUBROUTINE mp_comm_group( comm, group )
+         IMPLICIT NONE
+         INTEGER, INTENT (IN) :: comm
+         INTEGER, INTENT (OUT) :: group
+         INTEGER :: ierr
+         ierr = 0
+#if defined(__MPI)
+         CALL mpi_comm_group( comm, group, ierr )
+         IF (ierr/=0) CALL mp_stop( 8009 )
+#endif
+      END SUBROUTINE  mp_comm_group
+
+      SUBROUTINE mp_comm_split( old_comm, color, key, new_comm )
+         IMPLICIT NONE
+         INTEGER, INTENT (IN) :: old_comm
+         INTEGER, INTENT (IN) :: color, key
+         INTEGER, INTENT (OUT) :: new_comm
+         INTEGER :: ierr
+         ierr = 0
+#if defined(__MPI)
+         CALL MPI_COMM_SPLIT( old_comm, color, key, new_comm, ierr )
+         IF (ierr/=0) CALL mp_stop( 8009 )
+#endif  
+      END SUBROUTINE  mp_comm_split
+
+
+      SUBROUTINE mp_group_create( group_list, group_size, old_grp, new_grp )
         IMPLICIT NONE
-        INTEGER, INTENT (IN) :: group_list(:), group_size, old_comm
+        INTEGER, INTENT (IN) :: group_list(:), group_size, old_grp
+        INTEGER, INTENT (OUT) :: new_grp
+        INTEGER :: ierr
+
+        ierr = 0
+        new_grp = old_grp
+#if defined(__MPI)
+        CALL mpi_group_incl( old_grp, group_size, group_list, new_grp, ierr )
+        IF (ierr/=0) CALL mp_stop( 8010 )
+#endif
+      END SUBROUTINE mp_group_create
+
+!------------------------------------------------------------------------------!
+      SUBROUTINE mp_comm_create( old_comm, new_grp, new_comm )
+        IMPLICIT NONE
+        INTEGER, INTENT (IN) :: old_comm
+        INTEGER, INTENT (IN) :: new_grp
         INTEGER, INTENT (OUT) :: new_comm
-        INTEGER :: base, newgroup, ierr
+        INTEGER :: ierr
 
         ierr = 0
         new_comm = old_comm
 #if defined(__MPI)
-        CALL mpi_comm_group(old_comm,base,ierr)
-        IF (ierr/=0) CALL mp_stop( 8009 )
-        CALL mpi_group_incl(base,group_size,group_list,newgroup,ierr)
-        IF (ierr/=0) CALL mp_stop( 8010 )
-        CALL mpi_comm_create(old_comm,newgroup,new_comm,ierr)
+        CALL mpi_comm_create( old_comm, new_grp, new_comm, ierr )
         IF (ierr/=0) CALL mp_stop( 8011 )
 #endif
-      END SUBROUTINE mp_group
+      END SUBROUTINE mp_comm_create
+
 !------------------------------------------------------------------------------!
 !..mp_group_free
-      SUBROUTINE mp_group_free( comm )
+      SUBROUTINE mp_group_free( group )
         IMPLICIT NONE
-        INTEGER, INTENT (IN) :: comm
-        INTEGER :: base, ierr
+        INTEGER, INTENT (INOUT) :: group
+        INTEGER :: ierr
         ierr = 0
 #if defined(__MPI)
-        CALL mpi_comm_group( comm, base, ierr )
-        IF (ierr/=0) CALL mp_stop( 8012 )
-        CALL mpi_comm_free( comm, ierr )
-        IF (ierr/=0) CALL mp_stop( 8013 )
-        CALL mpi_group_free( base, ierr )
+        CALL mpi_group_free( group, ierr )
         IF (ierr/=0) CALL mp_stop( 8014 )
 #endif
       END SUBROUTINE mp_group_free
 !------------------------------------------------------------------------------!
-!..mp_cart_create
-      SUBROUTINE mp_cart_create(comm_old,ndims,dims,pos,comm_cart)
-        IMPLICIT NONE
-        INTEGER, INTENT (IN) :: comm_old, ndims
-        INTEGER, INTENT (OUT) :: dims(:), pos(:), comm_cart
-        INTEGER :: ierr, nodes
-        LOGICAL :: period(1:ndims), reorder
 
-        ierr = 0
-        dims(1:ndims) = 1
-        pos(1:ndims) = 1
-        comm_cart = comm_old
+      SUBROUTINE mp_comm_free( comm )
+         IMPLICIT NONE
+         INTEGER, INTENT (INOUT) :: comm
+         INTEGER :: ierr
+         ierr = 0
 #if defined(__MPI)
-        dims(1:ndims) = 0
-        CALL mpi_comm_size(comm_old,nodes,ierr)
-        IF (ierr/=0) CALL mp_stop( 8015 )
-        CALL mpi_dims_create(nodes,ndims,dims,ierr)
-        IF (ierr/=0) CALL mp_stop( 8016 )
-        reorder = .TRUE.
-        period = .TRUE.
-        CALL mpi_cart_create(comm_old,ndims,dims,period,reorder,comm_cart, ierr)
-        IF (ierr/=0) CALL mp_stop( 8017 )
-        CALL mpi_cart_get(comm_cart,ndims,dims,period,pos,ierr)
-        IF (ierr/=0) CALL mp_stop( 8018 )
+         IF( comm /= MPI_COMM_NULL ) THEN
+            CALL mpi_comm_free( comm, ierr )
+            IF (ierr/=0) CALL mp_stop( 8013 )
+         END IF
 #endif
-      END SUBROUTINE mp_cart_create
-!
+         RETURN
+      END SUBROUTINE mp_comm_free
+
 !------------------------------------------------------------------------------!
 !..mp_bcast
 

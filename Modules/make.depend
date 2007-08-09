@@ -40,6 +40,9 @@ constraints_module.o : ions_base.o
 constraints_module.o : kind.o
 control_flags.o : kind.o
 control_flags.o : parameters.o
+dspev_drv.o : io_global.o
+dspev_drv.o : kind.o
+dspev_drv.o : parallel_include.o
 electrons_base.o : constants.o
 electrons_base.o : control_flags.o
 electrons_base.o : io_global.o
@@ -259,8 +262,12 @@ xml_io_base.o : kind.o
 xml_io_base.o : mp.o
 xml_io_base.o : mp_global.o
 xml_io_base.o : mp_wave.o
+zhpev_drv.o : io_global.o
+zhpev_drv.o : kind.o
+zhpev_drv.o : parallel_include.o
 basic_algebra_routines.o : ../include/f_defs.h
 constraints_module.o : ../include/f_defs.h
+dspev_drv.o : ../include/f_defs.h
 fft_base.o : ../include/f_defs.h
 fft_scalar.o : ../include/f_defs.h
 fft_scalar.o : ../include/fft_defs.h
@@ -273,3 +280,4 @@ path_reparametrisation.o : ../include/f_defs.h
 ptoolkit.o : ../include/f_defs.h
 wannier.o : ../include/f_defs.h
 wave_base.o : ../include/f_defs.h
+zhpev_drv.o : ../include/f_defs.h
