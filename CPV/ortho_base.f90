@@ -12,9 +12,7 @@ MODULE orthogonalize_base
 
 
       USE kinds
-      USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv, &
-                                  pzhpev_drv, zhpev_drv, &
-                                  rep_matmul_drv
+      USE dspev_module, ONLY: pdspev_drv, dspev_drv
 
       IMPLICIT NONE
 
@@ -30,8 +28,6 @@ MODULE orthogonalize_base
       PARAMETER ( mcone = (-1.0d0, 0.0d0) )
       REAL(DP) :: small = 1.0d-14
       LOGICAL :: use_parallel_diag 
-
-      REAL(DP), PUBLIC :: ortho_para = 0
 
       PUBLIC :: sigset
       PUBLIC :: tauset
@@ -150,7 +146,7 @@ CONTAINS
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image
       USE mp_global,   ONLY: np_ortho, me_ortho, ortho_comm
       USE io_global,   ONLY: ionode, stdout
-      USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
+      USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
       USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , &
                              ilar_ , ilac_
@@ -260,9 +256,10 @@ CONTAINS
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image, &
                              ortho_comm, np_ortho, me_ortho, init_ortho_group
       USE io_global,   ONLY: ionode, stdout
-      USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier, mp_group, mp_group_free
+      USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
       USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_
+      USE control_flags, ONLY: ortho_para
       !
       IMPLICIT NONE
       !
@@ -304,7 +301,7 @@ CONTAINS
 
       DO np = nps, npx
 
-         CALL init_ortho_group( np * np, me_image, intra_image_comm )
+         CALL init_ortho_group( np * np, intra_image_comm )
 
          CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
 
@@ -360,7 +357,7 @@ CONTAINS
 
 #endif
 
-      CALL init_ortho_group( npbest*npbest, me_image, intra_image_comm )
+      CALL init_ortho_group( npbest*npbest, intra_image_comm )
 
       RETURN
 
@@ -735,7 +732,8 @@ CONTAINS
             ir = desc_ip( ilar_ )
             ic = desc_ip( ilac_ )
             !
-            root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ ) 
+            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
+                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
 
             CALL DGEMM( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
                         cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
@@ -783,7 +781,6 @@ CONTAINS
          IF( nvb > 0 ) THEN
             CALL DGEMM( 'T', 'N', nr, nc, nkbus, -1.0d0, becp( 1, ist+ir-1 ), &
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
-                        !qbecp( 1, ist + ic - 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
          IF(iprsta.GT.4) THEN
@@ -870,7 +867,8 @@ CONTAINS
             ir = desc_ip( ilar_ )
             ic = desc_ip( ilac_ )
             !
-            root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ )
+            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
+                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
 
             CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                   cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
@@ -997,7 +995,8 @@ CONTAINS
             ir = desc_ip( ilar_ )
             ic = desc_ip( ilac_ )
             !
-            root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ )
+            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
+                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
             !
             !  All processors contribute to the tau block of processor (ipr,ipc)
             !  with their own part of wavefunctions

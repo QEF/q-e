@@ -15,7 +15,7 @@
       use kinds,             only : DP
       use io_global,         only : stdout
       use constants,         only : autoev
-      use parallel_toolkit,  only : dspev_drv
+      use dspev_module,      only : dspev_drv
       USE sic_module,        only : self_interaction
       USE cp_main_variables, only : nlax
       USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_

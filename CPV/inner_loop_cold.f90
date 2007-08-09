@@ -76,7 +76,7 @@
       USE descriptors,       ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , la_me_ , la_nrl_
-      USE parallel_toolkit,  ONLY: pdspev_drv, dspev_drv
+      USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 
 
       !
@@ -590,7 +590,7 @@
                                    descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , &
                                    la_me_ , la_nrl_ 
-      USE parallel_toolkit,  ONLY: pdspev_drv, dspev_drv
+      USE dspev_module,   ONLY: pdspev_drv, dspev_drv
 
 
       !

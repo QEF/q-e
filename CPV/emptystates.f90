@@ -328,7 +328,7 @@
       USE check_stop,           ONLY : check_stop_now
       USE cp_interfaces,        ONLY : writeempty, readempty, gram_empty, ortho, &
                                        wave_rand_init, elec_fakekine, crot, dforce
-      USE mp,                   ONLY : mp_group_free, mp_group
+      USE mp,                   ONLY : mp_comm_split, mp_comm_free
       USE mp_global,            ONLY : intra_image_comm, me_image
       !
       IMPLICIT NONE
@@ -357,8 +357,7 @@
       REAL(DP),    ALLOCATABLE :: lambda_rep(:,:)
       INTEGER,     ALLOCATABLE :: ispin_emp(:)
       !
-      INTEGER, ALLOCATABLE :: np_list(:)
-      INTEGER, SAVE :: np_emp(2), me_emp(2), emp_comm
+      INTEGER, SAVE :: np_emp(2), me_emp(2), emp_comm, color
       INTEGER, SAVE :: desc_emp( descla_siz_ , 2 )
       LOGICAL, SAVE :: first = .true.
       !
@@ -372,25 +371,23 @@
       !  Here set the group of processors for empty states
       !
       IF( .NOT. first ) THEN
-         IF( me_emp(1) >= 0 ) CALL mp_group_free( emp_comm )
+         CALL mp_comm_free( emp_comm )
       END IF 
       !
       np_emp = 1
-      !
-      ALLOCATE( np_list( np_emp(1) * np_emp(2) ) )
-      !
-      do i = 1, np_emp(1) * np_emp(2)
-         np_list( i ) = i - 1
-      end do
-      !
-      CALL mp_group( np_list, np_emp(1) * np_emp(2), intra_image_comm, emp_comm )
-      !
+      IF( me_image < np_emp(1) * np_emp(2) ) THEN
+         color = 1
+      ELSE
+         color = 0
+      END IF
+      CALL mp_comm_split( intra_image_comm, color, me_image, emp_comm )
+      
       if( me_image <  np_emp(1) * np_emp(2) ) then
           me_emp(1) = me_image / np_emp(1)
           me_emp(2) = MOD( me_image, np_emp(1) ) 
       else
-          me_emp(1) = -1
-          me_emp(2) = -1
+          me_emp(1) = me_image
+          me_emp(2) = me_image
       endif
       !
       first = .FALSE.

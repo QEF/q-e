@@ -11,8 +11,8 @@ MODULE guess
 
 ! ...   declare modules
         USE kinds
-        USE parallel_toolkit, ONLY: rep_matmul_drv, &
-          diagonalize, cdiagonalize
+        USE parallel_toolkit, ONLY: rep_matmul_drv
+        USE dspev_module,     ONLY: diagonalize
 
         IMPLICIT NONE
         SAVE

@@ -292,7 +292,7 @@ MODULE input
                                     efield2_     => efield2
      !
      USE cvan,               ONLY : nvb
-     USE orthogonalize_base, ONLY : ortho_para_ => ortho_para
+     USE control_flags,      ONLY : ortho_para_ => ortho_para
      !
      USE input_parameters,   ONLY: &
         electron_dynamics, electron_damping, electron_temperature,   &

@@ -52,6 +52,7 @@ cglib.o : ../Modules/cell_base.o
 cglib.o : ../Modules/constants.o
 cglib.o : ../Modules/control_flags.o
 cglib.o : ../Modules/descriptors.o
+cglib.o : ../Modules/dspev_drv.o
 cglib.o : ../Modules/electrons_base.o
 cglib.o : ../Modules/io_global.o
 cglib.o : ../Modules/ions_base.o
@@ -200,6 +201,7 @@ cplib.o : ../Modules/cell_base.o
 cplib.o : ../Modules/constants.o
 cplib.o : ../Modules/control_flags.o
 cplib.o : ../Modules/descriptors.o
+cplib.o : ../Modules/dspev_drv.o
 cplib.o : ../Modules/electrons_base.o
 cplib.o : ../Modules/energies.o
 cplib.o : ../Modules/fft_base.o
@@ -213,7 +215,6 @@ cplib.o : ../Modules/kind.o
 cplib.o : ../Modules/mp.o
 cplib.o : ../Modules/mp_global.o
 cplib.o : ../Modules/parameters.o
-cplib.o : ../Modules/ptoolkit.o
 cplib.o : ../Modules/recvec.o
 cplib.o : ../Modules/sic.o
 cplib.o : ../Modules/smallbox.o
@@ -346,23 +347,23 @@ efield.o : ../Modules/uspp.o
 efield.o : ions_positions.o
 eigs0.o : ../Modules/constants.o
 eigs0.o : ../Modules/descriptors.o
+eigs0.o : ../Modules/dspev_drv.o
 eigs0.o : ../Modules/electrons_base.o
 eigs0.o : ../Modules/io_global.o
 eigs0.o : ../Modules/kind.o
 eigs0.o : ../Modules/mp.o
 eigs0.o : ../Modules/mp_global.o
-eigs0.o : ../Modules/ptoolkit.o
 eigs0.o : ../Modules/sic.o
 eigs0.o : electrons.o
 eigs0.o : ensemble_dft.o
 eigs0.o : mainvar.o
 electrons.o : ../Modules/constants.o
+electrons.o : ../Modules/dspev_drv.o
 electrons.o : ../Modules/electrons_base.o
 electrons.o : ../Modules/io_global.o
 electrons.o : ../Modules/kind.o
 electrons.o : ../Modules/mp_global.o
 electrons.o : ../Modules/parameters.o
-electrons.o : ../Modules/ptoolkit.o
 electrons.o : cp_emass.o
 emptystates.o : ../Modules/cell_base.o
 emptystates.o : ../Modules/check_stop.o
@@ -489,6 +490,7 @@ gtable.o : ../Modules/mp_global.o
 gtable.o : ../Modules/recvec.o
 guess.o : ../Modules/cell_base.o
 guess.o : ../Modules/control_flags.o
+guess.o : ../Modules/dspev_drv.o
 guess.o : ../Modules/kind.o
 guess.o : ../Modules/mp.o
 guess.o : ../Modules/mp_global.o
@@ -577,6 +579,7 @@ inner_loop_cold.o : ../Modules/atom.o
 inner_loop_cold.o : ../Modules/cell_base.o
 inner_loop_cold.o : ../Modules/control_flags.o
 inner_loop_cold.o : ../Modules/descriptors.o
+inner_loop_cold.o : ../Modules/dspev_drv.o
 inner_loop_cold.o : ../Modules/electrons_base.o
 inner_loop_cold.o : ../Modules/energies.o
 inner_loop_cold.o : ../Modules/griddim.o
@@ -586,7 +589,6 @@ inner_loop_cold.o : ../Modules/ions_base.o
 inner_loop_cold.o : ../Modules/kind.o
 inner_loop_cold.o : ../Modules/mp.o
 inner_loop_cold.o : ../Modules/mp_global.o
-inner_loop_cold.o : ../Modules/ptoolkit.o
 inner_loop_cold.o : ../Modules/recvec.o
 inner_loop_cold.o : ../Modules/uspp.o
 inner_loop_cold.o : cg.o
@@ -628,7 +630,6 @@ input.o : guess.o
 input.o : ksstates.o
 input.o : mainvar.o
 input.o : modules.o
-input.o : ortho_base.o
 input.o : pres_ai_mod.o
 input.o : read_pseudo.o
 input.o : turbo.o
@@ -747,6 +748,7 @@ nl.o : read_pseudo.o
 nl_base.o : ../Modules/cell_base.o
 nl_base.o : ../Modules/constants.o
 nl_base.o : ../Modules/control_flags.o
+nl_base.o : ../Modules/descriptors.o
 nl_base.o : ../Modules/electrons_base.o
 nl_base.o : ../Modules/io_global.o
 nl_base.o : ../Modules/ions_base.o
@@ -755,6 +757,7 @@ nl_base.o : ../Modules/mp.o
 nl_base.o : ../Modules/mp_global.o
 nl_base.o : ../Modules/recvec.o
 nl_base.o : ../Modules/uspp.o
+nl_base.o : mainvar.o
 nl_base.o : modules.o
 nlcc.o : ../Modules/atom.o
 nlcc.o : ../Modules/cell_base.o
@@ -793,12 +796,12 @@ ortho.o : ortho_base.o
 ortho_base.o : ../Modules/constants.o
 ortho_base.o : ../Modules/control_flags.o
 ortho_base.o : ../Modules/descriptors.o
+ortho_base.o : ../Modules/dspev_drv.o
 ortho_base.o : ../Modules/io_global.o
 ortho_base.o : ../Modules/ions_base.o
 ortho_base.o : ../Modules/kind.o
 ortho_base.o : ../Modules/mp.o
 ortho_base.o : ../Modules/mp_global.o
-ortho_base.o : ../Modules/ptoolkit.o
 ortho_base.o : ../Modules/recvec.o
 ortho_base.o : ../Modules/uspp.o
 ortho_base.o : modules.o
@@ -1162,12 +1165,12 @@ wannier.o : cp_interfaces.o
 wannier.o : modules.o
 wannier.o : wannier_base.o
 wannier_base.o : ../Modules/kind.o
+wave.o : ../Modules/dspev_drv.o
 wave.o : ../Modules/io_global.o
 wave.o : ../Modules/kind.o
 wave.o : ../Modules/mp.o
 wave.o : ../Modules/mp_global.o
 wave.o : ../Modules/mp_wave.o
-wave.o : ../Modules/ptoolkit.o
 wave.o : ../Modules/random_numbers.o
 wave.o : ../Modules/recvec.o
 wave.o : ../Modules/wave_base.o

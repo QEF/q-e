@@ -9,7 +9,7 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine calcmt( fdiag, zmat, fmat, firstiter)
+   subroutine calcmt( fdiag, zmat, fmat, firstiter)
 !-----------------------------------------------------------------------
 !
 !  constructs fmat=z0^t.fdiag.z0    zmat = z0^t
@@ -129,7 +129,7 @@
       subroutine ddiag(nx,n,amat,dval,dvec,iflag)
 !-----------------------------------------------------------------------
 !
-      use parallel_toolkit, only: dspev_drv
+      use dspev_module, only: dspev_drv
       implicit none
       integer nx,n,ndim,iflag,k,i,j
       real(8)   dval(n)

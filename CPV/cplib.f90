@@ -1835,7 +1835,7 @@ END FUNCTION
 !   hermitean matrix H . On output, the matrix H is destroyed
 !
       USE kinds,            ONLY: DP
-      USE parallel_toolkit, ONLY: dspev_drv
+      USE dspev_module,     ONLY: dspev_drv
       !
       IMPLICIT NONE
       !
@@ -3226,7 +3226,7 @@ end function set_Hubbard_l
       USE ldaU,             ONLY: lda_plus_u, Hubbard_U, Hubbard_l
       USE ldaU,             ONLY: n_atomic_wfc, ns, e_hubbard
       USE ldaU,             ONLY: Hubbard_lmax
-      use parallel_toolkit, only : dspev_drv
+      use dspev_module,     only : dspev_drv
 
       implicit none
 

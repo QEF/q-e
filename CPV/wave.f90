@@ -153,7 +153,7 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
-      USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv
+      USE dspev_module,     ONLY: pdspev_drv, dspev_drv
 
       IMPLICIT NONE
 
@@ -277,7 +277,7 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
-      USE parallel_toolkit, ONLY: pdspev_drv, dspev_drv
+      USE dspev_module,     ONLY: pdspev_drv, dspev_drv
 
       IMPLICIT NONE
 
@@ -363,7 +363,7 @@
       USE kinds,            ONLY: DP
       USE mp,               ONLY: mp_bcast
       USE mp_global,        ONLY: nproc_image, me_image, intra_image_comm
-      USE parallel_toolkit, ONLY: dspev_drv
+      USE dspev_module,     ONLY: dspev_drv
 
       IMPLICIT NONE
 

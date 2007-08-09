@@ -11,7 +11,7 @@
 #include "f_defs.h"
         USE kinds
         USE parameters,         ONLY: nspinx
-        USE parallel_toolkit,   ONLY: pdspev_drv, dspev_drv, pzhpev_drv, zhpev_drv
+        USE dspev_module,       ONLY: pdspev_drv, dspev_drv
         USE electrons_base,     ONLY: nbnd, nbndx, nbsp, nbspx, nspin, nel, nelt, &
                                       nupdwn, iupdwn, telectrons_base_initval, f, &
                                       nudx
