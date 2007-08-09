@@ -570,6 +570,16 @@ diagonalization
                'cg' :    conjugate-gradient-like band-by-band diagonalization
                'diis' :  DIIS-like diagonalization - PRESENTLY DISABLED
 
+ortho_para     
+               INTEGER ( default = 0 )
+               meaningful only if diagonalization = 'david+para' and with 
+               parallel executable.
+               The number of processors to be used for parallel diagonalization.
+               With the default value ( 0 ) the code try to use all the 
+               processors. Actually the number of processors used is the
+               largest square number less or equal to ortho_para.
+               
+
 diago_thr_init
                REAL
                Convergence threshold for the first iterative diagonalization
