@@ -82,7 +82,8 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/wavefunctions.o \
 ../Modules/wannier.o \
-../Modules/xml_io_base.o
+../Modules/xml_io_base.o \
+../Modules/zhpev_drv.o
 
 PWOBJS = ../PW/libpw.a
 
