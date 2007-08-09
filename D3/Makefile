@@ -67,6 +67,7 @@ MODULES = \
 ../Modules/check_stop.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
+../Modules/descriptors.o \
 ../Modules/electrons_base.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
