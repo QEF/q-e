@@ -494,6 +494,10 @@ constrained_magnetization CHARACTER ( defalt = 'none' )
                         the types (1-ntype).
                         mcons(:,:) array is defined from starting_magnetization,
                         angle1 and angle2 variables. lambda is a real number
+               `total direction`:  the angle theta of the total magnetization
+                        with the z axis (theta = fixed_magnetization(3))  
+                        is constrained: 
+     - LAMBDA * ( magnetization(1) - magnetization(3)*tan(theta) )**2
                `atomic direction`: not all the components of the atomic
                         magnetic moment are constrained but only the cosine
                         of angle1, and the penalty functional is:

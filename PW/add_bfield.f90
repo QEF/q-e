@@ -24,6 +24,7 @@ SUBROUTINE add_bfield (v,rho)
   !
   !
   USE kinds,            ONLY : dp
+  USE constants,        ONLY : pi
   USE io_global,        ONLY : stdout
   USE ions_base,        ONLY : nat, ntyp => nsp, ityp
   USE cell_base,        ONLY : omega
@@ -84,7 +85,7 @@ SUBROUTINE add_bfield (v,rho)
         END DO      ! points
      END DO      ! na
      write (stdout,'(4x,a,F15.8)' ) " constraint energy (Ryd) = ", etcon
-  ELSE IF (i_cons==3) THEN
+  ELSE IF (i_cons==3.or.i_cons==6) THEN
      m1 = 0.d0
      DO ir = 1,nrxx
         DO ipol = 1, 3
@@ -95,18 +96,41 @@ SUBROUTINE add_bfield (v,rho)
      DO ipol = 1, 3
         m1(ipol) = m1(ipol) * omega / ( nr1 * nr2 * nr3 )
      END DO
-     fact = 2.D0*lambda
-     DO ipol=1,3
-        bfield(ipol)=-fact*(m1(ipol)-mcons(ipol,1))
-     END DO
-     write(6,'(5x," External magnetic field: ", 3f13.5)') &
+
+     IF (i_cons==3) THEN
+       fact = 2.D0*lambda
+       DO ipol=1,3
+          bfield(ipol)=-fact*(m1(ipol)-mcons(ipol,1))
+       END DO
+       write(6,'(5x," External magnetic field: ", 3f13.5)') &
+            (bfield(ipol),ipol=1,3)
+       DO ipol = 2,4
+          fact=bfield(ipol-1)
+          DO ir =1,nrxx
+             v(ir,ipol) = v(ir,ipol)-fact
+          END DO
+       END DO
+     END IF
+
+     IF (i_cons==6) THEN
+       fact = TAN(mcons(3,1)/180.d0*pi)
+       write(6,'(5x,"-angle- ", f13.5)') atan(m1(1)/m1(3))*180.d0/pi
+       write(6,'(5x," E_constrain: ", f13.9)') (m1(1)-m1(3)*fact)**2*lambda
+       write(6,'(5x," lambda: ", f10.3)') lambda
+       bfield(1) = 2.d0*lambda*(m1(1)-m1(3)*fact)
+       bfield(2) = 0.d0
+       bfield(3) = -2.d0*lambda*fact*(m1(1)-m1(3)*fact)
+       write(6,'(5x," External magnetic field fixed: ", 3f13.5)') &
           (bfield(ipol),ipol=1,3)
-     DO ipol = 2,4
-        fact=bfield(ipol-1)
-        DO ir =1,nrxx
-           v(ir,ipol) = v(ir,ipol)-fact
-        END DO
-     END DO
+       DO ipol = 2,4
+          fact=bfield(ipol-1)
+          DO ir =1,nrxx
+             v(ir,ipol) = v(ir,ipol)+fact
+          END DO
+       END DO
+
+     END IF
+
   ELSE IF (i_cons==4) THEN
      bfield(:)=mcons(:,1)
      write(6,'(5x," External magnetic field fixed: ", 3f13.5)') &

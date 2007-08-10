@@ -449,6 +449,10 @@ SUBROUTINE iosys()
         !
      END DO
      !
+  CASE( 'total direction' )
+     i_cons = 6
+     mcons(3,1) = fixed_magnetization(3)
+     !
   CASE( 'atomic direction' )
      !
      IF ( nspin == 1 ) &
