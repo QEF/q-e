@@ -29,7 +29,7 @@ subroutine run_pseudo
        vnew(ndm,2)   ! the potential
 
   integer :: &
-       n1,n2,nst,ikl,ind
+       n1,n2,nst,ikl,ind,ios
 
   logical :: &
        conv       ! if true convergence reached
@@ -45,6 +45,7 @@ subroutine run_pseudo
 
   real(DP), parameter :: thresh=1.e-10_dp
   integer, parameter :: itmax=200
+  character(len=256) :: nomefile
 
   !
   !     initial estimate of the eigenvalues
@@ -96,10 +97,33 @@ subroutine run_pseudo
            vpstot(:,is)=vpstot(:,is)-vpsloc(:)
         enddo
 
-        !         do n=1,mesh
-        !            write(6,'(5f15.4)') r(n),vnew(n,1)-vpstot(n,1),
-        !     +               vnew(n,1), vnew(n,2)-vpstot(n,2), vnew(n,2)
-        !         enddo
+        if (file_potscf.ne.' ') then
+           if (iter<10) then
+              write(nomefile,'(a,"_",i1)') trim(file_potscf), iter
+           elseif(iter<100) then
+              write(nomefile,'(a,"_",i2)') trim(file_potscf), iter
+           elseif(iter<1000) then
+              write(nomefile,'(a,"_",i3)') trim(file_potscf), iter
+           else
+              call errore('run_pseudo','problem with iteration',1)
+           endif
+           open(unit=18,file=trim(nomefile), status='unknown', &
+                                             err=100, iostat=ios)
+100        call errore('run_pseudo','opening file'//nomefile,abs(ios))
+           if (lsd==1) then
+              do n=1,mesh
+                 write(18,'(5e16.8)') r(n),vnew(n,1)-vpstot(n,1), &
+                         vnew(n,1), vnew(n,2)-vpstot(n,2), vnew(n,2)
+              enddo
+           else
+              do n=1,mesh
+                 write(18,'(3e26.15)') r(n),vnew(n,1)-vpstot(n,1), &
+                          vnew(n,1)
+              enddo
+           endif
+           close(18)
+        endif
+
         call vpack(mesh,ndm,nspin,vnew,vpstot,1)
         call dmixp(mesh*nspin,vnew,vpstot,beta,tr2,iter,3,eps0,conv)
         call vpack(mesh,ndm,nspin,vnew,vpstot,-1)

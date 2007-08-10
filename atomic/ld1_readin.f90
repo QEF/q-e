@@ -62,6 +62,7 @@ subroutine ld1_readin
        configts,      & ! the configurations of the tests
        file_pseudo,   & ! input file containing the pseudopotential
        file_pseudopw, & ! output file containing the pseudopotential
+       file_potscf,   & ! output file with the scf potential at each iteration 
        ecutmin,       & ! for test with spherical Bessel functions:
        ecutmax,       & ! min and max energy cutoff for j_l(qr),
        decut,         & ! step: ecut = ecutmin, ecutmin+decut, ... , ecutmax
@@ -84,6 +85,7 @@ subroutine ld1_readin
        file_beta,     & ! output file for the beta functions
        file_chi,      & ! outpu  file for the chi functions
        file_qvan,     & ! output file for the qvan functions
+       file_potscf,   & ! output file with the scf potential at each iteration 
        file_wfcaegen, & ! output file where the all-electron wfc used for 
                         !        pseudo generation are written
        file_wfcncgen, & ! output file where the norm-conserving wfc used for 
@@ -102,6 +104,7 @@ subroutine ld1_readin
   file_chi     = ' '
   file_beta    = ' '
   file_qvan    = ' '
+  file_potscf  = ' '
   file_wfcaegen = ' '
   file_wfcncgen = ' '
   file_wfcusgen = ' '

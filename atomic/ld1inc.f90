@@ -251,6 +251,7 @@ module ld1inc
        file_wfcaegen,        & ! all-electron wavefunctions for generation
        file_wfcncgen,        & ! norm-conserving wavefunctions for generation
        file_wfcusgen,        & ! ultra-soft wavefunctions for generation
+       file_potscf,          & ! scf potential at each iteration
        file_wavefunctions,   & ! all-electron results for orbitals
        file_wavefunctionsps, & ! pseudopotential results for orbitals
        file_logder,          & ! all-electron logarithmic derivatives
