@@ -3101,10 +3101,6 @@ END SUBROUTINE
     nr = desc( nlar_ )
     nc = desc( nlac_ )
 
-    ALLOCATE( B( ldx, ldx ) )
-    ALLOCATE( C( ldx, ldx ) )
-    ALLOCATE( BUF_RECV ( ldx, ldx ) )
-
     DO j = nc+1, ldx
        DO i = 1, ldx
           sll( i, j ) = ( 0.0_DP , 0.0_DP )
@@ -3131,6 +3127,12 @@ END SUBROUTINE
     ELSE
        buf_recv = sll
     END IF
+
+#if defined __MPI
+
+    ALLOCATE( B( ldx, ldx ) )
+    ALLOCATE( C( ldx, ldx ) )
+    ALLOCATE( BUF_RECV ( ldx, ldx ) )
 
     ! Broadcast the blocks along the diagonal at the processors under the diagonal
     IF( myrow >= mycol ) THEN
@@ -3221,6 +3223,8 @@ END SUBROUTINE
     DEALLOCATE(B)
     DEALLOCATE(C)
     DEALLOCATE(BUF_RECV)
+
+#endif
 
   CONTAINS
 
