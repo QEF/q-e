@@ -109,7 +109,7 @@ subroutine run_pseudo
            endif
            open(unit=18,file=trim(nomefile), status='unknown', &
                                              err=100, iostat=ios)
-100        call errore('run_pseudo','opening file'//nomefile,abs(ios))
+100        call errore('run_pseudo','opening file' // nomefile,abs(ios))
            if (lsd==1) then
               do n=1,mesh
                  write(18,'(5e16.8)') r(n),vnew(n,1)-vpstot(n,1), &
