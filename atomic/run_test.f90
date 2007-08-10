@@ -97,6 +97,10 @@ subroutine run_test
         if (pseudotype.lt.3) then
            rcutts(n)=r(im)*1.1_dp
            rcutusts(n)=r(im)*1.1_dp
+           if (el(nstoaets(n)).eq.'6S') then
+              rcutts(n)=r(im)*1.2_dp
+              rcutusts(n)=r(im)*1.2_dp
+           endif
         else
            if (ll(nstoaets(n)).eq.0) then
               rcutts(n)=r(im)*1.6_dp
@@ -122,6 +126,7 @@ subroutine run_test
            endif
         endif
 20   continue
+!     write(6,*) n, rcutts(n), rcutusts(n)
      enddo
      !
      !   and run the pseudopotential test
