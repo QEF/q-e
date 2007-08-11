@@ -58,6 +58,7 @@ MODULE mp_global
   INTEGER :: pgrp_comm        = 0  ! plane-wave group communicator (task grouping)
   INTEGER :: ogrp_comm        = 0  ! orbital group communicarot (task grouping)
   INTEGER :: ortho_comm       = 0  ! communicator used for fast and memory saving ortho
+  INTEGER :: ortho_comm_id    = 0  ! id of the ortho_comm
   !
   CONTAINS
      !
@@ -260,7 +261,7 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       !  here we choose a processor every 2, in order not to stress memory BW
       !
       color = 0
-      IF( me_all < 2*nproc_all .AND. MOD( me_all, 2 ) == 0 ) color = 1
+      IF( me_all < 2*nproc_ortho .AND. MOD( me_all, 2 ) == 0 ) color = 1
       !
       leg_ortho = 2
       !
@@ -294,6 +295,7 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       CALL errore( " init_ortho_group ", " wrong root in ortho_comm ", ierr )
    !
    if( color == 1 ) then
+      ortho_comm_id = 1
       CALL GRID2D_COORDS( 'R', newid, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
       CALL GRID2D_RANK( 'R', np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2), ierr )
       IF( ierr /= newid ) &
@@ -301,10 +303,10 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       IF( newid*leg_ortho /= me_all ) &
          CALL errore( " init_ortho_group ", " wrong rank assignment in ortho_comm ", ierr )
    else
-      me_ortho(1) = me_all + nproc_ortho
-      me_ortho(2) = me_all + nproc_ortho
+      ortho_comm_id = 0
+      me_ortho(1) = newid
+      me_ortho(2) = newid
    endif
-
 
 #endif
     

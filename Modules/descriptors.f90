@@ -86,7 +86,7 @@
    END SUBROUTINE descla_local_dims
    !
    !
-   SUBROUTINE descla_init( desc, n, nx, np, me, comm )
+   SUBROUTINE descla_init( desc, n, nx, np, me, comm, includeme )
       !
       IMPLICIT NONE  
       INTEGER, INTENT(OUT) :: desc(:)
@@ -94,6 +94,7 @@
       INTEGER, INTENT(IN)  :: nx  !  the max among different matrixes sharing 
                                   !  this descriptor or the same data distribution
       INTEGER, INTENT(IN)  :: np(2), me(2), comm
+      INTEGER, INTENT(IN)  :: includeme
       INTEGER  :: ir, nr, ic, nc, lnode, nlax, nrl, nrlx
       INTEGER  :: ip, npp
       
@@ -101,7 +102,7 @@
          CALL errore( ' descla_init ', ' only square grid of proc are allowed ', 2 )
       END IF
 
-      IF( me(1) >= 0 .AND. me(2) >= 0 .AND. me(1) < np(1) .AND. me(2) < np(2) ) THEN
+      IF( includeme == 1 ) THEN
          !
          nr = ldim_block( nx, np(1), me(1) )
          nc = ldim_block( nx, np(2), me(2) )
@@ -157,7 +158,7 @@
 
       !  Compute local dimension of the cyclically distributed matrix
       !
-      IF( me(1) >= 0 .AND. me(1) < np(1) ) THEN
+      IF( includeme == 1 ) THEN
          nrl  = ldim_cyclic( n, npp, desc( la_me_ ) )
       ELSE
          nrl = 1
