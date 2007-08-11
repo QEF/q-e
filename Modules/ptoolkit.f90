@@ -3115,6 +3115,12 @@ END SUBROUTINE
        END DO
     END DO
 
+#if defined __MPI
+
+    ALLOCATE( B( ldx, ldx ) )
+    ALLOCATE( C( ldx, ldx ) )
+    ALLOCATE( BUF_RECV ( ldx, ldx ) )
+
     ! Compute the inverse of a lower triangular 
     ! along the diagonal of the global array with BLACS(dtrtri) 
     IF( mycol == myrow ) THEN
@@ -3130,12 +3136,6 @@ END SUBROUTINE
     ELSE
        buf_recv = sll
     END IF
-
-#if defined __MPI
-
-    ALLOCATE( B( ldx, ldx ) )
-    ALLOCATE( C( ldx, ldx ) )
-    ALLOCATE( BUF_RECV ( ldx, ldx ) )
 
     ! Broadcast the blocks along the diagonal at the processors under the diagonal
     IF( myrow >= mycol ) THEN
@@ -3226,6 +3226,18 @@ END SUBROUTINE
     DEALLOCATE(B)
     DEALLOCATE(C)
     DEALLOCATE(BUF_RECV)
+
+#else
+
+    DO j = 1, ldx
+       DO i = 1, j-1
+          sll ( i, j ) = ( 0.0_DP , 0.0_DP )
+       END DO
+    END DO
+    CALL ztrtri( 'L', 'N', n, sll, ldx, info )
+    IF( info /= 0 ) THEN
+       CALL errore( ' pztrtri ', ' problem in the local inversion ', info )
+    END IF
 
 #endif
 
