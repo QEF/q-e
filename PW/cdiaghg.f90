@@ -26,7 +26,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
                                intra_pool_comm, MPIME, init_ortho_group, &
-                               ortho_comm, np_ortho, me_ortho
+                               ortho_comm, np_ortho, me_ortho, ortho_comm_id
   USE zhpev_module,     ONLY : pzhpev_drv
   USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , &
                                ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_
@@ -70,7 +70,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
+     CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
      ! ... input s and h are copied so that they are not destroyed
      !

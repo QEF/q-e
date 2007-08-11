@@ -58,7 +58,7 @@
       USE local_pseudo,   ONLY: vps, rhops
       USE io_global,      ONLY: io_global_start, stdout, ionode, &
                                 ionode_id
-      USE mp_global,      ONLY: intra_image_comm
+      USE mp_global,      ONLY: intra_image_comm, leg_ortho
       USE dener
       USE derho
       USE cdvan
@@ -193,14 +193,18 @@
 
                   coor_ip(1) = ipr - 1
                   coor_ip(2) = ipc - 1
-                  CALL descla_init( desc_ip, descla( la_n_ , is ), descla( la_nx_ , is ), np, coor_ip, descla( la_comm_ , is ) )
+                  CALL descla_init( desc_ip, descla( la_n_ , is ), descla( la_nx_ , is ), np, coor_ip, descla( la_comm_ , is ), 1 )
 
                   nr = desc_ip( nlar_ )
                   nc = desc_ip( nlac_ )
                   ir = desc_ip( ilar_ )
                   ic = desc_ip( ilac_ )
 
-                  root = desc_ip( la_myc_ ) + desc_ip( la_myr_ ) * desc_ip( la_npr_ )
+                  CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
+                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+                  !
+                  root = root * leg_ortho
+
 
                   ALLOCATE( mtmp( nr, nc ) )
                   mtmp = 0.0d0
@@ -220,7 +224,8 @@
 
                   CALL mp_root_sum( mtmp, root, intra_image_comm )
 
-                  IF( coor_ip(1) == descla( la_myr_ , is ) .AND. coor_ip(2) == descla( la_myc_ , is ) ) THEN
+                  IF( coor_ip(1) == descla( la_myr_ , is ) .AND. &
+                      coor_ip(2) == descla( la_myc_ , is ) .AND. descla( lambda_node_ , is ) > 0 ) THEN
                      c0hc0(1:nr,1:nc,is) = mtmp
                   END IF
 

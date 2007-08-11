@@ -109,7 +109,8 @@ MODULE cp_main_variables
                                  gzero, nudx, smd )
       !------------------------------------------------------------------------
       !
-      USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm, me_image
+      USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm, &
+                             me_image, ortho_comm_id
       USE mp,          ONLY: mp_max, mp_min
       USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_
       !
@@ -174,7 +175,7 @@ MODULE cp_main_variables
       nlax = 0
       nrlx = 0
       DO iss = 1, nspin
-         CALL descla_init( descla( :, iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm )
+         CALL descla_init( descla( :, iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
          nlax = MAX( nlax, descla( nlax_ , iss ) )
          nrlx = MAX( nrlx, descla( la_nrlx_ , iss ) )
       END DO

@@ -144,7 +144,7 @@ CONTAINS
    SUBROUTINE mesure_diag_perf( n )
       !
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image
-      USE mp_global,   ONLY: np_ortho, me_ortho, ortho_comm
+      USE mp_global,   ONLY: np_ortho, me_ortho, ortho_comm, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
@@ -163,7 +163,7 @@ CONTAINS
       !
       ALLOCATE( d( n ) )
       !
-      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
+      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
 
       nr = desc( nlar_ )
       nc = desc( nlac_ )
@@ -254,11 +254,11 @@ CONTAINS
    SUBROUTINE mesure_mmul_perf( n )
       !
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm, root_image, &
-                             ortho_comm, np_ortho, me_ortho, init_ortho_group
+                             ortho_comm, np_ortho, me_ortho, init_ortho_group, ortho_comm_id
       USE io_global,   ONLY: ionode, stdout
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
-      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_
+      USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , la_comm_ , lambda_node_
       USE control_flags, ONLY: ortho_para
       !
       IMPLICIT NONE
@@ -303,7 +303,7 @@ CONTAINS
 
          CALL init_ortho_group( np * np, intra_image_comm )
 
-         CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm )
+         CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
 
          nr = desc( nlar_ )
          nc = desc( nlac_ )
@@ -725,7 +725,7 @@ CONTAINS
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ) )
+            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
 
             nr = desc_ip( nlar_ )
             nc = desc_ip( nlac_ )
@@ -755,7 +755,7 @@ CONTAINS
             !
             CALL mp_root_sum( sigp, root, intra_image_comm )
             !
-            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
+            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
                sig(1:nr,1:nc) = sigp(1:nr,1:nc)
             END IF
             !
@@ -862,7 +862,7 @@ CONTAINS
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ) )
+            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
 
             nr = desc_ip( nlar_ )
             nc = desc_ip( nlac_ )
@@ -891,7 +891,7 @@ CONTAINS
 
             CALL mp_root_sum( rhop, root, intra_image_comm )
 
-            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
+            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
                rho(1:nr,1:nc) = rhop(1:nr,1:nc)
             END IF
 
@@ -992,7 +992,7 @@ CONTAINS
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
 
-            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ) )
+            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
 
             nr = desc_ip( nlar_ )
             nc = desc_ip( nlac_ )
@@ -1024,7 +1024,7 @@ CONTAINS
             !
             CALL mp_root_sum( taup, root, intra_image_comm )
             !
-            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) ) THEN
+            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
                tau(1:nr,1:nc) = taup(1:nr,1:nc)
             END IF
             !
