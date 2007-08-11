@@ -688,7 +688,7 @@ CONTAINS
       USE mp,                 ONLY: mp_root_sum, mp_max, mp_barrier
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_image_comm, leg_ortho
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ 
@@ -734,6 +734,8 @@ CONTAINS
             !
             CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+
+            root = root * leg_ortho
 
             CALL DGEMM( 'T', 'N',  nr, nc, 2*ngw, -2.0d0, cp( 1, ist + ir - 1), 2*ngwx, &
                         cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, sigp, nx )
@@ -814,7 +816,7 @@ CONTAINS
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
       USE mp,                 ONLY: mp_root_sum, mp_barrier, mp_max
-      USE mp_global,          ONLY: intra_image_comm, me_image
+      USE mp_global,          ONLY: intra_image_comm, me_image, leg_ortho
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
@@ -869,6 +871,8 @@ CONTAINS
             !
             CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+            !
+            root = root * leg_ortho
 
             CALL DGEMM( 'T', 'N', nr, nc, 2*ngw, 2.0d0, phi( 1, ist + ir - 1 ), 2*ngwx, &
                   cp( 1, ist + ic - 1 ), 2*ngwx, 0.0d0, rhop, nx )
@@ -946,7 +950,7 @@ CONTAINS
       USE mp,                 ONLY: mp_root_sum, mp_max, mp_barrier
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_image_comm
+      USE mp_global,          ONLY: intra_image_comm, leg_ortho
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_
@@ -997,6 +1001,8 @@ CONTAINS
             !
             CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
                                    desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+            !
+            root = root * leg_ortho
             !
             !  All processors contribute to the tau block of processor (ipr,ipc)
             !  with their own part of wavefunctions

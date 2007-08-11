@@ -2145,15 +2145,20 @@
 !------------------------------------------------------------------------------!
 !.. Carlo Cavazzoni
 !..mp_rank
-      FUNCTION mp_rank()
+      FUNCTION mp_rank( comm )
         IMPLICIT NONE
         INTEGER :: mp_rank
+        INTEGER, OPTIONAL, INTENT(IN) :: comm
         INTEGER :: ierr, taskid
 
         ierr = 0
         taskid = 0
 #if defined(__MPI)
-        CALL mpi_comm_rank(mpi_comm_world,taskid,ierr)
+        IF( PRESENT( comm ) ) THEN
+           CALL mpi_comm_rank(comm,taskid,ierr)
+        ELSE
+           CALL mpi_comm_rank(mpi_comm_world,taskid,ierr)
+        END IF
         IF (ierr/=0) CALL mp_stop( 8181 )
 #endif
         mp_rank = taskid
@@ -2162,15 +2167,20 @@
 !------------------------------------------------------------------------------!
 !.. Carlo Cavazzoni
 !..mp_size
-      FUNCTION mp_size()
+      FUNCTION mp_size( comm )
         IMPLICIT NONE
         INTEGER :: mp_size
+        INTEGER, OPTIONAL, INTENT(IN) :: comm
         INTEGER :: ierr, numtask
 
         ierr = 0
         numtask = 1
 #if defined(__MPI)
-        CALL mpi_comm_size(mpi_comm_world,numtask,ierr)
+        IF( PRESENT( comm ) ) THEN
+           CALL mpi_comm_size(comm,numtask,ierr)
+        ELSE
+           CALL mpi_comm_size(mpi_comm_world,numtask,ierr)
+        END IF
         IF (ierr/=0) CALL mp_stop( 8182 )
 #endif
         mp_size = numtask

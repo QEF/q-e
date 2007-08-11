@@ -46,6 +46,8 @@ MODULE mp_global
                               !   written in the xml punch file
   INTEGER :: nproc_image = 1  ! number of processor within an image
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
+  INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
+                              ! of two neighbour processors in ortho_comm
   !
   ! ... communicators
   !
@@ -218,22 +220,22 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
 END SUBROUTINE init_pool
 !
 !
-SUBROUTINE init_ortho_group( nproc_try, comm_try )
+SUBROUTINE init_ortho_group( nproc_try, comm_all )
    !
-   USE mp, ONLY : mp_group_free, mp_comm_group, mp_group_create, mp_comm_create, &
-                  mp_comm_free
+   USE mp, ONLY : mp_comm_free, mp_size, mp_rank
    !
    IMPLICIT NONE
     
-   INTEGER, INTENT(IN) :: nproc_try, comm_try
+   INTEGER, INTENT(IN) :: nproc_try, comm_all
     
    LOGICAL, SAVE :: first = .true.
-   INTEGER :: ierr, color, key, me_try, newid, nproc_all
+   INTEGER :: ierr, color, key, me_all, newid, nproc_all
+   INTEGER :: i, nproc_ortho
     
 #if defined __MPI
 
-   CALL MPI_COMM_RANK( comm_try, me_try, ierr )
-   CALL MPI_COMM_SIZE( comm_try, nproc_all, ierr )
+   me_all    = mp_rank( comm_all )
+   nproc_all = mp_size( comm_all )
 
    IF( nproc_try > nproc_all ) THEN
       CALL errore( " init_ortho_group ", " argument 1 out of range ", nproc_try )
@@ -251,34 +253,58 @@ SUBROUTINE init_ortho_group( nproc_try, comm_try )
    !
    CALL grid2d_dims( 'S', nproc_try, np_ortho(1), np_ortho(2) )
    !
-   !  here we choose the first processors, but on some machine other choices may be better
+   nproc_ortho = np_ortho(1) * np_ortho(2)
    !
-   IF( me_try < np_ortho(1) * np_ortho(2) ) THEN
-      color = 1
-   ELSE 
+   IF( nproc_all >= 2*nproc_ortho ) THEN
+      !
+      !  here we choose a processor every 2, in order not to stress memory BW
+      !
       color = 0
+      IF( me_all < 2*nproc_all .AND. MOD( me_all, 2 ) == 0 ) color = 1
+      !
+      leg_ortho = 2
+      !
+   ELSE
+      !
+      !  here we choose the first processors
+      !
+      color = 0
+      IF( me_all < nproc_ortho ) color = 1
+      !
+      leg_ortho = 1
+      !
    END IF
    !
-   key   = me_try
+   key   = me_all
    !
    !  initialize the communicator for the new group
    !
-   CALL MPI_COMM_SPLIT( comm_try, color, key, ortho_comm, ierr )
+   CALL MPI_COMM_SPLIT( comm_all, color, key, ortho_comm, ierr )
    IF( ierr /= 0 ) &
       CALL errore( " init_ortho_group ", " error splitting communicator ", ierr )
    !
    !  Computes coordinates of the processors, in row maior order
    !
-   CALL MPI_COMM_RANK( ortho_comm, newid, ierr )
-   IF( ierr /= 0 ) &
-      CALL errore( " init_ortho_group ", " error in getting proc rank ", ierr )
+   newid       = mp_rank( ortho_comm )
+   nproc_ortho = mp_size( ortho_comm )
+   IF( color == 1 .AND. nproc_ortho /= np_ortho(1) * np_ortho(2) ) &
+      CALL errore( " init_ortho_group ", " wrong number of proc in ortho_comm ", ierr )
+   !
+   IF( me_all == 0 .AND. newid /= 0 ) &
+      CALL errore( " init_ortho_group ", " wrong root in ortho_comm ", ierr )
    !
    if( color == 1 ) then
-       CALL GRID2D_COORDS( 'R', newid, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
+      CALL GRID2D_COORDS( 'R', newid, np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2) )
+      CALL GRID2D_RANK( 'R', np_ortho(1), np_ortho(2), me_ortho(1), me_ortho(2), ierr )
+      IF( ierr /= newid ) &
+         CALL errore( " init_ortho_group ", " wrong coordinates in ortho_comm ", ierr )
+      IF( newid*leg_ortho /= me_all ) &
+         CALL errore( " init_ortho_group ", " wrong rank assignment in ortho_comm ", ierr )
    else
-       me_ortho(1) = newid + np_ortho(1) * np_ortho(2)
-       me_ortho(2) = newid + np_ortho(1) * np_ortho(2)
+      me_ortho(1) = me_all + nproc_ortho
+      me_ortho(2) = me_all + nproc_ortho
    endif
+
 
 #endif
     
