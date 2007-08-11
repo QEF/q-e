@@ -222,6 +222,8 @@
 #if defined(__MPI)
          CALL mpi_comm_group( comm, group, ierr )
          IF (ierr/=0) CALL mp_stop( 8009 )
+#else
+         group = 0
 #endif
       END SUBROUTINE  mp_comm_group
 
@@ -235,6 +237,8 @@
 #if defined(__MPI)
          CALL MPI_COMM_SPLIT( old_comm, color, key, new_comm, ierr )
          IF (ierr/=0) CALL mp_stop( 8009 )
+#else
+         new_comm = old_comm
 #endif  
       END SUBROUTINE  mp_comm_split
 
