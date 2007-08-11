@@ -191,14 +191,16 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
            END DO
         END DO
         !
-        DEALLOCATE( sl, vl, hl )
-        !
      END IF
      !
      CALL mp_bcast( e, root_pool, intra_pool_comm )
-     CALL mp_sum( v, intra_pool_comm )
+     CALL mp_sum( v(1:n,1:n), intra_pool_comm )
      !
      CALL stop_clock( 'paragemm' )
+     !
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        DEALLOCATE( sl, vl, hl )
+     END IF
      !
   ELSE
      !
