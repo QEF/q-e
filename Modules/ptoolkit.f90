@@ -3073,7 +3073,10 @@ END SUBROUTINE
     COMPLEX(DP), PARAMETER :: ONE = (1.0d0, 0.0d0)
     COMPLEX(DP), PARAMETER :: ZERO = (0.0d0, 0.0d0)
 
-    INTEGER :: status(MPI_STATUS_SIZE), req(2), ierr, col_comm
+#if defined __MPI
+    INTEGER :: status(MPI_STATUS_SIZE)
+#endif
+    INTEGER :: req(2), ierr, col_comm
     INTEGER :: send, recv, group_rank, group_size
     INTEGER :: myrow, mycol, np, myid, comm
 
