@@ -66,7 +66,7 @@ MODULE realus
       USE uspp_param, ONLY : lmaxq, nh, nhm, tvanp, kkbeta, nbeta, &
                              qfunc, dion, lmaxkb, qfcoef, nqf, nqlc, &
                              lll, rinner
-      USE atom,       ONLY : r
+      USE atom,       ONLY : rgrid
       USE pfft,       ONLY : npp
       USE mp_global,  ONLY : me_pool
       USE splinelib,  ONLY : spline, splint
@@ -113,7 +113,7 @@ MODULE realus
                   !
                   IF ( ABS( qfunc(indm,inbrx,it) ) > eps16 ) THEN
                      !
-                     boxrad(it) = MAX( r(indm,it), boxrad(it) )
+                     boxrad(it) = MAX( rgrid(it)%r(indm), boxrad(it) )
                      !
                      CYCLE
                      !
@@ -340,7 +340,7 @@ MODULE realus
          !
          ! ... the radii in x
          !
-         xsp(:) = r(1:kkbeta(nt),nt)
+         xsp(:) = rgrid(nt)%r(1:kkbeta(nt))
          !
          DO l = 0, nqlc(nt) - 1
             !
@@ -360,8 +360,8 @@ MODULE realus
                                MOD( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                   !
                   DO ir = 1, kkbeta(nt)
-                     IF ( r(ir,nt) >= rinner(l+1,nt) ) THEN
-                        qtot(ir,nb,mb) = qfunc(ir,ijv,nt) / r(ir,nt)**2
+                     IF ( rgrid(nt)%r(ir) >= rinner(l+1,nt) ) THEN
+                        qtot(ir,nb,mb) = qfunc(ir,ijv,nt) / rgrid(nt)%r(ir)**2
                      ELSE
                         ilast = ir
                      END IF
@@ -369,7 +369,7 @@ MODULE realus
                   !
                   IF ( rinner(l+1,nt) > 0.D0 ) &
                      CALL setqfcorr( qfcoef(1,l+1,nb,mb,nt), &
-                                     qtot(1,nb,mb), r(1,nt), nqf(nt), l, ilast )
+                                     qtot(1,nb,mb), rgrid(nt)%r(1), nqf(nt), l, ilast )
                   !
                   ! ... we save the values in y
                   !
@@ -378,12 +378,12 @@ MODULE realus
                   ! ... compute the first derivative in first point
                   !
                   CALL setqfcorrptfirst( qfcoef(1,l+1,nb,mb,nt), &
-                                         first, r(1,nt), nqf(nt), l )
+                                         first, rgrid(nt)%r(1), nqf(nt), l )
                   !
                   ! ... compute the second derivative in second point
                   !
                   CALL setqfcorrptsecond( qfcoef(1,l+1,nb,mb,nt), &
-                                          second, r(1,nt), nqf(nt), l )
+                                          second, rgrid(nt)%r(1), nqf(nt), l )
                   !
                   ! ... call spline
                   !

@@ -28,7 +28,7 @@ implicit none
              exc_t,         &   ! the exchange correlation energy
              vxcp(2),       &   
              rho_tot,       &   !
-             gi(ndm),       &   ! 
+             gi(ndmx),       &   ! 
              work(nwfsx)        ! 
 
       real(DP),allocatable :: &
@@ -49,28 +49,28 @@ implicit none
 
 
       gga=dft_is_gradient()
-      allocate(vgc(ndm,2),stat=ierr)
-      allocate(egc(ndm),stat=ierr)
-      if (nlcc) allocate(egcc(ndm), stat=ierr)
+      allocate(vgc(ndmx,2),stat=ierr)
+      allocate(egc(ndmx),stat=ierr)
+      if (nlcc) allocate(egcc(ndmx), stat=ierr)
 
-      allocate(f1(ndm,2), stat=ierr)
-      allocate(f2(mesh), stat=ierr)
-      allocate(f3(mesh), stat=ierr)
-      allocate(f4(mesh), stat=ierr)
-      allocate(f8(mesh), stat=ierr)
+      allocate(f1(ndmx,2), stat=ierr)
+      allocate(f2(grid%mesh), stat=ierr)
+      allocate(f3(grid%mesh), stat=ierr)
+      allocate(f4(grid%mesh), stat=ierr)
+      allocate(f8(grid%mesh), stat=ierr)
       vgc=0.0_DP
       egc=0.0_DP
       if (gga.and.nlcc) then
          f1=0.0_DP
-         call vxcgc(ndm,mesh,nspin,r,r2,f1,rhoc,vgc,egcc)
+         call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,f1,rhoc,vgc,egcc)
       endif
 
-      if (gga) call vxcgc(ndm,mesh,nspin,r,r2,rhos,rhoc,vgc,egc)
+      if (gga) call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rhos,rhoc,vgc,egc)
 
       rh0(1)=0.0_DP
       rh0(2)=0.0_DP
       rhc=0.0_DP
-      do i=1,mesh
+      do i=1,grid%mesh
          rho_tot=rhos(i,1)
          if (lsd.eq.1) rho_tot=rho_tot+rhos(i,2)
          f1(i,1)= vpsloc(i)*rho_tot
@@ -78,16 +78,16 @@ implicit none
          vh(i)= vh(i)*rho_tot
          !
          do is=1,nspin
-            rh(is) = rhos(i,is)/r2(i)/fpi
+            rh(is) = rhos(i,is)/grid%r2(i)/fpi
          enddo
          if (nlcc) then
-            rhc= rhoc(i)/r2(i)/fpi
+            rhc= rhoc(i)/grid%r2(i)/fpi
             call vxc_t(rh,rhc,lsd,vxcp)
             if (gga) then
                f3(i) = exc_t(rh,rhc,lsd)*(rho_tot+rhoc(i)) &
-                     + egc(i)*r2(i)*fpi 
+                     + egc(i)*grid%r2(i)*fpi 
                f8(i) = exc_t(rh0,rhc,lsd)*rhoc(i) + &
-                       egcc(i)*r2(i)*fpi
+                       egcc(i)*grid%r2(i)*fpi
                f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
                       -f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)-  &
@@ -102,7 +102,7 @@ implicit none
             call vxc_t(rh,rhc,lsd,vxcp)
             if (gga) then
                f3(i) = exc_t(rh,rhc,lsd)*rho_tot + &
-                       egc(i)*r2(i)*fpi
+                       egc(i)*grid%r2(i)*fpi
                f2(i) =-(vgc(i,1)+vxcp(1))*rhos(i,1) &
                                  -f1(i,1)-vh(i)-f4(i)
                if (lsd.eq.1) f2(i)=f2(i)  &
@@ -115,12 +115,12 @@ implicit none
          endif
       enddo
 
-      encl=    int_0_inf_dr(f1,r,r2,dx,mesh,1)
-      ehrt=0.5_DP*int_0_inf_dr(vh,r,r2,dx,mesh,2)
-      ecxc=    int_0_inf_dr(f3,r,r2,dx,mesh,2)
-      evxt=    int_0_inf_dr(f4,r,r2,dx,mesh,2)
+      encl=       int_0_inf_dr(f1,grid,grid%mesh,1)
+      ehrt=0.5_DP*int_0_inf_dr(vh,grid,grid%mesh,2)
+      ecxc=       int_0_inf_dr(f3,grid,grid%mesh,2)
+      evxt=       int_0_inf_dr(f4,grid,grid%mesh,2)
       if (nlcc) then
-         ecc=    int_0_inf_dr(f8,r,r2,dx,mesh,2)
+         ecc=     int_0_inf_dr(f8,grid,grid%mesh,2)
       else
          ecc= 0.0_DP
       endif
@@ -138,15 +138,15 @@ implicit none
             f1=0.0_DP
             lam=llts(ns)
             if (octs(ns).gt.0.0_DP) then
-               do n=1, mesh
+               do n=1, grid%mesh
                   f1(n,1) = f1(n,1) + phits(n,ns)**2 * octs(ns)
                enddo
             endif
-            do n=1,mesh
+            do n=1,grid%mesh
                f1(n,1) = f1(n,1) * vnl(n,lam,ind)
             end do
             if (ikk(ns) > 0) &
-                epseu = epseu + int_0_inf_dr(f1,r,r2,dx,ikk(ns),2*(lam+1))
+                epseu = epseu + int_0_inf_dr(f1,grid,ikk(ns),2*(lam+1))
          enddo
       else
          do ns=1,nwfts
@@ -159,7 +159,7 @@ implicit none
                      do n=1,ikl
                         gi(n)=betas(n,n1)*phits(n,ns)
                      enddo
-                     work(n1)=int_0_inf_dr(gi,r,r2,dx,ikl,nst)
+                     work(n1)=int_0_inf_dr(gi,grid,ikl,nst)
                   else
                      work(n1)=0.0_DP
                   endif
@@ -173,7 +173,7 @@ implicit none
             endif
          enddo
       endif 
-      ekin = int_0_inf_dr(f2,r,r2,dx,mesh,2) - epseu
+      ekin = int_0_inf_dr(f2,grid,grid%mesh,2) - epseu
       do ns=1,nwfts
          if (octs(ns).gt.0.0_DP) then
             ekin=ekin+octs(ns)*enlts(ns)

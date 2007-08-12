@@ -6,26 +6,28 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine c6_dft (mesh, zed, dx, r, r2)
+subroutine c6_dft (mesh, zed, grid)
    !--------------------------------------------------------------------
    !
    use kinds,      only : DP
    use constants,  only : e2, pi, fpi, BOHR_RADIUS_ANGS
    use ld1inc,     only : lsd, nwf, oc, nn, ll, isw, psi, enl, vpot,vxt,vh, &
-                          enne, latt, ndm, rho
+                          enne, latt, rho
+   use radial_grids, only: radial_grid_type, ndmx
    !
    implicit none
    !
    ! I/O variables
    !
+   type(radial_grid_type), intent(in) :: grid
    integer mesh , mesh_save
-   real(DP) :: dx, zed, r(mesh), r2(mesh)
+   real(DP) :: zed
    !
    ! local variables
    !
    logical :: csi, l_add_tf_term
-   real(DP) :: vnew(ndm,2), rhoc1(ndm), ze2, fac, vme(ndm)
-   real(DP) :: rho_save(ndm,2)
+   real(DP) :: vnew(ndmx,2), rhoc1(ndmx), ze2, fac, vme(ndmx)
+   real(DP) :: rho_save(ndmx,2)
    real(DP) :: error, error2, e, charge, beta, u, alpha, dalpha, c6, du1, &
                du2, factor, thresh
    real(DP), allocatable :: y(:), yy(:), sqr(:)
@@ -39,6 +41,7 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
    !
    write(6,'(/,/,/,5x,20(''-''),'' Compute C6 from polarizability.'',10(''-''),/)')
    !
+   if (mesh.ne.grid%mesh) call errore('c6_dft',' mesh dimension is not as expected',1)
    counter = 1
    do i = 1, mesh
       if (rho(i,1) .gt. 1.0d-30) counter = counter + 1
@@ -63,11 +66,6 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
    charge=0.d0
    ze2 = - zed * e2
    thresh = 1.d-10
-
-!  define sqr 
-   do i=1,mesh
-      sqr(i) = sqrt(r(i))
-   end do
 !
    rho_save =  rho
    rho=0.0_dp
@@ -79,8 +77,8 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
 
    error = 0.d0
    do i=1,mesh
-      error = error + abs( rho(i,1)-rho_save(i,1) ) * r2(i) * dx
-      error = error + abs( rho(i,2)-rho_save(i,2) ) * r2(i) * dx
+      error = error + abs( rho(i,1)-rho_save(i,1) ) * grid%r2(i) * grid%dx
+      error = error + abs( rho(i,2)-rho_save(i,2) ) * grid%r2(i) * grid%dx
    end do
 
    if (error > 1.d-8) then
@@ -89,12 +87,11 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
    end if
 
    rhoc1=0.d0
-   call new_potential(ndm,mesh,r,r2,sqr,dx,zed,vxt,    &
-                      lsd,.false.,latt,enne,rhoc1,rho,vh,vnew)
+   call new_potential(ndmx,mesh,grid,zed,vxt,lsd,.false.,latt,enne,rhoc1,rho,vh,vnew)
    error = 0.d0
    do i=1,mesh
-      error = error + abs( vpot(i,1)-vnew(i,1) ) * r2(i) * dx
-      error = error + abs( vpot(i,2)-vnew(i,2) ) * r2(i) * dx
+      error = error + abs( vpot(i,1)-vnew(i,1) ) * grid%r2(i) * grid%dx
+      error = error + abs( vpot(i,2)-vnew(i,2) ) * grid%r2(i) * grid%dx
    end do
    write (*,*) "Vpot-Vnew", error
 
@@ -102,8 +99,8 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
    do n=1,nwf
       if (oc(n) >= 0.0_dp) then
          is=isw(n)
-         call ascheq (nn(n),ll(n),enl(n),mesh,dx,r,r2,sqr, &
-                      vnew(1,is),ze2,thresh,psi(1,1,n),nstop)
+         call ascheq (nn(n),ll(n),enl(n),mesh,grid,vnew(1,is),ze2,&
+                      thresh,psi(1,1,n),nstop)
          nerr = nerr + nstop
          write (*,'(4i3,2f10.5,i5)') n, nn(n),ll(n),isw(n),oc(n),enl(n),nstop
       else
@@ -114,12 +111,12 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
 
 !  from now on rho is the REAL rho w/o the volume element
    do i = 1, mesh
-      rho(i,1) = rho(i,1) / (fpi*r(i)**2)
+      rho(i,1) = rho(i,1) / (fpi*grid%r(i)**2)
    end do
 !
 ! initialize external perturbation (electric field)
 !
-   call init_dpot(r,mesh,dvpot)
+   call init_dpot(grid%r,mesh,dvpot)
 !
 ! derivative of xc-potential
 !
@@ -168,13 +165,13 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
          do n=1,nwf
             do l = 1 + ll(n), max( 1 - ll(n), 0 ), - 2
 !               write (*,*) l, ll(n)
-               y(1:mesh) = psi(1:mesh,1,n)/sqr(1:mesh)
+               y(1:mesh) = psi(1:mesh,1,n)/grid%sqr(1:mesh)
                vme(:) = vnew(:,isw(n)) - enl(n)
-               call sternheimer(u,l,ll(n),mesh,dx,r,sqr,r2,vme,zed,y,dvscf,dy)
+               call sternheimer(u,l,ll(n),mesh,grid%dx,grid%r,grid%sqr,grid%r2,vme,zed,y,dvscf,dy)
                fac = 2.0d0 * (2.d0 * ll(n) + 1.d0 )
                if (ll(n)==1 .and. l==2) fac = fac * 2.d0/3.d0
                if (ll(n)==1 .and. l==0) fac = fac * 1.d0/3.d0
-               call inc_drho_of_r(mesh, dx, r, r2, y, dy, fac, drho)
+               call inc_drho_of_r(mesh, grid%dx, grid%r, grid%r2, y, dy, fac, drho)
              
             end do
          end do
@@ -193,7 +190,7 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
          ! compute dv of drho (w/o the TF term)
          !
          l_add_tf_term = .false.
-         call dv_of_drho(mesh, dx, r,r2,rho,drho,dvhx,dvxc,pp,l_add_tf_term)
+         call dv_of_drho(mesh, grid%dx, grid%r,grid%r2,rho,drho,dvhx,dvxc,pp,l_add_tf_term)
 
 #ifdef DEBUG
          write (*,*) "========================"
@@ -224,7 +221,7 @@ subroutine c6_dft (mesh, zed, dx, r, r2)
          do i=1,mesh
             dvscf(i) = dvscf(i) + beta * (dvpot(i)+dvhx(i) -dvscf(i))
             error = error + abs (drho(i) -drho_old(i))
-            error2 = error2 + abs (drho(i) -drho_old(i))* r(i) * dx
+            error2 = error2 + abs (drho(i) -drho_old(i))* grid%r(i) * grid%dx
             drho_old(i) = drho(i)
          end do 
          dalpha = abs(alpha + pp(mesh)) 

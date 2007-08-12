@@ -16,7 +16,7 @@ subroutine set_rhoc
   !
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
-  USE atom,      ONLY : rho_atc, numeric, msh, r, rab, nlcc
+  USE atom,      ONLY : rho_atc, numeric, msh, rgrid, nlcc
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY : omega, tpiba2
   USE ener,      ONLY : etxcc
@@ -71,7 +71,7 @@ subroutine set_rhoc
         !     drhoc compute the radial fourier transform for each shell of g vec
         !
         call drhoc (ngl, gl, omega, tpiba2, numeric (nt), a_nlcc (nt), &
-             b_nlcc (nt), alpha_nlcc (nt), msh (nt), r (1, nt), rab (1, nt), &
+             b_nlcc (nt), alpha_nlcc (nt), msh (nt), rgrid(nt)%r, rgrid(nt)%rab, &
              rho_atc (1, nt), rhocg)
         !
         !     multiply by the structure factor and sum

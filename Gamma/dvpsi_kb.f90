@@ -16,7 +16,7 @@ subroutine dvpsi_kb(kpoint,nu)
   USE kinds, only: DP
   use pwcom
   USE uspp_param, ONLY: nh, nhm
-  USE atom, ONLY: nlcc, mesh, dx, r, rab, rho_atc, numeric
+  USE atom, ONLY: nlcc, rgrid, rho_atc, numeric
   USE wavefunctions_module,  ONLY: evc, psic
   use cgcom
   !
@@ -43,7 +43,7 @@ subroutine dvpsi_kb(kpoint,nu)
         nt=ityp(na)
         if (nlcc(nt)) call drhoc (ngm,gg,omega,tpiba2,numeric(nt),&
                                   a_nlcc(nt),b_nlcc(nt),alpha_nlcc(nt), &
-                                  mesh(nt),dx(nt),r(1,nt),rho_atc(1,nt),workcc)
+                                  rgrid(nt)%mesh,rgrid(nt)%dx,rgrid(nt)%r,rho_atc(1,nt),workcc)
         has_nlcc = has_nlcc .or. nlcc(nt)
         do ng = 1,ngm
            gtau = tpi * ( g(1,ng)*tau(1,na) + &

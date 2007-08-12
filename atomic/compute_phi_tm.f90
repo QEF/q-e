@@ -32,8 +32,8 @@ subroutine compute_phi_tm(lam,ik,chir,phi_out,iflag,xc,e,els_in)
 
   real(DP) ::       &
        xc(8),       &    ! output: parameters of the fit
-       chir(ndm),   &    ! input: the all-electron function
-       phi_out(ndm)      ! output: the phi function
+       chir(ndmx),   &    ! input: the all-electron function
+       phi_out(ndmx)      ! output: the phi function
 
   character(len=2) :: els_in  ! input: the label of the state
   !
@@ -44,7 +44,7 @@ subroutine compute_phi_tm(lam,ik,chir,phi_out,iflag,xc,e,els_in)
        n, nst
 
   real(DP) :: &
-       gi(ndm), &
+       gi(ndmx), &
        psnor, &
        cn(6), c2
 
@@ -57,22 +57,22 @@ subroutine compute_phi_tm(lam,ik,chir,phi_out,iflag,xc,e,els_in)
   do n=1,ik+1
      gi(n)=chir(n)**2  
   enddo
-  faenor=int_0_inf_dr(gi,r,r2,dx,ik,nst)
+  faenor=int_0_inf_dr(gi,grid,ik,nst)
   !
   !
   ! TM: the pseudo-wavefunction is written as polynomial times exponential
   !
   call find_coefficients &
-          (ik, chir, e, r, dx, faenor, vpot, cn, c2, lam, mesh)
+          (ik, chir, e, grid%r, grid%dx, faenor, vpot, cn, c2, lam, grid%mesh)
   do n=1,ik
-     phi_out(n)=sign(r(n)**(lam+1)*exp(pr(cn,c2,r(n))),chir(ik))
+     phi_out(n)=sign(grid%r(n)**(lam+1)*exp(pr(cn,c2,grid%r(n))),chir(ik))
   end do
   xc(1:6) = cn(:)
   xc(7) = c2
   !
   !      for r > r(ik) the pseudo and all-electron psi(r) coincide
   !
-  do n=ik+1,mesh
+  do n=ik+1,grid%mesh
      phi_out(n)= chir(n)
   enddo
   !
@@ -81,11 +81,11 @@ subroutine compute_phi_tm(lam,ik,chir,phi_out,iflag,xc,e,els_in)
 !  do n=1,ik
 !     gi(n)=phi_out(n)**2
 !  enddo
-!  psnor=int_0_inf_dr(gi,r,r2,dx,ik,nst)
+!  psnor=int_0_inf_dr(gi,grid,ik,nst)
 ! write(stdout,'(5x," AE norm = ",f6.3,"  PS norm = ",f6.3)') faenor, psnor
 
   if (iflag == 1) then
-     write(stdout,120) els_in, r(ik)
+     write(stdout,120) els_in, grid%r(ik)
 120  format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
        '  Using Troullier-Martins method ')
   end if

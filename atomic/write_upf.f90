@@ -133,7 +133,7 @@ end subroutine write_upf
          "Suggested cutoff for wfc and rho"  
 
     write (ounps, '(i5,t24,a)') lmax, "Max angular momentum component"  
-    write (ounps, '(i5,t24,a)') mesh, "Number of points in mesh"
+    write (ounps, '(i5,t24,a)') grid%mesh, "Number of points in mesh"
     write (ounps, '(2i5,t24,a)', err = 100, iostat = ios) nwfts, &
          nbeta  , "Number of Wavefunctions, Number of Projectors"
     write (ounps, '(a,t24,a2,a3,a6)', err = 100, iostat = ios) &
@@ -166,10 +166,10 @@ end subroutine write_upf
     write (ounps, '(//a9)', err = 100, iostat = ios) "<PP_MESH>"  
 
     write (ounps, '(t3,a6)', err = 100, iostat = ios) "<PP_R>"  
-    write (ounps, '(1p4e19.11)', err=100, iostat=ios) (r(ir),  ir=1,mesh )
+    write (ounps, '(1p4e19.11)', err=100, iostat=ios) (grid%r(ir),  ir=1,grid%mesh )
     write (ounps, '(t3,a7)', err = 100, iostat = ios) "</PP_R>"  
     write (ounps, '(t3,a8)', err = 100, iostat = ios) "<PP_RAB>"  
-    write (ounps, '(1p4e19.11)', err=100, iostat=ios) (rab(ir), ir=1,mesh )
+    write (ounps, '(1p4e19.11)', err=100, iostat=ios) (grid%rab(ir), ir=1,grid%mesh )
     write (ounps, '(t3,a9)', err = 100, iostat = ios) "</PP_RAB>"  
 
     write (ounps, '(a10)', err = 100, iostat = ios) "</PP_MESH>"  
@@ -202,7 +202,7 @@ end subroutine write_upf
     write (ounps, '(//a9)', err = 100, iostat = ios) "<PP_NLCC>"  
 
     write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
-                                 ( rhoc(ir)/fpi/r2(ir), ir = 1, mesh )
+                                 ( rhoc(ir)/fpi/grid%r2(ir), ir = 1, grid%mesh )
     write (ounps, '(a10)', err = 100, iostat = ios) "</PP_NLCC>"  
     return
 
@@ -225,7 +225,7 @@ end subroutine write_upf
 
     write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_LOCAL>"  
     write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
-                                ( vpsloc(ir), ir = 1, mesh )
+                                ( vpsloc(ir), ir = 1, grid%mesh )
     write (ounps, '(a11)', err = 100, iostat = ios) "</PP_LOCAL>"  
     return
 100 call errore ('write_pseudo_local', 'Writing pseudo file', abs(ios) )  
@@ -288,7 +288,7 @@ end subroutine write_upf
              write (ounps, '(1pe19.11,t24,a)', err=100, iostat=ios) &
                                           qq(nb,mb), "Q_int"
              write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
-                                          ( qvan (n,nb,mb), n=1,mesh )
+                                          ( qvan (n,nb,mb), n=1,grid%mesh )
           enddo
        enddo
        write (ounps, '(t3,a9)', err = 100, iostat = ios) "</PP_QIJ>"  
@@ -321,7 +321,7 @@ end subroutine write_upf
        write (ounps,'(a2,i5,f6.2,t24,a)', err=100, iostat=ios) &
             elts(nb), llts(nb), octs(nb), "Wavefunction"
        write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
-            ( phits(ir,nb), ir=1,mesh )
+            ( phits(ir,nb), ir=1,grid%mesh )
     enddo
     write (ounps, '(a11)', err = 100, iostat = ios) "</PP_PSWFC>"  
     return
@@ -344,7 +344,7 @@ end subroutine write_upf
 
     write (ounps, '(//a12)', err = 100, iostat = ios) "<PP_RHOATOM>"  
     write (ounps, '(1p4e19.11)', err = 100, iostat = ios) &
-                               ( rhos(ir,1), ir=1,mesh )
+                               ( rhos(ir,1), ir=1,grid%mesh )
     write (ounps, '(a13)', err = 100, iostat = ios) "</PP_RHOATOM>"  
     return
 
@@ -372,7 +372,7 @@ end subroutine write_upf
        write (ounps, '(i5,f6.2)', err=100,iostat=ios) lls(nb), jjs(nb)
     enddo
 
-    write(ounps, '(4f15.8)') xmin, rmax, zmesh, dx
+    write(ounps, '(4f15.8)') grid%xmin, grid%rmax, grid%zmesh, grid%dx
 
     write (ounps, '(a13)', err = 100, iostat = ios) "</PP_ADDINFO>"  
 100 call errore('write_pseudo_addinfo','Writing pseudo file',abs(ios))

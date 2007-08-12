@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------------
-subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
+subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
      b,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ik)
   !---------------------------------------------------------------------
   !
@@ -17,7 +17,9 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
   !    correct values in the first two points
   !
   use kinds, only : DP
+  use radial_grids, only : radial_grid_type
   implicit none
+  type(radial_grid_type):: grid
   integer ::   &
        lam,    &     ! l angular momentum
        mesh,   &    ! size of radial mesh
@@ -29,11 +31,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
 
   real(DP) :: &
        e,       &  ! output eigenvalue
-       dx,      &  ! linear delta x for radial mesh
        jam,     &  ! j angular momentum
-       r(mesh), &  ! radial mesh
-       r2(mesh),&  ! square of radial mesh
-       sqr(mesh),& ! square root of radial mesh
        f(mesh), &  ! the f function
        b(0:3), &   ! the taylor expansion of the potential
        y(mesh), &  ! the output solution
@@ -77,7 +75,8 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
   allocate(iwork(nbeta), stat=ierr)
   allocate(eta(ik,nbeta), stat=ierr)
 
-  ddx12=dx*dx/12.0_DP
+  if (mesh.ne.grid%mesh) call errore('integrate_outward','mesh dimension is not as expected',1)
+  ddx12=grid%dx*grid%dx/12.0_DP
   b0e=b(0)-e
   x4l6=4*lam+6
   nst=(lam+1)*2
@@ -103,8 +102,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
         do jb=1,nbeta
            if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
               do n=1,ik
-                 c(n)= c(n)+(ddd(jb,ib) &
-                      -e*qq(jb,ib))*beta(n,jb)
+                 c(n)= c(n)+(ddd(jb,ib) -e*qq(jb,ib))*beta(n,jb)
               enddo
            endif
         enddo
@@ -112,20 +110,20 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
         !     compute the starting values of the solutions
         !
         do n=1,4
-           j1(n)=c(n)/r(n)**(lam+1)
+           j1(n)=c(n)/grid%r(n)**(lam+1)
         enddo
-        call seriesbes(j1,r,r2,4,d)
+        call seriesbes(j1,grid%r,grid%r2,4,d)
         delta=b0e**2+x4l6*b(2)
         xc(1)=(-d(1)*b0e-x4l6*d(3))/delta
         xc(3)=(-b0e*d(3)+d(1)*b(2))/delta
         xc(2)=0.0_DP
         xc(4)=0.0_DP
         do n=1,3
-           eta(n,iib)=r(n)**(lam+1)*(xc(1)+r2(n)*xc(3))/sqr(n)
+           eta(n,iib)=grid%r(n)**(lam+1)*(xc(1)+grid%r2(n)*xc(3))/grid%sqr(n)
         enddo
 
         do n=1,ik
-           c(n)=c(n)*r2(n)/sqr(n)
+           c(n)=c(n)*grid%r2(n)/grid%sqr(n)
         enddo
         !
         !   solve the inhomogeneous equation
@@ -143,16 +141,16 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
            if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
               jjb=jjb+1
               do n=1,ik
-                 el(n)=beta(n,jb)*eta(n,iib)*sqr(n)
+                 el(n)=beta(n,jb)*eta(n,iib)*grid%sqr(n)
               enddo
-              cm(jjb,iib)=-int_0_inf_dr(el,r,r2,dx,ik,nst)
+              cm(jjb,iib)=-int_0_inf_dr(el,grid,ik,nst)
            endif
         enddo
 
         do n=1,ik
-           el(n)=beta(n,ib)*y(n)*sqr(n)
+           el(n)=beta(n,ib)*y(n)*grid%sqr(n)
         enddo
-        bm(iib)=int_0_inf_dr(el,r,r2,dx,ik,nst)
+        bm(iib)=int_0_inf_dr(el,grid,ik,nst)
         cm(iib,iib)=1.0_DP+cm(iib,iib)
      endif
   enddo

@@ -39,7 +39,6 @@ exc_t.o \
 find_qi.o \
 gener_pseudo.o \
 green.o \
-hartree.o \
 int_0_inf_dr.o \
 integrate_inward.o \
 integrate_outward.o \
@@ -65,7 +64,6 @@ run_pseudo.o \
 run_test.o \
 scf.o \
 seriebes.o \
-series.o \
 set_rho_core.o \
 set_psi_in.o \
 set_sl3.o \
@@ -98,6 +96,7 @@ MODULES = \
 ../Modules/kind.o \
 ../Modules/io_files.o \
 ../Modules/pseudo_types.o \
+../Modules/radial_grids.o \
 ../Modules/random_numbers.o \
 ../Modules/read_upf.o \
 ../Modules/version.o \

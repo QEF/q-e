@@ -4,20 +4,20 @@ subroutine outward(y,f,g,mesh,imatch,ncross)
    ! outward integration. numerov method.
    !
    use kinds, only: DP
-   use ld1inc, only: ndm
+   use radial_grids, only: ndmx
    implicit none
    !
    ! I/O variables
    !
    integer :: mesh,imatch, ncross
-   real (DP) :: y(ndm), f(ndm), g(ndm)
+   real (DP) :: y(ndmx), f(ndmx), g(ndmx)
    !
    ! local variables
    !
    integer :: n
    real (DP) :: ymx
 
-   if (ndm.lt.mesh) stop ' outward : ndm .lt. mesh !!!!'
+   if (ndmx.lt.mesh) stop ' outward : ndmx .lt. mesh !!!!'
    !
    ncross=0
    ymx=0.d0

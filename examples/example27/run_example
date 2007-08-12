@@ -88,6 +88,8 @@ cat > c4h6.cp.metaGGA.in << EOF
     dt=4.0,
     pseudo_dir='$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
+    tprnfor=.true.
+    tstress=.true.
  /
  &system
     ibrav=1, celldm(1)=8.00,
@@ -126,6 +128,7 @@ cat > c4h6.pw.metaGGA.in << EOF
     pseudo_dir='$PSEUDO_DIR/',
     outdir='$TMP_DIR/',
     tprnfor=.true.
+    tstress=.true.
  /
  &system
     ibrav=1, celldm(1)=8.00,

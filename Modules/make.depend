@@ -1,5 +1,14 @@
+aa.o : ../iotk/src/iotk_module.o
+aa.o : constants.o
+aa.o : io_files.o
+aa.o : io_global.o
+aa.o : kind.o
+aa.o : mp.o
+aa.o : mp_global.o
+aa.o : mp_wave.o
 atom.o : kind.o
 atom.o : parameters.o
+atom.o : radial_grids.o
 autopilot.o : input_parameters.o
 autopilot.o : io_global.o
 autopilot.o : kind.o
@@ -83,6 +92,8 @@ ions_nose.o : ions_base.o
 ions_nose.o : kind.o
 ions_nose.o : parameters.o
 ions_nose.o : timestep.o
+kplusg.o : kind.o
+metadyn_base.o : aa.o
 metadyn_base.o : basic_algebra_routines.o
 metadyn_base.o : cell_base.o
 metadyn_base.o : constants.o
@@ -96,8 +107,8 @@ metadyn_base.o : metadyn_io.o
 metadyn_base.o : metadyn_vars.o
 metadyn_base.o : mp.o
 metadyn_base.o : random_numbers.o
-metadyn_base.o : xml_io_base.o
 metadyn_io.o : ../iotk/src/iotk_module.o
+metadyn_io.o : aa.o
 metadyn_io.o : constants.o
 metadyn_io.o : constraints_module.o
 metadyn_io.o : input_parameters.o
@@ -107,7 +118,6 @@ metadyn_io.o : ions_base.o
 metadyn_io.o : kind.o
 metadyn_io.o : metadyn_vars.o
 metadyn_io.o : mp.o
-metadyn_io.o : xml_io_base.o
 metadyn_vars.o : control_flags.o
 metadyn_vars.o : input_parameters.o
 metadyn_vars.o : kind.o
@@ -181,6 +191,7 @@ printout_base.o : mp.o
 printout_base.o : mp_global.o
 pseudo_types.o : kind.o
 pseudo_types.o : parameters.o
+pseudo_types.o : radial_grids.o
 pseudodata.o : kind.o
 pseudodata.o : parameters.o
 ptoolkit.o : descriptors.o
@@ -188,6 +199,8 @@ ptoolkit.o : io_global.o
 ptoolkit.o : kind.o
 ptoolkit.o : mp.o
 ptoolkit.o : parallel_include.o
+radial_grids.o : constants.o
+radial_grids.o : kind.o
 random_numbers.o : kind.o
 read_cards.o : autopilot.o
 read_cards.o : constants.o
@@ -208,6 +221,7 @@ read_uspp.o : functionals.o
 read_uspp.o : io_global.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
+read_uspp.o : radial_grids.o
 read_uspp.o : uspp.o
 recvec.o : kind.o
 recvec.o : mp.o
@@ -234,13 +248,15 @@ task_groups.o : parallel_include.o
 timestep.o : kind.o
 upf_to_internal.o : atom.o
 upf_to_internal.o : functionals.o
-upf_to_internal.o : parameters.o
 upf_to_internal.o : pseudo_types.o
+upf_to_internal.o : radial_grids.o
 upf_to_internal.o : uspp.o
 uspp.o : constants.o
 uspp.o : kind.o
 uspp.o : parameters.o
+uspp.o : radial_grids.o
 uspp.o : random_numbers.o
+vms.o : kind.o
 wannier.o : kind.o
 wave_base.o : kind.o
 wave_base.o : mp.o
@@ -248,12 +264,12 @@ wave_base.o : mp_global.o
 wave_base.o : random_numbers.o
 wavefunctions.o : kind.o
 xml_input.o : ../iotk/src/iotk_module.o
+xml_input.o : aa.o
 xml_input.o : input_parameters.o
 xml_input.o : io_files.o
 xml_input.o : io_global.o
 xml_input.o : kind.o
 xml_input.o : version.o
-xml_input.o : xml_io_base.o
 xml_io_base.o : ../iotk/src/iotk_module.o
 xml_io_base.o : constants.o
 xml_io_base.o : io_files.o

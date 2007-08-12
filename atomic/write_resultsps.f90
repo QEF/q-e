@@ -16,7 +16,7 @@ subroutine write_resultsps
   implicit none
 
   integer :: i, j, n, m, l, ios
-  real(DP) :: work(ndm), int_0_inf_dr, ravg, sij
+  real(DP) :: work(ndmx), int_0_inf_dr, ravg, sij
   character (len=20) :: dft_name
   !
   !
@@ -32,7 +32,7 @@ subroutine write_resultsps
   write(stdout,2300) dft_name(1:len_trim(dft_name)),lsd,isic,latt,beta,tr2
 2300 format(5x,'dft =',a,'   lsd =',i1,' sic =',i1,' latt =',i1, &
        '  beta=',f4.2,' tr2=',1pe7.1)
-  write(stdout,1270) mesh,r(mesh),xmin,dx
+  write(stdout,1270) grid%mesh,grid%r(grid%mesh),grid%xmin,grid%dx
 1270 format(5x,'mesh =',i4,' r(mesh) =',f10.5,' xmin =',f6.2,' dx =',f8.5)
   if (rel.lt.2) then
      write(stdout,1000)
@@ -108,8 +108,8 @@ subroutine write_resultsps
 1110 call mp_bcast(ios, ionode_id)
      call errore('write_resultps','opening file_wavefunctionsps',abs(ios))
      if (ionode) then
-        do n=1,mesh
-           write(16,'(8f10.6)') r(n),(phits(n,i), &
+        do n=1,grid%mesh
+           write(16,'(8f10.6)') grid%r(n),(phits(n,i), &
                                       i=nwfts,max(1,nwfts-6),-1)
         !            write(16,'(6f12.6)') r(n),(vnl(n,i)-vpsloc(n), i=lmax,0,-1)
         enddo

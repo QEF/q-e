@@ -17,7 +17,7 @@
       SUBROUTINE cpsizes() 
                                                                         
       USE kinds
-      USE parameters,         ONLY: ndmx
+      USE radial_grids,       ONLY: ndmx
       use ions_base,          only: nat, nsp
       use electrons_base,     only: nx => nbnd, nspin
       use electrons_module,   only: n_emp

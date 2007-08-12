@@ -16,7 +16,7 @@ subroutine normalize(phi,l,j)
   implicit none
 
   real(DP) ::    &
-       phi(ndm), &  ! function to normalize
+       phi(ndmx), &  ! function to normalize
        j            ! total angular momentum
   integer ::    &
        l            ! orbital angular momentum
@@ -28,7 +28,7 @@ subroutine normalize(phi,l,j)
        work(nwfsx), & ! auxiliary variable for becp
        work1,       & ! the norm
        int_0_inf_dr,& ! integration function
-       gi(ndm)        ! used to compute the integrals
+       gi(ndmx)        ! used to compute the integrals
 
 
   if (pseudotype.ne.3) return 
@@ -42,15 +42,15 @@ subroutine normalize(phi,l,j)
         do n=1,ikl
            gi(n)=betas(n,n1)*phi(n)
         enddo
-        work(n1)=int_0_inf_dr(gi,r,r2,dx,ikl,nst)
+        work(n1)=int_0_inf_dr(gi,grid,ikl,nst)
      else
         work(n1)=0.0_dp
      endif
   enddo
-  do n=1,mesh
+  do n=1,grid%mesh
      gi(n)=phi(n)*phi(n)
   enddo
-  work1=int_0_inf_dr(gi,r,r2,dx,mesh,nst)
+  work1=int_0_inf_dr(gi,grid,grid%mesh,nst)
   !
   !   and adding to the charge density
   !
@@ -66,7 +66,7 @@ subroutine normalize(phi,l,j)
      call errore('normalize','negative norm?',1)   
   end if
   work1=sqrt(work1)
-  do n=1,mesh
+  do n=1,grid%mesh
      phi(n)=phi(n)/work1
   enddo
 

@@ -27,7 +27,7 @@ subroutine init_paw_1
   USE paw ,        ONLY : paw_recon, paw_nkb, paw_lmaxkb
   USE splinelib
   USE uspp,        ONLY : ap, aainit
-  USE atom ,       ONLY : r, rab, msh
+  USE atom ,       ONLY : rgrid, msh
   USE io_global,   ONLY : stdout
   !
   implicit none
@@ -125,8 +125,8 @@ subroutine init_paw_1
         rc = paw_recon(nt)%psphi(j)%label%rc
         !rs = 1.0_dp / 3.0_dp * rc
         rs = 2.0_dp / 3.0_dp * rc
-        nrc = COUNT ( r(1:msh(nt),nt) <= rc )
-        nrs = COUNT ( r(1:msh(nt),nt) <= rs )
+        nrc = COUNT ( rgrid(nt)%r(1:msh(nt)) <= rc )
+        nrs = COUNT ( rgrid(nt)%r(1:msh(nt)) <= rs )
         !<debug>
         write(stdout,*) "ZZZ: ", rc, rs, nrc, nrs
         !</debug>
@@ -138,8 +138,8 @@ subroutine init_paw_1
         paw_recon(nt)%aephi(j)%label%nrc = nrc
         paw_recon(nt)%psphi(j)%label%nrs = nrs
         paw_recon(nt)%aephi(j)%label%nrs = nrs
-        call step_f(aux,paw_recon(nt)%psphi(j)%psi**2,r(:,nt),nrs,nrc,pow,msh(nt))
-        call simpson ( msh(nt), aux, rab(1,nt), norm )
+        call step_f(aux,paw_recon(nt)%psphi(j)%psi**2,rgrid(nt)%r(:),nrs,nrc,pow,msh(nt))
+        call simpson ( msh(nt), aux, rgrid(nt)%rab, norm )
         
         paw_recon(nt)%psphi(j)%psi = paw_recon(nt)%psphi(j)%psi / sqrt(norm)
         paw_recon(nt)%aephi(j)%psi = paw_recon(nt)%aephi(j)%psi / sqrt(norm)
@@ -166,9 +166,9 @@ subroutine init_paw_1
                       paw_recon(nt)%psphi(n2)%label%nrs )
                  
                  call step_f ( aux, paw_recon(nt)%psphi(n1)%psi(1:msh(nt)) &
-                      * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), r(:,nt), &
+                      * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), rgrid(nt)%r(:), &
                       nrs, nrc, pow, msh(nt) )
-                 call simpson ( msh(nt), aux, rab(1,nt), s(ih,jh) )
+                 call simpson ( msh(nt), aux, rgrid(nt)%rab, s(ih,jh) )
                  
                  !<apsi>
                  IF ( ih > jh ) THEN
@@ -227,7 +227,7 @@ subroutine init_paw_1
               nrs = paw_recon(nt)%psphi(n1)%label%nrs
               
               call step_f ( aux, &
-                   paw_recon(nt)%paw_betar(1:msh(nt),n1),r(:,nt), &
+                   paw_recon(nt)%paw_betar(1:msh(nt),n1),rgrid(nt)%r(:), &
                    nrs,nrc,pow,msh(nt))
               paw_recon(nt)%paw_betar(1:ndm,n1) = aux(1:ndm)
            end do
@@ -277,11 +277,11 @@ subroutine init_paw_1
         l = paw_recon(nt)%aephi(nb)%label%l
         do iq = startq, lastq
            qi = ( iq - 1 ) * dq
-           call sph_bes ( msh(nt), r(1,nt), qi, l, besr )
+           call sph_bes ( msh(nt), rgrid(nt)%r, qi, l, besr )
            do ir = 1, msh(nt)
-              aux(ir) = paw_recon(nt)%paw_betar(ir,nb) * besr(ir) * r(ir,nt)
+              aux(ir) = paw_recon(nt)%paw_betar(ir,nb) * besr(ir) * rgrid(nt)%r(ir)
            end do
-           call simpson ( msh(nt), aux, rab(1,nt), vqint )
+           call simpson ( msh(nt), aux, rgrid(nt)%rab, vqint )
            paw_recon(nt)%paw_tab(iq,nb) = vqint * pref
         end do
      end do

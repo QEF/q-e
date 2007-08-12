@@ -22,8 +22,8 @@ use ld1inc
   implicit none
 
       real(DP) :: &
-             psi_in(ndm), & ! input: the norm conserving wavefunction
-             phi_out(ndm)   ! output: the us wavefunction
+             psi_in(ndmx), & ! input: the norm conserving wavefunction
+             phi_out(ndmx)   ! output: the us wavefunction
 
       character(len=2) :: els_in
 
@@ -45,7 +45,7 @@ use ld1inc
                f1aep1,f1aem1,jnor, &  ! auxilairy quantities
                bm(2),  &              ! the derivative of the bessel
                fact(2), &             ! factor of normalization
-               j1(ndm,8)             ! the bessel functions
+               j1(ndmx,8)             ! the bessel functions
      
       real(DP) :: &
             deriv_7pts, deriv2_7pts,  p1aep1,  p1aem1
@@ -60,8 +60,8 @@ use ld1inc
 !    compute first and second derivative
 !
       fae=psi_in(ik)
-      f1ae=deriv_7pts(psi_in,ik,r(ik),dx)
-      f2ae=deriv2_7pts(psi_in,ik,r(ik),dx)
+      f1ae=deriv_7pts(psi_in,ik,grid%r(ik),grid%dx)
+      f2ae=deriv2_7pts(psi_in,ik,grid%r(ik),grid%dx)
 !
 !    find the q_i of the bessel functions
 !      
@@ -72,10 +72,10 @@ use ld1inc
 !    compute the functions
 !
       do nc=1,2
-         call sph_bes(ik+5,r,xc(3+nc),lam,j1(1,nc))
-         fact(nc)=psi_in(ik)/(j1(ik,nc)*r(ik))
+         call sph_bes(ik+5,grid%r,xc(3+nc),lam,j1(1,nc))
+         fact(nc)=psi_in(ik)/(j1(ik,nc)*grid%r(ik))
          do n=1,ik+5
-            j1(n,nc)=j1(n,nc)*r(n)*fact(nc)
+            j1(n,nc)=j1(n,nc)*grid%r(n)*fact(nc)
          enddo
       enddo
 !
@@ -84,13 +84,13 @@ use ld1inc
 !
        
       do nc=1,2
-            bm(nc)=deriv2_7pts(j1(1,nc),ik,r(ik),dx)
+            bm(nc)=deriv2_7pts(j1(1,nc),ik,grid%r(ik),grid%dx)
       enddo
 
       xc(2)=(f2ae-bm(1))/(bm(2)-bm(1))
       xc(1)=1.0_dp-xc(2)
       if (iflag.eq.1) then
-         write(stdout,110) els_in,r(ik),2.0_dp*xc(5)**2
+         write(stdout,110) els_in,grid%r(ik),2.0_dp*xc(5)**2
 110      format (5x, ' Wfc-us ',a3,' rcutus=',f6.3, &
                 '  Estimated cut-off energy= ', f8.2,' Ry')
       endif
@@ -101,7 +101,7 @@ use ld1inc
          phi_out(n)=xc(1)*j1(n,1)+xc(2)*j1(n,2)
       enddo
 
-      do n=ik+1,mesh
+      do n=ik+1,grid%mesh
          phi_out(n)=psi_in(n)
       enddo
 

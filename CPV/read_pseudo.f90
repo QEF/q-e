@@ -799,7 +799,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   !
   use uspp_param, only: zp, qfunc, qfcoef, rinner, qqq, vloc_at, &
                    lll, nbeta, kkbeta,  nqlc, nqf, betar, dion, tvanp
-  use atom, only: chi, lchi, nchi, rho_atc, r, rab, mesh, nlcc, numeric, oc
+  use atom, only: chi, lchi, nchi, rho_atc, rgrid, nlcc, numeric, oc
   use funct, only: set_dft_from_name, dft_is_hybrid
   !
   use pseudo_types
@@ -819,13 +819,13 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   zp(is)     = ap%zv
   tvanp(is)  = .FALSE.
   nlcc(is)   = ap%tnlcc
-  mesh(is)   = ap%mesh
+  rgrid(is)%mesh   = ap%mesh
   nchi(is)   = ap%nrps
   nbeta(is)  = ap%nbeta
-  kkbeta(is) = mesh(is)
+  kkbeta(is) = rgrid(is)%mesh
   nqlc(is)   = 0 ! upf%nqlc
   nqf (is)   = 0 ! upf%nqf
-  if (mesh(is) > ndmx ) call errore('read_pseudo','increase mmaxx',mesh(is))
+  if (rgrid(is)%mesh > ndmx ) call errore('read_pseudo','increase mmaxx',rgrid(is)%mesh)
   !
   call set_dft_from_name( TRIM( xc_type ) )
   IF ( dft_is_hybrid() ) &
@@ -847,8 +847,8 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   qfcoef(:,:,:,:,is) = 0.0d0
 
   !
-  r  (1:ap%mesh, is) = ap%rw( 1:ap%mesh )                ! = upf%r  (1:upf%mesh)
-  rab(1:ap%mesh, is) = ap%dx * ap%rw( 1:ap%mesh )        ! = upf%rab(1:upf%mesh)
+  rgrid(is)%r  (1:ap%mesh) = ap%rw( 1:ap%mesh )         ! = upf%r  (1:upf%mesh)
+  rgrid(is)%rab(1:ap%mesh) = ap%dx * ap%rw( 1:ap%mesh ) ! = upf%rab(1:upf%mesh)
   !
   rho_atc (:,is) = 0.d0
   if ( ap%tnlcc ) then
@@ -862,24 +862,21 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   vloc_at (1:ap%mesh, is) = 2.0d0 * ap%vloc( 1:ap%mesh ) ! = upf%vloc(1:upf%mesh)
 
   dion(:,:,is) = 0.0d0                                   ! upf%dion(1:upf%nbeta, 1:upf%nbeta)
-  allocate(fint(mesh(is)))
+  allocate(fint(rgrid(is)%mesh))
   do il = 1, nbeta(is)
     do ic = 1, nchi(is)
       if( lchi( ic, is ) == lll( il, is ) ) exit
     end do
-    do ir = 1, mesh(is)
+    do ir = 1, rgrid(is)%mesh
       fint(ir) = chi( ir, ic, is ) * 2.0d0 * ap%vrps( ir, il )
     end do
-    call simpson_cp90( mesh(is), fint, rab(1,is), dion(il,il,is) )
+    call simpson_cp90( rgrid(is)%mesh, fint, rgrid(is)%rab, dion(il,il,is) )
     dion(il,il,is) = 1.0d0/dion(il,il,is)
   end do
   deallocate(fint)
   !
   return
 end subroutine ncpp2internal
-
-
-
 
 !=----------------------------------------------------------------------------=!
 
@@ -1156,7 +1153,7 @@ END SUBROUTINE read_atomic_cc
       subroutine readbhs( is, iunps )
 !---------------------------------------------------------------------
 !
-      use atom, only: rab, r, mesh, nlcc, rho_atc, numeric
+      use atom, only: rgrid, nlcc, rho_atc, numeric
       use uspp_param, only: zp, betar, dion, vloc_at, lll, nbeta, kkbeta
       use bhs, only: rcl, rc2, bl, al, wrc1, lloc, wrc2, rc1
       use funct, only: set_dft_from_name, dft_is_hybrid
@@ -1221,13 +1218,13 @@ END SUBROUTINE read_atomic_cc
 !     wavefunctions are read from file iunps
 !     ------------------------------------------------------------------
       do il=1,nbeta(is)
-         read(iunps,*) mesh(is),cmesh
+         read(iunps,*) rgrid(is)%mesh,cmesh
 !
 ! kkbeta is for compatibility with Vanderbilt PP
 !
-         kkbeta(is)=mesh(is)
-         do j=1,mesh(is)
-            read(iunps,*) jj,r(j,is),betar(j,il,is)
+         kkbeta(is)=rgrid(is)%mesh
+         do j=1,rgrid(is)%mesh
+            read(iunps,*) jj,rgrid(is)%r(j),betar(j,il,is)
          end do
       end do
 !     
@@ -1237,18 +1234,18 @@ END SUBROUTINE read_atomic_cc
 !
       if(nlcc(is)) then
          read(15,*) meshp,cmeshp
-         if ( meshp.ne.mesh(is) .or. cmeshp.ne.cmesh ) then
+         if ( meshp.ne.rgrid(is)%mesh .or. cmeshp.ne.cmesh ) then
             call errore('readbhs','core charge mesh mismatch',is)
          endif
-         do ir=1,mesh(is)
+         do ir=1,rgrid(is)%mesh
             read(15,*) rdum, rho_atc(ir,is)
          end do
       endif
 !
 !  rab(i) is the derivative of the radial mesh
 !
-      do ir=1,mesh(is)
-         rab(ir,is)=r(ir,is) * log(cmesh)
+      do ir=1,rgrid(is)%mesh
+         rgrid(is)%rab(ir)=rgrid(is)%r(ir) * log(cmesh)
       end do
 !
 !     ------------------------------------------------------------------
@@ -1258,12 +1255,12 @@ END SUBROUTINE read_atomic_cc
 !
 ! NB: the following is NOT the local potential: the -ze^2/r term is missing
 !
-      do ir=1,mesh(is)
+      do ir=1,rgrid(is)%mesh
          vloc_at(ir,is)=0.d0
          do i=1,3
             vloc_at(ir,is) = vloc_at(ir,is)                             &
-     &            +(al(i,is,lloc(is))+bl(i,is,lloc(is))*r(ir,is)**2)    &
-     &            *exp(-(r(ir,is)/rcl(i,is,lloc(is)))**2)
+     &            +(al(i,is,lloc(is))+bl(i,is,lloc(is))*rgrid(is)%r(ir)**2)    &
+     &            *exp(-(rgrid(is)%r(ir)/rcl(i,is,lloc(is)))**2)
          end do
       end do
 !
@@ -1271,19 +1268,19 @@ END SUBROUTINE read_atomic_cc
 !     nonlocal potentials: kleinman-bylander form 
 !     (1) definition of betar   (2) calculation of dion 
 !     ------------------------------------------------------------------
-      allocate(fint(mesh(is)), vnl(mesh(is)))
+      allocate(fint(rgrid(is)%mesh), vnl(rgrid(is)%mesh))
       do il=1,nbeta(is)
-         do ir=1,mesh(is)
+         do ir=1,rgrid(is)%mesh
             vnl(ir)=0.d0
             do i=1,3
-               vnl(ir) = vnl(ir) + (al(i,is,il)+bl(i,is,il)*r(ir,is)**2)&
-     &                    * exp(-(r(ir,is)/rcl(i,is,il))**2)
+               vnl(ir) = vnl(ir) + (al(i,is,il)+bl(i,is,il)*rgrid(is)%r(ir)**2)&
+     &                    * exp(-(rgrid(is)%r(ir)/rcl(i,is,il))**2)
             end do
             vnl(ir) = vnl(ir) - vloc_at(ir,is)
             fint(ir)= betar(ir,il,is)**2*vnl(ir)
             betar(ir,il,is)=vnl(ir)*betar(ir,il,is)
          end do
-         call simpson_cp90(mesh(is),fint,rab(1,is),dion(il,il,is))
+         call simpson_cp90(rgrid(is)%mesh,fint,rgrid(is)%rab,dion(il,il,is))
          dion(il,il,is) = 1.0d0/dion(il,il,is)
       end do
       deallocate(vnl, fint)

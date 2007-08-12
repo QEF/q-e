@@ -17,8 +17,8 @@ use ld1inc
 IMPLICIT NONE
 
 REAL(DP) :: &
-         v_in(ndm), & ! input: the potential to pseudize
-         v_out(ndm),& ! output: the pseudized potential
+         v_in(ndmx), & ! input: the potential to pseudize
+         v_out(ndmx),& ! output: the pseudized potential
          xc(8)        ! output: the coefficients of the fit
 
 INTEGER :: &
@@ -33,7 +33,7 @@ REAL(DP) :: &
          f1aep1,f1aem1,jnor, &  ! auxilairy quantities
          bm(2),  &              ! the derivative of the bessel
          fact(2), &             ! factor of normalization
-         j1(ndm,8)              ! the bessel functions
+         j1(ndmx,8)              ! the bessel functions
      
 REAL(DP) :: &
          deriv_7pts, deriv2_7pts,  p1aep1,  p1aem1
@@ -46,8 +46,8 @@ INTEGER :: &
 !    compute first and second derivative
 !
 fae=v_in(ik)
-f1ae=deriv_7pts(v_in,ik,r(ik),dx)
-f2ae=deriv2_7pts(v_in,ik,r(ik),dx)
+f1ae=deriv_7pts(v_in,ik,grid%r(ik),grid%dx)
+f2ae=deriv2_7pts(v_in,ik,grid%r(ik),grid%dx)
 !
 !    find the q_i of the bessel functions
 !      
@@ -58,7 +58,7 @@ IF (iok.NE.0) &
 !    compute the functions
 !
 DO nc=1,2
-   call sph_bes(ik+1,r,xc(3+nc),0,j1(1,nc))
+   call sph_bes(ik+1,grid%r,xc(3+nc),0,j1(1,nc))
    fact(nc)=v_in(ik)/j1(ik,nc)
    DO n=1,ik+1
       j1(n,nc)=j1(n,nc)*fact(nc)
@@ -69,9 +69,9 @@ ENDDO
 !    first and second derivative
 !
 DO nc=1,2
-   p1aep1=(j1(ik+1,nc)-j1(ik,nc))/(r(ik+1)-r(ik))
-   p1aem1=(j1(ik,nc)-j1(ik-1,nc))/(r(ik)-r(ik-1))
-   bm(nc)=(p1aep1-p1aem1)*2.0_dp/(r(ik+1)-r(ik-1))
+   p1aep1=(j1(ik+1,nc)-j1(ik,nc))/(grid%r(ik+1)-grid%r(ik))
+   p1aem1=(j1(ik,nc)-j1(ik-1,nc))/(grid%r(ik)-grid%r(ik-1))
+   bm(nc)=(p1aep1-p1aem1)*2.0_dp/(grid%r(ik+1)-grid%r(ik-1))
 ENDDO
 
 xc(2)=(f2ae-bm(1))/(bm(2)-bm(1))
@@ -83,7 +83,7 @@ DO n=1,ik
    v_out(n)=xc(1)*j1(n,1)+xc(2)*j1(n,2)
 ENDDO
 
-DO n=ik+1,mesh
+DO n=ik+1,grid%mesh
    v_out(n)=v_in(n)
 ENDDO
 

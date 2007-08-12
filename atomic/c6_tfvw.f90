@@ -7,39 +7,42 @@
 !
 #undef DEBUG
 !---------------------------------------------------------------
-subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
+subroutine c6_tfvw (mesh, zed, grid, rho_input)
    !--------------------------------------------------------------------
    !
    use kinds,      only : DP
    use constants,  only : e2, pi, fpi, BOHR_RADIUS_ANGS
    use ld1inc,     only : lsd, nwf, oc, ll
+   use radial_grids, only: radial_grid_type
    !
    implicit none
    !
    ! I/O variables
    !
+   type(radial_grid_type), intent(in):: grid
    integer mesh
    real (kind=8) :: rho_input(mesh)
-   real (kind=8) :: dx, zed, r(mesh), r2(mesh), rho(mesh)
+   real (kind=8) :: zed, rho(mesh)
    !
    ! local variables
    !
    logical :: csi, l_add_tf_term
    real (kind=8) :: error, error2, e, charge, beta, u, alpha, dalpha, c6, du1, &
                     du2, factor, ze2, thresh
-   real (kind=8), allocatable :: veff(:), y(:), yy(:), sqr(:)
+   real (kind=8), allocatable :: veff(:), y(:), yy(:)
    real (kind=8), allocatable :: dvpot(:), dvscf(:), drho(:), dvhx(:), dvxc(:), pp(:)
    complex (kind=8), allocatable :: dy(:), drho_old(:)
    integer i, iter, n, l, ly, iu, Nu, Nc, counter, nstop, mesh_save
 
-   allocate ( veff(mesh),y(mesh),yy(mesh),sqr(mesh) )
+   allocate ( veff(mesh),y(mesh),yy(mesh))
    allocate ( dvpot(mesh),dvscf(mesh),drho(mesh),dvhx(mesh),dvxc(mesh),pp(mesh) )
    allocate ( dy(mesh), drho_old(mesh) )
    !
    write(6,'(/,/,/,5x,20(''-''),'' Compute C6 from polarizability with TFvW approx.'',10(''-''),/)')
    !
+   if (mesh.ne.grid%mesh) call errore('c6_tfwv',' mesh dimension is not as expected',1)
    do i = 1, mesh
-      rho(i) = rho_input(i) / (fpi*r(i)**2)
+      rho(i) = rho_input(i) / (fpi*grid%r(i)**2)
    end do
    !
    counter = 1
@@ -71,7 +74,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
 !
 ! compute unperturbed effective potential
 !
-   call veff_of_rho(mesh,dx,r,r2,rho,y,veff)
+   call veff_of_rho(mesh,grid%dx,grid%r,grid%r2,rho,y,veff)
 #ifdef DEBUG
    write (*,*) "veff(1:3)"
    write (*,*) veff(1:3)
@@ -89,15 +92,14 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
    thresh = 1.d-14
 
    do i=1,mesh
-      sqr(i) = sqrt(r(i))
-      charge = charge + rho(i) * fpi * r2(i) * r(i) * dx
+      charge = charge + rho(i) * fpi * grid%r2(i) * grid%r(i) * grid%dx
    end do
 !   call solve_scheq(n,l,e,mesh,dx,r,sqr,r2,veff,zed,yy)
-   call ascheq (n, l, e, mesh, dx, r, r2, sqr, veff, ze2, thresh, yy, nstop)
+   call ascheq (n, l, e, mesh, grid, veff, ze2, thresh, yy, nstop)
 
    error = 0.d0
    do i=1,mesh
-      error = error + (y(i)-yy(i)/sqr(i)*sqrt(charge))**2 * r2(i) * dx
+      error = error + (y(i)-yy(i)/grid%sqr(i)*sqrt(charge))**2 * grid%r2(i) * grid%dx
    end do
 
 #ifdef DEBUG
@@ -121,7 +123,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
 !
 ! initialize external perturbation (electric field)
 !
-   call init_dpot(r,mesh,dvpot)
+   call init_dpot(grid%r,mesh,dvpot)
 !
 ! derivative of xc-potential
 !
@@ -168,10 +170,10 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
          !
          l = 1
          ly = 0
-         call sternheimer(u,l,ly,mesh,dx,r,sqr,r2,veff,zed,y,dvscf,dy)
+         call sternheimer(u,l,ly,mesh,grid%dx,grid%r,grid%sqr,grid%r2,veff,zed,y,dvscf,dy)
          ! compute drho of r
          !
-         call drho_of_r(mesh, dx, r, r2, y, dy, drho)
+         call drho_of_r(mesh, grid%dx, grid%r, grid%r2, y, dy, drho)
 #ifdef DEGUG
          write (*,*) "========================"
          write (*,*) "drho(1:3)"
@@ -187,7 +189,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
          ! compute dv of drho (including the TF term)
          !
          l_add_tf_term = .true.
-         call dv_of_drho(mesh, dx, r,r2,rho,drho,dvhx,dvxc,pp, l_add_tf_term)
+         call dv_of_drho(mesh, grid%dx, grid%r,grid%r2,rho,drho,dvhx,dvxc,pp, l_add_tf_term)
 
 #ifdef DEGUG
          write (*,*) "========================"
@@ -217,7 +219,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
          do i=1,mesh
             dvscf(i) = dvscf(i) + beta * (dvpot(i)+dvhx(i) -dvscf(i))
             error = error + abs (drho(i) -drho_old(i))
-            error2 = error2 + abs (drho(i) -drho_old(i))* r(i) * dx
+            error2 = error2 + abs (drho(i) -drho_old(i))* grid%r(i) * grid%dx
             drho_old(i) = drho(i)
          end do 
          dalpha = abs(alpha + pp(mesh)) 
@@ -246,7 +248,7 @@ subroutine c6_tfvw (mesh, zed, dx, r, r2, rho_input)
    write(6,'(/,5x,20(''-''),'' End of C6 calculation '',20(''-''),/)')
 
    deallocate ( dy )
-   deallocate ( veff, y, yy, sqr )
+   deallocate ( veff, y, yy )
    deallocate ( dvpot, dvscf, drho, dvhx, pp )
    
    mesh = mesh_save

@@ -18,7 +18,7 @@ subroutine scf
 
   logical:: conv
   integer:: nerr, nstop, n, i, is, id, nin, mch
-  real(DP) ::  vnew(ndm,2), rhoc1(ndm), ze2
+  real(DP) ::  vnew(ndmx,2), rhoc1(ndmx), ze2
   real(DP), allocatable ::  vsic(:,:), vsicnew(:), vhn1(:), egc(:)
   integer, parameter :: maxter=200
   real(DP), parameter :: thresh=1.0e-10_dp
@@ -30,7 +30,7 @@ subroutine scf
   psi=0.0_dp
   !
   if (isic /= 0) then
-     allocate(vsic(ndm,nwf), vsicnew(ndm), vhn1(ndm), egc(ndm))
+     allocate(vsic(ndmx,nwf), vsicnew(ndmx), vhn1(ndmx), egc(ndmx))
      vsic=0.0_dp
      ! id=1
   endif
@@ -42,15 +42,14 @@ subroutine scf
            is=isw(n)
            if (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
            if (rel == 0) then
-              call ascheq (nn(n),ll(n),enl(n),mesh,dx,r,r2, &
-                   sqr,vnew(1,is),ze2,thresh,psi(1,1,n),nstop)
+              call ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
+                   ze2,thresh,psi(1,1,n),nstop)
            elseif (rel == 1) then
-              call lschps (1,zed,exp(dx),dx,mesh,nin,mch, &
-                   nn(n),ll(n),enl(n),psi(1,1,n),r,vnew(1,is))
+              call lschps (1,zed,grid,nin,mch,nn(n),ll(n),enl(n),psi(1,1,n),vnew(1,is))
               nstop=0
            elseif (rel == 2) then
-              call dirsol (ndm,mesh,nn(n),ll(n),jj(n),iter,enl(n), &
-                   thresh,dx,psi(1,1,n),r,rab,vnew(1,is))
+              call dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &
+                   thresh,grid,psi(1,1,n),vnew(1,is))
               nstop=0
            else
               call errore('scf','relativistic not programmed',1)
@@ -68,14 +67,14 @@ subroutine scf
      !
      rho=0.0_dp
      do n=1,nwf
-        do i=1,mesh
+        do i=1,grid%mesh
            rho(i,isw(n))=rho(i,isw(n))+oc(n)*(psi(i,1,n)**2+psi(i,2,n)**2)
         enddo
      enddo
      !
      ! calculate new potential
      !
-     call new_potential(ndm,mesh,r,r2,sqr,dx,zed,vxt,    &
+     call new_potential(ndmx,grid%mesh,grid,zed,vxt,&
           lsd,.false.,latt,enne,rhoc1,rho,vh,vnew)
      !
      ! calculate SIC correction potential (if present)
@@ -95,9 +94,9 @@ subroutine scf
      !
      ! mix old and new potential
      !
-     call vpack(mesh,ndm,nspin,vnew,vpot,1)
-     call dmixp(mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv)
-     call vpack(mesh,ndm,nspin,vnew,vpot,-1)
+     call vpack(grid%mesh,ndmx,nspin,vnew,vpot,1)
+     call dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv)
+     call vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
      !   write(6,*) iter, eps0
      !
      if (conv) then

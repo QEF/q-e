@@ -20,7 +20,7 @@ subroutine newd_at ( )
 
   real(DP) :: &
        int_0_inf_dr, &   ! the integral function
-       gi(ndm)          ! the gi function
+       gi(ndmx)          ! the gi function
 
   !
   !    screening the D coefficients
@@ -35,7 +35,7 @@ subroutine newd_at ( )
                     gi(n)=qvan(n,ib,jb)*vpstot(n,is)
                  enddo
                  ddd(ib,jb,is)= bmat(ib,jb) &
-                      + int_0_inf_dr(gi,r,r2,dx,ikk(ib),nst)
+                      + int_0_inf_dr(gi,grid,ikk(ib),nst)
                  ddd(jb,ib,is)=ddd(ib,jb,is)
               enddo
            endif

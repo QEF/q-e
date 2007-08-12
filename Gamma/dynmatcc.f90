@@ -13,7 +13,7 @@ subroutine dynmatcc(dyncc)
 #include "f_defs.h" 
   USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau
   use pwcom
-  USE atom, ONLY: nlcc, mesh, dx, r, rab, rho_atc, numeric
+  USE atom, ONLY: nlcc, rgrid, rho_atc, numeric
   USE wavefunctions_module,  ONLY: psic
   use cgcom
   implicit none
@@ -50,7 +50,7 @@ subroutine dynmatcc(dyncc)
      if (nlcc(nta)) then
         call drhoc  (ngm,gg,omega,tpiba2,numeric(nta),        &
                      a_nlcc(nta),b_nlcc(nta),alpha_nlcc(nta), &
-                     mesh(nta),dx(nta),r(1,nta),rho_atc(1,nta),drhocc)
+                     rgrid(nta)%mesh,rgrid(nta)%dx,rgrid(nta)%r,rho_atc(1,nta),drhocc)
         do ig=1,ngm
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
@@ -78,7 +78,7 @@ subroutine dynmatcc(dyncc)
            if (nlcc(ntb)) then
               call drhoc (ngm,gg,omega,tpiba2,numeric(ntb),                &
                           a_nlcc(ntb),b_nlcc(ntb),alpha_nlcc(ntb),         &
-                          mesh(ntb),dx(ntb),r(1,ntb),rho_atc(1,ntb),drhocc)
+                          rgrid(ntb)%mesh,rgrid(ntb)%dx,rgrid(ntb)%r,rho_atc(1,ntb),drhocc)
               do ig=1,ngm
                  exg = tpi* ( g(1,ig)*tau(1,nb) + &
                               g(2,ig)*tau(2,nb) + &

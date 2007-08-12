@@ -18,7 +18,7 @@
      use kinds,              ONLY : DP
      use control_flags,      ONLY : program_name
      use ions_base,          ONLY : nsp
-     use atom,               ONLY : nlcc, r, rab, mesh, rho_atc
+     use atom,               ONLY : nlcc, rgrid, rho_atc
      use gvecb,              ONLY : ngb, gb
      use small_box,          ONLY : omegab, tpibab
      use pseudo_base,        ONLY : compute_rhocg
@@ -51,8 +51,8 @@
            !
            IF( program_name == 'CP90' ) THEN
               !
-              CALL compute_rhocg( rhocb(:,is), rhocb(:,is), r(:,is), rab(:,is), &
-                  rho_atc(:,is), gb, omegab, tpibab**2, mesh(is), ngb, 0 )
+              CALL compute_rhocg( rhocb(:,is), rhocb(:,is), rgrid(is)%r, rgrid(is)%rab, &
+                  rho_atc(:,is), gb, omegab, tpibab**2, rgrid(is)%mesh, ngb, 0 )
               !
            END IF
            !
@@ -74,8 +74,8 @@
                  !
               ELSE
 
-                 CALL compute_rhocg( rhocg(:,is), drhocg(:,is), r(:,is), rab(:,is), &
-                                     rho_atc(:,is), g, omega, tpiba2, mesh(is), ngm, 1 )
+                 CALL compute_rhocg( rhocg(:,is), drhocg(:,is), rgrid(is)%r, rgrid(is)%rab, &
+                                     rho_atc(:,is), g, omega, tpiba2, rgrid(is)%mesh, ngm, 1 )
 
               END IF
               !

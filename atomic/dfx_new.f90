@@ -5,21 +5,21 @@ subroutine dfx_new(dchi0, vx)
 
    use constants, only: pi
    use kinds,     only: DP
-   use ld1inc,    only: ndm, nwfx, mesh, nwf, nspin, oc, rho, psi, isw, &
-                        r, r2, sqr, dx
+   use ld1inc,    only: nwfx, nwf, nspin, oc, rho, psi, isw, grid
+   use radial_grids, only: ndmx, hartree
    implicit none
    ! 
    ! I/O variables
    !
-   real(DP) :: dchi0(ndm,nwfx), vx(ndm,2)
+   real(DP) :: dchi0(ndmx,nwfx), vx(ndmx,2)
    !
    ! local variables
    ! 
    integer, parameter :: niterx = 12 ! 6, 12, 24
-   real(DP) :: drho0(ndm,2),appchim1(ndm,2), vslater(ndm,2)
+   real(DP) :: drho0(ndmx,2),appchim1(ndmx,2), vslater(ndmx,2)
    real(DP) :: int_0_inf_dr
-   real(DP) :: vvx(ndm,2,niterx),drhox(ndm,2,niterx), dvh(ndm,2,niterx), &
-                    dvh0(ndm,2), aux(ndm), drho1(ndm,2), dvh1(ndm,2)
+   real(DP) :: vvx(ndmx,2,niterx),drhox(ndmx,2,niterx), dvh(ndmx,2,niterx), &
+                    dvh0(ndmx,2), aux(ndmx), drho1(ndmx,2), dvh1(ndmx,2)
    real(DP) :: a(niterx,niterx), inva(niterx,niterx), &
                     b1(niterx), b2(niterx), c, c1, work(niterx), x(niterx), uno
    integer :: iwork(niterx), info, iterx
@@ -32,40 +32,40 @@ subroutine dfx_new(dchi0, vx)
    call drho0ofvx(drho0,dchi0)
 
    do is=1,nspin
-      call hartree(0,2,mesh,r,r2,sqr,dx,drho0(1,is),dvh0(1,is))
+      call hartree(0,2,grid%mesh,grid,drho0(1,is),dvh0(1,is))
    end do
 
-   aux(1:mesh) = drho0(1:mesh,1)*dvh0(1:mesh,1)
-   if (nspin==2) aux(1:mesh) = 2.d0 * ( aux(1:mesh) + &
-                               drho0(1:mesh,2)*dvh0(1:mesh,2) )
-   c = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+   aux(1:grid%mesh) = drho0(1:grid%mesh,1)*dvh0(1:grid%mesh,1)
+   if (nspin==2) aux(1:grid%mesh) = 2.d0 * ( aux(1:grid%mesh) + &
+                               drho0(1:grid%mesh,2)*dvh0(1:grid%mesh,2) )
+   c = int_0_inf_dr(aux,grid,grid%mesh,2)
 
    if (first) then
 !      first = .false.
 !-slater exchange potential
       do is=1,nspin
-         vslater(1:mesh,is) = 0.d0
+         vslater(1:grid%mesh,is) = 0.d0
          do nu=1,nwf
-            if (isw(nu) == is) vslater(1:mesh,is) = vslater(1:mesh,is) + &
-                                    oc(nu)*psi(1:mesh,1,nu)*dchi0(1:mesh,nu)
+            if (isw(nu) == is) vslater(1:grid%mesh,is) = vslater(1:grid%mesh,is) + &
+                                    oc(nu)*psi(1:grid%mesh,1,nu)*dchi0(1:grid%mesh,nu)
          end do
-         vslater(1:mesh,is) = vslater(1:mesh,is) / rho(1:mesh,is)
+         vslater(1:grid%mesh,is) = vslater(1:grid%mesh,is) / rho(1:grid%mesh,is)
        end do
-!      write (*,*) vslater(1:mesh)
+!      write (*,*) vslater(1:grid%mesh)
    else
-      vslater(1:mesh,1:nspin) = vx(1:mesh,1:nspin)
+      vslater(1:grid%mesh,1:nspin) = vx(1:grid%mesh,1:nspin)
    end if
 !- is a reasonable starting guess
    call drhoofv(drho1,vslater)
 
-   drho1(1:mesh,1:nspin) = drho1(1:mesh,1:nspin) - drho0(1:mesh,1:nspin)
+   drho1(1:grid%mesh,1:nspin) = drho1(1:grid%mesh,1:nspin) - drho0(1:grid%mesh,1:nspin)
    do is=1,nspin
-      call hartree(0,2,mesh,r,r2,sqr,dx,drho1(1,is),dvh1(1,is))
+      call hartree(0,2,grid%mesh,grid,drho1(1,is),dvh1(1,is))
    end do
-   aux(1:mesh) = drho1(1:mesh,1) * dvh1(1:mesh,1)
-   if (nspin==2) aux(1:mesh) = 2.d0 * ( aux(1:mesh) + &
-                               drho1(1:mesh,2) * dvh1(1:mesh,2) )
-   c1 = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+   aux(1:grid%mesh) = drho1(1:grid%mesh,1) * dvh1(1:grid%mesh,1)
+   if (nspin==2) aux(1:grid%mesh) = 2.d0 * ( aux(1:grid%mesh) + &
+                               drho1(1:grid%mesh,2) * dvh1(1:grid%mesh,2) )
+   c1 = int_0_inf_dr(aux,grid,grid%mesh,2)
 
 #ifdef DEBUG
    write (*,'(a,2f16.10)') "C, C1 ", c, c1
@@ -75,58 +75,58 @@ subroutine dfx_new(dchi0, vx)
    third = 1.0d0/3.0d0
    fac   = -(0.75d0*pi)**(2.0d0/3.0d0)
    do is =1, nspin
-      appchim1(1:mesh,is) = fac/(r(1:mesh)* &
-                            (nspin*rho(1:mesh,is)*r(1:mesh))**third)
+      appchim1(1:grid%mesh,is) = fac/(grid%r(1:grid%mesh)* &
+                            (nspin*rho(1:grid%mesh,is)*grid%r(1:grid%mesh))**third)
    end do
 
-   drhox(1:mesh,1:nspin,1) = drho1(1:mesh,1:nspin)
+   drhox(1:grid%mesh,1:nspin,1) = drho1(1:grid%mesh,1:nspin)
 !- ITERATE !
    do iterx =1,niterx
 !- set a new normalized correction vector vvx = chim1*drho/norm
      
-      vvx(1:mesh,1:nspin,iterx) = appchim1(1:mesh,1:nspin) * &
-                                             drhox(1:mesh,1:nspin,iterx)
+      vvx(1:grid%mesh,1:nspin,iterx) = appchim1(1:grid%mesh,1:nspin) * &
+                                             drhox(1:grid%mesh,1:nspin,iterx)
       do is=1,nspin
-         call hartree(0,2,mesh,r,r2,sqr,dx,vvx(1,is,iterx),dvh(1,is,iterx))
+         call hartree(0,2,grid%mesh,grid,vvx(1,is,iterx),dvh(1,is,iterx))
       end do
-      aux(1:mesh) =vvx(1:mesh,1,iterx) * dvh(1:mesh,1,iterx)
-      if (nspin==2) aux(1:mesh) = 2.d0 * ( aux(1:mesh) +  &
-                                  vvx(1:mesh,2,iterx) * dvh(1:mesh,2,iterx) )
-      capel = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+      aux(1:grid%mesh) =vvx(1:grid%mesh,1,iterx) * dvh(1:grid%mesh,1,iterx)
+      if (nspin==2) aux(1:grid%mesh) = 2.d0 * ( aux(1:grid%mesh) +  &
+                                  vvx(1:grid%mesh,2,iterx) * dvh(1:grid%mesh,2,iterx) )
+      capel = int_0_inf_dr(aux,grid,grid%mesh,2)
 #ifdef DEBUG
       write (*,*) "norm ", capel
 #endif
       if (capel >0) then
          capel = 1.d0/sqrt(capel)
-         vvx(1:mesh,1:nspin,iterx) = vvx(1:mesh,1:nspin,iterx) * capel
+         vvx(1:grid%mesh,1:nspin,iterx) = vvx(1:grid%mesh,1:nspin,iterx) * capel
       end if
 !- compute the corresponding drho
       call drhoofv(drhox(1,1,iterx),vvx(1,1,iterx) )
       do is =1,nspin
-         call hartree(0,2,mesh,r,r2,sqr,dx,drhox(1,is,iterx),dvh(1,is,iterx))
+         call hartree(0,2,grid%mesh,grid,drhox(1,is,iterx),dvh(1,is,iterx))
       end do
 
-      aux(1:mesh) = drhox(1:mesh,1,iterx) * dvh1(1:mesh,1)
-      if (nspin==2) aux(1:mesh) = 2.d0 * ( aux(1:mesh) + &
-                                  drhox(1:mesh,2,iterx) * dvh1(1:mesh,2) )
-      b1(iterx) = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+      aux(1:grid%mesh) = drhox(1:grid%mesh,1,iterx) * dvh1(1:grid%mesh,1)
+      if (nspin==2) aux(1:grid%mesh) = 2.d0 * ( aux(1:grid%mesh) + &
+                                  drhox(1:grid%mesh,2,iterx) * dvh1(1:grid%mesh,2) )
+      b1(iterx) = int_0_inf_dr(aux,grid,grid%mesh,2)
 
-      aux(1:mesh) = drho1(1:mesh,1) * dvh(1:mesh,1,iterx)
-      if (nspin==2) aux(1:mesh) =  2.d0 * ( aux(1:mesh) + &
-                                   drho1(1:mesh,2) * dvh(1:mesh,2,iterx) )
-      b2(iterx) = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+      aux(1:grid%mesh) = drho1(1:grid%mesh,1) * dvh(1:grid%mesh,1,iterx)
+      if (nspin==2) aux(1:grid%mesh) =  2.d0 * ( aux(1:grid%mesh) + &
+                                   drho1(1:grid%mesh,2) * dvh(1:grid%mesh,2,iterx) )
+      b2(iterx) = int_0_inf_dr(aux,grid,grid%mesh,2)
 
       do jter =1,iterx
      
-         aux(1:mesh) = drhox(1:mesh,1,iterx) * dvh(1:mesh,1,jter)
-         if (nspin==2) aux(1:mesh) = 2.d0 * ( aux(1:mesh) + &
-                                     drhox(1:mesh,2,iterx)*dvh(1:mesh,2,jter) )
-         a(iterx,jter) = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+         aux(1:grid%mesh) = drhox(1:grid%mesh,1,iterx) * dvh(1:grid%mesh,1,jter)
+         if (nspin==2) aux(1:grid%mesh) = 2.d0 * ( aux(1:grid%mesh) + &
+                                     drhox(1:grid%mesh,2,iterx)*dvh(1:grid%mesh,2,jter) )
+         a(iterx,jter) = int_0_inf_dr(aux,grid,grid%mesh,2)
 
-         aux(1:mesh) = drhox(1:mesh,1,jter) * dvh(1:mesh,1,iterx)
-         if (nspin==2) aux(1:mesh) = 2.d0 * ( aux(1:mesh) + &
-                                     drhox(1:mesh,2,jter)*dvh(1:mesh,2,iterx) )
-         a(jter,iterx) = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+         aux(1:grid%mesh) = drhox(1:grid%mesh,1,jter) * dvh(1:grid%mesh,1,iterx)
+         if (nspin==2) aux(1:grid%mesh) = 2.d0 * ( aux(1:grid%mesh) + &
+                                     drhox(1:grid%mesh,2,jter)*dvh(1:grid%mesh,2,iterx) )
+         a(jter,iterx) = int_0_inf_dr(aux,grid,grid%mesh,2)
 
       end do
       capel = 0.d0
@@ -186,24 +186,24 @@ subroutine dfx_new(dchi0, vx)
 #endif
 
 
-      vx(1:mesh,1:nspin) = vslater(1:mesh,1:nspin)
+      vx(1:grid%mesh,1:nspin) = vslater(1:grid%mesh,1:nspin)
       do j=1,iterx
-         vx(1:mesh,1:nspin) = vx(1:mesh,1:nspin) + x(j) * vvx(1:mesh,1:nspin,j)
+         vx(1:grid%mesh,1:nspin) = vx(1:grid%mesh,1:nspin) + x(j) * vvx(1:grid%mesh,1:nspin,j)
       end do
 
       if (iterx.eq.niterx) return
 
       call drhoofv(drhox(1,1,iterx+1), vx )
-      drhox(1:mesh,1:nspin,iterx+1) = drhox(1:mesh,1:nspin,iterx+1) - &
-                                      drho0(1:mesh,1:nspin)
+      drhox(1:grid%mesh,1:nspin,iterx+1) = drhox(1:grid%mesh,1:nspin,iterx+1) - &
+                                      drho0(1:grid%mesh,1:nspin)
       do is=1,nspin
-         call hartree(0,2,mesh,r,r2,sqr,dx,drhox(1,1,iterx+1),dvh(1,1,iterx+1))
+         call hartree(0,2,grid%mesh,grid,drhox(1,1,iterx+1),dvh(1,1,iterx+1))
       end do
 
-      aux(1:mesh) = drhox(1:mesh,1,iterx+1)*dvh(1:mesh,1,iterx+1)
-      if (nspin==2) aux(1:mesh) = 2.d0 * ( aux(1:mesh) + &
-                                  drhox(1:mesh,1,iterx+1)*dvh(1:mesh,1,iterx+1))
-      capel = int_0_inf_dr(aux,r,r2,dx,mesh,2)
+      aux(1:grid%mesh) = drhox(1:grid%mesh,1,iterx+1)*dvh(1:grid%mesh,1,iterx+1)
+      if (nspin==2) aux(1:grid%mesh) = 2.d0 * ( aux(1:grid%mesh) + &
+                                  drhox(1:grid%mesh,1,iterx+1)*dvh(1:grid%mesh,1,iterx+1))
+      capel = int_0_inf_dr(aux,grid,grid%mesh,2)
 #ifdef DEBUG
       write (*,*) "capel-check ", capel
 #endif

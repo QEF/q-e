@@ -53,7 +53,8 @@ END MODULE geomcell_cond
 !
 !
 MODULE orbcell_cond
-  USE parameters, only : ndmx, nbrx, npsx 
+  USE parameters, only : nbrx, npsx 
+  use radial_grids, only: ndmx
   USE kinds, only : DP
   !
   !  description of nonlocal orbitals

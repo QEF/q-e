@@ -14,12 +14,60 @@
 !  this module contains the definitions of several TYPE structures,
 !  together with their allocation/deallocation routines
 
-        USE kinds, ONLY: DP
-        USE parameters, ONLY: ndmx, lmaxx
+      USE kinds, ONLY: DP
+      USE parameters, ONLY: lmaxx
+      USE radial_grids, ONLY: ndmx, radial_grid_type
 
-        IMPLICIT NONE
-        SAVE
+      IMPLICIT NONE
+      integer, parameter:: nwfsx=10  ! the maximum number of pseudo wavefunctions
 
+      SAVE
+
+TYPE :: paw_t
+   !
+   ! Type describing a PAW dataset (temporary).
+   ! Functions are defined on a logarithmic radial mesh.
+   !
+
+   CHARACTER(LEN=2) :: symbol
+   REAL (DP) :: zval
+   REAL (DP) :: z
+   CHARACTER(LEN=80) :: dft
+   TYPE(radial_grid_type) :: grid
+!   INTEGER        :: mesh      ! the size of the mesh
+!   REAL (DP), POINTER :: r(:) !r (ndmx)     ! the mesh
+!   REAL (DP), POINTER :: r2(:) !r2 (ndmx)    ! r^2
+!   REAL (DP), POINTER :: sqrtr(:) !sqrtr (ndmx) ! sqrt(r)
+!   REAL (DP) :: dx          ! log(r(i+1))-log(r(i))
+!   REAL (DP) :: zmesh
+   LOGICAL :: nlcc ! nonlinear core correction
+   INTEGER :: nwfc ! number of wavefunctions/projectors
+   INTEGER :: lmax ! maximum angular momentum of projectors
+   INTEGER :: l(nwfsx) ! angular momentum of projectors
+   INTEGER :: ikk(nwfsx) ! cutoff radius for the projectors
+   INTEGER :: irc ! r(irc) = radius of the augmentation sphere
+   REAL (dp) :: &
+          oc (nwfsx), & ! the occupations
+          enl (nwfsx), & ! the energy of the wavefunctions
+          aewfc (ndmx,nwfsx), &  ! all-electron wavefunctions
+          pswfc (ndmx,nwfsx),        & ! pseudo wavefunctions
+          proj (ndmx,nwfsx),     & ! projectors
+          augfun(ndmx,nwfsx,nwfsx),      & ! augmentation functions
+          augmom(nwfsx,nwfsx,0:2*lmaxx) , & ! moments of the augmentation functions
+          aeccharge (ndmx),  & ! AE core charge
+          psccharge (ndmx),  & ! PS core charge
+          aeloc (ndmx),    & ! descreened AE potential: v_AE-v_H[n1]-v_XC[n1+nc]
+          psloc (ndmx),    & ! descreened local PS potential: v_PS-v_H[n~+n^]-v_XC[n~+n^+n~c]
+          kdiff (nwfsx,nwfsx)         ! kinetic energy differences
+!
+!!!  Notes about screening:
+!!!       Without nlcc, the local PSpotential is descreened with n~+n^ only.
+!!!       The local AEpotential is descreened ALWAYS with n1+nc. This improves
+!!!       the accuracy, and will not cost in the plane wave code (atomic
+!!!       contribution only).
+END TYPE paw_t
+
+!
 !  BEGIN manual
 !  TYPE DEFINITIONS
 

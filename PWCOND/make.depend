@@ -13,6 +13,7 @@ cond_out.o : ../PW/pwcom.o
 cond_out.o : condcom.o
 condcom.o : ../Modules/kind.o
 condcom.o : ../Modules/parameters.o
+condcom.o : ../Modules/radial_grids.o
 do_cond.o : ../Modules/io_files.o
 do_cond.o : ../Modules/io_global.o
 do_cond.o : ../Modules/ions_base.o
@@ -25,7 +26,7 @@ form_zk.o : ../Modules/kind.o
 four.o : ../Modules/cell_base.o
 four.o : ../Modules/constants.o
 four.o : ../Modules/kind.o
-four.o : ../Modules/parameters.o
+four.o : ../Modules/radial_grids.o
 four.o : condcom.o
 free_mem.o : condcom.o
 gep_x.o : ../Modules/kind.o
@@ -86,12 +87,14 @@ save_cond.o : ../Modules/cell_base.o
 save_cond.o : ../Modules/io_files.o
 save_cond.o : ../Modules/kind.o
 save_cond.o : ../Modules/parameters.o
+save_cond.o : ../Modules/radial_grids.o
 save_cond.o : ../PW/noncol.o
 save_cond.o : ../PW/pwcom.o
 save_cond.o : condcom.o
 scatter_forw.o : ../Modules/cell_base.o
 scatter_forw.o : ../Modules/constants.o
 scatter_forw.o : ../Modules/parameters.o
+scatter_forw.o : ../Modules/radial_grids.o
 scatter_forw.o : ../PW/noncol.o
 scatter_forw.o : condcom.o
 summary_band.o : ../Modules/io_files.o

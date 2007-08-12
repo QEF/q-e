@@ -33,8 +33,8 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
        e         ! input: the energy of the level
 
   real(DP) ::       &
-       chir(ndm),   &    ! input: the all-electron function
-       phi_out(ndm)      ! output: the phi function
+       chir(ndmx),   &    ! input: the all-electron function
+       phi_out(ndmx)      ! output: the phi function
 
   character(len=2) :: els_in  ! input: the label of the state
   !
@@ -51,7 +51,7 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
        m, n, nst, nnode, nc, nc1, ij, imax, iq, i
 
   real(DP) :: &
-       chi_dir(ndm,2), gi(ndm), j1(ndm,4), &
+       chi_dir(ndmx,2), gi(ndmx), j1(ndmx,4), &
        f1aep1, f1aem1, jnor, psnor, fact(4), &
        cm(10), bm(4), ze2, cn(6), c2, &
        delta, a, b, c, deter, gamma, &
@@ -76,15 +76,15 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   !   compute the first and second derivative of all-electron function
   !
   fae=chir(ik)
-  f1ae=deriv_7pts(chir,ik,r(ik),dx)
-  f2ae=deriv2_7pts(chir,ik,r(ik),dx)
+  f1ae=deriv_7pts(chir,ik,grid%r(ik),grid%dx)
+  f2ae=deriv2_7pts(chir,ik,grid%r(ik),grid%dx)
   !
   !   compute the norm of the all-electron function
   !
   do n=1,ik+1
      gi(n)=chir(n)**2  
   enddo
-  faenor=int_0_inf_dr(gi,r,r2,dx,ik,nst)
+  faenor=int_0_inf_dr(gi,grid,ik,nst)
   !
   !
   !   RRKJ: the pseudo-wavefunction is written as an expansion into (3 or 4) 
@@ -98,11 +98,11 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   !    compute the bessel functions
   !
   do nc=1,nbes
-     call sph_bes(ik+5,r,xc(nbes+nc),lam,j1(1,nc))
-     jnor=j1(ik,nc)*r(ik)
+     call sph_bes(ik+5,grid%r,xc(nbes+nc),lam,j1(1,nc))
+     jnor=j1(ik,nc)*grid%r(ik)
      fact(nc)=chir(ik)/jnor
      do n=1,ik+5
-        j1(n,nc)=j1(n,nc)*r(n)*chir(ik)/jnor
+        j1(n,nc)=j1(n,nc)*grid%r(n)*chir(ik)/jnor
      enddo
   enddo
   !
@@ -111,13 +111,13 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   !
   ij=0
   do nc=1, nbes
-     bm(nc)=deriv2_7pts(j1(1,nc),ik,r(ik),dx)
+     bm(nc)=deriv2_7pts(j1(1,nc),ik,grid%r(ik),grid%dx)
      do nc1=1,nc
         ij=ij+1
         do n=1,ik
            gi(n)=j1(n,nc)*j1(n,nc1)
         enddo
-        cm(ij)=int_0_inf_dr(gi,r,r2,dx,ik,nst)
+        cm(ij)=int_0_inf_dr(gi,grid,ik,nst)
      enddo
   enddo
      !
@@ -125,8 +125,8 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
      !
   if (nbes == 4) then
      wmax=0.0_dp
-     do n=1,mesh
-        if (abs(chir(n)) > wmax .and. r(n) < 4.0_dp) then
+     do n=1,grid%mesh
+        if (abs(chir(n)) > wmax .and. grid%r(n) < 4.0_dp) then
            wmax=abs(chir(n))
            if(chir(n).lt.0.0_dp)then
               isign=-1
@@ -222,7 +222,7 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   !
   !      for r > r(ik) the pseudo and all-electron psi(r) coincide
   !
-  do n=ik+1,mesh
+  do n=ik+1,grid%mesh
      phi_out(n)= chir(n)
   enddo
   !
@@ -231,15 +231,15 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   do n=1,ik
      gi(n)=phi_out(n)**2
   enddo
-  psnor=int_0_inf_dr(gi,r,r2,dx,ik,nst)
+  psnor=int_0_inf_dr(gi,grid,ik,nst)
 
   if (iflag == 1) then
      if (tm) then
-        write(stdout,120) els_in, r(ik)
+        write(stdout,120) els_in, grid%r(ik)
 120     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
           '  Using Troullier-Martins method ')
      else
-        write(stdout,130) els_in,r(ik),2.0_dp*xc(6)**2 
+        write(stdout,130) els_in,grid%r(ik),2.0_dp*xc(6)**2 
 130     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
           '  Estimated cut-off energy= ', f11.2,' Ry')
         if (nbes == 4) write(stdout,140) rho0
@@ -254,13 +254,13 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   nnode=0  
   do n=1,ik+1
      if ( phi_out(n) .ne. sign(phi_out(n),phi_out(n+1)) ) then
-        if (iflag==1) write(stdout,150) lam,r(n)
+        if (iflag==1) write(stdout,150) lam,grid%r(n)
 150     format (5x,'l=',i4,' Node at ',f10.8)
         nnode=nnode+1
      endif
   enddo
   iok=nnode
-  if (iflag == 1) write(stdout,160) nnode,r(ik)
+  if (iflag == 1) write(stdout,160) nnode,grid%r(ik)
 160 format (5x,' This function has ',i4,' nodes', ' for 0 < r < ',f8.3)
 
   return

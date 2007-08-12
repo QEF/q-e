@@ -33,7 +33,7 @@ subroutine four(w0, z0, dz, tblm, taunew, r, rab, betar)
 #include "f_defs.h"
   USE kinds, ONLY: DP 
   USE constants, ONLY : tpi, fpi
-  USE parameters, only : ndmx
+  USE radial_grids, only : ndmx
   USE cell_base, ONLY : alat, tpiba
   USE cond, ONLY : sarea, nz1, ngper, gper, ninsh, gnsh, ngpsh
 

@@ -12,7 +12,7 @@ subroutine stres_loc (sigmaloc)
   !----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : msh, mesh, r, rab, numeric
+  USE atom,                 ONLY : msh, rgrid, numeric
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : omega, tpiba2
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
@@ -66,8 +66,8 @@ subroutine stres_loc (sigmaloc)
   !
   do nt = 1, ntyp
      ! dvloc contains dV_loc(G)/dG
-     call dvloc_of_g (lloc (nt), lmax (nt), numeric (nt), mesh (nt), &
-          msh (nt), rab (1, nt), r (1, nt), vloc_at (1, nt), &
+     call dvloc_of_g (lloc (nt), lmax (nt), numeric (nt), rgrid(nt)%mesh, &
+          msh (nt), rgrid(nt)%rab, rgrid(nt)%r, vloc_at (1, nt), &
           cc (1, nt), alpc (1, nt), nlc (nt), nnl (nt), zp (nt), &
           aps (1, 0, nt), alps (1, 0, nt), tpiba2, ngl, gl, omega, dvloc)
      ! no G=0 contribution

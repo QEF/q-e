@@ -19,7 +19,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    USE parameters, ONLY : nchix
    USE io_global,  ONLY : stdout
    USE constants,  ONLY : tpi, fpi
-   USE atom,       ONLY : msh, r, rab, lchi, nchi, oc, chi
+   USE atom,       ONLY : msh, lchi, nchi, oc, chi
    USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
    USE cell_base,  ONLY : omega, at, bg, tpiba
    USE klist,      ONLY : xk

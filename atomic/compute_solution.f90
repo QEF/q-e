@@ -7,9 +7,8 @@
 !
 !
 !---------------------------------------------------------------
-subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
-     r2,sqr,vpot, &
-     y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk)
+subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
+           qq,nbeta,nwfx,lls,jjs,ikk)
   !---------------------------------------------------------------
   !
   !  numerical integration of the radial schroedinger equation for
@@ -22,8 +21,11 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   !
   use io_global, only : stdout
   use kinds, only : DP
+  use radial_grids, only: radial_grid_type, series
+
   implicit none
 
+  type(radial_grid_type), intent(in) :: grid
   integer :: &
        lam, &      ! l angular momentum
        mesh,&      ! size of radial mesh
@@ -36,11 +38,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
 
   real(DP) :: &
        e,       &  ! output eigenvalue
-       dx,      &  ! linear delta x for radial mesh
        jam,     &  ! j angular momentum
-       r(mesh), &  ! radial mesh
-       r2(mesh),&  ! square of radial mesh
-       sqr(mesh),& ! square root of radial mesh
        vpot(mesh),&! the local potential 
        thresh,   & ! precision of eigenvalue
        y(mesh),  & ! the output solution
@@ -57,7 +55,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
        ze2,        &  ! possible coulomb term aroun the origin (set 0)
        b(0:3),     &  ! coefficients of taylor expansion of potential
        c1,c2,c3,c4,b0e, & ! auxiliary for expansion of wavefunction
-       rr1,rr2,    & ! values of y in the first points
+       rr1,rr2,   & ! values of y in the first points+ auxiliary
        eup,elw,    & ! actual energy interval
        ymx,        & ! the maximum value of the function
        rap,        & ! the ratio between the number of nodes
@@ -84,6 +82,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
        ncross,& ! actual number of nodes
        nstart  ! starting point for inward integration
 
+   if (mesh.ne.grid%mesh) call errore('compute_solution','mesh dimension is not as expected',1)
   !
   !  set up constants and allocate variables the 
   !
@@ -91,7 +90,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   allocate(el(mesh), stat=ierr)
   allocate(c(mesh), stat=ierr)
 
-  ddx12=dx*dx/12.0_dp
+  ddx12=grid%dx*grid%dx/12.0_dp
   l1=lam+1
   nst=l1*2
   sqlhf=(DBLE(lam)+0.5_dp)**2
@@ -104,9 +103,9 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   !
   ze2=0.0_dp
   do n=1,4
-     y(n)=vpot(n)-ze2/r(n)
+     y(n)=vpot(n)-ze2/grid%r(n)
   enddo
-  call series(y,r,r2,b)
+  call series(y,grid%r,grid%r2,b)
 
   !      write(stdout,*) 'eneter lam,eup,elw,e',lam,nbeta,eup,elw,e
   !
@@ -116,16 +115,16 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   !  f > 0         "           "        "      forbidden   "
   !
   ik=0
-  f(1)=ddx12*(r2(1)*(vpot(1)-e)+sqlhf)
+  f(1)=ddx12*(grid%r2(1)*(vpot(1)-e)+sqlhf)
   do n=2,mesh
-     f(n)=ddx12*(r2(n)*(vpot(n)-e)+sqlhf)
+     f(n)=ddx12*(grid%r2(n)*(vpot(n)-e)+sqlhf)
      if( f(n).ne.sign(f(n),f(n-1)).and.n.lt.mesh-5 ) ik=n
   enddo
   if (ik.eq.0.and.nbeta.eq.0) ik=mesh*3/4
 
   if(ik.ge.mesh-2) then
      do n=1,mesh
-        write(stdout,*) r(n), vpot(n), f(n)
+        write(stdout,*) grid%r(n), vpot(n), f(n)
      enddo
      call errore('compute_solution', 'No point found for matching',1)
   endif
@@ -150,20 +149,20 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   c2=(c1*ze2+b0e)/x4l6
   c3=(c2*ze2+c1*b0e+b(1))/x6l12
   c4=(c3*ze2+c2*b0e+c1*b(1)+b(2))/x8l20
-  rr1=(1.0_dp+r(1)*(c1+r(1)*(c2+r(1)*(c3+r(1)*c4))))*r(1)**l1
-  rr2=(1.0_dp+r(2)*(c1+r(2)*(c2+r(2)*(c3+r(2)*c4))))*r(2)**l1
-  y(1)=rr1/sqr(1)
-  y(2)=rr2/sqr(2)
+  !
+  rr1=(1.0_dp+grid%r(1)*(c1+grid%r(1)*(c2+grid%r(1)*(c3+grid%r(1)*c4))))*grid%r(1)**l1
+  rr2=(1.0_dp+grid%r(2)*(c1+grid%r(2)*(c2+grid%r(2)*(c3+grid%r(2)*c4))))*grid%r(2)**l1
+  y(1)=rr1/grid%sqr(1)
+  y(2)=rr2/grid%sqr(2)
   !
   !    outward integration before ik
   !
-  call integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,f, &
-       b,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ik)
+  call integrate_outward (lam,jam,e,mesh,ndm,grid,f, b,y,beta,ddd,qq,&
+       nbeta,nwfx,lls,jjs,ik)
   !
   !    inward integration up to ik
   !
-  call integrate_inward(e,mesh,ndm,dx,r,r2,sqr,f,y, &
-       c,el,ik,nstart)
+  call integrate_inward(e,mesh,ndm,grid,f,y,c,el,ik,nstart)
   !
   !   exponential tail of the solution if it was not computed
   !
@@ -187,12 +186,12 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,dx,r, &
   !  normalize the eigenfunction and exit
   !
   do n=1,mesh
-     el(n)=r(n)*y(n)*y(n)
+     el(n)=grid%r(n)*y(n)*y(n)
   enddo
-  sum=int_0_inf_dr(el,r,r2,dx,mesh,nst)
+  sum=int_0_inf_dr(el,grid,mesh,nst)
   sum=sqrt(sum)
   do n=1,mesh
-     y(n)=sqr(n)*y(n)/sum
+     y(n)=grid%sqr(n)*y(n)/sum
   enddo
 
   deallocate(el)

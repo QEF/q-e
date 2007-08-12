@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
+subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
      thresh,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk)
   !---------------------------------------------------------------
   !
@@ -22,7 +22,10 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   use io_global, only : stdout
   use kinds, only : DP
+  use radial_grids, only: radial_grid_type
   implicit none
+
+  type (radial_grid_type),intent(in):: grid
 
   integer :: &
        nn, &       ! main quantum number for node number
@@ -34,13 +37,9 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
-  real(kind=dp) :: &
+  real(dp) :: &
        e,de,    &     ! output eigenvalue
-       dx,      &  ! linear delta x for radial mesh
        jam, &      ! j angular momentum
-       r(mesh), &  ! radial mesh
-       r2(mesh),&  ! square of radial mesh
-       sqr(mesh), &! square root of radial mesh
        vpot(mesh),&! the local potential 
        thresh,  &  ! precision of eigenvalue
        y(mesh), &  ! the output solution
@@ -52,7 +51,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
   integer, parameter :: maxter=100
 
-  real(kind=dp) :: &
+  real(dp) :: &
        sqlhf,      &  ! the term for angular momentum in equation
        det,detup,detlw,detold, &! the determinant
        eup0,elw0,  &  ! limits imposed by node counter
@@ -68,9 +67,12 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
 
   logical :: &
        nosol
+
+  if (mesh.ne.grid%mesh) call errore('asheqps','mesh dimension is not as expected',1)
   !
   !  set up constants and allocate variables the 
   !
+
   sqlhf=(dble(lam)+0.5_DP)**2
   !
   !     first try to find the zero with newton method
@@ -81,13 +83,11 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   nosol=.false.
   count0=0
   elw = e
-  call compute_det(nn,lam,jam,elw,mesh,ndm,dx,r,r2,sqr,vpot, &
-       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
-       detlw)
+  call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
+                   nwfx,lls,jjs,ikk,detlw)
   eup=e*0.99_DP
-  call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
-       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
-       detup)
+  call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
+                   nwfx,lls,jjs,ikk,detup)
      detold=detlw
   do iter=1,maxter
      if (detup /= detlw) de=-detlw*(eup-elw)/(detup-detlw)
@@ -107,12 +107,10 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      endif
         eup = elw
         elw = elw + de
-     call compute_det(nn,lam,jam,elw,mesh,ndm,dx,r,r2,sqr,vpot, &
-       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
-       detlw)
-     call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
-       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
-       detup)
+     call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,&
+                      nbeta,nwfx,lls,jjs,ikk,detlw)
+     call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,&
+                      nbeta,nwfx,lls,jjs,ikk,detup)
   enddo
   !
   !    if the program arrives here newton method does not work
@@ -120,14 +118,14 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !
 800 e=eold
   if (eup0 == 0.0_DP) then
-     eup=vpot(mesh)+sqlhf/r2(mesh)
+     eup=vpot(mesh)+sqlhf/grid%r2(mesh)
   else
      eup=eup0
   endif
   if (elw0 == 0.0_DP) then  
      elw=eup
      do n=1,mesh
-        elw=min(elw,vpot(n)+sqlhf/r2(n))
+        elw=min(elw,vpot(n)+sqlhf/grid%r2(n))
      enddo
   else
      elw=elw0
@@ -135,15 +133,14 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   if(e.gt.eup) e=0.9_DP*eup+0.1_DP*elw
   if(e.lt.elw) e=0.9_DP*elw+0.1_DP*eup
 
-  call compute_det(nn,lam,jam,elw,mesh,ndm,dx,r,r2,sqr,vpot, &
-       beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk,detlw)
+  call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
+                   nwfx,lls,jjs,ikk,detlw)
 
   de=(eup-elw)/51.0_DP
   do n=1,50
      eup=elw+de
-     call compute_det(nn,lam,jam,eup,mesh,ndm,dx,r,r2,sqr,vpot, &
-          beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk, &
-          detup)
+     call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
+                      nwfx,lls,jjs,ikk,detup)
      if (detup*detlw.lt.0.0_DP) write(stdout,*) 'count0 = ', count0
      if (detup*detlw.lt.0.0_DP) goto 100
      elw=eup
@@ -158,8 +155,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
   !      
   do iter=1,maxter
 
-     call compute_det(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
-          beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk,det)
+     call compute_det(nn,lam,jam,e,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
+                      nwfx,lls,jjs,ikk,det)
 
      !         write(stdout,'(i11,3f20.10)') iter,detlw,det,detup
      !         write(stdout,'(''energy'',i5,3f20.10)') iter,elw,e,eup
@@ -176,9 +173,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
            elw=eold
            detlw=detold
            eup=e-0.001_DP
-           call compute_det(nn,lam,jam,eup,mesh,ndm,dx, &
-                r,r2,sqr,vpot,beta,ddd,qq,&
-                nbeta,nwfx,lls,jjs,ikk,detup)
+           call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,&
+                            nbeta,nwfx,lls,jjs,ikk,detup)
 
            if (count.gt.30) &
                 call errore('ascheqps','too many attempts ',1)
@@ -188,9 +184,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
            elw=e+0.001_DP
            eup=eold
            detup=detold
-           call compute_det(nn,lam,jam,elw,mesh,ndm,dx,  &
-                r,r2,sqr,vpot,beta,ddd,qq, &
-                nbeta,nwfx,lls,jjs,ikk,detlw)
+           call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,&
+                            nbeta,nwfx,lls,jjs,ikk,detlw)
            if (count.gt.6) &
                 call errore('ascheqps','too many attempts ',2)
            goto 100
@@ -221,8 +216,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,dx,r,r2,sqr,vpot, &
      write(stdout,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
      nosol=.true.
   else
-     call compute_solution(lam,jam,e,mesh,ndm,dx,r, &
-          r2,sqr,vpot,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk)
+     call compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
+          qq,nbeta,nwfx,lls,jjs,ikk)
   endif
   !
   !    count the node number and compare with the required n

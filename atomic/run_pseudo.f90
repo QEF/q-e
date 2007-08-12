@@ -25,8 +25,8 @@ subroutine run_pseudo
        nbf      ! number of beta functions
 
   real(DP) :: &
-       vaux(ndm),  &   ! auxiliary variable
-       vnew(ndm,2)   ! the potential
+       vaux(ndmx),  &   ! auxiliary variable
+       vnew(ndmx,2)   ! the potential
 
   integer :: &
        n1,n2,nst,ikl,ind,ios
@@ -38,8 +38,8 @@ subroutine run_pseudo
        nvalts,                  & ! number of valence electrons for this conf.
        dddnew(nwfsx,nwfsx,2),   & ! the new D coefficients
        ocstart(nwfsx),          & ! guess for the occupations
-       vd(2*(ndm+nwfsx+nwfsx)), & ! Vloc and D in one array for mixing
-       vdnew(2*(ndm+nwfsx+nwfsx)) ! the new vd array
+       vd(2*(ndmx+nwfsx+nwfsx)), & ! Vloc and D in one array for mixing
+       vdnew(2*(ndmx+nwfsx+nwfsx)) ! the new vd array
   integer :: &
        iswstart(nwfsx)            ! guess for the starting spins
 
@@ -71,14 +71,14 @@ subroutine run_pseudo
      CALL new_paw_hamiltonian (vpstot, ddd, etots, &
           pawsetup, pawsetup%nwfc, pawsetup%l, 1,iswstart,ocstart, &
           pawsetup%pswfc, pawsetup%enl)
-     vpstot(1:mesh,2)=vpstot(1:mesh,1)
+     vpstot(1:grid%mesh,2)=vpstot(1:grid%mesh,1)
      ddd(1:nbeta,1:nbeta,2)=ddd(1:nbeta,1:nbeta,1)
      do is=1,nspin
-        vpstot(1:mesh,is)=vpstot(1:mesh,is)-pawsetup%psloc(1:mesh)
+        vpstot(1:grid%mesh,is)=vpstot(1:grid%mesh,is)-pawsetup%psloc(1:grid%mesh)
      enddo
-     call vdpack (mesh, ndm, nbeta, nwfsx, nspin, vpstot, ddd, vd, "PACK")
+     call vdpack (grid%mesh, ndmx, nbeta, nwfsx, nspin, vpstot, ddd, vd, "PACK")
      do is=1,nspin
-        vpstot(1:mesh,is)=vpstot(1:mesh,is)+pawsetup%psloc(1:mesh)
+        vpstot(1:grid%mesh,is)=vpstot(1:grid%mesh,is)+pawsetup%psloc(1:grid%mesh)
      enddo
   endif
   !
@@ -90,7 +90,7 @@ subroutine run_pseudo
      if (.not.lpaw) then
         !
         call chargeps(rhos,phits,nwfts,llts,jjts,octs,iswts)
-        call new_potential(ndm,mesh,r,r2,sqr,dx,0.0_dp,vxt,lsd, &
+        call new_potential(ndmx,grid%mesh,grid,0.0_dp,vxt,lsd,&
              nlcc,latt,enne,rhoc,rhos,vh,vnew)
 
         do is=1,nspin
@@ -111,25 +111,25 @@ subroutine run_pseudo
                                              err=100, iostat=ios)
 100        call errore('run_pseudo','opening file' // nomefile,abs(ios))
            if (lsd==1) then
-              do n=1,mesh
-                 write(18,'(5e16.8)') r(n),vnew(n,1)-vpstot(n,1), &
+              do n=1,grid%mesh
+                 write(18,'(5e16.8)') grid%r(n),vnew(n,1)-vpstot(n,1), &
                          vnew(n,1), vnew(n,2)-vpstot(n,2), vnew(n,2)
               enddo
            else
-              do n=1,mesh
-                 write(18,'(3e26.15)') r(n),vnew(n,1)-vpstot(n,1), &
+              do n=1,grid%mesh
+                 write(18,'(3e26.15)') grid%r(n),vnew(n,1)-vpstot(n,1), &
                           vnew(n,1)
               enddo
            endif
            close(18)
         endif
 
-        call vpack(mesh,ndm,nspin,vnew,vpstot,1)
-        call dmixp(mesh*nspin,vnew,vpstot,beta,tr2,iter,3,eps0,conv)
-        call vpack(mesh,ndm,nspin,vnew,vpstot,-1)
+        call vpack(grid%mesh,ndmx,nspin,vnew,vpstot,1)
+        call dmixp(grid%mesh*nspin,vnew,vpstot,beta,tr2,iter,3,eps0,conv)
+        call vpack(grid%mesh,ndmx,nspin,vnew,vpstot,-1)
 
         do is=1,nspin
-           do n=1,mesh
+           do n=1,grid%mesh
               vpstot(n,is)=vpstot(n,is)+vpsloc(n)
            enddo
         enddo
@@ -140,13 +140,13 @@ subroutine run_pseudo
         call new_paw_hamiltonian (vnew, dddnew, etots, &
              pawsetup, nwfts, llts, nspin, iswts, octs, phits, enlts)
         do is=1,nspin
-           vnew(1:mesh,is)=vnew(1:mesh,is)-pawsetup%psloc(1:mesh)
+           vnew(1:grid%mesh,is)=vnew(1:grid%mesh,is)-pawsetup%psloc(1:grid%mesh)
         enddo
-        call vdpack (mesh, ndm, nbeta, nwfsx, nspin, vnew, dddnew, vdnew, "PACK")
-        call dmixp((mesh+nbeta*nbeta)*nspin,vdnew,vd,beta,tr2,iter,3,eps0,conv)
-        call vdpack (mesh, ndm, nbeta, nwfsx, nspin, vpstot, ddd, vd, "UNDO")
+        call vdpack (grid%mesh, ndmx, nbeta, nwfsx, nspin, vnew, dddnew, vdnew, "PACK")
+        call dmixp((grid%mesh+nbeta*nbeta)*nspin,vdnew,vd,beta,tr2,iter,3,eps0,conv)
+        call vdpack (grid%mesh, ndmx, nbeta, nwfsx, nspin, vpstot, ddd, vd, "UNDO")
         do is=1,nspin
-           vpstot(1:mesh,is)=vpstot(1:mesh,is)+pawsetup%psloc(1:mesh)
+           vpstot(1:grid%mesh,is)=vpstot(1:grid%mesh,is)+pawsetup%psloc(1:grid%mesh)
         enddo
         !
      endif

@@ -13,7 +13,8 @@ subroutine save_cond (lwrite, lsr, ef, nrz, nocros, noins,  &
 !
 #include "f_defs.h"
   use kinds, only : DP
-  USE parameters, only : ndmx, nbrx, npsx
+  USE parameters, only : nbrx, npsx
+  use radial_grids, only: ndmx
   USE cell_base, ONLY : alat, tpiba, tpiba2, at, bg
   use io_files, only : save_file
   use lsda_mod, only: nspin

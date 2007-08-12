@@ -7,15 +7,21 @@
 !
 
 !-----------------------------------------------------------------------
-subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
-     r,r2,rab,sqr,dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
+subroutine read_pseudo (file_pseudo,zed,grid,ndmx,&
+                        dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
   !-----------------------------------------------------------------------
   !
   use kinds, only : DP
   use constants, only : fpi
+  use radial_grids, only: radial_grid_type, do_mesh
   implicit none
+  !
+  ! I/O variables
+  !
+  type (radial_grid_type), intent(out):: grid
+  !
   integer  ::    &
-       ndm, &    ! input: the mesh dimensions
+       ndmx, &    ! input: the mesh dimensions
        rel, &    ! input: rel=2 for spin-orbit pseudopotential
        mesh,&    ! output: the number of mesh points
        lmax,&    ! output: the maximum angular momentum
@@ -24,14 +30,16 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
   real(DP) ::       &
        zed,            & ! input: the atomic charge
        zval,           & ! output: the valence charge
-       xmin,dx,        & ! output: the mesh 
-       rmax,           & ! output: the maximum mesh value
-       r(ndm),r2(ndm), & ! output: the mesh
-       rab(ndm),       & ! output: derivative of the mesh
-       sqr(ndm),       & ! output: the square root of the mesh
-       vnl(ndm,0:3,2), & ! output: the potential in numerical form
-       vpsloc(ndm),    & ! output: the local pseudopotential
-       rhoc(ndm)         ! output: the core charge
+!       xmin,dx,        & ! output: the mesh 
+!       rmax,           & ! output: the maximum mesh value
+!       r(ndmx),r2(ndmx), & ! output: the mesh
+!       rab(ndmx),       & ! output: derivative of the mesh
+!       sqr(ndmx),       & ! output: the square root of the mesh
+       vnl(ndmx,0:3,2), & ! output: the potential in numerical form
+       vpsloc(ndmx),    & ! output: the local pseudopotential
+       rhoc(ndmx)         ! output: the core charge
+ 
+  real(DP) :: xmin, dx, rmax ! auxiliary mesh data
 
   logical :: &
        nlcc    ! output: if true the pseudopotential has nlcc
@@ -41,12 +49,10 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
        dft*20              ! output: the type of xc
 
   integer :: &
-       ios, i, l, k, ir, iunps, mesh1, &
-       nbeta,nlc,nnl   
+       ios, i, l, k, ir, iunps, nbeta,nlc,nnl   
 
   real(DP) :: &
-       vnloc, a_core, b_core, &
-       alfa_core, xmax, &
+       vnloc, a_core, b_core, alfa_core, &
        cc(2),alpc(2),alc(6,0:3),alps(3,0:3),erf 
 
   logical :: &
@@ -106,14 +112,13 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
   !     read the mesh parameters
   !
   read( iunps, *, err=300, iostat=ios ) zed, xmin, dx, mesh, nbeta
-  xmax=(mesh-1)*dx+xmin
-  rmax=exp(xmax)/zed
+  rmax=exp( (mesh-1)*dx+xmin )/zed
   !
   !    and generate the mesh: this overwrites the mesh defined in the
   !    input parameters
   !
-  call do_mesh(rmax,zed,xmin,dx,0,ndm,mesh1,r,r2,rab,sqr)
-  if (mesh.ne.mesh1) &
+  call do_mesh(rmax,zed,xmin,dx,0,grid)
+  if (mesh.ne.grid%mesh) &
        call errore('read_pseudo','something wrong in mesh',1)
   !
   !    outside this routine all pseudo are numeric: construct vnl and
@@ -126,8 +131,8 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
      read( iunps, '(a)', err=300, iostat=ios ) cdum
      if (nlcc) then 
         do ir=1, mesh
-           rhoc(ir)=(a_core+b_core*r2(ir))*exp(-alfa_core*r2(ir)) &
-                *r2(ir)*fpi
+           rhoc(ir)=(a_core+b_core*grid%r2(ir))*exp(-alfa_core*grid%r2(ir)) &
+                *grid%r2(ir)*fpi
         enddo
      else
         rhoc=0.0_dp
@@ -136,8 +141,8 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
         do ir=1,mesh
            vnloc = 0.0_dp
            do k=1,3
-              vnloc = vnloc + exp(-alps(k,l)*r2(ir))*  &
-                   ( alc(k,l) + r2(ir)*alc(k+3,l) )
+              vnloc = vnloc + exp(-alps(k,l)*grid%r2(ir))*  &
+                   ( alc(k,l) + grid%r2(ir)*alc(k+3,l) )
            enddo
            !
            !  NB: the factor 2 converts from hartree to rydberg
@@ -147,9 +152,9 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
         enddo
      enddo
      do ir=1,mesh
-        vpsloc(ir) = -2.0_dp*zval/r(ir)*(cc(1)*  &
-             erf(r(ir)*sqrt(alpc(1)))                &
-             + cc(2)*erf(r(ir)*sqrt(alpc(2))))
+        vpsloc(ir) = -2.0_dp*zval/grid%r(ir)* &
+                   ( cc(1)*erf(grid%r(ir)*sqrt(alpc(1))) &
+                   + cc(2)*erf(grid%r(ir)*sqrt(alpc(2))) )
      end do
   endif
 
@@ -191,7 +196,7 @@ subroutine read_pseudo (file_pseudo,zed,xmin,rmax,dx,mesh,ndm, &
         read( iunps, *, err=300, iostat=ios )  &
              ( rhoc(ir), ir=1,mesh )
         do ir=1, mesh
-           rhoc(ir)=rhoc(ir)*r2(ir)*fpi
+           rhoc(ir)=rhoc(ir)*grid%r2(ir)*fpi
         enddo
      else
         rhoc=0.0_dp

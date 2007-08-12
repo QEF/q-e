@@ -15,13 +15,14 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   use constants, only: e2, fpi
   use ld1inc
   use funct, only: dft_is_gradient
+  use radial_grids, only: hartree
   implicit none
   integer :: n
-  real(DP):: vhn1(ndm),vhn2(ndm), egc(ndm)
+  real(DP):: vhn1(ndmx),vhn2(ndmx), egc(ndmx)
   !
   integer :: i, is
   real(DP):: rh(2), rhc, exc_t, vxcp(2)
-  real(DP):: vgc(ndm,2),  egc0(ndm), rhotot(ndm,2)
+  real(DP):: vgc(ndmx,2),  egc0(ndmx), rhotot(ndmx,2)
   logical :: gga
 
   vhn1=0.0_dp
@@ -34,25 +35,25 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !
   rhotot=0.0_dp
   if (rel.eq.2) then
-     do i=1,mesh
+     do i=1,grid%mesh
         rhotot(i,1)=psi(i,1,n)**2+psi(i,2,n)**2
      enddo
   else
-     do i=1,mesh
+     do i=1,grid%mesh
         rhotot(i,1)=psi(i,1,n)**2
      enddo
   endif
-  !call hartree(0,2*(ll(n)+1),mesh,r,r2,sqr,dx,rhotot,vhn1)
-  call hartree(0,2,mesh,r,r2,sqr,dx,rhotot,vhn1)
+  !call hartree(0,2*(ll(n)+1),grid%mesh,grid,rhotot,vhn1)
+  call hartree(0,2,grid%mesh,grid,rhotot,vhn1)
   !
   !    add exchange and correlation potential: LDA or LSDA terms
   !
   rhc=0.0_dp
   rh=0.0_dp
-  do i=1,mesh
+  do i=1,grid%mesh
      vhn1(i) = e2*vhn1(i)
-     rh(1) = rhotot(i,1)/r2(i)/fpi
-     if (nlcc) rhc = rhoc(i)/r2(i)/fpi
+     rh(1) = rhotot(i,1)/grid%r2(i)/fpi
+     if (nlcc) rhc = rhoc(i)/grid%r2(i)/fpi
      call vxc_t(rh,rhc,lsd,vxcp)
      vhn2(i)= vhn1(i)+vxcp(1)
      egc(i)= exc_t(rh,rhc,lsd)*rhotot(i,1)
@@ -63,10 +64,10 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !   add gradient-correction terms to exchange-correlation potential
   !
   egc0=egc
-  call vxcgc(ndm,mesh,nspin,r,r2,rhotot,rhoc,vgc,egc)
-  do i=1,mesh
+  call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rhotot,rhoc,vgc,egc)
+  do i=1,grid%mesh
      vhn2(i)=vhn2(i)+vgc(i,1)
-     egc(i)=egc(i)*r2(i)*fpi+egc0(i)
+     egc(i)=egc(i)*grid%r2(i)*fpi+egc0(i)
   enddo
   return
 end subroutine sic_correction

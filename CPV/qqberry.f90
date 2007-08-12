@@ -19,7 +19,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
 
   use uspp_param,         only: lmaxq, nqlc, kkbeta, nbeta, nbetam, nh, nhm, oldvan
   use uspp,               only: indv, lpx, lpl, ap,nhtolm
-  use atom,               only: r, rab
+  use atom,               only: rgrid
   use core
   use gvecw,              only: ngw
   use reciprocal_vectors, only: mill_l
@@ -93,7 +93,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
      do l=1,nqlc(is)                        
         xg= gmes !only orthorombic cells
         !!!call bess(xg,l,kkbeta(is),r(1,is),jl)
-        call sph_bes ( kkbeta(is), r(1,is), xg, l-1, jl )
+        call sph_bes ( kkbeta(is), rgrid(is)%r, xg, l-1, jl )
         do iv= 1,nbeta(is)
            do jv=iv,nbeta(is)
               ijv = (jv-1)*jv/2 + iv
@@ -105,9 +105,9 @@ subroutine qqberry2( gqq,gqqm, ipol)
               end do
               if (oldvan(is)) then
                  call herman_skillman_int     &
-                      &  (kkbeta(is),fint,rab(1,is),qradb2(iv,jv,l,is))
+                      &  (kkbeta(is),fint,rgrid(is)%rab,qradb2(iv,jv,l,is))
               else
-                 call simpson (kkbeta(is),fint,rab(1,is),qradb2(iv,jv,l,is))
+                 call simpson (kkbeta(is),fint,rgrid(is)%rab,qradb2(iv,jv,l,is))
               endif
               qradb2(iv,jv,l,is)=  c*qradb2(iv,jv,l,is)
               if ( iv /= jv ) qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)

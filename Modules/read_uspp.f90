@@ -13,7 +13,8 @@ MODULE read_uspp_module
   !  Vanderbilt's code and Andrea's RRKJ3 format
   !     
   USE kinds, ONLY: DP
-  USE parameters, ONLY: nchix, lmaxx, nbrx, ndmx, nsx, lqmax, nqfx
+  USE parameters, ONLY: nchix, lmaxx, nbrx, nsx, lqmax, nqfx
+  use radial_grids, only: ndmx
   USE io_global, ONLY: stdout, meta_ionode
   USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
        set_dft_from_indices
@@ -22,8 +23,7 @@ MODULE read_uspp_module
   !
   USE uspp_param, ONLY: zp, qfunc, qfcoef, qqq, betar, dion, vloc_at, &
        rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp, oldvan, iver, psd
-  USE atom, ONLY: zmesh, nchi, chi, lchi, r, rab, mesh, nlcc, oc, &
-        rho_at, rho_atc, xmin, dx
+  USE atom, ONLY: rgrid, nchi, chi, lchi, nlcc, oc, rho_at, rho_atc
   !
   IMPLICIT NONE
   SAVE
@@ -145,11 +145,11 @@ CONTAINS
          call errore('readvan','wrong file version read',1)
     !
     read( iunps, '(a20,3f15.9)', err=100, iostat=ios ) &
-         title, zmesh(is), zp(is), exfact 
+         title, rgrid(is)%zmesh, zp(is), exfact 
     !
     psd (is) = title(1:2)
     !
-    if ( zmesh(is) < 1 .or. zmesh(is) > 100.0_DP) &
+    if ( rgrid(is)%zmesh < 1 .or. rgrid(is)%zmesh > 100.0_DP) &
          call errore( 'readvan','wrong zmesh read', is )
     if ( zp(is) <= 0.0_DP .or. zp(is) > 100.0_DP) &
          call errore('readvan','wrong atomic charge read', is )
@@ -166,10 +166,10 @@ CONTAINS
          CALL errore( 'readvan ', 'META-GGA not implemented', 1 )
     !
     read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios ) &
-         nchi(is), mesh(is), etotpseu
+         nchi(is), rgrid(is)%mesh, etotpseu
     if ( nchi(is) < 0 .OR. nchi(is) > nchix ) &
          call errore( 'readvan', 'wrong or too large nchi read', nchi(is) )
-    if ( mesh(is) > ndmx .or. mesh(is) < 0 ) &
+    if ( rgrid(is)%mesh > ndmx .or. rgrid(is)%mesh < 0 ) &
          call errore( 'readvan','wrong mesh', is )
     !
     !     info on pseudo eigenstates - energies are not used
@@ -269,7 +269,7 @@ CONTAINS
     !
     if( nbeta(is) > nbrx .or. nbeta(is) <0 ) &
          call errore( 'readvan','nbeta wrong or too large', is )
-    if( kkbeta(is) > mesh(is) .or. kkbeta(is) < 0 ) &
+    if( kkbeta(is) > rgrid(is)%mesh .or. kkbeta(is) < 0 ) &
          call errore( 'readvan','kkbeta wrong or too large', is )
     !
     !    Now reads the main Vanderbilt parameters
@@ -318,7 +318,7 @@ CONTAINS
     !   read the local potential vloc_at
     !
     read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-         rcloc, ( vloc_at(ir,is), ir=1,mesh(is) )
+         rcloc, ( vloc_at(ir,is), ir=1,rgrid(is)%mesh )
     !
     !   If present reads the core charge rho_atc(r)=4*pi*r**2*rho_core(r)
     !
@@ -326,38 +326,38 @@ CONTAINS
        if (iver(1,is) >= 7) &
             read( iunps, '(1p4e19.11)', err=100, iostat=ios ) dummy
        read( iunps, '(1p4e19.11)', err=100, iostat=ios )  &
-            ( rho_atc(ir,is), ir=1,mesh(is) )
+            ( rho_atc(ir,is), ir=1,rgrid(is)%mesh )
     endif
     !
     !     Read the screened local potential (not used)
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         (rho_at(ir,is), ir=1,mesh(is))
+         (rho_at(ir,is), ir=1,rgrid(is)%mesh)
     !
     !     Read the valence atomic charge
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         (rho_at(ir,is), ir=1,mesh(is))
+         (rho_at(ir,is), ir=1,rgrid(is)%mesh)
     !
     !     Read the logarithmic mesh (if version > 1)
     !
     if (iver(1,is) >1) then
        read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            (r(ir,is),ir=1,mesh(is))
+            (rgrid(is)%r(ir),ir=1,rgrid(is)%mesh)
        read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            (rab(ir,is),ir=1,mesh(is))
+            (rgrid(is)%rab(ir),ir=1,rgrid(is)%mesh)
     else
        !
        !     generate herman-skillman mesh (if version = 1)
        !
-       call herman_skillman_grid (mesh(is),zmesh(is),r(1,is),rab(1,is))
+       call herman_skillman_grid (rgrid(is)%mesh,rgrid(is)%zmesh,rgrid(is)%r,rgrid(is)%rab)
     end if
     !
     !     convert vloc_at to the conventions used in the rest of the code
     !     (as read from Vanderbilt's format it is r*v_loc(r))
     !
-    do ir = 2, mesh (is)
-       vloc_at (ir, is) = vloc_at (ir, is) / r (ir, is)
+    do ir = 2, rgrid(is)%mesh
+       vloc_at (ir, is) = vloc_at (ir, is) / rgrid(is)%r(ir)
     enddo
     vloc_at (1, is) = vloc_at (2, is)
     !
@@ -366,8 +366,8 @@ CONTAINS
     !
     if (nlcc (is) ) then
        rho_atc(1,is) = 0.0_DP
-       do ir=2,mesh(is)
-          rho_atc(ir,is) = rho_atc(ir,is)/fpi/r(ir,is)**2
+       do ir=2,rgrid(is)%mesh
+          rho_atc(ir,is) = rho_atc(ir,is)/fpi/rgrid(is)%r(ir)**2
        enddo
     end if
     !
@@ -381,7 +381,7 @@ CONTAINS
     !
     if (iver(1,is) >= 6) &
          read( iunps, *, err=100, iostat=ios ) &
-         ((chi(ir,iv,is),ir=1,mesh(is)),iv=1,nchi(is))
+         ((chi(ir,iv,is),ir=1,rgrid(is)%mesh),iv=1,nchi(is))
     !
     if (iver(1,is) == 1) then
        !
@@ -401,7 +401,7 @@ CONTAINS
 300 format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
     WRITE( stdout,400) title, dft_name
 400 format (4x,'|  ',2a20,' exchange-corr  |')
-    WRITE( stdout,500) zmesh(is), is, zp(is), exfact
+    WRITE( stdout,500) rgrid(is)%zmesh, is, zp(is), exfact
 500 format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
          &     f10.5, 9x,'|')
     WRITE( stdout,600) ifpcor, etotpseu
@@ -482,7 +482,7 @@ CONTAINS
                 if ( abs(qrl(ir,l)-qfunc(ir,ijv,is)) > 1.0d-6) go to 10
              end do
 10           irinner = ir+1
-             rinner(l,is) = r(irinner,is)
+             rinner(l,is) = rgrid(is)%r(irinner)
              !
              ! least square minimization: find
              ! qrl = sum_i c_i r^{l+1}r^{2i-2} for r < rinner
@@ -491,12 +491,12 @@ CONTAINS
              b(:)   = 0.0_DP
              do i = 1, nqf(is)
                 do ir=1,irinner
-                   b(i) = b(i) + r(ir,is)**(2*i-2+l+1) * qrl(ir,l)
+                   b(i) = b(i) + rgrid(is)%r(ir)**(2*i-2+l+1) * qrl(ir,l)
                 end do
                 do j = i, nqf(is)
                    do ir=1,irinner
-                      a(i,j) = a(i,j) + r(ir,is)**(2*i-2+l+1) * &
-                           r(ir,is)**(2*j-2+l+1) 
+                      a(i,j) = a(i,j) + rgrid(is)%r(ir)**(2*i-2+l+1) * &
+                                        rgrid(is)%r(ir)**(2*j-2+l+1) 
                    end do
                    if (j > i) a(j,i) = a(i,j) 
                 end do
@@ -637,9 +637,9 @@ CONTAINS
          call errore('readrrkj','wrong potential read',is)
     !
     read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
-         xmin (is), rdum, zmesh(is), dx (is), mesh(is)
+         rgrid(is)%xmin, rdum, rgrid(is)%zmesh, rgrid(is)%dx, rgrid(is)%mesh
     !
-    if (mesh(is) > ndmx .or. mesh(is) < 0) &
+    if (rgrid(is)%mesh > ndmx .or. rgrid(is)%mesh < 0) &
          call errore('readrrkj', 'wrong mesh',is)
     !
     read( iunps, '(2i5)', err=100, iostat=ios ) &
@@ -671,7 +671,7 @@ CONTAINS
        kkbeta(is)=max(kkbeta(is),ikk)
        read ( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
             ( betar(ir,nb,is), ir=1,ikk)
-       do ir=ikk+1,mesh(is)
+       do ir=ikk+1,rgrid(is)%mesh
           betar(ir,nb,is)=0.0_DP
        enddo
        do mb=1,nb
@@ -688,11 +688,11 @@ CONTAINS
                   qqq(nb,mb,is)
              qqq(mb,nb,is)=qqq(nb,mb,is)
              read(iunps,'(1p4e19.11)',err=100,iostat=ios) &
-                  (qfunc(n,ijv,is),n=1,mesh(is))
+                  (qfunc(n,ijv,is),n=1,rgrid(is)%mesh)
           else
              qqq(nb,mb,is)=0.0_DP
              qqq(mb,nb,is)=0.0_DP
-             do n=1,mesh(is)
+             do n=1,rgrid(is)%mesh
                 qfunc(n,ijv,is)=0.0_DP
              enddo
           endif
@@ -702,24 +702,24 @@ CONTAINS
     !   reads the local potential 
     !
     read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-         rdum, ( vloc_at(ir,is), ir=1,mesh(is) )
+         rdum, ( vloc_at(ir,is), ir=1,rgrid(is)%mesh )
     !
     !   reads the atomic charge
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         ( rho_at(ir, is), ir=1,mesh(is) )
+         ( rho_at(ir, is), ir=1,rgrid(is)%mesh )
     !
     !   if present reads the core charge
     !
     if ( nlcc(is) ) then 
        read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-            ( rho_atc(ir,is), ir=1,mesh(is) )
+            ( rho_atc(ir,is), ir=1,rgrid(is)%mesh )
     endif
     !
     !   read the pseudo wavefunctions of the atom
     !  
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         ((chi(ir,nb,is),ir=1,mesh(is)),nb=1,nchi(is))
+         ((chi(ir,nb,is),ir=1,rgrid(is)%mesh),nb=1,nchi(is))
     !
     !    set several variables for compatibility with the rest of the code
     !
@@ -732,17 +732,17 @@ CONTAINS
     !
     !    compute the radial mesh
     !
-    do ir = 1, mesh(is)
-       x = xmin(is) + DBLE(ir-1) * dx (is)
-       r(ir,is) = EXP(x) / zmesh(is)
-       rab(ir,is) = dx(is) * r(ir,is)
+    do ir = 1, rgrid(is)%mesh
+       x = rgrid(is)%xmin + DBLE(ir-1) * rgrid(is)%dx
+       rgrid(is)%r(ir) = EXP(x) / rgrid(is)%zmesh
+       rgrid(is)%rab(ir) = rgrid(is)%dx * rgrid(is)%r(ir)
     end do
     !
     !     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor)
     !
     if ( nlcc(is) ) then
-       do ir=1,mesh(is)
-          rho_atc(ir,is) = rho_atc(ir,is)/fpi/r(ir,is)**2
+       do ir=1,rgrid(is)%mesh
+          rho_atc(ir,is) = rho_atc(ir,is)/fpi/rgrid(is)%r(ir)**2
        enddo
     end if
     !

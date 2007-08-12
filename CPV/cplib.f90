@@ -20,7 +20,7 @@
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba
-      USE atom,               ONLY: nchi, lchi, mesh, r, chi, rab
+      USE atom,               ONLY: nchi, lchi, rgrid, chi
 !
       IMPLICIT NONE
       INTEGER,     INTENT(in) :: n_atomic_wfc
@@ -42,7 +42,7 @@
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
       CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
-      ndm = MAXVAL(mesh(1:nsp))
+      ndm = MAXVAL(rgrid(1:nsp)%mesh)
       !
       ALLOCATE(jl(ndm), vchi(ndm))
       ALLOCATE(q(ngw), chiq(ngw))
@@ -61,11 +61,11 @@
          DO nb = 1,nchi(is)
             l = lchi(nb,is)
             DO i=1,ngw
-               CALL sph_bes (mesh(is), r(1,is), q(i), l, jl)
-               DO ir=1,mesh(is)
-                  vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
+               CALL sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
+               DO ir=1,rgrid(is)%mesh
+                  vchi(ir) = chi(ir,nb,is)*rgrid(is)%r(ir)*jl(ir)
                ENDDO
-               CALL simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
+               CALL simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
             ENDDO
             !
             !   multiply by angular part and structure factor
@@ -3319,13 +3319,13 @@ end function set_Hubbard_l
 !
 ! Compute atomic wavefunctions in G-space, in the same order as used in new_ns
 !
-      use parameters,         only: mmaxx => ndmx
+      use radial_grids,       only: mmaxx => ndmx
       use ions_base,          only: na, nsp
       use gvecw,              only: ngw
       use reciprocal_vectors, only: g, gx, ng0 => gstart
       use cell_base,          only: omega, tpiba !@@@@@
       use constants,          only: fpi
-      USE atom,               ONLY: nchi, lchi, chi, r, rab, mesh
+      USE atom,               ONLY: nchi, lchi, chi, rgrid
       USE kinds,              ONLY: DP
 !
       implicit none
@@ -3379,11 +3379,11 @@ end function set_Hubbard_l
                l = lchi(nb,is)
                do i=1,ngw
 !                  call bess(q(i),l+1,mesh(is),r(1,is),jl)
-                  call sph_bes (mesh(is), r(1,is), q(i), l, jl)
-                  do ir=1,mesh(is)
-                     vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
+                  call sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
+                  do ir=1,rgrid(is)%mesh
+                     vchi(ir) = chi(ir,nb,is)*rgrid(is)%r(ir)*jl(ir)
                   enddo
-                  call simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
+                  call simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
                enddo
 !
 !   multiply by angular part and structure factor
@@ -3726,7 +3726,7 @@ end function set_Hubbard_l
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba, omega !@@@@
-      USE atom,               ONLY: nchi, lchi, mesh, r, chi, rab
+      USE atom,               ONLY: nchi, lchi, rgrid, chi
 !@@@@@
       USE constants,          ONLY: fpi
 !@@@@@
@@ -3751,7 +3751,7 @@ end function set_Hubbard_l
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
       !
       CALL ylmr2 ((lmax_wfc+1)**2, ngw, gx, g, ylm)
-      ndm = MAXVAL(mesh(1:nsp))
+      ndm = MAXVAL(rgrid(1:nsp)%mesh)
       !
       ALLOCATE(jl(ndm), vchi(ndm))
       ALLOCATE(q(ngw), chiq(ngw))
@@ -3771,11 +3771,11 @@ end function set_Hubbard_l
             DO nb = 1,nchi(is)
                l = lchi(nb,is)
                DO i=1,ngw
-                  CALL sph_bes (mesh(is), r(1,is), q(i), l, jl)
-                  DO ir=1,mesh(is)
-                     vchi(ir) = chi(ir,nb,is)*r(ir,is)*jl(ir)
+                  CALL sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
+                  DO ir=1,rgrid(is)%mesh
+                     vchi(ir) = chi(ir,nb,is)*rgrid(is)%r(ir)*jl(ir)
                   ENDDO
-                  CALL simpson_cp90(mesh(is),vchi,rab(1,is),chiq(i))
+                  CALL simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
                ENDDO
                !
                !   multiply by angular part and structure factor

@@ -55,36 +55,36 @@ subroutine read_pseudoupf
   endif
   etots=upf%etotps
   lmax = upf%lmax
-  mesh = upf%mesh
-  r  (1:mesh) = upf%r  (1:upf%mesh)
-  rab(1:mesh) = upf%rab(1:upf%mesh)
-  r2 (1:mesh) = r(1:mesh)**2
-  sqr(1:mesh) = sqrt(r(1:mesh))
+  grid%mesh = upf%mesh
+  grid%r  (1:grid%mesh) = upf%r  (1:upf%mesh)
+  grid%rab(1:grid%mesh) = upf%rab(1:upf%mesh)
+  grid%r2 (1:grid%mesh) = grid%r(1:grid%mesh)**2
+  grid%sqr(1:grid%mesh) = sqrt(grid%r(1:grid%mesh))
   if (.not.upf%has_so) then
-     if (r(1) > 0.0_dp) then
+     if (grid%r(1) > 0.0_dp) then
         !
         ! r(i+1) = exp(xmin)/zmesh * exp(i*dx)
         !
-        dx=log(r(2)/r(1))
-        rmax=r(mesh)
-        xmin=log(zed*r(1))
-        zmesh=zed
+        grid%dx=log(grid%r(2)/grid%r(1))
+        grid%rmax=grid%r(grid%mesh)
+        grid%xmin=log(zed*grid%r(1))
+        grid%zmesh=zed
      else
         !
         ! r(i+1) = exp(xmin)/zmesh * ( exp(i*dx) - 1 )
         !
-        dx=log( (r(3)-r(2)) / r(2) )
-        rmax=r(mesh)
-        zmesh=zed
-        xmin=log(zed*r(2)**2/(r(3)-2.0_dp*r(2)))
+        grid%dx=log( (grid%r(3)-grid%r(2)) / grid%r(2) )
+        grid%rmax=grid%r(grid%mesh)
+        grid%zmesh=zed
+        grid%xmin=log(zed*grid%r(2)**2/(grid%r(3)-2.0_dp*grid%r(2)))
      end if
   else
-     dx=upf%dx
-     xmin=upf%xmin
-     zmesh=upf%zmesh
-     rmax=exp(xmin+(mesh-1)*dx)/zmesh
+     grid%dx=upf%dx
+     grid%xmin=upf%xmin
+     grid%zmesh=upf%zmesh
+     grid%rmax=exp(grid%xmin+(grid%mesh-1)*grid%dx)/grid%zmesh
   endif
-  if (abs(exp(xmin+(mesh-1)*dx)/zed-rmax).gt.1.e-6_dp) &
+  if (abs(exp(grid%xmin+(grid%mesh-1)*grid%dx)/zed-grid%rmax).gt.1.e-6_dp) &
        call errore('read_pseudoup','mesh not supported',1)
 
   nwfs = upf%nwfc
@@ -105,12 +105,12 @@ subroutine read_pseudoupf
      rcut(nb)=upf%rcut(nb)
      rcutus(nb)=upf%rcutus(nb)
   end do
-  betas(1:mesh, 1:nbeta) = upf%beta(1:upf%mesh, 1:upf%nbeta)
+  betas(1:grid%mesh, 1:nbeta) = upf%beta(1:upf%mesh, 1:upf%nbeta)
   bmat(1:nbeta, 1:nbeta) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
   !
   if (pseudotype.eq.3) then
      qq(1:nbeta,1:nbeta) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-     qvan (1:mesh, 1:nbeta, 1:nbeta) = &
+     qvan (1:grid%mesh, 1:nbeta, 1:nbeta) = &
           upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
   else
      qq=0.0_dp
@@ -120,16 +120,16 @@ subroutine read_pseudoupf
   !
   if (upf%nlcc) then
      fpi=16.0_dp*atan(1.0_dp)
-     rhoc(1:mesh) = upf%rho_atc(1:upf%mesh)*fpi*r2(1:upf%mesh)
+     rhoc(1:grid%mesh) = upf%rho_atc(1:upf%mesh)*fpi*grid%r2(1:upf%mesh)
   else
      rhoc(:) = 0.0_dp
   end if
   rhos=0.0_dp
-  rhos (1:mesh,1) = upf%rho_at (1:upf%mesh)
-  phis(1:mesh,1:nwfs)=upf%chi(1:mesh,1:nwfs)
+  rhos (1:grid%mesh,1) = upf%rho_at (1:upf%mesh)
+  phis(1:grid%mesh,1:nwfs)=upf%chi(1:grid%mesh,1:nwfs)
   !!! TEMP
   lloc = -1
-  vpsloc(1:mesh) = upf%vloc(1:upf%mesh)
+  vpsloc(1:grid%mesh) = upf%vloc(1:upf%mesh)
   !!!
 
   CALL deallocate_pseudo_upf( upf )

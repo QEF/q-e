@@ -8,7 +8,8 @@
 MODULE paw
 
   USE kinds, ONLY: DP
-  USE parameters, ONLY: nbrx, npsx, ndmx
+  USE parameters, ONLY: nbrx, npsx
+  use radial_grids, only: ndmx
   !
   ! ... These parameters are needed for the paw variables
   !
@@ -126,7 +127,7 @@ CONTAINS
     ! 
     ! Initialize default values for labe end kkpsi
     !
-    
+    implicit none
     ! Argument
     TYPE ( at_wfc ), INTENT ( INOUT ) :: phi(:)
         
@@ -150,7 +151,7 @@ CONTAINS
     !
     
     use read_upf_module,    only : scan_begin, scan_end
-    use atom,               only : mesh
+    use atom,               only : rgrid
     USE io_global,          ONLY : stdout
     
     IMPLICIT NONE
@@ -183,7 +184,7 @@ CONTAINS
     WRITE (stdout,*) "N_AEwfc atom",jtyp,":", paw_recon_sp%paw_nbeta
     
     recphi_loop: DO i = 1, paw_recon_sp%paw_nbeta
-       ALLOCATE ( paw_recon_sp%aephi(i)%psi(mesh(jtyp)) )
+       ALLOCATE ( paw_recon_sp%aephi(i)%psi(rgrid(jtyp)%mesh) )
        paw_recon_sp%aephi(i)%label%nt=jtyp
        paw_recon_sp%aephi(i)%label%n=i
        CALL scan_begin(14,'REC',.false.)
@@ -197,7 +198,7 @@ CONTAINS
        CALL scan_begin(14,'REC_AE',.false.)
        read(14,*) ( paw_recon_sp%aephi(i)%psi(j),j=1,kkphi)
        CALL scan_end(14,'REC_AE')
-       ALLOCATE ( paw_recon_sp%psphi(i)%psi(mesh(jtyp)) )
+       ALLOCATE ( paw_recon_sp%psphi(i)%psi(rgrid(jtyp)%mesh) )
        paw_recon_sp%psphi(i)%label%nt = jtyp
        paw_recon_sp%psphi(i)%label%n = i
        paw_recon_sp%psphi(i)%label%l = paw_recon_sp%aephi(i)%label%l
@@ -222,7 +223,7 @@ CONTAINS
     
     use read_upf_module, only: scan_begin, scan_end
     USE ions_base,          ONLY : ntyp => nsp
-    use atom, only: mesh, msh, r, rab
+    use atom, only: msh, rgrid
     use kinds, only: DP
     use parameters, only : ntypx
     USE io_global,  ONLY : stdout
@@ -402,7 +403,7 @@ CONTAINS
        paw_recon_sp%aephi(i)%kkpsi = msh(jtyp)
        do j = 1, msh(jtyp)
           paw_recon_sp%aephi(i)%psi(j) &
-               = splint ( xdata, tab, tab_d2y, r(j,jtyp) )
+               = splint ( xdata, tab, tab_d2y, rgrid(jtyp)%r(j) )
        end do
        
        ! PS        
@@ -423,7 +424,7 @@ CONTAINS
        paw_recon_sp%psphi(i)%kkpsi = msh(jtyp)
        !paw_recon_sp%psphi(i)%r(1:msh(jtyp)) = r(1:msh(jtyp),jtyp)
        do j = 1, msh(jtyp)
-          paw_recon_sp%psphi(i)%psi(j) = splint(xdata, tab, tab_d2y, r(j,jtyp))
+          paw_recon_sp%psphi(i)%psi(j) = splint(xdata, tab, tab_d2y, rgrid(jtyp)%r(j))
        end do
        
        ! for the local potential; it is the same for all components, choose 1
@@ -434,7 +435,7 @@ CONTAINS
           call spline(xdata, tab, 0.0_dp, d1, tab_d2y)
           DO j = 1, msh(jtyp)
              paw_recon_sp%gipaw_ae_vloc(j) &
-                  = splint ( xdata, tab, tab_d2y, r(j,jtyp) )
+                  = splint ( xdata, tab, tab_d2y, rgrid(jtyp)%r(j) )
           END DO
        END IF
        
@@ -449,7 +450,7 @@ CONTAINS
           call spline ( xdata, tab, 0.0_dp, d1, tab_d2y )
           DO j = 1, msh(jtyp)
              paw_recon_sp%gipaw_ps_vloc(j) &
-                  = splint ( xdata, tab, tab_d2y, r(j,jtyp))
+                  = splint ( xdata, tab, tab_d2y, rgrid(jtyp)%r(j))
           END DO
           
           vloc_set = .TRUE.
@@ -475,7 +476,8 @@ CONTAINS
   !<apsi>
   USE pseudo_types
   USE ions_base, ONLY :  nsp
-  USE atom, ONLY: mesh
+  USE atom, ONLY: rgrid
+  implicit none
   !
   INTEGER, INTENT(IN) :: is
   TYPE (pseudo_upf) :: upf
@@ -506,7 +508,7 @@ CONTAINS
      ALLOCATE ( paw_recon(is)%psphi(upf%gipaw_wfs_nchannels) )
      
      DO nb = 1, upf%gipaw_wfs_nchannels
-        ALLOCATE ( paw_recon(is)%aephi(nb)%psi(mesh(is)) )
+        ALLOCATE ( paw_recon(is)%aephi(nb)%psi(rgrid(is)%mesh) )
         paw_recon(is)%aephi(nb)%label%nt = is
         paw_recon(is)%aephi(nb)%label%n = nb
         paw_recon(is)%aephi(nb)%label%l = upf%gipaw_wfs_ll(nb)
@@ -516,7 +518,7 @@ CONTAINS
         paw_recon(is)%aephi(nb)%label%rc = upf%gipaw_wfs_rcut(nb)
         paw_recon(is)%aephi(nb)%psi(:upf%mesh) = upf%gipaw_wfs_ae(:upf%mesh,nb)
         
-        ALLOCATE ( paw_recon(is)%psphi(nb)%psi(mesh(is)) )
+        ALLOCATE ( paw_recon(is)%psphi(nb)%psi(rgrid(is)%mesh) )
         paw_recon(is)%psphi(nb)%label%nt = is
         paw_recon(is)%psphi(nb)%label%n = nb
         paw_recon(is)%psphi(nb)%label%l = upf%gipaw_wfs_ll(nb)

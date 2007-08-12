@@ -234,7 +234,7 @@
    SUBROUTINE build_pstab_x( )
 
       USE kinds,              ONLY : DP
-      USE atom,               ONLY : mesh, r, rab, numeric
+      USE atom,               ONLY : rgrid, numeric
       USE ions_base,          ONLY : nsp, rcmax, zv
       USE cell_base,          ONLY : tpiba, tpiba2
       use bhs,                ONLY : rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
@@ -284,8 +284,8 @@
 
          if ( numeric(is) ) then
 
-            call formfn( vps_sp(is)%y, dvps_sp(is)%y, r(:,is), rab(:,is), vloc_at(:,is), &
-                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, mesh(is), &
+            call formfn( vps_sp(is)%y, dvps_sp(is)%y, rgrid(is)%r, rgrid(is)%rab, vloc_at(:,is), &
+                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, &
                          mmx, oldvan(is), tpre )
 
          else
@@ -315,7 +315,7 @@
    SUBROUTINE build_cctab_x( )
 
       USE kinds,              ONLY : DP
-      USE atom,               ONLY : mesh, r, rab, nlcc, rho_atc
+      USE atom,               ONLY : rgrid, nlcc, rho_atc
       USE ions_base,          ONLY : nsp, rcmax
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
@@ -362,8 +362,8 @@
             CALL allocate_spline( rhoc1_sp(is), mmx, xgmin, xgmax )
             CALL allocate_spline( rhocp_sp(is), mmx, xgmin, xgmax )
             !
-            CALL compute_rhocg( rhoc1_sp(is)%y, rhocp_sp(is)%y, r(:,is), &
-                 rab(:,is), rho_atc(:,is), xgtab, 1.0d0, tpiba2, mesh(is), mmx, 1 )
+            CALL compute_rhocg( rhoc1_sp(is)%y, rhocp_sp(is)%y, rgrid(is)%r, &
+                 rgrid(is)%rab, rho_atc(:,is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, 1 )
             !
             CALL init_spline( rhoc1_sp(is) )
             CALL init_spline( rhocp_sp(is) )
@@ -618,7 +618,7 @@
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp
       USE uspp_param, ONLY : nh, kkbeta, betar, nhm, nbeta, oldvan
-      USE atom,       ONLY : r, numeric, rab
+      USE atom,       ONLY : rgrid, numeric
       USE uspp,       ONLY : nhtol, indv
       USE betax,      only : refg, betagx, mmx, dbetagx
       !
@@ -656,33 +656,33 @@
             do il = 1, mmx
                !
                xg = sqrt( refg * (il-1) )
-               call sph_bes ( nr, r(1,is), xg, l, jl )
+               call sph_bes ( nr, rgrid(is)%r, xg, l, jl )
 !
                if( tpre )then
                   !
-                  call sph_dbes1 ( nr, r(1,is), xg, l, jl, djl)
+                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l, jl, djl)
                   !
                endif
                !
                !     beta(ir)=r*beta(r)
                !
                do ir = 1, nr
-                  fint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * jl(ir)
+                  fint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * jl(ir)
                end do
                if (oldvan(is)) then
-                  call herman_skillman_int(nr,fint,rab(1,is),betagx(il,iv,is))
+                  call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                else
-                  call simpson_cp90(nr,fint,rab(1,is),betagx(il,iv,is))
+                  call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                endif
                ! 
                if(tpre) then
                   do ir = 1, nr
-                     dfint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * djl(ir)
+                     dfint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * djl(ir)
                   end do
                   if (oldvan(is)) then
-                     call herman_skillman_int(nr,dfint,rab(1,is),dbetagx(il,iv,is))
+                     call herman_skillman_int(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
                   else
-                     call simpson_cp90(nr,dfint,rab(1,is),dbetagx(il,iv,is))
+                     call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
                   end if
                endif
                !
@@ -719,7 +719,7 @@
       USE ions_base,     ONLY : nsp
       USE uspp_param,    ONLY : nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
                                 lmaxq, nbeta, oldvan
-      USE atom,          ONLY : r, numeric, rab
+      USE atom,          ONLY : rgrid, numeric
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
       USE cvan,          only : ish, nvb
@@ -769,11 +769,11 @@
                !
                xg = sqrt( refg * DBLE(il-1) )
                !
-               call sph_bes ( nr, r(1,is), xg, l-1, jl(1) )
+               call sph_bes ( nr, rgrid(is)%r, xg, l-1, jl(1) )
                !
                if( tpre ) then
                   !
-                  call sph_dbes1 ( nr, r(1,is), xg, l-1, jl, djl)
+                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l-1, jl, djl)
                   !
                endif
                !
@@ -789,10 +789,10 @@
                      end do
                      if (oldvan(is)) then
                         call herman_skillman_int &
-                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
+                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
                      else
                         call simpson_cp90 &
-                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
+                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
                      end if
                      !
                      if( tpre ) then
@@ -801,10 +801,10 @@
                         end do
                         if ( oldvan(is) ) then
                            call herman_skillman_int &
-                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
+                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
                         else
                            call simpson_cp90 &
-                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
+                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
                         end if
                      end if
                      !
@@ -837,9 +837,7 @@
       RETURN
     END SUBROUTINE compute_qradx_x
 
-
 !------------------------------------------------------------------------------!
-
 
     SUBROUTINE exact_qradb_x( tpre )
       !
@@ -849,7 +847,7 @@
       USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
            lmaxq, nbeta, oldvan
       use uspp_param, only: lmaxkb
-      USE atom,       ONLY: r, numeric, rab
+      USE atom,       ONLY: rgrid, numeric
       USE uspp,       ONLY: indv
       use uspp,       only: qq, beta
       USE betax,      only: refg, qradx, mmx, dqradx
@@ -913,11 +911,11 @@
                !
                xg = sqrt( gb( il ) * tpibab * tpibab )
                !
-               call sph_bes ( nr, r(1,is), xg, l-1, jl(1) )
+               call sph_bes ( nr, rgrid(is)%r, xg, l-1, jl(1) )
                !
                if( tpre ) then
                   !
-                  call sph_dbes1 ( nr, r(1,is), xg, l-1, jl, djl)
+                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l-1, jl, djl)
                   !
                endif
                !
@@ -933,10 +931,10 @@
                      end do
                      if (oldvan(is)) then
                         call herman_skillman_int &
-                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
+                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
                      else
                         call simpson_cp90 &
-                             (nr,fint(1),rab(1,is),qradx(il,ijv,l,is))
+                             (nr,fint(1),rgrid(is)%rab,qradx(il,ijv,l,is))
                      end if
                      !
                      if( tpre ) then
@@ -945,10 +943,10 @@
                         end do
                         if ( oldvan(is) ) then
                            call herman_skillman_int &
-                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
+                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
                         else
                            call simpson_cp90 &
-                                (nr,dfint(1),rab(1,is),dqradx(il,ijv,l,is))
+                                (nr,dfint(1),rgrid(is)%rab,dqradx(il,ijv,l,is))
                         end if
                      end if
                      !
@@ -1418,11 +1416,11 @@
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
       USE uspp_param,    only : lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nh, &
-           betar, nhm, oldvan
+                                betar, nhm, oldvan
       USE uspp,          only : qq, nhtolm, beta, nhtol, indv
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE cdvan,         ONLY : dbeta
-      USE atom,          ONLY : r, numeric, rab
+      USE atom,          ONLY : rgrid, numeric
       USE reciprocal_vectors, only : g, gx, gstart
 
       IMPLICIT NONE
@@ -1463,33 +1461,33 @@
             do il = 1, ngw
                !
                xg = sqrt( g( il ) * tpiba * tpiba )
-               call sph_bes (nr, r(1,is), xg, l, jl )
+               call sph_bes (nr, rgrid(is)%r, xg, l, jl )
                !
                if( tpre )then
                   !
-                  call sph_dbes1 ( nr, r(1,is), xg, l, jl, djl)
+                  call sph_dbes1 ( nr, rgrid(is)%r, xg, l, jl, djl)
                   !
                endif
                !
                !     beta(ir)=r*beta(r)
                !
                do ir = 1, nr
-                  fint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * jl(ir)
+                  fint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * jl(ir)
                end do
                if (oldvan(is)) then
-                  call herman_skillman_int(nr,fint,rab(1,is),betagx(il,iv,is))
+                  call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                else
-                  call simpson_cp90(nr,fint,rab(1,is),betagx(il,iv,is))
+                  call simpson_cp90(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
                endif
                ! 
                if(tpre) then
                   do ir = 1, nr
-                     dfint(ir) = r(ir,is) * betar( ir, indv(iv,is), is ) * djl(ir)
+                     dfint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * djl(ir)
                   end do
                   if (oldvan(is)) then
-                     call herman_skillman_int(nr,dfint,rab(1,is),dbetagx(il,iv,is))
+                     call herman_skillman_int(nr,dfint,rgrid(ir)%rab,dbetagx(il,iv,is))
                   else
-                     call simpson_cp90(nr,dfint,rab(1,is),dbetagx(il,iv,is))
+                     call simpson_cp90(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
                   end if
                endif
                !
@@ -1579,7 +1577,7 @@
       ! fill l-components of Q(r) as in Vanderbilt's approach
       !
       USE uspp_param, ONLY: qfunc, nqf, qfcoef, rinner, lll, nbeta, kkbeta
-      USE atom,       ONLY: r
+      USE atom,       ONLY: rgrid
       USE kinds,      ONLY: DP
       USE io_global,  ONLY: stdout
       !
@@ -1626,15 +1624,15 @@
 
              do l = lmin, lmax
                do ir = 1, kkbeta(is)
-                  if ( r(ir,is) >= rinner(l,is) ) then
+                  if ( rgrid(is)%r(ir) >= rinner(l,is) ) then
                      qrl(ir,ijv,l)=qfunc(ir,ijv,is)
                   else
                      qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
                      do i = 2, nqf(is)
                         qrl(ir,ijv,l)=qrl(ir,ijv,l) +      &
-                             qfcoef(i,l,iv,jv,is) * r(ir,is)**(2*i-2)
+                             qfcoef(i,l,iv,jv,is) * rgrid(is)%r(ir)**(2*i-2)
                      end do
-                     qrl(ir,ijv,l) = qrl(ir,ijv,l) * r(ir,is)**(l+1)
+                     qrl(ir,ijv,l) = qrl(ir,ijv,l) * rgrid(is)%r(ir)**(l+1)
                   end if
                end do
             end do

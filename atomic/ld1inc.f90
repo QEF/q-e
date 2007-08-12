@@ -8,6 +8,7 @@
 module ld1inc
   use kinds, only : dp
   use ld1_parameters
+  use radial_grids, only: radial_grid_type, ndmx
   use atomic_paw, only : paw_t
   integer, parameter :: lmx=3, lmx2=2*lmx
   !
@@ -32,30 +33,30 @@ module ld1inc
 
   real(DP)::          &
        enl(nwfx),          & ! the energies of the all-electron atom
-       psi(ndm,2,nwfx),    & ! the all-electron (dirac) wavefunctions
+       psi(ndmx,2,nwfx),    & ! the all-electron (dirac) wavefunctions
                              ! psi(:,1,n) = major component for state n 
                              ! psi(:,2,n) = minor component for state n
-       rho(ndm,2),         & ! the all-electron density
+       rho(ndmx,2),         & ! the all-electron density
                              ! rho(:,1) = spin-up, rho(:,2) = spin-down
-       zeta(ndm)             ! the all-electron magnetization 
+       zeta(ndmx)             ! the all-electron magnetization 
 
   logical :: &
        core_state(nwfx)   ! if true the state is in the core
   !
   !    the parameters of the logarithmic mesh
   !
-  integer :: &
-       mesh     ! the number of mesh points
-
-  real(DP) :: &
-       r(ndm),     & ! the radial mesh
-       r2(ndm),    & ! the square of the radial mesh 
-       rab(ndm),   & ! d r(x) / d x where x is the linear grid
-       sqr(ndm),   & ! the square root of the radial mesh
-       xmin,       & ! the minimum x
-       rmax,       & ! the maximum radial point
-       zmesh,      & ! the ionic charge used for the mesh
-       dx            ! the deltax of the linear mesh
+  type(radial_grid_type) :: grid
+!  integer :: &
+!       mesh     ! the number of mesh points
+!  real(DP) :: &
+!       r(ndmx),     & ! the radial mesh
+!       r2(ndmx),    & ! the square of the radial mesh 
+!       rab(ndmx),   & ! d r(x) / d x where x is the linear grid
+!       sqr(ndmx),   & ! the square root of the radial mesh
+!       xmin,       & ! the minimum x
+!       rmax,       & ! the maximum radial point
+!       zmesh,      & ! the ionic charge used for the mesh
+!       dx            ! the deltax of the linear mesh
   !
   !    the variables for computing logarithmic derivatives
   !
@@ -96,18 +97,18 @@ module ld1inc
        ecutrho,          & ! suggested cut-off for the change 
        ecutwfc,          & ! suggested cut-off for the wavefunctions
        zval,             & ! the ionic pseudo charge
-       phis(ndm,nwfsx),  & ! the pseudo wavefunctions
-       psipsus(ndm,nwfx),& ! the all-electron wavefunctions for us pseudo
-       rhos(ndm,2),      & ! the pseudo density
-       zetas(ndm),       & ! the pseudo magnetization
-       vnl(ndm,0:3,2),   & ! the pseudopotential in semilocal form
-       betas(ndm,nwfsx), & ! the projector functions
-       chis(ndm,nwfsx),  & ! auxiliary functions
+       phis(ndmx,nwfsx),  & ! the pseudo wavefunctions
+       psipsus(ndmx,nwfx),& ! the all-electron wavefunctions for us pseudo
+       rhos(ndmx,2),      & ! the pseudo density
+       zetas(ndmx),       & ! the pseudo magnetization
+       vnl(ndmx,0:3,2),   & ! the pseudopotential in semilocal form
+       betas(ndmx,nwfsx), & ! the projector functions
+       chis(ndmx,nwfsx),  & ! auxiliary functions
        rho0,             & ! value of the charge at the origin
        bmat(nwfsx,nwfsx), &! the pseudo coefficients (unscreened D)
        ddd(nwfsx,nwfsx,2),&! the screened D
        qq(nwfsx,nwfsx),   &! the integrals of the qvan
-       qvan(ndm,nwfsx,nwfsx) ! the augmentation functions
+       qvan(ndmx,nwfsx,nwfsx) ! the augmentation functions
 
   logical :: &
        tm,            &!  if true use Troullier-Martins for norm-conserving PP
@@ -143,7 +144,7 @@ module ld1inc
 
   real(DP) ::        &
        enlts(nwfsx),       & ! the energies for the test configuration
-       phits(ndm,nwfsx),   & ! the pseudo wavefunctions
+       phits(ndmx,nwfsx),   & ! the pseudo wavefunctions
        rcutts(nwfsx),      & ! cut-off radius for test wavefunction
        rcutusts(nwfsx),    & ! us cut-off radii for test wavefunct.
        jjts(nwfsx),        & ! jj of the test function (rel=2)
@@ -204,7 +205,7 @@ module ld1inc
   !
   real(DP) :: &
        rcore,      &  ! the points where core charge is smooth
-       rhoc(ndm)      ! the core charge
+       rhoc(ndmx)      ! the core charge
 
   logical :: &
        nlcc    ! if true nlcc pseudopotential
@@ -212,12 +213,12 @@ module ld1inc
   !  the potential for the scf
   !
   real(DP) ::   &
-       vpot(ndm,2),  & ! the all-electron scf potential
-       vxt(ndm),     & ! the external potential
-       vh(ndm),      & ! the hartree potential
-       vpstot(ndm,2),& ! the total local pseudopotential
-       vpsloc(ndm)  ,& ! the local pseudopotential
-       vx(ndm,2)    ,& ! the OEP-X potential (when needed)
+       vpot(ndmx,2),  & ! the all-electron scf potential
+       vxt(ndmx),     & ! the external potential
+       vh(ndmx),      & ! the hartree potential
+       vpstot(ndmx,2),& ! the total local pseudopotential
+       vpsloc(ndmx)  ,& ! the local pseudopotential
+       vx(ndmx,2)    ,& ! the OEP-X potential (when needed)
        enzero(2)
   !
   !  variables needed for PAW dataset generation and test
@@ -227,9 +228,9 @@ module ld1inc
   type(paw_t) :: &
        pawsetup    ! the PAW dataset
   real(DP) ::       &
-       psipaw(ndm,nwfsx),& ! the all-electron wavefunctions for any beta
-       aeccharge(ndm),   & ! true, not smoothened, AE core charge for PAW
-       psccharge(ndm)      ! smoothened core charge for PAW
+       psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
+       aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
+       psccharge(ndmx)      ! smoothened core charge for PAW
   !
   !  file names
   !

@@ -216,7 +216,8 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
            ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
            h(:,k,1) =  (v2x + v2c)*grho (:,k,1) *e2
            etxc = etxc +  (sx + sc) * segno *e2
-           vtxc = vtxc + (v1x+v1c)*e2*arho
+!           vtxc = vtxc + (v1x+v1c)*e2*arho
+           vtxc = vtxc + (v1x+v1c)*e2*arho + 1.5d0*kedtaur(k,1)*tauk(k,1)
         ELSE  
            h (:, k, 1) = 0.d0  
            kedtaur(k,1)=0.d0
@@ -226,7 +227,7 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         !    spin-polarised case
         !
         CALL tpsscx_spin(rho (k, 1), rho (k, 2), grho2 (1), grho2 (2), &
-             tauk(k,1),tauk(k,2),sx, &
+             tauk(k,1)/e2,tauk(k,2)/e2,sx, &
              v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw)
         rh = rho (k, 1) + rho (k, 2)
         IF (rh.GT.epsr) THEN

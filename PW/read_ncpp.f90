@@ -11,8 +11,9 @@ subroutine read_ncpp (np, iunps)
   !-----------------------------------------------------------------------
   !
   USE kinds, only: dp
-  USE parameters, ONLY: nchix, lmaxx, ndmx
-  use atom,  only: zmesh, mesh, xmin, dx, r, rab, chi, oc, &
+  USE parameters, ONLY: nchix, lmaxx
+  use radial_grids, only: ndmx
+  use atom,  only: rgrid, chi, oc, &
        nchi, lchi, rho_at, rho_atc, numeric, nlcc
   use pseud, only: cc, alpc, aps, alps, nlc, nnl, lmax, lloc, &
        a_nlcc, b_nlcc, alpha_nlcc
@@ -71,9 +72,9 @@ subroutine read_ncpp (np, iunps)
         if (alpha_nlcc(np) <= 0.d0) call errore('read_ncpp','alpha_nlcc=0',np)
      endif
   endif
-  read (iunps, *, err=300, iostat=ios) zmesh(np), xmin(np), dx(np), &
-                                       mesh(np), nchi(np)
-  if (mesh(np) > ndmx .or. mesh(np) <= 0) &
+  read (iunps, *, err=300, iostat=ios) rgrid(np)%zmesh, rgrid(np)%xmin, rgrid(np)%dx, &
+                                       rgrid(np)%mesh, nchi(np)
+  if (rgrid(np)%mesh > ndmx .or. rgrid(np)%mesh <= 0) &
        call errore ('read_ncpp', 'mesh too big', np)
   if ( nchi(np) > nchix .or. &
        (nchi(np) < lmax(np)   .and. lloc(np) == lmax(np)) .or. & 
@@ -82,14 +83,14 @@ subroutine read_ncpp (np, iunps)
   !
   !  Here pseudopotentials in numeric form are read
   !
-  allocate (vnl(mesh(np), 0:lmax(np)))
+  allocate (vnl(rgrid(np)%mesh, 0:lmax(np)))
   if (numeric (np) ) then
      do l = 0, lmax (np)
         read (iunps, '(a)', err=300, iostat=ios)
-        read (iunps, *, err=300, iostat=ios) (vnl(ir,l), ir=1,mesh(np) )
+        read (iunps, *, err=300, iostat=ios) (vnl(ir,l), ir=1,rgrid(np)%mesh )
      enddo
      if (nlcc (np) ) then
-        read (iunps, *, err=300, iostat=ios) (rho_atc(ir,np), ir=1,mesh(np))
+        read (iunps, *, err=300, iostat=ios) (rho_atc(ir,np), ir=1,rgrid(np)%mesh)
      endif
   endif
   !
@@ -107,7 +108,7 @@ subroutine read_ncpp (np, iunps)
                       call errore ('read_ncpp', 'wrong lchi', np)
      if (oc(nb,np) < 0.d0 .or. oc(nb,np) > 2.d0*(2*lchi(nb,np)+1)) &
           call errore ('read_ncpp', 'wrong oc', np)
-     read (iunps, *, err=300, iostat=ios) ( chi(ir,nb,np), ir=1,mesh(np) )
+     read (iunps, *, err=300, iostat=ios) ( chi(ir,nb,np), ir=1,rgrid(np)%mesh )
   enddo
   !
   !====================================================================
@@ -123,18 +124,18 @@ subroutine read_ncpp (np, iunps)
   !
   !    compute the radial mesh
   !
-  do ir = 1, mesh (np)
-     x = xmin (np) + DBLE (ir - 1) * dx (np)
-     r (ir, np) = exp (x) / zmesh (np)
-     rab (ir, np) = dx (np) * r (ir, np)
+  do ir = 1, rgrid(np)%mesh
+     x = rgrid(np)%xmin + DBLE (ir - 1) * rgrid(np)%dx
+     rgrid(np)%r(ir) = exp (x) / rgrid(np)%zmesh 
+     rgrid(np)%rab(ir) = rgrid(np)%dx * rgrid(np)%r(ir)
   enddo
-  do ir = 1, mesh (np)
-     if ( r (ir, np) > rcut) then
+  do ir = 1, rgrid(np)%mesh
+     if ( rgrid(np)%r(ir) > rcut) then
         kkbeta(np) = ir
         go to 5
      end if
   end do
-  kkbeta(np) = mesh(np)
+  kkbeta(np) = rgrid(np)%mesh
   !
   ! ... force kkbeta to be odd for simpson integration (obsolete?)
   !
@@ -151,16 +152,16 @@ subroutine read_ncpp (np, iunps)
      do i = 1, nlc (np)
         do ir = 1, kkbeta(np)
            vloc_at (ir, np) = vloc_at (ir, np) - zp(np) * e2 * &
-                 cc (i, np) * erf ( sqrt (alpc (i, np)) * r (ir, np) ) &
-                 / r (ir, np)
+                 cc (i, np) * erf ( sqrt (alpc (i, np)) * rgrid(np)%r(ir) ) &
+                 / rgrid(np)%r(ir)
         end do
      end do
      do l = 0, lmax (np)
-        vnl (:, l) = vloc_at (1:mesh(np),np)
+        vnl (:, l) = vloc_at (1:rgrid(np)%mesh,np)
         do i = 1, nnl (np)
            vnl (:, l) = vnl (:, l) + e2 * (aps (i, l, np) + &
-                   aps (i + 3, l, np) * r (:, np) **2) * &
-                   exp ( - r (:, np) **2 * alps (i, l, np) )
+                   aps (i + 3, l, np) * rgrid(np)%r (:) **2) * &
+                   exp ( - rgrid(np)%r(:) **2 * alps (i, l, np) )
         enddo
      enddo
      ! core corrections are still analytic!
@@ -169,11 +170,11 @@ subroutine read_ncpp (np, iunps)
   !
   ! assume l=lloc as local part and subtract from the other channels
   !
-  if (lloc (np) <= lmax (np) ) vloc_at (1:mesh(np), np) = vnl (:, lloc (np))
+  if (lloc (np) <= lmax (np) ) vloc_at (1:rgrid(np)%mesh, np) = vnl (:, lloc (np))
   ! lloc > lmax is allowed for PP in analytical form only
   ! it means that only the erf part is taken as local part 
   do l = 0, lmax (np)
-     if (l /= lloc(np)) vnl (:, l) = vnl(:, l) - vloc_at(1:mesh(np), np)
+     if (l /= lloc(np)) vnl (:, l) = vnl(:, l) - vloc_at(1:rgrid(np)%mesh, np)
   enddo
   !
   !    compute the atomic charges
@@ -181,7 +182,7 @@ subroutine read_ncpp (np, iunps)
   rho_at(:,np) = 0.d0
   do nb = 1, nchi (np)
      if (oc (nb, np) > 0.d0) then
-        do ir = 1, mesh (np)
+        do ir = 1, rgrid(np)%mesh
            rho_at(ir,np) = rho_at(ir,np) + oc(nb,np) * chi(ir,nb,np)**2
         enddo
      endif
@@ -198,7 +199,7 @@ subroutine read_ncpp (np, iunps)
         do ir = 1, kkbeta(np)
            betar (ir, nb, np) = chi(ir, l+1, np) **2 * vnl(ir, l)
         end do
-        call simpson (kkbeta (np), betar (1, nb, np), rab (1, np), vll )
+        call simpson (kkbeta (np), betar (1, nb, np), rgrid(np)%rab, vll )
         dion (nb, nb, np) = 1.d0 / vll
         ! betar stores projectors  |beta(r)> = |V_nl(r)phi(r)>
         do ir = 1, kkbeta (np)

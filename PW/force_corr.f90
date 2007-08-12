@@ -20,7 +20,7 @@ subroutine force_corr (forcescc)
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
-  USE atom,                 ONLY : rho_at, msh, r, rab
+  USE atom,                 ONLY : rho_at, msh, rgrid
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,            ONLY : tpiba
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
@@ -71,13 +71,13 @@ subroutine force_corr (forcescc)
      do ig = gstart, ngl
         gx = sqrt (gl (ig) ) * tpiba
         do ir = 1, msh (nt)
-           if (r (ir, nt) .lt.1.0d-8) then
+           if (rgrid(nt)%r(ir) .lt.1.0d-8) then
               aux (ir) = rho_at (ir, nt)
            else
-              aux (ir) = rho_at (ir, nt) * sin(gx*r(ir,nt))/(r(ir,nt)*gx)
+              aux (ir) = rho_at (ir, nt) * sin(gx*rgrid(nt)%r(ir))/(rgrid(nt)%r(ir)*gx)
            endif
         enddo
-        call simpson (msh (nt), aux, rab (1, nt), rhocgnt (ig) )
+        call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (ig) )
      enddo
      do na = 1, nat
         if (nt.eq.ityp (na) ) then

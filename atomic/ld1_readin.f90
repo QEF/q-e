@@ -15,6 +15,7 @@ subroutine ld1_readin
   USE mp,         ONLY : mp_bcast
   use ld1inc
   use funct, only : set_dft_from_name
+  use radial_grids, only: do_mesh, check_mesh
   use atomic_paw, only : paw_io, paw2us
   implicit none
 
@@ -25,6 +26,7 @@ subroutine ld1_readin
        c1,    &          ! counter
        ios               ! I/O control
 
+  real(DP) :: xmin, dx, rmax
   real(DP) :: &
        edum(nwfsx), zdum ! auxiliary variables
   character(len=6)  :: zdum_
@@ -149,7 +151,7 @@ subroutine ld1_readin
   call mp_bcast(atom, ionode_id )
   call mp_bcast(config, ionode_id )
   call mp_bcast(dft, ionode_id )
-
+!
   call set_dft_from_name(dft)
 
   if (zed == 0.0_dp .and. atom /= ' ') then
@@ -180,9 +182,7 @@ subroutine ld1_readin
        &    'isic and latter correction not allowed',1)
   if (isic == 1 .and. iswitch .ne. 1 ) call errore('ld1_readin', &
        &    'SIC available with all-electron only', 1)
- 
 
-  zmesh=zed
   if (rel == 5 ) then
      if (zed < 19.0_dp) then
         rel=0
@@ -224,7 +224,7 @@ subroutine ld1_readin
   ! is not generated but read from the pseudopotential file
   !
   if (iswitch /= 2) then
-     call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,rab,sqr)
+     call do_mesh(rmax,zed,xmin,dx,0,grid)
      rhoc=0.0_dp
   endif
   !
@@ -417,19 +417,22 @@ subroutine ld1_readin
         !    UPF format
         !
         call read_pseudoupf
+        call check_mesh(grid)
         !
      else if (matches('.PAW',file_pseudo) .or. matches('.PAW',file_pseudo)) then
         !
         !    PAW dataset
         !
         lpaw=.true.
+        grid%xmin=xmin  ! this is a stupid thing to do...
         open(unit=111, file=trim(file_pseudo), status='unknown',  &
              form='formatted', err=50, iostat=ios)
 50      call errore('ld1_readin','open error on file '//file_pseudo,abs(ios))
         call paw_io(pawsetup,111,"INP")
         close(111)
-        call paw2us ( pawsetup, zval, mesh, r, r2, sqr, dx, nbeta, lls, &
-             ikk, betas, qq, qvan, pseudotype )
+        call paw2us ( pawsetup, zval, grid, nbeta, lls, ikk, betas, qq, &
+                      qvan, pseudotype )
+        call check_mesh(grid)
         !
      else if ( matches('.rrkj3', file_pseudo) .or. &
                matches('.RRKJ3', file_pseudo)) then
@@ -445,6 +448,7 @@ subroutine ld1_readin
            pseudotype = 1
            !
         else
+           call check_mesh(grid)
            lmax=0
            do ns=1,nwfs
               lmax=max(lmax,lls(ns))
@@ -460,13 +464,13 @@ subroutine ld1_readin
      !
      if (pseudotype == 1) then
         !
-        call read_pseudo  &
-             (file_pseudo,zed,xmin,rmax,dx,mesh,ndm,r,r2,rab,sqr, &
+        call read_pseudo  (file_pseudo,zed,grid,ndmx, &
              dft,lmax,lloc,zval,nlcc,rhoc,vnl,vpsloc,rel)
+        call check_mesh(grid)
         call set_dft_from_name(dft)
         !
         do ns=1,lmax+1
-           ikk(ns)=mesh
+           ikk(ns)=grid%mesh
         enddo
      endif
      !

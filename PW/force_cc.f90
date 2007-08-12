@@ -13,7 +13,7 @@ subroutine force_cc (forcecc)
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
-  USE atom,                 ONLY : rho_atc, numeric, mesh, r, rab, nlcc
+  USE atom,                 ONLY : rho_atc, numeric, rgrid, nlcc
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
@@ -89,7 +89,7 @@ subroutine force_cc (forcecc)
      if (nlcc (nt) ) then
 
         call drhoc (ngl, gl, omega, tpiba2, numeric (nt), a_nlcc (nt), &
-             b_nlcc (nt), alpha_nlcc (nt), mesh (nt), r (1, nt), rab (1, nt), &
+             b_nlcc (nt), alpha_nlcc (nt), rgrid(nt)%mesh, rgrid(nt)%r, rgrid(nt)%rab, &
              rho_atc (1, nt), rhocg)
         do na = 1, nat
            if (nt.eq.ityp (na) ) then
@@ -113,4 +113,3 @@ subroutine force_cc (forcecc)
   !
   return
 end subroutine force_cc
-

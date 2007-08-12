@@ -28,7 +28,7 @@ subroutine descreening
        ind
 
   real(DP) :: &
-       vaux(ndm,2)     ! work space
+       vaux(ndmx,2)     ! work space
 
   real(DP), external :: int_0_inf_dr ! the integral function
 
@@ -65,7 +65,7 @@ subroutine descreening
                  vaux(n,1)=qvan(n,ib,jb)*vpsloc(n)
               enddo
               bmat(ib,jb)= bmat(ib,jb)  &
-                   - int_0_inf_dr(vaux(1,1),r,r2,dx,ikk(ib),nst)
+                   - int_0_inf_dr(vaux(1,1),grid,ikk(ib),nst)
            endif
            bmat(jb,ib)=bmat(ib,jb)
         enddo
@@ -81,10 +81,10 @@ subroutine descreening
   iwork=1
   call chargeps(rhos,phits,nwfts,llts,jjts,octs,iwork)
 
-  call new_potential(ndm,mesh,r,r2,sqr,dx,0.0_dp,vxt,lsd,nlcc,latt,enne, &
+  call new_potential(ndmx,grid%mesh,grid,0.0_dp,vxt,lsd,nlcc,latt,enne,&
        rhoc,rhos,vh,vaux)
 
-  do n=1,mesh
+  do n=1,grid%mesh
      vpstot(n,1)=vpsloc(n)
      vpsloc(n)=vpsloc(n)-vaux(n,1)
   enddo
@@ -95,8 +95,8 @@ subroutine descreening
 100  call mp_bcast(ios, ionode_id)
      call errore('descreening','opening file'//file_screen,abs(ios))
      if (ionode) then
-        do n=1,mesh
-           write(20,'(i5,7e12.4)') n,r(n), vpsloc(n)+vaux(n,1), vpsloc(n), &
+        do n=1,grid%mesh
+           write(20,'(i5,7e12.4)') n,grid%r(n), vpsloc(n)+vaux(n,1), vpsloc(n), &
                 vaux(n,1),   rhos(n,1)
         enddo
         close(20)

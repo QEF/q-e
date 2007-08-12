@@ -22,7 +22,7 @@ subroutine all_electron(ild)
   !
   !    compute an initial estimate of the potential
   !
-  call starting_potential(ndm,mesh,zval,zed,nwf,oc,nn,ll,r,enl,vxt,vpot,&
+  call starting_potential(ndmx,grid%mesh,zval,zed,nwf,oc,nn,ll,grid%r,enl,vxt,vpot,&
        enne,nspin)
   !
   !     solve the eigenvalue self-consistent equation
@@ -31,8 +31,8 @@ subroutine all_electron(ild)
   !
   !  compute total energy
   !
-  call elsd (mesh,zed,r,r2,dx,rho,zeta,vxt,vh,nlcc,  &
-       nwf,enl,ll,lsd,nspin,oc,ndm,vnl,    &
+  call elsd (grid%mesh,zed,grid,rho,zeta,vxt,vh,nlcc,  &
+       nwf,enl,ll,lsd,nspin,oc,ndmx,vnl,    &
        etot,ekin,encl,epseu,ehrt,ecxc,evxt)
   !
   !   add sic correction if needed
@@ -50,8 +50,8 @@ subroutine all_electron(ild)
   ! compute C6 coefficient if required
   !
   if (vdw) then
-     call c6_tfvw ( mesh, zed, dx, r, r2, rho(1,1) )
-     call c6_dft  ( mesh, zed, dx, r, r2 )
+     call c6_tfvw ( grid%mesh, zed, grid, rho(1,1) )
+     call c6_dft  ( grid%mesh, zed, grid )
   end if
   !
   return

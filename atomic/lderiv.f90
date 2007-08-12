@@ -31,8 +31,8 @@ subroutine lderiv
        n,ie        ! generic counter 
 
   real(DP) ::           &
-       aux(ndm),         & ! the square of the wavefunction
-       aux_dir(ndm,2),   & ! the square of the wavefunction
+       aux(ndmx),         & ! the square of the wavefunction
+       aux_dir(ndmx,2),   & ! the square of the wavefunction
        ze2,              & ! the nuclear charge in Ry units
        e,                & ! the eigenvalue
        j                   ! total angular momentum for log_der
@@ -51,13 +51,13 @@ subroutine lderiv
 
   ze2=-zed*2.0_dp
 
-  do n=1,mesh
-     if (r(n) > rlderiv) go to 10
+  do n=1,grid%mesh
+     if (grid%r(n) > rlderiv) go to 10
   enddo
   call errore('lderiv','wrong rlderiv?',1)
 10 ikrld = n-1
   write(stdout,'(5x,''Computing logarithmic derivative in'',f10.5)') &
-       (r(ikrld)+r(ikrld+1))*0.5_dp
+       (grid%r(ikrld)+grid%r(ikrld+1))*0.5_dp
 
   npte= (emaxld-eminld)/deld + 1
   allocate ( dlchi(npte, nld) )
@@ -78,20 +78,18 @@ subroutine lderiv
            !    integrate outward up to ikrld+1
            !
            if (rel == 1) then
-              call lschps(3,zed,exp(dx),dx,mesh,idum,ikrld+5, &
-                   1,lam,e,aux,r,vpot(1,is)) 
+              call lschps(3,zed,grid,idum,ikrld+5,1,lam,e,aux,vpot(1,is))
            else if (rel == 2) then
-              call dir_outward(ndm,ikrld+5,lam,j,e,dx,&
-                   aux_dir,r,rab,vpot(1,is))
+              call dir_outward(ndmx,ikrld+5,lam,j,e,grid%dx,&
+                   aux_dir,grid%r,grid%rab,vpot(1,is))
               aux(:)=aux_dir(:,1)
            else
-              call intref(lam,e,ikrld+5,dx,r,r2,sqr, &
-                   vpot(1,is),ze2,aux)
+              call intref(lam,e,ikrld+5,grid,vpot(1,is),ze2,aux)
            endif
            !
            !    compute the logarithmic derivative and save in dlchi
            !            
-           dlchi(ie, nc) = compute_log(aux(ikrld-3),r(ikrld),dx)
+           dlchi(ie, nc) = compute_log(aux(ikrld-3),grid%r(ikrld),grid%dx)
         enddo
      enddo
       

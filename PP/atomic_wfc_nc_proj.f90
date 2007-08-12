@@ -19,7 +19,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : nchix
-  USE atom,       ONLY : nchi, lchi, jchi, chi, oc, r, rab, msh
+  USE atom,       ONLY : nchi, lchi, jchi, chi, oc
   USE constants,  ONLY : tpi, fpi, pi
   USE cell_base,  ONLY : omega, tpiba
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau

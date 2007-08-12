@@ -16,6 +16,7 @@
 !
 use ld1inc
 use funct, only: set_dft_from_indices
+use radial_grids, only: do_mesh
    implicit none
 
       integer :: &
@@ -27,6 +28,9 @@ use funct, only: set_dft_from_indices
       integer :: iexch, icorr, igcx, igcc
 
       logical :: reldum
+ 
+      real(DP):: xmin, dx, rmax, zmesh ! auxliary mesh data
+      integer :: mesh
 
       if (file_pseudo.eq.' ') return
 
@@ -52,10 +56,11 @@ use funct, only: set_dft_from_indices
       
       read( iunps, '(2e17.11,i5)') zval, etots, lmax
 
-      read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
-                                   xmin,rmax,zmesh,dx,mesh
+      read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) xmin,rmax,zmesh,dx,mesh
 
-      call do_mesh(rmax,zmesh,xmin,dx,0,ndm,mesh,r,r2,rab,sqr)
+      call do_mesh(rmax,zmesh,xmin,dx,0,grid)
+      if (mesh.ne.grid%mesh) &
+          call errore ('read_newpseudo','wrong meah dimensions',1)
 
       read( iunps, '(2i5)', err=100, iostat=ios ) nwfs, nbeta
       read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
@@ -71,7 +76,7 @@ use funct, only: set_dft_from_indices
          read ( iunps, '(i6)',err=100, iostat=ios ) ikk(nb)
          read ( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
                             ( betas(ir,nb), ir=1,ikk(nb))
-         do ir=ikk(nb)+1,mesh
+         do ir=ikk(nb)+1,grid%mesh
             betas(ir,nb)=0.0_dp
          enddo
          do mb=1,nb
@@ -83,14 +88,14 @@ use funct, only: set_dft_from_indices
                   qq(nb,mb)
               qq(mb,nb)=qq(nb,mb)
               read(iunps,'(1p4e19.11)',err=100,iostat=ios)   &  
-                 (qvan(n,nb,mb),n=1,mesh)
-              do n=1,mesh
+                 (qvan(n,nb,mb),n=1,grid%mesh)
+              do n=1,grid%mesh
                  qvan(n,mb,nb)=qvan(n,nb,mb)
               enddo
             else
               qq(nb,mb)=0.0_dp
               qq(mb,nb)=0.0_dp
-              do n=1,mesh
+              do n=1,grid%mesh
                  qvan(n,mb,nb)=0.0_dp
                  qvan(n,nb,mb)=0.0_dp
               enddo
@@ -101,18 +106,18 @@ use funct, only: set_dft_from_indices
 !   reads the local potential 
 !
       read( iunps, '(1p4e19.11)',err=100, iostat=ios ) rcloc, &
-                             ( vpsloc(ir), ir=1,mesh )
+                             ( vpsloc(ir), ir=1,grid%mesh )
 !
 !     reads the atomic charge
 !
       read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-                               ( rhos(ir,1), ir=1,mesh )
+                               ( rhos(ir,1), ir=1,grid%mesh )
 !
 !  if present reads the core charge
 !
       if ( nlcc ) then 
          read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-                               ( rhoc(ir), ir=1,mesh )
+                               ( rhoc(ir), ir=1,grid%mesh )
       else
          rhoc = 0.0_dp
       endif
@@ -120,7 +125,7 @@ use funct, only: set_dft_from_indices
 !    read the pseudo wavefunctions of the atom
 !      
       read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-                   ((phis(ir,nb),ir=1,mesh),nb=1,nwfs)
+                   ((phis(ir,nb),ir=1,grid%mesh),nb=1,nwfs)
 100   continue
       !
       ! do not stop with error message here: return error code instead

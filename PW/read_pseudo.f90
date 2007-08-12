@@ -19,7 +19,7 @@ subroutine readpp
   USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal,  ONLY : set_pseudo_upf
   USE paw,              ONLY : set_paw_upf
-  USE atom,       ONLY : chi, nchi, oc, mesh, msh, r, rab, numeric, xmin, dx
+  USE atom,       ONLY : chi, nchi, oc, msh, numeric, rgrid
   USE uspp_param, ONLY : zp, iver, tvanp, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
@@ -49,8 +49,8 @@ subroutine readpp
      ! obsolescent variables, not read from UPF format, no longer used
      !
      iver(:,nt) = 0
-     xmin(nt) = 0.d0
-     dx(nt) = 0.d0
+     rgrid(nt)%xmin = 0.d0
+     rgrid(nt)%dx = 0.d0
      lmax(nt) = -1
      lloc(nt) = -1
      ! 
@@ -140,13 +140,13 @@ subroutine readpp
      ! This is used to cut off the numerical noise arising from the
      ! large-r tail in cases like the integration of V_loc-Z/r
      !
-     do ir = 1, mesh (nt)
-        if (r (ir, nt) > rcut) then
+     do ir = 1, rgrid(nt)%mesh
+        if (rgrid(nt)%r(ir) > rcut) then
            msh (nt) = ir
            goto 5
         endif
      enddo
-     msh (nt) = mesh (nt)
+     msh (nt) = rgrid(nt)%mesh 
      !
      ! force msh to be odd for simpson integration (maybe obsolete)
      !
@@ -154,10 +154,10 @@ subroutine readpp
      !
      ! Check that there are no zero wavefunctions
      !
-     allocate ( chi2r (mesh(nt)) )
+     allocate ( chi2r (rgrid(nt)%mesh) )
      do nb = 1, nchi (nt)
-        chi2r(:) = chi ( :mesh(nt), nb, nt ) **2
-        call simpson (mesh(nt), chi2r(1), rab(1,nt), norm)
+        chi2r(:) = chi ( :rgrid(nt)%mesh, nb, nt ) **2
+        call simpson (rgrid(nt)%mesh, chi2r(1), rgrid(nt)%rab, norm)
         !
         if ( norm < eps ) then
            WRITE( stdout,'(5X,"WARNING: atomic wfc # ",i2, &

@@ -1,3 +1,4 @@
+atomic_number.o : ../Modules/kind.o
 avrec.o : ../Modules/kind.o
 bachel.o : ../Modules/constants.o
 bachel.o : ../Modules/kind.o

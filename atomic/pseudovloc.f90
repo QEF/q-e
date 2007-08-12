@@ -13,7 +13,6 @@ subroutine pseudovloc
   !     This routine generate a local pseudopotential 
   !     The output of the routine are:
   !     vpsloc: the local pseudopotential
-  !
   !      
   use io_global, only : stdout
   use ld1inc
@@ -36,9 +35,9 @@ subroutine pseudovloc
        p1aep1, p1aem1,     &  ! derivatives of the bessel functions
        xc(8),              &  ! the coefficients of the fit
        bm(2),              &  ! the derivative of the bessel
-       vaux(ndm,2),        &  ! keeps the potential
-       psi_in(ndm),        &  ! auxiliary
-       j1(ndm,4)              ! the bessel functions
+       vaux(ndmx,2),        &  ! keeps the potential
+       psi_in(ndmx),        &  ! auxiliary
+       j1(ndmx,4)              ! the bessel functions
 
   real(DP) :: &
        deriv_7pts, deriv2_7pts
@@ -61,18 +60,18 @@ subroutine pseudovloc
           "(/,5x,' Generating local potential from pseudized AE potential:',&
             &  /,5x,' Matching radius rcloc = ',f8.4)") rcloc
      ik=0
-     do n=1,mesh
-        if (r(n) < rcloc) ik=n
+     do n=1,grid%mesh
+        if (grid%r(n) < rcloc) ik=n
      enddo
      if (mod(ik,2) == 0) ik=ik+1
-     if (ik <= 1 .or. ik > mesh) &
+     if (ik <= 1 .or. ik > grid%mesh) &
           call errore('pseudovloc','wrong matching point',1)
 !
 !  smooth the potential before ik.
 !
 
      call compute_potps(ik,vpot,vpsloc,xc)
-     write(stdout, 110) r(ik),xc(5)**2 
+     write(stdout, 110) grid%r(ik),xc(5)**2 
 110  format (/5x, ' Local pseudo, rcloc=',f6.3, &
           ' Estimated cut-off energy= ', f8.2,' Ry')
   else
@@ -102,11 +101,11 @@ subroutine pseudovloc
         !    compute the ik closer to r_cut
         !
         ik=0
-        do n=1,mesh
-           if (r(n) < rcut(nsloc+indi)) ik=n
+        do n=1,grid%mesh
+           if (grid%r(n) < rcut(nsloc+indi)) ik=n
         enddo
         if (mod(ik,2).eq.0) ik=ik+1
-        if (ik <= 1 .or. ik > mesh) &
+        if (ik <= 1 .or. ik > grid%mesh) &
            call errore('pseudovloc','wrong matching point',1)
         rcloc=rcut(nsloc+indi)
         if (rep == 0) then
@@ -141,8 +140,8 @@ subroutine pseudovloc
         !
         !     set the local potential equal to the all-electron one at large r
         !
-        do n=1,mesh
-           if (r(n) > rcloc) then
+        do n=1,grid%mesh
+           if (grid%r(n) > rcloc) then
               vaux(n,indi+1)=vpot(n,1)
            else
               vaux(n,indi+1)=chis(n,ns)/phis(n,ns)
@@ -151,11 +150,11 @@ subroutine pseudovloc
         psipsus(:,ns)=phis(:,ns)
      enddo
      if (rep==0) then
-        do n=1,mesh
+        do n=1,grid%mesh
            vpsloc(n)=vaux(n,1)
         enddo
      else
-        do n=1,mesh
+        do n=1,grid%mesh
            vpsloc(n)=(lloc*vaux(n,1)+(lloc+1.0_dp)*vaux(n,2))/ &
                 (2.0_dp*lloc+1.0_dp)
         enddo

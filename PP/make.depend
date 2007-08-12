@@ -40,6 +40,7 @@ average.o : ../PW/pwcom.o
 bands.o : ../Modules/atom.o
 bands.o : ../Modules/cell_base.o
 bands.o : ../Modules/constants.o
+bands.o : ../Modules/control_flags.o
 bands.o : ../Modules/io_files.o
 bands.o : ../Modules/io_global.o
 bands.o : ../Modules/ions_base.o
@@ -127,6 +128,7 @@ elf.o : ../Modules/io_files.o
 elf.o : ../Modules/kind.o
 elf.o : ../Modules/wavefunctions.o
 elf.o : ../PW/pwcom.o
+epsilon.o : ../Modules/aa.o
 epsilon.o : ../Modules/cell_base.o
 epsilon.o : ../Modules/constants.o
 epsilon.o : ../Modules/io_files.o
@@ -136,7 +138,6 @@ epsilon.o : ../Modules/mp.o
 epsilon.o : ../Modules/mp_global.o
 epsilon.o : ../Modules/uspp.o
 epsilon.o : ../Modules/wavefunctions.o
-epsilon.o : ../Modules/xml_io_base.o
 epsilon.o : ../PW/pwcom.o
 epsilon.o : ../iotk/src/iotk_module.o
 ggen1d.o : ../Modules/cell_base.o
@@ -213,11 +214,14 @@ poormanwannier.o : ../Modules/wavefunctions.o
 poormanwannier.o : ../PW/becmod.o
 poormanwannier.o : ../PW/pwcom.o
 postproc.o : ../Modules/cell_base.o
+postproc.o : ../Modules/control_flags.o
 postproc.o : ../Modules/io_files.o
 postproc.o : ../Modules/io_global.o
 postproc.o : ../Modules/ions_base.o
 postproc.o : ../Modules/kind.o
 postproc.o : ../Modules/mp.o
+postproc.o : ../Modules/mp_global.o
+postproc.o : ../PW/noncol.o
 postproc.o : ../PW/pwcom.o
 projwfc.o : ../Modules/atom.o
 projwfc.o : ../Modules/cell_base.o

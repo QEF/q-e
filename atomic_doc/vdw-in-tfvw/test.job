@@ -24,15 +24,25 @@ arref=66.1
 krref=130.7
 
 (
-echo "        reference       sla-gl         sla-noc         slc-pz"
+echo "    reference       sla-gl                 sla-noc                slc-pz"
+echo "                 tfvw   full            tfvw   full            tfvw   full"
 
-echo -n "ne        $neref       "
-grep -e 'coeff' ne.* | awk '{gl=$7; getline; noc=$7;getline; pz=$7; print "    ", gl,"     ", noc, "     ",pz}'
+echo -n "ne    $neref "
+grep -e 'coeff' ne.* | awk '{gl=$7; getline; gl_full=$7; getline ;\
+                             noc=$7;getline; noc_full=$7; getline ; \
+                             pz=$7; getline; pz_full=$7; \
+            print " ", gl," ",gl_full"   ",noc," ",noc_full"   ",pz," ",pz_full}'
 
-echo -n "ar       $arref        "
-grep -e 'coeff' ar.* | awk '{gl=$7; getline; noc=$7;getline; pz=$7; print "   ", gl,"    ", noc, "    ",pz}'
+echo -n "ar   $arref "
+grep -e 'coeff' ar.* | awk '{gl=$7; getline; gl_full=$7; getline ;\
+                             noc=$7;getline; noc_full=$7; getline ; \
+                             pz=$7; getline; pz_full=$7; \
+            print " ", gl,"",gl_full"  ",noc,"",noc_full "  ",pz,"",pz_full}'
 
-echo -n "kr      $krref        "
-grep -e 'coeff' kr.* | awk '{gl=$7; getline; noc=$7;getline; pz=$7; print "  ", gl,"   ", noc, "   ",pz}'
+echo -n "kr  $krref "
+grep -e 'coeff' kr.* | awk '{gl=$7; getline; gl_full=$7; getline ;\
+                             noc=$7;getline; noc_full=$7; getline ; \
+                             pz=$7; getline; pz_full=$7; \
+            print "", gl,gl_full" ",noc,noc_full " ",pz,pz_full}'
 ) > compare.dat
 

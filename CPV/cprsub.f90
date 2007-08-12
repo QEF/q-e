@@ -26,7 +26,7 @@ subroutine formf( tfirst, eself )
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
   use local_pseudo,    ONLY : vps, rhops, dvps, drhops
-  use atom,            ONLY : r, rab, mesh, numeric
+  use atom,            ONLY : rgrid, numeric
   use uspp_param,      ONLY : vloc_at, oldvan
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
@@ -83,8 +83,8 @@ subroutine formf( tfirst, eself )
 
         if ( numeric(is) ) then
 
-           call formfn( vps(:,is), dvps(:,is), r(:,is), rab(:,is), vloc_at(:,is), &
-                        zv(is), rcmax(is), g, omega, tpiba2, mesh(is), &
+           call formfn( vps(:,is), dvps(:,is), rgrid(is)%r, rgrid(is)%rab, vloc_at(:,is), &
+                        zv(is), rcmax(is), g, omega, tpiba2, rgrid(is)%mesh, &
                         ngs, oldvan(is), tpre )
 
         else
@@ -334,7 +334,7 @@ subroutine nlinit
       use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv
       use uspp_param,      ONLY : kkbeta, qqq, nqlc, betar, lmaxq, dion,&
                                   nbeta, nbetam, lmaxkb, lll, nhm, nh, tvanp
-      use atom,            ONLY : mesh, r, rab, nlcc, numeric
+      use atom,            ONLY : rgrid, nlcc, numeric
       use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb
       use gvecb,           ONLY : ngb

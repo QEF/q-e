@@ -25,8 +25,8 @@ subroutine compute_chi_tm(lam,ik,ikk_in,phi_in,chi_out,xc,e)
   real(DP) :: &
        e,     &       ! input: the energy
        xc(8),       & ! input: the parameters of the fit
-       phi_in(ndm), & ! input: pseudo wavefunction
-       chi_out(ndm)   ! output: the chi function
+       phi_in(ndmx), & ! input: pseudo wavefunction
+       chi_out(ndmx)   ! output: the chi function
   !
   real(DP) :: &
        dpoly           
@@ -39,13 +39,13 @@ subroutine compute_chi_tm(lam,ik,ikk_in,phi_in,chi_out,xc,e)
   !   Troullier-Martins: use the analytic formula
   !
   do n=1,ik
-     dpoly = dpr(xc,xc(7),r(n))
+     dpoly = dpr(xc,xc(7),grid%r(n))
      ! dpr =  first derivate of polynomial pr
      ! d2pr= second derivate of polynomial pr
-     chi_out(n) = (e + (2*lam+2)/r(n)*dpoly + &
-             d2pr(xc,xc(7),r(n)) + dpoly**2 - vpsloc(n))*phi_in(n)
+     chi_out(n) = (e + (2*lam+2)/grid%r(n)*dpoly + &
+             d2pr(xc,xc(7),grid%r(n)) + dpoly**2 - vpsloc(n))*phi_in(n)
   enddo
-  do n = ik+1,mesh
+  do n = ik+1,grid%mesh
      chi_out(n) = (vpot(n,1) - vpsloc(n))*phi_in(n)
   enddo
   return

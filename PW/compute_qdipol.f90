@@ -12,7 +12,7 @@ SUBROUTINE compute_qdipol(dpqq)
   !
   USE kinds, only: DP
   USE constants, ONLY: fpi
-  USE atom, ONLY: r, rab
+  USE atom, ONLY: rgrid
   USE ions_base, ONLY: ntyp => nsp
   USE uspp, only: nhtol, nhtolm, indv, nlx, ap
   USE uspp_param, only: nbrx, nbeta, lll, kkbeta, qfunc, rinner, &
@@ -47,7 +47,7 @@ SUBROUTINE compute_qdipol(dpqq)
                    (l.le.lll(nb,nt)+lll(mb,nt))      .and. &
                    (mod (l+lll(nb,nt)+lll(mb,nt),2) .eq.0) ) then
                  do ir = 1, kkbeta (nt)
-                    if (r(ir, nt).ge.rinner(l+1, nt)) then
+                    if (rgrid(nt)%r(ir).ge.rinner(l+1, nt)) then
                        qtot(ir, nb, mb)=qfunc(ir,ijv,nt)
                     else
                        ilast = ir
@@ -55,7 +55,7 @@ SUBROUTINE compute_qdipol(dpqq)
                  enddo
                  if (rinner(l+1, nt).gt.0.d0) &
                       call setqf(qfcoef (1, l+1, nb, mb, nt), &
-                      qtot(1,nb,mb), r(1,nt), nqf(nt),l,ilast)
+                      qtot(1,nb,mb), rgrid(nt)%r, nqf(nt),l,ilast)
               endif
            enddo
         enddo
@@ -68,9 +68,9 @@ SUBROUTINE compute_qdipol(dpqq)
                    (l.le.lll(nb,nt) + lll(mb,nt) )        .and.  &
                    (mod(l+lll(nb,nt)+lll(mb,nt), 2).eq.0) ) then
                  do ir = 1, kkbeta (nt)
-                    aux(ir)=r(ir, nt)*qtot(ir, nb, mb)
+                    aux(ir)=rgrid(nt)%r(ir)*qtot(ir, nb, mb)
                  enddo
-                 call simpson (kkbeta(nt),aux,rab(1,nt),qrad2(nb,mb,nt))
+                 call simpson (kkbeta(nt),aux,rgrid(nt)%rab,qrad2(nb,mb,nt))
               endif
            enddo
         enddo

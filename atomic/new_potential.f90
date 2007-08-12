@@ -8,25 +8,26 @@
 !
 !---------------------------------------------------------------
 subroutine new_potential &
-     (ndm,mesh,r,r2,sqr,dx,zed,vxt,lsd, &
-     nlcc,latt,enne,rhoc,rho,vh,vnew)
+     (ndm,mesh,grid,zed,vxt,lsd,nlcc,latt,enne,rhoc,rho,vh,vnew)
   !---------------------------------------------------------------
   !   set up the selfconsistent atomic potential
   !
   use constants, only: fpi, e2
+  use radial_grids, only: radial_grid_type, hartree
   use kinds, only : DP
   use funct, only : get_iexch, dft_is_gradient
   use ld1inc, only : nwf, vx
   implicit none
+  type(radial_grid_type),intent(in):: grid
   logical :: nlcc, gga, oep
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
-  real(DP):: rho(ndm,2),r(ndm),r2(ndm),vxcp(2), &
-       sqr(ndm),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
-  real(DP):: zed,enne,dx,rh(2),rhc
+  real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
+  real(DP):: zed,enne,rh(2),rhc
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)
 
+  if (mesh.ne.grid%mesh) call errore('new_potential','mesh dimension is not as expected',1)
   gga=dft_is_gradient()
   oep=get_iexch().eq.4
   nspin=1
@@ -43,7 +44,7 @@ subroutine new_potential &
         rhotot(i)=rhotot(i)+rho(i,2)
      enddo
   endif
-  call hartree(0,2,mesh,r,r2,sqr,dx,rhotot,vh)
+  call hartree(0,2,mesh,grid,rhotot,vh)
   !
   ! add exchange and correlation potential: LDA or LSDA only
   !
@@ -51,12 +52,12 @@ subroutine new_potential &
   do i=1,mesh
      vh(i) = e2*vh(i)
      do is=1,nspin
-        rh(is) = rho(i,is)/r2(i)/fpi
+        rh(is) = rho(i,is)/grid%r2(i)/fpi
      enddo
-     if (nlcc) rhc = rhoc(i)/r2(i)/fpi
+     if (nlcc) rhc = rhoc(i)/grid%r2(i)/fpi
      call vxc_t(rh,rhc,lsd,vxcp)
      do is=1,nspin
-        vnew(i,is)= - zed*e2/r(i)+vxt(i)+vh(i)+vxcp(is)
+        vnew(i,is)= - zed*e2/grid%r(i)+vxt(i)+vh(i)+vxcp(is)
      enddo
   end do
 
@@ -69,7 +70,7 @@ subroutine new_potential &
      allocate(egc(ndm),stat=ierr)
      call errore('new_potential','allocating vgc and egc',ierr)
 
-     call vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc)
+     call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc)
      do is=1,nspin
         do i=1,mesh
            vnew(i,is)=vnew(i,is)+vgc(i,is)
@@ -105,7 +106,7 @@ subroutine new_potential &
   if (latt.ne.0) then
      do is=1,nspin
         do i=1,mesh
-           vnew(i,is)= min(vnew(i,is),-e2*(zed-enne+1.0_DP)/r(i))
+           vnew(i,is)= min(vnew(i,is),-e2*(zed-enne+1.0_DP)/grid%r(i))
         enddo
      enddo
   end if

@@ -16,7 +16,7 @@ subroutine init_at_1()
   !
   USE parameters, ONLY : nchix
   USE kinds,      ONLY : dp
-  USE atom,       ONLY : nchi, lchi, chi, oc, r, rab, msh
+  USE atom,       ONLY : nchi, lchi, chi, oc, rgrid, msh
   USE constants,  ONLY : fpi
   USE cell_base,  ONLY : omega
   USE ions_base,  ONLY : ntyp => nsp
@@ -50,11 +50,11 @@ subroutine init_at_1()
            l = lchi (nb, nt)
            do iq = startq, lastq
               q = dq * (iq - 1)
-              call sph_bes (msh(nt), r(1,nt), q, l, aux)
+              call sph_bes (msh(nt), rgrid(nt)%r, q, l, aux)
               do ir = 1, msh(nt)
-                 vchi(ir) = chi(ir,nb,nt) * aux(ir) * r(ir,nt)
+                 vchi(ir) = chi(ir,nb,nt) * aux(ir) * rgrid(nt)%r(ir)
               enddo
-              call simpson (msh(nt), vchi, rab(1,nt), vqint)
+              call simpson (msh(nt), vchi, rgrid(nt)%rab, vqint)
               tab_at (iq, nb, nt) = vqint * pref
            enddo
         endif

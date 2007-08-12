@@ -14,10 +14,10 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   !   Rydberg atomic units are  used.
   !
   USE kinds, ONLY: DP
-  USE atom, ONLY: r, rab
+  USE atom, ONLY: rgrid
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY: omega
-  USE parameters, ONLY:  ndmx
+  USE radial_grids, ONLY:  ndmx
   USE constants, ONLY: fpi
   USE uspp_param, ONLY: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
        nbeta, nbetam, kkbeta, tvanp
@@ -42,15 +42,15 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
               !       only need to calculate for for lmin,lmin+2 ...lmax-2,lmax
               DO l = ilmin,ilmax,2
                  DO i =  msh_bp,2,-1
-                    IF (r(i,np) .LT. rinner(l+1,np)) GOTO 100
+                    IF (rgrid(np)%r(i) .LT. rinner(l+1,np)) GOTO 100
                     aux(i) = qfunc(i,ijv,np)
                  ENDDO
-100              CALL setqf(qfcoef(1,l+1,iv,jv,np),aux(1),r(1,np) &
+100              CALL setqf(qfcoef(1,l+1,iv,jv,np),aux(1),rgrid(np)%r &
                       ,nqf(np),l,i)
 
                  IF (idbes .EQ. 1) THEN
                     !
-                    CALL sph_dbes( msh_bp, r(1,np), ql, l, jl )
+                    CALL sph_dbes( msh_bp, rgrid(np)%r, ql, l, jl )
                     !
                     ! ... this is the old call
                     !
@@ -58,7 +58,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
                     !
                  ELSE
                     !
-                    CALL sph_bes( msh_bp, r(1,np), ql, l, jl )
+                    CALL sph_bes( msh_bp, rgrid(np)%r, ql, l, jl )
                     !
                     ! ... this is the old call
                     !
@@ -73,7 +73,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
                     jlp1(i) = jl(i)*aux(i)
                  ENDDO
                  !                        if (tlog(np)) then
-                 CALL radlg1(msh_bp,jlp1,rab(1,np),sum) 
+                 CALL radlg1(msh_bp,jlp1,rgrid(np)%rab,sum) 
 
                  qr_k(iv,jv,l+1,np) = sum*fpi/omega
                  qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)

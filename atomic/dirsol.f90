@@ -11,7 +11,7 @@
 !
 !-------------------------------------------------------------------------
 !
-subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,dx,snl,r,rab,ruae)
+subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,grid,snl,ruae)
 !
 !     subroutine to compute solutions to the full dirac equation
 !
@@ -39,15 +39,14 @@ subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,dx,snl,r,rab,ruae)
 !
 use io_global, only : stdout
 use kinds, only : DP
+use radial_grids, only: radial_grid_type
 implicit none
 integer :: idim1 
-real(DP) :: r(idim1),     &   ! the radial mesh
-                 rab(idim1),   &   ! derivative of the radial mesh
-                 ruae(idim1),  &   ! the all electron potential
-                 snl(idim1,2)       ! the wavefunction
+type(radial_grid_type),intent(in)::grid
+real(DP) :: ruae(idim1),  &   ! the all electron potential
+            snl(idim1,2)       ! the wavefunction
 
 real(DP) :: e0,       &     ! the starting energy eigenvalue
-                 dx,       &     ! dx mesh value
                  jcur,     &     ! the j of the state
                  thresh
                   
@@ -68,7 +67,7 @@ real(DP) :: tbya, abyt,        &
                  factor,            &
                  ecur,              &
                  xw, decur, decurp          
-real(DP) :: r2(idim1), f(idim1), int_0_inf_dr
+real(DP) :: f(idim1), int_0_inf_dr
 
 integer :: itmax, &     ! maximum number of iterations
            iter,  &     ! current iteration
@@ -80,8 +79,9 @@ integer :: itmax, &     ! maximum number of iterations
            ninf         ! practical infinite
 !
 !               r o u t i n e  i n i t i a l i s a t i o n
+if (mesh.ne.grid%mesh) call errore('dirsol','mesh dimension is not as expected',1)
 do ir=1,mesh
-   ruae(ir)=ruae(ir)*r(ir)
+   ruae(ir)=ruae(ir)*grid%r(ir)
 enddo
 !
 !     set the maximum number of iterations for improving wavefunctions
@@ -92,8 +92,6 @@ itmax = 100
 tbya = 2.0_DP * 137.04_DP
 !     set ( fine structure constant / 2 )
 abyt = 1.0_DP / tbya
-
-r2=r**2
 
 if (jcur.eq.lcur+0.5_DP) then
     kcur = - ( lcur + 1 )
@@ -114,13 +112,13 @@ do iter = 1,itmax
 !
   if ( iter .eq. 1 ) then
     do ir = 1,mesh
-       zz(ir,1,1) = rab(ir) * DBLE(kcur) / r(ir)
+       zz(ir,1,1) = grid%rab(ir) * DBLE(kcur) / grid%r(ir)
        zz(ir,2,2) = - zz(ir,1,1)
     enddo
   endif
   do ir = 1,mesh
-     zz(ir,1,2) = - rab(ir) * ( ecur - ruae(ir) / r(ir) ) * abyt
-     zz(ir,2,1) = - zz(ir,1,2) + rab(ir) * tbya
+     zz(ir,1,2) = - grid%rab(ir) * ( ecur - ruae(ir) / grid%r(ir) ) * abyt
+     zz(ir,2,1) = - zz(ir,1,2) + grid%rab(ir) * tbya
   enddo
 !
 !   ==============================================
@@ -145,7 +143,7 @@ do iter = 1,itmax
 !
   tolinf = log(thresh) ** 2
   do ninf = nctp+10,mesh
-     alpha2 = (ruae(ninf)/r(ninf)-ecur) * (r(ninf) - r(nctp))**2
+     alpha2 = (ruae(ninf)/grid%r(ninf)-ecur) * (grid%r(ninf) - grid%r(nctp))**2
      if ( alpha2 .gt. tolinf ) goto 260
   enddo
 !
@@ -171,7 +169,7 @@ do iter = 1,itmax
 !         if kcur > 0  ig = + kcur , f_0 = 1 , g_0 = 0
 !         if kcur < 0  ig = - kcur , f_0 = 0 , g_1 = 1
 !
-  vzero = ruae(1) / r(1)
+  vzero = ruae(1) / grid%r(1)
 !
 !         set f0 and g0
   if ( kcur .lt. 0 ) then
@@ -191,8 +189,8 @@ do iter = 1,itmax
 !
 !
   do ir = 1,5
-     yy(ir,1) = r(ir)**ig * ( f0 + r(ir) * ( f1 + r(ir) * f2 ) )
-     yy(ir,2) = r(ir)**ig * ( g0 + r(ir) * ( g1 + r(ir) * g2 ) )
+     yy(ir,1) = grid%r(ir)**ig * ( f0 + grid%r(ir) * ( f1 + grid%r(ir) * f2 ) )
+     yy(ir,2) = grid%r(ir)**ig * ( g0 + grid%r(ir) * ( g1 + grid%r(ir) * g2 ) )
   enddo
 
 !         ===========================
@@ -205,17 +203,17 @@ do iter = 1,itmax
 !         save major component and its gradient at nctp
   gout = yy(nctp,2)
   gpout = zz(nctp,2,1)*yy(nctp,1) + zz(nctp,2,2)*yy(nctp,2)
-  gpout = gpout / rab(nctp)
+  gpout = gpout / grid%rab(nctp)
 !
 !   ==============================================
 !   start up of wavefunction at practical infinity
 !   ==============================================
 !
   do ir = ninf,ninf-4,-1
-     alpha = sqrt( ruae(ir) / r(ir) - ecur )
-     yy(ir,2) = exp ( - alpha * ( r(ir) - r(nctp) ) )
-     yy(ir,1) = ( DBLE(kcur)/r(ir) - alpha ) * yy(ir,2)*tbya / &
-  &               ( ecur - ruae(ir)/r(ir) + tbya ** 2 )
+     alpha = sqrt( ruae(ir) / grid%r(ir) - ecur )
+     yy(ir,2) = exp ( - alpha * ( grid%r(ir) - grid%r(nctp) ) )
+     yy(ir,1) = ( DBLE(kcur)/grid%r(ir) - alpha ) * yy(ir,2)*tbya / &
+  &               ( ecur - ruae(ir)/grid%r(ir) + tbya ** 2 )
   enddo
 !
 !         ==========================
@@ -228,7 +226,7 @@ do iter = 1,itmax
 !         save major component and its gradient at nctp
   gin = yy(nctp,2)
   gpin = zz(nctp,2,1)*yy(nctp,1) + zz(nctp,2,2)*yy(nctp,2)
-  gpin = gpin / rab(nctp)
+  gpin = gpin / grid%rab(nctp)
 !
 !
 !         ===============================================
@@ -287,7 +285,7 @@ do iter = 1,itmax
    do ir = 1,ninf
       f(ir) = (yy(ir,1)**2 + yy(ir,2)**2)
    enddo
-   factor=int_0_inf_dr(f,r,r2,dx,ninf,2*ig)
+   factor=int_0_inf_dr(f,grid,ninf,2*ig)
 !
 !
 !         =========================================
@@ -349,7 +347,7 @@ enddo
 e0=ecur
 700 continue
 do ir=1,mesh
-   ruae(ir)=ruae(ir)/r(ir)
+   ruae(ir)=ruae(ir)/grid%r(ir)
 enddo
 return
 end subroutine dirsol

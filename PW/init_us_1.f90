@@ -30,7 +30,7 @@ subroutine init_us_1
   USE kinds,      ONLY : DP
   USE parameters, ONLY : lmaxx
   USE constants,  ONLY : fpi
-  USE atom,       ONLY : r, rab
+  USE atom,       ONLY : rgrid
   USE ions_base,  ONLY : ntyp => nsp
   USE cell_base,  ONLY : omega, tpiba
   USE gvect,      ONLY : g, gg
@@ -237,7 +237,7 @@ subroutine init_us_1
                       (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
                       (mod (l + lll (nb, nt) + lll (mb, nt), 2) == 0) ) then
                     do ir = 1, kkbeta (nt)
-                       if (r (ir, nt) >= rinner (l + 1, nt) ) then
+                       if (rgrid(nt)%r(ir) >= rinner (l + 1, nt) ) then
                           qtot (ir, ijv) = qfunc (ir, ijv, nt)
                        else
                           ilast = ir
@@ -245,7 +245,7 @@ subroutine init_us_1
                     enddo
                    if (rinner (l + 1, nt) > 0.d0) &
                          call setqf(qfcoef (1, l+1, nb, mb, nt), &
-                                    qtot(1,ijv), r(1,nt), nqf(nt),l,ilast)
+                                    qtot(1,ijv), rgrid(nt)%r, nqf(nt),l,ilast)
                  endif
               enddo
            enddo
@@ -254,7 +254,7 @@ subroutine init_us_1
            !
            do iq = startq, lastq
               q = (iq - 1) * dq * tpiba
-              call sph_bes (kkbeta (nt), r (1, nt), q, l, aux)
+              call sph_bes (kkbeta (nt), rgrid(nt)%r, q, l, aux)
               !
               !   and then we integrate with all the Q functions
               !
@@ -270,7 +270,7 @@ subroutine init_us_1
                        do ir = 1, kkbeta (nt)
                           aux1 (ir) = aux (ir) * qtot (ir, ijv)
                        enddo
-                       call simpson (kkbeta(nt), aux1, rab(1, nt), &
+                       call simpson (kkbeta(nt), aux1, rgrid(nt)%rab, &
                                      qrad(iq,ijv,l + 1, nt) )
                     endif
                  enddo
@@ -356,11 +356,11 @@ subroutine init_us_1
         l = lll (nb, nt)
         do iq = startq, lastq
            qi = (iq - 1) * dq
-           call sph_bes (kkbeta (nt), r (1, nt), qi, l, besr)
+           call sph_bes (kkbeta (nt), rgrid(nt)%r, qi, l, besr)
            do ir = 1, kkbeta (nt)
-              aux (ir) = betar (ir, nb, nt) * besr (ir) * r (ir, nt)
+              aux (ir) = betar (ir, nb, nt) * besr (ir) * rgrid(nt)%r(ir)
            enddo
-           call simpson (kkbeta (nt), aux, rab (1, nt), vqint)
+           call simpson (kkbeta (nt), aux, rgrid(nt)%rab, vqint)
            tab (iq, nb, nt) = vqint * pref
         enddo
      enddo

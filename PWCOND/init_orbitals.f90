@@ -29,13 +29,13 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   use ions_base,  only : atm, nat, ityp, tau 
   use uspp_param, only : nbrx, nbeta, lll, betar, tvanp, dion
   use uspp,       only : deeq, deeq_nc, qq, qq_so 
-  use atom,       only : r, rab 
+  use atom,       only : rgrid
 
   implicit none
 
   integer :: noins, lnocros, rnocros, nocros, norb, na, nt, ih, ih1,&
              ioins, ilocros, irocros, orbin, orbfin, ib, lsr, nrz,  &
-             m, k, ipol, iorb, iorb1, ind, is     
+             m, k, ipol, iorb, iorb1, ind, is, ips
   integer, allocatable :: orbind(:,:), tblm(:,:), cros(:,:), natih(:,:)
   real(DP), parameter :: eps=1.d-8
   real(DP) :: ledge, redge, ledgel, redgel, ledger, redger, &
@@ -343,8 +343,10 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        else
           zpseul = zpseu
        endif
-       rl = r
-       rabl = rab
+       do ips=1, npsx
+          rl(:,ips) = rgrid(ips)%r(:)
+          rabl(:,ips) = rgrid(ips)%rab(:)
+       end do
        betarl = betar
     ENDIF
     norbf = norbl
@@ -368,8 +370,10 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        else
           zpseus = zpseu
        endif      
-       rs = r
-       rabs = rab
+       do ips=1, npsx
+          rs(:,ips) = rgrid(ips)%r(:)
+          rabs(:,ips) = rgrid(ips)%rab(:)
+       end do
        betars = betar
     ENDIF
     norbf = max(norbf,norbs)
@@ -394,8 +398,10 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        else
           zpseur = zpseu
        endif
-       rr = r
-       rabr = rab
+       do ips=1,npsx
+          rr(:,ips) = rgrid(ips)%r(:)
+          rabr(:,ips) = rgrid(ips)%rab(:)
+       enddo
        betarr = betar
     ENDIF
     norbf = max(norbf,norbr)

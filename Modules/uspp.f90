@@ -10,7 +10,8 @@ MODULE uspp_param
   ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
   !  
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lqmax, nbrx, npsx, nqfx, ndmx
+  USE parameters, ONLY : lqmax, nbrx, npsx, nqfx
+  use radial_grids, only: ndmx
   !
   SAVE
   !

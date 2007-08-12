@@ -31,7 +31,7 @@ implicit none
          do i=nwfts,1,-1
             write (51,*) '<PP_REC>'
             write (51,*) '<PP_kkbeta>'
-            write (51,*) mesh
+            write (51,*) grid%mesh
             write (51,*) '</PP_kkbeta>'
             write (51,*) '<PP_L>'
             write (51,*) llts(i)
@@ -41,8 +41,8 @@ implicit none
 ! Check sign of ae-wfct (max should be >0)
 
             wmax=0.0_dp
-            do n=1,mesh
-               if(abs(psi(n,1,iae)).gt.wmax.and.r(n).lt.4.0_dp)then
+            do n=1,grid%mesh
+               if(abs(psi(n,1,iae)).gt.wmax.and.grid%r(n).lt.4.0_dp)then
                   wmax=abs(psi(n,1,iae))
                   if(psi(n,1,iae).lt.0.0_dp)then
                      isign=-1
@@ -52,15 +52,15 @@ implicit none
                endif
             enddo
 
-            write (51,'(1p4e19.11)') (isign*psi(n,1,iae) , n=1,mesh )
+            write (51,'(1p4e19.11)') (isign*psi(n,1,iae) , n=1,grid%mesh )
             write (51,*) '</PP_REC_AE>'
             write (51,*) '<PP_REC_PS>'
 
 ! check sign of pseudo wfct (max should be >0)
 
             wmax=0.0_dp
-            do n=1,mesh
-               if(abs(phits(n,i)).gt.wmax.and.r(n).lt.4.0_dp)then
+            do n=1,grid%mesh
+               if(abs(phits(n,i)).gt.wmax.and.grid%r(n).lt.4.0_dp)then
                   wmax=abs(phits(n,i))
                   if(phits(n,i).lt.0.0_dp)then
                      isign=-1
@@ -70,8 +70,7 @@ implicit none
                endif
             enddo
 
-
-            write (51,'(1p4e19.11)') (isign*phits(n,i) , n=1,mesh )
+            write (51,'(1p4e19.11)') (isign*phits(n,i) , n=1,grid%mesh )
             write (51,*) '</PP_REC_PS>'
             write (51,*) '</PP_REC>'
             iae=iae-1

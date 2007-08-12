@@ -21,7 +21,7 @@ subroutine test_bessel ( )
   use io_global, only : stdout
   use kinds, only : dp
   use constants, only: pi
-  use ld1inc, only: lmax, lmx, mesh, r, r2, dx
+  use ld1inc, only: lmax, lmx, grid
   use ld1inc, only: ecutmin, ecutmax, decut, rm
   !
   implicit none
@@ -58,8 +58,8 @@ subroutine test_bessel ( )
      !   find grid point mesh_ such that r(mesh_) < R
      !   note that mesh_ must be odd to perform simpson integration
      !
-     do mesh_ = 1, mesh
-        if ( r(mesh_) >= rm ) go to 20
+     do mesh_ = 1, grid%mesh
+        if ( grid%r(mesh_) >= rm ) go to 20
      end do
      call errore ('test_bessel','r(mesh) < Rmax', mesh_)
 20   continue
@@ -187,7 +187,7 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
   !
   use io_global, only : stdout
   use kinds, only : dp
-  use ld1inc, only: lmx, r, r2, dx
+  use ld1inc, only: lmx, grid
   use ld1inc, only: nbeta, betas, qq, ddd, vpstot, vnl, lls, jjs, &
        nspin, rel, pseudotype
   implicit none
@@ -227,12 +227,12 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
      !
      do n = 1, nsw(l)
         !
-        call sph_bes ( mesh_, r, q(n,l), l, jlq(1,n) )
+        call sph_bes ( mesh_, grid%r, q(n,l), l, jlq(1,n) )
         !
         !  s0 = < j_l(qr) | j_l (qr) >
         !
-        work (:) = ( jlq(:,n) * r(1:mesh_) ) ** 2
-        s0(n) = sqrt ( int_0_inf_dr ( work, r, r2, dx, mesh_, 2*l+2 ) )
+        work (:) = ( jlq(:,n) * grid%r(1:mesh_) ) ** 2
+        s0(n) = sqrt ( int_0_inf_dr ( work, grid, mesh_, 2*l+2 ) )
         !
      end do
      !
@@ -265,8 +265,8 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
               !  matrix elements for vaux
               !
               do m = 1, n
-                 work (:) = jlq(:,n) * jlq(:,m) * vaux(1:mesh_) * r2(1:mesh_)
-                 h(m,n) = int_0_inf_dr ( work, r, r2, dx, mesh_, 2*l+2 ) &
+                 work (:) = jlq(:,n) * jlq(:,m) * vaux(1:mesh_) * grid%r2(1:mesh_)
+                 h(m,n) = int_0_inf_dr ( work, grid, mesh_, 2*l+2 ) &
                       / s0(n) / s0(m)
               end do
               !
@@ -279,9 +279,9 @@ subroutine h_diag  ( mesh_, nswx, nsw, lmax, q )
               if ( pseudotype > 1 ) then
                  do nb = 1, nbeta
                     if ( lls (nb) == l .and.  abs(jjs (nb) - j) < 0.001_8 ) then
-                       work (:) = jlq(:,n) * betas( 1:mesh_, nb ) * r(1:mesh_)
+                       work (:) = jlq(:,n) * betas( 1:mesh_, nb ) * grid%r(1:mesh_)
                        betajl (n, nb) = 1.0_dp / s0(n) * &
-                            int_0_inf_dr ( work, r, r2, dx, mesh_, 2*l+2 )
+                            int_0_inf_dr ( work, grid, mesh_, 2*l+2 )
                     end if
                  end do
               end if

@@ -12,7 +12,8 @@ PROGRAM pwscf
   ! ... Plane Wave Self-Consistent Field code 
   !
   USE io_global,        ONLY : stdout, ionode
-  USE parameters,       ONLY : ntypx, npk, lmaxx, nchix, ndmx, nqfx, nbrx
+  USE parameters,       ONLY : ntypx, npk, lmaxx, nchix, nqfx, nbrx
+  use radial_grids,     ONLY : ndmx
   USE global_version,   ONLY : version_number
   USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin

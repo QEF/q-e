@@ -21,7 +21,7 @@ subroutine init_cond (nregion, flag)
   USE io_files, ONLY : save_file
   USE noncollin_module, ONLY : noncolin, npol
   USE uspp_param, ONLY : nbrx, nbeta, lll, betar, tvanp
-  USE atom, ONLY: mesh, r
+  USE atom, ONLY: rgrid
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
   USE cond 
 
@@ -110,14 +110,14 @@ subroutine init_cond (nregion, flag)
     do ib=1, nbeta(nt)
       mmax = max(mmax, lll(ib, nt))
       bmax=0.d0
-      do ir=2, mesh(nt)
-         bmax=max(bmax, betar(ir,ib,nt)/r(ir,nt)) 
+      do ir=2, rgrid(nt)%mesh
+         bmax=max(bmax, betar(ir,ib,nt)/rgrid(nt)%r(ir)) 
       enddo  
-      ir=mesh(nt)
-      do while (abs(betar(ir,ib,nt)/r(ir,nt)).le.epsbeta*bmax)
+      ir=rgrid(nt)%mesh
+      do while (abs(betar(ir,ib,nt)/rgrid(nt)%r(ir)).le.epsbeta*bmax)
         ir=ir-1
       enddo
-      rsph(ib,nt)=r(ir,nt)/alat
+      rsph(ib,nt)=rgrid(nt)%r(ir)/alat
     enddo
   enddo
 

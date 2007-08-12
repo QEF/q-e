@@ -5,21 +5,21 @@ subroutine inward(y,f,g,mesh,imatch)
    ! inward integration, charlotte froese can j phys 41,1895(1963)
    !
    use kinds,  only:DP
-   use ld1inc, only:ndm
+   use radial_grids, only:ndmx
    implicit none
    !
    ! I/O variables
    !
    integer :: mesh, imatch
-   real(DP) :: y(ndm), f(ndm), g(ndm)
+   real(DP) :: y(ndmx), f(ndmx), g(ndmx)
    !
    ! local variables
    !
    integer :: imp1, imp2, nm1, n
    real(DP) :: di, ff, expn
-   real(DP) :: el(ndm),c(ndm)
+   real(DP) :: el(ndmx),c(ndmx)
 
-   if (ndm.lt.mesh) stop ' inward : ndm .lt. mesh !!!!'
+   if (ndmx.lt.mesh) stop ' inward : ndmx .lt. mesh !!!!'
 ! set up el, and c vectors
    imp1=imatch+1
    el(imp1)=10.d0*f(imp1)-12.d0

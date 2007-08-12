@@ -10,7 +10,7 @@ SUBROUTINE average_pp ( ntyp )
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE atom,             ONLY : chi, nchi, lchi, jchi, mesh
+  USE atom,             ONLY : chi, nchi, lchi, jchi, rgrid
   USE spin_orb,         ONLY : so
   USE uspp_param,       ONLY : betar, dion, jjj, lll, nbeta, tvanp
   !
@@ -66,11 +66,11 @@ SUBROUTINE average_pp ( ntyp )
               vionl = ( ( l + 1.D0 ) * dion(ind,ind,nt) + &
                    l * dion(ind1,ind1,nt) ) / ( 2.D0 * l + 1.D0 )
               !
-              betar(1:mesh(nt),nb,nt) = 1.D0 / ( 2.D0 * l + 1.D0 ) * &
+              betar(1:rgrid(nt)%mesh,nb,nt) = 1.D0 / ( 2.D0 * l + 1.D0 ) * &
                    ( ( l + 1.D0 ) * SQRT( dion(ind,ind,nt) / vionl ) * &
-                   betar(1:mesh(nt),ind,nt) + &
+                   betar(1:rgrid(nt)%mesh,ind,nt) + &
                    l * SQRT( dion(ind1,ind1,nt) / vionl ) * &
-                   betar(1:mesh(nt),ind1,nt) )
+                   betar(1:rgrid(nt)%mesh,ind1,nt) )
               !
               dion(nb,nb,nt) = vionl
               !
@@ -78,7 +78,7 @@ SUBROUTINE average_pp ( ntyp )
                  !
            ELSE
               !
-              betar(1:mesh(nt),nb,nt) = betar(1:mesh(nt),nbe,nt)
+              betar(1:rgrid(nt)%mesh,nb,nt) = betar(1:rgrid(nt)%mesh,nbe,nt)
               !
               dion(nb,nb,nt) = dion(nbe,nbe,nt)
               !
@@ -123,14 +123,14 @@ SUBROUTINE average_pp ( ntyp )
                  ind1=nbe+1
               END IF
               !
-              chi(1:mesh(nt),nb,nt)=((l+1.D0) * chi(1:mesh(nt),ind,nt)+ &
-                   l * chi(1:mesh(nt),ind1,nt)) / ( 2.D0 * l + 1.D0 )
+              chi(1:rgrid(nt)%mesh,nb,nt)=((l+1.D0) * chi(1:rgrid(nt)%mesh,ind,nt)+ &
+                   l * chi(1:rgrid(nt)%mesh,ind1,nt)) / ( 2.D0 * l + 1.D0 )
               !   
               nbe = nbe + 1
               !
            ELSE
               !
-              chi(1:mesh(nt),nb,nt) = chi(1:mesh(nt),nbe,nt)
+              chi(1:rgrid(nt)%mesh,nb,nt) = chi(1:rgrid(nt)%mesh,nbe,nt)
               !
            END IF
            !

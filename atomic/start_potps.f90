@@ -27,9 +27,9 @@ subroutine start_potps
 
   real(DP) ::    &
        xc(8),       & ! coefficients of bessel
-       gi(ndm),     & ! auxiliary
+       gi(ndmx),     & ! auxiliary
        int_0_inf_dr,& ! integral function
-       vnew(ndm,2)    ! the potential
+       vnew(ndmx,2)    ! the potential
   !
   !    compute an initial estimate of the potential
   !
@@ -43,13 +43,13 @@ subroutine start_potps
         !
         ik=0
         ikus=0
-        do n=1,mesh
-           if (r(n).lt.rcutts(ns)) ik=n
-           if (r(n).lt.rcutusts(ns)) ikus=n
+        do n=1,grid%mesh
+           if (grid%r(n).lt.rcutts(ns)) ik=n
+           if (grid%r(n).lt.rcutusts(ns)) ikus=n
         enddo
         if (mod(ik,2).eq.0) ik=ik+1
         if (mod(ikus,2).eq.0) ikus=ikus+1
-        if (ikus.gt.mesh) &
+        if (ikus.gt.grid%mesh) &
              call errore('starting potential','ik is wrong ',1)
         !
         !    compute the phi functions
@@ -65,7 +65,7 @@ subroutine start_potps
            !
            !   US only on the components where ikus <> ik
            !
-           do n=1,mesh
+           do n=1,grid%mesh
               psipsus(n,ns)=phis(n,ns)
            enddo
            if (ikus.ne.ik) call compute_phius(lam,ikus,psipsus(1,ns), &
@@ -76,11 +76,11 @@ subroutine start_potps
   enddo
 
   call chargeps(rhos,phis,nwfts,llts,jjts,octs,iswts)
-  call new_potential(ndm,mesh,r,r2,sqr,dx,0.0_dp,vxt,lsd,nlcc, &
+  call new_potential(ndmx,grid%mesh,grid,0.0_dp,vxt,lsd,nlcc,&
        latt,enne,rhoc,rhos,vh,vnew)
 
   do is=1,nspin
-     do n=1,mesh
+     do n=1,grid%mesh
         vpstot(n,is)=vpsloc(n)+vnew(n,is)
         !      if (is.eq.1) &
         !           write(stdout,'(3f25.16)') r(n), rhos(n,1),vpstot(n,1)

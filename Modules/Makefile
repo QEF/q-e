@@ -47,8 +47,9 @@ parameters.o \
 parser.o \
 pseudodata.o \
 pseudo_types.o \
-ptoolkit.o \
 printout_base.o \
+ptoolkit.o \
+radial_grids.o \
 random_numbers.o \
 read_cards.o \
 read_namelists.o \

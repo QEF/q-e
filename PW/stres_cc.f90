@@ -12,7 +12,7 @@ subroutine stres_cc (sigmaxcc)
   !-----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : rho_atc, numeric, mesh, r, rab, nlcc
+  USE atom,                 ONLY : rho_atc, numeric,rgrid, nlcc
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
@@ -72,7 +72,7 @@ subroutine stres_cc (sigmaxcc)
   do nt = 1, ntyp
      if (nlcc (nt) ) then
         call drhoc (ngl, gl, omega, tpiba2, numeric (nt), a_nlcc (nt), &
-             b_nlcc (nt), alpha_nlcc (nt), mesh (nt), r (1, nt), rab (1, nt) &
+             b_nlcc (nt), alpha_nlcc (nt), rgrid(nt)%mesh, rgrid(nt)%r, rgrid(nt)%rab &
              , rho_atc (1, nt), rhocg)
         ! diagonal term
         if (gstart==2) sigmadiag = sigmadiag + &
@@ -83,8 +83,8 @@ subroutine stres_cc (sigmaxcc)
         enddo
 
         call deriv_drhoc (ngl, gl, omega, tpiba2, numeric (nt), &
-             a_nlcc (nt), b_nlcc (nt), alpha_nlcc (nt), mesh (nt), r (1, nt), &
-             rab (1, nt), rho_atc (1, nt), rhocg)
+             a_nlcc (nt), b_nlcc (nt), alpha_nlcc (nt), rgrid(nt)%mesh, rgrid(nt)%r, &
+             rgrid(nt)%rab, rho_atc (1, nt), rhocg)
         ! non diagonal term (g=0 contribution missing)
         do ng = gstart, ngm
            do l = 1, 3

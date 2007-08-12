@@ -33,54 +33,17 @@ MODULE atomic_paw
   USE io_global, ONLY: stdout
   USE kinds, ONLY: dp
   USE constants, ONLY: pi, fpi, e2, eps8
-  USE ld1_parameters, ONLY: ndm, nwfsx
+  USE ld1_parameters, ONLY: nwfsx
+  use radial_grids, only: ndmx
+  USE pseudo_types, ONLY: paw_t
   USE parameters, ONLY: lmaxx
+
   !
   IMPLICIT NONE
   PRIVATE
   SAVE
   !
   REAL(dp), PARAMETER :: ZERO=0._dp, ONE=1._dp, TWO=2._dp, HALF=0.5_dp
-  !
-  !============================================================================
-  !
-  ! Type describing a PAW dataset
-  !
-  TYPE :: paw_t
-     REAL (dp) :: zval
-     REAL (dp) :: z
-     REAL (dp) :: zmesh
-     CHARACTER(LEN=80) :: dft
-     INTEGER        :: mesh      ! the size of the mesh
-     REAL (dp) :: r (ndm)   ! the mesh
-     REAL (dp) :: r2 (ndm)  ! r^2
-     REAL (dp) :: sqr (ndm) ! sqrt(r)
-     REAL (dp) :: dx        ! log(r(i+1))-log(r(i))
-     LOGICAL :: nlcc ! nonlinear core correction
-     INTEGER :: nwfc ! number of wavefunctions/projectors
-     INTEGER :: lmax ! maximum angular momentum of projectors
-     INTEGER :: l(nwfsx) ! angular momentum of projectors
-     INTEGER :: ikk(nwfsx) ! cutoff radius for the projectors
-     INTEGER :: irc ! r(irc) = radius of the augmentation sphere
-     REAL (dp) :: &
-          oc (nwfsx), & ! the occupations
-          enl (nwfsx), & ! the energy of the wavefunctions
-          aewfc (ndm,nwfsx), &  ! all-electron wavefunctions
-          pswfc (ndm,nwfsx),        & ! pseudo wavefunctions
-          proj (ndm,nwfsx),     & ! projectors
-          augfun(ndm,nwfsx,nwfsx),      & ! augmentation functions
-          augmom(nwfsx,nwfsx,0:2*lmaxx) , & ! moments of the augmentation functions
-          aeccharge (ndm),  & ! AE core charge
-          psccharge (ndm),  & ! PS core charge
-          aeloc (ndm),     & ! descreened AE potential: v_AE-v_H[n1]-v_XC[n1+nc]
-          psloc (ndm),     & ! descreened local PS potential: v_PS-v_H[n~+n^]-v_XC[n~+n^+n~c]
-          kdiff (nwfsx,nwfsx)         ! kinetic energy differences
-!!!  Notes about screening:
-!!!       Without nlcc, the local PSpotential is descreened with n~+n^ only.
-!!!       The local AEpotential is descreened ALWAYS with n1+nc. This improves
-!!!       the accuracy, and will not cost in the plane wave code (atomic
-!!!       contribution only).
-  END TYPE paw_t
   !
   !============================================================================
   !
@@ -102,7 +65,7 @@ CONTAINS
   SUBROUTINE new_paw_hamiltonian (veffps_, ddd_, etot_, &
        pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_, eig_)
     IMPLICIT NONE
-    REAL(dp), INTENT(OUT) :: veffps_(ndm,2)
+    REAL(dp), INTENT(OUT) :: veffps_(ndmx,2)
     REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
     REAL(dp), INTENT(OUT) :: etot_
     TYPE(paw_t),   INTENT(IN)  :: pawset_
@@ -111,17 +74,17 @@ CONTAINS
     INTEGER,       INTENT(IN)  :: nspin_
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
-    REAL(dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: pswfc_(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: eig_(nwfsx)
     !
     REAL(dp) :: &                                        ! one center:
          eps,             e1,             e1ps,             & ! energies;
-                          veff1(ndm,2),   veff1ps(ndm,2),   & ! eff potentials;
-         chargeps(ndm,2), charge1(ndm,2), charge1ps(ndm,2), & ! charges.
+                          veff1(ndmx,2),   veff1ps(ndmx,2),   & ! eff potentials;
+         chargeps(ndmx,2), charge1(ndmx,2), charge1ps(ndmx,2), & ! charges.
          projsum(nwfsx,nwfsx,2), eigsum !  sum of projections, sum of eigenval.
     !
     INTEGER :: ns, ns1, is
-    REAL(dp) :: aux(ndm)
+    REAL(dp) :: aux(ndmx)
     !
     ! Compute the valence charges
     CALL compute_charges(projsum, chargeps, charge1, charge1ps, &
@@ -136,12 +99,12 @@ CONTAINS
        pawset_, charge1ps, pawset_%nlcc, pawset_%psccharge, nspin_ )
     ! Add the local part
     DO is=1,nspin_
-       veffps_(1:pawset_%mesh,is) = veffps_(1:pawset_%mesh,is) +  &
-            pawset_%psloc(1:pawset_%mesh)
-       veff1  (1:pawset_%mesh,is) = veff1  (1:pawset_%mesh,is) +  &
-            pawset_%aeloc(1:pawset_%mesh)
-       veff1ps(1:pawset_%mesh,is) = veff1ps(1:pawset_%mesh,is) +  &
-            pawset_%psloc(1:pawset_%mesh)
+       veffps_(1:pawset_%grid%mesh,is) = veffps_(1:pawset_%grid%mesh,is) +  &
+            pawset_%psloc(1:pawset_%grid%mesh)
+       veff1  (1:pawset_%grid%mesh,is) = veff1  (1:pawset_%grid%mesh,is) +  &
+            pawset_%aeloc(1:pawset_%grid%mesh)
+       veff1ps(1:pawset_%grid%mesh,is) = veff1ps(1:pawset_%grid%mesh,is) +  &
+            pawset_%psloc(1:pawset_%grid%mesh)
     END DO
     !
     ! Compute the nonlocal D coefficients
@@ -161,39 +124,38 @@ CONTAINS
   ! Convert the USPP to a PAW dataset
   !
   SUBROUTINE us2paw (pawset_,                                     &
-       zval, mesh, r, r2, sqr, dx, irc, ikk,                      &
+       zval, grid, irc, ikk,                                      &
        nbeta, lls, ocs, enls, psipaw, phis, betas, qvan, kindiff, &
        nlcc, aerhoc, psrhoc, aevtot,psvtot, do_write_dataset)
     USE funct, only : get_iexch,get_icorr,get_igcx,get_igcc,dft_name
+    use radial_grids, only: radial_grid_type
     IMPLICIT NONE
     TYPE(paw_t),   INTENT(OUT) :: pawset_
+    TYPE(radial_grid_type), INTENT(IN) :: grid
     REAL(dp), INTENT(IN)  :: zval
-    INTEGER,       INTENT(IN)  :: mesh
-    REAL(dp), INTENT(IN)  :: r(ndm)
-    REAL(dp), INTENT(IN)  :: r2(ndm), sqr(ndm), dx
     INTEGER,       INTENT(IN)  :: irc
     INTEGER,       INTENT(IN)  :: ikk(nwfsx)
     INTEGER,       INTENT(IN)  :: nbeta
     INTEGER,       INTENT(IN)  :: lls(nwfsx)
     REAL(dp), INTENT(IN)  :: ocs(nwfsx)
     REAL(dp), INTENT(IN)  :: enls(nwfsx)
-    REAL(dp), INTENT(IN)  :: psipaw(ndm,nwfsx)
-    REAL(dp), INTENT(IN)  :: phis(ndm,nwfsx)
-    REAL(dp), INTENT(IN)  :: betas(ndm,nwfsx)
-    REAL(dp), INTENT(IN)  :: qvan(ndm,nwfsx,nwfsx)
+    REAL(dp), INTENT(IN)  :: psipaw(ndmx,nwfsx)
+    REAL(dp), INTENT(IN)  :: phis(ndmx,nwfsx)
+    REAL(dp), INTENT(IN)  :: betas(ndmx,nwfsx)
+    REAL(dp), INTENT(IN)  :: qvan(ndmx,nwfsx,nwfsx)
     REAL(dp), INTENT(IN)  :: kindiff(nwfsx,nwfsx)
     LOGICAL,       INTENT(IN)  :: nlcc
-    REAL(dp), INTENT(IN)  :: aerhoc(ndm)
-    REAL(dp), INTENT(IN)  :: psrhoc(ndm)
-    REAL(dp), INTENT(IN)  :: aevtot(ndm)
-    REAL(dp), INTENT(IN)  :: psvtot(ndm)
+    REAL(dp), INTENT(IN)  :: aerhoc(ndmx)
+    REAL(dp), INTENT(IN)  :: psrhoc(ndmx)
+    REAL(dp), INTENT(IN)  :: aevtot(ndmx)
+    REAL(dp), INTENT(IN)  :: psvtot(ndmx)
     LOGICAL,INTENT(IN),OPTIONAL:: do_write_dataset
     !
     REAL(DP), EXTERNAL :: int_0_inf_dr
-    REAL(dp) :: vps(ndm,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2)
-    INTEGER :: ns, ns1, n, l
-    REAL(dp) :: aux(ndm), aux2(ndm,2), raux
-    REAL(dp) :: aecharge(ndm,2), pscharge(ndm,2)
+    REAL(dp) :: vps(ndmx,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2)
+    INTEGER :: ns, ns1, n, l, mesh
+    REAL(dp) :: aux(ndmx), aux2(ndmx,2), raux
+    REAL(dp) :: aecharge(ndmx,2), pscharge(ndmx,2)
     REAL(dp) :: etot
     INTEGER :: nspin=1, spin(nwfsx)=1
     CHARACTER(LEN=4) :: shortname
@@ -202,11 +164,16 @@ CONTAINS
     pawset_%zval=zval
     !
     ! Copy the mesh
-    pawset_%mesh=mesh
-    pawset_%r(1:mesh)=r(1:mesh)
-    pawset_%r2(1:mesh)=r2(1:mesh)
-    pawset_%sqr(1:mesh)=sqr(1:mesh)
-    pawset_%dx=dx
+    mesh = grid%mesh
+    pawset_%grid%mesh=grid%mesh
+    pawset_%grid%zmesh=grid%zmesh
+    pawset_%grid%xmin=grid%xmin
+    pawset_%grid%dx=grid%dx
+    pawset_%grid%r(1:mesh)=grid%r(1:mesh)
+    pawset_%grid%r2(1:mesh)=grid%r2(1:mesh)
+    pawset_%grid%sqr(1:mesh)=grid%sqr(1:mesh)
+    pawset_%grid%rab(1:mesh)=grid%rab(1:mesh)
+    !
     pawset_%irc=irc
     pawset_%ikk(1:nbeta)=ikk(1:nbeta)
     !
@@ -219,7 +186,6 @@ CONTAINS
     pawset_%aewfc(1:mesh,1:nbeta) = psipaw(1:mesh,1:nbeta)
     pawset_%pswfc(1:mesh,1:nbeta) = phis  (1:mesh,1:nbeta)
     pawset_%proj (1:mesh,1:nbeta) = betas (1:mesh,1:nbeta)
-    !
     !
     ! Augmentation functions:
     ! The specific radial part is not important, as long as the
@@ -243,9 +209,8 @@ CONTAINS
     DO l=0,2*pawset_%lmax
        DO ns=1,nbeta
           DO ns1=1,ns
-             aux(1:pawset_%irc) = pawset_%augfun(1:pawset_%irc,ns,ns1) * pawset_%r(1:pawset_%irc)**l
-             pawset_%augmom(ns,ns1,l) = int_0_inf_dr(aux(1:pawset_%irc), &
-                  pawset_%r,pawset_%r2,pawset_%dx,pawset_%irc,(pawset_%l(ns)+1)*2)
+             aux(1:pawset_%irc) = pawset_%augfun(1:pawset_%irc,ns,ns1) * pawset_%grid%r(1:pawset_%irc)**l
+             pawset_%augmom(ns,ns1,l) = int_0_inf_dr(aux(1:pawset_%irc),pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
              pawset_%augmom(ns1,ns,l)=pawset_%augmom(ns,ns1,l)
           END DO
        END DO
@@ -259,28 +224,28 @@ CONTAINS
 #if defined __TEST_AUGFUN__
     CALL infomsg ('us2paw','Use for tests only!')
     ! a gaussian
-    aux(1:mesh)=EXP(-(r(1:mesh)**2)/(TWO*0.25_dp**2))
+    aux(1:grid%mesh)=EXP(-(grid%r(1:grid%mesh)**2)/(TWO*0.25_dp**2))
     DO ns=1,nbeta
        DO ns1=1,ns
           IF ( (pawset_%l(ns1)==pawset_%l(ns)) .AND. (ABS(pawset_%augmom(ns,ns1,0))>eps8)) THEN
              !
              ! Choose the shape of the augmentation functions: NC Q ...
-             pawset_%augfun(1:mesh,ns,ns1) = qvan(1:mesh,ns,ns1)
+             pawset_%augfun(1:grid%mesh,ns,ns1) = qvan(1:grid%mesh,ns,ns1)
              ! ... or Gaussian Q ?
-             !pawset_%augfun(1:mesh,ns,ns1) = aux(1:mesh) * pawset_%r2(1:mesh)
+             !pawset_%augfun(1:grid%mesh,ns,ns1) = aux(1:grid%mesh) * pawset_%grid%r2(1:grid%mesh)
              !
              ! Renormalize the aug. functions so that their integral is correct
-             raux=int_0_inf_dr(pawset_%augfun(1:pawset_%irc,ns,ns1),pawset_%r,pawset_%r2,pawset_%dx,pawset_%irc,(pawset_%l(ns)+1)*2)
+             raux=int_0_inf_dr(pawset_%augfun(1:pawset_%irc,ns,ns1),pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
              IF (ABS(raux) < eps8) THEN
                 CALL errore('us2paw','norm of augmentation funciton too small',ns*100+ns1)
              END IF
              raux=pawset_%augmom(ns,ns1,0)/raux
-             !pawset_%augfun(1:mesh,ns,ns1)=raux*pawset_%augfun(1:mesh,ns,ns1)
+             !pawset_%augfun(1:grid%mesh,ns,ns1)=raux*pawset_%augfun(1:grid%mesh,ns,ns1)
           ELSE
-             pawset_%augfun(1:mesh,ns,ns1)=ZERO
+             pawset_%augfun(1:grid%mesh,ns,ns1)=ZERO
           END IF
           ! Set the symmetric part
-          pawset_%augfun(1:mesh,ns1,ns)=pawset_%augfun(1:mesh,ns,ns1)
+          pawset_%augfun(1:grid%mesh,ns1,ns)=pawset_%augfun(1:grid%mesh,ns,ns1)
           !WRITE (900+ns*10+ns1,'(2e20.10)')(r(n),pawset_%augfun(n,ns,ns1),n=1,irc)
        END DO
     END DO
@@ -335,31 +300,34 @@ CONTAINS
   !
   ! ...
   !
-  SUBROUTINE paw2us (pawset_,zval,mesh,r,r2,sqr,dx,nbeta,lls,ikk, &
-       betas,qq,qvan,pseudotype)
+  SUBROUTINE paw2us (pawset_,zval,grid,nbeta,lls,ikk,betas,qq,qvan,pseudotype)
     USE funct, ONLY : set_dft_from_name
+    use radial_grids, only: radial_grid_type
     IMPLICIT NONE
+    TYPE(radial_grid_type), INTENT(OUT) :: grid
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     REAL(dp), INTENT(OUT) :: zval
-    INTEGER,       INTENT(OUT) :: mesh
-    REAL(dp), INTENT(OUT) :: r(ndm)
-    REAL(dp), INTENT(OUT) :: r2(ndm), sqr(ndm), dx
     INTEGER,       INTENT(OUT) :: nbeta
     INTEGER,       INTENT(OUT) :: lls(nwfsx)
     INTEGER,       INTENT(OUT) :: ikk(nwfsx)
     INTEGER,       INTENT(OUT) :: pseudotype
-    REAL(dp), INTENT(OUT) :: betas(ndm,nwfsx)
+    REAL(dp), INTENT(OUT) :: betas(ndmx,nwfsx)
     REAL(dp), INTENT(OUT) :: qq(nwfsx,nwfsx)
-    REAL(dp), INTENT(OUT) :: qvan(ndm,nwfsx,nwfsx)
-    INTEGER :: ns, ns1
+    REAL(dp), INTENT(OUT) :: qvan(ndmx,nwfsx,nwfsx)
+    INTEGER :: ns, ns1, mesh
     !
     zval=pawset_%zval
     !
-    mesh=pawset_%mesh
-    r(1:mesh)=pawset_%r(1:mesh)
-    r2(1:mesh)=pawset_%r2(1:mesh)
-    sqr(1:mesh)=pawset_%sqr(1:mesh)
-    dx=pawset_%dx
+    ! set the radial grid data
+    mesh = pawset_%grid%mesh 
+    grid%mesh=pawset_%grid%mesh
+    grid%zmesh=pawset_%grid%zmesh
+    grid%xmin=pawset_%grid%xmin
+    grid%dx=pawset_%grid%dx
+    grid%r(1:mesh)=pawset_%grid%r(1:mesh)
+    grid%r2(1:mesh)=pawset_%grid%r2(1:mesh)
+    grid%sqr(1:mesh)=pawset_%grid%sqr(1:mesh)
+    grid%rab(1:mesh)=pawset_%grid%rab(1:mesh)
     !
     nbeta=pawset_%nwfc
     lls(1:nbeta)=pawset_%l(1:nbeta)
@@ -388,6 +356,8 @@ CONTAINS
   ! Read/write the PAW dataset
   !
   SUBROUTINE paw_io(pawset_,un,what)
+    use radial_grids, only : write_grid_on_file, read_grid_from_file
+    IMPLICIT NONE
     TYPE(paw_t), INTENT(INOUT) :: pawset_
     INTEGER, INTENT(IN) :: un
     CHARACTER(LEN=3), INTENT(IN) :: what
@@ -396,11 +366,9 @@ CONTAINS
     CASE ("OUT")
        WRITE(un,*)
        WRITE(un,'(e20.10)') pawset_%zval
-       WRITE(un,'(i8)') pawset_%mesh
-       WRITE(un,'(e20.10)') (pawset_%r(n), n=1,pawset_%mesh)
-       WRITE(un,'(e20.10)') (pawset_%r2(n), n=1,pawset_%mesh)
-       WRITE(un,'(e20.10)') (pawset_%sqr(n), n=1,pawset_%mesh)
-       WRITE(un,'(e20.10)') pawset_%dx
+       ! write the radial grid data
+       call write_grid_on_file(un,pawset_%grid)
+       !
        WRITE(un,*) pawset_%nlcc
        WRITE(un,'(i8)') pawset_%nwfc
        WRITE(un,'(i8)') (pawset_%l(ns), ns=1,pawset_%nwfc)
@@ -408,26 +376,24 @@ CONTAINS
        WRITE(un,'(i8)') pawset_%irc
        WRITE(un,'(e20.10)') (pawset_%oc(ns), ns=1,pawset_%nwfc)
        WRITE(un,'(e20.10)') (pawset_%enl(ns), ns=1,pawset_%nwfc)
-       WRITE(un,'(e20.10)') ((pawset_%aewfc(n,ns), n=1,pawset_%mesh), ns=1,pawset_%nwfc)
-       WRITE(un,'(e20.10)') ((pawset_%pswfc(n,ns), n=1,pawset_%mesh), ns=1,pawset_%nwfc)
-       WRITE(un,'(e20.10)') ((pawset_%proj(n,ns), n=1,pawset_%mesh), ns=1,pawset_%nwfc)
-       WRITE(un,'(e20.10)') (((pawset_%augfun(n,ns,ns1), n=1,pawset_%mesh), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc)
+       WRITE(un,'(e20.10)') ((pawset_%aewfc(n,ns), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc)
+       WRITE(un,'(e20.10)') ((pawset_%pswfc(n,ns), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc)
+       WRITE(un,'(e20.10)') ((pawset_%proj(n,ns), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc)
+       WRITE(un,'(e20.10)') (((pawset_%augfun(n,ns,ns1), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc)
        WRITE(un,'(i8)') pawset_%lmax
        WRITE(un,'(e20.10)') (((pawset_%augmom(ns,ns1,l), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc),l=0,2*pawset_%lmax)
-       WRITE(un,'(e20.10)') (pawset_%aeccharge(n), n=1,pawset_%mesh)
-       IF (pawset_%nlcc) WRITE(un,'(e20.10)') (pawset_%psccharge(n), n=1,pawset_%mesh)
-       WRITE(un,'(e20.10)') (pawset_%aeloc(n), n=1,pawset_%mesh)
-       WRITE(un,'(e20.10)') (pawset_%psloc(n), n=1,pawset_%mesh)
+       WRITE(un,'(e20.10)') (pawset_%aeccharge(n), n=1,pawset_%grid%mesh)
+       IF (pawset_%nlcc) WRITE(un,'(e20.10)') (pawset_%psccharge(n), n=1,pawset_%grid%mesh)
+       WRITE(un,'(e20.10)') (pawset_%aeloc(n), n=1,pawset_%grid%mesh)
+       WRITE(un,'(e20.10)') (pawset_%psloc(n), n=1,pawset_%grid%mesh)
        WRITE(un,'(e20.10)') ((pawset_%kdiff(ns,ns1), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc)
        WRITE(un,'(A)') TRIM(pawset_%dft)
     CASE ("INP")
        READ(un,*)
        READ(un,'(e20.10)') pawset_%zval
-       READ(un,'(i8)') pawset_%mesh
-       READ(un,'(e20.10)') (pawset_%r(n), n=1,pawset_%mesh)
-       READ(un,'(e20.10)') (pawset_%r2(n), n=1,pawset_%mesh)
-       READ(un,'(e20.10)') (pawset_%sqr(n), n=1,pawset_%mesh)
-       READ(un,'(e20.10)') pawset_%dx
+       ! read the radial grid data
+       call read_grid_from_file(un,pawset_%grid)
+       !
        READ(un,*) pawset_%nlcc
        READ(un,'(i8)') pawset_%nwfc
        READ(un,'(i8)') (pawset_%l(ns), ns=1,pawset_%nwfc)
@@ -435,16 +401,16 @@ CONTAINS
        READ(un,'(i8)') pawset_%irc
        READ(un,'(e20.10)') (pawset_%oc(ns), ns=1,pawset_%nwfc)
        READ(un,'(e20.10)') (pawset_%enl(ns), ns=1,pawset_%nwfc)
-       READ(un,'(e20.10)') ((pawset_%aewfc(n,ns), n=1,pawset_%mesh), ns=1,pawset_%nwfc)
-       READ(un,'(e20.10)') ((pawset_%pswfc(n,ns), n=1,pawset_%mesh), ns=1,pawset_%nwfc)
-       READ(un,'(e20.10)') ((pawset_%proj(n,ns), n=1,pawset_%mesh), ns=1,pawset_%nwfc)
-       READ(un,'(e20.10)') (((pawset_%augfun(n,ns,ns1), n=1,pawset_%mesh), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc)
+       READ(un,'(e20.10)') ((pawset_%aewfc(n,ns), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc)
+       READ(un,'(e20.10)') ((pawset_%pswfc(n,ns), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc)
+       READ(un,'(e20.10)') ((pawset_%proj(n,ns), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc)
+       READ(un,'(e20.10)') (((pawset_%augfun(n,ns,ns1), n=1,pawset_%grid%mesh), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc)
        READ(un,'(i8)') pawset_%lmax
        READ(un,'(e20.10)') (((pawset_%augmom(ns,ns1,l), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc),l=0,2*pawset_%lmax)
-       READ(un,'(e20.10)') (pawset_%aeccharge(n), n=1,pawset_%mesh)
-       IF (pawset_%nlcc) READ(un,'(e20.10)') (pawset_%psccharge(n), n=1,pawset_%mesh)
-       READ(un,'(e20.10)') (pawset_%aeloc(n), n=1,pawset_%mesh)
-       READ(un,'(e20.10)') (pawset_%psloc(n), n=1,pawset_%mesh)
+       READ(un,'(e20.10)') (pawset_%aeccharge(n), n=1,pawset_%grid%mesh)
+       IF (pawset_%nlcc) READ(un,'(e20.10)') (pawset_%psccharge(n), n=1,pawset_%grid%mesh)
+       READ(un,'(e20.10)') (pawset_%aeloc(n), n=1,pawset_%grid%mesh)
+       READ(un,'(e20.10)') (pawset_%psloc(n), n=1,pawset_%grid%mesh)
        READ(un,'(e20.10)') ((pawset_%kdiff(ns,ns1), ns=1,pawset_%nwfc), ns1=1,pawset_%nwfc)
        pawset_%dft="                                                                                "
        READ(un,'(A)') pawset_%dft
@@ -462,17 +428,17 @@ CONTAINS
        pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_ )
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
-    REAL(dp), INTENT(OUT) :: chargeps_(ndm,2)
-    REAL(dp), INTENT(OUT) :: charge1_(ndm,2)
-    REAL(dp), INTENT(OUT) :: charge1ps_(ndm,2)
+    REAL(dp), INTENT(OUT) :: chargeps_(ndmx,2)
+    REAL(dp), INTENT(OUT) :: charge1_(ndmx,2)
+    REAL(dp), INTENT(OUT) :: charge1ps_(ndmx,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nwfc_
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: nspin_
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
-    REAL(dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
-    REAL(dp) :: augcharge(ndm,2)
+    REAL(dp), INTENT(IN)  :: pswfc_(ndmx,nwfsx)
+    REAL(dp) :: augcharge(ndmx,2)
     CALL compute_projsum(projsum_,pawset_,nwfc_,l_,spin_,pswfc_,oc_)
     !WRITE (6200,'(20e20.10)') ((projsum(ns,ns1),ns=1,ns1),ns1=1,pawset_%nwfc)
     CALL compute_sumwfc2(chargeps_,pawset_,nwfc_,pswfc_,oc_,spin_)
@@ -480,10 +446,10 @@ CONTAINS
     CALL compute_onecenter_charge(charge1_  ,pawset_,projsum_,nspin_,"AE")
     ! add augmentation charges
     CALL compute_augcharge(augcharge,pawset_,projsum_,nspin_)
-    chargeps_ (1:pawset_%mesh,1:nspin_) = chargeps_ (1:pawset_%mesh,1:nspin_) + &
-         augcharge(1:pawset_%mesh,1:nspin_)
-    charge1ps_(1:pawset_%mesh,1:nspin_) = charge1ps_(1:pawset_%mesh,1:nspin_) + &
-         augcharge(1:pawset_%mesh,1:nspin_)
+    chargeps_ (1:pawset_%grid%mesh,1:nspin_) = chargeps_ (1:pawset_%grid%mesh,1:nspin_) + &
+         augcharge(1:pawset_%grid%mesh,1:nspin_)
+    charge1ps_(1:pawset_%grid%mesh,1:nspin_) = charge1ps_(1:pawset_%grid%mesh,1:nspin_) + &
+         augcharge(1:pawset_%grid%mesh,1:nspin_)
   END SUBROUTINE compute_charges
   !
   !============================================================================
@@ -496,26 +462,27 @@ CONTAINS
   SUBROUTINE compute_onecenter_energy ( totenergy_, veff_, &
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, energies_ )
     USE funct, ONLY: dft_is_gradient
+    USE radial_grids, ONLY: hartree
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: totenergy_       ! H+XC+DC
-    REAL(dp), INTENT(OUT) :: veff_(ndm,2)     ! effective potential
+    REAL(dp), INTENT(OUT) :: veff_(ndmx,2)     ! effective potential
     TYPE(paw_t),   INTENT(IN)  :: pawset_          ! the PAW dataset
-    REAL(dp), INTENT(IN)  :: vcharge_(ndm,2)  ! valence charge
+    REAL(dp), INTENT(IN)  :: vcharge_(ndmx,2)  ! valence charge
     LOGICAL,       INTENT(IN)  :: nlcc_            ! non-linear core correction
-    REAL(dp), INTENT(IN)  :: ccharge_(ndm)    ! core charge
+    REAL(dp), INTENT(IN)  :: ccharge_(ndmx)    ! core charge
     INTEGER,       INTENT(IN)  :: nspin_           ! 1 for LDA, 2 for LSDA
     REAL(dp), INTENT(OUT), OPTIONAL :: energies_(4) ! Etot,H,XC,DC terms
     !
-    REAL(dp), PARAMETER :: rho_eq_0(ndm) = ZERO ! ccharge=0 when nlcc=.f.
+    REAL(dp), PARAMETER :: rho_eq_0(ndmx) = ZERO ! ccharge=0 when nlcc=.f.
     !
     REAL(dp) :: &
          eh, exc, edc, & ! hartree, xc and double counting energies
-         rhovtot(ndm), & ! total valence charge
-         aux(ndm),     & ! auxiliary to compute integrals
-         vh(ndm),      & ! hartree potential
-         vxc(ndm,2),   & ! exchange-correlation potential (LDA+GGA)
-         vgc(ndm,2),   & ! exchange-correlation potential (GGA only)
-         egc(ndm),     & ! exchange correlation energy density (GGA only)
+         rhovtot(ndmx), & ! total valence charge
+         aux(ndmx),     & ! auxiliary to compute integrals
+         vh(ndmx),      & ! hartree potential
+         vxc(ndmx,2),   & ! exchange-correlation potential (LDA+GGA)
+         vgc(ndmx,2),   & ! exchange-correlation potential (GGA only)
+         egc(ndmx),     & ! exchange correlation energy density (GGA only)
          rh(2),        & ! valence charge at a given point without 4 pi r^2
          rhc,          & ! core    charge at a given point without 4 pi r^2
          vxcr(2)         ! exchange-correlation potential at a given point
@@ -525,25 +492,25 @@ CONTAINS
     REAL(DP), EXTERNAL :: int_0_inf_dr, exc_t
     !
     ! Set up total valence charge
-    rhovtot(1:pawset_%mesh) = vcharge_(1:pawset_%mesh,1)
-    IF (nspin_==2) rhovtot(1:pawset_%mesh) = rhovtot(1:pawset_%mesh) +   &
-         vcharge_(1:pawset_%mesh,2)
+    rhovtot(1:pawset_%grid%mesh) = vcharge_(1:pawset_%grid%mesh,1)
+    IF (nspin_==2) rhovtot(1:pawset_%grid%mesh) = rhovtot(1:pawset_%grid%mesh) +   &
+         vcharge_(1:pawset_%grid%mesh,2)
     !
     ! Hartree
-    CALL hartree(0,2,pawset_%mesh,pawset_%r,pawset_%r2,pawset_%sqr,pawset_%dx,rhovtot,vh)
-    vh(1:pawset_%mesh) = e2 * vh(1:pawset_%mesh)
-    aux(1:pawset_%mesh) = vh(1:pawset_%mesh) * rhovtot(1:pawset_%mesh)
-    eh = HALF * int_0_inf_dr(aux,pawset_%r,pawset_%r2,pawset_%dx,pawset_%mesh,2)
+    CALL hartree(0,2,pawset_%grid%mesh,pawset_%grid,rhovtot,vh)
+    vh(1:pawset_%grid%mesh) = e2 * vh(1:pawset_%grid%mesh)
+    aux(1:pawset_%grid%mesh) = vh(1:pawset_%grid%mesh) * rhovtot(1:pawset_%grid%mesh)
+    eh = HALF * int_0_inf_dr(aux,pawset_%grid,pawset_%grid%mesh,2)
     !
     ! Exhange-Correlation
     rh=(/ZERO,ZERO/)
     rhc=ZERO
     lsd=nspin_-1
-    DO i=1,pawset_%mesh
+    DO i=1,pawset_%grid%mesh
        DO is=1,nspin_
-          rh(is) = vcharge_(i,is)/pawset_%r2(i)/FPI
+          rh(is) = vcharge_(i,is)/pawset_%grid%r2(i)/FPI
        ENDDO
-       IF (nlcc_) rhc = ccharge_(i)/pawset_%r2(i)/FPI
+       IF (nlcc_) rhc = ccharge_(i)/pawset_%grid%r2(i)/FPI
        CALL vxc_t(rh,rhc,lsd,vxcr)
        vxc(i,1:nspin_)=vxcr(1:nspin_)
        IF (nlcc_) THEN
@@ -554,23 +521,23 @@ CONTAINS
     END DO
     IF ( dft_is_gradient() ) THEN
        IF (nlcc_) THEN
-          CALL vxcgc(ndm,pawset_%mesh,nspin_,pawset_%r,pawset_%r2,vcharge_,ccharge_,vgc,egc)
+          CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,pawset_%grid%r2,vcharge_,ccharge_,vgc,egc)
        ELSE
-          CALL vxcgc(ndm,pawset_%mesh,nspin_,pawset_%r,pawset_%r2,vcharge_,rho_eq_0,vgc,egc)
+          CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,pawset_%grid%r2,vcharge_,rho_eq_0,vgc,egc)
        END IF
-       vxc(1:pawset_%mesh,1:nspin_) = vxc(1:pawset_%mesh,1:nspin_) + &
-                                      vgc(1:pawset_%mesh,1:nspin_)
-       aux(1:pawset_%mesh) = aux(1:pawset_%mesh) + &
-           egc(1:pawset_%mesh) * pawset_%r2(1:pawset_%mesh) * FPI
+       vxc(1:pawset_%grid%mesh,1:nspin_) = vxc(1:pawset_%grid%mesh,1:nspin_) + &
+                                      vgc(1:pawset_%grid%mesh,1:nspin_)
+       aux(1:pawset_%grid%mesh) = aux(1:pawset_%grid%mesh) + &
+           egc(1:pawset_%grid%mesh) * pawset_%grid%r2(1:pawset_%grid%mesh) * FPI
     END IF
-    exc = int_0_inf_dr(aux,pawset_%r,pawset_%r2,pawset_%dx,pawset_%mesh,2)
+    exc = int_0_inf_dr(aux,pawset_%grid,pawset_%grid%mesh,2)
     !
     ! Double counting
     edc=ZERO
     DO is=1,nspin_
-       veff_(1:pawset_%mesh,is)=vxc(1:pawset_%mesh,is)+vh(1:pawset_%mesh)
-       aux(1:pawset_%mesh)=veff_(1:pawset_%mesh,is)*vcharge_(1:pawset_%mesh,is)
-       edc=edc+int_0_inf_dr(aux,pawset_%r,pawset_%r2,pawset_%dx,pawset_%mesh,2)
+       veff_(1:pawset_%grid%mesh,is)=vxc(1:pawset_%grid%mesh,is)+vh(1:pawset_%grid%mesh)
+       aux(1:pawset_%grid%mesh)=veff_(1:pawset_%grid%mesh,is)*vcharge_(1:pawset_%grid%mesh,is)
+       edc=edc+int_0_inf_dr(aux,pawset_%grid,pawset_%grid%mesh,2)
     END DO
     !
     ! Total
@@ -594,11 +561,11 @@ CONTAINS
     REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nspin_
-    REAL(dp), INTENT(IN)  :: veffps_(ndm,2)
-    REAL(dp), INTENT(IN)  :: veff1_(ndm,2)
-    REAL(dp), INTENT(IN)  :: veff1ps_(ndm,2)
+    REAL(dp), INTENT(IN)  :: veffps_(ndmx,2)
+    REAL(dp), INTENT(IN)  :: veff1_(ndmx,2)
+    REAL(dp), INTENT(IN)  :: veff1ps_(ndmx,2)
     INTEGER :: is, ns, ns1
-    REAL(dp) :: aux(ndm)
+    REAL(dp) :: aux(ndmx)
     REAL(DP), EXTERNAL :: int_0_inf_dr
     !
     ! D^ = Int Q*v~
@@ -607,22 +574,22 @@ CONTAINS
        DO ns=1,pawset_%nwfc
           DO ns1=1,ns
              IF (pawset_%l(ns)==pawset_%l(ns1)) THEN
-                aux(1:pawset_%mesh) =                        &
-                     pawset_%augfun(1:pawset_%mesh,ns,ns1) * &
-                     veffps_(1:pawset_%mesh,is)
-                aux(1:pawset_%mesh) = aux(1:pawset_%mesh) +  &
-                     pawset_%aewfc(1:pawset_%mesh,ns ) *     &
-                     pawset_%aewfc(1:pawset_%mesh,ns1) *     &
-                     veff1_(1:pawset_%mesh,is)
-                aux(1:pawset_%mesh) = aux(1:pawset_%mesh) -  &
-                     pawset_%pswfc(1:pawset_%mesh,ns ) *     &
-                     pawset_%pswfc(1:pawset_%mesh,ns1) *     &
-                     veff1ps_(1:pawset_%mesh,is)
-                aux(1:pawset_%mesh) = aux(1:pawset_%mesh) -  &
-                     pawset_%augfun(1:pawset_%mesh,ns,ns1) * &
-                     veff1ps_(1:pawset_%mesh,is)
+                aux(1:pawset_%grid%mesh) =                        &
+                     pawset_%augfun(1:pawset_%grid%mesh,ns,ns1) * &
+                     veffps_(1:pawset_%grid%mesh,is)
+                aux(1:pawset_%grid%mesh) = aux(1:pawset_%grid%mesh) +  &
+                     pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
+                     pawset_%aewfc(1:pawset_%grid%mesh,ns1) *     &
+                     veff1_(1:pawset_%grid%mesh,is)
+                aux(1:pawset_%grid%mesh) = aux(1:pawset_%grid%mesh) -  &
+                     pawset_%pswfc(1:pawset_%grid%mesh,ns ) *     &
+                     pawset_%pswfc(1:pawset_%grid%mesh,ns1) *     &
+                     veff1ps_(1:pawset_%grid%mesh,is)
+                aux(1:pawset_%grid%mesh) = aux(1:pawset_%grid%mesh) -  &
+                     pawset_%augfun(1:pawset_%grid%mesh,ns,ns1) * &
+                     veff1ps_(1:pawset_%grid%mesh,is)
                 ddd_(ns,ns1,is) = pawset_%kdiff(ns,ns1) +       &
-                     int_0_inf_dr(aux,pawset_%r,pawset_%r2,pawset_%dx,pawset_%irc,(pawset_%l(ns)+1)*2)
+                     int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
              ELSE
                 ddd_(ns,ns1,is)=ZERO
              END IF
@@ -642,14 +609,14 @@ CONTAINS
     INTEGER :: n,ns
     DO ns=1,pawset_%nwfc
        WRITE (5000+ns,'(A)') "# r                 AEwfc               PSwfc               projector"
-       DO n=1,pawset_%mesh
-          WRITE (5000+ns,'(4f20.12)') pawset_%r(n), pawset_%aewfc(n,ns), pawset_%pswfc(n,ns),pawset_%proj(n,ns)
+       DO n=1,pawset_%grid%mesh
+          WRITE (5000+ns,'(4f20.12)') pawset_%grid%r(n), pawset_%aewfc(n,ns), pawset_%pswfc(n,ns),pawset_%proj(n,ns)
        END DO
     END DO
     !
     WRITE (6000,'(A)') "# r                 AEpot               PSpot"
-    DO n=1,pawset_%mesh
-       WRITE (6000,'(3f20.8)') pawset_%r(n), pawset_%aeloc(n), pawset_%psloc(n)
+    DO n=1,pawset_%grid%mesh
+       WRITE (6000,'(3f20.8)') pawset_%grid%r(n), pawset_%aeloc(n), pawset_%psloc(n)
     END DO
   END SUBROUTINE human_write_paw
   !
@@ -661,17 +628,17 @@ CONTAINS
   !
   SUBROUTINE compute_sumwfc2(charge_, pawset_, nwfc_, wfc_, oc_, spin_)
     IMPLICIT NONE
-    REAL(dp), INTENT(OUT) :: charge_(ndm,2)
+    REAL(dp), INTENT(OUT) :: charge_(ndmx,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     INTEGER,       INTENT(IN)  :: nwfc_
-    REAL(dp), INTENT(IN)  :: wfc_(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: wfc_(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
     INTEGER :: ns
-    charge_(1:pawset_%mesh,:)=ZERO
+    charge_(1:pawset_%grid%mesh,:)=ZERO
     DO ns=1,nwfc_
-       IF (oc_(ns)>ZERO) charge_(1:pawset_%mesh,spin_(ns)) = charge_(1:pawset_%mesh,spin_(ns)) + &
-            oc_(ns) * wfc_(1:pawset_%mesh,ns) * wfc_(1:pawset_%mesh,ns)
+       IF (oc_(ns)>ZERO) charge_(1:pawset_%grid%mesh,spin_(ns)) = charge_(1:pawset_%grid%mesh,spin_(ns)) + &
+            oc_(ns) * wfc_(1:pawset_%grid%mesh,ns) * wfc_(1:pawset_%grid%mesh,ns)
     END DO
   END SUBROUTINE compute_sumwfc2
   !
@@ -685,20 +652,20 @@ CONTAINS
     INTEGER,       INTENT(IN)  :: nwfc_
     INTEGER,       INTENT(IN)  :: l_(nwfsx)
     INTEGER,       INTENT(IN)  :: spin_(nwfsx)
-    REAL(dp), INTENT(IN)  :: pswfc_(ndm,nwfsx)
+    REAL(dp), INTENT(IN)  :: pswfc_(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
-    REAL(dp) :: proj_dot_wfc(nwfsx,nwfsx), aux(ndm)
+    REAL(dp) :: proj_dot_wfc(nwfsx,nwfsx), aux(ndmx)
     INTEGER :: ns, ns1, nf, nr, is, nst
     REAL(DP), EXTERNAL :: int_0_inf_dr
     ! Compute <projector|wavefunction>
     DO ns=1,pawset_%nwfc
        DO nf=1,nwfc_
           IF (pawset_%l(ns)==l_(nf)) THEN
-             DO nr=1,pawset_%mesh
+             DO nr=1,pawset_%grid%mesh
                 aux(nr)=pawset_%proj(nr,ns)*pswfc_(nr,nf)
              END DO
              nst=(l_(nf)+1)*2
-             proj_dot_wfc(ns,nf)=int_0_inf_dr(aux,pawset_%r,pawset_%r2,pawset_%dx,pawset_%irc,nst)
+             proj_dot_wfc(ns,nf)=int_0_inf_dr(aux,pawset_%grid,pawset_%irc,nst)
           ELSE
              proj_dot_wfc(ns,nf)=ZERO
           END IF
@@ -727,7 +694,7 @@ CONTAINS
   !
   SUBROUTINE compute_augcharge(augcharge_, pawset_, projsum_, nspin_)
     IMPLICIT NONE
-    REAL(dp), INTENT(OUT) :: augcharge_(ndm,2)
+    REAL(dp), INTENT(OUT) :: augcharge_(ndmx,2)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
     REAL(dp), INTENT(IN)  :: projsum_(nwfsx,nwfsx,2)
     INTEGER,       INTENT(IN)  :: nspin_
@@ -743,8 +710,8 @@ CONTAINS
              ELSE
                 factor=TWO
              END IF
-             augcharge_(1:pawset_%mesh,is) = augcharge_(1:pawset_%mesh,is) + factor * &
-                  projsum_(ns,ns1,is) * pawset_%augfun(1:pawset_%mesh,ns,ns1)
+             augcharge_(1:pawset_%grid%mesh,is) = augcharge_(1:pawset_%grid%mesh,is) + factor * &
+                  projsum_(ns,ns1,is) * pawset_%augfun(1:pawset_%grid%mesh,ns,ns1)
           END DO
        END DO
     END DO
@@ -756,7 +723,7 @@ CONTAINS
   !
   SUBROUTINE compute_onecenter_charge(charge1_, pawset_, projsum_, nspin_, which_wfc)
     IMPLICIT NONE
-    REAL(dp),   INTENT(OUT) :: charge1_(ndm,2)
+    REAL(dp),   INTENT(OUT) :: charge1_(ndmx,2)
     TYPE(paw_t),     INTENT(IN)  :: pawset_
     REAL(dp),   INTENT(IN)  :: projsum_(nwfsx,nwfsx,2)
     INTEGER,         INTENT(IN)  :: nspin_
@@ -775,13 +742,13 @@ CONTAINS
              END IF
              SELECT CASE (which_wfc)
              CASE ("AE")
-                charge1_(1:pawset_%mesh,is) = charge1_(1:pawset_%mesh,is) + factor * &
-                     projsum_(ns,ns1,is) * pawset_%aewfc(1:pawset_%mesh,ns) *     &
-                     pawset_%aewfc(1:pawset_%mesh,ns1)
+                charge1_(1:pawset_%grid%mesh,is) = charge1_(1:pawset_%grid%mesh,is) + factor * &
+                     projsum_(ns,ns1,is) * pawset_%aewfc(1:pawset_%grid%mesh,ns) *     &
+                     pawset_%aewfc(1:pawset_%grid%mesh,ns1)
              CASE ("PS")
-                charge1_(1:pawset_%mesh,is) = charge1_(1:pawset_%mesh,is) + factor * &
-                     projsum_(ns,ns1,is) * pawset_%pswfc(1:pawset_%mesh,ns) *     &
-                     pawset_%pswfc(1:pawset_%mesh,ns1)
+                charge1_(1:pawset_%grid%mesh,is) = charge1_(1:pawset_%grid%mesh,is) + factor * &
+                     projsum_(ns,ns1,is) * pawset_%pswfc(1:pawset_%grid%mesh,ns) *     &
+                     pawset_%pswfc(1:pawset_%grid%mesh,ns1)
              CASE DEFAULT
                 call errore ('compute_onecehnter_charge','specify AE or PS wavefunctions',1)
              END SELECT

@@ -15,8 +15,8 @@ subroutine set_drhoc (q)
 #include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp
   use pwcom
-  USE parameters, ONLY: ndmx
-  USE atom, ONLY : numeric, nlcc, msh, r, rab, rho_atc
+  USE radial_grids, ONLY: ndmx
+  USE atom, ONLY : numeric, nlcc, msh, rgrid, rho_atc
   USE kinds, only : DP
   use phcom
   implicit none
@@ -57,16 +57,16 @@ subroutine set_drhoc (q)
            if (numeric (nt) ) then
               if (gq2 < 1.0d-8) then
                  do ir = 1, msh (nt)
-                    aux (ir) = r (ir, nt) **2 * rho_atc (ir, nt)
+                    aux (ir) = rgrid(nt)%r(ir) **2 * rho_atc (ir, nt)
                  enddo
-                 call simpson (msh (nt), aux, rab (1, nt), rhocgip)
+                 call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgip)
               else
                  gx = sqrt (gq2)
-                 call sph_bes (msh (nt), r (1, nt), gx, 0, aux)
+                 call sph_bes (msh (nt), rgrid(nt)%r, gx, 0, aux)
                  do ir = 1, msh (nt)
-                    aux (ir) = r (ir, nt) **2 * rho_atc (ir, nt) * aux (ir)
+                    aux (ir) = rgrid(nt)%r(ir) **2 * rho_atc (ir, nt) * aux (ir)
                  enddo
-                 call simpson (msh (nt), aux, rab (1, nt), rhocgip)
+                 call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgip)
               endif
               rhocgnt = rhocgip * fpi
            else

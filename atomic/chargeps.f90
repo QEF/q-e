@@ -13,6 +13,7 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   !   calculate the (spherical) pseudo charge density 
   !
   use ld1inc
+  implicit none
 
   integer :: &
        nwf_i,        & ! input: the number of wavefunctions
@@ -22,8 +23,8 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   real(DP) ::  &
        jj_i(nwfsx), & ! input: their total angular momentum
        oc_i(nwfsx), & ! input: the occupation
-       phi_i(ndm,nwfsx), & ! input: the functions to add
-       rho_i(ndm,2)   ! output: the (nspin) components of the charge
+       phi_i(ndmx,nwfsx), & ! input: the functions to add
+       rho_i(ndmx,2)   ! output: the (nspin) components of the charge
 
   integer ::     &
        is,     &   ! counter on spin
@@ -33,7 +34,7 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   real(DP) ::    &
        work(nwfsx), & ! auxiliary variable for becp
        int_0_inf_dr,& ! integration function
-       gi(ndm)        ! used to compute the integrals
+       gi(ndmx)        ! used to compute the integrals
 
 
   rho_i=0.0_dp
@@ -43,7 +44,7 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   do ns=1,nwf_i
      if (oc_i(ns).gt.0.0_dp) then
         is=iswf_i(ns)
-        do n=1,mesh
+        do n=1,grid%mesh
            rho_i(n,is)=rho_i(n,is)+oc_i(ns)*phi_i(n,ns)**2
         end do
      endif
@@ -63,7 +64,7 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
                  do n=1,ikl
                     gi(n)=betas(n,n1)*phi_i(n,ns)
                  enddo
-                 work(n1)=int_0_inf_dr(gi,r,r2,dx,ikl,nst)
+                 work(n1)=int_0_inf_dr(gi,grid,ikl,nst)
               else
                  work(n1)=0.0_dp
               endif
@@ -73,7 +74,7 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
            !
            do n1=1,nbeta
               do n2=1,nbeta
-                 do n=1,mesh
+                 do n=1,grid%mesh
                     rho_i(n,is)=rho_i(n,is)+qvan(n,n1,n2)*oc_i(ns)* &
                          work(n1)*work(n2)
                  enddo

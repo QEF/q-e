@@ -16,6 +16,7 @@ subroutine lderivps
   !
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
+  use radial_grids, only: series
   use ld1inc
   implicit none
 
@@ -32,7 +33,7 @@ subroutine lderivps
        e,       &    ! the eigenvalue
        lamsq,            & ! combined angular momentum
        b(0:3),c(4),      & ! used for starting guess of the solution 
-       b0e, rr1,rr2,     & ! auxiliary
+       b0e, rr1,rr2, r1,r2, & ! auxiliary
        xl1, x4l6, ddx12, &
        x6l12, x8l20
 
@@ -59,17 +60,17 @@ subroutine lderivps
   if (nld == 0 .or. file_logderps == ' ') return
   if (nld > nwfsx) call errore('lderivps','nld is too large',1)
 
-  allocate( al(mesh), aux(mesh), vaux(mesh) )
+  allocate( al(grid%mesh), aux(grid%mesh), vaux(grid%mesh) )
 
   ze2=0.0_dp
 
-  do n=1,mesh
-     if (r(n) > rlderiv) go to 10
+  do n=1,grid%mesh
+     if (grid%r(n) > rlderiv) go to 10
   enddo
   call errore('lderivps','wrong rlderiv?',1)
 10 ikrld = n-1
   write(stdout,'(5x,''Computing logarithmic derivative in'',f10.5)') &
-       (r(ikrld)+r(ikrld+1))*0.5_dp
+       (grid%r(ikrld)+grid%r(ikrld+1))*0.5_dp
   npte= (emaxld-eminld)/deld + 1
   allocate ( dlchis(npte,nld) )
   ikmin=ikrld+5
@@ -92,7 +93,7 @@ subroutine lderivps
         x4l6=4*lam+6
         x6l12=6*lam+12
         x8l20=8*lam+20
-        ddx12=dx*dx/12.0_dp
+        ddx12=grid%dx*grid%dx/12.0_dp
         nst=(lam+1)**2  
         nbf=nbeta
         if (pseudotype == 1) then
@@ -101,20 +102,20 @@ subroutine lderivps
            else if (rel==2 .and. lam>0 .and. abs(jam-lam-0.5_dp)<0.001_dp) then
               ind=2
            endif
-           do n=1,mesh
+           do n=1,grid%mesh
               vaux(n) = vpstot(n,is) + vnl(n,lam,ind)
            enddo
            nbf=0
         else
-           do n=1,mesh
+           do n=1,grid%mesh
               vaux(n) = vpstot(n,is)
            enddo
         endif
 
         do n=1,4
-           al(n)=vaux(n)-ze2/r(n)
+           al(n)=vaux(n)-ze2/grid%r(n)
         enddo
-        call series(al,r,r2,b)
+        call series(al,grid%r,grid%r2,b)
 
         do ie=1,npte
            e=eminld+deld*(ie-1.0_dp)
@@ -127,29 +128,29 @@ subroutine lderivps
            c(2)=(c(1)*ze2+b0e)/x4l6
            c(3)=(c(2)*ze2+c(1)*b0e+b(1))/x6l12
            c(4)=(c(3)*ze2+c(2)*b0e+c(1)*b(1)+b(2))/x8l20
-           rr1=(1.0_dp+r(1)*(c(1)+r(1)* &
-                (c(2)+r(1)*(c(3)+r(1)*c(4)))))*r(1)**(lam+1)
-           rr2=(1.0_dp+r(2)*(c(1)+r(2)* &
-                (c(2)+r(2)*(c(3)+r(2)*c(4)))))*r(2)**(lam+1)
-           aux(1)=rr1/sqr(1)
-           aux(2)=rr2/sqr(2)
+           r1=grid%r(1)
+           r2=grid%r(2)
+           rr1=(1.0_dp+r1*(c(1)+r1*(c(2)+r1*(c(3)+r1*c(4)))))*r1**(lam+1)
+           rr2=(1.0_dp+r2*(c(1)+r2*(c(2)+r2*(c(3)+r2*c(4)))))*r2**(lam+1)
+           aux(1)=rr1/grid%sqr(1)
+           aux(2)=rr2/grid%sqr(2)
 
-           do n=1,mesh
-              al(n)=( (vaux(n)-e)*r2(n) + lamsq )*ddx12
+           do n=1,grid%mesh
+              al(n)=( (vaux(n)-e)*grid%r2(n) + lamsq )*ddx12
               al(n)=1.0_dp-al(n)
            enddo
 
-           call integrate_outward (lam,jam,e,mesh,ndm,dx,r,r2,sqr,al, &
-                b,aux,betas,ddd,qq,nbf,nwfsx,lls,jjs,ikmin)
+           call integrate_outward (lam,jam,e,grid%mesh,ndmx,grid,al,b,aux,betas,ddd,&
+                qq,nbf,nwfsx,lls,jjs,ikmin)
 
            !
            !    compute the logarithmic derivative and save in dlchi
            !            
            do n=-3,3
-              aux(ikrld+n)= aux(ikrld+n)*sqr(ikrld+n)
+              aux(ikrld+n)= aux(ikrld+n)*grid%sqr(ikrld+n)
            enddo
 
-           dlchis(ie,nc)=compute_log(aux(ikrld-3),r(ikrld),dx)
+           dlchis(ie,nc)=compute_log(aux(ikrld-3),grid%r(ikrld),grid%dx)
         enddo
      enddo
 

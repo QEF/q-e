@@ -16,8 +16,8 @@ subroutine esic
   ! local
   integer:: n, i
   real(DP) :: int_0_inf_dr,vxup,vxdw,vcup,vcdw,ex,ec,deksic  
-  real(DP) :: work1(ndm),v(ndm),vsic(ndm)
-  real(DP) :: egc(ndm)
+  real(DP) :: work1(ndmx),v(ndmx),vsic(ndmx)
+  real(DP) :: egc(ndmx)
   external int_0_inf_dr
   !
   deksic = 0.0_DP
@@ -26,20 +26,20 @@ subroutine esic
   do n=1,nwf
      call sic_correction(n,v,vsic,work1)
      if (rel.eq.2) then
-        do i=1,mesh
+        do i=1,grid%mesh
            v(i)=v(i)*(psi(i,1,n)**2+psi(i,2,n)**2)
            vsic(i)=vsic(i)*(psi(i,1,n)**2+psi(i,2,n)**2)
         end do
      else
-        do i=1,mesh
+        do i=1,grid%mesh
            v(i)=v(i)*psi(i,1,n)**2
            vsic(i)=vsic(i)*psi(i,1,n)**2
         enddo
      endif
      deksic = deksic +  &
-          &      oc(n)*int_0_inf_dr(vsic,r,r2,dx,mesh,2*(ll(n)+1))
-     dhrsic = dhrsic - 0.5_DP*oc(n)*int_0_inf_dr(v    ,r,r2,dx,mesh,2)
-     dxcsic = dxcsic - oc(n)*int_0_inf_dr(work1,r,r2,dx,mesh,2)
+          &      oc(n)*int_0_inf_dr(vsic,grid,grid%mesh,2*(ll(n)+1))
+     dhrsic = dhrsic - 0.5_DP*oc(n)*int_0_inf_dr(v    ,grid,grid%mesh,2)
+     dxcsic = dxcsic -        oc(n)*int_0_inf_dr(work1,grid,grid%mesh,2)
   enddo
   !
   ekin=ekin+deksic

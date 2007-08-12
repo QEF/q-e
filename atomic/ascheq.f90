@@ -7,8 +7,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
-     thresh,y,nstop)
+subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh,y,nstop)
   !---------------------------------------------------------------
   !
   !  numerical integration of the radial schroedinger equation for
@@ -16,7 +15,9 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   !  thresh determines the absolute accuracy for the eigenvalue
   !
   use kinds, only : DP
+  use radial_grids, only: radial_grid_type, series
   implicit none
+  type(radial_grid_type), intent(in) :: grid
   integer :: mesh,lam, ierr
   integer:: nn,nstop,maxter,iter,l1,i,ik,ncross,n, &
        nstart,ns,n2,nst1,nst2,ndcr
@@ -24,9 +25,9 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
        c1,c2,c3,c4,rr1,rr2,ymx,rap,rstart,di,expn,  &
        fe,a0,a1,a2,sum0,f2,sum,sqlhf,f0,f1,dfe,de,eps,&
        yln,xp, sum1
-  real(DP):: r(mesh),r2(mesh),sqr(mesh),vpot(mesh), y(mesh)
+  real(DP):: vpot(mesh), y(mesh)
   real(DP),allocatable:: c(:), el(:), f(:)
-  real(DP):: b(0:3),dx,e,thresh
+  real(DP):: b(0:3),e,thresh
   data maxter/50/
   !
   !  set up constants and initialize
@@ -36,7 +37,7 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   allocate(el(mesh),stat=ierr)
 
   iter=0
-  ddx12=dx*dx/12.0_dp
+  ddx12=grid%dx*grid%dx/12.0_dp
   l1=lam+1
   sqlhf=(DBLE(lam)+0.5_dp)**2
   xl1=l1
@@ -47,10 +48,10 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   !
   !  set initial lower and upper bounds to the eigenvalue
   !
-  eup=vpot(mesh)+sqlhf/r2(mesh)
+  eup=vpot(mesh)+sqlhf/grid%r2(mesh)
   elw=eup
   do i=1,mesh
-     elw=min(elw,vpot(i)+sqlhf/r2(i))
+     elw=min(elw,vpot(i)+sqlhf/grid%r2(i))
   enddo
   nstop=200
   if(eup.eq.elw) go to 900
@@ -60,9 +61,9 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   !  series developement of the potential near the origin
   !
   do i=1,4
-     y(i)=vpot(i)-ze2/r(i)
+     y(i)=vpot(i)-ze2/grid%r(i)
   enddo
-  call series(y,r,r2,b)
+  call series(y,grid%r,grid%r2,b)
   !
 300 continue
   iter=iter+1
@@ -74,9 +75,9 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   !  f < 0 (approximatively) means classically allowed   region
   !  f > 0         "           "        "      forbidden   "
   !
-  f(1)=ddx12*(r2(1)*(vpot(1)-e)+sqlhf)
+  f(1)=ddx12*(grid%r2(1)*(vpot(1)-e)+sqlhf)
   do i=2,mesh
-     f(i)=ddx12*(r2(i)*(vpot(i)-e)+sqlhf)
+     f(i)=ddx12*(grid%r2(i)*(vpot(i)-e)+sqlhf)
      if( f(i) .ne. sign(f(i),f(i-1)) ) ik=i
   enddo
   nstop=302
@@ -95,10 +96,10 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   c2=(c1*ze2+b0e)/x4l6
   c3=(c2*ze2+c1*b0e+b(1))/x6l12
   c4=(c3*ze2+c2*b0e+c1*b(1)+b(2))/x8l20
-  rr1=(1.0_dp+r(1)*(c1+r(1)*(c2+r(1)*(c3+r(1)*c4))))*r(1)**l1
-  rr2=(1.0_dp+r(2)*(c1+r(2)*(c2+r(2)*(c3+r(2)*c4))))*r(2)**l1
-  y(1)=rr1/sqr(1)
-  y(2)=rr2/sqr(2)
+  rr1=(1.0_dp+grid%r(1)*(c1+grid%r(1)*(c2+grid%r(1)*(c3+grid%r(1)*c4))))*grid%r(1)**l1
+  rr2=(1.0_dp+grid%r(2)*(c1+grid%r(2)*(c2+grid%r(2)*(c3+grid%r(2)*c4))))*grid%r(2)**l1
+  y(1)=rr1/grid%sqr(1)
+  y(2)=rr2/grid%sqr(2)
   !
   !  start outward integration and count number of crossings
   !
@@ -142,11 +143,11 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   !
   nstart=mesh
   ns=10
-  rstart=ns*r(ik)
-  if(rstart.lt.r(mesh)) then
+  rstart=ns*grid%r(ik)
+  if(rstart.lt.grid%r(mesh)) then
      do  i=ik,mesh
         nstart=i
-        if(r(i).ge.rstart) go to 403
+        if(grid%r(i).ge.rstart) go to 403
      enddo
 403  nstart=nstart/2
      nstart=2*nstart+1
@@ -188,18 +189,18 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   a0=1.0_dp/DBLE(2*lam+3)
   a1=c1/DBLE(lam+2)
   a2=(c1*c1+c2+c2)/DBLE(2*lam+5)
-  sum0=(a0+r(1)*(a1+r(1)*a2))*r(1)**(2*lam+3)
+  sum0=(a0+grid%r(1)*(a1+grid%r(1)*a2))*grid%r(1)**(2*lam+3)
   nst2=nstart-2
-  f2=r2(1  )*y(1  )*y(1  )
-  sum=r(1)*f2/DBLE(2*l1+1)
+  f2=grid%r2(1  )*y(1  )*y(1  )
+  sum=grid%r(1)*f2/DBLE(2*l1+1)
   do n=1,nst2,2
      f0=f2
-     f1=r2(n+1)*y(n+1)*y(n+1)
-     f2=r2(n+2)*y(n+2)*y(n+2)
+     f1=grid%r2(n+1)*y(n+1)*y(n+1)
+     f2=grid%r2(n+2)*y(n+2)*y(n+2)
      sum=sum+f0+f2+4.0_DP*f1
   enddo
-  sum=sum0+dx*sum/3.0_dp
-  dfe=-y(ik)*f(ik)/dx/sum
+  sum=sum0+grid%dx*sum/3.0_dp
+  dfe=-y(ik)*f(ik)/grid%dx/sum
   de=-fe*dfe
   eps=abs(de/e)
   if(abs(de).lt.thresh) go to 600
@@ -228,14 +229,14 @@ subroutine ascheq(nn,lam,e,mesh,dx,r,r2,sqr,vpot,ze2, &
   sum1=0.0_dp
   do n=nstart,mesh-2,2
      f0=f2
-     f1=r2(n+1)*y(n+1)*y(n+1)
-     f2=r2(n+2)*y(n+2)*y(n+2)
+     f1=grid%r2(n+1)*y(n+1)*y(n+1)
+     f2=grid%r2(n+2)*y(n+2)*y(n+2)
      sum1=sum1+f0+f2+4.0_dp*f1
   enddo
-  sum=sum+dx*sum1/3.0_dp
+  sum=sum+grid%dx*sum1/3.0_dp
   sum=sqrt(sum)
   do n=1,mesh
-     y(n)=sqr(n)*y(n)/sum
+     y(n)=grid%sqr(n)*y(n)/sum
   enddo
   if(nstop.lt.100) go to 900
   nstop=0

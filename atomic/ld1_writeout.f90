@@ -74,7 +74,7 @@ subroutine ld1_writeout
           ! write in CPMD format 
           if ( matches('.psp',file_pseudopw) ) then
              call write_cpmd &
-                  (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
+                  (iunps,zed,grid%xmin,grid%dx,grid%mesh,ndmx,grid%r,grid%r2,  &
                   dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
                   rhoc,vnl,phits,vpsloc,elts,llts,octs,rcut,etots,nwfts)
           else
@@ -82,7 +82,7 @@ subroutine ld1_writeout
           ! write old "NC" format (semilocal)
           !
              call write_pseudo &
-                  (iunps,zed,xmin,dx,mesh,ndm,r,r2,  &
+                  (iunps,zed,grid%xmin,grid%dx,grid%mesh,ndmx,grid%r,grid%r2,  &
                   dft_name,lmax,lloc,zval,nlc,nnl,cc,alpc,alc,alps,nlcc, &
                   rhoc,vnl,phits,vpsloc,elts,llts,octs,etots,nwfts)
           end if
@@ -137,7 +137,7 @@ subroutine write_rrkj (iunps)
 
   write( iunps, '(2e17.11,i5)') zval, etots, lmax
   write( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
-       xmin,rmax,zmesh,dx,mesh
+       grid%xmin,grid%rmax,grid%zmesh,grid%dx,grid%mesh
 
   write( iunps, '(2i5)', err=100, iostat=ios ) nwfs, nbeta
   write( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
@@ -159,7 +159,7 @@ subroutine write_rrkj (iunps)
            write(iunps,'(1p4e19.11)',err=100,iostat=ios) &
                 qq(nb,mb)
            write(iunps,'(1p4e19.11)',err=100,iostat=ios) & 
-                (qvan(ir,nb,mb),ir=1,mesh)
+                (qvan(ir,nb,mb),ir=1,grid%mesh)
         endif
      enddo
   enddo
@@ -167,24 +167,24 @@ subroutine write_rrkj (iunps)
   !   writes the local potential 
   !
   write( iunps, '(1p4e19.11)',err=100, iostat=ios ) rcloc, &
-       ( vpsloc(ir), ir=1,mesh )
+       ( vpsloc(ir), ir=1,grid%mesh )
   !
   !   writes the atomic charge
   !
   write( iunps, '(1p4e19.11)',err=100, iostat=ios )  &
-       ( rhos(ir,1), ir=1,mesh )
+       ( rhos(ir,1), ir=1,grid%mesh )
   !
   !   If present writes the core charge
   !
   if ( nlcc ) then 
      write( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-          ( rhoc(ir), ir=1,mesh )
+          ( rhoc(ir), ir=1,grid%mesh )
   endif
   !
   !    Writes the wavefunctions of the atom
   !      
   write( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-       ((phis(ir,nb),ir=1,mesh),nb=1,nwfs)
+       ((phis(ir,nb),ir=1,grid%mesh),nb=1,nwfs)
 100 call errore('ld1_writeout','Writing pseudopw file',abs(ios))
   !
 end subroutine write_rrkj

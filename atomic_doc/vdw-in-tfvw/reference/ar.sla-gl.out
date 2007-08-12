@@ -1,32 +1,30 @@
 
-     program ld1 starts. version 3.0   
-     today is 24Nov2005 at 16:53:24 
-
-     -------------------- All-electron run ------------------------------
+     Program LD1       v.3.2cvs starts ...
+     Today is 29Jul2007 at  8:33:18 
+     --------------------------- All-electron run ----------------------------
 
      Ar                                                                         
 
      atomic number is 18.00
-     dft =sla gl   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     dft =SLA GL   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
      mesh =1161 r(mesh) = 100.44680 xmin = -7.00 dx = 0.01250
 
-     n l     nl                  e(Ryd)         e(Ha)          e(eV)
-     1 0     1S 1( 2.00)      -227.6319      -113.8159     -3097.1137
-     2 0     2S 1( 2.00)       -21.6154       -10.8077      -294.0953
-     2 1     2P 1( 6.00)       -16.9142        -8.4571      -230.1317
-     3 0     3S 1( 2.00)        -1.7894        -0.8947       -24.3457
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -227.6319      -113.8159     -3097.0892
+     2 0     2S 1( 2.00)       -21.6154       -10.8077      -294.0930
+     2 1     2P 1( 6.00)       -16.9142        -8.4571      -230.1299
+     3 0     3S 1( 2.00)        -1.7894        -0.8947       -24.3455
      3 1     3P 1( 6.00)        -0.7862        -0.3931       -10.6968
 
      eps = 4.3E-15  iter = 13
  
-     Etot =   -1052.534462 Ry,    -526.267231 Ha,  -14320.573385 eV
+     Etot =   -1052.534462 Ry,    -526.267231 Ha,  -14320.460008 eV
 
-     Ekin =    1050.130296 Ry,     525.065148 Ha,   14287.862781 eV
-     Encl =   -2506.691437 Ry,   -1253.345719 Ha,  -34105.542359 eV
-     Eh   =     463.172362 Ry,     231.586181 Ha,    6301.830527 eV
-     Exc  =     -59.145683 Ry,     -29.572841 Ha,    -804.724333 eV
+     Ekin =    1050.130296 Ry,     525.065148 Ha,   14287.749663 eV
+     Encl =   -2506.691437 Ry,   -1253.345719 Ha,  -34105.272345 eV
+     Eh   =     463.172362 Ry,     231.586181 Ha,    6301.780634 eV
+     Exc  =     -59.145683 Ry,     -29.572841 Ha,    -804.717961 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
-     Epseu=       0.000000 Ry,       0.000000 Ha,       0.000000 eV
 
 
      normalization and overlap integrals
@@ -41,7 +39,7 @@
      s(3S/3S) =  1.000000  <r> =   1.4133  <r2> =    2.3296  r(max) =   1.1731
      s(3P/3P) =  1.000000  <r> =   1.6615  <r2> =    3.3333  r(max) =   1.2803
 
-     -------------------- End of All-electron run ----------------------
+     ------------------------ End of All-electron run ------------------------
 
      Computing logarithmic derivative in   2.40704
 
@@ -53,7 +51,26 @@
 
      Static polarizability:    1.49678 (in angstrom^3)   --->  10.10080  (in e^2a0^3)
 
-     C6 coefficient in units [e2*a0**5]   60.860049
+     C6 coefficient in units [e2*a0**5]   60.860047
+
+     -------------------- End of C6 calculation --------------------
+
+
+
+
+     -------------------- Compute C6 from polarizability.----------
+
+ Vpot-Vnew  1.060450167109102E-006
+  1  1  0  1   2.00000-227.63187    0
+  2  2  0  1   2.00000 -21.61544    0
+  3  2  1  1   6.00000 -16.91423    0
+  4  3  0  1   2.00000  -1.78936    0
+  5  3  1  1   6.00000  -0.78620    0
+     Frequency dependent polarizability is written into freq-pol.dat
+
+     Static polarizability:    1.73708 (in angstrom^3)   --->  11.72241  (in e^2a0^3)
+
+     C6 coefficient in units [e2*a0**5]   68.283379
 
      -------------------- End of C6 calculation --------------------
 

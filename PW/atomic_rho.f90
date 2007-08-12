@@ -28,7 +28,7 @@ subroutine atomic_rho (rhoa, nspina)
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE atom,                 ONLY : r, rab, msh, rho_at
+  USE atom,                 ONLY : rgrid, msh, rho_at
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : tpiba, omega
   USE gvect,                ONLY : ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, &
@@ -73,7 +73,7 @@ subroutine atomic_rho (rhoa, nspina)
         do ir = 1, msh (nt)
            aux (ir) = rho_at (ir, nt)
         enddo
-        call simpson (msh (nt), aux, rab (1, nt), rhocgnt (1) )
+        call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (1) )
      endif
      !
      ! Here we compute the G<>0 term
@@ -81,13 +81,13 @@ subroutine atomic_rho (rhoa, nspina)
      do igl = gstart, ngl
         gx = sqrt (gl (igl) ) * tpiba
         do ir = 1, msh (nt)
-           if (r (ir, nt) < 1.0d-8) then
+           if (rgrid(nt)%r(ir) < 1.0d-8) then
               aux(ir) = rho_at(ir,nt)
            else
-              aux(ir) = rho_at(ir,nt) * sin(gx*r(ir,nt)) / (r(ir,nt)*gx)
+              aux(ir) = rho_at(ir,nt) * sin(gx*rgrid(nt)%r(ir)) / (rgrid(nt)%r(ir)*gx)
            endif
         enddo
-        call simpson (msh (nt), aux, rab (1, nt), rhocgnt (igl) )
+        call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (igl) )
      enddo
      !
      ! we compute the 3D atomic charge in reciprocal space

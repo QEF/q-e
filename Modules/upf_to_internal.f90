@@ -28,8 +28,8 @@ subroutine set_pseudo_upf (is, upf)
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
   !   dummy argument ( upf ) - convert and copy to internal variables
   !
-  USE parameters, ONLY: ndmx
-  USE atom,  ONLY: mesh, r, rab, chi, oc, nchi, lchi, jchi, rho_at, &
+  USE radial_grids, ONLY: ndmx
+  USE atom,  ONLY: rgrid, chi, oc, nchi, lchi, jchi, rho_at, &
                    rho_atc, nlcc
   USE uspp_param, ONLY: zp, vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, &
                         nqlc, rinner, nbeta, kkbeta, lll, jjj, psd, tvanp
@@ -53,8 +53,8 @@ subroutine set_pseudo_upf (is, upf)
   nlcc(is) = upf%nlcc
   call set_dft_from_name( upf%dft )
   !
-  mesh(is) = upf%mesh
-  IF ( mesh(is) > ndmx ) &
+  rgrid(is)%mesh = upf%mesh
+  IF ( rgrid(is)%mesh > ndmx ) &
      CALL errore('upf_to_internals', 'too many grid points', 1)
   !
   nchi(is) = upf%nwfc
@@ -84,8 +84,8 @@ subroutine set_pseudo_upf (is, upf)
   qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
        upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
   !
-  r  (1:upf%mesh, is) = upf%r  (1:upf%mesh)
-  rab(1:upf%mesh, is) = upf%rab(1:upf%mesh)
+  rgrid(is)%r  (1:upf%mesh) = upf%r  (1:upf%mesh)
+  rgrid(is)%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
 
   if (upf%has_so) then
      jchi(1:upf%nwfc, is) = upf%jchi(1:upf%nwfc)

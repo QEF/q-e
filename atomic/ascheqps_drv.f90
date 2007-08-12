@@ -27,7 +27,7 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
           ncom           ! number of components of the pseudopotential
 
   real(DP) :: &
-       veff(ndm,ncom)    ! work space for writing the potential 
+       veff(ndmx,ncom)    ! work space for writing the potential 
 
   logical :: flag_all    ! if true calculates all the wavefunctions
 
@@ -39,7 +39,7 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
        ind
 
   real(DP) :: &
-       vaux(ndm,2)     ! work space for writing the potential 
+       vaux(ndmx,2)     ! work space for writing the potential 
 
   real(DP) :: thresh         ! threshold for selfconsistency
   !
@@ -66,17 +66,16 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
            else
               call errore('ascheqps_drv','something strange',1)
            endif
-           do n=1,mesh
+           do n=1,grid%mesh
               vaux(n,is)=veff(n,is)+vnl(n,llts(ns),ind)
            enddo
         else
-           do n=1,mesh
+           do n=1,grid%mesh
               vaux(n,is)=veff(n,is)
            enddo
         endif
-        call ascheqps(nnts(ns),llts(ns),jjts(ns),enlts(ns),    &
-             mesh,ndm,dx,r,r2,sqr,vaux(1,is),thresh,phits(1,ns), & 
-             betas,ddd(1,1,is),qq,nbf,nwfsx,lls,jjs,ikk)
+        call ascheqps(nnts(ns),llts(ns),jjts(ns),enlts(ns),grid%mesh,ndmx,grid,&
+             vaux(1,is),thresh,phits(1,ns),betas,ddd(1,1,is),qq,nbf,nwfsx,lls,jjs,ikk)
         !            write(6,*) ns, nnts(ns),llts(ns), jjts(ns), enlts(ns)
         !
         !   normalize the wavefunctions 
