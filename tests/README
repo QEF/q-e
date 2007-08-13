@@ -1,4 +1,4 @@
-Automatic tests for pw.x - edit and run "check.j"
+Automatic tests for pw.x - edit and run "check-pw.x.j"
 
 name      system   what is tested
 
@@ -9,20 +9,25 @@ scf       Si fcc   davidson and cg diagonalizations
                    Gamma, automatic, list of k-points
                    wf_collect and disk_io options
                    stress with k-points and at Gamma
+                   non-scf calculation
 metal     Al fcc   occupancies: all smearing schemes, tetrahedra
                    stress in metals
+                   non-scf calculation with smearing and tetrahedra
 uspp      Cu fcc   US PP, both single and double grid
                    davidson and cg diagonalizations
                    simple, TF, local-TF mixing, ndim=4,8
                    stress with single and double grid
+                   non-scf calculation
 uspp2     Ni fcc   core corrections
                    stress with core corrections
+                   non-scf calculation
 lsda      Ni fcc   LSDA with starting magnetization and free occupancies
                    core corrections
                    davidson and cg diagonalizations
                    simple, TF, local-TF mixing, ndim=4,8
                    constrained occupancies: tot_magnetization, nelup+neldw
                    LSDA stress
+                   non-scf calculation
 atom       O       occupancies from input, also with spin polarization
                    PBE and spin-polarized PBE
                    PBE and s-PBE stress
@@ -30,8 +35,10 @@ noncolin  Fe bcc   noncollinear magnetization
                    davidson and cg diagonalizations
                    constraints: atomic, atomic direction, total magnetization
                    noncollinear stress
+                   non-scf calculation
 spinorbit Pt fcc   spin-orbit + noncollinear magnetization
                    spin-orbit stress
+                   non-scf calculation
 relax     CO       forces
                    bfgs and damped dynamics
                    potential extrapolation
@@ -44,4 +51,4 @@ Tests are still missing for:
   forces with core corrections
   old PP formats
   dft:             blyp, pw91, lda+U, metaGGA
-  calculation:     nscf, vc-relax, vc-md, neb, metadynamics
+  calculation:     bands, vc-relax, vc-md, neb, metadynamics
