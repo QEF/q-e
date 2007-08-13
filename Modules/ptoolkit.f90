@@ -2838,15 +2838,24 @@ END SUBROUTINE blk2cyc_zredist
 !
 !
 !
+!  Double Complex and Double Precision Cholesky Factorization of
+!  an Hermitan/Symmetric block distributed matrix
+!
+!
+
 SUBROUTINE pzpotf( sll, ldx, n, desc )
+   !
    use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ ,&
                           nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
    use parallel_include
+   use kinds
+   !
    implicit none
+   !
    integer :: n, ldx
    integer :: desc( descla_siz_ )
-   real*8  :: one, zero
-   complex*16 :: sll( ldx, ldx ), cone, czero
+   real(DP)  :: one, zero
+   complex(DP) :: sll( ldx, ldx ), cone, czero
    integer :: myrow, mycol, ierr
    integer :: jb, info, ib, kb
    integer :: jnr, jir, jic, jnc
@@ -2854,12 +2863,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
    integer :: knr, kir, kic, knc
    integer :: nr, nc
    integer :: rcomm, ccomm, color, key, myid, np
-   complex*16, allocatable :: ssnd( :, : ), srcv( :, : )
+   complex(DP), allocatable :: ssnd( :, : ), srcv( :, : )
 
-   one   = 1.0d0
-   cone  = 1.0d0
-   zero  = 0.0d0
-   czero = 0.0d0
+   one   = 1.0_DP
+   cone  = 1.0_DP
+   zero  = 0.0_DP
+   czero = 0.0_DP
 
 #if defined __MPI
 
@@ -3025,10 +3034,207 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
 #endif
 
    return
-END SUBROUTINE
+END SUBROUTINE pzpotf
 
+!  now the Double Precision subroutine
 
-  SUBROUTINE pztrtri ( sll, ldx, n, desc )
+SUBROUTINE pdpotf( sll, ldx, n, desc )
+   !
+   use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ ,&
+                          nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
+   use parallel_include
+   use kinds
+   !
+   implicit none
+   !
+   integer  :: n, ldx
+   integer  :: desc( descla_siz_ )
+   REAL(DP) :: one, zero
+   REAL(DP) :: sll( ldx, ldx )
+   integer  :: myrow, mycol, ierr
+   integer  :: jb, info, ib, kb
+   integer  :: jnr, jir, jic, jnc
+   integer  :: inr, iir, iic, inc
+   integer  :: knr, kir, kic, knc
+   integer  :: nr, nc
+   integer  :: rcomm, ccomm, color, key, myid, np
+   REAL(DP), ALLOCATABLE :: ssnd( :, : ), srcv( :, : )
+
+   one   = 1.0_DP
+   zero  = 0.0_DP
+
+#if defined __MPI
+
+   myrow = desc( la_myr_ )
+   mycol = desc( la_myc_ )
+   myid  = desc( la_me_ )
+   np    = desc( la_npr_ )
+
+   IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
+      CALL errore( ' pzpotf ', ' only square grid are allowed ', 1 ) 
+   END IF
+
+   nr = desc( nlar_ )
+   nc = desc( nlac_ )
+
+   ALLOCATE( ssnd( ldx, ldx ) )
+   ALLOCATE( srcv( ldx, ldx ) )
+
+   DO jb = 1, np
+      !
+      !    Update and factorize the current diagonal block and test
+      !    for non-positive-definiteness.
+      !
+      CALL descla_local_dims( jir, jnr, n, desc( la_nx_ ), np, jb-1 )
+      !
+      !    since we loop on diagonal blocks/procs we have jnc == jnr
+      !
+      jnc = jnr   
+      !
+      !    prepare row and colum communicators
+      IF( ( myrow >= ( jb-1 ) ) .AND. ( mycol <= ( jb-1 ) ) ) THEN 
+          color = mycol
+          key   = myrow
+      ELSE
+          color = np
+          key   = myid
+      END IF
+      !
+      CALL mpi_comm_split( desc( la_comm_ ) , color, key, ccomm, ierr )
+      !  
+      IF( myrow >= jb-1 .and. mycol <= jb-1 ) THEN
+          color = myrow
+          key   = mycol
+      ELSE
+          color = np
+          key   = myid
+      END IF
+      !
+      CALL mpi_comm_split( desc( la_comm_ ), color, key, rcomm, ierr )
+      !
+      !    here every process can work independently, then we need a reduce.
+      !
+      IF( jb > 1 ) THEN
+         !
+         DO ib = 1, jb - 1
+            IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( ib - 1 ) ) ) THEN
+               !
+               !  remember: matrix ssnd is nr*nr, and procs on the diagonale have nr == nc 
+               !
+               CALL DSYRK( 'L', 'N', nr, nc, -ONE, sll, ldx, zero, ssnd, ldx )
+               !
+            END IF
+         END DO
+         IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+            ssnd = sll
+         END IF
+         !
+         IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol <= ( jb - 1 ) ) ) THEN
+            !
+            !  accumulate on the diagonal block/proc
+            !
+            CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_PRECISION, MPI_SUM, jb-1, rcomm, ierr )
+            !
+         END IF
+         !
+      END IF
+      !
+      ! Only proj ( jb-1, jb-1 ) operates this
+      !
+      info = 0
+      !
+      IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+         CALL DPOTRF( 'L', jnr, sll, ldx, INFO )
+         IF( info /= 0 ) &
+            CALL errore( " pzpotrf ", " problems computing cholesky decomposition ", ABS( info ) )
+      END IF
+      !
+      IF( ( jb > 1 ) .AND. ( jb < np ) ) THEN
+         !
+         !           Compute the current block column.
+         !
+         ! processors ( 1 : jb - 1, jb ) should bcast their blocs
+         ! along column to processor ( 1 : jb - 1, jb + 1 : nb )
+         !
+         IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
+            CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+         ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
+            CALL mpi_bcast( srcv, ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+         END IF
+         !
+         DO ib = jb + 1, np
+            CALL descla_local_dims( iir, inr, n, desc( la_nx_ ), np, ib-1 )
+            DO kb = 1, jb - 1
+               CALL descla_local_dims( kic, knc, n, desc( la_nx_ ), np, kb-1 )
+               IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( kb - 1 ) ) ) THEN
+                  CALL DGEMM( 'N', 'T', inr, jnr, knc, -ONE, sll, ldx, srcv, ldx, zero, ssnd, ldx )
+               END IF
+            END DO
+            IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+               ssnd = sll
+            END IF
+         END DO
+         !
+         ! processors ( jb, jb + 1 : nb ) should collect block along row,
+         ! from processors  ( 1 : jb - 1, jb + 1 : nb )
+         !
+         DO kb = jb + 1, np
+            IF( ( myrow == ( kb - 1 ) ) .AND. ( mycol <= ( jb - 1 ) ) ) THEN
+               IF( ( jb == 1 ) ) THEN
+                  IF( mycol == ( jb - 1 ) ) THEN
+                     sll = ssnd
+                  END IF
+               ELSE
+                  CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_PRECISION, MPI_SUM, jb-1, rcomm, ierr )
+               END IF
+            END IF
+         END DO
+         !
+      END IF
+      !
+      IF( jb < np ) THEN
+         !
+         ! processor "jb,jb" should broadcast his block to procs ( jb+1 : nb, jb )
+         !
+         IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+            CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+         ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+            CALL mpi_bcast( srcv,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+         END IF
+         !
+         DO ib = jb + 1, np
+            IF( ( myrow == ( ib - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
+               CALL DTRSM( 'R', 'L', 'T', 'N', nr, nc, ONE, srcv, ldx, sll, ldx )
+            END IF
+         END DO
+         !
+      END IF
+      !
+      CALL mpi_comm_free( rcomm, ierr )
+      CALL mpi_comm_free( ccomm, ierr )
+      !
+   END DO
+
+   DEALLOCATE( srcv, ssnd )
+
+#else
+
+   CALL DPOTRF( 'L', n, sll, ldx, info )
+
+   IF( info /= 0 ) &
+      CALL errore( " pzpotrf ", " problems computing cholesky decomposition ", ABS( info ) )
+
+#endif
+
+   return
+END SUBROUTINE pdpotf
+
+!
+!
+!
+!
+
+SUBROUTINE pztrtri ( sll, ldx, n, desc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
     ! distribuited among the processes using a 2-D block partitioning. 
@@ -3067,8 +3273,8 @@ END SUBROUTINE
     INTEGER, INTENT( IN ) :: desc( descla_siz_ )
     COMPLEX(DP), INTENT( INOUT ) :: sll( ldx, ldx )
 
-    COMPLEX(DP), PARAMETER :: ONE = (1.0d0, 0.0d0)
-    COMPLEX(DP), PARAMETER :: ZERO = (0.0d0, 0.0d0)
+    COMPLEX(DP), PARAMETER :: ONE = (1.0_DP, 0.0_DP)
+    COMPLEX(DP), PARAMETER :: ZERO = (0.0_DP, 0.0_DP)
 
 #if defined __MPI
     INTEGER :: status(MPI_STATUS_SIZE)
@@ -3105,12 +3311,12 @@ END SUBROUTINE
 
     DO j = nc+1, ldx
        DO i = 1, ldx
-          sll( i, j ) = ( 0.0_DP , 0.0_DP )
+          sll( i, j ) = zero
        END DO
     END DO
     DO j = 1, ldx
        DO i = nr+1, ldx
-          sll( i, j ) = ( 0.0_DP , 0.0_DP )
+          sll( i, j ) = zero
        END DO
     END DO
 
@@ -3158,7 +3364,7 @@ END SUBROUTINE
        !
        IF( myrow == 0 .AND. mycol == 1 ) THEN
           !
-          sll = ( 0.0_DP , 0.0_DP )
+          sll = zero
           !
        END IF
        !
@@ -3183,7 +3389,7 @@ END SUBROUTINE
        !
        CALL MPI_Comm_split( comm, MPI_UNDEFINED, MPI_UNDEFINED, col_comm, ierr )
        !
-       sll = ( 0.0_DP , 0.0_DP )
+       sll = zero
        !
     END IF
     ! 
@@ -3289,15 +3495,7 @@ END SUBROUTINE
 
 #else
 
-    DO j = 1, ldx
-       DO i = 1, j-1
-          sll ( i, j ) = ( 0.0_DP , 0.0_DP )
-       END DO
-    END DO
-    CALL ztrtri( 'L', 'N', n, sll, ldx, info )
-    IF( info /= 0 ) THEN
-       CALL errore( ' pztrtri ', ' problem in the local inversion ', info )
-    END IF
+    CALL compute_ztrtri()
 
 #endif
 
@@ -3309,7 +3507,7 @@ END SUBROUTINE
        !
        DO j = 1, ldx
           DO i = 1, j-1
-             sll ( i, j ) = ( 0.0_DP , 0.0_DP )
+             sll ( i, j ) = zero
           END DO
        END DO
        !
@@ -3341,4 +3539,313 @@ END SUBROUTINE
 
      END FUNCTION shift
 
-  END SUBROUTINE pztrtri
+END SUBROUTINE pztrtri
+
+!  now the Double Precision subroutine
+
+SUBROUTINE pdtrtri ( sll, ldx, n, desc )
+    
+    ! pztrtri computes the parallel inversion of a lower triangular matrix 
+    ! distribuited among the processes using a 2-D block partitioning. 
+    ! The algorithm is based on the schema below and executes the model 
+    ! recursively to each column C2 under the diagonal.     
+    !
+    !     |-------|-------|      |--------------------|--------------------|
+    !     |   A1  |   0   |      |   C1 = trtri(A1)   |          0         |
+    ! A = |-------|-------|  C = |--------------------|--------------------|
+    !     |   A2  |   A3  |      | C2 = -C3 * A2 * C1 |   C3 = trtri(A3)   | 
+    !     |-------|-------|      |--------------------|--------------------|
+    !
+    ! The recursive steps of multiplication (C2 = -C3 * A2 * C1) is based on the Cannon's algorithms 
+    ! for parallel matrix multiplication and is done with BLACS(dgemm)
+    !
+    !
+    ! Arguments
+    ! ============
+    !
+    ! sll   = local block of data
+    ! ldx   = leading dimension of one block
+    ! n     = size of the global array diributed among the blocks
+    ! desc  = descriptor of the matrix distribution
+    !
+    !
+    !
+
+    USE kinds
+    USE parallel_include
+    USE descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ ,&
+                          nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
+
+    IMPLICIT NONE
+
+    INTEGER, INTENT( IN ) :: n, ldx
+    INTEGER, INTENT( IN ) :: desc( descla_siz_ )
+    REAL(DP), INTENT( INOUT ) :: sll( ldx, ldx )
+
+    REAL(DP), PARAMETER :: ONE = 1.0_DP
+    REAL(DP), PARAMETER :: ZERO = 0.0_DP
+
+#if defined __MPI
+    INTEGER :: status(MPI_STATUS_SIZE)
+#endif
+    INTEGER :: req(2), ierr, col_comm
+    INTEGER :: send, recv, group_rank, group_size
+    INTEGER :: myrow, mycol, np, myid, comm
+
+    ! counters
+    INTEGER :: k, i, j, count, step_count, shiftcount, cicle 
+    INTEGER :: C3dim   ! Dimension of submatrix B
+    INTEGER :: nc, nr ! Local dimension of block
+    INTEGER :: info, sup_recv
+    INTEGER :: idrowref, idcolref, idref, idrecv 
+
+    ! B and BUF_RECV are used to overload the computation of matrix multiplication and the shift of the blocks
+    REAL(DP), ALLOCATABLE, DIMENSION( :, : ) :: B, C, BUF_RECV 
+    REAL(DP) :: first
+
+    myrow = desc( la_myr_ )
+    mycol = desc( la_myc_ )
+    myid  = desc( la_me_ )
+    np    = desc( la_npr_ )
+    comm  = desc( la_comm_ )
+
+    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
+       CALL errore( ' pdtrtri ', ' only square grid are allowed ', 1 ) 
+    END IF
+
+    nr = desc( nlar_ )
+    nc = desc( nlac_ )
+
+    !  clear elements outside local meaningful block nr*nc
+
+    DO j = nc+1, ldx
+       DO i = 1, ldx
+          sll( i, j ) = zero
+       END DO
+    END DO
+    DO j = 1, ldx
+       DO i = nr+1, ldx
+          sll( i, j ) = zero
+       END DO
+    END DO
+
+#if defined __MPI
+
+    ALLOCATE( B( ldx, ldx ) )
+    ALLOCATE( C( ldx, ldx ) )
+    ALLOCATE( BUF_RECV ( ldx, ldx ) )
+
+    IF( np == 2 ) THEN
+       !
+       !  special case with 4 proc, 2x2 grid
+       !
+       IF( myrow == mycol ) THEN
+          CALL compute_dtrtri()
+       END IF
+       !
+       CALL GRID2D_RANK( 'R', np, np, 1, 0, idref )
+       !
+       IF( myrow == 0 .AND. mycol == 0 ) THEN
+          CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_PRECISION, idref, 0, comm, ierr)
+       END IF
+       !
+       IF( myrow == 1 .AND. mycol == 1 ) THEN
+          CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_PRECISION, idref, 1, comm, ierr)
+       END IF
+       !
+       IF( myrow == 1 .AND. mycol == 0 ) THEN
+          !
+          CALL GRID2D_RANK( 'R', np, np, 0, 0, i )
+          CALL GRID2D_RANK( 'R', np, np, 1, 1, j )
+          !
+          CALL MPI_Irecv( B, ldx*ldx, MPI_DOUBLE_PRECISION, i, 0, comm, req(1), ierr)
+          CALL MPI_Irecv( C, ldx*ldx, MPI_DOUBLE_PRECISION, j, 1, comm, req(2), ierr)
+          !
+          CALL MPI_Wait(req(1), status, ierr)
+          !
+          CALL dgemm('N', 'N', ldx, ldx, ldx, ONE, sll, ldx, b, ldx, ZERO, buf_recv, ldx)
+          !
+          CALL MPI_Wait(req(2), status, ierr)
+          !
+          CALL dgemm('N', 'N', ldx, ldx, ldx, -ONE, c, ldx, buf_recv, ldx, ZERO, sll, ldx)
+          !
+       END IF
+       !
+       IF( myrow == 0 .AND. mycol == 1 ) THEN
+          !
+          sll = zero
+          !
+       END IF
+       !
+       DEALLOCATE( b, c, buf_recv )
+       !
+       RETURN
+       !
+    END IF
+
+  
+    IF( myrow >= mycol ) THEN
+       !
+       !  only procs on lower triangle partecipates
+       !
+       CALL MPI_Comm_split( comm, mycol, myrow, col_comm, ierr )
+       CALL MPI_Comm_size( col_comm, group_size, ierr )
+       CALL MPI_Comm_rank( col_comm, group_rank, ierr )
+       !
+    ELSE
+       !
+       !  other procs stay at the window!
+       !
+       CALL MPI_Comm_split( comm, MPI_UNDEFINED, MPI_UNDEFINED, col_comm, ierr )
+       !
+       sll = zero
+       !
+    END IF
+    ! 
+
+    ! Compute the inverse of a lower triangular 
+    ! along the diagonal of the global array with BLAS(ztrtri) 
+    !
+    IF( mycol == myrow ) THEN
+       !
+       CALL compute_dtrtri()
+       !
+    ELSE IF( myrow > mycol ) THEN
+       !
+       buf_recv = sll
+       !
+    END IF
+
+    IF( myrow >= mycol ) THEN
+       !
+       ! Broadcast the diagonal blocks to the processors under the diagonal
+       !
+       CALL MPI_Bcast( sll, ldx*ldx, MPI_DOUBLE_PRECISION, 0, col_comm, ierr )
+       !
+    END IF
+
+    ! Compute A2 * C1 and start the Cannon's algorithm shifting the blocks of column one place to the North
+    !
+    IF( myrow > mycol ) THEN
+       !
+       CALL dgemm( 'N', 'N', ldx, ldx, ldx, ONE, buf_recv, ldx, sll, ldx, ZERO, c, ldx )
+       !
+       send = shift( 1, group_rank, 1, ( group_size - 1 ), 'N' )
+       recv = shift( 1, group_rank, 1, ( group_size - 1 ), 'S' )
+       !
+       CALL MPI_Sendrecv( c, ldx*ldx, MPI_DOUBLE_PRECISION, send, 0, buf_recv, &
+            ldx*ldx, MPI_DOUBLE_PRECISION, recv, 0, col_comm, status, ierr )
+       !
+    END IF
+
+    ! Execute the Cannon's algorithm to compute ricorsively the multiplication of C2 = -C3 * A2 * C1
+    !
+    DO count = ( np - 2 ), 0, -1
+       C3dim = (np-1) - count ! Dimension of the submatrix C3
+       first = ZERO
+       cicle = 0
+       IF( ( myrow > count ) .AND. ( mycol >= count ) ) THEN
+          idcolref = count + 1
+          idrowref = myrow
+          CALL GRID2D_RANK( 'R', np, np, idrowref, idcolref, idref )
+          idrecv = idref - 1
+          ! Compute C2 = -C3 * A2 * C1
+          DO shiftcount = count, np-2
+             IF(mycol>count)THEN
+                ! Execute the virtual shift of the matrix C3 along the row in order to know which processor 
+                ! have to send the block to C2 
+                IF( cicle == 0)THEN
+                   ! virtual shift of the block i,j of the submatrix C3 i place to West
+                   send = shift(idref, myid, myrow-count, C3dim, 'W')
+                ELSE
+                   ! virtual shift of the block i,j of the submatrix C3 i place to West
+                   send = shift(idref, send, 1, C3dim, 'E')
+                END IF
+                IF(send==idref)THEN
+                   CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_PRECISION, idrecv, myid, comm, ierr)
+                END IF
+             ELSE
+                IF( cicle == 0)THEN
+                   ! virtual shift of the block i,j of the submatrix C3 i place to West
+                   sup_recv = shift(idref, myid+1, myrow-count, C3dim, 'E')
+                ELSE
+                   ! virtual shift of the block i,j of the submatrix C3 i place to West
+                   sup_recv = shift(idref, sup_recv, 1, C3dim, 'W')
+                END IF
+                CALL MPI_Recv(C, ldx*ldx, MPI_DOUBLE_PRECISION, sup_recv, sup_recv, comm, status, ierr)
+                send = shift(1, group_rank, 1, (group_size-1), 'S')
+                recv = shift(1, group_rank, 1, (group_size-1), 'N')
+                ! with the no-blocking communication the computation and the shift of the column block are overapped  
+                IF( MOD( cicle, 2 ) == 0 ) THEN
+                   CALL MPI_Isend(BUF_RECV, ldx*ldx, MPI_DOUBLE_PRECISION, send, group_rank+cicle, col_comm, req(1), ierr)
+                   CALL MPI_Irecv(B, ldx*ldx, MPI_DOUBLE_PRECISION, recv, recv+cicle, col_comm, req(2), ierr)
+                   CALL dgemm('N', 'N', ldx, ldx, ldx, -ONE, C, ldx, BUF_RECV, ldx, first, sll, ldx)
+                ELSE
+                   CALL MPI_Isend(B, ldx*ldx, MPI_DOUBLE_PRECISION, send, group_rank+cicle, col_comm, req(1), ierr)
+                   CALL MPI_Irecv(BUF_RECV, ldx*ldx, MPI_DOUBLE_PRECISION, recv, recv+cicle, col_comm, req(2), ierr)
+                   CALL dgemm('N', 'N', ldx, ldx, ldx, -ONE, C, ldx, B, ldx, ONE, sll, ldx)
+                END IF
+                CALL MPI_Wait(req(1), status, ierr)
+                CALL MPI_Wait(req(2), status, ierr)
+             END IF
+             cicle = cicle + 1
+             first = ONE 
+          END DO
+       END IF
+    END DO
+
+    IF( myrow >= mycol ) THEN
+       CALL mpi_comm_free( col_comm, ierr )
+    END IF
+
+    DEALLOCATE(B)
+    DEALLOCATE(C)
+    DEALLOCATE(BUF_RECV)
+
+#else
+
+    CALL compute_dtrtri()
+
+#endif
+
+  CONTAINS
+
+     SUBROUTINE compute_dtrtri()
+       !
+       !  clear the upper triangle (excluding diagonal terms) and
+       !
+       DO j = 1, ldx
+          DO i = 1, j-1
+             sll ( i, j ) = zero
+          END DO
+       END DO
+       !
+       CALL dtrtri( 'L', 'N', nr, sll, ldx, info )
+       !
+       IF( info /= 0 ) THEN
+          CALL errore( ' pdtrtri ', ' problem in the local inversion ', info )
+       END IF
+       !
+     END SUBROUTINE compute_dtrtri
+
+
+     INTEGER FUNCTION shift ( idref, id, pos, size, dir )
+
+       IMPLICIT NONE
+   
+       INTEGER :: idref, id, pos, size
+       CHARACTER ( LEN = 1 ) :: dir
+   
+       IF( ( dir == 'E' ) .OR. ( dir == 'S' ) ) THEN
+          shift = idref + MOD ( ( id - idref ) + pos, size )
+       ELSE IF( ( dir == 'W' ) .OR. ( dir == 'N' ) ) THEN
+          shift = idref + MOD ( ( id - idref ) - pos + size, size )
+       ELSE
+          shift = -1
+       END IF
+   
+       RETURN
+
+     END FUNCTION shift
+
+END SUBROUTINE pdtrtri
