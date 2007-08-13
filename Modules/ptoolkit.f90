@@ -3031,7 +3031,7 @@ END SUBROUTINE
   SUBROUTINE pztrtri ( sll, ldx, n, desc )
     
     ! pztrtri computes the parallel inversion of a lower triangular matrix 
-    ! distribuited among the processes using a 2-D cyclic block partitioning. 
+    ! distribuited among the processes using a 2-D block partitioning. 
     ! The algorithm is based on the schema below and executes the model 
     ! recursively to each column C2 under the diagonal.     
     !
@@ -3049,12 +3049,9 @@ END SUBROUTINE
     ! ============
     !
     ! sll   = local block of data
-    ! ldx    = maximum dimension of one block
+    ! ldx   = leading dimension of one block
     ! n     = size of the global array diributed among the blocks
-    ! mpime = The coordinates of the process whose local array row or 
-    !         column is to be determined.
-    ! np    = size of the grid of processors
-    ! comm  = global comunicator of the grid processors
+    ! desc  = descriptor of the matrix distribution
     !
     !
     !
@@ -3104,6 +3101,8 @@ END SUBROUTINE
     nr = desc( nlar_ )
     nc = desc( nlac_ )
 
+    !  clear elements outside local meaningful block nr*nc
+
     DO j = nc+1, ldx
        DO i = 1, ldx
           sll( i, j ) = ( 0.0_DP , 0.0_DP )
@@ -3121,43 +3120,111 @@ END SUBROUTINE
     ALLOCATE( C( ldx, ldx ) )
     ALLOCATE( BUF_RECV ( ldx, ldx ) )
 
-    ! Compute the inverse of a lower triangular 
-    ! along the diagonal of the global array with BLACS(dtrtri) 
-    IF( mycol == myrow ) THEN
-       DO j = 1, ldx
-          DO i = 1, j-1
-             sll ( i, j ) = ( 0.0_DP , 0.0_DP )
-          END DO
-       END DO
-       CALL ztrtri( 'L', 'N', nr, sll, ldx, info )
-       IF( info /= 0 ) THEN
-          CALL errore( ' pztrtri ', ' problem in the local inversion ', info )
+    IF( np == 2 ) THEN
+       !
+       !  special case with 4 proc, 2x2 grid
+       !
+       IF( myrow == mycol ) THEN
+          CALL compute_ztrtri()
        END IF
-    ELSE
-       buf_recv = sll
+       !
+       CALL GRID2D_RANK( 'R', np, np, 1, 0, idref )
+       !
+       IF( myrow == 0 .AND. mycol == 0 ) THEN
+          CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_COMPLEX, idref, 0, comm, ierr)
+       END IF
+       !
+       IF( myrow == 1 .AND. mycol == 1 ) THEN
+          CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_COMPLEX, idref, 1, comm, ierr)
+       END IF
+       !
+       IF( myrow == 1 .AND. mycol == 0 ) THEN
+          !
+          CALL GRID2D_RANK( 'R', np, np, 0, 0, i )
+          CALL GRID2D_RANK( 'R', np, np, 1, 1, j )
+          !
+          CALL MPI_Irecv( B, ldx*ldx, MPI_DOUBLE_COMPLEX, i, 0, comm, req(1), ierr)
+          CALL MPI_Irecv( C, ldx*ldx, MPI_DOUBLE_COMPLEX, j, 1, comm, req(2), ierr)
+          !
+          CALL MPI_Wait(req(1), status, ierr)
+          !
+          CALL zgemm('N', 'N', ldx, ldx, ldx, ONE, sll, ldx, b, ldx, ZERO, buf_recv, ldx)
+          !
+          CALL MPI_Wait(req(2), status, ierr)
+          !
+          CALL zgemm('N', 'N', ldx, ldx, ldx, -ONE, c, ldx, buf_recv, ldx, ZERO, sll, ldx)
+          !
+       END IF
+       !
+       IF( myrow == 0 .AND. mycol == 1 ) THEN
+          !
+          sll = ( 0.0_DP , 0.0_DP )
+          !
+       END IF
+       !
+       DEALLOCATE( b, c, buf_recv )
+       !
+       RETURN
+       !
     END IF
 
-    ! Broadcast the blocks along the diagonal at the processors under the diagonal
+  
     IF( myrow >= mycol ) THEN
+       !
+       !  only procs on lower triangle partecipates
+       !
        CALL MPI_Comm_split( comm, mycol, myrow, col_comm, ierr )
        CALL MPI_Comm_size( col_comm, group_size, ierr )
        CALL MPI_Comm_rank( col_comm, group_rank, ierr )
-       CALL MPI_Bcast( sll, ldx*ldx, MPI_DOUBLE_COMPLEX, 0, col_comm, ierr )
+       !
     ELSE
+       !
+       !  other procs stay at the window!
+       !
        CALL MPI_Comm_split( comm, MPI_UNDEFINED, MPI_UNDEFINED, col_comm, ierr )
+       !
        sll = ( 0.0_DP , 0.0_DP )
+       !
     END IF
- 
+    ! 
+
+    ! Compute the inverse of a lower triangular 
+    ! along the diagonal of the global array with BLAS(ztrtri) 
+    !
+    IF( mycol == myrow ) THEN
+       !
+       CALL compute_ztrtri()
+       !
+    ELSE IF( myrow > mycol ) THEN
+       !
+       buf_recv = sll
+       !
+    END IF
+
+    IF( myrow >= mycol ) THEN
+       !
+       ! Broadcast the diagonal blocks to the processors under the diagonal
+       !
+       CALL MPI_Bcast( sll, ldx*ldx, MPI_DOUBLE_COMPLEX, 0, col_comm, ierr )
+       !
+    END IF
+
     ! Compute A2 * C1 and start the Cannon's algorithm shifting the blocks of column one place to the North
+    !
     IF( myrow > mycol ) THEN
-       CALL zgemm( 'N', 'N', nr, nc, nc, ONE, buf_recv, ldx, sll, ldx, ZERO, c, ldx )
-       send = shift ( 1, group_rank, 1, ( group_size - 1 ), 'N' )
-       recv = shift(1, group_rank, 1, (group_size-1), 'S')
+       !
+       CALL zgemm( 'N', 'N', ldx, ldx, ldx, ONE, buf_recv, ldx, sll, ldx, ZERO, c, ldx )
+       !
+       send = shift( 1, group_rank, 1, ( group_size - 1 ), 'N' )
+       recv = shift( 1, group_rank, 1, ( group_size - 1 ), 'S' )
+       !
        CALL MPI_Sendrecv( c, ldx*ldx, MPI_DOUBLE_COMPLEX, send, 0, buf_recv, &
             ldx*ldx, MPI_DOUBLE_COMPLEX, recv, 0, col_comm, status, ierr )
+       !
     END IF
 
     ! Execute the Cannon's algorithm to compute ricorsively the multiplication of C2 = -C3 * A2 * C1
+    !
     DO count = ( np - 2 ), 0, -1
        C3dim = (np-1) - count ! Dimension of the submatrix C3
        first = ZERO
@@ -3213,13 +3280,6 @@ END SUBROUTINE
     END DO
 
     IF( myrow >= mycol ) THEN
-       IF( myrow == mycol ) THEN
-          DO j = 1, ldx
-             DO i = 1, j-1 
-                sll ( i, j ) = ( 0.0_DP , 0.0_DP )
-             END DO
-          END DO
-       END IF
        CALL mpi_comm_free( col_comm, ierr )
     END IF
 
@@ -3243,23 +3303,42 @@ END SUBROUTINE
 
   CONTAINS
 
-  INTEGER FUNCTION shift ( idref, id, pos, size, dir )
+     SUBROUTINE compute_ztrtri()
+       !
+       !  clear the upper triangle (excluding diagonal terms) and
+       !
+       DO j = 1, ldx
+          DO i = 1, j-1
+             sll ( i, j ) = ( 0.0_DP , 0.0_DP )
+          END DO
+       END DO
+       !
+       CALL ztrtri( 'L', 'N', nr, sll, ldx, info )
+       !
+       IF( info /= 0 ) THEN
+          CALL errore( ' pztrtri ', ' problem in the local inversion ', info )
+       END IF
+       !
+     END SUBROUTINE compute_ztrtri
 
-    IMPLICIT NONE
 
-    INTEGER :: idref, id, pos, size
-    CHARACTER ( LEN = 1 ) :: dir
+     INTEGER FUNCTION shift ( idref, id, pos, size, dir )
 
-    IF( ( dir == 'E' ) .OR. ( dir == 'S' ) ) THEN
-       shift = idref + MOD ( ( id - idref ) + pos, size )
-    ELSE IF( ( dir == 'W' ) .OR. ( dir == 'N' ) ) THEN
-       shift = idref + MOD ( ( id - idref ) - pos + size, size )
-    ELSE
-       shift = -1
-    END IF
+       IMPLICIT NONE
+   
+       INTEGER :: idref, id, pos, size
+       CHARACTER ( LEN = 1 ) :: dir
+   
+       IF( ( dir == 'E' ) .OR. ( dir == 'S' ) ) THEN
+          shift = idref + MOD ( ( id - idref ) + pos, size )
+       ELSE IF( ( dir == 'W' ) .OR. ( dir == 'N' ) ) THEN
+          shift = idref + MOD ( ( id - idref ) - pos + size, size )
+       ELSE
+          shift = -1
+       END IF
+   
+       RETURN
 
-    RETURN
-
-  END FUNCTION shift
+     END FUNCTION shift
 
   END SUBROUTINE pztrtri
