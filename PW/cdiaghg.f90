@@ -23,9 +23,9 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   !
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : use_para_diago, para_diago_dim
-  USE mp,               ONLY : mp_bcast, mp_sum, mp_barrier
+  USE mp,               ONLY : mp_bcast, mp_sum
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
-                               intra_pool_comm, MPIME, init_ortho_group, &
+                               intra_pool_comm, init_ortho_group, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id
   USE zhpev_module,     ONLY : pzhpev_drv
   USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , &
@@ -170,8 +170,8 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !
         CALL cyc2blk_zredist( n, vv, nrl, vl, nx, desc )
         !
-        DEALLOCATE( diag )
         DEALLOCATE( vv )
+        DEALLOCATE( diag )
         !
      END IF
      !
@@ -179,7 +179,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL start_clock( 'paragemm' )
      !
-     v(1:n,1:n) = 0.0d0
+     v(1:n,1:n) = ZERO
      !
      IF ( desc( lambda_node_ ) > 0 ) THEN
         !

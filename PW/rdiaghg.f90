@@ -21,9 +21,14 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   USE kinds,            ONLY : DP
   USE control_flags,    ONLY : use_para_diago, para_diago_dim
   USE dspev_module,     ONLY : diagonalize
-  USE mp,               ONLY : mp_bcast
-  USE mp_global,        ONLY : npool, nproc_pool, me_pool, &
-                               root_pool, intra_pool_comm
+  USE mp,               ONLY : mp_bcast, mp_sum
+  USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
+                               intra_pool_comm, init_ortho_group, &
+                               ortho_comm, np_ortho, me_ortho, ortho_comm_id
+  USE dspev_module,     ONLY : pdspev_drv
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , &
+                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_
+
   !
   IMPLICIT NONE
   !
@@ -42,30 +47,74 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   INTEGER               :: i, j, lwork, nb, mm, info
     ! mm = number of calculated eigenvectors
+  INTEGER                  :: nr, nc, ir, ic, nx, nrl
+    ! local block size
   REAL(DP)              :: abstol
+  REAL(DP), PARAMETER   :: one = 1_DP
+  REAL(DP), PARAMETER   :: zero = 0_DP
   INTEGER,  ALLOCATABLE :: iwork(:), ifail(:)
-  REAL(DP), ALLOCATABLE :: sdum(:,:), hdum(:,:), vdum(:,:)
+  REAL(DP), ALLOCATABLE :: sl(:,:), hl(:,:), vl(:,:), vv(:,:), diag(:,:)
   REAL(DP), ALLOCATABLE :: work(:), sdiag(:), hdiag(:)
   LOGICAL               :: all_eigenvalues
  ! REAL(DP), EXTERNAL    :: DLAMCH
   INTEGER,  EXTERNAL    :: ILAENV
     ! ILAENV returns optimal block size "nb"
+  INTEGER               :: desc( descla_siz_ )
   !
   !
   CALL start_clock( 'diaghg' )
   !
   IF ( use_para_diago .AND. n > para_diago_dim ) THEN
      !
-     ALLOCATE( hdum( n, n ), sdum( n, n ), vdum( n, n ) )
+     CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
-     hdum(:,:) = h(1:n,:)
-     sdum(:,:) = s(1:n,:)
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        ir  = desc( ilar_ )
+        ic  = desc( ilac_ )
+        nr  = desc( nlar_ )
+        nc  = desc( nlac_ )
+        nx  = desc( la_nx_ )
+        nrl = desc( la_nrl_ )
+        ALLOCATE( sl( nx , nx ) )
+        ALLOCATE( vl( nx , nx ) )
+        ALLOCATE( hl( nx , nx ) )
+        DO j = 1, nc
+           DO i = 1, nr
+              sl( i, j ) = s( i + ir - 1, j + ic - 1 )
+           END DO
+           DO i = nr+1, nx
+              sl( i, j ) = zero
+           END DO
+        END DO
+        DO j = nc + 1, nx
+           DO i = 1, nx
+              sl( i, j ) = zero
+           END DO
+        END DO
+        DO j = 1, nc
+           DO i = 1, nr
+              hl( i, j ) = h( i + ir - 1, j + ic - 1 )
+           END DO
+           DO i = nr+1, nx
+              hl( i, j ) = zero
+           END DO
+        END DO
+        DO j = nc + 1, nx
+           DO i = 1, nx
+              hl( i, j ) = zero
+           END DO
+        END DO
+     END IF
      !
      CALL start_clock( 'choldc' )
      !
      ! ... Cholesky decomposition of sdum ( L is stored in sdum )
      !
-     CALL para_dcholdc( n, sdum, n, intra_pool_comm )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL pdpotf( sl, nx, n, desc )
+        !
+     END IF
      !
      CALL stop_clock( 'choldc' )
      !
@@ -73,7 +122,11 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL start_clock( 'inversion' )
      !
-     CALL para_dtrtri( n, sdum, n, intra_pool_comm )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL pdtrtri ( sl, nx, n, desc )
+        !
+     END IF
      !
      CALL stop_clock( 'inversion' )
      !
@@ -81,29 +134,67 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL start_clock( 'paragemm' )
      !
-     CALL para_dgemm( 'N', 'N', n, n, n, 1.D0, sdum, &
-                      n, hdum, n, 0.D0, vdum, n, intra_pool_comm )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_mm_cannon( 'N', 'N', n, ONE, sl, nx, hl, nx, ZERO, vl, nx, desc )
+        !
+     END IF
      !
      ! ... hdum = ( L^-1*H )*(L^-1)^T
      !
-     CALL para_dgemm( 'N', 'T', n, n, n, 1.D0, vdum, &
-                      n, sdum, n, 0.D0, hdum, n, intra_pool_comm )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_mm_cannon( 'N', 'T', n, ONE, vl, nx, sl, nx, ZERO, hl, nx, desc )
+        !
+     END IF
      !
      CALL stop_clock( 'paragemm' )
      !
-     CALL diagonalize( 1, hdum, n, e, vdum, n, n, &
-                       nproc_pool, me_pool, intra_pool_comm )
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        ! 
+        !  Compute local dimension of the cyclically distributed matrix
+        !
+        ALLOCATE( diag( nrl, n ) )
+        ALLOCATE( vv( nrl, n ) )
+        !
+        CALL blk2cyc_redist( n, diag, nrl, hl, nx, desc )
+        !
+        CALL pdspev_drv( 'V', diag, nrl, e, vv, nrl, nrl, n, &
+             desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+        !
+        CALL cyc2blk_redist( n, vv, nrl, vl, nx, desc )
+        !
+        DEALLOCATE( vv )
+        DEALLOCATE( diag )
+        !
+     END IF
      !
      ! ... v = (L^T)^-1 v
      !
      CALL start_clock( 'paragemm' )
      !
-     CALL para_dgemm( 'T', 'N', n, m, n, 1.D0, sdum, &
-                      n, vdum, n, 0.D0, v, ldh, intra_pool_comm )
+     v(1:n,1:n) = zero
+     !
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_mm_cannon( 'T', 'N', n, ONE, sl, nx, vl, nx, ZERO, hl, nx, desc )
+        !
+        DO j = 1, nc
+           DO i = 1, nr
+              v( i + ir - 1, j + ic - 1 ) = hl( i, j ) 
+           END DO
+        END DO
+        !
+     END IF
+     !
+     CALL mp_bcast( e, root_pool, intra_pool_comm )
+     CALL mp_sum( v(1:n,1:n), intra_pool_comm )
      !
      CALL stop_clock( 'paragemm' )
      !
-     DEALLOCATE( hdum, sdum, vdum )
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        DEALLOCATE( hl, sl, vl )
+     END IF
      !
   ELSE
      !
