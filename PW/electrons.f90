@@ -663,7 +663,7 @@ SUBROUTINE electrons()
         !
         IF ( assume_isolated ) CALL makov_payne( etot )
         !
-        WRITE( stdout, 9110 )
+        WRITE( stdout, 9110 ) iter
         !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho()
         !
@@ -681,7 +681,7 @@ SUBROUTINE electrons()
   END DO
   !
   WRITE( stdout, 9101 )
-  WRITE( stdout, 9120 )
+  WRITE( stdout, 9120 ) iter
   !
   CALL flush_unit( stdout )
   !
@@ -731,8 +731,8 @@ SUBROUTINE electrons()
             /'     Harris-Foulkes estimate   =',0PF15.8,' Ry' &
             /'     estimated scf accuracy    <',1PE15.1,' Ry' )
 9101 FORMAT(/'     End of self-consistent calculation' )
-9110 FORMAT(/'     convergence has been achieved' )
-9120 FORMAT(/'     convergence NOT achieved, stopping' )
+9110 FORMAT(/'     convergence has been achieved in ',i3,' iterations' )
+9120 FORMAT(/'     convergence NOT achieved after ',i3,' iterations: stopping' )
   !
   CONTAINS
      !
