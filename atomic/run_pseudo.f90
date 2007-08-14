@@ -56,6 +56,7 @@ subroutine run_pseudo
   !
   !    compute an initial estimate of the potential
   !
+  call guess_initial_wfc()
   if (.not.lpaw) then
      call start_potps ( )
   else

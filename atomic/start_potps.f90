@@ -18,72 +18,23 @@ subroutine start_potps
   implicit none
 
   integer :: &
-       ns, &       ! counter on pseudowavefunctions
-       is, &       ! counter on spin
-       n,  &       ! counter on mesh
-       ib,jb,nst,  &   ! counter on lambda
-       nnode,  &     ! the number of nodes in lambda
-       ik,ikus,lam,nwf0 ! initial phi
+       is,   &   ! counter on spin
+       n         ! counter on mesh points
 
   real(DP) ::    &
-       xc(8),       & ! coefficients of bessel
-       gi(ndmx),     & ! auxiliary
-       int_0_inf_dr,& ! integral function
        vnew(ndmx,2)    ! the potential
   !
   !    compute an initial estimate of the potential
   !
-  !
-  do ns=1,nwfts
-     if (octs(ns).gt.0.0_dp) then
-        lam=llts(ns)
-        nwf0=nstoaets(ns)
-        !
-        !        compute the ik closer to r_cut
-        !
-        ik=0
-        ikus=0
-        do n=1,grid%mesh
-           if (grid%r(n).lt.rcutts(ns)) ik=n
-           if (grid%r(n).lt.rcutusts(ns)) ikus=n
-        enddo
-        if (mod(ik,2).eq.0) ik=ik+1
-        if (mod(ikus,2).eq.0) ikus=ikus+1
-        if (ikus.gt.grid%mesh) &
-             call errore('starting potential','ik is wrong ',1)
-        !
-        !    compute the phi functions
-        !
-        if (tm) then
-           call compute_phi_tm(lam,ik,psi(1,1,nwf0),phis(1,ns),0,xc,   &
-                                                    enls(ns),els(ns))
-        else
-           call compute_phi(lam,ik,psi(1,1,nwf0),phis(1,ns),xc,0,octs(ns), &
-                                enl(nwf0),'  ')
-        endif
-        if (pseudotype.eq.3) then
-           !
-           !   US only on the components where ikus <> ik
-           !
-           do n=1,grid%mesh
-              psipsus(n,ns)=phis(n,ns)
-           enddo
-           if (ikus.ne.ik) call compute_phius(lam,ikus,psipsus(1,ns), &
-                                                       phis(1,ns),xc,0,'  ')
-        endif
-        call normalize(phis(1,ns),llts(ns),jjts(ns))
-     endif
-  enddo
-
-  call chargeps(rhos,phis,nwfts,llts,jjts,octs,iswts)
-  call new_potential(ndmx,grid%mesh,grid,0.0_dp,vxt,lsd,nlcc,&
-       latt,enne,rhoc,rhos,vh,vnew)
+  call chargeps(rhos,phits,nwfts,llts,jjts,octs,iswts)
+  call new_potential(ndmx,grid%mesh,grid,0.0_dp,vxt,lsd,nlcc, &
+       latt,enne,rhoc,rhos,vh,vnew,1)
 
   do is=1,nspin
      do n=1,grid%mesh
         vpstot(n,is)=vpsloc(n)+vnew(n,is)
         !      if (is.eq.1) &
-        !           write(stdout,'(3f25.16)') r(n), rhos(n,1),vpstot(n,1)
+        !           write(stdout,'(3f25.16)') grid%r(n), rhos(n,1),vpstot(n,1)
         !      if (is.eq.2.and.nspin.eq.2)  &
         !   write(stdout,'(3f25.16)') 2.0_dp*rhos(n,1),vpstot(n,1),vpstot(n,2)
      enddo
@@ -95,3 +46,61 @@ subroutine start_potps
   !
   return
 end subroutine start_potps
+
+
+subroutine guess_initial_wfc()
+!
+!  This subroutine guess some initial wavefunction for the test configuration
+!
+use ld1inc
+implicit none
+
+integer ::    &
+       ns,n,     & ! counters 
+       lam,      & ! angular momentum
+       nwf0,     & ! all-electron state
+       ik,ikus     ! points on the mesh
+
+real(DP) :: psi_in(ndmx), xc(8)
+
+do ns=1,nwfts
+   if (octs(ns).gt.0.0_dp) then
+      lam=llts(ns)
+      nwf0=nstoaets(ns)
+      !
+      !        compute the ik closer to r_cut
+      !
+      ik=0
+      ikus=0
+      do n=1,grid%mesh
+         if (grid%r(n).lt.rcutts(ns)) ik=n
+         if (grid%r(n).lt.rcutusts(ns)) ikus=n
+      enddo
+      if (mod(ik,2).eq.0) ik=ik+1
+      if (mod(ikus,2).eq.0) ikus=ikus+1
+      if (ikus.gt.grid%mesh) &
+           call errore('starting potential','ik is wrong ',1)
+      !
+      !    compute the phi functions
+      !
+      if (tm) then
+         call compute_phi_tm(lam,ik,psi(1,1,nwf0),phits(1,ns),0,xc,   &
+                                                  enlts(ns),elts(ns))
+      else
+         call compute_phi(lam,ik,psi(1,1,nwf0),phits(1,ns),xc,0,octs(ns), &
+                              enlts(ns),'  ')
+      endif
+      if (pseudotype.eq.3) then
+         !
+         !   US only on the components where ikus <> ik
+         !
+         psi_in(:)=phits(:,ns)
+         if (ikus.ne.ik) call compute_phius(lam,ikus,psi_in, &
+                                                     phits(1,ns),xc,0,'  ')
+      endif
+      call normalize(phits(1,ns),llts(ns),jjts(ns))
+   endif
+enddo
+
+return
+end subroutine guess_initial_wfc
