@@ -148,6 +148,9 @@ subroutine ld1_readin
 100  call mp_bcast(ios, ionode_id)
   call errore('ld1_readin','reading input namelist ',abs(ios))
   call bcast_input()
+  call mp_bcast( xmin, ionode_id )
+  call mp_bcast( dx, ionode_id )
+  call mp_bcast( rmax, ionode_id )
   call mp_bcast(atom, ionode_id )
   call mp_bcast(config, ionode_id )
   call mp_bcast(dft, ionode_id )
@@ -498,9 +501,6 @@ subroutine bcast_input()
 
 implicit none
 #ifdef __PARA
-   call mp_bcast( xmin, ionode_id )
-   call mp_bcast( dx, ionode_id )
-   call mp_bcast( rmax, ionode_id )
    call mp_bcast( zed, ionode_id )
    call mp_bcast( beta, ionode_id )
    call mp_bcast( tr2, ionode_id )
