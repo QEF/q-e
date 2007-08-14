@@ -53,7 +53,16 @@ subroutine set_rho_core
         endif
      enddo
   enddo
-!  totrho = int_0_inf_dr(rhoc,grid,grid%mesh,2)
+  totrho = int_0_inf_dr(rhoc,grid,grid%mesh,2)
+  if (totrho<1.d-6.and.lpaw) then
+!
+!  All valence charge for this atom (mainly for H)
+!
+     aeccharge(1:grid%mesh) = 0.0_DP
+     psccharge(1:grid%mesh) = 0.0_DP
+     goto 1100
+  endif
+
 !  write(stdout,'("Integrated core charge",f15.10)') totrho
   rhoco(:) = rhoc(1:grid%mesh)
   if (lpaw) aeccharge(1:grid%mesh) = rhoc(1:grid%mesh)
@@ -128,9 +137,10 @@ subroutine set_rho_core
         close(26)
      endif
   endif
-  deallocate (rhoco, rhov)
   totrho = int_0_inf_dr(rhoc,grid,grid%mesh,2)
   write(stdout,'(13x,''integrated core pseudo-charge : '',f6.2)')  totrho
   if (.not.nlcc) rhoc(1:grid%mesh) = 0.0_dp
+1100 continue
+  deallocate (rhoco, rhov)
   return
 end subroutine set_rho_core

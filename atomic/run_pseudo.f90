@@ -56,8 +56,8 @@ subroutine run_pseudo
   !
   !    compute an initial estimate of the potential
   !
-  call guess_initial_wfc()
   if (.not.lpaw) then
+     call guess_initial_wfc()
      call start_potps ( )
   else
      ! Set starting occupations by rescaling those of the generating configuration
