@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is  2Aug2007 at 11:54:19 
+     Today is 14Aug2007 at 10:17:22 
 
      Parallel version (MPI)
 
@@ -11,7 +11,7 @@
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2000  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
 
      Planes per process (thick) : nr3 = 15 npp =  15 ncplane =  225
 
@@ -190,32 +190,32 @@
      ewald contribution        =    -5.50183453 Ry
      smearing contrib. (-TS)   =    -0.04484396 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Writing output data file pwscf.save
 
-     PWSCF        :     0.56s CPU time,    0.81s wall time
+     PWSCF        :     0.56s CPU time,    0.82s wall time
 
      init_run     :     0.10s CPU
      electrons    :     0.34s CPU
 
 
      electrons    :     0.34s CPU
-     c_bands      :     0.27s CPU (       4 calls,   0.067 s avg)
+     c_bands      :     0.27s CPU (       4 calls,   0.068 s avg)
      sum_band     :     0.06s CPU (       4 calls,   0.014 s avg)
      v_of_rho     :     0.01s CPU (       4 calls,   0.002 s avg)
      v_h          :     0.00s CPU (       4 calls,   0.000 s avg)
      v_xc         :     0.01s CPU (       4 calls,   0.001 s avg)
      mix_rho      :     0.00s CPU (       4 calls,   0.000 s avg)
 
-     c_bands      :     0.27s CPU (       4 calls,   0.067 s avg)
+     c_bands      :     0.27s CPU (       4 calls,   0.068 s avg)
      init_us_2    :     0.01s CPU (      90 calls,   0.000 s avg)
-     cegterg      :     0.25s CPU (      40 calls,   0.006 s avg)
+     cegterg      :     0.26s CPU (      40 calls,   0.006 s avg)
 
      sum_band     :     0.06s CPU (       4 calls,   0.014 s avg)
 
      wfcrot       :     0.04s CPU (      10 calls,   0.004 s avg)
-     cegterg      :     0.25s CPU (      40 calls,   0.006 s avg)
+     cegterg      :     0.26s CPU (      40 calls,   0.006 s avg)
      h_psi        :     0.23s CPU (     115 calls,   0.002 s avg)
      g_psi        :     0.00s CPU (      65 calls,   0.000 s avg)
      overlap      :     0.00s CPU (      65 calls,   0.000 s avg)
@@ -226,7 +226,7 @@
      h_psi        :     0.23s CPU (     115 calls,   0.002 s avg)
      init         :     0.00s CPU (     115 calls,   0.000 s avg)
      firstfft     :     0.09s CPU (     635 calls,   0.000 s avg)
-     secondfft    :     0.09s CPU (     635 calls,   0.000 s avg)
+     secondfft    :     0.10s CPU (     635 calls,   0.000 s avg)
      add_vuspsi   :     0.00s CPU (     115 calls,   0.000 s avg)
 
      General routines

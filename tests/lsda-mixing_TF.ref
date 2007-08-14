@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is  2Aug2007 at 11:53:25 
+     Today is 14Aug2007 at 10:16:11 
 
      Parallel version (MPI)
 
@@ -11,7 +11,7 @@
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2000  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
 
      Planes per process (thick) : nr3 = 25 npp =  25 ncplane =  625
      Planes per process (smooth): nr3s= 15 npps=  15 ncplanes=  225
@@ -122,7 +122,7 @@
      starting charge    9.99966, renormalised to   10.00000
      Starting wfc are    6 atomic +    3 random wfc
 
-     total cpu time spent up to now is      2.85 secs
+     total cpu time spent up to now is      3.05 secs
 
      Self-consistent Calculation
 
@@ -130,7 +130,7 @@
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  4.5
 
-     total cpu time spent up to now is      3.62 secs
+     total cpu time spent up to now is      3.84 secs
 
      total energy              =   -85.40652252 Ry
      Harris-Foulkes estimate   =   -85.36640406 Ry
@@ -143,7 +143,7 @@
      Davidson diagonalization with overlap
      ethr =  9.21E-03,  avg # of iterations =  1.2
 
-     total cpu time spent up to now is      4.17 secs
+     total cpu time spent up to now is      4.41 secs
 
      total energy              =   -85.67133155 Ry
      Harris-Foulkes estimate   =   -85.65085777 Ry
@@ -158,7 +158,7 @@
 
      negative rho (up, down):  0.000E+00 0.455E-04
 
-     total cpu time spent up to now is      4.73 secs
+     total cpu time spent up to now is      4.97 secs
 
      total energy              =   -85.71628494 Ry
      Harris-Foulkes estimate   =   -85.69367537 Ry
@@ -171,7 +171,7 @@
      Davidson diagonalization with overlap
      ethr =  4.09E-04,  avg # of iterations =  1.2
 
-     total cpu time spent up to now is      5.28 secs
+     total cpu time spent up to now is      5.54 secs
 
      total energy              =   -85.72178001 Ry
      Harris-Foulkes estimate   =   -85.72136056 Ry
@@ -184,7 +184,7 @@
      Davidson diagonalization with overlap
      ethr =  6.20E-05,  avg # of iterations =  1.2
 
-     total cpu time spent up to now is      5.83 secs
+     total cpu time spent up to now is      6.11 secs
 
      total energy              =   -85.72334417 Ry
      Harris-Foulkes estimate   =   -85.72338039 Ry
@@ -197,7 +197,7 @@
      Davidson diagonalization with overlap
      ethr =  2.92E-06,  avg # of iterations =  1.8
 
-     total cpu time spent up to now is      6.41 secs
+     total cpu time spent up to now is      6.71 secs
 
      total energy              =   -85.72339857 Ry
      Harris-Foulkes estimate   =   -85.72339656 Ry
@@ -210,7 +210,7 @@
      Davidson diagonalization with overlap
      ethr =  1.39E-07,  avg # of iterations =  1.4
 
-     total cpu time spent up to now is      6.96 secs
+     total cpu time spent up to now is      7.26 secs
 
      End of self-consistent calculation
 
@@ -337,35 +337,35 @@
      total magnetization       =     0.73 Bohr mag/cell
      absolute magnetization    =     0.78 Bohr mag/cell
 
-     convergence has been achieved
+     convergence has been achieved in   7 iterations
 
      Writing output data file pwscf.save
 
-     PWSCF        :     7.06s CPU time,    8.92s wall time
+     PWSCF        :     7.37s CPU time,    8.61s wall time
 
-     init_run     :     2.54s CPU
-     electrons    :     4.11s CPU
+     init_run     :     2.73s CPU
+     electrons    :     4.22s CPU
 
 
-     electrons    :     4.11s CPU
-     c_bands      :     1.92s CPU (       7 calls,   0.275 s avg)
-     sum_band     :     1.23s CPU (       7 calls,   0.175 s avg)
+     electrons    :     4.22s CPU
+     c_bands      :     1.93s CPU (       7 calls,   0.275 s avg)
+     sum_band     :     1.28s CPU (       7 calls,   0.183 s avg)
      v_of_rho     :     0.27s CPU (       8 calls,   0.034 s avg)
      v_h          :     0.02s CPU (       8 calls,   0.003 s avg)
      v_xc         :     0.25s CPU (       8 calls,   0.031 s avg)
-     newd         :     0.59s CPU (       8 calls,   0.074 s avg)
+     newd         :     0.65s CPU (       8 calls,   0.082 s avg)
      mix_rho      :     0.01s CPU (       7 calls,   0.001 s avg)
 
-     c_bands      :     1.92s CPU (       7 calls,   0.275 s avg)
+     c_bands      :     1.93s CPU (       7 calls,   0.275 s avg)
      init_us_2    :     0.07s CPU (     300 calls,   0.000 s avg)
-     cegterg      :     1.75s CPU (     140 calls,   0.013 s avg)
+     cegterg      :     1.76s CPU (     140 calls,   0.013 s avg)
 
-     sum_band     :     1.23s CPU (       7 calls,   0.175 s avg)
+     sum_band     :     1.28s CPU (       7 calls,   0.183 s avg)
      becsum       :     0.01s CPU (     140 calls,   0.000 s avg)
-     addusdens    :     0.72s CPU (       7 calls,   0.103 s avg)
+     addusdens    :     0.78s CPU (       7 calls,   0.111 s avg)
 
      wfcrot       :     0.09s CPU (      20 calls,   0.005 s avg)
-     cegterg      :     1.75s CPU (     140 calls,   0.013 s avg)
+     cegterg      :     1.76s CPU (     140 calls,   0.013 s avg)
      h_psi        :     1.31s CPU (     410 calls,   0.003 s avg)
      g_psi        :     0.02s CPU (     250 calls,   0.000 s avg)
      overlap      :     0.05s CPU (     250 calls,   0.000 s avg)
@@ -382,7 +382,7 @@
 
      General routines
      ccalbec      :     0.06s CPU (     550 calls,   0.000 s avg)
-     cft3         :     0.23s CPU (     100 calls,   0.002 s avg)
+     cft3         :     0.22s CPU (     100 calls,   0.002 s avg)
      cft3s        :     1.07s CPU (    7258 calls,   0.000 s avg)
      interpolate  :     0.09s CPU (      30 calls,   0.003 s avg)
      davcio       :     0.08s CPU (     440 calls,   0.000 s avg)

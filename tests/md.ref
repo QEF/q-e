@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is  3Aug2007 at 16:46: 8 
+     Today is 14Aug2007 at 10:17:21 
 
      Parallel version (MPI)
 
@@ -11,7 +11,7 @@
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2000  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
 
      Planes per process (thick) : nr3 = 15 npp =  15 ncplane =  225
 
@@ -139,7 +139,7 @@
      Davidson diagonalization with overlap
      ethr =  5.68E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.19 secs
+     total cpu time spent up to now is      0.20 secs
 
      total energy              =   -14.44793733 Ry
      Harris-Foulkes estimate   =   -14.44793732 Ry
@@ -149,7 +149,7 @@
      Davidson diagonalization with overlap
      ethr =  7.59E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.20 secs
+     total cpu time spent up to now is      0.21 secs
 
      End of self-consistent calculation
 
@@ -161,7 +161,7 @@
      Harris-Foulkes estimate   =   -14.44793734 Ry
      estimated scf accuracy    <        5.0E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   6 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -194,7 +194,7 @@ Si       0.123035762   0.123035762   0.123035762
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.24 secs
+     total cpu time spent up to now is      0.25 secs
 
      Self-consistent Calculation
 
@@ -208,7 +208,7 @@ Si       0.123035762   0.123035762   0.123035762
      Davidson diagonalization with overlap
      ethr =  5.76E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.25 secs
+     total cpu time spent up to now is      0.26 secs
 
      total energy              =   -14.44798775 Ry
      Harris-Foulkes estimate   =   -14.44801425 Ry
@@ -218,7 +218,7 @@ Si       0.123035762   0.123035762   0.123035762
      Davidson diagonalization with overlap
      ethr =  4.34E-10,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.26 secs
+     total cpu time spent up to now is      0.27 secs
 
      End of self-consistent calculation
 
@@ -230,7 +230,7 @@ Si       0.123035762   0.123035762   0.123035762
      Harris-Foulkes estimate   =   -14.44798776 Ry
      estimated scf accuracy    <        2.9E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   2 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -259,7 +259,7 @@ Si       0.123106623   0.123106623   0.123106623
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.30 secs
+     total cpu time spent up to now is      0.31 secs
 
      Self-consistent Calculation
 
@@ -273,7 +273,7 @@ Si       0.123106623   0.123106623   0.123106623
      Davidson diagonalization with overlap
      ethr =  2.29E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.31 secs
+     total cpu time spent up to now is      0.33 secs
 
      total energy              =   -14.44808489 Ry
      Harris-Foulkes estimate   =   -14.44810432 Ry
@@ -283,7 +283,7 @@ Si       0.123106623   0.123106623   0.123106623
      Davidson diagonalization with overlap
      ethr =  1.73E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.33 secs
+     total cpu time spent up to now is      0.34 secs
 
      total energy              =   -14.44808491 Ry
      Harris-Foulkes estimate   =   -14.44808490 Ry
@@ -293,7 +293,7 @@ Si       0.123106623   0.123106623   0.123106623
      Davidson diagonalization with overlap
      ethr =  1.43E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.33 secs
+     total cpu time spent up to now is      0.35 secs
 
      End of self-consistent calculation
 
@@ -305,7 +305,7 @@ Si       0.123106623   0.123106623   0.123106623
      Harris-Foulkes estimate   =   -14.44808491 Ry
      estimated scf accuracy    <        3.0E-10 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -334,7 +334,7 @@ Si       0.123211283   0.123211283   0.123211283
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.37 secs
+     total cpu time spent up to now is      0.39 secs
 
      Self-consistent Calculation
 
@@ -348,7 +348,7 @@ Si       0.123211283   0.123211283   0.123211283
      Davidson diagonalization with overlap
      ethr =  4.32E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.39 secs
+     total cpu time spent up to now is      0.40 secs
 
      total energy              =   -14.44822165 Ry
      Harris-Foulkes estimate   =   -14.44822039 Ry
@@ -358,7 +358,7 @@ Si       0.123211283   0.123211283   0.123211283
      Davidson diagonalization with overlap
      ethr =  3.83E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.40 secs
+     total cpu time spent up to now is      0.42 secs
 
      total energy              =   -14.44822169 Ry
      Harris-Foulkes estimate   =   -14.44822168 Ry
@@ -368,7 +368,7 @@ Si       0.123211283   0.123211283   0.123211283
      Davidson diagonalization with overlap
      ethr =  3.24E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.41 secs
+     total cpu time spent up to now is      0.42 secs
 
      End of self-consistent calculation
 
@@ -380,7 +380,7 @@ Si       0.123211283   0.123211283   0.123211283
      Harris-Foulkes estimate   =   -14.44822169 Ry
      estimated scf accuracy    <        8.2E-10 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -409,7 +409,7 @@ Si       0.123347826   0.123347826   0.123347826
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.45 secs
+     total cpu time spent up to now is      0.46 secs
 
      Self-consistent Calculation
 
@@ -423,7 +423,7 @@ Si       0.123347826   0.123347826   0.123347826
      Davidson diagonalization with overlap
      ethr =  7.37E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.46 secs
+     total cpu time spent up to now is      0.48 secs
 
      total energy              =   -14.44838810 Ry
      Harris-Foulkes estimate   =   -14.44838409 Ry
@@ -433,7 +433,7 @@ Si       0.123347826   0.123347826   0.123347826
      Davidson diagonalization with overlap
      ethr =  6.51E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.47 secs
+     total cpu time spent up to now is      0.49 secs
 
      total energy              =   -14.44838817 Ry
      Harris-Foulkes estimate   =   -14.44838815 Ry
@@ -443,7 +443,7 @@ Si       0.123347826   0.123347826   0.123347826
      Davidson diagonalization with overlap
      ethr =  5.42E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.48 secs
+     total cpu time spent up to now is      0.50 secs
 
      End of self-consistent calculation
 
@@ -455,7 +455,7 @@ Si       0.123347826   0.123347826   0.123347826
      Harris-Foulkes estimate   =   -14.44838817 Ry
      estimated scf accuracy    <        1.3E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -484,7 +484,7 @@ Si       0.123513758   0.123513758   0.123513758
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.51 secs
+     total cpu time spent up to now is      0.54 secs
 
      Self-consistent Calculation
 
@@ -498,7 +498,7 @@ Si       0.123513758   0.123513758   0.123513758
      Davidson diagonalization with overlap
      ethr =  1.09E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.53 secs
+     total cpu time spent up to now is      0.56 secs
 
      total energy              =   -14.44857220 Ry
      Harris-Foulkes estimate   =   -14.44856695 Ry
@@ -508,7 +508,7 @@ Si       0.123513758   0.123513758   0.123513758
      Davidson diagonalization with overlap
      ethr =  9.62E-09,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.54 secs
+     total cpu time spent up to now is      0.57 secs
 
      total energy              =   -14.44857229 Ry
      Harris-Foulkes estimate   =   -14.44857226 Ry
@@ -518,7 +518,7 @@ Si       0.123513758   0.123513758   0.123513758
      Davidson diagonalization with overlap
      ethr =  7.98E-10,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.55 secs
+     total cpu time spent up to now is      0.58 secs
 
      End of self-consistent calculation
 
@@ -530,7 +530,7 @@ Si       0.123513758   0.123513758   0.123513758
      Harris-Foulkes estimate   =   -14.44857229 Ry
      estimated scf accuracy    <        1.9E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -559,7 +559,7 @@ Si       0.123706063   0.123706063   0.123706063
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.59 secs
+     total cpu time spent up to now is      0.62 secs
 
      Self-consistent Calculation
 
@@ -573,7 +573,7 @@ Si       0.123706063   0.123706063   0.123706063
      Davidson diagonalization with overlap
      ethr =  1.46E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.60 secs
+     total cpu time spent up to now is      0.63 secs
 
      total energy              =   -14.44876071 Ry
      Harris-Foulkes estimate   =   -14.44875447 Ry
@@ -583,7 +583,7 @@ Si       0.123706063   0.123706063   0.123706063
      Davidson diagonalization with overlap
      ethr =  1.29E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.65 secs
 
      total energy              =   -14.44876084 Ry
      Harris-Foulkes estimate   =   -14.44876080 Ry
@@ -593,7 +593,7 @@ Si       0.123706063   0.123706063   0.123706063
      Davidson diagonalization with overlap
      ethr =  1.07E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.62 secs
+     total cpu time spent up to now is      0.65 secs
 
      End of self-consistent calculation
 
@@ -605,7 +605,7 @@ Si       0.123706063   0.123706063   0.123706063
      Harris-Foulkes estimate   =   -14.44876084 Ry
      estimated scf accuracy    <        2.6E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -634,7 +634,7 @@ Si       0.123921265   0.123921265   0.123921265
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.66 secs
+     total cpu time spent up to now is      0.69 secs
 
      Self-consistent Calculation
 
@@ -648,7 +648,7 @@ Si       0.123921265   0.123921265   0.123921265
      Davidson diagonalization with overlap
      ethr =  1.67E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.68 secs
+     total cpu time spent up to now is      0.71 secs
 
      total energy              =   -14.44894023 Ry
      Harris-Foulkes estimate   =   -14.44893532 Ry
@@ -658,7 +658,7 @@ Si       0.123921265   0.123921265   0.123921265
      Davidson diagonalization with overlap
      ethr =  1.63E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.69 secs
+     total cpu time spent up to now is      0.72 secs
 
      total energy              =   -14.44894039 Ry
      Harris-Foulkes estimate   =   -14.44894035 Ry
@@ -668,7 +668,7 @@ Si       0.123921265   0.123921265   0.123921265
      Davidson diagonalization with overlap
      ethr =  1.34E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.70 secs
+     total cpu time spent up to now is      0.73 secs
 
      End of self-consistent calculation
 
@@ -680,7 +680,7 @@ Si       0.123921265   0.123921265   0.123921265
      Harris-Foulkes estimate   =   -14.44894040 Ry
      estimated scf accuracy    <        3.4E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -709,7 +709,7 @@ Si       0.124155496   0.124155496   0.124155496
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.74 secs
+     total cpu time spent up to now is      0.77 secs
 
      Self-consistent Calculation
 
@@ -723,7 +723,7 @@ Si       0.124155496   0.124155496   0.124155496
      Davidson diagonalization with overlap
      ethr =  1.98E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.75 secs
+     total cpu time spent up to now is      0.79 secs
 
      total energy              =   -14.44909811 Ry
      Harris-Foulkes estimate   =   -14.44909215 Ry
@@ -733,7 +733,7 @@ Si       0.124155496   0.124155496   0.124155496
      Davidson diagonalization with overlap
      ethr =  1.94E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.77 secs
+     total cpu time spent up to now is      0.80 secs
 
      total energy              =   -14.44909830 Ry
      Harris-Foulkes estimate   =   -14.44909825 Ry
@@ -743,7 +743,7 @@ Si       0.124155496   0.124155496   0.124155496
      Davidson diagonalization with overlap
      ethr =  1.58E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.78 secs
+     total cpu time spent up to now is      0.81 secs
 
      End of self-consistent calculation
 
@@ -755,7 +755,7 @@ Si       0.124155496   0.124155496   0.124155496
      Harris-Foulkes estimate   =   -14.44909831 Ry
      estimated scf accuracy    <        4.1E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -784,7 +784,7 @@ Si       0.124404571   0.124404571   0.124404571
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.81 secs
+     total cpu time spent up to now is      0.85 secs
 
      Self-consistent Calculation
 
@@ -798,7 +798,7 @@ Si       0.124404571   0.124404571   0.124404571
      Davidson diagonalization with overlap
      ethr =  2.24E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.83 secs
+     total cpu time spent up to now is      0.86 secs
 
      total energy              =   -14.44922338 Ry
      Harris-Foulkes estimate   =   -14.44921643 Ry
@@ -808,7 +808,7 @@ Si       0.124404571   0.124404571   0.124404571
      Davidson diagonalization with overlap
      ethr =  2.19E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.84 secs
+     total cpu time spent up to now is      0.88 secs
 
      total energy              =   -14.44922360 Ry
      Harris-Foulkes estimate   =   -14.44922354 Ry
@@ -818,7 +818,7 @@ Si       0.124404571   0.124404571   0.124404571
      Davidson diagonalization with overlap
      ethr =  1.78E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.85 secs
+     total cpu time spent up to now is      0.89 secs
 
      End of self-consistent calculation
 
@@ -830,7 +830,7 @@ Si       0.124404571   0.124404571   0.124404571
      Harris-Foulkes estimate   =   -14.44922360 Ry
      estimated scf accuracy    <        4.7E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -857,7 +857,7 @@ Si       0.124664073   0.124664073   0.124664073
 
      NEW-OLD atomic charge density approx. for the potential
 
-     total cpu time spent up to now is      0.87 secs
+     total cpu time spent up to now is      0.90 secs
 
      Self-consistent Calculation
 
@@ -871,7 +871,7 @@ Si       0.124664073   0.124664073   0.124664073
      Davidson diagonalization with overlap
      ethr =  2.44E-08,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.89 secs
+     total cpu time spent up to now is      0.92 secs
 
      total energy              =   -14.44930749 Ry
      Harris-Foulkes estimate   =   -14.44929962 Ry
@@ -881,7 +881,7 @@ Si       0.124664073   0.124664073   0.124664073
      Davidson diagonalization with overlap
      ethr =  2.39E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.90 secs
+     total cpu time spent up to now is      0.93 secs
 
      total energy              =   -14.44930774 Ry
      Harris-Foulkes estimate   =   -14.44930767 Ry
@@ -891,7 +891,7 @@ Si       0.124664073   0.124664073   0.124664073
      Davidson diagonalization with overlap
      ethr =  1.93E-09,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.91 secs
+     total cpu time spent up to now is      0.94 secs
 
      End of self-consistent calculation
 
@@ -903,7 +903,7 @@ Si       0.124664073   0.124664073   0.124664073
      Harris-Foulkes estimate   =   -14.44930774 Ry
      estimated scf accuracy    <        5.2E-09 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   3 iterations
 
      Forces acting on atoms (Ry/au):
 
@@ -924,38 +924,38 @@ Si       0.124664073   0.124664073   0.124664073
 
      Writing output data file pwscf.save
 
-     PWSCF        :     0.94s CPU time,    1.49s wall time
+     PWSCF        :     0.97s CPU time,    1.38s wall time
 
      init_run     :     0.07s CPU
-     electrons    :     0.43s CPU (      11 calls,   0.039 s avg)
+     electrons    :     0.45s CPU (      11 calls,   0.041 s avg)
      update_pot   :     0.10s CPU (      10 calls,   0.010 s avg)
      forces       :     0.04s CPU (      11 calls,   0.004 s avg)
 
 
-     electrons    :     0.43s CPU (      11 calls,   0.039 s avg)
-     c_bands      :     0.22s CPU (      45 calls,   0.005 s avg)
+     electrons    :     0.45s CPU (      11 calls,   0.041 s avg)
+     c_bands      :     0.23s CPU (      45 calls,   0.005 s avg)
      sum_band     :     0.04s CPU (      45 calls,   0.001 s avg)
      v_of_rho     :     0.09s CPU (      46 calls,   0.002 s avg)
      v_h          :     0.02s CPU (      46 calls,   0.000 s avg)
      v_xc         :     0.07s CPU (      46 calls,   0.002 s avg)
      mix_rho      :     0.00s CPU (      45 calls,   0.000 s avg)
 
-     c_bands      :     0.22s CPU (      45 calls,   0.005 s avg)
+     c_bands      :     0.23s CPU (      45 calls,   0.005 s avg)
      init_us_2    :     0.01s CPU (      91 calls,   0.000 s avg)
-     cegterg      :     0.21s CPU (      45 calls,   0.005 s avg)
+     cegterg      :     0.22s CPU (      45 calls,   0.005 s avg)
 
      sum_band     :     0.04s CPU (      45 calls,   0.001 s avg)
 
      wfcrot       :     0.00s CPU
-     cegterg      :     0.21s CPU (      45 calls,   0.005 s avg)
-     h_psi        :     0.17s CPU (     118 calls,   0.001 s avg)
+     cegterg      :     0.22s CPU (      45 calls,   0.005 s avg)
+     h_psi        :     0.18s CPU (     118 calls,   0.002 s avg)
      g_psi        :     0.00s CPU (      72 calls,   0.000 s avg)
      overlap      :     0.00s CPU (      72 calls,   0.000 s avg)
      diaghg       :     0.02s CPU (      97 calls,   0.000 s avg)
      update       :     0.00s CPU (      72 calls,   0.000 s avg)
      last         :     0.00s CPU (      45 calls,   0.000 s avg)
 
-     h_psi        :     0.17s CPU (     118 calls,   0.001 s avg)
+     h_psi        :     0.18s CPU (     118 calls,   0.002 s avg)
      init         :     0.00s CPU (     118 calls,   0.000 s avg)
      firstfft     :     0.07s CPU (     425 calls,   0.000 s avg)
      secondfft    :     0.07s CPU (     425 calls,   0.000 s avg)
@@ -963,7 +963,7 @@ Si       0.124664073   0.124664073   0.124664073
 
      General routines
      ccalbec      :     0.00s CPU (     129 calls,   0.000 s avg)
-     cft3         :     0.04s CPU (     180 calls,   0.000 s avg)
+     cft3         :     0.05s CPU (     180 calls,   0.000 s avg)
      cft3s        :     0.14s CPU (    1030 calls,   0.000 s avg)
      davcio       :     0.00s CPU (      35 calls,   0.000 s avg)
 

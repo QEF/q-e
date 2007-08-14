@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is  2Aug2007 at 11:53:13 
+     Today is 14Aug2007 at 10:15:57 
 
      Parallel version (MPI)
 
@@ -11,7 +11,7 @@
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2000  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
 
      Planes per process (thick) : nr3 = 64 npp =  64 ncplane =  900
 
@@ -114,7 +114,7 @@
 
      negative rho (up, down):  0.132E-03 0.000E+00
 
-     total cpu time spent up to now is      0.55 secs
+     total cpu time spent up to now is      0.56 secs
 
      total energy              =    -2.23090525 Ry
      Harris-Foulkes estimate   =    -2.23134809 Ry
@@ -126,7 +126,7 @@
 
      negative rho (up, down):  0.164E-04 0.000E+00
 
-     total cpu time spent up to now is      0.71 secs
+     total cpu time spent up to now is      0.73 secs
 
      total energy              =    -2.23120002 Ry
      Harris-Foulkes estimate   =    -2.23120171 Ry
@@ -136,7 +136,7 @@
      Davidson diagonalization with overlap
      ethr =  5.86E-07,  avg # of iterations =  1.5
 
-     total cpu time spent up to now is      0.83 secs
+     total cpu time spent up to now is      0.85 secs
 
      End of self-consistent calculation
 
@@ -159,41 +159,41 @@
      xc contribution           =    -1.31412598 Ry
      ewald contribution        =     0.81061157 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   4 iterations
 
      Writing output data file pwscf.save
 
-     PWSCF        :     0.89s CPU time,    1.09s wall time
+     PWSCF        :     0.91s CPU time,    1.11s wall time
 
      init_run     :     0.22s CPU
-     electrons    :     0.57s CPU
+     electrons    :     0.58s CPU
 
 
-     electrons    :     0.57s CPU
-     c_bands      :     0.23s CPU (       4 calls,   0.057 s avg)
-     sum_band     :     0.08s CPU (       4 calls,   0.020 s avg)
+     electrons    :     0.58s CPU
+     c_bands      :     0.23s CPU (       4 calls,   0.059 s avg)
+     sum_band     :     0.08s CPU (       4 calls,   0.021 s avg)
      v_of_rho     :     0.17s CPU (       5 calls,   0.033 s avg)
      v_h          :     0.05s CPU (       5 calls,   0.010 s avg)
      v_xc         :     0.12s CPU (       5 calls,   0.024 s avg)
      mix_rho      :     0.02s CPU (       4 calls,   0.005 s avg)
 
-     c_bands      :     0.23s CPU (       4 calls,   0.057 s avg)
-     cegterg      :     0.22s CPU (       8 calls,   0.027 s avg)
+     c_bands      :     0.23s CPU (       4 calls,   0.059 s avg)
+     cegterg      :     0.22s CPU (       8 calls,   0.028 s avg)
 
-     sum_band     :     0.08s CPU (       4 calls,   0.020 s avg)
+     sum_band     :     0.08s CPU (       4 calls,   0.021 s avg)
 
-     wfcrot       :     0.04s CPU (       2 calls,   0.020 s avg)
-     cegterg      :     0.22s CPU (       8 calls,   0.027 s avg)
-     h_psi        :     0.24s CPU (      23 calls,   0.010 s avg)
+     wfcrot       :     0.04s CPU (       2 calls,   0.021 s avg)
+     cegterg      :     0.22s CPU (       8 calls,   0.028 s avg)
+     h_psi        :     0.24s CPU (      23 calls,   0.011 s avg)
      g_psi        :     0.00s CPU (      13 calls,   0.000 s avg)
      overlap      :     0.00s CPU (      13 calls,   0.000 s avg)
      diaghg       :     0.00s CPU (      21 calls,   0.000 s avg)
      update       :     0.00s CPU (      13 calls,   0.000 s avg)
      last         :     0.00s CPU (       8 calls,   0.000 s avg)
 
-     h_psi        :     0.24s CPU (      23 calls,   0.010 s avg)
+     h_psi        :     0.24s CPU (      23 calls,   0.011 s avg)
      init         :     0.00s CPU (      23 calls,   0.000 s avg)
-     firstfft     :     0.10s CPU (      25 calls,   0.004 s avg)
+     firstfft     :     0.11s CPU (      25 calls,   0.004 s avg)
      secondfft    :     0.10s CPU (      25 calls,   0.004 s avg)
 
      General routines

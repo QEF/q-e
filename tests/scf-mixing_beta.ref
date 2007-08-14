@@ -1,6 +1,6 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is  2Aug2007 at 11:54:25 
+     Today is 14Aug2007 at 10:28:20 
 
      Parallel version (MPI)
 
@@ -11,7 +11,7 @@
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2000  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
 
      Planes per process (thick) : nr3 = 16 npp =  16 ncplane =  256
 
@@ -105,7 +105,7 @@
      Davidson diagonalization with overlap
      ethr =  7.93E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.19 secs
+     total cpu time spent up to now is      0.20 secs
 
      total energy              =   -15.79489969 Ry
      Harris-Foulkes estimate   =   -16.03270275 Ry
@@ -115,7 +115,7 @@
      Davidson diagonalization with overlap
      ethr =  7.97E-04,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is      0.21 secs
+     total cpu time spent up to now is      0.22 secs
 
      total energy              =   -15.79349406 Ry
      Harris-Foulkes estimate   =   -15.79658879 Ry
@@ -135,7 +135,7 @@
      Davidson diagonalization with overlap
      ethr =  3.10E-06,  avg # of iterations =  2.5
 
-     total cpu time spent up to now is      0.26 secs
+     total cpu time spent up to now is      0.27 secs
 
      total energy              =   -15.79448657 Ry
      Harris-Foulkes estimate   =   -15.79451397 Ry
@@ -145,7 +145,7 @@
      Davidson diagonalization with overlap
      ethr =  6.56E-07,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.29 secs
+     total cpu time spent up to now is      0.30 secs
 
      total energy              =   -15.79449527 Ry
      Harris-Foulkes estimate   =   -15.79449622 Ry
@@ -155,7 +155,7 @@
      Davidson diagonalization with overlap
      ethr =  2.83E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is      0.31 secs
+     total cpu time spent up to now is      0.32 secs
 
      End of self-consistent calculation
 
@@ -178,13 +178,13 @@
      xc contribution           =    -4.81282936 Ry
      ewald contribution        =   -16.89975858 Ry
 
-     convergence has been achieved
+     convergence has been achieved in   6 iterations
 
      Writing output data file pwscf.save
 
-     PWSCF        :     0.36s CPU time,    0.47s wall time
+     PWSCF        :     0.37s CPU time,    0.49s wall time
 
-     init_run     :     0.09s CPU
+     init_run     :     0.10s CPU
      electrons    :     0.16s CPU
 
 

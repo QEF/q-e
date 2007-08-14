@@ -4,6 +4,7 @@
 # calculations: 'scf', 'relax', 'md', 'nscf' (see below for the latter)
 # The following quantites are verified against reference output :
 #    the converged total energy
+#    the number of scf iterations
 #    the module of the force ( sqrt(\sum_i f_i^2)) if calculated;
 #    the pressure P if calculated
 # Input data: *.in, reference results: *.res, output: *.out
@@ -46,7 +47,7 @@ do
   name=`basename $file .in`
   $ECHO "Checking $name...\c"
   ###
-  $ESPRESSO_ROOT/bin/pw.x < $name.in > $name.out
+  mpirun -np 2 $ESPRESSO_ROOT/bin/pw.x < $name.in > $name.out
   ###
   if test $? != 0; then
      $ECHO "FAILED with error condition!"
@@ -59,25 +60,34 @@ do
      # reference file exists
      # get reference total energy (cut to 6 significant digits)
      e0=`grep ! $name.ref | tail -1 | awk '{printf "%12.6f\n", $5}'`
+     # get reference number of scf iterations
+     n0=`grep 'convergence has' $name.ref | tail -1 | awk '{print $6}'`
      # get reference initial force (cut to 4 significant digits)
-     f0=`grep "Total force = " $name.ref | head -1 | awk '{printf "%8.4f\n", $4}'`
+     f0=`grep "Total force" $name.ref | head -1 | awk '{printf "%8.4f\n", $4}'`
      # get reference pressure
      p0=`grep "P= " $name.ref | tail -1 | awk '{print $6}'`
      #
      e1=`grep ! $name.out | tail -1 | awk '{printf "%12.6f\n", $5}'`
-     f1=`grep "Total force = " $name.out | head -1 | awk '{printf "%8.4f\n", $4}'`
+     n1=`grep 'convergence has' $name.out | tail -1 | awk '{print $6}'`
+     f1=`grep "Total force" $name.out | head -1 | awk '{printf "%8.4f\n", $4}'`
      p1=`grep "P= " $name.out | tail -1 | awk '{print $6}'`
      #
      if test "$e1" = "$e0"; then
-        if test "$f1" = "$f0"; then
-           if test "$p1" = "$p0"; then
-              $ECHO  "passed"
+        if test "$n1" = "$n0"; then
+           if test "$f1" = "$f0"; then
+              if test "$p1" = "$p0"; then
+                 $ECHO  "passed"
+              fi
            fi
         fi
      fi
      if test "$e1" != "$e0"; then
         $ECHO "discrepancy in total energy detected"
         $ECHO "Reference: $e0, You got: $e1"
+     fi
+     if test "$n1" != "$n0"; then
+        $ECHO "discrepancy in number of scf iterations detected"
+        $ECHO "Reference: $n0, You got: $n1"
      fi
      if test "$f1" != "$f0"; then
         $ECHO "discrepancy in force detected"
