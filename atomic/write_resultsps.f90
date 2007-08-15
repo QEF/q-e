@@ -71,15 +71,19 @@ subroutine write_resultsps
 1211 format (5x,'Etot =',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV')
   write(stdout,1221) etots, etots*0.5_dp, etots*rytoev
 1221 format (5x,'Etotps =',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-  write(stdout,1231) etot-etot0
+  if (abs(etot-etot0)> 1.d-9) then 
+     write(stdout,1231) etot-etot0
 1231 format (5x,'dEtot_ae =',f15.6,' Ry') 
-  write(stdout,1241) etots-etots0, etot-etot0 - (etots-etots0)
-1241 format (5x,'dEtot_ps =',f15.6,' Ry,','   Delta E=',f15.6 )
-  if (ionode) write(13,'(5x,''dEtot_ae ='',f15.6,'' Ry'')') etot-etot0
-  if (ionode) write(13,&
-             '(5x,''dEtot_ps ='',f15.6,'' Ry,'',''   Delta E='', f15.6 )') &
-       etots-etots0, etot-etot0-(etots-etots0)
-
+     write(stdout,1241) etots-etots0, etot-etot0 - (etots-etots0)
+1241 format (5x,'dEtot_ps =',f15.6,' Ry,','   Delta E=',f15.6,' Ry' )
+     if (ionode) write(13,'(5x,''dEtot_ae ='',f15.6,'' Ry'')') etot-etot0
+     if (ionode) write(13,&
+       '(5x,''dEtot_ps ='',f15.6,'' Ry,'',''   Delta E='', f15.6,'' Ry'' )') &
+          etots-etots0, etot-etot0-(etots-etots0)
+  else
+     if (ionode) write(13,1211) etot, etot*0.5_dp, etot*rytoev
+     if (ionode) write(13,1221) etots, etots*0.5_dp, etots*rytoev
+  endif
   write(stdout,1251) ekin, ekin*0.5_dp, ekin*rytoev
 1251 format (/,5x,'Ekin =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
 

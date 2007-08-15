@@ -29,7 +29,6 @@ dirsol.o \
 dmixp.o \
 drhoofv.o \
 drho0ofvx.o \
-do_mesh.o \
 dvex.o \
 el_config.o \
 elsd.o \
