@@ -62,10 +62,11 @@ implicit none
       egc=0.0_DP
       if (gga.and.nlcc) then
          f1=0.0_DP
-         call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,f1,rhoc,vgc,egcc)
+         call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,f1,rhoc,vgc,egcc,1)
       endif
 
-      if (gga) call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rhos,rhoc,vgc,egc)
+      if (gga) call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rhos, &
+                    rhoc,vgc,egc,1)
 
       rh0(1)=0.0_DP
       rh0(2)=0.0_DP

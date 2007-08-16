@@ -87,7 +87,7 @@ subroutine c6_dft (mesh, zed, grid)
    end if
 
    rhoc1=0.d0
-   call new_potential(ndmx,mesh,grid,zed,vxt,lsd,.false.,latt,enne,rhoc1,rho,vh,vnew)
+   call new_potential(ndmx,mesh,grid,zed,vxt,lsd,.false.,latt,enne,rhoc1,rho,vh,vnew,0)
    error = 0.d0
    do i=1,mesh
       error = error + abs( vpot(i,1)-vnew(i,1) ) * grid%r2(i) * grid%dx

@@ -124,23 +124,29 @@ subroutine set_rho_core
   write(stdout,110) grid%r(ik), a, b
 110 format (5x, '  r < ',f4.2,' : rho core = a sin(br)/r', &
        '    a=',f7.2,'  b=',f7.2/)
+1100 continue
   if (file_core .ne. ' ') then
-     write(stdout,*) '***Writing file ',trim(file_core),' ***'
+     write(stdout,'(6x, "***Writing file ",a, " ***")') trim(file_core)
      if (ionode) &
         open(unit=26,file=file_core, status='unknown', iostat=ios, err=300 )
 300  call mp_bcast(ios, ionode_id)
      call errore('set_rho_core','opening file '//file_core,abs(ios))
      if (ionode) then
-        do n=1,grid%mesh
-           write(26,'(4f20.10)') grid%r(n),rhoc(n),rhov(n),rhoco(n)
-        enddo
+        if (totrho>1.d-6) then
+           do n=1,grid%mesh
+              write(26,'(4f20.10)') grid%r(n),rhoc(n),rhov(n),rhoco(n)
+           enddo
+        else
+           do n=1,grid%mesh
+              write(26,'(2f20.10)') grid%r(n),rhov(n)
+           enddo
+        endif
         close(26)
      endif
   endif
   totrho = int_0_inf_dr(rhoc,grid,grid%mesh,2)
-  write(stdout,'(13x,''integrated core pseudo-charge : '',f6.2)')  totrho
+  write(stdout,'(6x,''Integrated core pseudo-charge : '',f6.2)')  totrho
   if (.not.nlcc) rhoc(1:grid%mesh) = 0.0_dp
-1100 continue
   deallocate (rhoco, rhov)
   return
 end subroutine set_rho_core

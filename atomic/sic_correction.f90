@@ -64,7 +64,7 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !   add gradient-correction terms to exchange-correlation potential
   !
   egc0=egc
-  call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rhotot,rhoc,vgc,egc)
+  call vxcgc(ndmx,grid%mesh,nspin,grid%r,grid%r2,rhotot,rhoc,vgc,egc,1)
   do i=1,grid%mesh
      vhn2(i)=vhn2(i)+vgc(i,1)
      egc(i)=egc(i)*grid%r2(i)*fpi+egc0(i)

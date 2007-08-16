@@ -44,7 +44,7 @@ subroutine elsd (mesh,zed,grid,rho,zeta,vxt,vh,nlcc,nwf,enl,ll,lsd,&
 
   rhoc=0.0_DP
   if (mesh.ne.grid%mesh) call errore('elsd','mesh dimension is not as expected',1)
-  call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc)
+  call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc,0)
 
   rhc=0.0_DP
   do i=1,mesh

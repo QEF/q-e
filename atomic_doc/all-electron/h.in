@@ -3,7 +3,7 @@
         title='H',
         xmin=-6,
         rel=0,
-        lsd=1,
+        lsd=0,
         isic=1,
         iswitch=1,
         config='1s1'

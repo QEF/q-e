@@ -8,7 +8,7 @@
 !
 !---------------------------------------------------------------
 subroutine new_potential &
-     (ndm,mesh,grid,zed,vxt,lsd,nlcc,latt,enne,rhoc,rho,vh,vnew)
+     (ndm,mesh,grid,zed,vxt,lsd,nlcc,latt,enne,rhoc,rho,vh,vnew,iflag)
   !---------------------------------------------------------------
   !   set up the selfconsistent atomic potential
   !
@@ -19,6 +19,7 @@ subroutine new_potential &
   use ld1inc, only : nwf, vx
   implicit none
   type(radial_grid_type),intent(in):: grid
+  integer, intent(in) :: iflag
   logical :: nlcc, gga, oep
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
@@ -26,6 +27,7 @@ subroutine new_potential &
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)
+
 
   if (mesh.ne.grid%mesh) call errore('new_potential','mesh dimension is not as expected',1)
   gga=dft_is_gradient()
@@ -70,7 +72,7 @@ subroutine new_potential &
      allocate(egc(ndm),stat=ierr)
      call errore('new_potential','allocating vgc and egc',ierr)
 
-     call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc)
+     call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc,iflag)
      do is=1,nspin
         do i=1,mesh
            vnew(i,is)=vnew(i,is)+vgc(i,is)

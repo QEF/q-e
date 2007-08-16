@@ -75,7 +75,7 @@ subroutine scf
      ! calculate new potential
      !
      call new_potential(ndmx,grid%mesh,grid,zed,vxt,&
-          lsd,.false.,latt,enne,rhoc1,rho,vh,vnew)
+          lsd,.false.,latt,enne,rhoc1,rho,vh,vnew,0)
      !
      ! calculate SIC correction potential (if present)
      !
@@ -97,7 +97,7 @@ subroutine scf
      call vpack(grid%mesh,ndmx,nspin,vnew,vpot,1)
      call dmixp(grid%mesh*nspin,vnew,vpot,beta,tr2,iter,id,eps0,conv)
      call vpack(grid%mesh,ndmx,nspin,vnew,vpot,-1)
-     !   write(6,*) iter, eps0
+!        write(6,*) iter, eps0
      !
      if (conv) then
         if (nerr /= 0) call infomsg ('scf','errors in KS equations')

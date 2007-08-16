@@ -82,7 +82,7 @@ subroutine descreening
   call chargeps(rhos,phits,nwfts,llts,jjts,octs,iwork)
 
   call new_potential(ndmx,grid%mesh,grid,0.0_dp,vxt,lsd,nlcc,latt,enne,&
-       rhoc,rhos,vh,vaux)
+       rhoc,rhos,vh,vaux,1)
 
   do n=1,grid%mesh
      vpstot(n,1)=vpsloc(n)
