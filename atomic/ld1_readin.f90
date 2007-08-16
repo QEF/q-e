@@ -275,25 +275,6 @@ subroutine ld1_readin
      !
      lmax = maxval(lls(1:nwfs))
      !
-     zdum = zed
-     do n=1,nwf
-        if ( oc(n) > 0.0_dp) zdum = zdum - oc(n)
-     end do
-     do ns=1,nwfs
-        if ( ocs(ns) > 0.0_dp) zdum = zdum + ocs(ns)
-     end do
-     if (zval == 0) then
-        zval = zdum
-        if ( abs(nint(zdum)-zdum) > 1.d-8 ) then
-           write(zdum_,'(f6.2)') zdum
-           call errore ('ld1_readin', 'found noninteger valence ' &
-                &//zdum_//', if you want this specify zval in inputp',1)
-        end if
-     else if ( abs(zval-zdum) > 1.d-8 ) then
-        call errore ('ld1_readin',&
-             ' supplied and calculated valence charge do not match',1)
-     end if
-     !
      do ns=1,nwfs
         if (pseudotype < 3) rcutus(ns) = rcut(ns)
         do ns1=1,ns-1
@@ -371,42 +352,61 @@ subroutine ld1_readin
      end do
      !
      nwftsc(1) = ns1
+  else
      !
-     return
-     !
-  endif
-  !
-  if (nconf > ncmax1.or.nconf < 1) &
-       call errore('ld1_readin','nconf is wrong',1)
-  if (iswitch == 3 .and. nconf > 1) &
-       call errore('ld1_readin','too many test configurations',1)
-  !  
-  do nc=1,nconf
-     if (configts(nc) == ' ') then
-        if (ionode) &
-        call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
-             nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
-             jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
-        call mp_bcast(eltsc(:,nc),ionode_id)
-     else
-        call el_config( configts(nc), rel, lsd, .false., nwftsc(nc), &
-             eltsc(1,nc), nntsc(1,nc), lltsc(1,nc), octsc(1,nc), &
-             iswtsc(1,nc), jjtsc(1,nc))
-     endif
-  enddo
-  call bcast_pstsconfig()
-  do nc=1,nconf
-     !
-     !  adjust the occupations of the test cases if this is a lsd run
-     !
-     if (lsd == 1) then
-        call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc),&
+     if (nconf > ncmax1.or.nconf < 1) &
+          call errore('ld1_readin','nconf is wrong',1)
+     if (iswitch == 3 .and. nconf > 1) &
+          call errore('ld1_readin','too many test configurations',1)
+     !  
+     do nc=1,nconf
+        if (configts(nc) == ' ') then
+           if (ionode) &
+           call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
+                nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
+                jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
+           call mp_bcast(eltsc(:,nc),ionode_id)
+        else
+           call el_config( configts(nc), rel, lsd, .false., nwftsc(nc), &
+                eltsc(1,nc), nntsc(1,nc), lltsc(1,nc), octsc(1,nc), &
+                iswtsc(1,nc), jjtsc(1,nc))
+        endif
+     enddo
+     call bcast_pstsconfig()
+     do nc=1,nconf
+        !
+        !  adjust the occupations of the test cases if this is a lsd run
+        !
+        if (lsd == 1) then
+           call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc),&
              octsc(1,nc), iswtsc(1,nc)) 
-     else if (rel == 2) then
-        call occ_spinorb(nwftsc(nc),nwfsx,eltsc(1,nc), &
+        else if (rel == 2) then
+           call occ_spinorb(nwftsc(nc),nwfsx,eltsc(1,nc), &
              nntsc(1,nc),lltsc(1,nc),jjtsc(1,nc),octsc(1,nc),iswtsc(1,nc))
-     endif
+        endif
+     end do
+  endif
+
+  zdum = zed
+  do n=1,nwf
+     if ( oc(n) > 0.0_dp) zdum = zdum - oc(n)
   end do
+     !
+  do ns=1,nwftsc(1)
+     if ( octsc(ns,1) > 0.0_dp) zdum = zdum + octsc(ns,1)
+  end do
+     !
+  if (zval == 0.0_DP) then
+     zval = zdum
+     if ( abs(nint(zdum)-zdum) > 1.d-8 ) then
+         write(zdum_,'(f6.2)') zdum
+         call errore ('ld1_readin', 'found noninteger valence ' &
+              &//zdum_//', if you want this specify zval in inputp',1)
+     end if
+  else if ( abs(zval-zdum) > 1.d-8 ) then
+     call errore ('ld1_readin',&
+             ' supplied and calculated valence charge do not match',1)
+  end if
   !
   !    PP testing: reading the pseudopotential
   !
