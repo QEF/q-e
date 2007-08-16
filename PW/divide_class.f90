@@ -151,21 +151,8 @@ ELSEIF (code_group==8) THEN
 !
 !  D_2  
 !
-!   versor find the rotation axis. 
-!   is_axis(ax,ind) is true if ax the axis given by ind 
-!   (1 asse x, 2 asse y, 3 asse z).
-!
    DO iclass=2,nclass
-      CALL versor(smat(1,1,elem(1,iclass)),ax)
-      IF (is_axis(ax,3)) THEN
-         which_irr(iclass)=2
-      ELSEIF (is_axis(ax,2)) THEN
-         which_irr(iclass)=3
-      ELSEIF (is_axis(ax,2)) THEN
-         which_irr(iclass)=4
-      ELSE
-         CALL errore('divide_class','wrong axis',1)
-      ENDIF
+         which_irr(iclass)=iclass
    ENDDO
 ELSEIF (code_group==9) THEN
 !
