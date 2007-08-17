@@ -225,7 +225,7 @@ enddo points
 !  In the first imin points the previous formula cannot be
 !  used. We interpolate with a polynomial the points already found
 !  and extrapolate in the points from 1 to imin.
-!  Presently we fit 5 points with a 3th degree polynomial.
+!  Presently we fit 5 points with a 3rd degree polynomial.
 !
 npoint=5
 raux=0.0_DP

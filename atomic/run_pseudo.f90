@@ -92,7 +92,7 @@ subroutine run_pseudo
         !
         call chargeps(rhos,phits,nwfts,llts,jjts,octs,iswts)
         call new_potential(ndmx,grid%mesh,grid,0.0_dp,vxt,lsd,&
-             nlcc,latt,enne,rhoc,rhos,vh,vnew)
+             nlcc,latt,enne,rhoc,rhos,vh,vnew,1)
 
         do is=1,nspin
            vpstot(:,is)=vpstot(:,is)-vpsloc(:)
@@ -113,7 +113,7 @@ subroutine run_pseudo
 100        call errore('run_pseudo','opening file' // nomefile,abs(ios))
            if (lsd==1) then
               do n=1,grid%mesh
-                 write(18,'(5e16.8)') grid%r(n),vnew(n,1)-vpstot(n,1), &
+                 write(18,'(5e20.12)') grid%r(n),vnew(n,1)-vpstot(n,1), &
                          vnew(n,1), vnew(n,2)-vpstot(n,2), vnew(n,2)
               enddo
            else

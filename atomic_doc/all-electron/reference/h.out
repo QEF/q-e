@@ -1,6 +1,6 @@
 
      Program LD1       v.3.2cvs starts ...
-     Today is 16Aug2007 at 18:18:17 
+     Today is 17Aug2007 at 10: 5:19 
 
      Parallel version (MPI)
 
@@ -11,27 +11,27 @@
 
      atomic number is  1.00
      dft =PW91   lsd =0 sic =1 latt =0  beta=0.20 tr2=1.0E-14
-     mesh = 849 r(mesh) =  99.48432 xmin = -6.00 dx = 0.01250
+     mesh = 929 r(mesh) =  99.48432 xmin = -7.00 dx = 0.01250
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
      1 0     1S 1( 1.00)        -1.0000        -0.5000       -13.6057
 
-     eps = 5.6E-15  iter = 69
+     eps = 5.0E-15  iter = 86
  
-     Etot =      -1.000000 Ry,      -0.500000 Ha,     -13.605690 eV
+     Etot =      -1.000000 Ry,      -0.500000 Ha,     -13.605692 eV
 
-     Ekin =       1.000000 Ry,       0.500000 Ha,      13.605693 eV
-     Encl =      -2.000000 Ry,      -1.000000 Ha,     -27.211383 eV
-     Eh   =       0.625000 Ry,       0.312500 Ha,       8.503557 eV
-     Exc  =      -0.625000 Ry,      -0.312500 Ha,      -8.503557 eV
+     Ekin =       1.000000 Ry,       0.500000 Ha,      13.605692 eV
+     Encl =      -2.000000 Ry,      -1.000000 Ha,     -27.211384 eV
+     Eh   =       0.625000 Ry,       0.312500 Ha,       8.503558 eV
+     Exc  =      -0.625000 Ry,      -0.312500 Ha,      -8.503558 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
  
      SIC information:
-     Esich=      -0.625000 Ry,      -0.312500 Ha,      -8.503557 eV
-     Esicxc=      0.540583 Ry,       0.270291 Ha,       7.354999 eV
+     Esich=      -0.625000 Ry,      -0.312500 Ha,      -8.503558 eV
+     Esicxc=      0.540583 Ry,       0.270291 Ha,       7.355000 eV
      Esictot=    -0.084417 Ry,      -0.042209 Ha,      -1.148558 eV
  
-     tot-Exc=    -0.540583 Ry,      -0.270291 Ha,      -7.354999 eV
+     tot-Exc=    -0.540583 Ry,      -0.270291 Ha,      -7.355000 eV
      int-Exc=     0.000000 Ry,       0.000000 Ha,       0.000000 eV
      int-Eh=      0.000000 Ry,       0.000000 Ha,       0.000000 eV
 

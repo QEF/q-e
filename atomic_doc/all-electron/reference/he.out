@@ -1,6 +1,6 @@
 
      Program LD1       v.3.2cvs starts ...
-     Today is 16Aug2007 at 18:19:25 
+     Today is 17Aug2007 at 10: 5:44 
 
      Parallel version (MPI)
 
@@ -11,19 +11,19 @@
 
      atomic number is  2.00
      dft =PBE   lsd =1 sic =1 latt =0  beta=0.20 tr2=1.0E-14
-     mesh = 905 r(mesh) = 100.16840 xmin = -6.00 dx = 0.01250
+     mesh = 985 r(mesh) = 100.16840 xmin = -7.00 dx = 0.01250
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
      1 0     1S 1( 1.00)        -1.8770        -0.9385       -25.5373
      1 0     1S 2( 1.00)        -1.8770        -0.9385       -25.5373
 
-     eps = 5.4E-15  iter = 69
+     eps = 8.0E-15  iter = 67
  
-     Etot =      -5.785250 Ry,      -2.892625 Ha,     -78.712333 eV
+     Etot =      -5.785249 Ry,      -2.892625 Ha,     -78.712323 eV
      Total magnetization:    0.00 Bohr mag. 
 
-     Ekin =       5.731275 Ry,       2.865637 Ha,      77.977962 eV
-     Encl =     -13.511495 Ry,      -6.755748 Ha,    -183.833244 eV
+     Ekin =       5.731275 Ry,       2.865638 Ha,      77.977970 eV
+     Encl =     -13.511495 Ry,      -6.755747 Ha,    -183.833243 eV
      Eh   =       4.113945 Ry,       2.056973 Ha,      55.973072 eV
      Exc  =      -2.118975 Ry,      -1.059488 Ha,     -28.830123 eV
      Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV

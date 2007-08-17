@@ -1,7 +1,6 @@
  &input
         zed=1.0,
         title='H',
-        xmin=-6,
         rel=0,
         lsd=0,
         isic=1,

@@ -1,7 +1,6 @@
  &input
         title='He',
         zed=2.0,
-        xmin=-6,
         rel=0,
         lsd=1,
         isic=1,

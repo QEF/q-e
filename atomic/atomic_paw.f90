@@ -521,9 +521,9 @@ CONTAINS
     END DO
     IF ( dft_is_gradient() ) THEN
        IF (nlcc_) THEN
-          CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,pawset_%grid%r2,vcharge_,ccharge_,vgc,egc)
+          CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,pawset_%grid%r2,vcharge_,ccharge_,vgc,egc,0)
        ELSE
-          CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,pawset_%grid%r2,vcharge_,rho_eq_0,vgc,egc)
+          CALL vxcgc(ndmx,pawset_%grid%mesh,nspin_,pawset_%grid%r,pawset_%grid%r2,vcharge_,rho_eq_0,vgc,egc,0)
        END IF
        vxc(1:pawset_%grid%mesh,1:nspin_) = vxc(1:pawset_%grid%mesh,1:nspin_) + &
                                       vgc(1:pawset_%grid%mesh,1:nspin_)
