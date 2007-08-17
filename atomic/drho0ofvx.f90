@@ -4,7 +4,8 @@ subroutine drho0ofvx(drho,dchi0)
 !---------------------------------------------------------------
    use constants, only: e2
    use kinds,     only: DP
-   use ld1inc,    only: nwf, nwfx, zed, oc, psi, ll, enl, vpot, isw, grid
+   use ld1_parameters, only : nwfx
+   use ld1inc,    only: nwf, zed, oc, psi, ll, enl, vpot, isw, grid
    use radial_grids, only: ndmx
    implicit none
    !

@@ -14,7 +14,14 @@ subroutine run_pseudo
   !     with the parameters given in input
   !
   !
-  use ld1inc
+  use kinds, only : dp
+  use radial_grids, only : ndmx
+  use ld1_parameters, only : nwfsx
+  use ld1inc, only : enl, lpaw, nlcc, lsd, latt, pawsetup, &
+                     nstoaets, grid, nspin, iter, rhos, rhoc, &
+                     nwfts, enlts, llts, jjts, iswts, octs, phits, &
+                     vxt, enne, vh, vpsloc, file_potscf, beta, tr2,  &
+                     eps0, file_recon, deld, vpstot, nbeta, ddd, etots
   use atomic_paw, only : new_paw_hamiltonian, paw2us
   implicit none
 

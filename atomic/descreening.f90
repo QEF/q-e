@@ -15,9 +15,15 @@ subroutine descreening
   !     The charge density is computed with the test configuration,
   !     not the one used to generate the pseudopotential
   !      
+  use kinds, only: dp
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc
+  use radial_grids, only: ndmx
+  use ld1_parameters, only: nwfsx
+  use ld1inc, only: grid, nlcc, vxt, lsd, vpstot, vpsloc, file_screen, &
+                    vh, enne, rhoc, latt, rhos, enl, &
+                    nbeta, bmat, qvan, jjs, lls, ikk, pseudotype, &
+                    nwfts, enlts, octs, llts, jjts, phits, nstoaets
   implicit none
 
   integer ::  &

@@ -29,9 +29,18 @@ subroutine gener_pseudo
   !
   !     The construction of a PAW dataset can also be done (experimental)
   !      
+  use kinds, only: dp
+  use radial_grids, only: ndmx
+  use ld1_parameters, only: nwfsx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc
+  use ld1inc, only: grid, lls, jjs, new, psipaw, psi, ecutwfc, ecutrho, &
+                    psipsus, tm, ocs, phis, els, nwfs, nspin, rel, nlcc, &
+                    file_chi, file_beta, file_wfcncgen, file_qvan, &
+                    file_wfcusgen, file_wfcaegen, psccharge, aeccharge, &
+                    qvan, qq, bmat, ddd, betas, nbeta, ikk, pseudotype, &
+                    pawsetup, zval, vpsloc, vpot, vnl, lpaw, rcloc, rcutus, &
+                    enl, enls, rcut, chis, nstoae
   use atomic_paw, only : us2paw, paw2us
   implicit none
 

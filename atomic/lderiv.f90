@@ -14,9 +14,13 @@ subroutine lderiv
   !  computing logarithmic derivatives for Coulomb potential
   !
   !
+  use kinds,     only : dp
+  use radial_grids, only : ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc
+  use ld1_parameters, only : nwfsx
+  use ld1inc,    only : file_logder, grid, vpot, rel, nspin, nld, zed, &
+                        npte, deld, eminld, emaxld, rlderiv
 
   implicit none
 

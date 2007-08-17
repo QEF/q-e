@@ -14,9 +14,14 @@ subroutine ld1_writeout
   !     a multiprojector pseudopotential. It can be in the
   !     Vanderbilt form or in the norm-conserving form
   !
+  use radial_grids, only: ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc
+  use ld1inc, only : file_pseudopw, zed, grid, &
+                     nconf , lpaw, rel, pawsetup, pseudotype, &
+                     rhoc, vnl, phits, vpsloc, & 
+                     elts, llts, octs, rcut, etots, nwfts, &
+                     lmax, lloc, zval, nlc, nnl, alps, alpc, alc, cc, nlcc
   use funct, only : get_dft_name
   use atomic_paw, only : paw_io
   implicit none

@@ -14,10 +14,15 @@ subroutine lderivps
   !  computing logarithmic derivatives for pseudo-potentials
   !  multiple nonlocal projectors are allowed
   !
+  use kinds,     only : DP
+  use radial_grids, only : ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
   use radial_grids, only: series
-  use ld1inc
+  use ld1_parameters, only : nwfsx
+  use ld1inc,    only : grid, nld, nbeta, nspin, rel, ikk, file_logderps, &
+                        betas, ddd, qq, lls, jjs, pseudotype, vpstot, vnl, &
+                        rlderiv, npte, emaxld, eminld, deld
   implicit none
 
   integer  ::       &

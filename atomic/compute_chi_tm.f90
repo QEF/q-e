@@ -14,7 +14,8 @@ subroutine compute_chi_tm(lam,ik,ikk_in,phi_in,chi_out,xc,e)
   !          |chi> = (\epsilon -T -V_{loc)) |psi>
   !      
   use kinds, only : DP
-  use ld1inc
+  use radial_grids, only: ndmx
+  use ld1inc, only: grid, vpot, vpsloc
 
   implicit none
   integer :: &

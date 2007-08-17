@@ -14,9 +14,13 @@
 !     a multiprojector pseudopotential. It can be in the
 !     Vanderbilt form or in the norm-conserving form
 !
-use ld1inc
+use kinds, only : dp
 use funct, only: set_dft_from_indices
 use radial_grids, only: do_mesh
+use ld1inc, only : file_pseudo, title, pseudotype, nlcc, rel, zval, etots, &
+                   grid, ikk, betas, bmat, qq, qvan, rcloc, vpsloc, rhos, &
+                   rhoc, phis, lmax, nwfs, nbeta, rcut, rcutus, &
+                   els, nns, lls, ocs
    implicit none
 
       integer :: &

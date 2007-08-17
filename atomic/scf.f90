@@ -12,8 +12,12 @@ subroutine scf
   !   this routine performs the atomic self-consistent procedure
   !   self-interaction-correction allowed
   !
+  use kinds, only : dp
+  use radial_grids, only : ndmx
   use constants, only: e2
-  use ld1inc
+  use ld1inc, only : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
+                     lsd, rel, latt, enne, vh, beta, nspin, tr2, eps0, &
+                     nwf, nn, ll, jj, enl, oc, isw
   implicit none
 
   logical:: conv

@@ -19,7 +19,8 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   use io_global, only : stdout
   use kinds, only : DP
   use constants, only: pi
-  use ld1inc
+  use radial_grids, only: ndmx
+  use ld1inc, only: grid, tm, rho0
   implicit none
 
   integer ::    &

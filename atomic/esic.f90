@@ -10,7 +10,11 @@
 subroutine esic
   !---------------------------------------------------------------
   !
-  use ld1inc
+  use kinds, only: dp
+  use radial_grids, only: ndmx
+  use ld1inc, only: grid, etot, ehrt, ecxc, ekin, rel, dhrsic, dxcsic, &
+                    nwf, ll,  oc, psi 
+ 
   implicit none
   ! output
   ! local

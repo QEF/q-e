@@ -8,9 +8,10 @@
 !--------------------------------------------------------------
       subroutine write_paw_recon
 !--------------------------------------------------------------
+use kinds,     only : dp
 use io_global, only : stdout, ionode, ionode_id
 use mp,        only : mp_bcast
-use ld1inc
+use ld1inc,    only : file_recon, nwf, nwfts, grid, llts, psi, phits
 implicit none
 
       integer :: i, j, n, m, l, ios, iae, isign

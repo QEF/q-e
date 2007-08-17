@@ -13,7 +13,9 @@
 !     all_electron potential. In input it receives, the point
 !     ik where the cut is done.
 !
-use ld1inc
+use kinds, only: dp
+use radial_grids, only: ndmx
+use ld1inc, only: grid
 IMPLICIT NONE
 
 REAL(DP) :: &

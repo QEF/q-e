@@ -8,10 +8,17 @@
 !--------------------------------------------------------------
 subroutine write_resultsps 
   !--------------------------------------------------------------
+  use kinds,     only : dp
+  use radial_grids, only : ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
   use constants, only : rytoev, eps6
-  use ld1inc
+  use ld1inc,    only : title, rel, zed, zval, lsd, isic, latt, beta, tr2, &
+                  nwfts, nnts, llts, jjts, elts, octs, iswts, enlts, nstoaets, &
+                  grid, enl,  eps0, iter, etot, etots, etot0, &
+                  etots0, ekin, encl, ehrt, ecxc, nlcc, ecc, evxt, epseu, &
+                  dhrsic, dxcsic, file_wavefunctionsps, phits
+       
   use funct, only: get_dft_name
   implicit none
 

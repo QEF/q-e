@@ -16,8 +16,8 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   !      if flag=0 f_l=j_l(r)
   !      if flag=1 f_l=r*j_l(r)
   !
-
-  use ld1inc
+  use kinds, only:dp
+  use ld1inc, only: grid
   implicit none
 
   integer,parameter ::  ncmax=10   ! maximum allowed nc

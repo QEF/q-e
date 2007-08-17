@@ -17,7 +17,10 @@ subroutine read_pseudoupf
   !
   ! PWSCF modules
   !
-  use ld1inc
+  use kinds, only : dp
+  use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, &
+                     zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
+                     lloc, vpsloc, grid, nwfs, bmat, qq, qvan, rhoc, rhos, phis
   use funct, only: set_dft_from_name
   !
   use pseudo_types

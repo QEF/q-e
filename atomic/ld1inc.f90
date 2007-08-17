@@ -10,6 +10,8 @@ module ld1inc
   use ld1_parameters
   use radial_grids, only: radial_grid_type, ndmx
   use atomic_paw, only : paw_t
+  implicit none
+  PRIVATE :: nwfx, nwfsx, ncmax1
   integer, parameter :: lmx=3, lmx2=2*lmx
   !
   !    variables for the all-electron calculation

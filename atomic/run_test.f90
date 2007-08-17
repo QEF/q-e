@@ -12,10 +12,18 @@ subroutine run_test
   !   This routine is a driver to the tests of the pseudopotential
   !---------------------------------------------------------------
   !
+  use kinds, only : dp
   use io_global, only : ionode, ionode_id
   use mp,        only : mp_bcast
-
-  use ld1inc
+  use ld1_parameters, only : nwfx
+  use ld1inc,    only : file_tests, prefix, nconf, rel, etot0, &
+                    nbeta, grid, psi, pseudotype, els, zed, &
+                    rcut, rcutus, rcutts, rcutusts,  etot, etots0, etots, &
+                    nwf,         ll,                oc, el, &
+                    nwfts, nnts, llts, jjts, iswts, octs, elts, nstoaets, &
+                    nwftsc, nntsc, lltsc, jjtsc, iswtsc, octsc, eltsc,nstoaec, &
+                    file_wavefunctions, file_logder, &
+                    file_wavefunctionsps, file_logderps
   implicit none
 
   real(DP) :: oc_old(nwfx)

@@ -14,8 +14,13 @@ subroutine all_electron(ild)
   !  with the parameters given in input
   !
   !
-  use  ld1inc
   use kinds, only : DP
+  use radial_grids, only: ndmx
+!  use  ld1inc
+  use  ld1inc, only: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
+                     deld, encl, etot, ecxc, evxt, ehrt, epseu, ekin, &
+                     vnl, vh, lsd, nspin, nlcc, vdw, nn, ll, oc, nwf, &
+                     zed, zval
   implicit none
 
   logical :: ild    ! if true compute log der

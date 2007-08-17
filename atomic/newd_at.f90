@@ -13,7 +13,9 @@ subroutine newd_at ( )
   !     this routine computes the new D coefficients
   !
   !
-  use ld1inc
+  use kinds, only : dp
+  use radial_grids, only : ndmx
+  use ld1inc, only : ddd, bmat
 
   integer :: &
        ib,jb,n,is,nst

@@ -5,7 +5,8 @@ subroutine dfx_new(dchi0, vx)
 
    use constants, only: pi
    use kinds,     only: DP
-   use ld1inc,    only: nwfx, nwf, nspin, oc, rho, psi, isw, grid
+   use ld1_parameters, only : nwfx
+   use ld1inc,    only: nwf, nspin, oc, rho, psi, isw, grid
    use radial_grids, only: ndmx, hartree
    implicit none
    ! 

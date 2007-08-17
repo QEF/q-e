@@ -12,8 +12,10 @@ subroutine sic_correction(n,vhn1,vhn2,egc)
   !   set up the orbital-dependent selfconsistent potential generated
   !   by the n-th wavefunction - for self-interaction correction
   !
+  use kinds, only : dp
+  use radial_grids, only : ndmx
   use constants, only: e2, fpi
-  use ld1inc
+  use ld1inc, only : nspin, lsd, rel, nlcc, rhoc, grid, psi
   use funct, only: dft_is_gradient
   use radial_grids, only: hartree
   implicit none

@@ -20,7 +20,13 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
   !     If flag is .true. compute all wavefunctions, otherwise only
   !     the wavefunctions with positive occupation.
   !      
-  use ld1inc
+!  use ld1inc
+  use kinds, only: dp
+  use ld1_parameters, only: nwfsx
+  use radial_grids, only: ndmx
+  use ld1inc, only: grid, pseudotype, rel, &
+                    lls, jjs, qq, ikk, ddd, betas, nbeta, vnl, &
+                    nwfts, iswts, octs, llts, jjts, nnts, enlts, phits 
   implicit none
 
   integer ::   &

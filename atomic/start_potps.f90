@@ -13,8 +13,12 @@ subroutine start_potps
   !     This routine computes an initial estimate of the screening
   !     potential
   !
+  use kinds, only : dp
+  use radial_grids, only : ndmx
   use io_global, only : stdout
-  use ld1inc
+  use ld1inc, only : grid, nspin, lsd, nlcc, latt, enne, rhos, rhoc, &
+                     nwfts, llts, jjts, octs, iswts, phits, &
+                     vxt, vh, vpstot, vpsloc
   implicit none
 
   integer :: &

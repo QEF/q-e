@@ -16,7 +16,12 @@
 !
 use kinds, only: DP
 use constants, only: fpi
-use ld1inc
+use radial_grids, only : ndmx
+use ld1_parameters, only : nwfsx
+use ld1inc, only : nlcc, grid, nspin, rhoc, rhos, lsd, vpsloc, vxt, vh, &
+                   encl, ehrt, ecxc, evxt, ekin, ecc, epseu, vnl, &
+                   etots, pseudotype, phits, ikk, nbeta, betas, bmat, &
+                   nwfts, rel, jjts, llts, octs, enlts, jjs, lls
 use funct, only : dft_is_gradient
 implicit none
       real(DP) :: &

@@ -15,8 +15,8 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
   !      
   use io_global, only : stdout, ionode
   use kinds, only : DP
-  use radial_grids, only: series
-  use ld1inc
+  use radial_grids, only: ndmx, series
+  use ld1inc, only:  grid, vpsloc, rho0
 
   implicit none
   integer :: &

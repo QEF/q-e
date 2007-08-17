@@ -3,7 +3,9 @@ SUBROUTINE set_psi_in(ik,l,j,e,psi_out)
 !  This subroutine calculates the all electron wavefunction psi at the 
 !  input energy e
 !
-USE ld1inc
+use kinds, only : dp
+use radial_grids, only : ndmx
+USE ld1inc, only : grid, rel, zed, vpot
 IMPLICIT NONE
 INTEGER :: l, ik    ! input: angular momentum and index of the cut-off radius
 REAL(DP) :: e, j    ! input: energy and total angular momentum

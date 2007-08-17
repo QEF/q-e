@@ -7,7 +7,8 @@ subroutine add_exchange ( energy )
    use io_global, only: stdout
    use kinds,  only: DP
    use constants, only: e2
-   use ld1inc, only: nwfx, nwf, oc, psi, vx, sl3, ll, nn, enl, el, &
+   use ld1_parameters, only : nwfx
+   use ld1inc, only: nwf, oc, psi, vx, sl3, ll, nn, enl, el, &
                      isw, nspin, enzero, grid
    use radial_grids, only: ndmx, hartree
    implicit none

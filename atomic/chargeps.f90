@@ -12,7 +12,11 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   !
   !   calculate the (spherical) pseudo charge density 
   !
-  use ld1inc
+!  use ld1inc
+  use kinds, only: dp
+  use ld1_parameters, only: nwfsx
+  use radial_grids, only: ndmx
+  use ld1inc, only: grid, pseudotype, qvan, nbeta, betas, lls, jjs, ikk
   implicit none
 
   integer :: &

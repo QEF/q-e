@@ -14,8 +14,12 @@ subroutine pseudovloc
   !     The output of the routine are:
   !     vpsloc: the local pseudopotential
   !      
+  use kinds, only : DP
+  use radial_grids, only : ndmx
   use io_global, only : stdout
-  use ld1inc
+  use ld1inc, only : lloc, rcloc, grid, vpot, vpsloc, rel, nsloc, &
+                     phis, els, chis, psipsus, &
+                     jjs, nstoae, enls, new, psi, enl, rcut, psipaw
   implicit none
 
   real(DP) :: &

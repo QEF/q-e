@@ -13,9 +13,11 @@ subroutine set_rho_core
   !      input : all-electron wavefunctions + valence states
   !      output: smoothed core charge for r > rcore
   !
+  use kinds, only : dp
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc
+  use ld1inc, only : nlcc, lpaw, grid, rhoc, aeccharge, psccharge, rcore, &
+                     nwf, oc, rel, core_state, psi, file_core
   implicit none
 
   real(DP) :: drho, const, br1, br2, pi, &

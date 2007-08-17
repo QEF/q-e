@@ -20,7 +20,7 @@ program ld1
   USE global_version,    ONLY : version_number
   USE io_files,          ONLY : nd_nmbr
   USE mp,                ONLY : mp_barrier, mp_end
-  USE ld1inc
+  USE ld1inc,            ONLY : iswitch
   !
   implicit none
   character :: day*9, hour*9

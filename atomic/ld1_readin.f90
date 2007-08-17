@@ -11,9 +11,28 @@ subroutine ld1_readin
   !
   !     This routine reads the input parameters of the calculation
   !
+  use kinds,      ONLY : dp
+  use radial_grids, only: ndmx
+  use ld1_parameters, only: ncmax1, nwfx, nwfsx
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
-  use ld1inc
+  use ld1inc,     only : els, lls, betas, qq, qvan, ikk, nbeta, pseudotype, &
+                         el, nn, ll, jj, oc, isw, nwf,rcut, rcutus, &
+                         enls, nns, lls, jjs, ocs, isws, nwfs, &
+                         eltsc, nntsc, lltsc, jjtsc, octsc, iswtsc, nwftsc, &
+                         rcuttsc, rcutustsc, &
+                         vpsloc, vnl,nld, iswitch, tr2, &
+                         nspin, lsd, rel, isic, latt, vdw, lpaw,  tm, &
+                         grid, zed, lmax, beta, rhoc, nconf, prefix,  &
+                         nnl, jjts, pawsetup, zval, title, &
+                         nlc, rm, rho0, lloc, rcore, rcloc, nlcc, & 
+                         file_pseudo, file_pseudopw, &
+                         file_potscf, file_screen, file_qvan, file_recon, &
+                         file_wfcaegen, file_wfcncgen, file_wfcusgen, &
+                         file_core, file_beta, file_chi, author, &
+                         nld, rlderiv, eminld, emaxld, deld, &
+                         ecutmin, ecutmax, decut
+
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
   use atomic_paw, only : paw_io, paw2us

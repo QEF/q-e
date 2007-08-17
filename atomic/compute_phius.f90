@@ -1,4 +1,3 @@
-
 !
 ! Copyright (C) 2004 PWSCF group
 ! This file is distributed under the terms of the
@@ -17,8 +16,10 @@
 !
 !
 !
+use kinds, only: dp
 use io_global, only : stdout
-use ld1inc
+use radial_grids, only: ndmx
+use ld1inc, only: grid
   implicit none
 
       real(DP) :: &

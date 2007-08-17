@@ -14,7 +14,16 @@ subroutine ld1_setup
   !     the atomic calculation
   !
   !
-  use ld1inc
+  use kinds, only : dp
+  use ld1inc, only : iswitch, lsd, rel,sl3, lmx, nconf, &
+                nbeta, lloc, nsloc, etot, etot0, etots0, vxt,   &
+                file_wavefunctions, file_logder,  &
+                file_wavefunctionsps, file_logderps, &
+                prefix, new, core_state, enls,  &
+                nwf,                       jj,   el,   isw,   oc, nstoae, &
+                nwfs,          lls,        jjs,  els,  isws,  ocs, &
+                nwfts,  nnts,  llts, nnts, jjts, elts, iswts, octs, nstoaets, &
+                nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec
   use funct, only : get_iexch, dft_is_meta, start_exx !, set_dft_from_name
   implicit none
 
