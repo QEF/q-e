@@ -1621,6 +1621,10 @@
         mp_call_count( 36 ) = mp_call_count( 36 ) + 1
         mp_call_sizex( 36 ) = MAX( mp_call_sizex( 36 ), msglen )
 
+#else
+
+        res = msg
+
 #endif
 
       END SUBROUTINE mp_root_sum_rm
