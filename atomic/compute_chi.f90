@@ -36,6 +36,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
        j1(ndmx), aux(ndmx), gi(ndmx),&
        b(4),c(4), arow(ndmx),brow(ndmx),crow(ndmx),drow(ndmx), &
        b0e, g0, g1, g2, &
+       r_clean,         &
        ddx12,           &
        x4l6,            &
        x6l12,           &
@@ -186,11 +187,26 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
      write(stdout,*) lam,n,grid%mesh,grid%r(n)
      call errore('compute_chi','n is too large',1)
   endif
-  !
-  !    clean also after 9 a.u.
-  !
+!
+!    When the input wavefunction is a diverging scattering state 
+!    this routine might become numerically unstable at large r. 
+!    Here chi_out should be 0.0 but it is not due to this instability. 
+!    We now clean chi_out when phi_in > 20.0.
+!    Clean also after 9.0 a.u..
+!     
+  r_clean=100.d0
+  do n=1,grid%mesh
+     if (abs(phi_in(n))>20.0_DP) then
+        r_clean=grid%r(n)
+        exit
+     endif
+  enddo
+  r_clean=min(r_clean,9.0_DP)
+  if (r_clean<grid%r(ikk_in)) &
+     call errore ('compute_chi ','phi_in too large before r_c', 1)
+
   do n=grid%mesh,1,-1
-     if (grid%r(n).lt.9.0_dp) goto 200
+     if (grid%r(n).lt.r_clean) goto 200
      chi_out(n)=0.0_dp
   enddo
 200 continue
