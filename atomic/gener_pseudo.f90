@@ -96,8 +96,6 @@ subroutine gener_pseudo
   endif
   if (pseudotype == 1.and.rel == 2) call errore('gener_pseudo', &
        'not programmed' ,2)
-  if (pseudotype == 3.and. tm) call errore('gener_pseudo', &
-       'not programmed' ,3)
   if (pseudotype /= 3.and. lpaw) call errore('gener_pseudo', &
        'please start from a US for generating a PAW dataset' ,pseudotype)
   psipaw=0.0_dp
@@ -211,7 +209,7 @@ subroutine gener_pseudo
         lbes4=.false.
         if (.not.tm) ecutwfc=max(ecutwfc,2.0_dp*xc(6)**2)
      endif
-     if (tm) then
+     if (tm.and.ik==ikus) then
         call compute_chi_tm(lam,ik,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns))
      else
         call compute_chi(lam,ikk(ns),phis(1,ns),chis(1,ns),xc,enls(ns),lbes4)
