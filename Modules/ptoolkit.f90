@@ -21,245 +21,145 @@
 
     PUBLIC :: rep_matmul_drv
     PUBLIC :: zrep_matmul_drv
+    PUBLIC :: dsqmdst, dsqmcll, dsqmred, dsqmsym
 
     CONTAINS
 
-!==----------------------------------------------==!
-!
-!  My parallel blas
-!
-!==----------------------------------------------==!
-
-SUBROUTINE mattr_drv( m, k, a, lda, b, ldb, nb, dims, coor, comm )
-  !
-  !  Compute B as the transpose of matrix A 
-  !  A and B are distributed on a 2D cartesian processor
-  !  grid in a block cyclic way (as in scalapack),
-  !  using a block size of NB
-  !
-  !     B :=  A'
-  !
-  !  A is a K by M matrix
-  !  B is an M by K matrix
-  !
-  implicit none
-  !
-  INTEGER, INTENT(IN) :: m, k
-  INTEGER, INTENT(IN) :: lda, ldb
-  REAL(DP)            :: a(lda,*), b(ldb,*)
-  INTEGER, INTENT(IN) :: nb, dims(2), coor(2), comm
-  !
-#if defined __MPI
-  !
-  integer ierr
-  integer ndims, rowid, colid
-  integer coosrc(2), coodst(2), ipsrc, ipdst, mpime
-  integer ihsnd, ihrcv
-  logical periods(2)
-  !
-  integer :: iu
-  integer :: i, j, nk, nm
-  integer :: ii, jj
-  integer :: isrc, jsrc
-  integer :: idst, jdst
-  integer :: itag
-  integer :: nmb, nkb 
-  integer :: istatus( MPI_STATUS_SIZE )
-  real(DP), allocatable :: abuf(:,:)
-  !
-  integer :: numroc
-  integer :: indxg2l
-  external :: numroc, indxg2l
-
-  !
-  CALL GRID2D_RANK( 'C', dims(1), dims(2), coor(1), coor(2), mpime )
-  !
-  iu = 200 + mpime
-  !
-  !  Compute the global number of blocks for matrix dimension
-  !
-  nmb = ( m + nb - 1 ) / nb  
-  nkb = ( k + nb - 1 ) / nb
-  !
-  ALLOCATE( abuf( nb, nb ) )
-  !
-  DO i = 1, nmb
-     DO j = 1, nkb
-        !
-        itag = j + nkb * (i-1)
-        !
-        coosrc(1) = MOD( (j-1), dims(1) )
-        coosrc(2) = MOD( (i-1), dims(2) ) 
-        !
-        coodst(1) = MOD( (i-1), dims(1) )
-        coodst(2) = MOD( (j-1), dims(2) ) 
-        !
-        CALL GRID2D_RANK( 'C', dims(1), dims(2), coosrc(1), coosrc(2), ipsrc )
-        CALL GRID2D_RANK( 'C', dims(1), dims(2), coodst(1), coodst(2), ipdst )
-        !
-        jsrc = INDXG2L( 1 + (j-1)*nb, nb, coor(1), 0, dims(1) )
-        isrc = INDXG2L( 1 + (i-1)*nb, nb, coor(2), 0, dims(2) )
-        !
-        jdst = INDXG2L( 1 + (j-1)*nb, nb, coor(2), 0, dims(2) )
-        idst = INDXG2L( 1 + (i-1)*nb, nb, coor(1), 0, dims(1) )
-        !
-        nk = MIN( nb, k - (j-1)*nb ) !  number of element in the block
-        nm = MIN( nb, m - (i-1)*nb ) !  number of element in the block
-        !
-        IF( ipsrc == ipdst ) THEN
-          IF( ipsrc == mpime ) THEN
-            DO ii = 1, nm
-              DO jj = 1, nk
-                b( idst + ii - 1, jdst + jj - 1 ) = a( jsrc + jj - 1, isrc + ii - 1 )
-              END DO
-            END DO
-          END IF
-        ELSE
-          IF( ipsrc == mpime ) THEN
-            DO ii = 1, nm
-              DO jj = 1, nk
-                abuf( ii, jj ) = a( jsrc + jj - 1, isrc + ii - 1 )
-                !
-              END DO
-            END DO
-            CALL MPI_ISEND( abuf, nb*nb, MPI_DOUBLE_PRECISION, ipdst, itag, comm, ihsnd, ierr )
-            CALL mpi_wait(ihsnd, istatus, ierr)
-          ELSE IF( ipdst == mpime ) THEN
-            CALL MPI_IRECV( abuf, nb*nb, MPI_DOUBLE_PRECISION, ipsrc, itag, comm, ihrcv, ierr )
-            CALL mpi_wait(ihrcv, istatus, ierr)
-            DO jj = 1, nk
-              DO ii = 1, nm
-                !
-                b( idst + ii - 1, jdst + jj - 1 ) = abuf( ii, jj )
-              END DO
-            END DO
-          END IF
-        END IF 
-        !
-     END DO
-  END DO
-
-#else
-
-  INTEGER :: i, j
-
-  DO j = 1, k
-     DO i = 1, m
-        B( i, j ) = A( j, i )
-     END DO
-  END DO
-
-#endif
-
-  RETURN
-
-END SUBROUTINE mattr_drv
-
 ! ---------------------------------------------------------------------------------
 
-SUBROUTINE matsplit_drv( m, k, ar, ldar, a, lda, nb, dims, coor, comm )
+SUBROUTINE dsqmdst( n, ar, ldar, a, lda, desc )
+  !
+  !  Double precision SQuare Matrix DiSTribution
+  !  This sub. take a replicated square matrix "ar" and distribute it
+  !  across processors as described by descriptor "desc"
+  !
+  USE kinds
+  USE descriptors
   !
   implicit none
   !
-  INTEGER, INTENT(IN) :: m, k
+  INTEGER, INTENT(IN) :: n
   INTEGER, INTENT(IN) :: ldar
   REAL(DP)            :: ar(ldar,*)  !  matrix to be splitted, replicated on all proc
   INTEGER, INTENT(IN) :: lda
   REAL(DP)            :: a(lda,*)
-  INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
+  INTEGER, INTENT(IN) :: desc( descla_siz_ )
   !
-  INTEGER :: i, j, nra, nca, ii, jj
+  REAL(DP), PARAMETER :: zero = 0_DP
   !
-  INTEGER  :: numroc, INDXL2G
-  EXTERNAL :: numroc, INDXL2G
+  INTEGER :: i, j, nr, nc, ic, ir, nx
+  !
+  IF( desc( lambda_node_ ) <= 0 ) THEN
+     RETURN
+  END IF
 
-  nra = NUMROC( m, nb, coor(1), 0, dims(1) )  !  total number of local row for matrix A, C
-  nca = NUMROC( k, nb, coor(2), 0, dims(2) )  !  total number of local columns of A
+  nx  = desc( la_nx_ )
+  ir  = desc( ilar_ )
+  ic  = desc( ilac_ )
+  nr  = desc( nlar_ )
+  nc  = desc( nlac_ )
 
-  do j = 1, nca
-     jj = INDXL2G( j, NB, coor(2), 0, dims(2) )
-     do i = 1, nra
-        ii = INDXL2G( i, NB, coor(1), 0, dims(1) )
-        a( i, j ) = ar( ii, jj )
-     end do
-  end do
+  IF( lda < nx ) &
+     CALL errore( " dsqmdst ", " inconsistent dimension lda ", lda )
+  IF( n /= desc( la_n_ ) ) &
+     CALL errore( " dsqmdst ", " inconsistent dimension n ", n )
+
+  DO j = 1, nc
+     DO i = 1, nr
+        a( i, j ) = ar( i + ir - 1, j + ic - 1 )
+     END DO
+     DO i = nr+1, nx
+        a( i, j ) = zero
+     END DO
+  END DO
+  DO j = nc + 1, nx
+     DO i = 1, nx
+        a( i, j ) = zero
+     END DO
+  END DO
 
   RETURN
 
-END SUBROUTINE matsplit_drv
+END SUBROUTINE dsqmdst
 
 ! ---------------------------------------------------------------------------------
 
-SUBROUTINE matmerge_drv( m, k, a, lda, ar, ldar, nb, dims, coor, comm )
+SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
+  !
+  !  Double precision SQuare Matrix CoLLect
+  !  This sub. take a distributed square matrix "a" and collect 
+  !  the block assigned to processors into a replicated matrix "ar",
+  !  matrix is distributed as described by descriptor desc
+  !
+  USE kinds
+  USE descriptors
   !
   implicit none
   !
-  INTEGER, INTENT(IN) :: m, k
+  INTEGER, INTENT(IN) :: n
   INTEGER, INTENT(IN) :: ldar
   REAL(DP)            :: ar(ldar,*)  !  matrix to be merged, replicated on all proc
   INTEGER, INTENT(IN) :: lda
   REAL(DP)            :: a(lda,*)
-  INTEGER, INTENT(IN) :: nb, coor(2), dims(2), comm
+  INTEGER, INTENT(IN) :: desc( descla_siz_ )
+  INTEGER, INTENT(IN) :: comm
   !
-  INTEGER :: i, j, ii, jj, ierr
+  INTEGER :: i, j
 
 #if defined __MPI
   !
-
-  INTEGER :: jsrc, isrc, ipsrc, coosrc(2)
-  INTEGER :: nmb, nkb, nk, nm, mpime
+  INTEGER :: np, nx, ipc, ipr, npr, npc, noff
+  INTEGER :: ierr, ir, ic, nr, nc
 
   REAL(DP), ALLOCATABLE :: buf(:,:)
   !
-  INTEGER  :: INDXG2L
-  EXTERNAL :: INDXG2L
-  !
-  CALL GRID2D_RANK( 'C', dims(1), dims(2), coor(1), coor(2), mpime )
-
-  nmb = ( m + nb - 1 ) / nb  
-  nkb = ( k + nb - 1 ) / nb
-
-  ALLOCATE( buf( nb, nb ) )
-
-  DO j = 1, nkb
-     DO i = 1, nmb
-        !
-        coosrc(1) = MOD( (i-1), dims(1) )
-        coosrc(2) = MOD( (j-1), dims(2) )
-        !
-        CALL GRID2D_RANK( 'C', dims(1), dims(2), coosrc(1), coosrc(2), ipsrc )
-        !
-        isrc = INDXG2L( 1 + (i-1)*nb, nb, coor(1), 0, dims(1) )
-        jsrc = INDXG2L( 1 + (j-1)*nb, nb, coor(2), 0, dims(2) )
-        !
-        nm = MIN( nb, m - (i-1)*nb ) !  number of element in the block
-        nk = MIN( nb, k - (j-1)*nb ) !  number of element in the block
-
-        IF( ipsrc == mpime ) THEN
-           DO jj = 1, nk
-              DO ii = 1, nm
-                 buf( ii, jj ) = a( isrc + ii - 1, jsrc + jj - 1 )
+  IF( desc( lambda_node_ ) > 0 ) THEN
+     !
+     np = desc( la_npr_ ) * desc( la_npc_ ) 
+     nx = desc( la_nx_ )
+     npr = desc( la_npr_ )
+     npc = desc( la_npc_ )
+     !
+     IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
+        ALLOCATE( buf( nx, nx * np ) )
+     ELSE
+        ALLOCATE( buf( 1, 1 ) )
+     END IF
+     !
+     IF( lda /= nx ) &
+        CALL errore( " dsqmcll ", " inconsistent dimension lda ", lda )
+     !
+     IF( desc( la_n_ ) /= n ) &
+        CALL errore( " dsqmcll ", " inconsistent dimension n ", n )
+     !
+     CALL mpi_gather( a, nx*nx, mpi_double_precision, &
+                      buf, nx*nx, mpi_double_precision, 0, desc( la_comm_ ) , ierr )
+     !
+     IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
+        DO ipc = 1, npc
+           CALL descla_local_dims( ic, nc, n, nx, npc, ipc-1 )
+           DO ipr = 1, npr
+              CALL descla_local_dims( ir, nr, n, nx, npr, ipr-1 )
+              noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
+              DO j = 1, nc
+                 DO i = 1, nr
+                    ar( i + ir - 1, j + ic - 1 ) = buf( i, j + noff )
+                 END DO
               END DO
            END DO
-        ENDIF
-        !
-        CALL MPI_BCAST( buf, nb*nb, MPI_DOUBLE_PRECISION, ipsrc, comm, ierr )
-        !
-        do jj = 1, nk
-           do ii = 1, nm
-              ar( ii + (i-1)*nb, jj + (j-1)*nb ) = buf( ii, jj )
-           end do
-        end do
-        !
-     END DO
-  END DO
+        END DO
+     END IF
+     !
+     DEALLOCATE( buf )
+     !
+  END IF
   !
-  DEALLOCATE( buf )
+  CALL mpi_bcast( ar,  ldar * n, mpi_double_precision, 0, comm, ierr )   
 
 #else
 
-  DO j = 1, k
-     DO i = 1, m
+  DO j = 1, n
+     DO i = 1, n
         ar( i, j ) = a( i, j )
      END DO
   END DO
@@ -267,7 +167,493 @@ SUBROUTINE matmerge_drv( m, k, a, lda, ar, ldar, nb, dims, coor, comm )
 #endif
 
   RETURN
-END SUBROUTINE matmerge_drv
+END SUBROUTINE dsqmcll
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE dsqmwpb( n, a, lda, desc )
+   !
+   ! Double precision SQuare Matrix WiPe Border subroutine
+   !
+   USE kinds
+   USE descriptors
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP)            :: a(lda,*)  !  matrix to be redistributed into b
+   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+   !
+   INTEGER :: i, j
+   !
+   DO j = 1, desc( nlac_ )
+      DO i = desc( nlar_ ) + 1, desc( la_nx_ )
+         a( i, j ) = 0_DP
+      END DO
+   END DO
+   DO j = desc( nlac_ ) + 1, desc( la_nx_ )
+      DO i = 1, desc( la_nx_ )
+         a( i, j ) = 0_DP
+      END DO
+   END DO
+   !
+   RETURN
+END SUBROUTINE dsqmwpb
+
+! ---------------------------------------------------------------------------------
+
+SUBROUTINE dsqmsym( n, a, lda, desc )
+   !
+   ! Double precision SQuare Matrix SYMmetrization
+   !
+   USE kinds
+   USE descriptors
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: n
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP)            :: a(lda,*) 
+   INTEGER, INTENT(IN) :: desc( descla_siz_ )
+#if defined __MPI
+   INTEGER :: istatus( MPI_STATUS_SIZE )
+#endif
+   INTEGER :: i, j
+   INTEGER :: comm 
+   INTEGER :: nr, nc, dest, sreq, ierr, sour
+   REAL(DP) :: atmp
+
+#if defined __MPI
+
+   IF( desc( lambda_node_ ) <= 0 ) THEN
+      RETURN
+   END IF
+
+   IF( n /= desc( la_n_ ) ) &
+      CALL errore( " dsqmsym ", " wrong global dim n ", n )
+   IF( lda /= desc( la_nx_ ) ) &
+      CALL errore( " dsqmsym ", " wrong leading dim lda ", lda )
+
+   comm = desc( la_comm_ )
+
+   nr = desc( nlar_ ) 
+   nc = desc( nlac_ ) 
+   IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+      !
+      !  diagonal block, procs work locally
+      !
+      DO j = 1, nc
+         DO i = j + 1, nr
+            a(i,j) = a(j,i)
+         END DO
+      END DO
+      !
+   ELSE IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+      !
+      !  super diagonal block, procs send the block to sub diag.
+      !
+      CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
+                             desc( la_myc_ ), desc( la_myr_ ), dest )
+      CALL mpi_isend( a, lda*nr, MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
+      !
+   ELSE IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
+      !
+      !  sub diagonal block, procs receive the block from super diag,
+      !  then transpose locally
+      !
+      CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
+                             desc( la_myc_ ), desc( la_myr_ ), sour )
+      CALL mpi_recv( a, lda*nc, MPI_DOUBLE_PRECISION, sour, 1, comm, istatus, ierr )
+      !
+      DO j = 1, nr
+         DO i = j + 1, nc
+            atmp = a(i,j)
+            a(i,j) = a(j,i)
+            a(j,i) = atmp
+         END DO
+      END DO
+      !
+   END IF
+
+   IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+      CALL MPI_Wait( sreq, istatus, ierr )
+   END IF
+
+#else
+
+   DO j = 1, n
+      !
+      DO i = j + 1, n
+         !
+         a(i,j) = a(j,i)
+         !
+      END DO
+      !
+   END DO
+
+#endif
+
+   RETURN
+END SUBROUTINE dsqmsym
+
+! ---------------------------------------------------------------------------------
+
+
+SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
+   !
+   ! Double precision SQuare Matrix REDistribution
+   ! 
+   ! Copy a global "na * na" matrix locally stored in "a",
+   !  and distributed as described by "desca", into a larger
+   !  global "nb * nb" matrix stored in "b" and distributed
+   !  as described in "descb".
+   ! 
+   ! If you want to read, get prepared for an headache!
+   ! Written struggling by Carlo Cavazzoni.
+   !
+   USE kinds
+   USE descriptors
+   !
+   IMPLICIT NONE
+   !
+   INTEGER, INTENT(IN) :: na
+   INTEGER, INTENT(IN) :: lda
+   REAL(DP)            :: a(lda,*)  !  matrix to be redistributed into b
+   INTEGER, INTENT(IN) :: desca( descla_siz_ )
+   INTEGER, INTENT(IN) :: nb
+   INTEGER, INTENT(IN) :: ldb
+   REAL(DP)            :: b(ldb,*)
+   INTEGER, INTENT(IN) :: descb( descla_siz_ )
+
+   INTEGER :: ipc, ipr, npc, npr
+   INTEGER :: ipr_old, ir_old, nr_old, irx_old
+   INTEGER :: ipc_old, ic_old, nc_old, icx_old
+   INTEGER :: myrow, mycol, ierr, rank
+   INTEGER :: col_comm, row_comm, comm, sreq
+   INTEGER :: nr_new, ir_new, irx_new, ir, nr, nrtot, irb, ire
+   INTEGER :: nc_new, ic_new, icx_new, ic, nc, nctot, icb, ice
+   INTEGER :: ib, i, j, myid
+   INTEGER :: nrsnd( desca( la_npr_ ) )
+   INTEGER :: ncsnd( desca( la_npr_ ) )
+   INTEGER :: displ( desca( la_npr_ ) )
+   INTEGER :: irb_new( desca( la_npr_ ) )
+   INTEGER :: ire_new( desca( la_npr_ ) )
+   INTEGER :: icb_new( desca( la_npr_ ) )
+   INTEGER :: ice_new( desca( la_npr_ ) )
+   REAL(DP), ALLOCATABLE :: buf(:)
+   REAL(DP), ALLOCATABLE :: ab(:,:)
+   REAL(DP), ALLOCATABLE :: tst1(:,:)
+   REAL(DP), ALLOCATABLE :: tst2(:,:)
+#if defined __MPI
+    INTEGER :: istatus( MPI_STATUS_SIZE )
+#endif
+
+   IF( desca( lambda_node_ ) <= 0 ) THEN
+      RETURN
+   END IF
+
+   ! preliminary consistency checks
+
+   IF( nb < na ) &
+      CALL errore( " dsqmred ", " nb < na, this sub. work only with nb >= na ", nb )
+   IF( nb /= descb( la_n_ ) ) &
+      CALL errore( " dsqmred ", " wrong global dim nb ", nb )
+   IF( na /= desca( la_n_ ) ) &
+      CALL errore( " dsqmred ", " wrong global dim na ", na )
+   IF( ldb /= descb( la_nx_ ) ) &
+      CALL errore( " dsqmred ", " wrong leading dim ldb ", ldb )
+   IF( lda /= desca( la_nx_ ) ) &
+      CALL errore( " dsqmred ", " wrong leading dim lda ", lda )
+
+   npr   = desca( la_npr_ )
+   myrow = desca( la_myr_ )
+   npc   = desca( la_npc_ )
+   mycol = desca( la_myc_ )
+   comm  = desca( la_comm_ )
+
+#if defined __MPI
+
+   ! split communicator into row and col communicators
+
+   CALL MPI_Comm_rank( comm, myid, ierr )
+
+   CALL MPI_Comm_split( comm, mycol, myrow, col_comm, ierr )
+   CALL MPI_Comm_split( comm, myrow, mycol, row_comm, ierr )
+
+   CALL MPI_Comm_rank( col_comm, rank, ierr )
+   IF( rank /= myrow ) &
+      CALL errore( " dsqmred ", " building col_comm ", rank )
+
+   CALL MPI_Comm_rank( row_comm, rank, ierr )
+   IF( rank /= mycol ) &
+      CALL errore( " dsqmred ", " building row_comm ", rank )
+
+   ALLOCATE( buf( descb( la_nx_ ) * descb( la_nx_ ) ) )
+   ALLOCATE( ab( descb( la_nx_ ), desca( la_nx_ ) ) )
+
+   ! write( 3000 + myid, * ) 'na, nb = ', na, nb
+
+   DO j = 1, descb( nlac_ )
+      DO i = 1, descb( nlar_ )
+         b( i, j ) = 0.0d0
+      END DO
+   END DO
+
+   ab = 0.0d0
+
+   ! first redistribute rows, column groups work in parallel
+
+   DO ipr = 1, npr
+      !
+      CALL descla_local_dims( ir_new, nr_new, nb, descb( la_nx_ ), npr, ipr-1 )
+      !
+      irx_new = ir_new + nr_new - 1
+
+      ! write( 3000 + myid, * ) 'ir_new, nr_new, irx_new = ', ir_new, nr_new, irx_new
+      !
+      DO ipr_old = 1, npr
+         !
+         CALL descla_local_dims( ir_old, nr_old, na, desca( la_nx_ ), npr, ipr_old-1 )
+         !
+         irx_old = ir_old + nr_old - 1
+         !
+         ! write( 3000 + myid, * ) 'ir_old, nr_old, irx_old = ', ir_old, nr_old, irx_old
+         !
+         IF( ir_old >= ir_new .AND. ir_old <= irx_new ) THEN
+            !
+            nrsnd( ipr_old ) = MIN( nr_old, irx_new - ir_old + 1 )
+            irb = 1
+            ire = nrsnd( ipr_old )
+            irb_new( ipr_old ) = ir_old - ir_new + 1
+            ire_new( ipr_old ) = irb_new( ipr_old ) + nrsnd( ipr_old ) - 1
+            !
+         ELSE IF( ir_new >= ir_old .AND. ir_new <= irx_old ) THEN
+            !
+            nrsnd( ipr_old ) = irx_old - ir_new + 1
+            irb = ir_new - ir_old + 1 
+            ire = nr_old
+            irb_new( ipr_old ) = 1
+            ire_new( ipr_old ) = nrsnd( ipr_old )
+            !
+         ELSE
+            nrsnd( ipr_old ) = 0
+            irb = 0
+            ire = 0
+            irb_new( ipr_old ) = 0
+            ire_new( ipr_old ) = 0
+         END IF
+         !
+         ! write( 3000 + myid, * ) 'ipr_old, nrsnd            = ', ipr_old, nrsnd( ipr_old )
+         ! write( 3000 + myid, * ) 'ipr_old, irb, ire         = ', ipr_old, irb, ire
+         ! write( 3000 + myid, * ) 'ipr_old, irb_new, ire_new = ', ipr_old, irb_new( ipr_old ), ire_new( ipr_old )
+         !
+         IF( ( myrow == ipr_old - 1 ) .AND. ( nrsnd( ipr_old ) > 0 ) ) THEN
+            IF(  myrow /= ipr - 1 ) THEN
+               ib = 0
+               DO j = 1, desca( nlac_ )
+                  DO i = irb, ire
+                     ib = ib + 1
+                     buf( ib ) = a( i, j )
+                  END DO
+               END DO
+               CALL mpi_isend( buf, ib, MPI_DOUBLE_PRECISION, ipr-1, ipr, col_comm, sreq, ierr )
+            ELSE
+               DO j = 1, desca( nlac_ )
+                  ib = irb
+                  DO i = irb_new( ipr_old ), ire_new( ipr_old )
+                     ab( i, j ) = a( ib, j )
+                     ib = ib + 1
+                  END DO
+               END DO
+            END IF
+         END IF
+         !
+         IF( nrsnd( ipr_old ) /= ire - irb + 1 ) &
+            CALL errore( " dsqmred ", " somthing wrong with row 1 ", nrsnd( ipr_old ) )
+         IF( nrsnd( ipr_old ) /= ire_new( ipr_old ) - irb_new( ipr_old ) + 1 ) &
+            CALL errore( " dsqmred ", " somthing wrong with row 2 ", nrsnd( ipr_old ) )
+         !
+         nrsnd( ipr_old ) = nrsnd( ipr_old ) * desca( nlac_ )
+         !
+      END DO
+      !
+      IF( myrow == ipr - 1 ) THEN
+         DO ipr_old = 1, npr
+            IF( nrsnd( ipr_old ) > 0 ) THEN
+               IF(  myrow /= ipr_old - 1 ) THEN
+                  CALL mpi_recv( buf, nrsnd(ipr_old), MPI_DOUBLE_PRECISION, ipr_old-1, ipr, col_comm, istatus, ierr )
+                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib) 
+                  IF( ib /= nrsnd(ipr_old) ) &
+                     CALL errore( " dsqmred ", " somthing wrong with row 3 ", ib )
+                  ib = 0
+                  DO j = 1, desca( nlac_ )
+                     DO i = irb_new( ipr_old ), ire_new( ipr_old )
+                        ib = ib + 1
+                        ab( i, j ) = buf( ib )
+                     END DO
+                  END DO
+               END IF
+            END IF
+         END DO
+      ELSE
+         DO ipr_old = 1, npr
+            IF( myrow == ipr_old - 1 .AND. nrsnd( ipr_old ) > 0 ) THEN
+                CALL MPI_Wait( sreq, istatus, ierr )
+            END IF
+         END DO
+      END IF
+      !
+   END DO
+
+   ! then redistribute cols, row groups work in parallel
+
+   DO ipc = 1, npc
+      !
+      CALL descla_local_dims( ic_new, nc_new, nb, descb( la_nx_ ), npc, ipc-1 )
+      !
+      icx_new = ic_new + nc_new - 1
+      !
+      ! write( 3000 + myid, * ) 'ic_new, nc_new, icx_new = ', ic_new, nc_new, icx_new
+      !
+      DO ipc_old = 1, npc
+         !
+         CALL descla_local_dims( ic_old, nc_old, na, desca( la_nx_ ), npc, ipc_old-1 )
+         !
+         icx_old = ic_old + nc_old - 1
+         !
+         ! write( 3000 + myid, * ) 'ic_old, nc_old, icx_old = ', ic_old, nc_old, icx_old
+         !
+         IF( ic_old >= ic_new .AND. ic_old <= icx_new ) THEN
+            !
+            ncsnd( ipc_old ) = MIN( nc_old, icx_new - ic_old + 1 )
+            icb = 1
+            ice = ncsnd( ipc_old )
+            icb_new( ipc_old ) = ic_old - ic_new + 1
+            ice_new( ipc_old ) = icb_new( ipc_old ) + ncsnd( ipc_old ) - 1
+            !
+         ELSE IF( ic_new >= ic_old .AND. ic_new <= icx_old ) THEN
+            !
+            ncsnd( ipc_old ) = icx_old - ic_new + 1
+            icb = ic_new - ic_old + 1 
+            ice = nc_old
+            icb_new( ipc_old ) = 1
+            ice_new( ipc_old ) = ncsnd( ipc_old )
+            !
+         ELSE
+            ncsnd( ipc_old ) = 0
+            icb = 0
+            ice = 0
+            icb_new( ipc_old ) = 0
+            ice_new( ipc_old ) = 0
+         END IF
+         !
+         ! write( 3000 + myid, * ) 'ipc_old, ncsnd            = ', ipc_old, ncsnd( ipc_old )
+         ! write( 3000 + myid, * ) 'ipc_old, icb, ice         = ', ipc_old, icb, ice
+         ! write( 3000 + myid, * ) 'ipc_old, icb_new, ice_new = ', ipc_old, icb_new( ipc_old ), ice_new( ipc_old )
+
+         IF( ( mycol == ipc_old - 1 ) .AND. ( ncsnd( ipc_old ) > 0 ) ) THEN
+            IF(  mycol /= ipc - 1 ) THEN
+               ib = 0
+               DO j = icb, ice
+                  DO i = 1, descb( la_nx_ )
+                     ib = ib + 1
+                     buf( ib ) = ab( i, j )
+                  END DO
+               END DO
+               CALL mpi_isend( buf, ib, MPI_DOUBLE_PRECISION, ipc-1, ipc, row_comm, sreq, ierr )
+            ELSE
+               ib = icb
+               DO j = icb_new( ipc_old ), ice_new( ipc_old )
+                  DO i = 1, descb( la_nx_ )
+                        b( i, j ) = ab( i, ib )
+                  END DO
+                  ib = ib + 1
+               END DO
+            END IF
+         END IF
+
+         IF( ncsnd( ipc_old ) /= ice-icb+1 ) &
+            CALL errore( " dsqmred ", " somthing wrong with col 1 ", ncsnd( ipc_old ) )
+         IF( ncsnd( ipc_old ) /= ice_new( ipc_old ) - icb_new( ipc_old ) + 1 ) &
+            CALL errore( " dsqmred ", " somthing wrong with col 2 ", ncsnd( ipc_old ) )
+         !
+         ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb( la_nx_ )
+         !
+      END DO
+      !
+      IF( mycol == ipc - 1 ) THEN
+         DO ipc_old = 1, npc
+            IF( ncsnd( ipc_old ) > 0 ) THEN
+               IF(  mycol /= ipc_old - 1 ) THEN
+                  ib = icb_new( ipc_old )
+                  CALL mpi_recv( b( 1, ib ), ncsnd(ipc_old), MPI_DOUBLE_PRECISION, ipc_old-1, ipc, row_comm, istatus, ierr )
+                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib) 
+                  IF( ib /= ncsnd(ipc_old) ) &
+                     CALL errore( " dsqmred ", " somthing wrong with col 3 ", ib )
+               END IF
+            END IF
+         END DO
+      ELSE
+         DO ipc_old = 1, npc
+            IF( mycol == ipc_old - 1 .AND. ncsnd( ipc_old ) > 0 ) THEN
+                CALL MPI_Wait( sreq, istatus, ierr )
+            END IF
+         END DO
+      END IF
+      !
+   END DO
+
+   DEALLOCATE( ab )
+   DEALLOCATE( buf )
+
+   CALL mpi_comm_free( col_comm, ierr )
+   CALL mpi_comm_free( row_comm, ierr )
+
+#if defined __PIPPO
+
+   !  this is for debugging, tests through global matrix, if
+   !  the two matrix (pre and before the redistribution) coincide.
+
+   ALLOCATE( tst1( nb, nb ) )
+   ALLOCATE( tst2( nb, nb ) )
+   ALLOCATE( ab( nb, nb ) )
+
+   ab = 0.0d0
+
+   do j = 1, desca( nlac_ )
+   do i = 1, desca( nlar_ )
+      ab( i + desca( ilar_ ) - 1, j + desca( ilac_ ) - 1 ) = a( i , j )
+   end do
+   end do
+
+   CALL MPI_REDUCE( ab, tst1, nb*nb, MPI_DOUBLE_PRECISION, MPI_SUM, 0, comm, ierr )
+
+   ab = 0.0d0
+
+   do j = 1, descb( nlac_ )
+   do i = 1, descb( nlar_ )
+      ab( i + descb( ilar_ ) - 1, j + descb( ilac_ ) - 1 ) = b( i , j )
+   end do
+   end do
+
+   CALL MPI_REDUCE( ab, tst2, nb*nb, MPI_DOUBLE_PRECISION, MPI_SUM, 0, comm, ierr )
+
+   IF( myid == 0 ) THEN
+      write( 1000, * ) na, nb, SUM( ABS( tst2 - tst1 ) ) 
+   END IF
+
+   DEALLOCATE( ab )
+   DEALLOCATE( tst2 )
+   DEALLOCATE( tst1 )
+
+#endif
+
+#endif
+
+   RETURN
+END SUBROUTINE dsqmred
+
 
 ! ---------------------------------------------------------------------------------
 
@@ -308,214 +694,6 @@ SUBROUTINE matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
 END SUBROUTINE
 
 ! ---------------------------------------------------------------------------------
-
-SUBROUTINE matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC, nb, dims, coor, comm )
-  !
-  implicit none
-  !
-  CHARACTER(LEN=1), INTENT(IN) :: transa, transb
-  INTEGER,  INTENT(IN) :: m, n, k
-  REAL(DP), INTENT(IN) :: alpha, beta
-  INTEGER,  INTENT(IN) :: lda, ldb, ldc
-  REAL(DP) :: a(lda,*), b(ldb,*), c(ldc,*)
-  INTEGER, INTENT(IN) :: nb, dims(2), coor(2), comm
-  !
-  !  DGEMM  PERFORMS ONE OF THE MATRIX-MATRIX OPERATIONS
-  !
-  !     C := ALPHA*OP( A )*OP( B ) + BETA*C,
-  !
-  !  WHERE  OP( X ) IS ONE OF
-  !
-  !     OP( X ) = X   OR   OP( X ) = X',
-  !
-  !  ALPHA AND BETA ARE SCALARS, AND A, B AND C ARE MATRICES, WITH OP( A )
-  !  AN M BY K MATRIX,  OP( B )  A  K BY N MATRIX AND  C AN M BY N MATRIX.
-  !
-  !
-  !
-
-#if defined __MPI
-  !
-  integer ierr
-  integer ndims, rowid, colid
-  integer comm_row, comm_col
-  !
-  integer :: ib, jb, kb, ibl, kbl, jbl
-  integer :: i, j, kk, ni, nj, nk, nm, il, jl
-  integer :: nnb, nmb, nkb 
-  integer :: nr, nra, nca, nc, nrb, ncb, ii, jj
-  integer :: nrt, ncat, nct, nrbt
-  real(DP), allocatable :: abuf(:,:), bbuf(:,:)
-  real(DP), allocatable :: at(:,:)
-  real(DP), allocatable :: bt(:,:)
-  !
-  integer :: numroc
-  integer :: indxg2l
-  external :: numroc, indxg2l
-  !
-  IF( dims(1) * dims(2) == 1 ) THEN
-
-     !  if there is only one proc no need of using parallel alg.
-
-     call dgemm( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
-
-     RETURN
-
-  END IF
-  !
-
-  CALL MPI_COMM_SPLIT( COMM, coor(2), coor(1), COMM_COL, IERR )
-  CALL MPI_COMM_RANK( COMM_COL, rowid, IERR )
-  !
-  CALL MPI_COMM_SPLIT( COMM, coor(1), coor(2), COMM_ROW, IERR )
-  CALL MPI_COMM_RANK( COMM_ROW, colid, IERR )
-  !
-  !  Compute the global number of blocks for matrix dimension
-  !
-  nmb = ( m + nb - 1 ) / nb  
-  !
-  nnb = ( n + nb - 1 ) / nb
-  !
-  nkb = ( k + nb - 1 ) / nb
-  !
-  !  Compute the total number of local row for matrix A, C
-  !
-  nr  = NUMROC( m, nb, coor(1), 0, dims(1) )  ! local row of C
-  !
-  nra = NUMROC( m, nb, coor(1), 0, dims(1) )  ! local row of OP( A )
-  nca = NUMROC( k, nb, coor(2), 0, dims(2) )  ! local columns of OP( A )
-  !
-  nrb = NUMROC( k, nb, coor(1), 0, dims(1) )  ! local row of OP( B )
-  ncb = NUMROC( n, nb, coor(2), 0, dims(2) )  ! local colum of OP( B )
-  !
-  nc  = NUMROC( n, nb, coor(2), 0, dims(2) )  ! local colum of C 
-  !
-  IF( transa == 'T' .OR. transa == 't' ) THEN
-    !
-    ALLOCATE( at( nra, nca ) )
-    !
-    CALL mattr_drv( m, k, a, lda, at, nra, nb, dims, coor, comm )
-    !
-  END IF
-  !
-  IF( transb == 'T' .OR. transb == 't' ) THEN
-    !
-    ALLOCATE( bt( nrb, ncb ) )
-    !
-    CALL mattr_drv( k, n, b, ldb, bt, nrb, nb, dims, coor, comm )
-    !
-  END IF
-  !
-  !  Scale matrix C
-  !
-  CALL matscal_drv( m, n, beta, c, ldc, nb, dims, coor, comm )
-  !
-  !  loop over the rows/columns blocks of matrix OP(A)/OP(B)
-  !
-  do kb = 1, nkb
-    !
-    kk  = ( kb - 1 ) * nb + 1  !  first element of the block (global index)
-    nk = MIN( nb, k - kk + 1 ) !  number of element in the block
-
-    colid = MOD( (kb-1), dims(2) )  ! processor owning the block
-    rowid = MOD( (kb-1), dims(1) )
-
-    allocate( abuf( nr, nk ) )
-
-    if( colid == coor(2) ) then
-      nrt = 0
-      ibl = 0
-      kbl = INDXG2L( 1 + (kb-1)*nb, nb, coor(2), 0, dims(2) )
-      do ib = 1 + coor(1), nmb, dims(1)
-        i = ( ib - 1 ) * nb + 1
-        ni = MIN( nb, m - i + 1 )
-        IF( transa == 'T' .OR. transa == 't' ) THEN
-          do jj = 1, nk
-            do ii = 1, ni
-              abuf( ii + nrt, jj ) = at( ii + ibl*nb, jj + kbl - 1 )
-            end do
-          end do
-        ELSE
-          do jj = 1, nk
-            do ii = 1, ni
-              abuf( ii + nrt, jj ) = a( ii + ibl*nb, jj + kbl - 1 )
-            end do
-          end do
-        END IF
-        nrt = nrt + ni
-        ibl = ibl + 1
-      end do
-    end if
-    CALL MPI_BCAST( abuf(1,1), nr*nk, MPI_DOUBLE_PRECISION, colid, COMM_ROW, IERR )
-
-    allocate( bbuf( nk, nc ) )
-
-    if( rowid == coor(1) ) then
-      nct = 0 
-      jbl = 0
-      kbl = INDXG2L( 1 + (kb-1)*nb, nb, coor(1), 0, dims(1) )
-      do jb = 1 + coor(2), nnb, dims(2)
-        j = ( jb - 1 ) * nb + 1
-        nj = MIN( nb, n - j + 1 )
-        IF( transb == 'T' .OR. transb == 't' ) THEN
-          do jj = 1, nj
-            do ii = 1, nk
-              bbuf( ii, jj + nct ) = bt( ii + kbl - 1, jj + jbl*nb )
-            end do
-          end do
-        ELSE
-          do jj = 1, nj
-            do ii = 1, nk
-              bbuf( ii, jj + nct ) = b( ii + kbl - 1, jj + jbl*nb )
-            end do
-          end do
-        END IF
-        nct = nct + nj
-        jbl = jbl + 1
-      end do
-    end if
-
-    CALL MPI_BCAST( bbuf(1,1), nk*nc, MPI_DOUBLE_PRECISION, rowid, COMM_COL, IERR )
-
-    ii = 1
-    do ib = 1 + coor(1), nmb, dims(1)
-      i = ( ib - 1 ) * nb + 1
-      il = INDXG2L( i, nb, coor(1), 0, dims(1) )
-      ni = MIN( nb, m - i + 1 )
-      jj = 1
-      do jb = 1 + coor(2), nnb, dims(2)
-        j = ( jb - 1 ) * nb + 1
-        jl = INDXG2L( j, nb, coor(2), 0, dims(2) )
-        nj = MIN( nb, n - j + 1 )
-        call dgemm( 'n', 'n', ni, nj, nk, alpha, abuf( ii, 1 ), nra, bbuf( 1, jj ), nk, 1.0_DP, c( il, jl ), ldc )
-        jj = jj + nj
-      end do
-      ii = ii + ni
-    end do
-
-    deallocate( abuf )
-    deallocate( bbuf )
-
-  end do
-
-  IF( ALLOCATED( at ) ) DEALLOCATE( at )
-  IF( ALLOCATED( bt ) ) DEALLOCATE( bt )
-
-  CALL MPI_COMM_FREE(COMM_ROW, ierr)
-  CALL MPI_COMM_FREE(COMM_COL, ierr)
-
-
-#else
-
-     !  if we are not compiling with __MPI this is equivalent to a blas call
-
-     call dgemm( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA, C, LDC )
-
-#endif
-
-  RETURN
-
-END SUBROUTINE
 
 !==----------------------------------------------==!
 !

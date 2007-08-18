@@ -1584,38 +1584,38 @@
       END SUBROUTINE mp_sum_rm
 
 
-      SUBROUTINE mp_root_sum_rm( msg, root, gid )
+      SUBROUTINE mp_root_sum_rm( msg, res, root, gid )
         IMPLICIT NONE
-        REAL (DP), INTENT (INOUT) :: msg(:,:)
-        INTEGER, INTENT (IN) :: root
+        REAL (DP), INTENT (IN)  :: msg(:,:)
+        REAL (DP), INTENT (OUT) :: res(:,:)
+        INTEGER,   INTENT (IN)  :: root
         INTEGER, OPTIONAL, INTENT (IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, m1, m2, ierr, taskid
-        REAL (DP), ALLOCATABLE :: res(:,:)
-        REAL (DP), ALLOCATABLE :: resv(:)
+        INTEGER :: msglen, ierr, taskid
+
 #if defined(__MPI)
+
         msglen = size(msg)
         IF( msglen*8 > mp_msgsiz_max ) CALL mp_stop( 8127 )
+
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
+
+        CALL mpi_comm_rank( group, taskid, ierr)
+        IF( taskid == root ) THEN
+           IF( msglen > size(res) ) CALL mp_stop( 8129 )
+        END IF
+
 #if defined __XD1
-        CALL PARALLEL_SUM_REAL( msg, msglen, root, group, ierr )
+
+        CALL PARALLEL_SUM_REAL_TO( msg, res, msglen, root, group, ierr )
+        !
 #else
-        m1 = size(msg(:,1))
-        m2 = size(msg(1,:))
-        ALLOCATE (res(m1,m2),STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8128 )
         !
         CALL mpi_reduce(msg, res, msglen, mpi_double_precision, mpi_sum, root, group, ierr)
         !
-        IF (ierr/=0) CALL mp_stop( 8129 )
-        CALL mpi_comm_rank( group, taskid, ierr )
-        IF( root == taskid ) THEN
-           msg = res
-        END IF
-        DEALLOCATE (res, STAT=ierr)
 #endif
-        IF (ierr/=0) CALL mp_stop( 8130 )
+        IF (ierr/=0) CALL mp_stop( 8128 )
 
         mp_high_watermark = MAX( mp_high_watermark, 8 * msglen ) 
         mp_call_count( 36 ) = mp_call_count( 36 ) + 1
@@ -1627,6 +1627,7 @@
 
 !
 !------------------------------------------------------------------------------!
+
 
 !------------------------------------------------------------------------------!
 !

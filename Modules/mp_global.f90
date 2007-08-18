@@ -256,7 +256,19 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
    !
    nproc_ortho = np_ortho(1) * np_ortho(2)
    !
-   IF( nproc_all >= 2*nproc_ortho ) THEN
+   IF( nproc_all >= 4*nproc_ortho ) THEN
+      !
+      !  here we choose a processor every 4, in order not to stress memory BW
+      !  on multi core procs, for which further performance enhancements are
+      !  possible using OpenMP BLAS inside regter/cegter/rdiaghg/cdiaghg
+      !  (to be implemented)
+      !
+      color = 0
+      IF( me_all < 4*nproc_ortho .AND. MOD( me_all, 4 ) == 0 ) color = 1
+      !
+      leg_ortho = 4
+      !
+   ELSE IF( nproc_all >= 2*nproc_ortho ) THEN
       !
       !  here we choose a processor every 2, in order not to stress memory BW
       !

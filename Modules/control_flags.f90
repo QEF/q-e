@@ -264,6 +264,10 @@ MODULE control_flags
   LOGICAL, PUBLIC :: &
     use_para_diago = .FALSE.  ! if .TRUE. a parallel Householder algorithm
                               ! can be used
+  LOGICAL, PUBLIC :: &
+    use_distpara_diago = .FALSE.  ! if .TRUE. a fully distributed memory iteration 
+                                  ! algorithm and parallel Householder algorithm are used
+
   INTEGER, PUBLIC :: &
     para_diago_dim = 0        ! minimum matrix dimension above which a parallel
                               ! algorithm is used
