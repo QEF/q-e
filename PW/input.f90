@@ -140,7 +140,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
-                            use_para_diago
+                            use_para_diago, use_distpara_diago
   USE control_flags, ONLY : ortho_para_ => ortho_para
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -857,6 +857,16 @@ SUBROUTINE iosys()
      david = diago_david_ndim
      !
      use_para_diago = .TRUE.
+     !
+     ortho_para_ = ortho_para
+     !
+  CASE ( 'david+distpara' )
+     !
+     isolve = 0
+     !
+     david = diago_david_ndim
+     !
+     use_distpara_diago = .TRUE.
      !
      ortho_para_ = ortho_para
      !

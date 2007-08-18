@@ -64,7 +64,7 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
-                                 use_para_diago
+                                 use_para_diago, use_distpara_diago
   USE control_flags,      ONLY : para_diago_dim   ! debug
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
@@ -682,7 +682,9 @@ SUBROUTINE setup()
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
-  IF ( use_para_diago ) CALL check_para_diag_efficiency()
+  IF ( use_para_diago )      CALL check_para_diag_efficiency()
+  !
+  IF ( use_distpara_diago )  CALL check_distpara_availability()
   !
 #else
   !
@@ -977,7 +979,7 @@ SUBROUTINE check_para_diag_efficiency()
   END DO dim_loop
   !
   ! use_para_diago = .TRUE.  !  debug
-  ! para_diago_dim = 100     !  debug
+  ! para_diago_dim = 1       !  debug
   !
   IF ( ionode ) THEN
      !
@@ -1015,3 +1017,82 @@ SUBROUTINE check_para_diag_efficiency()
     !
 END SUBROUTINE check_para_diag_efficiency
 
+
+SUBROUTINE check_distpara_availability()
+  !
+  USE wvfct,            ONLY : nbnd, nbndx, gamma_only
+  USE control_flags,    ONLY : use_distpara_diago, isolve, ortho_para, &
+                               use_para_diago, para_diago_dim
+  USE io_global,        ONLY : stdout, ionode, ionode_id
+  USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho, intra_pool_comm
+
+  IMPLICIT NONE
+
+  use_distpara_diago = .TRUE.
+  !
+  !  here we initialize the sub group of processors that will take part
+  !  in the matrix diagonalization. 
+  !  NOTE that the maximum number of processors could not be the optimal one,
+  !  and ortho_para input keyword can be used to force a given number of proc
+  !
+  IF( ortho_para < 1 ) THEN
+     ! 
+     !  use all the available processors
+     !
+     CALL init_ortho_group( nproc_pool, intra_pool_comm )
+     !
+  ELSE
+     !
+     CALL init_ortho_group( ortho_para, intra_pool_comm )
+     !
+  END IF
+
+  IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
+
+  IF ( ionode ) THEN
+     !
+     WRITE( stdout, '(/,5X,"Iterative solution of the eigenvalue problem")' ) 
+  END IF
+
+  !  we need at least 4 procs to use distributed algorithm
+
+  IF( np_ortho( 1 ) == 1 .AND. np_ortho( 2 ) == 1 ) THEN
+     use_distpara_diago = .FALSE.
+     IF ( ionode ) WRITE( stdout, '(5X,"Too few procs, we need at least 4 procs")' )
+  END IF
+
+  !  we need to have at least 1 electronic band per block
+
+  IF( np_ortho( 1 ) > nbnd ) THEN
+     use_distpara_diago = .FALSE.
+     IF ( ionode ) WRITE( stdout, '(5X,"Too few bands, we need at least as many bands as SQRT(nproc)")' )
+  END IF
+
+  !  for the time being distpara work only for calculation at gamma
+
+  IF( .NOT. gamma_only ) THEN
+     use_distpara_diago = .FALSE.
+     IF ( ionode ) WRITE( stdout, '(5X,"For the time being distpara work only for calculation at gamma")' )
+  END IF
+
+  IF( use_distpara_diago ) THEN
+     ! 
+     ! turn on parallel diagonalization, for all matrixes
+     !
+     use_para_diago = .TRUE.  
+     para_diago_dim = 1       
+     !
+  END IF
+
+  IF ( ionode ) THEN
+     !
+     IF ( use_distpara_diago ) THEN
+        WRITE( stdout, '(/,5X,"a parallel distributed memory algorithm will be used",/)' ) 
+     ELSE
+        WRITE( stdout, '(/,5X,"a serial algorithm will be used",/)' )
+     END IF
+     !
+  END IF
+
+  RETURN
+END SUBROUTINE check_distpara_availability

@@ -573,11 +573,20 @@ diagonalization
                          (default)
                'cg' :    conjugate-gradient-like band-by-band diagonalization
                'diis' :  DIIS-like diagonalization - PRESENTLY DISABLED
+               'david+para': like david, but use parallel diagonalization,
+                         after testing if it is convenient (for speed), 
+                         iteration loop use replicated data. 
+               'david+distpara': like david but use fully distributed memory 
+                         iteration loop. Allocated memory scale down with the 
+                         number of procs. Procs involved in diagonalization can 
+                         be changed with input parameter "ortho_para".  
+                         On multi core/CPUs often it is convenient to let only 
+                         one core per CPU to work on liner algebra.
 
 ortho_para     
                INTEGER ( default = 0 )
-               meaningful only if diagonalization = 'david+para' and with 
-               parallel executable.
+               meaningful only if diagonalization = 'david+para' or 
+               diagonalization = 'david+distpara' and with parallel executable.
                The number of processors to be used for parallel diagonalization.
                With the default value ( 0 ) the code try to use all the 
                processors. Actually the number of processors used is the

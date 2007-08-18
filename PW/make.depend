@@ -841,6 +841,7 @@ rdiaghg.o : ../Modules/dspev_drv.o
 rdiaghg.o : ../Modules/kind.o
 rdiaghg.o : ../Modules/mp.o
 rdiaghg.o : ../Modules/mp_global.o
+rdiaghg.o : ../Modules/ptoolkit.o
 read_conf_from_file.o : ../Modules/cell_base.o
 read_conf_from_file.o : ../Modules/io_files.o
 read_conf_from_file.o : ../Modules/io_global.o
@@ -916,7 +917,7 @@ reset_k_points.o : pwcom.o
 restart_from_file.o : ../Modules/control_flags.o
 restart_from_file.o : ../Modules/io_files.o
 restart_from_file.o : ../Modules/io_global.o
-restart_from_file.o : ../Modules/mp_global.o
+restart_from_file.o : ../Modules/mp.o
 restart_in_electrons.o : ../Modules/control_flags.o
 restart_in_electrons.o : ../Modules/io_files.o
 restart_in_electrons.o : ../Modules/io_global.o
