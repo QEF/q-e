@@ -11,6 +11,7 @@ module ld1inc
   use radial_grids, only: radial_grid_type, ndmx
   use atomic_paw, only : paw_t
   implicit none
+  save
   PRIVATE :: nwfx, nwfsx, ncmax1
   integer, parameter :: lmx=3, lmx2=2*lmx
   !
