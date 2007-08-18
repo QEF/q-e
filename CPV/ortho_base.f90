@@ -753,11 +753,11 @@ CONTAINS
             END IF
             !
             !
-            CALL mp_root_sum( sigp, root, intra_image_comm )
+            CALL mp_root_sum( sigp(1:nr,1:nc), sig(1:nr,1:nc), root, intra_image_comm )
             !
-            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
-               sig(1:nr,1:nc) = sigp(1:nr,1:nc)
-            END IF
+!            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
+!               sig(1:nr,1:nc) = sigp(1:nr,1:nc)
+!            END IF
             !
          END DO
          !
@@ -889,11 +889,11 @@ CONTAINS
                END DO
             END IF
 
-            CALL mp_root_sum( rhop, root, intra_image_comm )
+            CALL mp_root_sum( rhop(1:nr,1:nc), rho(1:nr,1:nc), root, intra_image_comm )
 
-            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
-               rho(1:nr,1:nc) = rhop(1:nr,1:nc)
-            END IF
+!            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
+!               rho(1:nr,1:nc) = rhop(1:nr,1:nc)
+!            END IF
 
          END DO
       END DO
@@ -1022,11 +1022,11 @@ CONTAINS
                END DO
             END IF
             !
-            CALL mp_root_sum( taup, root, intra_image_comm )
+            CALL mp_root_sum( taup(1:nr,1:nc), tau(1:nr,1:nc), root, intra_image_comm )
             !
-            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
-               tau(1:nr,1:nc) = taup(1:nr,1:nc)
-            END IF
+!            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
+!               tau(1:nr,1:nc) = taup(1:nr,1:nc)
+!            END IF
             !
          END DO
          !

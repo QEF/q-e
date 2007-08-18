@@ -205,7 +205,6 @@
                   !
                   root = root * leg_ortho
 
-
                   ALLOCATE( mtmp( nr, nc ) )
                   mtmp = 0.0d0
 
@@ -222,12 +221,12 @@
                      END DO
                   END IF
 
-                  CALL mp_root_sum( mtmp, root, intra_image_comm )
+                  CALL mp_root_sum( mtmp, c0hc0(1:nr,1:nc,is), root, intra_image_comm )
 
-                  IF( coor_ip(1) == descla( la_myr_ , is ) .AND. &
-                      coor_ip(2) == descla( la_myc_ , is ) .AND. descla( lambda_node_ , is ) > 0 ) THEN
-                     c0hc0(1:nr,1:nc,is) = mtmp
-                  END IF
+!                  IF( coor_ip(1) == descla( la_myr_ , is ) .AND. &
+!                      coor_ip(2) == descla( la_myc_ , is ) .AND. descla( lambda_node_ , is ) > 0 ) THEN
+!                     c0hc0(1:nr,1:nc,is) = mtmp
+!                  END IF
 
                   DEALLOCATE( mtmp )
 
