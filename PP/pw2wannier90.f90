@@ -21,7 +21,6 @@ program pw2wannier90
   use ktetra,     ONLY : k1, k2, k3, nk1, nk2, nk3
   use io_files,   ONLY : nd_nmbr, prefix, tmp_dir
   use noncollin_module, ONLY : noncolin
-  use wvfct,            ONLY : gamma_only
   use wannier
   !
   implicit none
@@ -90,10 +89,8 @@ program pw2wannier90
   call read_file  
   write(stdout,*)
   !
-  ! Make sure we aren't reading from a GAMMA or NCLS calculation
+  ! Make sure we aren't reading from a NCLS calculation
   !
-  if (gamma_only) call errore('pw2wannier90',&
-       'KPOINT GAMMA calculation is not implemented',1)
   if (noncolin) call errore('pw2wannier90',&
        'Non-collinear calculation is not implemented',1)
   !
@@ -246,13 +243,15 @@ subroutine setup_nnkp
   use gvect,     only : g, gg
   use ions_base, only : nat, tau, ityp, atm
   use klist,     only : xk
-  USE mp,         ONLY : mp_bcast
+  USE mp,        ONLY : mp_bcast, mp_sum
+  use mp_global, ONLY : intra_pool_comm
   use wvfct,     only : nbnd,npwx
   use wannier
 
   implicit none
   real(DP) :: g_(3), gg_
   integer  :: ik, ib, ig, iw, ia, indexb, type
+  integer, allocatable :: ig_check(:,:)
   real(DP) :: xnorm, znorm, coseno
   integer  :: exclude_bands(nbnd)
 
@@ -301,7 +300,7 @@ subroutine setup_nnkp
   enddo
 
   ! MP grid dimensions
-  call find_mp_grid ( )
+  call find_mp_grid()
 
   write(stdout,'("  - Number of atoms is (",i3,")")') nat 
 
@@ -370,7 +369,7 @@ subroutine setup_nnkp
   nnbx=0
   nnb=max(nnbx,nnb)
 
-  allocate( ig_(iknum,nnb) )
+  allocate( ig_(iknum,nnb), ig_check(iknum,nnb) )
 
   do ik=1, iknum
      do ib = 1, nnb
@@ -387,6 +386,18 @@ subroutine setup_nnkp
         end do
      end do
   end do
+
+  ig_check(:,:) = ig_(:,:)
+  CALL mp_sum( ig_check, intra_pool_comm )
+  do ik=1, iknum
+     do ib = 1, nnb
+        if (ig_check(ik,ib) ==0) &
+          call errore('setup_nnkp', &
+                      ' g_kpb vector is not in the list of Gs', 100*ik+ib )
+     end do 
+  end do 
+  deallocate (ig_check)
+
   write(stdout,*) ' - All neighbours are found '
   write(stdout,*)
   
@@ -430,7 +441,7 @@ subroutine run_wannier
 end subroutine run_wannier
 !-----------------------------------------------------------------------
 !
-subroutine find_mp_grid ( )
+subroutine find_mp_grid()
   !-----------------------------------------------------------------------
   !
   use io_global, only : stdout
@@ -498,7 +509,8 @@ subroutine read_nnkp
   use gvect,     only : g, gg
   use io_files,  only : find_free_unit
   use klist,     only : nkstot, xk
-  USE mp,        ONLY : mp_bcast
+  USE mp,        ONLY : mp_bcast, mp_sum
+  use mp_global, ONLY : intra_pool_comm
   use wvfct,     only : npwx, nbnd
   use wannier
 
@@ -507,6 +519,7 @@ subroutine read_nnkp
   real(DP) :: g_(3), gg_
   integer :: ik, ib, ig, ipol, iw, idum, indexb
   integer numk, i, j
+  integer, allocatable :: ig_check(:,:)
   real(DP) :: xx(3), xnorm, znorm, coseno
   CHARACTER(LEN=80) :: line1, line2
   logical :: have_nnkp
@@ -660,7 +673,8 @@ subroutine read_nnkp
   !
   nnbx = max (nnbx, nnb )
   !
-  allocate ( kpb(iknum,nnbx), g_kpb(3,iknum,nnbx),ig_(iknum,nnbx) )
+  allocate ( kpb(iknum,nnbx), g_kpb(3,iknum,nnbx),&
+             ig_(iknum,nnbx), ig_check(iknum,nnbx) )
 
   !  read data about neighbours
   write(stdout,*)
@@ -694,6 +708,17 @@ subroutine read_nnkp
         end do
      end do
   end do
+  ig_check(:,:) = ig_(:,:)
+  CALL mp_sum( ig_check, intra_pool_comm )
+  do ik=1, iknum
+     do ib = 1, nnb
+        if (ig_check(ik,ib) ==0) &
+          call errore('read_nnkp', &
+                      ' g_kpb vector is not in the list of Gs', 100*ik+ib )
+     end do
+  end do
+  deallocate (ig_check)
+
   write(stdout,*) ' All neighbours are found '
   write(stdout,*)
 
@@ -750,19 +775,19 @@ subroutine compute_mmn
    !
    USE io_global,  ONLY : stdout, ionode
    use kinds,           only: DP
-   use wvfct,           only : nbnd, npw, npwx, igk, g2kin
+   use wvfct,           only : nbnd, npw, npwx, igk, g2kin, gamma_only
    use wavefunctions_module, only : evc, psic
-   use gsmooth,         only: nls, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+   use gsmooth,         only: nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
    use klist,           only : nkstot, xk
    use io_files,        only : nwordwfc, iunwfc
    use io_files,        only : find_free_unit
-   use gvect,           only : g, ngm, ecutwfc
+   use gvect,           only : g, ngm, ecutwfc, gstart
    use cell_base,       only : tpiba2, omega, alat, tpiba, at, bg
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
    use constants,       only : tpi
    use uspp,            only : nkb, vkb
    USE uspp_param,      ONLY : nh, tvanp, lmaxq
-   use becmod,          only : becp
+   use becmod,          only : becp, rbecp
    use wannier
 
    implicit none
@@ -770,7 +795,9 @@ subroutine compute_mmn
    integer :: mmn_tot, ik, ikp, ipol, ib, npwq, i, m, n
    integer :: ikb, jkb, ih, jh, na, nt, ijkb0, ind, nbt
    integer :: ikevc, ikpevcq
-   complex(DP), allocatable :: phase(:), aux(:), evcq(:,:), becp2(:,:), Mkb(:,:)
+   complex(DP), allocatable :: phase(:), aux(:), aux2(:), evcq(:,:), &
+                               becp2(:,:), Mkb(:,:)
+   real(DP), allocatable    :: rbecp2(:,:)
    complex(DP), allocatable :: qb(:,:,:,:), qgm(:)
    real(DP), allocatable    :: qg(:), ylm(:,:), dxk(:,:)
    integer, allocatable     :: igkq(:)
@@ -783,6 +810,7 @@ subroutine compute_mmn
    logical                  :: nn_found
 
    allocate( phase(nrxxs), aux(npwx), evcq(npwx,nbnd), igkq(npwx) )
+   if (gamma_only) allocate(aux2(npwx))
 
    if (wan_mode.eq.'library') allocate(m_mat(num_bands,num_bands,nnb,iknum))
    
@@ -802,7 +830,11 @@ subroutine compute_mmn
    !
    if(any_uspp) then
       CALL init_us_1
-      allocate ( becp(nkb,nbnd),becp2(nkb,nbnd))
+      if (gamma_only) then
+         allocate ( rbecp(nkb,nbnd),rbecp2(nkb,nbnd))
+      else
+         allocate ( becp(nkb,nbnd),becp2(nkb,nbnd))
+      end if
    end if
    !
    !     qb is  FT of Q(r) 
@@ -881,7 +913,11 @@ subroutine compute_mmn
       if(any_uspp) then
          call init_us_2 (npw, igk, xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi> 
-         call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+         if (gamma_only) then
+            call ccalbec (nkb, npwx, npw, nbnd, rbecp, vkb, evc)
+         else
+            call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+         end if 
       end if
       !
       !
@@ -903,7 +939,11 @@ subroutine compute_mmn
          if(any_uspp) then
             call init_us_2 (npwq, igkq, xk(1,ikp), vkb)
             ! below we compute the product of beta functions with |psi> 
-            call ccalbec (nkb, npwx, npwq, nbnd, becp2, vkb, evcq)
+            if (gamma_only) then
+               call ccalbec (nkb, npwx, npwq, nbnd, rbecp2, vkb, evcq)
+            else
+               call ccalbec (nkb, npwx, npwq, nbnd, becp2, vkb, evcq)
+            end if
          end if
          !
          !
@@ -925,10 +965,18 @@ subroutine compute_mmn
                               ikb = ijkb0 + ih
                               !
                               do m = 1,nbnd
+                              if (excluded_band(m)) cycle
                               do n = 1,nbnd
-                                 Mkb(m,n) = Mkb(m,n) + &
-                                     phase1 * qb(ih,jh,nt,ind) * &
-                                     CONJG( becp(ikb,m) ) * becp2(jkb,n) 
+                              if (excluded_band(n)) cycle
+                                 if (gamma_only) then
+                                    Mkb(m,n) = Mkb(m,n) + &
+                                        phase1 * qb(ih,jh,nt,ind) * &
+                                              rbecp(ikb,m)  * rbecp2(jkb,n) 
+                                 else
+                                    Mkb(m,n) = Mkb(m,n) + &
+                                        phase1 * qb(ih,jh,nt,ind) * &
+                                        CONJG( becp(ikb,m) ) * becp2(jkb,n) 
+                                 end if
                               enddo
                               enddo
                            enddo !ih
@@ -952,18 +1000,27 @@ subroutine compute_mmn
          endif
          !
          do m=1,nbnd
+            if (excluded_band(m)) cycle
+            !
             psic(:) = (0.d0, 0.d0)
             psic(nls (igk (1:npw) ) ) = evc (1:npw, m)
+            if(gamma_only) psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, m))
             call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
             psic(1:nrxxs) = psic(1:nrxxs) * phase(1:nrxxs)
             call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
-            aux(1:npwq) = psic(nls (igkq(1:npwq) ) )
+            aux(1:npwq)  = psic(nls (igkq(1:npwq) ) )
+            if(gamma_only) then
+               if (gstart==2) psic(nlsm(1)) = (0.d0,0.d0)
+               aux2(1:npwq) = conjg(psic(nlsm(igkq(1:npwq) ) ) )
+            end if
             aa = 0.d0
             !
             !
             do n=1,nbnd   
+            if (excluded_band(n)) cycle
               !
               mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
+              if(gamma_only) mmn = mmn + CONJG(ZDOTC(npwq,aux2,1,evcq(1,n),1))
               !
               !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
               !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 > 
@@ -996,8 +1053,16 @@ subroutine compute_mmn
 
    if (ionode .and. wan_mode.eq.'standalone') close (iun_mmn)
 ! 
+   if (gamma_only) deallocate(aux2)
    deallocate (Mkb, dxk, phase, aux, evcq, igkq)
-   if(any_uspp) deallocate (becp, becp2, qb)
+   if(any_uspp) then
+      deallocate (  qb)
+      if (gamma_only) then
+          deallocate (rbecp,rbecp2)
+       else
+          deallocate(becp,becp2)
+       end if
+    end if
 !
    write(stdout,*)
    write(stdout,*) ' MMN calculated'
@@ -1012,14 +1077,14 @@ subroutine compute_amn
    USE io_global,  ONLY : stdout, ionode
    use kinds,           only : DP
    use klist,           only : nkstot, xk
-   use wvfct,           only : nbnd, npw, npwx, igk, g2kin
+   use wvfct,           only : nbnd, npw, npwx, igk, g2kin, gamma_only
    use wavefunctions_module, only : evc
    use io_files,        only : nwordwfc, iunwfc
    use io_files,        only : find_free_unit
-   use gvect,           only : g, ngm, ecutwfc
+   use gvect,           only : g, ngm, ecutwfc, gstart
    use cell_base,       only : tpiba2
    use uspp,            only : nkb, vkb
-   use becmod,          only : becp
+   use becmod,          only : becp, rbecp
    use wannier
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : tvanp
@@ -1027,6 +1092,7 @@ subroutine compute_amn
    implicit none
 
    complex(DP) :: amn, ZDOTC
+   real(DP):: DDOT
    complex(DP), allocatable :: sgf(:,:)
    integer :: amn_tot, ik, ibnd, ibnd1, iw,i, ikevc, nt
    character (len=9)  :: cdate,ctime
@@ -1059,7 +1125,11 @@ subroutine compute_amn
    allocate( sgf(npwx,n_wannier))
    !
    if (any_uspp) then
-      allocate ( becp(nkb,n_wannier))
+      if(gamma_only) then
+          allocate ( rbecp(nkb,n_wannier))
+      else
+          allocate ( becp(nkb,n_wannier))
+      end if
       CALL init_us_1
    end if
    !
@@ -1076,7 +1146,12 @@ subroutine compute_amn
       if(any_uspp) then
          call init_us_2 (npw, igk, xk (1, ik), vkb)
          ! below we compute the product of beta functions with trial func.
-         call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
+         if (gamma_only) then
+!!$            CALL pw_gemm( 'Y', nkb, n_wannier, npw, vkb, npwx,gf, npwx, rbecp, nkb )
+            call ccalbec (nkb, npwx, npw, n_wannier, rbecp, vkb, gf)
+         else
+            call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
+         end if
          ! and we use it for the product S|trial_func>
          call s_psi (npwx, npw, n_wannier, gf, sgf)  
       else
@@ -1086,9 +1161,14 @@ subroutine compute_amn
       do iw = 1,n_wannier
          ibnd1 = 0 
          do ibnd = 1,nbnd
-            amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
-            call reduce(2,amn)
             if (excluded_band(ibnd)) cycle
+            if (gamma_only) then
+               amn = 2.0_dp*DDOT(2*npw,evc(1,ibnd),1,sgf(1,iw),1)
+               if (gstart==2) amn = amn - real(conjg(evc(1,ibnd))*sgf(1,iw))
+            else
+               amn = ZDOTC(npw,evc(1,ibnd),1,sgf(1,iw),1) 
+            end if
+            call reduce(2,amn)
             ibnd1=ibnd1+1
             if (wan_mode.eq.'standalone') then
                if (ionode) write(iun_amn,'(3i5,2f18.12)') ibnd1, iw, ik, amn
@@ -1101,7 +1181,13 @@ subroutine compute_amn
       end do
    end do  ! k-points
    deallocate (sgf,csph)
-   if(any_uspp) deallocate (becp)
+   if(any_uspp) then 
+     if (gamma_only) then 
+        deallocate (rbecp)
+     else
+       deallocate (becp)
+     end if
+   end if
    !
    if (ionode .and. wan_mode.eq.'standalone') close (iun_amn)
    
@@ -1116,8 +1202,8 @@ subroutine generate_guiding_functions(ik)
    !
    USE io_global,  ONLY : stdout
    use constants, only : pi, tpi, fpi, eps8
-   use wvfct, only : npw, g2kin, igk
-   use gvect, only : ig1, ig2, ig3, g
+   use wvfct, only : npw, g2kin, igk, gamma_only
+   use gvect, only : ig1, ig2, ig3, g, gstart
    use cell_base,  ONLY : tpiba2, omega, tpiba
    use wannier
    use klist,      only : xk 
@@ -1128,7 +1214,7 @@ subroutine generate_guiding_functions(ik)
    integer, parameter :: lmax=3, lmax2=(lmax+1)**2
    integer :: iw, ig, ik, bgtau(3), isph, l, mesh_r
    integer :: lmax_iw, lm, ipol, n1, n2, n3, nr1, nr2, nr3, iig
-   real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa
+   real(DP) :: arg, anorm, fac, alpha_w2, yy, alfa, DDOT
    complex(DP) :: ZDOTC, kphase, lphase, gff, lph
    real(DP), allocatable :: gk(:,:), qg(:), ylm(:,:), radial(:,:)
    complex(DP), allocatable :: sk(:) 
@@ -1169,7 +1255,12 @@ subroutine generate_guiding_functions(ik)
          sk(ig) = CMPLX(cos(arg), -sin(arg) )
          gf(ig,iw) = gf(ig,iw) * sk(ig) 
       end do
-      anorm = REAL(ZDOTC(npw,gf(1,iw),1,gf(1,iw),1))
+      if (gamma_only) then
+          anorm = 2.0_dp*DDOT(2*npw,gf(1,iw),1,gf(1,iw),1)
+          if (gstart==2) anorm = anorm - abs(gf(1,iw))**2
+      else
+          anorm = REAL(ZDOTC(npw,gf(1,iw),1,gf(1,iw),1))
+      end if
       call reduce(1,anorm)
 !      write (stdout,*) ik, iw, anorm
       gf(:,iw) = gf(:,iw) / dsqrt(anorm)
@@ -1218,11 +1309,11 @@ end subroutine write_band
 
 subroutine write_plot
    USE io_global,  ONLY : stdout, ionode
-   use wvfct, only : nbnd, npw, igk, g2kin
+   use wvfct, only : nbnd, npw, igk, g2kin, gamma_only
    use wavefunctions_module, only : evc, psic
    use io_files, only : find_free_unit, nwordwfc, iunwfc
    use wannier
-   use gsmooth,         only : nls, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
+   use gsmooth,         only : nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
    use klist,           only : nkstot, xk
    use gvect,           only : g, ngm, ecutwfc
    use cell_base,       only : tpiba2
@@ -1288,6 +1379,7 @@ subroutine write_plot
          ibnd1=ibnd1 + 1
          psic(:) = (0.d0, 0.d0)
          psic(nls (igk (1:npw) ) ) = evc (1:npw, ibnd)
+         if (gamma_only)  psic(nlsm(igk (1:npw) ) ) = conjg(evc (1:npw, ibnd))
          call cft3s (psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, +2)
          if (reduce_unk) pos=0
 #ifdef __PARA
