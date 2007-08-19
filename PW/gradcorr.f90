@@ -29,10 +29,16 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   REAL(DP),    INTENT(OUT)   :: v(nrxx,nspin)
   REAL(DP),    INTENT(INOUT) :: vtxc, etxc
   !
-  INTEGER :: k, ipol, is, nspin0
+  INTEGER :: k, ipol, is, nspin0, ir, jpol
   !
   REAL(DP),    ALLOCATABLE :: grho(:,:,:), h(:,:,:), dh(:)
+#ifdef __OLD_NONCOLIN_GGA
   REAL(DP),    ALLOCATABLE :: rhoout(:,:), segni(:), vgg(:,:), vsave(:,:)
+#else
+  REAL(DP),    ALLOCATABLE :: rhoout(:,:), vgg(:,:), vsave(:,:)
+  REAL(DP),    ALLOCATABLE :: gmag(:,:,:)
+#endif
+
   COMPLEX(DP), ALLOCATABLE :: rhogsum(:,:)
   !
   LOGICAL  :: igcc_is_lyp
@@ -40,7 +46,7 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
               v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw , &
               etxcgc, vtxcgc, segno, arho, fac, zeta, rh, grh2, amag 
   REAL(DP) :: v2cup, v2cdw,  v2cud, rup, rdw, &
-              grhoup, grhodw, grhoud, grup, grdw
+              grhoup, grhodw, grhoud, grup, grdw, seg
   !
   REAL(DP), PARAMETER :: epsr = 1.D-6, epsg = 1.D-10
   !
@@ -55,20 +61,28 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   nspin0=nspin
   if (nspin==4) nspin0=1
   if (nspin==4.and.domag) nspin0=2
+  fac = 1.D0 / DBLE( nspin0 )
   !
   ALLOCATE(    h( 3, nrxx, nspin0) )
   ALLOCATE( grho( 3, nrxx, nspin0) )
   ALLOCATE( rhoout( nrxx, nspin0) )
   IF (nspin==4.AND.domag) THEN
-     ALLOCATE( segni( nrxx ) )
      ALLOCATE( vgg( nrxx, nspin0 ) )
      ALLOCATE( vsave( nrxx, nspin ) )
+#ifdef __OLD_NONCOLIN_GGA
+     ALLOCATE( segni( nrxx ) )
+#else
+     ALLOCATE( gmag( 3, nrxx, nspin) )
+#endif
      vsave=v
      v=0.d0
   ENDIF
   !
   ALLOCATE( rhogsum( ngm, nspin0 ) )
   !
+  ! ... calculate the gradient of rho + rho_core in real space
+  !
+#ifdef __OLD_NONCOLIN_GGA
   IF ( nspin == 4 .AND. domag ) THEN
      !
      CALL compute_rho(rho,rhoout,segni,nrxx)
@@ -90,11 +104,6 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      rhogsum(:,1:nspin0) = rhog(:,1:nspin0)
      !
   ENDIF
-  !
-  ! ... calculate the gradient of rho + rho_core in real space
-  !
-  fac = 1.D0 / DBLE( nspin0 )
-  !
   DO is = 1, nspin0
      !
      rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
@@ -104,6 +113,51 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
                    rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
      !
   END DO
+#else
+  IF ( nspin == 4 .AND. domag ) THEN
+     !
+     rhogsum(:,1) =rhog_core(:) + rhog(:,1)
+     !
+     CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
+                   rhogsum, ngm, g, nl, gmag )
+     DO is = 2, nspin
+        rhogsum(:,1) = rhog(:,is)
+        !
+        CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
+                      rhogsum, ngm, g, nl, gmag(1,1,is) )
+     END DO
+     DO is=1,nspin0
+        IF (is==1) seg=0.5_dp
+        IF (is==2) seg=-0.5_dp
+        DO ipol=1,3
+           grho(ipol,:,is) = 0.5_dp*gmag(ipol,:,1)
+        ENDDO
+        DO ir=1,nrxx
+           amag=sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
+           rhoout(ir,is) = fac*rho_core(ir) + 0.5_dp*rho(ir,1)
+           IF (amag>1.d-12) THEN
+              rhoout(ir,is)= rhoout(ir,is) + seg*amag
+              DO ipol=1,3
+                 DO jpol=2,4 
+                    grho(ipol,ir,is)=grho(ipol,ir,is)+ seg*rho(ir,jpol)* &
+                                              gmag(ipol,ir,jpol)/amag
+                 END DO
+              END DO
+           END IF
+        END DO
+     END DO
+  ELSE
+     DO is = 1, nspin0
+        !
+        rhoout(:,is)  = fac * rho_core(:)  + rho(:,is)
+        rhogsum(:,is) = fac * rhog_core(:) + rhog(:,is)
+        !
+        CALL gradrho( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, &
+                      rhogsum(1,is), ngm, g, nl, grho(1,1,is) )
+        !
+     END DO
+ END IF
+#endif
   !
   DEALLOCATE( rhogsum )
   !
@@ -183,11 +237,21 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
            ELSE
               !
               zeta = ( rhoout(k,1) - rhoout(k,2) ) / rh
+#ifdef __OLD_NONCOLIN_GGA
               if (nspin.eq.4.and.domag) zeta=abs(zeta)*segni(k)
               !
               grh2 = ( grho(1,k,1) + grho(1,k,2) )**2 + &
                      ( grho(2,k,1) + grho(2,k,2) )**2 + &
                      ( grho(3,k,1) + grho(3,k,2) )**2
+#else
+              if (nspin==4) then
+                 grh2= gmag(1,k,1)**2+ gmag(2,k,1)**2+gmag(3,k,1)**2
+              else
+                 grh2 = ( grho(1,k,1) + grho(1,k,2) )**2 + &
+                        ( grho(2,k,1) + grho(2,k,2) )**2 + &
+                        ( grho(3,k,1) + grho(3,k,2) )**2
+              endif
+#endif
               !
               CALL gcc_spin( rh, zeta, grh2, sc, v1cup, v1cdw, v2c )
               !
@@ -271,9 +335,15 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
         v(k,1)=v(k,1)+0.5d0*(vgg(k,1)+vgg(k,2))
         amag=sqrt(rho(k,2)**2+rho(k,3)**2+rho(k,4)**2)
         IF (amag.GT.1.d-12) THEN
+#ifdef __OLD_NONCOLIN_GGA
            v(k,2)=v(k,2)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,2)/amag
            v(k,3)=v(k,3)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,3)/amag
            v(k,4)=v(k,4)+segni(k)*0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,4)/amag
+#else
+           v(k,2)=v(k,2)+0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,2)/amag
+           v(k,3)=v(k,3)+0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,3)/amag
+           v(k,4)=v(k,4)+0.5d0*(vgg(k,1)-vgg(k,2))*rho(k,4)/amag
+#endif
         ENDIF
      ENDDO
   ENDIF
@@ -284,9 +354,12 @@ SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   IF (nspin==4.and.domag) THEN
      DEALLOCATE( vgg )
      DEALLOCATE( vsave )
+#ifdef __OLD_NONCOLIN_GGA
      DEALLOCATE( segni )
+#else
+     DEALLOCATE( gmag )
+#endif
   ENDIF
-
   !
   RETURN
   !
