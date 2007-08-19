@@ -245,7 +245,7 @@ subroutine setup_nnkp
   use klist,     only : xk
   USE mp,        ONLY : mp_bcast, mp_sum
   use mp_global, ONLY : intra_pool_comm
-  use wvfct,     only : nbnd,npwx
+  use wvfct,     only : nbnd,npwx,gamma_only
   use wannier
 
   implicit none
@@ -306,10 +306,10 @@ subroutine setup_nnkp
 
 #ifdef __WANLIB
   if (ionode) then
-     call wannier_setup(seedname,mp_grid,iknum, &          ! input
-          rlatt,glatt,kpt_latt,nbnd,nat,atsym,atcart, &    ! input
-          nnb,kpb,g_kpb,num_bands,n_wannier,center_w, &    ! output
-          l_w,mr_w,r_w,zaxis,xaxis,alpha_w,exclude_bands)  ! output
+     call wannier_setup(seedname,mp_grid,iknum,rlatt, &      ! input
+          glatt,kpt_latt,nbnd,nat,atsym,atcart,gamma_only, & ! input
+          nnb,kpb,g_kpb,num_bands,n_wannier,center_w, &      ! output
+          l_w,mr_w,r_w,zaxis,xaxis,alpha_w,exclude_bands)    ! output
   endif
 #endif
 
@@ -411,6 +411,7 @@ subroutine run_wannier
   use io_global, only : ionode, ionode_id
   use ions_base, only : nat
   use mp,        only : mp_bcast
+  use wvfct,     only : gamma_only
   use wannier
 
   implicit none
@@ -425,7 +426,7 @@ subroutine run_wannier
   if (ionode) then
      call wannier_run(seedname,mp_grid,iknum,rlatt, &                ! input
           glatt,kpt_latt,num_bands,n_wannier,nnb,nat, &              ! input
-          atsym,atcart,m_mat,a_mat,eigval, &                         ! input
+          atsym,atcart,gamma_only,m_mat,a_mat,eigval, &              ! input
           u_mat,u_mat_opt,lwindow,wann_centers,wann_spreads,spreads) ! output
   endif
 #endif
