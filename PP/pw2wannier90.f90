@@ -1593,7 +1593,7 @@ end subroutine check_inverse
    
 subroutine set_u_matrix(x,z,u)
    use kinds, ONLY :  DP
-   use constants, ONLY : eps8
+   use constants, ONLY : eps6
    implicit none
    ! I/O variables
    real(DP) :: x(3),z(3),u(3,3)
@@ -1601,14 +1601,14 @@ subroutine set_u_matrix(x,z,u)
    real(DP) :: xx, zz, y(3), coseno
 
    xx = sqrt(x(1)*x(1) + x(2)*x(2) + x(3)*x(3))
-   if (xx < eps8) call errore ('set_u_matrix',' |xaxis| < eps ',1)
+   if (xx < eps6) call errore ('set_u_matrix',' |xaxis| < eps ',1)
 !   x(:) = x(:)/xx
    zz = sqrt(z(1)*z(1) + z(2)*z(2) + z(3)*z(3))
-   if (zz < eps8) call errore ('set_u_matrix',' |zaxis| < eps ',1)
+   if (zz < eps6) call errore ('set_u_matrix',' |zaxis| < eps ',1)
 !   z(:) = z(:)/zz
 
    coseno = (x(1)*z(1) + x(2)*z(2) + x(3)*z(3))/xx/zz
-   if (abs(coseno) > eps8) call errore('set_u_matrix',' xaxis and zaxis are not orthogonal !',1)
+   if (abs(coseno) > eps6) call errore('set_u_matrix',' xaxis and zaxis are not orthogonal !',1)
 
    y(1) = (z(2)*x(3) - x(2)*z(3))/xx/zz
    y(2) = (z(3)*x(1) - x(3)*z(1))/xx/zz
