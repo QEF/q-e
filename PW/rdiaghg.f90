@@ -24,7 +24,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   USE mp_global,        ONLY : me_pool, root_pool, intra_pool_comm, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ 
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , nlax_ 
   !
   IMPLICIT NONE
   !
@@ -64,7 +64,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
-     nx  = desc( la_nx_ )
+     nx  = desc( nlax_ )
      !
      IF( desc( lambda_node_ ) > 0 ) THEN
         ALLOCATE( sl( nx , nx ) )
@@ -228,7 +228,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : root_pool, intra_pool_comm
   USE dspev_module,     ONLY : pdspev_drv
-  USE descriptors,      ONLY : descla_siz_ , lambda_node_ , la_nx_ , la_nrl_ , &
+  USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , &
                                la_npc_ , la_npr_ , la_me_ , la_comm_ 
   !
   !
@@ -257,7 +257,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     nx  = desc( la_nx_ )
+     nx  = desc( nlax_ )
      nrl = desc( la_nrl_ )
      !
      IF( nx /= ldh ) &
@@ -266,8 +266,8 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      ALLOCATE( hh( nx, nx ) )
      ALLOCATE( ss( nx, nx ) )
      !
-     hh(1:nx,1:n) = h(1:nx,1:n)
-     ss(1:nx,1:n) = s(1:nx,1:n)
+     hh(1:nx,1:nx) = h(1:nx,1:nx)
+     ss(1:nx,1:nx) = s(1:nx,1:nx)
      !
   END IF
   !

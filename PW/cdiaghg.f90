@@ -28,7 +28,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
                                intra_pool_comm, init_ortho_group, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id
   USE zhpev_module,     ONLY : pzhpev_drv
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , &
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , nlax_ , la_nrl_ , &
                                ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_
   !
   IMPLICIT NONE
@@ -79,7 +79,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         ic  = desc( ilac_ )
         nr  = desc( nlar_ )
         nc  = desc( nlac_ )
-        nx  = desc( la_nx_ )
+        nx  = desc( nlax_ )
         nrl = desc( la_nrl_ )
         ALLOCATE( sl( nx , nx ) )
         ALLOCATE( vl( nx , nx ) )

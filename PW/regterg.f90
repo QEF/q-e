@@ -469,7 +469,7 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
   USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , la_n_ , &
                                ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &
-                               la_myr_ , la_myc_
+                               la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
   USE mp,               ONLY : mp_max, mp_bcast, mp_root_sum, mp_sum
   !
@@ -709,12 +709,12 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         vl = hl
         DEALLOCATE( hl )
         ALLOCATE( hl( nx , nx ) )
-        CALL dsqmred( nbase, vl, desc_old( la_nx_ ), desc_old, nbase+notcnv, hl, nx, desc )
+        CALL dsqmred( nbase, vl, desc_old( nlax_ ), desc_old, nbase+notcnv, hl, nx, desc )
 
         vl = sl
         DEALLOCATE( sl )
         ALLOCATE( sl( nx , nx ) )
-        CALL dsqmred( nbase, vl, desc_old( la_nx_ ), desc_old, nbase+notcnv, sl, nx, desc )
+        CALL dsqmred( nbase, vl, desc_old( nlax_ ), desc_old, nbase+notcnv, sl, nx, desc )
 
         DEALLOCATE( vl )
         ALLOCATE( vl( nx , nx ) )
@@ -866,7 +866,7 @@ CONTAINS
      !
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
-     nx = desc( la_nx_ )
+     nx = desc( nlax_ )
      CALL mp_max( nx, intra_pool_comm )
      !
      DO j = 0, desc( la_npc_ ) - 1

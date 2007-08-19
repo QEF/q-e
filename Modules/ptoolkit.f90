@@ -53,7 +53,7 @@ SUBROUTINE dsqmdst( n, ar, ldar, a, lda, desc )
      RETURN
   END IF
 
-  nx  = desc( la_nx_ )
+  nx  = desc( nlax_ )
   ir  = desc( ilar_ )
   ic  = desc( ilac_ )
   nr  = desc( nlar_ )
@@ -116,7 +116,7 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
      np = desc( la_npr_ ) * desc( la_npc_ ) 
-     nx = desc( la_nx_ )
+     nx = desc( nlax_ )
      npr = desc( la_npr_ )
      npc = desc( la_npc_ )
      !
@@ -137,9 +137,9 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
      !
      IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
         DO ipc = 1, npc
-           CALL descla_local_dims( ic, nc, n, nx, npc, ipc-1 )
+           CALL descla_local_dims( ic, nc, n, desc( la_nx_ ), npc, ipc-1 )
            DO ipr = 1, npr
-              CALL descla_local_dims( ir, nr, n, nx, npr, ipr-1 )
+              CALL descla_local_dims( ir, nr, n, desc( la_nx_ ), npr, ipr-1 )
               noff = ( ipc - 1 + npc * ( ipr - 1 ) ) * nx
               DO j = 1, nc
                  DO i = 1, nr
@@ -188,12 +188,12 @@ SUBROUTINE dsqmwpb( n, a, lda, desc )
    INTEGER :: i, j
    !
    DO j = 1, desc( nlac_ )
-      DO i = desc( nlar_ ) + 1, desc( la_nx_ )
+      DO i = desc( nlar_ ) + 1, desc( nlax_ )
          a( i, j ) = 0_DP
       END DO
    END DO
-   DO j = desc( nlac_ ) + 1, desc( la_nx_ )
-      DO i = 1, desc( la_nx_ )
+   DO j = desc( nlac_ ) + 1, desc( nlax_ )
+      DO i = 1, desc( nlax_ )
          a( i, j ) = 0_DP
       END DO
    END DO
@@ -232,7 +232,7 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
 
    IF( n /= desc( la_n_ ) ) &
       CALL errore( " dsqmsym ", " wrong global dim n ", n )
-   IF( lda /= desc( la_nx_ ) ) &
+   IF( lda /= desc( nlax_ ) ) &
       CALL errore( " dsqmsym ", " wrong leading dim lda ", lda )
 
    comm = desc( la_comm_ )
@@ -361,9 +361,9 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
       CALL errore( " dsqmred ", " wrong global dim nb ", nb )
    IF( na /= desca( la_n_ ) ) &
       CALL errore( " dsqmred ", " wrong global dim na ", na )
-   IF( ldb /= descb( la_nx_ ) ) &
+   IF( ldb /= descb( nlax_ ) ) &
       CALL errore( " dsqmred ", " wrong leading dim ldb ", ldb )
-   IF( lda /= desca( la_nx_ ) ) &
+   IF( lda /= desca( nlax_ ) ) &
       CALL errore( " dsqmred ", " wrong leading dim lda ", lda )
 
    npr   = desca( la_npr_ )
@@ -389,8 +389,8 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    IF( rank /= mycol ) &
       CALL errore( " dsqmred ", " building row_comm ", rank )
 
-   ALLOCATE( buf( descb( la_nx_ ) * descb( la_nx_ ) ) )
-   ALLOCATE( ab( descb( la_nx_ ), desca( la_nx_ ) ) )
+   ALLOCATE( buf( descb( nlax_ ) * descb( nlax_ ) ) )
+   ALLOCATE( ab( descb( nlax_ ), desca( nlax_ ) ) )
 
    ! write( 3000 + myid, * ) 'na, nb = ', na, nb
 
@@ -556,7 +556,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
             IF(  mycol /= ipc - 1 ) THEN
                ib = 0
                DO j = icb, ice
-                  DO i = 1, descb( la_nx_ )
+                  DO i = 1, descb( nlax_ )
                      ib = ib + 1
                      buf( ib ) = ab( i, j )
                   END DO
@@ -565,7 +565,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
             ELSE
                ib = icb
                DO j = icb_new( ipc_old ), ice_new( ipc_old )
-                  DO i = 1, descb( la_nx_ )
+                  DO i = 1, descb( nlax_ )
                         b( i, j ) = ab( i, ib )
                   END DO
                   ib = ib + 1
@@ -578,7 +578,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
          IF( ncsnd( ipc_old ) /= ice_new( ipc_old ) - icb_new( ipc_old ) + 1 ) &
             CALL errore( " dsqmred ", " somthing wrong with col 2 ", ncsnd( ipc_old ) )
          !
-         ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb( la_nx_ )
+         ncsnd( ipc_old ) = ncsnd( ipc_old ) * descb( nlax_ )
          !
       END DO
       !
@@ -3023,7 +3023,7 @@ END SUBROUTINE blk2cyc_zredist
 
 SUBROUTINE pzpotf( sll, ldx, n, desc )
    !
-   use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ ,&
+   use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ ,&
                           nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
    use parallel_include
    use kinds
@@ -3057,6 +3057,10 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
 
    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
       CALL errore( ' pzpotf ', ' only square grid are allowed ', 1 ) 
+   END IF
+
+   IF( ldx /= desc( nlax_ ) ) THEN
+      CALL errore( ' pzpotf ', ' wrong leading dimension ldx ', ldx ) 
    END IF
 
    nr = desc( nlar_ )
@@ -3218,7 +3222,7 @@ END SUBROUTINE pzpotf
 
 SUBROUTINE pdpotf( sll, ldx, n, desc )
    !
-   use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ ,&
+   use descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ , &
                           nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
    use parallel_include
    use kinds
@@ -3249,7 +3253,11 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
    np    = desc( la_npr_ )
 
    IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
-      CALL errore( ' pzpotf ', ' only square grid are allowed ', 1 ) 
+      CALL errore( ' pdpotf ', ' only square grid are allowed ', 1 ) 
+   END IF
+
+   IF( ldx /= desc( nlax_ ) ) THEN
+      CALL errore( ' pdpotf ', ' wrong leading dimension ldx ', ldx ) 
    END IF
 
    nr = desc( nlar_ )
@@ -3442,7 +3450,7 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
 
     USE kinds
     USE parallel_include
-    USE descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ ,&
+    USE descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ , &
                           nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
 
     IMPLICIT NONE
@@ -3480,6 +3488,9 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
 
     IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
        CALL errore( ' pztrtri ', ' only square grid are allowed ', 1 ) 
+    END IF
+    IF( ldx /= desc( nlax_ ) ) THEN
+       CALL errore( ' pztrtri ', ' wrong leading dimension ldx ', ldx ) 
     END IF
 
     nr = desc( nlar_ )
@@ -3751,7 +3762,7 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
 
     USE kinds
     USE parallel_include
-    USE descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ ,&
+    USE descriptors, ONLY: descla_local_dims, descla_siz_ , la_myr_ , la_myc_ , la_me_ , nlax_ , &
                           nlar_ , nlac_ , ilar_ , ilac_ , la_comm_ , la_nx_ , la_npr_ , la_npc_
 
     IMPLICIT NONE
@@ -3789,6 +3800,9 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
 
     IF( desc( la_npr_ ) /= desc( la_npc_ ) ) THEN
        CALL errore( ' pdtrtri ', ' only square grid are allowed ', 1 ) 
+    END IF
+    IF( ldx /= desc( nlax_ ) ) THEN
+       CALL errore( ' pdtrtri ', ' wrong leading dimension ldx ', ldx ) 
     END IF
 
     nr = desc( nlar_ )
