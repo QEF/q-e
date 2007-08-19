@@ -578,6 +578,12 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      ALLOCATE( sl( nx , nx ) )
      ALLOCATE( hl( nx , nx ) )
      !
+  ELSE
+     !
+     ALLOCATE( vl( 1 , 1 ) )
+     ALLOCATE( sl( 1 , 1 ) )
+     ALLOCATE( hl( 1 , 1 ) )
+     !
   END IF
   !
   ALLOCATE( ew( nvecx ) )
@@ -828,7 +834,7 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
   END DO iterate
   !
-  IF( la_proc ) DEALLOCATE( vl, hl, sl )
+  DEALLOCATE( vl, hl, sl )
   !
   DEALLOCATE( rank_ip )
   DEALLOCATE( ic_notcnv )
