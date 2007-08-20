@@ -25,6 +25,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : noncolin, npol
   USE bp,               ONLY : lelfield
+  USE control_flags,    ONLY : use_distpara_diago
   !
   IMPLICIT NONE
   !
@@ -92,6 +93,16 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
+  IF( use_distpara_diago ) THEN
+     !
+     ! use data distributed subroutine, see below.
+     !
+     CALL pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+                    uspp, e, btype, notcnv, lrot, dav_iter )
+     !
+     RETURN 
+     !
+  END IF
   !
   CALL start_clock( 'cegterg' )
   !
@@ -471,3 +482,950 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   RETURN
   !
 END SUBROUTINE cegterg
+
+
+!
+!  Subroutine with distributed matrixes
+!  (written by Carlo Cavazzoni)
+!
+!----------------------------------------------------------------------------
+SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+                    uspp, e, btype, notcnv, lrot, dav_iter )
+  !----------------------------------------------------------------------------
+  !
+  ! ... iterative solution of the eigenvalue problem:
+  !
+  ! ... ( H - e S ) * evc = 0
+  !
+  ! ... where H is an hermitean operator, e is a real scalar,
+  ! ... S is an uspp matrix, evc is a complex vector
+  !
+  USE kinds,     ONLY : DP
+  USE io_global, ONLY : stdout
+  USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
+                               intra_pool_comm, init_ortho_group, me_image, &
+                               ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , la_n_ , &
+                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &
+                               la_myr_ , la_myc_ , nlax_
+  USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
+  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
+  USE noncollin_module, ONLY : noncolin, npol
+  USE bp,               ONLY : lelfield
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx
+    ! dimension of the matrix to be diagonalized
+    ! leading dimension of matrix evc, as declared in the calling pgm unit
+    ! integer number of searched low-lying roots
+    ! maximum dimension of the reduced basis set
+    !    (the basis set is refreshed when its dimension would exceed nvecx)
+  COMPLEX(DP), INTENT(INOUT) :: evc(ndmx,npol,nvec)
+    !  evc   contains the  refined estimates of the eigenvectors
+  REAL(DP), INTENT(IN) :: ethr
+    ! energy threshold for convergence: root improvement is stopped,
+    ! when two consecutive estimates of the root differ by less than ethr.
+  LOGICAL, INTENT(IN) :: uspp
+    ! if .FALSE. : S|psi> not needed
+  INTEGER, INTENT(IN) :: btype(nvec)
+    ! band type ( 1 = occupied, 0 = empty )
+  LOGICAL, INTENT(IN) :: lrot
+    ! .TRUE. if the wfc have already be rotated
+  REAL(DP), INTENT(OUT) :: e(nvec)
+    ! contains the estimated roots.
+  INTEGER, INTENT(OUT) :: dav_iter, notcnv
+    ! integer  number of iterations performed
+    ! number of unconverged roots
+  !
+  ! ... LOCAL variables
+  !
+  INTEGER, PARAMETER :: maxter = 20
+    ! maximum number of iterations
+  !
+  INTEGER :: kter, nbase, np, kdim, kdmx, n, m, nb1, nbn
+    ! counter on iterations
+    ! dimension of the reduced basis
+    ! counter on the reduced basis vectors
+    ! do-loop counters
+  REAL(DP), ALLOCATABLE :: ew(:)
+  COMPLEX(DP), ALLOCATABLE :: hl(:,:), sl(:,:), vl(:,:)
+    ! Hamiltonian on the reduced basis
+    ! S matrix on the reduced basis
+    ! eigenvectors of the Hamiltonian
+    ! eigenvalues of the reduced hamiltonian
+  COMPLEX(DP), ALLOCATABLE :: psi(:,:,:), hpsi(:,:,:), spsi(:,:,:)
+    ! work space, contains psi
+    ! the product of H and psi
+    ! the product of S and psi
+  LOGICAL, ALLOCATABLE :: conv(:)
+    ! true if the root is converged
+  REAL(DP) :: empty_ethr 
+    ! threshold for empty bands
+  INTEGER :: desc( descla_siz_ ), desc_old( descla_siz_ )
+  INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
+  INTEGER, ALLOCATABLE :: rank_ip( :, : )
+    ! matrix distribution descriptors
+  INTEGER :: nx
+    ! maximum local block dimension
+  LOGICAL :: la_proc
+    ! flag to distinguish procs involved in linear algebra
+  INTEGER, ALLOCATABLE :: notcnv_ip( : )
+  INTEGER, ALLOCATABLE :: ic_notcnv( : )
+  !
+  REAL(DP), EXTERNAL :: DDOT
+  !
+  EXTERNAL  h_psi, s_psi, g_psi
+    ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+    !     calculates H|psi> 
+    ! s_psi(ndmx,ndim,nvec,psi,spsi)
+    !     calculates S|psi> (if needed)
+    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
+    ! g_psi(ndmx,ndim,notcnv,psi,e)
+    !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
+    !    the first nvec columns contain the trial eigenvectors
+  !
+  !
+  CALL start_clock( 'cegterg' )
+  !
+  IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
+  !
+  ! ... threshold for empty bands
+  !
+  empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
+  !
+  IF ( npol == 1 ) THEN
+     !
+     kdim = ndim
+     kdmx = ndmx
+     !
+  ELSE
+     !
+     kdim = ndmx*npol
+     kdmx = ndmx*npol
+     !
+  END IF
+
+  ALLOCATE(  psi( ndmx, npol, nvecx ) )
+  ALLOCATE( hpsi( ndmx, npol, nvecx ) )
+  !
+  IF ( uspp ) ALLOCATE( spsi( ndmx, npol, nvecx ) )
+  !
+  ! ... Initialize the matrix descriptor
+  !
+  ALLOCATE( ic_notcnv( np_ortho(2) ) )
+  ALLOCATE( notcnv_ip( np_ortho(2) ) )
+  ALLOCATE( desc_ip( descla_siz_ , np_ortho(1), np_ortho(2) ) )
+  ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
+  !
+  CALL desc_init( nvec, desc, desc_ip )
+  !
+  IF( la_proc ) THEN
+     !
+     ! only procs involved in the diagonalization need to allocate local 
+     ! matrix block.
+     !
+     ALLOCATE( vl( nx , nx ) )
+     ALLOCATE( sl( nx , nx ) )
+     ALLOCATE( hl( nx , nx ) )
+     !
+  ELSE
+     !
+     ALLOCATE( vl( 1 , 1 ) )
+     ALLOCATE( sl( 1 , 1 ) )
+     ALLOCATE( hl( 1 , 1 ) )
+     !
+  END IF
+  !
+  ALLOCATE( ew( nvecx ) )
+  ALLOCATE( conv( nvec ) )
+  !
+  notcnv = nvec
+  nbase  = nvec
+  conv   = .FALSE.
+  !
+  IF ( uspp ) spsi = ZERO
+  !
+  hpsi = ZERO
+  psi  = ZERO
+  psi(:,:,1:nvec) = evc(:,:,1:nvec)
+  !
+  ! ... hpsi contains h times the basis vectors
+  !
+  IF ( noncolin ) THEN
+     !
+     CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
+     !
+     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
+     IF ( uspp ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
+     !
+  ELSE
+     !
+     CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
+     !
+     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
+     IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+     !
+  END IF
+  !
+  ! ... hl contains the projection of the hamiltonian onto the reduced
+  ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
+  ! ... are all distributed across processors, global replicated matrixes
+  ! ... here are never allocated
+  !
+  CALL compute_distmat( hl, psi, hpsi ) 
+  !
+  IF ( uspp ) THEN
+     !
+     CALL compute_distmat( sl, psi, spsi ) 
+     !
+  ELSE
+     !
+     CALL compute_distmat( sl, psi, psi )  
+     !
+  END IF
+  !
+  IF ( lrot ) THEN
+     !
+     CALL set_e_from_h()
+     !
+     CALL set_to_identity( vl, desc )
+     !
+  ELSE
+     !
+     ! ... diagonalize the reduced hamiltonian
+     !     Calling block parallel algorithm
+     !
+     CALL pcdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     !
+     e(1:nvec) = ew(1:nvec)
+     !
+  END IF
+  !
+  ! ... iterate
+  !
+  iterate: DO kter = 1, maxter
+     !
+     dav_iter = kter
+     !
+     CALL start_clock( 'update' )
+     !
+     CALL reorder_v()
+     !
+     nb1 = nbase + 1
+     !
+     ! ... expand the basis set with new basis vectors ( H - e*S )|psi> ...
+     !
+     CALL hpsi_dot_v()
+     !
+     CALL stop_clock( 'update' )
+     !
+     ! ... approximate inverse iteration
+     !
+     CALL g_psi( ndmx, ndim, notcnv, npol, psi(1,1,nb1), ew(nb1) )
+     !
+     ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
+     ! ... order to improve numerical stability of subspace diagonalization 
+     ! ... (cdiaghg) ew is used as work array :
+     !
+     ! ...         ew = <psi_i|psi_i>,  i = nbase + 1, nbase + notcnv
+     !
+     DO n = 1, notcnv
+        !
+        nbn = nbase + n
+        !
+        IF ( npol == 1 ) THEN
+           !
+           ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
+           !
+        ELSE
+           !
+           ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
+                   DDOT( 2*ndim, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
+           !
+        END IF
+        !
+     END DO
+     !
+     CALL reduce( notcnv, ew )
+     !
+     DO n = 1, notcnv
+        !
+        psi(:,:,nbase+n) = psi(:,:,nbase+n) / SQRT( ew(n) )
+        !
+     END DO
+     !
+     ! ... here compute the hpsi and spsi of the new functions
+     !
+     IF ( noncolin ) THEN
+        !
+        CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        !
+        IF ( lelfield ) &
+           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        !
+        IF ( uspp ) &
+           CALL s_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
+        !
+     ELSE
+        !
+        CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        !
+        IF ( lelfield ) &
+           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        !
+        IF ( uspp ) &
+           CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
+        !
+     END IF
+     !
+     ! ... update the reduced hamiltonian
+     !
+     ! we need to save the old descriptor in order to redistribute marixes 
+     !
+     desc_old = desc
+     !
+     ! ... RE-Initialize the matrix descriptor
+     !
+     CALL desc_init( nbase+notcnv, desc, desc_ip )
+     !
+     IF( la_proc ) THEN
+
+        !  redistribute hl and sl (see dsqmred), since the dimension of the subspace has changed
+        !
+        vl = hl
+        DEALLOCATE( hl )
+        ALLOCATE( hl( nx , nx ) )
+        CALL zsqmred( nbase, vl, desc_old( nlax_ ), desc_old, nbase+notcnv, hl, nx, desc )
+
+        vl = sl
+        DEALLOCATE( sl )
+        ALLOCATE( sl( nx , nx ) )
+        CALL zsqmred( nbase, vl, desc_old( nlax_ ), desc_old, nbase+notcnv, sl, nx, desc )
+
+        DEALLOCATE( vl )
+        ALLOCATE( vl( nx , nx ) )
+
+     END IF
+     !
+     CALL start_clock( 'uspp' )
+     !
+     CALL update_distmat( hl, psi, hpsi )
+     !
+     IF ( uspp ) THEN
+        !
+        CALL update_distmat( sl, psi, spsi )
+        !
+     ELSE
+        !
+        CALL update_distmat( sl, psi, psi )
+        !
+     END IF
+     !
+     CALL stop_clock( 'uspp' )
+     !
+     nbase = nbase + notcnv
+     !
+     ! ... diagonalize the reduced hamiltonian
+     !     Call block parallel algorithm
+     !
+     CALL pcdiaghg( nbase, hl, sl, nx, ew, vl, desc )
+     !
+     ! ... test for convergence
+     !
+     WHERE( btype(1:nvec) == 1 )
+        !
+        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < ethr ) )
+        !
+     ELSEWHERE
+        !
+        conv(1:nvec) = ( ( ABS( ew(1:nvec) - e(1:nvec) ) < empty_ethr ) )
+        !
+     END WHERE
+     !
+     notcnv = COUNT( .NOT. conv(:) )
+     !
+     e(1:nvec) = ew(1:nvec)
+     !
+     ! ... if overall convergence has been achieved, or the dimension of
+     ! ... the reduced basis set is becoming too large, or in any case if
+     ! ... we are at the last iteration refresh the basis set. i.e. replace
+     ! ... the first nvec elements with the current estimate of the
+     ! ... eigenvectors;  set the basis dimension to nvec.
+     !
+     IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
+        !
+        CALL start_clock( 'last' )
+        !
+        CALL refresh_evc()       
+        !
+        IF ( notcnv == 0 ) THEN
+           !
+           ! ... all roots converged: return
+           !
+           CALL stop_clock( 'last' )
+           !
+           EXIT iterate
+           !
+        ELSE IF ( dav_iter == maxter ) THEN
+           !
+           ! ... last iteration, some roots not converged: return
+           !
+           !!!WRITE( stdout, '(5X,"WARNING: ",I5, &
+           !!!     &   " eigenvalues not converged")' ) notcnv
+           !
+           CALL stop_clock( 'last' )
+           !
+           EXIT iterate
+           !
+        END IF
+        !
+        ! ... refresh psi, H*psi and S*psi
+        !
+        psi(:,:,1:nvec) = evc(:,:,1:nvec)
+        !
+        IF ( uspp ) THEN
+           !
+           CALL refresh_spsi()
+           ! 
+        END IF
+        !
+        CALL refresh_hpsi()
+        !
+        ! ... refresh the reduced hamiltonian
+        !
+        nbase = nvec
+        !
+        CALL desc_init( nvec, desc, desc_ip )
+        !
+        IF( la_proc ) THEN
+           !
+           ! note that nx has been changed by desc_init
+           ! we need to re-alloc with the new size.
+           !
+           DEALLOCATE( vl, hl, sl )
+           ALLOCATE( vl( nx, nx ) )
+           ALLOCATE( hl( nx, nx ) )
+           ALLOCATE( sl( nx, nx ) )
+           !
+        END IF
+        !
+        CALL set_h_from_e( )
+        !
+        CALL set_to_identity( vl, desc )
+        CALL set_to_identity( sl, desc )
+        !
+        CALL stop_clock( 'last' )
+        !
+     END IF
+     !
+  END DO iterate
+  !
+  DEALLOCATE( vl, hl, sl )
+  !
+  DEALLOCATE( rank_ip )
+  DEALLOCATE( ic_notcnv )
+  DEALLOCATE( desc_ip )
+  DEALLOCATE( notcnv_ip )
+  DEALLOCATE( conv )
+  DEALLOCATE( ew )
+  !
+  IF ( uspp ) DEALLOCATE( spsi )
+  !
+  DEALLOCATE( hpsi )
+  DEALLOCATE( psi )  
+  !
+  CALL stop_clock( 'cegterg' )
+  !
+  RETURN
+  !
+  !
+CONTAINS
+  !
+  !
+  SUBROUTINE desc_init( nsiz, desc, desc_ip )
+     !
+     INTEGER, INTENT(IN)  :: nsiz
+     INTEGER, INTENT(OUT) :: desc(:) 
+     INTEGER, INTENT(OUT) :: desc_ip(:,:,:) 
+     INTEGER :: i, j, rank
+     INTEGER :: coor_ip( 2 )
+     !
+     CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
+     !
+     nx = desc( nlax_ )
+     !
+     DO j = 0, desc( la_npc_ ) - 1
+        DO i = 0, desc( la_npr_ ) - 1
+           coor_ip( 1 ) = i
+           coor_ip( 2 ) = j
+           CALL descla_init( desc_ip(:,i+1,j+1), desc( la_n_ ), desc( la_nx_ ), &
+                             np_ortho, coor_ip, ortho_comm, 1 )
+           CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), i, j, rank )
+           rank_ip( i+1, j+1 ) = rank * leg_ortho
+        END DO
+     END DO
+     !
+     la_proc = .FALSE.
+     IF( desc( lambda_node_ ) > 0 ) la_proc = .TRUE.
+     !
+     RETURN
+  END SUBROUTINE desc_init
+  !
+  !
+  SUBROUTINE set_to_identity( distmat, desc )
+     INTEGER, INTENT(IN)  :: desc(:) 
+     COMPLEX(DP), INTENT(OUT) :: distmat(:,:)
+     INTEGER :: i
+     distmat = ( 0_DP , 0_DP )
+     IF( desc( la_myc_ ) == desc( la_myr_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
+        DO i = 1, desc( nlac_ )
+           distmat( i, i ) = ( 1_DP , 0_DP )
+        END DO
+     END IF 
+     RETURN
+  END SUBROUTINE set_to_identity
+  !
+  !
+  SUBROUTINE reorder_v()
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nc, ic
+     INTEGER :: nl, npl
+     !
+     np = 0
+     !
+     notcnv_ip = 0
+     !
+     n = 0
+     !
+     DO ipc = 1, desc( la_npc_ )
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        npl = 0
+        !
+        IF( ic <= nvec ) THEN
+           !
+           DO nl = 1, min( nvec - ic + 1, nc )
+              !
+              n  = n  + 1
+              !
+              IF ( .NOT. conv(n) ) THEN
+                 !
+                 ! ... this root not yet converged ... 
+                 !
+                 np  = np  + 1
+                 npl = npl + 1
+                 IF( npl == 1 ) ic_notcnv( ipc ) = np
+                 !
+                 ! ... reorder eigenvectors so that coefficients for unconverged
+                 ! ... roots come first. This allows to use quick matrix-matrix 
+                 ! ... multiplications to set a new basis vector (see below)
+                 !
+                 notcnv_ip( ipc ) = notcnv_ip( ipc ) + 1
+                 !
+                 IF ( npl /= nl ) THEN
+                    IF( la_proc .AND. desc( la_myc_ ) == ipc-1 ) THEN
+                       vl( :, npl) = vl( :, nl )
+                    END IF
+                 END IF
+                 !
+                 ! ... for use in g_psi
+                 !
+                 ew(nbase+np) = e(n)
+                 !   
+              END IF
+              !
+           END DO
+           !
+        END IF
+        !
+     END DO
+     !
+  END SUBROUTINE reorder_v
+  !
+  !
+  SUBROUTINE hpsi_dot_v()
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, notcl, root, np
+     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+     COMPLEX(DP), ALLOCATABLE :: ptmp( :, :, : )
+     COMPLEX(DP) :: beta
+
+     ALLOCATE( vtmp( nx, nx ) )
+     ALLOCATE( ptmp( ndmx, npol, nx ) )
+
+     DO ipc = 1, desc( la_npc_ )
+        !
+        IF( notcnv_ip( ipc ) > 0 ) THEN
+
+           notcl = notcnv_ip( ipc )
+           ic    = ic_notcnv( ipc ) 
+
+           ptmp = ZERO
+           beta = ZERO
+
+           DO ipr = 1, desc( la_npr_ )
+              !
+              nr = desc_ip( nlar_ , ipr, ipc )
+              ir = desc_ip( ilar_ , ipr, ipc )
+              !
+              root = rank_ip( ipr, ipc )
+
+              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+                 vtmp(:,1:notcl) = vl(:,1:notcl)
+              END IF
+
+              CALL mp_bcast( vtmp(:,1:notcl), root, intra_pool_comm )
+              ! 
+              IF ( uspp ) THEN
+                 !
+                 CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
+                    spsi( 1, 1, ir ), kdmx, vtmp, nx, beta, psi(1,1,nb1+ic-1), kdmx )
+                 !
+              ELSE
+                 !
+                 CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
+                    psi( 1, 1, ir ), kdmx, vtmp, nx, beta, psi(1,1,nb1+ic-1), kdmx )
+                 !
+              END IF
+              !
+              CALL ZGEMM( 'N', 'N', kdim, notcl, nr, ONE, &
+                      hpsi( 1, 1, ir ), kdmx, vtmp, nx, ONE, ptmp, kdmx )
+
+              beta = ONE
+
+           END DO
+
+           DO np = 1, notcl
+              !
+              psi(:,:,nbase+np+ic-1) = ptmp(:,:,np) - ew(nbase+np+ic-1) * psi(:,:,nbase+np+ic-1)
+              !
+           END DO
+           !
+        END IF
+        !
+     END DO
+
+     DEALLOCATE( vtmp )
+     DEALLOCATE( ptmp )
+
+     RETURN
+  END SUBROUTINE hpsi_dot_v
+  !
+  !
+  SUBROUTINE refresh_evc( )
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root
+     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+     COMPLEX(DP) :: beta
+
+     ALLOCATE( vtmp( nx, nx ) )
+     !
+     DO ipc = 1, desc( la_npc_ )
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        IF( ic <= nvec ) THEN
+           !
+           nc = min( nc, nvec - ic + 1 )
+           !
+           beta = ZERO
+
+           DO ipr = 1, desc( la_npr_ )
+              !
+              nr = desc_ip( nlar_ , ipr, ipc )
+              ir = desc_ip( ilar_ , ipr, ipc )
+              !
+              root = rank_ip( ipr, ipc )
+
+              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+                 !
+                 !  this proc sends his block
+                 ! 
+                 CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
+                          psi(1,1,ir), kdmx, vl, nx, beta, evc(1,1,ic), kdmx )
+              ELSE
+                 !
+                 !  all other procs receive
+                 ! 
+                 CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
+                          psi(1,1,ir), kdmx, vtmp, nx, beta, evc(1,1,ic), kdmx )
+              END IF
+              ! 
+
+              beta = ONE
+
+           END DO
+           !
+        END IF
+        !
+     END DO
+     !
+     DEALLOCATE( vtmp )
+
+     RETURN
+  END SUBROUTINE refresh_evc
+  !
+  !
+  SUBROUTINE refresh_spsi( )
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root
+     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+     COMPLEX(DP) :: beta
+
+     ALLOCATE( vtmp( nx, nx ) )
+     !
+     DO ipc = 1, desc( la_npc_ )
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        IF( ic <= nvec ) THEN
+           !
+           nc = min( nc, nvec - ic + 1 )
+           !
+           beta = ZERO
+           !
+           DO ipr = 1, desc( la_npr_ )
+              !
+              nr = desc_ip( nlar_ , ipr, ipc )
+              ir = desc_ip( ilar_ , ipr, ipc )
+              !
+              root = rank_ip( ipr, ipc )
+
+              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+                 !
+                 !  this proc sends his block
+                 ! 
+                 CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
+                          spsi(1,1,ir), kdmx, vl, nx, beta, psi(1,1,nvec+ic), kdmx )
+              ELSE
+                 !
+                 !  all other procs receive
+                 ! 
+                 CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
+                          spsi(1,1,ir), kdmx, vtmp, nx, beta, psi(1,1,nvec+ic), kdmx )
+              END IF
+              ! 
+              beta = ONE
+
+           END DO
+           !
+        END IF
+        !
+     END DO
+     !
+     spsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
+     !
+     DEALLOCATE( vtmp )
+
+     RETURN
+  END SUBROUTINE refresh_spsi
+  !
+  !
+  !
+  SUBROUTINE refresh_hpsi( )
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root
+     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+     COMPLEX(DP) :: beta
+
+     ALLOCATE( vtmp( nx, nx ) )
+     !
+     DO ipc = 1, desc( la_npc_ )
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        IF( ic <= nvec ) THEN
+           !
+           nc = min( nc, nvec - ic + 1 )
+           !
+           beta = ZERO
+           !
+           DO ipr = 1, desc( la_npr_ )
+              !
+              nr = desc_ip( nlar_ , ipr, ipc )
+              ir = desc_ip( ilar_ , ipr, ipc )
+              !
+              root = rank_ip( ipr, ipc )
+
+              IF( ipr-1 == desc( la_myr_ ) .AND. ipc-1 == desc( la_myc_ ) .AND. la_proc ) THEN
+                 !
+                 !  this proc sends his block
+                 ! 
+                 CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
+                          hpsi(1,1,ir), kdmx, vl, nx, beta, psi(1,1,nvec+ic), kdmx )
+              ELSE
+                 !
+                 !  all other procs receive
+                 ! 
+                 CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ONE, &
+                          hpsi(1,1,ir), kdmx, vtmp, nx, beta, psi(1,1,nvec+ic), kdmx )
+              END IF
+              ! 
+              beta = ONE
+
+           END DO
+           !
+        END IF
+        !
+     END DO
+     !
+     DEALLOCATE( vtmp )
+
+     hpsi(:,:,1:nvec) = psi(:,:,nvec+1:nvec+nvec)
+
+     RETURN
+  END SUBROUTINE refresh_hpsi
+  !
+  !
+
+  SUBROUTINE compute_distmat( dm, v, w )
+     !
+     !  This subroutine compute <vi|wj> and store the
+     !  result in distributed matrix dm 
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root
+     COMPLEX(DP), INTENT(OUT) :: dm( :, : )
+     COMPLEX(DP) :: v(:,:,:), w(:,:,:)
+     COMPLEX(DP), ALLOCATABLE :: work( :, : )
+     !
+     ALLOCATE( work( nx, nx ) )
+     !
+     work = ZERO
+     !
+     DO ipc = 1, desc( la_npc_ ) !  loop on column procs 
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
+           !
+           nr = desc_ip( nlar_ , ipr, ipc )
+           ir = desc_ip( ilar_ , ipr, ipc )
+           !
+           !  rank of the processor for which this block (ipr,ipc) is destinated
+           !
+           root = rank_ip( ipr, ipc )
+
+           ! use blas subs. on the matrix block
+
+           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ONE , &
+                       v(1,1,ir), kdmx, w(1,1,ic), kdmx, ZERO, work, nx )
+
+           ! accumulate result on dm of root proc.
+
+           CALL mp_root_sum( work, dm, root, intra_pool_comm )
+
+        END DO
+        !
+     END DO
+     !
+     CALL zsqmher( nbase, dm, nx, desc )
+     !
+     DEALLOCATE( work )
+     !
+     RETURN
+  END SUBROUTINE compute_distmat
+  !
+  !
+  SUBROUTINE update_distmat( dm, v, w )
+     !
+     INTEGER :: ipc, ipr
+     INTEGER :: nr, nc, ir, ic, root, icc, ii
+     COMPLEX(DP) :: dm( :, : )
+     COMPLEX(DP) :: v(:,:,:), w(:,:,:)
+     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+
+     ALLOCATE( vtmp( nx, nx ) )
+     !
+     vtmp = ZERO
+     !
+     DO ipc = 1, desc( la_npc_ )
+        !
+        nc = desc_ip( nlac_ , 1, ipc )
+        ic = desc_ip( ilac_ , 1, ipc )
+        !
+        IF( ic+nc-1 >= nb1 ) THEN
+
+           nc = MIN( nc, ic+nc-1 - nb1 + 1 )
+           IF( ic >= nb1 ) THEN
+              ii = ic
+              icc = 1
+           ELSE
+              ii = nb1
+              icc = nb1-ic+1
+           END IF
+
+           DO ipr = 1, ipc ! desc( la_npr_ ) use symmetry
+              !
+              nr = desc_ip( nlar_ , ipr, ipc )
+              ir = desc_ip( ilar_ , ipr, ipc )
+              !
+              root = rank_ip( ipr, ipc )
+
+              CALL ZGEMM( 'C', 'N', nr, nc, kdim, ONE, v( 1, 1, ir ), &
+                          kdmx, w(1,1,ii), kdmx, ZERO, vtmp, nx )
+              !
+              CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_pool_comm )
+
+           END DO
+           !
+        END IF
+        !
+     END DO
+     !
+     CALL zsqmher( nbase+notcnv, dm, nx, desc )
+     !
+     DEALLOCATE( vtmp )
+     RETURN
+  END SUBROUTINE update_distmat
+  !
+  !
+  !
+  SUBROUTINE set_e_from_h()
+     INTEGER :: nc, ic, i
+     e(1:nbase) = 0_DP
+     IF( desc( la_myc_ ) == desc( la_myr_ ) .AND. la_proc ) THEN
+        nc = desc( nlac_ )
+        ic = desc( ilac_ )
+        DO i = 1, nc
+           e( i + ic - 1 ) = REAL( hl( i, i ) )
+        END DO
+     END IF
+     CALL mp_sum( e(1:nbase), intra_pool_comm )
+     RETURN
+  END SUBROUTINE set_e_from_h
+  !
+  SUBROUTINE set_h_from_e()
+     INTEGER :: nc, ic, i
+     IF( la_proc ) THEN
+        hl = ZERO
+        IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+           nc = desc( nlac_ )
+           ic = desc( ilac_ )
+           DO i = 1, nc
+              hl(i,i) = CMPLX( e( i + ic - 1 ), 0_DP )
+           END DO
+        END IF
+     END IF
+     RETURN
+  END SUBROUTINE set_h_from_e
+  !
+END SUBROUTINE pcegterg
