@@ -229,7 +229,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   USE mp_global,        ONLY : root_pool, intra_pool_comm
   USE dspev_module,     ONLY : pdspev_drv
   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_ 
+                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_nrlx_
   !
   !
   IMPLICIT NONE
@@ -237,17 +237,17 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   INTEGER, INTENT(IN) :: n, ldh
     ! dimension of the matrix to be diagonalized and number of eigenstates to be calculated
     ! leading dimension of h, as declared in the calling pgm unit
-  REAL(DP), INTENT(INOUT) :: h(ldh,n), s(ldh,n)
+  REAL(DP), INTENT(INOUT) :: h(ldh,ldh), s(ldh,ldh)
     ! matrix to be diagonalized
     ! overlap matrix
   !
   REAL(DP), INTENT(OUT) :: e(n)
     ! eigenvalues
-  REAL(DP), INTENT(OUT) :: v(ldh,n)
+  REAL(DP), INTENT(OUT) :: v(ldh,ldh)
     ! eigenvectors (column-wise)
   INTEGER, INTENT(IN)   :: desc( descla_siz_ )
   !
-  INTEGER               :: nx, nrl
+  INTEGER               :: nx, nrl, nrlx
     ! local block size
   REAL(DP), PARAMETER   :: one = 1_DP
   REAL(DP), PARAMETER   :: zero = 0_DP
@@ -257,8 +257,9 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
-     nx  = desc( nlax_ )
-     nrl = desc( la_nrl_ )
+     nx   = desc( nlax_ )
+     nrl  = desc( la_nrl_ )
+     nrlx = desc( la_nrlx_ )
      !
      IF( nx /= ldh ) &
         CALL errore(" prdiaghg ", " inconsistent leading dimension ", ldh )
@@ -319,15 +320,15 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      ! 
      !  Compute local dimension of the cyclically distributed matrix
      !
-     ALLOCATE( diag( nrl, n ) )
-     ALLOCATE( vv( nrl, n ) )
+     ALLOCATE( diag( nrlx, n ) )
+     ALLOCATE( vv( nrlx, n ) )
      !
-     CALL blk2cyc_redist( n, diag, nrl, hh, nx, desc )
+     CALL blk2cyc_redist( n, diag, nrlx, hh, nx, desc )
      !
-     CALL pdspev_drv( 'V', diag, nrl, e, vv, nrl, nrl, n, &
+     CALL pdspev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, n, &
           desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
      !
-     CALL cyc2blk_redist( n, vv, nrl, hh, nx, desc )
+     CALL cyc2blk_redist( n, vv, nrlx, hh, nx, desc )
      !
      DEALLOCATE( vv )
      DEALLOCATE( diag )
