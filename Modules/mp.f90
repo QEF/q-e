@@ -52,7 +52,7 @@
       END INTERFACE
 
       INTERFACE mp_root_sum
-        MODULE PROCEDURE mp_root_sum_rm
+        MODULE PROCEDURE mp_root_sum_rm, mp_root_sum_cm
       END INTERFACE
 
       INTERFACE mp_get
@@ -1628,6 +1628,52 @@
 #endif
 
       END SUBROUTINE mp_root_sum_rm
+
+
+      SUBROUTINE mp_root_sum_cm( msg, res, root, gid )
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (IN)  :: msg(:,:)
+        COMPLEX (DP), INTENT (OUT) :: res(:,:)
+        INTEGER,   INTENT (IN)  :: root
+        INTEGER, OPTIONAL, INTENT (IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen, ierr, taskid
+
+#if defined(__MPI)
+
+        msglen = size(msg)
+        IF( msglen*16 > mp_msgsiz_max ) CALL mp_stop( 8127 )
+
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+
+        CALL mpi_comm_rank( group, taskid, ierr)
+        IF( taskid == root ) THEN
+           IF( msglen > size(res) ) CALL mp_stop( 8129 )
+        END IF
+
+#if defined __XD1
+
+        CALL PARALLEL_SUM_REAL_TO( msg, res, 2*msglen, root, group, ierr )
+        !
+#else
+        !
+        CALL mpi_reduce(msg, res, msglen, mpi_double_complex, mpi_sum, root, group, ierr)
+        !
+#endif
+        IF (ierr/=0) CALL mp_stop( 8128 )
+
+        mp_high_watermark = MAX( mp_high_watermark, 16 * msglen ) 
+        mp_call_count( 36 ) = mp_call_count( 36 ) + 1
+        mp_call_sizex( 36 ) = MAX( mp_call_sizex( 36 ), msglen )
+
+#else
+
+        res = msg
+
+#endif
+
+      END SUBROUTINE mp_root_sum_cm
 
 !
 !------------------------------------------------------------------------------!
