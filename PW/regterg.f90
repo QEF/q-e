@@ -471,7 +471,7 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
                                ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &
                                la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll, dsqmred, dsqmsym
-  USE mp,               ONLY : mp_max, mp_bcast, mp_root_sum, mp_sum
+  USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum
   !
   IMPLICIT NONE
   !
@@ -867,7 +867,6 @@ CONTAINS
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
      nx = desc( nlax_ )
-     CALL mp_max( nx, intra_pool_comm )
      !
      DO j = 0, desc( la_npc_ ) - 1
         DO i = 0, desc( la_npr_ ) - 1
