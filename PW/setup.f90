@@ -1068,13 +1068,6 @@ SUBROUTINE check_distpara_availability()
      IF ( ionode ) WRITE( stdout, '(5X,"Too few bands, we need at least as many bands as SQRT(nproc)")' )
   END IF
 
-  !  for the time being distpara work only for calculation at gamma
-
-  IF( .NOT. gamma_only ) THEN
-     use_distpara_diago = .FALSE.
-     IF ( ionode ) WRITE( stdout, '(5X,"For the time being distpara work only for calculation at gamma")' )
-  END IF
-
   IF( use_distpara_diago ) THEN
      ! 
      ! turn on parallel diagonalization, for all matrixes
