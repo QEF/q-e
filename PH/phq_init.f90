@@ -148,10 +148,11 @@ SUBROUTINE phq_init()
         IF ( ABS( xq(1) - ( xk(1,ikq) - xk(1,ikk) ) ) > eps8 .OR. &
              ABS( xq(2) - ( xk(2,ikq) - xk(2,ikk) ) ) > eps8 .OR. &
              ABS( xq(3) - ( xk(3,ikq) - xk(3,ikk) ) ) > eps8 ) THEN
-           WRITE( stdout, * ) ikk, ikq, nksq
-           WRITE( stdout, * ) ( xq(ipol),     ipol = 1, 3)
-           WRITE( stdout, * ) ( xk(ipol,ikq), ipol = 1, 3)
-           WRITE( stdout, * ) ( xk(ipol,ikk), ipol = 1, 3)
+           WRITE( stdout,'(/,5x,"k points #",i6," and ", &
+                  & i6,5x," total number "i,i6)') ikk, ikq, nksq
+           WRITE( stdout, '(  5x,"Expected q ",3f10.7)')(xq(ipol), ipol=1,3)
+           WRITE( stdout, '(  5x,"Found      ",3f10.7)')((xk(ipol,ikq) &
+                                                -xk(ipol,ikk)), ipol = 1, 3)
            CALL errore( 'phq_init', 'wrong order of k points', 1 )
         END IF
         !
