@@ -15,7 +15,9 @@ subroutine newd_at ( )
   !
   use kinds, only : dp
   use radial_grids, only : ndmx
-  use ld1inc, only : ddd, bmat
+  use ld1inc, only : ddd, bmat, nbeta, nspin, lls, jjs, ikk, qvan, vpstot, &
+                     grid, pseudotype
+  implicit none
 
   integer :: &
        ib,jb,n,is,nst
