@@ -98,19 +98,28 @@
       INTEGER  :: ir, nr, ic, nc, lnode, nlax, nrl, nrlx
       INTEGER  :: ip, npp
       
-      IF( np(1) /= np(2) ) THEN
+      IF( np(1) /= np(2) ) &
          CALL errore( ' descla_init ', ' only square grid of proc are allowed ', 2 )
-      END IF
+      IF( n < 1 ) &
+         CALL errore( ' descla_init ', ' dummy argument n less than 1 ', 3 )
+      IF( nx < n ) &
+         CALL errore( ' descla_init ', ' dummy argument nx less than n ', 4 )
+      IF( np(1) < 1 ) &
+         CALL errore( ' descla_init ', ' dummy argument np less than 1 ', 5 )
 
+      ! find the block maximum dimensions
+
+      nlax = ldim_block( nx, np(1), 0 )
+      DO ip = 1, np(1) - 1
+         nlax = MAX( nlax, ldim_block( nx, np(1), ip ) )
+      END DO
+      !
+      ! find local dimensions, if appropriate
+      !
       IF( includeme == 1 ) THEN
          !
          nr = ldim_block( nx, np(1), me(1) )
          nc = ldim_block( nx, np(2), me(2) )
-         !
-         nlax = ldim_block( nx, np(1), 0 )
-         DO ip = 1, np(1) - 1
-            nlax = MAX( nlax, ldim_block( nx, np(1), ip ) )
-         END DO
          !
          ir = gind_block( 1, nx, np(1), me(1) )
          ic = gind_block( 1, nx, np(2), me(2) )
@@ -134,8 +143,6 @@
          ic = 0
          !
          lnode = -1
-         !
-         nlax = 1
          !
       END IF
 
@@ -168,12 +175,16 @@
       desc( la_nrl_  ) = nrl
       desc( la_nrlx_ ) = nrlx
 
-      IF( nr < 1 .OR. nc < 1 ) THEN
-         CALL errore( ' descla_init ', ' wrong dim ', 1 )
-      END IF
-      IF( nlax < 1 ) THEN
-         CALL errore( ' descla_init ', ' wrong dim ', 2 )
-      END IF
+      IF( nr < 1 .OR. nc < 1 ) &
+         CALL errore( ' descla_init ', ' wrong valune for computed nr and nc ', 1 )
+      IF( nlax < 1 ) &
+         CALL errore( ' descla_init ', ' wrong value for computed nlax ', 2 )
+      IF( nlax < nr ) &
+         CALL errore( ' descla_init ', ' nlax < nr ', 2 )
+      IF( nlax < nc ) &
+         CALL errore( ' descla_init ', ' nlax < nc ', 2 )
+      IF( nrlx < nrl ) &
+         CALL errore( ' descla_init ', ' nrlx < nrl ', 2 )
 
    END SUBROUTINE descla_init
 
