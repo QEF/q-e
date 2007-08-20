@@ -1265,6 +1265,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    DEALLOCATE( tst2 )
    DEALLOCATE( tst1 )
 
+#endif
 
 #endif
 
@@ -2966,7 +2967,7 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    !  Parallel square matrix transposition with Cannon's algorithm
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , la_npc_ , &
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , la_npc_ , la_n_ , &
                            la_comm_ , lambda_node_ , la_npr_ , la_myr_ , la_myc_
    !
    IMPLICIT NONE
@@ -3008,10 +3009,12 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
       CALL errore( ' sqr_tr_cannon ', ' works only with square processor mesh ', 1 )
    IF( n < 1 ) &
       CALL errore( ' sqr_tr_cannon ', ' n less or equal zero ', 1 )
-   IF( n < desc( la_npr_ ) ) &
-      CALL errore( ' sqr_tr_cannon ', ' n less than the mesh size ', 1 )
-   IF( n < desc( nlax_ ) ) &
-      CALL errore( ' sqr_tr_cannon ', ' n less than the block size ', 1 )
+   IF( n /= desc( la_n_ ) ) &
+      CALL errore( ' sqr_tr_cannon ', ' inconsistent size n  ', 1 )
+   IF( lda /= desc( nlax_ ) ) &
+      CALL errore( ' sqr_tr_cannon ', ' inconsistent size lda  ', 1 )
+   IF( ldb /= desc( nlax_ ) ) &
+      CALL errore( ' sqr_tr_cannon ', ' inconsistent size ldb  ', 1 )
 
    comm = desc( la_comm_ )
 
