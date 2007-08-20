@@ -14,6 +14,7 @@ subroutine ld1_readin
   use kinds,      ONLY : dp
   use radial_grids, only: ndmx
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
+  use constants,  ONLY : rytoev
   USE io_global,  ONLY : ionode, ionode_id
   USE mp,         ONLY : mp_bcast
   use ld1inc,     only : els, lls, betas, qq, qvan, ikk, nbeta, pseudotype, &
@@ -31,7 +32,7 @@ subroutine ld1_readin
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
                          file_core, file_beta, file_chi, author, &
                          nld, rlderiv, eminld, emaxld, deld, &
-                         ecutmin, ecutmax, decut
+                         ecutmin, ecutmax, decut, rytoev_fact
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -76,6 +77,7 @@ subroutine ld1_readin
        latt,    &  ! if <> 0 Latter correction is applied
        title,   &  ! the title of the run
        prefix,  &  ! the prefix for file names
+       rytoev_fact, & ! conversion between Ry and eV 
        vdw         ! if .true. vdW coefficient in TF+vW will be calculated
 
   namelist /test/                 &
@@ -148,6 +150,7 @@ subroutine ld1_readin
   nld=0
   deld=0.03_dp
 
+  rytoev_fact=rytoev
   rel = 5 
   lsd = 0
   dft = 'LDA'

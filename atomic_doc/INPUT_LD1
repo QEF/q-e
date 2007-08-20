@@ -57,6 +57,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       isic= 1 (0) : (no) Self-interaction correction (default: no)
                     (only for all-electron calculation)
 
+      rytoev_fact :              (default:see file ../Modules/constants.f90)
+             factor used to convert Ry into eV. 
+
       vdw = .true. or .false.                         (default: .false.) 
              If .true., the frequency dependent polarizability and van der
              Waals coefficient C6 will be computed in Thomas-Fermi and 

@@ -235,6 +235,13 @@ module ld1inc
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
        psccharge(ndmx)      ! smoothened core charge for PAW
   !
+  ! conversion factor
+  ! 
+  real(DP) :: &
+             rytoev_fact    ! Conversion from Ry and eV. A value
+                            ! different from default can be used
+                            ! to reproduce results of old papers.
+  !
   !  file names
   !
   character(len=75)  :: title  ! the title of the run

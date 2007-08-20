@@ -12,12 +12,12 @@ subroutine write_resultsps
   use radial_grids, only : ndmx
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use constants, only : rytoev, eps6
+  use constants, only : eps6
   use ld1inc,    only : title, rel, zed, zval, lsd, isic, latt, beta, tr2, &
                   nwfts, nnts, llts, jjts, elts, octs, iswts, enlts, nstoaets, &
                   grid, enl,  eps0, iter, etot, etots, etot0, &
                   etots0, ekin, encl, ehrt, ecxc, nlcc, ecc, evxt, epseu, &
-                  dhrsic, dxcsic, file_wavefunctionsps, phits
+                  dhrsic, dxcsic, file_wavefunctionsps, phits, rytoev_fact
        
   use funct, only: get_dft_name
   implicit none
@@ -74,9 +74,9 @@ subroutine write_resultsps
   write(stdout,1200) eps0,iter
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
   write(stdout,*)
-  write(stdout,1211) etot, etot*0.5_dp, etot*rytoev
+  write(stdout,1211) etot, etot*0.5_dp, etot*rytoev_fact
 1211 format (5x,'Etot =',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV')
-  write(stdout,1221) etots, etots*0.5_dp, etots*rytoev
+  write(stdout,1221) etots, etots*0.5_dp, etots*rytoev_fact
 1221 format (5x,'Etotps =',f13.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
   if (abs(etot-etot0)> 1.d-9) then 
      write(stdout,1231) etot-etot0
@@ -88,23 +88,23 @@ subroutine write_resultsps
        '(5x,''dEtot_ps ='',f15.6,'' Ry,'',''   Delta E='', f15.6,'' Ry'' )') &
           etots-etots0, etot-etot0-(etots-etots0)
   else
-     if (ionode) write(13,1211) etot, etot*0.5_dp, etot*rytoev
-     if (ionode) write(13,1221) etots, etots*0.5_dp, etots*rytoev
+     if (ionode) write(13,1211) etot, etot*0.5_dp, etot*rytoev_fact
+     if (ionode) write(13,1221) etots, etots*0.5_dp, etots*rytoev_fact
   endif
-  write(stdout,1251) ekin, ekin*0.5_dp, ekin*rytoev
+  write(stdout,1251) ekin, ekin*0.5_dp, ekin*rytoev_fact
 1251 format (/,5x,'Ekin =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
 
-  write(stdout,1261) encl, encl*0.5_dp, encl*rytoev
+  write(stdout,1261) encl, encl*0.5_dp, encl*rytoev_fact
 1261 format (5x,'Encl =',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV') 
-  write(stdout,1271) ehrt, ehrt*0.5_dp, ehrt*rytoev
+  write(stdout,1271) ehrt, ehrt*0.5_dp, ehrt*rytoev_fact
 1271 format (5x,'Ehrt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV') 
-  write(stdout,1281) ecxc, ecxc*0.5_dp, ecxc*rytoev
+  write(stdout,1281) ecxc, ecxc*0.5_dp, ecxc*rytoev_fact
 1281 format (5x,'Ecxc =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
-  if (nlcc) write(stdout,1282) ecc, ecc*0.5_dp, ecc*rytoev
+  if (nlcc) write(stdout,1282) ecc, ecc*0.5_dp, ecc*rytoev_fact
 1282 format (5x,'(Ecc =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV)')
-  write(stdout,1291) evxt, evxt*0.5_dp, evxt*rytoev
+  write(stdout,1291) evxt, evxt*0.5_dp, evxt*rytoev_fact
 1291 format(5x,'Evxt =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
-  write(stdout,1292) epseu, epseu*0.5_dp, epseu*rytoev
+  write(stdout,1292) epseu, epseu*0.5_dp, epseu*rytoev_fact
 1292 format (5x,'Epseu=',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV') 
   if(isic.ne.0) write(stdout,1300) dhrsic+dxcsic, dhrsic, dxcsic
 1300 format(5x,'desic:'/5x,0pf12.4,24x,2(0pf12.4))
