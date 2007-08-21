@@ -926,7 +926,8 @@ cell_dynamics
 press          REAL ( default = 0.D0 )
                target pressure [KBar] in a variable-cell md or relaxation run.
 
-wmass          REAL ( default = sum of atomic masses in the cell )
+wmass          REAL ( default=0.75*Tot_Mass/pi**2 for Parrinello-Rahman MD,
+                             =0.75*Tot_Mass/pi**2/Omega**(2/3) for Wentzcovitch MD.)
                fictitious cell mass [amu] for variable-cell simulations
                (both 'vc-md' and 'vc-relax')
 
