@@ -219,6 +219,9 @@ module ld1inc
        vpot(ndmx,2),  & ! the all-electron scf potential
        vxt(ndmx),     & ! the external potential
        vh(ndmx),      & ! the hartree potential
+       vxc(ndmx,2),   & ! the exchange and correlation potential
+       exc(ndmx),     & ! the exchange and correlation energy
+       excgga(ndmx),  & ! the GGA exchange and correlation energy
        vpstot(ndmx,2),& ! the total local pseudopotential
        vpsloc(ndmx)  ,& ! the local pseudopotential
        vx(ndmx,2)    ,& ! the OEP-X potential (when needed)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2007 QUANTUM-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -7,8 +7,8 @@
 !
 !
 !---------------------------------------------------------------
-subroutine elsd (mesh,zed,grid,rho,zeta,vxt,vh,nlcc,nwf,enl,ll,lsd,&
-           nspin,oc,ndm, vnl, etot,ekin,encl,epseu,ehrt,ecxc,evxt)    
+subroutine elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,   &
+                 etot,ekin,encl,ehrt,ecxc,evxt)    
   !---------------------------------------------------------------
   !
   !   atomic total energy in the local-spin-density scheme
@@ -16,86 +16,86 @@ subroutine elsd (mesh,zed,grid,rho,zeta,vxt,vh,nlcc,nwf,enl,ll,lsd,&
   !   gradient correction allowed (A. Dal Corso fecit AD 1993)
   !
   use kinds, only : DP
-  use constants, only: fpi
-  use radial_grids, only: radial_grid_type
-  use funct, only: get_iexch, dft_is_gradient
+  use radial_grids, only: ndmx, radial_grid_type
+  use funct, only: get_iexch
   use ld1inc, only: vx
   implicit none
-  integer:: ndm,mesh,nwf,i,n,ll(nwf),lam,lmax,lsd,nspin,is
-  logical:: nlcc, gga, oep
+  integer, intent(in) :: nwf, nspin
   type(radial_grid_type),intent(in)::grid
-  real(DP):: zed, int_0_inf_dr, rh(2),rhc,vxc,exc,vxcp(2), &
-       etot,encl,epseu,ekin,ehrt,ecxc,evxt
-  real(DP):: enl(nwf),oc(nwf), rhotot, exc_t, rho(ndm,2),zeta(ndm), &
-       vxt(ndm),vnl(ndm,0:3),vh(ndm)
-  real(DP),allocatable :: f1(:), f2(:), f3(:), f4(:)
-  real(DP),allocatable :: vgc(:,:), egc(:), rhoc(:)
-  integer:: mgcx,mgcc,ierr
+  real(DP), intent(in)  :: zed
+  real(DP), intent(in)  :: enl(nwf), oc(nwf), rho(ndmx,2), &
+                           vxt(ndmx), vh(ndmx), vxc(ndmx,2), exc(ndmx), &
+                           excgga(ndmx)
+  real(DP), intent(out) :: etot,encl,ekin,ehrt,ecxc,evxt
+  real(DP),allocatable :: f1(:), f2(:), f3(:), f4(:), f5(:)
+  real(DP) :: int_0_inf_dr, rhotot
+  integer:: i,n,is,ierr
+  logical:: oep
 
-  gga=dft_is_gradient() 
   oep=get_iexch().eq.4
-  allocate(vgc(ndm,2),stat=ierr)
-  allocate(rhoc(ndm),stat=ierr)
-  allocate(egc(ndm),stat=ierr)
-  allocate(f1(mesh),stat=ierr)
-  allocate(f2(mesh),stat=ierr)
-  allocate(f3(mesh),stat=ierr)
-  allocate(f4(mesh),stat=ierr)
 
-  rhoc=0.0_DP
-  if (mesh.ne.grid%mesh) call errore('elsd','mesh dimension is not as expected',1)
-  call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc,0)
+  allocate(f1(grid%mesh),stat=ierr)
+  allocate(f2(grid%mesh),stat=ierr)
+  allocate(f3(grid%mesh),stat=ierr)
+  allocate(f4(grid%mesh),stat=ierr)
+  allocate(f5(grid%mesh),stat=ierr)
 
-  rhc=0.0_DP
-  do i=1,mesh
+  do i=1,grid%mesh
      rhotot=rho(i,1)
-     if (lsd.eq.1) rhotot=rhotot+rho(i,2) 
+     if (nspin==2) rhotot=rhotot+rho(i,2) 
+!
+!   The integral for the energy due to the interaction with nuclei
+!
      f1(i)=-2.0_DP*zed/grid%r(i) * rhotot
-     f4(i)= vxt(i)       * rhotot
-     vh(i)= vh (i)       * rhotot
-     do is=1, nspin
-        rh(is) = rho(i,is)/grid%r2(i)/fpi
-     enddo
-     call vxc_t(rh,rhc,lsd,vxcp)
-     if (gga) then
-        f2(i) =-(vxcp(1)+vgc(i,1))*rho(i,1)-f1(i)-vh(i)-f4(i)
-        f3(i) = exc_t(rh,rhc,lsd)*rhotot+egc(i)*grid%r2(i)*fpi
-        if (lsd.eq.1) f2(i)=f2(i)-(vxcp(2)+vgc(i,2))*rho(i,2)
-     else
-        f2(i) =-vxcp(1)*rho(i,1)-f1(i)-vh(i)-f4(i)
-        f3(i) = exc_t(rh,rhc,lsd) * rhotot
-        if (lsd.eq.1) f2(i) =f2(i)-vxcp(2)*rho(i,2)
-     endif
+!
+!   The integral for the Hartree energy
+!
+     f2(i)= vh (i) * rhotot
+!
+!   The integral for the exchange and correlation energy 
+!
+     f3(i) = exc(i) * rhotot + excgga(i)
+!
+!   The integral for the interaction with an external potential
+!
+     f4(i)= vxt(i) * rhotot
+!
+!   The integral to be subtracted to the sum of the eigenvalues to
+!   get the kinetic energy
+!
+     f5(i) =-vxc(i,1)*rho(i,1)-f1(i)-f2(i)-f4(i)
+     if (nspin==2) f5(i) =f5(i)-vxc(i,2)*rho(i,2)
+
      if (oep) then
         do is = 1, nspin
-           f2(i) = f2(i) - vx(i,is)*rho(i,is)
+           f5(i) = f5(i) - vx(i,is)*rho(i,is)
         end do
      end if
   enddo
-
-  encl=       int_0_inf_dr(f1,grid,mesh,1)
-  ehrt=0.5_DP*int_0_inf_dr(vh,grid,mesh,2)
-  ecxc=       int_0_inf_dr(f3,grid,mesh,2)
-  evxt=       int_0_inf_dr(f4,grid,mesh,2)
-  !
-  epseu=0.0_DP
-  ekin =      int_0_inf_dr(f2,grid,mesh,1)
-
+!
+!  Now compute the integrals
+!
+  encl=       int_0_inf_dr(f1,grid,grid%mesh,1)
+  ehrt=0.5_DP*int_0_inf_dr(f2,grid,grid%mesh,2)
+  ecxc=       int_0_inf_dr(f3,grid,grid%mesh,2)
+  evxt=       int_0_inf_dr(f4,grid,grid%mesh,2)
+!
+!  The kinetic energy is the sum of the eigenvalues plus the f5 integral
+!
+  ekin = int_0_inf_dr(f5,grid,grid%mesh,1)
   do n=1,nwf
-     ekin=ekin+oc(n)*enl(n)
+     if (oc(n)>0.0_DP) ekin=ekin+oc(n)*enl(n)
   enddo
 
   if (oep) call add_exchange (ecxc)
 
   etot= ekin + encl + ehrt + ecxc + evxt
 
+  deallocate(f5)
   deallocate(f4)
   deallocate(f3)
   deallocate(f2)
   deallocate(f1)
-  deallocate(egc)
-  deallocate(vgc)
-  deallocate(rhoc)
 
   return
 end subroutine elsd

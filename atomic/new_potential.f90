@@ -16,14 +16,14 @@ subroutine new_potential &
   use radial_grids, only: radial_grid_type, hartree
   use kinds, only : DP
   use funct, only : get_iexch, dft_is_gradient
-  use ld1inc, only : nwf, vx
+  use ld1inc, only : nwf, vx, vxc, exc, excgga
   implicit none
   type(radial_grid_type),intent(in):: grid
   integer, intent(in) :: iflag
   logical :: nlcc, gga, oep
   integer :: ndm,mesh,lsd,latt,i,is,nu, nspin, ierr
   real(DP):: rho(ndm,2),vxcp(2),vnew(ndm,2),vxt(ndm),vh(ndm), rhoc(ndm)
-  real(DP):: zed,enne,rh(2),rhc
+  real(DP):: zed,enne,rh(2),rhc, exc_t, rhot
   real(DP),allocatable:: vgc(:,:), egc(:), rhotot(:)
 !  real(DP),allocatable:: vx(:,:)
   real(DP),allocatable:: dchi0(:,:)
@@ -47,6 +47,7 @@ subroutine new_potential &
      enddo
   endif
   call hartree(0,2,mesh,grid,rhotot,vh)
+  deallocate(rhotot)
   !
   ! add exchange and correlation potential: LDA or LSDA only
   !
@@ -58,12 +59,12 @@ subroutine new_potential &
      enddo
      if (nlcc) rhc = rhoc(i)/grid%r2(i)/fpi
      call vxc_t(rh,rhc,lsd,vxcp)
+     exc(i)=exc_t(rh,rhc,lsd)
      do is=1,nspin
+        vxc(i,is)=vxcp(is)
         vnew(i,is)= - zed*e2/grid%r(i)+vxt(i)+vh(i)+vxcp(is)
      enddo
   end do
-
-  deallocate(rhotot)
   !
   ! add exchange and correlation potential: GGA only
   !
@@ -75,12 +76,17 @@ subroutine new_potential &
      call vxcgc(ndm,mesh,nspin,grid%r,grid%r2,rho,rhoc,vgc,egc,iflag)
      do is=1,nspin
         do i=1,mesh
+           vxc(i,is)=vxc(i,is)+vgc(i,is)
            vnew(i,is)=vnew(i,is)+vgc(i,is)
+           excgga(i) =egc(i)*fpi*grid%r2(i)
         enddo
      enddo
      deallocate(egc)
      deallocate(vgc)
+  else
+     excgga=0.0_DP
   end if
+
 
   !
   ! add OEP exchange 

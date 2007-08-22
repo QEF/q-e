@@ -16,19 +16,18 @@ subroutine all_electron(ild)
   !
   use kinds, only : DP
   use radial_grids, only: ndmx
-!  use  ld1inc
   use  ld1inc, only: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
                      deld, encl, etot, ecxc, evxt, ehrt, epseu, ekin, &
                      vnl, vh, lsd, nspin, nlcc, vdw, nn, ll, oc, nwf, &
-                     zed, zval
+                     zed, zval, vxc, exc, excgga
   implicit none
 
   logical :: ild    ! if true compute log der
   !
   !    compute an initial estimate of the potential
   !
-  call starting_potential(ndmx,grid%mesh,zval,zed,nwf,oc,nn,ll,grid%r,enl,vxt,vpot,&
-       enne,nspin)
+  call starting_potential(ndmx,grid%mesh,zval,zed,nwf,oc,nn,ll,grid%r,&
+       enl,vxt,vpot,enne,nspin)
   !
   !     solve the eigenvalue self-consistent equation
   !
@@ -36,9 +35,8 @@ subroutine all_electron(ild)
   !
   !  compute total energy
   !
-  call elsd (grid%mesh,zed,grid,rho,zeta,vxt,vh,nlcc,  &
-       nwf,enl,ll,lsd,nspin,oc,ndmx,vnl,    &
-       etot,ekin,encl,epseu,ehrt,ecxc,evxt)
+  call elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,    &
+             etot,ekin,encl,ehrt,ecxc,evxt)
   !
   !   add sic correction if needed
   !
