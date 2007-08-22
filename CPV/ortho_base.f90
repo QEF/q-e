@@ -91,7 +91,7 @@ CONTAINS
       USE mp,          ONLY: mp_sum
       USE mp_global,   ONLY: nproc_image, me_image, intra_image_comm
       USE descriptors, ONLY: la_myr_ , la_myc_ , la_comm_ , la_npr_ , la_npc_ , &
-                             lambda_node_ , la_nrl_ , la_me_
+                             lambda_node_ , la_nrl_ , la_me_ , nlax_ , la_nrlx_
       IMPLICIT NONE
       REAL(DP), INTENT(IN)  :: rhos(:,:) !  input symmetric matrix
       REAL(DP)              :: rhod(:)   !  output eigenvalues
@@ -102,7 +102,7 @@ CONTAINS
       REAL(DP),   ALLOCATABLE :: diag(:,:)
       REAL(DP),   ALLOCATABLE :: vv(:,:)
 
-      INTEGER :: nrl, me, np, comm
+      INTEGER :: nrl, me, np, comm, nrlx
 
       !  distribute matrix rows to processors 
       !  Matrix is distributed on the same processors group
@@ -111,23 +111,30 @@ CONTAINS
       np   = desc( la_npr_ ) * desc( la_npc_ )
       me   = desc( la_me_ )
       nrl  = desc( la_nrl_ )
+      nrlx = desc( la_nrlx_ )
       comm = desc( la_comm_ )
+
+      IF( SIZE(s,1) /= SIZE(rhos,1) .OR. SIZE(s,2) /= SIZE(rhos,2) ) &
+         CALL errore( " diagonalize_parallel ", " inconsistent dimension for s and rhos ", 1 )
 
       IF ( desc( lambda_node_ ) > 0 ) THEN
          !
+         IF( SIZE(s,1) /= desc( nlax_ ) ) &
+            CALL errore( " diagonalize_parallel ", " inconsistent dimension ", 1 )
+         !
          !  Compute local dimension of the cyclically distributed matrix
          !
-         ALLOCATE( diag( nrl, n ), vv( nrl, n ) )
+         ALLOCATE( diag( nrlx, n ), vv( nrlx, n ) )
          !
-         CALL blk2cyc_redist( n, diag, nrl, rhos, SIZE(s,1), desc(1) ) 
+         CALL blk2cyc_redist( n, diag, nrlx, rhos, SIZE(s,1), desc(1) ) 
          !
-         CALL pdspev_drv( 'V', diag, nrl, rhod, vv, nrl, nrl, n, np, me, comm )
+         CALL pdspev_drv( 'V', diag, nrlx, rhod, vv, nrlx, nrl, n, np, me, comm )
          !
          !  Redistribute matrix "vv" into "s"
          !  matrix "s" is block distributed
          !  across 2D processors grid ( ortho_comm )
          !
-         CALL cyc2blk_redist( n, vv, nrl, s, SIZE(s,1), desc(1) ) 
+         CALL cyc2blk_redist( n, vv, nrlx, s, SIZE(s,1), desc(1) ) 
          !
          DEALLOCATE( diag, vv )
          !
@@ -149,14 +156,14 @@ CONTAINS
       USE mp,          ONLY: mp_sum, mp_bcast, mp_barrier
       USE mp,          ONLY: mp_max
       USE descriptors, ONLY: descla_siz_ , descla_init , nlar_ , nlac_ , &
-                             ilar_ , ilac_
+                             ilar_ , ilac_ , nlax_ , lambda_node_ , la_myc_ , la_myr_
       !
       IMPLICIT NONE
       !
       INTEGER, INTENT(IN) :: n
       REAL(DP), ALLOCATABLE :: s(:,:), a(:,:), d(:)
       REAL(DP) :: t1, tpar, tser
-      INTEGER  :: nr, nc, ir, ic
+      INTEGER  :: nr, nc, ir, ic, nx
       INTEGER  :: desc( descla_siz_ )
       REAL(DP) :: cclock
       EXTERNAL :: cclock
@@ -165,13 +172,16 @@ CONTAINS
       !
       CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
 
+      nx = 1
+      IF( desc( lambda_node_ ) > 0 ) nx = desc( nlax_ )
+
       nr = desc( nlar_ )
       nc = desc( nlac_ )
       ir = desc( ilar_ )
       ic = desc( ilac_ )
 
-      ALLOCATE( s( nr, nc ) )
-      ALLOCATE( a( nr, nc ) )
+      ALLOCATE( s( nx, nx ) )
+      ALLOCATE( a( nx, nx ) )
       !
       CALL set_a()
       !
@@ -185,21 +195,30 @@ CONTAINS
 
       DEALLOCATE( s, a )
       !
-      nr = n
-      nc = n
-      ir = 1
-      ic = 1
-      !
-      ALLOCATE( a( n, n ) )
-      !
-      CALL set_a()
-      !
-      CALL mp_barrier( intra_image_comm )
-      t1 = cclock()
+      IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 .AND. desc( lambda_node_ ) > 0 ) THEN
 
-      CALL diagonalize_serial( n, a, d )
+         ALLOCATE( a( n, n ) )
+         nr = n
+         nc = n
+         ir = 1
+         ic = 1
 
-      tser = cclock() - t1
+         CALL set_a()
+
+         t1 = cclock()
+
+         CALL diagonalize_serial( n, a, d )
+
+         tser = cclock() - t1
+
+         DEALLOCATE( a )
+
+      ELSE
+
+         tser = 0_DP
+
+      END IF
+
       CALL mp_max( tser, intra_image_comm )
 
 #if defined __PARA
@@ -223,7 +242,7 @@ CONTAINS
 
       CALL mp_bcast( use_parallel_diag, root_image, intra_image_comm )
       
-      DEALLOCATE( a, d )
+      DEALLOCATE( d )
 
       RETURN
 
@@ -231,6 +250,7 @@ CONTAINS
 
       SUBROUTINE set_a()
          INTEGER :: i, j, ii, jj
+         IF( desc( lambda_node_ ) < 0 ) RETURN
          DO j = 1, nc
             DO i = 1, nr
                ii = i + ir - 1
@@ -383,19 +403,19 @@ CONTAINS
       USE mp_global,         ONLY: intra_image_comm, me_image, nproc_image
       USE mp,                ONLY: mp_sum, mp_max
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
-                                   la_myr_ , la_myc_ , la_comm_
+                                   la_myr_ , la_myc_ , la_comm_ , descla_siz_ , nlax_
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nss, ldx, nx0
-      INTEGER, INTENT(IN) :: desc(*)
-      REAL(DP) :: u   ( ldx, * )
+      INTEGER, INTENT(IN) :: desc( descla_siz_ )
+      REAL(DP) :: u   ( ldx, ldx )
       REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
-      REAL(DP) :: rhor( ldx, * )
-      REAL(DP) :: rhos( ldx, * )
-      REAL(DP) :: tau ( ldx, * )
-      REAL(DP) :: sig ( ldx, * )
+      REAL(DP) :: rhor( ldx, ldx )
+      REAL(DP) :: rhos( ldx, ldx )
+      REAL(DP) :: tau ( ldx, ldx )
+      REAL(DP) :: sig ( ldx, ldx )
       INTEGER, INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff 
 
@@ -411,6 +431,9 @@ CONTAINS
       !  jump at the end of the subroutine
       !
 
+      IF( ldx/= nx0 ) &
+         CALL errore( " ortho_iterate ", " inconsistent dimensions ldx, nx0 ", nx0 )
+
       IF( desc( lambda_node_ ) < 0 ) then
          xloc = 0.0d0
          iter = 0
@@ -424,8 +447,11 @@ CONTAINS
       ir = desc( ilar_ )
       ic = desc( ilac_ )
 
-      ALLOCATE( tr1(nr,nc), tr2(nr,nc) )
-      ALLOCATE( tmp1(nr,nc), tmp2(nr,nc), dd(nr,nc), x1(nr,nc), con(nr,nc) )
+      IF( ldx/= desc( nlax_ ) ) &
+         CALL errore( " ortho_iterate ", " inconsistent dimensions ldx ", ldx )
+
+      ALLOCATE( tr1(ldx,ldx), tr2(ldx,ldx) )
+      ALLOCATE( tmp1(ldx,ldx), tmp2(ldx,ldx), dd(ldx,ldx), x1(ldx,ldx), con(ldx,ldx) )
 
       !  Clear elements not involved in the orthogonalization
       !
@@ -450,13 +476,13 @@ CONTAINS
          !                       tmp2 = x0*rhos    (4th call)
          !
 
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp1, nr, desc)
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp2, nr, desc)
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, tmp2, nr, 0.0d0, dd, nr, desc)
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhos, nr, 0.0d0, tmp2, nr, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp1, ldx, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp2, ldx, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, tmp2, ldx, 0.0d0, dd, ldx, desc)
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhos, ldx, 0.0d0, tmp2, ldx, desc)
          !
-         CALL sqr_tr_cannon( nss, tmp1, nr, tr1, nr, desc )
-         CALL sqr_tr_cannon( nss, tmp2, nr, tr2, nr, desc )
+         CALL sqr_tr_cannon( nss, tmp1, ldx, tr1, ldx, desc )
+         CALL sqr_tr_cannon( nss, tmp2, ldx, tr2, ldx, desc )
          !
          DO i=1,nr
             DO j=1,nc
@@ -483,8 +509,8 @@ CONTAINS
          !                       tmp1 = x1*u
          !                       tmp2 = ut*x1*u
          !
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, x1, nr,  u,    ldx, 0.0d0, tmp1, nr, desc )
-         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u,  ldx, tmp1, nr,  0.0d0, tmp2, nr, desc )
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, x1, ldx,  u,    ldx, 0.0d0, tmp1, ldx, desc )
+         CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u,  ldx, tmp1, ldx,  0.0d0, tmp2, ldx, desc )
          !
          !       g=ut*x1*u/d  (g is stored in tmp1)
          !
@@ -498,8 +524,8 @@ CONTAINS
          !                       tmp2 = g*ut
          !                       x0 = u*g*ut
          !
-         CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, tmp1, nr,  u,    ldx, 0.0d0, tmp2, nr, desc )
-         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u,    ldx, tmp2, nr,  0.0d0, xloc, nx0, desc) 
+         CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, tmp1, ldx,  u,    ldx, 0.0d0, tmp2, ldx, desc )
+         CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u,    ldx, tmp2, ldx,  0.0d0, xloc, nx0, desc) 
          !
       END DO ITERATIVE_LOOP
 
@@ -529,18 +555,18 @@ CONTAINS
       USE mp_global,         ONLY: intra_image_comm, me_image, nproc_image
       USE mp,                ONLY: mp_sum, mp_max
       USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
-                                   la_myr_ , la_myc_ , la_comm_
+                                   la_myr_ , la_myc_ , la_comm_ , descla_siz_ , nlax_
 
       IMPLICIT NONE
 
       INTEGER, INTENT(IN) :: nss, ldx, nx0
-      INTEGER, INTENT(IN) :: desc(*)
-      REAL(DP) :: u   ( ldx, * )
+      INTEGER, INTENT(IN) :: desc( descla_siz_ )
+      REAL(DP) :: u   ( ldx, ldx )
       REAL(DP) :: diag( nss )
       REAL(DP) :: xloc( nx0, nx0 )
-      REAL(DP) :: rhor( ldx, * )
-      REAL(DP) :: tau ( ldx, * )
-      REAL(DP) :: sig ( ldx, * )
+      REAL(DP) :: rhor( ldx, ldx )
+      REAL(DP) :: tau ( ldx, ldx )
+      REAL(DP) :: sig ( ldx, ldx )
       INTEGER, INTENT(OUT) :: iter
       REAL(DP), INTENT(OUT) :: diff 
 
@@ -552,6 +578,9 @@ CONTAINS
       REAL(DP) :: den, dx
       !
       IF( nss < 1 ) RETURN
+
+      IF( ldx/= nx0 ) &
+         CALL errore( " ortho_alt_iterate ", " inconsistent dimensions ldx, nx0 ", nx0 )
 
       if( desc( lambda_node_ ) < 0 ) then
          xloc = 0.0d0
@@ -566,7 +595,10 @@ CONTAINS
       ir = desc( ilar_ )
       ic = desc( ilac_ )
 
-      ALLOCATE( tmp1(nr,nc), tmp2(nr,nc), x1(nr,nc), sigd(nss) )
+      IF( ldx/= desc( nlax_ ) ) &
+         CALL errore( " ortho_alt_iterate ", " inconsistent dimensions ldx ", ldx )
+
+      ALLOCATE( tmp1(ldx,ldx), tmp2(ldx,ldx), x1(ldx,ldx), sigd(nss) )
 
       !  Clear elements not involved in the orthogonalization
       !
@@ -583,14 +615,14 @@ CONTAINS
       !
       ! ...   Transform "sig", "rhoa" and "tau" in the new basis through matrix "s"
       !
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, sig, ldx, u, ldx, 0.0d0, tmp1, nr, desc)
-      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, sig, ldx, desc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, sig, ldx, u, ldx, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, sig, ldx, desc)
       !
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, rhor, ldx, u, ldx, 0.0d0, tmp1, nr, desc)
-      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, rhor, ldx, desc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, rhor, ldx, u, ldx, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, rhor, ldx, desc)
       !
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, u, ldx, 0.0d0, tmp1, nr, desc)
-      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, tau, ldx, desc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, tau, ldx, u, ldx, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, tau, ldx, desc)
       !
       ! ...   Initialize x0 with preconditioning
       !
@@ -608,9 +640,9 @@ CONTAINS
 
       ITERATIVE_LOOP: DO iter = 0, ortho_max
 
-        CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp2, nr, desc)
+        CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, xloc, nx0, rhor, ldx, 0.0d0, tmp2, ldx, desc)
 
-        CALL sqr_tr_cannon( nss, tmp2, nr, tmp1, nr, desc )
+        CALL sqr_tr_cannon( nss, tmp2, ldx, tmp1, ldx, desc )
 
         DO J=1,nc
           DO I=1,nr
@@ -618,7 +650,7 @@ CONTAINS
           ENDDO
         ENDDO
 !
-        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp1, nr, desc)
+        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, tau, ldx, xloc, nx0, 0.0d0, tmp1, ldx, desc)
         !
         sigd = 0.0d0
         IF( desc( la_myr_ ) == desc( la_myc_ ) ) THEN
@@ -629,9 +661,9 @@ CONTAINS
         END IF
         CALL mp_sum( sigd, desc( la_comm_ ) )
 
-        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, xloc, nx0, tmp1, nr, 0.0d0, x1, nr, desc)
+        CALL sqr_mm_cannon( 'T', 'N', nss, 1.0d0, xloc, nx0, tmp1, ldx, 0.0d0, x1, ldx, desc)
         !
-        CALL sqr_tr_cannon( nss, x1, nr, tmp1, nr, desc )
+        CALL sqr_tr_cannon( nss, x1, ldx, tmp1, ldx, desc )
 
         ! ...     X1   = SIG - tmp2 - 0.5d0 * ( X1 + X1^t )
 
@@ -658,8 +690,8 @@ CONTAINS
       !
       ! ...   Transform x0 back to the original basis
 
-      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u, ldx, xloc, nx0, 0.0d0, tmp1, nr, desc)
-      CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, u, ldx, tmp1, nr, 0.0d0, xloc, nx0, desc)
+      CALL sqr_mm_cannon( 'N', 'N', nss, 1.0d0, u, ldx, xloc, nx0, 0.0d0, tmp1, ldx, desc)
+      CALL sqr_mm_cannon( 'N', 'T', nss, 1.0d0, u, ldx, tmp1, ldx, 0.0d0, xloc, nx0, desc)
 
       DEALLOCATE( tmp1, tmp2, x1, sigd )
 
@@ -685,21 +717,21 @@ CONTAINS
       USE cvan,               ONLY: nvb
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_root_sum, mp_max, mp_barrier
+      USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_image_comm, leg_ortho
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ 
+                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
 !
       IMPLICIT NONE
 !
       INTEGER nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: cp( ngwx, n )
-      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, * )
-      REAL(DP)    :: sig( ldx, * )
-      INTEGER     :: desc( * )
+      REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, ldx )
+      REAL(DP)    :: sig( ldx, ldx )
+      INTEGER     :: desc( descla_siz_ )
 !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
@@ -713,11 +745,16 @@ CONTAINS
       np(1) = desc( la_npr_ )
       np(2) = desc( la_npc_ )
 
-      nx = desc( nlar_ )
-      nx = MAX( nx, desc( nlac_ ) )
-      CALL mp_max( nx, intra_image_comm )
+      nx = desc( nlax_ )
 
       ALLOCATE( sigp( nx, nx ) ) 
+
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         IF( desc( nlax_ ) /= ldx ) &
+            CALL errore( " sigset ", " inconsistent dimension ldx ", ldx )
+         IF( nx /= ldx ) &
+            CALL errore( " sigset ", " inconsistent dimension nx ", nx )
+      END IF
 
       DO ipc = 1, np(2)
          DO ipr = 1, np(1)
@@ -752,18 +789,11 @@ CONTAINS
                END DO
             END IF
             !
-            !
-            CALL mp_root_sum( sigp(1:nr,1:nc), sig(1:nr,1:nc), root, intra_image_comm )
-            !
-!            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
-!               sig(1:nr,1:nc) = sigp(1:nr,1:nc)
-!            END IF
+            CALL mp_root_sum( sigp, sig, root, intra_image_comm )
             !
          END DO
          !
       END DO
-      !
-      CALL mp_barrier( intra_image_comm )
       !
       DEALLOCATE( sigp )
       !
@@ -815,22 +845,22 @@ CONTAINS
       USE uspp,               ONLY: nkbus
       USE cvan,               ONLY: nvb
       USE kinds,              ONLY: DP
-      USE mp,                 ONLY: mp_root_sum, mp_barrier, mp_max
+      USE mp,                 ONLY: mp_root_sum
       USE mp_global,          ONLY: intra_image_comm, me_image, leg_ortho
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_
+                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
 
 !
       IMPLICIT NONE
 !
       INTEGER     :: nss, ist, ngwx, nkbx, ldx, n
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, * )
-      REAL(DP)    :: rho( ldx, * )
-      INTEGER     :: desc( * )
+      REAL(DP)    :: bephi( nkbx, n ), qbecp( nkbx, ldx )
+      REAL(DP)    :: rho( ldx, ldx )
+      INTEGER     :: desc( descla_siz_ )
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root, nx
@@ -848,9 +878,14 @@ CONTAINS
       np(1) = desc( la_npr_ )
       np(2) = desc( la_npc_ )
 
-      nx = desc( nlar_ )
-      nx = MAX( nx, desc( nlac_ ) )
-      CALL mp_max( nx, intra_image_comm )
+      nx = desc( nlax_ )
+
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         IF( desc( nlax_ ) /= ldx ) &
+            CALL errore( " rhoset ", " inconsistent dimension ldx ", ldx )
+         IF( nx /= ldx ) &
+            CALL errore( " rhoset ", " inconsistent dimension nx ", nx )
+      END IF
 
       ALLOCATE( rhop( nx, nx ) )
      
@@ -889,17 +924,11 @@ CONTAINS
                END DO
             END IF
 
-            CALL mp_root_sum( rhop(1:nr,1:nc), rho(1:nr,1:nc), root, intra_image_comm )
-
-!            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
-!               rho(1:nr,1:nc) = rhop(1:nr,1:nc)
-!            END IF
+            CALL mp_root_sum( rhop, rho, root, intra_image_comm )
 
          END DO
       END DO
  
-      CALL mp_barrier( intra_image_comm )
-
       DEALLOCATE( rhop )
 
       IF( desc( lambda_node_ ) > 0 ) THEN
@@ -915,7 +944,6 @@ CONTAINS
             !
             CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist+ir-1 ), &
                         nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, rho, ldx )
-                     ! qbecp( 1, ist + ic - 1 ), nkbx, 1.0d0, rho, ldx )
 
          END IF
 
@@ -947,21 +975,21 @@ CONTAINS
       USE uspp,               ONLY: nkbus
       USE gvecw,              ONLY: ngw
       USE reciprocal_vectors, ONLY: gstart
-      USE mp,                 ONLY: mp_root_sum, mp_max, mp_barrier
+      USE mp,                 ONLY: mp_root_sum
       USE control_flags,      ONLY: iprsta
       USE io_global,          ONLY: stdout
       USE mp_global,          ONLY: intra_image_comm, leg_ortho
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
-                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_
+                                    nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
 !
       IMPLICIT NONE
       !
       INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: phi( ngwx, n )
-      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, * )
-      REAL(DP)    :: tau( ldx, * )
-      INTEGER     :: desc( * )
+      REAL(DP)    :: bephi( nkbx, n ), qbephi( nkbx, ldx )
+      REAL(DP)    :: tau( ldx, ldx )
+      INTEGER     :: desc( descla_siz_ )
       !
       INTEGER :: i, j, ipr, ipc, nr, nc, ir, ic, npr, npc
       INTEGER :: ii, jj, root
@@ -977,11 +1005,18 @@ CONTAINS
       np(1) = desc( la_npr_ )
       np(2) = desc( la_npc_ )
       !
-      nx = desc( nlar_ )
-      nx = MAX( nx, desc( nlac_ ) )
-      CALL mp_max( nx, intra_image_comm )
+      nx = desc( nlax_ )
+      !
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         IF( desc( nlax_ ) /= ldx ) &
+            CALL errore( " tauset ", " inconsistent dimension ldx ", ldx )
+         IF( nx /= ldx ) &
+            CALL errore( " tauset ", " inconsistent dimension nx ", nx )
+      END IF
       !
       ALLOCATE( taup( nx, nx ) )
+      !
+      taup = 0.0d0
       !
       !  loop on processors coordinates
       !
@@ -1022,17 +1057,11 @@ CONTAINS
                END DO
             END IF
             !
-            CALL mp_root_sum( taup(1:nr,1:nc), tau(1:nr,1:nc), root, intra_image_comm )
-            !
-!            IF( coor_ip(1) == desc( la_myr_ ) .AND. coor_ip(2) == desc( la_myc_ ) .AND. desc( lambda_node_ ) > 0 ) THEN
-!               tau(1:nr,1:nc) = taup(1:nr,1:nc)
-!            END IF
+            CALL mp_root_sum( taup, tau, root, intra_image_comm )
             !
          END DO
          !
       END DO
-      !
-      CALL mp_barrier( intra_image_comm )
       !
       DEALLOCATE( taup )
       !
@@ -1047,7 +1076,6 @@ CONTAINS
             !
             CALL DGEMM( 'T', 'N', nr, nc, nkbus, 1.0d0, bephi( 1, ist + ir - 1 ), nkbx, &
                   qbephi( 1, 1 ), nkbx, 1.0d0, tau, ldx )
-                  !qbephi( 1, ist + ic - 1 ), nkbx, 1.0d0, tau, ldx )
          END IF
 
          IF(iprsta.GT.4) THEN
@@ -1084,14 +1112,16 @@ CONTAINS
       USE uspp_param,        ONLY: nh
       USE gvecw,             ONLY: ngw
       USE control_flags,     ONLY: iprint, iprsta
-      USE mp,                ONLY: mp_sum
-      USE mp_global,         ONLY: intra_image_comm
-      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_
+      USE mp,                ONLY: mp_sum, mp_bcast
+      USE mp_global,         ONLY: intra_image_comm, leg_ortho
+      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_ , la_comm_ , &
+                                   la_npc_ , la_npr_ , nlax_ , la_n_ , la_nx_ , la_myr_ , la_myc_ , &
+                                   descla_init
 !
       IMPLICIT NONE
 !
       INTEGER, INTENT(IN) :: n, nx0, ngwx, nkbx, istart, nss
-      INTEGER, INTENT(IN) :: desc(*)
+      INTEGER, INTENT(IN) :: desc( descla_siz_ )
       COMPLEX(DP) :: cp( ngwx, n ), phi( ngwx, n )
       REAL(DP), INTENT(IN) :: ccc
       REAL(DP)    :: bec( nkbx, n ), x0( nx0, nx0 )
@@ -1101,58 +1131,96 @@ CONTAINS
 
       INTEGER :: i, j, ig, is, iv, ia, inl, nr, nc, ir, ic
       REAL(DP),    ALLOCATABLE :: wtemp(:,:) 
-      REAL(DP),    ALLOCATABLE :: x0_repl(:,:) 
+      REAL(DP),    ALLOCATABLE :: xd(:,:) 
+      REAL(DP) :: beta
+      INTEGER :: ipr, ipc, nx, root
+      INTEGER :: np( 2 ), coor_ip( 2 )
+      INTEGER :: desc_ip( descla_siz_ )
       !
       !     lagrange multipliers
       !
       IF( nss < 1 ) RETURN
       !
+      IF( desc( lambda_node_ ) > 0 ) THEN
+         IF( nx0 /= desc( nlax_ ) ) &
+            CALL errore( " updatc ", " inconsistent dimension nx0 ", nx0 )
+      END IF
+      !
       !  size of the local block
       !
-      nr = desc( nlar_ )
-      nc = desc( nlac_ )
-      ir = desc( ilar_ )
-      ic = desc( ilac_ )
+      nx = desc( nlax_ )
+      !
+      np(1) = desc( la_npr_ )
+      np(2) = desc( la_npc_ )
       !
       CALL start_clock( 'updatc' )
 
-      ALLOCATE( x0_repl( nss, nss ) )
+      ALLOCATE( xd( nx, nx ) )
 
-      x0_repl = 0.0d0
-
-      IF( desc( lambda_node_ ) > 0 ) THEN
-         DO j = 1, nc
-            DO i = 1, nr
-               x0_repl( i + ir - 1, j + ic - 1 ) = x0( i, j ) * ccc
-            END DO
-         END DO
+      IF( nvb > 0 )THEN
+         ALLOCATE( wtemp( nx, nkb ) )
       END IF
 
-      CALL mp_sum( x0_repl, intra_image_comm ) 
-      !
-      CALL DGEMM( 'N', 'N', 2*ngw, nss, nss, 1.0d0, phi(1,istart), 2*ngwx, &
-                  x0_repl, nss, 1.0d0, cp(1,istart), 2*ngwx )
-      !    
-      !     updating of the <beta|c(n,g)>
-      !
-      !     bec of vanderbilt species are updated 
-      !
-      IF( nvb > 0 )THEN
+      DO ipr = 1, np(1)
 
-         ALLOCATE( wtemp( nss, nkb ) )
-
-         CALL DGEMM( 'N', 'T', nss, nkbus, nss, 1.0d0, x0_repl, nss, &
-                  bephi( 1, istart ), nkbx, 0.0d0, wtemp, nss )
+         beta = 0_DP
          !
-         DO i = 1, nss
-            DO inl = 1, nkbus
-               bec( inl, i + istart - 1 ) = wtemp( i, inl ) + becp( inl, i + istart - 1 )
-            END DO
+         DO ipc = 1, np(2)
+            !
+            coor_ip(1) = ipr - 1
+            coor_ip(2) = ipc - 1
+
+            CALL descla_init( desc_ip, desc( la_n_ ), desc( la_nx_ ), np, coor_ip, desc( la_comm_ ), 1 )
+
+            nr = desc_ip( nlar_ )
+            nc = desc_ip( nlac_ )
+            ir = desc_ip( ilar_ )
+            ic = desc_ip( ilac_ )
+            !
+            CALL GRID2D_RANK( 'R', desc_ip( la_npr_ ), desc_ip( la_npc_ ), &
+                                   desc_ip( la_myr_ ), desc_ip( la_myc_ ), root )
+
+            root = root * leg_ortho
+
+            IF( desc( la_myr_ ) == ipr - 1 .AND. desc( la_myc_ ) == ipc - 1 .AND. desc( lambda_node_ ) > 0 ) THEN
+               xd = x0 * ccc
+            END IF
+
+            CALL mp_bcast( xd, root, intra_image_comm )
+
+            CALL DGEMM( 'N', 'N', 2*ngw, nc, nr, 1.0d0, phi(1,istart+ir-1), 2*ngwx, &
+                        xd, nx, 1.0d0, cp(1,istart+ic-1), 2*ngwx )
+
+            IF( nvb > 0 )THEN
+               CALL DGEMM( 'N', 'T', nr, nkbus, nc, 1.0d0, xd, nx, &
+                    bephi( 1, istart + ic - 1), nkbx, beta, wtemp, nx )
+            END IF
+
+            beta = 1_DP
+
          END DO
+         !    
+         !     updating of the <beta|c(n,g)>
+         !
+         !     bec of vanderbilt species are updated 
+         !
+         IF( nvb > 0 )THEN
+            !
+            ! here nr and ir are still valid, since they are the same for all procs in the same row
+            !
+            DO i = 1, nr
+               DO inl = 1, nkbus
+                  bec( inl, i + istart + ir - 2 ) = wtemp( i, inl ) + becp( inl, i + istart + ir - 2 )
+               END DO
+            END DO
 
+         ENDIF
+
+      END DO
+
+      IF( nvb > 0 )THEN
          DEALLOCATE( wtemp )
-
-      ENDIF
+      END IF
 !
       IF ( iprsta > 2 ) THEN
          WRITE( stdout,*)
@@ -1172,7 +1240,7 @@ CONTAINS
          END DO
       ENDIF
       !
-      DEALLOCATE( x0_repl )
+      DEALLOCATE( xd )
       !
       CALL stop_clock( 'updatc' )
       !

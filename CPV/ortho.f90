@@ -33,14 +33,19 @@
       INTEGER                  :: iter, i, j
       INTEGER                  :: ngwx, n, nr, nc, nx
       REAL(DP)                 :: diff
-      REAL(DP)                 :: dum(2,2)
-      COMPLEX(DP)              :: cdum(2,2)
+      REAL(DP),    ALLOCATABLE :: dum(:,:)
+      REAL(DP),    ALLOCATABLE :: ddum(:,:)
+      COMPLEX(DP), ALLOCATABLE :: cdum(:,:)
       !
       CALL start_clock( 'ortho' )  
 
       n    = SIZE( c0, 2 )
       ngwx = SIZE( c0, 1 )
       nx   = SIZE( lambda, 1 )
+
+      ALLOCATE( dum( 1, n ) )
+      ALLOCATE( ddum( 1, nx ) )
+      ALLOCATE( cdum( ngwx, 1 ) )
 
       ALLOCATE( phi( ngwx, n ), STAT = info )
       IF( info /= 0 ) CALL errore( ' ortho ', ' allocating phi ', 3 )
@@ -55,7 +60,7 @@
           nwfc = nupdwn(iss)
           iwfc = iupdwn(iss)
           !
-          CALL ortho_gamma( 1, cp, ngwx, phi, dum, dum, 2, dum, dum, lambda(:,:,iss), nx, &
+          CALL ortho_gamma( 1, cp, ngwx, phi, dum, ddum, 1, dum, ddum, lambda(:,:,iss), nx, &
                descla(:,iss), diff, iter, n, nwfc, iwfc )
           !
           IF ( iter > ortho_max ) THEN
@@ -80,12 +85,14 @@
       IF( force_pairing ) cp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp(:,1:nupdwn(2))
       !
       DEALLOCATE( phi )
+      DEALLOCATE( dum )
+      DEALLOCATE( ddum )
+      DEALLOCATE( cdum )
       !
       CALL stop_clock( 'ortho' )
       !
       RETURN
    END SUBROUTINE ortho_m
-
 
 
 
@@ -98,9 +105,10 @@
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     ortho_alt_iterate, diagonalize_serial,   &
                                     use_parallel_diag, diagonalize_parallel
-      USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_
+      USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_ , nlax_
       USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
       USE mp,                 ONLY: mp_sum
+      USE cp_main_variables,  ONLY: nlam, la_proc
 
       IMPLICIT  NONE
 
@@ -122,13 +130,15 @@
       REAL(DP),   ALLOCATABLE :: s(:,:), sig(:,:), tau(:,:), rhot(:,:)
       REAL(DP),   ALLOCATABLE :: wrk(:,:), rhoa(:,:), rhos(:,:), rhod(:)
       INTEGER  :: i, j, info, nr, nc, ir, ic
-      LOGICAL  :: iter_node
       !
       ! ...   Subroutine body
       !
-      IF( descla( lambda_node_ ) > 0 ) THEN
+      IF( la_proc ) THEN
          !
-         iter_node = .TRUE.
+         IF( nx0 /= descla( nlax_ ) ) &
+            CALL errore( ' ortho_gamma ', ' inconsistent dimensions nx0 ' , nx0 )
+         IF( nlam /= descla( nlax_ ) ) &
+            CALL errore( ' ortho_gamma ', ' inconsistent dimensions nlam ' , nlam )
          !
          nr = descla( nlar_ )
          nc = descla( nlac_ )
@@ -136,23 +146,23 @@
          ir = descla( ilar_ )
          ic = descla( ilac_ )
          !
-	 ALLOCATE( rhos( nr, nc ) )
-         ALLOCATE( rhoa( nr, nc ) )   !   antisymmetric part of rho
-         ALLOCATE( s( nr, nc ) ) 
-         ALLOCATE( sig( nr, nc ) ) 
-         ALLOCATE( tau( nr, nc ) ) 
-         !
       ELSE
          !
-         iter_node = .FALSE.
+         nr = 1
+         nc = 1
          !
-	 ALLOCATE( rhos( 1, 1 ) )
-         ALLOCATE( rhoa( 1, 1 ) ) 
-         ALLOCATE( s( 1, 1 ) ) 
-         ALLOCATE( sig( 1, 1 ) ) 
-         ALLOCATE( tau( 1, 1 ) ) 
+         IF( nlam /= 1 ) &
+            CALL errore( ' ortho_gamma ', ' inconsistent dimensions nlam, should be 1 ' , nlam )
+         IF( nx0 /= 1 ) &
+            CALL errore( ' ortho_gamma ', ' inconsistent dimensions nx0, should be 1 ' , nx0 )
          !
       END IF
+      !
+      ALLOCATE( rhos( nlam, nlam ) )
+      ALLOCATE( rhoa( nlam, nlam ) )   !   antisymmetric part of rho
+      ALLOCATE( s( nlam, nlam ) ) 
+      ALLOCATE( sig( nlam, nlam ) ) 
+      ALLOCATE( tau( nlam, nlam ) ) 
       !
       ALLOCATE( rhod( nss ) )
       !
@@ -160,16 +170,16 @@
       !
       CALL start_clock( 'rhoset' )
       !
-      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nr, descla )
+      CALL rhoset( cp, ngwx, phi, bephi, nkbx, qbecp, n, nss, istart, rhos, nlam, descla )
       !
-      IF( iter_node ) THEN
+      IF( la_proc ) THEN
          !
-         ALLOCATE( rhot( nr, nc ) )   !   transpose of rho
+         ALLOCATE( rhot( nlam, nlam ) )   !   transpose of rho
          !
          !    distributed array rhos contains "rho", 
          !    now transpose rhos and store the result in distributed array rhot
          !
-         CALL sqr_tr_cannon( nss, rhos, nr, rhot, nr, descla )
+         CALL sqr_tr_cannon( nss, rhos, nlam, rhot, nlam, descla )
          !
          !  Compute the symmetric part of rho
          !
@@ -226,21 +236,21 @@
       !
       !     sig = 1-<cp|s|cp>
       !
-      CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nr, descla )
+      CALL sigset( cp, ngwx, becp, nkbx, qbecp, n, nss, istart, sig, nlam, descla )
       !
       !     tau = <s'c0|s|s'c0>
       !
-      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nr, descla )
+      CALL tauset( phi, ngwx, bephi, nkbx, qbephi, n, nss, istart, tau, nlam, descla )
       !
       CALL start_clock( 'ortho_iter' )
       !
       IF( iopt == 0 ) THEN
          !
-         CALL ortho_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
+         CALL ortho_iterate( iter, diff, s, nlam, rhod, x0, nx0, sig, rhoa, rhos, tau, nss, descla)
          !
       ELSE
          !
-         CALL ortho_alt_iterate( iter, diff, s, nr, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
+         CALL ortho_alt_iterate( iter, diff, s, nlam, rhod, x0, nx0, sig, rhoa, tau, nss, descla)
          !
       END IF
       !
@@ -248,7 +258,7 @@
       !
       DEALLOCATE( rhoa, rhos, rhod, s, sig, tau )
       !
-      IF( iter_node )  CALL consistency_check( x0 )
+      IF( la_proc )  CALL consistency_check( x0 )
 
       RETURN
 
@@ -257,7 +267,7 @@
       SUBROUTINE distribute_matrix( a, b )
          REAL(DP) :: a(:,:), b(:,:)
          INTEGER :: i, j
-         IF( iter_node ) THEN
+         IF( la_proc ) THEN
             DO j = 1, nc
                DO i = 1, nr
                   b( i, j ) = a( i + ir - 1, j + ic - 1 )
@@ -271,7 +281,7 @@
          REAL(DP) :: a(:,:), b(:,:)
          INTEGER :: i, j
          a = 0.0d0
-         IF( iter_node ) THEN
+         IF( la_proc ) THEN
             DO j = 1, nc
                DO i = 1, nr
                   a( ir + i - 1, ic + j - 1 ) = b( i, j )
@@ -331,7 +341,8 @@
       USE control_flags,  ONLY: force_pairing
       USE io_global,      ONLY: stdout, ionode
       USE cp_interfaces,  ONLY: ortho_gamma
-      USE descriptors,    ONLY: nlac_ , ilac_ , lambda_node_
+      USE descriptors,    ONLY: nlac_ , ilac_
+      USE cp_main_variables,  ONLY: nlam, la_proc
       !
       IMPLICIT NONE
       !
@@ -352,7 +363,11 @@
       REAL(DP) :: qqf
 
       nkbx = nkb
-      nx0  = SIZE( x0, 1 )
+      !
+      nx0 = SIZE( x0, 1 )
+      !
+      IF( nx0 /= nlam ) &
+         CALL errore( " ortho_cp ", " inconsistent dimensions for x0 ", nx0 )
       !
       !
       !     calculation of becp and bephi
@@ -382,7 +397,7 @@
                         istart = iupdwn(iss)
                         nc     = descla( nlac_ , iss )
                         ic     = descla( ilac_ , iss )
-                        IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                        IF( la_proc ) THEN
                            DO i = 1, nc
                               qbephi(inl,i,iss) = qbephi(inl,i,iss)                    &
                               + qqf * bephi(jnl,i+ic-1+istart-1)
@@ -407,7 +422,7 @@
          nss    = nupdwn(iss)
          istart = iupdwn(iss)
 
-         xloc = x0(:,:,iss) * ccc
+         IF( la_proc ) xloc = x0(:,:,iss) * ccc
 
          CALL ortho_gamma( 0, cp, ngwx, phi, becp, qbecp(:,:,iss), nkbx, bephi, qbephi(:,:,iss), &
                            xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
@@ -421,15 +436,15 @@
             WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
          ENDIF
          !     
-         x0( :, :, iss ) = xloc / ccc
+         IF( la_proc ) x0( :, :, iss ) = xloc / ccc
          !
       END DO
 
       IF( force_pairing ) cp(:, iupdwn(2):iupdwn(2)+nupdwn(2)-1 ) = cp(:,1:nupdwn(2))
       !
       DEALLOCATE( xloc )
-      DEALLOCATE(qbecp )
-      DEALLOCATE(qbephi)
+      DEALLOCATE( qbecp )
+      DEALLOCATE( qbephi )
       !
       CALL stop_clock( 'ortho' )
       !
