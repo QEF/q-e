@@ -887,7 +887,7 @@ subroutine compute_mmn
       deallocate (qg, qgm, ylm )
       !
    end if
-   write (stdout,'(/a)') "MMN"
+   write (stdout,*) "MMN"
 
    if (wan_mode.eq.'standalone') then
       CALL date_and_tim( cdate, ctime )
@@ -966,20 +966,23 @@ subroutine compute_mmn
                               ikb = ijkb0 + ih
                               !
                               do m = 1,nbnd
-                              if (excluded_band(m)) cycle
-                              do n = 1,nbnd
-                              if (excluded_band(n)) cycle
+                                 if (excluded_band(m)) cycle
                                  if (gamma_only) then
-                                    Mkb(m,n) = Mkb(m,n) + &
-                                        phase1 * qb(ih,jh,nt,ind) * &
-                                              rbecp(ikb,m)  * rbecp2(jkb,n) 
+                                    do n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
+                                       if (excluded_band(n)) cycle
+                                       Mkb(m,n) = Mkb(m,n) + &
+                                            phase1 * qb(ih,jh,nt,ind) * &
+                                            rbecp(ikb,m)  * rbecp2(jkb,n)                                     
+                                    enddo
                                  else
-                                    Mkb(m,n) = Mkb(m,n) + &
-                                        phase1 * qb(ih,jh,nt,ind) * &
-                                        CONJG( becp(ikb,m) ) * becp2(jkb,n) 
-                                 end if
-                              enddo
-                              enddo
+                                    do n=1,nbnd
+                                       if (excluded_band(n)) cycle
+                                       Mkb(m,n) = Mkb(m,n) + &
+                                            phase1 * qb(ih,jh,nt,ind) * &
+                                            CONJG( becp(ikb,m) ) * becp2(jkb,n) 
+                                    enddo
+                                 endif
+                              enddo ! m
                            enddo !ih
                         enddo !jh
                         ijkb0 = ijkb0 + nh(nt)
@@ -1016,22 +1019,28 @@ subroutine compute_mmn
             end if
             aa = 0.d0
             !
+            !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
+            !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 > 
             !
-            do n=1,nbnd   
-            if (excluded_band(n)) cycle
-              !
-              mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
-              if(gamma_only) mmn = mmn + CONJG(ZDOTC(npwq,aux2,1,evcq(1,n),1))
-              !
-              !  Mkb(m,n) = Mkb(m,n) + \sum_{ijI} qb_{ij}^I * e^-i(b*tau_I)
-              !             <psi_m,k1| beta_i,k1 > < beta_j,k2 | psi_n,k2 > 
-              !
-              call reduce(2,mmn)
-              Mkb(m,n) = mmn + Mkb(m,n)
-              !
-              aa = aa + abs(mmn)**2
-              !
-            end do ! n
+            if (gamma_only) then
+               do n=1,m ! Mkb(m,n) is symmetric in m and n for gamma_only case
+                  if (excluded_band(n)) cycle
+                  mmn = ZDOTC (npwq, aux,1,evcq(1,n),1) &
+                       + CONJG(ZDOTC(npwq,aux2,1,evcq(1,n),1))
+                  call reduce(2,mmn)
+                  Mkb(m,n) = mmn + Mkb(m,n)
+                  if (m.ne.n) Mkb(n,m) = Mkb(m,n) ! fill other half of matrix by symmetry
+                  aa = aa + abs(mmn)**2
+               enddo
+            else
+               do n=1,nbnd
+                  if (excluded_band(n)) cycle
+                  mmn = ZDOTC (npwq, aux,1,evcq(1,n),1)
+                  call reduce(2,mmn)
+                  Mkb(m,n) = mmn + Mkb(m,n)
+                  aa = aa + abs(mmn)**2
+               enddo
+            endif
          end do   ! m
 
 
