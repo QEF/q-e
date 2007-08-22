@@ -17,7 +17,7 @@
       use constants,         only : autoev
       use dspev_module,      only : dspev_drv
       USE sic_module,        only : self_interaction
-      USE cp_main_variables, only : nlax
+      USE cp_main_variables, only : nlax, nlam, la_proc
       USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , descla_siz_
       USE mp,                only : mp_sum
       USE mp_global,         only : intra_image_comm
@@ -27,7 +27,7 @@
       logical, intent(in) :: tprint, lf
       integer, intent(in) :: nspin, nx, nudx, nupdwn(nspin), iupdwn(nspin)
       integer, intent(in) :: desc( descla_siz_ , 2 )
-      real(DP), intent(in) :: lambda( nlax, nlax, nspin ), f( nx )
+      real(DP), intent(in) :: lambda( nlam, nlam, nspin ), f( nx )
       real(DP), intent(out) :: ei( nudx, nspin )
 ! local variables
       real(DP), allocatable :: lambdar(:), wr(:)
@@ -63,7 +63,7 @@
 
          !  lambda is distributed across processors
 
-         IF( desc( lambda_node_ , iss ) > 0 ) THEN
+         IF( la_proc ) THEN
             ir = desc( ilar_ , iss )
             ic = desc( ilac_ , iss )
             nr = desc( nlar_ , iss )

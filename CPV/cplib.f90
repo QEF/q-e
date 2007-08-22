@@ -1471,13 +1471,13 @@ END FUNCTION
       USE cvan,              ONLY: ish, nvb
       USE electrons_base,    ONLY: nbspx, nbsp, nudx, nspin, iupdwn, nupdwn
       USE constants,         ONLY: pi, fpi
-      USE cp_main_variables, ONLY: nlax, descla
-      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_
+      USE cp_main_variables, ONLY: nlam, nlax, descla, la_proc
+      USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ 
       USE mp,                ONLY: mp_sum
       USE mp_global,         ONLY: intra_image_comm
 !
       IMPLICIT NONE
-      REAL(DP) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nlax,nlax,nspin)
+      REAL(DP) bec(nhsa,nbsp), becdr(nhsa,nbsp,3), lambda(nlam,nlam,nspin)
       REAL(DP) fion(3,nat)
 !
       INTEGER :: k, is, ia, iv, jv, i, j, inl, isa, iss, nss, istart, ir, ic, nr, nc
@@ -1507,7 +1507,8 @@ END FUNCTION
                   tmpbec = 0.d0
                   tmpdr  = 0.d0
 !
-                  IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                  IF( la_proc ) THEN
+                     ! tmpbec distributed by columns
                      ic = descla( ilac_ , iss )
                      nc = descla( nlac_ , iss )
                      DO iv=1,nh(is)
@@ -1520,9 +1521,7 @@ END FUNCTION
                            ENDIF
                         END DO
                      END DO
-                  END IF
-!
-                  IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                     ! tmpdr distributed by rows
                      ir = descla( ilar_ , iss )
                      nr = descla( nlar_ , iss )
                      DO iv=1,nh(is)
@@ -1538,7 +1537,7 @@ END FUNCTION
                      !  CALL DGEMM &
                      !  ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdr, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
                      !
-                     IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                     IF( la_proc ) THEN
                         ir = descla( ilar_ , iss )
                         ic = descla( ilac_ , iss )
                         nr = descla( nlar_ , iss )

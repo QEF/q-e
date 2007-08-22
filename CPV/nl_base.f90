@@ -675,7 +675,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
   use constants,      only : pi, fpi
   use mp_global,      only : me_image, intra_image_comm, nproc_image
   use mp,             only : mp_sum
-  USE cp_main_variables, ONLY: nlax, descla
+  USE cp_main_variables, ONLY: nlax, descla, la_proc
   USE descriptors,       ONLY: nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_ , &
                                la_myr_ , la_myc_
   !
@@ -718,7 +718,7 @@ subroutine nlfq( c, eigr, bec, becdr, fion )
               nss = nupdwn( iss )
               istart = iupdwn( iss )
 
-              IF( ( descla( lambda_node_ , iss ) > 0 ) .AND. &
+              IF( la_proc .AND. &
                   ( descla( la_myr_ , iss ) == descla( la_myc_ , iss ) ) ) THEN
 
                  ! only processors on the diagonal of the square proc grid enter here.

@@ -1618,6 +1618,7 @@ SUBROUTINE gmeshinfo( )
    IMPLICIT NONE
 
    INTEGER :: ip, ng_snd(3), ng_rcv( 3, nproc_image )
+   INTEGER :: ierr
 
    IF(ionode) THEN
       WRITE( stdout,*)
@@ -1642,12 +1643,20 @@ SUBROUTINE gmeshinfo( )
    ng_snd(3) = ngsx
    CALL mp_gather(ng_snd, ng_rcv, ionode_id, intra_image_comm)
    !
+   ierr = 0
+   !
    IF(ionode) THEN
       WRITE( stdout,1001)
       DO ip = 1, nproc_image
          WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
+         IF( ng_rcv(2,ip) < 1 ) ierr = ip
       END DO
    END IF
+   !
+   CALL mp_max( ierr, intra_image_comm )
+   !
+   IF( ierr > 0 ) &
+      CALL errore( " gmeshinfo ", " Wow! some procesors have no G-vectots ", ierr )
    !
    ng_snd(1) = ngw_g
    ng_snd(2) = ngw_l
@@ -1658,8 +1667,14 @@ SUBROUTINE gmeshinfo( )
       WRITE( stdout,1002)
       DO ip = 1, nproc_image
          WRITE( stdout,1010) ip, ng_rcv(1,ip), ng_rcv(2,ip), ng_rcv(3,ip)
+         IF( ng_rcv(2,ip) < 1 ) ierr = ip
       END DO
    END IF
+   !
+   CALL mp_max( ierr, intra_image_comm )
+   !
+   IF( ierr > 0 ) &
+      CALL errore( " gmeshinfo ", " Wow! some procesors have no G-vectots ", ierr )
    !
    IF(ionode) THEN
       WRITE( stdout,1050)

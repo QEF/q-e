@@ -70,7 +70,9 @@ MODULE cp_main_variables
   INTEGER,  ALLOCATABLE :: descla(:,:) ! descriptor of the lambda distribution
                                        ! see descriptors_module
   INTEGER :: nlax = 0                  ! leading dimension of the distribute (by block) lambda matrix 
+  INTEGER :: nlam = 1                  ! dimension of lambda matrix, can be 1 or nlax depending on la_proc
   INTEGER :: nrlx = 0                  ! leading dimension of the distribute (by row  ) lambda matrix
+  LOGICAL :: la_proc = .FALSE.         ! indicate if a proc own a block of lambda
   !
   REAL(DP) :: acc(nacx)
   REAL(DP) :: acc_this_run(nacx)
@@ -112,7 +114,7 @@ MODULE cp_main_variables
       USE mp_global,   ONLY: np_ortho, me_ortho, intra_image_comm, ortho_comm, &
                              me_image, ortho_comm_id
       USE mp,          ONLY: mp_max, mp_min
-      USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_
+      USE descriptors, ONLY: descla_siz_ , descla_init , nlax_ , la_nrlx_ , lambda_node_
       !
       INTEGER,           INTENT(IN) :: ngw, ngwt, ngb, ngs, ng, nr1, nr2, nr3, &
                                        nnr, nnrsx, nat, nax, nsp, nspin, &
@@ -178,12 +180,13 @@ MODULE cp_main_variables
          CALL descla_init( descla( :, iss ), nupdwn( iss ), nudx, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
          nlax = MAX( nlax, descla( nlax_ , iss ) )
          nrlx = MAX( nrlx, descla( la_nrlx_ , iss ) )
+         IF( descla( lambda_node_ , iss ) > 0 ) la_proc = .TRUE.
       END DO
       !
-      call mp_max( nlax, intra_image_comm )
-      call mp_max( nrlx, intra_image_comm )
+      nlam = 1
+      IF( la_proc ) nlam = nlax
       !
-      !  ... End with lambda dimensins
+      !  ... End with lambda dimensions
       !
       !
       IF( program_name == 'CP90' ) THEN
@@ -202,15 +205,15 @@ MODULE cp_main_variables
          !
          IF ( nosmd ) THEN
             !
-            ALLOCATE( lambda(  nlax, nlax, nspin ) )
-            ALLOCATE( lambdam( nlax, nlax, nspin ) )
-            ALLOCATE( lambdap( nlax, nlax, nspin ) )
+            ALLOCATE( lambda(  nlam, nlam, nspin ) )
+            ALLOCATE( lambdam( nlam, nlam, nspin ) )
+            ALLOCATE( lambdap( nlam, nlam, nspin ) )
             !
          END IF
          !
       ELSE IF( program_name == 'FPMD' ) THEN
          !
-         ALLOCATE( lambda(  nlax, nlax, nspin ) )
+         ALLOCATE( lambda(  nlam, nlam, nspin ) )
          !
       END IF
       !

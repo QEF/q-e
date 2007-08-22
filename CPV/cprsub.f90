@@ -190,8 +190,8 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
   use constants,         ONLY : pi, fpi, au_gpa
   use io_global,         ONLY : stdout
   use control_flags,     ONLY : iprsta
-  USE cp_main_variables, ONLY : nlax, descla
-  USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ , lambda_node_
+  USE cp_main_variables, ONLY : descla, la_proc
+  USE descriptors,       ONLY : nlar_ , nlac_ , ilar_ , ilac_ 
   USE mp,                ONLY : mp_sum
   USE mp_global,         ONLY : intra_image_comm
 
@@ -251,7 +251,7 @@ subroutine nlfh_x( stress, bec, dbec, lambda )
                         CALL DGEMM &
                              ( 'N', 'N', nss, nss, nh(is), 1.0d0, tmpdh, nudx, tmpbec, nhm, 0.0d0, temp, nudx )
 
-                        IF( descla( lambda_node_ , iss ) > 0 ) THEN
+                        IF( la_proc ) THEN
                            ir = descla( ilar_ , iss )
                            ic = descla( ilac_ , iss )
                            do j = 1, descla( nlac_ , iss )
