@@ -320,8 +320,12 @@ SUBROUTINE init_ortho_group( nproc_try, comm_all )
       me_ortho(2) = newid
    endif
 
+#else
+
+   ortho_comm_id = 1
+
 #endif
-    
+
    first = .false.
     
    RETURN
