@@ -301,7 +301,7 @@ subroutine ld1_readin
         if (pseudotype < 3) rcutus(ns) = rcut(ns)
         do ns1=1,ns-1
            if (lls(ns) == lls(ns1).and.pseudotype == 1) &
-                call errore('ld1_readin','two wavefunctions for same l',1)
+                call errore('ld1_readin','Two wavefunctions for the same l',1)
         enddo
         !
         if (enls(ns) /= 0.0_dp .and. ocs(ns) > 0.0_dp) &
@@ -388,6 +388,13 @@ subroutine ld1_readin
                 nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
                 jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
            call mp_bcast(eltsc(:,nc),ionode_id)
+           do ns=1,nwftsc(nc)
+              do ns1=1,ns-1
+                 if (eltsc(ns,nc) == eltsc(ns1,nc)) &
+                    call errore('ld1_readin', &
+                               & 'Two test wavefunctions for the same n l',1)
+              enddo
+           enddo
         else
            call el_config( configts(nc), rel, lsd, .false., nwftsc(nc), &
                 eltsc(1,nc), nntsc(1,nc), lltsc(1,nc), octsc(1,nc), &
