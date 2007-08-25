@@ -65,7 +65,7 @@ subroutine descreening
      do ib=1,nbeta
         do jb=1,ib
            if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.e-7_dp) then
-              lam=lls(ns)
+              lam=lls(ib)
               nst=(lam+1)*2
               do n=1,ikk(ib)
                  vaux(n,1)=qvan(n,ib,jb)*vpsloc(n)
