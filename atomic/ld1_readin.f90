@@ -390,7 +390,9 @@ subroutine ld1_readin
            call mp_bcast(eltsc(:,nc),ionode_id)
            do ns=1,nwftsc(nc)
               do ns1=1,ns-1
-                 if (eltsc(ns,nc) == eltsc(ns1,nc)) &
+                 if (eltsc(ns,nc) == eltsc(ns1,nc)   &
+                    .and.ABS(jjtsc(ns,nc)-jjtsc(ns1,nc))<1.e-5_DP.and. &
+                     iswtsc(ns,nc)==iswtsc(ns1,nc)) &
                     call errore('ld1_readin', &
                                & 'Two test wavefunctions for the same n l',1)
               enddo
