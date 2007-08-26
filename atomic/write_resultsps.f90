@@ -15,7 +15,7 @@ subroutine write_resultsps
   use constants, only : eps6
   use ld1inc,    only : title, rel, zed, zval, lsd, isic, latt, beta, tr2, &
                   nwfts, nnts, llts, jjts, elts, octs, iswts, enlts, nstoaets, &
-                  grid, enl,  eps0, iter, etot, etots, etot0, &
+                  grid, enl,  eps0, iter, etot, etots, etot0, lpaw, &
                   etots0, ekin, encl, ehrt, ecxc, nlcc, ecc, evxt, epseu, &
                   dhrsic, dxcsic, file_wavefunctionsps, phits, rytoev_fact
        
@@ -91,6 +91,7 @@ subroutine write_resultsps
      if (ionode) write(13,1211) etot, etot*0.5_dp, etot*rytoev_fact
      if (ionode) write(13,1221) etots, etots*0.5_dp, etots*rytoev_fact
   endif
+  if (.not.lpaw) then
   write(stdout,1251) ekin, ekin*0.5_dp, ekin*rytoev_fact
 1251 format (/,5x,'Ekin =',f15.6,' Ry,',f15.6,' Ha,',f15.6,' eV')
 
@@ -108,6 +109,7 @@ subroutine write_resultsps
 1292 format (5x,'Epseu=',f15.6,' Ry,',f15.6, ' Ha,',f15.6,' eV') 
   if(isic.ne.0) write(stdout,1300) dhrsic+dxcsic, dhrsic, dxcsic
 1300 format(5x,'desic:'/5x,0pf12.4,24x,2(0pf12.4))
+  endif
   write(stdout,120)
 120 format (/,5x,22('-'), ' End of pseudopotential test ',22('-'),/)
   !
