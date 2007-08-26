@@ -189,15 +189,13 @@ end subroutine write_upf
     !     This routine writes the core charge for the nonlinear core
     !     correction of the new UPF file
     !
+    use constants, only : fpi
     use ld1inc
     use kinds, only : DP
     implicit none
     integer :: ounps  
     !
     integer :: ir, ios  
-    real(DP) :: fpi
-
-    fpi=16.0_DP*atan(1.0_DP)
 
     write (ounps, '(//a9)', err = 100, iostat = ios) "<PP_NLCC>"  
 

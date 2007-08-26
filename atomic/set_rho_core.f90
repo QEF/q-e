@@ -14,13 +14,14 @@ subroutine set_rho_core
   !      output: smoothed core charge for r > rcore
   !
   use kinds, only : dp
+  use constants, only : pi
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
   use ld1inc, only : nlcc, lpaw, grid, rhoc, aeccharge, psccharge, rcore, &
                      nwf, oc, rel, core_state, psi, file_core
   implicit none
 
-  real(DP) :: drho, const, br1, br2, pi, &
+  real(DP) :: drho, const, br1, br2, &
        eps1, eps2, br12, a, b, eps12, totrho
   real(DP), allocatable:: rhov(:), rhoco(:)
   real(DP), external :: int_0_inf_dr
@@ -31,7 +32,6 @@ subroutine set_rho_core
   else
      if (lpaw) write(stdout,'(/,5x,'' Computing core charge for PAW: '')')
   end if
-  pi = 4.0_dp*atan(1.0_dp)
   allocate (rhov(grid%mesh), rhoco(grid%mesh))
   !
   !      calculates core charge density

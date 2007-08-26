@@ -17,6 +17,7 @@ subroutine read_pseudoupf
   !
   ! PWSCF modules
   !
+  use constants, only : fpi
   use kinds, only : dp
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, &
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
@@ -33,7 +34,6 @@ subroutine read_pseudoupf
   !     Local variables
   !
   integer :: nb, ios
-  real(DP) :: fpi
   TYPE (pseudo_upf) :: upf
   !
   !
@@ -122,7 +122,6 @@ subroutine read_pseudoupf
   !
   !
   if (upf%nlcc) then
-     fpi=16.0_dp*atan(1.0_dp)
      rhoc(1:grid%mesh) = upf%rho_atc(1:upf%mesh)*fpi*grid%r2(1:upf%mesh)
   else
      rhoc(:) = 0.0_dp
