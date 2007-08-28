@@ -49,7 +49,6 @@ efg.o : ../PW/buffers.o
 efg.o : ../PW/paw.o
 efg.o : ../PW/pwcom.o
 efg.o : gipaw_module.o
-g_tensor_crystal.o : ../Modules/atom.o
 g_tensor_crystal.o : ../Modules/cell_base.o
 g_tensor_crystal.o : ../Modules/io_files.o
 g_tensor_crystal.o : ../Modules/io_global.o
@@ -119,7 +118,6 @@ j_para.o : gipaw_module.o
 stop_code.o : ../Modules/kind.o
 stop_code.o : ../Modules/mp.o
 stop_code.o : ../Modules/parallel_include.o
-suscept_crystal.o : ../Modules/atom.o
 suscept_crystal.o : ../Modules/cell_base.o
 suscept_crystal.o : ../Modules/io_files.o
 suscept_crystal.o : ../Modules/io_global.o

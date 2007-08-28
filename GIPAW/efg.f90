@@ -475,7 +475,7 @@ subroutine efg_correction ( efg_corr_tens )
   USE kinds,                 ONLY : dp
   USE uspp,                  ONLY : ap
   USE parameters,            ONLY : lmaxx, ntypx
-  USE atom,                  ONLY : r,rab,msh
+  USE atom,                  ONLY : rgrid
   USE gvect,                 ONLY : g,ngm,ecutwfc
   USE klist,                 ONLY : nks, xk, wk
   USE cell_base,             ONLY : tpiba2
@@ -548,9 +548,9 @@ subroutine efg_correction ( efg_corr_tens )
                    * paw_recon(nt)%aephi(il2)%psi(j) &
                    - paw_recon(nt)%psphi(il1)%psi(j) &
                    * paw_recon(nt)%psphi(il2)%psi(j) ) &
-                   / r(j,nt) ** 3
+                   / rgrid(nt)%r(j) ** 3
            end do
-           call simpson(nrc,work,rab(:,nt),at_efg(il1,il2,nt))
+           call simpson(nrc,work,rgrid(nt)%rab,at_efg(il1,il2,nt))
            !!!print*, nt, il1, il2, at_efg(il1,il2,nt)
         end do
      end do
@@ -673,7 +673,7 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
   USE kinds,                 ONLY : dp
   USE uspp,                  ONLY : ap
   USE parameters,            ONLY : lmaxx, ntypx
-  USE atom,                  ONLY : r,rab,msh
+  USE atom,                  ONLY : rgrid
   USE gvect,                 ONLY : g,ngm,ecutwfc, gg
   USE klist,                 ONLY : nks, xk, wk
   USE cell_base,             ONLY : tpiba2
@@ -742,7 +742,7 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
      kkpsi = paw_recon(nt)%aephi(1)%kkpsi
      allocate ( work(kkpsi) )
      
-     IF ( ABS ( r(1,nt) ) < 1e-8 ) THEN
+     IF ( ABS ( rgrid(nt)%r(1) ) < 1e-8 ) THEN
         r_first = 2
      ELSE
         r_first = 1
@@ -766,14 +766,14 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
                    * paw_recon(nt)%aephi(il2)%psi(j) &
                    - paw_recon(nt)%psphi(il1)%psi(j) &
                    * paw_recon(nt)%psphi(il2)%psi(j) ) &
-                   / r(j,nt) ** 2 / fpi
+                   / rgrid(nt)%r(j) ** 2 / fpi
            end do
            
            at_efg(il1,il2,nt) = work(2)
            
            IF ( iverbosity > 100 ) THEN
               do j = r_first, nrc
-                 write(1010+nt,*) r(j,nt), work(j) !* fpi
+                 write(1010+nt,*) rgrid(nt)%r(j), work(j) !* fpi
               end do
               write(1010+nt,*) ""
            END IF
@@ -788,10 +788,10 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
                    * paw_recon(nt)%aephi(il2)%psi(r_first) &
                    - paw_recon(nt)%psphi(il1)%psi(r_first) &
                    * paw_recon(nt)%psphi(il2)%psi(r_first) ) &
-                   / r(r_first,nt) ** 2 / fpi &
-                   * 2 / ( fpi * r(j,nt) ** 2 * r_Thomson &
-                   * ( 1 + 2 * r(j,nt) / r_Thomson ) ** 2 ) &
-                   * r(j,nt) ** 2
+                   / rgrid(nt)%r(r_first) ** 2 / fpi &
+                   * 2 / ( fpi * rgrid(nt)%r(j) ** 2 * r_Thomson &
+                   * ( 1 + 2 * rgrid(nt)%r(j) / r_Thomson ) ** 2 ) &
+                   * rgrid(nt)%r(j) ** 2
            end do
 
 !           ! Dirac delta function
@@ -821,12 +821,12 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
            
            IF ( iverbosity > 100 ) THEN
               do j = r_first, nrc
-                 write(1000+nt,*) r(j,nt), work(j) !* fpi
+                 write(1000+nt,*) rgrid(nt)%r(j), work(j) !* fpi
               end do
               write(1000+nt,*) ""
            END IF
            
-           CALL simpson(nrc,work,rab(:,nt),at_efg_zora(il1,il2,nt))
+           CALL simpson(nrc,work,rgrid(nt)%rab(:nrc),at_efg_zora(il1,il2,nt))
            
            IF ( iverbosity > 100 ) THEN
               write(6,'(A,2i6,2F10.5)') "DDD: ", &
@@ -925,7 +925,7 @@ end subroutine fermi_contact_reconstruction
 subroutine delta_Thomson_radial_ft ( delta_t )
   
   USE kinds,                 ONLY : dp
-  USE atom,                  ONLY : r,rab,msh
+  USE atom,                  ONLY : rgrid
   USE gvect,                 ONLY : ngm, gg
   USE ions_base,             ONLY : ntyp => nsp, atm
   USE constants,             ONLY : pi, fpi
@@ -949,7 +949,7 @@ subroutine delta_Thomson_radial_ft ( delta_t )
   
   do nt = 1, ntyp
      
-     allocate ( work(msh(nt)), f_radial(msh(nt)) )
+     allocate ( work(rgrid(nt)%mesh), f_radial(rgrid(nt)%mesh) )
      
      ! Thomson's delta function
      
@@ -957,17 +957,17 @@ subroutine delta_Thomson_radial_ft ( delta_t )
      
      ! Terms r(j,nt) ** 2 from the definition of delta_Thomson
      !    and the radial volume element r^2 in integral cancel each other
-     DO j = 1, msh(nt)
+     DO j = 1, rgrid(nt)%mesh
         f_radial(j) = 2 / ( fpi * r_Thomson &
-             * ( 1 + 2 * r(j,nt) / r_Thomson ) ** 2 )
+             * ( 1 + 2 * rgrid(nt)%r(j) / r_Thomson ) ** 2 )
      END DO
      
      DO gv = 1, ngm
         
         ! Thomson delta function
         work = 0.0_dp
-        do j = 1, msh(nt)
-           gr = SQRT(gg(gv)) * tpiba * r(j,nt)
+        do j = 1, rgrid(nt)%mesh
+           gr = SQRT(gg(gv)) * tpiba * rgrid(nt)%r(j)
            IF ( gr < 1.0e-8 ) THEN
               work(j) = f_radial(j) * fpi
            ELSE
@@ -975,7 +975,7 @@ subroutine delta_Thomson_radial_ft ( delta_t )
            END IF
         end do
         
-        CALL simpson(msh(nt),work,rab(:,nt),delta_t(gv,nt))
+        CALL simpson(rgrid(nt)%mesh,work,rgrid(nt)%rab,delta_t(gv,nt))
         
         IF ( iverbosity > 100 ) THEN
            write(1020+nt,*) SQRT(gg(gv))*tpiba, delta_t(gv,nt)

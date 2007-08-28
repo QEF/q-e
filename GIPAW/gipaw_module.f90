@@ -323,7 +323,7 @@ CONTAINS
 !                              paw_becp, paw_nkb
     USE paw,           ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
                               read_recon, read_recon_paratec
-    USE atom,          ONLY : r, rab
+    USE atom,          ONLY : rgrid
     
     !</apsi>
     
@@ -429,10 +429,10 @@ CONTAINS
              !
              do j = 1, nrc
                 work(j) = (paw_recon(nt)%aephi(il1)%psi(j)*paw_recon(nt)%aephi(il2)%psi(j)-&
-                     paw_recon(nt)%psphi(il1)%psi(j)*paw_recon(nt)%psphi(il2)%psi(j))/r(j,nt)
+                     paw_recon(nt)%psphi(il1)%psi(j)*paw_recon(nt)%psphi(il2)%psi(j))/rgrid(nt)%r(j)
              enddo
              
-             CALL simpson( nrc, work, rab(:nrc,nt), &
+             CALL simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic(il1,il2,nt) )
              
              !
@@ -445,10 +445,10 @@ CONTAINS
                 work(j) = &
                      ( paw_recon(nt)%aephi(il1)%psi(j) * paw_recon(nt)%aephi(il2)%psi(j) &
                      - paw_recon(nt)%psphi(il1)%psi(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
-                     / r(j,nt) ** 3
+                     / rgrid(nt)%r(j) ** 3
              end do
              
-             call simpson( nrc, work, rab(:,nt), &
+             call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic(il1,il2,nt) )
              if (iverbosity > 10) then
                 write(stdout,*) "WWW1: ", l2, il1, il2, &
@@ -464,9 +464,9 @@ CONTAINS
              ! g tensor, relativistic mass correction
              !
              ALLOCATE ( kinetic_aephi ( kkpsi ), kinetic_psphi ( kkpsi ) )
-             CALL radial_kinetic_energy ( l2, r(:nrc,nt), &
+             CALL radial_kinetic_energy ( l2, rgrid(nt)%r(:nrc), &
                   paw_recon(nt)%aephi(il2)%psi(:nrc), kinetic_aephi(:nrc) )
-             CALL radial_kinetic_energy ( l2, r(:nrc,nt), &
+             CALL radial_kinetic_energy ( l2, rgrid(nt)%r(:nrc), &
                   paw_recon(nt)%psphi(il2)%psi(:nrc), kinetic_psphi(:nrc) )
              
              do j = 1, nrc
@@ -475,7 +475,7 @@ CONTAINS
              end do
              DEALLOCATE ( kinetic_aephi, kinetic_psphi )
              
-             CALL simpson ( nrc, work, rab(:,nt), &
+             CALL simpson ( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_rmc(il1,il2,nt) )
              if (iverbosity > 10) then
                 write(stdout,*) "WWW2: ", l2, il1, il2, &
@@ -484,10 +484,10 @@ CONTAINS
              
              ALLOCATE ( aephi_dvloc_dr ( nrc ), psphi_dvloc_dr ( nrc ) )
              
-             CALL radial_derivative ( r(:nrc,nt), &
+             CALL radial_derivative ( rgrid(nt)%r(:nrc), &
                   paw_recon(nt)%gipaw_ae_vloc(:nrc), &
                   aephi_dvloc_dr(:nrc) )
-             CALL radial_derivative ( r(:nrc,nt), &
+             CALL radial_derivative ( rgrid(nt)%r(:nrc), &
                   paw_recon(nt)%gipaw_ps_vloc(:nrc), &
                   psphi_dvloc_dr ( :nrc ) )
              
@@ -498,10 +498,10 @@ CONTAINS
                 work(j) = ( paw_recon(nt)%aephi(il1)%psi(j) * aephi_dvloc_dr(j) &
                      * paw_recon(nt)%aephi(il2)%psi(j) - paw_recon(nt)%psphi(il1)%psi(j) &
                      * psphi_dvloc_dr(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
-                     * r(j,nt)
+                     * rgrid(nt)%r(j)
              end do
              
-             call simpson( nrc, work, rab(:,nt), &
+             call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic_so(il1,il2,nt) )
              if (iverbosity > 10) then
                 write(stdout,*) "WWW3: ", l2, il1, il2, &
@@ -515,18 +515,10 @@ CONTAINS
                 work(j) = ( paw_recon(nt)%aephi(il1)%psi(j) * aephi_dvloc_dr(j) &
                      * paw_recon(nt)%aephi(il2)%psi(j) - paw_recon(nt)%psphi(il1)%psi(j) &
                      * psphi_dvloc_dr(j) * paw_recon(nt)%psphi(il2)%psi(j) ) &
-                     / r(j,nt)
+                     / rgrid(nt)%r(j)
              end do
-             if (iverbosity > 10) then
-                if ( l1 == 0 ) then
-                   do j = 1, nrc
-                      write(90,*) r(j,nt), work(j)*r(j,nt)**2
-                   end do
-                   write(90,*) ""
-                end if
-             end if
              
-             call simpson( nrc,work,rab(:,nt), &
+             call simpson( nrc,work,rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic_so(il1,il2,nt) )
              if (iverbosity > 10) then
                 write(stdout,*) "WWW4: ", l2, il1, il2, &

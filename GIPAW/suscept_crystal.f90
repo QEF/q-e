@@ -386,7 +386,6 @@ CONTAINS
   !====================================================================
   SUBROUTINE diamagnetic_correction ( diamagnetic_tensor )
     
-    USE atom,           ONLY : r, rab
     USE ions_base,      ONLY : nat, ityp, ntyp => nsp
     USE gipaw_module,   ONLY : radial_integral_diamagnetic
     

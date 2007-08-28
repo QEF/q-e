@@ -611,7 +611,6 @@ CONTAINS
   !====================================================================
   SUBROUTINE relativistic_mass_correction ( rmc_gipaw )
     
-    USE atom,           ONLY : r, rab
     USE ions_base,      ONLY : nat, ityp, ntyp => nsp
     USE gipaw_module,   ONLY : radial_integral_rmc
     
@@ -674,7 +673,6 @@ CONTAINS
   !====================================================================
   SUBROUTINE diamagnetic_correction ( diamagnetic_tensor )
     
-    USE atom,           ONLY : r, rab
     USE ions_base,      ONLY : nat, ityp, ntyp => nsp
     USE gipaw_module,   ONLY : radial_integral_diamagnetic_so
     
