@@ -16,10 +16,10 @@ subroutine all_electron(ild)
   !
   use kinds, only : DP
   use radial_grids, only: ndmx
-  use  ld1inc, only: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
+  use ld1inc, only: isic, grid, zeta, rho, enne, vpot, vxt, enl, &
                      deld, encl, etot, ecxc, evxt, ehrt, epseu, ekin, &
                      vnl, vh, lsd, nspin, nlcc, vdw, nn, ll, oc, nwf, &
-                     zed, zval, vxc, exc, excgga
+                     zed, zval, vxc, exc, excgga, v0, verbosity
   implicit none
 
   logical :: ild    ! if true compute log der
@@ -27,7 +27,7 @@ subroutine all_electron(ild)
   !    compute an initial estimate of the potential
   !
   call starting_potential(ndmx,grid%mesh,zval,zed,nwf,oc,nn,ll,grid%r,&
-       enl,vxt,vpot,enne,nspin)
+       enl,v0,vxt,vpot,enne,nspin)
   !
   !     solve the eigenvalue self-consistent equation
   !
@@ -37,6 +37,8 @@ subroutine all_electron(ild)
   !
   call elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,    &
              etot,ekin,encl,ehrt,ecxc,evxt)
+  !
+  if (verbosity=='high') call elsd_highv( )
   !
   !   add sic correction if needed
   !

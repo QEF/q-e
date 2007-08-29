@@ -15,8 +15,10 @@ subroutine write_results
   use constants, only : eps6
   use ld1inc,    only : title, rel, zed, lsd, nspin, isic, latt, beta, tr2, &
                         grid, enzero, etot, ekin, encl, ehrt, evxt, ecxc, &
-                        nwf, nn,ll,jj,el,isw,oc,enl, file_wavefunctions, &
-                        dhrsic, dxcsic, eps0,iter, psi, rytoev_fact
+                        ehrtcc, ehrtcv, ehrtvv, enclv, enclc, verbosity,  &
+                        nwf, nn, ll, jj, el, isw, oc, enl, file_wavefunctions, &
+                        dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, &
+                        core_state, ekinc, ekinv, ae_fc_energy
 
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -28,6 +30,7 @@ subroutine write_results
   logical :: ok, oep
   character (len=20) :: dft_name
   character (len=2) :: elaux(max_out_wfc)
+  character (len=60) :: vstates
   character (len=256) :: nomefile
   !
   !
@@ -103,6 +106,14 @@ subroutine write_results
   write(stdout,1200) eps0,iter
 1200 format(/5x,'eps =',1pe8.1,'  iter =',i3)
   write(stdout,*)
+  if (verbosity=='high') then
+      vstates=''
+      do n=1,nwf
+         if (.not.core_state(n)) vstates=TRIM(vstates)//el(n)//","
+      enddo
+      write(stdout,'(5x,"The valence states are: ", a60,/)') vstates 
+  endif    
+  if (verbosity=='high') write(6,'(5x,"Total energy of the atom:",/)')
   write(stdout,'(5x,''Etot ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        etot, etot*0.5_dp, etot*rytoev_fact
   if (lsd.eq.1) then
@@ -115,18 +126,70 @@ subroutine write_results
      enddo
      write(stdout,'(5x,''Total magnetization:'',f8.2,'' Bohr mag. '')') mm
   endif
+  if (verbosity=='high') write(stdout,'(/,5x,"Kinetic energy:")')
   write(stdout,'(/,5x,''Ekin ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
        ekin, ekin*0.5_dp,  ekin*rytoev_fact
+  if (verbosity=='high') then
+     write(stdout,'(5x,''Ekinc='',f15.6,'' Ry,'',f15.6,'' Ha,''&
+                                 &,f15.6,'' eV'')')&
+                   ekinc, ekinc*0.5_dp,  ekinc*rytoev_fact
+     write(stdout,'(5x,''Ekinv='',f15.6,'' Ry,'',f15.6,'' Ha,''&
+                                 &,f15.6,'' eV'')')&
+                   ekinv, ekinv*0.5_dp,  ekinv*rytoev_fact
+     write(stdout,*)
+  endif
+  if (verbosity=='high') write(6,'(/,5x,"Interaction between the nucleus and &
+                                       &the electrons:",/)')
   write(stdout,'(5x,''Encl ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')')&
        encl, encl*0.5_dp, encl*rytoev_fact
+  if (verbosity=='high') then
+     write(stdout,&
+       '(5x,''Enclc='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+       enclc, enclc*0.5_dp, enclc*rytoev_fact
+     write(stdout,&
+       '(5x,''Enclv='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+       enclv, enclv*0.5_dp, enclv*rytoev_fact
+     write(stdout,*)
+  endif   
+  if (verbosity=='high') write(6,'(/,5x,"Hartree energy:",/)')
   write(stdout,'(5x,''Eh   ='',f15.6,'' Ry,'',f15.6, '' Ha,'',f15.6,'' eV'')') &
        ehrt, ehrt*0.5_dp, ehrt*rytoev_fact
+  if (verbosity=='high') then
+     write(stdout,&
+       '(5x,''Ehcc ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+       ehrtcc, ehrtcc*0.5_dp, ehrtcc*rytoev_fact
+     write(stdout,&
+       '(5x,''Ehcv ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+       ehrtcv, ehrtcv*0.5_dp, ehrtcv*rytoev_fact
+     write(stdout,&
+       '(5x,''Ehvv ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+       ehrtvv, ehrtvv*0.5_dp, ehrtvv*rytoev_fact
+     write(stdout,*)
+  endif
+  if (verbosity=='high') write(stdout, '(/,5x,''Exchange and correlation energy:'',/)') 
   write(stdout,&
        '(5x,''Exc  ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        ecxc, ecxc*0.5_dp, ecxc*rytoev_fact
-  write(stdout,&
+  if (verbosity=='high')  write(stdout,*)
+  if (ABS(evxt)>0.0_DP) then
+     if (verbosity=='high') &
+          write(stdout, '(/,5x,''Interaction with the external potential:'')') 
+     write(stdout,&
        '(5x,''Evxt ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
        evxt, evxt*0.5_dp, evxt*rytoev_fact
+  endif
+  if (verbosity=='high') then
+     write(stdout, '(/,5x,''Estimated frozen-core energy from all-electron calculation:'')') 
+     write(stdout, '(5x,''Efc = Ekinv + Enclv + Ehvv + Ehcv + Exc'')') 
+     write(stdout, '(5x,''Ed = Etot - Efc'',/)') 
+     write(stdout,&
+       '(5x,''Efc  ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+       ae_fc_energy, ae_fc_energy*0.5_dp, ae_fc_energy*rytoev_fact
+     write(stdout,&
+       '(5x,''Ed   ='',f15.6,'' Ry,'',f15.6,'' Ha,'',f15.6,'' eV'')') &
+      etot-ae_fc_energy, (etot-ae_fc_energy)*0.5_dp, (etot-ae_fc_energy)*rytoev_fact
+  endif
+
   if (isic.ne.0) then
      write(stdout,*)
      write(stdout,'(5x,"SIC information:")') 

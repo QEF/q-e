@@ -168,6 +168,9 @@ module ld1inc
   ! 1 scalar relativistic calculation
   ! 2 calculation with the full dirac equation
 
+  character(len=4) :: &
+       verbosity     ! if 'high' writes more information on output
+
   real(DP) :: &
        beta,       &   ! the mixing parameter
        tr2,        &   ! the required precision of the scf
@@ -199,6 +202,14 @@ module ld1inc
        ecc,        &    ! core-only contribution to the energy
        evxt,       &    ! external field energy 
        epseu,      &    ! pseudopotential energy
+       ekinc,      &    ! core kinetic energy
+       ekinc0,     &    ! core kinetic energy
+       ekinv,      &    ! valence kinetic energy
+       enclv, enclc,  & ! nuclear Coulomb energy of valence and core 
+       ehrtvv,     &    ! valence-valence Hartree energy
+       ehrtcv,     &    ! core-valence Hartree energy
+       ehrtcc,     &    ! core-core Hartree energy
+       ae_fc_energy, &  ! frozen core energy calculated with all-electron char
        dhrsic,     &    ! Hartree sic energy
        dxcsic,     &    ! exchange sic energy
        etots,      &    ! total pseudopotential energy
@@ -216,12 +227,16 @@ module ld1inc
   !  the potential for the scf
   !
   real(DP) ::   &
+       v0(ndmx),      & ! the coulomb potential
        vpot(ndmx,2),  & ! the all-electron scf potential
        vxt(ndmx),     & ! the external potential
        vh(ndmx),      & ! the hartree potential
        vxc(ndmx,2),   & ! the exchange and correlation potential
        exc(ndmx),     & ! the exchange and correlation energy
        excgga(ndmx),  & ! the GGA exchange and correlation energy
+       vxcts(ndmx,2), & ! the pseudo exchange and correlation potential
+       excts(ndmx),   & ! the pseudo exchange and correlation energy
+       excggats(ndmx),& ! the GGA exchange and correlation energy
        vpstot(ndmx,2),& ! the total local pseudopotential
        vpsloc(ndmx)  ,& ! the local pseudopotential
        vx(ndmx,2)    ,& ! the OEP-X potential (when needed)
@@ -244,6 +259,12 @@ module ld1inc
              rytoev_fact    ! Conversion from Ry and eV. A value
                             ! different from default can be used
                             ! to reproduce results of old papers.
+  !
+  !  Auxiliary quantities for verbose output 
+  !
+  real(DP) ::       &
+       aevcharge(ndmx,2)     ! the all-electron valence charge
+
   !
   !  file names
   !

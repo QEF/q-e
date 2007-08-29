@@ -32,6 +32,7 @@ drho0ofvx.o \
 dvex.o \
 el_config.o \
 elsd.o \
+elsd_highv.o \
 elsdps.o \
 esic.o \
 exc_t.o \
@@ -65,6 +66,7 @@ scf.o \
 seriebes.o \
 set_rho_core.o \
 set_psi_in.o \
+set_rc_rv.o \
 set_sl3.o \
 sic_correction.o \
 starting_potential.o \
@@ -76,6 +78,7 @@ vext.o \
 vpack.o \
 vxcgc.o \
 vxc_t.o \
+v_of_rho_at.o \
 write_cpmd.o \
 write_paw_recon.o \
 write_pseudo.o \

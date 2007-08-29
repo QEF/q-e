@@ -9,7 +9,7 @@
 !---------------------------------------------------------------
 subroutine starting_potential &
      (ndm,mesh,zval,zed,nwf,oc,nn,ll,r,enl, &
-     vxt,vpot,enne,nspin)
+     v0,vxt,vpot,enne,nspin)
   !---------------------------------------------------------------
   !
   ! starting potential: generalized thomas-fermi atomic potential
@@ -19,7 +19,7 @@ subroutine starting_potential &
   use kinds, only : DP
   implicit none
   integer :: nwf, nn(nwf), ll(nwf), ndm, mesh, n, i, nspin
-  real(DP) :: r(ndm), vpot(ndm,2), vxt(ndm), enl(nwf), oc(nwf), &
+  real(DP) :: r(ndm), vpot(ndm,2), v0(ndm), vxt(ndm), enl(nwf), oc(nwf), &
        zed, zval, zz, zen, enne, t,x, vext, oce
   real(DP), parameter :: e2 = 2.0_dp
   external vext
@@ -46,6 +46,7 @@ subroutine starting_potential &
           + x*(1.243_dp+x*(0.2302_dp+0.006944_dp*x)))
      t = max(1.0_dp,t)
      vpot(i,1) = -e2*t/r(i) + vxt(i)
+     v0(i)= -e2 * zed / r(i)
   enddo
   !
   if (nspin.eq.2) then

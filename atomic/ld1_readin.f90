@@ -15,7 +15,7 @@ subroutine ld1_readin
   use radial_grids, only: ndmx
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
   use constants,  ONLY : rytoev
-  USE io_global,  ONLY : ionode, ionode_id
+  USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast
   use ld1inc,     only : els, lls, betas, qq, qvan, ikk, nbeta, pseudotype, &
                          el, nn, ll, jj, oc, isw, nwf,rcut, rcutus, &
@@ -32,7 +32,7 @@ subroutine ld1_readin
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
                          file_core, file_beta, file_chi, author, &
                          nld, rlderiv, eminld, emaxld, deld, &
-                         ecutmin, ecutmax, decut, rytoev_fact
+                         ecutmin, ecutmax, decut, rytoev_fact, verbosity
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -76,7 +76,8 @@ subroutine ld1_readin
        isic,    &  ! if 1 self-interaction correction
        latt,    &  ! if <> 0 Latter correction is applied
        title,   &  ! the title of the run
-       prefix,  &  ! the prefix for file names
+       verbosity,& ! if 'high' writes more information on output
+       prefix,   & ! the prefix for file names
        rytoev_fact, & ! conversion between Ry and eV 
        vdw         ! if .true. vdW coefficient in TF+vW will be calculated
 
@@ -159,6 +160,7 @@ subroutine ld1_readin
   title = ' '
   config= ' '
 
+  verbosity='low'
   lpaw = .false.
   author='anonymous'
 
@@ -207,6 +209,11 @@ subroutine ld1_readin
        &    'isic and latter correction not allowed',1)
   if (isic == 1 .and. iswitch .ne. 1 ) call errore('ld1_readin', &
        &    'SIC available with all-electron only', 1)
+
+  if (iswitch==1.and.verbosity=='high') then
+     write(stdout,'("High verbosity not available with iswicth=1")') 
+     verbosity='low'
+  endif
 
   if (rel == 5 ) then
      if (zed < 19.0_dp) then
@@ -568,6 +575,7 @@ implicit none
   call mp_bcast( rcore, ionode_id )
   call mp_bcast( rcloc, ionode_id )
   call mp_bcast( lpaw,  ionode_id )
+  call mp_bcast( verbosity,  ionode_id )
   call mp_bcast( file_pseudopw, ionode_id )
   call mp_bcast( file_screen, ionode_id ) 
   call mp_bcast( file_core, ionode_id )

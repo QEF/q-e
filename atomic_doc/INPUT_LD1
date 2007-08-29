@@ -71,6 +71,11 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              containing the orbitals, logarithmic derivatives, tests
              See below for file names and the content of the file
 
+      verbosity   :                                  (default: low)
+            if 'high' with iswitch=2,3 prints separately core and
+            valence contributions to the energies. Print the
+            frozen-core energy.
+
       config = a string with the electronic configuration. Example:
                   '[Ar] 3d10 4s2 4p2.5'              (default: ' ')
                If lsd=1, spin-up and spin-down state may appear twice
