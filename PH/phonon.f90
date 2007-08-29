@@ -34,7 +34,7 @@ PROGRAM phonon
   USE control_flags,   ONLY : restart, lphonon, tr2, ethr, imix, nmix,  &
                               mixing_beta, lscf, lbands, david, isolve
   USE qpoint,          ONLY : xq, nksq
-  USE disp,            ONLY : nqs, x_q
+  USE disp,            ONLY : nqs, x_q, iq1, iq2, iq3
   USE control_ph,      ONLY : ldisp, lnscf, lgamma, lgamma_gamma, convt, &
                               epsil, trans, elph, zue, recover, maxirr, irr0, &
                               lnoloc, lrpa
@@ -389,6 +389,7 @@ PROGRAM phonon
      !
      CALL close_phq( .TRUE. )
      !
+666  continue
   END DO
   !
   IF ( ionode ) CALL delete_if_present( TRIM(tmp_dir)//TRIM(prefix)//".stat" )

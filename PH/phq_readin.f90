@@ -39,7 +39,7 @@ SUBROUTINE phq_readin()
   USE qpoint,        ONLY : nksq, xq
   USE partial,       ONLY : atomo, list, nat_todo, nrapp
   USE output,        ONLY : fildyn, fildvscf, fildrho
-  USE disp,          ONLY : nq1, nq2, nq3
+  USE disp,          ONLY : nq1, nq2, nq3, iq1, iq2, iq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
   USE noncollin_module, ONLY : noncolin, i_cons
   USE ldaU,          ONLY : lda_plus_u
@@ -77,7 +77,7 @@ SUBROUTINE phq_readin()
                        maxirr, nat_todo, iverbosity, outdir, epsil,  &
                        trans, elph, zue, nrapp, max_seconds, reduce_io, &
                        prefix, fildyn, fildvscf, fildrho,            &
-                       lnscf, ldisp, nq1, nq2, nq3,                  &
+                       lnscf, ldisp, nq1, nq2, nq3, iq1, iq2, iq3,   &
                        eth_rps, eth_ns, lraman, elop, dek, recover,  &
                        fpol, asr, lrpa, lnoloc
   ! tr2_ph       : convergence threshold
@@ -156,6 +156,9 @@ SUBROUTINE phq_readin()
   nq1          = 0
   nq2          = 0
   nq3          = 0
+  iq1          = 0
+  iq2          = 0
+  iq3          = 0
   dek          = 1.0d-3
   recover      = .FALSE.
   asr          = .FALSE.
@@ -340,11 +343,14 @@ SUBROUTINE phq_readin()
   IF (modenum > 0 .OR. ldisp .OR. lraman ) lgamma_gamma=.FALSE.
   IF (.not.lgamma_gamma) asr=.FALSE.
   !
-  !  broadcast the values of nq1, nq2, nq3
+  !  broadcast the values of nq1, nq2, nq3, iq1, iq2, iq3
   !
   CALL mp_bcast( nq1, ionode_id )
   CALL mp_bcast( nq2, ionode_id )
   CALL mp_bcast( nq3, ionode_id )
+  CALL mp_bcast( iq1, ionode_id )
+  CALL mp_bcast( iq2, ionode_id )
+  CALL mp_bcast( iq3, ionode_id )
   !
   IF (ldisp .AND. (nq1 .LE. 0 .OR. nq2 .LE. 0 .OR. nq3 .LE. 0)) &
        CALL errore('phq_readin','nq1, nq2, and nq3 must be greater than 0',1)

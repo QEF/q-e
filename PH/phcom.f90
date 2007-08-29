@@ -367,6 +367,9 @@ MODULE disp
   !
   INTEGER :: nq1, nq2, nq3
     ! number of q-points in each direction
+  INTEGER :: iq1, iq2, iq3
+    ! specific q point from the regular grid
+    ! (i.e., iq1/nq1,iq2/nq2,iq3/nq3)
   INTEGER :: nqs
     ! number of q points to be calculated 
   REAL (DP), ALLOCATABLE :: x_q(:,:)

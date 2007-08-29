@@ -12,6 +12,7 @@ SUBROUTINE q_points ( )
   USE kinds, only : dp
   USE io_global,  ONLY :  stdout, ionode
   USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
+  USE disp,  ONLY : iq1, iq2, iq3
   USE output, ONLY : fildyn
   USE symme, ONLY : nsym, s
   USE cell_base, ONLY : bg
@@ -30,10 +31,14 @@ SUBROUTINE q_points ( )
 
   if( nq1 .le. 0 .or. nq2 .le. 0 .or. nq3 .le. 0 ) &
        call errore('q_points','nq1 or nq2 or nq3 .le. 0',1)
+  if( iq1 .lt. 0 .or. iq2 .lt. 0 .or. iq3 .lt. 0 ) &
+       call errore('q_points','iq1 or iq2 or iq3 .le. 0',1)
+  if( iq1 .gt. nq1 .or. iq2 .gt. nq2 .or. iq3 .gt. iq3 ) &
+       call errore('q_points','iq1 or iq2 or iq3 .le. 0',1)
 
   allocate (wq(nqmax))
   allocate (x_q(3,nqmax))
-  call kpoint_grid( nsym, s, bg, nqmax, 0, 0, 0, &
+  call kpoint_grid( nsym, s, bg, nqmax, 2*iq1, 2*iq2, 2*iq3, &
                          nq1, nq2, nq3, nqs, x_q, wq )
   deallocate (wq)
   !
@@ -59,13 +64,16 @@ SUBROUTINE q_points ( )
   !
   write(stdout, '(//5x,"Calculation of the dynamical matrices for (", & 
        &3(i2,","),") uniform grid of q-points")') nq1, nq2, nq3
+  if (.not.(iq1.eq.0.and.iq2.eq.0.and.iq3.eq.0)) write(stdout, '(5x, &
+       "with only (", 3(i2,","),") point requested")') iq1, iq2, iq3
   write(stdout, '(5x,"(",i4,"q-points):")') nqs
   write(stdout, '(5x,"  N       xq(1)       xq(2)       xq(3) " )')
   do iq = 1, nqs
      write(stdout, '(5x,i3, 3f12.5)') iq, x_q(1,iq), x_q(2,iq), x_q(3,iq)
   end do
   !
-  if (.not. exist_gamma) call errore('q_points','Gamma is not a q point',1)
+  if ((iq1.eq.0.and.iq2.eq.0.and.iq3.eq.0).and.&
+       (.not. exist_gamma)) call errore('q_points','Gamma is not a q point',1)
   !
   ! ... write the information on the grid of q-points to file
   !

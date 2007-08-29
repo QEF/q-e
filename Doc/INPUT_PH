@@ -93,6 +93,13 @@ nq1,nq2,nq3 parameters of the Monkhorst-Pack grid (no offset) used   0,0,0
             when ldisp=.true. Same meaning as for nk1, nk2, nk3
             in the input of pw.x
 
+iq1,iq2,iq3 these go together with nq1, nq2, nq3 and allow to choose
+            just one point out of the Monkhorst-Pack grid with ldisp=.true. 
+            Note the the actual point chosen is something like
+            (iq1-1)/nq1, (iq2-1)/nq2, (iq3-1)/nq3 (so, check the 
+            output for what you get). Also make sure that PW left *.wfc
+            files behind (no 'phonon' is needed though).
+
 nrapp       choose the subset of irreducible representations (irreps)
             for which the linear response calculation is performed:
             "nrapp" irreps, specified in input (see below) are used.

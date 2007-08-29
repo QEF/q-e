@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !-----------------------------------------------------------------------
 subroutine kpoint_grid &
-     ( nrot, s, bg, npk, k1,k2,k3, nk1,nk2,nk3, nks, xk, wk)
+     ( nrot, s, bg, npk, k1i,k2i,k3i, nk1,nk2,nk3, nks, xk, wk)
 !-----------------------------------------------------------------------
 !
 !  Automatic generation of a uniform grid of k-points
@@ -19,6 +19,7 @@ subroutine kpoint_grid &
   USE symme,            ONLY : t_rev
   implicit none
   ! INPUT:
+  integer k1i, k2i, k3i, ik1, ik2, ik3, nsingle
   integer nrot, s(3,3,48), npk, k1, k2, k3, nk1, nk2, nk3
   real(DP) bg(3,3)
   ! OUTPUT:
@@ -28,11 +29,23 @@ subroutine kpoint_grid &
   real(DP), parameter :: eps=1.0d-5
   real(DP) xkr(3), deltap(3), deltam(3), fact, xx, yy, zz
   real(DP), allocatable:: xkg(:,:), wkk(:)
-  integer nkr, i,j,k, ns, n, nk
+  integer nkr, i,j,k, ns, n, nk, nkr1, nkr2
   integer, allocatable :: equiv(:)
   logical :: in_the_list
   !
+  ! 0 or 1 in k1i is for half-step shift
+  ! the rest is for choosing a specific grid point (ik1, ik2, ik3)
   nkr=nk1*nk2*nk3
+  k1 = mod(k1i,2)
+  k2 = mod(k2i,2)
+  k3 = mod(k3i,2)
+  ik1 = k1i/2
+  ik2 = k2i/2
+  ik3 = k3i/2
+  nsingle = 0
+  if (ik1.gt.0.and.ik2.gt.0.and.ik3.gt.0) &
+       nsingle = (ik3-1) + (ik2-1)*nk3 + (ik1-1)*nk2*nk3 + 1
+  if (nsingle.gt.nkr) nsingle = 0
   allocate (xkg( 3,nkr),wkk(nkr))    
   allocate (equiv( nkr))    
   !
@@ -117,7 +130,17 @@ subroutine kpoint_grid &
 
   nks=0
   fact=0.0d0
-  do nk=1,nkr
+  if (nsingle.eq.0) then
+     nkr1 = 1
+     nkr2 = nkr
+  else
+     nkr1 = equiv(nsingle)
+     nkr2 = nkr1
+!     nks=nks+1
+!     wk(nks) = 1.0d0
+!     xk(:,nks) = 0.0d0
+  endif
+  do nk=nkr1,nkr2
      if (equiv(nk).eq.nk) then
         nks=nks+1
         if (nks.gt.npk) call errore('kpoint_grid','too many k-points',1)
