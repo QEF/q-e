@@ -29,7 +29,7 @@ MODULE fft_cp
   IMPLICIT NONE
   SAVE
 
-  INTEGER, PRIVATE :: what_scatter = 1
+  INTEGER, PRIVATE :: what_scatter = 0
 
 CONTAINS
 

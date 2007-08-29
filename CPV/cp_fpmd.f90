@@ -1674,9 +1674,9 @@ SUBROUTINE gmeshinfo( )
    CALL mp_max( ierr, intra_image_comm )
    !
    IF( ierr > 0 ) &
-      CALL errore( " gmeshinfo ", " Wow! some procesors have no G-vectots ", ierr )
+      CALL errore( " gmeshinfo ", " Wow! some processors have no G-vectors ", ierr )
    !
-   IF(ionode) THEN
+   IF(ionode .AND. ngb > 0 ) THEN
       WRITE( stdout,1050)
       WRITE( stdout,1060) ngb
    END IF
