@@ -17,6 +17,7 @@ subroutine starting_potential &
   ! electron cannot be smaller than 1 (far from the core)
   !
   use kinds, only : DP
+  use ld1inc, only : frozen_core
   implicit none
   integer :: nwf, nn(nwf), ll(nwf), ndm, mesh, n, i, nspin
   real(DP) :: r(ndm), vpot(ndm,2), v0(ndm), vxt(ndm), enl(nwf), oc(nwf), &
@@ -36,7 +37,7 @@ subroutine starting_potential &
         if(nn(i).eq.nn(n).and.ll(i).le.ll(n)) zen=zen+oce
      end do
      zen = max(zz-zen+1.0_dp,1.0_dp)
-     enl(n) =-(zen/nn(n))**2
+     if (ABS(enl(n))<1.d-7.or..not.frozen_core) enl(n) =-(zen/nn(n))**2
   end do
   !
   do  i=1,mesh

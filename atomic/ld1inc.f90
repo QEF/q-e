@@ -122,6 +122,7 @@ module ld1inc
   integer ::                 &
        nconf,                & ! number of configuration
        nstoaec(nwfsx,ncmax1),& ! correspondence all-electron test
+       lsdts(ncmax1),        & ! for each configuration the lsd
        nwftsc(ncmax1),       & ! number of wavefunctions for each config.
        nntsc(nwfsx,ncmax1),lltsc(nwfsx,ncmax1),& ! the quantum numbers of
                                 ! each configuration
@@ -170,6 +171,9 @@ module ld1inc
 
   character(len=4) :: &
        verbosity     ! if 'high' writes more information on output
+
+  logical ::   &
+       frozen_core   ! if true the all-electron calculation is frozen core
 
   real(DP) :: &
        beta,       &   ! the mixing parameter

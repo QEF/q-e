@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine elsd_highv ()
+subroutine elsd_highv (nc)
   !---------------------------------------------------------------
   !
   !   additional information on the atomic total energy. The valence
@@ -19,8 +19,9 @@ subroutine elsd_highv ()
   use ld1inc, only: grid, aeccharge, aevcharge, nwf, nspin, enl, oc, v0, &
                     vxcts, excts, excggats, nlcc, enclc, enclv, ehrtvv, &
                     ehrtcv, ehrtcc, ekinc, ekinv, ecxc, ae_fc_energy, &
-                    core_state
+                    core_state, ekinc0, etot, frozen_core
   implicit none
+  integer, intent(in) :: nc
   real(DP),allocatable :: f2vv(:), f2cv(:), f2vc(:), f2cc(:), f1c(:), f1v(:),  &
                           f5c(:), f5v(:), vhval(:), vhcore(:), vnew(:,:)
 
@@ -88,6 +89,11 @@ subroutine elsd_highv ()
      if (oc(n)>0.0_DP.and.core_state(n)) ekinc=ekinc+oc(n)*enl(n)
      if (oc(n)>0.0_DP.and..not.core_state(n)) ekinv=ekinv+oc(n)*enl(n)
   enddo
+  if (nc==1) ekinc0=ekinc
+  if (frozen_core.and.nc>1) then
+     etot=etot-ekinc+ekinc0
+     ekinc=ekinc0
+  endif
 
   ae_fc_energy=ekinv+ehrtvv+ehrtcv+ecxc+enclv
 

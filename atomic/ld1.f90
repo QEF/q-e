@@ -41,7 +41,7 @@ program ld1
      !
      !   all-electron calculation
      !
-     call all_electron(.true.)
+     call all_electron(.true.,1)
      !
   elseif (iswitch.eq.2) then
      !
@@ -54,7 +54,7 @@ program ld1
      !
      !  pseudopotential generation and test
      !
-     call all_electron(.false.)
+     call all_electron(.false.,1)
      call gener_pseudo ( )
      call run_test ( )
      call ld1_writeout ( )

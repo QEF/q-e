@@ -19,7 +19,7 @@ subroutine ld1_setup
                 nbeta, lloc, nsloc, etot, etot0, etots0, vxt,   &
                 file_wavefunctions, file_logder,  &
                 file_wavefunctionsps, file_logderps, &
-                prefix, new, core_state, enls,  &
+                prefix, new, core_state, enls, enl,  &
                 nwf,                       jj,   el,   isw,   oc, nstoae, &
                 nwfs,          lls,        jjs,  els,  isws,  ocs, &
                 nwfts,  nnts,  llts, nnts, jjts, elts, iswts, octs, nstoaets, &
@@ -49,7 +49,7 @@ subroutine ld1_setup
   !
   !  make the correspondence all-electron pseudopotential
   !
-  if (iswitch >= 2) then
+  if (iswitch >= 3) then
      do nc=1, nconf
         do n=1,nwftsc(nc)
            nstoaec(n,nc)=0
@@ -60,12 +60,8 @@ subroutine ld1_setup
                     nstoaec(n,nc)=n1
                  endif
               else
-                 if (rel==2) then
-                    if (eltsc(n,nc).eq.el(n1).and.jjtsc(n,nc).eq.jj(n1)) &
+                 if (eltsc(n,nc).eq.el(n1).and.ABS(jjtsc(n,nc)-jj(n1))<1.d-7) &
                          & nstoaec(n,nc)=n1
-                 else
-                    if (eltsc(n,nc).eq.el(n1))  nstoaec(n,nc)=n1
-                 endif
               endif
            enddo
            if (nstoaec(n,nc).eq.0) call errore('ld1_setup', &
@@ -162,6 +158,7 @@ subroutine ld1_setup
   vxt=0.0_dp
   etot0=0.0_dp
   etots0=0.0_dp
+  enl=0.0_dp
   !
   !    initialize file names (used in all_electron)
   !

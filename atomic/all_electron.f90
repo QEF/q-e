@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine all_electron(ild)
+subroutine all_electron(ild,ic)
   !---------------------------------------------------------------
   !
   !  this routine is a driver to an all-electron calculation
@@ -22,6 +22,7 @@ subroutine all_electron(ild)
                      zed, zval, vxc, exc, excgga, v0, verbosity
   implicit none
 
+  integer, intent(in) :: ic   ! counter on configurations
   logical :: ild    ! if true compute log der
   !
   !    compute an initial estimate of the potential
@@ -31,14 +32,14 @@ subroutine all_electron(ild)
   !
   !     solve the eigenvalue self-consistent equation
   !
-  call scf
+  call scf(ic)
   !
   !  compute total energy
   !
   call elsd (zed,grid,rho,vxt,vh,vxc,exc,excgga,nwf,nspin,enl,oc,    &
              etot,ekin,encl,ehrt,ecxc,evxt)
   !
-  if (verbosity=='high') call elsd_highv( )
+  if (verbosity=='high') call elsd_highv(ic)
   !
   !   add sic correction if needed
   !

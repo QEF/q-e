@@ -32,7 +32,8 @@ subroutine ld1_readin
                          file_wfcaegen, file_wfcncgen, file_wfcusgen, &
                          file_core, file_beta, file_chi, author, &
                          nld, rlderiv, eminld, emaxld, deld, &
-                         ecutmin, ecutmax, decut, rytoev_fact, verbosity
+                         ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
+                         frozen_core, lsdts
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -87,6 +88,8 @@ subroutine ld1_readin
        file_pseudo,   & ! input file containing the pseudopotential
        file_pseudopw, & ! output file containing the pseudopotential
        file_potscf,   & ! output file with the scf potential at each iteration 
+       frozen_core,   & ! if true make a frozen-core all-electron calculation
+       lsdts,         & ! the lsd of each configuration
        ecutmin,       & ! for test with spherical Bessel functions:
        ecutmax,       & ! min and max energy cutoff for j_l(qr),
        decut,         & ! step: ecut = ecutmin, ecutmin+decut, ... , ecutmax
@@ -246,7 +249,7 @@ subroutine ld1_readin
   !
   !  In the spin polarized or relativistic case adjust the occupations
   !
-  if (lsd == 1) then
+  if (lsd == 1.and.iswitch==1) then
      call occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
   else if (rel == 2) then
      call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
@@ -264,6 +267,7 @@ subroutine ld1_readin
      !
      !    no more data needed for AE calculations
      !
+     frozen_core=.false.
      return
      !     
   else if (iswitch == 3) then
@@ -341,6 +345,8 @@ subroutine ld1_readin
   
   nconf=1
   configts=' '
+  frozen_core=.false.
+  lsdts=lsd
   ecutmin = 0.0_dp
   ecutmax = 0.0_dp
   decut   = 5.0_dp
@@ -387,11 +393,20 @@ subroutine ld1_readin
           call errore('ld1_readin','nconf is wrong',1)
      if (iswitch == 3 .and. nconf > 1) &
           call errore('ld1_readin','too many test configurations',1)
+     if (rel==2.and.lsdts(nc)==1) call errore('ld1_readin',&
+            'Fully relativistic spin-polarized calculations not allowed',1)
+     if (frozen_core.and.lsdts(1)==1) call errore('ld1_readin',&
+         'With frozen-core the first configuration must be spin-unpolarized',1)
+     if (iswitch==3.and.lsdts(1)==1) call errore('ld1_readin',&
+         'No spin-polarization with iswitch==3',1)
+     if (frozen_core) verbosity='high'
      !  
      do nc=1,nconf
+        if (lsdts(nc)<0.or.lsdts(nc)>1) call errore('ld1_readin', &
+                         'lsdtsi must be 0 or 1',1)
         if (configts(nc) == ' ') then
            if (ionode) &
-           call read_psconfig (rel, lsd, nwftsc(nc), eltsc(1,nc), &
+           call read_psconfig (rel, lsdts(nc), nwftsc(nc), eltsc(1,nc), &
                 nntsc(1,nc), lltsc(1,nc), octsc(1,nc), iswtsc(1,nc), &
                 jjtsc(1,nc), edum(1), rcuttsc(1,nc), rcutustsc(1,nc) )
            call mp_bcast(eltsc(:,nc),ionode_id)
@@ -415,7 +430,7 @@ subroutine ld1_readin
         !
         !  adjust the occupations of the test cases if this is a lsd run
         !
-        if (lsd == 1) then
+        if (lsdts(nc) == 1) then
            call occ_spin(nwftsc(nc),nwfsx,eltsc(1,nc),nntsc(1,nc),lltsc(1,nc),&
              octsc(1,nc), iswtsc(1,nc)) 
         else if (rel == 2) then
@@ -603,6 +618,8 @@ implicit none
    call mp_bcast( ecutmax, ionode_id ) 
    call mp_bcast( decut, ionode_id ) 
    call mp_bcast( rm, ionode_id )      
+   call mp_bcast( frozen_core, ionode_id )
+   call mp_bcast( lsdts, ionode_id )
 #endif
 return
 end subroutine bcast_test

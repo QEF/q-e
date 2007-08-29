@@ -184,3 +184,67 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
   nwf=nwf0
   return
 end subroutine occ_spinorbps
+
+!---------------------------------------------------------------
+subroutine occ_spin_tot(nwf,nwfx,el,nn,ll,oc,isw,enl,psi)
+  !---------------------------------------------------------------
+  !
+  !  This routine is similar to occ_spin, but updates also energies
+  !  and wavefunctions for frozen_core calculations
+  !
+  use radial_grids, only : ndmx
+  use kinds, only : DP
+  implicit none
+  integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
+  real(DP) :: oc(nwfx), enl(nwfx), psi(ndmx,2,nwfx)
+  character(len=2) :: el(nwfx)
+
+  integer :: nwf0, n, n1
+  logical :: ok
+
+  nwf0=nwf
+  do n=1,nwf0
+     if (oc(n) > (2*ll(n)+1)) then
+        !
+        !    check that the new state is not already available
+        !
+        do n1=n+1,nwf0
+           if (el(n1)==el(n)) call errore('ld1_readin','wrong occupations',1)
+        enddo
+        !
+        !    and add it
+        !
+        nwf=nwf+1
+        if (nwf > nwfx) call errore('ld1_readin','too many wavefunctions',1)
+        el(nwf)=el(n)
+        nn(nwf)=nn(n)
+        ll(nwf)=ll(n)
+        oc(nwf)=oc(n)-2*ll(n)-1
+        oc(n)=2*ll(n)+1
+        if (isw(n) == 1) isw(nwf)=2 
+        if (isw(n) == 2) isw(nwf)=1 
+        enl(nwf)=enl(n)
+        psi(:,1,nwf)=psi(:,1,n)
+     else
+        ok=.true.
+        do n1=1,nwf0
+           if (n1 /= n) ok=ok.and.(el(n1) /= el(n))  
+        enddo
+        if (ok) then
+           nwf=nwf+1
+           if (nwf > nwfx) &
+                & call errore('occ_spin','too many wavefunctions',1)
+           el(nwf)=el(n)
+           nn(nwf)=nn(n)
+           ll(nwf)=ll(n)
+           oc(nwf)=0.0_dp
+           if (isw(n) == 1) isw(nwf)=2 
+           if (isw(n) == 2) isw(nwf)=1 
+           enl(nwf)=enl(n)
+           psi(:,1,nwf)=psi(:,1,n)
+        endif
+     endif
+  enddo
+  return
+end subroutine occ_spin_tot
+!

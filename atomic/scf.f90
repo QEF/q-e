@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !---------------------------------------------------------------
-subroutine scf
+subroutine scf(ic)
   !---------------------------------------------------------------
   !
   !   this routine performs the atomic self-consistent procedure
@@ -17,8 +17,10 @@ subroutine scf
   use constants, only: e2
   use ld1inc, only : grid, zed, psi, isic, vpot, vh, vxt, rho, iter, &
                      lsd, rel, latt, enne, vh, beta, nspin, tr2, eps0, &
-                     nwf, nn, ll, jj, enl, oc, isw
+                     nwf, nn, ll, jj, enl, oc, isw, core_state, frozen_core
   implicit none
+
+  integer, intent(in) :: ic
 
   logical:: conv
   integer:: nerr, nstop, n, i, is, id, nin, mch
@@ -31,7 +33,7 @@ subroutine scf
   ze2 = - zed * e2
   rhoc1=0.0_dp
   id=3
-  psi=0.0_dp
+  if (.not.frozen_core.or.ic==1) psi=0.0_dp
   !
   if (isic /= 0) then
      allocate(vsic(ndmx,nwf), vsicnew(ndmx), vhn1(ndmx), egc(ndmx))
@@ -43,24 +45,27 @@ subroutine scf
      vnew=vpot
      do n=1,nwf
         if (oc(n) >= 0.0_dp) then
-           is=isw(n)
-           if (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
-           if (rel == 0) then
-              call ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
-                   ze2,thresh,psi(1,1,n),nstop)
-           elseif (rel == 1) then
-              call lschps (1,zed,grid,nin,mch,nn(n),ll(n),enl(n),psi(1,1,n),vnew(1,is))
-              nstop=0
-           elseif (rel == 2) then
-              call dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &
-                   thresh,grid,psi(1,1,n),vnew(1,is))
-              nstop=0
-           else
-              call errore('scf','relativistic not programmed',1)
+           if (ic==1.or..not.frozen_core.or..not.core_state(n)) then
+              is=isw(n)
+              if (isic /= 0 .and. iter > 1) vnew(:,is)=vpot(:,is)-vsic(:,n)
+              if (rel == 0) then
+                 call ascheq (nn(n),ll(n),enl(n),grid%mesh,grid,vnew(1,is),&
+                      ze2,thresh,psi(1,1,n),nstop)
+              elseif (rel == 1) then
+                 call lschps (1,zed,grid,nin,mch,nn(n),ll(n),enl(n),&
+                             psi(1,1,n),vnew(1,is))
+                 nstop=0
+              elseif (rel == 2) then
+                 call dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &
+                      thresh,grid,psi(1,1,n),vnew(1,is))
+                 nstop=0
+              else
+                 call errore('scf','relativistic not programmed',1)
+              endif
+              !      write(6,*) el(n),enl(n)
+              ! if (nstop /= 0) write(6,'(4i6)') iter,nn(n),ll(n),nstop
+              nerr=nerr+nstop
            endif
-           !      write(6,*) el(n),enl(n)
-           ! if (nstop /= 0) write(6,'(4i6)') iter,nn(n),ll(n),nstop
-           nerr=nerr+nstop
         else
            enl(n)=0.0_dp
            psi(:,:,n)=0.0_dp

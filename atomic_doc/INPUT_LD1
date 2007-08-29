@@ -218,10 +218,23 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                      ecutmin and ecutmax if you want to perform this test)
       rm            Radius of the box used with spherical Bessel functions
                     (default: 30 a.u.)
-      configts(nc) = a string containing the test valence electronic
+      configts(nc)   a string containing the test valence electronic
                      configuration nc, nc=1,nconf. Same syntax as for "config".
                      If configts(nc) is not set, the electron configuration 
                      is read from the following cards:
+
+      lsdts(nc)                                          (default lsd)
+                     0 or 1. It is the value of lsd used in the nc test.
+                     Allows to make simultaneously spin-polarized and 
+                     spin-unpolarized tests. 
+ 
+      frozen_core                                         (default=.false.)
+                   if .true. only the core wavefunctions of the first 
+                   configuration are calculated. The eigenvalues, orbitals
+                   and energies of the other configurations are calculated
+                   with the core of the first configuration.
+                   The first configuration must be spin-unpolarized.
+
 
   3.1) optional cards for PP test calculation
 
