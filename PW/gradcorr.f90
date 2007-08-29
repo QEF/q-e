@@ -7,6 +7,7 @@
 !
 #include "f_defs.h"
 !
+#define __OLD_NONCOLIN_GGA
 !----------------------------------------------------------------------------
 SUBROUTINE gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
