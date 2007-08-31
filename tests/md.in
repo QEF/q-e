@@ -8,7 +8,7 @@
     ecutwfc = 8.0, nosym=.true.
  /
  &electrons
-    conv_thr =  1.0d-8
+    conv_thr =  1.0e-8
     mixing_beta = 0.7
  /
  &ions

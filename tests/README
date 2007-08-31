@@ -46,9 +46,11 @@ relax2    Al       forces in metals
                    bfgs_ndim=3
                    wavefunction extrapolation
 md        Si       verlet algorithm 
+vc-relax1 As       Variable-cell optimization at P=  0 Pa
+vc-relax2 As       Variable-cell optimization at P=500 Pa
 
 Tests are still missing for:
   forces with core corrections
   old PP formats
   dft:             blyp, pw91, lda+U, metaGGA
-  calculation:     bands, vc-relax, vc-md, neb, metadynamics
+  calculation:     bands, vc-md, neb, metadynamics

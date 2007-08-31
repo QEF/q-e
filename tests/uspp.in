@@ -8,6 +8,7 @@
     occupations='smearing', smearing='marzari-vanderbilt', degauss=0.02
  /
  &electrons
+    conv_thr=1.e-9
  /
 ATOMIC_SPECIES
  Cu 63.55 Cu.pz-d-rrkjus.UPF

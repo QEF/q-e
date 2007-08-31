@@ -10,8 +10,10 @@
 # Input data: *.in, reference results: *.res, output: *.out
 # ./check-pw.x.j checks all *.in files
 # ./check-pw.x.j "some file(s)" checks the specified files
-# Example: 
-# ./check-pw.x.j atom*.in lsda*
+# Example:
+#    ./check-pw.x.j atom*.in lsda*
+# If you want to save a copy in file "logfile":
+#    ./check-pw.x.j atom*.in lsda* | tee logfile
 #
 # For 'nscf' case, the data is in file $name.in2, where $name.in is the
 # data for the scf calculation that must be executed before the nscf one.
@@ -21,6 +23,8 @@
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=$HOME/espresso/
+PARA_PREFIX="mpirun -np 1"
+PARA_POSTFIX=
 ESPRESSO_TMPDIR=./tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
@@ -47,7 +51,7 @@ do
   name=`basename $file .in`
   $ECHO "Checking $name...\c"
   ###
-  mpirun -np 2 $ESPRESSO_ROOT/bin/pw.x < $name.in > $name.out
+  $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX < $name.in > $name.out
   ###
   if test $? != 0; then
      $ECHO "FAILED with error condition!"
@@ -107,7 +111,7 @@ do
   if test -f $name.in$n; then
      $ECHO "Checking $name, step $n ...\c"
      ###
-     $ESPRESSO_ROOT/bin/pw.x < $name.in$n > $name.out$n
+     $PARA_PREFIX $ESPRESSO_ROOT/bin/pw.x $PARA_POSTFIX < $name.in$n > $name.out$n
      ###
      if test $? != 0; then
         $ECHO "FAILED with error condition!"
