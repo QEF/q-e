@@ -157,7 +157,13 @@ cdiaghg.o : ../Modules/kind.o
 cdiaghg.o : ../Modules/mp.o
 cdiaghg.o : ../Modules/mp_global.o
 cdiaghg.o : ../Modules/zhpev_drv.o
+cegterg.o : ../Modules/control_flags.o
+cegterg.o : ../Modules/descriptors.o
+cegterg.o : ../Modules/io_global.o
 cegterg.o : ../Modules/kind.o
+cegterg.o : ../Modules/mp.o
+cegterg.o : ../Modules/mp_global.o
+cegterg.o : ../Modules/ptoolkit.o
 cegterg.o : noncol.o
 cegterg.o : pwcom.o
 cft3.o : ../Modules/fft_base.o
@@ -899,8 +905,13 @@ realus.o : ../Modules/uspp.o
 realus.o : noncol.o
 realus.o : para.o
 realus.o : pwcom.o
+regterg.o : ../Modules/control_flags.o
+regterg.o : ../Modules/descriptors.o
 regterg.o : ../Modules/io_global.o
 regterg.o : ../Modules/kind.o
+regterg.o : ../Modules/mp.o
+regterg.o : ../Modules/mp_global.o
+regterg.o : ../Modules/ptoolkit.o
 remove_atomic_rho.o : ../Modules/io_files.o
 remove_atomic_rho.o : ../Modules/io_global.o
 remove_atomic_rho.o : ../Modules/kind.o

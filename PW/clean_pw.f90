@@ -36,6 +36,7 @@ SUBROUTINE clean_pw( lflag )
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
+  USE cellmd,               ONLY : lmovecell
   !
   IMPLICIT NONE
   !
@@ -61,7 +62,9 @@ SUBROUTINE clean_pw( lflag )
   ! ... arrays allocated in ggen.f90
   !
   IF ( ALLOCATED( ig_l2g ) )     DEALLOCATE( ig_l2g )
-  IF ( ASSOCIATED( gl ) )        DEALLOCATE( gl )
+  IF ( .NOT. lmovecell ) THEN
+     IF ( ASSOCIATED( gl ) )     DEALLOCATE ( gl )
+  END IF
   !
   ! ... arrays allocated in allocate_fft.f90 ( and never deallocated )
   !

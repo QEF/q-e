@@ -41,9 +41,9 @@ SUBROUTINE restart_from_file
   ! ... restart required: check if restart file is present
   ! ... report the result of the check into variable "restart"
   !
+  iunres = 1
+  !
   IF ( ionode ) THEN
-     !
-     iunres = 1
      !
      CALL seqopn( iunres, 'restart', 'UNFORMATTED', restart )
      !
