@@ -763,7 +763,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
             IF( nrsnd( ipr_old ) > 0 ) THEN
                IF(  myrow /= ipr_old - 1 ) THEN
                   CALL mpi_recv( buf, nrsnd(ipr_old), MPI_DOUBLE_PRECISION, ipr_old-1, ipr, col_comm, istatus, ierr )
-                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib) 
+                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib, ierr) 
                   IF( ib /= nrsnd(ipr_old) ) &
                      CALL errore( " dsqmred ", " somthing wrong with row 3 ", ib )
                   ib = 0
@@ -868,7 +868,7 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                IF(  mycol /= ipc_old - 1 ) THEN
                   ib = icb_new( ipc_old )
                   CALL mpi_recv( b( 1, ib ), ncsnd(ipc_old), MPI_DOUBLE_PRECISION, ipc_old-1, ipc, row_comm, istatus, ierr )
-                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib) 
+                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib, ierr ) 
                   IF( ib /= ncsnd(ipc_old) ) &
                      CALL errore( " dsqmred ", " somthing wrong with col 3 ", ib )
                END IF
@@ -1109,7 +1109,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
             IF( nrsnd( ipr_old ) > 0 ) THEN
                IF(  myrow /= ipr_old - 1 ) THEN
                   CALL mpi_recv( buf, nrsnd(ipr_old), MPI_DOUBLE_COMPLEX, ipr_old-1, ipr, col_comm, istatus, ierr )
-                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_COMPLEX, ib) 
+                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_COMPLEX, ib, ierr) 
                   IF( ib /= nrsnd(ipr_old) ) &
                      CALL errore( " zsqmred ", " somthing wrong with row 3 ", ib )
                   ib = 0
@@ -1206,7 +1206,7 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                IF(  mycol /= ipc_old - 1 ) THEN
                   ib = icb_new( ipc_old )
                   CALL mpi_recv( b( 1, ib ), ncsnd(ipc_old), MPI_DOUBLE_COMPLEX, ipc_old-1, ipc, row_comm, istatus, ierr )
-                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_COMPLEX, ib) 
+                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_COMPLEX, ib, ierr ) 
                   IF( ib /= ncsnd(ipc_old) ) &
                      CALL errore( " zsqmred ", " somthing wrong with col 3 ", ib )
                END IF
