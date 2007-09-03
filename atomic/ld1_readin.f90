@@ -33,7 +33,7 @@ subroutine ld1_readin
                          file_core, file_beta, file_chi, author, &
                          nld, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
-                         frozen_core, lsdts
+                         frozen_core, lsdts, new_core_ps
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -102,6 +102,7 @@ subroutine ld1_readin
        zval,  &    ! the pseudo valence
        lloc,  &    ! l component considered as local 
        nlcc,  &    ! if true nlcc is set
+       new_core_ps, & ! if true pseudize the core charge with bessel functions
        rcore, &    ! the core radius for nlcc
        rcloc, &    ! the local cut-off for pseudo
        lpaw,  &    ! if true create a PAW dataset
@@ -278,6 +279,7 @@ subroutine ld1_readin
      lloc=-1
      rcloc=-1_dp
      nlcc=.false.
+     new_core_ps=.false.
      rcore=0.0_dp
      rho0=0.0_dp
      tm  = .false.
@@ -587,6 +589,7 @@ implicit none
   call mp_bcast( zval,  ionode_id )
   call mp_bcast( lloc,  ionode_id )
   call mp_bcast( nlcc,  ionode_id )
+  call mp_bcast( new_core_ps,  ionode_id )
   call mp_bcast( rcore, ionode_id )
   call mp_bcast( rcloc, ionode_id )
   call mp_bcast( lpaw,  ionode_id )

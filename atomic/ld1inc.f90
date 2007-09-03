@@ -226,6 +226,7 @@ module ld1inc
        rhoc(ndmx)      ! the core charge
 
   logical :: &
+       new_core_ps, & ! if true pseudize the core charge with bessel functions
        nlcc    ! if true nlcc pseudopotential
   !
   !  the potential for the scf
