@@ -898,7 +898,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 1 )
   !
-  alpha(:) = REAL( psic(:) )
+  alpha(:) = REAL( psic(1:nrxxs) )
   !
   min_rs   = ( 3.D0 * omega / fpi / nelec )**one_third
   max_rs   = min_rs
@@ -935,7 +935,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   psic(:) = ZERO
   !
-  psic(nls(:ngm0)) = drho(:,1)
+  psic(nls(:ngm0)) = drho(:ngm0,1)
   !
   IF ( gamma_only ) psic(nlsm(:ngm0)) = CONJG( psic(nls(:ngm0)) )
   !
