@@ -1,0 +1,40 @@
+This example tests pw.x and ph.x in several cases that require the 
+noncollinear or the spin-orbit part of the code together with the gga.
+ph.x is used to calculate the phonons at X and Gamma of fcc-Pt with gga,
+and to calculate the phonons at X and Gamma of fcc-Ni to test the magnetic 
+case with gga with or without spin-orbit. 
+
+The calculation proceeds as follows:
+
+1) make a self-consistent calculation for fcc-Pt 
+   (input=pt.scf.in, output=pt.scf.out).
+
+2) make a phonon calculation at the Gamma point (input=pt.phG.in,
+   output=pt.phG.out).
+
+3) make a non scf calculation for the bands at k and k+q to prepare
+   a phonon calculation at X (input=pt.nscf.in, output=pt.nscf.out).
+
+4) make a phonon calculation at X (input=pt.phX.in, output=pt.phX.out).
+
+5) make a self-consistent calculation for fcc-Ni in the noncollinear case
+   (input=ni.scf.in, output=ni.scf.out).
+
+6) make a phonon calculation at the Gamma point (input=ni.phG.in,
+   output=ni.phG.out).
+
+7) make a non scf calculation for the bands at k and k+q to prepare
+   a phonon calculation at X (input=ni.nscf.in, output=ni.nscf.out).
+
+8) make a phonon calculation at X (input=ni.phX.in, output=ni.phX.out).
+
+9) make a self-consistent calculation for fully relativistic fcc-Ni 
+  (input=ni_so.scf.in, output=ni_so.scf.out).
+
+10) make a phonon calculation at the Gamma point (input=ni_so.phG.in,
+   output=ni_so.phG.out).
+
+11) make a non scf calculation for the bands at k and k+q to prepare
+   a phonon calculation at X (input=ni_so.nscf.in, output=ni_so.nscf.out).
+
+12) make a phonon calculation at X (input=ni_so.phX.in, output=ni_so.phX.out).
