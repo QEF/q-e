@@ -22,7 +22,7 @@ fhi2upf.x : fhi2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ fhi2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) $(LIBS)
 
 fpmd2upf.x : fpmd2upf.o $(OBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LIBS) ../flib/gridsetup.o
 
 ncpp2upf.x : ncpp2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ ncpp2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) $(LIBS)
