@@ -36,6 +36,7 @@ compute_drhous.o \
 compute_drhous_nc.o \
 compute_dvloc.o \
 compute_nldyn.o \
+compute_vsgga.o \
 compute_weight.o \
 deallocate_part.o \
 deallocate_phq.o \

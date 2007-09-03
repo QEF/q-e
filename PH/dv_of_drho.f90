@@ -30,7 +30,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   logical :: flag
   ! input: if true add core charge
 
-  integer :: ir, is, is1, ig, nspin0
+  integer :: ir, is, is1, ig, nspin0, nspin1
   ! counter on r vectors
   ! counter on spin polarizations
   ! counter on g vectors
@@ -46,7 +46,12 @@ subroutine dv_of_drho (mode, dvscf, flag)
   call start_clock ('dv_of_drho')
 
   nspin0=nspin
-  if (nspin==4) nspin0=1
+  nspin1=nspin
+  if (nspin==4) then
+     nspin0=1
+     nspin1=1
+     if (domag) nspin1=2
+  endif
 
   allocate (dvaux( nrxx,  nspin))    
   allocate (drhoc( nrxx))    
@@ -77,8 +82,8 @@ subroutine dv_of_drho (mode, dvscf, flag)
   !
   if ( dft_is_gradient() ) call dgradcorr &
        (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
-       alat, omega, dvaux)
+       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nspin1, &
+       nl, ngm, g, alat, omega, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin0
         rho(:, is) = rho(:, is) - fac * rho_core (:)

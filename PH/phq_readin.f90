@@ -48,7 +48,6 @@ SUBROUTINE phq_readin()
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
   USE control_flags, ONLY : twfcollect
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
-  USE funct,         ONLY : dft_is_gradient
   USE freq_ph
   !
   IMPLICIT NONE
@@ -244,9 +243,6 @@ SUBROUTINE phq_readin()
 
   IF (lda_plus_u) CALL errore('phq_readin',&
      'The phonon code with LDA+U is not yet available',1)
-
-  IF (noncolin.and.dft_is_gradient()) CALL errore('phq_readin', &
-     'The non collinear phonon code with GGA is not yet available',1)
 
   IF (noncolin.and..not.trans.and.okvan) CALL errore('phq_readin', &
      'The non collinear US dieletric constant is not yet available',1)

@@ -58,14 +58,14 @@ subroutine phq_setup
   USE atom,          ONLY : nlcc
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
-  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2
+  USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux
   USE wvfct,         ONLY : nbnd, et
   USE rap_point_group,      ONLY : code_group, nclass, nelem, elem, which_irr,&
                                   char_mat, name_rap, gname, name_class, ir_ram
   USE rap_point_group_is,   ONLY : code_group_is, gname_is
   use phcom
   USE control_flags, ONLY : iverbosity, modenum
-  USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc
+  USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
   implicit none
 
   real(DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, emax
@@ -114,6 +114,24 @@ subroutine phq_setup
      nlcc_any = nlcc_any.or.nlcc (nt)
   enddo
   if (nlcc_any) allocate (drc( ngm, ntyp))    
+  !
+  !  3) If necessary calculate the local magnetization. This information is
+  !      needed in sgama 
+  !
+  IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
+  IF (noncolin.and.domag) THEN
+     DO na = 1, nat
+        !
+        m_loc(1,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
+        m_loc(2,na) = starting_magnetization(ityp(na)) * &
+                      SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
+        m_loc(3,na) = starting_magnetization(ityp(na)) * &
+                      COS( angle1(ityp(na)) )
+     END DO
+     ux=0.0_DP
+     if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
+  ENDIF
   !
   ! 3) Computes the derivative of the xc potential
   !
@@ -460,22 +478,6 @@ subroutine phq_setup
      done_irr (irr) = 0
      npertx = max (npertx, npert (irr) )
   enddo
-  !
-  !  10) If necessary calculate the local magnetization. This information is
-  !      needed in sgama 
-  !
-  IF (.not.ALLOCATED(m_loc)) ALLOCATE( m_loc( 3, nat ) )
-  IF (noncolin.and.domag) THEN
-     DO na = 1, nat
-        !
-        m_loc(1,na) = starting_magnetization(ityp(na)) * &
-                      SIN( angle1(ityp(na)) ) * COS( angle2(ityp(na)) )
-        m_loc(2,na) = starting_magnetization(ityp(na)) * &
-                      SIN( angle1(ityp(na)) ) * SIN( angle2(ityp(na)) )
-        m_loc(3,na) = starting_magnetization(ityp(na)) * &
-                      COS( angle1(ityp(na)) )
-     END DO
-  ENDIF
 
   call stop_clock ('phq_setup')
   return
