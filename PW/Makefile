@@ -44,10 +44,12 @@ clean_pw.o \
 close_files.o \
 compute_dip.o \
 compute_rho.o \
+compute_rho_new.o \
 compute_fes_grads.o \
 compute_scf.o \
 compute_qdipol.o \
 compute_qdipol_so.o \
+compute_ux.o \
 coset.o \
 cryst_to_car.o \
 cubicsym.o \

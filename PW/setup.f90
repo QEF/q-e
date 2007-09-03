@@ -79,13 +79,13 @@ SUBROUTINE setup()
   USE mp_global,          ONLY : nimage, kunit
   USE spin_orb,           ONLY : lspinorb, domag, so
   USE noncollin_module,   ONLY : noncolin, npol, m_loc, i_cons, mcons, &
-                                 angle1, angle2, bfield
+                                 angle1, angle2, bfield, ux
   USE pw_restart,         ONLY : pw_readfile
   USE input_parameters,   ONLY : restart_mode
 #if defined (EXX)
   USE exx,                ONLY : exx_grid_init
 #endif
-  USE funct,              ONLY : dft_is_meta, dft_is_hybrid
+  USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
   !
   IMPLICIT NONE
   !
@@ -146,6 +146,10 @@ SUBROUTINE setup()
      !
      npol = 2
      !
+     !  initialize the quantization direction for gga
+     !
+     ux=0.0_DP
+     !
      ! ... transform angles to radiants
      !
 !     DO nt = 1, ntyp
@@ -183,6 +187,7 @@ SUBROUTINE setup()
         m_loc(3,na) = starting_magnetization(ityp(na)) * &
                       COS( angle1(ityp(na)) )
      END DO
+     if (dft_is_gradient()) call compute_ux(m_loc,ux,nat)
      !
      bfield=0.D0
      !
