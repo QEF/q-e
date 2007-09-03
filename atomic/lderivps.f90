@@ -146,7 +146,7 @@ subroutine lderivps
            enddo
 
            call integrate_outward (lam,jam,e,grid%mesh,ndmx,grid,al,b,aux,betas,ddd,&
-                qq,nbf,nwfsx,lls,jjs,ikmin)
+                qq,nbf,nwfsx,lls,jjs,ikk,ikmin)
 
            !
            !    compute the logarithmic derivative and save in dlchi

@@ -158,7 +158,7 @@ subroutine compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
   !    outward integration before ik
   !
   call integrate_outward (lam,jam,e,mesh,ndm,grid,f, b,y,beta,ddd,qq,&
-       nbeta,nwfx,lls,jjs,ik)
+       nbeta,nwfx,lls,jjs,ikk,ik)
   !
   !    inward integration up to ik
   !

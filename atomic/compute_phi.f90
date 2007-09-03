@@ -261,8 +261,11 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
      endif
   enddo
   iok=nnode
-  if (iflag == 1) write(stdout,160) nnode,grid%r(ik)
+  if (iflag == 1) then
+     write(stdout,160) nnode,grid%r(ik)
 160 format (5x,' This function has ',i4,' nodes', ' for 0 < r < ',f8.3)
+     if (nnode>0) call errore('compute_phi','phi has nodes before r_c',1)
+  endif
 
   return
 end subroutine compute_phi

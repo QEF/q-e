@@ -8,7 +8,7 @@
 !
 !---------------------------------------------------------------------
 subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
-     b,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ik)
+     b,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk,ik)
   !---------------------------------------------------------------------
   !
   !    Integrate the wavefunction from 0 to r(ik) 
@@ -27,6 +27,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
        nbeta,  &   ! number of beta function
        nwfx,   &   ! maximum number of beta functions
        lls(nbeta),&! for each beta the angular momentum
+       ikk(nbeta),&! for each beta the integration point
        ik         ! the last integration point
 
   real(DP) :: &
@@ -140,17 +141,17 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
         do jb=1,nbeta
            if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
               jjb=jjb+1
-              do n=1,ik
+              do n=1,min(ik,ikk(jb))
                  el(n)=beta(n,jb)*eta(n,iib)*grid%sqr(n)
               enddo
-              cm(jjb,iib)=-int_0_inf_dr(el,grid,ik,nst)
+              cm(jjb,iib)=-int_0_inf_dr(el,grid,min(ik,ikk(jb)),nst)
            endif
         enddo
 
-        do n=1,ik
+        do n=1,min(ik,ikk(ib))
            el(n)=beta(n,ib)*y(n)*grid%sqr(n)
         enddo
-        bm(iib)=int_0_inf_dr(el,grid,ik,nst)
+        bm(iib)=int_0_inf_dr(el,grid,min(ik,ikk(ib)),nst)
         cm(iib,iib)=1.0_DP+cm(iib,iib)
      endif
   enddo
