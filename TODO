@@ -1,4 +1,4 @@
-TODO LIST - May 2007
+TODO LIST - July 2007
 
 BUGS TO EXAMINE
 
@@ -43,12 +43,6 @@ COMMON
   exportable routine, is used everywhere. Requires some though
   on how to deal with parallelism without filling qexml with
   parallel stuff
-
-- uniform and clear values for constants in Modules/constants.f90
-  Almost done: now they have to be used everywhere!
-
-- convert all single-precision constants to double precision
-  (mostly done)
 
 - pseudopotentials: support new format (xml) if/when ready
   add default cutoff values as well as radii of augmented charge
@@ -124,10 +118,6 @@ PW
 - some symmetry-related routines such as sgama are too complex
   Verify that a group is a group (call multable again in sgama)
 
-- printout of cpu times not very informative
-
-- better memory estimate
-
 - add traceback in error (error_handler module)
 
 POSTPROCESSING
@@ -138,8 +128,6 @@ POSTPROCESSING
 - stm_wfc_matching not working
 
 - Move to a xml-based format for the dynamical matrix files
-
-- fix pp.x in parallel execution
 
 - pwtools: add example of a plot of phonon dispersions
   Fix fqha.f90
@@ -172,31 +160,24 @@ PH, D3, Gamma
 
 DOCUMENTATION
 
-- move to wiki-based documentation
+- complete move to wiki-based documentation
 
 - single source (xml?) for text file, GUI help file, user guide
-
-- better automated testing procedure, quick and distinct from examples!
 
 - add some benchmarks
 
 CP/FPMD:
 
-- PWGui for CP/FPMD?
-
-- check on small box size
-
 - Proposals from Princeton:
   * default set up for molecular calculations
   * default choice for spin restricted and spin unrestricted configurations
     for neutral systems (maybe already there?)
-  * automatic FFT grids from cutoff
-  * automatic box grid for USPP from radii of augmented charge
   * default values for emass(emass=300), for dt (dt=7), for preconditioning
     cutoff (3)
   * the code should consider a common error:
       dt^2/emass too large does not allow ortho to converge
       or cause energy to increase as time step evolve
+  * automatic box grid for USPP from radii of augmented charge
   * Electronic minimization: SD should be discouraged: use damp as default,
     introduce an automatic default schedule, something as:
     1st step sd followed by 5 steps with with damp= 0.8,

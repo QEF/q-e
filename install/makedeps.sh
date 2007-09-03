@@ -12,7 +12,7 @@ TOPDIR=`pwd`
 if test $# = 0
 then
     dirs=" Modules clib PW CPV flib pwtools upftools PP PWCOND \
-           Gamma PH D3 atomic GIPAW VIB VdW"
+           Gamma PH D3 atomic GIPAW VdW"
 else
     dirs=$*
 fi
@@ -29,7 +29,6 @@ do
 		  DEPENDS="$DEPENDS ../Modules ../PW"       ;;
 	D3 | VdW ) 
                   DEPENDS="$DEPENDS ../Modules ../PW ../PH" ;;
-        VIB )     DEPENDS="$DEPENDS ../Modules ../PW ../CPV";;
     esac
 
     # generate dependencies file
