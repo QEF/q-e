@@ -1,7 +1,8 @@
 #!/bin/sh
 
 # Checks for pw.x are presently implemented only for the following
-# calculations: 'scf', 'relax', 'md', 'nscf' (see below for the latter)
+# calculations: 'scf', 'relax', 'md', 'vc-relax', 'nscf'
+# (see below for the latter)
 # The following quantites are verified against reference output :
 #    the converged total energy
 #    the number of scf iterations
@@ -23,7 +24,8 @@
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=$HOME/espresso/
-PARA_PREFIX="mpirun -np 1"
+PARA_PREFIX=
+#PARA_PREFIX="mpirun -np 2"
 PARA_POSTFIX=
 ESPRESSO_TMPDIR=./tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
@@ -101,6 +103,28 @@ do
         $ECHO "discrepancy in pressure detected"
         $ECHO "Reference: $p0, You got: $p1"
      fi
+     # extract CPU time statistics (actually, wall time)
+     # convert from "1h23m45.6s" to seconds
+     tref=`awk '/wall time/ \
+                   { str = $6; h = m = s = 0;
+                     if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
+                     if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
+                     if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
+                     t += h * 3600 + m * 60 + s; }
+                   END { printf("%.2f\n", t); }' \
+                  $name.ref`
+     tout=`awk '/wall time/ \
+                   { str = $6; h = m = s = 0;
+                     if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
+                     if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
+                     if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
+                     t += h * 3600 + m * 60 + s; }
+                   END { printf("%.2f\n", t); }' \
+                  $name.out`
+     # accumulate data
+     totref=`echo $totref $tref | awk '{print $1+$2}'`
+     totout=`echo $totout $tout | awk '{print $1+$2}'`
+     #
   else
      $ECHO  "not checked, reference file not available "
   fi
@@ -151,8 +175,35 @@ do
            $ECHO "discrepancy in LUMO detected"
            $ECHO "Reference: $el0, You got: $el1"
         fi
+        # extract CPU time statistics (actually, wall time)
+        # convert from "1h23m45.6s" to seconds
+        tref=`awk '/wall time/ \
+                   { str = $6; h = m = s = 0;
+                     if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
+                     if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
+                     if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
+                     t += h * 3600 + m * 60 + s; }
+                   END { printf("%.2f\n", t); }' \
+                  $name.ref`
+        tout=`awk '/wall time/ \
+                   { str = $6; h = m = s = 0;
+                     if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
+                     if (split(str, x, "m") == 2) { m = x[1]; str = x[2]; }
+                     if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
+                     t += h * 3600 + m * 60 + s; }
+                   END { printf("%.2f\n", t); }' \
+                  $name.out`
+        # accumulate data
+        totref=`echo $totref $tref | awk '{print $1+$2}'`
+        totout=`echo $totout $tout | awk '{print $1+$2}'`
+        #
      else
         $ECHO  "not checked, reference file not available "
      fi
   fi
+
 done
+
+$ECHO  "Total wall time (s) spent in this run: " $totout
+$ECHO  "Reference                            : " $totref
+
