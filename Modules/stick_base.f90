@@ -170,22 +170,24 @@
           CALL mp_sum(stw ,intra_pool_comm )
           CALL mp_sum(sts ,intra_pool_comm )
 
+#if defined __STICKS_DEBUG
 ! Test sticks
-!          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
-!          WRITE( 6,*) 'lb = ', lb(1), lb(2)
-!          WRITE( 6,*) 'ub = ', ub(1), ub(2)
-!          WRITE( 6,*) 'counts    = ', COUNT( st > 0 ), COUNT( stw > 0 ), COUNT( sts > 0 )
-!          WRITE( 6,*) 'cut-offs  = ', gcut, gcutw, gcuts
-!          WRITE( 6,*) 'b1  = ', b1(1:3)
-!          WRITE( 6,*) 'b2  = ', b2(1:3)
-!          WRITE( 6,*) 'b3  = ', b3(1:3)
-!          DO i = lb(1), ub(1)
-!            DO j = lb(2), ub(2)
-!              WRITE( 6,'(2I4,I6)') i,j,stw(i,j)
-!            END DO
-!          END DO
-!          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
+          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
+          WRITE( 6,*) 'lb = ', lb(1), lb(2)
+          WRITE( 6,*) 'ub = ', ub(1), ub(2)
+          WRITE( 6,*) 'counts    = ', COUNT( st > 0 ), COUNT( stw > 0 ), COUNT( sts > 0 )
+          WRITE( 6,*) 'cut-offs  = ', gcut, gcutw, gcuts
+          WRITE( 6,*) 'b1  = ', b1(1:3)
+          WRITE( 6,*) 'b2  = ', b2(1:3)
+          WRITE( 6,*) 'b3  = ', b3(1:3)
+          DO i = lb(1), ub(1)
+            DO j = lb(2), ub(2)
+              WRITE( 6,'(2I4,3I6)') i,j,st(i,j),stw(i,j),sts(i,j)
+            END DO
+          END DO
+          WRITE( 6,*) 'testtesttesttesttesttesttesttesttesttest'
 ! Test sticks
+#endif
 
         RETURN
       END SUBROUTINE sticks_maps
@@ -277,15 +279,20 @@
 
         INTEGER, INTENT(OUT) :: idx(:)                
 
-        INTEGER :: mc, nr3x, ic
+        INTEGER  :: mc, nr3x, ic
+	REAL(DP) :: dn3
         REAL(DP), ALLOCATABLE :: aux(:)
 
         nr3x = MAXVAL( ngc(1:nct) ) + 1
+	dn3  = REAL( nr3x )
 
         IF( nproc_pool > 1 ) THEN
           ALLOCATE( aux( nct ) )
           DO mc = 1, nct
-            aux(mc) = -(ngcw(mc)*nr3x**2 + ngcs(mc)*nr3x + ngc(mc))
+            aux(mc) = ngcw(mc)
+            aux(mc) = dn3 * aux(mc) + ngcs(mc)
+            aux(mc) = dn3 * aux(mc) + ngc(mc)
+            aux(mc) = -aux(mc)
             idx(mc) = 0
           END DO
           CALL hpsort( nct, aux(1), idx(1))
@@ -312,12 +319,14 @@
           end do
         END IF
 
-        ! WRITE( stdout,*) '-----------------'
-        ! WRITE( stdout,*) 'STICKS_SORT DEBUG'
-        ! DO mc = 1, nct
-        !   WRITE( stdout, fmt="(4I10)" ) idx(mc), ngcw( idx(mc) ), ngcs( idx(mc) ), ngc( idx(mc) )
-        ! END DO
-        ! WRITE( stdout,*) '-----------------'
+#if defined __STICKS_DEBUG
+        WRITE( 6,*) '-----------------'
+        WRITE( 6,*) 'STICKS_SORT DEBUG'
+        DO mc = 1, nct
+          WRITE( 6, fmt="(4I10)" ) idx(mc), ngcw( idx(mc) ), ngcs( idx(mc) ), ngc( idx(mc) )
+        END DO
+        WRITE( 6,*) '-----------------'
+#endif
 
         RETURN
       END SUBROUTINE sticks_sort
