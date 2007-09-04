@@ -21,6 +21,7 @@ PROGRAM read_upf_tofile
   ! PWSCF modules
   !
   !
+  USE constants, only : fpi
   USE pseudo_types
   USE read_upf_module
   !
@@ -75,8 +76,8 @@ PROGRAM read_upf_tofile
 400   CALL errore('read_upf_tofile','open error on file filepot',ABS(ios))
 
   DO n=1,upf%mesh
-     WRITE(iunps,'(4f12.6)') upf%r(n), upf%vloc(n), upf%rho_at(n), &
-                                                     upf%rho_atc(n) 
+     WRITE(iunps,'(4f12.6)') upf%r(n), upf%vloc(n), &
+               upf%rho_at(n), upf%rho_atc(n)*fpi*upf%r(n)**2 
   END DO
 
   CLOSE(iunps)

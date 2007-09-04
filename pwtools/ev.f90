@@ -196,14 +196,15 @@
 !-----------------------------------------------------------------------
 !
       USE kinds, only: DP
+      USE constants, only: BOHR_RADIUS_SI
       IMPLICIT NONE
       INTEGER npt, istat, npar, i, iun, ios
       CHARACTER filout*20, bravais*3
       REAL(DP) v0(npt), etot(npt), efit(npt), par(npar), emin, chisq, fac
-      REAL(DP) p(npt), birch, keane
+      REAL(DP) p(npt), birch, keane, convfact
       EXTERNAL birch, keane
 
-
+      convfact=BOHR_RADIUS_SI*1.e10_DP 
  10   CONTINUE
       PRINT '(5x,''Output file > '',$)'
       READ '(a)',filout
@@ -246,9 +247,13 @@
       END IF
 
       IF(bravais.NE.'hex'.AND.bravais.NE.'HEX') THEN
-         WRITE(iun,'(''# a0 ='',f6.2,''  k0 ='',i5,'' kbar,  dk0 ='', &
-                    &f6.2,''  d2k0 ='',f7.3,''  emin ='',f11.5/)') &
+         WRITE(iun,'(''# a0 ='',f6.2,'' a.u., k0 ='',i5,'' kbar, dk0 ='', &
+                    &f6.2,'' d2k0 ='',f7.3,'' emin ='',f11.5)') &
             (par(1)/fac)**(1d0/3d0), INT(par(2)), par(3), par(4), emin
+         WRITE(iun,'(''# a0 ='',f7.3,'' A,   V0 ='',f7.3,'' (a.u.)^3,  V0 ='', &
+                    &f7.3,'' A^3 '',/)') &
+              (par(1)/fac)**(1d0/3d0)*convfact, par(1), &
+            par(1)*convfact**3
          WRITE(iun,'(f7.3,2f12.5,3x,f8.2,3x,f12.5)') &
               ( (v0(i)/fac)**(1d0/3d0), etot(i), efit(i), p(i), &
               etot(i)-efit(i), i=1,npt ) 
