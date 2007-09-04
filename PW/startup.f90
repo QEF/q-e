@@ -65,7 +65,8 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CHARACTER (LEN=80) :: np
   INTEGER            :: gid, node_number
   INTEGER            :: ierr = 0, ilen, nargs, iiarg
-  INTEGER, EXTERNAL  :: iargc
+  INTEGER            :: iargc
+  ! do not define iargc as external: gfortran does not like
   !
   !
 #if defined (__PARA)
