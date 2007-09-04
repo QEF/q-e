@@ -149,7 +149,7 @@ SUBROUTINE phq_init()
              ABS( xq(2) - ( xk(2,ikq) - xk(2,ikk) ) ) > eps8 .OR. &
              ABS( xq(3) - ( xk(3,ikq) - xk(3,ikk) ) ) > eps8 ) THEN
            WRITE( stdout,'(/,5x,"k points #",i6," and ", &
-                  & i6,5x," total number "i,i6)') ikk, ikq, nksq
+                  & i6,5x," total number ",i6)') ikk, ikq, nksq
            WRITE( stdout, '(  5x,"Expected q ",3f10.7)')(xq(ipol), ipol=1,3)
            WRITE( stdout, '(  5x,"Found      ",3f10.7)')((xk(ipol,ikq) &
                                                 -xk(ipol,ikk)), ipol = 1, 3)
