@@ -825,7 +825,7 @@ subroutine ncpp2internal ( ap, is, xc_type, ierr )
   kkbeta(is) = rgrid(is)%mesh
   nqlc(is)   = 0 ! upf%nqlc
   nqf (is)   = 0 ! upf%nqf
-  if (rgrid(is)%mesh > SIZE(rgrid%r) ) call errore('read_pseudo','increase ndmx',rgrid(is)%mesh)
+  if (rgrid(is)%mesh > SIZE(rgrid(is)%r) ) call errore('read_pseudo','increase ndmx',rgrid(is)%mesh)
   !
   call set_dft_from_name( TRIM( xc_type ) )
   IF ( dft_is_hybrid() ) &
