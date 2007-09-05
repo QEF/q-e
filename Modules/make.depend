@@ -212,7 +212,6 @@ read_uspp.o : functionals.o
 read_uspp.o : io_global.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
-read_uspp.o : radial_grids.o
 read_uspp.o : uspp.o
 recvec.o : kind.o
 recvec.o : mp.o
@@ -240,7 +239,6 @@ timestep.o : kind.o
 upf_to_internal.o : atom.o
 upf_to_internal.o : functionals.o
 upf_to_internal.o : pseudo_types.o
-upf_to_internal.o : radial_grids.o
 upf_to_internal.o : uspp.o
 uspp.o : constants.o
 uspp.o : kind.o

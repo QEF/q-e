@@ -27,7 +27,7 @@ MODULE radial_grids
   ! - hartree  : a routine that solve the Poisson's equation on radial grid
   !
   ! - series   : a simple routine returning the coefficient of the polynomial 
-  !              describing the leading beahavior of a function f at small r.
+  !              describing the leading behavior of a function f at small r.
   !
   ! - write_grid_on_file, read_grid_from_file : I/O routines 
   !
@@ -72,13 +72,15 @@ CONTAINS
 !   rab(i) is the integration element = r(i)*dx
 !  
 !   more general grid definitions are possible but currently not implemented
+!   (example: Vanderbilt's grid, same as above but starting at r=0)
+!   r(i) = exp ( xmin ) * ( exp( (i-1)*dx ) - 1.0_dp ) / zmesh
+!   rab(i) = ( r(i) + exp(xmin)/zmesh ) * dx
 !
 !---------------------------------------------------------------
       subroutine do_mesh(rmax,zmesh,xmin,dx,ibound,grid)
 !---------------------------------------------------------------
 !
       use kinds, only : DP
-!      use radial_grids, only : radial_grid_type, ndmx
       implicit none
       type(radial_grid_type),intent(out) :: grid
 
@@ -86,7 +88,7 @@ CONTAINS
       real(DP),intent(in) :: rmax, zmesh, dx
       real(DP),intent(inout):: xmin
 
-      real(DP) :: r(ndmx), r2(ndmx), rab(ndmx), sqr(ndmx), xmax, x
+      real(DP) :: xmax, x
       integer :: mesh, i
 !      
       xmax=log(rmax*zmesh)
@@ -100,13 +102,10 @@ CONTAINS
 !
       do i=1,mesh
          x=xmin+DBLE(i-1)*dx
-         r(i)=exp(x)/zmesh
-         rab(i)=(r(i)+exp(xmin)/zmesh)*dx
-         !!! r(i)=exp(xmin)*(exp((i-1)*dx)-1.0_dp)/zmesh
-         !!! rab(i)=r(i)*dx
-         r2(i)=r(i)*r(i)
-         rab(i)=r(i)*dx
-         sqr(i)=sqrt(r(i))
+         grid%r(i)   = exp(x)/zmesh
+         grid%r2(i)  = grid%r(i)*grid%r(i)
+         grid%rab(i) = grid%r(i)*dx
+         grid%sqr(i) = sqrt(grid%r(i))
       end do
 !
       grid%mesh = mesh
@@ -114,10 +113,6 @@ CONTAINS
       grid%xmin = xmin
       grid%rmax = rmax
       grid%zmesh = zmesh
-      grid%r(1:mesh)   = r(1:mesh)
-      grid%r2(1:mesh)  = r2(1:mesh)
-      grid%rab(1:mesh) = rab(1:mesh)
-      grid%sqr(1:mesh) = sqr(1:mesh)
 
       return
       end subroutine do_mesh
@@ -306,7 +301,7 @@ subroutine hartree(k,nst,mesh,grid,f,vh)
 end subroutine hartree
 !
 ! simple routine returning the coefficient of the polynomial 
-! describing the leading beahavior of a function f at small r.
+! describing the leading behavior of a function f at small r.
 !---------------------------------------------------------------
 subroutine series(f,r,r2,b)
   !---------------------------------------------------------------

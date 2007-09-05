@@ -14,7 +14,6 @@ MODULE read_uspp_module
   !     
   USE kinds, ONLY: DP
   USE parameters, ONLY: nchix, lmaxx, nbrx, nsx, lqmax, nqfx
-  use radial_grids, only: ndmx
   USE io_global, ONLY: stdout, meta_ionode
   USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
        set_dft_from_indices
@@ -169,7 +168,7 @@ CONTAINS
          nchi(is), rgrid(is)%mesh, etotpseu
     if ( nchi(is) < 0 .OR. nchi(is) > nchix ) &
          call errore( 'readvan', 'wrong or too large nchi read', nchi(is) )
-    if ( rgrid(is)%mesh > ndmx .or. rgrid(is)%mesh < 0 ) &
+    if ( rgrid(is)%mesh > SIZE (rgrid(is)%r) .or. rgrid(is)%mesh < 0 ) &
          call errore( 'readvan','wrong mesh', is )
     !
     !     info on pseudo eigenstates - energies are not used
@@ -639,7 +638,7 @@ CONTAINS
     read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
          rgrid(is)%xmin, rdum, rgrid(is)%zmesh, rgrid(is)%dx, rgrid(is)%mesh
     !
-    if (rgrid(is)%mesh > ndmx .or. rgrid(is)%mesh < 0) &
+    if (rgrid(is)%mesh > SIZE (rgrid(is)%r) .or. rgrid(is)%mesh < 0) &
          call errore('readrrkj', 'wrong mesh',is)
     !
     read( iunps, '(2i5)', err=100, iostat=ios ) &

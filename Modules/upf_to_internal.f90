@@ -28,7 +28,6 @@ subroutine set_pseudo_upf (is, upf)
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
   !   dummy argument ( upf ) - convert and copy to internal variables
   !
-  USE radial_grids, ONLY: ndmx
   USE atom,  ONLY: rgrid, chi, oc, nchi, lchi, jchi, rho_at, &
                    rho_atc, nlcc
   USE uspp_param, ONLY: zp, vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, &
@@ -54,7 +53,7 @@ subroutine set_pseudo_upf (is, upf)
   call set_dft_from_name( upf%dft )
   !
   rgrid(is)%mesh = upf%mesh
-  IF ( rgrid(is)%mesh > ndmx ) &
+  IF ( rgrid(is)%mesh > SIZE (rgrid(is)%r) ) &
      CALL errore('upf_to_internals', 'too many grid points', 1)
   !
   nchi(is) = upf%nwfc
