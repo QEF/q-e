@@ -17,7 +17,6 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   USE atom, ONLY: rgrid
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY: omega
-  USE radial_grids, ONLY:  ndmx
   USE constants, ONLY: fpi
   USE uspp_param, ONLY: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
        nbeta, nbetam, kkbeta, tvanp
@@ -27,13 +26,14 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   REAL(DP)  :: ql, qr_k(nbetam,nbetam,lmaxq,ntyp)
   INTEGER :: idbes
   !
-  INTEGER :: msh_bp, i, np, l
-  INTEGER :: ilmin, ilmax, iv, jv, ijv
-  REAL(DP)  :: jl(ndmx), jlp1(ndmx), aux(ndmx), sum
+  INTEGER :: msh_bp, i, np, l, ilmin, ilmax, iv, jv, ijv
+  REAL(DP) :: qrk
+  REAL(DP), ALLOCATABLE :: jl(:), aux(:)
   !
   DO np=1,ntyp
-     msh_bp=kkbeta(np)
      IF (tvanp(np)) THEN
+        msh_bp=kkbeta(np)
+        ALLOCATE ( jl(msh_bp), aux(msh_bp) ) 
         DO iv =1, nbeta(np)
            DO jv =iv, nbeta(np)
               ijv = jv * (jv-1) / 2 + iv
@@ -41,6 +41,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
               ilmax = iabs(lll(iv,np)+lll(jv,np))
               !       only need to calculate for for lmin,lmin+2 ...lmax-2,lmax
               DO l = ilmin,ilmax,2
+                 aux(:) = 0.0_DP
                  DO i =  msh_bp,2,-1
                     IF (rgrid(np)%r(i) .LT. rinner(l+1,np)) GOTO 100
                     aux(i) = qfunc(i,ijv,np)
@@ -70,17 +71,18 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
                  ! now integrate qfunc*jl*r^2 = Bessel transform of qfunc
 
                  DO i=1, msh_bp
-                    jlp1(i) = jl(i)*aux(i)
+                    aux(i) = jl(i)*aux(i)
                  ENDDO
                  !                        if (tlog(np)) then
-                 CALL radlg1(msh_bp,jlp1,rgrid(np)%rab,sum) 
+                 CALL radlg1(msh_bp,aux,rgrid(np)%rab,qrk) 
 
-                 qr_k(iv,jv,l+1,np) = sum*fpi/omega
+                 qr_k(iv,jv,l+1,np) = qrk*fpi/omega
                  qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)
 
               END DO
            END DO
         ENDDO
+        DEALLOCATE ( aux, jl )
      ENDIF
   ENDDO
   !

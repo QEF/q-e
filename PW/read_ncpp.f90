@@ -12,7 +12,6 @@ subroutine read_ncpp (np, iunps)
   !
   USE kinds, only: dp
   USE parameters, ONLY: nchix, lmaxx
-  use radial_grids, only: ndmx
   use atom,  only: rgrid, chi, oc, &
        nchi, lchi, rho_at, rho_atc, numeric, nlcc
   use pseud, only: cc, alpc, aps, alps, nlc, nnl, lmax, lloc, &
@@ -74,7 +73,7 @@ subroutine read_ncpp (np, iunps)
   endif
   read (iunps, *, err=300, iostat=ios) rgrid(np)%zmesh, rgrid(np)%xmin, rgrid(np)%dx, &
                                        rgrid(np)%mesh, nchi(np)
-  if (rgrid(np)%mesh > ndmx .or. rgrid(np)%mesh <= 0) &
+  if (rgrid(np)%mesh > SIZE(rgrid(np)%r) .or. rgrid(np)%mesh <= 0) &
        call errore ('read_ncpp', 'mesh too big', np)
   if ( nchi(np) > nchix .or. &
        (nchi(np) < lmax(np)   .and. lloc(np) == lmax(np)) .or. & 

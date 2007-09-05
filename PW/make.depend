@@ -107,7 +107,6 @@ bp_calc_btq.o : ../Modules/cell_base.o
 bp_calc_btq.o : ../Modules/constants.o
 bp_calc_btq.o : ../Modules/ions_base.o
 bp_calc_btq.o : ../Modules/kind.o
-bp_calc_btq.o : ../Modules/radial_grids.o
 bp_calc_btq.o : ../Modules/uspp.o
 bp_qvan3.o : ../Modules/ions_base.o
 bp_qvan3.o : ../Modules/kind.o
@@ -246,6 +245,9 @@ compute_qdipol_so.o : pwcom.o
 compute_rho.o : ../Modules/constants.o
 compute_rho.o : ../Modules/io_global.o
 compute_rho.o : ../Modules/kind.o
+compute_rho_new.o : ../Modules/constants.o
+compute_rho_new.o : ../Modules/io_global.o
+compute_rho_new.o : ../Modules/kind.o
 compute_scf.o : ../Modules/cell_base.o
 compute_scf.o : ../Modules/check_stop.o
 compute_scf.o : ../Modules/constants.o
@@ -261,6 +263,9 @@ compute_scf.o : ../Modules/path_formats.o
 compute_scf.o : ../Modules/path_io_routines.o
 compute_scf.o : ../Modules/path_variables.o
 compute_scf.o : pwcom.o
+compute_ux.o : ../Modules/constants.o
+compute_ux.o : ../Modules/io_global.o
+compute_ux.o : ../Modules/kind.o
 coset.o : ../Modules/kind.o
 cryst_to_car.o : ../Modules/kind.o
 cubicsym.o : ../Modules/kind.o
@@ -490,6 +495,7 @@ gradcorr.o : ../Modules/constants.o
 gradcorr.o : ../Modules/functionals.o
 gradcorr.o : ../Modules/kind.o
 gradcorr.o : ../Modules/wavefunctions.o
+gradcorr.o : noncol.o
 gradcorr.o : pwcom.o
 gweights.o : ../Modules/kind.o
 h_1psi.o : ../Modules/kind.o
@@ -872,7 +878,6 @@ read_ncpp.o : ../Modules/atom.o
 read_ncpp.o : ../Modules/functionals.o
 read_ncpp.o : ../Modules/kind.o
 read_ncpp.o : ../Modules/parameters.o
-read_ncpp.o : ../Modules/radial_grids.o
 read_ncpp.o : ../Modules/uspp.o
 read_ncpp.o : pwcom.o
 read_pseudo.o : ../Modules/atom.o
@@ -1283,7 +1288,9 @@ complex_diis_module.o : ../include/f_defs.h
 compute_fes_grads.o : ../include/f_defs.h
 compute_qdipol_so.o : ../include/f_defs.h
 compute_rho.o : ../include/f_defs.h
+compute_rho_new.o : ../include/f_defs.h
 compute_scf.o : ../include/f_defs.h
+compute_ux.o : ../include/f_defs.h
 d_matrix.o : ../include/f_defs.h
 data_structure.o : ../include/f_defs.h
 deriv_drhoc.o : ../include/f_defs.h
