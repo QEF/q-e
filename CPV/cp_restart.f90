@@ -219,7 +219,9 @@ MODULE cp_restart
       a2 = ht(2,:)
       a3 = ht(3,:)
       !
-      scalef = 1.D0 / SQRT( omega )
+      ! ... Beware: omega may be negative if axis are left-handed!
+      !
+      scalef = 1.D0 / SQRT( ABS (omega) )
       !
       ! ... Compute array ityp, and tau
       !
@@ -1308,6 +1310,8 @@ MODULE cp_restart
       IF ( ionode ) CALL invmat( 3, ht, htm1, omega )
       !
       CALL mp_bcast( omega, ionode_id, intra_image_comm )
+      !
+      ! ... Beware: omega may be negative if axis are left-handed!
       !
       scalef = 1.D0 / SQRT( ABS( omega ) )
       !
