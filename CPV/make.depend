@@ -215,7 +215,6 @@ cplib.o : ../Modules/kind.o
 cplib.o : ../Modules/mp.o
 cplib.o : ../Modules/mp_global.o
 cplib.o : ../Modules/parameters.o
-cplib.o : ../Modules/radial_grids.o
 cplib.o : ../Modules/recvec.o
 cplib.o : ../Modules/sic.o
 cplib.o : ../Modules/smallbox.o

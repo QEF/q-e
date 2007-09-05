@@ -3318,7 +3318,6 @@ end function set_Hubbard_l
 !
 ! Compute atomic wavefunctions in G-space, in the same order as used in new_ns
 !
-      use radial_grids,       only: mmaxx => ndmx
       use ions_base,          only: na, nsp
       use gvecw,              only: ngw
       use reciprocal_vectors, only: g, gx, ng0 => gstart
@@ -3337,8 +3336,6 @@ end function set_Hubbard_l
 !
 !
       allocate(q(ngw))
-      allocate(jl(mmaxx))
-      allocate(vchi(mmaxx))
       allocate(gxn(3,ngw))
       allocate(chiq(ngw))
 !
@@ -3368,6 +3365,7 @@ end function set_Hubbard_l
 !@@@@@
 
       do is = 1, nsp
+         ALLOCATE  ( jl(rgrid(is)%mesh), vchi(rgrid(is)%mesh) )
          do ia=1,na(is)
 !
 !   radial fourier transform of the chi functions
@@ -3396,6 +3394,7 @@ end function set_Hubbard_l
                enddo
             enddo
          end do
+         DEALLOCATE  ( vchi, jl )
       end do
 !
       do i = 1,natwfc
@@ -3405,12 +3404,10 @@ end function set_Hubbard_l
       if (natwfc.ne.n_atomic_wfc)                                       &
      &     call errore('atomic_wfc','unexpected error',natwfc)
 !
+      deallocate(ylm)
       deallocate(chiq)
       deallocate(gxn)
-      deallocate(vchi)
-      deallocate(jl)
       deallocate(q)
-      deallocate(ylm)
 !
       return
       end subroutine genatwfc
