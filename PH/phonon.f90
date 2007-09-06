@@ -220,9 +220,13 @@ PROGRAM phonon
         !
         IF (.NOT. lgamma ) THEN
            !
-           nkstot = nks_start
-           xk(:,1:nks_start) = xk_start(:,1:nks_start)
-           wk(1:nks_start)   = wk_start(1:nks_start)
+           if (nspin==2) then
+              nkstot = nks_start/2
+           else
+              nkstot = nks_start
+           endif
+           xk(:,1:nkstot) = xk_start(:,1:nkstot)
+           wk(1:nkstot)   = wk_start(1:nkstot)
         END IF
         !
      END IF
