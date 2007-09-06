@@ -1,0 +1,46 @@
+&CONTROL
+  calculation    = "neb",
+  prefix         = "symmetric_H2+H"
+/
+&SYSTEM
+  ibrav                  = 0,
+  celldm(1)              = 1.D0,
+  nat                    = 3,
+  ntyp                   = 1,
+  ecutwfc                = 20.0D0,
+  ecutrho                = 100.0D0,
+  nspin                  = 2,
+  starting_magnetization = 0.5D0,
+  occupations            = "smearing",
+  degauss                = 0.03D0,
+/
+&ELECTRONS
+  conv_thr    = 1.D-8,
+  mixing_beta = 0.3D0,
+/
+&IONS
+  ds                = 2.D0,
+  opt_scheme        = "broyden",
+  num_of_images     = 8,
+  k_max             = 0.3D0,
+  k_min             = 0.2D0,
+  pot_extrapolation = "second_order",
+  wfc_extrapolation = "second_order",
+  path_thr          = 0.2D0,
+/
+ATOMIC_SPECIES
+H  1.00794  HUSPBE.RRKJ3
+ATOMIC_POSITIONS { bohr }
+first_image
+H   -4.56670009      0.00000000      0.00000000  1  0  0
+H    0.00000000      0.00000000      0.00000000  0  0  0
+H    1.55776676      0.00000000      0.00000000  1  0  0
+last_image
+H   -1.55776676      0.00000000      0.00000000
+H    0.00000000      0.00000000      0.00000000
+H    4.56670009      0.00000000      0.00000000
+K_POINTS { gamma }
+CELL_PARAMETERS { cubic }
+  12.00000  0.00000  0.00000
+   0.00000  5.00000  0.00000
+   0.00000  0.00000  5.00000

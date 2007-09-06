@@ -1,24 +1,13 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is  3Aug2007 at 22:54:18 
-
-     Parallel version (MPI)
-
-     Number of processors in use:       1
+     Today is  4Sep2007 at 23:11:29 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2000  nbrx = 14  nqfx =  8
-
-     Planes per process (thick) : nr3 = 15 npp =  15 ncplane =  225
-
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     15    121      869   15    121      869     55      259
-
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
 
 
      bravais-lattice index     =            2
@@ -116,14 +105,14 @@
 
      Starting wfc are    9 atomic wfcs
 
-     total cpu time spent up to now is      0.11 secs
+     total cpu time spent up to now is      0.07 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
      ethr =  3.33E-08,  avg # of iterations =  8.8
 
-     total cpu time spent up to now is      0.77 secs
+     total cpu time spent up to now is      0.49 secs
 
      End of band structure calculation
 
@@ -243,42 +232,41 @@
 
      Writing output data file pwscf.save
 
-     PWSCF        :     0.88s CPU time,    1.29s wall time
+     PWSCF        :     0.56s CPU time,    0.68s wall time
 
      init_run     :     0.06s CPU
-     electrons    :     0.66s CPU
+     electrons    :     0.41s CPU
 
 
-     electrons    :     0.66s CPU
-     c_bands      :     0.66s CPU
+     electrons    :     0.41s CPU
+     c_bands      :     0.41s CPU
      v_of_rho     :     0.00s CPU
      v_h          :     0.00s CPU
      v_xc         :     0.00s CPU
 
-     c_bands      :     0.66s CPU
+     c_bands      :     0.41s CPU
      init_us_2    :     0.00s CPU (      28 calls,   0.000 s avg)
-     cegterg      :     0.50s CPU (      28 calls,   0.018 s avg)
+     cegterg      :     0.33s CPU (      28 calls,   0.012 s avg)
 
 
-     wfcrot       :     0.15s CPU (      28 calls,   0.005 s avg)
-     cegterg      :     0.50s CPU (      28 calls,   0.018 s avg)
-     h_psi        :     0.50s CPU (     303 calls,   0.002 s avg)
+     wfcrot       :     0.08s CPU (      28 calls,   0.003 s avg)
+     cegterg      :     0.33s CPU (      28 calls,   0.012 s avg)
+     h_psi        :     0.28s CPU (     303 calls,   0.001 s avg)
      g_psi        :     0.01s CPU (     247 calls,   0.000 s avg)
      overlap      :     0.01s CPU (     247 calls,   0.000 s avg)
-     diaghg       :     0.09s CPU (     275 calls,   0.000 s avg)
+     diaghg       :     0.08s CPU (     275 calls,   0.000 s avg)
      update       :     0.01s CPU (     247 calls,   0.000 s avg)
      last         :     0.01s CPU (      73 calls,   0.000 s avg)
 
-     h_psi        :     0.50s CPU (     303 calls,   0.002 s avg)
+     h_psi        :     0.28s CPU (     303 calls,   0.001 s avg)
      init         :     0.00s CPU (     303 calls,   0.000 s avg)
-     firstfft     :     0.19s CPU (    1096 calls,   0.000 s avg)
-     secondfft    :     0.21s CPU (    1096 calls,   0.000 s avg)
+     firstfft     :     0.12s CPU (    1096 calls,   0.000 s avg)
+     secondfft    :     0.13s CPU (    1096 calls,   0.000 s avg)
      add_vuspsi   :     0.01s CPU (     303 calls,   0.000 s avg)
 
      General routines
      ccalbec      :     0.00s CPU (     303 calls,   0.000 s avg)
      cft3         :     0.00s CPU (       3 calls,   0.000 s avg)
-     cft3s        :     0.37s CPU (    2192 calls,   0.000 s avg)
+     cft3s        :     0.23s CPU (    2192 calls,   0.000 s avg)
      davcio       :     0.00s CPU (      28 calls,   0.000 s avg)
 
-     Parallel routines

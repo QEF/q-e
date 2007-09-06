@@ -46,11 +46,14 @@ relax2    Al       forces in metals
                    bfgs_ndim=3
                    wavefunction extrapolation
 md        Si       verlet algorithm 
-vc-relax1 As       Variable-cell optimization at P=  0 Pa
-vc-relax2 As       Variable-cell optimization at P=500 Pa
+vc-relax  As       Variable-cell optimization at zero pressure
+                   and under an external pressure
+neb       H        NEB calculation for the H2+H proton exchange
+                   Automatic, manual, no choice of the climbing image
+                   Old RRKJ format
 
 Tests are still missing for:
   forces with core corrections
-  old PP formats
+  old PP formats:  van, nc
   dft:             blyp, pw91, lda+U, metaGGA
-  calculation:     bands, vc-md, neb, metadynamics
+  calculation:     bands, vc-md, metadynamics

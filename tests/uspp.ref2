@@ -1,10 +1,6 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is 30Aug2007 at 16:59:12 
-
-     Parallel version (MPI)
-
-     Number of processors in use:       1
+     Today is  4Sep2007 at 23:12:40 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
@@ -12,14 +8,6 @@
 
      ntypx = 10   npk = 40000  lmax =  3
      nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
-
-     Planes per process (thick) : nr3 = 24 npp =  24 ncplane =  576
-     Planes per process (smooth): nr3s= 15 npps=  15 ncplanes=  225
-
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     24    313     3695   15    151     1243     61      307
-
 
 
      bravais-lattice index     =            2
@@ -72,7 +60,7 @@
 
      number of k points=   29  gaussian broad. (Ry)=  0.0200     ngauss =  -1
                        cart. coord. in units 2pi/a_0
-        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039062
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   0.0039063
         k(    2) = (  -0.1250000   0.1250000  -0.1250000), wk =   0.0312500
         k(    3) = (  -0.2500000   0.2500000  -0.2500000), wk =   0.0312500
         k(    4) = (  -0.3750000   0.3750000  -0.3750000), wk =   0.0312500
@@ -122,14 +110,14 @@
 
      Starting wfc are    6 atomic +    2 random wfc
 
-     total cpu time spent up to now is      1.40 secs
+     total cpu time spent up to now is      1.41 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
      ethr =  9.09E-09,  avg # of iterations = 11.4
 
-     total cpu time spent up to now is      2.99 secs
+     total cpu time spent up to now is      2.58 secs
 
      End of band structure calculation
 
@@ -253,45 +241,44 @@
 
      Writing output data file pwscf.save
 
-     PWSCF        :     3.11s CPU time,    4.43s wall time
+     PWSCF        :     2.67s CPU time,    3.04s wall time
 
-     init_run     :     1.27s CPU
-     electrons    :     1.59s CPU
+     init_run     :     1.30s CPU
+     electrons    :     1.17s CPU
 
 
-     electrons    :     1.59s CPU
-     c_bands      :     1.59s CPU
+     electrons    :     1.17s CPU
+     c_bands      :     1.17s CPU
      v_of_rho     :     0.01s CPU
      v_h          :     0.00s CPU
      v_xc         :     0.01s CPU
      newd         :     0.03s CPU
 
-     c_bands      :     1.59s CPU
+     c_bands      :     1.17s CPU
      init_us_2    :     0.01s CPU (      29 calls,   0.000 s avg)
-     cegterg      :     1.38s CPU (      30 calls,   0.046 s avg)
+     cegterg      :     1.05s CPU (      30 calls,   0.035 s avg)
 
 
-     wfcrot       :     0.16s CPU (      29 calls,   0.005 s avg)
-     cegterg      :     1.38s CPU (      30 calls,   0.046 s avg)
-     h_psi        :     0.91s CPU (     390 calls,   0.002 s avg)
-     g_psi        :     0.02s CPU (     331 calls,   0.000 s avg)
+     wfcrot       :     0.08s CPU (      29 calls,   0.003 s avg)
+     cegterg      :     1.05s CPU (      30 calls,   0.035 s avg)
+     h_psi        :     0.55s CPU (     390 calls,   0.001 s avg)
+     g_psi        :     0.01s CPU (     331 calls,   0.000 s avg)
      overlap      :     0.08s CPU (     331 calls,   0.000 s avg)
-     diaghg       :     0.35s CPU (     360 calls,   0.001 s avg)
-     update       :     0.06s CPU (     331 calls,   0.000 s avg)
+     diaghg       :     0.34s CPU (     360 calls,   0.001 s avg)
+     update       :     0.05s CPU (     331 calls,   0.000 s avg)
      last         :     0.04s CPU (      72 calls,   0.001 s avg)
 
-     h_psi        :     0.91s CPU (     390 calls,   0.002 s avg)
+     h_psi        :     0.55s CPU (     390 calls,   0.001 s avg)
      init         :     0.00s CPU (     390 calls,   0.000 s avg)
-     firstfft     :     0.33s CPU (    1929 calls,   0.000 s avg)
-     secondfft    :     0.37s CPU (    1929 calls,   0.000 s avg)
-     add_vuspsi   :     0.04s CPU (     390 calls,   0.000 s avg)
-     s_psi        :     0.04s CPU (     390 calls,   0.000 s avg)
+     firstfft     :     0.22s CPU (    1929 calls,   0.000 s avg)
+     secondfft    :     0.23s CPU (    1929 calls,   0.000 s avg)
+     add_vuspsi   :     0.03s CPU (     390 calls,   0.000 s avg)
+     s_psi        :     0.03s CPU (     390 calls,   0.000 s avg)
 
      General routines
-     ccalbec      :     0.04s CPU (     390 calls,   0.000 s avg)
-     cft3         :     0.01s CPU (       5 calls,   0.002 s avg)
-     cft3s        :     0.63s CPU (    3859 calls,   0.000 s avg)
+     ccalbec      :     0.03s CPU (     390 calls,   0.000 s avg)
+     cft3         :     0.01s CPU (       5 calls,   0.001 s avg)
+     cft3s        :     0.41s CPU (    3859 calls,   0.000 s avg)
      interpolate  :     0.00s CPU
-     davcio       :     0.01s CPU (      29 calls,   0.000 s avg)
+     davcio       :     0.00s CPU (      29 calls,   0.000 s avg)
 
-     Parallel routines

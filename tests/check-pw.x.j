@@ -1,8 +1,8 @@
 #!/bin/sh
 
 # Checks for pw.x are presently implemented only for the following
-# calculations: 'scf', 'relax', 'md', 'vc-relax', 'nscf'
-# (see below for the latter)
+# calculations: 'scf', 'relax', 'md', 'vc-relax', 'neb', 'nscf'
+# (see below for the two latter)
 # The following quantites are verified against reference output :
 #    the converged total energy
 #    the number of scf iterations
@@ -16,14 +16,20 @@
 # If you want to save a copy in file "logfile":
 #    ./check-pw.x.j atom*.in lsda* | tee logfile
 #
+# For 'neb' calculations, the quantities that are verified are
+#    the converged activation energy
+#    the number of neb iterations
+#
 # For 'nscf' case, the data is in file $name.in2, where $name.in is the
 # data for the scf calculation that must be executed before the nscf one.
 # Output is written to $name.out2 and checked vs reference data $name.res2
-# The following quantities are compared: Fermi energy, or HOMO and LUMO
+# The quantities that are compared with reference ones are:
+#    the Fermi energy, or
+#    the HOMO and LUMO
 
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
-ESPRESSO_ROOT=$HOME/espresso/
+ESPRESSO_ROOT=`cd .. ; pwd`
 PARA_PREFIX=
 #PARA_PREFIX="mpirun -np 2"
 PARA_POSTFIX=
@@ -64,47 +70,78 @@ do
   #
   if test -f $name.ref ; then
      # reference file exists
-     # get reference total energy (cut to 6 significant digits)
-     e0=`grep ! $name.ref | tail -1 | awk '{printf "%12.6f\n", $5}'`
-     # get reference number of scf iterations
-     n0=`grep 'convergence has' $name.ref | tail -1 | awk '{print $6}'`
-     # get reference initial force (cut to 4 significant digits)
-     f0=`grep "Total force" $name.ref | head -1 | awk '{printf "%8.4f\n", $4}'`
-     # get reference pressure
-     p0=`grep "P= " $name.ref | tail -1 | awk '{print $6}'`
-     #
-     e1=`grep ! $name.out | tail -1 | awk '{printf "%12.6f\n", $5}'`
-     n1=`grep 'convergence has' $name.out | tail -1 | awk '{print $6}'`
-     f1=`grep "Total force" $name.out | head -1 | awk '{printf "%8.4f\n", $4}'`
-     p1=`grep "P= " $name.out | tail -1 | awk '{print $6}'`
-     #
-     if test "$e1" = "$e0"; then
-        if test "$n1" = "$n0"; then
-           if test "$f1" = "$f0"; then
-              if test "$p1" = "$p0"; then
-                 $ECHO  "passed"
+     if grep 'neb: convergence achieved' $name.ref > /dev/null; then
+        #
+        # Specific test for NEB
+        #
+        # get reference number of neb iterations
+        n0=`grep 'neb: convergence' $name.ref | awk '{print $1}'`
+        # get reference activation energy (truncated to 4 significant digits)
+        e0=`grep 'activation energy' $name.ref | tail -1 | awk '{printf "%8.4f\n", $5}'`
+        #
+        n1=`grep 'neb: convergence' $name.out | awk '{print $1}'`
+        e1=`grep 'activation energy' $name.out | tail -1 | awk '{printf "%8.4f\n", $5}'`
+        if test "$e1" = "$e0"; then
+           if test "$n1" = "$n0"; then
+              $ECHO  "passed"
+           fi
+        fi
+        if test "$e1" != "$e0"; then
+           $ECHO "discrepancy in activation energy detected"
+           $ECHO "Reference: $e0, You got: $e1"
+        fi
+        if test "$n1" != "$n0"; then
+           $ECHO "discrepancy in number of neb iterations detected"
+           $ECHO "Reference: $n0, You got: $n1"
+        fi
+     else
+        #
+        # Test for scf/relax/md/vc-relax
+        #
+        # get reference total energy (cut to 6 significant digits)
+        e0=`grep ! $name.ref | tail -1 | awk '{printf "%12.6f\n", $5}'`
+        # get reference number of scf iterations
+        n0=`grep 'convergence has' $name.ref | tail -1 | awk '{print $6}'`
+        # get reference initial force (cut to 4 significant digits)
+        f0=`grep "Total force" $name.ref | head -1 | awk '{printf "%8.4f\n", $4}'`
+        # get reference pressure
+        p0=`grep "P= " $name.ref | tail -1 | awk '{print $6}'`
+        #
+        e1=`grep ! $name.out | tail -1 | awk '{printf "%12.6f\n", $5}'`
+        n1=`grep 'convergence has' $name.out | tail -1 | awk '{print $6}'`
+        f1=`grep "Total force" $name.out | head -1 | awk '{printf "%8.4f\n", $4}'`
+        p1=`grep "P= " $name.out | tail -1 | awk '{print $6}'`
+        #
+        if test "$e1" = "$e0"; then
+           if test "$n1" = "$n0"; then
+              if test "$f1" = "$f0"; then
+                 if test "$p1" = "$p0"; then
+                    $ECHO  "passed"
+                 fi
               fi
            fi
         fi
-     fi
-     if test "$e1" != "$e0"; then
-        $ECHO "discrepancy in total energy detected"
-        $ECHO "Reference: $e0, You got: $e1"
-     fi
-     if test "$n1" != "$n0"; then
-        $ECHO "discrepancy in number of scf iterations detected"
-        $ECHO "Reference: $n0, You got: $n1"
-     fi
-     if test "$f1" != "$f0"; then
-        $ECHO "discrepancy in force detected"
-        $ECHO "Reference: $f0, You got: $f1"
-     fi
-     if test "$p1" != "$p0"; then
-        $ECHO "discrepancy in pressure detected"
-        $ECHO "Reference: $p0, You got: $p1"
+        if test "$e1" != "$e0"; then
+           $ECHO "discrepancy in total energy detected"
+           $ECHO "Reference: $e0, You got: $e1"
+        fi
+        if test "$n1" != "$n0"; then
+           $ECHO "discrepancy in number of scf iterations detected"
+           $ECHO "Reference: $n0, You got: $n1"
+        fi
+        if test "$f1" != "$f0"; then
+           $ECHO "discrepancy in force detected"
+           $ECHO "Reference: $f0, You got: $f1"
+        fi
+        if test "$p1" != "$p0"; then
+           $ECHO "discrepancy in pressure detected"
+           $ECHO "Reference: $p0, You got: $p1"
+        fi
      fi
      # extract CPU time statistics (actually, wall time)
      # convert from "1h23m45.6s" to seconds
+     # the following line prevents cases such as "2m 7.5s"
+     grep 'wall time' $name.ref | sed 's/m /m0/' > $name.tmp 
      tref=`awk '/wall time/ \
                    { str = $6; h = m = s = 0;
                      if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
@@ -112,7 +149,8 @@ do
                      if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
                      t += h * 3600 + m * 60 + s; }
                    END { printf("%.2f\n", t); }' \
-                  $name.ref`
+                  $name.tmp`
+     grep 'wall time' $name.out | sed 's/m /m0/' > $name.tmp 
      tout=`awk '/wall time/ \
                    { str = $6; h = m = s = 0;
                      if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
@@ -120,7 +158,8 @@ do
                      if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
                      t += h * 3600 + m * 60 + s; }
                    END { printf("%.2f\n", t); }' \
-                  $name.out`
+                  $name.tmp`
+     /bin/rm $name.tmp
      # accumulate data
      totref=`echo $totref $tref | awk '{print $1+$2}'`
      totout=`echo $totout $tout | awk '{print $1+$2}'`
@@ -176,7 +215,7 @@ do
            $ECHO "Reference: $el0, You got: $el1"
         fi
         # extract CPU time statistics (actually, wall time)
-        # convert from "1h23m45.6s" to seconds
+        grep 'wall time' $name.ref | sed 's/m /m0/' > $name.tmp 
         tref=`awk '/wall time/ \
                    { str = $6; h = m = s = 0;
                      if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
@@ -184,7 +223,8 @@ do
                      if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
                      t += h * 3600 + m * 60 + s; }
                    END { printf("%.2f\n", t); }' \
-                  $name.ref`
+                  $name.tmp`
+        grep 'wall time' $name.out | sed 's/m /m0/' > $name.tmp 
         tout=`awk '/wall time/ \
                    { str = $6; h = m = s = 0;
                      if (split(str, x, "h") == 2) { h = x[1]; str = x[2]; }
@@ -192,7 +232,8 @@ do
                      if (split(str, x, "s") == 2) { s = x[1]; str = x[2]; }
                      t += h * 3600 + m * 60 + s; }
                    END { printf("%.2f\n", t); }' \
-                  $name.out`
+                  $name.tmp`
+        /bin/rm $name.tmp
         # accumulate data
         totref=`echo $totref $tref | awk '{print $1+$2}'`
         totout=`echo $totout $tout | awk '{print $1+$2}'`
