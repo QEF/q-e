@@ -357,6 +357,7 @@ SUBROUTINE iosys()
   SELECT CASE( nspin )
   CASE( 1 )
      !
+     lsda = .FALSE.
      IF ( noncolin ) nspin = 4
      !
   CASE( 2 )
@@ -368,6 +369,7 @@ SUBROUTINE iosys()
      !
   CASE( 4 )
      !
+     lsda = .FALSE.
      noncolin = .TRUE.
      !
   CASE DEFAULT

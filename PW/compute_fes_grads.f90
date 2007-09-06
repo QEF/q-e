@@ -283,7 +283,7 @@ SUBROUTINE compute_fes_grads( fii, lii, stat )
         !
      END IF
      !
-     ! ... the averages are computed here (coverted ot Hartree a.u.)
+     ! ... the averages are computed here (converted to Hartree a.u.)
      !
      IF ( ldamped ) THEN
         !
