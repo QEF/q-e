@@ -24,6 +24,7 @@ subroutine set_rhoc
                         nrxx, nl, nlm, ngl, gl, igtongl
   USE pseud,     ONLY : a_nlcc, b_nlcc, alpha_nlcc
   USE scf,       ONLY : rho_core, rhog_core
+  USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
   USE wvfct,     ONLY : gamma_only
   !
@@ -42,26 +43,28 @@ subroutine set_rhoc
   ! dummy xc energy term
   real(DP) , allocatable ::  dum(:,:)
   ! dummy array containing rho=0
+  complex(DP) , allocatable ::  dumg(:,:)
+  ! dummy array containing rhog=0
 
   integer :: ir, nt, ng
   ! counter on mesh points
   ! counter on atomic types
   ! counter on g vectors
 
-  etxcc = 0.d0
+  etxcc = 0.0_DP
   do nt = 1, ntyp
      if (nlcc (nt) ) goto 10
   enddo
   
-  rhog_core(:) = 0.D0
-  rho_core(:)  = 0.d0
+  rhog_core(:) = 0.0_DP
+  rho_core(:)  = 0.0_DP
 
   return
 
 10 continue
   allocate (aux( nrxx))    
   allocate (rhocg( ngl))    
-  aux (:) = 0.d0
+  aux (:) = 0.0_DP
   !
   !    the sum is on atom types
   !
@@ -131,10 +134,13 @@ subroutine set_rhoc
   ! The term was present in previous versions of the code but it shouldn't
   !
   !   allocate (dum(nrxx , nspin))    
-  !   dum(:,:) = 0.d0
-  !   call v_xc (dum, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-  !        nrxx, nl, ngm, g, nspin, alat, omega, etxcc, vtxcc, aux)
-  !
+  !   allocate (dumg(ngm , nspin))    
+  !   dum(:,:) = 0.0_DP
+  !   dumg(:,:) = 0.0_DP
+  !   
+  !   call v_xc( dum, dumg, rho_core, rhog_core, etxcc, vtxcc, aux )
+  ! 
+  !   deallocate(dumg)
   !   deallocate(dum)
   !   WRITE( stdout, 9000) etxcc
   !   WRITE( stdout,  * ) 'BEWARE it will be subtracted from total energy !'
