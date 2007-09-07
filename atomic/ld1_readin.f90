@@ -325,7 +325,7 @@ subroutine ld1_readin
            !
           c1=0
           do ns1=1,nwfs
-             if (els(ns) == els(ns1) .and. jjs(ns) == jjs(ns1)) c1=c1+1 
+             if (lls(ns) == lls(ns1) .and. jjs(ns) == jjs(ns1)) c1=c1+1 
           enddo
           if (c1 < 2) call errore('ld1_readin', &
                         'US requires at least two energies per channel',1)
