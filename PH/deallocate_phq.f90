@@ -86,6 +86,10 @@ subroutine deallocate_phq
   if(allocated(dvxc_ss)) deallocate (dvxc_ss)    
   if(allocated(dvxc_s)) deallocate (dvxc_s)    
   if(allocated(grho)) deallocate (grho)  
+  if(allocated(segni)) deallocate (segni)
+  if(allocated(vsgga)) deallocate (vsgga)
+  if(allocated(gmag))  deallocate (gmag)
+
 
   return
 end subroutine deallocate_phq
