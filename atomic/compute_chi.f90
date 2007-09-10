@@ -201,7 +201,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
         exit
      endif
   enddo
-  r_clean=min(r_clean,9.0_DP)
+  r_clean=min(r_clean,7.0_DP)
   if (r_clean<grid%r(ikk_in)) &
      call errore ('compute_chi ','phi_in too large before r_c', 1)
 
