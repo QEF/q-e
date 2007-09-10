@@ -453,7 +453,8 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         DO n = 1, nbase
            !
-           hc(n,n) = REAL( e(n) )
+!           hc(n,n) = REAL( e(n) )
+           hc(n,n) = CMPLX( e(n), 0.0_DP )
            !
            sc(n,n) = ONE
            vc(n,n) = ONE
