@@ -28,7 +28,7 @@
                                 nx => nbspx, n => nbsp, ispin
 
       use ensemble_dft, only: tens,   ef,  z0t, c0diag,  &
-                      becdiag, fmat0, e0, ismear, id_matrix_init
+                      becdiag, fmat0, e0,  id_matrix_init
 !---
       use gvecp, only: ngm
       use gvecs, only: ngs
@@ -200,13 +200,8 @@
           else
 
             if(newscheme.or.firstiter) then 
-               if(ismear==2) then !fermi dirac smearing
-                 call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+               call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter,vpot)
-              else ! generalized smearings
-                 call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                      rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter,vpot)
-              endif
                firstiter=.false.
             endif
             !     calculation of the rotated quantities
@@ -564,13 +559,8 @@
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme) then 
-             if(ismear==2) then
-                call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                        rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.,vpot  )
-             else
-                call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+              call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                         rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )  
-             endif
           endif
 
           !     calculation of the rotated quantities
@@ -633,13 +623,8 @@
           call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
         else
           if(newscheme)  then
-             if(ismear==2) then
-                call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                     rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false.,vpot  )
-             else
-                call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+              call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                       rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
-             endif
           endif
           !     calculation of the rotated quantities
           call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
@@ -731,13 +716,8 @@
               call rhoofr(nfi,cm(:,:),irb,eigrb,becm,rhovan,rhor,rhog,rhos,enl,denl,ekin,dekin6)
             else
               if(newscheme)  then
-                 if(ismear==2) then
-                    call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+                  call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                           rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
-                 else
-                    call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                          rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,cm,becm,.false., vpot  )
-                 endif
               endif
               !     calculation of the rotated quantities
               call rotate( z0t, cm(:,:), becm, c0diag, becdiag, .false. )
@@ -791,13 +771,8 @@
         !
         !=======================================================================
         if(tens.and. .not.newscheme) then
-           if(ismear==2) then!fermi dirac
-              call  inner_loop( nfi, tfirst, tlast, eigr,  irb, eigrb, &
+            call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
                     rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter, vpot  )
-           else!cold smearing and all others
-              call  inner_loop_cold( nfi, tfirst, tlast, eigr,  irb, eigrb, &
-                    rhor, rhog, rhos, rhoc, ei1, ei2, ei3, sfac,c0,bec,firstiter, vpot  )
-           endif
 !the following sets up the new energy
            enever=etot
          endif

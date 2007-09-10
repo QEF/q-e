@@ -655,7 +655,7 @@
 
             IF( descla( lambda_node_ , is ) > 0 ) THEN
                !NB zaux is transposed
-               ALLOCATE( mtmp( nudx, nudx ) )
+               !ALLOCATE( mtmp( nudx, nudx ) )
                z0t( 1:nrl , 1:nss, is ) = zaux( 1:nrl, 1:nss )
             END IF
 

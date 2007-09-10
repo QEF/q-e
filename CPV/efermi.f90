@@ -190,10 +190,10 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
   entrofac=3.d0-fspin
   entrospin=2.d0/fspin
 
-  if ((nspin == 2).and.(ismear == 2)) then
-     write(*,*) 'ERROR: EFERMI with nspin.eq.2 and ismear.ne.2'
-     stop
-  end if
+!  if ((nspin == 2).and.(ismear == 2)) then
+!     write(*,*) 'ERROR: EFERMI with nspin.eq.2 and ismear.ne.2'
+!     stop
+!  end if
   
   if (nspin == 1) then
      if (2*nbands == nel) then
