@@ -34,6 +34,7 @@ el_config.o \
 elsd.o \
 elsd_highv.o \
 elsdps.o \
+elsdps_paw.o \
 esic.o \
 exc_t.o \
 find_qi.o \

@@ -143,7 +143,7 @@ subroutine gener_pseudo
      call errore('gener_pseudo','opening file '//file_wfcaegen,abs(ios))
      if (ionode) then
         do n=1,grid%mesh
-           write(19,'(8f12.6)') grid%r(n), (psipaw(n,ns), ns=1,nwfs)
+           write(19,'(15f12.6)') grid%r(n), (psipaw(n,ns), ns=1,nwfs)
         enddo
         close(19)
      endif
@@ -366,7 +366,7 @@ subroutine gener_pseudo
      ! PS:   T |phi> = (e - Vps) |phi> - |chi>
      do ns=1,nbeta
         do ns1=1,ns
-           if (lls(ns)==lls(ns1)) then
+           if (lls(ns)==lls(ns1).and.jjs(ns)==jjs(ns1)) then
               ikl=max(ikk(ns),ikk(ns1))
               nst=2*(lls(ns)+1)
               do n=1,ikl
@@ -387,14 +387,13 @@ subroutine gener_pseudo
      end do
      !
      ! create the 'pawsetup' object containing the atomic setup for PAW
-     call us2paw ( pawsetup,                                         &
-          zval, grid, maxval(ikk(1:nbeta)), ikk,                     &
-          nbeta, lls, ocs, enls, psipaw, phis, betas, qvan, kindiff, &
-          nlcc, aeccharge, psccharge, vpot, vpsloc )
+     call us2paw ( pawsetup, zval, grid, maxval(ikk(1:nbeta)), ikk,   &
+          nbeta, nwfs, lls, jjs, ocs, enls, psipaw, phis, betas, els, &
+          rcutus, qvan, kindiff,  nlcc, aeccharge, psccharge, vpot, vpsloc )
      !
      ! the augmentation functions are changed in 'pawsetup': read from it
-     call paw2us ( pawsetup, zval, grid, nbeta, lls, ikk, betas, qq, qvan, &
-                   pseudotype )
+     call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, qq, &
+                   qvan, els, rcutus, pseudotype )
      !
   endif
   !
@@ -411,7 +410,7 @@ subroutine gener_pseudo
      call errore('gener_pseudo','opening file '//file_beta,abs(ios))
      if (ionode) then
         do n=1,grid%mesh
-           write(19,'(8f12.6)') grid%r(n), (betas(n,ns), ns=1,nbeta)
+           write(19,'(15f12.6)') grid%r(n), (betas(n,ns), ns=1,nbeta)
         enddo
         close(19)
      endif
@@ -423,7 +422,7 @@ subroutine gener_pseudo
      call errore('gener_pseudo','opening file '//file_chi,abs(ios))
      if (ionode) then
         do n=1,grid%mesh
-           write(19,'(8f12.6)') grid%r(n), (chis(n,ns), ns=1,nbeta)
+           write(19,'(15f12.6)') grid%r(n), (chis(n,ns), ns=1,nbeta)
         enddo
         close(19)
      endif
@@ -445,7 +444,7 @@ subroutine gener_pseudo
         call errore('gener_pseudo','opening file '//file_qvan,abs(ios))
         if (ionode) then
            do n=1,grid%mesh
-              write(19,'(8f12.6)') grid%r(n), (qvan(n,ns,ns1), ns=1,ns1)
+              write(19,'(15f12.6)') grid%r(n), (qvan(n,ns,ns1), ns=1,ns1)
            enddo
            close(19)
         endif
@@ -460,7 +459,7 @@ subroutine gener_pseudo
      call errore('gener_pseudo','opening file '//file_wfcncgen,abs(ios))
      if (ionode) then
         do n=1,grid%mesh
-           write(19,'(8f12.6)') grid%r(n), (psipsus(n,ns), ns=1,nwfs)
+           write(19,'(15f12.6)') grid%r(n), (psipsus(n,ns), ns=1,nwfs)
         enddo
         close(19)
      endif
@@ -473,7 +472,7 @@ subroutine gener_pseudo
      call errore('gener_pseudo','opening file '//file_wfcusgen,abs(ios))
      if (ionode) then
         do n=1,grid%mesh
-           write(19,'(8f12.6)') grid%r(n), (phis(n,ns), ns=1,nwfs)
+           write(19,'(15f12.6)') grid%r(n), (phis(n,ns), ns=1,nwfs)
         enddo
         close(19)
      endif

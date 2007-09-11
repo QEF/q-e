@@ -1,0 +1,20 @@
+ &input
+        iswitch=2,
+        rel=0,
+        lsd=1
+        zed=14.0,
+        config="[Ne] 3s2 3p2 3d-2.0"
+        dft='LDA',
+ /
+ &test
+   file_pseudo='Sisr.RRKJ3.PAW',
+   nconf=5
+   configts(1)=" 3s2 3p2 "
+   configts(2)=" 3s2 3p1 "
+   configts(3)=" 3s1 3p2 "
+   configts(4)=" 3s0 3p2 3d1"
+   configts(5)=" 3s2 3p0 "
+   lsdts(1)=0
+   lsdts(2)=0
+   lsdts(4)=0
+ /

@@ -102,7 +102,7 @@ subroutine ld1_readin
        zval,  &    ! the pseudo valence
        lloc,  &    ! l component considered as local 
        nlcc,  &    ! if true nlcc is set
-       new_core_ps, & ! if true pseudize the core charge with bessel functions
+       new_core_ps, & ! if true the core charge is pseudized with bessel funct.
        rcore, &    ! the core radius for nlcc
        rcloc, &    ! the local cut-off for pseudo
        lpaw,  &    ! if true create a PAW dataset
@@ -488,8 +488,8 @@ subroutine ld1_readin
 50      call errore('ld1_readin','open error on file '//file_pseudo,abs(ios))
         call paw_io(pawsetup,111,"INP")
         close(111)
-        call paw2us ( pawsetup, zval, grid, nbeta, lls, ikk, betas, qq, &
-                      qvan, pseudotype )
+        call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, qq, &
+                      qvan, els, rcutus, pseudotype )
         call check_mesh(grid)
         !
      else if ( matches('.rrkj3', file_pseudo) .or. &
@@ -537,7 +537,7 @@ subroutine ld1_readin
   if (lpaw) then
      if (pseudotype /= 3) call errore('ld1_readin', &
           'please start from a US for generating a PAW dataset' ,pseudotype)
-     if (rel /= 0) call errore('ld1_readin', &
+     if (rel > 0) call errore('ld1_readin', &
           'relativistic PAW not implemented' ,rel)
      if (latt /= 0) call errore('ld1_readin', &
           'Latter correction not implemented in PAW' ,latt)
@@ -589,9 +589,9 @@ implicit none
   call mp_bcast( zval,  ionode_id )
   call mp_bcast( lloc,  ionode_id )
   call mp_bcast( nlcc,  ionode_id )
-  call mp_bcast( new_core_ps,  ionode_id )
   call mp_bcast( rcore, ionode_id )
   call mp_bcast( rcloc, ionode_id )
+  call mp_bcast( new_core_ps,  ionode_id )
   call mp_bcast( lpaw,  ionode_id )
   call mp_bcast( verbosity,  ionode_id )
   call mp_bcast( file_pseudopw, ionode_id )

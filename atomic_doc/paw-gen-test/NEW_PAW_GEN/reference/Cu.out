@@ -1,0 +1,221 @@
+
+     Program LD1       v.3.2cvs starts ...
+     Today is 11Sep2007 at 16:14:43 
+
+     Parallel version (MPI)
+
+     Number of processors in use:       1
+     --------------------------- All-electron run ----------------------------
+
+     Cu                                                                         
+
+     atomic number is 29.00
+     dft =PBE   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1199 r(mesh) = 100.25372 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569228 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -643.0378      -321.5189     -8748.9745
+     2 0     2S 1( 2.00)       -76.6311       -38.3155     -1042.6186
+     2 1     2P 1( 6.00)       -67.2036       -33.6018      -914.3518
+     3 0     3S 1( 2.00)        -8.3418        -4.1709      -113.4953
+     3 1     3P 1( 6.00)        -5.4094        -2.7047       -73.5982
+     3 2     3D 1( 9.50)        -0.5425        -0.2713        -7.3816
+     4 0     4S 1( 1.50)        -0.3699        -0.1849        -5.0321
+     4 1     4P 1( 0.00)        -0.0693        -0.0347        -0.9433
+
+     eps = 8.2E-15  iter = 27
+ 
+     Etot =   -3280.527370 Ry,   -1640.263685 Ha,  -44633.845927 eV
+
+     Ekin =    3278.145145 Ry,    1639.072573 Ha,   44601.434104 eV
+     Encl =   -7848.201883 Ry,   -3924.100942 Ha, -106780.219798 eV
+     Eh   =    1423.140731 Ry,     711.570366 Ha,   19362.814866 eV
+     Exc  =    -133.611364 Ry,     -66.805682 Ha,   -1817.875100 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.0529  <r2> =    0.0038  r(max) =   0.0349
+     s(1S/2S) =  0.000000
+     s(1S/3S) =  0.000000
+     s(1S/4S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   0.2387  <r2> =    0.0671  r(max) =   0.2009
+     s(2S/3S) =  0.000000
+     s(2S/4S) =  0.000000
+     s(2P/2P) =  1.000000  <r> =   0.2078  <r2> =    0.0529  r(max) =   0.1604
+     s(2P/3P) =  0.000000
+     s(2P/4P) =  0.000000
+     s(3S/3S) =  1.000000  <r> =   0.7211  <r2> =    0.6011  r(max) =   0.6189
+     s(3S/4S) =  0.000000
+     s(3P/3P) =  1.000000  <r> =   0.7518  <r2> =    0.6685  r(max) =   0.6189
+     s(3P/4P) =  0.000000
+     s(3D/3D) =  1.000000  <r> =   0.9921  <r2> =    1.3678  r(max) =   0.5961
+     s(4S/4S) =  1.000000  <r> =   2.8834  <r2> =    9.8030  r(max) =   2.2710
+     s(4P/4P) =  1.000000  <r> =   4.7485  <r2> =   27.8259  r(max) =   3.3879
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     --------------------- Generating PAW atomic setup --------------------
+
+
+      Generating local potential from pseudized AE potential:
+      Matching radius rcloc =   1.7000
+
+      Local pseudo, rcloc= 1.704 Estimated cut-off energy=     8.53 Ry
+
+      Computing core charge for PAW: 
+
+       r > 0.90 : true rho core
+       r < 0.90 : rho core = a sin(br)/r    a=  14.84  b=   2.81
+
+      Integrated core pseudo-charge :   7.05
+
+
+      Wfc   4S  rcut= 2.417  Estimated cut-off energy=        7.73 Ry
+      Using 4 Bessel functions for this wfc, rho(0) = 0.020
+      This function has    0 nodes for 0 < r <    2.417
+      Wfc-us  4S rcutus= 2.809  Estimated cut-off energy=     5.94 Ry
+
+
+      Wfc   4S  rcut= 2.417  Estimated cut-off energy=        8.64 Ry
+      Using 4 Bessel functions for this wfc, rho(0) = 0.020
+      This function has    0 nodes for 0 < r <    2.417
+      Wfc-us  4S rcutus= 2.809  Estimated cut-off energy=     7.23 Ry
+
+
+      Wfc   4P  rcut= 2.417  Estimated cut-off energy=       29.23 Ry
+      This function has    0 nodes for 0 < r <    2.417
+      Wfc-us  4P rcutus= 2.809  Estimated cut-off energy=     9.29 Ry
+
+
+      Wfc   4P  rcut= 2.417  Estimated cut-off energy=       29.72 Ry
+      This function has    0 nodes for 0 < r <    2.417
+      Wfc-us  4P rcutus= 2.809  Estimated cut-off energy=     9.93 Ry
+
+
+      Wfc   3D  rcut= 1.503  Estimated cut-off energy=      104.02 Ry
+      This function has    0 nodes for 0 < r <    1.503
+      Wfc-us  3D rcutus= 2.300  Estimated cut-off energy=    22.52 Ry
+
+
+      Wfc   3D  rcut= 1.503  Estimated cut-off energy=      106.66 Ry
+      This function has    0 nodes for 0 < r <    1.503
+      Wfc-us  3D rcutus= 2.300  Estimated cut-off energy=    36.97 Ry
+
+      The bmat matrix
+     1.14656    -1.24883     0.00000     0.00000     0.00000     0.00000
+    -1.24889     1.36426     0.00000     0.00000     0.00000     0.00000
+     0.00000     0.00000     0.10618     0.15024     0.00000     0.00000
+     0.00000     0.00000     0.15024     0.21344     0.00000     0.00000
+     0.00000     0.00000     0.00000     0.00000    -0.85900    -1.15050
+     0.00000     0.00000     0.00000     0.00000    -1.15049    -2.29146
+
+      The qq matrix
+    -0.19652     0.21357     0.00000     0.00000     0.00000     0.00000
+     0.21357    -0.23253     0.00000     0.00000     0.00000     0.00000
+     0.00000     0.00000    -0.01917    -0.02696     0.00000     0.00000
+     0.00000     0.00000    -0.02696    -0.03801     0.00000     0.00000
+     0.00000     0.00000     0.00000     0.00000     0.77686     0.90448
+     0.00000     0.00000     0.00000     0.00000     0.90448     0.99487
+
+     Estimated PAW energy = -211.940505 Ry
+
+     The PAW screened D coefficients
+     1.14656    -1.24884     0.00000     0.00000     0.00000     0.00000
+    -1.24884     1.36426     0.00000     0.00000     0.00000     0.00000
+     0.00000     0.00000     0.10618     0.15024     0.00000     0.00000
+     0.00000     0.00000     0.15024     0.21344     0.00000     0.00000
+     0.00000     0.00000     0.00000     0.00000    -0.85900    -1.15051
+     0.00000     0.00000     0.00000     0.00000    -1.15051    -2.29143
+
+      The ddd matrix
+     0.35090    -0.35966     0.00000     0.00000     0.00000     0.00000
+    -0.35966     0.36936     0.00000     0.00000     0.00000     0.00000
+     0.00000     0.00000     0.08151     0.11249     0.00000     0.00000
+     0.00000     0.00000     0.11249     0.15587     0.00000     0.00000
+     0.00000     0.00000     0.00000     0.00000     4.40694     5.34923
+     0.00000     0.00000     0.00000     0.00000     5.34923     5.41180
+
+     ------------------- End of pseudopotential generation -------------------
+
+     --------------------------- All-electron run ----------------------------
+
+     Cu                                                                         
+
+     atomic number is 29.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1199 r(mesh) = 100.25372 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569228 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)      -643.0378      -321.5189     -8748.9745
+     2 0     2S 1( 2.00)       -76.6311       -38.3155     -1042.6186
+     2 1     2P 1( 6.00)       -67.2036       -33.6018      -914.3518
+     3 0     3S 1( 2.00)        -8.3418        -4.1709      -113.4953
+     3 1     3P 1( 6.00)        -5.4094        -2.7047       -73.5982
+     3 2     3D 1( 9.50)        -0.5425        -0.2713        -7.3816
+     4 0     4S 1( 1.50)        -0.3699        -0.1849        -5.0321
+     4 1     4P 1( 0.00)        -0.0693        -0.0347        -0.9433
+
+     eps = 8.2E-15  iter = 27
+ 
+     Etot =   -3280.527370 Ry,   -1640.263685 Ha,  -44633.845927 eV
+
+     Ekin =    3278.145145 Ry,    1639.072573 Ha,   44601.434104 eV
+     Encl =   -7848.201883 Ry,   -3924.100942 Ha, -106780.219798 eV
+     Eh   =    1423.140731 Ry,     711.570366 Ha,   19362.814866 eV
+     Exc  =    -133.611364 Ry,     -66.805682 Ha,   -1817.875100 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.0529  <r2> =    0.0038  r(max) =   0.0349
+     s(1S/2S) =  0.000000
+     s(1S/3S) =  0.000000
+     s(1S/4S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   0.2387  <r2> =    0.0671  r(max) =   0.2009
+     s(2S/3S) =  0.000000
+     s(2S/4S) =  0.000000
+     s(2P/2P) =  1.000000  <r> =   0.2078  <r2> =    0.0529  r(max) =   0.1604
+     s(2P/3P) =  0.000000
+     s(2P/4P) =  0.000000
+     s(3S/3S) =  1.000000  <r> =   0.7211  <r2> =    0.6011  r(max) =   0.6189
+     s(3S/4S) =  0.000000
+     s(3P/3P) =  1.000000  <r> =   0.7518  <r2> =    0.6685  r(max) =   0.6189
+     s(3P/4P) =  0.000000
+     s(3D/3D) =  1.000000  <r> =   0.9921  <r2> =    1.3678  r(max) =   0.5961
+     s(4S/4S) =  1.000000  <r> =   2.8834  <r2> =    9.8030  r(max) =   2.2710
+     s(4P/4P) =  1.000000  <r> =   4.7485  <r2> =   27.8259  r(max) =   3.3879
+
+     ------------------------ End of All-electron run ------------------------
+
+     Computing logarithmic derivative in   2.40241
+     Computing logarithmic derivative in   2.40241
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     Cu                                                                         
+
+     atomic number is 29.00   valence charge is 11.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.20 tr2=1.0E-14
+     mesh =1199 r(mesh) = 100.25372 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     4S   1( 1.50)       -0.36985       -0.36983       -0.00002
+     2 1     4P   1( 0.00)       -0.06933       -0.06932       -0.00001
+     3 2     3D   1( 9.50)       -0.54254       -0.54250       -0.00003
+
+     eps = 1.0E-16  iter =  8
+ 
+     Etot =   -3280.527370 Ry,   -1640.263685 Ha,  -44633.845927 eV
+     Etotps =  -211.940459 Ry,    -105.970230 Ha,   -2883.596668 eV
+
+     Ekin =     187.845792 Ry,      93.922896 Ha,    2555.772037 eV
+     Encl =    -365.260235 Ry,    -182.630117 Ha,   -4969.618360 eV
+     Ehrt =      99.085373 Ry,      49.542687 Ha,    1348.125101 eV
+     Ecxc =    -133.611389 Ry,     -66.805695 Ha,   -1817.875446 eV
+
+     ---------------------- End of pseudopotential test ----------------------
+

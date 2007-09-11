@@ -1,0 +1,20 @@
+ &input
+        title='Cu'
+        zed=29.
+        rel=0,
+        lsd=1,
+        config='[Ar] 3d9.5 4s1.5 4p0.0'
+        iswitch=2,
+        dft='PBE'
+ /
+ &test
+   file_pseudo='CusrPBE.RRKJ3.PAW',
+   nconf=5,
+   frozen_core=.true.,
+   configts(1)='3d9.5 4s1.5 4p0.0'
+   configts(2)='3d10.0 4s1.0 4p0.0'
+   configts(3)='3d10.0 4s0.0 4p1.0'
+   configts(4)='3d9.0 4s1.0 4p1.0'
+   configts(5)='3d9.0 4s0.0 4p0.0'
+   lsdts(1)=0
+ /

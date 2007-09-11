@@ -76,6 +76,7 @@ do ns=1,nwfts
       !
       ik=0
       ikus=0
+!      write(6,*) ns, lam, rcutts(ns), rcutusts(ns)
       do n=1,grid%mesh
          if (grid%r(n).lt.rcutts(ns)) ik=n
          if (grid%r(n).lt.rcutusts(ns)) ikus=n
@@ -87,22 +88,28 @@ do ns=1,nwfts
       !
       !    compute the phi functions
       !
-      if (tm) then
-         call compute_phi_tm(lam,ik,psi(1,1,nwf0),phits(1,ns),0,xc,   &
-                                                  enlts(ns),elts(ns))
+      if (lpaw) then
+          phits(:,ns)=psi(:,1,nwf0)
       else
-         call compute_phi(lam,ik,psi(1,1,nwf0),phits(1,ns),xc,0,octs(ns), &
-                              enlts(ns),'  ')
+         if (tm) then
+            call compute_phi_tm(lam,ik,psi(1,1,nwf0),phits(1,ns),0,xc,   &
+                                                     enlts(ns),elts(ns))
+         else
+            call compute_phi(lam,ik,psi(1,1,nwf0),phits(1,ns),xc,0,octs(ns), &
+                                 enlts(ns),'  ')
+         endif
       endif
       if (pseudotype.eq.3) then
          !
          !   US only on the components where ikus <> ik
          !
          psi_in(:)=phits(:,ns)
-         if (ikus.ne.ik) call compute_phius(lam,ikus,psi_in, &
+         if (ikus.ne.ik.or.lpaw) call compute_phius(lam,ikus,psi_in, &
                                                      phits(1,ns),xc,0,'  ')
       endif
       call normalize(phits(1,ns),llts(ns),jjts(ns))
+   else
+      phits(:,ns)=0.0_dp
    endif
 enddo
 

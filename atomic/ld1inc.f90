@@ -256,7 +256,8 @@ module ld1inc
   real(DP) ::       &
        psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
-       psccharge(ndmx)      ! smoothened core charge for PAW
+       psccharge(ndmx),   & ! smoothened core charge for PAW
+       paw_energy(5,3)
   !
   ! conversion factor
   ! 

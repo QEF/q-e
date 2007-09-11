@@ -46,9 +46,12 @@ TYPE :: paw_t
    INTEGER :: l(nwfsx) ! angular momentum of projectors
    INTEGER :: ikk(nwfsx) ! cutoff radius for the projectors
    INTEGER :: irc ! r(irc) = radius of the augmentation sphere
+   CHARACTER(LEN=2) ::  els (nwfsx) ! the name of the wavefunctions
    REAL (dp) :: &
           oc (nwfsx), & ! the occupations
           enl (nwfsx), & ! the energy of the wavefunctions
+          jj (nwfsx), & ! the total angular momentum
+          rcutus (nwfsx), & ! the cutoff
           aewfc (ndmx,nwfsx), &  ! all-electron wavefunctions
           pswfc (ndmx,nwfsx),        & ! pseudo wavefunctions
           proj (ndmx,nwfsx),     & ! projectors
