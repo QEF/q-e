@@ -171,6 +171,12 @@ compute_nldyn.o : ../Modules/uspp.o
 compute_nldyn.o : ../PW/noncol.o
 compute_nldyn.o : ../PW/pwcom.o
 compute_nldyn.o : phcom.o
+compute_vsgga.o : ../Modules/cell_base.o
+compute_vsgga.o : ../Modules/constants.o
+compute_vsgga.o : ../Modules/functionals.o
+compute_vsgga.o : ../Modules/kind.o
+compute_vsgga.o : ../PW/noncol.o
+compute_vsgga.o : ../PW/pwcom.o
 compute_weight.o : ../Modules/kind.o
 compute_weight.o : ../PW/pwcom.o
 compute_weight.o : phcom.o
@@ -198,6 +204,9 @@ dgcxc_spin.o : ../Modules/functionals.o
 dgcxc_spin.o : ../Modules/kind.o
 dgradcorr.o : ../Modules/constants.o
 dgradcorr.o : ../Modules/kind.o
+dgradcorr.o : ../PW/noncol.o
+dgradcorr.o : ../PW/pwcom.o
+dgradcorr.o : phcom.o
 dhdrhopsi.o : ../Modules/io_files.o
 dhdrhopsi.o : ../Modules/kind.o
 dhdrhopsi.o : ../Modules/mp.o
@@ -467,7 +476,6 @@ phq_init.o : ../PW/pwcom.o
 phq_init.o : phcom.o
 phq_readin.o : ../Modules/constants.o
 phq_readin.o : ../Modules/control_flags.o
-phq_readin.o : ../Modules/functionals.o
 phq_readin.o : ../Modules/input_parameters.o
 phq_readin.o : ../Modules/io_files.o
 phq_readin.o : ../Modules/io_global.o
@@ -614,6 +622,8 @@ setlocq.o : ../Modules/kind.o
 setqmod.o : ../Modules/kind.o
 setup_dgc.o : ../Modules/functionals.o
 setup_dgc.o : ../Modules/kind.o
+setup_dgc.o : ../Modules/wavefunctions.o
+setup_dgc.o : ../PW/noncol.o
 setup_dgc.o : ../PW/pwcom.o
 setup_dgc.o : phcom.o
 smallgq.o : ../Modules/kind.o
@@ -799,6 +809,7 @@ compute_drhous.o : ../include/f_defs.h
 compute_drhous_nc.o : ../include/f_defs.h
 compute_dvloc.o : ../include/f_defs.h
 compute_nldyn.o : ../include/f_defs.h
+compute_vsgga.o : ../include/f_defs.h
 d2ionq.o : ../include/f_defs.h
 davcio_drho.o : ../include/f_defs.h
 dgradcorr.o : ../include/f_defs.h
