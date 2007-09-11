@@ -19,7 +19,7 @@
       USE radial_grids, ONLY: ndmx, radial_grid_type
 
       IMPLICIT NONE
-      integer, parameter:: nwfsx=10  ! the maximum number of pseudo wavefunctions
+      integer, parameter:: nwfsx=14  ! the maximum number of pseudo wavefunctions
 
       SAVE
 
