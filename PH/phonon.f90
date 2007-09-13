@@ -152,12 +152,17 @@ PROGRAM phonon
      !
   ELSE IF ( lnscf ) THEN
      !
-     ! ... xqq is the q-point for   phonon calculation (read from input)
-     ! ... xq  is the q-point for the nscf calculation (read from data file)
+     ! ... xq  is the q-point for   phonon calculation (read from input)
+     ! ... xqq is the q-point for the nscf calculation (read from data file)
      ! ... if the nscf calculation is to be performed, discard the latter
      !
      xqq = xq
      nqs = 1
+     !
+     ! ... in LSDA case k-points are already doubled to account for
+     ! ... spin polarization: restore the original numbero of k-points
+     !
+     if (nspin==2) nkstot = nkstot/2
      !
   ELSE
      !
@@ -218,16 +223,16 @@ PROGRAM phonon
         CALL mp_bcast( zue,    ionode_id )
         CALL mp_bcast( lgamma, ionode_id )
         !
-        IF (.NOT. lgamma ) THEN
-           !
-           if (nspin==2) then
-              nkstot = nks_start/2
-           else
-              nkstot = nks_start
-           endif
-           xk(:,1:nkstot) = xk_start(:,1:nkstot)
-           wk(1:nkstot)   = wk_start(1:nkstot)
-        END IF
+        ! ... in LSDA case k-points are already doubled to account for
+        ! ... spin polarization: restore the original number of k-points
+        !
+        if (nspin==2) then
+           nkstot = nks_start/2
+        else
+           nkstot = nks_start
+        endif
+        xk(:,1:nkstot) = xk_start(:,1:nkstot)
+        wk(1:nkstot)   = wk_start(1:nkstot)
         !
      END IF
      !
@@ -393,7 +398,6 @@ PROGRAM phonon
      !
      CALL close_phq( .TRUE. )
      !
-666  continue
   END DO
   !
   IF ( ionode ) CALL delete_if_present( TRIM(tmp_dir)//TRIM(prefix)//".stat" )
