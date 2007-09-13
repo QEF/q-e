@@ -227,9 +227,7 @@ example23:
     (contributed by Manu Sharma)
 
 example24:
-    This example shows how to use efg.x to calculate the electric field 
-    gradient, and to obtain the quadrupolar parameters of an NMR experiment.
-    The solid in example is quartz. 
+    Obsolete, removed
 
 example25:
     This example shows how to use pw.x to perform LDA+U calculations.
@@ -271,5 +269,5 @@ example31:
 
 example32:
     This example shows how to use the cpvib.x to calculate the normal modes,
-    Born charge tensors and infrared cross-sction, of a water molecule in 
+    Born charge tensors and infrared cross-section, of a water molecule in 
     vacuum.

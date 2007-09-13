@@ -125,8 +125,9 @@ example_list=`/bin/ls -d example??`
 for example in $example_list
 do
 
-    cd $PWROOT/examples/$example
+  cd $PWROOT/examples/$example
 
+  if test -x ./run_example ; then
     if test  "$example" = "example21" ; then
        # the argument "64" to run_example is used in example 21
        ./run_example 64 >& run.log
@@ -137,7 +138,6 @@ do
        # all other cases
        ./run_example >& run.log
     fi
-
     # get the exit status of the script run_example
     exit_status=$?
     N=`echo $example | sed 's/example//'`
@@ -149,6 +149,7 @@ do
 
     cat run.log >> ../run.log
     /bin/rm run.log
+  fi
 
 done
 

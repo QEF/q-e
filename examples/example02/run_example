@@ -138,47 +138,6 @@ $ECHO "  running the phonon calculation at Gamma...\c"
 $PH_COMMAND < si.phG.in > si.phG.out
 $ECHO " done"
 
-# non self-consistent calculation at X
-cat > si.nscfX.in << EOF
- &control
-    calculation='phonon'
-    prefix  = 'si'
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav=  2, celldm(1) =10.20, nat=  2, ntyp= 1,
-    ecutwfc =18.0,
- /
- &electrons
-    conv_thr =  1.0d-8
- /
- &phonon
-    xqq(1)=1.0, xqq(2)=0.0, xqq(3)=0.0
- /
-ATOMIC_SPECIES
- Si  28.086  Si.vbc.UPF
-ATOMIC_POSITIONS
- Si 0.00 0.00 0.00
- Si 0.25 0.25 0.25
-K_POINTS
-  10
-   0.1250000  0.1250000  0.1250000   1.00
-   0.1250000  0.1250000  0.3750000   3.00
-   0.1250000  0.1250000  0.6250000   3.00
-   0.1250000  0.1250000  0.8750000   3.00
-   0.1250000  0.3750000  0.3750000   3.00
-   0.1250000  0.3750000  0.6250000   6.00
-   0.1250000  0.3750000  0.8750000   6.00
-   0.1250000  0.6250000  0.6250000   3.00
-   0.3750000  0.3750000  0.3750000   1.00
-   0.3750000  0.3750000  0.6250000   3.00
-EOF
-$ECHO "  running the nscf calculation at X...\c"
-$PW_COMMAND < si.nscfX.in > si.nscfX.out
-check_failure $?
-$ECHO " done"
-
 # phonon calculation at X
 cat > si.phX.in << EOF
 phonons of si at X
@@ -188,6 +147,7 @@ phonons of si at X
   amass(1)=28.08,
   outdir='$TMP_DIR/',
   fildyn='si.dynX',
+  lnscf=.true.
  /
 1.0 0.0 0.0
 EOF
@@ -347,45 +307,6 @@ $PW_COMMAND < ni.scf.in > ni.scf.out
 check_failure $?
 $ECHO " done"
 
-# non self-consistent calculation for phonon at X of Ni with US-PP
-cat > ni.nscf.in << EOF
- &control
-    calculation='phonon'
-    restart_mode='from_scratch',
-    tprnfor = .true.
-    prefix='ni',
-    pseudo_dir = '$PSEUDO_DIR/',
-    outdir='$TMP_DIR/'
- /
- &system
-    ibrav=  2, celldm(1) =6.65, nat=  1, ntyp= 1,
-    nspin=2,
-    starting_magnetization(1)=0.5,
-    degauss=0.02,
-    smearing='mp',
-    occupations='smearing',
-    ecutwfc =27.0
-    ecutrho =300.0
- /
- &electrons
-    conv_thr =  1.0d-8
-    mixing_beta = 0.7
- /
- &phonon
-    xqq(1) = .00, xqq(2) = .00, xqq(3) = 1.00
- /
-ATOMIC_SPECIES
- Ni  58.6934  Ni.pbe-nd-rrkjus.UPF
-ATOMIC_POSITIONS
- Ni 0.00 0.00 0.00
-K_POINTS AUTOMATIC
-4 4 4 1 1 1
-EOF
-$ECHO "  running the non-scf calculation for phonon at X of Ni...\c"
-$PW_COMMAND < ni.nscf.in > ni.nscf.out
-check_failure $?
-$ECHO " done"
-
 # phonon calculation at X
 cat > ni.phX.in << EOF
 phonons of Ni at X
@@ -394,7 +315,8 @@ phonons of Ni at X
   prefix='ni',
   amass(1)=58.6934,
   fildyn='nix.dyn',
-  outdir='$TMP_DIR/'
+  outdir='$TMP_DIR/',
+  lnscf=.true.
  /
 0.0 0.0 1.0
 EOF
