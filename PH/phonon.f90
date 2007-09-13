@@ -160,9 +160,9 @@ PROGRAM phonon
      nqs = 1
      !
      ! ... in LSDA case k-points are already doubled to account for
-     ! ... spin polarization: restore the original numbero of k-points
+     ! ... spin polarization: restore the original number of k-points
      !
-     if (nspin==2) nkstot = nkstot/2
+     IF ( nspin==2 ) nkstot = nkstot/2
      !
   ELSE
      !
@@ -199,40 +199,46 @@ PROGRAM phonon
         !
         lgamma = ( xqq(1) == 0.D0 .AND. xqq(2) == 0.D0 .AND. xqq(3) == 0.D0 )
         !
-        ! ... in the case of an insulator one has to calculate 
-        ! ... the dielectric constant and the Born eff. charges
-        !
-        IF ( lgamma .AND. .NOT. lgauss ) THEN
+        IF ( lgamma ) THEN
            !
-           epsil = .TRUE.
-           zue   = .TRUE.
+           IF ( .NOT. lgauss ) THEN
+              !
+              ! ... in the case of an insulator at q=0 one has to calculate 
+              ! ... the dielectric constant and the Born eff. charges
+              !
+              epsil = .TRUE.
+              zue   = .TRUE.
+              !
+           ELSE
+              !
+              epsil = .FALSE.
+              zue   = .FALSE.
+              !
+           END IF
            !
-        END IF
-        !
-        ! ... for q != 0 no calculation of the dielectric tensor 
-        ! ...           and Born eff. charges
-        !
-        IF ( .NOT. lgamma ) THEN
+        ELSE
+           !
+           ! ... for q != 0 no calculation of the dielectric tensor 
+           ! ...           and Born eff. charges
            !
            epsil = .FALSE.
            zue   = .FALSE.
            !
+           ! ... non-scf calculation needed:
+           ! ... reset the k-points to their starting values. Note that
+           ! ... in LSDA case k-points are already doubled to account for
+           ! ... spin polarization: restore the original number of k-points
+           !
+           IF ( nspin==2) THEN
+              nkstot = nks_start/2
+           ELSE
+              nkstot = nks_start
+           END IF
+           !
+           xk(:,1:nkstot) = xk_start(:,1:nkstot)
+           wk(1:nkstot)   = wk_start(1:nkstot)
+           !
         END IF
-        !
-        CALL mp_bcast( epsil,  ionode_id )
-        CALL mp_bcast( zue,    ionode_id )
-        CALL mp_bcast( lgamma, ionode_id )
-        !
-        ! ... in LSDA case k-points are already doubled to account for
-        ! ... spin polarization: restore the original number of k-points
-        !
-        if (nspin==2) then
-           nkstot = nks_start/2
-        else
-           nkstot = nks_start
-        endif
-        xk(:,1:nkstot) = xk_start(:,1:nkstot)
-        wk(1:nkstot)   = wk_start(1:nkstot)
         !
      END IF
      !
