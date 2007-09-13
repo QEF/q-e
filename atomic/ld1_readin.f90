@@ -395,8 +395,6 @@ subroutine ld1_readin
           call errore('ld1_readin','nconf is wrong',1)
      if (iswitch == 3 .and. nconf > 1) &
           call errore('ld1_readin','too many test configurations',1)
-     if (rel==2.and.lsdts(nc)==1) call errore('ld1_readin',&
-            'Fully relativistic spin-polarized calculations not allowed',1)
      if (frozen_core.and.lsdts(1)==1) call errore('ld1_readin',&
          'With frozen-core the first configuration must be spin-unpolarized',1)
      if (iswitch==3.and.lsdts(1)==1) call errore('ld1_readin',&
@@ -406,6 +404,8 @@ subroutine ld1_readin
      do nc=1,nconf
         if (lsdts(nc)<0.or.lsdts(nc)>1) call errore('ld1_readin', &
                          'lsdtsi must be 0 or 1',1)
+        if (rel==2.and.lsdts(nc)==1) call errore('ld1_readin',&
+            'Fully relativistic spin-polarized calculations not allowed',1)
         if (configts(nc) == ' ') then
            if (ionode) &
            call read_psconfig (rel, lsdts(nc), nwftsc(nc), eltsc(1,nc), &
