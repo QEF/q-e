@@ -9,5 +9,5 @@ module ld1_parameters
    integer, parameter :: &
            ncmax1=10,    & ! the maximum configuration number
            nwfsx=14,     & ! the maximum number of pseudo wavefunctions
-           nwfx=35         ! the maximum number of wavefunctions
+           nwfx=38         ! the maximum number of wavefunctions
 end module ld1_parameters
