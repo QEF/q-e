@@ -283,7 +283,7 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
 !     write(*,'(a8,f12.6)') 'Efermi: ',ef
      DO ISPPT = 1,NKPTS
         DO J = 1,NBANDS
-!     write(*,'(a8,f12.6,f10.6)') 'Eigs,f: ',
+!     write(*,'(a8,f12.6,f10.6)') 'Eigs,f: ',&
 !    &        eigval(J,ISPPT),OCC(J,ISPPT)
            TEST = TEST + WEIGHT(ISPPT)*OCC(J,ISPPT)
         end do
@@ -306,8 +306,49 @@ SUBROUTINE EFERMI(NEL,NBANDS,DEL,NKPTS,OCC,EF,EIGVAL, &
      end if
      return
   else if ((abs(del).le.1.d-9).and.(nspin.ne.1)) then
-     write(*,*) 'ERROR: EFERMI with etemp.eq.0 and nspin.eq.2'
-     stop
+     if ((2*(nel/2)).ne.nel) then
+        write(*,*) 'EFERMI: etemp=0.0 but nel is odd !'
+        stop
+     end if
+     entropy=0.d0
+     ef=0.5d0*(sort(NKPTS*nel)+sort(NKPTS*nel+1))
+     DO ISPPT = 1,NKPTS
+        DO J = 1, NBANDS
+           if (eigval(J,ISPPT).le.ef) then
+              occ(j,isppt)=1.d0
+           else
+              occ(j,isppt)=0.d0
+           end if
+
+        end do
+     end do
+     TEST = 0.d0
+!     write(*,'(a8,f12.6)') 'Efermi: ',ef
+
+     DO ISPPT = 1,NKPTS
+        DO J = 1,NBANDS
+!     write(*,'(a8,f12.6,f10.6)') 'Eigs,f: ', &
+!    &        eigval(J,ISPPT),OCC(J,ISPPT)
+           TEST = TEST + WEIGHT(ISPPT)*OCC(J,ISPPT)
+        end do
+     end do
+!      this is commented since occ is normalized to 2
+!      test=test*2.0
+     IF ( ABS(TEST-Z) .GT. 1.0D-5) THEN
+        WRITE(*,*) '*** WARNING *** OCCUPANCIES MANUALLY SET'
+        DO ISPPT = 1,NKPTS
+           DO J = 1, NBANDS
+              if (j.le.nel) then
+                 occ(j,isppt)=1.d0
+              else
+                 occ(j,isppt)=0.d0
+              end if
+!         write(*,'(a8,f12.6,f10.6)') 'Eigs,f: ',
+!    &         eigval(J,ISPPT),OCC(J,ISPPT)
+           end do
+        end do
+     end if
+     return
   end if
 
 

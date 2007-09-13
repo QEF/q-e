@@ -303,8 +303,15 @@
 
       CALL start_clock('protate')
 
-      becrot = 0.0d0
-      c0rot  = 0.0d0
+      DO i = 1, nss
+         c0rot( :, i+noff-1 ) = 0.0d0
+         becrot(:,i+noff-1 ) = 0.0d0
+      END DO
+
+
+
+!      becrot = 0.0d0
+!      c0rot  = 0.0d0
 
          DO ip = 1, np_rot
 

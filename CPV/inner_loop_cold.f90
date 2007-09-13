@@ -651,7 +651,7 @@
                e0( i+istart-1 )= dval( i )
             END DO
 
-            z0t = 0.0d0
+            z0t(:,:,is) = 0.0d0
 
             IF( descla( lambda_node_ , is ) > 0 ) THEN
                !NB zaux is transposed
