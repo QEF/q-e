@@ -146,8 +146,8 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
      elw=eup
      detlw=detup  
   enddo
-  count=0
 100 continue
+  count=0
   if(e.gt.eup) e=0.9_DP*eup+0.1_DP*elw
   if(e.lt.elw) e=0.9_DP*elw+0.1_DP*eup
   !
