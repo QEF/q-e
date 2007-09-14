@@ -227,7 +227,11 @@ example23:
     (contributed by Manu Sharma)
 
 example24:
-    Obsolete, removed
+    This example tests pw.x and ph.x in several cases that require the 
+    noncollinear or the spin-orbit part of the code together with the gga.
+    ph.x is used to calculate the phonons at X and Gamma of fcc-Pt with gga,
+    and to calculate the phonons at X and Gamma of fcc-Ni to test the magnetic 
+    case with gga with or without spin-orbit. 
 
 example25:
     This example shows how to use pw.x to perform LDA+U calculations.
@@ -268,6 +272,12 @@ example31:
     calculate the dielectric constant of silicon.
 
 example32:
-    This example shows how to use the cpvib.x to calculate the normal modes,
-    Born charge tensors and infrared cross-section, of a water molecule in 
-    vacuum.
+    Obsolete, removed
+
+example33:
+    This example illustrates how to use pw.x and ph.x to calculate 
+    dynamic polarizability of methane molecules (experimental stage)
+
+example34:
+    This example illustrates how to use vdw.x to calculate 
+    dynamic polarizability of methane molecules (experimental stage).
