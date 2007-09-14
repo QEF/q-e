@@ -14,7 +14,7 @@ subroutine ld1_readin
   use kinds,      ONLY : dp
   use radial_grids, only: ndmx
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
-  use constants,  ONLY : rytoev
+  use constants,  ONLY : rytoev, c_au
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast
   use ld1inc,     only : els, lls, betas, qq, qvan, ikk, nbeta, pseudotype, &
@@ -33,7 +33,7 @@ subroutine ld1_readin
                          file_core, file_beta, file_chi, author, &
                          nld, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
-                         frozen_core, lsdts, new_core_ps
+                         frozen_core, lsdts, new_core_ps, cau_fact
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -80,6 +80,7 @@ subroutine ld1_readin
        verbosity,& ! if 'high' writes more information on output
        prefix,   & ! the prefix for file names
        rytoev_fact, & ! conversion between Ry and eV 
+       cau_fact, & ! speed of light in a.u.
        vdw         ! if .true. vdW coefficient in TF+vW will be calculated
 
   namelist /test/                 &
@@ -141,8 +142,10 @@ subroutine ld1_readin
   !
   atom  = '  '
   zed   = 0.0_dp
-  xmin  = -7.0_dp
-  dx    =  0.0125_dp
+!  xmin  = -7.0_dp
+!  dx    =  0.0125_dp
+  xmin  = 0.0_dp
+  dx    = 0.0_dp
   rmax  =100.0_dp
 
   beta  =  0.2_dp
@@ -156,6 +159,7 @@ subroutine ld1_readin
   deld=0.03_dp
 
   rytoev_fact=rytoev
+  cau_fact=c_au
   rel = 5 
   lsd = 0
   dft = 'LDA'
@@ -206,8 +210,6 @@ subroutine ld1_readin
        call errore('ld1_readin','negative deld',1)
   if (nld > nwfsx) &
        call errore('ld1_readin','too many nld',1)
-  if (xmin > -2) call errore('ld1_readin','wrong xmin',1)
-  if (dx <=0.0_dp) call errore('ld1_readin','wrong dx',1)
 
   if (isic == 1 .and. latt == 1) call errore('ld1_readin', &
        &    'isic and latter correction not allowed',1)
@@ -255,6 +257,22 @@ subroutine ld1_readin
   else if (rel == 2) then
      call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
   endif
+  if (xmin==0.0_DP) then
+     if (iswitch==1.and..not.vdw) then
+        xmin=-12.0_DP
+     else
+        xmin=-7.0_DP
+     endif
+  endif
+  if (dx==0.0_DP) then
+     if (iswitch==1.and..not.vdw) then
+        dx=0.008_DP
+     else
+        dx=0.0125_DP
+     endif
+  endif
+  if (xmin > -2.0_dp) call errore('ld1_readin','wrong xmin',1)
+  if (dx <=0.0_dp) call errore('ld1_readin','wrong dx',1)
   !
   ! generate the radial grid - note that if iswitch = 2 the radial grid
   ! is not generated but read from the pseudopotential file

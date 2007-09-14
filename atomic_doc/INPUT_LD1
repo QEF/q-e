@@ -17,8 +17,10 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       atom  = atomic symbol: atom='H', 'He', 'Be', etc
               specify either atom OR zed, not both
 
-      xmin  = radial grid parameter                (default: -7.0)
-      dx    =   "    "   "                         (default: 0.0125)
+      xmin  = radial grid parameter (default: -7.0 if iswitch>1, 
+                                              -12.0 otherwise)
+      dx    =   "    "   "          (default: 0.0125 if iswitch>1,
+                                              0.008 otherwise)
               the radial grid is: r(i+1) = exp(xmin+i*dx)/zed  a.u.
       rmax  = outermost grid point                 (default: 100.0 a.u.)
 
@@ -59,6 +61,9 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
 
       rytoev_fact :              (default:see file ../Modules/constants.f90)
              factor used to convert Ry into eV. 
+
+      cau_fact :              (default:see file ../Modules/constants.f90)
+             speed of light in a.u.. 
 
       vdw = .true. or .false.                         (default: .false.) 
              If .true., the frequency dependent polarizability and van der
@@ -307,4 +312,14 @@ The revised PBE described in PRL 80, 890 (1998) can be obtained with:
    latt=0
    dft='SLA-PW-RPB-PBC' or 'dft='revPBE'
 
+The relativistic energies of closed shell atoms reported in PRB 64 235126 (2001)
+can be reproduced with 
+   
+   isic=0
+   latt=0
+   dft='sla-vwn' for the LDA case
+   dft='pw91'    for the PW91-GGA case
+   dft='pbe'     for the PBE case
 
+Presenty the agreement is within 0.5 mH for LDA, and within 5 mH for the 
+GGA cases.

@@ -37,6 +37,7 @@ MODULE constants
   REAL(DP), PARAMETER :: RYDBERG_SI       = HARTREE_SI/2.0_DP   ! J
   REAL(DP), PARAMETER :: BOHR_RADIUS_SI   = 0.5291772108E-10_DP ! m
   REAL(DP), PARAMETER :: AMU_SI           = 1.66053886E-27_DP   ! Kg
+  REAL(DP), PARAMETER :: C_SI             = 2.99792458E+8_DP    ! m sec^-1
   !
   ! ... Physical constants, atomic units:
   ! ... AU for "Hartree" atomic units (e = m = hbar = 1)
@@ -74,6 +75,10 @@ MODULE constants
   !
   REAL(DP), PARAMETER :: eV_to_kelvin = ELECTRONVOLT_SI / K_BOLTZMANN_SI
   REAL(DP), PARAMETER :: ry_to_kelvin = RYDBERG_SI / K_BOLTZMANN_SI
+  !
+  !  Speed of light in atomic units
+  !
+  REAL(DP), PARAMETER :: C_AU             = C_SI / BOHR_RADIUS_SI * AU_SEC
   !
   ! ... zero up to a given accuracy
   !

@@ -38,6 +38,7 @@ subroutine dir_outward(idim1,mesh,lcur,jcur,e0,dx,snl,r,rab,ruae)
 !----------------------------------------------------------------------------
 !
 use kinds, only : DP
+use ld1inc, only : cau_fact
 implicit none
 integer :: idim1 
 real(DP) :: r(idim1),     &   ! the radial mesh
@@ -72,7 +73,8 @@ do ir=1,mesh
 enddo
 !
 !     set ( 2 / fine structure constant )
-tbya = 2.0_DP * 137.04_DP
+!tbya = 2.0_DP * 137.04_DP
+tbya = 2.0_DP * cau_fact
 !     set ( fine structure constant / 2 )
 abyt = 1.0_DP / tbya
 

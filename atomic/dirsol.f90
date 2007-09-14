@@ -40,6 +40,7 @@ subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,grid,snl,ruae)
 use io_global, only : stdout
 use kinds, only : DP
 use radial_grids, only: radial_grid_type
+use ld1inc, only : cau_fact
 implicit none
 integer :: idim1 
 type(radial_grid_type),intent(in)::grid
@@ -89,7 +90,9 @@ enddo
 itmax = 100
 !
 !     set ( 2 / fine structure constant )
-tbya = 2.0_DP * 137.04_DP
+!tbya = 2.0_DP * 137.04_DP
+tbya = 2.0_DP * cau_fact
+
 !     set ( fine structure constant / 2 )
 abyt = 1.0_DP / tbya
 

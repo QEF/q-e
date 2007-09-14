@@ -23,6 +23,7 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
   !
   use kinds, only : DP
   use radial_grids, only: radial_grid_type
+  use ld1inc, only : cau_fact
   implicit none
   !
   ! I/O variables
@@ -73,7 +74,8 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
   ! relativistic - non-relativistic switch
   !
   if(mode .eq. 1 .or. mode .eq. 3) then
-     fss=(1.0_dp/137.036_dp)**2
+!     fss=(1.0_dp/137.036_dp)**2
+     fss=(1.0_dp/cau_fact)**2
      if(l == 0) gamma=sqrt(1.0_dp-fss*z**2)
      if(l .gt. 0) gamma=(l*sqrt(l**2-fss*z**2) + &
           (l+1)*sqrt((l+1)**2-fss*z**2))/(2*l+1)

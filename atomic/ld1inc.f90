@@ -265,6 +265,8 @@ module ld1inc
              rytoev_fact    ! Conversion from Ry and eV. A value
                             ! different from default can be used
                             ! to reproduce results of old papers.
+  real(DP) :: &
+             cau_fact       ! speed of light in atomic units.
   !
   !  Auxiliary quantities for verbose output 
   !
