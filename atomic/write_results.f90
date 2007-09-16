@@ -18,7 +18,7 @@ subroutine write_results
                         ehrtcc, ehrtcv, ehrtvv, enclv, enclc, verbosity,  &
                         nwf, nn, ll, jj, el, isw, oc, enl, file_wavefunctions, &
                         dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, &
-                        core_state, ekinc, ekinv, ae_fc_energy
+                        core_state, ekinc, ekinv, ae_fc_energy, cau_fact
 
   use funct, only :  get_iexch, get_dft_name
   implicit none
@@ -47,7 +47,12 @@ subroutine write_results
        '  beta=',f4.2,' tr2=',1pe7.1)
   write(stdout,1270) grid%mesh,grid%r(grid%mesh),grid%xmin,grid%dx
 1270 format(5x,'mesh =',i4,' r(mesh) =',f10.5,' xmin =',f6.2,' dx =',f8.5)
-  write(stdout,'(5x "1 Ry = ",f12.8, " eV" )') rytoev_fact
+  if (rel==0) then
+     write(stdout,'(5x "1 Ry = ",f12.8, " eV" )') rytoev_fact
+  else
+     write(stdout,'(5x "1 Ry = ",f12.8, " eV, c = ",f12.8 )') rytoev_fact, &
+                                                            cau_fact
+  endif
   if (rel.lt.2) then
      write(stdout,1000)
 1000 format(/5x, &

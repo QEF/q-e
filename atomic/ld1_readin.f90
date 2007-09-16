@@ -258,14 +258,14 @@ subroutine ld1_readin
      call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
   endif
   if (xmin==0.0_DP) then
-     if (iswitch==1.and..not.vdw) then
-        xmin=-12.0_DP
+     if (iswitch==1.and..not.vdw.and.rel>0) then
+        xmin=-10.0_DP
      else
         xmin=-7.0_DP
      endif
   endif
   if (dx==0.0_DP) then
-     if (iswitch==1.and..not.vdw) then
+     if (iswitch==1.and..not.vdw.and.rel>0) then
         dx=0.008_DP
      else
         dx=0.0125_DP

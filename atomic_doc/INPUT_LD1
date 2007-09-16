@@ -17,8 +17,8 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       atom  = atomic symbol: atom='H', 'He', 'Be', etc
               specify either atom OR zed, not both
 
-      xmin  = radial grid parameter (default: -7.0 if iswitch>1, 
-                                              -12.0 otherwise)
+      xmin  = radial grid parameter (default: -7.0 if iswitch>1 or rel=0, 
+                                              -10.0 otherwise)
       dx    =   "    "   "          (default: 0.0125 if iswitch>1,
                                               0.008 otherwise)
               the radial grid is: r(i+1) = exp(xmin+i*dx)/zed  a.u.
