@@ -571,6 +571,7 @@ MODULE input
           tsde_      = .FALSE.
           IF( program_name == 'CP90' ) THEN
              tcg = .TRUE.
+             tortho_ = .FALSE.
           ELSE
              CALL errore(' control_flags ',' conjugate gradient not yet implemented in FPMD ', 1 )
           ENDIF
@@ -1249,6 +1250,8 @@ MODULE input
           tnosee = .FALSE.
           WRITE( stdout,509)
           WRITE( stdout,514) frice, grease
+      ELSE IF( TRIM(electron_dynamics) == 'cg' ) THEN
+          WRITE( stdout,511)
       ELSE
           CALL errore(' input_info ', ' unknown electron dynamics ', 1 )
       END IF
@@ -1311,6 +1314,7 @@ MODULE input
     !
 509 FORMAT( 3X,'verlet algorithm for electron dynamics')
 510 FORMAT( 3X,'Electron dynamics with newton equations')
+511 FORMAT( 3X,'Electron dynamics with conjugate gradient')
 512 FORMAT( 3X,'Orthog. with Gram-Schmidt')
 513 FORMAT( 3X,'Electron dynamics with steepest descent')
 514 FORMAT( 3X,'with friction frice = ',f7.4,' , grease = ',f7.4)
