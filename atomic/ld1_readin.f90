@@ -192,7 +192,7 @@ subroutine ld1_readin
   if (zed == 0.0_dp .and. atom /= ' ') then
      zed = DBLE(atomic_number(atom))
   else if (zed /= 0.0_dp .and. atom == ' ') then
-     if (DBLE(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 100) then
+     if (DBLE(int(zed)) /= zed .or. zed < 1.0_dp .or. zed > 103) then
         write(zdum_,'(f6.2)') zed
         call errore('ld1_readin','wrong nuclear charge zed: '//zdum_,1)
      end if
