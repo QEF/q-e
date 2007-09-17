@@ -450,8 +450,6 @@
          !
          IF( use_task_groups ) THEN
             !
-            ALLOCATE( psis( strd * ( nogrp + 1 ) ) ) 
-            !
             CALL loop_over_states_tg()
             !
          ELSE
@@ -481,10 +479,9 @@
                !
             END DO
             !
+            DEALLOCATE( psis ) 
+            !
          END IF
-         !
-         DEALLOCATE( psis ) 
-         !
          !
          !     smooth charge in g-space is put into rhog(ig)
          !
@@ -642,16 +639,17 @@
          !
          IMPLICIT NONE
          !
-         INTEGER :: to, from, ii, eig_index, ierr, eig_offset
+         INTEGER :: to, from, ii, eig_index, eig_offset
          REAL(DP), ALLOCATABLE :: long_rhos(:,:)
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
+         ALLOCATE( psis( strd * ( nogrp + 1 ) ) ) 
+         !
          ALLOCATE( long_rhos( nr1sx * nr2sx * tmp_npp( me_image + 1 ), nspin ) )
 
-         ALLOCATE( tmp_rhos( nr1sx * nr2sx * tmp_npp( me_image + 1 ), nspin ) )
+         ALLOCATE( tmp_rhos ( nr1sx * nr2sx * tmp_npp( me_image + 1 ), nspin ) )
          !
-         tmp_rhos = 0D0
-
+         tmp_rhos = 0_DP
 
          do i = 1, n, 2*nogrp
             !
@@ -729,6 +727,9 @@
             !code this should be equal to the total number of planes
             !
 
+            IF( nr1sx * nr2sx * tmp_npp( me_image + 1 ) > SIZE( psis ) ) &
+               CALL errore( ' rhoofr ', ' psis size too low ', nr1sx * nr2sx * tmp_npp( me_image + 1 ) )
+
             do ir = 1, nr1sx * nr2sx * tmp_npp( me_image + 1 )
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
@@ -769,7 +770,7 @@
 
          DEALLOCATE( long_rhos )
          DEALLOCATE( tmp_rhos )
-
+         DEALLOCATE( psis ) 
 
          RETURN
       END SUBROUTINE loop_over_states_tg

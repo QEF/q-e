@@ -29,8 +29,6 @@ MODULE fft_cp
   IMPLICIT NONE
   SAVE
 
-  INTEGER, PRIVATE :: what_scatter = 0
-
 CONTAINS
 
 !----------------------------------------------------------------------
@@ -133,7 +131,7 @@ CONTAINS
       !
       SUBROUTINE fw_scatter( iopt )
          !
-         use fft_base, only: fft_scatter, fft_transpose, fft_itranspose
+         use fft_base, only: fft_scatter
          !
          INTEGER, INTENT(IN) :: iopt
          INTEGER :: nppx
@@ -141,29 +139,23 @@ CONTAINS
          !
          IF( iopt == 2 ) THEN
             !
-            IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
-            ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, -2)
-            ELSE 
-               if ( nproc_image == 1 ) then
-                  nppx = dfft%nr3x
-               else
-                  nppx = dfft%npp( me )
-               end if
-               call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
-               f(:) = (0.d0, 0.d0)
-               ii = 0
-               do proc = 1, nproc_image
-                  do i = 1, dfft%nsw( proc )
-                     mc = dfft%ismap( i + dfft%iss( proc ) )
-                     ii = ii + 1 
-                     do j = 1, dfft%npp( me )
-                        f( mc + ( j - 1 ) * dfft%nnp ) = aux( j + ( ii - 1 ) * nppx )
-                     end do
+            if ( nproc_image == 1 ) then
+               nppx = dfft%nr3x
+            else
+               nppx = dfft%npp( me )
+            end if
+            call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
+            f(:) = (0.d0, 0.d0)
+            ii = 0
+            do proc = 1, nproc_image
+               do i = 1, dfft%nsw( proc )
+                  mc = dfft%ismap( i + dfft%iss( proc ) )
+                  ii = ii + 1 
+                  do j = 1, dfft%npp( me )
+                     f( mc + ( j - 1 ) * dfft%nnp ) = aux( j + ( ii - 1 ) * nppx )
                   end do
                end do
-            END IF
+            end do
             !
          ELSE IF( iopt == 1 ) THEN
             !
@@ -190,7 +182,7 @@ CONTAINS
       !
       SUBROUTINE bw_scatter( iopt )
          !
-         use fft_base, only: fft_scatter, fft_transpose, fft_itranspose
+         use fft_base, only: fft_scatter
          !
          INTEGER, INTENT(IN) :: iopt
          INTEGER :: nppx
@@ -198,28 +190,22 @@ CONTAINS
          !
          IF( iopt == -2 ) THEN
             !
-            IF( what_scatter == 1 ) THEN
-               call fft_transpose ( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
-            ELSE IF( what_scatter == 2 ) THEN
-               call fft_itranspose( aux, nr3x, f, nr1x, nr2x, dfft, me, intra_image_comm, nproc_image, 2)
-            ELSE 
-               if ( nproc_image == 1 ) then
-                  nppx = dfft%nr3x
-               else
-                  nppx = dfft%npp( me )
-               end if
-               ii = 0
-               do proc = 1, nproc_image
-                  do i = 1, dfft%nsw( proc )
-                     mc = dfft%ismap( i + dfft%iss( proc ) )
-                     ii = ii + 1 
-                     do j = 1, dfft%npp( me )
-                        aux( j + ( ii - 1 ) * nppx ) = f( mc + ( j - 1 ) * dfft%nnp )
-                     end do
+            if ( nproc_image == 1 ) then
+               nppx = dfft%nr3x
+            else
+               nppx = dfft%npp( me )
+            end if
+            ii = 0
+            do proc = 1, nproc_image
+               do i = 1, dfft%nsw( proc )
+                  mc = dfft%ismap( i + dfft%iss( proc ) )
+                  ii = ii + 1 
+                  do j = 1, dfft%npp( me )
+                     aux( j + ( ii - 1 ) * nppx ) = f( mc + ( j - 1 ) * dfft%nnp )
                   end do
                end do
-               call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
-            END IF
+            end do
+            call fft_scatter( aux, nr3x, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
             !
          ELSE IF( iopt == -1 ) THEN
             !
@@ -298,7 +284,7 @@ CONTAINS
       INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x, sign
       TYPE (fft_dlay_descriptor), INTENT(IN) :: dfft
 
-      COMPLEX(DP), INTENT(INOUT) :: f( : )
+      COMPLEX(DP) :: f( : )
 
       integer  mc, i, j, ii, proc, k, me
       integer  group_index, nnz_index, offset, ierr
@@ -307,14 +293,15 @@ CONTAINS
       !C. Bekas
       !--------------
       INTEGER :: HWMN, IT1, FLAG
-      COMPLEX(DP), DIMENSION(:), ALLOCATABLE  :: XF, YF, aux 
+      COMPLEX(DP), ALLOCATABLE :: yf(:), aux(:) 
       INTEGER, DIMENSION(NOGRP) :: send_cnt, send_displ, recv_cnt, recv_displ
-      INTEGER  :: idx
+      INTEGER  :: idx, ntsk, itsk
 
-      ALLOCATE( XF ( (NOGRP+1)*strd ) )
-      ALLOCATE( YF ( (NOGRP+1)*strd ) )
       ALLOCATE( aux( (NOGRP+1)*strd ) )
- 
+      ALLOCATE( YF ( (NOGRP+1)*strd ) )
+
+      CALL MPI_COMM_RANK( ogrp_comm, itsk, ierr )
+      CALL MPI_COMM_SIZE( ogrp_comm, ntsk, ierr )
       !
       ! see comments in cfftp for the logic (or lack of it) of the following
       !
@@ -327,7 +314,6 @@ CONTAINS
 
       me = me_image + 1
 
-
       if ( sign > 0 ) then
 
          !  Inverse FFT
@@ -337,20 +323,28 @@ CONTAINS
             CALL errore( ' tg_cfft ', ' task groups are implemented only for waves ', 1 )
             !
          else
+
             !
             ! WAVE - FUNCTION FFT calculation
             !
-
-            send_cnt(1)   = nr3x*dfft%nsw( me_image + 1 )
+            send_cnt(1)   = nr3x*dfft%nsw( me )
             send_displ(1) = 0
             recv_cnt(1)   = nr3x*dfft%nsw( nolist(1) + 1 )
             recv_displ(1) = 0
             DO idx = 2, nogrp
-               send_cnt(idx)   = nr3x * dfft%nsw( me_image + 1 )
+               send_cnt(idx)   = nr3x * dfft%nsw( me )
                send_displ(idx) = send_displ(idx-1) + strd
                recv_cnt(idx)   = nr3x * dfft%nsw( nolist(idx) + 1 )
                recv_displ(idx) = recv_displ(idx-1) + recv_cnt(idx-1)
             ENDDO
+
+            IF( recv_displ(nogrp) + recv_cnt(nogrp) > SIZE( yf ) ) THEN
+               CALL errore( ' tg_cfft ', ' inconsistent size ', 1 )
+            END IF
+            IF( send_displ(nogrp) + send_cnt(nogrp) > SIZE( f ) ) THEN
+               CALL errore( ' tg_cfft ', ' inconsistent size ', 2 )
+            END IF
+
 
             CALL start_clock( 'ALLTOALL' )
 
@@ -359,8 +353,13 @@ CONTAINS
             !  in "yf" processors will have all the sticks of the OGRP
 
 #if defined __MPI
-            CALL MPI_ALLTOALLV( f, send_cnt, send_displ, MPI_DOUBLE_COMPLEX, yf, recv_cnt, & 
+
+            CALL MPI_ALLTOALLV( f(1), send_cnt, send_displ, MPI_DOUBLE_COMPLEX, yf(1), recv_cnt, & 
          &                     recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)  
+            IF( ierr /= 0 ) THEN
+               CALL errore( ' tg_cfft ', ' alltoall error 1 ', ABS(ierr) )
+            END IF
+
 #endif
 
             CALL stop_clock( 'ALLTOALL' )
@@ -385,7 +384,7 @@ CONTAINS
             !dfft%npp: number of planes per processor
             !-------------------------------------------------------------------------------------
 
-            call fft_scatter( aux, nr3x, (NOGRP+1)*strd, f, tmp_nsw, tmp_npp, sign, use_tg = .TRUE. )
+            call fft_scatter( aux, nr3x, (nogrp+1)*strd, f, tmp_nsw, tmp_npp, sign, use_tg = .TRUE. )
 
             f(:) = (0.d0, 0.d0)
 
@@ -394,16 +393,15 @@ CONTAINS
                do i=1,dfft%nsw(proc)
                   mc = dfft%ismap( i + dfft%iss(proc))
                   ii = ii + 1
-                  do j=1,tmp_npp(me)
-                     f(mc+(j-1)*nr1x*nr2x) = aux(j + (ii-1)*tmp_npp(me))
+                  do j = 1, tmp_npp( me )
+                     f( mc + (j-1)*nr1x*nr2x ) = aux( j + (ii-1)*tmp_npp( me ) )
                   end do
                end do
             end do
 
-            call cft_2xy( f, tmp_npp(me), nr1, nr2, nr1x, nr2x, sign, dfft%iplw )
+            call cft_2xy( f, tmp_npp( me ), nr1, nr2, nr1x, nr2x, sign, dfft%iplw )
 
          end if
-
 
       else
 
@@ -419,27 +417,60 @@ CONTAINS
             !
             !  WAVE - FUNCTION FFT calculation
             !
-            call cft_2xy( f, tmp_npp(me), nr1, nr2, nr1x, nr2x, sign, dfft%iplw )
+            call cft_2xy( f, tmp_npp( me ), nr1, nr2, nr1x, nr2x, sign, dfft%iplw )
             ii = 0
             do proc=1,nproc_image
                do i=1,dfft%nsw(proc)
                   mc = dfft%ismap( i + dfft%iss(proc) )
                   ii = ii + 1
-                  do j=1,tmp_npp(me)
-                     aux(j + (ii-1)*tmp_npp(me)) = f(mc+(j-1)*nr1x*nr2x)
+                  do j = 1, tmp_npp( me )
+                     aux(j + (ii-1)*tmp_npp( me ) ) = f(mc+(j-1)*nr1x*nr2x)
                   end do
                end do
             end do
 
             call fft_scatter( aux, nr3x, (NOGRP+1)*strd, f, tmp_nsw, tmp_npp, sign, use_tg = .TRUE. )
-            call cft_1z(aux,tmp_nsw(me),nr3,nr3x,sign,f)
+            !
+            call cft_1z( aux, tmp_nsw( me ), nr3, nr3x, sign, yf )
+            !
+            !  Bring pencils back to their original distribution
+            !
+            send_cnt  (1) = nr3x * dfft%nsw( nolist(1) + 1 )
+            send_displ(1) = 0
+            recv_cnt  (1) = nr3x * dfft%nsw( me )
+            recv_displ(1) = 0
+            DO idx = 2, NOGRP
+               send_cnt  (idx) = nr3x * dfft%nsw( nolist(idx) + 1 )
+               send_displ(idx) = send_displ(idx-1) + send_cnt(idx-1)
+               recv_cnt  (idx) = nr3x * dfft%nsw( me )
+               recv_displ(idx) = recv_displ(idx-1) + recv_cnt(idx-1)
+            ENDDO
 
+            IF( recv_displ(nogrp) + recv_cnt(nogrp) > SIZE( f ) ) THEN
+               CALL errore( ' tg_cfft ', ' inconsistent size ', 3 )
+            END IF
+            IF( send_displ(nogrp) + send_cnt(nogrp) > SIZE( yf ) ) THEN
+               CALL errore( ' tg_cfft ', ' inconsistent size ', 4 )
+            END IF
+
+            CALL start_clock( 'ALLTOALL' )
+
+#if defined __MPI
+            CALL MPI_Alltoallv( yf(1), &
+                 send_cnt, send_displ, MPI_DOUBLE_COMPLEX, f(1), &
+                 recv_cnt, recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
+            IF( ierr /= 0 ) THEN
+               CALL errore( ' tg_cfft ', ' alltoall error 2 ', ABS(ierr) )
+            END IF
+#endif   
+
+            CALL stop_clock( 'ALLTOALL' )
+            !
          end if
 
       end if
 !
 
-      DEALLOCATE(XF)
       DEALLOCATE(YF)
       DEALLOCATE(aux)
 

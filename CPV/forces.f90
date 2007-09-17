@@ -67,41 +67,36 @@
       INTEGER     :: idx, eig_offset, eig_index, nogrp_
       REAL(DP)    :: fi, fip, dd, dv
       COMPLEX(DP) :: fp, fm, ci
-      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : ) ! automatic arrays
+      REAL(DP),    ALLOCATABLE :: af( :, : ), aa( :, : )
       COMPLEX(DP), ALLOCATABLE :: psi(:)
-      COMPLEX(DP), ALLOCATABLE :: temp_psi(:)
-      INTEGER,     ALLOCATABLE :: send_cnt(:), recv_cnt(:), send_displ(:), recv_displ(:)
-!
-!
+      !
       CALL start_clock( 'dforce' ) 
       !
       IF( use_task_groups ) THEN
          nogrp_ = nogrp
          ALLOCATE( psi( strd * ( nogrp + 1 ) ) )
-         ALLOCATE( temp_psi( 2 * ( nogrp + 1 ) * nswx * nr3sx ) )
       ELSE
          nogrp_ = 1
          ALLOCATE( psi( nnrsx ) )
-         ALLOCATE( temp_psi( 1 ) )
       END IF
       !
-      ci=(0.0d0,1.0d0)
+      ci = ( 0.0d0, 1.0d0 )
       !
-      psi (:) = (0.d0, 0.d0)
+      psi( : ) = (0.d0, 0.d0)
 
       igoff = 0
 
       DO idx = 1, 2*nogrp_ , 2
-
-         !This loop is executed only ONCE when NOGRP=1.
-         !Equivalent to the case with no task-groups
-         !dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
-         !We can either send these in the group with an mpi_allgather...or put the
-         !in the PSIS vector (in special positions) and send them with them.
-         !Otherwise we can do this once at the beginning, before the loop.
-         !we choose to do the latter one.
-
-         !     important: if n is odd => c(*,n+1)=0.
+         !
+         !  This loop is executed only ONCE when NOGRP=1.
+         !  Equivalent to the case with no task-groups
+         !  dfft%nsw(me) holds the number of z-sticks for the current processor per wave-function
+         !  We can either send these in the group with an mpi_allgather...or put the
+         !  in the PSIS vector (in special positions) and send them with them.
+         !  Otherwise we can do this once at the beginning, before the loop.
+         !  we choose to do the latter one.
+         !
+         !  important: if n is odd => c(*,n+1)=0.
          ! 
          IF ( ( idx + i - 1 ) == n ) c( : , idx + i ) = 0.0d0
 
@@ -116,7 +111,7 @@
 
       END DO
 
-      CALL invfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+      CALL invfft( 'Wave', psi, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx )
       !
       ! the following avoids a potential out-of-bounds error
       !
@@ -127,7 +122,7 @@
          iss1 = ispin(i)
          iss2 = iss1
       END IF
-!
+      !
       IF( use_task_groups ) THEN
          !
          DO ir = 1, nr1sx * nr2sx * tmp_npp( me_image + 1 )
@@ -148,49 +143,14 @@
          !
       END IF
       !
-      CALL fwfft('Wave',psi,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+      CALL fwfft( 'Wave', psi, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx )
       !
-      IF( use_task_groups ) THEN
-         !
-         !  Bring pencils back to their original distribution
-         !
-         ALLOCATE( send_cnt( nogrp ), recv_cnt( nogrp ) )
-         ALLOCATE( send_displ( nogrp ), recv_displ( nogrp ) )
-         send_cnt  (1) = nr3sx*dffts%nsw(nolist(1)+1)
-         send_displ(1) = 0
-         recv_cnt  (1) = nr3sx*dffts%nsw(me_image+1)
-         recv_displ(1) = 0
-         DO idx = 2, NOGRP
-            send_cnt  (idx) = nr3sx*dffts%nsw(nolist(idx)+1)
-            send_displ(idx) = send_displ(idx-1) + send_cnt(idx-1)
-
-            recv_cnt  (idx) = nr3sx*dffts%nsw(me_image+1)
-            recv_displ(idx) = recv_displ(idx-1) + recv_cnt(idx-1)
-         ENDDO
-
-         CALL start_clock('DFORCE_ALL')
-#if defined __MPI
-         CALL MPI_Alltoallv( psi(1), &
-              send_cnt, send_displ, MPI_DOUBLE_COMPLEX, temp_psi(1), &
-              recv_cnt, recv_displ, MPI_DOUBLE_COMPLEX, ogrp_comm, IERR)
-#endif
-         CALL stop_clock('DFORCE_ALL')
-         !
-         DEALLOCATE( send_cnt, recv_cnt )
-         DEALLOCATE( send_displ, recv_displ )
-         !
-      END IF
-!
-      !     note : the factor 0.5 appears 
+      !   note : the factor 0.5 appears 
       !       in the kinetic energy because it is defined as 0.5*g**2
       !       in the potential part because of the logics
-!
-   
       !
-      !--------------------------------------------------------------
-      !Each processor will treat its own part of the eigenstate
-      !assigned to its ORBITAL group
-      !--------------------------------------------------------------
+      !   Each processor will treat its own part of the eigenstate
+      !   assigned to its ORBITAL group
       !
       eig_offset = 0
       igno = 1
@@ -207,8 +167,8 @@
             endif
             IF( use_task_groups ) THEN
                DO ig=1,ngw
-                  fp= temp_psi(nps(ig)+eig_offset) +  temp_psi(nms(ig)+eig_offset)
-                  fm= temp_psi(nps(ig)+eig_offset) -  temp_psi(nms(ig)+eig_offset)
+                  fp= psi(nps(ig)+eig_offset) +  psi(nms(ig)+eig_offset)
+                  fm= psi(nps(ig)+eig_offset) -  psi(nms(ig)+eig_offset)
                   df(igno)= fi *(tpiba2 * ggp(ig) * c(ig,idx+i-1)+cmplx(real (fp), aimag(fm)))
                   da(igno)= fip*(tpiba2 * ggp(ig) * c(ig,idx+i  )+cmplx(aimag(fp),-real (fm)))
                   igno = igno + 1
@@ -224,7 +184,8 @@
          END IF
 
          eig_offset = eig_offset + nr3sx * dffts%nsw(me_image+1)
-         !We take into account the number of elements received from other members of the orbital group
+
+         ! We take into account the number of elements received from other members of the orbital group
 
       ENDDO
 
@@ -318,7 +279,6 @@
       ENDIF
 
       DEALLOCATE( psi )
-      DEALLOCATE( temp_psi )
 !
       CALL stop_clock( 'dforce' ) 
 !
