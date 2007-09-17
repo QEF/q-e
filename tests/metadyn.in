@@ -1,0 +1,50 @@
+&CONTROL
+  dt             = 15.D0,
+  calculation    = "metadyn",
+  nstep          = 10,
+  etot_conv_thr  = 2.D-4,
+  forc_conv_thr  = 2.D-3,
+/
+&SYSTEM
+  nosym          = .T.,
+  ibrav          = 1,
+  celldm(1)      = 14.D0,
+  nat            = 10,
+  ntyp           = 2,
+  ecutwfc        = 12.D0
+/
+&ELECTRONS
+  conv_thr    = 1.D-7,
+  mixing_beta = 0.4D0
+/
+&IONS
+  fe_step(1)        = 0.3D0,
+  fe_step(2)        = 0.3D0,
+  fe_step(3)        = 0.3D0,
+  g_amplitude       = 0.01D0,
+  fe_nstep          = 80,
+  sw_nstep          = 5,
+  ion_dynamics      = "damp",
+  pot_extrapolation = "second_order",
+  wfc_extrapolation = "second_order",
+/
+COLLECTIVE_VARS
+3
+"distance"  7   9
+"distance"  8  10
+"distance"  9  10
+ATOMIC_SPECIES
+H   1.0   H.vbc.UPF
+Si  1.0  Si.vbc.UPF
+ATOMIC_POSITIONS { angstrom }
+H       -2.142881868   2.313383337   0.000000936
+H        2.142881503   2.313381079  -0.000000356
+H       -1.824140891  -1.744121628   1.250555964
+H        1.824142509  -1.744123885   1.250554014
+H       -1.824146745  -1.744124685  -1.250553179
+H        1.824146636  -1.744127405  -1.250552673
+Si      -1.081854060   1.199601786  -0.000000959
+Si       1.081854851   1.199604160  -0.000001556
+Si      -1.192213258  -1.124761111  -0.000001090
+Si       1.192211325  -1.124755647  -0.000001100
+K_POINTS gamma
