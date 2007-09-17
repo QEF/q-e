@@ -76,12 +76,11 @@ SUBROUTINE task_groups_init( dffts )
 
    INTEGER  ::  MSGLEN, I, J, N1, IPOS, WORLD, NEWGROUP
    INTEGER  ::  IERR
+   INTEGER  ::  itsk, ntsk, color, key
    INTEGER  ::  num_planes, num_sticks
    INTEGER,  DIMENSION(:),   ALLOCATABLE  ::  nnrsx_vec 
 
-   !--------------------------------------------------------------
    !
-
    WRITE( stdout, 100 ) nogrp, npgrp
 
 100 FORMAT( /,3X,'Task Groups are in use',/,3X,'groups and procs/group : ',I5,I5 )
@@ -95,19 +94,17 @@ SUBROUTINE task_groups_init( dffts )
 
    IF( MOD( nproc_image, nogrp ) /= 0 ) &
       CALL errore( " groups ", " nogrp should be a divisor of nproc_image ", 1 )
-
  
    ALLOCATE( pgroup( nproc_image ) )
+   !
    DO i = 1, nproc_image
       pgroup( i ) = i - 1
    ENDDO
-
-
+   !
    ALLOCATE( nplist( npgrp ) )
    !
    ALLOCATE( nolist( nogrp ) )
-
-
+   !
    !--------------------------------------
    !LIST OF PROCESSORS IN MY ORBITAL GROUP
    !--------------------------------------
@@ -115,17 +112,17 @@ SUBROUTINE task_groups_init( dffts )
    !  processors in these group have contiguous indexes
    !
    N1 = ( me_image / NOGRP ) * NOGRP - 1
-   DO I = 1, NOGRP
+   DO i = 1, nogrp
       nolist( I ) = pgroup( N1 + I + 1 )
-      IF( me_image .EQ. nolist( I ) ) IPOS = i - 1
+      IF( me_image == nolist( I ) ) ipos = i - 1
    ENDDO
 
    !-----------------------------------------
    !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
    !-----------------------------------------
    !
-   DO I = 1, NPGRP
-      nplist( I ) = pgroup( IPOS + ( I - 1 ) * NOGRP + 1 )
+   DO I = 1, npgrp
+      nplist( I ) = pgroup( ipos + ( i - 1 ) * nogrp + 1 )
    ENDDO
 
    !-----------------
@@ -138,13 +135,19 @@ SUBROUTINE task_groups_init( dffts )
    !---------------------------------------
    !
 #if defined __MPI
-   ! get the handle world to the main group
-   CALL MPI_COMM_GROUP( intra_image_comm, WORLD, IERR )  
-   ! create a new group handle containing processor whose indices are
-   ! contained in array nogrp()
-   CALL MPI_GROUP_INCL( WORLD, NOGRP, NOLIST, NEWGROUP, IERR )
-   ! build a communicator for the newgroup and store it in ogrp_comm
-   CALL MPI_COMM_CREATE( intra_image_comm, NEWGROUP, ogrp_comm, IERR )
+   color = me_image / nogrp
+   key   = MOD( me_image , nogrp )
+   CALL MPI_COMM_SPLIT( intra_image_comm, color, key, ogrp_comm, ierr )
+   if( ierr /= 0 ) &
+      CALL errore( ' task_groups_init ', ' creating ogrp_comm ', ABS(ierr) )
+   CALL MPI_COMM_RANK( ogrp_comm, itsk, IERR )
+   CALL MPI_COMM_SIZE( ogrp_comm, ntsk, IERR )
+   IF( nogrp /= ntsk ) CALL errore( ' task_groups_init ', ' ogrp_comm size ', ntsk )
+   DO i = 1, nogrp
+      IF( me_image == nolist( i ) ) THEN
+         IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' ogrp_comm rank ', itsk )
+      END IF
+   END DO
 #endif
 
    !---------------------------------------
@@ -152,11 +155,20 @@ SUBROUTINE task_groups_init( dffts )
    !---------------------------------------
    !
 #if defined __MPI
-   CALL MPI_COMM_GROUP( intra_image_comm, WORLD, IERR )
-   CALL MPI_GROUP_INCL( WORLD, NPGRP, nplist, NEWGROUP, IERR )
-   CALL MPI_COMM_CREATE( intra_image_comm, NEWGROUP, pgrp_comm, IERR )
+   color = MOD( me_image , nogrp )
+   key   = me_image / nogrp
+   CALL MPI_COMM_SPLIT( intra_image_comm, color, key, pgrp_comm, ierr )
+   if( ierr /= 0 ) &
+      CALL errore( ' task_groups_init ', ' creating pgrp_comm ', ABS(ierr) )
+   CALL MPI_COMM_RANK( pgrp_comm, itsk, IERR )
+   CALL MPI_COMM_SIZE( pgrp_comm, ntsk, IERR )
+   IF( npgrp /= ntsk ) CALL errore( ' task_groups_init ', ' pgrp_comm size ', ntsk )
+   DO i = 1, npgrp
+      IF( me_image == nplist( i ) ) THEN
+         IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' pgrp_comm rank ', itsk )
+      END IF
+   END DO
 #endif
-
 
 
    ALLOCATE( nnrsx_vec( nproc_image ) )
@@ -164,7 +176,7 @@ SUBROUTINE task_groups_init( dffts )
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
 #if defined __MPI
-   CALL MPI_Allgather(dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_image_comm, IERR)
+   CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_image_comm, IERR)
    strd = MAXVAL( nnrsx_vec( 1:nproc_image ) )
    nswx = MAXVAL( dffts%nsw( 1:nproc_image ) )
 #else
@@ -184,31 +196,23 @@ SUBROUTINE task_groups_init( dffts )
    !we choose to do the latter one.
    !-------------------------------------------------------------------------------------
    !
-   IF (.NOT.ALLOCATED(tmp_nsw)) ALLOCATE(tmp_nsw(nproc_image))
-   IF (.NOT.ALLOCATED(tmp_npp)) THEN
-      ALLOCATE(tmp_npp(nproc_image))
-      tmp_npp(1)=-1
-   ENDIF
+   ALLOCATE(tmp_nsw(nproc_image))
+   ALLOCATE(tmp_npp(nproc_image))
 
    num_sticks = 0
    num_planes = 0
    DO i = 1, nogrp
-      num_sticks = num_sticks + dffts%nsw(nolist(i)+1)
-      num_planes = num_planes + dffts%npp(nolist(i)+1)
+      num_sticks = num_sticks + dffts%nsw( nolist(i) + 1 )
+      num_planes = num_planes + dffts%npp( nolist(i) + 1 )
    ENDDO
 
-
-   IF (tmp_npp(1).EQ.-1) THEN
 #if defined __MPI
-      CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, intra_image_comm, IERR)
-      CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_image_comm, IERR)
+   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, intra_image_comm, IERR)
+   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_image_comm, IERR)
 #else
-      tmp_nsw(1) = num_sticks
-      tmp_npp(1) = num_planes
+   tmp_nsw(1) = num_sticks
+   tmp_npp(1) = num_planes
 #endif
-   ENDIF
-
-
 
    RETURN
 
