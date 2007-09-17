@@ -54,7 +54,7 @@ SUBROUTINE compute_sigma_bare(chi_bare, sigma_bare)
     sigma_bare(:,:,na) = real(tmp_sigma(:,:))
   enddo
 #ifdef __PARA
-  call reduce(9*na, sigma_bare)
+  call reduce(9*nat, sigma_bare)
 #endif
   
 #if 0
@@ -201,6 +201,7 @@ SUBROUTINE print_sigma_total(sigma_bare, sigma_paramagnetic, sigma_diamagnetic)
     tr_sigma = (tmp(1,1) + tmp(2,2) + tmp(3,3))/3.0_dp
     write(stdout,'(5X,''Atom'',I3,2X,A3,'' pos: ('',3(F10.6),&
          &'')  sigma: '',F14.4)') na, atm(ityp(na)), tau(:,na), tr_sigma*1e6_dp
+    write(stdout, tens_fmt) tmp(:,:) * 1e6_dp
   enddo
   write(stdout,*)
   write(stdout,*)
