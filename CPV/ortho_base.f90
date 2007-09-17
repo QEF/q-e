@@ -358,6 +358,7 @@ CONTAINS
 
       IF( ionode ) THEN
          !
+         WRITE( stdout, 90 )
          IF( ortho_para == 0 )  THEN
             WRITE( stdout, 100 ) tser
             WRITE( stdout, 110 ) tbest, npbest*npbest
@@ -378,6 +379,13 @@ CONTAINS
 #endif
 
       CALL init_ortho_group( npbest*npbest, intra_image_comm )
+
+#if defined __PARA
+      IF( ionode ) THEN
+         WRITE( stdout, '(/,3X,"Constraints matrixes will be distributed block like on")' )
+         WRITE( stdout, '(3X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
+      END IF
+#endif
 
       RETURN
 
