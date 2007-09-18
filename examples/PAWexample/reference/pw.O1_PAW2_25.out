@@ -1,0 +1,155 @@
+
+     Program PWSCF     v.3.2cvs starts ...
+     Today is 17Sep2007 at 14:16: 0 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+
+     ntypx = 10   npk = 40000  lmax =  3
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
+ reading pseudopotential for:  O
+ dimensions (mesh, nwfc, lmax):  1095    4    1
+ PAW CUTOFF parameters
+         779   1.90705174100000     
+         793   2.27176817100000     
+         826   3.43170924200000     
+
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =      10.0000  a.u.
+     unit-cell volume          =     250.0000 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     number of electrons       =         6.00
+     number of Kohn-Sham states=            7
+     kinetic-energy cutoff     =      25.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     convergence threshold     =      1.0E-06
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation      =  SLA  PW   PBX  PBC (1434)
+
+     celldm(1)=  10.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.500000  0.000000  0.500000 )  
+               a(2) = (  0.000000  0.500000  0.500000 )  
+               a(3) = ( -0.500000  0.500000  0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for  O read from file PAW2.PAW
+     Pseudo is Ultrasoft + core correction, Zval =  6.0
+     Using radial grid of 1095 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        O              6.00     1.00000      O( 1.00)
+
+     48 Sym.Ops. (with inversion)
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           O   tau(  1) = (   0.0000000   0.0000000   0.0000000  )
+
+     number of k points=    1  gaussian broad. (Ry)=  0.0100     ngauss =   0
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+
+     G cutoff =  506.6059  (  11935 G-vectors)     FFT grid: ( 32, 32, 32)
+     G cutoff =  253.3030  (   4279 G-vectors)  smooth grid: ( 24, 24, 24)
+
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.06 Mb     (    531,   7)
+        NL pseudopotentials             0.06 Mb     (    531,   8)
+        Each V/rho on FFT grid          0.50 Mb     (  32768)
+        Each G-vector array             0.09 Mb     (  11935)
+        G-vector shells                 0.00 Mb     (    170)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         0.23 Mb     (    531,  28)
+        Each subspace H/S matrix        0.01 Mb     (     28,  28)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,   7)
+        Arrays for rho mixing           4.00 Mb     (  32768,   8)
+ entering init_prad
+           3           7
+ entering init_prad
+           3           7
+
+     Check: negative/imaginary core charge    -0.000166    0.000000
+     core-only xc energy         =      0.00000000 Ry
+
+     Check: atomic type           1
+
+            negative/imaginary core charge    -0.000166    0.000000
+
+     Check: atomic type           1
+
+            negative/imaginary core charge    -0.000166    0.000000
+
+     Initial potential from superposition of free atoms
+
+     starting charge    6.00000, renormalised to    6.00000
+
+     negative rho (up, down):  0.141E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.81401   5.81401
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   5.81401273601255        5.81401273601255     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.117E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.81401   5.81401
+dipole=   0.00000   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   5.81401273605293        5.81401273605293     
+EDIP  0.00000000  0.00000000  0.00000000  0.00000000
+     Starting wfc are    8 atomic wfcs
+
+     total cpu time spent up to now is     10.68 secs
+
+     per-process dynamical memory:     9.6 Mb
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+     from cdiaghg : error #        22
+     info =/= 0
+ %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+     stopping ...

@@ -1,0 +1,114 @@
+
+     Program LD1       v.3.2cvs starts ...
+     Today is 17Sep2007 at 14:14:27 
+Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/pseudo/PAW1.PAW
+ reading pseudopotential for:  O
+ dimensions (mesh, nwfc, lmax):  1095    4    1
+     --------------------------- All-electron run ----------------------------
+
+     O                                                                          
+
+     atomic number is  8.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569228 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2588
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
+     2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
+
+     eps = 3.6E-15  iter = 20
+ 
+     Etot =    -149.890991 Ry,     -74.945496 Ha,   -2039.370700 eV
+
+     Ekin =     149.468706 Ry,      74.734353 Ha,    2033.625223 eV
+     Encl =    -355.645089 Ry,    -177.822544 Ha,   -4838.797640 eV
+     Eh   =      72.821012 Ry,      36.410506 Ha,     990.780279 eV
+     Exc  =     -16.535620 Ry,      -8.267810 Ha,    -224.978562 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1997  <r2> =    0.0539  r(max) =   0.1298
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
+     s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     O                                                                          
+
+     atomic number is  8.00   valence charge is  6.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     2S   1( 2.00)       -1.75770       -1.75768       -0.00002
+     2 1     2P   1( 4.00)       -0.66426       -0.66424       -0.00002
+
+     eps = 1.0E-15  iter =  4
+ 
+     Etot =    -149.890991 Ry,     -74.945496 Ha,   -2039.370700 eV
+     Etotps =   -31.920831 Ry,     -15.960416 Ha,    -434.305004 eV
+
+     ---------------------- End of pseudopotential test ----------------------
+
+     --------------------------- All-electron run ----------------------------
+
+     O                                                                          
+
+     atomic number is  8.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569228 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -40.8660       -20.4330      -556.0100
+     2 0     2S 1( 0.00)        -4.2480        -2.1240       -57.7963
+     2 1     2P 1( 4.00)        -3.1344        -1.5672       -42.6459
+
+     eps = 3.9E-15  iter = 16
+ 
+     Etot =    -143.994638 Ry,     -71.997319 Ha,   -1959.146737 eV
+
+     Ekin =     143.694116 Ry,      71.847058 Ha,    1955.057929 eV
+     Encl =    -327.078419 Ry,    -163.539210 Ha,   -4450.128327 eV
+     Eh   =      53.771193 Ry,      26.885596 Ha,     731.594300 eV
+     Exc  =     -14.381528 Ry,      -7.190764 Ha,    -195.670639 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1994  <r2> =    0.0537  r(max) =   0.1298
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.0368  <r2> =    1.2786  r(max) =   0.8357
+     s(2P/2P) =  1.000000  <r> =   1.0147  <r2> =    1.2864  r(max) =   0.7468
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     O                                                                          
+
+     atomic number is  8.00   valence charge is  6.00
+     dft = SLA  PW   PBX  PBC   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     2S   1( 0.00)       -4.24795       -4.25562        0.00767
+     2 1     2P   1( 4.00)       -3.13442       -3.14070        0.00628
+
+     eps = 3.3E-17  iter =  9
+ 
+     Etot =    -143.994638 Ry,     -71.997319 Ha,   -1959.146737 eV
+     Etotps =   -26.019947 Ry,     -13.009973 Ha,    -354.019391 eV
+     dEtot_ae =       5.896353 Ry
+     dEtot_ps =       5.900884 Ry,   Delta E=      -0.004531 Ry
+
+     ---------------------- End of pseudopotential test ----------------------
+

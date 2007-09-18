@@ -1,0 +1,150 @@
+
+     Program LD1       v.3.2cvs starts ...
+     Today is 17Sep2007 at 14:13:11 
+     --------------------------- All-electron run ----------------------------
+
+     O                                                                          
+
+     atomic number is  8.00
+     dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569228 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
+     2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
+
+     eps = 8.9E-15  iter = 14
+ 
+     Etot =    -149.890996 Ry,     -74.945498 Ha,   -2039.370774 eV
+
+     Ekin =     149.468653 Ry,      74.734327 Ha,    2033.624499 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.796966 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780235 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978542 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1997  <r2> =    0.0539  r(max) =   0.1298
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
+     s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     --------------------- Generating US pseudopotential ---------------------
+
+
+      Generating local pot.: lloc=2, matching radius rcloc =   1.4000
+
+      Computing core charge for nlcc: 
+
+       r > 0.50 : true rho core
+       r < 0.50 : rho core = a sin(br)/r    a=   2.34  b=   5.42
+
+      Integrated core pseudo-charge :   0.27
+
+
+      Wfc   2S  rcut= 1.413  Estimated cut-off energy=       64.20 Ry
+      This function has    0 nodes for 0 < r <    1.413
+      Wfc-us  2S rcutus= 1.683  Estimated cut-off energy=    17.92 Ry
+
+
+      Wfc   2S  rcut= 1.413  Estimated cut-off energy=       79.41 Ry
+      This function has    0 nodes for 0 < r <    1.413
+      Wfc-us  2S rcutus= 1.683  Estimated cut-off energy=    33.87 Ry
+
+
+      Wfc   2P  rcut= 1.413  Estimated cut-off energy=       88.65 Ry
+      This function has    0 nodes for 0 < r <    1.413
+      Wfc-us  2P rcutus= 1.683  Estimated cut-off energy=    28.04 Ry
+
+
+      Wfc   2P  rcut= 1.413  Estimated cut-off energy=       92.81 Ry
+      This function has    0 nodes for 0 < r <    1.413
+      Wfc-us  2P rcutus= 1.683  Estimated cut-off energy=    35.27 Ry
+
+      The bmat matrix
+     1.70454    -7.81041     0.00000     0.00000
+    -7.81154    30.67194     0.00000     0.00000
+     0.00000     0.00000    -0.60782    -0.61066
+     0.00000     0.00000    -0.61063    -0.59259
+
+      The qq matrix
+    -0.06182     0.57930     0.00000     0.00000
+     0.57930    -3.38122     0.00000     0.00000
+     0.00000     0.00000     0.26804     0.31907
+     0.00000     0.00000     0.31907     0.38051
+
+      The ddd matrix
+     1.07877    -2.51740     0.00000     0.00000
+    -2.51740    -0.40985     0.00000     0.00000
+     0.00000     0.00000     1.48278     1.91669
+     0.00000     0.00000     1.91669     2.46672
+
+     ------------------- End of pseudopotential generation -------------------
+
+     --------------------------- All-electron run ----------------------------
+
+     O                                                                          
+
+     atomic number is  8.00
+     dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+     1 Ry =  13.60569228 eV
+
+     n l     nl                  e(Ry)          e(Ha)          e(eV)
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
+     2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
+     2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
+
+     eps = 4.3E-15  iter = 14
+ 
+     Etot =    -149.890996 Ry,     -74.945498 Ha,   -2039.370774 eV
+
+     Ekin =     149.468653 Ry,      74.734327 Ha,    2033.624500 eV
+     Encl =    -355.645039 Ry,    -177.822520 Ha,   -4838.796966 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780235 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978542 eV
+
+
+     normalization and overlap integrals
+
+     s(1S/1S) =  1.000000  <r> =   0.1997  <r2> =    0.0539  r(max) =   0.1298
+     s(1S/2S) =  0.000000
+     s(2S/2S) =  1.000000  <r> =   1.1407  <r2> =    1.5839  r(max) =   0.8677
+     s(2P/2P) =  1.000000  <r> =   1.2656  <r2> =    2.1371  r(max) =   0.8151
+
+     ------------------------ End of All-electron run ------------------------
+
+
+     ---------------------- Testing the pseudopotential ----------------------
+
+     O                                                                          
+
+     atomic number is  8.00   valence charge is  6.00
+     dft =PBE   lsd =0 sic =0 latt =0  beta=0.50 tr2=1.0E-14
+     mesh =1095 r(mesh) =  99.04343 xmin = -7.00 dx = 0.01250
+
+     n l     nl             e AE (Ry)        e PS (Ry)    De AE-PS (Ry) 
+     1 0     2S   1( 2.00)       -1.75770       -1.75769       -0.00001
+     2 1     2P   1( 4.00)       -0.66426       -0.66425       -0.00001
+
+     eps = 1.1E-15  iter =  4
+ 
+     Etot =    -149.890996 Ry,     -74.945498 Ha,   -2039.370774 eV
+     Etotps =   -31.820171 Ry,     -15.910086 Ha,    -432.935460 eV
+
+     Ekin =      11.635230 Ry,       5.817615 Ha,     158.305364 eV
+     Encl =     -71.612612 Ry,     -35.806306 Ha,    -974.339156 eV
+     Ehrt =      27.108126 Ry,      13.554063 Ha,     368.824820 eV
+     Ecxc =      -7.039639 Ry,      -3.519820 Ha,     -95.779163 eV
+     (Ecc =      -0.373154 Ry,      -0.186577 Ha,      -5.077024 eV)
+     Evxt =       0.000000 Ry,       0.000000 Ha,       0.000000 eV
+     Epseu=       8.088723 Ry,       4.044361 Ha,     110.052675 eV
+
+     ---------------------- End of pseudopotential test ----------------------
+

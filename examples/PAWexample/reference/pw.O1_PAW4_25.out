@@ -1,0 +1,1659 @@
+
+     Program PWSCF     v.3.2cvs starts ...
+     Today is 17Sep2007 at 10:56:20 
+
+     Ultrasoft (Vanderbilt) Pseudopotentials
+
+     Current dimensions of program pwscf are:
+
+     ntypx = 10   npk = 40000  lmax =  3
+     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
+ reading pseudopotential for:  O
+ dimensions (mesh, nwfc, lmax):  1095    4    1
+ PAW CUTOFF parameters
+         779   1.90705174100000     
+         793   2.27176817100000     
+         826   3.43170924200000     
+
+
+     bravais-lattice index     =            2
+     lattice parameter (a_0)   =      10.0000  a.u.
+     unit-cell volume          =     250.0000 (a.u.)^3
+     number of atoms/cell      =            1
+     number of atomic types    =            1
+     number of electrons       =         6.00
+     number of Kohn-Sham states=            7
+     kinetic-energy cutoff     =      25.0000  Ry
+     charge density cutoff     =     200.0000  Ry
+     convergence threshold     =      1.0E-06
+     mixing beta               =       0.7000
+     number of iterations used =            8  plain     mixing
+     Exchange-correlation      =  SLA  PW   PBX  PBC (1434)
+
+     celldm(1)=  10.000000  celldm(2)=   0.000000  celldm(3)=   0.000000
+     celldm(4)=   0.000000  celldm(5)=   0.000000  celldm(6)=   0.000000
+
+     crystal axes: (cart. coord. in units of a_0)
+               a(1) = ( -0.500000  0.000000  0.500000 )  
+               a(2) = (  0.000000  0.500000  0.500000 )  
+               a(3) = ( -0.500000  0.500000  0.000000 )  
+
+     reciprocal axes: (cart. coord. in units 2 pi/a_0)
+               b(1) = ( -1.000000 -1.000000  1.000000 )  
+               b(2) = (  1.000000  1.000000  1.000000 )  
+               b(3) = ( -1.000000  1.000000 -1.000000 )  
+
+
+     PseudoPot. # 1 for  O read from file PAW4.PAW
+     Pseudo is Ultrasoft + core correction, Zval =  6.0
+     Using radial grid of 1095 points,  4 beta functions with: 
+                l(1) =   0
+                l(2) =   0
+                l(3) =   1
+                l(4) =   1
+     Q(r) pseudized with 0 coefficients 
+
+
+     atomic species   valence    mass     pseudopotential
+        O              6.00     1.00000      O( 1.00)
+
+     48 Sym.Ops. (with inversion)
+
+
+   Cartesian axes
+
+     site n.     atom                  positions (a_0 units)
+         1           O   tau(  1) = (   0.0000000   0.0000000   0.0000000  )
+
+     number of k points=    1  gaussian broad. (Ry)=  0.0100     ngauss =   0
+                       cart. coord. in units 2pi/a_0
+        k(    1) = (   0.0000000   0.0000000   0.0000000), wk =   2.0000000
+
+     G cutoff =  506.6059  (  11935 G-vectors)     FFT grid: ( 32, 32, 32)
+     G cutoff =  253.3030  (   4279 G-vectors)  smooth grid: ( 24, 24, 24)
+
+     Largest allocated arrays     est. size (Mb)     dimensions
+        Kohn-Sham Wavefunctions         0.06 Mb     (    531,   7)
+        NL pseudopotentials             0.06 Mb     (    531,   8)
+        Each V/rho on FFT grid          0.50 Mb     (  32768)
+        Each G-vector array             0.09 Mb     (  11935)
+        G-vector shells                 0.00 Mb     (    170)
+     Largest temporary arrays     est. size (Mb)     dimensions
+        Auxiliary wavefunctions         0.23 Mb     (    531,  28)
+        Each subspace H/S matrix        0.01 Mb     (     28,  28)
+        Each <psi_i|beta_j> matrix      0.00 Mb     (      8,   7)
+        Arrays for rho mixing           4.00 Mb     (  32768,   8)
+ entering init_prad
+           3           7
+ entering init_prad
+           3           7
+
+     Check: negative/imaginary core charge    -0.000166    0.000000
+     core-only xc energy         =      0.00000000 Ry
+
+     Check: atomic type           1
+
+            negative/imaginary core charge    -0.000166    0.000000
+
+     Check: atomic type           1
+
+            negative/imaginary core charge    -0.000166    0.000000
+
+     Initial potential from superposition of free atoms
+
+     starting charge    6.00000, renormalised to    6.00000
+
+     negative rho (up, down):  0.141E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.81401   5.81401
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   5.81401273601255        5.81401273601255     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.100E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.81401   5.81401
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   5.81401273606230        5.81401273606229     
+EDIP  0.00000000 -0.00000002  0.00000002  0.00000000
+     Starting wfc are    8 atomic wfcs
+
+     total cpu time spent up to now is     10.79 secs
+
+     per-process dynamical memory:     9.6 Mb
+
+     Self-consistent Calculation
+
+     iteration #  1     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  3.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.586E-06 0.000E+00
+ == rho max diff:    1.14153670057241     
+
+     negative rho (up, down):  0.147E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.91738   5.91738
+dipole=  -0.00008   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =   0.00017   0.00031
+quad  =  -0.00028   0.00052
+quad  =   0.00000   0.00000
+quad  =   0.00022   0.00019
+quad  =   0.00000   0.00000
+ charge=   5.91738369979714        5.91738369979714     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.105E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.91738   5.91738
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =   0.00019   0.00031
+quad  =  -0.00030   0.00052
+quad  =   0.00000   0.00000
+quad  =   0.00022   0.00019
+quad  =   0.00000   0.00000
+ charge=   5.91738369984802        5.91738369984802     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.5077251912  27.5077255196
+==PS 1     :  27.9015253373  27.9015255035
+==AE-PS 1  :  -0.3938001461  -0.3937999839
+==AE tot   :  27.5077251912  27.5077255196
+==PS tot   :  27.9015253373  27.9015255035
+==AE-PS tot:  -0.3938001461  -0.3937999839
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1763041848  -7.1763870511
+==PS 1     :  -7.2904085412  -7.2905014497
+==AE-PS 1  :   0.1141043563   0.1141143986
+==AE tot   :  -7.1763041848  -7.1763870511
+==PS tot   :  -7.2904085412  -7.2905014497
+==AE-PS tot:   0.1141043563   0.1141143986
+==
+==TOTAL:  -0.2796957898  -0.2796855853
+
+     total cpu time spent up to now is     14.99 secs
+US energy before PAW additions   -32.25998387
+    atom #:   1 grid correction:      0.39778905
+    atom #:   1 rad correction:      -0.27968559
+
+     total energy              =   -31.86219482 Ry
+     Harris-Foulkes estimate   =   -32.26584325 Ry
+     estimated scf accuracy    < 19298.90630962 Ry
+
+     iteration #  2     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.623E-06 0.000E+00
+ == rho max diff:    1.11451435631010     
+
+     negative rho (up, down):  0.143E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.94181   5.94181
+dipole=  -0.00008   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =   0.00024   0.00040
+quad  =  -0.00038   0.00068
+quad  =   0.00000   0.00000
+quad  =   0.00029   0.00025
+quad  =   0.00000   0.00000
+ charge=   5.94181155290101        5.94181155290101     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.103E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.94181   5.94181
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =   0.00026   0.00040
+quad  =  -0.00039   0.00068
+quad  =   0.00000   0.00000
+quad  =   0.00029   0.00025
+quad  =   0.00000   0.00000
+ charge=   5.94181155295305        5.94181155295304     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.5994097368  27.5994100730
+==PS 1     :  27.9920218700  27.9920220434
+==AE-PS 1  :  -0.3926121332  -0.3926119705
+==AE tot   :  27.5994097368  27.5994100730
+==PS tot   :  27.9920218700  27.9920220434
+==AE-PS tot:  -0.3926121332  -0.3926119705
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1798459689  -7.1798763281
+==PS 1     :  -7.2938919937  -7.2939322042
+==AE-PS 1  :   0.1140460248   0.1140558761
+==AE tot   :  -7.1798459689  -7.1798763281
+==PS tot   :  -7.2938919937  -7.2939322042
+==AE-PS tot:   0.1140460248   0.1140558761
+==
+==TOTAL:  -0.2785661083  -0.2785560944
+
+     total cpu time spent up to now is     18.94 secs
+US energy before PAW additions   -32.27692255
+    atom #:   1 grid correction:      0.41216091
+    atom #:   1 rad correction:      -0.27855609
+
+     total energy              =   -31.86476164 Ry
+     Harris-Foulkes estimate   =   -32.27710536 Ry
+     estimated scf accuracy    < 64570.15846946 Ry
+
+     iteration #  3     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.571E-06 0.000E+00
+ == rho max diff:    1.11616745511128     
+
+     negative rho (up, down):  0.147E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.92445   5.92445
+dipole=  -0.00008   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00033  -0.00045
+quad  =   0.00046  -0.00077
+quad  =   0.00000   0.00000
+quad  =  -0.00032  -0.00028
+quad  =   0.00000   0.00000
+ charge=   5.92445319392784        5.92445319392784     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.106E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.92445   5.92445
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00031  -0.00045
+quad  =   0.00045  -0.00077
+quad  =   0.00000   0.00000
+quad  =  -0.00032  -0.00028
+quad  =   0.00000   0.00000
+ charge=   5.92445319397852        5.92445319397852     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.5582300981  27.5582304247
+==PS 1     :  27.9520718815  27.9520720461
+==AE-PS 1  :  -0.3938417834  -0.3938416215
+==AE tot   :  27.5582300981  27.5582304247
+==PS tot   :  27.9520718815  27.9520720461
+==AE-PS tot:  -0.3938417834  -0.3938416215
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1829243419  -7.1829987258
+==PS 1     :  -7.2969931775  -7.2970774577
+==AE-PS 1  :   0.1140688356   0.1140787319
+==AE tot   :  -7.1829243419  -7.1829987258
+==PS tot   :  -7.2969931775  -7.2970774577
+==AE-PS tot:   0.1140688356   0.1140787319
+==
+==TOTAL:  -0.2797729479  -0.2797628895
+
+     total cpu time spent up to now is     22.92 secs
+US energy before PAW additions   -32.27606149
+    atom #:   1 grid correction:      0.41102563
+    atom #:   1 rad correction:      -0.27976289
+
+     total energy              =   -31.86503587 Ry
+     Harris-Foulkes estimate   =   -32.27584227 Ry
+     estimated scf accuracy    < 40099.36144994 Ry
+
+     iteration #  4     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.532E-06 0.000E+00
+ == rho max diff:    1.11271616039516     
+
+     negative rho (up, down):  0.149E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.91557   5.91557
+dipole=  -0.00008   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00067  -0.00096
+quad  =   0.00094  -0.00159
+quad  =   0.00000   0.00000
+quad  =  -0.00068  -0.00059
+quad  =   0.00000   0.00000
+ charge=   5.91556734085128        5.91556734085128     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.107E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.91557   5.91557
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00065  -0.00096
+quad  =   0.00092  -0.00159
+quad  =   0.00000   0.00000
+quad  =  -0.00068  -0.00059
+quad  =   0.00000   0.00000
+ charge=   5.91556734090110        5.91556734090110     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.5278904569  27.5278907790
+==PS 1     :  27.9218458173  27.9218459780
+==AE-PS 1  :  -0.3939553604  -0.3939551990
+==AE tot   :  27.5278904569  27.5278907790
+==PS tot   :  27.9218458173  27.9218459780
+==AE-PS tot:  -0.3939553604  -0.3939551990
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1822678746  -7.1823618025
+==PS 1     :  -7.2962614170  -7.2963646379
+==AE-PS 1  :   0.1139935423   0.1140028355
+==AE tot   :  -7.1822678746  -7.1823618025
+==PS tot   :  -7.2962614170  -7.2963646379
+==AE-PS tot:   0.1139935423   0.1140028355
+==
+==TOTAL:  -0.2799618181  -0.2799523636
+
+     total cpu time spent up to now is     26.93 secs
+US energy before PAW additions   -32.27735023
+    atom #:   1 grid correction:      0.41217870
+    atom #:   1 rad correction:      -0.27995236
+
+     total energy              =   -31.86517153 Ry
+     Harris-Foulkes estimate   =   -32.27727315 Ry
+     estimated scf accuracy    < 69445.58378944 Ry
+
+     iteration #  5     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.536E-06 0.000E+00
+ == rho max diff:    1.11158602523756     
+
+     negative rho (up, down):  0.149E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.92366   5.92366
+dipole=  -0.00008   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00106  -0.00154
+quad  =   0.00152  -0.00260
+quad  =   0.00000   0.00000
+quad  =  -0.00110  -0.00095
+quad  =   0.00000   0.00000
+ charge=   5.92366049016618        5.92366049016618     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.107E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.92366   5.92366
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00104  -0.00154
+quad  =   0.00151  -0.00260
+quad  =   0.00000   0.00000
+quad  =  -0.00110  -0.00095
+quad  =   0.00000   0.00000
+ charge=   5.92366049021595        5.92366049021595     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.5669434024  27.5669437247
+==PS 1     :  27.9604219566  27.9604221177
+==AE-PS 1  :  -0.3934785543  -0.3934783931
+==AE tot   :  27.5669434024  27.5669437247
+==PS tot   :  27.9604219566  27.9604221177
+==AE-PS tot:  -0.3934785543  -0.3934783931
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1854136163  -7.1854920562
+==PS 1     :  -7.2993220056  -7.2994099660
+==AE-PS 1  :   0.1139083893   0.1139179097
+==AE tot   :  -7.1854136163  -7.1854920562
+==PS tot   :  -7.2993220056  -7.2994099660
+==AE-PS tot:   0.1139083893   0.1139179097
+==
+==TOTAL:  -0.2795701649  -0.2795604834
+
+     total cpu time spent up to now is     30.92 secs
+US energy before PAW additions   -32.27741594
+    atom #:   1 grid correction:      0.41228200
+    atom #:   1 rad correction:      -0.27956048
+
+     total energy              =   -31.86513394 Ry
+     Harris-Foulkes estimate   =   -32.27746688 Ry
+     estimated scf accuracy    < 83556.37585586 Ry
+
+     iteration #  6     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.605E-06 0.000E+00
+ == rho max diff:    1.11183551158786     
+
+     negative rho (up, down):  0.145E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.95708   5.95708
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00141  -0.00206
+quad  =   0.00202  -0.00347
+quad  =   0.00000   0.00000
+quad  =  -0.00147  -0.00127
+quad  =   0.00000   0.00000
+ charge=   5.95708222865545        5.95708222865545     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.105E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.95708   5.95708
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00139  -0.00206
+quad  =   0.00201  -0.00347
+quad  =   0.00000   0.00000
+quad  =  -0.00147  -0.00127
+quad  =   0.00000   0.00000
+ charge=   5.95708222870633        5.95708222870633     
+EDIP  0.00000000 -0.00000002  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.7089883372  27.7089886666
+==PS 1     :  28.1009987544  28.1009989224
+==AE-PS 1  :  -0.3920104172  -0.3920102558
+==AE tot   :  27.7089883372  27.7089886666
+==PS tot   :  28.1009987544  28.1009989224
+==AE-PS tot:  -0.3920104172  -0.3920102558
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1940717907  -7.1940837611
+==PS 1     :  -7.3078594017  -7.3078807862
+==AE-PS 1  :   0.1137876110   0.1137970252
+==AE tot   :  -7.1940717907  -7.1940837611
+==PS tot   :  -7.3078594017  -7.3078807862
+==AE-PS tot:   0.1137876110   0.1137970252
+==
+==TOTAL:  -0.2782228063  -0.2782132306
+
+     total cpu time spent up to now is     34.94 secs
+US energy before PAW additions   -32.27672672
+    atom #:   1 grid correction:      0.41181858
+    atom #:   1 rad correction:      -0.27821323
+
+     total energy              =   -31.86490814 Ry
+     Harris-Foulkes estimate   =   -32.27695187 Ry
+     estimated scf accuracy    < 72450.82848791 Ry
+
+     iteration #  7     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.669E-06 0.000E+00
+ == rho max diff:    1.11421927028491     
+
+     negative rho (up, down):  0.142E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.96249   5.96249
+dipole=  -0.00008   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00048  -0.00067
+quad  =   0.00052  -0.00088
+quad  =   0.00000   0.00000
+quad  =  -0.00044  -0.00038
+quad  =   0.00000   0.00000
+ charge=   5.96249320116512        5.96249320116512     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.103E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.96249   5.96249
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00046  -0.00067
+quad  =   0.00051  -0.00088
+quad  =   0.00000   0.00000
+quad  =  -0.00044  -0.00038
+quad  =   0.00000   0.00000
+ charge=   5.96249320121708        5.96249320121708     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.7185676788  27.7185680142
+==PS 1     :  28.1106972079  28.1106973811
+==AE-PS 1  :  -0.3921295291  -0.3921293668
+==AE tot   :  27.7185676788  27.7185680142
+==PS tot   :  28.1106972079  28.1106973811
+==AE-PS tot:  -0.3921295291  -0.3921293668
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1924783278  -7.1924766569
+==PS 1     :  -7.3064078558  -7.3064151371
+==AE-PS 1  :   0.1139295280   0.1139384802
+==AE tot   :  -7.1924783278  -7.1924766569
+==PS tot   :  -7.3064078558  -7.3064151371
+==AE-PS tot:   0.1139295280   0.1139384802
+==
+==TOTAL:  -0.2782000011  -0.2781908867
+
+     total cpu time spent up to now is     38.99 secs
+US energy before PAW additions   -32.27527026
+    atom #:   1 grid correction:      0.41040556
+    atom #:   1 rad correction:      -0.27819089
+
+     total energy              =   -31.86486470 Ry
+     Harris-Foulkes estimate   =   -32.27531966 Ry
+     estimated scf accuracy    < 34006.29818747 Ry
+
+     iteration #  8     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.688E-06 0.000E+00
+ == rho max diff:    1.11541458819430     
+
+     negative rho (up, down):  0.141E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.97521   5.97521
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00075  -0.00108
+quad  =   0.00109  -0.00187
+quad  =   0.00000   0.00000
+quad  =  -0.00078  -0.00068
+quad  =   0.00000   0.00000
+ charge=   5.97520681595685        5.97520681595685     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.103E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   5.97521   5.97521
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00074  -0.00108
+quad  =   0.00108  -0.00187
+quad  =   0.00000   0.00000
+quad  =  -0.00078  -0.00068
+quad  =   0.00000   0.00000
+ charge=   5.97520681600918        5.97520681600918     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.7751931579  27.7751934954
+==PS 1     :  28.1667904248  28.1667906001
+==AE-PS 1  :  -0.3915972670  -0.3915971047
+==AE tot   :  27.7751931579  27.7751934954
+==PS tot   :  28.1667904248  28.1667906001
+==AE-PS tot:  -0.3915972670  -0.3915971047
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.1963728779  -7.1963473425
+==PS 1     :  -7.3102527324  -7.3102351843
+==AE-PS 1  :   0.1138798545   0.1138878418
+==AE tot   :  -7.1963728779  -7.1963473425
+==PS tot   :  -7.3102527324  -7.3102351843
+==AE-PS tot:   0.1138798545   0.1138878418
+==
+==TOTAL:  -0.2777174125  -0.2777092628
+
+     total cpu time spent up to now is     42.85 secs
+US energy before PAW additions   -32.27534109
+    atom #:   1 grid correction:      0.41051391
+    atom #:   1 rad correction:      -0.27770926
+
+     total energy              =   -31.86482718 Ry
+     Harris-Foulkes estimate   =   -32.27538692 Ry
+     estimated scf accuracy    < 25812.33405943 Ry
+
+     iteration #  9     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.146E-05 0.000E+00
+ == rho max diff:    1.11616361945347     
+
+     negative rho (up, down):  0.133E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.05319   6.05319
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014  -0.00001
+quad  =  -0.00206  -0.00304
+quad  =   0.00310  -0.00534
+quad  =   0.00000   0.00000
+quad  =  -0.00219  -0.00190
+quad  =   0.00000   0.00000
+ charge=   6.05319190011133        6.05319190011133     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.997E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.05319   6.05319
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014  -0.00001
+quad  =  -0.00204  -0.00304
+quad  =   0.00309  -0.00534
+quad  =   0.00000   0.00000
+quad  =  -0.00219  -0.00190
+quad  =   0.00000   0.00000
+ charge=   6.05319190016592        6.05319190016592     
+EDIP  0.00000000 -0.00000002  0.00000002  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  28.1176958900  28.1176962413
+==PS 1     :  28.5057842987  28.5057844873
+==AE-PS 1  :  -0.3880884087  -0.3880882460
+==AE tot   :  28.1176958900  28.1176962413
+==PS tot   :  28.5057842987  28.5057844873
+==AE-PS tot:  -0.3880884087  -0.3880882460
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2190698065  -7.2188920528
+==PS 1     :  -7.3326185298  -7.3324420746
+==AE-PS 1  :   0.1135487233   0.1135500217
+==AE tot   :  -7.2190698065  -7.2188920528
+==PS tot   :  -7.3326185298  -7.3324420746
+==AE-PS tot:   0.1135487233   0.1135500217
+==
+==TOTAL:  -0.2745396854  -0.2745382243
+
+     total cpu time spent up to now is     46.84 secs
+US energy before PAW additions   -32.27464881
+    atom #:   1 grid correction:      0.41000856
+    atom #:   1 rad correction:      -0.27453822
+
+     total energy              =   -31.86464025 Ry
+     Harris-Foulkes estimate   =   -32.27483957 Ry
+     estimated scf accuracy    < 16818.68737885 Ry
+
+     iteration # 10     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.119E-05 0.000E+00
+ == rho max diff:    1.12146248802516     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02549   6.02549
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00031  -0.00043
+quad  =   0.00036  -0.00059
+quad  =   0.00000   0.00000
+quad  =  -0.00029  -0.00025
+quad  =   0.00000   0.00000
+ charge=   6.02549061150348        6.02549061150348     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.994E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02549   6.02549
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00030  -0.00043
+quad  =   0.00034  -0.00059
+quad  =   0.00000   0.00000
+quad  =  -0.00029  -0.00025
+quad  =   0.00000   0.00000
+ charge=   6.02549061155839        6.02549061155839     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9781386919  27.9781390460
+==PS 1     :  28.3679147195  28.3679149100
+==AE-PS 1  :  -0.3897760276  -0.3897758640
+==AE tot   :  27.9781386919  27.9781390460
+==PS tot   :  28.3679147195  28.3679149100
+==AE-PS tot:  -0.3897760276  -0.3897758640
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2070577764  -7.2069276877
+==PS 1     :  -7.3209267404  -7.3207995300
+==AE-PS 1  :   0.1138689640   0.1138718423
+==AE tot   :  -7.2070577764  -7.2069276877
+==PS tot   :  -7.3209267404  -7.3207995300
+==AE-PS tot:   0.1138689640   0.1138718423
+==
+==TOTAL:  -0.2759070636  -0.2759040217
+
+     total cpu time spent up to now is     50.92 secs
+US energy before PAW additions   -32.27134106
+    atom #:   1 grid correction:      0.40662220
+    atom #:   1 rad correction:      -0.27590402
+
+     total energy              =   -31.86471886 Ry
+     Harris-Foulkes estimate   =   -32.27136435 Ry
+     estimated scf accuracy    < 18343.01618062 Ry
+
+     iteration # 11     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.120E-05 0.000E+00
+ == rho max diff:    1.12044665282745     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02401   6.02401
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00005  -0.00003
+quad  =   0.00004  -0.00004
+quad  =   0.00000   0.00000
+quad  =  -0.00002  -0.00002
+quad  =   0.00000   0.00000
+ charge=   6.02401070159320        6.02401070159320     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.993E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02401   6.02401
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003  -0.00003
+quad  =   0.00003  -0.00004
+quad  =   0.00000   0.00000
+quad  =  -0.00002  -0.00002
+quad  =   0.00000   0.00000
+ charge=   6.02401070164826        6.02401070164825     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9716006162  27.9716009709
+==PS 1     :  28.3616340575  28.3616342486
+==AE-PS 1  :  -0.3900334414  -0.3900332777
+==AE tot   :  27.9716006162  27.9716009709
+==PS tot   :  28.3616340575  28.3616342486
+==AE-PS tot:  -0.3900334414  -0.3900332777
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2066664716  -7.2065391432
+==PS 1     :  -7.3205912055  -7.3204668534
+==AE-PS 1  :   0.1139247338   0.1139277102
+==AE tot   :  -7.2066664716  -7.2065391432
+==PS tot   :  -7.3205912055  -7.3204668534
+==AE-PS tot:   0.1139247338   0.1139277102
+==
+==TOTAL:  -0.2761087075  -0.2761055675
+
+     total cpu time spent up to now is     54.98 secs
+US energy before PAW additions   -32.27302105
+    atom #:   1 grid correction:      0.40829612
+    atom #:   1 rad correction:      -0.27610557
+
+     total energy              =   -31.86472493 Ry
+     Harris-Foulkes estimate   =   -32.27302146 Ry
+     estimated scf accuracy    <   392.10303206 Ry
+
+     iteration # 12     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.120E-05 0.000E+00
+ == rho max diff:    1.12030941863032     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02332   6.02332
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00005  -0.00002
+quad  =   0.00003  -0.00003
+quad  =   0.00000   0.00000
+quad  =  -0.00002  -0.00001
+quad  =   0.00000   0.00000
+ charge=   6.02331747607568        6.02331747607568     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02332   6.02332
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003  -0.00002
+quad  =   0.00002  -0.00003
+quad  =   0.00000   0.00000
+quad  =  -0.00002  -0.00001
+quad  =   0.00000   0.00000
+ charge=   6.02331747613078        6.02331747613078     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9673323415  27.9673326965
+==PS 1     :  28.3574138067  28.3574139979
+==AE-PS 1  :  -0.3900814652  -0.3900813014
+==AE tot   :  27.9673323415  27.9673326965
+==PS tot   :  28.3574138067  28.3574139979
+==AE-PS tot:  -0.3900814652  -0.3900813014
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2061910591  -7.2060646205
+==PS 1     :  -7.3201292091  -7.3200057835
+==AE-PS 1  :   0.1139381500   0.1139411629
+==AE tot   :  -7.2061910591  -7.2060646205
+==PS tot   :  -7.3201292091  -7.3200057835
+==AE-PS tot:   0.1139381500   0.1139411629
+==
+==TOTAL:  -0.2761433152  -0.2761401385
+
+     total cpu time spent up to now is     58.98 secs
+US energy before PAW additions   -32.27327877
+    atom #:   1 grid correction:      0.40855365
+    atom #:   1 rad correction:      -0.27614014
+
+     total energy              =   -31.86472512 Ry
+     Harris-Foulkes estimate   =   -32.27327877 Ry
+     estimated scf accuracy    <    45.73036371 Ry
+
+     iteration # 13     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.120E-05 0.000E+00
+ == rho max diff:    1.12031454504860     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02312   6.02312
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02311934578321        6.02311934578321     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02312   6.02312
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02311934583833        6.02311934583832     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9663025104  27.9663028654
+==PS 1     :  28.3564063616  28.3564065529
+==AE-PS 1  :  -0.3901038512  -0.3901036875
+==AE tot   :  27.9663025104  27.9663028654
+==PS tot   :  28.3564063616  28.3564065529
+==AE-PS tot:  -0.3901038512  -0.3901036875
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2061004056  -7.2059742812
+==PS 1     :  -7.3200436837  -7.3199205849
+==AE-PS 1  :   0.1139432782   0.1139463037
+==AE tot   :  -7.2061004056  -7.2059742812
+==PS tot   :  -7.3200436837  -7.3199205849
+==AE-PS tot:   0.1139432782   0.1139463037
+==
+==TOTAL:  -0.2761605731  -0.2761573838
+
+     total cpu time spent up to now is     62.91 secs
+US energy before PAW additions   -32.27332771
+    atom #:   1 grid correction:      0.40860258
+    atom #:   1 rad correction:      -0.27615738
+
+     total energy              =   -31.86472513 Ry
+     Harris-Foulkes estimate   =   -32.27332771 Ry
+     estimated scf accuracy    <     3.96592850 Ry
+
+     iteration # 14     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.00E-02,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+ == rho max diff:    1.12030596817376     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02306491180193        6.02306491180193     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02306491185705        6.02306491185704     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9660812156  27.9660815707
+==PS 1     :  28.3561936112  28.3561938025
+==AE-PS 1  :  -0.3901123956  -0.3901122318
+==AE tot   :  27.9660812156  27.9660815707
+==PS tot   :  28.3561936112  28.3561938025
+==AE-PS tot:  -0.3901123956  -0.3901122318
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2060900613  -7.2059640467
+==PS 1     :  -7.3200350547  -7.3199120700
+==AE-PS 1  :   0.1139449934   0.1139480233
+==AE tot   :  -7.2060900613  -7.2059640467
+==PS tot   :  -7.3200350547  -7.3199120700
+==AE-PS tot:   0.1139449934   0.1139480233
+==
+==TOTAL:  -0.2761674022  -0.2761642085
+
+     total cpu time spent up to now is     66.87 secs
+US energy before PAW additions   -32.27335018
+    atom #:   1 grid correction:      0.40862506
+    atom #:   1 rad correction:      -0.27616421
+
+     total energy              =   -31.86472513 Ry
+     Harris-Foulkes estimate   =   -32.27335018 Ry
+     estimated scf accuracy    <     0.33889021 Ry
+
+     iteration # 15     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  5.65E-03,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+ == rho max diff:    1.12029988070568     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02306086753261        6.02306086753261     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02306086758773        6.02306086758773     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9660602367  27.9660605917
+==PS 1     :  28.3561744586  28.3561746499
+==AE-PS 1  :  -0.3901142219  -0.3901140581
+==AE tot   :  27.9660602367  27.9660605917
+==PS tot   :  28.3561744586  28.3561746499
+==AE-PS tot:  -0.3901142219  -0.3901140581
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2060885355  -7.2059625344
+==PS 1     :  -7.3200340006  -7.3199110155
+==AE-PS 1  :   0.1139454651   0.1139484811
+==AE tot   :  -7.2060885355  -7.2059625344
+==PS tot   :  -7.3200340006  -7.3199110155
+==AE-PS tot:   0.1139454651   0.1139484811
+==
+==TOTAL:  -0.2761687568  -0.2761655770
+
+     total cpu time spent up to now is     70.85 secs
+US energy before PAW additions   -32.27335872
+    atom #:   1 grid correction:      0.40863360
+    atom #:   1 rad correction:      -0.27616558
+
+     total energy              =   -31.86472511 Ry
+     Harris-Foulkes estimate   =   -32.27335872 Ry
+     estimated scf accuracy    <     0.02488280 Ry
+
+     iteration # 16     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  4.15E-04,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+ == rho max diff:    1.12029951205412     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305692932034        6.02305692932034     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305692937546        6.02305692937546     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9660390828  27.9660394379
+==PS 1     :  28.3561539382  28.3561541295
+==AE-PS 1  :  -0.3901148554  -0.3901146916
+==AE tot   :  27.9660390828  27.9660394379
+==PS tot   :  28.3561539382  28.3561541295
+==AE-PS tot:  -0.3901148554  -0.3901146916
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2060866120  -7.2059606214
+==PS 1     :  -7.3200322292  -7.3199092564
+==AE-PS 1  :   0.1139456172   0.1139486351
+==AE tot   :  -7.2060866120  -7.2059606214
+==PS tot   :  -7.3200322292  -7.3199092564
+==AE-PS tot:   0.1139456172   0.1139486351
+==
+==TOTAL:  -0.2761692382  -0.2761660565
+
+     total cpu time spent up to now is     74.88 secs
+US energy before PAW additions   -32.27336057
+    atom #:   1 grid correction:      0.40863546
+    atom #:   1 rad correction:      -0.27616606
+
+     total energy              =   -31.86472511 Ry
+     Harris-Foulkes estimate   =   -32.27336057 Ry
+     estimated scf accuracy    <     0.00341855 Ry
+
+     iteration # 17     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  5.70E-05,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+ == rho max diff:    1.12029925546483     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02305   6.02305
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00015   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305467701948        6.02305467701948     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02305   6.02305
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305467707460        6.02305467707459     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9660265365  27.9660268916
+==PS 1     :  28.3561412147  28.3561414060
+==AE-PS 1  :  -0.3901146782  -0.3901145144
+==AE tot   :  27.9660265365  27.9660268916
+==PS tot   :  28.3561412147  28.3561414060
+==AE-PS tot:  -0.3901146782  -0.3901145144
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2060852930  -7.2059593035
+==PS 1     :  -7.3200308570  -7.3199078884
+==AE-PS 1  :   0.1139455640   0.1139485849
+==AE tot   :  -7.2060852930  -7.2059593035
+==PS tot   :  -7.3200308570  -7.3199078884
+==AE-PS tot:   0.1139455640   0.1139485849
+==
+==TOTAL:  -0.2761691142  -0.2761659296
+
+     total cpu time spent up to now is     78.80 secs
+US energy before PAW additions   -32.27336122
+    atom #:   1 grid correction:      0.40863610
+    atom #:   1 rad correction:      -0.27616593
+
+     total energy              =   -31.86472512 Ry
+     Harris-Foulkes estimate   =   -32.27336122 Ry
+     estimated scf accuracy    <     0.00028683 Ry
+
+     iteration # 18     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  4.78E-06,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+ == rho max diff:    1.12029946950331     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305720609750        6.02305720609750     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305720615262        6.02305720615262     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9660410384  27.9660413935
+==PS 1     :  28.3561561465  28.3561563378
+==AE-PS 1  :  -0.3901151080  -0.3901149442
+==AE tot   :  27.9660410384  27.9660413935
+==PS tot   :  28.3561561465  28.3561563378
+==AE-PS tot:  -0.3901151080  -0.3901149442
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2060869211  -7.2059609307
+==PS 1     :  -7.3200326070  -7.3199096295
+==AE-PS 1  :   0.1139456859   0.1139486988
+==AE tot   :  -7.2060869211  -7.2059609307
+==PS tot   :  -7.3200326070  -7.3199096295
+==AE-PS tot:   0.1139456859   0.1139486988
+==
+==TOTAL:  -0.2761694221  -0.2761662455
+
+     total cpu time spent up to now is     82.82 secs
+US energy before PAW additions   -32.27336104
+    atom #:   1 grid correction:      0.40863593
+    atom #:   1 rad correction:      -0.27616625
+
+     total energy              =   -31.86472511 Ry
+     Harris-Foulkes estimate   =   -32.27336104 Ry
+     estimated scf accuracy    <     0.00076458 Ry
+
+     iteration # 19     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  4.78E-06,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+ == rho max diff:    1.12029918645275     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305648340457        6.02305648340457     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305648345969        6.02305648345969     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9660372829  27.9660376380
+==PS 1     :  28.3561524329  28.3561526242
+==AE-PS 1  :  -0.3901151500  -0.3901149862
+==AE tot   :  27.9660372829  27.9660376380
+==PS tot   :  28.3561524329  28.3561526242
+==AE-PS tot:  -0.3901151500  -0.3901149862
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2060865833  -7.2059605908
+==PS 1     :  -7.3200322696  -7.3199092980
+==AE-PS 1  :   0.1139456864   0.1139487072
+==AE tot   :  -7.2060865833  -7.2059605908
+==PS tot   :  -7.3200322696  -7.3199092980
+==AE-PS tot:   0.1139456864   0.1139487072
+==
+==TOTAL:  -0.2761694636  -0.2761662791
+
+     total cpu time spent up to now is     86.87 secs
+US energy before PAW additions   -32.27336147
+    atom #:   1 grid correction:      0.40863636
+    atom #:   1 rad correction:      -0.27616628
+
+     total energy              =   -31.86472512 Ry
+     Harris-Foulkes estimate   =   -32.27336147 Ry
+     estimated scf accuracy    <     0.00002663 Ry
+
+     iteration # 20     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  4.44E-07,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+ == rho max diff:    1.12029915992757     
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305591923552        6.02305591923552     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305591929064        6.02305591929064     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+==GRID PAW ENERGIES (HARTREE): 
+==AE 1     :  27.9660344246  27.9660347796
+==PS 1     :  28.3561495853  28.3561497766
+==AE-PS 1  :  -0.3901151608  -0.3901149970
+==AE tot   :  27.9660344246  27.9660347796
+==PS tot   :  28.3561495853  28.3561497766
+==AE-PS tot:  -0.3901151608  -0.3901149970
+==
+==GRID PAW ENERGIES (XC): 
+==AE 1     :  -7.2060863341  -7.2059603370
+==PS 1     :  -7.3200320261  -7.3199090446
+==AE-PS 1  :   0.1139456920   0.1139487076
+==AE tot   :  -7.2060863341  -7.2059603370
+==PS tot   :  -7.3200320261  -7.3199090446
+==AE-PS tot:   0.1139456920   0.1139487076
+==
+==TOTAL:  -0.2761694687  -0.2761662893
+
+     total cpu time spent up to now is     90.92 secs
+US energy before PAW additions   -32.27336152
+    atom #:   1 grid correction:      0.40863641
+    atom #:   1 rad correction:      -0.27616629
+
+     total energy              =   -31.86472511 Ry
+     Harris-Foulkes estimate   =   -32.27336152 Ry
+     estimated scf accuracy    <     0.00000666 Ry
+
+     iteration # 21     ecut=    25.00 Ry     beta=0.70
+     Davidson diagonalization with overlap
+     ethr =  1.11E-07,  avg # of iterations =  1.0
+     Message from routine electrons:
+     mixing several times ns if lda_plus_U
+
+     negative rho (up, down):  0.121E-05 0.000E+00
+
+     negative rho (up, down):  0.134E-02 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00003   0.00000
+quad  =   0.00002   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305541396535        6.02305541396535     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+
+     negative rho (up, down):  0.992E-03 0.000E+00
+ calculate tot_multipoles           7
+ done
+     Message from routine v_h_grid:
+     alpha set manually
+charge=   6.02306   6.02306
+dipole=  -0.00007   0.00000
+dipole=   0.00000   0.00000
+dipole=   0.00014   0.00000
+quad  =  -0.00001   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+quad  =   0.00000   0.00000
+ charge=   6.02305541402047        6.02305541402047     
+EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
+     Message from routine electrons:
+     PAW forces missing
+
+     total cpu time spent up to now is     94.71 secs
+
+     End of self-consistent calculation
+
+          k = 0.0000 0.0000 0.0000 (   531 PWs)   bands (ev):
+
+   -20.5640  -5.3312  -5.3312  -5.3312   1.1743  16.8434  16.8434
+
+     the Fermi energy is    -5.2898 ev
+US energy before PAW additions   -32.27336153
+    atom #:   1 grid correction:      0.40863644
+    atom #:   1 rad correction:      -0.27616629
+
+!    total energy              =   -31.86472510 Ry
+     Harris-Foulkes estimate   =   -32.27336153 Ry
+     estimated scf accuracy    <     0.00000069 Ry
+
+     The total energy is the sum of the following terms:
+
+     one-electron contribution =   -21.10821324 Ry
+     hartree contribution      =    12.63670152 Ry
+     xc contribution           =    -7.28092003 Ry
+     ewald contribution        =   -16.50550354 Ry
+     smearing contrib. (-TS)   =    -0.01542623 Ry
+
+     convergence has been achieved in  21 iterations
+
+     Writing output data file o1.save
+ 
+     PWSCF        :  1m34.78s CPU time,     1m32.17s wall time
+
+     init_run     :    10.45s CPU
+     electrons    :    83.93s CPU
+ 
+ 
+     electrons    :    83.93s CPU
+     c_bands      :     1.23s CPU (      21 calls,   0.058 s avg)
+     sum_band     :     6.94s CPU (      21 calls,   0.331 s avg)
+     v_of_rho     :     2.31s CPU (      22 calls,   0.105 s avg)
+     v_h          :     0.16s CPU (      22 calls,   0.007 s avg)
+     v_xc         :     2.15s CPU (      22 calls,   0.098 s avg)
+     newd         :     6.06s CPU (      22 calls,   0.275 s avg)
+     mix_rho      :     0.47s CPU (      21 calls,   0.022 s avg)
+ 
+     c_bands      :     1.23s CPU (      21 calls,   0.058 s avg)
+     init_us_2    :     0.12s CPU (      43 calls,   0.003 s avg)
+     cegterg      :     1.10s CPU (      21 calls,   0.052 s avg)
+ 
+     sum_band     :     6.94s CPU (      21 calls,   0.331 s avg)
+     becsum       :     0.00s CPU (      21 calls,   0.000 s avg)
+     addusdens    :     5.66s CPU (      21 calls,   0.270 s avg)
+ 
+     wfcrot       :     0.02s CPU
+     cegterg      :     1.10s CPU (      21 calls,   0.052 s avg)
+     h_psi        :     0.96s CPU (      45 calls,   0.021 s avg)
+     g_psi        :     0.00s CPU (      23 calls,   0.000 s avg)
+     overlap      :     0.00s CPU (      23 calls,   0.000 s avg)
+     diaghg       :     0.02s CPU (      44 calls,   0.001 s avg)
+     update       :     0.02s CPU (      23 calls,   0.001 s avg)
+     last         :     0.02s CPU (      21 calls,   0.001 s avg)
+ 
+     h_psi        :     0.96s CPU (      45 calls,   0.021 s avg)
+     init         :     0.02s CPU (      45 calls,   0.000 s avg)
+     firstfft     :     0.34s CPU (     307 calls,   0.001 s avg)
+     secondfft    :     0.35s CPU (     307 calls,   0.001 s avg)
+     add_vuspsi   :     0.01s CPU (      45 calls,   0.000 s avg)
+     s_psi        :     0.04s CPU (      45 calls,   0.001 s avg)
+ 
+     General routines
+     ccalbec      :     0.02s CPU (      66 calls,   0.000 s avg)
+     cft3         :     1.63s CPU (     879 calls,   0.002 s avg)
+     cft3s        :     0.77s CPU (     804 calls,   0.001 s avg)
+     interpolate  :     0.30s CPU (      43 calls,   0.007 s avg)
+     davcio       :     0.00s CPU
+ 
+     PAW routines
+     init_prad    :     4.88s CPU
+     one-charge   :     8.88s CPU (      42 calls,   0.212 s avg)
+     one-pot      :     6.46s CPU (      22 calls,   0.294 s avg)
+     pvan2        :     5.83s CPU (    4680 calls,   0.001 s avg)
+     set_paw_rhoc :     0.07s CPU
+     v_h_grid     :     1.82s CPU (      44 calls,   0.041 s avg)
+     newd_paw     :     3.59s CPU (      22 calls,   0.163 s avg)
+     init_pawvloc :     0.03s CPU
+     vloc_of_g_no :     0.03s CPU (       2 calls,   0.016 s avg)
+     paw_setlocal :     0.09s CPU
+     PAW_energy   :    51.68s CPU (      21 calls,   2.461 s avg)
+     PAW_rho_lm   :     0.22s CPU (      42 calls,   0.005 s avg)
+     PAW_h_energy :     0.09s CPU (      42 calls,   0.002 s avg)
