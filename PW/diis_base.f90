@@ -105,33 +105,33 @@ MODULE diis_base
     ! .TRUE. if the band is converged  
   INTEGER, ALLOCATABLE :: mask(:)
     ! array used to reorder bands
-  INTEGER :: cnv, ndim2, ndmx2, nbnd_diis, diis_ndim1
+  INTEGER :: cnv, npw2, npwx2, nbnd_diis, diis_npw1
     ! number of converged bands
-    ! 2 * ndim
-    ! 2 * ndmx
+    ! 2 * npw
+    ! 2 * npwx
     ! nbnd - ncgbnd
-    ! diis_ndim - 1
+    ! diis_npw - 1
   !
   CONTAINS
     !
     ! ... allocation/deallocation procedures
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE allocate_base( ndmx, nbnd )
+    SUBROUTINE allocate_base( npwx, nbnd )
       !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
-      INTEGER, INTENT(IN) :: ndmx, nbnd
+      INTEGER, INTENT(IN) :: npwx, nbnd
       !
-      ALLOCATE( psi_old(  ndmx, diis_ndim1, nbnd_diis ) )
-      ALLOCATE( hpsi_old( ndmx, diis_ndim1, nbnd_diis ) )
-      ALLOCATE( spsi_old( ndmx, diis_ndim1, nbnd_diis ) )
-      ALLOCATE( e_old( diis_ndim1, nbnd_diis ) )
+      ALLOCATE( psi_old(  npwx, diis_npw1, nbnd_diis ) )
+      ALLOCATE( hpsi_old( npwx, diis_npw1, nbnd_diis ) )
+      ALLOCATE( spsi_old( npwx, diis_npw1, nbnd_diis ) )
+      ALLOCATE( e_old( diis_npw1, nbnd_diis ) )
       ALLOCATE( e_ref( nbnd ) )
-      ALLOCATE( hpsi( ndmx, nbnd ) )
-      ALLOCATE( spsi( ndmx, nbnd ) )
-      ALLOCATE( aux(  ndmx, nbnd ) )
+      ALLOCATE( hpsi( npwx, nbnd ) )
+      ALLOCATE( spsi( npwx, nbnd ) )
+      ALLOCATE( aux(  npwx, nbnd ) )
       ALLOCATE( conv( nbnd ) )
       ALLOCATE( mask( nbnd ) )       
       !
@@ -159,7 +159,7 @@ MODULE diis_base
     ! ... other procedures
     !
     !------------------------------------------------------------------------
-    FUNCTION no_holes( ndmx, nbnd, btype, psi, e )
+    FUNCTION no_holes( npwx, nbnd, btype, psi, e )
       !------------------------------------------------------------------------
       !
       USE control_flags, ONLY : ethr
@@ -167,19 +167,19 @@ MODULE diis_base
       IMPLICIT NONE
       !
       LOGICAL                          :: no_holes
-      INTEGER,           INTENT(IN)    :: ndmx, nbnd
+      INTEGER,           INTENT(IN)    :: npwx, nbnd
       INTEGER,           INTENT(INOUT) :: btype(nbnd)
       REAL (DP),    INTENT(INOUT) :: e(nbnd)
-      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd)
       !
       INTEGER                        :: ib, i, j, moved, btype_tmp
       REAL (DP)                 :: e_tmp, local_ethr
       COMPLEX (DP), ALLOCATABLE :: psi_tmp(:), hpsi_tmp(:), spsi_tmp(:)
       !
       !
-      ALLOCATE( psi_tmp(  ndmx ) )
-      ALLOCATE( hpsi_tmp( ndmx ) )
-      ALLOCATE( spsi_tmp( ndmx ) )
+      ALLOCATE( psi_tmp(  npwx ) )
+      ALLOCATE( hpsi_tmp( npwx ) )
+      ALLOCATE( spsi_tmp( npwx ) )
       !
       no_holes = .TRUE.
       !

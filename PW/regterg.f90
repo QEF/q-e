@@ -11,7 +11,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
                     uspp, gstart, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
@@ -29,13 +29,13 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx, gstart
+  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx, gstart
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX(DP), INTENT(INOUT) :: evc(ndmx,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc(npwx,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -75,17 +75,17 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! true if the root is converged
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
-  INTEGER :: ndim2, ndmx2
+  INTEGER :: npw2, npwx2
   !
   REAL(DP), EXTERNAL :: DDOT
   !
   EXTERNAL  h_psi, s_psi, g_psi
-    ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
-    ! s_psi(ndmx,ndim,nvec,psi,spsi)
+    ! s_psi(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
-    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
-    ! g_psi(ndmx,ndim,notcnv,psi,e)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
+    ! g_psi(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
@@ -94,7 +94,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! use data distributed subroutine, see below.
      !
-     CALL pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+     CALL pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
                     uspp, gstart, e, btype, notcnv, lrot, dav_iter )
      !
      RETURN 
@@ -109,10 +109,10 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  ALLOCATE( psi(  ndmx, nvecx ) )
-  ALLOCATE( hpsi( ndmx, nvecx ) )
+  ALLOCATE( psi(  npwx, nvecx ) )
+  ALLOCATE( hpsi( npwx, nvecx ) )
   !
-  IF ( uspp ) ALLOCATE( spsi( ndmx, nvecx ) )
+  IF ( uspp ) ALLOCATE( spsi( npwx, nvecx ) )
   !
   ALLOCATE( sr( nvecx, nvecx ) )
   ALLOCATE( hr( nvecx, nvecx ) )
@@ -120,8 +120,8 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ALLOCATE( ew( nvecx ) )
   ALLOCATE( conv( nvec ) )
   !
-  ndim2  = 2*ndim
-  ndmx2  = 2*ndmx
+  npw2  = 2*npw
+  npwx2  = 2*npwx
   notcnv = nvec
   nbase  = nvec
   conv   = .FALSE.
@@ -134,9 +134,9 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )
   !
-  IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
   ! ... hr contains the projection of the hamiltonian onto the reduced
   ! ... space vr contains the eigenvectors of hr
@@ -145,29 +145,29 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   sr(:,:) = 0.D0
   vr(:,:) = 0.D0
   !
-  CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0 , &
-              psi, ndmx2, hpsi, ndmx2, 0.D0, hr, nvecx )
+  CALL DGEMM( 'T', 'N', nbase, nbase, npw2, 2.D0 , &
+              psi, npwx2, hpsi, npwx2, 0.D0, hr, nvecx )
   !
   IF ( gstart == 2 ) &
-     CALL DGER( nbase, nbase, -1.D0, psi, ndmx2, hpsi, ndmx2, hr, nvecx )
+     CALL DGER( nbase, nbase, -1.D0, psi, npwx2, hpsi, npwx2, hr, nvecx )
   !
   CALL reduce( nbase*nvecx, hr )
   !
   IF ( uspp ) THEN
      !
-     CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0, &
-                 psi, ndmx2, spsi, ndmx2, 0.D0, sr, nvecx )
+     CALL DGEMM( 'T', 'N', nbase, nbase, npw2, 2.D0, &
+                 psi, npwx2, spsi, npwx2, 0.D0, sr, nvecx )
      !
      IF ( gstart == 2 ) &
-        CALL DGER( nbase, nbase, -1.D0, psi, ndmx2, spsi, ndmx2, sr, nvecx )
+        CALL DGER( nbase, nbase, -1.D0, psi, npwx2, spsi, npwx2, sr, nvecx )
      !
   ELSE
      !
-     CALL DGEMM( 'T', 'N', nbase, nbase, ndim2, 2.D0, &
-                 psi, ndmx2, psi, ndmx2, 0.D0, sr, nvecx )
+     CALL DGEMM( 'T', 'N', nbase, nbase, npw2, 2.D0, &
+                 psi, npwx2, psi, npwx2, 0.D0, sr, nvecx )
      !
      IF ( gstart == 2 ) &
-        CALL DGER( nbase, nbase, -1.D0, psi, ndmx2, psi, ndmx2, sr, nvecx )
+        CALL DGER( nbase, nbase, -1.D0, psi, npwx2, psi, npwx2, sr, nvecx )
      !
   END IF
   !
@@ -230,13 +230,13 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      IF ( uspp ) THEN
         !
-        CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, &
-                    spsi, ndmx2, vr, nvecx, 0.D0, psi(1,nb1), ndmx2 )
+        CALL DGEMM( 'N', 'N', npw2, notcnv, nbase, 1.D0, &
+                    spsi, npwx2, vr, nvecx, 0.D0, psi(1,nb1), npwx2 )
         !
      ELSE
         !
-        CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, &
-                    psi, ndmx2, vr, nvecx, 0.D0, psi(1,nb1), ndmx2 )
+        CALL DGEMM( 'N', 'N', npw2, notcnv, nbase, 1.D0, &
+                    psi, npwx2, vr, nvecx, 0.D0, psi(1,nb1), npwx2 )
         !
      END IF
      !
@@ -246,14 +246,14 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
      END DO
      !
-     CALL DGEMM( 'N', 'N', ndim2, notcnv, nbase, 1.D0, &
-                 hpsi, ndmx2, vr, nvecx, 1.D0, psi(1,nb1), ndmx2 )
+     CALL DGEMM( 'N', 'N', npw2, notcnv, nbase, 1.D0, &
+                 hpsi, npwx2, vr, nvecx, 1.D0, psi(1,nb1), npwx2 )
      !
      CALL stop_clock( 'update' )
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( ndmx, ndim, notcnv, 1, psi(1,nb1), ew(nb1) )
+     CALL g_psi( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -263,7 +263,7 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      DO n = 1, notcnv
         !
-        ew(n) = 2.D0 * DDOT( ndim2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
+        ew(n) = 2.D0 * DDOT( npw2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
         !
         IF ( gstart == 2 ) ew(n) = ew(n) - psi(1,nbase+n) * psi(1,nbase+n)
         !
@@ -279,40 +279,40 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( ndmx, ndim, notcnv, psi(1,nb1), hpsi(1,nb1) )
+     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
      !
-     IF ( uspp ) CALL s_psi( ndmx, ndim, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
      CALL start_clock( 'uspp' )
      !
-     CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, &
-                 ndmx2, hpsi(1,nb1), ndmx2, 0.D0, hr(1,nb1), nvecx )
+     CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, npw2, 2.D0, psi, &
+                 npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(1,nb1), nvecx )
      !
      IF ( gstart == 2 ) &
         CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, &
-                   ndmx2, hpsi(1,nb1), ndmx2, hr(1,nb1), nvecx )
+                   npwx2, hpsi(1,nb1), npwx2, hr(1,nb1), nvecx )
      !
      CALL reduce( nvecx*notcnv, hr(1,nb1) )
      !
      IF ( uspp ) THEN
         !
-        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, &
-                    ndmx2, spsi(1,nb1), ndmx2, 0.D0, sr(1,nb1), nvecx )
+        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, npw2, 2.D0, psi, &
+                    npwx2, spsi(1,nb1), npwx2, 0.D0, sr(1,nb1), nvecx )
         !
         IF ( gstart == 2 ) &
            CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, &
-                      ndmx2, spsi(1,nb1), ndmx2, sr(1,nb1), nvecx )
+                      npwx2, spsi(1,nb1), npwx2, sr(1,nb1), nvecx )
         !
      ELSE
         !
-        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, ndim2, 2.D0, psi, &
-                    ndmx2, psi(1,nb1), ndmx2, 0.D0, sr(1,nb1) , nvecx )
+        CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, npw2, 2.D0, psi, &
+                    npwx2, psi(1,nb1), npwx2, 0.D0, sr(1,nb1) , nvecx )
         !
         IF ( gstart == 2 ) &
            CALL DGER( nbase+notcnv, notcnv, -1.D0, psi, &
-                      ndmx2, psi(1,nb1), ndmx2, sr(1,nb1), nvecx )
+                      npwx2, psi(1,nb1), npwx2, sr(1,nb1), nvecx )
         !
      END IF
      !
@@ -364,8 +364,8 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         CALL start_clock( 'last' )
         !
-        CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, &
-                    psi, ndmx2, vr, nvecx, 0.D0, evc, ndmx2 )
+        CALL DGEMM( 'N', 'N', npw2, nvec, nbase, 1.D0, &
+                    psi, npwx2, vr, nvecx, 0.D0, evc, npwx2 )
         !
         IF ( notcnv == 0 ) THEN
            !
@@ -394,15 +394,15 @@ SUBROUTINE regterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         IF ( uspp ) THEN
            !
-           CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, spsi, &
-                       ndmx2, vr, nvecx, 0.D0, psi(1,nvec+1), ndmx2 )
+           CALL DGEMM( 'N', 'N', npw2, nvec, nbase, 1.D0, spsi, &
+                       npwx2, vr, nvecx, 0.D0, psi(1,nvec+1), npwx2 )
            !
            spsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
            !
         END IF
         !
-        CALL DGEMM( 'N', 'N', ndim2, nvec, nbase, 1.D0, hpsi, &
-                    ndmx2, vr, nvecx, 0.D0, psi(1,nvec+1), ndmx2 )
+        CALL DGEMM( 'N', 'N', npw2, nvec, nbase, 1.D0, hpsi, &
+                    npwx2, vr, nvecx, 0.D0, psi(1,nvec+1), npwx2 )
         !
         hpsi(:,1:nvec) = psi(:,nvec+1:nvec+nvec)
         !
@@ -450,7 +450,7 @@ END SUBROUTINE regterg
 !  (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
                     uspp, gstart, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
@@ -475,13 +475,13 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx, gstart
+  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx, gstart
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX(DP), INTENT(INOUT) :: evc(ndmx,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc(npwx,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -522,7 +522,7 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! true if the root is converged
   REAL(DP) :: empty_ethr 
     ! threshold for empty bands
-  INTEGER :: ndim2, ndmx2
+  INTEGER :: npw2, npwx2
   INTEGER :: desc( descla_siz_ ), desc_old( descla_siz_ )
   INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
@@ -537,12 +537,12 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   REAL(DP), EXTERNAL :: DDOT
   !
   EXTERNAL  h_psi, s_psi, g_psi
-    ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
-    ! s_psi(ndmx,ndim,nvec,psi,spsi)
+    ! s_psi(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
-    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
-    ! g_psi(ndmx,ndim,notcnv,psi,e)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
+    ! g_psi(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
@@ -555,10 +555,10 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  ALLOCATE( psi(  ndmx, nvecx ) )
-  ALLOCATE( hpsi( ndmx, nvecx ) )
+  ALLOCATE( psi(  npwx, nvecx ) )
+  ALLOCATE( hpsi( npwx, nvecx ) )
   !
-  IF ( uspp ) ALLOCATE( spsi( ndmx, nvecx ) )
+  IF ( uspp ) ALLOCATE( spsi( npwx, nvecx ) )
   !
   ! ... Initialize the matrix descriptor
   !
@@ -589,8 +589,8 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   ALLOCATE( ew( nvecx ) )
   ALLOCATE( conv( nvec ) )
   !
-  ndim2  = 2*ndim
-  ndmx2  = 2*ndmx
+  npw2  = 2*npw
+  npwx2  = 2*npwx
   notcnv = nvec
   nbase  = nvec
   conv   = .FALSE.
@@ -603,9 +603,9 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )
   !
-  IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -662,7 +662,7 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( ndmx, ndim, notcnv, 1, psi(1,nb1), ew(nb1) )
+     CALL g_psi( npwx, npw, notcnv, 1, psi(1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -672,7 +672,7 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      DO n = 1, notcnv
         !
-        ew(n) = 2.D0 * DDOT( ndim2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
+        ew(n) = 2.D0 * DDOT( npw2, psi(1,nbase+n), 1, psi(1,nbase+n), 1 )
         !
         IF ( gstart == 2 ) ew(n) = ew(n) - psi(1,nbase+n) * psi(1,nbase+n)
         !
@@ -688,9 +688,9 @@ SUBROUTINE pregterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     CALL h_psi( ndmx, ndim, notcnv, psi(1,nb1), hpsi(1,nb1) )
+     CALL h_psi( npwx, npw, notcnv, psi(1,nb1), hpsi(1,nb1) )
      !
-     IF ( uspp ) CALL s_psi( ndmx, ndim, notcnv, psi(1,nb1), spsi(1,nb1) )
+     IF ( uspp ) CALL s_psi( npwx, npw, notcnv, psi(1,nb1), spsi(1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
@@ -969,7 +969,7 @@ CONTAINS
      REAL(DP) :: beta
 
      ALLOCATE( vtmp( nx, nx ) )
-     ALLOCATE( ptmp( ndmx, nx ) )
+     ALLOCATE( ptmp( npwx, nx ) )
 
      DO ipc = 1, desc( la_npc_ )
         !
@@ -996,18 +996,18 @@ CONTAINS
               ! 
               IF ( uspp ) THEN
                  !
-                 CALL DGEMM( 'N', 'N', ndim2, notcl, nr, 1.D0, &
-                    spsi( 1, ir ), ndmx2, vtmp, nx, beta, psi(1,nb1+ic-1), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, notcl, nr, 1.D0, &
+                    spsi( 1, ir ), npwx2, vtmp, nx, beta, psi(1,nb1+ic-1), npwx2 )
                  !
               ELSE
                  !
-                 CALL DGEMM( 'N', 'N', ndim2, notcl, nr, 1.D0, &
-                    psi( 1, ir ), ndmx2, vtmp, nx, beta, psi(1,nb1+ic-1), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, notcl, nr, 1.D0, &
+                    psi( 1, ir ), npwx2, vtmp, nx, beta, psi(1,nb1+ic-1), npwx2 )
                  !
               END IF
               !
-              CALL DGEMM( 'N', 'N', ndim2, notcl, nr, 1.D0, &
-                      hpsi( 1, ir ), ndmx2, vtmp, nx, 1.D0, ptmp, ndmx2 )
+              CALL DGEMM( 'N', 'N', npw2, notcl, nr, 1.D0, &
+                      hpsi( 1, ir ), npwx2, vtmp, nx, 1.D0, ptmp, npwx2 )
 
               beta = 1.0d0
 
@@ -1063,15 +1063,15 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', ndim2, nc, nr, 1.D0, &
-                          psi(1,ir), ndmx2, vl, nx, beta, evc(1,ic), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          psi(1,ir), npwx2, vl, nx, beta, evc(1,ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', ndim2, nc, nr, 1.D0, &
-                          psi(1,ir), ndmx2, vtmp, nx, beta, evc(1,ic), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          psi(1,ir), npwx2, vtmp, nx, beta, evc(1,ic), npwx2 )
               END IF
               ! 
 
@@ -1121,15 +1121,15 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', ndim2, nc, nr, 1.D0, &
-                          spsi(1,ir), ndmx2, vl, nx, beta, psi(1,nvec+ic), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          spsi(1,ir), npwx2, vl, nx, beta, psi(1,nvec+ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', ndim2, nc, nr, 1.D0, &
-                          spsi(1,ir), ndmx2, vtmp, nx, beta, psi(1,nvec+ic), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          spsi(1,ir), npwx2, vtmp, nx, beta, psi(1,nvec+ic), npwx2 )
               END IF
               ! 
               beta = 1_DP
@@ -1181,15 +1181,15 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vl(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', ndim2, nc, nr, 1.D0, &
-                          hpsi(1,ir), ndmx2, vl, nx, beta, psi(1,nvec+ic), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          hpsi(1,ir), npwx2, vl, nx, beta, psi(1,nvec+ic), npwx2 )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', ndim2, nc, nr, 1.D0, &
-                          hpsi(1,ir), ndmx2, vtmp, nx, beta, psi(1,nvec+ic), ndmx2 )
+                 CALL DGEMM( 'N', 'N', npw2, nc, nr, 1.D0, &
+                          hpsi(1,ir), npwx2, vtmp, nx, beta, psi(1,nvec+ic), npwx2 )
               END IF
               ! 
               beta = 1.0d0
@@ -1240,11 +1240,11 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL DGEMM( 'T', 'N', nr, nc, ndim2, 2.D0 , &
-                       v(1,ir), ndmx2, w(1,ic), ndmx2, 0.D0, work, nx )
+           CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0 , &
+                       v(1,ir), npwx2, w(1,ic), npwx2, 0.D0, work, nx )
 
            IF ( gstart == 2 ) &
-              CALL DGER( nr, nc, -1.D0, v(1,ir), ndmx2, w(1,ic), ndmx2, work, nx )
+              CALL DGER( nr, nc, -1.D0, v(1,ir), npwx2, w(1,ic), npwx2, work, nx )
 
            ! accumulate result on dm of root proc.
 
@@ -1297,11 +1297,11 @@ CONTAINS
               !
               root = rank_ip( ipr, ipc )
 
-              CALL DGEMM( 'T', 'N', nr, nc, ndim2, 2.D0, v( 1, ir ), &
-                          ndmx2, w(1,ii), ndmx2, 0.D0, vtmp, nx )
+              CALL DGEMM( 'T', 'N', nr, nc, npw2, 2.D0, v( 1, ir ), &
+                          npwx2, w(1,ii), npwx2, 0.D0, vtmp, nx )
               !
               IF ( gstart == 2 ) &
-                 CALL DGER( nr, nc, -1.D0, v( 1, ir ), ndmx2, w(1,ii), ndmx2, vtmp, nx )
+                 CALL DGER( nr, nc, -1.D0, v( 1, ir ), npwx2, w(1,ii), npwx2, vtmp, nx )
 
               CALL mp_root_sum( vtmp(:,1:nc), dm(:,icc:icc+nc-1), root, intra_pool_comm )
 

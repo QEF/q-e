@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
+SUBROUTINE rcgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -26,10 +26,10 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   ! ... I/O variables
   !
-  INTEGER,      INTENT(IN)    :: ndmx, ndim, nbnd, maxter
+  INTEGER,      INTENT(IN)    :: npwx, npw, nbnd, maxter
   INTEGER,      INTENT(IN)    :: btype(nbnd)
-  REAL (DP),    INTENT(IN)    :: precondition(ndim), ethr
-  COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+  REAL (DP),    INTENT(IN)    :: precondition(npw), ethr
+  COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd)
   REAL (DP),    INTENT(INOUT) :: e(nbnd)
   INTEGER,      INTENT(OUT)   :: notconv
   REAL (DP),    INTENT(OUT)   :: avg_iter
@@ -44,7 +44,7 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
                                cg0, e0, es(2)
   REAL (DP)                 :: theta, cost, sint, cos2t, sin2t
   LOGICAL                   :: reorder
-  INTEGER                   :: ndim2, ndmx2
+  INTEGER                   :: npw2, npwx2
   REAL (DP)                 :: empty_ethr
   !
   ! ... external functions
@@ -56,16 +56,16 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   empty_ethr = MAX( ( ethr * 5.D0 ), 1.D-5 )
   !
-  ndim2 = 2 * ndim
-  ndmx2 = 2 * ndmx
+  npw2 = 2 * npw
+  npwx2 = 2 * npwx
   !
-  ALLOCATE( spsi( ndmx ) )
-  ALLOCATE( scg(  ndmx ) )
-  ALLOCATE( hpsi( ndmx ) )
-  ALLOCATE( g(    ndmx ) )
-  ALLOCATE( cg(   ndmx ) )
-  ALLOCATE( g0(   ndmx ) )
-  ALLOCATE( ppsi( ndmx ) )
+  ALLOCATE( spsi( npwx ) )
+  ALLOCATE( scg(  npwx ) )
+  ALLOCATE( hpsi( npwx ) )
+  ALLOCATE( g(    npwx ) )
+  ALLOCATE( cg(   npwx ) )
+  ALLOCATE( g0(   npwx ) )
+  ALLOCATE( ppsi( npwx ) )
   !    
   ALLOCATE( lagrange( nbnd ) )
   !
@@ -79,11 +79,11 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      ! ... calculate S|psi>
      !
-     CALL s_1psi( ndmx, ndim, psi(1,m), spsi )
+     CALL s_1psi( npwx, npw, psi(1,m), spsi )
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
-     CALL DGEMV( 'T', ndim2, m, 2.D0, psi, ndmx2, spsi, 1, 0.D0, lagrange, 1 )
+     CALL DGEMV( 'T', npw2, m, 2.D0, psi, npwx2, spsi, 1, 0.D0, lagrange, 1 )
      !
      IF ( gstart == 2 ) lagrange(1:m) = lagrange(1:m) - psi(1,1:m) * spsi(1)
      !
@@ -105,13 +105,13 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     CALL h_1psi( ndmx, ndim, psi(1,m), hpsi, spsi )
+     CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
-     ! ... NB:  DDOT(2*ndim,a,1,b,1) = DBLE( ZDOTC(ndim,a,1,b,1) )
+     ! ... NB:  DDOT(2*npw,a,1,b,1) = DBLE( ZDOTC(npw,a,1,b,1) )
      !
-     e(m) = 2.D0 * DDOT( ndim2, psi(1,m), 1, hpsi, 1 )
+     e(m) = 2.D0 * DDOT( npw2, psi(1,m), 1, hpsi, 1 )
      !
      IF ( gstart == 2 ) e(m) = e(m) - psi(1,m) * hpsi(1)
      !
@@ -124,13 +124,13 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         ! ... calculate  P (PHP)|y>
         ! ... ( P = preconditioning matrix, assumed diagonal )
         !
-        g(1:ndim)    = hpsi(1:ndim) / precondition(:)
-        ppsi(1:ndim) = spsi(1:ndim) / precondition(:)
+        g(1:npw)    = hpsi(1:npw) / precondition(:)
+        ppsi(1:npw) = spsi(1:npw) / precondition(:)
         !
         ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
         !
-        es(1) = 2.D0 * DDOT( ndim2, spsi(1), 1, g(1), 1 )
-        es(2) = 2.D0 * DDOT( ndim2, spsi(1), 1, ppsi(1), 1 )
+        es(1) = 2.D0 * DDOT( npw2, spsi(1), 1, g(1), 1 )
+        es(2) = 2.D0 * DDOT( npw2, spsi(1), 1, ppsi(1), 1 )
         !
         IF ( gstart == 2 ) THEN
            !
@@ -152,10 +152,10 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         ! ... scg is used as workspace
         !
-        CALL s_1psi( ndmx, ndim, g(1), scg(1) )
+        CALL s_1psi( npwx, npw, g(1), scg(1) )
         !
-        CALL DGEMV( 'T', ndim2, ( m - 1 ), 2.D0, &
-                    psi, ndmx2, scg, 1, 0.D0, lagrange, 1 )
+        CALL DGEMV( 'T', npw2, ( m - 1 ), 2.D0, &
+                    psi, npwx2, scg, 1, 0.D0, lagrange, 1 )
         !
         IF ( gstart == 2 ) &
            lagrange(1:m-1) = lagrange(1:m-1) - psi(1,1:m-1) * scg(1)
@@ -173,7 +173,7 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
            !
            ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
            !
-           gg1 = 2.D0 * DDOT( ndim2, g(1), 1, g0(1), 1 )
+           gg1 = 2.D0 * DDOT( npw2, g(1), 1, g0(1), 1 )
            !
            IF ( gstart == 2 ) gg1 = gg1 - g(1) * g0(1)
            !
@@ -185,9 +185,9 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         g0(:) = scg(:)
         !
-        g0(1:ndim) = g0(1:ndim) * precondition(:)
+        g0(1:npw) = g0(1:npw) * precondition(:)
         !
-        gg = 2.D0 * DDOT( ndim2, g(1), 1, g0(1), 1 )
+        gg = 2.D0 * DDOT( npw2, g(1), 1, g0(1), 1 )
         !
         IF ( gstart == 2 ) gg = gg - g(1) * g0(1)
         !
@@ -227,9 +227,9 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         ! ... |scg> is S|cg>
         !
-        CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
+        CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
-        cg0 = 2.D0 * DDOT( ndim2, cg(1), 1, scg(1), 1 )
+        cg0 = 2.D0 * DDOT( npw2, cg(1), 1, scg(1), 1 )
         !
         IF ( gstart == 2 ) cg0 = cg0 - cg(1) * scg(1)
         !
@@ -245,7 +245,7 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         ! ... so that the result is correctly normalized :
         ! ...                           <y(t)|P^2S|y(t)> = 1
         !
-        a0 = 4.D0 * DDOT( ndim2, psi(1,m), 1, ppsi(1), 1 )
+        a0 = 4.D0 * DDOT( npw2, psi(1,m), 1, ppsi(1), 1 )
         !
         IF ( gstart == 2 ) a0 = a0 - 2.D0 * psi(1,m) * ppsi(1)
         !
@@ -253,7 +253,7 @@ SUBROUTINE rcgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         CALL reduce( 1, a0 )
         !
-        b0 = 2.D0 * DDOT( ndim2, cg(1), 1, ppsi(1), 1 )
+        b0 = 2.D0 * DDOT( npw2, cg(1), 1, ppsi(1), 1 )
         !
         IF ( gstart == 2 ) b0 = b0 - cg(1) * ppsi(1)
         !

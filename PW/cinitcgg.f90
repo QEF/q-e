@@ -11,7 +11,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, lstart)
+SUBROUTINE cinitcgg( npwx, npw, nstart, nbnd, psi, evc, e, lstart)
   !----------------------------------------------------------------------------
   !
   ! ... Hamiltonian diagonalization in the subspace spanned
@@ -26,13 +26,13 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, lstart)
   !
   IMPLICIT NONE
   !
-  INTEGER :: ndim, ndmx, nstart, nbnd
+  INTEGER :: npw, npwx, nstart, nbnd
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
     ! k-point considered
-  COMPLEX(DP) :: psi(ndmx,npol,nstart), evc(ndmx,npol,nbnd)
+  COMPLEX(DP) :: psi(npwx,npol,nstart), evc(npwx,npol,nbnd)
     ! input and output eigenvectors (may overlap) 
   REAL(DP) :: e(nbnd)
     ! eigenvalues
@@ -52,20 +52,20 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, lstart)
   !
   IF ( npol == 1 ) THEN
      !
-     kdim = ndim
-     kdmx = ndmx
+     kdim = npw
+     kdmx = npwx
      !
   ELSE
      !
-     kdim = ndmx * npol
-     kdmx = ndmx * npol
+     kdim = npwx * npol
+     kdmx = npwx * npol
      !
   END IF
   !
   kdim2 = 2 * kdim
   kdmx2 = 2 * kdmx
   !
-  ALLOCATE( aux( ndmx, npol, 2 ) )
+  ALLOCATE( aux( npwx, npol, 2 ) )
   ALLOCATE( hc( nstart, nstart, 2 ) )
   ALLOCATE( sc( nstart, nstart ) )
   ALLOCATE( en( nstart ) )
@@ -79,9 +79,9 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, lstart)
   !
   DO m = 1, nstart
      !
-     CALL h_1psi( ndmx, ndim, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
+     CALL h_1psi( npwx, npw, psi(1,1,m), aux(1,1,1), aux(1,1,2) )
      !
-     IF(lelfield .and. .not.lstart) call h_epsi_her_apply(ndmx,ndim,1, psi(1,1,m), aux(1,1,1))
+     IF(lelfield .and. .not.lstart) call h_epsi_her_apply(npwx,npw,1, psi(1,1,m), aux(1,1,1))
      !
      CALL DGEMV( 'T', kdim2, 2, 1.D0, aux(1,1,1), &
                  kdmx2, psi(1,1,m), 1, 0.D0, rtmp, 1 )
@@ -117,9 +117,9 @@ SUBROUTINE cinitcgg( ndmx, ndim, nstart, nbnd, psi, evc, e, lstart)
   ! 
   DO ipol = 1, npol
      !
-     evc(ndim+1:ndmx,:,:) = (0.d0, 0.d0)
+     evc(npw+1:npwx,:,:) = (0.d0, 0.d0)
      !
-     DO i = 1, ndim
+     DO i = 1, npw
         !
         DO m = 1, nbnd
            !

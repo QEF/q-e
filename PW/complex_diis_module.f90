@@ -55,27 +55,27 @@ MODULE complex_diis_module
   CONTAINS
     !
     !------------------------------------------------------------------------
-    SUBROUTINE cdiisg( ndim, ndmx, nbnd, psi, e, &
+    SUBROUTINE cdiisg( npw, npwx, nbnd, psi, e, &
                        btype, notcnv, diis_iter, iter )
       !------------------------------------------------------------------------
       !
       ! ... k-points version of the DIIS algorithm
       !
       USE g_psi_mod,     ONLY : h_diag
-      USE control_flags, ONLY : diis_ndim, ethr, istep
+      USE control_flags, ONLY : diis_npw, ethr, istep
       !
       IMPLICIT NONE
       !
       ! ... I/O variables
       !
-      INTEGER, INTENT(IN) :: ndim, ndmx, nbnd, iter
+      INTEGER, INTENT(IN) :: npw, npwx, nbnd, iter
         ! dimension of the matrix to be diagonalized
         ! leading dimension of matrix psi, as declared in the calling pgm unit
         ! integer number of searched low-lying roots
         ! scf iteration
       INTEGER, INTENT(INOUT) :: btype(nbnd)
         ! band type ( 1 = occupied, 0 = empty )
-      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd)
         !  psi contains the refined estimates of the eigenvectors
       REAL (DP), INTENT(INOUT) :: e(nbnd)
         ! contains the estimated eigenvalues
@@ -91,14 +91,14 @@ MODULE complex_diis_module
       !
       nbase      = 0
       diis_iter  = 0
-      ndim2      = 2 * ndim
-      ndmx2      = 2 * ndmx
+      npw2      = 2 * npw
+      npwx2      = 2 * npwx
       nbnd_diis  = ( nbnd - ncgbnd )
-      diis_ndim1 = ( diis_ndim - 1 )
+      diis_npw1 = ( diis_npw - 1 )
       !
       ! ... work-space allocation
       !
-      CALL allocate_base( ndmx, nbnd )
+      CALL allocate_base( npwx, nbnd )
       !
       ALLOCATE( hc( nbnd, nbnd ) )
       ALLOCATE( sc( nbnd, nbnd ) )
@@ -132,7 +132,7 @@ MODULE complex_diis_module
          ! ... iteration of the first ionic step :  
          ! ... this to reduce the amount of holes in the energy spectrum
          !
-         CALL init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+         CALL init_steps( npw, npwx, nbnd, psi, e, btype, diis_iter )
          !
          ! ... first check on convergence
          !
@@ -152,19 +152,19 @@ MODULE complex_diis_module
          !
          ! ... here we compute H|psi> and S|psi> for all the bands
          !
-         CALL h_psi( ndmx, ndim, nbnd, psi(1,1), hpsi(1,1) )
-         CALL s_psi( ndmx, ndim, nbnd, psi(1,1), spsi(1,1) )
+         CALL h_psi( npwx, npw, nbnd, psi(1,1), hpsi(1,1) )
+         CALL s_psi( npwx, npw, nbnd, psi(1,1), spsi(1,1) )
          !
          ! ... here we set up the hamiltonian and overlap matrix
          ! ... on the subspace :
          !
          ! ...    hc_ij = <psi_i|H|psi_j>  and  sc_ij = <psi_i|S|psi_j>
          !
-         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
-                     psi, ndmx, hpsi, ndmx, ZERO, hc, nbnd )
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
+                     psi, npwx, hpsi, npwx, ZERO, hc, nbnd )
          !
-         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
-                     psi, ndmx, spsi, ndmx, ZERO, sc, nbnd )
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
+                     psi, npwx, spsi, npwx, ZERO, sc, nbnd )
          !
          CALL reduce( 2 * nbnd * nbnd, hc )
          CALL reduce( 2 * nbnd * nbnd, sc )
@@ -178,18 +178,18 @@ MODULE complex_diis_module
          !
          ! ... |psi>,  H|psi>  and  S|psi>  are rotated
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
-                     psi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                     psi, npwx, vc, nbnd, ZERO, aux, npwx )
          !
          psi(:,:) = aux(:,:)
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
-                     hpsi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                     hpsi, npwx, vc, nbnd, ZERO, aux, npwx )
          !
          hpsi(:,:) = aux(:,:)
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
-                     spsi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                     spsi, npwx, vc, nbnd, ZERO, aux, npwx )
          !
          spsi(:,:) = aux(:,:)
          !
@@ -198,7 +198,7 @@ MODULE complex_diis_module
       ! ... then DIIS-diagonalization is performed only on the lowest 
       ! ... "nbnd_diis" bands
       !
-      CALL diis_with_ortho( ndim, ndmx, psi, e, btype, diis_iter )
+      CALL diis_with_ortho( npw, npwx, psi, e, btype, diis_iter )
       !
       ! ... finally, all eventual holes left by the DIIS-diagonalization are
       ! ... filled with a CG-based diagonalization of the topmost "ncgbnd" 
@@ -206,9 +206,9 @@ MODULE complex_diis_module
       !
       holes_sniffer: DO
          !
-         CALL holes_filler( ndmx, ndim, nbnd, psi, e, h_diag, diis_iter )
+         CALL holes_filler( npwx, npw, nbnd, psi, e, h_diag, diis_iter )
          !
-         IF ( no_holes( ndmx, nbnd, btype, psi, e ) ) EXIT holes_sniffer
+         IF ( no_holes( npwx, nbnd, btype, psi, e ) ) EXIT holes_sniffer
          !
       END DO  holes_sniffer
       !
@@ -253,7 +253,7 @@ MODULE complex_diis_module
     END SUBROUTINE cdiisg
     !
     !------------------------------------------------------------------------
-    SUBROUTINE init_steps( ndim, ndmx, nbnd, psi, e, btype, diis_iter )
+    SUBROUTINE init_steps( npw, npwx, nbnd, psi, e, btype, diis_iter )
       !------------------------------------------------------------------------
       !
       USE control_flags, ONLY : ethr     
@@ -262,13 +262,13 @@ MODULE complex_diis_module
       !
       ! ... I/O variables
       !
-      INTEGER :: ndim, ndmx, nbnd
+      INTEGER :: npw, npwx, nbnd
         ! dimension of the matrix to be diagonalized
         ! leading dimension of matrix psi, as declared in the calling pgm unit
         ! integer number of searched low-lying roots
       INTEGER, INTENT(INOUT) :: btype(nbnd)
         ! band type ( 1 = occupied, 0 = empty )
-      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd)
         !  psi contains the refined estimates of the eigenvectors
       REAL (DP), INTENT(INOUT) :: e(nbnd)
         ! contains the estimated eigenvalues
@@ -285,8 +285,8 @@ MODULE complex_diis_module
       !
       sweep = 0
       !
-      CALL h_psi( ndmx, ndim, nbnd, psi(1,1), hpsi(1,1) )
-      CALL s_psi( ndmx, ndim, nbnd, psi(1,1), spsi(1,1) )
+      CALL h_psi( npwx, npw, nbnd, psi(1,1), hpsi(1,1) )
+      CALL s_psi( npwx, npw, nbnd, psi(1,1), spsi(1,1) )
       !
       iterate: DO
          !
@@ -310,7 +310,7 @@ MODULE complex_diis_module
                !
                IF ( conv(ib) ) CYCLE
                !
-               psiSpsi = DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+               psiSpsi = DDOT( npw2, psi(1,ib), 1, spsi(1,ib), 1 )
                !
                CALL reduce( 1, psiSpsi )
                !
@@ -320,13 +320,13 @@ MODULE complex_diis_module
                hpsi(1,ib) = hpsi(1,ib) * psiSpsi
                spsi(1,ib) = spsi(1,ib) * psiSpsi
                !
-               e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+               e(ib) = DDOT( npw2, psi(1,ib), 1, hpsi(1,ib), 1 )
                !
                CALL reduce( 1, e(ib) )
                !
                aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
                !
-               CALL g_psi( ndmx, ndim, 1, 1, aux(1,ib), e(ib) )               
+               CALL g_psi( npwx, npw, 1, 1, aux(1,ib), e(ib) )               
                !
             END DO
             !           
@@ -344,8 +344,8 @@ MODULE complex_diis_module
             !
             ! ... here we compute H|psi> and S|psi> for not converged bands
             !
-            CALL h_psi( ndmx, ndim, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
-            CALL s_psi( ndmx, ndim, notcnv, psi(1,cnv+1), spsi(1,cnv+1) ) 
+            CALL h_psi( npwx, npw, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
+            CALL s_psi( npwx, npw, notcnv, psi(1,cnv+1), spsi(1,cnv+1) ) 
             !
             ! ... bands are back-ordered
             !
@@ -358,11 +358,11 @@ MODULE complex_diis_module
          !
          ! ...    hc_ij = <psi_i|H|psi_j>   and   sc_ij = <psi_i|S|psi_j>
          !
-         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
-                     psi, ndmx, hpsi, ndmx, ZERO, hc, nbnd )
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
+                     psi, npwx, hpsi, npwx, ZERO, hc, nbnd )
          !
-         CALL ZGEMM( 'C', 'N', nbnd, nbnd, ndim, ONE, &
-                     psi, ndmx, spsi, ndmx, ZERO, sc, nbnd )
+         CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
+                     psi, npwx, spsi, npwx, ZERO, sc, nbnd )
          !
          CALL reduce( 2 * nbnd * nbnd, hc )
          CALL reduce( 2 * nbnd * nbnd, sc )
@@ -376,8 +376,8 @@ MODULE complex_diis_module
          !
          ! ... |psi>  are rotated
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
-                     psi, ndmx, vc, nbnd, ZERO, aux, ndmx )
+         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                     psi, npwx, vc, nbnd, ZERO, aux, npwx )
          !
          psi(:,:) = aux(:,:)         
          !
@@ -399,13 +399,13 @@ MODULE complex_diis_module
          !
          ! ... H|psi>  and  S|psi>  are rotated
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
-                     hpsi, ndmx, vc, nbnd, ZERO, aux, ndmx ) 
+         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                     hpsi, npwx, vc, nbnd, ZERO, aux, npwx ) 
          !     
          hpsi(:,:) = aux(:,:)
          !
-         CALL ZGEMM( 'N', 'N', ndim, nbnd, nbnd, ONE, &
-                     spsi, ndmx, vc, nbnd, ZERO, aux, ndmx ) 
+         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
+                     spsi, npwx, vc, nbnd, ZERO, aux, npwx ) 
          !     
          spsi(:,:) = aux(:,:)
          !
@@ -442,7 +442,7 @@ MODULE complex_diis_module
             !
             aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
             !
-            CALL g_psi( ndmx, ndim, 1, 1, aux(1,ib), e(ib) )
+            CALL g_psi( npwx, npw, 1, 1, aux(1,ib), e(ib) )
             !
             psi(:,ib) = psi(:,ib) - diis_lambda * aux(:,ib)
             !
@@ -459,21 +459,21 @@ MODULE complex_diis_module
     END SUBROUTINE init_steps
     !
     !------------------------------------------------------------------------
-    SUBROUTINE diis_with_ortho( ndim, ndmx, psi, e, btype, diis_iter )
+    SUBROUTINE diis_with_ortho( npw, npwx, psi, e, btype, diis_iter )
       !------------------------------------------------------------------------
       !
-      USE control_flags, ONLY : diis_ndim, ethr
+      USE control_flags, ONLY : diis_npw, ethr
       !
       IMPLICIT NONE
       !
       ! ... I/O variables
       !
-      INTEGER, INTENT(IN) :: ndim, ndmx
+      INTEGER, INTENT(IN) :: npw, npwx
         ! dimension of the matrix to be diagonalized
         ! leading dimension of matrix psi, as declared in the calling pgm unit
       INTEGER, INTENT(INOUT) :: btype(nbnd_diis)
         ! band type ( 1 = occupied, 0 = empty )
-      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd_diis)
+      COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd_diis)
         !  psi contains the refined estimates of the eigenvectors
       REAL (DP), INTENT(INOUT) :: e(nbnd_diis)
         ! contains the estimated eigenvalues
@@ -517,7 +517,7 @@ MODULE complex_diis_module
       !
       ! ... preconditioning of all the residual vecotrs
       !
-      CALL g_psi( ndmx, ndim, nbnd_diis, 1, aux, e )
+      CALL g_psi( npwx, npw, nbnd_diis, 1, aux, e )
       !
       ! ... new trial wavefunctions
       !
@@ -547,7 +547,7 @@ MODULE complex_diis_module
          !
          ! ... the size of the history-subspace is increased
          !
-         nbase = MIN( ( nbase + 1 ), diis_ndim )
+         nbase = MIN( ( nbase + 1 ), diis_npw )
          !
          ! ... bands are reordered so that converged bands come first
          !
@@ -555,8 +555,8 @@ MODULE complex_diis_module
          !
          ! ... here we compute H|psi> and S|psi> for not converged bands
          !
-         CALL h_psi( ndmx, ndim, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
-         CALL s_psi( ndmx, ndim, notcnv, psi(1,cnv+1), spsi(1,cnv+1) )
+         CALL h_psi( npwx, npw, notcnv, psi(1,cnv+1), hpsi(1,cnv+1) )
+         CALL s_psi( npwx, npw, notcnv, psi(1,cnv+1), spsi(1,cnv+1) )
          !
          ! ... bands are back-ordered
          !
@@ -583,7 +583,7 @@ MODULE complex_diis_module
                !
                IF ( ( e(ib) - e(jb) ) > ortho_win ) CYCLE
                !
-               overlap = ZDOTC( ndim, psi(1,jb), 1, spsi(1,ib), 1 )
+               overlap = ZDOTC( npw, psi(1,jb), 1, spsi(1,ib), 1 )
                !
                CALL reduce( 2, overlap )
                !
@@ -598,7 +598,7 @@ MODULE complex_diis_module
                !
             END DO
             !
-            psi_norm = DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+            psi_norm = DDOT( npw2, psi(1,ib), 1, spsi(1,ib), 1 )
             !
             CALL reduce( 1, psi_norm )
             !
@@ -622,7 +622,7 @@ MODULE complex_diis_module
          !
 #else
          !
-         CALL cgramg1( ndmx, nbnd_diis, ndim, 1, nbnd_diis, psi, spsi, hpsi )
+         CALL cgramg1( npwx, nbnd_diis, npw, 1, nbnd_diis, psi, spsi, hpsi )
          !
 #endif                  
          !
@@ -658,7 +658,7 @@ MODULE complex_diis_module
             !
             aux(:,ib) = hpsi(:,ib) - e(ib) * spsi(:,ib)
             !
-            CALL g_psi( ndmx, ndim, 1, 1, aux(1,ib), e(ib) )
+            CALL g_psi( npwx, npw, 1, 1, aux(1,ib), e(ib) )
             !
          END DO
          !           
@@ -683,7 +683,7 @@ MODULE complex_diis_module
          !          
          DO jb = 1, nbnd_diis
             !
-            overlap = ZDOTC( ndim, psi(1,jb), 1, spsi(1,ib), 1 )
+            overlap = ZDOTC( npw, psi(1,jb), 1, spsi(1,ib), 1 )
             !
             CALL reduce( 2, overlap )
             !
@@ -722,18 +722,18 @@ MODULE complex_diis_module
           COMPLEX (DP), ALLOCATABLE :: ps(:)
           !
           !
-          dim     = MIN( ( nbase - 1 ), diis_ndim1 )
-          dim_new = MIN( nbase, diis_ndim1 )
+          dim     = MIN( ( nbase - 1 ), diis_npw1 )
+          dim_new = MIN( nbase, diis_npw1 )
           !
           ! ... internal work-space allocation
           !
           ALLOCATE( e_small( nbase ) )
           ALLOCATE( rc_small( nbase, nbase ) )
           ALLOCATE( vc_small( nbase, nbase ) )
-          ALLOCATE( all_psi(  ndmx, nbase ) )
-          ALLOCATE( all_hpsi( ndmx, nbase ) )
-          ALLOCATE( all_spsi( ndmx, nbase ) )
-          ALLOCATE( all_res(  ndmx, nbase ) )
+          ALLOCATE( all_psi(  npwx, nbase ) )
+          ALLOCATE( all_hpsi( npwx, nbase ) )
+          ALLOCATE( all_spsi( npwx, nbase ) )
+          ALLOCATE( all_res(  npwx, nbase ) )
           ALLOCATE( ps( nbase ) )
           !
           ! ... initialization
@@ -764,7 +764,7 @@ MODULE complex_diis_module
              !
              DO n = 1, nbase
                 ! 
-                ps(n) = ZDOTC( ndim, all_psi(1,1), 1, all_spsi(1,n), 1 )
+                ps(n) = ZDOTC( npw, all_psi(1,1), 1, all_spsi(1,n), 1 )
                 !
              END DO
              !
@@ -778,7 +778,7 @@ MODULE complex_diis_module
                 !
              END DO
              !
-             psiSpsi = DDOT( ndim2, all_psi(1,1), 1, all_spsi(1,1), 1 )
+             psiSpsi = DDOT( npw2, all_psi(1,1), 1, all_spsi(1,1), 1 )
              !
              CALL reduce( 1, psiSpsi )
              !
@@ -798,7 +798,7 @@ MODULE complex_diis_module
              !
              ! ... the enrgy of the new wavefunction is computed here
              !
-             e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+             e(ib) = DDOT( npw2, psi(1,ib), 1, hpsi(1,ib), 1 )
              !
              CALL reduce( 1, e(ib) )
              !
@@ -824,8 +824,8 @@ MODULE complex_diis_module
              !
              ! ... here we construct the matrix :  rc_ij = <res_i|res_j>
              !
-             CALL ZGEMM( 'C', 'N', nbase, nbase, ndim, ONE, all_res, &
-                         ndmx, all_res, ndmx, ZERO, rc_small, nbase )
+             CALL ZGEMM( 'C', 'N', nbase, nbase, npw, ONE, all_res, &
+                         npwx, all_res, npwx, ZERO, rc_small, nbase )
              !
              CALL reduce( 2 * nbase * nbase, rc_small )
              ! 
@@ -836,16 +836,16 @@ MODULE complex_diis_module
              ! ... here we compute the best estimate of the |psi>, 
              ! ... H|psi> and S|psi>
              !
-             CALL ZGEMM( 'N', 'N', ndim, 1, nbase, ONE, all_psi(1,1), &
-                         ndmx, vc_small(1,1), nbase, ZERO, psi(1,ib), ndmx )
+             CALL ZGEMM( 'N', 'N', npw, 1, nbase, ONE, all_psi(1,1), &
+                         npwx, vc_small(1,1), nbase, ZERO, psi(1,ib), npwx )
              !
-             CALL ZGEMM( 'N', 'N', ndim, 1, nbase, ONE, all_hpsi(1,1), &
-                         ndmx, vc_small(1,1), nbase, ZERO, hpsi(1,ib), ndmx )
+             CALL ZGEMM( 'N', 'N', npw, 1, nbase, ONE, all_hpsi(1,1), &
+                         npwx, vc_small(1,1), nbase, ZERO, hpsi(1,ib), npwx )
              !
-             CALL ZGEMM( 'N', 'N', ndim, 1, nbase, ONE, all_spsi(1,1), &
-                         ndmx, vc_small(1,1), nbase, ZERO, spsi(1,ib), ndmx )
+             CALL ZGEMM( 'N', 'N', npw, 1, nbase, ONE, all_spsi(1,1), &
+                         npwx, vc_small(1,1), nbase, ZERO, spsi(1,ib), npwx )
              !
-             psiSpsi = DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+             psiSpsi = DDOT( npw2, psi(1,ib), 1, spsi(1,ib), 1 )
              !
              CALL reduce( 1, psiSpsi )
              !
@@ -857,7 +857,7 @@ MODULE complex_diis_module
              hpsi(:,ib) = hpsi(:,ib) * psiSpsi
              spsi(:,ib) = spsi(:,ib) * psiSpsi
              !             
-             e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+             e(ib) = DDOT( npw2, psi(1,ib), 1, hpsi(1,ib), 1 )
              !
              CALL reduce( 1, e(ib) )
              !
@@ -881,7 +881,7 @@ MODULE complex_diis_module
     END SUBROUTINE diis_with_ortho
     !
     !------------------------------------------------------------------------
-    SUBROUTINE holes_filler( ndmx, ndim, nbnd, psi, e, precondition, diis_iter )
+    SUBROUTINE holes_filler( npwx, npw, nbnd, psi, e, precondition, diis_iter )
       !------------------------------------------------------------------------
       !
       USE constants,      ONLY : pi, tpi
@@ -891,9 +891,9 @@ MODULE complex_diis_module
       !
       ! ... I/O variables 
       !
-      INTEGER,      INTENT(IN)    :: ndmx, ndim, nbnd
-      REAL (DP),    INTENT(IN)    :: precondition(ndim)
-      COMPLEX (DP), INTENT(INOUT) :: psi(ndmx,nbnd)
+      INTEGER,      INTENT(IN)    :: npwx, npw, nbnd
+      REAL (DP),    INTENT(IN)    :: precondition(npw)
+      COMPLEX (DP), INTENT(INOUT) :: psi(npwx,nbnd)
       REAL (DP),    INTENT(INOUT) :: e(nbnd)
       INTEGER,      INTENT(INOUT) :: diis_iter
         ! average number of iterations performed per band                       
@@ -909,11 +909,11 @@ MODULE complex_diis_module
       REAL(DP)                 :: rr, arg
       !
       !
-      ALLOCATE( scg(  ndmx ) )    
-      ALLOCATE( g(    ndmx ) )    
-      ALLOCATE( cg(   ndmx ) )    
-      ALLOCATE( g0(   ndmx ) )    
-      ALLOCATE( ppsi( ndmx ) )    
+      ALLOCATE( scg(  npwx ) )    
+      ALLOCATE( g(    npwx ) )    
+      ALLOCATE( cg(   npwx ) )    
+      ALLOCATE( g0(   npwx ) )    
+      ALLOCATE( ppsi( npwx ) )    
       ALLOCATE( lagrange( nbnd ) )    
       !
       holes_filler_iter = 0
@@ -928,11 +928,11 @@ MODULE complex_diis_module
          !
          ! ... add some noise to |psi>
          !
-         rr = DDOT( ndim2, aux(1,ib), 1, aux(1,ib), 1 )
+         rr = DDOT( npw2, aux(1,ib), 1, aux(1,ib), 1 )
          !
          rr = SQRT( rr )
          !
-         DO i = 1, ndim
+         DO i = 1, npw
             !
             arg = tpi * rndm()
             !
@@ -942,13 +942,13 @@ MODULE complex_diis_module
          !
          ! ... calculate S|psi>
          !
-         CALL s_1psi( ndmx, ndim, psi(1,ib), spsi(1,ib) )
+         CALL s_1psi( npwx, npw, psi(1,ib), spsi(1,ib) )
          !
          ! ... orthogonalize starting eigenfunction to those already calculated
          !
          DO j = 1, ( ib - 1 )
             !
-            lagrange(j) = ZDOTC( ndim, psi(1,j), 1, spsi(1,ib), 1 )
+            lagrange(j) = ZDOTC( npw, psi(1,j), 1, spsi(1,ib), 1 )
             !
          END DO
          !
@@ -961,7 +961,7 @@ MODULE complex_diis_module
             !
          END DO
          !
-         psi_norm = DDOT( ndim2, psi(1,ib), 1, spsi(1,ib), 1 )
+         psi_norm = DDOT( npw2, psi(1,ib), 1, spsi(1,ib), 1 )
          !
          CALL reduce( 1, psi_norm )
          !
@@ -981,11 +981,11 @@ MODULE complex_diis_module
          !
          ! ... calculate starting gradient ( |hpsi> = H|psi> ) ...
          !
-         CALL h_psi( ndmx, ndim, 1, psi(1,ib), hpsi(1,ib) )
+         CALL h_psi( npwx, npw, 1, psi(1,ib), hpsi(1,ib) )
          !
          ! ... and starting eigenvalue ( e = <y|PHP|y> = <psi|H|psi> )
          !
-         e(ib) = DDOT( ndim2, psi(1,ib), 1, hpsi(1,ib), 1 )
+         e(ib) = DDOT( npw2, psi(1,ib), 1, hpsi(1,ib), 1 )
          !
          CALL reduce( 1, e(ib) )
          !
@@ -1004,13 +1004,13 @@ MODULE complex_diis_module
             ! ... calculate  P (PHP)|y>
             ! ... ( P = preconditioning matrix, assumed diagonal )
             !
-            g(1:ndim)    = hpsi(1:ndim,ib) / precondition(:)
-            ppsi(1:ndim) = spsi(1:ndim,ib) / precondition(:)
+            g(1:npw)    = hpsi(1:npw,ib) / precondition(:)
+            ppsi(1:npw) = spsi(1:npw,ib) / precondition(:)
             !
             ! ... ppsi is now S P(P^2)|y> = S P^2|psi>)
             !
-            es(1) = DDOT( ndim2, spsi(1,ib), 1, g(1), 1 )
-            es(2) = DDOT( ndim2, spsi(1,ib), 1, ppsi(1), 1 )
+            es(1) = DDOT( npw2, spsi(1,ib), 1, g(1), 1 )
+            es(2) = DDOT( npw2, spsi(1,ib), 1, ppsi(1), 1 )
             !
             CALL reduce( 2, es )
             !
@@ -1024,11 +1024,11 @@ MODULE complex_diis_module
             !
             ! ... scg is used as workspace
             !
-            CALL s_1psi( ndmx, ndim, g(1), scg(1) )
+            CALL s_1psi( npwx, npw, g(1), scg(1) )
             !
             DO j = 1, ( ib - 1 )
                !
-               lagrange(j) = ZDOTC( ndim, psi(1,j), 1, scg(1), 1 )
+               lagrange(j) = ZDOTC( npw, psi(1,j), 1, scg(1), 1 )
                !
             END DO
             !
@@ -1045,7 +1045,7 @@ MODULE complex_diis_module
                !
                ! ... gg1 is <g(n+1)|S|g(n)> (used in Polak-Ribiere formula)
                !
-               gg1 = DDOT( ndim2, g(1), 1, g0(1), 1 )
+               gg1 = DDOT( npw2, g(1), 1, g0(1), 1 )
                !
                CALL reduce( 1, gg1 )
                !
@@ -1055,9 +1055,9 @@ MODULE complex_diis_module
             !
             g0(:) = scg(:)
             !
-            g0(1:ndim) = g0(1:ndim) * precondition(:)
+            g0(1:npw) = g0(1:npw) * precondition(:)
             !
-            gg = DDOT( ndim2, g(1), 1, g0(1), 1 )
+            gg = DDOT( npw2, g(1), 1, g0(1), 1 )
             !
             CALL reduce( 1, gg )
             !
@@ -1095,9 +1095,9 @@ MODULE complex_diis_module
             !
             ! ... |scg> is S|cg>
             !
-            CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
+            CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
             !
-            cg0 = DDOT( ndim2, cg(1), 1, scg(1), 1 )
+            cg0 = DDOT( npw2, cg(1), 1, scg(1), 1 )
             !
             CALL reduce( 1, cg0 )
             !
@@ -1111,11 +1111,11 @@ MODULE complex_diis_module
             ! ... so that the result is correctly normalized :
             ! ...                           <y(t)|P^2S|y(t)> = 1
             !
-            a0 = 2.D0 * DDOT( ndim2, psi(1,ib), 1, ppsi(1), 1 ) / cg0
+            a0 = 2.D0 * DDOT( npw2, psi(1,ib), 1, ppsi(1), 1 ) / cg0
             !
             CALL reduce( 1, a0 )
             !
-            b0 = DDOT( ndim2, cg(1), 1, ppsi(1), 1 ) / cg0**2
+            b0 = DDOT( npw2, cg(1), 1, ppsi(1), 1 ) / cg0**2
             !
             CALL reduce( 1, b0 )
             !

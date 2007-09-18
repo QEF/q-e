@@ -11,7 +11,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
+SUBROUTINE ccgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -30,10 +30,10 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   ! ... I/O variables
   !
-  INTEGER,     INTENT(IN)    :: ndmx, ndim, nbnd, maxter
+  INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, maxter
   INTEGER,     INTENT(IN)    :: btype(nbnd)
-  REAL(DP),    INTENT(IN)    :: precondition(ndmx*npol), ethr
-  COMPLEX(DP), INTENT(INOUT) :: psi(ndmx*npol,nbnd)
+  REAL(DP),    INTENT(IN)    :: precondition(npwx*npol), ethr
+  COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)
   REAL(DP),    INTENT(INOUT) :: e(nbnd)
   INTEGER,     INTENT(OUT)   :: notconv
   REAL(DP),    INTENT(OUT)   :: avg_iter
@@ -61,13 +61,13 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
   !
   IF ( npol == 1 ) THEN
      !
-     kdim = ndim
-     kdmx = ndmx
+     kdim = npw
+     kdmx = npwx
      !
   ELSE
      !
-     kdim = ndmx * npol
-     kdmx = ndmx * npol
+     kdim = npwx * npol
+     kdmx = npwx * npol
      !
   END IF
   !
@@ -112,7 +112,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      ! ... calculate S|psi>
      !
-     CALL s_1psi( ndmx, ndim, psi(1,m), spsi )
+     CALL s_1psi( npwx, npw, psi(1,m), spsi )
      !
      ! ... orthogonalize starting eigenfunction to those already calculated
      !
@@ -137,13 +137,13 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
      !
      ! ... calculate starting gradient (|hpsi> = H|psi>) ...
      !
-     CALL h_1psi( ndmx, ndim, psi(1,m), hpsi, spsi )
+     CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
      !
-     IF( lelfield )  CALL h_epsi_her_apply(ndmx, ndim, 1, psi(1,m), hpsi )
+     IF( lelfield )  CALL h_epsi_her_apply(npwx, npw, 1, psi(1,m), hpsi )
      !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
-     ! ... NB:  DDOT(2*ndim,a,1,b,1) = REAL( ZDOTC(ndim,a,1,b,1) )
+     ! ... NB:  DDOT(2*npw,a,1,b,1) = REAL( ZDOTC(npw,a,1,b,1) )
      !
      e(m) = DDOT( kdim2, psi(1,m), 1, hpsi, 1 )
      !
@@ -176,7 +176,7 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         ! ... scg is used as workspace
         !
-        CALL s_1psi( ndmx, ndim, g(1), scg(1) )
+        CALL s_1psi( npwx, npw, g(1), scg(1) )
         !
         CALL ZGEMV( 'C', kdim, ( m - 1 ), ONE, psi, &
                     kdmx, scg, 1, ZERO, lagrange, 1  )
@@ -244,9 +244,9 @@ SUBROUTINE ccgdiagg( ndmx, ndim, nbnd, psi, e, btype, precondition, &
         !
         ! ... |scg> is S|cg>
         !
-        CALL h_1psi( ndmx, ndim, cg(1), ppsi(1), scg(1) )
+        CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
         !
-        IF( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, 1, cg(1), ppsi(1) )
+        IF( lelfield ) CALL h_epsi_her_apply( npwx, npw, 1, cg(1), ppsi(1) )
         !
         cg0 = DDOT( kdim2, cg(1), 1, scg(1), 1 )
         !

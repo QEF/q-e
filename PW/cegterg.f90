@@ -11,7 +11,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
                     uspp, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
@@ -29,14 +29,14 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx
+  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
     ! k-point considered
-  COMPLEX(DP), INTENT(INOUT) :: evc(ndmx,npol,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence :
@@ -63,7 +63,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
     ! counter on iterations
     ! dimension of the reduced basis
     ! counter on the reduced basis vectors
-    ! adapted ndim and ndmx
+    ! adapted npw and npwx
     ! do-loop counters
   COMPLEX(DP), ALLOCATABLE :: hc(:,:), sc(:,:), vc(:,:)
     ! Hamiltonian on the reduced basis
@@ -84,12 +84,12 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   EXTERNAL  h_psi,    s_psi,    g_psi
   EXTERNAL  h_psi_nc, s_psi_nc
-    ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
-    ! s_psi(ndmx,ndim,nvec,spsi)
+    ! s_psi(npwx,npw,nvec,spsi)
     !     calculates S|psi> (if needed)
-    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,npol,nvec)
-    ! g_psi(ndmx,ndim,notcnv,psi,e)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,npol,nvec)
+    ! g_psi(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
@@ -97,7 +97,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! use data distributed subroutine, see below.
      !
-     CALL pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+     CALL pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
                     uspp, e, btype, notcnv, lrot, dav_iter )
      !
      RETURN 
@@ -114,20 +114,20 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IF ( npol == 1 ) THEN
      !
-     kdim = ndim
-     kdmx = ndmx
+     kdim = npw
+     kdmx = npwx
      !
   ELSE
      !
-     kdim = ndmx*npol
-     kdmx = ndmx*npol
+     kdim = npwx*npol
+     kdmx = npwx*npol
      !
   END IF
   !
-  ALLOCATE(  psi( ndmx, npol, nvecx ) )
-  ALLOCATE( hpsi( ndmx, npol, nvecx ) )
+  ALLOCATE(  psi( npwx, npol, nvecx ) )
+  ALLOCATE( hpsi( npwx, npol, nvecx ) )
   !
-  IF ( uspp ) ALLOCATE( spsi( ndmx, npol, nvecx ) )
+  IF ( uspp ) ALLOCATE( spsi( npwx, npol, nvecx ) )
   !
   ALLOCATE( sc( nvecx, nvecx ) )
   ALLOCATE( hc( nvecx, nvecx ) )
@@ -149,17 +149,17 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IF ( noncolin ) THEN
      !
-     CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
+     CALL h_psi_nc( npwx, npw, nvec, psi, hpsi )
      !
-     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
+     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
+     IF ( uspp ) CALL s_psi_nc( npwx, npw, nvec, psi, spsi )
      !
   ELSE
      !
-     CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
+     CALL h_psi( npwx, npw, nvec, psi, hpsi )
      !
-     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
+     IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
      !
   END IF
   !
@@ -270,7 +270,7 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( ndmx, ndim, notcnv, npol, psi(1,1,nb1), ew(nb1) )
+     CALL g_psi( npwx, npw, notcnv, npol, psi(1,1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in
      ! ... order to improve numerical stability of subspace diagonalization
@@ -284,12 +284,12 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         IF ( npol == 1 ) THEN
            !
-           ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
+           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
            !
         ELSE
            !
-           ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
-                   DDOT( 2*ndim, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
+           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
+                   DDOT( 2*npw, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
            !
         END IF
         !
@@ -307,23 +307,23 @@ SUBROUTINE cegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      IF ( noncolin ) THEN
         !
-        CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        CALL h_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( lelfield ) &
-           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( uspp ) &
-           CALL s_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
+           CALL s_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
         !
      ELSE
         !
-        CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        CALL h_psi( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( lelfield ) &
-           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( uspp ) &
-           CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
+           CALL s_psi( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
         !
      END IF
      !
@@ -490,7 +490,7 @@ END SUBROUTINE cegterg
 !  (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
+SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
                     uspp, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
@@ -516,13 +516,13 @@ SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: ndim, ndmx, nvec, nvecx
+  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-  COMPLEX(DP), INTENT(INOUT) :: evc(ndmx,npol,nvec)
+  COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr
     ! energy threshold for convergence: root improvement is stopped,
@@ -577,12 +577,12 @@ SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   REAL(DP), EXTERNAL :: DDOT
   !
   EXTERNAL  h_psi, s_psi, g_psi
-    ! h_psi(ndmx,ndim,nvec,psi,hpsi)
+    ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi> 
-    ! s_psi(ndmx,ndim,nvec,psi,spsi)
+    ! s_psi(npwx,npw,nvec,psi,spsi)
     !     calculates S|psi> (if needed)
-    !     Vectors psi,hpsi,spsi are dimensioned (ndmx,nvec)
-    ! g_psi(ndmx,ndim,notcnv,psi,e)
+    !     Vectors psi,hpsi,spsi are dimensioned (npwx,nvec)
+    ! g_psi(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
@@ -597,20 +597,20 @@ SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IF ( npol == 1 ) THEN
      !
-     kdim = ndim
-     kdmx = ndmx
+     kdim = npw
+     kdmx = npwx
      !
   ELSE
      !
-     kdim = ndmx*npol
-     kdmx = ndmx*npol
+     kdim = npwx*npol
+     kdmx = npwx*npol
      !
   END IF
 
-  ALLOCATE(  psi( ndmx, npol, nvecx ) )
-  ALLOCATE( hpsi( ndmx, npol, nvecx ) )
+  ALLOCATE(  psi( npwx, npol, nvecx ) )
+  ALLOCATE( hpsi( npwx, npol, nvecx ) )
   !
-  IF ( uspp ) ALLOCATE( spsi( ndmx, npol, nvecx ) )
+  IF ( uspp ) ALLOCATE( spsi( npwx, npol, nvecx ) )
   !
   ! ... Initialize the matrix descriptor
   !
@@ -655,17 +655,17 @@ SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
   !
   IF ( noncolin ) THEN
      !
-     CALL h_psi_nc( ndmx, ndim, nvec, psi, hpsi )
+     CALL h_psi_nc( npwx, npw, nvec, psi, hpsi )
      !
-     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi_nc( ndmx, ndim, nvec, psi, spsi )
+     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
+     IF ( uspp ) CALL s_psi_nc( npwx, npw, nvec, psi, spsi )
      !
   ELSE
      !
-     CALL h_psi( ndmx, ndim, nvec, psi, hpsi )
+     CALL h_psi( npwx, npw, nvec, psi, hpsi )
      !
-     IF ( lelfield ) CALL h_epsi_her_apply( ndmx, ndim, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi( ndmx, ndim, nvec, psi, spsi )
+     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
+     IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
      !
   END IF
   !
@@ -723,7 +723,7 @@ SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      ! ... approximate inverse iteration
      !
-     CALL g_psi( ndmx, ndim, notcnv, npol, psi(1,1,nb1), ew(nb1) )
+     CALL g_psi( npwx, npw, notcnv, npol, psi(1,1,nb1), ew(nb1) )
      !
      ! ... "normalize" correction vectors psi(:,nb1:nbase+notcnv) in 
      ! ... order to improve numerical stability of subspace diagonalization 
@@ -737,12 +737,12 @@ SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
         !
         IF ( npol == 1 ) THEN
            !
-           ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
+           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 )
            !
         ELSE
            !
-           ew(n) = DDOT( 2*ndim, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
-                   DDOT( 2*ndim, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
+           ew(n) = DDOT( 2*npw, psi(1,1,nbn), 1, psi(1,1,nbn), 1 ) + &
+                   DDOT( 2*npw, psi(1,2,nbn), 1, psi(1,2,nbn), 1 )
            !
         END IF
         !
@@ -760,23 +760,23 @@ SUBROUTINE pcegterg( ndim, ndmx, nvec, nvecx, evc, ethr, &
      !
      IF ( noncolin ) THEN
         !
-        CALL h_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        CALL h_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( lelfield ) &
-           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( uspp ) &
-           CALL s_psi_nc( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
+           CALL s_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
         !
      ELSE
         !
-        CALL h_psi( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+        CALL h_psi( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( lelfield ) &
-           CALL h_epsi_her_apply( ndmx, ndim, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
         !
         IF ( uspp ) &
-           CALL s_psi( ndmx, ndim, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
+           CALL s_psi( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
         !
      END IF
      !
@@ -1057,7 +1057,7 @@ CONTAINS
      COMPLEX(DP) :: beta
 
      ALLOCATE( vtmp( nx, nx ) )
-     ALLOCATE( ptmp( ndmx, npol, nx ) )
+     ALLOCATE( ptmp( npwx, npol, nx ) )
 
      DO ipc = 1, desc( la_npc_ )
         !
