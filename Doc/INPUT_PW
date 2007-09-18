@@ -646,6 +646,12 @@ startingwfc    CHARACTER
                'random': start from random wfcs
                'file':   start from a wavefunction file
 
+tqr            LOGICAL (default=.FALSE.)
+               If .true., use the (VERY EXPERIMENTAL) real-space algorithm
+               for augmentation charges in ultrasoft pseudopotentials.
+               Must faster execution of ultrasoft-related calculations,
+               but numerically less accurate than the default algorithm.
+               Use with care and after testing!
 
 ===============================================================================
 NAMELIST &IONS  ( only if calculation = 'relax', 'md',
@@ -698,8 +704,9 @@ wfc_extrapolation
                used to extrapolate the wavefunctions from preceding ionic steps
                'none'        :  no extrapolation
                'first_order' :  extrapolate the wave-functions with first-order
-                                formula
+                                formula - NOT IMPLEMENTED WITH USPP
                'second_order':  as above, with second order formula
+                                NOT IMPLEMENTED WITH USPP
 
 remove_rigid_rot
                LOGICAL ( default = .FALSE. )

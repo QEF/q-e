@@ -7,6 +7,12 @@ Fixed in CVS version:
 
 Fixed in version 3.2.1-3.2.3:
 
+  *  CP in parallel execution had a serious bug if the third dimension
+     of FFT arrays (nr3x/nr3sx) was not the same as FFT order (nr3/nr3s)
+
+  *  restart of pw.x in parallel could go bananas under some not-so-unusual
+     circumstances, due to bad setting of a variable
+
   *  various phonon glitches: pools and lsda, pools and dispersions,
      option lnscf, were not working
 
