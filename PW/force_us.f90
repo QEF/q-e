@@ -365,13 +365,13 @@ SUBROUTINE force_us( forcenl )
                                END IF
                             END DO
                           END DO
-                      END IF
-                   END DO
+                      END IF ! tvanp
+                   END DO ! ih = 1, nh(nt)
                    ijkb0 = ijkb0 + nh(nt)
-                END IF
-             END DO
-          END DO
-       END DO
+                END IF ! ityp(na) == nt
+             END DO ! nat
+          END DO ! ntyp
+       END DO ! nks
        !
 #ifdef __PARA
        CALL reduce( 3 * nat, forcenl )

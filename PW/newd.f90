@@ -32,17 +32,23 @@ SUBROUTINE newd_g()
                                    eigts1, eigts2, eigts3, nl
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vr, vltot
-  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
+  USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan, indv
   USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin
   !
+  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, &
+       &                           kdiff, dpaw_ae, dpaw_ps
+  USE grid_paw_routines,    ONLY : newd_paw_grid
+  USE uspp,                 ONLY : nhtol, nhtolm
+  !
   IMPLICIT NONE
   !
-  INTEGER :: ig, nt, ih, jh, na, is, nht, nspin0
-    ! counters on g vectors, atom type, beta functions x 2, atoms, spin
+  INTEGER :: ig, nt, ih, jh, na, is, nht, nspin0, nb, mb
+    ! counters on g vectors, atom type, beta functions x 2,
+    !   atoms, spin, aux, aux, beta func x2 (again)
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), qgm(:), qgm_na(:)
     ! work space
   REAL(DP), ALLOCATABLE :: ylmk0(:,:), qmod(:)
@@ -189,6 +195,7 @@ SUBROUTINE newd_g()
   DO na = 1, nat
      !
      nt  = ityp(na)
+     if_noncolin:&
      IF ( noncolin ) THEN
         !
         IF (so(nt)) THEN
@@ -201,24 +208,54 @@ SUBROUTINE newd_g()
            !
         END IF
         !
-     ELSE
+     ELSE if_noncolin
+        if_paw:&
+        IF (okpaw) THEN
+            CALL newd_paw_grid(na)
+            !
+            DO is = 1, nspin
+            !
+            DO ih = 1, nh(nt)
+            nb = indv(ih,nt)
+            !
+            DO jh = ih, nh(nt)
+                mb = indv(jh,nt)
+                !
+                IF ( nhtol (ih, nt) == nhtol (jh, nt) .AND. &
+                        nhtolm(ih, nt) == nhtolm(jh, nt)       ) THEN
+                    deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
+                        kdiff(nb,mb,nt)
+                END if
+                !
+                deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
+                        dpaw_ae (ih,jh,na,is) - dpaw_ps (ih,jh,na,is)
+                !
+                deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
+                !
+            END DO
+            !
+            END DO
+            !
+            END DO
+        ELSE if_paw
+            !
+            DO is = 1, nspin
+            !
+            DO ih = 1, nh(nt)
+                !
+                DO jh = ih, nh(nt)
+                    !
+                    deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan(ih,jh,nt)
+                    deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
+                    !
+                END DO
+                !
+            END DO
+            !
+            END DO
+        END IF if_paw
         !
-        DO is = 1, nspin
-           !
-           DO ih = 1, nh(nt)
-              !
-              DO jh = ih, nh(nt)
-                 !
-                 deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan(ih,jh,nt)
-                 deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
-                 !
-              END DO
-              !
-           END DO
-           !
-        END DO
-        !
-     END IF
+     END IF if_noncolin
      !
   END DO
   !

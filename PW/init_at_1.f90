@@ -38,10 +38,8 @@ subroutine init_at_1()
   ! chiq = radial fourier transform of atomic orbitals chi
   !
   pref = fpi/sqrt(omega)
-  !
   ! needed to normalize atomic wfcs (not a bad idea in general and 
   ! necessary to compute correctly lda+U projections)
-  !
   call divide (nqx, startq, lastq)
   tab_at(:,:,:) = 0.d0
   do nt = 1, ntyp

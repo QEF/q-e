@@ -50,6 +50,10 @@ SUBROUTINE potinit()
   USE pw_restart,           ONLY : pw_readfile
   USE io_rho_xml,           ONLY : read_rho
   !
+  USE uspp,               ONLY : becsum
+  USE grid_paw_variables, ONLY : rho1, rho1t
+  USE grid_paw_routines,  ONLY : atomic_becsum, compute_onecenter_charges, compute_onecenter_potentials
+  !
   IMPLICIT NONE
   !
   REAL(DP)              :: charge           ! the starting charge
@@ -232,6 +236,13 @@ SUBROUTINE potinit()
   !
   IF ( report /= 0 .AND. &
        noncolin .AND. domag .AND. lscf ) CALL report_mag()
+  !
+  ! ... PAW initialization: from atomic augmentation channel occupations
+  ! ... compute corresponding one-center charges and potentials
+  !
+  CALL atomic_becsum()
+  CALL compute_onecenter_charges(becsum,rho1,rho1t)
+  CALL compute_onecenter_potentials(becsum,rho1,rho1t)
   !
   RETURN
   !

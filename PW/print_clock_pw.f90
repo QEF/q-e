@@ -12,10 +12,11 @@ SUBROUTINE print_clock_pw()
    ! ... this routine prints out the clocks at the end of the run
    ! ... it tries to construct the calling tree of the program.
    !
-   USE io_global,        ONLY : stdout
-   USE control_flags,    ONLY : isolve
-   USE force_mod,        ONLY : lforce, lstres
-   USE mp_global,        ONLY : mpime, root
+   USE io_global,          ONLY : stdout
+   USE control_flags,      ONLY : isolve
+   USE force_mod,          ONLY : lforce, lstres
+   USE mp_global,          ONLY : mpime, root
+   USE grid_paw_variables, ONLY : okpaw
    !
    IMPLICIT NONE
    !
@@ -176,6 +177,26 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'exxen2' )
    CALL print_clock ('cycleig')
 #endif
+   !
+IF ( okpaw ) THEN
+   WRITE( stdout, '(5X,"PAW routines")' )
+   call print_clock ('init_prad')
+   call print_clock ('paw_prod_p')
+   call print_clock ('one-charge')
+   call print_clock ('one-pot')
+   call print_clock ('pvan2')
+   call print_clock ('set_paw_rhoc')
+   call print_clock ('v_h_grid')
+   call print_clock ('newd_paw')
+   call print_clock ('init_pawvloc')
+   call print_clock ('vloc_of_g_no')
+   call print_clock ('paw_setlocal')
+   ! radial routines:
+   CALL print_clock ('PAW_energy')
+   CALL print_clock ('PAW_rho_lm')
+   CALL print_clock ('PAW_h_energy')
+   CALL print_clock ('PAW_sph_int')
+END IF
    !
    RETURN
    !

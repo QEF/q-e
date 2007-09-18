@@ -22,6 +22,7 @@ SUBROUTINE hinit0()
   USE wvfct,     ONLY : npw, g2kin, igk
   USE io_files,  ONLY : iunigk
   USE realus,    ONLY : tqr, qpointlist
+  USE grid_paw_routines, ONLY : init_prad, set_paw_rhoc, init_paw_vloc, paw_grid_setlocal
   !
   IMPLICIT NONE
   !
@@ -31,10 +32,12 @@ SUBROUTINE hinit0()
   ! ... calculate the local part of the pseudopotentials
   !
   CALL init_vloc()
+  CALL init_paw_vloc() !!PAW!!
   !
   ! ... k-point independent parameters of non-local pseudopotentials
   !
   CALL init_us_1()
+  CALL init_prad() !!PAW!!
   CALL init_at_1()
   !
   REWIND( iunigk )
@@ -79,10 +82,12 @@ SUBROUTINE hinit0()
   ! ... calculate the total local potential
   !
   CALL setlocal()
+  CALL paw_grid_setlocal() !!PAW!!
   !
   ! ... calculate the core charge (if any) for the nonlinear core correction
   !
   CALL set_rhoc()
+  CALL set_paw_rhoc() !!PAW!!
   !
   IF ( tqr ) CALL qpointlist()
   !

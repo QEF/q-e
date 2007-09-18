@@ -21,6 +21,7 @@ fft_base.o \
 fft_scalar.o \
 fft_types.o \
 functionals.o \
+grid_paw_variables.o \
 griddim.o \
 input_parameters.o \
 io_files.o \
@@ -53,6 +54,7 @@ radial_grids.o \
 random_numbers.o \
 read_cards.o \
 read_namelists.o \
+read_paw.o \
 read_upf.o \
 read_uspp.o \
 recvec.o \
@@ -71,7 +73,7 @@ wavefunctions.o \
 wannier.o \
 xml_input.o \
 xml_io_base.o \
-zhpev_drv.o \
+zhpev_drv.o 
 
 all : $(MODULES)
 

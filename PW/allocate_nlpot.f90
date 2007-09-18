@@ -95,7 +95,6 @@ subroutine allocate_nlpot
   endif
   if (lspinorb) then
     allocate (qq_so(nhm, nhm, 4, nsp))    
-    allocate (qq(   nhm, nhm, nsp))    
     allocate (dvan_so( nhm, nhm, nspin, nsp))    
     allocate (fcoef(nhm,nhm,2,2,nsp))
   else

@@ -1,4 +1,3 @@
-ev.o : ../Modules/constants.o
 ev.o : ../Modules/kind.o
 ev.o : ../Modules/random_numbers.o
 metadyn_pp.o : ../Modules/constants.o

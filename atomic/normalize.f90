@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2004 PWSCF group
 ! This file is distributed under the terms of the
@@ -34,7 +35,6 @@ subroutine normalize(phi,l,j)
        work1,       & ! the norm
        int_0_inf_dr,& ! integration function
        gi(ndmx)        ! used to compute the integrals
-
 
   if (pseudotype.ne.3) return 
   !

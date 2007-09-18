@@ -40,7 +40,8 @@ subroutine gener_pseudo
                     file_wfcusgen, file_wfcaegen, psccharge, aeccharge, &
                     qvan, qq, bmat, ddd, betas, nbeta, ikk, pseudotype, &
                     pawsetup, zval, vpsloc, vpot, vnl, lpaw, rcloc, rcutus, &
-                    enl, enls, rcut, chis, nstoae
+                    enl, enls, rcut, chis, nstoae, paw_rmatch_augfun,&
+                    lnc2paw, rcutnc2paw, rhos, which_paw_augfun
   use atomic_paw, only : us2paw, paw2us
   implicit none
 
@@ -81,6 +82,10 @@ subroutine gener_pseudo
   logical :: &
        lbes4     ! use 4 Bessel functions expansion
 
+  ! additional vars for paw
+  real(DP) :: vpotpaw (ndmx) ! total potential to be used for PAW 
+                             ! generation (normally the AE potential)
+  integer  :: iknc2paw       ! point in rgrid closer to rcutnc2paw
 
   if (lpaw) then
      write(stdout, &
@@ -104,6 +109,15 @@ subroutine gener_pseudo
   !   compute the local potential from the all-electron potential
   !
   call pseudovloc ( )
+  !
+  !   initialize total potential for PAW generation
+  if (lpaw) then
+     if (.not.lnc2paw) then
+        vpotpaw(1:grid%mesh) = vpot(1:grid%mesh,1)
+     else
+        vpotpaw(1:grid%mesh) = vpsloc(1:grid%mesh)
+     end if
+  endif
   !
   !   if nlcc is true compute here the core charge
   !   the core charge is needed also for the PAW dataset
@@ -172,6 +186,12 @@ subroutine gener_pseudo
      if (mod(ik,2) == 0) ik=ik+1
      if (mod(ikus,2) == 0) ikus=ikus+1
      if (mod(ikloc,2) == 0) ikloc=ikloc+1
+     if (lnc2paw) then
+        do n=1,grid%mesh
+           if (grid%r(n).lt.rcutnc2paw(ns)) iknc2paw=n
+        end do
+        if (mod(iknc2paw,2) == 0) iknc2paw=iknc2paw+1
+     end if
      if (ikus.gt.grid%mesh) call errore('gener_pseudo','ik is wrong ',1)
      if (pseudotype == 3) then
         ikk(ns)=max(ikus+10,ikloc+5)
@@ -190,6 +210,17 @@ subroutine gener_pseudo
      psi_in(1:grid%mesh) = psipaw(1:grid%mesh,ns) 
      !
      !  compute the phi functions
+     !
+     if (lpaw.and.lnc2paw) then
+        ! first compute possibly harder NC pseudowfcts to be
+        ! used as AE reference for PAW generation
+        nnode=0
+       !call compute_phi(lam,ik,      psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns)) CURRENT
+        call compute_phi(lam,iknc2paw,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+       !call compute_phi(lam,iknc2paw,ik,nwf0,ns,xc,1,nnode,ocs(ns)) PAW
+       !call compute_phi(lam,ik,      ik,nwf0,ns,xc,1,nnode,ocs(ns)) OLD
+        psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
+     endif
      !
      if (tm) then
         call compute_phi_tm(lam,ik,psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
@@ -360,6 +391,9 @@ subroutine gener_pseudo
   !    generate a PAW dataset if required
   !
   if (lpaw) then
+     if (lnc2paw) write (stdout,'(/5x,''WARNING: __PAW_FROM_NC__'')')
+     !
+     !symbol=atom_name(nint(zed))
      !
      ! compute kinetic energy differences, using:
      ! AE:   T |psi> = (e - Vae) |psi>
@@ -370,7 +404,7 @@ subroutine gener_pseudo
               ikl=max(ikk(ns),ikk(ns1))
               nst=2*(lls(ns)+1)
               do n=1,ikl
-                 gi(n,1)=psipaw(n,ns)*(enls(ns1)-vpot(n,1))*psipaw(n,ns1)
+                 gi(n,1)=psipaw(n,ns)*(enls(ns1)-vpotpaw(n))*psipaw(n,ns1)
               end do
               aekin(ns,ns1)=int_0_inf_dr(gi(1:grid%mesh,1),grid,ikl,nst)
               do n=1,ikl
@@ -387,19 +421,22 @@ subroutine gener_pseudo
      end do
      !
      ! create the 'pawsetup' object containing the atomic setup for PAW
-     call us2paw ( pawsetup, zval, grid, maxval(ikk(1:nbeta)), ikk,   &
-          nbeta, nwfs, lls, jjs, ocs, enls, psipaw, phis, betas, els, &
-          rcutus, qvan, kindiff,  nlcc, aeccharge, psccharge, vpot, vpsloc )
-     !
-     ! the augmentation functions are changed in 'pawsetup': read from it
-     call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, qq, &
-                   qvan, els, rcutus, pseudotype )
+     call us2paw ( pawsetup,                                         &
+          zval, grid, paw_rmatch_augfun, ikk,  &
+          nbeta, lls, ocs, enls, psipaw, phis, betas, qvan, kindiff, &
+          nlcc, aeccharge, psccharge, vpotpaw, vpsloc, which_paw_augfun)
      !
   endif
   !
   !    unscreen the local potential and the D coefficients
   !
-  call descreening
+  if (lpaw) then
+     ! reread augmentation functions and descreened potentials from PAW
+     call paw2us ( pawsetup, zval, grid, nbeta, lls, ikk, betas, &
+                   qq, qvan, vpsloc, bmat, rhos, pseudotype )
+  else
+     call descreening
+  end if
   !
   !     print the main functions on files
   !

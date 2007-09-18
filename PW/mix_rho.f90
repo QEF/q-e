@@ -11,14 +11,15 @@
 #define ONLY_SMOOTH_G
 !
 !----------------------------------------------------------------------------
-SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
-                    dr2, tr2_min, iter, n_iter, conv )
+SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
+                    nsout, nsin, alphamix, dr2, tr2_min, iter, n_iter, conv )
   !----------------------------------------------------------------------------
   !
   ! ... Modified Broyden's method for charge density mixing
   ! ...         D.D. Johnson PRB 38, 12807 (1988)
   !
-  ! ... On output: the mixed density is in rhocin
+  ! ... On output: the mixed density is in rhocin, mixed augmentation
+  ! ...            channel occ. is in becin
   !
   USE kinds,          ONLY : DP
   USE ions_base,      ONLY : nat
@@ -31,6 +32,11 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
   USE io_files,       ONLY : find_free_unit
   USE cell_base,      ONLY : omega
   !
+  !!PAW]
+  USE uspp_param,           ONLY : nhm
+  USE grid_paw_variables,   ONLY : okpaw
+  !!PAW]
+  !
   IMPLICIT NONE
   !
   ! ... First the I/O variable
@@ -42,6 +48,9 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
     rhocin(ngm,nspin), rhocout(ngm,nspin)
   COMPLEX(DP) :: &
     taukin(ngm,nspin), taukout(ngm,nspin)
+  REAL(DP) :: &
+    becin (nhm*(nhm+1)/2,nat,nspin), & !PAW
+    becout(nhm*(nhm+1)/2,nat,nspin)    !PAW
   REAL(DP) :: &
     nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &!
     nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat),  &!
@@ -62,8 +71,9 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
     tmeta         ! set true if dft_is_meta
   INTEGER ::    &
     iunmix,        &! I/O unit number of charge density file
-    iunmix2,       &! I/O unit number of tauk file
-    iunmix3,       &! I/O unit number of ns file
+    iunmix_tk,     &! I/O unit number of tauk file
+    iunmix_ns,     &! I/O unit number of ns file
+    iunmix_paw,    &! I/O unit number of PAW file
     iter_used,     &! actual number of iterations used
     ipos,          &! index of the present iteration
     inext,         &! index of the next iteration
@@ -78,6 +88,9 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
     taukoutsave(:,:),   &! 
     nsinsave(:,:,:,:),  &!
     nsoutsave(:,:,:,:)   !
+  REAL(DP), ALLOCATABLE :: &
+    becinsave(:,:,:),   &
+    becoutsave(:,:,:)
   REAL(DP) :: &
     betamix(maxmix,maxmix), &
     gamma0,                 &
@@ -99,10 +112,13 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
   REAL(DP), ALLOCATABLE, SAVE :: &
     df_ns(:,:,:,:,:), &! idem 
     dv_ns(:,:,:,:,:)   ! idem
+  REAL(DP), ALLOCATABLE, SAVE :: &
+    df_bec(:,:,:,:), &! idem !PAW
+    dv_bec(:,:,:,:)   ! idem !PAW
   !
   ! ... external functions
   !
-  REAL(DP), EXTERNAL :: rho_ddot, ns_ddot, tauk_ddot
+  REAL(DP), EXTERNAL :: rho_ddot, ns_ddot, tauk_ddot, rho1_ddot
   !
   !
   CALL start_clock( 'mix_rho' )
@@ -122,13 +138,16 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
   savetofile = (io_level > 1)
   !
   rhocout(:,:) = rhocout(:,:) - rhocin(:,:)
+  !
   tmeta = dft_is_meta()
-  IF (tmeta) taukout(:,:) = taukout(:,:) - taukin(:,:)
+  IF (tmeta)        taukout(:,:)   = taukout(:,:)   - taukin(:,:)
   IF ( lda_plus_u ) nsout(:,:,:,:) = nsout(:,:,:,:) - nsin(:,:,:,:)
+  IF ( okpaw )      becout(:,:,:)  = becout(:,:,:)  - becin(:,:,:) !PAW
   !
   dr2 = rho_ddot( rhocout, rhocout, ngm, ngm, nspin, ngm )
-  IF ( tmeta ) dr2 = dr2 + tauk_ddot( taukout, taukout, ngm, ngm, nspin, ngm )
+  IF ( tmeta )      dr2 = dr2 + tauk_ddot( taukout, taukout, ngm, ngm, nspin, ngm )
   IF ( lda_plus_u ) dr2 = dr2 + ns_ddot( nsout, nsout, nspin )
+  IF ( okpaw )      dr2 = dr2 + rho1_ddot ( becout, becout ) !PAW
   !
   conv = ( dr2 < tr2 )
   !
@@ -138,12 +157,14 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      ! ... smaller than the estimated error due to diagonalization (tr2_min),
      ! ... exit and leave rhocin and rhocout unchanged
      !
-     IF ( ALLOCATED( df ) )    DEALLOCATE( df )
-     IF ( ALLOCATED( dv ) )    DEALLOCATE( dv )
-     IF ( ALLOCATED( df_k ) )  DEALLOCATE( df_k )
-     IF ( ALLOCATED( dv_k ) )  DEALLOCATE( dv_k )
-     IF ( ALLOCATED( df_ns ) ) DEALLOCATE( df_ns )
-     IF ( ALLOCATED( dv_ns ) ) DEALLOCATE( dv_ns )
+     IF ( ALLOCATED( df ) )     DEALLOCATE( df )
+     IF ( ALLOCATED( dv ) )     DEALLOCATE( dv )
+     IF ( ALLOCATED( df_k ) )   DEALLOCATE( df_k )
+     IF ( ALLOCATED( dv_k ) )   DEALLOCATE( dv_k )
+     IF ( ALLOCATED( df_ns ) )  DEALLOCATE( df_ns )
+     IF ( ALLOCATED( dv_ns ) )  DEALLOCATE( dv_ns )
+     IF ( ALLOCATED( df_bec ) ) DEALLOCATE ( df_bec ) !PAW
+     IF ( ALLOCATED( dv_bec ) ) DEALLOCATE ( dv_bec ) !PAW
      !
      rhocout(:,:) = rhocout(:,:) + rhocin(:,:)
      IF ( tmeta ) taukout(:,:) = taukout(:,:) + taukin(:,:)
@@ -161,13 +182,19 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      CALL diropn( iunmix, 'mix', 2*ngm0*nspin, exst )
      !
      IF ( tmeta ) THEN
-        iunmix2 = find_free_unit()
-        CALL diropn( iunmix2, 'mix.tauk', 2*ngm0*nspin, exst )
+        iunmix_tk = find_free_unit()
+        CALL diropn( iunmix_tk, 'mix.tauk', 2*ngm0*nspin, exst )
      END IF
      !
      IF ( lda_plus_u ) THEN
-        iunmix3 = find_free_unit()
-        CALL diropn( iunmix3, 'mix.ns', ldim*ldim*nspin*nat, exst )
+        iunmix_ns = find_free_unit()
+        CALL diropn( iunmix_ns, 'mix.ns', ldim*ldim*nspin*nat, exst )
+     END IF
+     !
+     IF ( okpaw ) then
+        iunmix_paw = find_free_unit()
+        CALL diropn( iunmix_paw, 'mix.bec', &
+                     ( (nhm * (nhm + 1)/2) * nat * nspin ), exst )
      END IF
      !
      IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
@@ -195,6 +222,13 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         IF ( .NOT. ALLOCATED( dv_ns ) ) &
            ALLOCATE( dv_ns( ldim, ldim, nspin, nat, n_iter ) )
      END IF
+     IF ( okpaw ) THEN
+        IF ( .NOT. ALLOCATED( df_bec ) ) &
+             ALLOCATE( df_bec( nhm * (nhm + 1)/2, nat, nspin, n_iter ) )
+        IF ( .NOT. ALLOCATED( dv_bec ) ) &
+             ALLOCATE( dv_bec( nhm * (nhm + 1)/2, nat, nspin, n_iter ) )
+        !
+     END IF
      !
   END IF
   !
@@ -217,14 +251,21 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         !
         IF ( tmeta ) THEN
            !
-           CALL davcio( df_k(1,1,ipos), 2*ngm0*nspin, iunmix2, 1, -1 )
-           CALL davcio( dv_k(1,1,ipos), 2*ngm0*nspin, iunmix2, 2, -1 )
+           CALL davcio( df_k(1,1,ipos), 2*ngm0*nspin, iunmix_tk, 1, -1 )
+           CALL davcio( dv_k(1,1,ipos), 2*ngm0*nspin, iunmix_tk, 2, -1 )
            !
         END IF
         IF ( lda_plus_u ) THEN
            !
-           CALL davcio( df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix3,1,-1 )
-           CALL davcio( dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix3,2,-1 )
+           CALL davcio( df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix_ns,1,-1 )
+           CALL davcio( dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix_ns,2,-1 )
+           !
+        END IF
+        !
+        IF ( okpaw ) THEN
+           !
+           CALL davcio( df_bec(1,1,1,ipos),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,1,-1 )
+           CALL davcio( dv_bec(1,1,1,ipos),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2,-1 )
            !
         END IF
         !
@@ -245,6 +286,13 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         !
      END IF
      !
+     IF ( okpaw ) THEN
+        !
+        df_bec(:,:,:,ipos) = df_bec(:,:,:,ipos) - becout
+        dv_bec(:,:,:,ipos) = dv_bec(:,:,:,ipos) - becin
+        !
+     END IF
+     !
   END IF
   !
   IF ( savetofile ) THEN
@@ -257,13 +305,18 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
            CALL davcio( dv(1,1,i), 2*ngm0*nspin, iunmix, 2*i+2, -1 )
            !
            IF ( tmeta ) THEN
-              CALL davcio( df_k(1,1,i), 2*ngm0*nspin, iunmix2, 2*i+1, -1 )
-              CALL davcio( dv_k(1,1,i), 2*ngm0*nspin, iunmix2, 2*i+2, -1 )
+              CALL davcio( df_k(1,1,i), 2*ngm0*nspin, iunmix_tk, 2*i+1, -1 )
+              CALL davcio( dv_k(1,1,i), 2*ngm0*nspin, iunmix_tk, 2*i+2, -1 )
            END IF
            !
            IF ( lda_plus_u ) THEN
-              CALL davcio(df_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix3,2*i+1,-1)
-              CALL davcio(dv_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix3,2*i+2,-1)
+              CALL davcio(df_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix_ns,2*i+1,-1)
+              CALL davcio(dv_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix_ns,2*i+2,-1)
+           END IF
+           !
+           IF ( okpaw ) THEN
+              CALL davcio(df_bec(1,1,1,i),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2*i+1,-1)
+              CALL davcio(dv_bec(1,1,1,i),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2*i+2,-1)
            END IF
            !
         END IF
@@ -288,17 +341,17 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      !
      IF ( tmeta ) THEN
         !
-        !! CALL davcio( taukout, 2*ngm0*nspin, iunmix2, 1, 1 )
-        !! CALL davcio( taukin,  2*ngm0*nspin, iunmix2, 2, 1 )
+        !! CALL davcio( taukout, 2*ngm0*nspin, iunmix_tk, 1, 1 )
+        !! CALL davcio( taukin,  2*ngm0*nspin, iunmix_tk, 2, 1 )
         rhoinsave(:,:) = taukout(1:ngm0,:)
-        CALL davcio( rhoinsave, 2*ngm0*nspin, iunmix2, 1, 1 )
+        CALL davcio( rhoinsave, 2*ngm0*nspin, iunmix_tk, 1, 1 )
         rhoinsave(:,:) = taukin(1:ngm0,:)
-        CALL davcio( rhoinsave,  2*ngm0*nspin, iunmix2, 2, 1 )
+        CALL davcio( rhoinsave,  2*ngm0*nspin, iunmix_tk, 2, 1 )
         !
         IF ( mixrho_iter > 1 ) THEN
            !
-           CALL davcio( df_k(1,1,ipos), 2*ngm0*nspin, iunmix2, 2*ipos+1, 1 )
-           CALL davcio( dv_k(1,1,ipos), 2*ngm0*nspin, iunmix2, 2*ipos+2, 1 )
+           CALL davcio( df_k(1,1,ipos), 2*ngm0*nspin, iunmix_tk, 2*ipos+1, 1 )
+           CALL davcio( dv_k(1,1,ipos), 2*ngm0*nspin, iunmix_tk, 2*ipos+2, 1 )
            !
         END IF
         !
@@ -308,15 +361,30 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      !
      IF ( lda_plus_u ) THEN
         !
-        CALL davcio( nsout, ldim*ldim*nspin*nat, iunmix3, 1, 1 )
-        CALL davcio( nsin , ldim*ldim*nspin*nat, iunmix3, 2, 1 )
+        CALL davcio( nsout, ldim*ldim*nspin*nat, iunmix_ns, 1, 1 )
+        CALL davcio( nsin , ldim*ldim*nspin*nat, iunmix_ns, 2, 1 )
         !
         IF ( mixrho_iter > 1 ) THEN
            !
            CALL davcio( df_ns(1,1,1,1,ipos), &
-                        ldim*ldim*nspin*nat, iunmix3, 2*ipos+1, 1 )
+                        ldim*ldim*nspin*nat, iunmix_ns, 2*ipos+1, 1 )
            CALL davcio( dv_ns(1,1,1,1,ipos), &
-                        ldim*ldim*nspin*nat, iunmix3, 2*ipos+2, 1 )
+                        ldim*ldim*nspin*nat, iunmix_ns, 2*ipos+2, 1 )
+        END IF
+        !
+     END IF
+     !
+     IF ( okpaw ) THEN
+        !
+        CALL davcio( becout, (nhm*(nhm+1)/2)*nat*nspin, iunmix_paw, 1, 1 )
+        CALL davcio( becin , (nhm*(nhm+1)/2)*nat*nspin, iunmix_paw, 2, 1 )
+        !
+        IF ( mixrho_iter > 1 ) THEN
+           !
+           CALL davcio( df_bec(1,1,1,ipos), (nhm*(nhm+1)/2)*nat*nspin, &
+                        iunmix_paw, 2*ipos+1, 1 )
+           CALL davcio( dv_bec(1,1,1,ipos), (nhm*(nhm+1)/2)*nat*nspin, &
+                        iunmix_paw, 2*ipos+2, 1 )
         END IF
         !
      END IF
@@ -346,6 +414,15 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         !
      END IF
      !
+     IF ( okpaw ) THEN
+        !
+        ALLOCATE( becinsave (nhm*(nhm+1)/2,nat,nspin), &
+                  becoutsave(nhm*(nhm+1)/2,nat,nspin) )
+        becinsave  = becin
+        becoutsave = becout
+        !
+     END IF
+     !
   END IF
   !
   DO i = 1, iter_used
@@ -360,7 +437,12 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         IF ( lda_plus_u ) betamix(i,j) = betamix(i,j) + &
                           ns_ddot( df_ns(1,1,1,1,j), df_ns(1,1,1,1,i), nspin )
         !
-        betamix(j,i) = betamix(i,j)
+        IF ( okpaw ) &
+           betamix(i,j) = betamix(i,j) + &
+                          rho1_ddot( df_bec(1,1,1,j), df_bec(1,1,1,i) )
+        !
+        betamix(j,i) = betamix(i,j) !symmetrize
+        !
         !
      END DO
      !
@@ -385,6 +467,9 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      IF ( lda_plus_u ) &
         work(i) = work(i) + ns_ddot( df_ns(1,1,1,1,i), nsout, nspin )
      !
+     IF ( okpaw ) &
+        work(i) = work(i) + rho1_ddot( df_bec(1,1,1,i), becout )
+     !
   END DO
   !
   DO i = 1, iter_used
@@ -406,6 +491,13 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         !
      END IF
      !
+     IF ( okpaw ) THEN
+        !
+        becin  = becin  - gamma0 * dv_bec(:,:,:,i)
+        becout = becout - gamma0 * df_bec(:,:,:,i)
+        !
+     END IF
+     !
   END DO
   !
   ! ... auxiliary vectors dv and df not needed anymore
@@ -414,7 +506,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      !
      IF ( lda_plus_u ) THEN
         !
-        CLOSE( iunmix3, STATUS = 'KEEP' )
+        CLOSE( iunmix_ns, STATUS = 'KEEP' )
         !
         DEALLOCATE( df_ns, dv_ns )
         !
@@ -422,9 +514,17 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
      !
      IF ( tmeta ) THEN
         !
-        CLOSE( iunmix2, STATUS = 'KEEP' )
+        CLOSE( iunmix_tk, STATUS = 'KEEP' )
         !
         DEALLOCATE( df_k, dv_k )
+        !
+     END IF
+     !
+     IF ( okpaw ) THEN
+        !
+        CLOSE( iunmix_paw, STATUS = 'KEEP' )
+        !
+        DEALLOCATE( df_bec, dv_bec )
         !
      END IF
      !
@@ -454,6 +554,15 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
         !
      END IF
      !
+     IF ( okpaw ) THEN
+        !
+        df_bec(:,:,:,inext) = becoutsave
+        dv_bec(:,:,:,inext) = becinsave
+        !
+        DEALLOCATE( becinsave, becoutsave )
+        !
+     END IF
+     !
      df(:,:,inext) = rhoutsave(:,:)
      dv(:,:,inext) = rhoinsave(:,:)
      !
@@ -480,6 +589,8 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, nsout, nsin, alphamix, &
   IF ( tmeta ) taukin = taukin + alphamix * taukout
   !
   IF ( lda_plus_u ) nsin = nsin + alphamix * nsout
+  !
+  IF ( okpaw ) becin = becin + alphamix * becout
   !
   CALL stop_clock( 'mix_rho' )
   !
@@ -707,6 +818,158 @@ FUNCTION tauk_ddot( tauk1, tauk2, ngm1, ngm2, nspin, gf )
   RETURN
   !
 END FUNCTION tauk_ddot
+!
+!
+!----------------------------------------------------------------------------
+FUNCTION rho1_ddot( bec1, bec2 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates 4pi/G^2*rho1(-G)*rho2(G) = V1_Hartree(-G)*rho2(G),
+  ! ... where rho1 and rho2 are 1-center charges (AE and PS)
+  ! ... input variables are the augmentation channel occupations
+  ! ... used as an estimate of the self-consistency error on the energy
+  !
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : e2, tpi, fpi
+  USE cell_base,     ONLY : omega, tpiba2
+  USE gvect,         ONLY : ngm, nl, nlm, gg, g, gstart
+  USE lsda_mod,      ONLY : nspin
+  USE wvfct,         ONLY : gamma_only
+  !  
+  USE grid_paw_variables, ONLY : pp, okpaw, prodp, prodpt, prod0p, prod0pt
+  USE ions_base,          ONLY : nat, ntyp => nsp, ityp
+  USE uspp_param,         ONLY : lmaxq, nh, nhm 
+  USE wvfct,              ONLY : gamma_only
+  !
+  IMPLICIT NONE
+  !
+  ! ... I/O variables
+  !
+  REAL(DP), INTENT(IN) :: &
+     bec1(nhm*(nhm+1)/2,nat,nspin), &
+     bec2(nhm*(nhm+1)/2,nat,nspin)
+  !
+  REAL(DP)                :: rho1_ddot
+  !
+  ! ... and the local variables
+  !
+  REAL(DP) :: fac   ! a multiplicative factor
+  !
+  INTEGER :: gi, ig, na, nt, ih, jh, ijh, ijh2, is
+  ! counters
+  !
+  COMPLEX(DP), POINTER :: prodp_(:,:,:), prod0p_(:,:,:)
+  INTEGER :: i_what
+  REAL(DP):: i_sign
+  !
+  rho1_ddot = 0.D0   
+  !
+  IF ( .NOT. okpaw ) RETURN
+  !
+  gi = gstart
+  !
+  fac = e2 * fpi / tpiba2
+  !  
+  whattodo: DO i_what=1, 2
+     !
+     NULLIFY(prodp_,prod0p_)
+     IF (i_what==1) THEN
+        prodp_ => prodp
+        prod0p_ => prod0p
+     ELSE IF (i_what==2) THEN
+        prodp_ => prodpt
+        prod0p_ => prod0pt
+     END IF
+     i_sign = DBLE(1-2*(i_what-1)) ! = +1 if i_what==1, -1 if i_what==2
+     !
+     DO ijh = 1, nhm*(nhm+1)/2
+        !
+        DO ijh2 = 1, nhm*(nhm+1)/2
+           !
+           DO na = 1, nat
+              !
+              nt = ityp (na)
+              IF ( nspin == 1 ) THEN
+                 !
+                 rho1_ddot = rho1_ddot + i_sign * fac * &
+                 bec1(ijh,na,1) * prodp_(ijh, ijh2, nt) * bec2(ijh2,na,1)
+                 !
+!!$              gamma_only case not yet implemented
+!!$              IF ( gamma_only ) rho1_ddot = 2.D0 * rho1_ddot
+                 !
+              ELSE IF ( nspin == 2 ) THEN
+                 !
+                 ! ... first the charge
+                 !
+                 rho1_ddot = rho1_ddot + i_sign * fac * &
+                  (bec1(ijh,na,1)+bec1(ijh,na,2)) * prodp_(ijh,ijh2,nt) * &
+                  (bec2(ijh2,na,1)+bec2(ijh2,na,2))
+                 ! 
+!!$              IF ( gamma_only ) rho1_ddot = 2.D0 * rho1_ddot
+                 !
+                 ! ... then the magnetization
+                 !
+                 fac = e2 * fpi / tpi**2  ! lambda = 1 a.u.
+                 !
+                 ! ... G=0 term
+                 !
+                 IF ( gstart == 2 ) THEN
+                    !
+                    rho1_ddot = rho1_ddot + i_sign * fac * &
+                    (bec1(ijh,na,1)-bec1(ijh,na,2)) * prod0p_(ijh,ijh2,nt) * &
+                    (bec2(ijh2,na,1)-bec2(ijh2,na,2))
+                    !
+                 END IF
+                 !
+!!$              IF ( gamma_only ) fac = 2.D0 * fac
+                 !
+                 rho1_ddot = rho1_ddot + i_sign * fac * &
+                   (bec1(ijh,na,1)-bec1(ijh,na,2)) * prodp_(ijh,ijh2,nt) * &
+                   (bec2(ijh2,na,1)-bec2(ijh2,na,2))
+                 !
+!!$           non-collinear case not yet implemented
+!!$           ELSE IF ( nspin == 4 ) THEN
+!!$              !
+!!$              rho1_ddot = rho1_ddot + fac * DBLE((-1)**(i_what-1)) * 
+!!$              bec1(ijh,na,1) * prodp_(ijh, ijh2, nt) * bec2(ijh2,na,1)
+!!$              !
+!!$              IF ( gamma_only ) rho1_ddot = 2.D0 * rho1_ddot
+!!$              !
+!!$              fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
+!!$              !
+!!$              IF ( gstart == 2 ) THEN
+!!$                 !
+!!$                 rho1_ddot = rho1_ddot + DBLE((-1)**(i_what-1)) * fac * &
+!!$                 bec1(ijh,na,2) * prod0p_(ijh,ijh2,nt) * bec2(ijh2,na,2)+ &
+!!$                 bec1(ijh,na,3) * prod0p_(ijh,ijh2,nt) * bec2(ijh2,na,3)+ &
+!!$                 bec1(ijh,na,4) * prod0p_(ijh,ijh2,nt) * bec2(ijh2,na,4)
+!!$                 !
+!!$              END IF
+!!$              !
+!!$              IF ( gamma_only ) fac = 2.D0 * fac
+!!$              !
+!!$              rho1_ddot = rho1_ddot + DBLE((-1)**(i_what-1)) * fac * &
+!!$              ( bec1(ijh,na,2) * prodp_(ijh,ijh2,nt) * bec2(ijh2,na,2)+ &
+!!$                bec1(ijh,na,3) * prodp_(ijh,ijh2,nt) * bec2(ijh2,na,3)+ &
+!!$                bec1(ijh,na,4) * prodp_(ijh,ijh2,nt) * bec2(ijh2,na,4) )
+!!$                 !
+              END IF
+              !
+           END DO
+           !
+        END DO
+        !
+     END DO
+     !
+  END DO whattodo
+  !
+  rho1_ddot = rho1_ddot * omega * 0.5D0
+  !
+  CALL reduce( 1, rho1_ddot )
+  !
+  RETURN
+  !
+END FUNCTION rho1_ddot
 !
 !----------------------------------------------------------------------------
 FUNCTION ns_ddot( ns1, ns2, nspin )

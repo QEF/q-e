@@ -61,6 +61,9 @@ fft_scalar.o : kind.o
 fft_types.o : io_global.o
 functionals.o : io_global.o
 functionals.o : kind.o
+grid_paw_variables.o : kind.o
+grid_paw_variables.o : parameters.o
+grid_paw_variables.o : radial_grids.o
 griddim.o : fft_scalar.o
 griddim.o : fft_types.o
 griddim.o : io_global.o
@@ -204,6 +207,15 @@ read_namelists.o : input_parameters.o
 read_namelists.o : io_global.o
 read_namelists.o : kind.o
 read_namelists.o : mp.o
+read_paw.o : atom.o
+read_paw.o : constants.o
+read_paw.o : functionals.o
+read_paw.o : grid_paw_variables.o
+read_paw.o : ions_base.o
+read_paw.o : kind.o
+read_paw.o : pseudo_types.o
+read_paw.o : radial_grids.o
+read_paw.o : uspp.o
 read_upf.o : kind.o
 read_upf.o : pseudo_types.o
 read_uspp.o : atom.o

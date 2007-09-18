@@ -274,7 +274,7 @@ subroutine write_results
                err=1110, iostat=ios,form='formatted')
         endif
 1110    call mp_bcast(ios,ionode_id)
-        call errore('write_result','opening file_wavefunctions',abs(ios))
+        call errore('write_result','opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
         if (ionode) then
            if (nspin==1) then
               write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)

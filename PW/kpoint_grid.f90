@@ -15,8 +15,6 @@ subroutine kpoint_grid &
 !
   USE kinds, only: DP
   USE noncollin_module, ONLY: noncolin
-  USE spin_orb,         ONLY : domag
-  USE symme,            ONLY : t_rev
   implicit none
   ! INPUT:
   integer k1i, k2i, k3i, ik1, ik2, ik3, nsingle
@@ -83,7 +81,6 @@ subroutine kpoint_grid &
                      + s(i,3,ns) * xkg(3,nk)
               xkr(i) = xkr(i) - nint( xkr(i) )
            end do
-           if(t_rev(ns).eq.1) xkr = -xkr
            xx = xkr(1)*nk1 - 0.5d0*k1
            yy = xkr(2)*nk2 - 0.5d0*k2
            zz = xkr(3)*nk3 - 0.5d0*k3
@@ -102,7 +99,7 @@ subroutine kpoint_grid &
                     'something wrong in the checking algorithm',1)
               end if
            end if
-           if (.not. noncolin.or. .not.domag) then
+           if (.not. noncolin) then
               xx =-xkr(1)*nk1 - 0.5d0*k1
               yy =-xkr(2)*nk2 - 0.5d0*k2
               zz =-xkr(3)*nk3 - 0.5d0*k3

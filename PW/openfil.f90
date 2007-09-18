@@ -52,6 +52,7 @@ SUBROUTINE openfil()
   ! ... for the direct-access file containing wavefunctions
   !
   nwordwfc = nbnd*npwx*npol
+
   !
   ! ... iunwfc=10: read/write wfc from/to file
   ! ... iunwfc=-1: copy wfc to/from RAM 

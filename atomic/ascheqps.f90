@@ -147,14 +147,13 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
      detlw=detup  
   enddo
 100 continue
-  count=0
+  count = 0
   if(e.gt.eup) e=0.9_DP*eup+0.1_DP*elw
   if(e.lt.elw) e=0.9_DP*elw+0.1_DP*eup
   !
   !    and find the detailed value
   !      
   do iter=1,maxter
-
      call compute_det(nn,lam,jam,e,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
                       nwfx,lls,jjs,ikk,det)
 
@@ -175,7 +174,6 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
            eup=e-0.001_DP
            call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,&
                             nbeta,nwfx,lls,jjs,ikk,detup)
-
            if (count.gt.30) &
                 call errore('ascheqps','too many attempts ',1)
            goto 100

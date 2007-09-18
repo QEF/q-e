@@ -23,8 +23,7 @@ subroutine ld1_setup
                 nwf,                       jj,   el,   isw,   oc, nstoae, &
                 nwfs,          lls,        jjs,  els,  isws,  ocs, &
                 nwfts,  nnts,  llts, nnts, jjts, elts, iswts, octs, nstoaets, &
-                nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, &
-                lpaw
+                nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec
   use funct, only : get_iexch, dft_is_meta, start_exx !, set_dft_from_name
   implicit none
 
@@ -91,6 +90,7 @@ subroutine ld1_setup
   !
   !  divide the core and valence states
   !
+  gen_and_test:&
   if (iswitch == 3) then 
      isws=1
      do n=1,nwf
@@ -138,9 +138,6 @@ subroutine ld1_setup
            &            'the wavefunction chosen for local potential',nsloc)
            end if
         end if
-        if (lpaw .and. ocs(nsloc)>0.0_DP) &
-           call errore('ld1_setup','Paw generation with electrons' // &
-           &    'in the local channel is not available',1)
      else
         nsloc=-1   
         nbeta=nwfs
@@ -155,7 +152,7 @@ subroutine ld1_setup
              ('ld1_setup','mismatched all-electron/pseudo occupations',n)
         endif
      enddo
-  endif
+  endif gen_and_test
   !
   !     zero the external potential and total energies
   !

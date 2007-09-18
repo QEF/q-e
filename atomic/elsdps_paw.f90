@@ -12,6 +12,8 @@
 !
 !   total paw energy in the local-spin-density scheme
 !
+call infomsg('elsdps_paw', 'energy report for PAW coming soon...')
+#ifdef __DONT_DEFINE_ME
 use kinds, only: DP
 use constants, only: fpi
 use radial_grids, only : ndmx
@@ -91,6 +93,6 @@ do ns=1,nwfts
       ekin=ekin+octs(ns)*enlts(ns)
    endif
 end do
-
+#endif
 return
 end subroutine elsdps_paw

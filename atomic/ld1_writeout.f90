@@ -23,7 +23,7 @@ subroutine ld1_writeout
                      elts, llts, octs, rcut, etots, nwfts, &
                      lmax, lloc, zval, nlc, nnl, alps, alpc, alc, cc, nlcc
   use funct, only : get_dft_name
-  use atomic_paw, only : paw_io
+  use read_paw_module, only : paw_io
   implicit none
 
   integer :: &
@@ -70,6 +70,14 @@ subroutine ld1_writeout
         ! write experimental PAW setup
         !
         call paw_io(pawsetup,iunps,"OUT")
+        !
+        !
+        ! and the corresponding PP
+        !
+        open(unit=iunps+1, file=trim(file_pseudopw)//".UPF", status='unknown',  &
+            form='formatted', err=50, iostat=ios)
+        call write_upf(iunps+1)
+        close(iunps+1)
         !
      else if (oldformat) then
         !

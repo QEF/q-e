@@ -97,6 +97,7 @@ get_locals.o \
 ggen.o \
 gk_sort.o \
 gradcorr.o \
+grid_paw_routines.o \
 gweights.o \
 g2_kin.o \
 h_epsi_her_apply.o \
@@ -144,6 +145,7 @@ orthoatwfc.o \
 output_tau.o \
 para.o \
 paw.o \
+paw_xc.o \
 potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \
@@ -154,6 +156,7 @@ pw_gemm.o \
 pw_restart.o \
 pwcom.o \
 qvan2.o \
+rad_paw_routines.o \
 rcgdiagg.o \
 rdiagh.o \
 rdiaghg.o \
@@ -246,7 +249,7 @@ wfcinit.o \
 wgauss.o \
 write_ns.o \
 wsweight.o \
-weights.o
+weights.o \
 
 # not actually used
 DIIS_OBJS=\
@@ -274,6 +277,7 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
+../Modules/grid_paw_variables.o \
 ../Modules/input_parameters.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
@@ -303,6 +307,7 @@ MODULES = \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
+../Modules/read_paw.o \
 ../Modules/read_upf.o \
 ../Modules/read_uspp.o \
 ../Modules/recvec.o \

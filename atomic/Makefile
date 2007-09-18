@@ -93,20 +93,29 @@ ld1inc.o \
 parameters.o 
 
 MODULES = \
+../Modules/atom.o \
+../Modules/cell_base.o \
 ../Modules/constants.o \
+../Modules/control_flags.o \
 ../Modules/functionals.o \
+../Modules/grid_paw_variables.o \
 ../Modules/io_global.o \
 ../Modules/kind.o \
+../Modules/ions_base.o \
+../Modules/ions_base.o \
 ../Modules/io_files.o \
 ../Modules/pseudo_types.o \
 ../Modules/radial_grids.o \
 ../Modules/random_numbers.o \
 ../Modules/read_upf.o \
+../Modules/timestep.o \
 ../Modules/version.o \
 ../Modules/parameters.o \
 ../Modules/parallel_include.o \
+../Modules/read_paw.o \
 ../Modules/mp_global.o \
 ../Modules/mp.o \
+../Modules/uspp.o \
 ../PW/startup.o
 
 TLDEPS= bindir mods libs 

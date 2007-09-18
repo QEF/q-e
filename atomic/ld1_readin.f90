@@ -14,6 +14,7 @@ subroutine ld1_readin
   use kinds,      ONLY : dp
   use radial_grids, only: ndmx
   use ld1_parameters, only: ncmax1, nwfx, nwfsx
+  use parameters,     only: lmaxx
   use constants,  ONLY : rytoev, c_au
   USE io_global,  ONLY : ionode, ionode_id, stdout
   USE mp,         ONLY : mp_bcast
@@ -25,7 +26,7 @@ subroutine ld1_readin
                          vpsloc, vnl,nld, iswitch, tr2, &
                          nspin, lsd, rel, isic, latt, vdw, lpaw,  tm, &
                          grid, zed, lmax, beta, rhoc, nconf, prefix,  &
-                         nnl, jjts, pawsetup, zval, title, &
+                         nnl, jjts, zval, title, &
                          nlc, rm, rho0, lloc, rcore, rcloc, nlcc, & 
                          file_pseudo, file_pseudopw, &
                          file_potscf, file_screen, file_qvan, file_recon, &
@@ -33,11 +34,15 @@ subroutine ld1_readin
                          file_core, file_beta, file_chi, author, &
                          nld, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
-                         frozen_core, lsdts, new_core_ps, cau_fact
+                         frozen_core, lsdts, new_core_ps, cau_fact, &
+                         lpaw, lnc2paw, pawsetup,rcutnc2paw, & !paw
+                         paw_rmatch_augfun, which_paw_augfun,& !paw
+                         rhos, bmat !extra for paw2us
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
-  use atomic_paw, only : paw_io, paw2us
+  use read_paw_module, only : paw_io
+  use atomic_paw, only : paw2us
   implicit none
 
   integer ::  &
@@ -106,8 +111,14 @@ subroutine ld1_readin
        new_core_ps, & ! if true the core charge is pseudized with bessel funct.
        rcore, &    ! the core radius for nlcc
        rcloc, &    ! the local cut-off for pseudo
-       lpaw,  &    ! if true create a PAW dataset
        author, &   ! the author of the PP
+       ! paw variables:
+       which_paw_augfun, &  ! choose shape of paw aug.fun. (GAUSS, BESSEL..)
+       lpaw,             &  ! if true generate or test a PAW dataset
+       lnc2paw,          &  ! if true the PAW dataset is generate from the NC one
+       rCutNC2paw,       &  ! a cut-off radius for NC wavefunctions to be used
+       paw_rmatch_augfun,& ! define the matching radius for paw aug.fun.
+       ! output files:
        file_pseudopw, & ! output file where the pseudopotential is written
        file_screen,   & ! output file for the screening potential
        file_core,     & ! output file for total and core charge
@@ -122,7 +133,7 @@ subroutine ld1_readin
        file_wfcusgen, & ! output file where the ultra-soft wfc used for 
                         !        pseudo generation are written
        file_recon       ! output file needed for the paw reconstruction
-       
+
    !
   prefix       = 'ld1'
   file_pseudo  = ' '
@@ -173,7 +184,7 @@ subroutine ld1_readin
   author='anonymous'
 
   vdw  = .false.
-  
+
   ! read the namelist input
 
   if (ionode) read(5,input,err=100,iostat=ios) 
@@ -304,6 +315,12 @@ subroutine ld1_readin
      pseudotype=0
      jjs=0.0_dp
 
+     !    paw defaults:
+     lnc2paw = .false.
+     which_paw_augfun = 'AE'
+     paw_rmatch_augfun=0.5_dp   ! reasonable
+     rcutnc2paw(:) = 1.0_dp     ! reasonable
+
      if (ionode) read(5,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id)
      call errore('ld1_readin','reading inputp',abs(ios))
@@ -355,6 +372,14 @@ subroutine ld1_readin
      endif
      nlc=0
      nnl=0
+
+     if (lnc2paw) then
+        call errore('ld1_readin', &
+             'You have chosen to generating PAW on top of NC', -1)
+        do ns=1,nwfs
+           if (rcutnc2paw(ns) <= 0._dp) rcutnc2paw(ns)=rcut(ns)
+        end do
+     end if
 
   end if
   !
@@ -495,19 +520,21 @@ subroutine ld1_readin
         call read_pseudoupf
         call check_mesh(grid)
         !
-     else if (matches('.PAW',file_pseudo) .or. matches('.PAW',file_pseudo)) then
+     else if (matches('.PAW',file_pseudo) .or. matches('.paw',file_pseudo)) then
         !
         !    PAW dataset
         !
+        write(stdout,'("Reading pseudopotential from file: ",a)') trim(file_pseudo)
         lpaw=.true.
         grid%xmin=xmin  ! this is a stupid thing to do...
         open(unit=111, file=trim(file_pseudo), status='unknown',  &
              form='formatted', err=50, iostat=ios)
 50      call errore('ld1_readin','open error on file '//file_pseudo,abs(ios))
-        call paw_io(pawsetup,111,"INP")
+        !call paw_io(pawsetup,111,"INP")
+        call paw_io(pawsetup,111,"INP",ndmx,nwfsx,lmaxx)
         close(111)
-        call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, qq, &
-                      qvan, els, rcutus, pseudotype )
+        call paw2us ( pawsetup, zval, grid, nbeta, lls, ikk, betas, &
+                      qq, qvan,vpsloc, bmat, rhos, pseudotype )
         call check_mesh(grid)
         !
      else if ( matches('.rrkj3', file_pseudo) .or. &

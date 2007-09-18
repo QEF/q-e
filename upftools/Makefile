@@ -6,7 +6,8 @@ OBJS = write_upf.o
 MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
        ../Modules/parser.o ../Modules/io_global.o ../Modules/mp_global.o \
        ../Modules/io_files.o \
-       ../Modules/mp.o ../Modules/parallel_include.o ../Modules/constants.o
+       ../Modules/mp.o ../Modules/parallel_include.o ../Modules/constants.o \
+       ../flib/gridsetup.o
 SPLINE = ../Modules/splinelib.o
 FUNCT = ../Modules/functionals.o
 UPF_MOD =../Modules/read_upf.o ../flib/flush_unit.o ../flib/matches.o ../flib/error.o ../flib/gridsetup.o

@@ -18,8 +18,8 @@ MODULE atom
   SAVE
   !
   type(radial_grid_type) :: &
-       rgrid(npsx)                ! the information on atomic radial grids.
-                                  ! NB: some of the subsequent data are therefore redundant 
+       rgrid(npsx)               &! the information on atomic radial grids.
+                                 &! NB: some of the subsequent data are therefore redundant 
                                   ! and will be eliminated in due course asap
   REAL(DP) :: &
 !       zmesh(npsx),              &! the atomic charge for mesh generation

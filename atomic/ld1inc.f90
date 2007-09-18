@@ -9,7 +9,7 @@ module ld1inc
   use kinds, only : dp
   use ld1_parameters
   use radial_grids, only: radial_grid_type, ndmx
-  use atomic_paw, only : paw_t
+  use pseudo_types, only : paw_t
   implicit none
   save
   PRIVATE :: nwfx, nwfsx, ncmax1
@@ -49,17 +49,6 @@ module ld1inc
   !    the parameters of the logarithmic mesh
   !
   type(radial_grid_type) :: grid
-!  integer :: &
-!       mesh     ! the number of mesh points
-!  real(DP) :: &
-!       r(ndmx),     & ! the radial mesh
-!       r2(ndmx),    & ! the square of the radial mesh 
-!       rab(ndmx),   & ! d r(x) / d x where x is the linear grid
-!       sqr(ndmx),   & ! the square root of the radial mesh
-!       xmin,       & ! the minimum x
-!       rmax,       & ! the maximum radial point
-!       zmesh,      & ! the ionic charge used for the mesh
-!       dx            ! the deltax of the linear mesh
   !
   !    the variables for computing logarithmic derivatives
   !
@@ -250,14 +239,19 @@ module ld1inc
   !  variables needed for PAW dataset generation and test
   !
   logical :: &
-       lpaw        ! if true generate or test a PAW dataset
+       lpaw,      &! if true generate or test a PAW dataset
+       lnc2paw     ! if true the PAW dataset is generate from the NC one
   type(paw_t) :: &
        pawsetup    ! the PAW dataset
   real(DP) ::       &
+       paw_rmatch_augfun, & ! define the matching radius for paw aug.fun.
        psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
        psccharge(ndmx),   & ! smoothened core charge for PAW
-       paw_energy(5,3)
+       rCutNC2paw(nwfsx)    ! a cut-off radius for NC wavefunctions to be used
+                            ! instead of AE ones in the construction of PAW
+   character(len=20) ::&
+       which_paw_augfun     ! choose shape of paw aug.fun. (GAUSS, BESSEL..)
   !
   ! conversion factor
   ! 

@@ -18,8 +18,7 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id, npool, kunit
 #if defined (EXX)
-  USE exx,       ONLY : index_xk, index_xkq, nkqs, nqs
-  USE funct,     ONLY : dft_is_hybrid
+  USE exx,       ONLY : lexx, index_xk, index_xkq, nkqs, nqs
 #endif
   !
   IMPLICIT NONE
@@ -73,7 +72,7 @@ SUBROUTINE divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
      IF ( lsda ) isk(1:nks) = isk(nbase+1:nbase+nks)
      !
 #if defined (EXX)
-     IF ( dft_is_hybrid() ) THEN
+     IF ( lexx ) THEN
         index_xk(1:nkqs) = index_xk(1:nkqs) - nbase
         index_xkq(1:nks,1:nqs) = index_xkq(nbase+1:nbase+nks,1:nqs)
         !

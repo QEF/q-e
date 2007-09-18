@@ -409,6 +409,7 @@ SUBROUTINE print_ps_info
                               a_nlcc, b_nlcc, alpha_nlcc
   USE uspp_param,      ONLY : zp, nqf, rinner, nqlc, nbeta, iver, lll, &
                               psd, tvanp
+  USE grid_paw_variables, ONLY: tpawp
   !
   INTEGER :: nt
   CHARACTER :: ps*35
@@ -417,6 +418,8 @@ SUBROUTINE print_ps_info
      !
      IF ( tvanp(nt) ) THEN
         ps='Ultrasoft'
+     ELSE IF ( tpawp (nt) ) THEN
+        ps="Projector augmented-wave"
      ELSE
         ps='Norm-conserving'
      END IF

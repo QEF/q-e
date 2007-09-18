@@ -17,8 +17,9 @@ subroutine set_rho_core
   use constants, only : pi
   use io_global, only : stdout, ionode, ionode_id
   use mp,        only : mp_bcast
-  use ld1inc, only : nlcc, lpaw, grid, rhoc, aeccharge, psccharge, rcore, &
-                     nwf, oc, rel, core_state, psi, file_core, new_core_ps
+  use ld1inc, only : nlcc, grid, rhoc, aeccharge, psccharge, rcore, &
+                     nwf, oc, rel, core_state, psi, file_core, new_core_ps,&
+                     lpaw, lnc2paw
   implicit none
 
   real(DP) :: drho, const, br1, br2, &
@@ -124,7 +125,29 @@ subroutine set_rho_core
         rhoc(n) = a*sin(b*grid%r(n))/grid%r(n) * grid%r2(n)
      end do
   endif
-  if (lpaw) psccharge(1:grid%mesh) = rhoc(1:grid%mesh)
+  if (lpaw) then
+     if (lnc2paw) then
+        ! Mimic NC calculation. If NLCC, the pseudized core charge.
+        if (nlcc) then
+           aeccharge(1:grid%mesh) = rhoc(1:grid%mesh)
+           ! Here one could set another pseudized ccharge, for
+           ! example with a larger matching radius. Right now,
+           ! just take the same as the AE (ie NC) one:
+           psccharge(1:grid%mesh) = rhoc(1:grid%mesh)
+        else
+           ! Reference NC calculation does not have core charge.
+           aeccharge(1:grid%mesh) = 0._dp
+           psccharge(1:grid%mesh) = 0._dp
+        end if
+     else
+        aeccharge(1:grid%mesh) = rhoc(1:grid%mesh)
+        if (nlcc) then
+           psccharge(1:grid%mesh) = rhoc(1:grid%mesh)
+        else
+           psccharge(1:grid%mesh) = 0._dp
+        end if
+     end if
+  end if
   write(stdout,'(/,5x,''  r > '',f4.2,'' : true rho core'')') grid%r(ik)
   if (new_core_ps) then
      write(stdout,'(5x,"Core charge pseudized with two Bessel functions")')

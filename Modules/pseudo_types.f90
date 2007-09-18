@@ -14,55 +14,50 @@
 !  this module contains the definitions of several TYPE structures,
 !  together with their allocation/deallocation routines
 
-      USE kinds, ONLY: DP
-      USE parameters, ONLY: lmaxx
-      USE radial_grids, ONLY: ndmx, radial_grid_type
+        USE kinds, ONLY: DP
+        USE parameters, ONLY: cp_lmax, lmaxx
+        use radial_grids, ONLY: ndmx, radial_grid_type
+        !  USE ld1_parameters, ONLY: ndm, nwfsx
+        USE parameters, ONLY: nwfsx=>nchix
 
-      IMPLICIT NONE
-      integer, parameter:: nwfsx=14  ! the maximum number of pseudo wavefunctions
-
-      SAVE
-
+        IMPLICIT NONE
+        SAVE
+!
 TYPE :: paw_t
    !
    ! Type describing a PAW dataset (temporary).
    ! Functions are defined on a logarithmic radial mesh.
    !
-
    CHARACTER(LEN=2) :: symbol
    REAL (DP) :: zval
    REAL (DP) :: z
    CHARACTER(LEN=80) :: dft
    TYPE(radial_grid_type) :: grid
-!   INTEGER        :: mesh      ! the size of the mesh
-!   REAL (DP), POINTER :: r(:) !r (ndmx)     ! the mesh
-!   REAL (DP), POINTER :: r2(:) !r2 (ndmx)    ! r^2
-!   REAL (DP), POINTER :: sqrtr(:) !sqrtr (ndmx) ! sqrt(r)
-!   REAL (DP) :: dx          ! log(r(i+1))-log(r(i))
-!   REAL (DP) :: zmesh
+   REAL (DP) :: rmatch_augfun  ! the matching radius for augmentation charges
    LOGICAL :: nlcc ! nonlinear core correction
    INTEGER :: nwfc ! number of wavefunctions/projectors
    INTEGER :: lmax ! maximum angular momentum of projectors
-   INTEGER :: l(nwfsx) ! angular momentum of projectors
-   INTEGER :: ikk(nwfsx) ! cutoff radius for the projectors
+   INTEGER, POINTER :: l(:) !l(nwfsx) ! angular momentum of projectors
+   INTEGER, POINTER :: ikk(:) !ikk(nwfsx) ! cutoff radius for the projectors
    INTEGER :: irc ! r(irc) = radius of the augmentation sphere
-   CHARACTER(LEN=2) ::  els (nwfsx) ! the name of the wavefunctions
-   REAL (dp) :: &
-          oc (nwfsx), & ! the occupations
-          enl (nwfsx), & ! the energy of the wavefunctions
-          jj (nwfsx), & ! the total angular momentum
-          rcutus (nwfsx), & ! the cutoff
-          aewfc (ndmx,nwfsx), &  ! all-electron wavefunctions
-          pswfc (ndmx,nwfsx),        & ! pseudo wavefunctions
-          proj (ndmx,nwfsx),     & ! projectors
-          augfun(ndmx,nwfsx,nwfsx),      & ! augmentation functions
-          augmom(nwfsx,nwfsx,0:2*lmaxx) , & ! moments of the augmentation functions
-          aeccharge (ndmx),  & ! AE core charge
-          psccharge (ndmx),  & ! PS core charge
-          aeloc (ndmx),    & ! descreened AE potential: v_AE-v_H[n1]-v_XC[n1+nc]
-          psloc (ndmx),    & ! descreened local PS potential: v_PS-v_H[n~+n^]-v_XC[n~+n^+n~c]
-          kdiff (nwfsx,nwfsx)         ! kinetic energy differences
-!
+   CHARACTER(LEN=2),POINTER ::  els (:) ! the name of the wavefunction
+   REAL (DP), POINTER :: &
+        oc(:), &          !(nwfsx) the occupations
+        enl(:), &         !(nwfsx) the energy of the wavefunctions
+        jj (:), &         ! the total angular momentum
+        rcutus (:), &     ! the cutoff
+        aewfc(:,:), &     !(ndmx,nwfsx) all-electron wavefunctions
+        pswfc(:,:), &     !(ndmx,nwfsx) pseudo wavefunctions
+        proj(:,:), &      !(ndmx,nwfsx) projectors
+        augfun(:,:,:,:), &!(ndmx,nwfsx,nwfsx,0:2*lmaxx+1),
+        augmom(:,:,:), &  !(nwfsx,nwfsx,0:2*lmaxx) moments of the augmentation functions
+        aeccharge(:), &   !(ndmx) AE core charge * 4PI r^2
+        psccharge(:), &   !(ndmx) PS core charge * 4PI r^2
+        pscharge(:), &    !(ndmx) PS charge * 4PI r^2
+        aeloc(:), &       !(ndmx) descreened AE potential: v_AE-v_H[n1]-v_XC[n1+nc]
+        psloc(:), &       !(ndmx) descreened local PS potential: v_PS-v_H[n~+n^]-v_XC[n~+n^+n~c]
+        kdiff(:,:), &     !(nwfsx,nwfsx) kinetic energy differences
+        dion(:,:)         !(nwfsx,nwfsx) descreened D coeffs
 !!!  Notes about screening:
 !!!       Without nlcc, the local PSpotential is descreened with n~+n^ only.
 !!!       The local AEpotential is descreened ALWAYS with n1+nc. This improves
@@ -71,6 +66,8 @@ TYPE :: paw_t
 END TYPE paw_t
 
 !
+!============================================================================
+
 !  BEGIN manual
 !  TYPE DEFINITIONS
 
@@ -83,17 +80,17 @@ END TYPE paw_t
           LOGICAL  :: tvanp             ! .true. if Ultrasoft
           LOGICAL :: nlcc               ! Non linear core corrections
           CHARACTER(LEN=20) :: dft      ! Exch-Corr type
-          REAL(DP) :: zp               ! z valence
-          REAL(DP) :: etotps           ! total energy
-          REAL(DP) :: ecutwfc          ! suggested cut-off for wfc
-          REAL(DP) :: ecutrho          ! suggested cut-off for rho
+          REAL(DP) :: zp                ! z valence
+          REAL(DP) :: etotps            ! total energy
+          REAL(DP) :: ecutwfc           ! suggested cut-off for wfc
+          REAL(DP) :: ecutrho           ! suggested cut-off for rho
 
           LOGICAL :: has_so             ! if .true. includes spin-orbit
-          REAL(DP) :: xmin             ! the minimum x of the linear mesh
-          REAL(DP) :: rmax             ! the maximum radius of the mesh
-          REAL(DP) :: zmesh            ! the nuclear charge used for mesh
-          REAL(DP) :: dx               ! the deltax of the linear mesh
-          INTEGER, POINTER :: nn(:)      ! nn(nwfc)
+          REAL(DP) :: xmin              ! the minimum x of the linear mesh
+          REAL(DP) :: rmax              ! the maximum radius of the mesh
+          REAL(DP) :: zmesh             ! the nuclear charge used for mesh
+          REAL(DP) :: dx                ! the deltax of the linear mesh
+          INTEGER, POINTER :: nn(:)     ! nn(nwfc)
           REAL(DP), POINTER :: rcut(:)  ! cut-off radius(nbeta)
           REAL(DP), POINTER :: rcutus(:)! cut-off ultrasoft radius (nbeta)
           REAL(DP), POINTER :: epseu(:) ! energy (nwfc)
@@ -107,14 +104,14 @@ END TYPE paw_t
           INTEGER :: nbeta              ! number of projectors
           CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc)
           CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta)
-          INTEGER, POINTER :: lchi(:)   ! lchi(nwfc)
-          REAL(DP), POINTER :: oc(:)   ! oc(nwfc)
-          REAL(DP), POINTER :: r(:)    ! r(mesh)
-          REAL(DP), POINTER :: rab(:)  ! rab(mesh)
+          INTEGER, POINTER :: lchi(:)     ! lchi(nwfc)
+          REAL(DP), POINTER :: oc(:)      ! oc(nwfc)
+          REAL(DP), POINTER :: r(:)       ! r(mesh)
+          REAL(DP), POINTER :: rab(:)     ! rab(mesh)
           REAL(DP), POINTER :: rho_atc(:) ! rho_atc(mesh)
           REAL(DP), POINTER :: vloc(:)    ! vloc(mesh)
-          INTEGER, POINTER :: lll(:)       ! lll(nbeta)
-          INTEGER, POINTER :: kkbeta(:)    ! kkbeta(nbeta)
+          INTEGER, POINTER :: lll(:)      ! lll(nbeta)
+          INTEGER, POINTER :: kkbeta(:)   ! kkbeta(nbeta)
           REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta)
           INTEGER :: nd
           REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta)
@@ -124,8 +121,8 @@ END TYPE paw_t
           REAL(DP), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta)
           REAL(DP), POINTER :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
           REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
-          REAL(DP), POINTER :: chi(:,:) !  chi(mesh,nwfc)
-          REAL(DP), POINTER :: rho_at(:) !  rho_at(mesh)
+          REAL(DP), POINTER :: chi(:,:)   !  chi(mesh,nwfc)
+          REAL(DP), POINTER :: rho_at(:)  !  rho_at(mesh)
           
           LOGICAL :: has_paw              ! Whether PAW data is included
           REAL(DP) :: paw_data_format     ! The version of the format
@@ -186,10 +183,6 @@ END TYPE paw_t
 !  ----------------------------------------------
 
       CONTAINS
-
-!  subroutines
-
-!  ----------------------------------------------
 
         SUBROUTINE nullify_pseudo_upf( upf )
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf

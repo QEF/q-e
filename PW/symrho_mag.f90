@@ -15,8 +15,6 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   !
 #include "f_defs.h"
   USE kinds
-  USE CHAR, ONLY : sname
-  USE symme,ONLY : t_rev
   implicit none
   !
   !    first the dummy variables
@@ -34,21 +32,10 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
   ! inp/out: the charge density
   integer , allocatable :: symflag (:,:,:)
   integer :: ri (48), rj (48), rk (48), kpol, i, j, k, isym
-  integer :: table(48, 48), invs(3, 3, 48)
   real(DP) :: sumx, sumy, sumz, mag(3), magrot(3)
   ! auxiliary variables
 
   if (nsym.eq.1) return
-
-  !
-  !    We compute the multiplication table of the group
-  !
-  call multable (nsym, s, table)
-  !
-  !   And we set the matrices of the inverse
-  !
-  call inverse_s (nsym, s, table, invs)
-
 
   allocate (symflag(nrx1, nrx2, nrx3))    
   do k = 1, nr3
@@ -77,12 +64,10 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
                  enddo
 ! rotate the magnetic moment
                 do kpol = 1, 3
-                    magrot(kpol) = invs(1,kpol,isym)*mag(1) + &
-                    invs(2,kpol,isym)*mag(2) + &
-                    invs(3,kpol,isym)*mag(3)
+                    magrot(kpol) = s(1,kpol,isym)*mag(1) + &
+                    s(2,kpol,isym)*mag(2) + &
+                    s(3,kpol,isym)*mag(3)
                 enddo
-                if (sname(isym)(1:3)=='inv') magrot=-magrot
-                if(t_rev(isym).eq.1) magrot=-magrot
                 sumx = sumx + magrot(1)
                 sumy = sumy + magrot(2)
                 sumz = sumz + magrot(3)
@@ -104,8 +89,6 @@ subroutine symrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
                         s(2,kpol,isym)*mag(2) + &
                         s(3,kpol,isym)*mag(3)
                      enddo
-                     if (sname(isym)(1:3)=='inv') magrot=-magrot
-                     if(t_rev(isym).eq.1) magrot=-magrot
 ! go back to carthesian coordinates
                      do kpol = 1, 3
                         mag(kpol)=at(kpol,1)*magrot(1) + &

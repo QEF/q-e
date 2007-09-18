@@ -82,7 +82,7 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
         endif
         call ascheqps(nnts(ns),llts(ns),jjts(ns),enlts(ns),grid%mesh,ndmx,grid,&
              vaux(1,is),thresh,phits(1,ns),betas,ddd(1,1,is),qq,nbf,nwfsx,lls,jjs,ikk)
-        !            write(6,*) ns, nnts(ns),llts(ns), jjts(ns), enlts(ns)
+        !           write(6,*) ns, nnts(ns),llts(ns), jjts(ns), enlts(ns)
         !
         !   normalize the wavefunctions 
         !

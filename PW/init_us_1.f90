@@ -41,8 +41,12 @@ subroutine init_us_1
                          qq_so, dvan_so, okvan
   USE uspp_param, ONLY : lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
                          kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, &
-                         nbetam, nhm
+                         nbetam, nhm, augfun
   USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
+!! NEW-AUG !!
+  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp
+
+!! NEW-AUG !!
   !
   implicit none
   !
@@ -69,11 +73,10 @@ subroutine init_us_1
   integer, external :: sph_ind
   complex(DP) :: coeff, qgm(1)
   real(DP) :: spinor, ji, jk
-
+  !
   real(DP), allocatable :: xdata(:)
   real(DP) :: d1
-
-
+  !
   call start_clock ('init_us_1')
   !
   !    Initialization of the variables
@@ -220,33 +223,39 @@ subroutine init_us_1
   !
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
-  !
+  !   
   call divide (nqxq, startq, lastq)
   do nt = 1, ntyp
+     !
      if (tvanp (nt) ) then
         do l = 0, nqlc (nt) - 1
            !
            !     first we build for each nb,mb,l the total Q(|r|) function
            !     note that l is the true (combined) angular momentum
-           !     and that the arrays have dimensions 1..l+1
+           !     and that the arrays have dimensions 0..l (no more 1..l+1)
            !
            do nb = 1, nbeta (nt)
               do mb = nb, nbeta (nt)
                  ijv = mb * (mb-1) / 2 + nb
-                 if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
-                      (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
-                      (mod (l + lll (nb, nt) + lll (mb, nt), 2) == 0) ) then
-                    do ir = 1, kkbeta (nt)
-                       if (rgrid(nt)%r(ir) >= rinner (l + 1, nt) ) then
-                          qtot (ir, ijv) = qfunc (ir, ijv, nt)
-                       else
-                          ilast = ir
-                       endif
-                    enddo
-                   if (rinner (l + 1, nt) > 0.d0) &
-                         call setqf(qfcoef (1, l+1, nb, mb, nt), &
-                                    qtot(1,ijv), rgrid(nt)%r, nqf(nt),l,ilast)
-                 endif
+                 paw:& ! in PAW formalism aug. charge is computed elsewhere
+                 if (tpawp(nt)) then
+                    qtot(1:kkbeta(nt),ijv) = augfun(1:kkbeta(nt),nb,mb,l,nt)
+                 else
+                    if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
+                        (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
+                        (mod (l + lll (nb, nt) + lll (mb, nt), 2) == 0) ) then
+                        do ir = 1, kkbeta (nt)
+                           if (rgrid(nt)%r(ir) >= rinner (l + 1, nt) ) then
+                               qtot (ir, ijv) = qfunc (ir, ijv, nt)
+                           else
+                               ilast = ir
+                           endif
+                        enddo
+                        if (rinner (l + 1, nt) > 0.d0) &
+                            call setqf(qfcoef (1, l+1, nb, mb, nt), &
+                                       qtot(1,ijv), rgrid(nt)%r, nqf(nt),l,ilast)
+                    endif
+                 endif paw
               enddo
            enddo
            !
@@ -266,7 +275,8 @@ subroutine init_us_1
                     ijv = mb * (mb - 1) / 2 + nb
                     if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
                          (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
-                         (mod (l + lll(nb, nt) + lll(mb, nt), 2) == 0) ) then
+                         (mod (l + lll(nb, nt) + lll(mb, nt), 2) == 0) &
+                         .or. tpawp(nt) ) then
                        do ir = 1, kkbeta (nt)
                           aux1 (ir) = aux (ir) * qtot (ir, ijv)
                        enddo
@@ -301,7 +311,6 @@ subroutine init_us_1
         do ih=1,nh(nt)
           do jh=1,nh(nt)
             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
-            qq (ih, jh, nt) = omega *  DBLE (qgm (1) )
             do kh=1,nh(nt)
               do lh=1,nh(nt)
                 ijs=0
@@ -340,7 +349,6 @@ subroutine init_us_1
 100 continue
   if (lspinorb) then
     call reduce ( nhm * nhm * ntyp * 8, qq_so )
-    call reduce ( nhm * nhm * ntyp, qq )
   else
     call reduce ( nhm * nhm * ntyp, qq )
   endif
@@ -365,6 +373,8 @@ subroutine init_us_1
         enddo
      enddo
   enddo
+
+
 #ifdef __PARA
   call reduce (nqx * nbetam * ntyp, tab)
 #endif
@@ -390,7 +400,6 @@ subroutine init_us_1
   deallocate (besr)
   deallocate (aux1)
   deallocate (aux)
-
   call stop_clock ('init_us_1')
   return
 end subroutine init_us_1

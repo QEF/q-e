@@ -154,6 +154,7 @@ MODULES = \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \
+../Modules/radial_grids.o \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \

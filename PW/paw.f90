@@ -7,9 +7,9 @@
 !
 MODULE paw
 
-  USE kinds, ONLY: DP
-  USE parameters, ONLY: nbrx, npsx
-  use radial_grids, only: ndmx
+  USE kinds,        ONLY: DP
+  USE parameters,   ONLY: nbrx, npsx
+  use radial_grids, ONLY: ndmx
   !
   ! ... These parameters are needed for the paw variables
   !
