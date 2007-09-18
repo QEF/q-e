@@ -329,7 +329,7 @@ subroutine set_pseudo_paw (is, pawset)
   !
   USE grid_paw_variables, ONLY : tpawp, pfunc, ptfunc, aevloc_at, psvloc_at, &
                                  aerho_atc, psrho_atc, kdiff, &
-                                 augmom, nraug, r2, step_f,aug !!NEW-AUG
+                                 augmom, nraug, step_f,aug !!NEW-AUG
   !USE grid_paw_routines, ONLY : step_f
   !
   implicit none

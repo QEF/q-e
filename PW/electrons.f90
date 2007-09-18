@@ -497,7 +497,9 @@ SUBROUTINE electrons()
               !
               descf_1ae = delta_e_1scf(rho1, rho1new, vr1, descf_1ae_na)  ! AE
               descf_1ps = delta_e_1scf(rho1t,rho1tnew,vr1t,descf_1ps_na)  ! PS
-                    WRITE(6,"(a,f15.10)") "==GRID PAW ENERGIES (HARTREE): "
+!#define __PAW_REPORT
+#ifdef __PAW_REPORT
+                    WRITE(6,"(a,f15.10)") "==PAW (HARTREE):    GRID          RAD"
                     DO i = 1,nat
                         WRITE(6,"(a,i2,a,2f15.10)") "==AE",i,"     :", ehart1(i),paw_correction(i,H,AE)
                         WRITE(6,"(a,i2,a,2f15.10)") "==PS",i,"     :", ehart1t(i),paw_correction(i,H,PS)
@@ -510,7 +512,7 @@ SUBROUTINE electrons()
                                                         SUM(paw_correction(:,H,AE))-SUM(paw_correction(:,H,PS))
                     WRITE(6,"(a,2f15.10)") "=="
                     !
-                    WRITE(6,"(a,2f15.10)") "==GRID PAW ENERGIES (XC): "
+                    WRITE(6,"(a,2f15.10)") "==PAW (XC):        GRID          RAD"
                     DO i = 1,nat
                         WRITE(6,"(a,i2,a,2f15.10)") "==AE",i,"     :", etxc1(i),paw_correction(i,XC,AE)
                         WRITE(6,"(a,i2,a,2f15.10)") "==PS",i,"     :", etxc1t(i),paw_correction(i,XC,PS)
@@ -525,7 +527,7 @@ SUBROUTINE electrons()
                     WRITE(6,"(a,2f15.10)") "==TOTAL:", SUM(etxc1(:))-SUM(etxc1t(:))+SUM(ehart1(:))-SUM(ehart1t(:)),&
                                                     SUM(paw_correction(:,XC,AE))-SUM(paw_correction(:,XC,PS))+&
                                                     SUM(paw_correction(:,H,AE))-SUM(paw_correction(:,H,PS))
-
+#endif
               !
               DEALLOCATE (rho1new, rho1tnew)
            END IF

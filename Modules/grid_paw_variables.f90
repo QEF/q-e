@@ -59,8 +59,8 @@ module grid_paw_variables
 
 !! NEW-AUG !!
   ! Moments of the augmentation functions
-  REAL (DP) :: &
-       r2(ndmx,npsx)    ! r**2 logarithmic mesh
+!   REAL (DP) :: &
+!        r2(ndmx,npsx)    ! r**2 logarithmic mesh
   REAL (DP) :: &
        augmom(nbrx,nbrx,0:6,npsx)     ! moments of PAW augm. functions
   INTEGER :: &
@@ -135,10 +135,6 @@ module grid_paw_variables
   REAL(DP), ALLOCATABLE, TARGET :: &
        rho1new(:,:,:),             &! new 1center AE charge density in real space
        rho1tnew(:,:,:)              ! new 1center PS charge density in real space
-  ! pltz
-!   REAL(DP), TARGET, ALLOCATABLE   :: rho1rad(:,:,:,:) ! AE charge density on radial grid
-!   REAL(DP), TARGET, ALLOCATABLE   :: rho1trad(:,:,:,:)! the same, but pseudo
-!   REAL(DP), TARGET, ALLOCATABLE   :: radpot(:,:,:,:,:)           ! potential on radial grid
 
   ! new vectors needed for mixing of augm. channel occupations
   REAL(DP), ALLOCATABLE :: &
