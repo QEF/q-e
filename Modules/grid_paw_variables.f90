@@ -31,10 +31,14 @@ module grid_paw_variables
        ptfunc(ndmx,nbrx,nbrx,npsx)  ! PS: \tilde{\phi}_{mu}(|r|)-\tilde{\phi}_{nu}(|r|)
 
   REAL(DP), TARGET :: &
-! THE DEFINITION OF augfun IS IN ../Modules/uspp.f90
-!       augfun(ndmx,nbrx,nbrx,0:lqmax,npsx), & ! 
+       !augfun(ndmx,nbrx,nbrx,0:lqmax,npsx), & ! changed to aug of type augfun_t (see below)
        pmultipole(nbrx,nbrx,0:lqmax,npsx), &! AE multipoles
        ptmultipole(nbrx,nbrx,0:lqmax,npsx)  ! PS multipoles
+
+  TYPE augfun_t
+    REAL(DP), ALLOCATABLE :: fun(:,:,:,:)
+  END TYPE
+  TYPE(augfun_t) :: aug(npsx)
 
   ! Analogous to qq in "uspp_param" (Modules/uspp.f90)
   REAL(DP), ALLOCATABLE, TARGET :: &
@@ -144,7 +148,6 @@ module grid_paw_variables
   REAL(DP) ::  deband_1ae, deband_1ps, descf_1ae, descf_1ps
 
 CONTAINS
-
   ! From PW/init_paw_1.f90
   SUBROUTINE step_f(f2,f,r,nrs,nrc,pow,mesh)
     USE kinds , ONLY : dp

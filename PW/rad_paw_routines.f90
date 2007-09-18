@@ -49,8 +49,9 @@ SUBROUTINE PAW_energy(becsum,correction)
     USE radial_grids,           ONLY : ndmx
     USE ions_base,              ONLY : nat, ityp
 
-    USE grid_paw_variables,     ONLY : pfunc, ptfunc, tpawp, aerho_atc, psrho_atc
-    USE uspp_param,             ONLY : augfun, nhm, lmaxq
+    USE grid_paw_variables,     ONLY : pfunc, ptfunc, tpawp, &
+                                       aerho_atc, psrho_atc, aug
+    USE uspp_param,             ONLY : nhm, lmaxq
 
     REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
     REAL(DP), INTENT(OUT),OPTIONAL :: &
@@ -115,7 +116,7 @@ SUBROUTINE PAW_energy(becsum,correction)
                 ! used later for xc energy:
                 rho_core => aerho_atc
             ELSE
-                CALL PAW_rho_lm(na, becsum, ptfunc, rho_lm, augfun)
+                CALL PAW_rho_lm(na, becsum, ptfunc, rho_lm, aug) !fun)
                 !     optional argument for pseudo part --> ^^^^^^
                 ! used later for xc energy:
                 rho_core => psrho_atc
@@ -347,6 +348,9 @@ FUNCTION PAW_xc_energy(na, rho_lm, rho_core, pot_lm, e_lm, task)
                              ix,k         ! counters on directions and radial grid
     ! for gradient correction only:
     REAL(DP),ALLOCATABLE  :: grho_rad(:,:)! workspace (radial slice of grad(rho))
+
+    pot_lm = 0._dp
+    e_lm   = 0._dp
 
     CALL start_clock ('PAW_xc_nrg')
     lsd = nspin-1
@@ -598,7 +602,7 @@ END FUNCTION PAW_h_energy
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! sum up pfuncs x occupation to build radial density's angular momentum components
-SUBROUTINE PAW_rho_lm(na, becsum, pfunc, rho_lm, augfun)
+SUBROUTINE PAW_rho_lm(na, becsum, pfunc, rho_lm, aug)
     USE kinds,                  ONLY : DP
     USE atom,                   ONLY : msh
     USE ions_base,              ONLY : ityp, ntyp => nsp, nat 
@@ -607,12 +611,15 @@ SUBROUTINE PAW_rho_lm(na, becsum, pfunc, rho_lm, augfun)
     USE uspp,                   ONLY : indv, ap, nhtolm,lpl,lpx
     USE parameters,             ONLY : nbrx, lqmax
     USE radial_grids,           ONLY : ndmx
+    USE grid_paw_variables,     ONLY : augfun_t
 
-    INTEGER,  INTENT(IN)         :: na     ! index of atom to use
-    REAL(DP), INTENT(IN)         :: becsum(nhm*(nhm+1)/2,nat,nspin)    ! cross band occupation
-    REAL(DP), INTENT(IN)         :: pfunc(ndmx,nbrx,nbrx,ntyp)         ! psi_i * psi_j
-    REAL(DP), INTENT(OUT)        :: rho_lm(ndmx,lmaxq**2,nspin)       ! AE charge density on rad. grid
-    REAL(DP), OPTIONAL,INTENT(IN):: augfun(ndmx,nbrx,nbrx,0:lqmax,ntyp)! augmentation functions (only for PS part)
+    INTEGER,  INTENT(IN)  :: na     ! index of atom to use
+    REAL(DP), INTENT(IN)  :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupation
+    REAL(DP), INTENT(IN)  :: pfunc(ndmx,nbrx,nbrx,ntyp)     ! psi_i * psi_j
+    REAL(DP), INTENT(OUT) :: rho_lm(ndmx,lmaxq**2,nspin)    ! AE charge density on rad. grid
+!    REAL(DP), OPTIONAL,INTENT(IN):: augfun(ndmx,nbrx,nbrx,0:lqmax,ntyp)! augmentation functions (only for PS part)
+    TYPE(augfun_t), OPTIONAL,INTENT(IN) :: &
+                             aug(ntyp) ! augmentation functions (only for PS part)
 
     REAL(DP)                :: pref ! workspace (ap*becsum)
 
@@ -657,11 +664,11 @@ SUBROUTINE PAW_rho_lm(na, becsum, pfunc, rho_lm, augfun)
                 !
                 rho_lm(1:msh(nt),lm,ispin) = rho_lm(1:msh(nt),lm,ispin) +&
                                 pref * pfunc(1:msh(nt), indv(nb,nt), indv(mb,nt), nt)
-                IF (present(augfun)) THEN
+                IF (present(aug)) THEN
                     ! if I'm doing the pseudo part I have to add the augmentation charge
                     l = INT(sqrt(DBLE(lm-1))) ! l has to start from zero
                     rho_lm(1:msh(nt),lm,ispin) = rho_lm(1:msh(nt),lm,ispin) +&
-                                pref * augfun(1:msh(na), indv(nb,nt), indv(mb,nt), l, nt)
+                                pref * aug(nt)%fun(1:msh(na), indv(nb,nt), indv(mb,nt), l)
                 ENDIF ! augfun
             ENDDO angular_momentum 
         ENDDO !mb

@@ -100,9 +100,10 @@ CONTAINS
          vr1, vr1t, int_r2pfunc, int_r2ptfunc, ehart1, etxc1, vtxc1, &
          ehart1t, etxc1t, vtxc1t, aerho_core, psrho_core, radial_distance, radial_r,&
          dpaw_ae, dpaw_ps, aevloc, psvloc, aevloc_r, psvloc_r, &
-         prodp, prodpt, prod0p, prod0pt
+         prodp, prodpt, prod0p, prod0pt, aug
     !
     IMPLICIT NONE
+    INTEGER :: nt
     !
     IF(allocated(pp))           DEALLOCATE (pp)
     IF(allocated(ppt))          DEALLOCATE (ppt)
@@ -144,6 +145,10 @@ CONTAINS
     !
     IF(allocated(dpaw_ae))      DEALLOCATE (dpaw_ae)
     IF(allocated(dpaw_ps))      DEALLOCATE (dpaw_ps)
+
+    DO nt = 1, ntyp
+        IF(allocated(aug(nt)%fun))  DEALLOCATE (aug(nt)%fun)
+    END DO
     !
   END SUBROUTINE deallocate_paw_internals
 
@@ -167,11 +172,11 @@ CONTAINS
     USE us,         ONLY : nqxq, dq, nqx, tab, qrad
     USE uspp,       ONLY : qq, qq_so
     USE uspp_param, ONLY : lmaxq, betar, qfunc, qfcoef, rinner, nbeta, &
-         kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm, tvanp, augfun
+         kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm, tvanp
     USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef
     !
     USE grid_paw_variables, ONLY: tpawp, pfunc, ptfunc, pp, ppt, prad, ptrad, &
-         int_r2pfunc, int_r2ptfunc, pmultipole, ptmultipole, okpaw
+         int_r2pfunc, int_r2ptfunc, pmultipole, ptmultipole, okpaw, aug
     !
     IMPLICIT NONE
     !
@@ -326,7 +331,7 @@ CONTAINS
                                      rgrid(nt)%r(1:msh(nt)) **2
                    ! add augmentation charge if ps
                    IF (i_what.EQ.2) aux2(1:msh(nt)) = aux2(1:msh(nt)) + &
-                                       augfun(1:msh(nt),nb, mb, 0, nt)* &
+                                       aug(nt)%fun(1:msh(nt),nb, mb, 0)* &
                                        rgrid(nt)%r(1:msh(nt)) **2
                    CALL simpson (msh(nt),aux2,rgrid(nt)%rab(1),int_r2pfunc_(nb,mb,nt))
                 END DO
@@ -345,7 +350,7 @@ CONTAINS
                                        rgrid(nt)%r(1:msh(nt))**l
                       ! add augmentation charge if ps
                       IF (i_what.EQ.2) aux2(1:msh(nt)) = aux2(1:msh(nt)) + &
-                                       augfun(1:msh(nt),nb, mb, l, nt)* &
+                                       aug(nt)%fun(1:msh(nt),nb, mb, l)* &
                                        rgrid(nt)%r(1:msh(nt))**l 
                       CALL simpson (msh(nt),aux2,rgrid(nt)%rab(1),pmultipole_(nb,mb,l,nt))
                    END DO

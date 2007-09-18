@@ -25,6 +25,7 @@ $ECHO "oxygen molecule"
 # set the needed environment variables
 . ../environment_variables
 PSEUDO_DIR="$EXAMPLE_DIR/pseudo"
+mkdir -p "$PSEUDO_DIR"
 
 # required executables and pseudopotentials
 BIN_LIST="pw.x ld1.x"

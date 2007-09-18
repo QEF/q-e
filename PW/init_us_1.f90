@@ -41,11 +41,10 @@ subroutine init_us_1
                          qq_so, dvan_so, okvan
   USE uspp_param, ONLY : lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
                          kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, &
-                         nbetam, nhm, augfun
+                         nbetam, nhm
   USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
 !! NEW-AUG !!
-  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp
-
+  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, aug
 !! NEW-AUG !!
   !
   implicit none
@@ -239,7 +238,7 @@ subroutine init_us_1
                  ijv = mb * (mb-1) / 2 + nb
                  paw:& ! in PAW formalism aug. charge is computed elsewhere
                  if (tpawp(nt)) then
-                    qtot(1:kkbeta(nt),ijv) = augfun(1:kkbeta(nt),nb,mb,l,nt)
+                    qtot(1:kkbeta(nt),ijv) = aug(nt)%fun(1:kkbeta(nt),nb,mb,l)
                  else
                     if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
                         (l <= lll (nb, nt) + lll (mb, nt) )        .and. &

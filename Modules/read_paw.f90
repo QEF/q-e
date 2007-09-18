@@ -319,7 +319,7 @@ subroutine set_pseudo_paw (is, pawset)
        chi, oc, nchi, lchi, jchi, rho_at, rho_atc, nlcc
 !  USE pseud, ONLY: lloc, lmax
   USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
-       rinner, nbeta, kkbeta, lll, jjj, psd, tvanp, augfun, zp
+       rinner, nbeta, kkbeta, lll, jjj, psd, tvanp, zp
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
   USE ions_base, ONLY: zv
@@ -329,7 +329,7 @@ subroutine set_pseudo_paw (is, pawset)
   !
   USE grid_paw_variables, ONLY : tpawp, pfunc, ptfunc, aevloc_at, psvloc_at, &
                                  aerho_atc, psrho_atc, kdiff, &
-                                 augmom, nraug, r2, step_f !!NEW-AUG
+                                 augmom, nraug, r2, step_f,aug !!NEW-AUG
   !USE grid_paw_routines, ONLY : step_f
   !
   implicit none
@@ -443,10 +443,15 @@ subroutine set_pseudo_paw (is, pawset)
           qfunc (1:pawset%grid%mesh, ijv, is) = pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
       enddo
   enddo
-!   qfunc (1:pawset%grid%mesh, 1:pawset%nwfc, 1:pawset%nwfc, is) = &
-!        pawset%augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0)
-  augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax,is) = &
+!   augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax,is) = &
+!        pawset%augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax)
+  ! new sparse allocation for augmentation functions
+  if (allocated(aug(is)%fun)) deallocate(aug(is)%fun)
+  allocate(aug(is)%fun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax))
+  aug(is)%fun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax) = &
        pawset%augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax)
+
+
   !
   do i=1,pawset%nwfc
      do j=1,pawset%nwfc

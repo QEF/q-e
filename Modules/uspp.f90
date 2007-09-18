@@ -25,7 +25,7 @@ MODULE uspp_param
        qqq(nbrx,nbrx,npsx),        &! q_{mu,nu} parameters (in the atomic case)
        qfunc(ndmx,nbrx*(nbrx+1)/2,npsx), &! Q_{mu,nu}(|r|) function for |r|> r_L
        qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q for |r|<r_L
-       augfun(ndmx,nbrx,nbrx,0:lqmax,npsx), &! augmentation functionfor paw 
+!       augfun(ndmx,nbrx,nbrx,0:lqmax,npsx), &! moved to grid_paw_variables.f90
        vloc_at(ndmx,npsx),                &! local potential
        rinner(lqmax,npsx)                  ! values of r_L
   INTEGER :: &

@@ -124,7 +124,7 @@ subroutine readpp
            tvanp (nt) = .true.
            open (unit = iunps, file = file_pseudo, status = 'old', &
                  form='formatted', iostat = ios)
-           call paw_io (pawset, iunps, "INP",ndmx,nchix,lmaxx)
+           call paw_io (pawset, iunps, "INP") !,ndmx,nchix,lmaxx)
            close (iunps)
            call set_pseudo_paw (nt, pawset)
            call deallocate_pseudo_paw (pawset)
