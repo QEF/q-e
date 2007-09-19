@@ -18,22 +18,16 @@ MODULE atom
   SAVE
   !
   type(radial_grid_type) :: &
-       rgrid(npsx)               &! the information on atomic radial grids.
-                                 &! NB: some of the subsequent data are therefore redundant 
+       rgrid(npsx)                ! the information on atomic radial grids.
+                                  ! NB: some of the subsequent data are therefore redundant 
                                   ! and will be eliminated in due course asap
   REAL(DP) :: &
-!       zmesh(npsx),              &! the atomic charge for mesh generation
-!       xmin(npsx),               &! initial linear mesh point
-!       dx(npsx),                 &! linear interval for logaritmic mesh
-!       r(ndmx,npsx),             &! radial logaritmic mesh
-!       rab(ndmx,npsx),           &! derivative of the radial mesh
        jchi(nchix,npsx),         &! total angular momentum of atomic orbitals
        chi(ndmx,nchix,npsx),     &! radial atomic orbitals
        oc(nchix,npsx),           &! atomic level occupation
        rho_at(ndmx,npsx),        &! radial atomic charge density
        rho_atc(ndmx,npsx)         ! radial core charge density
   INTEGER :: &
-!       mesh(npsx),               &! number of mesh points
        msh(npsx),                &! the point at rcut
        nchi(npsx),               &! number of atomic orbitals
        lchi(nchix,npsx)           ! angular momentum of atomic orbitals
