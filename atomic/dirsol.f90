@@ -11,7 +11,7 @@
 !
 !-------------------------------------------------------------------------
 !
-subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,grid,snl,ruae)
+subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,grid,snl,ruae,nstop)
 !
 !     subroutine to compute solutions to the full dirac equation
 !
@@ -77,13 +77,12 @@ integer :: itmax, &     ! maximum number of iterations
            kcur,  &     ! current k
            nctp,  &     ! index of the classical turning point
            nodes, &     ! the number of nodes
-           ninf         ! practical infinite
+           ninf,  &     ! practical infinite
+           nstop        ! 0 if all ok, 1 otherwise
 !
 !               r o u t i n e  i n i t i a l i s a t i o n
 if (mesh.ne.grid%mesh) call errore('dirsol','mesh dimension is not as expected',1)
-do ir=1,mesh
-   ruae(ir)=ruae(ir)*grid%r(ir)
-enddo
+nstop=0
 !
 !     set the maximum number of iterations for improving wavefunctions
 !
@@ -120,7 +119,7 @@ do iter = 1,itmax
     enddo
   endif
   do ir = 1,mesh
-     zz(ir,1,2) = - grid%rab(ir) * ( ecur - ruae(ir) / grid%r(ir) ) * abyt
+     zz(ir,1,2) = - grid%rab(ir) * ( ecur - ruae(ir) ) * abyt
      zz(ir,2,1) = - zz(ir,1,2) + grid%rab(ir) * tbya
   enddo
 !
@@ -138,15 +137,17 @@ do iter = 1,itmax
 
   if ( nctp .gt. mesh - 10 ) then 
 !     write(stdout,*) 'State nlk=', ncur, lcur, kcur, nctp, mesh
-!     write(stdout,*) 'ecur, ecurmax=', ecur, ruae(mesh-10)/r(mesh-10)
+!     write(stdout,*) 'ecur, ecurmax=', ecur, ruae(mesh-10)
      write(stdout,*) 'classical turning point too close to mesh',ncur,lcur,kcur
-     e0=0.0_DP
+     snl=0.0_DP
+     e0=e0-0.2_DP
+     nstop=1
      goto 700
   endif
 !
   tolinf = log(thresh) ** 2
   do ninf = nctp+10,mesh
-     alpha2 = (ruae(ninf)/grid%r(ninf)-ecur) * (grid%r(ninf) - grid%r(nctp))**2
+     alpha2 = (ruae(ninf)-ecur) * (grid%r(ninf) - grid%r(nctp))**2
      if ( alpha2 .gt. tolinf ) goto 260
   enddo
 !
@@ -172,7 +173,7 @@ do iter = 1,itmax
 !         if kcur > 0  ig = + kcur , f_0 = 1 , g_0 = 0
 !         if kcur < 0  ig = - kcur , f_0 = 0 , g_1 = 1
 !
-  vzero = ruae(1) / grid%r(1)
+  vzero = ruae(1) 
 !
 !         set f0 and g0
   if ( kcur .lt. 0 ) then
@@ -213,10 +214,10 @@ do iter = 1,itmax
 !   ==============================================
 !
   do ir = ninf,ninf-4,-1
-     alpha = sqrt( ruae(ir) / grid%r(ir) - ecur )
+     alpha = sqrt( ruae(ir) - ecur )
      yy(ir,2) = exp ( - alpha * ( grid%r(ir) - grid%r(nctp) ) )
      yy(ir,1) = ( DBLE(kcur)/grid%r(ir) - alpha ) * yy(ir,2)*tbya / &
-  &               ( ecur - ruae(ir)/grid%r(ir) + tbya ** 2 )
+  &               ( ecur - ruae(ir) + tbya ** 2 )
   enddo
 !
 !         ==========================
@@ -331,7 +332,9 @@ do iter = 1,itmax
 !    &      ' starting energy for calculation was',f10.5, &
 !    &      ' and end value =',f10.5)
        write(stdout,*) 'state nlj',ncur,lcur,jcur, ' not converged'
-      goto 700
+       snl=0.0_DP
+       nstop=1
+       goto 700
    endif
 !
 !       close iterative loop
@@ -349,8 +352,5 @@ do ir=1,mesh
 enddo
 e0=ecur
 700 continue
-do ir=1,mesh
-   ruae(ir)=ruae(ir)/grid%r(ir)
-enddo
 return
 end subroutine dirsol

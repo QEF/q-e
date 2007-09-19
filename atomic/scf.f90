@@ -57,8 +57,7 @@ subroutine scf(ic)
                  nstop=0
               elseif (rel == 2) then
                  call dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &
-                      thresh,grid,psi(1,1,n),vnew(1,is))
-                 nstop=0
+                      thresh,grid,psi(1,1,n),vnew(1,is),nstop)
               else
                  call errore('scf','relativistic not programmed',1)
               endif
