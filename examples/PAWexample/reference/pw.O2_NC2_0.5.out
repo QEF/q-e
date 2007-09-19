@@ -1,13 +1,13 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is 17Sep2007 at 11:21:11 
+     Today is 19Sep2007 at  0:18:57 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  3500  nbrx = 14  nqfx =  8
 Warning: card  H   1.000  H.PBE-RRKJUS.UPF ignored
 
 
@@ -88,7 +88,7 @@ Warning: card  H   1.000  H.PBE-RRKJUS.UPF ignored
      starting charge   12.00000, renormalised to   12.00000
      Starting wfc are    8 atomic +    2 random wfc
 
-     total cpu time spent up to now is     13.10 secs
+     total cpu time spent up to now is      6.06 secs
 
      per-process dynamical memory:    99.0 Mb
 
@@ -98,57 +98,57 @@ Warning: card  H   1.000  H.PBE-RRKJUS.UPF ignored
      Davidson diagonalization with overlap
      ethr =  1.00E-02,  avg # of iterations =  5.0
 
-     total cpu time spent up to now is     25.07 secs
+     total cpu time spent up to now is     11.55 secs
 
-     total energy              =   -63.81752947 Ry
-     Harris-Foulkes estimate   =   -63.90547368 Ry
-     estimated scf accuracy    <     0.16781850 Ry
+     total energy              =   -63.81753298 Ry
+     Harris-Foulkes estimate   =   -63.90547716 Ry
+     estimated scf accuracy    <     0.16781846 Ry
 
      iteration #  2     ecut=    70.00 Ry     beta=0.50
      Davidson diagonalization with overlap
      ethr =  1.40E-03,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     36.13 secs
+     total cpu time spent up to now is     16.17 secs
 
-     total energy              =   -63.84081654 Ry
-     Harris-Foulkes estimate   =   -63.84379572 Ry
-     estimated scf accuracy    <     0.01064152 Ry
+     total energy              =   -63.84082004 Ry
+     Harris-Foulkes estimate   =   -63.84379921 Ry
+     estimated scf accuracy    <     0.01064153 Ry
 
      iteration #  3     ecut=    70.00 Ry     beta=0.50
      Davidson diagonalization with overlap
      ethr =  8.87E-05,  avg # of iterations =  1.0
 
-     total cpu time spent up to now is     46.86 secs
+     total cpu time spent up to now is     20.54 secs
 
-     total energy              =   -63.84108953 Ry
-     Harris-Foulkes estimate   =   -63.84142092 Ry
+     total energy              =   -63.84109302 Ry
+     Harris-Foulkes estimate   =   -63.84142442 Ry
      estimated scf accuracy    <     0.00164988 Ry
 
      iteration #  4     ecut=    70.00 Ry     beta=0.50
      Davidson diagonalization with overlap
      ethr =  1.37E-05,  avg # of iterations =  7.0
 
-     total cpu time spent up to now is     58.67 secs
+     total cpu time spent up to now is     25.79 secs
 
-     total energy              =   -63.84122606 Ry
-     Harris-Foulkes estimate   =   -63.84123628 Ry
+     total energy              =   -63.84122956 Ry
+     Harris-Foulkes estimate   =   -63.84123978 Ry
      estimated scf accuracy    <     0.00004182 Ry
 
      iteration #  5     ecut=    70.00 Ry     beta=0.50
      Davidson diagonalization with overlap
      ethr =  3.49E-07,  avg # of iterations = 11.0
 
-     total cpu time spent up to now is     70.88 secs
+     total cpu time spent up to now is     31.17 secs
 
-     total energy              =   -63.84123328 Ry
-     Harris-Foulkes estimate   =   -63.84123427 Ry
+     total energy              =   -63.84123677 Ry
+     Harris-Foulkes estimate   =   -63.84123776 Ry
      estimated scf accuracy    <     0.00000170 Ry
 
      iteration #  6     ecut=    70.00 Ry     beta=0.50
      Davidson diagonalization with overlap
      ethr =  1.42E-08,  avg # of iterations =  2.0
 
-     total cpu time spent up to now is     81.83 secs
+     total cpu time spent up to now is     35.70 secs
 
      End of self-consistent calculation
 
@@ -159,15 +159,15 @@ Warning: card  H   1.000  H.PBE-RRKJUS.UPF ignored
 
      the Fermi energy is    -1.5407 ev
 
-!    total energy              =   -63.84123351 Ry
-     Harris-Foulkes estimate   =   -63.84123354 Ry
+!    total energy              =   -63.84123700 Ry
+     Harris-Foulkes estimate   =   -63.84123704 Ry
      estimated scf accuracy    <     0.00000012 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =  -102.76160095 Ry
-     hartree contribution      =    53.18720788 Ry
-     xc contribution           =   -15.40685763 Ry
+     one-electron contribution =  -102.76160419 Ry
+     hartree contribution      =    53.18720757 Ry
+     xc contribution           =   -15.40685757 Ry
      ewald contribution        =     1.15130098 Ry
      smearing contrib. (-TS)   =    -0.01128379 Ry
 
@@ -175,54 +175,49 @@ Warning: card  H   1.000  H.PBE-RRKJUS.UPF ignored
 
      Writing output data file o2.save
  
-     PWSCF        :  1m22.39s CPU time,     1m18.02s wall time
+     PWSCF        :    35.88s CPU time,   32.08s wall time
 
-     init_run     :    13.05s CPU
-     electrons    :    68.72s CPU
+     init_run     :     6.02s CPU
+     electrons    :    29.64s CPU
  
  
-     electrons    :    68.72s CPU
-     c_bands      :    12.18s CPU (       6 calls,   2.031 s avg)
-     sum_band     :    28.04s CPU (       6 calls,   4.673 s avg)
-     v_of_rho     :    10.28s CPU (       7 calls,   1.468 s avg)
-     v_h          :     0.79s CPU (       7 calls,   0.113 s avg)
-     v_xc         :     9.48s CPU (       7 calls,   1.355 s avg)
-     newd         :    19.61s CPU (       7 calls,   2.801 s avg)
-     mix_rho      :     0.54s CPU (       6 calls,   0.089 s avg)
+     electrons    :    29.64s CPU
+     c_bands      :     8.83s CPU (       6 calls,   1.471 s avg)
+     sum_band     :     8.46s CPU (       6 calls,   1.409 s avg)
+     v_of_rho     :     6.54s CPU (       7 calls,   0.935 s avg)
+     v_h          :     0.46s CPU (       7 calls,   0.065 s avg)
+     v_xc         :     6.09s CPU (       7 calls,   0.870 s avg)
+     newd         :     6.00s CPU (       7 calls,   0.857 s avg)
+     mix_rho      :     0.15s CPU (       6 calls,   0.025 s avg)
  
-     c_bands      :    12.18s CPU (       6 calls,   2.031 s avg)
-     init_us_2    :     0.67s CPU (      13 calls,   0.051 s avg)
-     cegterg      :    11.12s CPU (       6 calls,   1.853 s avg)
+     c_bands      :     8.83s CPU (       6 calls,   1.471 s avg)
+     init_us_2    :     0.21s CPU (      13 calls,   0.016 s avg)
+     cegterg      :     8.62s CPU (       6 calls,   1.437 s avg)
  
-     sum_band     :    28.04s CPU (       6 calls,   4.673 s avg)
+     sum_band     :     8.46s CPU (       6 calls,   1.409 s avg)
      becsum       :     0.00s CPU (       6 calls,   0.000 s avg)
-     addusdens    :    23.49s CPU (       6 calls,   3.914 s avg)
+     addusdens    :     5.06s CPU (       6 calls,   0.844 s avg)
  
-     wfcrot       :     0.41s CPU
-     cegterg      :    11.12s CPU (       6 calls,   1.853 s avg)
-     h_psi        :     8.76s CPU (      35 calls,   0.250 s avg)
-     g_psi        :     0.52s CPU (      28 calls,   0.019 s avg)
-     overlap      :     0.52s CPU (      28 calls,   0.019 s avg)
-     diaghg       :     0.08s CPU (      34 calls,   0.002 s avg)
-     update       :     0.50s CPU (      28 calls,   0.018 s avg)
-     last         :     0.14s CPU (       6 calls,   0.024 s avg)
+     wfcrot       :     0.32s CPU
+     cegterg      :     8.62s CPU (       6 calls,   1.437 s avg)
+     h_psi        :     7.10s CPU (      35 calls,   0.203 s avg)
+     g_psi        :     0.16s CPU (      28 calls,   0.006 s avg)
+     overlap      :     0.53s CPU (      28 calls,   0.019 s avg)
+     diaghg       :     0.06s CPU (      34 calls,   0.002 s avg)
+     update       :     0.38s CPU (      28 calls,   0.014 s avg)
+     last         :     0.14s CPU (       6 calls,   0.023 s avg)
  
-     h_psi        :     8.76s CPU (      35 calls,   0.250 s avg)
-     init         :     0.14s CPU (      35 calls,   0.004 s avg)
-     firstfft     :     3.46s CPU (     185 calls,   0.019 s avg)
-     secondfft    :     2.96s CPU (     185 calls,   0.016 s avg)
-     add_vuspsi   :     0.22s CPU (      35 calls,   0.006 s avg)
-     s_psi        :     0.35s CPU (      35 calls,   0.010 s avg)
+     h_psi        :     7.10s CPU (      35 calls,   0.203 s avg)
+     init         :     0.05s CPU (      35 calls,   0.001 s avg)
+     firstfft     :     3.11s CPU (     185 calls,   0.017 s avg)
+     secondfft    :     3.02s CPU (     185 calls,   0.016 s avg)
+     add_vuspsi   :     0.24s CPU (      35 calls,   0.007 s avg)
+     s_psi        :     0.28s CPU (      35 calls,   0.008 s avg)
  
      General routines
-     ccalbec      :     0.40s CPU (      41 calls,   0.010 s avg)
-     cft3         :     4.61s CPU (     101 calls,   0.046 s avg)
-     cft3s        :     6.51s CPU (     443 calls,   0.015 s avg)
-     interpolate  :     1.66s CPU (      13 calls,   0.128 s avg)
-     davcio       :     0.01s CPU
+     ccalbec      :     0.36s CPU (      41 calls,   0.009 s avg)
+     cft3         :     4.53s CPU (     101 calls,   0.045 s avg)
+     cft3s        :     7.16s CPU (     443 calls,   0.016 s avg)
+     interpolate  :     1.36s CPU (      13 calls,   0.104 s avg)
+     davcio       :     0.00s CPU
  
-     PAW routines
-     set_paw_rhoc :     0.50s CPU
-     init_pawvloc :     0.18s CPU
-     vloc_of_g_no :     0.18s CPU (       2 calls,   0.088 s avg)
-     paw_setlocal :     1.08s CPU

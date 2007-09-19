@@ -1,13 +1,13 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is 17Sep2007 at 14:16:51 
+     Today is 19Sep2007 at  0:22:17 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  3500  nbrx = 14  nqfx =  8
  reading pseudopotential for:  O
  dimensions (mesh, nwfc, lmax):  1095    4    1
  PAW CUTOFF parameters
@@ -117,7 +117,7 @@ quad  =  -0.00023   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273601255        5.81401273601255     
+ charge=   5.81401274408916        5.81401274408916     
 EDIP  0.00000000 -0.00000011  0.00000012  0.00000000
 
      negative rho (up, down):  0.129E-02 0.000E+00
@@ -134,13 +134,13 @@ quad  =  -0.00004   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273606230        5.81401273606229     
+ charge=   5.81401274412353        5.81401274412352     
 EDIP  0.00000000 -0.00000001  0.00000001  0.00000000
      Starting wfc are    8 atomic wfcs
 
-     total cpu time spent up to now is      9.17 secs
+     total cpu time spent up to now is      3.63 secs
 
-     per-process dynamical memory:     7.8 Mb
+     per-process dynamical memory:     8.3 Mb
 
      Self-consistent Calculation
 
@@ -151,7 +151,7 @@ EDIP  0.00000000 -0.00000001  0.00000001  0.00000000
      mixing several times ns if lda_plus_U
 
      negative rho (up, down):  0.207E-06 0.000E+00
- == rho max diff:    1.08421890588930     
+ == rho max diff:    1.08421892982307     
 
      negative rho (up, down):  0.794E-02 0.000E+00
  calculate tot_multipoles           7
@@ -167,7 +167,7 @@ quad  =  -0.00006  -0.00028
 quad  =   0.00000   0.00000
 quad  =  -0.00011  -0.00010
 quad  =   0.00000   0.00000
- charge=   6.57285728957970        6.57285728957970     
+ charge=   6.57285712130668        6.57285712130668     
 EDIP  0.00000000 -0.00000006  0.00000006  0.00000000
 
      negative rho (up, down):  0.982E-03 0.000E+00
@@ -184,39 +184,22 @@ quad  =   0.00012  -0.00028
 quad  =   0.00000   0.00000
 quad  =  -0.00011  -0.00010
 quad  =   0.00000   0.00000
- charge=   6.57285728965363        6.57285728965363     
+ charge=   6.57285712135371        6.57285712135371     
 EDIP  0.00000000  0.00000000  0.00000000  0.00000000
-==GRID PAW ENERGIES (HARTREE): 
-==AE 1     :  30.9226917863  30.9226965250
-==PS 1     :  31.3140624169  31.3140641105
-==AE-PS 1  :  -0.3913706306  -0.3913675855
-==AE tot   :  30.9226917863  30.9226965250
-==PS tot   :  31.3140624169  31.3140641105
-==AE-PS tot:  -0.3913706306  -0.3913675855
-==
-==GRID PAW ENERGIES (XC): 
-==AE 1     :  -7.4912636765  -7.4901287362
-==PS 1     :  -7.6051798917  -7.6057111242
-==AE-PS 1  :   0.1139162152   0.1155823880
-==AE tot   :  -7.4912636765  -7.4901287362
-==PS tot   :  -7.6051798917  -7.6057111242
-==AE-PS tot:   0.1139162152   0.1155823880
-==
-==TOTAL:  -0.2774544154  -0.2757851975
 
-     total cpu time spent up to now is     12.85 secs
-US energy before PAW additions   -32.19869557
-    atom #:   1 grid correction:      0.39777378
+     total cpu time spent up to now is      5.07 secs
+US energy before PAW additions   -32.19870208
+    atom #:   1 grid correction:      0.39777376
     atom #:   1 rad correction:      -0.27578520
 
-     total energy              =   -31.80092180 Ry
-     Harris-Foulkes estimate   =   -32.19936706 Ry
+     total energy              =   -31.80092833 Ry
+     Harris-Foulkes estimate   =   -32.19937358 Ry
      estimated scf accuracy    < NaN            Ry
 
      iteration #  2     ecut=    18.00 Ry     beta=0.70
      Davidson diagonalization with overlap
-     c_bands:  5 eigenvalues not converged
-     ethr =  NaN     ,  avg # of iterations = 20.0
+     c_bands:  4 eigenvalues not converged
+     ethr =  NaN     ,  avg # of iterations = 40.0
      Message from routine electrons:
      mixing several times ns if lda_plus_U
 
@@ -226,3 +209,4 @@ US energy before PAW additions   -32.19869557
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
      stopping ...
+2

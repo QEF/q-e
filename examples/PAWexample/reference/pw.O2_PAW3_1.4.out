@@ -1,13 +1,13 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is 17Sep2007 at 14:53:34 
+     Today is 19Sep2007 at  1:28: 9 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  3500  nbrx = 14  nqfx =  8
 Warning: card  H   1.000  H.PBE-RRKJUS.UPF ignored
  reading pseudopotential for:  O
  dimensions (mesh, nwfc, lmax):  1095    4    1
@@ -119,7 +119,7 @@ quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273601254        5.81401273601255     
+ charge=   5.81401274408916        5.81401274408916     
 EDIP  0.00000000  0.00000000  0.00000000  0.00000000
 
      negative rho (up, down):  0.222E-03 0.000E+00
@@ -136,7 +136,7 @@ quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273601254        5.81401273601255     
+ charge=   5.81401274408916        5.81401274408916     
 EDIP  0.00000000  0.00000000  0.00000000  0.00000000
 
      negative rho (up, down):  0.365E-03 0.000E+00
@@ -153,7 +153,7 @@ quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273606189        5.81401273606189     
+ charge=   5.81401274411498        5.81401274411498     
 EDIP  0.00000000  0.00000000  0.00000000  0.00000000
 
      negative rho (up, down):  0.365E-03 0.000E+00
@@ -170,13 +170,13 @@ quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273606189        5.81401273606189     
+ charge=   5.81401274411498        5.81401274411498     
 EDIP  0.00000000  0.00000000  0.00000000  0.00000000
      Starting wfc are   16 atomic wfcs
 
-     total cpu time spent up to now is     50.54 secs
+     total cpu time spent up to now is     18.47 secs
 
-     per-process dynamical memory:    99.2 Mb
+     per-process dynamical memory:    99.6 Mb
 
      Self-consistent Calculation
 
@@ -195,7 +195,7 @@ EDIP  0.00000000  0.00000000  0.00000000  0.00000000
      mixing several times ns if lda_plus_U
 
      negative rho (up, down):  0.184E-02 0.000E+00
- == rho max diff:    1.44421784192236     
+ == rho max diff:    1.44421781697707     
 
      negative rho (up, down):  0.225E-03 0.000E+00
  calculate tot_multipoles           7
@@ -211,7 +211,7 @@ quad  =  -0.04428   0.07669
 quad  =  -0.04428   0.07669
 quad  =   0.00000   0.00000
 quad  =  -0.04428  -0.07669
- charge=   5.81818882288228        5.81818882288228     
+ charge=   5.81818882738068        5.81818882738068     
 EDIP -0.00000001 -0.00000200  0.00000201  0.00000000
 
      negative rho (up, down):  0.225E-03 0.000E+00
@@ -228,7 +228,7 @@ quad  =  -0.04428   0.07669
 quad  =  -0.04428   0.07669
 quad  =   0.00000   0.00000
 quad  =  -0.04428  -0.07669
- charge=   5.81818883444551        5.81818883444551     
+ charge=   5.81818883894411        5.81818883894411     
 EDIP -0.00000001 -0.00000201  0.00000202  0.00000000
 
      negative rho (up, down):  0.927E-02 0.000E+00
@@ -245,7 +245,7 @@ quad  =  -0.04428   0.07669
 quad  =  -0.04428   0.07669
 quad  =   0.00000   0.00000
 quad  =  -0.04428  -0.07669
- charge=   5.81818882293251        5.81818882293251     
+ charge=   5.81818882740692        5.81818882740692     
 EDIP -0.00000001 -0.00000201  0.00000202  0.00000000
 
      negative rho (up, down):  0.927E-02 0.000E+00
@@ -262,41 +262,18 @@ quad  =  -0.04428   0.07669
 quad  =  -0.04428   0.07669
 quad  =   0.00000   0.00000
 quad  =  -0.04428  -0.07669
- charge=   5.81818883449575        5.81818883449574     
+ charge=   5.81818883897034        5.81818883897034     
 EDIP -0.00000001 -0.00000201  0.00000201  0.00000000
-==GRID PAW ENERGIES (HARTREE): 
-==AE 1     :  26.4704581031  26.4704605264
-==PS 1     :  27.0345103820  27.0345123506
-==AE-PS 1  :  -0.5640522788  -0.5640518241
-==AE 2     :  26.4704581525  26.4704605758
-==PS 2     :  27.0345104305  27.0345123992
-==AE-PS 2  :  -0.5640522781  -0.5640518234
-==AE tot   :  52.9409162556  52.9409211022
-==PS tot   :  54.0690208125  54.0690247497
-==AE-PS tot:  -1.1281045569  -1.1281036475
-==
-==GRID PAW ENERGIES (XC): 
-==AE 1     :  -7.0025271985  -7.0027977746
-==PS 1     :  -7.1777838609  -7.1781407004
-==AE-PS 1  :   0.1752566624   0.1753429259
-==AE 2     :  -7.0025272015  -7.0027977773
-==PS 2     :  -7.1777838638  -7.1781407050
-==AE-PS 2  :   0.1752566623   0.1753429277
-==AE tot   : -14.0050544000 -14.0055955519
-==PS tot   : -14.3555677247 -14.3562814054
-==AE-PS tot:   0.3505133247   0.3506858535
-==
-==TOTAL:  -0.7775912322  -0.7774177940
 
-     total cpu time spent up to now is    100.79 secs
-US energy before PAW additions   -65.12785858
+     total cpu time spent up to now is     38.53 secs
+US energy before PAW additions   -65.12786307
     atom #:   1 grid correction:      0.59134004
-    atom #:   1 rad correction:      -0.38870890
+    atom #:   1 rad correction:      -0.38870889
     atom #:   2 grid correction:      0.59134004
-    atom #:   2 rad correction:      -0.38870890
+    atom #:   2 rad correction:      -0.38870889
 
-     total energy              =   -63.94517850 Ry
-     Harris-Foulkes estimate   =   -64.90048977 Ry
+     total energy              =   -63.94518299 Ry
+     Harris-Foulkes estimate   =   -64.90049376 Ry
      estimated scf accuracy    <     0.03645093 Ry
 
      iteration #  2     ecut=    70.00 Ry     beta=0.50
@@ -306,14 +283,14 @@ US energy before PAW additions   -65.12785858
      mixing several times ns if lda_plus_U
 
      negative rho (up, down):  0.493E-02 0.000E+00
- == rho max diff:    1.45135346955885     
+ == rho max diff:    1.45135345215195     
 
      negative rho (up, down):  0.224E-03 0.000E+00
  calculate tot_multipoles           7
  done
      Message from routine v_h_grid:
      alpha set manually
-charge=   5.80320   5.80320
+charge=   5.80319   5.80319
 dipole=  -0.00034  -0.00034
 dipole=  -0.00034  -0.00034
 dipole=  -0.00034  -0.00034
@@ -322,7 +299,7 @@ quad  =  -0.08066   0.13971
 quad  =  -0.08066   0.13971
 quad  =   0.00000   0.00000
 quad  =  -0.08066  -0.13971
- charge=   5.80319502073912        5.80319502073912     
+ charge=   5.80319491187110        5.80319491187110     
 EDIP  0.00000000 -0.00000037  0.00000037  0.00000000
 
      negative rho (up, down):  0.224E-03 0.000E+00
@@ -339,7 +316,7 @@ quad  =  -0.08066   0.13971
 quad  =  -0.08066   0.13971
 quad  =   0.00000   0.00000
 quad  =  -0.08066  -0.13971
- charge=   5.80319490193819        5.80319490193819     
+ charge=   5.80319485415239        5.80319485415239     
 EDIP  0.00000000 -0.00000037  0.00000037  0.00000000
 
      negative rho (up, down):  0.177E-01 0.000E+00
@@ -347,7 +324,7 @@ EDIP  0.00000000 -0.00000037  0.00000037  0.00000000
  done
      Message from routine v_h_grid:
      alpha set manually
-charge=   5.80320   5.80320
+charge=   5.80319   5.80319
 dipole=  -0.00034  -0.00034
 dipole=  -0.00034  -0.00034
 dipole=  -0.00034  -0.00034
@@ -356,7 +333,7 @@ quad  =  -0.08066   0.13971
 quad  =  -0.08066   0.13971
 quad  =   0.00000   0.00000
 quad  =  -0.08066  -0.13971
- charge=   5.80319502078892        5.80319502078892     
+ charge=   5.80319491189703        5.80319491189703     
 EDIP  0.00000000 -0.00000037  0.00000037  0.00000000
 
      negative rho (up, down):  0.177E-01 0.000E+00
@@ -373,41 +350,18 @@ quad  =  -0.08066   0.13971
 quad  =  -0.08066   0.13971
 quad  =   0.00000   0.00000
 quad  =  -0.08066  -0.13971
- charge=   5.80319490198799        5.80319490198799     
+ charge=   5.80319485417832        5.80319485417832     
 EDIP  0.00000000 -0.00000037  0.00000037  0.00000000
-==GRID PAW ENERGIES (HARTREE): 
-==AE 1     :  26.3843947417  26.3844022531
-==PS 1     :  26.9490242218  26.9490333946
-==AE-PS 1  :  -0.5646294801  -0.5646311415
-==AE 2     :  26.3843938526  26.3844013641
-==PS 2     :  26.9490233168  26.9490324896
-==AE-PS 2  :  -0.5646294642  -0.5646311256
-==AE tot   :  52.7687885943  52.7688036172
-==PS tot   :  53.8980475386  53.8980658842
-==AE-PS tot:  -1.1292589443  -1.1292622670
-==
-==GRID PAW ENERGIES (XC): 
-==AE 1     :  -6.9962358456  -6.9965063675
-==PS 1     :  -7.1732433862  -7.1738847808
-==AE-PS 1  :   0.1770075406   0.1773784133
-==AE 2     :  -6.9962357149  -6.9965062385
-==PS 2     :  -7.1732432598  -7.1738846598
-==AE-PS 2  :   0.1770075448   0.1773784213
-==AE tot   : -13.9924715605 -13.9930126060
-==PS tot   : -14.3464866460 -14.3477694406
-==AE-PS tot:   0.3540150854   0.3547568346
-==
-==TOTAL:  -0.7752438589  -0.7745054324
 
-     total cpu time spent up to now is    139.30 secs
-US energy before PAW additions   -65.11663488
-    atom #:   1 grid correction:      0.58652295
-    atom #:   1 rad correction:      -0.38725273
-    atom #:   2 grid correction:      0.58652295
+     total cpu time spent up to now is     54.84 secs
+US energy before PAW additions   -65.11663934
+    atom #:   1 grid correction:      0.58652293
+    atom #:   1 rad correction:      -0.38725272
+    atom #:   2 grid correction:      0.58652293
     atom #:   2 rad correction:      -0.38725270
 
-     total energy              =   -63.94358898 Ry
-     Harris-Foulkes estimate   =   -65.11834876 Ry
+     total energy              =   -63.94359348 Ry
+     Harris-Foulkes estimate   =   -65.11835322 Ry
      estimated scf accuracy    <     0.00775447 Ry
 
      iteration #  3     ecut=    70.00 Ry     beta=0.50
@@ -417,7 +371,7 @@ US energy before PAW additions   -65.11663488
      mixing several times ns if lda_plus_U
 
      negative rho (up, down):  0.526E-02 0.000E+00
- == rho max diff:    1.45283738309722     
+ == rho max diff:    1.45283729867383     
 
      negative rho (up, down):  0.223E-03 0.000E+00
  calculate tot_multipoles           7
@@ -433,7 +387,7 @@ quad  =  -0.07892   0.13669
 quad  =  -0.07892   0.13669
 quad  =   0.00000   0.00000
 quad  =  -0.07892  -0.13669
- charge=   5.79781976685995        5.79781976685995     
+ charge=   5.79781963194783        5.79781963194784     
 EDIP -0.00000006 -0.00001507  0.00001513  0.00000000
 
      negative rho (up, down):  0.223E-03 0.000E+00
@@ -450,7 +404,7 @@ quad  =  -0.07892   0.13669
 quad  =  -0.07892   0.13669
 quad  =   0.00000   0.00000
 quad  =  -0.07892  -0.13669
- charge=   5.79781944324034        5.79781944324034     
+ charge=   5.79781956568476        5.79781956568476     
 EDIP -0.00000006 -0.00001504  0.00001510  0.00000000
 
      negative rho (up, down):  0.174E-01 0.000E+00
@@ -467,7 +421,7 @@ quad  =  -0.07892   0.13669
 quad  =  -0.07892   0.13669
 quad  =   0.00000   0.00000
 quad  =  -0.07892  -0.13669
- charge=   5.79781976690956        5.79781976690956     
+ charge=   5.79781963197362        5.79781963197362     
 EDIP -0.00000006 -0.00001505  0.00001511  0.00000000
 
      negative rho (up, down):  0.174E-01 0.000E+00
@@ -484,41 +438,18 @@ quad  =  -0.07892   0.13669
 quad  =  -0.07892   0.13669
 quad  =   0.00000   0.00000
 quad  =  -0.07892  -0.13669
- charge=   5.79781944328995        5.79781944328995     
+ charge=   5.79781956571055        5.79781956571055     
 EDIP -0.00000006 -0.00001506  0.00001512  0.00000000
-==GRID PAW ENERGIES (HARTREE): 
-==AE 1     :  26.3616587026  26.3616659020
-==PS 1     :  26.9265641618  26.9265729103
-==AE-PS 1  :  -0.5649054592  -0.5649070082
-==AE 2     :  26.3616560914  26.3616632910
-==PS 2     :  26.9265614974  26.9265702458
-==AE-PS 2  :  -0.5649054059  -0.5649069548
-==AE tot   :  52.7233147940  52.7233291930
-==PS tot   :  53.8531256591  53.8531431561
-==AE-PS tot:  -1.1298108651  -1.1298139630
-==
-==GRID PAW ENERGIES (XC): 
-==AE 1     :  -6.9945906215  -6.9948612957
-==PS 1     :  -7.1715087394  -7.1721395912
-==AE-PS 1  :   0.1769181179   0.1772782954
-==AE 2     :  -6.9945902297  -6.9948609023
-==PS 2     :  -7.1715083234  -7.1721391986
-==AE-PS 2  :   0.1769180937   0.1772782962
-==AE tot   : -13.9891808513 -13.9897221981
-==PS tot   : -14.3430170629 -14.3442787897
-==AE-PS tot:   0.3538362116   0.3545565917
-==
-==TOTAL:  -0.7759746536  -0.7752573714
 
-     total cpu time spent up to now is    177.94 secs
-US energy before PAW additions   -65.11636599
-    atom #:   1 grid correction:      0.58616234
-    atom #:   1 rad correction:      -0.38762871
-    atom #:   2 grid correction:      0.58616231
+     total cpu time spent up to now is     72.68 secs
+US energy before PAW additions   -65.11637046
+    atom #:   1 grid correction:      0.58616232
+    atom #:   1 rad correction:      -0.38762868
+    atom #:   2 grid correction:      0.58616232
     atom #:   2 rad correction:      -0.38762866
 
-     total energy              =   -63.94404134 Ry
-     Harris-Foulkes estimate   =   -65.11618991 Ry
+     total energy              =   -63.94404582 Ry
+     Harris-Foulkes estimate   =   -65.11619439 Ry
      estimated scf accuracy    <     0.00005645 Ry
 
      iteration #  4     ecut=    70.00 Ry     beta=0.50
@@ -528,7 +459,7 @@ US energy before PAW additions   -65.11636599
      mixing several times ns if lda_plus_U
 
      negative rho (up, down):  0.585E-02 0.000E+00
- == rho max diff:    1.45201080700213     
+ == rho max diff:    1.45201059758103     
 
      negative rho (up, down):  0.223E-03 0.000E+00
  calculate tot_multipoles           7
@@ -544,7 +475,7 @@ quad  =  -0.08188   0.14182
 quad  =  -0.08188   0.14182
 quad  =   0.00000   0.00000
 quad  =  -0.08188  -0.14182
- charge=   5.79322757234499        5.79322757234499     
+ charge=   5.79322713665721        5.79322713665721     
 EDIP -0.00000019 -0.00004727  0.00004746  0.00000000
 
      negative rho (up, down):  0.223E-03 0.000E+00
@@ -561,7 +492,7 @@ quad  =  -0.08188   0.14182
 quad  =  -0.08188   0.14182
 quad  =   0.00000   0.00000
 quad  =  -0.08188  -0.14182
- charge=   5.79322665095784        5.79322665095784     
+ charge=   5.79322700928884        5.79322700928884     
 EDIP -0.00000019 -0.00004723  0.00004742  0.00000000
 
      negative rho (up, down):  0.181E-01 0.000E+00
@@ -578,8 +509,8 @@ quad  =  -0.08188   0.14182
 quad  =  -0.08188   0.14182
 quad  =   0.00000   0.00000
 quad  =  -0.08188  -0.14182
- charge=   5.79322757239454        5.79322757239454     
-EDIP -0.00000019 -0.00004724  0.00004742  0.00000000
+ charge=   5.79322713668290        5.79322713668289     
+EDIP -0.00000019 -0.00004724  0.00004743  0.00000000
 
      negative rho (up, down):  0.181E-01 0.000E+00
  calculate tot_multipoles           7
@@ -595,41 +526,18 @@ quad  =  -0.08188   0.14182
 quad  =  -0.08188   0.14182
 quad  =   0.00000   0.00000
 quad  =  -0.08188  -0.14182
- charge=   5.79322665100739        5.79322665100738     
+ charge=   5.79322700931452        5.79322700931452     
 EDIP -0.00000019 -0.00004726  0.00004745  0.00000000
-==GRID PAW ENERGIES (HARTREE): 
-==AE 1     :  26.3373136918  26.3373214235
-==PS 1     :  26.9023056795  26.9023151858
-==AE-PS 1  :  -0.5649919877  -0.5649937623
-==AE 2     :  26.3373054574  26.3373131892
-==PS 2     :  26.9022972460  26.9023067522
-==AE-PS 2  :  -0.5649917886  -0.5649935630
-==AE tot   :  52.6746191492  52.6746346127
-==PS tot   :  53.8046029255  53.8046219380
-==AE-PS tot:  -1.1299837762  -1.1299873253
-==
-==GRID PAW ENERGIES (XC): 
-==AE 1     :  -6.9925008126  -6.9927715853
-==PS 1     :  -7.1695918018  -7.1702550630
-==AE-PS 1  :   0.1770909892   0.1774834777
-==AE 2     :  -6.9924995014  -6.9927702723
-==PS 2     :  -7.1695904519  -7.1702537267
-==AE-PS 2  :   0.1770909505   0.1774834544
-==AE tot   : -13.9850003141 -13.9855418575
-==PS tot   : -14.3391822537 -14.3405087896
-==AE-PS tot:   0.3541819397   0.3549669321
-==
-==TOTAL:  -0.7758018366  -0.7750203932
 
-     total cpu time spent up to now is    218.35 secs
-US energy before PAW additions   -65.11704007
-    atom #:   1 grid correction:      0.58646361
-    atom #:   1 rad correction:      -0.38751028
+     total cpu time spent up to now is     91.21 secs
+US energy before PAW additions   -65.11704452
+    atom #:   1 grid correction:      0.58646356
+    atom #:   1 rad correction:      -0.38751020
     atom #:   2 grid correction:      0.58646355
-    atom #:   2 rad correction:      -0.38751011
+    atom #:   2 rad correction:      -0.38751017
 
-     total energy              =   -63.94411291 Ry
-     Harris-Foulkes estimate   =   -65.11699748 Ry
+     total energy              =   -63.94411741 Ry
+     Harris-Foulkes estimate   =   -65.11700193 Ry
      estimated scf accuracy    <     0.00003382 Ry
 
      iteration #  5     ecut=    70.00 Ry     beta=0.50
@@ -639,7 +547,7 @@ US energy before PAW additions   -65.11704007
      mixing several times ns if lda_plus_U
 
      negative rho (up, down):  0.608E-02 0.000E+00
- == rho max diff:    1.45195376317050     
+ == rho max diff:    1.45195300793434     
 
      negative rho (up, down):  0.222E-03 0.000E+00
  calculate tot_multipoles           7
@@ -655,7 +563,7 @@ quad  =  -0.08186   0.14179
 quad  =  -0.08186   0.14179
 quad  =   0.00000   0.00000
 quad  =  -0.08186  -0.14179
- charge=   5.79073363357382        5.79073363357382     
+ charge=   5.79073175435288        5.79073175435288     
 EDIP -0.00000031 -0.00007751  0.00007782  0.00000000
 
      negative rho (up, down):  0.222E-03 0.000E+00
@@ -672,7 +580,7 @@ quad  =  -0.08186   0.14179
 quad  =  -0.08186   0.14179
 quad  =   0.00000   0.00000
 quad  =  -0.08186  -0.14179
- charge=   5.79072950869885        5.79072950869885     
+ charge=   5.79073131116517        5.79073131116517     
 EDIP -0.00000031 -0.00007746  0.00007777  0.00000000
 
      negative rho (up, down):  0.181E-01 0.000E+00
@@ -689,7 +597,7 @@ quad  =  -0.08187   0.14179
 quad  =  -0.08187   0.14179
 quad  =   0.00000   0.00000
 quad  =  -0.08187  -0.14179
- charge=   5.79073363362336        5.79073363362336     
+ charge=   5.79073175437851        5.79073175437851     
 EDIP -0.00000031 -0.00007747  0.00007778  0.00000000
 
      negative rho (up, down):  0.181E-01 0.000E+00
@@ -706,41 +614,18 @@ quad  =  -0.08187   0.14179
 quad  =  -0.08187   0.14179
 quad  =   0.00000   0.00000
 quad  =  -0.08187  -0.14179
- charge=   5.79072950874839        5.79072950874840     
+ charge=   5.79073131119081        5.79073131119081     
 EDIP -0.00000031 -0.00007750  0.00007781  0.00000000
-==GRID PAW ENERGIES (HARTREE): 
-==AE 1     :  26.3227030565  26.3227107851
-==PS 1     :  26.8876115256  26.8876210530
-==AE-PS 1  :  -0.5649084691  -0.5649102680
-==AE 2     :  26.3226653316  26.3226730604
-==PS 2     :  26.8875728584  26.8875823857
-==AE-PS 2  :  -0.5649075267  -0.5649093253
-==AE tot   :  52.6453683882  52.6453838454
-==PS tot   :  53.7751843840  53.7752034387
-==AE-PS tot:  -1.1298159958  -1.1298195932
-==
-==GRID PAW ENERGIES (XC): 
-==AE 1     :  -6.9908747217  -6.9911455682
-==PS 1     :  -7.1679537191  -7.1686215773
-==AE-PS 1  :   0.1770789973   0.1774760092
-==AE 2     :  -6.9908686406  -6.9911394842
-==PS 2     :  -7.1679474732  -7.1686153414
-==AE-PS 2  :   0.1770788325   0.1774758571
-==AE tot   : -13.9817433623 -13.9822850524
-==PS tot   : -14.3359011922 -14.3372369187
-==AE-PS tot:   0.3541578299   0.3549518663
-==
-==TOTAL:  -0.7756581659  -0.7748677269
 
-     total cpu time spent up to now is    257.47 secs
-US energy before PAW additions   -65.11704582
-    atom #:   1 grid correction:      0.58645674
-    atom #:   1 rad correction:      -0.38743426
-    atom #:   2 grid correction:      0.58645655
-    atom #:   2 rad correction:      -0.38743347
+     total cpu time spent up to now is    108.95 secs
+US energy before PAW additions   -65.11705028
+    atom #:   1 grid correction:      0.58645664
+    atom #:   1 rad correction:      -0.38743390
+    atom #:   2 grid correction:      0.58645662
+    atom #:   2 rad correction:      -0.38743381
 
-     total energy              =   -63.94413253 Ry
-     Harris-Foulkes estimate   =   -65.11702846 Ry
+     total energy              =   -63.94413701 Ry
+     Harris-Foulkes estimate   =   -65.11703292 Ry
      estimated scf accuracy    <     0.00000117 Ry
 
      iteration #  6     ecut=    70.00 Ry     beta=0.50
@@ -756,7 +641,7 @@ US energy before PAW additions   -65.11704582
  done
      Message from routine v_h_grid:
      alpha set manually
-charge=   5.79045   5.79045
+charge=   5.79044   5.79044
 dipole=  -0.00504  -0.00504
 dipole=  -0.00504  -0.00504
 dipole=  -0.00504  -0.00504
@@ -765,7 +650,7 @@ quad  =  -0.08175   0.14159
 quad  =  -0.08175   0.14159
 quad  =   0.00000   0.00000
 quad  =  -0.08175  -0.14159
- charge=   5.79044519938839        5.79044519938839     
+ charge=   5.79043505606471        5.79043505606471     
 EDIP -0.00000032 -0.00007987  0.00008019  0.00000000
 
      negative rho (up, down):  0.222E-03 0.000E+00
@@ -773,7 +658,7 @@ EDIP -0.00000032 -0.00007987  0.00008019  0.00000000
  done
      Message from routine v_h_grid:
      alpha set manually
-charge=   5.79042   5.79042
+charge=   5.79043   5.79043
 dipole=   0.00504   0.00504
 dipole=   0.00504   0.00504
 dipole=   0.00504   0.00504
@@ -782,7 +667,7 @@ quad  =  -0.08175   0.14159
 quad  =  -0.08175   0.14159
 quad  =   0.00000   0.00000
 quad  =  -0.08175  -0.14159
- charge=   5.79042266979949        5.79042266979949     
+ charge=   5.79043276015061        5.79043276015061     
 EDIP -0.00000032 -0.00007982  0.00008014  0.00000000
 
      negative rho (up, down):  0.181E-01 0.000E+00
@@ -790,7 +675,7 @@ EDIP -0.00000032 -0.00007982  0.00008014  0.00000000
  done
      Message from routine v_h_grid:
      alpha set manually
-charge=   5.79045   5.79045
+charge=   5.79044   5.79044
 dipole=  -0.00504  -0.00504
 dipole=  -0.00504  -0.00504
 dipole=  -0.00504  -0.00504
@@ -799,7 +684,7 @@ quad  =  -0.08175   0.14159
 quad  =  -0.08175   0.14159
 quad  =   0.00000   0.00000
 quad  =  -0.08175  -0.14159
- charge=   5.79044519943793        5.79044519943793     
+ charge=   5.79043505609034        5.79043505609034     
 EDIP -0.00000032 -0.00007983  0.00008015  0.00000000
 
      negative rho (up, down):  0.181E-01 0.000E+00
@@ -807,7 +692,7 @@ EDIP -0.00000032 -0.00007983  0.00008015  0.00000000
  done
      Message from routine v_h_grid:
      alpha set manually
-charge=   5.79042   5.79042
+charge=   5.79043   5.79043
 dipole=   0.00504   0.00504
 dipole=   0.00504   0.00504
 dipole=   0.00504   0.00504
@@ -816,36 +701,36 @@ quad  =  -0.08175   0.14159
 quad  =  -0.08175   0.14159
 quad  =   0.00000   0.00000
 quad  =  -0.08175  -0.14159
- charge=   5.79042266984903        5.79042266984903     
-EDIP -0.00000032 -0.00007987  0.00008018  0.00000000
+ charge=   5.79043276017624        5.79043276017624     
+EDIP -0.00000032 -0.00007987  0.00008019  0.00000000
      Message from routine electrons:
      PAW forces missing
 
-     total cpu time spent up to now is    290.92 secs
+     total cpu time spent up to now is    123.96 secs
 
      End of self-consistent calculation
 
           k = 0.0000 0.0000 0.0000 (  9843 PWs)   bands (ev):
 
-   -22.9327 -22.5735  -8.7122  -7.8456  -7.8456  -7.6287  -7.6287  -7.4001
+   -22.9327 -22.5736  -8.7122  -7.8456  -7.8456  -7.6287  -7.6287  -7.4001
     -0.4082   5.7705
 
      the Fermi energy is    -7.6270 ev
-US energy before PAW additions   -65.11686357
-    atom #:   1 grid correction:      0.58636205
-    atom #:   1 rad correction:      -0.38743426
-    atom #:   2 grid correction:      0.58636113
-    atom #:   2 rad correction:      -0.38743347
+US energy before PAW additions   -65.11686802
+    atom #:   1 grid correction:      0.58636162
+    atom #:   1 rad correction:      -0.38743390
+    atom #:   2 grid correction:      0.58636153
+    atom #:   2 rad correction:      -0.38743381
 
-!    total energy              =   -63.94414039 Ry
-     Harris-Foulkes estimate   =   -65.11685620 Ry
+!    total energy              =   -63.94414488 Ry
+     Harris-Foulkes estimate   =   -65.11686065 Ry
      estimated scf accuracy    <     0.00000003 Ry
 
      The total energy is the sum of the following terms:
 
-     one-electron contribution =   -60.85975447 Ry
-     hartree contribution      =    33.40769836 Ry
-     xc contribution           =   -14.47188185 Ry
+     one-electron contribution =   -60.85975865 Ry
+     hartree contribution      =    33.40769802 Ry
+     xc contribution           =   -14.47188178 Ry
      ewald contribution        =   -23.18043923 Ry
      smearing contrib. (-TS)   =    -0.01248638 Ry
 
@@ -853,63 +738,63 @@ US energy before PAW additions   -65.11686357
 
      Writing output data file o2.save
  
-     PWSCF        :  4m51.49s CPU time,     4m54.30s wall time
+     PWSCF        :  2m 4.38s CPU time,     2m28.71s wall time
 
-     init_run     :    50.16s CPU
-     electrons    :   240.38s CPU
+     init_run     :    18.20s CPU
+     electrons    :   105.48s CPU
  
  
-     electrons    :   240.38s CPU
-     c_bands      :     9.53s CPU (       7 calls,   1.361 s avg)
-     sum_band     :    32.57s CPU (       7 calls,   4.652 s avg)
-     v_of_rho     :    10.29s CPU (       7 calls,   1.470 s avg)
-     v_h          :     0.81s CPU (       7 calls,   0.116 s avg)
-     v_xc         :     9.48s CPU (       7 calls,   1.354 s avg)
-     newd         :    65.20s CPU (       7 calls,   9.314 s avg)
-     mix_rho      :     0.51s CPU (       7 calls,   0.073 s avg)
+     electrons    :   105.48s CPU
+     c_bands      :     8.68s CPU (       7 calls,   1.241 s avg)
+     sum_band     :     9.06s CPU (       7 calls,   1.295 s avg)
+     v_of_rho     :     7.00s CPU (       7 calls,   1.000 s avg)
+     v_h          :     0.50s CPU (       7 calls,   0.072 s avg)
+     v_xc         :     6.50s CPU (       7 calls,   0.928 s avg)
+     newd         :    22.97s CPU (       7 calls,   3.281 s avg)
+     mix_rho      :     0.19s CPU (       7 calls,   0.027 s avg)
  
-     c_bands      :     9.53s CPU (       7 calls,   1.361 s avg)
-     init_us_2    :     0.71s CPU (      15 calls,   0.047 s avg)
-     cegterg      :     8.23s CPU (       7 calls,   1.176 s avg)
+     c_bands      :     8.68s CPU (       7 calls,   1.241 s avg)
+     init_us_2    :     0.18s CPU (      15 calls,   0.012 s avg)
+     cegterg      :     8.48s CPU (       7 calls,   1.211 s avg)
  
-     sum_band     :    32.57s CPU (       7 calls,   4.652 s avg)
+     sum_band     :     9.06s CPU (       7 calls,   1.295 s avg)
      becsum       :     0.00s CPU (       7 calls,   0.000 s avg)
-     addusdens    :    27.24s CPU (       7 calls,   3.892 s avg)
+     addusdens    :     6.35s CPU (       7 calls,   0.907 s avg)
  
-     wfcrot       :     0.72s CPU
-     cegterg      :     8.23s CPU (       7 calls,   1.176 s avg)
-     h_psi        :     6.98s CPU (      19 calls,   0.368 s avg)
-     g_psi        :     0.35s CPU (      11 calls,   0.032 s avg)
-     overlap      :     0.28s CPU (      11 calls,   0.025 s avg)
-     diaghg       :     0.02s CPU (      17 calls,   0.001 s avg)
-     update       :     0.26s CPU (      11 calls,   0.024 s avg)
-     last         :     0.12s CPU (       7 calls,   0.017 s avg)
+     wfcrot       :     0.55s CPU
+     cegterg      :     8.48s CPU (       7 calls,   1.211 s avg)
+     h_psi        :     5.64s CPU (      19 calls,   0.297 s avg)
+     g_psi        :     0.06s CPU (      11 calls,   0.006 s avg)
+     overlap      :     0.36s CPU (      11 calls,   0.033 s avg)
+     diaghg       :     0.36s CPU (      17 calls,   0.021 s avg)
+     update       :     0.76s CPU (      11 calls,   0.069 s avg)
+     last         :     0.42s CPU (       7 calls,   0.059 s avg)
  
-     h_psi        :     6.98s CPU (      19 calls,   0.368 s avg)
-     init         :     0.15s CPU (      19 calls,   0.008 s avg)
-     firstfft     :     2.66s CPU (     167 calls,   0.016 s avg)
-     secondfft    :     2.30s CPU (     167 calls,   0.014 s avg)
-     add_vuspsi   :     0.22s CPU (      19 calls,   0.011 s avg)
-     s_psi        :     0.31s CPU (      19 calls,   0.016 s avg)
+     h_psi        :     5.64s CPU (      19 calls,   0.297 s avg)
+     init         :     0.01s CPU (      19 calls,   0.001 s avg)
+     firstfft     :     2.15s CPU (     167 calls,   0.013 s avg)
+     secondfft    :     2.12s CPU (     167 calls,   0.013 s avg)
+     add_vuspsi   :     0.52s CPU (      19 calls,   0.027 s avg)
+     s_psi        :     0.88s CPU (      19 calls,   0.046 s avg)
  
      General routines
-     ccalbec      :     0.44s CPU (      26 calls,   0.017 s avg)
-     cft3         :    20.29s CPU (     464 calls,   0.044 s avg)
-     cft3s        :     5.35s CPU (     418 calls,   0.013 s avg)
-     interpolate  :     1.70s CPU (      14 calls,   0.122 s avg)
+     ccalbec      :     0.61s CPU (      26 calls,   0.024 s avg)
+     cft3         :    21.08s CPU (     464 calls,   0.045 s avg)
+     cft3s        :     4.90s CPU (     418 calls,   0.012 s avg)
+     interpolate  :     1.08s CPU (      14 calls,   0.077 s avg)
      davcio       :     0.00s CPU
  
      PAW routines
-     init_prad    :     7.65s CPU
-     one-charge   :    66.75s CPU (      13 calls,   5.134 s avg)
-     one-pot      :    55.09s CPU (       7 calls,   7.870 s avg)
-     pvan2        :    50.16s CPU (    2016 calls,   0.025 s avg)
-     set_paw_rhoc :     0.50s CPU
-     v_h_grid     :    14.08s CPU (      28 calls,   0.503 s avg)
-     newd_paw     :    45.68s CPU (      14 calls,   3.263 s avg)
-     init_pawvloc :     0.22s CPU
-     vloc_of_g_no :     0.22s CPU (       2 calls,   0.110 s avg)
-     paw_setlocal :     1.10s CPU
-     PAW_energy   :    28.16s CPU (       6 calls,   4.693 s avg)
-     PAW_rho_lm   :     0.13s CPU (      24 calls,   0.005 s avg)
-     PAW_h_energy :     0.06s CPU (      24 calls,   0.003 s avg)
+     init_prad    :     2.80s CPU
+     one-charge   :    20.00s CPU (      13 calls,   1.539 s avg)
+     one-pot      :    34.61s CPU (       7 calls,   4.944 s avg)
+     pvan2        :    15.67s CPU (    2016 calls,   0.008 s avg)
+     set_paw_rhoc :     0.30s CPU
+     v_h_grid     :     6.36s CPU (      28 calls,   0.227 s avg)
+     newd_paw     :    15.60s CPU (      14 calls,   1.114 s avg)
+     init_pawvloc :     0.15s CPU
+     vloc_of_g_no :     0.15s CPU (       2 calls,   0.076 s avg)
+     paw_setlocal :     0.49s CPU
+     PAW_energy   :    11.70s CPU (       6 calls,   1.949 s avg)
+     PAW_rho_lm   :     0.01s CPU (      24 calls,   0.001 s avg)
+     PAW_h_energy :     0.02s CPU (      24 calls,   0.001 s avg)

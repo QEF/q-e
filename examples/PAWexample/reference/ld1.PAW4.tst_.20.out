@@ -1,6 +1,6 @@
 
      Program LD1       v.3.2cvs starts ...
-     Today is 17Sep2007 at 14:14:23 
+     Today is 19Sep2007 at  0:21:15 
 Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/pseudo/PAW4.PAW
  reading pseudopotential for:  O
  dimensions (mesh, nwfc, lmax):  1095    4    1
@@ -14,18 +14,18 @@ Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/p
      1 Ry =  13.60569228 eV
 
      n l     nl                  e(Ry)          e(Ha)          e(eV)
-     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2588
+     1 0     1S 1( 2.00)       -37.7973       -18.8987      -514.2587
      2 0     2S 1( 2.00)        -1.7577        -0.8788       -23.9147
      2 1     2P 1( 4.00)        -0.6643        -0.3321        -9.0378
 
-     eps = 3.6E-15  iter = 20
+     eps = 2.8E-15  iter = 15
  
-     Etot =    -149.890991 Ry,     -74.945496 Ha,   -2039.370700 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370780 eV
 
-     Ekin =     149.468706 Ry,      74.734353 Ha,    2033.625223 eV
-     Encl =    -355.645089 Ry,    -177.822544 Ha,   -4838.797640 eV
-     Eh   =      72.821012 Ry,      36.410506 Ha,     990.780279 eV
-     Exc  =     -16.535620 Ry,      -8.267810 Ha,    -224.978562 eV
+     Ekin =     149.468654 Ry,      74.734327 Ha,    2033.624506 eV
+     Encl =    -355.645040 Ry,    -177.822520 Ha,   -4838.796979 eV
+     Eh   =      72.821009 Ry,      36.410504 Ha,     990.780236 eV
+     Exc  =     -16.535619 Ry,      -8.267809 Ha,    -224.978543 eV
 
 
      normalization and overlap integrals
@@ -37,6 +37,8 @@ Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/p
 
      ------------------------ End of All-electron run ------------------------
 
+     Message from routine elsdps_paw:
+     energy report for PAW coming soon...
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -52,8 +54,13 @@ Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/p
 
      eps = 5.5E-16  iter =  4
  
-     Etot =    -149.890991 Ry,     -74.945496 Ha,   -2039.370700 eV
-     Etotps =   -31.920831 Ry,     -15.960416 Ha,    -434.305004 eV
+     Etot =    -149.890997 Ry,     -74.945498 Ha,   -2039.370780 eV
+     Etotps =   -31.920832 Ry,     -15.960416 Ha,    -434.305011 eV
+
+     Ekin =     149.468654 Ry,      74.734327 Ha,    2033.624506 eV
+     Encl =    -355.645040 Ry,    -177.822520 Ha,   -4838.796979 eV
+     Ehrt =      72.821009 Ry,      36.410504 Ha,     990.780236 eV
+     Ecxc =     -16.535619 Ry,      -8.267809 Ha,    -224.978543 eV
 
      ---------------------- End of pseudopotential test ----------------------
 
@@ -71,14 +78,14 @@ Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/p
      2 0     2S 1( 0.20)        -3.9719        -1.9860       -54.0408
      2 1     2P 1( 4.00)        -2.8558        -1.4279       -38.8557
 
-     eps = 4.5E-15  iter = 16
+     eps = 4.5E-15  iter = 14
  
-     Etot =    -144.816550 Ry,     -72.408275 Ha,   -1970.329416 eV
+     Etot =    -144.816556 Ry,     -72.408278 Ha,   -1970.329493 eV
 
-     Ekin =     144.503041 Ry,      72.251521 Ha,    1966.063915 eV
-     Encl =    -330.395472 Ry,    -165.197736 Ha,   -4495.259119 eV
-     Eh   =      55.695345 Ry,      27.847673 Ha,     757.773730 eV
-     Exc  =     -14.619465 Ry,      -7.309733 Ha,    -198.907942 eV
+     Ekin =     144.502991 Ry,      72.251495 Ha,    1966.063229 eV
+     Encl =    -330.395426 Ry,    -165.197713 Ha,   -4495.258493 eV
+     Eh   =      55.695343 Ry,      27.847671 Ha,     757.773696 eV
+     Exc  =     -14.619464 Ry,      -7.309732 Ha,    -198.907925 eV
 
 
      normalization and overlap integrals
@@ -90,6 +97,8 @@ Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/p
 
      ------------------------ End of All-electron run ------------------------
 
+     Message from routine elsdps_paw:
+     energy report for PAW coming soon...
 
      ---------------------- Testing the pseudopotential ----------------------
 
@@ -105,10 +114,15 @@ Reading pseudopotential from file: /home/paulatto/espresso/examples/PAWexample/p
 
      eps = 2.4E-16  iter =  9
  
-     Etot =    -144.816550 Ry,     -72.408275 Ha,   -1970.329416 eV
-     Etotps =   -26.843182 Ry,     -13.421591 Ha,    -365.220081 eV
+     Etot =    -144.816556 Ry,     -72.408278 Ha,   -1970.329493 eV
+     Etotps =   -26.843183 Ry,     -13.421591 Ha,    -365.220085 eV
      dEtot_ae =       5.074441 Ry
-     dEtot_ps =       5.077649 Ry,   Delta E=      -0.003208 Ry
+     dEtot_ps =       5.077649 Ry,   Delta E=      -0.003207 Ry
+
+     Ekin =     144.502991 Ry,      72.251495 Ha,    1966.063229 eV
+     Encl =    -330.395426 Ry,    -165.197713 Ha,   -4495.258493 eV
+     Ehrt =      55.695343 Ry,      27.847671 Ha,     757.773696 eV
+     Ecxc =     -14.619464 Ry,      -7.309732 Ha,    -198.907925 eV
 
      ---------------------- End of pseudopotential test ----------------------
 

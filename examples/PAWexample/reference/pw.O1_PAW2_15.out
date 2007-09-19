@@ -1,13 +1,13 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is 17Sep2007 at 14:16:21 
+     Today is 19Sep2007 at  0:22: 5 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  3500  nbrx = 14  nqfx =  8
  reading pseudopotential for:  O
  dimensions (mesh, nwfc, lmax):  1095    4    1
  PAW CUTOFF parameters
@@ -120,7 +120,7 @@ quad  =  -0.00041   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273601255        5.81401273601255     
+ charge=   5.81401274408916        5.81401274408916     
 EDIP  0.00000000 -0.00000010  0.00000010  0.00000000
 
      negative rho (up, down):  0.827E-02 0.000E+00
@@ -137,13 +137,13 @@ quad  =  -0.00018   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273605293        5.81401273605293     
+ charge=   5.81401274411295        5.81401274411295     
 EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
      Starting wfc are    8 atomic wfcs
 
-     total cpu time spent up to now is      8.19 secs
+     total cpu time spent up to now is      3.22 secs
 
-     per-process dynamical memory:     5.7 Mb
+     per-process dynamical memory:     6.1 Mb
 
      Self-consistent Calculation
 
@@ -156,3 +156,4 @@ EDIP  0.00000000 -0.00000003  0.00000003  0.00000000
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
      stopping ...
+2

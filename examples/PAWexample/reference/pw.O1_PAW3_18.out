@@ -1,13 +1,13 @@
 
      Program PWSCF     v.3.2cvs starts ...
-     Today is 17Sep2007 at 14:16:37 
+     Today is 19Sep2007 at  0:22:11 
 
      Ultrasoft (Vanderbilt) Pseudopotentials
 
      Current dimensions of program pwscf are:
 
      ntypx = 10   npk = 40000  lmax =  3
-     nchix =  6  ndmx =  2500  nbrx = 14  nqfx =  8
+     nchix =  6  ndmx =  3500  nbrx = 14  nqfx =  8
  reading pseudopotential for:  O
  dimensions (mesh, nwfc, lmax):  1095    4    1
  PAW CUTOFF parameters
@@ -117,7 +117,7 @@ quad  =  -0.00023   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273601255        5.81401273601255     
+ charge=   5.81401274408916        5.81401274408916     
 EDIP  0.00000000 -0.00000011  0.00000012  0.00000000
 
      negative rho (up, down):  0.976E-03 0.000E+00
@@ -134,13 +134,13 @@ quad  =  -0.00003   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
 quad  =   0.00000   0.00000
- charge=   5.81401273606189        5.81401273606189     
+ charge=   5.81401274411498        5.81401274411498     
 EDIP  0.00000000 -0.00000001  0.00000001  0.00000000
      Starting wfc are    8 atomic wfcs
 
-     total cpu time spent up to now is      9.24 secs
+     total cpu time spent up to now is      3.67 secs
 
-     per-process dynamical memory:     7.8 Mb
+     per-process dynamical memory:     8.3 Mb
 
      Self-consistent Calculation
 
@@ -151,7 +151,7 @@ EDIP  0.00000000 -0.00000001  0.00000001  0.00000000
      mixing several times ns if lda_plus_U
 
      negative rho (up, down):  0.463E-06 0.000E+00
- == rho max diff:    1.42633431719943     
+ == rho max diff:    1.42633432545371     
 
      negative rho (up, down):  0.794E-02 0.000E+00
  calculate tot_multipoles           7
@@ -167,7 +167,7 @@ quad  =  -0.00039   0.00029
 quad  =   0.00000   0.00000
 quad  =  -0.00029  -0.00025
 quad  =   0.00000   0.00000
- charge=   6.57526595614878        6.57526595614878     
+ charge=   6.57526593800667        6.57526593800667     
 EDIP  0.00000000 -0.00000005  0.00000006  0.00000000
 
      negative rho (up, down):  0.908E-03 0.000E+00
@@ -184,33 +184,16 @@ quad  =  -0.00021   0.00029
 quad  =   0.00000   0.00000
 quad  =  -0.00029  -0.00025
 quad  =   0.00000   0.00000
- charge=   6.57526595622399        6.57526595622399     
+ charge=   6.57526593804456        6.57526593804456     
 EDIP  0.00000000  0.00000000  0.00000000  0.00000000
-==GRID PAW ENERGIES (HARTREE): 
-==AE 1     :  30.9347599238  30.9347646632
-==PS 1     :  31.5145435270  31.5145433309
-==AE-PS 1  :  -0.5797836032  -0.5797786677
-==AE tot   :  30.9347599238  30.9347646632
-==PS tot   :  31.5145435270  31.5145433309
-==AE-PS tot:  -0.5797836032  -0.5797786677
-==
-==GRID PAW ENERGIES (XC): 
-==AE 1     :  -7.4922902470  -7.4911486964
-==PS 1     :  -7.6696551443  -7.6699058402
-==AE-PS 1  :   0.1773648973   0.1787571437
-==AE tot   :  -7.4922902470  -7.4911486964
-==PS tot   :  -7.6696551443  -7.6699058402
-==AE-PS tot:   0.1773648973   0.1787571437
-==
-==TOTAL:  -0.4024187059  -0.4010215240
 
-     total cpu time spent up to now is     12.87 secs
-US energy before PAW additions   -32.39265655
-    atom #:   1 grid correction:      0.59156129
+     total cpu time spent up to now is      5.16 secs
+US energy before PAW additions   -32.39266308
+    atom #:   1 grid correction:      0.59156127
     atom #:   1 rad correction:      -0.40102152
 
-     total energy              =   -31.80109526 Ry
-     Harris-Foulkes estimate   =   -32.39334992 Ry
+     total energy              =   -31.80110181 Ry
+     Harris-Foulkes estimate   =   -32.39335645 Ry
      estimated scf accuracy    < NaN            Ry
 
      iteration #  2     ecut=    18.00 Ry     beta=0.70
@@ -226,3 +209,4 @@ US energy before PAW additions   -32.39265655
  %%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
 
      stopping ...
+2
