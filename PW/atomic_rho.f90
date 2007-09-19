@@ -159,17 +159,17 @@ subroutine atomic_rho (rhoa, nspina)
      call reduce (1, rhoima)
 #endif
      IF ( rhoima > 1.0d-4 ) THEN
-        WRITE( stdout,'(5x,"Check: imaginary charge or magnetization:",&
+        WRITE( stdout,'(5x,"Check: imaginary charge or magnetization=",&
           & f12.6," (component ",i1,") set to zero")') rhoima, is
      END IF
      IF ( (is == 1) .OR. lsda ) THEN
         !
         IF ( (rhoneg < -1.0d-4) ) THEN
            IF ( lsda ) THEN 
-              WRITE( stdout,'(5x,"Check: negative starting charge ", &
+              WRITE( stdout,'(5x,"Check: negative starting charge=", &
                    &"(component",i1,"):",f12.6)') is, rhoneg
            ELSE
-              WRITE( stdout,'(5x,"Check: negative starting charge: ", &
+              WRITE( stdout,'(5x,"Check: negative starting charge=", &
           &          f12.6)') rhoneg
            END IF
         END IF

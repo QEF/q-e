@@ -119,8 +119,8 @@ subroutine atomic_wfc (ik, wfcatom)
             do m = 1, 2 * l + 1
               lm = l**2 + m
               n_starting_wfc = n_starting_wfc + 1
-              if (n_starting_wfc.gt.natomwfc) &
-                   call errore ('atomic_wfc', 'too many wfcs', 1)
+              if (n_starting_wfc > natomwfc) call errore &
+                   ('atomic_wfc', 'internal error: too many wfcs', 1)
               do ig = 1, npw
                  wfcatom (ig, n_starting_wfc) = lphase * &
                       sk (ig) * ylm (ig, lm) * chiq (ig, nb, nt)
@@ -130,8 +130,8 @@ subroutine atomic_wfc (ik, wfcatom)
      enddo
   enddo
 
-  if (n_starting_wfc.ne.natomwfc) call errore ('atomic_wfc', &
-       'something wrong', 1)
+  if (n_starting_wfc /= natomwfc) call errore ('atomic_wfc', &
+       'internal error: some wfcs were lost ', 1)
 
   deallocate(qg, chiq ,gk, sk ,ylm)
 
