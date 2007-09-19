@@ -504,7 +504,7 @@ SUBROUTINE sum_band()
                          -DBLE(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
                    END DO
                 ELSE
-                   rho(ir,2:4)=0.d0
+                   rho(:,2:4)=0.0_DP
                 END IF
                 !
              ELSE
