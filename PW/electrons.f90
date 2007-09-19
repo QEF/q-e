@@ -653,7 +653,7 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      !
      IF (okpaw) THEN
-        WRITE(stdout,'(A,F15.8)'), 'US energy before PAW additions', etot
+        WRITE(stdout,'(A,F15.8)') 'US energy before PAW additions', etot
         DO na = 1, nat
            IF (tpawp(ityp(na))) THEN
               correction1c = ehart1(na) -ehart1t(na) +etxc1(na) -etxc1t(na) + &
