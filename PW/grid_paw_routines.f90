@@ -997,7 +997,7 @@ SUBROUTINE v_h_grid( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
   !
   REAL(DP) :: dummyx, c(3), r2, gaussrho
   INTEGER :: ir1,ir2,ir3, i,j,k
-  !
+  real(DP), external :: erf
   !
    call start_clock ('v_h_grid')
    CALL infomsg ('v_h_grid','alpha set manually')
