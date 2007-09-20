@@ -105,7 +105,8 @@
       USE orthogonalize_base, ONLY: rhoset, sigset, tauset, ortho_iterate,   &
                                     ortho_alt_iterate, diagonalize_serial,   &
                                     use_parallel_diag, diagonalize_parallel
-      USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_ , nlax_
+      USE descriptors,        ONLY: lambda_node_ , nlar_ , nlac_ , ilar_ , ilac_ , &
+                                    nlax_ , la_comm_
       USE mp_global,          ONLY: nproc_image, me_image, intra_image_comm
       USE mp,                 ONLY: mp_sum
       USE cp_main_variables,  ONLY: nlam, la_proc
@@ -219,16 +220,20 @@
          !
       ELSE
          !
-         ALLOCATE( wrk( nss, nss ), STAT = info )
-         IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
-         !
-         CALL collect_matrix( wrk, rhos )
-         !
-         CALL diagonalize_serial( nss, wrk, rhod )
-         !
-         CALL distribute_matrix( wrk, s )
-         !
-         DEALLOCATE( wrk )
+         IF( la_proc ) THEN
+            !
+            ALLOCATE( wrk( nss, nss ), STAT = info )
+            IF( info /= 0 ) CALL errore( ' ortho ', ' allocating matrixes ', 1 )
+            !
+            CALL collect_matrix( wrk, rhos )
+            !
+            CALL diagonalize_serial( nss, wrk, rhod )
+            !
+            CALL distribute_matrix( wrk, s )
+            !
+            DEALLOCATE( wrk )
+            !
+         END IF
          !
       END IF
       !
@@ -288,7 +293,7 @@
                END DO
             END DO
          END IF
-         CALL mp_sum( a, intra_image_comm )
+         CALL mp_sum( a, descla( la_comm_ ) )
          RETURN
       END SUBROUTINE
 
