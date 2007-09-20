@@ -60,23 +60,23 @@ CONTAINS
     ALLOCATE (radial_distance(nrxx))
     ALLOCATE (radial_r(3,nrxx))
     !
-    ALLOCATE(prodp(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
-    ALLOCATE(prodpt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
-    ALLOCATE(prod0p(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
-    ALLOCATE(prod0pt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+    ALLOCATE (prodp(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+    ALLOCATE (prodpt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+    ALLOCATE (prod0p(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+    ALLOCATE (prod0pt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
     !
-    ALLOCATE(rho1(nrxx, nspin, nat))
-    ALLOCATE(rho1t(nrxx, nspin, nat))
+    ALLOCATE (rho1(nrxx, nspin, nat))
+    ALLOCATE (rho1t(nrxx, nspin, nat))
     !
-    ALLOCATE(vr1(nrxx, nspin, nat))
-    ALLOCATE(vr1t(nrxx, nspin, nat))
+    ALLOCATE (vr1(nrxx, nspin, nat))
+    ALLOCATE (vr1t(nrxx, nspin, nat))
     !
-    ALLOCATE(ehart1 (nat))
-    ALLOCATE(etxc1  (nat))
-    ALLOCATE(vtxc1  (nat))
-    ALLOCATE(ehart1t(nat))
-    ALLOCATE(etxc1t (nat))
-    ALLOCATE(vtxc1t (nat))
+    ALLOCATE (ehart1 (nat))
+    ALLOCATE (etxc1  (nat))
+    ALLOCATE (vtxc1  (nat))
+    ALLOCATE (ehart1t(nat))
+    ALLOCATE (etxc1t (nat))
+    ALLOCATE (vtxc1t (nat))
     ALLOCATE (aerho_core(nrxx,ntyp))
     ALLOCATE (psrho_core(nrxx,ntyp))
     !
@@ -145,10 +145,6 @@ CONTAINS
     !
     IF(allocated(dpaw_ae))      DEALLOCATE (dpaw_ae)
     IF(allocated(dpaw_ps))      DEALLOCATE (dpaw_ps)
-
-    DO nt = 1, ntyp
-        IF(allocated(aug(nt)%fun))  DEALLOCATE (aug(nt)%fun)
-    END DO
     !
   END SUBROUTINE deallocate_paw_internals
 
