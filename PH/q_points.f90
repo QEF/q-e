@@ -65,7 +65,7 @@ SUBROUTINE q_points ( )
   write(stdout, '(//5x,"Calculation of the dynamical matrices for (", & 
        &3(i2,","),") uniform grid of q-points")') nq1, nq2, nq3
   if (.not.(iq1.eq.0.and.iq2.eq.0.and.iq3.eq.0)) write(stdout, '(5x, &
-       "with only (", 3(i2,","),") point requested")') iq1, iq2, iq3
+       &"with only (", 3(i2,","),") point requested")') iq1, iq2, iq3
   write(stdout, '(5x,"(",i4,"q-points):")') nqs
   write(stdout, '(5x,"  N       xq(1)       xq(2)       xq(3) " )')
   do iq = 1, nqs
