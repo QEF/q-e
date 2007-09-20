@@ -732,6 +732,7 @@ CONTAINS
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
+      USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
 !
@@ -765,7 +766,7 @@ CONTAINS
       END IF
 
       DO ipc = 1, np(2)
-         DO ipr = 1, np(1)
+         DO ipr = 1, ipc ! np(1) use symmetry
 
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
@@ -788,13 +789,7 @@ CONTAINS
             !     q = 0  components has weight 1.0
             !
             IF ( gstart == 2 ) THEN
-               DO jj=1,nc
-                  DO ii=1,nr
-                     i = ii + ir - 1
-                     j = jj + ic - 1
-                     sigp(ii,jj) = sigp(ii,jj) + DBLE(cp(1,i+ist-1))*DBLE(cp(1,j+ist-1))
-                  END DO
-               END DO
+               CALL DGER( nr, nc, 1.D0, cp(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, sigp, nx )
             END IF
             !
             CALL mp_root_sum( sigp, sig, root, intra_image_comm )
@@ -804,6 +799,8 @@ CONTAINS
       END DO
       !
       DEALLOCATE( sigp )
+      !
+      CALL dsqmsym( nss, sig, nx, desc )
       !
       IF( desc( lambda_node_ ) > 0 ) THEN
          !
@@ -923,13 +920,7 @@ CONTAINS
             !     q = 0  components has weight 1.0
             !
             IF (gstart == 2) THEN
-               DO jj=1,nc
-                  DO ii=1,nr
-                     i = ii + ir - 1
-                     j = jj + ic - 1
-                     rhop(ii,jj) = rhop(ii,jj) - DBLE(phi(1,i+ist-1))*DBLE(cp(1,j+ist-1))
-                  END DO
-               END DO
+               CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, cp(1,ist+ic-1), 2*ngwx, rhop, nx )
             END IF
 
             CALL mp_root_sum( rhop, rho, root, intra_image_comm )
@@ -990,6 +981,7 @@ CONTAINS
       USE descriptors,        ONLY: lambda_node_ , la_npc_ , la_npr_ , descla_siz_ , &
                                     descla_init , la_comm_ , ilar_ , ilac_ , nlar_ , &
                                     nlac_ , la_myr_ , la_myc_ , la_nx_ , la_n_ , nlax_
+      USE parallel_toolkit,   ONLY: dsqmsym
 !
       IMPLICIT NONE
       !
@@ -1030,7 +1022,7 @@ CONTAINS
       !
       DO ipc = 1, np(2)
          !
-         DO ipr = 1, np(1)
+         DO ipr = 1, ipc ! np(1)  use symmetry
 
             coor_ip(1) = ipr - 1
             coor_ip(2) = ipc - 1
@@ -1056,13 +1048,7 @@ CONTAINS
             !           q = 0  components has weight 1.0
             !
             IF (gstart == 2) THEN
-               DO jj=1,nc
-                  DO ii=1,nr
-                     i = ii + ir - 1
-                     j = jj + ic - 1
-                     taup(ii,jj) = taup(ii,jj) - DBLE(phi(1,i+ist-1))*DBLE(phi(1,j+ist-1))
-                  END DO
-               END DO
+               CALL DGER( nr, nc, -1.D0, phi(1,ist+ir-1), 2*ngwx, phi(1,ist+ic-1), 2*ngwx, taup, nx )
             END IF
             !
             CALL mp_root_sum( taup, tau, root, intra_image_comm )
@@ -1072,6 +1058,8 @@ CONTAINS
       END DO
       !
       DEALLOCATE( taup )
+      !
+      CALL dsqmsym( nss, tau, nx, desc )
       !
       IF( desc( lambda_node_ ) > 0 ) THEN
          !
