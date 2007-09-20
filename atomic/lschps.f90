@@ -43,7 +43,7 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
   real(DP):: de, emax, emin
   real(DP):: eps, fss, gamma, ro, sc
   real(DP):: sls, sn, tfapot, uld, uout,  upin, upout
-  real(DP):: xkap, exp
+  real(DP):: xkap
   integer:: i, it, mmax, nint, node, ndm, ierr
 
   ! these arrays are used as work space
