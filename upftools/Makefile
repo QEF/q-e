@@ -10,7 +10,7 @@ MODS = ../Modules/kind.o ../Modules/parameters.o ../Modules/pseudo_types.o \
        ../flib/gridsetup.o
 SPLINE = ../Modules/splinelib.o
 FUNCT = ../Modules/functionals.o
-UPF_MOD =../Modules/read_upf.o ../flib/flush_unit.o ../flib/matches.o ../flib/error.o ../flib/gridsetup.o
+UPF_MOD =../Modules/read_upf.o ../flib/flush_unit.o ../flib/matches.o ../flib/error.o
 TLDEPS = mods libs libiotk
 
 all : tldeps cpmd2upf.x fhi2upf.x fpmd2upf.x ncpp2upf.x oldcp2upf.x \
@@ -23,7 +23,7 @@ fhi2upf.x : fhi2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ fhi2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) $(LIBS)
 
 fpmd2upf.x : fpmd2upf.o $(OBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LIBS) ../flib/gridsetup.o
+	$(LD) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LIBS)
 
 ncpp2upf.x : ncpp2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ ncpp2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) $(LIBS)
