@@ -248,8 +248,10 @@ module ld1inc
        psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
        psccharge(ndmx),   & ! smoothened core charge for PAW
-       rCutNC2paw(nwfsx)    ! a cut-off radius for NC wavefunctions to be used
+       rCutNC2paw(nwfsx), & ! a cut-off radius for NC wavefunctions to be used
                             ! instead of AE ones in the construction of PAW
+       paw_energy(5,3)
+
    character(len=20) ::&
        which_paw_augfun     ! choose shape of paw aug.fun. (GAUSS, BESSEL..)
   !

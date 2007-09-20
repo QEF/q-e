@@ -140,7 +140,7 @@ subroutine set_rho_core
            psccharge(1:grid%mesh) = 0._dp
         end if
      else
-        aeccharge(1:grid%mesh) = rhoc(1:grid%mesh)
+!        aeccharge(1:grid%mesh) = rhoc(1:grid%mesh)
         if (nlcc) then
            psccharge(1:grid%mesh) = rhoc(1:grid%mesh)
         else

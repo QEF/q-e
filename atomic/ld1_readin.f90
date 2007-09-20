@@ -533,8 +533,8 @@ subroutine ld1_readin
         !call paw_io(pawsetup,111,"INP")
         call paw_io(pawsetup,111,"INP",ndmx,nwfsx,lmaxx)
         close(111)
-        call paw2us ( pawsetup, zval, grid, nbeta, lls, ikk, betas, &
-                      qq, qvan,vpsloc, bmat, rhos, pseudotype )
+        call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, &
+                      qq, qvan,vpsloc, bmat, rhos, els, rcutus, pseudotype )
         call check_mesh(grid)
         !
      else if ( matches('.rrkj3', file_pseudo) .or. &

@@ -17,8 +17,9 @@
         USE kinds, ONLY: DP
         USE parameters, ONLY: cp_lmax, lmaxx
         use radial_grids, ONLY: ndmx, radial_grid_type
-        !  USE ld1_parameters, ONLY: ndm, nwfsx
-        USE parameters, ONLY: nwfsx=>nchix
+!        USE ld1_parameters, ONLY: nwfsx
+        USE parameters, ONLY: nwfsx
+!        USE ld1_parameters, ONLY: nwfsx
 
         IMPLICIT NONE
         SAVE

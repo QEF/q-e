@@ -21,7 +21,8 @@ subroutine run_pseudo
                      nstoaets, grid, nspin, iter, rhos, rhoc, &
                      nwfts, enlts, llts, jjts, iswts, octs, phits, &
                      vxt, enne, vh, vpsloc, file_potscf, beta, tr2,  &
-                     eps0, file_recon, deld, vpstot, nbeta, ddd, etots
+                     eps0, file_recon, deld, vpstot, nbeta, ddd, etots, &
+                     paw_energy
   use atomic_paw, only : new_paw_hamiltonian
   implicit none
 
@@ -44,7 +45,6 @@ subroutine run_pseudo
   real(DP) :: &
        nvalts,                  & ! number of valence electrons for this conf.
        dddnew(nwfsx,nwfsx,2),   & ! the new D coefficients
-       ocstart(nwfsx),          & ! guess for the occupations
        vd(2*(ndmx+nwfsx+nwfsx)), & ! Vloc and D in one array for mixing
        vdnew(2*(ndmx+nwfsx+nwfsx)) ! the new vd array
   integer :: &
@@ -63,24 +63,12 @@ subroutine run_pseudo
   !
   !    compute an initial estimate of the potential
   !
+  call guess_initial_wfc()
   if (.not.lpaw) then
-     call guess_initial_wfc()
      call start_potps ( )
   else
-     ! Set starting occupations by rescaling those of the generating configuration
-     nvalts=0._dp
-     do ns=1,nbeta
-        if (octs(ns)>0._dp) nvalts=nvalts+octs(ns)
-     end do
-     ocstart(1:pawsetup%nwfc) = pawsetup%oc(1:pawsetup%nwfc) * nvalts &
-                               / SUM(pawsetup%oc(1:pawsetup%nwfc))
-     iswstart=1
-     ! Generate the corresponding local and nonlocal potentials
-     CALL new_paw_hamiltonian (vpstot, ddd, etots, &
-          pawsetup, pawsetup%nwfc, pawsetup%l, 1,iswstart,ocstart, &
-          pawsetup%pswfc, pawsetup%enl)
-     vpstot(1:grid%mesh,2)=vpstot(1:grid%mesh,1)
-     ddd(1:nbeta,1:nbeta,2)=ddd(1:nbeta,1:nbeta,1)
+     CALL new_paw_hamiltonian (vpstot, ddd, etots,pawsetup, nwfts, &
+                               llts, nspin, iswts, octs, phits, enlts)
      do is=1,nspin
         vpstot(1:grid%mesh,is)=vpstot(1:grid%mesh,is)-pawsetup%psloc(1:grid%mesh)
      enddo
@@ -174,9 +162,9 @@ subroutine run_pseudo
   if (.not.lpaw) then
      call elsdps ( )
   else
-      call new_paw_hamiltonian (vnew, dddnew, etots, &
-           pawsetup, nwfts, llts, nspin, iswts, octs, phits, enlts)
-      call elsdps_paw ( )
+     call new_paw_hamiltonian (vnew, dddnew, etots, pawsetup, nwfts, &
+                llts, nspin, iswts, octs, phits, enlts, paw_energy)
+     call elsdps_paw()
   endif
 
   if (file_recon.ne.' ')  call write_paw_recon ( )

@@ -65,6 +65,12 @@
        WRITE(un,'(i8)')     (pawset_%ikk(ns), ns=1,pawset_%nwfc)
         write(un,'(a)') "oc:"
        WRITE(un,'(e20.10)') (pawset_%oc(ns), ns=1,pawset_%nwfc)
+        write(un,'(a)') "els:"
+       WRITE(un,'(a2)') (pawset_%els(ns), ns=1,pawset_%nwfc)
+        write(un,'(a)') "jj:"
+       WRITE(un,'(e20.10)') (pawset_%jj(ns), ns=1,pawset_%nwfc)
+        write(un,'(a)') "rcutus:"
+       WRITE(un,'(e20.10)') (pawset_%rcutus(ns), ns=1,pawset_%nwfc)
         write(un,'(a)') "enl:"
        WRITE(un,'(e20.10)') (pawset_%enl(ns), ns=1,pawset_%nwfc)
         write(un,'(a)') "aewfc:"
@@ -145,6 +151,12 @@
        READ (un,'(i8)')     (pawset_%ikk(ns), ns=1,pawset_%nwfc)
         read(un, '(a)') dummy
        READ (un,'(e20.10)') (pawset_%oc(ns), ns=1,pawset_%nwfc)
+        read(un,'(a)') dummy
+       READ(un,'(a2)') (pawset_%els(ns), ns=1,pawset_%nwfc)
+        read(un,'(a)') dummy
+       READ(un,'(e20.10)') (pawset_%jj(ns), ns=1,pawset_%nwfc)
+        read(un,'(a)') dummy
+       READ(un,'(e20.10)') (pawset_%rcutus(ns), ns=1,pawset_%nwfc)
         read(un, '(a)') dummy
        READ (un,'(e20.10)') (pawset_%enl(ns), ns=1,pawset_%nwfc)
         read(un, '(a)') dummy
@@ -247,8 +259,11 @@ SUBROUTINE allocate_pseudo_paw( paw, size_mesh, size_nwfc, size_lmax )
   INTEGER, INTENT(IN) :: size_mesh, size_nwfc, size_lmax
 !   WRITE(0,"(a,3i5)") "Allocating PAW setup: ",size_mesh, size_nwfc, size_lmax
   ALLOCATE ( paw%l(size_nwfc) )
+  ALLOCATE ( paw%jj(size_nwfc) )
   ALLOCATE ( paw%ikk(size_nwfc) )
   ALLOCATE ( paw%oc(size_nwfc) )
+  ALLOCATE ( paw%rcutus(size_nwfc) )
+  ALLOCATE ( paw%els(size_nwfc) )
   ALLOCATE ( paw%enl(size_nwfc) )
   ALLOCATE ( paw%aewfc(size_mesh,size_nwfc) )
   ALLOCATE ( paw%pswfc(size_mesh,size_nwfc) )
@@ -269,8 +284,11 @@ SUBROUTINE deallocate_pseudo_paw( paw )
 
   TYPE( paw_t ), INTENT(INOUT) :: paw
   IF( ASSOCIATED( paw%l ) ) DEALLOCATE( paw%l )
+  IF( ASSOCIATED( paw%jj ) ) DEALLOCATE( paw%jj )
   IF( ASSOCIATED( paw%ikk ) ) DEALLOCATE( paw%ikk )
   IF( ASSOCIATED( paw%oc ) ) DEALLOCATE( paw%oc )
+  IF( ASSOCIATED( paw%els ) ) DEALLOCATE( paw%els )
+  IF( ASSOCIATED( paw%rcutus ) ) DEALLOCATE( paw%rcutus )
   IF( ASSOCIATED( paw%enl ) ) DEALLOCATE( paw%enl )
   IF( ASSOCIATED( paw%aewfc ) ) DEALLOCATE( paw%aewfc )
   IF( ASSOCIATED( paw%pswfc ) ) DEALLOCATE( paw%pswfc )

@@ -423,8 +423,9 @@ subroutine gener_pseudo
      ! create the 'pawsetup' object containing the atomic setup for PAW
      call us2paw ( pawsetup,                                         &
           zval, grid, paw_rmatch_augfun, ikk,  &
-          nbeta, lls, ocs, enls, psipaw, phis, betas, qvan, kindiff, &
-          nlcc, aeccharge, psccharge, vpotpaw, vpsloc, which_paw_augfun)
+          nbeta, lls, jjs, ocs, enls, els, rcutus, psipaw, phis, betas, &
+          qvan, kindiff, nlcc, aeccharge, psccharge, vpotpaw, vpsloc, &
+          which_paw_augfun)
      !
   endif
   !
@@ -432,8 +433,8 @@ subroutine gener_pseudo
   !
   if (lpaw) then
      ! reread augmentation functions and descreened potentials from PAW
-     call paw2us ( pawsetup, zval, grid, nbeta, lls, ikk, betas, &
-                   qq, qvan, vpsloc, bmat, rhos, pseudotype )
+     call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, &
+                   qq, qvan, vpsloc, bmat, rhos, els, rcutus, pseudotype )
   else
      call descreening
   end if

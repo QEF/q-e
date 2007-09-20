@@ -23,7 +23,7 @@ subroutine ld1_setup
                 nwf,                       jj,   el,   isw,   oc, nstoae, &
                 nwfs,          lls,        jjs,  els,  isws,  ocs, &
                 nwfts,  nnts,  llts, nnts, jjts, elts, iswts, octs, nstoaets, &
-                nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec
+                nwftsc, nntsc, lltsc, jjtsc, eltsc, iswtsc, octsc, nstoaec, lpaw
   use funct, only : get_iexch, dft_is_meta, start_exx !, set_dft_from_name
   implicit none
 
@@ -138,6 +138,9 @@ subroutine ld1_setup
            &            'the wavefunction chosen for local potential',nsloc)
            end if
         end if
+        if (lpaw .and. ocs(nsloc)>0.0_DP) &
+            call errore('ld1_setup','Paw generation with electrons' // &
+            &    'in the local channel is not available',1)
      else
         nsloc=-1   
         nbeta=nwfs

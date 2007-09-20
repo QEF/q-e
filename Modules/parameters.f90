@@ -21,7 +21,8 @@ MODULE parameters
        npk    = 40000,  &! max number of k-points               
        lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
        cp_lmax  = lmaxx+1,&! max number of channels !TMP FOR PAW: REMOVE
-       nchix  = 6        ! max number of atomic wavefunctions per atom
+       nchix  = 6,      & ! max number of atomic wavefunctions per atom
+       nwfsx  = 14       ! max number of beta functions per atom
   !
   INTEGER, PARAMETER :: &
        nbrx = 14,          &! max number of beta functions
