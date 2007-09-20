@@ -24,7 +24,9 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   USE mp_global,        ONLY : me_pool, root_pool, intra_pool_comm, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id
   USE parallel_toolkit, ONLY : dsqmdst, dsqmcll
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , nlax_ 
+  USE dspev_module,     ONLY : pdspev_drv
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , nlax_ , &
+                               la_nrl_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , la_nrlx_
   !
   IMPLICIT NONE
   !
@@ -43,7 +45,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   !
   INTEGER               :: i, j, lwork, nb, mm, info
     ! mm = number of calculated eigenvectors
-  INTEGER               :: nx
+  INTEGER               :: nx, nrl, nrlx
     ! local block size
   REAL(DP)              :: abstol
   REAL(DP), PARAMETER   :: one = 1_DP
@@ -52,11 +54,9 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
   REAL(DP), ALLOCATABLE :: sl(:,:), hl(:,:), vl(:,:), vv(:,:), diag(:,:)
   REAL(DP), ALLOCATABLE :: work(:), sdiag(:), hdiag(:)
   LOGICAL               :: all_eigenvalues
- ! REAL(DP), EXTERNAL    :: DLAMCH
   INTEGER,  EXTERNAL    :: ILAENV
     ! ILAENV returns optimal block size "nb"
   INTEGER               :: desc( descla_siz_ )
-  !
   !
   CALL start_clock( 'diaghg' )
   !
@@ -65,6 +65,8 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !
      nx  = desc( nlax_ )
+     nrl  = desc( la_nrl_ )
+     nrlx = desc( la_nrlx_ )
      !
      IF( desc( lambda_node_ ) > 0 ) THEN
         ALLOCATE( sl( nx , nx ) )
@@ -79,7 +81,84 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      !  Call block parallel algorithm
      !
-     CALL prdiaghg( n, hl, sl, nx, e, vl, desc )
+     CALL start_clock( 'choldc' )
+     !
+     ! ... Cholesky decomposition of s ( L is stored in s )
+     !
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL pdpotf( sl, nx, n, desc )
+        !
+     END IF
+     !
+     CALL stop_clock( 'choldc' )
+     !
+     ! ... L is inverted ( s = L^-1 )
+     !
+     CALL start_clock( 'inversion' )
+     !
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL pdtrtri ( sl, nx, n, desc )
+        !
+     END IF
+     !
+     CALL stop_clock( 'inversion' )
+     !
+     ! ... v = L^-1*H
+     !
+     CALL start_clock( 'paragemm' )
+     !
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_mm_cannon( 'N', 'N', n, ONE, sl, nx, hl, nx, ZERO, vl, nx, desc )
+        !
+     END IF
+     !
+     ! ... h = ( L^-1*H )*(L^-1)^T
+     !
+     IF( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_mm_cannon( 'N', 'T', n, ONE, vl, nx, sl, nx, ZERO, hl, nx, desc )
+        !
+     END IF
+     !
+     CALL stop_clock( 'paragemm' )
+     !
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        ! 
+        !  Compute local dimension of the cyclically distributed matrix
+        !
+        ALLOCATE( diag( nrlx, n ) )
+        ALLOCATE( vv( nrlx, n ) )
+        !
+        CALL blk2cyc_redist( n, diag, nrlx, hl, nx, desc )
+        !
+        CALL pdspev_drv( 'V', diag, nrlx, e, vv, nrlx, nrl, n, &
+          desc( la_npc_ ) * desc( la_npr_ ), desc( la_me_ ), desc( la_comm_ ) )
+        !
+        CALL cyc2blk_redist( n, vv, nrlx, hl, nx, desc )
+        !
+        DEALLOCATE( vv )
+        DEALLOCATE( diag )
+        !
+     END IF
+     !
+     ! ... v = (L^T)^-1 v
+     !
+     CALL start_clock( 'paragemm' )
+     !
+     IF ( desc( lambda_node_ ) > 0 ) THEN
+        !
+        CALL sqr_mm_cannon( 'T', 'N', n, ONE, sl, nx, hl, nx, ZERO, vl, nx, desc )
+        !
+     END IF
+     !
+     CALL mp_bcast( e, root_pool, intra_pool_comm )
+     !
+     CALL stop_clock( 'paragemm' )
+     !
+     ! CALL prdiaghg( n, hl, sl, nx, e, vl, desc )
      !
      !  collect distributed matrix vl into replicated matrix v
      !
@@ -255,6 +334,8 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   REAL(DP), ALLOCATABLE :: hh(:,:)
   REAL(DP), ALLOCATABLE :: ss(:,:)
   !
+  CALL start_clock( 'diaghg' )
+  !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
      nx   = desc( nlax_ )
@@ -351,6 +432,8 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   CALL mp_bcast( e, root_pool, intra_pool_comm )
   !
   CALL stop_clock( 'paragemm' )
+  !
+  CALL stop_clock( 'diaghg' )
   !
   RETURN
   !
