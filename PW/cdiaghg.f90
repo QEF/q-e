@@ -365,6 +365,8 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... input s and h are copied so that they are not destroyed
   !
+  CALL start_clock( 'diaghg' )
+  !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
      nx   = desc( nlax_ )
@@ -462,6 +464,8 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   IF ( desc( lambda_node_ ) > 0 ) THEN
      DEALLOCATE( ss, hh )
   END IF
+  !
+  CALL stop_clock( 'diaghg' )
   !
   RETURN
   !
