@@ -102,7 +102,6 @@ MODULES = \
 ../Modules/io_global.o \
 ../Modules/kind.o \
 ../Modules/ions_base.o \
-../Modules/ions_base.o \
 ../Modules/io_files.o \
 ../Modules/pseudo_types.o \
 ../Modules/radial_grids.o \
