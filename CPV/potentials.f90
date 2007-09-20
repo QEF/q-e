@@ -698,7 +698,6 @@
   SUBROUTINE cluster_bc( screen_coul, hg, omega, hmat )
 
       USE kinds,           ONLY: DP
-      USE green_functions, ONLY: greenf
       USE mp_global,       ONLY: me_image
       USE fft_base,        ONLY: dfftp
       USE cp_interfaces,   ONLY: fwfft

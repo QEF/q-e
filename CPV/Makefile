@@ -39,7 +39,6 @@ fft.o \
 forces.o \
 fromscra.o \
 gradrho.o \
-greenf.o \
 gtable.o \
 guess.o \
 init.o \
