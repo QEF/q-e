@@ -9,11 +9,12 @@
 SUBROUTINE init_run()
   !----------------------------------------------------------------------------
   !
-  USE klist,           ONLY : nkstot
-  USE wvfct,           ONLY : nbnd, et, wg, btype
-  USE control_flags,   ONLY : lmd
-  USE dynamics_module, ONLY : allocate_dyn_vars
-  USE grid_paw_routines, ONLY : allocate_paw_internals
+  USE klist,              ONLY : nkstot
+  USE wvfct,              ONLY : nbnd, et, wg, btype
+  USE control_flags,      ONLY : lmd
+  USE dynamics_module,    ONLY : allocate_dyn_vars
+  USE grid_paw_routines,  ONLY : allocate_paw_internals
+  USE grid_paw_variables, ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -35,7 +36,7 @@ SUBROUTINE init_run()
   ! ... allocate memory for all other arrays (potentials, wavefunctions etc)
   !
   CALL allocate_nlpot()
-  CALL allocate_paw_internals()  !!PAW!!
+  if (okpaw)  CALL allocate_paw_internals()
   CALL allocate_locpot()
   CALL allocate_wfc()
   CALL memory_report()
