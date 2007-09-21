@@ -496,7 +496,7 @@ subroutine ld1_readin
      !
   if (zval == 0.0_DP) then
      zval = zdum
-     if ( abs(nint(zdum)-zdum) > 1.d-8 ) then
+     if ( abs(nint(zdum)-zdum) > 1.d-8 .and. iswitch==3 ) then
          write(zdum_,'(f6.2)') zdum
          call errore ('ld1_readin', 'found noninteger valence ' &
               &//zdum_//', if you want this specify zval in inputp',1)
