@@ -230,7 +230,7 @@ TLDEPS= bindir mods libs pw
 
 all : tldeps libph.a ph.x dynmat.x matdyn.x q2r.x 
 
-ph.x : phonon.o libph.a $(LIBOBJS)
+ph.x : phonon.o libph.a $(PWOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o ph.x phonon.o \
 		$(MODULES) libph.a $(PWOBJS) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PH/ph.x . )
