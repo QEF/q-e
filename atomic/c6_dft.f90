@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+#undef DEBUG
 !---------------------------------------------------------------
 subroutine c6_dft (mesh, zed, grid)
    !--------------------------------------------------------------------
@@ -171,7 +172,18 @@ subroutine c6_dft (mesh, zed, grid)
                fac = 2.0d0 * (2.d0 * ll(n) + 1.d0 )
                if (ll(n)==1 .and. l==2) fac = fac * 2.d0/3.d0
                if (ll(n)==1 .and. l==0) fac = fac * 1.d0/3.d0
+               if (ll(n)==2 .and. l==3) fac = fac * 3.d0/5.d0
+               if (ll(n)==2 .and. l==1) fac = fac * 2.d0/5.d0
                call inc_drho_of_r(mesh, grid%dx, grid%r, grid%r2, y, dy, fac, drho)
+#ifdef DEBUG
+         write (*,*) "========================", n, l
+         write (*,*) "y(1:3)"
+         write (*,*) y(1:3)
+         write (*,*) "dy(1:3)"
+         write (*,*) dy(1:3)
+         write (*,*) "drho(1:3)"
+         write (*,*) drho(1:3)
+#endif
              
             end do
          end do
@@ -212,7 +224,6 @@ subroutine c6_dft (mesh, zed, grid)
          write (*,*) "pp(mesh-2:mesh)"
          write (*,*) pp(mesh-2:mesh)
 #endif 
-
          !
          ! mix
          !

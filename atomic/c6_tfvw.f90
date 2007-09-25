@@ -23,6 +23,7 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
    integer mesh
    real (kind=8) :: rho_input(mesh)
    real (kind=8) :: zed, rho(mesh)
+   real (kind=8) :: vw_lambda=1.0_dp
    !
    ! local variables
    !
@@ -39,6 +40,7 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
    allocate ( dy(mesh), drho_old(mesh) )
    !
    write(6,'(/,/,/,5x,20(''-''),'' Compute C6 from polarizability with TFvW approx.'',10(''-''),/)')
+   if (vw_lambda.ne.1.d0) write(6,*) " value of vw_lambda ", vw_lambda
    !
    if (mesh.ne.grid%mesh) call errore('c6_tfwv',' mesh dimension is not as expected',1)
    do i = 1, mesh
@@ -114,7 +116,7 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
       write (*,*) yy(1:3)
       write (*,*) "yy(mesh-2:mesh)"
       write (*,*) yy(mesh-2:mesh)
-      write (*,*) sqr(1:3)
+      write (*,*) grid%sqr(1:3)
       write (*,*) "sqrt(charge)", sqrt(charge)
 #endif
    if (error > 1.d-8) then
@@ -170,7 +172,8 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
          !
          l = 1
          ly = 0
-         call sternheimer(u,l,ly,mesh,grid%dx,grid%r,grid%sqr,grid%r2,veff,zed,y,dvscf,dy)
+         call sternheimer(u*vw_lambda,l,ly,mesh,grid%dx,grid%r,grid%sqr,grid%r2,veff,zed,y,dvscf,dy)
+         dy = dy*vw_lambda
          ! compute drho of r
          !
          call drho_of_r(mesh, grid%dx, grid%r, grid%r2, y, dy, drho)
@@ -532,7 +535,7 @@ subroutine sternheimer(u, l, ll, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
       if( real(f(i)) .ne. sign(real(f(i)),real(f(i-1))) &
           .and. real(f(i)).gt.0d0 ) icl=i
    end do
-!   write (*,*) icl
+   ! write (*,*) icl
 
    do i=1,mesh
       f(i) = ddx12 * ( sqlhf + r2(i) *(vpot(i)-e) )
@@ -625,10 +628,16 @@ subroutine sternheimer(u, l, ll, mesh, dx, r, sqr, r2, vpot, zed, y, dvpot, dy)
       gg = g(i+1) + 10.d0*g(i) + g(i-1)
       dy(i-1)=( (12.d0-10.d0*f(i))*dy(i)-f(i+1)*dy(i+1) + gg )/f(i-1)
       if (abs(dy(i-1)).gt.1.d6) then
-         fac = ( dy(i-1) - 1.d0 ) / yy(i-1)
-         do j = i-1, mesh
-            dy(j) = dy(j) - fac * yy(j)
-         end do
+         if (abs(yy(i-1)).gt. 1.d-12) then
+            fac = ( dy(i-1) - 1.d0 ) / yy(i-1)
+            do j = i-1, mesh
+               dy(j) = dy(j) - fac * yy(j)
+            end do
+         else
+            do j = i-1, mesh
+               dy(j) = 0.d0
+            end do
+         end if
       end if
    end do
    !
