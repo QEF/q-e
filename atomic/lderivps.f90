@@ -81,7 +81,7 @@ subroutine lderivps
   ikmin=ikrld+5
   if (nbeta>0) then
      do nbf=1,nbeta
-        ikmin=max(ikmin,ikk(nbeta))
+        ikmin=max(ikmin,ikk(nbf))
      enddo
   endif
   do is=1,nspin
