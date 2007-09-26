@@ -45,19 +45,20 @@ subroutine slater_rxc (rs, ex, vx)
   !        Slater exchange with alpha=2/3 and Relativistic exchange
   !
   USE kinds
-  USE constants, ONLY : pi
+  USE constants, ONLY : pi, c_au
   IMPLICIT none
   real (DP):: rs, ex, vx
   !
   real(DP), PARAMETER :: ZERO=0.D0, ONE=1.D0, PFIVE=.5D0, &
-       OPF=1.5D0, C014=0.014D0
+       OPF=1.5D0 !, C014=0.014D0
   real (DP):: trd, ftrd, tftm, a0, alp, z, fz, fzp, vxp, xp, &
-       beta, sb, alb
+       beta, sb, alb, c014
   !
   TRD = ONE/3.d0
   FTRD = 4.d0*TRD
   TFTM = 2**FTRD-2.d0
   A0 = (4.d0/(9.d0*PI))**TRD
+  C014= 1.0_DP/a0/c_au
   
   !      X-alpha parameter:
   ALP = 2.d0 * TRD
