@@ -12,10 +12,10 @@ REAL(DP) :: e, j    ! input: energy and total angular momentum
 REAL(DP) :: psi_out(ndmx) ! output: the function psi.
 REAL(DP) :: psi_dir(ndmx,2) ! auxiliary function.
 REAL(DP) :: ze2, jnor
-integer  :: n
+integer  :: n, nstop
 
 IF (rel == 1) THEN
-   CALL lschps(3,zed,grid,grid%mesh,grid%mesh,1,l,e,psi_out,vpot)
+   CALL lschps(3,zed,grid,grid%mesh,grid%mesh,1,l,e,psi_out,vpot,nstop)
 ELSEIF (rel == 2) THEN
    CALL dir_outward(ndmx,grid%mesh,l,j,e,grid%dx,psi_dir,grid%r,grid%rab,vpot)
    psi_out(:)=psi_dir(:,1)

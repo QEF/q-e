@@ -8,6 +8,7 @@
 ! This routine has been modified in order to be compatible with the
 ! ld1 code. The numerical algorithm is unchanged.
 ! ADC Nov 2003
+! ADC Sep 2007 Clean-up
 !
 !-------------------------------------------------------------------------
 !
@@ -66,12 +67,7 @@ integer :: ir,    &     ! counter
            ig,    &     ! auxiliary
            kcur         ! current k
 !
-!               r o u t i n e  i n i t i a l i s a t i o n
-!
-do ir=1,mesh
-   ruae(ir)=ruae(ir)*r(ir)
-enddo
-!
+!     r o u t i n e  i n i t i a l i s a t i o n
 !     set ( 2 / fine structure constant )
 !tbya = 2.0_DP * 137.04_DP
 tbya = 2.0_DP * cau_fact
@@ -97,7 +93,7 @@ yy = 0.0_DP
 do ir = 1,mesh
    zz(ir,1,1) = rab(ir) * DBLE(kcur) / r(ir)
    zz(ir,2,2) = - zz(ir,1,1)
-   zz(ir,1,2) = - rab(ir) * ( ecur - ruae(ir) / r(ir) ) * abyt
+   zz(ir,1,2) = - rab(ir) * ( ecur - ruae(ir) )  * abyt
    zz(ir,2,1) = - zz(ir,1,2) + rab(ir) * tbya
 enddo
 !
@@ -118,7 +114,7 @@ enddo
 !         if kcur > 0  ig = + kcur , f_0 = 1 , g_0 = 0
 !         if kcur < 0  ig = - kcur , f_0 = 0 , g_1 = 1
 !
-vzero = ruae(1) / r(1)
+vzero = ruae(1) 
 !
 !         set f0 and g0
 if ( kcur .lt. 0 ) then
@@ -157,9 +153,6 @@ snl=0.0_DP
 do ir=1,mesh
    snl(ir,2)=yy(ir,1)
    snl(ir,1)=yy(ir,2)
-enddo
-do ir=1,mesh
-   ruae(ir)=ruae(ir)/r(ir)
 enddo
 return
 end subroutine dir_outward

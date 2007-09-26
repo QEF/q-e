@@ -31,6 +31,7 @@ subroutine lderiv
        idum,   &   ! integer variable for lschps
        is,     &   ! counter on spin
        ierr,   &   ! used for allocation control
+       nstop,  &   ! integer to monitor errors
        ios,    &   ! used for I/O control
        n,ie        ! generic counter 
 
@@ -82,7 +83,7 @@ subroutine lderiv
            !    integrate outward up to ikrld+1
            !
            if (rel == 1) then
-              call lschps(3,zed,grid,idum,ikrld+5,1,lam,e,aux,vpot(1,is))
+              call lschps(3,zed,grid,idum,ikrld+5,1,lam,e,aux,vpot(1,is),nstop)
            else if (rel == 2) then
               call dir_outward(ndmx,ikrld+5,lam,j,e,grid%dx,&
                    aux_dir,grid%r,grid%rab,vpot(1,is))
