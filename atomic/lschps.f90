@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
+subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v,nstop)
 !
   !
   ! integrates radial pauli-type scalar-relativistic equation
@@ -31,7 +31,7 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
   integer, intent (in) :: mode
   real(DP), intent(in) :: z
   type (radial_grid_type), intent(in) :: grid
-  integer :: nin, mch, n, l
+  integer :: nin, mch, n, l, nstop
   real(DP) :: e
   real(DP):: v(grid%mesh),u(grid%mesh)
   !
@@ -51,6 +51,7 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
 
 !- modified in order to pass radial grid data 
 !
+  nstop=0
   ammax= exp(grid%dx)
   al   = grid%dx
   mmax = grid%mesh
@@ -115,6 +116,7 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
   if(nint .gt. 60) then
      print '('' warning: wfc '',2i2,'' not converged'')', n, l
      u=0.0_dp
+     nstop=1
      go to 999
   end if
   !
@@ -158,6 +160,7 @@ subroutine lschps(mode,z,grid,nin,mch,n,l,e,u,v)
      do i=1,mmax
         u (i)=0.0_dp
      end do
+     nstop=1
      go to 999
   else
      nin=mch

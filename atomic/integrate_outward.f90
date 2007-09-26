@@ -102,7 +102,7 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
         c=0.0_DP
         do jb=1,nbeta
            if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
-              do n=1,ik
+              do n=1,ikk(jb)
                  c(n)= c(n)+(ddd(jb,ib) -e*qq(jb,ib))*beta(n,jb)
               enddo
            endif
@@ -161,6 +161,9 @@ subroutine integrate_outward (lam,jam,e,mesh,ndm,grid,f, &
      call dcopy(iib,bm,1,coef,1)
 
      call DGESV(iib,1,cm,nbeta,iwork,coef,nbeta,info)
+
+     if (info /= 0) call errore('integrate_outward', &
+                &  'problems solving the linear system',info)
 
      !         call dgef(cm,nbeta,iib,iwork,0)
      !         call dges(cm,nbeta,iib,iwork,coef,0)

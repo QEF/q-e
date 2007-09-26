@@ -53,8 +53,8 @@ subroutine scf(ic)
                       ze2,thresh,psi(1,1,n),nstop)
               elseif (rel == 1) then
                  call lschps (1,zed,grid,nin,mch,nn(n),ll(n),enl(n),&
-                             psi(1,1,n),vnew(1,is))
-                 nstop=0
+                             psi(1,1,n),vnew(1,is),nstop)
+                 if (nstop>0.and.oc(n)<1.e-10_DP) nstop=0
               elseif (rel == 2) then
                  call dirsol (ndmx,grid%mesh,nn(n),ll(n),jj(n),iter,enl(n), &
                       thresh,grid,psi(1,1,n),vnew(1,is),nstop)
