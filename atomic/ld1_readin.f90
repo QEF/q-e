@@ -59,7 +59,7 @@ subroutine ld1_readin
 
   character(len=80) :: config, configts(ncmax1)
   character(len=2)  :: atom
-  character(len=20) :: dft
+  character(len=20) :: dft, rel_dist
   character, external :: atom_name*2
   integer, external :: atomic_number
   logical, external :: matches
@@ -78,6 +78,8 @@ subroutine ld1_readin
        rel,     &  ! 0 non-relativistic calculation
                    ! 1 scalar-relativistic calculation
                    ! 2 dirac-relativistic calculation
+       rel_dist, & ! 'energy' or 'average'. Distribution of electrons in 
+                   !  relativistic case
        dft,     &  ! LDA, GGA, exchange only or Hartree ?
        isic,    &  ! if 1 self-interaction correction
        latt,    &  ! if <> 0 Latter correction is applied
@@ -174,6 +176,7 @@ subroutine ld1_readin
   rel = 5 
   lsd = 0
   dft = 'LDA'
+  rel_dist='energy'
   isic= 0
   latt= 0
   title = ' '
@@ -197,6 +200,7 @@ subroutine ld1_readin
   call mp_bcast(atom, ionode_id )
   call mp_bcast(config, ionode_id )
   call mp_bcast(dft, ionode_id )
+  call mp_bcast(rel_dist, ionode_id )
 !
   call set_dft_from_name(dft)
 
@@ -266,7 +270,7 @@ subroutine ld1_readin
   if (lsd == 1.and.iswitch==1) then
      call occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
   else if (rel == 2) then
-     call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
+     call occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw,rel_dist)
   endif
   if (xmin==0.0_DP) then
      if (iswitch==1.and..not.vdw.and.rel>0) then
@@ -341,7 +345,7 @@ subroutine ld1_readin
      call bcast_psconfig()
      !
      if (rel==2) call occ_spinorbps &
-          (nwfs,nwfsx,els,nns,lls,jjs,ocs,rcut,rcutus,enls,isws)
+          (nwfs,nwfsx,els,nns,lls,jjs,ocs,rcut,rcutus,enls,isws,rel_dist)
      !
      lmax = maxval(lls(1:nwfs))
      !
@@ -480,7 +484,8 @@ subroutine ld1_readin
              octsc(1,nc), iswtsc(1,nc)) 
         else if (rel == 2) then
            call occ_spinorb(nwftsc(nc),nwfsx,eltsc(1,nc), &
-             nntsc(1,nc),lltsc(1,nc),jjtsc(1,nc),octsc(1,nc),iswtsc(1,nc))
+             nntsc(1,nc),lltsc(1,nc),jjtsc(1,nc),octsc(1,nc),iswtsc(1,nc),&
+             rel_dist)
         endif
      end do
   endif

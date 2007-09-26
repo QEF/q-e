@@ -37,7 +37,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                        logarithmic derivatives are calculated
       deld   = delta e (Ry) of energy for logarithmic derivatives
                If the above parameters are not specified, logarithmic
-               derivaties are not calculated
+               derivatives are not calculated
 
       rel =  0 non relativistic calculation     (default for Z <= 18)
              1 scalar relativistic calculation  (default for Z >  18)
@@ -51,7 +51,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
            'BP'    Becke and Perdew GGA
            'PBE'   Perdew, Becke and Ernzerhof GGA
            'BLYP'  ...
-            For the complete list, see module "functionals" in ../Modules/
+            For the complete list, see module "functionals" in ../flib/
             The default is 'PZ' for all-electron calculations,
             it is read from the PP file in a PP calculation
 
@@ -64,6 +64,8 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
 
       cau_fact :              (default:see file ../Modules/constants.f90)
              speed of light in a.u.. 
+             (Be careful the default value is always used in the 
+              relativistic exchange)
 
       vdw = .true. or .false.                         (default: .false.) 
              If .true., the frequency dependent polarizability and van der
@@ -88,9 +90,15 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                   2 down. Otherwise, the Hund's rule is assumed.
                If rel=2, states with jj=l-1/2 are filled first.
                   If a state appears twice, the first one has jj=l-1/2, 
-                  the second one jj=l+1/2 (except S states)
+                  the second one jj=l+1/2 (except S states) 
+                  (Use rel_dist if you want to average the electrons
+                   over all available states)
               Negative occupancies are used to flag unbound states;
                   they are not actually used
+      rel_dist                                      (Default:'energy')
+              if 'energy' the relativistic l-1/2 states are filled first.
+              if 'average' the electrons are uniformly distributed 
+              among all the states with the given l.  
       If config is empty the electronic configuration is read from
       the following cards:
 
@@ -117,7 +125,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              If one value of zval is provided in input, it will be
              checked versus the calculated value. The only case in
              which you need to explicitly provide the value of zval
-             is for nointeger zval (i.e. half core-hole pseudopotentials)
+             is for noninteger zval (i.e. half core-hole pseudopotentials)
       pseudotype =                                           (no default)
            1    norm-conserving, single-projector PP (old format)
                 IMPORTANT: if pseudotype=1 all calculations are done using
@@ -146,7 +154,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       NB: if lloc>-1, the corresponding channel must be the last in the
           list of wavefunctions appearing after the namelist &inputp
           In the relativistic case, if lloc > 0 both the j=lloc-1/2 and
-          the j=lloc+1/2 wavefunctions must be atthe end of the list
+          the j=lloc+1/2 wavefunctions must be at the end of the list
       rcloc = matching radius (a.u.) for local pseudo-potential (no default)
               Must be specified only if lloc=-1, otherwise the
               corresponding value of rcut is used. 
@@ -221,7 +229,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
                     ecutmin, ecutmin+decut, ecutmin+2*decut ... up to ecutmax.
                     This yields an indication of convergence with the
                     corresponding plane-wave cutoff in solids, and shows 
-                    in an unambigouous way if there are "ghost" states
+                    in an unambiguous way if there are "ghost" states
                     (default: decut=5.0 Ry, ecutmin=ecutmax=0Ry; specify 
                      ecutmin and ecutmax if you want to perform this test)
       rm            Radius of the box used with spherical Bessel functions
@@ -317,9 +325,26 @@ can be reproduced with
    
    isic=0
    latt=0
+   xmin=-12.0
    dft='sla-vwn' for the LDA case
    dft='pw91'    for the PW91-GGA case
    dft='pbe'     for the PBE case
 
-Presenty the agreement is within 0.5 mH for LDA, and within 5 mH for the 
-GGA cases.
+
+The NIST results in PRB 55, 191 (1997): 
+
+LDA:
+rel=0
+dft='sla-vwn'
+
+RLDA
+rel=2
+xmin=-12
+rel_dist='average'
+dft='rxc-vwn'
+
+ScRLDA: 
+rel=1
+dft='rxc-vwn'
+
+LSD: (functional not yet available)

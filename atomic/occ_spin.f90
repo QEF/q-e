@@ -66,7 +66,7 @@ subroutine occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
   return
 end subroutine occ_spin
 !
-subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
+subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw,rel_dist)
   !
   ! This subroutine splits the states according to their j as needed to
   ! make a spin orbit calculation.
@@ -76,6 +76,7 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
   real(DP) :: oc(nwfx), jj(nwfx)
   character(len=2) :: el(nwfx)
+  character(len=20) :: rel_dist
 
   integer :: nwftot, nwf0, n, m
   logical :: ok
@@ -108,8 +109,14 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
            el(n+1)=el(n)
            isw(n+1)=isw(n)
            if (oc(n).gt.-1.e-3_dp) then
-              oc(n+1)=max(0.0_dp,oc(n)-min(2.0_dp*ll(n),oc(n)))
-              oc(n)=min(2.0_dp*ll(n),oc(n))
+              if (rel_dist=='average'.or.rel_dist=='AVERAGE' &
+                          .or.rel_dist=='Average') then
+                 oc(n+1)=oc(n)*(2.0_DP*(ll(n)+1))/(2.0_DP*(2*ll(n)+1)) 
+                 oc(n)=oc(n)*(2.0_DP*ll(n))/(2.0_DP*(2*ll(n)+1)) 
+              else
+                 oc(n+1)=max(0.0_dp,oc(n)-min(2.0_dp*ll(n),oc(n)))
+                 oc(n)=min(2.0_dp*ll(n),oc(n))
+              endif
            else
               oc(n+1)=oc(n)
            endif
@@ -124,7 +131,7 @@ subroutine occ_spinorb(nwf,nwfx,el,nn,ll,jj,oc,isw)
   return
 end subroutine occ_spinorb
 !---------------------------------------------------------------
-subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
+subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw,rel_dist)
 !---------------------------------------------------------------
   !
   ! This subroutine splits the states according to their j as needed to
@@ -135,6 +142,7 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
   integer :: nwf, nwfx, nn(nwfx), ll(nwfx), isw(nwfx)
   real(DP) :: oc(nwfx), jj(nwfx), rcut(nwfx), rcutus(nwfx), enls(nwfx)
   character(len=2) :: el(nwfx)
+  character(len=20) :: rel_dist
 
   integer :: nwftot, nwf0, n, m
   logical :: ok
@@ -172,8 +180,14 @@ subroutine occ_spinorbps(nwf,nwfx,el,nn,ll,jj,oc,rcut,rcutus,enls,isw)
            rcutus(n+1)=rcutus(n)
            enls(n+1)=enls(n)
            isw(n+1)=isw(n)
-           oc(n+1)=max(0.0_dp,oc(n)-min(2.0_dp*ll(n),oc(n)))
-           oc(n)=min(2.0_dp*ll(n),oc(n))
+           if (rel_dist=='average'.or.rel_dist=='AVERAGE' &
+                          .or.rel_dist=='Average') then
+              oc(n+1)=oc(n)*(2.0_DP*(ll(n)+1))/(2.0_DP*(2*ll(n)+1)) 
+              oc(n)=oc(n)*(2.0_DP*ll(n))/(2.0_DP*(2*ll(n)+1)) 
+           else
+              oc(n+1)=max(0.0_dp,oc(n)-min(2.0_dp*ll(n),oc(n)))
+              oc(n)=min(2.0_dp*ll(n),oc(n))
+           endif
         else
            if (abs(jj(n)).lt.1.e-2_dp) jj(n)=0.5_dp
         endif
