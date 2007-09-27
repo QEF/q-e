@@ -330,11 +330,15 @@ can be reproduced with
    dft='pw91'    for the PW91-GGA case
    dft='pbe'     for the PBE case
 
-
 The NIST results in PRB 55, 191 (1997): 
 
 LDA:
 rel=0
+dft='sla-vwn'
+
+LSD: 
+rel=0
+lsd=1
 dft='sla-vwn'
 
 RLDA
@@ -346,5 +350,3 @@ dft='rxc-vwn'
 ScRLDA: 
 rel=1
 dft='rxc-vwn'
-
-LSD: (functional not yet available)

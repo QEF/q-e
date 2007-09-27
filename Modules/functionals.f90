@@ -715,6 +715,8 @@ subroutine xc_spin (rho, zeta, ex, ec, vxup, vxdw, vcup, vcdw)
      vcdw = 0.0_DP
   elseif (icorr == 1) then
      call pz_spin (rs, zeta, ec, vcup, vcdw)
+  elseif (icorr == 2) then
+     call vwn_spin (rs, zeta, ec, vcup, vcdw)
   elseif (icorr == 3) then
      call lsd_lyp (rho, zeta, ec, vcup, vcdw) ! from CP/FPMD (more_functionals)
   elseif (icorr == 4) then
