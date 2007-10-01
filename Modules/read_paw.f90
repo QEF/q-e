@@ -50,7 +50,7 @@
         write(un,'(a)') "scalars:"
        WRITE(un,'(e20.10)') pawset_%zval
        WRITE(un,'(e20.10)') pawset_%z
-       WRITE(un,'(L)')      pawset_%nlcc
+       WRITE(un,'(L1)')     pawset_%nlcc
        WRITE(un,'(i8)')     pawset_%nwfc
        WRITE(un,'(i8)')     pawset_%irc
        WRITE(un,'(i8)')     pawset_%lmax
@@ -136,7 +136,7 @@
         read(un, '(a)') dummy
        READ (un,'(e20.10)') pawset_%zval
        READ (un,'(e20.10)') pawset_%z
-       READ (un,'(L)')      pawset_%nlcc
+       READ (un,'(L1)')      pawset_%nlcc
        READ (un,'(i8)')     pawset_%nwfc
        READ (un,'(i8)')     pawset_%irc
        READ (un,'(i8)')     pawset_%lmax
