@@ -92,23 +92,20 @@ SUBROUTINE vwn_spin(rs, zeta, ec, vcup, vcdw)
    ! tbQ = 2*b/Q
    ! fx0 = X(x_0) = x_0^2 + b*x_0 + c
    ! bx0fx0 = b*x_0/X(x_0)
-   real(DP), parameter :: &
-      cfz = 2.0_dp**(4.0_dp/3.0_dp) - 2.0_dp, &
-      cfz1 = 1.0_dp / cfz, &
-      cfz2 = 4.0_dp/3.0_dp * cfz1, &
-      iddfz0 = 9.0_dp / 8.0_dp *cfz
-   ! coefficients for f(z), df/dz, ddf/ddz(0)
 
-
-   ! input
-   real(DP) :: rs, zeta
-   ! output
-   real(DP) :: ec, vcup, vcdw
+   real(DP), intent(in) :: rs, zeta
+   real(DP), intent(out):: ec, vcup, vcdw
 
    ! local
    real(DP) :: zeta3, zeta4, trup, trdw, trup13, trdw13, fz, dfz, fzz4 
    real(DP) :: sqrtrs, ecP, ecF, ac, De, vcP, vcF, dac, dec1, dec2
+   real(DP) :: cfz, cfz1, cfz2, iddfz0
 
+   ! coefficients for f(z), df/dz, ddf/ddz(0)
+   cfz = 2.0_dp**(4.0_dp/3.0_dp) - 2.0_dp
+   cfz1 = 1.0_dp / cfz
+   cfz2 = 4.0_dp/3.0_dp * cfz1
+   iddfz0 = 9.0_dp / 8.0_dp *cfz
    sqrtrs = sqrt(rs)
    zeta3 = zeta**3
    zeta4 = zeta3*zeta
