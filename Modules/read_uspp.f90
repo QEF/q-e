@@ -1,5 +1,5 @@
-
-! Copyright (C) 2006 Quantum-Espresso group
+!
+! Copyright (C) 2006-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,9 +20,7 @@ MODULE read_uspp_module
   !
   ! Variables above are not modified, variables below are
   !
-  USE uspp_param, ONLY: zp, qfunc, qfcoef, qqq, betar, dion, vloc_at, &
-       rinner, kkbeta, lll, nbeta, nqf, nqlc, tvanp, oldvan, iver, psd
-  USE atom, ONLY: rgrid, nchi, chi, lchi, nlcc, oc, rho_at, rho_atc
+  USE uspp_param, ONLY: iver, oldvan
   !
   IMPLICIT NONE
   SAVE
@@ -31,11 +29,11 @@ MODULE read_uspp_module
   !
 CONTAINS
   !---------------------------------------------------------------------
-  subroutine readvan( is, iunps )
+  subroutine readvan( iunps, is, upf )
     !---------------------------------------------------------------------
     !
-    !     Read Vanderbilt pseudopotential for species "is" from unit "iunps"
-    !     Output parameters in module "uspp_param"
+    !     Read Vanderbilt pseudopotential from unit "iunps"
+    !     for species "is" into the structure "upf"
     !     info on DFT level in module "funct"
     !
     !     ------------------------------------------------------
@@ -86,11 +84,13 @@ CONTAINS
     !     ------------------------------------------------------
     !
     USE constants, ONLY : fpi
+    USE pseudo_types
     !
     implicit none
     !
     !    First the arguments passed to the subroutine
-    !
+    !  
+    TYPE (pseudo_upf) :: upf
     integer                                                           &
          &      is,        &! The number of the pseudopotential
          &      iunps       ! The unit of the pseudo file
@@ -106,6 +106,7 @@ CONTAINS
          &       rc(nchix),     &! the cut-off radii of the pseudopotential
          &       eee(nbrx),     &! energies of the beta function
          &       ddd(nbrx,nbrx),&! the screened D_{\mu,\nu} parameters
+         &       rinner1,       &! rinner if only one is present
          &       rcloc           ! the cut-off radius of the local potential 
     integer                                                           &
          &       idmy(3),       &! contains the date of creation of the pseudo
@@ -115,7 +116,7 @@ CONTAINS
          &       nnlz(nchix),   &! The nlm values of the valence states
          &       keyps,         &! the type of pseudopotential. Only US allowed
          &       irel,          &! it says if the pseudopotential is relativistic
-         &       ifqopt(nsx),   &! level of Q optimization
+         &       ifqopt,        &! level of Q optimization
          &       iptype(nbrx),  &! more recent parameters 
          &       npf,           &! as above
          &       nang,          &! number of angular momenta in pseudopotentials
@@ -123,9 +124,10 @@ CONTAINS
          &       lp,            &! counter on Q angular momenta
          &       l,             &! counter on angular momenta
          &       iv, jv, ijv,   &! beta function counter
+         &       kkbeta1,       &! number of grid points for which betar.ne.0
          &       ir              ! mesh points counter
     !
-    character(len=20) :: title, dft_name
+    character(len=20) :: title
     character(len=60) fmt
     !
     !     We first check the input variables
@@ -144,19 +146,19 @@ CONTAINS
          call errore('readvan','wrong file version read',1)
     !
     read( iunps, '(a20,3f15.9)', err=100, iostat=ios ) &
-         title, rgrid(is)%zmesh, zp(is), exfact 
+         title, upf%zmesh, upf%zp, exfact 
     !
-    psd (is) = title(1:2)
+    upf%psd = title(1:2)
     !
-    if ( rgrid(is)%zmesh < 1 .or. rgrid(is)%zmesh > 100.0_DP) &
+    if ( upf%zmesh < 1 .or. upf%zmesh > 100.0_DP) &
          call errore( 'readvan','wrong zmesh read', is )
-    if ( zp(is) <= 0.0_DP .or. zp(is) > 100.0_DP) &
+    if ( upf%zp <= 0.0_DP .or. upf%zp > 100.0_DP) &
          call errore('readvan','wrong atomic charge read', is )
     if ( exfact < -6 .or. exfact > 6) &
          &     call errore('readvan','Wrong xc in pseudopotential',1)
     ! convert from "our" conventions to Vanderbilt conventions
-    call dftname_cp (nint(exfact), dft_name)
-    call set_dft_from_name( dft_name )
+    call dftname_cp (nint(exfact), upf%dft)
+    call set_dft_from_name( upf%dft )
 #if !defined (EXX)
     IF ( dft_is_hybrid() ) &
          CALL errore( 'readvan', 'HYBRID XC not implemented', 1 )
@@ -165,23 +167,24 @@ CONTAINS
          CALL errore( 'readvan ', 'META-GGA not implemented', 1 )
     !
     read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios ) &
-         nchi(is), rgrid(is)%mesh, etotpseu
-    if ( nchi(is) < 0 .OR. nchi(is) > nchix ) &
-         call errore( 'readvan', 'wrong or too large nchi read', nchi(is) )
-    if ( rgrid(is)%mesh > SIZE (rgrid(is)%r) .or. rgrid(is)%mesh < 0 ) &
+         upf%nwfc, upf%mesh, etotpseu
+    if ( upf%nwfc < 0 .OR. upf%nwfc > nchix ) &
+         call errore( 'readvan', 'wrong or too large nchi read', upf%nwfc )
+    if ( upf%mesh < 0 ) &
          call errore( 'readvan','wrong mesh', is )
     !
     !     info on pseudo eigenstates - energies are not used
     !
+    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc) ) 
     read( iunps, '(i5,2f15.9)', err=100, iostat=ios ) &
-         ( nnlz(iv),  oc(iv,is), ee(iv), iv=1,nchi(is) )
-    do iv = 1, nchi(is)
+         ( nnlz(iv), upf%oc(iv), ee(iv), iv=1,upf%nwfc )
+    do iv = 1, upf%nwfc
        i = nnlz(iv) / 100
-       lchi(iv,is) = nnlz(iv)/10 - i * 10
+       upf%lchi(iv) = nnlz(iv)/10 - i * 10
     enddo
     read( iunps, '(2i5,f15.9)', err=100, iostat=ios ) &
-         keyps, ifpcor, rinner(1,is)
-    nlcc (is) = (ifpcor == 1)
+         keyps, ifpcor, rinner1
+    upf%nlcc = (ifpcor == 1)
     !
     !     keyps= 0 --> standard hsc pseudopotential with exponent 4.0
     !            1 --> standard hsc pseudopotential with exponent 3.5
@@ -193,14 +196,14 @@ CONTAINS
     else if (keyps == 4) then
        call errore('readvan','keyps not implemented',keyps)
     end if
-    tvanp(is) = (keyps == 3)
+    upf%tvanp = (keyps == 3)
     !
     !     Read information on the angular momenta, and on Q pseudization
     !     (version > 3.0)
     !
     if (iver(1,is) >= 3) then
        read( iunps, '(2i5,f9.5,2i5,f9.5)', err=100, iostat=ios )  &
-            nang, lloc, eloc, ifqopt(is), nqf(is), dummy
+            nang, lloc, eloc, ifqopt, upf%nqf, dummy
 !!! PWSCF: lmax(is)=nang, lloc(is)=lloc
        !
        !    NB: In the Vanderbilt atomic code the angular momentum goes 
@@ -211,27 +214,28 @@ CONTAINS
        if ( lloc == -1 ) lloc = nang+1
        if ( lloc > nang+1 .or. lloc < 0 ) &
             call errore( 'readvan', 'wrong lloc read', is )
-       if ( nqf(is) > nqfx .or. nqf(is) < 0 ) &
-            call errore(' readvan', 'Wrong nqf read', nqf(is))
-       if ( ifqopt(is) < 0 ) &
+       if ( upf%nqf > nqfx .or. upf%nqf < 0 ) &
+            call errore(' readvan', 'Wrong nqf read', upf%nqf)
+       if ( ifqopt < 0 ) &
             call errore( 'readvan', 'wrong ifqopt read', is )
     end if
     !
     !     Read and test the values of rinner (version > 5.1)
     !     rinner = radius at which to cut off partial core or q_ij
     !
+    ALLOCATE ( upf%rinner(2*nang-1) ) 
     if (10*iver(1,is)+iver(2,is) >= 51) then
        !
        read( iunps, *, err=100, iostat=ios ) &
-            (rinner(lp,is), lp=1,2*nang-1 )
+            (upf%rinner(lp), lp=1,2*nang-1 )
        !
        do lp = 1, 2*nang-1
-          if (rinner(lp,is) < 0.0_DP) &
+          if (upf%rinner(lp) < 0.0_DP) &
                call errore('readvan','Wrong rinner read', is )
        enddo
     else if (iver(1,is) > 3) then
        do lp = 2, 2*nang-1
-          rinner(lp,is)=rinner(1,is)
+          upf%rinner(lp)=rinner1
        end do
     end if
     !
@@ -243,20 +247,20 @@ CONTAINS
     if (iver(1,is) == 1) then
        oldvan(is) = .TRUE.
        ! old format: no distinction between nang and nchi
-       nang = nchi(is)
+       nang = upf%nwfc
        ! old format: no optimization of q_ij => 3-term taylor series
-       nqf(is)=3
-       nqlc(is)=5
+       upf%nqf=3
+       upf%nqlc=5
     else if (iver(1,is) == 2) then
-       nang = nchi(is)
-       nqf(is)=3
-       nqlc(is) = 2*nang - 1
+       nang = upf%nwfc
+       upf%nqf=3
+       upf%nqlc = 2*nang - 1
     else
-       nqlc(is) = 2*nang - 1
+       upf%nqlc = 2*nang - 1
     end if
     !
-    if ( nqlc(is) > lqmax .or. nqlc(is) < 0 ) &
-         call errore(' readvan', 'Wrong  nqlc read', nqlc(is) )
+    if ( upf%nqlc > lqmax .or. upf%nqlc < 0 ) &
+         call errore(' readvan', 'Wrong  nqlc read', upf%nqlc )
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
          ( rc(l), l=1,nang )
@@ -264,43 +268,57 @@ CONTAINS
     !     reads the number of beta functions 
     !
     read( iunps, '(2i5)', err=100, iostat=ios ) &
-         nbeta(is), kkbeta(is)
+         upf%nbeta, kkbeta1
     !
-    if( nbeta(is) > nbrx .or. nbeta(is) <0 ) &
+    !     BEWARE: upf%kkbeta is an array (one per beta function)
+    !
+    ALLOCATE ( upf%kkbeta(upf%nbeta) )
+    upf%kkbeta(:) = kkbeta1
+    !
+    if( upf%nbeta > nbrx .or. upf%nbeta <0 ) &
          call errore( 'readvan','nbeta wrong or too large', is )
-    if( kkbeta(is) > rgrid(is)%mesh .or. kkbeta(is) < 0 ) &
+    if( ANY (upf%kkbeta > upf%mesh) .or. ANY(upf%kkbeta < 0) ) &
          call errore( 'readvan','kkbeta wrong or too large', is )
     !
     !    Now reads the main Vanderbilt parameters
     !
-    do iv=1,nbeta(is)
-       read( iunps, '(i5)',err=100, iostat=ios ) &
-            lll(iv,is)
+    ALLOCATE ( upf%lll(upf%nbeta) )
+    ALLOCATE ( upf%beta(upf%mesh,upf%nbeta) )
+    ALLOCATE ( upf%dion(upf%nbeta,upf%nbeta), upf%qqq(upf%nbeta,upf%nbeta) )
+    ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta,upf%nbeta) )
+    ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
+    do iv=1,upf%nbeta
+       read( iunps, '(i5)',err=100, iostat=ios ) upf%lll(iv)
        read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            eee(iv), ( betar(ir,iv,is), ir=1,kkbeta(is) )
-       if ( lll(iv,is) > lmaxx .or. lll(iv,is) < 0 ) &
+            eee(iv), ( upf%beta(ir,iv), ir=1,upf%kkbeta(iv) )
+       do ir=upf%kkbeta(iv)+1,upf%mesh
+          upf%beta(ir,iv)=0.0_DP
+       enddo
+       if ( upf%lll(iv) > lmaxx .or. upf%lll(iv) < 0 ) &
             call errore( 'readvan', 'lll wrong or too large ', is )
-       do jv=iv,nbeta(is)
+       do jv=iv,upf%nbeta
           !
           !  the symmetric matric Q_{nb,mb} is stored in packed form
           !  Q(iv,jv) => qfunc(ijv) as defined below (for jv >= iv)
+          !  FIXME: no longer
           !
           ijv = jv * (jv-1) / 2 + iv
           read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-               dion(iv,jv,is), ddd(iv,jv), qqq(iv,jv,is),   &
-               (qfunc(ir,ijv,is),ir=1,kkbeta(is)),          &
-               ((qfcoef(i,lp,iv,jv,is),i=1,nqf(is)),lp=1,nqlc(is))
+               upf%dion(iv,jv), ddd(iv,jv), upf%qqq(iv,jv), &
+               (upf%qfunc(ir,iv,jv),ir=1,upf%kkbeta(1)),    &
+               ((upf%qfcoef(i,lp,iv,jv),i=1,upf%nqf),lp=1,upf%nqlc)
+          do ir=upf%kkbeta(1)+1,upf%mesh
+            upf%qfunc(ir,iv,jv)=0.0_DP
+          enddo
           !
           !     Use the symmetry of the coefficients
           !
-          dion(jv,iv,is)=dion(iv,jv,is)
-          qqq(jv,iv,is)=qqq(iv,jv,is)
-          !
-          do i = 1, nqf(is)
-             do lp= 1, nqlc(is)
-                qfcoef(i,lp,jv,iv,is)=qfcoef(i,lp,iv,jv,is)
-             enddo
-          enddo
+          if ( iv /= jv ) then
+             upf%dion(jv,iv)=upf%dion(iv,jv)
+             upf%qqq(jv,iv) =upf%qqq(iv,jv)
+             upf%qfunc(:,jv,iv) = upf%qfunc(:,iv,jv)
+             upf%qfcoef(:,:,jv,iv)=upf%qfcoef(:,:,iv,jv)
+          end if
        enddo
     enddo
     !
@@ -308,85 +326,91 @@ CONTAINS
     !
     if (10*iver(1,is)+iver(2,is) >= 72) then
        read( iunps, '(6i5)',err=100, iostat=ios ) &
-            (iptype(iv), iv=1,nbeta(is))
+            (iptype(iv), iv=1,upf%nbeta)
        read( iunps, '(i5,f15.9)',err=100, iostat=ios ) &
             npf, dummy
     end if
 
     !
-    !   read the local potential vloc_at
+    !   read the local potential
     !
+    ALLOCATE ( upf%vloc(upf%mesh) )
     read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-         rcloc, ( vloc_at(ir,is), ir=1,rgrid(is)%mesh )
+         rcloc, ( upf%vloc(ir), ir=1,upf%mesh )
     !
     !   If present reads the core charge rho_atc(r)=4*pi*r**2*rho_core(r)
     !
-    if ( nlcc(is) ) then 
+    if ( upf%nlcc ) then 
+       ALLOCATE ( upf%rho_atc(upf%mesh) )
        if (iver(1,is) >= 7) &
             read( iunps, '(1p4e19.11)', err=100, iostat=ios ) dummy
        read( iunps, '(1p4e19.11)', err=100, iostat=ios )  &
-            ( rho_atc(ir,is), ir=1,rgrid(is)%mesh )
+            ( upf%rho_atc(ir), ir=1,upf%mesh )
     endif
     !
     !     Read the screened local potential (not used)
     !
+    ALLOCATE ( upf%rho_at(upf%mesh) )
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         (rho_at(ir,is), ir=1,rgrid(is)%mesh)
+         (upf%rho_at(ir), ir=1,upf%mesh)
     !
     !     Read the valence atomic charge
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         (rho_at(ir,is), ir=1,rgrid(is)%mesh)
+         (upf%rho_at(ir), ir=1,upf%mesh)
     !
     !     Read the logarithmic mesh (if version > 1)
     !
+    ALLOCATE ( upf%r(upf%mesh), upf%rab(upf%mesh) ) 
     if (iver(1,is) >1) then
        read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            (rgrid(is)%r(ir),ir=1,rgrid(is)%mesh)
+            (upf%r(ir),ir=1,upf%mesh)
        read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            (rgrid(is)%rab(ir),ir=1,rgrid(is)%mesh)
+            (upf%rab(ir),ir=1,upf%mesh)
     else
        !
        !     generate herman-skillman mesh (if version = 1)
        !
-       call herman_skillman_grid (rgrid(is)%mesh,rgrid(is)%zmesh,rgrid(is)%r,rgrid(is)%rab)
+       call herman_skillman_grid &
+          ( upf%mesh, upf%zmesh, upf%r, upf%rab )
     end if
     !
-    !     convert vloc_at to the conventions used in the rest of the code
+    !     convert vloc to the conventions used in the rest of the code
     !     (as read from Vanderbilt's format it is r*v_loc(r))
     !
-    do ir = 2, rgrid(is)%mesh
-       vloc_at (ir, is) = vloc_at (ir, is) / rgrid(is)%r(ir)
+    do ir = 2, upf%mesh
+       upf%vloc (ir) = upf%vloc (ir) / upf%r(ir)
     enddo
-    vloc_at (1, is) = vloc_at (2, is)
+    upf%vloc (1) = upf%vloc (2)
     !
     !     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor,
     !     for compatibility with rho_atc in the non-US case)
     !
-    if (nlcc (is) ) then
-       rho_atc(1,is) = 0.0_DP
-       do ir=2,rgrid(is)%mesh
-          rho_atc(ir,is) = rho_atc(ir,is)/fpi/rgrid(is)%r(ir)**2
+    if (upf%nlcc) then
+       upf%rho_atc(1) = 0.0_DP
+       do ir=2,upf%mesh
+          upf%rho_atc(ir) = upf%rho_atc(ir)/fpi/upf%r(ir)**2
        enddo
     end if
     !
     !    Read the wavefunctions of the atom
-    !      
+    !
     if (iver(1,is) >= 7) then
        read( iunps, *, err=100, iostat=ios ) i
-       if (i /= nchi(is)) &
+       if (i /= upf%nwfc) &
             call errore('readvan','unexpected or unimplemented case',1)
     end if
     !
+    ALLOCATE ( upf%chi(upf%mesh, upf%nwfc) )
     if (iver(1,is) >= 6) &
          read( iunps, *, err=100, iostat=ios ) &
-         ((chi(ir,iv,is),ir=1,rgrid(is)%mesh),iv=1,nchi(is))
+         ( (upf%chi(ir,iv), ir=1,upf%mesh), iv=1,upf%nwfc )
     !
     if (iver(1,is) == 1) then
        !
        !   old version: read the q_l(r) and fit them with the Vanderbilt's form
-       !
-       call fit_qrl(iunps, is)
+       ! 
+       call fit_qrl ( )
        !
     end if
     !
@@ -398,9 +422,9 @@ CONTAINS
     WRITE( stdout,300) 'pseudo potential version', &
          iver(1,is), iver(2,is), iver(3,is)
 300 format (4x,'|  ',1a30,3i4,13x,' |' /4x,60('-'))
-    WRITE( stdout,400) title, dft_name
+    WRITE( stdout,400) title, upf%dft
 400 format (4x,'|  ',2a20,' exchange-corr  |')
-    WRITE( stdout,500) rgrid(is)%zmesh, is, zp(is), exfact
+    WRITE( stdout,500) upf%zmesh, is, upf%zp, exfact
 500 format (4x,'|  z =',f5.0,4x,'zv(',i2,') =',f5.0,4x,'exfact =',    &
          &     f10.5, 9x,'|')
     WRITE( stdout,600) ifpcor, etotpseu
@@ -408,22 +432,21 @@ CONTAINS
          &     ' Ry',6x,'|')
     WRITE( stdout,700)
 700 format(4x,'|  index    orbital      occupation    energy',14x,'|')
-    WRITE( stdout,800) ( iv, nnlz(iv), oc(iv,is), ee(iv), iv=1,nchi(is) )
+    WRITE( stdout,800) ( iv, nnlz(iv), upf%oc(iv), ee(iv), iv=1,upf%nwfc )
 800 format(4x,'|',i5,i11,5x,f10.2,f12.2,15x,'|')
     if (iver(1,is) >= 3 .and. nang > 0) then
        write(fmt,900) 2*nang-1, 40-8*(2*nang-2)
 900    format('(4x,''|  rinner ='',',i1,'f8.4,',i2,'x,''|'')')
-       WRITE( stdout,fmt)  (rinner(lp,is),lp=1,2*nang-1)
+       WRITE( stdout,fmt)  (upf%rinner(lp),lp=1,2*nang-1)
     end if
     WRITE( stdout,1000)
 1000 format(4x,'|    new generation scheme:',32x,'|')
-    WRITE( stdout,1100) nbeta(is),kkbeta(is),rcloc
-1100 format(4x,'|    nbeta = ',i2,5x,'kkbeta =',i5,5x,                 &
-         &     'rcloc =',f10.4,4x,'|'/                                      &
-         &     4x,'|    ibeta    l     epsilon   rcut',25x,'|')
-    do iv = 1, nbeta(is)
-       lp=lll(iv,is)+1
-       WRITE( stdout,1200) iv,lll(iv,is),eee(iv),rc(lp)
+    WRITE( stdout,1100) upf%nbeta, upf%kkbeta(1), rcloc
+1100 format(4x,'|    nbeta = ',i2,5x,'kkbeta =',i5,5x,'rcloc =',f10.4,4x,&
+         &     '|'/4x,'|    ibeta    l     epsilon   rcut',25x,'|')
+    do iv = 1, upf%nbeta
+       lp=upf%lll(iv)+1
+       WRITE( stdout,1200) iv,upf%lll(iv),eee(iv),rc(lp)
 1200   format(4x,'|',5x,i2,6x,i2,4x,2f7.2,25x,'|')
     enddo
     WRITE( stdout,1300)
@@ -431,81 +454,80 @@ CONTAINS
     !
     return
 100 call errore('readvan','error reading pseudo file', abs(ios) )
-  end subroutine readvan
-
+  !
+  CONTAINS
   !-----------------------------------------------------------------------
-  subroutine fit_qrl(iunps, is)
+  subroutine fit_qrl ( )
     !-----------------------------------------------------------------------
     !
     ! find coefficients qfcoef that fit the pseudized qrl in US PP
     ! these coefficients are written to file in newer versions of the 
     ! Vanderbilt PP generation code but not in some ancient versions
     !
-    !
     implicit none
-    integer, intent(in) :: iunps, is
     !
     real (kind=DP), allocatable :: qrl(:,:), a(:,:), ainv(:,:), b(:), x(:)
     real (kind=DP) :: deta
     integer :: iv, jv, ijv, lmin, lmax, l, ir, irinner, i,j
     !
     !
-    allocate ( a(nqf(is),nqf(is)), ainv(nqf(is),nqf(is)) )
-    allocate ( b(nqf(is)), x(nqf(is)) )
-    ALLOCATE ( qrl(kkbeta(is), nqlc(is)) )
+    allocate ( a(upf%nqf,upf%nqf), ainv(upf%nqf,upf%nqf) )
+    allocate ( b(upf%nqf), x(upf%nqf) )
+    ALLOCATE ( qrl(upf%kkbeta(1), upf%nqlc) )
     !
-    do iv=1,nbeta(is)
-       do jv=iv,nbeta(is)
-          ijv = jv * (jv-1) / 2 + iv
+    do iv=1,upf%nbeta
+       do jv=iv,upf%nbeta
           !
           ! original version, assuming lll(jv) >= lll(iv) 
           !   lmin=lll(jv,is)-lll(iv,is)+1
           !   lmax=lmin+2*lll(iv,is)
           ! note that indices run from 1 to Lmax+1, not from 0 to Lmax
           !
-          lmin = ABS( lll(jv,is) - lll(iv,is) ) + 1
-          lmax =      lll(jv,is) + lll(iv,is)   + 1
+          lmin = ABS( upf%lll(jv) - upf%lll(iv) ) + 1
+          lmax =      upf%lll(jv) + upf%lll(iv)   + 1
           IF ( lmin < 1 .OR. lmax >  SIZE(qrl,2)) &
                CALL errore ('fit_qrl', 'bad 2rd dimension for array qrl', 1)
           !
           !  read q_l(r) for all l
           !
           read(iunps,*, err=100) &
-                  ( (qrl(ir,l),ir=1,kkbeta(is)), l=lmin,lmax)
+                  ( (qrl(ir,l),ir=1,upf%kkbeta(1)), l=lmin,lmax)
+          !
+          !!! ijv = jv * (jv-1) / 2 + iv
           !
           do l=lmin,lmax
              !
              ! reconstruct rinner
              !
-             do ir=kkbeta(is),1,-1
-                if ( abs(qrl(ir,l)-qfunc(ir,ijv,is)) > 1.0d-6) go to 10
+             do ir=upf%kkbeta(1),1,-1
+                if ( abs(qrl(ir,l)-upf%qfunc(ir,iv,jv)) > 1.0d-6) go to 10
              end do
 10           irinner = ir+1
-             rinner(l,is) = rgrid(is)%r(irinner)
+             upf%rinner(l) = upf%r(irinner)
              !
              ! least square minimization: find
              ! qrl = sum_i c_i r^{l+1}r^{2i-2} for r < rinner
              !
              a(:,:) = 0.0_DP
              b(:)   = 0.0_DP
-             do i = 1, nqf(is)
+             do i = 1, upf%nqf
                 do ir=1,irinner
-                   b(i) = b(i) + rgrid(is)%r(ir)**(2*i-2+l+1) * qrl(ir,l)
+                   b(i) = b(i) + upf%r(ir)**(2*i-2+l+1) * qrl(ir,l)
                 end do
-                do j = i, nqf(is)
+                do j = i, upf%nqf
                    do ir=1,irinner
-                      a(i,j) = a(i,j) + rgrid(is)%r(ir)**(2*i-2+l+1) * &
-                                        rgrid(is)%r(ir)**(2*j-2+l+1) 
+                      a(i,j) = a(i,j) + upf%r(ir)**(2*i-2+l+1) * &
+                                        upf%r(ir)**(2*j-2+l+1) 
                    end do
                    if (j > i) a(j,i) = a(i,j) 
                 end do
              end do
              !
-             call invmat (nqf(is), a, ainv, deta)
+             call invmat (upf%nqf, a, ainv, deta)
              !
-             do i = 1, nqf(is)
-                qfcoef(i,l,iv,jv,is) = dot_product(ainv(i,:),b(:))
-                if (iv /= jv) qfcoef(i,l,jv,iv,is) = qfcoef(i,l,iv,jv,is)
+             do i = 1, upf%nqf
+                upf%qfcoef(i,l,iv,jv) = dot_product(ainv(i,:),b(:))
+                if (iv /= jv) upf%qfcoef(i,l,jv,iv) = upf%qfcoef(i,l,iv,jv)
              end do
           end do
        end do
@@ -517,8 +539,9 @@ CONTAINS
 100 call errore('readvan','error reading Q_L(r)', 1 )
   end subroutine fit_qrl
   !
+  end subroutine readvan
   !-----------------------------------------------------------------------
-  SUBROUTINE herman_skillman_grid(mesh,z,r,rab)
+  SUBROUTINE herman_skillman_grid (mesh,z,r,rab)
     !-----------------------------------------------------------------------
     !
     !     generate Herman-Skillman radial grid (obsolescent)
@@ -550,7 +573,7 @@ CONTAINS
   END SUBROUTINE herman_skillman_grid
   !
   !---------------------------------------------------------------------
-  subroutine readrrkj( is, iunps )
+  subroutine readrrkj( iunps, is, upf )
     !---------------------------------------------------------------------
     !
     !     This routine reads Vanderbilt pseudopotentials produced by the
@@ -562,11 +585,13 @@ CONTAINS
     !     info on DFT level in module "dft"
     !
     USE constants, ONLY : fpi
+    USE pseudo_types
     !
     implicit none
     !
     !    First the arguments passed to the subroutine
     !
+    TYPE (pseudo_upf) :: upf
     integer :: &
          is,        &! The index of the pseudopotential
          iunps       ! the unit from with pseudopotential is read
@@ -609,139 +634,154 @@ CONTAINS
     !
     read( iunps, '(a75)', err=100, iostat=ios ) &
          titleps
-    psd (is) = titleps(7:8)
+    upf%psd = titleps(7:8)
     !
     read( iunps, '(i5)',err=100, iostat=ios ) &
          pseudotype
-    tvanp(is) = (pseudotype == 3)
+    upf%tvanp = (pseudotype == 3)
     
-    if ( tvanp(is) .AND. meta_ionode ) then
+    if ( upf%tvanp .AND. meta_ionode ) then
        WRITE( stdout, &
-              '(/,5X,"RRKJ3 Ultrasoft PP for ",a2,/)') titleps(7:8)
+              '(/,5X,"RRKJ3 Ultrasoft PP for ",a2,/)') upf%psd
     else
        WRITE( stdout, &
-              '(/,5X,"RRKJ3 norm-conserving PP for ",a2,/)') titleps(7:8)
+              '(/,5X,"RRKJ3 norm-conserving PP for ",a2,/)') upf%psd
     endif
     
     read( iunps, '(2l5)',err=100, iostat=ios ) &
-         rel, nlcc(is)
+         rel, upf%nlcc
     read( iunps, '(4i5)',err=100, iostat=ios ) &
          iexch, icorr, igcx,  igcc
-
+    !
+    ! workaround to keep track of which dft was read
+    ! See also upf2internals
+    !
+    write( upf%dft, "('INDEX:',4i1)") iexch,icorr,igcx,igcc
     call set_dft_from_indices(iexch,icorr,igcx,igcc)
 
     read( iunps, '(2e17.11,i5)') &
-         zp(is), etotps, lmax
-    if ( zp(is) < 1 .or. zp(is) > 100 ) &
+         upf%zp, etotps, lmax
+    if ( upf%zp < 1 .or. upf%zp > 100 ) &
          call errore('readrrkj','wrong potential read',is)
     !
     read( iunps, '(4e17.11,i5)',err=100, iostat=ios ) &
-         rgrid(is)%xmin, rdum, rgrid(is)%zmesh, rgrid(is)%dx, rgrid(is)%mesh
+         upf%xmin, rdum, upf%zmesh, upf%dx, upf%mesh
     !
-    if (rgrid(is)%mesh > SIZE (rgrid(is)%r) .or. rgrid(is)%mesh < 0) &
+    if ( upf%mesh < 0) &
          call errore('readrrkj', 'wrong mesh',is)
     !
     read( iunps, '(2i5)', err=100, iostat=ios ) &
-         nchi(is), nbeta(is)
+         upf%nwfc, upf%nbeta
     !
-    if (nbeta(is) > nbrx .or. nbeta(is) < 0) &
+    if ( upf%nbeta > nbrx .or. upf%nbeta < 0) &
          call errore('readrrkj', 'wrong nbeta', is)
-    if (nchi(is) > nchix .or. nchi(is) < 0) &
+    if ( upf%nwfc > nchix .or. upf%nwfc < 0) &
          call errore('readrrkj', 'wrong nchi', is)
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         ( rdum, nb=1,nchi(is) )
+         ( rdum, nb=1,upf%nwfc )
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         ( rdum, nb=1,nchi(is) )
+         ( rdum, nb=1,upf%nwfc )
     !
-    do nb=1,nchi(is)
+    ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc), upf%lll(upf%nwfc) ) 
+    !
+    do nb=1,upf%nwfc
        read(iunps,'(a2,2i3,f6.2)',err=100,iostat=ios) &
-            adum, ndum, lchi(nb,is), oc(nb,is)
-       lll(nb,is)=lchi(nb,is)
+            adum, ndum, upf%lchi(nb), upf%oc(nb)
+       upf%lll(nb)=upf%lchi(nb)
        !
        ! oc < 0 distinguishes between bound states from unbound states
        !
-       if (oc (nb, is) <= 0.0_DP) oc (nb, is) = -1.0_DP
+       if ( upf%oc(nb) <= 0.0_DP) upf%oc(nb) = -1.0_DP
     enddo
     !
-    kkbeta(is)=0
-    do nb=1,nbeta(is)
-       read ( iunps, '(i6)',err=100, iostat=ios ) ikk
-       kkbeta(is)=max(kkbeta(is),ikk)
+    ALLOCATE ( upf%kkbeta(upf%nbeta) )
+    ALLOCATE ( upf%dion(upf%nbeta,upf%nbeta), upf%qqq(upf%nbeta,upf%nbeta) )
+    ALLOCATE ( upf%beta(upf%mesh,upf%nbeta) )
+    ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta,upf%nbeta) )
+    do nb=1,upf%nbeta
+       read ( iunps, '(i6)',err=100, iostat=ios ) upf%kkbeta(nb)
        read ( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            ( betar(ir,nb,is), ir=1,ikk)
-       do ir=ikk+1,rgrid(is)%mesh
-          betar(ir,nb,is)=0.0_DP
+            ( upf%beta(ir,nb), ir=1,upf%kkbeta(nb))
+       do ir=upf%kkbeta(nb)+1,upf%mesh
+          upf%beta(ir,nb)=0.0_DP
        enddo
        do mb=1,nb
           ! 
           ! the symmetric matric Q_{nb,mb} is stored in packed form
           ! Q(nb,mb) => qfunc(ijv) as defined below (for mb <= nb)
-          !
+          ! FIXME: no longer
           ijv = nb * (nb - 1) / 2 + mb
           read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-               dion(nb,mb,is)
-          dion(mb,nb,is)=dion(nb,mb,is)
-          if (pseudotype.eq.3) then
+               upf%dion(nb,mb)
+          if (pseudotype == 3) then
              read(iunps,'(1p4e19.11)',err=100,iostat=ios) &
-                  qqq(nb,mb,is)
-             qqq(mb,nb,is)=qqq(nb,mb,is)
+                  upf%qqq(nb,mb)
              read(iunps,'(1p4e19.11)',err=100,iostat=ios) &
-                  (qfunc(n,ijv,is),n=1,rgrid(is)%mesh)
+                  (upf%qfunc(n,nb,mb),n=1,upf%mesh)
           else
-             qqq(nb,mb,is)=0.0_DP
-             qqq(mb,nb,is)=0.0_DP
-             do n=1,rgrid(is)%mesh
-                qfunc(n,ijv,is)=0.0_DP
-             enddo
+             upf%qqq(nb,mb)=0.0_DP
+             upf%qfunc(:,nb,mb)=0.0_DP
           endif
+          if ( mb /= nb ) then
+             upf%dion(mb,nb)=upf%dion(nb,mb)
+             upf%qqq(mb,nb)=upf%qqq(nb,mb)
+             upf%qfunc(:,mb,nb)=upf%qfunc(:,nb,mb)
+          end if
        enddo
     enddo
     !
     !   reads the local potential 
     !
+    ALLOCATE ( upf%vloc(upf%mesh) )
     read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-         rdum, ( vloc_at(ir,is), ir=1,rgrid(is)%mesh )
+         rdum, ( upf%vloc(ir), ir=1,upf%mesh )
     !
     !   reads the atomic charge
     !
+    ALLOCATE ( upf%rho_at(upf%mesh) )
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         ( rho_at(ir, is), ir=1,rgrid(is)%mesh )
+         ( upf%rho_at(ir), ir=1,upf%mesh )
     !
     !   if present reads the core charge
     !
-    if ( nlcc(is) ) then 
+    if ( upf%nlcc ) then 
+       ALLOCATE ( upf%rho_atc(upf%mesh) )
        read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-            ( rho_atc(ir,is), ir=1,rgrid(is)%mesh )
+            ( upf%rho_atc(ir), ir=1,upf%mesh )
     endif
     !
     !   read the pseudo wavefunctions of the atom
     !  
+    ALLOCATE ( upf%chi(upf%mesh, upf%nwfc) )
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
-         ((chi(ir,nb,is),ir=1,rgrid(is)%mesh),nb=1,nchi(is))
+         ((upf%chi(ir,nb),ir=1,upf%mesh),nb=1,upf%nwfc)
     !
     !    set several variables for compatibility with the rest of the code
     !
-    nqlc(is)=2*lmax+1
-    if ( nqlc(is) > lqmax .or. nqlc(is) < 0 ) &
-         call errore(' readrrkj', 'Wrong  nqlc', nqlc(is) )
-    do l=1,nqlc(is)
-       rinner(l,is)=0.0_DP
+    upf%nqf=0
+    upf%nqlc=2*lmax+1
+    if ( upf%nqlc > lqmax .or. upf%nqlc < 0 ) &
+         call errore(' readrrkj', 'Wrong  nqlc', upf%nqlc )
+    ALLOCATE ( upf%rinner(upf%nqlc) )
+    do l=1,upf%nqlc
+       upf%rinner(l)=0.0_DP
     enddo
     !
     !    compute the radial mesh
     !
-    do ir = 1, rgrid(is)%mesh
-       x = rgrid(is)%xmin + DBLE(ir-1) * rgrid(is)%dx
-       rgrid(is)%r(ir) = EXP(x) / rgrid(is)%zmesh
-       rgrid(is)%rab(ir) = rgrid(is)%dx * rgrid(is)%r(ir)
+    ALLOCATE ( upf%r(upf%mesh), upf%rab(upf%mesh) )
+    do ir = 1, upf%mesh
+       x = upf%xmin + DBLE(ir-1) * upf%dx
+       upf%r(ir) = EXP(x) / upf%zmesh
+       upf%rab(ir) = upf%dx * upf%r(ir)
     end do
     !
     !     set rho_atc(r)=rho_core(r)  (without 4*pi*r^2 factor)
     !
-    if ( nlcc(is) ) then
-       do ir=1,rgrid(is)%mesh
-          rho_atc(ir,is) = rho_atc(ir,is)/fpi/rgrid(is)%r(ir)**2
+    if ( upf%nlcc ) then
+       do ir=1,upf%mesh
+          upf%rho_atc(ir) = upf%rho_atc(ir)/fpi/upf%r(ir)**2
        enddo
     end if
     !
@@ -749,4 +789,5 @@ CONTAINS
 100 call errore('readrrkj','Reading pseudo file',abs(ios))
     stop
   end subroutine readrrkj
+  !
 end module read_uspp_module

@@ -16,7 +16,7 @@ subroutine force_corr (forcescc)
   !     by means of a free atom superposition.
   !     (alessio f.)
   ! Uses superposition of atomic charges contained in the array rho_at
-  ! and already set in readin-readvan
+  ! and read from pseudopotential files
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi

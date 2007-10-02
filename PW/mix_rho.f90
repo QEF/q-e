@@ -322,15 +322,17 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
         END IF
         !
      END DO
-     ! not good if ngm0 != ngm 
-     !! CALL davcio( rhocout, 2*ngm0*nspin, iunmix, 1, 1 )
-     !! CALL davcio( rhocin,  2*ngm0*nspin, iunmix, 2, 1 )
-     ! use instead:
+#if defined (ONLY_SMOOTH_G)
      ALLOCATE( rhoinsave( ngm0, nspin ) )
      rhoinsave(:,:) = rhocout(1:ngm0,:)
      CALL davcio( rhoinsave, 2*ngm0*nspin, iunmix, 1, 1 )
      rhoinsave(:,:) = rhocin(1:ngm0,:)
      CALL davcio( rhoinsave,  2*ngm0*nspin, iunmix, 2, 1 )
+#else
+     ! not good if ngm0 != ngm : arrays are dimensioned (ngm,nspin)!
+     CALL davcio( rhocout, 2*ngm0*nspin, iunmix, 1, 1 )
+     CALL davcio( rhocin,  2*ngm0*nspin, iunmix, 2, 1 )
+#endif
      !
      IF ( mixrho_iter > 1 ) THEN
         !
@@ -341,12 +343,16 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
      !
      IF ( tmeta ) THEN
         !
-        !! CALL davcio( taukout, 2*ngm0*nspin, iunmix_tk, 1, 1 )
-        !! CALL davcio( taukin,  2*ngm0*nspin, iunmix_tk, 2, 1 )
+#if defined (ONLY_SMOOTH_G)
         rhoinsave(:,:) = taukout(1:ngm0,:)
         CALL davcio( rhoinsave, 2*ngm0*nspin, iunmix_tk, 1, 1 )
         rhoinsave(:,:) = taukin(1:ngm0,:)
         CALL davcio( rhoinsave,  2*ngm0*nspin, iunmix_tk, 2, 1 )
+#else
+        ! not good if ngm0 != ngm : arrays are dimensioned (ngm,nspin)!
+        CALL davcio( taukout, 2*ngm0*nspin, iunmix_tk, 1, 1 )
+        CALL davcio( taukin,  2*ngm0*nspin, iunmix_tk, 2, 1 )
+#endif
         !
         IF ( mixrho_iter > 1 ) THEN
            !
@@ -357,7 +363,9 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
         !
      END IF
      !
+#if defined (ONLY_SMOOTH_G)
      DEALLOCATE( rhoinsave )
+#endif
      !
      IF ( lda_plus_u ) THEN
         !

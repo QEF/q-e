@@ -801,6 +801,7 @@ ortho_base.o : ../Modules/ions_base.o
 ortho_base.o : ../Modules/kind.o
 ortho_base.o : ../Modules/mp.o
 ortho_base.o : ../Modules/mp_global.o
+ortho_base.o : ../Modules/ptoolkit.o
 ortho_base.o : ../Modules/recvec.o
 ortho_base.o : ../Modules/uspp.o
 ortho_base.o : modules.o

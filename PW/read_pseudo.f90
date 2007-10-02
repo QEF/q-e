@@ -106,11 +106,13 @@ subroutine readpp
            !
            newpseudo (nt) = ( pseudo_type (psfile (nt) ) == 2 )
            !
-           if ( newpseudo (nt) ) then
-              call readrrkj (nt, iunps)
-           else
-              call readvan (nt, iunps)
-           endif
+           IF ( newpseudo (nt) ) THEN
+              call readrrkj (iunps, nt, upf)
+           ELSE
+              CALL readvan (iunps, nt, upf)
+           ENDIF
+           CALL set_pseudo_upf (nt, upf)    ! TEMP
+           CALL deallocate_pseudo_upf( upf )! TEMP
            !
            lmax(nt) = max ( lmax(nt), MAXVAL( lll( 1:nbeta(nt), nt) ) )
            !
@@ -133,7 +135,10 @@ subroutine readpp
            tvanp (nt) = .false.
            newpseudo (nt) = .false.
            ! 
-           call read_ncpp (nt, iunps)
+           call read_ncpp (iunps, nt, upf)
+           !
+           CALL set_pseudo_upf (nt, upf)    ! TEMP
+           CALL deallocate_pseudo_upf( upf )! TEMP
            !
         endif
      endif

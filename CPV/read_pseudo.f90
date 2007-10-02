@@ -324,11 +324,19 @@ END FUNCTION calculate_dx
 
         ELSE IF( info == 1 ) THEN
 
-           call readvan( is, pseudounit )
+           CALL readvan( pseudounit, is, upf(is) )
+           CALL set_pseudo_upf( is, upf( is ) )
+           IF( .NOT. upf(is)%tvanp ) THEN
+             CALL upf2ncpp( upf(is), ap(is) )
+           END IF
 
         ELSE IF( info == 2 ) THEN
 
-           call readrrkj( is, pseudounit )
+           CALL readrrkj( pseudounit, is, upf(is) )
+           CALL set_pseudo_upf( is, upf( is ) )
+           IF( .NOT. upf(is)%tvanp ) THEN
+              CALL upf2ncpp( upf(is), ap(is) )
+           END IF
 
         ELSE IF( info == 11 ) THEN
 

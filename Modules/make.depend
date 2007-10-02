@@ -218,12 +218,12 @@ read_paw.o : radial_grids.o
 read_paw.o : uspp.o
 read_upf.o : kind.o
 read_upf.o : pseudo_types.o
-read_uspp.o : atom.o
 read_uspp.o : constants.o
 read_uspp.o : functionals.o
 read_uspp.o : io_global.o
 read_uspp.o : kind.o
 read_uspp.o : parameters.o
+read_uspp.o : pseudo_types.o
 read_uspp.o : uspp.o
 recvec.o : kind.o
 recvec.o : mp.o

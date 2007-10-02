@@ -301,6 +301,7 @@ divide_class_so.o : ../Modules/io_global.o
 divide_class_so.o : ../Modules/kind.o
 divide_class_so.o : noncol.o
 divide_class_so.o : pwcom.o
+divide_et_impera.o : ../Modules/functionals.o
 divide_et_impera.o : ../Modules/io_global.o
 divide_et_impera.o : ../Modules/kind.o
 divide_et_impera.o : ../Modules/mp_global.o
@@ -548,6 +549,7 @@ h_psi_nc.o : noncol.o
 h_psi_nc.o : pwcom.o
 hexsym.o : ../Modules/kind.o
 hinit0.o : ../Modules/cell_base.o
+hinit0.o : ../Modules/grid_paw_variables.o
 hinit0.o : ../Modules/io_files.o
 hinit0.o : ../Modules/ions_base.o
 hinit0.o : grid_paw_routines.o
@@ -587,6 +589,7 @@ init_paw_2.o : ../Modules/splinelib.o
 init_paw_2.o : paw.o
 init_paw_2.o : pwcom.o
 init_run.o : ../Modules/control_flags.o
+init_run.o : ../Modules/grid_paw_variables.o
 init_run.o : dynamics_module.o
 init_run.o : grid_paw_routines.o
 init_run.o : pwcom.o
@@ -651,6 +654,7 @@ iweights.o : ../Modules/kind.o
 iweights.o : noncol.o
 kpoint_grid.o : ../Modules/kind.o
 kpoint_grid.o : noncol.o
+kpoint_grid.o : pwcom.o
 lchk_tauxk.o : ../Modules/kind.o
 make_pointlists.o : ../Modules/cell_base.o
 make_pointlists.o : ../Modules/io_global.o
@@ -934,7 +938,7 @@ read_ncpp.o : ../Modules/atom.o
 read_ncpp.o : ../Modules/functionals.o
 read_ncpp.o : ../Modules/kind.o
 read_ncpp.o : ../Modules/parameters.o
-read_ncpp.o : ../Modules/uspp.o
+read_ncpp.o : ../Modules/pseudo_types.o
 read_ncpp.o : pwcom.o
 read_pseudo.o : ../Modules/atom.o
 read_pseudo.o : ../Modules/functionals.o
@@ -1229,6 +1233,7 @@ symmetrize_at.o : ../Modules/kind.o
 symmetrize_at.o : pwcom.o
 symrho.o : ../Modules/kind.o
 symrho_mag.o : ../Modules/kind.o
+symrho_mag.o : pwcom.o
 symscalar.o : ../Modules/kind.o
 symtns.o : ../Modules/kind.o
 symvect.o : ../Modules/kind.o

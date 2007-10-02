@@ -38,7 +38,7 @@ MODULE radial_grids
   IMPLICIT NONE
   !
   integer, parameter :: &
-       ndmx=3500     ! the maximum mesh size 
+       ndmx=2000     ! the maximum mesh size 
 
 TYPE radial_grid_type
 
