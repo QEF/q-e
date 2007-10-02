@@ -310,6 +310,7 @@ subroutine init_us_1
         do ih=1,nh(nt)
           do jh=1,nh(nt)
             call qvan2 (1, ih, jh, nt, gg, qgm, ylmk0)
+            qq (ih, jh, nt) = omega *  DBLE (qgm (1) )
             do kh=1,nh(nt)
               do lh=1,nh(nt)
                 ijs=0
@@ -348,6 +349,7 @@ subroutine init_us_1
 100 continue
   if (lspinorb) then
     call reduce ( nhm * nhm * ntyp * 8, qq_so )
+    call reduce ( nhm * nhm * ntyp, qq )
   else
     call reduce ( nhm * nhm * ntyp, qq )
   endif
