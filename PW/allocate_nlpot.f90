@@ -93,12 +93,12 @@ subroutine allocate_nlpot
   if (noncolin) then
      allocate (deeq_nc( nhm, nhm, nat, nspin))    
   endif
+  allocate (qq(   nhm, nhm, nsp))    
   if (lspinorb) then
     allocate (qq_so(nhm, nhm, 4, nsp))    
     allocate (dvan_so( nhm, nhm, nspin, nsp))    
     allocate (fcoef(nhm,nhm,2,2,nsp))
   else
-    allocate (qq(   nhm, nhm, nsp))    
     allocate (dvan( nhm, nhm, nsp))    
   endif
   !
