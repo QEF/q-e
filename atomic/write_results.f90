@@ -23,7 +23,7 @@ subroutine write_results
   use funct, only :  get_iexch, get_dft_name
   implicit none
 
-  integer :: is, i, j, n, m, im(40), l, ios, counter
+  integer :: is, i, j, n, m, im(40), l, ios, counter, ismax
   integer, parameter :: max_out_wfc=7
   real(DP):: work(ndmx), dum, int_0_inf_dr, ravg, r2avg, sij, ene, mm
   real(DP) :: psiaux(ndmx,max_out_wfc)
@@ -302,7 +302,9 @@ subroutine write_results
            endif
         enddo
      else
-        do is=1,2
+        ismax=1
+        if (lsmall) ismax=2
+        do is=1,ismax
            if (ionode) then
               if (is==2) nomefile=TRIM(file_wavefunctions)//'.small'
               open(unit=15,file=nomefile,status='unknown',  &
@@ -318,7 +320,7 @@ subroutine write_results
                     write(15,'(8f10.6)')grid%r(n), &
                               (psi(n,1,i),i=nwf,max(1,nwf-6),-1)
                  enddo
-              else if (lsmall) then
+              else 
                  do n=1,grid%mesh 
                     write(15,'(8f10.6)')grid%r(n), &
                               (psi(n,2,i),i=nwf,max(1,nwf-6),-1)
