@@ -53,7 +53,7 @@ SUBROUTINE suscept_crystal
   ! f-sum rule
   real(dp) :: f_sum(3,3)
 
-  integer :: ia, ib, ik, ipol, jpol, i, ibnd, isign
+  integer :: ia, ib, ik, ipol, jpol, i, ibnd, isign, ispin
   real(dp) :: tmp(3,3), q(3), braket, sigma_bare(3,3,nat)
   real(dp) :: diamagnetic_corr_tensor(3,3,nat)
   real(dp) :: paramagnetic_corr_tensor(3,3,nat)
@@ -259,11 +259,11 @@ SUBROUTINE suscept_crystal
   
   !nsym = 1
   ! either you symmetrize the current ...
-  do i = 1, nspin
+  do ispin = 1, nspin
 #ifdef __PARA
-    call psymmetrize_field(j_bare(:,:,:,i),1)
+    call psymmetrize_field(j_bare(:,:,:,ispin),1)
 #else
-    call symmetrize_field(j_bare(:,:,:,i),1)
+    call symmetrize_field(j_bare(:,:,:,ispin),1)
 #endif
   enddo
 

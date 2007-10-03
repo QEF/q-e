@@ -21,7 +21,7 @@ SUBROUTINE g_tensor_crystal
   USE wvfct,                       ONLY : nbnd, npwx, npw, igk, wg, g2kin, &
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk, nspin
-  USE becmod,                      ONLY : becp  
+  USE becmod,                      ONLY : becp
   USE symme,                       ONLY : nsym, s, ftau
   USE scf,                         ONLY : vr, vltot, rho
   USE gvect,                       ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, &
@@ -89,6 +89,9 @@ SUBROUTINE g_tensor_crystal
   
   ! Select majority and minority spin components
   rho_diff = SUM ( rho ( :, 1 ) - rho ( :, nspin ) )
+#ifdef __PARA
+  call reduce(1, rho_diff)
+#endif
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
@@ -180,9 +183,6 @@ SUBROUTINE g_tensor_crystal
         enddo
       enddo
     enddo
-#ifdef __PARA
-    call reduce(9, f_sum)
-#endif
 
     !------------------------------------------------------------------
     ! pGv and vGv contribution to chi_{bare}
@@ -234,19 +234,20 @@ SUBROUTINE g_tensor_crystal
 
 #ifdef __PARA
   call reduce(9, f_sum)
-  call reduce(9, q_pGv)
-  call reduce(9, q_vGv)
+  call reduce(9*3, q_pGv)
+  call reduce(9*3, q_vGv)
+  call reduce(1, delta_rmc)
   !<ceres> other reductions? </ceres>
 #endif
   
 #ifdef __PARA
   call poolreduce(9, f_sum)
-  call poolreduce(9, q_pGv)
-  call poolreduce(9, q_vGv)
+  call poolreduce(9*3, q_pGv)
+  call poolreduce(9*3, q_vGv)
   call poolreduce(9, delta_g_diamagn)
   call poolreduce(9, delta_g_paramagn)
-  call poolreduce(9, delta_rmc)
-  call poolreduce(9, gipaw_delta_rmc)
+  call poolreduce(1, delta_rmc)
+  call poolreduce(1, gipaw_delta_rmc)
   call poolreduce(nrxxs*nspin*9, j_bare)  ! or nrxx?
 #endif
   
@@ -273,7 +274,11 @@ SUBROUTINE g_tensor_crystal
   
   ! either you symmetrize the current ...
   do ispin = 1, nspin
-    call symmetrize_field(j_bare(:,:,:,ispin),1)
+#ifdef __PARA
+     call psymmetrize_field(j_bare(:,:,:,ispin),1)
+#else
+     call symmetrize_field(j_bare(:,:,:,ispin),1)
+#endif
   end do
   
   !
@@ -414,6 +419,11 @@ SUBROUTINE g_tensor_crystal
                 * ( rho(:,s_maj)-rho(:,s_min) ) )
         end do
      end do
+#ifdef __PARA
+     call reduce ( 9, delta_g_soo_2 )
+#endif
+  else
+     delta_g_soo_2 = 0.0_dp
   end if
   
   delta_g_soo_2 = delta_g_soo_2 * d_omega
@@ -552,7 +562,7 @@ CONTAINS
     complex(dp), intent(in) :: ul(npwx,nbnd,3), ur(npwx,nbnd,3)
     real(dp) :: braket
     integer :: ibnd, ia, ib, comp_ia, comp_ib, ind(3,3), mult(3,3)
-
+    
     ! index for the cross product
     ind(:,1) = (/ 1, 3, 2/);  mult(:,1) = (/ 0,-1, 1 /)
     ind(:,2) = (/ 3, 2, 1/);  mult(:,2) = (/ 1, 0,-1 /)
@@ -575,9 +585,6 @@ CONTAINS
 
       enddo  ! ib
     enddo  ! ia
-#ifdef __PARA
-    call reduce(9, qt)
-#endif
   END SUBROUTINE add_to_tensor
   
   
@@ -747,7 +754,7 @@ CONTAINS
     enddo
     
     if ( iverbosity > 10 ) then
-       write(6,'("CCC1",5F14.8)') dia_corr(5:9)
+       write(stdout,'("Debug: gt, dia  ",5F14.8)') dia_corr(5:9)
     end if
     
     !
@@ -872,7 +879,7 @@ CONTAINS
        paramagnetic_tensor ( :, ipol ) = REAL ( para_corr, dp )
        
        if ( iverbosity > 10 ) then
-          write(6,'("DDD1",2I3,3(F16.7,2X))') &
+          write(stdout,'("Debug: gt, para ",2I3,3(F16.7,2X))') &
                ipol, i*isign, REAL ( para_corr(1:3) ) * 1e6
        end if
        

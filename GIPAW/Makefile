@@ -47,7 +47,6 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
-../Modules/grid_paw_variables.o \
 ../Modules/input_parameters.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
@@ -77,7 +76,6 @@ MODULES = \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
 ../Modules/read_namelists.o \
-../Modules/read_paw.o \
 ../Modules/read_upf.o \
 ../Modules/read_uspp.o \
 ../Modules/recvec.o \
@@ -94,7 +92,6 @@ MODULES = \
 ../Modules/xml_io_base.o \
 ../Modules/zhpev_drv.o 
 
-
 PWOBJS = ../PW/libpw.a
 
 TLDEPS=bindir pw mods libs libiotk
@@ -110,7 +107,7 @@ tldeps:
 	test -n "$(TLDEPS)" && ( cd .. ; $(MAKE) $(MFLAGS) $(TLDEPS) || exit 1) || :
 
 clean :
-	- /bin/rm -f gipaw.x *.o *~ *.F90 *.d *.mod *.i *.L
+	- /bin/rm -f gipaw.x *.o *.F90 *.d *.mod *.i *.L
 
 include make.depend
 

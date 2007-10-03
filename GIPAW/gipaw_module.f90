@@ -130,6 +130,7 @@ CONTAINS
     filfield = ''
     read_recon_in_paratec_fmt = .FALSE.
     file_reconstruction ( : ) = " "
+    use_nmr_macroscopic_shape = .TRUE.
     nmr_macroscopic_shape = 2.0_dp / 3.0_dp
     spline_ps = .true.    ! TRUE in this case!!!!!
     isolve = 0
@@ -308,9 +309,9 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE gipaw_setup
     USE kinds,         ONLY : DP
-    USE io_global,  ONLY : stdout
+    USE io_global,     ONLY : stdout, ionode
     USE ions_base,     ONLY : tau, nat, ntyp => nsp
-    USE atom,          ONLY : nlcc
+    USE atom,          ONLY : nlcc, rgrid
     USE wvfct,         ONLY : nbnd, et, wg, npwx
     USE lsda_mod,      ONLY : nspin, lsda
     USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
@@ -323,8 +324,7 @@ CONTAINS
 !                              paw_becp, paw_nkb
     USE paw,           ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
                               read_recon, read_recon_paratec
-    USE atom,          ONLY : rgrid
-    
+    USE symme,         ONLY : nsym, s
     !</apsi>
     
     IMPLICIT none
@@ -347,6 +347,9 @@ CONTAINS
     !</apsi>
     
     call start_clock ('gipaw_setup')
+    
+    ! Test if the symmetry operations map Cartesian axis into each other
+!*apsi*    CALL test_symmetries ( s, nsym )    
     
     ! initialize pseudopotentials
     call init_us_1
@@ -371,6 +374,29 @@ CONTAINS
           !!!paw_recon(nt)%paw_nbeta = 0
        END IF
     END DO
+    
+    if ( iverbosity > 10 ) then
+       ! Write the wave functions and local potentials for debugging/testing
+       do nt = 1, ntyp
+          do il = 1, paw_recon(nt)%paw_nbeta
+             do j = 1, MIN(SIZE(rgrid(nt)%r),SIZE(paw_recon(nt)%aephi(il)%psi))
+                write(1000+nt,*) rgrid(nt)%r(j), paw_recon(nt)%aephi(il)%psi(j)
+                write(1100+nt,*) rgrid(nt)%r(j), paw_recon(nt)%psphi(il)%psi(j)
+             end do
+             write(1000+nt,*) " "
+             write(1100+nt,*) " "
+          end do
+       end do
+       
+       do nt = 1, ntyp
+          do j = 1, MIN(SIZE(rgrid(nt)%r),SIZE(paw_recon(nt)%gipaw_ae_vloc))
+             write(1200+nt,*) rgrid(nt)%r(j), paw_recon(nt)%gipaw_ae_vloc(j)
+             write(1300+nt,*) rgrid(nt)%r(j), paw_recon(nt)%gipaw_ps_vloc(j)
+          end do
+          write(1200+nt,*) " "
+          write(1300+nt,*) " "
+       end do
+    end if
     
     ! initialize paw
     do nt = 1, ntyp
@@ -451,7 +477,7 @@ CONTAINS
              call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "WWW1: ", l2, il1, il2, &
+                write(stdout,*) "Debug: int1 ", l2, il1, il2, &
                      radial_integral_paramagnetic(il1,il2,nt) &
                      * alpha ** 2 * 1e6 * 4
              end if
@@ -478,7 +504,7 @@ CONTAINS
              CALL simpson ( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_rmc(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "WWW2: ", l2, il1, il2, &
+                write(stdout,*) "Debug: int2 ", l2, il1, il2, &
                      radial_integral_rmc(il1,il2,nt)
              end if
              
@@ -504,7 +530,7 @@ CONTAINS
              call simpson( nrc, work, rgrid(nt)%rab(:nrc), &
                   radial_integral_diamagnetic_so(il1,il2,nt) )
              if (iverbosity > 10) then
-                write(stdout,*) "WWW3: ", l2, il1, il2, &
+                write(stdout,*) "Debug: int3 ", l2, il1, il2, &
                      radial_integral_diamagnetic_so(il1,il2,nt) * alpha
              end if
              
@@ -518,10 +544,19 @@ CONTAINS
                      / rgrid(nt)%r(j)
              end do
              
+             if ( iverbosity > 1000 ) then
+                if ( l1 == 0 ) then
+                   do j = 1, nrc
+                      write(90,*) rgrid(nt)%r(j), work(j)*rgrid(nt)%r(j)**2
+                   end do
+                   write(90,*) ""
+                end if
+             end if
+             
              call simpson( nrc,work,rgrid(nt)%rab(:nrc), &
                   radial_integral_paramagnetic_so(il1,il2,nt) )
-             if (iverbosity > 10) then
-                write(stdout,*) "WWW4: ", l2, il1, il2, &
+             if ( iverbosity > 100 ) then
+                write(stdout,*) "Debug: int4 ", l2, il1, il2, &
                      radial_integral_paramagnetic_so(il1,il2,nt) * alpha
              end if
              
@@ -748,6 +783,87 @@ CONTAINS
     END SUBROUTINE radial_derivative
     
   END SUBROUTINE gipaw_setup
+
+
+  !-----------------------------------------------------------------------
+  ! Test whether symmetry axis map into each other
+  !-----------------------------------------------------------------------
+  SUBROUTINE test_symmetries ( s, nsym )
+    
+    USE pwcom, ONLY : at, bg
+    
+    IMPLICIT NONE
+    
+    ! Arguments
+    INTEGER, INTENT ( INOUT ) :: s(3,3,48)
+    INTEGER, INTENT ( INOUT ) :: nsym
+    
+    ! Local
+    INTEGER :: i, isym, j
+    INTEGER :: s_new(3,3,48)
+    INTEGER :: isym_now
+    REAL ( dp ) :: vect(3,3), vec2(3), vec3(3), vec4(3)
+    REAL ( dp ) :: vect_len, vec4_len
+    
+    !--------------------------------------------------------------------------
+    
+    vect = 0.0
+    vect(1,1) = 1.0
+    vect(2,2) = 1.0
+    vect(3,3) = 1.0
+    
+    isym_now = 0
+    
+    DO isym = 1, nsym
+       DO i = 1, 3
+          
+          write(6,*) ">>>>>>>>>> ", i, isym
+          write(6,'(A,3F12.6)') "AAA ", vect(:,i)
+          
+          ! Transfer into reciprocal lattice vectors
+          vec2 = MATMUL ( TRANSPOSE ( bg ), vect(:,i) )
+          write(6,'(A,3F12.6)') "BBB ", vec2
+          
+          ! Multiply with symmetry operation
+          vec3 = MATMUL ( s(:,:,isym), vec2 )
+          write(6,'(A,3F12.6)') "CCC ", vec3
+          
+          ! Transfer into Cartesian coordinates
+          vec4 = MATMUL ( at, vec3 )
+          write(6,'(A,3F12.6)') "DDD ", vec4
+          
+          ! Check if the length is the same...
+          vect_len = SQRT ( SUM ( vect(:,i) ** 2 ) )
+          vec4_len = SQRT ( SUM ( vec4(:) ** 2 ) )
+          
+          IF ( ABS ( vect_len - vec4_len ) > 1e-8 ) THEN
+             write(6,*) "DEBUG: ", vect_len, vec4_len
+             CALL errore ( "test_symmetries", &
+                  "length of vectors cannot change", -1 )
+          END IF
+          
+          vec4 = vec4 / vec4_len
+          DO j = 1, 3
+             vec4(j) = ABS ( vec4(j) )
+          END DO
+          IF ( ABS ( vec4(1) - 1 ) + ABS ( vec4(2) ) + ABS ( vec4(3) ) > 1e-8 &
+               .AND. ABS ( vec4(1) ) + ABS ( vec4(2) - 1 ) + ABS ( vec4(3) ) > 1e-8 &
+               .AND. ABS ( vec4(1) ) + ABS ( vec4(2) ) + ABS ( vec4(3) - 1 ) > 1e-8 ) THEN
+             ! Symmetry operation does not map one axis to another - remove it
+          ELSE
+             isym_now = isym_now + 1
+             s_new(:,:,isym_now) = s(:,:,isym)
+          END IF
+          
+          write(6,*) "<<<<<<<<<<<< ", i, isym
+          
+       END DO
+    END DO
+    
+!    nsym = isym_now
+!    s = s_new
+    
+  END SUBROUTINE test_symmetries
   
  
 !-----------------------------------------------------------------------
