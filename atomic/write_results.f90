@@ -17,7 +17,7 @@ subroutine write_results
                         grid, enzero, etot, ekin, encl, ehrt, evxt, ecxc, &
                         ehrtcc, ehrtcv, ehrtvv, enclv, enclc, verbosity,  &
                         nwf, nn, ll, jj, el, isw, oc, enl, file_wavefunctions, &
-                        dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, &
+                        dhrsic, dxcsic, eps0, iter, psi, rytoev_fact, lsmall, &
                         core_state, ekinc, ekinv, ae_fc_energy, cau_fact
 
   use funct, only :  get_iexch, get_dft_name
@@ -263,43 +263,71 @@ subroutine write_results
 
   if (file_wavefunctions.ne.' ') then
      nomefile=TRIM(file_wavefunctions)
-     do is=1,nspin
-        if (ionode) then
-           if (nspin==2.and.is==1) then
-              nomefile=TRIM(file_wavefunctions)//'up'
-           elseif (nspin==2.and.is==2) then
-              nomefile=TRIM(file_wavefunctions)//'dw'
+     if (rel<2) then
+        do is=1,nspin
+           if (ionode) then
+              if (nspin==2.and.is==1) then
+                 nomefile=TRIM(file_wavefunctions)//'.up'
+              elseif (nspin==2.and.is==2) then
+                 nomefile=TRIM(file_wavefunctions)//'.dw'
+              endif
+              open(unit=15,file=nomefile,status='unknown',  &
+                  err=1110, iostat=ios,form='formatted')
            endif
-           open(unit=15,file=nomefile,status='unknown',  &
-               err=1110, iostat=ios,form='formatted')
-        endif
-1110    call mp_bcast(ios,ionode_id)
-        call errore('write_result','opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
-        if (ionode) then
-           if (nspin==1) then
-              write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)
-              do n=1,grid%mesh 
-                 write(15,'(8f10.6)')grid%r(n), &
+1110       call mp_bcast(ios,ionode_id)
+           call errore('write_result','opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
+           if (ionode) then
+              if (nspin==1) then
+                 write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)
+                 do n=1,grid%mesh 
+                    write(15,'(8f10.6)')grid%r(n), &
                       (psi(n,1,i),i=nwf,max(1,nwf-6),-1)
-              enddo
-           else
-              counter=1
-              do i=nwf,1,-1
-                 if (isw(i)==is) then
-                    elaux(counter)=el(i)
-                    psiaux(:,counter)=psi(:,1,i)
-                    counter=counter+1
-                    if (counter>max_out_wfc) exit
-                 endif
-              enddo
-              write(15,'("#     r",7(8x,a2))') (elaux(i),i=1,counter-1)
-              do n=1,grid%mesh 
-                 write(15,'(8f10.6)') grid%r(n), (psiaux(n,i),i=1,counter-1)
-              enddo
+                 enddo
+              else
+                 counter=1
+                 do i=nwf,1,-1
+                    if (isw(i)==is) then
+                       elaux(counter)=el(i)
+                       psiaux(:,counter)=psi(:,1,i)
+                       counter=counter+1
+                       if (counter>max_out_wfc) exit
+                    endif
+                 enddo
+                 write(15,'("#     r",7(8x,a2))') (elaux(i),i=1,counter-1)
+                 do n=1,grid%mesh 
+                    write(15,'(8f10.6)') grid%r(n), (psiaux(n,i),i=1,counter-1)
+                 enddo
+              endif
+              close(15)
            endif
-           close(15)
-        endif
-     enddo
+        enddo
+     else
+        do is=1,2
+           if (ionode) then
+              if (is==2) nomefile=TRIM(file_wavefunctions)//'.small'
+              open(unit=15,file=nomefile,status='unknown',  &
+                  err=1220, iostat=ios,form='formatted')
+           endif
+1220       call mp_bcast(ios,ionode_id)
+           call errore('write_result', &
+                 'opening file_wavefunctions "'//TRIM(nomefile)//'"',abs(ios))
+           if (ionode) then
+              write(15,'("#     r",7(8x,a2))') (el(i),i=nwf,max(1,nwf-6),-1)
+              if (is==1) then
+                 do n=1,grid%mesh 
+                    write(15,'(8f10.6)')grid%r(n), &
+                              (psi(n,1,i),i=nwf,max(1,nwf-6),-1)
+                 enddo
+              else if (lsmall) then
+                 do n=1,grid%mesh 
+                    write(15,'(8f10.6)')grid%r(n), &
+                              (psi(n,2,i),i=nwf,max(1,nwf-6),-1)
+                 enddo
+              endif
+              close(15)
+           endif
+        enddo
+     endif
   endif
   write(stdout,'(/,5x,24(''-''), '' End of All-electron run '',24(''-''),/)')
 

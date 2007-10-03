@@ -157,6 +157,8 @@ module ld1inc
        rel           ! 0 nonrelativistic calculation
   ! 1 scalar relativistic calculation
   ! 2 calculation with the full dirac equation
+  logical ::      &
+        lsmall       ! if true writes the small component on file
 
   character(len=4) :: &
        verbosity     ! if 'high' writes more information on output

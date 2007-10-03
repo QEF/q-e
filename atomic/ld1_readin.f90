@@ -37,7 +37,7 @@ subroutine ld1_readin
                          frozen_core, lsdts, new_core_ps, cau_fact, &
                          lpaw, lnc2paw, pawsetup,rcutnc2paw, & !paw
                          paw_rmatch_augfun, which_paw_augfun,& !paw
-                         rhos, bmat !extra for paw2us
+                         rhos, bmat, lsmall !extra for paw2us
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -86,6 +86,7 @@ subroutine ld1_readin
        title,   &  ! the title of the run
        verbosity,& ! if 'high' writes more information on output
        prefix,   & ! the prefix for file names
+       lsmall,   & ! if true the small component is written on file
        rytoev_fact, & ! conversion between Ry and eV 
        cau_fact, & ! speed of light in a.u.
        vdw         ! if .true. vdW coefficient in TF+vW will be calculated
@@ -175,6 +176,7 @@ subroutine ld1_readin
   cau_fact=c_au
   rel = 5 
   lsd = 0
+  lsmall=.false.
   dft = 'LDA'
   rel_dist='energy'
   isic= 0
@@ -617,6 +619,7 @@ implicit none
    call mp_bcast( deld, ionode_id )
    call mp_bcast( lsd, ionode_id )
    call mp_bcast( rel, ionode_id )
+   call mp_bcast( lsmall, ionode_id )
    call mp_bcast( isic, ionode_id )
    call mp_bcast( latt, ionode_id )
    call mp_bcast( title, ionode_id )

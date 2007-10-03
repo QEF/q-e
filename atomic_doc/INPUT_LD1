@@ -42,6 +42,8 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       rel =  0 non relativistic calculation     (default for Z <= 18)
              1 scalar relativistic calculation  (default for Z >  18)
              2 full relativistic calculation with spin-orbit
+      lsmall                                    (default .false.)
+            if .true. writes on files the small component
       lsd  = 1 spin-polarized calculation   (default: 0, no spin pol.)
                not allowed if iswitch=3 (PP generation) or with full
                relativistic calculation
@@ -285,6 +287,11 @@ Output files written:
 and for each testing configuration N:
   file_wavefunctions    "prefix"N.wfc     all-electron KS orbitals
   file_wavefunctionsps  "prefix"Nps.wfc   pseudo KS orbitals
+if lsd=1
+  file_wavefunctions    "prefix"N.wfc.up  all-electron KS up orbitals
+  file_wavefunctions    "prefix"N.wfc.dw  all-electron KS down orbitals
+if rel=2 and lsmall is true
+  file_wavefunctions    "prefix".wfc.small  all-electron KS small component
 if parameters for logarithmic derivatives are specified:
   file_logder           "prefix"Nps.dlog  all-electron logarithmic derivatives
   file_logderps         "prefix"Nps.dlog  pseudo logarithmic derivatives
