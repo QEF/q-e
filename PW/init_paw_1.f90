@@ -20,10 +20,6 @@ subroutine init_paw_1
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants ,  ONLY : fpi
   USE us,          ONLY : dq, nqx, tab, tab_d2y, qrad, spline_ps
-!  USE paw ,        ONLY : paw_nhm, paw_nh, paw_lmaxkb, paw_nkb, paw_nl, &
-!                          paw_iltonh, paw_tab, aephi, paw_betar, psphi, &
-!                          paw_indv, paw_nhtom, paw_nhtol, paw_nbeta, &
-!                          paw_tab_d2y
   USE paw ,        ONLY : paw_recon, paw_nkb, paw_lmaxkb
   USE splinelib
   USE uspp,        ONLY : ap, aainit
@@ -55,7 +51,7 @@ subroutine init_paw_1
   integer :: n_overlap_warnings
   
   real(DP), allocatable :: xdata(:)
-  real(DP) :: d1
+  real(DP) :: d1, scaling_factor
   
   call start_clock ('init_paw_1')
   !
@@ -138,7 +134,14 @@ subroutine init_paw_1
         paw_recon(nt)%aephi(j)%label%nrc = nrc
         paw_recon(nt)%psphi(j)%label%nrs = nrs
         paw_recon(nt)%aephi(j)%label%nrs = nrs
-        call step_f(aux,paw_recon(nt)%psphi(j)%psi**2,rgrid(nt)%r(:),nrs,nrc,pow,msh(nt))
+        
+        scaling_factor = paw_recon(nt)%aephi(j)%psi(nrc) &
+             / paw_recon(nt)%psphi(j)%psi(nrc)
+        paw_recon(nt)%psphi(j)%psi(:) = paw_recon(nt)%psphi(j)%psi(:) &
+             * scaling_factor
+        
+        call step_f ( aux, paw_recon(nt)%psphi(j)%psi**2, rgrid(nt)%r(:), &
+             nrs, nrc, pow, msh(nt) )
         call simpson ( msh(nt), aux, rgrid(nt)%rab, norm )
         
         paw_recon(nt)%psphi(j)%psi = paw_recon(nt)%psphi(j)%psi / sqrt(norm)
@@ -168,7 +171,8 @@ subroutine init_paw_1
                  call step_f ( aux, paw_recon(nt)%psphi(n1)%psi(1:msh(nt)) &
                       * paw_recon(nt)%psphi(n2)%psi(1:msh(nt)), rgrid(nt)%r(:), &
                       nrs, nrc, pow, msh(nt) )
-                 call simpson ( msh(nt), aux, rgrid(nt)%rab, s(ih,jh) )
+                 
+                 CALL simpson ( msh(nt), aux, rgrid(nt)%rab, s(ih,jh) )
                  
                  !<apsi>
                  IF ( ih > jh ) THEN
@@ -181,7 +185,7 @@ subroutine init_paw_1
                        call flush(stdout)
                        CALL errore ( "init_paw_1", &
                             "two projectors are linearly dependent", +1 )
-                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.00_dp ) < 1.e-1_dp ) THEN
+                    ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-2_dp ) THEN
                        IF ( n_overlap_warnings == 0 ) THEN
                           WRITE ( stdout, '(A)' ) ""
                        END IF
