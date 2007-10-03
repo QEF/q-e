@@ -40,8 +40,7 @@ SUBROUTINE potinit()
   USE ener,                 ONLY : ehart, etxc, vtxc
   USE ldaU,                 ONLY : niter_with_fixed_ns
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
-  USE noncollin_module,     ONLY : noncolin, factlist, pointlist, pointnum, &
-                                   mcons, i_cons, lambda, vtcon, report
+  USE noncollin_module,     ONLY : noncolin, report
   USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,             ONLY : domag
   USE mp,                   ONLY : mp_bcast

@@ -199,8 +199,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE extfield,             ONLY : etotefield
   USE cellmd,               ONLY : lmovecell, omega_old
   USE vlocal,               ONLY : strf
-  USE noncollin_module,     ONLY : noncolin, factlist, pointlist, pointnum, &
-                                   mcons, i_cons, lambda, vtcon, report
+  USE noncollin_module,     ONLY : noncolin
   USE io_files,             ONLY : prefix
   USE klist,                ONLY : nelec
   USE io_rho_xml,           ONLY : write_rho, read_rho
@@ -415,7 +414,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
                                    iunoldwfc2, prefix
   USE buffers,              ONLY : get_buffer, save_buffer
-  USE noncollin_module,     ONLY : noncolin
+!  USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : evc
   !
   IMPLICIT NONE

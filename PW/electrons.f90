@@ -47,9 +47,8 @@ SUBROUTINE electrons()
                                    niter_with_fixed_ns, lda_plus_u
   USE extfield,             ONLY : tefield, etotefield
   USE wavefunctions_module, ONLY : evc, psic
-  USE noncollin_module,     ONLY : noncolin, npol, magtot_nc, factlist, &
-                                   pointlist, pointnum, mcons, i_cons,  &
-                                   bfield, lambda, vtcon, report
+  USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
+                                   lambda, report
   USE spin_orb,             ONLY : domag
   USE bp,                   ONLY : lelfield
   USE io_rho_xml,           ONLY : write_rho

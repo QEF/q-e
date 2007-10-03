@@ -22,8 +22,6 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE control_flags, ONLY: restart, tr2, ethr
   USE vlocal, ONLY: vnew
   USE wvfct, ONLY: nbnd, et
-  USE noncollin_module, ONLY : noncolin, factlist, pointlist, pointnum, mcons,&
-                               i_cons, lambda, vtcon, report
   USE wavefunctions_module,    ONLY : evc, psic
   implicit none
   character :: where * 20
