@@ -47,6 +47,7 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
+../Modules/grid_paw_variables.o \
 ../Modules/input_parameters.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
@@ -75,6 +76,7 @@ MODULES = \
 ../Modules/radial_grids.o \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
+../Modules/read_paw.o \
 ../Modules/read_namelists.o \
 ../Modules/read_upf.o \
 ../Modules/read_uspp.o \
