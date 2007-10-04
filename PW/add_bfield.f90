@@ -31,11 +31,12 @@ SUBROUTINE add_bfield (v,rho)
   USE gvect,            ONLY : nr1, nr2, nr3, nrxx 
   USE lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : magtot_nc, bfield, lambda, i_cons, mcons, &
-       pointlist, pointnum, factlist 
+       pointlist, factlist 
   IMPLICIT NONE
   !
   REAL(dp) :: v(nrxx, nspin), rho(nrxx,nspin)
-  REAL(dp) :: ma, xx, fact, m1(3), m_loc(3,nat), r_loc(nat)
+  REAL(dp) :: ma, xx, fact, m1(3)
+  REAL(dp), allocatable :: m2(:,:), m_loc(:,:), r_loc(:)
 
   INTEGER :: ir, ipol, nt, na
   REAL(DP) :: etcon
@@ -46,6 +47,8 @@ SUBROUTINE add_bfield (v,rho)
   ! get the actual values of the local integrated quantities
   etcon=0.d0
   IF (i_cons.LT.3) THEN
+     allocate ( m2(3,nat), m_loc(3,nat), r_loc(nat) )
+
      CALL get_locals(r_loc, m_loc, rho)
 
      DO na = 1,nat
@@ -54,10 +57,10 @@ SUBROUTINE add_bfield (v,rho)
            ! i_cons = 1 means that the 3 components of the magnetization
            ! are constrained, they are given in the input-file
            DO ipol = 1,3
-              m1(ipol) = m_loc(ipol,na) - mcons(ipol,nt)
+              m2(ipol,na) = m_loc(ipol,na) - mcons(ipol,nt)
            END DO
-           etcon = etcon + &
-                lambda * (m1(1)*m1(1) + m1(2)*m1(2) + m1(3)*m1(3) )
+           etcon = etcon + lambda * &
+                 ( m2(1,na)*m2(1,na) + m2(2,na)*m2(2,na) + m2(3,na)*m2(3,na) )
         ELSE IF (i_cons==2) THEN
            ! i_cons = 2 means that the angle theta between the local
            ! magn. moment and the z-axis is constrained
@@ -68,22 +71,24 @@ SUBROUTINE add_bfield (v,rho)
            if (ma.lt.1.d-30) call errore('add_bfield', &
                 'local magnetization is zero',1)
            xx=(m_loc(3,na)/ma - mcons(3,nt))
-           m1(1) = - xx*m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
-           m1(2) = - xx*m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
-           m1(3) =   xx*(-m_loc(3,na)*m_loc(3,na) / (ma*ma*ma) + 1.d0/ma)
+           m2(1,na) = - xx*m_loc(1,na)*m_loc(3,na) / (ma*ma*ma)
+           m2(2,na) = - xx*m_loc(2,na)*m_loc(3,na) / (ma*ma*ma)
+           m2(3,na) =   xx*(-m_loc(3,na)*m_loc(3,na) / (ma*ma*ma) + 1.d0/ma)
            etcon = etcon + &
                 lambda * (m_loc(3,na)/ma - mcons(3,nt))**2
 
         END IF
+     END DO ! na
 
-        DO ir = 1,pointnum(na)
-           fact = 2.D0*lambda*factlist(ir,na)*omega/(nr1*nr2*nr3)
-           DO ipol = 1,3
-              v(pointlist(ir,na),ipol+1) = v(pointlist(ir,na),ipol+1) &
-                   + fact*m1(ipol)
-           END DO       ! ipol
-        END DO      ! points
-     END DO      ! na
+     DO ir = 1, nrxx
+        if (pointlist(ir) .eq. 0 ) cycle
+        fact = 2.D0*lambda*factlist(ir)*omega/(nr1*nr2*nr3)
+        DO ipol = 1,3
+           v(ir,ipol+1) = v(ir,ipol+1) + fact*m2(ipol,pointlist(ir))
+        END DO       ! ipol
+     END DO      ! points
+     deallocate (m2, m_loc, r_loc)
+
      write (stdout,'(4x,a,F15.8)' ) " constraint energy (Ryd) = ", etcon
   ELSE IF (i_cons==3.or.i_cons==6) THEN
      m1 = 0.d0

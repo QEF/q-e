@@ -20,9 +20,10 @@ MODULE noncollin_module
       i_cons = 0            !  indicator for constrained local quantities
   !
   INTEGER, ALLOCATABLE :: &
-      pointlist(:,:),     & !  points in the integration volume
-                            !  around atom na
-      pointnum(:)           !  number of such points
+  !                         !  when spherical (non-overlapping) integration
+      pointlist(:)          !  regions are defined around atoms this index
+                            !  say for each point in the fft grid to which 
+                            !  atom it is assigned (0 if no atom is selected)
   !
   LOGICAL :: &
       noncolin              !  true if noncollinear magnetism is allowed
@@ -40,7 +41,7 @@ MODULE noncollin_module
                             !  for constraints
   !
   REAL (DP), ALLOCATABLE :: &
-      factlist(:,:),       &! weightenig factors for local integrations
+      factlist(:),         &! weightenig factors for local integrations
       r_loc(:),            &! local integrated charge 
       m_loc(:,:)            ! local integrated magnetization
      ! mcons(:,:),          ! constrained values for local variables
@@ -56,7 +57,6 @@ MODULE noncollin_module
       !
       IF ( ALLOCATED( pointlist) )       DEALLOCATE( pointlist )
       IF ( ALLOCATED( factlist ) )       DEALLOCATE( factlist )
-      IF ( ALLOCATED( pointnum ) )       DEALLOCATE( pointnum )
       IF ( ALLOCATED( r_loc    ) )       DEALLOCATE( r_loc )
       IF ( ALLOCATED( m_loc    ) )       DEALLOCATE( m_loc )
       !

@@ -106,15 +106,16 @@ SUBROUTINE make_pointlists
      WRITE( stdout,'(5x,"new r_m : ",f8.4)') r_m
   ENDIF
 
-
-  ! Now, make for every atom a list of points which are in their
-  ! integration sphere, as well as a list of weights.
+  ! Now, set for every point in the fft grid an index corresponding
+  ! to the atom whose integration sphere the grid point belong to.
+  ! if the point is outside of all spherical regions set the index to 0.
+  ! Set as well the integration weight
   ! This also works in the parallel case.
 
+  pointlist(:) = 0
+  factlist(:) = 0.d0
+
   DO iat = 1,nat
-
-     pointnum(iat) = 0
-
      DO ir=1,nrxx
         idx = idx0 + ir - 1
 
@@ -138,27 +139,19 @@ SUBROUTINE make_pointlists
 
                  distance = SQRT(posi(1)**2+posi(2)**2+posi(3)**2)
 
-
                  IF (distance.LE.r_m) THEN
-                    pointnum(iat) = pointnum(iat) + 1
-                    factlist(pointnum(iat),iat) = 1.d0
-                    pointlist(pointnum(iat),iat) = ir
-
+                    factlist(ir) = 1.d0
+                    pointlist(ir) = iat
                  ELSE IF (distance.LE.1.2*r_m) THEN
-                    pointnum(iat) = pointnum(iat) + 1
-                    factlist(pointnum(iat),iat) = 1.d0 - (distance &
-                         -r_m)/(0.2d0*r_m)
-                    pointlist(pointnum(iat),iat) = ir
-
+                    factlist(ir) = 1.d0 - (distance -r_m)/(0.2d0*r_m)
+                    pointlist(ir) = iat
                  ENDIF
-
 
               ENDDO         ! k
            ENDDO            ! j
         ENDDO               ! i
 
      ENDDO                  ! ir
-
 
   ENDDO                     ! ipol
   DEALLOCATE(tau0)

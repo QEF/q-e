@@ -24,7 +24,7 @@ subroutine allocate_fft
                         tauk, taukg, kedtau, kedtaur
   USE vlocal,    ONLY : vnew
   USE wvfct,     ONLY : gamma_only
-  USE noncollin_module, ONLY : pointlist, factlist, pointnum, r_loc, &
+  USE noncollin_module, ONLY : pointlist, factlist, r_loc, &
       report, i_cons, noncolin, npol
   USE wavefunctions_module, ONLY : psic, psic_nc
   USE funct,     ONLY: dft_is_meta
@@ -97,9 +97,8 @@ subroutine allocate_fft
 ! In order to print out local quantities, integrated around the atoms,
 ! we need the following variables
 !
-        allocate(pointlist(nrxx,nat))
-        allocate(factlist(nrxx,nat))
-        allocate(pointnum(nat))
+        allocate(pointlist(nrxx))
+        allocate(factlist(nrxx))
         allocate(r_loc(nat))
 
         call make_pointlists
