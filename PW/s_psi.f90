@@ -30,7 +30,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   USE kinds,      ONLY : DP
   USE wvfct,      ONLY : gamma_only
   USE uspp,       ONLY : vkb, nkb, qq, okvan
-  USE uspp_param, ONLY : nh, tvanp
+  USE uspp_param, ONLY : upf, nh 
   USE wvfct,      ONLY : igk, g2kin
   USE gsmooth,    ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE ldaU,       ONLY : lda_plus_u
@@ -93,7 +93,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        ijkb0 = 0
        DO nt = 1, nsp
-          IF ( tvanp (nt) ) THEN
+          IF ( upf(nt)%tvanp ) THEN
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
                    DO ibnd = 1, m
@@ -166,7 +166,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
        !
        ijkb0 = 0
        DO nt = 1, nsp
-          IF ( tvanp(nt) ) THEN
+          IF ( upf(nt)%tvanp ) THEN
              DO na = 1, nat
                 IF ( ityp(na) == nt ) THEN
                    DO ibnd = 1, m

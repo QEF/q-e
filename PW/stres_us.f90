@@ -19,7 +19,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE klist,                ONLY : nks, xk
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wvfct,                ONLY : gamma_only, npw, npwx, nbnd, igk, wg, et
-  USE uspp_param,           ONLY : lmaxkb, nh, tvanp, newpseudo
+  USE uspp_param,           ONLY : upf, lmaxkb, nh, newpseudo
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, deeq_nc, qq_so
   USE wavefunctions_module, ONLY : evc
   USE spin_orb,             ONLY : lspinorb
@@ -111,7 +111,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                            et(ibnd,ik) * qq(ih,ih,np)
                       evps = evps + fac * ps * ABS( becp(ikb,ibnd) )**2
                       !
-                      IF ( tvanp(np) .OR. newpseudo(np) ) THEN
+                      IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
                          !
                          ! ... only in the US case there is a contribution 
                          ! ... for jh<>ih
@@ -149,7 +149,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 IF ( ityp(na) == np ) THEN
                    DO ih = 1, nh(np)
                       ikb = ijkb0 + ih
-                      IF ( .NOT. ( tvanp(np) .OR. newpseudo(np) ) ) THEN
+                      IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
                          ps = becp(ikb,ibnd) * &
                               ( deeq(ih,ih,na,current_spin) - &
                                 et(ibnd,ik) * qq(ih,ih,np) )
@@ -202,7 +202,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    IF ( ityp(na) == np ) THEN
                       DO ih = 1, nh(np)
                          ikb = ijkb0 + ih
-                         IF ( .NOT. ( tvanp(np) .OR. newpseudo(np) ) ) THEN
+                         IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
                             ps = becp(ikb,ibnd) * &
                                  ( deeq(ih,ih,na,current_spin) - &
                                    et(ibnd,ik) * qq(ih,ih,np ) )
@@ -342,7 +342,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          evps = evps + fac * ps * ABS( becp(ikb,ibnd) )**2
                       END IF
                       !
-                      IF ( tvanp(np) .OR. newpseudo(np) ) THEN
+                      IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
                          !
                          ! ... only in the US case there is a contribution 
                          ! ... for jh<>ih
@@ -408,7 +408,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                 IF ( ityp(na) == np ) THEN
                    DO ih = 1, nh(np)
                       ikb = ijkb0 + ih
-                      IF ( .NOT. ( tvanp(np) .OR. newpseudo(np) ) ) THEN
+                      IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
                          IF (noncolin) THEN
                             if (lspinorb) call errore('stres_us','wrong case',1)
                             ijs=0
@@ -518,7 +518,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    IF ( ityp(na) == np ) THEN
                       DO ih = 1, nh(np)
                          ikb = ijkb0 + ih
-                         IF ( .NOT. ( tvanp(np) .OR. newpseudo(np) ) ) THEN
+                         IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
                             IF (noncolin) THEN
                                ijs=0
                                ps_nc = (0.D0,0.D0)

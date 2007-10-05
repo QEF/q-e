@@ -124,7 +124,6 @@ CONTAINS
          &       lp,            &! counter on Q angular momenta
          &       l,             &! counter on angular momenta
          &       iv, jv, ijv,   &! beta function counter
-         &       kkbeta1,       &! number of grid points for which betar.ne.0
          &       ir              ! mesh points counter
     !
     character(len=20) :: title
@@ -268,16 +267,14 @@ CONTAINS
     !     reads the number of beta functions 
     !
     read( iunps, '(2i5)', err=100, iostat=ios ) &
-         upf%nbeta, kkbeta1
+         upf%nbeta, upf%kkbeta
     !
-    !     BEWARE: upf%kkbeta is an array (one per beta function)
-    !
-    ALLOCATE ( upf%kkbeta(upf%nbeta) )
-    upf%kkbeta(:) = kkbeta1
+    ALLOCATE ( upf%kbeta(upf%nbeta) )
+    upf%kbeta(:) = upf%kkbeta
     !
     if( upf%nbeta > nbrx .or. upf%nbeta <0 ) &
          call errore( 'readvan','nbeta wrong or too large', is )
-    if( ANY (upf%kkbeta > upf%mesh) .or. ANY(upf%kkbeta < 0) ) &
+    if( upf%kkbeta > upf%mesh .or. upf%kkbeta < 0 ) &
          call errore( 'readvan','kkbeta wrong or too large', is )
     !
     !    Now reads the main Vanderbilt parameters
@@ -290,8 +287,8 @@ CONTAINS
     do iv=1,upf%nbeta
        read( iunps, '(i5)',err=100, iostat=ios ) upf%lll(iv)
        read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            eee(iv), ( upf%beta(ir,iv), ir=1,upf%kkbeta(iv) )
-       do ir=upf%kkbeta(iv)+1,upf%mesh
+            eee(iv), ( upf%beta(ir,iv), ir=1,upf%kkbeta )
+       do ir=upf%kkbeta+1,upf%mesh
           upf%beta(ir,iv)=0.0_DP
        enddo
        if ( upf%lll(iv) > lmaxx .or. upf%lll(iv) < 0 ) &
@@ -305,9 +302,9 @@ CONTAINS
           ijv = jv * (jv-1) / 2 + iv
           read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
                upf%dion(iv,jv), ddd(iv,jv), upf%qqq(iv,jv), &
-               (upf%qfunc(ir,iv,jv),ir=1,upf%kkbeta(1)),    &
+               (upf%qfunc(ir,iv,jv),ir=1,upf%kkbeta),    &
                ((upf%qfcoef(i,lp,iv,jv),i=1,upf%nqf),lp=1,upf%nqlc)
-          do ir=upf%kkbeta(1)+1,upf%mesh
+          do ir=upf%kkbeta+1,upf%mesh
             upf%qfunc(ir,iv,jv)=0.0_DP
           enddo
           !
@@ -441,7 +438,7 @@ CONTAINS
     end if
     WRITE( stdout,1000)
 1000 format(4x,'|    new generation scheme:',32x,'|')
-    WRITE( stdout,1100) upf%nbeta, upf%kkbeta(1), rcloc
+    WRITE( stdout,1100) upf%nbeta, upf%kkbeta, rcloc
 1100 format(4x,'|    nbeta = ',i2,5x,'kkbeta =',i5,5x,'rcloc =',f10.4,4x,&
          &     '|'/4x,'|    ibeta    l     epsilon   rcut',25x,'|')
     do iv = 1, upf%nbeta
@@ -473,7 +470,7 @@ CONTAINS
     !
     allocate ( a(upf%nqf,upf%nqf), ainv(upf%nqf,upf%nqf) )
     allocate ( b(upf%nqf), x(upf%nqf) )
-    ALLOCATE ( qrl(upf%kkbeta(1), upf%nqlc) )
+    ALLOCATE ( qrl(upf%kkbeta, upf%nqlc) )
     !
     do iv=1,upf%nbeta
        do jv=iv,upf%nbeta
@@ -491,7 +488,7 @@ CONTAINS
           !  read q_l(r) for all l
           !
           read(iunps,*, err=100) &
-                  ( (qrl(ir,l),ir=1,upf%kkbeta(1)), l=lmin,lmax)
+                  ( (qrl(ir,l),ir=1,upf%kkbeta), l=lmin,lmax)
           !
           !!! ijv = jv * (jv-1) / 2 + iv
           !
@@ -499,7 +496,7 @@ CONTAINS
              !
              ! reconstruct rinner
              !
-             do ir=upf%kkbeta(1),1,-1
+             do ir=upf%kkbeta,1,-1
                 if ( abs(qrl(ir,l)-upf%qfunc(ir,iv,jv)) > 1.0d-6) go to 10
              end do
 10           irinner = ir+1
@@ -607,8 +604,7 @@ CONTAINS
          pseudotype,&! the type of pseudopotential
          ios,       &! I/O control
          ndum,      &! dummy integer variable
-         l,         &! counter on angular momentum
-         ikk         ! the kkbeta for each beta
+         l           ! counter on angular momentum
     real(DP):: &
          x,         &! auxiliary variable
          etotps,    &! total energy of the pseudoatom
@@ -695,15 +691,17 @@ CONTAINS
        if ( upf%oc(nb) <= 0.0_DP) upf%oc(nb) = -1.0_DP
     enddo
     !
-    ALLOCATE ( upf%kkbeta(upf%nbeta) )
+    ALLOCATE ( upf%kbeta(upf%nbeta) )
     ALLOCATE ( upf%dion(upf%nbeta,upf%nbeta), upf%qqq(upf%nbeta,upf%nbeta) )
     ALLOCATE ( upf%beta(upf%mesh,upf%nbeta) )
     ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta,upf%nbeta) )
+    upf%kkbeta = 0
     do nb=1,upf%nbeta
-       read ( iunps, '(i6)',err=100, iostat=ios ) upf%kkbeta(nb)
+       read ( iunps, '(i6)',err=100, iostat=ios ) upf%kbeta(nb)
+       upf%kkbeta = MAX ( upf%kkbeta, upf%kbeta(nb) )
        read ( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
-            ( upf%beta(ir,nb), ir=1,upf%kkbeta(nb))
-       do ir=upf%kkbeta(nb)+1,upf%mesh
+            ( upf%beta(ir,nb), ir=1,upf%kbeta(nb))
+       do ir=upf%kbeta(nb)+1,upf%mesh
           upf%beta(ir,nb)=0.0_DP
        enddo
        do mb=1,nb

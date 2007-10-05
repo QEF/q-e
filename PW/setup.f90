@@ -68,7 +68,7 @@ SUBROUTINE setup()
   USE control_flags,      ONLY : para_diago_dim   ! debug
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
-  USE uspp_param,         ONLY : zp, psd, nbeta, jjj, tvanp
+  USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
   USE ldaU,               ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax
@@ -98,12 +98,8 @@ SUBROUTINE setup()
   LOGICAL, EXTERNAL :: lchk_tauxk ! tests that atomic coordinates do not overlap
   !
   !
-  IF (dft_is_meta()) THEN
-     DO nt=1,ntyp
-        IF ( tvanp(nt) ) &
-             CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
-     END DO
-  END IF
+  IF ( dft_is_meta() .AND. ANY ( upf(:)%tvanp ) ) &
+     CALL errore( 'setup', 'US and Meta-GGA not yet implemented', 1 )
 
   ALLOCATE( m_loc( 3, nat ) )
   !
@@ -112,7 +108,7 @@ SUBROUTINE setup()
   !
   ! ... Compute the ionic charge for each atom type
   !
-  zv(1:ntyp) = zp(1:ntyp)
+  zv(1:ntyp) = upf(1:ntyp)%zp
   !
 #if defined (__PGI)
      ionic_charge = - tot_charge
@@ -406,18 +402,12 @@ SUBROUTINE setup()
   ! ... if this is not a spin-orbit calculation, all spin-orbit pseudopotentials
   ! ... are transformed into standard pseudopotentials
   !
+  IF ( lspinorb .AND. ALL ( .NOT. upf(:)%has_so ) ) &
+        CALL infomsg ('setup','At least one non s.o. pseudo')
+  !
   DO nt = 1, ntyp
      !
-     so(nt) = ( nbeta(nt) > 0 )
-     !
-     IF ( lspinorb .AND. ALL ( ABS( jjj(1:nbeta(nt),nt) ) < 1.D-7 ) ) &
-        CALL infomsg ('setup','At least one non s.o. pseudo')
-     !
-     DO nb = 1, nbeta(nt)
-        !
-        so(nt) = so(nt) .AND. ( ABS( jjj(nb,nt) ) > 1.D-7 )
-        !
-     END DO
+     so(nt) = upf(nt)%has_so
      !
   END DO
   !
@@ -700,7 +690,7 @@ SUBROUTINE setup()
   !
   ! ... okvan = .TRUE. : at least one pseudopotential is US
   !
-  okvan = ANY( tvanp(1:ntyp) )
+  okvan = ANY( upf(:)%tvanp )
   okpaw = ANY( tpawp(1:ntyp) )
   !
   ! ... Needed for LDA+U
@@ -715,12 +705,12 @@ SUBROUTINE setup()
         !
         IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
            !
-           Hubbard_l(nt) = set_Hubbard_l( psd(nt) )
+           Hubbard_l(nt) = set_Hubbard_l( upf(nt)%psd )
            !
            Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
            !
-           WRITE( UNIT = stdout, &
-                  FMT = * ) ' HUBBARD L FOR TYPE ',psd(nt),' IS ', Hubbard_l(nt)
+           WRITE( UNIT = stdout, FMT = * ) &
+               ' HUBBARD L FOR TYPE ',upf(nt)%psd,' IS ', Hubbard_l(nt)
            !
         END IF
         !

@@ -33,7 +33,7 @@ SUBROUTINE integrate_pfunc
     USE lsda_mod,   ONLY : nspin
     USE us,         ONLY : nqxq, dq, nqx, tab, qrad
     USE uspp 
-    USE uspp_param 
+    USE uspp_param
     USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef
     !
     USE grid_paw_variables, ONLY: tpawp, pfunc, ptfunc, pp, ppt, prad, ptrad, okpaw

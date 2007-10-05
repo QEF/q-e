@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -63,9 +63,7 @@ MODULE realus
       USE cell_base,  ONLY : at, bg, omega, alat
       USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
-      USE uspp_param, ONLY : lmaxq, nh, nhm, tvanp, kkbeta, nbeta, &
-                             qfunc, dion, lmaxkb, qfcoef, nqf, nqlc, &
-                             lll, rinner
+      USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
       USE pfft,       ONLY : npp
       USE mp_global,  ONLY : me_pool
@@ -73,7 +71,7 @@ MODULE realus
       !
       IMPLICIT NONE
       !
-      INTEGER               :: qsdim, ia, it, mbia, iqs, iqsia
+      INTEGER               :: qsdim, ia, mbia, iqs, iqsia
       INTEGER               :: indm, inbrx, idimension, &
                                ih, jh, ijh, lllnbnt, lllmbnt
       INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
@@ -107,19 +105,23 @@ MODULE realus
          !
          boxrad(:) = 0.D0
          !
-         DO it = 1, nsp
-            DO inbrx = 1, nbeta(it)*(nbeta(it)+1)/2
-               DO indm = kkbeta(it), 1, -1
+         DO nt = 1, nsp
+            !DO inbrx = 1, upf(nt)%nbeta*(upf(nt)%nbeta+1)/2 TEMP
+            DO nb = 1, upf(nt)%nbeta
+            DO mb = nb, upf(nt)%nbeta
+               DO indm = upf(nt)%kkbeta, 1, -1
                   !
-                  IF ( ABS( qfunc(indm,inbrx,it) ) > eps16 ) THEN
+                  ! IF ( ABS( qfunc(indm,inbrx,nt) ) > eps16 ) THEN TEMP
+                  IF ( ABS( upf(nt)%qfunc(indm,nb,mb) ) > eps16 ) THEN
                      !
-                     boxrad(it) = MAX( rgrid(it)%r(indm), boxrad(it) )
+                     boxrad(nt) = MAX( rgrid(nt)%r(indm), boxrad(nt) )
                      !
                      CYCLE
                      !
                   END IF
                   !
                END DO
+            END DO
             END DO
          END DO
          !
@@ -174,9 +176,11 @@ MODULE realus
       !
       DO ia = 1, nat
          !
-         IF ( .NOT. tvanp(ityp(ia)) ) CYCLE
+         nt = ityp(ia)
          !
-         boxradsq_ia = boxrad(ityp(ia))**2
+         IF ( .NOT. upf(nt)%tvanp ) CYCLE
+         !
+         boxradsq_ia = boxrad(nt)**2
          !
          tau_ia(1) = tau(1,ia)
          tau_ia(2) = tau(2,ia)
@@ -258,7 +262,9 @@ MODULE realus
       !
       DO ia = 1, nat
          !
-         IF ( .NOT. tvanp(ityp(ia)) ) CYCLE
+         nt = ityp(ia)
+         !
+         IF ( .NOT. upf(nt)%tvanp ) CYCLE
          !
          idimension = maxbox(ia)
          !
@@ -294,7 +300,7 @@ MODULE realus
          mbia = maxbox(ia)
          IF ( mbia == 0 ) CYCLE
          nt = ityp(ia)
-         IF ( .NOT. tvanp(nt) ) CYCLE
+         IF ( .NOT. upf(nt)%tvanp ) CYCLE
          DO ih = 1, nh(nt)
             DO jh = ih, nh(nt)
                qsdim = qsdim + mbia
@@ -330,60 +336,63 @@ MODULE realus
          !
          nt = ityp(ia)
          !
-         IF ( .NOT. tvanp(nt) ) CYCLE
+         IF ( .NOT. upf(nt)%tvanp ) CYCLE
          !
-         ALLOCATE( qtot( kkbeta(nt), nbeta(nt), nbeta(nt) ) )
+         ALLOCATE( qtot( upf(nt)%kkbeta, upf(nt)%nbeta, upf(nt)%nbeta ) )
          !
          ! ... variables used for spline interpolation
          !
-         ALLOCATE( xsp( kkbeta(nt) ), ysp( kkbeta(nt) ), wsp( kkbeta(nt ) ) )
+         ALLOCATE( xsp( upf(nt)%kkbeta ), ysp( upf(nt)%kkbeta ), &
+                   wsp( upf(nt)%kkbeta ) )
          !
          ! ... the radii in x
          !
-         xsp(:) = rgrid(nt)%r(1:kkbeta(nt))
+         xsp(:) = rgrid(nt)%r(1:upf(nt)%kkbeta)
          !
-         DO l = 0, nqlc(nt) - 1
+         DO l = 0, upf(nt)%nqlc - 1
             !
             ! ... first we build for each nb,mb,l the total Q(|r|) function
             ! ... note that l is the true (combined) angular momentum
             ! ... and that the arrays have dimensions 1..l+1
             !
-            DO nb = 1, nbeta(nt)
-               DO mb = nb, nbeta(nt)
+            DO nb = 1, upf(nt)%nbeta
+               DO mb = nb, upf(nt)%nbeta
                   ijv = mb * (mb-1) /2 + nb
                   !
-                  lllnbnt = lll(nb,nt)
-                  lllmbnt = lll(mb,nt)
+                  lllnbnt = upf(nt)%lll(nb)
+                  lllmbnt = upf(nt)%lll(mb)
                   !
                   IF ( .NOT. ( l >= ABS( lllnbnt - lllmbnt ) .AND. &
                                l <= lllnbnt + lllmbnt        .AND. &
                                MOD( l + lllnbnt + lllmbnt, 2 ) == 0 ) ) CYCLE
                   !
-                  DO ir = 1, kkbeta(nt)
-                     IF ( rgrid(nt)%r(ir) >= rinner(l+1,nt) ) THEN
-                        qtot(ir,nb,mb) = qfunc(ir,ijv,nt) / rgrid(nt)%r(ir)**2
+                  DO ir = 1, upf(nt)%kkbeta
+                     IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
+                        !qtot(ir,nb,mb) = qfunc(ir,ijv,nt) / rgrid(nt)%r(ir)**2
+                        qtot(ir,nb,mb) = upf(nt)%qfunc(ir,nb,mb) / &
+                                         rgrid(nt)%r(ir)**2
                      ELSE
                         ilast = ir
                      END IF
                   END DO
                   !
-                  IF ( rinner(l+1,nt) > 0.D0 ) &
-                     CALL setqfcorr( qfcoef(1,l+1,nb,mb,nt), &
-                                     qtot(1,nb,mb), rgrid(nt)%r(1), nqf(nt), l, ilast )
+                  IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
+                     CALL setqfcorr( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                        qtot(1,nb,mb), rgrid(nt)%r(1), upf(nt)%nqf, l, ilast )
                   !
                   ! ... we save the values in y
                   !
-                  ysp(:) = qtot(1:kkbeta(nt),nb,mb)
+                  ysp(:) = qtot(1:upf(nt)%kkbeta,nb,mb)
                   !
                   ! ... compute the first derivative in first point
                   !
-                  CALL setqfcorrptfirst( qfcoef(1,l+1,nb,mb,nt), &
-                                         first, rgrid(nt)%r(1), nqf(nt), l )
+                  CALL setqfcorrptfirst( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                                   first, rgrid(nt)%r(1), upf(nt)%nqf, l )
                   !
                   ! ... compute the second derivative in second point
                   !
-                  CALL setqfcorrptsecond( qfcoef(1,l+1,nb,mb,nt), &
-                                          second, rgrid(nt)%r(1), nqf(nt), l )
+                  CALL setqfcorrptsecond( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                                   second, rgrid(nt)%r(1), upf(nt)%nqf, l )
                   !
                   ! ... call spline
                   !
@@ -391,13 +400,13 @@ MODULE realus
                   !
                   DO ir = 1, maxbox(ia)
                      !
-                     IF ( boxdist(ir,ia) < rinner(l+1,nt) ) THEN
+                     IF ( boxdist(ir,ia) < upf(nt)%rinner(l+1) ) THEN
                         !
                         ! ... if in the inner radius just compute the
                         ! ... polynomial
                         !
-                        CALL setqfcorrpt( qfcoef(1,l+1,nb,mb,nt), &
-                                          qtot_int, boxdist(ir,ia), nqf(nt), l )
+                        CALL setqfcorrpt( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                                   qtot_int, boxdist(ir,ia), upf(nt)%nqf, l )
                         !
                      ELSE   
                         !
@@ -461,9 +470,8 @@ MODULE realus
       USE gvect,            ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,         ONLY : nspin
       USE scf,              ONLY : vr, vltot
-      USE uspp,             ONLY : okvan
-      USE uspp,             ONLY : deeq, deeq_nc, dvan, dvan_so
-      USE uspp_param,       ONLY : nh, nhm, tvanp
+      USE uspp,             ONLY : okvan, deeq, deeq_nc, dvan, dvan_so
+      USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : so, domag, lspinorb
       !
@@ -539,7 +547,7 @@ MODULE realus
             !
             nt = ityp(ia)
             !
-            IF ( .NOT. tvanp(nt) ) CYCLE
+            IF ( .NOT. upf(nt)%tvanp ) CYCLE
             !
             nhnt = nh(nt)
             !
@@ -871,7 +879,7 @@ MODULE realus
       USE klist,            ONLY : nelec
       USE gvect,            ONLY : nr1, nr2, nr3
       USE uspp,             ONLY : okvan, becsum
-      USE uspp_param,       ONLY : tvanp, nh
+      USE uspp_param,       ONLY : upf, nh
       USE noncollin_module, ONLY : noncolin
       USE spin_orb,         ONLY : domag
       !
@@ -901,7 +909,7 @@ MODULE realus
             !
             nt = ityp(ia)
             !
-            IF ( .NOT. tvanp(nt) ) CYCLE
+            IF ( .NOT. upf(nt)%tvanp ) CYCLE
             !
             nhnt = nh(nt)
             !

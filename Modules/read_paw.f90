@@ -333,14 +333,12 @@ subroutine set_pseudo_paw (is, pawset)
   ! PWSCF modules
   !
   USE radial_grids, ONLY: ndmx
-  USE atom,  ONLY: rgrid, msh, &
-       chi, oc, nchi, lchi, jchi, rho_at, rho_atc, nlcc
+  USE atom,  ONLY: rgrid, msh, chi, oc, nchi, lchi, jchi, rho_at, &
+                   rho_atc, nlcc
 !  USE pseud, ONLY: lloc, lmax
-  USE uspp_param, ONLY: vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, nqlc, &
-       rinner, nbeta, kkbeta, lll, jjj, psd, tvanp, zp
+  USE uspp_param, ONLY: upf
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
-  USE ions_base, ONLY: zv
 !  USE spin_orb, ONLY: lspinorb
   USE pseudo_types
   USE constants, ONLY: FPI
@@ -375,9 +373,9 @@ subroutine set_pseudo_paw (is, pawset)
   PRINT *, nrs, pawset%grid%r(nrs)
   PRINT *, nrc, pawset%grid%r(nrc)
   !
-  zp(is)  = pawset%zval
-  psd (is)= pawset%symbol
-  tvanp(is)=.true.
+  upf(is)%zp = pawset%zval
+  upf(is)%psd = pawset%symbol
+  upf(is)%tvanp=.true.
   tpawp(is)=.true.
   nlcc(is) = pawset%nlcc
   call set_dft_from_name( pawset%dft )
@@ -415,30 +413,36 @@ subroutine set_pseudo_paw (is, pawset)
 #endif
   end do
   !
-  nbeta(is)= pawset%nwfc
-  kkbeta(is)=0
+  upf(is)%nbeta= pawset%nwfc
+  allocate ( upf(is)%kbeta(pawset%nwfc) )
   do nb=1,pawset%nwfc
-     kkbeta(is)=max(pawset%ikk(nb),kkbeta(is))
+     upf(is)%kbeta(nb)=pawset%ikk(nb)
   end do
-  betar(1:pawset%grid%mesh, 1:pawset%nwfc, is) = pawset%proj(1:pawset%grid%mesh, 1:pawset%nwfc)
-  dion(1:pawset%nwfc, 1:pawset%nwfc, is) = pawset%dion(1:pawset%nwfc, 1:pawset%nwfc)
+  allocate (upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc))
+  upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc) = &
+  pawset%proj(1:pawset%grid%mesh, 1:pawset%nwfc)
+  allocate(upf(is)%dion(1:pawset%nwfc, 1:pawset%nwfc))
+  upf(is)%dion(1:pawset%nwfc, 1:pawset%nwfc) = pawset%dion(1:pawset%nwfc, 1:pawset%nwfc)
   kdiff(1:pawset%nwfc, 1:pawset%nwfc, is) = pawset%kdiff(1:pawset%nwfc, 1:pawset%nwfc)
 
   ! HOPE!
 !  lmax(is) = pawset%lmax
-  nqlc(is) = 2*pawset%lmax+1
-  nqf (is) = 0                   !! no rinner, all numeric
-  lll(1:pawset%nwfc,is) = pawset%l(1:pawset%nwfc)
-  rinner(1:nqlc(is),is) = 0._dp  !! no rinner, all numeric
+  upf(is)%nqlc = 2*pawset%lmax+1
+  upf(is)%nqf = 0                   !! no rinner, all numeric
+  allocate (upf(is)%lll(pawset%nwfc) )
+  upf(is)%lll(1:pawset%nwfc) = pawset%l(1:pawset%nwfc)
+  allocate (upf(is)%rinner(upf(is)%nqlc))
+  upf(is)%rinner(1:upf(is)%nqlc) = 0._dp  !! no rinner, all numeric
   !
   ! integral of augmentation charges vanishes for different values of l
   !
+  allocate ( upf(is)%qqq(pawset%nwfc,pawset%nwfc))
   do i = 1, pawset%nwfc
      do j = 1, pawset%nwfc
         if (pawset%l(i)==pawset%l(j)) then
-           qqq(i,j,is) = pawset%augmom(i,j,0) !!gf spherical approximation
+           upf(is)%qqq(i,j) = pawset%augmom(i,j,0) !!gf spherical approximation
         else
-           qqq(i,j,is) = 0._dp
+           upf(is)%qqq(i,j) = 0._dp
         end if
      end do
   end do
@@ -455,10 +459,13 @@ subroutine set_pseudo_paw (is, pawset)
   end do
 
   ! triangularize matrix of qfunc's
+  allocate ( upf(is)%qfunc(1:pawset%grid%mesh,pawset%nwfc,pawset%nwfc) )
   do nb = 1, pawset%nwfc
       do mb = nb, pawset%nwfc
           ijv = mb * (mb-1) / 2 + nb
-          qfunc (1:pawset%grid%mesh, ijv, is) = pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
+  !!!        qfunc (1:pawset%grid%mesh, ijv, is) = pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
+          upf(is)%qfunc (1:pawset%grid%mesh, nb,mb) = &
+             pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
       enddo
   enddo
 !   augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax,is) = &
@@ -522,8 +529,9 @@ subroutine set_pseudo_paw (is, pawset)
 !!$     jchi(1:pawset%nwfc, is) = pawset%jchi(1:pawset%nwfc)
 !!$     jjj(1:pawset%nbeta, is) = pawset%jjj(1:pawset%nbeta)
 !!$  else
-  jchi(1:pawset%nwfc, is) = 0._dp
-  jjj(1:pawset%nwfc, is) = 0._dp
+  jchi(1:pawset%nwfc,is) = 0._dp
+  allocate (upf(is)%jjj(1:pawset%nwfc))
+  upf(is)%jjj(1:pawset%nwfc) = 0._dp
 !!$  endif
   !
   if ( pawset%nlcc) then
@@ -548,7 +556,8 @@ subroutine set_pseudo_paw (is, pawset)
   !!! answer (pltz): I don't, but it breaked dependencies (removed!)
 !  lloc(is) = 0
   !!!
-  vloc_at(1:pawset%grid%mesh,is) = pawset%psloc(1:pawset%grid%mesh)
+  allocate (upf(is)%vloc(1:pawset%grid%mesh))
+  upf(is)%vloc(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
   aevloc_at(1:pawset%grid%mesh,is) = pawset%aeloc(1:pawset%grid%mesh)
   psvloc_at(1:pawset%grid%mesh,is) = pawset%psloc(1:pawset%grid%mesh)
@@ -572,8 +581,6 @@ subroutine set_pseudo_paw (is, pawset)
   ! force msh to be odd for simpson integration
   !
 5 msh (is) = 2 * ( (msh (is) + 1) / 2) - 1
-
-  zv(is) = zp(is)  !!! maybe not needed: it is done in setup
 
 end subroutine set_pseudo_paw
 

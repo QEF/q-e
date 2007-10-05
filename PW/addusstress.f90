@@ -21,7 +21,7 @@ subroutine addusstres (sigmanlc)
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : vr, vltot
   USE uspp,       ONLY : becsum, okvan
-  USE uspp_param, ONLY : lmaxq, tvanp, nh, nhm
+  USE uspp_param, ONLY : upf, lmaxq, nh, nhm
   USE wvfct,      ONLY : gamma_only
   !
   implicit none
@@ -93,13 +93,13 @@ subroutine addusstres (sigmanlc)
   do ipol = 1, 3
      call dylmr2 (lmaxq * lmaxq, ngm, g, gg, dylmk0, ipol)
      do nt = 1, ntyp
-        if (tvanp (nt) ) then
+        if ( upf(nt)%tvanp ) then
            ijh = 1
            do ih = 1, nh (nt)
               do jh = ih, nh (nt)
                  call dqvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0, dylmk0, ipol)
                  do na = 1, nat
-                    if (ityp (na) .eq.nt) then
+                    if (ityp (na) == nt) then
                        !
                        do is = 1, nspin
                           do jpol = 1, ipol

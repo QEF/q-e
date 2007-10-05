@@ -23,7 +23,7 @@ subroutine addusforce (forcenl)
   USE lsda_mod,   ONLY : nspin
   USE scf,        ONLY : vr, vltot
   USE uspp,       ONLY : becsum, okvan
-  USE uspp_param, ONLY : lmaxq, tvanp, nh, nhm
+  USE uspp_param, ONLY : upf, lmaxq, nh, nhm
   USE wvfct,      ONLY : gamma_only
   !
   implicit none
@@ -77,13 +77,13 @@ subroutine addusforce (forcenl)
   !       I = sum_G i G_a exp(-iR.G) Q_nm v^*
   !
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if ( upf(nt)%tvanp ) then
         ijh = 1
         do ih = 1, nh (nt)
            do jh = ih, nh (nt)
               call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
               do na = 1, nat
-                 if (ityp (na) .eq.nt) then
+                 if (ityp (na) == nt) then
                     !
                     ! The product of potential, structure factor and iG
                     !

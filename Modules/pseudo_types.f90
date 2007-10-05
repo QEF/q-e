@@ -1,12 +1,9 @@
 !
-! Copyright (C) 2002-2003 PWSCF-FPMD-CP90 group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-
-!  extracted from module "pseudo_types" of FPMD
 !
 
       MODULE pseudo_types
@@ -17,9 +14,6 @@
         USE kinds, ONLY: DP
         USE parameters, ONLY: cp_lmax, lmaxx
         use radial_grids, ONLY: ndmx, radial_grid_type
-!        USE ld1_parameters, ONLY: nwfsx
-        USE parameters, ONLY: nwfsx
-!        USE ld1_parameters, ONLY: nwfsx
 
         IMPLICIT NONE
         SAVE
@@ -103,6 +97,11 @@ END TYPE paw_t
           INTEGER :: mesh               ! number of point in the radial mesh
           INTEGER :: nwfc               ! number of wavefunctions
           INTEGER :: nbeta              ! number of projectors
+          INTEGER :: kkbeta             ! kkbeta=max(kbeta(:))
+          !  kbeta<=mesh is the number of grid points for each beta function
+          !              beta(r,nb) = 0 for r > r(kbeta(nb))
+          ! kkbeta<=mesh is the largest of such number so that for all beta
+          !              beta(r,nb) = 0 for r > r(kkbeta)
           CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc)
           CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta)
           INTEGER, POINTER :: lchi(:)     ! lchi(nwfc)
@@ -112,7 +111,7 @@ END TYPE paw_t
           REAL(DP), POINTER :: rho_atc(:) ! rho_atc(mesh)
           REAL(DP), POINTER :: vloc(:)    ! vloc(mesh)
           INTEGER, POINTER :: lll(:)      ! lll(nbeta)
-          INTEGER, POINTER :: kkbeta(:)   ! kkbeta(nbeta)
+          INTEGER, POINTER :: kbeta(:)    ! kbeta(nbeta) 
           REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta)
           INTEGER :: nd
           REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta)
@@ -193,7 +192,7 @@ END TYPE paw_t
           NULLIFY( upf%nn, upf%rcut)
           NULLIFY( upf%els_beta)
           NULLIFY( upf%rcutus, upf%epseu)
-          NULLIFY( upf%lll, upf%jjj, upf%kkbeta, upf%beta, upf%dion )  
+          NULLIFY( upf%lll, upf%jjj, upf%kbeta, upf%beta, upf%dion )  
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
@@ -229,7 +228,7 @@ END TYPE paw_t
           IF( ASSOCIATED( upf%vloc ) ) DEALLOCATE( upf%vloc )
           IF( ASSOCIATED( upf%lll ) ) DEALLOCATE( upf%lll )
           IF( ASSOCIATED( upf%jjj ) ) DEALLOCATE( upf%jjj )
-          IF( ASSOCIATED( upf%kkbeta ) ) DEALLOCATE( upf%kkbeta )
+          IF( ASSOCIATED( upf%kbeta ) ) DEALLOCATE( upf%kbeta )
           IF( ASSOCIATED( upf%beta ) ) DEALLOCATE( upf%beta )
           IF( ASSOCIATED( upf%dion ) ) DEALLOCATE( upf%dion )
           IF( ASSOCIATED( upf%rinner ) ) DEALLOCATE( upf%rinner )

@@ -34,7 +34,7 @@ SUBROUTINE c_phase_field
    USE gvect,                ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                     ecutwfc, g, gcutm
    USE uspp,                 ONLY : nkb, vkb, okvan
-   USE uspp_param,           ONLY : lmaxq, nh, nhm, nbetam, tvanp
+   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm, nbetam
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd
@@ -277,7 +277,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 !      CALL setv(2*nhm*nhm*ntyp,0.d0,q_dk,1)
       q_dk=(0.d0,0.d0)
       DO np =1, ntyp
-         if(tvanp(np)) then
+         if( upf(nt)%tvanp ) then
             DO iv = 1, nh(np)
                DO jv = iv, nh(np)
                   call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)

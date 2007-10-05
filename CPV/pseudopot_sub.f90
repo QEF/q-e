@@ -19,7 +19,7 @@
 
      USE kinds,      ONLY: DP
      use uspp,       only: dvan, nhtolm, indv
-     use uspp_param, only: nhm, nh, dion
+     use uspp_param, only: upf, nhm, nh
      use ions_base,  only: nsp
      use atom,       only: numeric
      !
@@ -42,7 +42,7 @@
        do iv=1,nh(is)
          do jv=1,nh(is)
            if ( nhtolm(iv,is) == nhtolm(jv,is) ) then
-             dvan( iv, jv, is ) = fac * dion( indv(iv,is), indv(jv,is), is )
+             dvan( iv, jv, is ) = fac * upf(is)%dion( indv(iv,is), indv(jv,is) )
            endif
          end do
        end do
@@ -64,14 +64,11 @@
       use cvan,       only: ish      !
       use uspp,       only: nkb, &   !
                             nkbus    !
-      use uspp_param, only: nbeta,  &!
+      use uspp_param, only: upf,  &!
                             lmaxkb, &!
-                            lll,    &!
                             nhm,    &!
                             nbetam, &!
                             nh,     &!
-                            tvanp,  &!
-                            nqlc,   &!
                             lmaxq    !
       use uspp,       only: nhtol,  &!
                             nhtolm, &!
@@ -97,18 +94,18 @@
       !
       do is = 1, nsp
          ind = 0
-         do iv = 1, nbeta(is)
-            lmaxkb = max( lmaxkb, lll( iv, is ) )
-            ind = ind + 2 * lll( iv, is ) + 1
+         do iv = 1, upf(is)%nbeta
+            lmaxkb = max( lmaxkb, upf(is)%lll( iv ) )
+            ind = ind + 2 * upf(is)%lll( iv ) + 1
          end do
          nh(is) = ind
          ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
-         if( tvanp(is) ) nkbus = nkbus + na(is) * nh(is)
+         if(  upf(is)%tvanp ) nkbus = nkbus + na(is) * nh(is)
          nlcc_any = nlcc_any .OR. nlcc(is)
       end do
       nhm    = MAXVAL( nh(1:nsp) )
-      nbetam = MAXVAL(nbeta(1:nsp))
+      nbetam = MAXVAL( upf(1:nsp)%nbeta )
       if (lmaxkb > lmaxx) call errore(' pseudopotential_indexes ',' l > lmax ',lmaxkb)
       lmaxq = 2*lmaxkb + 1
       !
@@ -117,7 +114,7 @@
       ! l of the beta functions but includes the l of the local potential
       !
       do is=1,nsp
-         nqlc(is) = MIN ( nqlc(is), lmaxq )
+          upf(is)%nqlc = MIN (  upf(is)%nqlc, lmaxq )
       end do
       if (nkb <= 0) call errore(' pseudopotential_indexes ',' not implemented ?',nkb)
 
@@ -135,13 +132,13 @@
       !
       do is = 1, nsp
          ind = 0
-         do iv = 1, nbeta(is)
-            lm = lll(iv,is)**2
-            do il = 1, 2*lll( iv, is ) + 1
+         do iv = 1,  upf(is)%nbeta
+            lm =  upf(is)%lll(iv)**2
+            do il = 1, 2* upf(is)%lll( iv ) + 1
                lm = lm + 1
                ind = ind + 1
                nhtolm( ind, is ) = lm
-               nhtol( ind, is ) = lll( iv, is )
+               nhtol( ind, is ) =  upf(is)%lll( iv )
                indv( ind, is ) = iv
             end do
          end do
@@ -240,7 +237,7 @@
       use bhs,                ONLY : rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : formfn, formfa
-      USE uspp_param,         only : vloc_at, oldvan
+      USE uspp_param,         only : upf, oldvan
       USE control_flags,      only : tpre
       use reciprocal_vectors, ONLY : g, gstart
       USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
@@ -284,17 +281,19 @@
 
          if ( numeric(is) ) then
 
-            call formfn( vps_sp(is)%y, dvps_sp(is)%y, rgrid(is)%r, rgrid(is)%rab, vloc_at(:,is), &
-                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, &
+            call formfn( vps_sp(is)%y, dvps_sp(is)%y, rgrid(is)%r, &
+                         rgrid(is)%rab, upf(is)%vloc(1), zv(is),   &
+                         rcmax(is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, &
                          mmx, oldvan(is), tpre )
 
          else
 
             !     bhs pseudopotentials
             !
-            call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), wrc1(is), wrc2(is), &
-                         rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
-                         zv(is), rcmax(is), xgtab, 1.0d0, tpiba2, mmx, 2 , tpre )
+            call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
+                         wrc1(is), wrc2(is), rcl(:,is,lloc(is)), &
+                         al(:,is,lloc(is)), bl(:,is,lloc(is)), zv(is), &
+                         rcmax(is), xgtab, 1.0d0, tpiba2, mmx, 2 , tpre )
 
          end if
 
@@ -389,9 +388,8 @@
       USE splines,                 ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,             ONLY : nlin_base
       USE pseudo_base,             ONLY : nlin_stress_base
-      USE pseudo_types,            ONLY : pseudo_ncpp, pseudo_upf
       USE reciprocal_vectors,      ONLY : g, gstart
-      USE uspp_param,              ONLY : nbeta, nbetam
+      USE uspp_param,              ONLY : upf, nbetam
       USE read_pseudo_module_fpmd, ONLY : ap, nspnl
       USE cp_interfaces,           ONLY : compute_xgtab, chkpstab
       USE pseudopotential,         ONLY : wnl_sp, wnla_sp, xgtab
@@ -436,7 +434,7 @@
               CALL nullify_spline( wnla_sp( l, is ) )
            END DO
 
-           DO l = 1, nbeta( is )
+           DO l = 1,  upf(is)%nbeta
               CALL allocate_spline(  wnl_sp(l,is), mmx, xgmin, xgmax )
               CALL allocate_spline( wnla_sp(l,is), mmx, xgmin, xgmax )
            END DO
@@ -445,17 +443,17 @@
            !
            CALL nlin_base(ap(is), xgtab(:), fintl)
            !
-           DO l = 1, nbeta( is )
+           DO l = 1,  upf(is)%nbeta
               wnl_sp( l, is )%y = fintl(:,l)
            END DO
            !
            CALL nlin_stress_base( ap(is), xgtab, fintl )
            
-           DO l = 1, nbeta( is )
+           DO l = 1,  upf(is)%nbeta
                wnla_sp( l, is )%y = fintl(:,l)
            END DO
            !
-           DO l = 1, nbeta( is )
+           DO l = 1,  upf(is)%nbeta
               CALL init_spline(  wnl_sp( l, is ) )
               CALL init_spline( wnla_sp( l, is ) )
            END DO
@@ -483,7 +481,7 @@
       USE pseudo_base,             ONLY: nlin_base
       USE control_flags,           ONLY: gamma_only
       USE uspp,                    ONLY: dvan
-      USE uspp_param,              ONLY: nh, nbeta
+      USE uspp_param,              ONLY: upf, nh
       USE constants,               ONLY: pi
       USE splines,                 ONLY: spline
       USE read_pseudo_module_fpmd, ONLY: ap, nspnl
@@ -523,7 +521,7 @@
             !
             IF( tpstab ) THEN
                !
-               DO l = 1, nbeta( is )
+               DO l = 1, upf(is)%nbeta
                   !
                   IF( gstart == 2 ) THEN
                      wnl(1,l,is,ik) = wnl_sp( l, is )%y(1)
@@ -563,7 +561,7 @@
       USE cell_base,               ONLY : tpiba
       USE pseudo_base,             ONLY : nlin_stress_base
       USE splines,                 ONLY : spline
-      USE uspp_param,              ONLY : nbeta
+      USE uspp_param,              ONLY : upf
       USE read_pseudo_module_fpmd, ONLY : ap, nspnl
       USE reciprocal_vectors,      ONLY : g, gstart
       USE pseudopotential,         ONLY : wnla_sp, tpstab
@@ -583,7 +581,7 @@
          !
          IF ( tpstab ) THEN
             !
-            DO l = 1, nbeta( is )
+            DO l = 1, upf(is)%nbeta
                !
                IF( gstart == 2 ) THEN
                   wnla(1,l,is) = wnla_sp( l, is )%y(1)
@@ -617,7 +615,7 @@
       !
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp
-      USE uspp_param, ONLY : nh, kkbeta, betar, nhm, nbeta, oldvan
+      USE uspp_param, ONLY : upf, nh, nhm, oldvan
       USE atom,       ONLY : rgrid, numeric
       USE uspp,       ONLY : nhtol, indv
       USE betax,      only : refg, betagx, mmx, dbetagx
@@ -635,11 +633,10 @@
       !
       ALLOCATE( betagx ( mmx, nhm, nsp ) )
       IF ( tpre ) ALLOCATE( dbetagx( mmx, nhm, nsp ) )
-
       !
       do is = 1, nsp
          !
-         nr = kkbeta( is )
+         nr = upf(is)%kkbeta
          !
          if ( tpre ) then
             allocate( dfint( nr ) )
@@ -667,7 +664,8 @@
                !     beta(ir)=r*beta(r)
                !
                do ir = 1, nr
-                  fint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * jl(ir)
+                  fint(ir) = rgrid(is)%r(ir) * jl(ir) * &
+                             upf(is)%beta( ir, indv(iv,is) ) 
                end do
                if (oldvan(is)) then
                   call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
@@ -677,7 +675,8 @@
                ! 
                if(tpre) then
                   do ir = 1, nr
-                     dfint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * djl(ir)
+                     dfint(ir) = rgrid(is)%r(ir) * djl(ir) * &
+                                 upf(is)%beta( ir, indv(iv,is) )
                   end do
                   if (oldvan(is)) then
                      call herman_skillman_int(nr,dfint,rgrid(is)%rab,dbetagx(il,iv,is))
@@ -717,8 +716,7 @@
       USE kinds,         ONLY : DP
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
-      USE uspp_param,    ONLY : nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
-                                lmaxq, nbeta, oldvan
+      USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, oldvan
       USE atom,          ONLY : rgrid, numeric
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
@@ -748,9 +746,9 @@
          !     as vanderbilts ppot-code prints them out
          !
          WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
-     &        nh(is), ngb, is, kkbeta(is), nqlc(is)
+     &        nh(is), ngb, is, upf(is)%kkbeta, upf(is)%nqlc
          !
-         nr = kkbeta(is)
+         nr = upf(is)%kkbeta
          !
          IF ( tpre ) THEN
             ALLOCATE( djl  ( nr ) )
@@ -759,11 +757,11 @@
          !
          ALLOCATE( fint( nr ) )
          ALLOCATE( jl  ( nr ) )
-         ALLOCATE( qrl( nr, nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
+         ALLOCATE( qrl( nr, upf(is)%nbeta*(upf(is)%nbeta+1)/2, upf(is)%nqlc) )
          !
          call fill_qrl ( is, qrl )
          !
-         do l = 1, nqlc( is )
+         do l = 1, upf(is)%nqlc
             !
             do il = 1, mmx
                !
@@ -778,8 +776,8 @@
                endif
                !
                ! 
-               do iv = 1, nbeta(is)
-                  do jv = iv, nbeta(is)
+               do iv = 1, upf(is)%nbeta
+                  do jv = iv, upf(is)%nbeta
                      ijv = jv * ( jv - 1 ) / 2 + iv
                      !
                      !      note qrl(r)=r^2*q(r)
@@ -827,8 +825,8 @@
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    qqq '
          !
-         do iv=1,nbeta(is)
-            WRITE( stdout,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
+         do iv=1,upf(is)%nbeta
+            WRITE( stdout,'(8f9.4)') (upf(is)%qqq(iv,jv),jv=1,upf(is)%nbeta)
          end do
          WRITE( stdout,*)
          !
@@ -844,8 +842,7 @@
       USE kinds,         ONLY : DP
       use io_global,  only: stdout
       USE ions_base,  ONLY: nsp
-      USE uspp_param, ONLY: nh, kkbeta, betar, nhm, nbetam, nqlc, qqq, &
-           lmaxq, nbeta, oldvan
+      USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq, oldvan
       use uspp_param, only: lmaxkb
       USE atom,       ONLY: rgrid, numeric
       USE uspp,       ONLY: indv
@@ -889,9 +886,9 @@
          !     as vanderbilts ppot-code prints them out
          !
          WRITE( stdout,*) ' nlinit  nh(is), ngb, is, kkbeta, lmaxq = ', &
-     &        nh(is), ngb, is, kkbeta(is), nqlc(is)
+     &        nh(is), ngb, is, upf(is)%kkbeta, upf(is)%nqlc
          !
-         nr = kkbeta(is)
+         nr = upf(is)%kkbeta
          !
          IF ( tpre ) THEN
             ALLOCATE( djl  ( nr ) )
@@ -900,12 +897,12 @@
          !
          ALLOCATE( fint( nr ) )
          ALLOCATE( jl  ( nr ) )
-         ALLOCATE( qrl( nr, nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
+         ALLOCATE( qrl( nr, upf(is)%nbeta*(upf(is)%nbeta+1)/2, upf(is)%nqlc) )
          !
          call fill_qrl ( is, qrl )
          ! qrl = 0.0d0
          !
-         do l = 1, nqlc( is )
+         do l = 1, upf(is)%nqlc
             !
             do il = 1, ngb
                !
@@ -920,8 +917,8 @@
                endif
                !
                ! 
-               do iv = 1, nbeta(is)
-                  do jv = iv, nbeta(is)
+               do iv = 1, upf(is)%nbeta
+                  do jv = iv, upf(is)%nbeta
                      ijv = jv * ( jv - 1 ) / 2 + iv
                      !
                      !      note qrl(r)=r^2*q(r)
@@ -969,8 +966,8 @@
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    qqq '
          !
-         do iv=1,nbeta(is)
-            WRITE( stdout,'(8f9.4)') (qqq(iv,jv,is),jv=1,nbeta(is))
+         do iv=1, upf(is)%nbeta
+            WRITE( stdout,'(8f9.4)') (upf(is)%qqq(iv,jv),jv=1, upf(is)%nbeta)
          end do
          WRITE( stdout,*)
          !
@@ -991,11 +988,11 @@
          !
          c = fpi / omegab
          !
-         do iv= 1,nbeta(is)
-            do jv = iv, nbeta(is)
+         do iv= 1, upf(is)%nbeta
+            do jv = iv, upf(is)%nbeta
                ijv = jv*(jv-1)/2 + iv
                do ig=1,ngb
-                  do l=1,nqlc(is)
+                  do l=1,upf(is)%nqlc
                      qradb(ig,ijv,l,is)= c*qradx(ig,ijv,l,is)
                   enddo
                enddo
@@ -1035,10 +1032,10 @@
          !
          do is=1,nvb
             !
-            do iv= 1,nbeta(is)
-               do jv=iv,nbeta(is)
+            do iv= 1, upf(is)%nbeta
+               do jv=iv, upf(is)%nbeta
                   ijv = jv*(jv-1)/2 + iv
-                  do l=1,nqlc(is)
+                  do l=1,upf(is)%nqlc
                      do ig=1,ngb
                         dqradb(ig,ijv,l,is) =  dqradx(ig,ijv,l,is)
                      enddo
@@ -1146,7 +1143,7 @@
       USE gvecw, only: ngw
       USE ions_base, only: nsp
       USE reciprocal_vectors, only: g, gx, gstart
-      USE uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nh
+      USE uspp_param, only: upf, lmaxq, lmaxkb, nh
       USE uspp, only: qq, nhtolm, beta
       USE cell_base, only: ainv, omega, tpiba2, tpiba
       USE betax, ONLY : refg, betagx, dbetagx
@@ -1251,7 +1248,7 @@
       use uspp, only: qq, nhtolm, beta
       use constants, only: pi, fpi
       use ions_base, only: nsp
-      use uspp_param, only: lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nbetam, nh
+      use uspp_param, only: upf, lmaxq, lmaxkb, nbetam, nh
       use qradb_mod, only: qradb
       use qgb_mod, only: qgb
       use gvecb, only: gb, gxb, ngb
@@ -1286,16 +1283,16 @@
          !
          c = fpi / omegab
          !
-         do iv= 1,nbeta(is)
-            do jv = iv, nbeta(is)
+         do iv= 1, upf(is)%nbeta
+            do jv = iv, upf(is)%nbeta
                ijv = jv*(jv-1)/2 + iv
-               do l=1,nqlc(is)
+               do l=1, upf(is)%nqlc
                   qradb(1,ijv,l,is) = c * qradx(1,ijv,l,is)
                end do
                do ig=2,ngb
                   gg=gb(ig)*tpibab*tpibab/refg
                   jj=int(gg)+1
-                  do l=1,nqlc(is)
+                  do l=1,upf(is)%nqlc
                      if(jj.ge.mmx) then
                         qradb(ig,ijv,l,is)=0.d0
                      else
@@ -1340,10 +1337,10 @@
          !
          do is=1,nvb
             !
-            do iv= 1,nbeta(is)
-               do jv=iv,nbeta(is)
+            do iv= 1, upf(is)%nbeta
+               do jv=iv, upf(is)%nbeta
                   ijv = jv*(jv-1)/2 + iv
-                  do l=1,nqlc(is)
+                  do l=1,upf(is)%nqlc
                      dqradb(1,ijv,l,is) =  dqradx(1,ijv,l,is)
                      do ig=2,ngb
                         gg=gb(ig)*tpibab*tpibab/refg
@@ -1415,8 +1412,7 @@
       USE io_global,     only : stdout
       USE gvecw,         only : ngw
       USE ions_base,     only : nsp
-      USE uspp_param,    only : lmaxq, nqlc, lmaxkb, kkbeta, nbeta, nh, &
-                                betar, nhm, oldvan
+      USE uspp_param,    only : upf, lmaxq, lmaxkb, nh, nhm, oldvan
       USE uspp,          only : qq, nhtolm, beta, nhtol, indv
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE cdvan,         ONLY : dbeta
@@ -1444,7 +1440,7 @@
       !
       do is = 1, nsp
          !
-         nr = kkbeta(is)
+         nr = upf(is)%kkbeta
          !
          if ( tpre ) then
             allocate( dfint( nr ) )
@@ -1472,7 +1468,8 @@
                !     beta(ir)=r*beta(r)
                !
                do ir = 1, nr
-                  fint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * jl(ir)
+                  fint(ir) = rgrid(is)%r(ir) * jl(ir) * &
+                             upf(is)%beta( ir, indv(iv,is) )
                end do
                if (oldvan(is)) then
                   call herman_skillman_int(nr,fint,rgrid(is)%rab,betagx(il,iv,is))
@@ -1482,7 +1479,8 @@
                ! 
                if(tpre) then
                   do ir = 1, nr
-                     dfint(ir) = rgrid(is)%r(ir) * betar( ir, indv(iv,is), is ) * djl(ir)
+                     dfint(ir) = rgrid(is)%r(ir) * djl(ir) * &
+                                 upf(is)%beta( ir, indv(iv,is) )
                   end do
                   if (oldvan(is)) then
                      call herman_skillman_int(nr,dfint,rgrid(ir)%rab,dbetagx(il,iv,is))
@@ -1576,7 +1574,7 @@
       !
       ! fill l-components of Q(r) as in Vanderbilt's approach
       !
-      USE uspp_param, ONLY: qfunc, nqf, qfcoef, rinner, lll, nbeta, kkbeta
+      USE uspp_param, ONLY: upf
       USE atom,       ONLY: rgrid
       USE kinds,      ONLY: DP
       USE io_global,  ONLY: stdout
@@ -1593,14 +1591,14 @@
       dim2 = SIZE( qrl, 2 )
       dim3 = SIZE( qrl, 3 )
       !
-      IF ( kkbeta(is) > dim1 ) &
+      IF ( upf(is)%kkbeta > dim1 ) &
            CALL errore ('fill_qrl', 'bad 1st dimension for array qrl', 1)
       !
       qrl = 0.0d0
       !
-      do iv = 1, nbeta(is)
+      do iv = 1,  upf(is)%nbeta
          !
-         do jv = iv, nbeta(is)
+         do jv = iv,  upf(is)%nbeta
             !
             ijv = (jv-1)*jv/2 + iv
             !
@@ -1609,11 +1607,11 @@
 
             ! notice that L runs from 1 to Lmax+1
 
-            lmin = ABS (lll(jv,is) - lll(iv,is)) + 1
-            lmax = lll(jv,is) + lll(iv,is) + 1
+            lmin = ABS (upf(is)%lll(jv) - upf(is)%lll(iv)) + 1
+            lmax = upf(is)%lll(jv) + upf(is)%lll(iv) + 1
 
             ! WRITE( stdout, * ) 'QRL is, jv, iv = ', is, jv, iv
-            ! WRITE( stdout, * ) 'QRL lll jv, iv = ', lll(jv,is), lll(iv,is)
+            ! WRITE( stdout, * ) 'QRL lll jv, iv = ', upf(is)%lll(jv), upf(is)%lll(iv)
             ! WRITE( stdout, * ) 'QRL lmin, lmax = ', lmin, lmax
             ! WRITE( stdout, * ) '---------------- '
 
@@ -1622,15 +1620,17 @@
                  CALL errore ('fill_qrl', 'bad 3rd dimension for array qrl', 3)
             END IF
 
+
              do l = lmin, lmax
-               do ir = 1, kkbeta(is)
-                  if ( rgrid(is)%r(ir) >= rinner(l,is) ) then
-                     qrl(ir,ijv,l)=qfunc(ir,ijv,is)
+               do ir = 1, upf(is)%kkbeta
+                  if ( rgrid(is)%r(ir) >= upf(is)%rinner(l) ) then
+                     ! qrl(ir,ijv,l)=upf(is)%qfunc(ir,ijv) TEMP
+                     qrl(ir,ijv,l)=upf(is)%qfunc(ir,iv,jv)
                   else
-                     qrl(ir,ijv,l)=qfcoef(1,l,iv,jv,is)
-                     do i = 2, nqf(is)
+                     qrl(ir,ijv,l)=upf(is)%qfcoef(1,l,iv,jv)
+                     do i = 2, upf(is)%nqf
                         qrl(ir,ijv,l)=qrl(ir,ijv,l) +      &
-                             qfcoef(i,l,iv,jv,is) * rgrid(is)%r(ir)**(2*i-2)
+                             upf(is)%qfcoef(i,l,iv,jv)*rgrid(is)%r(ir)**(2*i-2)
                      end do
                      qrl(ir,ijv,l) = qrl(ir,ijv,l) * rgrid(is)%r(ir)**(l+1)
                   end if

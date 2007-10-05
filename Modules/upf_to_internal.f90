@@ -65,10 +65,7 @@ subroutine set_pseudo_upf (is, upf)
   chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
   !
   nbeta(is)= upf%nbeta
-  kkbeta(is)=0
-  do nb=1,upf%nbeta
-     kkbeta(is)=max(upf%kkbeta(nb),kkbeta(is))
-  end do
+  kkbeta(is)=upf%kkbeta
   betar(1:upf%mesh, 1:upf%nbeta, is) = upf%beta(1:upf%mesh, 1:upf%nbeta)
   dion(1:upf%nbeta, 1:upf%nbeta, is) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
   !

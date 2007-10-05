@@ -24,7 +24,7 @@ subroutine s_psi_nc (lda, n, m, psi, spsi )
   !     spsi  S*psi
   !
   USE ions_base, ONLY: nat, ityp, ntyp => nsp
-  USE uspp_param, ONLY: nh, tvanp
+  USE uspp_param, ONLY: upf, nh
   USE uspp, ONLY: nkb, vkb, qq, qq_so, okvan
   use wvfct, ONLY: igk, g2kin
   use gsmooth, ONLY: nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
@@ -61,7 +61,7 @@ subroutine s_psi_nc (lda, n, m, psi, spsi )
   !
   ijkb0 = 0
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if ( upf(nt)%tvanp ) then
         do na = 1, nat
            if (ityp (na) .eq.nt) then
               do ih = 1,nh(nt)

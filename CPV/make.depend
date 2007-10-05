@@ -929,7 +929,6 @@ pseudopot_sub.o : ../Modules/kind.o
 pseudopot_sub.o : ../Modules/mp.o
 pseudopot_sub.o : ../Modules/mp_global.o
 pseudopot_sub.o : ../Modules/parameters.o
-pseudopot_sub.o : ../Modules/pseudo_types.o
 pseudopot_sub.o : ../Modules/recvec.o
 pseudopot_sub.o : ../Modules/smallbox.o
 pseudopot_sub.o : ../Modules/uspp.o

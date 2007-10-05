@@ -23,7 +23,7 @@ subroutine stres_loc (sigmaloc)
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
-  USE uspp_param,           ONLY : vloc_at, zp
+  USE uspp_param,           ONLY : upf
   !
   implicit none
   !
@@ -67,8 +67,8 @@ subroutine stres_loc (sigmaloc)
   do nt = 1, ntyp
      ! dvloc contains dV_loc(G)/dG
      call dvloc_of_g (lloc (nt), lmax (nt), numeric (nt), rgrid(nt)%mesh, &
-          msh (nt), rgrid(nt)%rab, rgrid(nt)%r, vloc_at (1, nt), &
-          cc (1, nt), alpc (1, nt), nlc (nt), nnl (nt), zp (nt), &
+          msh (nt), rgrid(nt)%rab, rgrid(nt)%r, upf(nt)%vloc(1), &
+          cc (1, nt), alpc (1, nt), nlc (nt), nnl (nt), upf(nt)%zp, &
           aps (1, 0, nt), alps (1, 0, nt), tpiba2, ngl, gl, omega, dvloc)
      ! no G=0 contribution
      do ng = 1, ngm

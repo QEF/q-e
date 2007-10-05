@@ -39,7 +39,7 @@ subroutine allocate_nlpot
                                nqxq, spline_ps
   USE uspp,             ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
                                nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
-  USE uspp_param,       ONLY : lmaxq, lmaxkb, lll, nbeta, nh, nhm, nbetam,tvanp
+  USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
   !
   implicit none
@@ -64,16 +64,16 @@ subroutine allocate_nlpot
   lmaxkb = - 1
   do nt = 1, nsp
      nh (nt) = 0
-     do nb = 1, nbeta (nt)
-        nh (nt) = nh (nt) + 2 * lll (nb, nt) + 1
-        lmaxkb = max (lmaxkb, lll (nb, nt) )
+     do nb = 1, upf(nt)%nbeta
+        nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
+        lmaxkb = max (lmaxkb, upf(nt)%lll(nb) )
      enddo
   enddo
   !
   ! calculate the maximum number of beta functions
   !
   nhm = MAXVAL (nh (1:nsp))
-  nbetam = MAXVAL (nbeta (1:nsp))
+  nbetam = MAXVAL (upf(:)%nbeta)
   !
   ! calculate the number of beta functions of the solid
   !
@@ -82,7 +82,7 @@ subroutine allocate_nlpot
   do na = 1, nat
      nt = ityp(na)
      nkb = nkb + nh (nt)
-     if (tvanp(nt)) nkbus = nkbus + nh (nt)
+     if (upf(nt)%tvanp) nkbus = nkbus + nh (nt)
   enddo
   !
   allocate (indv( nhm, nsp))    

@@ -26,7 +26,7 @@ subroutine h_epsi_her_set
   USE scf,      ONLY : vrs  
   USE gvect
   USE uspp
-  USE uspp_param
+  USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp, ONLY :  gdir,nppstr,efield,fact_hepsi,evcel,evcp=>evcelp,evcm=>evcelm
   USE basis
   USE klist
@@ -269,7 +269,7 @@ subroutine h_epsi_her_set
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
          q_dk=(0.d0,0.d0)
          DO np =1, ntyp
-            if(tvanp(np)) then
+            if( upf(nt)%tvanp ) then
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
                      call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)
@@ -287,7 +287,7 @@ subroutine h_epsi_her_set
 
          q_dkp=(0.d0,0.d0)
          DO np =1, ntyp
-            if(tvanp(np)) then
+            if( upf(nt)%tvanp ) then
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
                      call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)
@@ -1091,14 +1091,14 @@ subroutine h_epsi_her_set
       ijkb0 = 0
       do nt = 1, ntyp
          do na = 1, nat
-            if (ityp (na) .eq.nt) then
+            if (ityp (na) == nt) then
                do ibnd = 1, nbnd
                   do jh = 1, nh (nt)
                      jkb = ijkb0 + jh
                      do ih = 1, nh (nt)
                         ikb = ijkb0 + ih
                         ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                             qqq(ih,jh,ityp(na))* becp1(jkb,ibnd)
+                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
                      enddo
                   enddo
                enddo
@@ -1114,14 +1114,14 @@ subroutine h_epsi_her_set
       ijkb0 = 0
       do nt = 1, ntyp
          do na = 1, nat
-            if (ityp (na) .eq.nt) then
+            if (ityp (na) == nt) then
                do ibnd = 1, nbnd
                   do jh = 1, nh (nt)
                      jkb = ijkb0 + jh
                      do ih = 1, nh (nt)
                         ikb = ijkb0 + ih
                         ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                             qqq(ih,jh,ityp(na))* becp1(jkb,ibnd)
+                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
                      enddo
                   enddo
                enddo

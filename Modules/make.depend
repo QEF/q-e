@@ -211,7 +211,6 @@ read_paw.o : atom.o
 read_paw.o : constants.o
 read_paw.o : functionals.o
 read_paw.o : grid_paw_variables.o
-read_paw.o : ions_base.o
 read_paw.o : kind.o
 read_paw.o : pseudo_types.o
 read_paw.o : radial_grids.o
@@ -255,6 +254,7 @@ upf_to_internal.o : uspp.o
 uspp.o : constants.o
 uspp.o : kind.o
 uspp.o : parameters.o
+uspp.o : pseudo_types.o
 uspp.o : radial_grids.o
 uspp.o : random_numbers.o
 wannier.o : kind.o

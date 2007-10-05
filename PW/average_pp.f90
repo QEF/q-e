@@ -12,7 +12,7 @@ SUBROUTINE average_pp ( ntyp )
   USE kinds,            ONLY : DP
   USE atom,             ONLY : chi, nchi, lchi, jchi, rgrid
   USE spin_orb,         ONLY : so
-  USE uspp_param,       ONLY : betar, dion, jjj, lll, nbeta, tvanp
+  USE uspp_param,       ONLY : upf
   !
   IMPLICIT NONE
   !
@@ -26,65 +26,67 @@ SUBROUTINE average_pp ( ntyp )
      !
      IF ( so(nt) ) THEN
         !
-        IF ( tvanp(nt) ) &
+        IF ( upf(nt)%tvanp ) &
              CALL errore( 'setup', 'US j-average not yet implemented', 1 )
         !
         nbe = 0
         !
-        DO nb = 1, nbeta(nt)
+        DO nb = 1, upf(nt)%nbeta
            !
            nbe = nbe + 1
            !
-           IF ( lll(nb,nt) /= 0 .AND. &
-                ABS( jjj(nb,nt) - lll(nb,nt) - 0.5D0 ) < 1.D-7 ) nbe = nbe - 1
+           IF ( upf(nt)%lll(nb) /= 0 .AND. &
+                ABS( upf(nt)%jjj(nb) - upf(nt)%lll(nb) - 0.5D0 ) < 1.D-7 ) &
+              nbe = nbe - 1
         END DO
         !
-        nbeta(nt) = nbe
+        upf(nt)%nbeta = nbe
         !
         nbe = 0
         !
-        DO nb = 1, nbeta(nt)
+        DO nb = 1, upf(nt)%nbeta
            !
            nbe = nbe + 1
            !
-           l = lll(nbe,nt)
+           l = upf(nt)%lll(nbe)
            !
            IF ( l /= 0 ) THEN
               !
-              IF (ABS(jjj(nbe,nt)-lll(nbe,nt)+0.5d0).LT.1.d-7) THEN
-                 IF (ABS(jjj(nbe+1,nt)-lll(nbe+1,nt)-0.5d0).GT.1.d-7) &
-                      call errore('setup','wrong beta functions',1)
+              IF (ABS(upf(nt)%jjj(nbe)-upf(nt)%lll(nbe)+0.5d0) < 1.d-7) THEN
+                 IF ( ABS( upf(nt)%jjj(nbe+1)-upf(nt)%lll(nbe+1)-0.5d0 ) &
+                      > 1.d-7 ) call errore('setup','wrong beta functions',1)
                  ind=nbe+1
                  ind1=nbe
               ELSE
-                 IF (ABS(jjj(nbe+1,nt)-lll(nbe+1,nt)+0.5d0).GT.1.d-7) &
+                 IF (ABS(upf(nt)%jjj(nbe+1)-upf(nt)%lll(nbe+1)+0.5d0) > 1.d-7) &
                       call errore('setup','wrong beta functions',1)
                  ind=nbe
                  ind1=nbe+1
               ENDIF
               !
-              vionl = ( ( l + 1.D0 ) * dion(ind,ind,nt) + &
-                   l * dion(ind1,ind1,nt) ) / ( 2.D0 * l + 1.D0 )
+              vionl = ( ( l + 1.D0 ) * upf(nt)%dion(ind,ind) + &
+                   l * upf(nt)%dion(ind1,ind1) ) / ( 2.D0 * l + 1.D0 )
               !
-              betar(1:rgrid(nt)%mesh,nb,nt) = 1.D0 / ( 2.D0 * l + 1.D0 ) * &
-                   ( ( l + 1.D0 ) * SQRT( dion(ind,ind,nt) / vionl ) * &
-                   betar(1:rgrid(nt)%mesh,ind,nt) + &
-                   l * SQRT( dion(ind1,ind1,nt) / vionl ) * &
-                   betar(1:rgrid(nt)%mesh,ind1,nt) )
+              upf(nt)%beta(1:rgrid(nt)%mesh,nb) = 1.D0 / ( 2.D0 * l + 1.D0 ) * &
+                   ( ( l + 1.D0 ) * SQRT( upf(nt)%dion(ind,ind) / vionl ) * &
+                   upf(nt)%beta(1:rgrid(nt)%mesh,ind) + &
+                   l * SQRT( upf(nt)%dion(ind1,ind1) / vionl ) * &
+                   upf(nt)%beta(1:rgrid(nt)%mesh,ind1) )
               !
-              dion(nb,nb,nt) = vionl
+              upf(nt)%dion(nb,nb) = vionl
               !
               nbe = nbe + 1
                  !
            ELSE
               !
-              betar(1:rgrid(nt)%mesh,nb,nt) = betar(1:rgrid(nt)%mesh,nbe,nt)
+              upf(nt)%beta(1:rgrid(nt)%mesh,nb) = &
+                  upf(nt)%beta(1:rgrid(nt)%mesh,nbe)
               !
-              dion(nb,nb,nt) = dion(nbe,nbe,nt)
+              upf(nt)%dion(nb,nb) = upf(nt)%dion(nbe,nbe)
               !
            END IF
            !
-           lll(nb,nt)=lll(nbe,nt)
+           upf(nt)%lll(nb)=upf(nt)%lll(nbe)
            !
         END DO
         !
@@ -95,7 +97,8 @@ SUBROUTINE average_pp ( ntyp )
            nbe = nbe + 1
            !
            IF ( lchi(nb,nt) /= 0 .AND. &
-                ABS(jchi(nb,nt)-lchi(nb,nt)-0.5D0 ) < 1.D-7 ) nbe = nbe - 1
+                ABS(jchi(nb,nt)-lchi(nb,nt)-0.5D0 ) < 1.D-7 ) &
+              nbe = nbe - 1
            !
         END DO
         !
@@ -111,19 +114,20 @@ SUBROUTINE average_pp ( ntyp )
            !
            IF ( l /= 0 ) THEN
               !
-              IF (ABS(jchi(nbe,nt)-lchi(nbe,nt)+0.5d0).LT.1.d-7) THEN
-                 IF (ABS(jchi(nbe+1,nt)-lchi(nbe+1,nt)-0.5d0).GT.1.d-7) &
-                      call errore('setup','wrong chi functions',1)
+              IF (ABS(jchi(nbe,nt)-lchi(nbe,nt)+0.5d0) < 1.d-7) THEN
+                 IF ( ABS(jchi(nbe+1,nt)-lchi(nbe+1,nt)-0.5d0) > &
+                      1.d-7) call errore('setup','wrong chi functions',1)
                  ind=nbe+1
                  ind1=nbe
               ELSE
-                 IF (ABS(jchi(nbe+1,nt)-lchi(nbe+1,nt)+0.5d0).GT.1.d-7) &
-                      call errore('setup','wrong chi functions',1)
+                 IF ( ABS(jchi(nbe+1,nt)-lchi(nbe+1,nt)+0.5d0) > &
+                      1.d-7) call errore('setup','wrong chi functions',1)
                  ind=nbe
                  ind1=nbe+1
               END IF
               !
-              chi(1:rgrid(nt)%mesh,nb,nt)=((l+1.D0) * chi(1:rgrid(nt)%mesh,ind,nt)+ &
+              chi(1:rgrid(nt)%mesh,nb,nt) = &
+                 ((l+1.D0) * chi(1:rgrid(nt)%mesh,ind,nt)+ &
                    l * chi(1:rgrid(nt)%mesh,ind1,nt)) / ( 2.D0 * l + 1.D0 )
               !   
               nbe = nbe + 1

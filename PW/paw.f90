@@ -228,7 +228,6 @@ CONTAINS
     use parameters, only : ntypx
     USE io_global,  ONLY : stdout
     use splinelib
-    USE uspp_param,    ONLY : vloc_at
     
     IMPLICIT NONE
     

@@ -783,7 +783,6 @@ paw.o : ../Modules/pseudo_types.o
 paw.o : ../Modules/radial_grids.o
 paw.o : ../Modules/read_upf.o
 paw.o : ../Modules/splinelib.o
-paw.o : ../Modules/uspp.o
 paw_xc.o : ../Modules/cell_base.o
 paw_xc.o : ../Modules/constants.o
 paw_xc.o : ../Modules/functionals.o
@@ -1011,7 +1010,6 @@ restart_in_ions.o : ../Modules/io_global.o
 restart_in_ions.o : ../Modules/ions_base.o
 restart_in_ions.o : ../Modules/kind.o
 restart_in_ions.o : ../Modules/wavefunctions.o
-restart_in_ions.o : noncol.o
 restart_in_ions.o : pwcom.o
 rgen.o : ../Modules/kind.o
 rho2zeta.o : ../Modules/constants.o

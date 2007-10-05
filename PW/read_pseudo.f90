@@ -20,14 +20,14 @@ subroutine readpp
   USE upf_to_internal,  ONLY : set_pseudo_upf
   USE paw,              ONLY : set_paw_upf
   USE atom,       ONLY : chi, nchi, oc, msh, numeric, rgrid
-  USE uspp_param, ONLY : zp, iver, tvanp, newpseudo
+  USE uspp_param, ONLY : iver, newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE io_files,   ONLY : pseudo_dir, psfile
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
   USE pseud,      ONLY : lmax, lloc
-  USE uspp_param, ONLY : lll, nbeta
+  USE uspp_param, ONLY : upf
   USE parameters, ONLY : nchix !PAW
   USE grid_paw_variables, ONLY : tpawp
   USE read_paw_module,    ONLY : paw_io, allocate_pseudo_paw, deallocate_pseudo_paw
@@ -36,7 +36,6 @@ subroutine readpp
   !
   real(DP), parameter :: rcut = 10.d0, eps = 1.0D-08
   !
-  TYPE (pseudo_upf) :: upf
   TYPE(paw_t) :: pawset
   !
   character(len=256) :: file_pseudo
@@ -49,6 +48,7 @@ subroutine readpp
   !
   iunps = 4
   l = len_trim (pseudo_dir)
+  ALLOCATE ( upf(ntyp) )
   do nt = 1, ntyp
      tpawp(nt) = .false.
      !
@@ -79,15 +79,13 @@ subroutine readpp
      ! read UPF  pseudopotentials - the UPF format is detected via the
      ! presence of the keyword '<PP_HEADER>' at the beginning of the file
      !
-     call read_pseudo_upf(iunps, upf, isupf)
+     call read_pseudo_upf(iunps, upf(nt), isupf)
      !
      if (isupf == 0) then
-        call set_pseudo_upf (nt, upf)
-        call set_paw_upf (nt, upf)
-        CALL deallocate_pseudo_upf( upf )
+        call set_pseudo_upf (nt, upf(nt)) ! TEMP
+        call set_paw_upf (nt, upf(nt))
         ! for compatibility with old formats
         newpseudo (nt) = .true.
-        lmax(nt) = max ( lmax(nt), MAXVAL( lll( 1:nbeta(nt), nt) ) )
         !
      else
         rewind (unit = iunps)
@@ -107,14 +105,11 @@ subroutine readpp
            newpseudo (nt) = ( pseudo_type (psfile (nt) ) == 2 )
            !
            IF ( newpseudo (nt) ) THEN
-              call readrrkj (iunps, nt, upf)
+              call readrrkj (iunps, nt, upf(nt))
            ELSE
-              CALL readvan (iunps, nt, upf)
+              CALL readvan (iunps, nt, upf(nt))
            ENDIF
-           CALL set_pseudo_upf (nt, upf)    ! TEMP
-           CALL deallocate_pseudo_upf( upf )! TEMP
-           !
-           lmax(nt) = max ( lmax(nt), MAXVAL( lll( 1:nbeta(nt), nt) ) )
+           CALL set_pseudo_upf (nt, upf(nt)) ! TEMP
            !
         else if (pseudo_type (psfile (nt) ) ==3) then
            !
@@ -123,7 +118,6 @@ subroutine readpp
            !tpaw(nt)=.true.
            numeric (nt) = .true.
            newpseudo (nt) = .true.
-           tvanp (nt) = .true.
            open (unit = iunps, file = file_pseudo, status = 'old', &
                  form='formatted', iostat = ios)
            call paw_io (pawset, iunps, "INP") !,ndmx,nchix,lmaxx)
@@ -132,22 +126,18 @@ subroutine readpp
            call deallocate_pseudo_paw (pawset)
            !
         else
-           tvanp (nt) = .false.
            newpseudo (nt) = .false.
            ! 
-           call read_ncpp (iunps, nt, upf)
+           call read_ncpp (iunps, nt, upf(nt))
            !
-           CALL set_pseudo_upf (nt, upf)    ! TEMP
-           CALL deallocate_pseudo_upf( upf )! TEMP
+           CALL set_pseudo_upf (nt, upf(nt))    ! TEMP
            !
         endif
+        ! for compatibility with old formats - maybe obsolete?
+        lmax(nt) = max ( lmax(nt), &
+                         MAXVAL( upf(nt)%lll( 1:upf(nt)%nbeta ) ) )
      endif
      close (iunps)
-     !
-     ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
-     ! ... is set equal to Zp = pseudo-charge of the pseudopotential
-     !
-     zv(nt) = zp(nt)
      !
      if (nt == 1) then
         iexch_ = get_iexch()

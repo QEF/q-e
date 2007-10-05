@@ -136,13 +136,12 @@ SUBROUTINE check_types_order( )
   USE ions_base, ONLY: nsp
   IMPLICIT NONE
   INTEGER :: is, il
-  LOGICAL :: tvanp
   !
   !   With Vanderbilt, only UPF are allowed
   !
   IF( ANY( upf(1:nsp)%tvanp  ) ) THEN
-    CALL errore( &
-           ' check_types_order ', ' vanderbilt pseudo, not yet implemented in FPMD ', 1 )
+    CALL errore( ' check_types_order ', &
+                 ' vanderbilt pseudo, not yet implemented in FPMD ', 1 )
   END IF
   !
   !   non-local species must be ahead the local one,
@@ -194,7 +193,7 @@ END FUNCTION calculate_dx
       USE mp, ONLY: mp_bcast, mp_sum
       USE io_global, ONLY: stdout, ionode, ionode_id
       USE uspp, ONLY : okvan
-      USE uspp_param, ONLY : zp, tvanp, oldvan
+      USE uspp_param, ONLY : upf, oldvan
       USE atom, ONLY: numeric, nlcc, oc, lchi, nchi
       USE cvan, ONLY: nvb
       use ions_base, only: zv, nsp
@@ -364,8 +363,9 @@ END FUNCTION calculate_dx
 
         ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
         ! ... is set equal to Zp = pseudo-charge of the pseudopotential
+        !     (should be moved out from here)
  
-        zv(is) = zp(is)
+        zv(is) = upf(is)%zp
 
         CALL mp_sum( ierr )
         IF( ierr /= 0 ) THEN
@@ -388,7 +388,7 @@ END FUNCTION calculate_dx
           !     check on input ordering: US first, NC later 
           !
           if(is > 1) then
-            if ( (.NOT. tvanp(is-1)) .AND. tvanp(is) ) then
+            if ( (.NOT. upf(is-1)%tvanp) .AND. upf(is)%tvanp ) then
                call errore ('readpp', &
                             'ultrasoft PPs must precede norm-conserving',is)
             endif
@@ -396,7 +396,7 @@ END FUNCTION calculate_dx
           !
           !     count u-s vanderbilt species 
           !
-          if (tvanp(is)) nvb=nvb+1
+          if (upf(is)%tvanp) nvb=nvb+1
           !
         END IF
 
@@ -436,7 +436,7 @@ END FUNCTION calculate_dx
       END IF
 
       okvan = ( nvb > 0 )
-
+      !
       RETURN
       END SUBROUTINE readpp
 

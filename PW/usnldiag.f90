@@ -18,7 +18,7 @@ subroutine usnldiag (h_diag, s_diag)
   USE wvfct, ONLY: npw, npwx
   USE lsda_mod, ONLY: current_spin 
   USE uspp,  ONLY: deeq, vkb, qq, qq_so, deeq_nc
-  USE uspp_param, ONLY: nh, tvanp, newpseudo
+  USE uspp_param, ONLY: upf, nh, newpseudo
   USE spin_orb, ONLY: lspinorb
   USE noncollin_module, ONLY: noncolin, npol
   !
@@ -69,7 +69,7 @@ subroutine usnldiag (h_diag, s_diag)
                     s_diag (ig,ipol) = s_diag (ig,ipol) + ps2(ipol) * ar
                  enddo
               enddo
-              if (tvanp (nt) .or.newpseudo (nt) ) then
+              if ( upf(nt)%tvanp .or.newpseudo (nt) ) then
                  do jh = 1, nh (nt)
                     if (jh.ne.ih) then
                        jkb = ijkb0 + jh

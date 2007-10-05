@@ -21,7 +21,7 @@ SUBROUTINE force_us( forcenl )
   USE klist,                ONLY : nks, xk, ngk
   USE gvect,                ONLY : g
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, qq_so, deeq_nc
-  USE uspp_param,           ONLY : nh, tvanp, newpseudo
+  USE uspp_param,           ONLY : upf, nh, newpseudo
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE symme,                ONLY : irt, s, nsym
@@ -122,7 +122,7 @@ SUBROUTINE force_us( forcenl )
                          END DO
                       END DO
                       !
-                      IF ( tvanp(nt) .OR. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih. 
                          ! ... We use here the symmetry in the interchange 
@@ -306,7 +306,7 @@ SUBROUTINE force_us( forcenl )
                          END IF
                       END DO
                       !
-                      IF ( tvanp(nt) .OR. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih. 
                          ! ... We use here the symmetry in the interchange 

@@ -38,7 +38,6 @@ MODULE parameters
   INTEGER, PARAMETER :: natx    = 5000       ! maximum number of atoms
   INTEGER, PARAMETER :: nbndxx  = 10000      ! maximum number of electronic states
   INTEGER, PARAMETER :: npkx    = npk        ! maximum number of K points
-  INTEGER, PARAMETER :: ncnsx   = 101        ! maximum number of constraints
   INTEGER, PARAMETER :: nspinx  = 2          ! maximum number of spinors
 
   INTEGER, PARAMETER :: nhclm   = 4          ! maximum number NH chain length, 

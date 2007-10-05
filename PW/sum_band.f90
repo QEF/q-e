@@ -32,7 +32,7 @@ SUBROUTINE sum_band()
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
-  USE uspp_param,           ONLY : nh, tvanp, nhm
+  USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
@@ -343,7 +343,7 @@ SUBROUTINE sum_band()
              !
              DO np = 1, ntyp
                 !
-                IF ( tvanp(np) ) THEN
+                IF ( upf(np)%tvanp ) THEN
                    !
                    DO na = 1, nat
                       !
@@ -572,7 +572,7 @@ SUBROUTINE sum_band()
              !
              DO np = 1, ntyp
                 !
-                IF ( tvanp(np) ) THEN
+                IF ( upf(np)%tvanp ) THEN
                    !
                    DO na = 1, nat
                       !
@@ -665,7 +665,7 @@ SUBROUTINE sum_band()
 
        IF (noncolin.and.okvan) THEN
           DO np = 1, ntyp
-             IF ( tvanp(np) ) THEN
+             IF ( upf(np)%tvanp ) THEN
                 DO na = 1, nat
                    IF (ityp(na)==np) THEN
                       IF (so(np)) THEN

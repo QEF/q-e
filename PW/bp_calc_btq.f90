@@ -18,63 +18,56 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY: omega
   USE constants, ONLY: fpi
-  USE uspp_param, ONLY: lmaxq, qfunc, qfcoef, nqf, rinner, lll, &
-       nbeta, nbetam, kkbeta, tvanp
+  USE uspp_param, ONLY: upf, nbetam, lmaxq
   !
   IMPLICIT NONE
   !
   REAL(DP)  :: ql, qr_k(nbetam,nbetam,lmaxq,ntyp)
   INTEGER :: idbes
   !
-  INTEGER :: msh_bp, i, np, l, ilmin, ilmax, iv, jv, ijv
+  INTEGER :: i, np, l, ilmin, ilmax, iv, jv, ijv
   REAL(DP) :: qrk
   REAL(DP), ALLOCATABLE :: jl(:), aux(:)
   !
   DO np=1,ntyp
-     IF (tvanp(np)) THEN
-        msh_bp=kkbeta(np)
-        ALLOCATE ( jl(msh_bp), aux(msh_bp) ) 
-        DO iv =1, nbeta(np)
-           DO jv =iv, nbeta(np)
+     !
+     IF ( upf(np)%tvanp ) THEN
+        !
+        ALLOCATE ( jl(upf(np)%kkbeta), aux(upf(np)%kkbeta) ) 
+        DO iv =1, upf(np)%nbeta
+           DO jv =iv, upf(np)%nbeta
               ijv = jv * (jv-1) / 2 + iv
-              ilmin = iabs(lll(iv,np)-lll(jv,np))
-              ilmax = iabs(lll(iv,np)+lll(jv,np))
-              !       only need to calculate for for lmin,lmin+2 ...lmax-2,lmax
+              ilmin = abs ( upf(np)%lll(iv) - upf(np)%lll(jv) )
+              ilmax =       upf(np)%lll(iv) + upf(np)%lll(jv)
+              !       only need to calculate for l=lmin,lmin+2 ...lmax-2,lmax
               DO l = ilmin,ilmax,2
                  aux(:) = 0.0_DP
-                 DO i =  msh_bp,2,-1
-                    IF (rgrid(np)%r(i) .LT. rinner(l+1,np)) GOTO 100
-                    aux(i) = qfunc(i,ijv,np)
+                 DO i =  upf(np)%kkbeta,2,-1
+                    IF (rgrid(np)%r(i) .LT. upf(np)%rinner(l+1)) GOTO 100
+                    !!! aux(i) = qfunc(i,ijv,np) TEMP
+                    aux(i) = upf(np)%qfunc(i,iv,jv)
                  ENDDO
-100              CALL setqf(qfcoef(1,l+1,iv,jv,np),aux(1),rgrid(np)%r &
-                      ,nqf(np),l,i)
+100              CALL setqf ( upf(np)%qfcoef(1,l+1,iv,jv), aux(1), &
+                              rgrid(np)%r, upf(np)%nqf, l, i )
 
-                 IF (idbes .EQ. 1) THEN
+                 IF (idbes == 1) THEN
                     !
-                    CALL sph_dbes( msh_bp, rgrid(np)%r, ql, l, jl )
-                    !
-                    ! ... this is the old call
-                    !
-                    ! CALL dbess( ql, l+1, msh_bp, r(1,np), jl )
+                    CALL sph_dbes( upf(np)%kkbeta, rgrid(np)%r, ql, l, jl )
                     !
                  ELSE
                     !
-                    CALL sph_bes( msh_bp, rgrid(np)%r, ql, l, jl )
-                    !
-                    ! ... this is the old call
-                    !
-                    ! CALL bess( ql, l+1, msh_bp, r(1,np), jl )
+                    CALL sph_bes( upf(np)%kkbeta, rgrid(np)%r, ql, l, jl )
                     !
                  ENDIF
 
                  ! jl is the Bessel function (or its derivative) calculated at ql
                  ! now integrate qfunc*jl*r^2 = Bessel transform of qfunc
 
-                 DO i=1, msh_bp
+                 DO i=1, upf(np)%kkbeta
                     aux(i) = jl(i)*aux(i)
                  ENDDO
                  !                        if (tlog(np)) then
-                 CALL radlg1(msh_bp,aux,rgrid(np)%rab,qrk) 
+                 CALL radlg1(upf(np)%kkbeta,aux,rgrid(np)%rab,qrk) 
 
                  qr_k(iv,jv,l+1,np) = qrk*fpi/omega
                  qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)

@@ -167,8 +167,7 @@ CONTAINS
     USE lsda_mod,   ONLY : nspin
     USE us,         ONLY : nqxq, dq, nqx, tab, qrad
     USE uspp,       ONLY : qq, qq_so
-    USE uspp_param, ONLY : lmaxq, betar, qfunc, qfcoef, rinner, nbeta, &
-         kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, nhm, tvanp
+    USE uspp_param, ONLY : upf, lmaxq, nh, nhm
     USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef
     !
     USE grid_paw_variables, ONLY: tpawp, pfunc, ptfunc, pp, ppt, prad, ptrad, &
@@ -236,17 +235,17 @@ CONTAINS
        CALL divide (nqxq, startq, lastq)
        DO nt = 1, ntyp
           IF (tpawp (nt) ) THEN
-             DO l = 0, nqlc (nt) - 1
+             DO l = 0, upf(nt)%nqlc - 1
                 !
                 ! for each nb,mb,l we build the total P_l(|r|) function.
                 ! l is the total (combined) angular momentum and 
                 ! the arrays have dimensions 1..l+1
                 !
-                DO nb = 1, nbeta (nt)
-                   DO mb = nb, nbeta (nt)
-                      IF ( (l >= ABS (lll(nb,nt) - lll(mb,nt) ) ) .AND. &
-                           (l <= lll(nb,nt) + lll(mb,nt) )        .AND. &
-                           (MOD (l + lll(nb,nt) + lll(mb,nt),2) == 0) ) THEN
+                DO nb = 1, upf(nt)%nbeta
+                   DO mb = nb, upf(nt)%nbeta
+                      IF ( (l >= ABS (upf(nt)%lll(nb) - upf(nt)%lll(mb) ) ) .AND. &
+                           (l <= upf(nt)%lll(nb) + upf(nt)%lll(mb) )        .AND. &
+                           (MOD (l + upf(nt)%lll(nb) + upf(nt)%lll(mb),2) == 0) ) THEN
                          qtot(1:msh(nt),nb,mb) = pfunc_(1:msh(nt),nb,mb,nt)
                       ENDIF
                    ENDDO ! mb
@@ -260,13 +259,13 @@ CONTAINS
                    !
                    ! and then we integrate with all the Q functions
                    !
-                   DO nb = 1, nbeta (nt)
-                      DO mb = nb, nbeta (nt)
+                   DO nb = 1, upf(nt)%nbeta
+                      DO mb = nb, upf(nt)%nbeta
                          ! the P are symmetric with respect to indices
                          nmb = mb * (mb - 1) / 2 + nb
-                         IF ( (l >= ABS( lll(nb,nt) - lll(mb,nt) ) ) .AND. &
-                              (l <= lll(nb,nt) + lll(mb,nt) )        .AND. &
-                              (MOD (l+lll(nb,nt) + lll(mb,nt), 2) == 0) ) THEN
+                         IF ( (l >= ABS( upf(nt)%lll(nb) - upf(nt)%lll(mb) ) ) .AND. &
+                              (l <= upf(nt)%lll(nb) + upf(nt)%lll(mb) )        .AND. &
+                              (MOD (l+upf(nt)%lll(nb) + upf(nt)%lll(mb), 2) == 0) ) THEN
                             !!kk!! DO ir = 1, kkbeta (nt)
                             DO ir = 1, msh (nt)
                                aux1 (ir) = aux (ir) * qtot (ir, nb, mb)
@@ -321,8 +320,8 @@ CONTAINS
        ! Compute the integrals of pfunc*r^2   (not in init_us_1)
        DO nt = 1, ntyp
           IF (tpawp(nt)) THEN
-             DO nb = 1, nbeta (nt)
-                DO mb = nb, nbeta (nt)
+             DO nb = 1, upf(nt)%nbeta
+                DO mb = nb, upf(nt)%nbeta
                    aux2(1:msh(nt)) = pfunc_(1:msh(nt), nb, mb, nt) * &
                                      rgrid(nt)%r(1:msh(nt)) **2
                    ! add augmentation charge if ps
@@ -339,9 +338,9 @@ CONTAINS
        pmultipole_ = 0.0_DP
        DO nt = 1, ntyp
           IF (tpawp(nt)) THEN
-             DO nb = 1, nbeta (nt)
-                DO mb = nb, nbeta (nt)
-                   DO l = 0, nqlc(nt) - 1
+             DO nb = 1, upf(nt)%nbeta
+                DO mb = nb, upf(nt)%nbeta 
+                   DO l = 0, upf(nt)%nqlc - 1
                       aux2(1:msh(nt))= pfunc_(1:msh(nt), nb, mb, nt) * &
                                        rgrid(nt)%r(1:msh(nt))**l
                       ! add augmentation charge if ps
@@ -468,7 +467,7 @@ CONTAINS
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                      ngm, nl, nlm, gg, g
     USE lsda_mod,             ONLY : nspin
-    USE uspp_param,           ONLY : lmaxq, tvanp, nh, nhm
+    USE uspp_param,           ONLY : lmaxq, nh, nhm
     USE wvfct,                ONLY : gamma_only
     USE wavefunctions_module, ONLY : psic
     !
@@ -1294,8 +1293,7 @@ CONTAINS
                                      g, gg, ngm, gstart, nl
     USE lsda_mod,             ONLY : nspin
     USE scf,                  ONLY : vr, vltot
-    USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan
-    USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
+    USE uspp_param,           ONLY : lmaxq, nh, nhm
     USE wvfct,                ONLY : gamma_only
     USE wavefunctions_module, ONLY : psic
     USE spin_orb,             ONLY : lspinorb

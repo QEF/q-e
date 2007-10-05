@@ -33,7 +33,7 @@ SUBROUTINE newd_g()
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : vr, vltot
   USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan, indv
-  USE uspp_param,           ONLY : lmaxq, nh, nhm, tvanp
+  USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, so, domag
@@ -143,7 +143,7 @@ SUBROUTINE newd_g()
   !
   DO nt = 1, ntyp
      !
-     IF ( tvanp(nt) ) THEN
+     IF ( upf(nt)%tvanp ) THEN
         !
         DO ih = 1, nh(nt)
            !

@@ -23,7 +23,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   USE us,         ONLY : nqx, dq, tab, tab_d2y, spline_ps
   USE splinelib
   USE uspp,       ONLY : nkb, vkb, nhtol, nhtolm, indv
-  USE uspp_param, ONLY : lmaxkb, nbeta, nhm, nh
+  USE uspp_param, ONLY : upf, lmaxkb, nhm, nh
   !
   implicit none
   !
@@ -84,7 +84,7 @@ subroutine init_us_2 (npw_, igk_, q_, vkb_)
   jkb = 0
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
-     do nb = 1, nbeta (nt)
+     do nb = 1, upf(nt)%nbeta
         do ig = 1, npw_
            if (spline_ps) then
              vq(ig) = splint(xdata, tab(:,nb,nt), tab_d2y(:,nb,nt), qg(ig))

@@ -15,8 +15,7 @@ SUBROUTINE compute_qdipol(dpqq)
   USE atom, ONLY: rgrid
   USE ions_base, ONLY: ntyp => nsp
   USE uspp, only: nhtol, nhtolm, indv, nlx, ap
-  USE uspp_param, only: nbrx, nbeta, lll, kkbeta, qfunc, rinner, &
-       qfcoef, nqf, tvanp, nh, nhm
+  USE uspp_param, only: upf, nbetam, nh, nhm
 
   implicit none
 
@@ -26,51 +25,53 @@ SUBROUTINE compute_qdipol(dpqq)
   integer :: nt, l, ir, nb, mb, ijv, ilast, ipol, ih, ivl, jh, jvl, lp, ndm
 
   call start_clock('cmpt_qdipol')
-  ndm = MAXVAL (kkbeta(1:ntyp))
-  allocate (qrad2( nbrx , nbrx, ntyp))    
+  ndm = MAXVAL ( upf(1:ntyp)%kkbeta )
+  allocate (qrad2( nbetam , nbetam, ntyp))    
   allocate (aux( ndm))    
-  allocate (qtot( ndm, nbrx, nbrx))    
+  allocate (qtot( ndm, nbetam, nbetam))    
 
   qrad2(:,:,:)=0.d0
   dpqq=0.d0
 
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if ( upf(nt)%tvanp ) then
         l=1
 !
 !   Only l=1 terms enter in the dipole of Q
 !
-        do nb = 1, nbeta (nt)
-           do mb = nb, nbeta (nt)
+        do nb = 1, upf(nt)%nbeta
+           do mb = nb, upf(nt)%nbeta
               ijv = mb * (mb-1) /2 + nb
-              if ((l.ge.abs(lll(nb,nt)-lll(mb,nt))) .and. &
-                   (l.le.lll(nb,nt)+lll(mb,nt))      .and. &
-                   (mod (l+lll(nb,nt)+lll(mb,nt),2) .eq.0) ) then
-                 do ir = 1, kkbeta (nt)
-                    if (rgrid(nt)%r(ir).ge.rinner(l+1, nt)) then
-                       qtot(ir, nb, mb)=qfunc(ir,ijv,nt)
+              if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
+                   ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
+                   (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
+                 do ir = 1, upf(nt)%kkbeta
+                    if (rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1)) then
+                       ! qtot(ir, nb, mb)=qfunc(ir,ijv,nt) TEMP
+                       qtot(ir, nb, mb)=upf(nt)%qfunc(ir,nb,mb)
                     else
                        ilast = ir
                     endif
                  enddo
-                 if (rinner(l+1, nt).gt.0.d0) &
-                      call setqf(qfcoef (1, l+1, nb, mb, nt), &
-                      qtot(1,nb,mb), rgrid(nt)%r, nqf(nt),l,ilast)
+                 if ( upf(nt)%rinner(l+1) > 0.0_dp) &
+                      call setqf( upf(nt)%qfcoef (1, l+1, nb, mb), &
+                      qtot(1,nb,mb), rgrid(nt)%r, upf(nt)%nqf, l, ilast)
               endif
            enddo
         enddo
-        do nb=1, nbeta(nt)
+        do nb=1, upf(nt)%nbeta
            !
            !    the Q are symmetric with respect to indices
            !
-           do mb=nb, nbeta(nt)
-              if ( (l.ge.abs(lll(nb,nt)-lll(mb,nt) ) )    .and.  &
-                   (l.le.lll(nb,nt) + lll(mb,nt) )        .and.  &
-                   (mod(l+lll(nb,nt)+lll(mb,nt), 2).eq.0) ) then
-                 do ir = 1, kkbeta (nt)
+           do mb=nb, upf(nt)%nbeta
+              if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
+                   ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
+                   (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
+                 do ir = 1, upf(nt)%kkbeta
                     aux(ir)=rgrid(nt)%r(ir)*qtot(ir, nb, mb)
                  enddo
-                 call simpson (kkbeta(nt),aux,rgrid(nt)%rab,qrad2(nb,mb,nt))
+                 call simpson ( upf(nt)%kkbeta, aux, rgrid(nt)%rab, &
+                                qrad2(nb,mb,nt) )
               endif
            enddo
         enddo
@@ -87,7 +88,7 @@ SUBROUTINE compute_qdipol(dpqq)
         fact=-fact
      endif
      do nt = 1,ntyp
-        if (tvanp(nt)) then
+        if ( upf(nt)%tvanp ) then
            do ih = 1, nh(nt)
               ivl = nhtolm(ih, nt)
               mb = indv(ih, nt)
@@ -96,8 +97,8 @@ SUBROUTINE compute_qdipol(dpqq)
                  nb=indv(jh,nt)
                  if (ivl > nlx) call errore('compute_qdipol',' ivl > nlx', ivl)
                  if (jvl > nlx) call errore('compute_qdipol',' jvl > nlx', jvl)
-                 if (nb > nbrx) call errore('compute_qdipol',' nb > nbrx', nb)
-                 if (mb > nbrx) call errore('compute_qdipol',' mb > nbrx', mb)
+                 if (nb > nbetam) call errore('compute_qdipol',' nb > nbrx', nb)
+                 if (mb > nbetam) call errore('compute_qdipol',' mb > nbrx', mb)
                  if (mb > nb) call errore('compute_qdipol',' mb > nb', 1)
                  dpqq(ih,jh,ipol,nt)=fact*ap(lp,ivl,jvl)*qrad2(mb,nb,nt)
                  dpqq(jh,ih,ipol,nt)=dpqq(ih,jh,ipol,nt)

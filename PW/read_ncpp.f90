@@ -146,19 +146,20 @@ subroutine read_ncpp (iunps, np, upf)
      upf%r(ir) = exp (x) / upf%zmesh 
      upf%rab(ir) = upf%dx * upf%r(ir)
   enddo
-  ALLOCATE ( upf%kkbeta(upf%nbeta) )
   do ir = 1, upf%mesh
      if ( upf%r(ir) > rcut) then
-        upf%kkbeta(:) = ir
+        upf%kkbeta = ir
         go to 5
      end if
   end do
-  upf%kkbeta(:) = upf%mesh
+  upf%kkbeta = upf%mesh
   !
   ! ... force kkbeta to be odd for simpson integration (obsolete?)
   !
-5 upf%kkbeta(:) = 2 * ( ( upf%kkbeta(:) + 1 ) / 2) - 1
+5 upf%kkbeta = 2 * ( ( upf%kkbeta + 1 ) / 2) - 1
   !
+  ALLOCATE ( upf%kbeta(upf%nbeta) )
+  upf%kbeta(:) = upf%kkbeta
   ALLOCATE ( upf%vloc(upf%mesh) )
   upf%vloc (:) = 0.d0
   if (.not. numeric(np)) then
@@ -169,7 +170,7 @@ subroutine read_ncpp (iunps, np, upf)
           CALL bachel( alps(1,0,np), aps(1,0,np), 1, lmax(np) )
      !
      do i = 1, nlc (np)
-        do ir = 1, upf%kkbeta(1)
+        do ir = 1, upf%kkbeta
            upf%vloc (ir) = upf%vloc (ir) - upf%zp * e2 * cc (i, np) * &
                erf ( sqrt (alpc(i,np)) * upf%r(ir) ) / upf%r(ir)
         end do
@@ -217,14 +218,14 @@ subroutine read_ncpp (iunps, np, upf)
   do l = 0, lmax (np)
      if (l /= lloc (np) ) then
         nb = nb + 1
-        ! betar is used here as work space
-        do ir = 1, upf%kkbeta(1)
+        ! upf%beta is used here as work space
+        do ir = 1, upf%kkbeta
            upf%beta (ir, nb) = upf%chi(ir, l+1) **2 * vnl(ir, l)
         end do
-        call simpson (upf%kkbeta (1), upf%beta (1, nb), upf%rab, vll )
+        call simpson (upf%kkbeta, upf%beta (1, nb), upf%rab, vll )
         upf%dion (nb, nb) = 1.d0 / vll
         ! upf%beta stores projectors  |beta(r)> = |V_nl(r)phi(r)>
-        do ir = 1, upf%kkbeta (1)
+        do ir = 1, upf%kkbeta
            upf%beta (ir, nb) = vnl (ir, l) * upf%chi (ir, l + 1)
         enddo
         upf%lll (nb) = l

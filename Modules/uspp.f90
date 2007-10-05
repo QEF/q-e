@@ -12,9 +12,12 @@ MODULE uspp_param
   USE kinds,        ONLY : DP
   USE parameters,   ONLY : lqmax, nbrx, npsx, nqfx
   USE radial_grids, ONLY: ndmx
+  USE pseudo_types, ONLY: pseudo_upf
   !
   SAVE
   !
+  TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
+
   CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
 
   REAL(DP) :: &

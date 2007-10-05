@@ -42,7 +42,7 @@ subroutine addusdens_g
   USE noncollin_module,     ONLY : noncolin
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : becsum, okvan
-  USE uspp_param,           ONLY : lmaxq, tvanp, nh
+  USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
@@ -81,7 +81,7 @@ subroutine addusdens_g
      qmod (ig) = sqrt (gg (ig) )
   enddo
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if ( upf(nt)%tvanp ) then
         ijh = 0
         do ih = 1, nh (nt)
            do jh = ih, nh (nt)

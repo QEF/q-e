@@ -15,7 +15,7 @@ subroutine tabd (nt, occ_loc)
   ! (PPs usually are built on non physical configurations)
   !
   USE kinds, ONLY: DP
-  USE uspp_param, ONLY: psd
+  USE uspp_param, ONLY: upf
   implicit none
   real(DP) :: occ_loc
   ! output: the total number of d electrons
@@ -24,29 +24,29 @@ subroutine tabd (nt, occ_loc)
   !
   ! TRANSITION METALS
   !
-  if (psd (nt) .eq.'Mn') then
+  if (upf(nt)%psd .eq.'Mn') then
      occ_loc = 5.d0
-  elseif (psd (nt) .eq.'Fe') then
+  elseif (upf(nt)%psd .eq.'Fe') then
      occ_loc = 6.d0
-  elseif (psd (nt) .eq.'Co') then
+  elseif (upf(nt)%psd .eq.'Co') then
      occ_loc = 7.d0
-  elseif (psd (nt) .eq.'Ni') then
+  elseif (upf(nt)%psd .eq.'Ni') then
      occ_loc = 8.d0
-  elseif (psd (nt) .eq.'Cu') then
+  elseif (upf(nt)%psd .eq.'Cu') then
      occ_loc = 10.d0
      !
      ! RARE EARTHS
      !
-  elseif (psd (nt) .eq.'Ce') then
+  elseif (upf(nt)%psd .eq.'Ce') then
      occ_loc = 2.d0
      !
      ! OTHER ELEMENTS
      !
-  elseif (psd (nt) .eq.'C') then
+  elseif (upf(nt)%psd .eq.'C') then
      occ_loc = 2.d0
-  elseif (psd (nt) .eq.'O') then
+  elseif (upf(nt)%psd .eq.'O') then
      occ_loc = 4.d0
-  elseif (psd (nt) .eq.'H') then
+  elseif (upf(nt)%psd .eq.'H') then
      occ_loc = 1.d0
   else
      occ_loc = 0.d0

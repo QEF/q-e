@@ -27,7 +27,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   USE scf,      ONLY : vrs  
   USE gvect
   USE uspp
-  USE uspp_param
+  USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
   USE bp
   USE basis
   USE klist
@@ -68,7 +68,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
      jkb_bp=0
       DO nt=1,ntyp
          DO na=1,nat
-            IF (ityp(na).eq.nt) THEN
+            IF (ityp(na)== nt) THEN
                DO i=1, nh(nt)
                   jkb_bp=jkb_bp+1
                   nkbtona(jkb_bp) = na
@@ -105,7 +105,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
               jkb1 = jkb - nhjkb
               DO j = 1,nhjkbm
                  pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &!bec_evcel is relative to ik
-                      *qqq(nhjkb,j,np)
+                      *upf(np)%qqq(nhjkb,j)
               ENDDO
            ENDDO
            sca= sca + pref
@@ -143,14 +143,14 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
         ijkb0 = 0
         do nt = 1, ntyp
            do na = 1, nat
-              if (ityp (na) .eq.nt) then
+              if (ityp (na) == nt) then
                  do ibnd = 1, nbnd
                     do jh = 1, nh (nt)
                        jkb = ijkb0 + jh
                        do ih = 1, nh (nt)
                           ikb = ijkb0 + ih
                           ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                               qqq(ih,jh,ityp(na))* bec_evcel(jkb,ibnd)
+                               upf(nt)%qqq(ih,jh)* bec_evcel(jkb,ibnd)
                        enddo
                     enddo
                  enddo

@@ -1,5 +1,5 @@
-!
-! Copyright (C) 2001 PWSCF group
+
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -39,9 +39,7 @@ subroutine init_us_1
   USE splinelib
   USE uspp,       ONLY : nhtol, nhtoj, nhtolm, dvan, qq, indv, ap, aainit, &
                          qq_so, dvan_so, okvan
-  USE uspp_param, ONLY : lmaxq, dion, betar, qfunc, qfcoef, rinner, nbeta, &
-                         kkbeta, nqf, nqlc, lll, jjj, lmaxkb, nh, tvanp, &
-                         nbetam, nhm
+  USE uspp_param, ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
 !! NEW-AUG !!
   USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, aug
@@ -80,7 +78,7 @@ subroutine init_us_1
   !
   !    Initialization of the variables
   !
-  ndm = MAXVAL (kkbeta(1:ntyp))
+  ndm = MAXVAL ( upf(:)%kkbeta )
   allocate (aux ( ndm))    
   allocate (aux1( ndm))    
   allocate (besr( ndm))    
@@ -94,8 +92,8 @@ subroutine init_us_1
   ! l of the beta functions but includes the l of the local potential
   !
   do nt=1,ntyp
-     nqlc(nt) = MIN ( nqlc(nt), lmaxq )
-     IF ( nqlc(nt) < 0 )  nqlc(nt) = 0
+     upf(nt)%nqlc = MIN ( upf(nt)%nqlc, lmaxq )
+     IF ( upf(nt)%nqlc < 0 )  upf(nt)%nqlc = 0
   end do
 
   prefr = fpi / omega
@@ -132,17 +130,26 @@ subroutine init_us_1
   !
   do nt = 1, ntyp
      ih = 1
-     do nb = 1, nbeta (nt)
-        l = lll (nb, nt)
-        j = jjj (nb, nt)
+     do nb = 1, upf(nt)%nbeta
+        l = upf(nt)%lll (nb)
         do m = 1, 2 * l + 1
            nhtol (ih, nt) = l
            nhtolm(ih, nt) = l*l+m
-           nhtoj (ih, nt) = j
            indv  (ih, nt) = nb
            ih = ih + 1
         enddo
      enddo
+     if ( so(nt) ) then
+        ih = 1
+        do nb = 1, upf(nt)%nbeta
+           l = upf(nt)%lll (nb)
+           j = upf(nt)%jjj (nb)
+           do m = 1, 2 * l + 1
+              nhtoj (ih, nt) = j
+              ih = ih + 1
+           enddo
+        enddo
+     endif
      !
      !    From now on the only difference between KB and US pseudopotentials
      !    is in the presence of the q and Q functions.
@@ -163,7 +170,7 @@ subroutine init_us_1
             jk = nhtoj(kh, nt)
             mk = nhtolm(kh, nt)-lk*lk
             vk = indv (kh, nt)
-            if (li.eq.lk.and.abs(ji-jk).lt.1.d-7) then
+            if (li == lk .and. abs(ji-jk) < 1.d-7) then
               do is1=1,2
                 do is2=1,2
                   coeff = (0.d0, 0.d0)
@@ -190,7 +197,7 @@ subroutine init_us_1
               do is1=1,2
                  do is2=1,2
                     ijs=ijs+1
-                    dvan_so(ih,jh,ijs,nt) = dion(vi,vj,nt) * &
+                    dvan_so(ih,jh,ijs,nt) = upf(nt)%dion(vi,vj) * &
                                             fcoef(ih,jh,is1,is2,nt)
                     if (vi.ne.vj) fcoef(ih,jh,is1,is2,nt)=(0.d0,0.d0)
                  enddo
@@ -205,10 +212,10 @@ subroutine init_us_1
               ir = indv (ih, nt)
               is = indv (jh, nt)
               if (lspinorb) then
-                 dvan_so (ih, jh, 1, nt) = dion (ir, is, nt)
-                 dvan_so (ih, jh, 4, nt) = dion (ir, is, nt)
+                 dvan_so (ih, jh, 1, nt) = upf(nt)%dion (ir, is)
+                 dvan_so (ih, jh, 4, nt) = upf(nt)%dion (ir, is)
               else
-                 dvan (ih, jh, nt) = dion (ir, is, nt)
+                 dvan (ih, jh, nt) = upf(nt)%dion (ir, is)
               endif
             endif
           enddo
@@ -224,35 +231,37 @@ subroutine init_us_1
   !   Q functions.
   !   
   call divide (nqxq, startq, lastq)
+  !
   do nt = 1, ntyp
-     !
-     if (tvanp (nt) ) then
-        do l = 0, nqlc (nt) - 1
+     if ( upf(nt)%tvanp ) then
+        do l = 0, upf(nt)%nqlc - 1
            !
            !     first we build for each nb,mb,l the total Q(|r|) function
            !     note that l is the true (combined) angular momentum
            !     and that the arrays have dimensions 0..l (no more 1..l+1)
            !
-           do nb = 1, nbeta (nt)
-              do mb = nb, nbeta (nt)
+           do nb = 1, upf(nt)%nbeta
+              do mb = nb, upf(nt)%nbeta
                  ijv = mb * (mb-1) / 2 + nb
                  paw:& ! in PAW formalism aug. charge is computed elsewhere
                  if (tpawp(nt)) then
-                    qtot(1:kkbeta(nt),ijv) = aug(nt)%fun(1:kkbeta(nt),nb,mb,l)
+                    qtot(1:upf(nt)%kkbeta,ijv) = aug(nt)%fun(1:upf(nt)%kkbeta,nb,mb,l)
                  else
-                    if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
-                        (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
-                        (mod (l + lll (nb, nt) + lll (mb, nt), 2) == 0) ) then
-                        do ir = 1, kkbeta (nt)
-                           if (rgrid(nt)%r(ir) >= rinner (l + 1, nt) ) then
-                               qtot (ir, ijv) = qfunc (ir, ijv, nt)
+                  if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
+                       ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
+                       (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
+                        do ir = 1, upf(nt)%kkbeta
+                           if (rgrid(nt)%r(ir) >=upf(nt)%rinner (l+1) ) then
+                               ! qtot (ir, ijv) = qfunc (ir, ijv, nt) TEMP
+                               qtot (ir, ijv) = upf(nt)%qfunc(ir,nb,mb)
                            else
                                ilast = ir
                            endif
                         enddo
-                        if (rinner (l + 1, nt) > 0.d0) &
-                            call setqf(qfcoef (1, l+1, nb, mb, nt), &
-                                       qtot(1,ijv), rgrid(nt)%r, nqf(nt),l,ilast)
+                        if ( upf(nt)%rinner (l+1) > 0.0_dp) &
+                            call setqf(upf(nt)%qfcoef (1, l+1, nb, mb), &
+                                       qtot(1,ijv), rgrid(nt)%r, upf(nt)%nqf, &
+                                       l, ilast)
                     endif
                  endif paw
               enddo
@@ -262,24 +271,24 @@ subroutine init_us_1
            !
            do iq = startq, lastq
               q = (iq - 1) * dq * tpiba
-              call sph_bes (kkbeta (nt), rgrid(nt)%r, q, l, aux)
+              call sph_bes ( upf(nt)%kkbeta, rgrid(nt)%r, q, l, aux)
               !
               !   and then we integrate with all the Q functions
               !
-              do nb = 1, nbeta (nt)
+              do nb = 1, upf(nt)%nbeta
                  !
                  !    the Q are symmetric with respect to indices
                  !
-                 do mb = nb, nbeta (nt)
+                 do mb = nb, upf(nt)%nbeta
                     ijv = mb * (mb - 1) / 2 + nb
-                    if ( (l >= abs (lll (nb, nt) - lll (mb, nt) ) ) .and. &
-                         (l <= lll (nb, nt) + lll (mb, nt) )        .and. &
-                         (mod (l + lll(nb, nt) + lll(mb, nt), 2) == 0) &
-                         .or. tpawp(nt) ) then
-                       do ir = 1, kkbeta (nt)
+                    if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
+                         ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
+                         (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) .or.&
+                          tpawp(nt) ) then
+                       do ir = 1, upf(nt)%kkbeta
                           aux1 (ir) = aux (ir) * qtot (ir, ijv)
                        enddo
-                       call simpson (kkbeta(nt), aux1, rgrid(nt)%rab, &
+                       call simpson ( upf(nt)%kkbeta, aux1, rgrid(nt)%rab, &
                                      qrad(iq,ijv,l + 1, nt) )
                     endif
                  enddo
@@ -305,7 +314,7 @@ subroutine init_us_1
 #endif
   call ylmr2 (lmaxq * lmaxq, 1, g, gg, ylmk0)
   do nt = 1, ntyp
-    if (tvanp (nt) ) then
+    if ( upf(nt)%tvanp ) then
       if (so(nt)) then
         do ih=1,nh(nt)
           do jh=1,nh(nt)
@@ -361,20 +370,19 @@ subroutine init_us_1
   call divide (nqx, startq, lastq)
   tab (:,:,:) = 0.d0
   do nt = 1, ntyp
-     do nb = 1, nbeta (nt)
-        l = lll (nb, nt)
+     do nb = 1, upf(nt)%nbeta
+        l = upf(nt)%lll (nb)
         do iq = startq, lastq
            qi = (iq - 1) * dq
-           call sph_bes (kkbeta (nt), rgrid(nt)%r, qi, l, besr)
-           do ir = 1, kkbeta (nt)
-              aux (ir) = betar (ir, nb, nt) * besr (ir) * rgrid(nt)%r(ir)
+           call sph_bes (upf(nt)%kkbeta, rgrid(nt)%r, qi, l, besr)
+           do ir = 1, upf(nt)%kkbeta
+              aux (ir) = upf(nt)%beta (ir, nb) * besr (ir) * rgrid(nt)%r(ir)
            enddo
-           call simpson (kkbeta (nt), aux, rgrid(nt)%rab, vqint)
+           call simpson (upf(nt)%kkbeta, aux, rgrid(nt)%rab, vqint)
            tab (iq, nb, nt) = vqint * pref
         enddo
      enddo
   enddo
-
 
 #ifdef __PARA
   call reduce (nqx * nbetam * ntyp, tab)
@@ -382,18 +390,17 @@ subroutine init_us_1
 
   ! initialize spline interpolation
   if (spline_ps) then
-  allocate( xdata(nqx) )
-  do iq = 1, nqx
-    xdata(iq) = (iq - 1) * dq
-  enddo
-  do nt = 1, ntyp
-     do nb = 1, nbeta (nt)
-        l = lll (nb, nt)
-        d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
-        call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
+     allocate( xdata(nqx) )
+     do iq = 1, nqx
+        xdata(iq) = (iq - 1) * dq
      enddo
-  enddo
-  deallocate(xdata)
+     do nt = 1, ntyp
+        do nb = 1, upf(nt)%nbeta 
+           d1 = (tab(2,nb,nt) - tab(1,nb,nt)) / dq
+           call spline(xdata, tab(:,nb,nt), 0.d0, d1, tab_d2y(:,nb,nt))
+        enddo
+     enddo
+     deallocate(xdata)
   endif
 
   deallocate (ylmk0)

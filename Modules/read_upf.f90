@@ -340,7 +340,7 @@ subroutine read_pseudo_nl (upf, iunps)
   if ( upf%nbeta == 0) then
      upf%nqf = 0
      upf%nqlc= 0
-     ALLOCATE( upf%kkbeta( 1 ) )
+     ALLOCATE( upf%kbeta( 1 ) )
      ALLOCATE( upf%lll( 1 ) )
      ALLOCATE( upf%beta( 0:upf%mesh, 1 ) )
      ALLOCATE( upf%dion( 1, 1 ) )
@@ -353,7 +353,7 @@ subroutine read_pseudo_nl (upf, iunps)
      ALLOCATE( upf%els_beta( 1 ) )
      return
   end if
-  ALLOCATE( upf%kkbeta( upf%nbeta ) )
+  ALLOCATE( upf%kbeta( upf%nbeta ) )
   ALLOCATE( upf%lll( upf%nbeta ) )
   ALLOCATE( upf%beta( 0:upf%mesh, upf%nbeta ) )
   ALLOCATE( upf%dion( upf%nbeta, upf%nbeta ) )
@@ -373,7 +373,8 @@ subroutine read_pseudo_nl (upf, iunps)
      call scan_begin (iunps, "BETA", .false.)  
      read (iunps, *, err = 100, end = 100) idum, upf%lll(nb), dummy
      read (iunps, *, err = 100, end = 100) ikk  
-     upf%kkbeta(nb) = ikk
+     upf%kbeta(nb) = ikk
+     upf%kkbeta = MAX ( upf%kkbeta, upf%kbeta(nb) )  
      read (iunps, *, err = 100, end = 100) (upf%beta(ir,nb), ir=1,ikk)
 
      read (iunps, *, err=200,iostat=ios) upf%rcut(nb), upf%rcutus(nb)
