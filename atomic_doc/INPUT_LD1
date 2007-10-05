@@ -18,7 +18,7 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
               specify either atom OR zed, not both
 
       xmin  = radial grid parameter (default: -7.0 if iswitch>1 or rel=0, 
-                                              -10.0 otherwise)
+                                              -8.0 otherwise)
       dx    =   "    "   "          (default: 0.0125 if iswitch>1,
                                               0.008 otherwise)
               the radial grid is: r(i+1) = exp(xmin+i*dx)/zed  a.u.
@@ -332,10 +332,8 @@ can be reproduced with
    
    isic=0
    latt=0
-   xmin=-12.0
+   cau_fact=137.0359895
    dft='sla-vwn' for the LDA case
-   dft='pw91'    for the PW91-GGA case
-   dft='pbe'     for the PBE case
 
 The NIST results in PRB 55, 191 (1997): 
 
@@ -350,7 +348,6 @@ dft='sla-vwn'
 
 RLDA
 rel=2
-xmin=-12
 rel_dist='average'
 dft='rxc-vwn'
 

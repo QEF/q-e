@@ -276,7 +276,7 @@ subroutine ld1_readin
   endif
   if (xmin==0.0_DP) then
      if (iswitch==1.and..not.vdw.and.rel>0) then
-        xmin=-10.0_DP
+        xmin=-8.0_DP
      else
         xmin=-7.0_DP
      endif

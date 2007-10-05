@@ -40,7 +40,7 @@ subroutine dirsol(idim1,mesh,ncur,lcur,jcur,it,e0,thresh,grid,snl,ruae,nstop)
 use io_global, only : stdout
 use kinds, only : DP
 use radial_grids, only: radial_grid_type
-use ld1inc, only : cau_fact
+use ld1inc, only : cau_fact, zed
 implicit none
 integer :: idim1 
 type(radial_grid_type),intent(in)::grid
@@ -65,7 +65,7 @@ real(DP) :: tbya, abyt,        &
                  f0,f1,f2,g0,g1,g2, &
                  gout, gpout,       &
                  gin, gpin,         &
-                 factor,            &
+                 factor,gamma0,     &
                  ecur,              &
                  xw, decur, decurp          
 real(DP) :: f(idim1), int_0_inf_dr
@@ -173,28 +173,58 @@ do iter = 1,itmax
 !         if kcur > 0  ig = + kcur , f_0 = 1 , g_0 = 0
 !         if kcur < 0  ig = - kcur , f_0 = 0 , g_1 = 1
 !
-  vzero = ruae(1) 
+!    Uncomment the following instruction if you need this boundary conditions
+!
+!  vzero = ruae(1) 
 !
 !         set f0 and g0
+!  if ( kcur .lt. 0 ) then
+!     ig = - kcur
+!     f0 = 0
+!     g0 = 1
+!  else
+!     ig = kcur
+!     f0 = 1
+!     g0 = 0
+!  endif
+! 
+!  f1 = - (ecur-vzero) * abyt * g0 / DBLE( ig - kcur + 1 )
+!  g1 = (ecur-vzero+tbya**2) * abyt * f0 / DBLE( ig + kcur + 1 )
+!  f2 = - (ecur-vzero) * abyt * g1 / DBLE( ig - kcur + 2 )
+!  g2 = (ecur-vzero+tbya**2) * abyt * f1 / DBLE( ig + kcur + 2 )
+!
+!
+!  do ir = 1,5
+!     yy(ir,1) = grid%r(ir)**ig * ( f0 + grid%r(ir) * ( f1 + grid%r(ir) * f2 ) )
+!     yy(ir,2) = grid%r(ir)**ig * ( g0 + grid%r(ir) * ( g1 + grid%r(ir) * g2 ) )
+!  enddo
+
+!
+!  The following boundary conditions are for the Coulomb nuclear potential
+!  ADC 05/10/2007
+!
+   vzero = ruae(1)+zed*2.0_DP/grid%r(1) 
+!
+  gamma0=sqrt(kcur**2-4.0_DP*(abyt*zed)**2)
   if ( kcur .lt. 0 ) then
      ig = - kcur
-     f0 = 0
-     g0 = 1
+     f0 = (kcur+gamma0)/(2.0_DP*abyt*zed)
+     g0 = 1.0_DP
   else
      ig = kcur
-     f0 = 1
-     g0 = 0
+     f0 = 1.0_DP
+     g0 = (kcur-gamma0)/(2.0_DP*abyt*zed)
   endif
- 
-  f1 = - (ecur-vzero) * abyt * g0 / DBLE( ig - kcur + 1 )
-  g1 = (ecur-vzero+tbya**2) * abyt * f0 / DBLE( ig + kcur + 1 )
-  f2 = - (ecur-vzero) * abyt * g1 / DBLE( ig - kcur + 2 )
-  g2 = (ecur-vzero+tbya**2) * abyt * f1 / DBLE( ig + kcur + 2 )
+! 
+  f1 = - (ecur-vzero) * abyt * g0 / ( gamma0 - kcur + 1.0_DP )
+  g1 = (ecur-vzero+tbya**2) * abyt * f0 / ( gamma0 + kcur + 1.0_DP )
+  f2 = - (ecur-vzero) * abyt * g1 / ( gamma0 - kcur + 2.0_DP )
+  g2 = (ecur-vzero+tbya**2) * abyt * f1 / ( gamma0 + kcur + 2.0_DP )
 !
 !
   do ir = 1,5
-     yy(ir,1) = grid%r(ir)**ig * ( f0 + grid%r(ir) * ( f1 + grid%r(ir) * f2 ) )
-     yy(ir,2) = grid%r(ir)**ig * ( g0 + grid%r(ir) * ( g1 + grid%r(ir) * g2 ) )
+     yy(ir,1) = grid%r(ir)**gamma0*(f0+grid%r(ir)*(f1+grid%r(ir)*f2))
+     yy(ir,2) = grid%r(ir)**gamma0*(g0+grid%r(ir)*(g1+grid%r(ir)*g2))
   enddo
 
 !         ===========================
