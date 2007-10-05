@@ -103,7 +103,7 @@ subroutine read_pseudoupf
   !
   !
   do nb=1,nbeta
-     ikk(nb)=upf%kkbeta(nb)
+     ikk(nb)=upf%kkbeta
      els(nb)=upf%els_beta(nb)
      rcut(nb)=upf%rcut(nb)
      rcutus(nb)=upf%rcutus(nb)
