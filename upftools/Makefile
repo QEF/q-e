@@ -22,8 +22,8 @@ cpmd2upf.x : cpmd2upf.o $(OBJS) $(MODS) $(LIBOBJS)
 fhi2upf.x : fhi2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ fhi2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) $(LIBS)
 
-fpmd2upf.x : fpmd2upf.o $(OBJS) $(LIBOBJS)
-	$(LD) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) $(LIBS)
+fpmd2upf.x : fpmd2upf.o $(OBJS) $(LIBOBJS) ../Modules/radial_grids.o
+	$(LD) $(LDFLAGS) -o $@ fpmd2upf.o $(OBJS) $(LIBOBJS) $(MODS) ../Modules/radial_grids.o $(LIBS)
 
 ncpp2upf.x : ncpp2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) 
 	$(LD) $(LDFLAGS) -o $@ ncpp2upf.o $(OBJS) $(MODS) $(FUNCT) $(LIBOBJS) $(LIBS)

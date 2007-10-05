@@ -61,10 +61,6 @@ TYPE :: paw_t
 END TYPE paw_t
 
 !
-!============================================================================
-
-!  BEGIN manual
-!  TYPE DEFINITIONS
 
         TYPE pseudo_upf
           CHARACTER(LEN=80):: generated   ! 
@@ -143,44 +139,6 @@ END TYPE paw_t
           REAL(DP), POINTER :: gipaw_wfs_rcutus(:)
           REAL(DP), POINTER :: gipaw_wfs_ps(:,:)
         END TYPE
-
-
-        TYPE pseudo_ncpp
-          CHARACTER(LEN=4) :: psd         ! Element label
-          CHARACTER(LEN=20) :: pottyp     ! Potential type
-          LOGICAL :: tmix
-          LOGICAL :: tnlcc
-          INTEGER :: igau
-          INTEGER :: lloc
-          INTEGER :: nbeta 
-          INTEGER :: lll(lmaxx+1)
-          INTEGER :: nchan
-          INTEGER :: mesh
-          REAL(DP) ::  zv
-          REAL(DP) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
-          REAL(DP) ::  rab(ndmx)
-          REAL(DP) ::  rw(ndmx)
-          REAL(DP) ::  vnl(ndmx, lmaxx+1)
-          REAL(DP) ::  vloc(ndmx)
-          REAL(DP) ::  vrps(ndmx, lmaxx+1)
-          REAL(DP) ::  wgv(lmaxx+1)
-          REAL(DP) ::  rc(2)
-          REAL(DP) ::  wrc(2)
-          REAL(DP) ::  rcl(3,3)
-          REAL(DP) ::  al(3,3)
-          REAL(DP) ::  bl(3,3)
-          INTEGER :: nrps                     ! number of atomic wave function
-          INTEGER :: lrps(lmaxx+1)            ! angular momentum
-          REAL(DP) :: oc(lmaxx+1)            ! occupation for each rps
-          REAL(DP) :: rps(ndmx, lmaxx+1)  ! atomic pseudo wave function
-          REAL(DP) :: rhoc(ndmx)          ! core charge
-        END TYPE pseudo_ncpp
-
-!  ----------------------------------------------
-!  END manual
-
-!  end of module-scope declarations
-!  ----------------------------------------------
 
       CONTAINS
 
@@ -265,4 +223,3 @@ END TYPE paw_t
         END SUBROUTINE deallocate_pseudo_upf
 
       END MODULE pseudo_types
-

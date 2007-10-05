@@ -32,16 +32,50 @@
 module fpmd2upf_module
 
   USE kinds, ONLY: DP
+  USE parameters
+  use radial_grids, ONLY: ndmx
 
   implicit none
   save
 
   REAL(DP), PRIVATE :: TOLMESH = 1.d-5
 
+  TYPE pseudo_ncpp
+     CHARACTER(LEN=4) :: psd         ! Element label
+     CHARACTER(LEN=20) :: pottyp     ! Potential type
+     LOGICAL :: tmix
+     LOGICAL :: tnlcc
+     INTEGER :: igau
+     INTEGER :: lloc
+     INTEGER :: nbeta
+     INTEGER :: lll(lmaxx+1)
+     INTEGER :: nchan
+     INTEGER :: mesh
+     REAL(DP) ::  zv
+     REAL(DP) ::  dx            ! r(i) = cost * EXP( xmin + dx * (i-1) )
+     REAL(DP) ::  rab(ndmx)
+     REAL(DP) ::  rw(ndmx)
+     REAL(DP) ::  vnl(ndmx, lmaxx+1)
+     REAL(DP) ::  vloc(ndmx)
+     REAL(DP) ::  vrps(ndmx, lmaxx+1)
+     REAL(DP) ::  wgv(lmaxx+1)
+     REAL(DP) ::  rc(2)
+     REAL(DP) ::  wrc(2)
+     REAL(DP) ::  rcl(3,3)
+     REAL(DP) ::  al(3,3)
+     REAL(DP) ::  bl(3,3)
+     INTEGER :: nrps                     ! number of atomic wave function
+     INTEGER :: lrps(lmaxx+1)            ! angular momentum
+     REAL(DP) :: oc(lmaxx+1)            ! occupation for each rps
+     REAL(DP) :: rps(ndmx, lmaxx+1)  ! atomic pseudo wave function
+     REAL(DP) :: rhoc(ndmx)          ! core charge
+   END TYPE pseudo_ncpp
+
+
 contains
 
+
   subroutine read_pseudo_fpmd( ap, psfile )
-    USE pseudo_types, ONLY: pseudo_ncpp
     type(pseudo_ncpp) :: ap
     character(len=256) :: psfile
     character(len=80) :: error_msg
@@ -114,7 +148,6 @@ contains
 !=----------------------------------------------------------------------------=!
 
       SUBROUTINE analytic_to_numeric(ap)
-        USE pseudo_types, ONLY: pseudo_ncpp
         TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
         INTEGER :: ir, mesh, lmax, l, n, il, ib, ll
         REAL(DP) :: xmin, zmesh, dx, x
@@ -170,7 +203,6 @@ contains
 !=----------------------------------------------------------------------------=!
 
       SUBROUTINE read_giannoz(uni, ap, ierr)
-        USE pseudo_types, ONLY: pseudo_ncpp
 !        USE constants, ONLY : fpi
         IMPLICIT NONE
         TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
@@ -299,7 +331,6 @@ contains
 
 
       SUBROUTINE ap_info( ap )
-        USE pseudo_types, ONLY: pseudo_ncpp
         TYPE (pseudo_ncpp), INTENT(IN) :: ap
         INTEGER   :: in1, in2, in3, in4, m, il, ib, l, i
 
@@ -424,7 +455,6 @@ contains
 
 
 SUBROUTINE read_atomic_wf( iunit, ap, err_msg, ierr)
-  USE pseudo_types, ONLY: pseudo_ncpp
   USE parser, ONLY: field_count
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iunit
@@ -498,7 +528,6 @@ END SUBROUTINE read_atomic_wf
 !=----------------------------------------------------------------------------=!
 
 SUBROUTINE read_numeric_pp( iunit, ap, err_msg, ierr)
-  USE pseudo_types, ONLY: pseudo_ncpp
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iunit
   TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
@@ -585,7 +614,6 @@ END SUBROUTINE read_numeric_pp
 !
 
 SUBROUTINE read_head_pp( iunit, ap, err_msg, ierr)
-  USE pseudo_types, ONLY: pseudo_ncpp
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iunit
   TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
@@ -645,7 +673,6 @@ END SUBROUTINE read_head_pp
 !=----------------------------------------------------------------------------=!
 
 SUBROUTINE read_analytic_pp( iunit, ap, err_msg, ierr)
-  USE pseudo_types, ONLY: pseudo_ncpp
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iunit
   TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
@@ -713,7 +740,6 @@ END SUBROUTINE read_analytic_pp
 
 
 SUBROUTINE read_atomic_cc( iunit, ap, err_msg, ierr)
-  USE pseudo_types, ONLY: pseudo_ncpp
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iunit
   TYPE (pseudo_ncpp), INTENT(INOUT) :: ap
@@ -774,8 +800,7 @@ program fpmd2upf
   !
 
   USE kinds
-  USE fpmd2upf_module, ONLY: read_pseudo_fpmd, calculate_dx
-  USE pseudo_types, ONLY: pseudo_ncpp
+  USE fpmd2upf_module
   USE parameters
   USE upf
 
@@ -948,4 +973,106 @@ subroutine simpson2(mesh,func,rab,asum)
 
   return
 end subroutine simpson2
+
+
+
+!
+!  Description of the Native FPMD pseudopotential format
+!
+!  The format of the file must be as follows
+!  (lowercase text and }'s are comments):
+!
+!  When POTTYP = 'ANALYTIC' the layout is:
+!
+!    TCC      TMIX                additional stuff on each line is ignored
+!    POTTYP   LLOC LNL ( INDL(i), i = 1, LNL )
+!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
+!    ZV       IGAU                igau must be 1 or 3     }
+!    WRC(1) RC(1) WRC(2) RC(2)    this line if igau = 3   }
+!    RC(1)                        this one if igau = 1    }
+!    RCL(1,1)    AL(1,1)    BL(1,1)         }             }  this
+!     ...         ...        ...            }  l = 0      }  section
+!    RCL(IGAU,1) AL(IGAU,1) BL(IGAU,1)      }             }  only if
+!    RCL(1,2)    AL(1,2)    BL(1,2)      }                }  pottyp is
+!     ...         ...        ...         }     l = 1      }  'ANALYTIC'
+!    RCL(IGAU,2) AL(IGAU,2) BL(IGAU,2)   }                }
+!    RCL(1,3)    AL(1,3)    BL(1,3)         }             }
+!     ...         ...        ...            }  l = 2      }
+!    RCL(IGAU,3) AL(IGAU,3) BL(IGAU,3)      }             }
+!    NMESH NCHAN                                       }
+!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
+!     ...         ...              ...                 }
+!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
+!
+!
+!  When POTTYP = 'NUMERIC' the layout is:
+!
+!    TCC      TMIX             additional stuff on each line is ignored
+!    POTTYP   LLOC LNL  ( INDL(i), i = 1, LNL )
+!    ( WGV(i), i = 1, LNL )       this line only if tmix(is) is true
+!    ZV                                             }
+!    NMESH NCHAN                                    }    this if
+!    RW( 1 )     ( VR( 1, j ), j = 1, NCHAN )       }    pottyp is
+!     ...       ...             ...                 }    'NUMERIC'
+!    RW( NMESH ) ( VR( NMESH, j ), j = 1, NCHAN )   }
+!    NMESH NCHAN                                       }
+!    RW( 1 )     ( RPS( 1, j ), j = 1, NCHAN )         }  pseudowave
+!     ...         ...              ...                 }
+!    RW( NMESH ) ( RPS( NMESH, j ), j = 1, NCHAN )     }
+!
+!  DETAILED DESCRIPTION OF INPUT PARAMETERS:
+!
+!    TCC      (logical)   True if Core Correction are required for this
+!                         pseudo
+!
+!    TMIX     (logical)   True if we want to mix nonlocal pseudopotential
+!                         components
+!
+!    WGV(i)   (real)      wheight of the nonlocal components in the
+!                         pseudopotential mixing scheme
+!                         These parameters are present only if TMIX = .TRUE.
+!                         1 <= i <= LNL
+!
+!    POTTYP   (character) pseudopotential type
+!                         pottyp = 'ANALYTIC' : use an analytic expression
+!                         pottyp = 'NUMERIC'  : read values from a table
+!
+!    ZV       (integer)   valence for each species
+!
+!    IGAU     (integer)   number of Gaussians in the pseudopotentials
+!                         expression used only if pottyp='ANALYTIC'
+!
+!  parameters from Bachelet-Hamann-Schluter's table:
+!
+!    WRC(2)   (real)      c1, c2 (core)  parameters
+!    RC(2)    (real)      alpha1, alpha2 parameters
+!
+!    RCL(i,3) (real)      alpha1, alpha2, alpha3 for each angular momentum
+!                         1 <= i <= IGAU
+!    AL(i,3)  (real)      parameters for each angular momentum
+!                         1 <= i <= IGAU
+!    BL(i,3)  (real)      parameters for each angular momentum
+!                         1 <= i <= IGAU
+!
+!  nonlocality
+!    IGAU     (integer)   number of Gaussians for analytic pseudopotentials
+!    LLOC     (integer)   index of the angular momentum component added to
+!                          the local part  ( s = 1, p = 2, d = 3 )
+!    LNL      (integer)   number of non local component
+!    INDL(i)  (integer)   indices of non local components
+!                         1 <= i <= LNL
+!                         ( 1 3 means s and d taken as non local )
+!
+!  pseudo grids
+!    NMESH    (integer)   number of points in the mesh mesh
+!    NCHAN    (integer)   numbero of colums, radial components
+!    RW(i)    (real)      distance from the core in A.U. (radial mesh)
+!                         1 <= i <= NMESH
+!    RPS(i,j) (real)      Atomic pseudo - wavefunctions
+!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
+!    VP(i,j)  (real)      Atomic pseudo - potential
+!                         1 <= i <= NMESH ; 1 <= j <= NCHAN
+!
+!  ----------------------------------------------
+!  END manual
 

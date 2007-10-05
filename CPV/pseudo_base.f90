@@ -36,9 +36,9 @@
 
 
 !  ----------------------------------------------
-      SUBROUTINE nlin_base(ap, hg, wnl)
+      SUBROUTINE nlin_base( upf, hg, wnl)
 
-        USE pseudo_types, ONLY: pseudo_ncpp
+        USE pseudo_types, ONLY: pseudo_upf
         USE io_global, ONLY: stdout
 
 !  compute Kleinman-Bylander factors
@@ -61,34 +61,33 @@
 !  ----------------------------------------------
 
 ! ...   declare subroutine arguments
-        TYPE (pseudo_ncpp), INTENT(IN) :: ap
+        TYPE (pseudo_upf), INTENT(IN) :: upf
         REAL(DP), INTENT(IN) :: hg(:)
         REAL(DP), INTENT(OUT) :: wnl(:,:)
 
 ! ...   declare other variables
         REAL(DP), ALLOCATABLE :: fint(:,:)
-        REAL(DP)  :: xg, dx
+        REAL(DP), ALLOCATABLE :: rw(:)
+        REAL(DP):: xg
         INTEGER :: ig, mmax, nbeta, l, ind
-        REAL(DP), ALLOCATABLE :: ftest(:,:)
 
 ! ...   end of declarations
-!  ----------------------------------------------
 
-        nbeta  = ap%nbeta
-        mmax = ap%mesh
-        dx = ap%dx
+        nbeta  = upf%nbeta
+        mmax   = upf%mesh
 
-        ALLOCATE(fint(mmax,nbeta))
+        ALLOCATE( fint( mmax, nbeta ) )
+        ALLOCATE( rw( mmax ) )
 
-        ! WRITE( stdout,*) 'DEBUG nlin_base, tpiba = ', tpiba
+        rw( 1:mmax ) = upf%r( 1:mmax )
 
         DO ig = 1, SIZE( wnl, 1 )
           IF( hg(ig) < gsmall ) THEN
             DO l = 1,nbeta
 ! ...         G=0 (Only if l=1, since otherwise the radial Bessel function jl=0)
-              IF( ap%lll(l) == 0 ) THEN
-                fint(1:mmax,l) = ap%rw(1:mmax) * ap%vrps(1:mmax,l)
-                call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnl(ig,l) )
+              IF( upf%lll(l) == 0 ) THEN
+                fint(1:mmax,l) = rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
+                call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnl(ig,l) )
               ELSE
                 wnl(ig,l) = 0.d0
               END IF
@@ -96,17 +95,16 @@
           ELSE
 ! ...       Bessel functions: j_0(0)=1, j_n(0)=0 for n>0
             xg = SQRT( hg(ig) ) * tpiba
-            CALL bessel2(xg, ap%rw, fint, nbeta, ap%lll, mmax)
+            CALL bessel2(xg, rw, fint, nbeta, upf%lll, mmax)
             DO l = 1, nbeta
-              fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax) * ap%vrps(1:mmax,l)
-              call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnl(ig,l) )
+              fint(1:mmax,l) = fint(1:mmax,l) * rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
+              call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnl(ig,l) )
             END DO
-
-! ...       Bessel Test
 
           END IF
         END DO
 
+        DEALLOCATE(rw)
         DEALLOCATE(fint)
 
         RETURN
@@ -115,22 +113,23 @@
 !  ----------------------------------------------
 !  ----------------------------------------------
 
-      SUBROUTINE nlin_stress_base(ap, hg, wnla)
+      SUBROUTINE nlin_stress_base( upf, hg, wnla)
 
 !  (describe briefly what this routine does...)
 !  This subroutine is executed only for non-local potentials
 !  ----------------------------------------------
 
-        USE pseudo_types, ONLY: pseudo_ncpp
+        USE pseudo_types, ONLY: pseudo_upf
 
 ! ...   declare subroutine arguments
-        TYPE (pseudo_ncpp), INTENT(IN) :: ap
+        TYPE (pseudo_upf), INTENT(IN) :: upf
         REAL(DP), INTENT(IN)  :: hg(:)
         REAL(DP), INTENT(OUT) :: wnla(:,:)
 
 ! ...   declare other variables
         REAL(DP), ALLOCATABLE :: fint(:,:)
-        REAL(DP)  xg, dx
+        REAL(DP), ALLOCATABLE :: rw(:)
+        REAL(DP)  xg
         INTEGER ig,mmax,gstart,nbeta
         INTEGER l,ll
         INTEGER ir
@@ -138,33 +137,36 @@
 ! ...   end of declarations
 !  ----------------------------------------------
 
-        nbeta   = ap%nbeta
-        mmax  = ap%mesh
-        dx  = ap%dx
+        nbeta = upf%nbeta
+        mmax  = upf%mesh
 
         ALLOCATE( fint(mmax, nbeta) )
+        ALLOCATE( rw(mmax) )
+
+        rw( 1:mmax ) = upf%r( 1:mmax )
 
         DO ig = 1, SIZE( wnla, 1 )
           IF( hg(ig) < gsmall ) THEN
 ! ...       G=0 (Only if L = 0, since otherwise the radial Bessel function JL=0)
             DO l = 1, nbeta
-              IF( ap%lll(l) == 0 ) THEN
-                fint(1:mmax,l) = ap%rw(1:mmax) * ap%vrps(1:mmax,l) 
-                call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnla(ig,l) )
+              IF( upf%lll(l) == 0 ) THEN
+                fint(1:mmax,l) = rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
+                call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnla(ig,l) )
               ELSE
                 wnla(ig, l) = 0.d0
               END IF
             END DO
           ELSE
             xg = SQRT(hg(ig)) * tpiba
-            CALL bessel3(xg, ap%rw, fint, nbeta, ap%lll, mmax)
+            CALL bessel3(xg, rw, fint, nbeta, upf%lll, mmax)
             DO l = 1, nbeta
-              fint(1:mmax,l) = fint(1:mmax,l) * ap%rw(1:mmax) * ap%vrps(1:mmax,l)
-              call simpson_cp90( mmax, fint(1,l), ap%rab(1), wnla(ig,l) )
+              fint(1:mmax,l) = fint(1:mmax,l) * rw(1:mmax) * upf%beta(1:mmax,l) / 2.0d0
+              call simpson_cp90( mmax, fint(1,l), upf%rab(1), wnla(ig,l) )
             END DO
           END IF
         END DO
 
+        DEALLOCATE(rw)
         DEALLOCATE(fint)
 
         RETURN

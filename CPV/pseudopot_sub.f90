@@ -282,7 +282,7 @@
          if ( numeric(is) ) then
 
             call formfn( vps_sp(is)%y, dvps_sp(is)%y, rgrid(is)%r, &
-                         rgrid(is)%rab, upf(is)%vloc(1), zv(is),   &
+                         rgrid(is)%rab, upf(is)%vloc(1:rgrid(is)%mesh), zv(is),   &
                          rcmax(is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, &
                          mmx, oldvan(is), tpre )
 
@@ -389,8 +389,8 @@
       USE pseudo_base,             ONLY : nlin_base
       USE pseudo_base,             ONLY : nlin_stress_base
       USE reciprocal_vectors,      ONLY : g, gstart
-      USE uspp_param,              ONLY : upf, nbetam
-      USE read_pseudo_module_fpmd, ONLY : ap, nspnl
+      USE uspp_param,              ONLY : upf, nbeta, nbetam
+      USE read_pseudo_module_fpmd, ONLY : nspnl
       USE cp_interfaces,           ONLY : compute_xgtab, chkpstab
       USE pseudopotential,         ONLY : wnl_sp, wnla_sp, xgtab
       USE betax,                   ONLY : mmx
@@ -441,13 +441,13 @@
 
            ALLOCATE( fintl( SIZE( xgtab ), SIZE( wnl_sp, 1) ) )
            !
-           CALL nlin_base(ap(is), xgtab(:), fintl)
+           CALL nlin_base( upf(is), xgtab(:), fintl)
            !
            DO l = 1,  upf(is)%nbeta
               wnl_sp( l, is )%y = fintl(:,l)
            END DO
            !
-           CALL nlin_stress_base( ap(is), xgtab, fintl )
+           CALL nlin_stress_base( upf(is), xgtab, fintl )
            
            DO l = 1,  upf(is)%nbeta
                wnla_sp( l, is )%y = fintl(:,l)
@@ -484,7 +484,7 @@
       USE uspp_param,              ONLY: upf, nh
       USE constants,               ONLY: pi
       USE splines,                 ONLY: spline
-      USE read_pseudo_module_fpmd, ONLY: ap, nspnl
+      USE read_pseudo_module_fpmd, ONLY: nspnl
       USE reciprocal_vectors,      ONLY: g, gstart
       USE cp_interfaces,           ONLY: build_nltab
       USE pseudopotential,         ONLY: wnl_sp, tpstab
@@ -536,7 +536,7 @@
                !
             ELSE
                !
-               CALL nlin_base( ap(is), g, wnl(:,:,is,ik) )
+               CALL nlin_base( upf(is), g, wnl(:,:,is,ik) )
                !
             END IF
             !
@@ -561,8 +561,8 @@
       USE cell_base,               ONLY : tpiba
       USE pseudo_base,             ONLY : nlin_stress_base
       USE splines,                 ONLY : spline
-      USE uspp_param,              ONLY : upf
-      USE read_pseudo_module_fpmd, ONLY : ap, nspnl
+      USE uspp_param,              ONLY : upf, nbeta
+      USE read_pseudo_module_fpmd, ONLY : nspnl
       USE reciprocal_vectors,      ONLY : g, gstart
       USE pseudopotential,         ONLY : wnla_sp, tpstab
 
@@ -596,7 +596,7 @@
             !
          ELSE
             !
-            CALL nlin_stress_base(ap(is), g, wnla(:,:,is))
+            CALL nlin_stress_base( upf(is), g, wnla(:,:,is))
             !
          END IF
          !
