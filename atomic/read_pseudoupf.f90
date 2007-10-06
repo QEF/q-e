@@ -33,7 +33,7 @@ subroutine read_pseudoupf
   !
   !     Local variables
   !
-  integer :: nb, ios
+  integer :: nb, mb, ijv, ios
   TYPE (pseudo_upf) :: upf
   !
   !
@@ -113,8 +113,12 @@ subroutine read_pseudoupf
   !
   if (pseudotype.eq.3) then
      qq(1:nbeta,1:nbeta) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-     qvan (1:grid%mesh, 1:nbeta, 1:nbeta) = &
-          upf%qfunc(1:upf%mesh,1:upf%nbeta,1:upf%nbeta)
+     do nb = 1, upf%nbeta
+        do mb = nb, upf%nbeta
+           ijv = mb * (mb-1) / 2 + nb
+           qvan (1:grid%mesh, nb, mb) = upf%qfunc(1:upf%mesh, ijv)
+        end do
+     end do
   else
      qq=0.0_dp
      qvan=0.0_dp

@@ -20,7 +20,7 @@ subroutine init_cond (nregion, flag)
   USE pwcom
   USE io_files, ONLY : save_file
   USE noncollin_module, ONLY : noncolin, npol
-  USE uspp_param, ONLY : nbrx, nbeta, lll, betar, tvanp
+  USE uspp_param, ONLY : upf, nbetam
   USE atom, ONLY: rgrid
   USE ions_base,  ONLY : atm, nat, ityp, ntyp => nsp, tau
   USE cond 
@@ -49,7 +49,7 @@ subroutine init_cond (nregion, flag)
   if (abs(ecut2d).le.eps) ecut2d = ecutwfc
 
   allocate ( ztot(nrztot+1) )
-  allocate ( rsph(nbrx, npsx) )
+  allocate ( rsph(nbetam, ntyp) )
   allocate ( dwid(5) )
   allocate ( nrzreg(4) )
 
@@ -107,14 +107,14 @@ subroutine init_cond (nregion, flag)
 !
   mmax = 0
   do nt=1, ntyp
-    do ib=1, nbeta(nt)
-      mmax = max(mmax, lll(ib, nt))
+    do ib=1, upf(nt)%nbeta
+      mmax = max(mmax, upf(nt)%lll(ib))
       bmax=0.d0
       do ir=2, rgrid(nt)%mesh
-         bmax=max(bmax, betar(ir,ib,nt)/rgrid(nt)%r(ir)) 
+         bmax=max(bmax, upf(nT)%beta(ir,ib)/rgrid(nt)%r(ir)) 
       enddo  
       ir=rgrid(nt)%mesh
-      do while (abs(betar(ir,ib,nt)/rgrid(nt)%r(ir)).le.epsbeta*bmax)
+      do while (abs(upf(nt)%beta(ir,ib)/rgrid(nt)%r(ir)).le.epsbeta*bmax)
         ir=ir-1
       enddo
       rsph(ib,nt)=rgrid(nt)%r(ir)/alat
@@ -128,12 +128,12 @@ subroutine init_cond (nregion, flag)
 ! the problem with the spheres crossing or not the boundaries)
 !
   do nt=1, ntyp
-   if (tvanp(nt)) then
+   if (upf(nt)%tvanp) then
       bmax=0.d0
-      do ib=1, nbeta(nt)
+      do ib=1, upf(nt)%nbeta
          bmax=max(bmax, rsph(ib,nt))
       enddo
-      do ib=1, nbeta(nt)
+      do ib=1, upf(nt)%nbeta
          rsph(ib,nt)=bmax
       enddo  
    endif
@@ -202,8 +202,8 @@ subroutine init_cond (nregion, flag)
   write(stdout, '(/,5x,''type       ibeta     ang. mom.'',  &
       &           ''          radius (a_0 units)'')')
   write(stdout, '(7x,a6,3x,i3,7x,i3,14x,f12.4)')                     &
-      &        ( ( atm(nt), ib, lll(ib,nt), rsph(ib,nt),        &
-      &         ib=1,nbeta(nt) ), nt=1,ntyp)
+      &        ( ( atm(nt), ib, upf(nt)%lll(ib), rsph(ib,nt),        &
+      &         ib=1,upf(nt)%nbeta ), nt=1,ntyp)
 
 !-----------------------------
 

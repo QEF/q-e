@@ -184,7 +184,6 @@ printout_base.o : kind.o
 printout_base.o : mp.o
 printout_base.o : mp_global.o
 pseudo_types.o : kind.o
-pseudo_types.o : parameters.o
 pseudo_types.o : radial_grids.o
 pseudodata.o : kind.o
 pseudodata.o : parameters.o

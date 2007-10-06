@@ -41,7 +41,7 @@ SUBROUTINE phq_init()
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
-  USE uspp_param,           ONLY : vloc_at, zp
+  USE uspp_param,           ONLY : upf
   USE phcom
   !
   IMPLICIT NONE
@@ -97,8 +97,8 @@ SUBROUTINE phq_init()
   DO nt = 1, ntyp
      !
      CALL setlocq( xq, lloc(nt), lmax(nt), numeric(nt), rgrid(nt)%mesh,    &
-                   msh(nt), rgrid(nt)%rab, rgrid(nt)%r, vloc_at(1,nt),       &
-                   cc(1,nt), alpc(1,nt), nlc(nt), nnl(nt), zp(nt),   &
+                   msh(nt), rgrid(nt)%rab, rgrid(nt)%r, upf(nt)%vloc,      &
+                   cc(1,nt), alpc(1,nt), nlc(nt), nnl(nt), upf(nt)%zp,     &
                    aps(1,0,nt), alps(1,0,nt), tpiba2, ngm, g, omega, &
                    vlocq(1,nt) )
      !

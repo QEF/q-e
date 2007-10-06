@@ -6,7 +6,7 @@ fhi2upf.o : write_upf.o
 fpmd2upf.o : ../Modules/kind.o
 fpmd2upf.o : ../Modules/parameters.o
 fpmd2upf.o : ../Modules/parser.o
-fpmd2upf.o : ../Modules/pseudo_types.o
+fpmd2upf.o : ../Modules/radial_grids.o
 fpmd2upf.o : write_upf.o
 ncpp2upf.o : ../Modules/functionals.o
 ncpp2upf.o : write_upf.o

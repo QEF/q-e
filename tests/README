@@ -1,4 +1,8 @@
 Automatic tests for pw.x - edit and run "check-pw.x.j"
+Tests are intended to verify that a specified feature works.
+They are NOT intended to be realistic calculations!
+Do not use tests as samples for realistic calculations
+Use the examples in the examples/ subdirectory instead.
 
 name      system   what is tested
 
@@ -51,9 +55,10 @@ vc-relax  As       Variable-cell optimization at zero pressure
 neb       H        NEB calculation for the H2+H proton exchange
                    Automatic, manual, no choice of the climbing image
                    Old RRKJ format
+metadyn   Si+H     Metadynamics
 
 Tests are still missing for:
   forces with core corrections
   old PP formats:  van, nc
   dft:             blyp, pw91, lda+U, metaGGA
-  calculation:     bands, vc-md, metadynamics
+  calculation:     bands, vc-md
