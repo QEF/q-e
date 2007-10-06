@@ -84,7 +84,7 @@ subroutine formf( tfirst, eself )
         if ( numeric(is) ) then
 
            call formfn( vps(:,is), dvps(:,is), rgrid(is)%r, rgrid(is)%rab,  &
-                        upf(is)%vloc(1), zv(is), rcmax(is), g, omega, tpiba2,&
+                        upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), g, omega, tpiba2,&
                         rgrid(is)%mesh, ngs, oldvan(is), tpre )
 
         else
