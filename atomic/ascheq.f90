@@ -37,7 +37,7 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   allocate(el(mesh),stat=ierr)
 
   thresh=thresh0
-  if (e<-1.e-3) thresh=thresh0*10.0_DP
+  if (e<-5.e+2) thresh=thresh0*10.0_DP
   iter=0
   ddx12=grid%dx*grid%dx/12.0_dp
   l1=lam+1
