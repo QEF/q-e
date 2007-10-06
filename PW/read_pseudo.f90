@@ -82,7 +82,7 @@ subroutine readpp
      call read_pseudo_upf(iunps, upf(nt), isupf)
      !
      if (isupf == 0) then
-        call set_pseudo_upf (nt, upf(nt)) ! TEMP
+        call set_pseudo_upf (nt, upf(nt))
         call set_paw_upf (nt, upf(nt))
         ! for compatibility with old formats
         newpseudo (nt) = .true.
@@ -109,7 +109,7 @@ subroutine readpp
            ELSE
               CALL readvan (iunps, nt, upf(nt))
            ENDIF
-           CALL set_pseudo_upf (nt, upf(nt)) ! TEMP
+           CALL set_pseudo_upf (nt, upf(nt))
            !
         else if (pseudo_type (psfile (nt) ) ==3) then
            !
@@ -130,7 +130,7 @@ subroutine readpp
            ! 
            call read_ncpp (iunps, nt, upf(nt))
            !
-           CALL set_pseudo_upf (nt, upf(nt))    ! TEMP
+           CALL set_pseudo_upf (nt, upf(nt)) 
            !
         endif
         ! for compatibility with old formats - maybe obsolete?

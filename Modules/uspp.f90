@@ -10,7 +10,7 @@ MODULE uspp_param
   ! ... Ultrasoft and Norm-Conserving pseudopotential parameters
   !  
   USE kinds,        ONLY : DP
-  USE parameters,   ONLY : lqmax, nbrx, npsx, nqfx
+  USE parameters,   ONLY : lqmax, npsx
   USE radial_grids, ONLY: ndmx
   USE pseudo_types, ONLY: pseudo_upf
   !
@@ -18,29 +18,10 @@ MODULE uspp_param
   !
   TYPE (pseudo_upf),  ALLOCATABLE, TARGET :: upf(:)
 
-  CHARACTER(LEN=2 ) ::  psd(npsx)   ! name of the pseudopotential
-
-  REAL(DP) :: &
-       zp(npsx),                   &! the charge of the pseudopotential
-       dion(nbrx,nbrx,npsx),       &! D_{mu,nu} parameters (in the atomic case)
-       betar(ndmx,nbrx,npsx),      &! radial beta_{mu} functions
-       jjj(nbrx,npsx),             &! total angular momentum of the beta function
-       qqq(nbrx,nbrx,npsx),        &! q_{mu,nu} parameters (in the atomic case)
-       qfunc(ndmx,nbrx*(nbrx+1)/2,npsx), &! Q_{mu,nu}(|r|) function for |r|> r_L
-       qfcoef(nqfx,lqmax,nbrx,nbrx,npsx), &! coefficients for Q for |r|<r_L
-!       augfun(ndmx,nbrx,nbrx,0:lqmax,npsx), &! moved to grid_paw_variables.f90
-       vloc_at(ndmx,npsx),                &! local potential
-       rinner(lqmax,npsx)                  ! values of r_L
   INTEGER :: &
-       nbeta(npsx),          &! number of beta functions
        nh(npsx),             &! number of beta functions per atomic type
        nhm,                  &! max number of different beta functions per atom
        nbetam,               &! max number of beta functions
-       kkbeta(npsx),         &! point where the beta are zero
-       nqf(npsx),            &! number of coefficients for Q
-       nqlc(npsx),           &! number of angular momenta in Q
-       ifqopt(npsx),         &! level of q optimization
-       lll(nbrx,npsx),       &! angular momentum of the beta function
        iver(3,npsx)           ! version of the atomic code
   INTEGER :: &
        lmaxkb,               &! max angular momentum

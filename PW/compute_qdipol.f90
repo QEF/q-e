@@ -47,8 +47,7 @@ SUBROUTINE compute_qdipol(dpqq)
                    (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
                  do ir = 1, upf(nt)%kkbeta
                     if (rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1)) then
-                       ! qtot(ir, nb, mb)=qfunc(ir,ijv,nt) TEMP
-                       qtot(ir, nb, mb)=upf(nt)%qfunc(ir,nb,mb)
+                       qtot(ir, nb, mb)=upf(nt)%qfunc(ir,ijv)
                     else
                        ilast = ir
                     endif
@@ -97,8 +96,10 @@ SUBROUTINE compute_qdipol(dpqq)
                  nb=indv(jh,nt)
                  if (ivl > nlx) call errore('compute_qdipol',' ivl > nlx', ivl)
                  if (jvl > nlx) call errore('compute_qdipol',' jvl > nlx', jvl)
-                 if (nb > nbetam) call errore('compute_qdipol',' nb > nbrx', nb)
-                 if (mb > nbetam) call errore('compute_qdipol',' mb > nbrx', mb)
+                 if (nb > nbetam) &
+                    call errore('compute_qdipol',' nb out of bounds', nb)
+                 if (mb > nbetam) &
+                    call errore('compute_qdipol',' mb out of bounds', mb)
                  if (mb > nb) call errore('compute_qdipol',' mb > nb', 1)
                  dpqq(ih,jh,ipol,nt)=fact*ap(lp,ivl,jvl)*qrad2(mb,nb,nt)
                  dpqq(jh,ih,ipol,nt)=dpqq(ih,jh,ipol,nt)

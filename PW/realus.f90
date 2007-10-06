@@ -72,7 +72,7 @@ MODULE realus
       IMPLICIT NONE
       !
       INTEGER               :: qsdim, ia, mbia, iqs, iqsia
-      INTEGER               :: indm, inbrx, idimension, &
+      INTEGER               :: indm, idimension, &
                                ih, jh, ijh, lllnbnt, lllmbnt
       INTEGER               :: roughestimate, goodestimate, lamx2, l, nt
       INTEGER,  ALLOCATABLE :: buffpoints(:,:)
@@ -106,13 +106,10 @@ MODULE realus
          boxrad(:) = 0.D0
          !
          DO nt = 1, nsp
-            !DO inbrx = 1, upf(nt)%nbeta*(upf(nt)%nbeta+1)/2 TEMP
-            DO nb = 1, upf(nt)%nbeta
-            DO mb = nb, upf(nt)%nbeta
+            DO ijv = 1, upf(nt)%nbeta*(upf(nt)%nbeta+1)/2 
                DO indm = upf(nt)%kkbeta, 1, -1
                   !
-                  ! IF ( ABS( qfunc(indm,inbrx,nt) ) > eps16 ) THEN TEMP
-                  IF ( ABS( upf(nt)%qfunc(indm,nb,mb) ) > eps16 ) THEN
+                  IF ( ABS( upf(nt)%qfunc(indm,ijv) ) > eps16 ) THEN
                      !
                      boxrad(nt) = MAX( rgrid(nt)%r(indm), boxrad(nt) )
                      !
@@ -121,7 +118,6 @@ MODULE realus
                   END IF
                   !
                END DO
-            END DO
             END DO
          END DO
          !
@@ -368,8 +364,7 @@ MODULE realus
                   !
                   DO ir = 1, upf(nt)%kkbeta
                      IF ( rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1) ) THEN
-                        !qtot(ir,nb,mb) = qfunc(ir,ijv,nt) / rgrid(nt)%r(ir)**2
-                        qtot(ir,nb,mb) = upf(nt)%qfunc(ir,nb,mb) / &
+                        qtot(ir,nb,mb) = upf(nt)%qfunc(ir,ijv) / &
                                          rgrid(nt)%r(ir)**2
                      ELSE
                         ilast = ir

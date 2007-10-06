@@ -252,8 +252,7 @@ subroutine init_us_1
                        (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
                         do ir = 1, upf(nt)%kkbeta
                            if (rgrid(nt)%r(ir) >=upf(nt)%rinner (l+1) ) then
-                               ! qtot (ir, ijv) = qfunc (ir, ijv, nt) TEMP
-                               qtot (ir, ijv) = upf(nt)%qfunc(ir,nb,mb)
+                               qtot (ir, ijv) = upf(nt)%qfunc(ir,ijv)
                            else
                                ilast = ir
                            endif

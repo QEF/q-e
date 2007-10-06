@@ -333,7 +333,7 @@ subroutine read_pseudo_nl (upf, iunps)
   integer :: iunps  
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: nb, mb, n, ir, ios, idum, ldum, icon, lp, i, ikk
+  integer :: nb, mb, ijv, n, ir, ios, idum, ldum, icon, lp, i, ikk
   ! counters
   character (len=75) :: dummy  
   !
@@ -346,7 +346,7 @@ subroutine read_pseudo_nl (upf, iunps)
      ALLOCATE( upf%dion( 1, 1 ) )
      ALLOCATE( upf%rinner( 1 ) )
      ALLOCATE( upf%qqq   ( 1, 1 ) )
-     ALLOCATE( upf%qfunc ( 0:upf%mesh, 1, 1 ) )
+     ALLOCATE( upf%qfunc ( 0:upf%mesh, 1 ) )
      ALLOCATE( upf%qfcoef( 1, 1, 1, 1 ) )
      ALLOCATE( upf%rcut( 1 ) )
      ALLOCATE( upf%rcutus( 1 ) )
@@ -399,7 +399,7 @@ subroutine read_pseudo_nl (upf, iunps)
      upf%nqlc = 2 * upf%lmax  + 1
      ALLOCATE( upf%rinner( upf%nqlc ) )
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
-     ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta, upf%nbeta ) )
+     ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta*(upf%nbeta+1)/2 ) )
      ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
      upf%rinner = 0.0_DP
      upf%qqq    = 0.0_DP
@@ -422,11 +422,9 @@ subroutine read_pseudo_nl (upf, iunps)
            read (iunps,*,err=104,end=104) upf%qqq(nb,mb), dummy
            ! "Q_int"
            upf%qqq(mb,nb) = upf%qqq(nb,mb)  
-
-           read (iunps, *, err=105, end=105) (upf%qfunc(n,nb,mb), n=1,upf%mesh)
-           do n = 0, upf%mesh 
-              upf%qfunc(n,mb,nb) = upf%qfunc(n,nb,mb)  
-           enddo
+           ! ijv is the combined (nb,mb) index
+           ijv = mb * (mb-1) / 2 + nb
+           read (iunps, *, err=105, end=105) (upf%qfunc(n,ijv), n=1,upf%mesh)
 
            if ( upf%nqf > 0 ) then
               call scan_begin (iunps, "QFCOEF", .false.)  
@@ -448,7 +446,7 @@ subroutine read_pseudo_nl (upf, iunps)
      upf%nqlc = 2 * upf%lmax  + 1
      ALLOCATE( upf%rinner( upf%nqlc ) )
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
-     ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta, upf%nbeta ) )
+     ALLOCATE( upf%qfunc ( 0:upf%mesh, upf%nbeta*(upf%nbeta+1)/2 ) )
      ALLOCATE( upf%qfcoef( upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta ) )
      upf%rinner = 0.0_DP
      upf%qqq    = 0.0_DP

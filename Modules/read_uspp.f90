@@ -13,7 +13,7 @@ MODULE read_uspp_module
   !  Vanderbilt's code and Andrea's RRKJ3 format
   !     
   USE kinds, ONLY: DP
-  USE parameters, ONLY: nchix, lmaxx, nbrx, nsx, lqmax, nqfx
+  USE parameters, ONLY: nchix, lmaxx, nsx, lqmax
   USE io_global, ONLY: stdout, meta_ionode
   USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
        set_dft_from_indices
@@ -101,13 +101,16 @@ CONTAINS
          &       exfact,        &! index of the exchange and correlation used 
          &       etotpseu,      &! total pseudopotential energy
          &       ee(nchix),     &! the energy of the valence states
+         &       rc(nchix),     &! the cut-off radii of the pseudopotential
          &       eloc,          &! energy of the local potential
          &       dummy,         &! dummy real variable
-         &       rc(nchix),     &! the cut-off radii of the pseudopotential
-         &       eee(nbrx),     &! energies of the beta function
-         &       ddd(nbrx,nbrx),&! the screened D_{\mu,\nu} parameters
          &       rinner1,       &! rinner if only one is present
          &       rcloc           ! the cut-off radius of the local potential 
+    real(DP), allocatable::  &
+         &       eee(:),        &! energies of the beta function
+         &       ddd(:,:)        ! the screened D_{\mu,\nu} parameters
+    integer, allocatable ::  &
+         &       iptype(:)       ! more recent parameters 
     integer                                                           &
          &       idmy(3),       &! contains the date of creation of the pseudo
          &       ifpcor,        &! for core correction, 0 otherwise
@@ -115,9 +118,8 @@ CONTAINS
          &       i,             &! dummy counter 
          &       nnlz(nchix),   &! The nlm values of the valence states
          &       keyps,         &! the type of pseudopotential. Only US allowed
-         &       irel,          &! it says if the pseudopotential is relativistic
+         &       irel,          &! says if the pseudopotential is relativistic
          &       ifqopt,        &! level of Q optimization
-         &       iptype(nbrx),  &! more recent parameters 
          &       npf,           &! as above
          &       nang,          &! number of angular momenta in pseudopotentials
          &       lloc,          &! angular momentum of the local part of PPs
@@ -213,7 +215,7 @@ CONTAINS
        if ( lloc == -1 ) lloc = nang+1
        if ( lloc > nang+1 .or. lloc < 0 ) &
             call errore( 'readvan', 'wrong lloc read', is )
-       if ( upf%nqf > nqfx .or. upf%nqf < 0 ) &
+       if ( upf%nqf < 0 ) &
             call errore(' readvan', 'Wrong nqf read', upf%nqf)
        if ( ifqopt < 0 ) &
             call errore( 'readvan', 'wrong ifqopt read', is )
@@ -272,8 +274,8 @@ CONTAINS
     ALLOCATE ( upf%kbeta(upf%nbeta) )
     upf%kbeta(:) = upf%kkbeta
     !
-    if( upf%nbeta > nbrx .or. upf%nbeta <0 ) &
-         call errore( 'readvan','nbeta wrong or too large', is )
+    if( upf%nbeta < 0 ) &
+         call errore( 'readvan','nbeta wrong', is )
     if( upf%kkbeta > upf%mesh .or. upf%kkbeta < 0 ) &
          call errore( 'readvan','kkbeta wrong or too large', is )
     !
@@ -282,8 +284,9 @@ CONTAINS
     ALLOCATE ( upf%lll(upf%nbeta) )
     ALLOCATE ( upf%beta(upf%mesh,upf%nbeta) )
     ALLOCATE ( upf%dion(upf%nbeta,upf%nbeta), upf%qqq(upf%nbeta,upf%nbeta) )
-    ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta,upf%nbeta) )
+    ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
     ALLOCATE ( upf%qfcoef(upf%nqf, upf%nqlc, upf%nbeta, upf%nbeta) )
+    ALLOCATE ( eee(upf%nbeta), ddd(upf%nbeta,upf%nbeta) )
     do iv=1,upf%nbeta
        read( iunps, '(i5)',err=100, iostat=ios ) upf%lll(iv)
        read( iunps, '(1p4e19.11)',err=100, iostat=ios ) &
@@ -297,15 +300,14 @@ CONTAINS
           !
           !  the symmetric matric Q_{nb,mb} is stored in packed form
           !  Q(iv,jv) => qfunc(ijv) as defined below (for jv >= iv)
-          !  FIXME: no longer
           !
           ijv = jv * (jv-1) / 2 + iv
           read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
                upf%dion(iv,jv), ddd(iv,jv), upf%qqq(iv,jv), &
-               (upf%qfunc(ir,iv,jv),ir=1,upf%kkbeta),    &
+               (upf%qfunc(ir,ijv),ir=1,upf%kkbeta),         &
                ((upf%qfcoef(i,lp,iv,jv),i=1,upf%nqf),lp=1,upf%nqlc)
           do ir=upf%kkbeta+1,upf%mesh
-            upf%qfunc(ir,iv,jv)=0.0_DP
+            upf%qfunc(ir,ijv)=0.0_DP
           enddo
           !
           !     Use the symmetry of the coefficients
@@ -313,19 +315,21 @@ CONTAINS
           if ( iv /= jv ) then
              upf%dion(jv,iv)=upf%dion(iv,jv)
              upf%qqq(jv,iv) =upf%qqq(iv,jv)
-             upf%qfunc(:,jv,iv) = upf%qfunc(:,iv,jv)
              upf%qfcoef(:,:,jv,iv)=upf%qfcoef(:,:,iv,jv)
           end if
        enddo
     enddo
+    DEALLOCATE (ddd)
     !
     !    for versions later than 7.2
     !
     if (10*iver(1,is)+iver(2,is) >= 72) then
+       ALLOCATE (iptype(upf%nbeta))
        read( iunps, '(6i5)',err=100, iostat=ios ) &
             (iptype(iv), iv=1,upf%nbeta)
        read( iunps, '(i5,f15.9)',err=100, iostat=ios ) &
             npf, dummy
+       DEALLOCATE (iptype)
     end if
 
     !
@@ -449,6 +453,7 @@ CONTAINS
     WRITE( stdout,1300)
 1300 format (4x,60('='))
     !
+    DEALLOCATE (eee)
     return
 100 call errore('readvan','error reading pseudo file', abs(ios) )
   !
@@ -490,14 +495,14 @@ CONTAINS
           read(iunps,*, err=100) &
                   ( (qrl(ir,l),ir=1,upf%kkbeta), l=lmin,lmax)
           !
-          !!! ijv = jv * (jv-1) / 2 + iv
+          ijv = jv * (jv-1) / 2 + iv
           !
           do l=lmin,lmax
              !
              ! reconstruct rinner
              !
              do ir=upf%kkbeta,1,-1
-                if ( abs(qrl(ir,l)-upf%qfunc(ir,iv,jv)) > 1.0d-6) go to 10
+                if ( abs(qrl(ir,l)-upf%qfunc(ir,ijv)) > 1.0d-6) go to 10
              end do
 10           irinner = ir+1
              upf%rinner(l) = upf%r(irinner)
@@ -669,7 +674,7 @@ CONTAINS
     read( iunps, '(2i5)', err=100, iostat=ios ) &
          upf%nwfc, upf%nbeta
     !
-    if ( upf%nbeta > nbrx .or. upf%nbeta < 0) &
+    if ( upf%nbeta < 0) &
          call errore('readrrkj', 'wrong nbeta', is)
     if ( upf%nwfc > nchix .or. upf%nwfc < 0) &
          call errore('readrrkj', 'wrong nchi', is)
@@ -694,7 +699,7 @@ CONTAINS
     ALLOCATE ( upf%kbeta(upf%nbeta) )
     ALLOCATE ( upf%dion(upf%nbeta,upf%nbeta), upf%qqq(upf%nbeta,upf%nbeta) )
     ALLOCATE ( upf%beta(upf%mesh,upf%nbeta) )
-    ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta,upf%nbeta) )
+    ALLOCATE ( upf%qfunc(upf%mesh,upf%nbeta*(upf%nbeta+1)/2) )
     upf%kkbeta = 0
     do nb=1,upf%nbeta
        read ( iunps, '(i6)',err=100, iostat=ios ) upf%kbeta(nb)
@@ -708,7 +713,7 @@ CONTAINS
           ! 
           ! the symmetric matric Q_{nb,mb} is stored in packed form
           ! Q(nb,mb) => qfunc(ijv) as defined below (for mb <= nb)
-          ! FIXME: no longer
+          ! 
           ijv = nb * (nb - 1) / 2 + mb
           read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
                upf%dion(nb,mb)
@@ -716,15 +721,14 @@ CONTAINS
              read(iunps,'(1p4e19.11)',err=100,iostat=ios) &
                   upf%qqq(nb,mb)
              read(iunps,'(1p4e19.11)',err=100,iostat=ios) &
-                  (upf%qfunc(n,nb,mb),n=1,upf%mesh)
+                  (upf%qfunc(n,ijv),n=1,upf%mesh)
           else
              upf%qqq(nb,mb)=0.0_DP
-             upf%qfunc(:,nb,mb)=0.0_DP
+             upf%qfunc(:,ijv)=0.0_DP
           endif
           if ( mb /= nb ) then
              upf%dion(mb,nb)=upf%dion(nb,mb)
              upf%qqq(mb,nb)=upf%qqq(nb,mb)
-             upf%qfunc(:,mb,nb)=upf%qfunc(:,nb,mb)
           end if
        enddo
     enddo

@@ -24,7 +24,7 @@ subroutine gen_us_dj (ik, dvkb)
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
   USE splinelib
-  USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
+  USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
   implicit none
   !
@@ -88,7 +88,7 @@ subroutine gen_us_dj (ik, dvkb)
   endif
 
   do nt = 1, ntyp
-     do nb = 1, nbeta (nt)
+     do nb = 1, upf(nt)%nbeta
         do ig = 1, npw
            qt = sqrt(q (ig)) * tpiba
            if (spline_ps) then

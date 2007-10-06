@@ -53,8 +53,6 @@ end module bhs
 
 !
 !  lqmax:  maximum angular momentum of Q (Vanderbilt augmentation charges)
-!  nqfx :  maximum number of coefficients in Q smoothing
-!  nbrx :  maximum number of distinct radial beta functions
 !  ndmx:  maximum number of points in the radial grid
 ! 
 

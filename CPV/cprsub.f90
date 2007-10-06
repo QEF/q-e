@@ -27,7 +27,7 @@ subroutine formf( tfirst, eself )
   use ions_base,       ONLY : rcmax, zv, nsp, na
   use local_pseudo,    ONLY : vps, rhops, dvps, drhops
   use atom,            ONLY : rgrid, numeric
-  use uspp_param,      ONLY : vloc_at, oldvan
+  use uspp_param,      ONLY : upf, oldvan
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
   use cp_interfaces,   ONLY : build_pstab
@@ -83,9 +83,9 @@ subroutine formf( tfirst, eself )
 
         if ( numeric(is) ) then
 
-           call formfn( vps(:,is), dvps(:,is), rgrid(is)%r, rgrid(is)%rab, vloc_at(:,is), &
-                        zv(is), rcmax(is), g, omega, tpiba2, rgrid(is)%mesh, &
-                        ngs, oldvan(is), tpre )
+           call formfn( vps(:,is), dvps(:,is), rgrid(is)%r, rgrid(is)%rab,  &
+                        upf(is)%vloc(1), zv(is), rcmax(is), g, omega, tpiba2,&
+                        rgrid(is)%mesh, ngs, oldvan(is), tpre )
 
         else
 
@@ -332,8 +332,7 @@ subroutine nlinit
       use constants,       ONLY : pi, fpi
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv
-      use uspp_param,      ONLY : kkbeta, qqq, nqlc, betar, lmaxq, dion,&
-                                  nbeta, nbetam, lmaxkb, lll, nhm, nh, tvanp
+      use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
       use atom,            ONLY : rgrid, nlcc, numeric
       use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb
@@ -410,8 +409,8 @@ subroutine nlinit
          !
          WRITE( stdout,*)
          WRITE( stdout,'(20x,a)') '    dion '
-         do iv = 1, nbeta(is)
-            WRITE( stdout,'(8f9.4)') ( fac*dion(iv,jv,is), jv = 1, nbeta(is) )
+         do iv = 1, upf(is)%nbeta
+            WRITE( stdout,'(8f9.4)') ( fac*upf(is)%dion(iv,jv), jv = 1, upf(is)%nbeta )
          end do
          !
       end do

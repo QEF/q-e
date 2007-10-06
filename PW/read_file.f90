@@ -36,7 +36,7 @@ SUBROUTINE read_file()
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
   USE buffers,              ONLY : open_buffer, close_buffer
-  USE uspp_param,           ONLY : upf, nbeta, jjj
+  USE uspp_param,           ONLY : upf
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_global,            ONLY : kunit
   USE pw_restart,           ONLY : pw_readfile
@@ -155,13 +155,7 @@ SUBROUTINE read_file()
   !
   DO nt = 1, nsp
      !
-     so(nt) = ( upf(nt)%nbeta > 0 )
-     !
-     DO nb = 1, upf(nt)%nbeta
-        !
-        so(nt) = so(nt) .AND. ( ABS( upf(nt)%jjj(nb) ) > 1.D-7 )
-        !
-     END DO
+     so(nt) = upf(nt)%has_so
      !
   END DO
   !

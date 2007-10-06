@@ -389,7 +389,7 @@
       USE pseudo_base,             ONLY : nlin_base
       USE pseudo_base,             ONLY : nlin_stress_base
       USE reciprocal_vectors,      ONLY : g, gstart
-      USE uspp_param,              ONLY : upf, nbeta, nbetam
+      USE uspp_param,              ONLY : upf, nbetam
       USE read_pseudo_module_fpmd, ONLY : nspnl
       USE cp_interfaces,           ONLY : compute_xgtab, chkpstab
       USE pseudopotential,         ONLY : wnl_sp, wnla_sp, xgtab
@@ -561,7 +561,7 @@
       USE cell_base,               ONLY : tpiba
       USE pseudo_base,             ONLY : nlin_stress_base
       USE splines,                 ONLY : spline
-      USE uspp_param,              ONLY : upf, nbeta
+      USE uspp_param,              ONLY : upf
       USE read_pseudo_module_fpmd, ONLY : nspnl
       USE reciprocal_vectors,      ONLY : g, gstart
       USE pseudopotential,         ONLY : wnla_sp, tpstab
@@ -1624,8 +1624,7 @@
              do l = lmin, lmax
                do ir = 1, upf(is)%kkbeta
                   if ( rgrid(is)%r(ir) >= upf(is)%rinner(l) ) then
-                     ! qrl(ir,ijv,l)=upf(is)%qfunc(ir,ijv) TEMP
-                     qrl(ir,ijv,l)=upf(is)%qfunc(ir,iv,jv)
+                     qrl(ir,ijv,l)=upf(is)%qfunc(ir,ijv)
                   else
                      qrl(ir,ijv,l)=upf(is)%qfcoef(1,l,iv,jv)
                      do i = 2, upf(is)%nqf

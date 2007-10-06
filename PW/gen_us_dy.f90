@@ -25,7 +25,7 @@ subroutine gen_us_dy (ik, u, dvkb)
   USE uspp,       ONLY : nkb, indv, nhtol, nhtolm
   USE us,         ONLY : nqx, tab, tab_d2y, dq, spline_ps
   USE splinelib
-  USE uspp_param, ONLY : lmaxkb, nbeta, nbetam, nh
+  USE uspp_param, ONLY : upf, lmaxkb, nbetam, nh
   !
   implicit none
   !
@@ -82,7 +82,7 @@ subroutine gen_us_dy (ik, u, dvkb)
 
   do nt = 1, ntyp
      ! calculate beta in G-space using an interpolation table
-     do nb = 1, nbeta (nt)
+     do nb = 1, upf(nt)%nbeta
         do ig = 1, npw
            if (spline_ps) then
              vkb0(ig,nb,nt) = splint(xdata, tab(:,nb,nt), &

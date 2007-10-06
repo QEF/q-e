@@ -60,7 +60,7 @@
       USE cell_base,           ONLY: tpiba2, omega
       USE reciprocal_vectors,  ONLY: gstart, gzero, g, gx
       USE gvecw,               ONLY: ngw
-      USE uspp_param,          only: nh, lmaxkb, nbeta, nhm
+      USE uspp_param,          only: nbetam, nh, lmaxkb, nhm
       USE uspp,                only: nhtol, nhtolm, indv, nkb
       USE electrons_base,      only: nupdwn, iupdwn, nspin
       USE cdvan,               only: dbec
@@ -150,8 +150,8 @@
       ! ... initialize array wnla
  
       ALLOCATE( wsg ( nhm, nsp ) )
-      ALLOCATE( wnl ( ngw, MAXVAL( nbeta( 1:nsp ) ), nsp, 1 ) )
-      ALLOCATE( wnla( ngw, MAXVAL( nbeta( 1:nsp ) ), nsp ) )
+      ALLOCATE( wnl ( ngw, nbetam, nsp, 1 ) )
+      ALLOCATE( wnla( ngw, nbetam, nsp ) )
       ALLOCATE( fnlb( nsanl, MAXVAL( nh( 1:nsp ) ), MAXVAL( nupdwn ), nspin ) )
       !
       fac = sqrt( omega ) / ( 2.0d0 * 4.0d0 * pi )

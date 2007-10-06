@@ -459,12 +459,11 @@ subroutine set_pseudo_paw (is, pawset)
   end do
 
   ! triangularize matrix of qfunc's
-  allocate ( upf(is)%qfunc(1:pawset%grid%mesh,pawset%nwfc,pawset%nwfc) )
+  allocate ( upf(is)%qfunc(1:pawset%grid%mesh,pawset%nwfc*(pawset%nwfc+1)/2) )
   do nb = 1, pawset%nwfc
       do mb = nb, pawset%nwfc
           ijv = mb * (mb-1) / 2 + nb
-  !!!        qfunc (1:pawset%grid%mesh, ijv, is) = pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
-          upf(is)%qfunc (1:pawset%grid%mesh, nb,mb) = &
+          upf(is)%qfunc (1:pawset%grid%mesh,ijv) = &
              pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
       enddo
   enddo

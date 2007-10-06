@@ -8,7 +8,7 @@ module grid_paw_variables
   ! NO rinner > 0
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lqmax, nbrx, npsx, nqfx
+  USE parameters, ONLY : lqmax, nbrx, npsx
   USE radial_grids, ONLY: ndmx
   !
   implicit none

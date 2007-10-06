@@ -44,8 +44,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
                  aux(:) = 0.0_DP
                  DO i =  upf(np)%kkbeta,2,-1
                     IF (rgrid(np)%r(i) .LT. upf(np)%rinner(l+1)) GOTO 100
-                    !!! aux(i) = qfunc(i,ijv,np) TEMP
-                    aux(i) = upf(np)%qfunc(i,iv,jv)
+                    aux(i) = upf(np)%qfunc(i,ijv)
                  ENDDO
 100              CALL setqf ( upf(np)%qfcoef(1,l+1,iv,jv), aux(1), &
                               rgrid(np)%r, upf(np)%nqf, l, i )

@@ -17,7 +17,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   use smallbox_grid_dimensions, only: nr1b, nr2b, nr3b, &
             nr1bx, nr2bx, nr3bx, nnrb => nnrbx
 
-  use uspp_param,         only: lmaxq, nqlc, kkbeta, nbeta, nbetam, nh, nhm, oldvan
+  use uspp_param,         only: upf, lmaxq, nbetam, nh, nhm, oldvan
   use uspp,               only: indv, lpx, lpl, ap,nhtolm
   use atom,               only: rgrid
   use core
@@ -50,7 +50,7 @@ subroutine qqberry2( gqq,gqqm, ipol)
   integer :: ivs, jvs, ivl, jvl, lp, ijv
   real(8), allocatable:: ylm(:,:)
 
-  ndm = MAXVAL (kkbeta(1:nsp))
+  ndm = MAXVAL (upf(1:nsp)%kkbeta)
   allocate( fint( ndm), jl(ndm))
   allocate( qradb2(nbetam,nbetam,lmaxq,nsp))
   allocate( ylm(ngw, lmaxq*lmaxq))
@@ -86,28 +86,30 @@ subroutine qqberry2( gqq,gqqm, ipol)
   do is=1,nvb
      c=fpi                 !/omegab
      !
-     ALLOCATE ( qrl(kkbeta(is), nbeta(is)*(nbeta(is)+1)/2, nqlc(is)) )
+     ALLOCATE ( qrl( upf(is)%kkbeta, upf(is)%nbeta*(upf(is)%nbeta+1)/2, &
+                     upf(is)%nqlc ) )
      !
      call fill_qrl ( is, qrl )
      ! now the radial part
-     do l=1,nqlc(is)                        
+     do l=1,upf(is)%nqlc
         xg= gmes !only orthorombic cells
-        !!!call bess(xg,l,kkbeta(is),r(1,is),jl)
-        call sph_bes ( kkbeta(is), rgrid(is)%r, xg, l-1, jl )
-        do iv= 1,nbeta(is)
-           do jv=iv,nbeta(is)
+        !!!call bess(xg,l,upf(is)%kkbeta,rgrid(is)%r,jl)
+        call sph_bes ( upf(is)%kkbeta, rgrid(is)%r, xg, l-1, jl )
+        do iv= 1,upf(is)%nbeta
+           do jv=iv,upf(is)%nbeta
               ijv = (jv-1)*jv/2 + iv
 !     
 !     note qrl(r)=r^2*q(r)
 !
-              do ir=1,kkbeta(is)
+              do ir=1,upf(is)%kkbeta
                  fint(ir)=qrl(ir,ijv,l)*jl(ir)
               end do
               if (oldvan(is)) then
-                 call herman_skillman_int     &
-                      &  (kkbeta(is),fint,rgrid(is)%rab,qradb2(iv,jv,l,is))
+                 call herman_skillman_int ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
+                                            qradb2(iv,jv,l,is) )
               else
-                 call simpson (kkbeta(is),fint,rgrid(is)%rab,qradb2(iv,jv,l,is))
+                 call simpson ( upf(is)%kkbeta,fint,rgrid(is)%rab,&
+                                qradb2(iv,jv,l,is) )
               endif
               qradb2(iv,jv,l,is)=  c*qradb2(iv,jv,l,is)
               if ( iv /= jv ) qradb2(jv,iv,l,is)=  qradb2(iv,jv,l,is)

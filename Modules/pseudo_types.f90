@@ -12,8 +12,7 @@
 !  together with their allocation/deallocation routines
 
         USE kinds, ONLY: DP
-        USE parameters, ONLY: cp_lmax, lmaxx
-        use radial_grids, ONLY: ndmx, radial_grid_type
+        use radial_grids, ONLY: radial_grid_type
 
         IMPLICIT NONE
         SAVE
@@ -81,44 +80,46 @@ END TYPE paw_t
           REAL(DP) :: rmax              ! the maximum radius of the mesh
           REAL(DP) :: zmesh             ! the nuclear charge used for mesh
           REAL(DP) :: dx                ! the deltax of the linear mesh
-          INTEGER, POINTER :: nn(:)     ! nn(nwfc)
+          INTEGER, POINTER :: nn(:)     ! nn(nwfc) quantum number of wfc
           REAL(DP), POINTER :: rcut(:)  ! cut-off radius(nbeta)
-          REAL(DP), POINTER :: rcutus(:)! cut-off ultrasoft radius (nbeta)
+          REAL(DP), POINTER :: rcutus(:)! ultrasoft cut-off radius (nbeta)
           REAL(DP), POINTER :: epseu(:) ! energy (nwfc)
-          REAL(DP), POINTER :: jchi(:)  ! jchi(nwfc)
-          REAL(DP), POINTER :: jjj(:)   ! jjj(nbeta)
+          REAL(DP), POINTER :: jchi(:)  ! jchi(nwfc) j=l+1/2 or l-1/2 of wfc
+          REAL(DP), POINTER :: jjj(:)   ! jjj(nbeta) j=l+1/2 or l-1/2 of beta
 
           INTEGER :: nv                 ! UPF file version number
-          INTEGER :: lmax               ! maximum angular momentum component
+          INTEGER :: lmax               ! maximum l component in beta
           INTEGER :: mesh               ! number of point in the radial mesh
-          INTEGER :: nwfc               ! number of wavefunctions
+          INTEGER :: nwfc               ! number of atomic wavefunctions
           INTEGER :: nbeta              ! number of projectors
           INTEGER :: kkbeta             ! kkbeta=max(kbeta(:))
           !  kbeta<=mesh is the number of grid points for each beta function
           !              beta(r,nb) = 0 for r > r(kbeta(nb))
           ! kkbeta<=mesh is the largest of such number so that for all beta
           !              beta(r,nb) = 0 for r > r(kkbeta)
-          CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc)
-          CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta)
-          INTEGER, POINTER :: lchi(:)     ! lchi(nwfc)
-          REAL(DP), POINTER :: oc(:)      ! oc(nwfc)
-          REAL(DP), POINTER :: r(:)       ! r(mesh)
-          REAL(DP), POINTER :: rab(:)     ! rab(mesh)
-          REAL(DP), POINTER :: rho_atc(:) ! rho_atc(mesh)
-          REAL(DP), POINTER :: vloc(:)    ! vloc(mesh)
-          INTEGER, POINTER :: lll(:)      ! lll(nbeta)
-          INTEGER, POINTER :: kbeta(:)    ! kbeta(nbeta) 
-          REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta)
+          CHARACTER(LEN=2), POINTER :: els(:)  ! els(nwfc) label of wfc
+          CHARACTER(LEN=2), POINTER :: els_beta(:)  ! els(nbeta) label of beta
+          INTEGER, POINTER :: lchi(:)     ! lchi(nwfc) value of l for wavefcts
+          REAL(DP), POINTER :: oc(:)      ! oc(nwfc) occupancies for wavefcts
+          REAL(DP), POINTER :: r(:)       ! r(mesh)  radial grid
+          REAL(DP), POINTER :: rab(:)     ! rab(mesh) dr(x)/dx (x=linear grid)
+          REAL(DP), POINTER :: rho_atc(:) ! rho_atc(mesh) atomic core charge
+          REAL(DP), POINTER :: vloc(:)    ! vloc(mesh) local atomic potential
+          INTEGER, POINTER :: lll(:)      ! lll(nbeta) l of each projector
+          INTEGER, POINTER :: kbeta(:)    ! kbeta(nbeta) see above kkbeta
+          REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta) projectors
           INTEGER :: nd
-          REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta)
-          INTEGER :: nqf
-          INTEGER :: nqlc
-          REAL(DP), POINTER :: rinner(:)  ! rinner(0:2*lmax)
-          REAL(DP), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta)
-          REAL(DP), POINTER :: qfunc(:,:,:) ! qfunc(mesh,nbeta,nbeta)
+          REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta) atomic D_{mu,nu}
+          INTEGER :: nqf                  ! number of Q coefficients
+          INTEGER :: nqlc                 ! number of angular momenta in Q
+          REAL(DP), POINTER :: rinner(:)  ! rinner(0:2*lmax) r_L
+          REAL(DP), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta) q_{mu,nu}
+          REAL(DP), POINTER :: qfunc(:,:) ! qfunc(mesh,nbeta*(nbeta+1)/2)
+                                          ! Q_{mu,nu}(|r|) function for |r|> r_L
           REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
-          REAL(DP), POINTER :: chi(:,:)   !  chi(mesh,nwfc)
-          REAL(DP), POINTER :: rho_at(:)  !  rho_at(mesh)
+                                          ! coefficients for Q for |r|<r_L
+          REAL(DP), POINTER :: chi(:,:)   ! chi(mesh,nwfc) atomic wavefcts
+          REAL(DP), POINTER :: rho_at(:)  ! rho_at(mesh) atomic charge
           
           LOGICAL :: has_paw              ! Whether PAW data is included
           REAL(DP) :: paw_data_format     ! The version of the format

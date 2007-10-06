@@ -28,7 +28,6 @@ CONTAINS
   SUBROUTINE allocate_paw_internals
     USE gvect,              ONLY : nrxx
     USE lsda_mod,           ONLY : nspin
-    USE parameters,         ONLY : nbrx
     USE radial_grids,       ONLY : ndmx
     USE ions_base,          ONLY : nsp, nat, ntyp => nsp
     USE us,                 ONLY : nqxq
@@ -89,7 +88,6 @@ CONTAINS
   SUBROUTINE deallocate_paw_internals
     USE gvect,              ONLY : nrxx
     USE lsda_mod,           ONLY : nspin
-    USE parameters,         ONLY : nbrx
     USE radial_grids,       ONLY : ndmx
     USE ions_base,          ONLY : nsp, nat, ntyp => nsp
     USE us,                 ONLY : nqxq
@@ -192,7 +190,7 @@ CONTAINS
                 qi       ! q-point grid for interpolation
     REAL(DP), ALLOCATABLE :: ylmk0 (:) ! the spherical harmonics
     INTEGER :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
-              lk, mk, vk, kh, lh, sph_ind, nnbrx, ll
+              lk, mk, vk, kh, lh, sph_ind, ll
     COMPLEX(DP) :: coeff, qgm(1)
     REAL(DP) :: spinor, ji, jk
 
@@ -745,7 +743,8 @@ CONTAINS
     !#include "f_defs.h"
     USE kinds, ONLY: DP
     USE us, ONLY: dq!, qrad
-    USE uspp_param, ONLY: lmaxq, nbrx
+    USE parameters, ONLY: nbrx
+    USE uspp_param, ONLY: lmaxq
     USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtolm
     IMPLICIT NONE
 
@@ -1466,7 +1465,7 @@ END SUBROUTINE atomic_becsum
     USE cell_base,  ONLY : omega, tpiba2
     USE gvect,      ONLY : ngl, gl
     USE pseud,      ONLY : lloc, lmax, cc, nlc, nnl, alpc, alps, aps
-    USE uspp_param, ONLY : zp
+    USE uspp_param, ONLY : upf
     USE grid_paw_variables, ONLY: aevloc_at, psvloc_at, aevloc, psvloc
     !
     USE radial_grids, ONLY : ndmx
@@ -1498,7 +1497,7 @@ END SUBROUTINE atomic_becsum
        !
        CALL vloc_of_g_noerf (lloc (nt), lmax (nt), numeric (nt), rgrid(nt)%mesh, &
             msh (nt), rgrid(nt)%rab(1), rgrid(nt)%r(1), vloc_at_ (:, nt), cc (1, &
-            nt), alpc (1, nt), nlc (nt), nnl (nt), zp (nt), aps (1, 0, nt), &
+            nt), alpc (1, nt), nlc (nt), nnl (nt), upf(nt)%zp, aps (1, 0, nt), &
             alps (1, 0, nt), tpiba2, ngl, gl, omega, vloc_ (:, nt) )
        END DO
     END DO whattodo 

@@ -30,8 +30,7 @@ subroutine set_pseudo_upf (is, upf)
   !
   USE atom,  ONLY: rgrid, chi, oc, nchi, lchi, jchi, rho_at, &
                    rho_atc, nlcc
-  USE uspp_param, ONLY: zp, vloc_at, dion, betar, qqq, qfcoef, qfunc, nqf, &
-                        nqlc, rinner, nbeta, kkbeta, lll, jjj, psd, tvanp
+  USE uspp_param, ONLY: tvanp
   USE funct, ONLY: set_dft_from_name, set_dft_from_indices, dft_is_meta
   !
   USE pseudo_types
@@ -47,8 +46,6 @@ subroutine set_pseudo_upf (is, upf)
   TYPE (pseudo_upf) :: upf
   !
   !
-  zp(is)  = upf%zp
-  psd (is)= upf%psd
   tvanp(is)=upf%tvanp
   nlcc(is) = upf%nlcc
   ! workaround for rrkj format - it contains the indices, not the name
@@ -64,30 +61,6 @@ subroutine set_pseudo_upf (is, upf)
   oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
   chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
   !
-  nbeta(is)= upf%nbeta
-  kkbeta(is)=upf%kkbeta
-  betar(1:upf%mesh, 1:upf%nbeta, is) = upf%beta(1:upf%mesh, 1:upf%nbeta)
-  dion(1:upf%nbeta, 1:upf%nbeta, is) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
-  !
-  nqlc(is) = upf%nqlc
-  nqf (is) = upf%nqf
-  lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
-  rinner(1:upf%nqlc,is) = upf%rinner(1:upf%nqlc)
-  lll(1:upf%nbeta,is) = upf%lll(1:upf%nbeta)
-  if ( upf%tvanp ) then
-     qqq(1:upf%nbeta,1:upf%nbeta,is) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-     do nb = 1, upf%nbeta
-        do mb = nb, upf%nbeta
-           ijv = mb * (mb-1) / 2 + nb
-           qfunc (1:upf%mesh, ijv, is) = upf%qfunc(1:upf%mesh, nb, mb)
-        end do
-     end do
-     if ( upf%nqf > 0 ) then
-        qfcoef(1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta, is ) = &
-          upf%qfcoef( 1:upf%nqf, 1:upf%nqlc, 1:upf%nbeta, 1:upf%nbeta )
-     end if
-  end if
-  !
   rgrid(is)%dx   = upf%dx
   rgrid(is)%xmin = upf%xmin
   rgrid(is)%zmesh= upf%zmesh
@@ -100,10 +73,8 @@ subroutine set_pseudo_upf (is, upf)
   !
   if (upf%has_so) then
      jchi(1:upf%nwfc, is) = upf%jchi(1:upf%nwfc)
-     jjj(1:upf%nbeta, is) = upf%jjj(1:upf%nbeta)
   else
      jchi(1:upf%nwfc, is) = 0.0_DP
-     jjj(1:upf%nbeta, is) = 0.0_DP
   endif
   !
   if ( upf%nlcc) then
@@ -112,7 +83,6 @@ subroutine set_pseudo_upf (is, upf)
      rho_atc(:,is) = 0.0_DP
   end if
   rho_at (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
-  vloc_at(1:upf%mesh,is) = upf%vloc(1:upf%mesh)
 
 end subroutine set_pseudo_upf
 
