@@ -282,7 +282,7 @@ subroutine ld1_readin
      endif
   endif
   if (dx==0.0_DP) then
-     if (iswitch==1.and..not.vdw.and.rel>0) then
+     if (iswitch==1.and..not.vdw) then
         dx=0.008_DP
      else
         dx=0.0125_DP

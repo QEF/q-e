@@ -7,7 +7,7 @@
 !
 !
 !---------------------------------------------------------------
-subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh,y,nstop)
+subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh0,y,nstop)
   !---------------------------------------------------------------
   !
   !  numerical integration of the radial schroedinger equation for
@@ -27,7 +27,7 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh,y,nstop)
        yln,xp, sum1
   real(DP):: vpot(mesh), y(mesh)
   real(DP),allocatable:: c(:), el(:), f(:)
-  real(DP):: b(0:3),e,thresh
+  real(DP):: b(0:3),e,thresh0, thresh
   data maxter/50/
   !
   !  set up constants and initialize
@@ -36,6 +36,8 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh,y,nstop)
   allocate(f(mesh),stat=ierr)
   allocate(el(mesh),stat=ierr)
 
+  thresh=thresh0
+  if (e<-1.e-3) thresh=thresh0*10.0_DP
   iter=0
   ddx12=grid%dx*grid%dx/12.0_dp
   l1=lam+1
@@ -81,6 +83,7 @@ subroutine ascheq(nn,lam,e,mesh,grid,vpot,ze2,thresh,y,nstop)
      if( f(i) .ne. sign(f(i),f(i-1)) ) ik=i
   enddo
   nstop=302
+  
   if(ik.ge.mesh-2) go to 900
   do i=1,mesh
      f(i)=1.0_dp-f(i)
