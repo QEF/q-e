@@ -44,7 +44,8 @@ SUBROUTINE move_ions()
   !
   IMPLICIT NONE
   !
-  LOGICAL, SAVE         :: lcheck_mag = .TRUE.
+  LOGICAL, SAVE         :: lcheck_mag = .TRUE., &
+                           restart_with_starting_magnetization = .FALSE.
     ! .TRUE. if a check on zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
   REAL(DP)              :: energy_error, gradient_error
@@ -131,26 +132,9 @@ SUBROUTINE move_ions()
            IF ( ( lsda .AND. ( absmag < eps8 ) .AND. lcheck_mag ) ) THEN
               !
               ! ... lsda relaxation :  a final configuration with zero 
-              ! ...                    absolute magnetization has been found
-              !
-              ! ... here we check if it is really the minimum energy structure
-              ! ... by performing a new scf iteration without any "electronic"
-              ! ... history
-              !
-              WRITE( UNIT = stdout, FMT = 9010 )
-              WRITE( UNIT = stdout, FMT = 9020 )
-              !
-              ! ... the system is reinitialized
-              !
-              CALL init_h()
-              !
-              ! ... this check is performed only once
-              !
-              lcheck_mag = .FALSE.
-              !
-              ! ... conv_ions is set to .FALSE. to perform a final scf cycle
-              !
-              conv_ions = .FALSE.
+              ! ...                    absolute magnetization has been found.
+              !                        A check on this configuration is needed
+              restart_with_starting_magnetization = .true.
               ! 
            ELSE
               !
@@ -186,6 +170,7 @@ SUBROUTINE move_ions()
            lcheck_mag = .TRUE.
            !
         END IF
+
         !
         tau   =   RESHAPE( pos,  (/ 3, nat /) ) / alat
         force = - RESHAPE( grad, (/ 3, nat /) )
@@ -239,6 +224,31 @@ SUBROUTINE move_ions()
                        at, bg, nr1, nr2, nr3, irt, ftau, alat, omega )
      !
   END IF
+
+  CALL mp_bcast(restart_with_starting_magnetization,ionode_id,intra_image_comm)
+  !
+  if (restart_with_starting_magnetization) then
+     ! ... lsda relaxation :  a final configuration with zero 
+     ! ... absolute magnetization has been found and we check 
+     ! ... if it is really the minimum energy structure by 
+     ! ... performing a new scf iteration without any "electronic" history
+     !
+     WRITE( UNIT = stdout, FMT = 9010 )
+     WRITE( UNIT = stdout, FMT = 9020 )
+     !
+     ! ... the system is reinitialized
+     !
+     CALL init_h()
+     !
+     ! ... this check is performed only once
+     !
+     lcheck_mag = .FALSE.
+     restart_with_starting_magnetization = .FALSE.
+     !
+     ! ... conv_ions is set to .FALSE. to perform a final scf cycle
+     !
+     conv_ions = .FALSE.
+  end if
   !
   ! ... broadcast calculated quantities to all nodes
   !
