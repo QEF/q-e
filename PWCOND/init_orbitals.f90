@@ -27,7 +27,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   use noncollin_module, only : noncolin
   use spin_orb, only: lspinorb
   use ions_base,  only : atm, nat, ityp, tau, nsp 
-  use uspp_param, only : upf, nbetam, betar
+  use uspp_param, only : upf, nbetam
   use uspp,       only : deeq, deeq_nc, qq, qq_so 
   use atom,       only : rgrid
 
@@ -346,8 +346,9 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        do ips=1, npsx
           rl(:,ips) = rgrid(ips)%r(:)
           rabl(:,ips) = rgrid(ips)%rab(:)
+          betarl(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
+             upf(ips)%beta(1:rgrid(ips)%mesh,1:upf(ips)%nbeta)
        end do
-       betarl = betar
     ENDIF
     norbf = norbl
   elseif(lsr.eq.2) then
@@ -373,8 +374,9 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        do ips=1, npsx
           rs(:,ips) = rgrid(ips)%r(:)
           rabs(:,ips) = rgrid(ips)%rab(:)
+          betars(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
+                  upf(ips)%beta(1:rgrid(ips)%mesh,1:upf(ips)%nbeta)
        end do
-       betars = betar
     ENDIF
     norbf = max(norbf,norbs)
   elseif(lsr.eq.3) then
@@ -401,8 +403,9 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        do ips=1,npsx
           rr(:,ips) = rgrid(ips)%r(:)
           rabr(:,ips) = rgrid(ips)%rab(:)
+          betarr(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
+            upf(ips)%beta(1:rgrid(ips)%mesh,1:upf(ips)%nbeta)
        enddo
-       betarr = betar
     ENDIF
     norbf = max(norbf,norbr)
   endif
