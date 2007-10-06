@@ -95,7 +95,7 @@
     USE mp,              ONLY: mp_sum
     USE turbo,           ONLY: tturbo, nturbo, turbo_states, allocate_turbo
     USE io_global,       ONLY: stdout, ionode
-    USE control_flags,   ONLY: iprint
+    USE control_flags,   ONLY: iprint, use_task_groups
     USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
     USE cp_interfaces,   ONLY: invfft
     USE electrons_base,  ONLY: iupdwn, nupdwn, nspin
@@ -132,6 +132,9 @@
 !  ----------------------------------------------
 
     CALL start_clock( 'rhoofr' )
+
+    IF( use_task_groups ) &
+       CALL errore( ' rhoofr_fpmd ', ' tasks group not implemented in fpmd ', 1 )
 
     ! ... compute kinetic energy
 
