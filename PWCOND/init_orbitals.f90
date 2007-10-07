@@ -26,7 +26,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   use lsda_mod, only: nspin
   use noncollin_module, only : noncolin
   use spin_orb, only: lspinorb
-  use ions_base,  only : atm, nat, ityp, tau, nsp 
+  use ions_base,  only : atm, nat, ityp, ntyp=>nsp, tau
   use uspp_param, only : upf, nbetam
   use uspp,       only : deeq, deeq_nc, qq, qq_so 
   use atom,       only : rgrid
@@ -39,7 +39,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
   integer, allocatable :: orbind(:,:), tblm(:,:), cros(:,:), natih(:,:)
   real(DP), parameter :: eps=1.d-8
   real(DP) :: ledge, redge, ledgel, redgel, ledger, redger, &
-                   bd1, bd2, zlen, z(nrz+1), rsph(nbetam, nsp)   
+                   bd1, bd2, zlen, z(nrz+1), rsph(nbetam, ntyp)   
   real(DP), allocatable :: taunew(:,:), zpseu(:,:,:)
 
   complex(DP), allocatable :: zpseu_nc(:,:,:,:)
@@ -343,7 +343,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        else
           zpseul = zpseu
        endif
-       do ips=1, npsx
+       do ips=1, ntyp
           rl(:,ips) = rgrid(ips)%r(:)
           rabl(:,ips) = rgrid(ips)%rab(:)
           betarl(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
@@ -371,7 +371,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        else
           zpseus = zpseu
        endif      
-       do ips=1, npsx
+       do ips=1, ntyp
           rs(:,ips) = rgrid(ips)%r(:)
           rabs(:,ips) = rgrid(ips)%rab(:)
           betars(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &
@@ -400,7 +400,7 @@ subroutine init_orbitals (zlen, bd1, bd2, z, nrz, rsph, lsr)
        else
           zpseur = zpseu
        endif
-       do ips=1,npsx
+       do ips=1,ntyp
           rr(:,ips) = rgrid(ips)%r(:)
           rabr(:,ips) = rgrid(ips)%rab(:)
           betarr(1:rgrid(ips)%mesh,1:upf(ips)%nbeta,ips) = &

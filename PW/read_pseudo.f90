@@ -14,7 +14,8 @@ subroutine readpp
   !    Read pseudopotentials
   !
   USE kinds,      ONLY : DP
-  USE pseudo_types
+  USE pseudo_types,     ONLY : pseudo_upf, paw_t, &
+                               nullify_pseudo_upf, deallocate_pseudo_upf
   USE read_upf_module , ONLY : read_pseudo_upf
   USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal,  ONLY : set_pseudo_upf
@@ -48,6 +49,13 @@ subroutine readpp
   !
   iunps = 4
   l = len_trim (pseudo_dir)
+  IF( ALLOCATED( upf ) ) THEN
+     DO nt = 1, SIZE( upf )
+        CALL deallocate_pseudo_upf( upf( nt ) )
+        CALL nullify_pseudo_upf( upf( nt ) )
+     END DO
+     DEALLOCATE( upf )
+  END IF
   ALLOCATE ( upf(ntyp) )
   do nt = 1, ntyp
      tpawp(nt) = .false.

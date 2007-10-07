@@ -207,7 +207,6 @@ subroutine init_cond (nregion, flag)
 
 !-----------------------------
 
-
   if(flag.eq.'l') then
     nrzl = nrzreg(1)
     allocate( vppotl(nrzl, nrx * nry, npol, npol) )
