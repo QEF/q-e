@@ -138,6 +138,11 @@ subroutine readpp
                          MAXVAL( upf(nt)%lll( 1:upf(nt)%nbeta ) ) )
      endif
      close (iunps)
+     ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,
+     ! ... is set equal to Zp = pseudo-charge of the pseudopotential
+     !
+     zv(nt) = upf(nt)%zp
+     !
      !
      if (nt == 1) then
         iexch_ = get_iexch()
