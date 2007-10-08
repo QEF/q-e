@@ -830,6 +830,8 @@ MODULE read_cards_module
           CALL read_line( input_line, end_of_file = tend )
           IF (tend) GO TO 10
           READ(input_line, *, END=10, ERR=10) nkstot
+          IF ( nkstot > SIZE (xk,2)  ) CALL errore &
+                  ('card_kpoints', 'too many k-points',nkstot)
           !
           DO i = 1, nkstot
              CALL read_line( input_line, end_of_file = tend )
