@@ -16,9 +16,9 @@ MODULE parameters
   !
 
   INTEGER, PARAMETER :: &
-       ntypx  = 3 ,     &! max number of different types of atom
+       ntypx  = 10,     &! max number of different types of atom
        npsx   = ntypx,  &! max number of different PPs (obsolete)
-       npk    =  2000,  &! max number of k-points               
+       npk    = 40000,  &! max number of k-points               
        lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
        nchix  = 6,      & ! max number of atomic wavefunctions per atom
        nwfsx  = 14       ! max number of beta functions per atom

@@ -342,6 +342,7 @@ subroutine read_pseudo_nl (upf, iunps)
   if ( upf%nbeta == 0) then
      upf%nqf = 0
      upf%nqlc= 0
+     upf%kkbeta = 0  
      ALLOCATE( upf%kbeta( 1 ) )
      ALLOCATE( upf%lll( 1 ) )
      ALLOCATE( upf%beta( upf%mesh, 1 ) )
