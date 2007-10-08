@@ -21,7 +21,7 @@ subroutine readpp
   USE upf_to_internal,  ONLY : set_pseudo_upf
   USE paw,              ONLY : set_paw_upf
   USE atom,       ONLY : chi, nchi, oc, msh, numeric, rgrid
-  USE uspp_param, ONLY : iver, newpseudo
+  USE uspp_param, ONLY : newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE io_files,   ONLY : pseudo_dir, psfile
@@ -62,7 +62,6 @@ subroutine readpp
      !
      ! obsolescent variables, not read from UPF format, no longer used
      !
-     iver(:,nt) = 0
      rgrid(nt)%xmin = 0.d0
      rgrid(nt)%dx = 0.d0
      lmax(nt) = -1

@@ -969,7 +969,6 @@ read_pseudo.o : ../Modules/io_global.o
 read_pseudo.o : ../Modules/ions_base.o
 read_pseudo.o : ../Modules/kind.o
 read_pseudo.o : ../Modules/mp.o
-read_pseudo.o : ../Modules/parser.o
 read_pseudo.o : ../Modules/pseudo_types.o
 read_pseudo.o : ../Modules/read_upf.o
 read_pseudo.o : ../Modules/read_uspp.o
