@@ -372,7 +372,7 @@ MODULE realus
                   END DO
                   !
                   IF ( upf(nt)%rinner(l+1) > 0.D0 ) &
-                     CALL setqfcorr( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                     CALL setqfcorr( upf(nt)%qfcoef(1:,l+1,nb,mb), &
                         qtot(1,nb,mb), rgrid(nt)%r(1), upf(nt)%nqf, l, ilast )
                   !
                   ! ... we save the values in y
@@ -381,12 +381,12 @@ MODULE realus
                   !
                   ! ... compute the first derivative in first point
                   !
-                  CALL setqfcorrptfirst( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                  CALL setqfcorrptfirst( upf(nt)%qfcoef(1:,l+1,nb,mb), &
                                    first, rgrid(nt)%r(1), upf(nt)%nqf, l )
                   !
                   ! ... compute the second derivative in second point
                   !
-                  CALL setqfcorrptsecond( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                  CALL setqfcorrptsecond( upf(nt)%qfcoef(1:,l+1,nb,mb), &
                                    second, rgrid(nt)%r(1), upf(nt)%nqf, l )
                   !
                   ! ... call spline
@@ -400,7 +400,7 @@ MODULE realus
                         ! ... if in the inner radius just compute the
                         ! ... polynomial
                         !
-                        CALL setqfcorrpt( upf(nt)%qfcoef(1,l+1,nb,mb), &
+                        CALL setqfcorrpt( upf(nt)%qfcoef(1:,l+1,nb,mb), &
                                    qtot_int, boxdist(ir,ia), upf(nt)%nqf, l )
                         !
                      ELSE   
