@@ -28,21 +28,24 @@ subroutine syme (dvsym)
   ! the potential to symmetrize
   ! auxiliary quantity
 
-  integer :: is, ri, rj, rk, i, j, k, irot, ipol, jpol
+  integer :: is, ri, rj, rk, i, j, k, irot, ipol, jpol, nspin0
   ! counter on spin polarization
   ! the rotated points
   ! the point
   ! counter on symmetries
   ! counter on polarizations
 
-  do is = 1, nspin
+  nspin0=nspin
+  if (nspin==4) nspin0=1
+ 
+  do is = 1, nspin0
      do ipol = 1, 3
         dvsym(:,:,:,is,ipol) = CMPLX(DBLE(dvsym(:,:,:,is,ipol)),0.d0)
      end do
   end do
   if (nsym == 1) return
   allocate (aux(nrx1 , nrx2 , nrx3 , 3))    
-  do is = 1, nspin
+  do is = 1, nspin0
      do ipol = 1, 3
         aux(:,:,:,ipol) = dvsym(:,:,:,is,ipol)
         dvsym(:,:,:,is,ipol) = (0.d0, 0.d0)

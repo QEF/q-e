@@ -216,7 +216,7 @@ SUBROUTINE phq_init()
   !
   IF ( ( epsil .OR. zue ) .AND. okvan ) THEN
      CALL compute_qdipol(dpqq)
-!     IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
+     IF (lspinorb) CALL compute_qdipol_so(dpqq, dpqq_so)
   END IF
   !
   CALL stop_clock( 'phq_init' )

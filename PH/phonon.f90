@@ -325,7 +325,6 @@ PROGRAM phonon
      !
      IF ( epsil .AND. irr0 <=  0 ) THEN
         !
-        IF (noncolin) CALL errore('phonon','epsil and noncolin not programed',1)
         IF (fpol) THEN    ! calculate freq. dependent polarizability
            !
            WRITE( stdout, '(/,5X,"Frequency Dependent Polarizability Calculation",/)' )
@@ -358,7 +357,7 @@ PROGRAM phonon
            !
            ! ... calculate the effective charges Z(E,Us) (E=scf,Us=bare)
            !
-           IF (.NOT.(lrpa.OR.lnoloc).AND..NOT.noncolin) CALL zstar_eu()
+           IF (.NOT.(lrpa.OR.lnoloc)) CALL zstar_eu()
            !
            IF ( fildrho /= ' ' ) CALL punch_plot_e()
            !

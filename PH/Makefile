@@ -91,6 +91,7 @@ psidspsi.o \
 psymdvscf.o \
 psyme.o \
 psym_dmag.o \
+psym_dmage.o \
 punch_plot_e.o \
 punch_plot_ph.o \
 q_points.o \
@@ -115,6 +116,7 @@ stop_ph.o \
 sym_and_write_zue.o \
 sym_def.o \
 sym_dmag.o \
+sym_dmage.o \
 symdvscf.o \
 symdyn_munu.o \
 symdynph_gq.o \

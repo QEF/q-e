@@ -80,7 +80,7 @@ subroutine allocate_phq
         IF (lspinorb) THEN
            ALLOCATE(int2_so( nhm, nhm, 3, nat , nat, nspin))    
            ALLOCATE(int5_so( nhm, nhm, 3, 3, nat , nat, nspin))    
-!           allocate(dpqq_so( nhm, nhm, nspin, 3, ntyp))    
+           allocate(dpqq_so( nhm, nhm, nspin, 3, ntyp))    
         END IF
      END IF
      allocate (alphasum ( nhm * (nhm + 1)/2 , 3 , nat , nspin))    

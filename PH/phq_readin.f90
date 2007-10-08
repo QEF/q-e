@@ -41,7 +41,7 @@ SUBROUTINE phq_readin()
   USE output,        ONLY : fildyn, fildvscf, fildrho
   USE disp,          ONLY : nq1, nq2, nq3, iq1, iq2, iq3
   USE io_files,      ONLY : tmp_dir, prefix, trimcheck
-  USE noncollin_module, ONLY : noncolin, i_cons
+  USE noncollin_module, ONLY : i_cons
   USE ldaU,          ONLY : lda_plus_u
   USE control_flags, ONLY : iverbosity, modenum
   USE io_global,     ONLY : ionode
@@ -243,9 +243,6 @@ SUBROUTINE phq_readin()
 
   IF (lda_plus_u) CALL errore('phq_readin',&
      'The phonon code with LDA+U is not yet available',1)
-
-  IF (noncolin.and..not.trans.and.okvan) CALL errore('phq_readin', &
-     'The non collinear US dieletric constant is not yet available',1)
 
   IF (nproc /= nproc_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&

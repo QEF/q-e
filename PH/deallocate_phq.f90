@@ -62,7 +62,7 @@ subroutine deallocate_phq
   if(allocated(alphasum_nc)) deallocate(alphasum_nc)
   if(allocated(int2_so)) deallocate(int2_so)
   if(allocated(int5_so)) deallocate(int5_so)
-!  if (allocated(dpqq_so)) deallocate(dpqq_so)
+  if(allocated(dpqq_so)) deallocate(dpqq_so)
 
   if(allocated(alphasum)) deallocate (alphasum)
   if(allocated(this_dvkb3_is_on_file)) deallocate (this_dvkb3_is_on_file)    

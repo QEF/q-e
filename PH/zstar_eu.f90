@@ -18,6 +18,7 @@ subroutine zstar_eu
   USE io_global,      ONLY : stdout
   USE io_files, ONLY: iunigk
   use pwcom
+  use noncollin_module, ONLY : npol
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
   use phcom
@@ -60,7 +61,7 @@ subroutine zstar_eu
               call davcio (dpsi, lrdwf, iudwf, nrec, - 1)
               do ibnd = 1, nbnd_occ(ik)
                  zstareu0(jpol,mode)=zstareu0(jpol, mode)-2.d0*weight*&
-                      ZDOTC(npw,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
+                      ZDOTC(npwx*npol,dpsi(1,ibnd),1,dvpsi(1,ibnd),1)
               enddo
            enddo
         enddo

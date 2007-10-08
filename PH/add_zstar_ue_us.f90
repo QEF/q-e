@@ -18,6 +18,7 @@ subroutine add_zstar_ue_us(imode0,npe)
 #include "f_defs.h"
 
   USE pwcom
+  USE noncollin_module,   ONLY : npol
   USE kinds, ONLY : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
@@ -34,12 +35,8 @@ subroutine add_zstar_ue_us(imode0,npe)
   complex(DP), allocatable :: dvkb(:,:,:)
   !  auxiliary space for <psi|ds/du|psi>
 
-  ! 
-  !  Here we calculate the dipole of q
-  !  (Just to be sure, this has already beeen done in phq_setup)
-  !
   call start_clock('add_zstar_us')
-  call compute_qdipol(dpqq)
+!  call compute_qdipol(dpqq)
   
   allocate (pdsp(nbnd,nbnd))
   allocate (dvkb(npwx,nkb,3))
@@ -74,8 +71,8 @@ subroutine add_zstar_ue_us(imode0,npe)
               do jbnd = 1, nbnd_occ(ik)
                  zstarue0(mode,jpol)=zstarue0(mode,jpol) +              &
                       weight *                                          &
-                      dot_product(evc(1:npw,ibnd),dvpsi(1:npw,jbnd))*   &
-                      pdsp(jbnd,ibnd)
+                      dot_product(evc(1:npwx*npol,ibnd), &
+                           dvpsi(1:npwx*npol,jbnd))*pdsp(jbnd,ibnd)
               enddo
            enddo
 
@@ -103,7 +100,7 @@ subroutine add_zstar_ue_us(imode0,npe)
            !
            do ibnd = 1, nbnd_occ(ik)
               zstarue0(mode,jpol)=zstarue0(mode,jpol) - weight *   &
-                   dot_product(evc(1:npw,ibnd),dvpsi(1:npw,ibnd))
+                   dot_product(evc(1:npwx*npol,ibnd),dvpsi(1:npwx*npol,ibnd))
            enddo
         enddo
      enddo

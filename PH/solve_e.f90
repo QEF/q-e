@@ -20,16 +20,18 @@ subroutine solve_e
   !     d) calls cgsolve_all to solve the linear system
   !     e) computes Delta rho, Delta V_{SCF} and symmetrizes them
   !
-  USE ions_base,             ONLY : nat
+  USE ions_base,             ONLY : nat, ntyp => nsp, ityp
   USE io_global,             ONLY : stdout, ionode
   USE io_files,              ONLY : prefix, iunigk
   use pwcom
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
-  USE becmod,                ONLY : becp
-  USE uspp_param,            ONLY : nhm
+  USE becmod,                ONLY : becp, becp_nc
+  USE uspp_param,            ONLY : nhm, tvanp
+  USE noncollin_module,      ONLY : noncolin, npol
   use phcom
+  USE control_ph,            ONLY : reduce_io
   
   implicit none
 
@@ -49,15 +51,17 @@ subroutine solve_e
   complex(DP) , allocatable ::   &
                    dvscfout (:,:,:), & ! change of the scf potential (output)
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
-                   auxg (:), aux1 (:),  ps (:,:)
+                   dbecsum_nc(:,:,:,:,:), & ! the becsum with dpsi
+                   auxg (:), aux1 (:,:),  ps (:,:)
 
   complex(DP), EXTERNAL :: ZDOTC      ! the scalar product function
+  complex(DP) :: sup, sdwn
 
   logical :: conv_root, exst
   ! conv_root: true if linear system is converged
 
-  integer :: kter, iter0, ipol, ibnd, iter, lter, &
-       ik, ig, irr, ir, is, nrec, ios
+  integer :: kter, iter0, ipol, ibnd, jbnd, iter, lter, &
+       ik, ig, irr, ir, is, nrec, na, nt, ios
   ! counters
   integer :: ltaver, lintercall
 
@@ -69,7 +73,7 @@ subroutine solve_e
 
   external ch_psi_all, cg_psi
 
-  if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
+!  if (lsda) call errore ('solve_e', ' LSDA not implemented', 1)
 
   call start_clock ('solve_e')
   allocate (dvscfin( nrxx, nspin, 3))    
@@ -80,17 +84,24 @@ subroutine solve_e
   endif
   allocate (dvscfout( nrxx , nspin, 3))    
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))    
-  allocate (auxg(npwx))    
-  allocate (aux1(nrxxs))    
+  IF (noncolin) allocate (dbecsum_nc (nhm, nhm, nat, nspin, 3))
+  allocate (auxg(npwx*npol))    
+  allocate (aux1(nrxxs,npol))    
   allocate (ps  (nbnd,nbnd))    
   ps (:,:) = (0.d0, 0.d0)
-  allocate (h_diag(npwx, nbnd))    
+  allocate (h_diag(npwx*npol, nbnd))    
   allocate (eprec(nbnd))
   if (irr0 == -20) then
      ! restarting in Electric field calculation
      read (iunrec) iter0, dr2
      read (iunrec) dvscfin
-     if (okvan) read (iunrec) int1, int2, int3
+     if (okvan) then
+        read (iunrec) int1, int2, int3
+        if (noncolin) then
+           CALL set_int12_nc(0)
+           CALL set_int3_nc(3)
+        end if
+     end if
      close (unit = iunrec, status = 'keep')
      if (doublegrid) then
         do is=1,nspin
@@ -99,7 +110,7 @@ subroutine solve_e
            enddo
         enddo
      endif
-     convt = .false.
+     convt=.false.
   else if (irr0 > -20 .AND. irr0 <= -10) then
      ! restarting in Raman: proceed
      convt = .true.
@@ -131,16 +142,19 @@ subroutine solve_e
   !
   do kter = 1, niter_ph
 
+!     write(6,*) 'kter', kter
      iter = kter + iter0
      ltaver = 0
      lintercall = 0
 
      dvscfout(:,:,:)=(0.d0,0.d0)
      dbecsum(:,:,:,:)=(0.d0,0.d0)
+     IF (noncolin) dbecsum_nc=(0.d0,0.d0)
 
      if (nksq.gt.1) rewind (unit = iunigk)
      do ik = 1, nksq
         if (lsda) current_spin = isk (ik)
+!        write(6,*) 'current spin', current_spin, ik
         if (nksq.gt.1) then
            read (iunigk, err = 100, iostat = ios) npw, igk
 100        call errore ('solve_e', 'reading igk', abs (ios) )
@@ -172,17 +186,48 @@ subroutine solve_e
               ! dvscf_q from previous iteration (mix_potential)
               !
               do ibnd = 1, nbnd_occ (ik)
-                 aux1(:) = (0.d0, 0.d0)
+                 aux1 = (0.d0, 0.d0)
                  do ig = 1, npw
-                    aux1 (nls(igk(ig)))=evc(ig,ibnd)
+                    aux1 (nls(igk(ig)),1)=evc(ig,ibnd)
                  enddo
                  call cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
-                 do ir = 1, nrxxs
-                    aux1(ir)=aux1(ir)*dvscfins(ir,current_spin,ipol)
-                 enddo
+                 IF (noncolin) THEN
+                    do ig = 1, npw
+                       aux1 (nls(igk(ig)),2)=evc(ig+npwx,ibnd)
+                    enddo
+                    call cft3s (aux1(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,+2)
+                    IF (domag) THEN
+                       do ir = 1, nrxxs
+                          sup=aux1(ir,1)*(dvscfins(ir,1,ipol) &
+                                         +dvscfins(ir,4,ipol))+ &
+                              aux1(ir,2)*(dvscfins(ir,2,ipol)- &
+                                         (0.d0,1.d0)*dvscfins(ir,3,ipol))
+                          sdwn=aux1(ir,2)*(dvscfins(ir,1,ipol)- &
+                                           dvscfins(ir,4,ipol)) + &
+                               aux1(ir,1)*(dvscfins(ir,2,ipol)+ &
+                                           (0.d0,1.d0)*dvscfins(ir,3,ipol))
+                          aux1(ir,1)=sup
+                          aux1(ir,2)=sdwn
+                       enddo
+                    ELSE
+                       do ir = 1, nrxxs
+                          aux1(ir,1)=aux1(ir,1)*dvscfins(ir,1,ipol) 
+                          aux1(ir,2)=aux1(ir,2)*dvscfins(ir,1,ipol) 
+                       enddo
+                    ENDIF
+                    call cft3s (aux1(1,2),nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
+                    do ig = 1, npwq
+                       dvpsi(ig+npwx,ibnd)=dvpsi(ig+npwx,ibnd)+ &
+                                           aux1(nls(igkq(ig)),2)
+                    enddo
+                 ELSE
+                    do ir = 1, nrxxs
+                       aux1(ir,1)=aux1(ir,1)*dvscfins(ir,current_spin,ipol)
+                    enddo
+                 ENDIF
                  call cft3s (aux1,nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,-2)
                  do ig = 1, npwq
-                    dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igkq(ig)))
+                    dvpsi(ig,ibnd)=dvpsi(ig,ibnd)+aux1(nls(igkq(ig)),1)
                  enddo
               enddo
               !
@@ -192,23 +237,41 @@ subroutine solve_e
            !
            ! Orthogonalize dvpsi to valence states: ps = <evc|dvpsi>
            !
-           CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
+           IF (noncolin) THEN
+              CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwx*npol, &
+                  (1.d0,0.d0), evc(1,1), npwx*npol, dvpsi(1,1), npwx*npol,   &
+                  (0.d0,0.d0), ps(1,1), nbnd )
+           ELSE
+              CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
                 (1.d0,0.d0), evc(1,1), npwx, dvpsi(1,1), npwx, (0.d0,0.d0), &
                 ps(1,1), nbnd )
+           END IF
 #ifdef __PARA
            call reduce (2 * nbnd * nbnd_occ (ik), ps)
 #endif
            ! dpsi is used as work space to store S|evc>
            !
-           CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
-           CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dpsi)
+           IF (noncolin) THEN
+              CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd_occ(ik), becp_nc, &
+                                                                   vkb, evc)
+              CALL s_psi_nc (npwx, npw, nbnd_occ(ik), evc, dpsi)
+           ELSE
+              CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
+              CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dpsi)
+           END IF
            !
            ! |dvpsi> = - (|dvpsi> - S|evc><evc|dvpsi>)
            ! note the change of sign!
            !
-           CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
-               (1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
-                dvpsi(1,1), npwx )
+           IF (noncolin) THEN
+              CALL ZGEMM( 'N', 'N', npwx*npol, nbnd_occ(ik), nbnd_occ(ik), &
+                  (1.d0,0.d0), dpsi(1,1), npwx*npol, ps(1,1), nbnd,  &
+                  (-1.d0,0.d0), dvpsi(1,1), npwx*npol )
+           ELSE
+              CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+                  (1.d0,0.d0), dpsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &
+                   dvpsi(1,1), npwx )
+           END IF
            !
            if (iter == 1) then
               !
@@ -221,6 +284,7 @@ subroutine solve_e
               ! system
               !
               thresh = 1.d-2
+              if (lnoloc) thresh = 1.d-5
            else
               ! starting value for  delta_psi is read from iudwf
               !
@@ -236,24 +300,36 @@ subroutine solve_e
            ! dvpsi=-P_c+ (dvbare+dvscf)*psi , dvscf fixed.
            !
            do ibnd = 1, nbnd_occ (ik)
+              auxg=(0.d0,0.d0)
               do ig = 1, npw
                  auxg (ig) = g2kin (ig) * evc (ig, ibnd)
               enddo
-              eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
+              IF (noncolin) THEN
+                 do ig = 1, npw
+                    auxg (ig+npwx) = g2kin (ig) * evc (ig+npwx, ibnd)
+                 enddo
+              END if
+              eprec (ibnd) = 1.35d0*ZDOTC(npwx*npol,evc(1,ibnd),1,auxg,1)
            enddo
 #ifdef __PARA
            call reduce (nbnd_occ (ik), eprec)
 #endif
+           h_diag=0.d0
            do ibnd = 1, nbnd_occ (ik)
               do ig = 1, npw
                  h_diag(ig,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
               enddo
+              IF (noncolin) THEN
+                 do ig = 1, npw
+                    h_diag(ig+npwx,ibnd)=1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
+                 enddo
+              END IF
            enddo
 
            conv_root = .true.
 
            call cgsolve_all (ch_psi_all,cg_psi,et(1,ik),dvpsi,dpsi, &
-              h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik),1 )
+              h_diag,npwx,npw,thresh,ik,lter,conv_root,anorm,nbnd_occ(ik),npol)
 
            ltaver = ltaver + lter
            lintercall = lintercall + 1
@@ -268,8 +344,13 @@ subroutine solve_e
            !
            ! calculates dvscf, sum over k => dvscf_q_ipert
            !
-           call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
+           IF (noncolin) THEN
+              call incdrhoscf_nc(dvscfout(1,1,ipol),wk(ik),ik, &
+                                       dbecsum_nc(1,1,1,1,ipol))
+           ELSE
+              call incdrhoscf (dvscfout(1,current_spin,ipol), wk(ik), &
                             ik, dbecsum(1,1,current_spin,ipol))
+           ENDIF
         enddo   ! on polarizations
      enddo      ! on k points
 #ifdef __PARA
@@ -278,7 +359,11 @@ subroutine solve_e
      !  (see addusdbec) - we sum over processors the contributions 
      !  coming from each slice of bands
      !
-     call reduce (nhm * (nhm + 1) * nat * nspin * 3, dbecsum)
+     IF (noncolin) THEN
+        call reduce (2 * nhm * nhm * nat * nspin * 3, dbecsum_nc)
+     ELSE
+        call reduce (nhm * (nhm + 1) * nat * nspin * 3, dbecsum)
+     END IF
 #endif
 
      if (doublegrid) then
@@ -288,6 +373,22 @@ subroutine solve_e
            enddo
         enddo
      endif
+
+     IF (noncolin.and.okvan) THEN
+        DO nt = 1, ntyp
+           IF ( tvanp(nt) ) THEN
+              DO na = 1, nat
+                 IF (ityp(na)==nt) THEN
+                    IF (so(nt)) THEN
+                       CALL transform_dbecsum_so(dbecsum_nc,dbecsum,na, 3)
+                    ELSE
+                       CALL transform_dbecsum_nc(dbecsum_nc,dbecsum,na, 3)
+                    END IF
+                 END IF
+              END DO
+           END IF
+        END DO
+     END IF
 
      call addusddense (dvscfout, dbecsum)
      !
@@ -300,8 +401,10 @@ subroutine solve_e
      if (.not.lgamma_gamma) then
 #ifdef __PARA
         call psyme (dvscfout)
+        IF ( noncolin.and.domag ) CALL psym_dmage(dvscfout)
 #else
         call syme (dvscfout)
+        IF ( noncolin.and.domag ) CALL sym_dmage(dvscfout)
 #endif
      endif
      !
@@ -311,14 +414,17 @@ subroutine solve_e
      do ipol=1,3
         if (fildrho.ne.' ') call davcio_drho(dvscfout(1,1,ipol),lrdrho, &
              iudrho,ipol,+1)
-        call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
+        IF (lnoloc) then
+           dvscfout(:,:,ipol)=(0.d0,0.d0)
+        ELSE
+           call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)
+        ENDIF
      enddo
-     IF (lnoloc) dvscfout(:,:,:)=(0.d0,0.d0)
      !
      !   mix the new potential with the old 
      !
      call mix_potential (2 * 3 * nrxx *nspin, dvscfout, dvscfin, alpha_mix ( &
-          kter), dr2, 3 * tr2_ph, iter, nmix_ph, flmixdpot, convt)
+          kter), dr2, 3 * tr2_ph / npol, iter, nmix_ph, flmixdpot, convt)
      if (doublegrid) then
         do is=1,nspin
            do ipol = 1, 3
@@ -356,7 +462,7 @@ subroutine solve_e
      !
      ! info on current iteration (iter=0 if potential mixing not available)
      !
-     if (reduce_io .or. convt) then
+     if (reduce_io.or.convt) then
         write (iunrec) 0, dr2
      else
         write (iunrec) iter, dr2

@@ -24,7 +24,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
 
   INTEGER :: nrtot, ipert, jpert, is, is1, irr, ir, mode, mode1
-  INTEGER :: imode0, npe, ipol
+  INTEGER :: imode0, npe, ipol, nspin0, nspin1
 
   REAL(DP) :: fac
   
@@ -35,7 +35,15 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   IF ( my_pool_id /= 0 ) RETURN
 
-  
+
+  nspin0=nspin
+  nspin1=nspin
+  if (nspin==4) then
+     nspin0=1
+     nspin1=1
+     if (domag) nspin1=2
+  endif
+
   DO ipol = 1, 3
      imode0 = 0
      DO irr = 1, nirr
@@ -51,7 +59,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            dvaux = (0.0_dp,0.0_dp)
            CALL addcore (mode, drhoc)
            
-           DO is = 1, nspin
+           DO is = 1, nspin0
               rho(:,is) = rho(:,is) + fac * rho_core
            END DO
 
@@ -70,15 +78,15 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            !
 
            IF ( dft_is_gradient() ) &
-                CALL dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
-                drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
-                nspin, nl, ngm, g, alat, omega, dvaux)
+                CALL dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
+                    xq, drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, &
+                    nrx3, nrxx, nspin, nspin1, nl, ngm, g, alat, omega, dvaux)
         
-           DO is = 1, nspin
+           DO is = 1, nspin0
               rho(:,is) = rho(:,is) - fac * rho_core
            END DO
            
-           DO is = 1, nspin
+           DO is = 1, nspin0
               zstareu0(ipol,mode) = zstareu0(ipol,mode) -                  &
                    omega * fac / REAL(nrtot, DP) *         &
                    DOT_PRODUCT(dvaux(1:nrxx,is),drhoc(1:nrxx)) 

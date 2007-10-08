@@ -21,8 +21,9 @@ subroutine dvpsi_e (ik, ipol)
   USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions_module,  ONLY: evc
+  USE noncollin_module,  ONLY : noncolin, npol
   USE kinds, only : DP
-  USE becmod, ONLY: becp
+  USE becmod, ONLY: becp, becp_nc
   USE uspp_param, ONLY: nh
   USE ramanm, ONLY: eth_rps
   use phcom
@@ -44,14 +45,17 @@ subroutine dvpsi_e (ik, ipol)
   logical :: conv_root
   ! true if convergence has been achieved
 
-  complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:), &
-       work (:,:), becp2(:,:), spsi(:,:), ps(:,:)
+  complex(DP), allocatable :: ps2(:,:,:), dvkb (:,:), dvkb1 (:,:),  &
+       work (:,:), becp2(:,:), becp2_nc(:,:,:), spsi(:,:), ps(:,:), &
+       psc(:,:,:,:), aux(:)
   complex(DP), external :: ZDOTC
   ! the scalar products
   external ch_psi_all, cg_psi
   !
   !
   call start_clock ('dvpsi_e')
+  dpsi=(0.d0, 0.d0)
+  dvpsi=(0.d0, 0.d0)
   if (this_pcxpsi_is_on_file(ik,ipol)) then
      nrec = (ipol - 1)*nksq + ik
      call davcio(dvpsi, lrebar, iuebar, nrec, -1)
@@ -60,11 +64,17 @@ subroutine dvpsi_e (ik, ipol)
   end if
   !
   allocate (work ( npwx, MAX(nkb,1)))
+  allocate (aux ( npwx*npol ))
   allocate (gk ( 3, npwx))    
-  allocate (h_diag( npwx , nbnd))    
+  allocate (h_diag( npwx*npol, nbnd))    
   allocate (eprec( nbnd))    
   if (nkb > 0) then
-     allocate (becp2 (nkb, nbnd), dvkb (npwx, nkb), dvkb1(npwx, nkb))
+     IF (noncolin) THEN
+        allocate (becp2_nc (nkb, npol, nbnd))
+     ELSE
+        allocate (becp2 (nkb, nbnd))
+     END IF
+     allocate (dvkb (npwx, nkb), dvkb1(npwx, nkb))
      dvkb (:,:) = (0.d0, 0.d0)
      dvkb1(:,:) = (0.d0, 0.d0)
   end if
@@ -84,6 +94,14 @@ subroutine dvpsi_e (ik, ipol)
              at(3, ipol) * gk(3, ig) ) &
              *(0.d0,-2.d0)*evc (ig, ibnd)
      enddo
+     IF (noncolin) THEN
+        do ig = 1, npw
+           dpsi (ig+npwx, ibnd) = (at(1, ipol) * gk(1, ig) + &
+                at(2, ipol) * gk(2, ig) + &
+                at(3, ipol) * gk(3, ig) ) &
+                 *(0.d0,-2.d0)*evc (ig+npwx, ibnd)
+        end do
+     END IF
   enddo
 !
 ! Uncomment this goto and the continue below to calculate 
@@ -109,6 +127,7 @@ subroutine dvpsi_e (ik, ipol)
   enddo
 
   jkb = 0
+  work=(0.d0,0.d0)
   do nt = 1, ntyp
      do na = 1, nat
         if (nt == ityp (na)) then
@@ -117,8 +136,8 @@ subroutine dvpsi_e (ik, ipol)
               do ig = 1, npw
                  work (ig,jkb) = dvkb1 (ig, jkb) + dvkb (ig, jkb) * &
                       (at (1, ipol) * gk (1, ig) + &
-                      at (2, ipol) * gk (2, ig) + &
-                      at (3, ipol) * gk (3, ig) )
+                       at (2, ipol) * gk (2, ig) + &
+                       at (3, ipol) * gk (3, ig) )
               enddo
            enddo
         endif
@@ -126,11 +145,20 @@ subroutine dvpsi_e (ik, ipol)
   enddo
   deallocate (gk)
 
-  call ccalbec (nkb, npwx, npw, nbnd, becp2, work, evc)
+  IF ( noncolin ) THEN 
+     call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp2_nc, work, evc)
+  ELSE
+     call ccalbec (nkb, npwx, npw, nbnd, becp2, work, evc)
+  END IF
 
   ijkb0 = 0
-  allocate (ps2 ( nkb, nbnd, 2))
-  ps2(:,:,:)=(0.d0,0.d0)
+  IF (noncolin) THEN
+     allocate (psc ( nkb, npol, nbnd, 2))
+     psc=(0.d0,0.d0)
+  ELSE
+     allocate (ps2 ( nkb, nbnd, 2))
+     ps2=(0.d0,0.d0)
+  END IF
   do nt = 1, ntyp
      do na = 1, nat
         if (nt == ityp (na)) then
@@ -139,12 +167,54 @@ subroutine dvpsi_e (ik, ipol)
               do jh = 1, nh (nt)
                  jkb = ijkb0 + jh
                  do ibnd = 1, nbnd_occ (ik)
-                    ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
-                         (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin) &
-                         -et(ibnd,ik)*qq(ih,jh,nt))
-                    ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) +becp1(jkb,ibnd,ik) * &
-                         (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin)&
-                         -et(ibnd,ik)*qq(ih,jh,nt))
+                    IF (noncolin) THEN
+                       IF (lspinorb) THEN 
+                          psc(ikb,1,ibnd,1)=psc(ikb,1,ibnd,1)+(0.d0,-1.d0)* &
+                             (becp2_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1)  &
+                                 -et(ibnd,ik)*qq_so(ih,jh,1,nt) )+       &
+                              becp2_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,2)- &
+                                       et(ibnd,ik)* qq_so(ih,jh,2,nt) ) )
+                          psc(ikb,2,ibnd,1)=psc(ikb,2,ibnd,1)+(0.d0,-1.d0)*  &
+                             (becp2_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,3)  &
+                                 -et(ibnd,ik)*qq_so(ih,jh,3,nt) )+       &
+                              becp2_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4)- &
+                                       et(ibnd,ik)* qq_so(ih,jh,4,nt) ) )
+                          psc(ikb,1,ibnd,2)=psc(ikb,1,ibnd,2)+(0.d0,-1.d0)* &
+                             (becp1_nc(jkb,1,ibnd,ik)*(deeq_nc(ih,jh,na,1)  &
+                                 -et(ibnd,ik)*qq_so(ih,jh,1,nt) )+      &
+                             becp1_nc(jkb,2,ibnd,ik)*(deeq_nc(ih,jh,na,2)-  &
+                                       et(ibnd,ik)* qq_so(ih,jh,2,nt) ) )
+                          psc(ikb,2,ibnd,2)=psc(ikb,2,ibnd,2)+(0.d0,-1.d0)*  &
+                             (becp1_nc(jkb,1,ibnd,ik)*(deeq_nc(ih,jh,na,3)  &
+                                 -et(ibnd,ik)*qq_so(ih,jh,3,nt) )+      &
+                             becp1_nc(jkb,2,ibnd,ik)*(deeq_nc(ih,jh,na,4)-  &
+                                       et(ibnd,ik)* qq_so(ih,jh,4,nt) ) )
+                       ELSE
+                          psc(ikb,1,ibnd,1)=psc(ikb,1,ibnd,1)+ (0.d0,-1.d0)* &
+                              ( becp2_nc(jkb,1,ibnd)*(deeq_nc(ih,jh,na,1) &
+                                             -et(ibnd,ik)*qq(ih,jh,nt)) + &
+                                becp2_nc(jkb,2,ibnd)*deeq_nc(ih,jh,na,2) )
+                          psc(ikb,2,ibnd,1)=psc(ikb,2,ibnd,1)+ (0.d0,-1.d0)* &
+                              ( becp2_nc(jkb,2,ibnd)*(deeq_nc(ih,jh,na,4) &
+                                             -et(ibnd,ik)*qq(ih,jh,nt))+  &
+                                becp2_nc(jkb,1,ibnd)*deeq_nc(ih,jh,na,3) )
+                          psc(ikb,1,ibnd,2)=psc(ikb,1,ibnd,2)+ (0.d0,-1.d0)* &
+                              ( becp1_nc(jkb,1,ibnd,ik)*(deeq_nc(ih,jh,na,1) &
+                                             -et(ibnd,ik)*qq(ih,jh,nt))+ &
+                                becp1_nc(jkb,2,ibnd,ik)*deeq_nc(ih,jh,na,2) )
+                          psc(ikb,2,ibnd,2)=psc(ikb,2,ibnd,2)+ (0.d0,-1.d0)* &
+                              ( becp1_nc(jkb,2,ibnd,ik)*(deeq_nc(ih,jh,na,4) &
+                                             -et(ibnd,ik)*qq(ih,jh,nt))+ &
+                                becp1_nc(jkb,1,ibnd,ik)*deeq_nc(ih,jh,na,3) )
+                       END IF
+                    ELSE
+                       ps2(ikb,ibnd,1) = ps2(ikb,ibnd,1)+ becp2(jkb,ibnd)* &
+                           (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin) &
+                           -et(ibnd,ik)*qq(ih,jh,nt))
+                       ps2(ikb,ibnd,2) = ps2(ikb,ibnd,2) +becp1(jkb,ibnd,ik) * &
+                           (0.d0,-1.d0)*(deeq(ih,jh,na,current_spin)&
+                           -et(ibnd,ik)*qq(ih,jh,nt))
+                    END IF
                  enddo
               enddo
            enddo
@@ -153,34 +223,66 @@ subroutine dvpsi_e (ik, ipol)
      end do
   end do
   if (ikb /= nkb .OR. jkb /= nkb) call errore ('dvpsi_e', 'unexpected error',1)
-  CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
-       (1.d0,0.d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.d0), &
-       dpsi(1,1), npwx )
-  CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
-       (1.d0,0.d0),work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.d0), &
-       dpsi(1,1), npwx )
-  deallocate (ps2)
+  IF (noncolin) THEN
+     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik)*npol, nkb, &
+          (1.d0,0.d0), vkb(1,1), npwx, psc(1,1,1,1), nkb, (1.d0,0.d0), &
+          dpsi, npwx )
+     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik)*npol, nkb, &
+          (1.d0,0.d0),work(1,1), npwx, psc(1,1,1,2), nkb, (1.d0,0.d0), &
+          dpsi, npwx )
+  ELSE
+     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
+          (1.d0,0.d0), vkb(1,1), npwx, ps2(1,1,1), nkb, (1.d0,0.d0), &
+          dpsi(1,1), npwx )
+     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nkb, &
+          (1.d0,0.d0),work(1,1), npwx, ps2(1,1,2), nkb, (1.d0,0.d0), &
+          dpsi(1,1), npwx )
+  ENDIF
+
+  IF (noncolin) THEN
+     deallocate (psc)
+  ELSE
+     deallocate (ps2)
+  END IF
+
 !  111 continue
   !
   !    orthogonalize dpsi to the valence subspace: ps = <evc|dpsi>
   !
   allocate (ps ( nbnd, nbnd ))
-  CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
-       (1.d0,0.d0), evc(1,1), npwx, dpsi(1,1), npwx, (0.d0,0.d0), &
-       ps(1,1), nbnd )
+  IF (noncolin) THEN
+     CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npwx*npol, &
+          (1.d0,0.d0), evc, npwx*npol, dpsi, npwx*npol, (0.d0,0.d0), &
+          ps, nbnd )
+  ELSE
+     CALL ZGEMM( 'C', 'N', nbnd_occ (ik), nbnd_occ (ik), npw, &
+          (1.d0,0.d0), evc(1,1), npwx, dpsi(1,1), npwx, (0.d0,0.d0), &
+          ps(1,1), nbnd )
+  END IF
 #ifdef __PARA
   call reduce (2 * nbnd * nbnd_occ (ik), ps(1,1))
 #endif
   ! dvpsi is used as work space to store S|evc>
   !
-  CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
-  CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dvpsi)
+  IF (noncolin) THEN
+     CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd_occ(ik), becp_nc, vkb, evc)
+     CALL s_psi_nc (npwx, npw, nbnd_occ(ik), evc, dvpsi)
+  ELSE
+     CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
+     CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dvpsi)
+  END IF
   !
   ! |dpsi> = |dpsi> - S|evc><evc|dpsi>)
   !
-  CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
-       (-1.d0,0.d0), dvpsi(1,1), npwx, ps(1,1), nbnd, (1.d0,0.d0), &
-       dpsi(1,1), npwx )
+  IF (noncolin) THEN
+     CALL ZGEMM( 'N', 'N', npwx*npol, nbnd_occ(ik), nbnd_occ(ik), &
+          (-1.d0,0.d0), dvpsi(1,1), npwx*npol, ps(1,1), nbnd, (1.d0,0.d0), &
+          dpsi(1,1), npwx*npol )
+  ELSE
+     CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
+          (-1.d0,0.d0), dvpsi(1,1), npwx, ps(1,1), nbnd, (1.d0,0.d0), &
+          dpsi(1,1), npwx )
+  END IF
   deallocate (ps)
   !
   !   dpsi contains P^+_c [H-eS,x] psi_v for the three crystal polarizations
@@ -189,25 +291,37 @@ subroutine dvpsi_e (ik, ipol)
   thresh = eth_rps
   do ibnd = 1, nbnd_occ (ik)
      conv_root = .true.
+     aux=(0.d0,0.d0)
      do ig = 1, npwq
-        work (ig,1) = g2kin (ig) * evc (ig, ibnd)
+        aux(ig) = g2kin (ig) * evc (ig, ibnd)
      enddo
-     eprec (ibnd) = 1.35d0 * ZDOTC (npwq, evc (1, ibnd), 1, work, 1)
+     IF (noncolin) THEN
+        do ig = 1, npwq
+           aux(ig+npwx) = g2kin (ig) * evc (ig+npwx, ibnd)
+        enddo
+     END IF
+     eprec (ibnd) = 1.35d0 * ZDOTC (npwx*npol, evc (1, ibnd), 1, aux, 1)
   enddo
 #ifdef __PARA
   call reduce (nbnd_occ (ik), eprec)
 #endif
+  h_diag=0.d0
   do ibnd = 1, nbnd_occ (ik)
      do ig = 1, npwq
         h_diag (ig, ibnd) = 1.d0 / max (1.0d0, g2kin (ig) / eprec (ibnd) )
      enddo
+     IF (noncolin) THEN
+        do ig = 1, npwq
+           h_diag (ig+npwx, ibnd) = 1.d0/max(1.0d0,g2kin(ig)/eprec(ibnd))
+        enddo
+     END IF
   enddo
   !
   dvpsi(:,:) = (0.d0, 0.d0)
   !
   call cgsolve_all (ch_psi_all, cg_psi, et (1, ik), dpsi, dvpsi, &
        h_diag, npwx, npw, thresh, ik, lter, conv_root, anorm, &
-       nbnd_occ (ik),1  )
+       nbnd_occ (ik), npol)
 
   if (.not.conv_root) WRITE( stdout, '(5x,"ik",i4," ibnd",i4, &
        & " linter: root not converged ",e10.3)') &
@@ -231,19 +345,37 @@ subroutine dvpsi_e (ik, ipol)
      nrec = (ipol - 1) * nksq + ik
      call davcio (dvpsi, lrcom, iucom, nrec, 1)
      !
-     call ccalbec(nkb,npwx,npw,nbnd,becp,vkb,dvpsi)
-     allocate (spsi ( npwx, nbnd))    
-     call s_psi(npwx,npw,nbnd,dvpsi,spsi)
-     call DCOPY(2*npwx*nbnd,spsi,1,dvpsi,1)
+     allocate (spsi ( npwx*npol, nbnd))    
+     IF (noncolin) THEN
+        CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd,becp_nc,vkb,dvpsi)
+        CALL s_psi_nc(npwx,npw,nbnd,dvpsi,spsi)
+     ELSE
+        CALL ccalbec(nkb,npwx,npw,nbnd,becp,vkb,dvpsi)
+        CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
+     END IF
+     call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)
      deallocate (spsi)
-     call adddvepsi_us(becp2,ipol,ik)
+     IF (noncolin) THEN
+        call adddvepsi_us(becp2_nc,ipol,ik)
+     ELSE
+        call adddvepsi_us(becp2,ipol,ik)
+     END IF
   endif
 
 
-  if (nkb > 0) deallocate (dvkb1, dvkb, becp2)
+  IF (nkb > 0) THEN
+     deallocate (dvkb1, dvkb)
+     IF (noncolin) THEN
+        deallocate(becp2_nc)
+     ELSE
+        deallocate(becp2)
+     ENDIF
+  END IF
+
   deallocate (eprec)
   deallocate (h_diag)
   deallocate (work)
+  deallocate (aux)
 
   nrec = (ipol - 1)*nksq + ik
   call davcio(dvpsi, lrebar, iuebar, nrec, 1)

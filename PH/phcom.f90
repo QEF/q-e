@@ -201,7 +201,8 @@ MODULE phus
        int4_nc(:,:,:,:,:,:),   &! nhm, nhm, 3, 3, nat, nspin),&
        int5_so(:,:,:,:,:,:,:), &! nhm*(nhm+1)/2, 3, 3, nat, nat, nspin),&
        becsum_nc(:,:,:,:),     &! nhm*(nhm+1)/2,nat,npol,npol)
-       alphasum_nc(:,:,:,:,:)   ! nhm*(nhm+1)/2,3,nat,npol,npol)
+       alphasum_nc(:,:,:,:,:), &! nhm*(nhm+1)/2,3,nat,npol,npol)
+       dpqq_so(:,:,:,:,:)       ! dipole moment of each Q and the fcoef factors
 
   COMPLEX (DP), ALLOCATABLE, TARGET :: &
        becp1(:,:,:),        &! nkbtot, nbnd, nksq),&

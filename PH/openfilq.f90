@@ -139,7 +139,7 @@ SUBROUTINE openfilq()
   !    of kb projectors
   !  
      iudvkb3 = 29
-     lrdvkb3 = 2 * npwx * npol * nkb * 3
+     lrdvkb3 = 2 * npwx * nkb * 3
      CALL diropn (iudvkb3, 'dvkb3', lrdvkb3, exst)
      IF (recover.AND..NOT.exst) &
          CALL errore ('openfilq', 'file '//trim(prefix)//'.dvkb3 not found', 1)
