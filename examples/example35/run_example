@@ -163,7 +163,7 @@ K_POINTS AUTOMATIC
 4 4 4 1 1 1
 EOF
 $ECHO "  running pw.x for C with noncolin=.true....\c"
-$PW_COMMAND < c.scf.in > si.scf.out
+$PW_COMMAND < c.scf.in > c.scf.out
 check_failure $?
 $ECHO " done"
 
