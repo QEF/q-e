@@ -113,10 +113,9 @@ subroutine read_pseudoupf
   !
   if (pseudotype.eq.3) then
      qq(1:nbeta,1:nbeta) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
-     kbeta=0
      do ibeta=1,nbeta
         do jbeta=ibeta,nbeta
-           kbeta=kbeta+1
+           kbeta = jbeta * (jbeta-1) / 2 + ibeta
            qvan (1:grid%mesh, ibeta, jbeta) = upf%qfunc(1:upf%mesh,kbeta)
            if (ibeta /= jbeta) qvan (1:grid%mesh, jbeta, ibeta)= &
                                     upf%qfunc(1:upf%mesh,kbeta)
