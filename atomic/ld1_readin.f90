@@ -471,7 +471,7 @@ subroutine ld1_readin
               enddo
            enddo
         else
-           call el_config( configts(nc), rel, lsd, .false., nwftsc(nc), &
+           call el_config( configts(nc), rel, lsdts(nc), .false., nwftsc(nc), &
                 eltsc(1,nc), nntsc(1,nc), lltsc(1,nc), octsc(1,nc), &
                 iswtsc(1,nc), jjtsc(1,nc))
         endif

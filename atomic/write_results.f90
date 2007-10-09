@@ -90,19 +90,22 @@ subroutine write_results
      write(stdout,'(5x,"Averaged results")')
      ok=.true.
      do n=1,nwf
-        if (oc(n)+oc(n+1)>-eps6) then
-           if (ll(n).gt.0.and.ok) then
+        if (ll(n).gt.0.and.ok) then
+           if (oc(n)+oc(n+1)>-eps6) then
               ene=(enl(n)*2.0_dp*ll(n) &
                    + enl(n+1)*(2.0_dp*ll(n)+2.0_dp))/(4.0_dp*ll(n)+2.0_dp)
-              write(stdout,1100) nn(n),ll(n),el(n), isw(n),oc(n)+oc(n+1), &
-                   ene,ene*0.5_dp, ene*rytoev_fact
+              write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n)+oc(n+1), &
+                   ene, ene*0.5_dp, ene*rytoev_fact
               ok=.false.
-           else
-              if (ll(n).eq.0) &
-                   write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
-                   enl(n),enl(n)*0.5_dp,enl(n)*rytoev_fact
+           endif
+        elseif (ll(n)==0) then
+           if ( oc(n) > -eps6 ) then
+              write(stdout,1100) nn(n),ll(n),el(n),isw(n),oc(n), &
+                    enl(n), enl(n)*0.5_dp, enl(n)*rytoev_fact
               ok=.true.
            endif
+        else
+           ok=.true.
         endif
      enddo
   endif

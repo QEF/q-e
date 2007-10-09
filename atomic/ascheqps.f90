@@ -141,7 +141,6 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
      eup=elw+de
      call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
                       nwfx,lls,jjs,ikk,detup)
-     if (detup*detlw.lt.0.0_DP) write(stdout,*) 'count0 = ', count0
      if (detup*detlw.lt.0.0_DP) goto 100
      elw=eup
      detlw=detup  
