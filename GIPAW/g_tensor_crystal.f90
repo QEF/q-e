@@ -151,7 +151,7 @@ SUBROUTINE g_tensor_crystal
     q(:) = 0.0_dp
     !!!write(*,'(''q='',3(F12.4))') q
     call compute_u_kq(ik, q)
-
+    
     !<apsi>
     call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
@@ -162,7 +162,8 @@ SUBROUTINE g_tensor_crystal
     
     do ibnd = 1, nbnd_occ(ik)
        delta_rmc = delta_rmc - s_weight &
-            * wg(ibnd,ik) * SUM ( g2kin(:) * conjg(evc(:,ibnd)) * evc(:,ibnd) )
+            * wg(ibnd,ik) * SUM ( g2kin(:npw) &
+            * conjg(evc(:npw,ibnd)) * evc(:npw,ibnd) )
     end do
     
     CALL relativistic_mass_correction ( rmc_gipaw )
