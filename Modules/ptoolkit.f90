@@ -2359,7 +2359,7 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , la_npc_ , &
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , &
                            la_comm_ , lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
    !
    IMPLICIT NONE
@@ -2661,7 +2661,7 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    !  Parallel square matrix multiplication with Cannon's algorithm
    !
    USE kinds,       ONLY : DP
-   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , la_npc_ , &
+   USE descriptors, ONLY : ilar_ , nlar_ , ilac_ , nlac_ , nlax_ , &
                            la_comm_ , lambda_node_ , la_npr_ , la_npc_ , la_myr_ , la_myc_
    !
    IMPLICIT NONE

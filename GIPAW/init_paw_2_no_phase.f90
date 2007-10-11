@@ -20,9 +20,6 @@ subroutine init_paw_2_no_phase (npw_, igk_, q_, vkb_)
   USE cell_base , ONLY : tpiba
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
   USE gvect ,     ONLY : eigts1, eigts2, eigts3, g, ig1, ig2, ig3 
-  USE us,         ONLY : dq
-!  USE paw,        ONLY : paw_nkb, paw_lmaxkb, paw_nhm, paw_nh, paw_nhtol, &
-!                         paw_nhtom, paw_indv, paw_nbeta, paw_tab, paw_tab_d2y
   USE paw,        ONLY : paw_nkb, paw_recon, paw_lmaxkb
   USE us,         ONLY : nqxq, dq, spline_ps
   USE splinelib

@@ -20,7 +20,6 @@ SUBROUTINE compute_u_kq(ik, q)
                                    nwordwfc
   USE klist,                ONLY : nkstot, nks, xk, ngk
   USE uspp,                 ONLY : vkb, nkb
-  USE gvect,                ONLY : g, nrxx, nr1, nr2, nr3  
   USE wvfct,                ONLY : et, nbnd, npwx, igk, npw, g2kin, &
                                    current_k, nbndx, btype
   USE control_flags,        ONLY : ethr, io_level, lscf, istep, max_cg_iter

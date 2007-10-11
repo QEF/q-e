@@ -372,7 +372,6 @@ CONTAINS
   USE kinds,         ONLY : DP
   USE gvect,         ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                             ngm, nl, nlm, gg, g, gstart
-  USE wvfct,         ONLY : gamma_only
   !  
   USE grid_paw_variables, ONLY : prad, ptrad, tpawp, okpaw, prodp, prodpt,&
                                  prod0p, prod0pt
@@ -568,7 +567,6 @@ CONTAINS
   SUBROUTINE compute_onecenter_potentials (becsum,inp_rho1, inp_rho1t,fixed_lm)
     USE kinds,            ONLY : DP
     USE parameters,       ONLY : lqmax
-    USE cell_base,        ONLY : at, alat, omega
     USE cell_base,        ONLY : at, alat, omega, boxdimensions
     USE ions_base,        ONLY : tau, atm, ityp, ntyp=>nsp
     USE ions_base,        ONLY : nat
