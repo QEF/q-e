@@ -241,7 +241,7 @@ SUBROUTINE paw_gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   USE spin_orb, ONLY : domag
 
 #ifdef EXX
-  USE exx,       ONLY: lexx, exxalfa
+  USE exx,       ONLY: exxalfa
 #endif
 
   !
@@ -266,7 +266,11 @@ SUBROUTINE paw_gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                     grhoup, grhodw, grhoud, grup, grdw
 
   REAL (DP), PARAMETER :: epsr = 1.D-6, &
-                               epsg = 1.D-10
+                          epsg = 1.D-10
+#if defined (EXX)
+  logical :: lexx
+  lexx = exxalfa .ne. 0.00
+#endif
   !
   !
   IF ( .not. dft_is_gradient() ) RETURN
