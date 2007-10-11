@@ -8,7 +8,7 @@
 !
 !
 !--------------------------------------------------------------------------
-subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
+subroutine ascheqps_drv(veff, ncom, thresh, flag_all, nerr)
   !--------------------------------------------------------------------------
   !
   !     This routine is a driver that calculates for the test
@@ -29,8 +29,9 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
                     nwfts, iswts, octs, llts, jjts, nnts, enlts, phits 
   implicit none
 
-  integer ::   &
-          ncom           ! number of components of the pseudopotential
+  integer ::    &
+          nerr, &     ! control the errors of the routine ascheqps
+          ncom        ! number of components of the pseudopotential
 
   real(DP) :: &
        veff(ndmx,ncom)    ! work space for writing the potential 
@@ -42,6 +43,7 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
        is,    &  ! counter on spin
        nbf,   &  ! auxiliary nbeta
        n,     &  ! index on r point
+       nstop, &  ! errors in each wavefunction
        ind
 
   real(DP) :: &
@@ -57,6 +59,7 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
      nbf=nbeta
   endif
 
+  nerr=0
   do ns=1,nwfts
      if (octs(ns).gt.0.0_dp.or.(octs(ns).gt.-1.0_dp .and. flag_all)) then
         is=iswts(ns)
@@ -81,12 +84,14 @@ subroutine ascheqps_drv(veff, ncom, thresh, flag_all)
            enddo
         endif
         call ascheqps(nnts(ns),llts(ns),jjts(ns),enlts(ns),grid%mesh,ndmx,grid,&
-             vaux(1,is),thresh,phits(1,ns),betas,ddd(1,1,is),qq,nbf,nwfsx,lls,jjs,ikk)
+             vaux(1,is),thresh,phits(1,ns),betas,ddd(1,1,is),qq,nbf, &
+             nwfsx,lls,jjs,ikk,nstop)
         !           write(6,*) ns, nnts(ns),llts(ns), jjts(ns), enlts(ns)
         !
         !   normalize the wavefunctions 
         !
         call normalize(phits(1,ns),llts(ns),jjts(ns))
+        nerr=nerr+nstop
      endif
   enddo
 

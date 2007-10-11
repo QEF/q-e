@@ -58,6 +58,7 @@ subroutine occ_spin(nwf,nwfx,el,nn,ll,oc,isw)
            nn(nwf)=nn(n)
            ll(nwf)=ll(n)
            oc(nwf)=0.0_dp
+           if (oc(n)<0.0_dp) oc(nwf)=oc(n)
            if (isw(n) == 1) isw(nwf)=2 
            if (isw(n) == 2) isw(nwf)=1 
         endif
@@ -252,6 +253,7 @@ subroutine occ_spin_tot(nwf,nwfx,el,nn,ll,oc,isw,enl,psi)
            nn(nwf)=nn(n)
            ll(nwf)=ll(n)
            oc(nwf)=0.0_dp
+           if (oc(n)<0.0_DP) oc(nwf)=oc(n)
            if (isw(n) == 1) isw(nwf)=2 
            if (isw(n) == 2) isw(nwf)=1 
            enl(nwf)=enl(n)

@@ -8,7 +8,7 @@
 !
 !---------------------------------------------------------------
 subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
-     thresh,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk)
+     thresh,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk,nstop)
   !---------------------------------------------------------------
   !
   !  numerical integration of the radial schroedinger equation for
@@ -34,6 +34,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
        ndm,  &     ! maximum radial mesh 
        nbeta,&     ! number of beta function  
        nwfx, &     ! maximum number of beta functions
+       nstop, &    ! if the routine does not converge it is != 0
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
@@ -72,7 +73,7 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
   !
   !  set up constants and allocate variables the 
   !
-
+  nstop=0
   sqlhf=(dble(lam)+0.5_DP)**2
   !
   !     first try to find the zero with newton method
@@ -219,7 +220,10 @@ subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
   !
   !    count the node number and compare with the required n
   !
-  if (nosol) return
+  if (nosol) then
+     nstop=1
+     return
+  endif
   ncross=0
   do n=1,mesh-1
      if ( y(n).ne.sign(y(n),y(n+1)) ) then

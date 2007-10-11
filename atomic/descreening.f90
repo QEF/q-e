@@ -43,7 +43,7 @@ subroutine descreening
 
   integer  :: &
        m, n, l, n1, n2, nwf0, nst, ikl, imax, iwork(nwfsx), &
-       is, nbf, nc, ios
+       is, nbf, nc, ios, nerr
   !
   !     descreening the local potential: NB: this descreening is done with
   !     the occupation of the test configuration. This is required
@@ -57,7 +57,7 @@ subroutine descreening
   !
   !    compute the pseudowavefunctions in the test configuration
   !
-  call ascheqps_drv(vpsloc, 1, thresh, .false.)
+  call ascheqps_drv(vpsloc, 1, thresh, .false., nerr)
   !
   !    descreening the D coefficients
   !
@@ -102,8 +102,8 @@ subroutine descreening
      call errore('descreening','opening file'//file_screen,abs(ios))
      if (ionode) then
         do n=1,grid%mesh
-           write(20,'(i5,7e12.4)') n,grid%r(n), vpsloc(n)+vaux(n,1), vpsloc(n), &
-                vaux(n,1),   rhos(n,1)
+           write(20,'(i5,7e12.4)') n,grid%r(n), vpsloc(n)+vaux(n,1), &
+                vpsloc(n), vaux(n,1), rhos(n,1)
         enddo
         close(20)
      endif

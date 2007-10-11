@@ -48,6 +48,7 @@ subroutine run_pseudo
        vd(2*(ndmx+nwfsx+nwfsx)), & ! Vloc and D in one array for mixing
        vdnew(2*(ndmx+nwfsx+nwfsx)) ! the new vd array
   integer :: &
+       nerr, &                    ! error message 
        iswstart(nwfsx)            ! guess for the starting spins
 
   real(DP), parameter :: thresh=1.e-10_dp
@@ -81,7 +82,7 @@ subroutine run_pseudo
   !     iterate to self-consistency
   !
   do iter=1,itmax
-     call ascheqps_drv(vpstot, nspin, thresh, .false.)
+     call ascheqps_drv(vpstot, nspin, thresh, .false., nerr)
 
      if (.not.lpaw) then
         !
@@ -148,7 +149,10 @@ subroutine run_pseudo
      endif
 
 !            write(6,*) 'iteration number',iter, eps0
-     if (conv) goto 900
+     if (conv) then
+        if (nerr /= 0) call infomsg ('scf','errors in PS-KS equations')
+        goto 900
+     endif
   enddo
   call infomsg('run_pseudo','convergence not achieved')
 
@@ -157,7 +161,7 @@ subroutine run_pseudo
   !
 900 continue
 
-  call ascheqps_drv(vpstot, nspin, thresh, .true.)
+  call ascheqps_drv(vpstot, nspin, thresh, .true., nerr)
 
   if (.not.lpaw) then
      call elsdps ( )
