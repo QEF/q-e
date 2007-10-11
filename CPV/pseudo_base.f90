@@ -458,7 +458,7 @@
         !         also calculated the derivative of vps with respect to
         !         g^2 (dvps)
         !
-        ! bhs pseudopotentials (fourier transformed analytically)
+        ! BHS pseudopotentials (fourier transformed analytically)
 
         use kinds, only: DP
         use constants, only: pi, fpi, gsmall

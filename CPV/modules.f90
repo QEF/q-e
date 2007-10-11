@@ -5,16 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-module bhs
-  !     analytical BHS pseudopotential parameters
-  use parameters, only: nsx
-  implicit none
-  save
-  real(8) :: rc1(nsx), rc2(nsx), wrc1(nsx), wrc2(nsx), &
-       rcl(3,nsx,3), al(3,nsx,3), bl(3,nsx,3)
-  integer :: lloc(nsx)
-end module bhs
-
 !     f    = occupation numbers
 !     qbac = background neutralizing charge
 !     nspin = number of spins (1=no spin, 2=LSDA)

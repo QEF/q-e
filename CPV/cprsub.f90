@@ -21,7 +21,6 @@ subroutine formf( tfirst, eself )
   use control_flags,   ONLY : iprint, tpre, iprsta
   use io_global,       ONLY : stdout
   use mp_global,       ONLY : intra_image_comm
-  use bhs,             ONLY : rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
   use gvecs,           ONLY : ngs
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
@@ -89,11 +88,11 @@ subroutine formf( tfirst, eself )
 
         else
 
-           !     bhs pseudopotentials
-           !
-           call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
-                        rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
-                        zv(is), rcmax(is), g, omega, tpiba2, ngs, gstart, tpre )
+           CALL errore ( 'formf','BHS pseudopotentials no longer supported', is)
+
+           !call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
+           !             rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
+           !             zv(is), rcmax(is), g, omega, tpiba2, ngs, gstart, tpre )
 
         end if
 

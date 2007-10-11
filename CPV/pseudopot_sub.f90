@@ -234,7 +234,6 @@
       USE atom,               ONLY : rgrid, numeric
       USE ions_base,          ONLY : nsp, rcmax, zv
       USE cell_base,          ONLY : tpiba, tpiba2
-      use bhs,                ONLY : rc1, rc2, wrc2, wrc1, rcl, al, bl, lloc
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
       USE pseudo_base,        ONLY : formfn, formfa
       USE uspp_param,         only : upf, oldvan
@@ -288,12 +287,12 @@
 
          else
 
-            !     bhs pseudopotentials
-            !
-            call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
-                         wrc1(is), wrc2(is), rcl(:,is,lloc(is)), &
-                         al(:,is,lloc(is)), bl(:,is,lloc(is)), zv(is), &
-                         rcmax(is), xgtab, 1.0d0, tpiba2, mmx, 2 , tpre )
+            CALL errore('build_pstab','BHS format no longer supported', is)
+            
+            !call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
+            !             wrc1(is), wrc2(is), rcl(:,is,lloc(is)), &
+            !             al(:,is,lloc(is)), bl(:,is,lloc(is)), zv(is), &
+            !             rcmax(is), xgtab, 1.0d0, tpiba2, mmx, 2 , tpre )
 
          end if
 

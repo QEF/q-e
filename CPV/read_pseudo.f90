@@ -276,11 +276,9 @@ END FUNCTION calculate_dx
 
         numeric(is) = .true.
         !
-        ! used only by obsolete "bhs" format of CP
+        ! used only by obsolete Vanderbilt format with Herman-Skillman grid
         !
         oldvan(is)  = .false.
-        !
-        ! used only by obsolete Vanderbilt format with Herman-Skillman grid
         !
         IF( info == 20 ) THEN
            !
@@ -348,7 +346,7 @@ END FUNCTION calculate_dx
         ELSE IF( program_name == 'CP90' ) THEN
           !
           !     Ultrasoft formats: UPF, AdC, Vanderbilt ("old" and new)
-          !     norm-conserving formats: hsc, bhs, UPF
+          !     norm-conserving formats: UPF
           !
           !     check on input ordering: US first, NC later 
           !
