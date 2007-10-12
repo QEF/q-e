@@ -14,16 +14,16 @@ subroutine init_paw_1
   ! This routine initialize the variables of the paw projector
   ! and create the projectors in radial part (paw_betar) 
   !
-  USE kinds ,      ONLY : dp
-  USE parameters , ONLY : lqmax , nbrx, lmaxx
-  USE cell_base ,  ONLY : omega
+  USE kinds,       ONLY : dp
+  USE parameters,  ONLY : lqmax , nbrx, lmaxx
+  USE cell_base,   ONLY : omega
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
-  USE constants ,  ONLY : fpi
+  USE constants,   ONLY : fpi
   USE us,          ONLY : dq, nqx, tab, tab_d2y, qrad, spline_ps
-  USE paw ,        ONLY : paw_recon, paw_nkb, paw_lmaxkb
+  USE paw,         ONLY : paw_recon, paw_nkb, paw_lmaxkb
   USE splinelib
   USE uspp,        ONLY : ap, aainit
-  USE atom ,       ONLY : rgrid, msh
+  USE atom,        ONLY : rgrid, msh
   USE io_global,   ONLY : stdout
   !
   implicit none
@@ -182,7 +182,7 @@ subroutine init_paw_1
                             "projectors linearly dependent:", &
                             "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, &
                             s(ih,jh)
-                       call flush(stdout)
+                       call flush_unit ( stdout )
                        CALL errore ( "init_paw_1", &
                             "two projectors are linearly dependent", +1 )
                     ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-2_dp ) THEN
@@ -194,7 +194,7 @@ subroutine init_paw_1
                             "init_paw_1: ", &
                             "projectors nearly linearly dependent:", &
                             "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, s(ih,jh)
-                       call flush(stdout)
+                       call flush_unit ( stdout )
                     END IF
                  END IF
                  !</apsi>
