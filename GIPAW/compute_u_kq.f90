@@ -112,7 +112,9 @@ SUBROUTINE compute_u_kq(ik, q)
   ! diagonalization of bands for k-point ik
   call diag_bands ( iter, ik, avg_iter )
 
-  call poolreduce( 1, avg_iter )
+!#ifdef __PARA
+!  call poolreduce( 1, avg_iter )
+!#endif
   avg_iter = avg_iter / nkstot
 
   !! debug
