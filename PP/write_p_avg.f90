@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 quantum-ESPRESSO group
+! Copyright (C) 2006-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,8 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE noncollin_module,     ONLY : noncolin, npol
   USE ldaU,                 ONLY : lda_plus_u
   USE wavefunctions_module, ONLY : evc
-  USE io_global,            ONLY : ionode, stdout
+  USE io_global,            ONLY : ionode, ionode_id, stdout
+  USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -63,14 +64,17 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      END IF
   END IF
 
+  ios = 0
   IF ( ionode ) THEN
      iunout=58
      namefile=TRIM(filp)
      OPEN (unit = iunout, file = namefile, status = 'unknown', form = &
-          'formatted', err = 200, iostat = ios)
-200  CALL errore ('sym_band', 'Opening filband file', ABS (ios) )
+          'formatted', iostat = ios)
      REWIND (iunout)
   END IF
+
+  CALL mp_bcast (ios, ionode_id)
+  IF ( ios/=0 ) CALL errore ('sym_band', 'Opening filband file', ABS (ios) )
 
   DO ik = nks1, nks2
      !

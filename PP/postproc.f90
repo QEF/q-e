@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -104,16 +104,21 @@ SUBROUTINE extract (filplot,plot_num)
   emax = +999.0d0
   epsilon=1.d0
   !
+  ios = 0
+  !
   IF ( ionode )  THEN
      !
      !     reading the namelist inputpp
      !
-     READ (5, inputpp, err = 200, iostat = ios)
-200  CALL errore ('postproc', 'reading inputpp namelist', ABS (ios) )
+     READ (5, inputpp, iostat = ios)
      !
      tmp_dir = trimcheck ( outdir )
      !
   END IF
+  !
+  call mp_bcast (ios, ionode_id)
+  !
+  IF ( ios /= 0) CALL errore ('postproc', 'reading inputpp namelist', ABS(ios))
   !
   ! ... Broadcast variables
   !

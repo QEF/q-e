@@ -203,19 +203,23 @@ PROGRAM epsilon
   ! read input file
   !
   IF (ionode) WRITE( stdout, "( 2/, 5x, 'Reading input file...' ) " )
-  
-  IF ( ionode )  THEN 
-     !
-     READ (5, inputpp, IOSTAT=ios)
-     IF (ios/=0) CALL errore('epsilon', 'reading namelist INPUTPP', ABS(ios))
+  ios = 0 
+  !
+  IF ( ionode ) READ (5, inputpp, IOSTAT=ios)
+  !
+  CALL mp_bcast ( ios, ionode_id ) 
+  IF (ios/=0) CALL errore('epsilon', 'reading namelist INPUTPP', ABS(ios))
+  !
+  IF ( ionode ) THEN 
      !
      READ (5, energy_grid, IOSTAT=ios)
-     IF (ios/=0) CALL errore('epsilon', 'reading namelist ENERGY_GRID', ABS(ios))
      !
      tmp_dir = trimcheck(outdir)
      !
   ENDIF
-  
+  !
+  CALL mp_bcast ( ios, ionode_id ) 
+  IF (ios/=0) CALL errore('epsilon', 'reading namelist ENERGY_GRID', ABS(ios))
   ! 
   ! ... Broadcast variables 
   !

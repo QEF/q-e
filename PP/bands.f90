@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -50,17 +50,21 @@ PROGRAM bands
   !
   IF ( npool > 1 ) CALL errore('bands','pools not implemented',npool)
   !
+  ios = 0
+  !
   IF ( ionode )  THEN
      !
      CALL input_from_file ( )
      !
-     READ (5, inputpp, err = 200, iostat = ios)
-200  CALL errore ('do_bands', 'reading inputpp namelist', ABS (ios) )
+     READ (5, inputpp, iostat = ios)
      !
      lsigma(4)=.false.
      tmp_dir = trimcheck (outdir)
      !
   END IF
+  !
+  CALL mp_bcast( ios, ionode_id )
+  IF (ios /= 0) CALL errore ('do_bands', 'reading inputpp namelist', ABS(ios) )
   !
   ! ... Broadcast variables
   !
@@ -126,7 +130,8 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   USE uspp_param,           ONLY : tvanp, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
-  USE io_global,            ONLY : ionode 
+  USE io_global,            ONLY : ionode, ionode_id
+  USE mp,                   ONLY : mp_bcast
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
@@ -145,7 +150,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
   LOGICAL :: lsym
   ! as above for the noncolinear case
-  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, ios, nks1, nks2, ipol, ih, is1
+  INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, nks1, nks2, ipol, ih, is1
   ! counters
   INTEGER, ALLOCATABLE :: ok (:), igkold (:), il (:), ilold(:)
   ! ok: keeps track of which bands have been already ordered
@@ -157,7 +162,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   ! ndeg : number of degenerate states
   INTEGER, ALLOCATABLE :: degeneracy(:), degbands(:,:), idx(:)
   ! degbands keeps track of which states are degenerate
-  INTEGER :: iunpun_sigma(4), indjbnd
+  INTEGER :: iunpun_sigma(4), ios(0:4), indjbnd
   CHARACTER(LEN=256) :: nomefile
   REAL(DP), ALLOCATABLE:: edeg(:)
   REAL(DP), ALLOCATABLE:: sigma_avg(:,:,:)
@@ -172,19 +177,19 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   DO ipol=1,4
      IF (lsigma(ipol).and..not.noncolin) THEN
         CALL errore ('punch_band', 'lsigma requires noncollinear run', &
-                    ABS (ios) )
+                    ipol )
         lsigma=.false.
      ENDIF
   ENDDO
   
   iunpun = 18
   maxdeg = 30 * npol 
-  !
+  ! 
+  ios(:) = 0
   IF ( ionode ) THEN
      !
      OPEN (unit = iunpun, file = filband, status = 'unknown', form = &
-          'formatted', err = 100, iostat = ios)
-100  CALL errore ('punch_band', 'Opening filband file', ABS (ios) )
+          'formatted', iostat = ios(0))
      REWIND (iunpun)
      DO ipol=1,4
         IF (lsigma(ipol)) THEN
@@ -192,13 +197,20 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
            WRITE(nomefile,'(".",i1)') ipol
            OPEN (unit = iunpun_sigma(ipol),  &
                  file = TRIM(filband)//TRIM(nomefile), &
-                 status = 'unknown', form='formatted', err = 200, iostat = ios)
-200        CALL errore ('punch_band', 'Opening filband.1 file', ABS (ios) )
+                 status = 'unknown', form='formatted', iostat = ios(ipol))
            REWIND (iunpun_sigma(ipol))
         ENDIF
      ENDDO
      !
   END IF
+  !
+  CALL mp_bcast( ios, ionode_id )
+  IF ( ios(0) /= 0 ) &
+     CALL errore ('punch_band', 'Opening filband file', ABS(ios(0)) )
+  DO ipol=1,4
+     IF ( ios(ipol) /= 0 ) &
+        CALL errore ('punch_band', 'Opening filband.N file ', ipol)
+  END DO
   !
   IF (noncolin) THEN
      ALLOCATE (psiold_nc( npwx*npol, nbnd))

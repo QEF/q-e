@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2006 quantum-ESPRESSO group
+! Copyright (C) 2006-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,7 +34,8 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : evc
-  USE io_global,            ONLY : ionode, stdout
+  USE io_global,            ONLY : ionode, ionode_id, stdout
+  USE mp,                   ONLY : mp_bcast
   !
   IMPLICIT NONE
   !
@@ -72,10 +73,11 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
      iunout=58
      namefile=TRIM(filband)//".rap"
      OPEN (unit = iunout, file = namefile, status = 'unknown', form = &
-          'formatted', err = 200, iostat = ios)
-200  CALL errore ('sym_band', 'Opening filband file', ABS (ios) )
+          'formatted', iostat = ios)
      REWIND (iunout)
   ENDIF
+  CALL mp_bcast ( ios, ionode_id )
+  IF ( ios /= 0) CALL errore ('sym_band', 'Opening filband file', ABS (ios) )
 
   code_group_old=0
   is_high_sym=.FALSE.

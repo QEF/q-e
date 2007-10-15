@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group 
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -40,14 +40,18 @@ PROGRAM poormanwannier
   first_band=-1
   last_band=-1
   ! 
+  ios = 0
+  !
   IF ( ionode )  THEN 
      ! 
-     READ (5, inputpp, err = 200, iostat = ios) 
-200  CALL errore ('pmwannier', 'reading inputpp namelist', ABS (ios) ) 
+     READ (5, inputpp, iostat = ios) 
      ! 
      tmp_dir = trimcheck (outdir) 
      ! 
   END IF 
+  ! 
+  CALL mp_bcast( ios, ionode_id ) 
+  IF ( ios/=0 ) CALL errore ('pmwannier', 'reading inputpp namelist', ABS(ios)) 
   ! 
   ! ... Broadcast variables 
   ! 

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -134,19 +134,24 @@ PROGRAM projwfc
   lsym   = .true.
   degauss= 0.d0
   !
+  ios = 0
+  !
   IF ( ionode )  THEN  
-
+     !
      CALL input_from_file ( )
-
-     READ (5, inputpp, err = 200, iostat = ios) 
-200  CALL errore ('projwfc', 'reading inputpp namelist', ABS (ios) ) 
-     ! 
+     !
+     READ (5, inputpp, iostat = ios) 
+     !
      tmp_dir = trimcheck (outdir) 
      ! save the value of degauss and ngauss: they are read from file
-     ngauss1 = ngauss
      degauss1=degauss
+     ngauss1 = ngauss
      ! 
-  END IF 
+  END IF
+  !
+  CALL mp_bcast (ios, ionode_id )
+  !
+  IF (ios /= 0) CALL errore ('projwfc', 'reading inputpp namelist', ABS (ios) ) 
   ! 
   ! ... Broadcast variables 
   ! 

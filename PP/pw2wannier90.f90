@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -36,6 +36,7 @@ program pw2wannier90
   !
   ! Read input on i/o node and broadcast to the rest
   !
+  ios = 0
   if(ionode) then
      !
      ! Check to see if we are reading from a file
@@ -57,15 +58,16 @@ program pw2wannier90
      !
      !     reading the namelist inputpp
      !
-     read (5, inputpp, err=200,iostat=ios)
-     !
-200  call errore( 'phq_readin', 'reading inputpp namelist', abs(ios) )
+     read (5, inputpp, iostat=ios)
      !
      !     Check of namelist variables
      !
      tmp_dir = TRIM(outdir) 
      ! back to all nodes
   end if
+  !
+  call mp_bcast(ios,ionode_id)    
+  if (ios /= 0) call errore( 'phq_readin', 'reading inputpp namelist', abs(ios))
   !
   ! broadcast input variable to all nodes
   !

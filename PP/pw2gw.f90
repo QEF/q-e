@@ -1,5 +1,5 @@
 
-! Copyright (C) 2004 PWSCF group 
+! Copyright (C) 2004-2007 Quantum-Espresso group 
 ! This file is distributed under the terms of the 
 ! GNU General Public License. See the file `License' 
 ! in the root directory of the present distribution, 
@@ -35,13 +35,16 @@ PROGRAM pw2gw
   CALL get_env( 'ESPRESSO_TMPDIR', outdir )
   IF ( TRIM( outdir ) == ' ' ) outdir = './'
 
+  ios = 0
   IF ( ionode )  THEN 
      !
-     READ (5, inputpp, err=200, iostat=ios)
-200  CALL errore('pw2gw', 'reading inputpp namelist', ABS(ios))
-  tmp_dir = trimcheck (outdir)
+     READ (5, inputpp, iostat=ios)
+     tmp_dir = trimcheck (outdir)
      !
   END IF
+  ! 
+  CALL mp_bcast( ios, ionode_id ) 
+  IF (ios /= 0)   CALL errore('pw2gw', 'reading inputpp namelist', ABS(ios))
   ! 
   ! ... Broadcast variables 
   ! 
