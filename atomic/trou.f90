@@ -77,7 +77,7 @@ subroutine find_coefficients &
         newvalue = funz(amat,ipvt,y,rc,ik, &
              aenorm,c2,c,c2,lam,r,dx,ndm)**2
         write(prec,'(e10.4)') newvalue
-        call infomsg('find_coeff','giving up minimization, ', &
+        call infomsg('find_coeff','giving up minimization, '//&
              'the error is still '//prec)
         return
      end if
