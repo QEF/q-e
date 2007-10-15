@@ -8,7 +8,7 @@ module grid_paw_variables
   ! NO rinner > 0
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : lqmax, nbrx, npsx
+  USE parameters, ONLY : lqmax, npsx
   USE radial_grids, ONLY: ndmx
   !
   implicit none
@@ -16,6 +16,8 @@ module grid_paw_variables
   save
 
   LOGICAL, PARAMETER :: really_do_paw = .true.
+
+  INTEGER, PARAMETER :: nbrx = 14  ! max number of beta functions
 
   ! Analogous to okvan in  "uspp_param" (Modules/uspp.f90)
   LOGICAL :: &

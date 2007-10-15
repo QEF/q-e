@@ -24,7 +24,6 @@ MODULE parameters
        nwfsx  = 14       ! max number of beta functions per atom
   !
   INTEGER, PARAMETER :: &
-       nbrx = 14,          &! max number of beta functions
        lqmax= 2*lmaxx+1     ! max number of angular momenta of Q
 
   !

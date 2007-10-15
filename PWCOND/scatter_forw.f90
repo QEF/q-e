@@ -23,7 +23,7 @@ subroutine scatter_forw(nrz, nrzp, z, psiper, zk, norb, tblm, cros, &
 ! Phi_alpha over beta-functions inside the unit cell. 
 !
   USE constants, ONLY : tpi
-  USE parameters, only : nbrx, npsx
+  USE parameters, only : npsx
   use radial_grids, only: ndmx
   USE cell_base, ONLY : tpiba
   USE noncollin_module, ONLY : npol

@@ -609,9 +609,9 @@ SUBROUTINE PAW_rho_lm(na, becsum, pfunc, rho_lm, aug)
     USE lsda_mod,               ONLY : nspin
     USE uspp_param,             ONLY : nhm, nh, lmaxq
     USE uspp,                   ONLY : indv, ap, nhtolm,lpl,lpx
-    USE parameters,             ONLY : nbrx, lqmax
+    USE parameters,             ONLY : lqmax
     USE radial_grids,           ONLY : ndmx
-    USE grid_paw_variables,     ONLY : augfun_t
+    USE grid_paw_variables,     ONLY : augfun_t, nbrx
 
     INTEGER,  INTENT(IN)  :: na     ! index of atom to use
     REAL(DP), INTENT(IN)  :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupation

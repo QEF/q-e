@@ -155,7 +155,7 @@ CONTAINS
   SUBROUTINE init_prad
     !
     USE kinds,      ONLY : DP
-    USE parameters, ONLY : lmaxx, nbrx, lqmax
+    USE parameters, ONLY : lmaxx, lqmax
     USE radial_grids, ONLY : ndmx
     USE constants,  ONLY : fpi
     USE atom,       ONLY : rgrid, msh !r, rab, mesh, msh
@@ -169,7 +169,7 @@ CONTAINS
     USE spin_orb,   ONLY : lspinorb, rot_ylm, fcoef
     !
     USE grid_paw_variables, ONLY: tpawp, pfunc, ptfunc, pp, ppt, prad, ptrad, &
-         int_r2pfunc, int_r2ptfunc, pmultipole, ptmultipole, okpaw, aug
+         int_r2pfunc, int_r2ptfunc, pmultipole, ptmultipole, okpaw, aug, nbrx
     !
     IMPLICIT NONE
     !
@@ -741,7 +741,7 @@ CONTAINS
     !#include "f_defs.h"
     USE kinds, ONLY: DP
     USE us, ONLY: dq!, qrad
-    USE parameters, ONLY: nbrx
+    USE grid_paw_variables, ONLY: nbrx
     USE uspp_param, ONLY: lmaxq
     USE uspp, ONLY: nlx, lpl, lpx, ap, indv, nhtolm
     IMPLICIT NONE

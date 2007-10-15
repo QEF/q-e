@@ -1,12 +1,11 @@
 
-! Copyright (C) 2002-2003 PWSCF-FPMD-CP90 group
+! Copyright (C) 2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 
-!  extracted from module "readpseudo" of FPMD
 !  contains two modules:
 !      MODULE read_paw_module
 !      MODULE paw_to_internal

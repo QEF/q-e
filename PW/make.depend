@@ -573,6 +573,7 @@ init_ns.o : pwcom.o
 init_paw_1.o : ../Modules/atom.o
 init_paw_1.o : ../Modules/cell_base.o
 init_paw_1.o : ../Modules/constants.o
+init_paw_1.o : ../Modules/grid_paw_variables.o
 init_paw_1.o : ../Modules/io_global.o
 init_paw_1.o : ../Modules/ions_base.o
 init_paw_1.o : ../Modules/kind.o
@@ -775,6 +776,7 @@ para.o : ../Modules/mp.o
 para.o : ../Modules/mp_global.o
 para.o : ../Modules/parallel_include.o
 paw.o : ../Modules/atom.o
+paw.o : ../Modules/grid_paw_variables.o
 paw.o : ../Modules/io_global.o
 paw.o : ../Modules/ions_base.o
 paw.o : ../Modules/kind.o
