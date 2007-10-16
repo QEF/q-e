@@ -25,7 +25,7 @@ subroutine formf( tfirst, eself )
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
   use local_pseudo,    ONLY : vps, rhops, dvps, drhops
-  use atom,            ONLY : rgrid, numeric
+  use atom,            ONLY : rgrid
   use uspp_param,      ONLY : upf, oldvan
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
   use pseudopotential, ONLY : tpstab, vps_sp, dvps_sp
@@ -80,21 +80,14 @@ subroutine formf( tfirst, eself )
         !
      ELSE
 
-        if ( numeric(is) ) then
+        call formfn( vps(:,is), dvps(:,is), rgrid(is)%r, rgrid(is)%rab, &
+                     upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), &
+                     g, omega, tpiba2, rgrid(is)%mesh, ngs, oldvan(is), tpre )
 
-           call formfn( vps(:,is), dvps(:,is), rgrid(is)%r, rgrid(is)%rab,  &
-                        upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), g, omega, tpiba2,&
-                        rgrid(is)%mesh, ngs, oldvan(is), tpre )
-
-        else
-
-           CALL errore ( 'formf','BHS pseudopotentials no longer supported', is)
-
-           !call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
-           !             rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
-           !             zv(is), rcmax(is), g, omega, tpiba2, ngs, gstart, tpre )
-
-        end if
+! obsolete BHS form
+! call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
+!              rcl(:,is,lloc(is)), al(:,is,lloc(is)), bl(:,is,lloc(is)),    &
+!              zv(is), rcmax(is), g, omega, tpiba2, ngs, gstart, tpre )
 
      END IF
      !
@@ -332,7 +325,7 @@ subroutine nlinit
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
-      use atom,            ONLY : rgrid, nlcc, numeric
+      use atom,            ONLY : rgrid, nlcc
       use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb
       use gvecb,           ONLY : ngb
@@ -395,12 +388,8 @@ subroutine nlinit
 
       do is = 1, nsp
          WRITE( stdout, fmt="(/,3X,'Specie: ',I5)" ) is
-         if ( .not. numeric(is) ) then
-            fac=1.0d0
-         else
-            !     fac converts ry to hartree
-            fac=0.5d0
-         end if
+         !     fac converts ry to hartree
+         fac=0.5d0
          do iv = 1, nh(is)
             WRITE( stdout,901) iv, indv(iv,is), nhtol(iv,is)
          end do

@@ -405,8 +405,6 @@ SUBROUTINE print_ps_info
   USE io_files,        ONLY : psfile
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid, nlcc
-  USE pseud,           ONLY : alps, alpc, cc, aps, nlc, nnl, lmax, lloc, &
-                              a_nlcc, b_nlcc, alpha_nlcc
   USE uspp_param,      ONLY : upf
   USE grid_paw_variables, ONLY: tpawp
   !
@@ -442,6 +440,7 @@ SUBROUTINE print_ps_info
            WRITE( stdout, '(14x," l(",i2,") = ",i3)') ib, upf(nt)%lll(ib)
         ENDIF
      END DO
+
      IF ( upf(nt)%tvanp ) THEN
         IF (upf(nt)%nqf==0) THEN
            WRITE( stdout, '(5x,"Q(r) pseudized with 0 coefficients ",/)') 
@@ -451,34 +450,6 @@ SUBROUTINE print_ps_info
            &          52x,3f8.3,/ 52x,3f8.3)') &
            &          upf(nt)%nqf, (upf(nt)%rinner(i), i=1,upf(nt)%nqlc)
         END IF
-        !
-     ELSE
-        !
-        ! ... the following is for obsolete formats
-        !
-        IF ( lloc(nt) > -1 ) WRITE( stdout, &
-             '(/5x,"Channel chosen as local reference: L=",i2)') lloc(nt)
-        IF ( nlc(nt) > 0 .OR. nnl(nt) > 0 ) THEN
-           WRITE( stdout, '(/5x,"PseudoPot in analytical form:")')
-           WRITE( stdout, '(14x,"i=",7x,"1",13x,"2",10x,"3")')
-           WRITE( stdout, '(/5x,"core")')
-           WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alpc (i, nt) , i = 1, 2)
-           WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (cc (i, nt) , i = 1, 2)
-           DO l = 0, lmax(nt)
-              WRITE( stdout, '(/5x,"l = ",i2)') l
-              WRITE( stdout, '(5x,"alpha =",4x,3g13.5)') (alps (i, l, nt) , &
-                   i = 1, 3)
-              WRITE( stdout, '(5x,"a(i)  =",4x,3g13.5)') (aps (i, l, nt) , i = 1,3)
-              WRITE( stdout, '(5x,"a(i+3)=",4x,3g13.5)') (aps (i, l, nt) , i= 4, 6)
-           ENDDO
-           IF ( nlcc(nt) ) &
-              WRITE( stdout, 200) a_nlcc(nt), b_nlcc(nt), alpha_nlcc(nt)
-200        FORMAT(/5x,'nonlinear core correction: ', &
-                &     'rho(r) = ( a + b r^2) exp(-alpha r^2)', &
-                & /,5x,'a    =',4x,g11.5, &
-                & /,5x,'b    =',4x,g11.5, &
-                & /,5x,'alpha=',4x,g11.5)
-        ENDIF
      ENDIF
 
   ENDDO

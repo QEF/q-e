@@ -20,14 +20,13 @@ subroutine readpp
   USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal,  ONLY : set_pseudo_upf
   USE paw,              ONLY : set_paw_upf
-  USE atom,       ONLY : chi, nchi, oc, msh, numeric, rgrid
+  USE atom,       ONLY : chi, nchi, oc, msh, rgrid
   USE uspp_param, ONLY : newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
   USE io_files,   ONLY : pseudo_dir, psfile
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
-  USE pseud,      ONLY : lmax, lloc
   USE uspp_param, ONLY : upf
   USE parameters, ONLY : nchix !PAW
   USE grid_paw_variables, ONLY : tpawp
@@ -64,12 +63,6 @@ subroutine readpp
      !
      rgrid(nt)%xmin = 0.d0
      rgrid(nt)%dx = 0.d0
-     lmax(nt) = -1
-     lloc(nt) = -1
-     ! 
-     ! for compatibility - numeric is read by read_ncpp
-     !
-     numeric (nt) = .true.
      !
      ! add slash at the end if needed
      !
@@ -123,7 +116,6 @@ subroutine readpp
            !    PSEUDO PAW in temporary format. Use with care
            !
            !tpaw(nt)=.true.
-           numeric (nt) = .true.
            newpseudo (nt) = .true.
            open (unit = iunps, file = file_pseudo, status = 'old', &
                  form='formatted', iostat = ios)
@@ -140,9 +132,7 @@ subroutine readpp
            CALL set_pseudo_upf (nt, upf(nt)) 
            !
         endif
-        ! for compatibility with old formats - maybe obsolete?
-        lmax(nt) = max ( lmax(nt), &
-                         MAXVAL( upf(nt)%lll( 1:upf(nt)%nbeta ) ) )
+        !
      endif
      close (iunps)
      ! ... Zv = valence charge of the (pseudo-)atom, read from PP files,

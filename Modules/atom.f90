@@ -32,7 +32,6 @@ MODULE atom
        nchi(npsx),               &! number of atomic orbitals
        lchi(nchix,npsx)           ! angular momentum of atomic orbitals
   LOGICAL :: &
-       numeric(npsx),            &! if .TRUE. the potential is in numeric form
        nlcc(npsx)                 ! if .TRUE. the atom has nlcc
   !
 END MODULE atom

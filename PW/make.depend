@@ -935,12 +935,10 @@ read_file.o : buffers.o
 read_file.o : noncol.o
 read_file.o : pw_restart.o
 read_file.o : pwcom.o
-read_ncpp.o : ../Modules/atom.o
 read_ncpp.o : ../Modules/functionals.o
 read_ncpp.o : ../Modules/kind.o
 read_ncpp.o : ../Modules/parameters.o
 read_ncpp.o : ../Modules/pseudo_types.o
-read_ncpp.o : pwcom.o
 read_pseudo.o : ../Modules/atom.o
 read_pseudo.o : ../Modules/functionals.o
 read_pseudo.o : ../Modules/grid_paw_variables.o
@@ -956,7 +954,6 @@ read_pseudo.o : ../Modules/read_uspp.o
 read_pseudo.o : ../Modules/upf_to_internal.o
 read_pseudo.o : ../Modules/uspp.o
 read_pseudo.o : paw.o
-read_pseudo.o : pwcom.o
 real_diis_module.o : ../Modules/constants.o
 real_diis_module.o : ../Modules/control_flags.o
 real_diis_module.o : ../Modules/random_numbers.o

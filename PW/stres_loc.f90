@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,13 +12,12 @@ subroutine stres_loc (sigmaloc)
   !----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : msh, rgrid, numeric
+  USE atom,                 ONLY : msh, rgrid
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : omega, tpiba2
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
-  USE pseud,                ONLY : aps, alps,alpc, cc, lloc, lmax, nlc, nnl
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : gamma_only
@@ -66,10 +65,8 @@ subroutine stres_loc (sigmaloc)
   !
   do nt = 1, ntyp
      ! dvloc contains dV_loc(G)/dG
-     call dvloc_of_g (lloc (nt), lmax (nt), numeric (nt), rgrid(nt)%mesh, &
-          msh (nt), rgrid(nt)%rab, rgrid(nt)%r, upf(nt)%vloc(1), &
-          cc (1, nt), alpc (1, nt), nlc (nt), nnl (nt), upf(nt)%zp, &
-          aps (1, 0, nt), alps (1, 0, nt), tpiba2, ngl, gl, omega, dvloc)
+     call dvloc_of_g (rgrid(nt)%mesh, msh (nt), rgrid(nt)%rab, rgrid(nt)%r, &
+          upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
      ! no G=0 contribution
      do ng = 1, ngm
         do l = 1, 3

@@ -21,7 +21,6 @@
      use uspp,       only: dvan, nhtolm, indv
      use uspp_param, only: upf, nhm, nh
      use ions_base,  only: nsp
-     use atom,       only: numeric
      !
      implicit none
      !
@@ -33,12 +32,8 @@
      dvan(:,:,:) =0.d0
      !
      do is = 1, nsp
-       if ( .not. numeric( is ) ) then
-         fac = 1.0d0
-       else
-         !     fac converts ry to hartree
-         fac = 0.5d0
-       end if
+       !     fac converts ry to hartree
+       fac = 0.5d0
        do iv=1,nh(is)
          do jv=1,nh(is)
            if ( nhtolm(iv,is) == nhtolm(jv,is) ) then
@@ -231,7 +226,7 @@
    SUBROUTINE build_pstab_x( )
 
       USE kinds,              ONLY : DP
-      USE atom,               ONLY : rgrid, numeric
+      USE atom,               ONLY : rgrid
       USE ions_base,          ONLY : nsp, rcmax, zv
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
@@ -278,23 +273,15 @@
          CALL allocate_spline( vps_sp(is), mmx, xgmin, xgmax )
          CALL allocate_spline( dvps_sp(is), mmx, xgmin, xgmax )
 
-         if ( numeric(is) ) then
-
-            call formfn( vps_sp(is)%y, dvps_sp(is)%y, rgrid(is)%r, &
-                         rgrid(is)%rab, upf(is)%vloc(1:rgrid(is)%mesh), zv(is),   &
-                         rcmax(is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, &
-                         mmx, oldvan(is), tpre )
-
-         else
-
-            CALL errore('build_pstab','BHS format no longer supported', is)
-            
-            !call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
-            !             wrc1(is), wrc2(is), rcl(:,is,lloc(is)), &
-            !             al(:,is,lloc(is)), bl(:,is,lloc(is)), zv(is), &
-            !             rcmax(is), xgtab, 1.0d0, tpiba2, mmx, 2 , tpre )
-
-         end if
+         call formfn( vps_sp(is)%y, dvps_sp(is)%y, rgrid(is)%r, &
+                      rgrid(is)%rab, upf(is)%vloc(1:rgrid(is)%mesh), zv(is), &
+                      rcmax(is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, &
+                      mmx, oldvan(is), tpre )
+         ! obsolete BHS format
+         !call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
+         !             wrc1(is), wrc2(is), rcl(:,is,lloc(is)), &
+         !             al(:,is,lloc(is)), bl(:,is,lloc(is)), zv(is), &
+         !             rcmax(is), xgtab, 1.0d0, tpiba2, mmx, 2 , tpre )
 
          ! WRITE( 13, "(3D16.8)" ) ( xgtab(ig), vps_sp(is)%y(ig), dvps_sp(is)%y(ig), ig = 1, mmx )
 
@@ -615,7 +602,7 @@
       USE kinds,      ONLY : DP
       USE ions_base,  ONLY : nsp
       USE uspp_param, ONLY : upf, nh, nhm, oldvan
-      USE atom,       ONLY : rgrid, numeric
+      USE atom,       ONLY : rgrid
       USE uspp,       ONLY : nhtol, indv
       USE betax,      only : refg, betagx, mmx, dbetagx
       !
@@ -716,7 +703,7 @@
       use io_global,     only : stdout
       USE ions_base,     ONLY : nsp
       USE uspp_param,    ONLY : upf, nh, nhm, nbetam, lmaxq, oldvan
-      USE atom,          ONLY : rgrid, numeric
+      USE atom,          ONLY : rgrid
       USE uspp,          ONLY : indv
       USE betax,         only : refg, qradx, mmx, dqradx
       USE cvan,          only : ish, nvb
@@ -843,7 +830,7 @@
       USE ions_base,  ONLY: nsp
       USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq, oldvan
       use uspp_param, only: lmaxkb
-      USE atom,       ONLY: rgrid, numeric
+      USE atom,       ONLY: rgrid
       USE uspp,       ONLY: indv
       use uspp,       only: qq, beta
       USE betax,      only: refg, qradx, mmx, dqradx
@@ -1415,7 +1402,7 @@
       USE uspp,          only : qq, nhtolm, beta, nhtol, indv
       USE cell_base,     only : ainv, omega, tpiba2, tpiba
       USE cdvan,         ONLY : dbeta
-      USE atom,          ONLY : rgrid, numeric
+      USE atom,          ONLY : rgrid
       USE reciprocal_vectors, only : g, gx, gstart
 
       IMPLICIT NONE

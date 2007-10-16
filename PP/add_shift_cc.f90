@@ -13,14 +13,13 @@ subroutine add_shift_cc (shift_cc)
 #include "f_defs.h"
   USE kinds, ONLY : DP
   USE constants, ONLY: tpi
-  USE atom, ONLY: rho_atc, numeric, rgrid, nlcc
+  USE atom, ONLY: rho_atc, rgrid, nlcc
   USE ions_base, ONLY: nat, ntyp => nsp, ityp, tau
   USE cell_base, ONLY: alat, omega, tpiba, tpiba2
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, nl, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc
   USE lsda_mod, ONLY: nspin
-  USE pseud, ONLY: a_nlcc, b_nlcc, alpha_nlcc
   USE scf, ONLY: rho, rhog, rho_core, rhog_core
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
@@ -86,11 +85,10 @@ subroutine add_shift_cc (shift_cc)
   do nt = 1, ntyp
      if (nlcc (nt) ) then
 
-        call drhoc (ngl, gl, omega, tpiba2, numeric (nt), a_nlcc (nt), &
-             b_nlcc (nt), alpha_nlcc (nt), rgrid(nt)%mesh, rgrid(nt)%r, rgrid(nt)%rab, &
-             rho_atc (1, nt), rhocg)
+        call drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r, &
+             rgrid(nt)%rab, rho_atc (1, nt), rhocg)
         do na = 1, nat
-           if (nt.eq.ityp (na) ) then
+           if (nt == ityp (na) ) then
               if (gstart.eq.2)  shift_(na) = omega * rhocg (igtongl (1) ) * &
                                                      CONJG(psic (nl (1) ) )
               do ig = gstart, ngm

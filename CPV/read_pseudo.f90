@@ -177,7 +177,7 @@ END FUNCTION calculate_dx
       USE io_global, ONLY: stdout, ionode, ionode_id
       USE uspp, ONLY : okvan
       USE uspp_param, ONLY : oldvan
-      USE atom, ONLY: numeric, nlcc, oc, lchi, nchi
+      USE atom, ONLY: nlcc, oc, lchi, nchi
       USE cvan, ONLY: nvb
       use ions_base, only: zv, nsp
       use read_upf_module, only: read_pseudo_upf
@@ -274,7 +274,6 @@ END FUNCTION calculate_dx
 
         OPEN( UNIT = pseudounit, FILE = filename, STATUS = 'OLD' )
 
-        numeric(is) = .true.
         !
         ! used only by obsolete Vanderbilt format with Herman-Skillman grid
         !

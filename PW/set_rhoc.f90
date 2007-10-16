@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,13 +16,12 @@ subroutine set_rhoc
   !
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
-  USE atom,      ONLY : rho_atc, numeric, msh, rgrid, nlcc
+  USE atom,      ONLY : rho_atc, msh, rgrid, nlcc
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY : omega, tpiba2
   USE ener,      ONLY : etxcc
   USE gvect,     ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                         nrxx, nl, nlm, ngl, gl, igtongl
-  USE pseud,     ONLY : a_nlcc, b_nlcc, alpha_nlcc
   USE scf,       ONLY : rho_core, rhog_core
   USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
@@ -73,9 +72,8 @@ subroutine set_rhoc
         !
         !     drhoc compute the radial fourier transform for each shell of g vec
         !
-        call drhoc (ngl, gl, omega, tpiba2, numeric (nt), a_nlcc (nt), &
-             b_nlcc (nt), alpha_nlcc (nt), msh (nt), rgrid(nt)%r, rgrid(nt)%rab, &
-             rho_atc (1, nt), rhocg)
+        call drhoc (ngl, gl, omega, tpiba2, msh (nt), rgrid(nt)%r, &
+             rgrid(nt)%rab, rho_atc (1, nt), rhocg)
         !
         !     multiply by the structure factor and sum
         !

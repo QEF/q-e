@@ -37,7 +37,7 @@ SUBROUTINE phq_init()
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk
   USE pwcom
-  USE atom,                 ONLY : numeric,  msh, rgrid
+  USE atom,                 ONLY : msh, rgrid
   USE wavefunctions_module, ONLY : evc
   USE kinds,                ONLY : DP
   USE noncollin_module,     ONLY : noncolin, npol
@@ -96,10 +96,8 @@ SUBROUTINE phq_init()
   !
   DO nt = 1, ntyp
      !
-     CALL setlocq( xq, lloc(nt), lmax(nt), numeric(nt), rgrid(nt)%mesh,    &
-                   msh(nt), rgrid(nt)%rab, rgrid(nt)%r, upf(nt)%vloc(1),   &
-                   cc(1,nt), alpc(1,nt), nlc(nt), nnl(nt), upf(nt)%zp,     &
-                   aps(1,0,nt), alps(1,0,nt), tpiba2, ngm, g, omega, &
+     CALL setlocq( xq, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r,&
+                   upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngm, g, omega, &
                    vlocq(1,nt) )
      !
   END DO

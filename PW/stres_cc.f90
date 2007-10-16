@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,14 +12,13 @@ subroutine stres_cc (sigmaxcc)
   !-----------------------------------------------------------------------
   !
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : rho_atc, numeric,rgrid, nlcc
+  USE atom,                 ONLY : rho_atc, rgrid, nlcc
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, gg, ngl, gl, igtongl
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
-  USE pseud,                ONLY : a_nlcc, b_nlcc, alpha_nlcc
   USE scf,                  ONLY : rho, rhog, rho_core, rhog_core
   USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : gamma_only
@@ -71,9 +70,8 @@ subroutine stres_cc (sigmaxcc)
   end if
   do nt = 1, ntyp
      if (nlcc (nt) ) then
-        call drhoc (ngl, gl, omega, tpiba2, numeric (nt), a_nlcc (nt), &
-             b_nlcc (nt), alpha_nlcc (nt), rgrid(nt)%mesh, rgrid(nt)%r, rgrid(nt)%rab &
-             , rho_atc (1, nt), rhocg)
+        call drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r, &
+              rgrid(nt)%rab, rho_atc (1, nt), rhocg)
         ! diagonal term
         if (gstart==2) sigmadiag = sigmadiag + &
              CONJG(psic (nl(1) ) ) * strf (1,nt) * rhocg (igtongl (1) )
@@ -82,9 +80,8 @@ subroutine stres_cc (sigmaxcc)
                 strf (ng,nt) * rhocg (igtongl (ng) ) * fact
         enddo
 
-        call deriv_drhoc (ngl, gl, omega, tpiba2, numeric (nt), &
-             a_nlcc (nt), b_nlcc (nt), alpha_nlcc (nt), rgrid(nt)%mesh, rgrid(nt)%r, &
-             rgrid(nt)%rab, rho_atc (1, nt), rhocg)
+        call deriv_drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, &
+             rgrid(nt)%r, rgrid(nt)%rab, rho_atc (1, nt), rhocg)
         ! non diagonal term (g=0 contribution missing)
         do ng = gstart, ngm
            do l = 1, 3

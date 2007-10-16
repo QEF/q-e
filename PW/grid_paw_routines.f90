@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -855,12 +855,11 @@ CONTAINS
     !
     USE io_global, ONLY : stdout
     USE kinds,     ONLY : DP
-    USE atom,      ONLY : rgrid, msh,nlcc,numeric !rho_atc, numeric, msh, r, rab, nlcc
+    USE atom,      ONLY : rgrid, msh, nlcc
     USE ions_base, ONLY : ntyp => nsp
     USE cell_base, ONLY : omega, tpiba2, alat
     USE gvect,     ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                           nl, nlm, ngl, gl, igtongl
-    USE pseud,     ONLY : a_nlcc, b_nlcc, alpha_nlcc
     USE wvfct,     ONLY : gamma_only
     USE grid_paw_variables, ONLY : aerho_atc, psrho_atc, aerho_core, psrho_core
     !
@@ -908,9 +907,8 @@ CONTAINS
           !
           ! drhoc compute the radial fourier transform for each shell of g vec
           !
-          CALL drhoc (ngl, gl, omega, tpiba2, numeric (nt), a_nlcc (nt), &
-               b_nlcc (nt), alpha_nlcc (nt), msh (nt), rgrid(nt)%r(1), rgrid(nt)%rab(1), &
-               rho_atc_ (1, nt), rhocg)
+          CALL drhoc (ngl, gl, omega, tpiba2, msh (nt), rgrid(nt)%r(1), &
+               rgrid(nt)%rab(1), rho_atc_ (1, nt), rhocg)
           !
           aux (:) = 0.d0
           aux(nl(:)) = rhocg(igtongl(:)) 
@@ -1458,11 +1456,10 @@ END SUBROUTINE atomic_becsum
   SUBROUTINE init_paw_vloc
     !
     USE kinds, ONLY: DP
-    USE atom,       ONLY : rgrid, msh, numeric !, msh, mesh, r, rab
+    USE atom,       ONLY : rgrid, msh
     USE ions_base,  ONLY : ntyp => nsp
     USE cell_base,  ONLY : omega, tpiba2
     USE gvect,      ONLY : ngl, gl
-    USE pseud,      ONLY : lloc, lmax, cc, nlc, nnl, alpc, alps, aps
     USE uspp_param, ONLY : upf
     USE grid_paw_variables, ONLY: aevloc_at, psvloc_at, aevloc, psvloc
     !
@@ -1493,10 +1490,9 @@ END SUBROUTINE atomic_becsum
        !
        ! compute V_loc(G) for a given type of atom
        !
-       CALL vloc_of_g_noerf (lloc (nt), lmax (nt), numeric (nt), rgrid(nt)%mesh, &
-            msh (nt), rgrid(nt)%rab(1), rgrid(nt)%r(1), vloc_at_ (:, nt), cc (1, &
-            nt), alpc (1, nt), nlc (nt), nnl (nt), upf(nt)%zp, aps (1, 0, nt), &
-            alps (1, 0, nt), tpiba2, ngl, gl, omega, vloc_ (:, nt) )
+       CALL vloc_of_g_noerf (rgrid(nt)%mesh, &
+            msh (nt), rgrid(nt)%rab(1), rgrid(nt)%r(1), vloc_at_ (:, nt), &
+            upf(nt)%zp, tpiba2, ngl, gl, omega, vloc_ (:, nt) )
        END DO
     END DO whattodo 
    call stop_clock ('init_pawvloc')
@@ -1509,18 +1505,12 @@ END SUBROUTINE atomic_becsum
 ! because we don't assume anymore that v(r)\approx 2*e^2*zp/r at large r
 ! but that it is zero beyond some r_c (see cutoffing in upf_to_internal.f90)
 !----------------------------------------------------------------------
-subroutine vloc_of_g_noerf (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
-     cc, alpc, nlc, nnl, zp, aps, alps, tpiba2, ngl, gl, omega, vloc)
+subroutine vloc_of_g_noerf (mesh, msh, rab, r, vloc_at, &
+      zp, tpiba2, ngl, gl, omega, vloc)
   !----------------------------------------------------------------------
   !
   !    This routine computes the Fourier transform of the local
-  !    part of the pseudopotential. Two types of local potentials
-  !    are allowed:
-  !
-  !    a) The pseudopotential is in analytic form and its fourier
-  !       transform is computed analytically
-  !    b) The pseudopotential is in numeric form and its fourier
-  !       transform is computed numerically
+  !    part of the pseudopotential.
   !
   !    The local pseudopotential of the US case is always in
   !    numerical form, expressed in Ry units.
@@ -1532,32 +1522,21 @@ subroutine vloc_of_g_noerf (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
   !
   !    first the dummy variables
   !
-  integer :: nlc, nnl, ngl, lloc, lmax, mesh, msh
-  ! input: analytic, number of erf functions
-  ! input: analytic, number of gaussian functions
+  integer :: ngl, mesh, msh
   ! input: the number of shell of G vectors
-  ! input: the l taken as local part
-  ! input: the maximum non local angular momentum
-  ! input: numeric, the dimensions of the mesh
-  ! input: numeric, number of mesh points for radial integration
+  ! input: the dimensions of the mesh
+  ! input: number of mesh points for radial integration
 
-  real(DP) :: cc (2), alpc (2), alps (3, 0:3), aps (6, 0:3), &
-       zp, rab (mesh), r (mesh), vloc_at (mesh), tpiba2, omega, gl (ngl), &
-       vloc (ngl)
-  ! input: analytic, c of the erf functions
-  ! input: analytic, alpha of the erf
-  ! input: analytic, alpha of the gaussians
-  ! input: analytic, a and b of the gaussians
+  real(DP) :: zp, rab (mesh), r (mesh), vloc_at (mesh), tpiba2, omega, &
+       gl (ngl), vloc (ngl)
   ! input: valence pseudocharge
-  ! input: numeric, the derivative of mesh points
-  ! input: numeric, the mesh points
-  ! input: numeric, the pseudo on the radial mesh
+  ! input: the derivative of mesh points
+  ! input: the mesh points
+  ! input: the pseudo on the radial mesh
   ! input: 2 pi / alat
   ! input: the volume of the unit cell
   ! input: the moduli of g vectors for each shell
   ! output: the fourier transform of the potential
-  logical :: numeric
-  ! input: if true the pseudo is numeric
   !
   !    local variables
   !
@@ -1572,9 +1551,7 @@ subroutine vloc_of_g_noerf (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
   ! counter on mesh points
 
    call start_clock ('vloc_of_g_no')
-  if (.not.numeric) then
-     STOP 'vloc_of_g_noerf not implemented'
-  else
+
      !
      ! Pseudopotentials in numerical form (Vloc_at) contain the local part)
 !!$NO! in order to perform the Fourier transform, a term erf(r)/r is
@@ -1623,7 +1600,7 @@ subroutine vloc_of_g_noerf (lloc, lmax, numeric, mesh, msh, rab, r, vloc_at, &
      enddo
      vloc (:) = vloc(:) * fpi / omega
      deallocate (aux, aux1)
-  endif
+  
    call stop_clock ('vloc_of_g_no')
   return
 end subroutine vloc_of_g_noerf

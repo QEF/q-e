@@ -13,7 +13,7 @@ SUBROUTINE d3_init
   USE ions_base,  ONLY : nat, ntyp => nsp
   USE pwcom
   USE uspp_param, ONLY : upf
-  USE atom,       ONLY: numeric, msh, rgrid
+  USE atom,       ONLY : msh, rgrid
   USE phcom
   USE d3com
   USE mp,         ONLY : mp_barrier
@@ -60,10 +60,9 @@ SUBROUTINE d3_init
      vlocg0 (:,:) = 0.d0
      work = 0.d0
      DO nt = 1, ntyp
-        CALL setlocq (work, lloc(nt), lmax(nt), numeric(nt), &
-             rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, rgrid(nt)%r, upf(nt)%vloc,&
-             cc(1,nt), alpc(1,nt), nlc(nt), nnl(nt), upf(nt)%zp, aps(1,0,nt), &
-             alps(1,0,nt), tpiba2, ngm, g, omega, vlocg0(1,nt) )
+        CALL setlocq (work, rgrid(nt)%mesh, msh(nt), rgrid(nt)%rab, &
+             rgrid(nt)%r, upf(nt)%vloc, upf(nt)%zp, tpiba2, ngm, g, &
+             omega, vlocg0(1,nt) )
      ENDDO
   ENDIF
 !

@@ -30,13 +30,7 @@ subroutine cubicsym (at, is, isname, nrot)
   ! output: full name of the rotational part of
   !         each selected symmetry operation
   !
-  !    here the local parameters
-  ! sin3 = sin(pi/3), cos3 = cos(pi/3), msin3 = -sin(pi/3), mcos3 = -sin(pi/3)
-  !
-  real(DP), parameter :: sin3 = 0.866025403784438597d0, cos3 = 0.5d0, &
-                             msin3 =-0.866025403784438597d0, mcos3 = -0.5d0
-  !
-  !   and the local variables
+  !    here the local variables
   !
   real(DP) :: s (3, 3, 24), overlap (3, 3), rat (3), rot (3, 3), &
        value
