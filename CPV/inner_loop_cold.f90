@@ -290,11 +290,11 @@
                      tlast, ei1, ei2, ei3, irb, eigrb, sfac, &
                      tau0, fion2 )
        !entropy value already  been calculated
-
-         write(37,*) niter
-         write(37,*) atot0,atotl,atot1
-         write(37,*) lambda,atotmin,etot+entropy
-       
+         if(ionode) then
+           write(37,*) niter
+           write(37,*) atot0,atotl,atot1
+           write(37,*) lambda,atotmin,etot+entropy
+         endif
          atotl=atot0
          atot0=etot+entropy
 

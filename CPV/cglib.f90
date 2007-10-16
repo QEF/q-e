@@ -360,7 +360,6 @@ subroutine pc2(a,beca,b,becb)
       implicit none
 
       complex(8) a(ngw,n), b(ngw,n), as(ngw,n)
-      real(8)    beca(nhsa,n),becb(nhsa,n)
       ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
       real(8) sca
@@ -381,7 +380,11 @@ subroutine pc2(a,beca,b,becb)
             endif
             scar(i) = sca
          enddo
+         
+          
          call mp_sum( scar, intra_image_comm )
+
+
          do i=1,n
             if(ispin(i) == ispin(j)) then
                sca = scar(i)
