@@ -1,31 +1,24 @@
-TODO LIST - July 2007
+TODO LIST - October 2007
+
+TO BE DONE BEFORE THE 4.0 VERSION
+
+- decide license change
+- update copyright notice in the header of all files
+- decide how to cite q-e
+- complete web site quantum-espresso.org, decide what
+  should be there and what should be in pwscf.org
+- add benchmarks suite and results
+- complete automatic tests
+- remove smcp (unless somebody volunteers to fix it)
+- remove all fixed-dimension arrays used for pseudopotentials,
+  remove redundant pseudopotential arrays
+- improve vc-relax algorithms, fix loss of symmetry cases
 
 BUGS TO EXAMINE
 
-- Zr pp buggy?
-- strange empty states with C blyp ?
-- O pseudopotentials?
-- Zval is wrong for pseudopotentials generated on a ionic
-  configuration, when semicore states are in the valence
-- discrepancies between spin-unpolarized and spin=0 spin-polarized
-  results with gradient corrections
-- mysterious bfgs crash(-es) with ndim=3
-- Lisenkov:
-> Did anybody else report that pw.x hangs sometimes without any explicit 
-> reason? I see it very often recently (after realizing 3.2 version) on 
-> different machines (xeon em64t, cray xd1, cray xt3, altix,..). It usually
-> happens when the number of scf steps is being large (~100). I didn't see
-> such problem with earlier versions, but I need to use the latest one due 
-> to using LDA+U method
-- Sara Furlan:
-> sto usando cpvib.x dell'espresso versione 3.2.
-> Mi sono accorta che se in input si danno le ATOMIC_POSITIONS
-> con un ordine diverso dagli ATOMIC_SPECIES si ottengono delle
-> frequenze improbabili.
-
-- Problems found by Eduardo: 
-  - pw => cp with atoms out of the cell
-  - extrapolation of wfcs
+- extrapolation of wfcs doesn't work for USPP
+- fixing atomic positions for vc-relax case works only if the atoms
+  to be kept fixed are the first in the list
 
 CVS/INSTALLATION/PORTING
 
@@ -35,9 +28,6 @@ CVS/INSTALLATION/PORTING
 - put misc scripts into a Utils/ subdirectory
 
 COMMON
-
-- reduce usage of nonscalable static and dynamical memory:
-  qfunc, qrad, uspp, etc
 
 - use qexml for xml file processing so that a single, easily
   exportable routine, is used everywhere. Requires some though
@@ -71,7 +61,8 @@ COMMON
 
 - replace calls to level-1 blas copy, scal, axpy, with f90 syntax
 
-- CP "small boxes" vs PW "real-space" approach
+- CP "small boxes" vs PW "real-space" approach. Why is the real-space
+  approach not working well with rrkjus PP?
 
 - It would be nice to merge "cell_base_init" from CPV to PW,
   and also "cellmd" module of PW into "cell_base" of CPV
@@ -163,8 +154,6 @@ DOCUMENTATION
 - complete move to wiki-based documentation
 
 - single source (xml?) for text file, GUI help file, user guide
-
-- add some benchmarks
 
 CP/FPMD:
 

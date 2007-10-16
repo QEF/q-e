@@ -13,7 +13,7 @@ MODULE read_uspp_module
   !  Vanderbilt's code and Andrea's RRKJ3 format
   !     
   USE kinds, ONLY: DP
-  USE parameters, ONLY: nchix, lmaxx, nsx, lqmax
+  USE parameters, ONLY: nchix, lmaxx, lqmax
   USE io_global, ONLY: stdout
   USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
        set_dft_from_indices
@@ -134,7 +134,7 @@ CONTAINS
     !
     !     We first check the input variables
     !
-    if (is <= 0 .or. is >= nsx) &
+    if (is <= 0) &
          call errore('readvan','routine called with wrong 1st argument', 1)
     if (iunps <= 0 .or. iunps >= 100000) &
          call errore('readvan','routine called with wrong 2nd argument', 1)
@@ -222,6 +222,9 @@ CONTAINS
             call errore(' readvan', 'Wrong nqf read', upf%nqf)
        if ( ifqopt < 0 ) &
             call errore( 'readvan', 'wrong ifqopt read', is )
+    else
+       ! old format: no distinction between nang and nchi
+       nang = upf%nwfc
     end if
     !
     !     Read and test the values of rinner (version > 5.1)
@@ -250,13 +253,10 @@ CONTAINS
     !
     if (iver(1) == 1) then
        oldvan(is) = .TRUE.
-       ! old format: no distinction between nang and nchi
-       nang = upf%nwfc
        ! old format: no optimization of q_ij => 3-term taylor series
        upf%nqf=3
        upf%nqlc=5
     else if (iver(1) == 2) then
-       nang = upf%nwfc
        upf%nqf=3
        upf%nqlc = 2*nang - 1
     else
@@ -630,7 +630,7 @@ CONTAINS
     !
     !     We first check the input variables
     !
-    if (is <= 0 .or. is >= nsx) &
+    if (is <= 0) &
          call errore('readrrkj','routine called with wrong 1st argument', 1)
     if (iunps <= 0 .or. iunps >= 100000) &
          call errore('readrrkj','routine called with wrong 2nd argument', 1)
