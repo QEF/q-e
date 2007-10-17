@@ -34,7 +34,7 @@ subroutine set_drhoc (q)
   call start_clock('set_drhoc')
   !
   drc (:,:) = (0.d0, 0.d0)
-  if ( nlcc_any ) go to 10
+  if ( .not. nlcc_any ) go to 10
   !
   allocate (aux ( ndmx))
   do ng = 1, ngm
