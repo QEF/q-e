@@ -197,8 +197,8 @@ CONTAINS
     !    Initialization of the variables
     !
     ndm = MAXVAL (msh(1:ntyp))
-    ALLOCATE ( aux(ndm), aux1(ndm), besr(ndm), qtot(ndm,nbrx,nbrx), &
-               ylmk0(lmaxq*lmaxq))
+    ALLOCATE ( aux(ndm), aux1(ndm), aux2(ndm), besr(ndm), &
+               qtot(ndm,nbrx,nbrx), ylmk0(lmaxq*lmaxq) )
     !
     whattodo: DO i_what=1, 2
        ! associate a pointer to the AE or PS part
@@ -311,7 +311,6 @@ CONTAINS
        call reduce ( nhm * nhm * ntyp, pp_ )
 !    endif
 #endif
-       ALLOCATE ( aux2 (ndm) ) 
        ! Compute the integrals of pfunc*r^2   (not in init_us_1)
        DO nt = 1, ntyp
           IF (tpawp(nt)) THEN
@@ -349,7 +348,7 @@ CONTAINS
           END IF
        END DO
     END DO whattodo
-    DEALLOCATE (aux2,ylmk0, qtot, besr, aux1, aux)
+    DEALLOCATE (ylmk0, qtot, besr, aux2, aux1, aux)
 
 !     write(*,*) "== max difference between prad: ", MAXVAL(ABS(prad(:,:,:,:)-ptrad(:,:,:,:)))
 !     write(*,*) "== total difference between prad: ", SUM(ABS(prad(:,:,:,:)-ptrad(:,:,:,:)))
