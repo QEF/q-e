@@ -357,7 +357,7 @@ subroutine set_pseudo_paw (is, pawset)
   TYPE (paw_t) :: pawset
   integer :: i,j, l, nrc, nrs
   real (DP) :: pow
-  real (DP), ALLOCATABE :: aux (:)
+  real (DP), ALLOCATABLE :: aux (:)
   !
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
   PRINT '(A)', 'WARNING __DO_NOT_CUTOFF_PAW_FUNC'
