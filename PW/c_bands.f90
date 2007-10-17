@@ -522,6 +522,7 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
                                    evcel, evcelp, evcelm
   USE klist,                ONLY : nks
   USE wvfct,                ONLY : nbnd, npwx
+  USE io_global,            ONLY : stdout
   !
   IMPLICIT NONE
   !
@@ -540,7 +541,10 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
      !
      !...set up electric field hermitean operator
      !
+     call flush_unit(stdout)
      CALL h_epsi_her_set ( )
+     call flush_unit(stdout)
+
      !
      CALL c_bands( iter, ik_, dr2 )
      !

@@ -11,6 +11,7 @@ add_vuspsi_nc.o \
 addusdens.o \
 addusforce.o \
 addusstress.o \
+allocate_bp_efield.o \
 allocate_fft.o \
 allocate_locpot.o \
 allocate_nlpot.o \

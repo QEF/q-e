@@ -15,6 +15,7 @@ SUBROUTINE init_run()
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE grid_paw_routines,  ONLY : allocate_paw_internals
   USE grid_paw_variables, ONLY : okpaw
+  USE bp,                 ONLY : lberry, lelfield
   !
   IMPLICIT NONE
   !
@@ -39,6 +40,8 @@ SUBROUTINE init_run()
   if (okpaw)  CALL allocate_paw_internals()
   CALL allocate_locpot()
   CALL allocate_wfc()
+  CALL allocate_bp_efield()
+  IF( lberry .or. lelfield) call bp_global_map()
   CALL memory_report()
   !
   ALLOCATE( et( nbnd, nkstot ) , wg( nbnd, nkstot ), btype( nbnd, nkstot ) )

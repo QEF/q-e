@@ -32,7 +32,7 @@ SUBROUTINE c_phase_field
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
    USE gvect,                ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                                    ecutwfc, g, gcutm
+                                    ecutwfc, g, gcutm,ngm_g
    USE uspp,                 ONLY : nkb, vkb, okvan
    USE uspp_param,           ONLY : upf, lmaxq, nh, nhm, nbetam
    USE lsda_mod,             ONLY : nspin
@@ -41,7 +41,8 @@ SUBROUTINE c_phase_field
    USE wavefunctions_module, ONLY : evc
    USE bp
    USE fixed_occ
-
+   USE reciprocal_vectors,   ONLY : ig_l2g
+   USE mp,                   ONLY : mp_sum
 
 !  --- Make use of the module with common information ---
 
@@ -133,9 +134,21 @@ SUBROUTINE c_phase_field
    REAL(dp) :: dkfact
    COMPLEX(dp) :: zeta_tot
 
+   LOGICAL :: l_para! if true new parallel treatment
+   COMPLEX(kind=DP) :: sca
+   COMPLEX(kind=DP), ALLOCATABLE :: aux_g(:)
+
+
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
+
+   if(gdir==3) then
+      l_para=.false.
+   else
+      l_para=.true.
+   endif
+
 
   allocate(map_g(npwx))
   allocate(aux(ngm),aux0(ngm))
@@ -360,7 +373,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 
 
                
-               IF (kpar == (nppstr+1)) THEN
+               IF (kpar == (nppstr+1) .and. .not.l_para) THEN
                   map_g(:) = 0
                   do ig=1,npw1
 !                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
@@ -441,18 +454,34 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                            do ig=1,npw1
                               aux(igk1(ig))=psi1(ig,mb)
                            enddo
-                        ELSE
+                        ELSE IF( .not. l_para) THEN
                            do ig=1,npw1
-
                               aux(map_g(ig))=psi1(ig,mb)
                            enddo
-                           
+                        ELSE
+!allocate global array
+                           allocate(aux_g(ngm_g))
+                           aux_g=(0.d0,0.d0)
+!put psi1 on global array
+                           do ig=1,npw1
+                              aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir))=psi1(ig,mb)
+                           enddo
+                           call mp_sum(aux_g(:))
+                           sca=(0.d0,0.d0)
+!do scalar product
+                           do ig=1,ngm
+                              sca=sca+conjg(aux0(ig))*aux_g(ig_l2g(ig))
+                           enddo
+!do mp_sum
+                           call mp_sum(sca)
+                           mat(nb,mb)=sca
+                           deallocate(aux_g)
                         ENDIF
-                     
-                        mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-
-                        call reduce(2,mat(nb,mb))
-             
+                        
+                        if(kpar /= (nppstr+1).or..not. l_para) then
+                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)                           
+                           call reduce(2,mat(nb,mb))
+                        endif
 !                    --- Calculate the augmented part: ij=KB projectors, ---
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---

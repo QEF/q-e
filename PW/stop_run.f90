@@ -112,6 +112,8 @@ SUBROUTINE stop_run( flag )
 #endif
   !
   CALL clean_pw( .TRUE. )
+
+  CALL deallocate_bp_efield()
   !
   CALL deallocate_input_parameters () 
   !

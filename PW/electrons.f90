@@ -620,7 +620,8 @@ SUBROUTINE electrons()
      !
      ! ... calculate the polarization
      !
-     IF ( lelfield ) CALL c_phase_field()
+     !IF ( lelfield ) CALL c_phase_field()!ATTENZIONE
+     CALL c_phase_field()
      !
      ! ... write recover file
      !

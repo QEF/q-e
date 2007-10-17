@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 Quantum-ESPRESSO group
+! Copyright (C) 2001-2005 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -272,6 +272,33 @@ MODULE rap_point_group_is
    CHARACTER(LEN=11) :: gname_is       ! the name of the invariant group
    !
 END MODULE rap_point_group_is
+!
+MODULE pseud
+  !
+  ! ... The variables describing pseudopotentials in analytical form
+  !  
+  USE kinds,      ONLY : DP
+  USE parameters, ONLY : npsx
+  !
+  SAVE
+  !
+  REAL(DP) :: &
+       cc(2,npsx),            &! the coefficients of the erf functions
+       alpc(2,npsx),          &! the alpha of the erf functions
+       aps(6,0:3,npsx),       &! the a_l coefficient
+       alps(3,0:3,npsx)        ! the b_l coefficient
+  REAL(DP) :: &
+       a_nlcc(npsx),         &! nonlinear core correction coefficients:
+       b_nlcc(npsx),         &! rho_c(r) = (a_c + b_c*r^2) exp(-alpha_c*r^2)
+       alpha_nlcc(npsx)       ! 
+  INTEGER :: &
+       nlc(npsx),             &! number of erf functions
+       nnl(npsx),             &! number of the gaussian functions
+       lmax(npsx),            &! maximum angular momentum of the pseudopot
+       lloc(npsx)              ! angular momentum of the part taken as local
+  !
+END MODULE pseud
+!
 !
 MODULE vlocal
   !
@@ -610,6 +637,10 @@ MODULE bp
   COMPLEX(DP), ALLOCATABLE , TARGET :: evcelp(:,:) ! wave function for  storing projectors for  electric field operator
   COMPLEX(DP), ALLOCATABLE, TARGET :: fact_hepsi(:)!factors for hermitean electric field operators
   COMPLEX(DP), ALLOCATABLE, TARGET :: bec_evcel(:,:)!for storing bec's factors with evcel 
+  INTEGER, ALLOCATABLE, TARGET :: mapgp_global(:,:)! map for G'= G+1 correspondence
+  INTEGER, ALLOCATABLE, TARGET :: mapgm_global(:,:)! map for G'= G-1 correspondence
+
+  
 
 !
 END MODULE bp
@@ -632,6 +663,7 @@ MODULE pwcom
   USE rap_point_group
   USE rap_point_group_so
   USE rap_point_group_is
+  USE pseud
   USE vlocal
   USE wvfct
   USE ener

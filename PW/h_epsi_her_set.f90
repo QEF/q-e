@@ -27,7 +27,8 @@ subroutine h_epsi_her_set
   USE gvect
   USE uspp
   USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
-  USE bp, ONLY :  gdir,nppstr,efield,fact_hepsi,evcel,evcp=>evcelp,evcm=>evcelm
+  USE bp, ONLY :  gdir,nppstr,efield,fact_hepsi,evcel,evcp=>evcelp,evcm=>evcelm,&
+                   &mapgp_global,mapgm_global
   USE basis
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
@@ -36,6 +37,7 @@ subroutine h_epsi_her_set
   USE buffers,  ONLY: get_buffer
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
+  USE mp,       ONLY : mp_sum
   !
   implicit none
   !
@@ -114,11 +116,19 @@ subroutine h_epsi_her_set
    INTEGER, ALLOCATABLE  :: map_g(:)
 
    REAL(dp) :: dkfact
-
+   LOGICAL  :: l_para! if true new parallel treatment
+   COMPLEX(kind=DP), ALLOCATABLE :: aux_g(:)
 
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
+
+   if(gdir==3) then
+      l_para=.false.
+   else
+      l_para=.true.
+   endif
+
 
    ALLOCATE( evct(npwx,nbnd))
    ALLOCATE( map_g(npwx))
@@ -506,14 +516,15 @@ subroutine h_epsi_her_set
             &                   npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
-         ln0=0!set to 0
-         DO ig=1,npw1
-            mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
-            mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
-            mk3=nint(g(1,igk1(ig))*at(1,3)+g(2,igk1(ig))*at(2,3)+g(3,igk1(ig))*at(3,3))
-            ln0(mk1,mk2,mk3) = ig
-         END DO
-         
+         if(.not.l_para) then
+            ln0=0!set to 0
+            DO ig=1,npw1
+               mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
+               mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
+               mk3=nint(g(1,igk1(ig))*at(1,3)+g(2,igk1(ig))*at(2,3)+g(3,igk1(ig))*at(3,3))
+               ln0(mk1,mk2,mk3) = ig
+            END DO
+         endif
          if(okvan) then
             CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
             CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,evcel)
@@ -521,50 +532,50 @@ subroutine h_epsi_her_set
 !              --- Matrix elements calculation ---
 
          mat=(0.d0,0.d0)
-
-         map_g(:) = 0
-         do ig=1,npw0
-         !                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
+         if(.not. l_para) then
+            map_g(:) = 0
+            do ig=1,npw0
+!                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
 !                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
-            gtr(1)=g(1,igk0(ig)) + gpar(1)
-            gtr(2)=g(2,igk0(ig)) + gpar(2) 
-            gtr(3)=g(3,igk0(ig)) + gpar(3) 
+               gtr(1)=g(1,igk0(ig)) + gpar(1)
+               gtr(2)=g(2,igk0(ig)) + gpar(2) 
+               gtr(3)=g(3,igk0(ig)) + gpar(3) 
                !                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
 !                          --- and the position ng in the ngm array ---
-            IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-               n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-                    +gtr(3)*at(3,1))
-               n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-                    +gtr(3)*at(3,2))
-               n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-                    +gtr(3)*at(3,3))
-               ng=ln(n1,n2,n3) 
-               IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
-                    (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
-                    (ABS(g(3,ng)-gtr(3)) > eps)) THEN
-                  WRITE(6,*) ' error hepsiher: translated G=', &
-                    gtr(1),gtr(2),gtr(3), &
-                    ' with crystal coordinates',n1,n2,n3, &
-                    ' corresponds to ng=',ng,' but G(ng)=', &
-                    g(1,ng),g(2,ng),g(3,ng)
-                  WRITE(6,*) ' probably because G_par is NOT', &
-                    ' a reciprocal lattice vector '
-                  WRITE(6,*) ' Possible choices as smallest ', &
-                    ' G_par:'
-                  DO i=1,50
-                     WRITE(6,*) ' i=',i,'   G=', &
-                       g(1,i),g(2,i),g(3,i)
-                  ENDDO
+               IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
+                  n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
+                       +gtr(3)*at(3,1))
+                  n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
+                       +gtr(3)*at(3,2))
+                  n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
+                       +gtr(3)*at(3,3))
+                  ng=ln(n1,n2,n3) 
+                  IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
+                       (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
+                       (ABS(g(3,ng)-gtr(3)) > eps)) THEN
+                     WRITE(6,*) ' error hepsiher: translated G=', &
+                          gtr(1),gtr(2),gtr(3), &
+                          ' with crystal coordinates',n1,n2,n3, &
+                          ' corresponds to ng=',ng,' but G(ng)=', &
+                          g(1,ng),g(2,ng),g(3,ng)
+                     WRITE(6,*) ' probably because G_par is NOT', &
+                          ' a reciprocal lattice vector '
+                     WRITE(6,*) ' Possible choices as smallest ', &
+                          ' G_par:'
+                     DO i=1,50
+                        WRITE(6,*) ' i=',i,'   G=', &
+                             g(1,i),g(2,i),g(3,i)
+                     ENDDO
+                     STOP
+                  ENDIF
+               ELSE 
+                  WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
+                       gtr(1),gtr(2),gtr(3) 
                   STOP
-               ENDIF
-            ELSE 
-               WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
-                 gtr(1),gtr(2),gtr(3) 
-               STOP
-            END IF
-            map_g(ig)=ng
-         enddo
-      
+               END IF
+               map_g(ig)=ng
+            enddo
+         endif
 
 
          DO nb=1,nbnd
@@ -581,18 +592,37 @@ subroutine h_epsi_her_set
                   endif
                endif
                if(l_cal) then
-                  aux=(0.d0,0.d0)
-                  aux0=(0.d0,0.d0)
-                  DO ig=1,npw1
-                     aux0(igk1(ig))=evcel(ig,nb)
-                  END DO
-                  
-                  do ig=1,npw0
+                  if(.not.l_para) then
+                     aux=(0.d0,0.d0)
+                     aux0=(0.d0,0.d0)
+                     DO ig=1,npw1
+                        aux0(igk1(ig))=evcel(ig,nb)
+                     END DO
+                     
+                     do ig=1,npw0
 !               
-                     aux(map_g(ig))=evct(ig,mb)
-                  ENDDO
+                        aux(map_g(ig))=evct(ig,mb)
+                     ENDDO
               
-                  mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                     mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+                  else
+                     !allocate global array
+                     allocate(aux_g(ngm_g))
+                     aux_g=(0.d0,0.d0)
+!put psi1 on global array
+                     do ig=1,npw0
+                        aux_g(mapgp_global(ig_l2g(igk0(ig)),gdir))=evct(ig,mb)
+                     enddo
+                     call mp_sum(aux_g(:))
+                     sca=(0.d0,0.d0)
+!do scalar product
+                     do ig=1,npw1
+                        sca=sca+conjg(evcel(ig,nb))*aux_g(ig_l2g(igk1(ig)))
+                     enddo
+! mp_sum is done later!!!
+                     mat(nb,mb)=sca
+                     deallocate(aux_g)
+                  endif
                endif
             END DO
          END DO
@@ -641,30 +671,50 @@ subroutine h_epsi_her_set
      
 !    mat=S^-1(k,k-1)
         
-         do ig=1,npw0
-            gtr(1)=g(1,igk0(ig)) + gpar(1)
-            gtr(2)=g(2,igk0(ig)) + gpar(2)        
-            gtr(3)=g(3,igk0(ig)) + gpar(3) 
-          
+         if(.not.l_para) then
+            do ig=1,npw0
+               gtr(1)=g(1,igk0(ig)) + gpar(1)
+               gtr(2)=g(2,igk0(ig)) + gpar(2)        
+               gtr(3)=g(3,igk0(ig)) + gpar(3) 
+               
             !                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
             !                          --- and the position ng in the ngm array ---
-            IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-               n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-              &      +gtr(3)*at(3,1))
-               n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-              &      +gtr(3)*at(3,2))
-               n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-              &      +gtr(3)*at(3,3))
-               ng=ln0(n1,n2,n3) 
-               if(ng .gt. 0) then
-                  do m=1,nbnd
-                     do nb=1,nbnd
-                        evcm(ng,m)=evcm(ng,m) + mat(nb,m)*evct(ig,nb)
+               IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
+                  n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
+                       &      +gtr(3)*at(3,1))
+                  n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
+                       &      +gtr(3)*at(3,2))
+                  n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
+                       &      +gtr(3)*at(3,3))
+                  ng=ln0(n1,n2,n3) 
+                  if(ng .gt. 0) then
+                     do m=1,nbnd
+                        do nb=1,nbnd
+                           evcm(ng,m)=evcm(ng,m) + mat(nb,m)*evct(ig,nb)
+                        enddo
                      enddo
+                  endif
+               ENDIF
+            enddo
+         else
+!allocate
+            allocate(aux_g(ngm_g))
+!loop on nb
+            do nb=1,nbnd
+               aux_g(:)=(0.d0,0.d0)
+               do ig=1,npw0
+                  aux_g(mapgp_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)!ATTENZIONE + or - ?
+               enddo
+!put evct on global  array
+               call mp_sum(aux_g(:))
+               do m=1,nbnd
+                  do ig=1,npw1
+                     evcm(ig,m)=evcm(ig,m)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
                   enddo
-               endif
-            ENDIF
-         enddo
+               enddo
+            enddo
+            deallocate(aux_g)
+         endif
          if(okvan) then
             evct(:,:) =  (0.d0, 0.d0)
             ps (:,:) = (0.d0, 0.d0)
@@ -731,7 +781,7 @@ subroutine h_epsi_her_set
             mk3=nint(g(1,igk1(ig))*at(1,3)+g(2,igk1(ig))*at(2,3)+g(3,igk1(ig))*at(3,3))
             ln0(mk1,mk2,mk3) = ig
          END DO
-         
+        
          if(okvan) then
             CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
             CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,evcel)
@@ -893,13 +943,15 @@ subroutine h_epsi_her_set
                  &              npw1,igk1,g2kin_bp)        
          !  --- Recalculate FFT correspondence (see ggen.f90) ---
 
-      ln0=0! set to 0
-      DO ig=1,npw1
-         mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
-         mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
-         mk3=nint(g(1,igk1(ig))*at(1,3)+g(2,igk1(ig))*at(2,3)+g(3,igk1(ig))*at(3,3))
-         ln0(mk1,mk2,mk3) = ig
-      END DO
+      if(.not.l_para) then
+         ln0=0! set to 0
+         DO ig=1,npw1
+            mk1=nint(g(1,igk1(ig))*at(1,1)+g(2,igk1(ig))*at(2,1)+g(3,igk1(ig))*at(3,1))
+            mk2=nint(g(1,igk1(ig))*at(1,2)+g(2,igk1(ig))*at(2,2)+g(3,igk1(ig))*at(3,2))
+            mk3=nint(g(1,igk1(ig))*at(1,3)+g(2,igk1(ig))*at(2,3)+g(3,igk1(ig))*at(3,3))
+            ln0(mk1,mk2,mk3) = ig
+         END DO
+      endif
 
       if(okvan) then
          CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
@@ -907,49 +959,50 @@ subroutine h_epsi_her_set
       endif
 !              --- Matrix elements calculation ---
 
-      map_g(:) = 0
-      do ig=1,npw0
+      if(.not.l_para) then
+         map_g(:) = 0
+         do ig=1,npw0
 !                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
 !                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
-         gtr(1)=g(1,igk0(ig)) - gpar(1)
-         gtr(2)=g(2,igk0(ig)) - gpar(2) 
-         gtr(3)=g(3,igk0(ig)) - gpar(3) 
+            gtr(1)=g(1,igk0(ig)) - gpar(1)
+            gtr(2)=g(2,igk0(ig)) - gpar(2) 
+            gtr(3)=g(3,igk0(ig)) - gpar(3) 
          !                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
 !                          --- and the position ng in the ngm array ---
-         IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-            n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-                 +gtr(3)*at(3,1))
-            n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-                 +gtr(3)*at(3,2))
-            n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-                 +gtr(3)*at(3,3))
-            ng=ln(n1,n2,n3) 
-            IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
-                 (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
-                 (ABS(g(3,ng)-gtr(3)) > eps)) THEN
-               WRITE(6,*) ' error hepsiher: translated G=', &
-                    gtr(1),gtr(2),gtr(3), &
-                    ' with crystal coordinates',n1,n2,n3, &
-                    ' corresponds to ng=',ng,' but G(ng)=', &
-                    g(1,ng),g(2,ng),g(3,ng)
-               WRITE(6,*) ' probably because G_par is NOT', &
-                    ' a reciprocal lattice vector '
-               WRITE(6,*) ' Possible choices as smallest ', &
-                    ' G_par:'
-               DO i=1,50
-                  WRITE(6,*) ' i=',i,'   G=', &
-                       g(1,i),g(2,i),g(3,i)
-               ENDDO
+            IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
+               n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
+                    +gtr(3)*at(3,1))
+               n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
+                    +gtr(3)*at(3,2))
+               n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
+                    +gtr(3)*at(3,3))
+               ng=ln(n1,n2,n3) 
+               IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
+                    (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
+                    (ABS(g(3,ng)-gtr(3)) > eps)) THEN
+                  WRITE(6,*) ' error hepsiher: translated G=', &
+                       gtr(1),gtr(2),gtr(3), &
+                       ' with crystal coordinates',n1,n2,n3, &
+                       ' corresponds to ng=',ng,' but G(ng)=', &
+                       g(1,ng),g(2,ng),g(3,ng)
+                  WRITE(6,*) ' probably because G_par is NOT', &
+                       ' a reciprocal lattice vector '
+                  WRITE(6,*) ' Possible choices as smallest ', &
+                       ' G_par:'
+                  DO i=1,50
+                     WRITE(6,*) ' i=',i,'   G=', &
+                          g(1,i),g(2,i),g(3,i)
+                  ENDDO
+                  STOP
+               ENDIF
+            ELSE 
+               WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
+                    gtr(1),gtr(2),gtr(3) 
                STOP
-            ENDIF
-         ELSE 
-            WRITE(6,*) ' |gtr| > gcutm  for gtr=', &
-                 gtr(1),gtr(2),gtr(3) 
-            STOP
-         END IF
-         map_g(ig)=ng 
-      ENDDO
-
+            END IF
+            map_g(ig)=ng 
+         ENDDO
+      endif
 
 
       mat=(0.d0,0.d0)
@@ -967,19 +1020,35 @@ subroutine h_epsi_her_set
                endif
             endif
             if(l_cal) then
-               aux=(0.d0,0.d0)
-               aux0=(0.d0,0.d0)
-               DO ig=1,npw1
-                  aux0(igk1(ig))=evcel(ig,nb)
-               END DO
-               do ig=1,npw0
-                  aux(map_g(ig))=evct(ig,mb)
-               ENDDO
-               mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
-!                    --- Calculate the augmented part: ij=KB projectors, ---
-!                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
-!                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
-!                    --- also <u_nk|beta_iR>=<psi_nk|beta_iR> = becp^*   ---
+               if(.not.l_para) then
+                  aux=(0.d0,0.d0)
+                  aux0=(0.d0,0.d0)
+                  DO ig=1,npw1
+                     aux0(igk1(ig))=evcel(ig,nb)
+                  END DO
+                  do ig=1,npw0
+                     aux(map_g(ig))=evct(ig,mb)
+                  ENDDO
+                  mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)
+               else
+ !allocate global array
+                  allocate(aux_g(ngm_g))
+                  aux_g=(0.d0,0.d0)
+!put psi1 on global array
+                  do ig=1,npw0
+                     aux_g(mapgm_global(ig_l2g(igk0(ig)),gdir))=evct(ig,mb)
+                  enddo
+                  call mp_sum(aux_g(:))
+                  sca=(0.d0,0.d0)
+!do scalar product
+                  do ig=1,npw1
+                     sca=sca+conjg(evcel(ig,nb))*aux_g(ig_l2g(igk1(ig)))
+                  enddo
+! mp_sum is done later!!!
+                  mat(nb,mb)=sca
+                  deallocate(aux_g)
+                  
+               endif
             endif
          END DO
       END DO
@@ -1023,29 +1092,51 @@ subroutine h_epsi_her_set
       CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,1)
        
 !    mat=S^-1(k,k-1)
-      do ig=1,npw0
-         gtr(1)=g(1,igk0(ig)) - gpar(1)
-         gtr(2)=g(2,igk0(ig)) - gpar(2)        
-         gtr(3)=g(3,igk0(ig)) - gpar(3)        
+      if(.not.l_para) then
+         do ig=1,npw0
+            gtr(1)=g(1,igk0(ig)) - gpar(1)
+            gtr(2)=g(2,igk0(ig)) - gpar(2)        
+            gtr(3)=g(3,igk0(ig)) - gpar(3)        
             !                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
             !                          --- and the position ng in the ngm array ---
-         IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
-            n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
-                &    +gtr(3)*at(3,1))
-            n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
-                &    +gtr(3)*at(3,2))
-            n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
-                &    +gtr(3)*at(3,3))
-            ng=ln0(n1,n2,n3)
-            if(ng .gt. 0) then
-               do m=1,nbnd
-                  do nb=1,nbnd
-                     evcp(ng,m)=evcp(ng,m) + mat(nb,m)*evct(ig,nb)
-                  end do
+            IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
+               n1=NINT(gtr(1)*at(1,1)+gtr(2)*at(2,1) &
+                    &    +gtr(3)*at(3,1))
+               n2=NINT(gtr(1)*at(1,2)+gtr(2)*at(2,2) &
+                    &    +gtr(3)*at(3,2))
+               n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
+                    &    +gtr(3)*at(3,3))
+               ng=ln0(n1,n2,n3)
+               if(ng .gt. 0) then
+                  do m=1,nbnd
+                     do nb=1,nbnd
+                        evcp(ng,m)=evcp(ng,m) + mat(nb,m)*evct(ig,nb)
+                     end do
+                  enddo
+               end if
+            ENDIF
+         enddo
+      else
+
+!allocate
+         allocate(aux_g(ngm_g))
+!loop on nb
+         do nb=1,nbnd
+            aux_g(:)=(0.d0,0.d0)
+            do ig=1,npw0
+               aux_g(mapgm_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)!ATTENZIONE + or - ?
+            enddo
+!put evct on global  array
+            call mp_sum(aux_g(:))
+            do m=1,nbnd
+               do ig=1,npw1
+                  evcp(ig,m)=evcp(ig,m)+mat(nb,m)*aux_g(ig_l2g(igk1(ig)))
                enddo
-            end if
-         ENDIF
-      enddo
+            enddo
+         enddo
+          deallocate(aux_g)
+
+      endif
       if(okvan) then
          evct(:,:) =  (0.d0, 0.d0)
          ps (:,:) = (0.d0, 0.d0)
