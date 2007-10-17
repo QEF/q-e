@@ -28,7 +28,6 @@ CONTAINS
   SUBROUTINE allocate_paw_internals
     USE gvect,              ONLY : nrxx
     USE lsda_mod,           ONLY : nspin
-    USE radial_grids,       ONLY : ndmx
     USE ions_base,          ONLY : nsp, nat, ntyp => nsp
     USE us,                 ONLY : nqxq
     USE uspp_param,         ONLY : lmaxq, nhm, nbetam
@@ -88,7 +87,6 @@ CONTAINS
   SUBROUTINE deallocate_paw_internals
     USE gvect,              ONLY : nrxx
     USE lsda_mod,           ONLY : nspin
-    USE radial_grids,       ONLY : ndmx
     USE ions_base,          ONLY : nsp, nat, ntyp => nsp
     USE us,                 ONLY : nqxq
     USE uspp_param,         ONLY : lmaxq, nhm, nbetam
@@ -156,7 +154,6 @@ CONTAINS
     !
     USE kinds,      ONLY : DP
     USE parameters, ONLY : lmaxx, lqmax
-    USE radial_grids, ONLY : ndmx
     USE constants,  ONLY : fpi
     USE atom,       ONLY : rgrid, msh !r, rab, mesh, msh
     USE ions_base,  ONLY : ntyp => nsp
@@ -176,7 +173,7 @@ CONTAINS
     REAL(DP), POINTER :: pfunc_(:,:,:,:), prad_(:,:,:,:), pp_(:,:,:), int_r2pfunc_(:,:,:), pmultipole_(:,:,:,:)
     !
     INTEGER :: i_what
-    REAL(DP) :: aux2(ndmx)
+    REAL(DP), allocatable :: aux2(:)
     !
     ! here a few local variables
     !
@@ -314,7 +311,7 @@ CONTAINS
        call reduce ( nhm * nhm * ntyp, pp_ )
 !    endif
 #endif
-
+       ALLOCATE ( aux2 (ndm) ) 
        ! Compute the integrals of pfunc*r^2   (not in init_us_1)
        DO nt = 1, ntyp
           IF (tpawp(nt)) THEN
@@ -352,7 +349,7 @@ CONTAINS
           END IF
        END DO
     END DO whattodo
-    DEALLOCATE (ylmk0, qtot, besr, aux1, aux)
+    DEALLOCATE (aux2,ylmk0, qtot, besr, aux1, aux)
 
 !     write(*,*) "== max difference between prad: ", MAXVAL(ABS(prad(:,:,:,:)-ptrad(:,:,:,:)))
 !     write(*,*) "== total difference between prad: ", SUM(ABS(prad(:,:,:,:)-ptrad(:,:,:,:)))
@@ -1462,8 +1459,6 @@ END SUBROUTINE atomic_becsum
     USE gvect,      ONLY : ngl, gl
     USE uspp_param, ONLY : upf
     USE grid_paw_variables, ONLY: aevloc_at, psvloc_at, aevloc, psvloc
-    !
-    USE radial_grids, ONLY : ndmx
     !
     IMPLICIT NONE
     !

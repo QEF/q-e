@@ -331,7 +331,6 @@ subroutine set_pseudo_paw (is, pawset)
   !
   ! PWSCF modules
   !
-  USE radial_grids, ONLY: ndmx
   USE atom,  ONLY: rgrid, msh, chi, oc, nchi, lchi, jchi, rho_at, &
                    rho_atc, nlcc
 !  USE pseud, ONLY: lloc, lmax
@@ -357,7 +356,8 @@ subroutine set_pseudo_paw (is, pawset)
   integer :: nb, mb, ijv
   TYPE (paw_t) :: pawset
   integer :: i,j, l, nrc, nrs
-  real (DP) :: aux (ndmx), pow
+  real (DP) :: pow
+  real (DP), ALLOCATABE :: aux (:)
   !
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
   PRINT '(A)', 'WARNING __DO_NOT_CUTOFF_PAW_FUNC'
@@ -389,8 +389,6 @@ subroutine set_pseudo_paw (is, pawset)
 #endif
   !
   rgrid(is)%mesh = pawset%grid%mesh
-  IF ( rgrid(is)%mesh > ndmx ) &
-     CALL errore('upf_to_internal', 'too many grid points', 1)
   !
   ! ... Copy wavefunctions used for PAW construction.
   ! ... Copy also the unoccupied ones, e.g.
@@ -476,6 +474,9 @@ subroutine set_pseudo_paw (is, pawset)
 
 
   !
+#if ! defined __DO_NOT_CUTOFF_PAW_FUNC
+  ALLOCATE (aux(1:pawset%grid%mesh))
+#endif
   do i=1,pawset%nwfc
      do j=1,pawset%nwfc
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
@@ -550,10 +551,6 @@ subroutine set_pseudo_paw (is, pawset)
   !
   rho_at (1:pawset%grid%mesh, is) = pawset%pscharge(1:pawset%grid%mesh)
 
-  !!! TEMP       !!! this was already present in set_pseudo_upf. what does it mean?
-  !!! answer (pltz): I don't, but it breaked dependencies (removed!)
-!  lloc(is) = 0
-  !!!
   allocate (upf(is)%vloc(1:pawset%grid%mesh))
   upf(is)%vloc(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
@@ -566,6 +563,7 @@ subroutine set_pseudo_paw (is, pawset)
   aux(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)
   CALL step_f( psvloc_at(1:pawset%grid%mesh,is), aux(1:pawset%grid%mesh), &
        pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
+  DEALLOCATE (aux)
 #endif
 
   do ir = 1, rgrid(is)%mesh

@@ -15,7 +15,6 @@ subroutine set_drhoc (q)
 #include "f_defs.h"
   USE ions_base, ONLY : ntyp => nsp
   use pwcom
-  USE radial_grids, ONLY: ndmx
   USE atom, ONLY : nlcc, msh, rgrid, rho_atc
   USE kinds, only : DP
   use phcom
@@ -25,7 +24,7 @@ subroutine set_drhoc (q)
   !
   real(DP) :: gq2, g2a, gx, rhocgnt, rhocgip, q (3)
 
-  integer :: ir, ng, nt
+  integer :: ir, ng, nt, ndm
   ! counter on radial mesh points
   ! counter on plane waves
   ! counter on atomic types
@@ -36,7 +35,8 @@ subroutine set_drhoc (q)
   drc (:,:) = (0.d0, 0.d0)
   if ( .not. nlcc_any ) go to 10
   !
-  allocate (aux ( ndmx))
+  ndm = MAXVAL (msh(1:ntyp))
+  allocate (aux ( ndm))
   do ng = 1, ngm
      gq2 = (g (1, ng) + q (1) ) **2 + (g (2, ng) + q (2) ) **2 + &
           (g (3, ng) + q (3) ) **2

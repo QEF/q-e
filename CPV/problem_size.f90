@@ -17,7 +17,6 @@
       SUBROUTINE cpsizes() 
                                                                         
       USE kinds
-      USE radial_grids,       ONLY: ndmx
       use ions_base,          only: nat, nsp
       use electrons_base,     only: nx => nbnd, nspin
       use electrons_module,   only: n_emp
@@ -78,7 +77,7 @@
 
 ! ... pvofrho & pstress                                                 
       itmp = 8 * ( NR1_L * NR2_L * NR3_L * 8 + &
-     &       nat * NX * nhm * 6 + 6 * ngmx + ndmx + 6*ngwx +               &
+     &       nat * NX * nhm * 6 + 6 * ngmx + 6*ngwx +                   &
      &       ngwx*nhm*nsp + 2*ngwx*nat )
       if(itmp.gt.nbyte_alloc) nbyte_alloc = itmp 
 

@@ -11,7 +11,6 @@ MODULE uspp_param
   !  
   USE kinds,        ONLY : DP
   USE parameters,   ONLY : lqmax, npsx
-  USE radial_grids, ONLY: ndmx
   USE pseudo_types, ONLY: pseudo_upf
   !
   SAVE

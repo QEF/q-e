@@ -43,7 +43,6 @@
 
 !
 !  lqmax:  maximum angular momentum of Q (Vanderbilt augmentation charges)
-!  ndmx:  maximum number of points in the radial grid
 ! 
 
 !  nbeta    number of beta functions (sum over all l)
