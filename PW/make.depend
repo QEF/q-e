@@ -46,6 +46,12 @@ addusstress.o : ../Modules/ions_base.o
 addusstress.o : ../Modules/kind.o
 addusstress.o : ../Modules/uspp.o
 addusstress.o : pwcom.o
+allocate_bp_efield.o : ../Modules/cell_base.o
+allocate_bp_efield.o : ../Modules/io_global.o
+allocate_bp_efield.o : ../Modules/kind.o
+allocate_bp_efield.o : ../Modules/mp.o
+allocate_bp_efield.o : ../Modules/recvec.o
+allocate_bp_efield.o : pwcom.o
 allocate_fft.o : ../Modules/functionals.o
 allocate_fft.o : ../Modules/io_global.o
 allocate_fft.o : ../Modules/ions_base.o
@@ -134,6 +140,8 @@ c_phase_field.o : ../Modules/io_files.o
 c_phase_field.o : ../Modules/io_global.o
 c_phase_field.o : ../Modules/ions_base.o
 c_phase_field.o : ../Modules/kind.o
+c_phase_field.o : ../Modules/mp.o
+c_phase_field.o : ../Modules/recvec.o
 c_phase_field.o : ../Modules/uspp.o
 c_phase_field.o : ../Modules/wavefunctions.o
 c_phase_field.o : buffers.o
@@ -509,7 +517,6 @@ grid_paw_routines.o : ../Modules/io_global.o
 grid_paw_routines.o : ../Modules/ions_base.o
 grid_paw_routines.o : ../Modules/kind.o
 grid_paw_routines.o : ../Modules/parameters.o
-grid_paw_routines.o : ../Modules/radial_grids.o
 grid_paw_routines.o : ../Modules/uspp.o
 grid_paw_routines.o : ../Modules/wavefunctions.o
 grid_paw_routines.o : noncol.o
@@ -528,6 +535,7 @@ h_epsi_her_set.o : ../Modules/constants.o
 h_epsi_her_set.o : ../Modules/io_files.o
 h_epsi_her_set.o : ../Modules/ions_base.o
 h_epsi_her_set.o : ../Modules/kind.o
+h_epsi_her_set.o : ../Modules/mp.o
 h_epsi_her_set.o : ../Modules/uspp.o
 h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : pwcom.o
