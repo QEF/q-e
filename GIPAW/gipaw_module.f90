@@ -310,7 +310,7 @@ CONTAINS
   SUBROUTINE gipaw_setup
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout, ionode
-    USE ions_base,     ONLY : tau, nat, ntyp => nsp
+    USE ions_base,     ONLY : tau, nat, ntyp => nsp, atm
     USE atom,          ONLY : nlcc, rgrid
     USE wvfct,         ONLY : nbnd, et, wg, npwx
     USE lsda_mod,      ONLY : nspin, lsda
@@ -319,13 +319,9 @@ CONTAINS
     USE gsmooth,       ONLY : doublegrid
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
     USE constants,     ONLY : degspin, pi
-    !<apsi>
-!    USE paw,           ONLY : paw_nbeta, aephi, psphi, paw_vkb, &
-!                              paw_becp, paw_nkb
     USE paw,           ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
                               read_recon, read_recon_paratec
     USE symme,         ONLY : nsym, s
-    !</apsi>
     
     IMPLICIT none
     integer :: ik, nt, ibnd
@@ -344,17 +340,20 @@ CONTAINS
     real(dp) :: mysum1 ( 3, lmaxx ) !TMPTMPTMP
     real(dp) :: mysum2 ( 3, 1:lmaxx ) !TMPTMPTMP
     logical :: vloc_set
+    
+    INTEGER :: core_orb
+    REAL ( dp ) :: nmr_shift_core(ntyp), occupation, integral
     !</apsi>
     
     call start_clock ('gipaw_setup')
     
-    ! Test if the symmetry operations map Cartesian axis into each other
+    ! Test whether the symmetry operations map the Cartesian axis to each
+    ! other - if not, remove them (how to check the k point mesh then? - oops!
+    
 !*apsi*    CALL test_symmetries ( s, nsym )    
     
     ! initialize pseudopotentials
     call init_us_1
-
-    !<apsi>
     
     ! Read in qe format
     DO nt = 1, ntyp
@@ -423,7 +422,6 @@ CONTAINS
     allocate ( paw_becp(paw_nkb,nbnd) )
     allocate ( paw_becp2(paw_nkb,nbnd) )
     
-    !<apsi>
     allocate ( radial_integral_diamagnetic(paw_nkb,paw_nkb,ntypx) )
     allocate ( radial_integral_paramagnetic(paw_nkb,paw_nkb,ntypx) )
     allocate ( radial_integral_diamagnetic_so(paw_nkb,paw_nkb,ntypx) )
@@ -569,11 +567,8 @@ CONTAINS
        enddo
     enddo
     
-    !</apsi>
-    
     ! terms for paramagnetic
     
-    !<apsi>
     allocate ( lx ( lmaxx**2, lmaxx**2 ) )
     allocate ( ly ( lmaxx**2, lmaxx**2 ) )
     allocate ( lz ( lmaxx**2, lmaxx**2 ) )
@@ -681,9 +676,48 @@ CONTAINS
     
     deallocate ( lm2l, lm2m )
     
-    ! check whether the symmetry operations map the coordinate axis to each
-    ! other - if not, remove them (how to check the k point mesh then? - oops!
+    ! Compute the shift due to core orbitals
+    DO nt = 1, ntyp
+       
+       IF ( paw_recon(nt)%gipaw_ncore_orbital == 0 ) CYCLE
+       
+       ALLOCATE ( work(rgrid(nt)%mesh) )
+       
+       nmr_shift_core(nt) = 0.0
+       
+       DO core_orb = 1, paw_recon(nt)%gipaw_ncore_orbital
+          
+          DO j = 1, SIZE(work)
+             work(j) = paw_recon(nt)%gipaw_core_orbital(j,core_orb) ** 2 &
+                  / rgrid(nt)%r(j)
+          END DO
+          
+          CALL simpson( SIZE(work), work, rgrid(nt)%rab(:), &
+               integral )
+          
+          occupation = 2 * ( &
+               2 * paw_recon(nt)%gipaw_core_orbital_l(core_orb) + 1 )
+          nmr_shift_core(nt) = nmr_shift_core(nt) + occupation * integral
+       END DO
+       
+       DEALLOCATE ( work )
+       
+    END DO
     
+    WRITE ( stdout, '()' )
+    DO nt = 1, ntyp
+       IF ( paw_recon(nt)%gipaw_ncore_orbital == 0 ) THEN
+          WRITE ( stdout, '( 3A, F8.3)' ) "NMR: species ", &
+               TRIM ( atm(nt) ), &
+               ", no information on the core"
+       ELSE
+          WRITE ( stdout, '( 3A, F8.3)' ) "NMR: species ", &
+               TRIM ( atm(nt) ), &
+               ", contribution to shift due to core = ", &
+               nmr_shift_core(nt) * 17.75045395
+       END IF
+    END DO
+    WRITE ( stdout, '()' )
     
     ! computes the total local potential (external+scf) on the smooth grid
     call setlocal
