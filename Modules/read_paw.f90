@@ -415,6 +415,7 @@ subroutine set_pseudo_paw (is, pawset)
   do nb=1,pawset%nwfc
      upf(is)%kbeta(nb)=pawset%ikk(nb)
   end do
+  upf(is)%kkbeta=MAXVAL (upf(is)%kbeta(:))
   allocate (upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc))
   upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc) = &
   pawset%proj(1:pawset%grid%mesh, 1:pawset%nwfc)
