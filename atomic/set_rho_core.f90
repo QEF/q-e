@@ -150,7 +150,7 @@ subroutine set_rho_core
   end if
   write(stdout,'(/,5x,''  r > '',f4.2,'' : true rho core'')') grid%r(ik)
   if (new_core_ps) then
-     write(stdout,'(5x,"Core charge pseudized with two Bessel functions")')
+     write(stdout,'(6x,"Core charge pseudized with two Bessel functions")')
   else
      write(stdout,110) grid%r(ik), a, b
   endif

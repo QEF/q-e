@@ -334,6 +334,7 @@ can be reproduced with
    latt=0
    cau_fact=137.0359895
    dft='sla-vwn' for the LDA case
+   dft='PBE'     for the PBE case  
 
 The NIST results in PRB 55, 191 (1997): 
 

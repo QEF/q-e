@@ -102,7 +102,7 @@ subroutine run_test
         if (pseudotype.lt.3) then
            rcutts(n)=grid%r(im)*1.1_dp
            rcutusts(n)=grid%r(im)*1.1_dp
-           if (el(nstoaets(n)).eq.'6S') then
+           if (el(nstoaets(n))=='6S'.or.el(nstoaets(n))=='5S') then
               rcutts(n)=grid%r(im)*1.2_dp
               rcutusts(n)=grid%r(im)*1.2_dp
            endif
