@@ -7,245 +7,313 @@
 !
 !
 !---------------------------------------------------------------
-subroutine ascheqps(nn,lam,jam,e,mesh,ndm,grid,vpot, &
-     thresh,y,beta,ddd,qq,nbeta,nwfx,lls,jjs,ikk,nstop)
+subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
+           qq,nbeta,nwfx,lls,jjs,ikk,nstop)
   !---------------------------------------------------------------
   !
   !  numerical integration of the radial schroedinger equation for
   !  bound states in a local potential.
-  !  thresh dermines the absolute accuracy for the eigenvalue
   !
-  !  This routine allows a nonlocal potential and a overlap
+  !  This routine works at fixed e
+  !  It allows a nonlocal potential and an overlap
   !  operator. Therefore it can solve a general schroedinger
-  !  equation as in the US pseudopotential case. The other
-  !  pseudopotentials are particular cases
+  !  equation necessary to solve a US pseudopotential
   !
   use io_global, only : stdout
   use kinds, only : DP
-  use radial_grids, only: radial_grid_type
+  use radial_grids, only: radial_grid_type, series
+
   implicit none
 
-  type (radial_grid_type),intent(in):: grid
-
+  type(radial_grid_type), intent(in) :: grid
   integer :: &
-       nn, &       ! main quantum number for node number
-       lam,&       ! l angular momentum
-       mesh, &     ! size of radial mesh
-       ndm,  &     ! maximum radial mesh 
+       nam, &
+       lam, &      ! l angular momentum
+       mesh,&      ! size of radial mesh
+       ndm, &      ! maximum radial mesh 
        nbeta,&     ! number of beta function  
        nwfx, &     ! maximum number of beta functions
-       nstop, &    ! if the routine does not converge it is != 0
+       itscf, &    ! scf iteration
+       ndcr,  &    ! number of required nodes
+       n1, n2, &   ! counters
+       ikl,    &   ! auxiliary
+       nstop,  &   ! used to check the behaviour of the routine
        lls(nbeta),&! for each beta the angular momentum
        ikk(nbeta) ! for each beta the point where it become zero
 
-  real(dp) :: &
-       e,de,    &     ! output eigenvalue
-       jam, &      ! j angular momentum
+  real(DP) :: &
+       e0,e,    &  ! output eigenvalue
+       jam,     &  ! j angular momentum
        vpot(mesh),&! the local potential 
-       thresh,  &  ! precision of eigenvalue
-       y(mesh), &  ! the output solution
+       thresh,   & ! precision of eigenvalue
+       y(mesh),  & ! the output solution
        jjs(nwfx), & ! the j angular momentum
-       beta(ndm,nwfx), & ! the beta functions
+       beta(ndm,nwfx),& ! the beta functions
+       work(nbeta),  & ! auxiliary space
        ddd(nwfx,nwfx),qq(nwfx,nwfx) ! parameters for computing B_ij
   !
   !    the local variables
   !
-  integer, parameter :: maxter=100
-
-  real(dp) :: &
+  real(DP) :: &
+       ddx12,      &  ! dx**2/12 used for Numerov integration
        sqlhf,      &  ! the term for angular momentum in equation
-       det,detup,detlw,detold, &! the determinant
-       eup0,elw0,  &  ! limits imposed by node counter
-       eup,elw,eold  ! actual energy interval
+       xl1, x4l6, x6l12, x8l20,& ! used for starting series expansion
+       ze2,        &  ! possible coulomb term aroun the origin (set 0)
+       b(0:3),     &  ! coefficients of taylor expansion of potential
+       c1,c2,c3,c4,b0e, & ! auxiliary for expansion of wavefunction
+       rr1,rr2,   & ! values of y in the first points+ auxiliary
+       eup,elw,    & ! actual energy interval
+       ymx,        & ! the maximum value of the function
+       rap,        & ! the ratio between the number of nodes
+       fe,integ,dfe,de, &! auxiliary for numerov computation of e
+       eps,        & ! the epsilon of the delta e
+       yln, xp, expn,& ! used to compute the tail of the solution
+       int_0_inf_dr  ! integral function
 
-  integer ::  &
+  real(DP), allocatable :: &
+       fun(:),  &   ! integrand function
+       f(:),    &   ! the f function
+       el(:),c(:) ! auxiliary for inward integration
+
+  integer, parameter :: &
+       maxter=100    ! maximum number of iterations
+
+  integer :: &
        n,  &    ! counter on mesh points
-       iter, &  ! counter on iteration
-       ns,   &  ! counter on beta functions
-       ncross,& ! the number of nodes
-       count,&  ! counter on energy intervals 
-       count0   ! counter on attempts with wrong number of nodes
+       iter,&   ! counter on iteration
+       ik,  &   ! matching point
+       ns,  &   ! counter on beta functions
+       l1,  &   ! lam+1
+       nst, &   ! used in the integration routine
+       npt, &   ! number of points for energy intervals
+       ninter,& ! number of possible energy intervals
+       icountn,& ! counter on energy intervals 
+       ierr, &
+       ncross,& ! actual number of nodes
+       nstart  ! starting point for inward integration
 
-  logical :: &
-       nosol
-
-  if (mesh.ne.grid%mesh) call errore('asheqps','mesh dimension is not as expected',1)
+   if (mesh.ne.grid%mesh) call errore('compute_solution','mesh dimension is not as expected',1)
   !
   !  set up constants and allocate variables the 
   !
+  allocate(fun(mesh), stat=ierr)
+  allocate(f(mesh), stat=ierr)
+  allocate(el(mesh), stat=ierr)
+  allocate(c(mesh), stat=ierr)
+
   nstop=0
-  sqlhf=(dble(lam)+0.5_DP)**2
+  e=e0
+!  write(6,*) 'entering ', nam,lam, e
+  eup=0.3_DP*e
+  elw=1.3_dp*e
+  ndcr=nam-lam-1
+!  write(6,*) 'entering ascheqps', vpot(mesh-20)*grid%r(mesh-20)
+
+  ddx12=grid%dx*grid%dx/12.0_dp
+  l1=lam+1
+  nst=l1*2
+  sqlhf=(DBLE(lam)+0.5_dp)**2
+  xl1=lam+1
+  x4l6=4*lam+6
+  x6l12=6*lam+12
+  x8l20=8*lam+20
   !
-  !     first try to find the zero with newton method
+  !  series developement of the potential near the origin
   !
-  eold=e
-  eup0=0.0_DP
-  elw0=0.0_DP
-  nosol=.false.
-  count0=0
-  elw = e
-  call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
-                   nwfx,lls,jjs,ikk,detlw)
-  eup=e*0.99_DP
-  call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
-                   nwfx,lls,jjs,ikk,detup)
-     detold=detlw
-  do iter=1,maxter
-     if (detup /= detlw) de=-detlw*(eup-elw)/(detup-detlw)
-     !
-     !    if an asintote has been found use bisection
-     !
-     if (abs(de).gt.1.e3_dp*abs(eold)) then
-        ! write(stdout,*) 'BISECTION'
-        goto 800
-     endif
-     !
-     !    check for convergence
-     !
-     if (abs(de/elw).lt.thresh) then
-        e=elw
-        goto 900
-     endif
-        eup = elw
-        elw = elw + de
-     call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,&
-                      nbeta,nwfx,lls,jjs,ikk,detlw)
-     call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,&
-                      nbeta,nwfx,lls,jjs,ikk,detup)
+  do n=1,4
+     y(n)=vpot(n)
   enddo
+  call series(y,grid%r,grid%r2,b)
+
+  !      write(stdout,*) 'eneter lam,eup,elw,e',lam,nbeta,eup,elw,e
   !
-  !    if the program arrives here newton method does not work
-  !    try bisection, first bracket the zero
+  !  set up the f-function and determine the position of its last
+  !  change of sign
+  !  f < 0 (approximatively) means classically allowed   region
+  !  f > 0         "           "        "      forbidden   "
   !
-800 e=eold
-  if (eup0 == 0.0_DP) then
-     eup=vpot(mesh)+sqlhf/grid%r2(mesh)
-  else
-     eup=eup0
-  endif
-  if (elw0 == 0.0_DP) then  
-     elw=eup
+  do iter=1,maxter
+!  write(6,*) 'starting iter', iter, elw, e, eup
+  ik=1
+  f(1)=ddx12*(grid%r2(1)*(vpot(1)-e)+sqlhf)
+  do n=2,mesh
+     f(n)=ddx12*(grid%r2(n)*(vpot(n)-e)+sqlhf)
+     if( f(n).ne.sign(f(n),f(n-1)).and.n.lt.mesh-5 ) ik=n
+  enddo
+!  if (ik.eq.0.and.nbeta.eq.0) ik=mesh*3/4
+  if (ik.eq.1.or.grid%r(ik)>4.0_DP) ik=mesh*3/4
+
+  if(ik.ge.mesh-2) then
      do n=1,mesh
-        elw=min(elw,vpot(n)+sqlhf/grid%r2(n))
+        write(stdout,*) grid%r(n), vpot(n), f(n)
      enddo
-  else
-     elw=elw0
+     call errore('compute_solution', 'No point found for matching',1)
   endif
-  if(e.gt.eup) e=0.9_DP*eup+0.1_DP*elw
-  if(e.lt.elw) e=0.9_DP*elw+0.1_DP*eup
-
-  call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
-                   nwfx,lls,jjs,ikk,detlw)
-
-  de=(eup-elw)/51.0_DP
-  do n=1,50
-     eup=elw+de
-     call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
-                      nwfx,lls,jjs,ikk,detup)
-     if (detup*detlw.lt.0.0_DP) goto 100
-     elw=eup
-     detlw=detup  
+  !
+  !     determine if ik is sufficiently large
+  !
+  do ns=1,nbeta
+     if (lls(ns).eq.lam .and. jjs(ns).eq.jam .and. ikk(ns).gt.ik) ik=ikk(ns)+3
   enddo
-100 continue
-  count = 0
-  if(e.gt.eup) e=0.9_DP*eup+0.1_DP*elw
-  if(e.lt.elw) e=0.9_DP*elw+0.1_DP*eup
   !
-  !    and find the detailed value
-  !      
-  do iter=1,maxter
-     call compute_det(nn,lam,jam,e,mesh,ndm,grid,vpot,beta,ddd,qq,nbeta,&
-                      nwfx,lls,jjs,ikk,det)
-
-     !         write(stdout,'(i11,3f20.10)') iter,detlw,det,detup
-     !         write(stdout,'(''energy'',i5,3f20.10)') iter,elw,e,eup
-     !
-     !     convergence check
-     !
-     if (abs((eup-elw)/elw).lt.thresh) goto 900
-     !
-     !     treatement of asyntotes
-     !
-     if (abs(det).gt.1.0e4_dp) then 
-        if (e.gt.eold) then
-           count=count+1
-           elw=eold
-           detlw=detold
-           eup=e-0.001_DP
-           call compute_det(nn,lam,jam,eup,mesh,ndm,grid,vpot,beta,ddd,qq,&
-                            nbeta,nwfx,lls,jjs,ikk,detup)
-           if (count.gt.30) &
-                call errore('ascheqps','too many attempts ',1)
-           goto 100
-        else
-           count=count+1
-           elw=e+0.001_DP
-           eup=eold
-           detup=detold
-           call compute_det(nn,lam,jam,elw,mesh,ndm,grid,vpot,beta,ddd,qq,&
-                            nbeta,nwfx,lls,jjs,ikk,detlw)
-           if (count.gt.6) &
-                call errore('ascheqps','too many attempts ',2)
-           goto 100
-        endif
-     endif
-     !
-     !     bisection method
-     !             
-     if (det*detup.gt.0.0_DP) then
-        detup=det
-        eup=e
-        e=(eup+elw)*0.5_DP
-     else
-        detlw=det
-        elw=e
-        e=(eup+elw)*0.5_DP
-     endif
+  !     if everything is ok continue the integration and define f
+  !
+  do n=1,mesh
+     f(n)=1.0_dp-f(n)
   enddo
-  write(stdout,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
-  nosol=.true.
-900 continue
   !
-  !   The eigenvalue has been found, compute the solution
+  !  determination of the wave-function in the first two points by
+  !  series developement
   !
-  if (e.gt.0.0_DP) then
-     e=0.0_DP
-     y=0.0_DP
-     write(stdout,'(5x,"Solution not found in ascheqps for n,l=",2i2)') nn,lam
-     nosol=.true.
-  else
-     call compute_solution(lam,jam,e,mesh,ndm,grid,vpot,y,beta,ddd,&
-          qq,nbeta,nwfx,lls,jjs,ikk)
-  endif
+  b0e=b(0)-e
+  c1=0.5_dp*ze2/xl1
+  c2=(c1*ze2+b0e)/x4l6
+  c3=(c2*ze2+c1*b0e+b(1))/x6l12
+  c4=(c3*ze2+c2*b0e+c1*b(1)+b(2))/x8l20
   !
-  !    count the node number and compare with the required n
+  rr1=(1.0_dp+grid%r(1)*(c1+grid%r(1)*(c2+grid%r(1)*(c3+grid%r(1)*c4))))*grid%r(1)**l1
+  rr2=(1.0_dp+grid%r(2)*(c1+grid%r(2)*(c2+grid%r(2)*(c3+grid%r(2)*c4))))*grid%r(2)**l1
+  y(1)=rr1/grid%sqr(1)
+  y(2)=rr2/grid%sqr(2)
   !
-  if (nosol) then
-     nstop=1
-     return
-  endif
+  !    outward integration before ik
+  !
+  call integrate_outward (lam,jam,e,mesh,ndm,grid,f,b,y,beta,ddd,qq,&
+       nbeta,nwfx,lls,jjs,ikk,ik)
+
   ncross=0
-  do n=1,mesh-1
-     if ( y(n).ne.sign(y(n),y(n+1)) ) then
-        if (abs(y(n+1)).gt.1.e-10_dp) ncross=ncross+1
+  ymx=0.0_dp
+  do n=2,ik-1
+     if ( y(n) .ne. sign(y(n),y(n+1)) ) ncross=ncross+1
+     ymx=max(ymx,abs(y(n+1)))
+  end do
+!
+!  If at this point the number of nodes is wrong it means that something
+!  is probably wrong in the calling routines. A ghost might be present
+!  in the pseudopotential. With a nonlocal pseudopotential there is no
+!  node theorem so strictly speaking the following instructions are
+!  wrong but sometimes they help so we keep them here.
+!
+  if(ndcr < ncross) then
+     !
+     !  too many crossings. e is an upper bound to the true eigen-
+     !  value. increase abs(e)
+     !
+
+     eup=e
+     e=0.9_dp*elw+0.1_dp*eup
+!     write(6,*) 'too many crossing', ncross, ndcr
+!     call errore('aschqps','wrong number of nodes. Probably a Ghost?',1)
+     y=0.0_DP
+     ymx=0.0_dp
+     go to 300
+  else if (ndcr > ncross) then
+     !
+     !  too few crossings. e is a lower bound to the true eigen-
+     !  value. decrease abs(e)
+     !
+     elw=e
+     e=0.9_dp*eup+0.1_dp*elw
+!     write(6,*) 'too few crossing', ncross, ndcr
+!     call errore('aschqps','wrong number of nodes. Probably a Ghost?',1)
+     y=0.0_DP
+     ymx=0.0_dp
+     go to 300
+  end if
+  !
+  !    inward integration up to ik
+  !
+  call integrate_inward(e,mesh,ndm,grid,f,y,c,el,ik,nstart)
+  !
+  !  if necessary, improve the trial eigenvalue by the cooley's
+  !  procedure. jw cooley math of comp 15,363(1961)
+  !
+  fe=(12.0_dp-10.0_dp*f(ik))*y(ik)-f(ik-1)*y(ik-1)-f(ik+1)*y(ik+1)
+  !
+  ! audjust the normalization if needed
+  !
+  if(ymx.ge.1.0e10_dp) y=y/ymx
+  !
+  !  calculate the normalization
+  !
+  do n1=1,nbeta
+     if (lam.eq.lls(n1).and.abs(jam-jjs(n1)).lt.1.e-7_dp) then
+        ikl=ikk(n1)
+        do n=1,ikl
+           fun(n)=beta(n,n1)*y(n)*grid%sqr(n)
+        enddo
+        work(n1)=int_0_inf_dr(fun,grid,ikl,nst)
+     else
+        work(n1)=0.0_dp
      endif
   enddo
-  if (ncross.gt.nn-lam-1) then
-     eup0=e-1.e-6_dp
-  elseif (ncross.lt.nn-lam-1) then
-     elw0=e+1.e-6_dp
-  else
-     return
+  do n=1,nstart
+     fun(n)= y(n)*y(n)*grid%r(n)
+  enddo
+  integ=int_0_inf_dr(fun,grid,nstart,nst)
+  do n1=1,nbeta
+     do n2=1,nbeta
+        integ = integ + qq(n1,n2)*work(n1)*work(n2)
+     enddo
+  enddo
+  dfe=-y(ik)*f(ik)/grid%dx/integ
+  de=-fe*dfe
+  eps=abs(de/e)
+!  write(6,'(i5, 3f20.12)') iter, e, de
+  if(abs(de).lt.thresh) go to 600
+  if(eps.gt.0.25_dp) de=0.25_dp*de/eps
+  if(de.gt.0.0_dp) elw=e
+  if(de.lt.0.0_dp) eup=e
+  e=e+de
+  if(e.gt.eup) e=0.9_dp*eup+0.1_dp*elw
+  if(e.lt.elw) e=0.9_dp*elw+0.1_dp*eup
+300 continue
+  enddo
+  nstop=1
+600 continue
+
+  !
+  !   exponential tail of the solution if it was not computed
+  !
+  if (nstart.lt.mesh) then
+     do n=nstart,mesh-1
+        if (y(n) == 0.0_dp) then
+           y(n+1)=0.0_dp
+        else
+           yln=log(abs(y(n)))
+           xp=-sqrt(12.0_dp*abs(1.0_dp-f(n)))
+           expn=yln+xp
+           if (expn.lt.-80.0_dp) then
+              y(n+1)=0.0_dp
+           else
+              y(n+1)=sign(exp(expn),y(n))
+           endif
+        endif
+     enddo
   endif
   !
-  !    if the program arrives here the number of nodes is wrong
-  !    try bisection with the new limits
+  !  normalize the eigenfunction as if they were norm conserving. 
+  !  If this is a US PP the correct normalization is done outside this
+  !  routine.
   !
-  if (count0 > 5) then
-     call errore('ascheqps','too many attempts ',3)
+  do n=1,mesh
+     el(n)=grid%r(n)*y(n)*y(n)
+  enddo
+  integ=int_0_inf_dr(el,grid,mesh,nst)
+  if (integ>0.0_DP) then
+     integ=sqrt(integ)
+     do n=1,mesh
+        y(n)=grid%sqr(n)*y(n)/integ
+     enddo
+     e0=e
   else
-     count0 = count0 + 1
-     goto 800
-  end if
+     nstop=1
+  endif
+
+  deallocate(el)
+  deallocate(f )
+  deallocate(c )
+  deallocate(fun )
   return
+
 end subroutine ascheqps

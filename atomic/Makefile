@@ -9,6 +9,7 @@ add_exchange.o \
 all_electron.o \
 ascheq.o \
 ascheqps.o \
+ascheqps_old.o \
 ascheqps_drv.o \
 c6_dft.o \
 c6_tfvw.o \
