@@ -212,13 +212,10 @@ subroutine gener_pseudo
      !  compute the phi functions
      !
      if (lpaw.and.lnc2paw) then
-        ! first compute possibly harder NC pseudowfcts to be
+        ! first compute possibly harder NC pseudowfcs to be
         ! used as AE reference for PAW generation
         nnode=0
-       !call compute_phi(lam,ik,      psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns)) CURRENT
         call compute_phi(lam,iknc2paw,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
-       !call compute_phi(lam,iknc2paw,ik,nwf0,ns,xc,1,nnode,ocs(ns)) PAW
-       !call compute_phi(lam,ik,      ik,nwf0,ns,xc,1,nnode,ocs(ns)) OLD
         psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
      endif
      !

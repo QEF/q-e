@@ -904,7 +904,6 @@ problem_size.o : ../Modules/fft_base.o
 problem_size.o : ../Modules/io_global.o
 problem_size.o : ../Modules/ions_base.o
 problem_size.o : ../Modules/kind.o
-problem_size.o : ../Modules/radial_grids.o
 problem_size.o : ../Modules/recvec.o
 problem_size.o : ../Modules/uspp.o
 problem_size.o : electrons.o

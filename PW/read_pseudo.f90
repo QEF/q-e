@@ -57,7 +57,7 @@ subroutine readpp
   END IF
   ALLOCATE ( upf(ntyp) )
   do nt = 1, ntyp
-     tpawp(nt) = .false.
+     !tpawp(nt) = .false.
      !
      ! obsolescent variables, not read from UPF format, no longer used
      !

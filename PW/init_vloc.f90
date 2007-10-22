@@ -15,6 +15,7 @@ subroutine init_vloc()
   !    potential vloc(ig,it) for each type of atom
   !
   USE atom,       ONLY : msh, rgrid
+  USE kinds,      ONLY : dp
   USE uspp_param, ONLY : upf
   USE ions_base,  ONLY : ntyp => nsp
   USE cell_base,  ONLY : omega, tpiba2
@@ -23,12 +24,12 @@ subroutine init_vloc()
   !
   implicit none
   !
-  integer :: nt
+  integer :: nt,k
   ! counter on atomic types
   !
 
   call start_clock ('init_vloc')
-  vloc(:,:) = 0.d0
+  vloc(:,:) = 0._dp
   do nt = 1, ntyp
      !
      ! compute V_loc(G) for a given type of atom

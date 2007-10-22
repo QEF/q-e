@@ -15,6 +15,7 @@ SUBROUTINE init_run()
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE grid_paw_routines,  ONLY : allocate_paw_internals
   USE grid_paw_variables, ONLY : okpaw
+  USE rad_paw_routines,   ONLY : paw_init
   USE bp,                 ONLY : lberry, lelfield
   !
   IMPLICIT NONE
@@ -38,6 +39,7 @@ SUBROUTINE init_run()
   !
   CALL allocate_nlpot()
   if (okpaw)  CALL allocate_paw_internals()
+  if (okpaw)  CALL paw_init()
   CALL allocate_locpot()
   CALL allocate_wfc()
   CALL allocate_bp_efield()

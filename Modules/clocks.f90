@@ -5,7 +5,6 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!#define __TRACE
 !----------------------------------------------------------------------------
 MODULE mytime
   !----------------------------------------------------------------------------
@@ -95,8 +94,8 @@ SUBROUTINE start_clock( label )
         ! ... store in t0cpu the starting time
         !
         IF ( t0cpu(n) /= notrunning ) THEN
-           WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
-                          & " already started")' ) n, label
+!            WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
+!                           & " already started")' ) n, label
         ELSE
            t0cpu(n) = scnds()
            IF ( n == 1 ) t0wall = cclock()
@@ -159,8 +158,8 @@ SUBROUTINE stop_clock( label )
         !
         IF ( t0cpu(n) == notrunning ) THEN
            !
-           WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, &
-                          & " not running")' ) n, label
+!            WRITE( stdout, '("stop_clock: clock # ",I2," for ",A12, &
+!                           & " not running")' ) n, label
            !
         ELSE
            !

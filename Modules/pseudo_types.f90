@@ -67,7 +67,7 @@ END TYPE paw_t
           CHARACTER(LEN=80):: comment     !
           CHARACTER(LEN=2) :: psd       ! Element label
           CHARACTER(LEN=20) :: typ      ! Pseudo type ( NC or US )
-          LOGICAL  :: tvanp             ! .true. if Ultrasoft
+          LOGICAL :: tvanp              ! .true. if Ultrasoft
           LOGICAL :: nlcc               ! Non linear core corrections
           CHARACTER(LEN=20) :: dft      ! Exch-Corr type
           REAL(DP) :: zp                ! z valence
@@ -105,8 +105,8 @@ END TYPE paw_t
           REAL(DP), POINTER :: rab(:)     ! rab(mesh) dr(x)/dx (x=linear grid)
           REAL(DP), POINTER :: rho_atc(:) ! rho_atc(mesh) atomic core charge
           REAL(DP), POINTER :: vloc(:)    ! vloc(mesh) local atomic potential
-          INTEGER, POINTER :: lll(:)      ! lll(nbeta) l of each projector
-          INTEGER, POINTER :: kbeta(:)    ! kbeta(nbeta) see above kkbeta
+          INTEGER,  POINTER :: lll(:)     ! lll(nbeta) l of each projector
+          INTEGER,  POINTER :: kbeta(:)   ! kbeta(nbeta) see above kkbeta
           REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta) projectors
           INTEGER :: nd
           REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta) atomic D_{mu,nu}

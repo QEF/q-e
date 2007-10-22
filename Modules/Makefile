@@ -17,6 +17,7 @@ descriptors.o \
 dspev_drv.o \
 electrons_base.o \
 energies.o \
+exc_t.o \
 fft_base.o \
 fft_scalar.o \
 fft_types.o \
@@ -68,6 +69,8 @@ timestep.o \
 version.o \
 upf_to_internal.o \
 uspp.o \
+vxc_t.o \
+vxcgc.o \
 wave_base.o \
 wavefunctions.o \
 wannier.o \

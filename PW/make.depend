@@ -602,6 +602,7 @@ init_run.o : ../Modules/grid_paw_variables.o
 init_run.o : dynamics_module.o
 init_run.o : grid_paw_routines.o
 init_run.o : pwcom.o
+init_run.o : rad_paw_routines.o
 init_us_1.o : ../Modules/atom.o
 init_us_1.o : ../Modules/cell_base.o
 init_us_1.o : ../Modules/constants.o
@@ -704,6 +705,7 @@ mix_rho.o : ../Modules/kind.o
 mix_rho.o : ../Modules/uspp.o
 mix_rho.o : ../Modules/wavefunctions.o
 mix_rho.o : pwcom.o
+mix_rho.o : rad_paw_routines.o
 mode_group.o : ../Modules/constants.o
 mode_group.o : ../Modules/kind.o
 move_ions.o : ../Modules/basic_algebra_routines.o
@@ -741,6 +743,7 @@ newd.o : ../Modules/wavefunctions.o
 newd.o : grid_paw_routines.o
 newd.o : noncol.o
 newd.o : pwcom.o
+newd.o : rad_paw_routines.o
 newd.o : realus.o
 non_scf.o : ../Modules/control_flags.o
 non_scf.o : ../Modules/io_files.o
@@ -817,6 +820,7 @@ potinit.o : io_rho_xml.o
 potinit.o : noncol.o
 potinit.o : pw_restart.o
 potinit.o : pwcom.o
+potinit.o : rad_paw_routines.o
 print_clock_pw.o : ../Modules/control_flags.o
 print_clock_pw.o : ../Modules/grid_paw_variables.o
 print_clock_pw.o : ../Modules/io_global.o

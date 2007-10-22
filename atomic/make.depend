@@ -16,6 +16,9 @@ ascheqps_drv.o : ../Modules/kind.o
 ascheqps_drv.o : ../Modules/radial_grids.o
 ascheqps_drv.o : ld1inc.o
 ascheqps_drv.o : parameters.o
+ascheqps_old.o : ../Modules/io_global.o
+ascheqps_old.o : ../Modules/kind.o
+ascheqps_old.o : ../Modules/radial_grids.o
 atomic_paw.o : ../Modules/constants.o
 atomic_paw.o : ../Modules/functionals.o
 atomic_paw.o : ../Modules/kind.o
@@ -125,8 +128,6 @@ elsdps_paw.o : parameters.o
 esic.o : ../Modules/kind.o
 esic.o : ../Modules/radial_grids.o
 esic.o : ld1inc.o
-exc_t.o : ../Modules/functionals.o
-exc_t.o : ../Modules/kind.o
 find_qi.o : ../Modules/kind.o
 find_qi.o : ld1inc.o
 gener_pseudo.o : ../Modules/io_global.o
@@ -279,14 +280,6 @@ v_of_rho_at.o : ld1inc.o
 vdpack.o : ../Modules/kind.o
 vext.o : ../Modules/kind.o
 vpack.o : ../Modules/kind.o
-vxc_t.o : ../Modules/functionals.o
-vxc_t.o : ../Modules/io_global.o
-vxc_t.o : ../Modules/kind.o
-vxcgc.o : ../Modules/constants.o
-vxcgc.o : ../Modules/functionals.o
-vxcgc.o : ../Modules/kind.o
-vxcgc.o : ../Modules/radial_grids.o
-vxcgc.o : ld1inc.o
 write_cpmd.o : ../Modules/constants.o
 write_cpmd.o : ../Modules/functionals.o
 write_cpmd.o : ../Modules/kind.o

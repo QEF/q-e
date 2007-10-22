@@ -6,6 +6,12 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !
+#if ! defined __GRID_PAW
+! empty subroutine because some compilers refuses to compile an empty file
+SUBROUTINE unuseful_subroutine
+RETURN
+END SUBROUTINE unuseful_subroutine
+#else
 !----------------------------------------------------------------------------
 SUBROUTINE paw_v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                  nrxx, nl, ngm, g, nspin, alat, omega, etxc, vtxc, v )
@@ -26,6 +32,7 @@ SUBROUTINE paw_v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
 
   !
   IMPLICIT NONE
+
   !
   INTEGER, INTENT(IN) :: nspin, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                          nrxx, ngm, nl(ngm)
@@ -70,11 +77,17 @@ SUBROUTINE paw_v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                vanishing_mag    = 1.D-20
   !
   !
+#ifdef __NO_XC
+write(*,*) "##### skipping XC in PAW_xc"
+RETURN
+#endif
+
   etxc   = 0.D0
   vtxc   = 0.D0
   v(:,:) = 0.D0
   rhoneg = 0.D0
   !
+!goto 666
   IF ( nspin == 1 .OR. ( nspin == 4 .AND. .NOT. domag ) ) THEN
      !
      ! ... spin-unpolarized case
@@ -219,8 +232,14 @@ SUBROUTINE paw_v_xc( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
   ! ... add gradient corrections (if any)
   !
   !
+#ifdef __ONLY_GCXC
+    v(:,:) = 0._dp
+#endif
+#ifdef __NO_GCXC
+#else
   CALL paw_gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                  nrxx, nl, ngm, g, alat, omega, nspin, etxc, vtxc, v )
+#endif
   !
   CALL reduce( 1, vtxc )
   CALL reduce( 1, etxc )
@@ -391,6 +410,7 @@ SUBROUTINE paw_gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
         IF ( rh > epsr ) THEN
            !
            IF ( get_igcc() == 3 ) THEN
+               write(*,*) "USING MORE SPIN"
               !
               rup = rhoout(k,1)
               rdw = rhoout(k,2)
@@ -489,7 +509,17 @@ SUBROUTINE paw_gradcorr( rho, rho_core, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
      CALL paw_grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
                     nrxx, h(1,1,is), ngm, g, nl, alat, dh )
      !
-     v(:,is) = v(:,is) - dh(:)
+#ifdef __PAW_ONLYHAM
+        write(0,*) "######-- Only using hamiltonian contribution to gcxc"
+        v(:,is) = - dh(:)
+#else
+#ifdef __PAW_NONHAM
+        write(0,*) "######-- Only including NON HAM in gcxc"
+#else
+        v(:,is) = v(:,is) - dh(:)
+#endif
+#endif
+
      !
      vtxcgc = vtxcgc - SUM( dh(:) * rhoout(:,is) )
      !
@@ -658,3 +688,4 @@ SUBROUTINE paw_grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   !
 END SUBROUTINE paw_grad_dot
 
+#endif

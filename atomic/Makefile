@@ -37,7 +37,6 @@ elsd_highv.o \
 elsdps.o \
 elsdps_paw.o \
 esic.o \
-exc_t.o \
 find_qi.o \
 gener_pseudo.o \
 green.o \
@@ -78,8 +77,6 @@ trou.o \
 vdpack.o \
 vext.o \
 vpack.o \
-vxcgc.o \
-vxc_t.o \
 v_of_rho_at.o \
 write_cpmd.o \
 write_paw_recon.o \
@@ -98,6 +95,7 @@ MODULES = \
 ../Modules/cell_base.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
+../Modules/exc_t.o \
 ../Modules/functionals.o \
 ../Modules/grid_paw_variables.o \
 ../Modules/io_global.o \
@@ -116,6 +114,8 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp.o \
 ../Modules/uspp.o \
+../Modules/vxc_t.o \
+../Modules/vxcgc.o \
 ../PW/startup.o
 
 TLDEPS= bindir mods libs 

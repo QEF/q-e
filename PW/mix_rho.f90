@@ -7,7 +7,7 @@
 !
 #include "f_defs.h"
 !
-#define ZERO ( 0.D0, 0.D0 )
+#define ZERO ( 0._dp, 0._dp )
 #define ONLY_SMOOTH_G
 !
 !----------------------------------------------------------------------------
@@ -31,19 +31,18 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
   USE control_flags,  ONLY : imix, ngm0, tr2, io_level
   USE io_files,       ONLY : find_free_unit
   USE cell_base,      ONLY : omega
-  !
-  !!PAW]
+  ! ... for PAW:
   USE uspp_param,           ONLY : nhm
   USE grid_paw_variables,   ONLY : okpaw
-  !!PAW]
+  USE rad_paw_routines,     ONLY : paw_ddot
   !
   IMPLICIT NONE
   !
   ! ... First the I/O variable
   !
   INTEGER :: &
-    iter,                  &!  (in)  counter of the number of iterations
-    n_iter                  !  (in)  numb. of iterations used in mixing
+    iter,                  &!  (in) counter of the number of iterations
+    n_iter                  !  (in) numb. of iterations used in mixing
   COMPLEX(DP) :: &
     rhocin(ngm,nspin), rhocout(ngm,nspin)
   COMPLEX(DP) :: &
@@ -147,7 +146,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
   dr2 = rho_ddot( rhocout, rhocout, ngm, ngm, nspin, ngm )
   IF ( tmeta )      dr2 = dr2 + tauk_ddot( taukout, taukout, ngm, ngm, nspin, ngm )
   IF ( lda_plus_u ) dr2 = dr2 + ns_ddot( nsout, nsout, nspin )
-  IF ( okpaw )      dr2 = dr2 + rho1_ddot ( becout, becout ) !PAW
+  IF ( okpaw )      dr2 = dr2 + PAW_ddot ( becout, becout ) !PAW
   !
   conv = ( dr2 < tr2 )
   !
@@ -447,7 +446,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
         !
         IF ( okpaw ) &
            betamix(i,j) = betamix(i,j) + &
-                          rho1_ddot( df_bec(1,1,1,j), df_bec(1,1,1,i) )
+                          PAW_ddot( df_bec(1,1,1,j), df_bec(1,1,1,i) )
         !
         betamix(j,i) = betamix(i,j) !symmetrize
         !
@@ -476,7 +475,7 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
         work(i) = work(i) + ns_ddot( df_ns(1,1,1,1,i), nsout, nspin )
      !
      IF ( okpaw ) &
-        work(i) = work(i) + rho1_ddot( df_bec(1,1,1,i), becout )
+        work(i) = work(i) + PAW_ddot( df_bec(1,1,1,i), becout )
      !
   END DO
   !
@@ -828,6 +827,7 @@ FUNCTION tauk_ddot( tauk1, tauk2, ngm1, ngm2, nspin, gf )
 END FUNCTION tauk_ddot
 !
 !
+#ifdef __DONT_DO_THAT_THEN
 !----------------------------------------------------------------------------
 FUNCTION rho1_ddot( bec1, bec2 )
   !----------------------------------------------------------------------------
@@ -978,6 +978,7 @@ FUNCTION rho1_ddot( bec1, bec2 )
   RETURN
   !
 END FUNCTION rho1_ddot
+#endif
 !
 !----------------------------------------------------------------------------
 FUNCTION ns_ddot( ns1, ns2, nspin )

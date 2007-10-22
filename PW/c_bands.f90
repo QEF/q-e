@@ -39,7 +39,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   INTEGER :: ik_, iter
   ! k-point already done
   ! current iterations
-  REAL(DP) :: dr2
+  REAL(DP),INTENT(IN) :: dr2
   ! current accuracy of self-consistency
   !
   ! ... local variables

@@ -21,7 +21,6 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
   use kinds, only : DP
   use constants, only : fpi
   use funct, only : gcxc, gcx_spin, gcc_spin
-  use ld1inc, only : grid
   implicit none
   integer,  intent(in) :: ndm,mesh,nspin,iflag
   real(DP), intent(in) :: r(mesh), r2(mesh), rho(ndm,2), rhoc(ndm)
@@ -52,7 +51,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
      do i=1, mesh
         rhoaux(i,is)=(rho(i,is)+rhoc(i)/nspin)/fpi/r2(i)
      enddo
-     call gradient(rhoaux(1,is),grho(1,is),r,mesh,iflag)
+     call radial_gradient(rhoaux(1,is),grho(1,is),r,mesh,iflag)
   enddo
 
   if (nspin.eq.1) then
@@ -121,7 +120,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
   !     and correlation potential.
   !     
   do is=1,nspin
-     call gradient(h(1,is),dh,r,mesh,iflag)
+     call radial_gradient(h(1,is),dh,r,mesh,iflag)
      !
      !     Finally we compute the total exchange and correlation energy and
      !     potential. We put the original values on the charge and multiply
@@ -144,7 +143,7 @@ subroutine vxcgc(ndm,mesh,nspin,r,r2,rho,rhoc,vgc,egc,iflag)
   return
 end subroutine vxcgc
 
-subroutine gradient(f,gf,r,mesh,iflag)
+subroutine radial_gradient(f,gf,r,mesh,iflag)
 !
 !  This subroutine calculates the derivative with respect to r of a
 !  radial function defined on the mesh r. If iflag=0 it uses all mesh
@@ -153,7 +152,6 @@ subroutine gradient(f,gf,r,mesh,iflag)
 !  is too smooth.
 !
 use kinds, only : DP
-use ld1inc, only: zed
 use radial_grids, only : series
 implicit none
 integer, intent(in) :: mesh, iflag
@@ -248,7 +246,7 @@ do i=1,imin
    gf(i)=b(1)+r(i)*(b(2)+r(i)*(b(3)+r(i)*b(4)))
 enddo
 return
-end subroutine gradient
+end subroutine radial_gradient
 
 subroutine fit_pol(xdata,ydata,n,degree,b)
 !

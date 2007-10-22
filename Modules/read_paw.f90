@@ -49,7 +49,7 @@
         write(un,'(a)') "scalars:"
        WRITE(un,'(e20.10)') pawset_%zval
        WRITE(un,'(e20.10)') pawset_%z
-       WRITE(un,'(L1)')     pawset_%nlcc
+       WRITE(un,'(L)')      pawset_%nlcc
        WRITE(un,'(i8)')     pawset_%nwfc
        WRITE(un,'(i8)')     pawset_%irc
        WRITE(un,'(i8)')     pawset_%lmax
@@ -135,7 +135,7 @@
         read(un, '(a)') dummy
        READ (un,'(e20.10)') pawset_%zval
        READ (un,'(e20.10)') pawset_%z
-       READ (un,'(L1)')      pawset_%nlcc
+       READ (un,'(L)')      pawset_%nlcc
        READ (un,'(i8)')     pawset_%nwfc
        READ (un,'(i8)')     pawset_%irc
        READ (un,'(i8)')     pawset_%lmax
@@ -323,6 +323,7 @@ END SUBROUTINE deallocate_pseudo_paw
 
 !---------------------------------------------------------------------
 !#define __DO_NOT_CUTOFF_PAW_FUNC
+#define __SHARP_CUTOFF_PAW_FUNC
 subroutine set_pseudo_paw (is, pawset)
   !---------------------------------------------------------------------
   !
@@ -333,18 +334,15 @@ subroutine set_pseudo_paw (is, pawset)
   !
   USE atom,  ONLY: rgrid, msh, chi, oc, nchi, lchi, jchi, rho_at, &
                    rho_atc, nlcc
-!  USE pseud, ONLY: lloc, lmax
   USE uspp_param, ONLY: upf
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
-!  USE spin_orb, ONLY: lspinorb
   USE pseudo_types
   USE constants, ONLY: FPI
   !
   USE grid_paw_variables, ONLY : tpawp, pfunc, ptfunc, aevloc_at, psvloc_at, &
                                  aerho_atc, psrho_atc, kdiff, &
-                                 augmom, nraug, step_f,aug !!NEW-AUG
-  !USE grid_paw_routines, ONLY : step_f
+                                 augmom, nraug, step_f, aug 
   !
   implicit none
   !
@@ -361,6 +359,10 @@ subroutine set_pseudo_paw (is, pawset)
   !
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
   PRINT '(A)', 'WARNING __DO_NOT_CUTOFF_PAW_FUNC'
+#else
+#ifdef __SHARP_CUTOFF_PAW_FUNC
+  PRINT '(A)', 'WARNING __SHARP_CUTOFF_PAW_FUNC'
+#endif
 #endif
   !
   ! Cutoffing: WARNING: arbitrary right now, for grid calculation
@@ -378,7 +380,6 @@ subroutine set_pseudo_paw (is, pawset)
   tpawp(is)=.true.
   nlcc(is) = pawset%nlcc
   call set_dft_from_name( pawset%dft )
-!  call which_dft( pawset%dft )
   !
   IF ( dft_is_meta() ) &
     CALL errore( 'upf_to_internal', 'META-GGA not implemented in PWscf', 1 )
@@ -397,17 +398,10 @@ subroutine set_pseudo_paw (is, pawset)
   !
   nchi(is)=0
   do i=1, pawset%nwfc
-#if defined __DEBUG_UPF_TO_INTERNAL
-     ! take only occupied wfcs (to have exactly the same as for US)
-     if (pawset%oc(i)>0._dp) then
-#endif
         nchi(is)=nchi(is)+1
         lchi(nchi(is),is)=pawset%l(i)
         oc(nchi(is),is)=MAX(pawset%oc(i),0._DP)
         chi(1:pawset%grid%mesh, nchi(is), is) = pawset%pswfc(1:pawset%grid%mesh, i)
-#if defined __DEBUG_UPF_TO_INTERNAL
-     end if
-#endif
   end do
   !
   upf(is)%nbeta= pawset%nwfc
@@ -415,25 +409,27 @@ subroutine set_pseudo_paw (is, pawset)
   do nb=1,pawset%nwfc
      upf(is)%kbeta(nb)=pawset%ikk(nb)
   end do
+  ! kkbeta is the maximum distance from nucleus where AE 
+  ! and PS wavefunction may not match:
   upf(is)%kkbeta=MAXVAL (upf(is)%kbeta(:))
+
   allocate (upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc))
   upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc) = &
-  pawset%proj(1:pawset%grid%mesh, 1:pawset%nwfc)
+                    pawset%proj(1:pawset%grid%mesh, 1:pawset%nwfc)
+
   allocate(upf(is)%dion(1:pawset%nwfc, 1:pawset%nwfc))
   upf(is)%dion(1:pawset%nwfc, 1:pawset%nwfc) = pawset%dion(1:pawset%nwfc, 1:pawset%nwfc)
   kdiff(1:pawset%nwfc, 1:pawset%nwfc, is) = pawset%kdiff(1:pawset%nwfc, 1:pawset%nwfc)
 
-  ! HOPE!
-!  lmax(is) = pawset%lmax
   upf(is)%nqlc = 2*pawset%lmax+1
   upf(is)%nqf = 0                   !! no rinner, all numeric
+
   allocate (upf(is)%lll(pawset%nwfc) )
   upf(is)%lll(1:pawset%nwfc) = pawset%l(1:pawset%nwfc)
   allocate (upf(is)%rinner(upf(is)%nqlc))
   upf(is)%rinner(1:upf(is)%nqlc) = 0._dp  !! no rinner, all numeric
-  !
+
   ! integral of augmentation charges vanishes for different values of l
-  !
   allocate ( upf(is)%qqq(pawset%nwfc,pawset%nwfc))
   do i = 1, pawset%nwfc
      do j = 1, pawset%nwfc
@@ -444,7 +440,8 @@ subroutine set_pseudo_paw (is, pawset)
         end if
      end do
   end do
-  !! NEW-AUG !! 
+
+  ! import augmentation charge:
   nraug(is) = pawset%irc
   rgrid(is)%dx = pawset%grid%dx
   rgrid(is)%r2 (1:pawset%grid%mesh) = pawset%grid%r2  (1:pawset%grid%mesh)
@@ -465,13 +462,14 @@ subroutine set_pseudo_paw (is, pawset)
              pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
       enddo
   enddo
-!   augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax,is) = &
-!        pawset%augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax)
+
   ! new sparse allocation for augmentation functions
   if (allocated(aug(is)%fun)) deallocate(aug(is)%fun)
   allocate(aug(is)%fun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax))
-  aug(is)%fun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax) = &
-       pawset%augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax)
+  !
+    aug(is)%fun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax) &
+       = &
+  pawset%augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax)
 
 
   !
@@ -486,6 +484,14 @@ subroutine set_pseudo_paw (is, pawset)
         ptfunc (1:pawset%grid%mesh, i, j, is) = &
              pawset%pswfc(1:pawset%grid%mesh, i) * pawset%pswfc(1:pawset%grid%mesh, j)
 #else
+#if defined __SHARP_CUTOFF_PAW_FUNC
+        pfunc(:,i,j,is) = 0._dp
+        ptfunc(:,i,j,is) = 0._dp
+        pfunc (1:pawset%irc, i, j, is) = &
+             pawset%aewfc(1:pawset%irc, i) * pawset%aewfc(1:pawset%irc, j)
+        ptfunc (1:pawset%irc, i, j, is) = &
+             pawset%pswfc(1:pawset%irc, i) * pawset%pswfc(1:pawset%irc, j)
+#else
         aux(1:pawset%grid%mesh) = pawset%aewfc(1:pawset%grid%mesh, i) * &
              pawset%aewfc(1:pawset%grid%mesh, j)
         CALL step_f( pfunc(1:pawset%grid%mesh,i,j,is), aux(1:pawset%grid%mesh), &
@@ -494,6 +500,7 @@ subroutine set_pseudo_paw (is, pawset)
              pawset%pswfc(1:pawset%grid%mesh, j)
         CALL step_f( ptfunc(1:pawset%grid%mesh,i,j,is), aux(1:pawset%grid%mesh), &
              pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
+#endif
 #endif
      end do
   end do
@@ -519,10 +526,14 @@ subroutine set_pseudo_paw (is, pawset)
   rgrid(is)%r2(1:pawset%grid%mesh)  = pawset%grid%r2(1:pawset%grid%mesh)
   rgrid(is)%rab(1:pawset%grid%mesh) = pawset%grid%rab(1:pawset%grid%mesh)
   rgrid(is)%sqr(1:pawset%grid%mesh) = sqrt(pawset%grid%r(1:pawset%grid%mesh))
+! these speed up a lot a few calculations:
+  rgrid(is)%rm1(1:pawset%grid%mesh)   = pawset%grid%rm1(1:pawset%grid%mesh)
+  rgrid(is)%rm2(1:pawset%grid%mesh)   = pawset%grid%rm2(1:pawset%grid%mesh)
+  rgrid(is)%rm3(1:pawset%grid%mesh)   = pawset%grid%rm3(1:pawset%grid%mesh)
 
   ! NO spin orbit PAW implemented right now (oct 2005)
 !!$  if (lspinorb.and..not.pawset%has_so) &
-!!$     call infomsg ('pawset_to_internal','At least one non s.o. pseudo', -1)
+!!$     call infomsg ('pawset_to_internal','At least one non s.o. pseudo')
 !!$   
 !!$  lspinorb=lspinorb.and.pawset%has_so
 !!$  if (pawset%has_so) then
@@ -558,13 +569,18 @@ subroutine set_pseudo_paw (is, pawset)
   aevloc_at(1:pawset%grid%mesh,is) = pawset%aeloc(1:pawset%grid%mesh)
   psvloc_at(1:pawset%grid%mesh,is) = pawset%psloc(1:pawset%grid%mesh)
 #else
-  aux(1:pawset%grid%mesh) = pawset%aeloc(1:pawset%grid%mesh)
-  CALL step_f( aevloc_at(1:pawset%grid%mesh,is), aux(1:pawset%grid%mesh), &
-       pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
-  aux(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)
-  CALL step_f( psvloc_at(1:pawset%grid%mesh,is), aux(1:pawset%grid%mesh), &
-       pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
-  DEALLOCATE (aux)
+#if defined __SHARP_CUTOFF_PAW_FUNC
+  aevloc_at(1:pawset%grid%mesh,is) = pawset%aeloc(1:pawset%grid%mesh)
+  psvloc_at(1:pawset%grid%mesh,is) = pawset%psloc(1:pawset%grid%mesh)
+ aux(1:pawset%grid%mesh) = pawset%aeloc(1:pawset%grid%mesh)
+#else
+ CALL step_f( aevloc_at(1:pawset%grid%mesh,is), aux(1:pawset%grid%mesh), &
+      pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
+ aux(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)
+ CALL step_f( psvloc_at(1:pawset%grid%mesh,is), aux(1:pawset%grid%mesh), &
+      pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
+ DEALLOCATE (aux)
+#endif
 #endif
 
   do ir = 1, rgrid(is)%mesh

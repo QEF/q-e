@@ -69,6 +69,7 @@ MODULES = \
 ../Modules/control_flags.o \
 ../Modules/descriptors.o \
 ../Modules/electrons_base.o \
+../Modules/exc_t.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
@@ -103,6 +104,8 @@ MODULES = \
 ../Modules/uspp.o \
 ../Modules/timestep.o \
 ../Modules/version.o \
+../Modules/vxc_t.o \
+../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
 ../Modules/xml_io_base.o
 

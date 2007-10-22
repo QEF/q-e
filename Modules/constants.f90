@@ -88,6 +88,7 @@ MODULE constants
   REAL(DP), PARAMETER :: eps12 = 1.0E-12_DP
   REAL(DP), PARAMETER :: eps14 = 1.0E-14_DP
   REAL(DP), PARAMETER :: eps16 = 1.0E-16_DP
+  REAL(DP), PARAMETER :: eps24 = 1.0E-24_DP
   REAL(DP), PARAMETER :: eps32 = 1.0E-32_DP
   !
   REAL(DP), PARAMETER :: gsmall = 1.0E-12_DP

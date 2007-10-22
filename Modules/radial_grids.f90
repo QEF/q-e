@@ -48,7 +48,10 @@ TYPE radial_grid_type
        r(ndmx),    & ! the radial mesh
        r2(ndmx),   & ! the square of the radial mesh 
        rab(ndmx),  & ! d r(x) / d x where x is the linear grid
-       sqr(ndmx)     ! the square root of the radial mesh
+       sqr(ndmx),  & ! the square root of the radial mesh
+       rm1(ndmx),  & ! 1 / r
+       rm2(ndmx),  & ! 1 / r
+       rm3(ndmx)     ! 1 / r
   REAL(DP) :: &
        xmin,       & ! the minimum x
        rmax,       & ! the maximum radial point
@@ -63,7 +66,7 @@ END TYPE radial_grid_type
 
   !============================================================================
   !
-CONTAINS
+ CONTAINS
 !
 !   Build the radial (logarithmic) grid 
 !
@@ -106,6 +109,9 @@ CONTAINS
          grid%r2(i)  = grid%r(i)*grid%r(i)
          grid%rab(i) = grid%r(i)*dx
          grid%sqr(i) = sqrt(grid%r(i))
+         grid%rm1(i) = 1._dp/grid%r(i)
+         grid%rm2(i) = 1._dp/grid%r(i)**2
+         grid%rm3(i) = 1._dp/grid%r(i)**3
       end do
 !
       grid%mesh = mesh
@@ -359,7 +365,7 @@ subroutine read_grid_from_file(iunit,grid)
   integer, intent(in) :: iunit
   integer :: n
 !
-  READ(iunit,'(i8)') grid%mesh
+  READ(iunit,'(i8)')     grid%mesh
   READ(iunit,'(e20.10)') grid%dx
   READ(iunit,'(e20.10)') grid%xmin
   READ(iunit,'(e20.10)') grid%zmesh
@@ -368,6 +374,10 @@ subroutine read_grid_from_file(iunit,grid)
   READ(iunit,'(e20.10)') (grid%sqr(n), n=1,grid%mesh)
 !  READ(iunit,'(e20.10)') (grid%rab(n), n=1,grid%mesh)
   grid%rab(1:grid%mesh) = grid%r(1:grid%mesh) * grid%dx
+  grid%rm1(1:grid%mesh) = 1._dp/grid%r(1:grid%mesh)
+  grid%rm2(1:grid%mesh) = 1._dp/grid%r2(1:grid%mesh)
+  grid%rm3(1:grid%mesh) = 1._dp/grid%r(1:grid%mesh)**3
+
   return
 end subroutine read_grid_from_file
  

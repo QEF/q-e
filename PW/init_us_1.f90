@@ -41,9 +41,7 @@ subroutine init_us_1
                          qq_so, dvan_so, okvan
   USE uspp_param, ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
-!! NEW-AUG !!
   USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, aug
-!! NEW-AUG !!
   !
   implicit none
   !
@@ -243,28 +241,28 @@ subroutine init_us_1
            do nb = 1, upf(nt)%nbeta
               do mb = nb, upf(nt)%nbeta
                  ijv = mb * (mb-1) / 2 + nb
-                 paw:& ! in PAW formalism aug. charge is computed elsewhere
+                 paw : & ! in PAW formalism aug. charge is computed elsewhere
                  if (tpawp(nt)) then
                     qtot(1:upf(nt)%kkbeta,ijv) = aug(nt)%fun(1:upf(nt)%kkbeta,nb,mb,l)
                  else
-                  if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
-                       ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
-                       (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
-                        do ir = 1, upf(nt)%kkbeta
-                           if (rgrid(nt)%r(ir) >=upf(nt)%rinner (l+1) ) then
-                               qtot (ir, ijv) = upf(nt)%qfunc(ir,ijv)
-                           else
-                               ilast = ir
-                           endif
-                        enddo
-                        if ( upf(nt)%rinner (l+1) > 0.0_dp) &
-                            call setqf(upf(nt)%qfcoef (1, l+1, nb, mb), &
-                                       qtot(1,ijv), rgrid(nt)%r, upf(nt)%nqf, &
-                                       l, ilast)
+                    if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
+                         ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
+                         (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
+                            do ir = 1, upf(nt)%kkbeta
+                            if (rgrid(nt)%r(ir) >=upf(nt)%rinner (l+1) ) then
+                                qtot (ir, ijv) = upf(nt)%qfunc(ir,ijv)
+                            else
+                                ilast = ir
+                            endif
+                            enddo
+                            if ( upf(nt)%rinner (l+1) > 0.0_dp) &
+                                call setqf(upf(nt)%qfcoef (1, l+1, nb, mb), &
+                                        qtot(1,ijv), rgrid(nt)%r, upf(nt)%nqf, &
+                                        l, ilast)
                     endif
                  endif paw
-              enddo
-           enddo
+              enddo ! mb
+           enddo ! nb
            !
            !     here we compute the spherical bessel function for each |g|
            !

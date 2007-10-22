@@ -5,6 +5,12 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+!!! *****************************************************
+!!! WARNING!                                            *
+!!! This module contains only two functions unless the  *
+!!! flag __GRID_PAW is specified at compilation time!   *
+!!! *****************************************************
+
 #include "f_defs.h"
 !
 MODULE grid_paw_routines
@@ -13,16 +19,73 @@ MODULE grid_paw_routines
   !
   ! NO spin-orbit
   ! NO EXX
-  ! NO Parallelism
   ! NO rinner > 0
-  ! NO Gamma (?)
   !
   IMPLICIT NONE
   PUBLIC!              <===
   SAVE
 
 !!!=========================================================================
-CONTAINS
+ CONTAINS
+
+! Initialize becsum with atomic occupations (for PAW atoms only)
+! Notice: requires exact correspondence chi <--> beta in the atom,
+! that is that all wavefunctions considered for PAW generation are
+! counted in chi (otherwise the array "oc" does not correspond to beta)
+SUBROUTINE atomic_becsum()
+  USE kinds,              ONLY : DP
+  USE uspp,               ONLY : becsum, nhtol, indv
+  USE uspp_param,         ONLY : nh
+  USE ions_base,          ONLY : nat, ityp
+  USE lsda_mod,           ONLY : nspin, starting_magnetization
+  USE atom,               ONLY : oc
+  USE grid_paw_variables, ONLY : tpawp, okpaw
+  IMPLICIT NONE
+  INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
+  !
+  IF (.NOT. okpaw) RETURN
+  !
+  if (nspin.GT.2) STOP 'atomic_becsum not implemented'
+  !
+  na_loop: DO na = 1, nat
+     nt = ityp(na)
+     is_paw: IF (tpawp(nt)) THEN
+        !
+        ijh = 1
+        ih_loop: DO ih = 1, nh(nt)
+           nb = indv(ih,nt)
+           !
+           IF (nspin==1) THEN
+              !
+              becsum(ijh,na,1) = oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
+              !
+           ELSE IF (nspin==2) THEN
+              !
+              becsum(ijh,na,1) = 0.5d0 * (1.d0 + starting_magnetization(nt))* &
+                                 oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
+              becsum(ijh,na,2) = 0.5d0 * (1.d0 - starting_magnetization(nt))* &
+                                 oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
+              !
+           END IF
+           ijh = ijh + 1
+           !
+           jh_loop: DO jh = ( ih + 1 ), nh(nt)
+              !mb = indv(jh,nt)
+              DO ispin = 1, nspin
+                 becsum(ijh,na,ispin) = 0._DP
+              END DO
+              ijh = ijh + 1
+              !
+           END DO jh_loop
+        END DO ih_loop
+     END IF is_paw
+  END DO na_loop
+
+#if defined __DEBUG_ATOMIC_BECSUM
+  PRINT '(1f20.10)', becsum(:,1,1)
+#endif
+
+END SUBROUTINE atomic_becsum
 
   ! Analogous to PW/allocate_nlpot.f90 
   SUBROUTINE allocate_paw_internals
@@ -33,35 +96,41 @@ CONTAINS
     USE uspp_param,         ONLY : lmaxq, nhm, nbetam
     USE gvect,              ONLY : ngl
     !
-    USE grid_paw_variables, ONLY : pp, ppt, prad, ptrad, rho1, rho1t, &
-         vr1, vr1t, int_r2pfunc, int_r2ptfunc, ehart1, etxc1, vtxc1, &
-         ehart1t, etxc1t, vtxc1t, aerho_core, psrho_core, radial_distance, radial_r,&
-         dpaw_ae, dpaw_ps, aevloc, psvloc, aevloc_r, psvloc_r, &
-         prodp, prodpt, prod0p, prod0pt
+!     USE grid_paw_variables, ONLY : pp, ppt, prad, ptrad, rho1, rho1t, &
+!          vr1, vr1t, int_r2pfunc, int_r2ptfunc, ehart1, etxc1, vtxc1, &
+!          ehart1t, etxc1t, vtxc1t, aerho_core, psrho_core, radial_distance, radial_r,&
+!          dpaw_ae, dpaw_ps, aevloc, psvloc, aevloc_r, psvloc_r, &
+!          prodp, prodpt, prod0p, prod0pt
+    USE grid_paw_variables
     !
     IMPLICIT NONE
+
+    call start_clock('allocate_paw')
     !
+#ifdef __GRID_PAW
     ALLOCATE (pp(   nhm, nhm, nsp))
     ALLOCATE (ppt(  nhm, nhm, nsp))
     !
-    ALLOCATE (int_r2pfunc(   nhm, nhm, nsp))
-    ALLOCATE (int_r2ptfunc(  nhm, nhm, nsp))
+    ALLOCATE (int_r2pfunc(  nhm, nhm, nsp))
+    ALLOCATE (int_r2ptfunc( nhm, nhm, nsp))
     !
     IF (lmaxq > 0) ALLOCATE (prad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))
     IF (lmaxq > 0) ALLOCATE (ptrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))
     !
     ALLOCATE (aevloc( ngl, ntyp))
+#endif
     ALLOCATE (psvloc( ngl, ntyp))  
+#ifdef __GRID_PAW
     !
     ALLOCATE (aevloc_r(nrxx,ntyp))
     ALLOCATE (psvloc_r(nrxx,ntyp))
     ALLOCATE (radial_distance(nrxx))
     ALLOCATE (radial_r(3,nrxx))
     !
-    ALLOCATE (prodp(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
-    ALLOCATE (prodpt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
-    ALLOCATE (prod0p(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
-    ALLOCATE (prod0pt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+!     ALLOCATE (prodp(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+!     ALLOCATE (prodpt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+!     ALLOCATE (prod0p(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
+!     ALLOCATE (prod0pt(nhm*(nhm+1)/2,nhm*(nhm+1)/2,ntyp))
     !
     ALLOCATE (rho1(nrxx, nspin, nat))
     ALLOCATE (rho1t(nrxx, nspin, nat))
@@ -77,9 +146,11 @@ CONTAINS
     ALLOCATE (vtxc1t (nat))
     ALLOCATE (aerho_core(nrxx,ntyp))
     ALLOCATE (psrho_core(nrxx,ntyp))
+#endif
     !
     ALLOCATE(dpaw_ae( nhm, nhm, nat, nspin))
     ALLOCATE(dpaw_ps( nhm, nhm, nat, nspin))
+    !
     !
   END SUBROUTINE allocate_paw_internals
 
@@ -92,15 +163,17 @@ CONTAINS
     USE uspp_param,         ONLY : lmaxq, nhm, nbetam
     USE gvect,              ONLY : ngl
     !
-    USE grid_paw_variables, ONLY : pp, ppt, prad, ptrad, rho1, rho1t, &
-         vr1, vr1t, int_r2pfunc, int_r2ptfunc, ehart1, etxc1, vtxc1, &
-         ehart1t, etxc1t, vtxc1t, aerho_core, psrho_core, radial_distance, radial_r,&
-         dpaw_ae, dpaw_ps, aevloc, psvloc, aevloc_r, psvloc_r, &
-         prodp, prodpt, prod0p, prod0pt, aug
+!     USE grid_paw_variables, ONLY : pp, ppt, prad, ptrad, rho1, rho1t, &
+!          vr1, vr1t, int_r2pfunc, int_r2ptfunc, ehart1, etxc1, vtxc1, &
+!          ehart1t, etxc1t, vtxc1t, aerho_core, psrho_core, radial_distance, radial_r,&
+!          dpaw_ae, dpaw_ps, aevloc, psvloc, aevloc_r, psvloc_r, &
+!          prodp, prodpt, prod0p, prod0pt, aug
+    USE grid_paw_variables
     !
     IMPLICIT NONE
     INTEGER :: nt
     !
+#ifdef __GRID_PAW
     IF(allocated(pp))           DEALLOCATE (pp)
     IF(allocated(ppt))          DEALLOCATE (ppt)
     !
@@ -111,8 +184,10 @@ CONTAINS
     IF(allocated(ptrad))        DEALLOCATE (ptrad)
     !
     IF(allocated(aevloc))       DEALLOCATE (aevloc)
+#endif
     IF(allocated(psvloc))       DEALLOCATE (psvloc)  
     !
+#ifdef __GRID_PAW
     IF(allocated(aevloc_r))     DEALLOCATE (aevloc_r)
     IF(allocated(psvloc_r))     DEALLOCATE (psvloc_r)
     IF(allocated(radial_distance)) &
@@ -138,11 +213,66 @@ CONTAINS
     IF(allocated(vtxc1t ))      DEALLOCATE (vtxc1t )
     IF(allocated(aerho_core))   DEALLOCATE (aerho_core)
     IF(allocated(psrho_core))   DEALLOCATE (psrho_core)
+#endif
     !
     IF(allocated(dpaw_ae))      DEALLOCATE (dpaw_ae)
     IF(allocated(dpaw_ps))      DEALLOCATE (dpaw_ps)
     !
+    DO nt = 1,ntyp
+        IF(allocated(aug(nt)%fun)) DEALLOCATE (aug(nt)%fun)
+    ENDDO
+    !
   END SUBROUTINE deallocate_paw_internals
+
+#ifdef __GRID_PAW
+
+  ! Analogous to PW/init_vloc.f90
+  SUBROUTINE init_paw_vloc
+    !
+    USE kinds, ONLY: DP
+    USE atom,       ONLY : rgrid, msh
+    USE ions_base,  ONLY : ntyp => nsp
+    USE cell_base,  ONLY : omega, tpiba2
+    USE gvect,      ONLY : ngl, gl
+    USE uspp_param, ONLY : upf
+    USE grid_paw_variables, ONLY: aevloc_at, psvloc_at, aevloc, psvloc
+    !
+    IMPLICIT NONE
+    !
+    INTEGER :: nt
+    ! counter on atomic types
+    !
+    REAL(DP), POINTER :: vloc_at_(:,:)
+    REAL(DP), POINTER :: vloc_(:,:)
+    INTEGER :: i_what
+    !  
+   call start_clock ('init_pawvloc')
+    whattodo: DO i_what=1, 2
+       NULLIFY(vloc_at_,vloc_)
+       IF (i_what==1) THEN
+          vloc_at_ => aevloc_at
+          vloc_    => aevloc
+       ELSE IF (i_what==2) THEN
+          vloc_at_ => psvloc_at
+          vloc_    => psvloc
+       END IF
+    ! associate a pointer to the AE or PS part
+       vloc_(:,:) = 0.d0
+       DO nt = 1, ntyp
+       !
+       ! compute V_loc(G) for a given type of atom
+       !
+       CALL vloc_of_g_noerf (rgrid(nt)%mesh, &
+            msh (nt), rgrid(nt)%rab(1), rgrid(nt)%r(1), vloc_at_ (:, nt), &
+            upf(nt)%zp, tpiba2, ngl, gl, omega, vloc_ (:, nt) )
+       END DO
+    END DO whattodo 
+   call stop_clock ('init_pawvloc')
+    !
+    RETURN
+    !
+  END SUBROUTINE init_paw_vloc
+
 
 !!$=========================================================================
   ! Analogous to part of PW/init_us_1.f90
@@ -202,8 +332,6 @@ CONTAINS
     !
     whattodo: DO i_what=1, 2
        ! associate a pointer to the AE or PS part
-       write (*,*) "entering init_prad"
-       write (*,*) lmaxq, lqmax
        NULLIFY(pfunc_,pp_,prad_)
        IF (i_what==1) THEN
           pfunc_=> pfunc
@@ -629,6 +757,8 @@ CONTAINS
                         nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                         nl, ngm, g, nspin, alat, omega, &
                         etxc1_(na), vtxc1_(na), vr1_(:,:,na) )
+#ifdef __NO_HARTREE
+#else
              !
              spheropole=0.d0
              DO nt = 1, ntyp
@@ -649,7 +779,7 @@ CONTAINS
                    END DO
                 END DO
              END DO
-             write (*,*) "calculate tot_multipoles", lqmax
+             !write (*,*) "calculate tot_multipoles", lqmax
              tot_multipole(:)=0.d0
              DO nt = 1, ntyp
                 IF (ityp(na)==nt) THEN
@@ -682,13 +812,15 @@ CONTAINS
                    END DO
                 END IF
              END DO
-             write (*,*) "done"
+             !write (*,*) "done"
              !
              !PRINT *, 'SPHEROPOLE:',na, spheropole
              CALL v_h_grid( rho1_(:,:,na), nr1,nr2,nr3, nrx1,nrx2,nrx3, nrxx, &
                             nl, ngm, gg, gstart, nspin, alat, omega, &
                             ehart1_(na), charge, vr1_(:,:,na), &
                             spheropole, tot_multipole, na)
+#endif
+
           END IF
        END DO
     END DO whattodo
@@ -878,6 +1010,10 @@ CONTAINS
   
     INTEGER :: ir, & ! counter on mesh points
                nt    ! counter on atomic types
+  WRITE(*,*) "**************************************"
+  WRITE(*,*) "* set_paw_rhoc: I SHOULD NOT BE HERE *"
+  WRITE(*,*) "**************************************"
+
     !
     call start_clock ('set_paw_rhoc')
     ALLOCATE (aux(nrxx), rhocg(ngl))
@@ -988,6 +1124,11 @@ SUBROUTINE v_h_grid( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
   REAL(DP) :: dummyx, c(3), r2, gaussrho
   INTEGER :: ir1,ir2,ir3, i,j,k
   real(DP), external :: erf
+
+  WRITE(*,*) "**********************************"
+  WRITE(*,*) "* v_h_grid: I SHOULD NOT BE HERE *"
+  WRITE(*,*) "**********************************"
+
   !
    call start_clock ('v_h_grid')
    CALL infomsg ('v_h_grid','alpha set manually')
@@ -1015,6 +1156,7 @@ SUBROUTINE v_h_grid( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
   charge = charge * omega / (nr1*nr2*nr3)
   dipole(:) = dipole(:) * omega / (nr1*nr2*nr3)
   quad(:) = quad(:) * omega / (nr1*nr2*nr3)
+#ifdef __PRINT_MULTIPOLES
   write (*,'(a,2f10.5)') 'charge=', charge, tot_multipole(1)*sqrt(fpi)
   write (*,'(a,2f10.5)') 'dipole=', dipole(1),-tot_multipole(3)*sqrt(fpi/3.0_DP)
   write (*,'(a,2f10.5)') 'dipole=', dipole(2),-tot_multipole(4)*sqrt(fpi/3.0_DP)
@@ -1024,6 +1166,7 @@ SUBROUTINE v_h_grid( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
   write (*,'(a,2f10.5)') 'quad  =', quad(3), tot_multipole(7)*sqrt(fpi/5.0_DP)
   write (*,'(a,2f10.5)') 'quad  =', quad(4), tot_multipole(8)*sqrt(fpi/5.0_DP)
   write (*,'(a,2f10.5)') 'quad  =', quad(5), tot_multipole(9)*sqrt(fpi/5.0_DP)
+#endif
   !
   ! ... bring rho (aux) to G space
   !
@@ -1035,7 +1178,7 @@ SUBROUTINE v_h_grid( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
   !
   CALL reduce( 1, charge )
   !
-  PRINT *, 'charge=', charge, tot_multipole(1)*sqrt(fpi)
+  !PRINT *, 'charge=', charge, tot_multipole(1)*sqrt(fpi)
   !
   ! ... calculate hartree potential in G-space (NB: only G/=0 )
   !
@@ -1098,7 +1241,7 @@ SUBROUTINE v_h_grid( rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
   ! Add analytic contribution from gaussian charges to Hartree energy
   ehart = ehart +  e2 * (charge**2 + p2*alpha / 3.0_DP) * SQRT(alpha/TPI) 
   edip_r = e2 * p2*alpha / 3.0_DP * SQRT(alpha/TPI) 
-  PRINT '(A,4f12.8)','EDIP',edip_g0,edip_g,edip_r, edip_g0+edip_g+edip_r
+  !PRINT '(A,4f12.8)','EDIP',edip_g0,edip_g,edip_r, edip_g0+edip_g+edip_r
   !
 #if defined __DEBUG_NEWD_PAW_GRID
 !  PRINT '(A,3f20.10)', 'SPHEROPOLE,CHARGE:              ', charge, &
@@ -1255,17 +1398,23 @@ SUBROUTINE newd_paw_grid(na)
   INTEGER,INTENT(IN) :: na
   INTEGER :: i, ir, is, nir
   REAL(DP) :: deltav, average, rms
+
+  WRITE(*,*) "***************************************"
+  WRITE(*,*) "* newd_paw_grid: I SHOULD NOT BE HERE *"
+  WRITE(*,*) "***************************************"
   !
   IF ( .NOT. okpaw ) RETURN
    call start_clock ('newd_paw')
   !
   !PRINT '(A)', 'WARNING newd_paw_grid contains only H+xc potentials'
   !
+!  write(6,"(a)") "Now AE part:"
   CALL integrate_potential_x_charge (prad,  vr1,  aevloc_r, dpaw_ae,  &
        SIZE(prad,1),SIZE(prad,2),SIZE(prad,3),SIZE(prad,4), &
        SIZE(vr1,1),SIZE(vr1,2),SIZE(vr1,3),                 &
        SIZE(aevloc_r,1),SIZE(aevloc_r,2),                   &
        SIZE(dpaw_ae,1),SIZE(dpaw_ae,2),SIZE(dpaw_ae,3),SIZE(dpaw_ae,4))
+!  write(6,"(a)") "Now PS part:"
   CALL integrate_potential_x_charge (ptrad, vr1t, psvloc_r, dpaw_ps,  &
        SIZE(prad,1),SIZE(prad,2),SIZE(prad,3),SIZE(prad,4), &
        SIZE(vr1,1),SIZE(vr1,2),SIZE(vr1,3),                 &
@@ -1273,10 +1422,11 @@ SUBROUTINE newd_paw_grid(na)
        SIZE(dpaw_ae,1),SIZE(dpaw_ae,2),SIZE(dpaw_ae,3),SIZE(dpaw_ae,4))
    call stop_clock ('newd_paw')
   !
-CONTAINS
+ CONTAINS
   !
   SUBROUTINE integrate_potential_x_charge (prad_, vr_, vl_, dpaw_, &
        sp1,sp2,sp3,sp4, sv1,sv2,sv3, sl1,sl2, sd1,sd2,sd3,sd4)
+#define __DEBUG_NEWD_PAW_GRID
     USE kinds,                ONLY : DP
     USE ions_base,            ONLY : nat, ntyp => nsp, ityp
     USE cell_base,            ONLY : omega
@@ -1307,10 +1457,15 @@ CONTAINS
     ! spherical harmonics, modulus of G
     REAL(DP) :: fact, DDOT
     !
+
+    nt = ityp(na)
+!     PRINT *, 'BEFORE:'
+!     PRINT '(8f15.7)', ((dpaw_(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
+    !
     IF ( gamma_only ) THEN
-       fact = 2.D0
+       fact = 2._DP
     ELSE
-       fact = 1.D0
+       fact = 1._DP
     END IF
     !
     ALLOCATE( aux(ngm,nspin), qgm(ngm), qmod(ngm), ylmk0(ngm,lmaxq*lmaxq) )
@@ -1321,14 +1476,17 @@ CONTAINS
     !
     qmod(1:ngm) = SQRT( gg(1:ngm) )
     !
-! LOOP on NA removed to complain with new newd.f0 structure!!
+! LOOP on NA removed to complain with new newd.f90 structure!!
 !!$    DO na=1, nat
        ! The type is fixed
-       nt = ityp(na)
        !
        ! ... fourier transform of the total effective potential
        DO is = 1, nspin
-          psic(:) = vl_(:,nt) + vr_(:,is,na)
+#ifdef __NO_LOCAL
+          psic(:) = vr_(:,is,na)
+#else
+          psic(:) = vr_(:,is,na) + vl_(:,nt)
+#endif
           CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1 )
           aux(1:ngm,is) = psic( nl(1:ngm) )
        END DO
@@ -1374,8 +1532,8 @@ CONTAINS
     CALL reduce( nhm * nhm * nat * nspin, dpaw_ )
     !
 #if defined __DEBUG_NEWD_PAW_GRID
-!    PRINT *, 'D - D1 or D1~'
-!    PRINT '(8f15.7)', ((dpaw_(jh,ih,1,1),jh=1,nh(nt)),ih=1,nh(nt))
+!     PRINT *, 'AFTER:'
+!     PRINT '(8f15.7)', ((dpaw_(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
 #endif
     !
     DEALLOCATE( aux, qgm, qmod, ylmk0 )
@@ -1384,116 +1542,6 @@ CONTAINS
     
 END SUBROUTINE newd_paw_grid
 
-! Initialize becsum with atomic occupations (for PAW atoms only)
-! Notice: requires exact correspondence chi <--> beta in the atom,
-! that is that all wavefunctions considered for PAW generation are
-! counted in chi (otherwise the array "oc" does not correspond to beta)
-!#define __DEBUG_ATOMIC_BECSUM
-SUBROUTINE atomic_becsum()
-  USE kinds,              ONLY : DP
-  USE uspp,               ONLY : becsum, nhtol, indv
-  USE uspp_param,         ONLY : nh
-  USE ions_base,          ONLY : nat, ityp
-  USE lsda_mod,           ONLY : nspin, starting_magnetization
-  USE atom,               ONLY : oc
-  USE grid_paw_variables, ONLY : tpawp, okpaw
-  IMPLICIT NONE
-  INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
-  !
-  IF (.NOT. okpaw) RETURN
-  !
-  if (nspin.GT.2) STOP 'atomic_becsum not implemented'
-  !
-  na_loop: DO na = 1, nat
-     nt = ityp(na)
-     is_paw: IF (tpawp(nt)) THEN
-        !
-        ijh = 1
-        ih_loop: DO ih = 1, nh(nt)
-           nb = indv(ih,nt)
-           !
-#if defined __DEBUG_ATOMIC_BECSUM
-           PRINT *, ijh,ih,nb,oc(nb,nt),nhtol(ih,nt)
-#endif
-           IF (nspin==1) THEN
-              !
-              becsum(ijh,na,1) = oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
-              !
-           ELSE IF (nspin==2) THEN
-              !
-              becsum(ijh,na,1) = 0.5d0 * (1.d0 + starting_magnetization(nt))* &
-                                 oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
-              becsum(ijh,na,2) = 0.5d0 * (1.d0 - starting_magnetization(nt))* &
-                                 oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
-              !
-           END IF
-           ijh = ijh + 1
-           !
-           jh_loop: DO jh = ( ih + 1 ), nh(nt)
-              !mb = indv(jh,nt)
-              DO ispin = 1, nspin
-                 becsum(ijh,na,ispin) = 0._DP
-              END DO
-              ijh = ijh + 1
-              !
-           END DO jh_loop
-        END DO ih_loop
-     END IF is_paw
-  END DO na_loop
-
-#if defined __DEBUG_ATOMIC_BECSUM
-  PRINT '(1f20.10)', becsum(:,1,1)
-#endif
-
-END SUBROUTINE atomic_becsum
-
-
-  ! Analogous to PW/init_vloc.f90
-  SUBROUTINE init_paw_vloc
-    !
-    USE kinds, ONLY: DP
-    USE atom,       ONLY : rgrid, msh
-    USE ions_base,  ONLY : ntyp => nsp
-    USE cell_base,  ONLY : omega, tpiba2
-    USE gvect,      ONLY : ngl, gl
-    USE uspp_param, ONLY : upf
-    USE grid_paw_variables, ONLY: aevloc_at, psvloc_at, aevloc, psvloc
-    !
-    IMPLICIT NONE
-    !
-    INTEGER :: nt
-    ! counter on atomic types
-    !
-    REAL(DP), POINTER :: vloc_at_(:,:)
-    REAL(DP), POINTER :: vloc_(:,:)
-    INTEGER :: i_what
-    !  
-   call start_clock ('init_pawvloc')
-    whattodo: DO i_what=1, 2
-    ! associate a pointer to the AE or PS part
-       NULLIFY(vloc_at_,vloc_)
-       IF (i_what==1) THEN
-          vloc_at_ => aevloc_at
-          vloc_    => aevloc
-       ELSE IF (i_what==2) THEN
-          vloc_at_ => psvloc_at
-          vloc_    => psvloc
-       END IF
-       vloc_(:,:) = 0.d0
-       DO nt = 1, ntyp
-       !
-       ! compute V_loc(G) for a given type of atom
-       !
-       CALL vloc_of_g_noerf (rgrid(nt)%mesh, &
-            msh (nt), rgrid(nt)%rab(1), rgrid(nt)%r(1), vloc_at_ (:, nt), &
-            upf(nt)%zp, tpiba2, ngl, gl, omega, vloc_ (:, nt) )
-       END DO
-    END DO whattodo 
-   call stop_clock ('init_pawvloc')
-    !
-    RETURN
-    !
-  END SUBROUTINE init_paw_vloc
 
 ! Adapted from vloc_of_g.f90, for bounded potentials: don't add erf(r)/r
 ! because we don't assume anymore that v(r)\approx 2*e^2*zp/r at large r
@@ -1747,5 +1795,7 @@ END FUNCTION delta_e_1
   RETURN
   !
 END FUNCTION delta_e_1scf
+
+#endif
 
 END MODULE grid_paw_routines

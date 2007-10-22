@@ -611,7 +611,6 @@ set_asr_c.o : ../Modules/kind.o
 set_drhoc.o : ../Modules/atom.o
 set_drhoc.o : ../Modules/ions_base.o
 set_drhoc.o : ../Modules/kind.o
-set_drhoc.o : ../Modules/radial_grids.o
 set_drhoc.o : ../PW/pwcom.o
 set_drhoc.o : phcom.o
 set_dvscf.o : ../Modules/kind.o

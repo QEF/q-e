@@ -41,7 +41,10 @@ SUBROUTINE newd_g()
   !
   USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, &
        &                           kdiff, dpaw_ae, dpaw_ps
+#ifdef __GRID_PAW
   USE grid_paw_routines,    ONLY : newd_paw_grid
+#endif
+  USE rad_paw_routines,     ONLY : PAW_newd
   USE uspp,                 ONLY : nhtol, nhtolm
   !
   IMPLICIT NONE
@@ -192,6 +195,38 @@ SUBROUTINE newd_g()
   !
   CALL reduce( nhm * nhm * nat * nspin0, deeq )
   !
+
+  IF (okpaw) THEN
+  ! prepare non-kinetic paw contribution to D coefficients
+  ! (they are added later in the "atoms" loop)
+#ifdef __GRID_PAW
+            dpaw_ae=0._dp
+            dpaw_ps=0._dp
+            CALL newd_paw_grid(na)
+    IF (na==1) THEN
+    PRINT '(a)','--------------------------------------------------'
+    PRINT *, 'GRID AE 1:'
+    PRINT '(8f15.7)', (((dpaw_ae(jh,ih,na,1)),jh=1,nh(nt)),ih=1,nh(nt))
+    PRINT '(8f15.7)', 0.,0.,0.,0.,0.,0.,0.,0.
+    PRINT '(8f15.7)', (((dpaw_ae(jh,ih,na,2)),jh=1,nh(nt)),ih=1,nh(nt))
+    ENDIF
+            dpaw_ae=0._dp
+            dpaw_ps=0._dp
+#endif
+            CALL PAW_newd(dpaw_ae, dpaw_ps)
+!#define __VERBOSE_PAW_NEWD
+#ifdef __VERBOSE_PAW_NEWD
+    PRINT *, 'deeq 1:'
+    PRINT '(8f15.7)', ((deeq(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
+    PRINT *, 'ddd AE 1:'
+    PRINT '(8f15.7)', ((dpaw_ae(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
+    PRINT *, 'ddd PS 1:'
+    PRINT '(8f15.7)', ((dpaw_ps(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
+!     STOP
+#endif
+  ENDIF
+
+  atoms : &
   DO na = 1, nat
      !
      nt  = ityp(na)
@@ -209,9 +244,8 @@ SUBROUTINE newd_g()
         END IF
         !
      ELSE if_noncolin
-        if_paw:&
+        paw:&
         IF (okpaw) THEN
-            CALL newd_paw_grid(na)
             !
             DO is = 1, nspin
             !
@@ -221,10 +255,10 @@ SUBROUTINE newd_g()
             DO jh = ih, nh(nt)
                 mb = indv(jh,nt)
                 !
-                IF ( nhtol (ih, nt) == nhtol (jh, nt) .AND. &
-                        nhtolm(ih, nt) == nhtolm(jh, nt)       ) THEN
+                IF ( nhtol (ih, nt) == nhtol (jh, nt) .and. &
+                     nhtolm(ih, nt) == nhtolm(jh, nt) ) THEN
                     deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
-                        kdiff(nb,mb,nt)
+                                        kdiff(nb,mb,nt)
                 END if
                 !
                 deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
@@ -237,7 +271,7 @@ SUBROUTINE newd_g()
             END DO
             !
             END DO
-        ELSE if_paw
+        ELSE paw
             !
             DO is = 1, nspin
             !
@@ -253,11 +287,11 @@ SUBROUTINE newd_g()
             END DO
             !
             END DO
-        END IF if_paw
+        END IF paw
         !
      END IF if_noncolin
      !
-  END DO
+  END DO atoms
   !
   DEALLOCATE( aux, qgm_na, qgm, qmod, ylmk0 )
   !

@@ -62,17 +62,19 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
-  !!PAW]
+#ifdef __GRID_PAW
   USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, &
        ehart1, ehart1t, etxc1, etxc1t, deband_1ae, deband_1ps,  &
        descf_1ae, descf_1ps, rho1, rho1t, rho1new, rho1tnew,  &
        vr1, vr1t, becnew
   USE grid_paw_routines,    ONLY : compute_onecenter_potentials, &
        compute_onecenter_charges, delta_e_1, delta_e_1scf
-  USE rad_paw_routines,     ONLY : PAW_energy
-  USE uspp,                 ONLY : becsum
-  USE uspp_param,           ONLY : nhm
-  !!PAW]
+#else
+  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, becnew
+#endif
+  USE rad_paw_routines,     ONLY : PAW_potential,PAW_integrate
+  USE uspp,                 ONLY : becsum  ! used for PAW
+  USE uspp_param,           ONLY : nhm     ! used for PAW
   !
   IMPLICIT NONE
   !
@@ -111,16 +113,17 @@ SUBROUTINE electrons()
   REAL(DP), EXTERNAL :: ewald, get_clock
   !
   ! ... additional variables for PAW
-  REAL(DP), ALLOCATABLE :: becstep(:,:,:)
+  REAL(DP), ALLOCATABLE :: becstep(:,:,:)   ! cross-band occupations, used for mixing
+  REAL (DP) :: deband_PAW, descf_PAW, e_PAW ! deband, descf and E corrections from PAW
+  REAL (DP) :: correction1c                 ! total PAW correction
+#ifdef __GRID_PAW
   INTEGER :: na
-  INTEGER,PARAMETER :: AE=1,PS=2,XC=1,H=2
-  REAL (DP) :: correction1c
   REAL (DP), ALLOCATABLE :: deband_1ps_na(:), deband_1ae_na(:), & ! auxiliary info on
                             descf_1ps_na(:),  descf_1ae_na(:)     ! one-center corrections
-  REAL (DP)              :: paw_correction(nat,2,2) ! {# of atoms}, {XC|H}, {AE|PS}
   !
   IF (okpaw) ALLOCATE ( deband_1ae_na(nat), deband_1ps_na(nat), &
                         descf_1ae_na(nat),  descf_1ps_na(nat) )
+#endif
   !
   iter = 0
   ik_  = 0
@@ -135,7 +138,9 @@ SUBROUTINE electrons()
         !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho ()
         !
+#ifdef __GRID_PAW
         IF (okpaw) DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
+#endif
         RETURN
         !
      END IF
@@ -156,7 +161,9 @@ SUBROUTINE electrons()
      !
      conv_elec = .TRUE.
      !
+#ifdef __GRID_PAW
      IF (okpaw) DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
+#endif
      !
      RETURN
      !
@@ -190,10 +197,11 @@ SUBROUTINE electrons()
   !
   IF (okpaw) THEN
      IF ( .not. ALLOCATED(becstep) ) ALLOCATE (becstep(nhm*(nhm+1)/2,nat,nspin))
-     becstep (:,:,:) = 0.d0
-     DO na = 1, nat       
-        IF (tpawp(ityp(na))) becstep(:,na,:) = becsum(:,na,:)
-     END DO
+     becstep (:,:,:) = 0._dp
+!      DO na = 1, nat       
+!         IF (tpawp(ityp(na))) becstep(:,na,:) = becsum(:,na,:)
+!      END DO
+       becstep(:,:,:) = becsum(:,:,:)
   END IF
   !
   DO idum = 1, niter
@@ -354,19 +362,24 @@ SUBROUTINE electrons()
         !
         ! ... update core occupations for PAW
         IF (okpaw) THEN
+#ifdef __GRID_PAW
            CALL compute_onecenter_charges (becsum,rho1,rho1t)
            !
-           deband_1ae = delta_e_1(rho1, vr1, deband_1ae_na)  !AE
-           deband_1ps = delta_e_1(rho1t,vr1t,deband_1ps_na)  !PS
-           !
-           CALL infomsg ('electrons','mixing several times ns if lda_plus_U')
+           deband_1ae = delta_e_1(rho1, vr1, deband_1ae_na) !AE
+           deband_1ps = delta_e_1(rho1t,vr1t,deband_1ps_na) !PS
+           write(6,"(a,2f12.6)") " == deband (grid PAW): ", deband_1ae-deband_1ps
+#endif
+           deband_PAW = - PAW_integrate(becsum)
+           !write(6,"(a,2f13.8)") " == deband (radial PAW): ", deband_PAW
+           !CALL infomsg ('electrons','mixing several times ns if lda_plus_U')
            IF (lda_plus_U) STOP 'electrons - not implemented'
            !
            ALLOCATE (becnew(nhm*(nhm+1)/2, nat, nspin) )
-           becnew(:,:,:) = 0.d0
-           DO na = 1, nat
-              IF (tpawp(ityp(na))) becnew(:,na,:) = becsum(:,na,:)
-           END DO
+           becnew(:,:,:) = 0._DP
+!            DO na = 1, nat
+!               IF (tpawp(ityp(na))) becnew(:,na,:) = becsum(:,na,:)
+!            END DO
+           becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
         CALL mix_rho( rhognew, rhog, taukgnew, taukg, becnew, becstep, &
@@ -417,6 +430,7 @@ SUBROUTINE electrons()
            !
         END IF
         !
+        not_converged_electrons : &
         IF ( .NOT. conv_elec ) THEN
            !
            ! ... bring mixed charge density (rhog) from G- to R-space (rhonew)
@@ -484,58 +498,33 @@ SUBROUTINE electrons()
            !
            ! ... compute PAW corrections to descf
            IF (okpaw) THEN
-              ! ... radial PAW:
-              CALL PAW_energy(becstep,paw_correction)
               !
               ! ... grid PAW:
+#ifdef __GRID_PAW
               ALLOCATE (rho1new (nrxx,nspin,nat), rho1tnew(nrxx,nspin,nat) )
               !
               CALL compute_onecenter_charges   (becstep,rho1new,rho1tnew)
-              WRITE(*,*) "== rho max diff: ", MAXVAL(ABS(rho1(:,:,:)-rho1t(:,:,:)))
               CALL compute_onecenter_potentials(becstep,rho1new,rho1tnew)
               !
               descf_1ae = delta_e_1scf(rho1, rho1new, vr1, descf_1ae_na)  ! AE
               descf_1ps = delta_e_1scf(rho1t,rho1tnew,vr1t,descf_1ps_na)  ! PS
-!#define __PAW_REPORT
-#ifdef __PAW_REPORT
-                    WRITE(6,"(a,f15.10)") "==PAW (HARTREE):    GRID          RAD"
-                    DO i = 1,nat
-                        WRITE(6,"(a,i2,a,2f15.10)") "==AE",i,"     :", ehart1(i),paw_correction(i,H,AE)
-                        WRITE(6,"(a,i2,a,2f15.10)") "==PS",i,"     :", ehart1t(i),paw_correction(i,H,PS)
-                        WRITE(6,"(a,i2,a,2f15.10)") "==AE-PS",i,"  :", ehart1(i)-ehart1t(i),&
-                                                        paw_correction(i,H,AE)-paw_correction(i,H,PS)
-                    ENDDO
-                    WRITE(6,"(a,2f15.10)") "==AE tot   :", SUM(ehart1(:)),SUM(paw_correction(:,H,AE))
-                    WRITE(6,"(a,2f15.10)") "==PS tot   :", SUM(ehart1t(:)),SUM(paw_correction(:,H,PS))
-                    WRITE(6,"(a,2f15.10)") "==AE-PS tot:", SUM(ehart1(:))-SUM(ehart1t(:)),&
-                                                        SUM(paw_correction(:,H,AE))-SUM(paw_correction(:,H,PS))
-                    WRITE(6,"(a,2f15.10)") "=="
-                    !
-                    WRITE(6,"(a,2f15.10)") "==PAW (XC):        GRID          RAD"
-                    DO i = 1,nat
-                        WRITE(6,"(a,i2,a,2f15.10)") "==AE",i,"     :", etxc1(i),paw_correction(i,XC,AE)
-                        WRITE(6,"(a,i2,a,2f15.10)") "==PS",i,"     :", etxc1t(i),paw_correction(i,XC,PS)
-                        WRITE(6,"(a,i2,a,2f15.10)") "==AE-PS",i,"  :", etxc1(i)-etxc1t(i),&
-                                                        paw_correction(i,XC,AE)-paw_correction(i,XC,PS)
-                    ENDDO
-                    WRITE(6,"(a,2f15.10)") "==AE tot   :", SUM(etxc1(:)),SUM(paw_correction(:,XC,AE))
-                    WRITE(6,"(a,2f15.10)") "==PS tot   :", SUM(etxc1t(:)),SUM(paw_correction(:,XC,PS))
-                    WRITE(6,"(a,2f15.10)") "==AE-PS tot:", SUM(etxc1(:))-SUM(etxc1t(:)),&
-                                                        SUM(paw_correction(:,XC,AE))-SUM(paw_correction(:,XC,PS))
-                    WRITE(6,"(a,2f15.10)") "=="
-                    WRITE(6,"(a,2f15.10)") "==TOTAL:", SUM(etxc1(:))-SUM(etxc1t(:))+SUM(ehart1(:))-SUM(ehart1t(:)),&
-                                                    SUM(paw_correction(:,XC,AE))-SUM(paw_correction(:,XC,PS))+&
-                                                    SUM(paw_correction(:,H,AE))-SUM(paw_correction(:,H,PS))
-#endif
               !
               DEALLOCATE (rho1new, rho1tnew)
+              DO na = 1,nat
+                 write(*,"(a,2i2,2f10.5,a)") " == ",1,na, ehart1(na), etxc1(na),"(gu)"
+                 write(*,"(a,2i2,2f10.5,a)") " == ",2,na, ehart1t(na), etxc1t(na),"(gu)"
+              ENDDO
+#endif
+              CALL PAW_potential(becstep, e_PAW)
+              descf_PAW = - PAW_integrate(becstep-becsum)
+              !write(6,"(a,2f12.6)") " == descf:  ", descf_1ae-descf_1ps, descf_PAW
            END IF
            !
            ! ... write the charge density to file
            !
            CALL write_rho( rho, nspin )
            !
-        ELSE
+        ELSE not_converged_electrons
            !
            ! ... convergence reached:
            ! ... 1) the output HXC-potential is saved in vr
@@ -550,25 +539,35 @@ SUBROUTINE electrons()
            !
            ! CHECKME: is it becsum or becstep??
            IF (okpaw) THEN
-               CALL PAW_energy(becstep, paw_correction)
+#ifdef __GRID_PAW
                CALL compute_onecenter_potentials(becsum,rho1,rho1t)
-               CALL infomsg ('electrons','PAW forces missing')
+               DO na = 1,nat
+                  write(*,"(a,2i2,2f10.5,a)") " == ",1,na, ehart1(na), etxc1(na),"(g)"
+                  write(*,"(a,2i2,2f10.5,a)") " == ",2,na, ehart1t(na), etxc1t(na),"(g)"
+               ENDDO
+#endif
+               CALL PAW_potential(becsum, e_PAW)
+               !write(*,"(a,f13.8)") " == energy (radial PAW)",e_PAW
+               !CALL infomsg ('electrons','PAW forces missing')
            ENDIF
            !
            ! ... note that rho is the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
            !
-           descf = 0.D0
+           descf = 0._dp
            !
+#ifdef __GRID_PAW
            IF (okpaw) THEN
-              descf_1ae=0._DP
-              descf_1ps=0._DP
-              descf_1ae_na(:)=0.d0
-              descf_1ps_na(:)=0.d0
+              descf_1ae=0._dp
+              descf_1ps=0._dp
+              descf_1ae_na(:)=0._dp
+              descf_1ps_na(:)=0._dp
            ENDIF
+#endif
+           IF (okpaw) descf_PAW  = 0._dp
            !
            !
-        END IF
+        END IF not_converged_electrons
         !
 #if defined (EXX)
         IF ( exx_is_active() ) THEN
@@ -652,18 +651,29 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      !
      IF (okpaw) THEN
-        WRITE(stdout,'(A,F15.8)') 'US energy before PAW additions', etot
+#ifdef __GRID_PAW
         DO na = 1, nat
            IF (tpawp(ityp(na))) THEN
               correction1c = ehart1(na) -ehart1t(na) +etxc1(na) -etxc1t(na) + &
-                             deband_1ae_na(na) - deband_1ps_na(na) +           &
-                             descf_1ae_na(na) - descf_1ps_na(na)
-              PRINT '(4x,A,I3,A,F15.8)', 'atom #: ', na, ' grid correction: ', correction1c
-              PRINT '(4x,A,I3,A,F15.8)', 'atom #: ', na, ' rad correction:  ', &
-                    SUM(paw_correction(na,:,AE)-paw_correction(na,:,PS))
-              IF (really_do_paw) etot = etot + correction1c
+                             deband_1ae_na(na) - deband_1ps_na(na) +          &
+                             descf_1ae_na(na)  - descf_1ps_na(na)
+              PRINT *, "== "
+              PRINT '(A,I1,A,F13.8)', ' == atom #: ', na, ' grid correction: ', correction1c
+              PRINT '(A,4f13.8)', ' == ',deband_1ae_na(na) - deband_1ps_na(na),&
+                                descf_1ae_na(na)  - descf_1ps_na(na),&
+                                ehart1(na) -ehart1t(na) +etxc1(na) -etxc1t(na)
+              PRINT *, "== == == == == == =="
           END IF
         END DO
+#endif
+              correction1c = (deband_PAW + descf_PAW + e_PAW)
+              PRINT '(5x,A,f10.6,A)', 'PAW correction: ',correction1c, ', composed of: '
+              PRINT '(5x,A,f10.6,A,f10.6,A,f10.6)',&
+                 'de_band: ',deband_PAW,', de_scf: ',descf_PAW,', 1-center E: ', e_PAW
+              IF (really_do_paw) THEN
+                  etot = etot + correction1c
+                  hwf_energy = hwf_energy + correction1c
+              ENDIF
      END IF
      !
 #if defined (EXX)
@@ -736,6 +746,7 @@ SUBROUTINE electrons()
         IF ( tefield ) WRITE( stdout, 9061 ) etotefield
         IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
         IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
+        IF( okpaw) WRITE( stdout, 9067 ) correction1c
         !
         ! ... With Fermi-Dirac population factor, etot is the electronic
         ! ... free energy F = E - TS , demet is the -TS contribution
@@ -804,7 +815,9 @@ SUBROUTINE electrons()
         !DEALLOCATE (rhog) |should be elsewhere
         IF (okpaw) THEN
            DEALLOCATE (becstep)
+#ifdef __GRID_PAW
            DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
+#endif
         END IF
         !
         RETURN
@@ -849,8 +862,9 @@ SUBROUTINE electrons()
 9062 FORMAT( '     Fock energy 1             =',F15.8,' Ry' )
 9063 FORMAT( '     Fock energy 2             =',F15.8,' Ry' )
 9064 FORMAT( '     Half Fock energy 2        =',F15.8,' Ry' )
-9066 FORMAT( '     dexx                      =',F15.8,' Ry' )
 9065 FORMAT( '     Hubbard energy            =',F15.8,' Ry' )
+9066 FORMAT( '     dexx                      =',F15.8,' Ry' )
+9067 FORMAT( '     one-center paw contrib.   =',F15.8,' Ry' )
 9069 FORMAT( '     scf correction            =',F15.8,' Ry' )
 9070 FORMAT( '     smearing contrib. (-TS)   =',F15.8,' Ry' )
 9071 FORMAT( '     Magnetic field            =',3F12.7,' Ry' )

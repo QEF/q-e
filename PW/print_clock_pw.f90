@@ -178,25 +178,39 @@ SUBROUTINE print_clock_pw()
    CALL print_clock ('cycleig')
 #endif
    !
-IF ( okpaw ) THEN
-   WRITE( stdout, '(5X,"PAW routines")' )
-   call print_clock ('init_prad')
-   call print_clock ('paw_prod_p')
-   call print_clock ('one-charge')
-   call print_clock ('one-pot')
-   call print_clock ('pvan2')
-   call print_clock ('set_paw_rhoc')
-   call print_clock ('v_h_grid')
-   call print_clock ('newd_paw')
-   call print_clock ('init_pawvloc')
-   call print_clock ('vloc_of_g_no')
-   call print_clock ('paw_setlocal')
-   ! radial routines:
-   CALL print_clock ('PAW_energy')
-   CALL print_clock ('PAW_rho_lm')
-   CALL print_clock ('PAW_h_energy')
-   CALL print_clock ('PAW_sph_int')
-END IF
+   IF ( okpaw ) THEN
+      WRITE( stdout, '(5X,"PAW routines")' )
+#ifdef __GRID_PAW
+      call print_clock ('init_prad')
+      call print_clock ('paw_prod_p')
+      call print_clock ('one-charge')
+      call print_clock ('one-pot')
+      call print_clock ('pvan2')
+      call print_clock ('set_paw_rhoc')
+      call print_clock ('v_h_grid')
+      call print_clock ('newd_paw')
+      call print_clock ('init_pawvloc')
+      call print_clock ('vloc_of_g_no')
+      call print_clock ('paw_setlocal')
+#endif
+      ! radial routines:
+      CALL print_clock ('PAW_pot')
+      CALL print_clock ('PAW_newd')
+      CALL print_clock ('PAW_int')
+      CALL print_clock ('PAW_ddot')
+      CALL print_clock ('PAW_rad_init')
+      CALL print_clock ('PAW_energy')
+      ! second level routines:
+      CALL print_clock ('PAW_rho_lm')
+      CALL print_clock ('PAW_h_pot')
+      CALL print_clock ('PAW_xc_pot')
+      CALL print_clock ('PAW_lm2rad')
+      CALL print_clock ('PAW_rad2lm')
+      ! third level, or deeper:
+      CALL print_clock ('PAW_gcxc_v')
+      CALL print_clock ('PAW_div')
+      CALL print_clock ('PAW_grad')
+   END IF
    !
    RETURN
    !

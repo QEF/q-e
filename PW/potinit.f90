@@ -50,8 +50,14 @@ SUBROUTINE potinit()
   USE io_rho_xml,           ONLY : read_rho
   !
   USE uspp,               ONLY : becsum
-  USE grid_paw_variables, ONLY : rho1, rho1t
+#ifdef __GRID_PAW
+  USE grid_paw_variables, ONLY : rho1, rho1t, okpaw
   USE grid_paw_routines,  ONLY : atomic_becsum, compute_onecenter_charges, compute_onecenter_potentials
+#else
+  USE grid_paw_variables, ONLY : okpaw
+  USE grid_paw_routines,  ONLY : atomic_becsum
+#endif
+  USE rad_paw_routines,   ONLY : PAW_potential
   !
   IMPLICIT NONE
   !
@@ -239,9 +245,14 @@ SUBROUTINE potinit()
   ! ... PAW initialization: from atomic augmentation channel occupations
   ! ... compute corresponding one-center charges and potentials
   !
-  CALL atomic_becsum()
-  CALL compute_onecenter_charges(becsum,rho1,rho1t)
-  CALL compute_onecenter_potentials(becsum,rho1,rho1t)
+  IF ( okpaw ) THEN
+    CALL atomic_becsum()
+    CALL PAW_potential(becsum)
+#ifdef __GRID_PAW
+    CALL compute_onecenter_charges(becsum,rho1,rho1t)
+    CALL compute_onecenter_potentials(becsum,rho1,rho1t)
+#endif
+  ENDIF
   !
   RETURN
   !
