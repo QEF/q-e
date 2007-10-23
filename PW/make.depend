@@ -62,7 +62,6 @@ allocate_locpot.o : ../Modules/ions_base.o
 allocate_locpot.o : pwcom.o
 allocate_nlpot.o : ../Modules/cell_base.o
 allocate_nlpot.o : ../Modules/ions_base.o
-allocate_nlpot.o : ../Modules/parameters.o
 allocate_nlpot.o : ../Modules/uspp.o
 allocate_nlpot.o : noncol.o
 allocate_nlpot.o : pwcom.o
@@ -78,19 +77,17 @@ atomic_rho.o : ../Modules/kind.o
 atomic_rho.o : ../Modules/wavefunctions.o
 atomic_rho.o : noncol.o
 atomic_rho.o : pwcom.o
-atomic_wfc.o : ../Modules/atom.o
 atomic_wfc.o : ../Modules/cell_base.o
 atomic_wfc.o : ../Modules/constants.o
 atomic_wfc.o : ../Modules/ions_base.o
 atomic_wfc.o : ../Modules/kind.o
-atomic_wfc.o : ../Modules/parameters.o
+atomic_wfc.o : ../Modules/uspp.o
 atomic_wfc.o : pwcom.o
-atomic_wfc_nc.o : ../Modules/atom.o
 atomic_wfc_nc.o : ../Modules/cell_base.o
 atomic_wfc_nc.o : ../Modules/constants.o
 atomic_wfc_nc.o : ../Modules/ions_base.o
 atomic_wfc_nc.o : ../Modules/kind.o
-atomic_wfc_nc.o : ../Modules/parameters.o
+atomic_wfc_nc.o : ../Modules/uspp.o
 atomic_wfc_nc.o : noncol.o
 atomic_wfc_nc.o : pwcom.o
 average_pp.o : ../Modules/atom.o
@@ -314,7 +311,6 @@ divide_et_impera.o : ../Modules/io_global.o
 divide_et_impera.o : ../Modules/kind.o
 divide_et_impera.o : ../Modules/mp_global.o
 divide_et_impera.o : exx.o
-dndepsilon.o : ../Modules/atom.o
 dndepsilon.o : ../Modules/io_files.o
 dndepsilon.o : ../Modules/ions_base.o
 dndepsilon.o : ../Modules/kind.o
@@ -326,7 +322,6 @@ dndepsilon.o : pwcom.o
 dndtau_of_k.o : ../Modules/ions_base.o
 dndtau_of_k.o : ../Modules/kind.o
 dndtau_of_k.o : pwcom.o
-dprojdepsilon.o : ../Modules/atom.o
 dprojdepsilon.o : ../Modules/cell_base.o
 dprojdepsilon.o : ../Modules/ions_base.o
 dprojdepsilon.o : ../Modules/kind.o
@@ -334,7 +329,6 @@ dprojdepsilon.o : ../Modules/uspp.o
 dprojdepsilon.o : ../Modules/wavefunctions.o
 dprojdepsilon.o : becmod.o
 dprojdepsilon.o : pwcom.o
-dprojdtau.o : ../Modules/atom.o
 dprojdtau.o : ../Modules/cell_base.o
 dprojdtau.o : ../Modules/ions_base.o
 dprojdtau.o : ../Modules/kind.o
@@ -424,7 +418,6 @@ force_corr.o : ../Modules/wavefunctions.o
 force_corr.o : pwcom.o
 force_ew.o : ../Modules/constants.o
 force_ew.o : ../Modules/kind.o
-force_hub.o : ../Modules/atom.o
 force_hub.o : ../Modules/cell_base.o
 force_hub.o : ../Modules/io_files.o
 force_hub.o : ../Modules/ions_base.o
@@ -464,7 +457,7 @@ gen_at_dj.o : ../Modules/constants.o
 gen_at_dj.o : ../Modules/io_global.o
 gen_at_dj.o : ../Modules/ions_base.o
 gen_at_dj.o : ../Modules/kind.o
-gen_at_dj.o : ../Modules/parameters.o
+gen_at_dj.o : ../Modules/uspp.o
 gen_at_dj.o : pwcom.o
 gen_at_dy.o : ../Modules/atom.o
 gen_at_dy.o : ../Modules/cell_base.o
@@ -472,7 +465,7 @@ gen_at_dy.o : ../Modules/constants.o
 gen_at_dy.o : ../Modules/io_global.o
 gen_at_dy.o : ../Modules/ions_base.o
 gen_at_dy.o : ../Modules/kind.o
-gen_at_dy.o : ../Modules/parameters.o
+gen_at_dy.o : ../Modules/uspp.o
 gen_at_dy.o : pwcom.o
 gen_us_dj.o : ../Modules/cell_base.o
 gen_us_dj.o : ../Modules/constants.o
@@ -573,7 +566,7 @@ init_at_1.o : ../Modules/cell_base.o
 init_at_1.o : ../Modules/constants.o
 init_at_1.o : ../Modules/ions_base.o
 init_at_1.o : ../Modules/kind.o
-init_at_1.o : ../Modules/parameters.o
+init_at_1.o : ../Modules/uspp.o
 init_at_1.o : pwcom.o
 init_ns.o : ../Modules/ions_base.o
 init_ns.o : ../Modules/kind.o
@@ -651,12 +644,12 @@ input.o : pwcom.o
 input.o : realus.o
 interpolate.o : ../Modules/kind.o
 interpolate.o : pwcom.o
-io_rho_xml.o : ../Modules/aa.o
 io_rho_xml.o : ../Modules/io_files.o
 io_rho_xml.o : ../Modules/io_global.o
 io_rho_xml.o : ../Modules/kind.o
 io_rho_xml.o : ../Modules/mp.o
 io_rho_xml.o : ../Modules/mp_global.o
+io_rho_xml.o : ../Modules/xml_io_base.o
 io_rho_xml.o : pwcom.o
 ions.o : ../Modules/control_flags.o
 ions.o : pwcom.o
@@ -727,11 +720,11 @@ multable.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/kind.o
 n_plane_waves.o : ../Modules/mp.o
 n_plane_waves.o : ../Modules/mp_global.o
-new_ns.o : ../Modules/atom.o
 new_ns.o : ../Modules/io_files.o
 new_ns.o : ../Modules/io_global.o
 new_ns.o : ../Modules/ions_base.o
 new_ns.o : ../Modules/kind.o
+new_ns.o : ../Modules/uspp.o
 new_ns.o : ../Modules/wavefunctions.o
 new_ns.o : buffers.o
 new_ns.o : pwcom.o
@@ -772,7 +765,6 @@ orthoatwfc.o : ../Modules/io_files.o
 orthoatwfc.o : ../Modules/io_global.o
 orthoatwfc.o : ../Modules/ions_base.o
 orthoatwfc.o : ../Modules/kind.o
-orthoatwfc.o : ../Modules/parameters.o
 orthoatwfc.o : ../Modules/uspp.o
 orthoatwfc.o : becmod.o
 orthoatwfc.o : noncol.o
@@ -846,7 +838,6 @@ punch.o : a2fmod.o
 punch.o : pw_restart.o
 pw_gemm.o : ../Modules/kind.o
 pw_gemm.o : pwcom.o
-pw_restart.o : ../Modules/aa.o
 pw_restart.o : ../Modules/cell_base.o
 pw_restart.o : ../Modules/constants.o
 pw_restart.o : ../Modules/control_flags.o
@@ -861,6 +852,7 @@ pw_restart.o : ../Modules/mp_global.o
 pw_restart.o : ../Modules/recvec.o
 pw_restart.o : ../Modules/version.o
 pw_restart.o : ../Modules/wavefunctions.o
+pw_restart.o : ../Modules/xml_io_base.o
 pw_restart.o : ../iotk/src/iotk_module.o
 pw_restart.o : buffers.o
 pw_restart.o : io_rho_xml.o
@@ -936,7 +928,6 @@ read_conf_from_file.o : ../Modules/ions_base.o
 read_conf_from_file.o : ../Modules/kind.o
 read_conf_from_file.o : pw_restart.o
 read_conf_from_file.o : pwcom.o
-read_file.o : ../Modules/aa.o
 read_file.o : ../Modules/cell_base.o
 read_file.o : ../Modules/constants.o
 read_file.o : ../Modules/io_files.o
@@ -945,6 +936,7 @@ read_file.o : ../Modules/kind.o
 read_file.o : ../Modules/mp_global.o
 read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
+read_file.o : ../Modules/xml_io_base.o
 read_file.o : buffers.o
 read_file.o : noncol.o
 read_file.o : pw_restart.o
@@ -960,7 +952,6 @@ read_pseudo.o : ../Modules/io_files.o
 read_pseudo.o : ../Modules/io_global.o
 read_pseudo.o : ../Modules/ions_base.o
 read_pseudo.o : ../Modules/kind.o
-read_pseudo.o : ../Modules/parameters.o
 read_pseudo.o : ../Modules/pseudo_types.o
 read_pseudo.o : ../Modules/read_paw.o
 read_pseudo.o : ../Modules/read_upf.o
@@ -1106,7 +1097,6 @@ setlocal.o : ../Modules/ions_base.o
 setlocal.o : ../Modules/kind.o
 setlocal.o : pwcom.o
 setqf.o : ../Modules/kind.o
-setup.o : ../Modules/atom.o
 setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
 setup.o : ../Modules/control_flags.o
@@ -1304,13 +1294,13 @@ vcsmd.o : pwcom.o
 vcsubs.o : ../Modules/constants.o
 vcsubs.o : ../Modules/io_global.o
 vcsubs.o : ../Modules/kind.o
-vhpsi.o : ../Modules/atom.o
 vhpsi.o : ../Modules/ions_base.o
 vhpsi.o : ../Modules/kind.o
+vhpsi.o : ../Modules/uspp.o
 vhpsi.o : pwcom.o
-vhpsi_nc.o : ../Modules/atom.o
 vhpsi_nc.o : ../Modules/ions_base.o
 vhpsi_nc.o : ../Modules/kind.o
+vhpsi_nc.o : ../Modules/uspp.o
 vhpsi_nc.o : pwcom.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o

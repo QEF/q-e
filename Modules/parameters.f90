@@ -19,8 +19,7 @@ MODULE parameters
        ntypx  = 10,     &! max number of different types of atom
        npsx   = ntypx,  &! max number of different PPs (obsolete)
        npk    = 40000,  &! max number of k-points               
-       lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
-       nwfsx  = 14       ! max number of beta functions per atom
+       lmaxx  = 3        ! max non local angular momentum (l=0 to lmaxx)      
   !
   INTEGER, PARAMETER :: &
        lqmax= 2*lmaxx+1     ! max number of angular momenta of Q

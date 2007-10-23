@@ -187,8 +187,6 @@ printout_base.o : mp.o
 printout_base.o : mp_global.o
 pseudo_types.o : kind.o
 pseudo_types.o : radial_grids.o
-pseudodata.o : kind.o
-pseudodata.o : parameters.o
 ptoolkit.o : descriptors.o
 ptoolkit.o : io_global.o
 ptoolkit.o : kind.o

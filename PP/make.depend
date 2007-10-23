@@ -19,12 +19,11 @@ addusdens1d.o : ../Modules/ions_base.o
 addusdens1d.o : ../Modules/kind.o
 addusdens1d.o : ../Modules/uspp.o
 addusdens1d.o : ../PW/pwcom.o
-atomic_wfc_nc_proj.o : ../Modules/atom.o
 atomic_wfc_nc_proj.o : ../Modules/cell_base.o
 atomic_wfc_nc_proj.o : ../Modules/constants.o
 atomic_wfc_nc_proj.o : ../Modules/ions_base.o
 atomic_wfc_nc_proj.o : ../Modules/kind.o
-atomic_wfc_nc_proj.o : ../Modules/parameters.o
+atomic_wfc_nc_proj.o : ../Modules/uspp.o
 atomic_wfc_nc_proj.o : ../PW/noncol.o
 atomic_wfc_nc_proj.o : ../PW/pwcom.o
 average.o : ../Modules/cell_base.o
@@ -201,7 +200,6 @@ plotband.o : ../Modules/io_global.o
 plotproj.o : ../Modules/kind.o
 plotrho.o : ../Modules/io_global.o
 plotrho.o : ../Modules/kind.o
-poormanwannier.o : ../Modules/atom.o
 poormanwannier.o : ../Modules/cell_base.o
 poormanwannier.o : ../Modules/constants.o
 poormanwannier.o : ../Modules/io_files.o
@@ -223,7 +221,6 @@ postproc.o : ../Modules/mp.o
 postproc.o : ../Modules/mp_global.o
 postproc.o : ../PW/noncol.o
 postproc.o : ../PW/pwcom.o
-projwfc.o : ../Modules/atom.o
 projwfc.o : ../Modules/cell_base.o
 projwfc.o : ../Modules/constants.o
 projwfc.o : ../Modules/io_files.o

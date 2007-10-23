@@ -959,7 +959,6 @@ qqberry.o : ../Modules/recvec.o
 qqberry.o : ../Modules/uspp.o
 qqberry.o : cp_interfaces.o
 qqberry.o : modules.o
-read_pseudo.o : ../Modules/atom.o
 read_pseudo.o : ../Modules/constants.o
 read_pseudo.o : ../Modules/control_flags.o
 read_pseudo.o : ../Modules/functionals.o
