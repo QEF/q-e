@@ -780,7 +780,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     INTEGER               :: lm                 ! counter on angular momentum
     INTEGER               :: lsd                ! switch for local spin density
 
-    REAL, EXTERNAL        :: exc_t              ! computes XC energy
+    REAL(DP), EXTERNAL    :: exc_t              ! computes XC energy
 
     REAL(DP) :: &
          vgc(ndmx,2),   & ! exchange-correlation potential (GGA only)
