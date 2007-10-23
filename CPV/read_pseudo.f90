@@ -177,7 +177,6 @@ END FUNCTION calculate_dx
       USE io_global, ONLY: stdout, ionode, ionode_id
       USE uspp, ONLY : okvan
       USE uspp_param, ONLY : oldvan
-      USE atom, ONLY: nlcc, oc, lchi, nchi
       USE cvan, ONLY: nvb
       use ions_base, only: zv, nsp
       use read_upf_module, only: read_pseudo_upf
@@ -204,9 +203,6 @@ END FUNCTION calculate_dx
       nspnl   = 0  ! number of non local pseudo
       nvb     = 0  ! number of Vanderbilt pseudo
       !
-      oc      = 0  ! init atomic wf occupation
-      lchi    = 0  ! init atomic wf angular momentum
-      nchi    = 0  ! init numbero of atomic wf
 
       IF( nsp < 1 ) THEN
         CALL errore(' READPOT ',' nsp less than one! ', 1 )

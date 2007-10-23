@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,6 @@ MODULE parameters
        npsx   = ntypx,  &! max number of different PPs (obsolete)
        npk    = 40000,  &! max number of k-points               
        lmaxx  = 3,      &! max non local angular momentum (l=0 to lmaxx)      
-       nchix  = 6,      & ! max number of atomic wavefunctions per atom
        nwfsx  = 14       ! max number of beta functions per atom
   !
   INTEGER, PARAMETER :: &

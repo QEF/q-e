@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,6 @@ SUBROUTINE new_ns()
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
-  USE atom,                 ONLY : lchi, nchi, oc
   USE ions_base,            ONLY : nat, ityp
   USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
@@ -32,6 +31,7 @@ SUBROUTINE new_ns()
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer
+  USE uspp_param,           ONLY : upf
 
   IMPLICIT NONE
   !
@@ -62,9 +62,9 @@ SUBROUTINE new_ns()
   counter = 0  
   DO na = 1, nat  
      nt = ityp (na)  
-     DO n = 1, nchi (nt)  
-        IF (oc (n, nt) >= 0.d0) THEN  
-           l = lchi (n, nt)  
+     DO n = 1, upf(nt)%nwfc
+        IF (upf(nt)%oc (n) >= 0.d0) THEN  
+           l = upf(nt)%lchi (n)  
            IF (l == Hubbard_l(nt)) offset (na) = counter  
            counter = counter + 2 * l + 1  
         ENDIF

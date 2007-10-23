@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,6 @@ SUBROUTINE orthoatwfc
   ! in order to make lda+U calculations
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nchix
   USE io_global,  ONLY : stdout
   USE io_files,   ONLY : iunat, iunsat, nwordatwfc, iunigk
   USE ions_base,  ONLY : nat
@@ -35,8 +34,6 @@ SUBROUTINE orthoatwfc
        l, lm, ltot, ntot, ipol
   ! the k point under consideration
   ! counter on bands
-  INTEGER :: nchi_, lchi_ (nchix)
-  LOGICAL :: exst
   REAL(DP) :: t0, scnds
   ! cpu time spent
   LOGICAL :: orthogonalize_wfc

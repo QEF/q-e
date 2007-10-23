@@ -11,7 +11,7 @@ subroutine read_ncpp (iunps, np, upf)
   !-----------------------------------------------------------------------
   !
   USE kinds, only: dp
-  USE parameters, ONLY: nchix, lmaxx
+  USE parameters, ONLY: lmaxx
   use funct, only: set_dft_from_name, dft_is_meta, dft_is_hybrid
   USE pseudo_types
 
@@ -75,7 +75,7 @@ subroutine read_ncpp (iunps, np, upf)
                                        upf%mesh, upf%nwfc 
   if ( upf%mesh <= 0) &
        call errore ('read_ncpp', 'wrong nuymber of mesh points', np)
-  if ( upf%nwfc > nchix .or. &
+  if ( upf%nwfc < 0 .or. &
        (upf%nwfc < lmax   .and. lloc == lmax) .or. & 
        (upf%nwfc < lmax+1 .and. lloc /= lmax) ) &
        call errore ('read_ncpp', 'wrong no. of wfcts', np)

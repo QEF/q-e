@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -748,7 +748,7 @@ FUNCTION n_atom_wfc( nat, ityp )
   !
   ! ... Find number of starting atomic orbitals
   !
-  USE atom,             ONLY : oc, chi, nchi, lchi, jchi
+  USE uspp_param,       ONLY : upf
   USE noncollin_module, ONLY : noncolin
   USE spin_orb,         ONLY : so
   !
@@ -767,28 +767,28 @@ FUNCTION n_atom_wfc( nat, ityp )
      !
      nt = ityp(na)
      !
-     DO n = 1, nchi(nt)
+     DO n = 1, upf(nt)%nwfc
         !
-        IF ( oc(n,nt) >= 0.D0 ) THEN
+        IF ( upf(nt)%oc(n) >= 0.D0 ) THEN
            !
            IF ( noncolin ) THEN
               !
               IF ( so(nt) ) THEN
                  !
-                 n_atom_wfc = n_atom_wfc + 2 * lchi(n,nt)
+                 n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n)
                  !
-                 IF ( ABS( jchi(n,nt) - lchi(n,nt) - 0.5D0 ) < 1.D-6 ) &
+                 IF ( ABS( upf(nt)%jchi(n)-upf(nt)%lchi(n) - 0.5D0 ) < 1.D-6 ) &
                     n_atom_wfc = n_atom_wfc + 2
                  !
               ELSE
                  !
-                 n_atom_wfc = n_atom_wfc + 2 * ( 2 * lchi(n,nt) + 1 )
+                 n_atom_wfc = n_atom_wfc + 2 * ( 2 * upf(nt)%lchi(n) + 1 )
                  !
               END IF
               !
            ELSE
               !
-              n_atom_wfc = n_atom_wfc + 2 * lchi(n,nt) + 1
+              n_atom_wfc = n_atom_wfc + 2 * upf(nt)%lchi(n) + 1
               !
            END IF
         END IF

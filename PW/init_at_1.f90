@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,13 +14,13 @@ subroutine init_at_1()
   ! This routine computes a table with the radial Fourier transform 
   ! of the atomic wavefunctions.
   !
-  USE parameters, ONLY : nchix
   USE kinds,      ONLY : dp
-  USE atom,       ONLY : nchi, lchi, chi, oc, rgrid, msh
+  USE atom,       ONLY : rgrid, msh
   USE constants,  ONLY : fpi
   USE cell_base,  ONLY : omega
   USE ions_base,  ONLY : ntyp => nsp
   USE us,         ONLY : tab_at, nqx, dq
+  USE uspp_param, ONLY : upf
   !
   implicit none
   !
@@ -43,14 +43,14 @@ subroutine init_at_1()
   call divide (nqx, startq, lastq)
   tab_at(:,:,:) = 0.d0
   do nt = 1, ntyp
-     do nb = 1, nchi (nt)
-        if (oc (nb, nt) >= 0.d0) then
-           l = lchi (nb, nt)
+     do nb = 1, upf(nt)%nwfc
+        if (upf(nt)%oc(nb) >= 0.d0) then
+           l = upf(nt)%lchi (nb)
            do iq = startq, lastq
               q = dq * (iq - 1)
               call sph_bes (msh(nt), rgrid(nt)%r, q, l, aux)
               do ir = 1, msh(nt)
-                 vchi(ir) = chi(ir,nb,nt) * aux(ir) * rgrid(nt)%r(ir)
+                 vchi(ir) = upf(nt)%chi(ir,nb) * aux(ir) * rgrid(nt)%r(ir)
               enddo
               call simpson (msh(nt), vchi, rgrid(nt)%rab, vqint)
               tab_at (iq, nb, nt) = vqint * pref
@@ -59,7 +59,7 @@ subroutine init_at_1()
      enddo
  enddo
 #ifdef __PARA
-  call reduce (nqx * nchix * ntyp, tab_at)
+  call reduce (nqx * SIZE(tab_at,2) * ntyp, tab_at)
 #endif
 
   deallocate(aux ,vchi)

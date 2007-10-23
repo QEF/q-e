@@ -12,7 +12,7 @@ MODULE atom
   ! ... The variables needed to describe the atoms and related quantities
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : npsx, nchix
+  USE parameters, ONLY : npsx
   USE radial_grids, ONLY : ndmx, radial_grid_type
   !
   SAVE
@@ -22,15 +22,10 @@ MODULE atom
                                   ! NB: some of the subsequent data are therefore redundant 
                                   ! and will be eliminated in due course asap
   REAL(DP) :: &
-       jchi(nchix,npsx),         &! total angular momentum of atomic orbitals
-       chi(ndmx,nchix,npsx),     &! radial atomic orbitals
-       oc(nchix,npsx),           &! atomic level occupation
        rho_at(ndmx,npsx),        &! radial atomic charge density
        rho_atc(ndmx,npsx)         ! radial core charge density
   INTEGER :: &
-       msh(npsx),                &! the point at rcut
-       nchi(npsx),               &! number of atomic orbitals
-       lchi(nchix,npsx)           ! angular momentum of atomic orbitals
+       msh(npsx)                  ! the point at rcut
   LOGICAL :: &
        nlcc(npsx)                 ! if .TRUE. the atom has nlcc
   !

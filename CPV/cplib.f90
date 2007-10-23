@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,8 @@
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba
-      USE atom,               ONLY: nchi, lchi, rgrid, chi
+      USE atom,               ONLY: rgrid
+      USE uspp_param,         ONLY: upf
 !
       IMPLICIT NONE
       INTEGER,     INTENT(in) :: n_atomic_wfc
@@ -34,9 +35,7 @@
 !
       lmax_wfc=-1
       DO is = 1,nsp
-         DO nb = 1, nchi(is)
-            lmax_wfc = MAX (lmax_wfc, lchi (nb, is) )
-         ENDDO
+         lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(is)%lchi(1:upf(is)%nwfc) ) )
       ENDDO
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
@@ -58,12 +57,12 @@
          !   radial fourier transform of the chi functions
          !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
          !
-         DO nb = 1,nchi(is)
-            l = lchi(nb,is)
+         DO nb = 1,upf(is)%nwfc
+            l = upf(is)%lchi(nb)
             DO i=1,ngw
                CALL sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
                DO ir=1,rgrid(is)%mesh
-                  vchi(ir) = chi(ir,nb,is)*rgrid(is)%r(ir)*jl(ir)
+                  vchi(ir) = upf(is)%chi(ir,nb)*rgrid(is)%r(ir)*jl(ir)
                ENDDO
                CALL simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
             ENDDO
@@ -97,9 +96,9 @@ FUNCTION n_atom_wfc_x( )
   !
   ! ... Find max number of bands needed
   !
-  USE atom,             ONLY : nchi, lchi, oc
   USE ions_base,        ONLY : na, nsp
   USE kinds,            ONLY : DP
+  USE uspp_param,       ONLY : upf
   !
   IMPLICIT NONE
   !
@@ -110,11 +109,11 @@ FUNCTION n_atom_wfc_x( )
   !
   DO is = 1, nsp
      !
-     DO n = 1, nchi( is )
+     DO n = 1, upf(is)%nwfc
         !
-        IF ( oc( n, is ) >= 0.D0 ) THEN
+        IF ( upf(is)%oc(n) >= 0.D0 ) THEN
            !
-           n_atom_wfc_x = n_atom_wfc_x + na(is) * ( 2 * lchi( n, is ) + 1 )
+           n_atom_wfc_x = n_atom_wfc_x + na(is) * ( 2*upf(is)%lchi(n) + 1 )
            !
         END IF
         !
@@ -1670,7 +1669,7 @@ END FUNCTION
       USE reciprocal_vectors, ONLY: gstart
       USE ions_base,          ONLY: nsp, na, nat
       USE uspp,               ONLY: nhsa => nkb
-      USE atom,               ONLY: nchi, lchi
+      USE uspp_param,         ONLY: upf
 !
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n
@@ -1690,8 +1689,8 @@ END FUNCTION
       n_atomic_wfc = 0
       !
       DO is=1,nsp
-         DO nb = 1,nchi(is)
-            l = lchi(nb,is)
+         DO nb = 1,upf(is)%nwfc
+            l = upf(is)%lchi(nb)
             n_atomic_wfc = n_atomic_wfc + (2*l+1)*na(is)
          END DO
       END DO
@@ -1792,8 +1791,8 @@ END FUNCTION
       WRITE( stdout,  90 ) 
       WRITE( stdout, 100 )
       DO is=1,nsp
-         DO nb = 1,nchi(is)
-            l=lchi(nb,is)
+         DO nb = 1,upf(is)%nwfc
+            l=upf(is)%lchi(nb)
             DO m = -l,l
                DO ia=1,na(is)
                   i=i+1
@@ -2912,7 +2911,7 @@ END FUNCTION
       use ions_base,        only: na, nsp, nat
       use gvecw,            only: ngw
       use electrons_base,   only: nspin, nx => nbspx
-      USE atom,             ONLY: nchi, lchi
+      USE uspp_param,       ONLY: upf
       !
       implicit none
       integer is, nb, l
@@ -2932,8 +2931,8 @@ END FUNCTION
          !
          Hubbard_U( is ) = Hubbard_U_( is )/autoev
          !
-         do nb = 1,nchi(is)
-            l = lchi(nb,is)
+         do nb = 1,upf(is)%nwfc
+            l = upf(is)%lchi(nb)
             n_atomic_wfc = n_atomic_wfc + (2*l+1)*na(is)
          end do
          !
@@ -3008,12 +3007,8 @@ end function set_Hubbard_l
       use gvecw,              only: ngw
       use reciprocal_vectors, only: ng0 => gstart
       USE uspp,               ONLY: nhsa=>nkb
-!      use cvan
-!@@@@@
-      USE atom,               ONLY: nchi, lchi
-!      USE cell_base,          ONLY: tpiba
+      USE uspp_param,         ONLY: upf
       use electrons_base,     only: nspin, n => nbsp, nx => nbspx, ispin, f
-!@@@@@
       USE ldaU,               ONLY: lda_plus_u, Hubbard_U, Hubbard_l
       USE ldaU,               ONLY: n_atomic_wfc, ns, e_hubbard
 !
@@ -3071,8 +3066,8 @@ end function set_Hubbard_l
       counter = 0
       do is = 1, nsp
          do ia = 1, na(is)
-            do i = 1, nchi (is)
-               l = lchi (i, is)
+            do i = 1, upf(is)%nwfc
+               l = upf(is)%lchi(i)
                if (l.eq.Hubbard_l(is)) offset (is,ia) = counter
                counter = counter + 2 * l + 1
             end do
@@ -3321,9 +3316,10 @@ end function set_Hubbard_l
       use ions_base,          only: na, nsp
       use gvecw,              only: ngw
       use reciprocal_vectors, only: g, gx, ng0 => gstart
-      use cell_base,          only: omega, tpiba !@@@@@
+      use cell_base,          only: omega, tpiba
       use constants,          only: fpi
-      USE atom,               ONLY: nchi, lchi, chi, rgrid
+      USE atom,               ONLY: rgrid
+      USE uspp_param,         ONLY: upf
       USE kinds,              ONLY: DP
 !
       implicit none
@@ -3354,9 +3350,7 @@ end function set_Hubbard_l
 !
       lmax_wfc=-1
       DO is = 1,nsp
-         DO nb = 1, nchi(is)
-            lmax_wfc = MAX (lmax_wfc, lchi (nb, is) )
-         ENDDO
+         lmax_wfc = MAX (lmax_wfc, MAXVAL ( upf(is)%lchi(1:upf(is)%nwfc) ) )
       ENDDO
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
@@ -3372,13 +3366,12 @@ end function set_Hubbard_l
 !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
 !              bess requires l+1, not l, on input
 !
-            do nb = 1,nchi(is)
-               l = lchi(nb,is)
+            do nb = 1,upf(is)%nwfc
+               l = upf(is)%lchi(nb)
                do i=1,ngw
-!                  call bess(q(i),l+1,mesh(is),r(1,is),jl)
                   call sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
                   do ir=1,rgrid(is)%mesh
-                     vchi(ir) = chi(ir,nb,is)*rgrid(is)%r(ir)*jl(ir)
+                     vchi(ir) = upf(is)%chi(ir,nb)*rgrid(is)%r(ir)*jl(ir)
                   enddo
                   call simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
                enddo
@@ -3661,7 +3654,6 @@ end function set_Hubbard_l
       USE reciprocal_vectors, ONLY: gstart
       USE ions_base,          ONLY: nsp, na, nat
       USE uspp,               ONLY: nhsa => nkb
-      USE atom,               ONLY: nchi, lchi
 !
       IMPLICIT NONE
       INTEGER,     INTENT(IN) :: nx, n
@@ -3722,7 +3714,8 @@ end function set_Hubbard_l
       USE reciprocal_vectors, ONLY: gstart, g, gx
       USE ions_base,          ONLY: nsp, na, nat
       USE cell_base,          ONLY: tpiba, omega !@@@@
-      USE atom,               ONLY: nchi, lchi, rgrid, chi
+      USE atom,               ONLY: rgrid
+      USE uspp_param,         ONLY: upf
 !@@@@@
       USE constants,          ONLY: fpi
 !@@@@@
@@ -3739,9 +3732,7 @@ end function set_Hubbard_l
 !
       lmax_wfc=-1
       DO is = 1,nsp
-         DO nb = 1, nchi(is)
-            lmax_wfc = MAX (lmax_wfc, lchi (nb, is) )
-         ENDDO
+         lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(is)%lchi(1:upf(is)%nwfc) ) )
       ENDDO
       !
       ALLOCATE(ylm(ngw,(lmax_wfc+1)**2))
@@ -3764,12 +3755,12 @@ end function set_Hubbard_l
          !   NOTA BENE: chi is r times the radial part of the atomic wavefunction
          !
          DO ia = 1 + isa, na(is) + isa
-            DO nb = 1,nchi(is)
-               l = lchi(nb,is)
+            DO nb = 1,upf(is)%nwfc
+               l = upf(is)%lchi(nb)
                DO i=1,ngw
                   CALL sph_bes (rgrid(is)%mesh, rgrid(is)%r, q(i), l, jl)
                   DO ir=1,rgrid(is)%mesh
-                     vchi(ir) = chi(ir,nb,is)*rgrid(is)%r(ir)*jl(ir)
+                     vchi(ir) = upf(is)%chi(ir,nb)*rgrid(is)%r(ir)*jl(ir)
                   ENDDO
                   CALL simpson_cp90(rgrid(is)%mesh,vchi,rgrid(is)%rab,chiq(i))
                ENDDO

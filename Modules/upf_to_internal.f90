@@ -28,8 +28,7 @@ subroutine set_pseudo_upf (is, upf)
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
   !   dummy argument ( upf ) - convert and copy to internal variables
   !
-  USE atom,  ONLY: rgrid, chi, oc, nchi, lchi, jchi, rho_at, &
-                   rho_atc, nlcc
+  USE atom,  ONLY: rgrid, rho_at, rho_atc, nlcc
   USE uspp_param, ONLY: tvanp
   USE funct, ONLY: set_dft_from_name, set_dft_from_indices, dft_is_meta
   !
@@ -56,11 +55,6 @@ subroutine set_pseudo_upf (is, upf)
      call set_dft_from_name( upf%dft )
   end if
   !
-  nchi(is) = upf%nwfc
-  lchi(1:upf%nwfc, is) = upf%lchi(1:upf%nwfc)
-  oc(1:upf%nwfc, is) = upf%oc(1:upf%nwfc)
-  chi(1:upf%mesh, 1:upf%nwfc, is) = upf%chi(1:upf%mesh, 1:upf%nwfc)
-  !
   rgrid(is)%dx   = upf%dx
   rgrid(is)%xmin = upf%xmin
   rgrid(is)%zmesh= upf%zmesh
@@ -70,12 +64,6 @@ subroutine set_pseudo_upf (is, upf)
   !
   rgrid(is)%r  (1:upf%mesh) = upf%r  (1:upf%mesh)
   rgrid(is)%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
-  !
-  if (upf%has_so) then
-     jchi(1:upf%nwfc, is) = upf%jchi(1:upf%nwfc)
-  else
-     jchi(1:upf%nwfc, is) = 0.0_DP
-  endif
   !
   if ( upf%nlcc) then
      rho_atc(1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)

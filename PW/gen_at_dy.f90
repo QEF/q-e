@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 PWSCF group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,16 +16,16 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    ! is needed in computing the the internal stress tensor.
    !
    USE kinds,      ONLY : DP
-   USE parameters, ONLY : nchix
    USE io_global,  ONLY : stdout
    USE constants,  ONLY : tpi, fpi
-   USE atom,       ONLY : msh, lchi, nchi, oc, chi
+   USE atom,       ONLY : msh
    USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
    USE cell_base,  ONLY : omega, at, bg, tpiba
    USE klist,      ONLY : xk
    USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
    USE wvfct,      ONLY : npw, npwx, igk
    USE us,         ONLY : tab_at, dq
+   USE uspp_param, ONLY : upf
    !
    implicit none
    !
@@ -37,26 +37,18 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !
    ! local variables
    !
-   integer :: ig, na, nt, nb, l, lm, m, iig, ipol, iatw, i0, i1, i2, i3
+   integer :: ig, na, nt, nb, l, lm, m, iig, ipol, iatw, i0, i1, i2, i3, nwfcm
    real (DP) :: arg, px, ux, vx, wx
    complex (8) :: phase, pref
 
    real (DP), allocatable :: q(:), gk(:,:), dylm(:,:), dylm_u(:,:), &
                    chiq(:,:,:)
-   !          q(npw), gk(3,npw),
-   !          dylm  (npw,(lmax_wfc+1)**2),
-   !          dylm_u(npw,(lmax_wfc+1)**2),
-   !          vchi(ndm),
-   !          auxjl(ndm),
-   !          chiq(npwx,nchix,ntyp),
    complex (DP), allocatable :: sk(:)
-   !          sk(npw)
 
-   allocate ( q(npw), gk(3,npw), chiq(npwx,nchix,ntyp) )
+   nwfcm = MAXVAL ( upf(1:ntyp)%nwfc )
+   allocate ( q(npw), gk(3,npw), chiq(npwx,nwfcm,ntyp) )
 
    dwfcat(:,:) = (0.d0,0.d0)
-
-
    do ig = 1,npw
       gk (1, ig) = xk (1, ik) + g (1, igk (ig) )
       gk (2, ig) = xk (2, ik) + g (2, igk (ig) )
@@ -80,9 +72,9 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
    !    here we compute the radial fourier transform of the chi functions
    !
    do nt = 1,ntyp
-      do nb = 1,nchi(nt)
-         if (oc(nb,nt) >= 0.d0) then
-            l = lchi(nb,nt)
+      do nb = 1,upf(nt)%nwfc
+         if (upf(nt)%oc(nb) >= 0.d0) then
+            l = upf(nt)%lchi(nb)
             do ig = 1, npw
                px = q (ig) / dq - int (q (ig) / dq)
                ux = 1.d0 - px
@@ -114,10 +106,9 @@ subroutine gen_at_dy ( ik, natw, lmax_wfc, u, dwfcat )
                   eigts2(ig2(iig),na) * &
                   eigts3(ig3(iig),na) * phase
       end do
-      do nb = 1,nchi(nt)
-         if (oc(nb,nt) >= 0.d0) then
-            l  = lchi(nb,nt)
-            pref = (1.d0,0.d0)**l
+      do nb = 1,upf(nt)%nwfc
+         if (upf(nt)%oc(nb) >= 0.d0) then
+            l  = upf(nt)%lchi(nb)
             pref = (0.d0,1.d0)**l
             do m = 1,2*l+1
                lm = l*l+m

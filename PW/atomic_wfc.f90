@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,8 +15,6 @@ subroutine atomic_wfc (ik, wfcatom)
   ! given k-point.
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nchix
-  USE atom,       ONLY : nchi, lchi, chi, oc
   USE constants,  ONLY : tpi, fpi
   USE cell_base,  ONLY : omega, tpiba
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
@@ -24,6 +22,7 @@ subroutine atomic_wfc (ik, wfcatom)
   USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
   USE klist,      ONLY : xk
   USE wvfct,      ONLY : npwx, npw, nbnd, igk
+  USE uspp_param, ONLY : upf
   USE us,         ONLY : tab_at, dq
   !
   implicit none
@@ -33,7 +32,7 @@ subroutine atomic_wfc (ik, wfcatom)
   complex(DP) :: wfcatom (npwx, natomwfc) ! output: atomic wavefunctions
   !
   integer :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-             i0, i1, i2, i3
+             i0, i1, i2, i3, nwfcm
   !
   real(DP), allocatable :: qg(:), ylm (:,:), chiq (:,:,:), gk (:,:)
   complex(DP), allocatable :: sk (:)
@@ -42,17 +41,16 @@ subroutine atomic_wfc (ik, wfcatom)
 
   call start_clock ('atomic_wfc')
 
-  allocate ( qg(npw), chiq(npw,nchix,ntyp), gk(3,npw), sk(npw))
-
   ! calculate max angular momentum required in wavefunctions
   lmax_wfc = 0
   do nt = 1, ntyp
-     do nb = 1, nchi (nt)
-        lmax_wfc = max (lmax_wfc, lchi (nb, nt) )
-     enddo
+     lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(nt)%lchi(1:upf(nt)%nwfc) ) )
   enddo
   !
-  allocate(ylm (npw,(lmax_wfc+1)**2) )
+  nwfcm = MAXVAL ( upf(1:ntyp)%nwfc )
+  !
+  allocate ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &
+            gk(3,npw), sk(npw), qg(npw) )
   !
   do ig = 1, npw
      gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
@@ -76,8 +74,8 @@ subroutine atomic_wfc (ik, wfcatom)
   ! chiq = radial fourier transform of atomic orbitals chi
   !
   do nt = 1, ntyp
-     do nb = 1, nchi (nt)
-        if ( oc (nb, nt) >= 0.d0) then
+     do nb = 1, upf(nt)%nwfc
+        if ( upf(nt)%oc (nb) >= 0.d0) then
            do ig = 1, npw
               px = qg (ig) / dq - int (qg (ig) / dq)
               ux = 1.d0 - px
@@ -110,9 +108,9 @@ subroutine atomic_wfc (ik, wfcatom)
      enddo
      !
      nt = ityp (na)
-     do nb = 1, nchi (nt)
-        if (oc (nb, nt) >= 0.d0) then
-           l = lchi (nb, nt)
+     do nb = 1, upf(nt)%nwfc
+        if (upf(nt)%oc (nb) >= 0.d0) then
+           l = upf(nt)%lchi (nb)
            lphase = (0.d0,1.d0)**l
            !  the factor i^l MUST BE PRESENT in order to produce
            !  wavefunctions for k=0 that are real in real space
@@ -133,7 +131,7 @@ subroutine atomic_wfc (ik, wfcatom)
   if (n_starting_wfc /= natomwfc) call errore ('atomic_wfc', &
        'internal error: some wfcs were lost ', 1)
 
-  deallocate(qg, chiq ,gk, sk ,ylm)
+  deallocate(qg, sk, gk, chiq, ylm)
 
   call stop_clock ('atomic_wfc')
   return

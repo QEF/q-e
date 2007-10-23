@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF group
+! Copyright (C) 2002-2007  Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,7 +16,6 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    !
    USE kinds,                ONLY : DP
    USE wavefunctions_module, ONLY : evc
-   USE atom,                 ONLY : nchi, lchi, oc
    USE ions_base,            ONLY : nat, ityp
    USE basis,                ONLY : natomwfc
    USE klist,                ONLY : nks, xk, ngk
@@ -25,6 +24,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
+   USE uspp_param,           ONLY : upf
    USE becmod,               ONLY : becp
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
@@ -61,9 +61,9 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    DO na=1,nat
       offset(na) = 0
       nt=ityp(na)
-      DO n=1,nchi(nt)
-         IF (oc(n,nt) >= 0.d0) THEN
-            l=lchi(n,nt)
+      DO n=1,upf(nt)%nwfc
+         IF (upf(nt)%oc(n) >= 0.d0) THEN
+            l=upf(nt)%lchi(n)
             IF (l.EQ.Hubbard_l(nt)) offset(na) = counter
             counter = counter + 2 * l + 1
          END IF

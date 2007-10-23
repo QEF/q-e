@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,7 +25,6 @@ subroutine allocate_nlpot
   !     nbetam        !  maximum number of beta functions
   !
   !
-  USE parameters,       ONLY : nchix
   USE ions_base,        ONLY : nat, nsp, ityp
   USE cell_base,        ONLY : tpiba2
   USE cellmd,           ONLY : cell_factor
@@ -46,7 +45,7 @@ subroutine allocate_nlpot
   !
   !    a few local variables
   !
-  integer :: nt, na, nb, ldim  
+  integer :: nt, na, nb, ldim, nwfcm  
   ! counters on atom type, atoms, beta functions
   !
   !   calculate number of PWs for all kpoints
@@ -133,7 +132,8 @@ subroutine allocate_nlpot
   ! d2y is for the cubic splines
   if (spline_ps) allocate (tab_d2y( nqx , nbetam , nsp))
 
-  allocate (tab_at( nqx , nchix , nsp))
+  nwfcm = MAXVAL ( upf(1:nsp)%nwfc )
+  allocate (tab_at( nqx , nwfcm , nsp))
 
   return
 end subroutine allocate_nlpot

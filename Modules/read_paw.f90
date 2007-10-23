@@ -57,7 +57,6 @@
         write(un,'(a)') "grid:"
        ! write the radial grid data
        call write_grid_on_file(un,pawset_%grid)
-       !        call allocate_pseudo_paw( pawset_, pawset_%grid%mesh, pawset_%nwfc, pawset_%lmax)
         write(un,'(a)') "l:"
        WRITE(un,'(i8)')     (pawset_%l(ns), ns=1,pawset_%nwfc)
         write(un,'(a)') "ikk:"
@@ -102,7 +101,6 @@
         write(un,'(a)') "dft:"
        WRITE(un,'(A)') TRIM(pawset_%dft)
     CASE ("INP")
-       !call deallocate_pseudo_paw( pawset_ )
         read(un, '(a)') dummy
        READ(un,'(3i8)')    mesh, nwfc, lmax
        call deallocate_pseudo_paw( pawset_ )
@@ -143,7 +141,6 @@
        ! write the radial grid data
         read(un, '(a)') dummy
        call read_grid_from_file(un,pawset_%grid)
-       !        call allocate_pseudo_paw( pawset_, pawset_%grid%mesh, pawset_%nwfc, pawset_%lmax)
         read(un, '(a)') dummy
        READ (un,'(i8)')     (pawset_%l(ns), ns=1,pawset_%nwfc)
         read(un, '(a)') dummy
@@ -219,7 +216,6 @@
         WRITE(un,'(a,e20.10)') "grid%r     :",MAXVAL(pawset_%grid%r(:))
         WRITE(un,'(a,e20.10)') "grid%r     :",MAXVAL(pawset_%grid%r2(:))
         WRITE(un,'(a,e20.10)') "grid%sqr   :",MAXVAL(pawset_%grid%sqr(:))
-       !        call allocate_pseudo_paw( pawset_, pawset_%grid%mesh, pawset_%nwfc, pawset_%lmax)
        WRITE(un,'(a,i8)')     "l            :",MAXVAL(pawset_%l(:))
        WRITE(un,'(a,i8)')     "ikk          :",MAXVAL(pawset_%ikk(:))
        WRITE(un,'(a,e20.10)') "oc           :",MAXVAL(pawset_%oc(:))
@@ -332,8 +328,7 @@ subroutine set_pseudo_paw (is, pawset)
   !
   ! PWSCF modules
   !
-  USE atom,  ONLY: rgrid, msh, chi, oc, nchi, lchi, jchi, rho_at, &
-                   rho_atc, nlcc
+  USE atom,  ONLY: rgrid, msh, rho_at, rho_atc, nlcc
   USE uspp_param, ONLY: upf
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
@@ -396,12 +391,13 @@ subroutine set_pseudo_paw (is, pawset)
   ! ... corresponding to second energy for the same channel
   ! ... (necessary to set starting occupations correctly)
   !
-  nchi(is)=0
+  upf(is)%nwfc = pawset%nwfc
+  ALLOCATE ( upf(is)%lchi(pawset%nwfc), upf(is)%oc(pawset%nwfc) )
+  ALLOCATE ( upf(is)%chi( pawset%grid%mesh, pawset%nwfc) )
   do i=1, pawset%nwfc
-        nchi(is)=nchi(is)+1
-        lchi(nchi(is),is)=pawset%l(i)
-        oc(nchi(is),is)=MAX(pawset%oc(i),0._DP)
-        chi(1:pawset%grid%mesh, nchi(is), is) = pawset%pswfc(1:pawset%grid%mesh, i)
+     upf(is)%lchi(i)=pawset%l(i)
+     upf(is)%oc(i)=MAX(pawset%oc(i),0._DP)
+     upf(is)%chi(1:pawset%grid%mesh, i) = pawset%pswfc(1:pawset%grid%mesh, i)
   end do
   !
   upf(is)%nbeta= pawset%nwfc
@@ -531,18 +527,21 @@ subroutine set_pseudo_paw (is, pawset)
   rgrid(is)%rm2(1:pawset%grid%mesh)   = pawset%grid%rm2(1:pawset%grid%mesh)
   rgrid(is)%rm3(1:pawset%grid%mesh)   = pawset%grid%rm3(1:pawset%grid%mesh)
 
-  ! NO spin orbit PAW implemented right now (oct 2005)
+  ! NO spin orbit PAW implemented right now (oct 2007)
 !!$  if (lspinorb.and..not.pawset%has_so) &
 !!$     call infomsg ('pawset_to_internal','At least one non s.o. pseudo')
-!!$   
+  allocate (upf(is)%jchi(1:pawset%nwfc))
+  allocate (upf(is)%jjj(1:pawset%nwfc))
+
 !!$  lspinorb=lspinorb.and.pawset%has_so
 !!$  if (pawset%has_so) then
 !!$     jchi(1:pawset%nwfc, is) = pawset%jchi(1:pawset%nwfc)
 !!$     jjj(1:pawset%nbeta, is) = pawset%jjj(1:pawset%nbeta)
 !!$  else
-  jchi(1:pawset%nwfc,is) = 0._dp
-  allocate (upf(is)%jjj(1:pawset%nwfc))
+
+  upf(is)%jchi(1:pawset%nwfc) = 0._dp
   upf(is)%jjj(1:pawset%nwfc) = 0._dp
+
 !!$  endif
   !
   if ( pawset%nlcc) then

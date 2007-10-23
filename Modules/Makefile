@@ -47,7 +47,6 @@ parallel_include.o \
 parallel_types.o \
 parameters.o \
 parser.o \
-pseudodata.o \
 pseudo_types.o \
 printout_base.o \
 ptoolkit.o \

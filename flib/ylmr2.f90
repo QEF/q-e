@@ -41,7 +41,7 @@ subroutine ylmr2 (lmax2, ng, g, gg, ylm)
   do lmax = 0, 25
      if ((lmax+1)**2 == lmax2) go to 10
   end do
-  stop 'l > 25 or wrong number of Ylm required'
+  call errore (' ylmr', 'l > 25 or wrong number of Ylm required',lmax2)
 10 continue
 
   !

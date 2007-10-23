@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -1077,7 +1077,6 @@ END SUBROUTINE PAW_gcxc_potential
 SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     USE kinds,                  ONLY : DP
     USE constants,              ONLY : sqrtpi, fpi, eps12, e2
-    USE radial_grids,           ONLY : ndmx
     !USE uspp_param,             ONLY : lmaxq
     USE lsda_mod,               ONLY : nspin
     USE ions_base,              ONLY : ityp

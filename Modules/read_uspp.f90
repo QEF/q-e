@@ -13,7 +13,7 @@ MODULE read_uspp_module
   !  Vanderbilt's code and Andrea's RRKJ3 format
   !     
   USE kinds, ONLY: DP
-  USE parameters, ONLY: nchix, lmaxx, lqmax
+  USE parameters, ONLY: lmaxx, lqmax
   USE io_global, ONLY: stdout
   USE funct, ONLY: set_dft_from_name, dft_is_hybrid, dft_is_meta, &
        set_dft_from_indices
@@ -100,16 +100,17 @@ CONTAINS
     real(DP)                                                     &
          &       exfact,        &! index of the exchange and correlation used 
          &       etotpseu,      &! total pseudopotential energy
-         &       ee(nchix),     &! the energy of the valence states
-         &       rc(nchix),     &! the cut-off radii of the pseudopotential
          &       eloc,          &! energy of the local potential
          &       dummy,         &! dummy real variable
          &       rinner1,       &! rinner if only one is present
          &       rcloc           ! the cut-off radius of the local potential 
     real(DP), allocatable::  &
+         &       ee(:),         &! the energy of the valence states
+         &       rc(:),         &! the cut-off radii of the pseudopotential
          &       eee(:),        &! energies of the beta function
          &       ddd(:,:)        ! the screened D_{\mu,\nu} parameters
     integer, allocatable ::  &
+         &       nnlz(:),       &! The nlm values of the valence states
          &       iptype(:)       ! more recent parameters 
     integer                                                           &
          &       iver(3),       &! contains the version of generating code
@@ -117,7 +118,6 @@ CONTAINS
          &       ifpcor,        &! for core correction, 0 otherwise
          &       ios,           &! integer variable for I/O control
          &       i,             &! dummy counter 
-         &       nnlz(nchix),   &! The nlm values of the valence states
          &       keyps,         &! the type of pseudopotential. Only US allowed
          &       irel,          &! says if the pseudopotential is relativistic
          &       ifqopt,        &! level of Q optimization
@@ -172,14 +172,15 @@ CONTAINS
     !
     read( iunps, '(2i5,1pe19.11)', err=100, iostat=ios ) &
          upf%nwfc, upf%mesh, etotpseu
-    if ( upf%nwfc < 0 .OR. upf%nwfc > nchix ) &
-         call errore( 'readvan', 'wrong or too large nchi read', upf%nwfc )
+    if ( upf%nwfc < 0 ) &
+         call errore( 'readvan', 'wrong nchi read', upf%nwfc )
     if ( upf%mesh < 0 ) &
          call errore( 'readvan','wrong mesh', is )
     !
     !     info on pseudo eigenstates - energies are not used
     !
     ALLOCATE ( upf%oc(upf%nwfc), upf%lchi(upf%nwfc) ) 
+    ALLOCATE ( nnlz(upf%nwfc), ee(upf%nwfc) )
     read( iunps, '(i5,2f15.9)', err=100, iostat=ios ) &
          ( nnlz(iv), upf%oc(iv), ee(iv), iv=1,upf%nwfc )
     do iv = 1, upf%nwfc
@@ -213,7 +214,7 @@ CONTAINS
        !    NB: In the Vanderbilt atomic code the angular momentum goes 
        !        from 1 to nang
        !
-       if ( nang > nchix + 1 .or. nang < 0 ) &
+       if ( nang < 0 ) &
             call errore(' readvan', 'Wrong nang read', nang)
        if ( lloc == -1 ) lloc = nang+1
        if ( lloc > nang+1 .or. lloc < 0 ) &
@@ -266,6 +267,7 @@ CONTAINS
     if ( upf%nqlc > lqmax .or. upf%nqlc < 0 ) &
          call errore(' readvan', 'Wrong  nqlc read', upf%nqlc )
     !
+    ALLOCATE ( rc(nang) )
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &
          ( rc(l), l=1,nang )
     !
@@ -436,6 +438,7 @@ CONTAINS
     WRITE( stdout,700)
 700 format(4x,'|  index    orbital      occupation    energy',14x,'|')
     WRITE( stdout,800) ( iv, nnlz(iv), upf%oc(iv), ee(iv), iv=1,upf%nwfc )
+    DEALLOCATE (ee, nnlz)
 800 format(4x,'|',i5,i11,5x,f10.2,f12.2,15x,'|')
     if (iver(1) >= 3 .and. nang > 0) then
        write(fmt,900) 2*nang-1, 40-8*(2*nang-2)
@@ -455,7 +458,7 @@ CONTAINS
     WRITE( stdout,1300)
 1300 format (4x,60('='))
     !
-    DEALLOCATE (eee)
+    DEALLOCATE (eee, rc)
     return
 100 call errore('readvan','error reading pseudo file', abs(ios) )
   !
@@ -678,7 +681,7 @@ CONTAINS
     !
     if ( upf%nbeta < 0) &
          call errore('readrrkj', 'wrong nbeta', is)
-    if ( upf%nwfc > nchix .or. upf%nwfc < 0) &
+    if ( upf%nwfc < 0 ) &
          call errore('readrrkj', 'wrong nchi', is)
     !
     read( iunps, '(1p4e19.11)', err=100, iostat=ios ) &

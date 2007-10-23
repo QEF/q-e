@@ -77,7 +77,7 @@ SUBROUTINE projection (first_band, last_band)
   !----------------------------------------------------------------------- 
   ! 
   USE io_global,  ONLY : stdout 
-  USE atom 
+  USE uspp_param, ONLY : upf 
   USE ions_base, ONLY : nat, ityp
   USE basis,     ONLY : natomwfc
   USE cell_base
@@ -148,9 +148,9 @@ SUBROUTINE projection (first_band, last_band)
   counter_ldaU = 0
   DO na = 1, nat
      nt = ityp (na)
-     DO n = 1, nchi (nt)
-        IF (oc (n, nt) >= 0.d0) THEN
-           l = lchi (n, nt)
+     DO n = 1, upf(nt)%nwfc
+        IF (upf(nt)%oc (n) >= 0.d0) THEN
+           l = upf(nt)%lchi (n)
            IF ( (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) .AND. &
                                             l.EQ.Hubbard_l(nt) )THEN
                counter_ldaU = counter_ldaU + 2 * l + 1
@@ -182,9 +182,9 @@ SUBROUTINE projection (first_band, last_band)
   lmax_wfc = 0 
   DO na = 1, nat 
      nt = ityp (na) 
-     DO n = 1, nchi (nt) 
-        IF (oc (n, nt) >= 0.d0) THEN 
-           l = lchi (n, nt) 
+     DO n = 1, upf(nt)%nwfc
+        IF (upf(nt)%oc (n) >= 0.d0) THEN 
+           l = upf(nt)%lchi (n) 
            lmax_wfc = MAX (lmax_wfc, l ) 
            DO m = 1, 2 * l + 1 
               nwfc=nwfc+1 
@@ -241,9 +241,9 @@ SUBROUTINE projection (first_band, last_band)
      counter_ldaU = 0
      DO na = 1, nat
         nt = ityp (na)
-        DO n = 1, nchi (nt)
-           IF (oc (n, nt) >= 0.d0) THEN
-              l = lchi (n, nt)
+        DO n = 1, upf(nt)%nwfc
+           IF (upf(nt)%oc (nt) >= 0.d0) THEN
+              l = upf(nt)%lchi (n)
               IF ( (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) .AND. &
                                             l.EQ.Hubbard_l(nt) )THEN
                   pp(counter_ldaU+1:counter_ldaU+2*l+1, 1:ldim2) = &
@@ -294,9 +294,9 @@ SUBROUTINE projection (first_band, last_band)
      counter_ldaU = 0
      DO na = 1, nat
         nt = ityp (na)
-        DO n = 1, nchi (nt)
-           IF (oc (n, nt) >= 0.d0) THEN
-              l = lchi (n, nt)
+        DO n = 1, upf(nt)%nwfc
+           IF (upf(nt)%oc (n) >= 0.d0) THEN
+              l = upf(nt)%lchi (n)
               IF ( (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) .AND. &
                                             l.EQ.Hubbard_l(nt) )THEN
                   CALL ZGEMM( 'N', 'C', npw, 2*l+1, ldim2, ONE, &

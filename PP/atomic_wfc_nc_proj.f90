@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,8 +18,6 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   ! are generated.  
   !
   USE kinds,      ONLY : DP
-  USE parameters, ONLY : nchix
-  USE atom,       ONLY : nchi, lchi, jchi, chi, oc
   USE constants,  ONLY : tpi, fpi, pi
   USE cell_base,  ONLY : omega, tpiba
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
@@ -28,6 +26,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   USE klist,      ONLY : xk
   USE wvfct,      ONLY : npwx, npw, nbndx, nbnd, igk
   USE us,         ONLY : tab_at, dq
+  USE uspp_param, ONLY : upf
   USE noncollin_module, ONLY : noncolin, npol
   USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef, lmaxx
   !
@@ -38,7 +37,7 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   COMPLEX(DP) :: wfcatom (npwx, npol, natomwfc) ! output: atomic wavefunctions
   !
   INTEGER :: n_starting_wfc, lmax_wfc, nt, l, nb, na, m, lm, ig, iig, &
-             i0, i1, i2, i3
+             i0, i1, i2, i3, nwfcm
   !
   REAL(DP), ALLOCATABLE :: qg(:), ylm (:,:), chiq (:,:,:), aux (:), &
        gk (:,:), vchi (:)
@@ -51,19 +50,17 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   CALL start_clock ('atomic_wfc')
   IF (.NOT.noncolin) CALL errore('atomic_wfc_nc_proj', &
                                  'called in the wrong case',1)
-
-  ALLOCATE ( qg(npw), chiq(npw,nchix,ntyp), gk(3,npw), sk(npw))
-  IF (lspinorb) ALLOCATE(aux_so(npw))
-
   ! calculate max angular momentum required in wavefunctions
   lmax_wfc = 0
-  DO nt = 1, ntyp
-     DO nb = 1, nchi (nt)
-        lmax_wfc = max (lmax_wfc, lchi (nb, nt) )
-     ENDDO
-  ENDDO
+  do nt = 1, ntyp
+     lmax_wfc = MAX ( lmax_wfc, MAXVAL (upf(nt)%lchi(1:upf(nt)%nwfc) ) )
+  enddo
   !
-  ALLOCATE(ylm (npw,(lmax_wfc+1)**2) )
+  nwfcm = MAXVAL ( upf(1:ntyp)%nwfc )
+  !
+  allocate ( ylm (npw,(lmax_wfc+1)**2), chiq(npw,nwfcm,ntyp), &
+            gk(3,npw), sk(npw), qg(npw) )
+  IF (lspinorb) ALLOCATE(aux_so(npw))
   !
   DO ig = 1, npw
      gk (1,ig) = xk(1, ik) + g(1, igk(ig) )
@@ -87,8 +84,8 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   ! chiq = radial fourier transform of atomic orbitals chi
   !
   DO nt = 1, ntyp
-     DO nb = 1, nchi (nt)
-        IF ( oc (nb, nt) >= 0.d0) THEN
+     DO nb = 1, upf(nt)%nwfc
+        IF ( upf(nt)%oc(nb) >= 0.d0) THEN
            DO ig = 1, npw
               px = qg (ig) / dq - int (qg (ig) / dq)
               ux = 1.d0 - px
@@ -122,19 +119,19 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
      ENDDO
      !
      nt = ityp (na)
-     DO nb = 1, nchi (nt)
-        IF (oc (nb, nt) >= 0.d0) THEN
-           l = lchi (nb, nt)
+     DO nb = 1, upf(nt)%nwfc
+        IF ( upf(nt)%oc(nb) >= 0.d0) THEN
+           l = upf(nt)%lchi(nb)
            lphase = (0.d0,1.d0)**l
            !  the factor i^l MUST BE PRESENT in order to produce
            !  wavefunctions for k=0 that are real in real space
            IF (lspinorb) THEN
              IF (so(nt)) THEN
-               j = jchi (nb, nt)
+               j = upf(nt)%jchi (nb)
                DO m = -l-1, l
                  fact(1) = spinor(l,j,m,1)
                  fact(2) = spinor(l,j,m,2)
-                 IF (abs(fact(1)).gt.1.d-8.or.abs(fact(2)).gt.1.d-8) THEN
+                 IF (abs(fact(1)) > 1.d-8 .or. abs(fact(2)) > 1.d-8) THEN
                     n_starting_wfc = n_starting_wfc + 1
                     IF (n_starting_wfc.gt.natomwfc) &
                        CALL errore ('atomic_wfc_nc_proj', 'too many wfcs', 1)
@@ -212,8 +209,8 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   IF (n_starting_wfc.ne.natomwfc) CALL errore ('atomic_wfc_nc_proj', &
        'something wrong', 1)
 
-  DEALLOCATE(qg, chiq ,gk, sk ,ylm)
-  IF (lspinorb) DEALLOCATE(aux_so)
+  if (lspinorb) deallocate(aux_so)
+  deallocate(qg, sk, gk, chiq, ylm)
 
   CALL stop_clock ('atomic_wfc')
   RETURN

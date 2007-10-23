@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,10 +17,9 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
    !
    USE kinds,                ONLY : DP
-   USE atom,                 ONLY : nchi, lchi, oc
-   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE basis,                ONLY : natomwfc
    USE cell_base,            ONLY : tpiba
+   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE gvect,                ONLY : g
    USE klist,                ONLY : nks, xk
    USE ldaU,                 ONLY : swfcatom, Hubbard_l, &
@@ -28,7 +27,7 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb, qq
-   USE uspp_param,           ONLY : nhm, nh
+   USE uspp_param,           ONLY : upf, nhm, nh
    USE wavefunctions_module, ONLY : evc
    USE becmod,               ONLY : becp
 
@@ -85,9 +84,7 @@ SUBROUTINE dprojdepsilon ( ik,dproj,wfcatom,spsi,ipol,jpol )
 
    lmax_wfc = 0
    DO nt=1, ntyp
-      DO ib=1,nchi(nt)
-         lmax_wfc=MAX(lmax_wfc,lchi(ib,nt))
-      END DO
+      lmax_wfc=MAX(lmax_wfc,MAXVAL(upf(nt)%lchi(1:upf(nt)%nwfc)))
    END DO
 
    ! here the derivative of the Bessel function

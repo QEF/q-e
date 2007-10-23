@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2004 PWSCF group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,6 @@ SUBROUTINE dprojdtau(dproj,wfcatom,spsi,alpha,ipol,offset)
    ! f_{kv} <\fi^{at}_{I,m1}|S|\psi_{k,v,s}><\psi_{k,v,s}|S|\fi^{at}_{I,m2}>)
    !
    USE kinds,                ONLY : DP
-   USE atom,                 ONLY : nchi, lchi, oc
    USE ions_base,            ONLY : nat, ntyp => nsp, ityp
    USE basis,                ONLY : natomwfc
    USE cell_base,            ONLY : tpiba

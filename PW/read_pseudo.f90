@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ subroutine readpp
   USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal,  ONLY : set_pseudo_upf
   USE paw,              ONLY : set_paw_upf
-  USE atom,       ONLY : chi, nchi, oc, msh, rgrid
+  USE atom,             ONLY :  msh, rgrid
   USE uspp_param, ONLY : newpseudo
   USE ions_base,  ONLY : ntyp => nsp
   USE funct,      ONLY : get_iexch, get_icorr, get_igcx, get_igcc
@@ -28,7 +28,6 @@ subroutine readpp
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
   USE uspp_param, ONLY : upf
-  USE parameters, ONLY : nchix !PAW
   USE grid_paw_variables, ONLY : tpawp
   USE read_paw_module,    ONLY : paw_io, allocate_pseudo_paw, deallocate_pseudo_paw
   USE paw_to_internal,    ONLY : set_pseudo_paw
@@ -119,7 +118,7 @@ subroutine readpp
            newpseudo (nt) = .true.
            open (unit = iunps, file = file_pseudo, status = 'old', &
                  form='formatted', iostat = ios)
-           call paw_io (pawset, iunps, "INP") !,ndmx,nchix,lmaxx)
+           call paw_io (pawset, iunps, "INP")
            close (iunps)
            call set_pseudo_paw (nt, pawset)
            call deallocate_pseudo_paw (pawset)
@@ -173,8 +172,8 @@ subroutine readpp
      ! Check that there are no zero wavefunctions
      !
      allocate ( chi2r (rgrid(nt)%mesh) )
-     do nb = 1, nchi (nt)
-        chi2r(:) = chi ( :rgrid(nt)%mesh, nb, nt ) **2
+     do nb = 1, upf(nt)%nwfc
+        chi2r(:) = upf(nt)%chi (1:rgrid(nt)%mesh, nb ) **2
         call simpson (rgrid(nt)%mesh, chi2r(1), rgrid(nt)%rab, norm)
         !
         if ( norm < eps ) then
@@ -184,7 +183,7 @@ subroutine readpp
            ! set occupancy to a small negative number so that this wfc
            ! is not going to be used for starting wavefunctions
            !
-           oc (nb, nt) = -eps
+           upf(nt)%oc (nb) = -eps
         end if
      enddo
      deallocate ( chi2r )

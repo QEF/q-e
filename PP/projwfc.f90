@@ -244,7 +244,6 @@ SUBROUTINE projwave( filproj, lsym )
   !----------------------------------------------------------------------- 
   ! 
   USE io_global, ONLY : stdout, ionode
-  USE atom 
   USE char,      ONLY : title
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc
@@ -257,6 +256,7 @@ SUBROUTINE projwave( filproj, lsym )
   USE symme, ONLY: nsym, irt 
   USE wvfct 
   USE uspp, ONLY: nkb, vkb
+  USE uspp_param, ONLY: upf
   USE becmod,   ONLY: becp, rbecp
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   USE spin_orb, ONLY: lspinorb
@@ -301,9 +301,9 @@ SUBROUTINE projwave( filproj, lsym )
   lmax_wfc = 0 
   DO na = 1, nat 
      nt = ityp (na) 
-     DO n = 1, nchi (nt) 
-        IF (oc (n, nt) >= 0.d0) THEN 
-           l = lchi (n, nt) 
+     DO n = 1, upf(nt)%nwfc
+        IF (upf(nt)%oc (n) >= 0.d0) THEN 
+           l = upf(nt)%lchi (n) 
            lmax_wfc = MAX (lmax_wfc, l ) 
            DO m = 1, 2 * l + 1 
               nwfc=nwfc+1 
@@ -695,7 +695,6 @@ SUBROUTINE projwave_nc(filproj, lsym )
   !----------------------------------------------------------------------- 
   ! 
   USE io_global,  ONLY : stdout, ionode
-  USE atom 
   USE ions_base, ONLY : zv, tau, nat, ntyp => nsp, ityp, atm
   USE basis,     ONLY : natomwfc
   USE char,      ONLY : title
@@ -709,6 +708,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE symme, ONLY: nsym, irt, t_rev 
   USE wvfct 
   USE uspp, ONLY: nkb, vkb
+  USE uspp_param, ONLY: upf
   USE becmod,   ONLY: becp_nc
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   USE wavefunctions_module, ONLY: evc 
@@ -751,18 +751,18 @@ SUBROUTINE projwave_nc(filproj, lsym )
   DO na = 1, nat 
      nt = ityp (na) 
      n2 = 0
-     DO n = 1, nchi (nt) 
-        IF (oc (n, nt) >= 0.d0) THEN 
-           l = lchi (n, nt) 
+     DO n = 1, upf(nt)%nwfc
+        IF (upf(nt)%oc (n) >= 0.d0) THEN 
+           l = upf(nt)%lchi (n) 
            lmax_wfc = MAX (lmax_wfc, l )
            IF (lspinorb) THEN 
               IF (so(nt)) THEN     
-                jj = jchi (n, nt)
+                jj = upf(nt)%jchi (n)
                 ind = 0
                 DO m = -l-1, l
                    fact(1) = spinor(l,jj,m,1)
                    fact(2) = spinor(l,jj,m,2)
-                   IF (abs(fact(1)).gt.1.d-8.or.abs(fact(2)).gt.1.d-8) THEN 
+                   IF (abs(fact(1)) > 1.d-8 .or. abs(fact(2)) > 1.d-8) THEN 
                       nwfc = nwfc + 1 
                       ind = ind + 1
                       nlmchi(nwfc)%na = na 
@@ -782,7 +782,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
                     DO m = -l-1, l
                       fact(1) = spinor(l,jj,m,1)
                       fact(2) = spinor(l,jj,m,2)
-                      IF (abs(fact(1)).gt.1.d-8.or.abs(fact(2)).gt.1.d-8) THEN 
+                      IF (abs(fact(1)) > 1.d-8 .or. abs(fact(2)) > 1.d-8) THEN 
                         nwfc = nwfc + 1 
                         ind = ind + 1
                         nlmchi(nwfc)%na = na 

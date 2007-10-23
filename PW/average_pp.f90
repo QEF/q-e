@@ -10,7 +10,7 @@ SUBROUTINE average_pp ( ntyp )
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
-  USE atom,             ONLY : chi, nchi, lchi, jchi, rgrid
+  USE atom,             ONLY : rgrid
   USE spin_orb,         ONLY : so
   USE uspp_param,       ONLY : upf
   !
@@ -92,53 +92,53 @@ SUBROUTINE average_pp ( ntyp )
         !
         nbe = 0
         !
-        DO nb = 1, nchi(nt)
+        DO nb = 1, upf(nt)%nwfc
            !
            nbe = nbe + 1
            !
-           IF ( lchi(nb,nt) /= 0 .AND. &
-                ABS(jchi(nb,nt)-lchi(nb,nt)-0.5D0 ) < 1.D-7 ) &
+           IF ( upf(nt)%lchi(nb) /= 0 .AND. &
+                ABS(upf(nt)%jchi(nb)-upf(nt)%lchi(nb)-0.5D0 ) < 1.D-7 ) &
               nbe = nbe - 1
            !
         END DO
         !
-        nchi(nt) = nbe
+        upf(nt)%nwfc = nbe
         ! 
         nbe = 0
         !
-        do nb = 1, nchi(nt)
+        do nb = 1, upf(nt)%nwfc
            !
            nbe = nbe + 1
            !
-           l = lchi(nbe,nt)
+           l = upf(nt)%lchi(nbe)
            !
            IF ( l /= 0 ) THEN
               !
-              IF (ABS(jchi(nbe,nt)-lchi(nbe,nt)+0.5d0) < 1.d-7) THEN
-                 IF ( ABS(jchi(nbe+1,nt)-lchi(nbe+1,nt)-0.5d0) > &
+              IF (ABS(upf(nt)%jchi(nbe)-upf(nt)%lchi(nbe)+0.5d0) < 1.d-7) THEN
+                 IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)-0.5d0) > &
                       1.d-7) call errore('setup','wrong chi functions',1)
                  ind=nbe+1
                  ind1=nbe
               ELSE
-                 IF ( ABS(jchi(nbe+1,nt)-lchi(nbe+1,nt)+0.5d0) > &
+                 IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)+0.5d0) > &
                       1.d-7) call errore('setup','wrong chi functions',1)
                  ind=nbe
                  ind1=nbe+1
               END IF
               !
-              chi(1:rgrid(nt)%mesh,nb,nt) = &
-                 ((l+1.D0) * chi(1:rgrid(nt)%mesh,ind,nt)+ &
-                   l * chi(1:rgrid(nt)%mesh,ind1,nt)) / ( 2.D0 * l + 1.D0 )
+              upf(nt)%chi(1:rgrid(nt)%mesh,nb) = &
+                 ((l+1.D0) * upf(nt)%chi(1:rgrid(nt)%mesh,ind)+ &
+                   l * upf(nt)%chi(1:rgrid(nt)%mesh,ind1)) / ( 2.D0 * l + 1.D0 )
               !   
               nbe = nbe + 1
               !
            ELSE
               !
-              chi(1:rgrid(nt)%mesh,nb,nt) = chi(1:rgrid(nt)%mesh,nbe,nt)
+              upf(nt)%chi(1:rgrid(nt)%mesh,nb) = upf(nt)%chi(1:rgrid(nt)%mesh,nbe)
               !
            END IF
            !
-           lchi(nb,nt)= lchi(nbe,nt)
+           upf(nt)%lchi(nb)= upf(nt)%lchi(nbe)
            !
         END DO
         !

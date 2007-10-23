@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,14 +15,14 @@ subroutine vhpsi_nc (ldap, np, mp, psip, hpsi)
   ! of the current k-point, the result is added to hpsi
   !
   USE kinds, ONLY: DP
-  USE atom, ONLY: oc, lchi, nchi
-  USE ldaU, ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
+  USE ldaU,  ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
        ns, nsnew, swfcatom
-  USE lsda_mod, ONLY: nspin, current_spin
+  USE lsda_mod,   ONLY: nspin, current_spin
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp
   USE basis, ONLY: natomwfc
   USE wvfct, ONLY: gamma_only
-  USE gvect,   ONLY : gstart
+  USE gvect, ONLY : gstart
+  USE uspp_param, ONLY : upf
   implicit none
   integer :: ldap, np, mp
   complex(DP) :: psip (ldap,1, mp), hpsi (ldap,1, mp)
@@ -37,9 +37,9 @@ subroutine vhpsi_nc (ldap, np, mp, psip, hpsi)
   counter = 0  
   do na = 1, nat  
      nt = ityp (na)  
-     do n = 1, nchi (nt)  
-        if (oc (n, nt) >= 0.d0) then  
-           l = lchi (n, nt)  
+     do n = 1, upf(nt)%nwfc
+        if (upf(nt)%oc(n) >= 0.d0) then  
+           l = upf(nt)%lchi (n)  
            if (l.eq.Hubbard_l(nt)) offset (na) = counter  
            counter = counter + 2 * l + 1  
         endif

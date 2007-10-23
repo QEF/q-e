@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2003 PWSCF group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,16 +16,16 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    ! is needed in computing the internal stress tensor.
    !
    USE kinds,      ONLY : DP
-   USE parameters, ONLY : nchix
    USE io_global,  ONLY : stdout
    USE constants,  ONLY : tpi, fpi
-   USE atom,       ONLY : msh, lchi, nchi, oc, chi
+   USE atom,       ONLY : msh
    USE ions_base,  ONLY : nat, ntyp => nsp, ityp, tau
    USE cell_base,  ONLY : omega, at, bg, tpiba
    USE klist,      ONLY : xk
    USE gvect,      ONLY : ig1, ig2, ig3, eigts1, eigts2, eigts3, g
    USE wvfct,      ONLY : npw, npwx, igk
    USE us,         ONLY : tab_at, dq
+   USE uspp_param, ONLY : upf
    !
    implicit none
    !
@@ -36,18 +36,16 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    !
    ! local variables
    !
-   integer :: l, na, nt, nb, iatw, iig, ig, i0, i1, i2 ,i3, m, lm
+   integer :: l, na, nt, nb, iatw, iig, ig, i0, i1, i2 ,i3, m, lm, nwfcm
    real (DP) :: eps, qt, arg, px, ux, vx, wx
    parameter (eps=1.0d-8)
    complex (DP) :: phase, pref
    real (DP), allocatable :: gk(:,:), q(:), ylm(:,:), djl(:,:,:)
-   !          gk(3,npw), q(npw),
-   !          ylm(npw,(lmax_wfc+1)**2),
-   !          djl(npw,nchix,ntyp)
    complex (DP), allocatable :: sk(:)
    !          sk(npw)
 
-   allocate ( ylm (npw,(lmax_wfc+1)**2) , djl (npw,nchix,ntyp) )
+   nwfcm = MAXVAL ( upf(1:ntyp)%nwfc )
+   allocate ( ylm (npw,(lmax_wfc+1)**2) , djl (npw,nwfcm,ntyp) )
    allocate ( gk(3,npw), q (npw) )
 
    do ig = 1, npw
@@ -65,9 +63,9 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    q(:) = dsqrt ( q(:) )
 
    do nt=1,ntyp
-      do nb=1,nchi(nt)
-         if (oc(nb,nt) >= 0.d0) then
-            l =lchi(nb,nt)
+      do nb=1,upf(nt)%nwfc
+         if (upf(nt)%oc(nb) >= 0.d0) then
+            l =upf(nt)%lchi(nb)
             do ig = 1, npw
                qt=q(ig)*tpiba
                px = qt / dq - int (qt / dq)
@@ -87,7 +85,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
          end if
       end do
    end do
-   deallocate ( gk, q )
+   deallocate ( q, gk )
 
    allocate ( sk(npw) )
 
@@ -104,10 +102,9 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
                   eigts2(ig2(iig),na) *      &
                   eigts3(ig3(iig),na) * phase
       end do
-      do nb = 1,nchi(nt)
-         if (oc(nb,nt) >= 0.d0) then
-            l  = lchi(nb,nt)
-            pref = (1.d0,0.d0)**l
+      do nb = 1,upf(nt)%nwfc
+         if (upf(nt)%oc(nb) >= 0.d0) then
+            l  = upf(nt)%lchi(nb)
             pref = (0.d0,1.d0)**l
             do m = 1,2*l+1
                lm = l*l+m
@@ -126,7 +123,7 @@ subroutine gen_at_dj ( kpoint, natw, lmax_wfc, dwfcat )
    end if
 
    deallocate ( sk )
-   deallocate ( ylm , djl )
+   deallocate ( djl, ylm )
 
    return
 end subroutine gen_at_dj

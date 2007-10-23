@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 PWSCF group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -30,12 +30,12 @@ SUBROUTINE force_hub(forceh)
    USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : becp
    USE uspp,                 ONLY : nkb, vkb
+   USE uspp_param,           ONLY : upf
    USE wavefunctions_module, ONLY : evc
    USE klist,                ONLY : nks, xk, ngk
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
    USE buffers,              ONLY : get_buffer
-   USE atom,                 ONLY : nchi, lchi, oc
 
    IMPLICIT NONE
    REAL (DP) :: forceh(3,nat)  ! output: the Hubbard forces
@@ -79,9 +79,9 @@ SUBROUTINE force_hub(forceh)
    DO na=1,nat
       offset(na) = 0
       nt=ityp(na)
-      DO n=1,nchi(nt)
-         IF (oc(n,nt) >= 0.d0) THEN
-            l=lchi(n,nt)
+      DO n=1,upf(nt)%nwfc
+         IF (upf(nt)%oc(n) >= 0.d0) THEN
+            l=upf(nt)%lchi(n)
             IF (l == Hubbard_l(nt)) offset(na) = counter
             counter = counter + 2 * l + 1
          END IF

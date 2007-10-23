@@ -35,10 +35,9 @@ MODULE grid_paw_routines
 SUBROUTINE atomic_becsum()
   USE kinds,              ONLY : DP
   USE uspp,               ONLY : becsum, nhtol, indv
-  USE uspp_param,         ONLY : nh
+  USE uspp_param,         ONLY : upf, nh
   USE ions_base,          ONLY : nat, ityp
   USE lsda_mod,           ONLY : nspin, starting_magnetization
-  USE atom,               ONLY : oc
   USE grid_paw_variables, ONLY : tpawp, okpaw
   IMPLICIT NONE
   INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
@@ -57,14 +56,14 @@ SUBROUTINE atomic_becsum()
            !
            IF (nspin==1) THEN
               !
-              becsum(ijh,na,1) = oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
+              becsum(ijh,na,1) = upf(nt)%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
               !
            ELSE IF (nspin==2) THEN
               !
               becsum(ijh,na,1) = 0.5d0 * (1.d0 + starting_magnetization(nt))* &
-                                 oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
+                                 upf(nt)%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
               becsum(ijh,na,2) = 0.5d0 * (1.d0 - starting_magnetization(nt))* &
-                                 oc(nb,nt) / REAL(2*nhtol(ih,nt)+1,DP)
+                                 upf(nt)%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
               !
            END IF
            ijh = ijh + 1
