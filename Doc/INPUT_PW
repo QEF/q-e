@@ -490,10 +490,11 @@ constrained_magnetization CHARACTER ( defalt = 'none' )
                `atomic`: atomic magnetization are constrained to the defined
                         starting magnetization adding a penalty
      - LAMBDA * SUM_{i,itype} ( magnetic_moment(i,itype) - mcons(i,itype) )**2
-                        where i runs over the components (1-3) and itype over
-                        the types (1-ntype).
+                        where i runs over the cartesian components (or just z 
+                        in the collinear case) and itype over the types (1-ntype).
                         mcons(:,:) array is defined from starting_magnetization,
-                        angle1 and angle2 variables. lambda is a real number
+                        (and angle1, angle2 in the non-collinear case). lambda is 
+                        a real number
                `total direction`:  the angle theta of the total magnetization
                         with the z axis (theta = fixed_magnetization(3))  
                         is constrained: 
