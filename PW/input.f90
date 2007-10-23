@@ -440,16 +440,26 @@ SUBROUTINE iosys()
      !
      i_cons = 1
      !
-     DO nt = 1, ntyp
-        !
-        theta = angle1(nt)
-        phi   = angle2(nt)
-        !
-        mcons(1,nt) = starting_magnetization(nt) * SIN( theta ) * COS( phi )
-        mcons(2,nt) = starting_magnetization(nt) * SIN( theta ) * SIN( phi )
-        mcons(3,nt) = starting_magnetization(nt) * COS( theta )
-        !
-     END DO
+     if (nspin == 4) then
+        ! non-collinear case
+        DO nt = 1, ntyp
+           !
+           theta = angle1(nt)
+           phi   = angle2(nt)
+           !
+           mcons(1,nt) = starting_magnetization(nt) * SIN( theta ) * COS( phi )
+           mcons(2,nt) = starting_magnetization(nt) * SIN( theta ) * SIN( phi )
+           mcons(3,nt) = starting_magnetization(nt) * COS( theta )
+           !
+        END DO
+     else
+        ! collinear case
+        DO nt = 1, ntyp
+           !
+           mcons(1,nt) = starting_magnetization(nt) 
+           !
+        END DO
+     end if
      !
   CASE( 'total direction' )
      i_cons = 6

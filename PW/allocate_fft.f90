@@ -90,19 +90,17 @@ subroutine allocate_fft
      if (gamma_only) nlsm=> nlm
   endif
 
-  if (noncolin) then
-     allocate (psic_nc( nrxx, npol))    
-     if (((report.ne.0).or.(i_cons.ne.0)).and.(noncolin)) then
+  if (noncolin) allocate (psic_nc( nrxx, npol))    
+
+  if ( ((report.ne.0).or.(i_cons.ne.0)) .and. (noncolin) .or. (i_cons.eq.1) ) then
 !
 ! In order to print out local quantities, integrated around the atoms,
 ! we need the following variables
 !
-        allocate(pointlist(nrxx))
-        allocate(factlist(nrxx))
-        allocate(r_loc(nat))
-
-        call make_pointlists
-     endif
+     allocate(pointlist(nrxx))
+     allocate(factlist(nrxx))
+     allocate(r_loc(nat))
+     call make_pointlists
   endif
 
   return

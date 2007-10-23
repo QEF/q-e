@@ -218,7 +218,14 @@ SUBROUTINE setup()
         !
      ENDIF
      !
-     IF ( i_cons /= 0 .AND. i_cons /= 5 ) &
+     IF ( i_cons == 1) then
+        do na=1,nat
+           m_loc(1,na) = starting_magnetization(ityp(na))
+        end do
+     end if
+     IF ( i_cons /= 0 .AND. nspin ==1) &
+        CALL errore( 'setup', 'this i_cons requires a magnetic calculation ', 1 )
+     IF ( i_cons /= 0 .AND. i_cons /= 1 .AND. i_cons /= 5) &
         CALL errore( 'setup', 'this i_cons requires a non colinear run', 1 )
      IF ( i_cons == 5 .AND. nspin /= 2 ) &
         CALL errore( 'setup', 'i_cons can be 5 only with nspin=2', 1 )

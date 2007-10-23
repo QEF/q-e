@@ -40,7 +40,6 @@ SUBROUTINE make_pointlists
   REAL(DP) :: posi(3),distance,shift(3),scalprod, distmin
   REAL(DP), ALLOCATABLE :: tau0(:,:)
 
-  IF (.NOT.(noncolin)) RETURN
   WRITE( stdout,'(5x,"Generating pointlists ...")')
   ALLOCATE(tau0(3,nat))
 

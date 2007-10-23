@@ -48,9 +48,9 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, &
      CALL v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   endif
   !
-  ! ... add a magnetic field 
+  ! ... add a magnetic field  (if any)
   !
-  IF ( noncolin ) CALL add_bfield( v, rho )
+  CALL add_bfield( v, rho )
   !
   ! ... calculate hartree potential
   !

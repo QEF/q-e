@@ -30,34 +30,36 @@
       call get_locals(r_loc,m_loc,rho)
       
       do iat = 1,nat
+         if (noncolin) then
 !
 !    norm is the length of the magnetic moment vector
 !
-         norm= dsqrt(m_loc(1,iat)**2+m_loc(2,iat)**2+m_loc(3,iat)**2)
+             norm= dsqrt(m_loc(1,iat)**2+m_loc(2,iat)**2+m_loc(3,iat)**2)
 !
 ! norm1 is the length of the projection of the mm vector into
 ! the xy plane
 !
-         norm1 = dsqrt(m_loc(1,iat)**2+m_loc(2,iat)**2)
+             norm1 = dsqrt(m_loc(1,iat)**2+m_loc(2,iat)**2)
 
 
 ! calculate the polar angles of the magnetic moment
-         if(norm.gt.1.d-10) then
-            theta = acos(m_loc(3,iat)/norm)
-            if (norm1.gt.1.d-10) then
-               phi = acos(m_loc(1,iat)/norm1)
-               if (m_loc(2,iat).lt.0.d0) phi = - phi
-            else
-               phi = 2.d0*pi
-            endif
-         else
-            theta = 2.d0*pi
-            phi = 2.d0*pi
-         endif
+             if(norm.gt.1.d-10) then
+                theta = acos(m_loc(3,iat)/norm)
+                if (norm1.gt.1.d-10) then
+                   phi = acos(m_loc(1,iat)/norm1)
+                   if (m_loc(2,iat).lt.0.d0) phi = - phi
+                else
+                   phi = 2.d0*pi
+                endif
+             else
+                theta = 2.d0*pi
+                phi = 2.d0*pi
+             endif
 
-         ! go to degrees
-         theta = theta*180.d0/pi
-         phi = phi*180.d0/pi
+             ! go to degrees
+             theta = theta*180.d0/pi
+             phi = phi*180.d0/pi
+         end if
          
 
          WRITE( stdout,1010)
@@ -73,6 +75,10 @@
             else if (i_cons.eq.2) then
                WRITE( stdout,1017) 180.d0 * acos(mcons(3,ityp(iat)))/pi
             endif
+         else
+            WRITE( stdout,1012) m_loc(1,iat)
+            WRITE( stdout,1018) m_loc(1,iat)/r_loc(iat)
+            if (i_cons.eq.1) WRITE( stdout,1015) mcons(1,ityp(iat))
          endif
          WRITE( stdout,1010)
 

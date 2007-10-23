@@ -29,14 +29,15 @@
 !
       real(DP) ::   &
           rholoc(nat),   &     ! integrated charge arount the atoms
-          magloc(3,nat)        ! integrated magnetic moment around the atom
+          magloc(nspin-1,nat)  ! integrated magnetic moment around the atom
       real(DP) :: rho (nrxx, nspin)
 !
 ! local variables
 !
       integer iat,i,ipol
+      real(DP) :: fact
       real(DP), allocatable :: auxrholoc(:,:)
-      
+ 
       allocate (auxrholoc(0:nat,nspin))
       auxrholoc(:,:) = 0.d0
       do i=1,nrxx
@@ -45,12 +46,18 @@
       end do
       call reduce((nat+1)*nspin,auxrholoc)
 !
-      rholoc(1:nat) = auxrholoc(1:nat,1) * omega/(nr1*nr2*nr3)
-      if (noncolin) then
-         do ipol=1,3
-            magloc(ipol,1:nat) = auxrholoc(1:nat,ipol+1)*omega/(nr1*nr2*nr3)
-         end do
-      end if
+      fact =  omega/(nr1*nr2*nr3)
+      if (nspin.eq.2) then
+         rholoc(1:nat)   = (auxrholoc(1:nat,1)+auxrholoc(1:nat,2)) * fact
+         magloc(1,1:nat) = (auxrholoc(1:nat,1)-auxrholoc(1:nat,2)) * fact
+      else
+         rholoc(1:nat) = auxrholoc(1:nat,1) * fact
+         if (noncolin) then
+            do ipol=1,3
+               magloc(ipol,1:nat) = auxrholoc(1:nat,ipol+1) * fact
+            end do
+         end if
+      endif
 !
       deallocate (auxrholoc)
 
