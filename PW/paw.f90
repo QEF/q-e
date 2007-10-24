@@ -117,6 +117,7 @@ MODULE paw
      
      INTEGER :: gipaw_ncore_orbital
      REAL(dp), ALLOCATABLE :: gipaw_core_orbital(:,:)
+     INTEGER, ALLOCATABLE :: gipaw_core_orbital_l(:)
      
   END TYPE paw_recon_type
   
@@ -496,8 +497,11 @@ CONTAINS
      
      paw_recon(is)%gipaw_ncore_orbital = upf%gipaw_ncore_orbitals
      ALLOCATE ( paw_recon(is)%gipaw_core_orbital(upf%mesh,upf%gipaw_ncore_orbitals) )
+     ALLOCATE ( paw_recon(is)%gipaw_core_orbital_l(upf%gipaw_ncore_orbitals) )
      paw_recon(is)%gipaw_core_orbital(:upf%mesh,:upf%gipaw_ncore_orbitals) &
           = upf%gipaw_core_orbital(:upf%mesh,:upf%gipaw_ncore_orbitals)
+     paw_recon(is)%gipaw_core_orbital_l(:upf%gipaw_ncore_orbitals) &
+          = upf%gipaw_core_orbital_l(:upf%gipaw_ncore_orbitals)
      
      ALLOCATE ( paw_recon(is)%gipaw_ae_vloc(upf%mesh) )
      ALLOCATE ( paw_recon(is)%gipaw_ps_vloc(upf%mesh) )

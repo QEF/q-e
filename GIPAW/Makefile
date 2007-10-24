@@ -43,6 +43,7 @@ MODULES = \
 ../Modules/descriptors.o \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
+../Modules/exc_t.o \
 ../Modules/fft_base.o \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
@@ -89,6 +90,8 @@ MODULES = \
 ../Modules/upf_to_internal.o \
 ../Modules/uspp.o \
 ../Modules/version.o \
+../Modules/vxc_t.o \
+../Modules/vxcgc.f90 \
 ../Modules/wavefunctions.o \
 ../Modules/wave_base.o \
 ../Modules/xml_io_base.o \
