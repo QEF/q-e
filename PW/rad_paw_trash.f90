@@ -646,7 +646,7 @@ END SUBROUTINE integrate_pfunc
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                                      ngm, nl, nlm, gg, g
     USE lsda_mod,             ONLY : nspin
-    USE uspp_param,           ONLY : lmaxq, tvanp, nh, nhm
+    USE uspp_param,           ONLY : lmaxq, nh, nhm
     USE wvfct,                ONLY : gamma_only
     USE wavefunctions_module, ONLY : psic
     !

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 CP90 group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,6 @@
                                 tsde, tortho, tnosee, tnosep, trane, &
                                 tranp, tsdp, tcp, tcap, ampre, &
                                 amprp, tnoseh
-      USE atom,           ONLY: nlcc
       USE core,           ONLY: nlcc_any
       USE energies,       ONLY: eht, epseu, exc, etot, eself, enl, &
                                 ekin, atot, entropy, egrand

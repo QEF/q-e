@@ -328,7 +328,7 @@ subroutine set_pseudo_paw (is, pawset)
   !
   ! PWSCF modules
   !
-  USE atom,  ONLY: rgrid, msh, rho_at, rho_atc, nlcc
+  USE atom,  ONLY: rgrid, msh, nlcc
   USE uspp_param, ONLY: upf
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
@@ -545,10 +545,10 @@ subroutine set_pseudo_paw (is, pawset)
 !!$  endif
   !
   if ( pawset%nlcc) then
-     rho_atc(1:pawset%grid%mesh, is) = pawset%psccharge(1:pawset%grid%mesh) &
-          &                       / FPI / pawset%grid%r2(1:pawset%grid%mesh)
-  else
-     rho_atc(:,is) = 0.d0
+     allocate ( upf(is)%rho_atc(pawset%grid%mesh) )
+     upf(is)%rho_atc(1:pawset%grid%mesh) = &
+	pawset%psccharge(1:pawset%grid%mesh)   &
+        / FPI / pawset%grid%r2(1:pawset%grid%mesh)
   end if
 
   aerho_atc(1:pawset%grid%mesh, is) = pawset%aeccharge(1:pawset%grid%mesh) &
@@ -560,7 +560,8 @@ subroutine set_pseudo_paw (is, pawset)
      psrho_atc(:,is) = 0._dp
   end if
   !
-  rho_at (1:pawset%grid%mesh, is) = pawset%pscharge(1:pawset%grid%mesh)
+  allocate ( upf(is)%rho_atc(pawset%grid%mesh) )
+  upf(is)%rho_at (1:pawset%grid%mesh) = pawset%pscharge(1:pawset%grid%mesh)
 
   allocate (upf(is)%vloc(1:pawset%grid%mesh))
   upf(is)%vloc(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)

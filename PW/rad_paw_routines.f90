@@ -49,7 +49,7 @@
 MODULE rad_paw_routines
     !
     USE kinds,      ONLY : DP
-    USe parameters, ONLY : ntypx, natx
+    USe parameters, ONLY : ntypx
     !
     IMPLICIT NONE
 

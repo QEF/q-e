@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,10 +11,21 @@ subroutine dynmatcc(dyncc)
   !--------------------------------------------------------------------
   !
 #include "f_defs.h" 
-  USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau
-  use pwcom
-  USE atom, ONLY: nlcc, rgrid, rho_atc
+  USE kinds,      ONLY : DP
+  USE ions_base,  ONLY : ntyp => nsp, nat, ityp, tau
+  USE atom,       ONLY: rgrid, nlcc
+  USE constants,  ONLY: tpi
+  USE cell_base,  ONLY: omega, tpiba2
+  USE ener,       ONLY: etxc, vtxc
+  USE ions_base,  ONLY: ntyp => nsp, nat, ityp, tau
+  USE uspp_param, ONLY: upf
+  USE gvect,      ONLY : nl, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       nrxx, ngm, g, gg
+  USE scf,        ONLY : rho, rhog, rho_core, rhog_core
+  USE uspp_param, ONLY: upf
   USE wavefunctions_module,  ONLY: psic
+  USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
+
   use cgcom
   implicit none
   real(DP):: dyncc(3*nat,nmodes)
@@ -28,9 +39,7 @@ subroutine dynmatcc(dyncc)
   !
   dyncc(:,:) = 0.d0
   !
-  do nt=1,ntyp
-     if(nlcc(nt)) go to 10
-  end do
+  if ( ANY( upf(1:ntyp)%nlcc ) ) go to 10
   return
 10 continue
   !
@@ -42,14 +51,14 @@ subroutine dynmatcc(dyncc)
   !
   call v_xc  (rho, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
   !
-  call cft3(vxc,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
+  call cft3(vxc,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   !
   dyncc1(:,:,:,:) = 0.d0
   do na=1,nat
      nta=ityp(na)
-     if (nlcc(nta)) then
+     if ( upf(nta)%nlcc ) then
         call drhoc (ngm, gg, omega, tpiba2, rgrid(nta)%mesh, rgrid(nta)%dx, &
-                    rgrid(nta)%r, rho_atc(1,nta), drhocc)
+                    rgrid(nta)%r, upf(nta)%rho_atc, drhocc)
         do ig=1,ngm
            exg = tpi* ( g(1,ig)*tau(1,na) + &
                         g(2,ig)*tau(2,na) + &
@@ -74,9 +83,10 @@ subroutine dynmatcc(dyncc)
         end do
         do nb=1,nat
            ntb=ityp(nb)
-           if (nlcc(ntb)) then
+           if ( upf(ntb)%nlcc ) then
               call drhoc (ngm, gg, omega, tpiba2, rgrid(ntb)%mesh, &
-                          rgrid(ntb)%dx, rgrid(ntb)%r, rho_atc(1,ntb), drhocc)
+                          rgrid(ntb)%dx, rgrid(ntb)%r, upf(ntb)%rho_atc,&
+                          drhocc)
               do ig=1,ngm
                  exg = tpi* ( g(1,ig)*tau(1,nb) + &
                               g(2,ig)*tau(2,nb) + &

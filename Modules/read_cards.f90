@@ -23,8 +23,6 @@ MODULE read_cards_module
   !
   IMPLICIT NONE
   !
-  INTEGER, PARAMETER :: nbndxx  = 10000
-  !
   SAVE
   !
   PRIVATE
@@ -1947,28 +1945,33 @@ MODULE read_cards_module
        CHARACTER(LEN=256) :: input_line
        LOGICAL, SAVE      :: tread = .FALSE.
        INTEGER            :: i, s, nksx
-       INTEGER, ALLOCATABLE :: is( :, : )
+       TYPE occupancy_type
+          INTEGER, pointer :: occs(:)
+       END TYPE occupancy_type
+       TYPE(occupancy_type), ALLOCATABLE :: is(:)
        !
        IF ( tread ) THEN
           CALL errore( ' card_ksout ', ' two occurrence ', 2 )
        END IF
        !
-       ALLOCATE( is( nbndxx, nspin ) )
-       !
        nprnks = 0 
        nksx   = 0
+       !
+       ALLOCATE ( is (nspin) )
        !
        DO s = 1, nspin
           !
           CALL read_line( input_line )
           READ(input_line, *) nprnks( s )
           !
-          IF ( nprnks( s ) > nbndxx .OR. nprnks( s ) < 1 ) THEN
+          IF ( nprnks( s ) < 1 ) THEN
              CALL errore( ' card_ksout ', ' wrong number of states ', 2 )
           END IF
           !
+          ALLOCATE( is(s)%occs( 1:nprnks(s) ) )
+          !
           CALL read_line( input_line )
-          READ(input_line, *) ( is( i, s ), i = 1, nprnks( s ) )
+          READ(input_line, *) ( is(s)%occs(i), i = 1, nprnks( s ) )
           !
           nksx = MAX( nksx, nprnks( s ) )
           !
@@ -1980,9 +1983,11 @@ MODULE read_cards_module
           !
           DO i = 1, nprnks( s )
              !
-             iprnks( i, s ) = is( i, s )
+             iprnks( i, s ) = is(s)%occs(i)
              !
           END DO
+          !
+          DEALLOCATE( is(s)%occs )
           !
        END DO
        !
@@ -2048,13 +2053,16 @@ MODULE read_cards_module
        CHARACTER(LEN=256) :: input_line
        LOGICAL, SAVE      :: tread = .FALSE.
        INTEGER            :: nksx, i, s
-       INTEGER, ALLOCATABLE :: is( :, : )
+       TYPE occupancy_type
+          INTEGER, pointer :: occs(:)
+       END TYPE occupancy_type
+       TYPE(occupancy_type), ALLOCATABLE :: is(:)
        !
        IF ( tread ) THEN
           CALL errore( ' card_ksout_empty ', ' two occurrence ', 2 )
        END IF
        !
-       ALLOCATE( is( nbndxx, nspin ) )
+       ALLOCATE ( is (nspin) )
        !
        nprnks_empty = 0 
        nksx   = 0
@@ -2064,12 +2072,14 @@ MODULE read_cards_module
           CALL read_line( input_line )
           READ(input_line,*) nprnks_empty( s )
           !
-          IF ( ( nprnks_empty( s ) >  nbndxx ) .OR. ( nprnks_empty( s ) < 1 ) ) THEN
+          IF ( nprnks_empty( s ) < 1 ) THEN
              CALL errore( ' card_ksout_empty ', ' wrong number of states ', 2 )
           END IF
           !
+          ALLOCATE( is(s)%occs( 1:nprnks_empty( s ) ) )
+          !
           CALL read_line( input_line )
-          READ(input_line,*) ( is( i, s ), i = 1, nprnks_empty( s ) )
+          READ(input_line,*) ( is(s)%occs( i ), i = 1, nprnks_empty( s ) )
           !
           nksx = MAX( nksx, nprnks_empty( s ) )
           !
@@ -2081,9 +2091,11 @@ MODULE read_cards_module
           !
           DO i = 1, nprnks_empty( s )
              !
-             iprnks_empty( i, s ) = is( i, s )
+             iprnks_empty( i, s ) = is(s)%occs( i )
              !
           END DO
+          !
+          DEALLOCATE( is(s)%occs )
           !
        END DO
        !

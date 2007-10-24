@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -12,11 +12,17 @@ subroutine dvpsi_kb(kpoint,nu)
   ! calculates dVion/dtau * psi and stores it in dvpsi
   !
 #include "f_defs.h"
-  USE ions_base, ONLY : ntyp => nsp, nat, ityp, tau
-  USE kinds, only: DP
-  use pwcom
-  USE uspp_param, ONLY: nh, nhm
-  USE atom, ONLY: nlcc, rgrid, rho_atc
+  USE kinds,      ONLY: DP
+  USE constants,  ONLY: tpi
+  USE atom,       ONLY: rgrid
+  USE cell_base,  ONLY: omega, tpiba, tpiba2
+  USE ions_base,  ONLY: ntyp => nsp, nat, ityp, tau
+  USE uspp_param, ONLY: upf, nh, nhm
+  USE uspp,       ONLY: dvan, nkb, vkb
+  USE gvect,      ONLY : gstart, nl, nlm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+       nrxx, ngm, g, gg, igtongl
+  USE vlocal,     ONLY: vloc
+  USE wvfct,      ONLY: nbnd, npwx, npw, g2kin, igk
   USE wavefunctions_module,  ONLY: evc, psic
   use cgcom
   !
@@ -41,10 +47,10 @@ subroutine dvpsi_kb(kpoint,nu)
      mu = 3*(na-1)
      if ( u(mu+1,nu)**2+u(mu+2,nu)**2+u(mu+3,nu)**2.gt. 1.0d-12) then
         nt=ityp(na)
-        if (nlcc(nt)) call drhoc (ngm, gg, omega, tpiba2, rgrid(nt)%mesh, &
-                                  rgrid(nt)%dx, rgrid(nt)%r, rho_atc(1,nt),&
+        if (upf(nt)%nlcc) call drhoc (ngm, gg, omega, tpiba2, rgrid(nt)%mesh,&
+                                  rgrid(nt)%dx, rgrid(nt)%r, upf(nt)%rho_atc,&
                                   workcc)
-        has_nlcc = has_nlcc .or. nlcc(nt)
+        has_nlcc = has_nlcc .or. upf(nt)%nlcc
         do ng = 1,ngm
            gtau = tpi * ( g(1,ng)*tau(1,na) + &
                           g(2,ng)*tau(2,na) + &
@@ -54,7 +60,7 @@ subroutine dvpsi_kb(kpoint,nu)
                         g(3,ng)*u(mu+3,nu)   )
            exc = gu * CMPLX(-sin(gtau),-cos(gtau))
            dvloc (nl(ng))=dvloc (nl(ng)) + vloc(igtongl(ng),nt)*exc
-           if (nlcc(nt)) dvb_cc(nl(ng)) = dvb_cc(nl(ng)) + workcc(ng) * exc
+           if (upf(nt)%nlcc) dvb_cc(nl(ng)) = dvb_cc(nl(ng)) + workcc(ng) * exc
         end do
      end if
   end do
@@ -64,7 +70,7 @@ subroutine dvpsi_kb(kpoint,nu)
   !
   !   dVloc/dtau in real space
   !
-  call cft3(dvloc, nr1,nr2,nr3,nrx1,nr2,nr3,+1)
+  call cft3(dvloc, nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
   do ir = 1,nrxx
      dv(ir) =  DBLE(dvloc(ir))
   end do
@@ -72,7 +78,7 @@ subroutine dvpsi_kb(kpoint,nu)
      do ng = gstart,ngm
         dvb_cc (nlm(ng))=CONJG(dvb_cc(nl(ng)))
      end do
-     call cft3(dvb_cc,nr1,nr2,nr3,nrx1,nr2,nr3,+1)
+     call cft3(dvb_cc,nr1,nr2,nr3,nrx1,nrx2,nrx3,+1)
      do ir = 1,nrxx
         dv(ir) = dv(ir) +  DBLE(dvb_cc(ir)) * dmuxc(ir)
      end do

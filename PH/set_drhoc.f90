@@ -13,9 +13,12 @@ subroutine set_drhoc (q)
   ! used to calculate derivatives of the core charge
   !
 #include "f_defs.h"
+  USE constants, ONLY : fpi
+  USE cell_base, ONLY : omega, tpiba2
+  USE gvect,     ONLY : g, ngm
   USE ions_base, ONLY : ntyp => nsp
-  use pwcom
-  USE atom, ONLY : nlcc, msh, rgrid, rho_atc
+  USE atom, ONLY : msh, rgrid
+  USE uspp_param, ONLY : upf
   USE kinds, only : DP
   use phcom
   implicit none
@@ -43,17 +46,17 @@ subroutine set_drhoc (q)
      gq2 = gq2 * tpiba2
      do nt = 1, ntyp
         rhocgnt = 0.d0
-        if (nlcc (nt) ) then
+        if ( upf(nt)%nlcc ) then
            if (gq2 < 1.0d-8) then
               do ir = 1, msh (nt)
-                 aux (ir) = rgrid(nt)%r(ir) **2 * rho_atc (ir, nt)
+                 aux (ir) = rgrid(nt)%r(ir) **2 * upf(nt)%rho_atc (ir)
               enddo
               call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgip)
            else
               gx = sqrt (gq2)
               call sph_bes (msh (nt), rgrid(nt)%r, gx, 0, aux)
               do ir = 1, msh (nt)
-                 aux (ir) = rgrid(nt)%r(ir) **2 * rho_atc (ir, nt) * aux (ir)
+                 aux (ir) = rgrid(nt)%r(ir) **2 * upf(nt)%rho_atc(ir) * aux(ir)
               enddo
               call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgip)
            endif

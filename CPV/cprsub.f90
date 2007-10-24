@@ -325,7 +325,7 @@ subroutine nlinit
       use ions_base,       ONLY : na, nsp
       use uspp,            ONLY : aainit, beta, qq, dvan, nhtol, nhtolm, indv
       use uspp_param,      ONLY : upf, lmaxq, nbetam, lmaxkb, nhm, nh
-      use atom,            ONLY : rgrid, nlcc
+      use atom,            ONLY : rgrid
       use qradb_mod,       ONLY : qradb
       use qgb_mod,         ONLY : qgb
       use gvecb,           ONLY : ngb

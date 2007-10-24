@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,7 +18,8 @@
      use kinds,              ONLY : DP
      use control_flags,      ONLY : program_name
      use ions_base,          ONLY : nsp
-     use atom,               ONLY : nlcc, rgrid, rho_atc
+     use atom,               ONLY : rgrid
+     use uspp_param,         ONLY : upf
      use gvecb,              ONLY : ngb, gb
      use small_box,          ONLY : omegab, tpibab
      use pseudo_base,        ONLY : compute_rhocg
@@ -47,12 +48,13 @@
      !
      do is = 1, nsp
         !
-        if( nlcc( is ) ) then
+        if( upf(is)%nlcc ) then
            !
            IF( program_name == 'CP90' ) THEN
               !
-              CALL compute_rhocg( rhocb(:,is), rhocb(:,is), rgrid(is)%r, rgrid(is)%rab, &
-                  rho_atc(:,is), gb, omegab, tpibab**2, rgrid(is)%mesh, ngb, 0 )
+              CALL compute_rhocg( rhocb(:,is), rhocb(:,is), rgrid(is)%r, &
+                  rgrid(is)%rab, upf(is)%rho_atc(:), gb, omegab, tpibab**2, &
+                  rgrid(is)%mesh, ngb, 0 )
               !
            END IF
            !
@@ -74,8 +76,9 @@
                  !
               ELSE
 
-                 CALL compute_rhocg( rhocg(:,is), drhocg(:,is), rgrid(is)%r, rgrid(is)%rab, &
-                                     rho_atc(:,is), g, omega, tpiba2, rgrid(is)%mesh, ngm, 1 )
+                 CALL compute_rhocg( rhocg(:,is), drhocg(:,is), rgrid(is)%r, &
+                                     rgrid(is)%rab, upf(is)%rho_atc(:), g, &
+                                     omega, tpiba2, rgrid(is)%mesh, ngm, 1 )
 
               END IF
               !

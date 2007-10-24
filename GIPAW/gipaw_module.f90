@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -13,11 +13,12 @@ MODULE gipaw_module
   !
   USE kinds, ONLY : DP
   USE constants, ONLY : a0_to_cm => bohr_radius_cm
-  USE parameters, ONLY : npk, ntypx, lmaxx, natx
+  USE parameters, ONLY : npk, ntypx, lmaxx
   
   IMPLICIT NONE
   SAVE
   
+  INTEGER, PARAMETER:: natx=5000 ! max number of atoms
   ! alpha
   REAL(DP), PARAMETER :: alpha = 1.0_dp / 137.03599911_dp
   

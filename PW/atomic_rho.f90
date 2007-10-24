@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -28,7 +28,7 @@ subroutine atomic_rho (rhoa, nspina)
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE atom,                 ONLY : rgrid, msh, rho_at
+  USE atom,                 ONLY : rgrid, msh
   USE ions_base,            ONLY : ntyp => nsp
   USE cell_base,            ONLY : tpiba, omega
   USE gvect,                ONLY : ngm, ngl, nrxx, nr1, nr2, nr3, nrx1, nrx2, &
@@ -38,6 +38,7 @@ subroutine atomic_rho (rhoa, nspina)
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE noncollin_module,     ONLY : angle1, angle2
+  USE uspp_param,           ONLY : upf
   !
   implicit none
   !
@@ -71,7 +72,7 @@ subroutine atomic_rho (rhoa, nspina)
      !
      if (gstart == 2) then
         do ir = 1, msh (nt)
-           aux (ir) = rho_at (ir, nt)
+           aux (ir) = upf(nt)%rho_at (ir)
         enddo
         call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (1) )
      endif
@@ -82,9 +83,10 @@ subroutine atomic_rho (rhoa, nspina)
         gx = sqrt (gl (igl) ) * tpiba
         do ir = 1, msh (nt)
            if (rgrid(nt)%r(ir) < 1.0d-8) then
-              aux(ir) = rho_at(ir,nt)
+              aux(ir) = upf(nt)%rho_at(ir)
            else
-              aux(ir) = rho_at(ir,nt) * sin(gx*rgrid(nt)%r(ir)) / (rgrid(nt)%r(ir)*gx)
+              aux(ir) = upf(nt)%rho_at(ir) * &
+                        sin(gx*rgrid(nt)%r(ir)) / (rgrid(nt)%r(ir)*gx)
            endif
         enddo
         call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (igl) )

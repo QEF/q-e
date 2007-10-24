@@ -3002,7 +3002,7 @@ end function set_Hubbard_l
 !
       use control_flags,      ONLY: tfor, tprnfor
       use kinds,              ONLY: DP        
-      use parameters,         ONLY: natx, nsx
+      use parameters,         ONLY: nsx
       use ions_base,          only: na, nat, nsp
       use gvecw,              only: ngw
       use reciprocal_vectors, only: ng0 => gstart

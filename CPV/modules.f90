@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -397,9 +397,9 @@ end module ldaU
 ! Occupation constraint ...to be implemented...
 !
 module step_constraint
-  use parameters, only: natx_ => natx
   USE kinds
   implicit none
+  integer, parameter :: natx_ = 5000
   real(DP) :: E_con
   real(DP) :: A_con(natx_,2), sigma_con(natx_), alpha_con(natx_)
   logical :: step_con

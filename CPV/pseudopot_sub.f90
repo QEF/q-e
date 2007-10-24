@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -68,7 +68,6 @@
       use uspp,       only: nhtol,  &!
                             nhtolm, &!
                             indv     !
-      use atom,       only: nlcc     !
 
       use pseudopotential,         ONLY: nsanl
       USE read_pseudo_module_fpmd, ONLY: nspnl
@@ -97,7 +96,7 @@
          ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
          if(  upf(is)%tvanp ) nkbus = nkbus + na(is) * nh(is)
-         nlcc_any = nlcc_any .OR. nlcc(is)
+         nlcc_any = nlcc_any .OR. upf(is)%nlcc
       end do
       nhm    = MAXVAL( nh(1:nsp) )
       nbetam = MAXVAL( upf(1:nsp)%nbeta )
@@ -300,7 +299,8 @@
    SUBROUTINE build_cctab_x( )
 
       USE kinds,              ONLY : DP
-      USE atom,               ONLY : rgrid, nlcc, rho_atc
+      USE atom,               ONLY : rgrid
+      USE uspp_param,         ONLY : upf
       USE ions_base,          ONLY : nsp, rcmax
       USE cell_base,          ONLY : tpiba, tpiba2
       USE splines,            ONLY : init_spline, allocate_spline, kill_spline, nullify_spline
@@ -342,13 +342,14 @@
          CALL nullify_spline( rhoc1_sp( is ) )
          CALL nullify_spline( rhocp_sp( is ) )
 
-         IF( nlcc( is ) ) THEN
+         IF( upf(is)%nlcc ) THEN
             !
             CALL allocate_spline( rhoc1_sp(is), mmx, xgmin, xgmax )
             CALL allocate_spline( rhocp_sp(is), mmx, xgmin, xgmax )
             !
             CALL compute_rhocg( rhoc1_sp(is)%y, rhocp_sp(is)%y, rgrid(is)%r, &
-                 rgrid(is)%rab, rho_atc(:,is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, 1 )
+                 rgrid(is)%rab, upf(is)%rho_atc(:), xgtab, 1.0d0, tpiba2, &
+                 rgrid(is)%mesh, mmx, 1 )
             !
             CALL init_spline( rhoc1_sp(is) )
             CALL init_spline( rhocp_sp(is) )

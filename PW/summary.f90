@@ -404,7 +404,7 @@ SUBROUTINE print_ps_info
   USE io_global,       ONLY : stdout
   USE io_files,        ONLY : psfile
   USE ions_base,       ONLY : ntyp => nsp
-  USE atom,            ONLY : rgrid, nlcc
+  USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
   USE grid_paw_variables, ONLY: tpawp
   !
@@ -421,7 +421,7 @@ SUBROUTINE print_ps_info
         ps='Norm-conserving'
      END IF
      !
-     IF ( nlcc(nt) ) ps = TRIM(ps) // ' + core correction'
+     IF ( upf(nt)%nlcc ) ps = TRIM(ps) // ' + core correction'
      !
      WRITE( stdout, '(/5x,"PseudoPot. #",i2," for ",a2," read from file ",a)')&
              nt, upf(nt)%psd, TRIM (psfile(nt))

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,8 @@ subroutine force_corr (forcescc)
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
-  USE atom,                 ONLY : rho_at, msh, rgrid
+  USE atom,                 ONLY : msh, rgrid
+  USE uspp_param,           ONLY : upf
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,            ONLY : tpiba
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
@@ -72,9 +73,10 @@ subroutine force_corr (forcescc)
         gx = sqrt (gl (ig) ) * tpiba
         do ir = 1, msh (nt)
            if (rgrid(nt)%r(ir) .lt.1.0d-8) then
-              aux (ir) = rho_at (ir, nt)
+              aux (ir) = upf(nt)%rho_at (ir)
            else
-              aux (ir) = rho_at (ir, nt) * sin(gx*rgrid(nt)%r(ir))/(rgrid(nt)%r(ir)*gx)
+              aux (ir) = upf(nt)%rho_at (ir) * &
+                         sin(gx*rgrid(nt)%r(ir)) / (rgrid(nt)%r(ir)*gx)
            endif
         enddo
         call simpson (msh (nt), aux, rgrid(nt)%rab, rhocgnt (ig) )

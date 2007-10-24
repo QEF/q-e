@@ -28,7 +28,7 @@ subroutine set_pseudo_upf (is, upf)
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
   !   dummy argument ( upf ) - convert and copy to internal variables
   !
-  USE atom,  ONLY: rgrid, rho_at, rho_atc, nlcc
+  USE atom,  ONLY: rgrid, nlcc
   USE uspp_param, ONLY: tvanp
   USE funct, ONLY: set_dft_from_name, set_dft_from_indices, dft_is_meta
   !
@@ -65,13 +65,6 @@ subroutine set_pseudo_upf (is, upf)
   rgrid(is)%r  (1:upf%mesh) = upf%r  (1:upf%mesh)
   rgrid(is)%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
   !
-  if ( upf%nlcc) then
-     rho_atc(1:upf%mesh, is) = upf%rho_atc(1:upf%mesh)
-  else
-     rho_atc(:,is) = 0.0_DP
-  end if
-  rho_at (1:upf%mesh, is) = upf%rho_at (1:upf%mesh)
-
 end subroutine set_pseudo_upf
 
 

@@ -16,7 +16,8 @@ subroutine set_rhoc
   !
   USE io_global, ONLY : stdout
   USE kinds,     ONLY : DP
-  USE atom,      ONLY : rho_atc, msh, rgrid, nlcc
+  USE atom,      ONLY : msh, rgrid
+  USE uspp_param,ONLY : upf
   USE ions_base, ONLY : ntyp => nsp
   USE cell_base, ONLY : omega, tpiba2
   USE ener,      ONLY : etxcc
@@ -51,9 +52,7 @@ subroutine set_rhoc
   ! counter on g vectors
 
   etxcc = 0.0_DP
-  do nt = 1, ntyp
-     if (nlcc (nt) ) goto 10
-  enddo
+  if ( ANY( upf(1:ntyp)%nlcc ) ) goto 10
   
   rhog_core(:) = 0.0_DP
   rho_core(:)  = 0.0_DP
@@ -68,12 +67,12 @@ subroutine set_rhoc
   !    the sum is on atom types
   !
   do nt = 1, ntyp
-     if (nlcc (nt) ) then
+     if ( upf(nt)%nlcc ) then
         !
         !     drhoc compute the radial fourier transform for each shell of g vec
         !
         call drhoc (ngl, gl, omega, tpiba2, msh (nt), rgrid(nt)%r, &
-             rgrid(nt)%rab, rho_atc (1, nt), rhocg)
+             rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
         !
         !     multiply by the structure factor and sum
         !

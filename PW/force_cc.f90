@@ -13,7 +13,8 @@ subroutine force_cc (forcecc)
   !
   USE kinds,                ONLY : DP
   USE constants,            ONLY : tpi
-  USE atom,                 ONLY : rho_atc, rgrid, nlcc
+  USE atom,                 ONLY : rgrid
+  USE uspp_param,           ONLY : upf
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
   USE cell_base,            ONLY : alat, omega, tpiba, tpiba2
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
@@ -47,9 +48,7 @@ subroutine force_cc (forcecc)
 
   !
   forcecc(:,:) = 0.d0
-  do nt = 1, ntyp
-     if (nlcc (nt) ) goto 15
-  enddo
+  if ( ANY ( upf(1:ntyp)%nlcc ) ) go to 15
   return
   !
 15 continue
@@ -85,10 +84,10 @@ subroutine force_cc (forcecc)
   ! g = 0 term gives no contribution
   !
   do nt = 1, ntyp
-     if (nlcc (nt) ) then
+     if ( upf(nt)%nlcc ) then
 
         call drhoc (ngl, gl, omega, tpiba2, rgrid(nt)%mesh, rgrid(nt)%r,&
-             rgrid(nt)%rab, rho_atc (1, nt), rhocg)
+             rgrid(nt)%rab, upf(nt)%rho_atc, rhocg)
         do na = 1, nat
            if (nt.eq.ityp (na) ) then
               do ig = gstart, ngm

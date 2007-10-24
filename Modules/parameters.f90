@@ -30,8 +30,6 @@ MODULE parameters
   INTEGER, PARAMETER :: nacx    = 10         ! max number of averaged 
                                              ! quantities saved to the restart
   INTEGER, PARAMETER :: nsx     = ntypx      ! maximum number of species
-  INTEGER, PARAMETER :: natx    = 5000       ! maximum number of atoms
-  INTEGER, PARAMETER :: nbndxx  = 10000      ! maximum number of electronic states
   INTEGER, PARAMETER :: npkx    = npk        ! maximum number of K points
   INTEGER, PARAMETER :: nspinx  = 2          ! maximum number of spinors
 

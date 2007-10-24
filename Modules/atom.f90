@@ -13,7 +13,7 @@ MODULE atom
   !
   USE kinds,      ONLY : DP
   USE parameters, ONLY : npsx
-  USE radial_grids, ONLY : ndmx, radial_grid_type
+  USE radial_grids, ONLY : radial_grid_type
   !
   SAVE
   !
@@ -21,9 +21,6 @@ MODULE atom
        rgrid(npsx)                ! the information on atomic radial grids.
                                   ! NB: some of the subsequent data are therefore redundant 
                                   ! and will be eliminated in due course asap
-  REAL(DP) :: &
-       rho_at(ndmx,npsx),        &! radial atomic charge density
-       rho_atc(ndmx,npsx)         ! radial core charge density
   INTEGER :: &
        msh(npsx)                  ! the point at rcut
   LOGICAL :: &

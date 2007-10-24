@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2007 Quantum-Espresso groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -53,7 +53,7 @@
 
       real(kind=8) dx, dxx, xcc(4500)
       real(kind=8) weight0, wpiu, wmeno, maxr, minr
-      real(kind=8) tauv(3,natx,nsx), tau00(3), dist
+      real(kind=8) tau00(3), dist
       real(kind=8) rho_real(nnr,nspin), rhoc
       real(kind=8) alfa(nsx), alfa0, sigma, hgt 
       real(kind=8) pos_cry(3), pos_car(3), pos_aux(3)
@@ -67,6 +67,7 @@
       real(kind=8), allocatable:: drho(:,:), d2rho(:,:)
       real(kind=8), allocatable:: dxdyrho(:), dxdzrho(:)
       real(kind=8), allocatable:: dydzrho(:)
+      real(kind=8), allocatable:: tauv(:,:,:)
 
       complex(kind=8) s_fac(ngs,nsp), ci
       complex(kind=8) sum_sf, aux, auxx, fact, rho_g(ngm,nspin) 
@@ -146,6 +147,8 @@
          end if
       end if
 
+      n_at = MAXVAL ( na(1:nsp) )
+      allocate ( tauv(3,n_at,nsp) )
       n_at = 0
       do is = 1,nsp
          alfa(is) = step_rad(is)/2.d0
@@ -408,6 +411,7 @@
          end do
       end do
  
+      deallocate( tauv )
       if ( abisur ) deallocate( drho )
       if ( abisur ) deallocate( d2rho )
       if ( abisur ) deallocate( dxdyrho )
