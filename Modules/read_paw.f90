@@ -372,6 +372,7 @@ subroutine set_pseudo_paw (is, pawset)
   upf(is)%zp = pawset%zval
   upf(is)%psd = pawset%symbol
   upf(is)%tvanp=.true.
+  upf(is)%nlcc = pawset%nlcc
   tpawp(is)=.true.
   nlcc(is) = pawset%nlcc
   call set_dft_from_name( pawset%dft )
