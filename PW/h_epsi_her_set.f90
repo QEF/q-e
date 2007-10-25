@@ -279,7 +279,7 @@ subroutine h_epsi_her_set
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
          q_dk=(0.d0,0.d0)
          DO np =1, ntyp
-            if( upf(nt)%tvanp ) then
+            if( upf(np)%tvanp ) then
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
                      call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)
@@ -297,7 +297,7 @@ subroutine h_epsi_her_set
 
          q_dkp=(0.d0,0.d0)
          DO np =1, ntyp
-            if( upf(nt)%tvanp ) then
+            if( upf(np)%tvanp ) then
                DO iv = 1, nh(np)
                   DO jv = iv, nh(np)
                      call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)
@@ -1188,8 +1188,10 @@ subroutine h_epsi_her_set
                      jkb = ijkb0 + jh
                      do ih = 1, nh (nt)
                         ikb = ijkb0 + ih
+!                        ps (ikb, ibnd) = ps (ikb, ibnd) + &
+!                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
                         ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
+                             qq(ih,jh,nt)* becp1(jkb,ibnd)
                      enddo
                   enddo
                enddo
@@ -1211,8 +1213,10 @@ subroutine h_epsi_her_set
                      jkb = ijkb0 + jh
                      do ih = 1, nh (nt)
                         ikb = ijkb0 + ih
+!                        ps (ikb, ibnd) = ps (ikb, ibnd) + &
+!                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
                         ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
+                             qq(ih,jh,nt)* becp1(jkb,ibnd)
                      enddo
                   enddo
                enddo

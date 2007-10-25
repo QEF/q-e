@@ -290,7 +290,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 !      CALL setv(2*nhm*nhm*ntyp,0.d0,q_dk,1)
       q_dk=(0.d0,0.d0)
       DO np =1, ntyp
-         if( upf(nt)%tvanp ) then
+         if( upf(np)%tvanp ) then
             DO iv = 1, nh(np)
                DO jv = iv, nh(np)
                   call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)

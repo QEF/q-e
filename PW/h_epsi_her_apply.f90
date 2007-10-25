@@ -35,6 +35,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
+  USE io_global, ONLY : stdout
   !
  implicit none
   !
@@ -59,7 +60,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   COMPLEX(DP) :: sca, sca1, pref
   INTEGER nb,mb, jkb, nhjkb, na, np, nhjkbm,jkb1,i,j
   INTEGER :: jkb_bp,nt,ig, ijkb0,ibnd,jh,ih,ikb
-
+  
 
   ALLOCATE( evct(npwx,nbnd))
 
@@ -93,7 +94,9 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
      do mb=1,nbnd!index on states of evcel
         sca = zdotc(npw,evcel(1,mb),1,psi(1,nb),1)
         call reduce(2,sca)
+
         
+
         if(okvan) then 
            pref = (0.d0,0.d0)
            
@@ -104,13 +107,21 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
               nhjkbm = nh(np)
               jkb1 = jkb - nhjkb
               DO j = 1,nhjkbm
+!                 pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &!bec_evcel is relative to ik
+!                      *upf(np)%qqq(nhjkb,j)
                  pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &!bec_evcel is relative to ik
-                      *upf(np)%qqq(nhjkb,j)
+                      *qq(nhjkbm,j,np)
+
+
+
               ENDDO
            ENDDO
            sca= sca + pref
         endif
+
+
         do ig=1,npw
+
            hpsi(ig,nb) = hpsi(ig,nb) + &
                 &     fact_hepsi(ik)*sca*(evcelm(ig,mb)-evcelp(ig,mb))
         enddo
@@ -125,11 +136,11 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
            call reduce(2, sca1)
            
            do ig=1,npw
+
               hpsi(ig,nb) = hpsi(ig,nb) + &
                    &     CONJG(fact_hepsi(ik))*evcel(ig,mb)*(sca-sca1)
            enddo
         enddo
-        
    
      else ! US case
 
@@ -149,8 +160,11 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
                        jkb = ijkb0 + jh
                        do ih = 1, nh (nt)
                           ikb = ijkb0 + ih
-                          ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                               upf(nt)%qqq(ih,jh)* bec_evcel(jkb,ibnd)
+!                          ps (ikb, ibnd) = ps (ikb, ibnd) + &
+!                               upf(nt)%qqq(ih,jh)* bec_evcel(jkb,ibnd)
+                           ps (ikb, ibnd) = ps (ikb, ibnd) + &
+                               qq(ih,jh,nt)* bec_evcel(jkb,ibnd)
+
                        enddo
                     enddo
                  enddo
@@ -165,15 +179,19 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
            sca1 = zdotc(npw,evcelp(1,mb),1,psi(1,nb),1)         
            call reduce(2,sca)
            call reduce(2,sca1)
+
            do ig=1,npw
+
               hpsi(ig,nb) = hpsi(ig,nb) + &
                    &     CONJG(fact_hepsi(ik))*evct(ig,mb)*(sca-sca1)
            enddo
         enddo
+
      endif
   ENDDO
 
   DEALLOCATE( evct)
+
 
 
   
