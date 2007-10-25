@@ -13,12 +13,11 @@ subroutine dynmatcc(dyncc)
 #include "f_defs.h" 
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp, tau
-  USE atom,       ONLY: rgrid, nlcc
-  USE constants,  ONLY: tpi
-  USE cell_base,  ONLY: omega, tpiba2
-  USE ener,       ONLY: etxc, vtxc
-  USE ions_base,  ONLY: ntyp => nsp, nat, ityp, tau
-  USE uspp_param, ONLY: upf
+  USE atom,       ONLY : rgrid, nlcc
+  USE constants,  ONLY : tpi
+  USE cell_base,  ONLY : omega, tpiba2
+  USE ener,       ONLY : etxc, vtxc
+  USE uspp_param, ONLY : upf
   USE gvect,      ONLY : nl, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, ngm, g, gg
   USE scf,        ONLY : rho, rhog, rho_core, rhog_core
