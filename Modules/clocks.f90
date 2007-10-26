@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -236,7 +236,7 @@ SUBROUTINE print_this_clock( n )
   USE io_global, ONLY : stdout
   USE mytime,    ONLY : no, nclock, clock_label, cputime, walltime, &
                         notrunning, called, t0cpu, t0wall
-  USE mp,        ONLY : mp_max, mp_min
+  USE mp,        ONLY : mp_max
   USE mp_global, ONLY : intra_image_comm, my_image_id
   !
   IMPLICIT NONE
@@ -266,25 +266,19 @@ SUBROUTINE print_this_clock( n )
   !
   nmax = called(n)
   !
-#if defined (__PARA)
+  ! ... In the parallel case there are several possible approaches
+  ! ... The safest one is to leave each clock independent from the others
+  ! ... Another possibility is to print the maximum across all processors
+  ! ... This is done by uncommenting the following lines
   !
-  ! ... In the parallel case it is far from clear which value to print
-  ! ... The following is the maximum over all nodes and pools. NOTA BENE:
-  ! ... some trouble could arise if a clock is not started on all nodes
+  ! CALL mp_max( elapsed_cpu_time, intra_image_comm )
+  ! CALL mp_max( elapsed_wall_time, intra_image_comm )
+  ! CALL mp_max( nmax, intra_image_comm )
   !
-  ! ... by uncommenting the following line the extreme operation is removed
-  ! ... may be useful for testing purposes :
-  !
-  CALL mp_max( elapsed_cpu_time, intra_image_comm )
-  CALL mp_max( elapsed_wall_time, intra_image_comm )
-  !
-  ! ... In parallel execution, some processor
-  ! ... can use the clock less than other, we assume that the maximum
-  ! ... elapsed time can be associated with the maximum number of calls
-  !
-  CALL mp_max( nmax, intra_image_comm )
-  !
-#endif
+  ! ... In the last line we assume that the maximum cpu time
+  ! ... is associated to the maximum number of calls
+  ! ... NOTA BENE: by uncommenting the above lines you may run into
+  ! ... serious trouble if clocks are not started on all nodes
   !
   IF ( n == 1 ) THEN
      !
@@ -373,7 +367,7 @@ FUNCTION get_clock( label )
   USE io_global, ONLY : stdout
   USE mytime,    ONLY : no, nclock, clock_label, cputime, &
                         notrunning, called, t0cpu
-  USE mp,        ONLY : mp_max, mp_min
+  USE mp,        ONLY : mp_max
   USE mp_global, ONLY : intra_image_comm 
   !
   IMPLICIT NONE
@@ -415,9 +409,9 @@ FUNCTION get_clock( label )
            !
         END IF
         !
-        ! ... In the parallel case, use the maximum over all nodes and pools
+        ! ... See comments in subroutine print_this_clock
         !
-        CALL mp_max( get_clock, intra_image_comm )
+        ! CALL mp_max( get_clock, intra_image_comm )
         !
         RETURN
         !
