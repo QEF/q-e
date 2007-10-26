@@ -27,8 +27,8 @@ subroutine h_epsi_her_set
   USE gvect
   USE uspp
   USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
-  USE bp, ONLY :  gdir,nppstr,efield,fact_hepsi,evcel,evcp=>evcelp,evcm=>evcelm,&
-                   &mapgp_global,mapgm_global
+  USE bp, ONLY : gdir, nppstr, efield, fact_hepsi, evcel, evcp=>evcelp, &
+                 evcm=>evcelm, mapgp_global, mapgm_global
   USE basis
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
@@ -1188,8 +1188,6 @@ subroutine h_epsi_her_set
                      jkb = ijkb0 + jh
                      do ih = 1, nh (nt)
                         ikb = ijkb0 + ih
-!                        ps (ikb, ibnd) = ps (ikb, ibnd) + &
-!                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
                         ps (ikb, ibnd) = ps (ikb, ibnd) + &
                              qq(ih,jh,nt)* becp1(jkb,ibnd)
                      enddo
@@ -1213,8 +1211,6 @@ subroutine h_epsi_her_set
                      jkb = ijkb0 + jh
                      do ih = 1, nh (nt)
                         ikb = ijkb0 + ih
-!                        ps (ikb, ibnd) = ps (ikb, ibnd) + &
-!                             upf(nt)%qqq(ih,jh)* becp1(jkb,ibnd)
                         ps (ikb, ibnd) = ps (ikb, ibnd) + &
                              qq(ih,jh,nt)* becp1(jkb,ibnd)
                      enddo

@@ -27,7 +27,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   USE scf,      ONLY : vrs  
   USE gvect
   USE uspp
-  USE uspp_param, ONLY: upf, nh, nhm, nbetam, lmaxq
+  USE uspp_param, ONLY: nh, nhm, nbetam
   USE bp
   USE basis
   USE klist
@@ -107,13 +107,9 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
               nhjkbm = nh(np)
               jkb1 = jkb - nhjkb
               DO j = 1,nhjkbm
-!                 pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &!bec_evcel is relative to ik
-!                      *upf(np)%qqq(nhjkb,j)
-                 pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &!bec_evcel is relative to ik
+                 ! bec_evcel is relative to ik
+                 pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &
                       *qq(nhjkbm,j,np)
-
-
-
               ENDDO
            ENDDO
            sca= sca + pref
@@ -160,8 +156,6 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
                        jkb = ijkb0 + jh
                        do ih = 1, nh (nt)
                           ikb = ijkb0 + ih
-!                          ps (ikb, ibnd) = ps (ikb, ibnd) + &
-!                               upf(nt)%qqq(ih,jh)* bec_evcel(jkb,ibnd)
                            ps (ikb, ibnd) = ps (ikb, ibnd) + &
                                qq(ih,jh,nt)* bec_evcel(jkb,ibnd)
 

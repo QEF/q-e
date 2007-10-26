@@ -846,7 +846,7 @@ FUNCTION rho1_ddot( bec1, bec2 )
   !  
   USE grid_paw_variables, ONLY : pp, okpaw, prodp, prodpt, prod0p, prod0pt
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp
-  USE uspp_param,         ONLY : lmaxq, nh, nhm 
+  USE uspp_param,         ONLY : nh, nhm 
   USE wvfct,              ONLY : gamma_only
   !
   IMPLICIT NONE

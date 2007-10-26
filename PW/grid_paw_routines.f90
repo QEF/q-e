@@ -159,7 +159,7 @@ END SUBROUTINE atomic_becsum
     USE lsda_mod,           ONLY : nspin
     USE ions_base,          ONLY : nsp, nat, ntyp => nsp
     USE us,                 ONLY : nqxq
-    USE uspp_param,         ONLY : lmaxq, nhm, nbetam
+    USE uspp_param,         ONLY : nhm, nbetam
     USE gvect,              ONLY : ngl
     !
 !     USE grid_paw_variables, ONLY : pp, ppt, prad, ptrad, rho1, rho1t, &
