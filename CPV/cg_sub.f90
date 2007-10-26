@@ -98,8 +98,8 @@
       integer :: i, j, ig, k, is, iss,ia, iv, jv, il, ii, jj, kk, ip
       integer :: inl, jnl, niter, istart, nss, nrl, me_rot, np_rot , comm
       real(dp) :: enb, enbi, x
-      complex(dp) :: c2( ngw )
-      complex(dp) :: c3( ngw )
+      complex(dp), allocatable :: c2(:)
+      complex(dp), allocatable :: c3(:)
       real(dp) :: gamma, entmp, sta
       complex(dp),allocatable :: hpsi(:,:), hpsi0(:,:), gi(:,:), hi(:,:)
       real(DP), allocatable::               s_minus1(:,:)!factors for inverting US S matrix
@@ -131,7 +131,7 @@
 
       allocate(bec0(nhsa,n),becm(nhsa,n), becdrdiag(nhsa,n,3))
       allocate (ave_ene(n))
-
+      allocate(c2(ngw),c3(ngw))
 
 
       call start_clock('runcg_uspp')
@@ -961,6 +961,7 @@
 
        deallocate(bec0,becm,becdrdiag)
        deallocate(ave_ene)
+       deallocate(c2,c3)
 
        return
 

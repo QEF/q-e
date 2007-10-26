@@ -142,11 +142,11 @@ CONTAINS
             !
             nr = descla( nlar_ , is )
             !
-            IF( descla( la_myr_ , is ) == descla( la_myc_ , is ) ) THEN
+!            IF( descla( la_myr_ , is ) == descla( la_myc_ , is ) ) THEN
                DO i = 1, nr
                   psihpsi(i,i,is) = 1.0d0
                END DO
-            END IF
+!            END IF
          END IF
       end do
     RETURN

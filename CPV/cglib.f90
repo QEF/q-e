@@ -130,11 +130,14 @@
 !-----------------------------------------------------------------------
 !
       use dspev_module, only: dspev_drv
+      use kinds , only : dp
+
       implicit none
+
       integer nx,n,ndim,iflag,k,i,j
-      real(8)   dval(n)
-      real(8) amat(nx,n), dvec(nx,n)
-      real(8), allocatable::  ap(:)
+      real(dp)   dval(n)
+      real(dp) amat(nx,n), dvec(nx,n)
+      real(dp), allocatable::  ap(:)
 
       ndim=(n*(n+1))/2
       allocate(ap(ndim))
@@ -162,6 +165,7 @@
 !  constructs fmat=zmat.fdiag.zmat^t
 !
       use electrons_base, only: nudx, nspin, nupdwn, iupdwn, nx => nbspx, n => nbsp
+      use kinds, only : dp
 
       implicit none
 
@@ -169,7 +173,7 @@
 
 
       integer iss, nss, istart, i, j, k, ii, jj, kk
-      real(8) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
+      real(dp) zmat(nudx,nudx,nspin), fmat(nudx,nudx,nspin),         &
     &   fdiag(nx)
 
       call errore(" calcm ", " subroutine not updated ", 1)
@@ -198,9 +202,11 @@
     subroutine minparabola(ene0,dene0,ene1,passop,passo,stima)
 !this subroutines finds the minimum of a quadratic real function
       
+      use kinds, only : dp
+
       implicit none
-      real(8) ene0,dene0,ene1,passop,passo,stima
-      real(8) a,b,c!a*x^2+b*x+c
+      real(dp) ene0,dene0,ene1,passop,passo,stima
+      real(dp) a,b,c!a*x^2+b*x+c
       
       c=ene0
       b=dene0
@@ -359,10 +365,10 @@ subroutine pc2(a,beca,b,becb)
 
       implicit none
 
-      complex(8) a(ngw,n), b(ngw,n), as(ngw,n)
+      complex(dp) a(ngw,n), b(ngw,n), as(ngw,n)
       ! local variables
       integer is, iv, jv, ia, inl, jnl, i, j,ig
-      real(8) sca
+      real(dp) sca
       real(DP), allocatable:: scar(:)
       !
       call start_clock('pcdaga2')
@@ -433,10 +439,14 @@ subroutine pc2(a,beca,b,becb)
       real(DP),allocatable :: q_matrix(:,:), b_matrix(:,:),c_matrix(:,:)
       integer is, iv, jv, ia, inl, jnl, i, j, k,ig, js, ja
       real(DP) sca
-      integer ipiv(nhsavb),info, lwork
-      real(DP) work(nhsavb)
+      integer info, lwork
+      integer, allocatable :: ipiv(:)
+      real(dp),allocatable :: work(:)
 
       call start_clock('set_x_minus1')
+      allocate(ipiv(nhsavb))
+      allocate(work(nhsavb))
+
       lwork=nhsavb
 
       allocate(q_matrix(nhsavb,nhsavb),c_matrix(nhsavb,nhsavb))
@@ -510,6 +520,7 @@ subroutine pc2(a,beca,b,becb)
       CALL DGEMM('N','N',nhsavb,nhsavb,nhsavb,-1.0d0,c_matrix,nhsavb,q_matrix,nhsavb,0.0d0,m_minus1,nhsavb)
 
       deallocate(q_matrix,c_matrix)
+      deallocate(ipiv,work)
       call stop_clock('set_x_minus1')
       return
     end subroutine set_x_minus1
@@ -550,8 +561,7 @@ subroutine pc2(a,beca,b,becb)
       real(dp) , allocatable   :: qtemp(:,:)
       integer is, iv, jv, ia, inl, jnl, i, j, js, ja,ig
       real(dp) becktmp
-!      real(dp) qtemp(nhsavb,n) ! automatic array
-!
+
       
       logical :: mat_par=.true.!if true uses parallel routines      
 
@@ -734,8 +744,7 @@ subroutine pc2(a,beca,b,becb)
       integer is, iv, jv, ia, inl, jnl, i, j, js, ja,ig
       real(dp) becktmp
       real(kind=DP) :: prec_fact, x
-!      real(dp) qtemp(nhsavb,n) ! automatic array
-!
+
  
       call start_clock('xminus1')
       if (nvb.gt.0) then
