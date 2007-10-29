@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,8 +14,8 @@ SUBROUTINE cg_setup
   USE kinds, ONLY: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE pwcom
-  USE atom, ONLY: nlcc
-  USE mp_global,           ONLY : kunit
+  USE uspp_param, ONLY: upf
+  USE mp_global,        ONLY : kunit
   USE wavefunctions_module,  ONLY: evc
   USE io_files, ONLY: prefix, iunpun, iunres
   USE cgcom
@@ -67,11 +67,8 @@ SUBROUTINE cg_setup
   !
   !  compute drhocore/dtau for each atom type (if needed)
   !
-  nlcc_any = .FALSE.
-  DO nt=1,ntyp
-     nlcc_any = nlcc_any .OR. nlcc(nt)
-  END DO
-!!!      if (nlcc_any) call set_drhoc(xq)
+  nlcc_any = ANY  ( upf(1:ntyp)%nlcc )
+  !!! if (nlcc_any) call set_drhoc(xq)
   !
   !  local potential
   !

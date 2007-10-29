@@ -83,7 +83,9 @@ subroutine readpp
      if (isupf == 0) then
         call set_pseudo_upf (nt, upf(nt))
         call set_paw_upf (nt, upf(nt))
-        ! for compatibility with old formats
+        ! 
+        ! UPF is assumed to be multi-projector
+        !
         newpseudo (nt) = .true.
         !
      else
@@ -97,10 +99,9 @@ subroutine readpp
         if ( pseudo_type (psfile (nt) ) == 1 .or. &
              pseudo_type (psfile (nt) ) == 2 ) then
            !
-           !    newpseudo distinguishes beteween US pseudopotentials
-           !    produced by Vanderbilt code and those produced
-           !    by Andrea's atomic code.
-           !
+           ! PPs produced by Andrea Dal Corso's atomic code are assumed to
+           ! be multiprojector; NCPP produced by Vanderbilt's core are not
+           !    
            newpseudo (nt) = ( pseudo_type (psfile (nt) ) == 2 )
            !
            IF ( newpseudo (nt) ) THEN

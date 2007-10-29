@@ -9,7 +9,7 @@
 subroutine dvb_cc (nlcc,npseu,ngm,nr1,nr2,nr3,nrx1,nrx2,nrx3,  &
      nl,rho_core,dmuxc,ga,aux,dvb_nlcc)
   !---------------------------------------------------------------------
-  ! calcola il contributo core-correction al Delta V bare
+  ! calculate the core-correction contribution to Delta V bare
   !
 #include "f_defs.h"
   implicit none

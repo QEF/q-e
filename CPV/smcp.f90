@@ -19,7 +19,6 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
                                        nomore, tsde, tortho, tnosee, tnosep,   &
                                        trane, tranp, tsdp, tcp, tcap, ampre,   &
                                        amprp, tnoseh, tolp,ortho_eps, ortho_max
-  USE atom,                     ONLY : nlcc
   USE core,                     ONLY : nlcc_any, rhoc
   USE uspp_param,               ONLY : nhm
   USE uspp,                     ONLY : nkb, vkb, rhovan => becsum, deeq, okvan
@@ -536,7 +535,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !     put core charge (if present) in rhoc(r)
         !
-        IF ( ANY( nlcc ) ) CALL set_cc(irb,eigrb,rhoc)
+        IF ( nlcc_any ) CALL set_cc(irb,eigrb,rhoc)
         !
         vpot = rhor
         !
@@ -858,7 +857,7 @@ SUBROUTINE smdmain( tau, fion_out, etot_out, nat_out )
         !
         !     put core charge (if present) in rhoc(r)
         !
-        IF ( ANY( nlcc ) ) CALL set_cc(irb,eigrb,rhoc)
+        IF ( nlcc_any ) CALL set_cc(irb,eigrb,rhoc)
         !
         !
         IF(tlast) THEN

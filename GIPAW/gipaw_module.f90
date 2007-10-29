@@ -312,7 +312,7 @@ CONTAINS
     USE kinds,         ONLY : DP
     USE io_global,     ONLY : stdout, ionode
     USE ions_base,     ONLY : tau, nat, ntyp => nsp, atm
-    USE atom,          ONLY : nlcc, rgrid
+    USE atom,          ONLY : rgrid
     USE wvfct,         ONLY : nbnd, et, wg, npwx
     USE lsda_mod,      ONLY : nspin, lsda
     USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
@@ -728,10 +728,7 @@ CONTAINS
     call newd
     
     ! set non linear core correction stuff
-    nlcc_any = .false.
-    do nt = 1, ntyp
-       nlcc_any = nlcc_any.or.nlcc (nt)
-    enddo
+    !! nlcc_any = ANY ( upf(1:ntyp)%nlcc )
     !!if (nlcc_any) allocate (drc( ngm, ntyp))
     
     !! setup all gradient correction stuff

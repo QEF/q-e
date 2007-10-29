@@ -99,7 +99,7 @@
      USE fft_base,       ONLY: dfftp
      use electrons_base, only: nspin
      use gvecp,          only: ngm
-     use atom,           only: nlcc
+     use uspp_param,     only: upf
      USE cp_interfaces,  ONLY: invfft
      USE io_global,      ONLY: stdout
      USE mp_global,      ONLY: intra_image_comm
@@ -126,7 +126,7 @@
 
      fac = 1.0d0 / DBLE( nspin )
      DO is = 1, nsp
-       if( nlcc( is ) ) then
+       if( upf(is)%nlcc ) then
          do ig = 1, ngm
            vtemp(ig) = vtemp(ig) + fac * sfac( ig, is ) * CMPLX(rhoc(ig,is),0.0d0)
          end do
@@ -344,7 +344,7 @@
       use ions_base,       only: nsp, na, nat
       use parameters,      only: nsx
       use small_box,       only: tpibab
-      use atom,            only: nlcc
+      use uspp_param,      only: upf
       use core,            only: rhocb
       use cp_interfaces,   only: invfft
       use fft_base,        only: dfftb
@@ -377,7 +377,7 @@
       isa = 0
 
       do is=1,nsp
-         if( .not. nlcc(is) ) go to 10
+         if( .not. upf(is)%nlcc ) go to 10
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1
@@ -447,7 +447,7 @@
 !
       use ions_base,       only: nsp, na, nat
       use parameters,      only: nsx
-      use atom,            only: nlcc
+      use uspp_param,      only: upf
       use grid_dimensions, only: nr3, nnr => nnrx
       use gvecb,           only: ngb, npb, nmb
       use control_flags,   only: iprint
@@ -478,7 +478,7 @@
 !
       isa = 0
       do is=1,nsp
-         if (.not.nlcc(is)) go to 10
+         if (.not.upf(is)%nlcc) go to 10
 #ifdef __PARA
          do ia=1,na(is)
             nfft=1

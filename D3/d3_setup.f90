@@ -47,7 +47,7 @@ SUBROUTINE d3_setup()
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   USE pwcom
-  USE atom,          ONLY : nlcc
+  USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
   USE phcom
@@ -257,11 +257,8 @@ SUBROUTINE d3_setup()
   !
   ! 6) Set non linear core correction stuff
   !
-  nlcc_any = .FALSE.
-  DO nt = 1, ntyp
-     nlcc_any = nlcc_any.OR.nlcc (nt)
-  ENDDO
-
+  nlcc_any = ANY ( upf(1:ntyp)%nlcc )
+  !
   IF (nlcc_any) ALLOCATE (drc( ngm, ntyp))    
   !
   ! 7) Sets up variables needed to distribute one loop between pools

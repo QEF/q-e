@@ -18,7 +18,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
   USE ions_base,  ONLY : nat, ityp, tau
   USE kinds, only : DP
   use pwcom
-  USE atom, ONLY: nlcc
+  USE uspp_param, ONLY: upf
   use phcom
   use d3com
   !
@@ -108,7 +108,7 @@ subroutine dvscf (nu_i, dvloc, xq_x)
                              (g(3,ig) + xq_x(3)) * u_x(mu+3,nu_i) ) * &
                    CMPLX(0.d0,-1.d0) * CMPLX(cos(gtau),-sin(gtau))
            aux1 (nl(ig)) = aux1 (nl(ig)) + vloc_x (ig,nt) * guexp
-           if (nlcc(nt)) then
+           if (upf(nt)%nlcc) then
               aux2 (nl(ig)) = aux2 (nl(ig)) + drc_x(ig,nt) * guexp
            end if
         enddo

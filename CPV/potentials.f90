@@ -227,7 +227,7 @@
       USE sic_module,     ONLY: self_interaction, sic_epsilon, sic_alpha !!TO ADD!!!
       USE gvecp,          ONLY: ngm
       USE local_pseudo,   ONLY: vps, rhops
-      USE atom,           ONLY: nlcc
+      USE uspp_param,     ONLY: upf
       USE core,           ONLY: nlcc_any, rhocg, drhocg
       USE cp_interfaces,  ONLY: fwfft, invfft, add_core_charge, core_charge_forces
       USE electrons_base, ONLY: iupdwn, nupdwn, nspin
@@ -294,6 +294,7 @@
       REAL(DP), DIMENSION (6) :: deht, deps, dexc, dvdw
 
       LOGICAL :: ttscreen, ttsic, tgc
+      LOGICAL :: nlcc(nsp) ! for compatibility
 
       INTEGER ig1, ig2, ig3, is, ia, ig, isc, iflag, iss
       INTEGER ik, i, j, k, isa, idum
@@ -594,6 +595,7 @@
         !
         IF (tforce) THEN
            !
+           nlcc (1:nsp) = upf(1:nsp)%nlcc
            CALL core_charge_forces( fion, rhoeg, rhocg, nlcc, atoms, box, ei1, ei2, ei3 )
            !
         END IF
@@ -643,6 +645,7 @@
          !
          ! ... compute exchange & correlation energy contribution
          ! 
+         nlcc (1:nsp) = upf(1:nsp)%nlcc
          CALL stress_xc( dexc, strvxc, sfac, rhoeg, grho, v2xc, gagb, nlcc, drhocg, box )
          !
       END IF

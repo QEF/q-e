@@ -28,7 +28,7 @@ subroutine set_pseudo_upf (is, upf)
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
   !   dummy argument ( upf ) - convert and copy to internal variables
   !
-  USE atom,  ONLY: rgrid, nlcc
+  USE atom,  ONLY: rgrid
   USE uspp_param, ONLY: tvanp
   USE funct, ONLY: set_dft_from_name, set_dft_from_indices, dft_is_meta
   !
@@ -46,7 +46,6 @@ subroutine set_pseudo_upf (is, upf)
   !
   !
   tvanp(is)=upf%tvanp
-  nlcc(is) = upf%nlcc
   ! workaround for rrkj format - it contains the indices, not the name
   if ( upf%dft(1:6)=='INDEX:') then
      read( upf%dft(7:10), '(4i1)') iexch,icorr,igcx,igcc

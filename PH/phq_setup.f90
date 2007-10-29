@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -55,7 +55,7 @@ subroutine phq_setup
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
   USE symme,         ONLY : nsym, s, ftau, irt, t_rev
-  USE atom,          ONLY : nlcc
+  USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
   USE noncollin_module, ONLY : noncolin, m_loc, angle1, angle2, ux
@@ -109,10 +109,7 @@ subroutine phq_setup
   !
   ! 2) Set non linear core correction stuff
   !
-  nlcc_any = .false.
-  do nt = 1, ntyp
-     nlcc_any = nlcc_any.or.nlcc (nt)
-  enddo
+  nlcc_any = ANY ( upf(1:ntyp)%nlcc )
   if (nlcc_any) allocate (drc( ngm, ntyp))    
   !
   !  3) If necessary calculate the local magnetization. This information is

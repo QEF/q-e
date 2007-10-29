@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ subroutine addcore (mode, drhoc)
 #include "f_defs.h"
 
   USE kinds, only : DP
-  use atom, only: nlcc
+  use uspp_param, only: upf
   use ions_base, only: nat, ityp
   use cell_base, only: tpiba
   use gvect, only: ngm, nrxx, nrx1, nrx2, nrx3, nr1, nr2, nr3, nl, &
@@ -45,7 +45,7 @@ subroutine addcore (mode, drhoc)
   drhoc(:) = (0.d0, 0.d0)
   do na = 1, nat
      nt = ityp (na)
-     if (nlcc (nt) ) then
+     if (upf(nt)%nlcc) then
         fact = tpiba * (0.d0, -1.d0) * eigqts (na)
         mu = 3 * (na - 1)
         if ( abs (u (mu + 1, mode) ) + &

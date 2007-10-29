@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
   USE ions_base, ONLY : nat, ityp
   use pwcom
   USE noncollin_module, ONLY : npol
-  use atom, only: nlcc
+  use uspp_param, only: upf
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
   use phcom
@@ -112,7 +112,7 @@ subroutine dvqpsi_us (ik, mode, uact, addnlcc)
             u2 = uact(mu+2)
             u3 = uact(mu+3)
             gu0 = xq(1)*u1 +xq(2)*u2+xq(3)*u3
-            if (nlcc(nt)) then
+            if (upf(nt)%nlcc) then
                do ig = 1,ngm
                   gtau = eigts1(ig1(ig),na)*   &
                          eigts2(ig2(ig),na)*   &

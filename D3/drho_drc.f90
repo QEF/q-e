@@ -19,7 +19,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
   USE pwcom
   USE phcom
   USE d3com
-  USE atom,       ONLY : nlcc
+  USE uspp_param, ONLY : upf
   USE mp,         ONLY : mp_barrier
 
   IMPLICIT NONE
@@ -51,7 +51,7 @@ SUBROUTINE drho_drc (iudrho_x, u_x, xq_x, drc_x, scalef)
         IF (ABS (uact (mu + 1) ) + ABS (uact (mu + 2) ) + &
              ABS (uact (mu + 3) ) > 1.0d-12) THEN
            nt = ityp (na)
-           IF (nlcc (nt) ) THEN
+           IF (upf(nt)%nlcc) THEN
               DO ig = 1, ngm
                  gtau = tpi * ( (g (1, ig) + xq_x (1) ) * tau (1, na) &
                               + (g (2, ig) + xq_x (2) ) * tau (2, na) &

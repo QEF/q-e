@@ -89,7 +89,7 @@ END TYPE paw_t
 
           INTEGER :: nv                 ! UPF file version number
           INTEGER :: lmax               ! maximum l component in beta
-          INTEGER :: mesh               ! number of point in the radial mesh
+          INTEGER :: mesh               ! number of points in the radial mesh
           INTEGER :: nwfc               ! number of atomic wavefunctions
           INTEGER :: nbeta              ! number of projectors
           INTEGER :: kkbeta             ! kkbeta=max(kbeta(:))

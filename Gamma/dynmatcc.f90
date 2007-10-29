@@ -13,7 +13,7 @@ subroutine dynmatcc(dyncc)
 #include "f_defs.h" 
   USE kinds,      ONLY : DP
   USE ions_base,  ONLY : ntyp => nsp, nat, ityp, tau
-  USE atom,       ONLY : rgrid, nlcc
+  USE atom,       ONLY : rgrid
   USE constants,  ONLY : tpi
   USE cell_base,  ONLY : omega, tpiba2
   USE ener,       ONLY : etxc, vtxc
@@ -34,6 +34,7 @@ subroutine dynmatcc(dyncc)
   complex(DP) :: exc
   real(DP), allocatable:: drhocc(:), dyncc1(:,:,:,:)
   real(DP) :: exg
+  logical :: nlcc(ntyp)
   !
   !
   dyncc(:,:) = 0.d0
@@ -53,6 +54,8 @@ subroutine dynmatcc(dyncc)
   call cft3(vxc,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   !
   dyncc1(:,:,:,:) = 0.d0
+  ! temporary
+  nlcc(1:ntyp) =  upf(1:ntyp)%nlcc
   do na=1,nat
      nta=ityp(na)
      if ( upf(nta)%nlcc ) then

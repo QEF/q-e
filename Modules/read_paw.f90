@@ -328,7 +328,7 @@ subroutine set_pseudo_paw (is, pawset)
   !
   ! PWSCF modules
   !
-  USE atom,  ONLY: rgrid, msh, nlcc
+  USE atom,  ONLY: rgrid, msh
   USE uspp_param, ONLY: upf
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   !
@@ -374,7 +374,6 @@ subroutine set_pseudo_paw (is, pawset)
   upf(is)%tvanp=.true.
   upf(is)%nlcc = pawset%nlcc
   tpawp(is)=.true.
-  nlcc(is) = pawset%nlcc
   call set_dft_from_name( pawset%dft )
   !
   IF ( dft_is_meta() ) &

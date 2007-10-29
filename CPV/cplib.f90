@@ -202,7 +202,7 @@ END FUNCTION
       USE cell_base,          ONLY: omega, ainv, tpiba2
       USE mp,                 ONLY: mp_sum
       USE mp_global,          ONLY: intra_image_comm
-      USE atom,               ONLY: nlcc
+      USE uspp_param,         ONLY: upf
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE cp_interfaces,      ONLY: fwfft
 
@@ -242,7 +242,7 @@ END FUNCTION
             DO ig = gstart, ngs
                srhoc = 0.0d0
                DO is = 1, nsp
-                 IF( nlcc( is ) ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
+                 IF( upf(is)%nlcc ) srhoc = srhoc + sfac( ig, is ) * drhocg( ig, is )
                ENDDO
                vxcc = DBLE( CONJG( vxc( np( ig ) ) ) * srhoc ) / SQRT( g( ig ) * tpiba2 )
                dcc(i,j) = dcc(i,j) + vxcc * &

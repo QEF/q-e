@@ -982,7 +982,8 @@ END SUBROUTINE atomic_becsum
     !
     USE io_global, ONLY : stdout
     USE kinds,     ONLY : DP
-    USE atom,      ONLY : rgrid, msh, nlcc
+    USE atom,      ONLY : rgrid, msh
+    USE uspp_param,ONLY : upf
     USE ions_base, ONLY : ntyp => nsp
     USE cell_base, ONLY : omega, tpiba2, alat
     USE gvect,     ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
@@ -1031,7 +1032,7 @@ END SUBROUTINE atomic_becsum
        !
        typ_loop: DO nt = 1, ntyp
           !
-          IF ((i_what==2).AND.(.NOT.nlcc(nt))) THEN
+          IF ((i_what==2).AND.(.NOT.upf(nt)%nlcc)) THEN
              rho_core_(:,nt)=0.d0
              CYCLE typ_loop
           END IF
