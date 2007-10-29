@@ -425,19 +425,23 @@ SUBROUTINE chdens (filplot,plot_num)
         !
         ! GOPENMOL FORMAT
         !
-        if (fast3d.and.ionode) then
+        if (ionode) then
+           !
+           if (fast3d) then
 
-           call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
-                nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
-                bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
-                rhotot)
-        else
-           if (nx<=0 .or. ny <=0 .or. nz <=0) &
-               call errore("chdens","nx,ny,nz, required",1)
+              call plot_fast (celldm (1), at, nat, tau, atm, ityp, &
+                  nrx1, nrx2, nrx3, nr1, nr2, nr3, rhor, &
+                  bg, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
+                  rhotot)
+           else
+              if (nx<=0 .or. ny <=0 .or. nz <=0) &
+                  call errore("chdens","nx,ny,nz, required",1)
 
-           call plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog, &
-                nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, ounit, &
-                rhotot)
+              call plot_3d (celldm (1), at, nat, tau, atm, ityp, ngm, g, rhog,&
+                   nx, ny, nz, m1, m2, m3, x0, e1, e2, e3, output_format, &
+                   ounit, rhotot)
+           end if
+           !
         end if
      end if
 
