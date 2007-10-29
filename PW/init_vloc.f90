@@ -34,9 +34,20 @@ subroutine init_vloc()
      !
      ! compute V_loc(G) for a given type of atom
      !
-     call vloc_of_g (rgrid(nt)%mesh, msh (nt), rgrid(nt)%rab, rgrid(nt)%r, &
-          upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngl, gl, omega, vloc (1, nt) )
-
+     IF ( .NOT. ASSOCIATED ( upf(nt)%vloc ) ) THEN
+        !
+        ! special case: pseudopotential is coulomb 1/r potential
+        !
+        call vloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, vloc (1, nt) )
+        !
+     ELSE
+        !
+        ! normal case
+        !
+        call vloc_of_g (rgrid(nt)%mesh, msh (nt), rgrid(nt)%rab, rgrid(nt)%r, &
+            upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngl, gl, omega, vloc (1, nt) )
+        !
+     END IF
   enddo
   call stop_clock ('init_vloc')
   return

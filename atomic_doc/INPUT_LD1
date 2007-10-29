@@ -101,6 +101,14 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
               if 'energy' the relativistic l-1/2 states are filled first.
               if 'average' the electrons are uniformly distributed 
               among all the states with the given l.  
+
+      write_coulomb                        (logical, default: .false.)
+              if .true., a fake pseuopotential file with name X.UPF,
+              where X is the atomic symbol, is written. It contains
+              the radial grid and the wavefunctions as specified in input,
+              plus the info needed to build the Coulomb potential
+              for an all-electron calculation - for testing only
+
       If config is empty the electronic configuration is read from
       the following cards:
 

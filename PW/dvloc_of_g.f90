@@ -11,6 +11,8 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
      omega, dvloc)
   !----------------------------------------------------------------------
   !
+  ! dvloc = D Vloc (g^2) / D g^2 = (1/2g) * D Vloc(g) / D g
+  !
 #include "f_defs.h"
   USE kinds
   USE constants , ONLY : pi, fpi, e2, eps8
@@ -18,24 +20,23 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   !
   !    first the dummy variables
   !
-  integer :: ngl, mesh, msh
-  ! input: the number of shell of G vectors
-  ! input: the maximum non local angular mome
-  ! input: numeric, the dimensions of the mes
-  ! number of mesh points for radial integrat
+  integer, intent(in) :: ngl, mesh, msh
+  ! the number of shell of G vectors
+  ! max number of mesh points
+  ! number of mesh points for radial integration
 
-  real(DP) :: zp, rab (mesh), r (mesh), vloc_at (mesh), tpiba2, omega,&
-       gl (ngl), dvloc (ngl)
-  ! input: valence pseudocharge
-  ! input: the derivative of the radial grid
-  ! input: the radial grid
-  ! input: the pseudo on the radial grid
-  ! input: 2 pi / alat
-  ! input: the volume of the unit cell
-  ! input: the moduli of g vectors for each s
-  ! output: the fourier transform dVloc/dG
+  real(DP), intent(in) :: zp, rab (mesh), r (mesh), vloc_at (mesh), &
+                          tpiba2, omega, gl (ngl)
+  ! valence pseudocharge
+  ! the derivative of the radial grid
+  ! the radial grid
+  ! the pseudo on the radial grid
+  ! 2 pi / alat
+  ! the volume of the unit cell
+  ! the moduli of g vectors for each s
   !
-  !    and the local variables
+  real(DP), intent(out) ::  dvloc (ngl)
+  ! the fourier transform dVloc/dG
   !
   real(DP) :: vlcp, g2a, gx
   real(DP), allocatable ::  aux (:), aux1 (:)
@@ -44,7 +45,7 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   integer :: i, igl, igl0, l
   ! counter on erf functions or gaussians
   ! counter on g shells vectors
-  ! first shells with g != 0
+  ! first shell with g != 0
   ! the angular momentum
 
   ! the  G=0 component is not computed
@@ -58,6 +59,7 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
   ! Pseudopotentials in numerical form (Vloc contains the local part)
   ! In order to perform the Fourier transform, a term erf(r)/r is
   ! subtracted in real space and added again in G space
+
   allocate (aux( mesh))    
   allocate (aux1( mesh))    
   !
@@ -92,4 +94,41 @@ subroutine dvloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, gl, &
 
   return
 end subroutine dvloc_of_g
+!
+!----------------------------------------------------------------------
+subroutine dvloc_coul (zp, tpiba2, ngl, gl, omega, dvloc)
+  !----------------------------------------------------------------------
+  !
+  !    Fourier transform of the Coulomb potential - For all-electron
+  !    calculations, in specific cases only, for testing purposes
+  !
+  USE kinds
+  USE constants , ONLY : fpi, e2, eps8
+  implicit none
+  !
+  integer, intent(in) :: ngl
+  ! the number of shell of G vectors
+  real(DP), intent(in) :: zp, tpiba2, omega, gl (ngl)
+  ! valence pseudocharge
+  ! 2 pi / alat
+  ! the volume of the unit cell
+  ! the moduli of g vectors for each s
+  real(DP), intent(out) :: dvloc (ngl)
+  ! fourier transform: dvloc = D Vloc (g^2) / D g^2 = 4pi e^2/omegai /G^4
+  !
+  integer :: igl0
+  ! first shell with g != 0
+
+  ! the  G=0 component is 0
+  if (gl (1) < eps8) then
+     dvloc (1) = 0.0d0
+     igl0 = 2
+  else
+     igl0 = 1
+  endif
+
+  dvloc  (igl0:ngl) = fpi * e2 / omega / ( tpiba2 * gl (igl0:ngl) ) ** 2
+
+return
+end subroutine dvloc_coul
 

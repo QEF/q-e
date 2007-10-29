@@ -101,4 +101,40 @@ subroutine vloc_of_g (mesh, msh, rab, r, vloc_at, zp, tpiba2, ngl, &
 
 return
 end subroutine vloc_of_g
+!
+!----------------------------------------------------------------------
+subroutine vloc_coul (zp, tpiba2, ngl, gl, omega, vloc)
+  !----------------------------------------------------------------------
+  !
+  !    Fourier transform of the Coulomb potential - For all-electron
+  !    calculations, in specific cases only, for testing purposes
+  !
+#include "f_defs.h"
+  USE kinds
+  USE constants, ONLY : fpi, e2, eps8
+  implicit none
+  !
+  integer, intent(in) :: ngl
+  ! the number of shells of G vectors
+  real(DP), intent(in) :: zp, tpiba2, omega, gl (ngl)
+  ! valence pseudocharge
+  ! 2 pi / alat
+  ! the volume of the unit cell
+  ! the moduli of g vectors for each shell
+  real(DP), intent (out) :: vloc (ngl)
+  ! the fourier transform of the potential
+  !
+  integer :: igl0
+  !
+  if (gl (1) < eps8) then
+     igl0 = 2
+     vloc(1) = 0.0_dp
+  else
+     igl0 = 1
+  endif
+
+  vloc (igl0:ngl) = - fpi * e2 / omega / tpiba2 / gl (igl0:ngl)
+
+return
+end subroutine vloc_coul
 

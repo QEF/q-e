@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -26,7 +26,7 @@ subroutine ld1_readin
                          vpsloc, vnl,nld, iswitch, tr2, &
                          nspin, lsd, rel, isic, latt, vdw, lpaw,  tm, &
                          grid, zed, lmax, beta, rhoc, nconf, prefix,  &
-                         nnl, jjts, zval, title, &
+                         nnl, jjts, zval, title, write_coulomb, &
                          nlc, rm, rho0, lloc, rcore, rcloc, nlcc, & 
                          file_pseudo, file_pseudopw, &
                          file_potscf, file_screen, file_qvan, file_recon, &
@@ -89,7 +89,9 @@ subroutine ld1_readin
        lsmall,   & ! if true the small component is written on file
        rytoev_fact, & ! conversion between Ry and eV 
        cau_fact, & ! speed of light in a.u.
-       vdw         ! if .true. vdW coefficient in TF+vW will be calculated
+       vdw,      & ! if .true. vdW coefficient in TF+vW will be calculated
+       write_coulomb ! if .true. write a fake pseudopotential file with the
+                     ! Coulomb potential for usage in all-electron calculations
 
   namelist /test/                 &
        nconf,         & ! the number of configurations

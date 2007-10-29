@@ -108,14 +108,18 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      ALLOCATE( upf%rho_atc( upf%mesh ) )
      upf%rho_atc = 0.0_DP
   endif
+  !-------->Fake 1/r potential: do not read PP
+  if (.not. matches (upf%typ, "1/r") ) then
   !-------->Search for Local potential
-  call scan_begin (iunps, "LOCAL", .true.)  
-  call read_pseudo_local (upf, iunps)  
-  call scan_end (iunps, "LOCAL")  
+     call scan_begin (iunps, "LOCAL", .true.)  
+     call read_pseudo_local (upf, iunps)  
+     call scan_end (iunps, "LOCAL")  
   !-------->Search for Nonlocal potential
-  call scan_begin (iunps, "NONLOCAL", .true.)  
-  call read_pseudo_nl (upf, iunps)  
-  call scan_end (iunps, "NONLOCAL")  
+     call scan_begin (iunps, "NONLOCAL", .true.)  
+     call read_pseudo_nl (upf, iunps)  
+     call scan_end (iunps, "NONLOCAL")  
+  !--------
+  end if
   !-------->Search for atomic wavefunctions
   call scan_begin (iunps, "PSWFC", .true.)  
   call read_pseudo_pswfc (upf, iunps)  
@@ -213,6 +217,8 @@ subroutine read_pseudo_header (upf, iunps)
   if (matches (upf%typ, "US") ) then
      upf%tvanp = .true.  
   else if (matches (upf%typ, "NC") ) then
+     upf%tvanp = .false.  
+  else if (matches (upf%typ, "1/r") ) then
      upf%tvanp = .false.  
   else
      call errore ('read_pseudo_header', 'unknown pseudo type', 1)

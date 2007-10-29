@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -165,6 +165,11 @@ module ld1inc
 
   logical ::   &
        frozen_core   ! if true the all-electron calculation is frozen core
+
+  logical ::   &
+       write_coulomb ! if true write a fake UPF pseudopotential file named 
+                     ! X.coul (X=atomic symbol) - for usage in special cases
+                     ! when the bare coulomb potential is required
 
   real(DP) :: &
        beta,       &   ! the mixing parameter

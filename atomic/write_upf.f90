@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2004 PWSCF group
+! Copyright (C) 2004-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -114,7 +114,10 @@ end subroutine write_upf
     else if (pseudotype == 3) then
        write (ounps, '(a5,t24,a)', err = 100, iostat = ios) "US", &
             "Ultrasoft pseudopotential"
-    else
+    else if (pseudotype == 0) then
+       write (ounps, '(a5,t24,a)', err = 100, iostat = ios) "1/r", &
+            "Coulomb potential"
+    else 
        call errore ('write_pseudo_header',&
             'Unknown PP type: ', 1)
     endif
@@ -176,7 +179,7 @@ end subroutine write_upf
 
     return
 
-100 call errore ('write_pseudo_rhoatom','Writing pseudo file',abs(ios))
+100 call errore ('write_pseudo_mesh','Writing pseudo file',abs(ios))
 
   end subroutine write_pseudo_mesh
 

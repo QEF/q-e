@@ -64,9 +64,20 @@ subroutine stres_loc (sigmaloc)
   !      WRITE( 6,*) ' evloc ', evloc, evloc*omega   ! DEBUG
   !
   do nt = 1, ntyp
-     ! dvloc contains dV_loc(G)/dG
-     call dvloc_of_g (rgrid(nt)%mesh, msh (nt), rgrid(nt)%rab, rgrid(nt)%r, &
+     IF ( .NOT. ASSOCIATED ( upf(nt)%vloc ) ) THEN
+        !
+        ! special case: pseudopotential is coulomb 1/r potential
+        !
+        call dvloc_coul (upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        !
+     ELSE
+        !
+        ! normal case: dvloc contains dV_loc(G)/dG
+        !
+        call dvloc_of_g (rgrid(nt)%mesh, msh (nt), rgrid(nt)%rab, rgrid(nt)%r,&
           upf(nt)%vloc(1), upf(nt)%zp, tpiba2, ngl, gl, omega, dvloc)
+        !
+     END IF
      ! no G=0 contribution
      do ng = 1, ngm
         do l = 1, 3
