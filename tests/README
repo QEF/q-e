@@ -14,6 +14,7 @@ scf       Si fcc   davidson and cg diagonalizations
                    wf_collect and disk_io options
                    stress with k-points and at Gamma
                    non-scf calculation
+                   old "ncpp" format for pseudopotentials
 metal     Al fcc   occupancies: all smearing schemes, tetrahedra
                    stress in metals
                    non-scf calculation with smearing and tetrahedra
@@ -22,6 +23,7 @@ uspp      Cu fcc   US PP, both single and double grid
                    simple, TF, local-TF mixing, ndim=4,8
                    stress with single and double grid
                    non-scf calculation
+uspp1     H2O      old Vanderbilt format for pseudopotentials
 uspp2     Ni fcc   core corrections
                    stress with core corrections
                    non-scf calculation
@@ -54,11 +56,12 @@ vc-relax  As       Variable-cell optimization at zero pressure
                    and under an external pressure
 neb       H        NEB calculation for the H2+H proton exchange
                    Automatic, manual, no choice of the climbing image
-                   Old RRKJ format
+                   Old RRKJ format for pseudopotentials
 metadyn   Si+H     Metadynamics
+berry     PbTiO3    scf: Q function in real space (tqr=.true.)
+                   nscf: Berry's phase calculation
 
 Tests are still missing for:
   forces with core corrections
-  old PP formats:  van, nc
   dft:             blyp, pw91, lda+U, metaGGA
   calculation:     bands, vc-md

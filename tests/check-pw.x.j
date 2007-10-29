@@ -27,6 +27,7 @@
 # The quantities that are compared with reference ones are:
 #    the Fermi energy, or
 #    the HOMO and LUMO
+#    the total polarization (for the Berry's phase calculation)
 #
 # For all other cases, the quantites that are verified are:
 #    the converged total energy
@@ -162,15 +163,20 @@ function check_nscf() {
   # get reference HOMO and LUMO
   eh0=`grep "highest occupied" $1.ref$2 | awk '{print $7}'`
   el0=`grep "highest occupied" $1.ref$2 | awk '{print $8}'`
+  # get total polarization (for Berry's phase calculation)
+  tf0=`grep " P = " $1.ref$2 | head -1 | awk '{printf "%7.5f", $3}'`
   #
   ef1=`grep Fermi $name.out$n | awk '{print $5}'`
   eh1=`grep "highest occupied" $1.out$2 | awk '{print $7}'`
   el1=`grep "highest occupied" $1.out$2 | awk '{print $8}'`
+  tf1=`grep " P = " $1.out$2 | head -1 | awk '{printf "%7.5f", $3}'`
   #
   if test "$ef1" = "$ef0"; then
     if test "$eh1" = "$eh0"; then
       if test "$el1" = "$el0"; then
-        $ECHO  "passed"
+        if test "$tf1" = "$tf0"; then
+          $ECHO  "passed"
+        fi
       fi
     fi
   fi
@@ -185,6 +191,10 @@ function check_nscf() {
   if test "$el1" != "$el0"; then
     $ECHO "discrepancy in LUMO detected"
     $ECHO "Reference: $el0, You got: $el1"
+  fi
+  if test "$tf1" != "$tf0"; then
+    $ECHO "discrepancy in polarization detected"
+    $ECHO "Reference: $tf0, You got: $tf1"
   fi
 }
 ########################################################################
