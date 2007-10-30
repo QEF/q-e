@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -245,3 +245,16 @@ subroutine sph_bes (msh, r, q, l, jl)
   !
   return
 end subroutine sph_bes
+
+integer function semifact(n)
+  ! semifact(n) = n!!
+  implicit none
+  integer :: n, i
+
+  semifact = 1
+  do i = n, 1, -2
+     semifact = i*semifact
+  end do
+  return
+end function semifact
+

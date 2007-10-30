@@ -74,6 +74,7 @@ atomic_rho.o : ../Modules/cell_base.o
 atomic_rho.o : ../Modules/io_global.o
 atomic_rho.o : ../Modules/ions_base.o
 atomic_rho.o : ../Modules/kind.o
+atomic_rho.o : ../Modules/uspp.o
 atomic_rho.o : ../Modules/wavefunctions.o
 atomic_rho.o : noncol.o
 atomic_rho.o : pwcom.o
@@ -406,6 +407,7 @@ force_cc.o : ../Modules/cell_base.o
 force_cc.o : ../Modules/constants.o
 force_cc.o : ../Modules/ions_base.o
 force_cc.o : ../Modules/kind.o
+force_cc.o : ../Modules/uspp.o
 force_cc.o : ../Modules/wavefunctions.o
 force_cc.o : noncol.o
 force_cc.o : pwcom.o
@@ -414,6 +416,7 @@ force_corr.o : ../Modules/cell_base.o
 force_corr.o : ../Modules/constants.o
 force_corr.o : ../Modules/ions_base.o
 force_corr.o : ../Modules/kind.o
+force_corr.o : ../Modules/uspp.o
 force_corr.o : ../Modules/wavefunctions.o
 force_corr.o : pwcom.o
 force_ew.o : ../Modules/constants.o
@@ -519,6 +522,7 @@ h_1psi.o : ../Modules/kind.o
 h_1psi.o : noncol.o
 h_epsi_her_apply.o : ../Modules/cell_base.o
 h_epsi_her_apply.o : ../Modules/constants.o
+h_epsi_her_apply.o : ../Modules/io_global.o
 h_epsi_her_apply.o : ../Modules/ions_base.o
 h_epsi_her_apply.o : ../Modules/kind.o
 h_epsi_her_apply.o : ../Modules/uspp.o
@@ -1090,6 +1094,7 @@ set_rhoc.o : ../Modules/cell_base.o
 set_rhoc.o : ../Modules/io_global.o
 set_rhoc.o : ../Modules/ions_base.o
 set_rhoc.o : ../Modules/kind.o
+set_rhoc.o : ../Modules/uspp.o
 set_rhoc.o : pwcom.o
 set_vrs.o : ../Modules/kind.o
 setlocal.o : ../Modules/constants.o
@@ -1146,6 +1151,7 @@ stres_cc.o : ../Modules/atom.o
 stres_cc.o : ../Modules/cell_base.o
 stres_cc.o : ../Modules/ions_base.o
 stres_cc.o : ../Modules/kind.o
+stres_cc.o : ../Modules/uspp.o
 stres_cc.o : ../Modules/wavefunctions.o
 stres_cc.o : pwcom.o
 stres_ewa.o : ../Modules/constants.o

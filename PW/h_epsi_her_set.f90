@@ -274,7 +274,8 @@ subroutine h_epsi_her_set
          CALL calc_btq(dkmod,qrad_dk,0)
    
 !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-         CALL ylm_q(lmaxq*lmaxq,dk,dkmod,ylm_dk)
+         dkmod=dk(1)**2+dk(2)**2+dk(3)**2
+         CALL ylmr2(lmaxq*lmaxq, 1, dk, dkmod, ylm_dk)
       
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
          q_dk=(0.d0,0.d0)
@@ -291,7 +292,8 @@ subroutine h_epsi_her_set
          ENDDO
          
 !  --- Calculate the q-space real spherical harmonics at -dk [Y_LM] --- 
-         CALL ylm_q(lmaxq*lmaxq,dkm,dkmod,ylm_dk)
+         dkmod=dkm(1)**2+dkm(2)**2+dkm(3)**2
+         CALL ylmr2(lmaxq*lmaxq, 1, dkm, dkmod, ylm_dk)
   
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
 

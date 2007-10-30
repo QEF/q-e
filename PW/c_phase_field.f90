@@ -283,11 +283,10 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
       CALL calc_btq(dkmod,qrad_dk,0)
 
 !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-      CALL ylm_q(lmaxq*lmaxq,dk,dkmod,ylm_dk)!questa no funzia perche'??
-    
+      dkmod = dk(1)**2+dk(2)**2+dk(3)**2
+      CALL ylmr2(lmaxq*lmaxq,1, dk,dkmod,ylm_dk)!questa no funzia perche'??
       
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-!      CALL setv(2*nhm*nhm*ntyp,0.d0,q_dk,1)
       q_dk=(0.d0,0.d0)
       DO np =1, ntyp
          if( upf(np)%tvanp ) then

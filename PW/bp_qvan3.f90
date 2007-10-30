@@ -61,8 +61,12 @@
           l = 4
         else if ((lp.ge.17).and.(lp.le.25)) then
           l = 5
-        else if (lp.ge.26) then
-          call errore(' qvan3 ',' lp.ge.26 ',lp)
+        else if ((lp.ge.26).and.(lp.le.36)) then
+          l = 6
+        else if ((lp.ge.37).and.(lp.le.49)) then
+          l = 7
+        else if (lp.gt.49) then
+          call errore(' qvan3 ',' l not programmed ',lp)
         end if
 
         sig = (0.d0,-1.d0)**(l-1)
