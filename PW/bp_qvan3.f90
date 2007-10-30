@@ -5,6 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
+! Modified by PG - Oct.2007: removed obsolete comments
 !--------------------------------------------------------------------------
       subroutine qvan3(iv,jv,is,qg,ylm_k,qr)
 !--------------------------------------------------------------------------
@@ -23,13 +24,6 @@
       real(DP) :: qr(nbetam,nbetam,lmaxq,ntyp)
       
       integer ivs,jvs,ivl,jvl,lp,l,i
-!       IV  = 1..8    ! s_1 p_x1 p_y1 p_z1 s_2 p_x2 p_z2 p_y2
-!       IVS = 1..4    ! s_1 s_2 p_1 p_2 d_1 d_2
-!       IVL = 1..4    ! s p_x p_y p_z
-!
-!  NOTE :   IV  = 1..8 (sppp sppp)   IVS = 1..4 (sspp) OR 1..2 (sp)
-!           IVL = 1..4 (sppp)
-!
       ivs = indv(iv,is)
       jvs = indv(jv,is)
       ivl = nhtolm(iv,is)

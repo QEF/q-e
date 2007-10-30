@@ -26,12 +26,9 @@
 !#   LIST OF FILES                                                            #!
 !#   ~~~~~~~~~~~~~                                                            #!
 !#   The complete list of files added to the PWSCF distribution is:           #!
-!#   * ../PW/bp_bess.f                                                        #!
 !#   * ../PW/bp_calc_btq.f90                                                  #!
 !#   * ../PW/bp_c_phase.f90                                                   #!
-!#   * ../PW/bp_dbess.f                                                       #!
 !#   * ../PW/bp_qvan3.f90                                                     #!
-!#   * ../PW/bp_radin.f                                                       #!
 !#   * ../PW/bp_strings.f90                                                   #!
 !#                                                                            #!
 !#   The PWSCF files that needed (minor) modifications were:                  #!
@@ -40,6 +37,8 @@
 !#   * ../PW/pwcom.f90                                                        #!
 !#   * ../PW/setup.f90                                                        #!
 !#                                                                            #!
+!#   Present in the original version and later removed:                       #!
+!#   * bp_ylm_q.f bp_dbess.f bp_radin.f bp_bess.f                             #!
 !#                                                                            #!
 !#   BRIEF SUMMARY OF THE METHODOLOGY                                         #!
 !#   ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~                                         #!

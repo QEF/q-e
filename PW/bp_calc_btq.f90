@@ -66,7 +66,7 @@ SUBROUTINE calc_btq(ql,qr_k,idbes)
                     aux(i) = jl(i)*aux(i)
                  ENDDO
                  !                        if (tlog(np)) then
-                 CALL radlg1(upf(np)%kkbeta,aux,rgrid(np)%rab,qrk) 
+                 CALL simpson(upf(np)%kkbeta,aux,rgrid(np)%rab,qrk) 
 
                  qr_k(iv,jv,l+1,np) = qrk*fpi/omega
                  qr_k(jv,iv,l+1,np) = qr_k(iv,jv,l+1,np)

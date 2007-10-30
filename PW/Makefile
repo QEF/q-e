@@ -24,7 +24,6 @@ becmod.o \
 bp_c_phase.o \
 bp_calc_btq.o \
 bp_qvan3.o \
-bp_radin.o \
 bp_strings.o \
 buffers.o \
 c_bands.o \
