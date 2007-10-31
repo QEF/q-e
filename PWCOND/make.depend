@@ -75,6 +75,7 @@ poten.o : ../Modules/io_global.o
 poten.o : ../Modules/mp.o
 poten.o : ../PW/noncol.o
 poten.o : ../PW/pwcom.o
+poten.o : ../PW/scf_mod.o
 poten.o : condcom.o
 print_clock_pwcond.o : ../Modules/io_global.o
 print_clock_pwcond.o : ../Modules/mp_global.o

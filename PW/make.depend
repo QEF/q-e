@@ -664,12 +664,12 @@ input.o : pwcom.o
 input.o : realus.o
 interpolate.o : ../Modules/kind.o
 interpolate.o : pwcom.o
-io_rho_xml.o : ../Modules/aa.o
 io_rho_xml.o : ../Modules/io_files.o
 io_rho_xml.o : ../Modules/io_global.o
 io_rho_xml.o : ../Modules/kind.o
 io_rho_xml.o : ../Modules/mp.o
 io_rho_xml.o : ../Modules/mp_global.o
+io_rho_xml.o : ../Modules/xml_io_base.o
 io_rho_xml.o : pwcom.o
 ions.o : ../Modules/control_flags.o
 ions.o : pwcom.o
@@ -861,7 +861,6 @@ punch.o : a2fmod.o
 punch.o : pw_restart.o
 pw_gemm.o : ../Modules/kind.o
 pw_gemm.o : pwcom.o
-pw_restart.o : ../Modules/aa.o
 pw_restart.o : ../Modules/cell_base.o
 pw_restart.o : ../Modules/constants.o
 pw_restart.o : ../Modules/control_flags.o
@@ -876,6 +875,7 @@ pw_restart.o : ../Modules/mp_global.o
 pw_restart.o : ../Modules/recvec.o
 pw_restart.o : ../Modules/version.o
 pw_restart.o : ../Modules/wavefunctions.o
+pw_restart.o : ../Modules/xml_io_base.o
 pw_restart.o : ../iotk/src/iotk_module.o
 pw_restart.o : buffers.o
 pw_restart.o : io_rho_xml.o
@@ -952,7 +952,6 @@ read_conf_from_file.o : ../Modules/ions_base.o
 read_conf_from_file.o : ../Modules/kind.o
 read_conf_from_file.o : pw_restart.o
 read_conf_from_file.o : pwcom.o
-read_file.o : ../Modules/aa.o
 read_file.o : ../Modules/cell_base.o
 read_file.o : ../Modules/constants.o
 read_file.o : ../Modules/io_files.o
@@ -961,6 +960,7 @@ read_file.o : ../Modules/kind.o
 read_file.o : ../Modules/mp_global.o
 read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
+read_file.o : ../Modules/xml_io_base.o
 read_file.o : buffers.o
 read_file.o : noncol.o
 read_file.o : pw_restart.o
@@ -1102,6 +1102,7 @@ scale_h.o : ../Modules/io_global.o
 scale_h.o : ../Modules/ions_base.o
 scale_h.o : pwcom.o
 scf_mod.o : ../Modules/kind.o
+scf_mod.o : pwcom.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
 set_fft_dim.o : ../Modules/cell_base.o

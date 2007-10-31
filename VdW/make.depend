@@ -23,6 +23,7 @@ dv_of_drho.o : ../Modules/functionals.o
 dv_of_drho.o : ../Modules/kind.o
 dv_of_drho.o : ../PH/phcom.o
 dv_of_drho.o : ../PW/pwcom.o
+dv_of_drho.o : ../PW/scf_mod.o
 dv_of_drho.o : vdwcom.o
 dvpsi_e.o : ../Modules/io_global.o
 dvpsi_e.o : ../Modules/ions_base.o
@@ -47,6 +48,7 @@ h_psiq.o : ../Modules/wavefunctions.o
 h_psiq.o : ../PH/phcom.o
 h_psiq.o : ../PW/becmod.o
 h_psiq.o : ../PW/pwcom.o
+h_psiq.o : ../PW/scf_mod.o
 incdrhoscf.o : ../Modules/ions_base.o
 incdrhoscf.o : ../Modules/kind.o
 incdrhoscf.o : ../Modules/uspp.o
@@ -75,6 +77,7 @@ solve_e.o : ../Modules/uspp.o
 solve_e.o : ../PH/phcom.o
 solve_e.o : ../PW/becmod.o
 solve_e.o : ../PW/pwcom.o
+solve_e.o : ../PW/scf_mod.o
 solve_e.o : vdwcom.o
 start_vdw.o : ../Modules/version.o
 start_vdw.o : ../PW/pwcom.o
@@ -92,6 +95,7 @@ vdw.o : ../Modules/mp.o
 vdw.o : ../Modules/parser.o
 vdw.o : ../PH/phcom.o
 vdw.o : ../PW/pwcom.o
+vdw.o : ../PW/scf_mod.o
 vdw.o : vdwcom.o
 vdwcom.o : ../Modules/kind.o
 allocate_vdw.o : ../include/f_defs.h

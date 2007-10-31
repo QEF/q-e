@@ -31,7 +31,7 @@ END TYPE scf_type
 
   REAL(DP) :: v_of_0    ! vltot(G=0)      
   REAL(DP), ALLOCATABLE :: &
-!       rho(:,:),       &! the charge density in real space
+       rho(:,:),       &! the charge density in real space
        vr(:,:),        &! the Hartree + xc potential in real space
        vltot(:),       &! the local potential in real space
        vrs(:,:),       &! the total pot. in real space (smooth grig)
@@ -58,6 +58,6 @@ CONTAINS
  type (scf_type) :: rho
  if (allocated(rho%of_r)) deallocate(rho%of_r)
  return
- end subroutine allocate_scf_type
+ end subroutine deallocate_scf_type
  !
 END MODULE scf

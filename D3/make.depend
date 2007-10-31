@@ -37,6 +37,7 @@ d3_exc.o : ../Modules/mp.o
 d3_exc.o : ../Modules/mp_global.o
 d3_exc.o : ../PH/phcom.o
 d3_exc.o : ../PW/pwcom.o
+d3_exc.o : ../PW/scf_mod.o
 d3_exc.o : d3com.o
 d3_init.o : ../Modules/atom.o
 d3_init.o : ../Modules/ions_base.o
@@ -68,6 +69,7 @@ d3_setup.o : ../Modules/mp_global.o
 d3_setup.o : ../Modules/uspp.o
 d3_setup.o : ../PH/phcom.o
 d3_setup.o : ../PW/pwcom.o
+d3_setup.o : ../PW/scf_mod.o
 d3_setup.o : d3com.o
 d3_summary.o : ../Modules/control_flags.o
 d3_summary.o : ../Modules/io_global.o
@@ -90,6 +92,7 @@ d3dyn_cc.o : ../Modules/ions_base.o
 d3dyn_cc.o : ../Modules/kind.o
 d3dyn_cc.o : ../PH/phcom.o
 d3dyn_cc.o : ../PW/pwcom.o
+d3dyn_cc.o : ../PW/scf_mod.o
 d3dyn_cc.o : d3com.o
 d3ionq.o : ../Modules/constants.o
 d3ionq.o : ../Modules/io_global.o

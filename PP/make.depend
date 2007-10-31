@@ -134,7 +134,6 @@ elf.o : ../Modules/kind.o
 elf.o : ../Modules/wavefunctions.o
 elf.o : ../PW/pwcom.o
 elf.o : ../PW/scf_mod.o
-epsilon.o : ../Modules/aa.o
 epsilon.o : ../Modules/cell_base.o
 epsilon.o : ../Modules/constants.o
 epsilon.o : ../Modules/io_files.o
@@ -144,6 +143,7 @@ epsilon.o : ../Modules/mp.o
 epsilon.o : ../Modules/mp_global.o
 epsilon.o : ../Modules/uspp.o
 epsilon.o : ../Modules/wavefunctions.o
+epsilon.o : ../Modules/xml_io_base.o
 epsilon.o : ../PW/pwcom.o
 epsilon.o : ../iotk/src/iotk_module.o
 ggen1d.o : ../Modules/cell_base.o

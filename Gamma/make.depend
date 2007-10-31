@@ -24,10 +24,12 @@ cg_setup.o : ../Modules/mp_global.o
 cg_setup.o : ../Modules/uspp.o
 cg_setup.o : ../Modules/wavefunctions.o
 cg_setup.o : ../PW/pwcom.o
+cg_setup.o : ../PW/scf_mod.o
 cg_setup.o : cgcom.o
 cg_setupdgc.o : ../Modules/functionals.o
 cg_setupdgc.o : ../Modules/kind.o
 cg_setupdgc.o : ../PW/pwcom.o
+cg_setupdgc.o : ../PW/scf_mod.o
 cg_setupdgc.o : cgcom.o
 cgcom.o : ../Modules/kind.o
 cgsolve.o : ../Modules/io_global.o
@@ -98,6 +100,7 @@ phcg.o : ../Modules/mp.o
 phcg.o : ../Modules/version.o
 phcg.o : ../PW/noncol.o
 phcg.o : ../PW/pwcom.o
+phcg.o : ../PW/scf_mod.o
 phcg.o : cgcom.o
 pw_dot.o : ../Modules/kind.o
 pw_dot.o : ../PW/pwcom.o
@@ -105,6 +108,7 @@ rhod2vkb.o : ../Modules/ions_base.o
 rhod2vkb.o : ../Modules/uspp.o
 rhod2vkb.o : ../Modules/wavefunctions.o
 rhod2vkb.o : ../PW/pwcom.o
+rhod2vkb.o : ../PW/scf_mod.o
 rhod2vkb.o : cgcom.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/wavefunctions.o
