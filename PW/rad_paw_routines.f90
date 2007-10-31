@@ -187,6 +187,10 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
         write(0,*) "########### skipping hartree paw potential"
 #else
         ! First compute the Hartree potential (it does not depend on spin...):
+#ifdef __SPHERICAL_TERM_ONLY
+        write(0,*) "########### RADIAL GRID TEST: SPHERICALY AVERAGED RHO_LM"
+        rho_lm(:,2:lmaxq**2,:) = 0.d0
+#endif
         CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
         ! using "energy" as the in/out parameter I save a double call, but I have to do this:
         IF (present(energy)) energy_xc = energy

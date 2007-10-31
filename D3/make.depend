@@ -58,7 +58,6 @@ d3_recover.o : ../Modules/mp.o
 d3_recover.o : ../PH/phcom.o
 d3_recover.o : ../PW/pwcom.o
 d3_recover.o : d3com.o
-d3_setup.o : ../Modules/atom.o
 d3_setup.o : ../Modules/constants.o
 d3_setup.o : ../Modules/control_flags.o
 d3_setup.o : ../Modules/functionals.o
@@ -66,6 +65,7 @@ d3_setup.o : ../Modules/io_global.o
 d3_setup.o : ../Modules/ions_base.o
 d3_setup.o : ../Modules/kind.o
 d3_setup.o : ../Modules/mp_global.o
+d3_setup.o : ../Modules/uspp.o
 d3_setup.o : ../PH/phcom.o
 d3_setup.o : ../PW/pwcom.o
 d3_setup.o : d3com.o
@@ -153,10 +153,10 @@ drho_cc.o : ../Modules/kind.o
 drho_cc.o : ../PH/phcom.o
 drho_cc.o : ../PW/pwcom.o
 drho_cc.o : d3com.o
-drho_drc.o : ../Modules/atom.o
 drho_drc.o : ../Modules/ions_base.o
 drho_drc.o : ../Modules/kind.o
 drho_drc.o : ../Modules/mp.o
+drho_drc.o : ../Modules/uspp.o
 drho_drc.o : ../PH/phcom.o
 drho_drc.o : ../PW/pwcom.o
 drho_drc.o : d3com.o
@@ -170,9 +170,9 @@ dvdpsi.o : ../Modules/uspp.o
 dvdpsi.o : ../PH/phcom.o
 dvdpsi.o : ../PW/pwcom.o
 dvdpsi.o : d3com.o
-dvscf.o : ../Modules/atom.o
 dvscf.o : ../Modules/ions_base.o
 dvscf.o : ../Modules/kind.o
+dvscf.o : ../Modules/uspp.o
 dvscf.o : ../PH/phcom.o
 dvscf.o : ../PW/pwcom.o
 dvscf.o : d3com.o

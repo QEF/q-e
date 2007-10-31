@@ -21,7 +21,6 @@ cg.o : ../Modules/electrons_base.o
 cg.o : ../Modules/io_global.o
 cg.o : ../Modules/kind.o
 cg.o : ../Modules/recvec.o
-cg_sub.o : ../Modules/atom.o
 cg_sub.o : ../Modules/cell_base.o
 cg_sub.o : ../Modules/constants.o
 cg_sub.o : ../Modules/control_flags.o
@@ -95,6 +94,7 @@ chi2.o : ../Modules/kind.o
 chi2.o : ../Modules/mp.o
 chi2.o : ../Modules/mp_global.o
 chi2.o : ../Modules/recvec.o
+compute_fes_grads.o : ../Modules/aa.o
 compute_fes_grads.o : ../Modules/basic_algebra_routines.o
 compute_fes_grads.o : ../Modules/cell_base.o
 compute_fes_grads.o : ../Modules/check_stop.o
@@ -116,10 +116,10 @@ compute_fes_grads.o : ../Modules/path_io_routines.o
 compute_fes_grads.o : ../Modules/path_variables.o
 compute_fes_grads.o : ../Modules/timestep.o
 compute_fes_grads.o : ../Modules/wave_base.o
-compute_fes_grads.o : ../Modules/xml_io_base.o
 compute_fes_grads.o : input.o
 compute_fes_grads.o : ions_positions.o
 compute_fes_grads.o : mainvar.o
+compute_scf.o : ../Modules/aa.o
 compute_scf.o : ../Modules/check_stop.o
 compute_scf.o : ../Modules/control_flags.o
 compute_scf.o : ../Modules/io_files.o
@@ -128,7 +128,6 @@ compute_scf.o : ../Modules/ions_base.o
 compute_scf.o : ../Modules/kind.o
 compute_scf.o : ../Modules/path_formats.o
 compute_scf.o : ../Modules/path_variables.o
-compute_scf.o : ../Modules/xml_io_base.o
 compute_scf.o : cp_interfaces.o
 compute_scf.o : input.o
 compute_scf.o : mainvar.o
@@ -173,6 +172,7 @@ cp_interfaces.o : ../Modules/recvec.o
 cp_interfaces.o : ../Modules/uspp.o
 cp_interfaces.o : atoms_type.o
 cp_interfaces.o : wave_types.o
+cp_restart.o : ../Modules/aa.o
 cp_restart.o : ../Modules/cell_base.o
 cp_restart.o : ../Modules/constants.o
 cp_restart.o : ../Modules/control_flags.o
@@ -191,7 +191,6 @@ cp_restart.o : ../Modules/parameters.o
 cp_restart.o : ../Modules/printout_base.o
 cp_restart.o : ../Modules/recvec.o
 cp_restart.o : ../Modules/version.o
-cp_restart.o : ../Modules/xml_io_base.o
 cp_restart.o : ../iotk/src/iotk_module.o
 cp_restart.o : cp_interfaces.o
 cp_restart.o : mainvar.o
@@ -365,6 +364,7 @@ electrons.o : ../Modules/kind.o
 electrons.o : ../Modules/mp_global.o
 electrons.o : ../Modules/parameters.o
 electrons.o : cp_emass.o
+emptystates.o : ../Modules/aa.o
 emptystates.o : ../Modules/cell_base.o
 emptystates.o : ../Modules/check_stop.o
 emptystates.o : ../Modules/control_flags.o
@@ -382,7 +382,6 @@ emptystates.o : ../Modules/recvec.o
 emptystates.o : ../Modules/timestep.o
 emptystates.o : ../Modules/uspp.o
 emptystates.o : ../Modules/wave_base.o
-emptystates.o : ../Modules/xml_io_base.o
 emptystates.o : cp_emass.o
 emptystates.o : cp_interfaces.o
 emptystates.o : electrons.o
@@ -445,10 +444,10 @@ forces.o : ../Modules/uspp.o
 forces.o : cp_interfaces.o
 forces.o : ensemble_dft.o
 forces.o : modules.o
+fpmdpp.o : ../Modules/aa.o
 fpmdpp.o : ../Modules/constants.o
 fpmdpp.o : ../Modules/io_files.o
 fpmdpp.o : ../Modules/kind.o
-fpmdpp.o : ../Modules/xml_io_base.o
 fpmdpp.o : ../iotk/src/iotk_module.o
 fromscra.o : ../Modules/cell_base.o
 fromscra.o : ../Modules/control_flags.o
@@ -521,6 +520,7 @@ init.o : ions.o
 init.o : ions_positions.o
 init.o : mainvar.o
 init.o : problem_size.o
+init_run.o : ../Modules/aa.o
 init_run.o : ../Modules/cell_base.o
 init_run.o : ../Modules/control_flags.o
 init_run.o : ../Modules/electrons_base.o
@@ -539,7 +539,6 @@ init_run.o : ../Modules/recvec.o
 init_run.o : ../Modules/timestep.o
 init_run.o : ../Modules/uspp.o
 init_run.o : ../Modules/wavefunctions.o
-init_run.o : ../Modules/xml_io_base.o
 init_run.o : cg.o
 init_run.o : cp_emass.o
 init_run.o : cp_interfaces.o
@@ -555,7 +554,6 @@ init_run.o : pseudopot.o
 init_run.o : restart_sub.o
 init_run.o : wannier.o
 init_run.o : wave_types.o
-inner_loop.o : ../Modules/atom.o
 inner_loop.o : ../Modules/cell_base.o
 inner_loop.o : ../Modules/control_flags.o
 inner_loop.o : ../Modules/electrons_base.o
@@ -574,7 +572,6 @@ inner_loop.o : cp_interfaces.o
 inner_loop.o : ensemble_dft.o
 inner_loop.o : ions_positions.o
 inner_loop.o : modules.o
-inner_loop_cold.o : ../Modules/atom.o
 inner_loop_cold.o : ../Modules/cell_base.o
 inner_loop_cold.o : ../Modules/control_flags.o
 inner_loop_cold.o : ../Modules/descriptors.o
@@ -646,6 +643,7 @@ ions.o : ../Modules/timestep.o
 ions.o : atoms_type.o
 ions_positions.o : ../Modules/kind.o
 ions_positions.o : atoms_type.o
+ksstates.o : ../Modules/aa.o
 ksstates.o : ../Modules/electrons_base.o
 ksstates.o : ../Modules/fft_base.o
 ksstates.o : ../Modules/griddim.o
@@ -655,7 +653,6 @@ ksstates.o : ../Modules/kind.o
 ksstates.o : ../Modules/mp.o
 ksstates.o : ../Modules/mp_global.o
 ksstates.o : ../Modules/recvec.o
-ksstates.o : ../Modules/xml_io_base.o
 ksstates.o : cp_interfaces.o
 ksstates.o : electrons.o
 main.o : ../Modules/cell_base.o
@@ -772,6 +769,7 @@ nlcc.o : ../Modules/mp_global.o
 nlcc.o : ../Modules/parameters.o
 nlcc.o : ../Modules/recvec.o
 nlcc.o : ../Modules/smallbox.o
+nlcc.o : ../Modules/uspp.o
 nlcc.o : atoms_type.o
 nlcc.o : cp_interfaces.o
 nlcc.o : modules.o
@@ -805,6 +803,7 @@ ortho_base.o : ../Modules/ptoolkit.o
 ortho_base.o : ../Modules/recvec.o
 ortho_base.o : ../Modules/uspp.o
 ortho_base.o : modules.o
+para.o : ../Modules/aa.o
 para.o : ../Modules/control_flags.o
 para.o : ../Modules/fft_base.o
 para.o : ../Modules/griddim.o
@@ -815,7 +814,6 @@ para.o : ../Modules/mp.o
 para.o : ../Modules/mp_global.o
 para.o : ../Modules/parallel_include.o
 para.o : ../Modules/recvec.o
-para.o : ../Modules/xml_io_base.o
 path_routines.o : ../Modules/cell_base.o
 path_routines.o : ../Modules/constants.o
 path_routines.o : ../Modules/control_flags.o
@@ -846,7 +844,6 @@ polarization.o : ../Modules/kind.o
 polarization.o : ../Modules/mp.o
 polarization.o : ../Modules/mp_global.o
 polarization.o : ../Modules/mp_wave.o
-potentials.o : ../Modules/atom.o
 potentials.o : ../Modules/cell_base.o
 potentials.o : ../Modules/constants.o
 potentials.o : ../Modules/control_flags.o
@@ -863,6 +860,7 @@ potentials.o : ../Modules/mp.o
 potentials.o : ../Modules/mp_global.o
 potentials.o : ../Modules/recvec.o
 potentials.o : ../Modules/sic.o
+potentials.o : ../Modules/uspp.o
 potentials.o : atoms_type.o
 potentials.o : cp_interfaces.o
 potentials.o : mainvar.o
@@ -872,6 +870,7 @@ potentials.o : wave_types.o
 pres_ai_mod.o : ../Modules/constants.o
 pres_ai_mod.o : ../Modules/kind.o
 pres_ai_mod.o : ../Modules/parameters.o
+print_out.o : ../Modules/aa.o
 print_out.o : ../Modules/cell_base.o
 print_out.o : ../Modules/constants.o
 print_out.o : ../Modules/control_flags.o
@@ -889,7 +888,6 @@ print_out.o : ../Modules/printout_base.o
 print_out.o : ../Modules/recvec.o
 print_out.o : ../Modules/sic.o
 print_out.o : ../Modules/timestep.o
-print_out.o : ../Modules/xml_io_base.o
 print_out.o : atoms_type.o
 print_out.o : cg.o
 print_out.o : cp_interfaces.o
@@ -1041,7 +1039,6 @@ runcp.o : cp_interfaces.o
 runcp.o : efield.o
 runcp.o : modules.o
 runcp.o : wannier.o
-smcp.o : ../Modules/atom.o
 smcp.o : ../Modules/cell_base.o
 smcp.o : ../Modules/check_stop.o
 smcp.o : ../Modules/constants.o

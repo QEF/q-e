@@ -151,6 +151,7 @@ intref.o : ../Modules/radial_grids.o
 inward.o : ../Modules/kind.o
 inward.o : ../Modules/radial_grids.o
 ld1.o : ../Modules/io_files.o
+ld1.o : ../Modules/io_global.o
 ld1.o : ../Modules/mp.o
 ld1.o : ../Modules/version.o
 ld1.o : ld1inc.o

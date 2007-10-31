@@ -15,12 +15,12 @@ cg_readin.o : ../Modules/mp.o
 cg_readin.o : ../PW/noncol.o
 cg_readin.o : ../PW/pwcom.o
 cg_readin.o : cgcom.o
-cg_setup.o : ../Modules/atom.o
 cg_setup.o : ../Modules/functionals.o
 cg_setup.o : ../Modules/io_files.o
 cg_setup.o : ../Modules/ions_base.o
 cg_setup.o : ../Modules/kind.o
 cg_setup.o : ../Modules/mp_global.o
+cg_setup.o : ../Modules/uspp.o
 cg_setup.o : ../Modules/wavefunctions.o
 cg_setup.o : ../PW/pwcom.o
 cg_setup.o : cgcom.o
@@ -53,6 +53,8 @@ dvpsi_e.o : ../PW/becmod.o
 dvpsi_e.o : ../PW/pwcom.o
 dvpsi_e.o : cgcom.o
 dvpsi_kb.o : ../Modules/atom.o
+dvpsi_kb.o : ../Modules/cell_base.o
+dvpsi_kb.o : ../Modules/constants.o
 dvpsi_kb.o : ../Modules/ions_base.o
 dvpsi_kb.o : ../Modules/kind.o
 dvpsi_kb.o : ../Modules/uspp.o
@@ -65,7 +67,11 @@ dynmat_init.o : ../Modules/ions_base.o
 dynmat_init.o : ../PW/pwcom.o
 dynmat_init.o : cgcom.o
 dynmatcc.o : ../Modules/atom.o
+dynmatcc.o : ../Modules/cell_base.o
+dynmatcc.o : ../Modules/constants.o
 dynmatcc.o : ../Modules/ions_base.o
+dynmatcc.o : ../Modules/kind.o
+dynmatcc.o : ../Modules/uspp.o
 dynmatcc.o : ../Modules/wavefunctions.o
 dynmatcc.o : ../PW/pwcom.o
 dynmatcc.o : cgcom.o

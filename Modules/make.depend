@@ -1,3 +1,11 @@
+aa.o : ../iotk/src/iotk_module.o
+aa.o : constants.o
+aa.o : io_files.o
+aa.o : io_global.o
+aa.o : kind.o
+aa.o : mp.o
+aa.o : mp_global.o
+aa.o : mp_wave.o
 atom.o : kind.o
 atom.o : parameters.o
 atom.o : radial_grids.o
@@ -89,6 +97,8 @@ ions_nose.o : ions_base.o
 ions_nose.o : kind.o
 ions_nose.o : parameters.o
 ions_nose.o : timestep.o
+kplusg.o : kind.o
+metadyn_base.o : aa.o
 metadyn_base.o : basic_algebra_routines.o
 metadyn_base.o : cell_base.o
 metadyn_base.o : constants.o
@@ -102,8 +112,8 @@ metadyn_base.o : metadyn_io.o
 metadyn_base.o : metadyn_vars.o
 metadyn_base.o : mp.o
 metadyn_base.o : random_numbers.o
-metadyn_base.o : xml_io_base.o
 metadyn_io.o : ../iotk/src/iotk_module.o
+metadyn_io.o : aa.o
 metadyn_io.o : constants.o
 metadyn_io.o : constraints_module.o
 metadyn_io.o : input_parameters.o
@@ -113,7 +123,6 @@ metadyn_io.o : ions_base.o
 metadyn_io.o : kind.o
 metadyn_io.o : metadyn_vars.o
 metadyn_io.o : mp.o
-metadyn_io.o : xml_io_base.o
 metadyn_vars.o : control_flags.o
 metadyn_vars.o : input_parameters.o
 metadyn_vars.o : kind.o
@@ -255,6 +264,7 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
+vms.o : kind.o
 vxc_t.o : functionals.o
 vxc_t.o : io_global.o
 vxc_t.o : kind.o
@@ -269,12 +279,12 @@ wave_base.o : mp_global.o
 wave_base.o : random_numbers.o
 wavefunctions.o : kind.o
 xml_input.o : ../iotk/src/iotk_module.o
+xml_input.o : aa.o
 xml_input.o : input_parameters.o
 xml_input.o : io_files.o
 xml_input.o : io_global.o
 xml_input.o : kind.o
 xml_input.o : version.o
-xml_input.o : xml_io_base.o
 xml_io_base.o : ../iotk/src/iotk_module.o
 xml_io_base.o : constants.o
 xml_io_base.o : io_files.o

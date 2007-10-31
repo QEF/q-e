@@ -23,7 +23,10 @@ subroutine c6_tfvw (mesh, zed, grid, rho_input)
    integer mesh
    real (kind=8) :: rho_input(mesh)
    real (kind=8) :: zed, rho(mesh)
-   real (kind=8) :: vw_lambda=1.0_dp
+   !
+   !real (kind=8) :: vw_lambda=9.0_dp ! describes exactly the low-q limit
+   !real (kind=8) :: vw_lambda=3.0_dp ! interpolate between high and low q's
+   real (kind=8) :: vw_lambda=1.0_dp ! describes exactly the high-q limit
    !
    ! local variables
    !
