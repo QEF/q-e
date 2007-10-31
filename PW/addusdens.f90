@@ -40,7 +40,7 @@ subroutine addusdens_g
   USE lsda_mod,             ONLY : nspin
   USE spin_orb,             ONLY : domag
   USE noncollin_module,     ONLY : noncolin
-  USE scf,                  ONLY : rho
+  USE scf,                  ONLY : rhoin
   USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh
   USE wvfct,                ONLY : gamma_only
@@ -130,7 +130,7 @@ subroutine addusdens_g
      psic( nl(:) ) = aux(:,is)
      if (gamma_only) psic( nlm(:) ) = CONJG(aux(:,is))
      call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
-     rho (:, is) = rho (:, is) +  DBLE (psic (:) )
+     rhoin%of_r(:, is) = rhoin%of_r(:, is) +  DBLE (psic (:) )
   enddo
   deallocate (aux)
 
