@@ -36,16 +36,19 @@ addusdens.o : ../Modules/wavefunctions.o
 addusdens.o : noncol.o
 addusdens.o : pwcom.o
 addusdens.o : realus.o
+addusdens.o : scf_mod.o
 addusforce.o : ../Modules/cell_base.o
 addusforce.o : ../Modules/ions_base.o
 addusforce.o : ../Modules/kind.o
 addusforce.o : ../Modules/uspp.o
 addusforce.o : pwcom.o
+addusforce.o : scf_mod.o
 addusstress.o : ../Modules/cell_base.o
 addusstress.o : ../Modules/ions_base.o
 addusstress.o : ../Modules/kind.o
 addusstress.o : ../Modules/uspp.o
 addusstress.o : pwcom.o
+addusstress.o : scf_mod.o
 allocate_bp_efield.o : ../Modules/cell_base.o
 allocate_bp_efield.o : ../Modules/io_global.o
 allocate_bp_efield.o : ../Modules/kind.o
@@ -58,6 +61,7 @@ allocate_fft.o : ../Modules/ions_base.o
 allocate_fft.o : ../Modules/wavefunctions.o
 allocate_fft.o : noncol.o
 allocate_fft.o : pwcom.o
+allocate_fft.o : scf_mod.o
 allocate_locpot.o : ../Modules/ions_base.o
 allocate_locpot.o : pwcom.o
 allocate_nlpot.o : ../Modules/cell_base.o
@@ -132,6 +136,7 @@ c_bands.o : buffers.o
 c_bands.o : g_psi_mod.o
 c_bands.o : noncol.o
 c_bands.o : pwcom.o
+c_bands.o : scf_mod.o
 c_phase_field.o : ../Modules/cell_base.o
 c_phase_field.o : ../Modules/constants.o
 c_phase_field.o : ../Modules/io_files.o
@@ -202,6 +207,7 @@ clean_pw.o : dynamics_module.o
 clean_pw.o : grid_paw_routines.o
 clean_pw.o : noncol.o
 clean_pw.o : pwcom.o
+clean_pw.o : scf_mod.o
 close_files.o : ../Modules/control_flags.o
 close_files.o : ../Modules/io_files.o
 close_files.o : ../Modules/mp.o
@@ -383,6 +389,7 @@ electrons.o : noncol.o
 electrons.o : pwcom.o
 electrons.o : rad_paw_routines.o
 electrons.o : realus.o
+electrons.o : scf_mod.o
 eqvect.o : ../Modules/kind.o
 ewald.o : ../Modules/constants.o
 ewald.o : ../Modules/kind.o
@@ -411,6 +418,7 @@ force_cc.o : ../Modules/uspp.o
 force_cc.o : ../Modules/wavefunctions.o
 force_cc.o : noncol.o
 force_cc.o : pwcom.o
+force_cc.o : scf_mod.o
 force_corr.o : ../Modules/atom.o
 force_corr.o : ../Modules/cell_base.o
 force_corr.o : ../Modules/constants.o
@@ -448,6 +456,7 @@ forces.o : ../Modules/io_global.o
 forces.o : ../Modules/ions_base.o
 forces.o : ../Modules/kind.o
 forces.o : pwcom.o
+forces.o : scf_mod.o
 g2_kin.o : ../Modules/cell_base.o
 g2_kin.o : ../Modules/kind.o
 g2_kin.o : pwcom.o
@@ -517,6 +526,7 @@ grid_paw_routines.o : ../Modules/uspp.o
 grid_paw_routines.o : ../Modules/wavefunctions.o
 grid_paw_routines.o : noncol.o
 grid_paw_routines.o : pwcom.o
+grid_paw_routines.o : scf_mod.o
 gweights.o : ../Modules/kind.o
 h_1psi.o : ../Modules/kind.o
 h_1psi.o : noncol.o
@@ -527,6 +537,7 @@ h_epsi_her_apply.o : ../Modules/ions_base.o
 h_epsi_her_apply.o : ../Modules/kind.o
 h_epsi_her_apply.o : ../Modules/uspp.o
 h_epsi_her_apply.o : pwcom.o
+h_epsi_her_apply.o : scf_mod.o
 h_epsi_her_set.o : ../Modules/cell_base.o
 h_epsi_her_set.o : ../Modules/constants.o
 h_epsi_her_set.o : ../Modules/io_files.o
@@ -536,6 +547,7 @@ h_epsi_her_set.o : ../Modules/mp.o
 h_epsi_her_set.o : ../Modules/uspp.o
 h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : pwcom.o
+h_epsi_her_set.o : scf_mod.o
 h_psi.o : ../Modules/functionals.o
 h_psi.o : ../Modules/kind.o
 h_psi.o : ../Modules/uspp.o
@@ -543,15 +555,18 @@ h_psi.o : ../Modules/wavefunctions.o
 h_psi.o : becmod.o
 h_psi.o : exx.o
 h_psi.o : pwcom.o
+h_psi.o : scf_mod.o
 h_psi_meta.o : ../Modules/cell_base.o
 h_psi_meta.o : ../Modules/kind.o
 h_psi_meta.o : ../Modules/wavefunctions.o
 h_psi_meta.o : pwcom.o
+h_psi_meta.o : scf_mod.o
 h_psi_nc.o : ../Modules/uspp.o
 h_psi_nc.o : ../Modules/wavefunctions.o
 h_psi_nc.o : becmod.o
 h_psi_nc.o : noncol.o
 h_psi_nc.o : pwcom.o
+h_psi_nc.o : scf_mod.o
 hexsym.o : ../Modules/kind.o
 hinit0.o : ../Modules/cell_base.o
 hinit0.o : ../Modules/grid_paw_variables.o
@@ -565,6 +580,7 @@ hinit1.o : ../Modules/control_flags.o
 hinit1.o : ../Modules/ions_base.o
 hinit1.o : pwcom.o
 hinit1.o : realus.o
+hinit1.o : scf_mod.o
 init_at_1.o : ../Modules/atom.o
 init_at_1.o : ../Modules/cell_base.o
 init_at_1.o : ../Modules/constants.o
@@ -683,6 +699,7 @@ makov_payne.o : ../Modules/mp.o
 makov_payne.o : ../Modules/mp_global.o
 makov_payne.o : para.o
 makov_payne.o : pwcom.o
+makov_payne.o : scf_mod.o
 memory_report.o : ../Modules/control_flags.o
 memory_report.o : ../Modules/io_global.o
 memory_report.o : ../Modules/uspp.o
@@ -743,6 +760,7 @@ newd.o : noncol.o
 newd.o : pwcom.o
 newd.o : rad_paw_routines.o
 newd.o : realus.o
+newd.o : scf_mod.o
 non_scf.o : ../Modules/control_flags.o
 non_scf.o : ../Modules/io_files.o
 non_scf.o : ../Modules/io_global.o
@@ -818,6 +836,7 @@ potinit.o : noncol.o
 potinit.o : pw_restart.o
 potinit.o : pwcom.o
 potinit.o : rad_paw_routines.o
+potinit.o : scf_mod.o
 print_clock_pw.o : ../Modules/control_flags.o
 print_clock_pw.o : ../Modules/grid_paw_variables.o
 print_clock_pw.o : ../Modules/io_global.o
@@ -862,6 +881,7 @@ pw_restart.o : buffers.o
 pw_restart.o : io_rho_xml.o
 pw_restart.o : noncol.o
 pw_restart.o : pwcom.o
+pw_restart.o : scf_mod.o
 pwcom.o : ../Modules/cell_base.o
 pwcom.o : ../Modules/constants.o
 pwcom.o : ../Modules/fft_types.o
@@ -945,6 +965,7 @@ read_file.o : buffers.o
 read_file.o : noncol.o
 read_file.o : pw_restart.o
 read_file.o : pwcom.o
+read_file.o : scf_mod.o
 read_ncpp.o : ../Modules/functionals.o
 read_ncpp.o : ../Modules/kind.o
 read_ncpp.o : ../Modules/parameters.o
@@ -980,6 +1001,7 @@ realus.o : ../Modules/uspp.o
 realus.o : noncol.o
 realus.o : para.o
 realus.o : pwcom.o
+realus.o : scf_mod.o
 regterg.o : ../Modules/control_flags.o
 regterg.o : ../Modules/descriptors.o
 regterg.o : ../Modules/io_global.o
@@ -992,12 +1014,13 @@ remove_atomic_rho.o : ../Modules/io_global.o
 remove_atomic_rho.o : ../Modules/kind.o
 remove_atomic_rho.o : io_rho_xml.o
 remove_atomic_rho.o : pwcom.o
+remove_atomic_rho.o : scf_mod.o
 report_mag.o : ../Modules/constants.o
 report_mag.o : ../Modules/io_global.o
 report_mag.o : ../Modules/ions_base.o
 report_mag.o : ../Modules/kind.o
 report_mag.o : noncol.o
-report_mag.o : pwcom.o
+report_mag.o : scf_mod.o
 reset_k_points.o : ../Modules/input_parameters.o
 reset_k_points.o : pwcom.o
 restart_from_file.o : ../Modules/control_flags.o
@@ -1019,6 +1042,7 @@ restart_in_ions.o : ../Modules/ions_base.o
 restart_in_ions.o : ../Modules/kind.o
 restart_in_ions.o : ../Modules/wavefunctions.o
 restart_in_ions.o : pwcom.o
+restart_in_ions.o : scf_mod.o
 rgen.o : ../Modules/kind.o
 rho2zeta.o : ../Modules/constants.o
 rho2zeta.o : ../Modules/io_global.o
@@ -1077,6 +1101,7 @@ scale_h.o : ../Modules/cell_base.o
 scale_h.o : ../Modules/io_global.o
 scale_h.o : ../Modules/ions_base.o
 scale_h.o : pwcom.o
+scf_mod.o : ../Modules/kind.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
 set_fft_dim.o : ../Modules/cell_base.o
@@ -1096,11 +1121,13 @@ set_rhoc.o : ../Modules/ions_base.o
 set_rhoc.o : ../Modules/kind.o
 set_rhoc.o : ../Modules/uspp.o
 set_rhoc.o : pwcom.o
+set_rhoc.o : scf_mod.o
 set_vrs.o : ../Modules/kind.o
 setlocal.o : ../Modules/constants.o
 setlocal.o : ../Modules/ions_base.o
 setlocal.o : ../Modules/kind.o
 setlocal.o : pwcom.o
+setlocal.o : scf_mod.o
 setqf.o : ../Modules/kind.o
 setup.o : ../Modules/cell_base.o
 setup.o : ../Modules/constants.o
@@ -1154,17 +1181,19 @@ stres_cc.o : ../Modules/kind.o
 stres_cc.o : ../Modules/uspp.o
 stres_cc.o : ../Modules/wavefunctions.o
 stres_cc.o : pwcom.o
+stres_cc.o : scf_mod.o
 stres_ewa.o : ../Modules/constants.o
 stres_ewa.o : ../Modules/kind.o
 stres_gradcorr.o : ../Modules/functionals.o
 stres_gradcorr.o : ../Modules/kind.o
 stres_gradcorr.o : noncol.o
-stres_gradcorr.o : pwcom.o
+stres_gradcorr.o : scf_mod.o
 stres_har.o : ../Modules/cell_base.o
 stres_har.o : ../Modules/constants.o
 stres_har.o : ../Modules/kind.o
 stres_har.o : ../Modules/wavefunctions.o
 stres_har.o : pwcom.o
+stres_har.o : scf_mod.o
 stres_hub.o : ../Modules/cell_base.o
 stres_hub.o : ../Modules/io_files.o
 stres_hub.o : ../Modules/io_global.o
@@ -1186,6 +1215,7 @@ stres_loc.o : ../Modules/kind.o
 stres_loc.o : ../Modules/uspp.o
 stres_loc.o : ../Modules/wavefunctions.o
 stres_loc.o : pwcom.o
+stres_loc.o : scf_mod.o
 stres_us.o : ../Modules/constants.o
 stres_us.o : ../Modules/ions_base.o
 stres_us.o : ../Modules/kind.o
@@ -1203,6 +1233,7 @@ stress.o : ../Modules/ions_base.o
 stress.o : ../Modules/kind.o
 stress.o : noncol.o
 stress.o : pwcom.o
+stress.o : scf_mod.o
 struct_fact.o : ../Modules/constants.o
 struct_fact.o : ../Modules/kind.o
 sum_band.o : ../Modules/cell_base.o
@@ -1218,6 +1249,7 @@ sum_band.o : ../Modules/wavefunctions.o
 sum_band.o : buffers.o
 sum_band.o : noncol.o
 sum_band.o : pwcom.o
+sum_band.o : scf_mod.o
 sumkg.o : ../Modules/kind.o
 sumkt.o : ../Modules/kind.o
 summary.o : ../Modules/atom.o
@@ -1275,6 +1307,7 @@ update_pot.o : buffers.o
 update_pot.o : io_rho_xml.o
 update_pot.o : noncol.o
 update_pot.o : pwcom.o
+update_pot.o : scf_mod.o
 usnldiag.o : ../Modules/ions_base.o
 usnldiag.o : ../Modules/kind.o
 usnldiag.o : ../Modules/uspp.o
@@ -1287,6 +1320,7 @@ v_of_rho.o : ../Modules/io_global.o
 v_of_rho.o : ../Modules/kind.o
 v_of_rho.o : noncol.o
 v_of_rho.o : pwcom.o
+v_of_rho.o : scf_mod.o
 vcsmd.o : ../Modules/cell_base.o
 vcsmd.o : ../Modules/constants.o
 vcsmd.o : ../Modules/control_flags.o

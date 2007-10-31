@@ -15,6 +15,7 @@ subroutine rhod2vkb(dyn0)
 #include "f_defs.h"
   USE ions_base, ONLY : nat, tau, ityp, ntyp => nsp
   use pwcom
+  use scf, only : rho
   USE wavefunctions_module,  ONLY: evc, psic
   USE uspp_param, only: nh
   use cgcom

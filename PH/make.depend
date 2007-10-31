@@ -329,6 +329,7 @@ dynmat_us.o : ../Modules/uspp.o
 dynmat_us.o : ../Modules/wavefunctions.o
 dynmat_us.o : ../PW/noncol.o
 dynmat_us.o : ../PW/pwcom.o
+dynmat_us.o : ../PW/scf_mod.o
 dynmat_us.o : phcom.o
 dynmatcc.o : ../Modules/ions_base.o
 dynmatcc.o : ../Modules/kind.o
@@ -365,6 +366,7 @@ el_opt.o : ../Modules/kind.o
 el_opt.o : ../Modules/mp.o
 el_opt.o : ../Modules/mp_global.o
 el_opt.o : ../PW/pwcom.o
+el_opt.o : ../PW/scf_mod.o
 el_opt.o : phcom.o
 el_opt.o : ramanm.o
 elph.o : ../Modules/kind.o
@@ -520,6 +522,7 @@ phq_setup.o : ../Modules/kind.o
 phq_setup.o : ../Modules/uspp.o
 phq_setup.o : ../PW/noncol.o
 phq_setup.o : ../PW/pwcom.o
+phq_setup.o : ../PW/scf_mod.o
 phq_setup.o : phcom.o
 phq_summary.o : ../Modules/cell_base.o
 phq_summary.o : ../Modules/constants.o

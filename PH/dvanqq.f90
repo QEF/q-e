@@ -20,6 +20,7 @@ subroutine dvanqq
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
+  use scf, only : vr, vltot
   use noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   use phcom

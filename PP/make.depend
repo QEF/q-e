@@ -6,6 +6,7 @@ add_shift_cc.o : ../Modules/kind.o
 add_shift_cc.o : ../Modules/uspp.o
 add_shift_cc.o : ../Modules/wavefunctions.o
 add_shift_cc.o : ../PW/pwcom.o
+add_shift_cc.o : ../PW/scf_mod.o
 add_shift_lc.o : ../Modules/constants.o
 add_shift_lc.o : ../Modules/kind.o
 add_shift_us.o : ../Modules/cell_base.o
@@ -37,6 +38,7 @@ average.o : ../Modules/mp_global.o
 average.o : ../Modules/parameters.o
 average.o : ../Modules/wavefunctions.o
 average.o : ../PW/pwcom.o
+average.o : ../PW/scf_mod.o
 bands.o : ../Modules/atom.o
 bands.o : ../Modules/cell_base.o
 bands.o : ../Modules/constants.o
@@ -83,6 +85,7 @@ compute_sigma_avg.o : ../Modules/wavefunctions.o
 compute_sigma_avg.o : ../PW/noncol.o
 compute_sigma_avg.o : ../PW/para.o
 compute_sigma_avg.o : ../PW/pwcom.o
+compute_sigma_avg.o : ../PW/scf_mod.o
 cube.o : ../Modules/kind.o
 cubicspinsym.o : ../Modules/kind.o
 cubicspinsym.o : ../PW/pwcom.o
@@ -105,6 +108,7 @@ dipole.o : ../Modules/mp.o
 dipole.o : ../Modules/mp_global.o
 dipole.o : ../PW/para.o
 dipole.o : ../PW/pwcom.o
+dipole.o : ../PW/scf_mod.o
 do_initial_state.o : ../Modules/cell_base.o
 do_initial_state.o : ../Modules/io_global.o
 do_initial_state.o : ../Modules/ions_base.o
@@ -112,6 +116,7 @@ do_initial_state.o : ../Modules/kind.o
 do_initial_state.o : ../Modules/parameters.o
 do_initial_state.o : ../Modules/uspp.o
 do_initial_state.o : ../PW/pwcom.o
+do_initial_state.o : ../PW/scf_mod.o
 do_shift_ew.o : ../Modules/constants.o
 do_shift_ew.o : ../Modules/kind.o
 dos.o : ../Modules/constants.o
@@ -128,6 +133,7 @@ elf.o : ../Modules/io_files.o
 elf.o : ../Modules/kind.o
 elf.o : ../Modules/wavefunctions.o
 elf.o : ../PW/pwcom.o
+elf.o : ../PW/scf_mod.o
 epsilon.o : ../Modules/aa.o
 epsilon.o : ../Modules/cell_base.o
 epsilon.o : ../Modules/constants.o
@@ -163,6 +169,7 @@ local_dos.o : ../Modules/uspp.o
 local_dos.o : ../Modules/wavefunctions.o
 local_dos.o : ../PW/noncol.o
 local_dos.o : ../PW/pwcom.o
+local_dos.o : ../PW/scf_mod.o
 local_dos1d.o : ../Modules/cell_base.o
 local_dos1d.o : ../Modules/ions_base.o
 local_dos1d.o : ../Modules/uspp.o
@@ -178,6 +185,7 @@ local_dos_mag.o : ../Modules/uspp.o
 local_dos_mag.o : ../Modules/wavefunctions.o
 local_dos_mag.o : ../PW/noncol.o
 local_dos_mag.o : ../PW/pwcom.o
+local_dos_mag.o : ../PW/scf_mod.o
 openfil_pp.o : ../Modules/control_flags.o
 openfil_pp.o : ../Modules/io_files.o
 openfil_pp.o : ../Modules/kind.o
@@ -243,6 +251,7 @@ punch_plot.o : ../Modules/kind.o
 punch_plot.o : ../Modules/wavefunctions.o
 punch_plot.o : ../PW/noncol.o
 punch_plot.o : ../PW/pwcom.o
+punch_plot.o : ../PW/scf_mod.o
 pw2casino.o : ../Modules/cell_base.o
 pw2casino.o : ../Modules/constants.o
 pw2casino.o : ../Modules/io_files.o
@@ -254,6 +263,7 @@ pw2casino.o : ../Modules/uspp.o
 pw2casino.o : ../Modules/wavefunctions.o
 pw2casino.o : ../PW/becmod.o
 pw2casino.o : ../PW/pwcom.o
+pw2casino.o : ../PW/scf_mod.o
 pw2gw.o : ../Modules/cell_base.o
 pw2gw.o : ../Modules/constants.o
 pw2gw.o : ../Modules/io_files.o
@@ -301,6 +311,7 @@ stm.o : ../Modules/io_global.o
 stm.o : ../Modules/kind.o
 stm.o : ../Modules/wavefunctions.o
 stm.o : ../PW/pwcom.o
+stm.o : ../PW/scf_mod.o
 stop_pp.o : ../Modules/control_flags.o
 stop_pp.o : ../Modules/io_files.o
 stop_pp.o : ../Modules/mp.o
@@ -326,12 +337,14 @@ voronoy.o : ../Modules/ions_base.o
 voronoy.o : ../Modules/kind.o
 voronoy.o : ../Modules/mp_global.o
 voronoy.o : ../PW/pwcom.o
+voronoy.o : ../PW/scf_mod.o
 wfdd.o : ../Modules/constants.o
 work_function.o : ../Modules/cell_base.o
 work_function.o : ../Modules/constants.o
 work_function.o : ../Modules/io_global.o
 work_function.o : ../Modules/mp.o
 work_function.o : ../PW/pwcom.o
+work_function.o : ../PW/scf_mod.o
 write_p_avg.o : ../Modules/cell_base.o
 write_p_avg.o : ../Modules/constants.o
 write_p_avg.o : ../Modules/io_files.o

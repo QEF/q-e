@@ -13,6 +13,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
 
   USE funct, only : dft_is_gradient
   USE pwcom
+  USE scf, only : rho, rho_core
   USE kinds, ONLY : DP
   USE phcom
   USE mp_global, ONLY : my_pool_id

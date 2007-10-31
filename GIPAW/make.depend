@@ -48,6 +48,7 @@ efg.o : ../Modules/wavefunctions.o
 efg.o : ../PW/buffers.o
 efg.o : ../PW/paw.o
 efg.o : ../PW/pwcom.o
+efg.o : ../PW/scf_mod.o
 efg.o : gipaw_module.o
 g_tensor_crystal.o : ../Modules/cell_base.o
 g_tensor_crystal.o : ../Modules/io_files.o
@@ -60,6 +61,7 @@ g_tensor_crystal.o : ../PW/becmod.o
 g_tensor_crystal.o : ../PW/buffers.o
 g_tensor_crystal.o : ../PW/paw.o
 g_tensor_crystal.o : ../PW/pwcom.o
+g_tensor_crystal.o : ../PW/scf_mod.o
 g_tensor_crystal.o : gipaw_module.o
 gipaw_main.o : ../Modules/cell_base.o
 gipaw_main.o : ../Modules/control_flags.o
@@ -85,6 +87,7 @@ gipaw_module.o : ../PW/buffers.o
 gipaw_module.o : ../PW/noncol.o
 gipaw_module.o : ../PW/paw.o
 gipaw_module.o : ../PW/pwcom.o
+gipaw_module.o : ../PW/scf_mod.o
 greenfunction.o : ../Modules/io_files.o
 greenfunction.o : ../Modules/io_global.o
 greenfunction.o : ../Modules/kind.o

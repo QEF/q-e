@@ -19,6 +19,7 @@ subroutine dvpsi_e2
 
   use kinds, only : DP
   use pwcom
+  use scf, only : rho
   USE io_files, ONLY: iunigk
   USE wavefunctions_module,  ONLY: evc
   use becmod

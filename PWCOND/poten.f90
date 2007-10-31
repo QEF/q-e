@@ -15,6 +15,7 @@ SUBROUTINE poten(vppot,nrz,z)
 ! local potential in each slab.
 !
   USE pwcom
+  USE scf, only : vltot, vr
   USE noncollin_module, ONLY : noncolin, npol
   USE cond
   USE mp,               ONLY : mp_bcast

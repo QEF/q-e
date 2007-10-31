@@ -21,6 +21,7 @@ subroutine d3dyn_cc
   USE kinds, only : DP
   USE funct, only : xc
   use pwcom
+  use scf, only : rho, rho_core
   use phcom
   use d3com
   implicit none

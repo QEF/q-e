@@ -18,6 +18,7 @@ SUBROUTINE d3_exc
   USE ions_base,  ONLY : nat
   USE kinds,      ONLY : DP
   USE pwcom
+  USE scf, only : rho, rho_core
   USE phcom
   USE d3com
   USE io_global, ONLY : ionode_id

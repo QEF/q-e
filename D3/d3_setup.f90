@@ -47,6 +47,7 @@ SUBROUTINE d3_setup()
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   USE pwcom
+  USE scf, only : rho, rho_core, vr, vltot, vrs
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin

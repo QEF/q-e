@@ -18,6 +18,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !
 
   use pwcom
+  use scf, only : vrs
   USE wavefunctions_module,  ONLY: psic, psic_nc
   USE becmod, ONLY: becp, becp_nc
   USE noncollin_module, ONLY : noncolin, npol

@@ -117,6 +117,7 @@ d3vrho.o : ../Modules/uspp.o
 d3vrho.o : ../Modules/wavefunctions.o
 d3vrho.o : ../PH/phcom.o
 d3vrho.o : ../PW/pwcom.o
+d3vrho.o : ../PW/scf_mod.o
 d3vrho.o : d3com.o
 davcio_drho2.o : ../Modules/io_global.o
 davcio_drho2.o : ../Modules/kind.o

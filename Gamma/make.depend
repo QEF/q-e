@@ -6,6 +6,7 @@ a_h.o : ../Modules/uspp.o
 a_h.o : ../Modules/wavefunctions.o
 a_h.o : ../PW/becmod.o
 a_h.o : ../PW/pwcom.o
+a_h.o : ../PW/scf_mod.o
 a_h.o : cgcom.o
 cg_readin.o : ../Modules/io_files.o
 cg_readin.o : ../Modules/io_global.o
@@ -74,6 +75,7 @@ dynmatcc.o : ../Modules/kind.o
 dynmatcc.o : ../Modules/uspp.o
 dynmatcc.o : ../Modules/wavefunctions.o
 dynmatcc.o : ../PW/pwcom.o
+dynmatcc.o : ../PW/scf_mod.o
 dynmatcc.o : cgcom.o
 generate_dynamical_matrix.o : ../Modules/kind.o
 generate_effective_charges.o : ../Modules/kind.o
@@ -81,6 +83,7 @@ h_h.o : ../Modules/kind.o
 h_h.o : ../Modules/uspp.o
 h_h.o : ../PW/becmod.o
 h_h.o : ../PW/pwcom.o
+h_h.o : ../PW/scf_mod.o
 h_h.o : cgcom.o
 macro.o : ../PW/pwcom.o
 macro.o : cgcom.o

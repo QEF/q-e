@@ -26,6 +26,7 @@ subroutine solve_e_vdw ( iu )
   USE io_global,             ONLY : stdout
   USE io_files,              ONLY : iunigk, prefix, iunwfc, nwordwfc
   use pwcom
+  use scf, only : vrs
   USE check_stop,            ONLY : check_stop_now
 !  USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP

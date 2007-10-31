@@ -18,6 +18,7 @@ subroutine h_psiq_vdw (lda, n, m, psi, hpsi, spsi)
   !
 
   use pwcom
+  use scf, only : vrs
   USE wavefunctions_module,  ONLY: psic
   USE becmod, ONLY: becp
   USE kinds, only : DP

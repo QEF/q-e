@@ -17,6 +17,7 @@ check_v_eff.o : ../Modules/uspp.o
 check_v_eff.o : ../Modules/wavefunctions.o
 check_v_eff.o : ../PW/g_psi_mod.o
 check_v_eff.o : ../PW/pwcom.o
+check_v_eff.o : ../PW/scf_mod.o
 check_v_eff.o : vdwcom.o
 dv_of_drho.o : ../Modules/functionals.o
 dv_of_drho.o : ../Modules/kind.o
@@ -39,6 +40,7 @@ eff_pot.o : ../Modules/mp.o
 eff_pot.o : ../Modules/mp_global.o
 eff_pot.o : ../Modules/uspp.o
 eff_pot.o : ../PW/pwcom.o
+eff_pot.o : ../PW/scf_mod.o
 eff_pot.o : vdwcom.o
 h_psiq.o : ../Modules/kind.o
 h_psiq.o : ../Modules/wavefunctions.o

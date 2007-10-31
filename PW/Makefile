@@ -185,6 +185,7 @@ save_in_cbands.o \
 save_in_electrons.o \
 save_in_ions.o \
 scale_h.o \
+scf_mod.o \
 seqopn.o \
 set_fft_dim.o \
 set_hubbard_l.o \

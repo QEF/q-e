@@ -19,6 +19,7 @@ subroutine setup_dgc
 #include "f_defs.h"
 
   use pwcom
+  use scf, only : rho, rhog, rho_core, rhog_core
   USE noncollin_module, ONLY : noncolin, ux
   USE wavefunctions_module, ONLY : psic
   USE kinds, only : DP

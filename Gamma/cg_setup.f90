@@ -14,6 +14,7 @@ SUBROUTINE cg_setup
   USE kinds, ONLY: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE pwcom
+  USE scf, only : rho, rho_core, vr, vltot, vrs
   USE uspp_param, ONLY: upf
   USE mp_global,        ONLY : kunit
   USE wavefunctions_module,  ONLY: evc

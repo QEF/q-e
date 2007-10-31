@@ -15,6 +15,7 @@ subroutine dynmatcc
   !
   USE ions_base, ONLY : nat, ityp, tau
   use pwcom
+  use scf, only : rho, rhog, rho_core, rhog_core
   USE kinds, only : DP
   use phcom
   implicit none

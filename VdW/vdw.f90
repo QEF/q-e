@@ -25,6 +25,7 @@ PROGRAM vdw
   USE io_files,        ONLY : nd_nmbr
   USE io_global,       ONLY : ionode, stdout
   USE pwcom
+  USE scf, only: rho
   USE phcom
   USE qpoint,          ONLY : nksq
   USE control_vdw,     ONLY : thresh_veff

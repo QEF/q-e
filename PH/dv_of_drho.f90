@@ -16,6 +16,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
 #include "f_defs.h"
   use funct, only : dft_is_gradient
   use pwcom
+  use scf, only : rho, rho_core
   USE kinds, only : DP
   use phcom
   implicit none

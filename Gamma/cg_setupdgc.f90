@@ -13,6 +13,7 @@ subroutine cg_setupdgc
   !
   USE kinds, only: DP
   use pwcom
+  use scf, only : rho, rhog, rho_core, rhog_core
   use cgcom
   use funct, only: gcxc, gcx_spin, gcc_spin, dft_is_gradient
   !

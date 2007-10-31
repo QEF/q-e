@@ -361,37 +361,6 @@ MODULE force_mod
   !
 END MODULE force_mod
 !
-!
-MODULE scf
-  !
-  ! ... The variables needed to define the self-consistent cycle
-  !  
-  USE kinds, ONLY : DP
-  !
-  SAVE
-  !
-  REAL(DP) :: v_of_0    ! vltot(G=0)      
-  REAL(DP), ALLOCATABLE :: &
-       rho(:,:),       &! the charge density in real space
-       vr(:,:),        &! the Hartree + xc potential in real space
-       vltot(:),       &! the local potential in real space
-       vrs(:,:),       &! the total pot. in real space (smooth grig)
-       rho_core(:),    &! the core charge in real space
-       tauk(:,:),      &! kinetic energy density in real space (dense grid)
-       kedtau(:,:),    &! position dependent kinetic energy enhancement factor
-                        ! used in META-GGA in real space (smooth grid)
-       kedtaur(:,:)     ! position dependent kinetic energy enhancement factor
-                        ! used in META-GGA in real space (dense grid)
-
-  COMPLEX(DP), ALLOCATABLE :: &
-       rhog(:,:),      &! the charge density in reciprocal space
-       rhog_core(:),   &! the core charge in reciprocal space
-       taukg(:,:)       ! the kinetic energy density in reciprocal space
-
-  !
-END MODULE scf
-!
-!
 MODULE relax
   !
   ! ... The variables used to control ionic relaxations
@@ -640,7 +609,6 @@ MODULE pwcom
   USE wvfct
   USE ener
   USE force_mod
-  USE scf
   USE relax
   USE cellmd
   USE char

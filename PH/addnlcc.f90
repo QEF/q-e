@@ -15,6 +15,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
   USE ions_base, ONLY : nat
   use funct, only : dft_is_gradient
   use pwcom
+  use scf, only : rho, rho_core
   USE kinds, only : DP
   use phcom
   implicit none
