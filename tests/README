@@ -24,6 +24,7 @@ uspp      Cu fcc   US PP, both single and double grid
                    stress with single and double grid
                    non-scf calculation
 uspp1     H2O      old Vanderbilt format for pseudopotentials
+                   Fake coulombian (1/r) pseudopotential
 uspp2     Ni fcc   core corrections
                    stress with core corrections
                    non-scf calculation
