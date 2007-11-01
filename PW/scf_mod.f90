@@ -18,7 +18,7 @@ MODULE scf
   !
   USE lsda_mod,   ONLY : nspin
   USE ldaU,       ONLY : lda_plus_u
-  USE gvect,      ONLY : nrxx
+  USE gvect,      ONLY : nrxx, ngm
   !
   SAVE
   !
@@ -27,11 +27,10 @@ TYPE scf_type
 !  COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
 END TYPE scf_type
 
-  type (scf_type) :: rhoin 
+  type (scf_type) :: rho
 
   REAL(DP) :: v_of_0    ! vltot(G=0)      
   REAL(DP), ALLOCATABLE :: &
-       rho(:,:),       &! the charge density in real space
        vr(:,:),        &! the Hartree + xc potential in real space
        vltot(:),       &! the local potential in real space
        vrs(:,:),       &! the total pot. in real space (smooth grig)

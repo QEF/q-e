@@ -64,14 +64,14 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
      do is = 1, nspin
-        rho(:, is) = rho(:, is) + fac * rho_core (:)
+        rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
 !  allocate ( dmuxc(nrxx, nspin, nspin) )
   dmuxc(:,:,:) = 0.d0
   do ir = 1, nrxx
-     rhotot = rho (ir, nspin) + rho_core (ir)
+     rhotot = rho%of_r (ir, nspin) + rho_core (ir)
      if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
      if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
   enddo
@@ -88,12 +88,12 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
   ! its contribution. grho contains already the core charge
   !
 !  if (igcx /= 0 .or. igcc /= 0) call dgradcorr &
-!       (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
+!       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
 !       dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nl, ngm, g, &
 !       alat, omega, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin
-        rho(:, is) = rho(:, is) - fac * rho_core (:)
+        rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif
@@ -131,7 +131,7 @@ subroutine dv_of_drho_vdw (mode, dvscf, flag)
   dv_tfvw(:, is) = ttd * (0.125d0/ttd*fpi**2)**ttd * dv_tfvw (:, is) & 
                        * ( abs(rho_veff(:,is))** (-ttd/2.d0) )  
 !  dv_tfvw(:, is) = ttd * (0.125d0/ttd*fpi**2)**ttd * dv_tfvw (:, is) & 
-!                       * ( abs(rho(:,is)+rho_core(:))** (-ttd/2.d0) )  
+!                       * ( abs(rhof_r(:,is)+rho_core(:))** (-ttd/2.d0) )  
   !
   ! at the end the three contributes are added
   !

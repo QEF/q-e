@@ -275,7 +275,7 @@ SUBROUTINE electrons()
         !
         DO is = 1, nspin
            !
-           psic(:) = rho(:,is)
+           psic(:) = rho%of_r(:,is)
            !
            CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
            !
@@ -295,7 +295,7 @@ SUBROUTINE electrons()
               !
               CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
               !
-              rho(:,is) = psic(:)
+              rho%of_r(:,is) = psic(:)
               !
            END IF
            !
@@ -488,7 +488,7 @@ SUBROUTINE electrons()
            !
            ! ... now rho contains the mixed charge density in R-space
            !
-           rho(:,:) = rhonew(:,:)
+           rho%of_r(:,:) = rhonew(:,:)
            DEALLOCATE( rhonew )
            !
            IF ( dft_is_meta() ) THEN
@@ -522,7 +522,7 @@ SUBROUTINE electrons()
            !
            ! ... write the charge density to file
            !
-           CALL write_rho( rho, nspin )
+           CALL write_rho( rho%of_r, nspin )
            !
         ELSE not_converged_electrons
            !
@@ -532,7 +532,7 @@ SUBROUTINE electrons()
            !
            vnew(:,:) = vr(:,:)
            !
-           CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+           CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            vnew(:,:) = vr(:,:) - vnew(:,:)
@@ -904,7 +904,7 @@ SUBROUTINE electrons()
           !
           DO ir = 1, nrxx
              !
-             mag = rho(ir,1) - rho(ir,2)
+             mag = rho%of_r(ir,1) - rho%of_r(ir,2)
              !
              magtot = magtot + mag
              absmag = absmag + ABS( mag )
@@ -924,11 +924,13 @@ SUBROUTINE electrons()
           !
           DO ir = 1,nrxx
              !
-             mag = SQRT( rho(ir,2)**2 + rho(ir,3)**2 + rho(ir,4)**2 )
+             mag = SQRT( rho%of_r(ir,2)**2 + &
+                         rho%of_r(ir,3)**2 + &
+                         rho%of_r(ir,4)**2 )
              !
              DO i = 1, 3
                 !
-                magtot_nc(i) = magtot_nc(i) + rho(ir,i+1)
+                magtot_nc(i) = magtot_nc(i) + rho%of_r(ir,i+1)
                 !
              END DO
              !
@@ -996,7 +998,7 @@ SUBROUTINE electrons()
        !
        DO ipol = 1, nspin
           !
-          delta_e = delta_e - SUM( rho(:,ipol)*vr(:,ipol) )
+          delta_e = delta_e - SUM( rho%of_r(:,ipol)*vr(:,ipol) )
           !
        END DO
        !
@@ -1034,7 +1036,7 @@ SUBROUTINE electrons()
        DO ipol = 1, nspin
           !
           delta_escf = delta_escf - &
-                       SUM( ( rhonew(:,ipol) - rho(:,ipol) )*vr(:,ipol) )
+                       SUM( ( rhonew(:,ipol) - rho%of_r(:,ipol) )*vr(:,ipol) )
           !
        END DO
        !

@@ -104,7 +104,7 @@ subroutine el_opt
 
   d2muxc (:) = 0.0_dp
   do ir = 1, nrxx
-     rhotot = rho(ir,1) + rho_core(ir)
+     rhotot = rho%of_r(ir,1) + rho_core(ir)
      if ( rhotot.gt. 1.d-30 ) d2muxc(ir)= d2mxc( rhotot)
      if ( rhotot.lt.-1.d-30 ) d2muxc(ir)=-d2mxc(-rhotot)
   enddo

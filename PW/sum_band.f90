@@ -60,7 +60,7 @@ SUBROUTINE sum_band()
   CALL start_clock( 'sum_band' )
   !
   becsum(:,:,:) = 0.D0
-  rho(:,:)      = 0.D0
+  rho%of_r(:,:)      = 0.D0
   eband         = 0.D0  
   tauk(:,:)     = 0.D0
   if ( dft_is_meta() ) allocate (kplusg(npwx))
@@ -114,7 +114,7 @@ SUBROUTINE sum_band()
      !
      DO is = 1, nspin
         !
-        CALL interpolate( rho(1,is), rho(1,is), 1 )
+        CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
         if (dft_is_meta() ) CALL interpolate( tauk(1,is), tauk(1,is), 1 )
         !
      END DO
@@ -125,7 +125,7 @@ SUBROUTINE sum_band()
   !
   IF ( okvan ) CALL addusdens()
   !
-  IF ( noncolin .AND. .NOT. domag ) rho(:,2:4)=0.D0
+  IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
   CALL poolreduce( 1, eband )
   !
@@ -135,15 +135,15 @@ SUBROUTINE sum_band()
   !
   ! ... reduce charge density across pools
   !
-  CALL poolreduce( nspin * nrxx, rho )
+  CALL poolreduce( nspin * nrxx, rho%of_r )
   if (dft_is_meta() ) CALL poolreduce( nspin * nrxx, tauk )
   !
   IF ( noncolin ) THEN
      !
-     CALL psymrho( rho(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+     CALL psymrho( rho%of_r(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
      !
      IF ( domag ) &
-        CALL psymrho_mag( rho(1,2), nrx1, nrx2, nrx3, &
+        CALL psymrho_mag( rho%of_r(1,2), nrx1, nrx2, nrx3, &
                           nr1, nr2, nr3, nsym, s, ftau, bg, at )
 
      !
@@ -151,7 +151,7 @@ SUBROUTINE sum_band()
      !
      DO is = 1, nspin
         !
-        CALL psymrho( rho(1,is), nrx1, nrx2, nrx3, &
+        CALL psymrho( rho%of_r(1,is), nrx1, nrx2, nrx3, &
                       nr1, nr2, nr3, nsym, s, ftau )
         if (dft_is_meta() ) CALL psymrho( tauk(1,is), nrx1, nrx2, nrx3, &
                                           nr1, nr2, nr3, nsym, s, ftau )
@@ -164,17 +164,17 @@ SUBROUTINE sum_band()
   !
   IF ( noncolin ) THEN
      !
-     CALL symrho( rho(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+     CALL symrho( rho%of_r(1,1), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
      !
      IF ( domag ) &
-        CALL symrho_mag( rho(1,2), nrx1, nrx2, nrx3, &
+        CALL symrho_mag( rho%of_r(1,2), nrx1, nrx2, nrx3, &
                          nr1, nr2, nr3, nsym, s, ftau, bg, at )
      !
   ELSE
      !
      DO is = 1, nspin
         !
-        CALL symrho( rho(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
+        CALL symrho( rho%of_r(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
         if (dft_is_meta() ) CALL symrho( tauk(1,is), nrx1, nrx2, nrx3, &
                                          nr1, nr2, nr3, nsym, s, ftau )
 
@@ -284,9 +284,9 @@ SUBROUTINE sum_band()
              !
              DO ir = 1, nrxxs
                 !
-                rho(ir,current_spin) = rho(ir,current_spin) + &
-                                       w1 *  DBLE( psic(ir) )**2 + &
-                                       w2 * AIMAG( psic(ir) )**2
+                rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + &
+                                              w1 *  DBLE( psic(ir) )**2 + &
+                                              w2 * AIMAG( psic(ir) )**2
                 !
              END DO
              !
@@ -481,30 +481,30 @@ SUBROUTINE sum_band()
                 !
                 DO ipol=1,npol
                    DO ir = 1, nrxxs
-                      rho (ir, 1) = rho (ir, 1) + &
+                      rho%of_r (ir, 1) = rho%of_r (ir, 1) + &
                       w1*( DBLE(psic_nc(ir,ipol))**2+AIMAG(psic_nc(ir,ipol))**2)
                    END DO
                 END DO
                 !
                 ! In this case, calculate also the three
-                ! components of the magnetization (stored in rho(ir,2-4) )
+                ! components of the magnetization (stored in rho%of_r(ir,2-4))
                 !
                 IF (domag) THEN
                    DO ir = 1,nrxxs
-                      rho(ir,2) = rho(ir,2) + w1*2.D0* &
+                      rho%of_r(ir,2) = rho%of_r(ir,2) + w1*2.D0* &
                          (DBLE(psic_nc(ir,1))* DBLE(psic_nc(ir,2)) + &
                          AIMAG(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)))
 
-                      rho(ir,3) = rho(ir,3) + w1*2.D0* &
+                      rho%of_r(ir,3) = rho%of_r(ir,3) + w1*2.D0* &
                          (DBLE(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)) - &
                           DBLE(psic_nc(ir,2))*AIMAG(psic_nc(ir,1)))
 
-                      rho(ir,4) = rho(ir,4) + w1* &
+                      rho%of_r(ir,4) = rho%of_r(ir,4) + w1* &
                          (DBLE(psic_nc(ir,1))**2+AIMAG(psic_nc(ir,1))**2 &
                          -DBLE(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
                    END DO
                 ELSE
-                   rho(:,2:4)=0.0_DP
+                   rho%of_r(:,2:4)=0.0_DP
                 END IF
                 !
              ELSE
@@ -519,7 +519,7 @@ SUBROUTINE sum_band()
                 !
                 DO ir = 1, nrxxs
                    !
-                   rho(ir,current_spin) = rho(ir,current_spin) + &
+                   rho%of_r(ir,current_spin) = rho%of_r(ir,current_spin) + &
                                             w1 * ( DBLE( psic(ir) )**2 + &
                                                   AIMAG( psic(ir) )**2 )
                    !

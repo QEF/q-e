@@ -83,7 +83,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !
   stmdos(:) = 0.d0
   if (.not.stm_wfc_matching) then
-     rho(:,:) = 0.d0
+     rho%of_r(:,:) = 0.d0
      WRITE( stdout, '(5x,"Use the true wfcs")')
      WRITE( stdout, '(5x,"Sample bias          =",f8.4, &
           &       " eV")') sample_bias * rytoev
@@ -322,7 +322,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
 
               call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
               do ir = 1, nrxx
-                 rho (ir, 1) = rho (ir, 1) + w1 *  DBLE( psic(ir) ) **2 + &
+                 rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1 *  DBLE( psic(ir) ) **2 + &
                                              w2 * AIMAG( psic(ir) ) **2
               enddo
            END DO
@@ -344,7 +344,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
 
               call cft3 (psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1)
               do ir = 1, nrxx
-                 rho (ir, 1) = rho (ir, 1) + w1 *( DBLE(psic (ir) ) **2 + &
+                 rho%of_r (ir, 1) = rho%of_r (ir, 1) + w1 *( DBLE(psic (ir) ) **2 + &
                                                   AIMAG(psic (ir) ) **2)
               enddo
            END DO
@@ -360,13 +360,13 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      call symrho (stmdos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
           ftau)
   else
-     call poolreduce (nrxx, rho)
-     call psymrho (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
+     call poolreduce (nrxx, rho%of_r)
+     call psymrho (rho%of_r, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
           ftau)
-     call gather (rho, stmdos)
+     call gather (rho%of_r, stmdos)
   endif
 #else
-  if (.not.stm_wfc_matching) call DCOPY (nrxx, rho, 1, stmdos, 1)
+  if (.not.stm_wfc_matching) call DCOPY (nrxx, rho%of_r, 1, stmdos, 1)
   call symrho (stmdos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #endif
   deallocate(psi)

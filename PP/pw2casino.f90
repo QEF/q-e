@@ -135,7 +135,7 @@ SUBROUTINE compute_casino
      !
      !      bring rho to G-space
      !
-     aux(:) = CMPLX ( rho(:,ispin), 0.d0)
+     aux(:) = CMPLX ( rho%of_r(:,ispin), 0.d0)
      CALL cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
      !
      DO nt=1,ntyp
@@ -219,7 +219,7 @@ SUBROUTINE compute_casino
   !
   ! compute hartree and xc contribution
   !
-  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vnew )
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)

@@ -83,7 +83,7 @@ SUBROUTINE cg_setup
   !
   dmuxc(:) = 0.d0
   DO i = 1,nrxx
-     rhotot = rho(i,current_spin)+rho_core(i)
+     rhotot = rho%of_r(i,current_spin)+rho_core(i)
      IF ( rhotot.GT. 1.d-30 ) dmuxc(i)= dmxc( rhotot)
      IF ( rhotot.LT.-1.d-30 ) dmuxc(i)=-dmxc(-rhotot)
   END DO

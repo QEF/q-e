@@ -54,7 +54,7 @@ subroutine d3vrho()
 
   d3dynwrk (:,:,:) = (0.d0, 0.d0)
   do ir = 1, nrxx
-     rhog (ir) = CMPLX (rho (ir, 1), 0.d0)
+     rhog (ir) = CMPLX (rho%of_r (ir, 1), 0.d0)
   enddo
   call cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !

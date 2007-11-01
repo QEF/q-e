@@ -79,7 +79,7 @@ SUBROUTINE dynmat_us()
   !
   rhog (:) = (0.d0, 0.d0)
   DO is = 1, nspin0
-     rhog (:) = rhog (:) + CMPLX (rho (:, is), 0.d0)
+     rhog (:) = rhog (:) + CMPLX (rho%of_r(:, is), 0.d0)
   ENDDO
 
   CALL cft3 (rhog, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)

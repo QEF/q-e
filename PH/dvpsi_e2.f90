@@ -171,8 +171,8 @@ subroutine dvpsi_e2
 #endif
   d2muxc (:) = 0.d0
   do ir = 1, nrxx
-!     rhotot = rho(ir,1) + rho_core(ir)
-     rhotot = rho(ir,1)
+!     rhotot = rho%of_r(ir,1) + rho_core(ir)
+     rhotot = rho%of_r(ir,1)
      if ( rhotot.gt. 1.d-30 ) d2muxc(ir)= d2mxc( rhotot)
      if ( rhotot.lt.-1.d-30 ) d2muxc(ir)=-d2mxc(-rhotot)
   enddo

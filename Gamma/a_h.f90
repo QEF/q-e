@@ -16,7 +16,7 @@ subroutine A_h(e,h,ah)
   USE lsda_mod, ONLY : current_spin, nspin
   USE wvfct, ONLY: nbnd, npwx, npw, g2kin, igk
   USE wavefunctions_module,  ONLY: evc, psic
-  USE scf,      ONLY : vrs, rho  
+  USE scf,      ONLY : vrs, rho 
   USE gvect,    ONLY : gstart, nl, nlm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, ngm, g, gg
   USE constants,  ONLY: degspin, e2, fpi
@@ -116,7 +116,7 @@ subroutine A_h(e,h,ah)
   !
   call start_clock('dgradcorr')
   if (dft_is_gradient() ) call dgradcor1  &
-       (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
+       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s,            &
         drho, drhoc, nr1,nr2,nr3, nrx1, nrx2, nrx3, nrxx, nspin, &
         nl, nlm, ngm, g, alat, omega, dvxc)
   call stop_clock('dgradcorr')

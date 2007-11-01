@@ -70,7 +70,7 @@ subroutine setup_dgc
   IF (noncolin.and.domag) THEN
      allocate(rhogout(ngm,nspin))
 #ifdef __OLD_NONCOLIN_GGA
-     call compute_rho(rho,rhoout,segni,nrxx)
+     call compute_rho(rho%of_r,rhoout,segni,nrxx)
      DO is = 1, nspin0
         !
         if (nlcc_any) rhoout(:,is)  = fac * rho_core(:)  + rhoout(:,is)
@@ -87,7 +87,7 @@ subroutine setup_dgc
         !
      END DO
 #else
-     call compute_rho_new(rho,rhoout,segni,nrxx,ux)
+     call compute_rho_new(rho%of_r,rhoout,segni,nrxx,ux)
      do is=1,nspin
         rhogout(:,is) = rhog(:,is)
      enddo
@@ -105,12 +105,12 @@ subroutine setup_dgc
            grho(ipol,:,is) = 0.5_dp*gmag(ipol,:,1)
            DO ir=1,nrxx
               seg=seg0*segni(ir)
-              rhoout(ir,is) = fac*rho_core(ir) + 0.5_dp*rho(ir,1)
-              amag=sqrt(rho(ir,2)**2+rho(ir,3)**2+rho(ir,4)**2)
+              rhoout(ir,is) = fac*rho_core(ir) + 0.5_dp*rho%of_r(ir,1)
+              amag=sqrt(rho%of_r(ir,2)**2+rho%of_r(ir,3)**2+rho%of_r(ir,4)**2)
               IF (amag>1.d-12) THEN
                  rhoout(ir,is)=rhoout(ir,is)+seg*amag
                  DO jpol=2,4
-                    grho(ipol,ir,is)=grho(ipol,ir,is)+ seg*rho(ir,jpol)* &
+                    grho(ipol,ir,is)=grho(ipol,ir,is)+ seg*rho%of_r(ir,jpol)* &
                                                  gmag(ipol,ir,jpol)/amag
                  END DO
               END IF
@@ -125,11 +125,11 @@ subroutine setup_dgc
      DEALLOCATE(rhogout)
   ELSE
      do is = 1, nspin0
-        rhoout(:,is)  =  rho(:,is)
+        rhoout(:,is)  =  rho%of_r(:,is)
      enddo
      if (nlcc_any) then
         do is = 1, nspin0
-           rhoout(:,is)  = fac * rho_core(:)  + rho(:,is)
+           rhoout(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)
            rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
         enddo
      endif

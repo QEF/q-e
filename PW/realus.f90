@@ -870,7 +870,7 @@ MODULE realus
       USE ions_base,        ONLY : nat, ityp
       USE cell_base,        ONLY : omega
       USE lsda_mod,         ONLY : nspin
-      USE scf,              ONLY : rhoin
+      USE scf,              ONLY : rho
       USE klist,            ONLY : nelec
       USE gvect,            ONLY : nr1, nr2, nr3
       USE uspp,             ONLY : okvan, becsum
@@ -920,7 +920,7 @@ MODULE realus
                      irb = box(ir,ia)
                      iqs = iqs + 1
                      !
-                     rhoin%of_r(irb,is) = rhoin%of_r(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
+                     rho%of_r(irb,is) = rho%of_r(irb,is) + qsave(iqs)*becsum(ijh,ia,is)
                   END DO
                END DO
             END DO
@@ -930,7 +930,7 @@ MODULE realus
       !
       ! ... check the integral of the total charge
       !
-      charge = SUM( rhoin%of_r(:,1:nspin0) )*omega / ( nr1*nr2*nr3 )
+      charge = SUM( rho%of_r(:,1:nspin0) )*omega / ( nr1*nr2*nr3 )
       !
       CALL reduce( 1, charge )
       !
@@ -944,7 +944,7 @@ MODULE realus
          !
          ! ... rescale the density to impose the correct number of electrons
          !
-         rhoin%of_r(:,:) = rhoin%of_r(:,:) / charge * nelec
+         rho%of_r(:,:) = rho%of_r(:,:) / charge * nelec
          !
       END IF
       !

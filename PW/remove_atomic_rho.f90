@@ -36,7 +36,7 @@ subroutine remove_atomic_rho
   !
   call atomic_rho (work, nspin)
   !
-  work = rho - work
+  work = rho%of_r - work
   !
   call write_rho ( work, 1, output_drho )
   !

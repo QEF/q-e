@@ -135,16 +135,16 @@ subroutine phq_setup
   dmuxc(:,:,:) = 0.d0
   if (lsda) then
      do ir = 1, nrxx
-        rhoup = rho (ir, 1) + 0.5d0 * rho_core (ir)
-        rhodw = rho (ir, 2) + 0.5d0 * rho_core (ir)
+        rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
+        rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
         call dmxc_spin (rhoup, rhodw, dmuxc(ir,1,1), dmuxc(ir,2,1), &
                                       dmuxc(ir,1,2), dmuxc(ir,2,2) )
      enddo
   else
      IF (noncolin.and.domag) THEN
         do ir = 1, nrxx
-           rhotot = rho (ir, 1) + rho_core (ir)
-           call dmxc_nc (rhotot, rho(ir,2), rho(ir,3), rho(ir,4), auxdmuxc)
+           rhotot = rho%of_r (ir, 1) + rho_core (ir)
+           call dmxc_nc (rhotot, rho%of_r(ir,2), rho%of_r(ir,3), rho%of_r(ir,4), auxdmuxc)
            DO is=1,nspin
               DO js=1,nspin
                  dmuxc(ir,is,js)=auxdmuxc(is,js)
@@ -153,7 +153,7 @@ subroutine phq_setup
         enddo
      ELSE
         do ir = 1, nrxx
-           rhotot = rho (ir, 1) + rho_core (ir)
+           rhotot = rho%of_r (ir, 1) + rho_core (ir)
            if (rhotot.gt.1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
            if (rhotot.lt. - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
         enddo

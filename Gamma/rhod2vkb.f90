@@ -37,7 +37,7 @@ subroutine rhod2vkb(dyn0)
   allocate  ( dynloc( 3*nat, nmodes))    
   dynloc (:,:) = 0.d0
   do ir = 1,nrxx
-     psic(ir) = rho(ir,current_spin)
+     psic(ir) = rho%of_r(ir,current_spin)
   end do
   call cft3(psic,nr1,nr2,nr3,nrx1,nr2,nr3,-1)
   do nu_i = 1,nmodes

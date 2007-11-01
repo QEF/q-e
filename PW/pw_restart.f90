@@ -614,7 +614,7 @@ MODULE pw_restart
       !
       ! ... do not overwrite the scf charge density with a non-scf one
       !
-      IF ( lscf ) CALL write_rho( rho, nspin )
+      IF ( lscf ) CALL write_rho( rho%of_r, nspin )
       !
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
@@ -1037,7 +1037,7 @@ MODULE pw_restart
          !
          ! ... to read the charge-density we use the routine from io_rho_xml 
          !
-         CALL read_rho( rho, nspin )
+         CALL read_rho( rho%of_r, nspin )
          !
       END IF
       !

@@ -66,7 +66,7 @@ subroutine dv_of_drho (mode, dvscf, flag)
   if (nlcc_any.and.flag) then
      call addcore (mode, drhoc)
      do is = 1, nspin0
-        rho(:, is) = rho(:, is) + fac * rho_core (:)
+        rho%of_r(:, is) = rho%of_r(:, is) + fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) + fac * drhoc (:)
      enddo
   endif
@@ -82,12 +82,12 @@ subroutine dv_of_drho (mode, dvscf, flag)
   ! its contribution. grho contains already the core charge
   !
   if ( dft_is_gradient() ) call dgradcorr &
-       (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
+       (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
        dvscf, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nspin, nspin1, &
        nl, ngm, g, alat, omega, dvaux)
   if (nlcc_any.and.flag) then
      do is = 1, nspin0
-        rho(:, is) = rho(:, is) - fac * rho_core (:)
+        rho%of_r(:, is) = rho%of_r(:, is) - fac * rho_core (:)
         dvscf(:, is) = dvscf(:, is) - fac * drhoc (:)
      enddo
   endif

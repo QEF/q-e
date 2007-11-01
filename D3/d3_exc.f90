@@ -47,7 +47,7 @@ SUBROUTINE d3_exc
      !
      d2muxc(:) = 0.d0
      DO ir = 1, nrxx
-        rhotot = rho (ir, 1) + rho_core (ir)
+        rhotot = rho%of_r (ir, 1) + rho_core (ir)
         IF (rhotot > 1.d-30) d2muxc (ir) = d2mxc (rhotot)
         IF (rhotot < - 1.d-30) d2muxc (ir) = - d2mxc ( - rhotot)
      ENDDO

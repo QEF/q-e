@@ -235,22 +235,22 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   ! ... in the lsda case the magnetization will follow rigidly the density
   ! ... keeping fixed the value of zeta = mag / rho_tot.
-  ! ... zeta is set here and put in rho(:,2) while rho(:,1) will contain the
-  ! ... total valence charge
+  ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
+  ! ... will contain the total valence charge
   !
-  IF ( lsda ) CALL rho2zeta( rho, rho_core, nrxx, nspin, 1 )
+  IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, 1 )
   !
   IF ( noncolin ) THEN
      !
      DO is = 2, nspin
         !
-        WHERE( rho(:,1) > eps32 )
+        WHERE( rho%of_r(:,1) > eps32 )
            !
-           rho(:,is) = rho(:,is) / rho(:,1)
+           rho%of_r(:,is) = rho%of_r(:,is) / rho%of_r(:,1)
            !
         ELSEWHERE
            !
-           rho(:,is) = 0.D0
+           rho%of_r(:,is) = 0.D0
            !
         END WHERE
         !
@@ -262,9 +262,9 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   CALL atomic_rho( work, 1 )
   !
-  rho(:,1) = rho(:,1) - work(:,1)
+  rho%of_r(:,1) = rho%of_r(:,1) - work(:,1)
   !
-  IF ( lmovecell ) rho(:,1) = rho(:,1) * omega_old
+  IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) * omega_old
   !
   ! ... extrapolate the difference between the atomic charge and
   ! ... the self-consistent one
@@ -278,7 +278,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      WRITE( UNIT = stdout, FMT = '(/5X, &
           & "NEW-OLD atomic charge density approx. for the potential")' )
      !
-     CALL write_rho( rho, 1, 'old' )
+     CALL write_rho( rho%of_r, 1, 'old' )
      !
   ELSE IF ( rho_extr == 2 ) THEN
      !
@@ -289,15 +289,15 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      CALL read_rho( work, 1, 'old' )
      !
-     ! ...   rho   ->  oldrho
+     ! ...   rho%of_r   ->  oldrho
      ! ...   work  ->  oldrho2
      !
-     CALL write_rho( rho,  1, 'old' )
+     CALL write_rho( rho%of_r,  1, 'old' )
      CALL write_rho( work, 1, 'old2' )
      !
      ! ... extrapolation
      !
-     rho(:,1) = 2.D0*rho(:,1) - work(:,1)
+     rho%of_r(:,1) = 2.D0*rho%of_r(:,1) - work(:,1)
      !
   ELSE IF ( rho_extr == 3 ) THEN
      !
@@ -314,20 +314,20 @@ SUBROUTINE extrapolate_charge( rho_extr )
      CALL read_rho( work1, 1, 'old2' )
      CALL read_rho( work,  1, 'old' )
      !
-     ! ...   rho   ->  oldrho
+     ! ...   rho%of_r   ->  oldrho
      ! ...   work  ->  oldrho2
      !
-     CALL write_rho( rho,  1, 'old' )
+     CALL write_rho( rho%of_r,  1, 'old' )
      CALL write_rho( work, 1, 'old2' )
      !
-     rho(:,1) = rho(:,1) + alpha0*( rho(:,1) - work(:,1) ) + &
+     rho%of_r(:,1) = rho%of_r(:,1) + alpha0*( rho%of_r(:,1) - work(:,1) ) + &
                             beta0*( work(:,1) - work1(:,1) )
      !
      DEALLOCATE( work1 )
      !
   END IF
   !
-  IF ( lmovecell ) rho(:,1) = rho(:,1) / omega
+  IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) / omega
   !
   ! ... calculate structure factors for the new positions
   !
@@ -340,25 +340,25 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   CALL atomic_rho( work, 1 )
   !
-  rho(:,1) = rho(:,1) + work(:,1)
+  rho%of_r(:,1) = rho%of_r(:,1) + work(:,1)
   !
   CALL set_rhoc()
   !
   ! ... reset up and down charge densities in the LSDA case
   !
-  IF ( lsda ) CALL rho2zeta( rho, rho_core, nrxx, nspin, -1 )
+  IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, -1 )
   !
   IF ( noncolin ) THEN
      !
      DO is = 2, nspin
         !
-        WHERE( rho(:,1) > eps32 )
+        WHERE( rho%of_r(:,1) > eps32 )
            !
-           rho(:,is) = rho(:,is)*rho(:,1)
+           rho%of_r(:,is) = rho%of_r(:,is)*rho%of_r(:,1)
            !
         ELSEWHERE
            !
-           rho(:,is) = 0.D0
+           rho%of_r(:,is) = 0.D0
            !
         END WHERE
         !
@@ -370,7 +370,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   DO is = 1, nspin
      !
-     psic(:) = rho(:,is)
+     psic(:) = rho%of_r(:,is)
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
@@ -378,7 +378,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
   END DO
   !
-  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
@@ -387,7 +387,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
             '(/,5X,"extrapolated charge ",F10.5,", renormalised to ",F10.5)') &
          charge, nelec
      !
-     rho  = rho  / charge*nelec
+     rho%of_r  = rho%of_r  / charge*nelec
      rhog = rhog / charge*nelec
      !
   END IF

@@ -87,7 +87,7 @@ PROGRAM voronoy
      !
      CALL plot_io (filename, title, nrx1, nrx2, nrx3, nr1, nr2, nr3, &
           nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, plot_num, &
-          atm, ityp, zv, tau, rho, - 1)
+          atm, ityp, zv, tau, rho%of_r, - 1)
      !
      ! calculate g-vectors
      !
@@ -109,7 +109,7 @@ PROGRAM voronoy
 
      ALLOCATE (rhobig(nrx1big * nr2big * nr3big))    
 
-     CALL rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho, nr1big, &
+     CALL rhor_to_rhobig (ngm, nr1, nr2, nr3, nrx1, nl, rho%of_r, nr1big, &
           nr2big, nr3big, nrx1big, nlbig, rhobig)
 
      ALLOCATE (partial_charge(nat))

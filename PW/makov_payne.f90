@@ -121,9 +121,9 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
      !
      CALL cryst_to_cart( 1, r, at, 1 )
      !
-     rhoir = rho(ir,1)
+     rhoir = rho%of_r(ir,1)
      !
-     IF ( nspin == 2 ) rhoir = rhoir + rho(ir,2)
+     IF ( nspin == 2 ) rhoir = rhoir + rho%of_r(ir,2)
      !
      ! ... dipole(0) = charge density
      !

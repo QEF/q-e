@@ -71,7 +71,7 @@ subroutine addnlcc (imode0, drhoscf, npe)
      dvaux (:,:) = (0.d0, 0.d0)
      call addcore (mode, drhoc)
      do is = 1, nspin0
-        call DAXPY (nrxx, fac, rho_core, 1, rho (1, is), 1)
+        call DAXPY (nrxx, fac, rho_core, 1, rho%of_r(1, is), 1)
         call DAXPY (2 * nrxx, fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      do is = 1, nspin
@@ -87,11 +87,11 @@ subroutine addnlcc (imode0, drhoscf, npe)
      ! its contribution. grho contains already the core charge
      !
      if ( dft_is_gradient() ) &
-       call dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
+       call dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, xq, &
           drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
           nspin, nspin1, nl, ngm, g, alat, omega, dvaux)
      do is = 1, nspin0
-        call DAXPY (nrxx, - fac, rho_core, 1, rho (1, is), 1)
+        call DAXPY (nrxx, - fac, rho_core, 1, rho%of_r(1, is), 1)
         call DAXPY (2 * nrxx, - fac, drhoc, 1, drhoscf (1, is, ipert), 1)
      enddo
      mode1 = 0

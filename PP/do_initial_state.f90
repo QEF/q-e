@@ -113,7 +113,7 @@ SUBROUTINE do_initial_state (excite)
   ! ... The local contribution
   !
   CALL add_shift_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                 nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho, nl, nspin, &
+                 nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho%of_r, nl, nspin, &
                  gstart, gamma_only, vloc, shift_lc )
   !
   ! ... The NLCC contribution

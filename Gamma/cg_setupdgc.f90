@@ -45,7 +45,7 @@ subroutine cg_setupdgc
   fac=1.d0/DBLE(nspin)
   if (nlcc_any) then
      do is=1,nspin
-        rho(:,is)  = fac * rho_core(:)  + rho(:,is)
+        rho%of_r(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)
         rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
      enddo
   endif
@@ -57,9 +57,9 @@ subroutine cg_setupdgc
   if (nspin.eq.1) then
      do k = 1,nrxx
         grho2(1)=grho(1,k,1)**2+grho(2,k,1)**2+grho(3,k,1)**2
-        if (abs(rho(k,1)).gt.epsr.and.grho2(1).gt.epsg) then
-           call gcxc(rho(k,nspin),grho2(1),sx,sc,v1x,v2x,v1c,v2c)
-           call dgcxc(rho(k,nspin),grho2,vrrx,vsrx,vssx,vrrc,vsrc,vssc)
+        if (abs(rho%of_r(k,1)).gt.epsr.and.grho2(1).gt.epsg) then
+           call gcxc(rho%of_r(k,nspin),grho2(1),sx,sc,v1x,v2x,v1c,v2c)
+           call dgcxc(rho%of_r(k,nspin),grho2,vrrx,vsrx,vssx,vrrc,vsrc,vssc)
            dvxc_rr(k,1,1) = e2 * ( vrrx + vrrc )
            dvxc_sr(k,1,1) = e2 * ( vsrx + vsrc )
            dvxc_ss(k,1,1) = e2 * ( vssx + vssc )
@@ -69,20 +69,20 @@ subroutine cg_setupdgc
   else
      do k = 1,nrxx
         grho2(2)=grho(1,k,2)**2+grho(2,k,2)**2+grho(3,k,2)**2
-        rh=rho(k,1)+rho(k,2)
+        rh=rho%of_r(k,1)+rho%of_r(k,2)
         grh2= (grho(1,k,1)+grho(1,k,2))**2                          &
                         + (grho(2,k,1)+grho(2,k,2))**2              &
                         + (grho(3,k,1)+grho(3,k,2))**2
         !
-        call gcx_spin(rho(k,1),rho(k,2),grho2(1),grho2(2),sx,       &
+        call gcx_spin(rho%of_r(k,1),rho%of_r(k,2),grho2(1),grho2(2),sx,       &
              v1xup,v1xdw,v2xup,v2xdw)
         !
-        call dgcxc_spin(rho(k,1),rho(k,2),grho(1,k,1),grho(1,k,2),     &
+        call dgcxc_spin(rho%of_r(k,1),rho%of_r(k,2),grho(1,k,1),grho(1,k,2),     &
              vrrxup,vrrxdw,vrsxup,vrsxdw,vssxup,vssxdw, &
              vrrcup,vrrcdw,vrscup,vrscdw,vssc,vrzcup,vrzcdw)
         !
         if (rh.gt.epsr) then
-           zeta=(rho(k,1)-rho(k,2))/rh
+           zeta=(rho%of_r(k,1)-rho%of_r(k,2))/rh
            call gcc_spin(rh,zeta,grh2,sc,v1cup,v1cdw,v2c)
            !
            dvxc_rr(k,1,1)=e2*(vrrxup+vrrcup+vrzcup*(1.d0-zeta)/rh)
@@ -118,7 +118,7 @@ subroutine cg_setupdgc
   endif
   if (nlcc_any) then
      do is=1,nspin
-        rho(:,is)  = rho(:,is)  - fac * rho_core(:)
+        rho%of_r(:,is)  = rho%of_r(:,is)  - fac * rho_core(:)
         rhog(:,is) = rhog(:,is) - fac * rhog_core(:)
      enddo
   endif

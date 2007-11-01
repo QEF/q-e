@@ -153,7 +153,7 @@ SUBROUTINE potinit()
         !
      END IF
      !
-     CALL atomic_rho( rho, nspin )
+     CALL atomic_rho( rho%of_r, nspin )
      !
      IF ( input_drho /= ' ' ) THEN
         !
@@ -166,7 +166,7 @@ SUBROUTINE potinit()
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
             TRIM( input_drho )
         !
-        rho = rho + vr
+        rho%of_r = rho%of_r + vr
         !
      END IF
      !
@@ -177,11 +177,11 @@ SUBROUTINE potinit()
   !
   IF ( nspin == 2 ) THEN
      !
-     charge = SUM ( rho(:,1:nspin) )*omega / ( nr1*nr2*nr3 )
+     charge = SUM ( rho%of_r(:,1:nspin) )*omega / ( nr1*nr2*nr3 )
      !
   ELSE
      !
-     charge = SUM ( rho(:,1) )*omega / ( nr1*nr2*nr3 )
+     charge = SUM ( rho%of_r(:,1) )*omega / ( nr1*nr2*nr3 )
      !
   END IF
   !
@@ -194,9 +194,9 @@ SUBROUTINE potinit()
          charge, nelec
      !
      IF (nat>0) THEN
-        rho = rho / charge * nelec
+        rho%of_r = rho%of_r / charge * nelec
      ELSE
-        rho = nelec / omega
+        rho%of_r = nelec / omega
      ENDIF
      !
   ELSE IF ( .NOT. lscf .AND. ABS( charge - nelec ) / charge > 1.D-3 ) THEN
@@ -209,7 +209,7 @@ SUBROUTINE potinit()
   !
   DO is = 1, nspin
      !
-     psic(:) = rho(:,is)
+     psic(:) = rho%of_r(:,is)
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
@@ -219,7 +219,7 @@ SUBROUTINE potinit()
   !
   ! ... compute the potential and store it in vr
   !
-  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... define the total local potential (external+scf)

@@ -122,13 +122,13 @@ subroutine do_elf (elf)
   allocate ( tbos(nrxx), aux2(nrxx), aux(nrxx) )
   tbos(:) = 0.d0
   !
-  ! put the total (up+down) charge density in rho(*,1)
+  ! put the total (up+down) charge density in rho%of_r(*,1)
   !
   do is = 2, nspin
-     rho (:, 1) =  rho (:, 1) + rho (:, is)
+     rho%of_r (:, 1) =  rho%of_r (:, 1) + rho%of_r (:, is)
   enddo
   !
-  aux(:) = CMPLX ( rho(:, 1), 0.d0 )
+  aux(:) = CMPLX ( rho%of_r(:, 1), 0.d0 )
   call cft3 (aux, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)
   !
   do j = 1, 3
@@ -153,8 +153,8 @@ subroutine do_elf (elf)
   fac = 5.d0 / (3.d0 * (3.d0 * pi**2) ** (2.d0 / 3.d0) )
   elf(:) = 0.d0
   do i = 1, nrxx
-     if (rho (i,1) > 1.d-30) then
-        d = fac / rho(i,1)**(5d0/3d0) * (kkin(i)-0.25d0*tbos(i)/rho(i,1))
+     if (rho%of_r (i,1) > 1.d-30) then
+        d = fac / rho%of_r(i,1)**(5d0/3d0) * (kkin(i)-0.25d0*tbos(i)/rho%of_r(i,1))
         elf (i) = 1.0d0 / (1.0d0 + d**2)
      endif
   enddo

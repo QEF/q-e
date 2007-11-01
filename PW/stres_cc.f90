@@ -45,7 +45,7 @@ subroutine stres_cc (sigmaxcc)
   ! recalculate the exchange-correlation potential
   !
   allocate ( vxc(nrxx,nspin) )
-  call v_xc (rho, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
+  call v_xc (rho%of_r, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
   if (nspin.eq.1.or.nspin.eq.4) then
      do ir = 1, nrxx
         psic (ir) = vxc (ir, 1)

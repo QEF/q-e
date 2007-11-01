@@ -61,7 +61,7 @@ PROGRAM vdw
   !
   ! Calculate the effective potential
   !
-  call eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,&
+  call eff_pot (rho%of_r, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,&
                 ngm, gg, gstart, nspin, alat, omega, ecutwfc,  &
                 charge, vstart, thresh_veff)
   !

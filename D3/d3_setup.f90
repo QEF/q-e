@@ -91,14 +91,14 @@ SUBROUTINE d3_setup()
   dmuxc (:,:,:) = 0.d0
   IF (lsda) THEN
      DO ir = 1, nrxx
-        rhoup = rho (ir, 1) + 0.5d0 * rho_core (ir)
-        rhodw = rho (ir, 2) + 0.5d0 * rho_core (ir)
+        rhoup = rho%of_r (ir, 1) + 0.5d0 * rho_core (ir)
+        rhodw = rho%of_r (ir, 2) + 0.5d0 * rho_core (ir)
         CALL dmxc_spin (rhoup, rhodw, dmuxc (ir, 1, 1), &
              dmuxc (ir, 2, 1), dmuxc (ir, 1, 2), dmuxc (ir, 2, 2) )
      ENDDO
   ELSE
      DO ir = 1, nrxx
-        rhotot = rho (ir, nspin) + rho_core (ir)
+        rhotot = rho%of_r (ir, nspin) + rho_core (ir)
         IF (rhotot > 1.d-30) dmuxc (ir, 1, 1) = dmxc (rhotot)
         IF (rhotot < - 1.d-30) dmuxc (ir, 1, 1) = - dmxc ( - rhotot)
      ENDDO

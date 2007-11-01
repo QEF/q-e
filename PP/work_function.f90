@@ -38,7 +38,7 @@ SUBROUTINE work_function (wf)
   if (nspin==4) nspin0=1
 
   ALLOCATE (vxc(nrxx,nspin))
-  CALL v_xc (rho, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
+  CALL v_xc (rho%of_r, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
 
   IF ( ionode ) THEN
      !
@@ -53,10 +53,10 @@ SUBROUTINE work_function (wf)
 
 #ifdef __PARA
      ALLOCATE (aux  ( nrxx))    
-     aux(:) = rho(:,current_spin) + rho_core(:)/nspin0
+     aux(:) = rho%of_r(:,current_spin) + rho_core(:)/nspin0
      CALL gather (aux, raux1)
 #else
-     raux1(1:nrxx) = rho(1:nrxx,current_spin) + rho_core(1:nrxx)/nspin0
+     raux1(1:nrxx) = rho%of_r(1:nrxx,current_spin) + rho_core(1:nrxx)/nspin0
 #endif
      !
 #ifdef __PARA

@@ -37,7 +37,7 @@ SUBROUTINE check_v_eff ( veff, charge )
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid  
   USE control_flags,        ONLY : diis_ndim, ethr, lscf, max_cg_iter, isolve
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
-  USE scf,                  ONLY : rho, vltot, vrs, v_of_0
+  USE scf,                  ONLY : vltot, vrs, v_of_0
   USE lsda_mod,             ONLY : nspin, current_spin, lsda, isk
   USE wavefunctions_module, ONLY : psic , evc 
   USE g_psi_mod,            ONLY : h_diag, s_diag

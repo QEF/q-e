@@ -167,16 +167,16 @@ PROGRAM average
 
      CALL allocate_fft
      !
-     rho = 0.d0
+     rho%of_r = 0.d0
      !
      ! Read first file
      !
      CALL plot_io (filename (1), title, nrx1, nrx2, nrx3, nr1, nr2, &
           nr3, nat, ntyp, ibrav, celldm, at, gcutm, dual, ecutwfc, &
-          plot_num, atm, ityp, zv, tau, rho, -1)
+          plot_num, atm, ityp, zv, tau, rho%of_r, -1)
      !
      DO ir = 1, nrxx
-        psic (ir) = weight (1) * CMPLX (rho (ir, 1),0.d0)
+        psic (ir) = weight (1) * CMPLX (rho%of_r(ir, 1),0.d0)
      ENDDO
      !
      !       Now we open all the other files
@@ -192,7 +192,7 @@ PROGRAM average
         !
         CALL plot_io (filename (ifile), title, nrx1sa, nrx2sa, nrx3sa, &
              nr1sa, nr2sa, nr3sa, nats, ntyps, ibravs, celldms, ats, gcutmsa, &
-             duals, ecuts, plot_num, atms, ityps, zvs, taus, rho, - 1)
+             duals, ecuts, plot_num, atms, ityps, zvs, taus, rho%of_r, - 1)
         !
         DEALLOCATE (ityps)
         DEALLOCATE (taus)
@@ -210,7 +210,7 @@ PROGRAM average
                 CALL errore ('chdens', 'incompatible celldm', 1)
         ENDDO
         DO ir = 1, nrxx
-           psic (ir) = psic (ir) + weight(ifile) * CMPLX(rho(ir, 1),0.d0)
+           psic (ir) = psic (ir) + weight(ifile) * CMPLX(rho%of_r(ir, 1),0.d0)
         ENDDO
      ENDDO
      !

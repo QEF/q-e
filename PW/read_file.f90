@@ -193,7 +193,7 @@ SUBROUTINE read_file()
   !
   DO is = 1, nspin
      !
-     psic(:) = rho(:,is)
+     psic(:) = rho%of_r(:,is)
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
@@ -203,7 +203,7 @@ SUBROUTINE read_file()
   !
   ! ... recalculate the potential
   !
-  CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 

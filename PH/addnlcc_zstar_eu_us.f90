@@ -61,7 +61,7 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            CALL addcore (mode, drhoc)
            
            DO is = 1, nspin0
-              rho(:,is) = rho(:,is) + fac * rho_core
+              rho%of_r(:,is) = rho%of_r(:,is) + fac * rho_core
            END DO
 
            DO is = 1, nspin
@@ -79,12 +79,12 @@ SUBROUTINE addnlcc_zstar_eu_us( drhoscf )
            !
 
            IF ( dft_is_gradient() ) &
-                CALL dgradcorr (rho, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
+                CALL dgradcorr (rho%of_r, grho, dvxc_rr, dvxc_sr, dvxc_ss, dvxc_s, &
                     xq, drhoscf (1, 1, ipert), nr1, nr2, nr3, nrx1, nrx2, &
                     nrx3, nrxx, nspin, nspin1, nl, ngm, g, alat, omega, dvaux)
         
            DO is = 1, nspin0
-              rho(:,is) = rho(:,is) - fac * rho_core
+              rho%of_r(:,is) = rho%of_r(:,is) - fac * rho_core
            END DO
            
            DO is = 1, nspin0

@@ -102,7 +102,7 @@ DO np=1, ntyp
 END DO
 
 DO ibnd = 1, nbnd
-   rho = 0.d0
+   rho%of_r = 0.d0
    magtot1 = 0.d0
    magtot2 = 0.d0 
 
@@ -117,31 +117,31 @@ DO ibnd = 1, nbnd
    ENDDO
    !
    ! Calculate the three components of the magnetization 
-   ! (stored in rho(ir,2-4) )
+   ! (stored in rho%of_r(ir,2-4) )
    !
    IF (lsigma(1)) THEN
       DO ir = 1,nrxxs
-         rho(ir,2) = rho(ir,2) + 2.D0* &
+         rho%of_r(ir,2) = rho%of_r(ir,2) + 2.D0* &
                    (REAL(psic_nc(ir,1))*REAL(psic_nc(ir,2)) + &
                    AIMAG(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)))
       END DO
-      IF (doublegrid) CALL interpolate( rho(1,2), rho(1,2), 1 )
+      IF (doublegrid) CALL interpolate( rho%of_r(1,2), rho%of_r(1,2), 1 )
    END IF
    IF (lsigma(2)) THEN
       DO ir = 1,nrxxs
-         rho(ir,3) = rho(ir,3) + 2.D0* &
+         rho%of_r(ir,3) = rho%of_r(ir,3) + 2.D0* &
                    (REAL(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)) - &
                     REAL(psic_nc(ir,2))*AIMAG(psic_nc(ir,1)))
       END DO
-      IF (doublegrid) CALL interpolate( rho(1,3), rho(1,3), 1 )
+      IF (doublegrid) CALL interpolate( rho%of_r(1,3), rho%of_r(1,3), 1 )
    END IF
    IF (lsigma(3)) THEN
       DO ir = 1,nrxxs
-         rho(ir,4) = rho(ir,4) + &
+         rho%of_r(ir,4) = rho%of_r(ir,4) + &
                    (REAL(psic_nc(ir,1))**2+AIMAG(psic_nc(ir,1))**2 &
                    -REAL(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
       END DO
-      IF (doublegrid) CALL interpolate( rho(1,4), rho(1,4), 1 )
+      IF (doublegrid) CALL interpolate( rho%of_r(1,4), rho%of_r(1,4), 1 )
    END IF
 
    IF (lsigma(4)) THEN
@@ -185,7 +185,7 @@ DO ibnd = 1, nbnd
    DO ipol=1,3
       IF (lsigma(ipol)) THEN
          DO ir = 1,nrxx
-            magtot1(ipol) = magtot1(ipol) + rho(ir,ipol+1)
+            magtot1(ipol) = magtot1(ipol) + rho%of_r(ir,ipol+1)
          END DO
          CALL reduce( 1, magtot1(ipol) )
          magtot1(ipol) = magtot1(ipol) / ( nr1 * nr2 * nr3 )

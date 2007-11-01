@@ -96,16 +96,16 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !      plot of the charge density
      !
      IF (noncolin) THEN
-        call DCOPY (nrxx, rho, 1, raux, 1)
+        call DCOPY (nrxx, rho%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
-           CALL DCOPY (nrxx, rho (1, 1), 1, raux, 1)
+           CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
            DO is = 2, nspin
-              CALL DAXPY (nrxx, 1.d0, rho (1, is), 1, raux, 1)
+              CALL DAXPY (nrxx, 1.d0, rho%of_r (1, is), 1, raux, 1)
            ENDDO
         ELSE
            IF (nspin == 2) current_spin = spin_component
-           CALL DCOPY (nrxx, rho (1, current_spin), 1, raux, 1)
+           CALL DCOPY (nrxx, rho%of_r (1, current_spin), 1, raux, 1)
            CALL DSCAL (nrxx, 0.5d0 * nspin, raux, 1)
         ENDIF
      ENDIF
@@ -174,8 +174,8 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !      plot of the spin polarisation
      !
      IF (nspin == 2) THEN
-        CALL DCOPY (nrxx, rho (1, 1), 1, raux, 1)
-        CALL DAXPY (nrxx, - 1.d0, rho (1, 2), 1, raux, 1)
+        CALL DCOPY (nrxx, rho%of_r (1, 1), 1, raux, 1)
+        CALL DAXPY (nrxx, - 1.d0, rho%of_r (1, 2), 1, raux, 1)
      ELSE
         raux(:) = 0.d0
      ENDIF
@@ -210,17 +210,17 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      raux(:) = vltot(:) 
      IF (nspin == 2) THEN
         rhog(:,1) =  rhog(:,1) +  rhog(:,2)
-        rho (:,1) =  rho (:,1) +  rho (:,2)
+        rho%of_r (:,1) =  rho%of_r (:,1) +  rho%of_r (:,2)
         nspin = 1
      END IF
      CALL v_h (rhog, ehart, charge, raux)
-     IF (tefield.AND.dipfield) CALL add_efield(rho,raux,dummy,1)
+     IF (tefield.AND.dipfield) CALL add_efield(rho%of_r,raux,dummy,1)
 
   ELSEIF (plot_num == 12) THEN
 
      raux=0.d0
      IF (tefield) THEN
-         CALL add_efield(rho,raux,dummy,1)
+         CALL add_efield(rho%of_r,raux,dummy,1)
      ELSE
          CALL infomsg ('punch_plot','e_field is not calculated')
      ENDIF
@@ -229,9 +229,9 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) THEN
         IF (spin_component==0) THEN
-           raux(:) = SQRT(rho(:,2)**2 + rho(:,3)**2 + rho(:,4)**2 )
+           raux(:) = SQRT(rho%of_r(:,2)**2 + rho%of_r(:,3)**2 + rho%of_r(:,4)**2 )
         ELSEIF (spin_component >= 1 .OR. spin_component <=3) THEN
-           raux(:) = rho(:,spin_component+1)
+           raux(:) = rho%of_r(:,spin_component+1)
         ELSE
            CALL errore('punch_plot','spin_component not allowed',1)
         ENDIF
@@ -289,14 +289,14 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
   !
   IF (spin_component == 0) THEN
      IF (nspin == 1 .OR. nspin == 4 ) THEN
-        psic(:) = CMPLX (rho(:,1), 0.d0)
+        psic(:) = CMPLX (rho%of_r(:,1), 0.d0)
      ELSE IF (nspin == 2) THEN
-        psic(:) = CMPLX (rho(:,1) + rho(:,2), 0.d0) 
+        psic(:) = CMPLX (rho%of_r(:,1) + rho%of_r(:,2), 0.d0) 
      END IF
   ELSE 
      IF (spin_component > nspin .OR. spin_component < 1) &
           CALL errore('polarization', 'wrong spin component',1)
-     psic(:) = CMPLX (rho(:,spin_component), 0.d0)
+     psic(:) = CMPLX (rho%of_r(:,spin_component), 0.d0)
   END IF
   !
   !   transform to G space

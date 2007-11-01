@@ -67,7 +67,7 @@ subroutine d3dyn_cc
   enddo
   aux(:) = (0.d0, 0.d0)
   do ir = 1, nrxx
-     rhox = rho (ir, 1) + rho_core (ir)
+     rhox = rho%of_r (ir, 1) + rho_core (ir)
      arhox = abs (rhox)
      if (arhox > 1.0d-30) then
         call xc (arhox, ex, ec, vx, vc)

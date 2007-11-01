@@ -95,7 +95,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
         allocate (becp(nkb,nbnd))
      endif
   endif
-  rho(:,:) = 0.d0
+  rho%of_r(:,:) = 0.d0
   dos(:) = 0.d0
   becsum(:,:,:) = 0.d0
   if (lsign) allocate(segno(nrxx))
@@ -210,14 +210,14 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
               if (noncolin) then
                  do ipol=1,npol
                     do ir=1,nrxxs
-                       rho(ir,current_spin)=rho(ir,current_spin)+&
+                       rho%of_r(ir,current_spin)=rho%of_r(ir,current_spin)+&
                           w1*(DBLE(psic_nc(ir,ipol))**2+ &
                              AIMAG(psic_nc(ir,ipol))**2)
                     enddo
                  enddo
               else
                  do ir=1,nrxxs
-                    rho (ir, current_spin) = rho (ir, current_spin) + &
+                    rho%of_r(ir,current_spin)=rho%of_r(ir,current_spin) + &
                       w1 * (DBLE( psic (ir) ) **2 + AIMAG (psic (ir) ) **2)
                  enddo
               endif
@@ -344,10 +344,10 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   endif
   if (doublegrid) then
      if (noncolin) then
-       call interpolate(rho, rho, 1)
+       call interpolate(rho%of_r, rho%of_r, 1)
      else
        do is = 1, nspin
-         call interpolate(rho(1, is), rho(1, is), 1)
+         call interpolate(rho%of_r(1, is), rho%of_r(1, is), 1)
        enddo
      endif
   endif
@@ -358,11 +358,11 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !
   if (nspin == 1 .or. nspin==4) then
      is = 1 
-     dos(:) = rho (:, is)
+     dos(:) = rho%of_r (:, is)
   else
      isup = 1
      isdw = 2
-     dos(:) = rho (:, isup) + rho (:, isdw)
+     dos(:) = rho%of_r (:, isup) + rho%of_r (:, isdw)
   end if
   if (lsign) then
      dos(:) = dos(:) * segno(:)

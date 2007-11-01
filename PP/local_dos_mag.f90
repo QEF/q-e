@@ -57,7 +57,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   INTEGER :: ipol, kh, kkb, is1, is2
 
   becsum(:,:,:) = 0.D0
-  rho(:,:)      = 0.D0
+  rho%of_r(:,:)      = 0.D0
   w1=1.D0/omega
 
   ALLOCATE( becp_nc( nkb, npol, nbnd ) )
@@ -88,21 +88,21 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
               END DO
               IF (spin_component==1) THEN
                  DO ir = 1,nrxxs
-                    rho(ir,2) = rho(ir,2) + 2.D0*w1* &
+                    rho%of_r(ir,2) = rho%of_r(ir,2) + 2.D0*w1* &
                          (DBLE(psic_nc(ir,1))* DBLE(psic_nc(ir,2)) + &
                          AIMAG(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)))
                  END DO
               END IF
               IF (spin_component==2) THEN
                  DO ir = 1,nrxxs
-                    rho(ir,3) = rho(ir,3) + 2.D0*w1* &
+                    rho%of_r(ir,3) = rho%of_r(ir,3) + 2.D0*w1* &
                          (DBLE(psic_nc(ir,1))*AIMAG(psic_nc(ir,2)) - &
                           DBLE(psic_nc(ir,2))*AIMAG(psic_nc(ir,1)))
                  END DO
               END IF
               IF (spin_component==3) THEN
                  DO ir = 1,nrxxs
-                    rho(ir,4) = rho(ir,4) + w1* &
+                    rho%of_r(ir,4) = rho%of_r(ir,4) + w1* &
                         (DBLE(psic_nc(ir,1))**2+AIMAG(psic_nc(ir,1))**2 &
                         -DBLE(psic_nc(ir,2))**2-AIMAG(psic_nc(ir,2))**2)
                  END DO
@@ -255,7 +255,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
      !
   IF ( doublegrid ) THEN
     is=spin_component+1
-    CALL interpolate( rho(1,is), rho(1,is), 1 )
+    CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
   END IF
   !
   ! ... Here we add the Ultrasoft contribution to the charge and magnetization
@@ -263,7 +263,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   IF ( okvan ) CALL addusdens()
 
   DO ir=1,nrxx
-     raux(ir)=rho(ir,spin_component+1)
+     raux(ir)=rho%of_r(ir,spin_component+1)
   END DO
   !
   IF (lspinorb) DEALLOCATE(be1, be2)

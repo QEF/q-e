@@ -27,7 +27,7 @@
 !
 ! get_local integrates on the previously determined points
 !
-      call get_locals(r_loc,m_loc,rho)
+      call get_locals(r_loc,m_loc,rho%of_r)
       
       do iat = 1,nat
          if (noncolin) then

@@ -72,7 +72,7 @@ SUBROUTINE forces()
   ! ... The local contribution
   !
   CALL force_lc( nat, tau, ityp, alat, omega, ngm, ngl, igtongl, &
-                 nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho, nl, &
+                 nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, g, rho%of_r, nl, &
                  nspin, gstart, gamma_only, vloc, forcelc )
   !
   ! ... The NLCC contribution

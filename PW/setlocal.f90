@@ -60,7 +60,7 @@ subroutine setlocal
   !
   if ( tefield .and. ( .not. dipfield ) ) then
      !
-     call add_efield(rho,vltot,etotefield,0)
+     call add_efield(rho%of_r,vltot,etotefield,0)
      !
      ! NB rho is not actually used by add_efield in this case ...
      !    it should be fixed and removed from this routine
