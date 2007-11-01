@@ -61,8 +61,10 @@ neb       H        NEB calculation for the H2+H proton exchange
 metadyn   Si+H     Metadynamics
 berry     PbTiO3    scf: Q function in real space (tqr=.true.)
                    nscf: Berry's phase calculation
+lda+U     FeO      LDA+U with standard and user-defined occupancies
+metaGGA   C4H6     meta-GGA
 
 Tests are still missing for:
   forces with core corrections
-  dft:             blyp, pw91, lda+U, metaGGA
-  calculation:     bands, vc-md
+  blyp, pw91
+ 'bands' 'vc-md'
