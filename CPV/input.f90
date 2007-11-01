@@ -33,7 +33,7 @@ MODULE input
      USE read_namelists_module, ONLY : read_namelists
      USE read_cards_module,     ONLY : read_cards
      USE input_parameters,      ONLY : calculation, title
-     USE control_flags,         ONLY : lneb, lsmd, lpath, lwf, lmetadyn, &
+     USE control_flags,         ONLY : lneb, lpath, lwf, lmetadyn, &
                                        program_name
      USE printout_base,         ONLY : title_ => title
      USE io_global,             ONLY : meta_ionode, stdout
@@ -72,9 +72,7 @@ MODULE input
         !
      END IF
      !
-     lsmd = ( TRIM( calculation ) == 'smd' )
-     !
-     lpath = ( lneb .OR. lsmd )
+     lpath = lneb
      !
      lmetadyn = ( TRIM( calculation ) == 'metadyn' )
      !
@@ -138,7 +136,7 @@ MODULE input
      !-------------------------------------------------------------------------
      !
      USE control_flags,      ONLY : fix_dependencies, program_name, &
-                                    lsmd, lconstrain, lmetadyn
+                                    lconstrain, lmetadyn
      USE io_global,          ONLY : meta_ionode, stdout
      USE ions_base,          ONLY : nat, tau, ityp
      USE constraints_module, ONLY : init_constraint
@@ -170,10 +168,6 @@ MODULE input
      IF ( lconstrain ) CALL init_constraint( nat, tau, ityp, 1.D0 )
      !
      IF ( lmetadyn ) CALL init_metadyn_vars()
-     !
-     ! ... initialize SMD variables and path
-     !
-     IF ( lsmd ) CALL smd_initvar()
      !
      ! ... fix values for dependencies
      !
@@ -1052,113 +1046,6 @@ MODULE input
      RETURN
      !
   END SUBROUTINE modules_setup
-  !
-  !-------------------------------------------------------------------------
-  SUBROUTINE smd_initvar()
-    !-------------------------------------------------------------------------
-    !
-    ! ... this subroutine copies SMD variables from input 
-    ! ... module to path_variables
-    !
-    USE input_parameters, ONLY: calculation, &
-           smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1, smd_stcd2, smd_stcd3, smd_codf, &
-           smd_forf, smd_smwf, smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, smd_smlm, &
-           num_of_images, smd_ene_ini, smd_ene_fin
-
-    USE path_variables, ONLY: &
-           sm_p_ => smd_p, &
-           smcp_ => smd_cp, &
-           smlm_ => smd_lm, &
-           smopt_ => smd_opt, &
-           linr_ => smd_linr, &
-           polm_ => smd_polm, &
-           kwnp_ => smd_kwnp, &
-           codfreq_ => smd_codfreq, &
-           forfreq_ => smd_forfreq, &
-           smwfreq_ => smd_wfreq, &
-           tol_ => smd_tol, &
-           lmfreq_ => smd_lmfreq, &
-           maxlm_ => smd_maxlm, &
-           ene_ini_ => smd_ene_ini, &
-           ene_fin_ => smd_ene_fin
-
-    USE ions_base,      ONLY: nat, nsp, tions_base_init
-    USE control_flags,  ONLY: nbeg
-    USE cell_base,      ONLY: cell_alat
-      !
-      IMPLICIT NONE
-      !
-      REAL(DP) :: alat_
-      !
-      IF( .NOT. tions_base_init ) &
-        CALL errore( " smd_initvar ", " ions_base_init should be called first ", 1 )
-      !
-      alat_ = cell_alat()
-      !
-      ! ... SM_P  
-      !
-      sm_p_ = num_of_images -1
-      !
-      ! ... what to do
-      !
-      smcp_   = smd_smcp
-      smopt_  = smd_smopt
-      smlm_   = smd_smlm
-      !      
-      ! ... initial path info
-      !
-      linr_ = smd_linr
-      polm_ = smd_polm
-      kwnp_ = smd_kwnp
-      !
-      ! ...  Frequencey of wiriting
-      !
-      codfreq_ = smd_codf
-      forfreq_ = smd_forf
-      smwfreq_ = smd_smwf
-      !
-      ! ... Lagrange multiplier info.
-      !
-      lmfreq_ = smd_lmfreq
-      tol_    = smd_tol
-      maxlm_  = smd_maxlm
-      !
-      ! ... if smlm
-      !
-      IF( smd_smlm .AND. ( smd_ene_ini >= 0.d0 .OR. smd_ene_fin >= 0.d0 ) ) THEN
-         CALL errore(' start : ',' Check : ene_ini & ene_fin ', 1 )
-      END IF
-      !
-      ene_ini_ = smd_ene_ini
-      ene_fin_ = smd_ene_fin
-      !
-      !
-      IF( TRIM( calculation ) == 'smd' ) THEN
-         !
-         ! How to obtain the initial trial path.
-         !
-         IF(smd_smopt) THEN
-   
-          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,1)
-
-         ELSEIF(smd_linr) THEN
-
-          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,2)
-
-         ELSEIF(smd_polm .AND. (smd_kwnp < num_of_images) ) THEN
-
-          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,3)
-
-         ELSEIF(smd_kwnp == num_of_images ) THEN
-
-          CALL init_path(sm_p_,kwnp_,smd_stcd,nsp,nat,alat_,nbeg,4)
-
-         ENDIF
-
-      END IF
-      !
-      RETURN
-  END SUBROUTINE smd_initvar
   !
   !     --------------------------------------------------------
   !

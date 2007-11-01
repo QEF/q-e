@@ -12,54 +12,6 @@
 ! ... to force cprmain to compute forces for +your_position+ configuration
 !
 !----------------------------------------------------------------------------
-SUBROUTINE smd_loop( nloop )
-  !----------------------------------------------------------------------------
-  !
-  USE kinds,            ONLY : DP
-  USE ions_base,        ONLY : nat
-  USE input_parameters, ONLY : num_of_images
-  !
-  IMPLICIT NONE
-  !
-  INTEGER, INTENT(IN) :: nloop
-  !
-  INTEGER               :: iloop, sm_p 
-  REAL(DP), ALLOCATABLE :: tau(:,:,: )
-  REAL(DP), ALLOCATABLE :: fion(:,:,:)
-  REAL(DP), ALLOCATABLE :: etot(:) 
-  !
-  !
-  sm_p = num_of_images - 1
-  !
-  IF ( nat > 0 .AND. sm_p > 0 ) THEN
-     !
-     ALLOCATE( tau(  3, nat, 0:sm_p ) )
-     ALLOCATE( fion( 3, nat, 0:sm_p ) )
-     ALLOCATE( etot( 0:sm_p ) )
-     !
-  ELSE
-     !
-     CALL errore( ' smd_loop ', ' nat or sm_p less or equal 0 ', 1 )
-     !
-  END IF
-  !
-  ! ... initialize g-vectors, fft grids
-  !
-  CALL init_dimensions()
-  !
-  DO iloop = 1, nloop
-     !
-     CALL smdmain( tau, fion, etot, nat )
-     !
-  END DO
-  !
-  DEALLOCATE( tau, fion, etot )
-  !
-  RETURN
-  !
-END SUBROUTINE smd_loop
-!
-!----------------------------------------------------------------------------
 SUBROUTINE neb_loop( )
   !----------------------------------------------------------------------------
   !

@@ -131,9 +131,6 @@ do
     if test  "$example" = "example21" ; then
        # the argument "64" to run_example is used in example 21
        ./run_example 64 >& run.log
-    elif test  "$example" = "example26" ; then
-       # the arguments "1 7" to run_example are used in example 26
-       ./run_example 1 7 >& run.log
     else
        # all other cases
        ./run_example >& run.log

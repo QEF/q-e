@@ -79,10 +79,6 @@ redis.o \
 restart.o \
 restart_sub.o \
 runcp.o \
-smcp.o \
-smd_modules.o \
-smd.o  \
-smlam.o \
 spharmonic.o \
 spline.o \
 stop_run.o \

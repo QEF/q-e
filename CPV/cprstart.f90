@@ -166,7 +166,7 @@ PROGRAM main
      !
   ELSE IF ( lsmd ) THEN
      !
-     CALL smd_loop( 1 )
+     CALL errore ( 'cpr_main', 'SMD no longer implemented', 1)
      !
   ELSE
      !

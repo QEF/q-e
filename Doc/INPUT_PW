@@ -571,12 +571,13 @@ mixing_fixed_ns
 diagonalization
                CHARACTER
                'david':  Davidson iterative diagonalization with overlap matrix
-                         (default)
+                         (default). Fast, may in some rare cases fail.
                'cg' :    conjugate-gradient-like band-by-band diagonalization
-               'diis' :  DIIS-like diagonalization - PRESENTLY DISABLED
+                         Typically slower than 'david' but it uses less memory
+                         and is more robust (it fails very seldom)
                'david+para': like david, but use parallel diagonalization,
                          after testing if it is convenient (for speed), 
-                         iteration loop use replicated data. 
+                         iteration loop use replicated data. Obsolescent.
                'david+distpara': like david but use fully distributed memory 
                          iteration loop. Allocated memory scale down with the 
                          number of procs. Procs involved in diagonalization can 
@@ -644,7 +645,12 @@ startingwfc    CHARACTER
                'atomic': start from superposition of atomic orbitals ( default )
                          If not enough atomic orbitals are available,
                          fill with random numbers the remaining wfcs
-               'random': start from random wfcs
+                         The scf typically starts better with this option,
+                         but in some specific high-symmetry cases one can
+                         "loose" valence states.
+               'random': start from random wfcs. Slower start of scf but safe.
+                         It may also reduce memory usage in conjunction with
+                         diagonalization='cg'
                'file':   start from a wavefunction file
 
 tqr            LOGICAL (default=.FALSE.)
