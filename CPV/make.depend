@@ -969,8 +969,6 @@ read_pseudo.o : ../Modules/read_uspp.o
 read_pseudo.o : ../Modules/upf_to_internal.o
 read_pseudo.o : ../Modules/uspp.o
 read_pseudo.o : modules.o
-redis.o : ../Modules/ions_base.o
-redis.o : ../Modules/path_variables.o
 restart.o : ../Modules/autopilot.o
 restart.o : ../Modules/cell_base.o
 restart.o : ../Modules/control_flags.o
