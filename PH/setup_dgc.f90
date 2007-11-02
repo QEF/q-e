@@ -19,7 +19,7 @@ subroutine setup_dgc
 #include "f_defs.h"
 
   use pwcom
-  use scf, only : rho, rhog, rho_core, rhog_core
+  use scf, only : rho, rho_core, rhog_core
   USE noncollin_module, ONLY : noncolin, ux
   USE wavefunctions_module, ONLY : psic
   USE kinds, only : DP
@@ -89,10 +89,10 @@ subroutine setup_dgc
 #else
      call compute_rho_new(rho%of_r,rhoout,segni,nrxx,ux)
      do is=1,nspin
-        rhogout(:,is) = rhog(:,is)
+        rhogout(:,is) = rho%of_g(:,is)
      enddo
      if (nlcc_any) then
-        rhogout(:,1) = rhog_core(:) + rhog(:,1)
+        rhogout(:,1) = rhog_core(:) + rho%of_g(:,1)
      endif
      do is = 1, nspin
         call gradrho (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rhogout(1, is), &
@@ -130,11 +130,11 @@ subroutine setup_dgc
      if (nlcc_any) then
         do is = 1, nspin0
            rhoout(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)
-           rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
+           rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
         enddo
      endif
      do is = 1, nspin0
-        call gradrho (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rhog (1, is), &
+        call gradrho (nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, rho%of_g (1, is), &
              ngm, g, nl, grho (1, 1, is) )
      enddo
   END IF
@@ -203,7 +203,7 @@ subroutine setup_dgc
   else
      if (nlcc_any) then
         do is = 1, nspin0
-           rhog(:,is) = rhog(:,is) - fac * rhog_core(:)
+           rho%of_g(:,is) = rho%of_g(:,is) - fac * rhog_core(:)
         enddo
      endif
   endif

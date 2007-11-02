@@ -27,7 +27,6 @@ PROGRAM dipole
   USE cell_base, ONLY : at, bg, omega, alat, ibrav
   USE gvect,     ONLY : g, gg, ngm, gstart, igtongl
   USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
-  USE scf,       ONLY : rhog
   USE lsda_mod,  ONLY : nspin
   USE pfft,      ONLY : npp
   USE mp_global, ONLY : me_pool, intra_pool_comm

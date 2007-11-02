@@ -192,7 +192,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE gvect,                ONLY : nrxx, ngm, g, gg, gstart, nr1, nr2, nr3, &
                                    nl, eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
   USE lsda_mod,             ONLY : lsda, nspin
-  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, vr
+  USE scf,                  ONLY : rho, rho_core, rhog_core, vr
   USE wavefunctions_module, ONLY : psic
   USE control_flags,        ONLY : alpha0, beta0
   USE ener,                 ONLY : ehart, etxc, vtxc
@@ -374,11 +374,11 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
-     rhog(:,is) = psic(nl(:))
+     rho%of_g(:,is) = psic(nl(:))
      !
   END DO
   !
-  CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
@@ -388,7 +388,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
          charge, nelec
      !
      rho%of_r  = rho%of_r  / charge*nelec
-     rhog = rhog / charge*nelec
+     rho%of_g = rho%of_g / charge*nelec
      !
   END IF
   !

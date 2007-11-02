@@ -21,7 +21,7 @@ subroutine add_shift_cc (shift_cc)
        nrxx, nl, g, gg, ngl, gl, igtongl
   USE ener, ONLY: etxc, vtxc
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho, rhog, rho_core, rhog_core
+  USE scf, ONLY: rho, rho_core, rhog_core
   USE wvfct, ONLY: gamma_only
   USE wavefunctions_module,    ONLY : psic
   implicit none
@@ -60,7 +60,7 @@ subroutine add_shift_cc (shift_cc)
   allocate ( vxc(nrxx,nspin), shift_(nat) )
   shift_(:) = 0.d0
   !
-  call v_xc (rho%of_r, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
+  call v_xc (rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, vxc)
   !
   if (nspin.eq.1) then
      do ir = 1, nrxx

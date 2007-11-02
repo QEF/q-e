@@ -13,7 +13,7 @@ subroutine cg_setupdgc
   !
   USE kinds, only: DP
   use pwcom
-  use scf, only : rho, rhog, rho_core, rhog_core
+  use scf, only : rho, rho_core, rhog_core
   use cgcom
   use funct, only: gcxc, gcx_spin, gcc_spin, dft_is_gradient
   !
@@ -46,11 +46,11 @@ subroutine cg_setupdgc
   if (nlcc_any) then
      do is=1,nspin
         rho%of_r(:,is)  = fac * rho_core(:)  + rho%of_r(:,is)
-        rhog(:,is) = fac * rhog_core(:) + rhog(:,is)
+        rho%of_g(:,is) = fac * rhog_core(:) + rho%of_g(:,is)
      enddo
   endif
   do is=1,nspin
-     call gradrho (nrx1,nrx2,nrx3,nr1,nr2,nr3,nrxx,rhog(1,is),   &
+     call gradrho (nrx1,nrx2,nrx3,nr1,nr2,nr3,nrxx,rho%of_g(1,is),   &
           ngm,g,nl,grho(1,1,is))
   enddo
   !
@@ -119,7 +119,7 @@ subroutine cg_setupdgc
   if (nlcc_any) then
      do is=1,nspin
         rho%of_r(:,is)  = rho%of_r(:,is)  - fac * rho_core(:)
-        rhog(:,is) = rhog(:,is) - fac * rhog_core(:)
+        rho%of_g(:,is) = rho%of_g(:,is) - fac * rhog_core(:)
      enddo
   endif
   call stop_clock('setup_dgc')

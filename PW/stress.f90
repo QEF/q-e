@@ -22,7 +22,7 @@ subroutine stress
                             nrxx, nl, g, gg, gcutm
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
-  USE scf,           ONLY : rho, rho_core
+  USE scf,           ONLY : rho, rho_core, rhog_core
   USE control_flags, ONLY : iverbosity
   USE wvfct,         ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
@@ -65,8 +65,9 @@ subroutine stress
   !
   !  xc contribution: add gradient corrections (non diagonal)
   !
-  call stres_gradcorr (rho%of_r, rho_core, nspin, nr1, nr2, nr3, nrx1, &
-       nrx2, nrx3, nrxx, nl, ngm, g, alat, omega, sigmaxc)
+  call stres_gradcorr ( rho%of_r, rho%of_g, rho_core, rhog_core, nspin, &
+                        nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
+                        ngm, g, alat, omega, sigmaxc)
   !
   ! core correction contribution
   !

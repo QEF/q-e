@@ -15,7 +15,7 @@ subroutine dynmatcc
   !
   USE ions_base, ONLY : nat, ityp, tau
   use pwcom
-  use scf, only : rho, rhog, rho_core, rhog_core
+  use scf, only : rho, rho_core, rhog_core
   USE kinds, only : DP
   use phcom
   implicit none
@@ -39,7 +39,7 @@ subroutine dynmatcc
   allocate (vxc( nrxx))    
   allocate (v  ( nrxx , nspin))    
   !
-  call v_xc (rho%of_r, rhog, rho_core, rhog_core, etxcd, vtxcd, v)
+  call v_xc (rho%of_r, rho%of_g, rho_core, rhog_core, etxcd, vtxcd, v)
   !
   if (nspin == 1 .OR. nspin==4) then
      is=1

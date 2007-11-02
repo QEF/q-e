@@ -290,7 +290,7 @@ SUBROUTINE vacuum_level( x0, zion )
   USE io_files,  ONLY : prefix
   USE constants, ONLY : e2, pi, tpi, fpi, rytoev, eps32
   USE gvect,     ONLY : g, gg, ngm, gstart, igtongl
-  USE scf,       ONLY : rhog
+  USE scf,       ONLY : rho
   USE lsda_mod,  ONLY : nspin
   USE cell_base, ONLY : at, alat, tpiba, tpiba2
   USE ions_base, ONLY : nsp
@@ -346,13 +346,13 @@ SUBROUTINE vacuum_level( x0, zion )
      !
      fac = e2*fpi / ( tpiba2*gg(ig) )
      !
-     rgtot_re = REAL(  rhog(ig,1) )
-     rgtot_im = AIMAG( rhog(ig,1) )
+     rgtot_re = REAL(  rho%of_g(ig,1) )
+     rgtot_im = AIMAG( rho%of_g(ig,1) )
      !
      IF ( nspin == 2 ) THEN
         !
-        rgtot_re = rgtot_re + REAL(  rhog(ig,2) )
-        rgtot_im = rgtot_im + AIMAG( rhog(ig,2) )
+        rgtot_re = rgtot_re + REAL(  rho%of_g(ig,2) )
+        rgtot_im = rgtot_im + AIMAG( rho%of_g(ig,2) )
         !
      END IF
      !
@@ -414,9 +414,9 @@ SUBROUTINE vacuum_level( x0, zion )
         END IF
         !
         vgig = vg(ig)
-        qgig = rhog(ig,1)
+        qgig = rho%of_g(ig,1)
         !
-        IF ( nspin == 2 ) qgig = qgig + rhog(ig,2)
+        IF ( nspin == 2 ) qgig = qgig + rho%of_g(ig,2)
         !
         ! ... add the phase factor corresponding to the translation of the
         ! ... origin by x0 (notice that x0 is in alat units)

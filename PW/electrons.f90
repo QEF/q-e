@@ -34,7 +34,7 @@ SUBROUTINE electrons()
   USE wvfct,                ONLY : nbnd, et, gamma_only, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet
-  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
+  USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vr, vltot, vrs, &
                                    tauk, taukg, kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
@@ -382,24 +382,24 @@ SUBROUTINE electrons()
            becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
-        CALL mix_rho( rhognew, rhog, taukgnew, taukg, becnew, becstep, &
+        CALL mix_rho( rhognew, rho%of_g, taukgnew, taukg, becnew, becstep, &
               nsnew, ns, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
-        ! ... (tr2_min), rhog and rhognew are unchanged: rhog contains the
+        ! ... (tr2_min), rho%of_g and rhognew are unchanged: rho%of_g contains the
         ! ... input density and rhognew contains the output density, both in
         ! ... G-space.
-        ! ... in the other cases rhog now contains mixed charge density in
+        ! ... in the other cases rho%of_g now contains mixed charge density in
         ! ... G-space.
         !
         IF ( conv_elec ) THEN
            !
-           ! ... if convergence is achieved, rhognew is copied into rhog so
-           ! ... that rho and rhog contain the same charge density, one in
+           ! ... if convergence is achieved, rhognew is copied into rho%of_g so
+           ! ... that rho and rho%of_g contain the same charge density, one in
            ! ... R-space, the other in G-space
            !
-           rhog(:,:) = rhognew(:,:)
+           rho%of_g(:,:) = rhognew(:,:)
            IF ( dft_is_meta() ) taukg(:,:) = taukgnew(:,:)
            !
         END IF
@@ -433,7 +433,7 @@ SUBROUTINE electrons()
         not_converged_electrons : &
         IF ( .NOT. conv_elec ) THEN
            !
-           ! ... bring mixed charge density (rhog) from G- to R-space (rhonew)
+           ! ... bring mixed charge density (rho%of_g) from G- to R-space (rhonew)
            !
            ALLOCATE( rhonew( nrxx, nspin ) )
            !
@@ -441,9 +441,9 @@ SUBROUTINE electrons()
               !
               psic(:) = ( 0.D0, 0.D0 )
               !
-              psic(nl(:)) = rhog(:,is)
+              psic(nl(:)) = rho%of_g(:,is)
               !
-              IF ( gamma_only ) psic(nlm(:)) = CONJG( rhog(:,is) )
+              IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
               !
               CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
               !
@@ -474,7 +474,7 @@ SUBROUTINE electrons()
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL v_of_rho( rhonew, rhog, rho_core, rhog_core, &
+           CALL v_of_rho( rhonew, rho%of_g, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            ! ... estimate correction needed to have variational energy:
@@ -532,7 +532,7 @@ SUBROUTINE electrons()
            !
            vnew(:,:) = vr(:,:)
            !
-           CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
+           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            vnew(:,:) = vr(:,:) - vnew(:,:)
@@ -689,7 +689,7 @@ SUBROUTINE electrons()
         IF ( first ) THEN
            !
            fock0 = exxenergy2()
-           CALL v_of_rho( rho, rhog, rho_core, rhog_core, &
+           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )

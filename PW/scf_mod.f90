@@ -24,7 +24,7 @@ MODULE scf
   !
 TYPE scf_type
   REAL(DP),    ALLOCATABLE :: of_r(:,:) ! the charge density in R-space
-!  COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
+  COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
 END TYPE scf_type
 
   type (scf_type) :: rho
@@ -41,7 +41,7 @@ END TYPE scf_type
        kedtaur(:,:)     ! position dependent kinetic energy enhancement factor
                         ! used in META-GGA in real space (dense grid)
   COMPLEX(DP), ALLOCATABLE :: &
-       rhog(:,:),      &! the charge density in reciprocal space
+!       rhog(:,:),      &! the charge density in reciprocal space
        rhog_core(:),   &! the core charge in reciprocal space
        taukg(:,:)       ! the kinetic energy density in reciprocal space
 
@@ -49,13 +49,16 @@ CONTAINS
 
  subroutine allocate_scf_type ( rho )
  type (scf_type) :: rho
- allocate (rho%of_r( nrxx, nspin))
+ allocate ( rho%of_r( nrxx, nspin) )
+ allocate ( rho%of_g( ngm, nspin ) )
+
  return
  end subroutine allocate_scf_type
 
  subroutine deallocate_scf_type ( rho )
  type (scf_type) :: rho
  if (allocated(rho%of_r)) deallocate(rho%of_r)
+ if (allocated(rho%of_g)) deallocate(rho%of_g)
  return
  end subroutine deallocate_scf_type
  !

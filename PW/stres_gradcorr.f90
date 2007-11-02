@@ -8,13 +8,13 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-subroutine stres_gradcorr( rho, rho_core, nspin, nr1, nr2, nr3, nrx1, &
-                           nrx2, nrx3, nrxx, nl, ngm, g, alat, omega, sigmaxc )
+subroutine stres_gradcorr( rho, rhog, rho_core, rhog_core, nspin, &
+                           nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, &
+                           ngm, g, alat, omega, sigmaxc )
   !----------------------------------------------------------------------------
   !
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : noncolin
-  USE scf,              ONLY : rhog, rhog_core
   use funct,            ONLY : gcxc, gcx_spin, gcc_spin, gcc_spin_more, &
                                dft_is_gradient, get_igcc
   !
@@ -24,6 +24,7 @@ subroutine stres_gradcorr( rho, rho_core, nspin, nr1, nr2, nr3, nrx1, &
        nl (ngm)
   real(DP) :: rho (nrxx, nspin), rho_core (nrxx), g (3, ngm), &
        alat, omega, sigmaxc (3, 3)
+  complex(DP) :: rhog(ngm, nspin), rhog_core(ngm)
   integer :: k, l, m, ipol, is, nspin0
   real(DP) , allocatable :: grho (:,:,:)
   real(DP), parameter :: epsr = 1.0d-6, epsg = 1.0d-10, e2 = 2.d0

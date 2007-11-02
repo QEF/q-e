@@ -23,7 +23,7 @@ SUBROUTINE clean_pw( lflag )
   USE vlocal,               ONLY : strf, vloc, vnew
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype, gamma_only
   USE force_mod,            ONLY : force
-  USE scf,                  ONLY : rho, rhog, vr, vltot, rho_core, rhog_core, &
+  USE scf,                  ONLY : rho, vr, vltot, rho_core, rhog_core, &
                                    vrs, tauk, kedtau, kedtaur, taukg, &
                                    deallocate_scf_type
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
@@ -81,7 +81,6 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( ig2 ) )        DEALLOCATE( ig2 )
   IF ( ALLOCATED( ig3 ) )        DEALLOCATE( ig3 )
   call deallocate_scf_type(rho)
-  IF ( ALLOCATED( rhog ) )       DEALLOCATE( rhog )
   IF ( ALLOCATED( tauk ) )       DEALLOCATE( tauk )
   IF ( ALLOCATED( kedtau ) )     DEALLOCATE( kedtau )
   IF ( ALLOCATED( kedtaur ) )    DEALLOCATE( kedtaur )

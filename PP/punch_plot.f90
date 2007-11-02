@@ -53,7 +53,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
   USE io_global,        ONLY : stdout, ionode
-  USE scf,              ONLY : rho, rhog, vltot, vr
+  USE scf,              ONLY : rho, vltot, vr
   USE wvfct,            ONLY : npw, nbnd, wg, igk, gamma_only
   USE noncollin_module, ONLY : noncolin
 
@@ -209,11 +209,11 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      raux(:) = vltot(:) 
      IF (nspin == 2) THEN
-        rhog(:,1) =  rhog(:,1) +  rhog(:,2)
+        rho%of_g(:,1) =  rho%of_g(:,1) +  rho%of_g(:,2)
         rho%of_r (:,1) =  rho%of_r (:,1) +  rho%of_r (:,2)
         nspin = 1
      END IF
-     CALL v_h (rhog, ehart, charge, raux)
+     CALL v_h (rho%of_g, ehart, charge, raux)
      IF (tefield.AND.dipfield) CALL add_efield(rho%of_r,raux,dummy,1)
 
   ELSEIF (plot_num == 12) THEN

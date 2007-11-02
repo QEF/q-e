@@ -15,7 +15,7 @@ SUBROUTINE work_function (wf)
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE ener,      ONLY : ef
   USE lsda_mod,  ONLY : nspin, current_spin
-  USE scf,       ONLY : rho, rhog, vltot, vr, rho_core, rhog_core
+  USE scf,       ONLY : rho, vltot, vr, rho_core, rhog_core
   USE gvect
   USE cell_base, ONLY : omega, alat
   USE mp,        ONLY : mp_bcast
@@ -38,7 +38,7 @@ SUBROUTINE work_function (wf)
   if (nspin==4) nspin0=1
 
   ALLOCATE (vxc(nrxx,nspin))
-  CALL v_xc (rho%of_r, rhog, rho_core, rhog_core, etxc, vtxc, vxc)
+  CALL v_xc (rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, vxc)
 
   IF ( ionode ) THEN
      !

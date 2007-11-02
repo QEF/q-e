@@ -34,7 +34,7 @@ SUBROUTINE potinit()
                                    ngm, gstart, nl, g, gg
   USE gsmooth,              ONLY : doublegrid
   USE control_flags,        ONLY : lscf
-  USE scf,                  ONLY : rho, rhog, rho_core, rhog_core, &
+  USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, vr, vrs
   USE wavefunctions_module, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc
@@ -213,13 +213,13 @@ SUBROUTINE potinit()
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
-     rhog(:,is) = psic(nl(:))
+     rho%of_g(:,is) = psic(nl(:))
      !
   END DO
   !
   ! ... compute the potential and store it in vr
   !
-  CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... define the total local potential (external+scf)

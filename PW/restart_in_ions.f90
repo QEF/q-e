@@ -18,7 +18,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
        nrxx
   USE klist, ONLY: nks
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY : rho, rhog, rho_core, rhog_core
+  USE scf, ONLY : rho, rho_core, rhog_core
   USE control_flags, ONLY: restart, tr2, ethr
   USE vlocal, ONLY: vnew
   USE wvfct, ONLY: nbnd, et
@@ -74,13 +74,13 @@ subroutine restart_in_ions (iter, ik_, dr2)
      !
      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
      !
-     rhog(:,is) = psic(nl(:))
+     rho%of_g(:,is) = psic(nl(:))
      !
   END DO
   
   ! recalculate etxc, vtxc, ehart, needed by stress calculation
   !
-  CALL v_of_rho( rho%of_r, rhog, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
                  ehart, etxc, vtxc, etotefield, charge, psic )
   !
   !  restart procedure completed
