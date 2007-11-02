@@ -411,29 +411,6 @@ MODULE read_namelists_module
        !
        sic_rloc = 0.0_DP
        !
-       ! ... SMD defaults (Y.K. 15/04/2004 )
-       !
-       smd_polm    = .FALSE.
-       smd_kwnp    = 2
-       smd_linr    = .FALSE.
-       smd_stcd    = .FALSE.
-       smd_stcd1   = 0
-       smd_stcd2   = 0
-       smd_stcd3   = 0
-       smd_codf    = 50
-       smd_forf    = 50
-       smd_smwf    = 1
-       smd_lmfreq  = 1
-       smd_tol     = 1.E-4_DP
-       smd_maxlm   = 10
-       smd_smcp    = .TRUE.
-       smd_smopt   = .FALSE.
-       smd_smlm    = .FALSE.
-       smd_splc    = .FALSE.
-       smd_spal    = 1.0_DP
-       smd_ene_ini = 1.0_DP
-       smd_ene_fin = 1.0_DP
-       !
        ! ... meta-dynamics defaults
        !
        fe_step     = 0.4_DP
@@ -925,27 +902,6 @@ MODULE read_namelists_module
        CALL mp_bcast( w_2,              ionode_id )
        !
        CALL mp_bcast( sic_rloc, ionode_id )
-       !
-       ! ... SMD broadcast (Y.K. 15/04/2004)
-       !
-       CALL mp_bcast( smd_polm,    ionode_id )
-       CALL mp_bcast( smd_kwnp,    ionode_id )
-       CALL mp_bcast( smd_linr,    ionode_id )
-       CALL mp_bcast( smd_stcd,    ionode_id )
-       CALL mp_bcast( smd_stcd2,   ionode_id )
-       CALL mp_bcast( smd_stcd2,   ionode_id )
-       CALL mp_bcast( smd_stcd3,   ionode_id )
-       CALL mp_bcast( smd_codf,    ionode_id )
-       CALL mp_bcast( smd_forf,    ionode_id )
-       CALL mp_bcast( smd_smwf,    ionode_id )
-       CALL mp_bcast( smd_lmfreq,  ionode_id )
-       CALL mp_bcast( smd_tol,     ionode_id )
-       CALL mp_bcast( smd_maxlm,   ionode_id )
-       CALL mp_bcast( smd_smcp,    ionode_id )
-       CALL mp_bcast( smd_smopt,   ionode_id )
-       CALL mp_bcast( smd_smlm,    ionode_id )
-       CALL mp_bcast( smd_ene_ini, ionode_id )
-       CALL mp_bcast( smd_ene_fin, ionode_id )
        !
        CALL mp_bcast( fe_step,     ionode_id )
        CALL mp_bcast( fe_nstep,    ionode_id )
@@ -1455,26 +1411,6 @@ MODULE read_namelists_module
        IF ( .NOT. allowed ) &
           CALL errore( sub_name, ' CI_scheme ''' // &
                       & TRIM( CI_scheme ) //''' not allowed ', 1 )
-       !
-       ! ... SMD checking ( Y.K. 15/04/2004 )
-       !
-       IF ( smd_polm .AND. smd_linr ) &
-          CALL infomsg( sub_name,' smd_polm & smd_linr  both true ')
-       !
-       IF ( smd_polm .AND. smd_kwnp < 3 ) &
-          CALL infomsg( sub_name,' smd_kwnp < 3 for smd_polm ')
-       !
-       IF ( smd_stcd .AND. (smd_stcd1==0 .OR. smd_stcd2==0 .OR. smd_stcd3==0) ) &
-          CALL infomsg( sub_name,' smd_stcd not specified ')
-       !
-       IF( smd_smcp .AND. (smd_smopt .OR. smd_smlm) ) &
-          CALL infomsg( sub_name,' smcp ? ')
-       !
-       IF( smd_smopt .AND. (smd_smcp .OR. smd_smlm) ) &
-          CALL infomsg( sub_name,' smopt ? ')
-       !
-       IF( smd_smlm .AND. (smd_smcp .OR. smd_smopt) ) &
-          CALL infomsg( sub_name,' smlm ? ')
        !
        IF (sic /= 'none' .and. sic_rloc == 0.0_DP) &
           CALL errore( sub_name, ' invalid sic_rloc with sic activated ', 1 )

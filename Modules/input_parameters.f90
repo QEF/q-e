@@ -1161,58 +1161,6 @@ MODULE input_parameters
         REAL(DP)  :: sic_rloc = 0.0_DP
 
         !
-        ! ...  variable added for SMD  ( Y.K. 04/15/2004 )
-        !
-
-        LOGICAL :: smd_polm = .FALSE.
-          ! polynomial interpolation for the initial path.
-
-        INTEGER :: smd_kwnp = 2
-          ! # of known points for polm. interp.
-
-        LOGICAL :: smd_linr = .FALSE.
-          ! linear interpolation for the initial path.
-
-        LOGICAL :: smd_stcd = .FALSE.
-          ! for molecular reactions, make the 6 degrees of
-          ! the same to prevent rotation and translation
-          ! at the initial state.
-
-        INTEGER :: smd_stcd1, smd_stcd2, smd_stcd3
-          ! for STCD = .true.
-
-        INTEGER :: smd_codf = 50, smd_forf = 50, smd_smwf = 1
-          ! Frequency of writing coord, force, replica
-          ! files
-
-        INTEGER :: smd_lmfreq = 1
-          ! Frequencey of computing the Lag. mul.
-
-        REAL (DP) :: smd_tol = 0.0001_DP
-          ! Tolerance in constraints in units of
-          ! [alpha(k)-alpha(k-1)] - 1/SM_P
-          !
-
-        INTEGER :: smd_maxlm = 10
-          ! Max number of iterations for calculating
-          ! Lag. mul.
-
-        LOGICAL :: smd_smcp = .TRUE.
-        LOGICAL :: smd_smopt = .FALSE.
-        LOGICAL :: smd_smlm = .FALSE.
-        LOGICAL :: smd_splc = .FALSE.
-         ! smcp  for regular elec min.
-         ! smopt for the minimization of initial & final
-         !       state
-         ! smlm  for SMD.
-         ! splc  for future sp locater using SMD.
-
-        REAL (DP) :: smd_ene_ini = 1.0_DP
-        REAL (DP) :: smd_ene_fin = 1.0_DP
-        !
-        REAL (DP) :: smd_spal = 1.0_DP
-
-        !
         ! ... variable for meta-dynamics
         !
 
@@ -1234,10 +1182,6 @@ MODULE input_parameters
                           path_thr, fixed_tan, use_freezing,                   &
                           trust_radius_max, trust_radius_min,                  &
                           trust_radius_ini, w_1, w_2, bfgs_ndim, sic_rloc,     &
-                          smd_polm, smd_kwnp, smd_linr, smd_stcd, smd_stcd1,   &
-                          smd_stcd2, smd_stcd3, smd_codf, smd_forf, smd_smwf,  &
-                          smd_lmfreq, smd_tol, smd_maxlm, smd_smcp, smd_smopt, &
-                          smd_smlm, smd_ene_ini, smd_ene_fin,                  &
                           fe_step, fe_nstep, sw_nstep, eq_nstep, g_amplitude
 
 !=----------------------------------------------------------------------------=!

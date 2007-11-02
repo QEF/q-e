@@ -472,26 +472,8 @@ MODULE read_cards_module
           !
           IF ( calculation == 'smd' .AND. prog == 'CP' ) THEN
              !
-             rep_loop : DO rep_i = 1, smd_kwnp
-                !
-                CALL read_line( input_line, end_of_file = tend )
-                !
-                IF ( tend ) &
-                   CALL errore( 'read_cards', 'end of file reading ' // &
-                              & 'atomic positions (smd)', rep_i )
-                !
-                IF ( matches( "first_image", input_line ) .OR. &
-                     matches( "image",       input_line ) .OR. &
-                     matches( "last_image",  input_line) ) THEN
-                   !
-                   CALL path_read_images( rep_i )
-                   !
-                ELSE
-                   CALL errore( 'read_cards', 'missing or wrong image ' // &
-                              & 'identifier in ATOMIC_POSITION', 1 )
-                END IF
-                !
-             END DO rep_loop
+             CALL errore( 'read_cards', &
+                          'smd no longer implemented in CP', 1 )
              !
           ELSE
              !
