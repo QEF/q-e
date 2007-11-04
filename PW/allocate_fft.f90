@@ -21,7 +21,7 @@ subroutine allocate_fft
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
   USE scf,       ONLY : rho, vr, vltot, vrs, rho_core, rhog_core, &
-                        tauk, taukg, kedtau, kedtaur, allocate_scf_type
+                        tauk, taukg, kedtau, kedtaur, create_scf_type
   USE vlocal,    ONLY : vnew
   USE wvfct,     ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, r_loc, &
@@ -63,7 +63,7 @@ subroutine allocate_fft
   allocate (ig2(  ngm))    
   allocate (ig3(  ngm))    
 
-  call allocate_scf_type(rho)
+  call create_scf_type(rho)
   allocate (vr( nrxx,nspin))    
   allocate (vltot( nrxx))    
   allocate (vnew  ( nrxx, nspin))    

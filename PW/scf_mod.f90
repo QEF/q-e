@@ -47,19 +47,19 @@ END TYPE scf_type
 
 CONTAINS
 
- subroutine allocate_scf_type ( rho )
+ subroutine create_scf_type ( rho )
  type (scf_type) :: rho
  allocate ( rho%of_r( nrxx, nspin) )
  allocate ( rho%of_g( ngm, nspin ) )
 
  return
- end subroutine allocate_scf_type
+ end subroutine  create_scf_type
 
- subroutine deallocate_scf_type ( rho )
+ subroutine destroy_scf_type ( rho )
  type (scf_type) :: rho
  if (allocated(rho%of_r)) deallocate(rho%of_r)
  if (allocated(rho%of_g)) deallocate(rho%of_g)
  return
- end subroutine deallocate_scf_type
+ end subroutine destroy_scf_type
  !
 END MODULE scf

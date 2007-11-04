@@ -34,7 +34,9 @@ SUBROUTINE electrons()
   USE wvfct,                ONLY : nbnd, et, gamma_only, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet
-  USE scf,                  ONLY : rho, rho_core, rhog_core, &
+  USE scf,                  ONLY : scf_type, &
+                                   create_scf_type, destroy_scf_type, &
+                                   rho, rho_core, rhog_core, &
                                    vr, vltot, vrs, &
                                    tauk, taukg, kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
@@ -106,8 +108,9 @@ SUBROUTINE electrons()
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
   !
-  COMPLEX(DP), ALLOCATABLE :: rhognew(:,:), taukgnew(:,:)
-  REAL(DP),    ALLOCATABLE :: rhonew(:,:), tauknew(:,:)
+  type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
+  COMPLEX(DP), ALLOCATABLE :: taukgnew(:,:)
+  REAL(DP),    ALLOCATABLE :: tauknew(:,:)
   !
   ! ... external functions
   !
@@ -204,6 +207,7 @@ SUBROUTINE electrons()
 !      END DO
        becstep(:,:,:) = becsum(:,:,:)
   END IF
+  call create_scf_type ( rhoin )
   !
   DO idum = 1, niter
      !
@@ -233,6 +237,11 @@ SUBROUTINE electrons()
      ! ... used to calculate the Harris-Weinert-Foulkes energy )
      !
      deband_hwf = delta_e()
+     !
+     ! save input current density in rhoin
+     rhoin%of_r(:,:) = rho%of_r(:,:)
+     rhoin%of_g(:,:) = rho%of_g(:,:)
+     !rhoin = rho
      !
      scf_step: DO
         !
@@ -269,10 +278,8 @@ SUBROUTINE electrons()
         ! PAW : sum_band DOES NOT compute new one-center charges
         CALL sum_band()
         !
-        ! ... bring output charge density (now stored in rho) to G-space
-        ! ... (rhognew) for mixing
-        !
-        ALLOCATE( rhognew( ngm, nspin ) )
+        ! ... bring output charge density (now stored in R-space in rho%of_r) 
+        ! ... also to G-space (rho%of_g) for mixing
         !
         DO is = 1, nspin
            !
@@ -280,7 +287,7 @@ SUBROUTINE electrons()
            !
            CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
            !
-           rhognew(:,is) = psic(nl(:))
+           rho%of_g(:,is) = psic(nl(:))
            !
            IF ( okvan .AND. tqr ) THEN
               !
@@ -290,9 +297,9 @@ SUBROUTINE electrons()
               !
               psic(:) = ( 0.D0, 0.D0 )
               !
-              psic(nl(:)) = rhognew(:,is)
+              psic(nl(:)) = rho%of_g(:,is)
               !
-              IF ( gamma_only ) psic(nlm(:)) = CONJG( rhognew(:,is) )
+              IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
               !
               CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
               !
@@ -383,29 +390,26 @@ SUBROUTINE electrons()
            becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
-        CALL mix_rho( rhognew, rho%of_g, taukgnew, taukg, becnew, becstep, &
+        CALL mix_rho( rho%of_g, rhoin%of_g, taukgnew, taukg, becnew, becstep, &
               nsnew, ns, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
-        ! ... (tr2_min), rho%of_g and rhognew are unchanged: rho%of_g contains the
-        ! ... input density and rhognew contains the output density, both in
-        ! ... G-space.
-        ! ... in the other cases rho%of_g now contains mixed charge density in
-        ! ... G-space.
+        ! ... (tr2_min), rhoin%of_g and rho%of_g are unchanged: rhoin%of_g 
+        ! ... contains the input density and rho%of_g contains the output 
+        ! ... density, both in G-space.
+        ! ... in the other cases rhoin%of_g now contains mixed charge density 
+        ! ... (the new input density) in G-space.
         !
         IF ( conv_elec ) THEN
            !
-           ! ... if convergence is achieved, rhognew is copied into rho%of_g so
-           ! ... that rho and rho%of_g contain the same charge density, one in
-           ! ... R-space, the other in G-space
+           ! ... if convergence is achieved, rho%of_g and rho%of_r contain 
+           ! ... the same charge density, one in G-space, the other in R-space
            !
-           rho%of_g(:,:) = rhognew(:,:)
            IF ( dft_is_meta() ) taukg(:,:) = taukgnew(:,:)
            !
         END IF
         !
-        DEALLOCATE( rhognew )
         IF ( dft_is_meta() ) DEALLOCATE( taukgnew )
         IF ( okpaw )         DEALLOCATE (becnew)
         !
@@ -434,21 +438,20 @@ SUBROUTINE electrons()
         not_converged_electrons : &
         IF ( .NOT. conv_elec ) THEN
            !
-           ! ... bring mixed charge density (rho%of_g) from G- to R-space (rhonew)
-           !
-           ALLOCATE( rhonew( nrxx, nspin ) )
+           ! ... bring the mixed charge density (rho%of_g) from G- to 
+           ! ... R-space (rhoin%of_r)
            !
            DO is = 1, nspin
               !
               psic(:) = ( 0.D0, 0.D0 )
               !
-              psic(nl(:)) = rho%of_g(:,is)
+              psic(nl(:)) = rhoin%of_g(:,is)
               !
-              IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
+              IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%of_g(:,is) )
               !
               CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
               !
-              rhonew(:,is) = psic(:)
+              rhoin%of_r(:,is) = psic(:)
               !
            END DO
            !
@@ -475,22 +478,23 @@ SUBROUTINE electrons()
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL v_of_rho( rhonew, rho%of_g, rho_core, rhog_core, &
+           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
            ! ... and delta_e using the output charge density rho;
            ! ... E_H (ehart) and E_xc (etxc) are calculated in v_of_rho
-           ! ... above, using the mixed charge density rhonew.
+           ! ... above, using the mixed charge density rhoin%of_r.
            ! ... delta_escf corrects for this difference at first order
            !
            descf = delta_escf()
            !
-           ! ... now rho contains the mixed charge density in R-space
+           ! ... now copy the mixed charge density in R-space and G-space in rho
            !
-           rho%of_r(:,:) = rhonew(:,:)
-           DEALLOCATE( rhonew )
+           !rho%of_r(:,:) = rhoin%of_r(:,:)
+           !rho%of_g(:,:) = rhoin%of_g(:,:)
+           rho = rhoin
            !
            IF ( dft_is_meta() ) THEN
               tauk(:,:) = tauknew(:,:)
@@ -552,7 +556,7 @@ SUBROUTINE electrons()
                !CALL infomsg ('electrons','PAW forces missing')
            ENDIF
            !
-           ! ... note that rho is the output, not mixed, charge density
+           ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
            !
            descf = 0._dp
@@ -820,6 +824,7 @@ SUBROUTINE electrons()
            DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
 #endif
         END IF
+        call destroy_scf_type ( rhoin )
         !
         RETURN
         !
@@ -1037,7 +1042,7 @@ SUBROUTINE electrons()
        DO ipol = 1, nspin
           !
           delta_escf = delta_escf - &
-                       SUM( ( rhonew(:,ipol) - rho%of_r(:,ipol) )*vr(:,ipol) )
+                       SUM( ( rhoin%of_r(:,ipol)-rho%of_r(:,ipol) )*vr(:,ipol) )
           !
        END DO
        !
