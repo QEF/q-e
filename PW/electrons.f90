@@ -87,6 +87,7 @@ SUBROUTINE electrons()
   REAL(DP) :: &
       dr2,          &! the norm of the diffence between potential
       charge,       &! the total charge
+      deband_hwf,   &! deband for the Harris-Weinert-Foulkes functional
       mag           ! local magnetization
   INTEGER :: &
       i,            &! counter on polarization
@@ -227,6 +228,12 @@ SUBROUTINE electrons()
      !
      first = ( iter == 1 )
      !
+     ! ... deband = - \sum_v <\psi_v | V_h + V_xc |\psi_v> is calculated a
+     ! ... first time here using the input density and potential ( to be
+     ! ... used to calculate the Harris-Weinert-Foulkes energy )
+     !
+     deband_hwf = delta_e()
+     !
      scf_step: DO
         !
         ! ... tr2_min is set to an estimate of the error on the energy
@@ -249,12 +256,6 @@ SUBROUTINE electrons()
         END IF
         !
         IF ( check_stop_now() ) RETURN
-        !
-        ! ... deband = - \sum_v <\psi_v | V_h + V_xc |\psi_v> is calculated a
-        ! ... first time here using the input density and potential ( to be
-        ! ... used to calculate the Harris-Weinert-Foulkes energy )
-        !
-        deband = delta_e()
         !
         ! ... xk, wk, isk, et, wg are distributed across pools;
         ! ... the first node has a complete copy of xk, wk, isk,
@@ -337,7 +338,7 @@ SUBROUTINE electrons()
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
         !
-        hwf_energy = eband + deband + ( etxc - etxcc ) + ewld + ehart + demet
+        hwf_energy = eband + deband_hwf + ( etxc - etxcc ) + ewld + ehart + demet
         !
         IF ( lda_plus_u )  THEN
            !
