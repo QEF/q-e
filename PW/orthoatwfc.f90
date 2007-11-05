@@ -101,11 +101,7 @@ SUBROUTINE orthoatwfc
      overlap(:,:) = (0.d0,0.d0)
      work(:,:) = (0.d0,0.d0)
      
-     IF (noncolin) THEN
-        CALL atomic_wfc_nc (ik, wfcatom)
-     ELSE
-        CALL atomic_wfc (ik, wfcatom)
-     END IF
+     CALL atomic_wfc (ik, wfcatom)
      !
      ! write atomic wfc on unit iunat
      !

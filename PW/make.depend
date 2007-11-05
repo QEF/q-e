@@ -87,14 +87,8 @@ atomic_wfc.o : ../Modules/constants.o
 atomic_wfc.o : ../Modules/ions_base.o
 atomic_wfc.o : ../Modules/kind.o
 atomic_wfc.o : ../Modules/uspp.o
+atomic_wfc.o : noncol.o
 atomic_wfc.o : pwcom.o
-atomic_wfc_nc.o : ../Modules/cell_base.o
-atomic_wfc_nc.o : ../Modules/constants.o
-atomic_wfc_nc.o : ../Modules/ions_base.o
-atomic_wfc_nc.o : ../Modules/kind.o
-atomic_wfc_nc.o : ../Modules/uspp.o
-atomic_wfc_nc.o : noncol.o
-atomic_wfc_nc.o : pwcom.o
 average_pp.o : ../Modules/atom.o
 average_pp.o : ../Modules/kind.o
 average_pp.o : ../Modules/uspp.o
@@ -1188,7 +1182,6 @@ stres_ewa.o : ../Modules/kind.o
 stres_gradcorr.o : ../Modules/functionals.o
 stres_gradcorr.o : ../Modules/kind.o
 stres_gradcorr.o : noncol.o
-stres_gradcorr.o : scf_mod.o
 stres_har.o : ../Modules/cell_base.o
 stres_har.o : ../Modules/constants.o
 stres_har.o : ../Modules/kind.o
@@ -1390,7 +1383,6 @@ allocate_nlpot.o : ../include/f_defs.h
 allocate_wfc.o : ../include/f_defs.h
 atomic_rho.o : ../include/f_defs.h
 atomic_wfc.o : ../include/f_defs.h
-atomic_wfc_nc.o : ../include/f_defs.h
 bp_c_phase.o : ../include/f_defs.h
 bp_strings.o : ../include/f_defs.h
 c_bands.o : ../include/f_defs.h

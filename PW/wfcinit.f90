@@ -12,7 +12,7 @@ SUBROUTINE wfcinit()
   !----------------------------------------------------------------------------
   !
   ! ... This routine computes an estimate of the starting wavefunctions
-  ! ... from superposition of atomic wavefunctions.
+  ! ... from superposition of atomic wavefunctions and/or random wavefunctions.
   !
   USE io_global,            ONLY : stdout
   USE basis,                ONLY : natomwfc, startingwfc
@@ -56,6 +56,11 @@ SUBROUTINE wfcinit()
              &           I4," random wfc")' ) natomwfc, nbnd-natomwfc
         !
      END IF
+     !
+  ELSE IF ( startingwfc == 'atomic-safe' ) THEN
+     !
+     WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic wfcs", &
+                       & "plus randomization" )' ) natomwfc
      !
   ELSE
      !
@@ -134,8 +139,7 @@ END SUBROUTINE wfcinit
 SUBROUTINE init_wfc ( ik )
   !----------------------------------------------------------------------------
   !
-  ! ... This routine computes an estimate of the starting wavefunctions
-  ! ... from superposition of atomic wavefunctions.
+  ! ... This routine computes starting wavefunctions for k-point ik
   !
   USE kinds,                ONLY : DP
   USE wvfct,                ONLY : gamma_only
@@ -161,7 +165,7 @@ SUBROUTINE init_wfc ( ik )
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:) ! atomic wfcs for initialization
   !
   !
-  IF ( startingwfc == 'atomic' ) THEN
+  IF ( startingwfc == 'atomic' .OR. startingwfc == 'atomic-safe' ) THEN
      !
      n_starting_wfc = MAX( natomwfc, nbnd )
      n_starting_atomic_wfc = natomwfc
@@ -173,7 +177,8 @@ SUBROUTINE init_wfc ( ik )
      !
   ELSE
      !
-     !!! CALL davcio( evc, nwordwfc, iunwfc, ik, -1 )
+     ! ...case 'file' should not be done here
+     !
      CALL errore ( 'init_wfc', &
           'invalid value for startingwfc: ' // TRIM ( startingwfc ) , 1 )
      !
@@ -183,17 +188,23 @@ SUBROUTINE init_wfc ( ik )
   !
   wfcatom (:,:) = (0.d0, 0.d0)
   !
+  IF ( startingwfc == 'atomic-safe' .AND. &
+       n_starting_atomic_wfc == n_starting_wfc ) THEN
+     !
+     ! ... in this case, introduce a small randomization of wavefunctions
+     ! ... to prevent possible "loss of states"
+     !
+     !!!ampre = 0.1_dp
+     !
+  ELSE
+     !
+     !!!ampre = 0.0_dp
+     !
+  ENDIF
+  !
   IF ( startingwfc == 'atomic' ) THEN
      !
-     IF ( noncolin ) THEN
-        !
-        CALL atomic_wfc_nc( ik, wfcatom )
-        !
-     ELSE
-        !
-        CALL atomic_wfc( ik, wfcatom )
-        !
-     END IF
+     CALL atomic_wfc( ik, wfcatom )
      !
   END IF
   !
