@@ -342,15 +342,20 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                 ENDDO ! mb
                 ENDDO ! nb
             ENDDO spins
-#ifdef __PARA
-            CALL reduce (nhm*nhm*nat*nspin, d )
-#endif
+!#ifdef __PARA
+!            CALL reduce (nhm*nhm*nat*nspin, d )
+!#endif
         ENDDO whattodo
+
         ! cleanup
         DEALLOCATE(pfunc_lm)
         !
     ENDDO atoms
 
+#ifdef __PARA
+    CALL reduce (nhm*nhm*nat*nspin, d_ae )
+    CALL reduce (nhm*nhm*nat*nspin, d_ps )
+#endif
 
     CALL stop_clock ('PAW_newd')
 
