@@ -560,7 +560,7 @@ subroutine set_pseudo_paw (is, pawset)
      psrho_atc(:,is) = 0._dp
   end if
   !
-  allocate ( upf(is)%rho_atc(pawset%grid%mesh) )
+  allocate ( upf(is)%rho_at(pawset%grid%mesh) )
   upf(is)%rho_at (1:pawset%grid%mesh) = pawset%pscharge(1:pawset%grid%mesh)
 
   allocate (upf(is)%vloc(1:pawset%grid%mesh))
