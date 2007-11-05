@@ -42,6 +42,9 @@ SUBROUTINE read_file()
   USE pw_restart,           ONLY : pw_readfile
   USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : okvan
+  USE grid_paw_routines,    ONLY : allocate_paw_internals
+  USE grid_paw_variables,   ONLY : okpaw, tpawp
+  USE rad_paw_routines,     ONLY : paw_init
   !
   IMPLICIT NONE
   !
@@ -150,6 +153,7 @@ SUBROUTINE read_file()
   CALL readpp()
   !
   okvan = ANY ( upf(:)%tvanp )
+  okpaw = ANY ( tpawp(1:nsp) )
   !
   ! ... check for spin-orbit pseudopotentials
   !
@@ -170,6 +174,11 @@ SUBROUTINE read_file()
   !
   CALL allocate_locpot()
   CALL allocate_nlpot()
+  IF (okpaw) THEN
+     CALL allocate_paw_internals()
+     CALL paw_init()
+     CALL errore('read_file','post-processing paw routines not yet available',1)
+  ENDIF
   CALL allocate_wfc()
   !
   ! ... read the charge density

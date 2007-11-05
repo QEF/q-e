@@ -43,6 +43,8 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp_param,           ONLY : upf
   USE phcom
+  USE rad_paw_routines,   ONLY : PAW_potential
+  USE grid_paw_variables, ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -208,6 +210,10 @@ SUBROUTINE phq_init()
   !
   DEALLOCATE( aux1 )
   !
+  IF (okpaw) then
+     CALL compute_becsum()
+     CALL PAW_potential(becsum) 
+  ENDIF
   CALL newd()
   CALL dvanqq()
   CALL drho()

@@ -373,6 +373,7 @@ subroutine set_pseudo_paw (is, pawset)
   upf(is)%psd = pawset%symbol
   upf(is)%tvanp=.true.
   upf(is)%nlcc = pawset%nlcc
+  tvanp(is)=.true.
   tpawp(is)=.true.
   call set_dft_from_name( pawset%dft )
   !
@@ -547,7 +548,7 @@ subroutine set_pseudo_paw (is, pawset)
   if ( pawset%nlcc) then
      allocate ( upf(is)%rho_atc(pawset%grid%mesh) )
      upf(is)%rho_atc(1:pawset%grid%mesh) = &
-	pawset%psccharge(1:pawset%grid%mesh)   &
+         pawset%psccharge(1:pawset%grid%mesh)   &
         / FPI / pawset%grid%r2(1:pawset%grid%mesh)
   end if
 
