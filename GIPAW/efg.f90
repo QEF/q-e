@@ -49,7 +49,7 @@ subroutine efg
   ! e2 = 2.0_dp ! rydberg
   e2 = 1.0_dp  ! hartree
   fac= fpi * e2
-  aux(:) = rho(:,1)
+  aux(:) = rho%of_r(:,1)
   efgg_el(:,:,:) = (0.0_dp,0.0_dp)
   
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
@@ -267,7 +267,7 @@ subroutine hyperfine
   allocate(efgr_zora(nat))
   
   ! Select majority and minority spin components
-  rho_diff = SUM ( rho ( :, 1 ) - rho ( :, nspin ) )
+  rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
@@ -278,7 +278,7 @@ subroutine hyperfine
      write ( stdout, * ) "WARNING: rho_diff zero!"
   end if
   
-  aux(:) = rho(:,s_maj) - rho(:,s_min)
+  aux(:) = rho%of_r(:,s_maj) - rho%of_r(:,s_min)
   efgg_el(:,:,:) = (0.0_dp,0.0_dp)
   
   call cft3(aux,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
@@ -482,7 +482,7 @@ subroutine efg_correction ( efg_corr_tens )
   USE ions_base,             ONLY : nat, ityp, ntyp => nsp
   USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin
   USE wavefunctions_module,  ONLY : evc
-  USE paw,                   ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
+  USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE constants,             ONLY : pi
   USE buffers
   USE scf,                   ONLY : rho
@@ -514,7 +514,7 @@ subroutine efg_correction ( efg_corr_tens )
   efg_corr = 0.0_dp
   
   ! Select majority and minority spin components
-  rho_diff = SUM ( rho ( :, 1 ) - rho ( :, nspin ) )
+  rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
@@ -578,7 +578,7 @@ subroutine efg_correction ( efg_corr_tens )
      g2kin(:) = g2kin(:) * tpiba2
      call get_buffer ( evc, nwordwfc, iunwfc, ik)
      
-     call init_paw_2 ( npw, igk, xk(1,ik), paw_vkb )
+     call init_gipaw_2 ( npw, igk, xk(1,ik), paw_vkb )
      call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc )
      
      do ibnd = 1, nbnd_occ(ik)
@@ -680,7 +680,7 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
   USE ions_base,             ONLY : nat, ityp, ntyp => nsp, atm
   USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin
   USE wavefunctions_module,  ONLY : evc
-  USE paw,                   ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
+  USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE constants,             ONLY : pi
   USE buffers
   USE scf,                   ONLY : rho
@@ -716,7 +716,7 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
   efg_corr = 0.0_dp
   
   ! Select majority and minority spin components
-  rho_diff = SUM ( rho ( :, 1 ) - rho ( :, nspin ) )
+  rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
   if ( rho_diff > +1.0d-3 ) then
      s_maj = 1
      s_min = nspin
@@ -862,7 +862,7 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
      call gk_sort ( xk(1,ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin )
      call get_buffer ( evc, nwordwfc, iunwfc, ik)
      
-     call init_paw_2 ( npw, igk, xk(1,ik), paw_vkb )
+     call init_gipaw_2 ( npw, igk, xk(1,ik), paw_vkb )
      call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc )
      
      do ibnd = 1, nbnd_occ(ik)

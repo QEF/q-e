@@ -191,7 +191,7 @@ CONTAINS
     USE lsda_mod,      ONLY : nspin, lsda
     USE pwcom
     USE ions_base,     ONLY : ntyp => nsp
-    USE paw,           ONLY : paw_recon
+    USE paw_gipaw,     ONLY : paw_recon
     
     IMPLICIT NONE
     
@@ -320,10 +320,10 @@ CONTAINS
     USE gsmooth,       ONLY : doublegrid
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
     USE constants,     ONLY : degspin, pi
-    USE paw,           ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
-                              read_recon, read_recon_paratec
+    USE paw_gipaw,     ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp, &
+                              read_recon, read_recon_paratec, set_paw_upf
     USE symme,         ONLY : nsym, s
-    
+    USE uspp_param,    ONLY : upf 
     IMPLICIT none
     integer :: ik, nt, ibnd
     logical :: nlcc_any
@@ -370,6 +370,7 @@ CONTAINS
           END IF
           
        ELSE
+          CALL set_paw_upf (nt, upf(nt))
           CALL read_recon ( file_reconstruction(nt), nt, paw_recon(nt) )
           !!!paw_recon(nt)%paw_nbeta = 0
        END IF
@@ -417,7 +418,7 @@ CONTAINS
        enddo
     enddo
     
-    call init_paw_1()
+    call init_gipaw_1()
     
     allocate ( paw_vkb(npwx,paw_nkb) )
     allocate ( paw_becp(paw_nkb,nbnd) )

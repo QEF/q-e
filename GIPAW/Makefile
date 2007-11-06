@@ -5,6 +5,7 @@ include ../make.sys
 GIPAWOBJS = \
 gipaw_module.o \
 gipaw_main.o \
+paw_gipaw.o \
 stop_code.o \
 apply_p.o \
 apply_vel.o \
@@ -21,8 +22,9 @@ suscept_crystal.o \
 j_para.o \
 biot_savart.o \
 compute_sigma.o \
+init_gipaw_1.o \
+init_gipaw_2.o \
 init_us_2_no_phase.o \
-init_paw_2_no_phase.o \
 g_tensor_crystal.o \
 write_tensor_field.o \
 efg.o

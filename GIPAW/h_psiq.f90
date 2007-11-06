@@ -16,8 +16,8 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   !     wavefunctions and then with the routines hus_1psi and
   !     s_psi computes for each band the required products
   !
-
-  use pwcom
+  USE pwcom
+  USE scf,  ONLY: vrs
   USE wavefunctions_module,  ONLY: psic
   USE becmod, ONLY: becp
   USE kinds, only : DP

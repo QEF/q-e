@@ -5,7 +5,7 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-MODULE paw
+MODULE paw_gipaw
 
   USE kinds,        ONLY: DP
   USE parameters,   ONLY: npsx
@@ -536,4 +536,4 @@ CONTAINS
   !</apsi>
   END SUBROUTINE set_paw_upf
   
-END MODULE paw
+END MODULE paw_gipaw

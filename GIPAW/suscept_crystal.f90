@@ -32,7 +32,7 @@ SUBROUTINE suscept_crystal
                                          avogadro, filcurr, filfield, &
                                          nbnd_occ, a0_to_cm, isolve, &
                                          conv_threshold
-  USE paw,                         ONLY : paw_vkb, paw_becp, paw_nkb, paw_recon
+  USE paw_gipaw,                   ONLY : paw_vkb, paw_becp, paw_nkb, paw_recon
   USE ions_base,                   ONLY : nat
   USE buffers,                     ONLY : get_buffer
   
@@ -107,7 +107,7 @@ SUBROUTINE suscept_crystal
     call compute_u_kq(ik, q)
     
     !<apsi>
-    call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
+    call init_gipaw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
     diamagnetic_corr_tensor = 0.0d0
     call diamagnetic_correction ( diamagnetic_corr_tensor )
@@ -157,7 +157,7 @@ SUBROUTINE suscept_crystal
         call apply_operators
         
         !<apsi>
-        call init_paw_2_no_phase (npw, igk, xk(:,ik)+q(:), paw_vkb)
+        call init_gipaw_2_no_phase (npw, igk, xk(:,ik)+q(:), paw_vkb)
         call paramagnetic_correction ( paramagnetic_corr_tensor )
         call add_to_sigma_para ( paramagnetic_corr_tensor, sigma_paramagnetic )
         !</apsi>

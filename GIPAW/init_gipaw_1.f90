@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------
-subroutine init_paw_1
+subroutine init_gipaw_1
   !----------------------------------------------------------------------
   !
   ! This routine initialize the variables of the paw projector
@@ -21,7 +21,7 @@ subroutine init_paw_1
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants,   ONLY : fpi
   USE us,          ONLY : dq, nqx, tab, tab_d2y, qrad, spline_ps
-  USE paw,         ONLY : paw_recon, paw_nkb, paw_lmaxkb
+  USE paw_gipaw,   ONLY : paw_recon, paw_nkb, paw_lmaxkb
   USE splinelib
   USE uspp,        ONLY : ap, aainit
   USE atom,        ONLY : rgrid, msh
@@ -54,7 +54,7 @@ subroutine init_paw_1
   real(DP), allocatable :: xdata(:)
   real(DP) :: d1, scaling_factor
   
-  call start_clock ('init_paw_1')
+  call start_clock ('init_gipaw_1')
   !
   !    Initialization of the variables
   !
@@ -128,9 +128,9 @@ subroutine init_paw_1
         write(stdout,*) "ZZZ: ", rc, rs, nrc, nrs
         !</debug>
         IF ( nrc < 1 .OR. nrc > msh(nt) ) &
-             CALL errore ( "init_paw_1", "impossible value for nrc", 1 )
+             CALL errore ( "init_gipaw_1", "impossible value for nrc", 1 )
         IF ( nrs < 1 .OR. nrs > msh(nt) ) &
-             CALL errore ( "init_paw_1", "impossible value for nrs", 1 )
+             CALL errore ( "init_gipaw_1", "impossible value for nrs", 1 )
         paw_recon(nt)%psphi(j)%label%nrc = nrc
         paw_recon(nt)%aephi(j)%label%nrc = nrc
         paw_recon(nt)%psphi(j)%label%nrs = nrs
@@ -179,12 +179,12 @@ subroutine init_paw_1
                  IF ( ih > jh ) THEN
                     IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-5_dp ) THEN
                        WRITE ( stdout, '(5X,2A,/,5X,A,I3,A,3I2,F12.8)' ) &
-                            "init_paw_1: ", &
+                            "init_gipaw_1: ", &
                             "projectors linearly dependent:", &
                             "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, &
                             s(ih,jh)
                        call flush_unit ( stdout )
-                       CALL errore ( "init_paw_1", &
+                       CALL errore ( "init_gipaw_1", &
                             "two projectors are linearly dependent", +1 )
                     ELSE IF ( ABS ( ABS ( s(ih,jh) ) - 1.0_dp ) < 1.e-2_dp ) THEN
                        IF ( n_overlap_warnings == 0 ) THEN
@@ -192,7 +192,7 @@ subroutine init_paw_1
                        END IF
                        n_overlap_warnings = n_overlap_warnings + 1
                        WRITE ( stdout, '(5X,2A,/,5X,A,I3,A,3I2,F12.8)' ) &
-                            "init_paw_1: ", &
+                            "init_gipaw_1: ", &
                             "projectors nearly linearly dependent:", &
                             "ntyp =", nt, ", l/n1/n2 = ", l, ih, jh, s(ih,jh)
                        call flush_unit ( stdout )
@@ -321,10 +321,13 @@ subroutine init_paw_1
   deallocate (aux1)
   deallocate (aux)
   
-  call stop_clock ('init_paw_1')
+  call stop_clock ('init_gipaw_1')
   return
   
-end subroutine init_paw_1
+end subroutine init_gipaw_1
+
+
+
 
 subroutine step_f(f2,f,r,nrs,nrc,pow,mesh)
 

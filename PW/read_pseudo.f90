@@ -19,7 +19,6 @@ subroutine readpp
   USE read_upf_module , ONLY : read_pseudo_upf
   USE read_uspp_module, ONLY : readvan, readrrkj
   USE upf_to_internal,  ONLY : set_pseudo_upf
-  USE paw,              ONLY : set_paw_upf
   USE atom,             ONLY :  msh, rgrid
   USE uspp_param, ONLY : newpseudo
   USE ions_base,  ONLY : ntyp => nsp
@@ -82,7 +81,6 @@ subroutine readpp
      !
      if (isupf == 0) then
         call set_pseudo_upf (nt, upf(nt))
-        call set_paw_upf (nt, upf(nt))
         ! 
         ! UPF is assumed to be multi-projector
         !

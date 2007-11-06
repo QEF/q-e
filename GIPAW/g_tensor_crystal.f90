@@ -13,6 +13,7 @@ SUBROUTINE g_tensor_crystal
   ! ... Compute the g-tensor: PRL 88, 086403 (2002)
   !
   USE kinds,                       ONLY : DP
+  USE pwcom
   USE io_global,                   ONLY : stdout
   USE io_files,                    ONLY : nwordwfc, iunwfc
   USE cell_base,                   ONLY : at, bg, omega, tpiba, tpiba2
@@ -27,12 +28,11 @@ SUBROUTINE g_tensor_crystal
   USE gvect,                       ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, &
                                           nrx3, nrxx, nlm, g
   USE mp_global,                   ONLY : my_pool_id
-  USE pwcom
   USE gipaw_module,                ONLY : j_bare, b_ind, b_ind_r, q_gipaw, &
                                           evq, alpha, nbnd_occ, iverbosity, &
                                           isolve, conv_threshold
   USE buffers,                     ONLY : get_buffer
-  USE paw,                         ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
+  USE paw_gipaw,                   ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
   USE ions_base, ONLY : nat
   
   !-- local variables ----------------------------------------------------
@@ -88,7 +88,7 @@ SUBROUTINE g_tensor_crystal
   end if
   
   ! Select majority and minority spin components
-  rho_diff = SUM ( rho ( :, 1 ) - rho ( :, nspin ) )
+  rho_diff = SUM ( rho%of_r( :, 1 ) - rho%of_r( :, nspin ) )
 #ifdef __PARA
   call reduce(1, rho_diff)
 #endif
@@ -153,7 +153,7 @@ SUBROUTINE g_tensor_crystal
     call compute_u_kq(ik, q)
     
     !<apsi>
-    call init_paw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
+    call init_gipaw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
     call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
     diamagnetic_corr_tensor = 0.0d0
     call diamagnetic_correction ( diamagnetic_corr_tensor )
@@ -214,7 +214,7 @@ SUBROUTINE g_tensor_crystal
         call apply_operators
         
         !<apsi>
-        call init_paw_2_no_phase (npw, igk, xk(:,ik)+q(:), paw_vkb)
+        call init_gipaw_2_no_phase (npw, igk, xk(:,ik)+q(:), paw_vkb)
         call paramagnetic_correction ( paramagnetic_corr_tensor )
         paramagnetic_corr_tensor = paramagnetic_corr_tensor * s_weight
         call add_to_sigma_para ( paramagnetic_corr_tensor, delta_g_paramagn )
@@ -376,12 +376,12 @@ SUBROUTINE g_tensor_crystal
   !   int_r j_up(r) x v_h[n_unpaired] d^3r
   allocate(grad_vh(3,nrxx), vh(nrxx,nspin), aux1(nrxx))
   ! transform rho to G-space
-  aux1(:) = rho(:,s_maj)-rho(:,s_min)
+  aux1(:) = rho%of_r(:,s_maj)-rho%of_r(:,s_min)
   CALL cft3( aux1, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-  rhog(:,1) = aux1(nl(:))
-  rhog(:,2) = 0.d0
+  rho%of_g(:,1) = aux1(nl(:))
+  rho%of_g(:,2) = 0.d0
   vh = 0.d0
-  call v_h(rhog, e_hartree, charge, vh)
+  call v_h(rho%of_g, e_hartree, charge, vh)
   ! <ceres> which spin channel? </ceres>
   call gradient ( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, vh, &
        ngm, g, nl, grad_vh )
@@ -417,7 +417,7 @@ SUBROUTINE g_tensor_crystal
      do jpol = 1, 3
         do ipol = 1, 3
            delta_g_soo_2 ( ipol, jpol ) = SUM ( b_ind_r(:,ipol,jpol) &
-                * ( rho(:,s_maj)-rho(:,s_min) ) )
+                * ( rho%of_r(:,s_maj)-rho%of_r(:,s_min) ) )
         end do
      end do
 #ifdef __PARA

@@ -108,8 +108,6 @@ hexsym.o \
 hinit0.o \
 hinit1.o \
 init_ns.o \
-init_paw_1.o \
-init_paw_2.o \
 init_run.o \
 init_us_1.o \
 init_us_2.o \
@@ -142,7 +140,6 @@ openfil.o \
 orthoatwfc.o \
 output_tau.o \
 para.o \
-paw.o \
 paw_xc.o \
 potinit.o \
 print_clock_pw.o \
