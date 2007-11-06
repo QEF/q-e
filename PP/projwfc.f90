@@ -704,7 +704,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU 
   USE lsda_mod, ONLY: nspin
-  USE noncollin_module, ONLY: noncolin, npol
+  USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
   USE symme, ONLY: nsym, irt, t_rev 
   USE wvfct 
   USE uspp, ONLY: nkb, vkb
