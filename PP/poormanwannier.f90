@@ -84,9 +84,9 @@ SUBROUTINE projection (first_band, last_band)
   USE constants, ONLY: rytoev 
   USE gvect 
   USE klist 
-  USE ldaU 
+  USE ldaU
   USE lsda_mod 
-  USE symme, ONLY: nsym, irt 
+  USE symme, ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
   USE uspp, ONLY: nkb, vkb
   USE becmod,   ONLY: becp, rbecp

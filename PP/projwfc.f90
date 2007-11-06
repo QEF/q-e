@@ -253,7 +253,7 @@ SUBROUTINE projwave( filproj, lsym )
   USE klist, ONLY: xk, nks, nkstot, nelec
   USE ldaU 
   USE lsda_mod, ONLY: nspin, isk, current_spin
-  USE symme, ONLY: nsym, irt 
+  USE symme, ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
