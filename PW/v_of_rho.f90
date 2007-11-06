@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, &
+SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, &
                      ehart, etxc, vtxc, etotefield, charge, v )
   !----------------------------------------------------------------------------
   !
@@ -23,7 +23,7 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, &
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx)
+  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin)
     ! input: the valence charge
     ! input: the core charge
   COMPLEX(DP), INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
@@ -43,7 +43,7 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, &
   ! ... calculate exchange-correlation potential
   !
   if (dft_is_meta()) then
-     call v_xc_meta( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
+     call v_xc_meta( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   else
      CALL v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   endif
@@ -70,7 +70,7 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, &
   !
 END SUBROUTINE v_of_rho
 !
-SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
+SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   !----------------------------------------------------------------------------
   !
   ! ... Exchange-Correlation potential Vxc(r) from n(r)
@@ -86,7 +86,7 @@ SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx)
+  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin)
     ! the valence charge
     ! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
@@ -123,7 +123,7 @@ SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   rhoneg = 0.D0
   !
 !  IF (get_igcx()==7.AND.get_igcc()==6) THEN
-     call v_xc_tpss( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
+     call v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
 !  ELSE
 !     CALL errore('v_xc_meta','wrong igcx and/or igcc',1)
 !  ENDIF
@@ -131,7 +131,7 @@ SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   RETURN
 END SUBROUTINE v_xc_meta
 !
-SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
+SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   !     ===================
   !--------------------------------------------------------------------
 !  use gvecp, only: ng => ngm
@@ -139,14 +139,14 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE gvect,            ONLY : nrxx, nrx1,nrx2,nrx3,nr1,nr2,nr3, &
                                g,nl,ngm
   USE gsmooth,          ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
-  USE scf,              ONLY : kedtau,tauk, kedtaur
+  USE scf,              ONLY : kedtau, kedtaur
   USE lsda_mod,         ONLY : nspin
   USE cell_base,            ONLY : omega, alat
   USE constants,        ONLY : e2
   IMPLICIT NONE
   !
   ! input
-  REAL(DP),INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx)
+  REAL(DP),INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin)
   COMPLEX(DP),INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
   REAL(DP),INTENT(OUT) :: etxc, vtxc, v(nrxx,nspin)
 !  integer nspin , nnr

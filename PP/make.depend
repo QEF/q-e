@@ -108,7 +108,6 @@ dipole.o : ../Modules/mp.o
 dipole.o : ../Modules/mp_global.o
 dipole.o : ../PW/para.o
 dipole.o : ../PW/pwcom.o
-dipole.o : ../PW/scf_mod.o
 do_initial_state.o : ../Modules/cell_base.o
 do_initial_state.o : ../Modules/io_global.o
 do_initial_state.o : ../Modules/ions_base.o

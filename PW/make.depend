@@ -814,7 +814,9 @@ paw_xc.o : exx.o
 paw_xc.o : noncol.o
 paw_xc.o : pwcom.o
 potinit.o : ../Modules/cell_base.o
+potinit.o : ../Modules/constants.o
 potinit.o : ../Modules/control_flags.o
+potinit.o : ../Modules/functionals.o
 potinit.o : ../Modules/grid_paw_variables.o
 potinit.o : ../Modules/io_files.o
 potinit.o : ../Modules/io_global.o
@@ -948,6 +950,7 @@ read_conf_from_file.o : pw_restart.o
 read_conf_from_file.o : pwcom.o
 read_file.o : ../Modules/cell_base.o
 read_file.o : ../Modules/constants.o
+read_file.o : ../Modules/grid_paw_variables.o
 read_file.o : ../Modules/io_files.o
 read_file.o : ../Modules/ions_base.o
 read_file.o : ../Modules/kind.o
@@ -956,9 +959,11 @@ read_file.o : ../Modules/uspp.o
 read_file.o : ../Modules/wavefunctions.o
 read_file.o : ../Modules/xml_io_base.o
 read_file.o : buffers.o
+read_file.o : grid_paw_routines.o
 read_file.o : noncol.o
 read_file.o : pw_restart.o
 read_file.o : pwcom.o
+read_file.o : rad_paw_routines.o
 read_file.o : scf_mod.o
 read_ncpp.o : ../Modules/functionals.o
 read_ncpp.o : ../Modules/kind.o
@@ -1243,6 +1248,7 @@ sum_band.o : ../Modules/wavefunctions.o
 sum_band.o : buffers.o
 sum_band.o : noncol.o
 sum_band.o : pwcom.o
+sum_band.o : realus.o
 sum_band.o : scf_mod.o
 sumkg.o : ../Modules/kind.o
 sumkt.o : ../Modules/kind.o

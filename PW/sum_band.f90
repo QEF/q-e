@@ -21,13 +21,15 @@ SUBROUTINE sum_band()
   USE control_flags,        ONLY : diago_full_acc
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
-  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, g
+  USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
+                                   ngm, g, nl, nlm
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                    nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE scf,                  ONLY : rho, tauk
+  USE realus,               ONLY : tqr
+  USE scf,                  ONLY : rho, tauk, taukg
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
@@ -185,7 +187,57 @@ SUBROUTINE sum_band()
   !
 #endif
   if (dft_is_meta() ) deallocate (kplusg)
-  !  
+  !
+  ! ... synchronize rho%of_g to the calculated rho%of_r
+  !
+  DO is = 1, nspin
+     !
+     ! use psic as work array
+     psic(:) = rho%of_r(:,is)
+     CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+     rho%of_g(:,is) = psic(nl(:))
+     !
+     IF ( okvan .AND. tqr ) THEN
+        ! ... in case the augmentation charges are computed in real space
+        ! ... we apply an FFT filter to the density in real space to
+        ! ... remove features that are not compatible with the FFT grid.
+        !
+        psic(:) = ( 0.D0, 0.D0 )
+        psic(nl(:)) = rho%of_g(:,is)
+        IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
+        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+        rho%of_r(:,is) = psic(:)
+        !
+     END IF
+     !
+  END DO
+  !
+  ! ... the same for tauk and taukg 
+  !
+  IF ( dft_is_meta()) THEN
+     DO is = 1, nspin
+        !
+        ! use psic as work array
+        psic(:) = tauk(:,is)
+        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        taukg(:,is) = psic(nl(:))
+        !
+        IF ( okvan .AND. tqr ) THEN
+           ! ... in case the augmentation charges are computed in real space
+           ! ... we apply an FFT filter to the density in real space to
+           ! ... remove features that are not compatible with the FFT grid.
+           !
+           psic(:) = ( 0.D0, 0.D0 )
+           psic(nl(:)) = taukg(:,is)
+           IF ( gamma_only ) psic(nlm(:)) = CONJG( taukg(:,is) )
+           CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+           tauk(:,is) = psic(:)
+           !
+        END IF
+        !
+     END DO
+  END IF
+  !
   CALL stop_clock( 'sum_band' )      
   !
   RETURN

@@ -109,8 +109,8 @@ SUBROUTINE electrons()
   ! ... the charge density and of the HXC-potential
   !
   type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
-  COMPLEX(DP), ALLOCATABLE :: taukgnew(:,:)
-  REAL(DP),    ALLOCATABLE :: tauknew(:,:)
+  COMPLEX(DP), ALLOCATABLE :: taukgin(:,:)
+  REAL(DP),    ALLOCATABLE :: taukin(:,:)
   !
   ! ... external functions
   !
@@ -208,6 +208,10 @@ SUBROUTINE electrons()
        becstep(:,:,:) = becsum(:,:,:)
   END IF
   call create_scf_type ( rhoin )
+  IF ( dft_is_meta() ) then
+     ALLOCATE( taukin( nrxx, nspin ) )
+     ALLOCATE( taukgin( ngm, nspin ) )
+  END IF
   !
   DO idum = 1, niter
      !
@@ -239,9 +243,11 @@ SUBROUTINE electrons()
      deband_hwf = delta_e()
      !
      ! save input current density in rhoin
-     rhoin%of_r(:,:) = rho%of_r(:,:)
-     rhoin%of_g(:,:) = rho%of_g(:,:)
-     !rhoin = rho
+     rhoin = rho
+     if ( dft_is_meta() ) then
+        taukin(:,:)  = tauk(:,:)
+        taukgin(:,:) = taukg(:,:) 
+     end if
      !
      scf_step: DO
         !
@@ -278,74 +284,10 @@ SUBROUTINE electrons()
         ! PAW : sum_band DOES NOT compute new one-center charges
         CALL sum_band()
         !
-        ! ... bring output charge density (now stored in R-space in rho%of_r) 
-        ! ... also to G-space (rho%of_g) for mixing
-        !
-        DO is = 1, nspin
-           !
-           psic(:) = rho%of_r(:,is)
-           !
-           CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-           !
-           rho%of_g(:,is) = psic(nl(:))
-           !
-           IF ( okvan .AND. tqr ) THEN
-              !
-              ! ... in case the augmentation charges are computed in real space
-              ! ... we apply an FFT filter to the density in real space to
-              ! ... remove features that are not compatible with the FFT grid.
-              !
-              psic(:) = ( 0.D0, 0.D0 )
-              !
-              psic(nl(:)) = rho%of_g(:,is)
-              !
-              IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%of_g(:,is) )
-              !
-              CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-              !
-              rho%of_r(:,is) = psic(:)
-              !
-           END IF
-           !
-        END DO
-        !
-        ! ... the same for tauk -> rhognew
-        !
-        IF ( dft_is_meta()) THEN
-           ALLOCATE( taukgnew( ngm, nspin ) )
-           DO is = 1, nspin
-              !
-              psic(:) = tauk(:,is)
-              !
-              CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-              !
-              taukgnew(:,is) = psic(nl(:))
-              !
-              IF ( okvan .AND. tqr ) THEN
-                 !
-                 ! ... in case the augmentation terms are computed in real space
-                 ! ... we apply an FFT filter to the density in real space to
-                 ! ... remove features that are not compatible with the FFT grid
-                 !
-                 psic(:) = ( 0.D0, 0.D0 )
-                 !
-                 psic(nl(:)) = taukgnew(:,is)
-                 !
-                 IF ( gamma_only ) psic(nlm(:)) = CONJG( taukgnew(:,is) )
-                 !
-                 CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-                 !
-                 tauk(:,is) = psic(:)
-                 !
-              END IF
-              !
-           END DO
-        END IF
-        !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
         !
-        hwf_energy = eband + deband_hwf + ( etxc - etxcc ) + ewld + ehart + demet
+        hwf_energy = eband + deband_hwf + (etxc - etxcc) + ewld + ehart + demet
         !
         IF ( lda_plus_u )  THEN
            !
@@ -390,7 +332,7 @@ SUBROUTINE electrons()
            becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
-        CALL mix_rho( rho%of_g, rhoin%of_g, taukgnew, taukg, becnew, becstep, &
+        CALL mix_rho( rho%of_g, rhoin%of_g, taukg, taukgin, becnew, becstep, &
               nsnew, ns, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
@@ -398,19 +340,11 @@ SUBROUTINE electrons()
         ! ... (tr2_min), rhoin%of_g and rho%of_g are unchanged: rhoin%of_g 
         ! ... contains the input density and rho%of_g contains the output 
         ! ... density, both in G-space.
-        ! ... in the other cases rhoin%of_g now contains mixed charge density 
-        ! ... (the new input density) in G-space.
+        ! ... In the other cases rhoin%of_g now contains mixed charge density 
+        ! ... (the new input density) in G-space. In this case
+        ! NB: In this later case mix_rho leaves out-of-sync rho(in)%of_r and 
+        !     rho(in)%of_g. This should be fixed as it is error-prone.
         !
-        IF ( conv_elec ) THEN
-           !
-           ! ... if convergence is achieved, rho%of_g and rho%of_r contain 
-           ! ... the same charge density, one in G-space, the other in R-space
-           !
-           IF ( dft_is_meta() ) taukg(:,:) = taukgnew(:,:)
-           !
-        END IF
-        !
-        IF ( dft_is_meta() ) DEALLOCATE( taukgnew )
         IF ( okpaw )         DEALLOCATE (becnew)
         !
         IF ( first .and. nat > 0) THEN
@@ -438,11 +372,11 @@ SUBROUTINE electrons()
         not_converged_electrons : &
         IF ( .NOT. conv_elec ) THEN
            !
-           ! ... bring the mixed charge density (rho%of_g) from G- to 
-           ! ... R-space (rhoin%of_r)
+           ! ... synchronize R- and G- components of the mixed charge density 
            !
            DO is = 1, nspin
               !
+              ! use psic as working array
               psic(:) = ( 0.D0, 0.D0 )
               !
               psic(nl(:)) = rhoin%of_g(:,is)
@@ -455,30 +389,28 @@ SUBROUTINE electrons()
               !
            END DO
            !
-           ! the same for the kinetic energy density (tauknew)
+           ! the same for the kinetic energy density (taukin)
            !
            IF ( dft_is_meta() ) THEN
-              ALLOCATE( tauknew( nrxx, nspin ) )
               DO is = 1, nspin
                  !
                  psic(:) = ( 0.D0, 0.D0 )
                  !
-                 psic(nl(:)) = taukg(:,is)
+                 psic(nl(:)) = taukgin(:,is)
                  !
-                 IF ( gamma_only ) psic(nlm(:)) = CONJG( taukg(:,is) )
+                 IF ( gamma_only ) psic(nlm(:)) = CONJG( taukgin(:,is) )
                  !
                  CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
                  !
-                 tauknew(:,is) = psic(:)
+                 taukin(:,is) = psic(:)
                  !
               END DO
-              !
            END IF
            !
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, &
+           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, taukin, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            ! ... estimate correction needed to have variational energy:
@@ -490,16 +422,13 @@ SUBROUTINE electrons()
            !
            descf = delta_escf()
            !
-           ! ... now copy the mixed charge density in R-space and G-space in rho
+           ! ... now copy the mixed charge density in R- and G-space in rho
            !
-           !rho%of_r(:,:) = rhoin%of_r(:,:)
-           !rho%of_g(:,:) = rhoin%of_g(:,:)
            rho = rhoin
-           !
-           IF ( dft_is_meta() ) THEN
-              tauk(:,:) = tauknew(:,:)
-              DEALLOCATE( tauknew )
-           END IF
+           if ( dft_is_meta() ) then
+              tauk(:,:)  = taukin(:,:)
+              taukg(:,:) = taukgin(:,:)
+           end if
            !
            ! ... compute PAW corrections to descf
            IF (okpaw) THEN
@@ -537,7 +466,7 @@ SUBROUTINE electrons()
            !
            vnew(:,:) = vr(:,:)
            !
-           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
+           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, tauk, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            vnew(:,:) = vr(:,:) - vnew(:,:)
@@ -673,7 +602,7 @@ SUBROUTINE electrons()
 #endif
               correction1c = (deband_PAW + descf_PAW + e_PAW)
               PRINT '(5x,A,f10.6,A)', 'PAW correction: ',correction1c, ', composed of: '
-              PRINT '(5x,A,f10.6,A,f10.6,A,f12.6)',&
+              PRINT '(5x,A,f10.6,A,f10.6,A,f10.6)',&
                  'de_band: ',deband_PAW,', de_scf: ',descf_PAW,', 1-center E: ', e_PAW
               IF (really_do_paw) THEN
                   etot = etot + correction1c
@@ -694,7 +623,7 @@ SUBROUTINE electrons()
         IF ( first ) THEN
            !
            fock0 = exxenergy2()
-           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
+           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, tauk, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
@@ -824,6 +753,11 @@ SUBROUTINE electrons()
            DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
 #endif
         END IF
+        !
+        IF ( dft_is_meta() ) then
+           DEALLOCATE( taukgin )
+           DEALLOCATE( taukin )
+        ENDIF
         call destroy_scf_type ( rhoin )
         !
         RETURN
@@ -1049,7 +983,7 @@ SUBROUTINE electrons()
        IF ( dft_is_meta() ) THEN
           DO ipol = 1, nspin
              delta_escf = delta_escf - &
-                       SUM( (tauknew(:,ipol)-tauk(:,ipol) )*kedtaur(:,ipol))
+                       SUM( (taukin(:,ipol)-tauk(:,ipol) )*kedtaur(:,ipol))
           END DO
        END IF
        !

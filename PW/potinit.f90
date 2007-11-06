@@ -24,6 +24,7 @@ SUBROUTINE potinit()
   ! ... In all cases the scf potential is recalculated and saved in vr
   !
   USE kinds,                ONLY : DP
+  USE constants,            ONLY : pi
   USE io_global,            ONLY : stdout
   USE cell_base,            ONLY : alat, omega
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
@@ -34,8 +35,9 @@ SUBROUTINE potinit()
                                    ngm, gstart, nl, g, gg
   USE gsmooth,              ONLY : doublegrid
   USE control_flags,        ONLY : lscf
-  USE scf,                  ONLY : rho, rho_core, rhog_core, &
+  USE scf,                  ONLY : rho, rho_core, rhog_core, tauk, taukg, &
                                    vltot, vr, vrs
+  USE funct,            ONLY : dft_is_meta
   USE wavefunctions_module, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc
   USE ldaU,                 ONLY : niter_with_fixed_ns
@@ -63,6 +65,7 @@ SUBROUTINE potinit()
   !
   REAL(DP)              :: charge           ! the starting charge
   REAL(DP)              :: etotefield       !
+  REAL(DP)              :: fact 
   INTEGER               :: is, ios
   INTEGER               :: ldim             ! integer variable for I/O control
   LOGICAL               :: exst 
@@ -217,9 +220,21 @@ SUBROUTINE potinit()
      !
   END DO
   !
+  if ( dft_is_meta()) then
+     ! ... define a starting (TF) guess for tauk and taukg
+     fact = (3.d0*pi*pi)**(2.0/3.0)
+     DO is = 1, nspin
+        tauk(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
+        psic(:) = tauk(:,is)
+        CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
+        taukg(:,is) = psic(nl(:))
+     END DO
+     !
+  end if
+  !
   ! ... compute the potential and store it in vr
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, &
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, tauk, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... define the total local potential (external+scf)
