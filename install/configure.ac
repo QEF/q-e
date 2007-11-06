@@ -1,4 +1,4 @@
-AC_INIT(ESPRESSO, 3.2, , espresso)
+AC_INIT(ESPRESSO, 4.0, , espresso)
 
 # -----------------------------
 # application-specific settings
