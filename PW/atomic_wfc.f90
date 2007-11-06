@@ -119,15 +119,19 @@ SUBROUTINE atomic_wfc (ik, wfcatom)
            !  the factor i^l MUST BE PRESENT in order to produce
            !  wavefunctions for k=0 that are real in real space
            !
-           IF (so(nt)) THEN
+           IF ( noncolin ) THEN
               !
-              call atomic_wfc_so ( )
+              IF ( so(nt) ) THEN
+                 !
+                 call atomic_wfc_so ( )
+                 !
+              ELSE
+                 !
+                 call atomic_wfc_nc ( )
+                 !
+              ENDIF
               !
-           ELSE IF ( noncolin ) THEN
-              !
-              call atomic_wfc_nc ( )
-              !
-           ELSE
+            ELSE
               !
               call atomic_wfc___ ( )
               !
@@ -151,9 +155,10 @@ CONTAINS
 
   SUBROUTINE atomic_wfc_so ( )
    !
-   ! ... spin-orbit specific calculations
+   ! ... spin-orbit case
    !
-   real(DP) :: fact(2), j, spinor
+   real(DP) :: fact(2), j
+   real(DP), external :: spinor
    integer :: ind, ind1, n1, is, sph_ind
    !
    j = upf(nt)%jchi(nb)
@@ -163,7 +168,7 @@ CONTAINS
       if (abs(fact(1)) > 1.d-8 .or. abs(fact(2)) > 1.d-8) then
          n_starting_wfc = n_starting_wfc + 1
          if (n_starting_wfc > natomwfc) call errore &
-              ('atomic_wfc', 'internal error: too many wfcs', 1)
+              ('atomic_wfc_so', 'internal error: too many wfcs', 1)
          DO is=1,2
             IF (abs(fact(is)) > 1.d-8) THEN
                ind=lmaxx+1+sph_ind(l,j,m,is)
@@ -185,10 +190,10 @@ CONTAINS
    END DO
    !
    END SUBROUTINE atomic_wfc_so
+   ! 
+   SUBROUTINE atomic_wfc_nc ( )
    !
-   SUBROUTINE atomic_wfc_nc
-   !
-   ! ... noncolinear case without spin-orbit
+   ! ... noncolinear case, magnetization along "angle1" and "angle2"
    !
    real(DP) :: alpha, gamman
    complex(DP) :: fup, fdown  
@@ -200,7 +205,7 @@ CONTAINS
       lm = l**2 + m
       n_starting_wfc = n_starting_wfc + 1
       if (n_starting_wfc > natomwfc) call errore &
-            ('atomic_wfc', 'internal error: too many wfcs', 1)
+            ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       DO ig=1,npw
          aux(ig) = sk(ig)*ylm(ig,lm)*chiq(ig,nb,nt)
       END DO
@@ -240,7 +245,7 @@ CONTAINS
    !
    END SUBROUTINE atomic_wfc_nc
 
-   SUBROUTINE atomic_wfc___
+   SUBROUTINE atomic_wfc___( )
    !
    ! ... LSDA or nonmagnetic case
    !
@@ -248,7 +253,7 @@ CONTAINS
       lm = l**2 + m
       n_starting_wfc = n_starting_wfc + 1
       if (n_starting_wfc > natomwfc) call errore &
-         ('atomic_wfc', 'internal error: too many wfcs', 1)
+         ('atomic_wfc___', 'internal error: too many wfcs', 1)
       !
       DO ig = 1, npw
          wfcatom (ig, 1, n_starting_wfc) = lphase * &
@@ -258,5 +263,5 @@ CONTAINS
    END DO
    !
    END SUBROUTINE atomic_wfc___
-   
+   !
 END SUBROUTINE atomic_wfc
