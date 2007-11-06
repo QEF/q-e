@@ -204,7 +204,7 @@ CONTAINS
    DO m = 1, 2 * l + 1
       lm = l**2 + m
       n_starting_wfc = n_starting_wfc + 1
-      if (n_starting_wfc > natomwfc) call errore &
+      if (n_starting_wfc + 2*l+1 > natomwfc) call errore &
             ('atomic_wfc_nc', 'internal error: too many wfcs', 1)
       DO ig=1,npw
          aux(ig) = sk(ig)*ylm(ig,lm)*chiq(ig,nb,nt)

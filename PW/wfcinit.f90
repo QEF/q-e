@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -158,14 +158,14 @@ SUBROUTINE init_wfc ( ik )
   !
   INTEGER :: ik
   !
-  INTEGER :: is, ibnd, ig, ipol, ig2, n_starting_wfc, n_starting_atomic_wfc
+  INTEGER :: is, ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
   !
   REAL(DP) :: rr, arg
   !
-  COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:) ! atomic wfcs for initialization
+  COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
   !
   !
-  IF ( startingwfc == 'atomic' .OR. startingwfc == 'atomic-safe' ) THEN
+  IF ( startingwfc(1:6) == 'atomic' ) THEN
      !
      n_starting_wfc = MAX( natomwfc, nbnd )
      n_starting_atomic_wfc = natomwfc
@@ -184,27 +184,39 @@ SUBROUTINE init_wfc ( ik )
      !
   END IF
   !
-  ALLOCATE( wfcatom( npwx*npol, n_starting_wfc ) )
+  ALLOCATE( wfcatom( npwx, npol, n_starting_wfc ) )
   !
-  wfcatom (:,:) = (0.d0, 0.d0)
-  !
-  IF ( startingwfc == 'atomic-safe' .AND. &
-       n_starting_atomic_wfc == n_starting_wfc ) THEN
+  wfcatom (:,:,:) = (0.d0, 0.d0)
      !
-     ! ... in this case, introduce a small randomization of wavefunctions
-     ! ... to prevent possible "loss of states"
-     !
-     !!!ampre = 0.1_dp
-     !
-  ELSE
-     !
-     !!!ampre = 0.0_dp
-     !
-  ENDIF
-  !
-  IF ( startingwfc == 'atomic' ) THEN
+  IF ( startingwfc(1:6) == 'atomic' ) THEN
      !
      CALL atomic_wfc( ik, wfcatom )
+     !
+     IF ( startingwfc == 'atomic-safe' .AND. &
+         n_starting_wfc == n_starting_atomic_wfc ) THEN
+         !
+         ! ... in this case, introduce a small randomization of wavefunctions
+         ! ... to prevent possible "loss of states"
+         !
+         DO ibnd = 1, n_starting_atomic_wfc
+            !
+            DO ipol = 1, npol
+               !
+               DO ig = 1, npw
+                  !
+                  rr  = rndm()
+                  arg = tpi * rndm()
+                  !
+                  wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
+                     ( 1.0_DP + 0.01_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ) ) 
+                  !
+               END DO
+               !
+            END DO
+            !
+         END DO
+         !
+     END IF
      !
   END IF
   !
@@ -217,15 +229,14 @@ SUBROUTINE init_wfc ( ik )
         !
         DO ig = 1, npw
            !
-           ig2 = ig + (ipol-1)*npwx
            rr  = rndm()
            arg = tpi * rndm()
            !
-           wfcatom(ig2,ibnd) = &
+           wfcatom(ig,ipol,ibnd) = &
                 CMPLX( rr*COS( arg ), rr*SIN( arg ) ) / &
                        ( ( xk(1,ik) + g(1,igk(ig)) )**2 + &
                          ( xk(2,ik) + g(2,igk(ig)) )**2 + &
-                         ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.D0 )
+                         ( xk(3,ik) + g(3,igk(ig)) )**2 + 1.0_DP )
         END DO
         !
      END DO

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 Quantum-ESPRESSO group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -831,9 +831,10 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  IF ( startingwfc /= 'atomic' .AND. &
-       startingwfc /= 'random' .AND. &
-       startingwfc /= 'file' ) THEN
+  IF ( TRIM(startingwfc) /= 'atomic'      .AND. &
+       TRIM(startingwfc) /= 'atomic-safe' .AND. &
+       TRIM(startingwfc) /= 'random'      .AND. &
+       TRIM(startingwfc) /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingwfc: use default' )
      !
