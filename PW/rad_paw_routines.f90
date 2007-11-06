@@ -39,7 +39,7 @@
 !                                                               (Modules/vxcgc)
 !
 ! NOTE ON PARALLELIZATION:
-! this code is parallelized on atoms, this means that each node compute potential,
+! this code is parallelized on atoms, this means that each node computes potential,
 ! energy, newd coefficients, ddots and \int v \times n on a reduced number of atoms.
 ! The implementation assumes that divisions of atoms among the nodes is done always
 ! in the same way! Doing so we can avoid to allocate the potential for all the atoms
@@ -193,7 +193,7 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
 #endif
         CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
         ! using "energy" as the in/out parameter I save a double call, but I have to do this:
-        IF (present(energy)) energy_xc = energy
+        IF (present(energy)) energy_h = energy
         DO is = 1,nspin ! ... so it has to be copied to all spin components
             saved(i%a)%v(:,:,is,i%w) = v_lm(:,:,1)
         ENDDO
@@ -204,7 +204,7 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
 #else
         ! Than the XC one:
         CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
-        IF (present(energy)) energy_h = energy
+        IF (present(energy)) energy_xc = energy
         saved(i%a)%v(:,:,:,i%w) = saved(i%a)%v(:,:,:,i_what) &
                                 + v_lm(:,:,:)
 #endif
@@ -578,7 +578,7 @@ SUBROUTINE PAW_init()
 
     ! initialize for integration on angular momentum and gradient, integrating
     ! up to 2*lmaxq (twice the maximum angular momentum of rho) is enough for
-    ! H energy, and for XC energy. If I have gradient correction I have to go a bit higher
+    ! H energy and for XC energy. If I have gradient correction I have to go a bit higher
     IF ( dft_is_gradient() ) THEN
         CALL PAW_rad_init(2*lmaxq+xlm)
     ELSE

@@ -601,8 +601,8 @@ SUBROUTINE electrons()
         END DO
 #endif
               correction1c = (deband_PAW + descf_PAW + e_PAW)
-              PRINT '(5x,A,f10.6,A)', 'PAW correction: ',correction1c, ', composed of: '
-              PRINT '(5x,A,f10.6,A,f10.6,A,f10.6)',&
+              PRINT '(5x,A,f12.6,A)', 'PAW correction: ',correction1c, ', composed of: '
+              PRINT '(5x,A,f10.6,A,f10.6,A,f12.6)',&
                  'de_band: ',deband_PAW,', de_scf: ',descf_PAW,', 1-center E: ', e_PAW
               IF (really_do_paw) THEN
                   etot = etot + correction1c

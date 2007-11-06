@@ -193,6 +193,8 @@ END MODULE ktetra
 !
 MODULE symme
   !
+  USE kinds,      ONLY : DP
+  !
   ! ... The variables needed to describe the symmetry properties
   !  
   SAVE
@@ -207,6 +209,11 @@ MODULE symme
        irt(:,:)                 ! symmetric atom for each atom and sym.op.
   LOGICAL :: &
        invsym                   ! if .TRUE. the system has inversion symmetry
+  REAL(DP) :: &
+       d1(3,3,48),           &! matrices for rotating spherical
+       d2(5,5,48),           &! harmonics (d1 for l=1, ...)
+       d3(7,7,48)             !
+
   !
 END MODULE symme
 
@@ -462,9 +469,6 @@ MODULE ldaU
        ns(:,:,:,:),          &! the occupation matrix used in h_psi
        nsnew(:,:,:,:)         ! the occupation matrix computed by at
   REAL(DP) :: &       
-       d1(3,3,48),           &! matrices for rotating spherical     
-       d2(5,5,48),           &! harmonics                           
-       d3(7,7,48),           &! 
        eth,                  &! the (corrected) Hubbard contribution
        Hubbard_U(ntypx),     &! the Hubbard U
        Hubbard_alpha(ntypx), &! the Hubbard alpha (used to calculate U)

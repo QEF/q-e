@@ -814,9 +814,7 @@ paw_xc.o : exx.o
 paw_xc.o : noncol.o
 paw_xc.o : pwcom.o
 potinit.o : ../Modules/cell_base.o
-potinit.o : ../Modules/constants.o
 potinit.o : ../Modules/control_flags.o
-potinit.o : ../Modules/functionals.o
 potinit.o : ../Modules/grid_paw_variables.o
 potinit.o : ../Modules/io_files.o
 potinit.o : ../Modules/io_global.o
@@ -1248,7 +1246,6 @@ sum_band.o : ../Modules/wavefunctions.o
 sum_band.o : buffers.o
 sum_band.o : noncol.o
 sum_band.o : pwcom.o
-sum_band.o : realus.o
 sum_band.o : scf_mod.o
 sumkg.o : ../Modules/kind.o
 sumkt.o : ../Modules/kind.o

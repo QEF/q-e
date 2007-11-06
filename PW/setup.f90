@@ -60,7 +60,7 @@ SUBROUTINE setup()
   USE electrons_base,     ONLY : set_nelup_neldw
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
-  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym
+  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, d1,d2,d3
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
@@ -70,7 +70,7 @@ SUBROUTINE setup()
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf
   USE uspp,               ONLY : okvan
-  USE ldaU,               ONLY : d1, d2, d3, lda_plus_u, Hubbard_U, &
+  USE ldaU,               ONLY : lda_plus_u, Hubbard_U, &
                                  Hubbard_l, Hubbard_alpha, Hubbard_lmax
   USE bp,                 ONLY : gdir, lberry, nppstr
   USE fixed_occ,          ONLY : f_inp, tfixed_occ
@@ -700,7 +700,7 @@ SUBROUTINE setup()
   okvan = ANY( upf(:)%tvanp )
   okpaw = ANY( tpawp(1:ntyp) )
   !
-  ! ... Needed for LDA+U
+  ! ... Needed for LDA+U and PAW
   !
   ! ... initialize d1 and d2 to rotate the spherical harmonics
   !
@@ -730,13 +730,13 @@ SUBROUTINE setup()
         CALL errore( 'setup', &
                    & 'lda_plus_u calculation but Hubbard_l not set', 1 )
      !
-     CALL d_matrix( d1, d2, d3 )
-     !
   ELSE
      !
      Hubbard_lmax = 0
      !
   END IF
+  IF (lda_plus_u .or. okpaw ) &
+     CALL d_matrix( d1, d2, d3 )
   !
   RETURN
   !

@@ -117,7 +117,10 @@ SUBROUTINE mix_rho( rhocout, rhocin, taukout, taukin, becout, becin, &
   !
   ! ... external functions
   !
-  REAL(DP), EXTERNAL :: rho_ddot, ns_ddot, tauk_ddot, rho1_ddot
+  REAL(DP), EXTERNAL :: rho_ddot, ns_ddot, tauk_ddot
+#ifdef __GRID_PAW
+  REAL(DP), EXTERNAL :: rho1_ddot
+#endif
   !
   !
   CALL start_clock( 'mix_rho' )
@@ -827,7 +830,7 @@ FUNCTION tauk_ddot( tauk1, tauk2, ngm1, ngm2, nspin, gf )
 END FUNCTION tauk_ddot
 !
 !
-#ifdef __DONT_DO_THAT_THEN
+#ifdef __GRID_PAW
 !----------------------------------------------------------------------------
 FUNCTION rho1_ddot( bec1, bec2 )
   !----------------------------------------------------------------------------
@@ -870,7 +873,7 @@ FUNCTION rho1_ddot( bec1, bec2 )
   INTEGER :: i_what
   REAL(DP):: i_sign
   !
-  rho1_ddot = 0.D0   
+  rho1_ddot = 0._dp
   !
   IF ( .NOT. okpaw ) RETURN
   !

@@ -22,8 +22,8 @@ SUBROUTINE new_ns()
   USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
   USE ldaU,                 ONLY : ns, nsnew, Hubbard_lmax, Hubbard_l, &
-                                   Hubbard_U, Hubbard_alpha, swfcatom, &
-                                   eth, d1, d2, d3
+                                   Hubbard_U, Hubbard_alpha, swfcatom,eth
+  USE symme,                ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symme,                ONLY : nsym, irt
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, gamma_only
