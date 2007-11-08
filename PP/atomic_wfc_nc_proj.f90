@@ -13,9 +13,9 @@ SUBROUTINE atomic_wfc_nc_proj (ik, wfcatom)
   !
   ! This routine computes the superposition of atomic wavefunctions
   ! for k-point "ik" - output in "wfcatom" - noncolinear case only
-  ! If lspinorb=.TRUE. it generates eigenstates of the total angular
-  ! momentum j; otherwise, eigenstates of l, m and s_z (the z-component
-  ! of the spin) are generated.  
+  ! If lspinorb=.TRUE. it makes linear combinations of eigenstates of 
+  ! the atomic total angular momenta j and j_z; otherwise, of eigenstates of 
+  ! the orbital angular momenta l, l_z and of s_z (the z-component of the spin).
   !
   USE kinds,      ONLY : DP
   USE constants,  ONLY : tpi, fpi, pi
