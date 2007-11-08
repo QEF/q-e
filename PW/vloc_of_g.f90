@@ -133,7 +133,7 @@ subroutine vloc_coul (zp, tpiba2, ngl, gl, omega, vloc)
      igl0 = 1
   endif
 
-  vloc (igl0:ngl) = - fpi * e2 / omega / tpiba2 / gl (igl0:ngl)
+  vloc (igl0:ngl) = - fpi * zp *e2 / omega / tpiba2 / gl (igl0:ngl)
 
 return
 end subroutine vloc_coul

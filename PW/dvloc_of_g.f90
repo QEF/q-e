@@ -127,7 +127,7 @@ subroutine dvloc_coul (zp, tpiba2, ngl, gl, omega, dvloc)
      igl0 = 1
   endif
 
-  dvloc  (igl0:ngl) = fpi * e2 / omega / ( tpiba2 * gl (igl0:ngl) ) ** 2
+  dvloc  (igl0:ngl) = fpi * zp * e2 / omega / ( tpiba2 * gl (igl0:ngl) ) ** 2
 
 return
 end subroutine dvloc_coul
