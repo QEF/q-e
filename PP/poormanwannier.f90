@@ -78,20 +78,21 @@ SUBROUTINE projection (first_band, last_band)
   ! 
   USE io_global,  ONLY : stdout 
   USE uspp_param, ONLY : upf 
-  USE ions_base, ONLY : nat, ityp
-  USE basis,     ONLY : natomwfc
+  USE ions_base,  ONLY : nat, ityp
+  USE basis,      ONLY : natomwfc
   USE cell_base
-  USE constants, ONLY: rytoev 
+  USE constants,  ONLY: rytoev 
   USE gvect 
   USE klist 
-  USE ldaU
+  USE ldaU,       ONLY : swfcatom, lda_plus_u, &
+                         Hubbard_lmax, Hubbard_l, Hubbard_alpha, Hubbard_U
   USE lsda_mod 
-  USE symme, ONLY: nsym, irt, d1, d2, d3
+  USE symme,      ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
-  USE uspp, ONLY: nkb, vkb
-  USE becmod,   ONLY: becp, rbecp
-  USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
-                      iunsat, nwordatwfc
+  USE uspp,       ONLY: nkb, vkb
+  USE becmod,     ONLY: becp, rbecp
+  USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
+                        iunsat, nwordatwfc
   USE wavefunctions_module, ONLY: evc 
 
   IMPLICIT NONE 

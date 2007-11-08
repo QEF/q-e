@@ -18,14 +18,19 @@ MODULE scf
   !
   USE lsda_mod,   ONLY : nspin
   USE ldaU,       ONLY : lda_plus_u
-  USE gvect,      ONLY : nrxx, ngm
+  USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
+  USE gsmooth,    ONLY : ngms
   !
   SAVE
   !
-TYPE scf_type
-  REAL(DP),    ALLOCATABLE :: of_r(:,:) ! the charge density in R-space
-  COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
-END TYPE scf_type
+  TYPE scf_type
+     REAL(DP),    ALLOCATABLE :: of_r(:,:) ! the charge density in R-space
+     COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
+  END TYPE scf_type
+  !
+  TYPE mix_type
+    COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
+  END TYPE mix_type
 
   type (scf_type) :: rho
 
@@ -41,25 +46,305 @@ END TYPE scf_type
        kedtaur(:,:)     ! position dependent kinetic energy enhancement factor
                         ! used in META-GGA in real space (dense grid)
   COMPLEX(DP), ALLOCATABLE :: &
-!       rhog(:,:),      &! the charge density in reciprocal space
        rhog_core(:),   &! the core charge in reciprocal space
        taukg(:,:)       ! the kinetic energy density in reciprocal space
 
+  INTEGER  :: record_length 
+  REAL(DP), ALLOCATABLE :: io_buffer(:)
+
 CONTAINS
 
- subroutine create_scf_type ( rho )
- type (scf_type) :: rho
+ SUBROUTINE create_scf_type ( rho )
+ IMPLICIT NONE
+ TYPE (scf_type) :: rho
  allocate ( rho%of_r( nrxx, nspin) )
  allocate ( rho%of_g( ngm, nspin ) )
-
  return
- end subroutine  create_scf_type
+ END SUBROUTINE create_scf_type
 
- subroutine destroy_scf_type ( rho )
- type (scf_type) :: rho
+ SUBROUTINE destroy_scf_type ( rho )
+ IMPLICIT NONE
+ TYPE (scf_type) :: rho
  if (allocated(rho%of_r)) deallocate(rho%of_r)
  if (allocated(rho%of_g)) deallocate(rho%of_g)
  return
- end subroutine destroy_scf_type
+ END SUBROUTINE destroy_scf_type
+ !
+ SUBROUTINE create_mix_type ( rho )
+ TYPE (mix_type) :: rho
+ allocate ( rho%of_g( ngms, nspin ) )
+ return
+ END SUBROUTINE create_mix_type
+
+ SUBROUTINE destroy_mix_type ( rho )
+ IMPLICIT NONE
+ TYPE (mix_type) :: rho
+ if (allocated(rho%of_g)) deallocate(rho%of_g)
+ return
+ END SUBROUTINE destroy_mix_type
+ !
+ subroutine assign_scf_to_mix_type(rho_s, rho_m)
+ IMPLICIT NONE
+ TYPE (scf_type), INTENT(IN)  :: rho_s
+ TYPE (mix_type), INTENT(INOUT) :: rho_m
+ rho_m%of_g(:,:) = rho_s%of_g(1:ngms,:)
+ return
+ end subroutine assign_scf_to_mix_type
+ !
+ subroutine assign_mix_to_scf_type(rho_m, rho_s)
+   USE wavefunctions_module, ONLY : psic
+   USE wvfct,                ONLY : gamma_only
+   USE gvect,                ONLY : nl, nlm
+   IMPLICIT NONE
+   TYPE (mix_type), INTENT(IN) :: rho_m
+   TYPE (scf_type), INTENT(INOUT) :: rho_s
+   INTEGER :: is
+   rho_s%of_g(1:ngms,:) = rho_m%of_g(:,:)
+   ! define rho_s%of_r 
+   DO is = 1, nspin
+      psic(:) = ( 0.D0, 0.D0 )
+      psic(nl(:)) = rho_s%of_g(:,is)
+      IF ( gamma_only ) psic(nlm(:)) = CONJG( rho_s%of_g(:,is) )
+      CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+      rho_s%of_r(:,is) = psic(:)
+   END DO
+   return
+ end subroutine assign_mix_to_scf_type
+ !
+ !----------------------------------------------------------------------------
+ subroutine mix_type_AXPY (A,X,Y)
+  !----------------------------------------------------------------------------
+  ! works like DAXPY for scf_type variables :  Y = A * X + Y
+  ! NB: A is a REAL(DP) number
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  REAL(DP)                      :: A
+  TYPE(mix_type), INTENT(IN)    :: X
+  TYPE(mix_type), INTENT(INOUT) :: Y
+  Y%of_g = Y%of_g + A * X%of_g
+  !
+  RETURN
+ END SUBROUTINE mix_type_AXPY
+ !
+ subroutine high_frequency_mixing ( rhoin, input_rhout, alphamix )
+   USE wavefunctions_module, ONLY : psic
+   USE wvfct,                ONLY : gamma_only
+   USE gvect,                ONLY : nl, nlm
+ IMPLICIT NONE
+   TYPE (scf_type), INTENT(INOUT)     :: rhoin
+   TYPE (scf_type), INTENT(IN)  :: input_rhout
+   REAL(DP), INTENT(IN) :: alphamix
+   INTEGER :: is
+   if (ngms < ngm ) then
+      rhoin%of_g = rhoin%of_g + alphamix * ( input_rhout%of_g-rhoin%of_g)
+      rhoin%of_g(1:ngms,nspin) = (0.d0,0.d0)
+      ! define rho_s%of_r 
+      DO is = 1, nspin
+         psic(:) = ( 0.D0, 0.D0 )
+         psic(nl(:)) = rhoin%of_g(:,is)
+         IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%of_g(:,is) )
+         CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+         rhoin%of_r(:,is) = psic(:)
+      END DO
+   else
+      rhoin%of_g(:,:)= (0.d0,0.d0)
+      rhoin%of_r(:,:)= 0.d0
+   endif
+   return
+ end subroutine high_frequency_mixing 
+
+ subroutine diropn_mix_file( iunit, extension, exst )
+ implicit none
+ character(len=*), intent(in) :: extension
+ integer, intent(in) :: iunit
+ logical :: exst
+ record_length = 2 * ngms * nspin
+ call diropn ( iunit, extension, record_length, exst)
+ allocate (io_buffer(record_length))
+ return
+ end subroutine diropn_mix_file
+ !
+ subroutine close_mix_file( iunit )
+ implicit none
+ integer, intent(in) :: iunit
+ deallocate (io_buffer)
+ close(iunit,status='keep')
+ return
+ end subroutine close_mix_file
+
+ subroutine davcio_mix_type( rho, iunit, record, iflag )
+ implicit none
+ type (mix_type) :: rho
+ integer, intent(in) :: iunit, record, iflag
+ if (iflag > 0) call DCOPY(2*ngms*nspin,rho%of_g,1,io_buffer,1)
+ CALL davcio( io_buffer, record_length, iunit, record, iflag )
+ if (iflag < 0) call DCOPY(2*ngms*nspin,io_buffer,1,rho%of_g,1)
+ return
+ end subroutine davcio_mix_type
+
+ !
+ !----------------------------------------------------------------------------
+ FUNCTION rho_ddot( rho1, rho2, gf )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates 4pi/G^2*rho1(-G)*rho2(G) = V1_Hartree(-G)*rho2(G)
+  ! ... used as an estimate of the self-consistency error on the energy
+  !
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : e2, tpi, fpi
+  USE cell_base,     ONLY : omega, tpiba2
+  USE gvect,         ONLY : gg, gstart
+  USE wvfct,         ONLY : gamma_only
+  !
+  IMPLICIT NONE
+  !
+  type(mix_type), INTENT(IN) :: rho1, rho2
+  INTEGER,        INTENT(IN) :: gf
+  REAL(DP)                :: rho_ddot
+  !
+  REAL(DP) :: fac
+  INTEGER  :: ig
+  !
+  fac = e2 * fpi / tpiba2
+  !
+  rho_ddot = 0.D0
+  !
+  IF ( nspin == 1 ) THEN
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1) ) / gg(ig)
+        !
+     END DO
+     !
+     rho_ddot = fac*rho_ddot
+     !
+     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+     !
+  ELSE IF ( nspin == 2 ) THEN
+     !
+     ! ... first the charge
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(ig,1)+rho1%of_g(ig,2) ) * &
+                              ( rho2%of_g(ig,1)+rho2%of_g(ig,2) ) ) / gg(ig)
+        !
+     END DO
+     !
+     rho_ddot = fac*rho_ddot
+     !
+     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+     !
+     ! ... then the magnetization
+     !
+     fac = e2 * fpi / tpi**2  ! lambda = 1 a.u.
+     !
+     ! ... G=0 term
+     !
+     IF ( gstart == 2 ) THEN
+        !
+        rho_ddot = rho_ddot + &
+                   fac * REAL( CONJG( rho1%of_g(1,1) - rho1%of_g(1,2) ) * &
+                                    ( rho2%of_g(1,1) - rho2%of_g(1,2) ) )
+        !
+     END IF
+     !
+     IF ( gamma_only ) fac = 2.D0 * fac
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   fac * REAL( CONJG( rho1%of_g(ig,1) - rho1%of_g(ig,2) ) * &
+                                    ( rho2%of_g(ig,1) - rho2%of_g(ig,2) ) )
+        !
+     END DO
+     !
+  ELSE IF ( nspin == 4 ) THEN
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1) ) / gg(ig)
+        !
+     END DO
+     !
+     rho_ddot = fac*rho_ddot
+     !
+     IF ( gamma_only ) rho_ddot = 2.D0 * rho_ddot
+     !
+     fac = e2*fpi / (tpi**2)  ! lambda=1 a.u.
+     !
+     IF ( gstart == 2 ) THEN
+        !
+        rho_ddot = rho_ddot + &
+                   fac * ( REAL( CONJG( rho1%of_g(1,2))*(rho2%of_g(1,2) ) ) + &
+                           REAL( CONJG( rho1%of_g(1,3))*(rho2%of_g(1,3) ) ) + &
+                           REAL( CONJG( rho1%of_g(1,4))*(rho2%of_g(1,4) ) ) )
+        !
+     END IF
+     !
+     IF ( gamma_only ) fac = 2.D0 * fac
+     !
+     DO ig = gstart, gf
+        !
+        rho_ddot = rho_ddot + &
+                   fac *( REAL( CONJG( rho1%of_g(ig,2))*(rho2%of_g(ig,2) ) ) + &
+                          REAL( CONJG( rho1%of_g(ig,3))*(rho2%of_g(ig,3) ) ) + &
+                          REAL( CONJG( rho1%of_g(ig,4))*(rho2%of_g(ig,4) ) ) )
+        !
+     END DO
+     !
+  END IF
+  !
+  rho_ddot = rho_ddot * omega * 0.5D0
+  !
+  CALL reduce( 1, rho_ddot )
+  !
+  RETURN
+  !
+ END FUNCTION rho_ddot
+ !
+ !----------------------------------------------------------------------------
+ FUNCTION local_tf_ddot( rho1, rho2, ngm0 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates 4pi/G^2*rho1(-G)*rho2(G) = V1_Hartree(-G)*rho2(G)
+  ! ... used as an estimate of the self-consistency error on the energy
+  !
+  USE kinds,         ONLY : DP
+  USE constants,     ONLY : e2, fpi
+  USE cell_base,     ONLY : omega, tpiba2
+  USE gvect,         ONLY : gg, gstart
+  USE wvfct,         ONLY : gamma_only
+  !
+  IMPLICIT NONE
+  !
+  INTEGER, INTENT(IN)     :: ngm0
+  COMPLEX(DP), INTENT(IN) :: rho1(ngm0), rho2(ngm0)
+  REAL(DP)                :: local_tf_ddot
+  !
+  REAL(DP) :: fac
+  INTEGER  :: ig
+  !
+  local_tf_ddot = 0.D0
+  !
+  fac = e2 * fpi / tpiba2
+  !
+  DO ig = gstart, ngm0
+     local_tf_ddot = local_tf_ddot + REAL( CONJG(rho1(ig))*rho2(ig) ) / gg(ig)
+  END DO
+  !
+  local_tf_ddot = fac * local_tf_ddot * omega * 0.5D0
+  !
+  IF ( gamma_only ) local_tf_ddot = 2.D0 * local_tf_ddot
+  !
+  CALL reduce( 1, local_tf_ddot )
+  !
+  RETURN
+  !
+ END FUNCTION local_tf_ddot
  !
 END MODULE scf

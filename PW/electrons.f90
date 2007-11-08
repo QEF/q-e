@@ -332,18 +332,15 @@ SUBROUTINE electrons()
            becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
-        CALL mix_rho( rho%of_g, rhoin%of_g, taukg, taukgin, becnew, becstep, &
+        CALL mix_rho( rho, rhoin, taukg, taukgin, becnew, becstep, &
               nsnew, ns, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
-        ! ... (tr2_min), rhoin%of_g and rho%of_g are unchanged: rhoin%of_g 
-        ! ... contains the input density and rho%of_g contains the output 
-        ! ... density, both in G-space.
-        ! ... In the other cases rhoin%of_g now contains mixed charge density 
-        ! ... (the new input density) in G-space. In this case
-        ! NB: In this later case mix_rho leaves out-of-sync rho(in)%of_r and 
-        !     rho(in)%of_g. This should be fixed as it is error-prone.
+        ! ... (tr2_min), rhoin and rho are unchanged: rhoin contains the input
+        ! ...  density and rho contains the output density
+        ! ... In the other cases rhoin contains the mixed charge density 
+        ! ... (the new input density) while rho is unchanged
         !
         IF ( okpaw )         DEALLOCATE (becnew)
         !
@@ -373,21 +370,7 @@ SUBROUTINE electrons()
         IF ( .NOT. conv_elec ) THEN
            !
            ! ... synchronize R- and G- components of the mixed charge density 
-           !
-           DO is = 1, nspin
-              !
-              ! use psic as working array
-              psic(:) = ( 0.D0, 0.D0 )
-              !
-              psic(nl(:)) = rhoin%of_g(:,is)
-              !
-              IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%of_g(:,is) )
-              !
-              CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-              !
-              rhoin%of_r(:,is) = psic(:)
-              !
-           END DO
+           ! ... it is already so in mixrho
            !
            ! the same for the kinetic energy density (taukin)
            !

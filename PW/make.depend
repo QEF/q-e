@@ -690,12 +690,14 @@ mix_rho.o : ../Modules/control_flags.o
 mix_rho.o : ../Modules/functionals.o
 mix_rho.o : ../Modules/grid_paw_variables.o
 mix_rho.o : ../Modules/io_files.o
+mix_rho.o : ../Modules/io_global.o
 mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
 mix_rho.o : ../Modules/uspp.o
 mix_rho.o : ../Modules/wavefunctions.o
 mix_rho.o : pwcom.o
 mix_rho.o : rad_paw_routines.o
+mix_rho.o : scf_mod.o
 mode_group.o : ../Modules/constants.o
 mode_group.o : ../Modules/kind.o
 move_ions.o : ../Modules/basic_algebra_routines.o
@@ -785,7 +787,9 @@ paw_xc.o : exx.o
 paw_xc.o : noncol.o
 paw_xc.o : pwcom.o
 potinit.o : ../Modules/cell_base.o
+potinit.o : ../Modules/constants.o
 potinit.o : ../Modules/control_flags.o
+potinit.o : ../Modules/functionals.o
 potinit.o : ../Modules/grid_paw_variables.o
 potinit.o : ../Modules/io_files.o
 potinit.o : ../Modules/io_global.o
@@ -1068,7 +1072,10 @@ scale_h.o : ../Modules/cell_base.o
 scale_h.o : ../Modules/io_global.o
 scale_h.o : ../Modules/ions_base.o
 scale_h.o : pwcom.o
+scf_mod.o : ../Modules/cell_base.o
+scf_mod.o : ../Modules/constants.o
 scf_mod.o : ../Modules/kind.o
+scf_mod.o : ../Modules/wavefunctions.o
 scf_mod.o : pwcom.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
@@ -1216,6 +1223,7 @@ sum_band.o : ../Modules/wavefunctions.o
 sum_band.o : buffers.o
 sum_band.o : noncol.o
 sum_band.o : pwcom.o
+sum_band.o : realus.o
 sum_band.o : scf_mod.o
 sumkg.o : ../Modules/kind.o
 sumkt.o : ../Modules/kind.o
