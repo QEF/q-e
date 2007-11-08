@@ -141,14 +141,14 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !       The local density of states at e_fermi on output
      !
      if (noncolin) call errore('punch_plot','not implemented yet',1)
-     CALL local_dos (1, lsign, kpoint, kband, emin, emax, raux)
+     CALL local_dos (1, lsign, kpoint, kband, spin_component, emin, emax, raux)
 
   ELSEIF (plot_num == 4) THEN
      !
      !       The local density of electronic entropy on output
      !
      if (noncolin) call errore('punch_plot','not implemented yet',1)
-     CALL local_dos (2, lsign, kpoint, kband, emin, emax, raux)
+     CALL local_dos (2, lsign, kpoint, kband, spin_component, emin, emax, raux)
 
   ELSEIF (plot_num == 5) THEN
 
@@ -184,12 +184,12 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
      IF (noncolin) THEN
         IF (spin_component==0) THEN
-           CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
+           CALL local_dos (0, lsign, kpoint, kband, spin_component, emin, emax, raux)
         ELSE
            CALL local_dos_mag (spin_component, kpoint, kband, raux)
         ENDIF
      ELSE
-        CALL local_dos (0, lsign, kpoint, kband, emin, emax, raux)
+        CALL local_dos (0, lsign, kpoint, kband, spin_component, emin, emax, raux)
      END IF
   ELSEIF (plot_num == 8) THEN
 
@@ -203,7 +203,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
 
   ELSEIF (plot_num == 10) THEN
 
-     CALL local_dos (3, lsign, kpoint, kband, emin, emax, raux)
+     CALL local_dos (3, lsign, kpoint, kband, spin_component, emin, emax, raux)
 
   ELSEIF (plot_num == 11) THEN
 

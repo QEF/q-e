@@ -145,12 +145,15 @@ SUBROUTINE extract (filplot,plot_num)
   IF (plot_num < 0 .OR. plot_num > 16) CALL errore ('postproc', &
           'Wrong plot_num', ABS (plot_num) )
 
-  IF (plot_num == 13) THEN
+  IF (plot_num == 7 .OR. plot_num == 13) THEN
      IF  (spin_component < 0 .OR. spin_component > 3) CALL errore &
           ('postproc', 'wrong spin_component', 1)
+  ELSE IF (plot_num == 10) THEN
+     IF  (spin_component < 0 .OR. spin_component > 2) CALL errore &
+          ('postproc', 'wrong spin_component', 2)
   ELSE
      IF (spin_component < 0 ) CALL errore &
-         ('postproc', 'wrong value of spin_component', 1)
+         ('postproc', 'wrong spin_component', 3)
   END IF
   !
   !   Now allocate space for pwscf variables, read and check them.

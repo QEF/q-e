@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,15 +8,21 @@
 #include "f_defs.h"
 !
 !--------------------------------------------------------------------
-subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
+subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
+                      emin, emax, dos)
   !--------------------------------------------------------------------
   !
-  !     iflag=0: calculates |psi|^2 for band kband at point kpoint
+  !     iflag=0: calculates |psi|^2 for band "kband" at point "kpoint"
   !     iflag=1: calculates the local density of state at e_fermi
   !              (only for metals)
   !     iflag=2: calculates the local density of  electronic entropy
   !              (only for metals with fermi spreading)
-  !     iflag=3: calculates the integral of local dos from emin to emax
+  !     iflag=3: calculates the integral of local dos from "emin" to "emax"
+  !              (emin, emax in Ry)
+  !
+  !     lsign:   if true and k=gamma and iflag=0, write |psi|^2 * sign(psi)
+  !     spin_component: for iflag=3 and LSDA calculations only
+  !                     0 for up+down dos,  1 for up dos, 2 for down dos
   !
   USE kinds,                ONLY : DP
   USE cell_base,            ONLY : omega, tpiba2
@@ -45,14 +51,11 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
   !
   ! input variables
   !
-  integer :: iflag, kpoint, kband
+  integer, intent(in) :: iflag, kpoint, kband, spin_component
+  logical, intent(in) :: lsign
+  real(DP), intent(in) :: emin, emax
   !
-  real(DP) :: emin, emax
-  ! output as determined by iflag
-  real(DP) :: dos (nrxx)
-
-  logical :: lsign    ! if true and k=gamma and iflag=0 
-                      ! write |psi|^2 * sign(psi)
+  real(DP), intent(out) :: dos (nrxx)
   !
   !    local variables
   !
@@ -360,9 +363,13 @@ subroutine local_dos (iflag, lsign, kpoint, kband, emin, emax, dos)
      is = 1 
      dos(:) = rho%of_r (:, is)
   else
-     isup = 1
-     isdw = 2
-     dos(:) = rho%of_r (:, isup) + rho%of_r (:, isdw)
+     IF ( iflag==3 .AND. (spin_component==1 .OR. spin_component==2 ) ) THEN
+        dos(:) = rho%of_r (:, spin_component)
+     ELSE
+        isup = 1
+        isdw = 2
+        dos(:) = rho%of_r (:, isup) + rho%of_r (:, isdw)
+     END IF
   end if
   if (lsign) then
      dos(:) = dos(:) * segno(:)
