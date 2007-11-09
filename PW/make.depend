@@ -520,6 +520,7 @@ grid_paw_routines.o : ../Modules/uspp.o
 grid_paw_routines.o : ../Modules/wavefunctions.o
 grid_paw_routines.o : noncol.o
 grid_paw_routines.o : pwcom.o
+grid_paw_routines.o : rad_paw_routines.o
 grid_paw_routines.o : scf_mod.o
 gweights.o : ../Modules/kind.o
 h_1psi.o : ../Modules/kind.o
@@ -878,6 +879,7 @@ qvan2.o : ../Modules/uspp.o
 qvan2.o : pwcom.o
 rad_paw_routines.o : ../Modules/atom.o
 rad_paw_routines.o : ../Modules/constants.o
+rad_paw_routines.o : ../Modules/control_flags.o
 rad_paw_routines.o : ../Modules/functionals.o
 rad_paw_routines.o : ../Modules/grid_paw_variables.o
 rad_paw_routines.o : ../Modules/ions_base.o
@@ -1213,6 +1215,7 @@ struct_fact.o : ../Modules/kind.o
 sum_band.o : ../Modules/cell_base.o
 sum_band.o : ../Modules/control_flags.o
 sum_band.o : ../Modules/functionals.o
+sum_band.o : ../Modules/grid_paw_variables.o
 sum_band.o : ../Modules/io_files.o
 sum_band.o : ../Modules/ions_base.o
 sum_band.o : ../Modules/kind.o
@@ -1223,6 +1226,7 @@ sum_band.o : ../Modules/wavefunctions.o
 sum_band.o : buffers.o
 sum_band.o : noncol.o
 sum_band.o : pwcom.o
+sum_band.o : rad_paw_routines.o
 sum_band.o : realus.o
 sum_band.o : scf_mod.o
 sumkg.o : ../Modules/kind.o

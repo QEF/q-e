@@ -209,11 +209,10 @@ MODULE symme
        irt(:,:)                 ! symmetric atom for each atom and sym.op.
   LOGICAL :: &
        invsym                   ! if .TRUE. the system has inversion symmetry
-  REAL(DP) :: &
+  REAL(DP),TARGET :: &
        d1(3,3,48),           &! matrices for rotating spherical
        d2(5,5,48),           &! harmonics (d1 for l=1, ...)
        d3(7,7,48)             !
-
   !
 END MODULE symme
 

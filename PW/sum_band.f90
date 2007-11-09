@@ -43,6 +43,8 @@ SUBROUTINE sum_band()
                                    root_image, npool, my_pool_id
   USE mp,                   ONLY : mp_bcast
   USE funct,                ONLY : dft_is_meta
+  USE rad_paw_routines,     ONLY : PAW_symmetrize
+  USE grid_paw_variables,   ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -109,6 +111,7 @@ SUBROUTINE sum_band()
      CALL sum_band_k()
      !
   END IF    
+  !
   !
   ! ... If a double grid is used, interpolate onto the fine grid
   !
@@ -186,6 +189,12 @@ SUBROUTINE sum_band()
   END IF
   !
 #endif
+  ! ... Needed for PAW: becsum has to be symmetrized so that they reflect a real integral
+  ! in k-space, not only on the irreducible zone. For USPP there is no need to do this as
+  ! becsums are only used to compute the density, which is symmetrized later.
+  !
+  IF ( okpaw ) CALL PAW_symmetrize(becsum)
+  !
   if (dft_is_meta() ) deallocate (kplusg)
   !
   ! ... synchronize rho%of_g to the calculated rho%of_r

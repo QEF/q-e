@@ -39,6 +39,7 @@ SUBROUTINE atomic_becsum()
   USE ions_base,          ONLY : nat, ityp
   USE lsda_mod,           ONLY : nspin, starting_magnetization
   USE grid_paw_variables, ONLY : tpawp, okpaw
+  USE rad_paw_routines,   ONLY : PAW_symmetrize
   IMPLICIT NONE
   INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
   !
@@ -68,7 +69,8 @@ SUBROUTINE atomic_becsum()
            END IF
            ijh = ijh + 1
            !
-           jh_loop: DO jh = ( ih + 1 ), nh(nt)
+           jh_loop: &
+            DO jh = ( ih + 1 ), nh(nt)
               !mb = indv(jh,nt)
               DO ispin = 1, nspin
                  becsum(ijh,na,ispin) = 0._DP
@@ -83,6 +85,8 @@ SUBROUTINE atomic_becsum()
 #if defined __DEBUG_ATOMIC_BECSUM
   PRINT '(1f20.10)', becsum(:,1,1)
 #endif
+
+    CALL PAW_symmetrize(becsum)
 
 END SUBROUTINE atomic_becsum
 

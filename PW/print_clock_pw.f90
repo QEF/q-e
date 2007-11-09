@@ -200,6 +200,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock ('PAW_ddot')
       CALL print_clock ('PAW_rad_init')
       CALL print_clock ('PAW_energy')
+      CALL print_clock ('PAW_symme')
       ! second level routines:
       CALL print_clock ('PAW_rho_lm')
       CALL print_clock ('PAW_h_pot')

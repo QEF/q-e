@@ -54,12 +54,13 @@ MODULE rad_paw_routines
     IMPLICIT NONE
 
     ! entry points:
-    PUBLIC :: PAW_potential ! prepare paw potential and store it,
-                            ! also computes energy if required
-    PUBLIC :: PAW_integrate ! computes \int v(r) \times n(r) dr
-    PUBLIC :: PAW_ddot      ! error estimate for mix_rho
-    PUBLIC :: PAW_init      ! initialize
-    PUBLIC :: PAW_newd      ! computes descreening coefficients
+    PUBLIC :: PAW_potential  ! prepare paw potential and store it,
+                             ! also computes energy if required
+    PUBLIC :: PAW_integrate  ! computes \int v(r) \times n(r) dr
+    PUBLIC :: PAW_ddot       ! error estimate for mix_rho
+    PUBLIC :: PAW_init       ! initialize
+    PUBLIC :: PAW_newd       ! computes descreening coefficients
+    PUBLIC :: PAW_symmetrize ! symmetrize becsums
     !
     PRIVATE
     SAVE
@@ -233,6 +234,167 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
 
 END SUBROUTINE PAW_potential
 
+SUBROUTINE PAW_symmetrize(becsum)
+    USE kinds,                  ONLY : DP
+    USE lsda_mod,               ONLY : nspin
+    USE uspp_param,             ONLY : nhm, lmaxq
+    USE ions_base,              ONLY : nat, ityp
+    USE symme,                  ONLY : nsym, irt, d1, d2, d3
+    USE uspp,                   ONLY : nhtolm,nhtol
+    USE uspp_param,             ONLY : nh
+    USE grid_paw_variables,     ONLY : tpawp
+    USE wvfct,                  ONLY : gamma_only
+    USE control_flags,          ONLY : nosym
+
+    REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
+
+    REAL(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin)! symmetrized becsum
+!    REAL(DP)                :: bectwo(nhm*(nhm+1)/2,nat,nspin)! twice symmetrized becsum
+
+    INTEGER :: is, na, nt   ! counters on spin, atom, atom-type
+    INTEGER :: ma           ! atom symmetric to na
+    INTEGER :: ih,jh, ijh   ! counters for augmentation channels
+    INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
+               l_i, l_j, m_i, m_j
+    INTEGER :: p_i, p_j     ! projector indexes of ih and jh (tricky!)
+    INTEGER :: m_o, m_u     ! counters for sums on m
+    INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
+    INTEGER :: isym         ! counter for symmetry operation
+    CHARACTER(len=8) :: do_symme
+
+    ! The following mess is necessary because the symmetrization operation
+    ! in LDA+U code is simpler than in PAW, so the required quantities are
+    ! represented in a simple but not general way.
+    ! I will fix this when everything works.
+    REAL(DP), TARGET :: d0(1,1,48)
+    TYPE symmetryzation_tensor
+        REAL(DP),POINTER :: d(:,:,:)
+    END TYPE symmetryzation_tensor
+    TYPE(symmetryzation_tensor) :: D(0:3)
+    d0(1,1,:) = 1._dp
+    D(0)%d => d0 ! d0(1,1,48)
+    D(1)%d => d1 ! d1(3,3,48)
+    D(2)%d => d2 ! d2(5,5,48)
+    D(3)%d => d3 ! d3(7,7,48)
+
+! => lm = l**2 + m
+! => ih = lm + (l+proj)**2  <-- if proj starts from zero!
+!       = lm + proj**2 + 2*l*proj
+!       = m + l**2 + proj**2 + 2*l*proj
+!        ^^^
+! Known ih and m_i I can compute the index oh of a different m = m_o but
+! the same augmentation channel (l_i = l_o, proj_i = proj_o):
+!
+! oh = ih - m_i + m_o
+#define __DEBUG_PAW_SYM
+#ifdef __DEBUG_PAW_SYM
+        nt = 1
+        na = 1
+        is = 1
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            IF (jh > ih) THEN
+                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ELSE
+                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
+            ENDIF
+            write(*,"(1f10.5)", advance='no') becsum(ijh,na,is)
+        ENDDO
+            write(*,*)
+        ENDDO
+#endif
+
+    IF( gamma_only .or. nosym ) RETURN
+
+    CALL start_clock('PAW_symme')
+
+    becsym(:,:,:) = 0._dp
+
+    DO is = 1, nspin
+    DO na = 1, nat
+        nt = ityp(na)
+        ! No need to symmetrize non-PAW atoms
+        IF ( .not. tpawp(nt) ) CYCLE
+        !
+        DO ih = 1, nh(nt)
+        DO jh = ih, nh(nt) ! note: jh >= ih
+            ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            !
+            lm_i  = nhtolm(ih,nt)
+            lm_j  = nhtolm(jh,nt)
+            !
+            l_i   = nhtol(ih,nt)
+            l_j   = nhtol(jh,nt)
+            !
+            m_i   = lm_i - l_i**2
+            m_j   = lm_j - l_j**2
+            !
+            DO isym = 1,nsym
+                ma = irt(isym,na)
+                DO m_o = 1, 2*l_i +1
+                DO m_u = 1, 2*l_j +1
+                    oh = ih - m_i + m_o
+                    uh = jh - m_j + m_u
+                    IF ( oh >= uh ) THEN
+                        ouh = nh(nt)*(uh-1) - uh*(uh-1)/2 + oh
+                    ELSE
+                        ouh = nh(nt)*(oh-1) - oh*(oh-1)/2 + uh
+                    ENDIF
+                    !
+                    becsym(ijh, na, is) = becsym(ijh, na, is) &
+                        + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &
+                          * becsum(ouh, ma, is) / nsym
+                ENDDO ! m_o
+                ENDDO ! m_u
+            ENDDO ! isym
+        ENDDO ! ih
+        ENDDO ! jh
+    ENDDO ! nat
+    ENDDO ! nspin
+
+#define __DEBUG_PAW_SYM
+#ifdef __DEBUG_PAW_SYM
+        nt = 1
+        na = 1
+        is = 1
+            write(*,*)
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            IF (jh > ih) THEN
+                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ELSE
+                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
+            ENDIF
+            write(*,"(1f10.5)", advance='no') becsym(ijh,na,is)
+        ENDDO
+            write(*,*)
+        ENDDO
+            write(*,*)
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            IF (jh > ih) THEN
+                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ELSE
+                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
+            ENDIF
+            write(*,"(1f10.5)", advance='no') becsym(ijh,na,is)-becsum(ijh,na,is)
+        ENDDO
+            write(*,*)
+        ENDDO
+        write(*,*) "________________________________________________"
+#endif
+
+    ! Apply symmetrization:
+    CALL get_environment_variable('DO_SYMME', do_symme)
+    IF (trim(do_symme)=='.false.') THEN
+        write(*,*) "**** skipping PAW symmetrization!"
+    ELSE
+        becsum(:,:,:) = becsym(:,:,:)
+    ENDIF
+
+    CALL stop_clock('PAW_symme')
+
+END SUBROUTINE PAW_symmetrize
 
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
@@ -1349,6 +1511,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     ! This subroutine computes the angular momentum components of rho
     ! using the following formula:
     !   rho(\vec{r}) = \sum_{LM} Y_{LM} \sum_{i,j} (\hat{r}) a_{LM}^{(lm)_i(lm)_j} becsum_ij pfunc_ij(r)
+    ! where a_{LM}^{(lm)_i(lm)_j} are the Clebsh-Gordan coefficients.
     !
     ! actually different angular momentum components are stored separately:
     !   rho^{LM}(\vec{r}) = \sum_{i,j} (\hat{r}) a_{LM}^{(lm)_i(lm)_j} becsum_ij pfunc_ij(r)
