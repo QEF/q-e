@@ -982,6 +982,7 @@
         INTEGER :: ierr, nrcv
         INTEGER :: msglen
 
+        msglen=0
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
