@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2006 Quantum-ESPRESSO group
+! Copyright (C) 2002-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -48,18 +48,18 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   !
   ! ... First the I/O variable
   !
-  INTEGER :: &
-    iter,        &!  (in) counter of the number of iterations
-    n_iter        !  (in) numb. of iterations used in mixing
-  REAL(DP) :: &
-    alphamix ,   &! (in) mixing factor
-    dr2           ! (out) the estimated errr on the energy
-  REAL(DP) :: &
+  INTEGER, INTENT(IN) :: &
+    iter,        &!  counter of the number of iterations
+    n_iter        !  numb. of iterations used in mixing
+  REAL(DP), INTENT(IN) :: &
+    alphamix,    &! mixing factor
     tr2_min       ! estimated error in diagonalization. If the estimated
                   ! scf error is smaller than this, exit: a more accurate 
                   ! diagonalization is needed
-  LOGICAL :: &
-    conv          ! (out) .true. if the convergence has been reached
+  REAL(DP), INTENT(OUT) :: &
+    dr2           ! the estimated errr on the energy
+  LOGICAL, INTENT(OUT) :: &
+    conv          ! .true. if the convergence has been reached
 
   type(scf_type), intent(in)    :: input_rhout
   REAL(DP),    intent(in)    :: input_becout(nhm*(nhm+1)/2,nat,nspin), &! PAW
@@ -147,7 +147,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   call mix_type_AXPY ( -1.d0, rhoin_m, rhout )
   IF ( lda_plus_u ) nsout(:,:,:,:) = input_nsout(:,:,:,:) - nsin(:,:,:,:)
   IF ( okpaw )      becout(:,:,:)  = input_becout(:,:,:)  - becin(:,:,:) !PAW
- 
   !
   dr2 = rho_ddot( rhout, rhout, ngms )  !!!! this used to be ngm NOT ngms
   IF ( lda_plus_u ) dr2 = dr2 + ns_ddot( nsout, nsout, nspin )

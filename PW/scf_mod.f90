@@ -55,7 +55,6 @@ MODULE scf
 
   INTEGER  :: record_length 
   REAL(DP), ALLOCATABLE :: io_buffer(:)
-
 CONTAINS
 
  SUBROUTINE create_scf_type ( rho )
@@ -146,7 +145,7 @@ CONTAINS
   TYPE(mix_type), INTENT(IN)    :: X
   TYPE(mix_type), INTENT(INOUT) :: Y
   Y%of_g  = Y%of_g  + A * X%of_g
-  Y%kin_g = Y%kin_g + A * X%kin_g
+  if (dft_is_meta()) Y%kin_g = Y%kin_g + A * X%kin_g
   !
   RETURN
  END SUBROUTINE mix_type_AXPY
@@ -251,7 +250,6 @@ CONTAINS
   type(mix_type), INTENT(IN) :: rho1, rho2
   INTEGER,        INTENT(IN) :: gf
   REAL(DP)                :: rho_ddot
-  REAL(DP)                :: tauk_ddot
   !
   REAL(DP) :: fac
   INTEGER  :: ig
