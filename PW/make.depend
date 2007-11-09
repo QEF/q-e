@@ -1076,6 +1076,7 @@ scale_h.o : ../Modules/ions_base.o
 scale_h.o : pwcom.o
 scf_mod.o : ../Modules/cell_base.o
 scf_mod.o : ../Modules/constants.o
+scf_mod.o : ../Modules/functionals.o
 scf_mod.o : ../Modules/kind.o
 scf_mod.o : ../Modules/wavefunctions.o
 scf_mod.o : pwcom.o

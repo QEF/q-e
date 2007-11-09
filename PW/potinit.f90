@@ -35,7 +35,7 @@ SUBROUTINE potinit()
                                    ngm, gstart, nl, g, gg
   USE gsmooth,              ONLY : doublegrid
   USE control_flags,        ONLY : lscf
-  USE scf,                  ONLY : rho, rho_core, rhog_core, tauk, taukg, &
+  USE scf,                  ONLY : rho, rho_core, rhog_core, &
                                    vltot, vr, vrs
   USE funct,            ONLY : dft_is_meta
   USE wavefunctions_module, ONLY : psic
@@ -221,20 +221,20 @@ SUBROUTINE potinit()
   END DO
   !
   if ( dft_is_meta()) then
-     ! ... define a starting (TF) guess for tauk and taukg
+     ! ... define a starting (TF) guess for rho%kin_r and rho%kin_g
      fact = (3.d0*pi*pi)**(2.0/3.0)
      DO is = 1, nspin
-        tauk(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
-        psic(:) = tauk(:,is)
+        rho%kin_r(:,is) = fact * abs(rho%of_r(:,is)*nspin)**(5.0/3.0)/nspin
+        psic(:) = rho%kin_r(:,is)
         CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-        taukg(:,is) = psic(nl(:))
+        rho%kin_g(:,is) = psic(nl(:))
      END DO
      !
   end if
   !
   ! ... compute the potential and store it in vr
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, tauk, &
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
                  ehart, etxc, vtxc, etotefield, charge, vr )
   !
   ! ... define the total local potential (external+scf)

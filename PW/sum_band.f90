@@ -29,7 +29,7 @@ SUBROUTINE sum_band()
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE realus,               ONLY : tqr
-  USE scf,                  ONLY : rho, tauk, taukg
+  USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
@@ -65,9 +65,13 @@ SUBROUTINE sum_band()
   !
   becsum(:,:,:) = 0.D0
   rho%of_r(:,:)      = 0.D0
+  rho%of_g(:,:)      = 0.D0
+  if ( dft_is_meta() ) then
+     rho%kin_r(:,:)      = 0.D0
+     rho%kin_g(:,:)      = 0.D0
+     allocate (kplusg(npwx))
+  end if
   eband         = 0.D0  
-  tauk(:,:)     = 0.D0
-  if ( dft_is_meta() ) allocate (kplusg(npwx))
 
   !
   ! ... calculates weights of Kohn-Sham orbitals used in calculation of rho
@@ -120,7 +124,7 @@ SUBROUTINE sum_band()
      DO is = 1, nspin
         !
         CALL interpolate( rho%of_r(1,is), rho%of_r(1,is), 1 )
-        if (dft_is_meta() ) CALL interpolate( tauk(1,is), tauk(1,is), 1 )
+        if (dft_is_meta()) CALL interpolate(rho%kin_r(1,is),rho%kin_r(1,is),1)
         !
      END DO
      !
@@ -141,7 +145,7 @@ SUBROUTINE sum_band()
   ! ... reduce charge density across pools
   !
   CALL poolreduce( nspin * nrxx, rho%of_r )
-  if (dft_is_meta() ) CALL poolreduce( nspin * nrxx, tauk )
+  if (dft_is_meta() ) CALL poolreduce( nspin * nrxx, rho%kin_r )
   !
   IF ( noncolin ) THEN
      !
@@ -158,7 +162,7 @@ SUBROUTINE sum_band()
         !
         CALL psymrho( rho%of_r(1,is), nrx1, nrx2, nrx3, &
                       nr1, nr2, nr3, nsym, s, ftau )
-        if (dft_is_meta() ) CALL psymrho( tauk(1,is), nrx1, nrx2, nrx3, &
+        if (dft_is_meta() ) CALL psymrho( rho%kin_r(1,is), nrx1, nrx2, nrx3, &
                                           nr1, nr2, nr3, nsym, s, ftau )
         !
      END DO
@@ -180,9 +184,8 @@ SUBROUTINE sum_band()
      DO is = 1, nspin
         !
         CALL symrho( rho%of_r(1,is), nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
-        if (dft_is_meta() ) CALL symrho( tauk(1,is), nrx1, nrx2, nrx3, &
+        if (dft_is_meta() ) CALL symrho( rho%kin_r(1,is), nrx1, nrx2, nrx3, &
                                          nr1, nr2, nr3, nsym, s, ftau )
-
         !
      END DO
      !
@@ -221,15 +224,15 @@ SUBROUTINE sum_band()
      !
   END DO
   !
-  ! ... the same for tauk and taukg 
+  ! ... the same for rho%kin_r and rho%kin_g
   !
   IF ( dft_is_meta()) THEN
      DO is = 1, nspin
         !
         ! use psic as work array
-        psic(:) = tauk(:,is)
+        psic(:) = rho%kin_r(:,is)
         CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, -1 )
-        taukg(:,is) = psic(nl(:))
+        rho%kin_g(:,is) = psic(nl(:))
         !
         IF ( okvan .AND. tqr ) THEN
            ! ... in case the augmentation charges are computed in real space
@@ -237,10 +240,10 @@ SUBROUTINE sum_band()
            ! ... remove features that are not compatible with the FFT grid.
            !
            psic(:) = ( 0.D0, 0.D0 )
-           psic(nl(:)) = taukg(:,is)
-           IF ( gamma_only ) psic(nlm(:)) = CONJG( taukg(:,is) )
+           psic(nl(:)) = rho%kin_g(:,is)
+           IF ( gamma_only ) psic(nlm(:)) = CONJG( rho%kin_g(:,is) )
            CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-           tauk(:,is) = psic(:)
+           rho%kin_r(:,is) = psic(:)
            !
         END IF
         !
@@ -377,7 +380,8 @@ SUBROUTINE sum_band()
                    ! ... increment the kinetic energy density ...
                    !
                    DO ir = 1, nrxxs
-                      tauk(ir,current_spin) = tauk(ir,current_spin) + &
+                      rho%kin_r(ir,current_spin) = &
+                                           rho%kin_r(ir,current_spin) + &
                                            w1 *  DBLE( psic(ir) )**2 + &
                                            w2 * AIMAG( psic(ir) )**2
                    END DO
@@ -599,7 +603,8 @@ SUBROUTINE sum_band()
                       ! ... increment the kinetic energy density ...
                       !
                       DO ir = 1, nrxxs
-                         tauk(ir,current_spin) = tauk(ir,current_spin) + &
+                         rho%kin_r(ir,current_spin) = &
+                                                rho%kin_r(ir,current_spin) + &
                                                 w1 * ( DBLE( psic(ir) )**2 + &
                                                       AIMAG( psic(ir) )**2 )
                       END DO

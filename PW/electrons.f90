@@ -38,7 +38,7 @@ SUBROUTINE electrons()
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &
                                    vr, vltot, vrs, &
-                                   tauk, taukg, kedtau, kedtaur
+                                   kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, assume_isolated
@@ -109,8 +109,6 @@ SUBROUTINE electrons()
   ! ... the charge density and of the HXC-potential
   !
   type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
-  COMPLEX(DP), ALLOCATABLE :: taukgin(:,:)
-  REAL(DP),    ALLOCATABLE :: taukin(:,:)
   !
   ! ... external functions
   !
@@ -208,10 +206,6 @@ SUBROUTINE electrons()
        becstep(:,:,:) = becsum(:,:,:)
   END IF
   call create_scf_type ( rhoin )
-  IF ( dft_is_meta() ) then
-     ALLOCATE( taukin( nrxx, nspin ) )
-     ALLOCATE( taukgin( ngm, nspin ) )
-  END IF
   !
   DO idum = 1, niter
      !
@@ -244,10 +238,6 @@ SUBROUTINE electrons()
      !
      ! save input current density in rhoin
      rhoin = rho
-     if ( dft_is_meta() ) then
-        taukin(:,:)  = tauk(:,:)
-        taukgin(:,:) = taukg(:,:) 
-     end if
      !
      scf_step: DO
         !
@@ -332,7 +322,7 @@ SUBROUTINE electrons()
            becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
-        CALL mix_rho( rho, rhoin, taukg, taukgin, becnew, becstep, &
+        CALL mix_rho( rho, rhoin, becnew, becstep, &
               nsnew, ns, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
@@ -372,28 +362,28 @@ SUBROUTINE electrons()
            ! ... synchronize R- and G- components of the mixed charge density 
            ! ... it is already so in mixrho
            !
-           ! the same for the kinetic energy density (taukin)
+           ! the same for the kinetic energy density (rhoin%kin_r)
            !
-           IF ( dft_is_meta() ) THEN
-              DO is = 1, nspin
-                 !
-                 psic(:) = ( 0.D0, 0.D0 )
-                 !
-                 psic(nl(:)) = taukgin(:,is)
-                 !
-                 IF ( gamma_only ) psic(nlm(:)) = CONJG( taukgin(:,is) )
-                 !
-                 CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-                 !
-                 taukin(:,is) = psic(:)
-                 !
-              END DO
-           END IF
-           !
+!           IF ( dft_is_meta() ) THEN
+!              DO is = 1, nspin
+!                 !
+!                 psic(:) = ( 0.D0, 0.D0 )
+!                 !
+!                 psic(nl(:)) = rhoin%kin_g(:,is)
+!                 !
+!                 IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%kin_g(:,is) )
+!                 !
+!                 CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
+!                 !
+!                 rhoin%kin_r(:,is) = psic(:)
+!                 !
+!              END DO
+!           END IF
+!           !
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, taukin, &
+           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, rhoin%kin_r, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            ! ... estimate correction needed to have variational energy:
@@ -408,10 +398,6 @@ SUBROUTINE electrons()
            ! ... now copy the mixed charge density in R- and G-space in rho
            !
            rho = rhoin
-           if ( dft_is_meta() ) then
-              tauk(:,:)  = taukin(:,:)
-              taukg(:,:) = taukgin(:,:)
-           end if
            !
            ! ... compute PAW corrections to descf
            IF (okpaw) THEN
@@ -449,7 +435,7 @@ SUBROUTINE electrons()
            !
            vnew(:,:) = vr(:,:)
            !
-           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, tauk, &
+           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            vnew(:,:) = vr(:,:) - vnew(:,:)
@@ -606,7 +592,7 @@ SUBROUTINE electrons()
         IF ( first ) THEN
            !
            fock0 = exxenergy2()
-           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, tauk, &
+           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
                           ehart, etxc, vtxc, etotefield, charge, vr )
            !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
@@ -737,10 +723,6 @@ SUBROUTINE electrons()
 #endif
         END IF
         !
-        IF ( dft_is_meta() ) then
-           DEALLOCATE( taukgin )
-           DEALLOCATE( taukin )
-        ENDIF
         call destroy_scf_type ( rhoin )
         !
         RETURN
@@ -908,26 +890,26 @@ SUBROUTINE electrons()
      FUNCTION delta_e()
        !-----------------------------------------------------------------------
        !
-       ! ... delta_e = - \int rho(r) V_scf(r)
-       !               - \int tauk(r) Kedtau(r) [for Meta-GGA]
+       ! ... delta_e = - \int rho%of_r(r) V_scf(r)
+       !               - \int rho%kin_r(r) Kedtau(r) [for Meta-GGA]
        !
        IMPLICIT NONE
        !
        REAL(DP) :: delta_e
-       INTEGER  :: ipol
+       INTEGER  :: is
        !
        !
        delta_e = 0.D0
        !
-       DO ipol = 1, nspin
+       DO is = 1, nspin
           !
-          delta_e = delta_e - SUM( rho%of_r(:,ipol)*vr(:,ipol) )
+          delta_e = delta_e - SUM( rho%of_r(:,is)*vr(:,is) )
           !
        END DO
        !
        IF ( dft_is_meta() ) THEN
-          DO ipol = 1, nspin
-             delta_e = delta_e - SUM( tauk(:,ipol)*kedtaur(:,ipol) )
+          DO is = 1, nspin
+             delta_e = delta_e - SUM( rho%kin_r(:,is)*kedtaur(:,is) )
           END DO
        END IF
        !
@@ -943,30 +925,30 @@ SUBROUTINE electrons()
      FUNCTION delta_escf()
        !-----------------------------------------------------------------------
        !
-       ! ... delta_escf = - \int \delta rho(r) V_scf(r)
-       !                  - \int \delta tauk(r) Kedtau(r) [for Meta-GGA]
+       ! ... delta_escf = - \int \delta rho%of_r(r) V_scf(r)
+       !                  - \int \delta rho%kin_r(r) Kedtau(r) [for Meta-GGA]
        ! ... calculates the difference between the Hartree and XC energy
        ! ... at first order in the charge density difference \delta rho(r)
        !
        IMPLICIT NONE
        !
        REAL(DP) :: delta_escf
-       INTEGER  :: ipol
+       INTEGER  :: is
        !
        !
        delta_escf = 0.D0
        !
-       DO ipol = 1, nspin
+       DO is = 1, nspin
           !
           delta_escf = delta_escf - &
-                       SUM( ( rhoin%of_r(:,ipol)-rho%of_r(:,ipol) )*vr(:,ipol) )
+                       SUM( ( rhoin%of_r(:,is)-rho%of_r(:,is) )*vr(:,is) )
           !
        END DO
        !
        IF ( dft_is_meta() ) THEN
-          DO ipol = 1, nspin
+          DO is = 1, nspin
              delta_escf = delta_escf - &
-                       SUM( (taukin(:,ipol)-tauk(:,ipol) )*kedtaur(:,ipol))
+                       SUM( (rhoin%kin_r(:,is)-rho%kin_r(:,is) )*kedtaur(:,is))
           END DO
        END IF
        !
