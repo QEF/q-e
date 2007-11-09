@@ -385,12 +385,12 @@ SUBROUTINE PAW_symmetrize(becsum)
 #endif
 
     ! Apply symmetrization:
-    CALL get_environment_variable('DO_SYMME', do_symme)
-    IF (trim(do_symme)=='.false.') THEN
-        write(*,*) "**** skipping PAW symmetrization!"
-    ELSE
+!     CALL get_environment_variable('DO_SYMME', do_symme)
+!     IF (trim(do_symme)=='.false.') THEN
+!         write(*,*) "**** skipping PAW symmetrization!"
+!     ELSE
         becsum(:,:,:) = becsym(:,:,:)
-    ENDIF
+!     ENDIF
 
     CALL stop_clock('PAW_symme')
 
