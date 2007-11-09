@@ -777,7 +777,7 @@ CONTAINS
     INTEGER :: is, ns, ns1, l
     REAL(dp) :: aux(ndmx), dd
     REAL(DP), EXTERNAL :: int_0_inf_dr
-    REAL(dp):: dddd(nwfsx,nwfsx,3)
+    !REAL(dp):: dddd(nwfsx,nwfsx,3)
 
     !
     ! D^ = Int Q*v~
@@ -792,7 +792,7 @@ CONTAINS
                    pawset_%augfun(1:pawset_%grid%mesh,ns,ns1,0) * &
                    veffps_(1:pawset_%grid%mesh,is)
                 dd = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                dddd(ns,ns1,1) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+                !dddd(ns,ns1,1) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
                 ! Int[ae*v1*ae]
                 aux(1:pawset_%grid%mesh) =                        &
                      pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
@@ -800,7 +800,7 @@ CONTAINS
                      veff1_(1:pawset_%grid%mesh,is)
                 dd = dd +                                    &
                      int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                dddd(ns,ns1,2) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+                !dddd(ns,ns1,2) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
                 ! Int[ps*v1~*ps + aufun*v1~]
                 aux(1:pawset_%grid%mesh) =                        &
                    ( pawset_%pswfc(1:pawset_%grid%mesh,ns ) *     &
@@ -809,7 +809,7 @@ CONTAINS
                      veff1ps_(1:pawset_%grid%mesh,is)
                 dd = dd -                                    &
                      int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                dddd(ns,ns1,3) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+                !dddd(ns,ns1,3) = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
                 ! collect
                 ddd_(ns,ns1,is) = pawset_%kdiff(ns,ns1) + dd
                 ddd_(ns1,ns,is) = ddd_(ns,ns1,is)
@@ -817,12 +817,12 @@ CONTAINS
           END DO
        END DO
     END DO
-    write(*,*) 'deeq'
-    write(*,'(4f13.8)') dddd(1:4,1:4,1)
-    write(*,*) 'ddd ae'
-    write(*,'(4f13.8)') dddd(1:4,1:4,2)
-    write(*,*) 'ddd ps'
-    write(*,'(4f13.8)') dddd(1:4,1:4,3)
+!     write(*,*) 'deeq'
+!     write(*,'(4f13.8)') dddd(1:4,1:4,1)
+!     write(*,*) 'ddd ae'
+!     write(*,'(4f13.8)') dddd(1:4,1:4,2)
+!     write(*,*) 'ddd ps'
+!     write(*,'(4f13.8)') dddd(1:4,1:4,3)
 
   END SUBROUTINE compute_nonlocal_coeff
   !
