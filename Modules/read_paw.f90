@@ -128,8 +128,8 @@
         pawset_%kdiff(:,:) = 0._dp
         pawset_%dion (:,:) = 0._dp
        READ (un,'(A)')      pawset_%symbol
-        write(6,"(a)") " reading pseudopotential for: "//TRIM(pawset_%symbol)
-        write(6,"(a,3i5)") " dimensions (mesh, nwfc, lmax): ",mesh, nwfc, lmax
+        write(*,"(5x,a)") "Reading PAW setup for: "//TRIM(pawset_%symbol)
+        write(*,"(7x,a,3i5)") "dimensions (mesh, nwfc, lmax): ",mesh, nwfc, lmax
         read(un, '(a)') dummy
        READ (un,'(e20.10)') pawset_%zval
        READ (un,'(e20.10)') pawset_%z
@@ -186,54 +186,11 @@
         read(un, '(a)') dummy
        READ (un,'(A)') pawset_%dft
        pawset_%dft = TRIM(pawset_%dft)
+        write(*,"(7x,a,3i5)") "functional used: "//TRIM(pawset_%dft)
     CASE DEFAULT
        CALL errore ('paw_io','specify (INP)ut or (OUT)put',1)
     END SELECT
-#undef __DEBUG_PAW_IO
-#ifdef __DEBUG_PAW_IO
-    call check_paw_io(pawset_)
 
-    !CLOSE(un) ! it should be parent's business to close the file
-    CONTAINS
-    SUBROUTINE check_paw_io(pawset_)
-        TYPE(paw_t), INTENT(IN) :: pawset_
-        INTEGER :: un = 0 ! = stderr
-       WRITE(un,'(a,3i8)')    "init :", pawset_%grid%mesh, pawset_%nwfc, pawset_%lmax
-       ! the pseudopot:
-       WRITE(un,'(a,A)')      "symbol           :",pawset_%symbol
-       WRITE(un,'(a,e20.10)') "zval             :",pawset_%zval
-       WRITE(un,'(a,e20.10)') "z                :",pawset_%z
-       WRITE(un,'(a,L)')      "nlcc             :",pawset_%nlcc
-       WRITE(un,'(a,i8)')     "nwfc             :",pawset_%nwfc
-       WRITE(un,'(a,i8)')     "irc              :",pawset_%irc
-       WRITE(un,'(a,i8)')     "lmax             :",pawset_%lmax
-       WRITE(un,'(a,e20.10)') "rmatch_augfun    :",pawset_%rmatch_augfun
-       ! write the radial grid data
-        WRITE(un,'(a,i8)')     "grid%mesh  :",pawset_%grid%mesh
-        WRITE(un,'(a,e20.10)') "grid%dx    :",pawset_%grid%dx
-        WRITE(un,'(a,e20.10)') "grid%xmin  :",pawset_%grid%xmin
-        WRITE(un,'(a,e20.10)') "grid%zmesh :",pawset_%grid%zmesh
-        WRITE(un,'(a,e20.10)') "grid%r     :",MAXVAL(pawset_%grid%r(:))
-        WRITE(un,'(a,e20.10)') "grid%r     :",MAXVAL(pawset_%grid%r2(:))
-        WRITE(un,'(a,e20.10)') "grid%sqr   :",MAXVAL(pawset_%grid%sqr(:))
-       WRITE(un,'(a,i8)')     "l            :",MAXVAL(pawset_%l(:))
-       WRITE(un,'(a,i8)')     "ikk          :",MAXVAL(pawset_%ikk(:))
-       WRITE(un,'(a,e20.10)') "oc           :",MAXVAL(pawset_%oc(:))
-       WRITE(un,'(a,e20.10)') "enl          :",MAXVAL(pawset_%enl(:))
-       WRITE(un,'(a,e20.10)') "aewfc        :",MAXVAL(pawset_%aewfc(:,:))
-       WRITE(un,'(a,e20.10)') "pswfc        :",MAXVAL(pawset_%pswfc(:,:))
-       WRITE(un,'(a,e20.10)') "proj         :",MAXVAL(pawset_%proj(:,:))
-       WRITE(un,'(a,e20.10)') "augfun       :",MAXVAL(pawset_%augfun(:,:,:,:))
-       WRITE(un,'(a,e20.10)') "augmom       :",MAXVAL(pawset_%augmom(:,:,:))
-       WRITE(un,'(a,e20.10)') "aeccharge    :",MAXVAL(pawset_%aeccharge(:))
-       IF (pawset_%nlcc) WRITE(un,'(a,e20.10)') "psccharge :",MAXVAL(pawset_%psccharge(:))
-       WRITE(un,'(a,e20.10)') "pscharge :",MAXVAL(pawset_%pscharge(:))
-       WRITE(un,'(a,e20.10)') "aeloc    :",MAXVAL(pawset_%aeloc(:))
-       WRITE(un,'(a,e20.10)') "psloc    :",MAXVAL(pawset_%psloc(:))
-       WRITE(un,'(a,e20.10)') "kdiff    :",MAXVAL(pawset_%kdiff(:,:))
-       WRITE(un,'(a,e20.10)') "dion     :",MAXVAL(pawset_%dion (:,:))
-    END SUBROUTINE check_paw_io
-#endif
   END SUBROUTINE paw_io
 
 SUBROUTINE nullify_pseudo_paw( paw )
@@ -352,28 +309,28 @@ subroutine set_pseudo_paw (is, pawset)
   real (DP) :: pow
   real (DP), ALLOCATABLE :: aux (:)
   !
-#if defined __DO_NOT_CUTOFF_PAW_FUNC
-  PRINT '(A)', 'WARNING __DO_NOT_CUTOFF_PAW_FUNC'
-#else
-#ifdef __SHARP_CUTOFF_PAW_FUNC
-  PRINT '(A)', 'WARNING __SHARP_CUTOFF_PAW_FUNC'
-#endif
-#endif
+! #if defined __DO_NOT_CUTOFF_PAW_FUNC
+!   PRINT '(A)', 'WARNING __DO_NOT_CUTOFF_PAW_FUNC'
+! #else
+! #ifdef __SHARP_CUTOFF_PAW_FUNC
+!   PRINT '(A)', 'WARNING __SHARP_CUTOFF_PAW_FUNC'
+! #endif
+! #endif
   !
   ! Cutoffing: WARNING: arbitrary right now, for grid calculation
   pow = 1.d0
   nrs =  Count(pawset%grid%r(1:pawset%grid%mesh).le. (pawset%grid%r(pawset%irc)*1.2d0))
   nrc =  Count(pawset%grid%r(1:pawset%grid%mesh).le. (pawset%grid%r(pawset%irc)*1.8d0))
-  PRINT *, 'PAW CUTOFF parameters'
-  PRINT *, pawset%irc, pawset%grid%r(pawset%irc)
-  PRINT *, nrs, pawset%grid%r(nrs)
-  PRINT *, nrc, pawset%grid%r(nrc)
+  WRITE(*,"(7x,a)") 'PAW functions cut-off:'
+  WRITE(*,"(9x,a,i5,f12.6)") "matching radius:       ", pawset%irc, pawset%grid%r(pawset%irc)
+  WRITE(*,"(9x,a,i5,f12.6)") "inner stepping radius: ", nrs, pawset%grid%r(nrs)
+  WRITE(*,"(9x,a,i5,f12.6)") "outer stepping radius: ", nrc, pawset%grid%r(nrc)
   !
   upf(is)%zp = pawset%zval
   upf(is)%psd = pawset%symbol
   upf(is)%tvanp=.true.
   upf(is)%nlcc = pawset%nlcc
-  tvanp(is)=.true.
+  !tvanp(is)=.true.
   tpawp(is)=.true.
   call set_dft_from_name( pawset%dft )
   !
