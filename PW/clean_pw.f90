@@ -24,12 +24,11 @@ SUBROUTINE clean_pw( lflag )
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype, gamma_only
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, vr, vltot, rho_core, rhog_core, &
-                                   vrs, kedtau, kedtaur, &
-                                   destroy_scf_type
+                                   vrs, kedtau, kedtaur, destroy_scf_type
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
-  USE ldaU,                 ONLY : ns, nsnew, swfcatom
+  USE ldaU,                 ONLY : swfcatom, v_hub
   USE extfield,             ONLY : forcefield
   USE sticks,               ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
@@ -115,8 +114,7 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( igk ) )        DEALLOCATE( igk )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
-  IF ( ALLOCATED( ns ) )         DEALLOCATE( ns )
-  IF ( ALLOCATED( nsnew ) )      DEALLOCATE( nsnew )
+  IF ( ALLOCATED( v_hub ) )      DEALLOCATE( v_hub )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
   IF ( lspinorb ) THEN

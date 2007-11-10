@@ -101,7 +101,7 @@ SUBROUTINE sum_band()
   !
   ! ... Needed for LDA+U
   !
-  IF ( lda_plus_u ) CALL new_ns()  
+  IF ( lda_plus_u ) CALL new_ns(rho%ns)  
   !     
   ! ... specific routines are called to sum for each k point the contribution
   ! ... of the wavefunctions to the charge

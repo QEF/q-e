@@ -17,7 +17,8 @@ MODULE scf
   USE kinds,      ONLY : DP
   !
   USE lsda_mod,   ONLY : nspin
-  USE ldaU,       ONLY : lda_plus_u
+  USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
+  USE ions_base,  ONLY : nat
   USE funct,      ONLY : dft_is_meta
   USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
   USE gsmooth,    ONLY : ngms
@@ -29,11 +30,13 @@ MODULE scf
      COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
      REAL(DP),    ALLOCATABLE :: kin_r(:,:) ! the charge density in R-space
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
+     REAL(DP),   ALLOCATABLE  :: ns(:,:,:,:)! the LDA+U occupation matrix 
   END TYPE scf_type
   !
   TYPE mix_type
      COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
+     REAL(DP),   ALLOCATABLE  :: ns(:,:,:,:)! the LDA+U occupation matrix 
   END TYPE mix_type
 
   type (scf_type) :: rho
@@ -51,10 +54,11 @@ MODULE scf
                         ! used in META-GGA in real space (dense grid)
   COMPLEX(DP), ALLOCATABLE :: &
        rhog_core(:)     ! the core charge in reciprocal space
-!       taukg(:,:)       ! the kinetic energy density in reciprocal space
 
-  INTEGER  :: record_length 
-  REAL(DP), ALLOCATABLE :: io_buffer(:)
+  INTEGER, PRIVATE  :: record_length, &
+                       rlen_rho=0, rlen_kin=0, rlen_ldaU=0, &
+                       start_rho=0, start_kin=0, start_ldaU=0
+  REAL(DP), PRIVATE, ALLOCATABLE:: io_buffer(:)
 CONTAINS
 
  SUBROUTINE create_scf_type ( rho )
@@ -66,6 +70,7 @@ CONTAINS
     allocate ( rho%kin_r( nrxx, nspin) )
     allocate ( rho%kin_g( ngm, nspin ) )
  endif
+ if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
  return
  END SUBROUTINE create_scf_type
 
@@ -76,6 +81,7 @@ CONTAINS
  if (allocated(rho%of_g)) deallocate(rho%of_g)
  if (allocated(rho%kin_r)) deallocate(rho%kin_r)
  if (allocated(rho%kin_g)) deallocate(rho%kin_g)
+ if (allocated(rho%ns)) deallocate(rho%ns)
  return
  END SUBROUTINE destroy_scf_type
  !
@@ -83,6 +89,7 @@ CONTAINS
  TYPE (mix_type) :: rho
  allocate ( rho%of_g( ngms, nspin ) )
  if (dft_is_meta()) allocate ( rho%kin_g( ngms, nspin ) )
+ if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
  return
  END SUBROUTINE create_mix_type
 
@@ -91,6 +98,7 @@ CONTAINS
  TYPE (mix_type) :: rho
  if (allocated(rho%of_g)) deallocate(rho%of_g)
  if (allocated(rho%kin_g)) deallocate(rho%kin_g)
+ if (allocated(rho%ns)) deallocate(rho%ns)
  return
  END SUBROUTINE destroy_mix_type
  !
@@ -100,6 +108,7 @@ CONTAINS
  TYPE (mix_type), INTENT(INOUT) :: rho_m
  rho_m%of_g(:,:) = rho_s%of_g(1:ngms,:)
  if (dft_is_meta()) rho_m%kin_g(:,:) = rho_s%kin_g(1:ngms,:)
+ if (lda_plus_u) rho_m%ns(:,:,:,:) = rho_s%ns(:,:,:,:)
  return
  end subroutine assign_scf_to_mix_type
  !
@@ -131,6 +140,7 @@ CONTAINS
          rho_s%kin_r(:,is) = psic(:)
       END DO
    end if
+   if (lda_plus_u) rho_s%ns(:,:,:,:) = rho_m%ns(:,:,:,:)
    return
  end subroutine assign_mix_to_scf_type
  !
@@ -146,6 +156,7 @@ CONTAINS
   TYPE(mix_type), INTENT(INOUT) :: Y
   Y%of_g  = Y%of_g  + A * X%of_g
   if (dft_is_meta()) Y%kin_g = Y%kin_g + A * X%kin_g
+  if (lda_plus_u) Y%ns = Y%ns + A * X%ns
   !
   RETURN
  END SUBROUTINE mix_type_AXPY
@@ -191,6 +202,7 @@ CONTAINS
          rhoin%kin_r(:,:)= 0.d0
       endif
    endif
+   if (lda_plus_u) rhoin%ns(:,:,:,:) = 0.d0
    return
  end subroutine high_frequency_mixing 
 
@@ -199,10 +211,20 @@ CONTAINS
  character(len=*), intent(in) :: extension
  integer, intent(in) :: iunit
  logical :: exst
- record_length = 2 * ngms * nspin
- if (dft_is_meta() ) record_length = record_length + 2 * ngms * nspin
+ ! define lengths of different record chunks
+ rlen_rho = 2 * ngms * nspin
+ if (dft_is_meta() ) rlen_kin = 2 * ngms * nspin
+ if (lda_plus_u) rlen_ldaU = (2*Hubbard_lmax+1)**2*nspin*nat
+ ! define total record length
+ record_length = rlen_rho + rlen_kin + rlen_ldaU
+ ! and the starting point of different chunks
+ start_rho = 1
+ start_kin = start_rho + rlen_rho
+ start_ldaU = start_kin + rlen_kin
+ ! open file and allocate io_buffer
  call diropn ( iunit, extension, record_length, exst)
  allocate (io_buffer(record_length))
+ !
  return
  end subroutine diropn_mix_file
  !
@@ -219,15 +241,15 @@ CONTAINS
  type (mix_type) :: rho
  integer, intent(in) :: iunit, record, iflag
  if (iflag > 0) then
-    call DCOPY(2*ngms*nspin,rho%of_g,1,io_buffer,1)
-    if (dft_is_meta()) &
-       call DCOPY(2*ngms*nspin,rho%kin_g,1,io_buffer(2*ngms*nspin+1),1)
+    call DCOPY(rlen_rho,rho%of_g,1,io_buffer(start_rho),1)
+    if (dft_is_meta()) call DCOPY(rlen_kin,rho%kin_g,1,io_buffer(start_kin),1)
+    if (lda_plus_u) call DCOPY(rlen_ldaU,rho%ns,1,io_buffer(start_ldaU),1)
  end if
  CALL davcio( io_buffer, record_length, iunit, record, iflag )
  if (iflag < 0) then
-    call DCOPY(2*ngms*nspin,io_buffer,1,rho%of_g,1)
-    if (dft_is_meta()) &
-       call DCOPY(2*ngms*nspin,io_buffer(2*ngms*nspin+1),1,rho%kin_g,1)
+    call DCOPY(rlen_rho,io_buffer(start_rho),1,rho%of_g,1)
+    if (dft_is_meta()) call DCOPY(start_kin,io_buffer(start_kin),1,rho%kin_g,1)
+    if (lda_plus_u) call DCOPY(rlen_ldaU,io_buffer(start_ldaU),1,rho%ns,1)
  end if
  return
  end subroutine davcio_mix_type
@@ -353,6 +375,7 @@ CONTAINS
   CALL reduce( 1, rho_ddot )
   !
   if (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
+  IF (lda_plus_u ) rho_ddot = rho_ddot + ns_ddot(rho1,rho2)
 
   RETURN
   !
@@ -460,6 +483,42 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   RETURN
   !
 END FUNCTION tauk_ddot
+!----------------------------------------------------------------------------
+FUNCTION ns_ddot( rho1, rho2 )
+  !----------------------------------------------------------------------------
+  !
+  ! ... calculates U/2 \sum_i ns1(i)*ns2(i)
+  ! ... used as an estimate of the self-consistency error on the 
+  ! ... LDA+U correction to the energy
+  !
+  USE kinds,     ONLY : DP
+  USE ldaU,      ONLY : Hubbard_l, Hubbard_U, Hubbard_alpha
+  USE ions_base, ONLY : nat, ityp
+  !
+  IMPLICIT NONE  
+  !
+  type(mix_type), INTENT(IN) :: rho1, rho2
+  REAL(DP)             :: ns_ddot
+  !
+  INTEGER :: na, nt, m1, m2
+  !
+  ns_ddot = 0.D0
+  !
+  DO na = 1, nat
+     nt = ityp(na)
+     IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
+        m1 = 2 * Hubbard_l(nt) + 1
+        m2 = 2 * Hubbard_l(nt) + 1
+        ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
+                  SUM( rho1%ns(:m1,:m2,:nspin,na)*rho2%ns(:m1,:m2,:nspin,na) )
+     END IF
+  END DO
+  !
+  IF ( nspin == 1 ) ns_ddot = 2.D0*ns_ddot
+  !
+  RETURN
+  !
+END FUNCTION ns_ddot
  !----------------------------------------------------------------------------
  FUNCTION local_tf_ddot( rho1, rho2, ngm0 )
   !----------------------------------------------------------------------------

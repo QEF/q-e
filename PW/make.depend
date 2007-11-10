@@ -69,6 +69,7 @@ allocate_nlpot.o : ../Modules/ions_base.o
 allocate_nlpot.o : ../Modules/uspp.o
 allocate_nlpot.o : noncol.o
 allocate_nlpot.o : pwcom.o
+allocate_nlpot.o : scf_mod.o
 allocate_wfc.o : ../Modules/io_global.o
 allocate_wfc.o : ../Modules/wavefunctions.o
 allocate_wfc.o : noncol.o
@@ -433,6 +434,7 @@ force_hub.o : ../Modules/wavefunctions.o
 force_hub.o : becmod.o
 force_hub.o : buffers.o
 force_hub.o : pwcom.o
+force_hub.o : scf_mod.o
 force_lc.o : ../Modules/constants.o
 force_lc.o : ../Modules/kind.o
 force_us.o : ../Modules/cell_base.o
@@ -576,6 +578,9 @@ hinit1.o : ../Modules/ions_base.o
 hinit1.o : pwcom.o
 hinit1.o : realus.o
 hinit1.o : scf_mod.o
+hub_en.o : ../Modules/ions_base.o
+hub_en.o : ../Modules/kind.o
+hub_en.o : pwcom.o
 init_at_1.o : ../Modules/atom.o
 init_at_1.o : ../Modules/cell_base.o
 init_at_1.o : ../Modules/constants.o
@@ -586,6 +591,7 @@ init_at_1.o : pwcom.o
 init_ns.o : ../Modules/ions_base.o
 init_ns.o : ../Modules/kind.o
 init_ns.o : pwcom.o
+init_ns.o : scf_mod.o
 init_run.o : ../Modules/control_flags.o
 init_run.o : ../Modules/grid_paw_variables.o
 init_run.o : dynamics_module.o
@@ -752,6 +758,7 @@ ns_adj.o : ../Modules/io_global.o
 ns_adj.o : ../Modules/ions_base.o
 ns_adj.o : ../Modules/kind.o
 ns_adj.o : pwcom.o
+ns_adj.o : scf_mod.o
 openfil.o : ../Modules/control_flags.o
 openfil.o : ../Modules/io_files.o
 openfil.o : ../Modules/io_global.o
@@ -1077,6 +1084,7 @@ scale_h.o : pwcom.o
 scf_mod.o : ../Modules/cell_base.o
 scf_mod.o : ../Modules/constants.o
 scf_mod.o : ../Modules/functionals.o
+scf_mod.o : ../Modules/ions_base.o
 scf_mod.o : ../Modules/kind.o
 scf_mod.o : ../Modules/wavefunctions.o
 scf_mod.o : pwcom.o
@@ -1177,6 +1185,7 @@ stres_hub.o : ../Modules/io_global.o
 stres_hub.o : ../Modules/ions_base.o
 stres_hub.o : ../Modules/kind.o
 stres_hub.o : pwcom.o
+stres_hub.o : scf_mod.o
 stres_knl.o : ../Modules/cell_base.o
 stres_knl.o : ../Modules/constants.o
 stres_knl.o : ../Modules/io_files.o
@@ -1297,6 +1306,7 @@ v_of_rho.o : ../Modules/cell_base.o
 v_of_rho.o : ../Modules/constants.o
 v_of_rho.o : ../Modules/functionals.o
 v_of_rho.o : ../Modules/io_global.o
+v_of_rho.o : ../Modules/ions_base.o
 v_of_rho.o : ../Modules/kind.o
 v_of_rho.o : noncol.o
 v_of_rho.o : pwcom.o
@@ -1322,6 +1332,7 @@ vhpsi_nc.o : ../Modules/ions_base.o
 vhpsi_nc.o : ../Modules/kind.o
 vhpsi_nc.o : ../Modules/uspp.o
 vhpsi_nc.o : pwcom.o
+vhpsi_nc.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/kind.o
@@ -1356,6 +1367,7 @@ write_ns.o : ../Modules/io_global.o
 write_ns.o : ../Modules/ions_base.o
 write_ns.o : ../Modules/kind.o
 write_ns.o : pwcom.o
+write_ns.o : scf_mod.o
 wsweight.o : ../Modules/kind.o
 add_efield.o : ../include/f_defs.h
 add_vuspsi.o : ../include/f_defs.h
@@ -1427,6 +1439,7 @@ grid_paw_routines.o : ../include/f_defs.h
 h_epsi_her_apply.o : ../include/f_defs.h
 h_epsi_her_set.o : ../include/f_defs.h
 h_psi_meta.o : ../include/f_defs.h
+hub_en.o : ../include/f_defs.h
 init_at_1.o : ../include/f_defs.h
 init_ns.o : ../include/f_defs.h
 init_us_1.o : ../include/f_defs.h

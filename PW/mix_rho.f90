@@ -10,8 +10,7 @@
 #define ZERO ( 0._dp, 0._dp )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE mix_rho( input_rhout, rhoin, &
-                    input_becout, becin, input_nsout, nsin,       &
+SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
                     alphamix, dr2, tr2_min, iter, n_iter, conv )
   !----------------------------------------------------------------------------
   !
@@ -26,8 +25,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   USE ions_base,      ONLY : nat
   USE gvect,          ONLY : nrxx, ngm
   USE gsmooth,        ONLY : ngms
-  USE ldaU,           ONLY : lda_plus_u, Hubbard_lmax
-  USE funct,          ONLY : dft_is_meta
   USE lsda_mod,       ONLY : nspin
   USE control_flags,  ONLY : imix, ngm0, tr2, io_level
   USE io_files,       ONLY : find_free_unit
@@ -62,17 +59,14 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
     conv          ! .true. if the convergence has been reached
 
   type(scf_type), intent(in)    :: input_rhout
-  REAL(DP),    intent(in)    :: input_becout(nhm*(nhm+1)/2,nat,nspin), &! PAW
-             input_nsout(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)   ! LDA+U
+  REAL(DP),    intent(in)    :: input_becout(nhm*(nhm+1)/2,nat,nspin) ! PAW
   type(scf_type), intent(inout) :: rhoin
-  REAL(DP),    intent(inout) :: becin (nhm*(nhm+1)/2,nat,nspin),       &!PAW
-                   nsin(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)    ! LDA+U
+  REAL(DP),    intent(inout) :: becin (nhm*(nhm+1)/2,nat,nspin)       !PAW
   !
   ! ... Here the local variables
   !
   type(mix_type) :: rhout, rhoin_m
-  REAL(DP),    allocatable   :: becout(:,:,:), &! PAW
-                                nsout(:,:,:,:)  ! LDA+U
+  REAL(DP),    allocatable   :: becout(:,:,:) ! PAW
   INTEGER, PARAMETER :: &
     maxmix = 25             ! max number of iterations for charge mixing
   INTEGER ::    &
@@ -87,9 +81,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
     info,          &! flag saying if the exec. of libr. routines was ok
     ldim            ! 2 * Hubbard_lmax + 1
   type(mix_type) :: rhoin_save, rhout_save
-  COMPLEX(DP), ALLOCATABLE :: &
-    nsinsave(:,:,:,:),  &!
-    nsoutsave(:,:,:,:)   !
   REAL(DP), ALLOCATABLE :: &
     becinsave(:,:,:),   &
     becoutsave(:,:,:)
@@ -110,15 +101,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
   REAL(DP), ALLOCATABLE, SAVE :: &
-    df_ns(:,:,:,:,:), &! idem 
-    dv_ns(:,:,:,:,:)   ! idem
-  REAL(DP), ALLOCATABLE, SAVE :: &
     df_bec(:,:,:,:), &! idem !PAW
     dv_bec(:,:,:,:)   ! idem !PAW
   !
   ! ... external functions
   !
-  REAL(DP), EXTERNAL :: ns_ddot
 #ifdef __GRID_PAW
   REAL(DP), EXTERNAL :: rho1_ddot
 #endif
@@ -131,25 +118,20 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   !
   IF ( n_iter > maxmix ) CALL errore( 'mix_rho', 'n_iter too big', 1 )
   !
-  IF ( lda_plus_u ) ldim = 2 * Hubbard_lmax + 1
-  !
   savetofile = (io_level > 1)
   !
   ! define rhocout variables and copy input_rhocout in there
   !
   call create_mix_type(rhout)
   call assign_scf_to_mix_type(input_rhout, rhout)
-  if (lda_plus_u) allocate (nsout(ldim,ldim,nspin,nat))
   if (okpaw) allocate (becout(nhm*(nhm+1)/2,nat,nspin))
   !
   call create_mix_type(rhoin_m)
   call assign_scf_to_mix_type(rhoin, rhoin_m)
   call mix_type_AXPY ( -1.d0, rhoin_m, rhout )
-  IF ( lda_plus_u ) nsout(:,:,:,:) = input_nsout(:,:,:,:) - nsin(:,:,:,:)
   IF ( okpaw )      becout(:,:,:)  = input_becout(:,:,:)  - becin(:,:,:) !PAW
   !
   dr2 = rho_ddot( rhout, rhout, ngms )  !!!! this used to be ngm NOT ngms
-  IF ( lda_plus_u ) dr2 = dr2 + ns_ddot( nsout, nsout, nspin )
   IF ( okpaw )      dr2 = dr2 + PAW_ddot ( becout, becout ) !PAW
   !
   conv = ( dr2 < tr2 )
@@ -172,14 +154,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
          END DO
          DEALLOCATE( dv )
      END IF
-     IF ( ALLOCATED( df_ns ) )  DEALLOCATE( df_ns )
-     IF ( ALLOCATED( dv_ns ) )  DEALLOCATE( dv_ns )
      IF ( ALLOCATED( df_bec ) ) DEALLOCATE ( df_bec ) !PAW
      IF ( ALLOCATED( dv_bec ) ) DEALLOCATE ( dv_bec ) !PAW
      !
      call destroy_mix_type(rhoin_m)
      call destroy_mix_type(rhout)
-     if (lda_plus_u) deallocate (nsout)
      if (okpaw) deallocate (becout)
  
      CALL stop_clock( 'mix_rho' )
@@ -192,11 +171,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
      !
      iunmix = find_free_unit()
      CALL diropn_mix_file( iunmix, 'mix', exst )
-     !
-     IF ( lda_plus_u ) THEN
-        iunmix_ns = find_free_unit()
-        CALL diropn( iunmix_ns, 'mix.ns', ldim*ldim*nspin*nat, exst )
-     END IF
      !
      IF ( okpaw ) then
         iunmix_paw = find_free_unit()
@@ -228,12 +202,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
         END DO
      END IF
      !
-     IF ( lda_plus_u ) THEN
-        IF ( .NOT. ALLOCATED( df_ns ) ) &
-           ALLOCATE( df_ns( ldim, ldim, nspin, nat, n_iter ) )
-        IF ( .NOT. ALLOCATED( dv_ns ) ) &
-           ALLOCATE( dv_ns( ldim, ldim, nspin, nat, n_iter ) )
-     END IF
      IF ( okpaw ) THEN
         IF ( .NOT. ALLOCATED( df_bec ) ) &
              ALLOCATE( df_bec( nhm * (nhm + 1)/2, nat, nspin, n_iter ) )
@@ -260,10 +228,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
         !
         CALL davcio_mix_type( df(ipos), iunmix, 1, -1 )
         CALL davcio_mix_type( dv(ipos), iunmix, 2, -1 )
-        IF ( lda_plus_u ) THEN
-           CALL davcio( df_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix_ns,1,-1 )
-           CALL davcio( dv_ns(1,1,1,1,ipos),ldim*ldim*nspin*nat,iunmix_ns,2,-1 )
-        END IF
         IF ( okpaw ) THEN
            CALL davcio( df_bec(1,1,1,ipos),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,1,-1 )
            CALL davcio( dv_bec(1,1,1,ipos),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2,-1 )
@@ -273,10 +237,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
      !
      call mix_type_AXPY ( -1.d0, rhout, df(ipos) )
      call mix_type_AXPY ( -1.d0, rhoin_m, dv(ipos) )
-     IF ( lda_plus_u ) THEN
-        df_ns(:,:,:,:,ipos) = df_ns(:,:,:,:,ipos) - nsout
-        dv_ns(:,:,:,:,ipos) = dv_ns(:,:,:,:,ipos) - nsin
-     END IF
      IF ( okpaw ) THEN
         df_bec(:,:,:,ipos) = df_bec(:,:,:,ipos) - becout
         dv_bec(:,:,:,ipos) = dv_bec(:,:,:,ipos) - becin
@@ -292,10 +252,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
            !
            CALL davcio_mix_type( df(i), iunmix, 2*i+1, -1 )
            CALL davcio_mix_type( dv(i), iunmix, 2*i+2, -1 )
-           IF ( lda_plus_u ) THEN
-              CALL davcio(df_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix_ns,2*i+1,-1)
-              CALL davcio(dv_ns(1,1,1,1,i),ldim*ldim*nspin*nat,iunmix_ns,2*i+2,-1)
-           END IF
            IF ( okpaw ) THEN
               CALL davcio(df_bec(1,1,1,i),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2*i+1,-1)
               CALL davcio(dv_bec(1,1,1,i),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2*i+2,-1)
@@ -310,21 +266,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
      IF ( mixrho_iter > 1 ) THEN
         CALL davcio_mix_type( df(ipos), iunmix, 2*ipos+1, 1 )
         CALL davcio_mix_type( dv(ipos), iunmix, 2*ipos+2, 1 )
-     END IF
-     !
-     IF ( lda_plus_u ) THEN
-        !
-        CALL davcio( nsout, ldim*ldim*nspin*nat, iunmix_ns, 1, 1 )
-        CALL davcio( nsin , ldim*ldim*nspin*nat, iunmix_ns, 2, 1 )
-        !
-        IF ( mixrho_iter > 1 ) THEN
-           !
-           CALL davcio( df_ns(1,1,1,1,ipos), &
-                        ldim*ldim*nspin*nat, iunmix_ns, 2*ipos+1, 1 )
-           CALL davcio( dv_ns(1,1,1,1,ipos), &
-                        ldim*ldim*nspin*nat, iunmix_ns, 2*ipos+2, 1 )
-        END IF
-        !
      END IF
      !
      IF ( okpaw ) THEN
@@ -350,13 +291,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
      rhoin_save = rhoin_m
      rhout_save = rhout
      !
-     IF ( lda_plus_u ) THEN
-        ALLOCATE( nsinsave(  ldim, ldim, nspin, nat ), &
-                  nsoutsave( ldim, ldim, nspin, nat ) )
-        nsinsave  = nsin
-        nsoutsave = nsout
-     END IF
-     !
      IF ( okpaw ) THEN
         ALLOCATE( becinsave (nhm*(nhm+1)/2,nat,nspin), &
                   becoutsave(nhm*(nhm+1)/2,nat,nspin) )
@@ -371,9 +305,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
      DO j = i, iter_used
         !
         betamix(i,j) = rho_ddot( df(j), df(i), ngm0 )
-        !
-        IF ( lda_plus_u ) betamix(i,j) = betamix(i,j) + &
-                          ns_ddot( df_ns(1,1,1,1,j), df_ns(1,1,1,1,i), nspin )
         !
         IF ( okpaw ) &
            betamix(i,j) = betamix(i,j) + &
@@ -399,9 +330,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
      !
      work(i) = rho_ddot( df(i), rhout, ngm0 )
      !
-     IF ( lda_plus_u ) &
-        work(i) = work(i) + ns_ddot( df_ns(1,1,1,1,i), nsout, nspin )
-     !
      IF ( okpaw ) &
         work(i) = work(i) + PAW_ddot( df_bec(1,1,1,i), becout )
      !
@@ -414,11 +342,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
      call mix_type_AXPY ( -gamma0, dv(i), rhoin_m )
      call mix_type_AXPY ( -gamma0, df(i), rhout )
      !
-     IF ( lda_plus_u ) THEN
-        nsin  = nsin  - gamma0*dv_ns(:,:,:,:,i)
-        nsout = nsout - gamma0*df_ns(:,:,:,:,i)
-     END IF
-     !
      IF ( okpaw ) THEN
         becin  = becin  - gamma0 * dv_bec(:,:,:,i)
         becout = becout - gamma0 * df_bec(:,:,:,i)
@@ -429,14 +352,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   ! ... auxiliary vectors dv and df not needed anymore
   !
   IF ( savetofile ) THEN
-     !
-     IF ( lda_plus_u ) THEN
-        !
-        CLOSE( iunmix_ns, STATUS = 'KEEP' )
-        !
-        DEALLOCATE( df_ns, dv_ns )
-        !
-     END IF
      !
      IF ( okpaw ) THEN
         !
@@ -464,12 +379,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   ELSE
      !
      inext = mixrho_iter - ( ( mixrho_iter - 1 ) / n_iter ) * n_iter
-     !
-     IF ( lda_plus_u ) THEN
-        df_ns(:,:,:,:,inext) = nsoutsave
-        dv_ns(:,:,:,:,inext) = nsinsave
-        DEALLOCATE( nsinsave, nsoutsave )
-     END IF
      !
      IF ( okpaw ) THEN
         df_bec(:,:,:,inext) = becoutsave
@@ -500,7 +409,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   ! ... set new trial density
   !
   call mix_type_AXPY ( alphamix, rhout, rhoin_m )
-  IF ( lda_plus_u ) nsin = nsin + alphamix * nsout
   IF ( okpaw ) becin = becin + alphamix * becout
   !
   ! ... simple mixing for high_frequencies (and set to zero the smooth ones)
@@ -510,7 +418,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, &
   !
   call destroy_mix_type(rhout)
   call destroy_mix_type(rhoin_m)
-  if (lda_plus_u) deallocate (nsout)
   if (okpaw) deallocate (becout)
 
   CALL stop_clock( 'mix_rho' )
@@ -671,56 +578,6 @@ FUNCTION rho1_ddot( bec1, bec2 )
   !
 END FUNCTION rho1_ddot
 #endif
-!
-!----------------------------------------------------------------------------
-FUNCTION ns_ddot( ns1, ns2, nspin )
-  !----------------------------------------------------------------------------
-  !
-  ! ... calculates U/2 \sum_i ns1(i)*ns2(i)
-  ! ... used as an estimate of the self-consistency error on the 
-  ! ... LDA+U correction to the energy
-  !
-  USE kinds,     ONLY : DP
-  USE ldaU,      ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, Hubbard_U, &
-                        Hubbard_alpha
-  USE ions_base, ONLY : nat, ityp
-  !
-  IMPLICIT NONE  
-  !
-  INTEGER,  INTENT(IN) :: nspin
-  REAL(DP), INTENT(IN) :: ns1(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat), &
-                          ns2(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
-  REAL(DP)             :: ns_ddot
-  !
-  INTEGER :: na, nt, m1, m2
-  !
-  !
-  ns_ddot = 0.D0
-  !
-  IF ( .NOT. lda_plus_u ) RETURN
-  !
-  DO na = 1, nat
-     !
-     nt = ityp(na)
-     !
-     IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
-        !
-        m1 = 2 * Hubbard_l(nt) + 1
-        m2 = 2 * Hubbard_l(nt) + 1
-        !
-        ns_ddot = ns_ddot + 0.5D0 * Hubbard_U(nt) * &
-                            SUM( ns1(:m1,:m2,:nspin,na)*ns2(:m1,:m2,:nspin,na) )
-        !
-     END IF
-     !
-  END DO
-  !
-  IF ( nspin == 1 ) ns_ddot = 2.D0*ns_ddot
-  !
-  RETURN
-  !
-END FUNCTION ns_ddot
-!
 !----------------------------------------------------------------------------
 SUBROUTINE approx_screening( drho )
   !----------------------------------------------------------------------------

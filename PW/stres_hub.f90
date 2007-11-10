@@ -20,7 +20,8 @@ SUBROUTINE stres_hub ( sigmah )
   USE ions_base, ONLY : nat, ityp
   USE cell_base, ONLY : omega, at, bg
   USE ldaU,      ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
-                        hubbard_alpha, ns, U_projection
+                        hubbard_alpha, U_projection, v_hub
+  USE scf,       ONLY : 
   USE lsda_mod,  ONLY : nspin
   USE symme,     ONLY : s, nsym
   USE io_files,  ONLY : prefix, iunocc
@@ -55,15 +56,6 @@ SUBROUTINE stres_hub ( sigmah )
    ALLOCATE (dns(ldim,ldim,nspin,nat))
    dns(:,:,:,:) = 0.d0
 
-   IF ( ionode ) THEN
-
-      CALL seqopn(iunocc,'occup','formatted',exst)
-      READ(iunocc,*) ns
-      CLOSE(unit=iunocc,status='keep')
-
-   END IF
-
-
 #ifdef DEBUG
    DO na=1,nat
       DO is=1,nspin
@@ -71,7 +63,7 @@ SUBROUTINE stres_hub ( sigmah )
          IF (Hubbard_U(nt).NE.0.d0.OR.Hubbard_alpha(nt).NE.0.d0) THEN
             WRITE( stdout,'(a,2i3)') 'NS(NA,IS) ', na,is
             DO m1=1,ldim
-               WRITE( stdout,'(7f10.4)') (ns(m1,m2,is,na),m2=1,ldim)
+               WRITE( stdout,'(7f10.4)') (rho%ns(m1,m2,is,na),m2=1,ldim)
             END DO
          END IF
       END DO
@@ -97,11 +89,9 @@ SUBROUTINE stres_hub ( sigmah )
                   WRITE( stdout,'(5f10.4)') ((dns(m1,m2,is,na),m2=1,5),m1=1,5)
 #endif
                   DO m2 = 1, 2 * Hubbard_l(nt) + 1
-                     sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
-                           Hubbard_U(nt) * 0.5d0 * dns(m2,m2,is,na) 
                      DO m1 = 1, 2 * Hubbard_l(nt) + 1
-                        sigmah(ipol,jpol) = sigmah(ipol,jpol) + omin1 * &
-                           Hubbard_U(nt) * ns(m2,m1,is,na) * dns(m1,m2,is,na)
+                        sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
+                           v_hub(m2,m1,is,na) * dns(m1,m2,is,na)
                      END DO
                   END DO
                END DO
@@ -114,7 +104,6 @@ SUBROUTINE stres_hub ( sigmah )
    CALL trntns(sigmah,at,bg,-1)
    CALL symtns(sigmah,nsym,s)
    CALL trntns(sigmah,at,bg,1)
-
 !
 ! Symmetryze the stress tensor with respect to cartesian coordinates
 ! it should NOT be needed, let's do it for safety.

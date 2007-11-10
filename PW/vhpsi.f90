@@ -15,8 +15,8 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   ! of the current k-point, the result is added to hpsi
   !
   USE kinds,     ONLY : DP
-  USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
-                        ns, nsnew, swfcatom
+  USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, HUbbard_U, Hubbard_alpha, &
+                        v_hub, swfcatom
   USE lsda_mod,  ONLY : nspin, current_spin
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE basis,     ONLY : natomwfc
@@ -70,14 +70,11 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
         nt = ityp (na)  
         if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then  
            do m1 = 1, 2 * Hubbard_l(nt) + 1 
-              temp = proj (offset(na)+m1, ibnd)  
+              temp = 0.d0
               do m2 = 1, 2 * Hubbard_l(nt) + 1 
-                 temp = temp - 2.d0 * ns ( m1, m2, current_spin, na) * &
+                 temp = temp + v_hub ( m1, m2, current_spin, na) * &
                                       proj (offset(na)+m2, ibnd)
               enddo
-
-              temp = temp * Hubbard_U(nt)/2.d0
-              temp = temp + proj(offset(na)+m1,ibnd) * Hubbard_alpha(nt)
               if (gamma_only) then
                  call DAXPY (2*np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,ibnd),              1)

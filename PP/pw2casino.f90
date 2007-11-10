@@ -70,6 +70,7 @@ SUBROUTINE compute_casino
   USE klist , ONLY: nks, nelec, xk
   USE lsda_mod, ONLY: lsda, nspin
   USE scf, ONLY: rho, rho_core, rhog_core
+  USE ldaU, ONLY : lda_plus_u, eth, Hubbard_lmax
   USE vlocal, ONLY: vloc, vnew, strf
   USE wvfct, ONLY: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
   USE uspp, ONLY: nkb, vkb, dvan
@@ -85,6 +86,7 @@ SUBROUTINE compute_casino
   LOGICAL :: exst, found
   REAL(DP) :: ek, eloc, enl, charge, etotefield
   COMPLEX(DP), ALLOCATABLE :: aux(:), hpsi(:,:)
+  REAL(DP), allocatable :: v_h_new(:,:,:,:)
   INTEGER :: ios
   INTEGER, EXTERNAL :: atomic_number
   REAL (DP), EXTERNAL :: ewald
@@ -103,7 +105,7 @@ SUBROUTINE compute_casino
   ! four times npwx should be enough
   ALLOCATE (idx (4*npwx) )
   ALLOCATE (igtog (4*npwx) )
-
+  if (lda_plus_u) allocate(v_h_new(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
   hpsi (:,:) = (0.d0, 0.d0)
   idx(:) = 0
   igtog(:) = 0
@@ -219,8 +221,8 @@ SUBROUTINE compute_casino
   !
   ! compute hartree and xc contribution
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-                 ehart, etxc, vtxc, etotefield, charge, vnew )
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, rho%ns, &
+                 ehart, etxc, vtxc, eth, etotefield, charge, vnew, v_h_new )
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   !

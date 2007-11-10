@@ -37,16 +37,15 @@ SUBROUTINE electrons()
   USE scf,                  ONLY : scf_type, &
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &
-                                   vr, vltot, vrs, &
-                                   kedtau, kedtaur
+                                   vr, vltot, vrs, kedtau, kedtaur
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, assume_isolated
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield
   USE buffers,              ONLY : save_buffer
-  USE ldaU,                 ONLY : ns, nsnew, eth, Hubbard_U, Hubbard_lmax, &
-                                   niter_with_fixed_ns, lda_plus_u
+  USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
+                                   niter_with_fixed_ns, lda_plus_u, v_hub
   USE extfield,             ONLY : tefield, etotefield
   USE wavefunctions_module, ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
@@ -278,6 +277,7 @@ SUBROUTINE electrons()
         ! ... quantities obtained from the input density
         !
         hwf_energy = eband + deband_hwf + (etxc - etxcc) + ewld + ehart + demet
+        IF ( lda_plus_u ) hwf_energy = hwf_energy + eth
         !
         IF ( lda_plus_u )  THEN
            !
@@ -285,8 +285,7 @@ SUBROUTINE electrons()
            !
            IF ( first .AND. istep == 0 .AND. &
                 startingpot == 'atomic' ) CALL ns_adj()
-           !
-           IF ( iter <= niter_with_fixed_ns ) nsnew = ns
+           IF ( iter <= niter_with_fixed_ns ) rho%ns = rhoin%ns
            !
         END IF
         !
@@ -323,7 +322,7 @@ SUBROUTINE electrons()
         END IF
         !
         CALL mix_rho( rho, rhoin, becnew, becstep, &
-              nsnew, ns, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
+                      mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
@@ -332,7 +331,7 @@ SUBROUTINE electrons()
         ! ... In the other cases rhoin contains the mixed charge density 
         ! ... (the new input density) while rho is unchanged
         !
-        IF ( okpaw )         DEALLOCATE (becnew)
+        IF ( okpaw ) DEALLOCATE (becnew)
         !
         IF ( first .and. nat > 0) THEN
            !
@@ -358,33 +357,12 @@ SUBROUTINE electrons()
         !
         not_converged_electrons : &
         IF ( .NOT. conv_elec ) THEN
-           !
-           ! ... synchronize R- and G- components of the mixed charge density 
-           ! ... it is already so in mixrho
-           !
-           ! the same for the kinetic energy density (rhoin%kin_r)
-           !
-!           IF ( dft_is_meta() ) THEN
-!              DO is = 1, nspin
-!                 !
-!                 psic(:) = ( 0.D0, 0.D0 )
-!                 !
-!                 psic(nl(:)) = rhoin%kin_g(:,is)
-!                 !
-!                 IF ( gamma_only ) psic(nlm(:)) = CONJG( rhoin%kin_g(:,is) )
-!                 !
-!                 CALL cft3( psic, nr1, nr2, nr3, nrx1, nrx2, nrx3, 1 )
-!                 !
-!                 rhoin%kin_r(:,is) = psic(:)
-!                 !
-!              END DO
-!           END IF
-!           !
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, rhoin%kin_r, &
-                          ehart, etxc, vtxc, etotefield, charge, vr )
+           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, &
+                          rhoin%kin_r, rhoin%ns, &
+                          ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -426,6 +404,13 @@ SUBROUTINE electrons()
            ! ... write the charge density to file
            !
            CALL write_rho( rho%of_r, nspin )
+           IF ( lda_plus_u ) THEN
+              IF ( ionode ) THEN
+                 CALL seqopn( iunocc, 'occup', 'FORMATTED', exst )
+                 WRITE( iunocc, * ) rho%ns
+                 CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
+              END IF
+           END IF
            !
         ELSE not_converged_electrons
            !
@@ -435,8 +420,9 @@ SUBROUTINE electrons()
            !
            vnew(:,:) = vr(:,:)
            !
-           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-                          ehart, etxc, vtxc, etotefield, charge, vr )
+           CALL v_of_rho( rho%of_r,rho%of_g, rho_core,rhog_core, &
+                          rho%kin_r, rho%ns, &
+                          ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
            !
            vnew(:,:) = vr(:,:) - vnew(:,:)
            !
@@ -494,20 +480,6 @@ SUBROUTINE electrons()
      ! ... define the total local potential (external + scf)
      !
      CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
-     !
-     IF ( lda_plus_u ) THEN
-        !
-        IF ( ionode ) THEN
-           !
-           CALL seqopn( iunocc, 'occup', 'FORMATTED', exst )
-           !
-           WRITE( iunocc, * ) ns
-           !
-           CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
-           !
-        END IF
-        !
-     END IF
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential
@@ -592,8 +564,9 @@ SUBROUTINE electrons()
         IF ( first ) THEN
            !
            fock0 = exxenergy2()
-           CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-                          ehart, etxc, vtxc, etotefield, charge, vr )
+           CALL v_of_rho( rho%of_r,rho%of_g, rho_core,rhog_core, &
+                          rho%kin_r, rho%ns, &
+                          ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
            !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
            !
@@ -896,6 +869,7 @@ SUBROUTINE electrons()
        IMPLICIT NONE
        !
        REAL(DP) :: delta_e
+       REAL(DP) :: delta_e_hub
        INTEGER  :: is
        !
        !
@@ -917,6 +891,12 @@ SUBROUTINE electrons()
        !
        CALL mp_sum( delta_e, intra_pool_comm )
        !
+       if (lda_plus_u) then
+          delta_e_hub = - SUM (rho%ns(:,:,:,:)*v_hub(:,:,:,:))
+          if (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
+          delta_e = delta_e + delta_e_hub
+       end if
+       !
        RETURN
        !
      END FUNCTION delta_e
@@ -933,6 +913,7 @@ SUBROUTINE electrons()
        IMPLICIT NONE
        !
        REAL(DP) :: delta_escf
+       REAL(DP) :: delta_escf_hub
        INTEGER  :: is
        !
        !
@@ -956,6 +937,13 @@ SUBROUTINE electrons()
        !
        CALL mp_sum( delta_escf, intra_pool_comm )
        !
+       !
+       if (lda_plus_u) then
+          delta_escf_hub = - SUM ((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v_hub(:,:,:,:))
+          if (nspin==1) delta_escf_hub = 2.d0 * delta_escf_hub
+          delta_escf = delta_escf + delta_escf_hub
+       end if
+
        RETURN
        !
      END FUNCTION delta_escf

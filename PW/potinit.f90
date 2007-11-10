@@ -41,7 +41,7 @@ SUBROUTINE potinit()
   USE wavefunctions_module, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc
   USE ldaU,                 ONLY : niter_with_fixed_ns
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, ns, nsnew
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, v_hub, eth
   USE noncollin_module,     ONLY : noncolin, report
   USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,             ONLY : domag
@@ -115,23 +115,15 @@ SUBROUTINE potinit()
      IF ( lda_plus_u ) THEN
         !
         ldim = 2*Hubbard_lmax + 1
-        !
         IF ( ionode ) THEN
-           !
            CALL seqopn( iunocc, 'occup', 'FORMATTED', exst )
-           READ( UNIT = iunocc, FMT = * ) ns
+           READ( UNIT = iunocc, FMT = * ) rho%ns
            CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
-           !
         ELSE
-           !
-           ns(:,:,:,:) = 0.D0
-           !
+           rho%ns(:,:,:,:) = 0.D0
         END IF
-        !
-        CALL reduce( ldim*ldim*nspin*nat, ns )
-        CALL poolreduce( ldim*ldim*nspin*nat, ns )
-        !
-        nsnew = ns
+        CALL reduce( ldim*ldim*nspin*nat, rho%ns )
+        CALL poolreduce( ldim*ldim*nspin*nat, rho%ns )
         !
      END IF
      !
@@ -148,15 +140,8 @@ SUBROUTINE potinit()
      !
      ! ... in the lda+U case set the initial value of ns
      !
-     IF ( lda_plus_u ) THEN
-        !
-        CALL init_ns()
-        !
-        nsnew = ns
-        !
-     END IF
-     !
      CALL atomic_rho( rho%of_r, nspin )
+     IF ( lda_plus_u ) CALL init_ns()
      !
      IF ( input_drho /= ' ' ) THEN
         !
@@ -172,7 +157,6 @@ SUBROUTINE potinit()
         rho%of_r = rho%of_r + vr
         !
      END IF
-     !
      !
   END IF
   !
@@ -234,8 +218,8 @@ SUBROUTINE potinit()
   !
   ! ... compute the potential and store it in vr
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-                 ehart, etxc, vtxc, etotefield, charge, vr )
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, rho%ns, &
+                 ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub )
   !
   ! ... define the total local potential (external+scf)
   !

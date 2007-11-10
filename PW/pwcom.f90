@@ -465,10 +465,9 @@ MODULE ldaU
   COMPLEX(DP), ALLOCATABLE :: &
        swfcatom(:,:)           ! orthogonalized atomic wfcs
   REAL(DP), ALLOCATABLE :: &
-       ns(:,:,:,:),          &! the occupation matrix used in h_psi
-       nsnew(:,:,:,:)         ! the occupation matrix computed by at
+       v_hub(:,:,:,:)         ! the hubbard contribution to the potential
   REAL(DP) :: &       
-       eth,                  &! the (corrected) Hubbard contribution
+       eth,                  &! the Hubbard contribution to the energy
        Hubbard_U(ntypx),     &! the Hubbard U
        Hubbard_alpha(ntypx), &! the Hubbard alpha (used to calculate U)
        starting_ns(lqmax,nspinx,ntypx) !

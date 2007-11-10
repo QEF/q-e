@@ -13,7 +13,8 @@ subroutine ns_adj
 !
    USE kinds,     ONLY : DP
    USE ions_base, ONLY : nat, ntyp => nsp, ityp
-   USE ldaU,      ONLY : nsnew, Hubbard_lmax, Hubbard_l, Hubbard_U, starting_ns
+   USE ldaU,      ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, starting_ns
+   USE scf,       ONLY : rho
    USE lsda_mod,  ONLY : nspin
    USE io_global, ONLY : stdout
  
@@ -36,7 +37,7 @@ subroutine ns_adj
          do is=1,nspin
             do m1 = 1, 2 * Hubbard_l(nt) + 1
                do m2 = 1, 2 * Hubbard_l(nt) + 1
-                  f(m1,m2) = nsnew(m1,m2,is,na)
+                  f(m1,m2) = rho%ns(m1,m2,is,na)
                end do
             end do
             call cdiagh(2*Hubbard_l(nt)+1, f, ldim, lambda, vet)
@@ -49,13 +50,13 @@ subroutine ns_adj
                   do i = 1,2 * Hubbard_l(nt) + 1
                      temp = temp + CONJG(vet(m1,i))*lambda(i)*vet(m2,i)     
                   end do
-                  nsnew(m1,m2,is,na) =  DBLE(temp)
-                  nsnew(m2,m1,is,na) = nsnew(m1,m2,is,na)
+                  rho%ns(m1,m2,is,na) =  DBLE(temp)
+                  rho%ns(m2,m1,is,na) = rho%ns(m1,m2,is,na)
                end do
             end do
          end do
       end if
-   end do          ! on na
+   end do ! on na
    CALL write_ns
    return
 end subroutine ns_adj

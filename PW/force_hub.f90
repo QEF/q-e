@@ -20,8 +20,8 @@ SUBROUTINE force_hub(forceh)
    USE ions_base,            ONLY : nat, ityp
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
-                                    hubbard_alpha, ns, U_projection, &
-                                    swfcatom
+                                    hubbard_alpha, U_projection, &
+                                    swfcatom, v_hub
    USE symme,                ONLY : s, nsym, irt
    USE io_files,             ONLY : prefix, iunocc
    USE wvfct,                ONLY : gamma_only, nbnd, npwx, npw, igk
@@ -66,14 +66,6 @@ SUBROUTINE force_hub(forceh)
             becp(nkb,nbnd) )
 
    forceh(:,:) = 0.d0
-
-   IF ( me_pool == 0 .AND. my_pool_id == 0 ) THEN
-
-      CALL seqopn (iunocc, 'occup', 'formatted', exst)
-      READ(iunocc,*) ns
-      CLOSE(unit=iunocc,status='keep')
-
-   END IF
 
    counter = 0
    DO na=1,nat
@@ -131,11 +123,9 @@ SUBROUTINE force_hub(forceh)
                IF (Hubbard_U(nt).NE.0.d0.OR. Hubbard_alpha(nt).NE.0.d0) THEN
                   DO is = 1,nspin
                      DO m2 = 1,ldim
-                        forceh(ipol,alpha) = forceh(ipol,alpha) -  &
-                              Hubbard_U(nt) * 0.5d0           * dns(m2,m2,is,na)
                         DO m1 = 1,ldim
-                           forceh(ipol,alpha) = forceh(ipol,alpha) +    &
-                              Hubbard_U(nt) * ns(m2,m1,is,na) * dns(m1,m2,is,na)
+                           forceh(ipol,alpha) = forceh(ipol,alpha) -    &
+                              v_hub(m2,m1,is,na) * dns(m1,m2,is,na)
                         END DO
                      END DO
                   END DO

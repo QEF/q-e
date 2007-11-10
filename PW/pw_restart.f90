@@ -837,7 +837,10 @@ MODULE pw_restart
       !
       USE io_rho_xml, ONLY : read_rho
       USE scf,        ONLY : rho
+      USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
       USE lsda_mod,   ONLY : nspin
+      USE io_files,   ONLY : iunocc    
+      USE ions_base,  ONLY : nat
       !
       IMPLICIT NONE
       !
@@ -848,6 +851,7 @@ MODULE pw_restart
       LOGICAL            :: lexist, lcell, lpw, lions, lspin, linit_mag, &
                             lxc, locc, lbz, lbs, lwfc, &
                             lsymm, lph, lrho, lefield
+      INTEGER :: ldim
       !
       !
       ierr = 0
@@ -1038,6 +1042,23 @@ MODULE pw_restart
          ! ... to read the charge-density we use the routine from io_rho_xml 
          !
          CALL read_rho( rho%of_r, nspin )
+         ! ... The occupations ns also need to be read in order to build up 
+         ! ... the potential
+         !
+         IF ( lda_plus_u ) THEN
+            !
+            ldim = 2*Hubbard_lmax + 1
+            IF ( ionode ) THEN
+               CALL seqopn( iunocc, 'occup', 'FORMATTED', lexist )
+               READ( UNIT = iunocc, FMT = * ) rho%ns
+               CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
+            ELSE
+               rho%ns(:,:,:,:) = 0.D0
+            END IF
+            CALL reduce( ldim*ldim*nspin*nat, rho%ns )
+            CALL poolreduce( ldim*ldim*nspin*nat, rho%ns )
+            !
+         END IF
          !
       END IF
       !

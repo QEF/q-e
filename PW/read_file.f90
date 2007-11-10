@@ -45,6 +45,7 @@ SUBROUTINE read_file()
   USE grid_paw_routines,    ONLY : allocate_paw_internals
   USE grid_paw_variables,   ONLY : okpaw, tpawp
   USE rad_paw_routines,     ONLY : paw_init
+  USE ldaU,                 ONLY : v_hub, eth
   !
   IMPLICIT NONE
   !
@@ -212,8 +213,8 @@ SUBROUTINE read_file()
   !
   ! ... recalculate the potential
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, &
-                 ehart, etxc, vtxc, etotefield, charge, vr )
+  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, rho%ns, &
+                 ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub )
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 
   ! ... to unit iunwfc (for compatibility)

@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !-----------------------------------------------------------------------
-SUBROUTINE new_ns()
+SUBROUTINE new_ns(ns)
   !-----------------------------------------------------------------------
   !
   ! This routine computes the new value for ns (the occupation numbers of
@@ -21,8 +21,8 @@ SUBROUTINE new_ns()
   USE ions_base,            ONLY : nat, ityp
   USE basis,                ONLY : natomwfc
   USE klist,                ONLY : nks, ngk
-  USE ldaU,                 ONLY : ns, nsnew, Hubbard_lmax, Hubbard_l, &
-                                   Hubbard_U, Hubbard_alpha, swfcatom,eth
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, &
+                                   Hubbard_U, Hubbard_alpha, swfcatom
   USE symme,                ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symme,                ONLY : nsym, irt
@@ -35,6 +35,10 @@ SUBROUTINE new_ns()
 
   IMPLICIT NONE
   !
+  ! I/O variables
+  !
+  REAL(DP) :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+
   INTEGER :: ik, ibnd, is, i, na, nb, nt, isym, n, counter, m1, m2, &
        m0, m00, l, ldim
   INTEGER, ALLOCATABLE ::  offset (:)
@@ -73,8 +77,8 @@ SUBROUTINE new_ns()
   ENDDO
 
   IF (counter.NE.natomwfc) CALL errore ('new_ns', 'nstart<>counter', 1)
-  nr    (:,:,:,:) = 0.d0
-  nsnew (:,:,:,:) = 0.d0
+  nr (:,:,:,:) = 0.d0
+  ns (:,:,:,:) = 0.d0
   !
   !    we start a loop on k points
   !
@@ -148,7 +152,7 @@ SUBROUTINE new_ns()
      ENDDO
   ENDDO
 
-  ! symmetryze the quantities nr -> nsnew
+  ! symmetryze the quantities nr -> ns
   DO na = 1, nat  
      nt = ityp (na)  
      IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
@@ -160,18 +164,18 @@ SUBROUTINE new_ns()
                     DO m0 = 1, 2 * Hubbard_l(nt) + 1  
                        DO m00 = 1, 2 * Hubbard_l(nt) + 1  
                           IF (Hubbard_l(nt).EQ.0) THEN
-                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                             ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
                                    nr(m0,m00,is,nb) / nsym
                           ELSE IF (Hubbard_l(nt).EQ.1) THEN
-                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                             ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
                                    d1(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d1(m00,m2,isym) / nsym
                           ELSE IF (Hubbard_l(nt).EQ.2) THEN
-                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                             ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
                                    d2(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d2(m00,m2,isym) / nsym
                           ELSE IF (Hubbard_l(nt).EQ.3) THEN
-                             nsnew(m1,m2,is,na) = nsnew(m1,m2,is,na) +  &
+                             ns(m1,m2,is,na) = ns(m1,m2,is,na) +  &
                                    d3(m0 ,m1,isym) * nr(m0,m00,is,nb) * &
                                    d3(m00,m2,isym) / nsym
                           ELSE
@@ -195,16 +199,16 @@ SUBROUTINE new_ns()
         DO is = 1, nspin  
            DO m1 = 1, 2 * Hubbard_l(nt) + 1  
               DO m2 = m1, 2 * Hubbard_l(nt) + 1  
-                 psum = ABS ( nsnew(m1,m2,is,na) - nsnew(m2,m1,is,na) )  
+                 psum = ABS ( ns(m1,m2,is,na) - ns(m2,m1,is,na) )  
                  IF (psum.GT.1.d-10) THEN  
                     WRITE( stdout, * ) na, is, m1, m2  
-                    WRITE( stdout, * ) nsnew (m1, m2, is, na)  
-                    WRITE( stdout, * ) nsnew (m2, m1, is, na)  
+                    WRITE( stdout, * ) ns (m1, m2, is, na)  
+                    WRITE( stdout, * ) ns (m2, m1, is, na)  
                     CALL errore ('new_ns', 'non hermitean matrix', 1)  
                  ELSE  
-                    nsnew(m1,m2,is,na) = 0.5d0 * (nsnew(m1,m2,is,na) + &
-                                                  nsnew(m2,m1,is,na) )
-                    nsnew(m2,m1,is,na) = nsnew(m1,m2,is,na)
+                    ns(m1,m2,is,na) = 0.5d0 * (ns(m1,m2,is,na) + &
+                                               ns(m2,m1,is,na) )
+                    ns(m2,m1,is,na) = ns(m1,m2,is,na)
                  ENDIF
               ENDDO
            ENDDO
@@ -212,27 +216,7 @@ SUBROUTINE new_ns()
      ENDIF 
   ENDDO
 
-  !
-  ! Now the contribution to the total energy is computed. The corrections
-  ! needed to obtain a variational expression are already included
-  !
-  eth = 0.d0  
-  DO na = 1, nat  
-     nt = ityp (na)  
-     IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
-        DO is = 1, nspin  
-           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
-              DO m2 = 1, 2 * Hubbard_l(nt) + 1  
-                 eth = eth + Hubbard_U(nt) * nsnew(m1,m2,is,na) * &
-                          (ns(m2,m1,is,na) - nsnew(m2,m1,is,na) * 0.5d0)
-              ENDDO
-           ENDDO
-        ENDDO
-     ENDIF
-  ENDDO
-
   DEALLOCATE ( offset, proj, nr )
-  IF (nspin.EQ.1) eth = 2.d0 * eth
 
   RETURN
 

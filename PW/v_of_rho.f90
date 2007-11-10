@@ -6,8 +6,8 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, &
-                     ehart, etxc, vtxc, etotefield, charge, v )
+SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, ns, &
+                     ehart, etxc, vtxc, eth, etotefield, charge, v, v_hub )
   !----------------------------------------------------------------------------
   !
   ! ... This routine computes the Hartree and Exchange and Correlation
@@ -19,17 +19,23 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, &
   USE gvect,            ONLY : nrxx, ngm
   USE lsda_mod,         ONLY : nspin
   USE noncollin_module, ONLY : noncolin
+  USE ions_base,        ONLY : nat
+  USE ldaU,             ONLY : lda_plus_U, Hubbard_lmax, Hubbard_l, &
+                               Hubbard_U, Hubbard_alpha
   USE funct,            ONLY : dft_is_meta
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin)
+  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin), &
+                          ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
     ! input: the valence charge
     ! input: the core charge
   COMPLEX(DP), INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
     ! input: the valence charge in reciprocal space
     ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, charge, etotefield, v(nrxx,nspin) 
+  REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, eth, charge, etotefield, &
+                           v(nrxx,nspin), &
+                           v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
     ! output: the integral V_xc * rho
     ! output: the E_xc energy
     ! output: the hartree energy
@@ -55,6 +61,10 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, &
   ! ... calculate hartree potential
   !
   CALL v_h( rhog, ehart, charge, v )
+  !
+  !
+  !
+  if (lda_plus_u) call v_Hubbard(ns,v_hub,eth)
   !
   ! ... add an electric field
   ! 
@@ -623,3 +633,50 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   RETURN
   !
 END SUBROUTINE v_h
+!
+!-----------------------------------------------------------------------
+SUBROUTINE v_hubbard(ns, v_hub, eth)
+  !-----------------------------------------------------------------------
+  !
+  USE kinds,                ONLY : DP
+  USE ions_base,            ONLY : nat, ityp
+  USE ldaU,                 ONLY : Hubbard_lmax, Hubbard_l, &
+                                   Hubbard_U, Hubbard_alpha
+  USE lsda_mod,             ONLY : nspin
+
+  IMPLICIT NONE
+  !
+  REAL(DP), INTENT(IN)  :: ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
+  REAL(DP), INTENT(OUT) :: v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat) 
+  REAL(DP), INTENT(OUT) :: eth
+  INTEGER :: is, na, nt, m1, m2
+  !
+  ! Now the contribution to the total energy is computed. The corrections
+  ! needed to obtain a variational expression are already included
+  !
+  eth = 0.d0  
+  v_hub(:,:,:,:) = 0.d0
+  DO na = 1, nat  
+     nt = ityp (na)  
+     IF (Hubbard_U(nt).NE.0.d0 .OR. Hubbard_alpha(nt).NE.0.d0) THEN  
+        DO is = 1, nspin  
+           DO m1 = 1, 2 * Hubbard_l(nt) + 1  
+              eth = eth + ( Hubbard_alpha(nt) + 0.5D0 * Hubbard_U(nt) ) * &
+                            ns(m1,m1,is,na) 
+              v_hub(m1,m1,is,na) = v_hub(m1,m1,is,na) + &
+                          ( Hubbard_alpha(nt) + 0.5D0 * Hubbard_U(nt) ) 
+              DO m2 = 1, 2 * Hubbard_l(nt) + 1  
+                 eth = eth - 0.5D0 * Hubbard_U(nt) * &
+                                     ns(m2,m1,is,na)* ns(m1,m2,is,na) 
+                 v_hub(m1,m2,is,na) = v_hub(m1,m2,is,na) - &
+                                      Hubbard_U(nt) * ns(m2,m1,is,na) 
+              ENDDO
+           ENDDO
+        ENDDO
+     ENDIF
+  ENDDO
+  IF (nspin.EQ.1) eth = 2.d0 * eth
+
+  RETURN
+
+END SUBROUTINE v_hubbard

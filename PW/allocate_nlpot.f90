@@ -31,7 +31,8 @@ subroutine allocate_nlpot
   USE gvect,            ONLY : ngm, gcutm, ecutwfc, g
   USE klist,            ONLY : xk, wk, ngk, nks, xqq
   USE lsda_mod,         ONLY : nspin
-  USE ldaU,             ONLY : Hubbard_lmax, ns, nsnew
+  USE ldaU,             ONLY : Hubbard_lmax, v_hub
+  USE scf,              ONLY : 
   USE noncollin_module, ONLY : noncolin
   USE wvfct,            ONLY : npwx, npw, igk, g2kin
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
@@ -117,8 +118,7 @@ subroutine allocate_nlpot
   ! if (lda_plus_u) then  
   !
   ldim = 2 * Hubbard_lmax + 1
-  ALLOCATE( ns( ldim, ldim, nspin, nat ) )
-  ALLOCATE( nsnew( ldim, ldim, nspin, nat ) ) 
+  ALLOCATE( v_hub( ldim, ldim, nspin, nat ) ) 
   !
   ! endif
   !

@@ -13,9 +13,9 @@ subroutine write_ns
   USE constants,  ONLY : rytoev
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE lsda_mod,   ONLY : nspin
-  USE io_global,  ONLY :  stdout
-  USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
-                         nsnew
+  USE io_global,  ONLY : stdout
+  USE scf,        ONLY : rho
+  USE ldaU,       ONLY : Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha
   !
   implicit none
   !
@@ -45,7 +45,7 @@ subroutine write_ns
         nsuma = 0.d0
         do is = 1, nspin
            do m1 = 1, ldim
-              nsuma = nsuma + nsnew (m1, m1, is, na)
+              nsuma = nsuma + rho%ns (m1, m1, is, na)
            end do
         end do
         if (nspin.eq.1) nsuma = 2.d0 * nsuma
@@ -54,7 +54,7 @@ subroutine write_ns
         do is = 1, nspin
            do m1 = 1, ldim
               do m2 = 1, ldim
-                 f (m1, m2) = nsnew (m1, m2, is, na)
+                 f (m1, m2) = rho%ns (m1, m2, is, na)
               enddo
            enddo
            call cdiagh(ldim, f, ldmx, lambda, vet)
@@ -66,7 +66,7 @@ subroutine write_ns
            end do
            WRITE( stdout,*) 'occupations'
            do m1 = 1, ldim
-              WRITE( stdout,'(7(f6.3,1x))') (nsnew(m1,m2,is,na),m2=1,ldim)
+              WRITE( stdout,'(7(f6.3,1x))') (rho%ns(m1,m2,is,na),m2=1,ldim)
            end do
         enddo
      endif

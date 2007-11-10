@@ -21,7 +21,8 @@ subroutine init_ns
    USE kinds,     ONLY : DP
    USE ions_base, ONLY : nat, ityp
    USE lsda_mod,  ONLY : nspin, starting_magnetization
-   USE ldaU,      ONLY : ns, hubbard_u, hubbard_alpha, hubbard_l
+   USE ldaU,      ONLY : hubbard_u, hubbard_alpha, hubbard_l
+   USE scf,       ONLY : rho
    !
    implicit none
 
@@ -30,7 +31,7 @@ subroutine init_ns
    integer :: na, nt, is, m1, majs, mins
    logical :: nm        ! true if the atom is non magnetic
 
-   ns(:,:,:,:) = 0.d0
+   rho%ns(:,:,:,:) = 0.d0
 
    do na = 1, nat
       nt = ityp (na)
@@ -51,19 +52,19 @@ subroutine init_ns
          if (.not.nm) then  
             if (totoc.gt.2*Hubbard_l(nt)+1) then  
                do m1 = 1, 2*Hubbard_l(nt)+1  
-                  ns (m1, m1, majs, na) = 1.d0  
-                  ns (m1, m1, mins, na) = (totoc -(2*Hubbard_l(nt)+1) ) / &
-                                                  (2*Hubbard_l(nt)+1)  
+                  rho%ns (m1, m1, majs, na) = 1.d0  
+                  rho%ns (m1, m1, mins, na) = (totoc -(2*Hubbard_l(nt)+1) ) / &
+                                                      (2*Hubbard_l(nt)+1)  
                enddo  
             else  
                do m1 = 1, 2*Hubbard_l(nt)+1  
-                  ns (m1, m1, majs, na) = totoc / (2*Hubbard_l(nt)+1)
+                  rho%ns (m1, m1, majs, na) = totoc / (2*Hubbard_l(nt)+1)
                enddo  
             endif  
          else  
             do is = 1,nspin
                do m1 = 1, 2*Hubbard_l(nt)+1  
-                  ns (m1, m1, is, na) = totoc /  2.d0 / (2*Hubbard_l(nt)+1)
+                  rho%ns (m1, m1, is, na) = totoc /  2.d0 / (2*Hubbard_l(nt)+1)
                enddo  
             enddo  
          endif  
@@ -71,4 +72,3 @@ subroutine init_ns
    enddo  
    return  
 end subroutine init_ns
-
