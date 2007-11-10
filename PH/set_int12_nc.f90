@@ -14,7 +14,7 @@ SUBROUTINE set_int12_nc(iflag)
 !
 USE ions_base, ONLY : nat, ntyp => nsp, ityp
 USE spin_orb, ONLY : lspinorb, so
-USE uspp_param, only: tvanp
+USE uspp_param, only: upf
 USE phus, ONLY : int1, int2, int1_nc, int2_so
 IMPLICIT NONE
 INTEGER :: iflag
@@ -23,7 +23,7 @@ INTEGER :: np, na
 int1_nc=(0.d0,0.d0)
 IF (lspinorb) int2_so=(0.d0,0.d0)
 DO np = 1, ntyp
-   IF ( tvanp(np) ) THEN
+   IF ( upf(np)%tvanp ) THEN
       DO na = 1, nat
          IF (ityp(na)==np) THEN
             IF (so(np)) THEN
@@ -44,7 +44,7 @@ SUBROUTINE set_int3_nc(npe)
 !----------------------------------------------------------------------------
 USE ions_base, ONLY : nat, ntyp => nsp, ityp
 USE spin_orb, ONLY : so
-USE uspp_param, only: tvanp
+USE uspp_param, only: upf
 USE phus, ONLY : int3, int3_nc
 IMPLICIT NONE
 INTEGER :: npe
@@ -52,7 +52,7 @@ INTEGER :: np, na
 
 int3_nc=(0.d0,0.d0)
 DO np = 1, ntyp
-   IF ( tvanp(np) ) THEN
+   IF ( upf(np)%tvanp ) THEN
       DO na = 1, nat
          IF (ityp(na)==np) THEN
             IF (so(np)) THEN

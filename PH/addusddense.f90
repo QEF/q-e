@@ -21,7 +21,7 @@ subroutine addusddense (drhoscf, dbecsum)
   use pwcom
   use phcom
   USE kinds, only : DP
-  USE uspp_param, ONLY: lmaxq, nh, nhm, tvanp
+  USE uspp_param, ONLY: upf, lmaxq, nh, nhm
   implicit none
   !
   !   the dummy variables
@@ -72,7 +72,7 @@ subroutine addusddense (drhoscf, dbecsum)
 
   aux (:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if (upf(nt)%tvanp ) then
         ijh = 0
         do ih = 1, nh (nt)
            do jh = ih, nh (nt)

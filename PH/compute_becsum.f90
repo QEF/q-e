@@ -22,7 +22,7 @@ subroutine compute_becsum
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
-  USE uspp_param, ONLY: nh, tvanp
+  USE uspp_param, ONLY: upf, nh
   use phcom
   implicit none
 
@@ -45,7 +45,7 @@ subroutine compute_becsum
      if (lsda) current_spin = isk (ikk)
      ijkb0 = 0
      do nt = 1, ntyp
-        if (tvanp (nt) ) then
+        if (upf(nt)%tvanp ) then
            do na = 1, nat
               if (ityp (na) == nt) then
                  ijh = 0
@@ -105,7 +105,7 @@ subroutine compute_becsum
 
   IF (noncolin.and.okvan) THEN
      DO nt = 1, ntyp
-        IF ( tvanp(nt) ) THEN
+        IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
                  IF (so(nt)) THEN

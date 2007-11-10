@@ -28,7 +28,7 @@ subroutine solve_e
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
   USE becmod,                ONLY : becp, becp_nc
-  USE uspp_param,            ONLY : nhm, tvanp
+  USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol
   use phcom
   USE control_ph,            ONLY : reduce_io
@@ -376,7 +376,7 @@ subroutine solve_e
 
      IF (noncolin.and.okvan) THEN
         DO nt = 1, ntyp
-           IF ( tvanp(nt) ) THEN
+           IF ( upf(nt)%tvanp ) THEN
               DO na = 1, nat
                  IF (ityp(na)==nt) THEN
                     IF (so(nt)) THEN

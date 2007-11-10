@@ -18,7 +18,7 @@ subroutine zstar_eu_us
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE io_files, ONLY: iunigk
-  USE uspp_param,      ONLY : nhm, tvanp
+  USE uspp_param,      ONLY : upf, nhm
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   use phcom
@@ -106,7 +106,7 @@ subroutine zstar_eu_us
   end if
   IF (noncolin.and.okvan) THEN
      DO nt = 1, ntyp
-        IF ( tvanp(nt) ) THEN
+        IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
                  IF (so(nt)) THEN

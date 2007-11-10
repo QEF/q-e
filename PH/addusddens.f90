@@ -22,7 +22,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   USE wavefunctions_module,  ONLY: psic
   use phcom
   USE kinds, only : DP
-  USE uspp_param, ONLY: lmaxq, nh, nhm, tvanp
+  USE uspp_param, ONLY: upf, lmaxq, nh, nhm
 
   implicit none
   !
@@ -99,7 +99,7 @@ subroutine addusddens (drhoscf, dbecsum, irr, mode0, npe, iflag)
   fact = 0.5d0 * CMPLX (0.d0, - tpiba)
   aux(:,:,:) = (0.d0, 0.d0)
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if (upf(nt)%tvanp  ) then
         ijh = 0
         do ih = 1, nh (nt)
            do jh = ih, nh (nt)

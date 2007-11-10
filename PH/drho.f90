@@ -22,7 +22,7 @@ subroutine drho
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
-  USE uspp_param, only: nhm, tvanp
+  USE uspp_param, only: upf, nhm
   USE uspp, only : okvan
   use phcom
   implicit none
@@ -195,7 +195,7 @@ subroutine drho
 
   IF (noncolin) THEN
      DO nt = 1, ntyp
-        IF ( tvanp(nt) ) THEN
+        IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
                  IF (so(nt)) THEN

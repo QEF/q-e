@@ -17,7 +17,7 @@ subroutine adddvscf (ipert, ik)
 #include "f_defs.h"
 
   USE kinds,      ONLY : DP
-  USE uspp_param, ONLY : nh, tvanp
+  USE uspp_param, ONLY : upf, nh 
   USE uspp,       ONLY : vkb, okvan
 ! modules from pwcom
   USE lsda_mod,   ONLY : lsda, current_spin, isk
@@ -62,7 +62,7 @@ subroutine adddvscf (ipert, ik)
   if (lsda) current_spin = isk (ikk)
   ijkb0 = 0
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if (upf(nt)%tvanp  ) then
         do na = 1, nat
            if (ityp (na) .eq.nt) then
               !

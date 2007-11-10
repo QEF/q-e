@@ -23,7 +23,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE kinds, only : DP
-  USE uspp_param, ONLY: nh, nhm, tvanp
+  USE uspp_param, ONLY: upf, nh, nhm
   use phcom
   USE io_files, ONLY: iunigk
   implicit none
@@ -126,7 +126,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
         w1 = weight * wdelta
         ijkb0 = 0
         do nt = 1, ntyp
-           if (tvanp (nt) ) then
+           if (upf(nt)%tvanp ) then
               do na = 1, nat
                  if (ityp (na) == nt) then
                     ijh = 1
@@ -189,7 +189,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
 
   IF (noncolin.and.okvan) THEN
      DO nt = 1, ntyp
-        IF ( tvanp(nt) ) THEN
+        IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
                  IF (so(nt)) THEN

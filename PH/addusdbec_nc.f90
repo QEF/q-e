@@ -19,7 +19,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
-  USE uspp_param, only: nh, tvanp, nhm
+  USE uspp_param, only: upf, nh, nhm
   use phcom
   implicit none
   !
@@ -78,7 +78,7 @@ subroutine addusdbec_nc (ik, wgt, psi, dbecsum_nc)
   !
   ijkb0 = 0
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if (upf(nt)%tvanp ) then
         do na = 1, nat
            if (ityp (na) .eq.nt) then
               do ih = 1, nh (nt)

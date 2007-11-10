@@ -24,7 +24,7 @@ subroutine dvanqq
   use noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   use phcom
-  USE uspp_param, ONLY: lmaxq, nh, tvanp
+  USE uspp_param, ONLY: upf, lmaxq, nh
   implicit none
   !
   !   And the local variables
@@ -115,7 +115,7 @@ subroutine dvanqq
   fact1 = CMPLX (0.d0, - tpiba * omega)
   !
   do ntb = 1, ntyp
-     if (tvanp (ntb) ) then
+     if (upf(ntb)%tvanp ) then
         ijh = 0
         do ih = 1, nh (ntb)
            do jh = ih, nh (ntb)
@@ -234,7 +234,7 @@ subroutine dvanqq
      int4_nc = (0.d0, 0.d0)
      IF (lspinorb) int5_so = (0.d0, 0.d0)
      DO nt = 1, ntyp
-        IF ( tvanp(nt) ) THEN
+        IF ( upf(nt)%tvanp ) THEN
            DO na = 1, nat
               IF (ityp(na)==nt) THEN
                  IF (so(nt)) THEN

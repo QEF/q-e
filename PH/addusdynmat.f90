@@ -21,7 +21,7 @@ subroutine addusdynmat (dynwrk)
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
-  USE uspp_param, only: tvanp, nh
+  USE uspp_param, only: upf, nh
   use phcom
   implicit none
 
@@ -57,7 +57,7 @@ subroutine addusdynmat (dynwrk)
   !
   do na = 1, nat
      np = ityp (na)
-     if (tvanp (np) ) then
+     if (upf(np)%tvanp  ) then
         dim = (nh (np) * (nh (np) + 1) ) / 2
         do ipol = 1, 3
            nu_i = 3 * (na - 1) + ipol

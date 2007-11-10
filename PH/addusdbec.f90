@@ -18,7 +18,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
   USE kinds, only : DP
-  USE uspp_param, only: nh, tvanp, nhm
+  USE uspp_param, only: upf, nh, nhm
   use phcom
   implicit none
   !
@@ -78,7 +78,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !
   ijkb0 = 0
   do nt = 1, ntyp
-     if (tvanp (nt) ) then
+     if (upf(nt)%tvanp ) then
         do na = 1, nat
            if (ityp (na) .eq.nt) then
               !

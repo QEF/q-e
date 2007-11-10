@@ -31,7 +31,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE kinds,                ONLY : DP
   USE becmod,               ONLY : becp, becp_nc  
   use pwcom
-  USE uspp_param,           ONLY : nhm, tvanp
+  USE uspp_param,           ONLY : upf, nhm
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_ph,           ONLY : irr0, niter_ph, nmix_ph, elph, tr2_ph, &
                                    alpha_pv, lgamma, lgamma_gamma, convt, &
@@ -522,7 +522,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 !
      IF (noncolin.and.okvan) THEN
         DO nt = 1, ntyp
-           IF ( tvanp(nt) ) THEN
+           IF ( upf(nt)%tvanp ) THEN
               DO na = 1, nat
                  IF (ityp(na)==nt) THEN
                     IF (so(nt)) THEN

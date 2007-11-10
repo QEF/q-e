@@ -21,7 +21,7 @@ subroutine newdq (dvscf, npe)
   USE noncollin_module, ONLY : noncolin
   USE kinds, only : DP
   use phcom
-  USE uspp_param, ONLY: nh, nhm, tvanp, lmaxq
+  USE uspp_param, ONLY: upf, nh, nhm, lmaxq
   implicit none
   !
   !   The dummy variables
@@ -97,7 +97,7 @@ subroutine newdq (dvscf, npe)
      enddo
 
      do nt = 1, ntyp
-        if (tvanp (nt) ) then
+        if (upf(nt)%tvanp ) then
            do ih = 1, nh (nt)
               do jh = ih, nh (nt)
                  call qvan2 (ngm, ih, jh, nt, qmod, qgm, ylmk0)
