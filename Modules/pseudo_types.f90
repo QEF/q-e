@@ -64,12 +64,12 @@ END TYPE paw_t
         ! they are all stored on a radial grid:
         TYPE paw_in_upf
             REAL(DP),ALLOCATABLE :: aug(:,:,:,:)  ! Augmentation charge
-            REAL(DP),ALLOCATABLE :: ae_core(:),  &! AE core charge
-                                    ps_core(:)    ! PS core charge
-            REAL(DP),ALLOCATABLE :: ae_vloc(:),  &! AE local potential
-                                    ps_vloc(:)    ! PS local potential
+            REAL(DP),POINTER     :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
+                                                  ! is already included in upf)
             REAL(DP),ALLOCATABLE :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
                                     ptfunc(:,:,:) ! as above, but for pseudo
+            REAL(DP),POINTER     :: ae_vloc(:)    ! AE local potential (pseudo vloc
+                                                  ! is already included in upf)
         END TYPE paw_in_upf
 
 

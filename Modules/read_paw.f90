@@ -292,8 +292,7 @@ subroutine set_pseudo_paw (is, pawset)
   USE pseudo_types
   USE constants, ONLY: FPI
   !
-  USE paw_variables, ONLY : pfunc, ptfunc, aevloc_at, psvloc_at, &
-                            aerho_atc, psrho_atc, kdiff, &
+  USE paw_variables, ONLY : kdiff, &
                             augmom, nraug, step_f
   !
   implicit none
@@ -308,15 +307,6 @@ subroutine set_pseudo_paw (is, pawset)
   integer :: i,j, l, nrc, nrs
   integer :: nwfc, mesh
   real (DP) :: pow
-  real (DP), ALLOCATABLE :: aux (:)
-  !
-! #if defined __DO_NOT_CUTOFF_PAW_FUNC
-!   PRINT '(A)', 'WARNING __DO_NOT_CUTOFF_PAW_FUNC'
-! #else
-! #ifdef __SHARP_CUTOFF_PAW_FUNC
-!   PRINT '(A)', 'WARNING __SHARP_CUTOFF_PAW_FUNC'
-! #endif
-! #endif
   !
   ! Cutoffing: WARNING: arbitrary right now, for grid calculation
   pow = 1.d0
@@ -409,9 +399,9 @@ subroutine set_pseudo_paw (is, pawset)
      end do
   end do
 
-  ! FIXME!!! Probably this loop is unnecessary as the qfunc are reconstraucted from
-  ! the full augfuncs !!
-  ! triangularize matrix of qfunc's
+  ! Triangularize matrix of qfunc's
+  ! FIXME!!! Probably this loop is unnecessary as the qfunc are reconstructed
+  ! directly from the full augfuncs in init_us_1!!
   allocate ( upf(is)%qfunc(1:mesh,nwfc*(nwfc+1)/2) )
   do nb = 1, nwfc
       do mb = nb, nwfc
@@ -421,53 +411,28 @@ subroutine set_pseudo_paw (is, pawset)
       enddo
   enddo
 
-  ! new sparse allocation for augmentation functions
-  !if (allocated(aug(is)%fun)) deallocate(aug(is)%fun)
-!   allocate(aug(is)%fun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax))
-!   !
-!     aug(is)%fun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax) &
-!        = &
-!   pawset%augfun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax)
-
   ! Augmentation functions for PAW depend on angular momentum!
-  allocate(upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax))
+  ! FIXME: actually they are allocated up to mesh, but they only
+  ! need to be allocated up to irc!
+  ALLOCATE(upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax))
   upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax) &
            = pawset%augfun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax)
 
-
-
-  !
-#if ! defined __DO_NOT_CUTOFF_PAW_FUNC
-  ALLOCATE (aux(1:mesh))
-#endif
-  do i=1,nwfc
-     do j=1,nwfc
-#if defined __DO_NOT_CUTOFF_PAW_FUNC
-        pfunc (1:mesh, i, j, is) = &
-             pawset%aewfc(1:mesh, i) * pawset%aewfc(1:mesh, j)
-        ptfunc (1:mesh, i, j, is) = &
-             pawset%pswfc(1:mesh, i) * pawset%pswfc(1:mesh, j)
-#else
-#if defined __SHARP_CUTOFF_PAW_FUNC
-        pfunc(:,i,j,is) = 0._dp
-        ptfunc(:,i,j,is) = 0._dp
-        pfunc (1:pawset%irc, i, j, is) = &
+  ! pfunc and ptfunc are couple-wise products of atomic wavefunctions
+  ! FIXME: same as augfun!
+  ALLOCATE( upf(is)%paw%pfunc (1:mesh, 1:nwfc,1:nwfc),&
+            upf(is)%paw%ptfunc(1:mesh, 1:nwfc,1:nwfc) )
+  DO i=1,nwfc
+     DO j=1,nwfc
+        upf(is)%paw%pfunc(:,i,j)  = 0._dp
+        upf(is)%paw%ptfunc(:,i,j) = 0._dp
+        !
+        upf(is)%paw%pfunc (1:pawset%irc, i, j) = &
              pawset%aewfc(1:pawset%irc, i) * pawset%aewfc(1:pawset%irc, j)
-        ptfunc (1:pawset%irc, i, j, is) = &
+        upf(is)%paw%ptfunc (1:pawset%irc, i, j) = &
              pawset%pswfc(1:pawset%irc, i) * pawset%pswfc(1:pawset%irc, j)
-#else
-        aux(1:mesh) = pawset%aewfc(1:mesh, i) * &
-             pawset%aewfc(1:mesh, j)
-        CALL step_f( pfunc(1:mesh,i,j,is), aux(1:mesh), &
-             pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
-        aux(1:mesh) = pawset%pswfc(1:mesh, i) * &
-             pawset%pswfc(1:mesh, j)
-        CALL step_f( ptfunc(1:mesh,i,j,is), aux(1:mesh), &
-             pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
-#endif
-#endif
-     end do
-  end do
+     ENDDO
+  ENDDO
   !
   ! ... Add augmentation charge to ptfunc already here.
   ! ... One should not need \tilde{n}^1 alone in any case.
@@ -511,44 +476,32 @@ subroutine set_pseudo_paw (is, pawset)
   upf(is)%jjj(1:nwfc) = 0._dp
 
 !!$  endif
+
+  ! Core charge: AE core charge is always present, while pseudo core can be
+  ! omitted. Actually PAW uses zero core when it not used, but this will be
+  ! fixed sooner or later.
+  allocate ( upf(is)%rho_atc(mesh) )
+  allocate ( upf(is)%paw%ae_rho_atc(mesh) )
   !
   if ( pawset%nlcc) then
-     allocate ( upf(is)%rho_atc(mesh) )
      upf(is)%rho_atc(1:mesh) = &
          pawset%psccharge(1:mesh) / FPI / pawset%grid%r2(1:mesh)
-  end if
-
-  aerho_atc(1:mesh, is) = pawset%aeccharge(1:mesh) &
-       &                         / FPI / pawset%grid%r2(1:mesh)
-  if ( pawset%nlcc) then
-     psrho_atc(1:mesh, is) = pawset%psccharge(1:mesh) &
-       &                         / FPI / pawset%grid%r2(1:mesh)
   else
-     psrho_atc(:,is) = 0._dp
+     upf(is)%rho_atc(1:mesh) = 0._dp
   end if
+  !
+  upf(is)%paw%ae_rho_atc(1:mesh) = &
+          pawset%aeccharge(1:mesh) / FPI / pawset%grid%r2(1:mesh)
+
   !
   allocate ( upf(is)%rho_at(mesh) )
   upf(is)%rho_at (1:mesh) = pawset%pscharge(1:mesh)
 
-  allocate (upf(is)%vloc(1:mesh))
+  ! Pseudo and All-electron local potentials, on radial grid
+  ALLOCATE (upf(is)%vloc(1:mesh))
+  ALLOCATE (upf(is)%paw%ae_vloc(mesh))
   upf(is)%vloc(1:mesh) = pawset%psloc(1:mesh)
-#if defined __DO_NOT_CUTOFF_PAW_FUNC
-  aevloc_at(1:mesh,is) = pawset%aeloc(1:mesh)
-  psvloc_at(1:mesh,is) = pawset%psloc(1:mesh)
-#else
-#if defined __SHARP_CUTOFF_PAW_FUNC
-  aevloc_at(1:mesh,is) = pawset%aeloc(1:mesh)
-  psvloc_at(1:mesh,is) = pawset%psloc(1:mesh)
- aux(1:mesh) = pawset%aeloc(1:mesh)
-#else
- CALL step_f( aevloc_at(1:mesh,is), aux(1:mesh), &
-      pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
- aux(1:mesh) = pawset%psloc(1:mesh)
- CALL step_f( psvloc_at(1:mesh,is), aux(1:mesh), &
-      pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
- DEALLOCATE (aux)
-#endif
-#endif
+  upf(is)%paw%ae_vloc(1:mesh) = pawset%aeloc(1:mesh)
 
   do ir = 1, rgrid(is)%mesh
     if (rgrid(is)%r (ir) .gt.rcut) then

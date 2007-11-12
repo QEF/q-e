@@ -82,7 +82,6 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
     USE ions_base,         ONLY : nat, ityp
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nhm, lmaxq, upf
-    USE paw_variables,     ONLY : pfunc, ptfunc, aerho_atc, psrho_atc
 
     REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
     REAL(DP),INTENT(OUT),OPTIONAL :: energy          ! if present compute E[rho]
@@ -90,7 +89,7 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
     !
     INTEGER, PARAMETER      :: AE = 1, PS = 2,&      ! All-Electron and Pseudo
                                XC = 1, H  = 2        ! XC and Hartree
-    REAL(DP), POINTER       :: rho_core(:,:)         ! pointer to AE/PS core charge density 
+    REAL(DP), POINTER       :: rho_core(:)           ! pointer to AE/PS core charge density 
     TYPE(paw_info)          :: i                     ! minimal info on atoms
     INTEGER                 :: i_what                ! counter on AE and PS
     INTEGER                 :: is                    ! counter on AE and PS
@@ -129,16 +128,16 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
             IF (i_what == AE) THEN
                 ! to pass the atom indes is dirtyer but faster and
                 ! uses less memory than to pass only a hyperslice of the array
-                CALL PAW_rho_lm(i, becsum, pfunc, rho_lm)
+                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
                 ! used later for xc potential:
-                rho_core => aerho_atc
+                rho_core => upf(i%t)%paw%ae_rho_atc
                 ! sign to sum up the enrgy
                 sgn = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, becsum, ptfunc, rho_lm, upf(i%t)%paw%aug)
+                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
                 !    optional argument for pseudo part --> ^^^
-                rho_core => psrho_atc ! as before
-                sgn = -1._dp          ! as before
+                rho_core => upf(i%t)%rho_atc ! as before
+                sgn = -1._dp                 ! as before
             ENDIF
 
         ! cleanup previously stored potentials
@@ -352,8 +351,7 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
-    USE paw_variables,     ONLY : pfunc, ptfunc, &
-                                  aevloc_at, psvloc_at, ra=>nraug
+    USE paw_variables,     ONLY : ra=>nraug
     USE uspp_param,        ONLY : nh, nhm, lmaxq, upf
 
     REAL(DP), TARGET, INTENT(INOUT) :: d_ae( nhm, nhm, nat, nspin)
@@ -368,7 +366,7 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
     INTEGER                 :: lm,k            ! counters on angmom and radial grid
     INTEGER                 :: nb, mb, nmb, is
     !
-    REAL(DP), POINTER       :: v_at(:,:)       ! point to aevloc_at or psvloc_at
+    REAL(DP), POINTER       :: v_at(:)         ! point to aevloc_at or psvloc_at
     REAL(DP), POINTER       :: d(:,:,:,:)      ! point to d_ae or d_ps
     REAL(DP), ALLOCATABLE   :: pfunc_lm(:,:,:) ! aux charge density
     REAL(DP)                :: integral        ! workspace
@@ -413,12 +411,12 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                     ! compute the density from a single pfunc
                     becfake(nmb,na,is) = 1._dp
                     IF (i_what == AE) THEN
-                        CALL PAW_rho_lm(i, becfake, pfunc, pfunc_lm)
-                        v_at => aevloc_at
+                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, pfunc_lm)
+                        v_at => upf(i%t)%paw%ae_vloc
                         d    => d_ae
                     ELSE
-                        CALL PAW_rho_lm(i, becfake, ptfunc, pfunc_lm, upf(i%t)%paw%aug)
-                        v_at => psvloc_at
+                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, pfunc_lm, upf(i%t)%paw%aug)
+                        v_at => upf(i%t)%vloc
                         d    => d_ps
                     ENDIF
                     !
@@ -427,7 +425,7 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                     DO lm = 1,lmaxq**2
                         IF ( lm == 1 ) THEN
                             pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
-                                ( saved(i%a)%v(1:i%m,lm,is,i_what) + e2*sqrtpi*v_at(1:i%m,i%t) )
+                                ( saved(i%a)%v(1:i%m,lm,is,i_what) + e2*sqrtpi*v_at(1:i%m) )
                         ELSE
                             pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
                                 saved(i%a)%v(1:i%m,lm,is,i_what)
@@ -471,7 +469,6 @@ FUNCTION PAW_integrate(becsum)
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
-    USE paw_variables,     ONLY : pfunc, ptfunc
     USE uspp_param,        ONLY : nhm, lmaxq, upf
 
     REAL(DP)                :: PAW_integrate
@@ -510,10 +507,10 @@ FUNCTION PAW_integrate(becsum)
         whattodo: DO i_what = AE, PS
             !
             IF (i_what == AE) THEN
-                CALL PAW_rho_lm(i, becsum, pfunc, rho_lm)
+                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
                 i_sign = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, becsum, ptfunc, rho_lm, upf(i%t)%paw%aug)
+                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
                 i_sign = -1._dp
             ENDIF
             !
@@ -554,7 +551,6 @@ FUNCTION PAW_ddot(bec1,bec2)
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
-    USE paw_variables,     ONLY : pfunc, ptfunc
     USE uspp_param,        ONLY : nhm, lmaxq, upf
 
     REAL(DP)                :: PAW_ddot
@@ -599,10 +595,10 @@ FUNCTION PAW_ddot(bec1,bec2)
         whattodo: DO i_what = AE, PS
             ! Build rho from the occupations in bec1
             IF (i_what == AE) THEN
-                CALL PAW_rho_lm(i, bec1, pfunc, rho_lm)
+                CALL PAW_rho_lm(i, bec1, upf(i%t)%paw%pfunc, rho_lm)
                 i_sign = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, bec1, ptfunc, rho_lm, upf(i%t)%paw%aug)
+                CALL PAW_rho_lm(i, bec1, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
                 i_sign = -1._dp
             ENDIF
             !
@@ -611,9 +607,9 @@ FUNCTION PAW_ddot(bec1,bec2)
             !
             ! Now a new rho is computed, this time from bec2
             IF (i_what == AE) THEN
-                CALL PAW_rho_lm(i, bec2, pfunc, rho_lm)
+                CALL PAW_rho_lm(i, bec2, upf(i%t)%paw%pfunc, rho_lm)
             ELSE
-                CALL PAW_rho_lm(i, bec2, ptfunc, rho_lm, upf(i%t)%paw%aug)
+                CALL PAW_rho_lm(i, bec2, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
             ENDIF
             !
             ! Finally compute the integral
@@ -660,7 +656,7 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
 
     TYPE(paw_info)  :: i                               ! atom's minimal info
     REAL(DP), INTENT(IN)  :: rho_lm(i%m,lmaxq**2,nspin)! charge density as lm components
-    REAL(DP), INTENT(IN)  :: rho_core(ndmx,ntypx)      ! core charge, radial and spherical
+    REAL(DP), INTENT(IN)  :: rho_core(i%m)      ! core charge, radial and spherical
     REAL(DP), INTENT(OUT) :: v_lm(i%m,lmaxq**2,nspin)  ! potential density as lm components
     REAL(DP),OPTIONAL,INTENT(OUT) :: energy            ! XC energy (if required)
     !
@@ -703,11 +699,11 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         ! compute the potential along ix
         DO k = 1,i%m
             rho_loc(1:nspin) = rho_rad(k,1:nspin)*g(i%t)%rm2(k)
-            CALL vxc_t(rho_loc, rho_core(k,i%t), lsd, v_loc)
+            CALL vxc_t(rho_loc, rho_core(k), lsd, v_loc)
             v_rad(k,ix,1:nspin) = v_loc(1:nspin)
             IF (present(energy)) &
-                e_rad(k) = exc_t(rho_loc, rho_core(k,i%t), lsd) &
-                          * ( SUM(rho_rad(k,1:nspin)) + rho_core(k,i%t)*g(i%t)%r2(k) )
+                e_rad(k) = exc_t(rho_loc, rho_core(k), lsd) &
+                          * ( SUM(rho_rad(k,1:nspin)) + rho_core(k)*g(i%t)%r2(k) )
         ENDDO
         IF (present(energy)) THEN
             CALL simpson(i%m, e_rad, g(i%t)%rab, e)
@@ -753,7 +749,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     !
     TYPE(paw_info)  :: i                                  ! atom's minimal info
     REAL(DP), INTENT(IN)    :: rho_lm(i%m,lmaxq**2,nspin) ! charge density as lm components
-    REAL(DP), INTENT(IN)    :: rho_core(ndmx,ntypx)       ! core charge, radial and spherical
+    REAL(DP), INTENT(IN)    :: rho_core(i%m)              ! core charge, radial and spherical
     REAL(DP), INTENT(INOUT) :: v_lm(i%m,lmaxq**2,nspin)   ! potential to be updated
     REAL(DP),OPTIONAL,INTENT(INOUT) :: energy             ! if present, add GC to energy
 
@@ -800,7 +796,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         DO ix = 1,nx
         DO k = 1, i%m
             ! arho is the absolute value of real charge, sgn is its sign
-            arho = rho_rad(k,ix,1)*g(i%t)%rm2(k) + rho_core(k,i%t)
+            arho = rho_rad(k,ix,1)*g(i%t)%rm2(k) + rho_core(k)
             sgn  = SIGN(1._dp,arho)
             arho = ABS(arho)
 
@@ -832,7 +828,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
             !
             ! Prepare the necessary quantities
             ! rho_core is considered half spin up and half spin down:
-            co2 = rho_core(k,i%t)/2._dp
+            co2 = rho_core(k)/2._dp
             ! than I build the real charge dividing by r**2
             rup = rho_rad(k,ix,1)*g(i%t)%rm2(k) + co2
             rdw = rho_rad(k,ix,2)*g(i%t)%rm2(k) + co2
@@ -1007,7 +1003,7 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
     TYPE(paw_info)  :: i                              ! atom's minimal info
     REAL(DP), INTENT(IN) :: rho_lm(i%m,lmaxq**2,nspin)! Y_lm expansion of rho
     REAL(DP), INTENT(IN) :: rho_rad(i%m,nspin)        ! radial density along direction ix
-    REAL(DP), INTENT(IN) :: rho_core(ndmx,ntypx)      ! core density
+    REAL(DP), INTENT(IN) :: rho_core(i%m)             ! core density
     REAL(DP), INTENT(OUT):: grho_rad2(i%m,nspin)      ! |grad(rho)|^2 on rad. grid
     REAL(DP), OPTIONAL,INTENT(OUT):: grho_rad(i%m,3,nspin) ! vector gradient (only for gcxc)
     !              r, theta and phi components ---^
@@ -1023,7 +1019,7 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
     DO is = 1,nspin
         ! build real charge density
         aux(1:i%m) = rho_rad(1:i%m,is)*g(i%t)%rm2(1:i%m) &
-                          + rho_core(1:i%m,i%t)/nspin
+                          + rho_core(1:i%m)/nspin
         CALL radial_gradient(aux, aux2, g(i%t)%r, i%m, 1)
         ! compute the square
         grho_rad2(:,is) = aux2(:)**2
@@ -1141,7 +1137,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
 
     TYPE(paw_info)  :: i                                    ! atom's minimal info
     REAL(DP), INTENT(IN)  :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupation
-    REAL(DP), INTENT(IN)  :: pfunc(ndmx,nbrx,nbrx,ntyp)     ! psi_i * psi_j
+    REAL(DP), INTENT(IN)  :: pfunc(i%m,i%w,i%w)             ! psi_i * psi_j
     REAL(DP), INTENT(OUT) :: rho_lm(i%m,lmaxq**2,nspin)     ! AE charge density on rad. grid
     REAL(DP), OPTIONAL,INTENT(IN) :: &
                              aug(i%m,i%w,i%w,0:2*i%l) ! augmentation functions (only for PS part)
@@ -1187,7 +1183,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
                 pref = becsum(nmb,i%a,ispin) * ap(lm, nhtolm(nb,i%t), nhtolm(mb,i%t))
                 !
                 rho_lm(1:i%m,lm,ispin) = rho_lm(1:i%m,lm,ispin) +&
-                                pref * pfunc(1:i%m, indv(nb,i%t), indv(mb,i%t), i%t)
+                                pref * pfunc(1:i%m, indv(nb,i%t), indv(mb,i%t))
                 IF (present(aug)) THEN
                     ! if I'm doing the pseudo part I have to add the augmentation charge
                     l = INT(SQRT(DBLE(lm-1))) ! l has to start from zero

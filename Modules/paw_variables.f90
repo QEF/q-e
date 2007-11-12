@@ -50,9 +50,9 @@ MODULE paw_variables
     !!!! Pseudopotential data: !!!!
 
     ! Analogous to qfunc in "uspp_param" (Modules/uspp.f90)
-    REAL(DP), TARGET :: &
-         pfunc(ndmx,nbrx,nbrx,npsx), &! AE: \phi_{mu}(|r|)-\phi_{nu}(|r|)
-         ptfunc(ndmx,nbrx,nbrx,npsx)  ! PS: \tilde{\phi}_{mu}(|r|)-\tilde{\phi}_{nu}(|r|)
+!     REAL(DP), TARGET :: &
+!          pfunc(ndmx,nbrx,nbrx,npsx), &! AE: \phi_{mu}(|r|)-\phi_{nu}(|r|)
+!          ptfunc(ndmx,nbrx,nbrx,npsx)  ! PS: \tilde{\phi}_{mu}(|r|)-\tilde{\phi}_{nu}(|r|)
 
     ! Augmentation on radial grid:
 !     TYPE augfun_t
@@ -66,15 +66,9 @@ MODULE paw_variables
          nraug(npsx)                 ! augm. functions cutoff parameter
 
     ! Analogous to rho_atc in "atom" (Modules/atom.f90)
-    REAL(DP), TARGET :: &
-         aerho_atc(ndmx,npsx),        &! radial AE core charge density
-         psrho_atc(ndmx,npsx)          ! radial PS core charge density          
-
-    ! Analogous to vloc_at in "uspp_param" (Modules/uspp.f90)
-    ! actually pseudopotential (AE and PS) on radial grid.
-    REAL(DP), TARGET :: &
-        aevloc_at(ndmx,npsx),               &! AE descreened potential
-        psvloc_at(ndmx,npsx)                 ! PS descreened potential
+!     REAL(DP), TARGET :: &
+!          aerho_atc(ndmx,npsx),        &! radial AE core charge density
+!          psrho_atc(ndmx,npsx)          ! radial PS core charge density          
 
     ! Analogous to vloc in "vlocal" (PW/pwcom.f90)
     REAL(DP), ALLOCATABLE, TARGET :: &
