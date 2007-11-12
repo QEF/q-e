@@ -1,7 +1,6 @@
  &input
         title='U',
         zed=92.,
-        xmin=-6.0,
         rmax=200,
         rel=2,
         isic=0,

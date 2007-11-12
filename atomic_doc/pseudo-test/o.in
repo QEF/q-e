@@ -11,11 +11,10 @@
         iswitch=2,
         dft='PBE',
  /
-4
+3
 1S  1  0  2.0  1
 2S  2  0  2.0  1
 2P  2  1  4.0  1
-3D  3  2  0.0  1
  &test
   file_pseudo='OPBE.RRKJ3.UPF',
   nconf=1,
