@@ -40,9 +40,9 @@ if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=`cd .. ; pwd`
 PARA_PREFIX=
-PARA_PREFIX="mpirun -np 2"
+#PARA_PREFIX="mpirun -np 2"
 PARA_POSTFIX=
-ESPRESSO_TMPDIR=/home/paulatto/tmp/
+ESPRESSO_TMPDIR=$ESPRESSO_ROOT/tmp/
 ESPRESSO_PSEUDO=$ESPRESSO_ROOT/pseudo/
 
 # no need to specify outdir and pseudo_dir in all *.in files
