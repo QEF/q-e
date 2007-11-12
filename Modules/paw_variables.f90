@@ -15,8 +15,6 @@ MODULE paw_variables
     !!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Control flags: !!!!
 
-    ! debug: if .false. don't apply PAW correction
-    LOGICAL, PARAMETER :: really_do_paw = .true.
     ! Set to true after initialization, to prevent double allocs:
     LOGICAL              :: is_init = .false.
     ! Analogous to okvan in  "uspp_param" (Modules/uspp.f90)
@@ -24,8 +22,8 @@ MODULE paw_variables
          okpaw              ! if .TRUE. at least one pseudo is PAW
 
     ! Analogous to tvanp in "uspp_param" (Modules/uspp.f90)
-    LOGICAL :: &
-         tpawp(npsx) = .false.   ! if .TRUE. the atom is of PAW type
+!     LOGICAL :: &
+!          tpawp(npsx) = .false.   ! if .TRUE. the atom is of PAW type
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Initialization data: !!!!
@@ -57,13 +55,13 @@ MODULE paw_variables
          ptfunc(ndmx,nbrx,nbrx,npsx)  ! PS: \tilde{\phi}_{mu}(|r|)-\tilde{\phi}_{nu}(|r|)
 
     ! Augmentation on radial grid:
-    TYPE augfun_t
-      REAL(DP), ALLOCATABLE :: fun(:,:,:,:)
-    END TYPE
-    TYPE(augfun_t) :: aug(npsx)
+!     TYPE augfun_t
+!       REAL(DP), ALLOCATABLE :: fun(:,:,:,:)
+!     END TYPE
+!     TYPE(augfun_t) :: aug(npsx)
     ! Moments of the augmentation functions
     REAL (DP) :: &
-         augmom(nbrx,nbrx,0:6,npsx)     ! moments of PAW augm. functions
+         augmom(nbrx,nbrx,0:6,npsx)  ! moments of PAW augm. functions
     INTEGER :: &
          nraug(npsx)                 ! augm. functions cutoff parameter
 
@@ -71,7 +69,7 @@ MODULE paw_variables
     REAL(DP), TARGET :: &
          aerho_atc(ndmx,npsx),        &! radial AE core charge density
          psrho_atc(ndmx,npsx)          ! radial PS core charge density          
-    
+
     ! Analogous to vloc_at in "uspp_param" (Modules/uspp.f90)
     ! actually pseudopotential (AE and PS) on radial grid.
     REAL(DP), TARGET :: &
@@ -100,13 +98,13 @@ MODULE paw_variables
          saved(:) ! allocated in PAW_rad_init
 
     ! This type contains some useful data that has to be passed to all
-    ! the functions, but cannot stay in global variables for parallel:
+    ! functions, but cannot stay in global variables for parallel:
     TYPE paw_info
         INTEGER :: a ! atom index
         INTEGER :: t ! atom type index
         INTEGER :: m ! atom mesh = g(nt)%mesh
-        INTEGER :: w ! w=1 --> all electron, w=2 --> pseudo
-                     ! (used only for gradient correction)
+        INTEGER :: w ! number of atomic wavefunctions
+        INTEGER :: l ! max angular index l
     END TYPE
 
     ! Analogous to deeq in "uspp_param" (Modules/uspp.f90)

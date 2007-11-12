@@ -27,27 +27,27 @@ subroutine init_us_1
   !   g) It computes the q terms which define the S matrix.
   !   h) It fills the interpolation table for the beta functions
   !
-  USE kinds,      ONLY : DP
-  USE parameters, ONLY : lmaxx
-  USE constants,  ONLY : fpi
-  USE atom,       ONLY : rgrid
-  USE ions_base,  ONLY : ntyp => nsp
-  USE cell_base,  ONLY : omega, tpiba
-  USE gvect,      ONLY : g, gg
-  USE lsda_mod,   ONLY : nspin
-  USE us,         ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
+  USE kinds,        ONLY : DP
+  USE parameters,   ONLY : lmaxx
+  USE constants,    ONLY : fpi
+  USE atom,         ONLY : rgrid
+  USE ions_base,    ONLY : ntyp => nsp
+  USE cell_base,    ONLY : omega, tpiba
+  USE gvect,        ONLY : g, gg
+  USE lsda_mod,     ONLY : nspin
+  USE us,           ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
   USE splinelib
-  USE uspp,       ONLY : nhtol, nhtoj, nhtolm, dvan, qq, indv, ap, aainit, &
-                         qq_so, dvan_so, okvan
-  USE uspp_param, ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
-  USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
-  USE paw_variables,   ONLY : really_do_paw, okpaw, tpawp, aug
+  USE uspp,         ONLY : nhtol, nhtoj, nhtolm, dvan, qq, indv,&
+                           ap, aainit, qq_so, dvan_so, okvan
+  USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
+  USE spin_orb,     ONLY : lspinorb, so, rot_ylm, fcoef
+  USE paw_variables,ONLY : okpaw
+  USE paw_init,     ONLY : PAW_post_init
   !
   implicit none
   !
   !     here a few local variables
   !
-
   integer :: nt, ih, jh, nb, mb, ijv, l, m, ir, iq, is, startq, &
        lastq, ilast, ndm
   ! various counters
@@ -242,8 +242,8 @@ subroutine init_us_1
               do mb = nb, upf(nt)%nbeta
                  ijv = mb * (mb-1) / 2 + nb
                  paw : & ! in PAW formalism aug. charge is computed elsewhere
-                 if (tpawp(nt)) then
-                    qtot(1:upf(nt)%kkbeta,ijv) = aug(nt)%fun(1:upf(nt)%kkbeta,nb,mb,l)
+                 if (upf(nt)%tpawp) then
+                    qtot(1:upf(nt)%kkbeta,ijv) = upf(nt)%paw%aug(1:upf(nt)%kkbeta,nb,mb,l)
                  else
                     if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
                          ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
@@ -281,7 +281,7 @@ subroutine init_us_1
                     if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
                          ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
                          (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) .or.&
-                          tpawp(nt) ) then
+                          upf(nt)%tpawp ) then
                        do ir = 1, upf(nt)%kkbeta
                           aux1 (ir) = aux (ir) * qtot (ir, ijv)
                        enddo
@@ -405,6 +405,11 @@ subroutine init_us_1
   deallocate (besr)
   deallocate (aux1)
   deallocate (aux)
+
+  ! Some paw variables are used on all nodes only for initialization,
+  ! then they can be deallocated on all nodes but one.
+  call PAW_post_init()
+
   call stop_clock ('init_us_1')
   return
 end subroutine init_us_1

@@ -406,7 +406,6 @@ SUBROUTINE print_ps_info
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
-  USE paw_variables,   ONLY: tpawp
   !
   INTEGER :: nt
   CHARACTER :: ps*35
@@ -415,7 +414,7 @@ SUBROUTINE print_ps_info
      !
      IF ( upf(nt)%tvanp ) THEN
         ps='Ultrasoft'
-     ELSE IF ( tpawp (nt) ) THEN
+     ELSE IF ( upf(nt)%tpawp ) THEN
         ps="Projector augmented-wave"
      ELSE
         ps='Norm-conserving'

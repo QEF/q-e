@@ -27,7 +27,6 @@ subroutine readpp
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
   USE uspp_param, ONLY : upf
-  USE paw_variables,    ONLY : tpawp
   USE read_paw_module,  ONLY : paw_io, allocate_pseudo_paw, deallocate_pseudo_paw
   USE paw_to_internal,  ONLY : set_pseudo_paw
   implicit none
@@ -55,7 +54,6 @@ subroutine readpp
   END IF
   ALLOCATE ( upf(ntyp) )
   do nt = 1, ntyp
-     !tpawp(nt) = .false.
      !
      ! obsolescent variables, not read from UPF format, no longer used
      !

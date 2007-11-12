@@ -52,6 +52,7 @@ MODULE paw_onecenter
     USE parameters,     ONLY : ntypx
     USE paw_variables,  ONLY : paw_info, saved, ww, nx, lm_max, ylm, &
                                xlm, dylmp, dylmt, sin_th, cos_th
+    USE uspp_param,     ONLY : upf
     !
     IMPLICIT NONE
 
@@ -80,9 +81,8 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
     USE atom,              ONLY : g => rgrid
     USE ions_base,         ONLY : nat, ityp
     USE lsda_mod,          ONLY : nspin
-    USE uspp_param,        ONLY : nhm, lmaxq
-    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, &
-                                  aerho_atc, psrho_atc, aug
+    USE uspp_param,        ONLY : nhm, lmaxq, upf
+    USE paw_variables,     ONLY : pfunc, ptfunc, aerho_atc, psrho_atc
 
     REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
     REAL(DP),INTENT(OUT),OPTIONAL :: energy          ! if present compute E[rho]
@@ -112,8 +112,10 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
     i%a = na         ! the index of the atom
     i%t = ityp(na)   ! the type of atom na
     i%m = g(i%t)%mesh! radial mesh size for atom na
+    i%w = upf(i%t)%nwfc
+    i%l = upf(i%t)%nqlc-1
     !
-    ifpaw: IF (tpawp(i%t)) THEN
+    ifpaw: IF (upf(i%t)%tpawp) THEN
         !
         ! Arrays are allocated inside the cycle to allow reduced
         ! memory usage as differnt atoms have different meshes (they
@@ -122,7 +124,6 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
         ALLOCATE(v_lm(i%m,lmaxq**2,nspin))
         !
         whattodo: DO i_what = AE, PS
-            i%w = i_what     ! spherical_gradient likes to know
             ! STEP: 1 [ build rho_lm (PAW_rho_lm) ]
             NULLIFY(rho_core)
             IF (i_what == AE) THEN
@@ -134,31 +135,31 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
                 ! sign to sum up the enrgy
                 sgn = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, becsum, ptfunc, rho_lm, aug)
+                CALL PAW_rho_lm(i, becsum, ptfunc, rho_lm, upf(i%t)%paw%aug)
                 !    optional argument for pseudo part --> ^^^
                 rho_core => psrho_atc ! as before
                 sgn = -1._dp          ! as before
             ENDIF
 
         ! cleanup previously stored potentials
-        saved(i%a)%v(:,:,:,i%w) = 0._dp
+        saved(i%a)%v(:,:,:,i_what) = 0._dp
         ! First compute the Hartree potential (it does not depend on spin...):
         CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
         ! using "energy" as the in/out parameter I save a double call, but I have to do this:
         IF (present(energy)) energy_h = energy
         DO is = 1,nspin ! ... so it has to be copied to all spin components
-            saved(i%a)%v(:,:,is,i%w) = v_lm(:,:,1)
+            saved(i%a)%v(:,:,is,i_what) = v_lm(:,:,1)
         ENDDO
 
         ! Than the XC one:
         CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         IF (present(energy)) energy_xc = energy
-        saved(i%a)%v(:,:,:,i%w) = saved(i%a)%v(:,:,:,i_what) &
+        saved(i%a)%v(:,:,:,i_what) = saved(i%a)%v(:,:,:,i_what) &
                                 + v_lm(:,:,:)
         IF (present(energy)) energy_tot = energy_tot + sgn*(energy_xc + energy_h)
         IF (present(e_cmp)) THEN
-            e_cmp(na, 1, i%w) = energy_xc
-            e_cmp(na, 2, i%w) = energy_h
+            e_cmp(na, 1, i_what) = energy_xc
+            e_cmp(na, 2, i_what) = energy_h
         ENDIF
         ENDDO whattodo
     DEALLOCATE(rho_lm, v_lm)
@@ -186,8 +187,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     USE ions_base,         ONLY : nat, ityp
     USE symme,             ONLY : nsym, irt, d1, d2, d3
     USE uspp,              ONLY : nhtolm,nhtol
-    USE uspp_param,        ONLY : nh
-    USE paw_variables,     ONLY : tpawp
+    USE uspp_param,        ONLY : nh, upf
     USE wvfct,             ONLY : gamma_only
     USE control_flags,     ONLY : nosym
 
@@ -260,7 +260,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     DO na = 1, nat
         nt = ityp(na)
         ! No need to symmetrize non-PAW atoms
-        IF ( .not. tpawp(nt) ) CYCLE
+        IF ( .not. upf(nt)%tpawp ) CYCLE
         !
         DO ih = 1, nh(nt)
         DO jh = ih, nh(nt) ! note: jh >= ih
@@ -352,9 +352,9 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
-    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug, &
+    USE paw_variables,     ONLY : pfunc, ptfunc, &
                                   aevloc_at, psvloc_at, ra=>nraug
-    USE uspp_param,        ONLY : nh, nhm, lmaxq
+    USE uspp_param,        ONLY : nh, nhm, lmaxq, upf
 
     REAL(DP), TARGET, INTENT(INOUT) :: d_ae( nhm, nhm, nat, nspin)
     REAL(DP), TARGET, INTENT(INOUT) :: d_ps( nhm, nhm, nat, nspin)
@@ -393,14 +393,15 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
     i%a = na         ! the index of the atom
     i%t = ityp(na)   ! the type of atom na
     ! skip non-paw atoms
-    IF ( .not. tpawp(i%t) ) CYCLE
+    IF ( .not. upf(i%t)%tpawp ) CYCLE
     i%m = g(i%t)%mesh! radial mesh size for atom na
+    i%w = upf(i%t)%nwfc
+    i%l = upf(i%t)%nqlc-1
         !
         ! Different atoms may have different mesh sizes:
         ALLOCATE(pfunc_lm(i%m, lmaxq**2, nspin))
         !
         whattodo: DO i_what = AE, PS
-            i%w = i_what
             !
             spins: DO is = 1, nspin
                 nmb = 0
@@ -411,12 +412,12 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                     !
                     ! compute the density from a single pfunc
                     becfake(nmb,na,is) = 1._dp
-                    IF (i%w == AE) THEN
+                    IF (i_what == AE) THEN
                         CALL PAW_rho_lm(i, becfake, pfunc, pfunc_lm)
                         v_at => aevloc_at
                         d    => d_ae
                     ELSE
-                        CALL PAW_rho_lm(i, becfake, ptfunc, pfunc_lm, aug)
+                        CALL PAW_rho_lm(i, becfake, ptfunc, pfunc_lm, upf(i%t)%paw%aug)
                         v_at => psvloc_at
                         d    => d_ps
                     ENDIF
@@ -426,10 +427,10 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                     DO lm = 1,lmaxq**2
                         IF ( lm == 1 ) THEN
                             pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
-                                ( saved(i%a)%v(1:i%m,lm,is,i%w) + e2*sqrtpi*v_at(1:i%m,i%t) )
+                                ( saved(i%a)%v(1:i%m,lm,is,i_what) + e2*sqrtpi*v_at(1:i%m,i%t) )
                         ELSE
                             pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
-                                saved(i%a)%v(1:i%m,lm,is,i%w)
+                                saved(i%a)%v(1:i%m,lm,is,i_what)
                         ENDIF
                         !
                         ! Integrate!
@@ -470,8 +471,8 @@ FUNCTION PAW_integrate(becsum)
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
-    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug
-    USE uspp_param,        ONLY : nhm, lmaxq
+    USE paw_variables,     ONLY : pfunc, ptfunc
+    USE uspp_param,        ONLY : nhm, lmaxq, upf
 
     REAL(DP)                :: PAW_integrate
 
@@ -499,19 +500,20 @@ FUNCTION PAW_integrate(becsum)
     i%a = na         ! the index of the atom
     i%t = ityp(na)   ! the type of atom na
     i%m = g(i%t)%mesh! radial mesh size for atom na
+    i%w = upf(i%t)%nwfc
+    i%l = upf(i%t)%nqlc-1
     !
-    ifpaw: IF (tpawp(i%t)) THEN
+    ifpaw: IF (upf(i%t)%tpawp) THEN
         !
         ALLOCATE(rho_lm(i%m,lmaxq**2,nspin))
         !
         whattodo: DO i_what = AE, PS
-            i%w = i_what
             !
-            IF (i%w == AE) THEN
+            IF (i_what == AE) THEN
                 CALL PAW_rho_lm(i, becsum, pfunc, rho_lm)
                 i_sign = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, becsum, ptfunc, rho_lm, aug)
+                CALL PAW_rho_lm(i, becsum, ptfunc, rho_lm, upf(i%t)%paw%aug)
                 i_sign = -1._dp
             ENDIF
             !
@@ -520,7 +522,7 @@ FUNCTION PAW_integrate(becsum)
             DO lm = 1, lmaxq**2
                 ! I can use rho_lm itself as workspace
                 rho_lm(1:i%m,lm,is) = rho_lm(1:i%m,lm,is) &
-                                     * saved(i%a)%v(1:i%m,lm,is,i%w)
+                                     * saved(i%a)%v(1:i%m,lm,is,i_what)
                 CALL simpson (i%m,rho_lm(:,lm,is),g(i%t)%rab,integral)
                 !WRITE(6,"(3i3,10f20.10)") i_what, is, lm, integral
                 PAW_integrate = PAW_integrate + i_sign*integral
@@ -552,8 +554,8 @@ FUNCTION PAW_ddot(bec1,bec2)
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
-    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug
-    USE uspp_param,        ONLY : nhm, lmaxq
+    USE paw_variables,     ONLY : pfunc, ptfunc
+    USE uspp_param,        ONLY : nhm, lmaxq, upf
 
     REAL(DP)                :: PAW_ddot
 
@@ -586,8 +588,10 @@ FUNCTION PAW_ddot(bec1,bec2)
     i%a = na         ! the index of the atom
     i%t = ityp(na)   ! the type of atom na
     i%m = g(i%t)%mesh ! radial mesh size for atom na
+    i%w = upf(i%t)%nwfc
+    i%l = upf(i%t)%nqlc-1
     !
-    ifpaw: IF (tpawp(i%t)) THEN
+    ifpaw: IF (upf(i%t)%tpawp) THEN
         !
         ALLOCATE(rho_lm(i%m,lmaxq**2,nspin))
         ALLOCATE(v_lm(i%m,lmaxq**2))
@@ -598,7 +602,7 @@ FUNCTION PAW_ddot(bec1,bec2)
                 CALL PAW_rho_lm(i, bec1, pfunc, rho_lm)
                 i_sign = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, bec1, ptfunc, rho_lm, aug) !fun)
+                CALL PAW_rho_lm(i, bec1, ptfunc, rho_lm, upf(i%t)%paw%aug)
                 i_sign = -1._dp
             ENDIF
             !
@@ -609,7 +613,7 @@ FUNCTION PAW_ddot(bec1,bec2)
             IF (i_what == AE) THEN
                 CALL PAW_rho_lm(i, bec2, pfunc, rho_lm)
             ELSE
-                CALL PAW_rho_lm(i, bec2, ptfunc, rho_lm, aug) !fun)
+                CALL PAW_rho_lm(i, bec2, ptfunc, rho_lm, upf(i%t)%paw%aug)
             ENDIF
             !
             ! Finally compute the integral
@@ -1132,15 +1136,15 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     USE parameters,        ONLY : lqmax
     USE constants,         ONLY : eps12
     USE radial_grids,      ONLY : ndmx
-    USE paw_variables,     ONLY : augfun_t, nbrx
+    USE paw_variables,     ONLY : nbrx
     USE atom,              ONLY : g => rgrid
 
     TYPE(paw_info)  :: i                                    ! atom's minimal info
     REAL(DP), INTENT(IN)  :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupation
     REAL(DP), INTENT(IN)  :: pfunc(ndmx,nbrx,nbrx,ntyp)     ! psi_i * psi_j
     REAL(DP), INTENT(OUT) :: rho_lm(i%m,lmaxq**2,nspin)     ! AE charge density on rad. grid
-    TYPE(augfun_t), OPTIONAL,INTENT(IN) :: &
-                             aug(ntyp) ! augmentation functions (only for PS part)
+    REAL(DP), OPTIONAL,INTENT(IN) :: &
+                             aug(i%m,i%w,i%w,0:2*i%l) ! augmentation functions (only for PS part)
 
     REAL(DP)                :: pref ! workspace (ap*becsum)
 
@@ -1188,7 +1192,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
                     ! if I'm doing the pseudo part I have to add the augmentation charge
                     l = INT(SQRT(DBLE(lm-1))) ! l has to start from zero
                     rho_lm(1:i%m,lm,ispin) = rho_lm(1:i%m,lm,ispin) +&
-                                pref * aug(i%t)%fun(1:i%m, indv(nb,i%t), indv(mb,i%t), l)
+                                pref * aug(1:i%m, indv(nb,i%t), indv(mb,i%t), l)
                 ENDIF ! augfun
             ENDDO angular_momentum 
         ENDDO !mb

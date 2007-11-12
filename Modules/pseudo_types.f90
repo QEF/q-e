@@ -60,9 +60,21 @@ TYPE :: paw_t
 END TYPE paw_t
 
 !
+        ! Additional data to make a PAW setup out of an US pseudo,
+        ! they are all stored on a radial grid:
+        TYPE paw_in_upf
+            REAL(DP),ALLOCATABLE :: aug(:,:,:,:)  ! Augmentation charge
+            REAL(DP),ALLOCATABLE :: ae_core(:),  &! AE core charge
+                                    ps_core(:)    ! PS core charge
+            REAL(DP),ALLOCATABLE :: ae_vloc(:),  &! AE local potential
+                                    ps_vloc(:)    ! PS local potential
+            REAL(DP),ALLOCATABLE :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
+                                    ptfunc(:,:,:) ! as above, but for pseudo
+        END TYPE paw_in_upf
+
 
         TYPE pseudo_upf
-          CHARACTER(LEN=80):: generated   ! 
+          CHARACTER(LEN=80):: generated   !
           CHARACTER(LEN=80):: date_author ! Misc info
           CHARACTER(LEN=80):: comment     !
           CHARACTER(LEN=2) :: psd       ! Element label
@@ -119,13 +131,18 @@ END TYPE paw_t
           REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
                                           ! coefficients for Q for |r|<r_L
           REAL(DP), POINTER :: chi(:,:)   ! chi(mesh,nwfc) atomic wavefcts
-          REAL(DP), POINTER :: rho_at(:)  ! rho_at(mesh) atomic charge
-          
-          LOGICAL :: has_paw              ! Whether PAW data is included
+          REAL(DP), POINTER :: rho_at(:)  ! rho_at(mesh) atomic charge 
+
+          ! PAW:
+          LOGICAL  :: has_paw             ! Whether PAW data is included
           REAL(DP) :: paw_data_format     ! The version of the format
-          LOGICAL :: has_gipaw            ! Whether GIPAW data is included
+          LOGICAL  :: tpawp               ! true if atom is PAW
+          TYPE(paw_in_upf) :: paw         ! additional data for PAW (see above)
+
+          ! GIPAW:
+          LOGICAL  :: has_gipaw           ! Whether GIPAW data is included
           REAL(DP) :: gipaw_data_format   ! The version of the format
-          INTEGER :: gipaw_ncore_orbitals
+          INTEGER  :: gipaw_ncore_orbitals
           REAL(DP), POINTER :: gipaw_core_orbital_n(:)
           REAL(DP), POINTER :: gipaw_core_orbital_l(:)
           CHARACTER(LEN=2), POINTER :: gipaw_core_orbital_el(:)

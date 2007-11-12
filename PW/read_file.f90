@@ -42,7 +42,7 @@ SUBROUTINE read_file()
   USE pw_restart,           ONLY : pw_readfile
   USE xml_io_base,          ONLY : pp_check_file
   USE uspp,                 ONLY : okvan
-  USE paw_variables,        ONLY : okpaw, tpawp
+  USE paw_variables,        ONLY : okpaw
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : v_hub, eth
   !
@@ -153,7 +153,7 @@ SUBROUTINE read_file()
   CALL readpp()
   !
   okvan = ANY ( upf(:)%tvanp )
-  okpaw = ANY ( tpawp(1:nsp) )
+  okpaw = ANY ( upf(1:nsp)%tpawp )
   !
   ! ... check for spin-orbit pseudopotentials
   !

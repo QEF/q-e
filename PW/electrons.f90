@@ -63,7 +63,7 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
-  USE paw_variables,        ONLY : really_do_paw, okpaw, tpawp, becnew
+  USE paw_variables,        ONLY : okpaw, becnew
   USE paw_onecenter,        ONLY : PAW_potential,PAW_integrate
   USE uspp,                 ONLY : becsum  ! used for PAW
   USE uspp_param,           ONLY : nhm     ! used for PAW
@@ -175,11 +175,8 @@ SUBROUTINE electrons()
   !
   IF (okpaw) THEN
      IF ( .not. ALLOCATED(becstep) ) ALLOCATE (becstep(nhm*(nhm+1)/2,nat,nspin))
-     becstep (:,:,:) = 0._dp
-!      DO na = 1, nat       
-!         IF (tpawp(ityp(na))) becstep(:,na,:) = becsum(:,na,:)
-!      END DO
-       becstep(:,:,:) = becsum(:,:,:)
+     !becstep (:,:,:) = 0._dp
+     becstep(:,:,:) = becsum(:,:,:)
   END IF
   call create_scf_type ( rhoin )
   !
@@ -459,14 +456,12 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      !
      IF (okpaw) THEN
-              correction1c = (deband_PAW + descf_PAW + e_PAW)
-              PRINT '(5x,A,f12.6,A)', 'PAW correction: ',correction1c, ', composed of: '
-              PRINT '(5x,A,f10.6,A,f10.6,A,f12.6)',&
-                 'de_band: ',deband_PAW,', de_scf: ',descf_PAW,', 1-center E: ', e_PAW
-              IF (really_do_paw) THEN
-                  etot = etot + correction1c
-                  hwf_energy = hwf_energy + correction1c
-              ENDIF
+        correction1c = (deband_PAW + descf_PAW + e_PAW)
+        PRINT '(5x,A,f12.6,A)', 'PAW correction: ',correction1c, ', composed of: '
+        PRINT '(5x,A,f10.6,A,f10.6,A,f12.6)',&
+              'de_band: ',deband_PAW,', de_scf: ',descf_PAW,', 1-center E: ', e_PAW
+        etot = etot + correction1c
+        hwf_energy = hwf_energy + correction1c
      END IF
      !
 #if defined (EXX)

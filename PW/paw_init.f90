@@ -16,6 +16,8 @@ MODULE paw_init
 
   PUBLIC :: PAW_init_becsum
   PUBLIC :: PAW_init_onecenter
+  PUBLIC :: PAW_post_init
+
   PUBLIC :: allocate_paw_internals, deallocate_paw_internals
 
 !!!=========================================================================
@@ -42,7 +44,8 @@ MODULE paw_init
   ! Called from clean_pw
   SUBROUTINE deallocate_paw_internals
     USE paw_variables
-    USE ions_base, ONLY : ntyp => nsp
+    USE uspp_param, ONLY : upf
+    USE ions_base,  ONLY : ntyp => nsp
     !
     IMPLICIT NONE
     INTEGER :: nt
@@ -54,22 +57,29 @@ MODULE paw_init
     !
     ! Allocated in read_paw:
     DO nt = 1,ntyp
-        IF(allocated(aug(nt)%fun)) DEALLOCATE (aug(nt)%fun)
+        IF(allocated(upf(nt)%paw%aug)) DEALLOCATE (upf(nt)%paw%aug)
     ENDDO
     !
   END SUBROUTINE deallocate_paw_internals
+
+! Deallocate variables that are used only at init and then no more necessary.
+SUBROUTINE PAW_post_init()
+    ! this routine does nothing at this moment...
+    RETURN
+
+END SUBROUTINE PAW_post_init
+
 
 ! Initialize becsum with atomic occupations (for PAW atoms only)
 ! Notice: requires exact correspondence chi <--> beta in the atom,
 ! that is that all wavefunctions considered for PAW generation are
 ! counted in chi (otherwise the array "oc" does not correspond to beta)
 SUBROUTINE PAW_init_becsum()
-    USE kinds,              ONLY : DP
     USE uspp,               ONLY : becsum, nhtol, indv
-    USE uspp_param,         ONLY : upf, nh
+    USE uspp_param,         ONLY : upf, nh, upf
     USE ions_base,          ONLY : nat, ityp
     USE lsda_mod,           ONLY : nspin, starting_magnetization
-    USE paw_variables,      ONLY : tpawp, okpaw
+    USE paw_variables,      ONLY : okpaw
     USE paw_onecenter,      ONLY : PAW_symmetrize
     IMPLICIT NONE
     INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
@@ -80,7 +90,7 @@ SUBROUTINE PAW_init_becsum()
     !
     na_loop: DO na = 1, nat
        nt = ityp(na)
-       is_paw: IF (tpawp(nt)) THEN
+       is_paw: IF (upf(nt)%tpawp) THEN
           !
           ijh = 1
           ih_loop: DO ih = 1, nh(nt)
@@ -121,9 +131,9 @@ END SUBROUTINE PAW_init_becsum
 ! calls PAW_rad_init to initialize onecenter integration.
 SUBROUTINE PAW_init_onecenter()
     USE ions_base,              ONLY : nat, ityp
-    USE paw_variables,          ONLY : tpawp, xlm, saved
+    USE paw_variables,          ONLY : xlm, saved
     USE atom,                   ONLY : g => rgrid
-    USE uspp_param,             ONLY : lmaxq
+    USE uspp_param,             ONLY : lmaxq, upf
     USE lsda_mod,               ONLY : nspin
     USE funct,                  ONLY : dft_is_gradient
 
@@ -138,7 +148,7 @@ SUBROUTINE PAW_init_onecenter()
     DO na = first_nat, last_nat
         nt = ityp(na)
         ! note that if the atom is not paw it is left unallocated
-        IF ( tpawp(nt) ) THEN
+        IF ( upf(nt)%tpawp ) THEN
             IF (allocated(saved(na)%v)) DEALLOCATE(saved(na)%v)
             ALLOCATE( saved(na)%v(g(nt)%mesh, lmaxq**2, nspin, 2 ) )
                       !                                     {AE|PS}

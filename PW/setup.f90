@@ -86,7 +86,7 @@ SUBROUTINE setup()
   USE exx,                ONLY : exx_grid_init
 #endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
-  USE paw_variables,      ONLY : okpaw, tpawp
+  USE paw_variables,      ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -698,7 +698,7 @@ SUBROUTINE setup()
   ! ... okvan = .TRUE. : at least one pseudopotential is US
   !
   okvan = ANY( upf(:)%tvanp )
-  okpaw = ANY( tpawp(1:ntyp) )
+  okpaw = ANY( upf(1:ntyp)%tpawp )
   !
   ! ... Needed for LDA+U and PAW
   !

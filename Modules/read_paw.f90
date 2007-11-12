@@ -292,9 +292,9 @@ subroutine set_pseudo_paw (is, pawset)
   USE pseudo_types
   USE constants, ONLY: FPI
   !
-  USE paw_variables, ONLY : tpawp, pfunc, ptfunc, aevloc_at, psvloc_at, &
+  USE paw_variables, ONLY : pfunc, ptfunc, aevloc_at, psvloc_at, &
                             aerho_atc, psrho_atc, kdiff, &
-                            augmom, nraug, step_f, aug 
+                            augmom, nraug, step_f
   !
   implicit none
   !
@@ -306,6 +306,7 @@ subroutine set_pseudo_paw (is, pawset)
   integer :: nb, mb, ijv
   TYPE (paw_t) :: pawset
   integer :: i,j, l, nrc, nrs
+  integer :: nwfc, mesh
   real (DP) :: pow
   real (DP), ALLOCATABLE :: aux (:)
   !
@@ -330,8 +331,7 @@ subroutine set_pseudo_paw (is, pawset)
   upf(is)%psd = pawset%symbol
   upf(is)%tvanp=.true.
   upf(is)%nlcc = pawset%nlcc
-  !tvanp(is)=.true.
-  tpawp(is)=.true.
+  upf(is)%tpawp = .true.
   call set_dft_from_name( pawset%dft )
   !
   IF ( dft_is_meta() ) &
@@ -343,50 +343,52 @@ subroutine set_pseudo_paw (is, pawset)
 #endif
   !
   rgrid(is)%mesh = pawset%grid%mesh
+  mesh = pawset%grid%mesh ! to make this file barely readable
+  nwfc = pawset%nwfc      ! "   "    "     "     "     "
   !
   ! ... Copy wavefunctions used for PAW construction.
   ! ... Copy also the unoccupied ones, e.g.
   ! ... corresponding to second energy for the same channel
   ! ... (necessary to set starting occupations correctly)
   !
-  upf(is)%nwfc = pawset%nwfc
-  ALLOCATE ( upf(is)%lchi(pawset%nwfc), upf(is)%oc(pawset%nwfc) )
-  ALLOCATE ( upf(is)%chi( pawset%grid%mesh, pawset%nwfc) )
-  do i=1, pawset%nwfc
+  upf(is)%nwfc = nwfc
+  ALLOCATE ( upf(is)%lchi(nwfc), upf(is)%oc(nwfc) )
+  ALLOCATE ( upf(is)%chi( mesh, nwfc) )
+  do i=1, nwfc
      upf(is)%lchi(i)=pawset%l(i)
      upf(is)%oc(i)=MAX(pawset%oc(i),0._DP)
-     upf(is)%chi(1:pawset%grid%mesh, i) = pawset%pswfc(1:pawset%grid%mesh, i)
+     upf(is)%chi(1:mesh, i) = pawset%pswfc(1:mesh, i)
   end do
   !
-  upf(is)%nbeta= pawset%nwfc
-  allocate ( upf(is)%kbeta(pawset%nwfc) )
-  do nb=1,pawset%nwfc
+  upf(is)%nbeta= nwfc
+  allocate ( upf(is)%kbeta(nwfc) )
+  do nb=1,nwfc
      upf(is)%kbeta(nb)=pawset%ikk(nb)
   end do
   ! kkbeta is the maximum distance from nucleus where AE 
   ! and PS wavefunction may not match:
   upf(is)%kkbeta=MAXVAL (upf(is)%kbeta(:))
 
-  allocate (upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc))
-  upf(is)%beta(1:pawset%grid%mesh, 1:pawset%nwfc) = &
-                    pawset%proj(1:pawset%grid%mesh, 1:pawset%nwfc)
+  allocate (upf(is)%beta(1:mesh, 1:nwfc))
+  upf(is)%beta(1:mesh, 1:nwfc) = &
+                    pawset%proj(1:mesh, 1:nwfc)
 
-  allocate(upf(is)%dion(1:pawset%nwfc, 1:pawset%nwfc))
-  upf(is)%dion(1:pawset%nwfc, 1:pawset%nwfc) = pawset%dion(1:pawset%nwfc, 1:pawset%nwfc)
-  kdiff(1:pawset%nwfc, 1:pawset%nwfc, is) = pawset%kdiff(1:pawset%nwfc, 1:pawset%nwfc)
+  allocate(upf(is)%dion(1:nwfc, 1:nwfc))
+  upf(is)%dion(1:nwfc, 1:nwfc) = pawset%dion(1:nwfc, 1:nwfc)
+  kdiff(1:nwfc, 1:nwfc, is) = pawset%kdiff(1:nwfc, 1:nwfc)
 
   upf(is)%nqlc = 2*pawset%lmax+1
   upf(is)%nqf = 0                   !! no rinner, all numeric
 
-  allocate (upf(is)%lll(pawset%nwfc) )
-  upf(is)%lll(1:pawset%nwfc) = pawset%l(1:pawset%nwfc)
+  allocate (upf(is)%lll(nwfc) )
+  upf(is)%lll(1:nwfc) = pawset%l(1:nwfc)
   allocate (upf(is)%rinner(upf(is)%nqlc))
   upf(is)%rinner(1:upf(is)%nqlc) = 0._dp  !! no rinner, all numeric
 
   ! integral of augmentation charges vanishes for different values of l
-  allocate ( upf(is)%qqq(pawset%nwfc,pawset%nwfc))
-  do i = 1, pawset%nwfc
-     do j = 1, pawset%nwfc
+  allocate ( upf(is)%qqq(nwfc,nwfc))
+  do i = 1, nwfc
+     do j = 1, nwfc
         if (pawset%l(i)==pawset%l(j)) then
            upf(is)%qqq(i,j) = pawset%augmom(i,j,0) !!gf spherical approximation
         else
@@ -398,45 +400,53 @@ subroutine set_pseudo_paw (is, pawset)
   ! import augmentation charge:
   nraug(is) = pawset%irc
   rgrid(is)%dx = pawset%grid%dx
-  rgrid(is)%r2 (1:pawset%grid%mesh) = pawset%grid%r2  (1:pawset%grid%mesh)
+  rgrid(is)%r2 (1:mesh) = pawset%grid%r2  (1:mesh)
   do l = 0, 2*pawset%lmax
-     do i = 1, pawset%nwfc
-        do j = 1, pawset%nwfc
+     do i = 1, nwfc
+        do j = 1, nwfc
            augmom(i,j,l,is) = pawset%augmom(i,j,l)
         end do 
      end do
   end do
 
+  ! FIXME!!! Probably this loop is unnecessary as the qfunc are reconstraucted from
+  ! the full augfuncs !!
   ! triangularize matrix of qfunc's
-  allocate ( upf(is)%qfunc(1:pawset%grid%mesh,pawset%nwfc*(pawset%nwfc+1)/2) )
-  do nb = 1, pawset%nwfc
-      do mb = nb, pawset%nwfc
+  allocate ( upf(is)%qfunc(1:mesh,nwfc*(nwfc+1)/2) )
+  do nb = 1, nwfc
+      do mb = nb, nwfc
           ijv = mb * (mb-1) / 2 + nb
-          upf(is)%qfunc (1:pawset%grid%mesh,ijv) = &
-             pawset%augfun(1:pawset%grid%mesh,nb,mb,0)
+          upf(is)%qfunc (1:mesh,ijv) = &
+             pawset%augfun(1:mesh,nb,mb,0)
       enddo
   enddo
 
   ! new sparse allocation for augmentation functions
-  if (allocated(aug(is)%fun)) deallocate(aug(is)%fun)
-  allocate(aug(is)%fun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax))
-  !
-    aug(is)%fun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax) &
-       = &
-  pawset%augfun(1:pawset%grid%mesh,1:pawset%nwfc,1:pawset%nwfc,0:2*pawset%lmax)
+  !if (allocated(aug(is)%fun)) deallocate(aug(is)%fun)
+!   allocate(aug(is)%fun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax))
+!   !
+!     aug(is)%fun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax) &
+!        = &
+!   pawset%augfun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax)
+
+  ! Augmentation functions for PAW depend on angular momentum!
+  allocate(upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax))
+  upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax) &
+           = pawset%augfun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax)
+
 
 
   !
 #if ! defined __DO_NOT_CUTOFF_PAW_FUNC
-  ALLOCATE (aux(1:pawset%grid%mesh))
+  ALLOCATE (aux(1:mesh))
 #endif
-  do i=1,pawset%nwfc
-     do j=1,pawset%nwfc
+  do i=1,nwfc
+     do j=1,nwfc
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
-        pfunc (1:pawset%grid%mesh, i, j, is) = &
-             pawset%aewfc(1:pawset%grid%mesh, i) * pawset%aewfc(1:pawset%grid%mesh, j)
-        ptfunc (1:pawset%grid%mesh, i, j, is) = &
-             pawset%pswfc(1:pawset%grid%mesh, i) * pawset%pswfc(1:pawset%grid%mesh, j)
+        pfunc (1:mesh, i, j, is) = &
+             pawset%aewfc(1:mesh, i) * pawset%aewfc(1:mesh, j)
+        ptfunc (1:mesh, i, j, is) = &
+             pawset%pswfc(1:mesh, i) * pawset%pswfc(1:mesh, j)
 #else
 #if defined __SHARP_CUTOFF_PAW_FUNC
         pfunc(:,i,j,is) = 0._dp
@@ -446,14 +456,14 @@ subroutine set_pseudo_paw (is, pawset)
         ptfunc (1:pawset%irc, i, j, is) = &
              pawset%pswfc(1:pawset%irc, i) * pawset%pswfc(1:pawset%irc, j)
 #else
-        aux(1:pawset%grid%mesh) = pawset%aewfc(1:pawset%grid%mesh, i) * &
-             pawset%aewfc(1:pawset%grid%mesh, j)
-        CALL step_f( pfunc(1:pawset%grid%mesh,i,j,is), aux(1:pawset%grid%mesh), &
-             pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
-        aux(1:pawset%grid%mesh) = pawset%pswfc(1:pawset%grid%mesh, i) * &
-             pawset%pswfc(1:pawset%grid%mesh, j)
-        CALL step_f( ptfunc(1:pawset%grid%mesh,i,j,is), aux(1:pawset%grid%mesh), &
-             pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
+        aux(1:mesh) = pawset%aewfc(1:mesh, i) * &
+             pawset%aewfc(1:mesh, j)
+        CALL step_f( pfunc(1:mesh,i,j,is), aux(1:mesh), &
+             pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
+        aux(1:mesh) = pawset%pswfc(1:mesh, i) * &
+             pawset%pswfc(1:mesh, j)
+        CALL step_f( ptfunc(1:mesh,i,j,is), aux(1:mesh), &
+             pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
 #endif
 #endif
      end do
@@ -463,80 +473,79 @@ subroutine set_pseudo_paw (is, pawset)
   ! ... One should not need \tilde{n}^1 alone in any case.
   !
   ! nqf is always 0 for this PAW format
-  ! qfcoef(1:pawset%nqf, 1:pawset%nqlc, 1:pawset%nwfc, 1:pawset%nwfc, is ) = 0._dp
+  ! qfcoef(1:pawset%nqf, 1:pawset%nqlc, 1:nwfc, 1:nwfc, is ) = 0._dp
   !
-  rgrid(is)%r  (1:pawset%grid%mesh) = pawset%grid%r  (1:pawset%grid%mesh)
-  rgrid(is)%rab(1:pawset%grid%mesh) = pawset%grid%r  (1:pawset%grid%mesh)*pawset%grid%dx
+  rgrid(is)%r  (1:mesh) = pawset%grid%r  (1:mesh)
+  rgrid(is)%rab(1:mesh) = pawset%grid%r  (1:mesh)*pawset%grid%dx
 
 !
 ! set radial grid data
 !
-  rgrid(is)%mesh = pawset%grid%mesh
+  rgrid(is)%mesh = mesh
   rgrid(is)%xmin = pawset%grid%xmin
   rgrid(is)%rmax = pawset%grid%rmax
   rgrid(is)%zmesh= pawset%grid%zmesh
   rgrid(is)%dx   = pawset%grid%dx
-  rgrid(is)%r(1:pawset%grid%mesh)   = pawset%grid%r(1:pawset%grid%mesh)
-  rgrid(is)%r2(1:pawset%grid%mesh)  = pawset%grid%r2(1:pawset%grid%mesh)
-  rgrid(is)%rab(1:pawset%grid%mesh) = pawset%grid%rab(1:pawset%grid%mesh)
-  rgrid(is)%sqr(1:pawset%grid%mesh) = sqrt(pawset%grid%r(1:pawset%grid%mesh))
-! these speed up a lot a few calculations:
-  rgrid(is)%rm1(1:pawset%grid%mesh)   = pawset%grid%rm1(1:pawset%grid%mesh)
-  rgrid(is)%rm2(1:pawset%grid%mesh)   = pawset%grid%rm2(1:pawset%grid%mesh)
-  rgrid(is)%rm3(1:pawset%grid%mesh)   = pawset%grid%rm3(1:pawset%grid%mesh)
+  rgrid(is)%r(1:mesh)   = pawset%grid%r(1:mesh)
+  rgrid(is)%r2(1:mesh)  = pawset%grid%r2(1:mesh)
+  rgrid(is)%rab(1:mesh) = pawset%grid%rab(1:mesh)
+  rgrid(is)%sqr(1:mesh) = sqrt(pawset%grid%r(1:mesh))
+! these speed up a lot a few calculations (paw XC and GCXC):
+  rgrid(is)%rm1(1:mesh) = pawset%grid%rm1(1:mesh)
+  rgrid(is)%rm2(1:mesh) = pawset%grid%rm2(1:mesh)
+  rgrid(is)%rm3(1:mesh) = pawset%grid%rm3(1:mesh)
 
   ! NO spin orbit PAW implemented right now (oct 2007)
 !!$  if (lspinorb.and..not.pawset%has_so) &
 !!$     call infomsg ('pawset_to_internal','At least one non s.o. pseudo')
-  allocate (upf(is)%jchi(1:pawset%nwfc))
-  allocate (upf(is)%jjj(1:pawset%nwfc))
+  allocate (upf(is)%jchi(1:nwfc))
+  allocate (upf(is)%jjj(1:nwfc))
 
 !!$  lspinorb=lspinorb.and.pawset%has_so
 !!$  if (pawset%has_so) then
-!!$     jchi(1:pawset%nwfc, is) = pawset%jchi(1:pawset%nwfc)
+!!$     jchi(1:nwfc, is) = pawset%jchi(1:nwfc)
 !!$     jjj(1:pawset%nbeta, is) = pawset%jjj(1:pawset%nbeta)
 !!$  else
 
-  upf(is)%jchi(1:pawset%nwfc) = 0._dp
-  upf(is)%jjj(1:pawset%nwfc) = 0._dp
+  upf(is)%jchi(1:nwfc) = 0._dp
+  upf(is)%jjj(1:nwfc) = 0._dp
 
 !!$  endif
   !
   if ( pawset%nlcc) then
-     allocate ( upf(is)%rho_atc(pawset%grid%mesh) )
-     upf(is)%rho_atc(1:pawset%grid%mesh) = &
-         pawset%psccharge(1:pawset%grid%mesh)   &
-        / FPI / pawset%grid%r2(1:pawset%grid%mesh)
+     allocate ( upf(is)%rho_atc(mesh) )
+     upf(is)%rho_atc(1:mesh) = &
+         pawset%psccharge(1:mesh) / FPI / pawset%grid%r2(1:mesh)
   end if
 
-  aerho_atc(1:pawset%grid%mesh, is) = pawset%aeccharge(1:pawset%grid%mesh) &
-       &                         / FPI / pawset%grid%r2(1:pawset%grid%mesh)
+  aerho_atc(1:mesh, is) = pawset%aeccharge(1:mesh) &
+       &                         / FPI / pawset%grid%r2(1:mesh)
   if ( pawset%nlcc) then
-     psrho_atc(1:pawset%grid%mesh, is) = pawset%psccharge(1:pawset%grid%mesh) &
-          &                         / FPI / pawset%grid%r2(1:pawset%grid%mesh)
+     psrho_atc(1:mesh, is) = pawset%psccharge(1:mesh) &
+       &                         / FPI / pawset%grid%r2(1:mesh)
   else
      psrho_atc(:,is) = 0._dp
   end if
   !
-  allocate ( upf(is)%rho_at(pawset%grid%mesh) )
-  upf(is)%rho_at (1:pawset%grid%mesh) = pawset%pscharge(1:pawset%grid%mesh)
+  allocate ( upf(is)%rho_at(mesh) )
+  upf(is)%rho_at (1:mesh) = pawset%pscharge(1:mesh)
 
-  allocate (upf(is)%vloc(1:pawset%grid%mesh))
-  upf(is)%vloc(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)
+  allocate (upf(is)%vloc(1:mesh))
+  upf(is)%vloc(1:mesh) = pawset%psloc(1:mesh)
 #if defined __DO_NOT_CUTOFF_PAW_FUNC
-  aevloc_at(1:pawset%grid%mesh,is) = pawset%aeloc(1:pawset%grid%mesh)
-  psvloc_at(1:pawset%grid%mesh,is) = pawset%psloc(1:pawset%grid%mesh)
+  aevloc_at(1:mesh,is) = pawset%aeloc(1:mesh)
+  psvloc_at(1:mesh,is) = pawset%psloc(1:mesh)
 #else
 #if defined __SHARP_CUTOFF_PAW_FUNC
-  aevloc_at(1:pawset%grid%mesh,is) = pawset%aeloc(1:pawset%grid%mesh)
-  psvloc_at(1:pawset%grid%mesh,is) = pawset%psloc(1:pawset%grid%mesh)
- aux(1:pawset%grid%mesh) = pawset%aeloc(1:pawset%grid%mesh)
+  aevloc_at(1:mesh,is) = pawset%aeloc(1:mesh)
+  psvloc_at(1:mesh,is) = pawset%psloc(1:mesh)
+ aux(1:mesh) = pawset%aeloc(1:mesh)
 #else
- CALL step_f( aevloc_at(1:pawset%grid%mesh,is), aux(1:pawset%grid%mesh), &
-      pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
- aux(1:pawset%grid%mesh) = pawset%psloc(1:pawset%grid%mesh)
- CALL step_f( psvloc_at(1:pawset%grid%mesh,is), aux(1:pawset%grid%mesh), &
-      pawset%grid%r(1:pawset%grid%mesh), nrs, nrc, pow, pawset%grid%mesh)
+ CALL step_f( aevloc_at(1:mesh,is), aux(1:mesh), &
+      pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
+ aux(1:mesh) = pawset%psloc(1:mesh)
+ CALL step_f( psvloc_at(1:mesh,is), aux(1:mesh), &
+      pawset%grid%r(1:mesh), nrs, nrc, pow, mesh)
  DEALLOCATE (aux)
 #endif
 #endif

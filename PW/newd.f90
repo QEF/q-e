@@ -39,8 +39,7 @@ SUBROUTINE newd_g()
   USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin
   !
-  USE paw_variables,        ONLY : really_do_paw, okpaw, tpawp, &
-                                   kdiff, dpaw_ae, dpaw_ps
+  USE paw_variables,        ONLY : okpaw, kdiff, dpaw_ae, dpaw_ps
   USE paw_onecenter,        ONLY : PAW_newd
   USE uspp,                 ONLY : nhtol, nhtolm
   !
