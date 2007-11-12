@@ -22,7 +22,6 @@ fft_base.o \
 fft_scalar.o \
 fft_types.o \
 functionals.o \
-grid_paw_variables.o \
 griddim.o \
 input_parameters.o \
 io_files.o \
@@ -47,6 +46,7 @@ parallel_include.o \
 parallel_types.o \
 parameters.o \
 parser.o \
+paw_variables.o \
 pseudo_types.o \
 printout_base.o \
 ptoolkit.o \

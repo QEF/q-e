@@ -299,7 +299,8 @@ CONTAINS
              SELECT CASE (which_paw_augfun)
              CASE ('QVAN')
                 !call errore ('us2paw','QVAN aug func to be checked',1)
-                CALL infomsg('us2paw', '*** QVAN augmentation function are experimental and will not work in pw!')
+                CALL infomsg('us2paw', 'WARNING: QVAN augmentation function are for testing ONLY: '//&
+                                       'they will not work in pw!')
                 ! Choose the shape of the augmentation functions: NC Q ...
                 pawset_%augfun(1:mesh,ns,ns1,0) = qvan(1:mesh,ns,ns1)
                 ! Renormalize the aug. functions so that their integral is correct
@@ -309,8 +310,11 @@ CONTAINS
                    ('ld1_to_paw','norm of augm.func. is too small',ns*100+ns1)
                 raux=pawset_%augmom(ns,ns1,0)/raux
                 pawset_%augfun(1:mesh,ns,ns1,0)=raux*pawset_%augfun(1:mesh,ns,ns1,0)
+                !
              CASE ('GAUSS')
-                ! define a "gaussian" (with a volume element)
+                ! use Bloechl style augmentation functions, as linear combinations of
+                ! gaussians functions (this is quite pointless if the the plane-wave
+                ! code doesn't use double-augmentation with analytical gaussian overlaps)
                 rm = pawset_%rmatch_augfun
                 twosigma2 = TWO*(rm/3.0_dp)**2
                 do ir=1,mesh
@@ -336,8 +340,9 @@ CONTAINS
                 END DO
                 !
              CASE ('BESSEL')
+                ! Use Kresse-Joubert style augmentation functions
+                ! Defined as linear combination of Bessel functions.
                 ALLOCATE (j1 (pawset_%grid%mesh,2))
-                ! ... or linear combination of Bessel functions?
                 do ir=1,irc
                    if (grid%r(ir)<pawset_%rmatch_augfun) ircm=ir
                 end do
@@ -355,20 +360,12 @@ CONTAINS
                       !
                    ENDDO
                    xc(1) = b1(2) / (b1(2) * b2(1) - b1(1) * b2(2))
-!                   xc(2) = - b1(1) / (b1(2) * b2(1) - b1(1) * b2(2))
                    xc(2) = - b1(1) * xc(1) / b1(2)
                    pawset_%augfun(1:ircm,ns,ns1,l3) = &
                           pawset_%augmom(ns,ns1,l3) * grid%r2(1:ircm) * &
                           (xc(1) * j1(1:ircm,1) + xc(2) * j1(1:ircm,2)) 
-
-                   ! change the sign of augfun if they are negative, and symmetrize them:
-!                    IF ( SUM(pawset_%augfun(1:mesh,ns,ns1,l3)) > 0._dp ) THEN
+                   ! Symmetrize augmentation functions:
                        pawset_%augfun(1:mesh,ns1,ns,l3)=pawset_%augfun(1:mesh,ns,ns1,l3)
-!                     ELSE
-!                        CALL infomsg('us2paw', 'WARNING: augmentation functions are negative, changing their sign!')
-!                        pawset_%augfun(1:mesh,ns1,ns,l3)=-pawset_%augfun(1:mesh,ns,ns1,l3)
-!                        pawset_%augfun(1:mesh,ns,ns1,l3)= pawset_%augfun(1:mesh,ns1,ns,l3)
-!                     ENDIF
                    !
                 end do 
                 DEALLOCATE (j1)

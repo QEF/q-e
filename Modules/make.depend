@@ -89,7 +89,6 @@ ions_nose.o : ions_base.o
 ions_nose.o : kind.o
 ions_nose.o : parameters.o
 ions_nose.o : timestep.o
-kplusg.o : kind.o
 metadyn_base.o : basic_algebra_routines.o
 metadyn_base.o : cell_base.o
 metadyn_base.o : constants.o
@@ -182,6 +181,9 @@ path_reparametrisation.o : mp.o
 path_reparametrisation.o : path_variables.o
 path_reparametrisation.o : splinelib.o
 path_variables.o : kind.o
+paw_variables.o : kind.o
+paw_variables.o : parameters.o
+paw_variables.o : radial_grids.o
 printout_base.o : io_global.o
 printout_base.o : kind.o
 printout_base.o : mp.o
@@ -210,8 +212,8 @@ read_namelists.o : mp.o
 read_paw.o : atom.o
 read_paw.o : constants.o
 read_paw.o : functionals.o
-read_paw.o : grid_paw_variables.o
 read_paw.o : kind.o
+read_paw.o : paw_variables.o
 read_paw.o : pseudo_types.o
 read_paw.o : radial_grids.o
 read_paw.o : uspp.o
@@ -256,7 +258,6 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
-vms.o : kind.o
 vxc_t.o : functionals.o
 vxc_t.o : io_global.o
 vxc_t.o : kind.o

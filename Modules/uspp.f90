@@ -11,7 +11,7 @@ MODULE uspp_param
   !  
   USE kinds,        ONLY : DP
   USE parameters,   ONLY : lqmax, npsx
-  USE pseudo_types, ONLY: pseudo_upf
+  USE pseudo_types, ONLY : pseudo_upf
   !
   SAVE
   !

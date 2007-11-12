@@ -36,7 +36,7 @@ SUBROUTINE clean_pw( lflag )
   USE spin_orb,             ONLY : lspinorb, fcoef
   USE noncollin_module,     ONLY : deallocate_noncol
   USE dynamics_module,      ONLY : deallocate_dyn_vars
-  USE grid_paw_routines,    ONLY : deallocate_paw_internals
+  USE paw_init,             ONLY : deallocate_paw_internals
   USE cellmd,               ONLY : lmovecell
   !
   IMPLICIT NONE

@@ -63,17 +63,8 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
-#ifdef __GRID_PAW
-  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, &
-       ehart1, ehart1t, etxc1, etxc1t, deband_1ae, deband_1ps,  &
-       descf_1ae, descf_1ps, rho1, rho1t, rho1new, rho1tnew,  &
-       vr1, vr1t, becnew
-  USE grid_paw_routines,    ONLY : compute_onecenter_potentials, &
-       compute_onecenter_charges, delta_e_1, delta_e_1scf
-#else
-  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, becnew
-#endif
-  USE rad_paw_routines,     ONLY : PAW_potential,PAW_integrate
+  USE paw_variables,        ONLY : really_do_paw, okpaw, tpawp, becnew
+  USE paw_onecenter,        ONLY : PAW_potential,PAW_integrate
   USE uspp,                 ONLY : becsum  ! used for PAW
   USE uspp_param,           ONLY : nhm     ! used for PAW
   !
@@ -117,14 +108,6 @@ SUBROUTINE electrons()
   REAL(DP), ALLOCATABLE :: becstep(:,:,:)   ! cross-band occupations, used for mixing
   REAL (DP) :: deband_PAW, descf_PAW, e_PAW ! deband, descf and E corrections from PAW
   REAL (DP) :: correction1c                 ! total PAW correction
-#ifdef __GRID_PAW
-  INTEGER :: na
-  REAL (DP), ALLOCATABLE :: deband_1ps_na(:), deband_1ae_na(:), & ! auxiliary info on
-                            descf_1ps_na(:),  descf_1ae_na(:)     ! one-center corrections
-  !
-  IF (okpaw) ALLOCATE ( deband_1ae_na(nat), deband_1ps_na(nat), &
-                        descf_1ae_na(nat),  descf_1ps_na(nat) )
-#endif
   !
   iter = 0
   ik_  = 0
@@ -139,9 +122,6 @@ SUBROUTINE electrons()
         !
         IF ( output_drho /= ' ' ) CALL remove_atomic_rho ()
         !
-#ifdef __GRID_PAW
-        IF (okpaw) DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
-#endif
         RETURN
         !
      END IF
@@ -162,9 +142,6 @@ SUBROUTINE electrons()
      !
      conv_elec = .TRUE.
      !
-#ifdef __GRID_PAW
-     IF (okpaw) DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
-#endif
      !
      RETURN
      !
@@ -301,23 +278,13 @@ SUBROUTINE electrons()
         !
         ! ... update core occupations for PAW
         IF (okpaw) THEN
-#ifdef __GRID_PAW
-           CALL compute_onecenter_charges (becsum,rho1,rho1t)
-           !
-           deband_1ae = delta_e_1(rho1, vr1, deband_1ae_na) !AE
-           deband_1ps = delta_e_1(rho1t,vr1t,deband_1ps_na) !PS
-           write(6,"(a,2f12.6)") " == deband (grid PAW): ", deband_1ae-deband_1ps
-#endif
            deband_PAW = - PAW_integrate(becsum)
            !write(6,"(a,2f13.8)") " == deband (radial PAW): ", deband_PAW
            !CALL infomsg ('electrons','mixing several times ns if lda_plus_U')
            IF (lda_plus_U) STOP 'electrons - not implemented'
            !
            ALLOCATE (becnew(nhm*(nhm+1)/2, nat, nspin) )
-           becnew(:,:,:) = 0._DP
-!            DO na = 1, nat
-!               IF (tpawp(ityp(na))) becnew(:,na,:) = becsum(:,na,:)
-!            END DO
+           !becnew(:,:,:) = 0._DP
            becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
@@ -381,21 +348,6 @@ SUBROUTINE electrons()
            IF (okpaw) THEN
               !
               ! ... grid PAW:
-#ifdef __GRID_PAW
-              ALLOCATE (rho1new (nrxx,nspin,nat), rho1tnew(nrxx,nspin,nat) )
-              !
-              CALL compute_onecenter_charges   (becstep,rho1new,rho1tnew)
-              CALL compute_onecenter_potentials(becstep,rho1new,rho1tnew)
-              !
-              descf_1ae = delta_e_1scf(rho1, rho1new, vr1, descf_1ae_na)  ! AE
-              descf_1ps = delta_e_1scf(rho1t,rho1tnew,vr1t,descf_1ps_na)  ! PS
-              !
-              DEALLOCATE (rho1new, rho1tnew)
-              DO na = 1,nat
-                 write(*,"(a,2i2,2f10.5,a)") " == ",1,na, ehart1(na), etxc1(na),"(gu)"
-                 write(*,"(a,2i2,2f10.5,a)") " == ",2,na, ehart1t(na), etxc1t(na),"(gu)"
-              ENDDO
-#endif
               CALL PAW_potential(becstep, e_PAW)
               descf_PAW = - PAW_integrate(becstep-becsum)
               !write(6,"(a,2f12.6)") " == descf:  ", descf_1ae-descf_1ps, descf_PAW
@@ -427,32 +379,13 @@ SUBROUTINE electrons()
            vnew(:,:) = vr(:,:) - vnew(:,:)
            !
            ! CHECKME: is it becsum or becstep??
-           IF (okpaw) THEN
-#ifdef __GRID_PAW
-               CALL compute_onecenter_potentials(becsum,rho1,rho1t)
-               DO na = 1,nat
-                  write(*,"(a,2i2,2f10.5,a)") " == ",1,na, ehart1(na), etxc1(na),"(g)"
-                  write(*,"(a,2i2,2f10.5,a)") " == ",2,na, ehart1t(na), etxc1t(na),"(g)"
-               ENDDO
-#endif
+           IF (okpaw) &
                CALL PAW_potential(becsum, e_PAW)
-               !write(*,"(a,f13.8)") " == energy (radial PAW)",e_PAW
-               !CALL infomsg ('electrons','PAW forces missing')
-           ENDIF
            !
            ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
            !
            descf = 0._dp
-           !
-#ifdef __GRID_PAW
-           IF (okpaw) THEN
-              descf_1ae=0._dp
-              descf_1ps=0._dp
-              descf_1ae_na(:)=0._dp
-              descf_1ps_na(:)=0._dp
-           ENDIF
-#endif
            IF (okpaw) descf_PAW  = 0._dp
            !
            !
@@ -526,21 +459,6 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      !
      IF (okpaw) THEN
-#ifdef __GRID_PAW
-        DO na = 1, nat
-           IF (tpawp(ityp(na))) THEN
-              correction1c = ehart1(na) -ehart1t(na) +etxc1(na) -etxc1t(na) + &
-                             deband_1ae_na(na) - deband_1ps_na(na) +          &
-                             descf_1ae_na(na)  - descf_1ps_na(na)
-              PRINT *, "== "
-              PRINT '(A,I1,A,F13.8)', ' == atom #: ', na, ' grid correction: ', correction1c
-              PRINT '(A,4f13.8)', ' == ',deband_1ae_na(na) - deband_1ps_na(na),&
-                                descf_1ae_na(na)  - descf_1ps_na(na),&
-                                ehart1(na) -ehart1t(na) +etxc1(na) -etxc1t(na)
-              PRINT *, "== == == == == == =="
-          END IF
-        END DO
-#endif
               correction1c = (deband_PAW + descf_PAW + e_PAW)
               PRINT '(5x,A,f12.6,A)', 'PAW correction: ',correction1c, ', composed of: '
               PRINT '(5x,A,f10.6,A,f10.6,A,f12.6)',&
@@ -691,9 +609,6 @@ SUBROUTINE electrons()
         !DEALLOCATE (rhog) |should be elsewhere
         IF (okpaw) THEN
            DEALLOCATE (becstep)
-#ifdef __GRID_PAW
-           DEALLOCATE(deband_1ae_na, deband_1ps_na, descf_1ae_na, descf_1ps_na)
-#endif
         END IF
         !
         call destroy_scf_type ( rhoin )

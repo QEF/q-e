@@ -95,7 +95,6 @@ get_locals.o \
 ggen.o \
 gk_sort.o \
 gradcorr.o \
-grid_paw_routines.o \
 gweights.o \
 g2_kin.o \
 h_epsi_her_apply.o \
@@ -140,7 +139,8 @@ openfil.o \
 orthoatwfc.o \
 output_tau.o \
 para.o \
-paw_xc.o \
+paw_init.o \
+paw_onecenter.o \
 potinit.o \
 print_clock_pw.o \
 print_ks_energies.o \
@@ -151,7 +151,6 @@ pw_gemm.o \
 pw_restart.o \
 pwcom.o \
 qvan2.o \
-rad_paw_routines.o \
 rcgdiagg.o \
 rdiagh.o \
 rdiaghg.o \
@@ -274,7 +273,6 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
-../Modules/grid_paw_variables.o \
 ../Modules/input_parameters.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
@@ -297,6 +295,7 @@ MODULES = \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/paw_variables.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \

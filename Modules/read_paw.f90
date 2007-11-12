@@ -292,9 +292,9 @@ subroutine set_pseudo_paw (is, pawset)
   USE pseudo_types
   USE constants, ONLY: FPI
   !
-  USE grid_paw_variables, ONLY : tpawp, pfunc, ptfunc, aevloc_at, psvloc_at, &
-                                 aerho_atc, psrho_atc, kdiff, &
-                                 augmom, nraug, step_f, aug 
+  USE paw_variables, ONLY : tpawp, pfunc, ptfunc, aevloc_at, psvloc_at, &
+                            aerho_atc, psrho_atc, kdiff, &
+                            augmom, nraug, step_f, aug 
   !
   implicit none
   !

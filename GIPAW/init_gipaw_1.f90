@@ -16,7 +16,7 @@ subroutine init_gipaw_1
   !
   USE kinds ,      ONLY : dp
   USE parameters , ONLY : lqmax , lmaxx
-  USE grid_paw_variables, ONLY : nbrx
+  USE paw_variables, ONLY : nbrx
   USE cell_base ,  ONLY : omega
   USE ions_base,   ONLY : nat, ntyp => nsp, ityp
   USE constants,   ONLY : fpi

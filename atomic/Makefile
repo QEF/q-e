@@ -97,11 +97,11 @@ MODULES = \
 ../Modules/control_flags.o \
 ../Modules/exc_t.o \
 ../Modules/functionals.o \
-../Modules/grid_paw_variables.o \
 ../Modules/io_global.o \
 ../Modules/kind.o \
 ../Modules/ions_base.o \
 ../Modules/io_files.o \
+../Modules/paw_variables.o \
 ../Modules/pseudo_types.o \
 ../Modules/radial_grids.o \
 ../Modules/random_numbers.o \

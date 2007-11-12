@@ -55,7 +55,6 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
-../Modules/grid_paw_variables.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
 ../Modules/ions_base.o \
@@ -68,6 +67,7 @@ MODULES = \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
+../Modules/paw_variables.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \

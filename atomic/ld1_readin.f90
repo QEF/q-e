@@ -371,7 +371,7 @@ subroutine ld1_readin
              if (lls(ns) == lls(ns1) .and. jjs(ns) == jjs(ns1)) c1=c1+1 
           enddo
           if (c1 < 2) call errore('ld1_readin', &
-                        'US requires at least two energies per channel',1)
+                        'US requires at least two energies per channel',ns)
         endif
      enddo
      if (nwfs > 1) then
@@ -591,7 +591,7 @@ subroutine ld1_readin
   if (lpaw) then
      if (pseudotype /= 3) call errore('ld1_readin', &
           'please start from a US for generating a PAW dataset' ,pseudotype)
-     if (rel > 0) call errore('ld1_readin', &
+     if (rel > 1) call errore('ld1_readin', &
           'relativistic PAW not implemented' ,rel)
      if (latt /= 0) call errore('ld1_readin', &
           'Latter correction not implemented in PAW' ,latt)

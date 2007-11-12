@@ -39,12 +39,9 @@ SUBROUTINE newd_g()
   USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin
   !
-  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, &
-       &                           kdiff, dpaw_ae, dpaw_ps
-#ifdef __GRID_PAW
-  USE grid_paw_routines,    ONLY : newd_paw_grid
-#endif
-  USE rad_paw_routines,     ONLY : PAW_newd
+  USE paw_variables,        ONLY : really_do_paw, okpaw, tpawp, &
+                                   kdiff, dpaw_ae, dpaw_ps
+  USE paw_onecenter,        ONLY : PAW_newd
   USE uspp,                 ONLY : nhtol, nhtolm
   !
   IMPLICIT NONE
@@ -196,35 +193,10 @@ SUBROUTINE newd_g()
   CALL reduce( nhm * nhm * nat * nspin0, deeq )
   !
 
-  IF (okpaw) THEN
   ! prepare non-kinetic paw contribution to D coefficients
   ! (they are added later in the "atoms" loop)
-#ifdef __GRID_PAW
-            dpaw_ae=0._dp
-            dpaw_ps=0._dp
-            CALL newd_paw_grid(na)
-    IF (na==1) THEN
-    PRINT '(a)','--------------------------------------------------'
-    PRINT *, 'GRID AE 1:'
-    PRINT '(8f15.7)', (((dpaw_ae(jh,ih,na,1)),jh=1,nh(nt)),ih=1,nh(nt))
-    PRINT '(8f15.7)', 0.,0.,0.,0.,0.,0.,0.,0.
-    PRINT '(8f15.7)', (((dpaw_ae(jh,ih,na,2)),jh=1,nh(nt)),ih=1,nh(nt))
-    ENDIF
-            dpaw_ae=0._dp
-            dpaw_ps=0._dp
-#endif
+  IF (okpaw) &
             CALL PAW_newd(dpaw_ae, dpaw_ps)
-!#define __VERBOSE_PAW_NEWD
-#ifdef __VERBOSE_PAW_NEWD
-    PRINT *, 'deeq 1:'
-    PRINT '(8f15.7)', ((deeq(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
-    PRINT *, 'ddd AE 1:'
-    PRINT '(8f15.7)', ((dpaw_ae(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
-    PRINT *, 'ddd PS 1:'
-    PRINT '(8f15.7)', ((dpaw_ps(jh,ih,na,1),jh=1,nh(nt)),ih=1,nh(nt))
-!     STOP
-#endif
-  ENDIF
 
   atoms : &
   DO na = 1, nat

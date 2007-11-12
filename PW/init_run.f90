@@ -13,9 +13,8 @@ SUBROUTINE init_run()
   USE wvfct,              ONLY : nbnd, et, wg, btype
   USE control_flags,      ONLY : lmd
   USE dynamics_module,    ONLY : allocate_dyn_vars
-  USE grid_paw_routines,  ONLY : allocate_paw_internals
-  USE grid_paw_variables, ONLY : okpaw
-  USE rad_paw_routines,   ONLY : paw_init
+  USE paw_variables,      ONLY : okpaw
+  USE paw_init,           ONLY : paw_init_onecenter, allocate_paw_internals
   USE bp,                 ONLY : lberry, lelfield
   !
   IMPLICIT NONE
@@ -39,7 +38,7 @@ SUBROUTINE init_run()
   !
   CALL allocate_nlpot()
   if (okpaw)  CALL allocate_paw_internals()
-  if (okpaw)  CALL paw_init()
+  if (okpaw)  CALL paw_init_onecenter()
   CALL allocate_locpot()
   CALL allocate_wfc()
   CALL allocate_bp_efield()

@@ -406,7 +406,7 @@ SUBROUTINE print_ps_info
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
-  USE grid_paw_variables, ONLY: tpawp
+  USE paw_variables,   ONLY: tpawp
   !
   INTEGER :: nt
   CHARACTER :: ps*35

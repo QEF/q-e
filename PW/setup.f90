@@ -86,7 +86,7 @@ SUBROUTINE setup()
   USE exx,                ONLY : exx_grid_init
 #endif
   USE funct,              ONLY : dft_is_meta, dft_is_hybrid, dft_is_gradient
-  USE grid_paw_variables, ONLY : okpaw, tpawp
+  USE paw_variables,      ONLY : okpaw, tpawp
   !
   IMPLICIT NONE
   !

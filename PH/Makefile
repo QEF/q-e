@@ -157,7 +157,6 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
-../Modules/grid_paw_variables.o \
 ../Modules/input_parameters.o \
 ../Modules/io_files.o \
 ../Modules/io_global.o \
@@ -180,6 +179,7 @@ MODULES = \
 ../Modules/path_opt_routines.o \
 ../Modules/path_io_routines.o \
 ../Modules/path_reparametrisation.o \
+../Modules/paw_variables.o \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/ptoolkit.o \

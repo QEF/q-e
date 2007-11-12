@@ -41,7 +41,7 @@ subroutine init_us_1
                          qq_so, dvan_so, okvan
   USE uspp_param, ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,   ONLY : lspinorb, so, rot_ylm, fcoef
-  USE grid_paw_variables,   ONLY : really_do_paw, okpaw, tpawp, aug
+  USE paw_variables,   ONLY : really_do_paw, okpaw, tpawp, aug
   !
   implicit none
   !

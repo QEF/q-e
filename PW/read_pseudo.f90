@@ -27,9 +27,9 @@ subroutine readpp
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
   USE uspp_param, ONLY : upf
-  USE grid_paw_variables, ONLY : tpawp
-  USE read_paw_module,    ONLY : paw_io, allocate_pseudo_paw, deallocate_pseudo_paw
-  USE paw_to_internal,    ONLY : set_pseudo_paw
+  USE paw_variables,    ONLY : tpawp
+  USE read_paw_module,  ONLY : paw_io, allocate_pseudo_paw, deallocate_pseudo_paw
+  USE paw_to_internal,  ONLY : set_pseudo_paw
   implicit none
   !
   real(DP), parameter :: rcut = 10.d0, eps = 1.0D-08

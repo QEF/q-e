@@ -43,8 +43,8 @@ SUBROUTINE sum_band()
                                    root_image, npool, my_pool_id
   USE mp,                   ONLY : mp_bcast
   USE funct,                ONLY : dft_is_meta
-  USE rad_paw_routines,     ONLY : PAW_symmetrize
-  USE grid_paw_variables,   ONLY : okpaw
+  USE paw_onecenter,        ONLY : PAW_symmetrize
+  USE paw_variables,        ONLY : okpaw
   !
   IMPLICIT NONE
   !

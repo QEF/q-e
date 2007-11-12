@@ -46,10 +46,12 @@
 ! on all the nodes, and (most important) we don't need to distribute the potential
 ! among the nodes after computing it.
 !
-MODULE rad_paw_routines
+MODULE paw_onecenter
     !
-    USE kinds,      ONLY : DP
-    USe parameters, ONLY : ntypx
+    USE kinds,          ONLY : DP
+    USE parameters,     ONLY : ntypx
+    USE paw_variables,  ONLY : paw_info, saved, ww, nx, lm_max, ylm, &
+                               xlm, dylmp, dylmt, sin_th, cos_th
     !
     IMPLICIT NONE
 
@@ -58,53 +60,10 @@ MODULE rad_paw_routines
                              ! also computes energy if required
     PUBLIC :: PAW_integrate  ! computes \int v(r) \times n(r) dr
     PUBLIC :: PAW_ddot       ! error estimate for mix_rho
-    PUBLIC :: PAW_init       ! initialize
     PUBLIC :: PAW_newd       ! computes descreening coefficients
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
     !
     PRIVATE
-    SAVE
-    !
-    ! Set to true after initialization, to prevent double allocs:
-    LOGICAL              :: is_init = .false.
-
-    ! We need a place to store the radial AE and pseudo potential,
-    ! as different atoms may have different max_lm, and different max(|r|)
-    ! using a derived type is the way to go
-    TYPE paw_saved_potential
-        REAL(DP),ALLOCATABLE :: &
-            v(:,:,:,:)  ! indexes: |r|, lm, spin, {AE|PS}
-    END TYPE
-    TYPE(paw_saved_potential),ALLOCATABLE :: &
-         saved(:) ! allocated in PAW_rad_init
-
-    ! the following variables are used to convert spherical harmonics expansion
-    ! to radial sampling, they are initialized for an angular momentum up to
-    ! l = l_max and (l+1)**2 = lm_max
-    ! see function PAW_rad_init for details
-    INTEGER              :: l_max  = 0
-    INTEGER              :: lm_max = 0
-    INTEGER              :: nx     = 0
-    REAL(DP),ALLOCATABLE :: ww(:)
-    REAL(DP),ALLOCATABLE :: ylm(:,:) ! Y_lm(nx,lm_max)
-
-    ! additional variables for gradient correction
-    INTEGER,PARAMETER    :: xlm = 2     ! Additional angular momentum to
-                                        ! integrate to have a good GC
-    REAL(DP),ALLOCATABLE :: dylmt(:,:),&! |d(ylm)/dtheta|**2
-                            dylmp(:,:)  ! |d(ylm)/dphi|**2
-    REAL(DP),ALLOCATABLE :: cos_th(:),& ! cos(theta) (for divergence)
-                            sin_th(:)   ! sin(theta) (for divergence)
-
-    ! This type contains some useful data that has to be passed to all
-    ! the functions, but cannot stay in global variables for parallel:
-    TYPE paw_info
-        INTEGER :: a ! atom index
-        INTEGER :: t ! atom type index
-        INTEGER :: m ! atom mesh = g(nt)%mesh
-        INTEGER :: w ! w=1 --> all electron, w=2 --> pseudo
-                     ! (used only for gradient correction)
-    END TYPE
 
     ! the following macro controls the use of several fine-grained clocks
     ! set it to '! CALL' (without quotes) in order to disable them
@@ -118,13 +77,12 @@ MODULE rad_paw_routines
 !!! total potential in the global static save%v variable
 !!
 SUBROUTINE PAW_potential(becsum, energy, e_cmp)
-    USE kinds,                  ONLY : DP
-    USE atom,                   ONLY : g => rgrid
-    USE ions_base,              ONLY : nat, ityp
-    USE lsda_mod,               ONLY : nspin
-    USE uspp_param,             ONLY : nhm, lmaxq
-    USE grid_paw_variables,     ONLY : pfunc, ptfunc, tpawp, &
-                                       aerho_atc, psrho_atc, aug
+    USE atom,              ONLY : g => rgrid
+    USE ions_base,         ONLY : nat, ityp
+    USE lsda_mod,          ONLY : nspin
+    USE uspp_param,        ONLY : nhm, lmaxq
+    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, &
+                                  aerho_atc, psrho_atc, aug
 
     REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
     REAL(DP),INTENT(OUT),OPTIONAL :: energy          ! if present compute E[rho]
@@ -184,31 +142,19 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
 
         ! cleanup previously stored potentials
         saved(i%a)%v(:,:,:,i%w) = 0._dp
-#ifdef __NO_HARTREE
-        write(0,*) "########### skipping hartree paw potential"
-#else
         ! First compute the Hartree potential (it does not depend on spin...):
-#ifdef __SPHERICAL_TERM_ONLY
-        write(0,*) "########### RADIAL GRID TEST: SPHERICALY AVERAGED RHO_LM"
-        rho_lm(:,2:lmaxq**2,:) = 0.d0
-#endif
         CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
         ! using "energy" as the in/out parameter I save a double call, but I have to do this:
         IF (present(energy)) energy_h = energy
         DO is = 1,nspin ! ... so it has to be copied to all spin components
             saved(i%a)%v(:,:,is,i%w) = v_lm(:,:,1)
         ENDDO
-#endif
 
-#ifdef __NO_XC
-        write(0,*) "########### skipping XC paw potential"
-#else
         ! Than the XC one:
         CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
         IF (present(energy)) energy_xc = energy
         saved(i%a)%v(:,:,:,i%w) = saved(i%a)%v(:,:,:,i_what) &
                                 + v_lm(:,:,:)
-#endif
         IF (present(energy)) energy_tot = energy_tot + sgn*(energy_xc + energy_h)
         IF (present(e_cmp)) THEN
             e_cmp(na, 1, i%w) = energy_xc
@@ -235,16 +181,15 @@ SUBROUTINE PAW_potential(becsum, energy, e_cmp)
 END SUBROUTINE PAW_potential
 
 SUBROUTINE PAW_symmetrize(becsum)
-    USE kinds,                  ONLY : DP
-    USE lsda_mod,               ONLY : nspin
-    USE uspp_param,             ONLY : nhm, lmaxq
-    USE ions_base,              ONLY : nat, ityp
-    USE symme,                  ONLY : nsym, irt, d1, d2, d3
-    USE uspp,                   ONLY : nhtolm,nhtol
-    USE uspp_param,             ONLY : nh
-    USE grid_paw_variables,     ONLY : tpawp
-    USE wvfct,                  ONLY : gamma_only
-    USE control_flags,          ONLY : nosym
+    USE lsda_mod,          ONLY : nspin
+    USE uspp_param,        ONLY : nhm, lmaxq
+    USE ions_base,         ONLY : nat, ityp
+    USE symme,             ONLY : nsym, irt, d1, d2, d3
+    USE uspp,              ONLY : nhtolm,nhtol
+    USE uspp_param,        ONLY : nh
+    USE paw_variables,     ONLY : tpawp
+    USE wvfct,             ONLY : gamma_only
+    USE control_flags,     ONLY : nosym
 
     REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
 
@@ -278,15 +223,16 @@ SUBROUTINE PAW_symmetrize(becsum)
     D(3)%d => d3 ! d3(7,7,48)
 
 ! => lm = l**2 + m
-! => ih = lm + (l+proj)**2  <-- if proj starts from zero!
+! => ih = lm + (l+proj)**2  <-- if the projector index starts from zero!
 !       = lm + proj**2 + 2*l*proj
 !       = m + l**2 + proj**2 + 2*l*proj
 !        ^^^
 ! Known ih and m_i I can compute the index oh of a different m = m_o but
 ! the same augmentation channel (l_i = l_o, proj_i = proj_o):
-!
-! oh = ih - m_i + m_o
-#define __DEBUG_PAW_SYM
+!  oh = ih - m_i + m_o
+! this expression should be general inside pwscf.
+
+!#define __DEBUG_PAW_SYM
 #ifdef __DEBUG_PAW_SYM
         nt = 1
         na = 1
@@ -352,7 +298,6 @@ SUBROUTINE PAW_symmetrize(becsum)
     ENDDO ! nat
     ENDDO ! nspin
 
-#define __DEBUG_PAW_SYM
 #ifdef __DEBUG_PAW_SYM
         nt = 1
         na = 1
@@ -385,12 +330,12 @@ SUBROUTINE PAW_symmetrize(becsum)
 #endif
 
     ! Apply symmetrization:
-!     CALL get_environment_variable('DO_SYMME', do_symme)
-!     IF (trim(do_symme)=='.false.') THEN
-!         write(*,*) "**** skipping PAW symmetrization!"
-!     ELSE
+    !CALL get_environment_variable('DO_SYMME', do_symme)
+    !IF (trim(do_symme)=='.false.') THEN
+    !    write(*,*) "**** skipping PAW symmetrization!"
+    !ELSE
         becsum(:,:,:) = becsym(:,:,:)
-!     ENDIF
+    !ENDIF
 
     CALL stop_clock('PAW_symme')
 
@@ -403,14 +348,13 @@ END SUBROUTINE PAW_symmetrize
 !!
 !! This is subroutine does NOT cycle on atoms because newd likes it this way
 SUBROUTINE PAW_newd(d_ae, d_ps)
-    USE kinds,                  ONLY : DP
-    USE constants,              ONLY : sqrtpi, e2
-    USE lsda_mod,               ONLY : nspin
-    USE ions_base,              ONLY : nat, ityp
-    USE atom,                   ONLY : g => rgrid
-    USE grid_paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug, &
-                                       aevloc_at, psvloc_at, ra=>nraug
-    USE uspp_param,             ONLY : nh, nhm, lmaxq
+    USE constants,         ONLY : sqrtpi, e2
+    USE lsda_mod,          ONLY : nspin
+    USE ions_base,         ONLY : nat, ityp
+    USE atom,              ONLY : g => rgrid
+    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug, &
+                                  aevloc_at, psvloc_at, ra=>nraug
+    USE uspp_param,        ONLY : nh, nhm, lmaxq
 
     REAL(DP), TARGET, INTENT(INOUT) :: d_ae( nhm, nhm, nat, nspin)
     REAL(DP), TARGET, INTENT(INOUT) :: d_ps( nhm, nhm, nat, nspin)
@@ -480,10 +424,6 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                     ! Now I multiply the pfunc and the potential, I can use
                     ! pfunc_lm itself as workspace
                     DO lm = 1,lmaxq**2
-#ifdef __NO_LOCAL
-                    pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
-                            saved(i%a)%v(1:i%m,lm,is,i%w)
-#else
                         IF ( lm == 1 ) THEN
                             pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
                                 ( saved(i%a)%v(1:i%m,lm,is,i%w) + e2*sqrtpi*v_at(1:i%m,i%t) )
@@ -491,7 +431,6 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                             pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
                                 saved(i%a)%v(1:i%m,lm,is,i%w)
                         ENDIF
-#endif
                         !
                         ! Integrate!
                         CALL simpson (ra(i%t),pfunc_lm(:,lm,is),g(i%t)%rab,integral)
@@ -504,9 +443,6 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                 ENDDO ! mb
                 ENDDO ! nb
             ENDDO spins
-!#ifdef __PARA
-!            CALL reduce (nhm*nhm*nat*nspin, d )
-!#endif
         ENDDO whattodo
 
         ! cleanup
@@ -531,12 +467,11 @@ END SUBROUTINE PAW_newd
 !!! previously computed and stored in global static variable "saved(na)"
 !!
 FUNCTION PAW_integrate(becsum)
-    USE kinds,                  ONLY : DP
-    USE lsda_mod,               ONLY : nspin
-    USE ions_base,              ONLY : nat, ityp
-    USE atom,                   ONLY : g => rgrid
-    USE grid_paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug
-    USE uspp_param,             ONLY : nhm, lmaxq
+    USE lsda_mod,          ONLY : nspin
+    USE ions_base,         ONLY : nat, ityp
+    USE atom,              ONLY : g => rgrid
+    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug
+    USE uspp_param,        ONLY : nhm, lmaxq
 
     REAL(DP)                :: PAW_integrate
 
@@ -613,14 +548,12 @@ END FUNCTION PAW_integrate
 !!! As rho_ddot in mix_rho for radial grids
 !!
 FUNCTION PAW_ddot(bec1,bec2)
-    USE kinds,                  ONLY : DP
-    USE constants,              ONLY : pi
-    USE lsda_mod,               ONLY : nspin
-    USE ions_base,              ONLY : nat, ityp
-    USE atom,                   ONLY : g => rgrid
-
-    USE grid_paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug
-    USE uspp_param,             ONLY : nhm, lmaxq
+    USE constants,         ONLY : pi
+    USE lsda_mod,          ONLY : nspin
+    USE ions_base,         ONLY : nat, ityp
+    USE atom,              ONLY : g => rgrid
+    USE paw_variables,     ONLY : pfunc, ptfunc, tpawp, aug
+    USE uspp_param,        ONLY : nhm, lmaxq
 
     REAL(DP)                :: PAW_ddot
 
@@ -645,9 +578,6 @@ FUNCTION PAW_ddot(bec1,bec2)
 
     ! initialize for integration on angular momentum and gradient
     PAW_ddot = 0._dp
-
-! !$OMP PARALLEL DO default(shared) reduction(+:paw_ddot) &
-! !$OMP private(rho_lm, v_lm, i_sign, i_what, na)
 
     CALL divide (nat, first_nat, last_nat)
     !
@@ -701,7 +631,7 @@ FUNCTION PAW_ddot(bec1,bec2)
         !
     ENDIF ifpaw
     ENDDO atoms
-!!$OMP END PARALLEL DO
+
 #ifdef __PARA
     CALL reduce (1, PAW_ddot )
 #endif
@@ -710,220 +640,11 @@ FUNCTION PAW_ddot(bec1,bec2)
 
 
 END FUNCTION PAW_ddot
-
-
-SUBROUTINE PAW_init()
-    USE ions_base,              ONLY : nat, ityp
-    USE grid_paw_variables,     ONLY : tpawp
-    USE atom,                   ONLY : g => rgrid
-    USE uspp_param,             ONLY : lmaxq
-    USE lsda_mod,               ONLY : nspin
-    USE funct,                  ONLY : dft_is_gradient
-
-    INTEGER :: na, nt, first_nat, last_nat
-
-    ! First a bit of generic initialization:
-    ALLOCATE(saved(nat)) ! allocate space to store the potentials
-    !
-    ! Parallelizing this loop every node only allocs the potential
-    ! for the atoms that it will actually use later.
-    CALL divide (nat, first_nat, last_nat)
-    DO na = first_nat, last_nat
-        nt = ityp(na)
-        ! note that if the atom is not paw it is left unallocated
-        IF ( tpawp(nt) ) THEN
-            IF (allocated(saved(na)%v)) DEALLOCATE(saved(na)%v)
-            ALLOCATE( saved(na)%v(g(nt)%mesh, lmaxq**2, nspin, 2 ) )
-                      !                                     {AE|PS}
-        ENDIF
-    ENDDO
-
-    ! initialize for integration on angular momentum and gradient, integrating
-    ! up to 2*lmaxq (twice the maximum angular momentum of rho) is enough for
-    ! H energy and for XC energy. If I have gradient correction I have to go a bit higher
-    IF ( dft_is_gradient() ) THEN
-        CALL PAW_rad_init(2*lmaxq+xlm)
-    ELSE
-        CALL PAW_rad_init(2*lmaxq)
-    ENDIF
-
-END SUBROUTINE PAW_init
-
-!___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
-!!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
-!!! initialize several quantities related to radial integration: spherical harmonics and their 
-!!! gradients along a few (depending on lmaxq) directions, weights for spherical integration
-!!
-SUBROUTINE PAW_rad_init(l)
-    USE constants,              ONLY : pi, fpi, eps8
-    USE funct,                  ONLY : dft_is_gradient
-    INTEGER,INTENT(IN)          :: l ! max angular momentum component that will be
-                                     ! integrated exactly (to numerical precision)
-
-    REAL(DP),ALLOCATABLE        :: x(:),&       ! nx versors in smart directions
-                                   w(:),&       ! temporary integration weights
-                                   r(:,:),&     ! integration directions
-                                   r2(:),&      ! square modulus of r
-                                   ath(:),aph(:)! angles in sph coords for r
-
-    INTEGER                     :: i,ii,n       ! counters
-    INTEGER                     :: lm,lm2,m     ! indexes for ang.mom
-    REAL(DP)                    :: phi,dphi,rho ! spherical coordinates
-    REAL(DP)                    :: z            ! cartesian coordinates
-    ! for gradient corrections:
-    INTEGER                     :: ipol
-    REAL(DP),ALLOCATABLE        :: aux(:,:),&   ! workspace
-                                   s(:,:),&     ! integration directions + delta
-                                   s2(:)        ! square modulus of s
-    REAL(DP)                    :: vth(3), vph(3) !versors for theta and phi
-    !
-    CHARACTER(len=100)          :: message
-
-    ! reinit if necessary
-    IF( is_init ) THEN
-        IF ( l /= l_max ) THEN
-            CALL infomsg('PAW_rad_init',&
-             'PAW radial integration already initialized but for a different l: reinitializing.')
-            DEALLOCATE(ww, ylm)
-            IF (ALLOCATEd(dylmt))  DEALLOCATE(dylmt)
-            IF (ALLOCATEd(dylmp))  DEALLOCATE(dylmp)
-            IF (ALLOCATEd(cos_th)) DEALLOCATE(cos_th)
-            IF (ALLOCATEd(sin_th)) DEALLOCATE(sin_th)
-        ELSE
-            ! if already initialized correctly nothing to be done
-            RETURN
-        ENDIF
-    ENDIF
-
-    OPTIONAL_CALL start_clock ('PAW_rad_init')
-
-    ! maximum value of l correctly integrated
-    l_max = l
-    ! volume element for angle phi
-    dphi = 2._dp*pi/(l_max+1)
-    ! number of samples for theta angle
-    n = (l_max+2)/2
-    ALLOCATE(x(n),w(n))
-    ! compute weights for theta integration
-    CALL weights(x,w,n)
-
-    ! number of integration directions
-    nx = n*(l_max+1)
-    WRITE(message,"(a,i3,a,i2)") "Setup to integrate on ",nx," directions; integration exact up to l = ",l
-    CALL infomsg('PAW_rad_init', message)
-    ALLOCATE(r(3,nx),r2(nx), ww(nx), ath(nx), aph(nx))
-
-    ! compute real weights multiplying theta and phi weights
-    ii = 0
-    do i=1,n
-        z = x(i)
-        rho=sqrt(1._dp-z**2)
-        do m=0,l_max
-            ii= ii+1
-            phi = dphi*m
-            r(1,ii) = rho*cos(phi)
-            r(2,ii) = rho*sin(phi)
-            r(3,ii) = z
-            ww(ii) = w(i)*2._dp*pi/(l_max+1)
-            r2(ii) = r(1,ii)**2+r(2,ii)**2+r(3,ii)**2
-            ! these will be used later:
-            ath(ii) = acos(z/sqrt(r2(ii)))
-            aph(ii) = phi
-        end do
-    end do
-    ! cleanup
-    DEALLOCATE (x,w)
-
-    ! initialize spherical harmonics that will be used
-    ! to convert rho_lm to radial grid
-    lm_max = (l_max+1)**2
-    ALLOCATE(ylm(nx,lm_max))
-    CALL ylmr2(lm_max, nx, r,r2,ylm)
-
-    ! if gradient corrections will be used than we need
-    ! to initialize the gradient of ylm, as we are working in spherical
-    ! coordinates the formula involves \hat{theta} and \hat{phi}
-    gradient: IF (dft_is_gradient()) THEN
-        ALLOCATE(s(3,nx),s2(nx))
-        ALLOCATE(dylmt(nx,lm_max),dylmp(nx,lm_max),aux(nx,lm_max))
-        ALLOCATE(cos_th(nx), sin_th(nx))
-        dylmt(:,:) = 0._dp
-        dylmp(:,:) = 0._dp
-
-        ! compute derivative along x, y and z => gradient, then compute the
-        ! scalar products with \hat{theta} and \hat{phi} and store them in
-        ! dylmt and dylmp respectively
-        DO ipol = 1,3 !x,y,z
-            CALL dylmr2(lm_max, nx, r,r2, aux, ipol)
-            DO lm = 1, lm_max
-            DO i = 1,nx
-                vph = (/-sin(aph(i)), cos(aph(i)), 0._dp/)
-                ! this is the explicit form, but the cross product trick (below) is much faster:
-                ! vth = (/cos(aph(i))*cos(ath(i)), sin(aph(i))*cos(ath(i)), -sin(ath(i))/)
-                vth = (/vph(2)*r(3,i)-vph(3)*r(2,i),&
-                        vph(3)*r(1,i)-vph(1)*r(3,i),&
-                        vph(1)*r(2,i)-vph(2)*r(1,i)/)
-                dylmt(i,lm) = dylmt(i,lm) + aux(i,lm)*vth(ipol)
-                ! CHECK: the 1/sin(th) factor should be correct, but deals wrong result, why?
-                dylmp(i,lm) = dylmp(i,lm) + aux(i,lm)*vph(ipol) !/sin(ath(i))
-                cos_th(i) = cos(ath(i))
-                sin_th(i) = sin(ath(i))
-            ENDDO
-            ENDDO
-        ENDDO
-        DEALLOCATE(aux)
-    ENDIF gradient
-    ! cleanup
-    DEALLOCATE (r,r2)
-
-    ! success
-    is_init = .true.
-
-    OPTIONAL_CALL stop_clock ('PAW_rad_init')
-
- CONTAINS
-    ! Computes weights for gaussian integrals,
-    ! from numerical recipes
-    SUBROUTINE weights(x,w,n)
-    implicit none
-    integer :: n, i,j,m
-    real(8), parameter :: eps=1.d-14
-    real(8) :: x(n),w(n), z,z1, p1,p2,p3,pp,pi
-    
-    pi = 4._dp*atan(1._dp)
-    m=(n+1)/2
-    do i=1,m
-        z1 = 2._dp
-        z=cos(pi*(i-0.25_dp)/(n+0.5_dp))
-        do while (abs(z-z1).gt.eps)
-        p1=1._dp
-        p2=0._dp
-        do j=1,n
-            p3=p2
-            p2=p1
-            p1=((2._dp*j-1._dp)*z*p2-(j-1._dp)*p3)/j
-        end do
-        pp = n*(z*p1-p2)/(z*z-1._dp)
-        z1=z
-        z=z1-p1/pp
-        end do
-        x(i) = -z
-        x(n+1-i) = z
-        w(i) = 2._dp/((1._dp-z*z)*pp*pp)
-        w(n+1-i) = w(i)
-    end do
-
-    END SUBROUTINE weights
-END SUBROUTINE PAW_rad_init 
-
-
-
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
 !!! use the density produced by sum_rad_rho to compute xc potential and energy, as
 !!! xc functional is not diagonal on angular momentum numerical integration is performed
 SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
-    USE kinds,                  ONLY : DP
     USE parameters,             ONLY : ntypx
     USE lsda_mod,               ONLY : nspin
     USE uspp_param,             ONLY : lmaxq
@@ -956,12 +677,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     REAL(DP) :: &
          vgc(ndmx,2),   & ! exchange-correlation potential (GGA only)
          egc(ndmx)        ! exchange correlation energy density (GGA only)
-
-!#define __SURRENDER_OR_DIE
-#ifdef __SURRENDER_OR_DIE
-    ! REMOVE:
-    REAL(DP) :: aux(i%m),aux2(i%m),auxc(i%m) ! charge density as lm components
-#endif
 
     OPTIONAL_CALL start_clock ('PAW_xc_pot')
     !
@@ -997,56 +712,19 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ENDDO
     IF(present(energy)) DEALLOCATE(e_rad)
 
-#ifdef __ONLY_GCXC
-    write(0,*) "########### only GC for XC part"
-    v_rad(:,:,:) = 0._dp
-#endif
-
     ! Recompose the sph. harm. expansion
     CALL PAW_rad2lm(i, v_rad, v_lm, lmaxq)
 
-#ifdef __SURRENDER_OR_DIE
-    write(*,*) "__SURRENDER_OR_DIE"
-
-    OPEN (6354, FILE='ld1.extracted', FORM='FORMATTED' )
-    DO k = 1,i%m
-        read(6354,'(4f20.10)') aux(k),aux2(k), auxc(k)
-    ENDDO
-    CLOSE(6354)
-#endif
-
-#ifdef __NO_GCXC
-#else
 !
 !  Passing this charge : fpi*rho_lm(:,1,1) and this rho core : fpi*rho_core(:,1)*g(i%t)%r2(:) 
 !  to the original vxcgc routine yeld almost the same ddd coefficients as using the charge loaded
 !  from file, produced by the atomic code.
 !  What the heck is happening in between????
 !
-
     ! Add gradient correction, if necessary
-    IF( dft_is_gradient() ) THEN
-!           CALL vxcgc(ndmx,g(i%t)%mesh,nspin,g(i%t)%r,g(i%t)%r2,&
-!                       sqrt(fpi)*rho_lm(:,1,1),fpi*rho_core(:,1)*g(i%t)%r2(:),vgc,egc,1)
-
-!         v_lm(:,1,1) = 0._dp
-!         rho_lm(1:i%m,1,1) = aux2(1:i%m)/sqrt(fpi)
-        !v_lm(:,1,1) = 0._dp
+    IF( dft_is_gradient() ) &
         CALL PAW_gcxc_potential(i, rho_lm,rho_core, v_lm,energy)
-!      v_lm(1:i%m,1,1:nspin) =  v_lm(1:i%m,1,1:nspin) + vgc(1:i%m,1:nspin)
-    ENDIF
 
-!     IF (i%w == 1) THEN
-! #ifdef __SURRENDER_OR_DIE
-!     write(12000,'(4f20.10)') (g(i%t)%r(k),rho_lm(k,1,1),aux2(k),v_lm(k,1,1),k=1,i%m)
-! #else
-!     write(12000,'(3f20.10)') (g(i%t)%r(k),rho_lm(k,1,1),v_lm(k,1,1),k=1,i%m)
-! #endif
-!     ENDIF
-#endif
-
-    ! cleanup
-    !DEALLOCATE(rho_rad)
 
     OPTIONAL_CALL stop_clock ('PAW_xc_pot')
 
@@ -1060,7 +738,6 @@ END SUBROUTINE PAW_xc_potential
 !!! precision during teh calculation, even if only the ones up to lmaxq (the maximum in the
 !!! density of charge) matter when computing \int v * rho 
 SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
-    USE kinds,                  ONLY : DP
     USE ions_base,              ONLY : ityp
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
@@ -1207,35 +884,12 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     CALL PAW_divergence(i, h_lm, div_h, lmaxq+xlm, lmaxq)
     !                         input max lm --^     ^-- output max lm
 
-#ifdef __PAW_ONLYHAM
-    write(0,*) "##### only HAM"
-#else
-#ifdef __PAW_NONHAM
-    write(0,*) "##### NO HAM"
-#else
-#endif
-#endif
-
     ! Finally sum it back into v_xc
     DO is = 1,nspin
     DO lm = 1,lmaxq**2
-#ifdef __PAW_ONLYHAM
-            v_lm(:,lm,is) = v_lm(:,lm,is) - e2*div_h(:,lm,is)*g(i%t)%rm2(:)
-#else
-#ifdef __PAW_NONHAM
-            v_lm(:,lm,is) = v_lm(:,lm,is) + e2*gc_lm(:,lm,is) 
-#else
             v_lm(1:i%m,lm,is) = v_lm(1:i%m,lm,is) + e2*(gc_lm(1:i%m,lm,is)*g(i%t)%r2(1:i%m)-div_h(1:i%m,lm,is))
-#endif
-#endif
     ENDDO
     ENDDO
-
-!   DO k = 1,i%m
-!      write(9000,'(100f20.10)') g(i%t)%r(k), rho_lm(k,1,1), rho_core(k,i%t),&
-!                                gc_lm(k,1,1),div_h(k,1,1),e2*(gc_lm(k,1,1)*g(i%t)%r2(k)-div_h(k,1,1))
-!   ENDDO
-
 
     OPTIONAL_CALL stop_clock ('PAW_gcxc_v')
 
@@ -1246,7 +900,6 @@ END SUBROUTINE PAW_gcxc_potential
 !!! it is assumed that: 1. the input function is multiplied by r**2; 
 !!! 2. the output function will be divided by r**2 outside
 SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
-    USE kinds,                  ONLY : DP
     USE constants,              ONLY : sqrtpi, fpi, eps12, e2
     !USE uspp_param,             ONLY : lmaxq
     USE lsda_mod,               ONLY : nspin
@@ -1258,10 +911,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     INTEGER, INTENT(IN)  :: lmaxq_in  ! max angular momentum to derive
                                       ! (divergence is reliable up to lmaxq_in-2)
     INTEGER, INTENT(IN)  :: lmaxq_out ! max angular momentum to reconstruct for output
-!     INTEGER, INTENT(IN)  :: ix ! line of the dylm2 matrix to use actually it is
-!                                ! one of the nx spherical integration directions
     REAL(DP), INTENT(IN) :: F_lm(i%m,3,lmaxq_in**2,nspin)  ! Y_lm expansion of F
-    !REAL(DP), INTENT(IN) :: F_rad(i%m,3,nspin)             ! F along direction ix
     REAL(DP), INTENT(OUT):: div_F_lm(i%m,lmaxq_out**2,nspin)! div(F) 
     !
     REAL(DP)             :: div_F_rad(i%m,nx,nspin)         ! div(F) on rad. grid
@@ -1287,7 +937,6 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     ! initialize
     div_F_rad(:,:,:) = 0._dp
 
-!#ifdef __DONT_DO_THAT_THEN
     ! phi component
     DO is = 1,nspin
     DO ix = 1,nx
@@ -1301,9 +950,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
         div_F_rad(1:i%m,ix,is) = div_F_rad(1:i%m,ix,is)+aux(1:i%m)
     ENDDO
     ENDDO
-!#endif
 
-!#ifdef __DONT_DO_THAT_THEN
     ! theta component
     DO is = 1,nspin
     DO ix = 1,nx
@@ -1320,9 +967,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
 
     ! Convert what I have done so forth to Y_lm
     CALL PAW_rad2lm(i, div_F_rad, div_F_lm, lmaxq_out)
-!#endif
 
-!#ifdef __DONT_DO_THAT_THEN
     ! 1. compute the partial radial derivative d/dr
     !div_F_lm(:,:,:) = 0._dp !!! REMOVE: this kills radial components
     DO is = 1,nspin
@@ -1336,7 +981,6 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
         div_F_lm(1:i%m,lm,is) = (div_F_lm(1:i%m,lm,is) + aux(1:i%m))*g(i%t)%rm2(1:i%m)
     ENDDO
     ENDDO
-!#endif
 
     OPTIONAL_CALL stop_clock ('PAW_div')
 
@@ -1346,7 +990,6 @@ END SUBROUTINE PAW_divergence
 !!! build gradient of radial charge distribution from its spherical harmonics expansion
 !!! uses pre-computed rho_rad
 SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
-    USE kinds,                  ONLY : DP
     USE constants,              ONLY : fpi
     USE radial_grids,           ONLY : ndmx
     USE uspp_param,             ONLY : lmaxq
@@ -1418,7 +1061,6 @@ END SUBROUTINE PAW_gradient
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! computes H  potential from rho, used by PAW_h_energy and PAW_ddot
 SUBROUTINE PAW_h_potential(i, rho_lm, v_lm, energy)
-    USE kinds,                  ONLY : DP
     USE constants,              ONLY : fpi, e2
     USE radial_grids,           ONLY : hartree
     USE uspp_param,             ONLY : lmaxq
@@ -1483,16 +1125,15 @@ END SUBROUTINE PAW_h_potential
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! sum up pfuncs x occupation to build radial density's angular momentum components
 SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
-    USE kinds,                  ONLY : DP
-    USE ions_base,              ONLY : ntyp => nsp, nat 
-    USE lsda_mod,               ONLY : nspin
-    USE uspp_param,             ONLY : nh, lmaxq, nhm
-    USE uspp,                   ONLY : indv, ap, nhtolm,lpl,lpx
-    USE parameters,             ONLY : lqmax
-    USE constants,              ONLY : eps12
-    USE radial_grids,           ONLY : ndmx
-    USE grid_paw_variables,     ONLY : augfun_t, nbrx
-    USE atom,                   ONLY : g => rgrid
+    USE ions_base,         ONLY : ntyp => nsp, nat 
+    USE lsda_mod,          ONLY : nspin
+    USE uspp_param,        ONLY : nh, lmaxq, nhm
+    USE uspp,              ONLY : indv, ap, nhtolm,lpl,lpx
+    USE parameters,        ONLY : lqmax
+    USE constants,         ONLY : eps12
+    USE radial_grids,      ONLY : ndmx
+    USE paw_variables,     ONLY : augfun_t, nbrx
+    USE atom,              ONLY : g => rgrid
 
     TYPE(paw_info)  :: i                                    ! atom's minimal info
     REAL(DP), INTENT(IN)  :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupation
@@ -1562,7 +1203,6 @@ END SUBROUTINE PAW_rho_lm
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! build radial charge distribution from its spherical harmonics expansion
 SUBROUTINE PAW_lm2rad(i, ix, F_lm, F_rad)
-    USE kinds,                  ONLY : DP
     USE uspp_param,             ONLY : lmaxq
     USE lsda_mod,               ONLY : nspin
 
@@ -1592,8 +1232,6 @@ END SUBROUTINE PAW_lm2rad
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! computes F_lm(r) = \int d \Omega F(r,th,ph) Y_lm(th,ph)
 SUBROUTINE PAW_rad2lm(i, F_rad, F_lm, lmaxq_loc)
-    USE kinds,                  ONLY : DP
-    !USE uspp_param,             ONLY : lmaxq ! <-- now passed as parameter
     USE lsda_mod,               ONLY : nspin
 
     TYPE(paw_info)       :: i         ! atom's minimal info
@@ -1625,4 +1263,4 @@ SUBROUTINE PAW_rad2lm(i, F_rad, F_lm, lmaxq_loc)
 END SUBROUTINE PAW_rad2lm
 
 
-END MODULE rad_paw_routines
+END MODULE paw_onecenter
