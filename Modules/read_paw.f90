@@ -292,8 +292,7 @@ subroutine set_pseudo_paw (is, pawset)
   USE pseudo_types
   USE constants, ONLY: FPI
   !
-  USE paw_variables, ONLY : kdiff, &
-                            augmom, nraug, step_f
+  USE paw_variables, ONLY : kdiff,augmom, nraug
   !
   implicit none
   !
