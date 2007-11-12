@@ -21,10 +21,6 @@ MODULE paw_variables
     LOGICAL :: &
          okpaw              ! if .TRUE. at least one pseudo is PAW
 
-    ! Analogous to tvanp in "uspp_param" (Modules/uspp.f90)
-!     LOGICAL :: &
-!          tpawp(npsx) = .false.   ! if .TRUE. the atom is of PAW type
-
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Initialization data: !!!!
 
@@ -49,30 +45,11 @@ MODULE paw_variables
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Pseudopotential data: !!!!
 
-    ! Analogous to qfunc in "uspp_param" (Modules/uspp.f90)
-!     REAL(DP), TARGET :: &
-!          pfunc(ndmx,nbrx,nbrx,npsx), &! AE: \phi_{mu}(|r|)-\phi_{nu}(|r|)
-!          ptfunc(ndmx,nbrx,nbrx,npsx)  ! PS: \tilde{\phi}_{mu}(|r|)-\tilde{\phi}_{nu}(|r|)
-
-    ! Augmentation on radial grid:
-!     TYPE augfun_t
-!       REAL(DP), ALLOCATABLE :: fun(:,:,:,:)
-!     END TYPE
-!     TYPE(augfun_t) :: aug(npsx)
     ! Moments of the augmentation functions
     REAL (DP) :: &
          augmom(nbrx,nbrx,0:6,npsx)  ! moments of PAW augm. functions
     INTEGER :: &
          nraug(npsx)                 ! augm. functions cutoff parameter
-
-    ! Analogous to rho_atc in "atom" (Modules/atom.f90)
-!     REAL(DP), TARGET :: &
-!          aerho_atc(ndmx,npsx),        &! radial AE core charge density
-!          psrho_atc(ndmx,npsx)          ! radial PS core charge density          
-
-    ! Analogous to vloc in "vlocal" (PW/pwcom.f90)
-    REAL(DP), ALLOCATABLE, TARGET :: &
-         psvloc(:,:)              ! PS local 1-c potential for each atom type
 
     ! Analogous to dion in "uspp_param" (Modules/uspp.f90)
     REAL(DP) :: &
@@ -110,41 +87,4 @@ MODULE paw_variables
     REAL(DP), ALLOCATABLE :: &
          becnew(:,:,:)       ! new augmentation channel occupations
 
-
- CONTAINS
-    ! From PW/init_paw_1.f90
-    SUBROUTINE step_f(f2,f,r,nrs,nrc,pow,mesh)
-      USE kinds , ONLY : dp
-      !
-      ! This routine apply a function which goes smoothly to zero from rs to rc
-      ! 
-      IMPLICIT NONE
-      INTEGER :: mesh
-      REAL(DP), INTENT(out):: f2(mesh)
-      REAL(DP), INTENT(in) :: f(mesh), r(mesh)
-      REAL(DP), INTENT(in) :: pow
-      INTEGER :: nrs, nrc 
-
-      INTEGER :: n,i
-      REAL(DP) :: rcp, rsp
-
-      rcp = r(nrc)
-      rsp = r(nrs)
-
-      DO i=1,mesh
-         IF(r(i).LE.rsp) THEN
-            f2(i) = f(i)
-         ELSE
-            IF(r(i).LE.rcp) THEN
-               f2(i)=f(i)* (1.d0-3.d0*((r(i)-rsp)/(rcp-rsp))**2+ &
-                    2.d0*((r(i)-rsp)/(rcp-rsp))**3)**pow
-            ELSE
-               f2(i)=0.d0
-            ENDIF
-         ENDIF
-
-      END DO
-
-    END SUBROUTINE step_f
-
-END MODULE paw_variables
+ END MODULE paw_variables

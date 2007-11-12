@@ -440,25 +440,6 @@ subroutine set_pseudo_paw (is, pawset)
   ! nqf is always 0 for this PAW format
   ! qfcoef(1:pawset%nqf, 1:pawset%nqlc, 1:nwfc, 1:nwfc, is ) = 0._dp
   !
-  rgrid(is)%r  (1:mesh) = pawset%grid%r  (1:mesh)
-  rgrid(is)%rab(1:mesh) = pawset%grid%r  (1:mesh)*pawset%grid%dx
-
-!
-! set radial grid data
-!
-  rgrid(is)%mesh = mesh
-  rgrid(is)%xmin = pawset%grid%xmin
-  rgrid(is)%rmax = pawset%grid%rmax
-  rgrid(is)%zmesh= pawset%grid%zmesh
-  rgrid(is)%dx   = pawset%grid%dx
-  rgrid(is)%r(1:mesh)   = pawset%grid%r(1:mesh)
-  rgrid(is)%r2(1:mesh)  = pawset%grid%r2(1:mesh)
-  rgrid(is)%rab(1:mesh) = pawset%grid%rab(1:mesh)
-  rgrid(is)%sqr(1:mesh) = sqrt(pawset%grid%r(1:mesh))
-! these speed up a lot a few calculations (paw XC and GCXC):
-  rgrid(is)%rm1(1:mesh) = pawset%grid%rm1(1:mesh)
-  rgrid(is)%rm2(1:mesh) = pawset%grid%rm2(1:mesh)
-  rgrid(is)%rm3(1:mesh) = pawset%grid%rm3(1:mesh)
 
   ! NO spin orbit PAW implemented right now (oct 2007)
 !!$  if (lspinorb.and..not.pawset%has_so) &
@@ -502,6 +483,25 @@ subroutine set_pseudo_paw (is, pawset)
   ALLOCATE (upf(is)%paw%ae_vloc(mesh))
   upf(is)%vloc(1:mesh) = pawset%psloc(1:mesh)
   upf(is)%paw%ae_vloc(1:mesh) = pawset%aeloc(1:mesh)
+
+  !
+  ! set radial grid data
+  !
+  rgrid(is)%r  (1:mesh) = pawset%grid%r  (1:mesh)
+  rgrid(is)%rab(1:mesh) = pawset%grid%r  (1:mesh)*pawset%grid%dx
+  rgrid(is)%mesh = mesh
+  rgrid(is)%xmin = pawset%grid%xmin
+  rgrid(is)%rmax = pawset%grid%rmax
+  rgrid(is)%zmesh= pawset%grid%zmesh
+  rgrid(is)%dx   = pawset%grid%dx
+  rgrid(is)%r(1:mesh)   = pawset%grid%r(1:mesh)
+  rgrid(is)%r2(1:mesh)  = pawset%grid%r2(1:mesh)
+  rgrid(is)%rab(1:mesh) = pawset%grid%rab(1:mesh)
+  rgrid(is)%sqr(1:mesh) = sqrt(pawset%grid%r(1:mesh))
+  ! these speed up a lot a few calculations (paw XC and GCXC):
+  rgrid(is)%rm1(1:mesh) = pawset%grid%rm1(1:mesh)
+  rgrid(is)%rm2(1:mesh) = pawset%grid%rm2(1:mesh)
+  rgrid(is)%rm3(1:mesh) = pawset%grid%rm3(1:mesh)
 
   do ir = 1, rgrid(is)%mesh
     if (rgrid(is)%r (ir) .gt.rcut) then

@@ -33,8 +33,6 @@ MODULE paw_init
     USE paw_variables
     !
     IMPLICIT NONE
-
-    ALLOCATE (psvloc( ngl, ntyp))  
     !
     ALLOCATE(dpaw_ae( nhm, nhm, nat, nspin))
     ALLOCATE(dpaw_ps( nhm, nhm, nat, nspin))
@@ -49,8 +47,6 @@ MODULE paw_init
     !
     IMPLICIT NONE
     INTEGER :: nt
-    !
-    IF(allocated(psvloc))       DEALLOCATE (psvloc)  
     !
     IF(allocated(dpaw_ae))      DEALLOCATE (dpaw_ae)
     IF(allocated(dpaw_ps))      DEALLOCATE (dpaw_ps)

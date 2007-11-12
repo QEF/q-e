@@ -63,9 +63,6 @@ fft_scalar.o : kind.o
 fft_types.o : io_global.o
 functionals.o : io_global.o
 functionals.o : kind.o
-grid_paw_variables.o : kind.o
-grid_paw_variables.o : parameters.o
-grid_paw_variables.o : radial_grids.o
 griddim.o : fft_scalar.o
 griddim.o : fft_types.o
 griddim.o : io_global.o
