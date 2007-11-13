@@ -70,6 +70,9 @@ END TYPE paw_t
                                     ptfunc(:,:,:) ! as above, but for pseudo
             REAL(DP),POINTER     :: ae_vloc(:)    ! AE local potential (pseudo vloc
                                                   ! is already included in upf)
+            REAL(DP),ALLOCATABLE :: kdiff(:,:)    ! kinetic energy difference AE-pseudo
+            REAL(DP),ALLOCATABLE :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
+            INTEGER              :: nraug         ! max cutoff of augmentation functions 
         END TYPE paw_in_upf
 
 

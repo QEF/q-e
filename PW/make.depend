@@ -586,7 +586,6 @@ init_us_1.o : ../Modules/parameters.o
 init_us_1.o : ../Modules/paw_variables.o
 init_us_1.o : ../Modules/splinelib.o
 init_us_1.o : ../Modules/uspp.o
-init_us_1.o : paw_init.o
 init_us_1.o : pwcom.o
 init_us_2.o : ../Modules/cell_base.o
 init_us_2.o : ../Modules/constants.o
@@ -767,8 +766,10 @@ para.o : ../Modules/parallel_include.o
 paw_init.o : ../Modules/atom.o
 paw_init.o : ../Modules/constants.o
 paw_init.o : ../Modules/functionals.o
+paw_init.o : ../Modules/io_global.o
 paw_init.o : ../Modules/ions_base.o
 paw_init.o : ../Modules/kind.o
+paw_init.o : ../Modules/mp_global.o
 paw_init.o : ../Modules/paw_variables.o
 paw_init.o : ../Modules/uspp.o
 paw_init.o : paw_onecenter.o
@@ -1422,6 +1423,7 @@ non_scf.o : ../include/f_defs.h
 orthoatwfc.o : ../include/f_defs.h
 para.o : ../include/f_defs.h
 paw_init.o : ../include/f_defs.h
+paw_onecenter.o : ../include/f_defs.h
 potinit.o : ../include/f_defs.h
 print_ks_energies.o : ../include/f_defs.h
 psymrho.o : ../include/f_defs.h

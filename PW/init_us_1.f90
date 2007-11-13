@@ -42,7 +42,6 @@ subroutine init_us_1
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,     ONLY : lspinorb, so, rot_ylm, fcoef
   USE paw_variables,ONLY : okpaw
-  USE paw_init,     ONLY : PAW_post_init
   !
   implicit none
   !
@@ -405,10 +404,6 @@ subroutine init_us_1
   deallocate (besr)
   deallocate (aux1)
   deallocate (aux)
-
-  ! Some paw variables are used on all nodes only for initialization,
-  ! then they can be deallocated on all nodes but one.
-  call PAW_post_init()
 
   call stop_clock ('init_us_1')
   return

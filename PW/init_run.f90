@@ -15,6 +15,9 @@ SUBROUTINE init_run()
   USE dynamics_module,    ONLY : allocate_dyn_vars
   USE paw_variables,      ONLY : okpaw
   USE paw_init,           ONLY : paw_init_onecenter, allocate_paw_internals
+#ifdef __PARA
+  USE paw_init,           ONLY : paw_post_init
+#endif
   USE bp,                 ONLY : lberry, lelfield
   !
   IMPLICIT NONE
@@ -37,8 +40,10 @@ SUBROUTINE init_run()
   ! ... allocate memory for all other arrays (potentials, wavefunctions etc)
   !
   CALL allocate_nlpot()
-  if (okpaw)  CALL allocate_paw_internals()
-  if (okpaw)  CALL paw_init_onecenter()
+  IF (okpaw) THEN
+    CALL allocate_paw_internals()
+    CALL paw_init_onecenter()
+  ENDIF
   CALL allocate_locpot()
   CALL allocate_wfc()
   CALL allocate_bp_efield()
@@ -55,6 +60,12 @@ SUBROUTINE init_run()
   CALL openfil()
   !
   CALL init_h()
+  !
+  ! Finish to initialize PAW data and cleanup
+  ! arrays that are only used for init (parallel only)
+#ifdef __PARA
+    IF (okpaw)  CALL paw_post_init()
+#endif
   !
   IF ( lmd ) CALL allocate_dyn_vars()
   !

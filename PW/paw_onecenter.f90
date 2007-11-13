@@ -46,6 +46,7 @@
 ! on all the nodes, and (most important) we don't need to distribute the potential
 ! among the nodes after computing it.
 !
+#include "f_defs.h"
 MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
@@ -67,8 +68,9 @@ MODULE paw_onecenter
     PRIVATE
 
     ! the following macro controls the use of several fine-grained clocks
-    ! set it to '! CALL' (without quotes) in order to disable them
-#define OPTIONAL_CALL CALL
+    ! set it to 'if(.false.) CALL' (without quotes) in order to disable them,
+    ! set it to 'CALL' to enable them.
+#define OPTIONAL_CALL if(.false.) CALL
 
  CONTAINS
 
@@ -193,7 +195,6 @@ SUBROUTINE PAW_symmetrize(becsum)
     REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
 
     REAL(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin)! symmetrized becsum
-!    REAL(DP)                :: bectwo(nhm*(nhm+1)/2,nat,nspin)! twice symmetrized becsum
 
     INTEGER :: is, na, nt   ! counters on spin, atom, atom-type
     INTEGER :: ma           ! atom symmetric to na
@@ -204,6 +205,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     INTEGER :: m_o, m_u     ! counters for sums on m
     INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
     INTEGER :: isym         ! counter for symmetry operation
+    INTEGER :: first_nat, last_nat ! to parallelize on atoms
     CHARACTER(len=8) :: do_symme
 
     ! The following mess is necessary because the symmetrization operation
@@ -220,6 +222,8 @@ SUBROUTINE PAW_symmetrize(becsum)
     D(1)%d => d1 ! d1(3,3,48)
     D(2)%d => d2 ! d2(5,5,48)
     D(3)%d => d3 ! d3(7,7,48)
+
+    IF( gamma_only .or. nosym ) RETURN
 
 ! => lm = l**2 + m
 ! => ih = lm + (l+proj)**2  <-- if the projector index starts from zero!
@@ -249,14 +253,14 @@ SUBROUTINE PAW_symmetrize(becsum)
         ENDDO
 #endif
 
-    IF( gamma_only .or. nosym ) RETURN
-
     CALL start_clock('PAW_symme')
 
     becsym(:,:,:) = 0._dp
 
+    CALL divide (nat, first_nat, last_nat)
     DO is = 1, nspin
-    DO na = 1, nat
+    !
+    atoms: DO na = first_nat, last_nat
         nt = ityp(na)
         ! No need to symmetrize non-PAW atoms
         IF ( .not. upf(nt)%tpawp ) CYCLE
@@ -294,7 +298,7 @@ SUBROUTINE PAW_symmetrize(becsum)
             ENDDO ! isym
         ENDDO ! ih
         ENDDO ! jh
-    ENDDO ! nat
+    ENDDO atoms ! nat
     ENDDO ! nspin
 
 #ifdef __DEBUG_PAW_SYM
@@ -329,12 +333,10 @@ SUBROUTINE PAW_symmetrize(becsum)
 #endif
 
     ! Apply symmetrization:
-    !CALL get_environment_variable('DO_SYMME', do_symme)
-    !IF (trim(do_symme)=='.false.') THEN
-    !    write(*,*) "**** skipping PAW symmetrization!"
-    !ELSE
-        becsum(:,:,:) = becsym(:,:,:)
-    !ENDIF
+#ifdef __PARA
+    CALL reduce( (nhm*(nhm+1)/2) *nat*nspin, becsym)
+#endif
+    becsum(:,:,:) = becsym(:,:,:)
 
     CALL stop_clock('PAW_symme')
 
@@ -346,16 +348,14 @@ END SUBROUTINE PAW_symmetrize
 !!! D_ij = \int (v_loc_scf + v_loc_at) p_ij
 !!
 !! This is subroutine does NOT cycle on atoms because newd likes it this way
-SUBROUTINE PAW_newd(d_ae, d_ps)
+SUBROUTINE PAW_newd(d)
     USE constants,         ONLY : sqrtpi, e2
     USE lsda_mod,          ONLY : nspin
     USE ions_base,         ONLY : nat, ityp
     USE atom,              ONLY : g => rgrid
-    USE paw_variables,     ONLY : ra=>nraug
     USE uspp_param,        ONLY : nh, nhm, lmaxq, upf
 
-    REAL(DP), TARGET, INTENT(INOUT) :: d_ae( nhm, nhm, nat, nspin)
-    REAL(DP), TARGET, INTENT(INOUT) :: d_ps( nhm, nhm, nat, nspin)
+    REAL(DP), INTENT(INOUT) :: d(:,:,:,:) ! descreening coefficients (AE - pseudo)
 
     INTEGER                 :: i_what
     INTEGER                 :: na, first_nat, last_nat
@@ -367,9 +367,9 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
     INTEGER                 :: nb, mb, nmb, is
     !
     REAL(DP), POINTER       :: v_at(:)         ! point to aevloc_at or psvloc_at
-    REAL(DP), POINTER       :: d(:,:,:,:)      ! point to d_ae or d_ps
     REAL(DP), ALLOCATABLE   :: pfunc_lm(:,:,:) ! aux charge density
     REAL(DP)                :: integral        ! workspace
+    REAL(DP)                :: sgn             ! +1 for AE, -1 for pseudo
     !
     TYPE(paw_info)          :: i
 
@@ -381,8 +381,7 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
     ! Some initialization
     becfake(:,:,:) = 0._dp
     !
-    d_ae(:,:,:,:)  = 0._dp
-    d_ps(:,:,:,:)  = 0._dp
+    d(:,:,:,:) = 0._dp
 
     CALL divide (nat, first_nat, last_nat)
 
@@ -413,11 +412,11 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                     IF (i_what == AE) THEN
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, pfunc_lm)
                         v_at => upf(i%t)%paw%ae_vloc
-                        d    => d_ae
+                        sgn = +1._dp
                     ELSE
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, pfunc_lm, upf(i%t)%paw%aug)
                         v_at => upf(i%t)%vloc
-                        d    => d_ps
+                        sgn = -1._dp
                     ENDIF
                     !
                     ! Now I multiply the pfunc and the potential, I can use
@@ -432,12 +431,12 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
                         ENDIF
                         !
                         ! Integrate!
-                        CALL simpson (ra(i%t),pfunc_lm(:,lm,is),g(i%t)%rab,integral)
-                        d(nb,mb,i%a,is) = d(nb,mb,i%a,is) + integral
+                        CALL simpson (upf(i%t)%paw%nraug,pfunc_lm(:,lm,is),g(i%t)%rab,integral)
+                        d(nb,mb,i%a,is) = d(nb,mb,i%a,is) + sgn * integral
                     ENDDO
                     ! Symmetrize:
                     d(mb,nb, i%a,is) = d(nb,mb, i%a,is)
-                    !
+                    ! restore becfake to zero
                     becfake(nmb,na,is) = 0._dp
                 ENDDO ! mb
                 ENDDO ! nb
@@ -450,8 +449,7 @@ SUBROUTINE PAW_newd(d_ae, d_ps)
     ENDDO atoms
 
 #ifdef __PARA
-    CALL reduce (nhm*nhm*nat*nspin, d_ae )
-    CALL reduce (nhm*nhm*nat*nspin, d_ps )
+    CALL reduce (nhm*nhm*nat*nspin, d )
 #endif
 
     CALL stop_clock ('PAW_newd')
@@ -649,7 +647,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE uspp_param,             ONLY : lmaxq
     USE ions_base,              ONLY : ityp
-    USE radial_grids,           ONLY : ndmx
     USE atom,                   ONLY : g => rgrid
     USE funct,                  ONLY : dft_is_gradient
     USE constants,              ONLY : fpi ! REMOVE
@@ -675,8 +672,8 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     REAL(DP), EXTERNAL    :: exc_t              ! computes XC energy
 
     REAL(DP) :: &
-         vgc(ndmx,2),   & ! exchange-correlation potential (GGA only)
-         egc(ndmx)        ! exchange correlation energy density (GGA only)
+         vgc(i%m,2),   & ! exchange-correlation potential (GGA only)
+         egc(i%m)        ! exchange correlation energy density (GGA only)
 
     OPTIONAL_CALL start_clock ('PAW_xc_pot')
     !
@@ -742,7 +739,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE uspp_param,             ONLY : lmaxq
-    USE radial_grids,           ONLY : ndmx
     USE parameters,             ONLY : ntypx
     USE constants,              ONLY : sqrtpi, fpi,pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : gcxc, gcx_spin, gcc_spin
@@ -991,7 +987,6 @@ END SUBROUTINE PAW_divergence
 !!! uses pre-computed rho_rad
 SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
     USE constants,              ONLY : fpi
-    USE radial_grids,           ONLY : ndmx
     USE uspp_param,             ONLY : lmaxq
     USE lsda_mod,               ONLY : nspin
     USE ions_base,              ONLY : ityp
@@ -1131,8 +1126,6 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     USE uspp,              ONLY : indv, ap, nhtolm,lpl,lpx
     USE parameters,        ONLY : lqmax
     USE constants,         ONLY : eps12
-    USE radial_grids,      ONLY : ndmx
-    USE paw_variables,     ONLY : nbrx
     USE atom,              ONLY : g => rgrid
 
     TYPE(paw_info)  :: i                                    ! atom's minimal info

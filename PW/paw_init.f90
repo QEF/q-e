@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 #include "f_defs.h"
-#define OPTIONAL_CALL CALL
+#define OPTIONAL_CALL if(.false.) CALL
 !
 MODULE paw_init
   !
@@ -16,7 +16,9 @@ MODULE paw_init
 
   PUBLIC :: PAW_init_becsum
   PUBLIC :: PAW_init_onecenter
+#ifdef __PARA
   PUBLIC :: PAW_post_init
+#endif
 
   PUBLIC :: allocate_paw_internals, deallocate_paw_internals
 
@@ -34,8 +36,7 @@ MODULE paw_init
     !
     IMPLICIT NONE
     !
-    ALLOCATE(dpaw_ae( nhm, nhm, nat, nspin))
-    ALLOCATE(dpaw_ps( nhm, nhm, nat, nspin))
+    ALLOCATE(ddd_paw( nhm, nhm, nat, nspin))
     !
   END SUBROUTINE allocate_paw_internals
 
@@ -48,8 +49,7 @@ MODULE paw_init
     IMPLICIT NONE
     INTEGER :: nt
     !
-    IF(allocated(dpaw_ae))      DEALLOCATE (dpaw_ae)
-    IF(allocated(dpaw_ps))      DEALLOCATE (dpaw_ps)
+    IF(allocated(ddd_paw))      DEALLOCATE (ddd_paw)
     !
     ! Allocated in read_paw:
     DO nt = 1,ntyp
@@ -58,13 +58,56 @@ MODULE paw_init
     !
   END SUBROUTINE deallocate_paw_internals
 
+#ifdef __PARA
 ! Deallocate variables that are used only at init and then no more necessary.
+! This is only useful in parallel, as each node only does a limited number of atoms
 SUBROUTINE PAW_post_init()
     ! this routine does nothing at this moment...
-    RETURN
+    USE ions_base,          ONLY : nat, ntyp=>nsp, ityp
+    USE uspp_param,         ONLY : upf
+    USE mp_global,          ONLY : mpime, nproc
+    USE io_global,          ONLY : stdout, ionode
+    !
+    INTEGER :: nt, na, np, first_nat, last_nat
+    LOGICAL :: info(nproc,ntyp)
+
+    IF(ionode) &
+    WRITE(stdout,"(5x,a)") &
+        'Checking if some PAW data can be deallocated... '
+    info(:,:) = .false.
+    CALL divide (nat, first_nat, last_nat)
+    !
+    types : &
+    DO nt = 1,ntyp
+        DO na = first_nat, last_nat
+            IF (ityp(na) == nt ) CYCLE types
+        ENDDO
+        ! If I can't find any atom within first_nat and last_nat
+        ! which is of type nt, then I can deallocate:
+        DEALLOCATE( upf(nt)%paw%aug,        &
+                    upf(nt)%paw%ae_rho_atc, &
+                    upf(nt)%paw%pfunc,      &
+                    upf(nt)%paw%ptfunc,     &
+                    upf(nt)%paw%ae_vloc     &
+                  )
+        DEALLOCATE( upf(nt)%vloc)
+        DEALLOCATE( upf(nt)%rho_atc)
+        info(mpime,nt) = .true.
+    ENDDO types
+    CALL reduce(nproc*ntyp, info)
+
+    IF(ionode) THEN
+        DO np = 1,nproc
+        DO nt = 1,ntyp
+            IF( info(np,nt) ) &
+            WRITE(*,"(7x,a,i3,a,10i3)") "node ",np,&
+                    ", deallocated PAW data for type:", nt
+        ENDDO
+        ENDDO
+    ENDIF
 
 END SUBROUTINE PAW_post_init
-
+#endif
 
 ! Initialize becsum with atomic occupations (for PAW atoms only)
 ! Notice: requires exact correspondence chi <--> beta in the atom,
@@ -82,7 +125,8 @@ SUBROUTINE PAW_init_becsum()
     !
     IF (.NOT. okpaw) RETURN
     !
-    if (nspin.GT.2) STOP 'atomic_becsum not implemented'
+    if (nspin.GT.2) &
+        CALL errore('PAW_init_becsum', 'Atomic becsum not implemented for nspin>2',1)
     !
     na_loop: DO na = 1, nat
        nt = ityp(na)

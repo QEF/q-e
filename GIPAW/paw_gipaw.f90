@@ -10,7 +10,7 @@ MODULE paw_gipaw
   USE kinds,        ONLY: DP
   USE parameters,   ONLY: npsx
   use radial_grids, ONLY: ndmx
-  use paw_variables, ONLY: nbrx
+  use gipaw_module, ONLY: nbrx
   !
   ! ... These parameters are needed for the paw variables
   !

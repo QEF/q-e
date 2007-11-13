@@ -8,10 +8,6 @@ MODULE paw_variables
     PUBLIC
     SAVE
 
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!! Legacy (to be removed): !!!!
-    INTEGER, PARAMETER :: nbrx = 14  ! max number of beta functions
-
     !!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Control flags: !!!!
 
@@ -20,6 +16,12 @@ MODULE paw_variables
     ! Analogous to okvan in  "uspp_param" (Modules/uspp.f90)
     LOGICAL :: &
          okpaw              ! if .TRUE. at least one pseudo is PAW
+
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!!! Pseudopotential data: !!!!
+
+    ! There is no pseudopotential data here, it is all stored in the upf type.
+    ! See files pseudo_types.f90 and read_paw.f90
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Initialization data: !!!!
@@ -41,19 +43,6 @@ MODULE paw_variables
                             dylmp(:,:)  ! |d(ylm)/dphi|**2
     REAL(DP),ALLOCATABLE :: cos_th(:),& ! cos(theta) (for divergence)
                             sin_th(:)   ! sin(theta) (for divergence)
-
-    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-    !!!! Pseudopotential data: !!!!
-
-    ! Moments of the augmentation functions
-    REAL (DP) :: &
-         augmom(nbrx,nbrx,0:6,npsx)  ! moments of PAW augm. functions
-    INTEGER :: &
-         nraug(npsx)                 ! augm. functions cutoff parameter
-
-    ! Analogous to dion in "uspp_param" (Modules/uspp.f90)
-    REAL(DP) :: &
-         kdiff (nbrx,nbrx,npsx)                ! Kinetic energy differences
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! self-consistent variables: !!!!
@@ -80,8 +69,8 @@ MODULE paw_variables
 
     ! Analogous to deeq in "uspp_param" (Modules/uspp.f90)
     REAL(DP), ALLOCATABLE :: &
-         dpaw_ae(:,:,:,:),         &! AE D: D^1_{ij}         (except for K.E.)
-         dpaw_ps(:,:,:,:)           ! PS D: \tilde{D}^1_{ij} (except for K.E.)
+         ddd_paw(:,:,:,:)  ! AE D: D^1_{ij}         (except for K.E.)
+                           ! PS D: \tilde{D}^1_{ij} (except for K.E.)
 
     ! new vectors needed for mixing of augm. channel occupations
     REAL(DP), ALLOCATABLE :: &

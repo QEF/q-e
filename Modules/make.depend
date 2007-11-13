@@ -209,8 +209,8 @@ read_namelists.o : mp.o
 read_paw.o : atom.o
 read_paw.o : constants.o
 read_paw.o : functionals.o
+read_paw.o : io_global.o
 read_paw.o : kind.o
-read_paw.o : paw_variables.o
 read_paw.o : pseudo_types.o
 read_paw.o : radial_grids.o
 read_paw.o : uspp.o

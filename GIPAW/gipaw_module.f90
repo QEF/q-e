@@ -19,6 +19,7 @@ MODULE gipaw_module
   SAVE
   
   INTEGER, PARAMETER:: natx=5000 ! max number of atoms
+  INTEGER, PARAMETER:: nbrx=14   ! max number of beta functions
   ! alpha
   REAL(DP), PARAMETER :: alpha = 1.0_dp / 137.03599911_dp
   

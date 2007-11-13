@@ -31,6 +31,7 @@
   SUBROUTINE paw_io(pawset_,un,what,a_mesh,a_nwfc,a_lmax)
     use pseudo_types, only : paw_t
     use radial_grids, only : write_grid_on_file, read_grid_from_file
+    USE io_global,  ONLY : stdout, ionode
     IMPLICIT NONE
     TYPE(paw_t), INTENT(INOUT) :: pawset_
     INTEGER, INTENT(IN) :: un
@@ -128,8 +129,12 @@
         pawset_%kdiff(:,:) = 0._dp
         pawset_%dion (:,:) = 0._dp
        READ (un,'(A)')      pawset_%symbol
-        write(*,"(5x,a)") "Reading PAW setup for: "//TRIM(pawset_%symbol)
-        write(*,"(7x,a,3i5)") "dimensions (mesh, nwfc, lmax): ",mesh, nwfc, lmax
+        if (ionode) then
+            write(stdout,"(5x,a)") &
+                "Reading PAW setup for: "//TRIM(pawset_%symbol)
+            write(stdout,"(7x,a,3i5)") &
+                "dimensions (mesh, nwfc, lmax): ",mesh, nwfc, lmax
+        endif
         read(un, '(a)') dummy
        READ (un,'(e20.10)') pawset_%zval
        READ (un,'(e20.10)') pawset_%z
@@ -186,7 +191,7 @@
         read(un, '(a)') dummy
        READ (un,'(A)') pawset_%dft
        pawset_%dft = TRIM(pawset_%dft)
-        write(*,"(7x,a,3i5)") "functional used: "//TRIM(pawset_%dft)
+        if(ionode) write(*,"(7x,a,3i5)") "functional used: "//TRIM(pawset_%dft)
     CASE DEFAULT
        CALL errore ('paw_io','specify (INP)ut or (OUT)put',1)
     END SELECT
@@ -275,8 +280,6 @@ END SUBROUTINE deallocate_pseudo_paw
       CONTAINS
 
 !---------------------------------------------------------------------
-!#define __DO_NOT_CUTOFF_PAW_FUNC
-#define __SHARP_CUTOFF_PAW_FUNC
 subroutine set_pseudo_paw (is, pawset)
   !---------------------------------------------------------------------
   !
@@ -288,11 +291,10 @@ subroutine set_pseudo_paw (is, pawset)
   USE atom,  ONLY: rgrid, msh
   USE uspp_param, ONLY: upf, tvanp
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
+  USE io_global,  ONLY : stdout, ionode
   !
   USE pseudo_types
   USE constants, ONLY: FPI
-  !
-  USE paw_variables, ONLY : kdiff,augmom, nraug
   !
   implicit none
   !
@@ -311,10 +313,13 @@ subroutine set_pseudo_paw (is, pawset)
   pow = 1.d0
   nrs =  Count(pawset%grid%r(1:pawset%grid%mesh).le. (pawset%grid%r(pawset%irc)*1.2d0))
   nrc =  Count(pawset%grid%r(1:pawset%grid%mesh).le. (pawset%grid%r(pawset%irc)*1.8d0))
-  WRITE(*,"(7x,a)") 'PAW functions cut-off:'
-  WRITE(*,"(9x,a,i5,f12.6)") "matching radius:       ", pawset%irc, pawset%grid%r(pawset%irc)
-  WRITE(*,"(9x,a,i5,f12.6)") "inner stepping radius: ", nrs, pawset%grid%r(nrs)
-  WRITE(*,"(9x,a,i5,f12.6)") "outer stepping radius: ", nrc, pawset%grid%r(nrc)
+  if (ionode) then
+    WRITE(stdout,"(7x,a)") 'PAW functions cut-off:'
+    WRITE(stdout,"(9x,a,i5,f12.6)") "matching radius:       ", pawset%irc, pawset%grid%r(pawset%irc)
+  endif
+  ! Currently unused:
+!   WRITE(*,"(9x,a,i5,f12.6)") "inner stepping radius: ", nrs, pawset%grid%r(nrs)
+!   WRITE(*,"(9x,a,i5,f12.6)") "outer stepping radius: ", nrc, pawset%grid%r(nrc)
   !
   upf(is)%zp = pawset%zval
   upf(is)%psd = pawset%symbol
@@ -324,16 +329,35 @@ subroutine set_pseudo_paw (is, pawset)
   call set_dft_from_name( pawset%dft )
   !
   IF ( dft_is_meta() ) &
-    CALL errore( 'upf_to_internal', 'META-GGA not implemented in PWscf', 1 )
+    CALL errore( 'set_pseudo_paw', 'META-GGA not implemented for PAW', 1 )
 #if defined (EXX)
 #else
   IF ( dft_is_hybrid() ) &
-    CALL errore( 'upf_to_internal', 'HYBRID XC not implemented in PWscf', 1 )
+    CALL errore( 'set_pseudo_paw', 'HYBRID XC not implemented for PAW', 1 )
 #endif
+
+  ! to make this file barely readable:
+  mesh = pawset%grid%mesh 
+  nwfc = pawset%nwfc
+
+  ! set radial grid data
+  rgrid(is)%mesh = mesh
+  rgrid(is)%xmin = pawset%grid%xmin
+  rgrid(is)%rmax = pawset%grid%rmax
+  rgrid(is)%zmesh= pawset%grid%zmesh
+  rgrid(is)%dx   = pawset%grid%dx
   !
-  rgrid(is)%mesh = pawset%grid%mesh
-  mesh = pawset%grid%mesh ! to make this file barely readable
-  nwfc = pawset%nwfc      ! "   "    "     "     "     "
+  rgrid(is)%r  (1:mesh) = pawset%grid%r(1:mesh)
+  rgrid(is)%rab(1:mesh) = pawset%grid%r(1:mesh)*pawset%grid%dx
+  !rgrid(is)%rab(1:mesh) = pawset%grid%rab(1:mesh)
+  !
+  rgrid(is)%r2(1:mesh)  = pawset%grid%r2(1:mesh)
+  rgrid(is)%sqr(1:mesh) = sqrt(pawset%grid%r(1:mesh))
+  ! these speed up a lot a few calculations (paw XC and GCXC):
+  rgrid(is)%rm1(1:mesh) = pawset%grid%rm1(1:mesh)
+  rgrid(is)%rm2(1:mesh) = pawset%grid%rm2(1:mesh)
+  rgrid(is)%rm3(1:mesh) = pawset%grid%rm3(1:mesh)
+
   !
   ! ... Copy wavefunctions used for PAW construction.
   ! ... Copy also the unoccupied ones, e.g.
@@ -364,7 +388,9 @@ subroutine set_pseudo_paw (is, pawset)
 
   allocate(upf(is)%dion(1:nwfc, 1:nwfc))
   upf(is)%dion(1:nwfc, 1:nwfc) = pawset%dion(1:nwfc, 1:nwfc)
-  kdiff(1:nwfc, 1:nwfc, is) = pawset%kdiff(1:nwfc, 1:nwfc)
+
+  allocate(upf(is)%paw%kdiff(1:nwfc, 1:nwfc))
+  upf(is)%paw%kdiff(1:nwfc, 1:nwfc) = pawset%kdiff(1:nwfc, 1:nwfc)
 
   upf(is)%nqlc = 2*pawset%lmax+1
   upf(is)%nqf = 0                   !! no rinner, all numeric
@@ -386,14 +412,15 @@ subroutine set_pseudo_paw (is, pawset)
      end do
   end do
 
-  ! import augmentation charge:
-  nraug(is) = pawset%irc
-  rgrid(is)%dx = pawset%grid%dx
-  rgrid(is)%r2 (1:mesh) = pawset%grid%r2  (1:mesh)
+  ! Augmentation charge cutoff:
+  upf(is)%paw%nraug = pawset%irc
+
+  ! Import total multipoles of AE-pseudo density (actually unused)
+  allocate( upf(is)%paw%augmom(nwfc,nwfc, 0:2*pawset%lmax) )
   do l = 0, 2*pawset%lmax
      do i = 1, nwfc
         do j = 1, nwfc
-           augmom(i,j,l,is) = pawset%augmom(i,j,l)
+           upf(is)%paw%augmom(i,j,l) = pawset%augmom(i,j,l)
         end do 
      end do
   end do
@@ -401,28 +428,31 @@ subroutine set_pseudo_paw (is, pawset)
   ! Triangularize matrix of qfunc's
   ! FIXME!!! Probably this loop is unnecessary as the qfunc are reconstructed
   ! directly from the full augfuncs in init_us_1!!
-  allocate ( upf(is)%qfunc(1:mesh,nwfc*(nwfc+1)/2) )
-  do nb = 1, nwfc
-      do mb = nb, nwfc
-          ijv = mb * (mb-1) / 2 + nb
-          upf(is)%qfunc (1:mesh,ijv) = &
-             pawset%augfun(1:mesh,nb,mb,0)
-      enddo
-  enddo
+!   allocate ( upf(is)%qfunc(1:mesh,nwfc*(nwfc+1)/2) )
+!   do nb = 1, nwfc
+!       do mb = nb, nwfc
+!           ijv = mb * (mb-1) / 2 + nb
+!           upf(is)%qfunc (1:mesh,ijv) = &
+!              pawset%augfun(1:mesh,nb,mb,0)
+!       enddo
+!   enddo
 
   ! Augmentation functions for PAW depend on angular momentum!
   ! FIXME: actually they are allocated up to mesh, but they only
   ! need to be allocated up to irc!
-  ALLOCATE(upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax))
+  ! FIXME(2): augfun form a triangular matrix, so they could use a
+  ! composite index ijh = nwfc*(ih-1) - ih*(ih-1)/2 + jh as for
+  ! becsum, doing it would complicate paw_onecenter quite a bit...
+  allocate(upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax))
   upf(is)%paw%aug(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax) &
            = pawset%augfun(1:mesh,1:nwfc,1:nwfc,0:2*pawset%lmax)
 
   ! pfunc and ptfunc are couple-wise products of atomic wavefunctions
   ! FIXME: same as augfun!
-  ALLOCATE( upf(is)%paw%pfunc (1:mesh, 1:nwfc,1:nwfc),&
+  allocate( upf(is)%paw%pfunc (1:mesh, 1:nwfc,1:nwfc),&
             upf(is)%paw%ptfunc(1:mesh, 1:nwfc,1:nwfc) )
-  DO i=1,nwfc
-     DO j=1,nwfc
+  do i=1,nwfc
+     do j=1,nwfc
         upf(is)%paw%pfunc(:,i,j)  = 0._dp
         upf(is)%paw%ptfunc(:,i,j) = 0._dp
         !
@@ -430,8 +460,8 @@ subroutine set_pseudo_paw (is, pawset)
              pawset%aewfc(1:pawset%irc, i) * pawset%aewfc(1:pawset%irc, j)
         upf(is)%paw%ptfunc (1:pawset%irc, i, j) = &
              pawset%pswfc(1:pawset%irc, i) * pawset%pswfc(1:pawset%irc, j)
-     ENDDO
-  ENDDO
+     enddo
+  enddo
   !
   ! ... Add augmentation charge to ptfunc already here.
   ! ... One should not need \tilde{n}^1 alone in any case.
@@ -458,7 +488,7 @@ subroutine set_pseudo_paw (is, pawset)
 !!$  endif
 
   ! Core charge: AE core charge is always present, while pseudo core can be
-  ! omitted. Actually PAW uses zero core when it not used, but this will be
+  ! omitted. Actually PAW uses zero core when it's not used, but this will be
   ! fixed sooner or later.
   allocate ( upf(is)%rho_atc(mesh) )
   allocate ( upf(is)%paw%ae_rho_atc(mesh) )
@@ -473,46 +503,28 @@ subroutine set_pseudo_paw (is, pawset)
   upf(is)%paw%ae_rho_atc(1:mesh) = &
           pawset%aeccharge(1:mesh) / FPI / pawset%grid%r2(1:mesh)
 
-  !
+  ! Atomic charge:
   allocate ( upf(is)%rho_at(mesh) )
   upf(is)%rho_at (1:mesh) = pawset%pscharge(1:mesh)
 
+
   ! Pseudo and All-electron local potentials, on radial grid
-  ALLOCATE (upf(is)%vloc(1:mesh))
-  ALLOCATE (upf(is)%paw%ae_vloc(mesh))
+  allocate (upf(is)%vloc(1:mesh))
+  allocate (upf(is)%paw%ae_vloc(mesh))
   upf(is)%vloc(1:mesh) = pawset%psloc(1:mesh)
   upf(is)%paw%ae_vloc(1:mesh) = pawset%aeloc(1:mesh)
 
-  !
-  ! set radial grid data
-  !
-  rgrid(is)%r  (1:mesh) = pawset%grid%r  (1:mesh)
-  rgrid(is)%rab(1:mesh) = pawset%grid%r  (1:mesh)*pawset%grid%dx
-  rgrid(is)%mesh = mesh
-  rgrid(is)%xmin = pawset%grid%xmin
-  rgrid(is)%rmax = pawset%grid%rmax
-  rgrid(is)%zmesh= pawset%grid%zmesh
-  rgrid(is)%dx   = pawset%grid%dx
-  rgrid(is)%r(1:mesh)   = pawset%grid%r(1:mesh)
-  rgrid(is)%r2(1:mesh)  = pawset%grid%r2(1:mesh)
-  rgrid(is)%rab(1:mesh) = pawset%grid%rab(1:mesh)
-  rgrid(is)%sqr(1:mesh) = sqrt(pawset%grid%r(1:mesh))
-  ! these speed up a lot a few calculations (paw XC and GCXC):
-  rgrid(is)%rm1(1:mesh) = pawset%grid%rm1(1:mesh)
-  rgrid(is)%rm2(1:mesh) = pawset%grid%rm2(1:mesh)
-  rgrid(is)%rm3(1:mesh) = pawset%grid%rm3(1:mesh)
-
-  do ir = 1, rgrid(is)%mesh
-    if (rgrid(is)%r (ir) .gt.rcut) then
-        msh (is) = ir
-        goto 5
-    endif
-  enddo
+  ! Minimum mesh point larger than cutoff radius
   msh (is) = rgrid(is)%mesh
+  ir_loop : do ir = 1, rgrid(is)%mesh
+    if (rgrid(is)%r (ir) > rcut) then
+        msh (is) = ir
+        exit ir_loop
+    endif
+  enddo ir_loop
   !
   ! force msh to be odd for simpson integration
-  !
-5 msh (is) = 2 * ( (msh (is) + 1) / 2) - 1
+  msh (is) = 2 * ( (msh (is) + 1) / 2) - 1
 
 end subroutine set_pseudo_paw
 

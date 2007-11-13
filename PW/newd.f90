@@ -39,7 +39,7 @@ SUBROUTINE newd_g()
   USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin
   !
-  USE paw_variables,        ONLY : okpaw, kdiff, dpaw_ae, dpaw_ps
+  USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_onecenter,        ONLY : PAW_newd
   USE uspp,                 ONLY : nhtol, nhtolm
   !
@@ -195,7 +195,7 @@ SUBROUTINE newd_g()
   ! prepare non-kinetic paw contribution to D coefficients
   ! (they are added later in the "atoms" loop)
   IF (okpaw) &
-            CALL PAW_newd(dpaw_ae, dpaw_ps)
+            CALL PAW_newd(ddd_paw)
 
   atoms : &
   DO na = 1, nat
@@ -228,12 +228,11 @@ SUBROUTINE newd_g()
                 !
                 IF ( nhtol (ih, nt) == nhtol (jh, nt) .and. &
                      nhtolm(ih, nt) == nhtolm(jh, nt) ) THEN
-                    deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
-                                        kdiff(nb,mb,nt)
+                     deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
+                                         upf(nt)%paw%kdiff(nb,mb)
                 END if
                 !
-                deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
-                        dpaw_ae (ih,jh,na,is) - dpaw_ps (ih,jh,na,is)
+                deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + ddd_paw (ih,jh,na,is) 
                 !
                 deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
                 !
