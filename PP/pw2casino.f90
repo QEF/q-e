@@ -221,7 +221,7 @@ SUBROUTINE compute_casino
   !
   ! compute hartree and xc contribution
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, rho%ns, &
+  CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, vnew, v_h_new )
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)

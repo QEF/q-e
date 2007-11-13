@@ -39,7 +39,7 @@ subroutine dynmatcc
   allocate (vxc( nrxx))    
   allocate (v  ( nrxx , nspin))    
   !
-  call v_xc (rho%of_r, rho%of_g, rho_core, rhog_core, etxcd, vtxcd, v)
+  call v_xc (rho, rho_core, rhog_core, etxcd, vtxcd, v)
   !
   if (nspin == 1 .OR. nspin==4) then
      is=1

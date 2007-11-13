@@ -69,10 +69,12 @@ MODULE uspp
   !
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        vkb(:,:)                ! all beta functions in reciprocal space
+  REAL(DP), pointer :: &
+       becsum(:,:,:)           ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   REAL(DP), ALLOCATABLE :: &
        dvan(:,:,:),           &! the D functions of the solid
        deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
-       becsum(:,:,:),         &! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
+!       becsum(:,:,:),         &! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
        qq(:,:,:),             &! the q functions in the solid
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
   !
@@ -250,7 +252,8 @@ CONTAINS
     IF( ALLOCATED( nhtolm ) )  DEALLOCATE( nhtolm )
     IF( ALLOCATED( nhtoj ) )   DEALLOCATE( nhtoj )
     IF( ALLOCATED( vkb ) )     DEALLOCATE( vkb )
-    IF( ALLOCATED( becsum ) )  DEALLOCATE( becsum )
+!    IF( ALLOCATED( becsum ) )  DEALLOCATE( becsum )
+    IF( ASSOCIATED( becsum ) )  DEALLOCATE( becsum )
     IF( ALLOCATED( qq ) )      DEALLOCATE( qq )
     IF( ALLOCATED( dvan ) )    DEALLOCATE( dvan )
     IF( ALLOCATED( deeq ) )    DEALLOCATE( deeq )

@@ -38,7 +38,7 @@ SUBROUTINE work_function (wf)
   if (nspin==4) nspin0=1
 
   ALLOCATE (vxc(nrxx,nspin))
-  CALL v_xc (rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, vxc)
+  CALL v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
 
   IF ( ionode ) THEN
      !

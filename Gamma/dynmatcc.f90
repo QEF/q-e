@@ -49,7 +49,7 @@ subroutine dynmatcc(dyncc)
   allocate  ( gc    ( nrxx, 3))    
   allocate  ( drhocc( nrxx))    
   !
-  call v_xc  (rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, vxc)
+  call v_xc  (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
   call cft3(vxc,nr1,nr2,nr3,nrx1,nrx2,nrx3,-1)
   !

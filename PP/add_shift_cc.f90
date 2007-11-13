@@ -60,7 +60,7 @@ subroutine add_shift_cc (shift_cc)
   allocate ( vxc(nrxx,nspin), shift_(nat) )
   shift_(:) = 0.d0
   !
-  call v_xc (rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, vxc)
+  call v_xc (rho, rho_core, rhog_core, etxc, vtxc, vxc)
   !
   if (nspin.eq.1) then
      do ir = 1, nrxx
