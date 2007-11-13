@@ -889,18 +889,21 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(dest .NE. sour) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, msglen, MPI_INTEGER, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8060 )
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, msglen, MPI_INTEGER, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8061 )
-          CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8062 )
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, msglen, MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8060 )
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, msglen, MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8061 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8062 )
+           END IF
 #endif
         ELSE
           msg_dest = msg_sour
@@ -910,6 +913,7 @@
         CALL MPI_BARRIER(group, IERR)
         IF (ierr/=0) CALL mp_stop( 8063 )
 #endif
+
         mp_high_watermark = MAX( mp_high_watermark, 4 * msglen ) 
         mp_call_count( 20 ) = mp_call_count( 20 ) + 1
         mp_call_sizex( 20 ) = MAX( mp_call_sizex( 20 ), msglen )
@@ -937,20 +941,23 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          msglen = SIZE(msg_sour)
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_INTEGER, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8064 )
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_INTEGER, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8065 )
-          CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8066 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             msglen = SIZE(msg_sour)
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8064 )
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8065 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8066 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
@@ -982,26 +989,28 @@
         INTEGER :: ierr, nrcv
         INTEGER :: msglen
 
-        msglen=0
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
 
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          msglen = SIZE(msg_sour) 
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8069 )
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8070 )
-          CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8071 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             msglen = SIZE(msg_sour) 
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8069 )
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8070 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8071 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
@@ -1041,20 +1050,23 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8074 )
-          msglen = SIZE(msg_sour)
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8075 )
-          CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8076 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8074 )
+             msglen = SIZE(msg_sour)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8075 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8076 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour,1), 1:SIZE(msg_sour,2)) = msg_sour(:,:)
@@ -1092,20 +1104,23 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF( dest .NE. sour ) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_COMPLEX, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8079 )
-          msglen = SIZE(msg_sour)
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_COMPLEX, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8080 )
-          CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_COMPLEX, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8081 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_COMPLEX, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8079 )
+             msglen = SIZE(msg_sour)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_COMPLEX, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8080 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_COMPLEX, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8081 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
@@ -1143,20 +1158,23 @@
         IF( PRESENT( gid ) ) group = gid
 #endif
 
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(dest .NE. sour) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, 1, MPI_INTEGER, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8084 )
-          msglen = 1
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, 1, MPI_INTEGER, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8085 )
-          CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8086 )
-          msglen = 1
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, 1, MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8084 )
+             msglen = 1
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, 1, MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8085 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8086 )
+             msglen = 1
+           END IF
 #endif
         ELSE
           msg_dest = msg_sour
@@ -1190,20 +1208,23 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_INTEGER, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8089 )
-          msglen = SIZE(msg_sour)
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_INTEGER, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8090 )
-          CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8091 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_INTEGER, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8089 )
+             msglen = SIZE(msg_sour)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_INTEGER, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8090 )
+             CALL MPI_GET_COUNT(istatus, MPI_INTEGER, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8091 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
@@ -1237,20 +1258,23 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8094 )
-          msglen = SIZE(msg_sour)
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8095 )
-          CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8096 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8094 )
+             msglen = SIZE(msg_sour)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8095 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8096 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
@@ -1284,20 +1308,23 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF(sour .NE. dest) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8099 )
-          msglen = SIZE(msg_sour)
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8100 )
-          CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8101 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_PRECISION, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8099 )
+             msglen = SIZE(msg_sour)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_PRECISION, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8100 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_PRECISION, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8101 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour,1),1:SIZE(msg_sour,2)) = msg_sour(:,:)
@@ -1332,20 +1359,23 @@
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
 #endif
+        ! processors not taking part in the communication have 0 lenght message
+
+        msglen = 0
+
         IF( dest .NE. sour ) THEN
 #if defined(__MPI)
-        IF(mpime .EQ. sour) THEN
-          CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_COMPLEX, dest, ip, group, ierr)
-          IF (ierr/=0) CALL mp_stop( 8104 )
-          msglen = SIZE(msg_sour)
-        END IF
-        IF(mpime .EQ. dest) THEN
-          CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_COMPLEX, sour, ip, group, istatus, IERR )
-          IF (ierr/=0) CALL mp_stop( 8105 )
-          CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_COMPLEX, nrcv, ierr)
-          IF (ierr/=0) CALL mp_stop( 8106 )
-          msglen = nrcv
-        END IF
+           IF(mpime .EQ. sour) THEN
+             CALL MPI_SEND( msg_sour, SIZE(msg_sour), MPI_DOUBLE_COMPLEX, dest, ip, group, ierr)
+             IF (ierr/=0) CALL mp_stop( 8104 )
+             msglen = SIZE(msg_sour)
+           ELSE IF(mpime .EQ. dest) THEN
+             CALL MPI_RECV( msg_dest, SIZE(msg_dest), MPI_DOUBLE_COMPLEX, sour, ip, group, istatus, IERR )
+             IF (ierr/=0) CALL mp_stop( 8105 )
+             CALL MPI_GET_COUNT(istatus, MPI_DOUBLE_COMPLEX, nrcv, ierr)
+             IF (ierr/=0) CALL mp_stop( 8106 )
+             msglen = nrcv
+           END IF
 #endif
         ELSE
           msg_dest(1:SIZE(msg_sour)) = msg_sour(:)
