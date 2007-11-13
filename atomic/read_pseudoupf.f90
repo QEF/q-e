@@ -21,7 +21,8 @@ subroutine read_pseudoupf
   use kinds, only : dp
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, &
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
-                     lloc, vpsloc, grid, nwfs, bmat, qq, qvan, rhoc, rhos, phis
+                     lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
+                     rhos, phis, which_augfun
   use funct, only: set_dft_from_name
   !
   use pseudo_types
@@ -29,7 +30,7 @@ subroutine read_pseudoupf
   !
   implicit none
   !
-  integer :: iunps, ierr, ibeta, jbeta, kbeta
+  integer :: iunps, ierr, ibeta, jbeta, kbeta, l, l1, l2
   !
   !     Local variables
   !
@@ -116,9 +117,24 @@ subroutine read_pseudoupf
      do ibeta=1,nbeta
         do jbeta=ibeta,nbeta
            kbeta = jbeta * (jbeta-1) / 2 + ibeta
-           qvan (1:grid%mesh, ibeta, jbeta) = upf%qfunc(1:upf%mesh,kbeta)
-           if (ibeta /= jbeta) qvan (1:grid%mesh, jbeta, ibeta)= &
-                                    upf%qfunc(1:upf%mesh,kbeta)
+           if (upf%q_with_l) then
+              l1=upf%lll(ibeta)
+              l2=upf%lll(jbeta)
+              do l=abs(l1-l2), l1+l2
+                 qvanl(1:upf%mesh,ibeta,jbeta,l)=upf%qfuncl(1:upf%mesh,kbeta,l)
+                 if (ibeta /= jbeta) qvanl (1:grid%mesh, jbeta, ibeta, l)= &
+                                    upf%qfuncl(1:upf%mesh,kbeta,l)
+              enddo
+              qvan(1:upf%mesh,ibeta,jbeta)=upf%qfuncl(1:upf%mesh,kbeta,0)
+              if (ibeta /= jbeta) qvan(1:grid%mesh, jbeta, ibeta)= &
+                                    upf%qfuncl(1:upf%mesh,kbeta,0)
+              which_augfun='BESSEL'
+           else
+              qvan (1:grid%mesh, ibeta, jbeta) = upf%qfunc(1:upf%mesh,kbeta)
+              if (ibeta /= jbeta) qvan (1:grid%mesh, jbeta, ibeta)= &
+                                       upf%qfunc(1:upf%mesh,kbeta)
+              which_augfun='AE'
+           endif
         enddo
      enddo
   else

@@ -58,6 +58,7 @@ nodenum.o \
 normalize.o \
 occ_spin.o \
 pseudovloc.o \
+pseudo_q.o \
 read_newpseudo.o \
 read_pseudo.o \
 read_pseudoupf.o \

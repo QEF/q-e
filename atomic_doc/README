@@ -11,6 +11,8 @@ a) Generation and test of norm-conserving and ultrasoft pseudo-potentials
    ( Phys. Rev. B41, 1227 (1990); Phys. Rev. B 44, 13175 (1991) )
 b) Generation of fully relativistic pseudo-potentials including 
    spin-orbit coupling.
+c) Generation of PAW dataset. Based on the original implementation 
+   by G. Fratesi with several additions by R. Mazzarello.
 
 Input variables are described in file INPUT_LD1.
 Directories all-electron/, pseudo-gen/, pseudo-test/, 

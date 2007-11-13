@@ -131,10 +131,16 @@ END TYPE paw_t
           REAL(DP), POINTER :: qqq(:,:)   ! qqq(nbeta,nbeta) q_{mu,nu}
           REAL(DP), POINTER :: qfunc(:,:) ! qfunc(mesh,nbeta*(nbeta+1)/2)
                                           ! Q_{mu,nu}(|r|) function for |r|> r_L
+          REAL(DP), POINTER :: qfuncl(:,:,:)!  qfuncl(mesh,nbeta*(nbeta+1)/2,l)
+                                            ! Q_{mu,nu}(|r|) function for |r|>
+
           REAL(DP), POINTER :: qfcoef(:,:,:,:) ! qfcoef(nqf,0:2*lmax,nbeta,nbeta)
                                           ! coefficients for Q for |r|<r_L
           REAL(DP), POINTER :: chi(:,:)   ! chi(mesh,nwfc) atomic wavefcts
           REAL(DP), POINTER :: rho_at(:)  ! rho_at(mesh) atomic charge 
+
+          LOGICAL :: q_with_l              ! if .true. qfunc is pseudized in
+                                           ! different ways for different l
 
           ! PAW:
           LOGICAL  :: has_paw             ! Whether PAW data is included

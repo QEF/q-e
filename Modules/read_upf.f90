@@ -49,13 +49,14 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
   !
   ierr = 1  
   ios = 0
-  upf%has_so=.true.
+  upf%q_with_l=.false.
+  upf%has_so=.false.
   upf%has_paw = .false.
   upf%has_gipaw = .false.
   addinfo_loop: do while (ios == 0)  
      read (iunps, *, iostat = ios, err = 200) dummy  
      if (matches ("<PP_ADDINFO>", dummy) ) then
-        ierr = 0
+        upf%has_so=.true. 
      endif
      if ( matches ( "<PP_PAW>", dummy ) ) then
         upf%has_paw = .true.
@@ -63,8 +64,10 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      if ( matches ( "<PP_GIPAW_RECONSTRUCTION_DATA>", dummy ) ) then
         upf%has_gipaw = .true.
      endif
+     if (matches ("<PP_QIJ_WITH_L>", dummy) ) then
+        upf%q_with_l=.true. 
+     endif
   enddo addinfo_loop
-  if (ierr == 1) upf%has_so=.false. 
   
   !------->Search for Header
   !     This version doesn't use the new routine scan_begin
@@ -341,7 +344,7 @@ subroutine read_pseudo_nl (upf, iunps)
   integer :: iunps  
   TYPE (pseudo_upf), INTENT(INOUT) :: upf
   !
-  integer :: nb, mb, ijv, n, ir, ios, idum, ldum, icon, lp, i, ikk
+  integer :: nb, mb, ijv, n, ir, ios, idum, ldum, icon, lp, i, ikk, l, l1,l2
   ! counters
   character (len=75) :: dummy  
   !
@@ -408,11 +411,16 @@ subroutine read_pseudo_nl (upf, iunps)
      upf%nqlc = 2 * upf%lmax  + 1
      ALLOCATE( upf%rinner( upf%nqlc ) )
      ALLOCATE( upf%qqq   ( upf%nbeta, upf%nbeta ) )
-     ALLOCATE( upf%qfunc ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2 ) )
+     IF (upf%q_with_l) then
+        ALLOCATE( upf%qfuncl ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2, 0:2*upf%lmax ) )
+        upf%qfuncl  = 0.0_DP
+     ELSE
+        ALLOCATE( upf%qfunc ( upf%mesh, upf%nbeta*(upf%nbeta+1)/2 ) )
+        upf%qfunc  = 0.0_DP
+     ENDIF
      ALLOCATE( upf%qfcoef( MAX( upf%nqf,1 ), upf%nqlc, upf%nbeta, upf%nbeta ) )
      upf%rinner = 0.0_DP
      upf%qqq    = 0.0_DP
-     upf%qfunc  = 0.0_DP
      upf%qfcoef = 0.0_DP
      if ( upf%nqf /= 0) then
         call scan_begin (iunps, "RINNER", .false.)  
@@ -433,7 +441,16 @@ subroutine read_pseudo_nl (upf, iunps)
            upf%qqq(mb,nb) = upf%qqq(nb,mb)  
            ! ijv is the combined (nb,mb) index
            ijv = mb * (mb-1) / 2 + nb
-           read (iunps, *, err=105, end=105) (upf%qfunc(n,ijv), n=1,upf%mesh)
+           IF (upf%q_with_l) THEN
+              l1=upf%lll(nb)
+              l2=upf%lll(mb)
+              DO l=abs(l1-l2),l1+l2
+                 read (iunps, *, err=105, end=105) (upf%qfuncl(n,ijv,l), &
+                                                    n=1,upf%mesh)
+              END DO
+           ELSE
+              read (iunps, *, err=105, end=105) (upf%qfunc(n,ijv), n=1,upf%mesh)
+           ENDIF
 
            if ( upf%nqf > 0 ) then
               call scan_begin (iunps, "QFCOEF", .false.)  

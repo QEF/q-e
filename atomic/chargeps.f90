@@ -16,7 +16,8 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
   use kinds, only: dp
   use ld1_parameters, only: nwfsx
   use radial_grids, only: ndmx
-  use ld1inc, only: grid, pseudotype, qvan, nbeta, betas, lls, jjs, ikk
+  use ld1inc, only: grid, pseudotype, qvan, nbeta, betas, lls, jjs, ikk,  &
+                    which_augfun, lpaw, qvanl
   implicit none
 
   integer :: &
@@ -78,10 +79,17 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
            !
            do n1=1,nbeta
               do n2=1,nbeta
-                 do n=1,grid%mesh
-                    rho_i(n,is)=rho_i(n,is)+qvan(n,n1,n2)*oc_i(ns)* &
-                         work(n1)*work(n2)
-                 enddo
+                 IF (which_augfun/='AE'.and..not.lpaw) then
+                    do n=1,grid%mesh
+                       rho_i(n,is)=rho_i(n,is)+qvanl(n,n1,n2,0)*oc_i(ns)* &
+                            work(n1)*work(n2)
+                    enddo
+                 ELSE
+                    do n=1,grid%mesh
+                       rho_i(n,is)=rho_i(n,is)+qvan(n,n1,n2)*oc_i(ns)* &
+                            work(n1)*work(n2)
+                    enddo
+                 ENDIF
               enddo
            enddo
         endif

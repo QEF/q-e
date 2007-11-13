@@ -58,6 +58,7 @@ MODULE atomic_paw
   PUBLIC :: paw2us
   PUBLIC :: check_multipole
   PUBLIC :: new_paw_hamiltonian
+  PUBLIC :: find_bes_qi
   !
 CONTAINS
   !

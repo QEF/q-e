@@ -22,8 +22,9 @@ subroutine descreening
   use ld1_parameters, only: nwfsx
   use ld1inc, only: grid, nlcc, vxt, lsd, vpstot, vpsloc, file_screen, &
                     vh, enne, rhoc, latt, rhos, enl, &
-                    nbeta, bmat, qvan, jjs, lls, ikk, pseudotype, &
-                    nwfts, enlts, octs, llts, jjts, phits, nstoaets
+                    nbeta, bmat, qvan, qvanl, jjs, lls, ikk, pseudotype, &
+                    nwfts, enlts, octs, llts, jjts, phits, nstoaets, lpaw, &
+                    which_augfun
   implicit none
 
   integer ::  &
@@ -67,9 +68,15 @@ subroutine descreening
            if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.e-7_dp) then
               lam=lls(ib)
               nst=(lam+1)*2
-              do n=1,ikk(ib)
-                 vaux(n,1)=qvan(n,ib,jb)*vpsloc(n)
-              enddo
+              IF (which_augfun/='AE'.and..not.lpaw) then
+                 do n=1,ikk(ib)
+                    vaux(n,1)=qvanl(n,ib,jb,0)*vpsloc(n)
+                 enddo
+              ELSE
+                 do n=1,ikk(ib)
+                    vaux(n,1)=qvan(n,ib,jb)*vpsloc(n)
+                 enddo
+              ENDIF
               bmat(ib,jb)= bmat(ib,jb)  &
                    - int_0_inf_dr(vaux(1,1),grid,ikk(ib),nst)
            endif

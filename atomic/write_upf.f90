@@ -244,7 +244,7 @@ end subroutine write_upf
     implicit none
     integer :: ounps  
     !
-    integer :: nb, mb, n, ir, nd, i, lp, nqf, ios  
+    integer :: nb, mb, n, ir, nd, i, lp, nqf, l1, l2, l, ios  
 
     write (ounps, '(//a13)', err = 100, iostat = ios) "<PP_NONLOCAL>"  
     do nb = 1, nbeta  
@@ -283,18 +283,31 @@ end subroutine write_upf
        write (ounps, '(i5,a)',err=100, iostat=ios) nqf,"     nqf.&
           & If not zero, Qij's inside rinner are computed using qfcoef's"
        do nb = 1, nbeta 
+          l1=lls(nb)
           do mb = nb, nbeta
+             l2=lls(mb)
              write (ounps, '(3i5,t24,a)', err=100, iostat=ios) &
                                           nb, mb, lls(mb) , "i  j  (l(j))"
              write (ounps, '(1pe19.11,t24,a)', err=100, iostat=ios) &
                                           qq(nb,mb), "Q_int"
-             write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
-                                          ( qvan (n,nb,mb), n=1,grid%mesh )
+             if (which_augfun=='AE') then
+                write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
+                                       ( qvan (n,nb,mb), n=1,grid%mesh )
+             else
+                do l=abs(l1-l2),l1+l2
+                   write (ounps, '(1p4e19.11)', err=100, iostat=ios) &
+                                    ( qvanl (n,nb,mb,l), n=1,grid%mesh )
+                enddo
+             endif
           enddo
        enddo
        write (ounps, '(t3,a9)', err = 100, iostat = ios) "</PP_QIJ>"  
 
     endif
+    IF (which_augfun/='AE') THEN
+       write (ounps, '(t3,a15)', err = 100, iostat = ios) "<PP_QIJ_WITH_L>"  
+       write (ounps, '(t3,a16)', err = 100, iostat = ios) "</PP_QIJ_WITH_L>"  
+    ENDIF
     write (ounps, '(a14)', err = 100, iostat = ios) "</PP_NONLOCAL>"  
     return
 

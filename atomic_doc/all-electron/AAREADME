@@ -1,8 +1,3 @@
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
- h.in: numerical problems with PW91 - not related to SIC but to LSD
-he.in: convergence problems apparently related to SIC, worse with LSD
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
 This directory contains a few examples of all-electron inputs.
 The output are in the directory "reference/". Input data:
 
@@ -27,6 +22,8 @@ writes the differences between these files into file "difference".
 
 References:
 
-[1] D. Liberman, J.T. Waber, and Don T. Cromer, Phys. Rev. 137, A27 (1965).
+[1]
 
-[2] J. Perdew and A. Zunger, Phys. Rev. B 23, 5048 (1981).
+[2] D. Liberman, J.T. Waber, and Don T. Cromer, Phys. Rev. 137, A27 (1965).
+
+[3] J. Perdew and A. Zunger, Phys. Rev. B 23, 5048 (1981).

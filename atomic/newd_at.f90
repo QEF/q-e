@@ -16,7 +16,7 @@ subroutine newd_at ( )
   use kinds, only : dp
   use radial_grids, only : ndmx
   use ld1inc, only : ddd, bmat, nbeta, nspin, lls, jjs, ikk, qvan, vpstot, &
-                     grid, pseudotype
+                     grid, pseudotype, lpaw, which_augfun, qvanl
   implicit none
 
   integer :: &
@@ -35,9 +35,15 @@ subroutine newd_at ( )
            if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.0e-7_dp) then
               nst=(lls(ib)+1)*2
               do is=1,nspin
-                 do n=1,ikk(ib)
-                    gi(n)=qvan(n,ib,jb)*vpstot(n,is)
-                 enddo
+                 IF (which_augfun/='AE'.and..not.lpaw) then
+                    do n=1,ikk(ib)
+                       gi(n)=qvanl(n,ib,jb,0)*vpstot(n,is)
+                    enddo
+                 ELSE
+                    do n=1,ikk(ib)
+                       gi(n)=qvan(n,ib,jb)*vpstot(n,is)
+                    enddo
+                 ENDIF
                  ddd(ib,jb,is)= bmat(ib,jb) &
                       + int_0_inf_dr(gi,grid,ikk(ib),nst)
                  ddd(jb,ib,is)=ddd(ib,jb,is)

@@ -35,9 +35,9 @@ subroutine ld1_readin
                          nld, rlderiv, eminld, emaxld, deld, &
                          ecutmin, ecutmax, decut, rytoev_fact, verbosity, &
                          frozen_core, lsdts, new_core_ps, cau_fact, &
-                         lpaw, lnc2paw, pawsetup,rcutnc2paw, & !paw
-                         paw_rmatch_augfun, which_paw_augfun,& !paw
-                         rhos, bmat, lsmall !extra for paw2us
+                         lpaw, lnc2paw, pawsetup, rcutnc2paw, & !paw
+                         rmatch_augfun, which_augfun,         & !paw
+                         rhos, bmat, lsmall                ! extra for paw2us
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
@@ -118,11 +118,11 @@ subroutine ld1_readin
        rcloc, &    ! the local cut-off for pseudo
        author, &   ! the author of the PP
        ! paw variables:
-       which_paw_augfun, &  ! choose shape of paw aug.fun. (GAUSS, BESSEL..)
+       which_augfun, &  ! choose shape of aug.fun. (GAUSS, BESSEL..)
        lpaw,             &  ! if true generate or test a PAW dataset
        lnc2paw,          &  ! if true the PAW dataset is generate from the NC one
        rCutNC2paw,       &  ! a cut-off radius for NC wavefunctions to be used
-       paw_rmatch_augfun,& ! define the matching radius for paw aug.fun.
+       rmatch_augfun,    & ! define the matching radius for aug.fun.
        ! output files:
        file_pseudopw, & ! output file where the pseudopotential is written
        file_screen,   & ! output file for the screening potential
@@ -301,6 +301,7 @@ subroutine ld1_readin
      rhoc=0.0_dp
   endif
   !
+  which_augfun = 'AE'
   if (iswitch == 1) then
      !
      !    no more data needed for AE calculations
@@ -325,8 +326,7 @@ subroutine ld1_readin
 
      !    paw defaults:
      lnc2paw = .false.
-     which_paw_augfun = 'AE'
-     paw_rmatch_augfun=0.5_dp   ! reasonable
+     rmatch_augfun=0.5_dp   ! reasonable
      rcutnc2paw(:) = 1.0_dp     ! reasonable
 
      if (ionode) read(5,inputp,err=500,iostat=ios)

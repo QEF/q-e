@@ -243,6 +243,9 @@ subroutine init_us_1
                  paw : & ! in PAW formalism aug. charge is computed elsewhere
                  if (upf(nt)%tpawp) then
                     qtot(1:upf(nt)%kkbeta,ijv) = upf(nt)%paw%aug(1:upf(nt)%kkbeta,nb,mb,l)
+                 elseif (upf(nt)%q_with_l) then
+                     qtot(1:upf(nt)%kkbeta,ijv) =&
+                                 upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
                  else
                     if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
                          ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &

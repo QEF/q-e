@@ -100,7 +100,8 @@ module ld1inc
        bmat(nwfsx,nwfsx), &! the pseudo coefficients (unscreened D)
        ddd(nwfsx,nwfsx,2),&! the screened D
        qq(nwfsx,nwfsx),   &! the integrals of the qvan
-       qvan(ndmx,nwfsx,nwfsx) ! the augmentation functions
+       qvan(ndmx,nwfsx,nwfsx), & ! the augmentation functions
+       qvanl(ndmx,nwfsx,nwfsx,0:lmx2) ! the augmentation functions, l dependent
 
   logical :: &
        tm,            &!  if true use Troullier-Martins for norm-conserving PP
@@ -251,7 +252,7 @@ module ld1inc
   type(paw_t) :: &
        pawsetup    ! the PAW dataset
   real(DP) ::       &
-       paw_rmatch_augfun, & ! define the matching radius for paw aug.fun.
+       rmatch_augfun,     & ! define the matching radius for paw aug.fun.
        psipaw(ndmx,nwfsx),& ! the all-electron wavefunctions for any beta
        aeccharge(ndmx),   & ! true, not smoothened, AE core charge for PAW
        psccharge(ndmx),   & ! smoothened core charge for PAW
@@ -260,7 +261,7 @@ module ld1inc
        paw_energy(5,3)
 
    character(len=20) ::&
-       which_paw_augfun     ! choose shape of paw aug.fun. (GAUSS, BESSEL..)
+       which_augfun     ! choose shape of paw fun. (GAUSS, BESSEL..)
   !
   ! conversion factor
   ! 

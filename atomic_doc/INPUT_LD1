@@ -186,7 +186,18 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
              Typical values are in the order of 0.01-0.02       (default 0.0)
       lpaw =.true. : produce a PAW dataset, experimental feature
              only for pseudotype=3 (default .false.)
-      author     =   name of the author (default 'anonymous') 
+      which_augfun =                               (default 'AE')
+          If different from 'AE' the augmentation functions are pseudized
+          before rmatch_augfun. The pseudization options are:
+          'BESSEL'     Use bessel functions to pseudize the Q.
+          'GAUSS'      Use gaussian functions to pseudize the Q.
+          This feature is available for both PAW and for US-PP.
+      rmatch_augfun                                   (default 0.5 a.u.)
+          Used only if which_augfun is different from 'AE'.
+          Pseudization radius for the augmentation functions. Presently
+          it has the same value for all L.    
+      author     =   name of the author            (default 'anonymous') 
+
       file_chi   =   file containing output PP chi functions       (' ')
       file_beta  =   file containing output PP beta functions      (' ')
       file_qvan  =   file containing output PP qvan functions      (' ')

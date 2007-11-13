@@ -38,10 +38,10 @@ subroutine gener_pseudo
                     psipsus, tm, ocs, phis, els, nwfs, nspin, rel, nlcc, &
                     file_chi, file_beta, file_wfcncgen, file_qvan, &
                     file_wfcusgen, file_wfcaegen, psccharge, aeccharge, &
-                    qvan, qq, bmat, ddd, betas, nbeta, ikk, pseudotype, &
+                    qvan, qvanl, qq, bmat, ddd, betas, nbeta, ikk, pseudotype, &
                     pawsetup, zval, vpsloc, vpot, vnl, lpaw, rcloc, rcutus, &
-                    enl, enls, rcut, chis, nstoae, paw_rmatch_augfun,&
-                    lnc2paw, rcutnc2paw, rhos, which_paw_augfun
+                    enl, enls, rcut, chis, nstoae, rmatch_augfun,&
+                    lnc2paw, rcutnc2paw, rhos, which_augfun
   use atomic_paw, only : us2paw, paw2us
   implicit none
 
@@ -219,16 +219,20 @@ subroutine gener_pseudo
         psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
      endif
      !
-     if (tm) then
-        call compute_phi_tm(lam,ik,psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
-     else
-        call compute_phi(lam,ik,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
-        ecutrho=max(ecutrho,8.0_dp*xc(6)**2)
-     endif
+     IF (which_augfun/='AE'.AND..NOT.lpaw) THEN
+        psipsus(:,ns)=psi_in(:) 
+     ELSE
+        if (tm) then
+           call compute_phi_tm(lam,ik,psi_in,phis(1,ns),1,xc,enls(ns),els(ns))
+        else
+           call compute_phi(lam,ik,psi_in,phis(1,ns),xc,1,occ,enls(ns),els(ns))
+           ecutrho=max(ecutrho,8.0_dp*xc(6)**2)
+        endif
      !
      !   US only on the components where ikus <> ik
      ! 
-     psipsus(:,ns)=phis(:,ns) 
+        psipsus(:,ns)=phis(:,ns) 
+     ENDIF
      if (ikus.ne.ik) then
         call compute_phius(lam,ikus,psipsus(1,ns),phis(1,ns),xc,1,els(ns))
         ecutwfc=max(ecutwfc,2.0_dp*xc(5)**2)
@@ -385,6 +389,15 @@ subroutine gener_pseudo
      ddd(:,:,is)=bmat(:,:)
   enddo
   !
+  !  Pseudize the Q functions if required. This might be needed for
+  !  pseudo-potentials with semicore states. In this case the cut-off radius
+  !  for the norm conserving wavefunctions is quite small and without
+  !  the Q pseudization the augmentation charges are very hard making the
+  !  ASR in phonon calculation very difficult to converge.
+  ! 
+  IF (which_augfun/='AE'.and..not.lpaw) CALL pseudo_q(qvan,qvanl)
+  !
+  !
   !    generate a PAW dataset if required
   !
   if (lpaw) then
@@ -419,10 +432,10 @@ subroutine gener_pseudo
      !
      ! create the 'pawsetup' object containing the atomic setup for PAW
      call us2paw ( pawsetup,                                         &
-          zval, grid, paw_rmatch_augfun, ikk,  &
+          zval, grid, rmatch_augfun, ikk,  &
           nbeta, lls, jjs, ocs, enls, els, rcutus, psipaw, phis, betas, &
           qvan, kindiff, nlcc, aeccharge, psccharge, vpotpaw, vpsloc, &
-          which_paw_augfun)
+          which_augfun)
      !
   endif
   !
@@ -485,7 +498,6 @@ subroutine gener_pseudo
         endif
      enddo
   endif
-
 
   if (file_wfcncgen .ne. ' ') then
      if (ionode) & 

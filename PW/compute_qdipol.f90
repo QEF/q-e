@@ -47,7 +47,11 @@ SUBROUTINE compute_qdipol(dpqq)
                    (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
                  do ir = 1, upf(nt)%kkbeta
                     if (rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1)) then
-                       qtot(ir, nb, mb)=upf(nt)%qfunc(ir,ijv)
+                       if (upf(nt)%q_with_l) then
+                          qtot(ir, nb, mb)=upf(nt)%qfuncl(ir,ijv,l)
+                       else
+                          qtot(ir, nb, mb)=upf(nt)%qfunc(ir,ijv)
+                       endif
                     else
                        ilast = ir
                     endif
