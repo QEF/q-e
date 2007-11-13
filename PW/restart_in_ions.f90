@@ -81,7 +81,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   
   ! recalculate etxc, vtxc, ehart, needed by stress calculation
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, rho%ns, &
+  CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, psic, psic )
   !
   !  restart procedure completed

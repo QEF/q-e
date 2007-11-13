@@ -24,30 +24,31 @@
       implicit none
       real(DP)  ::    theta,phi,norm,norm1
       integer     :: i,ipol,iat
+      real (DP) :: r1_loc(nat), m1_loc(3,nat)
 !
 ! get_local integrates on the previously determined points
 !
-      call get_locals(r_loc,m_loc,rho%of_r)
+      call get_locals(r1_loc,m1_loc,rho%of_r)
       
       do iat = 1,nat
          if (noncolin) then
 !
 !    norm is the length of the magnetic moment vector
 !
-             norm= dsqrt(m_loc(1,iat)**2+m_loc(2,iat)**2+m_loc(3,iat)**2)
+             norm= dsqrt(m1_loc(1,iat)**2+m1_loc(2,iat)**2+m1_loc(3,iat)**2)
 !
 ! norm1 is the length of the projection of the mm vector into
 ! the xy plane
 !
-             norm1 = dsqrt(m_loc(1,iat)**2+m_loc(2,iat)**2)
+             norm1 = dsqrt(m1_loc(1,iat)**2+m1_loc(2,iat)**2)
 
 
 ! calculate the polar angles of the magnetic moment
              if(norm.gt.1.d-10) then
-                theta = acos(m_loc(3,iat)/norm)
+                theta = acos(m1_loc(3,iat)/norm)
                 if (norm1.gt.1.d-10) then
-                   phi = acos(m_loc(1,iat)/norm1)
-                   if (m_loc(2,iat).lt.0.d0) phi = - phi
+                   phi = acos(m1_loc(1,iat)/norm1)
+                   if (m1_loc(2,iat).lt.0.d0) phi = - phi
                 else
                    phi = 2.d0*pi
                 endif
@@ -64,11 +65,11 @@
 
          WRITE( stdout,1010)
          WRITE( stdout,1011) iat,(tau(ipol,iat),ipol=1,3)
-         WRITE( stdout,1014) r_loc (iat)
+         WRITE( stdout,1014) r1_loc (iat)
 
          if (noncolin) then
-            WRITE( stdout,1012) (m_loc(ipol,iat),ipol=1,3)
-            WRITE( stdout,1018) (m_loc(ipol,iat)/r_loc(iat),ipol=1,3)
+            WRITE( stdout,1012) (m1_loc(ipol,iat),ipol=1,3)
+            WRITE( stdout,1018) (m1_loc(ipol,iat)/r1_loc(iat),ipol=1,3)
             WRITE( stdout,1013) norm,theta,phi
             if (i_cons.eq.1) then
                WRITE( stdout,1015) (mcons(ipol,ityp(iat)),ipol=1,3)
@@ -76,8 +77,8 @@
                WRITE( stdout,1017) 180.d0 * acos(mcons(3,ityp(iat)))/pi
             endif
          else
-            WRITE( stdout,1012) m_loc(1,iat)
-            WRITE( stdout,1018) m_loc(1,iat)/r_loc(iat)
+            WRITE( stdout,1012) m1_loc(1,iat)
+            WRITE( stdout,1018) m1_loc(1,iat)/r1_loc(iat)
             if (i_cons.eq.1) WRITE( stdout,1015) mcons(1,ityp(iat))
          endif
          WRITE( stdout,1010)

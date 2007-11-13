@@ -130,15 +130,13 @@ subroutine set_rhoc
   ! calculate core_only exch-corr energy etxcc=E_xc[rho_core] if required
   ! The term was present in previous versions of the code but it shouldn't
   !
-  !   allocate (dum(nrxx , nspin))    
-  !   allocate (dumg(ngm , nspin))    
-  !   dum(:,:) = 0.0_DP
-  !   dumg(:,:) = 0.0_DP
+  !   call create_scf_type(dum)
+  !   dum%of_r(:,:) = 0.0_DP
+  !   dum%of_g(:,:) = (0.0_DP, 0.0_DP)
   !   
-  !   call v_xc( dum, dumg, rho_core, rhog_core, etxcc, vtxcc, aux )
+  !   call v_xc( dum, rho_core, rhog_core, etxcc, vtxcc, aux )
   ! 
-  !   deallocate(dumg)
-  !   deallocate(dum)
+  !   call destroy_scf_type(dum)
   !   WRITE( stdout, 9000) etxcc
   !   WRITE( stdout,  * ) 'BEWARE it will be subtracted from total energy !'
   !

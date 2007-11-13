@@ -379,7 +379,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      !
   END DO
   !
-  CALL v_of_rho( rho%of_r, rho%of_g, rho_core, rhog_core, rho%kin_r, rho%ns, &
+  CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub )
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN

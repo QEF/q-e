@@ -397,6 +397,23 @@ SUBROUTINE iosys()
   END IF
 
   !
+  ! ... starting_magnetization(ia) = sm_not_set means "not set" -- set it to 0
+  ! ... stop if starting_magnetization is not set for all atomic types
+  !
+  IF ( lscf .AND. nspin == 2 .AND. &
+          nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
+          multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
+          ALL(starting_magnetization == sm_not_set) ) THEN
+      CALL errore('iosys','some starting_magnetization MUST be set', 1 )
+  END IF
+  !
+  DO ia = 1, ntyp
+     !
+     IF ( starting_magnetization(ia) == sm_not_set ) &
+        starting_magnetization(ia) = 0.D0
+     !
+  END DO
+  !
   SELECT CASE( TRIM( constrained_magnetization ) )
   CASE( 'none' )
      !
@@ -507,23 +524,6 @@ SUBROUTINE iosys()
                    & 'only B_field(3) can be specified with nspin=2', 1 )
      !
   END IF
-  !
-  ! ... starting_magnetization(ia) = sm_not_set means "not set" -- set it to 0
-  ! ... stop if starting_magnetization is not set for all atomic types
-  !
-  IF ( lscf .AND. nspin == 2 .AND. &
-          nelup == 0.d0 .AND. neldw == 0.d0 .AND. &
-          multiplicity == 0 .AND. tot_magnetization == -1    .AND. &
-          ALL(starting_magnetization == sm_not_set) ) THEN
-      CALL errore('iosys','some starting_magnetization MUST be set', 1 )
-  END IF
-  !
-  DO ia = 1, ntyp
-     !
-     IF ( starting_magnetization(ia) == sm_not_set ) &
-        starting_magnetization(ia) = 0.D0
-     !
-  END DO
   !
   IF ( ecutrho <= 0.D0 ) THEN
      !

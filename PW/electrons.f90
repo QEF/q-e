@@ -154,6 +154,12 @@ SUBROUTINE electrons()
   ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !
+  IF (okpaw) THEN
+     IF ( .not. ALLOCATED(becstep) ) ALLOCATE (becstep(nhm*(nhm+1)/2,nat,nspin))
+     !becstep (:,:,:) = 0._dp
+     becstep(:,:,:) = becsum(:,:,:)
+  END IF
+  call create_scf_type ( rhoin )
 #if defined (EXX)
 10 CONTINUE
 #endif
@@ -172,13 +178,6 @@ SUBROUTINE electrons()
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
-  !
-  IF (okpaw) THEN
-     IF ( .not. ALLOCATED(becstep) ) ALLOCATE (becstep(nhm*(nhm+1)/2,nat,nspin))
-     !becstep (:,:,:) = 0._dp
-     becstep(:,:,:) = becsum(:,:,:)
-  END IF
-  call create_scf_type ( rhoin )
   !
   DO idum = 1, niter
      !
@@ -324,8 +323,7 @@ SUBROUTINE electrons()
            ! ... no convergence yet: calculate new potential from mixed
            ! ... charge density (i.e. the new estimate)
            !
-           CALL v_of_rho( rhoin%of_r, rhoin%of_g, rho_core, rhog_core, &
-                          rhoin%kin_r, rhoin%ns, &
+           CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
            !
            ! ... estimate correction needed to have variational energy:
@@ -369,8 +367,7 @@ SUBROUTINE electrons()
            !
            vnew(:,:) = vr(:,:)
            !
-           CALL v_of_rho( rho%of_r,rho%of_g, rho_core,rhog_core, &
-                          rho%kin_r, rho%ns, &
+           CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
            !
            vnew(:,:) = vr(:,:) - vnew(:,:)
@@ -477,8 +474,7 @@ SUBROUTINE electrons()
         IF ( first ) THEN
            !
            fock0 = exxenergy2()
-           CALL v_of_rho( rho%of_r,rho%of_g, rho_core,rhog_core, &
-                          rho%kin_r, rho%ns, &
+           CALL v_of_rho( rho, rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
            !
            CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )

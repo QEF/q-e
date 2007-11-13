@@ -26,11 +26,11 @@ MODULE scf
   SAVE
   !
   TYPE scf_type
-     REAL(DP),    ALLOCATABLE :: of_r(:,:) ! the charge density in R-space
-     COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
-     REAL(DP),    ALLOCATABLE :: kin_r(:,:) ! the charge density in R-space
-     COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
-     REAL(DP),   ALLOCATABLE  :: ns(:,:,:,:)! the LDA+U occupation matrix 
+     REAL(DP),    ALLOCATABLE :: of_r(:,:)  ! the charge density in R-space
+     COMPLEX(DP), ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
+     REAL(DP),    ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
+     COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
+     REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
   END TYPE scf_type
   !
   TYPE mix_type

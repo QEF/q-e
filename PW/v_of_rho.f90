@@ -6,7 +6,7 @@
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !----------------------------------------------------------------------------
-SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, ns, &
+SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
                      ehart, etxc, vtxc, eth, etotefield, charge, v, v_hub )
   !----------------------------------------------------------------------------
   !
@@ -23,15 +23,14 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, ns, &
   USE ldaU,             ONLY : lda_plus_U, Hubbard_lmax, Hubbard_l, &
                                Hubbard_U, Hubbard_alpha
   USE funct,            ONLY : dft_is_meta
+  USE scf,              ONLY : scf_type
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin), &
-                          ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
-    ! input: the valence charge
+  TYPE(scf_type), INTENT(IN) :: rho  ! the valence charge
+  REAL(DP), INTENT(IN) :: rho_core(nrxx)
     ! input: the core charge
-  COMPLEX(DP), INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
-    ! input: the valence charge in reciprocal space
+  COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! input: the core charge in reciprocal space
   REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, eth, charge, etotefield, &
                            v(nrxx,nspin), &
@@ -49,28 +48,26 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, ns, &
   ! ... calculate exchange-correlation potential
   !
   if (dft_is_meta()) then
-     call v_xc_meta( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
+     call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v )
   else
-     CALL v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
+     CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   endif
   !
   ! ... add a magnetic field  (if any)
   !
-  CALL add_bfield( v, rho )
+  CALL add_bfield( v, rho%of_r )
   !
   ! ... calculate hartree potential
   !
-  CALL v_h( rhog, ehart, charge, v )
+  CALL v_h( rho%of_g, ehart, charge, v )
   !
-  !
-  !
-  if (lda_plus_u) call v_Hubbard(ns,v_hub,eth)
+  if (lda_plus_u) call v_Hubbard(rho%ns,v_hub,eth)
   !
   ! ... add an electric field
   ! 
   DO is = 1, nspin
      !
-     CALL add_efield( rho, v(1,is), etotefield, 0 )
+     CALL add_efield( rho%of_r, v(1,is), etotefield, 0 )
      !
   END DO
   !
@@ -80,7 +77,7 @@ SUBROUTINE v_of_rho( rho, rhog, rho_core, rhog_core, tauk, ns, &
   !
 END SUBROUTINE v_of_rho
 !
-SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
+SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
   !
   ! ... Exchange-Correlation potential Vxc(r) from n(r)
@@ -93,14 +90,14 @@ SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin, get_igcx, get_igcc
+  USE scf,              ONLY : scf_type
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin)
-    ! the valence charge
+  TYPE (scf_type), INTENT(IN) :: rho
+  REAL(DP), INTENT(IN) :: rho_core(nrxx)
     ! the core charge
-  COMPLEX(DP), INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
-    ! input: the valence charge in reciprocal space
+  COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! input: the core charge in reciprocal space
   REAL(DP), INTENT(OUT) :: v(nrxx,nspin), vtxc, etxc
     ! V_xc potential
@@ -133,7 +130,7 @@ SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   rhoneg = 0.D0
   !
 !  IF (get_igcx()==7.AND.get_igcc()==6) THEN
-     call v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
+     call v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v )
 !  ELSE
 !     CALL errore('v_xc_meta','wrong igcx and/or igcc',1)
 !  ENDIF
@@ -141,7 +138,7 @@ SUBROUTINE v_xc_meta( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   RETURN
 END SUBROUTINE v_xc_meta
 !
-SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
+SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v )
   !     ===================
   !--------------------------------------------------------------------
 !  use gvecp, only: ng => ngm
@@ -149,15 +146,16 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   USE gvect,            ONLY : nrxx, nrx1,nrx2,nrx3,nr1,nr2,nr3, &
                                g,nl,ngm
   USE gsmooth,          ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
-  USE scf,              ONLY : kedtau, kedtaur
+  USE scf,              ONLY : scf_type, kedtau, kedtaur
   USE lsda_mod,         ONLY : nspin
-  USE cell_base,            ONLY : omega, alat
+  USE cell_base,        ONLY : omega, alat
   USE constants,        ONLY : e2
   IMPLICIT NONE
   !
   ! input
-  REAL(DP),INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx), tauk(nrxx,nspin)
-  COMPLEX(DP),INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
+  TYPE (scf_type), INTENT(IN) :: rho
+  REAL(DP),INTENT(IN) :: rho_core(nrxx)
+  COMPLEX(DP),INTENT(IN) :: rhog_core(ngm)
   REAL(DP),INTENT(OUT) :: etxc, vtxc, v(nrxx,nspin)
 !  integer nspin , nnr
 !  real(8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
@@ -179,14 +177,13 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   ALLOCATE (h(3,nrxx,nspin))
   ALLOCATE (rhoout(nrxx,nspin))
   ALLOCATE (rhogsum(ngm,nspin))
-!  ALLOCATE (kedtaur(nrxx,nspin))
   !
   etxc = 0.d0
   !
   ! ... calculate the gradient of rho + rho_core in real space
   !
-  rhoout(:,1:nspin)=rho(:,1:nspin)
-  rhogsum(:,1:nspin)=rhog(:,1:nspin)
+  rhoout(:,1:nspin)=rho%of_r(:,1:nspin)
+  rhogsum(:,1:nspin)=rho%of_g(:,1:nspin)
   fac = 1.D0 / DBLE( nspin )
   !
   DO is = 1, nspin
@@ -207,12 +204,11 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
         !
         !    This is the spin-unpolarised case
         !
-        arho = ABS (rho (k, 1) )
-        segno = SIGN (1.d0, rho (k, 1) )
-        atau = tauk(k,1) / e2  ! kinetic energy density in Hartree
+        arho = ABS (rho%of_r (k, 1) )
+        segno = SIGN (1.d0, rho%of_r (k, 1) )
+        atau = rho%kin_r(k,1) / e2  ! kinetic energy density in Hartree
         IF (arho.GT.epsr.AND.grho2 (1) .GT.epsg.AND.ABS(atau).GT.epsr) THEN
-           CALL tpsscxc (arho, grho2(1),atau,sx, sc, &
-                v1x, v2x,v3x,v1c, v2c,v3c)
+           CALL tpsscxc (arho, grho2(1),atau,sx, sc, v1x, v2x,v3x,v1c, v2c,v3c)
 !           if (mod(k,100).eq.0) then
 !             write(6,*) 'PON k=',k
 !             write(6,*) ' arho,atau=',arho,atau
@@ -221,13 +217,11 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
 !             write(6,*) ' v1c,v2c,v3c=',v1c,v2c,v3c
 !           endif
            v(k, 1) =  (v1x + v1c )*e2
-!          kedtau(k,1)=  (v3x + v3c) *0.5d0
            kedtaur(k,1)=  (v3x + v3c) * 0.5d0 * e2 
            ! h contains D(rho*Exc)/D(|grad rho|) * (grad rho) / |grad rho|
            h(:,k,1) =  (v2x + v2c)*grho (:,k,1) *e2
            etxc = etxc +  (sx + sc) * segno *e2
-!           vtxc = vtxc + (v1x+v1c)*e2*arho
-           vtxc = vtxc + (v1x+v1c)*e2*arho + 1.5d0*kedtaur(k,1)*tauk(k,1)
+           vtxc = vtxc + (v1x+v1c)*e2*arho + 1.5d0*kedtaur(k,1)*rho%kin_r(k,1)
         ELSE  
            h (:, k, 1) = 0.d0  
            kedtaur(k,1)=0.d0
@@ -236,17 +230,17 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
         !
         !    spin-polarised case
         !
-        CALL tpsscx_spin(rho (k, 1), rho (k, 2), grho2 (1), grho2 (2), &
-             tauk(k,1)/e2,tauk(k,2)/e2,sx, &
+        CALL tpsscx_spin(rho%of_r(k, 1), rho%of_r(k, 2), grho2 (1), grho2 (2), &
+             rho%kin_r(k,1)/e2,rho%kin_r(k,2)/e2,sx, &
              v1xup,v1xdw,v2xup,v2xdw,v3xup,v3xdw)
-        rh = rho (k, 1) + rho (k, 2)
+        rh = rho%of_r(k, 1) + rho%of_r(k, 2)
         IF (rh.GT.epsr) THEN
-           zeta = (rho (k, 1) - rho (k, 2) ) / rh
+           zeta = (rho%of_r(k, 1) - rho%of_r(k, 2) ) / rh
            DO ipol=1,3
               grhoup(ipol)=grho(ipol,k,1)
               grhodw(ipol)=grho(ipol,k,2)
            END DO
-           atau = ( tauk(k,1)+tauk(k,2) ) / e2 ! kin. en. density in Hartree
+           atau = (rho%kin_r(k,1)+rho%kin_r(k,2)) / e2 ! KE-density in Hartree
            CALL tpsscc_spin(rh,zeta,grhoup,grhodw, &
                 atau,sc,v1cup,v1cdw,v2cup,v2cdw,v3c)
         ELSE
@@ -268,8 +262,6 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
         !
         h(:,k,1) = (v2xup*grho(:,k,1) + v2cup(:))*e2
         h(:,k,2) = (v2xdw*grho(:,k,2) + v2cdw(:)) *e2
-!       kedtau(k,1)=  (v3xup + v3c) *0.5d0
-!       kedtau(k,2)=  (v3xdw + v3c) *0.5d0
         kedtaur(k,1)=  (v3xup + v3c) * 0.5d0 * e2
         kedtaur(k,2)=  (v3xdw + v3c) * 0.5d0 * e2
         etxc = etxc +  (sx + sc)*e2
@@ -279,12 +271,9 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   !
   IF (nspin==1) then
      CALL interpolate(kedtaur(1,1),kedtau(1,1),-1)
-!     CALL cft3s( kedtau(1,1), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
   else
      CALL interpolate(kedtaur(1,1),kedtau(1,1),-1)
-!     CALL cft3s( kedtau(1,1), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
      CALL interpolate(kedtaur(1,2),kedtau(1,2),-1)
-!     CALL cft3s( kedtau(1,2), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -1 )
   endif
   !
   ALLOCATE( dh( nrxx ) )    
@@ -314,14 +303,12 @@ SUBROUTINE v_xc_tpss( rho, rhog, rho_core, rhog_core, tauk, etxc, vtxc, v )
   DEALLOCATE(h)
   DEALLOCATE(rhoout)
   DEALLOCATE(rhogsum)
-!  DEALLOCATE(kedtaur)
   !
   RETURN
   !
 END SUBROUTINE v_xc_tpss
-!-----------------------------------------------------------------------
 !----------------------------------------------------------------------------
-SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
+SUBROUTINE v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
   !----------------------------------------------------------------------------
   !
   ! ... Exchange-Correlation potential Vxc(r) from n(r)
@@ -334,14 +321,14 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   USE cell_base,        ONLY : omega
   USE spin_orb,         ONLY : domag
   USE funct,            ONLY : xc, xc_spin
+  USE scf,              ONLY : scf_type
   !
   IMPLICIT NONE
   !
-  REAL(DP), INTENT(IN) :: rho(nrxx,nspin), rho_core(nrxx)
-    ! the valence charge
+  TYPE (scf_type), INTENT(IN) :: rho
+  REAL(DP), INTENT(IN) :: rho_core(nrxx)
     ! the core charge
-  COMPLEX(DP), INTENT(IN) :: rhog(ngm,nspin), rhog_core(ngm)
-    ! input: the valence charge in reciprocal space
+  COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! input: the core charge in reciprocal space
   REAL(DP), INTENT(OUT) :: v(nrxx,nspin), vtxc, etxc
     ! V_xc potential
@@ -379,7 +366,7 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      DO ir = 1, nrxx
         !
-        rhox = rho(ir,1) + rho_core(ir)
+        rhox = rho%of_r(ir,1) + rho_core(ir)
         !
         arhox = ABS( rhox )
         !
@@ -391,11 +378,11 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
            !
            etxc = etxc + e2*( ex + ec ) * rhox
            !
-           vtxc = vtxc + v(ir,1) * rho(ir,1)
+           vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
            !
         ENDIF
         !
-        IF ( rho(ir,1) < 0.D0 ) rhoneg(1) = rhoneg(1) - rho(ir,1)
+        IF ( rho%of_r(ir,1) < 0.D0 ) rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
         !
      END DO
      !
@@ -405,18 +392,18 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      DO ir = 1, nrxx
         !
-        rhox = rho(ir,1) + rho(ir,2) + rho_core(ir)
+        rhox = rho%of_r(ir,1) + rho%of_r(ir,2) + rho_core(ir)
         !
         arhox = ABS( rhox )
         !
         IF ( arhox > vanishing_charge ) THEN
            !
-           zeta = ( rho(ir,1) - rho(ir,2) ) / arhox
+           zeta = ( rho%of_r(ir,1) - rho%of_r(ir,2) ) / arhox
            !
            IF ( ABS( zeta ) > 1.D0 ) zeta = SIGN( 1.D0, zeta )
            !
-           IF ( rho(ir,1) < 0.D0 ) rhoneg(1) = rhoneg(1) - rho(ir,1)
-           IF ( rho(ir,2) < 0.D0 ) rhoneg(2) = rhoneg(2) - rho(ir,2)
+           IF ( rho%of_r(ir,1) < 0.D0 ) rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
+           IF ( rho%of_r(ir,2) < 0.D0 ) rhoneg(2) = rhoneg(2) - rho%of_r(ir,2)
            !
            CALL xc_spin( arhox, zeta, ex, ec, vx(1), vx(2), vc(1), vc(2) )
            !
@@ -424,7 +411,7 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
            !
            etxc = etxc + e2*( ex + ec ) * rhox
            !
-           vtxc = vtxc + v(ir,1) * rho(ir,1) + v(ir,2) * rho(ir,2)
+           vtxc = vtxc + v(ir,1) * rho%of_r(ir,1) + v(ir,2) * rho%of_r(ir,2)
            !
         END IF
         !
@@ -436,11 +423,11 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
      !
      DO ir = 1,nrxx
         !
-        amag = SQRT( rho(ir,2)**2 + rho(ir,3)**2 + rho(ir,4)**2 )
+        amag = SQRT( rho%of_r(ir,2)**2 + rho%of_r(ir,3)**2 + rho%of_r(ir,4)**2 )
         !
-        rhox = rho(ir,1) + rho_core(ir)
+        rhox = rho%of_r(ir,1) + rho_core(ir)
         !
-        IF ( rho(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho(ir,1)
+        IF ( rho%of_r(ir,1) < 0.D0 )  rhoneg(1) = rhoneg(1) - rho%of_r(ir,1)
         !
         arhox = ABS( rhox )
         !
@@ -466,16 +453,16 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
               !
               DO ipol = 2, 4
                  !
-                 v(ir,ipol) = e2 * vs * rho(ir,ipol) / amag
+                 v(ir,ipol) = e2 * vs * rho%of_r(ir,ipol) / amag
                  !
-                 vtxc = vtxc + v(ir,ipol) * rho(ir,ipol)
+                 vtxc = vtxc + v(ir,ipol) * rho%of_r(ir,ipol)
                  !
               END DO
               !
            END IF
            !
            etxc = etxc + e2*( ex + ec ) * rhox
-           vtxc = vtxc + v(ir,1) * rho(ir,1)
+           vtxc = vtxc + v(ir,1) * rho%of_r(ir,1)
            !
         END IF
         !
@@ -497,7 +484,7 @@ SUBROUTINE v_xc( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
   !
   ! ... add gradient corrections (if any)
   !
-  CALL gradcorr( rho, rhog, rho_core, rhog_core, etxc, vtxc, v )
+  CALL gradcorr( rho%of_r, rho%of_g, rho_core, rhog_core, etxc, vtxc, v )
   !
   CALL reduce( 1, vtxc )
   CALL reduce( 1, etxc )
@@ -533,7 +520,6 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   REAL(DP), ALLOCATABLE :: aux(:,:), aux1(:,:)
   REAL(DP)              :: rgtot_re, rgtot_im
   INTEGER               :: is, ig
-  !
   !
   CALL start_clock( 'v_h' )
   !
