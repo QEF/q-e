@@ -91,7 +91,7 @@ SUBROUTINE PAW_post_init()
                     upf(nt)%paw%ae_vloc     &
                   )
         DEALLOCATE( upf(nt)%vloc)
-        DEALLOCATE( upf(nt)%rho_atc)
+!        DEALLOCATE( upf(nt)%rho_atc)
         info(mpime,nt) = .true.
     ENDDO types
     CALL reduce(nproc*ntyp, info)
