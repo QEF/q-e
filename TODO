@@ -1,20 +1,15 @@
-TODO LIST - October 2007
+TODO LIST - November 2007
 
 TO BE DONE BEFORE THE 4.0 VERSION
 
-- decide license change
-- update copyright notice in the header of all files
-- decide how to cite q-e
-- complete web site quantum-espresso.org, decide what
-  should be there and what should be in pwscf.org
-- add benchmarks suite and results
-- complete automatic tests
-- remove smcp (unless somebody volunteers to fix it)
-- remove all fixed-dimension arrays used for pseudopotentials,
-  remove redundant pseudopotential arrays
+- license change; update copyright notice in the header of all files
+- write reference paper for q-e
+- decide what should be in quantum-espresso.org and what in pwscf.org
 - improve vc-relax algorithms, fix loss of symmetry cases
+- add benchmarks suite and results
+- careful check of Berry phase and macroscopic electric fields
 
-BUGS TO EXAMINE
+BUGS TO FIX
 
 - extrapolation of wfcs doesn't work for USPP
 - fixing atomic positions for vc-relax case works only if the atoms
