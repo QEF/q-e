@@ -10,7 +10,7 @@ MODULE paw_gipaw
   USE kinds,        ONLY: DP
   USE parameters,   ONLY: npsx
   use radial_grids, ONLY: ndmx
-  use gipaw_module, ONLY: nbrx
+  !!use gipaw_module, ONLY: nbrx
   !
   ! ... These parameters are needed for the paw variables
   !
@@ -74,6 +74,8 @@ MODULE paw_gipaw
 !  
 !  INTEGER, ALLOCATABLE :: gipaw_ncore_orbital ( : )
 !  REAL(dp), ALLOCATABLE :: gipaw_core_orbital ( :, :, : )
+
+  integer, parameter :: nbrx = 20
   
   INTEGER :: &
        paw_nkb,            & ! total number of beta functions, with st.fact.

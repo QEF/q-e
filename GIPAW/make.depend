@@ -141,7 +141,6 @@ paw_gipaw.o : ../Modules/pseudo_types.o
 paw_gipaw.o : ../Modules/radial_grids.o
 paw_gipaw.o : ../Modules/read_upf.o
 paw_gipaw.o : ../Modules/splinelib.o
-paw_gipaw.o : gipaw_module.o
 stop_code.o : ../Modules/kind.o
 stop_code.o : ../Modules/mp.o
 stop_code.o : ../Modules/parallel_include.o
