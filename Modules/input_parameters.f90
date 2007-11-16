@@ -676,10 +676,12 @@ MODULE input_parameters
           ! oscillation frequency of the nose thermostat (in terahertz)
 
         CHARACTER(LEN=80) :: startingwfc = 'random'
-          ! startingwfc = 'atomic' | 'random'* | 'none'
+          ! startingwfc = 'atomic' | 'atomic+random' | 'random' | 'file'
           ! define how the code should initialize the wave function
           ! 'atomic'   start from superposition of atomic wave functions
+          ! 'atomic+random' as above, plus randomization
           ! 'random'   start from random wave functions
+          ! 'file'     read wavefunctions from file
 
         REAL(DP) :: ampre = 0.0_DP
           ! meaningful only if "startingwfc = 'random'", amplitude of the

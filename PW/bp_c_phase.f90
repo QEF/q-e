@@ -158,8 +158,8 @@ SUBROUTINE c_phase
    USE constants,            ONLY : pi, tpi
    USE gvect,                ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
                                     ecutwfc, g, gcutm
-   USE uspp,                 ONLY : nkb, vkb
-   USE uspp_param,           ONLY : lmaxq, nbetam, nh, nhm
+   USE uspp,                 ONLY : nkb, vkb, okvan
+   USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd
@@ -172,7 +172,7 @@ SUBROUTINE c_phase
    INTEGER :: i
    INTEGER :: igk1(npwx)
    INTEGER :: igk0(npwx)
-   INTEGER :: ik
+   INTEGER :: ig
    INTEGER :: ind1
    INTEGER :: info
    INTEGER :: is
@@ -194,7 +194,8 @@ SUBROUTINE c_phase
    INTEGER :: mk1
    INTEGER :: mk2
    INTEGER :: mk3
-   INTEGER , ALLOCATABLE :: mod_elec(:), ln(:,:,:)
+   INTEGER , ALLOCATABLE :: mod_elec(:)
+   INTEGER , ALLOCATABLE :: ln(:,:,:)
    INTEGER :: mod_elec_dw
    INTEGER :: mod_elec_tot
    INTEGER :: mod_elec_up
@@ -228,25 +229,25 @@ SUBROUTINE c_phase
    REAL(DP) :: gtr(3)
    REAL(DP) :: gvec
    REAL(DP), ALLOCATABLE :: loc_k(:)
-   REAL(DP) , ALLOCATABLE :: pdl_elec(:)
+   REAL(DP), ALLOCATABLE :: pdl_elec(:)
+   REAL(DP), ALLOCATABLE :: phik(:)
+   REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
+   REAL(DP) :: weight
+   REAL(DP) :: upol(3)
    REAL(DP) :: pdl_elec_dw
    REAL(DP) :: pdl_elec_tot
    REAL(DP) :: pdl_elec_up
    REAL(DP) :: pdl_ion(nat)
    REAL(DP) :: pdl_ion_tot
    REAL(DP) :: pdl_tot
-   REAL(DP) , ALLOCATABLE :: phik(:)
    REAL(DP) :: phidw
    REAL(DP) :: phiup
    REAL(DP) :: rmod
-   REAL(DP) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
-   REAL(DP) :: upol(3)
-   REAL(DP) :: weight
    REAL(DP), ALLOCATABLE :: wstring(:)
    REAL(DP) :: ylm_dk(lmaxq*lmaxq)
    REAL(DP) :: zeta_mod
-   COMPLEX(DP) :: aux(ngm)
-   COMPLEX(DP) :: aux0(ngm)
+   COMPLEX(DP), ALLOCATABLE :: aux(:)
+   COMPLEX(DP), ALLOCATABLE :: aux0(:)
    COMPLEX(DP) :: becp0(nkb,nbnd)
    COMPLEX(DP) :: becp_bp(nkb,nbnd)
    COMPLEX(DP) :: cdet(2)
@@ -259,17 +260,20 @@ SUBROUTINE c_phase
    COMPLEX(DP) :: dtheta
    COMPLEX(DP) :: mat(nbnd,nbnd)
    COMPLEX(DP) :: pref
-   COMPLEX(DP) :: psi(npwx,nbnd)
+   COMPLEX(DP), ALLOCATABLE :: psi(:,:)
    COMPLEX(DP) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(DP) :: struc(nat)
    COMPLEX(DP) :: theta0
    COMPLEX(DP) :: ZDOTC
    COMPLEX(DP) :: zeta
 
-
 !  -------------------------------------------------------------------------   !
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
+
+   ALLOCATE (psi(npwx,nbnd))
+   ALLOCATE (aux(ngm))
+   ALLOCATE (aux0(ngm))
 
 !  --- Write header ---
    WRITE( stdout,"(/,/,/,15X,50('='))")
@@ -278,7 +282,8 @@ SUBROUTINE c_phase
    WRITE( stdout,"(15X,50('-'),/)")
 
 !  --- Check that we are working with an insulator with no empty bands ---
-   IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
+   IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
+        CALL errore('c_phase', &
                 'Polarization only for insulators and no empty bands',1)
 
 !  --- Define a small number ---
@@ -293,20 +298,21 @@ SUBROUTINE c_phase
       ln(mk1,mk2,mk3) = ng
    END DO
 
+   if(okvan) then
 !  --- Initialize arrays ---
-   jkb_bp=0
-   DO nt=1,ntyp
-      DO na=1,nat
-         IF (ityp(na).eq.nt) THEN
-            DO i=1, nh(nt)
-               jkb_bp=jkb_bp+1
-               nkbtona(jkb_bp) = na
-               nkbtonh(jkb_bp) = i
-            END DO
-         END IF
+      jkb_bp=0
+      DO nt=1,ntyp
+         DO na=1,nat
+            IF (ityp(na).eq.nt) THEN
+               DO i=1, nh(nt)
+                  jkb_bp=jkb_bp+1
+                  nkbtona(jkb_bp) = na
+                  nkbtonh(jkb_bp) = i
+               END DO
+            END IF
+         END DO
       END DO
-   END DO
-    
+   endif
 !  --- Get the number of strings ---
    nstring=nks/nppstr
    nkort=nstring/(nspin)
@@ -318,7 +324,6 @@ SUBROUTINE c_phase
    ALLOCATE(wstring(nstring))
    ALLOCATE(pdl_elec(nstring))
    ALLOCATE(mod_elec(nstring))
-
 
 !  -------------------------------------------------------------------------   !
 !           electronic polarization: set values for k-points strings           !
@@ -353,7 +358,6 @@ SUBROUTINE c_phase
       END DO
    END DO
 
-
 !  -------------------------------------------------------------------------   !
 !                   electronic polarization: weight strings                    !
 !  -------------------------------------------------------------------------   !
@@ -372,7 +376,6 @@ SUBROUTINE c_phase
       END DO
    END DO
 
-
 !  -------------------------------------------------------------------------   !
 !                  electronic polarization: structure factor                   !
 !  -------------------------------------------------------------------------   !
@@ -383,35 +386,36 @@ SUBROUTINE c_phase
       struc(na)=CMPLX(cos(fac),-sin(fac))
    END DO
 
-
 !  -------------------------------------------------------------------------   !
 !                     electronic polarization: form factor                     !
 !  -------------------------------------------------------------------------   !
-
+   if(okvan) then
 !  --- Calculate Bessel transform of Q_ij(|r|) at dk [Q_ij^L(|r|)] ---
-   CALL calc_btq(dkmod,qrad_dk,0)
+      CALL calc_btq(dkmod,qrad_dk,0)
 
 !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
-   dkmod=dk(1)**2+dk(2)**2+dk(3)**2
-   CALL ylmr2(lmaxq*lmaxq, 1, dk, dkmod, ylm_dk)
+      dkmod=dk(1)**2+dk(2)**2+dk(3)**2
+      CALL ylmr2(lmaxq*lmaxq, 1, dk, dkmod, ylm_dk)
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
-   q_dk(:,:,:) = (0.d0, 0.d0)
-   DO np =1, ntyp
-      DO iv = 1, nh(np)
-         DO jv = iv, nh(np)
-            call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)
-            q_dk(iv,jv,np) = omega*pref
-            q_dk(jv,iv,np) = omega*pref
-         ENDDO
+      q_dk = (0.d0, 0.d0)
+      DO np =1, ntyp
+         if( upf(np)%tvanp ) then
+            DO iv = 1, nh(np)
+               DO jv = iv, nh(np)
+                  call qvan3(iv,jv,np,pref,ylm_dk,qrad_dk)
+                  q_dk(iv,jv,np) = omega*pref
+                  q_dk(jv,iv,np) = omega*pref
+               ENDDO
+            ENDDO
+         endif
       ENDDO
-   ENDDO
-
+   endif
 
 !  -------------------------------------------------------------------------   !
 !                   electronic polarization: strings phases                    !
 !  -------------------------------------------------------------------------   !
 
-   el_loc   = 0.d0
+   el_loc=0.d0
    kpoint=0
 
 !  --- Start loop over spin ---
@@ -440,43 +444,49 @@ SUBROUTINE c_phase
                CALL gk_sort(xk(1,kpoint-1),ngm,g,ecutwfc/tpiba2, &
                             npw0,igk0,g2kin_bp) 
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
-               CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
-               CALL ccalbec(nkb, npwx, npw, nbnd, becp0, vkb, psi)
-
+               if (okvan) then
+                  CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
+                  CALL ccalbec(nkb, npwx, npw, nbnd, becp0, vkb, psi)
+               endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= nppstr) THEN
                   CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)        
                   CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
-                  CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
-                  CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
+                  if (okvan) then
+                     CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
+                     CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
+                  endif
                ELSE
                   kstart = kpoint-nppstr+1
                   CALL gk_sort(xk(1,kstart),ngm,g,ecutwfc/tpiba2, &
                                npw1,igk1,g2kin_bp)  
                   CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
-                  CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
-                  CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
+                  if (okvan) then
+                     CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
+                     CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
+                  endif
                ENDIF
 
 !              --- Matrix elements calculation ---
+
                mat(:,:) = (0.d0, 0.d0)
                DO nb=1,nbnd
                   DO mb=1,nbnd
                      aux(:) = (0.d0, 0.d0)
                      aux0(:)= (0.d0, 0.d0)
-                     DO ik=1,npw0
-                        aux0(igk0(ik))=psi(ik,nb)
-                     END DO    
-                     DO ik=1,npw1
+                     DO ig=1,npw0
+                        aux0(igk0(ig))=psi(ig,nb)
+                     END DO
+                     DO ig=1,npw1
                         IF (kpar /= nppstr) THEN
-                           aux(igk1(ik))=evc(ik,mb)
+                           aux(igk1(ig))=evc(ig,mb)
                         ELSE
 !                          --- If k'=k+G_o, the relation psi_k+G_o (G-G_o) ---
 !                          --- = psi_k(G) is used, gpar=G_o, gtr = G-G_o ---
-                           gtr(1)=g(1,igk1(ik))-gpar(1)
-                           gtr(2)=g(2,igk1(ik))-gpar(2) 
-                           gtr(3)=g(3,igk1(ik))-gpar(3) 
+                           gtr(1)=g(1,igk1(ig))-gpar(1)
+                           gtr(2)=g(2,igk1(ig))-gpar(2) 
+                           gtr(3)=g(3,igk1(ig))-gpar(3) 
 !                          --- Find crystal coordinates of gtr, n1,n2,n3 ---
 !                          --- and the position ng in the ngm array ---
                            IF (gtr(1)**2+gtr(2)**2+gtr(3)**2 <= gcutm) THEN
@@ -510,7 +520,7 @@ SUBROUTINE c_phase
                                    gtr(1),gtr(2),gtr(3) 
                               STOP
                            END IF
-                           aux(ng)=evc(ik,mb)
+                           aux(ng)=evc(ig,mb)
                         ENDIF
                      END DO
                      mat(nb,mb) = ZDOTC (ngm,aux0,1,aux,1)
@@ -525,30 +535,32 @@ SUBROUTINE c_phase
 !                    --- R=atom index: SUM_{ijR} q(ijR) <u_nk|beta_iR>   ---
 !                    --- <beta_jR|u_mk'> e^i(k-k')*R =                   ---
 !                    --- also <u_nk|beta_iR>=<psi_nk|beta_iR> = becp^*   ---
-                     pref = (0.d0,0.d0)
-                     DO jkb=1,nkb
-                        nhjkb = nkbtonh(jkb)
-                        na = nkbtona(jkb)
-                        np = ityp(na)
-                        nhjkbm = nh(np)
-                        jkb1 = jkb - nhjkb
-                        DO j = 1,nhjkbm
-                           pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
-                                  *q_dk(nhjkb,j,np)*struc(na)
+                     if (okvan) then
+                        pref = (0.d0,0.d0)
+                        DO jkb=1,nkb
+                           nhjkb = nkbtonh(jkb)
+                           na = nkbtona(jkb)
+                           np = ityp(na)
+                           nhjkbm = nh(np)
+                           jkb1 = jkb - nhjkb
+                           DO j = 1,nhjkbm
+                              pref = pref+CONJG(becp0(jkb,nb))*becp_bp(jkb1+j,mb) &
+                                   *q_dk(nhjkb,j,np)*struc(na)
+                           ENDDO
                         ENDDO
-                     ENDDO
-                     mat(nb,mb) = mat(nb,mb) + pref
+                        mat(nb,mb) = mat(nb,mb) + pref
+                     endif
                   ENDDO
                ENDDO
 
 !              --- Calculate matrix determinant ---
-               CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-               !!! CALL ZGETRF (nbnd,nbnd,mat,nbnd,ivpt,info)
+               CALL ZGETRF (nbnd,nbnd,mat,nbnd,ivpt,info)
                CALL errore('c_phase','error in factorization',abs(info))
-               job=10
-               CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
-               det=cdet(1)*10.d0**cdet(2)
-
+               det=(1.d0,0.d0)
+               do nb=1,nbnd
+                  det = det*mat(nb,nb)
+                  if(nb.ne.ivpt(nb)) det=-det
+               enddo
 !              --- Multiply by the already calculated determinants ---
                zeta=zeta*det
 
@@ -572,7 +584,6 @@ SUBROUTINE c_phase
 
 !  --- End loop over spin ---
    END DO
-
 
 !  -------------------------------------------------------------------------   !
 !                    electronic polarization: phase average                    !
@@ -623,7 +634,6 @@ SUBROUTINE c_phase
 !  --- End loop over spins
    END DO
 
-
 !  -------------------------------------------------------------------------   !
 !                     electronic polarization: remap phases                    !
 !  -------------------------------------------------------------------------   !
@@ -647,7 +657,6 @@ SUBROUTINE c_phase
       pdl_elec_tot=pdl_elec_tot-1.0_dp*NINT(pdl_elec_tot/1.0_dp)
       mod_elec_tot=1
    END IF
-
 
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
@@ -686,7 +695,6 @@ SUBROUTINE c_phase
       mod_ion_tot=2
    END IF
 
-
 !  -------------------------------------------------------------------------   !
 !                              total polarization                              !
 !  -------------------------------------------------------------------------   !
@@ -698,7 +706,6 @@ SUBROUTINE c_phase
    ELSE
       mod_tot=1
    END IF
-
 
 !  -------------------------------------------------------------------------   !
 !                           write output information                           !
@@ -822,21 +829,21 @@ SUBROUTINE c_phase
 !  --- End of information relative to polarization calculation ---
    WRITE( stdout,"(/,/,15X,50('=')/,/)")
 
-
 !  -------------------------------------------------------------------------   !
 !                                  finalization                                !
 !  -------------------------------------------------------------------------   !
 
 !  --- Free memory ---
-   DEALLOCATE(ln)
-   DEALLOCATE(pdl_elec)
    DEALLOCATE(mod_elec)
+   DEALLOCATE(pdl_elec)
    DEALLOCATE(wstring)
+   DEALLOCATE(cphik)
    DEALLOCATE(loc_k)
    DEALLOCATE(phik)
-   DEALLOCATE(cphik)
-
-
+   DEALLOCATE(ln)
+   DEALLOCATE(aux)
+   DEALLOCATE(aux0)
+   DEALLOCATE(psi)
 !------------------------------------------------------------------------------!
 
 END SUBROUTINE c_phase

@@ -2,7 +2,6 @@ MODULE paw_variables
     !
     USE kinds,      ONLY : DP
     USE parameters, ONLY : lqmax, npsx
-    USE radial_grids, ONLY: ndmx
     !
     IMPLICIT NONE
     PUBLIC

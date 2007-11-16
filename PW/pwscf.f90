@@ -13,7 +13,6 @@ PROGRAM pwscf
   !
   USE io_global,        ONLY : stdout, ionode
   USE parameters,       ONLY : ntypx, npk, lmaxx
-  use radial_grids,     ONLY : ndmx
   USE global_version,   ONLY : version_number
   USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
@@ -56,10 +55,10 @@ PROGRAM pwscf
   IF ( ionode ) THEN
      !
      WRITE( UNIT = stdout, &
-            FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials")')
+            FMT = '(/5X,"Ultrasoft (Vanderbilt) Pseudopotentials and PAW")')
      !
      WRITE( unit = stdout, FMT = 9010 ) &
-         ntypx, npk, lmaxx, ndmx
+         ntypx, npk, lmaxx
      !
   END IF   
   !
@@ -131,7 +130,9 @@ PROGRAM pwscf
   !
   STOP
   !
-9010 FORMAT( /,5X,'Current dimensions of program pwscf are:', /, &
-           & /,5X,'ntypx = ',I2,'   npk = ',I5,'  lmax = ',I2,'  ndmx = ',I5 )
+9010 FORMAT( /,5X,'Current dimensions of program pwscf are:', &
+           & /,5X,'Max number of different atomic species (ntypx) = ',I2,&
+           & /,5X,'Max number of k-points (npk) = ',I6,&
+           & /,5X,'Max angular momentum in pseudopotentials (lmaxx) = ',i2)
   !
 END PROGRAM pwscf

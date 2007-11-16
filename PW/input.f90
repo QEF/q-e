@@ -831,10 +831,10 @@ SUBROUTINE iosys()
      !
   END IF
   !
-  IF ( TRIM(startingwfc) /= 'atomic'      .AND. &
-       TRIM(startingwfc) /= 'atomic-safe' .AND. &
-       TRIM(startingwfc) /= 'random'      .AND. &
-       TRIM(startingwfc) /= 'file' ) THEN
+  IF (      startingwfc /= 'atomic' .AND. &
+            startingwfc /= 'random' .AND. &
+            startingwfc /= 'atomic+random' .AND. &
+            startingwfc /= 'file' ) THEN
      !
      CALL infomsg( 'iosys', 'wrong startingwfc: use default' )
      !

@@ -40,7 +40,7 @@ SUBROUTINE wfcinit()
   !
   ! ... state what is going to happen
   !
-  IF ( startingwfc == 'file' ) THEN
+  IF ( TRIM(startingwfc) == 'file' ) THEN
      !
      WRITE( stdout, '(5X,"Starting wfc from file")' )
      !
@@ -57,10 +57,10 @@ SUBROUTINE wfcinit()
         !
      END IF
      !
-  ELSE IF ( startingwfc == 'atomic-safe' ) THEN
+  ELSE IF ( TRIM(startingwfc) == 'atomic+random' ) THEN
      !
-     WRITE( stdout, '(5X,"Starting wfc are ",I4," atomic wfcs", &
-                       & "plus randomization" )' ) natomwfc
+     WRITE( stdout, '(5X,"Starting wfc are ",I4," randomized atomic wfcs")' ) &
+             natomwfc
      !
   ELSE
      !
@@ -79,7 +79,7 @@ SUBROUTINE wfcinit()
      !
   END IF
   !
-  IF ( startingwfc == 'file' ) THEN
+  IF ( TRIM(startingwfc) == 'file' ) THEN
      !
      ! ... wavefunctions are to be read from file: store wavefunction into
      ! ... memory if c_bands will not do it (for a single k-point);
@@ -192,7 +192,7 @@ SUBROUTINE init_wfc ( ik )
      !
      CALL atomic_wfc( ik, wfcatom )
      !
-     IF ( startingwfc == 'atomic-safe' .AND. &
+     IF ( startingwfc == 'atomic+random' .AND. &
          n_starting_wfc == n_starting_atomic_wfc ) THEN
          !
          ! ... in this case, introduce a small randomization of wavefunctions
@@ -208,7 +208,7 @@ SUBROUTINE init_wfc ( ik )
                   arg = tpi * rndm()
                   !
                   wfcatom(ig,ipol,ibnd) = wfcatom(ig,ipol,ibnd) * &
-                     ( 1.0_DP + 0.01_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ) ) 
+                     ( 1.0_DP + 0.05_DP * CMPLX( rr*COS(arg), rr*SIN(arg) ) ) 
                   !
                END DO
                !

@@ -15,10 +15,9 @@ MODULE basis
   !
   INTEGER :: &
        natomwfc            ! number of starting wavefunctions
-  CHARACTER(LEN=30) :: &   ! 'alat', 'crystal', 'angstrom', 'bohr'
-       atomic_positions    ! specifies how input coordinates are given
-  CHARACTER(LEN=6)  :: &
-       startingwfc ,      &! 'random' or 'atomic' or 'file'
+  CHARACTER(LEN=30) ::    &! specifies how input coordinates are given
+       atomic_positions,  &! 'alat', 'crystal', 'angstrom', 'bohr'
+       startingwfc ,      &! 'random' or 'atomic' or 'atomic+randm' or 'file'
        startingpot ,      &! 'atomic' or 'file'
        startingconfig      ! 'input' or 'file'
   !

@@ -671,7 +671,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
      ! ... calculate starting  wavefunctions
      !
-     IF ( startingwfc == 'file' ) THEN
+     IF ( TRIM(startingwfc) == 'file' ) THEN
         !
         CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
         !

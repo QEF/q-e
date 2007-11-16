@@ -64,7 +64,7 @@ SUBROUTINE openfil()
   END IF
   CALL open_buffer( iunwfc, 'wfc', nwordwfc, nks, exst )
   !
-  IF ( startingwfc == 'file' .AND. .NOT. exst ) THEN
+  IF ( TRIM(startingwfc) == 'file' .AND. .NOT. exst ) THEN
      !
      ! ... wavefunctions are read from the "save" file and rewritten
      ! ... (directly in pw_readfile) using the internal format

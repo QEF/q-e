@@ -7,12 +7,13 @@
 !
 
 ! this routine is used to calculate the electronic polarization
-! when a finite  electric field describe through the modern
-! theory of the polarization is applied.
-! is very close to the routine c_phase in bp_c_phase
+! when a finite electric field, described through the modern
+! theory of the polarization, is applied.
+! It is very similar to the routine c_phase in bp_c_phase
 ! however the numbering of the k-points in the strings is different
 
 #include "f_defs.h"
+
 !======================================================================!
 
 SUBROUTINE c_phase_field
@@ -21,7 +22,6 @@ SUBROUTINE c_phase_field
 
 !   Geometric phase calculation along a strip of nppstr k-points
 !   averaged over a 2D grid of nkort k-points ortogonal to nppstr 
-
 
 !  --- Make use of the module with common information ---
    USE kinds,                ONLY : DP
@@ -32,21 +32,17 @@ SUBROUTINE c_phase_field
    USE cell_base,            ONLY : at, alat, tpiba, omega, tpiba2
    USE constants,            ONLY : pi, tpi
    USE gvect,                ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-                                    ecutwfc, g, gcutm,ngm_g
+                                    ecutwfc, g, gcutm, ngm_g
    USE uspp,                 ONLY : nkb, vkb, okvan
-   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm, nbetam
+   USE uspp_param,           ONLY : upf, lmaxq, nbetam, nh, nhm
    USE lsda_mod,             ONLY : nspin
    USE klist,                ONLY : nelec, degauss, nks, xk, wk
    USE wvfct,                ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc
-   USE bp
+   USE bp,                   ONLY : gdir, nppstr, mapgm_global
    USE fixed_occ
    USE reciprocal_vectors,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
-
-!  --- Make use of the module with common information ---
-
-
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -59,6 +55,7 @@ SUBROUTINE c_phase_field
    INTEGER :: is
    INTEGER :: istring
    INTEGER :: iv
+   INTEGER :: ivpt(nbnd)
    INTEGER :: j
    INTEGER :: jkb
    INTEGER :: jkb_bp
@@ -73,6 +70,7 @@ SUBROUTINE c_phase_field
    INTEGER :: mk2
    INTEGER :: mk3
    INTEGER , ALLOCATABLE :: mod_elec(:)
+   INTEGER , ALLOCATABLE :: ln(:,:,:)
    INTEGER :: n1
    INTEGER :: n2
    INTEGER :: n3
@@ -98,16 +96,15 @@ SUBROUTINE c_phase_field
    REAL(dp) :: gpar(3)
    REAL(dp) :: gtr(3)
    REAL(dp) :: gvec
-   REAL(dp), ALLOCATABLE :: ln(:,:,:)
    REAL(dp), ALLOCATABLE :: loc_k(:)
-   REAL(dp) , ALLOCATABLE :: pdl_elec(:)
-   REAL(dp) , ALLOCATABLE :: phik(:)
+   REAL(dp), ALLOCATABLE :: pdl_elec(:)
+   REAL(dp), ALLOCATABLE :: phik(:)
    REAL(dp) :: qrad_dk(nbetam,nbetam,lmaxq,ntyp)
    REAL(dp) :: weight
+   REAL(dp) :: pola, pola_ion
    REAL(dp), ALLOCATABLE :: wstring(:)
    REAL(dp) :: ylm_dk(lmaxq*lmaxq)
    REAL(dp) :: zeta_mod
-   REAL(dp) :: pola, pola_ion
    COMPLEX(dp), ALLOCATABLE :: aux(:)
    COMPLEX(dp), ALLOCATABLE :: aux0(:)
    COMPLEX(dp) :: becp0(nkb,nbnd)
@@ -118,15 +115,13 @@ SUBROUTINE c_phase_field
    COMPLEX(dp) :: pref
    COMPLEX(dp) :: q_dk(nhm,nhm,ntyp)
    COMPLEX(dp) :: struc(nat)
-   COMPLEX(dp) :: zdotc
+   COMPLEX(dp) :: ZDOTC
    COMPLEX(dp) :: zeta
 
-   COMPLEX(dp) :: psi(npwx,nbnd)
-   COMPLEX(dp) :: psi1(npwx,nbnd)
+   COMPLEX(dp), ALLOCATABLE :: psi(:,:)
+   COMPLEX(dp), ALLOCATABLE :: psi1(:,:)
    COMPLEX(dp) :: zeta_loc
 
-
-   INTEGER ipivi(nbnd,nbnd),ii
 
    LOGICAL l_cal!flag for doing mat calculation
    INTEGER, ALLOCATABLE :: map_g(:)
@@ -143,6 +138,11 @@ SUBROUTINE c_phase_field
 !                               INITIALIZATIONS
 !  -------------------------------------------------------------------------   !
 
+   ALLOCATE (psi1(npwx,nbnd))
+   ALLOCATE (psi(npwx,nbnd))
+   ALLOCATE (aux(ngm))
+   ALLOCATE (aux0(ngm))
+   ALLOCATE (map_g(npwx))
    if(gdir==3) then
       l_para=.false.
    else
@@ -150,24 +150,20 @@ SUBROUTINE c_phase_field
    endif
 
 
-  allocate(map_g(npwx))
-  allocate(aux(ngm),aux0(ngm))
-  allocate(ln(-nr1:nr1,-nr2:nr2,-nr3:nr3))
-
-  pola=0.d0!set to 0 electronic polarization   
-  zeta_tot=(1.d0,0.d0)
+   pola=0.d0 !set to 0 electronic polarization   
+   zeta_tot=(1.d0,0.d0)
 
 !  --- Check that we are working with an insulator with no empty bands ---
-!   IF ((degauss > 0.01) .OR. (nbnd /= nelec/2)) CALL errore('c_phase', &
-!                'Polarization only for insulators and no empty bands',1)
+   IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
+        WRITE (stdout,*) 'PAY ATTENTION: EL FIELD AND OCCUPATIONS'
+   !  CALL errore('c_phase', &
+   !        'Polarization only for insulators and no empty bands',1)
 
-IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
-   &write(stdout,*) 'PAY ATTENTION: EL FIELD AND OCCUPATIONS'
-
-!  --- Define a small number ---
+   !  --- Define a small number ---
    eps=1.0E-6_dp
 
 !  --- Recalculate FFT correspondence (see ggen.f90) ---
+   ALLOCATE (ln (-nr1:nr1, -nr2:nr2, -nr3:nr3) )
    DO ng=1,ngm
       mk1=nint(g(1,ng)*at(1,1)+g(2,ng)*at(2,1)+g(3,ng)*at(3,1))
       mk2=nint(g(1,ng)*at(1,2)+g(2,ng)*at(2,2)+g(3,ng)*at(3,2))
@@ -175,7 +171,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
       ln(mk1,mk2,mk3) = ng
    END DO
 
-   if(okvan) then
+   if (okvan) then
 !  --- Initialize arrays ---
       jkb_bp=0
       DO nt=1,ntyp
@@ -184,13 +180,11 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                DO i=1, nh(nt)
                   jkb_bp=jkb_bp+1
                   nkbtona(jkb_bp) = na
-                  nkbtonh(jkb_bp) = i
-             
+                  nkbtonh(jkb_bp) = i        
                END DO
             END IF
          END DO
       END DO
-   
    endif
 !  --- Get the number of strings ---
    nstring=nks/nppstr
@@ -204,9 +198,6 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
    ALLOCATE(pdl_elec(nstring))
    ALLOCATE(mod_elec(nstring))
 
-
-
-  
 !  -------------------------------------------------------------------------   !
 !           electronic polarization: set values for k-points strings           !
 !  -------------------------------------------------------------------------   !
@@ -223,31 +214,27 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
       gpar(3)=0.d0
       gpar(gdir)=1.d0/at(gdir,gdir)!
       gvec=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
-   endif
-      
+   endif      
       
 !  --- Find vector between consecutive points in strings ---
-   if(nppstr.ne.1) then
+   if(nppstr.ne.1) then  ! orthorhombic cell 
       dk(1)=xk(1,2)-xk(1,1)
       dk(2)=xk(2,2)-xk(2,1) 
       dk(3)=xk(3,2)-xk(3,1)
-      dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba!orthorombic cell
-     
-   else!caso punto gamma, per adesso solo cella cubica
+      dkmod=SQRT(dk(1)**2+dk(2)**2+dk(3)**2)*tpiba 
+   else ! Gamma point case, only cubic cell for now
       dk(1)=0.d0
       dk(2)=0.d0
       dk(3)=0.d0
       dk(gdir)=1.d0/at(gdir,gdir)
       dkmod=tpiba/sqrt(at(gdir,1)**2.d0+at(gdir,2)**2.d0+at(gdir,3)**2.d0)
    endif
-   
-  
- 
+
 !  -------------------------------------------------------------------------   !
 !                   electronic polarization: weight strings                    !
 !  -------------------------------------------------------------------------   !
 
-!  --- Calculate string weights, normalizing to 1 (no spin) or 1 (spin) ---
+!  --- Calculate string weights, normalizing to 1 (no spin) or 1+1 (spin) ---
    DO is=1,nspin
       weight=0.0_dp
       DO kort=1,nkort
@@ -259,8 +246,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
          istring=kort+(is-1)*nkort
          wstring(istring)=wstring(istring)/weight
       END DO
-   END DO
-  
+   END DO  
   
 !  -------------------------------------------------------------------------   !
 !                  electronic polarization: structure factor                   !
@@ -272,8 +258,6 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
       fac=(dk(1)*tau(1,na)+dk(2)*tau(2,na)+dk(3)*tau(3,na))*tpi 
       struc(na)=CMPLX(cos(fac),-sin(fac))
    END DO
-  
-  
 
 !  -------------------------------------------------------------------------   !
 !                     electronic polarization: form factor                     !
@@ -284,7 +268,7 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
 
 !  --- Calculate the q-space real spherical harmonics at dk [Y_LM] --- 
       dkmod = dk(1)**2+dk(2)**2+dk(3)**2
-      CALL ylmr2(lmaxq*lmaxq,1, dk,dkmod,ylm_dk)!questa no funzia perche'??
+      CALL ylmr2(lmaxq*lmaxq, 1, dk, dkmod, ylm_dk)
       
 !  --- Form factor: 4 pi sum_LM c_ij^LM Y_LM(Omega) Q_ij^L(|r|) ---
       q_dk=(0.d0,0.d0)
@@ -299,15 +283,13 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
             ENDDO
          endif
       ENDDO
-      
    endif
- 
    
 !  -------------------------------------------------------------------------   !
 !                   electronic polarization: strings phases                    !
 !  -------------------------------------------------------------------------   !
 
-   el_loc   = 0.d0
+   el_loc=0.d0
    kpoint=0
    zeta=(1.d0,0.d0)
 !  --- Start loop over spin ---
@@ -336,11 +318,10 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                CALL gk_sort(xk(1,kpoint-1),ngm,g,ecutwfc/tpiba2, &
                             npw0,igk0,g2kin_bp) 
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
-               if(okvan) then
+               if (okvan) then
                   CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
                   CALL ccalbec(nkb, npwx, npw0, nbnd, becp0, vkb, psi)
                endif
-              
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= (nppstr+1)) THEN
                   CALL gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2, &
@@ -360,18 +341,9 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                      CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,psi1)
                   endif
                ENDIF
-
            
 !              --- Matrix elements calculation ---
-!               CALL setv(2*nbnd*nbnd,0.d0,mat,1)
-! 
 
-
-
-
-
-
-               
                IF (kpar == (nppstr+1) .and. .not.l_para) THEN
                   map_g(:) = 0
                   do ig=1,npw1
@@ -391,9 +363,9 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                         n3=NINT(gtr(1)*at(1,3)+gtr(2)*at(2,3) &
                              +gtr(3)*at(3,3))
                         ng=ln(n1,n2,n3) 
-                        IF ((ABS(g(1,ng)-gtr(1)) > eps) .OR. &
+                        IF ( (ABS(g(1,ng)-gtr(1)) > eps) .OR. &
                              (ABS(g(2,ng)-gtr(2)) > eps) .OR. &
-                             (ABS(g(3,ng)-gtr(3)) > eps)) THEN
+                             (ABS(g(3,ng)-gtr(3)) > eps) ) THEN
                            WRITE(6,*) ' error: translated G=', &
                                 gtr(1),gtr(2),gtr(3), &
                                 &     ' with crystal coordinates',n1,n2,n3, &
@@ -415,20 +387,13 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                         STOP
                      END IF
                      map_g(ig)=ng
-                            
-                  enddo
-                           
+                  enddo                           
                ENDIF
-
-
-
 
                mat=(0.d0,0.d0)
                DO nb=1,nbnd
                   DO mb=1,nbnd
-!                     CALL setv(2*ngm,0.d0,aux,1)
-!
-!added support for spin polarized case
+                     ! added support for spin polarized case
                      l_cal=.true.
                      if( nspin==2 .and. tfixed_occ) then
                         if(f_inp(nb,is)==0.d0 .or. f_inp(mb,is)==0.d0) then
@@ -441,14 +406,11 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                         endif
                      endif
                      if(l_cal) then
-!                        CALL setv(2*ngm,0.d0,aux0,1)
                         aux=(0.d0,0.d0)
                         aux0=(0.d0,0.d0)
                         DO ig=1,npw0
                            aux0(igk0(ig))=psi(ig,nb)
                         END DO
-                 
-                   
                         IF (kpar /= (nppstr+1)) THEN
                            do ig=1,npw1
                               aux(igk1(ig))=psi1(ig,mb)
@@ -458,27 +420,27 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                               aux(map_g(ig))=psi1(ig,mb)
                            enddo
                         ELSE
-!allocate global array
+! allocate global array
                            allocate(aux_g(ngm_g))
                            aux_g=(0.d0,0.d0)
-!put psi1 on global array
+! put psi1 on global array
                            do ig=1,npw1
                               aux_g(mapgm_global(ig_l2g(igk1(ig)),gdir))=psi1(ig,mb)
                            enddo
                            call mp_sum(aux_g(:))
                            sca=(0.d0,0.d0)
-!do scalar product
+! do scalar product
                            do ig=1,ngm
                               sca=sca+conjg(aux0(ig))*aux_g(ig_l2g(ig))
                            enddo
-!do mp_sum
+! do mp_sum
                            call mp_sum(sca)
                            mat(nb,mb)=sca
                            deallocate(aux_g)
                         ENDIF
                         
                         if(kpar /= (nppstr+1).or..not. l_para) then
-                           mat(nb,mb) = zdotc(ngm,aux0,1,aux,1)                           
+                           mat(nb,mb) = ZDOTC(ngm,aux0,1,aux,1)                           
                            call reduce(2,mat(nb,mb))
                         endif
 !                    --- Calculate the augmented part: ij=KB projectors, ---
@@ -506,27 +468,17 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
                ENDDO
 
 !              --- Calculate matrix determinant ---
-!               CALL zgefa(mat,nbnd,nbnd,ivpt,info)
-!               CALL errore('c_phase','error in zgefa',abs(info))
-!               job=10
-!               CALL zgedi(mat,nbnd,nbnd,ivpt,cdet,cdwork,job)
-!               det=cdet(1)*10.**cdet(2)
 
-               det=(1.d0,0.d0)
-               call zgetrf(nbnd,nbnd,mat,nbnd,ipivi,info)
+               call ZGETRF(nbnd,nbnd,mat,nbnd,ivpt,info)
                CALL errore('c_phase','error in zgetrf',abs(info))
-               do ii=1,nbnd
-                  if(ii.ne.ipivi(ii,1)) det=-det
+               det=(1.d0,0.d0)
+               do nb=1,nbnd
+                  if(nb.ne.ivpt(nb)) det=-det
+                  det = det*mat(nb,nb)
                enddo
-               do ii=1,nbnd
-                  det = det*mat(ii,ii)
-               enddo
-
-!               write(6,*) "LogDet:", LOG(det)
 !              --- Multiply by the already calculated determinants ---
                zeta=zeta*det
                zeta_loc=zeta_loc*det
-               
 
 !           --- End of dot products between wavefunctions and betas ---
             ENDIF
@@ -565,7 +517,6 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
    write(stdout,*)
    write(stdout,*) "    Expectation value of exp(iGx):",zeta_tot,dkfact
    write(stdout,*) "    Electronic Dipole per cell (a.u.)",pola
- 
 
 !  -------------------------------------------------------------------------   !
 !                              ionic polarization                              !
@@ -588,8 +539,12 @@ IF ((degauss > 0.01d0) .OR. (nbnd /= nelec/2)) &
    DEALLOCATE(loc_k)
    DEALLOCATE(phik)
    DEALLOCATE(cphik)
+   DEALLOCATE(ln)
    DEALLOCATE(map_g)
-   DEALLOCATE(aux,aux0,ln)
+   DEALLOCATE(aux)
+   DEALLOCATE(aux0)
+   DEALLOCATE(psi)
+   DEALLOCATE(psi1)
 !------------------------------------------------------------------------------!
 
 END SUBROUTINE c_phase_field
