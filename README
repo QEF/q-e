@@ -1,79 +1,10 @@
 This is the distribution of the Quantum-ESPRESSO suite of codes (ESPRESSO: 
 opEn-Source Package for Research in Electronic Structure, Simulation, 
 and Optimization), promoted by the DEMOCRITOS National Simulation Center 
-of the Italian INFM (http://www.democritos.it). It contains the following 
-codes for density-functional theory calculations of electronic structure,
-based on plane waves and pseudopotentials:
-
-- the PWscf package, developed by Stefano Baroni, Stefano de Gironcoli, 
-  Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi (Scuola Normale,
-  Pisa) and others: see http://www.pwscf.org for more information
-
-- the CP code, developed by Alfredo Pasquarello (IRRMA, Lausanne),
-  Kari Laasonen (Oulu), Andrea Trave (LLNL), Roberto Car
-  (Princeton), Paolo Giannozzi, Nicola Marzari (MIT),
-  Carlo Cavazzoni (CINECA, Bologna), Sandro Scandolo (ICTP, Trieste), 
-  Guido Chiarotti (SISSA, Trieste), Paolo Focher, 
-  Gerardo Ballabio (CINECA, Bologna) and others, 
-  for Car-Parrinello variable-cell molecular dynamics 
-
-Several utilities are also included, in particular:
-
-- a GUI (Graphical User Interface) for generating input data files,
-  written by Anton Kokalj (IJS Ljubljana) (for more info, see 
-  http://www-k3.ijs.si/kokalj/pwgui , http://www-k3.ijs.si/kokalj/guib/)
-
-- the pseudopotential generation code "atomic", written by Andrea Dal Corso
-
-- the Input/Output Toolkit "iotk", written by Giovanni Bussi (S3 Modena)
-  (for more info, see http://www.s3.infm.it/iotk)
-
-This distribution is a step in the ongoing work aiming at a full 
-integration and interoperability of these codes. This project is 
-part of a cooperative effort involving DEMOCRITOS, CINECA, Princeton 
-University, MIT.
-
-Directory structure of the common part of the three packages:
-
-Modules/   Source file for modules that are common to all programs
-include/   files *.h included by fortran source files
-clib/      external libraries written in C
-flib/      external libraries written in Fortran
-install/   machine-dependent makefiles and tools for compilation
-           and installation
-pseudo/    pseudopotential files used by examples
-upftools/  Source files for converters to unified pseudopotential
-           format (UPF)
-examples/  Contains sample input and output files
-Doc/       Documentation
-
-Directory structure of the PWscf package:
-
-PW/        Source files for scf calculations (pw.x)
-PH/        Source files for phonon calculations (ph.x)
-PP/        Source files for post-processing of pw.x data file
-Gamma/     Source files for Gamma-only phonon calculation (phcg.x)
-D3/        Source files for third-order derivative calculations (d3.x)
-PWCOND/    Source files for conductance calculations (pwcond.x)
-pwtools/   Source files for post-processing of ph.x results,
-           miscellaneous analysis programs
-vdW/       Source files for calculation of the molecular polarizability 
-           at finite (imaginary) frequency using approximated Thomas-Fermi
-           + von Weizacker scheme (contributed by V.H. Nguyen, Sissa and
-           Hanoi University).
-
-CPV/       Source files for Car-Parrinello code CP/FPMD
-
-GUI/ or PWgui-*/ Source files for the GUI (GUI/ for CVS sources, while
-                 PWgui-*/ for the tarball *.tar.gz).
-
-atomic/    Source files for the pseudopotential generation package
-atomic_doc/ Documentation, tests and examples for the above
-
-iotk/      Input/Output Toolkit
-
-VIB/       Source files for the frozen-phonon code (contributed by 
-           Silviu Zilberman, Princeton)
+of the Italian INFM (http://www.democritos.it). For more information,
+see the documentation contained in directory Doc, consult the web site
+http://www.quantum-espresso.org/ and in particular the Wiki page
+http://www.quantum-espresso.org/wiki/index.php/Main_Page .
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU

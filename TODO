@@ -1,23 +1,42 @@
 TODO LIST - November 2007
 
-TO BE DONE BEFORE THE 4.0 VERSION
+TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 
-- license change; update copyright notice in the header of all files
-- write reference paper for q-e
-- decide what should be in quantum-espresso.org and what in pwscf.org
-- improve vc-relax algorithms, fix loss of symmetry cases
-- add benchmarks suite and results
-- careful check of Berry phase and macroscopic electric fields
-
-BUGS TO FIX
-
-- extrapolation of wfcs doesn't work for USPP
-- fixing atomic positions for vc-relax case works only if the atoms
-  to be kept fixed are the first in the list
+- License: decide whether to move to LGPL, and in case, update copyright
+           notice in the header of all files
+- Web: move download and PP page from pwscf.org to quantum-espresso.org;
+       move Tutorial and Examples from wiki into Learn page;
+       find a way to extract the User Guide and other info from wiki
+       into a printable format (pdf or html);
+       advertise the forthcoming release
+- Doc: write reference paper for q-e
+- Doc: move the contents of the various README and most of the contents
+       of the Doc/ directory from CVS into wiki
+- Doc: advertise the existence of a library of files for PP generation
+- Doc: add benchmarks suite and results
+- Cleanup: the GUI should be either updated or removed
+- Code: improve vc-relax algorithms, fix loss of symmetry cases
+- Code: PAW (Lorenzo-SdG)
+- Code: GIPAW (Paris-Davide)
+- Code: electron-phonon (Paris 2)?
+- Code: corrections for charged/isolated systems (Ismaila-Nicola)?
+- Code: other "external" contributions to Q-E: Wannier, Want, SAX, ...
+- Contrib: QHA codes (Eyvaz)
+- Contrib: band plotting (Jonathan)
+- Contrib: metaGGA atomic code (Yosuke-needs work)
+- Contrib: math parser (Javier-license problem)
+- Bug: extrapolation of wfcs doesn't work for USPP
+- Bug: there is still some problem with Berry phase and macroscopic
+       electric fields with USPP
+- Bug: fixing atomic positions for vc-relax case works only if the atoms
+       to be kept fixed are the first in the list
+- Bug: xcrysden doesn't read any longer some output files
+- UPF: update UPF format to allow hack-free inclusion of spin-orbit/GIPAW/PAW
+       (maybe this should be postponed?)
 
 CVS/INSTALLATION/PORTING
 
-- restructuration of the CVS server, dividing it into "base libs",
+- restructuring of the CVS repository, dividing it into "base libs",
   "base QE", additional packages - release.sh is clumsy, simplify
 - remove obsolete stuff from install/
 - put misc scripts into a Utils/ subdirectory
@@ -120,6 +139,11 @@ POSTPROCESSING
 
 PH, D3, Gamma
 
+- Phonon restart is unreliable. In addition to making it more reliable,
+  we need to make the calculation of each mode independent and the
+  respective results independently restorable, so that execution on the
+  grid is straightforward and at least partial restart safe in all cases
+
 - replace static npertx with dynamical npert
 
 - C(R) might be calculated at the end of a dispersion run
@@ -142,7 +166,6 @@ PH, D3, Gamma
 
 - stop with 'prefix.EXIT' and restart (PH now has it; D3 & Gamma do not
   have any infrastructure for stopping like this)
-  Phonon restart is inefficient in some cases
 
 DOCUMENTATION
 
