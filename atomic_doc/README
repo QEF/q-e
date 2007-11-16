@@ -3,8 +3,8 @@ atomic calculations and pseudo-potentials generation.
 
 The ld1 code, maintained by Andrea Dal Corso (SISSA, Trieste) 
 is the result of several additions to the original code by
-P. Giannozzi (http://web1.sns.it/~giannozz/software.html) for 
-pseudopotential generation. The major additions are:
+P. Giannozzi (http://www.fisica.uniud.it/~giannozz/software.html) 
+for pseudopotential generation. The major additions are:
 
 a) Generation and test of norm-conserving and ultrasoft pseudo-potentials
    with the Rappe-Rabe-Kaxiras-Joannopoulos (RRKJ) recipe
@@ -18,6 +18,8 @@ Input variables are described in file INPUT_LD1.
 Directories all-electron/, pseudo-gen/, pseudo-test/, 
 contain tests for the three modes of operation, respectively:
 all-electron run, pseudo-potential generation, pseudo-potential testing. 
+Directory pseudo_library/ contains input data used for pseudopotential
+generation of many elements.
 
 All the material included in this distribution is free software;
 you can redistribute it and/or modify it under the terms of the GNU
