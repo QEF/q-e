@@ -82,6 +82,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
+../Modules/mp_base.o \
 ../Modules/metagga.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \

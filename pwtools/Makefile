@@ -16,12 +16,14 @@ MODULES = \
 ../Modules/fft_scalar.o \
 ../Modules/kind.o \
 ../Modules/mp.o \
+../Modules/mp_base.o \
 ../Modules/mp_global.o \
 ../Modules/parallel_include.o \
 ../Modules/parameters.o \
 ../Modules/parser.o \
 ../Modules/path_formats.o \
 ../Modules/printout_base.o \
+../Modules/pseudo_types.o \
 ../Modules/random_numbers.o \
 ../Modules/recvec.o \
 ../Modules/splinelib.o \

@@ -131,6 +131,7 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp_wave.o \
 ../Modules/mp.o \
+../Modules/mp_base.o \
 ../Modules/metagga.o \
 ../Modules/metadyn_base.o \
 ../Modules/metadyn_io.o \
@@ -194,6 +195,7 @@ cpver.h :
 PPOBJS = \
 ../Modules/xml_io_base.o \
 ../Modules/mp.o \
+../Modules/mp_base.o \
 ../Modules/mp_global.o \
 ../Modules/io_global.o \
 ../Modules/io_files.o \

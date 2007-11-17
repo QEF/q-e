@@ -114,6 +114,7 @@ MODULES = \
 ../Modules/read_paw.o \
 ../Modules/mp_global.o \
 ../Modules/mp.o \
+../Modules/mp_base.o \
 ../Modules/uspp.o \
 ../Modules/vxc_t.o \
 ../Modules/vxcgc.o \

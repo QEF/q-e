@@ -868,7 +868,6 @@ pwscf.o : ../Modules/parameters.o
 pwscf.o : ../Modules/path_base.o
 pwscf.o : ../Modules/path_io_routines.o
 pwscf.o : ../Modules/path_variables.o
-pwscf.o : ../Modules/radial_grids.o
 pwscf.o : ../Modules/version.o
 pwscf.o : noncol.o
 pwscf.o : pwcom.o

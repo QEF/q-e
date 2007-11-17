@@ -30,6 +30,7 @@ ions_base.o \
 ions_nose.o \
 kind.o \
 mp.o \
+mp_base.o \
 mp_global.o \
 mp_wave.o \
 metagga.o \

@@ -118,6 +118,8 @@ metagga.o : kind.o
 mp.o : io_global.o
 mp.o : kind.o
 mp.o : parallel_include.o
+mp_base.o : kind.o
+mp_base.o : parallel_include.o
 mp_global.o : mp.o
 mp_global.o : parallel_include.o
 mp_global.o : shmem_include.o
@@ -180,7 +182,6 @@ path_reparametrisation.o : splinelib.o
 path_variables.o : kind.o
 paw_variables.o : kind.o
 paw_variables.o : parameters.o
-paw_variables.o : radial_grids.o
 printout_base.o : io_global.o
 printout_base.o : kind.o
 printout_base.o : mp.o
