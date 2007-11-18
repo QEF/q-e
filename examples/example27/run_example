@@ -117,7 +117,7 @@ ATOMIC_POSITIONS  bohr
  C  0.109484E+01   0.137081E+01  -0.496954E+00
 EOF
 $ECHO "  running the cp.x SCF calculation...\c"
-#$CP_COMMAND < c4h6.cp.metaGGA.in > c4h6.cp.metaGGA.out
+$CP_COMMAND < c4h6.cp.metaGGA.in > c4h6.cp.metaGGA.out
 check_failure $?
 $ECHO " done"
 
