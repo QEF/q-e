@@ -20,15 +20,15 @@ SUBROUTINE clean_pw( lflag )
   USE klist,                ONLY : ngk
   USE reciprocal_vectors,   ONLY : ig_l2g
   USE symme,                ONLY : irt
-  USE vlocal,               ONLY : strf, vloc, vnew
+  USE vlocal,               ONLY : strf, vloc
   USE wvfct,                ONLY : igk, g2kin, et, wg, btype, gamma_only
   USE force_mod,            ONLY : force
-  USE scf,                  ONLY : rho, vr, vltot, rho_core, rhog_core, &
-                                   vrs, kedtau, kedtaur, destroy_scf_type
+  USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
+                                   vrs, kedtau, destroy_scf_type, vnew
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE us,                   ONLY : qrad, tab, tab_at, tab_d2y, spline_ps
   USE uspp,                 ONLY : deallocate_uspp
-  USE ldaU,                 ONLY : swfcatom, v_hub
+  USE ldaU,                 ONLY : swfcatom
   USE extfield,             ONLY : forcefield
   USE sticks,               ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
@@ -80,11 +80,10 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( ig2 ) )        DEALLOCATE( ig2 )
   IF ( ALLOCATED( ig3 ) )        DEALLOCATE( ig3 )
   call destroy_scf_type(rho)
+  call destroy_scf_type(v)
+  call destroy_scf_type(vnew)
   IF ( ALLOCATED( kedtau ) )     DEALLOCATE( kedtau )
-  IF ( ALLOCATED( kedtaur ) )    DEALLOCATE( kedtaur )
-  IF ( ALLOCATED( vr ) )         DEALLOCATE( vr )
   IF ( ALLOCATED( vltot ) )      DEALLOCATE( vltot )
-  IF ( ALLOCATED( vnew ) )       DEALLOCATE( vnew )
   IF ( ALLOCATED( rho_core ) )   DEALLOCATE( rho_core )
   IF ( ALLOCATED( rhog_core ) )  DEALLOCATE( rhog_core )
   IF ( ALLOCATED( psic ) )       DEALLOCATE( psic )
@@ -114,7 +113,6 @@ SUBROUTINE clean_pw( lflag )
   IF ( ALLOCATED( igk ) )        DEALLOCATE( igk )
   IF ( ALLOCATED( g2kin ) )      DEALLOCATE( g2kin )
   IF ( ALLOCATED( qrad ) )       DEALLOCATE( qrad )
-  IF ( ALLOCATED( v_hub ) )      DEALLOCATE( v_hub )
   IF ( ALLOCATED( tab ) )        DEALLOCATE( tab )
   IF ( ALLOCATED( tab_at ) )     DEALLOCATE( tab_at )
   IF ( lspinorb ) THEN

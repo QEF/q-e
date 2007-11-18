@@ -14,7 +14,7 @@ subroutine save_in_electrons (iter, dr2)
   USE klist, ONLY: nks
   USE control_flags, ONLY: io_level, conv_elec, tr2, ethr
   USE wvfct, ONLY: nbnd, et
-  USE vlocal, ONLY: vnew
+  USE scf, ONLY: vnew
   implicit none
   character :: where * 20
   ! are we in the right place?
@@ -43,7 +43,7 @@ subroutine save_in_electrons (iter, dr2)
      write (iunres) ( (et (ibnd, ik), ibnd = 1, nbnd), ik = 1, nks)
      write (iunres) etot, tr2
      ! vnew = V(in)-V(out) is needed in the scf correction term to forces
-     write (iunres) vnew
+     write (iunres) vnew%of_r
   else
      !
      ! save iteration number

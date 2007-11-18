@@ -30,14 +30,14 @@ SUBROUTINE electrons()
   USE gsmooth,              ONLY : doublegrid, ngms
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
-  USE vlocal,               ONLY : strf, vnew
+  USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : nbnd, et, gamma_only, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet
   USE scf,                  ONLY : scf_type, &
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &
-                                   vr, vltot, vrs, kedtau, kedtaur
+                                   v, vltot, vrs, kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, assume_isolated
@@ -45,7 +45,7 @@ SUBROUTINE electrons()
                                    iunefield
   USE buffers,              ONLY : save_buffer
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
-                                   niter_with_fixed_ns, lda_plus_u, v_hub
+                                   niter_with_fixed_ns, lda_plus_u
   USE extfield,             ONLY : tefield, etotefield
   USE wavefunctions_module, ONLY : evc, psic
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
@@ -324,7 +324,7 @@ SUBROUTINE electrons()
            ! ... charge density (i.e. the new estimate)
            !
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
-                          ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
+                          ehart, etxc, vtxc, eth, etotefield, charge, v)
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -365,12 +365,12 @@ SUBROUTINE electrons()
            ! ... 1) the output HXC-potential is saved in vr
            ! ... 2) vnew contains V(out)-V(in) ( used to correct the forces ).
            !
-           vnew(:,:) = vr(:,:)
+           vnew%of_r(:,:) = v%of_r(:,:)
            !
            CALL v_of_rho( rho,rho_core,rhog_core, &
-                          ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
+                          ehart, etxc, vtxc, eth, etotefield, charge, v)
            !
-           vnew(:,:) = vr(:,:) - vnew(:,:)
+           vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
            ! CHECKME: is it becsum or becstep??
            IF (okpaw) &
@@ -406,7 +406,7 @@ SUBROUTINE electrons()
      !
      ! ... define the total local potential (external + scf)
      !
-     CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
+     CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
      !
      ! ... in the US case we have to recompute the self-consistent
      ! ... term in the nonlocal potential
@@ -475,9 +475,9 @@ SUBROUTINE electrons()
            !
            fock0 = exxenergy2()
            CALL v_of_rho( rho, rho_core,rhog_core, &
-                          ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub)
+                          ehart, etxc, vtxc, eth, etotefield, charge, v)
            !
-           CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
+           CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
            !
            WRITE( stdout, * ) " NOW GO BACK TO REFINE HYBRID CALCULATION"
            WRITE( stdout, * ) fock0
@@ -783,13 +783,13 @@ SUBROUTINE electrons()
        !
        DO is = 1, nspin
           !
-          delta_e = delta_e - SUM( rho%of_r(:,is)*vr(:,is) )
+          delta_e = delta_e - SUM( rho%of_r(:,is)*v%of_r(:,is) )
           !
        END DO
        !
        IF ( dft_is_meta() ) THEN
           DO is = 1, nspin
-             delta_e = delta_e - SUM( rho%kin_r(:,is)*kedtaur(:,is) )
+             delta_e = delta_e - SUM( rho%kin_r(:,is)*v%kin_r(:,is) )
           END DO
        END IF
        !
@@ -798,7 +798,7 @@ SUBROUTINE electrons()
        CALL mp_sum( delta_e, intra_pool_comm )
        !
        if (lda_plus_u) then
-          delta_e_hub = - SUM (rho%ns(:,:,:,:)*v_hub(:,:,:,:))
+          delta_e_hub = - SUM (rho%ns(:,:,:,:)*v%ns(:,:,:,:))
           if (nspin==1) delta_e_hub = 2.d0 * delta_e_hub
           delta_e = delta_e + delta_e_hub
        end if
@@ -828,14 +828,14 @@ SUBROUTINE electrons()
        DO is = 1, nspin
           !
           delta_escf = delta_escf - &
-                       SUM( ( rhoin%of_r(:,is)-rho%of_r(:,is) )*vr(:,is) )
+                       SUM( ( rhoin%of_r(:,is)-rho%of_r(:,is) )*v%of_r(:,is) )
           !
        END DO
        !
        IF ( dft_is_meta() ) THEN
           DO is = 1, nspin
              delta_escf = delta_escf - &
-                       SUM( (rhoin%kin_r(:,is)-rho%kin_r(:,is) )*kedtaur(:,is))
+                       SUM( (rhoin%kin_r(:,is)-rho%kin_r(:,is) )*v%kin_r(:,is))
           END DO
        END IF
        !
@@ -845,7 +845,7 @@ SUBROUTINE electrons()
        !
        !
        if (lda_plus_u) then
-          delta_escf_hub = - SUM ((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v_hub(:,:,:,:))
+          delta_escf_hub = - SUM ((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
           if (nspin==1) delta_escf_hub = 2.d0 * delta_escf_hub
           delta_escf = delta_escf + delta_escf_hub
        end if

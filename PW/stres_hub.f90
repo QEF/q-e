@@ -20,8 +20,8 @@ SUBROUTINE stres_hub ( sigmah )
   USE ions_base, ONLY : nat, ityp
   USE cell_base, ONLY : omega, at, bg
   USE ldaU,      ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
-                        hubbard_alpha, U_projection, v_hub
-  USE scf,       ONLY : 
+                        hubbard_alpha, U_projection
+  USE scf,       ONLY : v
   USE lsda_mod,  ONLY : nspin
   USE symme,     ONLY : s, nsym
   USE io_files,  ONLY : prefix, iunocc
@@ -91,7 +91,7 @@ SUBROUTINE stres_hub ( sigmah )
                   DO m2 = 1, 2 * Hubbard_l(nt) + 1
                      DO m1 = 1, 2 * Hubbard_l(nt) + 1
                         sigmah(ipol,jpol) = sigmah(ipol,jpol) - omin1 * &
-                           v_hub(m2,m1,is,na) * dns(m1,m2,is,na)
+                           v%ns(m2,m1,is,na) * dns(m1,m2,is,na)
                      END DO
                   END DO
                END DO

@@ -464,7 +464,7 @@ MODULE realus
       USE cell_base,        ONLY : omega
       USE gvect,            ONLY : nr1, nr2, nr3, nrxx
       USE lsda_mod,         ONLY : nspin
-      USE scf,              ONLY : vr, vltot
+      USE scf,              ONLY : v, vltot
       USE uspp,             ONLY : okvan, deeq, deeq_nc, dvan, dvan_so
       USE uspp_param,       ONLY : upf, nh, nhm
       USE noncollin_module, ONLY : noncolin
@@ -527,9 +527,9 @@ MODULE realus
       DO is = 1, nspin0
          !
          IF ( nspin0 == 4 .AND. is /= 1 ) THEN
-            aux(:) = vr(:,is)
+            aux(:) = v%of_r(:,is)
          ELSE
-            aux(:) = vltot(:) + vr(:,is)
+            aux(:) = vltot(:) + v%of_r(:,is)
          END IF
          !
          iqs = 0

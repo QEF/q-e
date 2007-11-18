@@ -31,7 +31,7 @@ SUBROUTINE newd_g()
                                    g, gg, ngm, gstart, ig1, ig2, ig3, &
                                    eigts1, eigts2, eigts3, nl
   USE lsda_mod,             ONLY : nspin
-  USE scf,                  ONLY : vr, vltot
+  USE scf,                  ONLY : v, vltot
   USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan, indv
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
   USE wvfct,                ONLY : gamma_only
@@ -123,11 +123,11 @@ SUBROUTINE newd_g()
      !
      IF ( nspin0 == 4 .AND. is /= 1 ) THEN 
         !
-        psic(:) = vr(:,is)
+        psic(:) = v%of_r(:,is)
         !
      ELSE
         !
-        psic(:) = vltot(:) + vr(:,is)
+        psic(:) = vltot(:) + v%of_r(:,is)
         !
      END IF
      !

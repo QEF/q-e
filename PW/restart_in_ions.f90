@@ -18,10 +18,9 @@ subroutine restart_in_ions (iter, ik_, dr2)
        nrxx
   USE klist, ONLY: nks
   USE lsda_mod, ONLY: nspin
-  USE scf, ONLY : rho, rho_core, rhog_core
+  USE scf, ONLY : rho, rho_core, rhog_core, v, vnew
   USE ldaU, ONLY : eth
   USE control_flags, ONLY: restart, tr2, ethr
-  USE vlocal, ONLY: vnew
   USE wvfct, ONLY: nbnd, et
   USE wavefunctions_module,    ONLY : evc, psic
   implicit none
@@ -54,7 +53,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   read (iunres, err=10, end=10) ( (et(ibnd,ik), ibnd=1,nbnd), ik=1,nks)
   read (iunres, err=10, end=10) etot, tr2
   ! vnew = V(in)-V(out) is needed in the scf correction term to forces
-  read (iunres, err=10, end=10) vnew
+  read (iunres, err=10, end=10) vnew%of_r
   close (unit = iunres, status = 'keep')
   WRITE( stdout, '(5x,"Calculation restarted from IONS ",i3)')
   !
@@ -82,7 +81,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! recalculate etxc, vtxc, ehart, needed by stress calculation
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
-                 ehart, etxc, vtxc, eth, etotefield, charge, psic, psic )
+                 ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   !  restart procedure completed
   !

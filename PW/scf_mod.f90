@@ -39,19 +39,17 @@ MODULE scf
      REAL(DP),   ALLOCATABLE  :: ns(:,:,:,:)! the LDA+U occupation matrix 
   END TYPE mix_type
 
-  type (scf_type) :: rho
+  type (scf_type) :: rho  ! the charge density and its other components
+
+  type (scf_type) :: v    ! the scf potential
+  type (scf_type) :: vnew ! used to correct the forces
 
   REAL(DP) :: v_of_0    ! vltot(G=0)      
   REAL(DP), ALLOCATABLE :: &
-       vr(:,:),        &! the Hartree + xc potential in real space
        vltot(:),       &! the local potential in real space
        vrs(:,:),       &! the total pot. in real space (smooth grig)
        rho_core(:),    &! the core charge in real space
-!       tauk(:,:),      &! kinetic energy density in real space (dense grid)
-       kedtau(:,:),    &! position dependent kinetic energy enhancement factor
-                        ! used in META-GGA in real space (smooth grid)
-       kedtaur(:,:)     ! position dependent kinetic energy enhancement factor
-                        ! used in META-GGA in real space (dense grid)
+       kedtau(:,:)      ! position dependent kinetic energy enhancement factor
   COMPLEX(DP), ALLOCATABLE :: &
        rhog_core(:)     ! the core charge in reciprocal space
 

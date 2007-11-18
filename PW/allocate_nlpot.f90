@@ -31,7 +31,7 @@ subroutine allocate_nlpot
   USE gvect,            ONLY : ngm, gcutm, ecutwfc, g
   USE klist,            ONLY : xk, wk, ngk, nks, xqq
   USE lsda_mod,         ONLY : nspin
-  USE ldaU,             ONLY : Hubbard_lmax, v_hub
+  USE ldaU,             ONLY : Hubbard_lmax
   USE scf,              ONLY : 
   USE noncollin_module, ONLY : noncolin
   USE wvfct,            ONLY : npwx, npw, igk, g2kin
@@ -46,7 +46,7 @@ subroutine allocate_nlpot
   !
   !    a few local variables
   !
-  integer :: nt, na, nb, ldim, nwfcm  
+  integer :: nt, na, nb, nwfcm  
   ! counters on atom type, atoms, beta functions
   !
   !   calculate number of PWs for all kpoints
@@ -110,20 +110,8 @@ subroutine allocate_nlpot
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   !
-  ! ... Allocate space for Hubbard potential
-  ! ... These arrays are allocated ALWAYS even if lda_plus_u = .FALSE.
-  ! ... This is needed since they are passed as arguments of mix_rho
-  ! ... no matter lda_plus_u is .TRUE. or .FALSE.   ( 23/10/2003 C.S. )
-  !
-  ! if (lda_plus_u) then  
-  !
-  ldim = 2 * Hubbard_lmax + 1
-  ALLOCATE( v_hub( ldim, ldim, nspin, nat ) ) 
-  !
-  ! endif
-  !
-  !     Calculate dimensions for array tab (including a possible factor
-  !     coming from cell contraction during variable cell relaxation/MD)
+  ! Calculate dimensions for array tab (including a possible factor
+  ! coming from cell contraction during variable cell relaxation/MD)
   !
   nqx = INT( (sqrt (ecutwfc) / dq + 4) * cell_factor )
 

@@ -16,7 +16,8 @@ subroutine vhpsi_nc (ldap, np, mp, psip, hpsi)
   !
   USE kinds, ONLY: DP
   USE ldaU,  ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
-                   v_hub, swfcatom
+                   swfcatom
+  USE scf,   ONLY: v
   USE lsda_mod,   ONLY: nspin, current_spin
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
   USE basis, ONLY: natomwfc
@@ -62,8 +63,8 @@ subroutine vhpsi_nc (ldap, np, mp, psip, hpsi)
            do m1 = 1, 2 * Hubbard_l(nt) + 1 
               temp = 0.d0
               do m2 = 1, 2 * Hubbard_l(nt) + 1 
-                 temp = temp + v_hub ( m1, m2, current_spin, na) * &
-                                      proj (offset(na)+m2, ibnd)
+                 temp = temp + v%ns( m1, m2, current_spin, na) * &
+                                     proj (offset(na)+m2, ibnd)
               enddo
               call ZAXPY (np, temp, swfcatom(1,offset(na)+m1), 1, &
                                     hpsi(1,1,ibnd),              1)

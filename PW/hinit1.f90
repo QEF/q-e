@@ -18,7 +18,7 @@ SUBROUTINE hinit1()
   USE gsmooth,       ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
-  USE scf,           ONLY : vrs, vltot, vr
+  USE scf,           ONLY : vrs, vltot, v, kedtau
   USE vlocal,        ONLY : strf
   USE control_flags, ONLY : pot_order
   USE realus,        ONLY : tqr, qpointlist
@@ -53,7 +53,7 @@ SUBROUTINE hinit1()
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
+  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
   !
   IF ( tqr ) CALL qpointlist()
   !

@@ -27,7 +27,7 @@ subroutine force_corr (forcescc)
   USE gvect,                ONLY : ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, &
                                    nrx3, nrxx, nl, g, ngl, gl, igtongl
   USE lsda_mod,             ONLY : nspin
-  USE vlocal,               ONLY : vnew
+  USE scf,                  ONLY : vnew
   USE wvfct,                ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
@@ -45,11 +45,11 @@ subroutine force_corr (forcescc)
   ! vnew is V_out - V_in, psic is the temp space
   !
   if (nspin == 1 .or. nspin == 4) then
-     psic(:) = vnew (:, 1)
+     psic(:) = vnew%of_r (:, 1)
   else
      isup = 1
      isdw = 2
-     psic(:) = (vnew (:, isup) + vnew (:, isdw)) * 0.5d0
+     psic(:) = (vnew%of_r (:, isup) + vnew%of_r (:, isdw)) * 0.5d0
   end if
   !
   ndm = MAXVAL ( msh(1:ntyp) )

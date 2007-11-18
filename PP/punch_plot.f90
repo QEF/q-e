@@ -53,7 +53,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE lsda_mod,         ONLY : nspin, current_spin
   USE ener,             ONLY : ehart
   USE io_global,        ONLY : stdout, ionode
-  USE scf,              ONLY : rho, vltot, vr
+  USE scf,              ONLY : rho, vltot, v
   USE wvfct,            ONLY : npw, nbnd, wg, igk, gamma_only
   USE noncollin_module, ONLY : noncolin
 
@@ -115,17 +115,17 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
      !       The total self-consistent potential V_H+V_xc on output
      !
      IF (noncolin) THEN
-        call DCOPY (nrxx, vr, 1, raux, 1)
+        call DCOPY (nrxx, v%of_r, 1, raux, 1)
      ELSE
         IF (spin_component == 0) THEN
-           CALL DCOPY (nrxx, vr, 1, raux, 1)
+           CALL DCOPY (nrxx, v%of_r, 1, raux, 1)
            DO is = 2, nspin
-              CALL DAXPY (nrxx, 1.0d0, vr (1, is), 1, raux, 1)
+              CALL DAXPY (nrxx, 1.0d0, v%of_r (1, is), 1, raux, 1)
            ENDDO
            CALL DSCAL (nrxx, 1.d0 / nspin, raux, 1)
         ELSE
            IF (nspin == 2) current_spin = spin_component
-           CALL DCOPY (nrxx, vr (1, current_spin), 1, raux, 1)
+           CALL DCOPY (nrxx, v%of_r (1, current_spin), 1, raux, 1)
         ENDIF
      ENDIF
      CALL DAXPY (nrxx, 1.0d0, vltot, 1, raux, 1)

@@ -15,7 +15,7 @@ SUBROUTINE poten(vppot,nrz,z)
 ! local potential in each slab.
 !
   USE pwcom
-  USE scf, only : vltot, vr
+  USE scf, only : vltot, v
   USE noncollin_module, ONLY : noncolin, npol
   USE cond
   USE mp,               ONLY : mp_bcast
@@ -101,12 +101,12 @@ vppot = 0.d0
 DO ispin=1,nspin_eff
    IF (noncolin) THEN
       IF (ispin==1) THEN
-         auxr(:) = vltot(:)+vr(:,1)
+         auxr(:) = vltot(:)+v%of_r(:,1)
       ELSE
-         auxr(:) = vr(:,ispin)
+         auxr(:) = v%of_r(:,ispin)
       ENDIF
    ELSE
-      auxr(:) = vltot(:) + vr(:,iofspin) 
+      auxr(:) = vltot(:) + v%of_r(:,iofspin) 
    ENDIF
 !
 ! To collect the potential from different CPUs

@@ -17,7 +17,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
 !  USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, &
 !                                   igk, npw 
   USE uspp,                 ONLY : nkb
-  USE scf,                  ONLY : vr, vltot, vrs, rho_core
+  USE scf,                  ONLY : v, vltot, vrs, rho_core
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s,&
                                    nrx2s, nrx3s, nrxxs, doublegrid
   USE eff_v,                ONLY : rho_fft, veff
@@ -37,7 +37,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
   !    output
   !
-  real(kind=DP), allocatable :: v (:,:), rho_in(:,:), k_gamma(:) 
+  real(kind=DP), allocatable :: vv (:,:), rho_in(:,:), k_gamma(:) 
   !
   !    local variables
   !
@@ -56,7 +56,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   call start_clock('eff_pot')
   !
   allocate (aux(2,nrxx), aux1(2,ngm), psi(2,nrxx), psi_smooth(2,nrxx),S(nrxx) )
-  allocate ( v(nrxx, nspin) )
+  allocate ( vv(nrxx, nspin) )
   allocate ( rho_in(nrxx, nspin) )
   !
   tpiba2 = (fpi / 2.d0 / alat) **2
@@ -149,12 +149,12 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   is = 1
   if (.false.) then
      do ir = 1, nrxx
-        v(ir,is) = -aux(1,ir)
+        vv(ir,is) = -aux(1,ir)
      end do
   else
      do ir = 1, nrxx
         if (abs(psi_smooth(1,ir)) > eps ) then
-           v(ir,is) = -aux(1,ir) / psi_smooth(1,ir)
+           vv(ir,is) = -aux(1,ir) / psi_smooth(1,ir)
         else
            avg1 = avg1 - aux(1,ir)
            avg2 = avg2 + psi_smooth(1,ir)
@@ -169,7 +169,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
      if (nnn > 0 ) then
         do ir = 1, nrxx
            if (abs(psi_smooth(1,ir)) <= eps ) then
-              v(ir,is) = avg1 / avg2
+              vv(ir,is) = avg1 / avg2
            end if
         end do
      end if
@@ -179,8 +179,8 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   !
 vstart=20000
   do ir = 1, nrxx
-     vrs(ir,1) = vr(ir,1) + vltot(ir)
-     v(ir,is) = erf(abs(psi_smooth(1,ir)*dble(vstart)))*v(ir,is) + &
+     vrs(ir,1) = v%of_r(ir,1) + vltot(ir)
+     vv(ir,is) = erf(abs(psi_smooth(1,ir)*dble(vstart)))*vv(ir,is) + &
                 (1.d0-erf( abs( psi_smooth(1,ir)*dble(vstart) ) ))*&
                 vrs(ir,is)
 
@@ -188,7 +188,7 @@ vstart=20000
   !
   !  check the quality of trial potential
   !
-  CALL check_v_eff(v(1,1), charge)
+  CALL check_v_eff(vv(1,1), charge)
   WRITE( stdout, '(/,10x,"Charge difference due to V_eff (initial)   ",f10.8,/)' ) charge
   !
   ! iterative procedure of V_eff if necessary 
@@ -204,7 +204,7 @@ vstart=20000
      !  whose the GS solution should be the square root 
      !  of the charge density
      !
-     call check_v_eff(v, charge)
+     call check_v_eff(vv, charge)
      nite = nite + 1
 !#ifdef __PARA
 !     call ireduce(1, nite)
@@ -226,9 +226,9 @@ vstart=20000
   ! set the optmized eff. potential to veff
   !
 100 continue
-  veff(:,:) = v(:,:)
+  veff(:,:) = vv(:,:)
   !
-  deallocate ( v, rho_in )
+  deallocate ( vv, rho_in )
   deallocate (aux,aux1,psi,psi_smooth,S)
   !
   call stop_clock('eff_pot')
@@ -255,7 +255,7 @@ vstart=20000
 !CALL flush_unit( stdout )
      s2 = 0.d0
      do ir = 1, nrxx
-        S(ir) = psi_smooth(1,ir) * ( aux(1,ir) + v(ir,1)*psi_smooth(1,ir) )
+        S(ir) = psi_smooth(1,ir) * ( aux(1,ir) + vv(ir,1)*psi_smooth(1,ir) )
         s2 = s2 + S(ir)**2
      enddo
 #ifdef __PARA
@@ -314,7 +314,7 @@ vstart=20000
         ! Update V-eff
         !  
         do ir = 1, nrxx
-           v(ir,1) = v(ir,1) + alp*S(ir) + beta
+           vv(ir,1)= vv(ir,1) + alp*S(ir) + beta
            S(ir)   = S(ir) * (1.d0 + alp*psi_smooth(1,ir)**2) + & 
                      beta*psi_smooth(1,ir)**2
         enddo

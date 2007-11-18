@@ -20,9 +20,8 @@ subroutine allocate_fft
   USE gsmooth,   ONLY : nr1s,nr2s,nr3s,nrxxs,ngms, nls, nlsm, doublegrid
   USE ions_base, ONLY : nat
   USE lsda_mod,  ONLY : nspin
-  USE scf,       ONLY : rho, vr, vltot, vrs, rho_core, rhog_core, &
-                        kedtau, kedtaur, create_scf_type
-  USE vlocal,    ONLY : vnew
+  USE scf,       ONLY : rho, v, vnew, vltot, vrs, rho_core, rhog_core, &
+                        kedtau, create_scf_type
   USE wvfct,     ONLY : gamma_only
   USE noncollin_module, ONLY : pointlist, factlist, r_loc, &
       report, i_cons, noncolin, npol
@@ -64,16 +63,14 @@ subroutine allocate_fft
   allocate (ig3(  ngm))    
 
   call create_scf_type(rho)
-  allocate (vr( nrxx,nspin))    
+  call create_scf_type(v)
+  call create_scf_type(vnew)
   allocate (vltot( nrxx))    
-  allocate (vnew  ( nrxx, nspin))    
   allocate (rho_core( nrxx))
   if (dft_is_meta() ) then
      allocate ( kedtau(nrxxs,nspin) )
-     allocate ( kedtaur(nrxx,nspin) )
   else
      allocate ( kedtau(1,nspin) )
-     allocate ( kedtaur(1,nspin) )
   end if
   ALLOCATE( rhog_core( ngm ) )
   allocate (psic( nrxx))    

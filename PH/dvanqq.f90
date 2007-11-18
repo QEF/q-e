@@ -20,7 +20,7 @@ subroutine dvanqq
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
-  use scf, only : vr, vltot
+  use scf, only : v, vltot
   use noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   use phcom
@@ -100,11 +100,11 @@ subroutine dvanqq
   do is = 1, nspin
      if (nspin.ne.4.or.is==1) then
         do ir = 1, nrxx
-           veff (ir, is) = CMPLX (vltot (ir) + vr (ir, is), 0.d0)
+           veff (ir, is) = CMPLX (vltot (ir) + v%of_r (ir, is), 0.d0)
         enddo
      else
         do ir = 1, nrxx
-           veff (ir, is) = CMPLX (vr (ir, is), 0.d0)
+           veff (ir, is) = CMPLX (v%of_r (ir, is), 0.d0)
         enddo
      endif
      call cft3 (veff (1, is), nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)

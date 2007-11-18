@@ -289,8 +289,7 @@ MODULE vlocal
   COMPLEX(DP), ALLOCATABLE :: &
        strf(:,:)              ! the structure factor
   REAL(DP), ALLOCATABLE :: &
-       vloc(:,:),            &! the local potential for each atom type
-       vnew(:,:)              ! V_out - V_in, needed in scf force correction
+       vloc(:,:)              ! the local potential for each atom type
   !
 END MODULE vlocal
 !
@@ -463,8 +462,8 @@ MODULE ldaU
   !
   COMPLEX(DP), ALLOCATABLE :: &
        swfcatom(:,:)           ! orthogonalized atomic wfcs
-  REAL(DP), ALLOCATABLE :: &
-       v_hub(:,:,:,:)         ! the hubbard contribution to the potential
+!  REAL(DP), ALLOCATABLE :: &
+!       v_hub(:,:,:,:)         ! the hubbard contribution to the potential
   REAL(DP) :: &       
        eth,                  &! the Hubbard contribution to the energy
        Hubbard_U(ntypx),     &! the Hubbard U

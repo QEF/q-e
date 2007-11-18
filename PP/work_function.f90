@@ -15,7 +15,7 @@ SUBROUTINE work_function (wf)
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE ener,      ONLY : ef
   USE lsda_mod,  ONLY : nspin, current_spin
-  USE scf,       ONLY : rho, vltot, vr, rho_core, rhog_core
+  USE scf,       ONLY : rho, vltot, v, rho_core, rhog_core
   USE gvect
   USE cell_base, ONLY : omega, alat
   USE mp,        ONLY : mp_bcast
@@ -60,12 +60,12 @@ SUBROUTINE work_function (wf)
 #endif
      !
 #ifdef __PARA
-     aux(:) = vltot(:) + vr(:,current_spin)
+     aux(:) = vltot(:) + v%of_r(:,current_spin)
      CALL gather (aux, vaux1)
      aux(:) = aux(:) - vxc(:,current_spin)
      CALL gather (aux, vaux2)
 #else
-     vaux1(1:nrxx) = vltot(1:nrxx) + vr(1:nrxx,current_spin)
+     vaux1(1:nrxx) = vltot(1:nrxx) + v%of_r(1:nrxx,current_spin)
      vaux2(1:nrxx) = vaux1(1:nrxx) -vxc(1:nrxx,current_spin)
 #endif
      !

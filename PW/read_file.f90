@@ -31,7 +31,7 @@ SUBROUTINE read_file()
                                    nl, gstart
   USE gsmooth,              ONLY : ngms, nls, nrx1s, nr1s, nr2s, nr3s
   USE spin_orb,             ONLY : so, lspinorb
-  USE scf,                  ONLY : rho, rho_core, rhog_core, vr
+  USE scf,                  ONLY : rho, rho_core, rhog_core, v
   USE wavefunctions_module, ONLY : psic
   USE vlocal,               ONLY : strf
   USE io_files,             ONLY : tmp_dir, prefix, iunpun, nwordwfc, iunwfc
@@ -44,7 +44,7 @@ SUBROUTINE read_file()
   USE uspp,                 ONLY : okvan
   USE paw_variables,        ONLY : okpaw
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
-  USE ldaU,                 ONLY : v_hub, eth
+  USE ldaU,                 ONLY : eth
   !
   IMPLICIT NONE
   !
@@ -213,7 +213,7 @@ SUBROUTINE read_file()
   ! ... recalculate the potential
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
-                 ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub )
+                 ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 
   ! ... to unit iunwfc (for compatibility)

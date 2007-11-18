@@ -14,7 +14,7 @@ SUBROUTINE cg_setup
   USE kinds, ONLY: DP
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
   USE pwcom
-  USE scf, only : rho, rho_core, vr, vltot, vrs
+  USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
   USE uspp_param, ONLY: upf
   USE mp_global,        ONLY : kunit
   USE wavefunctions_module,  ONLY: evc
@@ -39,7 +39,7 @@ SUBROUTINE cg_setup
   !
   !  sum self-consistent part (vr) and local part (vltot) of potential
   !
-  CALL set_vrs(vrs,vltot,vr,nrxx,nspin,doublegrid)
+  CALL set_vrs(vrs,vltot,v%of_r,kedtau, v%kin_r, nrxx,nspin,doublegrid)
   !
   !  allocate memory for various arrays
   !

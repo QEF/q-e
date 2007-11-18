@@ -21,11 +21,12 @@ SUBROUTINE force_hub(forceh)
    USE cell_base,            ONLY : at, bg
    USE ldaU,                 ONLY : hubbard_lmax, hubbard_l, hubbard_u, &
                                     hubbard_alpha, U_projection, &
-                                    swfcatom, v_hub
+                                    swfcatom
    USE symme,                ONLY : s, nsym, irt
    USE io_files,             ONLY : prefix, iunocc
    USE wvfct,                ONLY : gamma_only, nbnd, npwx, npw, igk
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
+   USE scf,                  ONLY : v
    USE mp_global,            ONLY : me_pool, my_pool_id
    USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : becp
@@ -125,7 +126,7 @@ SUBROUTINE force_hub(forceh)
                      DO m2 = 1,ldim
                         DO m1 = 1,ldim
                            forceh(ipol,alpha) = forceh(ipol,alpha) -    &
-                              v_hub(m2,m1,is,na) * dns(m1,m2,is,na)
+                              v%ns(m2,m1,is,na) * dns(m1,m2,is,na)
                         END DO
                      END DO
                   END DO

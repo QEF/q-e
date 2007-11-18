@@ -19,7 +19,7 @@ subroutine addusstres (sigmanlc)
   USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, &
                          nl, nlm, gg, g, eigts1, eigts2, eigts3, ig1, ig2, ig3
   USE lsda_mod,   ONLY : nspin
-  USE scf,        ONLY : vr, vltot
+  USE scf,        ONLY : v, vltot
   USE uspp,       ONLY : becsum, okvan
   USE uspp_param, ONLY : upf, lmaxq, nh, nhm
   USE wvfct,      ONLY : gamma_only
@@ -73,11 +73,11 @@ subroutine addusstres (sigmanlc)
   do is = 1, nspin
      if ( nspin == 4 .and. is /= 1 ) then
         !
-        vg(:) = vr(:,is)
+        vg(:) = v%of_r(:,is)
         !
      ELSE
         !
-        vg(:) = vltot(:) + vr(:,is)
+        vg(:) = vltot(:) + v%of_r(:,is)
         !
      END IF
      call cft3 (vg, nr1, nr2, nr3, nrx1, nrx2, nrx3, - 1)

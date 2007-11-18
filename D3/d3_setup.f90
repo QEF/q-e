@@ -47,7 +47,7 @@ SUBROUTINE d3_setup()
   USE io_global,     ONLY : stdout
   USE kinds,         ONLY : DP
   USE pwcom
-  USE scf, only : rho, rho_core, vr, vltot, vrs
+  USE scf, only : rho, rho_core, v, vltot, vrs, kedtau
   USE uspp_param,    ONLY : upf
   USE control_flags, ONLY : iverbosity, modenum
   USE constants,     ONLY : degspin
@@ -84,7 +84,7 @@ SUBROUTINE d3_setup()
   !
   ! 1) Computes the total local potential (external+scf) on the smoot grid
   !
-  CALL set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
+  CALL set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
   !
   ! 2) Computes the derivative of the xc potential
   !

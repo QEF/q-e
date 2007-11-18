@@ -7,7 +7,7 @@
 !
 !----------------------------------------------------------------------------
 SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
-                     ehart, etxc, vtxc, eth, etotefield, charge, v, v_hub )
+                     ehart, etxc, vtxc, eth, etotefield, charge, v )
   !----------------------------------------------------------------------------
   !
   ! ... This routine computes the Hartree and Exchange and Correlation
@@ -28,18 +28,19 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   IMPLICIT NONE
   !
   TYPE(scf_type), INTENT(IN) :: rho  ! the valence charge
+  TYPE(scf_type), INTENT(INOUT) :: v ! the scf (Hxc) potential 
+  !!!!!!!!!!!!!!!!! NB: NOTE that in F90 derived data type must be INOUT and 
+  !!!!!!!!!!!!!!!!! not just OUT because otherwise their allocatable or pointer
+  !!!!!!!!!!!!!!!!! components are NOT defined !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
   REAL(DP), INTENT(IN) :: rho_core(nrxx)
     ! input: the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, eth, charge, etotefield, &
-                           v(nrxx,nspin), &
-                           v_hub(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat)
+  REAL(DP), INTENT(OUT) :: vtxc, etxc, ehart, eth, charge, etotefield
     ! output: the integral V_xc * rho
     ! output: the E_xc energy
     ! output: the hartree energy
     ! output: the integral of the charge
-    ! output: the H+xc_up  potential
   !
   INTEGER :: is
   !
@@ -48,26 +49,26 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   ! ... calculate exchange-correlation potential
   !
   if (dft_is_meta()) then
-     call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v )
+     call v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v%of_r, v%kin_r )
   else
-     CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v )
+     CALL v_xc( rho, rho_core, rhog_core, etxc, vtxc, v%of_r )
   endif
   !
   ! ... add a magnetic field  (if any)
   !
-  CALL add_bfield( v, rho%of_r )
+  CALL add_bfield( v%of_r, rho%of_r )
   !
   ! ... calculate hartree potential
   !
-  CALL v_h( rho%of_g, ehart, charge, v )
+  CALL v_h( rho%of_g, ehart, charge, v%of_r )
   !
-  if (lda_plus_u) call v_Hubbard(rho%ns,v_hub,eth)
+  if (lda_plus_u) call v_Hubbard(rho%ns,v%ns,eth)
   !
   ! ... add an electric field
   ! 
   DO is = 1, nspin
      !
-     CALL add_efield( rho%of_r, v(1,is), etotefield, 0 )
+     CALL add_efield( rho%of_r, v%of_r(1,is), etotefield, 0 )
      !
   END DO
   !
@@ -77,7 +78,7 @@ SUBROUTINE v_of_rho( rho, rho_core, rhog_core, &
   !
 END SUBROUTINE v_of_rho
 !
-SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v )
+SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !----------------------------------------------------------------------------
   !
   ! ... Exchange-Correlation potential Vxc(r) from n(r)
@@ -99,7 +100,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v )
     ! the core charge
   COMPLEX(DP), INTENT(IN) :: rhog_core(ngm)
     ! input: the core charge in reciprocal space
-  REAL(DP), INTENT(OUT) :: v(nrxx,nspin), vtxc, etxc
+  REAL(DP), INTENT(OUT) :: v(nrxx,nspin), kedtaur(nrxx,nspin), vtxc, etxc
     ! V_xc potential
     ! integral V_xc * rho
     ! E_xc energy
@@ -130,7 +131,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v )
   rhoneg = 0.D0
   !
 !  IF (get_igcx()==7.AND.get_igcc()==6) THEN
-     call v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v )
+     call v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
 !  ELSE
 !     CALL errore('v_xc_meta','wrong igcx and/or igcc',1)
 !  ENDIF
@@ -138,7 +139,7 @@ SUBROUTINE v_xc_meta( rho, rho_core, rhog_core, etxc, vtxc, v )
   RETURN
 END SUBROUTINE v_xc_meta
 !
-SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v )
+SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v, kedtaur )
   !     ===================
   !--------------------------------------------------------------------
 !  use gvecp, only: ng => ngm
@@ -146,7 +147,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v )
   USE gvect,            ONLY : nrxx, nrx1,nrx2,nrx3,nr1,nr2,nr3, &
                                g,nl,ngm
   USE gsmooth,          ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
-  USE scf,              ONLY : scf_type, kedtau, kedtaur
+  USE scf,              ONLY : scf_type
   USE lsda_mod,         ONLY : nspin
   USE cell_base,        ONLY : omega, alat
   USE constants,        ONLY : e2
@@ -156,7 +157,7 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v )
   TYPE (scf_type), INTENT(IN) :: rho
   REAL(DP),INTENT(IN) :: rho_core(nrxx)
   COMPLEX(DP),INTENT(IN) :: rhog_core(ngm)
-  REAL(DP),INTENT(OUT) :: etxc, vtxc, v(nrxx,nspin)
+  REAL(DP),INTENT(OUT) :: etxc, vtxc, v(nrxx,nspin), kedtaur(nrxx,nspin)
 !  integer nspin , nnr
 !  real(8)  grho(nnr,3,nspin), rho(nnr,nspin),kedtau(nnr,nspin)
   ! output: excrho: exc * rho ;  E_xc = \int excrho(r) d_r
@@ -268,13 +269,6 @@ SUBROUTINE v_xc_tpss( rho, rho_core, rhog_core, etxc, vtxc, v )
         vtxc = vtxc + (v1xup+v1cup+v1xdw+v1cdw)*e2*rh
      ENDIF
   ENDDO
-  !
-  IF (nspin==1) then
-     CALL interpolate(kedtaur(1,1),kedtau(1,1),-1)
-  else
-     CALL interpolate(kedtaur(1,1),kedtau(1,1),-1)
-     CALL interpolate(kedtaur(1,2),kedtau(1,2),-1)
-  endif
   !
   ALLOCATE( dh( nrxx ) )    
   !
@@ -637,8 +631,7 @@ SUBROUTINE v_hubbard(ns, v_hub, eth)
   REAL(DP), INTENT(OUT) :: eth
   INTEGER :: is, na, nt, m1, m2
   !
-  ! Now the contribution to the total energy is computed. The corrections
-  ! needed to obtain a variational expression are already included
+  ! Now the contribution to the total energy is computed. 
   !
   eth = 0.d0  
   v_hub(:,:,:,:) = 0.d0

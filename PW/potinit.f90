@@ -36,12 +36,12 @@ SUBROUTINE potinit()
   USE gsmooth,              ONLY : doublegrid
   USE control_flags,        ONLY : lscf
   USE scf,                  ONLY : rho, rho_core, rhog_core, &
-                                   vltot, vr, vrs
-  USE funct,            ONLY : dft_is_meta
+                                   vltot, v, vrs, kedtau
+  USE funct,                ONLY : dft_is_meta
   USE wavefunctions_module, ONLY : psic
   USE ener,                 ONLY : ehart, etxc, vtxc
   USE ldaU,                 ONLY : niter_with_fixed_ns
-  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, v_hub, eth
+  USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth
   USE noncollin_module,     ONLY : noncolin, report
   USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,             ONLY : domag
@@ -143,13 +143,13 @@ SUBROUTINE potinit()
         IF ( nspin > 1 ) CALL errore &
              ( 'potinit', 'spin polarization not allowed in drho', 1 )
         !
-        CALL read_rho ( vr, 1, input_drho )
+        CALL read_rho ( v%of_r, 1, input_drho )
         !
         WRITE( UNIT = stdout, &
                FMT = '(/5X,"a scf correction to at. rho is read from",A)' ) &
             TRIM( input_drho )
         !
-        rho%of_r = rho%of_r + vr
+        rho%of_r = rho%of_r + v%of_r
         !
      END IF
      !
@@ -214,11 +214,11 @@ SUBROUTINE potinit()
   ! ... compute the potential and store it in vr
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
-                 ehart, etxc, vtxc, eth, etotefield, charge, vr, v_hub )
+                 ehart, etxc, vtxc, eth, etotefield, charge, v )
   !
   ! ... define the total local potential (external+scf)
   !
-  CALL set_vrs( vrs, vltot, vr, nrxx, nspin, doublegrid )
+  CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
   !
   ! ... write on output the parameters used in the lda+U calculation
   !

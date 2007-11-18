@@ -51,7 +51,7 @@ subroutine phq_setup
   USE klist,         ONLY : xk, lgauss, degauss, ngauss, nks, nelec
   USE ktetra,        ONLY : ltetra, tetra
   USE lsda_mod,      ONLY : nspin, lsda, starting_magnetization
-  USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
+  USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
   USE symme,         ONLY : nsym, s, ftau, irt, t_rev
@@ -105,7 +105,7 @@ subroutine phq_setup
   !
   ! 1) Computes the total local potential (external+scf) on the smooth grid
   !
-  call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
+  call set_vrs (vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
   !
   ! 2) Set non linear core correction stuff
   !

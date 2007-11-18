@@ -724,7 +724,7 @@ CONTAINS
     
     ! computes the total local potential (external+scf) on the smooth grid
     call setlocal
-    call set_vrs (vrs, vltot, vr, nrxx, nspin, doublegrid)
+    call set_vrs (vrs, vltot, vr, kedtau, kedtaur, nrxx, nspin, doublegrid)
     
     ! compute the D for the pseudopotentials
     call newd

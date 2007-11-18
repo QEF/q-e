@@ -69,9 +69,9 @@ SUBROUTINE compute_casino
        nrxx, g, gg, ecutwfc, gcutm, nl, igtongl
   USE klist , ONLY: nks, nelec, xk
   USE lsda_mod, ONLY: lsda, nspin
-  USE scf, ONLY: rho, rho_core, rhog_core
+  USE scf, ONLY: rho, rho_core, rhog_core, vnew
   USE ldaU, ONLY : lda_plus_u, eth, Hubbard_lmax
-  USE vlocal, ONLY: vloc, vnew, strf
+  USE vlocal, ONLY: vloc, strf
   USE wvfct, ONLY: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
@@ -79,6 +79,7 @@ SUBROUTINE compute_casino
   USE io_global, ONLY: stdout
   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
+  USE funct, ONLY : dft_is_meta
   IMPLICIT NONE
   INTEGER :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
        nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb, at_num 
@@ -86,7 +87,7 @@ SUBROUTINE compute_casino
   LOGICAL :: exst, found
   REAL(DP) :: ek, eloc, enl, charge, etotefield
   COMPLEX(DP), ALLOCATABLE :: aux(:), hpsi(:,:)
-  REAL(DP), allocatable :: v_h_new(:,:,:,:)
+  REAL(DP), allocatable :: v_h_new(:,:,:,:), kedtaur_new(:,:)
   INTEGER :: ios
   INTEGER, EXTERNAL :: atomic_number
   REAL (DP), EXTERNAL :: ewald
@@ -106,6 +107,11 @@ SUBROUTINE compute_casino
   ALLOCATE (idx (4*npwx) )
   ALLOCATE (igtog (4*npwx) )
   if (lda_plus_u) allocate(v_h_new(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
+  if (dft_is_meta()) then
+     allocate (kedtaur_new(nrxx,nspin))
+  else
+     allocate (kedtaur_new(1,nspin))
+  endif
   hpsi (:,:) = (0.d0, 0.d0)
   idx(:) = 0
   igtog(:) = 0
@@ -222,7 +228,7 @@ SUBROUTINE compute_casino
   ! compute hartree and xc contribution
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
-                 ehart, etxc, vtxc, eth, etotefield, charge, vnew, v_h_new )
+                 ehart, etxc, vtxc, eth, etotefield, charge, vnew )
   !
   etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
   !
