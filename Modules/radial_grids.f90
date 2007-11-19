@@ -50,8 +50,8 @@ TYPE radial_grid_type
        rab(ndmx),  & ! d r(x) / d x where x is the linear grid
        sqr(ndmx),  & ! the square root of the radial mesh
        rm1(ndmx),  & ! 1 / r
-       rm2(ndmx),  & ! 1 / r
-       rm3(ndmx)     ! 1 / r
+       rm2(ndmx),  & ! 1 / r**2
+       rm3(ndmx)     ! 1 / r**3
   REAL(DP) :: &
        xmin,       & ! the minimum x
        rmax,       & ! the maximum radial point
@@ -197,10 +197,7 @@ subroutine hartree(k,nst,mesh,grid,f,vh)
   allocate(d(mesh),stat=ierr)
   allocate(e(mesh),stat=ierr)
 
-  if (ierr.ne.0) then
-     write(6,'('' Error allocating d or e '')')
-     stop
-  endif
+  if (ierr.ne.0) call errore('hartree',' error allocating d or e',1)
   !
   ! Find the series expansion of the solution close to r=0
   !
@@ -273,10 +270,7 @@ subroutine hartree(k,nst,mesh,grid,f,vh)
   ! solve the linear system with lapack routine dptsv
   !
   call dptsv(mesh-2,1,d(2),e(2),vh(2),mesh-2,ierr)
-  if (ierr.ne.0) then
-     write(6,'(''Error in lapack, info= '',i5)') ierr
-     stop
-  endif
+  if (ierr.ne.0) call errore('hartree', 'error in lapack', ierr)
   !
   ! Set the value of the solution at the first and last point
   ! First, find c0 from the solution in the second point

@@ -75,6 +75,7 @@ subroutine readpp
      ! read UPF  pseudopotentials - the UPF format is detected via the
      ! presence of the keyword '<PP_HEADER>' at the beginning of the file
      !
+     upf(nt)%grid => rgrid(nt)
      call read_pseudo_upf(iunps, upf(nt), isupf)
      !
      if (isupf == 0) then
@@ -105,7 +106,7 @@ subroutine readpp
            ELSE
               CALL readvan (iunps, nt, upf(nt))
            ENDIF
-           CALL set_pseudo_upf (nt, upf(nt))
+           CALL set_pseudo_upf (nt, upf(nt), do_grid=.true.)
            !
         else if (pseudo_type (psfile (nt) ) ==3) then
            !
@@ -125,7 +126,7 @@ subroutine readpp
            ! 
            call read_ncpp (iunps, nt, upf(nt))
            !
-           CALL set_pseudo_upf (nt, upf(nt)) 
+           CALL set_pseudo_upf (nt, upf(nt), do_grid=.true.) 
            !
         endif
         !

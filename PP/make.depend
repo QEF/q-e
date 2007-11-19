@@ -253,6 +253,7 @@ punch_plot.o : ../PW/pwcom.o
 punch_plot.o : ../PW/scf_mod.o
 pw2casino.o : ../Modules/cell_base.o
 pw2casino.o : ../Modules/constants.o
+pw2casino.o : ../Modules/functionals.o
 pw2casino.o : ../Modules/io_files.o
 pw2casino.o : ../Modules/io_global.o
 pw2casino.o : ../Modules/ions_base.o

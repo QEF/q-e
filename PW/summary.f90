@@ -406,16 +406,20 @@ SUBROUTINE print_ps_info
   USE ions_base,       ONLY : ntyp => nsp
   USE atom,            ONLY : rgrid
   USE uspp_param,      ONLY : upf
+  USE paw_variables,   ONLY : rad, xlm
+  USE funct,           ONLY : dft_is_gradient
+
   !
-  INTEGER :: nt
+  INTEGER :: nt, lmax
   CHARACTER :: ps*35
   !
   DO nt = 1, ntyp
      !
-     IF ( upf(nt)%tvanp ) THEN
-        ps='Ultrasoft'
-     ELSE IF ( upf(nt)%tpawp ) THEN
+     IF ( upf(nt)%tpawp ) THEN
+        ! Note: for PAW pseudo also tvanp is .true.
         ps="Projector augmented-wave"
+     ELSE IF ( upf(nt)%tvanp ) THEN
+        ps='Ultrasoft'
      ELSE
         ps='Norm-conserving'
      END IF
@@ -430,6 +434,15 @@ SUBROUTINE print_ps_info
      !
      WRITE( stdout, '(5x,A)') TRIM(upf(nt)%generated)
      !
+     IF(upf(nt)%tpawp) THEN
+        lmax = 2*upf(nt)%paw%lmax_rho
+        IF ( dft_is_gradient() ) lmax = lmax + xlm
+        WRITE( stdout, '(5x, a, i4, a, i3)') &
+               "Setup to integrate on", ((lmax+1)*(lmax+2))/2, &
+               " directions: integral exact up to l =", lmax
+        WRITE( stdout, '(5x,a,a)') &
+               "Shape of augmentation charge: ", TRIM(upf(nt)%paw%augshape)
+     ENDIF
      WRITE( stdout, '(5x,"Using radial grid of ", i4, " points, ", &
          &i2," beta functions with: ")') rgrid(nt)%mesh, upf(nt)%nbeta
      DO ib = 1, upf(nt)%nbeta

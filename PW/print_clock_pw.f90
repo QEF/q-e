@@ -196,6 +196,7 @@ SUBROUTINE print_clock_pw()
       CALL print_clock ('PAW_lm2rad')
       CALL print_clock ('PAW_rad2lm')
       ! third level, or deeper:
+      CALL print_clock ('PAW_rad2lm3')
       CALL print_clock ('PAW_gcxc_v')
       CALL print_clock ('PAW_div')
       CALL print_clock ('PAW_grad')

@@ -200,6 +200,7 @@ CONTAINS
     INTEGER  :: nc, iok          ! index Bessel function, ...
     INTEGER :: l1,l2,l3, lll, ircm, ir, ir0
     REAL(dp) :: twosigma2, rm, gaussian(ndmx)  ! needed for "gaussian" augfun 
+    REAL(dp) :: zeta, resi,usigma=4._dp             ! needed for "bloechl" augfun 
     !
     mesh = grid%mesh
     irc = maxval(ikk(1:nbeta))+8
@@ -227,7 +228,7 @@ CONTAINS
     ! Copy the wavefunctions
     pawset_%nwfc = nbeta
     pawset_%l(1:nbeta) = lls(1:nbeta)
-    pawset_%lmax = MAXVAL(pawset_%l(1:pawset_%nwfc))
+    pawset_%lmax = MAXVAL(pawset_%l(1:nbeta))
     pawset_%oc(1:nbeta) = ocs(1:nbeta)
     pawset_%jj(1:nbeta) = jjs(1:nbeta)
     pawset_%rcutus(1:nbeta) = rcutus(1:nbeta)
@@ -284,14 +285,15 @@ CONTAINS
        END DO
     END DO
     !
+    !
     IF (which_paw_augfun/='AE') THEN
        ! The following lines enables to test the idependence on the 
        ! specific shape of the radial part of the augmentation functions
        ! in a spherically averager system (as is the case in atoms) only
        ! the zero-th moment contribute to the scf charge
        CALL infomsg ('us2paw','You have specified: '//TRIM(which_paw_augfun))  
-
-       pawset_%augfun(:,:,:,:) = 0.0_dp
+       !
+101    pawset_%augfun(:,:,:,:) = 0.0_dp
        DO ns=1,nbeta
           l1 = pawset_%l(ns)
           DO ns1=1,ns
@@ -299,7 +301,6 @@ CONTAINS
              !
              SELECT CASE (which_paw_augfun)
              CASE ('QVAN')
-                !call errore ('us2paw','QVAN aug func to be checked',1)
                 CALL infomsg('us2paw', 'WARNING: QVAN augmentation function are for testing ONLY: '//&
                                        'they will not work in pw!')
                 ! Choose the shape of the augmentation functions: NC Q ...
@@ -312,10 +313,49 @@ CONTAINS
                 raux=pawset_%augmom(ns,ns1,0)/raux
                 pawset_%augfun(1:mesh,ns,ns1,0)=raux*pawset_%augfun(1:mesh,ns,ns1,0)
                 !
-             CASE ('GAUSS')
+             CASE ('BG')
+                CALL infomsg('us2paw', 'WARNING: using Bloechl style augmentation functions '//&
+                                       'is not a good idea, as analytical overlap are not yet '//&
+                                       'implemented in pwscf: use BESSEL instead.')
                 ! use Bloechl style augmentation functions, as linear combinations of
                 ! gaussians functions (this is quite pointless if the the plane-wave
                 ! code doesn't use double-augmentation with analytical gaussian overlaps)
+                DO ir0 = 1,mesh
+                    IF(grid%r(ir0) > pawset_%rmatch_augfun) &
+                        exit
+                ENDDO
+                ! look for a sigma large enough to keep (almost) all the gaussian in the aug sphere
+                zeta = (usigma/pawset_%rmatch_augfun)**2
+                DO ir = 1,mesh
+                    gaussian(ir) = exp( - zeta*(grid%r(ir))**2 ) * grid%r2(ir)
+                ENDDO
+                DO l3 = max (l1-l2,l2-l1), l1+l2
+                    ! Functions has to be normalized later, so I can use a constant factor 
+                    ! = rc**l3 to prevent very large numbers when integrating:
+                    aux(:) = gaussian(:) * grid%r(:)**l3
+                    ! Normalization to have unitary multipole l3
+                    ! and check norm of augmentation functions.
+                    raux = int_0_inf_dr(aux,pawset_%grid,mesh,l3+2)
+                    IF (abs(raux) < eps8) CALL errore &
+                        ('ld1_to_paw','norm of augm. func. is too small',ns*100+ns1)
+                    ! Check if gaussians are localized enough into the augmentation sphere,
+                    ! otherwise try again with a larger sigma.
+                    resi = int_0_inf_dr(aux,pawset_%grid,ir0, l3+2)
+                    resi = (raux-resi)/raux
+                    IF (abs(resi) > eps8) THEN
+                        usigma = usigma + .0625_dp
+                        GOTO 101
+                    ENDIF
+                    raux=pawset_%augmom(ns,ns1,l3)/raux
+
+                    pawset_%augfun(1:mesh,ns,ns1,l3) = raux*gaussian(1:mesh)
+                    pawset_%augfun(1:mesh,ns1,ns,l3) = raux*gaussian(1:mesh)
+                ENDDO
+                !
+             CASE ('GAUSS')
+                ! use linear combinations of gaussians functions, not the Bloechl style
+                ! but it looks a bit alike... (used for testing, now obsolete)
+                CALL infomsg('us2paw', 'GAUSS augmentation functions are obsolete: use BESSEL instead')
                 rm = pawset_%rmatch_augfun
                 twosigma2 = TWO*(rm/3.0_dp)**2
                 do ir=1,mesh
@@ -378,6 +418,8 @@ CONTAINS
              END SELECT
           END DO
        END DO
+       IF ( which_paw_augfun == 'BG') &
+         write(*,"(5x,a,f12.6)") "Gaussians generated with zeta: ", zeta
     END IF
     !
     !

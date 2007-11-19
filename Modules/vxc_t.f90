@@ -41,14 +41,12 @@ subroutine vxc_t(rho,rhoc,lsd,vxc)
      arho = abs(rho(1)+rho(2)+rhoc)
      if (arho.gt.eps) then      
         zeta = (rho(1)-rho(2)) / arho
-        if (abs(zeta).gt.1.0_dp) then 
-           write(stdout,*) 'zeta, rho_up, rho_dw, rhoc', zeta, &
-                           rho(1),rho(2),rhoc
-        else
-           call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
-           vxc(1) = e2*(vx(1)+vc(1))
-           vxc(2) = e2*(vx(2)+vc(2))
-        endif
+        ! zeta has to stay between -1 and 1, but can get a little
+        ! out the bound during the first iterations.
+        if (abs(zeta).gt.1.0_dp) zeta = sign(1._dp, zeta)
+        call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
+        vxc(1) = e2*(vx(1)+vc(1))
+        vxc(2) = e2*(vx(2)+vc(2))
      endif
   endif
 

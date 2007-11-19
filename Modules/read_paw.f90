@@ -214,7 +214,7 @@ SUBROUTINE allocate_pseudo_paw( paw, size_mesh, size_nwfc, size_lmax )
 
   TYPE( paw_t ), INTENT(INOUT) :: paw
   INTEGER, INTENT(IN) :: size_mesh, size_nwfc, size_lmax
-!   WRITE(0,"(a,3i5)") "Allocating PAW setup: ",size_mesh, size_nwfc, size_lmax
+  !WRITE(0,"(a,3i5)") "Allocating PAW setup: ",size_mesh, size_nwfc, size_lmax
   ALLOCATE ( paw%l(size_nwfc) )
   ALLOCATE ( paw%jj(size_nwfc) )
   ALLOCATE ( paw%ikk(size_nwfc) )
@@ -313,13 +313,6 @@ subroutine set_pseudo_paw (is, pawset)
   pow = 1.d0
   nrs =  Count(pawset%grid%r(1:pawset%grid%mesh).le. (pawset%grid%r(pawset%irc)*1.2d0))
   nrc =  Count(pawset%grid%r(1:pawset%grid%mesh).le. (pawset%grid%r(pawset%irc)*1.8d0))
-  if (ionode) then
-    WRITE(stdout,"(7x,a)") 'PAW functions cut-off:'
-    WRITE(stdout,"(9x,a,i5,f12.6)") "matching radius:       ", pawset%irc, pawset%grid%r(pawset%irc)
-  endif
-  ! Currently unused:
-!   WRITE(*,"(9x,a,i5,f12.6)") "inner stepping radius: ", nrs, pawset%grid%r(nrs)
-!   WRITE(*,"(9x,a,i5,f12.6)") "outer stepping radius: ", nrc, pawset%grid%r(nrc)
   !
   upf(is)%zp = pawset%zval
   upf(is)%psd = pawset%symbol
@@ -346,6 +339,11 @@ subroutine set_pseudo_paw (is, pawset)
   rgrid(is)%rmax = pawset%grid%rmax
   rgrid(is)%zmesh= pawset%grid%zmesh
   rgrid(is)%dx   = pawset%grid%dx
+
+!   upf(is)%paw%rmax  = pawset%grid%rmax
+!   upf(is)%paw%zmesh = pawset%grid%zmesh
+!   upf(is)%paw%xmin  = pawset%grid%xmin
+!   upf(is)%paw%dx    = pawset%grid%dx
   !
   rgrid(is)%r  (1:mesh) = pawset%grid%r(1:mesh)
   rgrid(is)%rab(1:mesh) = pawset%grid%r(1:mesh)*pawset%grid%dx
@@ -365,15 +363,20 @@ subroutine set_pseudo_paw (is, pawset)
   ! ... (necessary to set starting occupations correctly)
   !
   upf(is)%nwfc = nwfc
-  ALLOCATE ( upf(is)%lchi(nwfc), upf(is)%oc(nwfc) )
+  ALLOCATE ( upf(is)%lchi(nwfc), upf(is)%oc(nwfc),upf(is)%paw%oc(nwfc) )
   ALLOCATE ( upf(is)%chi( mesh, nwfc) )
   do i=1, nwfc
      upf(is)%lchi(i)=pawset%l(i)
      upf(is)%oc(i)=MAX(pawset%oc(i),0._DP)
+     upf(is)%paw%oc(i)=MAX(pawset%oc(i),0._DP)
      upf(is)%chi(1:mesh, i) = pawset%pswfc(1:mesh, i)
   end do
   !
+  ! Augmentation charge cutoff:
+  upf(is)%paw%iraug = pawset%irc
+  !
   upf(is)%nbeta= nwfc
+  ! 
   allocate ( upf(is)%kbeta(nwfc) )
   do nb=1,nwfc
      upf(is)%kbeta(nb)=pawset%ikk(nb)
@@ -381,6 +384,21 @@ subroutine set_pseudo_paw (is, pawset)
   ! kkbeta is the maximum distance from nucleus where AE 
   ! and PS wavefunction may not match:
   upf(is)%kkbeta=MAXVAL (upf(is)%kbeta(:))
+  ! WARNING! In paw kkbeta may be smaller than the cutoff radius of augmentation function
+  ! we have to keep this into account!!!
+  upf(is)%paw%irmax=MAX(upf(is)%kkbeta, upf(is)%paw%iraug)
+  !
+  if (ionode) then
+    WRITE(stdout,"(7x,a)") 'PAW functions cut-off radii:'
+    WRITE(stdout,"(9x,a,i5,f12.6)") "max pfunc radius: ", upf(is)%kkbeta, pawset%grid%r(upf(is)%kkbeta)
+    WRITE(stdout,"(9x,a,i5,f12.6)") "aug sphere radius:", pawset%irc, pawset%grid%r(pawset%irc)
+    WRITE(stdout,"(9x,a,i5,f12.6)") "max radius:       ", upf(is)%paw%irmax, pawset%grid%r(upf(is)%paw%irmax)
+  ! Currently unused:
+!   WRITE(*,"(9x,a,i5,f12.6)") "inner stepping radius: ", nrs, pawset%grid%r(nrs)
+!   WRITE(*,"(9x,a,i5,f12.6)") "outer stepping radius: ", nrc, pawset%grid%r(nrc)
+  endif
+  
+
 
   allocate (upf(is)%beta(1:mesh, 1:nwfc))
   upf(is)%beta(1:mesh, 1:nwfc) = &
@@ -412,8 +430,6 @@ subroutine set_pseudo_paw (is, pawset)
      end do
   end do
 
-  ! Augmentation charge cutoff:
-  upf(is)%paw%nraug = pawset%irc
 
   ! Import total multipoles of AE-pseudo density (actually unused)
   allocate( upf(is)%paw%augmom(nwfc,nwfc, 0:2*pawset%lmax) )
@@ -460,6 +476,7 @@ subroutine set_pseudo_paw (is, pawset)
              pawset%aewfc(1:pawset%irc, i) * pawset%aewfc(1:pawset%irc, j)
         upf(is)%paw%ptfunc (1:pawset%irc, i, j) = &
              pawset%pswfc(1:pawset%irc, i) * pawset%pswfc(1:pawset%irc, j)
+        !write(20000+100*i+10*j,'(f15.7)') upf(is)%paw%pfunc(:,i,j)
      enddo
   enddo
   !

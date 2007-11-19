@@ -230,7 +230,7 @@ subroutine init_us_1
   !
   do nt = 1, ntyp
      if ( upf(nt)%tvanp ) then
-        do l = 0, upf(nt)%nqlc - 1
+        do l = 0, upf(nt)%nqlc -1
            !
            !     first we build for each nb,mb,l the total Q(|r|) function
            !     note that l is the true (combined) angular momentum
@@ -238,6 +238,10 @@ subroutine init_us_1
            !
            do nb = 1, upf(nt)%nbeta
               do mb = nb, upf(nt)%nbeta
+               respect_sum_rule : &
+               if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
+                    ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
+                    (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
                  ijv = mb * (mb-1) / 2 + nb
                  paw : & ! in PAW formalism aug. charge is computed elsewhere
                  if (upf(nt)%tpawp) then
@@ -246,22 +250,19 @@ subroutine init_us_1
                      qtot(1:upf(nt)%kkbeta,ijv) =&
                                  upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
                  else
-                    if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
-                         ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
-                         (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
-                            do ir = 1, upf(nt)%kkbeta
-                            if (rgrid(nt)%r(ir) >=upf(nt)%rinner (l+1) ) then
-                                qtot (ir, ijv) = upf(nt)%qfunc(ir,ijv)
-                            else
-                                ilast = ir
-                            endif
-                            enddo
-                            if ( upf(nt)%rinner (l+1) > 0.0_dp) &
-                                call setqf(upf(nt)%qfcoef (1, l+1, nb, mb), &
-                                        qtot(1,ijv), rgrid(nt)%r, upf(nt)%nqf, &
-                                        l, ilast)
+                    do ir = 1, upf(nt)%kkbeta
+                    if (rgrid(nt)%r(ir) >=upf(nt)%rinner (l+1) ) then
+                        qtot (ir, ijv) = upf(nt)%qfunc(ir,ijv)
+                    else
+                        ilast = ir
                     endif
+                    enddo
+                    if ( upf(nt)%rinner (l+1) > 0.0_dp) &
+                        call setqf(upf(nt)%qfcoef (1, l+1, nb, mb), &
+                                qtot(1,ijv), rgrid(nt)%r, upf(nt)%nqf, &
+                                l, ilast)
                  endif paw
+              endif respect_sum_rule
               enddo ! mb
            enddo ! nb
            !
@@ -301,7 +302,6 @@ subroutine init_us_1
 #endif
      endif
      ! ntyp
-
   enddo
   !
   !   and finally we compute the qq coefficients by integrating the Q.

@@ -22,7 +22,7 @@
 !=----------------------------------------------------------------------------=!
 !
 !---------------------------------------------------------------------
-subroutine set_pseudo_upf (is, upf)
+subroutine set_pseudo_upf (is, upf, do_grid)
   !---------------------------------------------------------------------
   !
   !   set "is"-th pseudopotential using the Unified Pseudopotential Format
@@ -42,6 +42,8 @@ subroutine set_pseudo_upf (is, upf)
   !
   integer :: nb, mb, ijv
   integer :: iexch,icorr,igcx,igcc
+  logical,optional :: do_grid ! if .true. reconstruct radial grid.
+                              ! (only for old format pseudos)
   TYPE (pseudo_upf) :: upf
   !
   !
@@ -54,15 +56,19 @@ subroutine set_pseudo_upf (is, upf)
      call set_dft_from_name( upf%dft )
   end if
   !
-  rgrid(is)%dx   = upf%dx
-  rgrid(is)%xmin = upf%xmin
-  rgrid(is)%zmesh= upf%zmesh
-  rgrid(is)%mesh = upf%mesh
-  IF ( rgrid(is)%mesh > SIZE (rgrid(is)%r) ) &
-     CALL errore('upf_to_internals', 'too many grid points', 1)
-  !
-  rgrid(is)%r  (1:upf%mesh) = upf%r  (1:upf%mesh)
-  rgrid(is)%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
+  if(present(do_grid)) then
+  if(do_grid) then
+    rgrid(is)%dx   = upf%dx
+    rgrid(is)%xmin = upf%xmin
+    rgrid(is)%zmesh= upf%zmesh
+    rgrid(is)%mesh = upf%mesh
+    IF ( rgrid(is)%mesh > SIZE (rgrid(is)%r) ) &
+        CALL errore('upf_to_internals', 'too many grid points', 1)
+    !
+    rgrid(is)%r  (1:upf%mesh) = upf%r  (1:upf%mesh)
+    rgrid(is)%rab(1:upf%mesh) = upf%rab(1:upf%mesh)
+  endif
+  endif
   !
 end subroutine set_pseudo_upf
 

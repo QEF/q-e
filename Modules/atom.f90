@@ -17,7 +17,7 @@ MODULE atom
   !
   SAVE
   !
-  type(radial_grid_type) :: &
+  type(radial_grid_type),target :: &
        rgrid(npsx)                ! the information on atomic radial grids.
                                   ! NB: some of the subsequent data are therefore redundant 
                                   ! and will be eliminated in due course asap

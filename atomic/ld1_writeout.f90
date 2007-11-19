@@ -40,8 +40,8 @@ subroutine ld1_writeout
   if (nconf > 1) &
        call errore('ld1_writeout','more than one test configuration',1)
 
-  if (.not. lpaw) then
-
+!   if (.not. lpaw) then
+! 
      if (rel == 2 .and. .not. matches('.UPF',file_pseudopw) &
                   .and. .not. matches('.upf',file_pseudopw) ) then
         file_pseudopw=trim(file_pseudopw)//'.UPF'
@@ -49,13 +49,12 @@ subroutine ld1_writeout
 
      oldformat = .not. matches('.UPF',file_pseudopw) .and. &
                  .not. matches('.upf',file_pseudopw)
-
-  else
-     if ( .not. matches('.PAW',file_pseudopw) .and. &
-          .not. matches('.paw',file_pseudopw) ) then
-        file_pseudopw=trim(file_pseudopw)//'.PAW'
-     end if
-  end if
+!   else
+!      if ( .not. matches('.PAW',file_pseudopw) .and. &
+!           .not. matches('.paw',file_pseudopw) ) then
+!         file_pseudopw=trim(file_pseudopw)//'.PAW'
+!      end if
+!   end if
 
   iunps=28
   if (ionode) &

@@ -23,17 +23,17 @@ TYPE :: paw_t
    ! Functions are defined on a logarithmic radial mesh.
    !
    CHARACTER(LEN=2) :: symbol
-   REAL (DP) :: zval
-   REAL (DP) :: z
-   CHARACTER(LEN=80) :: dft
+   REAL (DP)        :: zval
+   REAL (DP)        :: z
+   CHARACTER(LEN=80):: dft
    TYPE(radial_grid_type) :: grid
-   REAL (DP) :: rmatch_augfun  ! the matching radius for augmentation charges
-   LOGICAL :: nlcc ! nonlinear core correction
-   INTEGER :: nwfc ! number of wavefunctions/projectors
-   INTEGER :: lmax ! maximum angular momentum of projectors
+   REAL (DP)        :: rmatch_augfun  ! the matching radius for augmentation charges
+   LOGICAL          :: nlcc ! nonlinear core correction
+   INTEGER          :: nwfc ! number of wavefunctions/projectors
+   INTEGER          :: lmax ! maximum angular momentum of projectors
    INTEGER, POINTER :: l(:) !l(nwfsx) ! angular momentum of projectors
    INTEGER, POINTER :: ikk(:) !ikk(nwfsx) ! cutoff radius for the projectors
-   INTEGER :: irc ! r(irc) = radius of the augmentation sphere
+   INTEGER          :: irc ! r(irc) = radius of the augmentation sphere
    CHARACTER(LEN=2),POINTER ::  els (:) ! the name of the wavefunction
    REAL (DP), POINTER :: &
         oc(:), &          !(nwfsx) the occupations
@@ -65,14 +65,25 @@ END TYPE paw_t
         TYPE paw_in_upf
             REAL(DP),POINTER :: aug(:,:,:,:)  ! Augmentation charge
             REAL(DP),POINTER :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
-                                                  ! is already included in upf)
+                                              ! is already included in upf)
             REAL(DP),POINTER :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
                                 ptfunc(:,:,:) ! as above, but for pseudo
             REAL(DP),POINTER :: ae_vloc(:)    ! AE local potential (pseudo vloc
-                                                  ! is already included in upf)
+                                              ! is already included in upf)
             REAL(DP),POINTER :: kdiff(:,:)    ! kinetic energy difference AE-pseudo
+            REAL(DP),POINTER :: oc(:)         ! starting occupation used to init becsum
+                                              ! they differ from US ones because they
+                                              ! are indexed on BETA functions, non on WFC
             REAL(DP),POINTER :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
-            INTEGER          :: nraug         ! max cutoff of augmentation functions 
+            INTEGER          :: iraug         ! index on rgrid closer to, and >, raug
+            INTEGER          :: irmax         ! max{ iraug , kkbeta } == max radius to integrate
+            INTEGER          :: lmax_aug      ! max angmom of augmentation functions, it is ==
+                                              ! to 2* max{l of pseudized wavefunctions}
+                                              ! note that nqlc of upf also include the angmom of
+                                              ! empty virtual channel used to generate local potential
+            INTEGER          :: lmax_phi      !
+            INTEGER          :: lmax_rho      !
+            CHARACTER(len=12):: augshape      ! shape of augmentation charge
         END TYPE paw_in_upf
 
 
@@ -147,6 +158,9 @@ END TYPE paw_t
           REAL(DP) :: paw_data_format     ! The version of the format
           LOGICAL  :: tpawp               ! true if atom is PAW
           TYPE(paw_in_upf) :: paw         ! additional data for PAW (see above)
+          TYPE(radial_grid_type),POINTER :: &
+                             grid         ! pointer to the corresponding grid
+                                          ! in radial_grids module
 
           ! GIPAW:
           LOGICAL  :: has_gipaw           ! Whether GIPAW data is included
@@ -178,6 +192,7 @@ END TYPE paw_t
             NULLIFY( paw%ae_vloc ) 
             NULLIFY( paw%kdiff )
             NULLIFY( paw%augmom )
+            NULLIFY( paw%oc )
         END SUBROUTINE
 
         SUBROUTINE deallocate_paw_in_upf( paw )
@@ -189,6 +204,7 @@ END TYPE paw_t
            IF( ASSOCIATED( paw%ae_vloc )  ) DEALLOCATE ( paw%ae_vloc )
            IF( ASSOCIATED( paw%kdiff ) ) DEALLOCATE ( paw%kdiff )
            IF( ASSOCIATED( paw%augmom ) ) DEALLOCATE ( paw%augmom )
+           IF( ASSOCIATED( paw%oc ) ) DEALLOCATE ( paw%oc )
            CALL nullify_paw_in_upf( paw )
         END SUBROUTINE
 

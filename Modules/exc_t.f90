@@ -41,7 +41,7 @@ function exc_t(rho,rhoc,lsd)
         zeta = (rho(1)-rho(2)) / arho
         ! In atomic this cannot happen, but in PAW zeta can become
         ! a little larger than 1, or smaller than -1:
-        zeta = MAX(MIN(zeta, 1._dp),-1._dp)
+        if( abs(zeta) > 1._dp) zeta = sign(1._dp, zeta)
         call xc_spin(arho,zeta,ex,ec,vx(1),vx(2),vc(1),vc(2))
         exc_t=e2*(ex+ec)
      endif
