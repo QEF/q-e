@@ -569,7 +569,7 @@ SUBROUTINE poolextreme( ps, iflag )
   !
   USE mp_global, ONLY : inter_pool_comm, intra_image_comm, npool
   USE mp,        ONLY : mp_barrier  
-  USE parallel_include  
+  USE kinds,     ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -578,31 +578,19 @@ SUBROUTINE poolextreme( ps, iflag )
   !
 #if defined (__PARA)  
   !
-  INTEGER  :: info
-  REAL(DP) :: psr 
-  !
-  !
   IF ( npool <= 1 ) RETURN
   !
   CALL mp_barrier( intra_image_comm )
   !
   IF ( iflag > 0 ) THEN
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MAX, &
-                         inter_pool_comm, info )
-     !
-     CALL errore( 'poolextreme', 'info<>0 in allreduce1', info )
+     CALL parallel_max_real( 1, ps, inter_pool_comm, -1 )
      !
   ELSE
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MIN, &
-                         inter_pool_comm, info )
-     !
-     CALL errore( 'poolextreme', 'info<>0 in allreduce2', info )
+     CALL parallel_min_real( 1, ps, inter_pool_comm, -1 )
      !
   END IF
-  !
-  ps = psr
   !
 #endif
   !
@@ -769,8 +757,7 @@ SUBROUTINE extreme( ps, iflag )
   ! ... of a real variable among the values distributed on a given pool
   !
   USE mp_global, ONLY : intra_image_comm
-  USE mp,        ONLY : mp_barrier  
-  USE parallel_include    
+  USE kinds,     ONLY : DP
   !
   IMPLICIT NONE
   !
@@ -779,25 +766,15 @@ SUBROUTINE extreme( ps, iflag )
   !
 #if defined (__PARA)  
   !
-  REAL(DP) :: psr
-  INTEGER  :: info
-  !
-  !
-  CALL mp_barrier( intra_image_comm )
-  !
   IF ( iflag > 0 ) THEN
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MAX, &
-                         intra_image_comm, info )
+     CALL parallel_max_real( 1, ps, intra_image_comm, -1 )
      !
   ELSE
      !
-     CALL MPI_ALLREDUCE( ps, psr, 1, MPI_DOUBLE_PRECISION, MPI_MIN, &
-                         intra_image_comm, info )
+     CALL parallel_min_real( 1, ps, intra_image_comm, -1 )
      !
   END IF
-  !
-  ps = psr
   !
 #endif
   !
