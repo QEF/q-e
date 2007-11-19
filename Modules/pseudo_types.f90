@@ -63,16 +63,16 @@ END TYPE paw_t
         ! Additional data to make a PAW setup out of an US pseudo,
         ! they are all stored on a radial grid:
         TYPE paw_in_upf
-            REAL(DP),ALLOCATABLE :: aug(:,:,:,:)  ! Augmentation charge
-            REAL(DP),POINTER     :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
+            REAL(DP),POINTER :: aug(:,:,:,:)  ! Augmentation charge
+            REAL(DP),POINTER :: ae_rho_atc(:) ! AE core charge (pseudo ccharge
                                                   ! is already included in upf)
-            REAL(DP),ALLOCATABLE :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
-                                    ptfunc(:,:,:) ! as above, but for pseudo
-            REAL(DP),POINTER     :: ae_vloc(:)    ! AE local potential (pseudo vloc
+            REAL(DP),POINTER :: pfunc(:,:,:),&! Psi_i(r)*Psi_j(r)
+                                ptfunc(:,:,:) ! as above, but for pseudo
+            REAL(DP),POINTER :: ae_vloc(:)    ! AE local potential (pseudo vloc
                                                   ! is already included in upf)
-            REAL(DP),ALLOCATABLE :: kdiff(:,:)    ! kinetic energy difference AE-pseudo
-            REAL(DP),ALLOCATABLE :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
-            INTEGER              :: nraug         ! max cutoff of augmentation functions 
+            REAL(DP),POINTER :: kdiff(:,:)    ! kinetic energy difference AE-pseudo
+            REAL(DP),POINTER :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
+            INTEGER          :: nraug         ! max cutoff of augmentation functions 
         END TYPE paw_in_upf
 
 
@@ -169,8 +169,32 @@ END TYPE paw_t
 
       CONTAINS
 
+        SUBROUTINE nullify_paw_in_upf( paw )
+           TYPE( paw_in_upf ), INTENT(INOUT) :: paw
+            NULLIFY( paw%aug )
+            NULLIFY( paw%ae_rho_atc )
+            NULLIFY( paw%pfunc )
+            NULLIFY( paw%ptfunc )
+            NULLIFY( paw%ae_vloc ) 
+            NULLIFY( paw%kdiff )
+            NULLIFY( paw%augmom )
+        END SUBROUTINE
+
+        SUBROUTINE deallocate_paw_in_upf( paw )
+           TYPE( paw_in_upf ), INTENT(INOUT) :: paw
+           IF( ASSOCIATED( paw%aug ) ) DEALLOCATE ( paw%aug )
+           IF( ASSOCIATED( paw%ae_rho_atc ) ) DEALLOCATE ( paw%ae_rho_atc )
+           IF( ASSOCIATED( paw%pfunc ) ) DEALLOCATE ( paw%pfunc )
+           IF( ASSOCIATED( paw%ptfunc ) ) DEALLOCATE ( paw%ptfunc )
+           IF( ASSOCIATED( paw%ae_vloc )  ) DEALLOCATE ( paw%ae_vloc )
+           IF( ASSOCIATED( paw%kdiff ) ) DEALLOCATE ( paw%kdiff )
+           IF( ASSOCIATED( paw%augmom ) ) DEALLOCATE ( paw%augmom )
+           CALL nullify_paw_in_upf( paw )
+        END SUBROUTINE
+
         SUBROUTINE nullify_pseudo_upf( upf )
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
+          CALL nullify_paw_in_upf( upf%paw )
           NULLIFY( upf%els, upf%lchi, upf%jchi, upf%oc )
           NULLIFY( upf%r, upf%rab )  
           NULLIFY( upf%rho_atc, upf%vloc )  
@@ -198,6 +222,7 @@ END TYPE paw_t
 
         SUBROUTINE deallocate_pseudo_upf( upf )
           TYPE( pseudo_upf ), INTENT(INOUT) :: upf
+          CALL deallocate_paw_in_upf( upf%paw )
           IF( ASSOCIATED( upf%els ) ) DEALLOCATE( upf%els )
           IF( ASSOCIATED( upf%lchi ) ) DEALLOCATE( upf%lchi )
           IF( ASSOCIATED( upf%jchi ) ) DEALLOCATE( upf%jchi )
