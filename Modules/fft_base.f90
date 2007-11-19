@@ -90,7 +90,7 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 
   integer :: dest, from, k, offset1 (nproc), sendcount (nproc), &
        sdispls (nproc), recvcount (nproc), rdispls (nproc), &
-       proc, ierr, me, nprocp, gproc, gcomm
+       proc, ierr, me, nprocp, gproc, gcomm, i, kdest, kfrom
   !
   LOGICAL :: use_tg_
 
@@ -173,10 +173,27 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         ELSE
            gproc = proc
         END IF
-        do k = 1, ncp_ (me)
-           call DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nrx3), &
-                1, f_aux (dest + (k - 1) * npp_ ( gproc ) ), 1)
-        enddo
+        !
+        !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
+        !
+        IF( npp_ ( gproc ) > 128 ) THEN
+           do k = 1, ncp_ (me)
+              call DCOPY (2 * npp_ ( gproc ), f_in (from + (k - 1) * nrx3), &
+                   1, f_aux (dest + (k - 1) * npp_ ( gproc ) ), 1)
+           enddo
+        ELSE IF( npp_ ( gproc ) == 1 ) THEN
+           do k = 1, ncp_ (me)
+              f_aux (dest + (k - 1) ) =  f_in (from + (k - 1) * nrx3 )
+           enddo
+        ELSE
+           do k = 1, ncp_ (me)
+              kdest = dest + (k - 1) * npp_ ( gproc ) - 1
+              kfrom = from + (k - 1) * nrx3 - 1
+              do i = 1, npp_ ( gproc )
+                 f_aux ( kdest + i ) =  f_in ( kfrom + i )
+              enddo
+           enddo
+        END IF
      enddo
      !
      ! maybe useless; ensures that no garbage is present in the output
@@ -229,10 +246,27 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
         ELSE
            gproc = proc
         END IF
-        do k = 1, ncp_ (me)
-           call DCOPY ( 2 * npp_ ( gproc ), f_aux (from + (k - 1) * npp_ ( gproc ) ), 1, &
+        !  
+        !  optimize for large parallel execution, where npp_ ( gproc ) ~ 1
+        !
+        IF( npp_ ( gproc ) > 128 ) THEN
+           do k = 1, ncp_ (me) 
+              call DCOPY ( 2 * npp_ ( gproc ), f_aux (from + (k - 1) * npp_ ( gproc ) ), 1, &
                                             f_in  (dest + (k - 1) * nrx3 ), 1 )
-        enddo
+           enddo
+        ELSE IF ( npp_ ( gproc ) == 1 ) THEN
+           do k = 1, ncp_ (me) 
+              f_in ( dest + (k - 1) * nrx3 ) = f_aux ( from + (k - 1) )
+           end do
+        ELSE
+           do k = 1, ncp_ (me)
+              kdest = dest + (k - 1) * nrx3 - 1
+              kfrom = from + (k - 1) * npp_ ( gproc ) - 1
+              do i = 1, npp_ ( gproc )
+                 f_in ( kdest + i ) = f_aux( kfrom + i )
+              enddo
+           enddo
+        END IF
 
      enddo
 

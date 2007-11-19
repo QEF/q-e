@@ -359,10 +359,10 @@ SUBROUTINE reduce_base_integer( dim, ps, comm, root )
      !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_INTEGER, MPI_SUM, root, comm, info )
-        CALL errore( 'reduce_base_integer', 'error in mpi_reduce 1', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer', 'error in mpi_reduce 1', info )
      ELSE
         CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_INTEGER, MPI_SUM, comm, info )
-        CALL errore( 'reduce_base_integer', 'error in mpi_allreduce 1', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer', 'error in mpi_allreduce 1', info )
      END IF
      !
      IF( root < 0 ) THEN
@@ -379,10 +379,10 @@ SUBROUTINE reduce_base_integer( dim, ps, comm, root )
      !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_INTEGER, MPI_SUM, root, comm, info )
-        CALL errore( 'reduce_base_integer', 'error in mpi_reduce 2', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer', 'error in mpi_reduce 2', info )
      ELSE
         CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_INTEGER, MPI_SUM, comm, info )
-        CALL errore( 'reduce_base_integer', 'error in mpi_allreduce 2', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer', 'error in mpi_allreduce 2', info )
      END IF
      !
      IF( root < 0 ) THEN
@@ -526,10 +526,10 @@ SUBROUTINE reduce_base_real_to( dim, ps, psout, comm, root )
      !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+(n-1)*maxb), psout(1+(n-1)*maxb), maxb, MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
-        CALL errore( 'reduce_base_real_to', 'error in mpi_reduce 1', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_real_to', 'error in mpi_reduce 1', info )
      ELSE
         CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), psout(1+(n-1)*maxb), maxb, MPI_DOUBLE_PRECISION, MPI_SUM, comm, info )
-        CALL errore( 'reduce_base_real_to', 'error in mpi_allreduce 1', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_real_to', 'error in mpi_allreduce 1', info )
      END IF
      !                    
 #endif
@@ -561,10 +561,10 @@ SUBROUTINE reduce_base_real_to( dim, ps, psout, comm, root )
      !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+nbuf*maxb), psout(1+nbuf*maxb), (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_SUM, root, comm, info )
-        CALL errore( 'reduce_base_real_to', 'error in mpi_reduce 2', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_real_to', 'error in mpi_reduce 2', info )
      ELSE
         CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), psout(1+nbuf*maxb), (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_SUM, comm, info )
-        CALL errore( 'reduce_base_real_to', 'error in mpi_allreduce 2', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_real_to', 'error in mpi_allreduce 2', info )
      END IF
      !
 #endif
@@ -631,10 +631,10 @@ SUBROUTINE reduce_base_integer_to( dim, ps, psout, comm, root )
      !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+(n-1)*maxb), psout( 1+(n-1)*maxb ), maxb, MPI_INTEGER, MPI_SUM, root, comm, info )
-        CALL errore( 'reduce_base_integer_to', 'error in mpi_reduce 1', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer_to', 'error in mpi_reduce 1', info )
      ELSE
         CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), psout( 1+(n-1)*maxb ), maxb, MPI_INTEGER, MPI_SUM, comm, info )
-        CALL errore( 'reduce_base_integer_to', 'error in mpi_allreduce 1', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer_to', 'error in mpi_allreduce 1', info )
      END IF
      !                    
   END DO
@@ -645,10 +645,10 @@ SUBROUTINE reduce_base_integer_to( dim, ps, psout, comm, root )
      !
      IF( root >= 0 ) THEN
         CALL MPI_REDUCE( ps(1+nbuf*maxb), psout(1+nbuf*maxb), (dim-nbuf*maxb), MPI_INTEGER, MPI_SUM, root, comm, info )
-        CALL errore( 'reduce_base_integer_to', 'error in mpi_reduce 2', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer_to', 'error in mpi_reduce 2', info )
      ELSE
         CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), psout(1+nbuf*maxb), (dim-nbuf*maxb), MPI_INTEGER, MPI_SUM, comm, info )
-        CALL errore( 'reduce_base_integer_to', 'error in mpi_allreduce 2', info )
+        IF( info /= 0 ) CALL errore( 'reduce_base_integer_to', 'error in mpi_allreduce 2', info )
      END IF
      !
   END IF
@@ -661,3 +661,375 @@ SUBROUTINE reduce_base_integer_to( dim, ps, psout, comm, root )
   RETURN
   !
 END SUBROUTINE reduce_base_integer_to
+!
+!
+!  Parallel MIN and MAX
+!
+
+!----------------------------------------------------------------------------
+SUBROUTINE parallel_min_integer( dim, ps, comm, root )
+  !----------------------------------------------------------------------------
+  !
+  ! ... sums a distributed variable ps(dim) over the processors.
+  ! ... This version uses a fixed-length buffer of appropriate (?) dim
+  ! ...              uses SHMEM if available, MPI otherwhise
+  !
+  USE kinds, ONLY : DP
+  USE parallel_include  
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)    :: dim
+  INTEGER,  INTENT(INOUT) :: ps(dim)
+  INTEGER,  INTENT(IN)    :: comm    ! communecator
+  INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
+                                     ! if root >= 0 perform a reduce only to root proc.
+  !
+#if defined (__PARA)  
+  !
+  INTEGER            :: info, n, nbuf, nproc, myid
+  INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
+  !
+  INTEGER :: buff(maxb)  
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_min_integer IN'
+#endif
+  CALL mpi_comm_size( comm, nproc, info )
+  IF( info /= 0 ) CALL errore( 'parallel_min_integer', 'error in mpi_comm_size', info )
+
+  CALL mpi_comm_rank( comm, myid, info )
+  IF( info /= 0 ) CALL errore( 'parallel_min_integer', 'error in mpi_comm_rank', info )
+  !
+  IF ( dim <= 0 .OR. nproc <= 1 ) RETURN
+  !
+  ! ... synchronize processes
+  !
+  CALL mpi_barrier( comm, info )
+  IF( info /= 0 ) CALL errore( 'parallel_min_integer', 'error in mpi_barrier', info )
+  !
+  nbuf = dim / maxb
+  !
+  DO n = 1, nbuf
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_INTEGER, MPI_MIN, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_integer', 'error in mpi_reduce 1', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_INTEGER, MPI_MIN, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_integer', 'error in mpi_allreduce 1', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     ELSE IF( root == myid ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     END IF
+     !
+  END DO
+  !
+  ! ... possible remaining elements < maxb
+  !
+  IF ( ( dim - nbuf * maxb ) > 0 ) THEN
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_INTEGER, MPI_MIN, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_integer', 'error in mpi_reduce 2', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_INTEGER, MPI_MIN, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_integer', 'error in mpi_allreduce 2', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     ELSE IF( root == myid ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     END IF
+     !
+  END IF
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_min_integer OUT'
+#endif
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE parallel_min_integer
+
+!
+!----------------------------------------------------------------------------
+SUBROUTINE parallel_max_integer( dim, ps, comm, root )
+  !----------------------------------------------------------------------------
+  !
+  ! ... sums a distributed variable ps(dim) over the processors.
+  ! ... This version uses a fixed-length buffer of appropriate (?) dim
+  ! ...              uses SHMEM if available, MPI otherwhise
+  !
+  USE kinds, ONLY : DP
+  USE parallel_include  
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)    :: dim
+  INTEGER,  INTENT(INOUT) :: ps(dim)
+  INTEGER,  INTENT(IN)    :: comm    ! communecator
+  INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
+                                     ! if root >= 0 perform a reduce only to root proc.
+  !
+#if defined (__PARA)  
+  !
+  INTEGER            :: info, n, nbuf, nproc, myid
+  INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
+  !
+  INTEGER :: buff(maxb)  
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_max_integer IN'
+#endif
+  CALL mpi_comm_size( comm, nproc, info )
+  IF( info /= 0 ) CALL errore( 'parallel_max_integer', 'error in mpi_comm_size', info )
+
+  CALL mpi_comm_rank( comm, myid, info )
+  IF( info /= 0 ) CALL errore( 'parallel_max_integer', 'error in mpi_comm_rank', info )
+  !
+  IF ( dim <= 0 .OR. nproc <= 1 ) RETURN
+  !
+  ! ... synchronize processes
+  !
+  CALL mpi_barrier( comm, info )
+  IF( info /= 0 ) CALL errore( 'parallel_max_integer', 'error in mpi_barrier', info )
+  !
+  nbuf = dim / maxb
+  !
+  DO n = 1, nbuf
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_INTEGER, MPI_MAX, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_integer', 'error in mpi_reduce 1', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_INTEGER, MPI_MAX, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_integer', 'error in mpi_allreduce 1', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     ELSE IF( root == myid ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     END IF
+     !
+  END DO
+  !
+  ! ... possible remaining elements < maxb
+  !
+  IF ( ( dim - nbuf * maxb ) > 0 ) THEN
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_INTEGER, MPI_MAX, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_integer', 'error in mpi_reduce 2', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_INTEGER, MPI_MAX, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_integer', 'error in mpi_allreduce 2', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     ELSE IF( root == myid ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     END IF
+     !
+  END IF
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_max_integer OUT'
+#endif
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE parallel_max_integer
+
+
+!----------------------------------------------------------------------------
+SUBROUTINE parallel_min_real( dim, ps, comm, root )
+  !----------------------------------------------------------------------------
+  !
+  ! ... sums a distributed variable ps(dim) over the processors.
+  ! ... This version uses a fixed-length buffer of appropriate (?) dim
+  ! ...              uses SHMEM if available, MPI otherwhise
+  !
+  USE kinds, ONLY : DP
+  USE parallel_include  
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)    :: dim
+  REAL(DP), INTENT(INOUT) :: ps(dim)
+  INTEGER,  INTENT(IN)    :: comm    ! communecator
+  INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
+                                     ! if root >= 0 perform a reduce only to root proc.
+  !
+#if defined (__PARA)  
+  !
+  INTEGER            :: info, n, nbuf, nproc, myid
+  INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
+  !
+  REAL(DP) :: buff(maxb)  
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_min_real IN'
+#endif
+  CALL mpi_comm_size( comm, nproc, info )
+  IF( info /= 0 ) CALL errore( 'parallel_min_real', 'error in mpi_comm_size', info )
+
+  CALL mpi_comm_rank( comm, myid, info )
+  IF( info /= 0 ) CALL errore( 'parallel_min_real', 'error in mpi_comm_rank', info )
+  !
+  IF ( dim <= 0 .OR. nproc <= 1 ) RETURN
+  !
+  ! ... synchronize processes
+  !
+  CALL mpi_barrier( comm, info )
+  IF( info /= 0 ) CALL errore( 'parallel_min_real', 'error in mpi_barrier', info )
+  !
+  nbuf = dim / maxb
+  !
+  DO n = 1, nbuf
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_DOUBLE_PRECISION, MPI_MIN, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_real', 'error in mpi_reduce 1', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_DOUBLE_PRECISION, MPI_MIN, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_real', 'error in mpi_allreduce 1', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     ELSE IF( root == myid ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     END IF
+     !
+  END DO
+  !
+  ! ... possible remaining elements < maxb
+  !
+  IF ( ( dim - nbuf * maxb ) > 0 ) THEN
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_MIN, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_real', 'error in mpi_reduce 2', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_MIN, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_min_real', 'error in mpi_allreduce 2', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     ELSE IF( root == myid ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     END IF
+     !
+  END IF
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_min_real OUT'
+#endif
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE parallel_min_real
+
+!
+!----------------------------------------------------------------------------
+SUBROUTINE parallel_max_real( dim, ps, comm, root )
+  !----------------------------------------------------------------------------
+  !
+  ! ... sums a distributed variable ps(dim) over the processors.
+  ! ... This version uses a fixed-length buffer of appropriate (?) dim
+  ! ...              uses SHMEM if available, MPI otherwhise
+  !
+  USE kinds, ONLY : DP
+  USE parallel_include  
+  !
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(IN)    :: dim
+  REAL(DP), INTENT(INOUT) :: ps(dim)
+  INTEGER,  INTENT(IN)    :: comm    ! communecator
+  INTEGER,  INTENT(IN)    :: root    ! if root <  0 perform a reduction to all procs
+                                     ! if root >= 0 perform a reduce only to root proc.
+  !
+#if defined (__PARA)  
+  !
+  INTEGER            :: info, n, nbuf, nproc, myid
+  INTEGER, PARAMETER :: maxb = __MSGSIZ_MAX
+  !
+  REAL(DP) :: buff(maxb)  
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_max_real IN'
+#endif
+  CALL mpi_comm_size( comm, nproc, info )
+  IF( info /= 0 ) CALL errore( 'parallel_max_real', 'error in mpi_comm_size', info )
+
+  CALL mpi_comm_rank( comm, myid, info )
+  IF( info /= 0 ) CALL errore( 'parallel_max_real', 'error in mpi_comm_rank', info )
+  !
+  IF ( dim <= 0 .OR. nproc <= 1 ) RETURN
+  !
+  ! ... synchronize processes
+  !
+  CALL mpi_barrier( comm, info )
+  IF( info /= 0 ) CALL errore( 'parallel_max_real', 'error in mpi_barrier', info )
+  !
+  nbuf = dim / maxb
+  !
+  DO n = 1, nbuf
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_DOUBLE_PRECISION, MPI_MAX, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_real', 'error in mpi_reduce 1', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+(n-1)*maxb), buff, maxb, MPI_DOUBLE_PRECISION, MPI_MAX, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_real', 'error in mpi_allreduce 1', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     ELSE IF( root == myid ) THEN
+        ps((1+(n-1)*maxb):(n*maxb)) = buff(1:maxb)
+     END IF
+     !
+  END DO
+  !
+  ! ... possible remaining elements < maxb
+  !
+  IF ( ( dim - nbuf * maxb ) > 0 ) THEN
+     !
+     IF( root >= 0 ) THEN
+        CALL MPI_REDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_MAX, root, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_real', 'error in mpi_reduce 2', info )
+     ELSE
+        CALL MPI_ALLREDUCE( ps(1+nbuf*maxb), buff, (dim-nbuf*maxb), MPI_DOUBLE_PRECISION, MPI_MAX, comm, info )
+        IF( info /= 0 ) CALL errore( 'parallel_max_real', 'error in mpi_allreduce 2', info )
+     END IF
+     !
+     IF( root < 0 ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     ELSE IF( root == myid ) THEN
+        ps((1+nbuf*maxb):dim) = buff(1:(dim-nbuf*maxb))
+     END IF
+     !
+  END IF
+  !
+#if defined __TRACE
+  write(*,*) 'parallel_max_real OUT'
+#endif
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE parallel_max_real
+

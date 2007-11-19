@@ -1692,15 +1692,12 @@
         INTEGER, INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        INTEGER :: res
+        INTEGER :: msglen
 #if defined(__MPI)
+        msglen = 1
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
-        msglen = 1
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_INTEGER,MPI_MAX,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8160 )
-        msg = res
+        CALL parallel_max_integer( msglen, msg, group, -1 )
         mp_call_count( 46 ) = mp_call_count( 46 ) + 1
         mp_call_sizex( 46 ) = MAX( mp_call_sizex( 46 ), msglen )
 #endif
@@ -1716,19 +1713,12 @@
         INTEGER, INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        INTEGER, ALLOCATABLE :: res(:)
+        INTEGER :: msglen
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
         msglen = size(msg)
-        ALLOCATE (res(1:msglen),STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8162 )
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_INTEGER, MPI_MAX,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8163 )
-        msg = res
-        DEALLOCATE (res, STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8164 )
+        CALL parallel_max_integer( msglen, msg, group, -1 )
         mp_call_count( 47 ) = mp_call_count( 47 ) + 1
         mp_call_sizex( 47 ) = MAX( mp_call_sizex( 47 ), msglen )
 #endif
@@ -1741,15 +1731,12 @@
         REAL (DP), INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        REAL (DP) :: res
+        INTEGER :: msglen
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
         msglen = 1
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_DOUBLE_PRECISION, MPI_MAX,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8165 )
-        msg = res
+        CALL parallel_max_real( msglen, msg, group, -1 )
         mp_call_count( 48 ) = mp_call_count( 48 ) + 1
         mp_call_sizex( 48 ) = MAX( mp_call_sizex( 48 ), msglen )
 #endif
@@ -1761,19 +1748,12 @@
         REAL (DP), INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        REAL (DP), ALLOCATABLE :: res(:)
+        INTEGER :: msglen
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
         msglen = size(msg)
-        ALLOCATE (res(1:msglen),STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8167 )
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_DOUBLE_PRECISION, MPI_MAX,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8168 )
-        msg = res
-        DEALLOCATE (res, STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8169 )
+        CALL parallel_max_real( msglen, msg, group, -1 )
         mp_call_count( 49 ) = mp_call_count( 49 ) + 1
         mp_call_sizex( 49 ) = MAX( mp_call_sizex( 49 ), msglen )
 #endif
@@ -1784,15 +1764,12 @@
         INTEGER, INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        INTEGER :: res
+        INTEGER :: msglen
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
         msglen = 1
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_INTEGER,MPI_MIN,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8170 )
-        msg = res
+        CALL parallel_min_integer( msglen, msg, group, -1 )
         mp_call_count( 50 ) = mp_call_count( 50 ) + 1
         mp_call_sizex( 50 ) = MAX( mp_call_sizex( 50 ), msglen )
 #endif
@@ -1803,19 +1780,12 @@
         INTEGER, INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        INTEGER, ALLOCATABLE :: res(:)
+        INTEGER :: msglen
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
         msglen = SIZE(msg)
-        ALLOCATE (res(1:msglen),STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8172 )
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_INTEGER,MPI_MIN,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8173 )
-        msg = res
-        DEALLOCATE (res, STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8174 )
+        CALL parallel_min_integer( msglen, msg, group, -1 )
         mp_call_count( 51 ) = mp_call_count( 51 ) + 1
         mp_call_sizex( 51 ) = MAX( mp_call_sizex( 51 ), msglen )
 #endif
@@ -1826,15 +1796,12 @@
         REAL (DP), INTENT (INOUT) :: msg
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        REAL (DP) :: res
+        INTEGER :: msglen
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
         msglen = 1
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_DOUBLE_PRECISION, MPI_MIN,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8175 )
-        msg = res
+        CALL parallel_min_real( msglen, msg, group, -1 )
         mp_call_count( 52 ) = mp_call_count( 52 ) + 1
         mp_call_sizex( 52 ) = MAX( mp_call_sizex( 52 ), msglen )
 #endif
@@ -1846,19 +1813,12 @@
         REAL (DP), INTENT (INOUT) :: msg(:)
         INTEGER, OPTIONAL, INTENT(IN) :: gid
         INTEGER :: group
-        INTEGER :: msglen, ierr
-        REAL (DP), ALLOCATABLE :: res(:)
+        INTEGER :: msglen
 #if defined(__MPI)
         group = mpi_comm_world
         IF( PRESENT( gid ) ) group = gid
         msglen = size(msg)
-        ALLOCATE (res(1:msglen),STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8177 )
-        CALL MPI_ALLREDUCE(MSG,res,msglen,MPI_DOUBLE_PRECISION, MPI_MIN,group,IERR)
-        IF (ierr/=0) CALL mp_stop( 8178 )
-        msg = res
-        DEALLOCATE (res, STAT=ierr)
-        IF (ierr/=0) CALL mp_stop( 8179 )
+        CALL parallel_min_real( msglen, msg, group, -1 )
         mp_call_count( 53 ) = mp_call_count( 53 ) + 1
         mp_call_sizex( 53 ) = MAX( mp_call_sizex( 53 ), msglen )
 #endif
@@ -1927,7 +1887,6 @@
         INTEGER :: i
         WRITE( stdout, *)
 #if defined(__MPI)
-        ! WRITE( stdout, 10 ) mp_high_watermark
 #  if defined (__MP_STAT)
         WRITE( stdout, 20 )
         DO i = 1, SIZE( mp_call_count )
