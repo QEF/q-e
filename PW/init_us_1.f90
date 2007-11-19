@@ -29,7 +29,7 @@ subroutine init_us_1
   !
   USE kinds,        ONLY : DP
   USE parameters,   ONLY : lmaxx
-  USE constants,    ONLY : fpi
+  USE constants,    ONLY : fpi, sqrt2
   USE atom,         ONLY : rgrid
   USE ions_base,    ONLY : ntyp => nsp
   USE cell_base,    ONLY : omega, tpiba
@@ -59,9 +59,9 @@ subroutine init_us_1
   ! q-point grid for interpolation
   real(DP), allocatable :: ylmk0 (:)
   ! the spherical harmonics
-  real(DP) ::  vll (0:lmaxx), vqint, sqrt2, j
-  ! the denominator in KB case
+  real(DP) ::  vqint, j
   ! interpolated value
+  ! J=L+S (noninteger!)
   integer :: n1, m0, m1, n, li, mi, vi, vj, ijs, is1, is2, &
              lk, mk, vk, kh, lh
   integer, external :: sph_ind
@@ -99,18 +99,17 @@ subroutine init_us_1
 !  In the spin-orbit case we need the unitary matrix u which rotates the
 !  real spherical harmonics and yields the complex ones.
 !
-     sqrt2=1.d0/dsqrt(2.d0)
      rot_ylm=(0.d0,0.d0)
      l=lmaxx
      rot_ylm(l+1,1)=(1.d0,0.d0)
      do n1=2,2*l+1,2
        m=n1/2
        n=l+1-m
-       rot_ylm(n,n1)=CMPLX((-1.d0)**m*sqrt2,0.d0)
-       rot_ylm(n,n1+1)=CMPLX(0.d0,-(-1.d0)**m*sqrt2)
+       rot_ylm(n,n1)=CMPLX((-1.d0)**m/sqrt2,0.0_dp)
+       rot_ylm(n,n1+1)=CMPLX(0.d0,-(-1.d0)**m/sqrt2)
        n=l+1+m
-       rot_ylm(n,n1)=CMPLX(sqrt2,0.d0)
-       rot_ylm(n,n1+1)=CMPLX(0.d0, sqrt2)
+       rot_ylm(n,n1)=CMPLX(1.0_dp/sqrt2,0.d0)
+       rot_ylm(n,n1+1)=CMPLX(0.d0, 1.0_dp/sqrt2)
      enddo
      fcoef=(0.d0,0.d0)
      dvan_so = (0.d0,0.d0)

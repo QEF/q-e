@@ -179,7 +179,6 @@ MODULE guess
              USE cell_base, only: boxdimensions
              use cp_interfaces, only: rhoofr
              USE wave_types
-             USE parameters, ONLY: nspinx
 
 ! ...        declare subroutine argument
              REAL(DP), INTENT(OUT) :: rho(:,:)

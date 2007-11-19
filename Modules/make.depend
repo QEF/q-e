@@ -181,7 +181,6 @@ path_reparametrisation.o : path_variables.o
 path_reparametrisation.o : splinelib.o
 path_variables.o : kind.o
 paw_variables.o : kind.o
-paw_variables.o : parameters.o
 printout_base.o : io_global.o
 printout_base.o : kind.o
 printout_base.o : mp.o

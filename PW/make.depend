@@ -421,6 +421,7 @@ force_corr.o : ../Modules/kind.o
 force_corr.o : ../Modules/uspp.o
 force_corr.o : ../Modules/wavefunctions.o
 force_corr.o : pwcom.o
+force_corr.o : scf_mod.o
 force_ew.o : ../Modules/constants.o
 force_ew.o : ../Modules/kind.o
 force_hub.o : ../Modules/cell_base.o
@@ -433,6 +434,7 @@ force_hub.o : ../Modules/wavefunctions.o
 force_hub.o : becmod.o
 force_hub.o : buffers.o
 force_hub.o : pwcom.o
+force_hub.o : scf_mod.o
 force_lc.o : ../Modules/constants.o
 force_lc.o : ../Modules/kind.o
 force_us.o : ../Modules/cell_base.o
@@ -780,7 +782,6 @@ paw_onecenter.o : ../Modules/control_flags.o
 paw_onecenter.o : ../Modules/functionals.o
 paw_onecenter.o : ../Modules/ions_base.o
 paw_onecenter.o : ../Modules/kind.o
-paw_onecenter.o : ../Modules/parameters.o
 paw_onecenter.o : ../Modules/paw_variables.o
 paw_onecenter.o : ../Modules/radial_grids.o
 paw_onecenter.o : ../Modules/uspp.o
@@ -1037,6 +1038,7 @@ save_in_electrons.o : ../Modules/control_flags.o
 save_in_electrons.o : ../Modules/io_files.o
 save_in_electrons.o : ../Modules/kind.o
 save_in_electrons.o : pwcom.o
+save_in_electrons.o : scf_mod.o
 save_in_ions.o : ../Modules/control_flags.o
 save_in_ions.o : ../Modules/io_files.o
 save_in_ions.o : ../Modules/kind.o
@@ -1072,7 +1074,9 @@ set_rhoc.o : ../Modules/kind.o
 set_rhoc.o : ../Modules/uspp.o
 set_rhoc.o : pwcom.o
 set_rhoc.o : scf_mod.o
+set_vrs.o : ../Modules/functionals.o
 set_vrs.o : ../Modules/kind.o
+set_vrs.o : pwcom.o
 setlocal.o : ../Modules/constants.o
 setlocal.o : ../Modules/ions_base.o
 setlocal.o : ../Modules/kind.o
@@ -1291,10 +1295,12 @@ vhpsi.o : ../Modules/ions_base.o
 vhpsi.o : ../Modules/kind.o
 vhpsi.o : ../Modules/uspp.o
 vhpsi.o : pwcom.o
+vhpsi.o : scf_mod.o
 vhpsi_nc.o : ../Modules/ions_base.o
 vhpsi_nc.o : ../Modules/kind.o
 vhpsi_nc.o : ../Modules/uspp.o
 vhpsi_nc.o : pwcom.o
+vhpsi_nc.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/kind.o

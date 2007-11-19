@@ -1,7 +1,6 @@
 MODULE paw_variables
     !
     USE kinds,      ONLY : DP
-    USE parameters, ONLY : lqmax, npsx
     !
     IMPLICIT NONE
     PUBLIC

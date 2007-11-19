@@ -315,7 +315,6 @@ subroutine nlinit
   !     (betax, qradx) then calculated on the box grid by interpolation
   !     (this is done in routine newnlinit)
   !     
-      use parameters,      ONLY : lmaxx
       use control_flags,   ONLY : iprint, tpre, program_name
       use io_global,       ONLY : stdout, ionode
       use gvecw,           ONLY : ngw

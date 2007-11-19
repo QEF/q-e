@@ -292,7 +292,6 @@ cprsub.o : ../Modules/ions_base.o
 cprsub.o : ../Modules/kind.o
 cprsub.o : ../Modules/mp.o
 cprsub.o : ../Modules/mp_global.o
-cprsub.o : ../Modules/parameters.o
 cprsub.o : ../Modules/recvec.o
 cprsub.o : ../Modules/uspp.o
 cprsub.o : cp_interfaces.o
@@ -492,7 +491,6 @@ guess.o : ../Modules/dspev_drv.o
 guess.o : ../Modules/kind.o
 guess.o : ../Modules/mp.o
 guess.o : ../Modules/mp_global.o
-guess.o : ../Modules/parameters.o
 guess.o : ../Modules/ptoolkit.o
 guess.o : ../Modules/uspp.o
 guess.o : cp_interfaces.o

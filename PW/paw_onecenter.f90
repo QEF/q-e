@@ -50,7 +50,6 @@
 MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
-    USE parameters,     ONLY : ntypx
     USE paw_variables,  ONLY : paw_info, saved, ww, nx, lm_max, ylm, &
                                xlm, dylmp, dylmt, sin_th, cos_th
     USE uspp_param,     ONLY : upf
@@ -643,7 +642,6 @@ END FUNCTION PAW_ddot
 !!! use the density produced by sum_rad_rho to compute xc potential and energy, as
 !!! xc functional is not diagonal on angular momentum numerical integration is performed
 SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
-    USE parameters,             ONLY : ntypx
     USE lsda_mod,               ONLY : nspin
     USE uspp_param,             ONLY : lmaxq
     USE ions_base,              ONLY : ityp
@@ -739,7 +737,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE uspp_param,             ONLY : lmaxq
-    USE parameters,             ONLY : ntypx
     USE constants,              ONLY : sqrtpi, fpi,pi,e2, eps => eps12, eps2 => eps24
     USE funct,                  ONLY : gcxc, gcx_spin, gcc_spin
     !
@@ -900,7 +897,6 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     !USE uspp_param,             ONLY : lmaxq
     USE lsda_mod,               ONLY : nspin
     USE ions_base,              ONLY : ityp
-    USE parameters,             ONLY : ntypx
     USE atom,                   ONLY : g => rgrid
 
     TYPE(paw_info)  :: i              ! atom's minimal info
@@ -990,7 +986,6 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
     USE uspp_param,             ONLY : lmaxq
     USE lsda_mod,               ONLY : nspin
     USE ions_base,              ONLY : ityp
-    USE parameters,             ONLY : ntypx
     USE atom,                   ONLY : g => rgrid
 
     INTEGER, INTENT(IN)  :: ix ! line of the dylm2 matrix to use actually it is
@@ -1124,7 +1119,6 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nh, lmaxq, nhm
     USE uspp,              ONLY : indv, ap, nhtolm,lpl,lpx
-    USE parameters,        ONLY : lqmax
     USE constants,         ONLY : eps12
     USE atom,              ONLY : g => rgrid
 
