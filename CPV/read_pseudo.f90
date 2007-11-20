@@ -290,12 +290,12 @@ END FUNCTION calculate_dx
         ELSE IF( info == 1 ) THEN
 
            CALL readvan( pseudounit, is, upf(is) )
-           CALL set_pseudo_upf( is, upf( is ) )
+           CALL set_pseudo_upf( is, upf( is ), do_grid=.true. )
 
         ELSE IF( info == 2 ) THEN
 
            CALL readrrkj( pseudounit, is, upf(is) )
-           CALL set_pseudo_upf( is, upf( is ) )
+           CALL set_pseudo_upf( is, upf( is ), do_grid=.true. )
 
         ELSE IF( info == 11 ) THEN
 
