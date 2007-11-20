@@ -45,20 +45,25 @@ SUBROUTINE compute_qdipol(dpqq)
               if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
                    ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
                    (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) ) then
-                 do ir = 1, upf(nt)%kkbeta
-                    if (rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1)) then
-                       if (upf(nt)%q_with_l) then
-                          qtot(ir, nb, mb)=upf(nt)%qfuncl(ir,ijv,l)
+                 if (upf(nt)%tpawp) then
+                    qtot(1:upf(nt)%kkbeta,nb,mb)= &
+                           upf(nt)%paw%aug(1:upf(nt)%kkbeta,nb,mb,l)
+                 elseif (upf(nt)%q_with_l) then
+                    qtot(1:upf(nt)%kkbeta,nb,mb) =&
+                            upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)
+                 else
+                    do ir = 1, upf(nt)%kkbeta
+                       if (rgrid(nt)%r(ir) >= upf(nt)%rinner(l+1)) then
+                           qtot(ir, nb, mb)=upf(nt)%qfunc(ir,ijv)
                        else
-                          qtot(ir, nb, mb)=upf(nt)%qfunc(ir,ijv)
+                          ilast = ir
                        endif
-                    else
-                       ilast = ir
-                    endif
-                 enddo
-                 if ( upf(nt)%rinner(l+1) > 0.0_dp) &
-                      call setqf( upf(nt)%qfcoef (1, l+1, nb, mb), &
-                      qtot(1,nb,mb), rgrid(nt)%r, upf(nt)%nqf, l, ilast)
+                    enddo
+                 
+                    if ( upf(nt)%rinner(l+1) > 0.0_dp) &
+                        call setqf( upf(nt)%qfcoef (1, l+1, nb, mb), &
+                        qtot(1,nb,mb), rgrid(nt)%r, upf(nt)%nqf, l, ilast)
+                 endif
               endif
            enddo
         enddo
