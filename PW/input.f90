@@ -863,6 +863,21 @@ SUBROUTINE iosys()
      !
      david = diago_david_ndim
      !
+     ! ensure that with more than 4 procs parallel 
+     ! distributed algorithm is the dafault
+     !
+     use_distpara_diago = .TRUE.
+     !
+     ortho_para_ = ortho_para
+     !
+  CASE ( 'david+serial' )
+     !
+     isolve = 0
+     !
+     david = diago_david_ndim
+     !
+     use_distpara_diago = .FALSE.
+     !
   CASE ( 'david+para' )
      !
      isolve = 0

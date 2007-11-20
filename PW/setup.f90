@@ -693,6 +693,9 @@ SUBROUTINE setup()
   !
   nks = nkstot
   !
+  use_para_diago     = .FALSE.
+  use_distpara_diago = .FALSE.
+  !
 #endif
   !
   ! ... okvan = .TRUE. : at least one pseudopotential is US
@@ -1032,6 +1035,11 @@ SUBROUTINE check_distpara_availability()
 
   IMPLICIT NONE
 
+  IF ( isolve /= 0 ) THEN
+     use_distpara_diago = .FALSE.
+     RETURN
+  END IF
+
   use_distpara_diago = .TRUE.
   !
   !  here we initialize the sub group of processors that will take part
@@ -1051,8 +1059,6 @@ SUBROUTINE check_distpara_availability()
      !
   END IF
 
-  IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
-
   IF ( ionode ) THEN
      !
      WRITE( stdout, '(/,5X,"Iterative solution of the eigenvalue problem")' ) 
@@ -1062,14 +1068,16 @@ SUBROUTINE check_distpara_availability()
 
   IF( np_ortho( 1 ) == 1 .AND. np_ortho( 2 ) == 1 ) THEN
      use_distpara_diago = .FALSE.
-     IF ( ionode ) WRITE( stdout, '(5X,"Too few procs, we need at least 4 procs")' )
+     IF ( ionode ) WRITE( stdout, '(5X,"Too few procs for parallel algorithm")' )
+     IF ( ionode ) WRITE( stdout, '(5X,"  we need at least 4 procs")' )
   END IF
 
   !  we need to have at least 1 electronic band per block
 
   IF( np_ortho( 1 ) > nbnd ) THEN
      use_distpara_diago = .FALSE.
-     IF ( ionode ) WRITE( stdout, '(5X,"Too few bands, we need at least as many bands as SQRT(nproc)")' )
+     IF ( ionode ) WRITE( stdout, '(5X,"Too few bands for parallel algorithm")')
+     IF ( ionode ) WRITE( stdout, '(5X,"  we need at least as many bands as SQRT(nproc)")' )
   END IF
 
   IF( use_distpara_diago ) THEN
