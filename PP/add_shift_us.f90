@@ -21,7 +21,7 @@ SUBROUTINE add_shift_us( shift_nl )
   USE klist,                ONLY : nks, xk
   USE gvect,                ONLY : g, ngm, ecutwfc
   USE uspp,                 ONLY : nkb, vkb, qq, deeq
-  USE uspp_param,           ONLY : nh, tvanp, newpseudo
+  USE uspp_param,           ONLY : upf, nh, newpseudo
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, et
   USE lsda_mod,             ONLY : lsda, current_spin, isk
   USE symme,                ONLY : irt, s, nsym
@@ -97,7 +97,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                       becp(ikb,ibnd) * becp(ikb,ibnd)
                       END DO
                       !
-                      IF ( tvanp(nt) .OR. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih. 
                          ! ... We use here the symmetry in the interchange 
@@ -186,7 +186,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                                    becp(ikb,ibnd) )
                       END DO
                       !
-                      IF ( tvanp(nt) .OR. newpseudo(nt) ) THEN
+                      IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
                          !
                          ! ... in US case there is a contribution for jh<>ih. 
                          ! ... We use here the symmetry in the interchange 

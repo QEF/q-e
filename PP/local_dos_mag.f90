@@ -25,7 +25,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
   USE scf,                  ONLY : rho
   USE io_files,             ONLY : iunwfc, nwordwfc
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv, okvan
-  USE uspp_param,           ONLY : nh, tvanp, nhm
+  USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, so, fcoef
@@ -111,7 +111,7 @@ SUBROUTINE local_dos_mag(spin_component, kpoint, kband, raux)
               ijkb0 = 0
               DO np = 1, ntyp
                  !
-                 IF ( tvanp(np) ) THEN
+                 IF ( upf(np)%tvanp ) THEN
                     !
                     DO na = 1, nat
                        !

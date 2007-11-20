@@ -8,7 +8,7 @@
 !
 !-----------------------------------------------------------------------
 function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
-     npw, psi1, psi2, tvanp)
+     npw, psi1, psi2, upf)
   !-----------------------------------------------------------------------
   !
   !     This function computes the scalar product between two wavefunction
@@ -19,6 +19,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
   !
 #include "f_defs.h"
   USE kinds
+  USE pseudo_types, ONLY : pseudo_upf 
   implicit none
   !
   !     here the dummy variables
@@ -43,7 +44,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
 
   real(DP) :: qq (nhm, nhm, ntyp)
   ! input: the q values defining S
-  logical :: tvanp (ntyp)
+  type(pseudo_upf) :: upf (ntyp)
   ! input: if true the pseudo is vanderb
   !
   !    Here the local variables
@@ -66,7 +67,7 @@ function cgracsc (nkb, bec1, bec2, nhm, ntyp, nh, qq, nat, ityp, &
 #endif
   ijkb0 = 0
   do np = 1, ntyp
-     if (tvanp (np) ) then
+     if (upf(np)%tvanp ) then
         do na = 1, nat
            if (ityp (na) .eq.np) then
               do ih = 1, nh (np)
@@ -94,7 +95,7 @@ end function cgracsc
 !
 !-----------------------------------------------------------------------
 function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
-     npw, npol, psi1, psi2, tvanp)
+     npw, npol, psi1, psi2, upf)
   !-----------------------------------------------------------------------
   !
   !     This function computes the scalar product between two wavefunction
@@ -107,6 +108,7 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   USE kinds
   USE uspp, ONLY: qq, qq_so
   USE spin_orb, ONLY: lspinorb
+  USE pseudo_types, ONLY : pseudo_upf
   implicit none
   !
   !     here the dummy variables
@@ -129,7 +131,7 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
   ! input: the second wavefunction
   ! output: the value of the scalar produ
 
-  logical :: tvanp (ntyp)
+  type(pseudo_upf) :: upf (ntyp)
   ! input: if true the pseudo is vanderb
   !
   !    Here the local variables
@@ -152,7 +154,7 @@ function cgracsc_nc (nkb, bec1, bec2, nhm, ntyp, nh, nat, ityp, &
 #endif
   ijkb0 = 0
   do np = 1, ntyp
-     if (tvanp (np) ) then
+     if (upf(np)%tvanp ) then
         do na = 1, nat
            if (ityp (na) .eq.np) then
               do ih = 1, nh (np)

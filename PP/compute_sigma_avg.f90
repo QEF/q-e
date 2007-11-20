@@ -15,7 +15,7 @@ USE noncollin_module,     ONLY : noncolin, npol
 USE cell_base,            ONLY : alat, at, tpiba, omega
 USE spin_orb,             ONLY : so, fcoef
 USE uspp,                 ONLY : nkb,qq,vkb,nhtol,nhtoj,nhtolm,indv
-USE uspp_param,           ONLY : nh, tvanp, nhm
+USE uspp_param,           ONLY : upf, nh, nhm
 USE wvfct,                ONLY : nbnd, npwx, npw, igk 
 USE wavefunctions_module, ONLY : evc, psic_nc
 USE klist,                ONLY : nks, xk
@@ -198,7 +198,7 @@ DO ibnd = 1, nbnd
 !
    DO np = 1, ntyp
       !
-      IF ( tvanp(np) ) THEN
+      IF ( upf(np)%tvanp ) THEN
          !
          DO na = 1, nat
             !

@@ -20,7 +20,7 @@ subroutine local_dos1d (ik, kband, plan)
   USE gsmooth
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum, indv, nhtol, nhtoj
-  USE uspp_param, ONLY: nh, tvanp, nhm
+  USE uspp_param, ONLY: upf, nh, nhm
   USE wvfct, ONLY: npw, npwx, wg, igk
   USE noncollin_module, ONLY: noncolin, npol
   USE spin_orb, ONLY: lspinorb, so, fcoef
@@ -120,7 +120,7 @@ subroutine local_dos1d (ik, kband, plan)
   w1 = wg (ibnd, ik)
   ijkb0 = 0
   do np = 1, ntyp
-     if (tvanp (np) ) then
+     if (upf(np)%tvanp) then
         do na = 1, nat
            if (ityp (na) == np) then
               if (noncolin) then

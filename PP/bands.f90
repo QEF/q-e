@@ -127,7 +127,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   USE io_files,             ONLY : iunpun, nwordwfc, iunwfc
   USE wvfct
   USE uspp,                 ONLY : nkb, vkb, qq
-  USE uspp_param,           ONLY : tvanp, nh, nhm
+  USE uspp_param,           ONLY : upf, nh, nhm
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id
@@ -314,14 +314,14 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
                     END DO
                     pro = cgracsc_nc (nkb,becp_nc(1,1,jbnd), &
                               becpold_nc(1,1,idx(ibnd)), nhm, ntyp, nh, &
-                              nat, ityp, ngm, npol, new_nc, old_nc, tvanp)
+                              nat, ityp, ngm, npol, new_nc, old_nc, upf)
                  ELSE
                     new (:) = (0.d0, 0.d0)
                     DO ig = 1, npw
                        new (igk (ig) ) = evc (ig, jbnd)
                     END DO
                     pro=cgracsc(nkb,becp(1,jbnd),becpold(1,idx(ibnd)), &
-                         nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, tvanp)
+                         nhm, ntyp, nh, qq, nat, ityp, ngm, NEW, old, upf)
                  END IF
 !                 write(6,'(3i5,f15.10)') ik,idx(ibnd), jbnd, abs(pro)
                  IF (abs (pro) > 1.d-2 ) THEN

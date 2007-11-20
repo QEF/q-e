@@ -789,7 +789,7 @@ subroutine compute_mmn
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
    use constants,       only : tpi
    use uspp,            only : nkb, vkb
-   USE uspp_param,      ONLY : nh, tvanp, lmaxq
+   USE uspp_param,      ONLY : upf, nh, lmaxq
    use becmod,          only : becp, rbecp
    use wannier
 
@@ -829,7 +829,7 @@ subroutine compute_mmn
    !
    !   USPP
    !
-   any_uspp = ANY(tvanp(1:ntyp))
+   any_uspp = ANY(upf(1:ntyp)%tvanp)
    !
    if(any_uspp) then
       CALL init_us_1
@@ -876,7 +876,7 @@ subroutine compute_mmn
       qg(:) = sqrt(qg(:)) * tpiba
       !
       do nt = 1, ntyp
-         if (tvanp (nt) ) then 
+         if (upf(nt)%tvanp ) then 
             do ih = 1, nh (nt)
                do jh = 1, nh (nt)
                   CALL qvan2 (nbt, ih, jh, nt, qg, qgm, ylm)
@@ -955,7 +955,7 @@ subroutine compute_mmn
          if (any_uspp) then
             ijkb0 = 0
             do nt = 1, ntyp
-               if ( tvanp(nt) ) then
+               if ( upf(nt)%tvanp ) then
                   do na = 1, nat
                      !
                      arg = DOT_PRODUCT( dxk(:,ind), tau(:,na) ) * tpi 
@@ -1099,7 +1099,7 @@ subroutine compute_amn
    use becmod,          only : becp, rbecp
    use wannier
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
-   USE uspp_param,      ONLY : tvanp
+   USE uspp_param,      ONLY : upf
 
    implicit none
 
@@ -1113,7 +1113,7 @@ subroutine compute_amn
 
    !call read_gf_definition.....>   this is done at the begin
 
-   any_uspp =ANY (tvanp(1:ntyp)) 
+   any_uspp =ANY (upf(1:ntyp)%tvanp) 
 
    if (wan_mode.eq.'library') allocate(a_mat(num_bands,n_wannier,iknum))
 

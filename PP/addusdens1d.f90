@@ -22,7 +22,7 @@ subroutine addusdens1d (plan, prho)
   USE gvect, ONLY: nr3, nrx3, nrxx, nl, eigts1, eigts2, eigts3, ig1,ig2,ig3
   USE lsda_mod, ONLY: current_spin
   USE uspp, ONLY: becsum
-  USE uspp_param, ONLY: lmaxq, nh, tvanp
+  USE uspp_param, ONLY: upf, lmaxq, nh
   !
   !     here the local variables
   !
@@ -69,7 +69,7 @@ subroutine addusdens1d (plan, prho)
   if (ngm1d > 0) then
      call ylmr2 (lmaxq * lmaxq, ngm1d, g1d, gg1d, ylmk0)
      do nt = 1, ntyp
-        if (tvanp (nt) ) then
+        if (upf(nt)%tvanp  ) then
            ijh = 0
            do ih = 1, nh (nt)
               do jh = ih, nh (nt)

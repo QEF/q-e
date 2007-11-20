@@ -37,7 +37,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
-  USE uspp_param,           ONLY : nh, nhm, tvanp
+  USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
                                    gamma_only
@@ -230,7 +230,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
               w1 = wg (ibnd, ik)
               ijkb0 = 0
               do np = 1, ntyp
-                if (tvanp (np) ) then
+                if (upf(np)%tvanp  ) then
                   do na = 1, nat
                     if (ityp (na) == np) then
                       if (noncolin) then
