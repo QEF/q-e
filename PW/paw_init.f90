@@ -51,20 +51,24 @@ MODULE paw_init
     IF(allocated(ddd_paw)) DEALLOCATE (ddd_paw)
     !
     ! Allocated in paw_init_onecenter
-    DO na = 1,size(saved)
-        IF(associated(saved(na)%v)) DEALLOCATE (saved(na)%v)
-    ENDDO
-    IF(allocated(saved)) DEALLOCATE(saved)
+    IF(allocated(saved)) THEN
+        DO na = 1,size(saved)
+            IF(associated(saved(na)%v)) DEALLOCATE (saved(na)%v)
+        ENDDO
+        DEALLOCATE(saved)
+    ENDIF
     !
-    DO na = 1,size(rad)
-        IF(associated(rad(na)%ww))      DEALLOCATE (rad(na)%ww)
-        IF(associated(rad(na)%ylm))     DEALLOCATE (rad(na)%ylm)
-        IF(associated(rad(na)%wwylm))   DEALLOCATE (rad(na)%wwylm)
-        IF(associated(rad(na)%dylmt))   DEALLOCATE (rad(na)%dylmt)
-        IF(associated(rad(na)%dylmp))   DEALLOCATE (rad(na)%dylmp)
-        IF(associated(rad(na)%cotg_th)) DEALLOCATE (rad(na)%cotg_th)
-    ENDDO
-    IF(allocated(rad)) DEALLOCATE(rad)
+    IF(allocated(rad)) THEN
+        DO na = 1,size(rad)
+            IF(associated(rad(na)%ww))      DEALLOCATE (rad(na)%ww)
+            IF(associated(rad(na)%ylm))     DEALLOCATE (rad(na)%ylm)
+            IF(associated(rad(na)%wwylm))   DEALLOCATE (rad(na)%wwylm)
+            IF(associated(rad(na)%dylmt))   DEALLOCATE (rad(na)%dylmt)
+            IF(associated(rad(na)%dylmp))   DEALLOCATE (rad(na)%dylmp)
+            IF(associated(rad(na)%cotg_th)) DEALLOCATE (rad(na)%cotg_th)
+        ENDDO
+        DEALLOCATE(rad)
+    ENDIF
 
   END SUBROUTINE deallocate_paw_internals
 
@@ -196,8 +200,10 @@ SUBROUTINE PAW_init_onecenter()
     ENDIF
 
     ! First a bit of generic initialization:
-    IF (allocated(saved)) DEALLOCATE(saved)
     ALLOCATE(saved(nat)) ! allocate space to store the potentials
+    DO na = 1,nat
+        NULLIFY(saved(nat)%v)
+    ENDDO
     !
     ! Parallelizing this loop every node only allocs the potential
     ! for the atoms that it will actually use later.
@@ -206,17 +212,23 @@ SUBROUTINE PAW_init_onecenter()
         nt = ityp(na)
         ! note that if the atom is not paw it is left unallocated
         IF ( upf(nt)%tpawp ) THEN
-            IF (associated(saved(na)%v)) DEALLOCATE(saved(na)%v)
             ALLOCATE( saved(na)%v(g(nt)%mesh, (upf(nt)%paw%lmax_rho+1)**2, nspin, 2 ) )
-                      !                                     {AE|PS}
+            !                                                                  {AE|PS}
         ENDIF
     ENDDO
 
     ! initialize for integration on angular momentum and gradient, integrating
     ! up to 2*lmaxq (twice the maximum angular momentum of rho) is enough for
     ! H energy and for XC energy. If I have gradient correction I have to go a bit higher
-    IF(allocated(rad)) DEALLOCATE( rad )
     ALLOCATE( rad(ntyp) )
+    DO nt = 1,ntyp
+        NULLIFY (rad(nt)%ww)
+        NULLIFY (rad(nt)%ylm)
+        NULLIFY (rad(nt)%wwylm)
+        NULLIFY (rad(nt)%dylmt)
+        NULLIFY (rad(nt)%dylmp)
+        NULLIFY (rad(nt)%cotg_th)
+    ENDDO
     !
     IF ( dft_is_gradient() ) THEN
         lmax_safe = xlm
