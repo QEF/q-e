@@ -47,6 +47,7 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : ionode
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
   USE control_flags, ONLY : twfcollect
+  USE paw_variables, ONLY : okpaw
   USE ramanm,        ONLY : eth_rps, eth_ns, lraman, elop, dek
   USE freq_ph
   !
@@ -243,6 +244,8 @@ SUBROUTINE phq_readin()
 
   IF (lda_plus_u) CALL errore('phq_readin',&
      'The phonon code with LDA+U is not yet available',1)
+
+  IF (okpaw)  CALL errore('phq_reading','phonon with paw not yet available',1)
 
   IF (nproc /= nproc_file .and. .not. twfcollect)  &
      CALL errore('phq_readin',&

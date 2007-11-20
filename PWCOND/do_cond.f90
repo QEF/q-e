@@ -19,6 +19,8 @@ SUBROUTINE do_cond(nodenumber)
   USE io_files 
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
+  USE paw_onecenter,      ONLY : PAW_potential
+  USE paw_variables,      ONLY : okpaw
 
   USE mp
 
@@ -212,6 +214,12 @@ ELSE
     prefix = prefixt
     call read_file
     call init_us_1
+    IF (okpaw) THEN
+       CALL openfil_cond
+       CALL compute_becsum(1)
+       CALL PAW_potential(becsum)
+       CALL closefil_cond
+    ENDIF
     call newd
     IF (ikind.eq.0) then
       CALL init_cond(1,'t')
@@ -226,6 +234,12 @@ ELSE
     prefix = prefixl
     call read_file
     call init_us_1
+    IF (okpaw) THEN
+       CALL openfil_cond
+       CALL compute_becsum(1)
+       CALL PAW_potential(becsum)
+       CALL closefil_cond
+    ENDIF
     call newd
     CALL init_cond(1,'l')
     CALL clean_pw(.true.)
@@ -234,6 +248,12 @@ ELSE
     prefix = prefixs
     call read_file
     call init_us_1
+    IF (okpaw) THEN
+       CALL openfil_cond
+       CALL compute_becsum(1)
+       CALL PAW_potential(becsum)
+       CALL closefil_cond
+    ENDIF
     call newd
     CALL init_cond(1,'s')
     CALL clean_pw(.true.)
@@ -242,6 +262,12 @@ ELSE
     prefix = prefixr
     call read_file
     call init_us_1
+    IF (okpaw) THEN
+       CALL openfil_cond
+       CALL compute_becsum(1)
+       CALL PAW_potential(becsum)
+       CALL closefil_cond
+    ENDIF
     call newd
     CALL init_cond(1,'r')
     CALL clean_pw(.true.)

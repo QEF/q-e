@@ -62,9 +62,9 @@ subroutine drho
   !    first compute the terms needed for the change of the charge density
   !    due to the displacement of the augmentation charge
   !
-  call compute_becsum
+  call compute_becsum_ph()
   !
-  call compute_alphasum
+  call compute_alphasum()
   !
   !    then compute the weights
   !

@@ -43,7 +43,7 @@ SUBROUTINE phq_init()
   USE noncollin_module,     ONLY : noncolin, npol
   USE uspp_param,           ONLY : upf
   USE phcom
-  USE paw_onecenter,      ONLY : PAW_potential
+  USE paw_onecenter,      ONLY : PAW_potential, PAW_symmetrize
   USE paw_variables,      ONLY : okpaw
   !
   IMPLICIT NONE
@@ -211,7 +211,8 @@ SUBROUTINE phq_init()
   DEALLOCATE( aux1 )
   !
   IF (okpaw) then
-     CALL compute_becsum()
+     CALL compute_becsum_ph()
+     CALL PAW_symmetrize(becsum)
      CALL PAW_potential(becsum) 
   ENDIF
   CALL newd()

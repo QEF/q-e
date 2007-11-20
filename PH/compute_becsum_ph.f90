@@ -7,7 +7,7 @@
 !
 !
 !-----------------------------------------------------------------------
-subroutine compute_becsum
+subroutine compute_becsum_ph
   !-----------------------------------------------------------------------
   !
   !   This routine computes the becsum term which is used to compute the
@@ -127,4 +127,4 @@ subroutine compute_becsum
   !      enddo
   !      call stop_ph(.true.)
   return
-end subroutine compute_becsum
+end subroutine compute_becsum_ph

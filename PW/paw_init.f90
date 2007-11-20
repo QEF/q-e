@@ -186,6 +186,7 @@ SUBROUTINE PAW_init_onecenter()
     ENDIF
 
     ! First a bit of generic initialization:
+    IF (allocated(saved)) DEALLOCATE(saved)
     ALLOCATE(saved(nat)) ! allocate space to store the potentials
     !
     ! Parallelizing this loop every node only allocs the potential

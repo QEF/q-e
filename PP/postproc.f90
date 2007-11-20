@@ -69,6 +69,7 @@ SUBROUTINE extract (filplot,plot_num)
   USE mp_global,     ONLY : nproc, nproc_pool, nproc_file, nproc_pool_file
   USE control_flags, ONLY : twfcollect
   USE noncollin_module, ONLY : i_cons
+  USE paw_variables, ONLY : okpaw
   USE mp,        ONLY : mp_bcast
 
   IMPLICIT NONE
@@ -173,6 +174,8 @@ SUBROUTINE extract (filplot,plot_num)
   IF (two_fermi_energies.or.i_cons /= 0) &
      CALL errore('postproc',&
      'Post-processing with constrained magnetization is not available yet',1)
+  IF (okpaw) CALL errore('postproc', &
+             'post-processing paw routines not yet tested',1)
 
   CALL openfil_pp ( )
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &

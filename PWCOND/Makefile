@@ -31,6 +31,7 @@ jbloch.o \
 kbloch.o \
 local.o \
 local_set.o \
+openfil_cond.o \
 poten.o \
 print_clock_pwcond.o \
 rotproc.o \

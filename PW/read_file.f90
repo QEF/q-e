@@ -22,7 +22,7 @@ SUBROUTINE read_file()
   USE klist,                ONLY : nkstot, nks, xk, wk
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
   USE wvfct,                ONLY : nbnd, nbndx, et, wg, npwx
-  USE symme,                ONLY : irt, nsym, ftau, s
+  USE symme,                ONLY : irt, nsym, ftau, s, d1, d2, d3
   USE ktetra,               ONLY : tetra, ntetra 
   USE extfield,             ONLY : forcefield, tefield
   USE cellmd,               ONLY : cell_factor, lmovecell
@@ -177,7 +177,7 @@ SUBROUTINE read_file()
   IF (okpaw) THEN
      CALL allocate_paw_internals()
      CALL paw_init_onecenter()
-     CALL errore('read_file','post-processing paw routines not yet available',1)
+     CALL d_matrix(d1,d2,d3)
   ENDIF
   CALL allocate_wfc()
   !
