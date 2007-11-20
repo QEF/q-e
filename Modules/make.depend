@@ -250,7 +250,6 @@ timestep.o : kind.o
 upf_to_internal.o : atom.o
 upf_to_internal.o : functionals.o
 upf_to_internal.o : pseudo_types.o
-upf_to_internal.o : uspp.o
 uspp.o : constants.o
 uspp.o : kind.o
 uspp.o : parameters.o

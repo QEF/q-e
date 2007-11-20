@@ -289,7 +289,7 @@ subroutine set_pseudo_paw (is, pawset)
   ! PWSCF modules
   !
   USE atom,  ONLY: rgrid, msh
-  USE uspp_param, ONLY: upf, tvanp
+  USE uspp_param, ONLY: upf
   USE funct, ONLY: set_dft_from_name, dft_is_meta, dft_is_hybrid
   USE io_global,  ONLY : stdout, ionode
   !

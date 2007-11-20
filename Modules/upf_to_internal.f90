@@ -29,7 +29,6 @@ subroutine set_pseudo_upf (is, upf, do_grid)
   !   dummy argument ( upf ) - convert and copy to internal variables
   !
   USE atom,  ONLY: rgrid
-  USE uspp_param, ONLY: tvanp
   USE funct, ONLY: set_dft_from_name, set_dft_from_indices, dft_is_meta
   !
   USE pseudo_types
@@ -47,7 +46,6 @@ subroutine set_pseudo_upf (is, upf, do_grid)
   TYPE (pseudo_upf) :: upf
   !
   !
-  tvanp(is)=upf%tvanp
   ! workaround for rrkj format - it contains the indices, not the name
   if ( upf%dft(1:6)=='INDEX:') then
      read( upf%dft(7:10), '(4i1)') iexch,icorr,igcx,igcc
