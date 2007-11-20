@@ -184,6 +184,7 @@ END FUNCTION calculate_dx
       use control_flags, only: program_name
       use funct, only: get_iexch, get_icorr, get_igcx, get_igcc, set_dft_from_name, dft_is_hybrid
       USE upf_to_internal, ONLY: set_pseudo_upf
+      USE atom,            ONLY :  msh, rgrid
 
       IMPLICIT NONE
 
@@ -217,6 +218,9 @@ END FUNCTION calculate_dx
       END IF
 
       ALLOCATE( upf( nsp ) )
+      DO is = 1, SIZE( upf )
+        upf(is)%grid => rgrid( is )
+      END DO
 
       ierr = 0
       info = 0
