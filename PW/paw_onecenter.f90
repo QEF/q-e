@@ -790,7 +790,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
                 CALL gcxc(arho,grad2(k,1), sx,sc,v1x,v2x,v1c,v2c)
                 IF (present(energy)) &
                     e_rad(k)    = sgn *e2* (sx+sc) * g(i%t)%r2(k)
-                gc_rad(k,ix,1)  = (v1x+v1c)*g(i%t)%rm2(k)
+                gc_rad(k,ix,1)  = (v1x+v1c)!*g(i%t)%rm2(k)
                 h_rad(k,:,ix,1) = (v2x+v2c)*grad(k,:,1)*g(i%t)%r2(k)
             ELSE
                 IF (present(energy)) &

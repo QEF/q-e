@@ -457,10 +457,10 @@ use radial_grids, only : write_grid_on_file
     write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_AE_RHO_ATC>"
     write (ounps,'(1p4e19.11)') (pawsetup%aeccharge(k)/ fpi / pawsetup%grid%r2(k),&
                                  k = 1,pawsetup%grid%mesh)
-    write (ounps, '(//a16)', err = 100, iostat = ios) "</PP_AE_RHO_ATC>"
+    write (ounps, '(a16)', err = 100, iostat = ios) "</PP_AE_RHO_ATC>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(a10)', err = 100, iostat = ios) "<PP_AEWFC>"
+    write (ounps, '(//a10)', err = 100, iostat = ios) "<PP_AEWFC>"
     do nb = 1,pawsetup%nwfc
     write (ounps,'(a2,i5,f6.2,t24,a)', iostat=ios) &
         els(nb), lls(nb), ocs(nb), "All-electron Wavefunction"
@@ -469,7 +469,7 @@ use radial_grids, only : write_grid_on_file
     write (ounps, '(a11)', err = 100, iostat = ios) "</PP_AEWFC>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
-    write (ounps, '(a15)', err = 100, iostat = ios) "<PP_PSWFC_FULL>"
+    write (ounps, '(//a15)', err = 100, iostat = ios) "<PP_PSWFC_FULL>"
     do nb = 1,pawsetup%nwfc
     write (ounps,'(a2,i5,f6.2,t24,a)', iostat=ios) &
         els(nb), lls(nb), ocs(nb), "Pseudo Wavefunction"
@@ -505,7 +505,7 @@ use radial_grids, only : write_grid_on_file
     write (ounps,'(1p4e19.11)') ( grid%sqr(k), k=1,pawsetup%grid%mesh)
     write (ounps, '(a12)', err = 100, iostat = ios) "</PP_SQRT_R>"
     !
-    write (ounps, '(a16)', err = 100, iostat = ios) "</PP_GRID_RECON>"
+    write (ounps, '(//a16)', err = 100, iostat = ios) "</PP_GRID_RECON>"
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     write (ounps, '(a9)', err = 100, iostat = ios) "</PP_PAW>"
