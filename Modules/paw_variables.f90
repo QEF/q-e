@@ -13,7 +13,7 @@ MODULE paw_variables
     LOGICAL              :: paw_is_init = .false.
     ! Analogous to okvan in  "uspp_param" (Modules/uspp.f90)
     LOGICAL :: &
-         okpaw              ! if .TRUE. at least one pseudo is PAW
+         okpaw = .FALSE.          ! if .TRUE. at least one pseudo is PAW
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Pseudopotential data: !!!!

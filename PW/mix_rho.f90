@@ -9,6 +9,17 @@
 !
 #define ZERO ( 0._dp, 0._dp )
 !
+#ifdef __GFORTRAN
+! gfortran hack - for some mysterious reason gfortran doesn't save
+!                 derived-type variables even with the SAVE attribute
+MODULE mix_save
+  USE scf, ONLY : mix_type
+  TYPE(mix_type), ALLOCATABLE, SAVE :: &
+    df(:),        &! information from preceding iterations
+    dv(:)          !     "  "       "     "        "  "
+END MODULE mix_save
+#endif
+
 !----------------------------------------------------------------------------
 SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
                     alphamix, dr2, tr2_min, iter, n_iter, conv )
@@ -38,7 +49,10 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
                              assign_scf_to_mix_type, assign_mix_to_scf_type, &
                              mix_type_AXPY, diropn_mix_file, close_mix_file, &
                              davcio_mix_type, rho_ddot, high_frequency_mixing
-   USE io_global,     ONLY : stdout
+  USE io_global,     ONLY : stdout
+#ifdef __GFORTRAN 
+  USE mix_save
+#endif
   !
   IMPLICIT NONE
   integer :: kilobytes
@@ -96,10 +110,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   !
   INTEGER, SAVE :: &
     mixrho_iter = 0    ! history of mixing
-  
+#ifndef __GFORTRAN 
   TYPE(mix_type), ALLOCATABLE, SAVE :: &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
+#endif
   REAL(DP), ALLOCATABLE, SAVE :: &
     df_bec(:,:,:,:), &! idem !PAW
     dv_bec(:,:,:,:)   ! idem !PAW

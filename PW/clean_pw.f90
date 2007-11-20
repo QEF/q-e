@@ -148,8 +148,9 @@ SUBROUTINE clean_pw( lflag )
   CALL deallocate_dyn_vars()
   !
   ! ... additional arrays for PAW
+  !
   CALL deallocate_paw_internals()
-
+  !
   RETURN
   !
 END SUBROUTINE clean_pw

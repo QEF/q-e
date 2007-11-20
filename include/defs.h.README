@@ -74,6 +74,7 @@ Hardware/Compiler:
       __ALPHA     hp-compaq (formerly dec) alphas
       __SX6       Nec sx-6 vector machines (Nec compiler)
       __PGI       Portland Group compiler (workarounds for compiler bugs)
+      __GFORTRAN  gnu gfortran (workarounds for compiler bugs)
       __INTEL     Intel ifc and ifort compilers (workaround for compiler 
                   bugs and for insufficient stack size)
       __XD1       Specialized code for Cray XD1

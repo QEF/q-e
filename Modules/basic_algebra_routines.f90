@@ -27,7 +27,6 @@ MODULE basic_algebra_routines
   !  matrix( x, y )     vector-vector multiplication ( |x><y| )
   !  identity( N )      identity matrix of rank N
   !
-  !
   USE kinds,  ONLY : DP
   !
   IMPLICIT NONE
@@ -109,12 +108,17 @@ MODULE basic_algebra_routines
        REAL(DP), INTENT(IN) :: vec(:)
        REAL(DP), INTENT(IN) :: mat(:,:)
        REAL(DP)             :: matrix_times_vector(SIZE( vec ))
+! gfortran hack
+       REAL(DP)             :: aux(SIZE( vec ))
        INTEGER              :: dim1
        !
        dim1 = SIZE( vec )
        !
-       CALL DGEMV( 'N', dim1, dim1, 1.0_DP, mat, dim1, &
-                   vec, 1, 0.0_DP, matrix_times_vector, 1 )
+       CALL DGEMV( 'N', dim1, dim1, 1.0_DP, mat, dim1, vec, 1, 0.0_DP, &
+                   aux, 1 ) 
+! gfortran hack 
+!                  matrix_times_vector, 1 )
+       matrix_times_vector = aux
        !
      END FUNCTION  matrix_times_vector
      !
@@ -128,12 +132,17 @@ MODULE basic_algebra_routines
        REAL(DP), INTENT(IN) :: vec(:)
        REAL(DP), INTENT(IN) :: mat(:,:)
        REAL(DP)             :: vector_times_matrix(SIZE( vec ))
+! gfortran hack
+       REAL(DP)             :: aux(SIZE( vec ))
        INTEGER              :: dim1
        !
        dim1 = SIZE( vec )
        !
-       CALL DGEMV( 'T', dim1, dim1, 1.0_DP, mat, dim1, &
-                   vec, 1, 0.0_DP, vector_times_matrix, 1 )
+       CALL DGEMV( 'T', dim1, dim1, 1.0_DP, mat, dim1, vec, 1, 0.0_DP, &
+                   aux, 1) 
+! gfortran hack 
+!                  vector_times_matrix, 1 )
+       vector_times_matrix = aux
        !
      END FUNCTION vector_times_matrix
      !
@@ -146,14 +155,27 @@ MODULE basic_algebra_routines
        !
        REAL(DP), INTENT(IN) :: vec1(:), vec2(:)
        REAL(DP)             :: matrix(SIZE( vec1 ),SIZE( vec2 ))
+#ifdef __GFORTRAN
+! gfortran hack - explicit preprocessing is used because this hack
+! costs an additional matrix allocation, which may not be a good idea
+       REAL(DP)             :: aux(SIZE( vec1 ),SIZE( vec2 ))
+#endif
        INTEGER              :: dim1, dim2
        !
        dim1 = SIZE( vec1 )
        dim2 = SIZE( vec2 )
        !
-       matrix = 0.0_DP
+#ifdef __GFORTRAN
        !
+       aux = 0.0_DP
+       CALL DGER( dim1, dim2, 1.0_DP, vec1, 1, vec2, 1, aux, dim1 )
+       matrix = aux
+#else
+       !
+       matrix = 0.0_DP
        CALL DGER( dim1, dim2, 1.0_DP, vec1, 1, vec2, 1, matrix, dim1 )
+       !
+#endif
        !
      END FUNCTION matrix
      !
