@@ -28,9 +28,8 @@ MODULE paw_init
   ! Allocate PAW internal variables require for SCF calculation
   SUBROUTINE allocate_paw_internals
     USE lsda_mod,           ONLY : nspin
-    USE ions_base,          ONLY : nat, ntyp => nsp
+    USE ions_base,          ONLY : nat
     USE uspp_param,         ONLY : nhm
-    USE gvect,              ONLY : ngl
     !
     USE paw_variables
     !
@@ -44,18 +43,29 @@ MODULE paw_init
   SUBROUTINE deallocate_paw_internals
     USE paw_variables
     USE uspp_param, ONLY : upf
-    USE ions_base,  ONLY : ntyp => nsp
+    USE ions_base,  ONLY : nat, ntyp => nsp
     !
     IMPLICIT NONE
-    INTEGER :: nt
+    INTEGER :: nt, na
     !
     IF(allocated(ddd_paw)) DEALLOCATE (ddd_paw)
     !
-    ! Allocated in read_paw:
-    DO nt = 1,ntyp
-        IF(associated(upf(nt)%paw%aug)) DEALLOCATE (upf(nt)%paw%aug)
+    ! Allocated in paw_init_onecenter
+    DO na = 1,size(saved)
+        IF(associated(saved(na)%v)) DEALLOCATE (saved(na)%v)
     ENDDO
+    IF(allocated(saved)) DEALLOCATE(saved)
     !
+    DO na = 1,size(rad)
+        IF(associated(rad(na)%ww))      DEALLOCATE (rad(na)%ww)
+        IF(associated(rad(na)%ylm))     DEALLOCATE (rad(na)%ylm)
+        IF(associated(rad(na)%wwylm))   DEALLOCATE (rad(na)%wwylm)
+        IF(associated(rad(na)%dylmt))   DEALLOCATE (rad(na)%dylmt)
+        IF(associated(rad(na)%dylmp))   DEALLOCATE (rad(na)%dylmp)
+        IF(associated(rad(na)%cotg_th)) DEALLOCATE (rad(na)%cotg_th)
+    ENDDO
+    IF(allocated(rad)) DEALLOCATE(rad)
+
   END SUBROUTINE deallocate_paw_internals
 
 #ifdef __PARA
