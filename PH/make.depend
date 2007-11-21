@@ -146,12 +146,12 @@ compute_becalp.o : ../Modules/kind.o
 compute_becalp.o : ../PW/noncol.o
 compute_becalp.o : ../PW/pwcom.o
 compute_becalp.o : phcom.o
-compute_becsum.o : ../Modules/ions_base.o
-compute_becsum.o : ../Modules/kind.o
-compute_becsum.o : ../Modules/uspp.o
-compute_becsum.o : ../PW/noncol.o
-compute_becsum.o : ../PW/pwcom.o
-compute_becsum.o : phcom.o
+compute_becsum_ph.o : ../Modules/ions_base.o
+compute_becsum_ph.o : ../Modules/kind.o
+compute_becsum_ph.o : ../Modules/uspp.o
+compute_becsum_ph.o : ../PW/noncol.o
+compute_becsum_ph.o : ../PW/pwcom.o
+compute_becsum_ph.o : phcom.o
 compute_drhous.o : ../Modules/io_files.o
 compute_drhous.o : ../Modules/ions_base.o
 compute_drhous.o : ../Modules/kind.o
@@ -501,6 +501,7 @@ phq_readin.o : ../Modules/kind.o
 phq_readin.o : ../Modules/mp.o
 phq_readin.o : ../Modules/mp_global.o
 phq_readin.o : ../Modules/parameters.o
+phq_readin.o : ../Modules/paw_variables.o
 phq_readin.o : ../Modules/printout_base.o
 phq_readin.o : ../Modules/uspp.o
 phq_readin.o : ../PW/noncol.o
@@ -837,7 +838,7 @@ ch_psi_all.o : ../include/f_defs.h
 chi_test.o : ../include/f_defs.h
 compute_alphasum.o : ../include/f_defs.h
 compute_becalp.o : ../include/f_defs.h
-compute_becsum.o : ../include/f_defs.h
+compute_becsum_ph.o : ../include/f_defs.h
 compute_drhous.o : ../include/f_defs.h
 compute_drhous_nc.o : ../include/f_defs.h
 compute_dvloc.o : ../include/f_defs.h

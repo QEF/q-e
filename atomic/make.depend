@@ -25,7 +25,6 @@ atomic_paw.o : ../Modules/kind.o
 atomic_paw.o : ../Modules/parameters.o
 atomic_paw.o : ../Modules/pseudo_types.o
 atomic_paw.o : ../Modules/radial_grids.o
-atomic_paw.o : ../Modules/read_paw.o
 atomic_paw.o : ld1inc.o
 atomic_paw.o : parameters.o
 c6_dft.o : ../Modules/constants.o
@@ -162,7 +161,6 @@ ld1_readin.o : ../Modules/kind.o
 ld1_readin.o : ../Modules/mp.o
 ld1_readin.o : ../Modules/parameters.o
 ld1_readin.o : ../Modules/radial_grids.o
-ld1_readin.o : ../Modules/read_paw.o
 ld1_readin.o : atomic_paw.o
 ld1_readin.o : ld1inc.o
 ld1_readin.o : parameters.o
@@ -172,8 +170,8 @@ ld1_setup.o : ld1inc.o
 ld1_writeout.o : ../Modules/functionals.o
 ld1_writeout.o : ../Modules/io_global.o
 ld1_writeout.o : ../Modules/mp.o
+ld1_writeout.o : ../Modules/pseudo_types.o
 ld1_writeout.o : ../Modules/radial_grids.o
-ld1_writeout.o : ../Modules/read_paw.o
 ld1_writeout.o : ld1inc.o
 ld1inc.o : ../Modules/kind.o
 ld1inc.o : ../Modules/pseudo_types.o
@@ -231,6 +229,7 @@ read_pseudoupf.o : ../Modules/constants.o
 read_pseudoupf.o : ../Modules/functionals.o
 read_pseudoupf.o : ../Modules/kind.o
 read_pseudoupf.o : ../Modules/pseudo_types.o
+read_pseudoupf.o : ../Modules/radial_grids.o
 read_pseudoupf.o : ../Modules/read_upf.o
 read_pseudoupf.o : ld1inc.o
 run_pseudo.o : ../Modules/kind.o

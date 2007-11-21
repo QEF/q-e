@@ -618,7 +618,6 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   INTEGER :: nb, nb1, l, k
   REAL(DP),ALLOCATABLE :: aux(:,:)
   CHARACTER(len=70) :: dummy
-  REAL(DP)          :: rummy
   
 
   CALL scan_begin ( iunps, "PAW_FORMAT_VERSION", .false. )
@@ -637,7 +636,7 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   CALL scan_begin ( iunps, "AUGFUN", .false. )
     read (iunps,'(1pa)') dummy
     read (iunps,'(1pa)') upf%paw%augshape ! shape of augfun
-    read (iunps,'(1p1e19.11,i5,a)') rummy, upf%paw%iraug, dummy
+    read (iunps,'(1p1e19.11,i5,a)') upf%paw%raug, upf%paw%iraug, dummy
     read (iunps,'(1pi5,a)') upf%paw%lmax_aug, dummy
     if(upf%paw%lmax_aug /= upf%paw%lmax_rho) &
         call errore('read_pseudo_paw', &
@@ -646,6 +645,9 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
 
     ! maximum radius of integration (for r > rmax PS == AE .and. aug == 0)
     upf%paw%irmax = max(upf%kkbeta, upf%paw%iraug)
+    ! temporary WORKAROUND: if augmentation charge extend further than betas
+    ! part of it will be dropped in init_us_1 when transformed to Fourier space
+    upf%kkbeta = max(upf%kkbeta, upf%paw%iraug)
     !
     ! First read multipoles (they are needed to read the augfuns)
     ALLOCATE( upf%paw%augmom(upf%nbeta,upf%nbeta, 0:upf%paw%lmax_aug) )
@@ -661,7 +663,7 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
         do nb = 1,upf%nbeta
         do nb1 = 1,upf%nbeta
             if (abs(upf%paw%augmom(nb,nb1,l)) > 1.d-10) then
-                read (iunps,'(x,a)') dummy ! blabla
+                read (iunps,'(1x,a)') dummy ! blabla
                 read (iunps,'(1p4e19.11)') (upf%paw%aug(k,nb,nb1,l), k  = 1,upf%mesh)
             else
                 upf%paw%aug(1:upf%mesh,nb,nb1,l) = 0._dp

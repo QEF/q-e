@@ -111,7 +111,6 @@ MODULES = \
 ../Modules/version.o \
 ../Modules/parameters.o \
 ../Modules/parallel_include.o \
-../Modules/read_paw.o \
 ../Modules/mp_global.o \
 ../Modules/mp.o \
 ../Modules/mp_base.o \

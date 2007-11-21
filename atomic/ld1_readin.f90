@@ -41,7 +41,6 @@ subroutine ld1_readin
 
   use funct, only : set_dft_from_name
   use radial_grids, only: do_mesh, check_mesh
-  use read_paw_module, only : paw_io
   use atomic_paw, only : paw2us
   implicit none
 
@@ -527,23 +526,6 @@ subroutine ld1_readin
         !    UPF format
         !
         call read_pseudoupf
-        call check_mesh(grid)
-        !
-     else if (matches('.PAW',file_pseudo) .or. matches('.paw',file_pseudo)) then
-        !
-        !    PAW dataset
-        !
-        write(stdout,'("Reading pseudopotential from file: ",a)') trim(file_pseudo)
-        lpaw=.true.
-        grid%xmin=xmin  ! this is a stupid thing to do...
-        open(unit=111, file=trim(file_pseudo), status='unknown',  &
-             form='formatted', err=50, iostat=ios)
-50      call errore('ld1_readin','open error on file '//file_pseudo,abs(ios))
-        !call paw_io(pawsetup,111,"INP")
-        call paw_io(pawsetup,111,"INP",ndmx,nwfsx,lmaxx)
-        close(111)
-        call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, &
-                      qq, qvan,vpsloc, bmat, rhos, els, rcutus, pseudotype )
         call check_mesh(grid)
         !
      else if ( matches('.rrkj3', file_pseudo) .or. &

@@ -19,10 +19,11 @@ subroutine read_pseudoupf
   !
   use constants, only : fpi
   use kinds, only : dp
+  use radial_grids, only : ndmx, radial_grid_type
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, &
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
                      lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
-                     rhos, phis, which_augfun
+                     rhos, phis, which_augfun, lpaw, rmatch_augfun
   use funct, only: set_dft_from_name
   !
   use pseudo_types
@@ -36,6 +37,8 @@ subroutine read_pseudoupf
   !
   integer :: nb, ios
   TYPE (pseudo_upf) :: upf
+  TYPE (radial_grid_type),TARGET :: rgrid
+  upf%grid => rgrid
   !
   !
   iunps=2
@@ -57,6 +60,7 @@ subroutine read_pseudoupf
   else
      pseudotype=3
   endif
+  lpaw = upf%tpawp
   etots=upf%etotps
   lmax = upf%lmax
   grid%mesh = upf%mesh
@@ -112,7 +116,7 @@ subroutine read_pseudoupf
   betas(1:grid%mesh, 1:nbeta) = upf%beta(1:upf%mesh, 1:upf%nbeta)
   bmat(1:nbeta, 1:nbeta) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
   !
-  if (pseudotype.eq.3) then
+  if (pseudotype.eq.3 .and. .not. lpaw) then
      qq(1:nbeta,1:nbeta) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
      do ibeta=1,nbeta
         do jbeta=ibeta,nbeta
@@ -155,6 +159,19 @@ subroutine read_pseudoupf
   lloc = -1
   vpsloc(1:grid%mesh) = upf%vloc(1:upf%mesh)
   !!!
+  ! paw:
+  if (lpaw) then
+    which_augfun  = upf%paw%augshape
+    rmatch_augfun = upf%paw%raug
+    call errore('ld1_readin', &
+                'Testing PAW setup after generationis not implemented yet. '       //&
+                'You can test it during generation, but remember to regenerate it '//&
+                'after all the tests without a test configuration, or with a test '//&
+                'configuration equal to the generating one: descreening '          //&
+                'is computed using the last test configuration, so results '       //&
+                'may be different from what you expected!', 1)
+  endif
+
 
   CALL deallocate_pseudo_upf( upf )
 

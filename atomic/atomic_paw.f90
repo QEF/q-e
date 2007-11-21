@@ -38,8 +38,7 @@ MODULE atomic_paw
   USE parameters,       ONLY: lmaxx
   USE constants,        ONLY: pi, fpi, e2, eps8
   USE radial_grids,     ONLY: ndmx, radial_grid_type
-  USE pseudo_types,     ONLY: paw_t
-  USE read_paw_module,  ONLY: nullify_pseudo_paw, allocate_pseudo_paw
+  USE pseudo_types,     ONLY: paw_t, nullify_pseudo_paw, allocate_pseudo_paw
   !
   IMPLICIT NONE
   PRIVATE
@@ -155,7 +154,7 @@ CONTAINS
        nlcc, aerhoc, psrhoc, aevtot, psvtot, which_paw_augfun)
     USE funct, ONLY : dft_name, get_iexch, get_icorr, get_igcx, get_igcc
     USE ld1inc, ONLY : zed
-    USE read_paw_module, ONLY : nullify_pseudo_paw, allocate_pseudo_paw
+    USE pseudo_types, ONLY : nullify_pseudo_paw, allocate_pseudo_paw
     IMPLICIT NONE
     TYPE(paw_t),      INTENT(OUT) :: pawset_
 !   CHARACTER(LEN=2), INTENT(IN)  :: symbol !now generated on the fly

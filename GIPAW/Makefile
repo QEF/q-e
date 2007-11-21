@@ -80,7 +80,6 @@ MODULES = \
 ../Modules/radial_grids.o \
 ../Modules/random_numbers.o \
 ../Modules/read_cards.o \
-../Modules/read_paw.o \
 ../Modules/read_namelists.o \
 ../Modules/read_upf.o \
 ../Modules/read_uspp.o \

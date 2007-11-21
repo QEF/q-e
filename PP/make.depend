@@ -54,6 +54,7 @@ bands.o : ../PW/noncol.o
 bands.o : ../PW/pwcom.o
 cft.o : ../Modules/kind.o
 cgracsc.o : ../Modules/kind.o
+cgracsc.o : ../Modules/pseudo_types.o
 cgracsc.o : ../Modules/uspp.o
 cgracsc.o : ../PW/pwcom.o
 chdens.o : ../Modules/cell_base.o
@@ -227,6 +228,7 @@ postproc.o : ../Modules/ions_base.o
 postproc.o : ../Modules/kind.o
 postproc.o : ../Modules/mp.o
 postproc.o : ../Modules/mp_global.o
+postproc.o : ../Modules/paw_variables.o
 postproc.o : ../PW/noncol.o
 postproc.o : ../PW/pwcom.o
 projwfc.o : ../Modules/cell_base.o

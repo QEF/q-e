@@ -74,7 +74,7 @@ subroutine simpson_cp90( mesh, func, rab, asum )
   real(DP) :: c(4)
   integer ::i
   !
-  if ( mesh < 8 ) call errore ('simpson','few mesh points',8)
+  if ( mesh < 8 ) call errore ('simpson_cp90','few mesh points',8)
 
   c(1) = 109.0d0 / 48.d0
   c(2) = -5.d0 / 48.d0

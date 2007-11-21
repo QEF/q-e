@@ -51,7 +51,6 @@ MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
     USE paw_variables,  ONLY : paw_info, saved, xlm, rad
-    USE uspp_param,     ONLY : upf
     !
     IMPLICIT NONE
 
@@ -199,12 +198,10 @@ SUBROUTINE PAW_symmetrize(becsum)
     INTEGER :: ih,jh, ijh   ! counters for augmentation channels
     INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
                l_i, l_j, m_i, m_j
-    INTEGER :: p_i, p_j     ! projector indexes of ih and jh (tricky!)
     INTEGER :: m_o, m_u     ! counters for sums on m
     INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
     INTEGER :: isym         ! counter for symmetry operation
     INTEGER :: first_nat, last_nat ! to parallelize on atoms
-    CHARACTER(len=8) :: do_symme
 
     ! The following mess is necessary because the symmetrization operation
     ! in LDA+U code is simpler than in PAW, so the required quantities are
@@ -361,7 +358,7 @@ SUBROUTINE PAW_newd(d)
     REAL(DP)                :: becfake(nhm*(nhm+1)/2,nat,nspin)
 
     INTEGER, PARAMETER      :: AE = 1, PS = 2  ! All-Electron and Pseudo
-    INTEGER                 :: lm,k            ! counters on angmom and radial grid
+    INTEGER                 :: lm              ! counters on angmom and radial grid
     INTEGER                 :: nb, mb, nmb, is
     !
     REAL(DP), POINTER       :: v_at(:)         ! point to aevloc_at or psvloc_at
@@ -473,7 +470,7 @@ FUNCTION PAW_integrate(becsum)
 
     INTEGER, PARAMETER      :: AE = 1, PS = 2        ! All-Electron and Pseudo
     INTEGER                 :: na,first_nat,last_nat ! atoms counters and indexes
-    INTEGER                 :: lm,k                  ! counters on angmom and radial grid
+    INTEGER                 :: lm                    ! counters on angmom and radial grid
     INTEGER                 :: is                    ! counter on spin
     !
     REAL(DP), ALLOCATABLE   :: rho_lm(:,:,:) ! radial density expanded on Y_lm
@@ -642,7 +639,6 @@ END FUNCTION PAW_ddot
 !!! xc functional is not diagonal on angular momentum numerical integration is performed
 SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     USE lsda_mod,               ONLY : nspin
-    USE ions_base,              ONLY : ityp
     USE atom,                   ONLY : g => rgrid
     USE funct,                  ONLY : dft_is_gradient
     USE constants,              ONLY : fpi ! REMOVE
@@ -662,14 +658,9 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     REAL(DP)              :: e                  ! aux, used to integrate energy
     !
     INTEGER               :: ix,k               ! counters on directions and radial grid
-    INTEGER               :: lm                 ! counter on angular momentum
     INTEGER               :: lsd                ! switch for local spin density
 
     REAL(DP), EXTERNAL    :: exc_t              ! computes XC energy
-
-    REAL(DP) :: &
-         vgc(i%m,2),   & ! exchange-correlation potential (GGA only)
-         egc(i%m)        ! exchange correlation energy density (GGA only)
 
     OPTIONAL_CALL start_clock ('PAW_xc_pot')
     !
@@ -731,7 +722,6 @@ END SUBROUTINE PAW_xc_potential
 !!! precision during teh calculation, even if only the ones up to lmax_rho (the maximum in the
 !!! density of charge) matter when computing \int v * rho 
 SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
-    USE ions_base,              ONLY : ityp
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
     USE constants,              ONLY : sqrtpi, fpi,pi,e2, eps => eps12, eps2 => eps24
@@ -757,12 +747,12 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP),ALLOCATABLE    :: e_rad(:)                   ! aux, used to store energy
     REAL(DP)                :: e                          ! aux, used to integrate energy
 
-    INTEGER  :: k, ix, is, a, lm                          ! counters on spin and mesh
+    INTEGER  :: k, ix, is, lm                             ! counters on spin and mesh
     REAL(DP) :: sx,sc,v1x,v2x,v1c,v2c                     ! workspace
     REAL(DP) :: v1xup, v1xdw, v2xup, v2xdw, v1cup, v1cdw  ! workspace
     REAL(DP) :: sgn, arho                                 ! workspace
-    REAL(DP) :: rup, rdw, gup, gdw, co2                   ! workspace
-    REAL(DP) :: rh, zeta, grh2, grho2(2)
+    REAL(DP) :: rup, rdw, co2                             ! workspace
+    REAL(DP) :: rh, zeta, grh2
 
     OPTIONAL_CALL start_clock ('PAW_gcxc_v')
 
@@ -891,9 +881,7 @@ END SUBROUTINE PAW_gcxc_potential
 !!! 2. the output function is multiplied by r**2 too
 SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     USE constants,              ONLY : sqrtpi, fpi, eps12, e2
-    !USE uspp_param,             ONLY : lmaxq
     USE lsda_mod,               ONLY : nspin
-    USE ions_base,              ONLY : ityp
     USE atom,                   ONLY : g => rgrid
 
     TYPE(paw_info)  :: i              ! atom's minimal info
@@ -906,7 +894,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     REAL(DP)             :: div_F_rad(i%m,rad(i%t)%nx,nspin)! div(F) on rad. grid
     REAL(DP)             :: aux(i%m)!,aux2(i%m)              ! workspace
     ! counters on: spin, angular momentum, radial grid point:
-    INTEGER              :: is, lm, k, ix
+    INTEGER              :: is, lm, ix
 
     OPTIONAL_CALL start_clock ('PAW_div')
 
@@ -983,7 +971,6 @@ END SUBROUTINE PAW_divergence
 SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
     USE constants,              ONLY : fpi
     USE lsda_mod,               ONLY : nspin
-    USE ions_base,              ONLY : ityp
     USE atom,                   ONLY : g => rgrid
 
     INTEGER, INTENT(IN)  :: ix ! line of the dylm2 matrix to use actually it is
@@ -997,8 +984,7 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
     !              r, theta and phi components ---^
     !
     REAL(DP)             :: aux(i%m),aux2(i%m)       ! workspace
-    ! counters on: spin, angular momentum, atom type, radial grid point:
-    INTEGER              :: is, lm, k
+    INTEGER              :: is, lm ! counters on: spin, angular momentum
 
     OPTIONAL_CALL start_clock ('PAW_grad')
     ! 1. build real charge density = rho/r**2 + rho_core
@@ -1113,7 +1099,7 @@ END SUBROUTINE PAW_h_potential
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
 !!! sum up pfuncs x occupation to build radial density's angular momentum components
 SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
-    USE ions_base,         ONLY : ntyp => nsp, nat 
+    USE ions_base,         ONLY : nat 
     USE lsda_mod,          ONLY : nspin
     USE uspp_param,        ONLY : nh, nhm
     USE uspp,              ONLY : indv, ap, nhtolm,lpl,lpx

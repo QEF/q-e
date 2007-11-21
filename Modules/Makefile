@@ -55,7 +55,6 @@ radial_grids.o \
 random_numbers.o \
 read_cards.o \
 read_namelists.o \
-read_paw.o \
 read_upf.o \
 read_uspp.o \
 recvec.o \

@@ -23,13 +23,12 @@ subroutine ld1_writeout
                      elts, llts, octs, rcut, etots, nwfts, &
                      lmax, lloc, zval, nlc, nnl, alps, alpc, alc, cc, nlcc
   use funct, only : get_dft_name
-  use read_paw_module, only : paw_io
+  use pseudo_types, only : deallocate_pseudo_paw
   implicit none
 
   integer :: &
        ios,   &  ! I/O control
        iunps     ! the unit with the pseudopotential
-
 
   logical, external :: matches
   logical :: oldformat
@@ -40,21 +39,14 @@ subroutine ld1_writeout
   if (nconf > 1) &
        call errore('ld1_writeout','more than one test configuration',1)
 
-!   if (.not. lpaw) then
-! 
-     if (rel == 2 .and. .not. matches('.UPF',file_pseudopw) &
-                  .and. .not. matches('.upf',file_pseudopw) ) then
-        file_pseudopw=trim(file_pseudopw)//'.UPF'
-     end if
+  if ( (( rel == 2) .or. lpaw) &
+       .and. .not. matches('.UPF',file_pseudopw) &
+       .and. .not. matches('.upf',file_pseudopw) ) then
+     file_pseudopw=trim(file_pseudopw)//'.UPF'
+  end if
 
-     oldformat = .not. matches('.UPF',file_pseudopw) .and. &
-                 .not. matches('.upf',file_pseudopw)
-!   else
-!      if ( .not. matches('.PAW',file_pseudopw) .and. &
-!           .not. matches('.paw',file_pseudopw) ) then
-!         file_pseudopw=trim(file_pseudopw)//'.PAW'
-!      end if
-!   end if
+  oldformat = .not. matches('.UPF',file_pseudopw) .and. &
+              .not. matches('.upf',file_pseudopw)
 
   iunps=28
   if (ionode) &
@@ -64,21 +56,6 @@ subroutine ld1_writeout
   call errore('ld1_writeout','opening file_pseudopw',abs(ios))
 
   if (ionode) then
-!      if (lpaw) then
-!         !
-!         ! write experimental PAW setup
-!         !
-!         call paw_io(pawsetup,iunps,"OUT")
-!         !
-!         !
-!         ! and the corresponding PP
-!         !
-!         open(unit=iunps+1, file=trim(file_pseudopw)//".UPF", status='unknown',  &
-!             form='formatted', err=50, iostat=ios)
-!         call write_upf(iunps+1)
-!         close(iunps+1)
-!         !
-!      else if (oldformat) then
      if (oldformat) then
         !
         if (pseudotype == 1) then
@@ -109,6 +86,7 @@ subroutine ld1_writeout
      else
         !
         call write_upf(iunps)
+        if(lpaw) call deallocate_pseudo_paw( pawsetup )
         !
      endif
      !

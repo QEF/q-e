@@ -59,7 +59,6 @@ MODULES = \
 ../Modules/ptoolkit.o \
 ../Modules/radial_grids.o \
 ../Modules/random_numbers.o \
-../Modules/read_paw.o \
 ../Modules/read_upf.o \
 ../Modules/read_uspp.o \
 ../Modules/recvec.o \

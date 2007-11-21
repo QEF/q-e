@@ -27,8 +27,6 @@ subroutine readpp
   USE io_global,  ONLY : stdout
   USE ions_base,  ONLY : zv
   USE uspp_param, ONLY : upf
-  USE read_paw_module,  ONLY : paw_io, allocate_pseudo_paw, deallocate_pseudo_paw
-  USE paw_to_internal,  ONLY : set_pseudo_paw
   implicit none
   !
   real(DP), parameter :: rcut = 10.d0, eps = 1.0D-08
@@ -107,19 +105,6 @@ subroutine readpp
               CALL readvan (iunps, nt, upf(nt))
            ENDIF
            CALL set_pseudo_upf (nt, upf(nt), do_grid=.true.)
-           !
-        else if (pseudo_type (psfile (nt) ) ==3) then
-           !
-           !    PSEUDO PAW in temporary format. Use with care
-           !
-           !tpaw(nt)=.true.
-           newpseudo (nt) = .true.
-           open (unit = iunps, file = file_pseudo, status = 'old', &
-                 form='formatted', iostat = ios)
-           call paw_io (pawset, iunps, "INP")
-           close (iunps)
-           call set_pseudo_paw (nt, pawset)
-           call deallocate_pseudo_paw (pawset)
            !
         else
            newpseudo (nt) = .false.
@@ -203,9 +188,6 @@ integer function pseudo_type (psfile)
        pseudo_type = 1
   if (l > 5) then
      if (psfile (l - 5:l) .eq.'.RRKJ3') pseudo_type = 2
-  end if
-  if (l > 3) then
-     if (psfile (l - 3:l) .eq.'.PAW') pseudo_type = 3
   end if
   !
   return

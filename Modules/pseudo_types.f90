@@ -75,6 +75,7 @@ END TYPE paw_t
                                               ! they differ from US ones because they
                                               ! are indexed on BETA functions, non on WFC
             REAL(DP),POINTER :: augmom(:,:,:) ! multipole AE-pseudo (i,j,l=0:2*lmax)
+            REAL(DP)         :: raug          ! augfunction max radius
             INTEGER          :: iraug         ! index on rgrid closer to, and >, raug
             INTEGER          :: irmax         ! max{ iraug , kkbeta } == max radius to integrate
             INTEGER          :: lmax_aug      ! max angmom of augmentation functions, it is ==
@@ -221,6 +222,7 @@ END TYPE paw_t
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
+          !NULLIFY( upf%grid ) ! Note: this must NOT be nullified or read_upf will fail!
           NULLIFY ( upf%gipaw_core_orbital_n )
           NULLIFY ( upf%gipaw_core_orbital_l )
           NULLIFY ( upf%gipaw_core_orbital_el )
@@ -289,5 +291,69 @@ END TYPE paw_t
                DEALLOCATE ( upf%gipaw_wfs_ps )
           RETURN
         END SUBROUTINE deallocate_pseudo_upf
+
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+! Nullify, allocate and deallocate for paw_t type. Used only
+! in atomic code.
+!%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
+
+        SUBROUTINE nullify_pseudo_paw( paw )
+        TYPE( paw_t ), INTENT(INOUT) :: paw
+        NULLIFY( paw%l, paw%ikk )
+        NULLIFY( paw%oc, paw%enl, paw%aewfc, paw%pswfc, paw%proj )
+        NULLIFY( paw%augfun, paw%augmom, paw%aeccharge, paw%psccharge, paw%pscharge )
+        NULLIFY( paw%aeloc, paw%psloc, paw%kdiff, paw%dion )
+        RETURN
+        END SUBROUTINE nullify_pseudo_paw
+        
+        SUBROUTINE allocate_pseudo_paw( paw, size_mesh, size_nwfc, size_lmax )
+        TYPE( paw_t ), INTENT(INOUT) :: paw
+        INTEGER, INTENT(IN) :: size_mesh, size_nwfc, size_lmax
+        !WRITE(0,"(a,3i5)") "Allocating PAW setup: ",size_mesh, size_nwfc, size_lmax
+        ALLOCATE ( paw%l(size_nwfc) )
+        ALLOCATE ( paw%jj(size_nwfc) )
+        ALLOCATE ( paw%ikk(size_nwfc) )
+        ALLOCATE ( paw%oc(size_nwfc) )
+        ALLOCATE ( paw%rcutus(size_nwfc) )
+        ALLOCATE ( paw%els(size_nwfc) )
+        ALLOCATE ( paw%enl(size_nwfc) )
+        ALLOCATE ( paw%aewfc(size_mesh,size_nwfc) )
+        ALLOCATE ( paw%pswfc(size_mesh,size_nwfc) )
+        ALLOCATE ( paw%proj (size_mesh,size_nwfc) )
+        ALLOCATE ( paw%augfun(size_mesh,size_nwfc,size_nwfc,0:2*size_lmax+2) )
+        ALLOCATE ( paw%augmom(size_nwfc,size_nwfc,0:2*size_lmax+1) )
+        ALLOCATE ( paw%aeccharge(size_mesh) )
+        ALLOCATE ( paw%psccharge(size_mesh) )
+        ALLOCATE ( paw%pscharge(size_mesh) )
+        ALLOCATE ( paw%aeloc(size_mesh) )
+        ALLOCATE ( paw%psloc(size_mesh) )
+        ALLOCATE ( paw%kdiff(size_nwfc,size_nwfc) )
+        ALLOCATE ( paw%dion (size_nwfc,size_nwfc) )
+        END SUBROUTINE allocate_pseudo_paw
+        
+        SUBROUTINE deallocate_pseudo_paw( paw )
+        TYPE( paw_t ), INTENT(INOUT) :: paw
+        IF( ASSOCIATED( paw%l ) ) DEALLOCATE( paw%l )
+        IF( ASSOCIATED( paw%jj ) ) DEALLOCATE( paw%jj )
+        IF( ASSOCIATED( paw%ikk ) ) DEALLOCATE( paw%ikk )
+        IF( ASSOCIATED( paw%oc ) ) DEALLOCATE( paw%oc )
+        IF( ASSOCIATED( paw%els ) ) DEALLOCATE( paw%els )
+        IF( ASSOCIATED( paw%rcutus ) ) DEALLOCATE( paw%rcutus )
+        IF( ASSOCIATED( paw%enl ) ) DEALLOCATE( paw%enl )
+        IF( ASSOCIATED( paw%aewfc ) ) DEALLOCATE( paw%aewfc )
+        IF( ASSOCIATED( paw%pswfc ) ) DEALLOCATE( paw%pswfc )
+        IF( ASSOCIATED( paw%proj ) ) DEALLOCATE( paw%proj )
+        IF( ASSOCIATED( paw%augfun ) ) DEALLOCATE( paw%augfun )
+        IF( ASSOCIATED( paw%augmom ) ) DEALLOCATE( paw%augmom )
+        IF( ASSOCIATED( paw%aeccharge ) ) DEALLOCATE( paw%aeccharge )
+        IF( ASSOCIATED( paw%psccharge ) ) DEALLOCATE( paw%psccharge )
+        IF( ASSOCIATED( paw%pscharge ) ) DEALLOCATE( paw%pscharge )
+        IF( ASSOCIATED( paw%aeloc ) ) DEALLOCATE( paw%aeloc )
+        IF( ASSOCIATED( paw%psloc ) ) DEALLOCATE( paw%psloc )
+        IF( ASSOCIATED( paw%kdiff ) ) DEALLOCATE( paw%kdiff )
+        IF( ASSOCIATED( paw%dion ) ) DEALLOCATE( paw%dion )
+        RETURN
+        END SUBROUTINE deallocate_pseudo_paw
+
 
       END MODULE pseudo_types

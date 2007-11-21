@@ -52,14 +52,14 @@ MODULE paw_init
     !
     ! Allocated in paw_init_onecenter
     IF(allocated(saved)) THEN
-        DO na = 1,size(saved)
+        DO na = 1,nat
             IF(associated(saved(na)%v)) DEALLOCATE (saved(na)%v)
         ENDDO
         DEALLOCATE(saved)
     ENDIF
     !
     IF(allocated(rad)) THEN
-        DO na = 1,size(rad)
+        DO na = 1,ntyp
             IF(associated(rad(na)%ww))      DEALLOCATE (rad(na)%ww)
             IF(associated(rad(na)%ylm))     DEALLOCATE (rad(na)%ylm)
             IF(associated(rad(na)%wwylm))   DEALLOCATE (rad(na)%wwylm)
@@ -188,7 +188,7 @@ SUBROUTINE PAW_init_onecenter()
     USE paw_variables,          ONLY : xlm, saved, rad, paw_is_init
     USE atom,                   ONLY : g => rgrid
     USE radial_grids,           ONLY : do_mesh
-    USE uspp_param,             ONLY : lmaxq, upf
+    USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE funct,                  ONLY : dft_is_gradient
 
@@ -277,7 +277,7 @@ SUBROUTINE PAW_rad_init(l, rad)
                                    ath(:),aph(:)! angles in sph coords for r
 
     INTEGER                     :: i,ii,n       ! counters
-    INTEGER                     :: lm,lm2,m     ! indexes for ang.mom
+    INTEGER                     :: lm,m         ! indexes for ang.mom
     REAL(DP)                    :: phi,dphi,rho ! spherical coordinates
     REAL(DP)                    :: z            ! cartesian coordinates
     ! for gradient corrections:
@@ -286,8 +286,6 @@ SUBROUTINE PAW_rad_init(l, rad)
                                    s(:,:),&     ! integration directions + delta
                                    s2(:)        ! square modulus of s
     REAL(DP)                    :: vth(3), vph(3) !versors for theta and phi
-    !
-    CHARACTER(len=100)          :: message
 
     OPTIONAL_CALL start_clock ('PAW_rad_init')
 
@@ -303,9 +301,7 @@ SUBROUTINE PAW_rad_init(l, rad)
 
     ! number of integration directions
     rad%nx = n*(rad%lmax+1)
-!     WRITE(message,"(a,i3,a,i2)") "Setup to integrate on ",&
-!           rad%nx," directions; integration exact up to l = ",rad%lmax
-!     CALL infomsg('PAW_rad_init', message)
+    !
     ALLOCATE(r(3,rad%nx),r2(rad%nx), rad%ww(rad%nx), ath(rad%nx), aph(rad%nx))
 
     ! compute real weights multiplying theta and phi weights
