@@ -15,7 +15,7 @@ MODULE dspev_module
     SAVE
     PRIVATE
 
-    PUBLIC :: pdspev_drv, dspev_drv, diagonalize
+    PUBLIC :: pdspev_drv, dspev_drv
 
 CONTAINS
 
@@ -72,7 +72,7 @@ CONTAINS
 !
 !     OUTPUTS :
 !
-!     V(NRL,N) Ortogonal transormation that tridiagonalize A,
+!     V(NRL,N) Ortogonal transformation that tridiagonalize A,
 !              this matrix is distributed omong processor
 !              in the same way as A.
 !
@@ -593,170 +593,6 @@ CONTAINS
       return
    END FUNCTION pythag
    !
-   !
-   !
-   !-------------------------------------------------------------------------
-   SUBROUTINE diagonalize( iopt, a, lda, d, ev, ldv, n, nproc, mpime, comm_in )
-     !-------------------------------------------------------------------------
-     !
-     ! This subroutine calculate eigenvalues and optionally eigenvectors
-     ! of a real symmetric matrix "a" distributed or replicated across
-     ! processors
-     !
-     ! iopt     input, choose the distributions of "a"
-     !          iopt = 0 matrix "a" and "ev" are distributed across procs
-     !          iopt = 1 matrix "a" and "ev" are replicated across procs
-     ! a(:,:)   input, matrix to be diagonalized, overwritten on output 
-     ! d(:)     output, array of the eigenvalues
-     ! ev(:,:)  output, matrix of the eigenvectors
-     ! n        input, dimension of matrix a
-     ! nproc    input, number of processors
-     ! mpime    input, index of this processors (starting from 0!)
-     !
-     ! When iopt = 0 the matrix "a" shoud have the following layout:
-     !
-     !     A(NRL,N) Local part of the global matrix A(N,N) to be reduced,
-     !              The rows of the matrix are cyclically distributed among 
-     !              processors with blocking factor 1.
-     !              Example for NPROC = 4 :
-     !              ROW | PE
-     !              1   | 0
-     !              2   | 1
-     !              3   | 2
-     !              4   | 3 
-     !              5   | 0
-     !              6   | 1
-     !              ..  | ..
-     !
-     USE kinds,     ONLY : DP
-     USE io_global, ONLY : stdout
-     USE parallel_include
-     !
-     IMPLICIT NONE
-     !   
-     INTEGER,           INTENT(IN)    :: iopt, n, nproc, mpime, lda, ldv
-     REAL(DP),          INTENT(OUT)   :: d(n)
-     REAL(DP),          INTENT(IN)    :: a(lda,*)
-     REAL(DP),          INTENT(OUT)   :: ev(ldv,*)
-     INTEGER, OPTIONAL, INTENT(IN)    :: comm_in
-     !
-     REAL(DP), ALLOCATABLE :: aloc(:,:)
-     REAL(DP), ALLOCATABLE :: evloc(:,:)
-     REAL(DP), ALLOCATABLE :: e(:)
-     INTEGER               :: nrl, i, j, jl, ierr, comm
-     INTEGER               :: ip, nrl_ip
-     !
-     !
-#if defined (__PARA) && defined (__MPI)
-     IF ( PRESENT( comm_in ) ) THEN
-        !
-        comm = comm_in
-        !
-     ELSE
-        !
-        comm = MPI_COMM_WORLD
-        !
-     END IF
-#endif
-     !
-     nrl = n / nproc
-     !
-     IF ( mpime < MOD( n, nproc ) ) nrl = nrl + 1
-     !
-     ALLOCATE( evloc( nrl, n ) )
-     ALLOCATE( e( n ) )
-     ALLOCATE( aloc( nrl, n ) )
-     !
-     IF ( iopt == 1 ) THEN
-        !
-        DO i = 1, n
-           DO jl = 1, nrl
-              aloc( jl, i ) = a( (jl-1)*nproc + mpime + 1, i )
-           END DO
-        END DO
-        !
-        CALL ptredv( aloc, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
-        !
-     ELSE
-        !
-        DO i = 1, n
-           DO jl = 1, nrl
-              aloc( jl, i ) = a( jl, i )
-           END DO
-        END DO
-        !
-        CALL ptredv( aloc, nrl, d, e, evloc, nrl, nrl, n, nproc, mpime, comm )
-        !
-     END IF
-     !
-     DEALLOCATE( aloc )
-     !
-     CALL ptqliv( d, e, n, evloc, nrl, nrl )
-     CALL peigsrtv( d, evloc, nrl, n, nrl )
-     !
-     IF ( iopt == 1 ) THEN
-        !
-
-#if defined (__PARA)
-#  if defined (__MPI)
-
-           DO ip = 0, nproc - 1
-
-              nrl_ip = n / nproc
-              !
-              IF ( ip < MOD( n, nproc ) )  nrl_ip = nrl_ip + 1
-
-              ALLOCATE( aloc( nrl_ip, n ) )
-
-              IF( mpime == ip ) THEN
-                 CALL MPI_BCAST( evloc, nrl_ip*n, MPI_DOUBLE_PRECISION, ip, comm, ierr )
-              ELSE
-                 CALL MPI_BCAST( aloc, nrl_ip*n, MPI_DOUBLE_PRECISION, ip, comm, ierr )
-              END IF
-
-              IF( mpime == ip ) THEN
-                 DO j = 1,n
-                    DO i = 1, nrl_ip
-                       ev((i-1)*nproc+ip+1,j) = evloc(i,j)
-                    END DO
-                 END DO
-              ELSE
-                 DO j = 1,n
-                    DO i = 1, nrl_ip
-                       ev((i-1)*nproc+ip+1,j) = aloc(i,j)
-                    END DO
-                 END DO
-              END IF
-              !
-              DEALLOCATE( aloc )
-
-           END DO
-
-#  endif
-#else
-
-           ev( 1:n, 1:n ) = evloc( 1:n, 1:n )
-
-#endif
-
-        !
-     ELSE
-        !
-        DO i = 1, n
-           DO jl = 1, nrl
-             ev(jl,i) = evloc(jl,i)
-           END DO
-        END DO
-        !
-     END IF
-     !
-     DEALLOCATE( evloc )
-     DEALLOCATE( e )
-     !
-     RETURN
-     !
-   END SUBROUTINE diagonalize
-
 !==----------------------------------------------==!
 
    SUBROUTINE pdspev_drv( jobz, ap, lda, w, z, ldz, &

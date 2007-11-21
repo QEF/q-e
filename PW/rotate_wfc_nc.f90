@@ -18,7 +18,7 @@ subroutine rotate_wfc_nc &
   !
 #include "f_defs.h"
   USE kinds
-  USE control_flags, ONLY : use_distpara_diago
+  USE control_flags, ONLY : use_para_diag
   implicit none
   !
   integer :: npw, npwx, nstart, nbnd, npol, i, j, idx
@@ -43,7 +43,7 @@ subroutine rotate_wfc_nc &
   real(DP), allocatable :: en (:)
   external ZDOTC
   !
-  IF( use_distpara_diago ) THEN
+  IF( use_para_diag ) THEN
      !
      ! use data distributed subroutine, see below.
      !

@@ -22,7 +22,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   ! ... the parallel version is also implemented
   !
   USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : use_para_diago, para_diago_dim
+  USE control_flags,    ONLY : use_para_diag
   USE mp,               ONLY : mp_bcast, mp_sum
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
                                intra_pool_comm, init_ortho_group, &
@@ -68,7 +68,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   CALL start_clock( 'diaghg' )
   !
   !
-  IF ( use_para_diago .AND. n > para_diago_dim ) THEN
+  IF ( use_para_diag ) THEN
      !
      CALL descla_init( desc, n, n, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
      !

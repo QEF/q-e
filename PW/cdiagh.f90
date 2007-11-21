@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,11 +15,9 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   ! ... hermitean matrix H. On output, the matrix is unchanged
   !
   USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : use_para_diago, para_diago_dim
   USE mp_global,        ONLY : nproc, npool, nproc_pool, me_pool, &
                                root_pool, intra_pool_comm, my_image_id
   USE mp,               ONLY : mp_bcast
-  USE zhpev_module,     ONLY : cdiagonalize
   !
   IMPLICIT NONE
   !
@@ -38,20 +36,11 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
   !
   CALL start_clock( 'diagh' )  
   !
-  IF ( use_para_diago .AND. n > para_diago_dim ) THEN
-     !
-     CALL cdiagonalize( 1, h, ldh, e, v, ldh, n, &
-                        nproc_pool, me_pool, intra_pool_comm )
-     !
-  ELSE
-     !
 #if defined (__ESSL)
-     CALL cdiagh_aix()
+  CALL cdiagh_aix()
 #else
-     CALL cdiagh_lapack( v )
+  CALL cdiagh_lapack( v )
 #endif
-     !
-  END IF
   !
   CALL stop_clock( 'diagh' )
   !

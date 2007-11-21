@@ -140,7 +140,7 @@ SUBROUTINE iosys()
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &
-                            use_para_diago, use_distpara_diago
+                            use_para_diag
   USE control_flags, ONLY : ortho_para_ => ortho_para
   !
   USE wvfct,         ONLY : nbnd_ => nbnd
@@ -846,7 +846,6 @@ SUBROUTINE iosys()
   CASE ( 'cg' )
      !
      isolve = 1
-     !
      max_cg_iter = diago_cg_maxiter
      !
   CASE ( 'diis' )
@@ -857,46 +856,22 @@ SUBROUTINE iosys()
      max_cg_iter = diago_cg_maxiter
      diis_ndim   = diago_diis_ndim
      !
-  CASE ( 'david' )
+  CASE ( 'david', 'david+para', 'david+distpara' )
      !
      isolve = 0
-     !
      david = diago_david_ndim
      !
-     ! ensure that with more than 4 procs parallel 
-     ! distributed algorithm is the dafault
+     ! parallel distributed diagonalizaion is the default
+     ! (with more than 4 procs)
      !
-     use_distpara_diago = .TRUE.
-     !
+     use_para_diag = .TRUE.
      ortho_para_ = ortho_para
      !
-  CASE ( 'david+serial' )
+  CASE ( 'david+serial', 'david-serial' )
      !
      isolve = 0
-     !
      david = diago_david_ndim
-     !
-     use_distpara_diago = .FALSE.
-     !
-  CASE ( 'david+para' )
-     !
-     isolve = 0
-     !
-     david = diago_david_ndim
-     !
-     use_para_diago = .TRUE.
-     !
-     ortho_para_ = ortho_para
-     !
-  CASE ( 'david+distpara' )
-     !
-     isolve = 0
-     !
-     david = diago_david_ndim
-     !
-     use_distpara_diago = .TRUE.
-     !
-     ortho_para_ = ortho_para
+     use_para_diag = .FALSE.
      !
   CASE DEFAULT
      !

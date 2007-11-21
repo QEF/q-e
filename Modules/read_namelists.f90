@@ -1218,9 +1218,6 @@ MODULE read_namelists_module
           IF ( diagonalization == 'cg' ) &
              CALL errore( sub_name ,' cg not allowed with noncolin ', 1 )
           !
-          IF ( diagonalization == 'diis' ) &
-             CALL errore( sub_name ,' diis not allowed with noncolin ', 1 )
-          !
        END IF
        !
        ! ... control on SIC variables

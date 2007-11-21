@@ -15,11 +15,9 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
   ! ... simmetric matrix H . On output, the matrix is unchanged
   !
   USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : use_para_diago, para_diago_dim
   USE mp_global,        ONLY : nproc, npool, nproc_pool, me_pool, &
                                root_pool, intra_pool_comm, my_image_id
   USE mp,               ONLY : mp_bcast
-  USE dspev_module,     ONLY : diagonalize
   !
   IMPLICIT NONE
   !
@@ -39,20 +37,11 @@ SUBROUTINE rdiagh( n, h, ldh, e, v )
   !
   CALL start_clock( 'diagh' )  
   !
-  IF ( use_para_diago .AND. n > para_diago_dim ) THEN
-     !
-     CALL diagonalize( 1, h, ldh, e, v, ldh, n, &
-                       nproc_pool, me_pool, intra_pool_comm )
-     !
-  ELSE
-     !
 #if defined (__ESSL)
-     CALL rdiagh_aix()
+  CALL rdiagh_aix()
 #else
-     CALL rdiagh_lapack()
+  CALL rdiagh_lapack()
 #endif
-     !
-  END IF
   !
   CALL stop_clock( 'diagh' )
   !

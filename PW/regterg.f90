@@ -25,7 +25,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE control_flags, ONLY : use_distpara_diago
+  USE control_flags, ONLY : use_para_diag
   !
   IMPLICIT NONE
   !
@@ -90,7 +90,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
     !    the first nvec columns contain the trial eigenvectors
   !
   !
-  IF( use_distpara_diago ) THEN
+  IF( use_para_diag ) THEN
      !
      ! use data distributed subroutine, see below.
      !

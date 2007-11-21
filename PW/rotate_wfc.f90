@@ -18,7 +18,7 @@ SUBROUTINE rotate_wfc( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   ! ... It only uses an auxiliary array of the same size as psi.
   !
   USE kinds,         ONLY : DP
-  USE control_flags, ONLY : use_distpara_diago
+  USE control_flags, ONLY : use_para_diag
   !
   IMPLICIT NONE
   !
@@ -41,7 +41,7 @@ SUBROUTINE rotate_wfc( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
-  IF( use_distpara_diago ) THEN
+  IF( use_para_diag ) THEN
      !
      ! use data distributed subroutine, see below.
      !

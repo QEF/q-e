@@ -190,7 +190,6 @@ pseudo_types.o : radial_grids.o
 ptoolkit.o : descriptors.o
 ptoolkit.o : io_global.o
 ptoolkit.o : kind.o
-ptoolkit.o : mp.o
 ptoolkit.o : parallel_include.o
 radial_grids.o : constants.o
 radial_grids.o : kind.o

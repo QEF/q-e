@@ -820,20 +820,8 @@ MODULE input_parameters
           ! NOT used in FPMD
 
         CHARACTER(LEN=80) :: diagonalization = 'cg'
-          ! diagonalization = 'cg' | 'david' | 'david_overlap' | 'diis' | 'david+para' |
-          !                   'david+distpara'
-          ! NOTA: 'david' e 'david_overlap' per eliminare la variabile "loverlap"
-          !       'david+para' use parallel diagonalization testing if it is convenient
-          !                    for speed, but iteration loop use replicated data, not
-          !                    indicated in machine with small memory per core
-          !       'david+distpara' use fully distributed memory iteration loop.
-          !                    Allocated memory scale down with the number of procs,
-          !                    and procs involved in diagonalization can be changed with
-          !                    input parameter "ortho_para", infact on multi core/CPU
-          !                    often it is convenient to let only one core per CPU to work
-          !                    on liner algebra.
-          !       
-          ! NOT used in FPMD
+          ! diagonalization = 'cg' | 'david' | 'david-serial'
+          ! algorithm used by PWscf for iterative diagonalization
 
         REAL(DP) :: diago_thr_init = 0.0_DP
           ! convergence threshold for the firts iterative diagonalization.

@@ -64,8 +64,7 @@ SUBROUTINE setup()
   USE wvfct,              ONLY : nbnd, nbndx, gamma_only
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
-                                 use_para_diago, use_distpara_diago
-  USE control_flags,      ONLY : para_diago_dim   ! debug
+                                 use_para_diag
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf
@@ -685,16 +684,13 @@ SUBROUTINE setup()
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
-  IF ( use_para_diago )      CALL check_para_diag_efficiency()
-  !
-  IF ( use_distpara_diago )  CALL check_distpara_availability()
+  IF ( use_para_diag )  CALL check_para_diag()
   !
 #else
   !
   nks = nkstot
   !
-  use_para_diago     = .FALSE.
-  use_distpara_diago = .FALSE.
+  use_para_diag = .FALSE.
   !
 #endif
   !
@@ -801,246 +797,22 @@ FUNCTION n_atom_wfc( nat, ityp )
   RETURN
   !
 END FUNCTION n_atom_wfc
-!
-!----------------------------------------------------------------------------
-SUBROUTINE check_para_diag_efficiency()
-  !----------------------------------------------------------------------------
-  !
-  USE kinds,            ONLY : DP
-  USE wvfct,            ONLY : nbnd, nbndx, gamma_only
-  USE control_flags,    ONLY : use_para_diago, para_diago_dim, isolve, ortho_para
-  USE io_global,        ONLY : stdout, ionode, ionode_id
-  USE random_numbers,   ONLY : rranf
-  USE mp_global,        ONLY : nproc_pool, me_pool, intra_pool_comm, init_ortho_group
-  USE mp,               ONLY : mp_bcast, mp_barrier
-  !
-  IMPLICIT NONE
-  !
-  INTEGER                  :: dim1, dim_pool, i, j, m, m_min
-  REAL(DP)                 :: time_para, time_serial, t_incr, t_incr_old
-  LOGICAL                  :: lfirst
-  REAL(DP),    ALLOCATABLE :: ar(:,:), br(:,:), vr(:,:)
-  COMPLEX(DP), ALLOCATABLE :: ac(:,:), bc(:,:), vc(:,:)
-  REAL(DP),    ALLOCATABLE :: e(:)
-  !
-  REAL(DP), EXTERNAL :: scnds
-  !
-  use_para_diago = .FALSE.
-  !
-  !  here we initialize the sub group of processors that will take part
-  !  in the matrix diagonalization. 
-  !  NOTE that the maximum number of processors could not be the optimal one,
-  !  and ortho_para input keyword can be used to force a given number of proc
-  !
-  IF( ortho_para < 1 ) THEN
-     ! 
-     !  use all the available processors
-     !
-     CALL init_ortho_group( nproc_pool, intra_pool_comm )
-     !
-  ELSE
-     !
-     CALL init_ortho_group( ortho_para, intra_pool_comm )
-     !
-  END IF
-  !
-  IF ( isolve /= 0 .OR. nproc_pool == 1 ) RETURN
-  !
-  IF ( ionode ) &
-     WRITE( stdout, '(/,5X,"looking for ", &
-                     &     "the optimal diagonalization algorithm ...",/)' )
-  !
-  m_min = ( nbnd / nproc_pool )*nproc_pool
-  !
-  m = ( 100 / nproc_pool )*nproc_pool
-  !
-  IF ( m > nbndx .OR. nbndx < 200 )  THEN
-     !
-     IF ( ionode ) WRITE( stdout, '(5X,"a serial algorithm will be used",/)' )
-     !
-     RETURN
-     !
-  END IF
-  !
-  IF ( ionode ) &
-     WRITE( stdout, '(5X,"dimension   time para (sec)   time serial (sec)")' )
-  !
-  lfirst = .TRUE.
-  !
-  dim_loop: DO dim1 = m_min, nbndx, m
-     !
-     dim_pool = dim1 / nproc_pool
-     !
-     ALLOCATE( e( dim1 ) )
-     !
-     IF ( gamma_only ) THEN
-        !
-        ALLOCATE( ar( dim1, dim1 ) )
-        ALLOCATE( br( dim1, dim1 ) )
-        ALLOCATE( vr( dim1, dim1 ) )
-        !
-        ar(:,:) = 0.D0
-        br(:,:) = 0.D0
-        !
-        DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
-           !
-           DO j = i, dim1
-              !
-              ar(i,j) = rranf() - 0.5D0
-              ar(j,i) = ar(i,j)
-              !
-           END DO
-           !
-        END DO
-        !
-        CALL reduce( dim1*dim1, ar )
-        !
-        FORALL( i = 1:dim1 ) br(i,i) = 1.D0
-        !
-     ELSE
-        !
-        ALLOCATE( ac( dim1, dim1 ) )
-        ALLOCATE( bc( dim1, dim1 ) )
-        ALLOCATE( vc( dim1, dim1 ) )
-        !
-        ac(:,:) = ( 0.D0, 0.D0 )
-        bc(:,:) = ( 0.D0, 0.D0 )
-        !
-        DO i = me_pool*dim_pool + 1, ( me_pool + 1 )*dim_pool
-           !
-           DO j = i, dim1
-              !
-              ac(i,j) = CMPLX( rranf() - 0.5D0, rranf() - 0.5D0 )
-              ac(j,i) = ac(i,j)
-              !
-           END DO
-           !
-        END DO
-        !
-        CALL reduce( 2*dim1*dim1, ac )
-        !
-        FORALL( i = 1:dim1 ) bc(i,i) = ( 1.D0, 0.D0 )
-        !
-     END IF
-     !
-     CALL mp_barrier()
-     !
-     ! ... parallel diagonalizer
-     !
-     use_para_diago = .TRUE.
-     para_diago_dim = 1
-     !
-     IF ( ionode ) time_para = scnds()
-     !
-     CALL do_test()
-     !
-     IF ( ionode ) &
-        time_para = ( scnds() - time_para ) / DBLE( nbndx / dim1 )
-     !
-     ! ... serial diagonalizer
-     !
-     use_para_diago = .FALSE.
-     !
-     IF ( ionode ) time_serial = scnds()
-     !
-     CALL do_test()
-     !
-     IF ( ionode ) &
-        time_serial = ( scnds() - time_serial ) / DBLE( nbndx / dim1 )
-     !
-     IF ( gamma_only ) THEN
-        DEALLOCATE( ar, br, vr, e )
-     ELSE
-        DEALLOCATE( ac, bc, vc, e )
-     END IF
-     !
-     IF ( ionode ) &
-        WRITE( stdout, '(5X,I5,2(6X,F12.8))' ) dim1, time_para, time_serial
-     !
-     CALL mp_bcast( time_para,   ionode_id )
-     CALL mp_bcast( time_serial, ionode_id )
-     !
-     t_incr = ( time_para - time_serial ) / time_serial
-     !
-     IF ( time_para < time_serial ) THEN
-        !
-        use_para_diago = .TRUE.
-        para_diago_dim = dim1
-        !
-        EXIT dim_loop
-        !
-     ELSE IF ( .NOT.lfirst .AND. t_incr > t_incr_old ) THEN
-        !
-        ! ... the parallel diagonalizer is getting slower and slower
-        !
-        use_para_diago = .FALSE.
-        !
-        EXIT dim_loop
-        !
-     END IF
-     !
-     lfirst = .FALSE.
-     !
-     t_incr_old = t_incr
-     !
-  END DO dim_loop
-  !
-  ! use_para_diago = .TRUE.  !  debug
-  ! para_diago_dim = 1       !  debug
-  !
-  IF ( ionode ) THEN
-     !
-     IF ( use_para_diago ) THEN
-        WRITE( stdout, '(/,5X,"a parallel algorithm will be used for ", &
-                        &     "matrices larger than ",I4,/)' ) para_diago_dim
-     ELSE
-        WRITE( stdout, '(/,5X,"a serial algorithm will be used",/)' )
-     END IF
-     !
-  END IF
-  !
-  RETURN
-  !
-  CONTAINS
-    !
-    !-----------------------------------------------------------------------
-    SUBROUTINE do_test()
-      !-----------------------------------------------------------------------
-      !
-      IMPLICIT NONE
-      !
-      DO i = 1, nbndx / dim1
-         !
-         IF ( gamma_only ) THEN
-            CALL rdiaghg( dim1, dim1, ar, br, dim1, e, vr )
-         ELSE
-            CALL cdiaghg( dim1, dim1, ac, bc, dim1, e, vc )
-         END IF
-      END DO
-      !
-      CALL mp_barrier()
-      !
-    END SUBROUTINE do_test
-    !
-END SUBROUTINE check_para_diag_efficiency
 
-
-SUBROUTINE check_distpara_availability()
+SUBROUTINE check_para_diag()
   !
   USE wvfct,            ONLY : nbnd, nbndx, gamma_only
-  USE control_flags,    ONLY : use_distpara_diago, isolve, ortho_para, &
-                               use_para_diago, para_diago_dim
+  USE control_flags,    ONLY : use_para_diag, isolve, ortho_para
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho, intra_pool_comm
 
   IMPLICIT NONE
 
   IF ( isolve /= 0 ) THEN
-     use_distpara_diago = .FALSE.
+     use_para_diag = .FALSE.
      RETURN
   END IF
 
-  use_distpara_diago = .TRUE.
+  use_para_diag = .TRUE.
   !
   !  here we initialize the sub group of processors that will take part
   !  in the matrix diagonalization. 
@@ -1067,7 +839,7 @@ SUBROUTINE check_distpara_availability()
   !  we need at least 4 procs to use distributed algorithm
 
   IF( np_ortho( 1 ) == 1 .AND. np_ortho( 2 ) == 1 ) THEN
-     use_distpara_diago = .FALSE.
+     use_para_diag = .FALSE.
      IF ( ionode ) WRITE( stdout, '(5X,"Too few procs for parallel algorithm")' )
      IF ( ionode ) WRITE( stdout, '(5X,"  we need at least 4 procs")' )
   END IF
@@ -1075,23 +847,14 @@ SUBROUTINE check_distpara_availability()
   !  we need to have at least 1 electronic band per block
 
   IF( np_ortho( 1 ) > nbnd ) THEN
-     use_distpara_diago = .FALSE.
+     use_para_diag = .FALSE.
      IF ( ionode ) WRITE( stdout, '(5X,"Too few bands for parallel algorithm")')
      IF ( ionode ) WRITE( stdout, '(5X,"  we need at least as many bands as SQRT(nproc)")' )
   END IF
 
-  IF( use_distpara_diago ) THEN
-     ! 
-     ! turn on parallel diagonalization, for all matrixes
-     !
-     use_para_diago = .TRUE.  
-     para_diago_dim = 1       
-     !
-  END IF
-
   IF ( ionode ) THEN
      !
-     IF ( use_distpara_diago ) THEN
+     IF ( use_para_diag ) THEN
         WRITE( stdout, '(/,5X,"a parallel distributed memory algorithm will be used,")' ) 
         WRITE( stdout, '(  5X,"eigenstates matrixes will be distributed block like on")' ) 
         WRITE( stdout, '(  5X,"ortho sub-group = ", I4, "*", I4, " procs",/)' ) np_ortho(1), np_ortho(2)
@@ -1102,4 +865,4 @@ SUBROUTINE check_distpara_availability()
   END IF
 
   RETURN
-END SUBROUTINE check_distpara_availability
+END SUBROUTINE check_para_diag

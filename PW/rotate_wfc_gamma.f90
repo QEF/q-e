@@ -23,7 +23,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   !
   USE kinds,         ONLY : DP
   USE wvfct,         ONLY : gamma_only 
-  USE control_flags, ONLY : use_distpara_diago
+  USE control_flags, ONLY : use_para_diag
   !
   IMPLICIT NONE
   !
@@ -46,7 +46,7 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   COMPLEX(DP), ALLOCATABLE :: aux(:,:)
   REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), en(:)
   !
-  IF( use_distpara_diago ) THEN
+  IF( use_para_diag ) THEN
      !
      ! use data distributed subroutine, see below.
      !

@@ -151,11 +151,9 @@ ccgdiagg.o : ../Modules/constants.o
 ccgdiagg.o : ../Modules/kind.o
 ccgdiagg.o : noncol.o
 ccgdiagg.o : pwcom.o
-cdiagh.o : ../Modules/control_flags.o
 cdiagh.o : ../Modules/kind.o
 cdiagh.o : ../Modules/mp.o
 cdiagh.o : ../Modules/mp_global.o
-cdiagh.o : ../Modules/zhpev_drv.o
 cdiaghg.o : ../Modules/control_flags.o
 cdiaghg.o : ../Modules/descriptors.o
 cdiaghg.o : ../Modules/kind.o
@@ -890,8 +888,6 @@ qvan2.o : pwcom.o
 rcgdiagg.o : ../Modules/constants.o
 rcgdiagg.o : ../Modules/kind.o
 rcgdiagg.o : pwcom.o
-rdiagh.o : ../Modules/control_flags.o
-rdiagh.o : ../Modules/dspev_drv.o
 rdiagh.o : ../Modules/kind.o
 rdiagh.o : ../Modules/mp.o
 rdiagh.o : ../Modules/mp_global.o
@@ -1104,11 +1100,9 @@ setup.o : ../Modules/io_files.o
 setup.o : ../Modules/io_global.o
 setup.o : ../Modules/ions_base.o
 setup.o : ../Modules/kind.o
-setup.o : ../Modules/mp.o
 setup.o : ../Modules/mp_global.o
 setup.o : ../Modules/parameters.o
 setup.o : ../Modules/paw_variables.o
-setup.o : ../Modules/random_numbers.o
 setup.o : ../Modules/uspp.o
 setup.o : exx.o
 setup.o : noncol.o
