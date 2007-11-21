@@ -143,6 +143,13 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      call read_pseudo_paw ( upf, iunps )
      call scan_end ( iunps, "PAW" )
   endif
+  !--- Try to get the core radius if not present. Needed by the 
+  !    atomic code for old pseudo files
+  IF (upf%nbeta>0.and.upf%rcutus(1)<1.e-9_DP) then
+     call scan_begin (iunps, "INFO", .true.)  
+     call read_pseudo_ppinfo (upf, iunps)  
+     call scan_end (iunps, "INFO")  
+  ENDIF
 
 200 return
 
@@ -938,6 +945,37 @@ SUBROUTINE read_pseudo_gipaw_orbitals ( upf, iunps )
 100 CALL errore ( 'read_pseudo_gipaw_orbitals', 'Reading pseudo file', 1 )
 END SUBROUTINE read_pseudo_gipaw_orbitals
 !</apsi>
+
+subroutine read_pseudo_ppinfo (upf, iunps)  
+  !---------------------------------------------------------------------
+  !
+  USE pseudo_types, ONLY: pseudo_upf
+  USE kinds, ONLY : dp
+
+  implicit none
+  !
+  TYPE (pseudo_upf), INTENT(INOUT) :: upf
+  integer :: iunps  
+  character (len=80) :: dummy  
+  logical, external :: matches
+  character(len=2) :: adummy
+  real(dp) :: rdummy
+  integer :: idummy, nb, ios
+
+  ios=0
+  DO while (ios==0) 
+     READ (iunps, '(a)', err = 100, end = 100, iostat=ios) dummy  
+     IF (matches ("Rcut", dummy) ) THEN
+        DO nb=1,upf%nbeta
+           READ (iunps, '(a2,2i3,f6.2,3f19.11)',err=100, end=100,iostat=ios) &
+               upf%els_beta(nb), idummy, &
+               idummy, rdummy, upf%rcut(nb), upf%rcutus (nb), rdummy
+        ENDDO
+        ios=100
+     ENDIF
+  ENDDO
+100  RETURN
+  END SUBROUTINE read_pseudo_ppinfo
 
 !=----------------------------------------------------------------------------=!
       END MODULE read_upf_module

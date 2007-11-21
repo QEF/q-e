@@ -1,2 +1,2 @@
 rm -r results
-rm difference
+rm difference ld1.wfc*
