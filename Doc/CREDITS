@@ -15,10 +15,9 @@ contribution was done and may no longer be valid.
 The maintenance and further development of the Quantum-ESPRESSO code
 is promoted by the DEMOCRITOS National Simulation Center of the 
 Italian INFM (http://www.democritos.it/), under the coordination of 
-Paolo Giannozzi (Univ.Udine, Italy), with the strong
-support of the CINECA National Supercomputing Center in Bologna 
-(http://www.cineca.it/), under the responsibility of Carlo 
-Cavazzoni (CINECA). 
+Paolo Giannozzi (Univ.Udine, Italy), with the strong support of the 
+CINECA National Supercomputing Center in Bologna (http://www.cineca.it/),
+under the responsibility of Carlo Cavazzoni (CINECA). 
 
 The PWscf package (http://www.pwscf.org) was developed by Stefano Baroni, 
 Stefano de Gironcoli, Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi, 

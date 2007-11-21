@@ -94,6 +94,10 @@
   ! emin        lower energy boundary (in eV)
   ! emax        upper energy boundary (in eV), i.e. compute 
   !             ILDOS from emin to emax
+  ! spin_component  for LSDA case only: plot the contribution to ILDOS of
+  !                 0 = spin-up + spin-down (default)
+  !                 1 = spin-up   only
+  !                 2 = spin-down only
   !
   !             Options for noncollinear magnetization (plot_num=13): 
   !

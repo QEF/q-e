@@ -135,9 +135,8 @@ sparc )
 	try_mpif90="mpf90"
 	try_dflags="-D__SUN"
 	;;
-crayx1 )
+crayx1 | crayxt4 )
 	try_f90="ftn $try_f90"
-	try_dflags="-D__X1"
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
@@ -231,11 +230,10 @@ case "$arch" in
 			echo "${ECHO_T}ifort $version"
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
-		# TEMPORARILY DISABLED - problems with older mkl?
-		#if test `echo $version | sed 's/\..*//'` -gt 8; then
-			#MKL_LIBS=""
-			#MKL_FLAGS="-i-static -openmp"
-		#fi
+		if test `echo $version | sed 's/\..*//'` -gt 8; then
+			MKL_LIBS=""
+			MKL_FLAGS="-i-static -openmp"
+		fi
 	elif test "$pgf_version" != ""
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
@@ -295,7 +293,7 @@ alinux:* )
 sparc:* )
 	try_f77="f77 $f90"
 	;;
-crayx1:ftn )
+cray*:ftn )
 	try_cc="cc"
 	;;
 macppc:xlf90 )
@@ -408,6 +406,7 @@ ia32:path* | ia64:path* | amd64:path* )
 	try_f90flags="\$(FFLAGS) -x f95-cpp-input"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
+	try_dflags="$try_dflags -D__GFORTRAN"
 	#try_ldflags_static="-static"
         ;;
 aix:*xlf* )
@@ -455,8 +454,15 @@ crayx1:ftn )
         try_f90flags="\$(FFLAGS)"
         try_fflags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
         try_ldflags="-s default64 -f nan64"
-        try_dflags="$try_dflags -D__X1_COA"
         pre_fdflags="-e Z -F"
+	;;
+crayxt4:ftn )
+        try_fflags="-fast -r8"
+        try_f90flags="\$(FFLAGS)"
+        try_fflags_noopt="-O0"
+        try_ldflags="-v"
+	try_dflags="$try_dflags -D__PGI"
+	have_cpp=0
 	;;
 macppc:* )
 	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
@@ -543,6 +549,9 @@ sparc:mpcc | sparc:cc )
 	;;
 crayx1:cc )
         try_cflags=""
+        ;;
+crayxt4:cc )
+        try_cflags="-fast"
         ;;
 macppc:xlc* | macppc:mpcc* )
 	try_cflags="-O4"

@@ -575,25 +575,26 @@ diagonalization
                'cg' :    conjugate-gradient-like band-by-band diagonalization
                          Typically slower than 'david' but it uses less memory
                          and is more robust (it fails very seldom)
-               'david+para': like david, but use parallel diagonalization,
-                         after testing if it is convenient (for speed), 
-                         iteration loop use replicated data. Obsolescent.
-               'david+distpara': like david but use fully distributed memory 
-                         iteration loop. Allocated memory scale down with the 
-                         number of procs. Procs involved in diagonalization can 
-                         be changed with input parameter "ortho_para".  
-                         On multi core/CPUs often it is convenient to let only 
-                         one core per CPU to work on liner algebra.
+               'david-serial': do not use parallel subspace diagonalization 
+                         in Davidson algorithm (for testing purposes).
+                         The subspace diagonalization in Davidson is performed
+                         by a fully distributed-memory parallel algorithm on
+                         4 or more processors, by default. The allocated memory
+                         scales down with the number of procs. Procs involved 
+                         in diagonalization can be changed with input parameter
+                         "ortho_para". On multicore CPUs often it is convenient
+                         to let only one core per CPU to work on linear algebra.
 
 ortho_para     
                INTEGER ( default = 0 )
-               meaningful only if diagonalization = 'david+para' or 
-               diagonalization = 'david+distpara' and with parallel executable.
-               The number of processors to be used for parallel diagonalization.
-               With the default value ( 0 ) the code try to use all the 
-               processors. Actually the number of processors used is the
-               largest square number less or equal to ortho_para.
-               
+               meaningful for diagonalization='david' and parallel executables.
+               The number of processors to be used for the parallel subspace
+               diagonalization algorithm. With the default value (0) the code
+               tries to use as many processors as available. Note that the
+               algorithm uses a square number of processors (4, 9, 16, 25,...),
+               so the actual number of processors used will be the largest
+               square number less or equal to ortho_para (if set) or to the 
+               total number of processors (if ortho_para is not set).
 
 diago_thr_init
                REAL
@@ -646,8 +647,11 @@ startingwfc    CHARACTER
                          If not enough atomic orbitals are available,
                          fill with random numbers the remaining wfcs
                          The scf typically starts better with this option,
-                         but in some specific high-symmetry cases one can
-                         "loose" valence states.
+                         but in some high-symmetry cases one can "loose" 
+                         valence states, ending up in the wrong ground state.
+               'atomic+random': as above, plus a superimposed "randomization"
+                         of atomic orbitals. Prevents the "loss" of states 
+                         mentioned above.
                'random': start from random wfcs. Slower start of scf but safe.
                          It may also reduce memory usage in conjunction with
                          diagonalization='cg'

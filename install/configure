@@ -1501,9 +1501,8 @@ sparc )
 	try_mpif90="mpf90"
 	try_dflags="-D__SUN"
 	;;
-crayx1 )
+crayx1 | crayxt4 )
 	try_f90="ftn $try_f90"
-	try_dflags="-D__X1"
 	;;
 macppc )
 	try_mpif90="mpxlf90 mpf90"
@@ -1650,7 +1649,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1653:" \
+echo "$as_me:1652:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2078,7 +2077,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2081:" \
+echo "$as_me:2080:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2249,11 +2248,10 @@ case "$arch" in
 			echo "${ECHO_T}ifort $version"
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
-		# TEMPORARILY DISABLED - problems with older mkl?
-		#if test `echo $version | sed 's/\..*//'` -gt 8; then
-			#MKL_LIBS=""
-			#MKL_FLAGS="-i-static -openmp"
-		#fi
+		if test `echo $version | sed 's/\..*//'` -gt 8; then
+			MKL_LIBS=""
+			MKL_FLAGS="-i-static -openmp"
+		fi
 	elif test "$pgf_version" != ""
 	then
 		version=`echo $pgf_version | awk '{print $2}'`
@@ -2313,7 +2311,7 @@ alinux:* )
 sparc:* )
 	try_f77="f77 $f90"
 	;;
-crayx1:ftn )
+cray*:ftn )
 	try_cc="cc"
 	;;
 macppc:xlf90 )
@@ -4114,7 +4112,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4117:" \
+echo "$as_me:4115:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4324,6 +4322,7 @@ ia32:path* | ia64:path* | amd64:path* )
 	try_f90flags="\$(FFLAGS) -x f95-cpp-input"
 	try_fflags_noopt="-O0"
 	try_ldflags=""
+	try_dflags="$try_dflags -D__GFORTRAN"
 	#try_ldflags_static="-static"
         ;;
 aix:*xlf* )
@@ -4371,8 +4370,15 @@ crayx1:ftn )
         try_f90flags="\$(FFLAGS)"
         try_fflags_noopt="-s default64 -dp -rma -e0 -O0 -Z"
         try_ldflags="-s default64 -f nan64"
-        try_dflags="$try_dflags -D__X1_COA"
         pre_fdflags="-e Z -F"
+	;;
+crayxt4:ftn )
+        try_fflags="-fast -r8"
+        try_f90flags="\$(FFLAGS)"
+        try_fflags_noopt="-O0"
+        try_ldflags="-v"
+	try_dflags="$try_dflags -D__PGI"
+	have_cpp=0
 	;;
 macppc:* )
 	try_fflags="-O4 -qarch=auto -qtune=auto -qsuffix=cpp=f90 \
@@ -4459,6 +4465,9 @@ sparc:mpcc | sparc:cc )
 	;;
 crayx1:cc )
         try_cflags=""
+        ;;
+crayxt4:cc )
+        try_cflags="-fast"
         ;;
 macppc:xlc* | macppc:mpcc* )
 	try_cflags="-O4"
@@ -4608,7 +4617,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4611: \"$ac_link\") >&5
+(eval echo $as_me:4620: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4686,7 +4695,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4689: \"$ac_link\") >&5
+(eval echo $as_me:4698: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
