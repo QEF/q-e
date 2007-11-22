@@ -40,7 +40,6 @@ forces.o \
 fromscra.o \
 gradrho.o \
 gtable.o \
-guess.o \
 init.o \
 init_run.o \
 inner_loop.o \

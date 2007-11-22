@@ -901,7 +901,6 @@ MODULE input
            nr1s_ => nr1s, &
            nr2s_ => nr2s, &
            nr3s_ => nr3s
-     USE guess,              ONLY : guess_setup
      USE charge_mix,         ONLY : charge_mix_setup
      USE kohn_sham_states,   ONLY : ks_states_init
      USE electrons_module,   ONLY : electrons_setup, empty_init

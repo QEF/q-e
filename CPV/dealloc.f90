@@ -56,7 +56,6 @@ SUBROUTINE deallocate_modules_var()
   USE ncpp,                 ONLY : deallocate_ncpp
   USE task_groups,          ONLY : deallocate_groups
   USE ions_positions,       ONLY : deallocate_ions_positions
-  USE guess,                ONLY : guess_closeup
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldau,                 ONLY : deallocate_lda_plus_u
   !
@@ -116,7 +115,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_sic()
   CALL deallocate_metagga()
   CALL ions_nose_deallocate()
-  CALL guess_closeup()
   CALL ks_states_closeup()
   !
   CALL deallocate_lda_plus_u()

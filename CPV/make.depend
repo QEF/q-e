@@ -319,7 +319,6 @@ dealloc.o : cpr_mod.o
 dealloc.o : efield.o
 dealloc.o : electrons.o
 dealloc.o : ensemble_dft.o
-dealloc.o : guess.o
 dealloc.o : ions_positions.o
 dealloc.o : ksstates.o
 dealloc.o : mainvar.o
@@ -485,16 +484,6 @@ gtable.o : ../Modules/io_global.o
 gtable.o : ../Modules/mp.o
 gtable.o : ../Modules/mp_global.o
 gtable.o : ../Modules/recvec.o
-guess.o : ../Modules/cell_base.o
-guess.o : ../Modules/control_flags.o
-guess.o : ../Modules/dspev_drv.o
-guess.o : ../Modules/kind.o
-guess.o : ../Modules/mp.o
-guess.o : ../Modules/mp_global.o
-guess.o : ../Modules/ptoolkit.o
-guess.o : ../Modules/uspp.o
-guess.o : cp_interfaces.o
-guess.o : wave_types.o
 indices.o : ../Modules/kind.o
 init.o : ../Modules/berry_phase.o
 init.o : ../Modules/cell_base.o
@@ -619,7 +608,6 @@ input.o : cp_emass.o
 input.o : efield.o
 input.o : electrons.o
 input.o : ensemble_dft.o
-input.o : guess.o
 input.o : ksstates.o
 input.o : mainvar.o
 input.o : modules.o
@@ -953,6 +941,7 @@ qqberry.o : ../Modules/recvec.o
 qqberry.o : ../Modules/uspp.o
 qqberry.o : cp_interfaces.o
 qqberry.o : modules.o
+read_pseudo.o : ../Modules/atom.o
 read_pseudo.o : ../Modules/constants.o
 read_pseudo.o : ../Modules/control_flags.o
 read_pseudo.o : ../Modules/functionals.o
@@ -1156,7 +1145,6 @@ forces.o : ../include/f_defs.h
 fromscra.o : ../include/f_defs.h
 geninv.o : ../include/f_defs.h
 gradrho.o : ../include/f_defs.h
-guess.o : ../include/f_defs.h
 init_run.o : ../include/f_defs.h
 inner_loop.o : ../include/f_defs.h
 inner_loop_cold.o : ../include/f_defs.h
