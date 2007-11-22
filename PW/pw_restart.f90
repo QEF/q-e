@@ -56,7 +56,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions, &
-                                       lscf, lkpoint_dir
+                                       lscf, lkpoint_dir, gamma_only
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
@@ -79,7 +79,7 @@ MODULE pw_restart
       USE gsmooth,              ONLY : nr1s, nr2s, nr3s, ngms_g
       USE ktetra,               ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                        ntetra, tetra, ltetra
-      USE wvfct,                ONLY : gamma_only, npw, npwx, g2kin, et, wg, &
+      USE wvfct,                ONLY : npw, npwx, g2kin, et, wg, &
                                        igk, nbnd
       USE ener,                 ONLY : ef, ef_up, ef_dw
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
@@ -1081,7 +1081,8 @@ MODULE pw_restart
       USE noncollin_module, ONLY : noncolin
       USE ktetra,           ONLY : ntetra
       USE klist,            ONLY : nkstot, nelec
-      USE wvfct,            ONLY : nbnd, npwx, gamma_only
+      USE wvfct,            ONLY : nbnd, npwx
+      USE control_flags,    ONLY : gamma_only
       USE mp_global,        ONLY : kunit, nproc_file, nproc_pool_file
       !
       IMPLICIT NONE
@@ -1688,7 +1689,8 @@ MODULE pw_restart
       !
       USE gvect,   ONLY : nr1, nr2, nr3, ngm_g, ecutwfc, dual
       USE gsmooth, ONLY : nr1s, nr2s, nr3s, ngms_g
-      USE wvfct,   ONLY : gamma_only, npwx, g2kin
+      USE wvfct,   ONLY : npwx, g2kin
+      USE control_flags, ONLY : gamma_only
       !
       IMPLICIT NONE
       !

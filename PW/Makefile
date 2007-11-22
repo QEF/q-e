@@ -30,6 +30,7 @@ c_phase_field.o \
 ccalbec.o \
 ccalbec_nc.o \
 ccgdiagg.o \
+cinitcgg.o \
 cdiagh.o \
 cdiaghg.o \
 cegterg.o \
@@ -37,7 +38,6 @@ cft3.o \
 cft3s.o \
 checkallsym.o \
 checksym.o \
-cinitcgg.o \
 clean_pw.o \
 close_files.o \
 compute_becsum.o \
@@ -153,6 +153,7 @@ pw_restart.o \
 pwcom.o \
 qvan2.o \
 rcgdiagg.o \
+rinitcgg.o \
 rdiagh.o \
 rdiaghg.o \
 read_conf_from_file.o \
@@ -168,8 +169,8 @@ restart_in_electrons.o \
 restart_in_ions.o \
 rgen.o \
 rho2zeta.o \
-rinitcgg.o \
 rotate_wfc.o \
+rotate_wfc_k.o \
 rotate_wfc_gamma.o \
 rotate_wfc_nc.o \
 ruotaijk.o \

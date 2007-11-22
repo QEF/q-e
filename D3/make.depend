@@ -103,6 +103,7 @@ d3matrix.o : ../Modules/kind.o
 d3matrix.o : ../PH/phcom.o
 d3matrix.o : ../PW/pwcom.o
 d3matrix.o : d3com.o
+d3toten.o : ../Modules/control_flags.o
 d3toten.o : ../Modules/io_files.o
 d3toten.o : ../Modules/io_global.o
 d3toten.o : ../Modules/ions_base.o

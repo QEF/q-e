@@ -31,7 +31,7 @@ SUBROUTINE electrons()
   USE klist,                ONLY : xk, wk, nelec, ngk, nks, nkstot, lgauss
   USE lsda_mod,             ONLY : lsda, nspin, magtot, absmag, isk
   USE vlocal,               ONLY : strf
-  USE wvfct,                ONLY : nbnd, et, gamma_only, npwx
+  USE wvfct,                ONLY : nbnd, et, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet
   USE scf,                  ONLY : scf_type, &
@@ -40,7 +40,8 @@ SUBROUTINE electrons()
                                    v, vltot, vrs, kedtau, vnew
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
-                                   restart, io_level, assume_isolated
+                                   restart, io_level, assume_isolated,  &
+                                   gamma_only
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield
   USE buffers,              ONLY : save_buffer

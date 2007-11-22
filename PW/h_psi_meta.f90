@@ -17,12 +17,12 @@ subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba
   USE lsda_mod,  ONLY : nspin, current_spin
-  USE wvfct,     ONLY : igk
+  USE wvfct,     ONLY : igk, current_k
   USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE gvect,     ONLY : g
   USE scf,       ONLY : kedtau
   USE klist,     ONLY : xk
-  USE wvfct,     ONLY : gamma_only, current_k
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
   implicit none

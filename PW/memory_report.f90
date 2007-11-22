@@ -20,8 +20,7 @@ SUBROUTINE memory_report()
   USE lsda_mod,  ONLY : nspin
   USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
-  USE wvfct,     ONLY : gamma_only
-  USE control_flags, ONLY: isolve, nmix
+  USE control_flags, ONLY: isolve, nmix, gamma_only
   !
   IMPLICIT NONE
   !

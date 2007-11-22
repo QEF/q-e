@@ -371,7 +371,8 @@ contains
     USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
     USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                                      nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, gamma_only
+    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et
+    USE control_flags,        ONLY : gamma_only
     USE klist,                ONLY : wk, ngk, nks
     USE symme,                ONLY : nsym, s, ftau
 
@@ -550,7 +551,8 @@ contains
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                            nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, current_k, gamma_only
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk, current_k
+    USE control_flags, ONLY : gamma_only
     USE klist,     ONLY : xk
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
@@ -702,7 +704,8 @@ contains
     ! the correct energy 
     USE io_files,   ONLY : iunigk,iunwfc, nwordwfc
     USE buffers,    ONLY : get_buffer
-    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, current_k, gamma_only
+    USE wvfct,      ONLY : nbnd, npwx, npw, igk, wg, current_k
+    USE control_flags, ONLY : gamma_only
     USE gvect,      ONLY : gstart
     USE wavefunctions_module, ONLY : evc
     USE lsda_mod,   ONLY : lsda, current_spin, isk
@@ -765,7 +768,8 @@ contains
     USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm
     USE gsmooth,   ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
                           nrx1s, nrx2s, nrx3s, nrxxs, doublegrid
-    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k, gamma_only
+    USE wvfct,     ONLY : nbnd, npwx, npw, igk, wg, current_k
+    USE control_flags, ONLY : gamma_only
     USE wavefunctions_module, ONLY : evc
     USE klist,     ONLY : xk, ngk, nks
     USE lsda_mod,  ONLY : lsda, current_spin, isk
@@ -923,8 +927,8 @@ contains
      USE constants, ONLY : fpi, e2
      USE cell_base, ONLY : bg, at, alat, omega
      USE gvect,     ONLY : ngm, g, ecutwfc
-     USE wvfct,     ONLY : gamma_only
      USE io_global, ONLY : stdout
+     USE control_flags, ONLY : gamma_only
 
      implicit none
      real(DP) :: exx_divergence

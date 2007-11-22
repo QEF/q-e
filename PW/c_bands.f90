@@ -28,7 +28,6 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE control_flags,        ONLY : ethr, isolve, io_level
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
-  USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE bp,                   ONLY : lelfield
   !
@@ -172,13 +171,13 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   USE kinds,                ONLY : DP
   USE io_global,            ONLY : stdout
-  USE wvfct,                ONLY : gamma_only
   USE io_files,             ONLY : nwordwfc, iunefieldp, iunefieldm
   USE uspp,                 ONLY : vkb, nkb, okvan
   USE gvect,                ONLY : gstart
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, npw, &
        current_k, btype
-  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, istep
+  USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, istep, &
+                                   gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag

@@ -14,6 +14,7 @@ SUBROUTINE cg_readin()
   USE ions_base, ONLY : nat, amass
   USE pwcom
   USE cgcom
+  USE control_flags, ONLY : gamma_only
   USE io_files,  ONLY : tmp_dir, prefix, trimcheck
   USE io_global, ONLY : ionode, ionode_id
   USE noncollin_module, ONLY : noncolin

@@ -18,6 +18,7 @@ program d3toten
   use phcom
   use d3com
   use io_files,       only : prefix, nd_nmbr
+  use control_flags,  only : gamma_only
   use global_version
   implicit none
   character(len=9) :: cdate, ctime, code = 'D3TOTEN'

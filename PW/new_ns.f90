@@ -26,7 +26,8 @@ SUBROUTINE new_ns(ns)
   USE symme,                ONLY : d1, d2, d3
   USE lsda_mod,             ONLY : lsda, current_spin, nspin, isk
   USE symme,                ONLY : nsym, irt
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg, gamma_only
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, wg
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : evc
   USE gvect,                ONLY : gstart
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat

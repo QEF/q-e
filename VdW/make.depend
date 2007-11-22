@@ -34,6 +34,7 @@ dvpsi_e.o : ../PW/becmod.o
 dvpsi_e.o : ../PW/pwcom.o
 dvpsi_e.o : vdwcom.o
 eff_pot.o : ../Modules/constants.o
+eff_pot.o : ../Modules/control_flags.o
 eff_pot.o : ../Modules/io_files.o
 eff_pot.o : ../Modules/io_global.o
 eff_pot.o : ../Modules/kind.o
@@ -80,7 +81,6 @@ solve_e.o : ../PW/pwcom.o
 solve_e.o : ../PW/scf_mod.o
 solve_e.o : vdwcom.o
 start_vdw.o : ../Modules/version.o
-start_vdw.o : ../PW/pwcom.o
 stop_vdw.o : ../Modules/control_flags.o
 stop_vdw.o : ../Modules/io_files.o
 stop_vdw.o : ../Modules/mp.o

@@ -500,9 +500,8 @@ SUBROUTINE v_h( rhog, ehart, charge, v )
   USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
                         nl, nlm, ngm, gg, gstart
   USE lsda_mod,  ONLY : nspin
-  USE cell_base, ONLY : omega
-  USE wvfct,     ONLY : gamma_only
-  USE cell_base, ONLY : tpiba2
+  USE cell_base, ONLY : omega, tpiba2
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !

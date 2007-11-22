@@ -8,6 +8,7 @@ a_h.o : ../PW/becmod.o
 a_h.o : ../PW/pwcom.o
 a_h.o : ../PW/scf_mod.o
 a_h.o : cgcom.o
+cg_readin.o : ../Modules/control_flags.o
 cg_readin.o : ../Modules/io_files.o
 cg_readin.o : ../Modules/io_global.o
 cg_readin.o : ../Modules/ions_base.o

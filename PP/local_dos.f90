@@ -39,8 +39,8 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE uspp,                 ONLY : nkb, vkb, becsum, nhtol, nhtoj, indv
   USE uspp_param,           ONLY : upf, nh, nhm
   USE wavefunctions_module, ONLY : evc, psic, psic_nc
-  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin, &
-                                   gamma_only
+  USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, g2kin
+  USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, so, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc

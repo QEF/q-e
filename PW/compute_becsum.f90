@@ -15,7 +15,7 @@ SUBROUTINE compute_becsum(iflag)
   ! ... this version works also for metals (gaussian spreading technique)  
   !
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE cell_base,            ONLY : tpiba2
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk

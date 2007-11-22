@@ -18,7 +18,7 @@ SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
   ! ... and the wavefunctions, and save them in the array bec.
   !
   USE kinds, ONLY : DP
-  USE wvfct, ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   USE gvect, ONLY : gstart
   !
   IMPLICIT NONE

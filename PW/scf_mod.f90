@@ -112,7 +112,7 @@ CONTAINS
  !
  subroutine assign_mix_to_scf_type(rho_m, rho_s)
    USE wavefunctions_module, ONLY : psic
-   USE wvfct,                ONLY : gamma_only
+   USE control_flags,        ONLY : gamma_only
    USE gvect,                ONLY : nl, nlm
    IMPLICIT NONE
    TYPE (mix_type), INTENT(IN) :: rho_m
@@ -161,7 +161,7 @@ CONTAINS
  !
  subroutine high_frequency_mixing ( rhoin, input_rhout, alphamix )
    USE wavefunctions_module, ONLY : psic
-   USE wvfct,                ONLY : gamma_only
+   USE control_flags,        ONLY : gamma_only
    USE gvect,                ONLY : nl, nlm
  IMPLICIT NONE
    TYPE (scf_type), INTENT(INOUT)     :: rhoin
@@ -263,7 +263,7 @@ CONTAINS
   USE constants,     ONLY : e2, tpi, fpi
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
-  USE wvfct,         ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -390,7 +390,7 @@ FUNCTION tauk_ddot( rho1, rho2, gf )
   USE constants,     ONLY : e2, tpi, fpi
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
-  USE wvfct,         ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -528,7 +528,7 @@ END FUNCTION ns_ddot
   USE constants,     ONLY : e2, fpi
   USE cell_base,     ONLY : omega, tpiba2
   USE gvect,         ONLY : gg, gstart
-  USE wvfct,         ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !

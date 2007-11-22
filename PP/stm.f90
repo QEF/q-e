@@ -34,7 +34,8 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   USE ener, ONLY: ef
   USE symme
   USE scf, ONLY: rho
-  USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk, gamma_only
+  USE wvfct, ONLY: npwx, npw, nbnd, wg, et, g2kin, igk
+  USE control_flags, ONLY : gamma_only
   USE wavefunctions_module,  ONLY : evc, psic
   USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin

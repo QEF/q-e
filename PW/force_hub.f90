@@ -24,7 +24,8 @@ SUBROUTINE force_hub(forceh)
                                     swfcatom
    USE symme,                ONLY : s, nsym, irt
    USE io_files,             ONLY : prefix, iunocc
-   USE wvfct,                ONLY : gamma_only, nbnd, npwx, npw, igk
+   USE wvfct,                ONLY : nbnd, npwx, npw, igk
+   USE control_flags,        ONLY : gamma_only
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
    USE mp_global,            ONLY : me_pool, my_pool_id

@@ -32,7 +32,6 @@ PROGRAM dipole
   USE mp_global, ONLY : me_pool, intra_pool_comm
   USE vlocal,    ONLY : strf, vloc
   USE mp,        ONLY : mp_sum, mp_bcast
-  USE wvfct,     ONLY : gamma_only
   USE basic_algebra_routines
   !
   IMPLICIT NONE

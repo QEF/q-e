@@ -17,10 +17,11 @@ subroutine interpolate (v, vs, iflag)
   !     V and Vs are real and in real space . V and Vs may coincide
   !
   USE kinds, ONLY: DP
-  USE wvfct,  ONLY: gamma_only
   USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
   USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
        nls, nlsm, doublegrid
+  USE control_flags, ONLY: gamma_only
+  !
   implicit none
   real(DP) :: v (nrxx), vs (nrxxs)
   ! function on thick mesh
@@ -105,10 +106,12 @@ subroutine cinterpolate (v, vs, iflag)
   !     V and Vs are complex and in real space . V and Vs may coincide
   !
   USE kinds, ONLY: DP
-  USE wvfct,  ONLY: gamma_only
   USE gvect,  ONLY: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm
   USE gsmooth,ONLY: nr1s,nr2s,nr3s,nrx1s,nrx2s,nrx3s,nrxxs,ngms, &
        nls, nlsm, doublegrid
+  USE control_flags, ONLY: gamma_only
+  !
+  IMPLICIT NONE
   complex(DP) :: v (nrxx), vs (nrxxs)
   ! function on thick mesh
   ! function on smooth mesh

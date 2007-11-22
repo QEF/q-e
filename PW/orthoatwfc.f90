@@ -22,9 +22,10 @@ SUBROUTINE orthoatwfc
   USE basis,      ONLY : natomwfc
   USE klist,      ONLY : nks, xk, ngk
   USE ldaU,       ONLY : swfcatom, U_projection
-  USE wvfct,      ONLY : npwx, npw, igk, gamma_only
+  USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
   USE becmod,     ONLY : becp, rbecp, becp_nc
+  USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   ! 
   IMPLICIT NONE

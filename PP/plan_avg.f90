@@ -20,8 +20,9 @@ PROGRAM do_plan_avg
   USE ions_base, ONLY : nat, ntyp=>nsp, ityp, tau, atm, zv
   USE io_files,  ONLY : tmp_dir, prefix, nd_nmbr, trimcheck
   USE io_global, ONLY : ionode, ionode_id
-  USE wvfct,     ONLY : nbnd, gamma_only
+  USE wvfct,     ONLY : nbnd
   USE mp,        ONLY : mp_bcast
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   INTEGER :: ninter

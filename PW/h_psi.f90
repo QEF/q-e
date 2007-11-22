@@ -22,7 +22,6 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   ! ...    hpsi  H*psi
   !
   USE kinds,    ONLY : DP
-  USE wvfct,    ONLY : gamma_only 
   USE uspp,     ONLY : vkb, nkb
   USE wvfct,    ONLY : igk, g2kin
   USE gsmooth,  ONLY : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
@@ -35,7 +34,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   USE funct,    ONLY : exx_is_active
 #endif
   USE funct,    ONLY : dft_is_meta
-
+  USE control_flags, ONLY : gamma_only 
   !
   IMPLICIT NONE
   !

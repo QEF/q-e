@@ -54,7 +54,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE ener,             ONLY : ehart
   USE io_global,        ONLY : stdout, ionode
   USE scf,              ONLY : rho, vltot, v
-  USE wvfct,            ONLY : npw, nbnd, wg, igk, gamma_only
+  USE wvfct,            ONLY : npw, nbnd, wg, igk
   USE noncollin_module, ONLY : noncolin
 
   IMPLICIT NONE
@@ -277,7 +277,7 @@ SUBROUTINE polarization ( spin_component, ipol, epsilon, raux )
        ngm, nrxx, gstart, g, gg
   USE lsda_mod,  ONLY : nspin
   USE scf, ONLY: rho
-  USE wvfct,  ONLY: gamma_only
+  USE control_flags,    ONLY : gamma_only
   USE wavefunctions_module,  ONLY: psic
   !
   IMPLICIT NONE

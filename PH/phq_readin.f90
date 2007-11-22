@@ -26,7 +26,7 @@ SUBROUTINE phq_readin()
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass, atm
   USE klist,         ONLY : xqq, xk, nks, lgauss, two_fermi_energies
-  USE wvfct,         ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
   USE lsda_mod,      ONLY : lsda, nspin

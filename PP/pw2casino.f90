@@ -72,7 +72,8 @@ SUBROUTINE compute_casino
   USE scf, ONLY: rho, rho_core, rhog_core, vnew
   USE ldaU, ONLY : lda_plus_u, eth, Hubbard_lmax
   USE vlocal, ONLY: vloc, strf
-  USE wvfct, ONLY: npw, npwx, nbnd, gamma_only, igk, g2kin, wg, et
+  USE wvfct, ONLY: npw, npwx, nbnd, igk, g2kin, wg, et
+  USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
   USE becmod,   ONLY: becp 

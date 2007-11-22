@@ -1580,7 +1580,6 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
                                  sp_pos, k_points, xk, wk, nk1, nk2, nk3,  &
                                  k1, k2, k3, nkstot, cell_symmetry, rd_ht, &
                                  trd_ht, f_inp
-  USE wvfct,              ONLY : gamma_only
   USE cell_base,          ONLY : at, ibrav, symm_type
   USE ions_base,          ONLY : nat, ntyp => nsp, ityp, tau, atm
   USE klist,              ONLY : nkstot_ => nkstot
@@ -1598,7 +1597,7 @@ SUBROUTINE read_cards( psfile, atomic_positions_ )
   USE ions_base,          ONLY : fixatom, &
                                  if_pos_ =>  if_pos
   USE ions_base,          ONLY : amass
-  USE control_flags,      ONLY : lfixatom
+  USE control_flags,      ONLY : lfixatom, gamma_only
   USE read_cards_module,  ONLY : read_cards_base => read_cards
   !
   IMPLICIT NONE

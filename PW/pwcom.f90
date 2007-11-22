@@ -317,8 +317,6 @@ MODULE wvfct
   INTEGER, ALLOCATABLE :: &
        btype(:,:)         ! one if the corresponding state has to be
                           ! converged to full accuracy, zero otherwise
-  LOGICAL :: &
-       gamma_only         ! if .TRUE. only half G vectors are used
   !
 END MODULE wvfct
 !

@@ -40,7 +40,8 @@ subroutine do_elf (elf)
   USE lsda_mod, ONLY: nspin
   USE scf, ONLY: rho
   USE symme, ONLY: nsym, ftau, s
-  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg, gamma_only
+  USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
+  USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: evc
   !
   ! I/O variables

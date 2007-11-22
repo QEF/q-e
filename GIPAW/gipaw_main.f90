@@ -28,7 +28,6 @@ PROGRAM gipaw_main
   ! ...
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode, ionode_id
-  USE wvfct,           ONLY : gamma_only
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr
   USE klist,           ONLY : nks
   USE mp,              ONLY : mp_bcast
@@ -39,7 +38,7 @@ PROGRAM gipaw_main
                               gipaw_readin, gipaw_allocate, gipaw_setup, &
                               gipaw_openfil, print_clock_gipaw, &
                               gipaw_summary
-  USE control_flags,   ONLY : io_level
+  USE control_flags,   ONLY : io_level, gamma_only
 
   !------------------------------------------------------------------------
   IMPLICIT NONE

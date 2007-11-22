@@ -186,8 +186,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     USE symme,             ONLY : nsym, irt, d1, d2, d3
     USE uspp,              ONLY : nhtolm,nhtol
     USE uspp_param,        ONLY : nh, upf
-    USE wvfct,             ONLY : gamma_only
-    USE control_flags,     ONLY : nosym
+    USE control_flags,     ONLY : nosym, gamma_only
 
     REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
 

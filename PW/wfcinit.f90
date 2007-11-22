@@ -1,4 +1,4 @@
-!
+! 
 ! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
@@ -142,14 +142,14 @@ SUBROUTINE init_wfc ( ik )
   ! ... This routine computes starting wavefunctions for k-point ik
   !
   USE kinds,                ONLY : DP
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
-  USE gvect,                ONLY : g
+  USE gvect,                ONLY : g, gstart
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, et
-  USE uspp,                 ONLY : nkb
+  USE uspp,                 ONLY : nkb, okvan
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : rndm
@@ -161,6 +161,7 @@ SUBROUTINE init_wfc ( ik )
   INTEGER :: is, ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
   !
   REAL(DP) :: rr, arg
+  REAL(DP), ALLOCATABLE :: etatom(:) ! atomic eigenvalues
   !
   COMPLEX(DP), ALLOCATABLE :: wfcatom(:,:,:) ! atomic wfcs for initialization
   !
@@ -245,16 +246,22 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... Diagonalize the Hamiltonian on the basis of atomic wfcs
   !
-  IF ( gamma_only ) THEN
-     !
-     CALL wfcinit_gamma()
-     !
-  ELSE
-     !
-     CALL wfcinit_k()
-     !
-  END IF
+  ALLOCATE( etatom( n_starting_wfc ) )
   !
+  ! ... Allocate space for <beta|psi>
+  !
+  CALL allocate_bec ( )
+  !
+  CALL rotate_wfc ( npwx, npw, n_starting_wfc, gstart, &
+                    nbnd, wfcatom, npol, okvan, evc, etatom )
+  !
+  ! ... copy the first nbnd eigenvalues
+  ! ... eigenvectors are already copied inside routine rotate_wfc
+  !
+  et(1:nbnd,ik) = etatom(1:nbnd)
+  !
+  CALL deallocate_bec ( )
+  DEALLOCATE( etatom )
   DEALLOCATE( wfcatom )
   !
   RETURN
@@ -262,68 +269,20 @@ SUBROUTINE init_wfc ( ik )
 CONTAINS
   !
   !-----------------------------------------------------------------------
-  SUBROUTINE wfcinit_gamma()
+  SUBROUTINE allocate_bec ()
     !-----------------------------------------------------------------------
     !
-    ! ... gamma version
-    !
-    USE gvect,  ONLY : gstart
-    USE becmod, ONLY : rbecp
-    USE control_flags, ONLY : isolve
-    USE uspp, ONLY: okvan
+    USE becmod, ONLY : rbecp, becp, becp_nc
     !
     IMPLICIT NONE
     !
-    REAL(DP), ALLOCATABLE :: etatom(:)
-    ! atomic eigenvalues
+    ! ... *bec* contain <beta|psi> - used in h_psi and s_psi
     !
-    ! ... rbecp contains <beta|psi> - used in h_psi and s_psi
-    !
-    ALLOCATE( rbecp( nkb, n_starting_wfc ) )
-    ALLOCATE( etatom( n_starting_wfc ) )
-    !
-    IF ( isolve == 1 ) THEN
+    IF ( gamma_only ) THEN 
        !
-       CALL rinitcgg( npwx, npw, n_starting_wfc, &
-            nbnd, wfcatom, evc, etatom )
+       ALLOCATE( rbecp( nkb, n_starting_wfc ) )
        !
-    ELSE
-       !
-       CALL rotate_wfc_gamma( npwx, npw, n_starting_wfc, gstart, &
-            nbnd, wfcatom, okvan, evc, etatom )
-    END IF
-    !
-    ! ... copy the first nbnd eigenvalues
-    ! ... eigenvectors are already copied inside routines
-    ! ... rinitcgg, rotate_wfc_gamma above
-    !
-    et(1:nbnd,ik) = etatom(1:nbnd)
-    !
-    DEALLOCATE( rbecp )
-    DEALLOCATE( etatom )
-    !
-    RETURN
-    !
-  END SUBROUTINE wfcinit_gamma
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE wfcinit_k()
-    !-----------------------------------------------------------------------
-    !
-    ! ... k-points version
-    !
-    USE becmod, ONLY : becp, becp_nc
-    USE control_flags,  ONLY : isolve
-    USE uspp, ONLY: okvan
-    !
-    IMPLICIT NONE
-    !
-    REAL(DP), ALLOCATABLE :: etatom(:)
-    ! atomic eigenvalues
-    !
-    ! ... becp contains <beta|psi> - used in h_psi and s_psi
-    !
-    IF ( noncolin ) THEN
+    ELSE IF ( noncolin) THEN
        !
        ALLOCATE( becp_nc( nkb, npol, n_starting_wfc ) )
        !
@@ -333,36 +292,23 @@ CONTAINS
        !
     END IF
     !
-    ALLOCATE( etatom( n_starting_wfc ) )
+    RETURN
     !
-    IF ( isolve == 1 ) THEN
-       !
-       CALL cinitcgg( npwx, npw, n_starting_wfc, &
-            nbnd, wfcatom, evc, etatom, .true. )
-       !
-    ELSE
-       !
-       IF ( noncolin ) THEN
-          !
-          CALL rotate_wfc_nc( npwx, npw, n_starting_wfc, nbnd, &
-               wfcatom, npol, okvan, evc, etatom )
-          !
-       ELSE
-          !
-          CALL rotate_wfc( npwx, npw, n_starting_wfc, &
-               nbnd, wfcatom, okvan, evc, etatom )
-          !
-       END IF
-       !
-    END IF
+  END SUBROUTINE allocate_bec
+  !
+  !-----------------------------------------------------------------------
+  SUBROUTINE deallocate_bec ()
+    !-----------------------------------------------------------------------
     !
-    ! ... copy the first nbnd eigenvalues are copied
-    ! ... eigenvectors are already copied inside routines
-    ! ... cinitcgg, rotate_wfc, rotate_wfc_nc above
+    USE becmod, ONLY : rbecp, becp, becp_nc
     !
-    et(1:nbnd,ik) = etatom(1:nbnd)
+    IMPLICIT NONE
     !
-    IF ( noncolin ) THEN
+    IF ( gamma_only ) THEN 
+       !
+       DEALLOCATE( rbecp )
+       !
+    ELSE IF ( noncolin) THEN
        !
        DEALLOCATE( becp_nc )
        !
@@ -372,10 +318,8 @@ CONTAINS
        !
     END IF
     !
-    DEALLOCATE( etatom )
-    !
     RETURN
     !
-  END SUBROUTINE wfcinit_k
+  END SUBROUTINE deallocate_bec
   !
 END SUBROUTINE init_wfc

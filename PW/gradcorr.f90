@@ -370,7 +370,7 @@ SUBROUTINE gradrho( nrx1, nrx2, nrx3, &
   USE constants, ONLY : tpi
   USE cell_base, ONLY : tpiba
   USE gvect,     ONLY : nlm
-  USE wvfct,     ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -429,7 +429,7 @@ SUBROUTINE gradient( nrx1, nrx2, nrx3, &
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : nlm
-  USE wvfct,     ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -496,7 +496,7 @@ SUBROUTINE grad_dot( nrx1, nrx2, nrx3, nr1, nr2, nr3, &
   USE cell_base, ONLY : tpiba
   USE kinds,     ONLY : DP
   USE gvect,     ONLY : nlm
-  USE wvfct,     ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !

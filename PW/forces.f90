@@ -32,13 +32,12 @@ SUBROUTINE forces()
   USE lsda_mod,      ONLY : nspin
   USE symme,         ONLY : s, nsym, irt
   USE vlocal,        ONLY : strf, vloc
-  USE wvfct,         ONLY : gamma_only
   USE force_mod,     ONLY : force, lforce
   USE scf,           ONLY : rho
   USE ions_base,     ONLY : if_pos
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
-  USE control_flags, ONLY : remove_rigid_rot, lbfgs
+  USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs
   !
   IMPLICIT NONE
   !

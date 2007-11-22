@@ -364,6 +364,7 @@ subroutine write_export (pp_file,kunit,uspp_spsi, ascii, single_file, raw)
 
   use kinds,          ONLY : DP 
   use pwcom  
+  use control_flags,  ONLY : gamma_only  
   use global_version, ONLY : version_number
   use becmod,         ONLY : becp, rbecp
   use wavefunctions_module,  ONLY : evc

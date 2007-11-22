@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002 PWSCF group
+! Copyright (C) 2002-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -25,8 +25,8 @@ SUBROUTINE stres_hub ( sigmah )
   USE lsda_mod,  ONLY : nspin
   USE symme,     ONLY : s, nsym
   USE io_files,  ONLY : prefix, iunocc
-  USE wvfct,     ONLY : gamma_only   
   USE io_global, ONLY : stdout, ionode
+  USE control_flags, ONLY : gamma_only   
 
    !
    IMPLICIT NONE

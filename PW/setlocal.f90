@@ -20,8 +20,8 @@ subroutine setlocal
   USE gvect,     ONLY : igtongl, gg
   USE scf,       ONLY : rho, v_of_0, vltot
   USE vlocal,    ONLY : strf, vloc
-  USE wvfct,     ONLY : gamma_only
   USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl, nlm, ngm
+  USE control_flags, ONLY : gamma_only
   !
   implicit none
   complex(DP), allocatable :: aux (:)

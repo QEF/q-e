@@ -247,7 +247,8 @@ subroutine setup_nnkp
   use klist,     only : xk
   USE mp,        ONLY : mp_bcast, mp_sum
   use mp_global, ONLY : intra_pool_comm
-  use wvfct,     only : nbnd,npwx,gamma_only
+  use wvfct,     only : nbnd, npwx
+  USE control_flags, ONLY : gamma_only
   use wannier
 
   implicit none
@@ -413,7 +414,7 @@ subroutine run_wannier
   use io_global, only : ionode, ionode_id
   use ions_base, only : nat
   use mp,        only : mp_bcast
-  use wvfct,     only : gamma_only
+  use control_flags, only : gamma_only
   use wannier
 
   implicit none
@@ -778,7 +779,8 @@ subroutine compute_mmn
    !
    USE io_global,  ONLY : stdout, ionode
    use kinds,           only: DP
-   use wvfct,           only : nbnd, npw, npwx, igk, g2kin, gamma_only
+   use wvfct,           only : nbnd, npw, npwx, igk, g2kin
+   use control_flags,   only : gamma_only
    use wavefunctions_module, only : evc, psic
    use gsmooth,         only: nls, nlsm, nrxxs, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s
    use klist,           only : nkstot, xk
@@ -1089,7 +1091,8 @@ subroutine compute_amn
    USE io_global,  ONLY : stdout, ionode
    use kinds,           only : DP
    use klist,           only : nkstot, xk
-   use wvfct,           only : nbnd, npw, npwx, igk, g2kin, gamma_only
+   use wvfct,           only : nbnd, npw, npwx, igk, g2kin
+   use control_flags,   only : gamma_only
    use wavefunctions_module, only : evc
    use io_files,        only : nwordwfc, iunwfc
    use io_files,        only : find_free_unit
@@ -1214,7 +1217,8 @@ subroutine generate_guiding_functions(ik)
    !
    USE io_global,  ONLY : stdout
    use constants, only : pi, tpi, fpi, eps8
-   use wvfct, only : npw, g2kin, igk, gamma_only
+   use wvfct, only : npw, g2kin, igk
+   use control_flags,   only : gamma_only
    use gvect, only : ig1, ig2, ig3, g, gstart
    use cell_base,  ONLY : tpiba2, omega, tpiba
    use wannier
@@ -1321,7 +1325,8 @@ end subroutine write_band
 
 subroutine write_plot
    USE io_global,  ONLY : stdout, ionode
-   use wvfct, only : nbnd, npw, igk, g2kin, gamma_only
+   use wvfct, only : nbnd, npw, igk, g2kin
+   use control_flags,   only : gamma_only
    use wavefunctions_module, only : evc, psic
    use io_files, only : find_free_unit, nwordwfc, iunwfc
    use wannier

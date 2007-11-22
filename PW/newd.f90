@@ -34,7 +34,7 @@ SUBROUTINE newd_g()
   USE scf,                  ONLY : v, vltot
   USE uspp,                 ONLY : deeq, dvan, deeq_nc, dvan_so, okvan, indv
   USE uspp_param,           ONLY : upf, lmaxq, nh, nhm
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin

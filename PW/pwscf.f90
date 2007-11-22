@@ -14,9 +14,9 @@ PROGRAM pwscf
   USE io_global,        ONLY : stdout, ionode
   USE parameters,       ONLY : ntypx, npk, lmaxx
   USE global_version,   ONLY : version_number
-  USE wvfct,            ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin
-  USE control_flags,    ONLY : conv_elec, conv_ions, lpath, lmetadyn
+  USE control_flags,    ONLY : conv_elec, conv_ions, lpath, lmetadyn, &
+                               gamma_only
   USE io_files,         ONLY : nd_nmbr
   USE ions_base,        ONLY : tau
   USE path_variables,   ONLY : conv_path

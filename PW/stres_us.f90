@@ -18,7 +18,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE constants,            ONLY : eps8
   USE klist,                ONLY : nks, xk
   USE lsda_mod,             ONLY : current_spin, lsda, isk
-  USE wvfct,                ONLY : gamma_only, npw, npwx, nbnd, igk, wg, et
+  USE wvfct,                ONLY : npw, npwx, nbnd, igk, wg, et
+  USE control_flags,        ONLY : gamma_only
   USE uspp_param,           ONLY : upf, lmaxkb, nh, newpseudo
   USE uspp,                 ONLY : nkb, vkb, qq, deeq, deeq_nc, qq_so
   USE wavefunctions_module, ONLY : evc

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 20012007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,8 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE io_files,             ONLY: iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY: get_buffer
   USE symme,                ONLY: s, nsym
-  USE wvfct,                ONLY: npw, npwx, nbnd, gamma_only, igk, wg
+  USE wvfct,                ONLY: npw, npwx, nbnd, igk, wg
+  USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
   USE wavefunctions_module, ONLY: evc
   implicit none

@@ -24,7 +24,7 @@ SUBROUTINE ggen()
                                  nl, gstart, gl, ngl, igtongl
   USE gsmooth,            ONLY : ngms, gcutms, ngms_g, nr1s, nr2s, nr3s, &
                                  nrx1s, nrx3s, nls
-  USE wvfct,              ONLY : gamma_only
+  USE control_flags,      ONLY : gamma_only
   USE cellmd,             ONLY : lmovecell
   USE constants,          ONLY : eps8
   USE sticks,             ONLY : dfftp, dffts
@@ -347,8 +347,8 @@ SUBROUTINE index_minusg()
   USE gvect,   ONLY : ngm, nr1, nr2, nr3, &
                       nrx1, nrx2, nrx3, nlM, ig1, ig2, ig3
   USE gsmooth, ONLY : nr1s, nr2s, nr3s, nrx1s, nrx3s, nlsm, ngms
-  USE wvfct,   ONLY : gamma_only
   USE sticks,  ONLY : dfftp, dffts
+  USE control_flags, ONLY : gamma_only
   IMPLICIT NONE
   !
   INTEGER :: n1, n2, n3, n1s, n2s, n3s, ng

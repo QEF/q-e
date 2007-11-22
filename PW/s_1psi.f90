@@ -14,8 +14,8 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !
   USE kinds,  ONLY : DP
   USE uspp,   ONLY : vkb, nkb
-  USE wvfct,  ONLY : gamma_only
   USE becmod, ONLY : becp, rbecp, becp_nc
+  USE control_flags,    ONLY : gamma_only 
   USE noncollin_module, ONLY : noncolin, npol
   !
   IMPLICIT NONE

@@ -22,7 +22,7 @@ SUBROUTINE cgramg1( lda, nvecx, n, start, finish, psi, spsi, hpsi )
   USE kinds,     ONLY : DP
   USE constants, ONLY : eps8
   USE io_global, ONLY : stdout
-  USE wvfct,     ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   IMPLICIT NONE
   !

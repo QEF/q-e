@@ -451,9 +451,8 @@ SUBROUTINE approx_screening( drho )
                             nr1, nr2, nr3, nrx1, nrx2, nrx3, nl, nlm
   USE klist,         ONLY : nelec
   USE lsda_mod,      ONLY : nspin
-  USE control_flags, ONLY : ngm0
+  USE control_flags, ONLY : ngm0, gamma_only
   USE scf,           ONLY : mix_type
-  USE wvfct,         ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
   IMPLICIT NONE  
@@ -505,8 +504,7 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE wavefunctions_module, ONLY : psic
   USE klist,                ONLY : nelec
   USE lsda_mod,             ONLY : nspin
-  USE wvfct,                ONLY : gamma_only
-  USE control_flags,        ONLY : ngm0
+  USE control_flags,        ONLY : ngm0, gamma_only
   USE scf,                  ONLY : mix_type, local_tf_ddot
   !
   IMPLICIT NONE

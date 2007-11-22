@@ -61,10 +61,10 @@ SUBROUTINE setup()
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
   USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, d1,d2,d3
-  USE wvfct,              ONLY : nbnd, nbndx, gamma_only
+  USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
-                                 use_para_diag
+                                 use_para_diag, gamma_only
   USE relax,              ONLY : starting_diag_threshold
   USE cellmd,             ONLY : calc
   USE uspp_param,         ONLY : upf
@@ -800,8 +800,8 @@ END FUNCTION n_atom_wfc
 
 SUBROUTINE check_para_diag()
   !
-  USE wvfct,            ONLY : nbnd, nbndx, gamma_only
-  USE control_flags,    ONLY : use_para_diag, isolve, ortho_para
+  USE wvfct,            ONLY : nbnd, nbndx
+  USE control_flags,    ONLY : use_para_diag, isolve, ortho_para, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho, intra_pool_comm
 

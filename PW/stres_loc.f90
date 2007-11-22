@@ -20,7 +20,7 @@ subroutine stres_loc (sigmaloc)
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho
   USE vlocal,               ONLY : strf, vloc
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE uspp_param,           ONLY : upf
   !

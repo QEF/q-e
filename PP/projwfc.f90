@@ -255,6 +255,7 @@ SUBROUTINE projwave( filproj, lsym )
   USE lsda_mod, ONLY: nspin, isk, current_spin
   USE symme, ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
+  USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: becp, rbecp
@@ -707,6 +708,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE noncollin_module, ONLY: noncolin, npol, angle1, angle2
   USE symme, ONLY: nsym, irt, t_rev 
   USE wvfct 
+  USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
   USE becmod,   ONLY: becp_nc

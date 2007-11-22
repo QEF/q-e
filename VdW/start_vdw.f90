@@ -12,7 +12,6 @@ subroutine start_vdw (nodenumber)
   !  Wrapper routine for postprocessing initialization
   !
   USE global_version, ONLY: version_number
-  USE wvfct,  ONLY: gamma_only
   implicit none
   character(len=3) :: nodenumber
   character(len=9) :: code = 'VdW'

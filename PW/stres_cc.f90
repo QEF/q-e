@@ -22,7 +22,7 @@ subroutine stres_cc (sigmaxcc)
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
   USE vlocal,               ONLY : strf
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
   implicit none

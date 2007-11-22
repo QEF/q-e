@@ -89,6 +89,7 @@ SUBROUTINE projection (first_band, last_band)
   USE lsda_mod 
   USE symme,      ONLY: nsym, irt, d1, d2, d3
   USE wvfct 
+  USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
   USE becmod,     ONLY: becp, rbecp
   USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &

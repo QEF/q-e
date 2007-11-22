@@ -35,7 +35,7 @@ subroutine atomic_rho (rhoa, nspina)
                                    nrx3, gstart, nl, nlm, gl, igtongl
   USE lsda_mod,             ONLY : starting_magnetization, lsda
   USE vlocal,               ONLY : strf
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   USE noncollin_module,     ONLY : angle1, angle2
   USE uspp_param,           ONLY : upf

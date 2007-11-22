@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,13 +14,13 @@ subroutine stres_har (sigmahar)
   USE kinds, ONLY : DP
   USE constants, ONLY : e2, fpi
   USE cell_base, ONLY: omega, tpiba2
-  USE ener, ONLY: ehart
-  USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
-       nrxx , nl, g, gg
-  USE lsda_mod, ONLY: nspin
-  USE scf, ONLY: rho
-  USE wvfct, ONLY: gamma_only
-  USE wavefunctions_module,    ONLY : psic
+  USE ener,      ONLY: ehart
+  USE gvect,     ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                       nrxx , nl, g, gg
+  USE lsda_mod,  ONLY: nspin
+  USE scf,       ONLY: rho
+  USE control_flags,        ONLY: gamma_only
+  USE wavefunctions_module, ONLY : psic
   implicit none
   !
   real(DP) :: sigmahar (3, 3), shart, g2

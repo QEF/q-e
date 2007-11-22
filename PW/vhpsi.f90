@@ -21,9 +21,9 @@ subroutine vhpsi (ldap, np, mp, psip, hpsi)
   USE scf,       ONLY : v
   USE ions_base, ONLY : nat, ntyp => nsp, ityp
   USE basis,     ONLY : natomwfc
-  USE wvfct,     ONLY : gamma_only
   USE gvect,     ONLY : gstart
   USE uspp_param,ONLY : upf
+  USE control_flags, ONLY : gamma_only
   !
   implicit none
   !

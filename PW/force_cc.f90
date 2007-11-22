@@ -22,7 +22,7 @@ subroutine force_cc (forcecc)
   USE ener,                 ONLY : etxc, vtxc
   USE lsda_mod,             ONLY : nspin
   USE scf,                  ONLY : rho, rho_core, rhog_core
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE noncollin_module,     ONLY : noncolin
   USE wavefunctions_module, ONLY : psic
   !

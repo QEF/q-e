@@ -13,9 +13,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   USE klist,                ONLY : nelec
   USE gvect,                ONLY : nlm, g, qcutz, ecfixed, q2sigma
   USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, &
-                                   igk, npw, gamma_only
-!  USE wvfct,                ONLY : g2kin, wg, nbndx, et, nbnd, npwx, &
-!                                   igk, npw 
+                                   igk, npw 
   USE uspp,                 ONLY : nkb
   USE scf,                  ONLY : v, vltot, vrs, rho_core
   USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s,&
@@ -24,6 +22,7 @@ subroutine eff_pot (rho, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, nl,   &
   USE mp_global,            ONLY : intra_pool_comm
   USE mp,                   ONLY : mp_sum
 
+  USE control_flags,        ONLY : gamma_only
 !  USE control_vdw,          ONLY : thresh_veff
 !  USE wavefunctions_module, ONLY : evc, psic
   implicit none

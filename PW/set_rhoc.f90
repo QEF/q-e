@@ -26,7 +26,7 @@ subroutine set_rhoc
   USE scf,       ONLY : rho_core, rhog_core
   USE lsda_mod,  ONLY : nspin
   USE vlocal,    ONLY : strf
-  USE wvfct,     ONLY : gamma_only
+  USE control_flags, ONLY : gamma_only
   !
   implicit none
   !

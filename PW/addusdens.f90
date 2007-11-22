@@ -43,7 +43,7 @@ subroutine addusdens_g
   USE scf,                  ONLY : rho
   USE uspp,                 ONLY : becsum, okvan
   USE uspp_param,           ONLY : upf, lmaxq, nh
-  USE wvfct,                ONLY : gamma_only
+  USE control_flags,        ONLY : gamma_only
   USE wavefunctions_module, ONLY : psic
   !
   implicit none

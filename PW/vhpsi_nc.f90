@@ -18,10 +18,10 @@ subroutine vhpsi_nc (ldap, np, mp, psip, hpsi)
   USE ldaU,  ONLY: Hubbard_lmax, Hubbard_l, Hubbard_U, Hubbard_alpha, &
                    swfcatom
   USE scf,   ONLY: v
+  USE basis, ONLY: natomwfc
   USE lsda_mod,   ONLY: nspin, current_spin
   USE ions_base,  ONLY : nat, ntyp => nsp, ityp
-  USE basis, ONLY: natomwfc
-  USE wvfct, ONLY: gamma_only
+  USE control_flags, ONLY: gamma_only
   USE gvect, ONLY : gstart
   USE uspp_param, ONLY : upf
   implicit none

@@ -17,7 +17,7 @@ PROGRAM phonon
   !
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode, ionode_id
-  USE wvfct,           ONLY : gamma_only
+  USE control_flags,   ONLY : gamma_only
   USE klist,           ONLY : xk, wk, xqq, lgauss, nks, nkstot,            &
                               tot_magnetization,                           &
                               multiplicity, nelup, neldw, tot_charge,      &

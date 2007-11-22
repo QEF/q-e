@@ -297,8 +297,8 @@ SUBROUTINE vacuum_level( x0, zion )
   USE vlocal,    ONLY : strf, vloc
   USE mp_global, ONLY : intra_pool_comm
   USE mp,        ONLY : mp_sum
-  USE wvfct,     ONLY : gamma_only
-  USE basic_algebra_routines
+  USE control_flags, ONLY : gamma_only
+  USE basic_algebra_routines, ONLY : norm
   !
   IMPLICIT NONE
   !

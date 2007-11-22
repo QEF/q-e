@@ -1,6 +1,7 @@
 add_shift_cc.o : ../Modules/atom.o
 add_shift_cc.o : ../Modules/cell_base.o
 add_shift_cc.o : ../Modules/constants.o
+add_shift_cc.o : ../Modules/control_flags.o
 add_shift_cc.o : ../Modules/ions_base.o
 add_shift_cc.o : ../Modules/kind.o
 add_shift_cc.o : ../Modules/uspp.o
@@ -10,6 +11,7 @@ add_shift_cc.o : ../PW/scf_mod.o
 add_shift_lc.o : ../Modules/constants.o
 add_shift_lc.o : ../Modules/kind.o
 add_shift_us.o : ../Modules/cell_base.o
+add_shift_us.o : ../Modules/control_flags.o
 add_shift_us.o : ../Modules/io_files.o
 add_shift_us.o : ../Modules/ions_base.o
 add_shift_us.o : ../Modules/kind.o
@@ -110,6 +112,7 @@ dipole.o : ../Modules/mp_global.o
 dipole.o : ../PW/para.o
 dipole.o : ../PW/pwcom.o
 do_initial_state.o : ../Modules/cell_base.o
+do_initial_state.o : ../Modules/control_flags.o
 do_initial_state.o : ../Modules/io_global.o
 do_initial_state.o : ../Modules/ions_base.o
 do_initial_state.o : ../Modules/kind.o
@@ -129,6 +132,7 @@ dos.o : ../PW/pwcom.o
 dosg.o : ../Modules/kind.o
 elf.o : ../Modules/cell_base.o
 elf.o : ../Modules/constants.o
+elf.o : ../Modules/control_flags.o
 elf.o : ../Modules/io_files.o
 elf.o : ../Modules/kind.o
 elf.o : ../Modules/wavefunctions.o
@@ -161,6 +165,7 @@ initial_state.o : ../Modules/uspp.o
 initial_state.o : ../Modules/wavefunctions.o
 initial_state.o : ../PW/pwcom.o
 local_dos.o : ../Modules/cell_base.o
+local_dos.o : ../Modules/control_flags.o
 local_dos.o : ../Modules/io_files.o
 local_dos.o : ../Modules/ions_base.o
 local_dos.o : ../Modules/kind.o
@@ -192,6 +197,7 @@ openfil_pp.o : ../Modules/kind.o
 openfil_pp.o : ../PW/noncol.o
 openfil_pp.o : ../PW/pwcom.o
 plan_avg.o : ../Modules/cell_base.o
+plan_avg.o : ../Modules/control_flags.o
 plan_avg.o : ../Modules/io_files.o
 plan_avg.o : ../Modules/io_global.o
 plan_avg.o : ../Modules/ions_base.o
@@ -211,6 +217,7 @@ plotrho.o : ../Modules/io_global.o
 plotrho.o : ../Modules/kind.o
 poormanwannier.o : ../Modules/cell_base.o
 poormanwannier.o : ../Modules/constants.o
+poormanwannier.o : ../Modules/control_flags.o
 poormanwannier.o : ../Modules/io_files.o
 poormanwannier.o : ../Modules/io_global.o
 poormanwannier.o : ../Modules/ions_base.o
@@ -233,6 +240,7 @@ postproc.o : ../PW/noncol.o
 postproc.o : ../PW/pwcom.o
 projwfc.o : ../Modules/cell_base.o
 projwfc.o : ../Modules/constants.o
+projwfc.o : ../Modules/control_flags.o
 projwfc.o : ../Modules/io_files.o
 projwfc.o : ../Modules/io_global.o
 projwfc.o : ../Modules/ions_base.o
@@ -246,6 +254,7 @@ projwfc.o : ../PW/pwcom.o
 projwfc.o : ../iotk/src/iotk_module.o
 punch_plot.o : ../Modules/cell_base.o
 punch_plot.o : ../Modules/constants.o
+punch_plot.o : ../Modules/control_flags.o
 punch_plot.o : ../Modules/io_global.o
 punch_plot.o : ../Modules/ions_base.o
 punch_plot.o : ../Modules/kind.o
@@ -255,6 +264,7 @@ punch_plot.o : ../PW/pwcom.o
 punch_plot.o : ../PW/scf_mod.o
 pw2casino.o : ../Modules/cell_base.o
 pw2casino.o : ../Modules/constants.o
+pw2casino.o : ../Modules/control_flags.o
 pw2casino.o : ../Modules/functionals.o
 pw2casino.o : ../Modules/io_files.o
 pw2casino.o : ../Modules/io_global.o
@@ -268,6 +278,7 @@ pw2casino.o : ../PW/pwcom.o
 pw2casino.o : ../PW/scf_mod.o
 pw2gw.o : ../Modules/cell_base.o
 pw2gw.o : ../Modules/constants.o
+pw2gw.o : ../Modules/control_flags.o
 pw2gw.o : ../Modules/io_files.o
 pw2gw.o : ../Modules/io_global.o
 pw2gw.o : ../Modules/kind.o
@@ -276,6 +287,7 @@ pw2gw.o : ../Modules/wavefunctions.o
 pw2gw.o : ../PW/pwcom.o
 pw2wannier90.o : ../Modules/cell_base.o
 pw2wannier90.o : ../Modules/constants.o
+pw2wannier90.o : ../Modules/control_flags.o
 pw2wannier90.o : ../Modules/io_files.o
 pw2wannier90.o : ../Modules/io_global.o
 pw2wannier90.o : ../Modules/ions_base.o
@@ -289,6 +301,7 @@ pw2wannier90.o : ../Modules/wavefunctions.o
 pw2wannier90.o : ../PW/becmod.o
 pw2wannier90.o : ../PW/noncol.o
 pw2wannier90.o : ../PW/pwcom.o
+pw_export.o : ../Modules/control_flags.o
 pw_export.o : ../Modules/io_files.o
 pw_export.o : ../Modules/io_global.o
 pw_export.o : ../Modules/ions_base.o
@@ -305,9 +318,9 @@ pw_export.o : ../iotk/src/iotk_module.o
 qexml.o : ../iotk/src/iotk_module.o
 smallgk.o : ../Modules/kind.o
 start_postproc.o : ../Modules/version.o
-start_postproc.o : ../PW/pwcom.o
 stm.o : ../Modules/cell_base.o
 stm.o : ../Modules/constants.o
+stm.o : ../Modules/control_flags.o
 stm.o : ../Modules/io_files.o
 stm.o : ../Modules/io_global.o
 stm.o : ../Modules/kind.o

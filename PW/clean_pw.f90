@@ -21,7 +21,8 @@ SUBROUTINE clean_pw( lflag )
   USE reciprocal_vectors,   ONLY : ig_l2g
   USE symme,                ONLY : irt
   USE vlocal,               ONLY : strf, vloc
-  USE wvfct,                ONLY : igk, g2kin, et, wg, btype, gamma_only
+  USE wvfct,                ONLY : igk, g2kin, et, wg, btype
+  USE control_flags,        ONLY : gamma_only
   USE force_mod,            ONLY : force
   USE scf,                  ONLY : rho, v, vltot, rho_core, rhog_core, &
                                    vrs, kedtau, destroy_scf_type, vnew

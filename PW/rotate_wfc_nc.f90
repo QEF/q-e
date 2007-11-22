@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2003 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,50 +11,36 @@ subroutine rotate_wfc_nc &
      (npwx, npw, nstart, nbnd, psi, npol, overlap, evc, e)
   !----------------------------------------------------------------------
   !
-  !   Hamiltonian diagonalization in the subspace spanned
-  !   by nstart states psi (atomic or random wavefunctions).
-  !   Produces on output nbnd eigenvectors (nbnd <= nstart) in evc.
-  !   Calls h_psi to calculate H|psi> ans S|psi>
+  !   Serial version of rotate_wfc for noncollinear caluculations
   !
 #include "f_defs.h"
   USE kinds
-  USE control_flags, ONLY : use_para_diag
   implicit none
   !
-  integer :: npw, npwx, nstart, nbnd, npol, i, j, idx
+  integer :: npw, npwx, nstart, nbnd, npol
   ! dimension of the matrix to be diagonalized
   ! leading dimension of matrix psi, as declared in the calling pgm unit
   ! input number of states
   ! output number of states
-  ! number of coordinates of wfc
-  ! counters
+  ! number of spin polarizations
   logical :: overlap
   ! if .false. : S|psi> not needed
 
-  complex(DP) :: psi (npwx, npol, nstart), evc (npwx, npol, nbnd),ZDOTC
+  complex(DP) :: psi (npwx, npol, nstart), evc (npwx, npol, nbnd)
+
   ! input and output eigenvectors (may overlap)
 
   real(DP) :: e (nbnd)
   ! eigenvalues
 
   ! auxiliary variables:
+  integer :: i, j, idx
+  ! counters
   complex(DP), allocatable :: hpsi (:,:,:), spsi (:,:,:), &
        hc (:,:), sc (:,:), vc (:,:) 
   real(DP), allocatable :: en (:)
-  external ZDOTC
+  COMPLEX(DP), EXTERNAL :: ZDOTC
   !
-  IF( use_para_diag ) THEN
-     !
-     ! use data distributed subroutine, see below.
-     !
-     CALL protate_wfc_nc &
-          (npwx, npw, nstart, nbnd, psi, npol, overlap, evc, e)
-     !
-     RETURN
-     !
-  END IF
-  !
-  call start_clock ('wfcrot')
   allocate (hpsi(  npwx ,npol, nstart))    
   if (overlap) allocate (spsi(  npwx , npol, nstart))    
   allocate (hc( nstart , nstart))    
@@ -79,6 +65,7 @@ subroutine rotate_wfc_nc &
      call ZGEMM ('c','n',nstart,nstart,npw,(1.d0,0.d0),psi(1,1,1),npwx, &
        hpsi(1,1,1), npwx, (0.d0, 0.d0) , hc, nstart)
   else
+     ! FIXME: this should be replaced by a call to ZGEMM
      do j=1,nstart
         do i=1,nstart
            hc(i,j) = ZDOTC(npw,psi(1,1,i),1,hpsi(1,1,j),1) + &
@@ -94,6 +81,7 @@ subroutine rotate_wfc_nc &
         call ZGEMM ('c','n',nstart,nstart,npw,(1.d0,0.d0),psi(1,1,1),npwx, &
              spsi(1,1,1),npwx,(0.d0,0.d0),sc,nstart)
      else
+        ! FIXME: this should be replaced by a call to ZGEMM
         do j=1,nstart
            do i=1,nstart
               sc(i,j) = ZDOTC(npw,psi(:,1,i),1,spsi(:,1,j),1) + &
@@ -107,6 +95,7 @@ subroutine rotate_wfc_nc &
         call ZGEMM ('c','n',nstart,nstart,npw,(1.d0,0.d0),psi(1,1,1),npwx, &
              psi(1,1,1),npwx,(0.d0,0.d0),sc,nstart)
      else
+        ! FIXME: this should be replaced by a call to ZGEMM
         do j=1,nstart
            do i=1,nstart
               sc(i,j) = ZDOTC(npw,psi(:,1,i),1,psi(:,1,j),1) + &
@@ -153,55 +142,52 @@ subroutine rotate_wfc_nc &
   if (overlap) deallocate (spsi)
   deallocate (hpsi)
 
-  call stop_clock ('wfcrot')
   return
 end subroutine rotate_wfc_nc
 
-!
-!
-!  Subroutine with distributed matrixes
-!  (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------
 subroutine protate_wfc_nc &
      (npwx, npw, nstart, nbnd, psi, npol, overlap, evc, e)
   !----------------------------------------------------------------------
   !
-  !   Hamiltonian diagonalization in the subspace spanned
-  !   by nstart states psi (atomic or random wavefunctions).
-  !   Produces on output nbnd eigenvectors (nbnd <= nstart) in evc.
-  !   Calls h_psi to calculate H|psi> ans S|psi>
+  ! ... Parallel version of rotate_wfc for noncollinear calculations
+  ! ... Subroutine with distributed matrices, written by Carlo Cavazzoni
   !
 #include "f_defs.h"
   USE kinds
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
                                intra_pool_comm, init_ortho_group, me_image, &
-                               ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , la_n_ , &
-                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &
+                               ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
+                               leg_ortho
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , &
+                               la_nx_ , la_nrl_ , la_n_ , &
+                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , &
+                               la_npr_ , la_me_ , la_comm_ , &
                                la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
 
   implicit none
   !
-  integer :: npw, npwx, nstart, nbnd, npol, i, j, idx
+  integer :: npw, npwx, nstart, nbnd, npol
   ! dimension of the matrix to be diagonalized
   ! leading dimension of matrix psi, as declared in the calling pgm unit
   ! input number of states
   ! output number of states
-  ! number of coordinates of wfc
-  ! counters
+  ! number of spin polarizations
   logical :: overlap
   ! if .false. : S|psi> not needed
 
-  complex(DP) :: psi (npwx, npol, nstart), evc (npwx, npol, nbnd),ZDOTC
+  complex(DP) :: psi (npwx, npol, nstart), evc (npwx, npol, nbnd)
   ! input and output eigenvectors (may overlap)
 
   real(DP) :: e (nbnd)
   ! eigenvalues
 
   ! auxiliary variables:
+  integer :: i, j, idx
+  ! counters
   complex(DP), allocatable :: hpsi (:,:,:), spsi (:,:,:), &
        hc (:,:), sc (:,:), vc (:,:) 
   real(DP), allocatable :: en (:)
@@ -215,10 +201,7 @@ subroutine protate_wfc_nc &
   INTEGER, ALLOCATABLE :: desc_ip( :, :, : )
   INTEGER, ALLOCATABLE :: rank_ip( :, : )
 
-  external ZDOTC
-  !
-  !
-  call start_clock ('wfcrot')
+  COMPLEX(DP), external :: ZDOTC
   !
   ALLOCATE( desc_ip( descla_siz_ , np_ortho(1), np_ortho(2) ) )
   ALLOCATE( rank_ip( np_ortho(1), np_ortho(2) ) )
@@ -349,6 +332,7 @@ contains
               call ZGEMM ('c','n',nr,nc,npw,(1.d0,0.d0),v(1,1,ir),npwx, &
                           w(1,1,ic), npwx, (0.d0, 0.d0) , work, nx )
            else
+              ! FIXME: this should be replaced by a call to ZGEMM
               do j=1,nc
                  do i=1,nr
                     work(i,j) = ZDOTC(npw,v(1,1,i+ir-1),1,w(1,1,j+ic-1),1) + &

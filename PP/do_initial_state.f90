@@ -36,9 +36,10 @@ SUBROUTINE do_initial_state (excite)
   USE uspp,       ONLY : nkb, vkb
   USE uspp_param, ONLY : nh
   USE klist,      ONLY : nks, xk
-  USE wvfct,      ONLY : npw, npwx, igk, gamma_only
+  USE wvfct,      ONLY : npw, npwx, igk
   USE ener,       ONLY : ef
   USE parameters, ONLY : ntypx
+  USE control_flags, ONLY: gamma_only
   !
   IMPLICIT NONE
   !

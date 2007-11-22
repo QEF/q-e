@@ -1,35 +1,29 @@
 !
-! Copyright (C) 2003-2007 Quantum-Espresso group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!
 #include "f_defs.h"
-
+!
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
-                             psi, overlap, evc, e )
+SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
-  ! ... Serial version of rotate_wfc for Gamma-only calculations
-  ! ... This version assumes real wavefunctions (k=0) with only
-  ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
+  ! ... Serial version of rotate_wfc for colinear, k-point calculations
   !
   USE kinds,         ONLY : DP
-  USE control_flags, ONLY : gamma_only 
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER :: npw, npwx, nstart, nbnd, gstart
+  INTEGER :: npw, npwx, nstart, nbnd
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
-    ! first G with nonzero norm
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
   COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
@@ -37,15 +31,15 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
-  ! ... auxiliary variables:
+  ! ... local variables
   !
-  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
-  REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), en(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
+  REAL(DP),    ALLOCATABLE :: en(:)
   !
   ALLOCATE( aux(  npwx, nstart ) )    
-  ALLOCATE( hr( nstart, nstart ) )    
-  ALLOCATE( sr( nstart, nstart ) )    
-  ALLOCATE( vr( nstart, nstart ) )    
+  ALLOCATE( hc( nstart, nstart) )    
+  ALLOCATE( sc( nstart, nstart) )    
+  ALLOCATE( vc( nstart, nstart) )    
   ALLOCATE( en( nstart ) )
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -54,78 +48,63 @@ SUBROUTINE rotate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, &
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !
-  CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi, &
-              2 * npwx, aux, 2 * npwx, 0.D0, hr, nstart )
-  !  
-  IF ( gstart == 2 ) &
-     call DGER( nstart, nstart, -1.D0, psi, 2 * npwx, aux, &
-                2 * npwx, hr, nstart )
-  !     
+  call ZGEMM( 'C', 'N', nstart, nstart, npw, ( 1.D0, 0.D0 ), psi, npwx, &
+              aux, npwx, ( 0.D0, 0.D0 ), hc, nstart )
+  !            
 #if defined (__PARA)
-  CALL reduce( nstart * nstart, hr )
+  CALL reduce( 2 * nstart * nstart, hc )
 #endif
-  !     
+  !
   IF ( overlap ) THEN
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
      !
-     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0 , psi, &
-                 2 * npwx, aux, 2 * npwx, 0.D0, sr, nstart )
-     !            
-     IF ( gstart == 2 ) &
-        CALL DGER( nstart, nstart, -1.D0, psi, 2 * npwx, &
-                   aux, 2 * npwx, sr, nstart )
-     !              
+     CALL ZGEMM( 'C', 'N', nstart, nstart, npw, ( 1.D0, 0.D0 ), psi, npwx, &
+                 aux, npwx, ( 0.D0, 0.D0 ), sc, nstart )
+     !
   ELSE
      !
-     CALL DGEMM( 'T', 'N', nstart, nstart, 2 * npw, 2.D0, psi, &
-                 2 * npwx, psi, 2 * npwx, 0.D0, sr, nstart )
-     !
-     IF ( gstart == 2 ) &
-        CALL DGER( nstart, nstart, -1.D0, psi, 2 * npwx, &
-                   psi, 2 * npwx, sr, nstart )
-     !
+     CALL ZGEMM( 'C', 'N', nstart, nstart, npw, ( 1.D0, 0.D0 ), psi, npwx, &
+                 psi, npwx, ( 0.D0, 0.D0 ), sc, nstart )
+     !  
   END IF
   !
 #if defined (__PARA)
-  CALL reduce( nstart * nstart, sr )
+  CALL reduce( 2 * nstart * nstart, sc )
 #endif
   !
   ! ... Diagonalize
   !
-  CALL rdiaghg( nstart, nbnd, hr, sr, nstart, en, vr )
+  CALL cdiaghg( nstart, nbnd, hc, sc, nstart, en, vc )
   !
   e(:) = en(1:nbnd)
   !
-  ! ... update the basis set
-  !
-  CALL DGEMM( 'N', 'N', 2 * npw, nbnd, nstart, 1.D0, psi, 2 * npwx, &
-              vr, nstart, 0.D0, aux, 2 * npwx )
-  !   
+  ! ...  update the basis set
+  !  
+  CALL ZGEMM( 'N', 'N', npw, nbnd, nstart, ( 1.D0, 0.D0 ), psi, npwx, &
+              vc, nstart, ( 0.D0, 0.D0 ), aux, npwx ) 
+  !     
   evc(:,:) = aux(:,1:nbnd)
   !
   DEALLOCATE( en )
-  DEALLOCATE( vr )
-  DEALLOCATE( sr )
-  DEALLOCATE( hr )
+  DEALLOCATE( vc )
+  DEALLOCATE( sc )
+  DEALLOCATE( hc )
   DEALLOCATE( aux )
   !
   RETURN
   !
-END SUBROUTINE rotate_wfc_gamma
+END SUBROUTINE rotate_wfc_k
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc, e )
+SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
-  ! ... Parallel version of rotate_wfc for Gamma-only calculations
+  ! ... Parallel version of rotate_wfc for colinear, k-point calculations
   ! ... Subroutine with distributed matrices, written by Carlo Cavazzoni
-  ! ... This version assumes real wavefunctions (k=0) with only
-  ! ... half plane waves stored: psi(-G)=psi*(G), except G=0
   !
   USE kinds,            ONLY : DP
-  USE control_flags,    ONLY : gamma_only 
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
                                intra_pool_comm, init_ortho_group, me_image, &
                                ortho_comm, np_ortho, me_ortho, ortho_comm_id,&
@@ -135,20 +114,18 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
                                ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , &
                                la_npr_ , la_me_ , la_comm_ , &
                                la_myr_ , la_myc_ , nlax_
-  USE parallel_toolkit, ONLY : dsqmred, dsqmdst, dsqmsym
+  USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
-
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER :: npw, npwx, nstart, nbnd, gstart
+  INTEGER :: npw, npwx, nstart, nbnd
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
-    ! first G with nonzero norm
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
   COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
@@ -156,10 +133,10 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
-  ! ... auxiliary variables:
+  ! ... local variables
   !
-  COMPLEX(DP), ALLOCATABLE :: aux(:,:)
-  REAL(DP),    ALLOCATABLE :: hr(:,:), sr(:,:), vr(:,:), en(:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
+  REAL(DP),    ALLOCATABLE :: en(:)
   !
   INTEGER :: desc( descla_siz_ )
     ! matrix distribution descriptors
@@ -176,9 +153,9 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   CALL desc_init( nstart, desc, desc_ip )
   !
   ALLOCATE( aux(  npwx, nstart ) )    
-  ALLOCATE( hr( nx, nx ) )    
-  ALLOCATE( sr( nx, nx ) )    
-  ALLOCATE( vr( nx, nx ) )    
+  ALLOCATE( hc( nx, nx) )    
+  ALLOCATE( sc( nx, nx) )    
+  ALLOCATE( vc( nx, nx) )    
   ALLOCATE( en( nstart ) )
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
@@ -187,41 +164,43 @@ SUBROUTINE protate_wfc_gamma( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !
-  CALL compute_distmat( hr, psi, aux )
-  !
+  CALL compute_distmat( hc, psi, aux ) 
+  !            
   IF ( overlap ) THEN
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
      !
-     CALL compute_distmat( sr, psi, aux )
-     !              
+     CALL compute_distmat( sc, psi, aux )
+     !
   ELSE
      !
-     CALL compute_distmat( sr, psi, psi )
-     !
+     CALL compute_distmat( sc, psi, psi )
+     !  
   END IF
   !
   ! ... Diagonalize
   !
-  CALL prdiaghg( nstart, hr, sr, nx, en, vr, desc )
+  CALL pcdiaghg( nstart, hc, sc, nx, en, vc, desc )
   !
   e(:) = en(1:nbnd)
   !
-  ! ... update the basis set
-  !
-  CALL refresh_evc( )
-  !   
+  ! ...  update the basis set
+  !  
+  CALL refresh_evc()
+  !     
   evc(:,:) = aux(:,1:nbnd)
+  !
+  DEALLOCATE( en )
+  DEALLOCATE( vc )
+  DEALLOCATE( sc )
+  DEALLOCATE( hc )
+  DEALLOCATE( aux )
   !
   DEALLOCATE( desc_ip )
   DEALLOCATE( rank_ip )
-  DEALLOCATE( en )
-  DEALLOCATE( vr )
-  DEALLOCATE( sr )
-  DEALLOCATE( hr )
-  DEALLOCATE( aux )
   !
   RETURN
+  !
   !
 CONTAINS
   !
@@ -232,9 +211,9 @@ CONTAINS
      INTEGER, INTENT(OUT) :: desc_ip(:,:,:)
      INTEGER :: i, j, rank
      INTEGER :: coor_ip( 2 )
-     ! 
+     !
      CALL descla_init( desc, nsiz, nsiz, np_ortho, me_ortho, ortho_comm, ortho_comm_id )
-     ! 
+     !
      nx = desc( nlax_ )
      !
      DO j = 0, desc( la_npc_ ) - 1
@@ -262,20 +241,20 @@ CONTAINS
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
-     REAL(DP), INTENT(OUT) :: dm( :, : )
+     COMPLEX(DP), INTENT(OUT) :: dm( :, : )
      COMPLEX(DP) :: v(:,:), w(:,:)
-     REAL(DP), ALLOCATABLE :: work( :, : )
+     COMPLEX(DP), ALLOCATABLE :: work( :, : )
      !
      ALLOCATE( work( nx, nx ) )
      !
-     work = 0.0d0
+     work = ( 0.0_DP, 0.0_DP )
      !
      DO ipc = 1, desc( la_npc_ ) !  loop on column procs 
         !
         nc = desc_ip( nlac_ , 1, ipc )
         ic = desc_ip( ilac_ , 1, ipc )
         !
-        DO ipr = 1, ipc ! use symmetry for the loop on row procs
+        DO ipr = 1, ipc ! desc( la_npr_ ) ! ipc ! use symmetry for the loop on row procs
            !
            nr = desc_ip( nlar_ , ipr, ipc )
            ir = desc_ip( ilar_ , ipr, ipc )
@@ -286,11 +265,8 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL DGEMM( 'T', 'N', nr, nc, 2*npw, 2.D0 , &
-                       v(1,ir), 2*npwx, w(1,ic), 2*npwx, 0.D0, work, nx )
-
-           IF ( gstart == 2 ) &
-              CALL DGER( nr, nc, -1.D0, v(1,ir), 2*npwx, w(1,ic), 2*npwx, work, nx )
+           CALL ZGEMM( 'C', 'N', nr, nc, npw, ( 1.D0, 0.D0 ) , &
+                       v(1,ir), npwx, w(1,ic), npwx, ( 0.D0, 0.D0 ), work, nx )
 
            ! accumulate result on dm of root proc.
 
@@ -300,20 +276,20 @@ CONTAINS
         !
      END DO
      !
-     CALL dsqmsym( nstart, dm, nx, desc )
+     CALL zsqmher( nstart, dm, nx, desc )
      !
      DEALLOCATE( work )
      !
      RETURN
   END SUBROUTINE compute_distmat
-  !
-  !
+
+
   SUBROUTINE refresh_evc( )
      !
      INTEGER :: ipc, ipr
      INTEGER :: nr, nc, ir, ic, root
-     REAL(DP), ALLOCATABLE :: vtmp( :, : )
-     REAL(DP) :: beta
+     COMPLEX(DP), ALLOCATABLE :: vtmp( :, : )
+     COMPLEX(DP) :: beta
 
      ALLOCATE( vtmp( nx, nx ) )
      !
@@ -326,7 +302,7 @@ CONTAINS
            !
            nc = min( nc, nbnd - ic + 1 )
            !
-           beta = 0.0d0
+           beta = ( 0.D0, 0.D0 )
 
            DO ipr = 1, desc( la_npr_ )
               !
@@ -339,20 +315,20 @@ CONTAINS
                  !
                  !  this proc sends his block
                  ! 
-                 CALL mp_bcast( vr(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0, &
-                          psi(1,ir), 2*npwx, vr, nx, beta, aux(1,ic), 2*npwx )
+                 CALL mp_bcast( vc(:,1:nc), root, intra_pool_comm )
+                 CALL ZGEMM( 'N', 'N', npw, nc, nr, ( 1.D0, 0.D0 ), &
+                          psi(1,ir), npwx, vc, nx, beta, aux(1,ic), npwx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
-                 CALL DGEMM( 'N', 'N', 2*npw, nc, nr, 1.D0, &
-                          psi(1,ir), 2*npwx, vtmp, nx, beta, aux(1,ic), 2*npwx )
+                 CALL ZGEMM( 'N', 'N', npw, nc, nr, ( 1.D0, 0.D0 ), &
+                          psi(1,ir), npwx, vtmp, nx, beta, aux(1,ic), npwx )
               END IF
               ! 
 
-              beta = 1.0d0
+              beta = ( 1.D0, 0.D0 )
 
            END DO
            !
@@ -364,5 +340,5 @@ CONTAINS
 
      RETURN
   END SUBROUTINE refresh_evc
-  !
-END SUBROUTINE protate_wfc_gamma
+
+END SUBROUTINE protate_wfc_k
