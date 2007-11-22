@@ -159,6 +159,22 @@ CONTAINS
   RETURN
  END SUBROUTINE mix_type_AXPY
  !
+ !----------------------------------------------------------------------------
+ subroutine mix_type_COPY (X,Y)
+  !----------------------------------------------------------------------------
+  ! works like DCOPY for mix_type copy variables :  Y = X 
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  REAL(DP)                      :: A
+  TYPE(mix_type), INTENT(IN)    :: X
+  TYPE(mix_type), INTENT(INOUT) :: Y
+  Y%of_g  = X%of_g
+  if (dft_is_meta()) Y%kin_g = X%kin_g
+  if (lda_plus_u) Y%ns = X%ns
+  !
+  RETURN
+ end subroutine mix_type_COPY
+ !
  subroutine high_frequency_mixing ( rhoin, input_rhout, alphamix )
    USE wavefunctions_module, ONLY : psic
    USE control_flags,        ONLY : gamma_only
@@ -283,7 +299,7 @@ CONTAINS
      DO ig = gstart, gf
         !
         rho_ddot = rho_ddot + &
-                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1) ) / gg(ig)
+                   REAL( CONJG( rho1%of_g(ig,1) )*rho2%of_g(ig,1), DP ) / gg(ig)
         !
      END DO
      !

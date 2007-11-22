@@ -48,9 +48,10 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
                              mix_type, create_mix_type, destroy_mix_type, &
                              assign_scf_to_mix_type, assign_mix_to_scf_type, &
                              mix_type_AXPY, diropn_mix_file, close_mix_file, &
-                             davcio_mix_type, rho_ddot, high_frequency_mixing
+                             davcio_mix_type, rho_ddot, high_frequency_mixing, &
+                             mix_type_COPY
   USE io_global,     ONLY : stdout
-#ifdef __GFORTRAN 
+#ifdef __GFORTRAN
   USE mix_save
 #endif
   !
@@ -98,10 +99,9 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   REAL(DP), ALLOCATABLE :: &
     becinsave(:,:,:),   &
     becoutsave(:,:,:)
-  REAL(DP) :: &
-    betamix(maxmix,maxmix), &
-    gamma0,                 &
-    work(maxmix)
+  REAL(DP) :: betamix(maxmix,maxmix)
+  REAL(DP) :: gamma0
+  REAL(DP) :: work(maxmix)
   LOGICAL :: &
     savetofile,  &! save intermediate steps on file $prefix."mix",...
     exst          ! if true the file exists
@@ -110,7 +110,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   !
   INTEGER, SAVE :: &
     mixrho_iter = 0    ! history of mixing
-#ifndef __GFORTRAN 
+#ifndef __GFORTRAN
   TYPE(mix_type), ALLOCATABLE, SAVE :: &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
@@ -123,6 +123,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   !
   !
   CALL start_clock( 'mix_rho' )
+  !
   !
   ngm0 = ngms
   !
@@ -300,8 +301,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
      call create_mix_type (rhoin_save)
      call create_mix_type (rhout_save)
      !
-     rhoin_save = rhoin_m
-     rhout_save = rhout
+     call mix_type_COPY( rhoin_m, rhoin_save )
+     call mix_type_COPY( rhout, rhout_save )
      !
      IF ( okpaw ) THEN
         ALLOCATE( becinsave (nhm*(nhm+1)/2,nat,nspin), &
@@ -311,6 +312,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
      END IF
      !
   END IF
+  !
+  betamix = 0.0d0
   !
   DO i = 1, iter_used
      !
@@ -323,7 +326,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
                           PAW_ddot( df_bec(1,1,1,j), df_bec(1,1,1,i) )
         !
         betamix(j,i) = betamix(i,j) !symmetrize
-        !
         !
      END DO
      !
@@ -398,8 +400,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
         DEALLOCATE( becinsave, becoutsave )
      END IF
      !
-     df(inext) = rhout_save
-     dv(inext) = rhoin_save
+     call mix_type_COPY( rhout_save, df(inext) )
+     call mix_type_COPY( rhoin_save, dv(inext) )
      !
      call destroy_mix_type( rhoin_save )
      call destroy_mix_type( rhout_save )
