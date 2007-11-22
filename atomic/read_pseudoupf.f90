@@ -23,7 +23,7 @@ subroutine read_pseudoupf
   use ld1inc, only : file_pseudo, zval, nlcc, pseudotype, etots, lmax, &
                      zed, nbeta, betas, lls, jjs, ikk, els, rcut, rcutus, &
                      lloc, vpsloc, grid, nwfs, bmat, qq, qvan, qvanl, rhoc, &
-                     rhos, phis, which_augfun, lpaw, rmatch_augfun
+                     rhos, phis, which_augfun, lpaw, rmatch_augfun, pawsetup
   use funct, only: set_dft_from_name
   !
   use pseudo_types
@@ -116,7 +116,7 @@ subroutine read_pseudoupf
   betas(1:grid%mesh, 1:nbeta) = upf%beta(1:upf%mesh, 1:upf%nbeta)
   bmat(1:nbeta, 1:nbeta) = upf%dion(1:upf%nbeta, 1:upf%nbeta)
   !
-  if (pseudotype.eq.3 .and. .not. lpaw) then
+  if (pseudotype.eq.3.and..not.lpaw) then
      qq(1:nbeta,1:nbeta) = upf%qqq(1:upf%nbeta,1:upf%nbeta)
      do ibeta=1,nbeta
         do jbeta=ibeta,nbeta
@@ -141,11 +141,20 @@ subroutine read_pseudoupf
            endif
         enddo
      enddo
+  elseif (lpaw) then
+     qq(1:nbeta,1:nbeta) = upf%paw%augmom(1:upf%nbeta,1:upf%nbeta,0)
+     do ibeta=1,nbeta
+        do jbeta=ibeta,nbeta
+           qvan (1:grid%mesh, ibeta, jbeta) = &
+                           upf%paw%aug(1:grid%mesh,ibeta,jbeta,0)
+           if (ibeta /= jbeta) qvan (1:grid%mesh, jbeta, ibeta)= &
+                               upf%paw%aug(1:grid%mesh,ibeta,jbeta,0)
+        enddo
+     enddo
   else
      qq=0.0_dp
      qvan=0.0_dp
   endif
-  !
   !
   if (upf%nlcc) then
      rhoc(1:grid%mesh) = upf%rho_atc(1:upf%mesh)*fpi*grid%r2(1:upf%mesh)
@@ -161,18 +170,54 @@ subroutine read_pseudoupf
   !!!
   ! paw:
   if (lpaw) then
-    which_augfun  = upf%paw%augshape
+    which_augfun = upf%paw%augshape
     rmatch_augfun = upf%paw%raug
-    call errore('ld1_readin', &
-                'Testing PAW setup after generationis not implemented yet. '       //&
-                'You can test it during generation, but remember to regenerate it '//&
-                'after all the tests without a test configuration, or with a test '//&
-                'configuration equal to the generating one: descreening '          //&
-                'is computed using the last test configuration, so results '       //&
-                'may be different from what you expected!', 1)
+    call allocate_pseudo_paw( pawsetup, grid%mesh, nbeta, lmax )
+    call set_pawsetup( pawsetup, upf )
   endif
-
 
   CALL deallocate_pseudo_upf( upf )
 
 end subroutine read_pseudoupf
+
+SUBROUTINE set_pawsetup(pawset_, upf_)
+USE kinds, ONLY : DP
+USE constants, ONLY : fpi
+USE pseudo_types, ONLY : paw_t, pseudo_upf
+IMPLICIT NONE
+TYPE(paw_t), INTENT(INOUT) :: pawset_
+TYPE(pseudo_upf), INTENT(IN) :: upf_
+
+pawset_%augfun=0.0_DP
+pawset_%augmom=0.0_DP
+pawset_%jj(:) = 0.0_DP
+pawset_%enl(:) = 0.0_DP
+pawset_%l(:) = upf_%lll(:)
+pawset_%ikk(:) = upf_%kbeta(:)
+pawset_%oc(:) = upf_%paw%oc(:)
+pawset_%aewfc(:,:) = upf_%aewfc(:,:)
+pawset_%pswfc(:,:) = upf_%pswfc(:,:)
+pawset_%proj(:,:) = upf_%beta(:,:)
+pawset_%augfun(:,:,:,0:upf_%paw%lmax_aug) = &
+                             upf_%paw%aug(:,:,:,0:upf_%paw%lmax_aug)
+pawset_%augmom(:,:,0:upf_%paw%lmax_aug) = & 
+                upf_%paw%augmom(:,:,0:upf_%paw%lmax_aug)
+pawset_%aeccharge(:) = upf_%paw%ae_rho_atc(:)*fpi*upf_%grid%r2(:)
+pawset_%psccharge(:) = upf_%rho_atc(:)*fpi*upf_%grid%r2(:)
+pawset_%pscharge(:) = upf_%rho_at(:)
+pawset_%aeloc(:) = upf_%paw%ae_vloc(:)
+pawset_%psloc(:) = upf_%vloc(:)
+pawset_%kdiff(:,:) = upf_%paw%kdiff(:,:)
+pawset_%dion (:,:) = upf_%dion(:,:)
+pawset_%symbol=upf_%psd
+pawset_%zval=upf_%zp
+pawset_%z=upf_%zmesh
+pawset_%nlcc=upf_%nlcc
+pawset_%nwfc=upf_%nbeta
+pawset_%irc=upf_%paw%irmax
+pawset_%lmax=upf_%lmax
+pawset_%rmatch_augfun=upf_%paw%raug
+pawset_%grid= upf_%grid
+
+END SUBROUTINE set_pawsetup
+

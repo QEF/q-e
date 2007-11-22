@@ -135,6 +135,8 @@ END TYPE paw_t
           INTEGER,  POINTER :: lll(:)     ! lll(nbeta) l of each projector
           INTEGER,  POINTER :: kbeta(:)   ! kbeta(nbeta) see above kkbeta
           REAL(DP), POINTER :: beta(:,:)  ! beta(mesh,nbeta) projectors
+          REAL(DP), POINTER :: aewfc(:,:)  ! wfc(mesh,nbeta) all-electron wfc
+          REAL(DP), POINTER :: pswfc(:,:)  ! wfc(mesh,nbeta) pseudo wfc
           INTEGER :: nd
           REAL(DP), POINTER :: dion(:,:)  ! dion(nbeta,nbeta) atomic D_{mu,nu}
           INTEGER :: nqf                  ! number of Q coefficients
@@ -219,6 +221,7 @@ END TYPE paw_t
           NULLIFY( upf%els_beta)
           NULLIFY( upf%rcutus, upf%epseu)
           NULLIFY( upf%lll, upf%jjj, upf%kbeta, upf%beta, upf%dion )  
+          NULLIFY( upf%aewfc, upf%pswfc )  
           NULLIFY( upf%rinner, upf%qqq, upf%qfunc, upf%qfcoef )  
           NULLIFY( upf%chi )  
           NULLIFY( upf%rho_at )  
@@ -258,6 +261,8 @@ END TYPE paw_t
           IF( ASSOCIATED( upf%jjj ) ) DEALLOCATE( upf%jjj )
           IF( ASSOCIATED( upf%kbeta ) ) DEALLOCATE( upf%kbeta )
           IF( ASSOCIATED( upf%beta ) ) DEALLOCATE( upf%beta )
+          IF( ASSOCIATED( upf%aewfc ) ) DEALLOCATE( upf%aewfc )
+          IF( ASSOCIATED( upf%pswfc ) ) DEALLOCATE( upf%pswfc )
           IF( ASSOCIATED( upf%dion ) ) DEALLOCATE( upf%dion )
           IF( ASSOCIATED( upf%rinner ) ) DEALLOCATE( upf%rinner )
           IF( ASSOCIATED( upf%qqq ) ) DEALLOCATE( upf%qqq )
