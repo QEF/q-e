@@ -623,7 +623,6 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   TYPE ( pseudo_upf ), INTENT ( INOUT ) :: upf
   !
   INTEGER :: nb, nb1, l, k
-  REAL(DP),ALLOCATABLE :: aux(:,:)
   CHARACTER(len=70) :: dummy
   
 
@@ -688,21 +687,22 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
 
   ! pfunc = phi_i * phi_j; ptfunc = phi~_i * phi~_j
   ! Saving the wavefunctions uses less space, so we have to reconstruct the pfuncs
-  ALLOCATE( aux(upf%mesh,upf%nbeta) )
+  ALLOCATE( upf%aewfc(upf%mesh,upf%nbeta) )
+  ALLOCATE( upf%pswfc(upf%mesh,upf%nbeta) )
   ALLOCATE( upf%paw%pfunc (upf%mesh, upf%nbeta,upf%nbeta),&
             upf%paw%ptfunc(upf%mesh, upf%nbeta,upf%nbeta) )
   ! read AE wfc
   CALL scan_begin ( iunps, "AEWFC", .false. )
     do nb = 1,upf%nbeta
     read (iunps,'(a)') dummy ! blabla
-    read (iunps,'(1p4e19.11)') (aux(k,nb), k  = 1,upf%mesh)
+    read (iunps,'(1p4e19.11)') (upf%aewfc(k,nb), k  = 1,upf%mesh)
     enddo
   CALL scan_end ( iunps, "AEWFC" )
   ! reconstruct pfunc
   do nb=1,upf%nbeta
      do nb1=1,upf%nbeta
         upf%paw%pfunc (1:upf%mesh, nb, nb1) = &
-             aux(1:upf%mesh, nb) * aux(1:upf%mesh, nb1)
+             upf%aewfc(1:upf%mesh, nb) * upf%aewfc(1:upf%mesh, nb1)
         upf%paw%pfunc(upf%paw%iraug+1:,nb,nb1) = 0._dp
         !write(10000+100*nb+10*nb1,'(f15.7)') upf%paw%pfunc(:,nb,nb1)
      enddo
@@ -713,18 +713,17 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   CALL scan_begin ( iunps, "PSWFC_FULL", .false. )
     do nb = 1,upf%nbeta
     read (iunps,'(a)') dummy ! blabla
-    read (iunps,'(1p4e19.11)') (aux(k,nb), k  = 1,upf%mesh)
+    read (iunps,'(1p4e19.11)') (upf%pswfc(k,nb), k  = 1,upf%mesh)
     enddo
   CALL scan_end ( iunps, "PSWFC_FULL" )
   ! reconstruct \tilde{pfunc}
   do nb=1,upf%nbeta
      do nb1=1,upf%nbeta
         upf%paw%ptfunc (1:upf%mesh, nb, nb1) = &
-             aux(1:upf%mesh, nb) * aux(1:upf%mesh, nb1)
+             upf%pswfc(1:upf%mesh, nb) * upf%pswfc(1:upf%mesh, nb1)
         upf%paw%ptfunc(upf%paw%iraug+1:,nb,nb1) = 0._dp
      enddo
   enddo
-  DEALLOCATE( aux )
 
   ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
   CALL scan_begin ( iunps, "AE_VLOC", .false. )
