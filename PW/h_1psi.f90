@@ -14,7 +14,8 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   ! ... to a vector psi and puts the result in hpsi and spsi
   ! ... Wrapper routine - calls h_psi and s_psi
   !
-  USE kinds, ONLY : DP
+  USE kinds, ONLY: DP
+  USE bp,    ONLY: lelfield
   USE noncollin_module, ONLY: noncolin
   !
   IMPLICIT NONE
@@ -36,6 +37,8 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
      CALL s_psi( lda, n, 1, psi, spsi )
      !
   END IF
+  !
+  IF ( lelfield ) CALL h_epsi_her_apply ( lda, n, 1, psi, hpsi )
   !
   CALL stop_clock( 'h_1psi' )
   !

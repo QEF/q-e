@@ -24,7 +24,6 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   USE constants,        ONLY : pi
   USE kinds,            ONLY : DP
   USE noncollin_module, ONLY : npol
-  USE bp,               ONLY : lelfield
   !
   IMPLICIT NONE
   !
@@ -139,8 +138,6 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
      !
      CALL h_1psi( npwx, npw, psi(1,m), hpsi, spsi )
      !
-     IF( lelfield )  CALL h_epsi_her_apply(npwx, npw, 1, psi(1,m), hpsi )
-     !
      ! ... and starting eigenvalue (e = <y|PHP|y> = <psi|H|psi>)
      !
      ! ... NB:  DDOT(2*npw,a,1,b,1) = REAL( ZDOTC(npw,a,1,b,1) )
@@ -245,8 +242,6 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
         ! ... |scg> is S|cg>
         !
         CALL h_1psi( npwx, npw, cg(1), ppsi(1), scg(1) )
-        !
-        IF( lelfield ) CALL h_epsi_her_apply( npwx, npw, 1, cg(1), ppsi(1) )
         !
         cg0 = DDOT( kdim2, cg(1), 1, scg(1), 1 )
         !

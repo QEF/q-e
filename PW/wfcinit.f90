@@ -142,6 +142,7 @@ SUBROUTINE init_wfc ( ik )
   ! ... This routine computes starting wavefunctions for k-point ik
   !
   USE kinds,                ONLY : DP
+  USE bp,                   ONLY : lelfield
   USE control_flags,        ONLY : gamma_only
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
@@ -159,6 +160,7 @@ SUBROUTINE init_wfc ( ik )
   INTEGER :: ik
   !
   INTEGER :: is, ibnd, ig, ipol, n_starting_wfc, n_starting_atomic_wfc
+  LOGICAL :: lelfield_save
   !
   REAL(DP) :: rr, arg
   REAL(DP), ALLOCATABLE :: etatom(:) ! atomic eigenvalues
@@ -252,8 +254,18 @@ SUBROUTINE init_wfc ( ik )
   !
   CALL allocate_bec ( )
   !
+  ! ... the following trick is for electric fields with Berry's phase:
+  ! ... by setting lelfield = .false. one prevents the calculation of
+  ! ... electric enthalpy in the Hamiltonian (cannot be calculated
+  ! ... at this stage: wavefunctions at previous step are missing)
+  ! 
+  lelfield_save = lelfield
+  lelfield = .FALSE.
+  !
   CALL rotate_wfc ( npwx, npw, n_starting_wfc, gstart, &
                     nbnd, wfcatom, npol, okvan, evc, etatom )
+  !
+  lelfield = lelfield_save
   !
   ! ... copy the first nbnd eigenvalues
   ! ... eigenvectors are already copied inside routine rotate_wfc

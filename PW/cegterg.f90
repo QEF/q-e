@@ -23,9 +23,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
   ! ... S is an overlap matrix, evc is a complex vector
   !
   USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : noncolin, npol
-  USE bp,               ONLY : lelfield
-  USE control_flags,    ONLY : use_para_diag
+  USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !
@@ -83,7 +81,6 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
   REAL(DP), EXTERNAL :: DDOT
   !
   EXTERNAL  h_psi,    s_psi,    g_psi
-  EXTERNAL  h_psi_nc, s_psi_nc
     ! h_psi(npwx,npw,nvec,psi,hpsi)
     !     calculates H|psi>
     ! s_psi(npwx,npw,nvec,spsi)
@@ -92,17 +89,6 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
     ! g_psi(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
-  !
-  IF( use_para_diag ) THEN
-     !
-     ! use data distributed subroutine, see below.
-     !
-     CALL pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
-                    uspp, e, btype, notcnv, lrot, dav_iter )
-     !
-     RETURN 
-     !
-  END IF
   !
   CALL start_clock( 'cegterg' )
   !
@@ -147,21 +133,11 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  IF ( noncolin ) THEN
-     !
-     CALL h_psi_nc( npwx, npw, nvec, psi, hpsi )
-     !
-     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi_nc( npwx, npw, nvec, psi, spsi )
-     !
-  ELSE
-     !
-     CALL h_psi( npwx, npw, nvec, psi, hpsi )
-     !
-     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
-     !
-  END IF
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )
+  !
+  ! ... spsi contains s times the basis vectors
+  !
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
   ! ... hc contains the projection of the hamiltonian onto the reduced 
   ! ... space vc contains the eigenvectors of hc
@@ -305,27 +281,11 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     IF ( noncolin ) THEN
-        !
-        CALL h_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( lelfield ) &
-           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( uspp ) &
-           CALL s_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
-        !
-     ELSE
-        !
-        CALL h_psi( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( lelfield ) &
-           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( uspp ) &
-           CALL s_psi( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
-        !
-     END IF
+     !
+     CALL h_psi( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+     !
+     IF ( uspp ) &
+        CALL s_psi( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !
@@ -511,8 +471,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
                                la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
-  USE noncollin_module, ONLY : noncolin, npol
-  USE bp,               ONLY : lelfield
+  USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !
@@ -653,21 +612,9 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   ! ... hpsi contains h times the basis vectors
   !
-  IF ( noncolin ) THEN
-     !
-     CALL h_psi_nc( npwx, npw, nvec, psi, hpsi )
-     !
-     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi_nc( npwx, npw, nvec, psi, spsi )
-     !
-  ELSE
-     !
-     CALL h_psi( npwx, npw, nvec, psi, hpsi )
-     !
-     IF ( lelfield ) CALL h_epsi_her_apply( npwx, npw, nvec, psi, hpsi )
-     IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
-     !
-  END IF
+  CALL h_psi( npwx, npw, nvec, psi, hpsi )
+  !
+  IF ( uspp ) CALL s_psi( npwx, npw, nvec, psi, spsi )
   !
   ! ... hl contains the projection of the hamiltonian onto the reduced
   ! ... space, vl contains the eigenvectors of hl. Remember hl, vl and sl
@@ -758,27 +705,10 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... here compute the hpsi and spsi of the new functions
      !
-     IF ( noncolin ) THEN
-        !
-        CALL h_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( lelfield ) &
-           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( uspp ) &
-           CALL s_psi_nc( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
-        !
-     ELSE
-        !
-        CALL h_psi( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( lelfield ) &
-           CALL h_epsi_her_apply( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
-        !
-        IF ( uspp ) &
-           CALL s_psi( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
-        !
-     END IF
+     CALL h_psi( npwx, npw, notcnv, psi(1,1,nb1), hpsi(1,1,nb1) )
+     !
+     IF ( uspp ) &
+        CALL s_psi( npwx, npw, notcnv, psi(1,1,nb1), spsi(1,1,nb1) )
      !
      ! ... update the reduced hamiltonian
      !

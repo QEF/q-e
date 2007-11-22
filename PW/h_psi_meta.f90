@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,8 +11,8 @@
 subroutine h_psi_meta (ldap, np, mp, psip, hpsi)
   !-----------------------------------------------------------------------
   !
-  ! This routine computes the Hubbard potential applied to the electronic
-  ! of the current k-point, the result is added to hpsi
+  ! This routine computes the specific contribution from the meta-GGA
+  ! potential to H*psi; the result is added to hpsi
   !
   USE kinds,     ONLY : DP
   USE cell_base, ONLY : tpiba

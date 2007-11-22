@@ -49,11 +49,8 @@ MODULE control_flags
   !
   ! ...   declare execution control variables
   !
-  CHARACTER(LEN=4) :: program_name = ' '  !  used to control execution flow inside module
-                                          !  main_program = 'PWSC'  pwscf
-                                          !                 'FPMD'  fpmd
-                                          !                 'CPVC'  cp
-                                          !                 'SMCP'  smcp
+  CHARACTER(LEN=4) :: program_name = ' '  !  used to control execution flow 
+                                          !  inside module: 'FPMD' or 'CP90'
   !
   LOGICAL :: trhor     = .FALSE. ! read rho from unit 47 (only cp, seldom used)
   LOGICAL :: trhow     = .FALSE. ! CP code, write rho to restart dir
@@ -212,7 +209,7 @@ MODULE control_flags
   REAL(DP), PUBLIC  :: &
     ethr               ! the convergence threshold for eigenvalues
   INTEGER, PUBLIC :: &
-    david,            &! used on Davidson diagonalization
+    david,            &! max dimension of subspace in Davidson diagonalization
     isolve,           &! Davidson or CG or DIIS diagonalization
     max_cg_iter,      &! maximum number of iterations in a CG di
     diis_buff,        &! dimension of the buffer in diis

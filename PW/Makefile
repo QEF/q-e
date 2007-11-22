@@ -102,7 +102,6 @@ h_epsi_her_apply.o \
 h_epsi_her_set.o \
 h_1psi.o \
 h_psi.o \
-h_psi_nc.o \
 h_psi_meta.o \
 hexsym.o \
 hinit0.o \
@@ -177,7 +176,6 @@ ruotaijk.o \
 s_1psi.o \
 s_axis_to_ca.o \
 s_psi.o \
-s_psi_nc.o \
 save_in_cbands.o \
 save_in_electrons.o \
 save_in_ions.o \

@@ -58,8 +58,8 @@ subroutine rotate_wfc_nc &
   !
   ! Set up the Hamiltonian and Overlap matrix
   !
-  call h_psi_nc (npwx, npw, nstart, psi(1,1,1), hpsi(1,1,1))
-  if (overlap) call s_psi_nc (npwx, npw, nstart, psi(1,1,1), spsi(1,1,1))
+  call h_psi (npwx, npw, nstart, psi(1,1,1), hpsi(1,1,1))
+  if (overlap) call s_psi (npwx, npw, nstart, psi(1,1,1), spsi(1,1,1))
 
   if (npol.eq.1) then
      call ZGEMM ('c','n',nstart,nstart,npw,(1.d0,0.d0),psi(1,1,1),npwx, &
@@ -225,8 +225,8 @@ subroutine protate_wfc_nc &
   !
   ! Set up the Hamiltonian and Overlap matrix
   !
-  call h_psi_nc (npwx, npw, nstart, psi(1,1,1), hpsi(1,1,1))
-  if (overlap) call s_psi_nc (npwx, npw, nstart, psi(1,1,1), spsi(1,1,1))
+  call h_psi (npwx, npw, nstart, psi(1,1,1), hpsi(1,1,1))
+  if (overlap) call s_psi (npwx, npw, nstart, psi(1,1,1), spsi(1,1,1))
 
   call compute_distmat( hc, psi, hpsi )
 
@@ -262,7 +262,6 @@ subroutine protate_wfc_nc &
   deallocate( desc_ip )
   deallocate( rank_ip )
 
-  call stop_clock ('wfcrot')
   return
 
 contains 

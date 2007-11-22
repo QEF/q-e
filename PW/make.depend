@@ -157,7 +157,6 @@ ccalbec_nc.o : ../Modules/kind.o
 ccgdiagg.o : ../Modules/constants.o
 ccgdiagg.o : ../Modules/kind.o
 ccgdiagg.o : noncol.o
-ccgdiagg.o : pwcom.o
 cdiagh.o : ../Modules/kind.o
 cdiagh.o : ../Modules/mp.o
 cdiagh.o : ../Modules/mp_global.o
@@ -167,7 +166,6 @@ cdiaghg.o : ../Modules/kind.o
 cdiaghg.o : ../Modules/mp.o
 cdiaghg.o : ../Modules/mp_global.o
 cdiaghg.o : ../Modules/zhpev_drv.o
-cegterg.o : ../Modules/control_flags.o
 cegterg.o : ../Modules/descriptors.o
 cegterg.o : ../Modules/io_global.o
 cegterg.o : ../Modules/kind.o
@@ -175,7 +173,6 @@ cegterg.o : ../Modules/mp.o
 cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
 cegterg.o : noncol.o
-cegterg.o : pwcom.o
 cft3.o : ../Modules/fft_base.o
 cft3.o : ../Modules/fft_scalar.o
 cft3.o : ../Modules/kind.o
@@ -539,6 +536,7 @@ gradcorr.o : pwcom.o
 gweights.o : ../Modules/kind.o
 h_1psi.o : ../Modules/kind.o
 h_1psi.o : noncol.o
+h_1psi.o : pwcom.o
 h_epsi_her_apply.o : ../Modules/cell_base.o
 h_epsi_her_apply.o : ../Modules/constants.o
 h_epsi_her_apply.o : ../Modules/io_global.o
@@ -564,6 +562,7 @@ h_psi.o : ../Modules/uspp.o
 h_psi.o : ../Modules/wavefunctions.o
 h_psi.o : becmod.o
 h_psi.o : exx.o
+h_psi.o : noncol.o
 h_psi.o : pwcom.o
 h_psi.o : scf_mod.o
 h_psi_meta.o : ../Modules/cell_base.o
@@ -977,7 +976,6 @@ realus.o : noncol.o
 realus.o : para.o
 realus.o : pwcom.o
 realus.o : scf_mod.o
-regterg.o : ../Modules/control_flags.o
 regterg.o : ../Modules/descriptors.o
 regterg.o : ../Modules/io_global.o
 regterg.o : ../Modules/kind.o
@@ -1054,6 +1052,7 @@ s_psi.o : ../Modules/ions_base.o
 s_psi.o : ../Modules/kind.o
 s_psi.o : ../Modules/uspp.o
 s_psi.o : becmod.o
+s_psi.o : noncol.o
 s_psi.o : pwcom.o
 s_psi_nc.o : ../Modules/ions_base.o
 s_psi_nc.o : ../Modules/uspp.o

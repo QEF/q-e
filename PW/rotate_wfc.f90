@@ -86,4 +86,6 @@ SUBROUTINE rotate_wfc &
      !
   END IF
   !
+  CALL stop_clock( 'wfcrot' )
+  !
 END SUBROUTINE rotate_wfc

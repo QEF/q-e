@@ -25,7 +25,6 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
   USE kinds,         ONLY : DP
   USE io_global,     ONLY : stdout
-  USE control_flags, ONLY : use_para_diag
   !
   IMPLICIT NONE
   !
@@ -88,18 +87,6 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
     ! g_psi(npwx,npw,notcnv,psi,e)
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
-  !
-  !
-  IF( use_para_diag ) THEN
-     !
-     ! use data distributed subroutine, see below.
-     !
-     CALL pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
-                    uspp, gstart, e, btype, notcnv, lrot, dav_iter )
-     !
-     RETURN 
-     !
-  END IF
   !
   CALL start_clock( 'cegterg' )
   !

@@ -565,8 +565,8 @@ MODULE bp
   SAVE
   !
   LOGICAL :: &
-       lberry, &        ! if .TRUE., calculate polarization
-       lelfield         ! if .TRUE. static homogeneous electric field
+       lberry  =.FALSE., & ! if .TRUE. calculate polarization using Berry phase
+       lelfield=.FALSE.    ! if .TRUE. finite electric field using Berry phase
   INTEGER :: &
        gdir,        &! G-vector for polarization calculation
        nppstr,      &! number of k-points (parallel vector)

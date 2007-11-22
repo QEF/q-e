@@ -158,7 +158,6 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ! ... Two types of iterative diagonalizations are currently used:
   ! ... a) Davidson algorithm (all-band)
   ! ... b) Conjugate Gradient (band-by-band)
-  ! ... (the DIIS algorithm (all-band) is presently disabled)
   ! ...
   ! ... internal procedures :
   !
@@ -177,7 +176,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE wvfct,                ONLY : g2kin, nbndx, et, nbnd, npwx, npw, &
        current_k, btype
   USE control_flags,        ONLY : ethr, lscf, max_cg_iter, isolve, istep, &
-                                   gamma_only
+                                   gamma_only, use_para_diag
   USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
   USE g_psi_mod,            ONLY : h_diag, s_diag
@@ -192,9 +191,8 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   !
   REAL (KIND=DP) :: cg_iter
   ! (weighted) number of iterations in Conjugate-Gradient
-  INTEGER :: ig, dav_iter, diis_iter, ntry, notconv
+  INTEGER :: ig, dav_iter, ntry, notconv
   ! number of iterations in Davidson
-  ! number of iterations in DIIS
   ! number or repeated call to diagonalization in case of non convergence
   ! number of notconverged elements
   !
@@ -242,7 +240,6 @@ CONTAINS
     ! ... Diagonalization of a real Hamiltonian
     !
     USE becmod,           ONLY : rbecp
-    !USE real_diis_module, ONLY : rdiisg
     !
     IMPLICIT NONE
     !
@@ -308,13 +305,18 @@ CONTAINS
           !
           lrot = ( iter == 1 )
           !
-          CALL regterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-               okvan, gstart, et(1,ik), btype(1,ik), &
-               notconv, lrot, dav_iter )
-          ! DIIS:
-          !CALL rdiisg( npw, npwx, nbnd, evc, &
-          !             et(1,ik), btype(1,ik), notconv, diis_iter, iter )
-          !avg_iter = avg_iter + diis_iter
+          IF ( use_para_diag ) then
+             !
+             CALL pregterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+                         okvan, gstart, et(1,ik), btype(1,ik), &
+                         notconv, lrot, dav_iter )
+             !
+          ELSE
+             !
+             CALL regterg ( npw, npwx, nbnd, nbndx, evc, ethr, &
+                         okvan, gstart, et(1,ik), btype(1,ik), &
+                         notconv, lrot, dav_iter )
+          END IF
           !
           avg_iter = avg_iter + dav_iter
           !
@@ -343,7 +345,6 @@ CONTAINS
     ! ... Complex Hamiltonian diagonalization
     !
     USE becmod,              ONLY : becp, becp_nc
-    !USE complex_diis_module, ONLY : cdiisg
     !
     IMPLICIT NONE
     !
@@ -406,7 +407,7 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik),.false. )
+             CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !
@@ -448,13 +449,18 @@ CONTAINS
           !
           lrot = ( iter == 1 )
           !
-          ! DIIS:
-          !   CALL cdiisg( npw, npwx, nbnd, evc, et(1,ik), &
-          !                btype(1,ik), notconv, diis_iter, iter )
-          !
-          CALL cegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
-               okvan, et(1,ik), btype(1,ik), notconv, &
-               lrot, dav_iter )
+          IF ( use_para_diag ) then
+             !
+             CALL pcegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+                         okvan, et(1,ik), btype(1,ik), &
+                         notconv, lrot, dav_iter )
+             !
+          ELSE
+             !
+             CALL cegterg ( npw, npwx, nbnd, nbndx, evc, ethr, &
+                         okvan, et(1,ik), btype(1,ik), &
+                         notconv, lrot, dav_iter )
+          END IF
           !
           avg_iter = avg_iter + dav_iter
           !
@@ -543,7 +549,6 @@ SUBROUTINE c_bands_efield ( iter, ik_, dr2 )
      call flush_unit(stdout)
      CALL h_epsi_her_set ( )
      call flush_unit(stdout)
-
      !
      CALL c_bands( iter, ik_, dr2 )
      !
