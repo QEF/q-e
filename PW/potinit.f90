@@ -66,6 +66,7 @@ SUBROUTINE potinit()
   LOGICAL               :: exst 
   CHARACTER(LEN=256)    :: filename
   !
+  CALL start_clock('potinit')
   !
   filename =  TRIM( prefix ) // '.save/charge-density.xml'
   !
@@ -243,6 +244,8 @@ SUBROUTINE potinit()
     CALL PAW_init_becsum()
     CALL PAW_potential(becsum)
   ENDIF
+  !
+  CALL stop_clock('potinit')
   !
   RETURN
   !

@@ -13,8 +13,7 @@ SUBROUTINE print_clock_pw()
    ! ... it tries to construct the calling tree of the program.
    !
    USE io_global,          ONLY : stdout
-   USE control_flags,      ONLY : isolve
-   USE force_mod,          ONLY : lforce, lstres
+   USE control_flags,      ONLY : isolve, iverbosity, gamma_only
    USE mp_global,          ONLY : mpime, root
    USE paw_variables,      ONLY : okpaw
    !
@@ -30,123 +29,105 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'init_run' )
    CALL print_clock( 'electrons' )
    CALL print_clock( 'update_pot' )
+   CALL print_clock( 'forces' )
+   CALL print_clock( 'stress' )
    !
-   IF ( lforce ) CALL print_clock( 'forces' )
-   IF ( lstres ) CALL print_clock( 'stress' )
+   WRITE( stdout, '(/5x,"Called by init_run:")' )
+   CALL print_clock( 'wfcinit' )
+   CALL print_clock( 'potinit' )
+   CALL print_clock( 'realus' )
+   IF ( iverbosity > 0 ) THEN
+      CALL print_clock( 'realus:boxes' )
+      CALL print_clock( 'realus:spher' )
+      CALL print_clock( 'realus:qsave' )
+   END IF
    !
-   WRITE( stdout, * )
-   CALL print_clock( 'qpointlist' )
-   CALL print_clock( 'realus:boxes' )
-   CALL print_clock( 'realus:spher' )
-   CALL print_clock( 'realus:qsave' )
-   !
-   WRITE( stdout, * )
-   !
-   CALL print_clock( 'electrons' )
+   WRITE( stdout, '(/5x,"Called by electrons:")' )
    CALL print_clock( 'c_bands' )
    CALL print_clock( 'sum_band' )
    CALL print_clock( 'v_of_rho' )
-   CALL print_clock( 'v_h' )
-   CALL print_clock( 'v_xc' )
+   IF ( iverbosity > 0 ) THEN
+      CALL print_clock( 'v_h' )
+      CALL print_clock( 'v_xc' )
+      CALL print_clock( 'v_xc_meta' )
+   END IF
    CALL print_clock( 'newd' )
-   !
-#ifdef DEBUG_NEWD
-   !
-   CALL print_clock( 'newd:fftvg' )
-   CALL print_clock( 'newd:qvan2' )
-   CALL print_clock( 'newd:int1' )
-   CALL print_clock( 'newd:int2' )
-#endif
-   !
+   IF ( iverbosity > 0 ) THEN
+      CALL print_clock( 'newd:fftvg' )
+      CALL print_clock( 'newd:qvan2' )
+      CALL print_clock( 'newd:int1' )
+      CALL print_clock( 'newd:int2' )
+   END IF
    CALL print_clock( 'mix_rho' )
    !
-   WRITE( stdout, * )
-   !
-   CALL print_clock( 'c_bands' )
+   WRITE( stdout, '(/5x,"Called by c_bands:")' )
    CALL print_clock( 'init_us_2' )
-   CALL print_clock( 'cegterg' )
-   CALL print_clock( 'ccgdiagg' )
+   IF ( isolve == 0 ) THEN
+      IF ( gamma_only ) THEN
+         CALL print_clock( 'regterg' )
+      ELSE
+         CALL print_clock( 'cegterg' )
+      ENDIF
+   ELSE 
+      IF ( gamma_only ) THEN
+         CALL print_clock( 'rcgdiagg' )
+      ELSE
+         CALL print_clock( 'ccgdiagg' )
+      ENDIF
+      CALL print_clock( 'wfcrot' )
+   ENDIF
    !
-   WRITE( stdout, * )
-   !
-   CALL print_clock( 'sum_band' )
-   CALL print_clock( 'becsum' )
-   !
-   CALL print_clock( 'addusdens' )
-   !
-#ifdef DEBUG_ADDUSDENS
-   CALL print_clock( 'addus:qvan2' )
-   CALL print_clock( 'addus:strf' )
-   CALL print_clock( 'addus:aux2' )
-   CALL print_clock( 'addus:aux' )
-#endif
-   !
-   WRITE( stdout, * )
-   !
-   CALL print_clock( 'wfcrot' )
-   CALL print_clock( 'cegterg' )
-   CALL print_clock( 'ccdiagg' )
+   IF ( iverbosity > 0)  THEN
+      WRITE( stdout, '(/5x,"Called by sum_band:")' )
+      CALL print_clock( 'sum_band:becsum' )
+      CALL print_clock( 'addusdens' )
+      CALL print_clock( 'addus:qvan2' )
+      CALL print_clock( 'addus:strf' )
+      CALL print_clock( 'addus:aux2' )
+      CALL print_clock( 'addus:aux' )
+   ENDIF
    !
    IF ( isolve == 0 ) THEN
-      !
-      CALL print_clock( 'h_psi' )
-      CALL print_clock( 'g_psi' )
-      CALL print_clock( 'overlap' )
-      CALL print_clock( 'diagh' )
-      CALL print_clock( 'diaghg' )
-      CALL print_clock( 'choldc' )
-      CALL print_clock( 'inversion' )
-      CALL print_clock( 'paragemm' )
-      !
-      CALL print_clock( 'update' )
-      CALL print_clock( 'last' )
-      !
-      WRITE( stdout, * )
-      !
-      CALL print_clock( 'h_psi' )
-      CALL print_clock( 'init' )
-      CALL print_clock( 'firstfft' )
-      CALL print_clock( 'secondfft' )
-      CALL print_clock( 'add_vuspsi' )
-      CALL print_clock( 'h_psi_meta' )
-      CALL print_clock( 's_psi' )
-      !
-   ELSE IF ( isolve == 1 ) THEN
-      !
-      CALL print_clock( 'h_1psi' )
-      CALL print_clock( 's_1psi' )
-      CALL print_clock( 'cdiaghg' )
-      !
-      WRITE( stdout, * )
-      !
-      CALL print_clock( 'h_1psi' )
-      CALL print_clock( 'init' )
-      CALL print_clock( 'firstfft' )
-      CALL print_clock( 'secondfft' )
-      CALL print_clock( 'add_vuspsi' )
-      CALL print_clock( 'h_psi_meta' )
-      !
-   ELSE
-      !
-      CALL print_clock( 'h_psi' )
-      CALL print_clock( 's_psi' )
-      CALL print_clock( 'g_psi' )
-      CALL print_clock( 'cdiaghg' )
-      CALL print_clock( 'cholortho' )
-      !
-      WRITE( stdout, * )
-      !
-      CALL print_clock( 'h_psi' )
-      CALL print_clock( 'init' )
-      CALL print_clock( 'firstfft' )
-      CALL print_clock( 'secondfft' )
-      CALL print_clock( 'add_vuspsi' )
-      CALL print_clock( 'h_psi_meta' )
-      !   
+      WRITE( stdout, '(/5x,"Called by *egterg:")' )
+   ELSE 
+      WRITE( stdout, '(/5x,"Called by *cgdiagg:")' )
    END IF
    !
-   WRITE( stdout, * )
-   WRITE( stdout, '(5X,"General routines")' )
+   CALL print_clock( 'h_psi' )
+   CALL print_clock( 's_psi' )
+   CALL print_clock( 'g_psi' )
+   IF ( gamma_only ) THEN
+      CALL print_clock( 'rdiaghg' )
+      IF ( iverbosity > 0 )  THEN
+         CALL print_clock( 'regterg:overlap' )
+         CALL print_clock( 'regterg:update' )
+         CALL print_clock( 'regterg:last' )
+         CALL print_clock( 'rdiaghg:choldc' )
+         CALL print_clock( 'rdiaghg:inversion' )
+         CALL print_clock( 'rdiaghg:paragemm' )
+      ENDIF
+   ELSE
+      CALL print_clock( 'cdiaghg' )
+      IF ( iverbosity > 0 )  THEN
+         CALL print_clock( 'cegterg:overlap' )
+         CALL print_clock( 'cegterg:update' )
+         CALL print_clock( 'cegterg:last' )
+         CALL print_clock( 'cdiaghg:choldc' )
+         CALL print_clock( 'cdiaghg:inversion' )
+         CALL print_clock( 'cdiaghg:paragemm' )
+      END IF
+   END IF
+   !
+   WRITE( stdout, '(/5x,"Called by h_psi:")' )
+   IF ( iverbosity > 0 )  THEN
+      CALL print_clock( 'h_psi:init' )
+      CALL print_clock( 'h_psi:firstfft' )
+      CALL print_clock( 'h_psi:secondfft' )
+   END IF
+   CALL print_clock( 'add_vuspsi' )
+   CALL print_clock( 'h_psi_meta' )
+   !
+   WRITE( stdout, '(/5X,"General routines")' )
    !
    CALL print_clock( 'ccalbec' )
    CALL print_clock( 'cft3' )

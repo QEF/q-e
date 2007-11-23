@@ -191,7 +191,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      dav_iter = kter
      !
-     CALL start_clock( 'update' )
+     CALL start_clock( 'cegterg:update' )
      !
      np = 0
      !
@@ -242,7 +242,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      CALL ZGEMM( 'N', 'N', kdim, notcnv, nbase, ONE, hpsi, &
                  kdmx, vc, nvecx, ONE, psi(1,1,nb1), kdmx )
      !
-     CALL stop_clock( 'update' )
+     CALL stop_clock( 'cegterg:update' )
      !
      ! ... approximate inverse iteration
      !
@@ -289,7 +289,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... update the reduced hamiltonian
      !
-     CALL start_clock( 'overlap' )
+     CALL start_clock( 'cegterg:overlap' )
      !
      CALL ZGEMM( 'C', 'N', nbase+notcnv, notcnv, kdim, ONE, psi, &
                  kdmx, hpsi(1,1,nb1), kdmx, ZERO, hc(1,nb1), nvecx )
@@ -310,7 +310,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      CALL reduce( 2*nvecx*notcnv, sc(1,nb1) )
      !
-     CALL stop_clock( 'overlap' )
+     CALL stop_clock( 'cegterg:overlap' )
      !
      nbase = nbase + notcnv
      !
@@ -359,7 +359,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      IF ( notcnv == 0 .OR. &
           nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
-        CALL start_clock( 'last' )
+        CALL start_clock( 'cegterg:last' )
         !
         CALL ZGEMM( 'N', 'N', kdim, nvec, nbase, ONE, &
                     psi, kdmx, vc, nvecx, ZERO, evc, kdmx )
@@ -368,7 +368,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !
            ! ... all roots converged: return
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'cegterg:last' )
            !
            EXIT iterate
            !
@@ -379,7 +379,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !!!WRITE( stdout, '(5X,"WARNING: ",I5, &
            !!!     &   " eigenvalues not converged")' ) notcnv
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'cegterg:last' )
            !
            EXIT iterate
            !
@@ -421,7 +421,7 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !
         END DO
         !
-        CALL stop_clock( 'last' )
+        CALL stop_clock( 'cegterg:last' )
         !
      END IF
      !
@@ -656,7 +656,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      dav_iter = kter
      !
-     CALL start_clock( 'update' )
+     CALL start_clock( 'cegterg:update' )
      !
      CALL reorder_v()
      !
@@ -666,7 +666,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      CALL hpsi_dot_v()
      !
-     CALL stop_clock( 'update' )
+     CALL stop_clock( 'cegterg:update' )
      !
      ! ... approximate inverse iteration
      !
@@ -739,7 +739,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
 
      END IF
      !
-     CALL start_clock( 'uspp' )
+     CALL start_clock( 'cegterg:overlap' )
      !
      CALL update_distmat( hl, psi, hpsi )
      !
@@ -753,7 +753,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END IF
      !
-     CALL stop_clock( 'uspp' )
+     CALL stop_clock( 'overlap' )
      !
      nbase = nbase + notcnv
      !
@@ -786,7 +786,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
-        CALL start_clock( 'last' )
+        CALL start_clock( 'cegterg:last' )
         !
         CALL refresh_evc()       
         !
@@ -794,7 +794,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !
            ! ... all roots converged: return
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'cegterg:last' )
            !
            EXIT iterate
            !
@@ -805,7 +805,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !!!WRITE( stdout, '(5X,"WARNING: ",I5, &
            !!!     &   " eigenvalues not converged")' ) notcnv
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'cegterg:last' )
            !
            EXIT iterate
            !
@@ -846,7 +846,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
         CALL set_to_identity( vl, desc )
         CALL set_to_identity( sl, desc )
         !
-        CALL stop_clock( 'last' )
+        CALL stop_clock( 'cegterg:last' )
         !
      END IF
      !

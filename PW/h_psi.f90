@@ -88,7 +88,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        INTEGER :: ibnd, j
        !
        !
-       CALL start_clock( 'init' )
+       CALL start_clock( 'h_psi:init' )
        !
        ! ... Here we apply the kinetic energy (k+G)^2 psi
        !
@@ -103,7 +103,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
        END DO
        !
-       CALL stop_clock( 'init' )
+       CALL stop_clock( 'h_psi:init' )
         
        if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
        !
@@ -149,7 +149,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! counters
        !
        !
-       CALL start_clock( 'init' )
+       CALL start_clock( 'h_psi:init' )
        !
        ! ... Here we apply the kinetic energy (k+G)^2 psi
        !
@@ -159,7 +159,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
        END DO
        !
-       CALL stop_clock( 'init' )
+       CALL stop_clock( 'h_psi:init' )
         
        if (dft_is_meta()) call h_psi_meta (lda, n, m, psi, hpsi)
        !
@@ -171,7 +171,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        DO ibnd = 1, m
           !
-          CALL start_clock( 'firstfft' )
+          CALL start_clock( 'h_psi:firstfft' )
           !
           psic(1:nrxxs) = ( 0.D0, 0.D0 )
           !
@@ -179,7 +179,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
           CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2 )
           !
-          CALL stop_clock( 'firstfft' )
+          CALL stop_clock( 'h_psi:firstfft' )
           !
           ! ... product with the potential vrs = (vltot+vr) on the smooth grid
           !
@@ -187,7 +187,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
           ! ... back to reciprocal space
           !
-          CALL start_clock( 'secondfft' )
+          CALL start_clock( 'h_psi:secondfft' )
           !
           CALL cft3s( psic, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2 )
           !
@@ -195,7 +195,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           !
           hpsi(1:n,ibnd) = hpsi(1:n,ibnd) + psic(nls(igk(1:n)))
           !
-          CALL stop_clock( 'secondfft' )
+          CALL stop_clock( 'h_psi:secondfft' )
           !
        END DO
        !
@@ -251,7 +251,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   integer :: ibnd,j,ipol
   ! counters
   call start_clock ('h_psi')
-  call start_clock ('init')
+  call start_clock ('h_psi:init')
   call ccalbec_nc (nkb, lda, n, npol, m, becp_nc, vkb, psi)
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
@@ -264,7 +264,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
      enddo
   enddo
 
-  call stop_clock ('init')
+  call stop_clock ('h_psi:init')
   !
   ! Here we add the Hubbard potential times psi
   !
@@ -273,7 +273,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   ! the local potential V_Loc psi. First the psi in real space
   !
   do ibnd = 1, m
-     call start_clock ('firstfft')
+     call start_clock ('h_psi:firstfft')
      psic_nc = (0.d0,0.d0)
      do ipol=1,npol
         do j = 1, n
@@ -281,7 +281,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
         enddo
         call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
      enddo
-     call stop_clock ('firstfft')
+     call stop_clock ('h_psi:firstfft')
      !
      !   product with the potential vrs = (vltot+vr) on the smooth grid
      !
@@ -302,7 +302,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
      !
      !   back to reciprocal space
      !
-     call start_clock ('secondfft')
+     call start_clock ('h_psi:secondfft')
      do ipol=1,npol
         call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
      enddo
@@ -314,7 +314,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
            hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + psic_nc(nls(igk(j)),ipol)
         enddo
      enddo
-     call stop_clock ('secondfft')
+     call stop_clock ('h_psi:secondfft')
   enddo
   !
   !  Here the product with the non local potential V_NL psi

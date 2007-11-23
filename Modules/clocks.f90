@@ -76,8 +76,9 @@ SUBROUTINE start_clock( label )
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: label
-  INTEGER          :: n
   !
+  CHARACTER(LEN=12) :: label_
+  INTEGER          :: n
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
@@ -86,16 +87,20 @@ SUBROUTINE start_clock( label )
   !
   IF ( no .AND. ( nclock == 1 ) ) RETURN
   !
+  ! ... prevent trouble if label is longer than 12 characters 
+  !
+  label_ = TRIM ( label ) 
+  !
   DO n = 1, nclock
      !
-     IF ( label == clock_label(n) ) THEN
+     IF ( clock_label(n) == label_ ) THEN
         !
         ! ... found previously defined clock: check if not already started,
         ! ... store in t0cpu the starting time
         !
         IF ( t0cpu(n) /= notrunning ) THEN
 !            WRITE( stdout, '("start_clock: clock # ",I2," for ",A12, &
-!                           & " already started")' ) n, label
+!                           & " already started")' ) n, label_
         ELSE
            t0cpu(n) = scnds()
            IF ( n == 1 ) t0wall = cclock()
@@ -116,7 +121,7 @@ SUBROUTINE start_clock( label )
   ELSE
      !
      nclock              = nclock + 1
-     clock_label(nclock) = TRIM(label)
+     clock_label(nclock) = label_
      t0cpu(nclock)          = scnds()
      IF ( nclock == 1 ) t0wall = cclock()
      !
@@ -139,8 +144,9 @@ SUBROUTINE stop_clock( label )
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: label
-  INTEGER          :: n
   !
+  CHARACTER(LEN=12) :: label_
+  INTEGER          :: n
   REAL(DP), EXTERNAL :: scnds, cclock
   !
 #if defined (__TRACE)
@@ -149,9 +155,13 @@ SUBROUTINE stop_clock( label )
   !
   IF ( no ) RETURN
   !
+  ! ... prevent trouble if label is longer than 12 characters 
+  !
+  label_ = TRIM ( label ) 
+  ! 
   DO n = 1, nclock
      !
-     IF ( label == clock_label(n) ) THEN
+     IF ( clock_label(n) == label_ ) THEN
         !
         ! ... found previously defined clock : check if properly initialised,
         ! ... add elapsed time, increase the counter of calls
@@ -195,8 +205,9 @@ SUBROUTINE print_clock( label )
   IMPLICIT NONE
   !
   CHARACTER(LEN=*) :: label
-  INTEGER          :: n
   !
+  CHARACTER(LEN=12) :: label_
+  INTEGER          :: n
   !
   IF ( label == ' ' ) THEN
      !
@@ -210,9 +221,13 @@ SUBROUTINE print_clock( label )
      !
   ELSE
      !
+     ! ... prevent trouble if label is longer than 12 characters 
+     !
+     label_ = TRIM ( label ) 
+     !
      DO n = 1, nclock
         !
-        IF ( label == clock_label(n) ) THEN
+        IF ( clock_label(n) == label_ ) THEN
            !
            CALL print_this_clock( n )
            !

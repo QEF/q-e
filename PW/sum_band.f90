@@ -398,7 +398,7 @@ SUBROUTINE sum_band()
           IF ( nkb > 0 ) &
              CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
           !
-          CALL start_clock( 'becsum' )
+          CALL start_clock( 'sum_band:becsum' )
           !
           DO ibnd = 1, nbnd
              !
@@ -459,7 +459,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          CALL stop_clock( 'becsum' )
+          CALL stop_clock( 'sum_band:becsum' )
           !
        END DO k_loop
        !
@@ -628,7 +628,7 @@ SUBROUTINE sum_band()
                 CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
           ENDIF
           !
-          CALL start_clock( 'becsum' )
+          CALL start_clock( 'sum_band:becsum' )
           !
           DO ibnd = 1, nbnd
              !
@@ -724,7 +724,7 @@ SUBROUTINE sum_band()
              !
           END DO
           !
-          CALL stop_clock( 'becsum' )
+          CALL stop_clock( 'sum_band:becsum' )
           !
        END DO k_loop
 

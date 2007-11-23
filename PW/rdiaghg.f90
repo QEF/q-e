@@ -58,7 +58,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
     ! ILAENV returns optimal block size "nb"
   INTEGER               :: desc( descla_siz_ )
   !
-  CALL start_clock( 'diaghg' )
+  CALL start_clock( 'rdiaghg' )
   !
   IF ( use_para_diag ) THEN
      !
@@ -81,7 +81,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      !  Call block parallel algorithm
      !
-     CALL start_clock( 'choldc' )
+     CALL start_clock( 'rdiaghg:choldc' )
      !
      ! ... Cholesky decomposition of s ( L is stored in s )
      !
@@ -91,11 +91,11 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
      END IF
      !
-     CALL stop_clock( 'choldc' )
+     CALL stop_clock( 'rdiaghg:choldc' )
      !
      ! ... L is inverted ( s = L^-1 )
      !
-     CALL start_clock( 'inversion' )
+     CALL start_clock( 'rdiaghg:inversion' )
      !
      IF( desc( lambda_node_ ) > 0 ) THEN
         !
@@ -103,11 +103,11 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
      END IF
      !
-     CALL stop_clock( 'inversion' )
+     CALL stop_clock( 'rdiaghg:inversion' )
      !
      ! ... v = L^-1*H
      !
-     CALL start_clock( 'paragemm' )
+     CALL start_clock( 'rdiaghg:paragemm' )
      !
      IF( desc( lambda_node_ ) > 0 ) THEN
         !
@@ -123,7 +123,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
         !
      END IF
      !
-     CALL stop_clock( 'paragemm' )
+     CALL stop_clock( 'rdiaghg:paragemm' )
      !
      IF ( desc( lambda_node_ ) > 0 ) THEN
         ! 
@@ -146,7 +146,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      ! ... v = (L^T)^-1 v
      !
-     CALL start_clock( 'paragemm' )
+     CALL start_clock( 'rdiaghg:paragemm' )
      !
      IF ( desc( lambda_node_ ) > 0 ) THEN
         !
@@ -156,7 +156,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
      CALL mp_bcast( e, root_pool, intra_pool_comm )
      !
-     CALL stop_clock( 'paragemm' )
+     CALL stop_clock( 'rdiaghg:paragemm' )
      !
      ! CALL prdiaghg( n, hl, sl, nx, e, vl, desc )
      !
@@ -283,7 +283,7 @@ SUBROUTINE rdiaghg( n, m, h, s, ldh, e, v )
      !
   END IF
   !
-  CALL stop_clock( 'diaghg' )
+  CALL stop_clock( 'rdiaghg' )
   !
   RETURN
   !
@@ -334,7 +334,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   REAL(DP), ALLOCATABLE :: hh(:,:)
   REAL(DP), ALLOCATABLE :: ss(:,:)
   !
-  CALL start_clock( 'diaghg' )
+  CALL start_clock( 'rdiaghg' )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
@@ -353,7 +353,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL start_clock( 'choldc' )
+  CALL start_clock( 'rdiaghg:choldc' )
   !
   ! ... Cholesky decomposition of s ( L is stored in s )
   !
@@ -363,11 +363,11 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL stop_clock( 'choldc' )
+  CALL stop_clock( 'rdiaghg:choldc' )
   !
   ! ... L is inverted ( s = L^-1 )
   !
-  CALL start_clock( 'inversion' )
+  CALL start_clock( 'rdiaghg:inversion' )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
@@ -375,11 +375,11 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL stop_clock( 'inversion' )
+  CALL stop_clock( 'rdiaghg:inversion' )
   !
   ! ... v = L^-1*H
   !
-  CALL start_clock( 'paragemm' )
+  CALL start_clock( 'rdiaghg:paragemm' )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
@@ -395,7 +395,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL stop_clock( 'paragemm' )
+  CALL stop_clock( 'rdiaghg:paragemm' )
   !
   IF ( desc( lambda_node_ ) > 0 ) THEN
      ! 
@@ -418,7 +418,7 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... v = (L^T)^-1 v
   !
-  CALL start_clock( 'paragemm' )
+  CALL start_clock( 'rdiaghg:paragemm' )
   !
   IF ( desc( lambda_node_ ) > 0 ) THEN
      !
@@ -431,9 +431,9 @@ SUBROUTINE prdiaghg( n, h, s, ldh, e, v, desc )
   !
   CALL mp_bcast( e, root_pool, intra_pool_comm )
   !
-  CALL stop_clock( 'paragemm' )
+  CALL stop_clock( 'rdiaghg:paragemm' )
   !
-  CALL stop_clock( 'diaghg' )
+  CALL stop_clock( 'rdiaghg' )
   !
   RETURN
   !

@@ -65,7 +65,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
   INTEGER                  :: desc( descla_siz_ )
   !
   !
-  CALL start_clock( 'diaghg' )
+  CALL start_clock( 'cdiaghg' )
   !
   !
   IF ( use_para_diag ) THEN
@@ -112,7 +112,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         END DO
      END IF
 
-     CALL start_clock( 'choldc' )
+     CALL start_clock( 'cdiaghg:choldc' )
      !
      ! ... Cholesky decomposition of sl ( L is stored in sl )
      !
@@ -122,11 +122,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !
      END IF
      !
-     CALL stop_clock( 'choldc' )
+     CALL stop_clock( 'cdiaghg:choldc' )
      !
      ! ... L is inverted ( sl = L^-1 )
      !
-     CALL start_clock( 'inversion' )
+     CALL start_clock( 'cdiaghg:inversion' )
      !
      IF( desc( lambda_node_ ) > 0 ) THEN
         !
@@ -134,11 +134,11 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !
      END IF
      !
-     CALL stop_clock( 'inversion' )
+     CALL stop_clock( 'cdiaghg:inversion' )
      !
      ! ... vl = L^-1*H
      !
-     CALL start_clock( 'paragemm' )
+     CALL start_clock( 'cdiaghg:paragemm' )
      !
      IF( desc( lambda_node_ ) > 0 ) THEN
         !
@@ -154,7 +154,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
         !
      END IF
      !
-     CALL stop_clock( 'paragemm' )
+     CALL stop_clock( 'cdiaghg:paragemm' )
      !
      IF ( desc( lambda_node_ ) > 0 ) THEN
         ! 
@@ -177,7 +177,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
      ! ... v = (L^T)^-1 v
      !
-     CALL start_clock( 'paragemm' )
+     CALL start_clock( 'cdiaghg:paragemm' )
      !
      v(1:n,1:n) = ZERO
      !
@@ -196,7 +196,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      CALL mp_bcast( e, root_pool, intra_pool_comm )
      CALL mp_sum( v(1:n,1:n), intra_pool_comm )
      !
-     CALL stop_clock( 'paragemm' )
+     CALL stop_clock( 'cdiaghg:paragemm' )
      !
      IF ( desc( lambda_node_ ) > 0 ) THEN
         DEALLOCATE( sl, vl, hl )
@@ -316,7 +316,7 @@ SUBROUTINE cdiaghg( n, m, h, s, ldh, e, v )
      !
   END IF
   !
-  CALL stop_clock( 'diaghg' )
+  CALL stop_clock( 'cdiaghg' )
   !
   RETURN
   !
@@ -365,7 +365,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... input s and h are copied so that they are not destroyed
   !
-  CALL start_clock( 'diaghg' )
+  CALL start_clock( 'cdiaghg' )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
@@ -384,7 +384,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
 
-  CALL start_clock( 'choldc' )
+  CALL start_clock( 'cdiaghg:choldc' )
   !
   ! ... Cholesky decomposition of sl ( L is stored in sl )
   !
@@ -394,7 +394,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL stop_clock( 'choldc' )
+  CALL stop_clock( 'cdiaghg:choldc' )
   !
   ! ... L is inverted ( sl = L^-1 )
   !
@@ -406,11 +406,11 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL stop_clock( 'inversion' )
+  CALL stop_clock( 'cdiaghg:inversion' )
   !
   ! ... vl = L^-1*H
   !
-  CALL start_clock( 'paragemm' )
+  CALL start_clock( 'cdiaghg:paragemm' )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
@@ -426,7 +426,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
   END IF
   !
-  CALL stop_clock( 'paragemm' )
+  CALL stop_clock( 'cdiaghg:paragemm' )
   !
   IF ( desc( lambda_node_ ) > 0 ) THEN
      ! 
@@ -465,7 +465,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      DEALLOCATE( ss, hh )
   END IF
   !
-  CALL stop_clock( 'diaghg' )
+  CALL stop_clock( 'cdiaghg' )
   !
   RETURN
   !

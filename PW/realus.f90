@@ -90,7 +90,7 @@ MODULE realus
       !
       IF ( .NOT. okvan ) RETURN
       !
-      CALL start_clock( 'qpointlist' )
+      CALL start_clock( 'realus' )
       !
       ! ... qsave is deallocated here to free the memory for the buffers
       !
@@ -449,7 +449,7 @@ MODULE realus
       DEALLOCATE( spher )
       !
       CALL stop_clock( 'realus:qsave' )
-      CALL stop_clock( 'qpointlist' )
+      CALL stop_clock( 'realus' )
       !
     END SUBROUTINE qpointlist
     !

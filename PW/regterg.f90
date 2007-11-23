@@ -88,7 +88,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
     !    calculates (diag(h)-e)^-1 * psi, diagonal approx. to (h-e)^-1*psi
     !    the first nvec columns contain the trial eigenvectors
   !
-  CALL start_clock( 'cegterg' )
+  CALL start_clock( 'regterg' )
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
   !
@@ -185,7 +185,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      dav_iter = kter
      !
-     CALL start_clock( 'update' )
+     CALL start_clock( 'regterg:update' )
      !
      np = 0
      !
@@ -236,7 +236,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      CALL DGEMM( 'N', 'N', npw2, notcnv, nbase, 1.D0, &
                  hpsi, npwx2, vr, nvecx, 1.D0, psi(1,nb1), npwx2 )
      !
-     CALL stop_clock( 'update' )
+     CALL stop_clock( 'regterg:update' )
      !
      ! ... approximate inverse iteration
      !
@@ -272,7 +272,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      ! ... update the reduced hamiltonian
      !
-     CALL start_clock( 'uspp' )
+     CALL start_clock( 'regterg:overlap' )
      !
      CALL DGEMM( 'T', 'N', nbase+notcnv, notcnv, npw2, 2.D0, psi, &
                  npwx2, hpsi(1,nb1), npwx2, 0.D0, hr(1,nb1), nvecx )
@@ -305,7 +305,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      CALL reduce( nvecx*notcnv, sr(1,nb1) )
      !
-     CALL stop_clock( 'uspp' )
+     CALL stop_clock( 'regterg:overlap' )
      !
      nbase = nbase + notcnv
      !
@@ -349,7 +349,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
      IF ( notcnv == 0 .OR. &
           nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
-        CALL start_clock( 'last' )
+        CALL start_clock( 'regterg:last' )
         !
         CALL DGEMM( 'N', 'N', npw2, nvec, nbase, 1.D0, &
                     psi, npwx2, vr, nvecx, 0.D0, evc, npwx2 )
@@ -358,7 +358,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !
            ! ... all roots converged: return
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'regterg:last' )
            !
            EXIT iterate
            !
@@ -369,7 +369,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
            WRITE( stdout, '(5X,"WARNING: ",I5, &
                 &   " eigenvalues not converged")' ) notcnv
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'regterg:last' )
            !
            EXIT iterate
            !
@@ -409,7 +409,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !
         END DO
         !
-        CALL stop_clock( 'last' )
+        CALL stop_clock( 'regterg:last' )
         !
      END IF
      !
@@ -426,7 +426,7 @@ SUBROUTINE regterg( npw, npwx, nvec, nvecx, evc, ethr, &
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )  
   !
-  CALL stop_clock( 'cegterg' )
+  CALL stop_clock( 'regterg' )
   !
   RETURN
   !
@@ -534,7 +534,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
     !    the first nvec columns contain the trial eigenvectors
   !
   !
-  CALL start_clock( 'cegterg' )
+  CALL start_clock( 'regterg' )
   !
   IF ( nvec > nvecx / 2 ) CALL errore( 'regter', 'nvecx is too small', 1 )
   !
@@ -635,7 +635,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      dav_iter = kter
      !
-     CALL start_clock( 'update' )
+     CALL start_clock( 'regterg:update' )
      !
      CALL reorder_v()
      !
@@ -645,7 +645,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      CALL hpsi_dot_v()
      !
-     CALL stop_clock( 'update' )
+     CALL stop_clock( 'regterg:update' )
      !
      ! ... approximate inverse iteration
      !
@@ -708,7 +708,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
 
      END IF
      !
-     CALL start_clock( 'uspp' )
+     CALL start_clock( 'regterg:overlap' )
      !
      CALL update_distmat( hl, psi, hpsi )
      !
@@ -722,7 +722,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END IF
      !
-     CALL stop_clock( 'uspp' )
+     CALL stop_clock( 'regterg:overlap' )
      !
      nbase = nbase + notcnv
      !
@@ -755,7 +755,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
      !
      IF ( notcnv == 0 .OR. nbase+notcnv > nvecx .OR. dav_iter == maxter ) THEN
         !
-        CALL start_clock( 'last' )
+        CALL start_clock( 'regterg:last' )
         !
         CALL refresh_evc()       
         !
@@ -763,7 +763,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
            !
            ! ... all roots converged: return
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'regterg:last' )
            !
            EXIT iterate
            !
@@ -774,7 +774,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
            WRITE( stdout, '(5X,"WARNING: ",I5, &
                 &   " eigenvalues not converged")' ) notcnv
            !
-           CALL stop_clock( 'last' )
+           CALL stop_clock( 'regterg:last' )
            !
            EXIT iterate
            !
@@ -815,7 +815,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
         CALL set_to_identity( vl, desc )
         CALL set_to_identity( sl, desc )
         !
-        CALL stop_clock( 'last' )
+        CALL stop_clock( 'regterg:last' )
         !
      END IF
      !
@@ -835,7 +835,7 @@ SUBROUTINE pregterg( npw, npwx, nvec, nvecx, evc, ethr, &
   DEALLOCATE( hpsi )
   DEALLOCATE( psi )  
   !
-  CALL stop_clock( 'cegterg' )
+  CALL stop_clock( 'regterg' )
   !
   RETURN
   !
