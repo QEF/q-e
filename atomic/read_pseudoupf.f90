@@ -187,28 +187,31 @@ USE pseudo_types, ONLY : paw_t, pseudo_upf
 IMPLICIT NONE
 TYPE(paw_t), INTENT(INOUT) :: pawset_
 TYPE(pseudo_upf), INTENT(IN) :: upf_
+INTEGER :: mesh, nbeta
 
+nbeta=upf_%nbeta
+mesh=upf_%mesh
 pawset_%augfun=0.0_DP
 pawset_%augmom=0.0_DP
 pawset_%jj(:) = 0.0_DP
 pawset_%enl(:) = 0.0_DP
-pawset_%l(:) = upf_%lll(:)
-pawset_%ikk(:) = upf_%kbeta(:)
-pawset_%oc(:) = upf_%paw%oc(:)
-pawset_%aewfc(:,:) = upf_%aewfc(:,:)
-pawset_%pswfc(:,:) = upf_%pswfc(:,:)
-pawset_%proj(:,:) = upf_%beta(:,:)
-pawset_%augfun(:,:,:,0:upf_%paw%lmax_aug) = &
-                             upf_%paw%aug(:,:,:,0:upf_%paw%lmax_aug)
-pawset_%augmom(:,:,0:upf_%paw%lmax_aug) = & 
-                upf_%paw%augmom(:,:,0:upf_%paw%lmax_aug)
-pawset_%aeccharge(:) = upf_%paw%ae_rho_atc(:)*fpi*upf_%grid%r2(:)
-pawset_%psccharge(:) = upf_%rho_atc(:)*fpi*upf_%grid%r2(:)
-pawset_%pscharge(:) = upf_%rho_at(:)
-pawset_%aeloc(:) = upf_%paw%ae_vloc(:)
-pawset_%psloc(:) = upf_%vloc(:)
-pawset_%kdiff(:,:) = upf_%paw%kdiff(:,:)
-pawset_%dion (:,:) = upf_%dion(:,:)
+pawset_%l(1:nbeta) = upf_%lll(1:nbeta)
+pawset_%ikk(1:nbeta) = upf_%kbeta(1:nbeta)
+pawset_%oc(1:nbeta) = upf_%paw%oc(1:nbeta)
+pawset_%aewfc(1:mesh,1:nbeta) = upf_%aewfc(1:mesh,1:nbeta)
+pawset_%pswfc(1:mesh,1:nbeta) = upf_%pswfc(1:mesh,1:nbeta)
+pawset_%proj(1:mesh,1:nbeta) = upf_%beta(1:mesh,1:nbeta)
+pawset_%augfun(1:mesh,1:nbeta,1:nbeta,0:upf_%paw%lmax_aug) = &
+                       upf_%paw%aug(1:mesh,1:nbeta,1:nbeta,0:upf_%paw%lmax_aug)
+pawset_%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug) = & 
+                upf_%paw%augmom(1:nbeta,1:nbeta,0:upf_%paw%lmax_aug)
+pawset_%aeccharge(1:mesh) = upf_%paw%ae_rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
+pawset_%psccharge(1:mesh) = upf_%rho_atc(1:mesh)*fpi*upf_%grid%r2(1:mesh)
+pawset_%pscharge(1:mesh) = upf_%rho_at(1:mesh)
+pawset_%aeloc(1:mesh) = upf_%paw%ae_vloc(1:mesh)
+pawset_%psloc(1:mesh) = upf_%vloc(1:mesh)
+pawset_%kdiff(1:nbeta,1:nbeta) = upf_%paw%kdiff(1:nbeta,1:nbeta)
+pawset_%dion (1:nbeta,1:nbeta) = upf_%dion(1:nbeta,1:nbeta)
 pawset_%symbol=upf_%psd
 pawset_%zval=upf_%zp
 pawset_%z=upf_%zmesh
