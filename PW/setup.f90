@@ -801,16 +801,11 @@ END FUNCTION n_atom_wfc
 SUBROUTINE check_para_diag()
   !
   USE wvfct,            ONLY : nbnd, nbndx
-  USE control_flags,    ONLY : use_para_diag, isolve, ortho_para, gamma_only
+  USE control_flags,    ONLY : use_para_diag, ortho_para, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho, intra_pool_comm
 
   IMPLICIT NONE
-
-  IF ( isolve /= 0 ) THEN
-     use_para_diag = .FALSE.
-     RETURN
-  END IF
 
   use_para_diag = .TRUE.
   !

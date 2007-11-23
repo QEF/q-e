@@ -399,8 +399,11 @@ h_psiq.o : ../PW/noncol.o
 h_psiq.o : ../PW/pwcom.o
 h_psiq.o : ../PW/scf_mod.o
 h_psiq.o : phcom.o
+hdiag.o : ../Modules/cell_base.o
 hdiag.o : ../Modules/kind.o
+hdiag.o : ../Modules/uspp.o
 hdiag.o : ../Modules/wavefunctions.o
+hdiag.o : ../PW/noncol.o
 hdiag.o : ../PW/pwcom.o
 hdiag.o : ramanm.o
 incdrhoscf.o : ../Modules/ions_base.o

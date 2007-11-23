@@ -13,11 +13,14 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   ! by Conjugate Gradient (band-by-band)
   !
 #include "f_defs.h"
-  use kinds, only : DP
-  use pwcom, ONLY: g, g2kin, tpiba2, ecfixed, qcutz, q2sigma, nbnd, &
-        npwx, vkb, igk, npw
-  USE wavefunctions_module,  ONLY: evc
-  USE ramanm, ONLY: eth_ns
+  USE kinds,     ONLY : DP
+  USE cell_base, ONLY: tpiba2
+  USE gvect,     ONLY: g, ecfixed, qcutz, q2sigma, gstart
+  USE wvfct,     ONLY: g2kin, igk, nbnd, npwx, npw
+  USE uspp,      ONLY: vkb, okvan
+  USE noncollin_module,    ONLY: npol
+  USE wavefunctions_module,ONLY: evc
+  USE ramanm,    ONLY: eth_ns
   implicit none
 
   !
@@ -78,7 +81,8 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   ntry = 0
 10 continue
   if (ntry > 0) then
-     call cinitcgg (npwx, npw, nbnd, nbnd, evc, evc, et_, .FALSE. )
+     call rotate_wfc &
+       ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
      avg_iter = avg_iter + 1.d0
   endif
   call ccgdiagg (npwx, npw, nbnd, evc, et_, btype, h_prec, eth_ns, &

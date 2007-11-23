@@ -268,7 +268,8 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL rinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, &
+                               evc, npol, okvan, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !
@@ -407,7 +408,8 @@ CONTAINS
           !
           IF ( .NOT. lrot ) THEN
              !
-             CALL cinitcgg( npwx, npw, nbnd, nbnd, evc, evc, et(1,ik) )
+             CALL rotate_wfc ( npwx, npw, nbnd, gstart, nbnd, &
+                               evc, npol, okvan, evc, et(1,ik) )
              !
              avg_iter = avg_iter + 1.D0
              !
@@ -583,7 +585,6 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE control_flags,        ONLY : ethr, lbands, isolve, io_level, iverbosity
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
-  USE noncollin_module,     ONLY : noncolin, npol
   USE wavefunctions_module, ONLY : evc
 #ifdef __PARA
   USE mp_global,            ONLY : npool, kunit

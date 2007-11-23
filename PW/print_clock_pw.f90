@@ -66,7 +66,6 @@ SUBROUTINE print_clock_pw()
    CALL print_clock( 'init_us_2' )
    CALL print_clock( 'cegterg' )
    CALL print_clock( 'ccgdiagg' )
-   CALL print_clock( 'diis' )
    !
    WRITE( stdout, * )
    !
@@ -85,10 +84,8 @@ SUBROUTINE print_clock_pw()
    WRITE( stdout, * )
    !
    CALL print_clock( 'wfcrot' )
-   CALL print_clock( 'wfcrot1' )
    CALL print_clock( 'cegterg' )
    CALL print_clock( 'ccdiagg' )
-   CALL print_clock( 'cdiisg' )
    !
    IF ( isolve == 0 ) THEN
       !

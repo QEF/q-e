@@ -40,7 +40,7 @@ SUBROUTINE summary()
                               name_class_so1
   USE rap_point_group_is, ONLY : nsym_is, sr_is, ftau_is, d_spin_is, gname_is, &
                                  sname_is, code_group_is
-  USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, diis_ndim, &
+  USE control_flags,   ONLY : imix, nmix, mixing_beta, nstep, &
                               tr2, isolve, lmd, lbfgs, lpath, iverbosity
   USE noncollin_module,ONLY : noncolin
   USE spin_orb,        ONLY : domag, lspinorb
@@ -374,9 +374,6 @@ SUBROUTINE summary()
           &    i7," G-vectors)","  smooth grid: (",i3, &
           &    ",",i3,",",i3,")")') gcutms, ngmtot, nr1s, nr2s, nr3s
   ENDIF
-
-  IF ( isolve == 2 ) &
-     WRITE( stdout, '(/,5X,"reduced basis size: ",I5)' ) diis_ndim
 
   IF (tfixed_occ) THEN
      WRITE( stdout, '(/,5X,"Occupations read from input ")' ) 

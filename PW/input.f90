@@ -124,7 +124,7 @@ SUBROUTINE iosys()
   !
   USE relax,         ONLY : epse, epsf, epsp, starting_scf_threshold
   !
-  USE control_flags, ONLY : diis_ndim, isolve, max_cg_iter, david, tr2, imix, &
+  USE control_flags, ONLY : isolve, max_cg_iter, david, tr2, imix, &
                             nmix, iverbosity, niter, pot_order, wfc_order, &
                             assume_isolated_  => assume_isolated, &
                             remove_rigid_rot_ => remove_rigid_rot, &
@@ -210,9 +210,8 @@ SUBROUTINE iosys()
   USE input_parameters, ONLY : electron_maxstep, mixing_mode, mixing_beta, &
                                mixing_ndim, mixing_fixed_ns, conv_thr,     &
                                tqr, diago_thr_init, diago_cg_maxiter,      &
-                               diago_david_ndim, diago_diis_ndim,          &
-                               diagonalization, diago_full_acc,            &
-                               startingwfc, startingpot
+                               diago_david_ndim, diagonalization,          &
+                               diago_full_acc, startingwfc, startingpot
   USE input_parameters, ONLY : ortho_para
   !
   ! ... IONS namelist
@@ -842,30 +841,28 @@ SUBROUTINE iosys()
      !
   END IF
   !
+  ! parallel distributed diagonalization is the default
+  ! (with more than 4 procs)
+  !
+  use_para_diag = .TRUE.
+  ortho_para_ = ortho_para
+  !
   SELECT CASE( TRIM( diagonalization ) )
   CASE ( 'cg' )
      !
      isolve = 1
      max_cg_iter = diago_cg_maxiter
      !
-  CASE ( 'diis' )
+  CASE ( 'cg-serial', 'cg+serial' )
      !
-     CALL errore( 'iosys', 'diis diagonalization disabled', 1 )
-     isolve = 2
-     !
+     isolve = 1
      max_cg_iter = diago_cg_maxiter
-     diis_ndim   = diago_diis_ndim
+     use_para_diag = .FALSE.
      !
   CASE ( 'david', 'david+para', 'david+distpara' )
      !
      isolve = 0
      david = diago_david_ndim
-     !
-     ! parallel distributed diagonalizaion is the default
-     ! (with more than 4 procs)
-     !
-     use_para_diag = .TRUE.
-     ortho_para_ = ortho_para
      !
   CASE ( 'david+serial', 'david-serial' )
      !
@@ -876,7 +873,6 @@ SUBROUTINE iosys()
   CASE DEFAULT
      !
      isolve = 0
-     !
      david = diago_david_ndim
      !
   END SELECT

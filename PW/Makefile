@@ -30,7 +30,6 @@ c_phase_field.o \
 ccalbec.o \
 ccalbec_nc.o \
 ccgdiagg.o \
-cinitcgg.o \
 cdiagh.o \
 cdiaghg.o \
 cegterg.o \
@@ -152,7 +151,6 @@ pw_restart.o \
 pwcom.o \
 qvan2.o \
 rcgdiagg.o \
-rinitcgg.o \
 rdiagh.o \
 rdiaghg.o \
 read_conf_from_file.o \
@@ -245,13 +243,6 @@ wgauss.o \
 write_ns.o \
 wsweight.o \
 weights.o \
-
-# not actually used
-DIIS_OBJS=\
-diis_base.o \
-cgramg1.o \
-real_diis_module.o \
-complex_diis_module.o
 
 MODULES = \
 ../Modules/atom.o \
