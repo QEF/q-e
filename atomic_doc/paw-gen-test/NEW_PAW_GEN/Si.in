@@ -7,7 +7,7 @@
         deld=0.01d0,
         nld=4,
 
-        rel=0,
+        rel=1,
         zed=14.0,
         config="[Ne] 3s2 3p2 3d-2.0 4f-2.0"
         dft='LDA',
@@ -17,7 +17,10 @@
    pseudotype=3,
    lpaw=.true.,
    tm=.true.,
-   file_pseudopw='Sisr.RRKJ3.PAW',
+   nlcc=.true.
+   file_pseudopw='Sisr.RRKJ3.UPF',
+   which_augfun='BESSEL'
+   rmatch_augfun=1.9
  /
 7
 3S  1  0  2.00  0.00  2.00  2.10

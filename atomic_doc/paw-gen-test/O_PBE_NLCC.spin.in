@@ -19,7 +19,7 @@
 2P  2  1  2.0  2
 3D  3  2 -1.0  2
  &test
-  file_pseudo='./results//OPBE.RRKJ3.PAW',
+  file_pseudo='./results//OPBE.RRKJ3.UPF',
   nconf=3,
  / 
 4

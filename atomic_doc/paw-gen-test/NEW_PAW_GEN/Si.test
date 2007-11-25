@@ -1,13 +1,13 @@
  &input
         iswitch=2,
-        rel=0,
+        rel=1,
         lsd=1
         zed=14.0,
         config="[Ne] 3s2 3p2 3d-2.0"
         dft='LDA',
  /
  &test
-   file_pseudo='Sisr.RRKJ3.PAW',
+   file_pseudo='Sisr.RRKJ3.UPF',
    nconf=5
    configts(1)=" 3s2 3p2 "
    configts(2)=" 3s2 3p1 "

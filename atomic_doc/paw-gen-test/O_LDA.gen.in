@@ -17,7 +17,7 @@
    pseudotype=3,
    nlcc=.false., rcore=0.50
    lloc=2,
-   file_pseudopw='./results//OLDA.RRKJ3.PAW',
+   file_pseudopw='./results//OLDA.RRKJ3.UPF',
    zval=6.d0,
    lpaw=.true.
  /
