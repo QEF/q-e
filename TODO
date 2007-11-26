@@ -2,8 +2,9 @@ TODO LIST - November 2007
 
 TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 
-- License: decide whether to move to LGPL, and in case, update copyright
-           notice in the header of all files
+- License: decide whether to move to LGPL
+           decide who is the copyright owner ("Quantum-Espresso group"?)
+           update copyright notice in the header of all files
 - Web: move download and PP page from pwscf.org to quantum-espresso.org;
        move Tutorial and Examples from wiki into Learn page;
        find a way to extract the User Guide and other info from wiki
@@ -21,7 +22,7 @@ TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 - Code: electron-phonon (Paris 2)?
 - Code: corrections for charged/isolated systems (Ismaila-Nicola)?
 - Code: other "external" contributions to Q-E: Wannier, Want, SAX, ...
-- Contrib: QHA codes (Eyvaz)
+- Contrib: QHA + projected phonon DOS codes (Eyvaz)
 - Contrib: band plotting (Jonathan)
 - Contrib: metaGGA atomic code (Yosuke-needs work)
 - Contrib: math parser (Javier-license problem)
@@ -33,6 +34,7 @@ TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 - Bug: xcrysden doesn't read any longer some output files
 - UPF: update UPF format to allow hack-free inclusion of spin-orbit/GIPAW/PAW
        (maybe this should be postponed?)
+- Bin: should we make a few binary distributions?
 
 CVS/INSTALLATION/PORTING
 
