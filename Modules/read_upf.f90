@@ -143,6 +143,12 @@ subroutine read_pseudo_upf (iunps, upf, ierr, header_only)
      call read_pseudo_paw ( upf, iunps )
      call scan_end ( iunps, "PAW" )
   endif
+  !-------->GIPAW data
+  IF ( upf%has_gipaw ) then
+     CALL scan_begin ( iunps, "GIPAW_RECONSTRUCTION_DATA", .false. )
+     CALL read_pseudo_gipaw ( upf, iunps )
+     CALL scan_end ( iunps, "GIPAW_RECONSTRUCTION_DATA" )
+  END IF
   !--- Try to get the core radius if not present. Needed by the 
   !    atomic code for old pseudo files
   IF (upf%nbeta>0.and.upf%rcutus(1)<1.e-9_DP) then
@@ -770,13 +776,6 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
 
   CALL scan_end ( iunps, "GRID_RECON" )
 
-
-  IF ( upf%has_gipaw ) then
-     CALL scan_begin ( iunps, "GIPAW_RECONSTRUCTION_DATA", .false. )
-     CALL read_pseudo_gipaw ( upf, iunps )
-     CALL scan_end ( iunps, "GIPAW_RECONSTRUCTION_DATA" )
-  END IF
-  
   RETURN
   
 100 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file', 1 )
