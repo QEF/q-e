@@ -1219,11 +1219,6 @@ nl pn  l   occ               Rcut            Rcut US             E pseu
 </PP_RHOATOM>
 
 
-<PP_PAW>
-<PP_PAW_FORMAT_VERSION>
-  0.1
-</PP_PAW_FORMAT_VERSION>
-</PP_PAW>
 
 
 <PP_GIPAW_RECONSTRUCTION_DATA>
