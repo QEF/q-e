@@ -444,7 +444,6 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
   !
 END SUBROUTINE cegterg
 
-
 !
 !  Subroutine with distributed matrixes
 !  (written by Carlo Cavazzoni)
@@ -753,7 +752,7 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
         !
      END IF
      !
-     CALL stop_clock( 'overlap' )
+     CALL stop_clock( 'cegterg:overlap' )
      !
      nbase = nbase + notcnv
      !

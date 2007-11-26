@@ -398,7 +398,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   !
   ! ... L is inverted ( sl = L^-1 )
   !
-  CALL start_clock( 'inversion' )
+  CALL start_clock( 'cdiaghg:inversion' )
   !
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
