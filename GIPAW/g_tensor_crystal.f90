@@ -24,7 +24,7 @@ SUBROUTINE g_tensor_crystal
   USE lsda_mod,                    ONLY : current_spin, lsda, isk, nspin
   USE becmod,                      ONLY : becp
   USE symme,                       ONLY : nsym, s, ftau
-  USE scf,                         ONLY : vr, vltot, rho
+  USE scf,                         ONLY : v, vltot, rho
   USE gvect,                       ONLY : ngm, nr1, nr2, nr3, nrx1, nrx2, &
                                           nrx3, nrxx, nlm, g
   USE mp_global,                   ONLY : my_pool_id
@@ -337,7 +337,7 @@ SUBROUTINE g_tensor_crystal
   ! <apsi> TMPTMPTMP PLEASE CHECK FOR VANDERBILT/HARD GRIDS
   allocate ( grad_vr ( 3, nrxx ), v_local ( nrxx, nspin ) )
   do ispin = 1, nspin
-     v_local(:,ispin) = vltot(:) + vr(:,ispin)
+     v_local(:,ispin) = vltot(:) + v%of_r(:,ispin)
   end do
   ! <ceres> which spin channel? </ceres>
   call gradient ( nrx1, nrx2, nrx3, nr1, nr2, nr3, nrxx, v_local, &

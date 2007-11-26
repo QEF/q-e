@@ -316,7 +316,7 @@ CONTAINS
     USE atom,          ONLY : rgrid
     USE wvfct,         ONLY : nbnd, et, wg, npwx
     USE lsda_mod,      ONLY : nspin, lsda
-    USE scf,           ONLY : vr, vrs, vltot, rho, rho_core
+    USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
     USE gvect,         ONLY : nrxx, ngm
     USE gsmooth,       ONLY : doublegrid
     USE klist,         ONLY : xk, degauss, ngauss, nks, nelec
@@ -724,7 +724,7 @@ CONTAINS
     
     ! computes the total local potential (external+scf) on the smooth grid
     call setlocal
-    call set_vrs (vrs, vltot, vr, kedtau, kedtaur, nrxx, nspin, doublegrid)
+    call set_vrs(vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid)
     
     ! compute the D for the pseudopotentials
     call newd
