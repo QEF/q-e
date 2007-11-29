@@ -199,15 +199,16 @@ MODULE symme
   SAVE
   !
   INTEGER :: &
-       s(3,3,48),              &! simmetry matrices
-       ftau(3,48),             &! fractional translations
-       nsym                     ! number of symmetries
+       s(3,3,48),            &! simmetry matrices
+       ftau(3,48),           &! fractional translations
+       nsym                   ! number of symmetries
   INTEGER :: &
-       t_rev(48) = 0            ! time reversal flag, for noncolinear magnetisation
+       t_rev(48) = 0          ! time reversal flag, for noncolinear magnetisation
   INTEGER, ALLOCATABLE :: &
-       irt(:,:)                 ! symmetric atom for each atom and sym.op.
+       irt(:,:)               ! symmetric atom for each atom and sym.op.
   LOGICAL :: &
-       invsym                   ! if .TRUE. the system has inversion symmetry
+       time_reversal=.true., &! if .TRUE. the system has time_reversal symmetry
+       invsym                 ! if .TRUE. the system has inversion symmetry
   REAL(DP),TARGET :: &
        d1(3,3,48),           &! matrices for rotating spherical
        d2(5,5,48),           &! harmonics (d1 for l=1, ...)

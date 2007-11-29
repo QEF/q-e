@@ -60,7 +60,8 @@ SUBROUTINE setup()
   USE electrons_base,     ONLY : set_nelup_neldw
   USE ktetra,             ONLY : nk1, nk2, nk3, k1, k2, k3, &
                                  tetra, ntetra, ltetra
-  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, d1,d2,d3
+  USE symme,              ONLY : s, t_rev, irt, ftau, nsym, invsym, d1,d2,d3, &
+                                 time_reversal
   USE wvfct,              ONLY : nbnd, nbndx
   USE control_flags,      ONLY : tr2, ethr, lscf, lmd, lpath, lphonon, david,  &
                                  isolve, niter, noinv, nosym, modenum, lbands, &
@@ -534,6 +535,8 @@ SUBROUTINE setup()
   !
   IF ( nosym ) nrot = 1
   !
+  time_reversal = .NOT. noncolin .OR. .NOT. domag
+  !
   ! ... Automatic generation of k-points (if required)
   !
   IF ( nkstot < 0 ) THEN
@@ -554,8 +557,8 @@ SUBROUTINE setup()
         !
      ELSE
         !
-        CALL kpoint_grid( nrot, s, bg, npk, k1, k2, k3, &
-                          nk1, nk2, nk3, nkstot, xk, wk )
+        CALL kpoint_grid ( nrot, time_reversal, s, t_rev, bg, npk, &
+                         k1,k2,k3, nk1,nk2,nk3, nkstot, xk, wk)
         !
      END IF
      !

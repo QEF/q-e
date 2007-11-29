@@ -14,16 +14,14 @@ SUBROUTINE q_points ( )
   USE disp,  ONLY : nqmax, nq1, nq2, nq3, x_q, nqs
   USE disp,  ONLY : iq1, iq2, iq3
   USE output, ONLY : fildyn
-  USE symme, ONLY : nsym, s
+  USE symme, ONLY : nsym, s, time_reversal, t_rev
   USE cell_base, ONLY : bg
 
   implicit none
   
   integer :: i, iq, ierr, iudyn = 26
-
-  real(DP), allocatable, dimension(:) :: wq  
-
   logical :: exist_gamma
+  real(DP), allocatable, dimension(:) :: wq  
 
   !
   !  calculates the Monkhorst-Pack grid
@@ -38,8 +36,9 @@ SUBROUTINE q_points ( )
 
   allocate (wq(nqmax))
   allocate (x_q(3,nqmax))
-  call kpoint_grid( nsym, s, bg, nqmax, 2*iq1, 2*iq2, 2*iq3, &
-                         nq1, nq2, nq3, nqs, x_q, wq )
+  call kpoint_grid( nsym, time_reversal, s, t_rev, bg, nqmax, &
+                         0,0,0, nq1,nq2,nq3, nqs, x_q, wq )
+
   deallocate (wq)
   !
   ! Check if the Gamma point is one of the points and put

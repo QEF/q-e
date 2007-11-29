@@ -300,9 +300,10 @@ IF (lda_plus_u) call errore('do_cond','PWCOND not working with LDA+U',1)
 #endif
 
 IF (nkpts==0) THEN
+   time_reversal = .NOT. noncolin
    IF (ionode) THEN
-      CALL kpoint_grid( nsym, s, bg, npk, k1ts, k2ts, 0, &
-                        nk1ts, nk2ts, 1, nkpts, xk, wkpt )
+      CALL kpoint_grid( nsym, time_reversal, s, t_rev, bg, npk, &
+                        k1ts, k2ts, 0, nk1ts, nk2ts, 1, nkpts, xk, wkpt )
       DO ik=1,nkpts
          xyk(1,ik)=xk(1,ik)
          xyk(2,ik)=xk(2,ik)

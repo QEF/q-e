@@ -54,7 +54,7 @@ subroutine phq_setup
   USE scf,           ONLY : v, vrs, vltot, rho, rho_core, kedtau
   USE gvect,         ONLY : nrxx, ngm
   USE gsmooth,       ONLY : doublegrid
-  USE symme,         ONLY : nsym, s, ftau, irt, t_rev
+  USE symme,         ONLY : nsym, s, ftau, irt, t_rev, time_reversal
   USE uspp_param,    ONLY : upf
   USE spin_orb,      ONLY : domag
   USE constants,     ONLY : degspin, pi
@@ -251,6 +251,8 @@ subroutine phq_setup
   !
   ! 7) set all the variables needed to use the pattern representation
   !
+  time_reversal = .NOT.noncolin .OR. .NOT.domag
+  ! 
   ! allocate and calculate rtau, the rotated position of each atom
   !
   do isym = 1, nsym
