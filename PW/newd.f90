@@ -216,7 +216,7 @@ SUBROUTINE newd_g()
         !
      ELSE if_noncolin
         paw:&
-        IF (okpaw) THEN
+        IF (upf(nt)%tpawp) THEN
             !
             DO is = 1, nspin
             !

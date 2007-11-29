@@ -94,7 +94,7 @@ SUBROUTINE PAW_post_init()
     types : &
     DO nt = 1,ntyp
         DO na = first_nat, last_nat
-            IF (ityp(na) == nt ) CYCLE types
+            IF (ityp(na) == nt.or..not.upf(nt)%tpawp ) CYCLE types
         ENDDO
         ! If I can't find any atom within first_nat and last_nat
         ! which is of type nt, then I can deallocate:
