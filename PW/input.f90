@@ -922,14 +922,6 @@ SUBROUTINE iosys()
      !
   END SELECT
   !
-  IF ( wfc_order > 0 .AND. noncolin ) THEN
-     !
-     CALL errore( 'iosys', &
-                & 'wfc extrapolation not implemented in the ' // &
-                & 'noncollinear case', 1 )
-     !
-  END IF
-  !
   IF ( occupations == 'fixed' .AND. nspin == 2  .AND. lscf ) THEN
      !
      IF ( two_fermi_energies ) THEN

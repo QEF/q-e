@@ -182,6 +182,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
+  USE becmod,               ONLY : allocate_bec, deallocate_bec
   !
   IMPLICIT NONE
   !
@@ -202,6 +203,10 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   ALLOCATE( h_diag( npwx, npol ) )
   ALLOCATE( s_diag( npwx, npol ) )
   !
+  ! ... allocate space for <beta_i|psi_j> - used in h_psi and s_psi
+  !
+  CALL allocate_bec ( nkb, nbnd )
+  !
   IF ( gamma_only ) THEN
      !
      CALL c_bands_gamma()
@@ -212,6 +217,9 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
      !
   END IF
   !
+  ! ... deallocate work space
+  !
+  CALL deallocate_bec ( )
   DEALLOCATE( s_diag )
   DEALLOCATE( h_diag )
   !
@@ -239,13 +247,7 @@ CONTAINS
     !
     ! ... Diagonalization of a real Hamiltonian
     !
-    USE becmod,           ONLY : rbecp
-    !
     IMPLICIT NONE
-    !
-    ! ... becp contains <beta|psi> - used in h_psi and s_psi
-    !
-    ALLOCATE( rbecp( nkb, nbnd ) )
     !
     IF ( isolve == 1 ) THEN
        !
@@ -331,10 +333,6 @@ CONTAINS
        !
     END IF
     !
-    ! ... deallocate work space
-    !
-    DEALLOCATE( rbecp )
-    !
     RETURN
     !
   END SUBROUTINE c_bands_gamma
@@ -345,25 +343,11 @@ CONTAINS
     !
     ! ... Complex Hamiltonian diagonalization
     !
-    USE becmod,              ONLY : becp, becp_nc
-    !
     IMPLICIT NONE
     !
     ! ... here the local variables
     !
     INTEGER :: ipol
-    !
-    ! ... becp contains <beta|psi> - used in h_psi and s_psi
-    !
-    IF ( noncolin ) THEN
-       !
-       ALLOCATE( becp_nc( nkb, npol, nbnd ) )
-       !
-    ELSE
-       !
-       ALLOCATE( becp( nkb, nbnd ) )
-       !
-    END IF
     !
     IF ( lelfield ) THEN
        !
@@ -477,18 +461,6 @@ CONTAINS
           IF ( test_exit_cond() ) EXIT david_loop
           !
        END DO david_loop
-       !
-    END IF
-    !
-    ! ... deallocate work space
-    !
-    IF ( noncolin ) THEN
-       !
-       DEALLOCATE( becp_nc )
-       !
-    ELSE
-       !
-       DEALLOCATE( becp )
        !
     END IF
     !

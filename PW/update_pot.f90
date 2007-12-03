@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -65,7 +65,11 @@ SUBROUTINE update_pot()
   USE control_flags, ONLY : pot_order, wfc_order, history, alpha0, beta0
   USE io_files,      ONLY : prefix, iunupdate, tmp_dir, nd_nmbr
   USE io_global,     ONLY : ionode, ionode_id
-  USE ions_base,     ONLY : nat, tau
+  USE cell_base,     ONLY : bg
+  USE ions_base,     ONLY : nat, tau, nsp, ityp
+  USE gvect,         ONLY : ngm, g, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
+                            eigts1, eigts2, eigts3
+  USE vlocal,        ONLY : strf
   USE mp,            ONLY : mp_bcast
   USE mp_global,     ONLY : intra_image_comm
   !
@@ -80,6 +84,8 @@ SUBROUTINE update_pot()
   !
   CALL start_clock( 'update_pot' )
   !
+  ALLOCATE( tauold( 3, nat, 3 ) )
+  !
   IF ( ionode ) THEN
      !
      ! ... default values for extrapolation coefficients (if history < 3 they
@@ -92,8 +98,6 @@ SUBROUTINE update_pot()
      !
      IF ( exists ) THEN
         !
-        ALLOCATE( tauold( 3, nat, 3 ) )
-        !
         READ( UNIT = iunupdate, FMT = * ) history
         READ( UNIT = iunupdate, FMT = * ) tauold
         !
@@ -102,13 +106,12 @@ SUBROUTINE update_pot()
         !
         CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
         !
-        DEALLOCATE( tauold )
-        !
         CLOSE( UNIT = iunupdate, STATUS = 'KEEP' )
         !
      ELSE
         !
         history = 0
+        tauold = 0.0_dp
         !
         CLOSE( UNIT = iunupdate, STATUS = 'DELETE' )
         !
@@ -118,9 +121,56 @@ SUBROUTINE update_pot()
   !
   CALL mp_bcast( alpha0, ionode_id, intra_image_comm )
   CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
+  CALL mp_bcast( tauold, ionode_id, intra_image_comm )
   !
   ! ... determines the maximum effective order of the extrapolation on the
   ! ... basis of the files that are really available
+  !
+  ! ... for the wavefunctions
+  !
+  IF ( ionode ) THEN
+     !
+     wfc_extr = MIN( 1, history, wfc_order )
+     !
+     INQUIRE( FILE = TRIM( tmp_dir ) // &
+            & TRIM( prefix ) // '.oldwfc' // nd_nmbr, EXIST = exists )
+     !
+     IF ( exists ) THEN
+        !
+        wfc_extr = MIN( 2, history, wfc_order  )
+        !
+        INQUIRE( FILE = TRIM( tmp_dir ) // &
+               & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )
+        !
+        IF ( exists ) wfc_extr = MIN( 3, history, wfc_order )
+        !
+     END IF
+     !
+  END IF
+  !
+  CALL mp_bcast( wfc_extr, ionode_id, intra_image_comm )
+  !
+  IF ( wfc_order > 0 ) THEN
+     !
+     ! ... save tau(t+dt), replace with tau(t)
+     ! ... extrapolate_wfcs needs tau(t) to evaluate S(t)
+     ! ... note that structure factors have not yet been updated
+     !
+     tauold (:,:,2) = tau (:,:)
+     tau (:,:) = tauold (:,:,1)
+     !
+     CALL extrapolate_wfcs( wfc_extr )
+     !
+     !!!IF ( pot_order < 0 ) CALL sum_band ( )
+     !!!IF ( pot_order < 0 ) CALL v_of_rho ( )
+     !
+     ! ... restore tau(t+dt)
+     !
+     tau (:,:) = tauold (:,:,2)
+     !
+  END IF
+  !
+  DEALLOCATE( tauold )
   !
   ! ... for the charge density
   !
@@ -148,32 +198,6 @@ SUBROUTINE update_pot()
   !
   IF ( pot_order > 0 ) CALL extrapolate_charge( rho_extr )
   !
-  ! ... for the wavefunctions
-  !
-  IF ( ionode ) THEN
-     !
-     wfc_extr = MIN( 1, history, wfc_order )
-     !
-     INQUIRE( FILE = TRIM( tmp_dir ) // &
-            & TRIM( prefix ) // '.oldwfc' // nd_nmbr, EXIST = exists )
-     !
-     IF ( exists ) THEN
-        !
-        wfc_extr = MIN( 2, history, wfc_order  )
-        !
-        INQUIRE( FILE = TRIM( tmp_dir ) // &
-               & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )
-        !
-        IF ( exists ) wfc_extr = MIN( 3, history, wfc_order )
-        !
-     END IF
-     !
-  END IF
-  !
-  CALL mp_bcast( wfc_extr, ionode_id, intra_image_comm )
-  !
-  IF ( wfc_order > 0 ) CALL extrapolate_wfcs( wfc_extr )
-  !
   CALL stop_clock( 'update_pot' )
   !
   RETURN
@@ -187,7 +211,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE constants,            ONLY : eps32
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
-  USE cell_base,            ONLY : omega, bg, alat
+  USE cell_base,            ONLY : omega, bg
   USE ions_base,            ONLY : nat, tau, nsp, ityp
   USE gvect,                ONLY : nrxx, ngm, g, gg, gstart, nr1, nr2, nr3, &
                                    nl, eigts1, eigts2, eigts3, nrx1, nrx2, nrx3
@@ -409,14 +433,20 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   !
   USE io_global,            ONLY : stdout
   USE kinds,                ONLY : DP
-  USE klist,                ONLY : nks, ngk
-  USE control_flags,        ONLY : isolve, alpha0, beta0, wfc_order
-  USE wvfct,                ONLY : nbnd, npw, npwx, igk
+  USE klist,                ONLY : nks, ngk, xk
+  USE lsda_mod,             ONLY : lsda, current_spin, isk
+  USE control_flags,        ONLY : alpha0, beta0, wfc_order
+  USE wvfct,                ONLY : nbnd, npw, npwx, igk, current_k
+  USE ions_base,            ONLY : nat, tau
   USE io_files,             ONLY : nwordwfc, iunigk, iunwfc, iunoldwfc, &
                                    iunoldwfc2, prefix
   USE buffers,              ONLY : get_buffer, save_buffer
-!  USE noncollin_module,     ONLY : noncolin
+  USE uspp,                 ONLY : nkb, vkb, okvan
   USE wavefunctions_module, ONLY : evc
+  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
+                                   becp, rbecp, becp_nc
+  USE noncollin_module,     ONLY : noncolin, npol
+  USE control_flags,        ONLY : gamma_only
   !
   IMPLICIT NONE
   !
@@ -434,9 +464,9 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! left unitary matrix in the SVD of sp_m
     ! right unitary matrix in the SVD of sp_m
     ! workspace for ZGESVD
-  COMPLEX(DP), ALLOCATABLE :: evcold(:,:)
-    ! wavefunctions at previous iteration
-  REAL(DP), ALLOCATABLE :: ew(:), rwork(:)
+  COMPLEX(DP), ALLOCATABLE :: evcold(:,:), aux(:,:)
+    ! wavefunctions at previous iteration + workspace
+  REAL(DP), ALLOCATABLE :: ew(:), rwork(:), rs_m(:,:)
     ! the eigenvalues of s_m
     ! workspace for ZGESVD
   LOGICAL :: exst
@@ -457,18 +487,27 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
      !
-  ELSE IF ( wfc_extr == 2 ) THEN
+  ELSE 
      !
      CALL diropn( iunoldwfc, 'oldwfc', 2*nwordwfc, exst )
+     IF ( wfc_extr > 2 .OR. wfc_order > 2 ) &
+        CALL diropn( iunoldwfc2, 'old2wfc', 2*nwordwfc, exst )
      !
-     IF ( wfc_order > 2 ) CALL diropn( iunoldwfc2, 'old2wfc', 2*nwordwfc, exst )
-     !
-     ALLOCATE( evcold( npwx, nbnd ) )
-     !
-     WRITE( stdout, '(5X,"first order wave-functions extrapolation")' )
+     IF ( wfc_extr == 2 ) THEN
+        !
+        WRITE( stdout, '(5X,"first order wave-functions extrapolation")' )
+        !
+     ELSE
+        !
+        WRITE( stdout, '(5X,"second order wave-functions extrapolation")' )
+        !
+     END IF
      !
      lwork = 5*nbnd
      !
+     ALLOCATE( evcold( npwx*npol, nbnd ) )
+     ALLOCATE( aux( npwx*npol, nbnd ) )
+     CALL allocate_bec ( nkb, nbnd ) 
      ALLOCATE( s_m( nbnd, nbnd ), sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), &
                w_m( nbnd, nbnd ), work( lwork ), ew( nbnd ), rwork( lwork ) )
      !
@@ -478,17 +517,57 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      DO ik = 1, nks
         !
-        npw = ngk (ik)
-        IF ( nks > 1 ) READ( iunigk ) igk
-        !
         CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, -1 )
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
         !
-        ! ... construct s_m = <evcold|evc>
+        IF ( okvan ) THEN
+           !
+           ! ... Ultrasoft PP: calculate overlap matrix
+           ! ... various initializations: k, spin, number of PW, indices
+           !
+           current_k = ik
+           IF ( lsda ) current_spin = isk(ik)
+           npw = ngk (ik)
+           IF ( nks > 1 ) READ( iunigk ) igk
+           !
+           call g2_kin (ik)
+           !
+           ! ... Calculate nonlocal pseudopotential projectors |beta>
+           !
+           IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
+           !
+           IF ( gamma_only ) THEN
+              CALL ccalbec( nkb, npwx, npw, nbnd,rbecp, vkb, evc )
+           ELSE IF ( noncolin) THEN
+              CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc )
+           ELSE
+              CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+           END IF
+           !
+           CALL s_psi ( npwx, npw, nbnd, evc, aux )
+        ELSE
+           !
+           ! ... Norm-Conserving  PP: no overlap matrix
+           !
+           aux = evc
+           !
+        END IF
         !
-        CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
-                    evcold, npwx, evc, npwx, ZERO, s_m, nbnd )
+        ! ... construct s_m = <evcold|S|evc>
         !
+        IF ( gamma_only ) THEN
+            ALLOCATE ( rs_m (nbnd,nbnd) )
+            CALL pw_gemm ( 'N', nbnd, nbnd, npw, evcold, npwx, &
+                        aux, npwx, rs_m, nbnd )
+            s_m(:,:) = rs_m(:,:)
+            DEALLOCATE ( rs_m )
+        ELSE IF ( noncolin) THEN
+           CALL ZGEMM( 'C', 'N', nbnd, nbnd, npwx*npol, ONE, &
+                       evcold, npwx*npol, aux, npwx*npol, ZERO, s_m, nbnd )
+        ELSE
+           CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
+                       evcold, npwx, aux, npwx, ZERO, s_m, nbnd )
+        END IF
         CALL reduce( 2*nbnd*nbnd, s_m )
         !
         ! ... construct sp_m
@@ -515,37 +594,42 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, &
                     u_m, nbnd, w_m, nbnd, ZERO, sp_m, nbnd )
         !
-        ! ... now use evcold as workspace to calculate "aligned" wavefcts:
+        ! ... now use aux as workspace to calculate "aligned" wavefcts:
         !
-        ! ... evcold_i = sum_j evc_j*sp_m_ji (eq.3.21)
+        ! ... aux_i = sum_j evc_j*sp_m_ji (eq.3.21)
         !
         CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
-                    evc, npwx, sp_m, nbnd, ZERO, evcold, npwx )
+                    evc, npwx, sp_m, nbnd, ZERO, aux, npwx )
         !
-        ! ... save to file the aligned wavefcts
+        ! ... extrapolate the wfc's (note that aux contains wavefcts
+        ! ... at (t) and evcold contains wavefcts at (t-dt) )
         !
-        CALL save_buffer( evcold, nwordwfc, iunwfc, ik )
-        !
-        ! ... re-read from file the wavefcts at (t-dt)
-        !
-        CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, -1 )
-        !
-        ! ... extrapolate the wfc's (note that evcold contains wavefcts
-        ! ... at (t) and evc contains wavefcts at (t-dt) )
-        !
-        evc = 2.D0*evcold - evc
+        IF ( wfc_extr == 3 ) THEN
+           !
+           ! ... read wavefunctions at (t-2*dt)
+           !
+           CALL davcio( evc, 2*nwordwfc, iunoldwfc2, ik, - 1 )
+           !
+           ! ... alpha0 and beta0 are calculated in "move_ions"
+           !
+           evc = ( 1 + alpha0 ) * aux + ( beta0 - alpha0 ) * evcold &
+               - beta0 * evc
+           !
+        ELSE
+           !
+           evc = 2.D0*aux - evcold
+           !
+        END IF
         !
         ! ... move the files: "old" -> "old1" and "now" -> "old"
         !
-        IF ( wfc_order > 2 ) THEN
+        IF ( wfc_extr > 2 .OR. wfc_order > 2 ) THEN
            !
-           CALL davcio( evcold, 2*nwordwfc, iunoldwfc,  ik, -1 )
            CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, +1 )
            !
         END IF
         !
-        CALL get_buffer( evcold, nwordwfc, iunwfc, ik )
-        CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, +1 )
+        CALL davcio( aux, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
         ! ... save evc to file iunwfc
         !
@@ -556,125 +640,16 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      IF ( zero_ew > 0 ) &
         WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,  &
                         &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
-                        &  I2," zero eigenvalues")' ) zero_ew
+                        &  I2," small (< 0.1) eigenvalues")' ) zero_ew
      !
      DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
-     !
+     CALL deallocate_bec () 
+     DEALLOCATE( aux )
      DEALLOCATE( evcold )
      !
      CLOSE( UNIT = iunoldwfc, STATUS = 'KEEP' )
-     !
-     IF ( wfc_order > 2 ) CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )
-     !
-  ELSE
-     !
-     ! ... case :  wfc_extr = 3
-     !
-     CALL diropn( iunoldwfc,  'oldwfc',  2*nwordwfc, exst )
-     CALL diropn( iunoldwfc2, 'old2wfc', 2*nwordwfc, exst )
-     !
-     ALLOCATE( evcold( npwx, nbnd ) )
-     !
-     WRITE( stdout, '(5X,"second order wave-functions extrapolation")' )
-     !
-     lwork = 5*nbnd
-     !
-     ALLOCATE( s_m( nbnd, nbnd ), sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), &
-               w_m( nbnd, nbnd ), work( lwork ), ew( nbnd ), rwork( lwork ) )
-     !
-     IF ( nks > 1 ) REWIND( iunigk )
-     !
-     zero_ew = 0
-     !
-     DO ik = 1, nks
-        !
-        npw = ngk (ik)
-        IF ( nks > 1 ) READ( iunigk ) igk
-        !
-        CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, -1 )
-        CALL get_buffer( evc, nwordwfc, iunwfc, ik )
-        !
-        ! ... construct s_m = <evcold|evc>
-        !
-        CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
-                    evcold, npwx, evc, npwx, ZERO, s_m, nbnd )
-        !
-        CALL reduce( 2*nbnd*nbnd, s_m )
-        !
-        ! ... construct sp_m
-        !
-        DO i = 1, nbnd
-          !
-          sp_m(:,i) = CONJG( s_m(i,:) )
-          !
-        END DO
-        !
-        ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29) by means the
-        ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m
-        ! ... becomes u_m * w_m
-        !
-        CALL ZGESVD( 'A', 'A', nbnd, nbnd, sp_m, nbnd, ew, u_m, &
-                     nbnd, w_m, nbnd, work, lwork, rwork, info )
-        !
-        ! ... check on eigenvalues
-        !
-        zero_ew = COUNT( ew(:) < 0.1D0 )
-        !
-        ! ... use sp_m to store u_m * w_m
-        !
-        CALL ZGEMM( 'N', 'N', nbnd, nbnd, nbnd, ONE, &
-                    u_m, nbnd, w_m, nbnd, ZERO, sp_m, nbnd )
-        !
-        ! ... now use evcold as workspace to calculate "aligned" wavefcts:
-        !
-        ! ... evcold_i = sum_j evc_j*sp_m_ji (eq.3.21)
-        !
-        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
-                    evc, npwx, sp_m, nbnd, ZERO, evcold, npwx )
-        !
-        ! ... save to file the aligned wavefcts
-        !
-        CALL save_buffer( evcold, nwordwfc, iunwfc, ik )
-        !
-        ! ... re-read from file the wavefcts at (t-dt)
-        !
-        CALL davcio( evc, 2*nwordwfc, iunoldwfc, ik, - 1 )
-        !
-        ! ... extrapolate the wfc's :
-        ! ... if wfc_extr == 3 use the second order extrapolation formula
-        !
-        evc = ( 1 + alpha0 )*evcold + ( beta0 - alpha0 )*evc
-        !
-        CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, - 1 )
-        !
-        evc = evc - beta0*evcold
-        !
-        ! ... move the files: "old" -> "old1" and "now" -> "old"
-        !
-        CALL davcio( evcold, 2*nwordwfc, iunoldwfc,  ik, -1 )
-        CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, +1 )
-        !
-        CALL get_buffer( evcold, nwordwfc, iunwfc, ik )
-        !
-        CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, +1 )
-        !
-        ! ... save evc to file iunwfc
-        !
-        CALL save_buffer( evc, nwordwfc, iunwfc, ik )
-        !
-     END DO
-     !
-     IF ( zero_ew > 0 ) &
-        WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,  &
-                        &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
-                        &  I2," zero eigenvalues")' ) zero_ew
-     !
-     DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
-     !
-     DEALLOCATE( evcold )
-     !
-     CLOSE( UNIT = iunoldwfc,  STATUS = 'KEEP' )
-     CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )
+     IF ( wfc_extr > 2 .OR. wfc_order > 2 ) &
+        CLOSE( UNIT = iunoldwfc2, STATUS = 'KEEP' )
      !
   END IF
   !

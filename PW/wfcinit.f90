@@ -143,7 +143,7 @@ SUBROUTINE init_wfc ( ik )
   !
   USE kinds,                ONLY : DP
   USE bp,                   ONLY : lelfield
-  USE control_flags,        ONLY : gamma_only
+  USE becmod,               ONLY : allocate_bec, deallocate_bec
   USE constants,            ONLY : tpi
   USE cell_base,            ONLY : tpiba2
   USE basis,                ONLY : natomwfc, startingwfc
@@ -151,7 +151,7 @@ SUBROUTINE init_wfc ( ik )
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npw, npwx, igk, et
   USE uspp,                 ONLY : nkb, okvan
-  USE noncollin_module,     ONLY : noncolin, npol
+  USE noncollin_module,     ONLY : npol
   USE wavefunctions_module, ONLY : evc
   USE random_numbers,       ONLY : rndm
   !
@@ -252,7 +252,7 @@ SUBROUTINE init_wfc ( ik )
   !
   ! ... Allocate space for <beta|psi>
   !
-  CALL allocate_bec ( )
+  CALL allocate_bec ( nkb, n_starting_wfc )
   !
   ! ... the following trick is for electric fields with Berry's phase:
   ! ... by setting lelfield = .false. one prevents the calculation of
@@ -277,61 +277,5 @@ SUBROUTINE init_wfc ( ik )
   DEALLOCATE( wfcatom )
   !
   RETURN
-  !
-CONTAINS
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE allocate_bec ()
-    !-----------------------------------------------------------------------
-    !
-    USE becmod, ONLY : rbecp, becp, becp_nc
-    !
-    IMPLICIT NONE
-    !
-    ! ... *bec* contain <beta|psi> - used in h_psi and s_psi
-    !
-    IF ( gamma_only ) THEN 
-       !
-       ALLOCATE( rbecp( nkb, n_starting_wfc ) )
-       !
-    ELSE IF ( noncolin) THEN
-       !
-       ALLOCATE( becp_nc( nkb, npol, n_starting_wfc ) )
-       !
-    ELSE
-       !
-       ALLOCATE( becp( nkb, n_starting_wfc ) )
-       !
-    END IF
-    !
-    RETURN
-    !
-  END SUBROUTINE allocate_bec
-  !
-  !-----------------------------------------------------------------------
-  SUBROUTINE deallocate_bec ()
-    !-----------------------------------------------------------------------
-    !
-    USE becmod, ONLY : rbecp, becp, becp_nc
-    !
-    IMPLICIT NONE
-    !
-    IF ( gamma_only ) THEN 
-       !
-       DEALLOCATE( rbecp )
-       !
-    ELSE IF ( noncolin) THEN
-       !
-       DEALLOCATE( becp_nc )
-       !
-    ELSE
-       !
-       DEALLOCATE( becp )
-       !
-    END IF
-    !
-    RETURN
-    !
-  END SUBROUTINE deallocate_bec
   !
 END SUBROUTINE init_wfc

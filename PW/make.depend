@@ -100,7 +100,9 @@ average_pp.o : ../Modules/atom.o
 average_pp.o : ../Modules/kind.o
 average_pp.o : ../Modules/uspp.o
 average_pp.o : pwcom.o
+becmod.o : ../Modules/control_flags.o
 becmod.o : ../Modules/kind.o
+becmod.o : noncol.o
 bp_c_phase.o : ../Modules/cell_base.o
 bp_c_phase.o : ../Modules/constants.o
 bp_c_phase.o : ../Modules/io_files.o
@@ -646,8 +648,6 @@ irrek.o : ../Modules/kind.o
 iweights.o : ../Modules/kind.o
 iweights.o : noncol.o
 kpoint_grid.o : ../Modules/kind.o
-kpoint_grid.o : noncol.o
-kpoint_grid.o : pwcom.o
 lchk_tauxk.o : ../Modules/kind.o
 make_pointlists.o : ../Modules/cell_base.o
 make_pointlists.o : ../Modules/io_global.o
@@ -821,7 +821,6 @@ print_clock_pw.o : ../Modules/control_flags.o
 print_clock_pw.o : ../Modules/io_global.o
 print_clock_pw.o : ../Modules/mp_global.o
 print_clock_pw.o : ../Modules/paw_variables.o
-print_clock_pw.o : pwcom.o
 print_ks_energies.o : ../Modules/constants.o
 print_ks_energies.o : ../Modules/control_flags.o
 print_ks_energies.o : ../Modules/io_global.o
@@ -1260,7 +1259,9 @@ update_pot.o : ../Modules/ions_base.o
 update_pot.o : ../Modules/kind.o
 update_pot.o : ../Modules/mp.o
 update_pot.o : ../Modules/mp_global.o
+update_pot.o : ../Modules/uspp.o
 update_pot.o : ../Modules/wavefunctions.o
+update_pot.o : becmod.o
 update_pot.o : buffers.o
 update_pot.o : io_rho_xml.o
 update_pot.o : noncol.o
