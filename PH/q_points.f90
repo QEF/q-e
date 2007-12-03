@@ -21,34 +21,46 @@ SUBROUTINE q_points ( )
   
   integer :: i, iq, ierr, iudyn = 26
   logical :: exist_gamma
+  logical, external :: is_equivalent
   real(DP), allocatable, dimension(:) :: wq  
 
   !
-  !  calculates the Monkhorst-Pack grid
+  !  calculate the Monkhorst-Pack grid
   !
 
-  if( nq1 .le. 0 .or. nq2 .le. 0 .or. nq3 .le. 0 ) &
-       call errore('q_points','nq1 or nq2 or nq3 .le. 0',1)
-  if( iq1 .lt. 0 .or. iq2 .lt. 0 .or. iq3 .lt. 0 ) &
-       call errore('q_points','iq1 or iq2 or iq3 .le. 0',1)
-  if( iq1 .gt. nq1 .or. iq2 .gt. nq2 .or. iq3 .gt. iq3 ) &
-       call errore('q_points','iq1 or iq2 or iq3 .le. 0',1)
+  if( nq1 <= 0 .or. nq2 <= 0 .or. nq3 <= 0 ) &
+       call errore('q_points','nq1 or nq2 or nq3 <= 0',1)
 
   allocate (wq(nqmax))
   allocate (x_q(3,nqmax))
   call kpoint_grid( nsym, time_reversal, s, t_rev, bg, nqmax, &
                          0,0,0, nq1,nq2,nq3, nqs, x_q, wq )
-
   deallocate (wq)
+  !
+  !  if a single q-point of the grid requested
+  !
+  IF ( iq1 < 0 .or. iq2 < 0 .or. iq3 < 0 ) &
+       CALL errore('q_points','iq1 or iq2 or iq3 < 0',1)
+  IF ( iq1 > nq1 .or. iq2 > nq2 .or. iq3 > iq3 ) &
+       CALL errore('q_points','iq1 or iq2 or iq3 > nq1 or nq2 or nq3',1)
+  DO iq = 1, nqs
+     IF ( is_equivalent ( iq1, iq2, iq3, nq1, nq2, nq3, x_q(1,iq), bg, &
+                          time_reversal, nsym, s, t_rev ) ) THEN
+        x_q(:,1) = x_q(1,iq)
+        nqs = 1
+        EXIT 
+     END IF
+  END DO
+  IF ( nqs > 1 ) CALL errore('q_points','could not find required q-point',1)
   !
   ! Check if the Gamma point is one of the points and put
   ! it in the first position (it should already be the first)
   !
   exist_gamma = .false.
   do iq = 1, nqs
-     if (abs(x_q(1,iq)) .lt. 1.0e-10_dp .and. &
+     if ( abs(x_q(1,iq)) .lt. 1.0e-10_dp .and. &
           abs(x_q(2,iq)) .lt. 1.0e-10_dp .and. &
-          abs(x_q(3,iq)) .lt. 1.0e-10_dp) then
+          abs(x_q(3,iq)) .lt. 1.0e-10_dp ) then
         exist_gamma = .true.
         if (iq .ne. 1) then
            do i = 1, 3
@@ -89,3 +101,50 @@ SUBROUTINE q_points ( )
   END IF
   return
 end subroutine q_points
+!
+!-----------------------------------------------------------------------
+LOGICAL FUNCTION is_equivalent ( ik1, ik2, ik3, nk1, nk2, nk3, xk, bg, &
+                                 time_reversal, nsym, s, t_rev )
+!-----------------------------------------------------------------------
+  !
+  ! ... Check if q-point defined by ik1, ik2, ik3 in the uniform grid
+  ! ... is equivalent to xk (cartesian) - used for single-q calculation
+  ! 
+  USE kinds, ONLY: DP
+  IMPLICIT NONE
+  !
+  INTEGER,  INTENT(in) :: ik1,ik2,ik3, nk1,nk2,nk3, nsym, t_rev(48), s(3,3,48)
+  LOGICAL,  INTENT(in) :: time_reversal 
+  REAL(DP), INTENT(in) :: bg(3,3)
+  REAL(DP), INTENT(in) :: xk(3)
+  !
+  REAL(DP), PARAMETER :: eps=1.0d-5
+  REAL(DP) :: xk_(3), xkr(3)
+  INTEGER :: ns
+  !
+  xk_(1) = DBLE(ik1-1)/nk1
+  xk_(2) = DBLE(ik2-1)/nk2
+  xk_(3) = DBLE(ik3-1)/nk3
+  xk_(:) = xk_(:)-NINT(xk_(:))
+  !
+  DO ns=1,nsym
+     !
+     xkr(:) = s(:,1,ns) * xk_(1) &
+            + s(:,2,ns) * xk_(2) &
+            + s(:,3,ns) * xk_(3)
+     xkr(:) = xkr(:) - NINT( xkr(:) )
+     IF (t_rev(ns) == 1) xkr(:) = -xkr(:)
+     ! 
+     CALL cryst_to_cart (1, xkr, bg, 1)
+     !
+     is_equivalent = ABS( xkr(1)-xk(1) ) < eps .AND. &
+                     ABS( xkr(2)-xk(2) ) < eps .AND. &
+                     ABS( xkr(3)-xk(3) ) < eps
+     IF ( is_equivalent)  RETURN 
+     !
+  END DO
+
+  is_equivalent = .false.
+  RETURN 
+
+END FUNCTION is_equivalent

@@ -242,7 +242,7 @@ PROGRAM phonon
         !
      END IF
      !
-     ! ... In the case of q != 0, we make first an non selfconsistent run
+     ! ... In the case of q != 0, we make first a non selfconsistent run
      !
      IF ( lnscf .AND. .NOT. lgamma ) THEN
         !
