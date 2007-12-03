@@ -450,6 +450,7 @@ force_us.o : ../Modules/ions_base.o
 force_us.o : ../Modules/kind.o
 force_us.o : ../Modules/uspp.o
 force_us.o : ../Modules/wavefunctions.o
+force_us.o : becmod.o
 force_us.o : buffers.o
 force_us.o : noncol.o
 force_us.o : pwcom.o
@@ -1176,6 +1177,7 @@ stres_us.o : ../Modules/kind.o
 stres_us.o : ../Modules/mp_global.o
 stres_us.o : ../Modules/uspp.o
 stres_us.o : ../Modules/wavefunctions.o
+stres_us.o : becmod.o
 stres_us.o : noncol.o
 stres_us.o : pwcom.o
 stress.o : ../Modules/cell_base.o
@@ -1201,6 +1203,7 @@ sum_band.o : ../Modules/mp_global.o
 sum_band.o : ../Modules/paw_variables.o
 sum_band.o : ../Modules/uspp.o
 sum_band.o : ../Modules/wavefunctions.o
+sum_band.o : becmod.o
 sum_band.o : buffers.o
 sum_band.o : noncol.o
 sum_band.o : paw_onecenter.o

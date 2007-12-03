@@ -44,6 +44,8 @@ SUBROUTINE sum_band()
   USE funct,                ONLY : dft_is_meta
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
+  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
+                                   becp, rbecp, becp_nc
   !
   IMPLICIT NONE
   !
@@ -101,6 +103,8 @@ SUBROUTINE sum_band()
   ! ... Needed for LDA+U
   !
   IF ( lda_plus_u ) CALL new_ns(rho%ns)  
+  !
+  IF ( okvan ) CALL allocate_bec (nkb,nbnd)
   !     
   ! ... specific routines are called to sum for each k point the contribution
   ! ... of the wavefunctions to the charge
@@ -115,6 +119,7 @@ SUBROUTINE sum_band()
      !
   END IF    
   !
+  IF ( okvan ) CALL deallocate_bec ( )
   !
   ! ... If a double grid is used, interpolate onto the fine grid
   !
@@ -269,11 +274,7 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1, w2
          ! weights
-       REAL(DP), ALLOCATABLE :: becp(:,:)
-         ! contains <beta|psi>
        !
-       !
-       ALLOCATE( becp( nkb, nbnd ) )
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -396,7 +397,7 @@ SUBROUTINE sum_band()
           IF ( .NOT. okvan ) CYCLE k_loop
           !
           IF ( nkb > 0 ) &
-             CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+             CALL ccalbec( nkb, npwx, npw, nbnd, rbecp, vkb, evc )
           !
           CALL start_clock( 'sum_band:becsum' )
           !
@@ -421,7 +422,7 @@ SUBROUTINE sum_band()
                             !
                             becsum(ijh,na,current_spin) = &
                                             becsum(ijh,na,current_spin) + &
-                                            w1 * becp(ikb,ibnd) * becp(ikb,ibnd)
+                                            w1 *rbecp(ikb,ibnd) *rbecp(ikb,ibnd)
                             !
                             ijh = ijh + 1
                             !
@@ -431,7 +432,7 @@ SUBROUTINE sum_band()
                                !
                                becsum(ijh,na,current_spin) = &
                                      becsum(ijh,na,current_spin) + &
-                                     w1 * 2.D0 * becp(ikb,ibnd) * becp(jkb,ibnd)
+                                     w1 * 2.D0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd)
                                !
                                ijh = ijh + 1
                                !
@@ -463,8 +464,6 @@ SUBROUTINE sum_band()
           !
        END DO k_loop
        !
-       DEALLOCATE( becp )
-       !
        RETURN
        !
      END SUBROUTINE sum_band_gamma
@@ -482,22 +481,14 @@ SUBROUTINE sum_band()
        !
        REAL(DP) :: w1
        ! weights
-       COMPLEX(DP), ALLOCATABLE :: becp(:,:), becp_nc(:,:,:)
-       ! contains <beta|psi>
-       !
        COMPLEX(DP), ALLOCATABLE :: becsum_nc(:,:,:,:)
        !
        INTEGER :: ipol, kh, kkb, is1, is2, js
        !
 
-       IF (okvan) THEN
-          IF (noncolin) THEN
-             ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
-             becsum_nc=(0.d0, 0.d0)
-             ALLOCATE( becp_nc( nkb, npol, nbnd ) )
-          ELSE
-             ALLOCATE( becp( nkb, nbnd ) )
-          END IF
+       IF (okvan .AND.  noncolin) THEN
+          ALLOCATE(becsum_nc(nhm*(nhm+1)/2,nat,npol,npol))
+          becsum_nc=(0.d0, 0.d0)
        ENDIF
        !
        ! ... here we sum for each k point the contribution
@@ -744,14 +735,7 @@ SUBROUTINE sum_band()
           END DO
        END IF
        !
-       IF (okvan) THEN
-          IF (noncolin) THEN
-             DEALLOCATE( becsum_nc )
-             DEALLOCATE( becp_nc )
-          ELSE
-             DEALLOCATE( becp )
-          ENDIF
-       END IF
+       IF ( ALLOCATED (becsum_nc) ) DEALLOCATE( becsum_nc )
        !
        RETURN
        !

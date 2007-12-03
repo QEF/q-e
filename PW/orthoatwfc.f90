@@ -24,7 +24,7 @@ SUBROUTINE orthoatwfc
   USE ldaU,       ONLY : swfcatom, U_projection
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : becp, rbecp, becp_nc
+  USE becmod,     ONLY : allocate_bec, deallocate_bec, becp, rbecp, becp_nc
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   ! 
@@ -82,15 +82,7 @@ SUBROUTINE orthoatwfc
   END IF
 
   ! Allocate the array becp = <beta|wfcatom>
-  IF ( gamma_only ) THEN 
-     ALLOCATE (rbecp (nkb,natomwfc)) 
-  ELSE
-     IF (noncolin) THEN
-        ALLOCATE ( becp_nc (nkb, npol, natomwfc)) 
-     ELSE
-        ALLOCATE ( becp (nkb,natomwfc)) 
-     END IF
-  END IF
+  CALL allocate_bec (nkb,natomwfc) 
   
   IF (nks > 1) REWIND (iunigk)
   
@@ -198,15 +190,7 @@ SUBROUTINE orthoatwfc
   DEALLOCATE (work)
   DEALLOCATE (e)
   DEALLOCATE (wfcatom)
-  IF ( gamma_only ) THEN 
-     DEALLOCATE (rbecp) 
-  ELSE
-     IF (noncolin) THEN
-        DEALLOCATE (becp_nc) 
-     ELSE
-        DEALLOCATE (becp) 
-     END IF
-  END IF
+  CALL deallocate_bec ( )
   !
   RETURN
      

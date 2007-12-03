@@ -26,6 +26,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE spin_orb,             ONLY : lspinorb
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_global,            ONLY : me_pool, root_pool
+  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
+                                   rbecp, becp, becp_nc
   !
   IMPLICIT NONE
   !
@@ -34,6 +36,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   INTEGER       :: ik
   REAL(DP) :: sigmanlc(3,3), gk(3,npw)
   !
+  CALL allocate_bec ( nkb, nbnd ) 
   !
   IF ( gamma_only ) THEN
      !
@@ -43,7 +46,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
      !
      CALL stres_us_k()
      !
-  END IF      
+  END IF
+  !
+  CALL deallocate_bec ( ) 
   !
   RETURN
   !
@@ -63,7 +68,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                         ikb, jkb, ih, jh, ijkb0
        REAL(DP)                 :: fac, xyz(3,3), q, evps, DDOT
        REAL(DP), ALLOCATABLE    :: qm1(:)
-       REAL(DP), ALLOCATABLE    :: becp(:,:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        ! dvkb contains the derivatives of the kb potential
        COMPLEX(DP)              :: ps
@@ -76,9 +80,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
-       ALLOCATE( becp( nkb, nbnd ) )
-       !
-       CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, becp, nkb )
+       CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, rbecp, nkb )
        !
        ALLOCATE( work1( npwx ), work2( npwx ), qm1( npwx ) )
        !
@@ -110,7 +112,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       ikb = ijkb0 + ih
                       ps = deeq(ih,ih,na,current_spin) - &
                            et(ibnd,ik) * qq(ih,ih,np)
-                      evps = evps + fac * ps * ABS( becp(ikb,ibnd) )**2
+                      evps = evps + fac * ps * ABS( rbecp(ikb,ibnd) )**2
                       !
                       IF ( upf(np)%tvanp .OR. newpseudo(np) ) THEN
                          !
@@ -124,7 +126,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ps = deeq(ih,jh,na,current_spin) - &
                                  et(ibnd,ik) * qq(ih,jh,np)
                             evps = evps + ps * fac * 2.D0 * &
-                                   becp(ikb,ibnd) * becp(jkb,ibnd)
+                                   rbecp(ikb,ibnd) * rbecp(jkb,ibnd)
                          END DO
                        END IF
                    END DO
@@ -151,7 +153,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                    DO ih = 1, nh(np)
                       ikb = ijkb0 + ih
                       IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                         ps = becp(ikb,ibnd) * &
+                         ps = rbecp(ikb,ibnd) * &
                               ( deeq(ih,ih,na,current_spin) - &
                                 et(ibnd,ik) * qq(ih,ih,np) )
                       ELSE
@@ -162,7 +164,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                          ps = (0.D0,0.D0)
                          DO jh = 1, nh(np)
                             jkb = ijkb0 + jh
-                            ps = ps + becp(jkb,ibnd) * &
+                            ps = ps + rbecp(jkb,ibnd) * &
                                  ( deeq(ih,jh,na,current_spin) - &
                                    et(ibnd,ik) * qq(ih,jh,np) )
                          END DO
@@ -204,7 +206,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                       DO ih = 1, nh(np)
                          ikb = ijkb0 + ih
                          IF ( .NOT. ( upf(np)%tvanp .OR. newpseudo(np) ) ) THEN
-                            ps = becp(ikb,ibnd) * &
+                            ps = rbecp(ikb,ibnd) * &
                                  ( deeq(ih,ih,na,current_spin) - &
                                    et(ibnd,ik) * qq(ih,ih,np ) )
                          ELSE 
@@ -215,7 +217,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                             ps = (0.D0,0.D0)
                             DO jh = 1, nh(np)
                                jkb = ijkb0 + jh
-                               ps = ps + becp(jkb,ibnd) * &
+                               ps = ps + rbecp(jkb,ibnd) * &
                                     ( deeq(ih,jh,na,current_spin) - &
                                       et(ibnd,ik) * qq(ih,jh,np) )
                             END DO
@@ -246,7 +248,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
           sigmanlc(l,l) = sigmanlc(l,l) - evps
        END DO
        !
-       DEALLOCATE( becp )
        DEALLOCATE( dvkb )
        DEALLOCATE( qm1, work2, work1 )
        !
@@ -269,7 +270,6 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
                                         ikb, jkb, ih, jh, ijkb0, is, js, ijs
        REAL(DP)                 :: fac, xyz (3, 3), q, evps, DDOT
        REAL(DP), ALLOCATABLE    :: qm1(:)
-       COMPLEX(DP), ALLOCATABLE :: becp(:,:), becp_nc(:,:,:)
        COMPLEX(DP), ALLOCATABLE :: work1(:), work2(:), dvkb(:,:)
        COMPLEX(DP), ALLOCATABLE :: work2_nc(:,:)
        ! dvkb contains the derivatives of the kb potential
@@ -284,11 +284,9 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
        if (noncolin) then
-          ALLOCATE( becp_nc( nkb, npol, nbnd ) )
           CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc )
           ALLOCATE( work2_nc(npwx,npol) )
        else
-          ALLOCATE( becp( nkb, nbnd ) )
           CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
        endif
        !
@@ -609,10 +607,8 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
 10     CONTINUE
        !
        IF (noncolin) THEN
-           DEALLOCATE( becp_nc )
            DEALLOCATE( work2_nc )
        ELSE
-           DEALLOCATE( becp )
            DEALLOCATE( work2 )
        ENDIF
        DEALLOCATE( dvkb )

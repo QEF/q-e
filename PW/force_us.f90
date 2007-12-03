@@ -30,6 +30,8 @@ SUBROUTINE force_us( forcenl )
   USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
+  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
+                                   rbecp, becp, becp_nc
   !
   IMPLICIT NONE
   !
@@ -38,6 +40,7 @@ SUBROUTINE force_us( forcenl )
   REAL(DP) :: forcenl(3,nat)
   ! output: the nonlocal contribution
   !
+  CALL allocate_bec ( nkb, nbnd )   
   !
   IF ( gamma_only ) THEN
      !
@@ -48,6 +51,8 @@ SUBROUTINE force_us( forcenl )
      CALL force_us_k()
      !
   END IF  
+  !
+  CALL deallocate_bec ( )   
   !
   RETURN
   !
@@ -61,8 +66,8 @@ SUBROUTINE force_us( forcenl )
        !
        IMPLICIT NONE
        !
-       REAL(DP), ALLOCATABLE    :: becp(:,:), dbecp (:,:,:)
-       ! auxiliary variables contain <beta|psi> and <dbeta|psi>
+       REAL(DP), ALLOCATABLE    :: rdbecp (:,:,:)
+       ! auxiliary variable, contains <dbeta|psi>
        COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
        REAL(DP) :: ps
@@ -72,7 +77,7 @@ SUBROUTINE force_us( forcenl )
        !
        forcenl(:,:) = 0.D0
        !
-       ALLOCATE( becp( nkb, nbnd ), dbecp( nkb, nbnd, 3 ) )    
+       ALLOCATE( rdbecp( nkb, nbnd, 3 ) )    
        ALLOCATE( vkb1(  npwx, nkb ) ) 
        !   
        IF ( nks > 1 ) REWIND iunigk
@@ -102,7 +107,7 @@ SUBROUTINE force_us( forcenl )
              !
              IF ( nkb > 0 ) &
                 CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb1, npwx, evc, npwx, &
-                              dbecp(1,1,ipol), nkb )
+                              rdbecp(1,1,ipol), nkb )
              !
           END DO
           !
@@ -118,7 +123,7 @@ SUBROUTINE force_us( forcenl )
                          DO ipol = 1, 3
                             forcenl(ipol,na) = forcenl(ipol,na) - &
                                        ps * wg(ibnd,ik) * 2.D0 * tpiba * &
-                                       dbecp(ikb,ibnd,ipol) * becp(ikb,ibnd)
+                                       rdbecp(ikb,ibnd,ipol) * becp(ikb,ibnd)
                          END DO
                       END DO
                       !
@@ -136,8 +141,8 @@ SUBROUTINE force_us( forcenl )
                                DO ipol = 1, 3
                                   forcenl(ipol,na) = forcenl(ipol,na) - &
                                      ps * wg(ibnd,ik) * 2.d0 * tpiba * &
-                                     ( dbecp(ikb,ibnd,ipol) * becp(jkb,ibnd) + &
-                                       dbecp(jkb,ibnd,ipol) * becp(ikb,ibnd) )
+                                     (rdbecp(ikb,ibnd,ipol) * becp(jkb,ibnd) + &
+                                      rdbecp(jkb,ibnd,ipol) * becp(ikb,ibnd) )
                                END DO
                             END DO
                          END DO
@@ -182,7 +187,7 @@ SUBROUTINE force_us( forcenl )
        END DO
        !
        DEALLOCATE( vkb1 )
-       DEALLOCATE( becp, dbecp ) 
+       DEALLOCATE(rdbecp ) 
        !
        RETURN
        !
@@ -194,8 +199,7 @@ SUBROUTINE force_us( forcenl )
        !  
        IMPLICIT NONE
        !
-       COMPLEX(DP), ALLOCATABLE :: becp(:,:), dbecp(:,:,:)
-       COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), dbecp_nc(:,:,:,:)
+       COMPLEX(DP), ALLOCATABLE :: dbecp(:,:,:), dbecp_nc(:,:,:,:)
        ! auxiliary variable contains <beta|psi> and <dbeta|psi>
        COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
        ! auxiliary variable contains g*|beta>
@@ -209,9 +213,9 @@ SUBROUTINE force_us( forcenl )
        forcenl(:,:) = 0.D0
        !
        IF (noncolin) then
-          ALLOCATE( becp_nc(nkb,npol,nbnd), dbecp_nc(nkb,npol,nbnd,3) )    
+          ALLOCATE( dbecp_nc(nkb,npol,nbnd,3) )    
        ELSE
-          ALLOCATE( becp( nkb, nbnd ), dbecp( nkb, nbnd, 3 ) )    
+          ALLOCATE( dbecp( nkb, nbnd, 3 ) )    
        ENDIF
        ALLOCATE( vkb1( npwx, nkb ) )   
        ! 
@@ -379,9 +383,9 @@ SUBROUTINE force_us( forcenl )
        !
        DEALLOCATE( vkb1 )
        IF (noncolin) THEN
-          DEALLOCATE( becp_nc, dbecp_nc )
+          DEALLOCATE( dbecp_nc )
        ELSE
-          DEALLOCATE( becp, dbecp )
+          DEALLOCATE( dbecp )
        ENDIF
        !
        ! ... The total D matrix depends on the ionic position via the
