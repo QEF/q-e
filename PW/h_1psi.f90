@@ -38,7 +38,6 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
      !
   END IF
   !
-  IF ( lelfield ) CALL h_epsi_her_apply ( lda, n, 1, psi, hpsi )
   !
   CALL stop_clock( 'h_1psi' )
   !

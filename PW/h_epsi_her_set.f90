@@ -705,7 +705,7 @@ subroutine h_epsi_her_set
             do nb=1,nbnd
                aux_g(:)=(0.d0,0.d0)
                do ig=1,npw0
-                  aux_g(mapgp_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)!ATTENZIONE + or - ?
+                  aux_g(mapgp_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)
                enddo
 !put evct on global  array
                call mp_sum(aux_g(:))
@@ -1126,7 +1126,7 @@ subroutine h_epsi_her_set
          do nb=1,nbnd
             aux_g(:)=(0.d0,0.d0)
             do ig=1,npw0
-               aux_g(mapgm_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)!ATTENZIONE + or - ?
+               aux_g(mapgm_global(ig_l2g(igk0(ig)),gdir))=evct(ig,nb)
             enddo
 !put evct on global  array
             call mp_sum(aux_g(:))
@@ -1175,58 +1175,6 @@ subroutine h_epsi_her_set
    ENDIF
 
 
-
-   if(okvan) then
-! in US case, add  S to evcp and evcm
-
-      CALL ccalbec(nkb, npwx, npw1, nbnd, becp1, vkb, evcp)   
-      ps (:,:) = (0.d0, 0.d0)
-      ijkb0 = 0
-      do nt = 1, ntyp
-         do na = 1, nat
-            if (ityp (na) == nt) then
-               do ibnd = 1, nbnd
-                  do jh = 1, nh (nt)
-                     jkb = ijkb0 + jh
-                     do ih = 1, nh (nt)
-                        ikb = ijkb0 + ih
-                        ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                             qq(ih,jh,nt)* becp1(jkb,ibnd)
-                     enddo
-                  enddo
-               enddo
-               ijkb0 = ijkb0 + nh (nt)
-            endif
-         enddo
-      enddo
-      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
-           npwx, ps, nkb, (1.d0, 0.d0) , evcp, npwx)
-      
-      CALL ccalbec(nkb, npwx, npw1, nbnd, becp1, vkb, evcm)   
-      ps (:,:) = (0.d0, 0.d0)
-      ijkb0 = 0
-      do nt = 1, ntyp
-         do na = 1, nat
-            if (ityp (na) == nt) then
-               do ibnd = 1, nbnd
-                  do jh = 1, nh (nt)
-                     jkb = ijkb0 + jh
-                     do ih = 1, nh (nt)
-                        ikb = ijkb0 + ih
-                        ps (ikb, ibnd) = ps (ikb, ibnd) + &
-                             qq(ih,jh,nt)* becp1(jkb,ibnd)
-                     enddo
-                  enddo
-               enddo
-               ijkb0 = ijkb0 + nh (nt)
-            endif
-         enddo
-      enddo
-      call ZGEMM ('N', 'N', npw1, nbnd , nkb, (1.d0, 0.d0) , vkb, &!vkb is relative to the last ik read
-           npwx, ps, nkb, (1.d0, 0.d0) , evcm, npwx)
-
-
-   endif
 
 !writes projectors to disk 
    call davcio(evcm, 2*nwordwfc,iunefieldm,ik,1)

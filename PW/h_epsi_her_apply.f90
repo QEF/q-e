@@ -109,7 +109,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
               DO j = 1,nhjkbm
                  ! bec_evcel is relative to ik
                  pref = pref+CONJG(bec_evcel(jkb,mb))*becp0(jkb1+j,nb) &
-                      *qq(nhjkbm,j,np)
+                      *qq(nhjkb,j,np)
               ENDDO
            ENDDO
            sca= sca + pref
