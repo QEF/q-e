@@ -1,12 +1,13 @@
 
      Program PWSCF     v.4.0cvs starts ...
-     Today is  1Nov2007 at 15:51:47 
+     Today is 23Nov2007 at 10:51:10 
 
-     Ultrasoft (Vanderbilt) Pseudopotentials
+     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
 
      Current dimensions of program pwscf are:
-
-     ntypx =  4   npk = 40000  lmax =  3  ndmx =  3500
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
 
 
      bravais-lattice index     =            2
@@ -97,7 +98,7 @@
      total cpu time spent up to now is      0.16 secs
 
      total energy              =   -15.83638829 Ry
-     Harris-Foulkes estimate   =   -16.06852357 Ry
+     Harris-Foulkes estimate   =   -15.85759061 Ry
      estimated scf accuracy    <     0.06473318 Ry
 
      iteration #  2     ecut=    12.00 Ry     beta=0.70
@@ -170,7 +171,7 @@
 
      Writing output data file pwscf.save
 
-     PWSCF        :     0.28s CPU time,    0.35s wall time
+     PWSCF        :     0.28s CPU time,    0.36s wall time
 
      init_run     :     0.13s CPU
      electrons    :     0.09s CPU
@@ -178,20 +179,20 @@
 
 
      electrons    :     0.09s CPU
-     c_bands      :     0.05s CPU (       6 calls,   0.008 s avg)
+     c_bands      :     0.05s CPU (       6 calls,   0.009 s avg)
      sum_band     :     0.02s CPU (       6 calls,   0.003 s avg)
      v_of_rho     :     0.01s CPU (       6 calls,   0.002 s avg)
      v_h          :     0.00s CPU (       6 calls,   0.000 s avg)
      v_xc         :     0.01s CPU (       6 calls,   0.002 s avg)
      mix_rho      :     0.00s CPU (       6 calls,   0.000 s avg)
 
-     c_bands      :     0.05s CPU (       6 calls,   0.008 s avg)
+     c_bands      :     0.05s CPU (       6 calls,   0.009 s avg)
      init_us_2    :     0.00s CPU (      28 calls,   0.000 s avg)
      cegterg      :     0.05s CPU (      12 calls,   0.004 s avg)
 
      sum_band     :     0.02s CPU (       6 calls,   0.003 s avg)
 
-     wfcrot       :     0.01s CPU (       2 calls,   0.007 s avg)
+     wfcrot       :     0.02s CPU (       2 calls,   0.008 s avg)
      cegterg      :     0.05s CPU (      12 calls,   0.004 s avg)
      h_psi        :     0.05s CPU (      36 calls,   0.001 s avg)
      g_psi        :     0.00s CPU (      22 calls,   0.000 s avg)

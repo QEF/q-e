@@ -53,8 +53,6 @@ relax2    Al       forces in metals
                    bfgs_ndim=3
                    wavefunction extrapolation
 md        Si       verlet algorithm 
-vc-relax  As       Variable-cell optimization at zero pressure
-                   and under an external pressure
 neb       H        NEB calculation for the H2+H proton exchange
                    Automatic, manual, no choice of the climbing image
                    Old RRKJ format for pseudopotentials
@@ -63,8 +61,12 @@ berry     PbTiO3    scf: Q function in real space (tqr=.true.)
                    nscf: Berry's phase calculation
 lda+U     FeO      LDA+U with standard and user-defined occupancies
 metaGGA   C4H6     meta-GGA
+vc-relax  As       Variable-cell optimization at zero pressure
+                   and under an external pressure
+electric  Si       finite electric field using Berry's phase approach
 
 Tests are still missing for:
   forces with core corrections
   blyp, pw91
  'bands' 'vc-md'
+  makov-payne

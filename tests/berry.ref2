@@ -1,23 +1,13 @@
 
      Program PWSCF     v.4.0cvs starts ...
-     Today is 30Oct2007 at 10:10:33 
+     Today is 23Nov2007 at 10:18:15 
 
-     Parallel version (MPI)
-
-     Number of processors in use:       1
-
-     Ultrasoft (Vanderbilt) Pseudopotentials
+     Ultrasoft (Vanderbilt) Pseudopotentials and PAW
 
      Current dimensions of program pwscf are:
-
-     ntypx =  4   npk = 40000  lmax =  3  ndmx =  3500
-
-     Planes per process (thick) : nr3 = 27 npp =  27 ncplane =  729
-
-     Proc/  planes cols     G    planes cols    G      columns  G
-     Pool       (dense grid)       (smooth grid)      (wavefct grid)
-       1     27    517     8925   27    517     8925    161     1551
-
+     Max number of different atomic species (ntypx) = 10
+     Max number of k-points (npk) =  40000
+     Max angular momentum in pseudopotentials (lmaxx) =  3
 
 
      bravais-lattice index     =            1
@@ -144,14 +134,14 @@
 
      Starting wfc are   31 atomic wfcs
 
-     total cpu time spent up to now is      4.52 secs
+     total cpu time spent up to now is      4.29 secs
 
      Band Structure Calculation
      Davidson diagonalization with overlap
 
      ethr =  2.27E-09,  avg # of iterations = 12.3
 
-     total cpu time spent up to now is     33.94 secs
+     total cpu time spent up to now is     34.14 secs
 
      End of band structure calculation
 
@@ -211,7 +201,7 @@
 
           k = 0.1250 0.3750-0.1667     band energies (ev):
 
-   -44.7213 -21.3779 -21.3289 -21.3213  -6.0355  -5.3333  -5.2853  -4.5363
+   -44.7213 -21.3778 -21.3289 -21.3213  -6.0355  -5.3333  -5.2853  -4.5363
     -4.4811  -4.4460  -4.3297  -4.2354   3.5415   6.7391   7.1005   7.5794
      8.2239   8.6370   9.0805   9.8818   9.9285  10.5142
 
@@ -223,7 +213,7 @@
 
           k = 0.1250 0.3750 0.1667     band energies (ev):
 
-   -44.7213 -21.3779 -21.3289 -21.3213  -6.0355  -5.3333  -5.2853  -4.5363
+   -44.7213 -21.3778 -21.3289 -21.3213  -6.0355  -5.3333  -5.2853  -4.5363
     -4.4811  -4.4460  -4.3297  -4.2354   3.5415   6.7391   7.1005   7.5794
      8.2239   8.6370   9.0805   9.8818   9.9285  10.5142
 
@@ -358,7 +348,7 @@
         the polarization vector (in different units, and being Omega
         the volume of the unit cell):
 
-           P =   0.2942116  (mod  14.7398000)  (e/Omega).bohr
+           P =   0.2942115  (mod  14.7398000)  (e/Omega).bohr
 
            P =   0.0007350  (mod   0.0368220)  e/bohr^2
 
@@ -373,44 +363,43 @@
 
      Writing output data file pwscf.save
 
-     PWSCF        :    36.01s CPU time,   36.92s wall time
+     PWSCF        :    36.37s CPU time,   37.74s wall time
 
-     init_run     :     3.84s CPU
-     electrons    :    31.26s CPU
+     init_run     :     3.67s CPU
+     electrons    :    31.87s CPU
 
 
-     electrons    :    31.26s CPU
-     c_bands      :    29.42s CPU
+     electrons    :    31.87s CPU
+     c_bands      :    29.85s CPU
      v_of_rho     :     0.01s CPU
      v_h          :     0.00s CPU
      v_xc         :     0.01s CPU
      newd         :     0.20s CPU
 
-     c_bands      :    29.42s CPU
-     init_us_2    :     0.18s CPU (      57 calls,   0.003 s avg)
-     cegterg      :    25.93s CPU (      21 calls,   1.235 s avg)
+     c_bands      :    29.85s CPU
+     init_us_2    :     0.17s CPU (      57 calls,   0.003 s avg)
+     cegterg      :    26.42s CPU (      21 calls,   1.258 s avg)
 
 
-     wfcrot       :     3.09s CPU (      21 calls,   0.147 s avg)
-     cegterg      :    25.93s CPU (      21 calls,   1.235 s avg)
-     h_psi        :    17.52s CPU (     300 calls,   0.058 s avg)
+     wfcrot       :     3.06s CPU (      21 calls,   0.146 s avg)
+     cegterg      :    26.42s CPU (      21 calls,   1.258 s avg)
+     h_psi        :    15.99s CPU (     300 calls,   0.053 s avg)
      g_psi        :     0.24s CPU (     258 calls,   0.001 s avg)
-     overlap      :     3.02s CPU (     258 calls,   0.012 s avg)
-     diaghg       :     2.33s CPU (     279 calls,   0.008 s avg)
-     update       :     1.88s CPU (     258 calls,   0.007 s avg)
-     last         :     1.58s CPU (      63 calls,   0.025 s avg)
+     overlap      :     3.89s CPU (     258 calls,   0.015 s avg)
+     diaghg       :     2.26s CPU (     279 calls,   0.008 s avg)
+     update       :     1.93s CPU (     258 calls,   0.007 s avg)
+     last         :     2.14s CPU (      63 calls,   0.034 s avg)
 
-     h_psi        :    17.52s CPU (     300 calls,   0.058 s avg)
+     h_psi        :    15.99s CPU (     300 calls,   0.053 s avg)
      init         :     0.04s CPU (     300 calls,   0.000 s avg)
-     firstfft     :     6.58s CPU (    4630 calls,   0.001 s avg)
-     secondfft    :     6.91s CPU (    4630 calls,   0.001 s avg)
-     add_vuspsi   :     1.72s CPU (     300 calls,   0.006 s avg)
-     s_psi        :     1.75s CPU (     300 calls,   0.006 s avg)
+     firstfft     :     5.49s CPU (    4630 calls,   0.001 s avg)
+     secondfft    :     5.42s CPU (    4630 calls,   0.001 s avg)
+     add_vuspsi   :     2.10s CPU (     300 calls,   0.007 s avg)
+     s_psi        :     2.17s CPU (     300 calls,   0.007 s avg)
 
      General routines
-     ccalbec      :     2.24s CPU (     336 calls,   0.007 s avg)
-     cft3         :     0.01s CPU (       4 calls,   0.003 s avg)
-     cft3s        :    13.08s CPU (    9260 calls,   0.001 s avg)
+     ccalbec      :     2.95s CPU (     336 calls,   0.009 s avg)
+     cft3         :     0.01s CPU (       4 calls,   0.002 s avg)
+     cft3s        :    10.48s CPU (    9260 calls,   0.001 s avg)
      davcio       :     0.00s CPU (      57 calls,   0.000 s avg)
 
-     Parallel routines

@@ -68,7 +68,7 @@ fi
 ########################################################################
 # function to test matadynamics - usage: check_meta "file prefix"
 ########################################################################
-function check_meta() {
+function check_meta {
   # get average configurational energy (truncated to 4 significant digits)
   e0=`grep 'Final energy' $1.ref | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
   e1=`grep 'Final energy' $1.out | awk '{sum+=$4} END {printf "%8.4f\n", sum/NR}'`
@@ -84,7 +84,7 @@ function check_meta() {
 ########################################################################
 # function to test NEB calculations - usage: check_neb "file prefix"
 ########################################################################
-function check_neb() {
+function check_neb {
   # get reference number of neb iterations
   n0=`grep 'neb: convergence' $1.ref | awk '{print $1}'`
   # get reference activation energy (truncated to 4 significant digits)
@@ -109,7 +109,7 @@ function check_neb() {
 ########################################################################
 # function to test scf calculations - usage: check_scf "file prefix"
 ########################################################################
-function check_scf() {
+function check_scf {
   # get reference total energy (cut to 6 significant digits)
   e0=`grep ! $1.ref | tail -1 | awk '{printf "%12.6f\n", $5}'`
   # get reference number of scf iterations
@@ -157,7 +157,7 @@ function check_scf() {
 ########################################################################
 # function to test nscf calculations - usage: check_nscf "file prefix" "number"
 ########################################################################
-function check_nscf() {
+function check_nscf {
   # get reference Fermi energy
   ef0=`grep Fermi $1.ref$2 | awk '{print $5}'`
   # get reference HOMO and LUMO
@@ -200,7 +200,7 @@ function check_nscf() {
 ########################################################################
 # function to get wall times - usage: get_times "file prefix"
 ########################################################################
-function get_times() {
+function get_times {
   # convert from "1h23m45.6s" to seconds
   # the following line prevents cases such as "2m 7.5s"
   grep 'wall time' $1.ref | sed 's/m /m0/' > $1.tmp 

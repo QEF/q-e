@@ -12,7 +12,7 @@
 &ELECTRONS
 /
 &IONS
-  pot_extrapolation='first_order'
+  pot_extrapolation='second_order'
 /
 ATOMIC_SPECIES
 O  1.00  O.pz-rrkjus.UPF
