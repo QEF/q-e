@@ -30,8 +30,7 @@ SUBROUTINE force_us( forcenl )
   USE spin_orb,             ONLY : lspinorb
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
-  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
-                                   rbecp, becp, becp_nc
+  USE becmod,               ONLY : allocate_bec, deallocate_bec
   !
   IMPLICIT NONE
   !
@@ -64,6 +63,7 @@ SUBROUTINE force_us( forcenl )
        !
        ! ... calculation at gamma
        !
+       USE becmod, ONLY : rbecp
        IMPLICIT NONE
        !
        REAL(DP), ALLOCATABLE    :: rdbecp (:,:,:)
@@ -96,7 +96,7 @@ SUBROUTINE force_us( forcenl )
           END IF
           !
           IF ( nkb > 0 ) &
-             CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, becp, nkb )
+             CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx,rbecp, nkb )
           !
           DO ipol = 1, 3
              DO jkb = 1, nkb
@@ -123,7 +123,7 @@ SUBROUTINE force_us( forcenl )
                          DO ipol = 1, 3
                             forcenl(ipol,na) = forcenl(ipol,na) - &
                                        ps * wg(ibnd,ik) * 2.D0 * tpiba * &
-                                       rdbecp(ikb,ibnd,ipol) * becp(ikb,ibnd)
+                                       rdbecp(ikb,ibnd,ipol) *rbecp(ikb,ibnd)
                          END DO
                       END DO
                       !
@@ -141,8 +141,8 @@ SUBROUTINE force_us( forcenl )
                                DO ipol = 1, 3
                                   forcenl(ipol,na) = forcenl(ipol,na) - &
                                      ps * wg(ibnd,ik) * 2.d0 * tpiba * &
-                                     (rdbecp(ikb,ibnd,ipol) * becp(jkb,ibnd) + &
-                                      rdbecp(jkb,ibnd,ipol) * becp(ikb,ibnd) )
+                                     (rdbecp(ikb,ibnd,ipol) *rbecp(jkb,ibnd) + &
+                                      rdbecp(jkb,ibnd,ipol) *rbecp(ikb,ibnd) )
                                END DO
                             END DO
                          END DO
@@ -197,6 +197,7 @@ SUBROUTINE force_us( forcenl )
      SUBROUTINE force_us_k()
        !-----------------------------------------------------------------------
        !  
+       USE becmod, ONLY : becp, becp_nc
        IMPLICIT NONE
        !
        COMPLEX(DP), ALLOCATABLE :: dbecp(:,:,:), dbecp_nc(:,:,:,:)
