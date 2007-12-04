@@ -10,7 +10,7 @@
 #define ZERO ( 0._dp, 0._dp )
 !
 ! This macro force the normalization of betamix matrix, usually not necessary
-#define __NORMALIZE_BETAMIX
+!#define __NORMALIZE_BETAMIX
 !
 #ifdef __GFORTRAN
 ! gfortran hack - for some mysterious reason gfortran doesn't save
