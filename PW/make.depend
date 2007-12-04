@@ -30,6 +30,7 @@ add_vuspsi_nc.o : ../Modules/kind.o
 add_vuspsi_nc.o : ../Modules/uspp.o
 add_vuspsi_nc.o : becmod.o
 add_vuspsi_nc.o : noncol.o
+addusdens.o : ../Modules/constants.o
 addusdens.o : ../Modules/control_flags.o
 addusdens.o : ../Modules/ions_base.o
 addusdens.o : ../Modules/kind.o
@@ -685,7 +686,6 @@ mix_rho.o : ../Modules/cell_base.o
 mix_rho.o : ../Modules/constants.o
 mix_rho.o : ../Modules/control_flags.o
 mix_rho.o : ../Modules/io_files.o
-mix_rho.o : ../Modules/io_global.o
 mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
 mix_rho.o : ../Modules/paw_variables.o
@@ -1048,7 +1048,10 @@ scf_mod.o : ../Modules/control_flags.o
 scf_mod.o : ../Modules/functionals.o
 scf_mod.o : ../Modules/ions_base.o
 scf_mod.o : ../Modules/kind.o
+scf_mod.o : ../Modules/paw_variables.o
+scf_mod.o : ../Modules/uspp.o
 scf_mod.o : ../Modules/wavefunctions.o
+scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
