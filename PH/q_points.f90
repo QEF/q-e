@@ -43,15 +43,17 @@ SUBROUTINE q_points ( )
        CALL errore('q_points','iq1 or iq2 or iq3 < 0',1)
   IF ( iq1 > nq1 .or. iq2 > nq2 .or. iq3 > iq3 ) &
        CALL errore('q_points','iq1 or iq2 or iq3 > nq1 or nq2 or nq3',1)
-  DO iq = 1, nqs
-     IF ( is_equivalent ( iq1, iq2, iq3, nq1, nq2, nq3, x_q(1,iq), bg, &
+  IF (iq1 > 0 .or. iq2 > 0 .or. iq3 > 0 ) THEN
+     DO iq = 1, nqs
+        IF ( is_equivalent ( iq1, iq2, iq3, nq1, nq2, nq3, x_q(1,iq), bg, &
                           time_reversal, nsym, s, t_rev ) ) THEN
-        x_q(:,1) = x_q(1,iq)
-        nqs = 1
-        EXIT 
-     END IF
-  END DO
-  IF ( nqs > 1 ) CALL errore('q_points','could not find required q-point',1)
+          x_q(:,1) = x_q(:,iq)
+          nqs = 1
+          EXIT 
+        END IF
+     END DO
+     IF ( nqs > 1 ) CALL errore('q_points','could not find required q-point',1)
+  END IF
   !
   ! Check if the Gamma point is one of the points and put
   ! it in the first position (it should already be the first)
