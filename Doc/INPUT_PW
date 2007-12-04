@@ -190,7 +190,7 @@ tefield        LOGICAL ( default = .FALSE. )
 dipfield       LOGICAL ( default = .FALSE. )
                If .TRUE. and tefield=.TRUE. a dipole correction is also
                added to the bare ionic potential - implements the recipe
-               of L. Bengtsson, PRB 59, 12303 (1999). See variables edir,
+               of L. Bengtsson, PRB 59, 12301 (1999). See variables edir,
                emaxprog, eopreg for the form of the correction, that must
                be used only in a slab geometry, for surface calculations,
                with the discontinuity in the empty space
