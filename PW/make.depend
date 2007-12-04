@@ -382,6 +382,7 @@ electrons.o : buffers.o
 electrons.o : exx.o
 electrons.o : io_rho_xml.o
 electrons.o : noncol.o
+electrons.o : paw_init.o
 electrons.o : paw_onecenter.o
 electrons.o : pwcom.o
 electrons.o : realus.o

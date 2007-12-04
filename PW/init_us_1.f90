@@ -84,7 +84,7 @@ subroutine init_us_1
   ap (:,:,:)   = 0.d0
   if (lmaxq > 0) qrad(:,:,:,:)= 0.d0
   !
-  ! the following prevents an out-of-bound error: nqlc(is)=2*lmax+1
+  ! the following prevents an out-of-bound error: upf(nt)%nqlc=2*lmax+1
   ! but in some versions of the PP files lmax is not set to the maximum
   ! l of the beta functions but includes the l of the local potential
   !
@@ -221,7 +221,7 @@ subroutine init_us_1
   !
   !  compute Clebsch-Gordan coefficients
   !
-  if (okvan) call aainit (lmaxkb + 1)
+  if (okvan .or. okpaw) call aainit (lmaxkb + 1)
   !
   !   here for the US types we compute the Fourier transform of the
   !   Q functions.
@@ -246,6 +246,7 @@ subroutine init_us_1
                  paw : & ! in PAW formalism aug. charge is computed elsewhere
                  if (upf(nt)%tpawp) then
                     qtot(1:upf(nt)%kkbeta,ijv) = upf(nt)%paw%aug(1:upf(nt)%kkbeta,nb,mb,l)
+                 !
                  elseif (upf(nt)%q_with_l) then
                      qtot(1:upf(nt)%kkbeta,ijv) =&
                                  upf(nt)%qfuncl(1:upf(nt)%kkbeta,ijv,l)

@@ -1,3 +1,4 @@
+
 !
 ! Copyright (C) 2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
@@ -50,7 +51,7 @@
 MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
-    USE paw_variables,  ONLY : paw_info, saved, xlm, rad
+    USE paw_variables,  ONLY : paw_info, saved, xlm, rad, radial_grad_style
     !
     IMPLICIT NONE
 
@@ -61,6 +62,7 @@ MODULE paw_onecenter
     PUBLIC :: PAW_ddot       ! error estimate for mix_rho
     PUBLIC :: PAW_newd       ! computes descreening coefficients
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
+    PUBLIC :: PAW_test_d
     !
     PRIVATE
 
@@ -70,6 +72,92 @@ MODULE paw_onecenter
 #define OPTIONAL_CALL CALL
 
  CONTAINS
+
+SUBROUTINE PAW_test_d()
+    USE paw_variables,  ONLY : rad, paw_info
+    USE ions_base,         ONLY : nat, ityp
+    USE lsda_mod,          ONLY : nspin
+    USE uspp_param,        ONLY : nhm, upf
+    USE atom,             ONLY : g => rgrid
+
+    INTEGER :: k,ix,is,na,lm
+    REAL(DP),ALLOCATABLE :: f_rad(:,:,:), f_lm(:,:,:), core(:), &
+                            grad(:,:,:,:), grad2(:,:,:), grad_lm(:,:,:,:),&
+                            div(:,:,:)
+    TYPE(paw_info) :: i
+    INTEGER :: xlm = 0
+
+    RETURN
+
+    na = 1
+    i%a = na         ! the index of the atom
+    i%t = ityp(na)   ! the type of atom na
+    i%m = g(i%t)%mesh! radial mesh size for atom na
+    i%b = upf(i%t)%nbeta
+    i%l = upf(i%t)%paw%lmax_rho+1
+
+    ALLOCATE(f_rad(i%m,rad(i%t)%nx,nspin))
+    ALLOCATE(f_lm(i%m,i%l**2,nspin))
+    ALLOCATE(core(i%m))
+    core(:) = 0._dp
+
+    write(*,*) "generating..."
+    DO is = 1,nspin
+    DO ix = 1,rad(i%t)%nx
+    DO k = 1, i%m
+        f_rad(k,ix,is) = ( exp( -abs(rad(i%t)%r(1,ix) * g(i%t)%r(k)) ) &
+                         + exp( -abs(rad(i%t)%r(2,ix) * g(i%t)%r(k)) ) &
+                         + exp( -abs(rad(i%t)%r(3,ix) * g(i%t)%r(k)) ) ) &
+                         * g(i%t)%r2(k)
+    ENDDO
+    ENDDO
+    ENDDO
+
+    ALLOCATE(grad(i%m,3,rad(i%t)%nx,nspin))
+    ALLOCATE(grad2(i%m,rad(i%t)%nx,nspin))
+
+    write(*,*) "rad2lm..."
+    CALL PAW_rad2lm(i, f_rad, f_lm, i%l)
+
+    lm = 1
+!     write(10000,'(4f15.7)') (g(i%t)%r(k), f_lm(k,lm,1), f_lm(k,lm,2),f_rad(k,lm,1), k=1,i%m)
+    !
+    write(*,*) "gradient..."
+    DO ix = 1,rad(i%t)%nx
+        CALL PAW_gradient(i, ix, f_lm, f_rad, core, &
+                            grad2(:,ix,:), grad(:,:,ix,:))
+    ENDDO
+
+!     DO is = 1,nspin
+!     DO ix = 1,rad(i%t)%nx
+!         grad(:,1,ix,is) = g(i%t)%r2(1:i%m) *grad(:,1,ix,is)
+!         grad(:,2,ix,is) = g(i%t)%r2(1:i%m) *grad(:,2,ix,is)
+!         grad(:,3,ix,is) = g(i%t)%r2(1:i%m) *grad(:,3,ix,is)
+!     ENDDO
+!     ENDDO
+
+    !CALL PAW_rad2lm3(i, grad, grad_lm, i%l+xlm)
+    write(*,*) "rad2lm3..."
+    ALLOCATE(grad_lm(i%m,3,(i%l+xlm)**2,nspin))
+    CALL PAW_rad2lm3(i, grad, grad_lm, i%l+xlm)
+
+    !CALL PAW_divergence(i, grad_lm, div, i%l+xlm, i%l)
+    write(*,*) "divergence..."
+    ALLOCATE(div(i%m,rad(i%t)%nx,nspin))
+    CALL PAW_divergence(i, grad_lm, div, i%l+xlm, i%l)
+
+    write(*,*) "rad2lm..."
+    DO is = 1,nspin
+    DO ix = 1,rad(i%t)%nx
+        write(*,'(2i3,e20.11)') is,ix,MAXVAL(abs(div(:,ix,is) - f_rad(:,ix,is)))
+    ENDDO
+    ENDDO
+
+!     write(20000,'(3f15.7)') (g(i%t)%r(k), div(k,lm,1), div(k,lm,2), k=1,i%m)
+
+
+END SUBROUTINE PAW_test_d
+
 
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
@@ -217,8 +305,6 @@ SUBROUTINE PAW_symmetrize(becsum)
     D(2)%d => d2 ! d2(5,5,48)
     D(3)%d => d3 ! d3(7,7,48)
 
-    IF( gamma_only .or. nosym ) RETURN
-
 ! => lm = l**2 + m
 ! => ih = lm + (l+proj)**2  <-- if the projector index starts from zero!
 !       = lm + proj**2 + 2*l*proj
@@ -245,7 +331,23 @@ SUBROUTINE PAW_symmetrize(becsum)
         ENDDO
             write(*,*)
         ENDDO
+
+        write(*,*)
+        is = 2
+        DO ih = 1, nh(nt)
+        DO jh = 1, nh(nt)
+            IF (jh > ih) THEN
+                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ELSE
+                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
+            ENDIF
+            write(*,"(1f10.5)", advance='no') becsum(ijh,na,is)
+        ENDDO
+            write(*,*)
+        ENDDO
 #endif
+
+    IF( gamma_only .or. nosym ) RETURN
 
     CALL start_clock('PAW_symme')
 
@@ -565,8 +667,7 @@ FUNCTION PAW_ddot(bec1,bec2)
     TYPE(paw_info)          :: i
 
     CALL start_clock ('PAW_ddot')
-
-    ! initialize for integration on angular momentum and gradient
+    ! initialize 
     PAW_ddot = 0._dp
 
     CALL divide (nat, first_nat, last_nat)
@@ -610,7 +711,7 @@ FUNCTION PAW_ddot(bec1,bec2)
                 DO k = 1, i%m
                     v_lm(k,lm) = v_lm(k,lm) * SUM(rho_lm(k,lm,1:nspin))
                 ENDDO
-                CALL simpson (i%m,v_lm(:,lm),g(i%t)%rab,integral)
+                CALL simpson (upf(i%t)%paw%irmax,v_lm(:,lm),g(i%t)%rab,integral)
                 !
                 ! Sum all the energies in PAW_ddot
                 PAW_ddot = PAW_ddot + i_sign * integral
@@ -698,12 +799,6 @@ SUBROUTINE PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
     ! Recompose the sph. harm. expansion
     CALL PAW_rad2lm(i, v_rad, v_lm, i%l)
 
-!
-!  Passing this charge : fpi*rho_lm(:,1,1) and this rho core : fpi*rho_core(:,1)*g(i%t)%r2(:) 
-!  to the original vxcgc routine yeld almost the same ddd coefficients as using the charge loaded
-!  from file, produced by the atomic code.
-!  What the heck is happening in between????
-!
     ! Add gradient correction, if necessary
     IF( dft_is_gradient() ) &
         CALL PAW_gcxc_potential(i, rho_lm,rho_core, v_lm,energy)
@@ -744,7 +839,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     REAL(DP)                :: div_h(i%m,i%l**2,nspin)  ! div(hamiltonian)
 
     REAL(DP),ALLOCATABLE    :: e_rad(:)                   ! aux, used to store energy
-    REAL(DP)                :: e                          ! aux, used to integrate energy
+    REAL(DP)                :: e, e_gcxc                  ! aux, used to integrate energy
 
     INTEGER  :: k, ix, is, lm                             ! counters on spin and mesh
     REAL(DP) :: sx,sc,v1x,v2x,v1c,v2c                     ! workspace
@@ -755,9 +850,13 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
 
     OPTIONAL_CALL start_clock ('PAW_gcxc_v')
 
-    IF (present(energy)) ALLOCATE(e_rad(i%m))
+    IF (present(energy)) THEN
+        e_gcxc = 0._dp
+        ALLOCATE(e_rad(i%m))
+    ENDIF
 
     spin:&
+    !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     IF ( nspin == 1 ) THEN
         !
         !     GGA case
@@ -791,9 +890,10 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         ! integrate energy (if required)
         IF (present(energy)) THEN
             CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-            energy = energy + e * rad(i%t)%ww(ix)
+            e_gcxc = e_gcxc + e * rad(i%t)%ww(ix)
         ENDIF
         ENDDO
+    !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ELSEIF ( nspin == 2 ) THEN
         !
         !   this is the \sigma-GGA case
@@ -818,7 +918,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
             rh = rup + rdw ! total charge
             IF ( rh > eps ) THEN
                 zeta = (rup - rdw ) / rh ! polarization
-                !grh2 = (grho (i, 1) + grho (i, 2) ) **2 
+                !
                 grh2 =  (grad(k,1,1) + grad(k,1,2))**2 &
                       + (grad(k,2,1) + grad(k,2,2))**2 &
                       + (grad(k,3,1) + grad(k,3,2))**2
@@ -841,14 +941,17 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
         ! NOTE: this integration is duplicated for every spin, FIXME!
         IF (present(energy)) THEN
             CALL simpson(i%m, e_rad, g(i%t)%rab, e)
-            energy = energy + e * rad(i%t)%ww(ix)
+            e_gcxc = e_gcxc + e * rad(i%t)%ww(ix)
         ENDIF
         ENDDO ! ix
+    !XXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
     ELSEIF ( nspin == 4 ) THEN
         CALL errore('PAW_gcxc_v', 'non-collinear not yet implemented!', 1)
     ELSE spin
         CALL errore('PAW_gcxc_v', 'unknown spin number', 2)
     ENDIF spin
+    !
+    IF (present(energy)) energy = energy + e_gcxc
     !
     ! convert the first part of the GC correction back to spherical harmonics
     CALL PAW_rad2lm(i, gc_rad, gc_lm, i%l)
@@ -862,7 +965,6 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     !                         input max lm --^     ^-- output max lm
 
     ! Finally sum it back into v_xc
-            OPTIONAL_CALL start_clock ('PAW_gcxc_3c')
     DO is = 1,nspin
     DO lm = 1,i%l**2
             !v_lm(1:i%m,lm,is) = v_lm(1:i%m,lm,is) + e2*(gc_lm(1:i%m,lm,is)*g(i%t)%r2(1:i%m)-div_h(1:i%m,lm,is))
@@ -870,6 +972,7 @@ SUBROUTINE PAW_gcxc_potential(i, rho_lm,rho_core, v_lm, energy)
     ENDDO
     ENDDO
 
+    !if(present(energy)) write(*,*) "gcxc -->", e_gcxc
     OPTIONAL_CALL stop_clock ('PAW_gcxc_v')
 
 END SUBROUTINE PAW_gcxc_potential
@@ -879,7 +982,7 @@ END SUBROUTINE PAW_gcxc_potential
 !!! it is assumed that: 1. the input function is multiplied by r**2; 
 !!! 2. the output function is multiplied by r**2 too
 SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
-    USE constants,              ONLY : sqrtpi, fpi, eps12, e2
+    USE constants,              ONLY : sqrtpi, fpi, e2
     USE lsda_mod,               ONLY : nspin
     USE atom,                   ONLY : g => rgrid
 
@@ -907,8 +1010,8 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
 
     ! The radial component of the divergence is computed last, for practical reasons
 
-    CALL errore('PAW_divergence', 'More angular momentum components are needed (in input)'//&
-                ' to provide the number you have requested (in output)', lmaxq_out-lmaxq_in+2)
+!     CALL errore('PAW_divergence', 'More angular momentum components are needed (in input)'//&
+!                 ' to provide the number you have requested (in output)', lmaxq_out-lmaxq_in+2)
 
     ! phi component
     DO is = 1,nspin
@@ -953,7 +1056,7 @@ SUBROUTINE PAW_divergence(i, F_lm, div_F_lm, lmaxq_in, lmaxq_out)
     DO lm = 1,lmaxq_out**2
         ! Derive along \hat{r} (F already contains a r**2 factor, otherwise
         ! it may be better to expand (1/r**2) d(A*r**2)/dr = dA/dr + 2A/r)
-        CALL radial_gradient(F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, 1)
+        CALL radial_gradient(F_lm(1:i%m,1,lm,is), aux, g(i%t)%r, i%m, radial_grad_style)
         ! Sum it in the divergence: it is already in the right Y_lm form
         aux(1:i%m) = aux(1:i%m)*g(i%t)%rm2(1:i%m)
         !
@@ -993,7 +1096,7 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
         ! build real charge density
         aux(1:i%m) = rho_rad(1:i%m,is)*g(i%t)%rm2(1:i%m) &
                           + rho_core(1:i%m)/nspin
-        CALL radial_gradient(aux, aux2, g(i%t)%r, i%m, 1)
+        CALL radial_gradient(aux, aux2, g(i%t)%r, i%m, radial_grad_style)
         ! compute the square
         grho_rad2(:,is) = aux2(:)**2
         ! store in vector gradient, if present:
@@ -1008,9 +1111,9 @@ SUBROUTINE PAW_gradient(i, ix, rho_lm, rho_rad, rho_core, grho_rad2, grho_rad)
         ! as its contribution to non-radial derivative is zero
         DO lm = 2,i%l**2
             ! 5. [ \sum_{lm} rho(r) (dY_{lm}/dphi /cos(theta))  ]**2
-            aux(1:i%m) = aux(1:i%m) + rad(i%t)%dylmp(ix,lm)* (rho_lm(1:i%m,lm,is))
+            aux(1:i%m) = aux(1:i%m) + rad(i%t)%dylmp(ix,lm)* rho_lm(1:i%m,lm,is)
             ! 6. [ \sum_{lm} rho(r) (dY_{lm}/dtheta)  ]**2
-            aux2(1:i%m) = aux2(1:i%m) + rad(i%t)%dylmt(ix,lm)* (rho_lm(1:i%m,lm,is))
+            aux2(1:i%m) = aux2(1:i%m) + rad(i%t)%dylmt(ix,lm)* rho_lm(1:i%m,lm,is)
         ENDDO
         ! Square and sum up these 2 components, the (1/r**2)**3 factor come from:
         !  a. 1/r**2 from the derivative in spherical coordinates

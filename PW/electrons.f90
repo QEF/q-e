@@ -64,8 +64,9 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
-  USE paw_variables,        ONLY : okpaw, becnew
+  USE paw_variables,        ONLY : okpaw
   USE paw_onecenter,        ONLY : PAW_potential,PAW_integrate
+  USE paw_init,             ONLY : PAW_increase_lm
   USE uspp,                 ONLY : becsum  ! used for PAW
   USE uspp_param,           ONLY : nhm     ! used for PAW
   !
@@ -106,7 +107,7 @@ SUBROUTINE electrons()
   REAL(DP), EXTERNAL :: ewald, get_clock
   !
   ! ... additional variables for PAW
-  REAL(DP), ALLOCATABLE :: becstep(:,:,:)   ! cross-band occupations, used for mixing
+  REAL(DP), ALLOCATABLE :: becsum_in(:,:,:)   ! cross-band occupations, used for mixing
   REAL (DP) :: deband_PAW, descf_PAW, e_PAW ! deband, descf and E corrections from PAW
   REAL (DP) :: correction1c                 ! total PAW correction
   !
@@ -155,12 +156,8 @@ SUBROUTINE electrons()
   ewld = ewald( alat, nat, nsp, ityp, zv, at, bg, tau, &
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !
-  IF (okpaw) THEN
-     IF ( .not. ALLOCATED(becstep) ) ALLOCATE (becstep(nhm*(nhm+1)/2,nat,nspin))
-     !becstep (:,:,:) = 0._dp
-     becstep(:,:,:) = becsum(:,:,:)
-  END IF
   call create_scf_type ( rhoin )
+  if ( okpaw .and. .not. allocated(becsum_in) ) allocate(becsum_in(nhm*(nhm+1)/2,nat,nspin))
 #if defined (EXX)
 10 CONTINUE
 #endif
@@ -244,7 +241,7 @@ SUBROUTINE electrons()
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
         ! ... the new density is computed here
-        ! PAW : sum_band DOES NOT compute new one-center charges
+        ! PAW : sum_band computes new becsum (in uspp modules)
         CALL sum_band()
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
@@ -276,16 +273,10 @@ SUBROUTINE electrons()
         ! ... update core occupations for PAW
         IF (okpaw) THEN
            deband_PAW = - PAW_integrate(becsum)
-           !write(6,"(a,2f13.8)") " == deband (radial PAW): ", deband_PAW
-           !CALL infomsg ('electrons','mixing several times ns if lda_plus_U')
-           IF (lda_plus_U) STOP 'electrons - not implemented'
            !
-           ALLOCATE (becnew(nhm*(nhm+1)/2, nat, nspin) )
-           !becnew(:,:,:) = 0._DP
-           becnew(:,:,:) = becsum(:,:,:)
         END IF
         !
-        CALL mix_rho( rho, rhoin, becnew, becstep, &
+        CALL mix_rho( rho, rhoin, becsum, becsum_in, &
                       mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
@@ -294,8 +285,6 @@ SUBROUTINE electrons()
         ! ...  density and rho contains the output density
         ! ... In the other cases rhoin contains the mixed charge density 
         ! ... (the new input density) while rho is unchanged
-        !
-        IF ( okpaw ) DEALLOCATE (becnew)
         !
         IF ( first .and. nat > 0) THEN
            !
@@ -342,11 +331,8 @@ SUBROUTINE electrons()
            !
            ! ... compute PAW corrections to descf
            IF (okpaw) THEN
-              !
-              ! ... grid PAW:
-              CALL PAW_potential(becstep, e_PAW)
-              descf_PAW = - PAW_integrate(becstep-becsum)
-              !write(6,"(a,2f12.6)") " == descf:  ", descf_1ae-descf_1ps, descf_PAW
+              CALL PAW_potential(becsum_in, e_PAW)
+              descf_PAW = - PAW_integrate(becsum_in-becsum)
            END IF
            !
            ! ... write the charge density to file
@@ -455,11 +441,20 @@ SUBROUTINE electrons()
      !
      IF (okpaw) THEN
         correction1c = (deband_PAW + descf_PAW + e_PAW)
-!         PRINT '(5x,A,f12.6,A)', 'PAW correction: ',correction1c, ', composed of: '
-!         PRINT '(5x,A,f10.6,A,f10.6,A,f12.6)',&
-!               'de_band: ',deband_PAW,', de_scf: ',descf_PAW,', 1-center E: ', e_PAW
-        etot = etot + correction1c
+        !
+        if(ionode) &
+        write(*,"(5x,a,3e20.11)") "  total energy before PAW: ", etot, hwf_energy,e_PAW
+        etot       = etot       + correction1c
         hwf_energy = hwf_energy + correction1c
+        !
+        IF (ionode) THEN
+            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
+                'de_band_paw: ',deband_PAW,', de_scf_paw: ',descf_PAW,', E_paw: ', e_PAW
+            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
+                'de_band: ',deband,', de_scf: ',descf, ' dr2: ', dr2
+        ENDIF
+        ! If a high convergence threshold is selected paw may be unable to reach
+        ! sufficient accuracy: we increase the maximum angular component to integrate:
      END IF
      !
 #if defined (EXX)
@@ -598,12 +593,8 @@ SUBROUTINE electrons()
         !
         CALL stop_clock( 'electrons' )
         !
-        !DEALLOCATE (rhog) |should be elsewhere
-        IF (okpaw) THEN
-           DEALLOCATE (becstep)
-        END IF
-        !
         call destroy_scf_type ( rhoin )
+        if (allocated(becsum_in)) deallocate(becsum_in)
         !
         RETURN
         !

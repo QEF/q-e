@@ -58,6 +58,7 @@ cglib.o : ../Modules/ions_base.o
 cglib.o : ../Modules/kind.o
 cglib.o : ../Modules/mp.o
 cglib.o : ../Modules/mp_global.o
+cglib.o : ../Modules/parallel_include.o
 cglib.o : ../Modules/ptoolkit.o
 cglib.o : ../Modules/recvec.o
 cglib.o : ../Modules/uspp.o

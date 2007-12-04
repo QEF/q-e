@@ -16,6 +16,7 @@ MODULE paw_init
 
   PUBLIC :: PAW_init_becsum
   PUBLIC :: PAW_init_onecenter
+  PUBLIC :: PAW_increase_lm
 #ifdef __PARA
   PUBLIC :: PAW_post_init
 #endif
@@ -59,13 +60,13 @@ MODULE paw_init
     ENDIF
     !
     IF(allocated(rad)) THEN
-        DO na = 1,ntyp
-            IF(associated(rad(na)%ww))      DEALLOCATE (rad(na)%ww)
-            IF(associated(rad(na)%ylm))     DEALLOCATE (rad(na)%ylm)
-            IF(associated(rad(na)%wwylm))   DEALLOCATE (rad(na)%wwylm)
-            IF(associated(rad(na)%dylmt))   DEALLOCATE (rad(na)%dylmt)
-            IF(associated(rad(na)%dylmp))   DEALLOCATE (rad(na)%dylmp)
-            IF(associated(rad(na)%cotg_th)) DEALLOCATE (rad(na)%cotg_th)
+        DO nt = 1,ntyp
+            IF(associated(rad(nt)%ww))      DEALLOCATE (rad(nt)%ww)
+            IF(associated(rad(nt)%ylm))     DEALLOCATE (rad(nt)%ylm)
+            IF(associated(rad(nt)%wwylm))   DEALLOCATE (rad(nt)%wwylm)
+            IF(associated(rad(nt)%dylmt))   DEALLOCATE (rad(nt)%dylmt)
+            IF(associated(rad(nt)%dylmp))   DEALLOCATE (rad(nt)%dylmp)
+            IF(associated(rad(nt)%cotg_th)) DEALLOCATE (rad(nt)%cotg_th)
         ENDDO
         DEALLOCATE(rad)
     ENDIF
@@ -128,12 +129,14 @@ END SUBROUTINE PAW_post_init
 ! that is that all wavefunctions considered for PAW generation are
 ! counted in chi (otherwise the array "oc" does not correspond to beta)
 SUBROUTINE PAW_init_becsum()
+    USE kinds,              ONLY : dp
     USE uspp,               ONLY : becsum, nhtol, indv
     USE uspp_param,         ONLY : upf, nh, upf
     USE ions_base,          ONLY : nat, ityp
     USE lsda_mod,           ONLY : nspin, starting_magnetization
     USE paw_variables,      ONLY : okpaw
     USE paw_onecenter,      ONLY : PAW_symmetrize
+    !USE random_numbers,     ONLY : rndm
     IMPLICIT NONE
     INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
     !
@@ -152,13 +155,13 @@ SUBROUTINE PAW_init_becsum()
              !
              IF (nspin==1) THEN
                 !
-                becsum(ijh,na,1) = upf(nt)%paw%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
+                becsum(ijh,na,1) = upf(nt)%paw%oc(nb) / REAL(2*nhtol(ih,nt)+1)
                 !
              ELSE IF (nspin==2) THEN
                 !
-                becsum(ijh,na,1) = 0.5d0 * (1.d0 + starting_magnetization(nt))* &
+                becsum(ijh,na,1) = 0.5_dp * (1._dp + starting_magnetization(nt))* &
                                    upf(nt)%paw%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
-                becsum(ijh,na,2) = 0.5d0 * (1.d0 - starting_magnetization(nt))* &
+                becsum(ijh,na,2) = 0.5_dp * (1._dp - starting_magnetization(nt))* &
                                    upf(nt)%paw%oc(nb) / REAL(2*nhtol(ih,nt)+1,DP)
                 !
              END IF
@@ -168,7 +171,7 @@ SUBROUTINE PAW_init_becsum()
               DO jh = ( ih + 1 ), nh(nt)
                 !mb = indv(jh,nt)
                 DO ispin = 1, nspin
-                   becsum(ijh,na,ispin) = 0._DP
+                   becsum(ijh,na,ispin) = 0._dp
                 END DO
                 ijh = ijh + 1
                 !
@@ -191,6 +194,7 @@ SUBROUTINE PAW_init_onecenter()
     USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE funct,                  ONLY : dft_is_gradient
+    USE paw_onecenter, ONLY: paw_test_d
 
     INTEGER :: na, nt, first_nat, last_nat, lmax_safe
 
@@ -251,7 +255,61 @@ SUBROUTINE PAW_init_onecenter()
 
     paw_is_init = .true.
 
+    CALL PAW_test_d()
+
 END SUBROUTINE PAW_init_onecenter
+
+
+SUBROUTINE PAW_increase_lm(incr)
+    USE ions_base,          ONLY : nat, ityp, ntyp => nsp
+    USE paw_variables,      ONLY : rad, paw_is_init
+    USE io_global,          ONLY : stdout, ionode
+
+    INTEGER,INTENT(IN) :: incr ! required increase in lm precision
+    INTEGER :: na, nt, first_nat, last_nat, lmax_safe
+
+    IF( .not. paw_is_init .or. .not. allocated(rad)) THEN
+        CALL infomsg('PAW_increase_lm', &
+        'WARNING: trying to incress max paw angular momentum, but it is not set!', 1)
+        RETURN
+    ENDIF
+
+    CALL divide (nat, first_nat, last_nat)
+
+    IF (ionode) &
+        WRITE( stdout, '(5x,a)') &
+            "WARNING: increasing angular resolution of radial grid for PAW."
+
+    types : &
+    DO nt = 1,ntyp
+        IF (ionode) THEN
+        WRITE( stdout, '(7x,a,i3,a,i3,a,i3,a,i3)')     &
+               "type: ", nt,                      &
+               ", prev. max{l}:",rad(nt)%lmax,    &
+               ", cur. max{l}:",rad(nt)%lmax+incr,&
+               ", directions:",((rad(nt)%lmax+1+incr)*(rad(nt)%lmax+2+incr))/2
+        ENDIF
+        ! only allocate radial grid integrator for atomic species
+        ! that are actually present on this parallel node:
+        DO na = first_nat, last_nat
+        IF (ityp(na) == nt ) THEN
+            IF(associated(rad(nt)%ww))      DEALLOCATE (rad(nt)%ww)
+            IF(associated(rad(nt)%ylm))     DEALLOCATE (rad(nt)%ylm)
+            IF(associated(rad(nt)%wwylm))   DEALLOCATE (rad(nt)%wwylm)
+            IF(associated(rad(nt)%dylmt))   DEALLOCATE (rad(nt)%dylmt)
+            IF(associated(rad(nt)%dylmp))   DEALLOCATE (rad(nt)%dylmp)
+            IF(associated(rad(nt)%cotg_th)) DEALLOCATE (rad(nt)%cotg_th)
+
+            CALL PAW_rad_init(rad(nt)%lmax+incr, rad(nt))
+            !
+            CYCLE types
+        ENDIF
+        ENDDO
+    ENDDO types
+
+    !paw_is_init = .true.
+
+END SUBROUTINE PAW_increase_lm
 
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
@@ -374,6 +432,8 @@ SUBROUTINE PAW_rad_init(l, rad)
         DEALLOCATE(aux)
     ENDIF gradient
     ! cleanup
+    ALLOCATE(rad%r(3,rad%nx))
+    rad%r(:,:) = r(:,:)
     DEALLOCATE (r,r2)
 
     OPTIONAL_CALL stop_clock ('PAW_rad_init')

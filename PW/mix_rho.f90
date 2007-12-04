@@ -9,6 +9,9 @@
 !
 #define ZERO ( 0._dp, 0._dp )
 !
+! This macro force the normalization of betamix matrix, usually not necessary
+#define __NORMALIZE_BETAMIX
+!
 #ifdef __GFORTRAN
 ! gfortran hack - for some mysterious reason gfortran doesn't save
 !                 derived-type variables even with the SAVE attribute
@@ -50,7 +53,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
                              mix_type_AXPY, diropn_mix_file, close_mix_file, &
                              davcio_mix_type, rho_ddot, high_frequency_mixing, &
                              mix_type_COPY
-  USE io_global,     ONLY : stdout
 #ifdef __GFORTRAN
   USE mix_save
 #endif
@@ -74,34 +76,28 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
     conv          ! .true. if the convergence has been reached
 
   type(scf_type), intent(in)    :: input_rhout
-  REAL(DP),    intent(in)    :: input_becout(nhm*(nhm+1)/2,nat,nspin) ! PAW
+  REAL(DP),    intent(in)       :: input_becout(nhm*(nhm+1)/2,nat,nspin) ! PAW
   type(scf_type), intent(inout) :: rhoin
-  REAL(DP),    intent(inout) :: becin (nhm*(nhm+1)/2,nat,nspin)       !PAW
+  REAL(DP),    intent(inout)    :: becin (nhm*(nhm+1)/2,nat,nspin)       !PAW
   !
   ! ... Here the local variables
   !
-  type(mix_type) :: rhout, rhoin_m
-  REAL(DP),    allocatable   :: becout(:,:,:) ! PAW
+  type(mix_type) :: rhout_m, rhoin_m
   INTEGER, PARAMETER :: &
     maxmix = 25             ! max number of iterations for charge mixing
   INTEGER ::    &
     iunmix,        &! I/O unit number of charge density file in G-space
-    iunmix_ns,     &! I/O unit number of ns file
     iunmix_paw,    &! I/O unit number of PAW file
     iter_used,     &! actual number of iterations used
     ipos,          &! index of the present iteration
     inext,         &! index of the next iteration
     i, j,          &! counters on number of iterations
-    iwork(maxmix), &! dummy array used as output by libr. routines
     info,          &! flag saying if the exec. of libr. routines was ok
     ldim            ! 2 * Hubbard_lmax + 1
   type(mix_type) :: rhoin_save, rhout_save
-  REAL(DP), ALLOCATABLE :: &
-    becinsave(:,:,:),   &
-    becoutsave(:,:,:)
-  REAL(DP) :: betamix(maxmix,maxmix)
+  REAL(DP),ALLOCATABLE :: betamix(:,:), work(:)
+  INTEGER :: iwork
   REAL(DP) :: gamma0
-  REAL(DP) :: work(maxmix)
   LOGICAL :: &
     savetofile,  &! save intermediate steps on file $prefix."mix",...
     exst          ! if true the file exists
@@ -118,6 +114,12 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   REAL(DP), ALLOCATABLE, SAVE :: &
     df_bec(:,:,:,:), &! idem !PAW
     dv_bec(:,:,:,:)   ! idem !PAW
+  REAL(DP) :: dr2_paw, norm
+!  REAL(DP),ALLOCATABLE :: e(:),v(:,:)
+  INTEGER, PARAMETER :: read_ = -1, write_ = +1
+#ifdef __NORMALIZE_BETAMIX
+  REAL(DP),PARAMETER :: w0 = 0._dp
+#endif
   !
   ! ... external functions
   !
@@ -135,17 +137,20 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   !
   ! define rhocout variables and copy input_rhocout in there
   !
-  call create_mix_type(rhout)
-  call assign_scf_to_mix_type(input_rhout, rhout)
-  if (okpaw) allocate (becout(nhm*(nhm+1)/2,nat,nspin))
-  !
+  call create_mix_type(rhout_m)
   call create_mix_type(rhoin_m)
-  call assign_scf_to_mix_type(rhoin, rhoin_m)
-  call mix_type_AXPY ( -1.d0, rhoin_m, rhout )
-  IF ( okpaw )      becout(:,:,:)  = input_becout(:,:,:)  - becin(:,:,:) !PAW
   !
-  dr2 = rho_ddot( rhout, rhout, ngms )  !!!! this used to be ngm NOT ngms
-  IF ( okpaw )      dr2 = dr2 + PAW_ddot ( becout, becout ) !PAW
+  call assign_scf_to_mix_type(rhoin, rhoin_m)
+  call assign_scf_to_mix_type(input_rhout, rhout_m)
+  ! temporary PAW hack:
+  if (okpaw) then
+    rhoin_m%bec = becin
+    rhout_m%bec = input_becout
+  endif
+
+  call mix_type_AXPY ( -1.d0, rhoin_m, rhout_m )
+  !
+  dr2 = rho_ddot( rhout_m, rhout_m, ngms )  !!!! this used to be ngm NOT ngms
   !
   conv = ( dr2 < tr2 )
   !
@@ -167,12 +172,9 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
          END DO
          DEALLOCATE( dv )
      END IF
-     IF ( ALLOCATED( df_bec ) ) DEALLOCATE ( df_bec ) !PAW
-     IF ( ALLOCATED( dv_bec ) ) DEALLOCATE ( dv_bec ) !PAW
      !
      call destroy_mix_type(rhoin_m)
-     call destroy_mix_type(rhout)
-     if (okpaw) deallocate (becout)
+     call destroy_mix_type(rhout_m)
  
      CALL stop_clock( 'mix_rho' )
      !
@@ -184,12 +186,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
      !
      iunmix = find_free_unit()
      CALL diropn_mix_file( iunmix, 'mix', exst )
-     !
-     IF ( okpaw ) then
-        iunmix_paw = find_free_unit()
-        CALL diropn( iunmix_paw, 'mix.bec', &
-                     ( (nhm * (nhm + 1)/2) * nat * nspin ), exst )
-     END IF
      !
      IF ( mixrho_iter > 1 .AND. .NOT. exst ) THEN
         !
@@ -215,14 +211,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
         END DO
      END IF
      !
-     IF ( okpaw ) THEN
-        IF ( .NOT. ALLOCATED( df_bec ) ) &
-             ALLOCATE( df_bec( nhm * (nhm + 1)/2, nat, nspin, n_iter ) )
-        IF ( .NOT. ALLOCATED( dv_bec ) ) &
-             ALLOCATE( dv_bec( nhm * (nhm + 1)/2, nat, nspin, n_iter ) )
-        !
-     END IF
-     !
   END IF
   !
   ! ... iter_used = mixrho_iter-1  if  mixrho_iter <= n_iter
@@ -239,21 +227,20 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
      !
      IF ( savetofile ) THEN
         !
-        CALL davcio_mix_type( df(ipos), iunmix, 1, -1 )
-        CALL davcio_mix_type( dv(ipos), iunmix, 2, -1 )
-        IF ( okpaw ) THEN
-           CALL davcio( df_bec(1,1,1,ipos),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,1,-1 )
-           CALL davcio( dv_bec(1,1,1,ipos),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2,-1 )
-        END IF
+        CALL davcio_mix_type( df(ipos), iunmix, 1, read_ )
+        CALL davcio_mix_type( dv(ipos), iunmix, 2, read_ )
         !
      END IF
      !
-     call mix_type_AXPY ( -1.d0, rhout, df(ipos) )
+     call mix_type_AXPY ( -1.d0, rhout_m, df(ipos) )
      call mix_type_AXPY ( -1.d0, rhoin_m, dv(ipos) )
-     IF ( okpaw ) THEN
-        df_bec(:,:,:,ipos) = df_bec(:,:,:,ipos) - becout
-        dv_bec(:,:,:,ipos) = dv_bec(:,:,:,ipos) - becin
-     END IF
+     !
+#ifdef __NORMALIZE_BETAMIX
+     norm = rho_ddot( df(ipos), df(ipos), ngm0 ) 
+     norm = 1._dp / sqrt(norm)
+     call mix_type_AXPY ( norm-1._dp, df(ipos), df(ipos) )
+     call mix_type_AXPY ( norm-1._dp, dv(ipos), dv(ipos) )
+#endif
      !
   END IF
   !
@@ -263,37 +250,18 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
         !
         IF ( i /= ipos ) THEN
            !
-           CALL davcio_mix_type( df(i), iunmix, 2*i+1, -1 )
-           CALL davcio_mix_type( dv(i), iunmix, 2*i+2, -1 )
-           IF ( okpaw ) THEN
-              CALL davcio(df_bec(1,1,1,i),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2*i+1,-1)
-              CALL davcio(dv_bec(1,1,1,i),(nhm*(nhm+1)/2)*nat*nspin,iunmix_paw,2*i+2,-1)
-           END IF
-           !
+           CALL davcio_mix_type( df(i), iunmix, 2*i+1, read_ )
+           CALL davcio_mix_type( dv(i), iunmix, 2*i+2, read_ )
         END IF
         !
      END DO
-     CALL davcio_mix_type( rhout,   iunmix, 1, 1 )
-     CALL davcio_mix_type( rhoin_m, iunmix, 2, 1 )
+     !
+     CALL davcio_mix_type( rhout_m, iunmix, 1, write_ )
+     CALL davcio_mix_type( rhoin_m, iunmix, 2, write_ )
      !
      IF ( mixrho_iter > 1 ) THEN
-        CALL davcio_mix_type( df(ipos), iunmix, 2*ipos+1, 1 )
-        CALL davcio_mix_type( dv(ipos), iunmix, 2*ipos+2, 1 )
-     END IF
-     !
-     IF ( okpaw ) THEN
-        !
-        CALL davcio( becout, (nhm*(nhm+1)/2)*nat*nspin, iunmix_paw, 1, 1 )
-        CALL davcio( becin , (nhm*(nhm+1)/2)*nat*nspin, iunmix_paw, 2, 1 )
-        !
-        IF ( mixrho_iter > 1 ) THEN
-           !
-           CALL davcio( df_bec(1,1,1,ipos), (nhm*(nhm+1)/2)*nat*nspin, &
-                        iunmix_paw, 2*ipos+1, 1 )
-           CALL davcio( dv_bec(1,1,1,ipos), (nhm*(nhm+1)/2)*nat*nspin, &
-                        iunmix_paw, 2*ipos+2, 1 )
-        END IF
-        !
+        CALL davcio_mix_type( df(ipos), iunmix, 2*ipos+1, write_ )
+        CALL davcio_mix_type( dv(ipos), iunmix, 2*ipos+2, write_ )
      END IF
      !
   ELSE
@@ -302,78 +270,82 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
      call create_mix_type (rhout_save)
      !
      call mix_type_COPY( rhoin_m, rhoin_save )
-     call mix_type_COPY( rhout, rhout_save )
-     !
-     IF ( okpaw ) THEN
-        ALLOCATE( becinsave (nhm*(nhm+1)/2,nat,nspin), &
-                  becoutsave(nhm*(nhm+1)/2,nat,nspin) )
-        becinsave  = becin
-        becoutsave = becout
-     END IF
+     call mix_type_COPY( rhout_m, rhout_save )
      !
   END IF
-  !
-  betamix = 0.0d0
-  !
-  DO i = 1, iter_used
-     !
-     DO j = i, iter_used
+  ! Nothing else to do on first iteration
+  skip_on_first: &
+  IF (iter_used > 0) THEN
+    !
+    ALLOCATE(betamix(iter_used, iter_used))
+    betamix = 0._dp
+    !
+    DO i = 1, iter_used
         !
-        betamix(i,j) = rho_ddot( df(j), df(i), ngm0 )
+        DO j = i, iter_used
+            !
+            betamix(i,j) = rho_ddot( df(j), df(i), ngm0 )
+            !
+            IF ( i /= j ) THEN
+                betamix(j,i) = betamix(i,j) !symmetrize
+#ifdef __NORMALIZE_BETAMIX
+            ELSE
+                betamix(i,i) = betamix(i,i) + w0
+#endif
+            ENDIF
+            !
+        END DO
         !
-        IF ( okpaw ) &
-           betamix(i,j) = betamix(i,j) + &
-                          PAW_ddot( df_bec(1,1,1,j), df_bec(1,1,1,i) )
+    END DO
+    !
+    !   allocate(e(iter_used), v(iter_used, iter_used))
+    !   CALL rdiagh(iter_used, betamix, iter_used, e, v)
+    !   write(*,'(1e11.3)') e(:)
+    !   write(*,*)
+    !   deallocate(e,v)
+    ! Try to invert with DPOTRI (positive definite matrix) if it fails
+    ! try again with DSYTRI, but issue a warning (it should not happen)
+    CALL DPOTRF( 'U', iter_used, betamix, iter_used, info )
+    !
+    IF( info == 0) &
+      CALL DPOTRI( 'U', iter_used, betamix, iter_used, info )
+    !
+    IF (info /= 0) THEN
+       CALL infomsg('mix_rho', 'WARNING: betamix is not positive definite')
+       !
+       allocate(work(iter_used))
+       CALL DSYTRF( 'U', iter_used, betamix, iter_used, iwork, work, iter_used, info )
+       CALL errore( 'mix_rho', 'broyden: factorization (DSYTRF)', info )
+       !
+       CALL DSYTRI( 'U', iter_used, betamix, iter_used, iwork, work, info )
+       CALL errore( 'mix_rho', 'broyden: inversion (DSYTRI)', info )
+       deallocate(work)
+    ENDIF
+    !
+    FORALL( i = 1:iter_used, &
+            j = 1:iter_used, j > i ) betamix(j,i) = betamix(i,j)
+    !
+    ALLOCATE(work(iter_used))
+    DO i = 1, iter_used
         !
-        betamix(j,i) = betamix(i,j) !symmetrize
+        work(i) = rho_ddot( df(i), rhout_m, ngm0 )
         !
-     END DO
-     !
-  END DO
-  !
-  CALL DSYTRF( 'U', iter_used, betamix, maxmix, iwork, work, maxmix, info )
-  CALL errore( 'broyden', 'factorization', info )
-  !
-  CALL DSYTRI( 'U', iter_used, betamix, maxmix, iwork, work, info )
-  CALL errore( 'broyden', 'DSYTRI', info )
-  !
-  FORALL( i = 1:iter_used, &
-          j = 1:iter_used, j > i ) betamix(j,i) = betamix(i,j)
-  !
-  DO i = 1, iter_used
-     !
-     work(i) = rho_ddot( df(i), rhout, ngm0 )
-     !
-     IF ( okpaw ) &
-        work(i) = work(i) + PAW_ddot( df_bec(1,1,1,i), becout )
-     !
-  END DO
-  !
-  DO i = 1, iter_used
-     !
-     gamma0 = SUM( betamix(1:iter_used,i)*work(1:iter_used) )
-     !
-     call mix_type_AXPY ( -gamma0, dv(i), rhoin_m )
-     call mix_type_AXPY ( -gamma0, df(i), rhout )
-     !
-     IF ( okpaw ) THEN
-        becin  = becin  - gamma0 * dv_bec(:,:,:,i)
-        becout = becout - gamma0 * df_bec(:,:,:,i)
-     END IF
-     !
-  END DO
-  !
-  ! ... auxiliary vectors dv and df not needed anymore
-  !
+    END DO
+    !
+    DO i = 1, iter_used
+        !
+        gamma0 = DOT_PRODUCT( betamix(1:iter_used,i), work(1:iter_used) )
+        !
+        call mix_type_AXPY ( -gamma0, dv(i), rhoin_m )
+        call mix_type_AXPY ( -gamma0, df(i), rhout_m )
+        !
+    END DO
+    DEALLOCATE(betamix, work)
+    !
+    ! ... auxiliary vectors dv and df not needed anymore
+    !
+  ENDIF skip_on_first
   IF ( savetofile ) THEN
-     !
-     IF ( okpaw ) THEN
-        !
-        CLOSE( iunmix_paw, STATUS = 'KEEP' )
-        !
-        DEALLOCATE( df_bec, dv_bec )
-        !
-     END IF
      !
      call close_mix_file( iunmix )
      !
@@ -394,12 +366,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
      !
      inext = mixrho_iter - ( ( mixrho_iter - 1 ) / n_iter ) * n_iter
      !
-     IF ( okpaw ) THEN
-        df_bec(:,:,:,inext) = becoutsave
-        dv_bec(:,:,:,inext) = becinsave
-        DEALLOCATE( becinsave, becoutsave )
-     END IF
-     !
      call mix_type_COPY( rhout_save, df(inext) )
      call mix_type_COPY( rhoin_save, dv(inext) )
      !
@@ -412,27 +378,26 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   !
   IF ( imix == 1 ) THEN
      !
-     CALL approx_screening( rhout )
+     CALL approx_screening( rhout_m )
      !
   ELSE IF ( imix == 2 ) THEN
      !
-     CALL approx_screening2( rhout, rhoin_m )
+     CALL approx_screening2( rhout_m, rhoin_m )
      !
   END IF
   !
   ! ... set new trial density
   !
-  call mix_type_AXPY ( alphamix, rhout, rhoin_m )
-  IF ( okpaw ) becin = becin + alphamix * becout
-  !
+  call mix_type_AXPY ( alphamix, rhout_m, rhoin_m )
   ! ... simple mixing for high_frequencies (and set to zero the smooth ones)
   call high_frequency_mixing ( rhoin, input_rhout, alphamix )
   ! ... add the mixed rho for the smooth frequencies
   call assign_mix_to_scf_type(rhoin_m,rhoin)
+  ! temporary PAW hack!
+  if (okpaw) becin = rhoin_m%bec
   !
-  call destroy_mix_type(rhout)
+  call destroy_mix_type(rhout_m)
   call destroy_mix_type(rhoin_m)
-  if (okpaw) deallocate (becout)
 
   CALL stop_clock( 'mix_rho' )
   !

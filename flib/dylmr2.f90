@@ -34,7 +34,7 @@ subroutine dylmr2 (nylm, ngy, g, gg, dylm, ipol)
   ! counter on g vectors
   ! counter on l,m component
 
-  real(DP), parameter :: delta = 1.d-5
+  real(DP), parameter :: delta = 1.d-6
   real(DP), allocatable :: dg (:), dgi (:), gx (:,:), ggx (:), ylmaux (:,:)
   ! dg is the finite increment for numerical derivation:
   ! dg = delta |G| = delta * sqrt(gg)

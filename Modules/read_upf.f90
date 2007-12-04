@@ -674,7 +674,7 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
     do l = 0,upf%paw%lmax_aug
         do nb = 1,upf%nbeta
         do nb1 = 1,upf%nbeta
-            if (abs(upf%paw%augmom(nb,nb1,l)) > 1.d-10) then
+            if (abs(upf%paw%augmom(nb,nb1,l)) > 1.e-10_dp) then
                 read (iunps,'(1x,a)') dummy ! blabla
                 read (iunps,'(1p4e19.11)') (upf%paw%aug(k,nb,nb1,l), k  = 1,upf%mesh)
             else
@@ -752,11 +752,6 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
     upf%paw%oc(nb) = MAX(upf%paw%oc(nb),0._dp)
   enddo
 
-  ! WARNING!!! for structural reasons unless I put the grid in the UPF structure
-  ! (and I don't whant to do that now!) I have to read the parameters here and
-  ! reconstruct the grid later, when I can access the type index...
-  ! BTW I'm wondering how all the subroutines that uses the grid can survive
-  ! considering that this module don't initialize it for uspp...
   CALL scan_begin ( iunps, "GRID_RECON", .false. )
     read (iunps,'(a)') dummy
     read (iunps,'(1pe19.11,a)') upf%grid%dx,   dummy
