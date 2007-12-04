@@ -25,7 +25,7 @@ SUBROUTINE phq_readin()
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
   USE ions_base,     ONLY : amass, atm
-  USE klist,         ONLY : xqq, xk, nks, lgauss, two_fermi_energies
+  USE klist,         ONLY : xqq, xk, nks, nkstot, lgauss, two_fermi_energies
   USE control_flags, ONLY : gamma_only
   USE uspp,          ONLY : okvan
   USE fixed_occ,     ONLY : tfixed_occ
@@ -273,7 +273,7 @@ SUBROUTINE phq_readin()
      amass(it) = amconv * amass(it)
   ENDDO
   lgamma_gamma=.FALSE.
-  IF (nks==1.OR.(nks==2.AND.nspin==2)) THEN
+  IF (nkstot==1.OR.(nkstot==2.AND.nspin==2)) THEN
      lgamma_gamma=(lgamma.AND.(ABS(xk(1,1))<1.D-12) &
                          .AND.(ABS(xk(2,1))<1.D-12) &
                          .AND.(ABS(xk(3,1))<1.D-12) )
@@ -325,8 +325,8 @@ SUBROUTINE phq_readin()
         CALL errore ('phq_readin', 'no elec. field with metals', 1)
   IF (maxirr.LT.0.OR.maxirr.GT.3 * nat) CALL errore ('phq_readin', ' &
        &Wrong maxirr ', ABS (maxirr) )
-  IF (MOD (nks, 2) .NE.0.AND..NOT.lgamma) CALL errore ('phq_readin', &
-       'k-points are odd', nks)
+  IF (MOD (nkstot, 2) .NE.0.AND..NOT.lgamma.and..not.lnscf) &
+           CALL errore ('phq_readin', 'k-points are odd', nkstot)
   IF (modenum > 0) THEN
      IF ( ldisp ) &
           CALL errore('phq_readin','Dispersion calculation and &

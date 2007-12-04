@@ -122,15 +122,7 @@ PROGRAM phonon
   !   
   CALL mp_bcast( iq_start, ionode_id )
   !
-  IF ( ldisp ) THEN
-     !
-     ! ... Calculate the q-points for the dispersion
-     !
-     CALL q_points()
-     !
-     ! ... Store the name of the matdyn file in auxdyn
-     !
-     auxdyn = fildyn
+  IF ( ldisp .OR. lnscf ) THEN
      !
      ! ... Save the starting k points 
      !
@@ -145,6 +137,17 @@ PROGRAM phonon
      xk_start(:,1:nks_start) = xk(:,1:nks_start)
      wk_start(1:nks_start)   = wk(1:nks_start)
 #endif
+  ENDIF
+
+  IF (ldisp) THEN
+     !
+     ! ... Calculate the q-points for the dispersion
+     !
+     CALL q_points()
+     !
+     ! ... Store the name of the matdyn file in auxdyn
+     !
+     auxdyn = fildyn
      !
      ! ... do always a non-scf calculation
      !
@@ -229,22 +232,22 @@ PROGRAM phonon
            ! ... in LSDA case k-points are already doubled to account for
            ! ... spin polarization: restore the original number of k-points
            !
-           IF ( nspin==2) THEN
-              nkstot = nks_start/2
-           ELSE
-              nkstot = nks_start
-           END IF
-           !
-           xk(:,1:nkstot) = xk_start(:,1:nkstot)
-           wk(1:nkstot)   = wk_start(1:nkstot)
-           !
         END IF
-        !
-     END IF
+     ENDIF
      !
      ! ... In the case of q != 0, we make first a non selfconsistent run
      !
      IF ( lnscf .AND. .NOT. lgamma ) THEN
+        !
+        IF ( nspin==2) THEN
+           nkstot = nks_start/2
+        ELSE
+           nkstot = nks_start
+        END IF
+        !
+        xk(:,1:nkstot) = xk_start(:,1:nkstot)
+        wk(1:nkstot)   = wk_start(1:nkstot)
+        !
         !
         WRITE( stdout, '(/,5X,"Calculation of q = ",3F8.4)') xqq
         !
