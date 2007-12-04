@@ -179,7 +179,9 @@ subroutine psidspsi (ik, uact, pdsp)
         call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1_nc, nkb, (1.d0, 0.d0) , dspsi, npwx)
      else
-        dspsi = matmul(vkb,ps1)+ dspsi
+        call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
+         (1.d0, 0.d0), vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dspsi, npwx)
+!        dspsi = matmul(vkb,ps1)+ dspsi
      endif
   endif
   !

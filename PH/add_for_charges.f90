@@ -214,7 +214,9 @@ subroutine add_for_charges (ik, uact)
         call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
          (1.d0, 0.d0), vkb, npwx, ps1_nc, nkb, (1.d0, 0.d0) , dvpsi, npwx)
      else
-        dvpsi = matmul(vkb,ps1) + dvpsi
+        call ZGEMM ('N', 'N', npw, nbnd*npol, nkb, &
+         (1.d0, 0.d0), vkb, npwx, ps1, nkb, (1.d0, 0.d0) , dvpsi, npwx)
+!        dvpsi = matmul(vkb,ps1) + dvpsi
      endif
   endif
   !
