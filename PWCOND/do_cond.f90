@@ -19,6 +19,7 @@ SUBROUTINE do_cond(nodenumber)
   USE io_files 
   USE noncollin_module, ONLY : noncolin, i_cons
   USE io_global, ONLY : stdout, ionode, ionode_id
+  USE mp_global, ONLY : npool
   USE paw_onecenter,      ONLY : PAW_potential
   USE paw_variables,      ONLY : okpaw
 
@@ -129,6 +130,10 @@ SUBROUTINE do_cond(nodenumber)
 400  CALL errore ('do_cond','reading energy list',ABS(ios))
      !
   END IF
+
+#ifdef __PARA
+   IF ( npool > 1 ) CALL errore('pwcond','pools not implemented',npool)
+#endif
 
 !
 ! ... Broadcast variables
