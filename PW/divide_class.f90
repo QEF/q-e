@@ -183,7 +183,7 @@ ELSEIF (code_group==10) THEN
          ENDDO 
          axis1=MOD(ipol,3)+1
          axis2=MOD(ipol+1,3)+1
-         IF (axis==0) call errore('divide_class_so','unknown D_4 axis ',1)
+         IF (axis==0) call errore('divide_class','unknown D_4 axis ',1)
       ENDIF
    END DO
    DO iclass=2,nclass
@@ -197,7 +197,7 @@ ELSEIF (code_group==10) THEN
          ELSE
             which_irr(iclass)=5
          END IF
-      ELSE
+      ELSEIF (ts.ne.3) THEN
          CALL errore('divide_class','wrong sym_type',1)
       END IF
    END DO
