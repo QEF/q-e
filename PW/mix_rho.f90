@@ -303,29 +303,17 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
     !   write(*,'(1e11.3)') e(:)
     !   write(*,*)
     !   deallocate(e,v)
-    ! Try to invert with DPOTRI (positive definite matrix) if it fails
-    ! try again with DSYTRI, but issue a warning (it should not happen)
-    CALL DPOTRF( 'U', iter_used, betamix, iter_used, info )
+    ALLOCATE(work(iter_used))
     !
-    IF( info == 0) &
-      CALL DPOTRI( 'U', iter_used, betamix, iter_used, info )
+    CALL DSYTRF( 'U', iter_used, betamix, iter_used, iwork, work, iter_used, info )
+    CALL errore( 'mix_rho', 'broyden: factorization (DSYTRF)', info )
     !
-    IF (info /= 0) THEN
-       CALL infomsg('mix_rho', 'WARNING: betamix is not positive definite')
-       !
-       allocate(work(iter_used))
-       CALL DSYTRF( 'U', iter_used, betamix, iter_used, iwork, work, iter_used, info )
-       CALL errore( 'mix_rho', 'broyden: factorization (DSYTRF)', info )
-       !
-       CALL DSYTRI( 'U', iter_used, betamix, iter_used, iwork, work, info )
-       CALL errore( 'mix_rho', 'broyden: inversion (DSYTRI)', info )
-       deallocate(work)
-    ENDIF
+    CALL DSYTRI( 'U', iter_used, betamix, iter_used, iwork, work, info )
+    CALL errore( 'mix_rho', 'broyden: inversion (DSYTRI)', info )
     !
     FORALL( i = 1:iter_used, &
             j = 1:iter_used, j > i ) betamix(j,i) = betamix(i,j)
     !
-    ALLOCATE(work(iter_used))
     DO i = 1, iter_used
         !
         work(i) = rho_ddot( df(i), rhout_m, ngm0 )
