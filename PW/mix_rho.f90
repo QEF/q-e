@@ -96,7 +96,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
     ldim            ! 2 * Hubbard_lmax + 1
   type(mix_type) :: rhoin_save, rhout_save
   REAL(DP),ALLOCATABLE :: betamix(:,:), work(:)
-  INTEGER :: iwork
+  INTEGER, ALLOCATABLE :: iwork(:)
   REAL(DP) :: gamma0
   LOGICAL :: &
     savetofile,  &! save intermediate steps on file $prefix."mix",...
@@ -277,7 +277,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   skip_on_first: &
   IF (iter_used > 0) THEN
     !
-    ALLOCATE(betamix(iter_used, iter_used))
+    ALLOCATE(betamix(iter_used, iter_used)) !iter_used))
     betamix = 0._dp
     !
     DO i = 1, iter_used
@@ -285,14 +285,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
         DO j = i, iter_used
             !
             betamix(i,j) = rho_ddot( df(j), df(i), ngm0 )
-            !
-            IF ( i /= j ) THEN
-                betamix(j,i) = betamix(i,j) !symmetrize
-#ifdef __NORMALIZE_BETAMIX
-            ELSE
-                betamix(i,i) = betamix(i,i) + w0
-#endif
-            ENDIF
+            betamix(j,i) = betamix(i,j)
             !
         END DO
         !
@@ -303,13 +296,14 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
     !   write(*,'(1e11.3)') e(:)
     !   write(*,*)
     !   deallocate(e,v)
-    ALLOCATE(work(iter_used))
-    !
+    allocate(work(iter_used), iwork(iter_used))
+    !write(*,*) betamix(:,:)
     CALL DSYTRF( 'U', iter_used, betamix, iter_used, iwork, work, iter_used, info )
-    CALL errore( 'mix_rho', 'broyden: factorization (DSYTRF)', info )
+    CALL errore( 'broyden', 'factorization', abs(info) )
     !
     CALL DSYTRI( 'U', iter_used, betamix, iter_used, iwork, work, info )
-    CALL errore( 'mix_rho', 'broyden: inversion (DSYTRI)', info )
+    CALL errore( 'broyden', 'DSYTRI', abs(info) )    !
+    deallocate(iwork)
     !
     FORALL( i = 1:iter_used, &
             j = 1:iter_used, j > i ) betamix(j,i) = betamix(i,j)
@@ -333,6 +327,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
     ! ... auxiliary vectors dv and df not needed anymore
     !
   ENDIF skip_on_first
+  !
   IF ( savetofile ) THEN
      !
      call close_mix_file( iunmix )
