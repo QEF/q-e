@@ -165,6 +165,7 @@ SUBROUTINE c_phase
    USE wvfct,                ONLY : npwx, npw, nbnd
    USE wavefunctions_module, ONLY : evc
    USE bp,                   ONLY : gdir, nppstr
+   USE becmod,               ONLY : calbec
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -446,7 +447,7 @@ SUBROUTINE c_phase
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if (okvan) then
                   CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
-                  CALL ccalbec(nkb, npwx, npw, nbnd, becp0, vkb, psi)
+                  CALL calbec (npw0, vkb, psi, becp0)
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= nppstr) THEN
@@ -455,7 +456,7 @@ SUBROUTINE c_phase
                   CALL get_buffer(evc,nwordwfc,iunwfc,kpoint)
                   if (okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
-                     CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
+                     CALL calbec (npw1, vkb, evc, becp_bp)
                   endif
                ELSE
                   kstart = kpoint-nppstr+1
@@ -464,7 +465,7 @@ SUBROUTINE c_phase
                   CALL get_buffer(evc,nwordwfc,iunwfc,kstart)
                   if (okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
-                     CALL ccalbec(nkb,npwx,npw,nbnd,becp_bp,vkb,evc)
+                     CALL calbec(npw1, vkb, evc, becp_bp)
                   endif
                ENDIF
 

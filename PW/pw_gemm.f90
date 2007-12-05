@@ -36,7 +36,7 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   !
   IF ( na == 0 .OR. nb == 0 ) RETURN
   !
-  CALL start_clock( 'pw_gemm' )
+  CALL start_clock( 'calbec' )
   !
   IF ( nb == 1 ) THEN
      !
@@ -56,7 +56,7 @@ SUBROUTINE pw_gemm( sum_over_nodes, na, nb, n, a, lda, b, ldb, c, ldc )
   IF ( sum_over_nodes == 'y' .OR. &
        sum_over_nodes == 'Y' ) CALL reduce( ldc*nb, c )
   !
-  CALL stop_clock( 'pw_gemm' )
+  CALL stop_clock( 'calbec' )
   !
   RETURN
   !

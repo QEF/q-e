@@ -63,7 +63,7 @@ SUBROUTINE force_us( forcenl )
        !
        ! ... calculation at gamma
        !
-       USE becmod, ONLY : rbecp
+       USE becmod, ONLY : rbecp, calbec
        IMPLICIT NONE
        !
        REAL(DP), ALLOCATABLE    :: rdbecp (:,:,:)
@@ -95,8 +95,7 @@ SUBROUTINE force_us( forcenl )
                 CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
-          IF ( nkb > 0 ) &
-             CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx,rbecp, nkb )
+          CALL calbec ( npw, vkb, evc, rbecp )
           !
           DO ipol = 1, 3
              DO jkb = 1, nkb
@@ -105,9 +104,7 @@ SUBROUTINE force_us( forcenl )
                 END DO
              END DO
              !
-             IF ( nkb > 0 ) &
-                CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb1, npwx, evc, npwx, &
-                              rdbecp(1,1,ipol), nkb )
+             CALL calbec ( npw, vkb1, evc, rdbecp(:,:,ipol) )
              !
           END DO
           !
@@ -197,7 +194,7 @@ SUBROUTINE force_us( forcenl )
      SUBROUTINE force_us_k()
        !-----------------------------------------------------------------------
        !  
-       USE becmod, ONLY : becp, becp_nc
+       USE becmod, ONLY : becp, becp_nc, calbec
        IMPLICIT NONE
        !
        COMPLEX(DP), ALLOCATABLE :: dbecp(:,:,:), dbecp_nc(:,:,:,:)
@@ -236,9 +233,9 @@ SUBROUTINE force_us( forcenl )
           END IF
           !
           IF (noncolin) THEN
-             CALL ccalbec_nc(nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
+             CALL calbec ( npw, vkb, evc, becp_nc)
           ELSE
-             CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+             CALL calbec ( npw, vkb, evc, becp)
           ENDIF
           !
           DO ipol = 1, 3

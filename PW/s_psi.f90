@@ -14,7 +14,7 @@ SUBROUTINE s_psi( lda, n, m, psi, spsi )
   ! ... This routine applies the S matrix to m wavefunctions psi
   ! ... and puts the results in spsi.
   ! ... Requires the products of psi with all beta functions
-  ! ... in array becp(nkb,m) (calculated in h_psi or by ccalbec)
+  ! ... in array becp(nkb,m) (calculated in h_psi or by calbec)
   !
   ! ... input:
   !
@@ -223,7 +223,7 @@ subroutine s_psi_nc (lda, n, m, psi, spsi )
   !    This routine applies the S matrix to m wavefunctions psi
   !    and puts the results in spsi.
   !    Requires the products of psi with all beta functions
-  !    in array becp_nc(nkb,m) (calculated by ccalbec)
+  !    in array becp_nc(nkb,m) (calculated by calbec)
   ! input:
   !     lda   leading dimension of arrays psi, spsi
   !     n     true dimension of psi, spsi
@@ -232,6 +232,7 @@ subroutine s_psi_nc (lda, n, m, psi, spsi )
   ! output:
   !     spsi  S*psi
   !
+  USE kinds,     ONLY : DP
   USE ions_base, ONLY: nat, ityp, ntyp => nsp
   USE uspp_param, ONLY: upf, nh
   USE uspp, ONLY: nkb, vkb, qq, qq_so, okvan

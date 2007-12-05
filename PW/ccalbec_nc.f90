@@ -34,7 +34,7 @@ subroutine ccalbec_nc (nkb, npwx, npw, npol, nbnd, bec, vkb, psi)
   !
   if (nkb.eq.0) return
 
-  call start_clock ('ccalbec')
+  call start_clock ('calbec')
   alpha= (1.d0, 0.d0)
   beta = (0.d0, 0.d0)
   call ZGEMM ('C', 'N', nkb, nbnd*npol, npw, alpha, vkb, npwx, psi, &
@@ -43,6 +43,6 @@ subroutine ccalbec_nc (nkb, npwx, npw, npol, nbnd, bec, vkb, psi)
 #ifdef __PARA
   call reduce (2 * nkb * nbnd*npol, bec)
 #endif
-  call stop_clock ('ccalbec')
+  call stop_clock ('calbec')
   return
 end subroutine ccalbec_nc

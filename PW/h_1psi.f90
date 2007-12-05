@@ -16,12 +16,12 @@ SUBROUTINE h_1psi( lda, n, psi, hpsi, spsi )
   !
   USE kinds, ONLY: DP
   USE bp,    ONLY: lelfield
-  USE noncollin_module, ONLY: noncolin
+  USE noncollin_module, ONLY: noncolin, npol
   !
   IMPLICIT NONE
   !
   INTEGER           :: lda, n
-  COMPLEX (DP) :: psi(n), hpsi(n), spsi(n)
+  COMPLEX (DP) :: psi(lda*npol), hpsi(n), spsi(n)
   !
   !
   CALL start_clock( 'h_1psi' )

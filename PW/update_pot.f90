@@ -443,10 +443,10 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
   USE buffers,              ONLY : get_buffer, save_buffer
   USE uspp,                 ONLY : nkb, vkb, okvan
   USE wavefunctions_module, ONLY : evc
-  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
-                                   becp, rbecp, becp_nc
   USE noncollin_module,     ONLY : noncolin, npol
   USE control_flags,        ONLY : gamma_only
+  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
+                                   becp, rbecp, becp_nc, calbec
   !
   IMPLICIT NONE
   !
@@ -537,11 +537,11 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
            !
            IF ( gamma_only ) THEN
-              CALL ccalbec( nkb, npwx, npw, nbnd,rbecp, vkb, evc )
+              CALL calbec( npw, vkb, evc, rbecp )
            ELSE IF ( noncolin) THEN
-              CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc )
+              CALL calbec( npw, vkb, evc, becp_nc )
            ELSE
-              CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+              CALL calbec( npw, vkb, evc, becp )
            END IF
            !
            CALL s_psi ( npwx, npw, nbnd, evc, aux )
@@ -557,18 +557,19 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         IF ( gamma_only ) THEN
             ALLOCATE ( rs_m (nbnd,nbnd) )
-            CALL pw_gemm ( 'N', nbnd, nbnd, npw, evcold, npwx, &
+            CALL pw_gemm ( 'Y', nbnd, nbnd, npw, evcold, npwx, &
                         aux, npwx, rs_m, nbnd )
             s_m(:,:) = rs_m(:,:)
             DEALLOCATE ( rs_m )
         ELSE IF ( noncolin) THEN
            CALL ZGEMM( 'C', 'N', nbnd, nbnd, npwx*npol, ONE, &
                        evcold, npwx*npol, aux, npwx*npol, ZERO, s_m, nbnd )
+           CALL reduce( 2*nbnd*nbnd, s_m )
         ELSE
            CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
                        evcold, npwx, aux, npwx, ZERO, s_m, nbnd )
+           CALL reduce( 2*nbnd*nbnd, s_m )
         END IF
-        CALL reduce( 2*nbnd*nbnd, s_m )
         !
         ! ... construct sp_m
         !

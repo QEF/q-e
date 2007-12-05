@@ -33,11 +33,12 @@ subroutine h_epsi_her_set
   USE klist
   USE cell_base, ONLY: at, alat, tpiba, omega, tpiba2
   USE ions_base, ONLY: ityp, tau, nat,ntyp => nsp
-  USE io_files, ONLY: iunwfc, nwordwfc, iunefieldm, iunefieldp
-  USE buffers,  ONLY: get_buffer
+  USE io_files,  ONLY: iunwfc, nwordwfc, iunefieldm, iunefieldp
+  USE buffers,   ONLY: get_buffer
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
-  USE mp,       ONLY : mp_sum
+  USE mp,        ONLY : mp_sum
+  USE becmod,    ONLY : calbec
   !
   implicit none
   !
@@ -336,7 +337,7 @@ subroutine h_epsi_her_set
 !              --- Dot wavefunctions and betas for PREVIOUS k-point ---
          if(okvan) then
             CALL init_us_2 (npw0,igk0,xk(1,ik-1),vkb)
-            CALL ccalbec(nkb, npwx, npw0, nbnd, becp0, vkb, evct)
+            CALL calbec( npw0, vkb, evct, becp0 )
          endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
@@ -354,7 +355,7 @@ subroutine h_epsi_her_set
       
          if(okvan) then
             CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
-            CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,evcel)
+            CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
 
 
@@ -510,7 +511,7 @@ subroutine h_epsi_her_set
           
          if(okvan) then
             CALL init_us_2 (npw0,igk0,xk(1,ik+nppstr-1),vkb)
-            CALL ccalbec(nkb, npwx, npw0, nbnd, becp0, vkb, evct)
+            CALL calbec( npw0, vkb, evct, becp0 )
          endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
@@ -529,7 +530,7 @@ subroutine h_epsi_her_set
          endif
          if(okvan) then
             CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
-            CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,evcel)
+            CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
 !              --- Matrix elements calculation ---
 
@@ -768,7 +769,7 @@ subroutine h_epsi_her_set
          
          if(okvan) then
             CALL init_us_2 (npw0,igk0,xk(1,ik+1),vkb)
-            CALL ccalbec(nkb, npwx, npw0, nbnd, becp0, vkb, evct)
+            CALL calbec( npw0, vkb, evct, becp0)
          endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
@@ -786,7 +787,7 @@ subroutine h_epsi_her_set
         
          if(okvan) then
             CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
-            CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,evcel)
+            CALL calbec( npw1, vkb, evcel, becp_bp )
          endif
          
 
@@ -937,7 +938,7 @@ subroutine h_epsi_her_set
 
       if(okvan) then
          CALL init_us_2 (npw0,igk0,xk(1,ik-nppstr+1),vkb)
-         CALL ccalbec(nkb, npwx, npw0, nbnd, becp0, vkb, evct)
+         CALL calbec( npw0, vkb, evct, becp0 )
       endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
          
@@ -957,7 +958,7 @@ subroutine h_epsi_her_set
 
       if(okvan) then
          CALL init_us_2 (npw1,igk1,xk(1,ik),vkb)
-         CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,evcel)
+         CALL calbec( npw1, vkb, evcel, becp_bp )
       endif
 !              --- Matrix elements calculation ---
 

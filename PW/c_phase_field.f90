@@ -43,6 +43,7 @@ SUBROUTINE c_phase_field
    USE fixed_occ
    USE reciprocal_vectors,   ONLY : ig_l2g
    USE mp,                   ONLY : mp_sum
+   USE becmod,               ONLY : calbec
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
 
@@ -320,7 +321,7 @@ SUBROUTINE c_phase_field
                CALL get_buffer (psi,nwordwfc,iunwfc,kpoint-1)
                if (okvan) then
                   CALL init_us_2 (npw0,igk0,xk(1,kpoint-1),vkb)
-                  CALL ccalbec(nkb, npwx, npw0, nbnd, becp0, vkb, psi)
+                  CALL calbec( npw0, vkb, psi, becp0)
                endif
 !              --- Dot wavefunctions and betas for CURRENT k-point ---
                IF (kpar /= (nppstr+1)) THEN
@@ -329,7 +330,7 @@ SUBROUTINE c_phase_field
                   CALL get_buffer (psi1,nwordwfc,iunwfc,kpoint)
                   if(okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kpoint),vkb)
-                     CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,psi1)
+                     CALL calbec( npw1, vkb, psi1, becp_bp)
                   endif
                ELSE
                   kstart = kpoint-(nppstr+1)+1
@@ -338,7 +339,7 @@ SUBROUTINE c_phase_field
                   CALL get_buffer (psi1,nwordwfc,iunwfc,kstart)
                   if(okvan) then
                      CALL init_us_2 (npw1,igk1,xk(1,kstart),vkb)
-                     CALL ccalbec(nkb,npwx,npw1,nbnd,becp_bp,vkb,psi1)
+                     CALL calbec( npw1, vkb, psi1, becp_bp)
                   endif
                ENDIF
            

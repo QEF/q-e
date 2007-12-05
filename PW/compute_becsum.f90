@@ -31,6 +31,7 @@ SUBROUTINE compute_becsum(iflag)
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, g2kin
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
+  USE becmod,               ONLY : calbec
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iflag ! if 1 compute also the weights
@@ -86,11 +87,11 @@ SUBROUTINE compute_becsum(iflag)
        !
        REAL(DP) :: w1
          ! weights
-       REAL(DP), ALLOCATABLE :: becp(:,:)
+       REAL(DP), ALLOCATABLE :: rbecp(:,:)
          ! contains <beta|psi>
        !
        !
-       ALLOCATE( becp( nkb, nbnd ) )
+       ALLOCATE( rbecp( nkb, nbnd ) )
        !
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
@@ -114,8 +115,7 @@ SUBROUTINE compute_becsum(iflag)
           !
           IF ( .NOT. okvan ) CYCLE k_loop
           !
-          IF ( nkb > 0 ) &
-             CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+          CALL calbec( npw, vkb, evc, rbecp )
           !
           CALL start_clock( 'becsum' )
           !
@@ -140,7 +140,7 @@ SUBROUTINE compute_becsum(iflag)
                             !
                             becsum(ijh,na,current_spin) = &
                                             becsum(ijh,na,current_spin) + &
-                                            w1 * becp(ikb,ibnd) * becp(ikb,ibnd)
+                                            w1 *rbecp(ikb,ibnd) *rbecp(ikb,ibnd)
                             !
                             ijh = ijh + 1
                             !
@@ -150,7 +150,7 @@ SUBROUTINE compute_becsum(iflag)
                                !
                                becsum(ijh,na,current_spin) = &
                                      becsum(ijh,na,current_spin) + &
-                                     w1 * 2.D0 * becp(ikb,ibnd) * becp(jkb,ibnd)
+                                     w1 * 2.D0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd)
                                !
                                ijh = ijh + 1
                                !
@@ -182,7 +182,7 @@ SUBROUTINE compute_becsum(iflag)
           !
        END DO k_loop
        !
-       DEALLOCATE( becp )
+       DEALLOCATE(rbecp )
        !
        RETURN
        !
@@ -248,12 +248,9 @@ SUBROUTINE compute_becsum(iflag)
           IF ( .NOT. okvan ) CYCLE k_loop
           !
           IF (noncolin) THEN
-             IF ( nkb > 0 ) &
-                CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, &
-                                                 becp_nc, vkb, evc )
+             CALL calbec( npw, vkb, evc, becp_nc )
           ELSE
-             IF ( nkb > 0 ) &
-                CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+             CALL calbec( npw, vkb, evc, becp )
           ENDIF
           !
           CALL start_clock( 'becsum' )

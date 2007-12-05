@@ -10,46 +10,35 @@ SUBROUTINE s_1psi( npwx, n, psi, spsi )
   !----------------------------------------------------------------------------
   !
   ! ... spsi = S*psi for one wavefunction
-  ! ... Wrapper routine - calls ccalbec and s_psi
+  ! ... Wrapper routine - calls calbec and s_psi
   !
   USE kinds,  ONLY : DP
   USE uspp,   ONLY : vkb, nkb
-  USE becmod, ONLY : becp, rbecp, becp_nc
+  USE becmod, ONLY : becp, rbecp, becp_nc, calbec
   USE control_flags,    ONLY : gamma_only 
   USE noncollin_module, ONLY : noncolin, npol
   !
   IMPLICIT NONE
   !
   INTEGER          :: npwx, n
-  COMPLEX(DP) :: psi(n), spsi(n)
+  COMPLEX(DP) :: psi(npwx*npol,1), spsi(npwx*npol)
   !
   !
   CALL start_clock( 's_1psi' )
   !
   IF ( gamma_only ) THEN
      !
-     CALL ccalbec( nkb, npwx, n, 1, rbecp, vkb, psi )
+     CALL calbec( n, vkb, psi, rbecp )
+     CALL s_psi( npwx, n, 1, psi, spsi )
      !
-  ELSE
+  ELSE IF ( noncolin ) THEN
      !
-     IF ( noncolin ) THEN
-        !
-        CALL ccalbec_nc( nkb, npwx, n, npol, 1, becp_nc, vkb, psi )
-        !
-     ELSE
-        !
-        CALL ccalbec( nkb, npwx, n, 1, becp, vkb, psi )
-        !
-     END IF
-     !
-  END IF 
-  !
-  IF ( noncolin ) THEN
-     !
+     CALL calbec( n, vkb, psi, becp_nc )
      CALL s_psi_nc( npwx, n, 1, psi, spsi )
      !
   ELSE
      !
+     CALL calbec( n, vkb, psi, becp )
      CALL s_psi( npwx, n, 1, psi, spsi )
      !
   END IF

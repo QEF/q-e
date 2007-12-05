@@ -27,7 +27,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
   USE noncollin_module,     ONLY : noncolin, npol
   USE mp_global,            ONLY : me_pool, root_pool
   USE becmod,               ONLY : allocate_bec, deallocate_bec, &
-                                   rbecp, becp, becp_nc
+                                   rbecp, becp, becp_nc, calbec
   !
   IMPLICIT NONE
   !
@@ -80,7 +80,7 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( lsda ) current_spin = isk(ik)
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
-       CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, rbecp, nkb )
+       CALL calbec( npw, vkb, evc, rbecp )
        !
        ALLOCATE( work1( npwx ), work2( npwx ), qm1( npwx ) )
        !
@@ -284,10 +284,10 @@ SUBROUTINE stres_us( ik, gk, sigmanlc )
        IF ( nks > 1 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
        !
        if (noncolin) then
-          CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc )
+          CALL calbec( npw, vkb, evc, becp_nc )
           ALLOCATE( work2_nc(npwx,npol) )
        else
-          CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+          CALL calbec( npw, vkb, evc, becp )
        endif
        !
        ALLOCATE( work1(npwx), work2(npwx), qm1( npwx ) )

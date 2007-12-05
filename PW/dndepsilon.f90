@@ -25,7 +25,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg
    USE uspp,                 ONLY : nkb, vkb
    USE uspp_param,           ONLY : upf
-   USE becmod,               ONLY : becp
+   USE becmod,               ONLY : becp, calbec
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
    USE buffers,              ONLY : get_buffer
@@ -88,7 +88,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
       !
       CALL get_buffer (evc, nwordwfc, iunwfc, ik)
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
-      CALL ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
+      CALL calbec( npw, vkb, evc, becp )
 
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 !      CALL atomic_wfc( ik, wfcatom )

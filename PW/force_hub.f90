@@ -30,7 +30,7 @@ SUBROUTINE force_hub(forceh)
    USE scf,                  ONLY : v
    USE mp_global,            ONLY : me_pool, my_pool_id
    USE basis,                ONLY : natomwfc
-   USE becmod,               ONLY : becp
+   USE becmod,               ONLY : becp, calbec
    USE uspp,                 ONLY : nkb, vkb
    USE uspp_param,           ONLY : upf
    USE wavefunctions_module, ONLY : evc
@@ -109,7 +109,7 @@ SUBROUTINE force_hub(forceh)
 
       CALL init_us_2 (npw,igk,xk(1,ik),vkb)
 
-      CALL ccalbec(nkb, npwx, npw, nbnd, becp, vkb, evc)
+      CALL calbec( npw, vkb, evc, becp )
 
       CALL s_psi  (npwx, npw, nbnd, evc, spsi )
 

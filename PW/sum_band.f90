@@ -44,8 +44,7 @@ SUBROUTINE sum_band()
   USE funct,                ONLY : dft_is_meta
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
-  USE becmod,               ONLY : allocate_bec, deallocate_bec, &
-                                   becp, rbecp, becp_nc
+  USE becmod,               ONLY : allocate_bec, deallocate_bec
   !
   IMPLICIT NONE
   !
@@ -268,6 +267,8 @@ SUBROUTINE sum_band()
        !
        ! ... gamma version
        !
+       USE becmod, ONLY : rbecp, calbec
+       !
        IMPLICIT NONE
        !
        ! ... local variables
@@ -396,8 +397,7 @@ SUBROUTINE sum_band()
           !
           IF ( .NOT. okvan ) CYCLE k_loop
           !
-          IF ( nkb > 0 ) &
-             CALL ccalbec( nkb, npwx, npw, nbnd, rbecp, vkb, evc )
+          CALL calbec( npw, vkb, evc, rbecp )
           !
           CALL start_clock( 'sum_band:becsum' )
           !
@@ -474,6 +474,8 @@ SUBROUTINE sum_band()
        !-----------------------------------------------------------------------
        !
        ! ... k-points version
+       !
+       USE becmod, ONLY : becp, becp_nc, calbec
        !
        IMPLICIT NONE
        !
@@ -611,12 +613,9 @@ SUBROUTINE sum_band()
           IF ( .NOT. okvan ) CYCLE k_loop
           !
           IF (noncolin) THEN
-             IF ( nkb > 0 ) &
-                CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, &
-                                                 becp_nc, vkb, evc )
+             CALL calbec( npw, vkb, evc, becp_nc )
           ELSE
-             IF ( nkb > 0 ) &
-                CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+             CALL calbec( npw, vkb, evc, becp )
           ENDIF
           !
           CALL start_clock( 'sum_band:becsum' )

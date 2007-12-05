@@ -24,7 +24,8 @@ SUBROUTINE orthoatwfc
   USE ldaU,       ONLY : swfcatom, U_projection
   USE wvfct,      ONLY : npwx, npw, igk
   USE uspp,       ONLY : nkb, vkb
-  USE becmod,     ONLY : allocate_bec, deallocate_bec, becp, rbecp, becp_nc
+  USE becmod,     ONLY : allocate_bec, deallocate_bec, &
+                         becp, rbecp, becp_nc, calbec
   USE control_flags,    ONLY : gamma_only
   USE noncollin_module, ONLY : noncolin, npol
   ! 
@@ -103,13 +104,12 @@ SUBROUTINE orthoatwfc
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      
      IF ( gamma_only ) THEN 
-        CALL pw_gemm ('Y', nkb, natomwfc, npw, vkb, npwx, &
-             wfcatom, npwx, rbecp, nkb) 
+        CALL calbec (npw, vkb, wfcatom, rbecp) 
      ELSE
         IF (noncolin) THEN
-           CALL ccalbec_nc(nkb,npwx,npw,npol,natomwfc,becp_nc,vkb,wfcatom)
+           CALL calbec (npw, vkb, wfcatom, becp_nc)
         ELSE
-           CALL ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom)
+           CALL calbec (npw, vkb, wfcatom, becp)
         END IF
      ENDIF
 

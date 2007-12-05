@@ -112,6 +112,7 @@ bp_c_phase.o : ../Modules/ions_base.o
 bp_c_phase.o : ../Modules/kind.o
 bp_c_phase.o : ../Modules/uspp.o
 bp_c_phase.o : ../Modules/wavefunctions.o
+bp_c_phase.o : becmod.o
 bp_c_phase.o : buffers.o
 bp_c_phase.o : pwcom.o
 bp_calc_btq.o : ../Modules/atom.o
@@ -151,6 +152,7 @@ c_phase_field.o : ../Modules/mp.o
 c_phase_field.o : ../Modules/recvec.o
 c_phase_field.o : ../Modules/uspp.o
 c_phase_field.o : ../Modules/wavefunctions.o
+c_phase_field.o : becmod.o
 c_phase_field.o : buffers.o
 c_phase_field.o : pwcom.o
 ccalbec.o : ../Modules/control_flags.o
@@ -216,6 +218,7 @@ compute_becsum.o : ../Modules/kind.o
 compute_becsum.o : ../Modules/paw_variables.o
 compute_becsum.o : ../Modules/uspp.o
 compute_becsum.o : ../Modules/wavefunctions.o
+compute_becsum.o : becmod.o
 compute_becsum.o : buffers.o
 compute_becsum.o : noncol.o
 compute_becsum.o : paw_onecenter.o
@@ -532,6 +535,7 @@ h_epsi_her_apply.o : ../Modules/io_global.o
 h_epsi_her_apply.o : ../Modules/ions_base.o
 h_epsi_her_apply.o : ../Modules/kind.o
 h_epsi_her_apply.o : ../Modules/uspp.o
+h_epsi_her_apply.o : becmod.o
 h_epsi_her_apply.o : pwcom.o
 h_epsi_her_apply.o : scf_mod.o
 h_epsi_her_set.o : ../Modules/cell_base.o
@@ -541,6 +545,7 @@ h_epsi_her_set.o : ../Modules/ions_base.o
 h_epsi_her_set.o : ../Modules/kind.o
 h_epsi_her_set.o : ../Modules/mp.o
 h_epsi_her_set.o : ../Modules/uspp.o
+h_epsi_her_set.o : becmod.o
 h_epsi_her_set.o : buffers.o
 h_epsi_her_set.o : pwcom.o
 h_epsi_her_set.o : scf_mod.o

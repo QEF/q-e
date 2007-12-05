@@ -11,8 +11,8 @@
 subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   !-----------------------------------------------------------------------
   !
-  ! this subrutine applies w_k+w_k* on psi, 
-  ! (as in Souza,et al.  PRB B 69, 085106 (2004))
+  ! this subroutine applies w_k+w_k* on psi, 
+  ! (as in Souza et al.  PRB B 69, 085106 (2004))
   ! the output is put into hpsi
   !
   ! evcel must contain the wavefunctions from previous iteration
@@ -36,6 +36,7 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
   USE constants, ONLY : e2, pi, tpi, fpi
   USE fixed_occ
   USE io_global, ONLY : stdout
+  USE becmod,    ONLY : calbec
   !
  implicit none
   !
@@ -82,8 +83,8 @@ subroutine h_epsi_her_apply(lda, n,nbande, psi, hpsi)
 
 
 
-  if(okvan) then
-     CALL ccalbec(nkb, npwx, npw, nbande, becp0, vkb, psi)
+  if(okvan) THEN
+     CALL calbec ( npw, vkb, psi, becp0, nbande )
   endif
 
 

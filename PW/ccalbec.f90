@@ -38,11 +38,12 @@ SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
   !
   IF ( nkb == 0 ) RETURN
   !
-  CALL start_clock( 'ccalbec' )
+  CALL start_clock( 'calbec' )
   !
   IF ( gamma_only ) THEN
      !
-     CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, psi, npwx, bec, nkb )
+     !CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, psi, npwx, bec, nkb )
+     CALL errore ('ccalbec','called in wrong case',1)
      !
   ELSE
      !
@@ -61,7 +62,7 @@ SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
      !
   END IF
   !
-  CALL stop_clock( 'ccalbec' )
+  CALL stop_clock( 'calbec' )
   !
   RETURN
   !

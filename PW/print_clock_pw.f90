@@ -129,7 +129,7 @@ SUBROUTINE print_clock_pw()
    !
    WRITE( stdout, '(/5X,"General routines")' )
    !
-   CALL print_clock( 'ccalbec' )
+   CALL print_clock( 'calbec' )
    CALL print_clock( 'cft3' )
    CALL print_clock( 'cft3s' )
    CALL print_clock( 'interpolate' )

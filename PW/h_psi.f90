@@ -81,7 +81,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! 
        ! ... gamma version
        !
-       USE becmod,  ONLY : rbecp
+       USE becmod,  ONLY : rbecp, calbec
        !
        IMPLICIT NONE
        !
@@ -119,7 +119,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IF ( nkb > 0 ) THEN
           !
-          CALL pw_gemm( 'Y', nkb, m, n, vkb, lda, psi, lda, rbecp, nkb )
+          CALL calbec ( n, vkb, psi, rbecp, m )
           !
           CALL add_vuspsi( lda, n, m, psi, hpsi )
           !
@@ -141,7 +141,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        ! ... k-points version
        !
        USE wavefunctions_module, ONLY : psic
-       USE becmod,               ONLY : becp
+       USE becmod,               ONLY : becp, calbec
        !
        IMPLICIT NONE
        !
@@ -203,7 +203,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IF ( nkb > 0 ) THEN
           !
-          CALL ccalbec( nkb, lda, n, m, becp, vkb, psi )
+          CALL calbec( n, vkb, psi, becp, m )
           !
           CALL add_vuspsi( lda, n, m, psi, hpsi )
           !
@@ -233,33 +233,33 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   ! output:
   !     hpsi  H*psi
   !
+  USE kinds, ONLY : DP
   use uspp, only: vkb, nkb
   use wvfct, only: igk, g2kin
   use gsmooth, only : nls, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   use ldaU, only : lda_plus_u
   use lsda_mod, only : current_spin
   use scf, only: vrs
-  use becmod
+  use becmod, only: becp_nc, calbec
   use wavefunctions_module, only: psic_nc
   use noncollin_module, only: noncolin, npol
   implicit none
   !
   integer :: lda, n, m
-  complex(DP) :: psi(lda,npol,m), hpsi(lda,npol,m),&
-                      sup, sdwn
+  complex(DP) :: psi(lda*npol,m), hpsi(lda,npol,m), sup, sdwn
   !
   integer :: ibnd,j,ipol
   ! counters
   call start_clock ('h_psi')
   call start_clock ('h_psi:init')
-  call ccalbec_nc (nkb, lda, n, npol, m, becp_nc, vkb, psi)
+  call calbec ( n, vkb, psi, becp_nc, m )
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
   !
   do ibnd = 1, m
      do ipol = 1, npol
         do j = 1, n
-           hpsi (j, ipol, ibnd) = g2kin (j) * psi (j, ipol, ibnd)
+           hpsi (j, ipol, ibnd) = g2kin (j) * psi (j+(ipol-1)*lda, ibnd)
         enddo
      enddo
   enddo
@@ -268,7 +268,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   !
   ! Here we add the Hubbard potential times psi
   !
-  if (lda_plus_u) call vhpsi_nc (lda, n, m, psi(1,1,1), hpsi(1,1,1))
+  if (lda_plus_u) call vhpsi_nc (lda, n, m, psi(1,1), hpsi(1,1,1))
   !
   ! the local potential V_Loc psi. First the psi in real space
   !
@@ -277,7 +277,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
      psic_nc = (0.d0,0.d0)
      do ipol=1,npol
         do j = 1, n
-           psic_nc(nls(igk(j)),ipol) = psi(j,ipol,ibnd)
+           psic_nc(nls(igk(j)),ipol) = psi(j+(ipol-1)*lda,ibnd)
         enddo
         call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
      enddo

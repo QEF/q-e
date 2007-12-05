@@ -14,7 +14,7 @@ SUBROUTINE add_vuspsi( lda, n, m, psi, hpsi )
   !    This routine applies the Ultra-Soft Hamiltonian to a
   !    vector psi and puts the result in hpsi.
   !    Requires the products of psi with all beta functions
-  !    in array becp(nkb,m) (calculated by ccalbec)
+  !    in array becp(nkb,m) (calculated by calbec)
   ! input:
   !     lda   leading dimension of arrays psi, spsi
   !     n     true dimension of psi, spsi

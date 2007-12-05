@@ -182,7 +182,7 @@ SUBROUTINE diag_bands( iter, ik, avg_iter )
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE scf,                  ONLY : v_of_0
   USE bp,                   ONLY : lelfield, evcel, evcelp, evcelm, bec_evcel
-  USE becmod,               ONLY : allocate_bec, deallocate_bec
+  USE becmod,               ONLY : allocate_bec, deallocate_bec, calbec
   !
   IMPLICIT NONE
   !
@@ -363,7 +363,7 @@ CONTAINS
        IF ( okvan ) THEN
           !
           ALLOCATE( bec_evcel ( nkb, nbnd ) )
-          CALL ccalbec(nkb,npwx,npw,nbnd,bec_evcel,vkb,evcel)
+          CALL calbec(npw, vkb, evcel, bec_evcel)
           !
        ENDIF
        !
