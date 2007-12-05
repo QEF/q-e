@@ -155,6 +155,7 @@ CONTAINS
     USE funct, ONLY : dft_name, get_iexch, get_icorr, get_igcx, get_igcc
     USE ld1inc, ONLY : zed
     USE pseudo_types, ONLY : nullify_pseudo_paw, allocate_pseudo_paw
+    USE io_global, ONLY : stdout
     IMPLICIT NONE
     TYPE(paw_t),      INTENT(OUT) :: pawset_
 !   CHARACTER(LEN=2), INTENT(IN)  :: symbol !now generated on the fly
@@ -273,13 +274,13 @@ CONTAINS
              pawset_%augmom(ns,ns1,l3)=int_0_inf_dr(aux(1:irc),pawset_%grid,irc,lll)
              pawset_%augmom(ns1,ns,l3)=pawset_%augmom(ns,ns1,l3)
           end do
-          write (*,'(a,2i3,a,2i3,10f8.4)') " MULTIPOLE",ns,l1,":",ns1,l2,&
+          write (stdout,'(a,2i3,a,2i3,10f8.4)') " MULTIPOLE",ns,l1,":",ns1,l2,&
                               (pawset_%augmom(ns,ns1,l3), l3=0,l1+l2)
 !          do ir=1,irc
 !             if (r(ir) < 1.0_dp) ir0 = ir
 !          end do
 !          do ir=ir0,irc+30, 3
-!             write (*,'(10f8.4)') r(ir),(pawset_%augfun(ir,ns,ns1,l3),l3=0,l1+l2)
+!             write (stdout,'(10f8.4)') r(ir),(pawset_%augfun(ir,ns,ns1,l3),l3=0,l1+l2)
 !          end do
        END DO
     END DO
@@ -418,7 +419,7 @@ CONTAINS
           END DO
        END DO
        IF ( which_paw_augfun == 'BG') &
-         write(*,"(5x,a,f12.6)") "Gaussians generated with zeta: ", zeta
+         write(stdout,"(5x,a,f12.6)") "Gaussians generated with zeta: ", zeta
     END IF
     !
     !
@@ -458,14 +459,14 @@ CONTAINS
     CALL new_paw_hamiltonian (vps, ddd, etot, &
        pawset_, pawset_%nwfc, pawset_%l, nspin, spin, pawset_%oc, pawset_%pswfc, pawset_%enl, energy, dddion)
     pawset_%dion(1:nbeta,1:nbeta)=dddion(1:nbeta,1:nbeta,1)
-    WRITE(6,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ryd'
-    WRITE(6,'(/5x,A)') 'The PAW screened D coefficients'
+    WRITE(stdout,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ryd'
+    WRITE(stdout,'(/5x,A)') 'The PAW screened D coefficients'
     DO ns1=1,pawset_%nwfc
-       WRITE(6,'(6f12.5)') (ddd(ns1,ns,1),ns=1,pawset_%nwfc)
+       WRITE(stdout,'(6f12.5)') (ddd(ns1,ns,1),ns=1,pawset_%nwfc)
     END DO
-    WRITE(6,'(/5x,A)') 'The PAW descreened D coefficients (US)'
+    WRITE(stdout,'(/5x,A)') 'The PAW descreened D coefficients (US)'
     DO ns1=1,pawset_%nwfc
-       WRITE(6,'(6f12.5)') (dddion(ns1,ns,1),ns=1,pawset_%nwfc)
+       WRITE(stdout,'(6f12.5)') (dddion(ns1,ns,1),ns=1,pawset_%nwfc)
     END DO
     !
     !
@@ -553,6 +554,7 @@ CONTAINS
   !
   SUBROUTINE check_multipole (pawset_)
     USE radial_grids, ONLY: hartree
+    USE io_global, ONLY : stdout
     IMPLICIT NONE
     TYPE(paw_t), INTENT(IN)  :: pawset_
     REAL(dp):: zval
@@ -564,7 +566,7 @@ CONTAINS
     REAL(dp) :: auxpot(ndmx,0:2*lmaxx+2), auxrho(ndmx)
     !
     ! set a few internal variables 
-    write (*,*) "check_multipole : lmaxx =",lmaxx
+    write (stdout,*) "check_multipole : lmaxx =",lmaxx
     mesh=pawset_%grid%mesh
     r(1:mesh)=pawset_%grid%r(1:mesh)
     r2(1:mesh)=pawset_%grid%r2(1:mesh)
@@ -587,12 +589,12 @@ CONTAINS
                 pawset_%augfun(1:mesh,ns1,ns2,l3) 
              call hartree(l3,l1+l2+2,mesh,pawset_%grid,auxrho,auxpot(1,l3))
           end do
-          write (*,'(a,2i3,a,2i3)') " MULTIPOLO DI ",ns1,l1,":",ns2, l2
+          write (stdout,'(a,2i3,a,2i3)') " MULTIPOLO DI ",ns1,l1,":",ns2, l2
           do ir=1,irc
              if (r(ir) < 1.0_dp) ir0 = ir
           end do
           do ir=ir0,irc+30, 3
-             write (*,'(10f8.4)') r(ir),(auxpot(ir,l3), l3=0,l1+l2)
+             write (stdout,'(10f8.4)') r(ir),(auxpot(ir,l3), l3=0,l1+l2)
           end do
        end do
     end do
@@ -605,6 +607,7 @@ CONTAINS
   !
   SUBROUTINE compute_charges (projsum_, chargeps_, charge1_, charge1ps_, &
        pawset_, nwfc_, l_, nspin_, spin_, oc_, pswfc_ , iflag, unit_)
+    USE io_global, ONLY : ionode
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: projsum_(nwfsx,nwfsx,2)
     REAL(dp), INTENT(OUT) :: chargeps_(ndmx,2)
@@ -631,7 +634,7 @@ CONTAINS
     ! add augmentation charges
     CALL compute_augcharge(augcharge,pawset_,projsum_,nspin_)
 
-    if (present(unit_)) then
+    if (present(unit_).and.ionode) then
        write(unit_,*) 
        write(unit_,*) "#"
        do i=1,pawset_%grid%mesh
@@ -675,6 +678,7 @@ CONTAINS
        pawset_, vcharge_, nlcc_, ccharge_, nspin_, iint, vloc, energies_ , unit_)
     USE funct, ONLY: dft_is_gradient !igcx, igcc
     USE radial_grids, ONLY: hartree
+    USE io_global, ONLY : stdout, ionode
     IMPLICIT NONE
     REAL(dp), INTENT(OUT) :: totenergy_            ! H+XC+DC
     REAL(dp), INTENT(OUT) :: veff_(ndmx,2)         ! effective potential
@@ -717,7 +721,7 @@ CONTAINS
     !
     ! Hartree
     CALL hartree(0,2,pawset_%grid%mesh,pawset_%grid,rhovtot,vh)
-    if (PRESENT(unit_)) then
+    if (PRESENT(unit_).and.ionode) then
        write (unit_,*)  " " 
        write (unit_,*)  "#" 
        do i=1,pawset_%grid%mesh
@@ -731,7 +735,7 @@ CONTAINS
     aux2(1:pawset_%grid%mesh) = rhovtot(1:pawset_%grid%mesh)*pawset_%grid%r2(1:pawset_%grid%mesh)
     res1 = int_0_inf_dr(aux1,pawset_%grid,pawset_%grid%mesh,1)
     res2 = int_0_inf_dr(aux2,pawset_%grid,pawset_%grid%mesh,4)
-    WRITE (*,'(4(A,1e15.7))') ' INT rho', dummy_charge,' INT V_H', &
+    WRITE (stdout,'(4(A,1e15.7))') ' INT rho', dummy_charge,' INT V_H', &
          res1, ' INT r^2*rho', res2, ' ERR:', (1.d0-  res1/ (-res2 * (2.d0*PI/3.d0)))
 #endif
     vh(1:pawset_%grid%mesh) = e2 * vh(1:pawset_%grid%mesh)
@@ -918,9 +922,11 @@ CONTAINS
   ! Write PAW dataset wfc and potentials on files
   !
   SUBROUTINE human_write_paw(pawset_)
+    USE io_global, ONLY : ionode
     IMPLICIT NONE
     TYPE(paw_t), INTENT(In) :: pawset_
     INTEGER :: n,ns
+    IF (.not.ionode) return
     DO ns=1,pawset_%nwfc
        WRITE (5000+ns,'(A)') "# r                 AEwfc               PSwfc               projector"
        DO n=1,pawset_%grid%mesh
