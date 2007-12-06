@@ -17,6 +17,7 @@ add_shift_us.o : ../Modules/ions_base.o
 add_shift_us.o : ../Modules/kind.o
 add_shift_us.o : ../Modules/uspp.o
 add_shift_us.o : ../Modules/wavefunctions.o
+add_shift_us.o : ../PW/becmod.o
 add_shift_us.o : ../PW/pwcom.o
 addusdens1d.o : ../Modules/cell_base.o
 addusdens1d.o : ../Modules/ions_base.o
@@ -52,6 +53,7 @@ bands.o : ../Modules/mp.o
 bands.o : ../Modules/mp_global.o
 bands.o : ../Modules/uspp.o
 bands.o : ../Modules/wavefunctions.o
+bands.o : ../PW/becmod.o
 bands.o : ../PW/noncol.o
 bands.o : ../PW/pwcom.o
 cft.o : ../Modules/kind.o
@@ -172,6 +174,7 @@ local_dos.o : ../Modules/kind.o
 local_dos.o : ../Modules/mp.o
 local_dos.o : ../Modules/uspp.o
 local_dos.o : ../Modules/wavefunctions.o
+local_dos.o : ../PW/becmod.o
 local_dos.o : ../PW/noncol.o
 local_dos.o : ../PW/pwcom.o
 local_dos.o : ../PW/scf_mod.o
@@ -188,6 +191,7 @@ local_dos_mag.o : ../Modules/ions_base.o
 local_dos_mag.o : ../Modules/kind.o
 local_dos_mag.o : ../Modules/uspp.o
 local_dos_mag.o : ../Modules/wavefunctions.o
+local_dos_mag.o : ../PW/becmod.o
 local_dos_mag.o : ../PW/noncol.o
 local_dos_mag.o : ../PW/pwcom.o
 local_dos_mag.o : ../PW/scf_mod.o

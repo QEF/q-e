@@ -31,7 +31,7 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   USE gvect,                ONLY : g
   USE klist,                ONLY : xk, nks
   USE noncollin_module,     ONLY : noncolin, npol
-  USE becmod,               ONLY : becp, becp_nc
+  USE becmod,               ONLY : becp, becp_nc, calbec
   USE uspp_param,           ONLY : nh, nhm
   IMPLICIT NONE
   !
@@ -120,12 +120,10 @@ subroutine compute_ppsi (ppsi, ppsi_us, ik, ipol, nbnd_occ, current_spin)
   END DO
   DEALLOCATE (gk)
 
-  IF (nkb>0) THEN
-     IF (noncolin) THEN
-        CALL ccalbec_nc(nkb, npwx, npw, npol, nbnd, becp2_nc, work, evc)
-     ELSE
-        CALL ccalbec(nkb, npwx, npw, nbnd, becp2, work, evc)
-     ENDIF
+  IF (noncolin) THEN
+     CALL calbec ( npw, work, evc, becp2_nc )
+  ELSE
+     CALL calbec ( npw, work, evc, becp2 )
   ENDIF
 
   ijkb0 = 0

@@ -258,7 +258,7 @@ SUBROUTINE projwave( filproj, lsym )
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
-  USE becmod,   ONLY: becp, rbecp
+  USE becmod,   ONLY: becp, rbecp, calbec
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   USE spin_orb, ONLY: lspinorb
   USE wavefunctions_module, ONLY: evc 
@@ -353,9 +353,9 @@ SUBROUTINE projwave( filproj, lsym )
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
  
      IF ( gamma_only ) THEN 
-        CALL pw_gemm ('Y', nkb, natomwfc, npw, vkb, npwx, wfcatom, npwx, rbecp, nkb)   
+        CALL calbec ( npw, vkb, wfcatom, rbecp) 
      ELSE 
-        CALL ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom) 
+        CALL calbec ( npw, vkb, wfcatom, becp) 
      END IF 
  
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
@@ -364,12 +364,11 @@ SUBROUTINE projwave( filproj, lsym )
      ! calculate overlap matrix O_ij = <phi_i|\hat S|\phi_j> 
      ! 
      IF ( gamma_only ) THEN 
-        CALL pw_gemm ('Y', natomwfc, natomwfc, npw, wfcatom, npwx, swfcatom, &
-             npwx, roverlap, natomwfc) 
+        CALL calbec ( npw, wfcatom, swfcatom, roverlap ) 
         overlap(:,:)=CMPLX(roverlap(:,:),0.d0)
         ! TEMP: diagonalization routine for real matrix should be used instead 
      ELSE 
-        CALL ccalbec (natomwfc, npwx, npw, natomwfc, overlap, wfcatom, swfcatom) 
+        CALL calbec ( npw, wfcatom, swfcatom, overlap ) 
      END IF 
  
      ! 
@@ -409,14 +408,14 @@ SUBROUTINE projwave( filproj, lsym )
      IF ( gamma_only ) THEN 
         !
         ALLOCATE(rproj0(natomwfc,nbnd), rwork1 (nbnd) ) 
-        CALL pw_gemm ('Y', natomwfc, nbnd, npw, wfcatom, npwx, evc, npwx, rproj0, natomwfc) 
+        CALL calbec ( npw, wfcatom, evc, rproj0) 
         !
         proj_aux(:,:,ik) = CMPLX( rproj0(:,:), 0.d0 )
         !
      ELSE 
         !
         ALLOCATE(proj0(natomwfc,nbnd), work1 (nbnd) ) 
-        CALL ccalbec (natomwfc, npwx, npw, nbnd, proj0, wfcatom, evc) 
+        CALL calbec ( npw, wfcatom, evc, proj0) 
         !
         proj_aux(:,:,ik) = proj0(:,:)
         !
@@ -711,7 +710,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   USE control_flags, ONLY: gamma_only 
   USE uspp, ONLY: nkb, vkb
   USE uspp_param, ONLY: upf
-  USE becmod,   ONLY: becp_nc
+  USE becmod,   ONLY: becp_nc, calbec
   USE io_files, ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc 
   USE wavefunctions_module, ONLY: evc 
   !
@@ -867,7 +866,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
      ! 
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
  
-     CALL ccalbec_nc (nkb, npwx, npw, npol, natomwfc, becp_nc, vkb, wfcatom)
+     CALL calbec ( npw, vkb, wfcatom, becp_nc )
  
      CALL s_psi_nc (npwx, npw, natomwfc, wfcatom, swfcatom) 
      ! 

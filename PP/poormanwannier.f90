@@ -91,7 +91,7 @@ SUBROUTINE projection (first_band, last_band)
   USE wvfct 
   USE control_flags, ONLY: gamma_only
   USE uspp,       ONLY: nkb, vkb
-  USE becmod,     ONLY: becp, rbecp
+  USE becmod,     ONLY: becp, rbecp, calbec
   USE io_files,   ONLY: nd_nmbr, prefix, tmp_dir, nwordwfc, iunwfc, &
                         iunsat, nwordatwfc
   USE wavefunctions_module, ONLY: evc 
@@ -214,9 +214,9 @@ SUBROUTINE projection (first_band, last_band)
      CALL init_us_2 (npw, igk, xk (1, ik), vkb) 
  
      IF ( gamma_only ) THEN 
-        CALL pw_gemm ('Y', nkb, natomwfc, npw, vkb, npwx, wfcatom, npwx, rbecp, nkb)   
+        CALL calbec ( npw, vkb, wfcatom, rbecp ) 
      ELSE 
-        CALL ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom) 
+        CALL calbec ( npw, vkb, wfcatom, becp )
      END IF 
  
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
@@ -228,13 +228,12 @@ SUBROUTINE projection (first_band, last_band)
      ! 
      IF ( gamma_only ) THEN 
         ALLOCATE(rproj0(natomwfc,nbnd) ) 
-        CALL pw_gemm ('Y', natomwfc, nbnd, npw, swfcatom, npwx, evc, npwx, &
-                       rproj0, natomwfc) 
+        CALL calbec ( npw, swfcatom, evc, rproj0 ) 
         proj(:,:,ik) = CMPLX(rproj0(:,:),0.d0)
         DEALLOCATE (rproj0) 
      ELSE 
         ALLOCATE(proj0(natomwfc,nbnd) ) 
-        CALL ccalbec (natomwfc, npwx, npw, nbnd, proj0, swfcatom, evc) 
+        CALL calbec ( npw, swfcatom, evc, proj0 ) 
         proj(:,:,ik) = proj0(:,:)
         DEALLOCATE (proj0) 
      END IF 
@@ -312,9 +311,9 @@ SUBROUTINE projection (first_band, last_band)
         ENDDO
      ENDDO
      IF ( gamma_only ) THEN 
-        CALL pw_gemm ('Y', nkb, natomwfc, npw, vkb, npwx, wfcatom, npwx, rbecp, nkb)   
+        CALL calbec ( npw, vkb, wfcatom, rbecp ) 
      ELSE 
-        CALL ccalbec (nkb, npwx, npw, natomwfc, becp, vkb, wfcatom) 
+        CALL calbec ( npw, vkb, wfcatom, becp ) 
      END IF 
      CALL s_psi (npwx, npw, natomwfc, wfcatom, swfcatom) 
 

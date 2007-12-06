@@ -226,7 +226,7 @@ USE constants,       ONLY : rytoev
 USE rap_point_group, ONLY : code_group, nclass, nelem, elem, which_irr, &
                             char_mat, name_rap, name_class, gname
 USE uspp,            ONLY : vkb, nkb, okvan
-USE becmod,          ONLY : becp
+USE becmod,          ONLY : becp, calbec
 IMPLICIT NONE
 
 INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
@@ -310,7 +310,7 @@ DO iclass=1,nclass
 !   and apply S if necessary
 !
    IF ( okvan ) THEN
-      CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evcr ) 
+      CALL calbec( npw, vkb, evcr, becp ) 
       CALL s_psi( npwx, npw, nbnd, evcr, evcr )
    ENDIF
 !
@@ -531,7 +531,7 @@ USE rap_point_group_is, ONLY : gname_is
 USE spin_orb,           ONLY : domag
 USE uspp,               ONLY : vkb, nkb, okvan
 USE noncollin_module,   ONLY : npol
-USE becmod,             ONLY : becp_nc
+USE becmod,             ONLY : becp_nc, calbec
 IMPLICIT NONE
 
 INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, npwx
@@ -620,7 +620,7 @@ DO iclass=1,nclass
 !   and apply S in the US case.
 !
    IF ( okvan ) THEN
-      CALL ccalbec_nc( nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evcr ) 
+      CALL calbec( npw, vkb, evcr, becp_nc )
       CALL s_psi_nc( npwx, npw, nbnd, evcr, evcr )
    ENDIF
 !

@@ -146,7 +146,7 @@ subroutine plan_avg (averag, plan, ninter)
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module, ONLY : noncolin, npol
   USE io_files, ONLY: iunwfc, nwordwfc
-  USE becmod, ONLY: becp, becp_nc
+  USE becmod, ONLY: becp, becp_nc, calbec
 
   implicit none
   integer :: ninter
@@ -247,9 +247,9 @@ subroutine plan_avg (averag, plan, ninter)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
 
      if (noncolin) then
-        call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
+        call calbec ( npw, vkb, evc, becp_nc)
      else
-        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+        call calbec ( npw, vkb, evc, becp)
      endif
      do ibnd = 1, nbnd
         call local_dos1d (ik, ibnd, plan (1, ibnd, ik) )

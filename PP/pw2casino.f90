@@ -76,7 +76,7 @@ SUBROUTINE compute_casino
   USE control_flags, ONLY : gamma_only
   USE uspp, ONLY: nkb, vkb, dvan
   USE uspp_param, ONLY: nh
-  USE becmod,   ONLY: becp 
+  USE becmod,   ONLY: becp, calbec
   USE io_global, ONLY: stdout
   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
@@ -159,7 +159,7 @@ SUBROUTINE compute_casino
         CALL gk_sort (xk (1, ikk), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
         CALL davcio (evc, nwordwfc, iunwfc, ikk, - 1)
         CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
-        CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+        CALL calbec ( npw, vkb, evc, becp )
 
         DO ig =1, npw
            IF( igk(ig) > 4*npwx ) & 

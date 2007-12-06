@@ -792,7 +792,7 @@ subroutine compute_mmn
    use constants,       only : tpi
    use uspp,            only : nkb, vkb
    USE uspp_param,      ONLY : upf, nh, lmaxq
-   use becmod,          only : becp, rbecp
+   use becmod,          only : becp, rbecp, calbec
    use wannier
 
    implicit none
@@ -919,9 +919,9 @@ subroutine compute_mmn
          call init_us_2 (npw, igk, xk(1,ik), vkb)
          ! below we compute the product of beta functions with |psi> 
          if (gamma_only) then
-            call ccalbec (nkb, npwx, npw, nbnd, rbecp, vkb, evc)
+            call calbec ( npw, vkb, evc, rbecp )
          else
-            call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+            call calbec ( npw, vkb, evc, becp )
          end if 
       end if
       !
@@ -945,9 +945,9 @@ subroutine compute_mmn
             call init_us_2 (npwq, igkq, xk(1,ikp), vkb)
             ! below we compute the product of beta functions with |psi> 
             if (gamma_only) then
-               call ccalbec (nkb, npwx, npwq, nbnd, rbecp2, vkb, evcq)
+               call calbec ( npwq, vkb, evcq, rbecp2 )
             else
-               call ccalbec (nkb, npwx, npwq, nbnd, becp2, vkb, evcq)
+               call calbec ( npwq, vkb, evcq, becp2 )
             end if
          end if
          !
@@ -1099,7 +1099,7 @@ subroutine compute_amn
    use gvect,           only : g, ngm, ecutwfc, gstart
    use cell_base,       only : tpiba2
    use uspp,            only : nkb, vkb
-   use becmod,          only : becp, rbecp
+   use becmod,          only : becp, rbecp, calbec
    use wannier
    USE ions_base,       only : nat, ntyp => nsp, ityp, tau
    USE uspp_param,      ONLY : upf
@@ -1162,10 +1162,9 @@ subroutine compute_amn
          call init_us_2 (npw, igk, xk (1, ik), vkb)
          ! below we compute the product of beta functions with trial func.
          if (gamma_only) then
-!!$            CALL pw_gemm( 'Y', nkb, n_wannier, npw, vkb, npwx,gf, npwx, rbecp, nkb )
-            call ccalbec (nkb, npwx, npw, n_wannier, rbecp, vkb, gf)
+            call calbec ( npw, vkb, gf, rbecp, n_wannier )
          else
-            call ccalbec (nkb, npwx, npw, n_wannier, becp, vkb, gf)
+            call calbec ( npw, vkb, gf, becp, n_wannier )
          end if
          ! and we use it for the product S|trial_func>
          call s_psi (npwx, npw, n_wannier, gf, sgf)  

@@ -132,6 +132,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id
   USE mp,                   ONLY : mp_bcast
+  USE becmod,               ONLY : calbec
 
   IMPLICIT NONE
   CHARACTER (len=*) :: filband
@@ -261,10 +262,10 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
      ! 
      CALL init_us_2 (npw, igk, xk (1, ik), vkb)
      IF (noncolin) THEN
-        CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
+        CALL calbec ( npw, vkb, evc, becp_nc )
         CALL compute_sigma_avg(sigma_avg(1,1,ik),becp_nc,ik,lsigma)
      ELSE
-        CALL ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+        CALL calbec ( npw, vkb, evc, becp )
      END IF
      !
      IF (ik==nks1.or.lsym) THEN

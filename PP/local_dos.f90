@@ -47,6 +47,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
 #ifdef __PARA
   USE mp,                   ONLY : mp_bcast
 #endif
+  USE becmod,               ONLY : calbec
   implicit none
   !
   ! input variables
@@ -143,13 +144,11 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
         call init_us_2 (npw, igk, xk (1, ik), vkb)
 
         if (gamma_only) then
-           call pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, rbecp, nkb)
+           call calbec ( npw, vkb, evc, rbecp )
+        else if (noncolin) then
+           call calbec ( npw, vkb, evc, becp_nc )
         else
-           if (noncolin) then
-              call ccalbec_nc (nkb,npwx,npw,npol,nbnd,becp_nc,vkb,evc)
-           else
-              call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
-           endif
+           call calbec ( npw, vkb, evc, becp )
         end if
      !
      !     here we compute the density of states

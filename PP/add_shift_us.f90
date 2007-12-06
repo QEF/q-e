@@ -28,6 +28,7 @@ SUBROUTINE add_shift_us( shift_nl )
   USE symme,                ONLY : irt, s, nsym
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunwfc, nwordwfc
+  USE becmod,               ONLY : calbec
   !
   IMPLICIT NONE
   !
@@ -59,7 +60,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        IMPLICIT NONE
        !
-       REAL(DP), ALLOCATABLE    :: becp(:,:), shift_(:)
+       REAL(DP), ALLOCATABLE    :: rbecp(:,:), shift_(:)
        ! auxiliary variables contain <beta|psi> 
        REAL(DP) :: ps
        INTEGER       :: ik, ibnd, ig, ih, jh, na, nt, ikb, jkb, ijkb0
@@ -67,7 +68,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        !
        !
-       ALLOCATE( becp( nkb, nbnd ), shift_(nat) )    
+       ALLOCATE( rbecp( nkb, nbnd ), shift_(nat) )    
        !   
        shift_(:) = 0.d0
        !
@@ -82,8 +83,7 @@ SUBROUTINE add_shift_us( shift_nl )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
-          IF ( nkb > 0 ) &
-             CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, becp, nkb )
+          CALL calbec ( npw, vkb, evc, rbecp )
           !
           ijkb0 = 0
           DO nt = 1, ntyp
@@ -95,7 +95,7 @@ SUBROUTINE add_shift_us( shift_nl )
                          ps = deeq(ih,ih,na,current_spin) - &
                               et(ibnd,ik) * qq(ih,ih,nt)
                          shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
-                                      becp(ikb,ibnd) * becp(ikb,ibnd)
+                                      rbecp(ikb,ibnd) * rbecp(ikb,ibnd)
                       END DO
                       !
                       IF ( upf(nt)%tvanp .OR. newpseudo(nt) ) THEN
@@ -110,7 +110,7 @@ SUBROUTINE add_shift_us( shift_nl )
                                ps = deeq(ih,jh,na,current_spin) - &
                                     et(ibnd,ik) * qq(ih,jh,nt)
                                shift_(na) = shift_(na) + ps * wg(ibnd,ik) * &
-                                     2.d0 * becp(ikb,ibnd) * becp(jkb,ibnd) 
+                                     2.d0 *rbecp(ikb,ibnd) *rbecp(jkb,ibnd) 
                             END DO
                          END DO
                       END IF
@@ -135,7 +135,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        shift_nl(:) = shift_nl(:) + shift_(:)
        !
-       DEALLOCATE( becp, shift_ ) 
+       DEALLOCATE( rbecp, shift_ ) 
        !
        RETURN
        !
@@ -170,7 +170,7 @@ SUBROUTINE add_shift_us( shift_nl )
              IF ( nkb > 0 ) CALL init_us_2( npw, igk, xk(1,ik), vkb )
           END IF
           !
-          CALL ccalbec( nkb, npwx, npw, nbnd, becp, vkb, evc )
+          CALL calbec( npw, vkb, evc, becp )
           !
           !
           ijkb0 = 0

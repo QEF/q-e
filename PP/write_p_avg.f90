@@ -23,7 +23,8 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   USE klist,                ONLY : xk, nks, nkstot
   USE io_files,             ONLY : nwordwfc, iunwfc
   USE uspp,                 ONLY : nkb, vkb, okvan
-  USE becmod,               ONLY : becp, becp_nc
+  USE becmod,               ONLY : becp, becp_nc, calbec, &
+                                   allocate_bec, deallocate_bec
   USE noncollin_module,     ONLY : noncolin, npol
   USE ldaU,                 ONLY : lda_plus_u
   USE wavefunctions_module, ONLY : evc
@@ -41,11 +42,7 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
   IF (lda_plus_u) CALL errore('write_p_avg', &
                        'write_p_avg not working with LDA+U',1)
   ALLOCATE(matp(nbnd,nbnd,3))
-  IF (noncolin) THEN
-     ALLOCATE(becp_nc(nkb,npol,nbnd))
-  ELSE
-     ALLOCATE(becp(nkb,nbnd))
-  ENDIF 
+  CALL allocate_bec (nkb,nbnd)
 
   IF (nspin==1.OR.nspin==4) THEN
      nks1=MAX(1,firstk)
@@ -101,12 +98,10 @@ SUBROUTINE write_p_avg(filp, spin_component, firstk, lastk)
      !
      CALL davcio (evc, nwordwfc, iunwfc, ik, - 1)
 
-     IF (nkb>0) THEN
-        IF (noncolin) THEN
-           CALL ccalbec_nc (nkb,npwx,npw,npol,nbnd_occ,becp_nc,vkb,evc)
-        ELSE
-           CALL ccalbec (nkb,npwx,npw,nbnd_occ,becp,vkb,evc)
-        END IF
+     IF (noncolin) THEN
+        CALL calbec ( npw, vkb, evc, becp_nc, nbnd_occ )
+     ELSE
+        CALL calbec ( npw, vkb, evc, becp, nbnd_occ )
      END IF
  
      DO ipol=1,3
