@@ -399,9 +399,8 @@ CONTAINS
              !
           END IF
           !
-          CALL ccgdiagg( npwx, npw, nbnd, evc, et(1,ik), btype(1,ik), &
-                  h_diag, ethr, max_cg_iter, .NOT. lscf, &
-                  notconv, cg_iter )
+          CALL ccgdiagg( npwx, npw, nbnd, npol, evc, et(1,ik), btype(1,ik), &
+               h_diag, ethr, max_cg_iter, .NOT. lscf, notconv, cg_iter )
           !
           avg_iter = avg_iter + cg_iter
           !
@@ -437,13 +436,13 @@ CONTAINS
           !
           IF ( use_para_diag ) then
              !
-             CALL pcegterg( npw, npwx, nbnd, nbndx, evc, ethr, &
+             CALL pcegterg( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                          okvan, et(1,ik), btype(1,ik), &
                          notconv, lrot, dav_iter )
              !
           ELSE
              !
-             CALL cegterg ( npw, npwx, nbnd, nbndx, evc, ethr, &
+             CALL cegterg ( npw, npwx, nbnd, nbndx, npol, evc, ethr, &
                          okvan, et(1,ik), btype(1,ik), &
                          notconv, lrot, dav_iter )
           END IF

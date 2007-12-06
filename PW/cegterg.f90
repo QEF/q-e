@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
+SUBROUTINE cegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
                     uspp, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
@@ -23,17 +23,16 @@ SUBROUTINE cegterg( npw, npwx, nvec, nvecx, evc, ethr, &
   ! ... S is an overlap matrix, evc is a complex vector
   !
   USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
+  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx, npol
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set :
     !    (the basis set is refreshed when its dimension would exceed nvecx)
-    ! k-point considered
+    ! umber of spin polarizations
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc contains the  refined estimates of the eigenvectors  
   REAL(DP), INTENT(IN) :: ethr
@@ -449,7 +448,7 @@ END SUBROUTINE cegterg
 !  (written by Carlo Cavazzoni)
 !
 !----------------------------------------------------------------------------
-SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
+SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, npol, evc, ethr, &
                     uspp, e, btype, notcnv, lrot, dav_iter )
   !----------------------------------------------------------------------------
   !
@@ -464,22 +463,25 @@ SUBROUTINE pcegterg( npw, npwx, nvec, nvecx, evc, ethr, &
   USE io_global, ONLY : stdout
   USE mp_global,        ONLY : npool, nproc_pool, me_pool, root_pool, &
                                intra_pool_comm, init_ortho_group, me_image, &
-                               ortho_comm, np_ortho, me_ortho, ortho_comm_id, leg_ortho
-  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , la_nx_ , la_nrl_ , la_n_ , &
-                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , la_npr_ , la_me_ , la_comm_ , &
+                               ortho_comm, np_ortho, me_ortho, ortho_comm_id, &
+                               leg_ortho
+  USE descriptors,      ONLY : descla_siz_ , descla_init , lambda_node_ , &
+                               la_nx_ , la_nrl_ , la_n_ , &
+                               ilac_ , ilar_ , nlar_ , nlac_ , la_npc_ , &
+                               la_npr_ , la_me_ , la_comm_ , &
                                la_myr_ , la_myc_ , nlax_
   USE parallel_toolkit, ONLY : zsqmred, zsqmher, zsqmdst
   USE mp,               ONLY : mp_bcast, mp_root_sum, mp_sum, mp_barrier, mp_end
-  USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !
-  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx
+  INTEGER, INTENT(IN) :: npw, npwx, nvec, nvecx, npol
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix evc, as declared in the calling pgm unit
     ! integer number of searched low-lying roots
     ! maximum dimension of the reduced basis set
     !    (the basis set is refreshed when its dimension would exceed nvecx)
+    ! number of spin polarizations
   COMPLEX(DP), INTENT(INOUT) :: evc(npwx,npol,nvec)
     !  evc   contains the  refined estimates of the eigenvectors
   REAL(DP), INTENT(IN) :: ethr

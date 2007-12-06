@@ -169,7 +169,6 @@ rho2zeta.o \
 rotate_wfc.o \
 rotate_wfc_k.o \
 rotate_wfc_gamma.o \
-rotate_wfc_nc.o \
 ruotaijk.o \
 s_1psi.o \
 s_axis_to_ca.o \

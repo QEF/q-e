@@ -51,15 +51,10 @@ SUBROUTINE rotate_wfc &
         CALL protate_wfc_gamma &
             ( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc, e )
         !
-     ELSE IF ( npol == 2 ) THEN
-        !
-        CALL protate_wfc_nc &
-            ( npwx, npw, nstart, nbnd, psi, npol, overlap, evc, e )
-        !
      ELSE
         !
         CALL protate_wfc_k &
-            ( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+            ( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
         !
      END IF
      !
@@ -72,15 +67,10 @@ SUBROUTINE rotate_wfc &
         CALL rotate_wfc_gamma &
             ( npwx, npw, nstart, gstart, nbnd, psi, overlap, evc, e )
         !
-     ELSE IF ( npol == 2 ) THEN
-        !
-        CALL rotate_wfc_nc &
-            ( npwx, npw, nstart, nbnd, psi, npol, overlap, evc, e )
-        !
      ELSE
         !
         CALL rotate_wfc_k &
-            ( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+            ( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
         !
      END IF
      !

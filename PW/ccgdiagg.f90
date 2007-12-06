@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2005 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -11,7 +11,7 @@
 #define ONE  ( 1.D0, 0.D0 )
 !
 !----------------------------------------------------------------------------
-SUBROUTINE ccgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
+SUBROUTINE ccgdiagg( npwx, npw, nbnd, npol, psi, e, btype, precondition, &
                      ethr, maxter, reorder, notconv, avg_iter )
   !----------------------------------------------------------------------------
   !
@@ -23,13 +23,12 @@ SUBROUTINE ccgdiagg( npwx, npw, nbnd, psi, e, btype, precondition, &
   !
   USE constants,        ONLY : pi
   USE kinds,            ONLY : DP
-  USE noncollin_module, ONLY : npol
   !
   IMPLICIT NONE
   !
   ! ... I/O variables
   !
-  INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, maxter
+  INTEGER,     INTENT(IN)    :: npwx, npw, nbnd, npol, maxter
   INTEGER,     INTENT(IN)    :: btype(nbnd)
   REAL(DP),    INTENT(IN)    :: precondition(npwx*npol), ethr
   COMPLEX(DP), INTENT(INOUT) :: psi(npwx*npol,nbnd)

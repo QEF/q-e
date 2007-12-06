@@ -160,7 +160,6 @@ ccalbec.o : pwcom.o
 ccalbec_nc.o : ../Modules/kind.o
 ccgdiagg.o : ../Modules/constants.o
 ccgdiagg.o : ../Modules/kind.o
-ccgdiagg.o : noncol.o
 cdiagh.o : ../Modules/kind.o
 cdiagh.o : ../Modules/mp.o
 cdiagh.o : ../Modules/mp_global.o
@@ -176,7 +175,6 @@ cegterg.o : ../Modules/kind.o
 cegterg.o : ../Modules/mp.o
 cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
-cegterg.o : noncol.o
 cft3.o : ../Modules/fft_base.o
 cft3.o : ../Modules/fft_scalar.o
 cft3.o : ../Modules/kind.o
@@ -1010,11 +1008,6 @@ rotate_wfc_k.o : ../Modules/kind.o
 rotate_wfc_k.o : ../Modules/mp.o
 rotate_wfc_k.o : ../Modules/mp_global.o
 rotate_wfc_k.o : ../Modules/ptoolkit.o
-rotate_wfc_nc.o : ../Modules/descriptors.o
-rotate_wfc_nc.o : ../Modules/kind.o
-rotate_wfc_nc.o : ../Modules/mp.o
-rotate_wfc_nc.o : ../Modules/mp_global.o
-rotate_wfc_nc.o : ../Modules/ptoolkit.o
 ruotaijk.o : ../Modules/kind.o
 s_1psi.o : ../Modules/control_flags.o
 s_1psi.o : ../Modules/kind.o
@@ -1464,7 +1457,6 @@ rgen.o : ../include/f_defs.h
 rotate_wfc.o : ../include/f_defs.h
 rotate_wfc_gamma.o : ../include/f_defs.h
 rotate_wfc_k.o : ../include/f_defs.h
-rotate_wfc_nc.o : ../include/f_defs.h
 s_psi.o : ../include/f_defs.h
 scale_h.o : ../include/f_defs.h
 set_rhoc.o : ../include/f_defs.h

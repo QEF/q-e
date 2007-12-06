@@ -8,7 +8,7 @@
 #include "f_defs.h"
 !
 !----------------------------------------------------------------------------
-SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Serial version of rotate_wfc for colinear, k-point calculations
@@ -19,24 +19,38 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !
   ! ... I/O variables
   !
-  INTEGER :: npw, npwx, nstart, nbnd
+  INTEGER, INTENT(IN) :: npw, npwx, nstart, nbnd, npol
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
+    ! number of spin polarizations
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
-  COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
+  COMPLEX(DP) :: psi(npwx*npol,nstart), evc(npwx*npol,nbnd)
     ! input and output eigenvectors (may overlap)
   REAL(DP) :: e(nbnd)
     ! eigenvalues
   !
   ! ... local variables
   !
+  INTEGER :: kdim, kdmx
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
-  ALLOCATE( aux(  npwx, nstart ) )    
+  IF ( npol == 1 ) THEN
+     !
+     kdim = npw
+     kdmx = npwx
+     !
+  ELSE
+     !
+     kdim = npwx*npol
+     kdmx = npwx*npol
+     !
+  END IF
+  !
+  ALLOCATE( aux(kdmx, nstart ) )    
   ALLOCATE( hc( nstart, nstart) )    
   ALLOCATE( sc( nstart, nstart) )    
   ALLOCATE( vc( nstart, nstart) )    
@@ -48,8 +62,8 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !
   CALL h_psi( npwx, npw, nstart, psi, aux )
   !
-  call ZGEMM( 'C', 'N', nstart, nstart, npw, ( 1.D0, 0.D0 ), psi, npwx, &
-              aux, npwx, ( 0.D0, 0.D0 ), hc, nstart )
+  call ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, &
+              aux, kdmx, ( 0.D0, 0.D0 ), hc, nstart )
   !            
 #if defined (__PARA)
   CALL reduce( 2 * nstart * nstart, hc )
@@ -59,13 +73,13 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
      !
      CALL s_psi( npwx, npw, nstart, psi, aux )
      !
-     CALL ZGEMM( 'C', 'N', nstart, nstart, npw, ( 1.D0, 0.D0 ), psi, npwx, &
-                 aux, npwx, ( 0.D0, 0.D0 ), sc, nstart )
+     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, &
+                 aux, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
      !
   ELSE
      !
-     CALL ZGEMM( 'C', 'N', nstart, nstart, npw, ( 1.D0, 0.D0 ), psi, npwx, &
-                 psi, npwx, ( 0.D0, 0.D0 ), sc, nstart )
+     CALL ZGEMM( 'C', 'N', nstart, nstart, kdim, ( 1.D0, 0.D0 ), psi, kdmx, &
+                 psi, kdmx, ( 0.D0, 0.D0 ), sc, nstart )
      !  
   END IF
   !
@@ -81,8 +95,8 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !
   ! ...  update the basis set
   !  
-  CALL ZGEMM( 'N', 'N', npw, nbnd, nstart, ( 1.D0, 0.D0 ), psi, npwx, &
-              vc, nstart, ( 0.D0, 0.D0 ), aux, npwx ) 
+  CALL ZGEMM( 'N', 'N', kdim, nbnd, nstart, ( 1.D0, 0.D0 ), psi, kdmx, &
+              vc, nstart, ( 0.D0, 0.D0 ), aux, kdmx ) 
   !     
   evc(:,:) = aux(:,1:nbnd)
   !
@@ -98,7 +112,7 @@ END SUBROUTINE rotate_wfc_k
 !
 !
 !----------------------------------------------------------------------------
-SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
+SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   !----------------------------------------------------------------------------
   !
   ! ... Parallel version of rotate_wfc for colinear, k-point calculations
@@ -121,11 +135,12 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !
   ! ... I/O variables
   !
-  INTEGER :: npw, npwx, nstart, nbnd
+  INTEGER :: npw, npwx, nstart, nbnd, npol
     ! dimension of the matrix to be diagonalized
     ! leading dimension of matrix psi, as declared in the calling pgm unit
     ! input number of states
     ! output number of states
+    ! number of spin polarizations
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
   COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
@@ -135,6 +150,7 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !
   ! ... local variables
   !
+  INTEGER :: kdim, kdmx
   COMPLEX(DP), ALLOCATABLE :: aux(:,:), hc(:,:), sc(:,:), vc(:,:)
   REAL(DP),    ALLOCATABLE :: en(:)
   !
@@ -152,7 +168,19 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, psi, overlap, evc, e )
   !
   CALL desc_init( nstart, desc, desc_ip )
   !
-  ALLOCATE( aux(  npwx, nstart ) )    
+  IF ( npol == 1 ) THEN
+     !
+     kdim = npw
+     kdmx = npwx
+     !
+  ELSE
+     !
+     kdim = npwx*npol
+     kdmx = npwx*npol
+     !
+  END IF
+  !
+  ALLOCATE( aux(kdmx, nstart ) )    
   ALLOCATE( hc( nx, nx) )    
   ALLOCATE( sc( nx, nx) )    
   ALLOCATE( vc( nx, nx) )    
@@ -265,8 +293,8 @@ CONTAINS
 
            ! use blas subs. on the matrix block
 
-           CALL ZGEMM( 'C', 'N', nr, nc, npw, ( 1.D0, 0.D0 ) , &
-                       v(1,ir), npwx, w(1,ic), npwx, ( 0.D0, 0.D0 ), work, nx )
+           CALL ZGEMM( 'C', 'N', nr, nc, kdim, ( 1.D0, 0.D0 ) , &
+                       v(1,ir), kdmx, w(1,ic), kdmx, ( 0.D0, 0.D0 ), work, nx )
 
            ! accumulate result on dm of root proc.
 
@@ -316,15 +344,15 @@ CONTAINS
                  !  this proc sends his block
                  ! 
                  CALL mp_bcast( vc(:,1:nc), root, intra_pool_comm )
-                 CALL ZGEMM( 'N', 'N', npw, nc, nr, ( 1.D0, 0.D0 ), &
-                          psi(1,ir), npwx, vc, nx, beta, aux(1,ic), npwx )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), &
+                          psi(1,ir), kdmx, vc, nx, beta, aux(1,ic), kdmx )
               ELSE
                  !
                  !  all other procs receive
                  ! 
                  CALL mp_bcast( vtmp(:,1:nc), root, intra_pool_comm )
-                 CALL ZGEMM( 'N', 'N', npw, nc, nr, ( 1.D0, 0.D0 ), &
-                          psi(1,ir), npwx, vtmp, nx, beta, aux(1,ic), npwx )
+                 CALL ZGEMM( 'N', 'N', kdim, nc, nr, ( 1.D0, 0.D0 ), &
+                          psi(1,ir), kdmx, vtmp, nx, beta, aux(1,ic), kdmx )
               END IF
               ! 
 
