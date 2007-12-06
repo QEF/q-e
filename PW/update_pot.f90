@@ -458,17 +458,17 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
     ! number of zero 'eigenvalues' of the s_m matrix
     ! used by singular value decomposition (ZGESVD)
     ! flag returned by ZGESVD
-  COMPLEX(DP), ALLOCATABLE :: s_m(:,:), sp_m(:,:), u_m(:,:), w_m(:,:), work(:)
-    ! the overlap matrix s (eq. 3.24)
-    ! its dagger
+  COMPLEX(DP), ALLOCATABLE :: sp_m(:,:), u_m(:,:), w_m(:,:), work(:)
+    ! the overlap matrix s^+ (eq. 3.24)
     ! left unitary matrix in the SVD of sp_m
     ! right unitary matrix in the SVD of sp_m
     ! workspace for ZGESVD
   COMPLEX(DP), ALLOCATABLE :: evcold(:,:), aux(:,:)
     ! wavefunctions at previous iteration + workspace
-  REAL(DP), ALLOCATABLE :: ew(:), rwork(:), rs_m(:,:)
+  REAL(DP), ALLOCATABLE :: ew(:), rwork(:), rp_m(:,:)
     ! the eigenvalues of s_m
     ! workspace for ZGESVD
+    ! real version of sp_m
   LOGICAL :: exst
   !
   !
@@ -508,8 +508,8 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      ALLOCATE( evcold( npwx*npol, nbnd ) )
      ALLOCATE( aux( npwx*npol, nbnd ) )
      CALL allocate_bec ( nkb, nbnd ) 
-     ALLOCATE( s_m( nbnd, nbnd ), sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), &
-               w_m( nbnd, nbnd ), work( lwork ), ew( nbnd ), rwork( lwork ) )
+     ALLOCATE( sp_m( nbnd, nbnd ), u_m( nbnd, nbnd ), w_m( nbnd, nbnd ), &
+               work( lwork ), ew( nbnd ), rwork( lwork ) )
      !
      IF ( nks > 1 ) REWIND( iunigk )
      !
@@ -553,31 +553,18 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
            !
         END IF
         !
-        ! ... construct s_m = <evcold|S|evc>
+        ! ... construct s^+_m = <psi(t)|S|psi(t-dt)>
         !
         IF ( gamma_only ) THEN
-            ALLOCATE ( rs_m (nbnd,nbnd) )
-            CALL pw_gemm ( 'Y', nbnd, nbnd, npw, evcold, npwx, &
-                        aux, npwx, rs_m, nbnd )
-            s_m(:,:) = rs_m(:,:)
-            DEALLOCATE ( rs_m )
+           ALLOCATE ( rp_m (nbnd,nbnd) )
+           CALL calbec ( npw, aux, evcold, rp_m )
+           sp_m(:,:) = rp_m(:,:)
+           DEALLOCATE ( rp_m )
         ELSE IF ( noncolin) THEN
-           CALL ZGEMM( 'C', 'N', nbnd, nbnd, npwx*npol, ONE, &
-                       evcold, npwx*npol, aux, npwx*npol, ZERO, s_m, nbnd )
-           CALL reduce( 2*nbnd*nbnd, s_m )
+           CALL calbec ( npwx*npol, aux, evcold, sp_m )
         ELSE
-           CALL ZGEMM( 'C', 'N', nbnd, nbnd, npw, ONE, &
-                       evcold, npwx, aux, npwx, ZERO, s_m, nbnd )
-           CALL reduce( 2*nbnd*nbnd, s_m )
+           CALL calbec ( npw, aux, evcold, sp_m )
         END IF
-        !
-        ! ... construct sp_m
-        !
-        DO i = 1, nbnd
-          !
-          sp_m(:,i) = CONJG( s_m(i,:) )
-          !
-        END DO
         !
         ! ... the unitary matrix [sp_m*s_m]^(-1/2)*sp_m (eq. 3.29) by means the
         ! ... singular value decomposition (SVD) of  sp_m = u_m*diag(ew)*w_m
@@ -643,7 +630,7 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
                         &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
                         &  I2," small (< 0.1) eigenvalues")' ) zero_ew
      !
-     DEALLOCATE( s_m, sp_m, u_m, w_m, work, ew, rwork )
+     DEALLOCATE( sp_m, u_m, w_m, work, ew, rwork )
      CALL deallocate_bec () 
      DEALLOCATE( aux )
      DEALLOCATE( evcold )

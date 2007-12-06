@@ -30,7 +30,6 @@ add_vuspsi_nc.o : ../Modules/kind.o
 add_vuspsi_nc.o : ../Modules/uspp.o
 add_vuspsi_nc.o : becmod.o
 add_vuspsi_nc.o : noncol.o
-addusdens.o : ../Modules/constants.o
 addusdens.o : ../Modules/control_flags.o
 addusdens.o : ../Modules/ions_base.o
 addusdens.o : ../Modules/kind.o
