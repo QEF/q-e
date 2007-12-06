@@ -4617,7 +4617,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4620: \"$ac_link\") >&5
+(eval echo $as_me:4621: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4630,6 +4630,7 @@ rm -f conftest*
 ac_f77_v_output="`echo $ac_f77_v_output |
 	grep 'LPATH is:' |
 	sed 's,.*LPATH is\(: *[^ ]*\).*,\1,;s,: */, -L/,g'` $ac_f77_v_output"
+
 
 case $ac_f77_v_output in
   # If we are using xlf then replace all the commas with spaces.
@@ -4646,6 +4647,8 @@ case $ac_f77_v_output in
   # FIXME: a more general fix for quoted arguments with spaces?
   *cft90*)
     ac_f77_v_output=`echo $ac_f77_v_output | sed "s/\"//g"` ;;
+  *ftn*)
+    ac_f77_v_output=`echo $ac_f77_v_output | sed "s/'//g"` ;;
 esac
 
 
@@ -4695,7 +4698,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4698: \"$ac_link\") >&5
+(eval echo $as_me:4699: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4724,6 +4727,8 @@ case $ac_f77_v_output in
   # FIXME: a more general fix for quoted arguments with spaces?
   *cft90*)
     ac_f77_v_output=`echo $ac_f77_v_output | sed "s/\"//g"` ;;
+  *ftn*)
+    ac_f77_v_output=`echo $ac_f77_v_output | sed "s/'//g"` ;;
 esac
 
 
