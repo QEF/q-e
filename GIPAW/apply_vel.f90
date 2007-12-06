@@ -19,7 +19,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   USE ions_base,            ONLY : nat, ityp, ntyp => nsp
   USE klist,                ONLY : xk
   USE wvfct,                ONLY : nbnd, npwx, npw, igk  
-  USE becmod,               ONLY : becp
+  USE becmod
   USE pwcom
   USE gipaw_module
 
@@ -63,14 +63,15 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   ! compute (1/2|dk|) ( V^{NL}_{k+dk+q,k+dk} |psi> - 
   !                     V^{NL}_{k-dk+q,k-dk} |psi> )
   !====================================================================
-  allocate(becp(nkb,nbnd))
+  call allocate_bec(nkb,nbnd)
   do isign = -1,1,2
     dxk(:) = xk(:,ik)
     dxk(ipol) = dxk(ipol) + isign * dk     ! k + dk
 
     ! compute <\beta(k \pm dk)| and project on |psi>
     call init_us_2_no_phase(npw, igk, dxk, vkb)
-    call ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, psi)
+    !it was: call ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, psi)
+    call calbec (npw, vkb, psi, becp, nbnd_occ(ik))
 
     ! |q|!=0 => compute |\beta(k \pm dk + q)>
     if (.not. q_is_zero) then
@@ -83,7 +84,7 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
     call add_vuspsi(npwx, npw, nbnd_occ(ik), psi, aux)
     vel_psi = vel_psi + dble(isign) * ryd_to_hartree * aux/(2.d0*dk*tpiba)
   enddo
-  deallocate(becp)
+  call deallocate_bec
 #else
 
   do isign = -1,1,2

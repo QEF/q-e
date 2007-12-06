@@ -19,7 +19,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   USE pwcom
   USE scf,  ONLY: vrs
   USE wavefunctions_module,  ONLY: psic
-  USE becmod, ONLY: becp
+  USE becmod
   USE kinds, only : DP
   use gipaw_module
   implicit none
@@ -45,7 +45,8 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   call start_clock ('h_psiq')
   call start_clock ('init')
 
-  call ccalbec (nkb, npwx, n, m, becp, vkb, psi)
+  !it was: call ccalbec (nkb, npwx, n, m, becp, vkb, psi)
+  call calbec (n, vkb, psi, becp, m)
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
   !

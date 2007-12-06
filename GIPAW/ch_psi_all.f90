@@ -89,7 +89,8 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !
   !    And apply S again
   !
-  call ccalbec (nkb, npwx, n, m, becp, vkb, hpsi)
+  !it was: call ccalbec (nkb, npwx, n, m, becp, vkb, hpsi)
+  call calbec (n, vkb, hpsi, becp, m)
 
   call s_psi (npwx, n, m, hpsi, spsi)
   do ibnd = 1, m

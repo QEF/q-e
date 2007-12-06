@@ -16,7 +16,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   !
   USE kinds,                       ONLY : DP
   USE io_global,                   ONLY : stdout  
-  USE becmod,                      ONLY : becp
+  USE becmod
   USE wavefunctions_module,        ONLY : evc
   USE noncollin_module,            ONLY : npol
   USE pwcom
@@ -117,7 +117,8 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   else
     call init_us_2(npw, igk, xk(1,ik), vkb)
   endif
-  call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
+  !it was: call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, psi)
+  call calbec (npw, vkb, psi, becp, nbnd)
     
   ! initial guess
   g_psi(:,:) = (0.d0, 0.d0)
@@ -143,6 +144,7 @@ SUBROUTINE greenfunction(ik, psi, g_psi, q)
   call stop_clock('greenf')
  
   ! free memory
-  deallocate (work, h_diag, eprec, ps, becp)
+  deallocate (work, h_diag, eprec, ps)
+  call deallocate_bec
 
 END SUBROUTINE greenfunction
