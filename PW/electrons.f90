@@ -327,12 +327,14 @@ SUBROUTINE electrons()
            !
            ! ... now copy the mixed charge density in R- and G-space in rho
            !
-           rho = rhoin
+           CALL scf_type_COPY( rhoin, rho )
            !
            ! ... compute PAW corrections to descf
            IF (okpaw) THEN
+              ! Repeat the 3 previous operation for PAW too
               CALL PAW_potential(becsum_in, e_PAW)
               descf_PAW = - PAW_integrate(becsum_in-becsum)
+              becsum = becsum_in
            END IF
            !
            ! ... write the charge density to file
