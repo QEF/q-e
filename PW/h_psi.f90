@@ -51,7 +51,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   !  
   IF ( gamma_only ) THEN
      !
+#if defined __PGI
+     CALL h_psi_gamma( psi )
+#else
      CALL h_psi_gamma( )
+#endif
      !
   ELSE IF ( noncolin ) THEN
      !
@@ -61,7 +65,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
      !
   ELSE  
      !
+#if defined __PGI
+     CALL h_psi_k( psi )
+#else
      CALL h_psi_k( )
+#endif
      !
   END IF  
   !
@@ -76,7 +84,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
   CONTAINS
      !
      !-----------------------------------------------------------------------
+#if defined __PGI
+     SUBROUTINE h_psi_gamma( psi )
+#else
      SUBROUTINE h_psi_gamma( )
+#endif
        !-----------------------------------------------------------------------
        ! 
        ! ... gamma version
@@ -85,6 +97,9 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IMPLICIT NONE
        !
+#if defined __PGI
+       COMPLEX(DP) :: psi(:,:) 
+#endif
        INTEGER :: ibnd, j
        !
        !
@@ -135,7 +150,11 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
      !
      !
      !-----------------------------------------------------------------------
+#if defined __PGI
+     SUBROUTINE h_psi_k( psi )
+#else
      SUBROUTINE h_psi_k( )
+#endif
        !-----------------------------------------------------------------------
        !
        ! ... k-points version
@@ -145,6 +164,9 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        IMPLICIT NONE
        !
+#if defined __PGI
+       COMPLEX(DP) :: psi(:,:) 
+#endif
        INTEGER :: ibnd, j
        ! counters
        !
