@@ -34,7 +34,7 @@ SUBROUTINE electrons()
   USE wvfct,                ONLY : nbnd, et, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
                                    vtxc, etxc, etxcc, ewld, demet
-  USE scf,                  ONLY : scf_type, &
+  USE scf,                  ONLY : scf_type, scf_type_COPY, &
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &
                                    v, vltot, vrs, kedtau, vnew
@@ -207,7 +207,7 @@ SUBROUTINE electrons()
      deband_hwf = delta_e()
      !
      ! save input current density in rhoin
-     rhoin = rho
+     call scf_type_COPY( rho, rhoin )
      !
      scf_step: DO
         !
