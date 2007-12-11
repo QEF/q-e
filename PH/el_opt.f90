@@ -93,14 +93,14 @@ subroutine el_opt
   ! Calculates the term depending on the third derivative of the
   !                     Exchange-correlation energy
   !
-#ifdef __PARA
-  if (my_pool_id .ne. 0) goto 100
-#endif
   allocate (d2muxc (nrxx))
   allocate (aux3   (nrxx,3))
   do ipa = 1, 3
      call davcio_drho (aux3 (1, ipa), lrdrho, iudrho, ipa, -1)
   enddo
+#ifdef __PARA
+  if (my_pool_id .ne. 0) goto 100
+#endif
 
   d2muxc (:) = 0.0_dp
   do ir = 1, nrxx
@@ -121,13 +121,13 @@ subroutine el_opt
      enddo
   enddo
 
-  deallocate (d2muxc )
-  deallocate (aux3   )
 #ifdef __PARA
   call reduce (27, ps3)
 100 continue
   call mp_bcast(ps3, ionode_id)
 #endif
+  deallocate (d2muxc )
+  deallocate (aux3   )
 
   elop_(:,:,:,2) = elop_(:,:,:,1)
   elop_(:,:,:,3) =   ps3(:,:,:)
