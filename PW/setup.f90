@@ -718,15 +718,9 @@ SUBROUTINE setup()
            !
            Hubbard_lmax = MAX( Hubbard_lmax, Hubbard_l(nt) )
            !
-           WRITE( UNIT = stdout, FMT = * ) &
-               ' HUBBARD L FOR TYPE ',upf(nt)%psd,' IS ', Hubbard_l(nt)
-           !
         END IF
         !
      END DO
-     !
-     WRITE( UNIT = stdout, &
-            FMT = * ) ' MAXIMUM HUBBARD L IS ', Hubbard_lmax
      !
      IF ( Hubbard_lmax == -1 ) &
         CALL errore( 'setup', &

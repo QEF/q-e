@@ -154,9 +154,7 @@ c_phase_field.o : ../Modules/wavefunctions.o
 c_phase_field.o : becmod.o
 c_phase_field.o : buffers.o
 c_phase_field.o : pwcom.o
-ccalbec.o : ../Modules/control_flags.o
 ccalbec.o : ../Modules/kind.o
-ccalbec.o : pwcom.o
 ccalbec_nc.o : ../Modules/kind.o
 ccgdiagg.o : ../Modules/constants.o
 ccgdiagg.o : ../Modules/kind.o

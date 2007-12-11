@@ -41,7 +41,7 @@ SUBROUTINE electrons()
   USE control_flags,        ONLY : mixing_beta, tr2, ethr, niter, nmix, &
                                    iprint, istep, lscf, lmd, conv_elec, &
                                    restart, io_level, assume_isolated,  &
-                                   gamma_only
+                                   gamma_only, iverbosity
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
                                    iunefield
   USE buffers,              ONLY : save_buffer
@@ -252,7 +252,7 @@ SUBROUTINE electrons()
         !
         IF ( lda_plus_u )  THEN
            !
-           CALL write_ns()
+           IF ( iverbosity > 0 ) CALL write_ns()
            !
            IF ( first .AND. istep == 0 .AND. &
                 startingpot == 'atomic' ) CALL ns_adj()
@@ -429,6 +429,7 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
+        IF ( iverbosity == 0 ) CALL write_ns ( )
         CALL print_ks_energies()
         !
      END IF

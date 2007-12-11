@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -29,7 +29,7 @@ subroutine write_ns
 
   WRITE( stdout,*) 'enter write_ns'
 
-  if ( 2 * Hubbard_lmax + 1 .gt. ldmx ) &
+  if ( 2 * Hubbard_lmax + 1 > ldmx ) &
        call errore ('write_ns', 'ldmx is too small', 1)
 
   WRITE( stdout,'(6(a,i2,a,f8.4,6x))') &
@@ -40,7 +40,7 @@ subroutine write_ns
   nsum = 0.d0
   do na = 1, nat
      nt = ityp (na)
-     if (Hubbard_U(nt).ne.0.d0 .or. Hubbard_alpha(nt).ne.0.d0) then
+     if (Hubbard_U(nt) /= 0.d0 .or. Hubbard_alpha(nt) /= 0.d0) then
         ldim = 2 * Hubbard_l(nt) + 1
         nsuma = 0.d0
         do is = 1, nspin

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2007 PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,8 +18,6 @@ SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
   ! ... and the wavefunctions, and save them in the array bec.
   !
   USE kinds, ONLY : DP
-  USE control_flags, ONLY : gamma_only
-  USE gvect, ONLY : gstart
   !
   IMPLICIT NONE
   !
@@ -40,27 +38,18 @@ SUBROUTINE ccalbec( nkb, npwx, npw, nbnd, bec, vkb, psi )
   !
   CALL start_clock( 'calbec' )
   !
-  IF ( gamma_only ) THEN
+  IF ( nbnd == 1 ) THEN
      !
-     !CALL pw_gemm( 'Y', nkb, nbnd, npw, vkb, npwx, psi, npwx, bec, nkb )
-     CALL errore ('ccalbec','called in wrong case',1)
+     CALL ZGEMV( 'C', npw, nkb, ONE, vkb, npwx, psi, 1, ZERO, bec, 1 )
      !
   ELSE
      !
-     IF ( nbnd == 1 ) THEN
-        !
-        CALL ZGEMV( 'C', npw, nkb, ONE, vkb, npwx, psi, 1, ZERO, bec, 1 )
-        !
-     ELSE
-        !
-        CALL ZGEMM( 'C', 'N', nkb, nbnd, npw, ONE, &
-                    vkb, npwx, psi, npwx, ZERO, bec, nkb )
-        !
-     END IF
-     !
-     CALL reduce( 2 * nkb * nbnd, bec )
+     CALL ZGEMM( 'C', 'N', nkb, nbnd, npw, ONE, &
+                 vkb, npwx, psi, npwx, ZERO, bec, nkb )
      !
   END IF
+  !
+  CALL reduce( 2 * nkb * nbnd, bec )
   !
   CALL stop_clock( 'calbec' )
   !

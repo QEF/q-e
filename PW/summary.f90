@@ -29,6 +29,8 @@ SUBROUTINE summary()
                               ngm, gcutm, qcutz
   USE gsmooth,         ONLY : nr1s, nr2s, nr3s, doublegrid, ngms, gcutms
   USE lsda_mod,        ONLY : lsda, starting_magnetization
+  USE ldaU,            ONLY : lda_plus_U, Hubbard_u, Hubbard_alpha, &
+                              Hubbard_l, Hubbard_lmax
   USE klist,           ONLY : degauss, ngauss, lgauss, nkstot, xk, wk, &
                               nelec, nelup, neldw, two_fermi_energies
   USE ktetra,          ONLY : ltetra
@@ -200,6 +202,17 @@ SUBROUTINE summary()
         WRITE( stdout, '(5x,a6,9x,f6.3)') atm(nt), starting_magnetization(nt)
      ENDDO
   ENDIF
+  IF ( lda_plus_U ) THEN
+     WRITE( stdout, '(/5x,"LDA+U calculation, Hubbard_lmax = ",i1)') &
+                    Hubbard_lmax
+     WRITE( stdout, '(5x,"atomic species  L   Hubbard U  Hubbard alpha")' ) 
+     DO nt = 1, ntyp
+        IF ( Hubbard_U(nt) /= 0.D0 .OR. Hubbard_alpha(nt) /= 0.D0 ) THEN
+           WRITE( stdout,'(5x,a6,5x,i6,2f12.6)') &
+             atm(nt), Hubbard_L(nt), Hubbard_U(nt), Hubbard_alpha(nt)
+        END IF
+     END DO
+  END IF
   !
   !   description of symmetries
   !
