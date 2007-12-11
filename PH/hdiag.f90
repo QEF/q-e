@@ -75,6 +75,7 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
   !
   ! Conjugate-Gradient diagonalization
   !
+  h_prec=1.0_DP
   do ig = 1, npw
      h_prec (ig) = max (1.d0, g2kin (ig) )
   enddo
@@ -85,7 +86,7 @@ subroutine hdiag( max_iter, avg_iter, xk_, et_ )
        ( npwx, npw, nbnd, gstart, nbnd, evc, npol, okvan, evc, et_ )
      avg_iter = avg_iter + 1.d0
   endif
-  call ccgdiagg (npwx, npw, nbnd, evc, et_, btype, h_prec, eth_ns, &
+  call ccgdiagg (npwx, npw, nbnd, npol, evc, et_, btype, h_prec, eth_ns, &
        max_iter, .true., notconv, cg_iter)
   avg_iter = avg_iter + cg_iter
   ntry = ntry + 1
