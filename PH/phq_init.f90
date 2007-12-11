@@ -44,7 +44,7 @@ SUBROUTINE phq_init()
   USE uspp_param,           ONLY : upf
   USE phcom
   USE paw_onecenter,      ONLY : PAW_potential, PAW_symmetrize
-  USE paw_variables,      ONLY : okpaw
+  USE paw_variables,      ONLY : okpaw, ddd_paw
   !
   IMPLICIT NONE
   !
@@ -213,7 +213,7 @@ SUBROUTINE phq_init()
   IF (okpaw) then
      CALL compute_becsum_ph()
      CALL PAW_symmetrize(becsum)
-     CALL PAW_potential(becsum) 
+     CALL PAW_potential(becsum,ddd_paw) 
   ENDIF
   CALL newd()
   CALL dvanqq()

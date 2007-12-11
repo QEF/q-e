@@ -82,7 +82,7 @@ CONTAINS
     REAL(dp), INTENT(IN)  :: oc_(nwfsx)
     REAL(dp), INTENT(IN)  :: pswfc_(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: eig_(nwfsx)
-    REAL(dp), OPTIONAL :: dddion_(nwfsx,nwfsx,2)
+    REAL(dp), OPTIONAL :: dddion_(nwfsx,nwfsx)
     REAL(dp), INTENT(OUT), OPTIONAL :: paw_energy(5,3) 
     !
     REAL(dp) :: &                                        ! one center:
@@ -129,7 +129,7 @@ CONTAINS
     ! Compute the nonlocal D coefficients
     CALL compute_nonlocal_coeff (ddd_,pawset_,nspin_,veffps_,veff1,veff1ps)
     IF (PRESENT(dddion_)) THEN
-       CALL compute_nonlocal_coeff_ion (dddion_,pawset_,nspin_,veffps_,veff1,veff1ps)
+       CALL compute_nonlocal_coeff_ion (dddion_,pawset_)
     END IF
     !
     ! Compute total energy
@@ -185,7 +185,7 @@ CONTAINS
     !
     REAL(DP),  EXTERNAL :: int_0_inf_dr
     CHARACTER, EXTERNAL :: atom_name*2
-    REAL(dp) :: vps(ndmx,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2), dddion(nwfsx,nwfsx,2)
+    REAL(dp) :: vps(ndmx,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2), dddion(nwfsx,nwfsx)
     INTEGER  :: irc, ns, ns1, n, l, leading_power, mesh
     REAL(dp) :: aux(ndmx), aux2(ndmx,2), raux
     REAL(dp) :: aecharge(ndmx,2), pscharge(ndmx,2)
@@ -264,7 +264,7 @@ CONTAINS
        l1=pawset_%l(ns)
        DO ns1=1,ns
           l2=pawset_%l(ns1)
-          do l3 = max(l1-l2,l2-l1), l1+l2
+          do l3 = max(l1-l2,l2-l1), l1+l2, 2
              pawset_%augfun(1:mesh,ns,ns1,l3) = &
                  pawset_%aewfc(1:mesh,ns) * pawset_%aewfc(1:mesh,ns1) - &
                  pawset_%pswfc(1:mesh,ns) * pawset_%pswfc(1:mesh,ns1)
@@ -458,7 +458,7 @@ CONTAINS
     ! Generate the paw hamiltonian for test (should be equal to the US one)
     CALL new_paw_hamiltonian (vps, ddd, etot, &
        pawset_, pawset_%nwfc, pawset_%l, nspin, spin, pawset_%oc, pawset_%pswfc, pawset_%enl, energy, dddion)
-    pawset_%dion(1:nbeta,1:nbeta)=dddion(1:nbeta,1:nbeta,1)
+    pawset_%dion(1:nbeta,1:nbeta)=dddion(1:nbeta,1:nbeta)
     WRITE(stdout,'(/5x,A,f12.6,A)') 'Estimated PAW energy =',etot,' Ryd'
     WRITE(stdout,'(/5x,A)') 'The PAW screened D coefficients'
     DO ns1=1,pawset_%nwfc
@@ -466,7 +466,7 @@ CONTAINS
     END DO
     WRITE(stdout,'(/5x,A)') 'The PAW descreened D coefficients (US)'
     DO ns1=1,pawset_%nwfc
-       WRITE(stdout,'(6f12.5)') (dddion(ns1,ns,1),ns=1,pawset_%nwfc)
+       WRITE(stdout,'(6f12.5)') (dddion(ns1,ns),ns=1,pawset_%nwfc)
     END DO
     !
     !
@@ -873,15 +873,11 @@ CONTAINS
   !
   ! 'D_ion' coefficients = D1 - D1~
   !
-  SUBROUTINE compute_nonlocal_coeff_ion(ddd_, pawset_, nspin_, veffps_, veff1_, veff1ps_)
+  SUBROUTINE compute_nonlocal_coeff_ion(ddd_, pawset_)
     IMPLICIT NONE
-    REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx,2)
+    REAL(dp), INTENT(OUT) :: ddd_(nwfsx,nwfsx)
     TYPE(paw_t),   INTENT(IN)  :: pawset_
-    INTEGER,       INTENT(IN)  :: nspin_
-    REAL(dp), INTENT(IN)  :: veffps_(ndmx,2)
-    REAL(dp), INTENT(IN)  :: veff1_(ndmx,2)
-    REAL(dp), INTENT(IN)  :: veff1ps_(ndmx,2)
-    INTEGER :: is, ns, ns1, l
+    INTEGER :: ns, ns1, l
     REAL(dp) :: aux(ndmx), dd
     REAL(DP), EXTERNAL :: int_0_inf_dr
     !
@@ -889,30 +885,28 @@ CONTAINS
     ! D1-D1~ = kindiff + Int[ae*v1*ae - ps*v1~*ps - Q*v1~]
 !     write(666,"(4f12.6)") (pawset_%grid%r(ns), veffps_(ns,1), veff1_(ns,1), veff1ps_(ns,1), ns=1,pawset_%grid%mesh)
 !     write(667,"(4f12.6)") (pawset_%grid%r(ns), veffps_(ns,2), veff1_(ns,2), veff1ps_(ns,2), ns=1,pawset_%grid%mesh)
-    ddd_(:,:,:)=ZERO
-    DO is=1,nspin_
-       DO ns=1,pawset_%nwfc
-          DO ns1=1,ns
-             IF (pawset_%l(ns)==pawset_%l(ns1)) THEN
-                ! Int[ae*v1*ae]
-                aux(1:pawset_%grid%mesh) =                        &
-                     pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
-                     pawset_%aewfc(1:pawset_%grid%mesh,ns1) *     &
-                     veff1_(1:pawset_%grid%mesh,is)
-                dd = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                ! Int[ps*v1~*ps + Q*v1~]
-                aux(1:pawset_%grid%mesh) =                        &
-                   ( pawset_%pswfc(1:pawset_%grid%mesh,ns ) *     &
-                     pawset_%pswfc(1:pawset_%grid%mesh,ns1) +     &
-                     pawset_%augfun(1:pawset_%grid%mesh,ns,ns1,0) ) * &
-                     veff1ps_(1:pawset_%grid%mesh,is)
-                dd = dd - &
-                     int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
-                !
-                ddd_(ns,ns1,is) = pawset_%kdiff(ns,ns1) +  dd
-                ddd_(ns1,ns,is)=ddd_(ns,ns1,is)
-             END IF
-          END DO
+    ddd_(:,:)=ZERO
+    DO ns=1,pawset_%nwfc
+       DO ns1=1,ns
+          IF (pawset_%l(ns)==pawset_%l(ns1)) THEN
+             ! Int[ae*v1*ae]
+             aux(1:pawset_%grid%mesh) =                        &
+                  pawset_%aewfc(1:pawset_%grid%mesh,ns ) *     &
+                  pawset_%aewfc(1:pawset_%grid%mesh,ns1) *     &
+                  pawset_%aeloc(1:pawset_%grid%mesh)
+             dd = int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+             ! Int[ps*v1~*ps + Q*v1~]
+             aux(1:pawset_%grid%mesh) =                        &
+                ( pawset_%pswfc(1:pawset_%grid%mesh,ns ) *     &
+                  pawset_%pswfc(1:pawset_%grid%mesh,ns1) +     &
+                  pawset_%augfun(1:pawset_%grid%mesh,ns,ns1,0) ) * &
+                  pawset_%psloc(1:pawset_%grid%mesh)
+             dd = dd - &
+                  int_0_inf_dr(aux,pawset_%grid,pawset_%irc,(pawset_%l(ns)+1)*2)
+             !
+             ddd_(ns,ns1) = pawset_%kdiff(ns,ns1) +  dd
+             ddd_(ns1,ns)=ddd_(ns,ns1)
+          END IF
        END DO
     END DO
   END SUBROUTINE compute_nonlocal_coeff_ion

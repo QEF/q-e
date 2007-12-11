@@ -71,11 +71,6 @@ MODULE paw_variables
 
     ! Analogous to deeq in "uspp_param" (Modules/uspp.f90)
     REAL(DP), ALLOCATABLE :: &
-         ddd_paw(:,:,:,:)  ! AE D: D^1_{ij}         (except for K.E.)
-                           ! PS D: \tilde{D}^1_{ij} (except for K.E.)
-
-    ! new vectors needed for mixing of augm. channel occupations
-    REAL(DP), ALLOCATABLE :: &
-         becnew(:,:,:)       ! new augmentation channel occupations
+         ddd_paw(:,:,:)  ! D: D^1_{ij} - \tilde{D}^1_{ij} (only Hxc part)
 
  END MODULE paw_variables

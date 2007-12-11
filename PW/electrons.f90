@@ -55,7 +55,6 @@ SUBROUTINE electrons()
   USE bp,                   ONLY : lelfield
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
-  USE realus,               ONLY : tqr
 #if defined (EXX)
   USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
@@ -64,11 +63,11 @@ SUBROUTINE electrons()
   USE mp_global,            ONLY : intra_pool_comm, npool
   USE mp,                   ONLY : mp_sum
   !
-  USE paw_variables,        ONLY : okpaw
-  USE paw_onecenter,        ONLY : PAW_potential,PAW_integrate
+  USE paw_variables,        ONLY : okpaw, ddd_paw
+  USE paw_onecenter,        ONLY : PAW_potential
   USE paw_init,             ONLY : PAW_increase_lm
   USE uspp,                 ONLY : becsum  ! used for PAW
-  USE uspp_param,           ONLY : nhm     ! used for PAW
+  USE uspp_param,           ONLY : nh, nhm ! used for PAW
   !
   IMPLICIT NONE
   !
@@ -101,14 +100,14 @@ SUBROUTINE electrons()
   ! ... the charge density and of the HXC-potential
   !
   type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
+  REAL(DP), ALLOCATABLE :: becsum_in(:,:,:) ! cross-band occupations, used for mixing
   !
   ! ... external functions
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
   !
   ! ... additional variables for PAW
-  REAL(DP), ALLOCATABLE :: becsum_in(:,:,:)   ! cross-band occupations, used for mixing
-  REAL (DP) :: deband_PAW, descf_PAW, e_PAW ! deband, descf and E corrections from PAW
+  REAL (DP) :: e_PAW ! deband, descf and E corrections from PAW
   REAL (DP) :: correction1c                 ! total PAW correction
   !
   iter = 0
@@ -157,7 +156,11 @@ SUBROUTINE electrons()
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !
   call create_scf_type ( rhoin )
-  if ( okpaw .and. .not. allocated(becsum_in) ) allocate(becsum_in(nhm*(nhm+1)/2,nat,nspin))
+  IF (okpaw) then
+     IF (.not. ALLOCATED(becsum_in) ) ALLOCATE (becsum_in(nhm*(nhm+1)/2,nat,nspin))
+  ELSE
+     IF (.not. ALLOCATED(becsum_in) ) ALLOCATE (becsum_in(1,1,1))
+  END IF
 #if defined (EXX)
 10 CONTINUE
 #endif
@@ -208,6 +211,8 @@ SUBROUTINE electrons()
      !
      ! save input current density in rhoin
      call scf_type_COPY( rho, rhoin )
+     !becsum_in(:,:,:) = becsum(:,:,:)
+     if (okpaw) becsum_in = becsum
      !
      scf_step: DO
         !
@@ -216,7 +221,7 @@ SUBROUTINE electrons()
         !
         tr2_min = 0.D0
         !
-        IF ( first ) tr2_min = ethr*MAX( 1.D0, nelec )
+        IF ( first ) tr2_min = ethr*MAX( 1.D0, nelec ) 
         !
         ! ... diagonalization of the KS hamiltonian
         !
@@ -270,12 +275,6 @@ SUBROUTINE electrons()
         !
         deband = delta_e()
         !
-        ! ... update core occupations for PAW
-        IF (okpaw) THEN
-           deband_PAW = - PAW_integrate(becsum)
-           !
-        END IF
-        !
         CALL mix_rho( rho, rhoin, becsum, becsum_in, &
                       mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
@@ -315,6 +314,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
+           IF (okpaw) CALL PAW_potential(becsum_in, ddd_paw, e_PAW)
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -328,14 +328,8 @@ SUBROUTINE electrons()
            ! ... now copy the mixed charge density in R- and G-space in rho
            !
            CALL scf_type_COPY( rhoin, rho )
-           !
-           ! ... compute PAW corrections to descf
-           IF (okpaw) THEN
-              ! Repeat the 3 previous operation for PAW too
-              CALL PAW_potential(becsum_in, e_PAW)
-              descf_PAW = - PAW_integrate(becsum_in-becsum)
-              becsum = becsum_in
-           END IF
+           if (okpaw) becsum(:,:,:) = becsum_in(:,:,:)
+           !becsum = becsum_in
            !
            ! ... write the charge density to file
            !
@@ -358,19 +352,14 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
+           if (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
            !
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
-           !
-           ! CHECKME: is it becsum or becstep??
-           IF (okpaw) &
-               CALL PAW_potential(becsum, e_PAW)
            !
            ! ... note that rho is here the output, not mixed, charge density
            ! ... so correction for variational energy is no longer needed
            !
            descf = 0._dp
-           IF (okpaw) descf_PAW  = 0._dp
-           !
            !
         END IF not_converged_electrons
         !
@@ -443,19 +432,19 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      !
      IF (okpaw) THEN
-        correction1c = (deband_PAW + descf_PAW + e_PAW)
+        correction1c = (e_PAW)
         !
-        if(ionode) &
-        write(*,"(5x,a,3e20.11)") "  total energy before PAW: ", etot, hwf_energy,e_PAW
+!        if(ionode) &
+!        write(*,"(5x,a,3e20.11)") "  total energy before PAW: ", etot, hwf_energy,e_PAW
         etot       = etot       + correction1c
         hwf_energy = hwf_energy + correction1c
         !
-        IF (ionode) THEN
-            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
-                'de_band_paw: ',deband_PAW,', de_scf_paw: ',descf_PAW,', E_paw: ', e_PAW
-            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
-                'de_band: ',deband,', de_scf: ',descf, ' dr2: ', dr2
-        ENDIF
+!        IF (ionode) THEN
+!            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
+!                'de_band_paw: ',deband_PAW,', de_scf_paw: ',descf_PAW,', E_paw: ', e_PAW
+!            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
+!                'de_band: ',deband,', de_scf: ',descf, ' dr2: ', dr2
+!        ENDIF
         ! If a high convergence threshold is selected paw may be unable to reach
         ! sufficient accuracy: we increase the maximum angular component to integrate:
      END IF
@@ -475,6 +464,7 @@ SUBROUTINE electrons()
            fock0 = exxenergy2()
            CALL v_of_rho( rho, rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
+           IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
            !
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
            !
@@ -747,7 +737,6 @@ SUBROUTINE electrons()
        LOGICAL :: check_stop_now
        INTEGER :: unit
        !
-       !
        unit = stdout
        !
        IF ( lpath ) unit = iunpath
@@ -763,30 +752,18 @@ SUBROUTINE electrons()
      !-----------------------------------------------------------------------
      FUNCTION delta_e()
        !-----------------------------------------------------------------------
-       !
-       ! ... delta_e = - \int rho%of_r(r) V_scf(r)
-       !               - \int rho%kin_r(r) Kedtau(r) [for Meta-GGA]
-       !
+       ! ... delta_e = - \int rho%of_r(r)  v%of_r(r)
+       !               - \int rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
+       !               - \sum rho%ns       v%ns       [for LDA+U]
+       !               - \sum becsum       D1_Hxc     [for PAW]
        IMPLICIT NONE
+       REAL(DP) :: delta_e, delta_e_hub
+       REAl(DP):: delta_e_paw
        !
-       REAL(DP) :: delta_e
-       REAL(DP) :: delta_e_hub
-       INTEGER  :: is
+       delta_e = - SUM( rho%of_r(:,:)*v%of_r(:,:) )
        !
-       !
-       delta_e = 0.D0
-       !
-       DO is = 1, nspin
-          !
-          delta_e = delta_e - SUM( rho%of_r(:,is)*v%of_r(:,is) )
-          !
-       END DO
-       !
-       IF ( dft_is_meta() ) THEN
-          DO is = 1, nspin
-             delta_e = delta_e - SUM( rho%kin_r(:,is)*v%kin_r(:,is) )
-          END DO
-       END IF
+       IF ( dft_is_meta() ) &
+          delta_e = delta_e - SUM( rho%kin_r(:,:)*v%kin_r(:,:) )
        !
        delta_e = omega * delta_e / ( nr1*nr2*nr3 )
        !
@@ -798,6 +775,8 @@ SUBROUTINE electrons()
           delta_e = delta_e + delta_e_hub
        end if
        !
+       IF (okpaw) delta_e = delta_e - SUM(ddd_paw(:,:,:)*becsum(:,:,:))
+       !
        RETURN
        !
      END FUNCTION delta_e
@@ -806,44 +785,34 @@ SUBROUTINE electrons()
      FUNCTION delta_escf()
        !-----------------------------------------------------------------------
        !
-       ! ... delta_escf = - \int \delta rho%of_r(r) V_scf(r)
-       !                  - \int \delta rho%kin_r(r) Kedtau(r) [for Meta-GGA]
+       ! ... delta_escf = - \int \delta rho%of_r(r)  v%of_r(r)
+       !                  - \int \delta rho%kin_r(r) v%kin_r(r) [for Meta-GGA]
+       !                  - \sum \delta rho%ns       v%ns       [for LDA+U]
+       !                  - \sum \delta becsum       D1         [for PAW]
        ! ... calculates the difference between the Hartree and XC energy
        ! ... at first order in the charge density difference \delta rho(r)
-       !
        IMPLICIT NONE
        !
-       REAL(DP) :: delta_escf
-       REAL(DP) :: delta_escf_hub
-       INTEGER  :: is
+       REAL(DP) :: delta_escf, delta_escf_hub
        !
+       delta_escf = - SUM( ( rhoin%of_r(:,:)-rho%of_r(:,:) )*v%of_r(:,:) )
        !
-       delta_escf = 0.D0
-       !
-       DO is = 1, nspin
-          !
+       IF ( dft_is_meta() ) &
           delta_escf = delta_escf - &
-                       SUM( ( rhoin%of_r(:,is)-rho%of_r(:,is) )*v%of_r(:,is) )
-          !
-       END DO
-       !
-       IF ( dft_is_meta() ) THEN
-          DO is = 1, nspin
-             delta_escf = delta_escf - &
-                       SUM( (rhoin%kin_r(:,is)-rho%kin_r(:,is) )*v%kin_r(:,is))
-          END DO
-       END IF
+                       SUM( (rhoin%kin_r(:,:)-rho%kin_r(:,:) )*v%kin_r(:,:))
        !
        delta_escf = omega * delta_escf / ( nr1*nr2*nr3 )
        !
        CALL mp_sum( delta_escf, intra_pool_comm )
        !
-       !
        if (lda_plus_u) then
-          delta_escf_hub = - SUM ((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
+          delta_escf_hub = - SUM((rhoin%ns(:,:,:,:)-rho%ns(:,:,:,:))*v%ns(:,:,:,:))
           if (nspin==1) delta_escf_hub = 2.d0 * delta_escf_hub
           delta_escf = delta_escf + delta_escf_hub
        end if
+
+       IF (okpaw) delta_escf = delta_escf - &
+                               SUM(ddd_paw(:,:,:)*(becsum_in(:,:,:)-becsum(:,:,:)))
 
        RETURN
        !

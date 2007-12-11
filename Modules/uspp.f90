@@ -73,7 +73,6 @@ MODULE uspp
   REAL(DP), ALLOCATABLE :: &
        dvan(:,:,:),           &! the D functions of the solid
        deeq(:,:,:,:),         &! the integral of V_eff and Q_{nm} 
-!       becsum(:,:,:),         &! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
        qq(:,:,:),             &! the q functions in the solid
        nhtoj(:,:)              ! correspondence n <-> total angular momentum
   !

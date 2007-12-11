@@ -36,7 +36,7 @@ MODULE paw_init
     !
     IMPLICIT NONE
     !
-    ALLOCATE(ddd_paw( nhm, nhm, nat, nspin))
+    ALLOCATE(ddd_paw(nhm*(nhm+1)/2, nat, nspin))
     !
   END SUBROUTINE allocate_paw_internals
 
@@ -50,14 +50,6 @@ MODULE paw_init
     INTEGER :: nt, na
     !
     IF(allocated(ddd_paw)) DEALLOCATE (ddd_paw)
-    !
-    ! Allocated in paw_init_onecenter
-    IF(allocated(saved)) THEN
-        DO na = 1,nat
-            IF(associated(saved(na)%v)) DEALLOCATE (saved(na)%v)
-        ENDDO
-        DEALLOCATE(saved)
-    ENDIF
     !
     IF(allocated(rad)) THEN
         DO nt = 1,ntyp
@@ -188,7 +180,7 @@ END SUBROUTINE PAW_init_becsum
 ! calls PAW_rad_init to initialize onecenter integration.
 SUBROUTINE PAW_init_onecenter()
     USE ions_base,              ONLY : nat, ityp, ntyp => nsp
-    USE paw_variables,          ONLY : xlm, saved, rad, paw_is_init
+    USE paw_variables,          ONLY : xlm, rad, paw_is_init
     USE atom,                   ONLY : g => rgrid
     USE radial_grids,           ONLY : do_mesh
     USE uspp_param,             ONLY : upf
@@ -202,24 +194,9 @@ SUBROUTINE PAW_init_onecenter()
         CALL infomsg('PAW_init_onecenter', 'Already initialized!', 1)
         RETURN
     ENDIF
-
-    ! First a bit of generic initialization:
-    ALLOCATE(saved(nat)) ! allocate space to store the potentials
-    DO na = 1,nat
-        NULLIFY(saved(na)%v)
-    ENDDO
     !
-    ! Parallelizing this loop every node only allocs the potential
     ! for the atoms that it will actually use later.
     CALL divide (nat, first_nat, last_nat)
-    DO na = first_nat, last_nat
-        nt = ityp(na)
-        ! note that if the atom is not paw it is left unallocated
-        IF ( upf(nt)%tpawp ) THEN
-            ALLOCATE( saved(na)%v(g(nt)%mesh, (upf(nt)%paw%lmax_rho+1)**2, nspin, 2 ) )
-            !                                                                  {AE|PS}
-        ENDIF
-    ENDDO
 
     ! initialize for integration on angular momentum and gradient, integrating
     ! up to 2*lmaxq (twice the maximum angular momentum of rho) is enough for
@@ -258,7 +235,6 @@ SUBROUTINE PAW_init_onecenter()
     CALL PAW_test_d()
 
 END SUBROUTINE PAW_init_onecenter
-
 
 SUBROUTINE PAW_increase_lm(incr)
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp

@@ -71,6 +71,9 @@ CONTAINS
  if (dft_is_meta()) then
     allocate ( rho%kin_r( nrxx, nspin) )
     allocate ( rho%kin_g( ngm, nspin ) )
+ else
+    allocate ( rho%kin_r(1,1) )
+    allocate ( rho%kin_g(1,1) )
  endif
  if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
  !if (okpaw)      allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
@@ -160,6 +163,26 @@ CONTAINS
  end subroutine assign_mix_to_scf_type
  !
  !----------------------------------------------------------------------------
+ subroutine scf_type_COPY (X,Y)
+  !----------------------------------------------------------------------------
+  ! works like DCOPY for scf_type copy variables :  Y = X 
+  USE kinds, ONLY : DP
+  IMPLICIT NONE
+  TYPE(scf_type), INTENT(IN)    :: X
+  TYPE(scf_type), INTENT(INOUT) :: Y
+  Y%of_r  = X%of_r
+  Y%of_g  = X%of_g
+  if (dft_is_meta()) then
+     Y%kin_r = X%kin_r
+     Y%kin_g = X%kin_g
+  end if
+  if (lda_plus_u) Y%ns = X%ns
+  !if (okpaw)   Y%bec = X%bec
+  !
+  RETURN
+ end subroutine scf_type_COPY
+ !
+ !----------------------------------------------------------------------------
  subroutine mix_type_AXPY (A,X,Y)
   !----------------------------------------------------------------------------
   ! works like DAXPY for scf_type variables :  Y = A * X + Y
@@ -194,25 +217,21 @@ CONTAINS
  end subroutine mix_type_COPY
  !
  !----------------------------------------------------------------------------
- subroutine scf_type_COPY (X,Y)
+ subroutine mix_type_SCAL (A,X)
   !----------------------------------------------------------------------------
-  ! works like DCOPY for mix_type copy variables :  Y = X 
+  ! works like DSCAL for mix_type copy variables :  X = A * X 
+  ! NB: A is a REAL(DP) number
   USE kinds, ONLY : DP
   IMPLICIT NONE
-  TYPE(scf_type), INTENT(IN)    :: X
-  TYPE(scf_type), INTENT(INOUT) :: Y
-  Y%of_g  = X%of_g
-  Y%of_r  = X%of_r
-
-  if (dft_is_meta()) then
-     Y%kin_g = X%kin_g
-     Y%kin_r = X%kin_r
-  endif
-  if (lda_plus_u) Y%ns = X%ns
-  !if (okpaw)   Y%bec = X%bec
+  REAL(DP),       INTENT(IN)    :: A
+  TYPE(mix_type), INTENT(INOUT) :: X
+  X%of_g(:,:)  = A * X%of_g(:,:)
+  if (dft_is_meta()) X%kin_g = A * X%kin_g
+  if (lda_plus_u) X%ns = A * X%ns
+  if (okpaw)      X%bec= A * X%bec
   !
   RETURN
- end subroutine scf_type_COPY
+ end subroutine mix_type_SCAL
  !
  subroutine high_frequency_mixing ( rhoin, input_rhout, alphamix )
    USE wavefunctions_module, ONLY : psic

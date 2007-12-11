@@ -18,13 +18,13 @@
 !            |              +- hartree (radial_grids)
 !            |
 !            +- xc_potential +
-!> newd +                    +- lm2rad
-!       |                    +- vxc_t (Modules/vxc_t)
-!       +- rho_lm [2]        +- exc_t (Modules/exc_t)
-!                            +- rad2lm
-!> integrate +               +~ gcxc_potential +
-!            |                                 +- lm2rad
-!            +- rho_lm [2]                     +- gradient +
+!            |               +- lm2rad
+!            |               +- vxc_t (Modules/vxc_t)
+!            |               +- exc_t (Modules/exc_t)
+!            |               +- rad2lm
+!            |               +~ gcxc_potential +
+!            +- ddd +                          +- lm2rad
+!                   + rho_lm [2]               +- gradient +
 !                                              |           + radial_gradient
 !> ddot +                                      |             (Modules/vxcgc)
 !       |                                      |
@@ -43,9 +43,9 @@
 ! this code is parallelized on atoms, this means that each node computes potential,
 ! energy, newd coefficients, ddots and \int v \times n on a reduced number of atoms.
 ! The implementation assumes that divisions of atoms among the nodes is done always
-! in the same way! Doing so we can avoid to allocate the potential for all the atoms
-! on all the nodes, and (most important) we don't need to distribute the potential
-! among the nodes after computing it.
+! in the same way! By doing so we can avoid to allocate the potential for all the 
+! atoms on all the nodes, and (most importantly) we don't need to distribute the 
+! potential among the nodes after computing it.
 !
 #include "f_defs.h"
 MODULE paw_onecenter
@@ -58,9 +58,7 @@ MODULE paw_onecenter
     ! entry points:
     PUBLIC :: PAW_potential  ! prepare paw potential and store it,
                              ! also computes energy if required
-    PUBLIC :: PAW_integrate  ! computes \int v(r) \times n(r) dr
     PUBLIC :: PAW_ddot       ! error estimate for mix_rho
-    PUBLIC :: PAW_newd       ! computes descreening coefficients
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
     PUBLIC :: PAW_test_d
     !
@@ -158,112 +156,154 @@ SUBROUTINE PAW_test_d()
 
 END SUBROUTINE PAW_test_d
 
-
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
-!!! Computes V_h and V_xc using the "density" becsum provided, and stores the
-!!! total potential in the global static save%v variable
-!!
-SUBROUTINE PAW_potential(becsum, energy, e_cmp)
-    USE atom,              ONLY : g => rgrid
-    USE ions_base,         ONLY : nat, ityp
-    USE lsda_mod,          ONLY : nspin
-    USE uspp_param,        ONLY : nhm, upf
+!!! Computes V_h and V_xc using the "density" becsum provided and then
+!!! 
+!!! Update the descreening coefficients:
+!!! D_ij = \int v_Hxc p_ij - \int vt_Hxc (pt_ij + augfun_ij)
+!!!
+!!! calculate the onecenter contribution to the energy
+!!!
+SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
+   USE atom,              ONLY : g => rgrid
+   USE ions_base,         ONLY : nat, ityp
+   USE lsda_mod,          ONLY : nspin
+   USE uspp_param,        ONLY : nh, nhm, upf
 
-    REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
-    REAL(DP),INTENT(OUT),OPTIONAL :: energy          ! if present compute E[rho]
-    REAL(DP),INTENT(OUT),OPTIONAL :: e_cmp(nat,2,2)
-    !
-    INTEGER, PARAMETER      :: AE = 1, PS = 2,&      ! All-Electron and Pseudo
-                               XC = 1, H  = 2        ! XC and Hartree
-    REAL(DP), POINTER       :: rho_core(:)           ! pointer to AE/PS core charge density 
-    TYPE(paw_info)          :: i                     ! minimal info on atoms
-    INTEGER                 :: i_what                ! counter on AE and PS
-    INTEGER                 :: is                    ! spin index
-    INTEGER                 :: na,first_nat,last_nat ! atoms counters and indexes
-    !
-    REAL(DP), ALLOCATABLE   :: rho_lm(:,:,:) ! density expanded on Y_lm
-    REAL(DP), ALLOCATABLE   :: v_lm(:,:,:)   ! workspace: potential
-    REAL(DP)                :: energy_xc, energy_h, energy_tot
-    REAL(DP)                :: sgn
+   REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
+   REAL(DP), INTENT(OUT) :: d(nhm*(nhm+1)/2,nat,nspin) ! descreening coefficients (AE - PS)
+   REAL(DP), INTENT(OUT), OPTIONAL :: energy          ! if present compute E[rho]
+   REAL(DP), INTENT(OUT), OPTIONAL :: e_cmp(nat,2,2)
+   !
+   INTEGER, PARAMETER      :: AE = 1, PS = 2,&      ! All-Electron and Pseudo
+                              XC = 1, H  = 2        ! XC and Hartree
+   REAL(DP), POINTER       :: rho_core(:)           ! pointer to AE/PS core charge density 
+   TYPE(paw_info)          :: i                     ! minimal info on atoms
+   INTEGER                 :: i_what                ! counter on AE and PS
+   INTEGER                 :: is                    ! spin index
+   INTEGER                 :: lm                    ! counters on angmom and radial grid
+   INTEGER                 :: nb, mb, nmb           ! augfun indices
+   INTEGER                 :: na,first_nat,last_nat ! atoms counters and indexes
+   !
+   REAL(DP), ALLOCATABLE   :: v_lm(:,:,:)   ! workspace: potential
+   REAL(DP), ALLOCATABLE   :: rho_lm(:,:,:) ! density expanded on Y_lm
+   REAL(DP), ALLOCATABLE   :: savedv_lm(:,:,:)   ! workspace: potential
+   ! fake cross band occupations to select only one pfunc at a time:
+   REAL(DP)                :: becfake(nhm*(nhm+1)/2,nat,nspin)
+   REAL(DP)                :: integral        ! workspace
+   REAL(DP)                :: energy_xc, energy_h, energy_tot
+   REAL(DP)                :: sgn
 
-    CALL start_clock('PAW_pot')
+   CALL start_clock('PAW_pot')
+   ! Some initialization
+   becfake(:,:,:) = 0._dp
+   d(:,:,:) = 0._dp
 
-    IF(present(energy)) energy_tot = 0._dp
-
-    CALL divide (nat, first_nat, last_nat)
-    !
-    atoms: DO na = first_nat, last_nat
-    !
-    i%a = na         ! the index of the atom
-    i%t = ityp(na)   ! the type of atom na
-    i%m = g(i%t)%mesh! radial mesh size for atom na
-    i%b = upf(i%t)%nbeta
-    i%l = upf(i%t)%paw%lmax_rho+1
-    !
-    ifpaw: IF (upf(i%t)%tpawp) THEN
-        !
-        ! Arrays are allocated inside the cycle to allow reduced
-        ! memory usage as differnt atoms have different meshes (they
-        ! also have different lmax, I will fix this sooner or later)
-        ALLOCATE(rho_lm(i%m,i%l**2,nspin))
-        ALLOCATE(v_lm(i%m,i%l**2,nspin))
-        !
-        whattodo: DO i_what = AE, PS
+   IF(present(energy)) energy_tot = 0._dp
+   !
+   CALL divide (nat, first_nat, last_nat)
+   atoms: DO na = first_nat, last_nat
+      !
+      i%a = na         ! the index of the atom
+      i%t = ityp(na)   ! the type of atom na
+      i%m = g(i%t)%mesh! radial mesh size for atom na
+      i%b = upf(i%t)%nbeta
+      i%l = upf(i%t)%paw%lmax_rho+1
+      !
+      ifpaw: IF (upf(i%t)%tpawp) THEN
+         !
+         ! Arrays are allocated inside the cycle to allow reduced
+         ! memory usage as differnt atoms have different meshes (they
+         ! also have different lmax, I will fix this sooner or later)
+         ALLOCATE(v_lm(i%m,i%l**2,nspin))
+         ALLOCATE(savedv_lm(i%m,i%l**2,nspin))
+         ALLOCATE(rho_lm(i%m,i%l**2,nspin))
+         !
+         whattodo: DO i_what = AE, PS
             ! STEP: 1 [ build rho_lm (PAW_rho_lm) ]
             NULLIFY(rho_core)
             IF (i_what == AE) THEN
-                ! to pass the atom indes is dirtyer but faster and
-                ! uses less memory than to pass only a hyperslice of the array
-                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
-                ! used later for xc potential:
-                rho_core => upf(i%t)%paw%ae_rho_atc
-                ! sign to sum up the enrgy
-                sgn = +1._dp
+               ! to pass the atom indes is dirtyer but faster and
+               ! uses less memory than to pass only a hyperslice of the array
+               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
+               ! used later for xc potential:
+               rho_core => upf(i%t)%paw%ae_rho_atc
+               ! sign to sum up the enrgy
+               sgn = +1._dp
             ELSE
-                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
-                !    optional argument for pseudo part --> ^^^
-                rho_core => upf(i%t)%rho_atc ! as before
-                sgn = -1._dp                 ! as before
+               CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
+               !                 optional argument for pseudo part --> ^^^
+               rho_core => upf(i%t)%rho_atc ! as before
+               sgn = -1._dp                 ! as before
             ENDIF
+            ! cleanup auxiliary potentials
+            savedv_lm(:,:,:) = 0._dp
 
-        ! cleanup previously stored potentials
-        saved(i%a)%v(:,:,:,i_what) = 0._dp
-        ! First compute the Hartree potential (it does not depend on spin...):
-        CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
-        ! using "energy" as the in/out parameter I save a double call, but I have to do this:
-        IF (present(energy)) energy_h = energy
-        DO is = 1,nspin ! ... so it has to be copied to all spin components
-            saved(i%a)%v(:,:,is,i_what) = v_lm(:,:,1)
-        ENDDO
+            ! First compute the Hartree potential (it does not depend on spin...):
+            CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy_h)
+            ! using "energy" as in/out parameter I save a double call, but I have to do this:
+            IF (present(energy)) energy = energy_h 
+            IF (present(e_cmp)) e_cmp(na, H, i_what) = energy_h
+            DO is = 1,nspin ! ... so it has to be copied to all spin components
+               savedv_lm(:,:,is) = v_lm(:,:,1)
+            ENDDO
 
-        ! Than the XC one:
-        CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
-        IF (present(energy)) energy_xc = energy
-        saved(i%a)%v(:,:,:,i_what) = saved(i%a)%v(:,:,:,i_what) &
-                                    + v_lm(:,:,:)
-        IF (present(energy)) energy_tot = energy_tot + sgn*(energy_xc + energy_h)
-        IF (present(e_cmp)) THEN
-            e_cmp(na, 1, i_what) = energy_xc
-            e_cmp(na, 2, i_what) = energy_h
-        ENDIF
-        ENDDO whattodo
-    DEALLOCATE(rho_lm, v_lm)
-    !
-    ENDIF ifpaw
-    ENDDO atoms
+            ! Then the XC one:
+            CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy_xc)
+            IF (present(energy)) energy = energy_xc
+            IF (present(e_cmp)) e_cmp(na, XC, i_what) = energy_xc
+            savedv_lm(:,:,:) = savedv_lm(:,:,:) + v_lm(:,:,:)
+            IF (present(energy)) energy_tot = energy_tot + sgn*(energy_xc + energy_h)
+            !
+            spins: DO is = 1, nspin
+               nmb = 0
+               ! loop on all pfunc for this kind of pseudo
+               DO nb = 1, nh(i%t)
+                  DO mb = nb, nh(i%t)
+                     nmb = nmb+1 ! nmb = 1, nh*(nh+1)/2
+                     !
+                     ! compute the density from a single pfunc
+                     becfake(nmb,na,is) = 1._dp
+                     IF (i_what == AE) THEN
+                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, rho_lm)
+                     ELSE
+                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
+                        !                  optional argument for pseudo part --> ^^^
+                     ENDIF
+                     !
+                     ! Now I multiply the rho_lm and the potential, I can use
+                     ! rho_lm itself as workspace
+                     DO lm = 1,i%l**2
+                        rho_lm(1:i%m,lm,is) = rho_lm(1:i%m,lm,is) * savedv_lm(1:i%m,lm,is)
+                        ! Integrate!
+                        CALL simpson (upf(i%t)%paw%irmax,rho_lm(:,lm,is),g(i%t)%rab,integral)
+                        d(nmb,i%a,is) = d(nmb,i%a,is) + sgn * integral
+                     ENDDO
+                     ! restore becfake to zero
+                     becfake(nmb,na,is) = 0._dp
+                  ENDDO ! mb
+               ENDDO ! nb
+            ENDDO spins
+         ENDDO whattodo
+         ! cleanup
+         DEALLOCATE(rho_lm)
+         DEALLOCATE(savedv_lm)
+         DEALLOCATE(v_lm)
+         !
+      ENDIF ifpaw
+   ENDDO atoms
 
 #ifdef __PARA
-    IF ( present(energy) ) &
-        CALL reduce (1, energy_tot )
-    ! note: potential doesn't need to be recollected,
-    ! see note at the top of the file for details.
+   IF ( present(energy) ) CALL reduce (1, energy_tot )
+   ! note: potential doesn't need to be recollected,
+   ! see note at the top of the file for details.
 #endif
 
-    ! put energy back in the output variable
-    IF (present(energy)) energy = energy_tot
+   ! put energy back in the output variable
+   IF (present(energy)) energy = energy_tot
 
-    CALL stop_clock('PAW_pot')
+   CALL stop_clock('PAW_pot')
 
 END SUBROUTINE PAW_potential
 
@@ -327,24 +367,12 @@ SUBROUTINE PAW_symmetrize(becsum)
             ELSE
                 ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
             ENDIF
-            write(*,"(1f10.5)", advance='no') becsum(ijh,na,is)
+            write(*,"(1f10.3)", advance='no') becsum(ijh,na,is)
         ENDDO
             write(*,*)
         ENDDO
 
         write(*,*)
-        is = 2
-        DO ih = 1, nh(nt)
-        DO jh = 1, nh(nt)
-            IF (jh > ih) THEN
-                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
-            ELSE
-                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
-            ENDIF
-            write(*,"(1f10.5)", advance='no') becsum(ijh,na,is)
-        ENDDO
-            write(*,*)
-        ENDDO
 #endif
 
     IF( gamma_only .or. nosym ) RETURN
@@ -352,6 +380,15 @@ SUBROUTINE PAW_symmetrize(becsum)
     CALL start_clock('PAW_symme')
 
     becsym(:,:,:) = 0._dp
+
+    DO na=1,nat
+       nt = ityp(na)
+       IF ( .not. upf(nt)%tpawp ) CYCLE
+       DO ih = 1, nh(nt)
+          ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + ih
+          becsum(ijh,na,1:nspin) = becsum(ijh,na,1:nspin) *2.d0
+       END DO
+    END DO
 
     CALL divide (nat, first_nat, last_nat)
     DO is = 1, nspin
@@ -399,7 +436,15 @@ SUBROUTINE PAW_symmetrize(becsum)
 #ifdef __PARA
     CALL reduce( (nhm*(nhm+1)/2) *nat*nspin, becsym)
 #endif
-
+    DO na=1,nat
+       nt = ityp(na)
+       IF ( .not. upf(nt)%tpawp ) CYCLE
+       DO ih = 1, nh(nt)
+          ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + ih
+          becsym(ijh,na,1:nspin) = becsym(ijh,na,1:nspin) *0.5d0
+          becsum(ijh,na,1:nspin) = becsum(ijh,na,1:nspin) *0.5d0
+       END DO
+    END DO
 #ifdef __DEBUG_PAW_SYM
         nt = 1
         na = 1
@@ -412,7 +457,7 @@ SUBROUTINE PAW_symmetrize(becsum)
             ELSE
                 ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
             ENDIF
-            write(*,"(1f10.5)", advance='no') becsym(ijh,na,is)
+            write(*,"(1f10.3)", advance='no') becsym(ijh,na,is)
         ENDDO
             write(*,*)
         ENDDO
@@ -424,7 +469,7 @@ SUBROUTINE PAW_symmetrize(becsum)
             ELSE
                 ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
             ENDIF
-            write(*,"(1f10.5)", advance='no') becsym(ijh,na,is)-becsum(ijh,na,is)
+            write(*,"(1f10.3)", advance='no') becsym(ijh,na,is)-becsum(ijh,na,is)
         ENDDO
             write(*,*)
         ENDDO
@@ -437,204 +482,6 @@ SUBROUTINE PAW_symmetrize(becsum)
     CALL stop_clock('PAW_symme')
 
 END SUBROUTINE PAW_symmetrize
-
-!___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
-!!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
-!!! Update the descreening coefficients:
-!!! D_ij = \int (v_loc_scf + v_loc_at) p_ij
-!!
-!! This is subroutine does NOT cycle on atoms because newd likes it this way
-SUBROUTINE PAW_newd(d)
-    USE constants,         ONLY : sqrtpi, e2
-    USE lsda_mod,          ONLY : nspin
-    USE ions_base,         ONLY : nat, ityp
-    USE atom,              ONLY : g => rgrid
-    USE uspp_param,        ONLY : nh, nhm, upf
-
-    REAL(DP), INTENT(INOUT) :: d(:,:,:,:) ! descreening coefficients (AE - pseudo)
-
-    INTEGER                 :: i_what
-    INTEGER                 :: na, first_nat, last_nat
-    ! fake cross band occupations to select only one pfunc at a time:
-    REAL(DP)                :: becfake(nhm*(nhm+1)/2,nat,nspin)
-
-    INTEGER, PARAMETER      :: AE = 1, PS = 2  ! All-Electron and Pseudo
-    INTEGER                 :: lm              ! counters on angmom and radial grid
-    INTEGER                 :: nb, mb, nmb, is
-    !
-    REAL(DP), POINTER       :: v_at(:)         ! point to aevloc_at or psvloc_at
-    REAL(DP), ALLOCATABLE   :: pfunc_lm(:,:,:) ! aux charge density
-    REAL(DP)                :: integral        ! workspace
-    REAL(DP)                :: sgn             ! +1 for AE, -1 for pseudo
-    !
-    TYPE(paw_info)          :: i
-
-    !
-    ! At the moment this part is done using a fake becsum with all the states
-    ! empty but one. It's inefficient, but safe.
-    CALL start_clock ('PAW_newd')
-
-    ! Some initialization
-    becfake(:,:,:) = 0._dp
-    !
-    d(:,:,:,:) = 0._dp
-
-    CALL divide (nat, first_nat, last_nat)
-
-    atoms: DO na = first_nat, last_nat
-    !
-    i%a = na         ! the index of the atom
-    i%t = ityp(na)   ! the type of atom na
-    ! skip non-paw atoms
-    IF ( .not. upf(i%t)%tpawp ) CYCLE
-    i%m = g(i%t)%mesh! radial mesh size for atom na
-    i%b = upf(i%t)%nbeta
-    i%l = upf(i%t)%paw%lmax_rho+1
-        !
-        ! Different atoms may have different mesh sizes:
-        ALLOCATE(pfunc_lm(i%m, i%l**2, nspin))
-        !
-        whattodo: DO i_what = AE, PS
-            !
-            spins: DO is = 1, nspin
-                nmb = 0
-                ! loop on all pfunc for this kind of pseudo
-                DO nb = 1, nh(i%t)
-                DO mb = nb, nh(i%t)
-                nmb = nmb+1 ! nmb = 1, nh*(nh+1)/2
-                    !
-                    ! compute the density from a single pfunc
-                    becfake(nmb,na,is) = 1._dp
-                    IF (i_what == AE) THEN
-                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, pfunc_lm)
-                        v_at => upf(i%t)%paw%ae_vloc
-                        sgn = +1._dp
-                    ELSE
-                        CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%ptfunc, pfunc_lm, upf(i%t)%paw%aug)
-                        v_at => upf(i%t)%vloc
-                        sgn = -1._dp
-                    ENDIF
-                    !
-                    ! Now I multiply the pfunc and the potential, I can use
-                    ! pfunc_lm itself as workspace
-                    DO lm = 1,i%l**2
-                        IF ( lm == 1 ) THEN
-                            pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
-                                ( saved(i%a)%v(1:i%m,lm,is,i_what) + e2*sqrtpi*v_at(1:i%m) )
-                        ELSE
-                            pfunc_lm(1:i%m,lm,is) = pfunc_lm(1:i%m,lm,is) * &
-                                saved(i%a)%v(1:i%m,lm,is,i_what)
-                        ENDIF
-                        !
-                        ! Integrate!
-                        CALL simpson (upf(i%t)%paw%irmax,pfunc_lm(:,lm,is),g(i%t)%rab,integral)
-                        d(nb,mb,i%a,is) = d(nb,mb,i%a,is) + sgn * integral
-                    ENDDO
-                    ! Symmetrize:
-                    d(mb,nb, i%a,is) = d(nb,mb, i%a,is)
-                    ! restore becfake to zero
-                    becfake(nmb,na,is) = 0._dp
-                ENDDO ! mb
-                ENDDO ! nb
-            ENDDO spins
-        ENDDO whattodo
-
-        ! cleanup
-        DEALLOCATE(pfunc_lm)
-        !
-    ENDDO atoms
-
-#ifdef __PARA
-    CALL reduce (nhm*nhm*nat*nspin, d )
-#endif
-
-    CALL stop_clock ('PAW_newd')
-
-
-END SUBROUTINE PAW_newd
-
-
-!___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
-!!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
-!!! Compute a new density from becsum, and integrate it with the potential
-!!! previously computed and stored in global static variable "saved(na)"
-!!
-FUNCTION PAW_integrate(becsum)
-    USE lsda_mod,          ONLY : nspin
-    USE ions_base,         ONLY : nat, ityp
-    USE atom,              ONLY : g => rgrid
-    USE uspp_param,        ONLY : nhm, upf
-
-    REAL(DP)                :: PAW_integrate
-
-    REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
-
-    INTEGER, PARAMETER      :: AE = 1, PS = 2        ! All-Electron and Pseudo
-    INTEGER                 :: na,first_nat,last_nat ! atoms counters and indexes
-    INTEGER                 :: lm                    ! counters on angmom and radial grid
-    INTEGER                 :: is                    ! counter on spin
-    !
-    REAL(DP), ALLOCATABLE   :: rho_lm(:,:,:) ! radial density expanded on Y_lm
-    REAL(DP)                :: integral      ! workspace
-    !
-    TYPE(paw_info)          :: i
-    INTEGER                 :: i_what,i_sign ! =1 => AE; =2 => PS
-
-    CALL start_clock ('PAW_int')
-
-    PAW_integrate = 0._dp
-
-    CALL divide (nat, first_nat, last_nat)
-
-    atoms: DO na = first_nat, last_nat
-    !
-    i%a = na         ! the index of the atom
-    i%t = ityp(na)   ! the type of atom na
-    i%m = g(i%t)%mesh! radial mesh size for atom na
-    i%b = upf(i%t)%nbeta
-    i%l = upf(i%t)%paw%lmax_rho+1
-    !
-    ifpaw: IF (upf(i%t)%tpawp) THEN
-        !
-        ALLOCATE(rho_lm(i%m,i%l**2,nspin))
-        !
-        whattodo: DO i_what = AE, PS
-            !
-            IF (i_what == AE) THEN
-                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%pfunc, rho_lm)
-                i_sign = +1._dp
-            ELSE
-                CALL PAW_rho_lm(i, becsum, upf(i%t)%paw%ptfunc, rho_lm, upf(i%t)%paw%aug)
-                i_sign = -1._dp
-            ENDIF
-            !
-            ! Compute the integral
-            DO is = 1,nspin
-            DO lm = 1, i%l**2
-                ! I can use rho_lm itself as workspace
-                rho_lm(1:i%m,lm,is) = rho_lm(1:i%m,lm,is) &
-                                     * saved(i%a)%v(1:i%m,lm,is,i_what)
-                CALL simpson (i%m,rho_lm(:,lm,is),g(i%t)%rab,integral)
-                !WRITE(6,"(3i3,10f20.10)") i_what, is, lm, integral
-                PAW_integrate = PAW_integrate + i_sign*integral
-                !
-            ENDDO
-            ENDDO
-        ENDDO whattodo
-        !
-        DEALLOCATE(rho_lm)
-        !
-    ENDIF ifpaw
-    ENDDO atoms
-
-#ifdef __PARA
-    CALL reduce (1, PAW_integrate )
-#endif
-
-    CALL stop_clock ('PAW_int')
-
-
-END FUNCTION PAW_integrate
 
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!

@@ -384,7 +384,6 @@ electrons.o : noncol.o
 electrons.o : paw_init.o
 electrons.o : paw_onecenter.o
 electrons.o : pwcom.o
-electrons.o : realus.o
 electrons.o : scf_mod.o
 eqvect.o : ../Modules/kind.o
 ewald.o : ../Modules/constants.o
@@ -686,6 +685,7 @@ mix_rho.o : ../Modules/cell_base.o
 mix_rho.o : ../Modules/constants.o
 mix_rho.o : ../Modules/control_flags.o
 mix_rho.o : ../Modules/io_files.o
+mix_rho.o : ../Modules/io_global.o
 mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
 mix_rho.o : ../Modules/paw_variables.o

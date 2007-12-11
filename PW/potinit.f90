@@ -52,7 +52,7 @@ SUBROUTINE potinit()
   USE io_rho_xml,           ONLY : read_rho
   !
   USE uspp,               ONLY : becsum
-  USE paw_variables,      ONLY : okpaw
+  USE paw_variables,      ONLY : okpaw, ddd_PAW
   USE paw_init,           ONLY : PAW_init_becsum
   USE paw_onecenter,      ONLY : PAW_potential
   !
@@ -60,6 +60,7 @@ SUBROUTINE potinit()
   !
   REAL(DP)              :: charge           ! the starting charge
   REAL(DP)              :: etotefield       !
+  REAL(DP)              :: e_PAW            !
   REAL(DP)              :: fact 
   INTEGER               :: is, ios
   INTEGER               :: ldim             ! integer variable for I/O control
@@ -212,10 +213,17 @@ SUBROUTINE potinit()
      !
   end if
   !
+  ! ... PAW initialization: from atomic augmentation channel occupations
+  ! ... compute corresponding one-center charges and potentials
+  !
+  IF ( okpaw ) CALL PAW_init_becsum()
+  !
   ! ... compute the potential and store it in vr
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
+  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+
   !
   ! ... define the total local potential (external+scf)
   !
@@ -236,14 +244,6 @@ SUBROUTINE potinit()
   !
   IF ( report /= 0 .AND. &
        noncolin .AND. domag .AND. lscf ) CALL report_mag()
-  !
-  ! ... PAW initialization: from atomic augmentation channel occupations
-  ! ... compute corresponding one-center charges and potentials
-  !
-  IF ( okpaw ) THEN
-    CALL PAW_init_becsum()
-    CALL PAW_potential(becsum)
-  ENDIF
   !
   CALL stop_clock('potinit')
   !

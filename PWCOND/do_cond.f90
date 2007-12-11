@@ -21,7 +21,7 @@ SUBROUTINE do_cond(nodenumber)
   USE io_global, ONLY : stdout, ionode, ionode_id
   USE mp_global, ONLY : npool
   USE paw_onecenter,      ONLY : PAW_potential
-  USE paw_variables,      ONLY : okpaw
+  USE paw_variables,      ONLY : okpaw, ddd_PAW
 
   USE mp
 
@@ -222,7 +222,7 @@ ELSE
     IF (okpaw) THEN
        CALL openfil_cond
        CALL compute_becsum(1)
-       CALL PAW_potential(becsum)
+       CALL PAW_potential(becsum,ddd_PAW)
        CALL closefil_cond
     ENDIF
     call newd
@@ -242,7 +242,7 @@ ELSE
     IF (okpaw) THEN
        CALL openfil_cond
        CALL compute_becsum(1)
-       CALL PAW_potential(becsum)
+       CALL PAW_potential(becsum, ddd_PAW)
        CALL closefil_cond
     ENDIF
     call newd
@@ -256,7 +256,7 @@ ELSE
     IF (okpaw) THEN
        CALL openfil_cond
        CALL compute_becsum(1)
-       CALL PAW_potential(becsum)
+       CALL PAW_potential(becsum, ddd_PAW)
        CALL closefil_cond
     ENDIF
     call newd
@@ -270,7 +270,7 @@ ELSE
     IF (okpaw) THEN
        CALL openfil_cond
        CALL compute_becsum(1)
-       CALL PAW_potential(becsum)
+       CALL PAW_potential(becsum, ddd_PAW)
        CALL closefil_cond
     ENDIF
     call newd

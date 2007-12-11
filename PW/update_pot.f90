@@ -228,6 +228,9 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE io_files,             ONLY : prefix
   USE klist,                ONLY : nelec
   USE io_rho_xml,           ONLY : write_rho, read_rho
+  USE paw_variables,        ONLY : okpaw, ddd_paw
+  USE paw_onecenter,        ONLY : PAW_potential
+  USE uspp,                 ONLY : becsum
   !
   IMPLICIT NONE
   !
@@ -237,6 +240,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
     ! work  is the difference between rho and atomic rho at time t
     ! work1 is the same thing at time t-dt
   REAL(DP) :: charge
+  REAL(DP) :: e_PAW
   !
   INTEGER :: ir, is
   !
@@ -405,6 +409,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
+  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !

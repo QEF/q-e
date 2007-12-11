@@ -8,12 +8,35 @@
 #include "f_defs.h"
 !
 SUBROUTINE newd()
-  use realus, ONLY: tqr,  newd_r
+  USE uspp,          ONLY : deeq
+  USE uspp_param,    ONLY : upf, nh
+  USE lsda_mod,      ONLY : nspin
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp
+  use realus,        ONLY : tqr, newd_r
+  USE paw_variables, ONLY : okpaw, ddd_paw
+  IMPLICIT NONE
+  integer :: na, nt, ih, jh, ijh
   if (tqr) then
      call newd_r()
   else
      call newd_g()
   end if
+  if (okpaw) then
+     do na=1,nat
+        nt = ityp(na)
+        IF (.not.upf(nt)%tpawp) cycle
+        ijh=0
+        do ih=1,nh(nt)
+           do jh=ih,nh(nt)
+              ijh=ijh+1
+              deeq(ih,jh,na,1:nspin) = deeq(ih,jh,na,1:nspin) &
+                                     + ddd_paw(ijh,na,1:nspin)
+              deeq(jh,ih,na,1:nspin) = deeq(ih,jh,na,1:nspin) 
+           end do
+        end do
+     end do
+  end IF 
+
   return
 END SUBROUTINE newd
 !----------------------------------------------------------------------------
@@ -39,8 +62,6 @@ SUBROUTINE newd_g()
   USE spin_orb,             ONLY : lspinorb, so, domag
   USE noncollin_module,     ONLY : noncolin
   !
-  USE paw_variables,        ONLY : okpaw, ddd_paw
-  USE paw_onecenter,        ONLY : PAW_newd
   USE uspp,                 ONLY : nhtol, nhtolm
   !
   IMPLICIT NONE
@@ -191,12 +212,8 @@ SUBROUTINE newd_g()
   !
   CALL reduce( nhm * nhm * nat * nspin0, deeq )
   !
-
-  ! prepare non-kinetic paw contribution to D coefficients
-  ! (they are added later in the "atoms" loop)
-  IF (okpaw) &
-            CALL PAW_newd(ddd_paw)
-
+  DEALLOCATE( aux, qgm_na, qgm, qmod, ylmk0 )
+  !
   atoms : &
   DO na = 1, nat
      !
@@ -215,55 +232,21 @@ SUBROUTINE newd_g()
         END IF
         !
      ELSE if_noncolin
-        paw:&
-        IF (upf(nt)%tpawp) THEN
-            !
-            DO is = 1, nspin
-            !
-            DO ih = 1, nh(nt)
-            nb = indv(ih,nt)
-            !
-            DO jh = ih, nh(nt)
-                mb = indv(jh,nt)
-                !
-                IF ( nhtol (ih, nt) == nhtol (jh, nt) .and. &
-                     nhtolm(ih, nt) == nhtolm(jh, nt) ) THEN
-                     deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + &
-                                         upf(nt)%paw%kdiff(nb,mb)
-                END if
-                !
-                deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + ddd_paw (ih,jh,na,is) 
-                !
-                deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
-                !
-            END DO
-            !
-            END DO
-            !
-            END DO
-        ELSE paw
-            !
-            DO is = 1, nspin
-            !
-            DO ih = 1, nh(nt)
-                !
-                DO jh = ih, nh(nt)
-                    !
-                    deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan(ih,jh,nt)
-                    deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
-                    !
-                END DO
-                !
-            END DO
-            !
-            END DO
-        END IF paw
+        !
+        DO is = 1, nspin
+           !
+           DO ih = 1, nh(nt)
+              DO jh = ih, nh(nt)
+                 deeq(ih,jh,na,is) = deeq(ih,jh,na,is) + dvan(ih,jh,nt)
+                 deeq(jh,ih,na,is) = deeq(ih,jh,na,is)
+              END DO
+           END DO
+           !
+        END DO
         !
      END IF if_noncolin
      !
   END DO atoms
-  !
-  DEALLOCATE( aux, qgm_na, qgm, qmod, ylmk0 )
   !
   CALL stop_clock( 'newd' )
   !

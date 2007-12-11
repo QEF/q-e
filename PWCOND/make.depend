@@ -18,6 +18,7 @@ do_cond.o : ../Modules/io_files.o
 do_cond.o : ../Modules/io_global.o
 do_cond.o : ../Modules/ions_base.o
 do_cond.o : ../Modules/mp.o
+do_cond.o : ../Modules/mp_global.o
 do_cond.o : ../Modules/paw_variables.o
 do_cond.o : ../PW/noncol.o
 do_cond.o : ../PW/paw_onecenter.o

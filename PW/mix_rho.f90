@@ -10,7 +10,7 @@
 #define ZERO ( 0._dp, 0._dp )
 !
 ! This macro force the normalization of betamix matrix, usually not necessary
-!#define __NORMALIZE_BETAMIX
+#define __NORMALIZE_BETAMIX
 !
 #ifdef __GFORTRAN
 ! gfortran hack - for some mysterious reason gfortran doesn't save
@@ -37,12 +37,11 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   !
   USE kinds,          ONLY : DP
   USE ions_base,      ONLY : nat
-  USE gvect,          ONLY : nrxx, ngm
+  USE gvect,          ONLY : ngm
   USE gsmooth,        ONLY : ngms
   USE lsda_mod,       ONLY : nspin
   USE control_flags,  ONLY : imix, ngm0, tr2, io_level
   USE io_files,       ONLY : find_free_unit
-  USE cell_base,      ONLY : omega
   ! ... for PAW:
   USE uspp_param,     ONLY : nhm
   USE paw_variables,  ONLY : okpaw
@@ -52,7 +51,8 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
                              assign_scf_to_mix_type, assign_mix_to_scf_type, &
                              mix_type_AXPY, diropn_mix_file, close_mix_file, &
                              davcio_mix_type, rho_ddot, high_frequency_mixing, &
-                             mix_type_COPY
+                             mix_type_COPY, mix_type_SCAL
+  USE io_global,     ONLY : stdout
 #ifdef __GFORTRAN
   USE mix_save
 #endif
@@ -97,7 +97,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   type(mix_type) :: rhoin_save, rhout_save
   REAL(DP),ALLOCATABLE :: betamix(:,:), work(:)
   INTEGER, ALLOCATABLE :: iwork(:)
-  REAL(DP) :: gamma0
+  REAL(DP) :: gamma0, norm2, obn
   LOGICAL :: &
     savetofile,  &! save intermediate steps on file $prefix."mix",...
     exst          ! if true the file exists
@@ -111,9 +111,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
     df(:),        &! information from preceding iterations
     dv(:)          !     "  "       "     "        "  "
 #endif
-  REAL(DP), ALLOCATABLE, SAVE :: &
-    df_bec(:,:,:,:), &! idem !PAW
-    dv_bec(:,:,:,:)   ! idem !PAW
   REAL(DP) :: dr2_paw, norm
 !  REAL(DP),ALLOCATABLE :: e(:),v(:,:)
   INTEGER, PARAMETER :: read_ = -1, write_ = +1
@@ -234,12 +231,12 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
      !
      call mix_type_AXPY ( -1.d0, rhout_m, df(ipos) )
      call mix_type_AXPY ( -1.d0, rhoin_m, dv(ipos) )
-     !
 #ifdef __NORMALIZE_BETAMIX
-     norm = rho_ddot( df(ipos), df(ipos), ngm0 ) 
-     norm = 1._dp / sqrt(norm)
-     call mix_type_AXPY ( norm-1._dp, df(ipos), df(ipos) )
-     call mix_type_AXPY ( norm-1._dp, dv(ipos), dv(ipos) )
+     ! NORMALIZE
+     norm2 = rho_ddot( df(ipos), df(ipos), ngm0 )
+     obn = 1.d0/sqrt(norm2)
+     call mix_type_SCAL (obn,df(ipos))
+     call mix_type_SCAL (obn,dv(ipos))
 #endif
      !
   END IF

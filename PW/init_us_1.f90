@@ -283,8 +283,7 @@ subroutine init_us_1
                     ijv = mb * (mb - 1) / 2 + nb
                     if ( ( l >= abs(upf(nt)%lll(nb) - upf(nt)%lll(mb)) ) .and. &
                          ( l <=     upf(nt)%lll(nb) + upf(nt)%lll(mb)  ) .and. &
-                         (mod (l+upf(nt)%lll(nb)+upf(nt)%lll(mb), 2) == 0) .or.&
-                          upf(nt)%tpawp ) then
+                         (mod(l+upf(nt)%lll(nb)+upf(nt)%lll(mb),2)==0) ) then
                        do ir = 1, upf(nt)%kkbeta
                           aux1 (ir) = aux (ir) * qtot (ir, ijv)
                        enddo

@@ -41,15 +41,16 @@ SUBROUTINE read_file()
   USE mp_global,            ONLY : kunit
   USE pw_restart,           ONLY : pw_readfile
   USE xml_io_base,          ONLY : pp_check_file
-  USE uspp,                 ONLY : okvan
-  USE paw_variables,        ONLY : okpaw
+  USE uspp,                 ONLY : okvan, becsum
+  USE paw_variables,        ONLY : okpaw, ddd_PAW
+  USE paw_onecenter,        ONLY : paw_potential
   USE paw_init,             ONLY : paw_init_onecenter, allocate_paw_internals
   USE ldaU,                 ONLY : eth
   !
   IMPLICIT NONE
   !
   INTEGER  :: i, is, ik, ibnd, nb, nt, ios, isym, ierr
-  REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, charge
+  REAL(DP) :: rdum(1,1), ehart, etxc, vtxc, etotefield, e_PAW, charge
   REAL(DP) :: sr(3,3,48)
   LOGICAL  :: exst
   !
@@ -214,6 +215,8 @@ SUBROUTINE read_file()
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
+  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 
   ! ... to unit iunwfc (for compatibility)

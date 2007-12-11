@@ -23,6 +23,9 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE control_flags, ONLY: restart, tr2, ethr
   USE wvfct, ONLY: nbnd, et
   USE wavefunctions_module,    ONLY : evc, psic
+  USE uspp,  ONLY: becsum
+  USE paw_variables,  ONLY: okpaw, ddd_PAW
+  USE paw_onecenter, ONLY : PAW_potential
   implicit none
   character :: where * 20
   ! are we in the right place?
@@ -34,7 +37,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! check for number of atoms
   logical :: exst
 
-  real(DP) :: dr2, charge, etotefield
+  real(DP) :: dr2, charge, etotefield, e_PAW
   call seqopn (iunres, 'restart', 'unformatted', exst)
 
   if (.not.exst) goto 10
@@ -82,6 +85,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
+  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
   !
   !  restart procedure completed
   !

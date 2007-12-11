@@ -437,15 +437,13 @@ subroutine gener_pseudo
           qvan, kindiff, nlcc, aeccharge, psccharge, vpotpaw, vpsloc, &
           which_augfun)
      !
-  endif
-  !
-  !    unscreen the local potential and the D coefficients
-  !
-  if (lpaw) then
      ! reread augmentation functions and descreened potentials from PAW
      call paw2us ( pawsetup, zval, grid, nbeta, lls, jjs, ikk, betas, &
                    qq, qvan, vpsloc, bmat, rhos, els, rcutus, pseudotype )
   else
+     !
+     !    unscreen the local potential and the D coefficients
+     !
      call descreening
   end if
   !

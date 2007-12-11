@@ -165,6 +165,8 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   !  determination of the wave-function in the first two points by
   !  series developement
   !
+  ! no coulomb divergence in the origin for a pseudopotential
+  ze2=0.d0 
   b0e=b(0)-e
   c1=0.5_dp*ze2/xl1
   c2=(c1*ze2+b0e)/x4l6

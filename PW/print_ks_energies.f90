@@ -97,7 +97,9 @@ SUBROUTINE print_ks_energies()
      ELSE
         !
         IF ( tfixed_occ ) THEN
-           ibnd = 0
+           ibnd    = 0
+           ibnd_up = 0
+           ibnd_dw = 0
            DO kbnd = 1, nbnd
               IF ( nspin == 1 .OR. nspin == 4 ) THEN
                  IF ( f_inp(kbnd,1) > 0.D0 ) ibnd = kbnd
@@ -122,22 +124,20 @@ SUBROUTINE print_ks_energies()
               ehomo = MAXVAL( et(ibnd,  1:nkstot) )
               elumo = MINVAL( et(ibnd+1,1:nkstot) )
            ELSE
+              elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
+                           MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
               IF ( ibnd_up == 0 ) THEN
                  !
                  ehomo = MAXVAL( et(ibnd_dw,1:nkstot/2) )
-                 elumo = MINVAL( et(ibnd_up+1,nkstot/2+1:nkstot) )
                  !
               ELSE IF ( ibnd_dw == 0 ) THEN
                  !
                  ehomo = MAXVAL( et(ibnd_up,1:nkstot/2) )
-                 elumo = MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) )
                  !
               ELSE
                  !
                  ehomo = MAX( MAXVAL( et(ibnd_up,1:nkstot/2) ), &
                               MAXVAL( et(ibnd_dw,nkstot/2+1:nkstot) ) )
-                 elumo = MIN( MINVAL( et(ibnd_up+1,1:nkstot/2) ), &
-                              MINVAL( et(ibnd_dw+1,nkstot/2+1:nkstot) ) )
                  !
               END IF
            END IF
