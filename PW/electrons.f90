@@ -257,7 +257,7 @@ SUBROUTINE electrons()
         !
         IF ( lda_plus_u )  THEN
            !
-           IF ( iverbosity > 0 ) CALL write_ns()
+           IF ( iverbosity > 0 .OR. first ) CALL write_ns()
            !
            IF ( first .AND. istep == 0 .AND. &
                 startingpot == 'atomic' ) CALL ns_adj()
