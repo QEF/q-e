@@ -214,11 +214,13 @@ subroutine phq_summary
           &               "  gaussian broad. (Ry)=",f8.4,5x, &
           &               "ngauss = ",i3)') nkstot, degauss, ngauss
   endif
-  WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
-  do ik = 1, nkstot
-     WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
-          (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
-  enddo
+  IF (iverbosity==1 .or. nkstot < 10000 ) then
+     WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
+     do ik = 1, nkstot
+        WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
+             (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
+     enddo
+  ENDIF
   if (iverbosity.eq.1) then
      WRITE( stdout, '(/23x,"cryst. coord.")')
      do ik = 1, nkstot

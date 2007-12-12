@@ -356,11 +356,13 @@ SUBROUTINE summary()
      WRITE( stdout, '(/5x,"number of k points=",i5)') nkstot
 
   ENDIF
-  WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
-  DO ik = 1, nkstot
-     WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
-          (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
-  ENDDO
+  IF (iverbosity==1 .OR. nkstot < 10000 ) THEN
+     WRITE( stdout, '(23x,"cart. coord. in units 2pi/a_0")')
+     DO ik = 1, nkstot
+        WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
+             (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
+     ENDDO 
+  ENDIF
   IF (iverbosity.EQ.1) THEN
      WRITE( stdout, '(/23x,"cryst. coord.")')
      DO ik = 1, nkstot
