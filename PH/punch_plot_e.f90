@@ -43,7 +43,7 @@ SUBROUTINE punch_plot_e()
   REAL(DP), ALLOCATABLE  :: raux (:)
   ! auxiliary vector
 
-  COMPLEX(DP), ALLOCATABLE :: aux (:,:), aux1 (:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux (:,:,:), aux1 (:,:,:)
   ! auxiliary space to rotate the
   ! induced charge
 
@@ -58,23 +58,23 @@ SUBROUTINE punch_plot_e()
   !
   !    reads drho from the file
   !
-  ALLOCATE (aux  (  nrxx,3))    
-  ALLOCATE (aux1 (  nrxx,3))    
+  ALLOCATE (aux  (  nrxx,nspin,3))    
+  ALLOCATE (aux1 (  nrxx,nspin,3))    
   ALLOCATE (raux (  nrxx))    
   !
   !     reads the delta_rho on the aux variable
   !
   DO ipol = 1, 3
-     CALL davcio_drho (aux (1, ipol), lrdrho, iudrho, ipol, - 1)
+     CALL davcio_drho (aux (1,1,ipol), lrdrho, iudrho, ipol, - 1)
   ENDDO
   !
   !     rotate the charge and transform to cartesian coordinates
   !
-  aux1(:,:) = (0.0d0, 0.0d0)
+  aux1(:,:,:) = (0.0d0, 0.0d0)
   DO ipol = 1, 3
      DO jpol = 1, 3
-        CALL DAXPY (2 * nrxx, bg (ipol, jpol), aux (1, jpol), 1, &
-             aux1 (1, ipol), 1)
+        CALL DAXPY (2 * nrxx, bg (ipol, jpol), aux (1,1,jpol), 1, &
+             aux1 (1,1,ipol), 1)
      ENDDO
   ENDDO
   !
@@ -112,7 +112,8 @@ SUBROUTINE punch_plot_e()
      !
      !      plot of the charge density
      !
-     raux (:) =  DBLE (aux1 (:, ipol) )
+     raux (:) =  DBLE (aux1 (:,1, ipol) )
+     IF (lsda) CALL DAXPY (nrxx, 1.d0, aux1 (1,2, ipol), 2, raux, 1)
      !
 #if defined (__PARA)
      ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    
