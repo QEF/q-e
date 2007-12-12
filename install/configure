@@ -4315,7 +4315,7 @@ ia32:path* | ia64:path* | amd64:path* )
 	try_f90flags="\$(FFLAGS)"
 	try_fflags_noopt="-O0 -cpp"
 	try_ldflags=""
-	#try_ldflags_static="-static"
+	try_ldflags_static="-static"
 	;;
 *:gfortran )
 	try_fflags="-O3"
