@@ -418,7 +418,7 @@ SUBROUTINE electrons()
      !
      IF ( conv_elec .OR. MOD( iter, iprint ) == 0 ) THEN
         !
-        IF ( iverbosity == 0 ) CALL write_ns ( )
+        IF ( lda_plus_U .AND. iverbosity == 0 ) CALL write_ns ( )
         CALL print_ks_energies()
         !
      END IF
