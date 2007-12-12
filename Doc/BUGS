@@ -1,10 +1,12 @@
 Fixed in CVS version:
 
+  *  a few symmetries were confusing the symmetry finder
+
   *  serious bugs in Berry's phase calculation. It affected only the US 
      case and only some terms, so the error was small but not negligible. 
-     There were two different bugs, one introduced when the spherical
-     harmonics were modified in the rest of the code, one that I think
-     has been there from the beginning.
+     There were three different bugs, one introduced when the spherical
+     harmonics were modified in the rest of the code, two that I think
+     have been there from the beginning.
 
   *  various glitches with wf_collect option in the noncollinear case
 
