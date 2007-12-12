@@ -4323,7 +4323,7 @@ ia32:path* | ia64:path* | amd64:path* )
 	try_fflags_noopt="-O0"
 	try_ldflags=""
 	try_dflags="$try_dflags -D__GFORTRAN"
-	#try_ldflags_static="-static"
+	try_ldflags_static="-static"
         ;;
 aix:*xlf* )
 	try_fflags="-q64 -qalias=noaryovrlp -O3 -qstrict \

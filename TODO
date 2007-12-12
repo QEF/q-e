@@ -1,4 +1,4 @@
-TODO LIST - November 2007
+TODO LIST - December 2007
 
 TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 
@@ -13,28 +13,30 @@ TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 - Doc: write reference paper for q-e
 - Doc: move the contents of the various README and most of the contents
        of the Doc/ directory from CVS into wiki
-- Doc: advertise the existence of a library of files for PP generation
 - Doc: add benchmarks suite and results
 - Cleanup: the GUI should be either updated or removed
 - Code: improve vc-relax algorithms, fix loss of symmetry cases
-- Code: PAW (Lorenzo-SdG)
+- Code: PAW, including PAWsets (Lorenzo-SdG)
 - Code: GIPAW (Paris-Davide)
 - Code: electron-phonon (Paris 2)?
-- Code: corrections for charged/isolated systems (Ismaila-Nicola)?
 - Code: other "external" contributions to Q-E: Wannier, Want, SAX, ...
 - Contrib: QHA + projected phonon DOS codes (Eyvaz)
 - Contrib: band plotting (Jonathan)
-- Contrib: metaGGA atomic code (Yosuke-needs work)
-- Contrib: math parser (Javier-license problem)
-- Bug: extrapolation of wfcs doesn't work for USPP
-- Bug: there is still some problem with Berry phase and macroscopic
-       electric fields with USPP
 - Bug: fixing atomic positions for vc-relax case works only if the atoms
        to be kept fixed are the first in the list
 - Bug: xcrysden doesn't read any longer some output files
 - UPF: update UPF format to allow hack-free inclusion of spin-orbit/GIPAW/PAW
-       (maybe this should be postponed?)
 - Bin: should we make a few binary distributions?
+       - Mac OS-X 10.4 Intel
+       - Linux Intel 32bit serial
+       - Linux Intel 32bit parallel
+       - Linux Intel/AMD 64bit serial
+       - Linux Intel/AMD 64bit parallel
+
+Postponed:
+- Code: corrections for charged/isolated systems (Ismaila-Nicola)
+- Contrib: metaGGA atomic code (Yosuke-needs work)
+- Contrib: math parser (Javier-license problem)
 
 CVS/INSTALLATION/PORTING
 
@@ -97,8 +99,6 @@ PW
 
 - atomic coordinates should be read from file and only optionally 
   from input in non-scf calculations: the present method is error-prone
-
-- DIIS still doesn't work!
 
 - Fermi-Dirac: pass T instead of "broadening", make it possible
   to use it on top of smearing for free-energy calculations
@@ -168,6 +168,12 @@ PH, D3, Gamma
 
 - stop with 'prefix.EXIT' and restart (PH now has it; D3 & Gamma do not
   have any infrastructure for stopping like this)
+
+- the calculation of P_c x|\psi> should be cleanup up and extracted 
+  from phonon, since it may be used for other calculations as well
+  (TDDFT, photoemission cross sections, etc)
+
+- spin-polarized BLYP not implemented
 
 DOCUMENTATION
 
