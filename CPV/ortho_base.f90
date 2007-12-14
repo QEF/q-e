@@ -185,6 +185,13 @@ CONTAINS
       !
       CALL set_a()
       !
+      ! some MPIs (OpenMPI) the first time they call a collective routine take too much
+      ! time to perform initializations, then perform a dummy call to get meaningful time
+      !
+      CALL diagonalize_parallel( n, a, d, s, desc )
+      !
+      CALL set_a()
+      !
       CALL mp_barrier( intra_image_comm )
       t1 = cclock()
       !
@@ -333,6 +340,10 @@ CONTAINS
          a = 1.0d0 / DBLE( n )
          b = 1.0d0 / DBLE( n )
    
+         ! some MPIs (OpenMPI) the first time they call a collective routine take too much
+         ! time to perform initializations, then perform a dummy call to get meaningful time
+         CALL sqr_mm_cannon( 'N', 'N', n, 1.0d0, a, nr, b, nr, 0.0d0, c, nr, desc) 
+
          CALL mp_barrier( intra_image_comm )
          t1 = cclock()
 
