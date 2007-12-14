@@ -235,18 +235,12 @@ subroutine compute_phi(lam,ik,chir,phi_out,xc,iflag,occ,e,els_in)
   psnor=int_0_inf_dr(gi,grid,ik,nst)
 
   if (iflag == 1) then
-     if (tm) then
-        write(stdout,120) els_in, grid%r(ik)
-120     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
-          '  Using Troullier-Martins method ')
-     else
-        write(stdout,130) els_in,grid%r(ik),2.0_dp*xc(6)**2 
-130     format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
+     write(stdout,130) els_in,grid%r(ik),2.0_dp*xc(6)**2 
+130  format (/ /5x, ' Wfc  ',a3,'  rcut=',f6.3, &
           '  Estimated cut-off energy= ', f11.2,' Ry')
-        if (nbes == 4) write(stdout,140) rho0
-140        format (5x,' Using 4 Bessel functions for this wfc,', &
+     if (nbes == 4) write(stdout,140) rho0
+140     format (5x,' Using 4 Bessel functions for this wfc,', &
                 ' rho(0) =',f6.3)
-     end if
      ! write(stdout,'(5x," AE norm = ",f6.3,"  PS norm = ",f6.3)') faenor, psnor
   end if
   !
