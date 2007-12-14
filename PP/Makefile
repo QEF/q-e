@@ -96,10 +96,10 @@ PWOBJS = ../PW/libpw.a
 
 TLDEPS= bindir mods libs pw
 
-all : tldeps average.x bands.x dos.x plotband.x plotproj.x \
-      plotrho.x wfdd.x \
-      pmw.x pp.x projwfc.x pw2casino.x pw2wannier90.x pw_export.x \
-      voronoy.x initial_state.x dipole.x sumpdos.x plan_avg.x pw2gw.x
+all : tldeps average.x bands.x dipole.x dos.x epsilon.x initial_state.x \
+      plan_avg.x plotband.x plotproj.x plotrho.x pmw.x pp.x projwfc.x \
+      sumpdos.x voronoy.x wfdd.x \
+      pw2casino.x pw2wannier90.x pw_export.x pw2gw.x
 
 average.x : average.o $(PPOBJS) $(MODULES) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
@@ -127,19 +127,19 @@ plan_avg.x : plan_avg.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 		$(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-plotband.x : plotband.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+plotband.x : plotband.o $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotband.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		plotband.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-plotproj.x : plotproj.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+plotproj.x : plotproj.o $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotproj.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		plotproj.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
-plotrho.x : plotrho.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
+plotrho.x : plotrho.o $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o $@ \
-		plotrho.o $(PPOBJS) $(MODULES) $(PWOBJS) $(LIBOBJS) $(LIBS)
+		plotrho.o $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 pmw.x : poormanwannier.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)

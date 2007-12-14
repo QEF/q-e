@@ -63,11 +63,11 @@ SUBROUTINE compute_casino
   USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, zv, atm
   USE cell_base, ONLY: omega, alat, tpiba2, at, bg
   USE char, ONLY: title
-  USE constants, ONLY: tpi
-  USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc
+  USE constants, ONLY: tpi, e2
+  USE ener, ONLY: ewld, ehart, etxc, vtxc, etot, etxcc, demet, ef
   USE gvect, ONLY: ngm, gstart, nr1, nr2, nr3, nrx1, nrx2, nrx3, &
        nrxx, g, gg, ecutwfc, gcutm, nl, igtongl
-  USE klist , ONLY: nks, nelec, xk
+  USE klist , ONLY: nks, nelec, xk, wk, degauss, ngauss
   USE lsda_mod, ONLY: lsda, nspin
   USE scf, ONLY: rho, rho_core, rhog_core, vnew
   USE ldaU, ONLY : lda_plus_u, eth, Hubbard_lmax
@@ -91,7 +91,7 @@ SUBROUTINE compute_casino
   REAL(DP), allocatable :: v_h_new(:,:,:,:), kedtaur_new(:,:)
   INTEGER :: ios
   INTEGER, EXTERNAL :: atomic_number
-  REAL (DP), EXTERNAL :: ewald
+  REAL (DP), EXTERNAL :: ewald, w1gauss
 
   CALL init_us_1
   CALL newd
@@ -129,14 +129,10 @@ SUBROUTINE compute_casino
      !     nspin = 1
   ENDIF
 
-  !  if(nks > 1) rewind(iunigk)
-  !  do ik=1,nks
-  !     if(nks > 1) read(iunigk) npw, igk
-  !     
-  !  if(nks > 1) rewind(iunigk)
   ek  = 0.d0
   eloc= 0.d0
   enl = 0.d0
+  demet=0.d0
   !
   DO ispin = 1, nspin 
      !
@@ -160,7 +156,16 @@ SUBROUTINE compute_casino
         CALL davcio (evc, nwordwfc, iunwfc, ikk, - 1)
         CALL init_us_2 (npw, igk, xk (1, ikk), vkb)
         CALL calbec ( npw, vkb, evc, becp )
-
+        !
+        ! -TS term for metals (if any)
+        !
+        IF ( degauss > 0.0_dp) THEN
+           DO ibnd = 1, nbnd
+              demet = demet + wk (ik) * &
+                 degauss * w1gauss ( (ef-et(ibnd,ik)) / degauss, ngauss)
+           END DO
+        END IF
+        !
         DO ig =1, npw
            IF( igk(ig) > 4*npwx ) & 
                 CALL errore ('pw2casino','increase allocation of index', ig)
@@ -209,6 +214,7 @@ SUBROUTINE compute_casino
   CALL reduce(1,ek)
   CALL poolreduce(1,ek)
   CALL poolreduce(1,enl)
+  CALL poolreduce(1,demet)
 #endif
   eloc = eloc * omega 
   ek = ek * tpiba2
@@ -331,13 +337,16 @@ SUBROUTINE compute_casino
   ENDDO
   CLOSE(io)
 
-  WRITE (stdout,*) 'Kinetic energy   '  , ek/2
-  WRITE (stdout,*) 'Local energy     ', eloc/2
-  WRITE (stdout,*) 'Non-Local energy ', enl/2
-  WRITE (stdout,*) 'Ewald energy     ', ewld/2
-  WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/2
-  WRITE (stdout,*) 'hartree energy   ', ehart/2
-  WRITE (stdout,*) 'Total energy     ', (ek + (etxc-etxcc)+ehart+eloc+enl+ewld)/2
+  WRITE (stdout,*) 'Kinetic energy   '  , ek/e2
+  WRITE (stdout,*) 'Local energy     ', eloc/e2
+  WRITE (stdout,*) 'Non-Local energy ', enl/e2
+  WRITE (stdout,*) 'Ewald energy     ', ewld/e2
+  WRITE (stdout,*) 'xc contribution  ',(etxc-etxcc)/e2
+  WRITE (stdout,*) 'hartree energy   ', ehart/e2
+  IF ( degauss > 0.0_dp ) &
+  WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2
+  WRITE (stdout,*) 'Total energy     ',(ek + (etxc-etxcc) + ehart + eloc + &
+                                        enl + ewld + demet) / e2
 
   DEALLOCATE (igtog)
   DEALLOCATE (idx)

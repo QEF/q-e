@@ -1,6 +1,5 @@
-
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -9,9 +8,8 @@
 program read_bands
 #include "f_defs.h"
 
-  USE io_global,  ONLY : stdout
-
   implicit none
+  integer, parameter :: stdout=6
   real, allocatable :: e(:,:), k(:,:), e_in(:), kx(:)
   real :: k1(3), k2(3), xk1, xk2, ps
   real, allocatable :: e_rap(:,:), k_rap(:,:)

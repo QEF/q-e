@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2007 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,9 +18,9 @@ program plotrho
   !                   - contour lines of various kinds (solid, dashed, etc)
   !
 #include "f_defs.h"
-  USE io_global,  ONLY : stdout
-  USE kinds, only : DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
+  integer, parameter :: stdout=6
   ! for spline interpolation using essl toutines
   integer, parameter :: nwrk = 10000
   real(DP) :: wrk (nwrk)
@@ -182,8 +182,8 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
   !   z(0:nc) are the levels,
   !   xdim and ydim are the physical dimensions of the figure in cm
   !   xs and ys determine a shift of the origin in cm
-  USE kinds, only: DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
   integer :: imax, jmax, iub, jub, nc
   real(DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
   real(DP) :: xmin, xmax, ymin, ymax, xdim, ydim, xs, ys
@@ -277,8 +277,8 @@ subroutine cplot (d, imax, jmax, x, xmin, xmax, iub, y, ymin, &
 end subroutine cplot
 
 subroutine conrec (imax, iub, jmax, jub, x, y, d, nc, z)
-  USE kinds, only: DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
   integer :: imax, iub, jmax, jub, nc
 
   real(DP) :: d (0:imax, 0:jmax), x (0:imax), y (0:jmax), z (0:nc)
@@ -571,8 +571,8 @@ end subroutine conrec
 subroutine atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
   !-----------------------------------------------------------------------
   !
-  USE kinds, only: DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
   integer :: nat, ityp (nat)
   real(DP) :: tau (3, nat), at (3, 3), r0 (3), tau1 (3), tau2 (3), a0
   real(DP) :: xdim, ydim
@@ -641,8 +641,8 @@ subroutine atomi (nat, tau, ityp, at, a0, r0, tau1, tau2, xdim, ydim)
 end subroutine atomi
  
 subroutine hatch (x1, x2, y1, y2)
-  USE kinds, only: DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
   real(DP) :: x1, x2, y1, y2
   real(DP) :: cm =  28.453d0, delta = 0.2d0, dim
   integer :: nhach, n
@@ -686,8 +686,8 @@ subroutine psplot ( d, imax, x, iub, y, jub, nlevels, z, &
   !   z(0:nlevels) are the levels
   !   xdim and ydim are the physical dimensions of the figure in cm
   !   xs and ys determine a shift of the origin in cm
-  USE kinds, only : DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
   integer, parameter :: ncontourmax=100, npointmax=500, nmaxtypes=8
   integer :: imax, iub, jub, nlevels
   real(DP) :: d(0:imax,0:jub), x(0:imax), y(0:jub), z(0:nlevels), &
@@ -795,8 +795,8 @@ end subroutine psplot
 subroutine findcontours (d, imax, iub, jub, x, y, z, segments, work, &
      done, npointmax, ncontourmax, line, npoints, ncontours)
   !
-  USE kinds, only : DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
   integer :: imax, iub, jub, npointmax, ncontourmax,  ncontours, &
        npoints(ncontourmax)
   real(DP) :: d(0:imax,0:jub),x(0:iub), y(0:jub), z, &
@@ -931,8 +931,8 @@ end subroutine findcontours
 !
 subroutine triangle ( d, x, y, z, imax, iub, jub, i0, j0, m0, found, line )
   !
-  USE kinds, only : DP
   implicit none
+  integer, parameter :: DP = selected_real_kind(14,200)
   integer :: imax, iub, jub, i0, j0, m0
   real(DP) :: d(0:imax,0:jub), x(0:iub), y(0:jub), z, line(2,2)
   logical :: found
