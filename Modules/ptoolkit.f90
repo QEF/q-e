@@ -192,6 +192,9 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
      CALL mpi_gather( a, nx*nx, mpi_double_precision, &
                       buf, nx*nx, mpi_double_precision, 0, desc( la_comm_ ) , ierr )
      !
+     IF( ierr /= 0 ) &
+        CALL errore( " dsqmcll ", " in gather ", ABS( ierr ) )
+     !
      IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
         DO ipc = 1, npc
            CALL descla_local_dims( ic, nc, n, desc( la_nx_ ), npc, ipc-1 )
@@ -212,6 +215,9 @@ SUBROUTINE dsqmcll( n, a, lda, ar, ldar, desc, comm )
   END IF
   !
   CALL mpi_bcast( ar,  ldar * n, mpi_double_precision, 0, comm, ierr )   
+  !
+  IF( ierr /= 0 ) &
+     CALL errore( " dsqmcll ", " in bcast ", ABS( ierr ) )
 
 #else
 
@@ -278,6 +284,9 @@ SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
      CALL mpi_gather( a, nx*nx, mpi_double_complex, &
                       buf, nx*nx, mpi_double_complex, 0, desc( la_comm_ ) , ierr )
      !
+     IF( ierr /= 0 ) &
+        CALL errore( " zsqmcll ", " in gather ", ABS( ierr ) )
+     !
      IF( desc( la_myr_ ) == 0 .AND. desc( la_myc_ ) == 0 ) THEN
         DO ipc = 1, npc
            CALL descla_local_dims( ic, nc, n, desc( la_nx_ ), npc, ipc-1 )
@@ -298,6 +307,9 @@ SUBROUTINE zsqmcll( n, a, lda, ar, ldar, desc, comm )
   END IF
   !
   CALL mpi_bcast( ar,  ldar * n, mpi_double_complex, 0, comm, ierr )   
+  !
+  IF( ierr /= 0 ) &
+     CALL errore( " zsqmcll ", " in bcast ", ABS( ierr ) )
 
 #else
 
@@ -401,6 +413,9 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
                              desc( la_myc_ ), desc( la_myr_ ), dest )
       CALL mpi_isend( a, lda*lda, MPI_DOUBLE_PRECISION, dest, 1, comm, sreq, ierr )
       !
+      IF( ierr /= 0 ) &
+         CALL errore( " dsqmsym ", " in isend ", ABS( ierr ) )
+      !
    ELSE IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
       !
       !  sub diagonal block, procs receive the block from super diag,
@@ -409,6 +424,9 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
       CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
                              desc( la_myc_ ), desc( la_myr_ ), sour )
       CALL mpi_recv( a, lda*lda, MPI_DOUBLE_PRECISION, sour, 1, comm, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL errore( " dsqmsym ", " in recv ", ABS( ierr ) )
       !
       DO j = 1, lda
          DO i = j + 1, lda
@@ -421,7 +439,17 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
    END IF
 
    IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+      !
       CALL MPI_Wait( sreq, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL errore( " dsqmsym ", " in wait ", ABS( ierr ) )
+      !
+      CALL mpi_request_free( sreq, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL errore( " dsqmsym ", " in request_free ", ABS( ierr ) )
+      !
    END IF
 
 #else
@@ -499,6 +527,9 @@ SUBROUTINE zsqmher( n, a, lda, desc )
                              desc( la_myc_ ), desc( la_myr_ ), dest )
       CALL mpi_isend( a, lda*lda, MPI_DOUBLE_COMPLEX, dest, 1, comm, sreq, ierr )
       !
+      IF( ierr /= 0 ) &
+         CALL errore( " zsqmher ", " in mpi_isend ", ABS( ierr ) )
+      !
    ELSE IF( desc( la_myc_ ) < desc( la_myr_ ) ) THEN
       !
       !  sub diagonal block, procs receive the block from super diag,
@@ -507,6 +538,9 @@ SUBROUTINE zsqmher( n, a, lda, desc )
       CALL GRID2D_RANK( 'R', desc( la_npr_ ), desc( la_npc_ ), &
                              desc( la_myc_ ), desc( la_myr_ ), sour )
       CALL mpi_recv( a, lda*lda, MPI_DOUBLE_COMPLEX, sour, 1, comm, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL errore( " zsqmher ", " in mpi_recv ", ABS( ierr ) )
       !
       DO j = 1, lda
          DO i = j + 1, lda
@@ -524,7 +558,17 @@ SUBROUTINE zsqmher( n, a, lda, desc )
    END IF
 
    IF( desc( la_myc_ ) > desc( la_myr_ ) ) THEN
+      !
       CALL MPI_Wait( sreq, istatus, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL errore( " zsqmher ", " in MPI_Wait ", ABS( ierr ) )
+      !
+      CALL mpi_request_free( sreq, ierr )
+      !
+      IF( ierr /= 0 ) &
+         CALL errore( " zsqmher ", " in mpi_request_free ", ABS( ierr ) )
+      !
    END IF
 
 #if defined __PIPPO
@@ -657,15 +701,26 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    ! split communicator into row and col communicators
 
    CALL MPI_Comm_rank( comm, myid, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " dsqmred ", " in MPI_Comm_rank 1 ", ABS( ierr ) )
 
    CALL MPI_Comm_split( comm, mycol, myrow, col_comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " dsqmred ", " in MPI_Comm_split 1 ", ABS( ierr ) )
+    
    CALL MPI_Comm_split( comm, myrow, mycol, row_comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " dsqmred ", " in MPI_Comm_split 2 ", ABS( ierr ) )
 
    CALL MPI_Comm_rank( col_comm, rank, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " dsqmred ", " in MPI_Comm_rank 2 ", ABS( ierr ) )
    IF( rank /= myrow ) &
       CALL errore( " dsqmred ", " building col_comm ", rank )
 
    CALL MPI_Comm_rank( row_comm, rank, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " dsqmred ", " in MPI_Comm_rank 3 ", ABS( ierr ) )
    IF( rank /= mycol ) &
       CALL errore( " dsqmred ", " building row_comm ", rank )
 
@@ -738,6 +793,8 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                   END DO
                END DO
                CALL mpi_isend( buf, ib, MPI_DOUBLE_PRECISION, ipr-1, ipr, col_comm, sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " dsqmred ", " in mpi_isend ", ABS( ierr ) )
             ELSE
                DO j = 1, desca( nlac_ )
                   ib = irb
@@ -763,7 +820,11 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
             IF( nrsnd( ipr_old ) > 0 ) THEN
                IF(  myrow /= ipr_old - 1 ) THEN
                   CALL mpi_recv( buf, nrsnd(ipr_old), MPI_DOUBLE_PRECISION, ipr_old-1, ipr, col_comm, istatus, ierr )
-                  CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib, ierr) 
+                  IF( ierr /= 0 ) &
+                     CALL errore( " dsqmred ", " in mpi_recv ", ABS( ierr ) )
+                  CALL mpi_get_count( istatus, MPI_DOUBLE_PRECISION, ib, ierr) 
+                  IF( ierr /= 0 ) &
+                     CALL errore( " dsqmred ", " in mpi_get_count ", ABS( ierr ) )
                   IF( ib /= nrsnd(ipr_old) ) &
                      CALL errore( " dsqmred ", " somthing wrong with row 3 ", ib )
                   ib = 0
@@ -779,7 +840,12 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
       ELSE
          DO ipr_old = 1, npr
             IF( myrow == ipr_old - 1 .AND. nrsnd( ipr_old ) > 0 ) THEN
-                CALL MPI_Wait( sreq, istatus, ierr )
+               CALL MPI_Wait( sreq, istatus, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " dsqmred ", " in MPI_Wait ", ABS( ierr ) )
+               CALL mpi_request_free( sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " dsqmred ", " in mpi_request_free ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -842,6 +908,8 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                   END DO
                END DO
                CALL mpi_isend( buf, ib, MPI_DOUBLE_PRECISION, ipc-1, ipc, row_comm, sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " dsqmred ", " in mpi_isend 2 ", ABS( ierr ) )
             ELSE
                ib = icb
                DO j = icb_new( ipc_old ), ice_new( ipc_old )
@@ -868,7 +936,11 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                IF(  mycol /= ipc_old - 1 ) THEN
                   ib = icb_new( ipc_old )
                   CALL mpi_recv( b( 1, ib ), ncsnd(ipc_old), MPI_DOUBLE_PRECISION, ipc_old-1, ipc, row_comm, istatus, ierr )
+                  IF( ierr /= 0 ) &
+                     CALL errore( " dsqmred ", " in mpi_recv 2 ", ABS( ierr ) )
                   CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_PRECISION, ib, ierr ) 
+                  IF( ierr /= 0 ) &
+                     CALL errore( " dsqmred ", " in MPI_GET_COUNT 2 ", ABS( ierr ) )
                   IF( ib /= ncsnd(ipc_old) ) &
                      CALL errore( " dsqmred ", " somthing wrong with col 3 ", ib )
                END IF
@@ -877,7 +949,12 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
       ELSE
          DO ipc_old = 1, npc
             IF( mycol == ipc_old - 1 .AND. ncsnd( ipc_old ) > 0 ) THEN
-                CALL MPI_Wait( sreq, istatus, ierr )
+               CALL MPI_Wait( sreq, istatus, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " dsqmred ", " in MPI_Wait 2 ", ABS( ierr ) )
+               CALL mpi_request_free( sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " dsqmred ", " in mpi_request_free 2 ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -888,7 +965,14 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    DEALLOCATE( buf )
 
    CALL mpi_comm_free( col_comm, ierr )
+
+   IF( ierr /= 0 ) &
+      CALL errore( " dsqmred ", " in mpi_comm_free 1 ", ABS( ierr ) )
+
    CALL mpi_comm_free( row_comm, ierr )
+
+   IF( ierr /= 0 ) &
+      CALL errore( " dsqmred ", " in mpi_comm_free 2 ", ABS( ierr ) )
 
 #if defined __PIPPO
 
@@ -1013,15 +1097,26 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    ! split communicator into row and col communicators
 
    CALL MPI_Comm_rank( comm, myid, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " zsqmred ", " in MPI_Comm_rank 1 ", ABS( ierr ) )
 
    CALL MPI_Comm_split( comm, mycol, myrow, col_comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " zsqmred ", " in MPI_Comm_split 1 ", ABS( ierr ) )
+
    CALL MPI_Comm_split( comm, myrow, mycol, row_comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " zsqmred ", " in MPI_Comm_split 2 ", ABS( ierr ) )
 
    CALL MPI_Comm_rank( col_comm, rank, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " zsqmred ", " in MPI_Comm_rank 2 ", ABS( ierr ) )
    IF( rank /= myrow ) &
       CALL errore( " zsqmred ", " building col_comm ", rank )
 
    CALL MPI_Comm_rank( row_comm, rank, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " zsqmred ", " in MPI_Comm_rank 3 ", ABS( ierr ) )
    IF( rank /= mycol ) &
       CALL errore( " zsqmred ", " building row_comm ", rank )
 
@@ -1084,6 +1179,8 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                   END DO
                END DO
                CALL mpi_isend( buf, ib, MPI_DOUBLE_COMPLEX, ipr-1, ipr, col_comm, sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " zsqmred ", " in mpi_isend 1 ", ABS( ierr ) )
             ELSE
                DO j = 1, desca( nlac_ )
                   ib = irb
@@ -1109,7 +1206,11 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
             IF( nrsnd( ipr_old ) > 0 ) THEN
                IF(  myrow /= ipr_old - 1 ) THEN
                   CALL mpi_recv( buf, nrsnd(ipr_old), MPI_DOUBLE_COMPLEX, ipr_old-1, ipr, col_comm, istatus, ierr )
+                  IF( ierr /= 0 ) &
+                     CALL errore( " zsqmred ", " in mpi_recv 1 ", ABS( ierr ) )
                   CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_COMPLEX, ib, ierr) 
+                  IF( ierr /= 0 ) &
+                     CALL errore( " zsqmred ", " in MPI_GET_COUNT 1 ", ABS( ierr ) )
                   IF( ib /= nrsnd(ipr_old) ) &
                      CALL errore( " zsqmred ", " somthing wrong with row 3 ", ib )
                   ib = 0
@@ -1125,7 +1226,12 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
       ELSE
          DO ipr_old = 1, npr
             IF( myrow == ipr_old - 1 .AND. nrsnd( ipr_old ) > 0 ) THEN
-                CALL MPI_Wait( sreq, istatus, ierr )
+               CALL MPI_Wait( sreq, istatus, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " zsqmred ", " in MPI_Wait 1 ", ABS( ierr ) )
+               CALL mpi_request_free( sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " zsqmred ", " in mpi_request_free 1 ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -1180,6 +1286,8 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                   END DO
                END DO
                CALL mpi_isend( buf, ib, MPI_DOUBLE_COMPLEX, ipc-1, ipc, row_comm, sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " zsqmred ", " in mpi_isend 2 ", ABS( ierr ) )
             ELSE
                ib = icb
                DO j = icb_new( ipc_old ), ice_new( ipc_old )
@@ -1206,7 +1314,11 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                IF(  mycol /= ipc_old - 1 ) THEN
                   ib = icb_new( ipc_old )
                   CALL mpi_recv( b( 1, ib ), ncsnd(ipc_old), MPI_DOUBLE_COMPLEX, ipc_old-1, ipc, row_comm, istatus, ierr )
+                  IF( ierr /= 0 ) &
+                     CALL errore( " zsqmred ", " in mpi_recv 2 ", ABS( ierr ) )
                   CALL MPI_GET_COUNT( istatus, MPI_DOUBLE_COMPLEX, ib, ierr ) 
+                  IF( ierr /= 0 ) &
+                     CALL errore( " zsqmred ", " in MPI_GET_COUNT 2 ", ABS( ierr ) )
                   IF( ib /= ncsnd(ipc_old) ) &
                      CALL errore( " zsqmred ", " somthing wrong with col 3 ", ib )
                END IF
@@ -1215,7 +1327,12 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
       ELSE
          DO ipc_old = 1, npc
             IF( mycol == ipc_old - 1 .AND. ncsnd( ipc_old ) > 0 ) THEN
-                CALL MPI_Wait( sreq, istatus, ierr )
+               CALL MPI_Wait( sreq, istatus, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " zsqmred ", " in MPI_Wait 2 ", ABS( ierr ) )
+               CALL mpi_request_free( sreq, ierr )
+               IF( ierr /= 0 ) &
+                  CALL errore( " zsqmred ", " in mpi_request_free 2 ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -1226,7 +1343,12 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    DEALLOCATE( buf )
 
    CALL mpi_comm_free( col_comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " zsqmred ", " in mpi_comm_free 1 ", ABS( ierr ) )
+
    CALL mpi_comm_free( row_comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " zsqmred ", " in mpi_comm_free 2 ", ABS( ierr ) )
 
 #if defined __PIPPO
 
@@ -1412,6 +1534,9 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
 
      CALL MPI_BCAST( auxa(1), ldx*n, mpi_double_precision, ip, comm, IERR)
 
+     IF( ierr /= 0 ) &
+        CALL errore( " rep_matmul_drv ", " in MPI_BCAST ", ABS( ierr ) )
+
      IBUF = 0
      ioff = IB_SOUR - 1
      DO J = 1, N
@@ -1573,6 +1698,9 @@ SUBROUTINE zrep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA
 
      CALL MPI_BCAST( auxa(1), ldx*n, mpi_double_complex, ip, comm, IERR)
 
+     IF( ierr /= 0 ) &
+        CALL errore( " zrep_matmul_drv ", " in MPI_BCAST ", ABS( ierr ) )
+
      IBUF = 0
      ioff = IB_SOUR - 1
      DO J = 1, N
@@ -1705,6 +1833,8 @@ SUBROUTINE sqr_mm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ldc
    !
 #if defined (__MPI)
    CALL MPI_BARRIER( comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " sqr_mm_cannon ", " in MPI_BARRIER ", ABS( ierr ) )
 #endif
    !
    allocate( ablk( nb, nb ) )
@@ -1847,6 +1977,8 @@ CONTAINS
       !
       CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
            idest, tag, isour, tag, comm, istatus, ierr)
+      IF( ierr /= 0 ) &
+         CALL errore( " sqr_mm_cannon ", " in MPI_SENDRECV_REPLACE ", ABS( ierr ) )
       !
 #endif
       RETURN
@@ -1906,6 +2038,8 @@ CONTAINS
       !
       CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
            idest, tag, isour, tag, comm, istatus, ierr)
+      IF( ierr /= 0 ) &
+         CALL errore( " sqr_mm_cannon ", " in MPI_SENDRECV_REPLACE 2 ", ABS( ierr ) )
       !
 #endif
       RETURN
@@ -2009,6 +2143,8 @@ SUBROUTINE sqr_zmm_cannon( transa, transb, n, alpha, a, lda, b, ldb, beta, c, ld
    !
 #if defined (__MPI)
    CALL MPI_BARRIER( comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " sqr_zmm_cannon ", " in MPI_BARRIER ", ABS( ierr ) )
 #endif
    !
    allocate( ablk( nb, nb ) )
@@ -2151,6 +2287,8 @@ CONTAINS
       !
       CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_COMPLEX, &
            idest, tag, isour, tag, comm, istatus, ierr)
+      IF( ierr /= 0 ) &
+         CALL errore( " sqr_zmm_cannon ", " in MPI_SENDRECV_REPLACE 1 ", ABS( ierr ) )
       !
 #endif
       RETURN
@@ -2210,6 +2348,8 @@ CONTAINS
       !
       CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_COMPLEX, &
            idest, tag, isour, tag, comm, istatus, ierr)
+      IF( ierr /= 0 ) &
+         CALL errore( " sqr_zmm_cannon ", " in MPI_SENDRECV_REPLACE 2 ", ABS( ierr ) )
       !
 #endif
       RETURN
@@ -2310,6 +2450,8 @@ SUBROUTINE sqr_tr_cannon( n, a, lda, b, ldb, desc )
    !
 #if defined (__MPI)
    CALL MPI_BARRIER( comm, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " sqr_tr_cannon ", " in MPI_BARRIER ", ABS( ierr ) )
 #endif
    !
    DO j = 1, nr
@@ -2345,6 +2487,8 @@ CONTAINS
       !
       CALL MPI_SENDRECV_REPLACE(blk, nb*nb, MPI_DOUBLE_PRECISION, &
            idest, np+np+1, isour, np+np+1, comm, istatus, ierr)
+      IF( ierr /= 0 ) &
+         CALL errore( " sqr_tr_cannon ", " in MPI_SENDRECV_REPLACE ", ABS( ierr ) )
       !
 #endif
 
@@ -2414,6 +2558,8 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " cyc2blk_redist ", " in mpi_allgather ", ABS( ierr ) )
    !
    nbuf = (nb/nproc+2) * nb
    !
@@ -2445,6 +2591,8 @@ SUBROUTINE cyc2blk_redist( n, a, lda, b, ldb, desc )
 
       CALL mpi_gather( sndbuf, nbuf, mpi_double_precision, &
                        rcvbuf, nbuf, mpi_double_precision, ip, comm_a, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " cyc2blk_redist ", " in mpi_gather ", ABS( ierr ) )
      
    END DO
 
@@ -2539,6 +2687,8 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " cyc2blk_zredist ", " in mpi_allgather ", ABS( ierr ) )
    !
    nbuf = (nb/nproc+2) * nb
    !
@@ -2570,6 +2720,8 @@ SUBROUTINE cyc2blk_zredist( n, a, lda, b, ldb, desc )
 
       CALL mpi_gather( sndbuf, nbuf, mpi_double_complex, &
                        rcvbuf, nbuf, mpi_double_complex, ip, comm_a, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " cyc2blk_zredist ", " in mpi_gather ", ABS( ierr ) )
      
    END DO
 
@@ -2664,6 +2816,8 @@ SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " blk2cyc_redist ", " in mpi_allgather ", ABS( ierr ) )
    !
    nbuf = (nb/nproc+2) * nb
    !
@@ -2688,6 +2842,8 @@ SUBROUTINE blk2cyc_redist( n, a, lda, b, ldb, desc )
       END DO
       CALL mpi_gather( sndbuf, nbuf, mpi_double_precision, &
                        rcvbuf, nbuf, mpi_double_precision, ip, comm_a, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " blk2cyc_redist ", " in mpi_gather ", ABS( ierr ) )
    END DO
    !
    
@@ -2787,6 +2943,8 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, b, ldb, desc )
    ALLOCATE( ip_desc( descla_siz_ , nproc ) )
 
    CALL mpi_allgather( desc, descla_siz_ , mpi_integer, ip_desc, descla_siz_ , mpi_integer, comm_a, ierr )
+   IF( ierr /= 0 ) &
+      CALL errore( " blk2cyc_zredist ", " in mpi_allgather ", ABS( ierr ) )
    !
    nbuf = (nb/nproc+2) * nb
    !
@@ -2811,6 +2969,8 @@ SUBROUTINE blk2cyc_zredist( n, a, lda, b, ldb, desc )
       END DO
       CALL mpi_gather( sndbuf, nbuf, mpi_double_complex, &
                        rcvbuf, nbuf, mpi_double_complex, ip, comm_a, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " blk2cyc_zredist ", " in mpi_gather ", ABS( ierr ) )
    END DO
    !
    
@@ -2930,6 +3090,8 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
       END IF
       !
       CALL mpi_comm_split( desc( la_comm_ ) , color, key, ccomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pzpotf ", " in mpi_comm_split 1 ", ABS( ierr ) )
       !  
       IF( myrow >= jb-1 .and. mycol <= jb-1 ) THEN
           color = myrow
@@ -2940,6 +3102,8 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
       END IF
       !
       CALL mpi_comm_split( desc( la_comm_ ), color, key, rcomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pzpotf ", " in mpi_comm_split 2 ", ABS( ierr ) )
       !
       !    here every process can work independently, then we need a reduce.
       !
@@ -2963,6 +3127,8 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
             !  accumulate on the diagonal block/proc
             !
             CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_COMPLEX, MPI_SUM, jb-1, rcomm, ierr )
+            IF( ierr /= 0 ) &
+               CALL errore( " pzpotf ", " in MPI_REDUCE 1 ", ABS( ierr ) )
             !
          END IF
          !
@@ -2987,8 +3153,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pzpotf ", " in mpi_bcast 1 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( srcv, ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pzpotf ", " in mpi_bcast 2 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3015,6 +3185,8 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
                   END IF
                ELSE
                   CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_COMPLEX, MPI_SUM, jb-1, rcomm, ierr )
+                  IF( ierr /= 0 ) &
+                     CALL errore( " pzpotf ", " in mpi_reduce 2 ", ABS( ierr ) )
                END IF
             END IF
          END DO
@@ -3027,8 +3199,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pzpotf ", " in mpi_bcast 3 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( srcv,  ldx*ldx, MPI_DOUBLE_COMPLEX, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pzpotf ", " in mpi_bcast 4 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3040,7 +3216,12 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
       END IF
       !
       CALL mpi_comm_free( rcomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pzpotf ", " in mpi_comm_free 1 ", ABS( ierr ) )
+      !
       CALL mpi_comm_free( ccomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pzpotf ", " in mpi_comm_free 2 ", ABS( ierr ) )
       !
    END DO
 
@@ -3127,6 +3308,8 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       END IF
       !
       CALL mpi_comm_split( desc( la_comm_ ) , color, key, ccomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pdpotf ", " in mpi_comm_split 1 ", ABS( ierr ) )
       !  
       IF( myrow >= jb-1 .and. mycol <= jb-1 ) THEN
           color = myrow
@@ -3137,6 +3320,8 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       END IF
       !
       CALL mpi_comm_split( desc( la_comm_ ), color, key, rcomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pdpotf ", " in mpi_comm_split 2 ", ABS( ierr ) )
       !
       !    here every process can work independently, then we need a reduce.
       !
@@ -3160,6 +3345,8 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
             !  accumulate on the diagonal block/proc
             !
             CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_PRECISION, MPI_SUM, jb-1, rcomm, ierr )
+            IF( ierr /= 0 ) &
+               CALL errore( " pdpotf ", " in MPI_REDUCE 1 ", ABS( ierr ) )
             !
          END IF
          !
@@ -3184,8 +3371,12 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pdpotf ", " in mpi_bcast 1 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol < ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( srcv, ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pdpotf ", " in mpi_bcast 2 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3212,6 +3403,8 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
                   END IF
                ELSE
                   CALL MPI_REDUCE( ssnd, sll, ldx*ldx, MPI_DOUBLE_PRECISION, MPI_SUM, jb-1, rcomm, ierr )
+                  IF( ierr /= 0 ) &
+                     CALL errore( " pdpotf ", " in mpi_reduce 2 ", ABS( ierr ) )
                END IF
             END IF
          END DO
@@ -3224,8 +3417,12 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
          !
          IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( sll,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pdpotf ", " in mpi_bcast 3 ", ABS( ierr ) )
          ELSE IF( ( myrow > ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
             CALL mpi_bcast( srcv,  ldx*ldx, MPI_DOUBLE_PRECISION, 0, ccomm, ierr )   
+            IF( ierr /= 0 ) &
+               CALL errore( " pdpotf ", " in mpi_bcast 4 ", ABS( ierr ) )
          END IF
          !
          DO ib = jb + 1, np
@@ -3237,7 +3434,12 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       END IF
       !
       CALL mpi_comm_free( rcomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pdpotf ", " in mpi_comm_free 1 ", ABS( ierr ) )
+
       CALL mpi_comm_free( ccomm, ierr )
+      IF( ierr /= 0 ) &
+         CALL errore( " pdpotf ", " in mpi_comm_free 2 ", ABS( ierr ) )
       !
    END DO
 
@@ -3368,10 +3570,14 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
        !
        IF( myrow == 0 .AND. mycol == 0 ) THEN
           CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_COMPLEX, idref, 0, comm, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in mpi_send 1 ", ABS( ierr ) )
        END IF
        !
        IF( myrow == 1 .AND. mycol == 1 ) THEN
           CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_COMPLEX, idref, 1, comm, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in mpi_send 2 ", ABS( ierr ) )
        END IF
        !
        IF( myrow == 1 .AND. mycol == 0 ) THEN
@@ -3380,15 +3586,32 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
           CALL GRID2D_RANK( 'R', np, np, 1, 1, j )
           !
           CALL MPI_Irecv( B, ldx*ldx, MPI_DOUBLE_COMPLEX, i, 0, comm, req(1), ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in mpi_irecv 3 ", ABS( ierr ) )
+          !
           CALL MPI_Irecv( C, ldx*ldx, MPI_DOUBLE_COMPLEX, j, 1, comm, req(2), ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in mpi_irecv 4 ", ABS( ierr ) )
           !
           CALL MPI_Wait(req(1), status, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in MPI_Wait 5 ", ABS( ierr ) )
           !
           CALL zgemm('N', 'N', ldx, ldx, ldx, ONE, sll, ldx, b, ldx, ZERO, buf_recv, ldx)
           !
           CALL MPI_Wait(req(2), status, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in MPI_Wait 6 ", ABS( ierr ) )
           !
           CALL zgemm('N', 'N', ldx, ldx, ldx, -ONE, c, ldx, buf_recv, ldx, ZERO, sll, ldx)
+          !
+          CALL mpi_request_free( req(1), ierr )
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in mpi_request_free 7 ", ABS( ierr ) )
+          !
+          CALL mpi_request_free( req(2), ierr )
+          IF( ierr /= 0 ) &
+             CALL errore( " pztrtri ", " in mpi_request_free 8 ", ABS( ierr ) )
           !
        END IF
        !
@@ -3410,14 +3633,24 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
        !  only procs on lower triangle partecipates
        !
        CALL MPI_Comm_split( comm, mycol, myrow, col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pztrtri ", " in MPI_Comm_split 9 ", ABS( ierr ) )
+
        CALL MPI_Comm_size( col_comm, group_size, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pztrtri ", " in MPI_Comm_size 10 ", ABS( ierr ) )
+       !
        CALL MPI_Comm_rank( col_comm, group_rank, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pztrtri ", " in MPI_Comm_rank 11 ", ABS( ierr ) )
        !
     ELSE
        !
        !  other procs stay at the window!
        !
        CALL MPI_Comm_split( comm, MPI_UNDEFINED, MPI_UNDEFINED, col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pztrtri ", " in MPI_Comm_split 12 ", ABS( ierr ) )
        !
        sll = zero
        !
@@ -3442,6 +3675,8 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
        ! Broadcast the diagonal blocks to the processors under the diagonal
        !
        CALL MPI_Bcast( sll, ldx*ldx, MPI_DOUBLE_COMPLEX, 0, col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pztrtri ", " in MPI_Bcast 13 ", ABS( ierr ) )
        !
     END IF
 
@@ -3456,6 +3691,8 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
        !
        CALL MPI_Sendrecv( c, ldx*ldx, MPI_DOUBLE_COMPLEX, send, 0, buf_recv, &
             ldx*ldx, MPI_DOUBLE_COMPLEX, recv, 0, col_comm, status, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pztrtri ", " in MPI_Sendrecv 14 ", ABS( ierr ) )
        !
     END IF
 
@@ -3484,6 +3721,8 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
                 END IF
                 IF(send==idref)THEN
                    CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_COMPLEX, idrecv, myid, comm, ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pztrtri ", " in MPI_Send 15 ", ABS( ierr ) )
                 END IF
              ELSE
                 IF( cicle == 0)THEN
@@ -3494,20 +3733,46 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
                    sup_recv = shift(idref, sup_recv, 1, C3dim, 'W')
                 END IF
                 CALL MPI_Recv(C, ldx*ldx, MPI_DOUBLE_COMPLEX, sup_recv, sup_recv, comm, status, ierr)
+                IF( ierr /= 0 ) &
+                   CALL errore( " pztrtri ", " in MPI_Recv 16 ", ABS( ierr ) )
                 send = shift(1, group_rank, 1, (group_size-1), 'S')
                 recv = shift(1, group_rank, 1, (group_size-1), 'N')
                 ! with the no-blocking communication the computation and the shift of the column block are overapped  
+                !
                 IF( MOD( cicle, 2 ) == 0 ) THEN
                    CALL MPI_Isend(BUF_RECV, ldx*ldx, MPI_DOUBLE_COMPLEX, send, group_rank+cicle, col_comm, req(1), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pztrtri ", " in MPI_Isend 17 ", ABS( ierr ) )
                    CALL MPI_Irecv(B, ldx*ldx, MPI_DOUBLE_COMPLEX, recv, recv+cicle, col_comm, req(2), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pztrtri ", " in MPI_Irecv 18 ", ABS( ierr ) )
                    CALL zgemm('N', 'N', ldx, ldx, ldx, -ONE, C, ldx, BUF_RECV, ldx, first, sll, ldx)
                 ELSE
                    CALL MPI_Isend(B, ldx*ldx, MPI_DOUBLE_COMPLEX, send, group_rank+cicle, col_comm, req(1), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pztrtri ", " in MPI_Isend 19 ", ABS( ierr ) )
                    CALL MPI_Irecv(BUF_RECV, ldx*ldx, MPI_DOUBLE_COMPLEX, recv, recv+cicle, col_comm, req(2), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pztrtri ", " in MPI_Irecv 20 ", ABS( ierr ) )
                    CALL zgemm('N', 'N', ldx, ldx, ldx, -ONE, C, ldx, B, ldx, ONE, sll, ldx)
                 END IF
+                !
                 CALL MPI_Wait(req(1), status, ierr)
+                IF( ierr /= 0 ) &
+                   CALL errore( " pztrtri ", " in MPI_Wait 21 ", ABS( ierr ) )
+                !
                 CALL MPI_Wait(req(2), status, ierr)
+                IF( ierr /= 0 ) &
+                   CALL errore( " pztrtri ", " in MPI_Wait 22 ", ABS( ierr ) )
+                !
+                CALL mpi_request_free( req(1), ierr )
+                IF( ierr /= 0 ) &
+                   CALL errore( " pztrtri ", " in mpi_request_free 23 ", ABS( ierr ) )
+                !
+                CALL mpi_request_free( req(2), ierr )
+                IF( ierr /= 0 ) &
+                   CALL errore( " pztrtri ", " in mpi_request_free 24 ", ABS( ierr ) )
+                !
              END IF
              cicle = cicle + 1
              first = ONE 
@@ -3517,6 +3782,8 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
 
     IF( myrow >= mycol ) THEN
        CALL mpi_comm_free( col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pztrtri ", " in mpi_comm_free 25 ", ABS( ierr ) )
     END IF
 
     DEALLOCATE(B)
@@ -3681,10 +3948,14 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
        !
        IF( myrow == 0 .AND. mycol == 0 ) THEN
           CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_PRECISION, idref, 0, comm, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in MPI_Send 1 ", ABS( ierr ) )
        END IF
        !
        IF( myrow == 1 .AND. mycol == 1 ) THEN
           CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_PRECISION, idref, 1, comm, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in MPI_Send 2 ", ABS( ierr ) )
        END IF
        !
        IF( myrow == 1 .AND. mycol == 0 ) THEN
@@ -3693,16 +3964,33 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
           CALL GRID2D_RANK( 'R', np, np, 1, 1, j )
           !
           CALL MPI_Irecv( B, ldx*ldx, MPI_DOUBLE_PRECISION, i, 0, comm, req(1), ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in MPI_Irecv 3 ", ABS( ierr ) )
+          !
           CALL MPI_Irecv( C, ldx*ldx, MPI_DOUBLE_PRECISION, j, 1, comm, req(2), ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in MPI_Irecv 4 ", ABS( ierr ) )
           !
           CALL MPI_Wait(req(1), status, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in MPI_Wait 5 ", ABS( ierr ) )
           !
           CALL dgemm('N', 'N', ldx, ldx, ldx, ONE, sll, ldx, b, ldx, ZERO, buf_recv, ldx)
           !
           CALL MPI_Wait(req(2), status, ierr)
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in MPI_Wait 6 ", ABS( ierr ) )
           !
           CALL dgemm('N', 'N', ldx, ldx, ldx, -ONE, c, ldx, buf_recv, ldx, ZERO, sll, ldx)
           !
+          CALL mpi_request_free( req(1), ierr )
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in mpi_request_free 7 ", ABS( ierr ) )
+
+          CALL mpi_request_free( req(2), ierr )
+          IF( ierr /= 0 ) &
+             CALL errore( " pdtrtri ", " in mpi_request_free 8 ", ABS( ierr ) )
+
        END IF
        !
        IF( myrow == 0 .AND. mycol == 1 ) THEN
@@ -3723,14 +4011,24 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
        !  only procs on lower triangle partecipates
        !
        CALL MPI_Comm_split( comm, mycol, myrow, col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pdtrtri ", " in MPI_Comm_split 9 ", ABS( ierr ) )
+
        CALL MPI_Comm_size( col_comm, group_size, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pdtrtri ", " in MPI_Comm_size 10 ", ABS( ierr ) )
+
        CALL MPI_Comm_rank( col_comm, group_rank, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pdtrtri ", " in MPI_Comm_rank 11 ", ABS( ierr ) )
        !
     ELSE
        !
        !  other procs stay at the window!
        !
        CALL MPI_Comm_split( comm, MPI_UNDEFINED, MPI_UNDEFINED, col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pdtrtri ", " in MPI_Comm_split 12 ", ABS( ierr ) )
        !
        sll = zero
        !
@@ -3755,6 +4053,8 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
        ! Broadcast the diagonal blocks to the processors under the diagonal
        !
        CALL MPI_Bcast( sll, ldx*ldx, MPI_DOUBLE_PRECISION, 0, col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pdtrtri ", " in MPI_Bcast 13 ", ABS( ierr ) )
        !
     END IF
 
@@ -3769,6 +4069,8 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
        !
        CALL MPI_Sendrecv( c, ldx*ldx, MPI_DOUBLE_PRECISION, send, 0, buf_recv, &
             ldx*ldx, MPI_DOUBLE_PRECISION, recv, 0, col_comm, status, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pdtrtri ", " in MPI_Sendrecv 14 ", ABS( ierr ) )
        !
     END IF
 
@@ -3797,6 +4099,8 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
                 END IF
                 IF(send==idref)THEN
                    CALL MPI_Send(sll, ldx*ldx, MPI_DOUBLE_PRECISION, idrecv, myid, comm, ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pdtrtri ", " in MPI_Send 15 ", ABS( ierr ) )
                 END IF
              ELSE
                 IF( cicle == 0)THEN
@@ -3807,20 +4111,48 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
                    sup_recv = shift(idref, sup_recv, 1, C3dim, 'W')
                 END IF
                 CALL MPI_Recv(C, ldx*ldx, MPI_DOUBLE_PRECISION, sup_recv, sup_recv, comm, status, ierr)
+                IF( ierr /= 0 ) &
+                   CALL errore( " pdtrtri ", " in MPI_Recv 16 ", ABS( ierr ) )
                 send = shift(1, group_rank, 1, (group_size-1), 'S')
                 recv = shift(1, group_rank, 1, (group_size-1), 'N')
                 ! with the no-blocking communication the computation and the shift of the column block are overapped  
                 IF( MOD( cicle, 2 ) == 0 ) THEN
+                   !
                    CALL MPI_Isend(BUF_RECV, ldx*ldx, MPI_DOUBLE_PRECISION, send, group_rank+cicle, col_comm, req(1), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pdtrtri ", " in MPI_Isend 17 ", ABS( ierr ) )
                    CALL MPI_Irecv(B, ldx*ldx, MPI_DOUBLE_PRECISION, recv, recv+cicle, col_comm, req(2), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pdtrtri ", " in MPI_Irecv 18 ", ABS( ierr ) )
+                   !
                    CALL dgemm('N', 'N', ldx, ldx, ldx, -ONE, C, ldx, BUF_RECV, ldx, first, sll, ldx)
+                   !
                 ELSE
+                   !
                    CALL MPI_Isend(B, ldx*ldx, MPI_DOUBLE_PRECISION, send, group_rank+cicle, col_comm, req(1), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pdtrtri ", " in MPI_Isend 19 ", ABS( ierr ) )
                    CALL MPI_Irecv(BUF_RECV, ldx*ldx, MPI_DOUBLE_PRECISION, recv, recv+cicle, col_comm, req(2), ierr)
+                   IF( ierr /= 0 ) &
+                      CALL errore( " pdtrtri ", " in MPI_Irecv 20 ", ABS( ierr ) )
+                   !
                    CALL dgemm('N', 'N', ldx, ldx, ldx, -ONE, C, ldx, B, ldx, ONE, sll, ldx)
+                   !
                 END IF
+                !
                 CALL MPI_Wait(req(1), status, ierr)
+                IF( ierr /= 0 ) &
+                   CALL errore( " pdtrtri ", " in MPI_Wait 21 ", ABS( ierr ) )
                 CALL MPI_Wait(req(2), status, ierr)
+                IF( ierr /= 0 ) &
+                   CALL errore( " pdtrtri ", " in MPI_Wait 22 ", ABS( ierr ) )
+                CALL mpi_request_free( req(1), ierr )
+                IF( ierr /= 0 ) &
+                   CALL errore( " pdtrtri ", " in mpi_request_free 23 ", ABS( ierr ) )
+                CALL mpi_request_free( req(2), ierr )
+                IF( ierr /= 0 ) &
+                   CALL errore( " pdtrtri ", " in mpi_request_free 24 ", ABS( ierr ) )
+                !
              END IF
              cicle = cicle + 1
              first = ONE 
@@ -3830,6 +4162,8 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
 
     IF( myrow >= mycol ) THEN
        CALL mpi_comm_free( col_comm, ierr )
+       IF( ierr /= 0 ) &
+          CALL errore( " pdtrtri ", " in mpi_request_free 25 ", ABS( ierr ) )
     END IF
 
     DEALLOCATE(B)
