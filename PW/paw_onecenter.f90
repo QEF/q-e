@@ -1,43 +1,9 @@
-
 !
 ! Copyright (C) 2007 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
-!
-! Notes for following table:
-! 1. 'PAW_' prefix omitted, when present
-! 2. '~' means "only for gradient correction".
-! 3. calls to 'simpson' (flib/simpsn), 'infomsg' and 'errore' omitted
-!
-!> potential +
-!            |
-!            +- rho_lm [2]
-!            +- h_potential +
-!            |              +- hartree (radial_grids)
-!            |
-!            +- xc_potential +
-!            |               +- lm2rad
-!            |               +- vxc_t (Modules/vxc_t)
-!            |               +- exc_t (Modules/exc_t)
-!            |               +- rad2lm
-!            |               +~ gcxc_potential +
-!            +- ddd +                          +- lm2rad
-!                   + rho_lm [2]               +- gradient +
-!                                              |           + radial_gradient
-!> ddot +                                      |             (Modules/vxcgc)
-!       |                                      |
-!       +- rho_lm [2]                          | +- gcxc (Modules/functionals)
-!       +- h_potential +                       +{
-!                      +- hartree              | +- gcc_spin (Modules/functionals)
-!> init +                                      | +- gcx_spin (Modules/functionals)
-!       |                                      |
-!       + rad_init +                           +- rad2lm [2]
-!                  +- weights                  +- divergence +
-!                  +- ylmr2                                  +- rad2lm
-!                  +~ dylmr2                                 +- radial_gradient
-!                                                               (Modules/vxcgc)
 !
 ! NOTE ON PARALLELIZATION:
 ! this code is parallelized on atoms, this means that each node computes potential,
@@ -60,101 +26,15 @@ MODULE paw_onecenter
                              ! also computes energy if required
     PUBLIC :: PAW_ddot       ! error estimate for mix_rho
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
-    PUBLIC :: PAW_test_d
     !
     PRIVATE
 
     ! the following macro controls the use of several fine-grained clocks
     ! set it to 'if(.false.) CALL' (without quotes) in order to disable them,
     ! set it to 'CALL' to enable them.
-#define OPTIONAL_CALL CALL
+#define OPTIONAL_CALL if(.false.) CALL
 
  CONTAINS
-
-SUBROUTINE PAW_test_d()
-    USE paw_variables,  ONLY : rad, paw_info
-    USE ions_base,         ONLY : nat, ityp
-    USE lsda_mod,          ONLY : nspin
-    USE uspp_param,        ONLY : nhm, upf
-    USE atom,             ONLY : g => rgrid
-
-    INTEGER :: k,ix,is,na,lm
-    REAL(DP),ALLOCATABLE :: f_rad(:,:,:), f_lm(:,:,:), core(:), &
-                            grad(:,:,:,:), grad2(:,:,:), grad_lm(:,:,:,:),&
-                            div(:,:,:)
-    TYPE(paw_info) :: i
-    INTEGER :: xlm = 0
-
-    RETURN
-
-    na = 1
-    i%a = na         ! the index of the atom
-    i%t = ityp(na)   ! the type of atom na
-    i%m = g(i%t)%mesh! radial mesh size for atom na
-    i%b = upf(i%t)%nbeta
-    i%l = upf(i%t)%paw%lmax_rho+1
-
-    ALLOCATE(f_rad(i%m,rad(i%t)%nx,nspin))
-    ALLOCATE(f_lm(i%m,i%l**2,nspin))
-    ALLOCATE(core(i%m))
-    core(:) = 0._dp
-
-    write(*,*) "generating..."
-    DO is = 1,nspin
-    DO ix = 1,rad(i%t)%nx
-    DO k = 1, i%m
-        f_rad(k,ix,is) = ( exp( -abs(rad(i%t)%r(1,ix) * g(i%t)%r(k)) ) &
-                         + exp( -abs(rad(i%t)%r(2,ix) * g(i%t)%r(k)) ) &
-                         + exp( -abs(rad(i%t)%r(3,ix) * g(i%t)%r(k)) ) ) &
-                         * g(i%t)%r2(k)
-    ENDDO
-    ENDDO
-    ENDDO
-
-    ALLOCATE(grad(i%m,3,rad(i%t)%nx,nspin))
-    ALLOCATE(grad2(i%m,rad(i%t)%nx,nspin))
-
-    write(*,*) "rad2lm..."
-    CALL PAW_rad2lm(i, f_rad, f_lm, i%l)
-
-    lm = 1
-!     write(10000,'(4f15.7)') (g(i%t)%r(k), f_lm(k,lm,1), f_lm(k,lm,2),f_rad(k,lm,1), k=1,i%m)
-    !
-    write(*,*) "gradient..."
-    DO ix = 1,rad(i%t)%nx
-        CALL PAW_gradient(i, ix, f_lm, f_rad, core, &
-                            grad2(:,ix,:), grad(:,:,ix,:))
-    ENDDO
-
-!     DO is = 1,nspin
-!     DO ix = 1,rad(i%t)%nx
-!         grad(:,1,ix,is) = g(i%t)%r2(1:i%m) *grad(:,1,ix,is)
-!         grad(:,2,ix,is) = g(i%t)%r2(1:i%m) *grad(:,2,ix,is)
-!         grad(:,3,ix,is) = g(i%t)%r2(1:i%m) *grad(:,3,ix,is)
-!     ENDDO
-!     ENDDO
-
-    !CALL PAW_rad2lm3(i, grad, grad_lm, i%l+xlm)
-    write(*,*) "rad2lm3..."
-    ALLOCATE(grad_lm(i%m,3,(i%l+xlm)**2,nspin))
-    CALL PAW_rad2lm3(i, grad, grad_lm, i%l+xlm)
-
-    !CALL PAW_divergence(i, grad_lm, div, i%l+xlm, i%l)
-    write(*,*) "divergence..."
-    ALLOCATE(div(i%m,rad(i%t)%nx,nspin))
-    CALL PAW_divergence(i, grad_lm, div, i%l+xlm, i%l)
-
-    write(*,*) "rad2lm..."
-    DO is = 1,nspin
-    DO ix = 1,rad(i%t)%nx
-        write(*,'(2i3,e20.11)') is,ix,MAXVAL(abs(div(:,ix,is) - f_rad(:,ix,is)))
-    ENDDO
-    ENDDO
-
-!     write(20000,'(3f15.7)') (g(i%t)%r(k), div(k,lm,1), div(k,lm,2), k=1,i%m)
-
-
-END SUBROUTINE PAW_test_d
 
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!
@@ -241,20 +121,19 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             savedv_lm(:,:,:) = 0._dp
 
             ! First compute the Hartree potential (it does not depend on spin...):
-            CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy_h)
+            CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
             ! using "energy" as in/out parameter I save a double call, but I have to do this:
-            IF (present(energy)) energy = energy_h 
-            IF (present(e_cmp)) e_cmp(na, H, i_what) = energy_h
+            IF (present(energy)) energy_tot = energy_tot + sgn*energy
+            IF (present(e_cmp)) e_cmp(na, H, i_what) = energy
             DO is = 1,nspin ! ... so it has to be copied to all spin components
                savedv_lm(:,:,is) = v_lm(:,:,1)
             ENDDO
 
             ! Then the XC one:
-            CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy_xc)
-            IF (present(energy)) energy = energy_xc
-            IF (present(e_cmp)) e_cmp(na, XC, i_what) = energy_xc
+            CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
+            IF (present(energy))energy_tot = energy_tot + sgn*energy
+            IF (present(e_cmp)) e_cmp(na, XC, i_what) = energy
             savedv_lm(:,:,:) = savedv_lm(:,:,:) + v_lm(:,:,:)
-            IF (present(energy)) energy_tot = energy_tot + sgn*(energy_xc + energy_h)
             !
             spins: DO is = 1, nspin
                nmb = 0
@@ -312,13 +191,14 @@ SUBROUTINE PAW_symmetrize(becsum)
     USE uspp_param,        ONLY : nhm
     USE ions_base,         ONLY : nat, ityp
     USE symme,             ONLY : nsym, irt, d1, d2, d3
-    USE uspp,              ONLY : nhtolm,nhtol
+    USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
     USE control_flags,     ONLY : nosym, gamma_only
 
     REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
 
     REAL(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin)! symmetrized becsum
+    REAL(DP) :: pref, usym
 
     INTEGER :: is, na, nt   ! counters on spin, atom, atom-type
     INTEGER :: ma           ! atom symmetric to na
@@ -357,38 +237,28 @@ SUBROUTINE PAW_symmetrize(becsum)
 
 !#define __DEBUG_PAW_SYM
 #ifdef __DEBUG_PAW_SYM
-        nt = 1
         na = 1
-        is = 1
+        nt = ityp(na)
+        DO is = 1, nspin
+            write(*,*) is
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
-            IF (jh > ih) THEN
-                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
-            ELSE
-                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
-            ENDIF
+            ijh = ijtoh(ih,jh,nt)
             write(*,"(1f10.3)", advance='no') becsum(ijh,na,is)
         ENDDO
             write(*,*)
         ENDDO
-
-        write(*,*)
+            write(*,*)
+        ENDDO
 #endif
 
-    IF( gamma_only .or. nosym ) RETURN
+    !IF( gamma_only .or. nosym ) RETURN
+    IF( nosym ) RETURN
 
     CALL start_clock('PAW_symme')
 
     becsym(:,:,:) = 0._dp
-
-    DO na=1,nat
-       nt = ityp(na)
-       IF ( .not. upf(nt)%tpawp ) CYCLE
-       DO ih = 1, nh(nt)
-          ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + ih
-          becsum(ijh,na,1:nspin) = becsum(ijh,na,1:nspin) *2.d0
-       END DO
-    END DO
+    usym = 1._dp / REAL(nsym)
 
     CALL divide (nat, first_nat, last_nat)
     DO is = 1, nspin
@@ -400,7 +270,8 @@ SUBROUTINE PAW_symmetrize(becsum)
         !
         DO ih = 1, nh(nt)
         DO jh = ih, nh(nt) ! note: jh >= ih
-            ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            !ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
+            ijh = ijtoh(ih,jh,nt)
             !
             lm_i  = nhtolm(ih,nt)
             lm_j  = nhtolm(jh,nt)
@@ -417,18 +288,24 @@ SUBROUTINE PAW_symmetrize(becsum)
                 DO m_u = 1, 2*l_j +1
                     oh = ih - m_i + m_o
                     uh = jh - m_j + m_u
-                    IF ( oh >= uh ) THEN
-                        ouh = nh(nt)*(uh-1) - uh*(uh-1)/2 + oh
+                    ouh = ijtoh(oh,uh,nt)
+                    ! In becsum off-diagonal terms are multiplied by 2, I have
+                    ! to neutralize this factor and restore it later
+                    IF ( oh == uh ) THEN
+                        pref = 2._dp * usym
                     ELSE
-                        ouh = nh(nt)*(oh-1) - oh*(oh-1)/2 + uh
+                        pref = usym
                     ENDIF
                     !
                     becsym(ijh, na, is) = becsym(ijh, na, is) &
                         + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &
-                          * becsum(ouh, ma, is) / nsym
+                          * pref * becsum(ouh, ma, is)
                 ENDDO ! m_o
                 ENDDO ! m_u
             ENDDO ! isym
+            !
+            ! Put the prefactor back in:
+            IF ( ih == jh ) becsym(ijh,na,is) = .5_dp * becsym(ijh,na,is)
         ENDDO ! ih
         ENDDO ! jh
     ENDDO atoms ! nat
@@ -436,40 +313,18 @@ SUBROUTINE PAW_symmetrize(becsum)
 #ifdef __PARA
     CALL reduce( (nhm*(nhm+1)/2) *nat*nspin, becsym)
 #endif
-    DO na=1,nat
-       nt = ityp(na)
-       IF ( .not. upf(nt)%tpawp ) CYCLE
-       DO ih = 1, nh(nt)
-          ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + ih
-          becsym(ijh,na,1:nspin) = becsym(ijh,na,1:nspin) *0.5d0
-          becsum(ijh,na,1:nspin) = becsum(ijh,na,1:nspin) *0.5d0
-       END DO
-    END DO
+
 #ifdef __DEBUG_PAW_SYM
-        nt = 1
         na = 1
-        is = 1
-            write(*,*)
+        nt = ityp(na)
+        DO is = 1, nspin
+            write(*,*) is
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
-            IF (jh > ih) THEN
-                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
-            ELSE
-                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
-            ENDIF
+            ijh = ijtoh(ih,jh,nt)
             write(*,"(1f10.3)", advance='no') becsym(ijh,na,is)
         ENDDO
             write(*,*)
-        ENDDO
-            write(*,*)
-        DO ih = 1, nh(nt)
-        DO jh = 1, nh(nt)
-            IF (jh > ih) THEN
-                ijh = nh(nt)*(ih-1) - ih*(ih-1)/2 + jh
-            ELSE
-                ijh = nh(nt)*(jh-1) - jh*(jh-1)/2 + ih
-            ENDIF
-            write(*,"(1f10.3)", advance='no') becsym(ijh,na,is)-becsum(ijh,na,is)
         ENDDO
             write(*,*)
         ENDDO
@@ -1100,8 +955,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
                 ! the lpl array contains the possible combination of LM,lm_j,lm_j that
                 ! have non-zero a_{LM}^{(lm)_i(lm)_j} (it saves some loops)
                 lm = lpl (nhtolm(mb,i%t), nhtolm(nb,i%t), lp)
-!                 write(*,"(2i4,i6,i4,i6,i4,f12.6)") nb,mb,indv(nb,i%t), indv(mb,i%t),lp,lm,&
-!                                        ap(lm, nhtolm(nb,i%t), nhtolm(mb,i%t))
+                !
                 ! becsum already contains a factor 2 for off-diagonal pfuncs
                 pref = becsum(nmb,i%a,ispin) * ap(lm, nhtolm(nb,i%t), nhtolm(mb,i%t))
                 !
@@ -1109,7 +963,7 @@ SUBROUTINE PAW_rho_lm(i, becsum, pfunc, rho_lm, aug)
                                 pref * pfunc(1:i%m, indv(nb,i%t), indv(mb,i%t))
                 IF (present(aug)) THEN
                     ! if I'm doing the pseudo part I have to add the augmentation charge
-                    l = INT(SQRT(DBLE(lm-1))) ! l has to start from zero
+                    l = INT(SQRT(DBLE(lm-1))) ! l has to start from zero, lm = l**2 +m
                     rho_lm(1:i%m,lm,ispin) = rho_lm(1:i%m,lm,ispin) +&
                                 pref * aug(1:i%m, indv(nb,i%t), indv(mb,i%t), l)
                 ENDIF ! augfun

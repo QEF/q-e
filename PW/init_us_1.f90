@@ -37,7 +37,7 @@ subroutine init_us_1
   USE lsda_mod,     ONLY : nspin
   USE us,           ONLY : nqxq, dq, nqx, tab, tab_d2y, qrad, spline_ps
   USE splinelib
-  USE uspp,         ONLY : nhtol, nhtoj, nhtolm, dvan, qq, indv,&
+  USE uspp,         ONLY : nhtol, nhtoj, nhtolm, ijtoh, dvan, qq, indv,&
                            ap, aainit, qq_so, dvan_so, okvan
   USE uspp_param,   ONLY : upf, lmaxq, nbetam, nh, nhm, lmaxkb
   USE spin_orb,     ONLY : lspinorb, so, rot_ylm, fcoef
@@ -146,6 +146,17 @@ subroutine init_us_1
            enddo
         enddo
      endif
+     ! ijtoh map augmentation channel indexes ih and jh to composite
+     ! "triangular" index ijh
+     ijtoh(:,:,nt) = -1
+     ijv = 0
+     do ih = 1,nh(nt)
+         do jh = ih,nh(nt)
+             ijv = ijv+1
+             ijtoh(ih,jh,nt) = ijv
+             ijtoh(jh,ih,nt) = ijv
+         enddo
+     enddo
      !
      !    From now on the only difference between KB and US pseudopotentials
      !    is in the presence of the q and Q functions.

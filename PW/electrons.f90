@@ -65,8 +65,6 @@ SUBROUTINE electrons()
   !
   USE paw_variables,        ONLY : okpaw, ddd_paw
   USE paw_onecenter,        ONLY : PAW_potential
-  USE paw_init,             ONLY : PAW_increase_lm
-  USE uspp,                 ONLY : becsum  ! used for PAW
   USE uspp_param,           ONLY : nh, nhm ! used for PAW
   !
   IMPLICIT NONE
@@ -100,7 +98,6 @@ SUBROUTINE electrons()
   ! ... the charge density and of the HXC-potential
   !
   type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
-  REAL(DP), ALLOCATABLE :: becsum_in(:,:,:) ! cross-band occupations, used for mixing
   !
   ! ... external functions
   !
@@ -156,11 +153,7 @@ SUBROUTINE electrons()
                 omega, g, gg, ngm, gcutm, gstart, gamma_only, strf )
   !
   call create_scf_type ( rhoin )
-  IF (okpaw) then
-     IF (.not. ALLOCATED(becsum_in) ) ALLOCATE (becsum_in(nhm*(nhm+1)/2,nat,nspin))
-  ELSE
-     IF (.not. ALLOCATED(becsum_in) ) ALLOCATE (becsum_in(1,1,1))
-  END IF
+
 #if defined (EXX)
 10 CONTINUE
 #endif
@@ -211,8 +204,6 @@ SUBROUTINE electrons()
      !
      ! save input current density in rhoin
      call scf_type_COPY( rho, rhoin )
-     !becsum_in(:,:,:) = becsum(:,:,:)
-     if (okpaw) becsum_in = becsum
      !
      scf_step: DO
         !
@@ -275,8 +266,7 @@ SUBROUTINE electrons()
         !
         deband = delta_e()
         !
-        CALL mix_rho( rho, rhoin, becsum, becsum_in, &
-                      mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
+        CALL mix_rho( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
         ! ... if convergence is achieved or if the self-consistency error
         ! ... (dr2) is smaller than the estimated error due to diagonalization
@@ -314,7 +304,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           IF (okpaw) CALL PAW_potential(becsum_in, ddd_paw, e_PAW)
+           IF (okpaw) CALL PAW_potential(rhoin%bec, ddd_paw, e_PAW)
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -328,8 +318,6 @@ SUBROUTINE electrons()
            ! ... now copy the mixed charge density in R- and G-space in rho
            !
            CALL scf_type_COPY( rhoin, rho )
-           if (okpaw) becsum(:,:,:) = becsum_in(:,:,:)
-           !becsum = becsum_in
            !
            ! ... write the charge density to file
            !
@@ -352,7 +340,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           if (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+           if (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, e_PAW)
            !
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
@@ -432,21 +420,9 @@ SUBROUTINE electrons()
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
      !
      IF (okpaw) THEN
-        correction1c = (e_PAW)
-        !
-!        if(ionode) &
-!        write(*,"(5x,a,3e20.11)") "  total energy before PAW: ", etot, hwf_energy,e_PAW
+        correction1c = e_PAW
         etot       = etot       + correction1c
         hwf_energy = hwf_energy + correction1c
-        !
-!        IF (ionode) THEN
-!            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
-!                'de_band_paw: ',deband_PAW,', de_scf_paw: ',descf_PAW,', E_paw: ', e_PAW
-!            PRINT '(8x,A,e10.3,A,e10.3,A,e12.6)',&
-!                'de_band: ',deband,', de_scf: ',descf, ' dr2: ', dr2
-!        ENDIF
-        ! If a high convergence threshold is selected paw may be unable to reach
-        ! sufficient accuracy: we increase the maximum angular component to integrate:
      END IF
      !
 #if defined (EXX)
@@ -464,7 +440,7 @@ SUBROUTINE electrons()
            fock0 = exxenergy2()
            CALL v_of_rho( rho, rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+           IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, e_PAW)
            !
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
            !
@@ -587,7 +563,6 @@ SUBROUTINE electrons()
         CALL stop_clock( 'electrons' )
         !
         call destroy_scf_type ( rhoin )
-        if (allocated(becsum_in)) deallocate(becsum_in)
         !
         RETURN
         !
@@ -775,7 +750,7 @@ SUBROUTINE electrons()
           delta_e = delta_e + delta_e_hub
        end if
        !
-       IF (okpaw) delta_e = delta_e - SUM(ddd_paw(:,:,:)*becsum(:,:,:))
+       IF (okpaw) delta_e = delta_e - SUM(ddd_paw(:,:,:)*rho%bec(:,:,:))
        !
        RETURN
        !
@@ -812,7 +787,7 @@ SUBROUTINE electrons()
        end if
 
        IF (okpaw) delta_escf = delta_escf - &
-                               SUM(ddd_paw(:,:,:)*(becsum_in(:,:,:)-becsum(:,:,:)))
+                               SUM(ddd_paw(:,:,:)*(rhoin%bec(:,:,:)-rho%bec(:,:,:)))
 
        RETURN
        !

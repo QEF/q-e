@@ -86,7 +86,6 @@ ions_nose.o : ions_base.o
 ions_nose.o : kind.o
 ions_nose.o : parameters.o
 ions_nose.o : timestep.o
-kplusg.o : kind.o
 metadyn_base.o : basic_algebra_routines.o
 metadyn_base.o : cell_base.o
 metadyn_base.o : constants.o
@@ -247,7 +246,6 @@ uspp.o : kind.o
 uspp.o : parameters.o
 uspp.o : pseudo_types.o
 uspp.o : random_numbers.o
-vms.o : kind.o
 vxc_t.o : functionals.o
 vxc_t.o : io_global.o
 vxc_t.o : kind.o

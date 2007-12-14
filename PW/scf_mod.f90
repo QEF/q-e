@@ -33,14 +33,15 @@ MODULE scf
      REAL(DP),    ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
      REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
-     REAL(DP),    ALLOCATABLE :: bec(:,:,:)
+     REAL(DP),    POINTER     :: bec(:,:,:) ! the PAW hamiltonian elements, may point to
+        LOGICAL :: internal_becsum = .false.! becsum in module uspp or be allocated anew.
   END TYPE scf_type
   !
   TYPE mix_type
-     COMPLEX(DP), ALLOCATABLE :: of_g(:,:) ! the charge density in G-space
+     COMPLEX(DP), ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
      COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
      REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
-     REAL(DP),    ALLOCATABLE :: bec(:,:,:)
+     REAL(DP),    ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
   END TYPE mix_type
 
   type (scf_type) :: rho  ! the charge density and its other components
@@ -63,9 +64,10 @@ MODULE scf
   REAL(DP), PRIVATE, ALLOCATABLE:: io_buffer(:)
 CONTAINS
 
- SUBROUTINE create_scf_type ( rho )
+ SUBROUTINE create_scf_type ( rho, do_not_allocate_becsum )
  IMPLICIT NONE
  TYPE (scf_type) :: rho
+ LOGICAL,INTENT(IN),OPTIONAL :: do_not_allocate_becsum
  allocate ( rho%of_r( nrxx, nspin) )
  allocate ( rho%of_g( ngm, nspin ) )
  if (dft_is_meta()) then
@@ -76,7 +78,22 @@ CONTAINS
     allocate ( rho%kin_g(1,1) )
  endif
  if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
- !if (okpaw)      allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
+ if (okpaw) then
+   ! double no means yes, it looks silly here but clearer everywhere else
+   if(present(do_not_allocate_becsum) .and. & !<-- .but. would be clearer
+      do_not_allocate_becsum) then
+      ! This hack is necessary because when scf type is inited in
+      ! allocate_fft becsum is not yet initialized. The pointer is 
+      ! actually set in allocate_nlpot.
+      nullify(rho%bec)
+      rho%internal_becsum = .false.
+   else
+      allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
+      rho%bec(:,:,:) = 0._dp
+      rho%internal_becsum = .true.
+   endif
+ endif
+
  return
  END SUBROUTINE create_scf_type
 
@@ -88,7 +105,12 @@ CONTAINS
  if (allocated(rho%kin_r)) deallocate(rho%kin_r)
  if (allocated(rho%kin_g)) deallocate(rho%kin_g)
  if (allocated(rho%ns))    deallocate(rho%ns)
- !if (allocated(rho%bec))   deallocate(rho%bec)
+ ! Same reason as above for this hack:
+ if (rho%internal_becsum) then
+    if (associated(rho%bec)) deallocate(rho%bec)
+ else
+    nullify(rho%bec)
+ endif
  return
  END SUBROUTINE destroy_scf_type
  !
@@ -104,7 +126,6 @@ CONTAINS
  if (dft_is_meta()) rho%kin_g = 0._dp
  if (lda_plus_u)    rho%ns    = 0._dp
  if (okpaw)         rho%bec   = 0._dp
-
  return
  END SUBROUTINE create_mix_type
 
@@ -125,7 +146,7 @@ CONTAINS
  rho_m%of_g(1:ngms,:) = rho_s%of_g(1:ngms,:)
  if (dft_is_meta()) rho_m%kin_g(1:ngms,:) = rho_s%kin_g(1:ngms,:)
  if (lda_plus_u)    rho_m%ns  = rho_s%ns
- !if (okpaw)         rho_m%bec = rho_s%bec
+ if (okpaw)         rho_m%bec = rho_s%bec
  return
  end subroutine assign_scf_to_mix_type
  !
@@ -158,7 +179,7 @@ CONTAINS
       END DO
    end if
    if (lda_plus_u) rho_s%ns(:,:,:,:) = rho_m%ns(:,:,:,:)
-   !if (okpaw)      rho_s%bec(:,:,:)  = rho_m%bec(:,:,:)
+   if (okpaw)      rho_s%bec(:,:,:)  = rho_m%bec(:,:,:)
    return
  end subroutine assign_mix_to_scf_type
  !
@@ -177,7 +198,7 @@ CONTAINS
      Y%kin_g = X%kin_g
   end if
   if (lda_plus_u) Y%ns = X%ns
-  !if (okpaw)   Y%bec = X%bec
+  if (okpaw)     Y%bec = X%bec
   !
   RETURN
  end subroutine scf_type_COPY
@@ -195,7 +216,7 @@ CONTAINS
   Y%of_g  = Y%of_g  + A * X%of_g
   if (dft_is_meta()) Y%kin_g = Y%kin_g + A * X%kin_g
   if (lda_plus_u) Y%ns = Y%ns + A * X%ns
-  if (okpaw)      Y%bec = Y%bec + A * X%bec
+  if (okpaw)     Y%bec = Y%bec + A * X%bec
   !
   RETURN
  END SUBROUTINE mix_type_AXPY
@@ -451,8 +472,8 @@ CONTAINS
   CALL reduce( 1, rho_ddot )
   !
   IF (dft_is_meta()) rho_ddot = rho_ddot + tauk_ddot( rho1, rho2, gf )
-  IF (lda_plus_u ) rho_ddot = rho_ddot + ns_ddot(rho1,rho2)
-  IF (okpaw)       rho_ddot = rho_ddot + paw_ddot(rho1%bec, rho2%bec)
+  IF (lda_plus_u )   rho_ddot = rho_ddot + ns_ddot(rho1,rho2)
+  IF (okpaw)         rho_ddot = rho_ddot + paw_ddot(rho1%bec, rho2%bec)
 
   RETURN
   !

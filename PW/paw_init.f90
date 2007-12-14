@@ -186,7 +186,6 @@ SUBROUTINE PAW_init_onecenter()
     USE uspp_param,             ONLY : upf
     USE lsda_mod,               ONLY : nspin
     USE funct,                  ONLY : dft_is_gradient
-    USE paw_onecenter, ONLY: paw_test_d
 
     INTEGER :: na, nt, first_nat, last_nat, lmax_safe
 
@@ -231,8 +230,6 @@ SUBROUTINE PAW_init_onecenter()
     ENDDO types
 
     paw_is_init = .true.
-
-    CALL PAW_test_d()
 
 END SUBROUTINE PAW_init_onecenter
 

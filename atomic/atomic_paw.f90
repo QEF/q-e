@@ -274,7 +274,7 @@ CONTAINS
              pawset_%augmom(ns,ns1,l3)=int_0_inf_dr(aux(1:irc),pawset_%grid,irc,lll)
              pawset_%augmom(ns1,ns,l3)=pawset_%augmom(ns,ns1,l3)
           end do
-          write (stdout,'(a,2i3,a,2i3,10f8.4)') " MULTIPOLE",ns,l1,":",ns1,l2,&
+          write (stdout,'(5x,a,2i3,a,2i3,10f8.4)') " MULTIPOLE",ns,l1,":",ns1,l2,&
                               (pawset_%augmom(ns,ns1,l3), l3=0,l1+l2)
 !          do ir=1,irc
 !             if (r(ir) < 1.0_dp) ir0 = ir
@@ -342,7 +342,7 @@ CONTAINS
                     ! otherwise try again with a larger sigma.
                     resi = int_0_inf_dr(aux,pawset_%grid,ir0, l3+2)
                     resi = (raux-resi)/raux
-                    IF (abs(resi) > eps8) THEN
+                    IF (abs(resi) > 1.e-10_dp) THEN
                         usigma = usigma + .0625_dp
                         GOTO 101
                     ENDIF

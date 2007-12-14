@@ -109,7 +109,6 @@ bcast_ph_input.o : ramanm.o
 bcast_ph_input1.o : ../Modules/mp.o
 bcast_ph_input1.o : ../PW/pwcom.o
 bcast_ph_input1.o : phcom.o
-bicgstab.o : ../Modules/kind.o
 ccg_psi.o : ../Modules/kind.o
 cch_psi_all.o : ../Modules/kind.o
 cch_psi_all.o : ../PW/becmod.o
@@ -351,12 +350,6 @@ dynmatrix.o : ../PW/noncol.o
 dynmatrix.o : ../PW/pwcom.o
 dynmatrix.o : phcom.o
 dynmatrix.o : ramanm.o
-ec_rpa.o : ../Modules/io_files.o
-ec_rpa.o : ../Modules/io_global.o
-ec_rpa.o : ../Modules/kind.o
-ec_rpa.o : ../Modules/random_numbers.o
-ec_rpa.o : ../PW/pwcom.o
-ec_rpa.o : phcom.o
 ef_shift.o : ../Modules/cell_base.o
 ef_shift.o : ../Modules/io_global.o
 ef_shift.o : ../Modules/kind.o
@@ -398,7 +391,6 @@ find_mode_sym.o : ../PW/noncol.o
 find_mode_sym.o : ../PW/pwcom.o
 find_mode_sym.o : phcom.o
 generate_dynamical_matrix_c.o : ../Modules/kind.o
-gl_weight.o : phcom.o
 gmressolve_all.o : ../Modules/kind.o
 h_psiq.o : ../Modules/kind.o
 h_psiq.o : ../Modules/wavefunctions.o
@@ -703,17 +695,6 @@ solve_e_nscf.o : ../Modules/wavefunctions.o
 solve_e_nscf.o : ../PW/becmod.o
 solve_e_nscf.o : ../PW/pwcom.o
 solve_e_nscf.o : phcom.o
-solve_edv.o : ../Modules/check_stop.o
-solve_edv.o : ../Modules/control_flags.o
-solve_edv.o : ../Modules/io_files.o
-solve_edv.o : ../Modules/io_global.o
-solve_edv.o : ../Modules/ions_base.o
-solve_edv.o : ../Modules/kind.o
-solve_edv.o : ../Modules/uspp.o
-solve_edv.o : ../Modules/wavefunctions.o
-solve_edv.o : ../PW/becmod.o
-solve_edv.o : ../PW/pwcom.o
-solve_edv.o : phcom.o
 solve_linter.o : ../Modules/check_stop.o
 solve_linter.o : ../Modules/constants.o
 solve_linter.o : ../Modules/io_files.o
@@ -807,10 +788,6 @@ transform_int_so.o : ../PW/pwcom.o
 transform_int_so.o : phcom.o
 trntnsc.o : ../Modules/kind.o
 trntnsr_3.o : ../Modules/kind.o
-vc_dv.o : ../Modules/functionals.o
-vc_dv.o : ../Modules/kind.o
-vc_dv.o : ../PW/pwcom.o
-vc_dv.o : phcom.o
 write_dyn_on_file.o : ../Modules/kind.o
 write_epsilon_and_zeu.o : ../Modules/io_global.o
 write_epsilon_and_zeu.o : ../Modules/kind.o
@@ -858,7 +835,6 @@ allocate_part.o : ../include/f_defs.h
 allocate_phq.o : ../include/f_defs.h
 bcast_ph_input.o : ../include/f_defs.h
 bcast_ph_input1.o : ../include/f_defs.h
-bicgstab.o : ../include/f_defs.h
 cch_psi_all.o : ../include/f_defs.h
 cgsolve_all.o : ../include/f_defs.h
 ch_psi_all.o : ../include/f_defs.h
@@ -895,7 +871,6 @@ dynmat0.o : ../include/f_defs.h
 dynmat_us.o : ../include/f_defs.h
 dynmatcc.o : ../include/f_defs.h
 dynmatrix.o : ../include/f_defs.h
-ec_rpa.o : ../include/f_defs.h
 ef_shift.o : ../include/f_defs.h
 el_opt.o : ../include/f_defs.h
 elphon.o : ../include/f_defs.h
@@ -946,7 +921,6 @@ solve_e.o : ../include/f_defs.h
 solve_e2.o : ../include/f_defs.h
 solve_e_fpol.o : ../include/f_defs.h
 solve_e_nscf.o : ../include/f_defs.h
-solve_edv.o : ../include/f_defs.h
 solve_linter.o : ../include/f_defs.h
 star_q.o : ../include/f_defs.h
 sym_and_write_zue.o : ../include/f_defs.h
@@ -969,7 +943,6 @@ transform_int_nc.o : ../include/f_defs.h
 transform_int_so.o : ../include/f_defs.h
 trntnsc.o : ../include/f_defs.h
 trntnsr_3.o : ../include/f_defs.h
-vc_dv.o : ../include/f_defs.h
 xk_wk_collect.o : ../include/f_defs.h
 zstar_eu.o : ../include/f_defs.h
 zstar_eu_us.o : ../include/f_defs.h

@@ -32,15 +32,16 @@ subroutine allocate_nlpot
   USE klist,            ONLY : xk, wk, ngk, nks, xqq
   USE lsda_mod,         ONLY : nspin
   USE ldaU,             ONLY : Hubbard_lmax
-  USE scf,              ONLY : 
+  USE scf,              ONLY : rho
   USE noncollin_module, ONLY : noncolin
   USE wvfct,            ONLY : npwx, npw, igk, g2kin
   USE us,               ONLY : qrad, tab, tab_d2y, tab_at, dq, nqx, &
                                nqxq, spline_ps
-  USE uspp,             ONLY : indv, nhtol, nhtolm, qq, dvan, deeq, vkb, nkb, &
-                               nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
+  USE uspp,             ONLY : indv, nhtol, nhtolm, ijtoh, qq, dvan, deeq, vkb, &
+                               nkb, nkbus, nhtoj, becsum, qq_so, dvan_so, deeq_nc
   USE uspp_param,       ONLY : upf, lmaxq, lmaxkb, nh, nhm, nbetam
   USE spin_orb,         ONLY : lspinorb, fcoef
+  USE paw_variables,    ONLY : okpaw
   !
   implicit none
   !
@@ -89,6 +90,7 @@ subroutine allocate_nlpot
   allocate (nhtol(nhm, nsp))    
   allocate (nhtolm(nhm, nsp))    
   allocate (nhtoj(nhm, nsp))    
+  allocate (ijtoh(nhm, nhm, nsp))
   allocate (deeq( nhm, nhm, nat, nspin))    
   if (noncolin) then
      allocate (deeq_nc( nhm, nhm, nat, nspin))    
@@ -109,6 +111,8 @@ subroutine allocate_nlpot
   if (lmaxq > 0) allocate (qrad( nqxq, nbetam*(nbetam+1)/2, lmaxq, nsp))    
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
+  ! In PAW becsum has to be treated self-consistently:
+  if (okpaw) rho%bec => becsum
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)

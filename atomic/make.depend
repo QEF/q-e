@@ -21,6 +21,7 @@ ascheqps_old.o : ../Modules/kind.o
 ascheqps_old.o : ../Modules/radial_grids.o
 atomic_paw.o : ../Modules/constants.o
 atomic_paw.o : ../Modules/functionals.o
+atomic_paw.o : ../Modules/io_global.o
 atomic_paw.o : ../Modules/kind.o
 atomic_paw.o : ../Modules/parameters.o
 atomic_paw.o : ../Modules/pseudo_types.o

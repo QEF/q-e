@@ -71,6 +71,7 @@ allocate_locpot.o : ../Modules/ions_base.o
 allocate_locpot.o : pwcom.o
 allocate_nlpot.o : ../Modules/cell_base.o
 allocate_nlpot.o : ../Modules/ions_base.o
+allocate_nlpot.o : ../Modules/paw_variables.o
 allocate_nlpot.o : ../Modules/uspp.o
 allocate_nlpot.o : noncol.o
 allocate_nlpot.o : pwcom.o
@@ -381,7 +382,6 @@ electrons.o : buffers.o
 electrons.o : exx.o
 electrons.o : io_rho_xml.o
 electrons.o : noncol.o
-electrons.o : paw_init.o
 electrons.o : paw_onecenter.o
 electrons.o : pwcom.o
 electrons.o : scf_mod.o
@@ -731,7 +731,6 @@ newd.o : ../Modules/paw_variables.o
 newd.o : ../Modules/uspp.o
 newd.o : ../Modules/wavefunctions.o
 newd.o : noncol.o
-newd.o : paw_onecenter.o
 newd.o : pwcom.o
 newd.o : realus.o
 newd.o : scf_mod.o
@@ -919,6 +918,7 @@ read_file.o : ../Modules/xml_io_base.o
 read_file.o : buffers.o
 read_file.o : noncol.o
 read_file.o : paw_init.o
+read_file.o : paw_onecenter.o
 read_file.o : pw_restart.o
 read_file.o : pwcom.o
 read_file.o : scf_mod.o
@@ -986,7 +986,10 @@ restart_in_ions.o : ../Modules/io_files.o
 restart_in_ions.o : ../Modules/io_global.o
 restart_in_ions.o : ../Modules/ions_base.o
 restart_in_ions.o : ../Modules/kind.o
+restart_in_ions.o : ../Modules/paw_variables.o
+restart_in_ions.o : ../Modules/uspp.o
 restart_in_ions.o : ../Modules/wavefunctions.o
+restart_in_ions.o : paw_onecenter.o
 restart_in_ions.o : pwcom.o
 restart_in_ions.o : scf_mod.o
 rgen.o : ../Modules/kind.o
@@ -1261,12 +1264,14 @@ update_pot.o : ../Modules/ions_base.o
 update_pot.o : ../Modules/kind.o
 update_pot.o : ../Modules/mp.o
 update_pot.o : ../Modules/mp_global.o
+update_pot.o : ../Modules/paw_variables.o
 update_pot.o : ../Modules/uspp.o
 update_pot.o : ../Modules/wavefunctions.o
 update_pot.o : becmod.o
 update_pot.o : buffers.o
 update_pot.o : io_rho_xml.o
 update_pot.o : noncol.o
+update_pot.o : paw_onecenter.o
 update_pot.o : pwcom.o
 update_pot.o : scf_mod.o
 usnldiag.o : ../Modules/ions_base.o

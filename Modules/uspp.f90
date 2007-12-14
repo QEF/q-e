@@ -43,7 +43,7 @@ MODULE uspp
   PRIVATE
   SAVE
   PUBLIC :: nlx, lpx, lpl, ap, aainit, indv, nhtol, nhtolm, nkb, nkbus, &
-       vkb, dvan, deeq, qq, nhtoj, beta, becsum, okvan, deallocate_uspp
+       vkb, dvan, deeq, qq, nhtoj, ijtoh, beta, becsum, okvan, deallocate_uspp
   PUBLIC :: qq_so, dvan_so, deeq_nc 
   INTEGER, PARAMETER :: &
        nlx  = (lmaxx+1)**2, &! maximum number of combined angular momentum
@@ -61,7 +61,8 @@ MODULE uspp
   INTEGER, ALLOCATABLE ::&
        indv(:,:),        &! indes linking  atomic beta's to beta's in the solid
        nhtol(:,:),       &! correspondence n <-> angular momentum l
-       nhtolm(:,:)        ! correspondence n <-> combined lm index for (l,m)
+       nhtolm(:,:),      &! correspondence n <-> combined lm index for (l,m)
+       ijtoh(:,:,:)       ! correspondence beta indexes ih,jh -> composite index ijh
   !
   LOGICAL :: &
        okvan = .FALSE.    ! if .TRUE. at least one pseudo is Vanderbilt
@@ -249,6 +250,7 @@ CONTAINS
     IF( ALLOCATED( indv ) )    DEALLOCATE( indv )
     IF( ALLOCATED( nhtolm ) )  DEALLOCATE( nhtolm )
     IF( ALLOCATED( nhtoj ) )   DEALLOCATE( nhtoj )
+    IF( ALLOCATED( ijtoh ) )   DEALLOCATE( ijtoh )
     IF( ALLOCATED( vkb ) )     DEALLOCATE( vkb )
 !    IF( ALLOCATED( becsum ) )  DEALLOCATE( becsum )
     IF( ASSOCIATED( becsum ) )  DEALLOCATE( becsum )

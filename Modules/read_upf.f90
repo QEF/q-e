@@ -646,10 +646,10 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
 
   ! Read augmentation charge:
   CALL scan_begin ( iunps, "AUGFUN", .false. )
-    read (iunps,'(1pa)') dummy
-    read (iunps,'(1pa)') upf%paw%augshape ! shape of augfun
-    read (iunps,'(1p1e19.11,i5,a)') upf%paw%raug, upf%paw%iraug, dummy
-    read (iunps,'(1pi5,a)') upf%paw%lmax_aug, dummy
+    read (iunps,*) dummy
+    read (iunps,*) upf%paw%augshape ! shape of augfun
+    read (iunps,*) upf%paw%raug, upf%paw%iraug, dummy
+    read (iunps,*) upf%paw%lmax_aug, dummy
     if(upf%paw%lmax_aug /= upf%paw%lmax_rho) &
         call errore('read_pseudo_paw', &
              'Max charge L and max aug.charge L differ: there is an error in the pseudopotential.',&
@@ -663,20 +663,20 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
     !
     ! First read multipoles (they are needed to read the augfuns)
     ALLOCATE( upf%paw%augmom(upf%nbeta,upf%nbeta, 0:upf%paw%lmax_aug) )
-    read (iunps,'(1pa)') dummy ! multipolar momenti
-    read (iunps,'(1p4e19.11)') (((upf%paw%augmom(nb,nb1,l), nb  = 1,upf%nbeta),&
+    read (iunps,*) dummy ! multipolar momenti
+    read (iunps,*) (((upf%paw%augmom(nb,nb1,l), nb  = 1,upf%nbeta),&
                                                             nb1 = 1,upf%nbeta),&
                                                             l   = 0,upf%paw%lmax_aug)
     !
     ! Read augmentation charge:
     ALLOCATE( upf%paw%aug(upf%mesh, upf%nbeta,upf%nbeta, 0:upf%paw%lmax_aug) )
-    read (iunps,'(1pa)') dummy ! augmentation functions
+    read (iunps,*) dummy ! augmentation functions
     do l = 0,upf%paw%lmax_aug
         do nb = 1,upf%nbeta
         do nb1 = 1,upf%nbeta
             if (abs(upf%paw%augmom(nb,nb1,l)) > 1.e-10_dp) then
-                read (iunps,'(1x,a)') dummy ! blabla
-                read (iunps,'(1p4e19.11)') (upf%paw%aug(k,nb,nb1,l), k  = 1,upf%mesh)
+                read (iunps,*) dummy ! blabla
+                read (iunps,*) (upf%paw%aug(k,nb,nb1,l), k  = 1,upf%mesh)
             else
                 upf%paw%aug(1:upf%mesh,nb,nb1,l) = 0._dp
             endif
@@ -688,7 +688,7 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   ! All-electron core correction charge
   ALLOCATE( upf%paw%ae_rho_atc(upf%mesh) )
   CALL scan_begin ( iunps, "AE_RHO_ATC", .false. )
-    read (iunps,'(1p4e19.11)') (upf%paw%ae_rho_atc(k), k = 1,upf%mesh)
+    read (iunps,*) (upf%paw%ae_rho_atc(k), k = 1,upf%mesh)
   CALL scan_end ( iunps, "AE_RHO_ATC" )
 
   ! pfunc = phi_i * phi_j; ptfunc = phi~_i * phi~_j
@@ -700,8 +700,8 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   ! read AE wfc
   CALL scan_begin ( iunps, "AEWFC", .false. )
     do nb = 1,upf%nbeta
-    read (iunps,'(a)') dummy ! blabla
-    read (iunps,'(1p4e19.11)') (upf%aewfc(k,nb), k  = 1,upf%mesh)
+    read (iunps,*) dummy ! blabla
+    read (iunps,*) (upf%aewfc(k,nb), k  = 1,upf%mesh)
     enddo
   CALL scan_end ( iunps, "AEWFC" )
   ! reconstruct pfunc
@@ -718,8 +718,8 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   !       while for PAW we have to use all of them!
   CALL scan_begin ( iunps, "PSWFC_FULL", .false. )
     do nb = 1,upf%nbeta
-    read (iunps,'(a)') dummy ! blabla
-    read (iunps,'(1p4e19.11)') (upf%pswfc(k,nb), k  = 1,upf%mesh)
+    read (iunps,*) dummy ! blabla
+    read (iunps,*) (upf%pswfc(k,nb), k  = 1,upf%mesh)
     enddo
   CALL scan_end ( iunps, "PSWFC_FULL" )
   ! reconstruct \tilde{pfunc}
@@ -733,19 +733,19 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
 
   ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
   CALL scan_begin ( iunps, "AE_VLOC", .false. )
-  read (iunps,'(1p4e19.11)') (upf%paw%ae_vloc(k), k = 1,upf%mesh)
+  read (iunps,*) (upf%paw%ae_vloc(k), k = 1,upf%mesh)
   CALL scan_end ( iunps, "AE_VLOC" )
 
   ALLOCATE( upf%paw%kdiff(upf%nbeta,upf%nbeta) )
   CALL scan_begin ( iunps, "KDIFF", .false. )
-  read (iunps,'(1p4e19.11)') ((upf%paw%kdiff(nb,nb1), nb  = 1,upf%nbeta),&
+  read (iunps,*) ((upf%paw%kdiff(nb,nb1), nb  = 1,upf%nbeta),&
                                                       nb1 = 1,upf%nbeta)
   CALL scan_end ( iunps, "KDIFF" )
 
   !IF(allocated(upf%oc)) DEALLOCATE(upf%oc)
   ALLOCATE( upf%paw%oc(upf%nbeta) )
   CALL scan_begin ( iunps, "OCCUP", .false. )
-  read (iunps,'(1p4e19.11)') (upf%paw%oc(nb), nb  = 1,upf%nbeta)
+  read (iunps,*) (upf%paw%oc(nb), nb  = 1,upf%nbeta)
   CALL scan_end ( iunps, "OCCUP" )
   ! negative occupations has a meaning in ld1, but not here.
   do nb = 1,upf%nbeta
@@ -753,13 +753,13 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   enddo
 
   CALL scan_begin ( iunps, "GRID_RECON", .false. )
-    read (iunps,'(a)') dummy
-    read (iunps,'(1pe19.11,a)') upf%grid%dx,   dummy
-    read (iunps,'(1pe19.11,a)') upf%grid%xmin, dummy
-    read (iunps,'(1pe19.11,a)') upf%grid%rmax, dummy
-    read (iunps,'(1pe19.11,a)') upf%grid%zmesh,dummy
+    read (iunps,*) dummy
+    read (iunps,*) upf%grid%dx,   dummy
+    read (iunps,*) upf%grid%xmin, dummy
+    read (iunps,*) upf%grid%rmax, dummy
+    read (iunps,*) upf%grid%zmesh,dummy
     CALL scan_begin ( iunps, "SQRT_R", .false. )
-    read (iunps,'(1p4e19.11)') ( upf%grid%sqr(k), k=1,upf%mesh)
+    read (iunps,*) ( upf%grid%sqr(k), k=1,upf%mesh)
     CALL scan_end ( iunps, "SQRT_R")
     !
     upf%grid%mesh = upf%mesh

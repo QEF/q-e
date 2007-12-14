@@ -24,8 +24,7 @@ END MODULE mix_save
 #endif
 
 !----------------------------------------------------------------------------
-SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
-                    alphamix, dr2, tr2_min, iter, n_iter, conv )
+SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, conv )
   !----------------------------------------------------------------------------
   !
   ! ... Modified Broyden's method for charge density mixing
@@ -76,9 +75,7 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
     conv          ! .true. if the convergence has been reached
 
   type(scf_type), intent(in)    :: input_rhout
-  REAL(DP),    intent(in)       :: input_becout(nhm*(nhm+1)/2,nat,nspin) ! PAW
   type(scf_type), intent(inout) :: rhoin
-  REAL(DP),    intent(inout)    :: becin (nhm*(nhm+1)/2,nat,nspin)       !PAW
   !
   ! ... Here the local variables
   !
@@ -139,11 +136,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   !
   call assign_scf_to_mix_type(rhoin, rhoin_m)
   call assign_scf_to_mix_type(input_rhout, rhout_m)
-  ! temporary PAW hack:
-  if (okpaw) then
-    rhoin_m%bec = becin
-    rhout_m%bec = input_becout
-  endif
 
   call mix_type_AXPY ( -1.d0, rhoin_m, rhout_m )
   !
@@ -373,8 +365,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, input_becout, becin, &
   call high_frequency_mixing ( rhoin, input_rhout, alphamix )
   ! ... add the mixed rho for the smooth frequencies
   call assign_mix_to_scf_type(rhoin_m,rhoin)
-  ! temporary PAW hack!
-  if (okpaw) becin = rhoin_m%bec
   !
   call destroy_mix_type(rhout_m)
   call destroy_mix_type(rhoin_m)
