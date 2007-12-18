@@ -87,7 +87,7 @@ SUBROUTINE compute_casino
   INTEGER, ALLOCATABLE :: idx(:), igtog(:)
   LOGICAL :: exst, found
   REAL(DP) :: ek, eloc, enl, charge, etotefield
-  COMPLEX(DP), ALLOCATABLE :: aux(:), hpsi(:,:)
+  COMPLEX(DP), ALLOCATABLE :: aux(:)
   REAL(DP), allocatable :: v_h_new(:,:,:,:), kedtaur_new(:,:)
   INTEGER :: ios
   INTEGER, EXTERNAL :: atomic_number
@@ -101,7 +101,6 @@ SUBROUTINE compute_casino
 
   CALL seqopn( 77, 'pwfn.data', 'formatted',exst)  
 
-  ALLOCATE (hpsi(npwx, nbnd))
   ALLOCATE (aux(nrxx))
   ALLOCATE (becp (nkb,nbnd))
   ! four times npwx should be enough
@@ -113,7 +112,6 @@ SUBROUTINE compute_casino
   else
      allocate (kedtaur_new(1,nspin))
   endif
-  hpsi (:,:) = (0.d0, 0.d0)
   idx(:) = 0
   igtog(:) = 0
 
@@ -176,8 +174,8 @@ SUBROUTINE compute_casino
         !
         DO ibnd = 1, nbnd
            DO j = 1, npw
-              hpsi(j,ibnd) =  g2kin(j) * evc(j,ibnd)
-              ek = ek +  CONJG(evc(j,ibnd))*hpsi(j,ibnd) * wg(ibnd,ikk)
+              ek = ek +  CONJG(evc(j,ibnd)) * evc(j,ibnd) * &
+                              g2kin(j) * wg(ibnd,ikk)
            END DO
 
            !
@@ -237,7 +235,7 @@ SUBROUTINE compute_casino
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, vnew )
   !
-  etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)
+  etot=(ek + (etxc-etxcc)+ehart+eloc+enl+ewld)+demet
   !
   WRITE(io,'(a)') title
   WRITE(io,'(a)')
@@ -255,18 +253,23 @@ SUBROUTINE compute_casino
   WRITE(io,*) ecutwfc/2
   WRITE(io,'(a)') ' Spin polarized:'
   WRITE(io,*)lsda 
-  WRITE(io,'(a)') ' Total energy (au per primitive cell)' 
-  WRITE(io,*)etot/2                
+  IF ( degauss > 0.0_dp ) THEN
+     WRITE(io,'(a)') ' Total energy (au per primitive cell; includes -TS term)'
+     WRITE(io,*)etot/e2, demet/e2
+  ELSE
+     WRITE(io,'(a)') ' Total energy (au per primitive cell)' 
+     WRITE(io,*)etot/e2                
+  END IF
   WRITE(io,'(a)') ' Kinetic energy (au per primitive cell)' 
-  WRITE(io,*)ek/2              
+  WRITE(io,*)ek/e2              
   WRITE(io,'(a)') ' Local potential energy (au per primitive cell)' 
-  WRITE(io,*)eloc/2 
+  WRITE(io,*)eloc/e2 
   WRITE(io,'(a)') ' Non local potential energy(au per primitive cel)'
-  WRITE(io,*)enl/2
+  WRITE(io,*)enl/e2
   WRITE(io,'(a)') ' Electron electron energy (au per primitive cell)' 
-  WRITE(io,*)ehart/2    
+  WRITE(io,*)ehart/e2    
   WRITE(io,'(a)') ' Ion ion energy (au per primitive cell)' 
-  WRITE(io,*)ewld/2
+  WRITE(io,*)ewld/e2
   WRITE(io,'(a)') ' Number of electrons per primitive cell'                 
   WRITE(io,*)NINT(nelec)
   WRITE(io,'(a)') ' '                 
@@ -317,7 +320,7 @@ SUBROUTINE compute_casino
         ENDIF
         DO ibnd = 1, nbnd
            WRITE(io,'(a)') ' Band, spin, eigenvalue (au)'
-           WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/2 
+           WRITE(io,*) ibnd, ispin, et(ibnd,ikk)/e2 
            WRITE(io,'(a)') ' Eigenvectors coefficients'
            DO ig=1, ngtot
               ! now for all G vectors find the PW coefficient for this k-point
@@ -345,14 +348,12 @@ SUBROUTINE compute_casino
   WRITE (stdout,*) 'hartree energy   ', ehart/e2
   IF ( degauss > 0.0_dp ) &
   WRITE (stdout,*) 'Smearing (-TS)   ', demet/e2
-  WRITE (stdout,*) 'Total energy     ',(ek + (etxc-etxcc) + ehart + eloc + &
-                                        enl + ewld + demet) / e2
+  WRITE (stdout,*) 'Total energy     ', etot/e2
 
   DEALLOCATE (igtog)
   DEALLOCATE (idx)
   DEALLOCATE (becp)
   DEALLOCATE (aux)
-  DEALLOCATE (hpsi)
 
 END SUBROUTINE compute_casino
 
