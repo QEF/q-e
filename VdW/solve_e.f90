@@ -59,7 +59,7 @@ subroutine solve_e_vdw ( iu )
   complex(kind=DP) , allocatable ::   &
                    dvscfout (:,:,:), & ! change of the scf potential (output)
                    dbecsum(:,:,:,:), & ! the becsum with dpsi
-                   auxg (:), aux1 (:), spsi(:), ps (:)
+                   auxg (:,:), aux1 (:), spsi(:), ps (:)
 
   complex(kind=DP) :: ZDOTC      ! the scalar product function
 
@@ -111,7 +111,7 @@ subroutine solve_e_vdw ( iu )
   endif
   allocate (dvscfout( nrxx , nspin, 3))    
   allocate (dbecsum( nhm*(nhm+1)/2, nat, nspin, 3))    
-  allocate (auxg(npwx))    
+  allocate (auxg(npwx,1))    
   allocate (aux1(nrxxs))    
   allocate (spsi(npwx))    
   allocate (ps  (nbnd))    
@@ -188,7 +188,7 @@ subroutine solve_e_vdw ( iu )
         ! we compute the becp terms which are used in the rest of
         !    the code
         !
-        CALL calbec( npw, vkb, evc, becp1(1,1,ik) )
+        CALL calbec( npw, vkb, evc, becp1(:,:,ik) )
         !
         ! compute the kinetic energy
         !
@@ -250,7 +250,7 @@ subroutine solve_e_vdw ( iu )
            ! Orthogonalize dvpsi
            !
            do ibnd = 1, nbnd_occ (ik)
-              auxg(:) = (0.d0, 0.d0)
+              auxg(:,1) = (0.d0, 0.d0)
               do jbnd = 1, nbnd_occ (ik)
                  ps(jbnd)=-ZDOTC(npw,evc(1,jbnd),1,dvpsi(1,ibnd),1)
               enddo
@@ -274,7 +274,7 @@ subroutine solve_e_vdw ( iu )
            !
            do ibnd = 1, nbnd_occ (ik)
               do ig = 1, npw
-                 auxg (ig) = g2kin (ig) * evc (ig, ibnd)
+                 auxg (ig,1) = g2kin (ig) * evc (ig, ibnd)
               enddo
               eprec (ibnd) = 1.35d0*ZDOTC(npwq,evc(1,ibnd),1,auxg,1)
            enddo
