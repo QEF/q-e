@@ -23,7 +23,7 @@ SUBROUTINE suscept_crystal
   USE wvfct,                       ONLY : nbnd, npwx, npw, igk, wg, g2kin, &
                                           current_k
   USE lsda_mod,                    ONLY : current_spin, lsda, isk
-  USE becmod,                      ONLY : becp  
+  USE becmod,                      ONLY : becp, calbec  
   USE symme,                       ONLY : nsym, s, ftau
   USE mp_global,                   ONLY : my_pool_id, me_pool, root_pool
   USE pwcom
@@ -108,7 +108,8 @@ SUBROUTINE suscept_crystal
     
     !<apsi>
     call init_gipaw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
-    call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
+    !call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
+    call calbec (npw, paw_vkb, evc, paw_becp)
     diamagnetic_corr_tensor = 0.0d0
     call diamagnetic_correction ( diamagnetic_corr_tensor )
     sigma_diamagnetic = sigma_diamagnetic + diamagnetic_corr_tensor
@@ -512,6 +513,7 @@ CONTAINS
     USE ions_base,      ONLY : nat, ityp, ntyp => nsp
     USE gipaw_module,   ONLY : lx, ly, lz, radial_integral_paramagnetic, &
                               paw_becp2
+    USE becmod,         ONLY : calbec
     
     implicit none
     
@@ -540,8 +542,9 @@ CONTAINS
        
        if ( ipol == i ) cycle !TESTTESTTEST
        
-       call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp2, paw_vkb, &
-            g_vel_evc(1,1,ipol))
+       !call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp2, paw_vkb, &
+       !     g_vel_evc(1,1,ipol))
+       call calbec (npw, paw_vkb, g_vel_evc(:,:,ipol), paw_becp2)
        
        para_corr = 0.0_dp
        

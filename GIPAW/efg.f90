@@ -483,6 +483,7 @@ subroutine efg_correction ( efg_corr_tens )
   USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin
   USE wavefunctions_module,  ONLY : evc
   USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
+  USE becmod,                ONLY : calbec
   USE constants,             ONLY : pi
   USE buffers
   USE scf,                   ONLY : rho
@@ -579,7 +580,8 @@ subroutine efg_correction ( efg_corr_tens )
      call get_buffer ( evc, nwordwfc, iunwfc, ik)
      
      call init_gipaw_2 ( npw, igk, xk(1,ik), paw_vkb )
-     call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc )
+     !it was: call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc )
+     call calbec ( npw, paw_vkb, evc, paw_becp )
      
      do ibnd = 1, nbnd_occ(ik)
         ijkb0 = 0
@@ -681,6 +683,7 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
   USE wvfct,                 ONLY : npwx, nbnd, npw, igk, g2kin
   USE wavefunctions_module,  ONLY : evc
   USE paw_gipaw,             ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
+  USE becmod,                ONLY : calbec
   USE constants,             ONLY : pi
   USE buffers
   USE scf,                   ONLY : rho
@@ -863,7 +866,8 @@ subroutine fermi_contact_reconstruction ( fc_recon, fc_recon_zora )
      call get_buffer ( evc, nwordwfc, iunwfc, ik)
      
      call init_gipaw_2 ( npw, igk, xk(1,ik), paw_vkb )
-     call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc )
+     !it was: call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc )
+     call calbec ( npw, paw_vkb, evc, paw_becp )
      
      do ibnd = 1, nbnd_occ(ik)
         ijkb0 = 0

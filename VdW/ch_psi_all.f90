@@ -96,7 +96,7 @@ subroutine ch_psi_all_vdw (n, h, ah, e, ik, m)
   !
   !    And apply S again
   !
-  call ccalbec (nkb, npwx, n, m, becp, vkb, hpsi)     ! not need in TFvW
+  call calbec (n, vkb, hpsi, becp, m)     ! not need in TFvW
   !
   call s_psi (npwx, n, m, hpsi, spsi)
 

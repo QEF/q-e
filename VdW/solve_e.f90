@@ -30,7 +30,7 @@ subroutine solve_e_vdw ( iu )
   USE check_stop,            ONLY : check_stop_now
 !  USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
-  USE becmod,                ONLY : becp
+  USE becmod,                ONLY : becp, calbec
   USE uspp_param,            ONLY : nhm
   use phcom
   USE phus,                  ONLY : becp1 
@@ -188,7 +188,7 @@ subroutine solve_e_vdw ( iu )
         ! we compute the becp terms which are used in the rest of
         !    the code
         !
-        CALL ccalbec( nkb, npwx, npw, nbnd, becp1(1,1,ik), vkb, evc )
+        CALL calbec( npw, vkb, evc, becp1(1,1,ik) )
         !
         ! compute the kinetic energy
         !
@@ -260,7 +260,7 @@ subroutine solve_e_vdw ( iu )
               do jbnd = 1, nbnd_occ (ik)
                  call ZAXPY (npw, ps (jbnd), evc (1, jbnd), 1, auxg, 1)
               enddo
-              call ccalbec (nkb, npwx, npw, 1, becp, vkb, auxg)
+              call calbec (npw, vkb, auxg, becp, 1)
               call s_psi (npwx, npw, 1, auxg, spsi)
               call DAXPY (2*npw, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
            enddo

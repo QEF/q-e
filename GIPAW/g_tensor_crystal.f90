@@ -33,6 +33,7 @@ SUBROUTINE g_tensor_crystal
                                           isolve, conv_threshold
   USE buffers,                     ONLY : get_buffer
   USE paw_gipaw,                   ONLY : paw_recon, paw_nkb, paw_vkb, paw_becp
+  USE becmod,                      ONLY : calbec
   USE ions_base, ONLY : nat
   
   !-- local variables ----------------------------------------------------
@@ -154,7 +155,8 @@ SUBROUTINE g_tensor_crystal
     
     !<apsi>
     call init_gipaw_2_no_phase (npw, igk, xk (1, ik), paw_vkb)
-    call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
+    !it was: call ccalbec (paw_nkb, npwx, npw, nbnd, paw_becp, paw_vkb, evc)
+    call calbec (npw, paw_vkb, evc, paw_becp)
     diamagnetic_corr_tensor = 0.0d0
     call diamagnetic_correction ( diamagnetic_corr_tensor )
     delta_g_diamagn = delta_g_diamagn + s_weight * diamagnetic_corr_tensor
@@ -799,6 +801,7 @@ CONTAINS
     USE ions_base,      ONLY : nat, ityp, ntyp => nsp
     USE gipaw_module,   ONLY : lx, ly, lz, paw_becp2, &
                               radial_integral_paramagnetic_so
+    USE becmod,         ONLY : calbec
     
     implicit none
     
@@ -827,8 +830,9 @@ CONTAINS
        
        if ( ipol == i ) cycle !TESTTESTTEST
        
-       call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp2, paw_vkb, &
-            g_vel_evc(1,1,ipol) )
+       !call ccalbec ( paw_nkb, npwx, npw, nbnd, paw_becp2, paw_vkb, &
+       !     g_vel_evc(1,1,ipol) )
+       call calbec (npw, paw_vkb, g_vel_evc(:,:,ipol), paw_becp2)
        
        para_corr = 0.0_dp
        

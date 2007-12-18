@@ -90,7 +90,8 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
   do isign = -1,1,2
     ! compute <\beta(k)| and project on |psi>
     call init_us_2_no_phase(npw, igk, xk(1,ik), vkb)
-    call ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, psi)
+    !it was: call ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, psi)
+    call calbec (npw, vkb, psi, becp, nbnd_occ(ik))
 
     dxk(ipol) = xk(ipol,ik) + isign * dk     ! k + dk
     call init_us_2_no_phase(npw, igk, dxk, vkb)
@@ -105,7 +106,8 @@ SUBROUTINE apply_vel(psi, vel_psi, ik, ipol, q)
     dxk(:) = xk(:,ik)
     dxk(ipol) = dxk(ipol) + isign * dk     ! k + dk
     call init_us_2_no_phase(npw, igk, xk(1,ik), vkb)
-    call ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, psi)
+    !it was: call ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, psi)
+    call calbec (npw, vkb, psi, becp, nbnd_occ(ik))
 
     dxk(:) = xk(:,ik)
     call init_us_2_no_phase(npw, igk, dxk, vkb)

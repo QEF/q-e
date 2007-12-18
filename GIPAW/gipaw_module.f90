@@ -290,7 +290,7 @@ CONTAINS
     call print_clock ('c_sigma')
     WRITE( stdout, * )
     WRITE( stdout, * ) '     General routines'
-    call print_clock ('ccalbec')
+    call print_clock ('calbec')
     call print_clock ('cft3')
     call print_clock ('cft3s')
     call print_clock ('cinterpolate')
