@@ -29,7 +29,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE wavefunctions_module, ONLY : evc
   USE constants,            ONLY : degspin
   USE kinds,                ONLY : DP
-  USE becmod,               ONLY : becp, becp_nc  
+  USE becmod,               ONLY : becp, becp_nc, calbec
   use pwcom
   USE uspp_param,           ONLY : upf, nhm
   USE noncollin_module,     ONLY : noncolin, npol
@@ -391,10 +391,10 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
            ! dpsi is used as work space to store S|evc>
            !
            IF (noncolin) THEN
-              CALL ccalbec_nc (nkb, npwx, npwq, npol, nbnd, becp_nc, vkb, evq)
+              CALL calbec ( npwq, vkb, evq, becp_nc )
               CALL s_psi_nc (npwx, npwq, nbnd, evq, dpsi)
            ELSE
-              CALL ccalbec (nkb, npwx, npwq, nbnd, becp, vkb, evq)
+              CALL calbec ( npwq, vkb, evq, becp )
               CALL s_psi (npwx, npwq, nbnd, evq, dpsi)
            ENDIF
            !

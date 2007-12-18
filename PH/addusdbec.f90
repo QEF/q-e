@@ -16,6 +16,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !
 #include "f_defs.h"
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
+  USE becmod, ONLY : calbec
   use pwcom
   USE kinds, only : DP
   USE uspp_param, only: upf, nh, nhm
@@ -68,7 +69,7 @@ subroutine addusdbec (ik, wgt, psi, dbecsum)
   !
   !     First compute the product of psi and vkb
   !
-  call ccalbec (nkb, npwx, npwq, nbnd, dbecq, vkb, psi)
+  call calbec (npwq, vkb, psi, dbecq)
   !
   !  And then we add the product to becsum
   !

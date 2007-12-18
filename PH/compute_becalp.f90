@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,6 +17,7 @@ subroutine compute_becalp (becq, alpq)
 
 
   use pwcom
+  USE becmod, ONLY: calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   USE io_files, ONLY: iunigk
@@ -53,9 +54,11 @@ subroutine compute_becalp (becq, alpq)
      call init_us_2 (npwq, igkq, xk (1, ikq), vkb)
      call davcio (evq, lrwfc, iuwfc, ikq, - 1)
      IF (noncolin) THEN
-        call ccalbec_nc(nkb,npwx,npwq,npol,nbnd,becq(1,1,1,ik),vkb,evq)
+        call calbec ( npwq, vkb, evq, becq(:,:,:,ik) )
+        ! call calbec_nc(nkb,npwx,npwq,npol,nbnd,becq(1,1,1,ik),vkb,evq)
      ELSE
-        call ccalbec (nkb, npwx, npwq, nbnd, becq(1, 1, 1,ik), vkb, evq)
+        call calbec ( npwq, vkb, evq, becq(:,1,:,ik) )
+        ! call calbec (nkb, npwx, npwq, nbnd, becq(1, 1, 1,ik), vkb, evq)
      END IF
      do ipol = 1, 3
         aux=(0.d0,0.d0)
@@ -73,9 +76,11 @@ subroutine compute_becalp (becq, alpq)
         enddo
 
         IF (noncolin) THEN
-           call ccalbec_nc(nkb,npwx,npwq,npol,nbnd,alpq(1,1,1,ipol,ik),vkb, aux)
+           call calbec ( npwq, vkb, aux, alpq(:,:,:,ipol,ik) )
+           ! call calbec_nc(nkb, npwx, npwq, nbnd, alpq(1,1,1,ipol,ik),vkb, aux)
         ELSE
-           call ccalbec (nkb, npwx, npwq, nbnd, alpq(1,1,1,ipol,ik),vkb, aux)
+           call calbec ( npwq, vkb, aux, alpq(:,1,:,ipol,ik) )
+           ! call calbec (nkb, npwx, npwq, nbnd, alpq(1,1,1,ipol,ik),vkb, aux)
         END IF
      enddo
   enddo

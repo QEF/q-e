@@ -23,7 +23,7 @@ subroutine dvpsi_e (ik, ipol)
   USE wavefunctions_module,  ONLY: evc
   USE noncollin_module,  ONLY : noncolin, npol
   USE kinds, only : DP
-  USE becmod, ONLY: becp, becp_nc
+  USE becmod, ONLY: becp, becp_nc, calbec
   USE uspp_param, ONLY: nh
   USE ramanm, ONLY: eth_rps
   use phcom
@@ -146,9 +146,9 @@ subroutine dvpsi_e (ik, ipol)
   deallocate (gk)
 
   IF ( noncolin ) THEN 
-     call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp2_nc, work, evc)
+     call calbec (npw, work, evc, becp2_nc)
   ELSE
-     call ccalbec (nkb, npwx, npw, nbnd, becp2, work, evc)
+     call calbec (npw, work, evc, becp2)
   END IF
 
   ijkb0 = 0
@@ -265,10 +265,10 @@ subroutine dvpsi_e (ik, ipol)
   ! dvpsi is used as work space to store S|evc>
   !
   IF (noncolin) THEN
-     CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd_occ(ik), becp_nc, vkb, evc)
+     CALL calbec ( npw, vkb, evc, becp_nc, nbnd_occ(ik) )
      CALL s_psi_nc (npwx, npw, nbnd_occ(ik), evc, dvpsi)
   ELSE
-     CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
+     CALL calbec ( npw, vkb, evc, becp, nbnd_occ(ik) )
      CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dvpsi)
   END IF
   !
@@ -347,10 +347,10 @@ subroutine dvpsi_e (ik, ipol)
      !
      allocate (spsi ( npwx*npol, nbnd))    
      IF (noncolin) THEN
-        CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd,becp_nc,vkb,dvpsi)
+        CALL calbec (npw, vkb, dvpsi, becp_nc )
         CALL s_psi_nc(npwx,npw,nbnd,dvpsi,spsi)
      ELSE
-        CALL ccalbec(nkb,npwx,npw,nbnd,becp,vkb,dvpsi)
+        CALL calbec (npw, vkb, dvpsi, becp )
         CALL s_psi(npwx,npw,nbnd,dvpsi,spsi)
      END IF
      call DCOPY(2*npwx*npol*nbnd,spsi,1,dvpsi,1)

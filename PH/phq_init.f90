@@ -33,6 +33,7 @@ SUBROUTINE phq_init()
   !
   !
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp, tau
+  USE becmod,               ONLY : calbec
   USE constants,            ONLY : eps8
   USE io_global,            ONLY : stdout
   USE io_files,             ONLY : iunigk
@@ -170,9 +171,9 @@ SUBROUTINE phq_init()
      ! ...    the code
      !
      IF (noncolin) THEN
-        CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd,becp1_nc(1,1,1,ik),vkb,evc )
+        CALL calbec (npw, vkb, evc, becp1_nc(:,:,:,ik) )
      ELSE
-        CALL ccalbec( nkb, npwx, npw, nbnd, becp1(1,1,ik), vkb, evc )
+        CALL calbec (npw, vkb, evc, becp1(:,:,ik) )
      ENDIF
      !
      ! ... e') we compute the derivative of the becp term with respect to an
@@ -193,10 +194,9 @@ SUBROUTINE phq_init()
            END IF
         END DO
         IF (noncolin) THEN
-           CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd,alphap_nc(1,1,1,ipol,ik),&
-                                                           vkb,aux1)
+           CALL calbec (npw, vkb, aux1, alphap_nc(:,:,:,ipol,ik) )
         ELSE
-           CALL ccalbec(nkb,npwx,npw,nbnd,alphap(1,1,ipol,ik),vkb,aux1)
+           CALL calbec (npw, vkb, aux1, alphap(:,:,ipol,ik) )
         END IF
      END DO
      !

@@ -1,5 +1,5 @@
 ! 
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -21,6 +21,7 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   USE kinds, only : DP
   USE wavefunctions_module,    ONLY : evc
   USE uspp_param, only: nh
+  USE becmod, ONLY: calbec
   use phcom
 
   implicit none
@@ -81,9 +82,9 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
   !
   if (lsda) current_spin = isk (kpoint)
   if (noncolin) then
-     call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp2_nc, dvkb(1,1,jpol), evc)
+     call calbec (npw, dvkb(:,:,jpol), evc, becp2_nc)
   else
-     call ccalbec (nkb, npwx, npw, nbnd, becp2, dvkb(1,1,jpol), evc)
+     call calbec (npw, dvkb(:,:,jpol), evc, becp2)
   endif
 
 #ifdef TIMING_ADD_DKMDS
@@ -105,11 +106,9 @@ subroutine add_dkmds(kpoint, uact, jpol, dvkb)
         endif
      enddo
      if (noncolin) then
-        call ccalbec_nc(nkb, npwx, npw, npol, nbnd,  &
-                                alphadk_nc(1,1,1,ipol), dvkb(1,1,jpol), aux1)
+        call calbec(npw, dvkb(:,:,jpol), aux1, alphadk_nc(:,:,:,ipol))
      else
-        call ccalbec (nkb, npwx, npw, nbnd, alphadk(1,1,ipol),  &
-                                               dvkb(1,1,jpol), aux1)
+        call calbec(npw, dvkb(:,:,jpol), aux1, alphadk(:,:,ipol))
      endif
   enddo
 #ifdef TIMING_ADD_DKMDS

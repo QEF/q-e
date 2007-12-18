@@ -1,12 +1,11 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
 !-----------------------------------------------------------------------
-
 subroutine drhodv (nu_i0, nper, drhoscf)
   !-----------------------------------------------------------------------
   !
@@ -17,6 +16,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   USE ions_base, ONLY : nat
   use pwcom
+  USE becmod, ONLY: calbec
   USE io_global, ONLY : stdout
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
@@ -77,9 +77,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
         nrec = (mu - 1) * nksq + ik
         if (nksq > 1 .or. nper > 1) call davcio(dpsi, lrdwf, iudwf, nrec,-1)
         if (noncolin) then
-           call ccalbec_nc(nkb,npwx,npwq,npol,nbnd,dbecq_nc(1,1,1,mu),vkb,dpsi)
+           call calbec (npwq, vkb, dpsi, dbecq_nc(:,:,:,mu) )
         else
-           call ccalbec (nkb, npwx, npwq, nbnd, dbecq (1, 1, mu), vkb, dpsi)
+           call calbec (npwq, vkb, dpsi, dbecq(:,:,mu) )
         endif
         do ipol = 1, 3
            aux=(0.d0,0.d0)
@@ -96,10 +96,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
               endif
            enddo
            if (noncolin) then
-              call ccalbec_nc(nkb,npwx,npwq,npol,nbnd,dalpq_nc(1,1,1,ipol,mu),&
-                             vkb, aux)
+              call calbec (npwq, vkb, aux, dalpq_nc(:,:,:,ipol,mu) )
            else
-              call ccalbec (nkb, npwx, npwq, nbnd, dalpq(1,1,ipol,mu), vkb, aux)
+              call calbec (npwq, vkb, aux, dalpq(:,:,ipol,mu) )
            endif
         enddo
      enddo

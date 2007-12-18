@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -79,7 +79,7 @@ subroutine pcgreen (avg_iter, thresh, ik, et_ )
   !
   ! uncomment for ultrasoft PPs
   ! note that spsi is used as work space to store S|evc>
-  ! CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
+  ! CALL calbec ( npw, vkb, evc, becp, nbnd_occ(ik) )
   ! CALL s_psi (npwx, npw, nbnd_occ(ik), evc, spsi)
   ! CALL ZGEMM( 'N', 'N', npw, nbnd_occ(ik), nbnd_occ(ik), &
   !     (1.d0,0.d0), spsi(1,1), npwx, ps(1,1), nbnd, (-1.d0,0.d0), &

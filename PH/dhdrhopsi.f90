@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -164,7 +164,7 @@ subroutine dhdrhopsi
            call hdiag ( max_iter, avg_iter1, xk(1,ik), et(1,ik) )
 
 !           call init_us_2 (npw, igk, xk (1, ik), vkb)
-           call ccalbec (nkb, npwx, npw, nbnd, becp1 (1, 1, ik), vkb, evc)
+           call calbec (npw, vkb, evc, becp1 (:,:,ik) )
            do ipb = 1, 3
               !
               ! Calculates in a non-scf way the derivative of the

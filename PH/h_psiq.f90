@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,7 +20,7 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   use pwcom
   use scf, only : vrs
   USE wavefunctions_module,  ONLY: psic, psic_nc
-  USE becmod, ONLY: becp, becp_nc
+  USE becmod, ONLY: becp, becp_nc, calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   use phcom
@@ -49,9 +49,9 @@ subroutine h_psiq (lda, n, m, psi, hpsi, spsi)
   call start_clock ('init')
 
   IF (noncolin) THEN
-     call ccalbec_nc (nkb, npwx, n, npol, m, becp_nc, vkb, psi)
+     call calbec ( n, vkb, psi, becp_nc, m)
   ELSE
-     call ccalbec (nkb, npwx, n, m, becp, vkb, psi)
+     call calbec ( n, vkb, psi, becp, m)
   END IF
   !
   ! Here we apply the kinetic energy (k+G)^2 psi

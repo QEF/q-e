@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -20,6 +20,7 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
+  USE becmod, ONLY: calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE wavefunctions_module,  ONLY: evc, psic, psic_nc
   USE kinds, only : DP
@@ -86,9 +87,9 @@ subroutine localdos (ldos, ldoss, dos_ef)
      call init_us_2 (npw, igk, xk (1, ik), vkb)
      !
      IF (noncolin) THEN
-        call ccalbec_nc (nkb, npwx, npw, npol, nbnd, becp_nc, vkb, evc)
+        call calbec ( npw, vkb, evc, becp_nc)
      ELSE
-        call ccalbec (nkb, npwx, npw, nbnd, becp, vkb, evc)
+        call calbec ( npw, vkb, evc, becp)
      END IF
      do ibnd = 1, nbnd_occ (ik)
         wdelta = w0gauss ( (ef-et(ibnd,ik)) / degauss, ngauss) / degauss

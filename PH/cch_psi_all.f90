@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -89,7 +89,7 @@ subroutine cch_psi_all (n, h, ah, e, ik, m)
   !
   !    And apply S again
   !
-  call ccalbec (nkb, npwx, n, m, becp, vkb, hpsi)
+  call calbec (n, vkb, hpsi, becp, m)
 
   call s_psi (npwx, n, m, hpsi, spsi)
   do ibnd = 1, m

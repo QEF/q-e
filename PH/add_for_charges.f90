@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO PWSCF group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,6 +15,7 @@ subroutine add_for_charges (ik, uact)
 
   USE ions_base, ONLY : nat, ityp, ntyp => nsp
   use pwcom
+  USE becmod, ONLY: calbec
   USE noncollin_module, ONLY : noncolin, npol
   USE kinds, only : DP
   USE uspp_param, only: nh
@@ -103,9 +104,9 @@ subroutine add_for_charges (ik, uact)
   ! first we calculate the products of the beta functions with dpsi 
   !
   IF (noncolin) THEN
-     call ccalbec_nc (nkb, npwx, npw, npol, nbnd, bedp_nc, vkb, dpsi)
+     call calbec (npw, vkb, dpsi, bedp_nc)
   ELSE
-     call ccalbec (nkb, npwx, npw, nbnd, bedp, vkb, dpsi)
+     call calbec (npw, vkb, dpsi, bedp)
   ENDIF
   do ipol = 1, 3
      aux1=(0.d0,0.d0)
@@ -124,9 +125,9 @@ subroutine add_for_charges (ik, uact)
         endif
      enddo
      if (noncolin) then
-        call ccalbec_nc(nkb,npwx,npw,npol,nbnd,alphapp_nc(1,1,1,ipol),vkb,aux1)
+        call calbec ( npw, vkb, aux1, alphapp_nc(:,:,:,ipol) )
      else
-        call ccalbec (nkb, npwx, npw, nbnd, alphapp(1,1,ipol), vkb, aux1)
+        call calbec ( npw, vkb, aux1, alphapp(:,:,ipol) )
      endif
   enddo
 

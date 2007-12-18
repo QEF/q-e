@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -32,6 +32,7 @@ SUBROUTINE dynmat_us()
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb
   USE phcom
+  USE becmod,               ONLY : calbec
   USE io_global,            ONLY : stdout
   USE mp_global,            ONLY : my_pool_id
 
@@ -151,14 +152,13 @@ SUBROUTINE dynmat_us()
            ENDDO
 
            IF (noncolin) THEN
-              CALL ccalbec_nc(nkb,npwx,npw,npol,nbnd, &
-                              gammap_nc(1,1,1,icart,jcart),vkb,aux1)
+              CALL calbec ( npw, vkb, aux1, gammap_nc(:,:,:,icart,jcart) )
               IF (jcart < icart) THEN
                  CALL ZCOPY (nkb*nbnd*npol, gammap_nc(1,1,1,icart,jcart),1, &
                                       gammap_nc (1, 1, 1, jcart, icart), 1)
               END IF
            ELSE
-              CALL ccalbec(nkb,npwx,npw,nbnd,gammap(1,1,icart,jcart),vkb,aux1)
+              CALL calbec ( npw, vkb, aux1, gammap(:,:,icart,jcart) )
               IF (jcart < icart) THEN
                  CALL ZCOPY (nkb * nbnd, gammap (1, 1, icart, jcart), 1, &
                                        gammap (1, 1, jcart, icart), 1)

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,7 @@ subroutine solve_e
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
-  USE becmod,                ONLY : becp, becp_nc
+  USE becmod,                ONLY : becp, becp_nc, calbec
   USE uspp_param,            ONLY : upf, nhm
   USE noncollin_module,      ONLY : noncolin, npol
   use phcom
@@ -252,11 +252,10 @@ subroutine solve_e
            ! dpsi is used as work space to store S|evc>
            !
            IF (noncolin) THEN
-              CALL ccalbec_nc (nkb, npwx, npw, npol, nbnd_occ(ik), becp_nc, &
-                                                                   vkb, evc)
+              CALL calbec ( npw,  vkb, evc, becp_nc, nbnd_occ(ik) )
               CALL s_psi_nc (npwx, npw, nbnd_occ(ik), evc, dpsi)
            ELSE
-              CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
+              CALL calbec ( npw,  vkb, evc, becp, nbnd_occ(ik) )
               CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dpsi)
            END IF
            !

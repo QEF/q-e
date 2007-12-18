@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -27,7 +27,7 @@ subroutine solve_e_fpol ( iw )
   USE check_stop,            ONLY : check_stop_now
   USE wavefunctions_module,  ONLY : evc
   USE kinds,                 ONLY : DP
-  USE becmod,                ONLY : becp
+  USE becmod,                ONLY : becp, calbec
   USE uspp_param,            ONLY : nhm
   use phcom
   
@@ -211,7 +211,7 @@ subroutine solve_e_fpol ( iw )
 #endif
            ! dpsi is used as work space to store S|evc>
            !
-           CALL ccalbec (nkb, npwx, npw, nbnd_occ(ik), becp, vkb, evc)
+           CALL calbec (npw, vkb, evc, becp, nbnd_occ(ik) )
            CALL s_psi (npwx, npw, nbnd_occ(ik), evc, dpsi)
            !
            ! |dvpsi> = - (|dvpsi> - S|evc><evc|dvpsi>)

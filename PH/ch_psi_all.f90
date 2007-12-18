@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -109,10 +109,10 @@ subroutine ch_psi_all (n, h, ah, e, ik, m)
   !    And apply S again
   !
   IF (noncolin) THEN
-     call ccalbec_nc (nkb, npwx, n, npol, m, becp_nc, vkb, hpsi)
+     call calbec (n, vkb, hpsi, becp_nc, m)
      call s_psi_nc (npwx, n, m, hpsi, spsi)
   ELSE
-     call ccalbec (nkb, npwx, n, m, becp, vkb, hpsi)
+     call calbec (n, vkb, hpsi, becp, m)
      call s_psi (npwx, n, m, hpsi, spsi)
   END IF
   do ibnd = 1, m

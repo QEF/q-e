@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001 PWSCF group
+! Copyright (C) 2001-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -16,8 +16,9 @@ subroutine raman_mat
 
   use kinds, only : DP
   use pwcom
+  USE becmod,   ONLY: calbec
   USE io_files, ONLY: iunigk
-  USE ions_base, ONLY: nat
+  USE ions_base,ONLY: nat
   USE wavefunctions_module,  ONLY: evc
   use phcom
   USE ramanm
@@ -168,7 +169,7 @@ subroutine raman_mat
            ! initializes some variables used by dvqpsi_us
            !
            call ZCOPY (npwx * nbnd, chif (1, 1, ipa), 1, evc, 1)
-           call ccalbec (nkb, npwx, npw, nbnd, becp1 (1, 1, ik), vkb, evc)
+           call calbec (npw, vkb, evc, becp1 (:,:,ik) )
            do ipb = 1, 3
               do ibnd = 1, nbnd
                  do ig = 1, npw
@@ -177,7 +178,7 @@ subroutine raman_mat
                                 ( xk(ipb,ik) + g(ipb,igk(ig)) )
                  enddo
               enddo
-              call ccalbec (nkb, npwx, npw, nbnd, alphap(1,1,ipb,ik), vkb, aux1)
+              call calbec (npw, vkb, aux1, alphap (:,:,ipb,ik) )
            enddo
 
            call dvqpsi_us (ik, imod, uact (1, imod),.false. )
