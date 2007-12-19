@@ -272,6 +272,7 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
 300 continue
   enddo
   nstop=1
+  goto 900
 600 continue
 
   !
@@ -311,6 +312,8 @@ subroutine ascheqps(nam,lam,jam,e0,mesh,ndm,grid,vpot,thresh,y,beta,ddd,&
   else
      nstop=1
   endif
+
+900 continue
 
   deallocate(el)
   deallocate(f )
