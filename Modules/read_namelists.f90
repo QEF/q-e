@@ -440,7 +440,7 @@ MODULE read_namelists_module
        !
        cell_parameters = 'default'
        !
-       ! ... ( 'sd' | 'pr' | 'none' | 'w' | 'damp-pr' | 'damp-w' )
+       ! ... ( 'sd' | 'pr' | 'none' | 'w' | 'damp-pr' | 'damp-w' | 'bfgs' )
        !
        cell_dynamics = 'none'
        !

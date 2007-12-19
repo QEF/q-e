@@ -803,12 +803,19 @@
 
 !------------------------------------------------------------------------------!
 
-  subroutine cell_force( fcell, ainv, stress, omega, press, wmass )
+  subroutine cell_force( fcell, ainv, stress, omega, press, wmassIN )
     USE constants, ONLY : eps8
     REAL(DP), intent(out) :: fcell(3,3)
     REAL(DP), intent(in) :: stress(3,3), ainv(3,3)
-    REAL(DP), intent(in) :: omega, press, wmass
-    integer      :: i, j
+    REAL(DP), intent(in) :: omega, press
+    REAL(DP), intent(in), optional :: wmassIN
+    integer        :: i, j
+    REAL(DP) :: wmass
+    IF (.not. present(wmassIN)) THEN
+      wmass = 1.0
+    ELSE
+      wmass = wmassIN
+    END IF
     do j=1,3
       do i=1,3
         fcell(i,j) = ainv(j,1)*stress(i,1) + ainv(j,2)*stress(i,2) + ainv(j,3)*stress(i,3)

@@ -22,17 +22,17 @@ SUBROUTINE move_ions()
   USE io_global,              ONLY : stdout
   USE io_files,               ONLY : tmp_dir, iunupdate
   USE kinds,                  ONLY : DP
-  USE cell_base,              ONLY : alat, at, bg, omega
-  USE cellmd,                 ONLY : omega_old, at_old, lmovecell, calc
+  USE cell_base,              ONLY : alat, at, bg, omega, cell_force
+  USE cellmd,                 ONLY : omega_old, at_old, press, lmovecell, calc
   USE ions_base,              ONLY : nat, ityp, tau, if_pos
   USE gvect,                  ONLY : nr1, nr2, nr3
   USE symme,                  ONLY : s, ftau, nsym, irt
   USE ener,                   ONLY : etot
-  USE force_mod,              ONLY : force
+  USE force_mod,              ONLY : force, sigma
   USE control_flags,          ONLY : istep, nstep, upscale, lbfgs, ldamped, &
                                      lconstrain, lcoarsegrained, conv_ions, &
                                      lmd, llang, history, tr2
-  USE relax,                  ONLY : epse, epsf, starting_scf_threshold
+  USE relax,                  ONLY : epse, epsf, epsp, starting_scf_threshold
   USE lsda_mod,               ONLY : lsda, absmag
   USE metadyn_base,           ONLY : set_target, mean_force
   USE mp_global,              ONLY : intra_image_comm
@@ -48,9 +48,10 @@ SUBROUTINE move_ions()
                            restart_with_starting_magnetization = .FALSE.
     ! .TRUE. if a check on zero absolute magnetization is required
   REAL(DP), ALLOCATABLE :: tauold(:,:,:)
-  REAL(DP)              :: energy_error, gradient_error
+  REAL(DP)              :: energy_error, gradient_error, cell_error
   LOGICAL               :: step_accepted, exst
   REAL(DP), ALLOCATABLE :: pos(:), grad(:)
+  REAL(DP)              :: h(3,3), fcell(3,3)=0.d0
   INTEGER,  ALLOCATABLE :: fixion(:)
   !
   !
@@ -119,13 +120,34 @@ SUBROUTINE move_ions()
         !  
         ALLOCATE( pos( 3*nat ), grad( 3*nat ), fixion( 3*nat ) )
         !
-        pos    =   RESHAPE( tau,    (/ 3 * nat /) ) * alat
-        grad   = - RESHAPE( force,  (/ 3 * nat /) )
+        h = at * alat
+        !
+        pos    =   RESHAPE( tau,    (/ 3 * nat /) )
+        CALL cryst_to_cart( nat, pos, bg, -1 )
+        grad   = - RESHAPE( force,  (/ 3 * nat /) ) * alat
+        CALL cryst_to_cart( nat, grad, at, -1 )
         fixion =   RESHAPE( if_pos, (/ 3 * nat /) )
         !
-        CALL bfgs( pos, etot, grad, fixion, tmp_dir, stdout, epse, &
-                   epsf, energy_error, gradient_error, istep, nstep, &
-                   step_accepted, conv_ions )
+        if ( lmovecell ) then
+           at_old = at
+           omega_old = omega
+           etot = etot + press * omega
+           CALL cell_force( fcell, - transpose(bg)/alat, sigma, omega, press )
+        end if
+        CALL bfgs( pos, h, etot, grad, fcell, fixion, tmp_dir, stdout, epse, epsf, epsp, &
+                   energy_error, gradient_error, cell_error, &
+                   istep, nstep, step_accepted, conv_ions, lmovecell )
+        !
+        if ( lmovecell ) then
+           ! changes needed only if cell moves
+           at = h /alat  
+           CALL recips( at(1,1),at(1,2),at(1,3), bg(1,1),bg(1,2),bg(1,3) )
+           CALL volume( alat, at(1,1), at(1,2), at(1,3), omega )
+        end if
+        CALL cryst_to_cart( nat, pos, at, 1 )
+        tau    =   RESHAPE( pos, (/ 3 , nat /) )
+        CALL cryst_to_cart( nat, grad, bg, 1 )
+        force = - RESHAPE( grad, (/ 3, nat /) )
         !
         IF ( conv_ions ) THEN
            !
@@ -170,10 +192,6 @@ SUBROUTINE move_ions()
            lcheck_mag = .TRUE.
            !
         END IF
-
-        !
-        tau   =   RESHAPE( pos,  (/ 3, nat /) ) / alat
-        force = - RESHAPE( grad, (/ 3, nat /) )
         !
         CALL output_tau( conv_ions )
         !

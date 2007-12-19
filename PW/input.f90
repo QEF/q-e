@@ -740,6 +740,12 @@ SUBROUTINE iosys()
         calc    = 'nm'
         ntcheck = nstep + 1
         !
+     CASE( 'bfgs' )
+        !
+        lbfgs = .TRUE.
+        lmd   = .FALSE.
+        ldamped = .FALSE.
+        !
      CASE DEFAULT
         !
         CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
@@ -748,7 +754,7 @@ SUBROUTINE iosys()
         !
      END SELECT
      !
-     IF ( TRIM( ion_dynamics ) /= 'damp' ) &
+     IF ( TRIM( ion_dynamics ) /= 'damp' .AND. .NOT. lbfgs) &
         CALL errore( 'iosys', 'calculation=' // TRIM( calculation ) // &
                    & ': ion_dynamics=' // TRIM( ion_dynamics ) // &
                    & ' not supported', 1 )

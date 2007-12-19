@@ -1194,8 +1194,8 @@ MODULE input_parameters
           ! 'sd'     steepest descent algorithm is used to minimize the cell
           ! 'pr'     standard Verlet algorithm is used to propagate the cell
 
-        CHARACTER(LEN=80) :: cell_dynamics_allowed(6)
-        DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', 'damp-w'  /
+        CHARACTER(LEN=80) :: cell_dynamics_allowed(7)
+        DATA cell_dynamics_allowed / 'sd', 'pr', 'none', 'w', 'damp-pr', 'damp-w', 'bfgs'  /
 
         CHARACTER(LEN=80) :: cell_velocities = 'default'
           ! cell_velocities = 'zero' | 'default'*
