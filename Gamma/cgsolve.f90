@@ -17,8 +17,9 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   !  x = solution, u = gradient, h = conjugate gradient, Ah = operator*h
   !
 #include "f_defs.h"
-  USE io_global,  ONLY : stdout
-  USE kinds, only : DP
+  USE io_global, ONLY : stdout
+  USE kinds,     ONLY : DP
+  USE becmod,    ONLY : calbec
   implicit none
   integer npw, npwx, nbnd, nbndx, niter, iter
   real(DP) :: diagonal(npw), e(nbnd), overlap(nbndx,nbnd)
@@ -45,9 +46,9 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
   call DAXPY(2*npwx*nbnd,-1.d0,b,1,u,1)
   if (precondition) then
      call zvscal(npw,npwx,nbnd,diagonal,u,pu)
-     call pw_gemm ('Y', nbnd, nbnd, npw, evc, npwx, pu, npwx, lagrange, nbnd)
+     call calbec ( npw, evc, pu, lagrange )
   else
-     call pw_gemm ('Y', nbnd, nbnd, npw, evc, npwx, u, npwx, lagrange, nbnd)
+     call calbec ( npw, evc,  u, lagrange )
    end if
   if (.not. orthonormal) &
        call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)
@@ -102,9 +103,9 @@ subroutine cgsolve (operator,npw,evc,npwx,nbnd,overlap,      &
      ! lagrange multipliers ensure orthogonality of the solution
      if (precondition) then
         call zvscal(npw,npwx,nbnd,diagonal,u,pu)
-        call pw_gemm ('Y',nbnd, nbnd, npw, evc, npwx, pu, npwx, lagrange, nbnd)
+        call calbec ( npw, evc, pu, lagrange )
      else
-        call pw_gemm ('Y',nbnd, nbnd, npw, evc, npwx, u, npwx, lagrange, nbnd)
+        call calbec ( npw, evc,  u, lagrange )
      end if
      if (.not. orthonormal) &
           call DPOTRS('U',nbnd,nbnd,overlap,nbndx,lagrange,nbnd,info)

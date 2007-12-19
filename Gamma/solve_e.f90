@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -14,7 +14,7 @@ subroutine solve_e
   USE io_global,      ONLY : stdout
   use pwcom
   USE wavefunctions_module,  ONLY: evc
-  USE becmod, ONLY: rbecp
+  USE becmod, ONLY: rbecp, calbec
   use cgcom
   !
   implicit none
@@ -51,7 +51,7 @@ subroutine solve_e
         diag(i) = 1.0d0/max(1.d0,g2kin(i))
      end do
      call zvscal(npw,npwx,nbnd,diag,evc,work)
-     call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
+     call calbec (npw, work, evc, overlap)
      call DPOTRF('U',nbnd,overlap,nbnd,info)
      if (info.ne.0) call errore('solve_e','cannot factorize',info)
   end if

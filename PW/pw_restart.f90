@@ -1932,12 +1932,12 @@ MODULE pw_restart
                CALL iotk_scan_dat( iunpun, "FERMI_ENERGY_DOWN", ef_up )
             ENDIF
             IF (i_cons>0) CALL iotk_scan_dat(iunpun,"LAMBDA",lambda)
-            ! 
+            !
             CALL iotk_scan_end( iunpun, "STARTING_MAG" )
-            !
-            CALL iotk_close_read( iunpun )
-            !
+            ! 
          END IF
+         !
+         CALL iotk_close_read( iunpun )
          !
       END IF
       !

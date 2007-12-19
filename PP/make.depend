@@ -215,10 +215,6 @@ plan_avg.o : ../PW/pwcom.o
 plot_io.o : ../Modules/io_global.o
 plot_io.o : ../Modules/kind.o
 plot_whole_cell.o : ../Modules/kind.o
-plotband.o : ../Modules/io_global.o
-plotproj.o : ../Modules/kind.o
-plotrho.o : ../Modules/io_global.o
-plotrho.o : ../Modules/kind.o
 poormanwannier.o : ../Modules/cell_base.o
 poormanwannier.o : ../Modules/constants.o
 poormanwannier.o : ../Modules/control_flags.o

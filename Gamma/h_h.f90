@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -17,7 +17,7 @@ subroutine H_h(e,h,Ah)
   USE uspp,     ONLY : vkb, nkb
   USE lsda_mod, ONLY : current_spin
   USE scf,      ONLY : vrs
-  use becmod, only: rbecp
+  use becmod, only: rbecp, calbec
   use cgcom
   !
   implicit none
@@ -41,8 +41,8 @@ subroutine H_h(e,h,Ah)
   ! V_Loc psi
   call vloc_psi(npwx, npw, nbnd, h, vrs(1,current_spin), ah)
   ! V_NL psi
-   call pw_gemm ('Y', nkb, nbnd, npw, vkb, npwx, h, npwx, rbecp, nkb)
-  if (nkb.gt.0) call add_vuspsi (npwx, npw, nbnd, h, ah)
+   call calbec  ( npw, vkb, h, rbecp )
+  if (nkb > 0) call add_vuspsi (npwx, npw, nbnd, h, ah)
   ! set to zero the imaginary part of ah at G=0
   !  needed for numerical stability
   if (gstart==2) then

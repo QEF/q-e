@@ -45,6 +45,7 @@ efg.o : ../Modules/kind.o
 efg.o : ../Modules/parameters.o
 efg.o : ../Modules/uspp.o
 efg.o : ../Modules/wavefunctions.o
+efg.o : ../PW/becmod.o
 efg.o : ../PW/buffers.o
 efg.o : ../PW/pwcom.o
 efg.o : ../PW/scf_mod.o

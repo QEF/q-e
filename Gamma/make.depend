@@ -35,6 +35,7 @@ cg_setupdgc.o : cgcom.o
 cgcom.o : ../Modules/kind.o
 cgsolve.o : ../Modules/io_global.o
 cgsolve.o : ../Modules/kind.o
+cgsolve.o : ../PW/becmod.o
 d2ion.o : ../Modules/constants.o
 d2ion.o : ../Modules/io_global.o
 d2ion.o : ../Modules/kind.o
@@ -63,6 +64,7 @@ dvpsi_kb.o : ../Modules/ions_base.o
 dvpsi_kb.o : ../Modules/kind.o
 dvpsi_kb.o : ../Modules/uspp.o
 dvpsi_kb.o : ../Modules/wavefunctions.o
+dvpsi_kb.o : ../PW/becmod.o
 dvpsi_kb.o : ../PW/pwcom.o
 dvpsi_kb.o : cgcom.o
 dyndiar.o : ../Modules/io_global.o
@@ -108,6 +110,7 @@ pw_dot.o : ../PW/pwcom.o
 rhod2vkb.o : ../Modules/ions_base.o
 rhod2vkb.o : ../Modules/uspp.o
 rhod2vkb.o : ../Modules/wavefunctions.o
+rhod2vkb.o : ../PW/becmod.o
 rhod2vkb.o : ../PW/pwcom.o
 rhod2vkb.o : ../PW/scf_mod.o
 rhod2vkb.o : cgcom.o

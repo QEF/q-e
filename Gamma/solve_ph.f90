@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -15,7 +15,7 @@ SUBROUTINE solve_ph ( )
   USE io_files,              ONLY : iunres
   USE pwcom
   USE wavefunctions_module,  ONLY : evc
-  USE becmod,                ONLY : rbecp
+  USE becmod,                ONLY : rbecp, calbec
   USE cgcom
 
   IMPLICIT NONE
@@ -51,7 +51,7 @@ SUBROUTINE solve_ph ( )
         diag(i) = 1.0d0/MAX(1.d0,g2kin(i))
      END DO
      CALL zvscal(npw,npwx,nbnd,diag,evc,work)
-     CALL pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
+     CALL calbec (npw, work, evc, overlap)
      CALL DPOTRF('U',nbnd,overlap,nbnd,info)
      IF (info.NE.0) CALL errore('solve_ph','cannot factorize',info)
   END IF

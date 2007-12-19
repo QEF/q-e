@@ -44,8 +44,7 @@ subroutine h_psiq_vdw (lda, n, m, psi, hpsi, spsi)
 
   call start_clock ('h_psiq')
   call start_clock ('init')
-
-!  call ccalbec (nkb, npwx, n, m, becp, vkb, psi)   ! no need in TFvW
+!  call calbec ( n, vkb, psi, becp, m)   ! no need in TFvW
   !
   ! Here we apply the kinetic energy (k+G)^2 psi
   !

@@ -104,6 +104,7 @@ average_pp.o : pwcom.o
 becmod.o : ../Modules/control_flags.o
 becmod.o : ../Modules/kind.o
 becmod.o : noncol.o
+becmod.o : pwcom.o
 bp_c_phase.o : ../Modules/cell_base.o
 bp_c_phase.o : ../Modules/constants.o
 bp_c_phase.o : ../Modules/io_files.o
@@ -839,8 +840,6 @@ punch.o : ../Modules/io_files.o
 punch.o : ../Modules/io_global.o
 punch.o : a2fmod.o
 punch.o : pw_restart.o
-pw_gemm.o : ../Modules/kind.o
-pw_gemm.o : pwcom.o
 pw_restart.o : ../Modules/cell_base.o
 pw_restart.o : ../Modules/constants.o
 pw_restart.o : ../Modules/control_flags.o
@@ -1366,8 +1365,6 @@ bp_c_phase.o : ../include/f_defs.h
 bp_strings.o : ../include/f_defs.h
 c_bands.o : ../include/f_defs.h
 c_phase_field.o : ../include/f_defs.h
-ccalbec.o : ../include/f_defs.h
-ccalbec_nc.o : ../include/f_defs.h
 ccgdiagg.o : ../include/f_defs.h
 cdiagh.o : ../include/f_defs.h
 cdiaghg.o : ../include/f_defs.h

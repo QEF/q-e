@@ -27,8 +27,6 @@ bp_strings.o \
 buffers.o \
 c_bands.o \
 c_phase_field.o \
-ccalbec.o \
-ccalbec_nc.o \
 ccgdiagg.o \
 cdiagh.o \
 cdiaghg.o \
@@ -146,7 +144,6 @@ print_ks_energies.o \
 psymrho.o \
 psymrho_mag.o \
 punch.o \
-pw_gemm.o \
 pw_restart.o \
 pwcom.o \
 qvan2.o \

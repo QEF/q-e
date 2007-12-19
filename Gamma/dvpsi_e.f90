@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -19,7 +19,7 @@ subroutine dvpsi_e(kpoint,ipol)
   use pwcom
   USE uspp_param, ONLY: nh
   USE wavefunctions_module,  ONLY: evc
-  USE becmod, ONLY: rbecp
+  USE becmod, ONLY: rbecp, calbec
   use cgcom
   !
   implicit none
@@ -79,8 +79,8 @@ subroutine dvpsi_e(kpoint,ipol)
      end do
   end do
   !
-  call pw_gemm ('Y', nkb, nbnd, npw,  vkb, npwx, evc, npwx,rbecp, nkb)
-  call pw_gemm ('Y', nkb, nbnd, npw, dvkb, npwx, evc, npwx, dbec, nkb)
+  call calbec ( npw,  vkb, evc, rbecp )
+  call calbec ( npw, dvkb, evc,  dbec )
   !
   jkb = 0
   do nt=1, ntyp
@@ -126,7 +126,7 @@ subroutine dvpsi_e(kpoint,ipol)
         q(i) = 1.0d0/max(1.d0,g2kin(i))
      end do
      call zvscal(npw,npwx,nbnd,q,evc,work)
-     call pw_gemm ('Y',nbnd, nbnd, npw, work, npwx, evc, npwx, overlap, nbnd)
+     call calbec ( npw, work, evc, overlap )
      call DPOTRF('U',nbnd,overlap,nbnd,info)
      if (info.ne.0) call errore('solve_ph','cannot factorize',info)
   end if

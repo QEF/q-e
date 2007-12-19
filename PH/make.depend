@@ -2,12 +2,14 @@ add_dkmds.o : ../Modules/ions_base.o
 add_dkmds.o : ../Modules/kind.o
 add_dkmds.o : ../Modules/uspp.o
 add_dkmds.o : ../Modules/wavefunctions.o
+add_dkmds.o : ../PW/becmod.o
 add_dkmds.o : ../PW/noncol.o
 add_dkmds.o : ../PW/pwcom.o
 add_dkmds.o : phcom.o
 add_for_charges.o : ../Modules/ions_base.o
 add_for_charges.o : ../Modules/kind.o
 add_for_charges.o : ../Modules/uspp.o
+add_for_charges.o : ../PW/becmod.o
 add_for_charges.o : ../PW/noncol.o
 add_for_charges.o : ../PW/pwcom.o
 add_for_charges.o : phcom.o
@@ -55,11 +57,13 @@ addnlcc_zstar_eu_us.o : phcom.o
 addusdbec.o : ../Modules/ions_base.o
 addusdbec.o : ../Modules/kind.o
 addusdbec.o : ../Modules/uspp.o
+addusdbec.o : ../PW/becmod.o
 addusdbec.o : ../PW/pwcom.o
 addusdbec.o : phcom.o
 addusdbec_nc.o : ../Modules/ions_base.o
 addusdbec_nc.o : ../Modules/kind.o
 addusdbec_nc.o : ../Modules/uspp.o
+addusdbec_nc.o : ../PW/becmod.o
 addusdbec_nc.o : ../PW/noncol.o
 addusdbec_nc.o : ../PW/pwcom.o
 addusdbec_nc.o : phcom.o
@@ -143,6 +147,7 @@ compute_alphasum.o : ../PW/pwcom.o
 compute_alphasum.o : phcom.o
 compute_becalp.o : ../Modules/io_files.o
 compute_becalp.o : ../Modules/kind.o
+compute_becalp.o : ../PW/becmod.o
 compute_becalp.o : ../PW/noncol.o
 compute_becalp.o : ../PW/pwcom.o
 compute_becalp.o : phcom.o
@@ -244,6 +249,7 @@ drhodv.o : ../Modules/io_files.o
 drhodv.o : ../Modules/io_global.o
 drhodv.o : ../Modules/ions_base.o
 drhodv.o : ../Modules/kind.o
+drhodv.o : ../PW/becmod.o
 drhodv.o : ../PW/noncol.o
 drhodv.o : ../PW/pwcom.o
 drhodv.o : phcom.o
@@ -331,6 +337,7 @@ dynmat_us.o : ../Modules/kind.o
 dynmat_us.o : ../Modules/mp_global.o
 dynmat_us.o : ../Modules/uspp.o
 dynmat_us.o : ../Modules/wavefunctions.o
+dynmat_us.o : ../PW/becmod.o
 dynmat_us.o : ../PW/noncol.o
 dynmat_us.o : ../PW/pwcom.o
 dynmat_us.o : ../PW/scf_mod.o
@@ -439,6 +446,7 @@ localdos.o : ../Modules/ions_base.o
 localdos.o : ../Modules/kind.o
 localdos.o : ../Modules/uspp.o
 localdos.o : ../Modules/wavefunctions.o
+localdos.o : ../PW/becmod.o
 localdos.o : ../PW/noncol.o
 localdos.o : ../PW/pwcom.o
 localdos.o : phcom.o
@@ -490,6 +498,7 @@ phq_init.o : ../Modules/kind.o
 phq_init.o : ../Modules/paw_variables.o
 phq_init.o : ../Modules/uspp.o
 phq_init.o : ../Modules/wavefunctions.o
+phq_init.o : ../PW/becmod.o
 phq_init.o : ../PW/noncol.o
 phq_init.o : ../PW/paw_onecenter.o
 phq_init.o : ../PW/pwcom.o
@@ -613,6 +622,7 @@ raman_mat.o : ../Modules/io_files.o
 raman_mat.o : ../Modules/ions_base.o
 raman_mat.o : ../Modules/kind.o
 raman_mat.o : ../Modules/wavefunctions.o
+raman_mat.o : ../PW/becmod.o
 raman_mat.o : ../PW/pwcom.o
 raman_mat.o : phcom.o
 raman_mat.o : ramanm.o

@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2003 PWSCF group
+! Copyright (C) 2003-2007 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -18,6 +18,7 @@ subroutine rhod2vkb(dyn0)
   use scf, only : rho
   USE wavefunctions_module,  ONLY: evc, psic
   USE uspp_param, only: nh
+  USE becmod, ONLY: calbec
   use cgcom
   !
   implicit none
@@ -99,7 +100,7 @@ subroutine rhod2vkb(dyn0)
      call gk_sort(xk(1,kpoint),ngm,g,ecutwfc/tpiba2,npw,igk,psic)
      if (nks.gt.1) call davcio(evc,lrwfc,iuwfc,kpoint,-1)
      !
-     call pw_gemm ('Y', nkb, nbnd, npw, vkb, npwx, evc, npwx, becp, nkb)
+     call calbec ( npw, vkb, evc, becp )
      !
      !  becp(j,n) = sum_G [ V_n*(G) psi_j(G) ]   n=(na,l)
      !
@@ -110,8 +111,7 @@ subroutine rhod2vkb(dyn0)
            end do
         end do
         !
-        call pw_gemm ('Y', nkb, nbnd, npw, dvkb, npwx, evc, npwx, &
-             becp1(1,1,ipol), nkb)
+        call calbec ( npw, dvkb, evc, becp1(:,:,ipol) )
         !
         !  becp1(j,n,ipol) = sum_G [ V_n*(G) (iG_ipol) psi_j(G) ]
         !
@@ -126,8 +126,7 @@ subroutine rhod2vkb(dyn0)
            end do
            !
            ijpol=ijpol+1
-           call pw_gemm ('Y', nkb, nbnd, npw, dvkb, npwx, evc, npwx, &
-             becp2(1,1,ijpol), nkb)
+           call calbec ( npw, dvkb, evc, becp2(:,:,ijpol) )
            !
            !  becp2(j,n,ijpol) = sum_G [ V_n*(G) (-iG_ipol) (iG_jpol)  psi_j(G) ]
            !

@@ -15,6 +15,7 @@ subroutine dvpsi_kb(kpoint,nu)
   USE kinds,      ONLY: DP
   USE constants,  ONLY: tpi
   USE atom,       ONLY: rgrid
+  USE becmod,     ONLY: calbec
   USE cell_base,  ONLY: omega, tpiba, tpiba2
   USE ions_base,  ONLY: ntyp => nsp, nat, ityp, tau
   USE uspp_param, ONLY: upf, nh, nhm
@@ -91,11 +92,10 @@ subroutine dvpsi_kb(kpoint,nu)
   !
   !   nonlocal (Kleinman-Bylander) contribution.
   !
-  allocate (work( npwx, nhm))    
   jkb=0
   do nt = 1,ntyp
-     ! bec1 and bec2 are allocated with first dimension nh(nt) :
-     ! maybe obsolete ?
+     ! beware allocations !
+     allocate (work( npwx, nh(nt)))    
      allocate (bec1( nh(nt), nbnd))    
      allocate (bec2( nh(nt), nbnd))    
      do na = 1,nat
@@ -115,10 +115,8 @@ subroutine dvpsi_kb(kpoint,nu)
                  end do
               end do
               !
-              call pw_gemm ('Y', nh(nt), nbnd, npw, work        , npwx, &
-                   evc, npwx, bec1, nh(nt))
-              call pw_gemm ('Y', nh(nt), nbnd, npw, vkb(1,jkb+1), npwx, &
-                   evc, npwx, bec2, nh(nt))
+              call calbec ( npw, work, evc, bec1 )
+              call calbec ( npw, vkb(:,jkb+1:jkb+nh(nt)), evc, bec2 )
               !
               do ibnd = 1,nbnd
                  do ih = 1,nh(nt)
@@ -135,12 +133,11 @@ subroutine dvpsi_kb(kpoint,nu)
            jkb = jkb + nh(nt)
         end if
      end do
+     deallocate(work)
      deallocate(bec2)
      deallocate(bec1)
   end do
   if (jkb.ne.nkb) call errore('dvpsi_kb','unexpected error',1)
-  !
-  deallocate(work)
   !
   call stop_clock('dvpsi_kb')
   !

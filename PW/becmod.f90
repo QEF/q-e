@@ -14,9 +14,10 @@ MODULE becmod
   ! ...    betapsi(i,j)  = <beta(i)|psi(j)>   (the sum is over npw components)
   ! ... or betapsi(i,s,j)= <beta(i)|psi(s,j)> (s=polarization index)
   !
-  USE control_flags, ONLY : gamma_only
+  USE kinds,            ONLY : DP
+  USE control_flags,    ONLY : gamma_only
+  USE gvect,            ONLY : gstart
   USE noncollin_module, ONLY : noncolin, npol
-  USE kinds, ONLY :  DP
   !
   SAVE
   !
@@ -40,6 +41,10 @@ CONTAINS
   SUBROUTINE calbec_gamma ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
     !
+    ! ... matrix times matrix with summation index (k=1,npw) running on 
+    ! ... half of the G-vectors or PWs - assuming k=0 is the G=0 component:
+    ! ... betapsi(i,j) = 2Re(\sum_k beta^*(i,k)psi(k,j)) + beta^*(i,0)psi(0,j)
+    !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (IN) :: beta(:,:), psi(:,:)
     REAL (DP), INTENT (OUT) :: betapsi(:,:)
@@ -50,6 +55,8 @@ CONTAINS
     !
     nkb = SIZE (beta, 2)
     IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
     npwx= SIZE (beta, 1)
     IF ( npwx /= SIZE (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -61,8 +68,25 @@ CONTAINS
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 2) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
-    CALL pw_gemm ('Y', nkb, m, npw, beta, npwx, psi, npwx, betapsi, nkb)
-    !
+    IF ( m == 1 ) THEN
+        !
+        CALL DGEMV( 'C', 2*npw, nkb, 2.0_DP, beta, 2*npwx, psi, 1, 0.0_DP, &
+                     betapsi, 1 )
+        IF ( gstart == 2 ) betapsi(:,1) = betapsi(:,1) - beta(1,:)*psi(1,1)
+        !
+    ELSE
+        !
+        CALL DGEMM( 'C', 'N', nkb, m, 2*npw, 2.0_DP, beta, 2*npwx, psi, &
+                    2*npwx, 0.0_DP, betapsi, nkb )
+        IF ( gstart == 2 ) &
+           CALL DGER( nkb, m, -1.0_DP, beta, 2*npwx, psi, 2*npwx, betapsi, nkb )
+        !
+     END IF
+     !
+     CALL reduce( nkb*m, betapsi )
+     !
+     CALL stop_clock( 'calbec' )
+     !
     RETURN
     !
   END SUBROUTINE calbec_gamma
@@ -70,6 +94,9 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_k ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
+    !
+    ! ... matrix times matrix with summation index (k=1,npw) running on 
+    ! ... G-vectors or PWs : betapsi(i,j) = \sum_k beta^*(i,k) psi(k,j)
     !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (IN) :: beta(:,:), psi(:,:)
@@ -81,6 +108,8 @@ CONTAINS
     !
     nkb = SIZE (beta, 2)
     IF ( nkb == 0 ) RETURN
+    !
+    CALL start_clock( 'calbec' )
     npwx= SIZE (beta, 1)
     IF ( npwx /= SIZE (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -92,7 +121,21 @@ CONTAINS
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 2) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
-    CALL ccalbec( nkb, npwx, npw, m, betapsi, beta, psi )
+    IF ( m == 1 ) THEN
+       !
+       CALL ZGEMV( 'C', npw, nkb, (1.0_DP,0.0_DP), beta, npwx, psi, 1, &
+                   (0.0_DP, 0.0_DP), betapsi, 1 )
+       !
+    ELSE
+       !
+       CALL ZGEMM( 'C', 'N', nkb, m, npw, (1.0_DP,0.0_DP), &
+                 beta, npwx, psi, npwx, (0.0_DP,0.0_DP), betapsi, nkb )
+       !
+    END IF
+    !
+    CALL reduce( 2*nkb*m, betapsi )
+    !
+    CALL stop_clock( 'calbec' )
     !
     RETURN
     !
@@ -101,6 +144,11 @@ CONTAINS
   !-----------------------------------------------------------------------
   SUBROUTINE calbec_nc ( npw, beta, psi, betapsi, nbnd )
     !-----------------------------------------------------------------------
+    !
+    ! ... matrix times matrix with summation index (k below) running on 
+    ! ... G-vectors or PWs corresponding to two different polarizations:
+    ! ... betapsi(i,1,j) = \sum_k=1,npw beta^*(i,k) psi(k,j)
+    ! ... betapsi(i,2,j) = \sum_k=1,npw beta^*(i,k) psi(k+npwx,j)
     !
     IMPLICIT NONE
     COMPLEX (DP), INTENT (IN) :: beta(:,:), psi(:,:)
@@ -112,6 +160,8 @@ CONTAINS
     !
     nkb = SIZE (beta, 2)
     IF ( nkb == 0 ) RETURN
+    !
+    call start_clock ('calbec')
     npwx= SIZE (beta, 1)
     IF ( 2*npwx /= SIZE (psi, 1) ) CALL errore ('calbec', 'size mismatch', 1)
     IF ( npwx < npw ) CALL errore ('calbec', 'size mismatch', 2)
@@ -124,7 +174,12 @@ CONTAINS
     IF ( nkb /= SIZE (betapsi,1) .OR. m > SIZE (betapsi, 3) ) &
       CALL errore ('calbec', 'size mismatch', 3)
     !
-    CALL ccalbec_nc( nkb, npwx, npw, npol, m, betapsi, beta, psi )
+    call ZGEMM ('C', 'N', nkb, m*npol, npw, (1.0_DP, 0.0_DP), beta, &
+              npwx, psi, npwx, (0.0_DP, 0.0_DP),  betapsi, nkb)
+    !
+    CALL reduce( 2*nkb*m*npol, betapsi )
+    !
+    CALL stop_clock( 'calbec' )
     !
     RETURN
     !

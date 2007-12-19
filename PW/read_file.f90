@@ -135,7 +135,7 @@ SUBROUTINE read_file()
   !
   ! ... distribute across pools k-points and related variables.
   ! ... nks is defined by the following routine as the number 
-  !yy ... of k-points in the current pool
+  ! ... of k-points in the current pool
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
