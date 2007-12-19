@@ -1276,6 +1276,7 @@ MODULE pw_restart
       CHARACTER(LEN=80) :: bravais_lattice
       !
       !
+      ierr = 0
       IF ( lcell_read ) RETURN
       !
       IF ( ionode ) &
@@ -1407,7 +1408,7 @@ MODULE pw_restart
       INTEGER :: i
       LOGICAL :: exst
       !
-      !
+      ierr = 0
       IF ( lions_read ) RETURN
       !
       IF ( .NOT. lcell_read ) &
@@ -1533,7 +1534,7 @@ MODULE pw_restart
       REAL(DP) :: tmp(3)
       LOGICAL  :: found
       !
-      !
+      ierr = 0
       IF ( lsymm_read ) RETURN
       !
       IF ( .NOT. lpw_read ) &
@@ -1628,7 +1629,7 @@ MODULE pw_restart
       INTEGER,          INTENT(OUT) :: ierr
       LOGICAL                       :: found
       !
-      !
+      ierr = 0
       IF ( lefield_read ) RETURN
       !
       IF ( ionode ) &
@@ -1700,7 +1701,7 @@ MODULE pw_restart
       REAL(DP) :: ecutrho
       INTEGER  :: npwx_
       !
-      !
+      ierr = 0
       IF ( lpw_read ) RETURN
       !
       IF ( ionode ) &
@@ -1782,6 +1783,72 @@ MODULE pw_restart
       !
       LOGICAL :: found
       !
+      ierr = 0
+      IF ( lpw_read ) RETURN
+      !
+      IF ( ionode ) &
+         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
+                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
+      !
+      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
+      !
+      IF ( ierr > 0 ) RETURN
+      !
+      IF ( ionode ) THEN
+         !
+         CALL iotk_scan_begin( iunpun, "PLANE_WAVES" )
+         !
+         CALL iotk_scan_dat( iunpun, "WFC_CUTOFF", ecutwfc )
+         !
+         CALL iotk_scan_dat( iunpun, "RHO_CUTOFF", ecutrho )
+         !
+         ecutwfc = ecutwfc * e2
+         ecutrho = ecutrho * e2
+         !
+         dual = ecutrho / ecutwfc
+         !
+         CALL iotk_scan_dat( iunpun, "MAX_NUMBER_OF_GK-VECTORS", npwx_ )
+         !
+         CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
+         !
+         CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
+         CALL iotk_scan_attr( attr, "nr1", nr1 )
+         CALL iotk_scan_attr( attr, "nr2", nr2 )
+         CALL iotk_scan_attr( attr, "nr3", nr3 )
+         !
+         CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
+         !
+         CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
+         CALL iotk_scan_attr( attr, "nr1s", nr1s )
+         CALL iotk_scan_attr( attr, "nr2s", nr2s )
+         CALL iotk_scan_attr( attr, "nr3s", nr3s )
+         !
+         CALL iotk_scan_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
+         !
+         CALL iotk_scan_end( iunpun, "PLANE_WAVES" )
+         !
+         CALL iotk_close_read( iunpun )
+         !
+      END IF
+      !
+      CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
+      CALL mp_bcast( dual,       ionode_id, intra_image_comm )
+      CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
+      CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
+      CALL mp_bcast( nr1,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nr2,        ionode_id, intra_image_comm )
+      CALL mp_bcast( nr3,        ionode_id, intra_image_comm )
+      CALL mp_bcast( ngm_g,      ionode_id, intra_image_comm )
+      CALL mp_bcast( nr1s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( nr2s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( nr3s,       ionode_id, intra_image_comm )
+      CALL mp_bcast( ngms_g,     ionode_id, intra_image_comm )
+      !
+      lpw_read = .TRUE.
+      !
+      RETURN
+      !
+    END SUBROUTINE 
       IF ( lspin_read ) RETURN
       !
       IF ( ionode ) &
@@ -1872,6 +1939,7 @@ MODULE pw_restart
       LOGICAL :: found
       INTEGER :: ityp, ntyp
       !
+      ierr = 0
       IF ( lstarting_mag_read ) RETURN
       !
       IF ( ionode ) &
@@ -1975,7 +2043,7 @@ MODULE pw_restart
       INTEGER           :: nsp_
       LOGICAL           :: found
       !
-      !
+      ierr = 0
       IF ( lxc_read ) RETURN
       !
       IF ( .NOT. lions_read ) &
@@ -2054,7 +2122,7 @@ MODULE pw_restart
       !
       INTEGER :: ik, num_k_points
       !
-      !
+      ierr = 0
       IF ( lbz_read ) RETURN
       !
       IF ( ionode ) &
@@ -2143,7 +2211,7 @@ MODULE pw_restart
       INTEGER :: i
       LOGICAL :: found
       !
-      !
+      ierr = 0
       IF ( locc_read ) RETURN
       !
       IF ( ionode ) &
@@ -2280,6 +2348,7 @@ MODULE pw_restart
       INTEGER :: ik, ik_eff, num_k_points
       LOGICAL :: found
       !
+      ierr = 0
       IF ( lbs_read ) RETURN
       !
       IF ( .NOT. lspin_read ) &
