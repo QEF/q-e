@@ -1092,7 +1092,7 @@ MODULE pw_restart
       !
       INTEGER  :: npwx_
       REAL(DP) :: ecutrho
-      LOGICAL  :: found
+      LOGICAL  :: found, found2
       !
       !
       ! ... first the entire CELL section is read
@@ -1217,10 +1217,14 @@ MODULE pw_restart
                  "GRANULARITY_OF_K-POINTS_DISTRIBUTION", kunit )
             !
             CALL iotk_scan_dat( iunpun, &
-                              "NUMBER_OF_PROCESSORS", nproc_file )
+                              "NUMBER_OF_PROCESSORS", nproc_file, &
+                               FOUND=found2 )
+            IF ( .NOT. found2) nproc_file=1 ! compatibility
             !
             CALL iotk_scan_dat( iunpun, &
-                            "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool_file)
+                            "NUMBER_OF_PROCESSORS_PER_POOL", nproc_pool_file,&
+                               FOUND=found2 )
+            IF ( .NOT. found2) nproc_pool_file=1 ! compatibility
             !
             CALL iotk_scan_end( iunpun, "PARALLELISM" )
             !
@@ -1784,71 +1788,6 @@ MODULE pw_restart
       LOGICAL :: found
       !
       ierr = 0
-      IF ( lpw_read ) RETURN
-      !
-      IF ( ionode ) &
-         CALL iotk_open_read( iunpun, FILE = TRIM( dirname ) // '/' // &
-                            & TRIM( xmlpun ), BINARY = .FALSE., IERR = ierr )
-      !
-      CALL mp_bcast( ierr, ionode_id, intra_image_comm )
-      !
-      IF ( ierr > 0 ) RETURN
-      !
-      IF ( ionode ) THEN
-         !
-         CALL iotk_scan_begin( iunpun, "PLANE_WAVES" )
-         !
-         CALL iotk_scan_dat( iunpun, "WFC_CUTOFF", ecutwfc )
-         !
-         CALL iotk_scan_dat( iunpun, "RHO_CUTOFF", ecutrho )
-         !
-         ecutwfc = ecutwfc * e2
-         ecutrho = ecutrho * e2
-         !
-         dual = ecutrho / ecutwfc
-         !
-         CALL iotk_scan_dat( iunpun, "MAX_NUMBER_OF_GK-VECTORS", npwx_ )
-         !
-         CALL iotk_scan_dat( iunpun, "GAMMA_ONLY", gamma_only )
-         !
-         CALL iotk_scan_empty( iunpun, "FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1", nr1 )
-         CALL iotk_scan_attr( attr, "nr2", nr2 )
-         CALL iotk_scan_attr( attr, "nr3", nr3 )
-         !
-         CALL iotk_scan_dat( iunpun, "GVECT_NUMBER", ngm_g )
-         !
-         CALL iotk_scan_empty( iunpun, "SMOOTH_FFT_GRID", attr )
-         CALL iotk_scan_attr( attr, "nr1s", nr1s )
-         CALL iotk_scan_attr( attr, "nr2s", nr2s )
-         CALL iotk_scan_attr( attr, "nr3s", nr3s )
-         !
-         CALL iotk_scan_dat( iunpun, "SMOOTH_GVECT_NUMBER", ngms_g )
-         !
-         CALL iotk_scan_end( iunpun, "PLANE_WAVES" )
-         !
-         CALL iotk_close_read( iunpun )
-         !
-      END IF
-      !
-      CALL mp_bcast( ecutwfc,    ionode_id, intra_image_comm )
-      CALL mp_bcast( dual,       ionode_id, intra_image_comm )
-      CALL mp_bcast( npwx_,      ionode_id, intra_image_comm )
-      CALL mp_bcast( gamma_only, ionode_id, intra_image_comm )
-      CALL mp_bcast( nr1,        ionode_id, intra_image_comm )
-      CALL mp_bcast( nr2,        ionode_id, intra_image_comm )
-      CALL mp_bcast( nr3,        ionode_id, intra_image_comm )
-      CALL mp_bcast( ngm_g,      ionode_id, intra_image_comm )
-      CALL mp_bcast( nr1s,       ionode_id, intra_image_comm )
-      CALL mp_bcast( nr2s,       ionode_id, intra_image_comm )
-      CALL mp_bcast( nr3s,       ionode_id, intra_image_comm )
-      CALL mp_bcast( ngms_g,     ionode_id, intra_image_comm )
-      !
-      lpw_read = .TRUE.
-      !
-      RETURN
-      !
-    END SUBROUTINE 
       IF ( lspin_read ) RETURN
       !
       IF ( ionode ) &
@@ -1996,9 +1935,9 @@ MODULE pw_restart
             ! 
             CALL iotk_scan_end( iunpun, "STARTING_MAG" )
             !
+            CALL iotk_close_read( iunpun )
+            !
          END IF
-         !
-         CALL iotk_close_read( iunpun )
          !
       END IF
       !
