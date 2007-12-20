@@ -157,7 +157,7 @@ CONTAINS
       LOGICAL  :: lwolfe
       REAL(DP) :: dE0s, den
       ! ... for scaled coordinates
-      REAL(DP) :: scnorm, hinv(3,3),g(3,3),ginv(3,3),garbage
+      REAL(DP) :: hinv(3,3),g(3,3),ginv(3,3),garbage
       !
       !
       n = SIZE( pos_in ) + 9
