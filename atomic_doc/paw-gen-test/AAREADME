@@ -9,9 +9,6 @@ O_PBE_NLCC.gen.in    the same as above, but with GGA and NLCC
 O_PBE_NLCC.test.in
 O_PBE_NLCC.spin.in
 
-Cu_LDA_NLCC.gen.in   generate a PAW dataset for Cu
-Cu_LDA_NLCC.test.in  test it
-
 The script test.job runs ld1.x on these examples and compares the
 outputs and the pseudo-potentials with those contained in reference.
 A snapshot of the differences between these files is written to

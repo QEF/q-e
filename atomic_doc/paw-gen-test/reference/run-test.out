@@ -54,20 +54,3 @@ Pseudopotential tested in the (1s2) 2s1 2s1 2p1 2p3 configuration
   Error         =   -0.000100 Ryd
 
 
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-!!!                          Doing tests for Copper                          !!!
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-Generating pseudo LDA for Cu with nlcc=.true. ...
-Pseudopotential generated in the (1s2 2s2 2p6 3s2 3p6) 3d10 4s1 configuration
-  Pseudo energy = -207.078160 Ryd
-
-Testing pseudo LDA for Cu with nlcc=.true. ...
-Pseudopotential generated in the (1s2 2s2 2p6 3s2 3p6) 3d10 4s1 configuration
-  Pseudo energy = -207.078160 Ryd
-Pseudopotential tested in the (1s2 2s2 2p6 3s2 3p6) 3d9.7 4s1 configuration
-  Pseudo energy = -206.915990 Ryd
-  Error         =   -0.000552 Ryd
-
-!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-

@@ -44,7 +44,7 @@ cat <<EOF > $file.in
    pseudotype=3,
    nlcc=${nlcc[$i]}, rcore=0.50
    lloc=2,
-   file_pseudopw='$workd/O${dft[$i]}.RRKJ3.PAW',
+   file_pseudopw='$workd/O${dft[$i]}.RRKJ3.UPF',
    zval=6.d0,
    lpaw=.true.
  /
@@ -84,7 +84,7 @@ cat << EOF > $file.in
 2P  2  1  4.0  1
 3D  3  2 -1.0  1
  &test
-  file_pseudo='$workd/O${dft[$i]}.RRKJ3.PAW',
+  file_pseudo='$workd/O${dft[$i]}.RRKJ3.UPF',
   nconf=3,
  / 
 2
@@ -131,7 +131,7 @@ cat << EOF > $file.in
 2P  2  1  2.0  2
 3D  3  2 -1.0  2
  &test
-  file_pseudo='$workd/O${dft[$i]}.RRKJ3.PAW',
+  file_pseudo='$workd/O${dft[$i]}.RRKJ3.UPF',
   nconf=3,
  / 
 4
@@ -163,99 +163,6 @@ echo
 echo
 done
 
-echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-echo "!!!                          Doing tests for Copper                          !!!"
-echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-echo
-echo "Generating pseudo LDA for Cu with nlcc=.true. ..."
-file=$workd/Cu_LDA_NLCC.gen
-cat <<EOF > $file.in
- &input
-        title='Cu',
-        zed=29.0,
-        rel=0,
-        dx=0.006
-        beta=0.7,
-        iswitch=3,
-        dft='LDA',
-        prefix='$workd/cu_LDA'
-        nld=0
- /
-8
-1S  1  0  2.0  1
-2S  2  0  2.0  1
-2P  2  1  6.0  1
-3S  3  0  2.0  1
-3P  3  1  6.0  1
-3D  3  2 10.0  1
-4S  4  0  1.0  1
-4P  4  1 -1.0  1
- &inputp
-  pseudotype=3,
-   nlcc=.true., rcore=0.50
-   lloc=1
-   file_pseudopw='$workd/CuLDA.RRKJ3.PAW',
-   zval=11.d0,
-   lpaw=.true.
- /
-4
-3D  3  2 10.00  0.00  1.80  2.50
-3D  3  2  0.00  0.02  1.80  2.50
-4S  1  0  1.00  0.00  2.80  2.80
-4P  4  1 -2.00  0.15  2.80  2.80
- &test
-   nconf=1,
- / 
-2
-3D  3  2 10.00  0.00  1.80  2.50
-4S  1  0  1.00  0.00  2.80  2.80
-EOF
-$LD1 < $file.in > $file.out
-echo "Pseudopotential generated in the (1s2 2s2 2p6 3s2 3p6) 3d10 4s1 configuration"
-echo "  Pseudo energy = $(awk '/Etotps/{printf "%11.6f\n", $3}' $file.out | awk '(NR==1)' ) Ryd"
-echo
-echo "Testing pseudo LDA for Cu with nlcc=.true. ..."
-file=$workd/Cu_LDA_NLCC.test
-cat <<EOF > $file.in
- &input
-        title='Cu',
-        zed=29.0,
-        dx=0.006,
-        rel=0,
-        beta=0.1,
-        iswitch=2,
-        dft='LDA',
-        prefix='$workd/cu_LDA'
- /
-8
-1S  1  0  2.0  1
-2S  2  0  2.0  1
-2P  2  1  6.0  1
-3S  3  0  2.0  1
-3P  3  1  6.0  1
-3D  3  2 10.0  1
-4S  4  0  1.0  1
-4P  4  1 -1.0  1
- &test
-  file_pseudo='$workd/CuLDA.RRKJ3.PAW',
-  nconf=2,
- / 
-2
-3D  3  2 10.00  0.00  1.80  2.50  1
-4S  1  0  1.00  0.00  2.80  2.80  1
-2
-3D  3  2  9.70  0.00  1.80  2.50  1
-4S  1  0  1.00  0.00  2.80  2.80  1
-EOF
-$LD1 < $file.in > $file.out
-echo "Pseudopotential generated in the (1s2 2s2 2p6 3s2 3p6) 3d10 4s1 configuration"
-echo "  Pseudo energy = $(awk '/Etotps/{printf "%11.6f\n", $3}' $file.out | awk '(NR==1)' ) Ryd"
-echo "Pseudopotential tested in the (1s2 2s2 2p6 3s2 3p6) 3d9.7 4s1 configuration"
-echo "  Pseudo energy = $(awk '/Etotps/{printf "%11.6f\n", $3}' $file.out | awk '(NR==2)' ) Ryd"
-echo "  Error         = $(awk '/Delta E=/{printf "%11.6f\n", $7}' $file.out | awk '(NR==2)' ) Ryd"
-echo
-echo "!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!"
-echo
 ) > $workd/run-test.out
 
 echo
