@@ -219,7 +219,7 @@ subroutine gener_pseudo
         psipaw(1:grid%mesh,ns)=phis(1:grid%mesh,ns)
      endif
      !
-     IF (which_augfun/='AE'.AND..NOT.lpaw) THEN
+     IF (which_augfun=='PSQ') THEN
         psipsus(:,ns)=psi_in(:) 
      ELSE
         if (tm) then
@@ -395,7 +395,7 @@ subroutine gener_pseudo
   !  the Q pseudization the augmentation charges are very hard making the
   !  ASR in phonon calculation very difficult to converge.
   ! 
-  IF (which_augfun/='AE'.and..not.lpaw) CALL pseudo_q(qvan,qvanl)
+  IF (which_augfun=='PSQ') CALL pseudo_q(qvan,qvanl)
   !
   !
   !    generate a PAW dataset if required

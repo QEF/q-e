@@ -340,7 +340,11 @@ subroutine ld1_readin
      if (rel==2 .and. pseudotype==1 ) &
           call errore('ld1_readin','Generation of a FR PP with'// & 
                   &     ' pseudotype=1 not allowed',1)
-
+     if (which_augfun=='PSQ'.and.pseudotype.ne.3) &
+          call errore('ld1_readin','PSQ requires pseudotype=3',1)
+     !
+     if (which_augfun=='PSQ'.and.lpaw) &
+          call errore('ld1_readin','PSQ available only with US-PPs',1)
      !
      if (ionode) &
         call read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
@@ -616,8 +620,11 @@ end subroutine bcast_input
 subroutine bcast_inputp()
   USE io_global,  ONLY : ionode_id
   USE mp,         ONLY : mp_bcast
-  use ld1inc
-
+  use ld1inc,     ONLY : pseudotype, tm, rho0, zval, lloc, nlcc, &
+                         rcore, rcloc, new_core_ps, lpaw, verbosity, &
+                         file_pseudopw, file_screen, file_core, file_beta, &
+                         file_chi, file_qvan, file_wfcaegen, file_wfcncgen, &
+                         file_wfcusgen, file_recon, which_augfun, rmatch_augfun
 implicit none
 #ifdef __PARA
   call mp_bcast( pseudotype, ionode_id )
@@ -641,6 +648,8 @@ implicit none
   call mp_bcast( file_wfcncgen, ionode_id )
   call mp_bcast( file_wfcusgen, ionode_id )
   call mp_bcast( file_recon,  ionode_id )
+  call mp_bcast( which_augfun,  ionode_id )
+  call mp_bcast( rmatch_augfun,  ionode_id )
 #endif
   return
 end subroutine bcast_inputp

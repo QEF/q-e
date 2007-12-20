@@ -22,6 +22,7 @@ compute_phi.o \
 compute_phi_tm.o \
 compute_phius.o \
 compute_potps.o \
+compute_q_3bess.o \
 compute_solution.o \
 descreening.o \
 dfx_new.o \

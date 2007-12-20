@@ -79,7 +79,7 @@ subroutine chargeps(rho_i,phi_i,nwf_i,ll_i,jj_i,oc_i,iswf_i)
            !
            do n1=1,nbeta
               do n2=1,nbeta
-                 IF (which_augfun/='AE'.and..not.lpaw) then
+                 IF (which_augfun=='PSQ') then
                     do n=1,grid%mesh
                        rho_i(n,is)=rho_i(n,is)+qvanl(n,n1,n2,0)*oc_i(ns)* &
                             work(n1)*work(n2)

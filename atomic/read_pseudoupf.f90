@@ -132,7 +132,7 @@ subroutine read_pseudoupf
               qvan(1:upf%mesh,ibeta,jbeta)=upf%qfuncl(1:upf%mesh,kbeta,0)
               if (ibeta /= jbeta) qvan(1:grid%mesh, jbeta, ibeta)= &
                                     upf%qfuncl(1:upf%mesh,kbeta,0)
-              which_augfun='BESSEL'
+              which_augfun='PSQ'
            else
               qvan (1:grid%mesh, ibeta, jbeta) = upf%qfunc(1:upf%mesh,kbeta)
               if (ibeta /= jbeta) qvan (1:grid%mesh, jbeta, ibeta)= &

@@ -35,7 +35,7 @@ subroutine newd_at ( )
            if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.0e-7_dp) then
               nst=(lls(ib)+1)*2
               do is=1,nspin
-                 IF (which_augfun/='AE'.and..not.lpaw) then
+                 IF (which_augfun=='PSQ') then
                     do n=1,ikk(ib)
                        gi(n)=qvanl(n,ib,jb,0)*vpstot(n,is)
                     enddo

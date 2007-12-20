@@ -189,9 +189,13 @@ Needed for pseudo-potential (PP) test. optional for PP generation:
       which_augfun =                               (default 'AE')
           If different from 'AE' the augmentation functions are pseudized
           before rmatch_augfun. The pseudization options are:
-          'BESSEL'     Use bessel functions to pseudize the Q.
-          'GAUSS'      Use gaussian functions to pseudize the Q.
-          This feature is available for both PAW and for US-PP.
+          'BESSEL'     Use Bessel functions to pseudize the Q.
+          'GAUSS'      Use Gaussian functions to pseudize the Q.
+          This feature is available only for PAW. 
+          'PSQ'        Use Bessel functions to pseudize Q from the origin
+                       to min(rcut(ns),rcut(ns1)) where ns and ns1 are
+                       the two channels for that Q.
+          This feature is available only for US-PP.
       rmatch_augfun                                   (default 0.5 a.u.)
           Used only if which_augfun is different from 'AE'.
           Pseudization radius for the augmentation functions. Presently

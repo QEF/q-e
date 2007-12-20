@@ -13,8 +13,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   !      functions f_l have a logarithmic derivative equal to
   !      logderae at the point ik
   !
-  !      if flag=0 f_l=j_l(r)
-  !      if flag=1 f_l=r*j_l(r)
+  !      f_l=j_l(r) * r**flag
   !
   use kinds, only:dp
   use ld1inc, only: grid
@@ -54,7 +53,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   if (flag.eq.0.and.lam.ne.0) &
        call errore('find_qi','lam too large for this iflag',1)
 
-  if (lam.gt.3) &
+  if (lam.gt.6) &
        call errore('find_qi','l not programmed',1)
   !
   !    fix deltaq and the maximum step number
@@ -66,9 +65,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   !
   qmax=0.1_dp
   call sph_bes(7,grid%r(ik-3),qmax,lam,j1)
-  if (flag.ne.0) then 
-     j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)
-  endif
+  j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)**flag
   logdermax=compute_log(j1,grid%r(ik),grid%dx)-logderae
 
   do nc=1,ncn
@@ -80,9 +77,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
      do iq=1,imax
         xc(nc)=qmin+dq*iq
         call sph_bes(7,grid%r(ik-3),xc(nc),lam,j1)
-        if (flag.ne.0) then
-           j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)
-        endif
+        j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)**flag
         logdermax=compute_log(j1,grid%r(ik),grid%dx)-logderae
         !
         !    the zero has been bracketed?
@@ -101,9 +96,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
      !
      xc(nc)=(qmax+qmin)/2.0_dp
      call sph_bes(7,grid%r(ik-3),xc(nc),lam,j1)
-     if (flag.ne.0) then
-        j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)
-     endif
+     j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)**flag
      logder=compute_log(j1,grid%r(ik),grid%dx)-logderae
      if (logder*logdermin.lt.0.0_dp) then
         qmax=xc(nc)

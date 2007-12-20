@@ -192,7 +192,7 @@ subroutine compute_chi(lam,ikk_in,phi_in,chi_out,xc,e,lbes4)
 !    this routine might become numerically unstable at large r. 
 !    Here chi_out should be 0.0 but it is not due to this instability. 
 !    We now clean chi_out when phi_in > 20.0.
-!    Clean also after 9.0 a.u..
+!    Clean also after 7.0 a.u..
 !     
   r_clean=100.d0
   do n=1,grid%mesh

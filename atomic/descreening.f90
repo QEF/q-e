@@ -68,7 +68,7 @@ subroutine descreening
            if (lls(ib).eq.lls(jb).and.abs(jjs(ib)-jjs(jb)).lt.1.e-7_dp) then
               lam=lls(ib)
               nst=(lam+1)*2
-              IF (which_augfun/='AE'.and..not.lpaw) then
+              IF (which_augfun=='PSQ') then
                  do n=1,ikk(ib)
                     vaux(n,1)=qvanl(n,ib,jb,0)*vpsloc(n)
                  enddo
