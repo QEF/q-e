@@ -56,7 +56,7 @@ SUBROUTINE task_groups_init( dffts )
 
    USE parallel_include
    !
-   USE mp_global,      ONLY : me_image, nproc_image, intra_image_comm, root
+   USE mp_global,      ONLY : me_pool, nproc_pool, intra_pool_comm
    USE mp_global,      ONLY : NOGRP, NPGRP, ogrp_comm, pgrp_comm  
    USE mp,             ONLY : mp_bcast
    USE io_global,      only : stdout
@@ -92,12 +92,12 @@ SUBROUTINE task_groups_init( dffts )
    !OF PROCESSORS
    !--------------------------------------------------------------
 
-   IF( MOD( nproc_image, nogrp ) /= 0 ) &
-      CALL errore( " groups ", " nogrp should be a divisor of nproc_image ", 1 )
+   IF( MOD( nproc_pool, nogrp ) /= 0 ) &
+      CALL errore( " groups ", " nogrp should be a divisor of nproc_pool ", 1 )
  
-   ALLOCATE( pgroup( nproc_image ) )
+   ALLOCATE( pgroup( nproc_pool ) )
    !
-   DO i = 1, nproc_image
+   DO i = 1, nproc_pool
       pgroup( i ) = i - 1
    ENDDO
    !
@@ -111,10 +111,10 @@ SUBROUTINE task_groups_init( dffts )
    !
    !  processors in these group have contiguous indexes
    !
-   N1 = ( me_image / NOGRP ) * NOGRP - 1
+   N1 = ( me_pool / NOGRP ) * NOGRP - 1
    DO i = 1, nogrp
       nolist( I ) = pgroup( N1 + I + 1 )
-      IF( me_image == nolist( I ) ) ipos = i - 1
+      IF( me_pool == nolist( I ) ) ipos = i - 1
    ENDDO
 
    !-----------------------------------------
@@ -135,16 +135,16 @@ SUBROUTINE task_groups_init( dffts )
    !---------------------------------------
    !
 #if defined __MPI
-   color = me_image / nogrp
-   key   = MOD( me_image , nogrp )
-   CALL MPI_COMM_SPLIT( intra_image_comm, color, key, ogrp_comm, ierr )
+   color = me_pool / nogrp
+   key   = MOD( me_pool , nogrp )
+   CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, ogrp_comm, ierr )
    if( ierr /= 0 ) &
       CALL errore( ' task_groups_init ', ' creating ogrp_comm ', ABS(ierr) )
    CALL MPI_COMM_RANK( ogrp_comm, itsk, IERR )
    CALL MPI_COMM_SIZE( ogrp_comm, ntsk, IERR )
    IF( nogrp /= ntsk ) CALL errore( ' task_groups_init ', ' ogrp_comm size ', ntsk )
    DO i = 1, nogrp
-      IF( me_image == nolist( i ) ) THEN
+      IF( me_pool == nolist( i ) ) THEN
          IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' ogrp_comm rank ', itsk )
       END IF
    END DO
@@ -155,30 +155,30 @@ SUBROUTINE task_groups_init( dffts )
    !---------------------------------------
    !
 #if defined __MPI
-   color = MOD( me_image , nogrp )
-   key   = me_image / nogrp
-   CALL MPI_COMM_SPLIT( intra_image_comm, color, key, pgrp_comm, ierr )
+   color = MOD( me_pool , nogrp )
+   key   = me_pool / nogrp
+   CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, pgrp_comm, ierr )
    if( ierr /= 0 ) &
       CALL errore( ' task_groups_init ', ' creating pgrp_comm ', ABS(ierr) )
    CALL MPI_COMM_RANK( pgrp_comm, itsk, IERR )
    CALL MPI_COMM_SIZE( pgrp_comm, ntsk, IERR )
    IF( npgrp /= ntsk ) CALL errore( ' task_groups_init ', ' pgrp_comm size ', ntsk )
    DO i = 1, npgrp
-      IF( me_image == nplist( i ) ) THEN
+      IF( me_pool == nplist( i ) ) THEN
          IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' pgrp_comm rank ', itsk )
       END IF
    END DO
 #endif
 
 
-   ALLOCATE( nnrsx_vec( nproc_image ) )
+   ALLOCATE( nnrsx_vec( nproc_pool ) )
 
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
 #if defined __MPI
-   CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_image_comm, IERR)
-   strd = MAXVAL( nnrsx_vec( 1:nproc_image ) )
-   nswx = MAXVAL( dffts%nsw( 1:nproc_image ) )
+   CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_pool_comm, IERR)
+   strd = MAXVAL( nnrsx_vec( 1:nproc_pool ) )
+   nswx = MAXVAL( dffts%nsw( 1:nproc_pool ) )
 #else
    strd = dffts%nnr 
    nswx = dffts%nsw(1)
@@ -196,8 +196,8 @@ SUBROUTINE task_groups_init( dffts )
    !we choose to do the latter one.
    !-------------------------------------------------------------------------------------
    !
-   ALLOCATE(tmp_nsw(nproc_image))
-   ALLOCATE(tmp_npp(nproc_image))
+   ALLOCATE(tmp_nsw(nproc_pool))
+   ALLOCATE(tmp_npp(nproc_pool))
 
    num_sticks = 0
    num_planes = 0
@@ -207,8 +207,8 @@ SUBROUTINE task_groups_init( dffts )
    ENDDO
 
 #if defined __MPI
-   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, intra_image_comm, IERR)
-   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_image_comm, IERR)
+   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, intra_pool_comm, IERR)
+   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_pool_comm, IERR)
 #else
    tmp_nsw(1) = num_sticks
    tmp_npp(1) = num_planes

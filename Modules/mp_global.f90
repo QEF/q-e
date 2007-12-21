@@ -211,10 +211,10 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
   CALL init_ortho_group( nproc_pool, intra_pool_comm )
   !
-  IF( MOD( nproc_image, nogrp ) /= 0 ) &
-      CALL errore( " init_pool ", " nogrp should be a divisor of nproc_image ", 1 )
+  IF( MOD( nproc_pool, nogrp ) /= 0 ) &
+      CALL errore( " init_pool ", " nogrp should be a divisor of nproc_pool ", 1 )
   !
-  npgrp = nproc_image / nogrp
+  npgrp = nproc_pool / nogrp
   !
   RETURN
   !
