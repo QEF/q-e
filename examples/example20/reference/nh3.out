@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Wed Jul 11 14:42:47 CEST 2007                      
+     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  10:34:53   1Aug2007               
+   This run was started on:   4:14:59  21Dec2007               
 
    Serial Build
 
@@ -24,13 +24,13 @@
    /home/giannozz/espresso/pseudo/N.BLYP.UPF
    file type is 20: UPF
  
-   Type is UPF        and NONLOCAL. 
+   Type is NC         and NONLOCAL. 
    Local component is ..... :   1
    Non local components are :   0
    Pseudo charge :    5.000
 
    Pseudopotentials Grid    : Channels =  2, Mesh =   624
-                              dx   = 0.01734863835748
+
    point    radius        vloc         ( vnl - vloc )
        1  0.892857E-03 -0.202084E+02  0.287210E-02
      156  0.131406E-01 -0.190411E+02  0.422761E-01
@@ -38,7 +38,7 @@
      624  0.441290E+02 -0.113304E+00  0.000000E+00
 
    Atomic wavefunction Grid : Channels =  2, Mesh =   624
-                              dx   = 0.01734863835748
+
    Channels occupation number :     2.0000    3.0000
    point      radius        wavefunction
        1  0.892857E-03  0.213764E-03  0.966907E-06
@@ -52,12 +52,12 @@
    /home/giannozz/espresso/pseudo/H.fpmd.UPF
    file type is 20: UPF
  
-   Type is UPF        and LOCAL. 
+   Type is NC         and LOCAL. 
    Local component is ..... :   0
    Pseudo charge :    1.000
 
    Pseudopotentials Grid    : Channels =  1, Mesh =   809
-                              dx   = 0.02500000000000
+
    point    radius        vloc         ( vnl - vloc )
        1  0.112299E-02 -0.647505E+01
      202  0.170886E+00 -0.525294E+01
@@ -65,7 +65,7 @@
      809  0.665464E+06 -0.150271E-05
 
    Atomic wavefunction Grid : Channels =  1, Mesh =   809
-                              dx   = 0.02500000000000
+
    Channels occupation number :     1.0000
    point      radius        wavefunction
        1  0.112299E-02  0.000000E+00
@@ -216,13 +216,10 @@
    PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)
     1          10408          10408          10408
 
-                Small box Mesh
-   ngb =            0 not distributed to processors
-
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :     52074632
+   dimension of the problem (byte/pe) :     52058632
 
 
    System geometry initialization
@@ -330,7 +327,7 @@
 
   -34.40  -18.09   -0.14    7.99
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -423,7 +420,7 @@
 
   -23.23  -13.34   -9.54   -2.60
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -516,7 +513,7 @@
 
   -21.73  -11.96   -9.89   -4.66
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -609,7 +606,7 @@
 
   -21.17  -11.45  -10.05   -5.39
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -702,7 +699,7 @@
 
   -20.95  -11.16  -10.19   -5.72
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -795,7 +792,7 @@
 
   -20.84  -10.98  -10.30   -5.87
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -888,7 +885,7 @@
 
   -20.79  -10.87  -10.37   -5.95
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -981,7 +978,7 @@
 
   -20.77  -10.80  -10.42   -5.99
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1074,7 +1071,7 @@
 
   -20.75  -10.75  -10.45   -6.01
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1167,7 +1164,7 @@
 
   -20.74  -10.72  -10.47   -6.02
  
-   Allocated memory (kb) =     28067
+   Allocated memory (kb) =     27564
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -1212,7 +1209,7 @@
   100  0.00007    0.0    0.0   -11.71674   -11.71674   -11.71673   -11.71667  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /home/giannozz/tmp//nh3_mol_51.save
-   restart file written in    0.188 sec.
+   restart file written in    0.186 sec.
 
 
 
@@ -1229,32 +1226,32 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.64s CPU
-     main_loop    :   145.76s CPU (     100 calls,   1.458 s avg)
+     initialize   :     4.78s CPU
+     main_loop    :   148.39s CPU (     100 calls,   1.484 s avg)
      formf        :     1.37s CPU
-     rhoofr       :    12.31s CPU (     101 calls,   0.122 s avg)
-     vofrho       :   111.26s CPU (     101 calls,   1.102 s avg)
-     dforce       :    21.22s CPU (     202 calls,   0.105 s avg)
-     calphi       :     0.20s CPU (     101 calls,   0.002 s avg)
-     ortho        :     0.76s CPU (     101 calls,   0.008 s avg)
+     rhoofr       :    13.03s CPU (     101 calls,   0.129 s avg)
+     vofrho       :   113.65s CPU (     101 calls,   1.125 s avg)
+     dforce       :    20.68s CPU (     202 calls,   0.102 s avg)
+     calphi       :     0.10s CPU (     101 calls,   0.001 s avg)
+     ortho        :     0.75s CPU (     101 calls,   0.007 s avg)
      ortho_iter   :     0.00s CPU (     101 calls,   0.000 s avg)
-     rhoset       :     0.12s CPU (     101 calls,   0.001 s avg)
-     updatc       :     0.22s CPU (     101 calls,   0.002 s avg)
+     rhoset       :     0.18s CPU (     101 calls,   0.002 s avg)
+     updatc       :     0.20s CPU (     101 calls,   0.002 s avg)
      gram         :     0.01s CPU
-     prefor       :     0.09s CPU (     101 calls,   0.001 s avg)
-     strucf       :     0.86s CPU (     101 calls,   0.009 s avg)
-     nlsm1        :     0.05s CPU (     101 calls,   0.000 s avg)
-     nlsm2        :     0.26s CPU (     101 calls,   0.003 s avg)
-     fft          :    64.59s CPU (     808 calls,   0.080 s avg)
-     fftw         :    27.64s CPU (     606 calls,   0.046 s avg)
-     rsg          :     0.00s CPU (     101 calls,   0.000 s avg)
+     prefor       :     0.02s CPU (     101 calls,   0.000 s avg)
+     strucf       :     0.95s CPU (     101 calls,   0.009 s avg)
+     nlsm1        :     0.02s CPU (     101 calls,   0.000 s avg)
+     nlsm2        :     0.31s CPU (     101 calls,   0.003 s avg)
+     fft          :    66.97s CPU (     808 calls,   0.083 s avg)
+     fftw         :    27.97s CPU (     606 calls,   0.046 s avg)
+     rsg          :     0.01s CPU (     101 calls,   0.000 s avg)
  
  
  
-     CP           :  2m30.64s CPU time,     2m54.71s wall time
+     CP           :  2m33.45s CPU time,     2m52.06s wall time
 
  
-   This run was terminated on:  10:37:48   1Aug2007            
+   This run was terminated on:   4:17:51  21Dec2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

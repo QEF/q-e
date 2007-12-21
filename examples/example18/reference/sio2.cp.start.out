@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Wed Jul 11 14:42:47 CEST 2007                      
+     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:15:15  31Jul2007               
+   This run was started on:   4: 8:37  21Dec2007               
 
    Serial Build
 
@@ -336,7 +336,7 @@
    -5.29   -5.19   -5.01   -4.86   -4.78   -4.46   -4.22   -3.87   -3.73   -3.47
    -3.08   -2.10   -1.73    1.69    5.06    7.65   10.37   10.65
  
-   Allocated memory (kb) =     18563
+   Allocated memory (kb) =     17996
  
    CELL_PARAMETERS
     9.28990000    0.00000000    0.00000000
@@ -423,7 +423,7 @@
    20  1.13098    0.0    0.0  -204.68460  -204.68460  -204.68460  -203.55361  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /home/giannozz/tmp//cp_91.save
-   restart file written in    0.226 sec.
+   restart file written in    0.222 sec.
 
 
 
@@ -440,36 +440,36 @@
    volume        :     1526.90154    1526.90154 (AU)
 
 
-     initialize   :     5.74s CPU
-     total_time   :    15.88s CPU (      20 calls,   0.794 s avg)
+     initialize   :     5.96s CPU
+     total_time   :    15.89s CPU (      20 calls,   0.795 s avg)
      formf        :     0.30s CPU
      rhoofr       :     4.49s CPU (      21 calls,   0.214 s avg)
-     vofrho       :     1.78s CPU (      21 calls,   0.085 s avg)
-     dforce       :     5.59s CPU (     504 calls,   0.011 s avg)
-     calphi       :     0.17s CPU (      21 calls,   0.008 s avg)
-     ortho        :     1.19s CPU (      21 calls,   0.057 s avg)
-     ortho_iter   :     0.09s CPU (      21 calls,   0.004 s avg)
-     rhoset       :     0.09s CPU (      21 calls,   0.004 s avg)
+     vofrho       :     1.81s CPU (      21 calls,   0.086 s avg)
+     dforce       :     5.64s CPU (     504 calls,   0.011 s avg)
+     calphi       :     0.16s CPU (      21 calls,   0.008 s avg)
+     ortho        :     1.23s CPU (      21 calls,   0.059 s avg)
+     ortho_iter   :     0.08s CPU (      21 calls,   0.004 s avg)
+     rhoset       :     0.12s CPU (      21 calls,   0.006 s avg)
      updatc       :     0.07s CPU (      21 calls,   0.003 s avg)
-     gram         :     0.08s CPU
-     newd         :     3.02s CPU (      21 calls,   0.144 s avg)
-     calbec       :     0.24s CPU (      22 calls,   0.011 s avg)
-     prefor       :     0.07s CPU (      21 calls,   0.003 s avg)
-     strucf       :     0.01s CPU
-     rhov         :     0.85s CPU (      21 calls,   0.040 s avg)
-     nlsm1        :     1.03s CPU (      64 calls,   0.016 s avg)
-     fft          :     1.95s CPU (      84 calls,   0.023 s avg)
-     ffts         :     0.32s CPU (      42 calls,   0.008 s avg)
-     fftw         :     6.02s CPU (    1512 calls,   0.004 s avg)
-     fftb         :     2.14s CPU (    4662 calls,   0.000 s avg)
-     rsg          :     0.03s CPU (      21 calls,   0.001 s avg)
+     gram         :     0.09s CPU
+     newd         :     2.91s CPU (      21 calls,   0.139 s avg)
+     calbec       :     0.18s CPU (      22 calls,   0.008 s avg)
+     prefor       :     0.03s CPU (      21 calls,   0.001 s avg)
+     strucf       :     0.00s CPU
+     rhov         :     0.84s CPU (      21 calls,   0.040 s avg)
+     nlsm1        :     1.01s CPU (      64 calls,   0.016 s avg)
+     fft          :     2.00s CPU (      84 calls,   0.024 s avg)
+     ffts         :     0.29s CPU (      42 calls,   0.007 s avg)
+     fftw         :     5.92s CPU (    1512 calls,   0.004 s avg)
+     fftb         :     2.04s CPU (    4662 calls,   0.000 s avg)
+     rsg          :     0.02s CPU (      21 calls,   0.001 s avg)
  
  
  
-     CP           :    21.77s CPU time,   23.22s wall time
+     CP           :    22.04s CPU time,   23.10s wall time
 
  
-   This run was terminated on:   4:15:38  31Jul2007            
+   This run was terminated on:   4: 9: 0  21Dec2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

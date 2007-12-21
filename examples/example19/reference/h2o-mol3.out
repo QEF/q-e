@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Wed Jul 11 14:42:47 CEST 2007                      
+     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  10:28:58   1Aug2007               
+   This run was started on:   4:13:29  21Dec2007               
 
    Serial Build
 
@@ -24,13 +24,13 @@
    /home/giannozz/espresso/pseudo/O.BLYP.UPF
    file type is 20: UPF
  
-   Type is UPF        and NONLOCAL. 
+   Type is NC         and NONLOCAL. 
    Local component is ..... :   1
    Non local components are :   0
    Pseudo charge :    6.000
 
    Pseudopotentials Grid    : Channels =  2, Mesh =   631
-                              dx   = 0.01734863831720
+
    point    radius        vloc         ( vnl - vloc )
        1  0.781250E-03 -0.253772E+02  0.392686E-02
      157  0.116993E-01 -0.239772E+02  0.588100E-01
@@ -38,7 +38,7 @@
      631  0.435987E+02 -0.137619E+00  0.000000E+00
 
    Atomic wavefunction Grid : Channels =  2, Mesh =   631
-                              dx   = 0.01734863831720
+
    Channels occupation number :     2.0000    4.0000
    point      radius        wavefunction
        1  0.781250E-03  0.255544E-03  0.103901E-05
@@ -52,12 +52,12 @@
    /home/giannozz/espresso/pseudo/H.fpmd.UPF
    file type is 20: UPF
  
-   Type is UPF        and LOCAL. 
+   Type is NC         and LOCAL. 
    Local component is ..... :   0
    Pseudo charge :    1.000
 
    Pseudopotentials Grid    : Channels =  1, Mesh =   809
-                              dx   = 0.02500000000000
+
    point    radius        vloc         ( vnl - vloc )
        1  0.112299E-02 -0.647505E+01
      202  0.170886E+00 -0.525294E+01
@@ -65,7 +65,7 @@
      809  0.665464E+06 -0.150271E-05
 
    Atomic wavefunction Grid : Channels =  1, Mesh =   809
-                              dx   = 0.02500000000000
+
    Channels occupation number :     1.0000
    point      radius        wavefunction
        1  0.112299E-02  0.000000E+00
@@ -217,13 +217,10 @@
    PE   Global(ngwt)     Local(ngw) MaxLocal(ngwx)
     1          10408          10408          10408
 
-                Small box Mesh
-   ngb =            0 not distributed to processors
-
 
    Estimated Sizes of the problem
    ------------------------------
-   dimension of the problem (byte/pe) :     51737784
+   dimension of the problem (byte/pe) :     51721784
 
 
    System geometry initialization
@@ -339,7 +336,7 @@
 
   -24.88  -12.71   -8.95   -6.98
  
-   Allocated memory (kb) =     27735
+   Allocated memory (kb) =     27232
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -414,7 +411,7 @@
 
   -24.90  -12.71   -8.85   -7.05
  
-   Allocated memory (kb) =     27735
+   Allocated memory (kb) =     27232
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -489,7 +486,7 @@
 
   -24.90  -12.75   -9.05   -6.86
  
-   Allocated memory (kb) =     27735
+   Allocated memory (kb) =     27232
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -564,7 +561,7 @@
 
   -24.87  -12.69   -9.05   -6.87
  
-   Allocated memory (kb) =     27735
+   Allocated memory (kb) =     27232
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -639,7 +636,7 @@
 
   -24.89  -12.66   -8.91   -7.05
  
-   Allocated memory (kb) =     27735
+   Allocated memory (kb) =     27232
  
    CELL_PARAMETERS
    12.00000000    0.00000000    0.00000000
@@ -681,7 +678,7 @@
   150  0.00079    0.0    2.6   -17.17909   -17.17909   -17.17906   -17.17827  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /home/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.179 sec.
+   restart file written in    0.184 sec.
 
 
 
@@ -698,31 +695,31 @@
    volume        :     1728.00000    1728.00000 (AU)
 
 
-     initialize   :     4.59s CPU
-     main_loop    :    69.82s CPU (      50 calls,   1.396 s avg)
-     formf        :     1.35s CPU
-     rhoofr       :     5.92s CPU (      51 calls,   0.116 s avg)
-     vofrho       :    53.81s CPU (      51 calls,   1.055 s avg)
-     dforce       :    10.44s CPU (     102 calls,   0.102 s avg)
-     calphi       :     0.04s CPU (      51 calls,   0.001 s avg)
-     ortho        :     0.40s CPU (      51 calls,   0.008 s avg)
+     initialize   :     4.73s CPU
+     main_loop    :    74.19s CPU (      50 calls,   1.484 s avg)
+     formf        :     1.40s CPU
+     rhoofr       :     6.63s CPU (      51 calls,   0.130 s avg)
+     vofrho       :    57.35s CPU (      51 calls,   1.125 s avg)
+     dforce       :    10.58s CPU (     102 calls,   0.104 s avg)
+     calphi       :     0.05s CPU (      51 calls,   0.001 s avg)
+     ortho        :     0.37s CPU (      51 calls,   0.007 s avg)
      ortho_iter   :     0.00s CPU (      51 calls,   0.000 s avg)
-     rhoset       :     0.12s CPU (      51 calls,   0.002 s avg)
+     rhoset       :     0.11s CPU (      51 calls,   0.002 s avg)
      updatc       :     0.09s CPU (      51 calls,   0.002 s avg)
      prefor       :     0.01s CPU (      51 calls,   0.000 s avg)
-     strucf       :     0.42s CPU (      51 calls,   0.008 s avg)
-     nlsm1        :     0.04s CPU (      51 calls,   0.001 s avg)
-     nlsm2        :     0.08s CPU (      51 calls,   0.002 s avg)
-     fft          :    32.64s CPU (     408 calls,   0.080 s avg)
-     fftw         :    13.42s CPU (     306 calls,   0.044 s avg)
+     strucf       :     0.36s CPU (      51 calls,   0.007 s avg)
+     nlsm1        :     0.05s CPU (      51 calls,   0.001 s avg)
+     nlsm2        :     0.13s CPU (      51 calls,   0.003 s avg)
+     fft          :    35.79s CPU (     408 calls,   0.088 s avg)
+     fftw         :    14.24s CPU (     306 calls,   0.047 s avg)
      rsg          :     0.00s CPU (      51 calls,   0.000 s avg)
  
  
  
-     CP           :  1m14.61s CPU time,     1m28.02s wall time
+     CP           :  1m19.17s CPU time,     1m29.21s wall time
 
  
-   This run was terminated on:  10:30:26   1Aug2007            
+   This run was terminated on:   4:14:59  21Dec2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

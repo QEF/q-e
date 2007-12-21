@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.3.2cvs starts ...
-     Today is 27Jul2007 at  3:14:51 
+     Program POST-PROC v.4.0cvs starts ...
+     Today is 21Dec2007 at  3:12:30 
  
 ===== INPUT FILE containing the left lead =====
 
@@ -471,14 +471,14 @@
         k1(2pi/a)    k2(2pi/a)       E-Ef (eV)
  
  
-     PWCOND       :    13.00s CPU time,   13.17s wall time
+     PWCOND       :    13.09s CPU time,   13.15s wall time
 
      init         :     0.36s CPU
-     poten        :     0.00s CPU
+     poten        :     0.01s CPU
      local        :     0.55s CPU
  
-     scatter_forw :     8.36s CPU (      71 calls,   0.118 s avg)
+     scatter_forw :     8.41s CPU (      71 calls,   0.118 s avg)
  
-     compbs       :     3.72s CPU (      71 calls,   0.052 s avg)
-     compbs_2     :     3.44s CPU (      71 calls,   0.048 s avg)
+     compbs       :     3.77s CPU (      71 calls,   0.053 s avg)
+     compbs_2     :     3.48s CPU (      71 calls,   0.049 s avg)
  

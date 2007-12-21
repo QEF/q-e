@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Wed Jul 11 14:42:47 CEST 2007                      
+     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   4:12:32  31Jul2007               
+   This run was started on:   4: 5:48  21Dec2007               
 
    Serial Build
 Warning: card K_POINTS { GAMMA } ignored
@@ -24,9 +24,6 @@ Warning: card K_POINTS { GAMMA } ignored
    Reading pseudopotential for specie #  1 from file :
    /home/giannozz/espresso/pseudo/HUSPBE.RRKJ3
    file type is  2: RRKJ3
-
-     RRKJ3 Ultrasoft PP for H 
-
 
 
    Main Simulation Parameters (from input)
@@ -135,11 +132,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      tcpu =      0.0    self-consistency for image   1
      tcpu =      2.9    self-consistency for image   2
-     tcpu =      5.8    self-consistency for image   3
-     tcpu =      9.4    self-consistency for image   4
-     tcpu =     12.5    self-consistency for image   5
-     tcpu =     17.3    self-consistency for image   6
-     tcpu =     20.3    self-consistency for image   7
+     tcpu =      6.0    self-consistency for image   3
+     tcpu =     10.0    self-consistency for image   4
+     tcpu =     13.3    self-consistency for image   5
+     tcpu =     18.3    self-consistency for image   6
+     tcpu =     21.5    self-consistency for image   7
 
      activation energy (->) =   1.706818 eV
      activation energy (<-) =   1.707019 eV
@@ -161,11 +158,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   2 ------------------------------
 
-     tcpu =     23.2    self-consistency for image   2
-     tcpu =     24.9    self-consistency for image   3
-     tcpu =     27.0    self-consistency for image   4
-     tcpu =     28.8    self-consistency for image   5
-     tcpu =     30.6    self-consistency for image   6
+     tcpu =     24.5    self-consistency for image   2
+     tcpu =     26.4    self-consistency for image   3
+     tcpu =     28.5    self-consistency for image   4
+     tcpu =     30.3    self-consistency for image   5
+     tcpu =     32.4    self-consistency for image   6
 
      activation energy (->) =   1.463795 eV
      activation energy (<-) =   1.463996 eV
@@ -187,11 +184,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   3 ------------------------------
 
-     tcpu =     32.4    self-consistency for image   2
-     tcpu =     34.4    self-consistency for image   3
-     tcpu =     36.4    self-consistency for image   4
-     tcpu =     38.4    self-consistency for image   5
-     tcpu =     40.5    self-consistency for image   6
+     tcpu =     34.3    self-consistency for image   2
+     tcpu =     36.3    self-consistency for image   3
+     tcpu =     38.5    self-consistency for image   4
+     tcpu =     40.5    self-consistency for image   5
+     tcpu =     42.7    self-consistency for image   6
 
      activation energy (->) =   1.100827 eV
      activation energy (<-) =   1.101028 eV
@@ -213,11 +210,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   4 ------------------------------
 
-     tcpu =     42.5    self-consistency for image   2
-     tcpu =     44.4    self-consistency for image   3
-     tcpu =     46.5    self-consistency for image   4
-     tcpu =     48.6    self-consistency for image   5
-     tcpu =     50.6    self-consistency for image   6
+     tcpu =     44.8    self-consistency for image   2
+     tcpu =     46.8    self-consistency for image   3
+     tcpu =     48.9    self-consistency for image   4
+     tcpu =     51.1    self-consistency for image   5
+     tcpu =     53.2    self-consistency for image   6
 
      activation energy (->) =   0.739359 eV
      activation energy (<-) =   0.739560 eV
@@ -239,11 +236,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   5 ------------------------------
 
-     tcpu =     52.6    self-consistency for image   2
-     tcpu =     54.7    self-consistency for image   3
-     tcpu =     56.8    self-consistency for image   4
-     tcpu =     58.8    self-consistency for image   5
-     tcpu =     60.9    self-consistency for image   6
+     tcpu =     55.3    self-consistency for image   2
+     tcpu =     57.4    self-consistency for image   3
+     tcpu =     59.5    self-consistency for image   4
+     tcpu =     61.6    self-consistency for image   5
+     tcpu =     63.8    self-consistency for image   6
 
      activation energy (->) =   0.420116 eV
      activation energy (<-) =   0.420316 eV
@@ -265,11 +262,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   6 ------------------------------
 
-     tcpu =     62.9    self-consistency for image   2
-     tcpu =     64.7    self-consistency for image   3
-     tcpu =     66.7    self-consistency for image   4
-     tcpu =     68.8    self-consistency for image   5
-     tcpu =     70.8    self-consistency for image   6
+     tcpu =     65.9    self-consistency for image   2
+     tcpu =     67.7    self-consistency for image   3
+     tcpu =     69.8    self-consistency for image   4
+     tcpu =     72.0    self-consistency for image   5
+     tcpu =     74.2    self-consistency for image   6
 
      activation energy (->) =   0.214373 eV
      activation energy (<-) =   0.214573 eV
@@ -291,11 +288,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   7 ------------------------------
 
-     tcpu =     72.6    self-consistency for image   2
-     tcpu =     74.3    self-consistency for image   3
-     tcpu =     76.3    self-consistency for image   4
-     tcpu =     78.2    self-consistency for image   5
-     tcpu =     80.2    self-consistency for image   6
+     tcpu =     76.0    self-consistency for image   2
+     tcpu =     77.9    self-consistency for image   3
+     tcpu =     80.0    self-consistency for image   4
+     tcpu =     82.1    self-consistency for image   5
+     tcpu =     84.2    self-consistency for image   6
 
      activation energy (->) =   0.311007 eV
      activation energy (<-) =   0.311208 eV
@@ -317,11 +314,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   8 ------------------------------
 
-     tcpu =     82.0    self-consistency for image   2
-     tcpu =     83.6    self-consistency for image   3
-     tcpu =     85.1    self-consistency for image   4
-     tcpu =     86.7    self-consistency for image   5
-     tcpu =     88.2    self-consistency for image   6
+     tcpu =     86.1    self-consistency for image   2
+     tcpu =     87.9    self-consistency for image   3
+     tcpu =     89.4    self-consistency for image   4
+     tcpu =     91.1    self-consistency for image   5
+     tcpu =     92.6    self-consistency for image   6
 
      activation energy (->) =   0.257817 eV
      activation energy (<-) =   0.258018 eV
@@ -343,11 +340,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration   9 ------------------------------
 
-     tcpu =     89.8    self-consistency for image   2
-     tcpu =     91.2    self-consistency for image   3
-     tcpu =     92.7    self-consistency for image   4
-     tcpu =     94.3    self-consistency for image   5
-     tcpu =     95.8    self-consistency for image   6
+     tcpu =     94.3    self-consistency for image   2
+     tcpu =     95.8    self-consistency for image   3
+     tcpu =     97.4    self-consistency for image   4
+     tcpu =     99.1    self-consistency for image   5
+     tcpu =    100.6    self-consistency for image   6
 
      activation energy (->) =   0.222883 eV
      activation energy (<-) =   0.223083 eV
@@ -369,11 +366,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration  10 ------------------------------
 
-     tcpu =     97.2    self-consistency for image   2
-     tcpu =     98.3    self-consistency for image   3
-     tcpu =     99.7    self-consistency for image   4
-     tcpu =    100.5    self-consistency for image   5
-     tcpu =    101.8    self-consistency for image   6
+     tcpu =    102.1    self-consistency for image   2
+     tcpu =    103.3    self-consistency for image   3
+     tcpu =    104.7    self-consistency for image   4
+     tcpu =    105.6    self-consistency for image   5
+     tcpu =    107.0    self-consistency for image   6
 
      activation energy (->) =   0.219860 eV
      activation energy (<-) =   0.220060 eV
@@ -395,11 +392,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration  11 ------------------------------
 
-     tcpu =    103.0    self-consistency for image   2
-     tcpu =    104.9    self-consistency for image   3
-     tcpu =    106.8    self-consistency for image   4
-     tcpu =    108.8    self-consistency for image   5
-     tcpu =    110.6    self-consistency for image   6
+     tcpu =    108.2    self-consistency for image   2
+     tcpu =    110.2    self-consistency for image   3
+     tcpu =    112.1    self-consistency for image   4
+     tcpu =    114.2    self-consistency for image   5
+     tcpu =    116.1    self-consistency for image   6
 
      activation energy (->) =   0.306486 eV
      activation energy (<-) =   0.306687 eV
@@ -421,11 +418,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration  12 ------------------------------
 
-     tcpu =    112.6    self-consistency for image   2
-     tcpu =    114.5    self-consistency for image   3
-     tcpu =    116.3    self-consistency for image   4
-     tcpu =    118.3    self-consistency for image   5
-     tcpu =    120.1    self-consistency for image   6
+     tcpu =    118.1    self-consistency for image   2
+     tcpu =    120.2    self-consistency for image   3
+     tcpu =    122.2    self-consistency for image   4
+     tcpu =    124.3    self-consistency for image   5
+     tcpu =    126.2    self-consistency for image   6
 
      activation energy (->) =   0.206746 eV
      activation energy (<-) =   0.206946 eV
@@ -447,11 +444,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration  13 ------------------------------
 
-     tcpu =    122.1    self-consistency for image   2
-     tcpu =    122.9    self-consistency for image   3
-     tcpu =    124.0    self-consistency for image   4
-     tcpu =    124.8    self-consistency for image   5
-     tcpu =    126.0    self-consistency for image   6
+     tcpu =    128.2    self-consistency for image   2
+     tcpu =    129.1    self-consistency for image   3
+     tcpu =    130.3    self-consistency for image   4
+     tcpu =    131.1    self-consistency for image   5
+     tcpu =    132.2    self-consistency for image   6
 
      activation energy (->) =   0.206435 eV
      activation energy (<-) =   0.206636 eV
@@ -473,11 +470,11 @@ Warning: card K_POINTS { GAMMA } ignored
 
      ------------------------------ iteration  14 ------------------------------
 
-     tcpu =    126.9    self-consistency for image   2
-     tcpu =    128.0    self-consistency for image   3
-     tcpu =    129.2    self-consistency for image   4
-     tcpu =    130.6    self-consistency for image   5
-     tcpu =    131.8    self-consistency for image   6
+     tcpu =    133.2    self-consistency for image   2
+     tcpu =    134.3    self-consistency for image   3
+     tcpu =    135.5    self-consistency for image   4
+     tcpu =    137.0    self-consistency for image   5
+     tcpu =    138.2    self-consistency for image   6
 
      activation energy (->) =   0.205120 eV
      activation energy (<-) =   0.205321 eV
@@ -502,10 +499,10 @@ Warning: card K_POINTS { GAMMA } ignored
 
      neb: convergence achieved in  14 iterations
  
-     CP           :  2m12.88s CPU time,     2m43.48s wall time
+     CP           :  2m19.39s CPU time,     2m48.46s wall time
 
  
-   This run was terminated on:   4:15:15  31Jul2007            
+   This run was terminated on:   4: 8:37  21Dec2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

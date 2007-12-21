@@ -1,6 +1,6 @@
 
-     Program POST-PROC v.3.2cvs starts ...
-     Today is 31Jul2007 at  3:56:28 
+     Program POST-PROC v.4.0cvs starts ...
+     Today is 21Dec2007 at  3:51:35 
 
      Calling punch_plot, plot_num =   5
 
@@ -12,7 +12,7 @@
      Use the true wfcs
      Sample bias          = -1.0000 eV
 
-     STM:      1.08s cpu time
+     STM:      1.17s cpu time
      Writing data to file  AlAsresm-1.0
      Reading data from file  AlAsresm-1.0
 

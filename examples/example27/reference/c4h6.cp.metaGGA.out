@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2 - Mon Feb 12 22:45:04 CET 2007                          
+     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:  21:43:14  13Feb2007               
+   This run was started on:   5:57: 6  21Dec2007               
 
    Serial Build
 
@@ -21,11 +21,11 @@
    ----------------------------------
 
    Reading pseudopotential for specie #  1 from file :
-   /home/degironc/QE/espresso/pseudo/Hmeta.tm.UPF
+   /home/giannozz/espresso/pseudo/Hmeta.tm.UPF
    file type is 20: UPF
 
    Reading pseudopotential for specie #  2 from file :
-   /home/degironc/QE/espresso/pseudo/C.meta.tm.UPF
+   /home/giannozz/espresso/pseudo/C.meta.tm.UPF
    file type is 20: UPF
 
 
@@ -107,6 +107,7 @@
 
    Cell Dynamics Parameters (from STDIN)
    -------------------------------------
+   internal stress tensor calculated
    Starting cell generated from CELLDM
    Constant VOLUME Molecular dynamics
    cell parameters are not allowed to move
@@ -184,20 +185,18 @@
 
    System geometry initialization
    ------------------------------
-
-   Scaled atomic positions                                from standard input
-   Species   1 atoms =    6
-    H      -0.339619    -0.307277     0.295218
-    H      -0.364115     0.311411     0.119117
-    H       0.254536    -0.338018    -0.131109
-    H       0.388639    -0.203734     0.236664
-    H       0.306019     0.329807     0.041584
-    H       0.117604     0.200234    -0.322971
-   Species   2 atoms =    4
-    C      -0.151881    -0.163628     0.164576
-    C      -0.170157     0.145767     0.103149
-    C       0.193590    -0.179198     0.063828
-    C       0.136855     0.171351    -0.062119
+ 
+   Scaled positions from standard input
+   H   -0.339619E+00 -0.307277E+00  0.295218E+00
+   H   -0.364115E+00  0.311411E+00  0.119117E+00
+   H    0.254536E+00 -0.338018E+00 -0.131109E+00
+   H    0.388639E+00 -0.203734E+00  0.236664E+00
+   H    0.306019E+00  0.329807E+00  0.415838E-01
+   H    0.117604E+00  0.200234E+00 -0.322971E+00
+   C   -0.151881E+00 -0.163628E+00  0.164576E+00
+   C   -0.170157E+00  0.145767E+00  0.103149E+00
+   C    0.193590E+00 -0.179198E+00  0.638284E-01
+   C    0.136855E+00  0.171351E+00 -0.621193E-01
 
 
    Pseudopotentials initialization
@@ -369,7 +368,7 @@
   -16.95  -10.92  -10.46   -8.89   -5.91   -5.05   -4.47   -3.55   -2.30   -2.08
    -0.46
  
-   Allocated memory (kb) =      1892
+   Allocated memory (kb) =      9568
  
    CELL_PARAMETERS
     8.00000000    0.00000000    0.00000000
@@ -382,9 +381,9 @@
    Center of mass square displacement (a.u.):   0.000000
 
    Total stress (GPa)
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
-        0.00000000         0.00000000         0.00000000
+      -13.93847951        -6.06452951        -0.75813125
+       -6.06452951       -13.75984366        -2.00539369
+       -0.75813125        -2.00539369       -20.08358272
    ATOMIC_POSITIONS
    H   -0.271695E+01 -0.245822E+01  0.236174E+01
    H   -0.291292E+01  0.249129E+01  0.952936E+00
@@ -410,16 +409,16 @@
    C    0.000000E+00  0.000000E+00  0.000000E+00
  
    Forces acting on atoms (au):
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   H    0.000000E+00  0.000000E+00  0.000000E+00
-   C    0.000000E+00  0.000000E+00  0.000000E+00
-   C    0.000000E+00  0.000000E+00  0.000000E+00
-   C    0.000000E+00  0.000000E+00  0.000000E+00
-   C    0.000000E+00  0.000000E+00  0.000000E+00
+   H    0.484339E-01  0.441839E-02 -0.193341E-01
+   H    0.222675E-02 -0.411037E-02 -0.231772E-02
+   H   -0.977981E-02  0.810413E-02 -0.809000E-02
+   H   -0.321187E-01  0.969003E-02  0.394348E-02
+   H    0.161965E-02  0.368851E-02  0.864830E-03
+   H   -0.166186E-02 -0.647797E-02 -0.788998E-02
+   C   -0.173335E-01 -0.436855E-01  0.576932E-01
+   C   -0.589781E-02  0.475732E-01  0.149535E-02
+   C    0.105802E-01 -0.123403E-01 -0.274883E-01
+   C    0.418446E-02 -0.666631E-02 -0.263551E-02
  
 
 
@@ -470,8 +469,8 @@
    MAIN:   0.867441D-06  0.1D-05  0.446486D-06  0.1D-03  0.000000D+00  0.1D+11
    MAIN: convergence achieved for system relaxation
 
-   writing restart file: /home/degironc/tmp//cp_50.save
-   restart file written in    0.086 sec.
+   writing restart file: /home/giannozz/tmp//cp_50.save
+   restart file written in    0.129 sec.
 
 
 
@@ -484,38 +483,41 @@
    temperature   :        0.00000       0.00000 (K )
    enthalpy      :      -22.65501     -22.65501 (AU)
    econs         :      -22.65501     -22.65501 (AU)
-   pressure      :        0.00000       0.00000 (Gpa)
+   pressure      :       90.46977      90.46977 (Gpa)
    volume        :      512.00000     512.00000 (AU)
 
 
-     initialize   :     2.17s CPU
-     total_time   :    56.13s CPU (     135 calls,   0.416 s avg)
+     initialize   :     2.26s CPU
+     total_time   :    46.33s CPU (     135 calls,   0.343 s avg)
      formf        :     0.92s CPU
-     rhoofr       :    14.72s CPU (     136 calls,   0.108 s avg)
-     vofrho       :    22.26s CPU (     136 calls,   0.164 s avg)
-     dforce       :    18.56s CPU (     816 calls,   0.023 s avg)
-     calphi       :     0.04s CPU (     136 calls,   0.000 s avg)
-     ortho        :     0.28s CPU (     136 calls,   0.002 s avg)
-     ortho_iter   :     0.02s CPU (     136 calls,   0.000 s avg)
-     rhoset       :     0.08s CPU (     136 calls,   0.001 s avg)
-     updatc       :     0.05s CPU (     136 calls,   0.000 s avg)
+     rhoofr       :    16.55s CPU (     136 calls,   0.122 s avg)
+     vofrho       :    18.14s CPU (     136 calls,   0.133 s avg)
+     dforce       :    11.31s CPU (     816 calls,   0.014 s avg)
+     calphi       :     0.01s CPU (     136 calls,   0.000 s avg)
+     ortho        :     0.19s CPU (     136 calls,   0.001 s avg)
+     ortho_iter   :     0.03s CPU (     136 calls,   0.000 s avg)
+     rhoset       :     0.09s CPU (     136 calls,   0.001 s avg)
+     updatc       :     0.06s CPU (     136 calls,   0.000 s avg)
      gram         :     0.00s CPU
      newd         :     0.00s CPU (     136 calls,   0.000 s avg)
-     calbec       :     0.04s CPU (     137 calls,   0.000 s avg)
+     calbec       :     0.01s CPU (     137 calls,   0.000 s avg)
      prefor       :     0.01s CPU (     136 calls,   0.000 s avg)
-     strucf       :     0.27s CPU (     136 calls,   0.002 s avg)
-     nlsm1        :     0.04s CPU (     409 calls,   0.000 s avg)
-     fft          :     6.44s CPU (    1360 calls,   0.005 s avg)
-     ffts         :     2.38s CPU (     544 calls,   0.004 s avg)
-     fftw         :    26.59s CPU (    9792 calls,   0.003 s avg)
-     rsg          :     0.02s CPU (     136 calls,   0.000 s avg)
+     strucf       :     0.01s CPU
+     nlfl         :     0.00s CPU (     136 calls,   0.000 s avg)
+     nlfq         :     0.06s CPU (     136 calls,   0.000 s avg)
+     nlsm1        :     0.01s CPU (     409 calls,   0.000 s avg)
+     nlsm2        :     0.06s CPU (     136 calls,   0.000 s avg)
+     fft          :     4.27s CPU (    1360 calls,   0.003 s avg)
+     ffts         :     1.70s CPU (     544 calls,   0.003 s avg)
+     fftw         :    15.99s CPU (    9792 calls,   0.002 s avg)
+     rsg          :     0.03s CPU (     136 calls,   0.000 s avg)
  
  
  
-     CP           :  0m58.48s CPU time,     1m 2.92s wall time
+     CP           :    48.76s CPU time,   50.49s wall time
 
  
-   This run was terminated on:  21:44:17  13Feb2007            
+   This run was terminated on:   5:57:57  21Dec2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.

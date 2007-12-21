@@ -3,14 +3,14 @@
      CP: variable-cell Car-Parrinello molecular dynamics
      using norm-conserving and ultrasoft Vanderbilt pseudopotentials
 
-     Version: 3.2cvs - Wed Jul 11 14:42:47 CEST 2007                      
+     Version: 4.0cvs - Mon Oct 8 02:36:14 CEST 2007                       
      Authors: Alfredo Pasquarello, Kari Laasonen, Andrea Trave, Roberto Car,
        Paolo Giannozzi, Nicola Marzari, Carlo Cavazzoni, Guido Chiarotti,
        Sandro Scandolo, Paolo Focher, Gerardo Ballabio, and others
 
 =------------------------------------------------------------------------------=
 
-   This run was started on:   5:23: 8   1Aug2007               
+   This run was started on:   5:20: 8  21Dec2007               
 
    Serial Build
 
@@ -334,7 +334,7 @@ inw = 3:   0   0   1   1.000000
  
 
    reading restart file: /home/giannozz/tmp//h2o_mol_50.save
-   restart file read in    0.043 sec.
+   restart file read in    0.044 sec.
 
 
    formf: eself=  30.31961
@@ -467,7 +467,7 @@ inw = 3:   0   0   1   1.000000
 
   -25.50  -12.80   -9.50   -7.19
  
-   Allocated memory (kb) =     52999
+   Allocated memory (kb) =     52636
  
    CELL_PARAMETERS
    20.00000000    0.00000000    0.00000000
@@ -509,7 +509,7 @@ inw = 3:   0   0   1   1.000000
   100  0.00019    0.0  194.8   -17.20337   -17.30364   -17.30086   -17.30067  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /home/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.185 sec.
+   restart file written in    0.190 sec.
 
   101  0.00028    0.0  220.0   -17.20373   -16.70398   -16.70084   -16.70057  0.0000  0.0000  0.0000  0.0000
   102  0.00029    0.0  243.8   -17.20410   -16.70436   -16.70089   -16.70060  0.0000  0.0000  0.0000  0.0000
@@ -634,7 +634,7 @@ inw = 3:   0   0   1   1.000000
 
   -24.90  -13.13   -8.82   -7.07
  
-   Allocated memory (kb) =     52999
+   Allocated memory (kb) =     52636
  
    CELL_PARAMETERS
    20.00000000    0.00000000    0.00000000
@@ -676,7 +676,7 @@ inw = 3:   0   0   1   1.000000
   200  0.00025    0.0  326.0   -17.20497   -17.30521   -17.30057   -17.30032  0.0000  0.0000  0.0000  0.0000
 
    writing restart file: /home/giannozz/tmp//h2o_mol_51.save
-   restart file written in    0.119 sec.
+   restart file written in    0.182 sec.
 
 
 
@@ -693,38 +693,38 @@ inw = 3:   0   0   1   1.000000
    volume        :     8000.00000    8000.00000 (AU)
 
 
-     initialize   :     2.94s CPU
-     total_time   :   349.60s CPU (     200 calls,   1.748 s avg)
-     formf        :     0.38s CPU
-     rhoofr       :    72.15s CPU (     200 calls,   0.361 s avg)
-     vofrho       :   200.71s CPU (     200 calls,   1.004 s avg)
-     dforce       :    35.84s CPU (     400 calls,   0.090 s avg)
-     calphi       :     0.92s CPU (     200 calls,   0.005 s avg)
-     ortho        :     2.04s CPU (     200 calls,   0.010 s avg)
-     ortho_iter   :     0.01s CPU (     200 calls,   0.000 s avg)
-     rhoset       :     0.21s CPU (     200 calls,   0.001 s avg)
-     updatc       :     0.26s CPU (     200 calls,   0.001 s avg)
-     newd         :     1.15s CPU (     200 calls,   0.006 s avg)
-     calbec       :     0.00s CPU (     201 calls,   0.000 s avg)
-     prefor       :     0.80s CPU (     401 calls,   0.002 s avg)
-     strucf       :     1.26s CPU (     201 calls,   0.006 s avg)
-     nlfl         :     0.01s CPU (     200 calls,   0.000 s avg)
-     nlfq         :     2.54s CPU (     200 calls,   0.013 s avg)
-     rhov         :    16.10s CPU (     200 calls,   0.081 s avg)
-     nlsm1        :     1.49s CPU (     601 calls,   0.002 s avg)
-     nlsm2        :     2.53s CPU (     200 calls,   0.013 s avg)
-     fft          :   123.69s CPU (    1800 calls,   0.069 s avg)
-     ffts         :    27.41s CPU (     400 calls,   0.069 s avg)
-     fftw         :    47.78s CPU (    1200 calls,   0.040 s avg)
-     fftb         :     2.72s CPU (   31914 calls,   0.000 s avg)
-     rsg          :     0.00s CPU (     200 calls,   0.000 s avg)
+     initialize   :     2.99s CPU
+     total_time   :   347.92s CPU (     200 calls,   1.740 s avg)
+     formf        :     0.37s CPU
+     rhoofr       :    72.14s CPU (     200 calls,   0.361 s avg)
+     vofrho       :   199.25s CPU (     200 calls,   0.996 s avg)
+     dforce       :    35.80s CPU (     400 calls,   0.089 s avg)
+     calphi       :     0.82s CPU (     200 calls,   0.004 s avg)
+     ortho        :     2.05s CPU (     200 calls,   0.010 s avg)
+     ortho_iter   :     0.04s CPU (     200 calls,   0.000 s avg)
+     rhoset       :     0.27s CPU (     200 calls,   0.001 s avg)
+     updatc       :     0.36s CPU (     200 calls,   0.002 s avg)
+     newd         :     1.14s CPU (     200 calls,   0.006 s avg)
+     calbec       :     0.01s CPU (     201 calls,   0.000 s avg)
+     prefor       :     0.77s CPU (     401 calls,   0.002 s avg)
+     strucf       :     1.32s CPU (     201 calls,   0.007 s avg)
+     nlfl         :     0.00s CPU (     200 calls,   0.000 s avg)
+     nlfq         :     2.62s CPU (     200 calls,   0.013 s avg)
+     rhov         :    16.45s CPU (     200 calls,   0.082 s avg)
+     nlsm1        :     1.51s CPU (     601 calls,   0.003 s avg)
+     nlsm2        :     2.62s CPU (     200 calls,   0.013 s avg)
+     fft          :   122.63s CPU (    1800 calls,   0.068 s avg)
+     ffts         :    26.97s CPU (     400 calls,   0.067 s avg)
+     fftw         :    47.45s CPU (    1200 calls,   0.040 s avg)
+     fftb         :     2.85s CPU (   31914 calls,   0.000 s avg)
+     rsg          :     0.01s CPU (     200 calls,   0.000 s avg)
  
  
  
-     CP           :  5m58.42s CPU time,     6m25.16s wall time
+     CP           :  5m56.80s CPU time,     6m22.11s wall time
 
  
-   This run was terminated on:   5:29:33   1Aug2007            
+   This run was terminated on:   5:26:30  21Dec2007            
 
 =------------------------------------------------------------------------------=
    JOB DONE.
