@@ -32,5 +32,5 @@ TMP_DIR=$HOME/tmp
 #
 # To run on a single processor, you can usually leave them empty.
 
-PARA_PREFIX="mpirun -v -machinefile $HOME/nodefile -np 4" 
-PARA_POSTFIX="-npool 1"
+PARA_PREFIX=
+PARA_POSTFIX=
