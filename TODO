@@ -2,9 +2,7 @@ TODO LIST - December 2007
 
 TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
 
-- License: decide whether to move to LGPL
-           decide who is the copyright owner ("Quantum-Espresso group"?)
-           update copyright notice in the header of all files
+- License: update copyright notice in the header of all files
 - Web: move download and PP page from pwscf.org to quantum-espresso.org;
        move Tutorial and Examples from wiki into Learn page;
        find a way to extract the User Guide and other info from wiki
@@ -15,23 +13,19 @@ TO BE DONE BEFORE THE 4.0 VERSION (to be released hopefully soon)
        of the Doc/ directory from CVS into wiki
 - Doc: add benchmarks suite and results
 - Cleanup: the GUI should be either updated or removed
-- Code: improve vc-relax algorithms, fix loss of symmetry cases
 - Code: PAW, including PAWsets (Lorenzo-SdG)
 - Code: GIPAW (Paris-Davide)
 - Code: electron-phonon (Paris 2)?
 - Code: other "external" contributions to Q-E: Wannier, Want, SAX, ...
 - Contrib: QHA + projected phonon DOS codes (Eyvaz)
 - Contrib: band plotting (Jonathan)
-- Bug: fixing atomic positions for vc-relax case works only if the atoms
-       to be kept fixed are the first in the list
 - Bug: xcrysden doesn't read any longer some output files
+- Bug: more problems in electric fields/Berry phase noticed by David V.
 - UPF: update UPF format to allow hack-free inclusion of spin-orbit/GIPAW/PAW
 - Bin: should we make a few binary distributions?
        - Mac OS-X 10.4 Intel
        - Linux Intel 32bit serial
-       - Linux Intel 32bit parallel
        - Linux Intel/AMD 64bit serial
-       - Linux Intel/AMD 64bit parallel
 
 Postponed:
 - Code: corrections for charged/isolated systems (Ismaila-Nicola)
