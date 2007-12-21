@@ -474,7 +474,12 @@ SUBROUTINE reduce_base_real_to( dim, ps, psout, comm, root )
   IF( info /= 0 ) CALL errore( 'reduce_base_real_to', 'error in mpi_comm_rank', info )
 
   !
-  IF ( dim <= 0 .OR. nproc <= 1 ) RETURN
+  IF ( dim <= 0 .OR. nproc < 1 ) RETURN
+  !
+  IF ( nproc == 1 ) THEN
+     psout = ps
+     RETURN
+  END IF
   !
   ! ... synchronize processes
   !
@@ -618,7 +623,12 @@ SUBROUTINE reduce_base_integer_to( dim, ps, psout, comm, root )
   CALL mpi_comm_rank( comm, myid, info )
   IF( info /= 0 ) CALL errore( 'reduce_base_integer_to', 'error in mpi_comm_rank', info )
   !
-  IF ( dim <= 0 .OR. nproc <= 1 ) RETURN
+  IF ( dim <= 0 .OR. nproc < 1 ) RETURN
+  !
+  IF ( nproc == 1 ) THEN
+     psout = ps
+     RETURN
+  END IF
   !
   ! ... synchronize processes
   !
