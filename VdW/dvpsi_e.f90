@@ -131,7 +131,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
      enddo
   enddo
 
-  call calbec (npw, work, evc, becp2)
+  if (nkb > 0) call calbec (npw, work, evc, becp2)
 
   ijkb0 = 0
   do nt = 1, ntyp
@@ -175,7 +175,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
      do jbnd = 1, nbnd_occ (kpoint)
         call ZAXPY (npw, ps (1, jbnd), evc (1, jbnd), 1, work, 1)
      enddo
-     call calbec (npw, vkb, work, becp, 1)
+     if ( nkb > 0 ) call calbec (npw, vkb, work, becp, 1)
      call s_psi (npwx, npw, 1, work, spsi)
      call DAXPY (2 * npw, 1.0d0, spsi, 1, dpsi (1, ibnd), 1)
   enddo
@@ -230,7 +230,7 @@ subroutine dvpsi_e_vdw (kpoint, ipol)
 !     nrec = (ipol - 1) * nksq + kpoint
 !     call davcio (dvpsi, lrcom, iucom, nrec, 1)
      !
-     call calbec (npw, vkb, dvpsi, becp)
+     if (nkb > 0) call calbec (npw, vkb, dvpsi, becp)
      call s_psi(npwx,npw,nbnd,dvpsi,spsi)
      call DCOPY(2*npwx*nbnd,spsi,1,dvpsi,1)
      call adddvepsi_us(becp2,ipol,kpoint)

@@ -188,8 +188,7 @@ subroutine solve_e_vdw ( iu )
         ! we compute the becp terms which are used in the rest of
         !    the code
         !
-        IF ( nkb > 0 ) & ! workaround: this is actually not used
-           CALL calbec( npw, vkb, evc, becp1(:,:,ik) )
+        IF ( nkb > 0 ) CALL calbec( npw, vkb, evc, becp1(:,:,ik) )
         !
         ! compute the kinetic energy
         !
@@ -261,8 +260,7 @@ subroutine solve_e_vdw ( iu )
               do jbnd = 1, nbnd_occ (ik)
                  call ZAXPY (npw, ps (jbnd), evc (1, jbnd), 1, auxg, 1)
               enddo
-              IF ( nkb > 0 ) & ! workaround: this is actually not used
-                  call calbec (npw, vkb, auxg, becp, 1)
+              IF ( nkb > 0 ) call calbec (npw, vkb, auxg, becp, 1)
               call s_psi (npwx, npw, 1, auxg, spsi)
               call DAXPY (2*npw, 1.0d0, spsi, 1, dvpsi (1, ibnd), 1)
            enddo
