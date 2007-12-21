@@ -117,11 +117,11 @@ CONTAINS
         RETURN
       END IF
 
-      ALLOCATE( u( n ), p( n+1 ), vtmp( n+1 ), ul( n ), pl( n ), is( n ), ri( n ) )
+      ALLOCATE( u( n+2 ), p( n+1 ), vtmp( n+2 ), ul( n ), pl( n ), is( n ), ri( n ) )
 
       DO I = N, 1, -1
         IS(I)  = (I-1)/NPROC
-        RI(I)  = MOD((I-1),NPROC)
+        RI(I)  = MOD((I-1),NPROC)  !  owner of I-th row
         IF(ME .le. RI(I) ) then
           IS(I) = IS(I) + 1
         END IF
@@ -150,9 +150,11 @@ CONTAINS
 #endif
 
            IF ( SCALEF .EQ. 0.0_DP )  THEN
+             !
              IF (RI(L).EQ.ME) THEN
                E(I) = A(is(L),I) 
              END IF
+             !
            ELSE 
 
              !  ......  CALCOLO DI SIGMA E DI H
@@ -170,14 +172,30 @@ CONTAINS
                F = 0.0_DP
              END IF
 
+             !  COSTRUZIONE DEL VETTORE U
+
+             vtmp( 1:l ) = 0.0_DP 
+
+             k = ME + 1
+             DO kl = 1,is(l)          
+               vtmp(k)   = A(kl,I)
+               k         = k + NPROC
+             END DO
+
+             DO kl = 1,is(l)          
+               UL(kl)    = A(kl,I)
+             END DO
+
 #if defined __PARA
 #  if defined __MPI
-             redin(1) = sigma
-             redin(2) = f
-             CALL MPI_ALLREDUCE( redin, redout, 2, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR)
-             SIGMA = redout(1)
-             f     = redout(2)
+             vtmp( l + 1 ) = sigma
+             vtmp( l + 2 ) = f
+             CALL MPI_ALLREDUCE( VTMP, U, L+2, MPI_DOUBLE_PRECISION, MPI_SUM, comm, IERR )
+             sigma = u( l + 1 )
+             f     = u( l + 2 )
 #  endif
+#else
+             u(1:l) = vtmp(1:l)
 #endif
 
              G          = -SIGN(SQRT(SIGMA),F)
@@ -185,36 +203,14 @@ CONTAINS
              ONE_OVER_H = 1.0_DP/H
              E(I)       = SCALEF*G
 
-!  ......  COSTRUZIONE DEL VETTORE U
+             U(L)       = F - G 
 
-             DO k = 1,L          
-               vtmp(k) = 0.0_DP 
-             END DO
-
-             k = ME + 1
-
-             DO kl = 1,is(l)          
-               vtmp(k)   = A(kl,I)
-               UL(kl) = A(kl,I)
-               k      = k + NPROC
-             END DO
-             IF(RI(L) .eq. ME ) THEN
-               vtmp(L)      = F - G 
+             IF( RI(L) ==  ME ) THEN
                UL(is(l))  = F - G
                A(is(l),I) = F - G 
              END IF
 
-#if defined __PARA
-#  if defined __MPI
-             CALL MPI_ALLREDUCE(VTMP,U,L,MPI_DOUBLE_PRECISION,MPI_SUM,comm,IERR)
-#  endif
-#else
-             u(1:l) = vtmp(1:l)
-#endif
-
 !  ......  COSTRUZIONE DEL VETTORE P
-
-             KAPPA = 0.0_DP
 
              DO J = 1,L
 
@@ -224,16 +220,17 @@ CONTAINS
                  vtmp(J) = vtmp(J) + A(KL,J) * UL(KL)
                END DO
 
-               IF(L.GT.J .AND. ME.EQ.RI(J)) then
-
+               IF( L > J .AND. ME == RI(J) ) then
                  DO K = J+1,L
                    vtmp(J) = vtmp(J) + A(IS(J),K) * U(K)
                  END DO
                END IF
 
                vtmp(J) = vtmp(J) * ONE_OVER_H
-               KAPPA = KAPPA + vtmp(J) * U(J) * 0.5_DP * ONE_OVER_H
+
              END DO 
+
+             KAPPA = 0.5_DP * ONE_OVER_H * ddot( l, vtmp, 1, u, 1 )
 
 #if defined __PARA
 #  if defined __MPI
@@ -248,22 +245,6 @@ CONTAINS
              CALL DAXPY( l, -kappa, u, 1, p, 1 )
              CALL DGER( is(l), l, -1.0_DP, ul, 1, p, 1, a, lda )
              CALL DGER( is(l), l, -1.0_DP, p( me + 1 ), nproc, u, 1, a, lda )
-
-             ! k = me + 1
-             ! DO kl = 1,is(l)          
-             !   PL(kl) = P(k)
-             !   k      = k + NPROC
-             ! END DO
-
-
-             ! DO J = 1,L
-             !   tu= U(J)
-             !   tp= P(J)
-             !   DO KL = 1,is(l)
-             !     A(KL,j) = A(KL,j) - UL(KL) * tp 
-             !     A(KL,j) = A(KL,j) - PL(KL) * tu 
-             !   END DO
-             ! END DO
 
            END IF
 
@@ -290,9 +271,7 @@ CONTAINS
       D(1) = 0.0_DP
 
       DO J = 1,N
-        DO I = 1,NRL
-          V(I,J) = 0.0_DP
-        END DO
+        V(1:nrl,J) = 0.0_DP
         IF(RI(J).EQ.ME) THEN
           V(IS(J),J) = 1.0_DP
         END IF
@@ -301,11 +280,17 @@ CONTAINS
       DO I = 2,N
         L = I - 1
         LLOC = IS(L)
-        IF(D(I).NE.0.0_DP) THEN
+        !
+        IF( D(I) .NE. 0.0_DP ) THEN
+          !
           ONE_OVER_H = 1.0_DP/D(I)
-          DO J = 1, L
-            P(J) = DDOT(LLOC,V(1,J),1,A(1,I),1)
-          END DO
+          !
+          IF( lloc > 0 ) THEN
+             CALL DGEMV( 't', lloc, l, 1.0d0, v(1,1), ldv, a(1,i), 1, 0.0d0, p(1), 1 )
+          ELSE
+             P(1:l) = 0.0d0
+          END IF
+           
 
 #if defined __PARA
 #  if defined __MPI
@@ -315,9 +300,9 @@ CONTAINS
           vtmp(1:l) = p(1:l)
 #endif
 
-          DO J = 1, L
-            call DAXPY(LLOC,-VTMP(J)*ONE_OVER_H,A(1,I),1,V(1,J),1)
-          END DO
+          IF( lloc > 0 ) THEN
+             CALL DGER( lloc, l, -ONE_OVER_H, a(1,i), 1, vtmp, 1, v, ldv )
+          END IF
 
         END IF
 
