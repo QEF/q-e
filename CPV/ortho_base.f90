@@ -747,7 +747,7 @@ CONTAINS
 !
       IMPLICIT NONE
 !
-      INTEGER nss, ist, ngwx, nkbx, n, ldx, nx
+      INTEGER     :: nss, ist, ngwx, nkbx, n, ldx, nx
       COMPLEX(DP) :: cp( ngwx, n )
       REAL(DP)    :: becp( nkbx, n ), qbecp( nkbx, ldx )
       REAL(DP)    :: sig( ldx, ldx )
@@ -831,11 +831,11 @@ CONTAINS
                          nkbx, qbecp( 1, 1 ), nkbx, 1.0d0, sig, ldx )
          ENDIF
          !
-         IF(iprsta.GT.4) THEN
+         IF( iprsta > 4 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    sig '
-            DO i=1,nr
-               WRITE( stdout,'(7f11.6)') (sig(i,j),j=1,nc)
+            DO i = 1, nr
+               WRITE( stdout,'(7f11.6)' ) ( sig(i,j), j=1, nc )
             END DO
          ENDIF
          !
@@ -957,7 +957,7 @@ CONTAINS
 
          END IF
 
-         IF (iprsta.GT.4) THEN
+         IF ( iprsta > 4 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    rho '
             DO i=1,nr
@@ -1085,7 +1085,7 @@ CONTAINS
                   qbephi( 1, 1 ), nkbx, 1.0d0, tau, ldx )
          END IF
 
-         IF(iprsta.GT.4) THEN
+         IF( iprsta > 4 ) THEN
             WRITE( stdout,*)
             WRITE( stdout,'(26x,a)') '    tau '
             DO i=1,nr
@@ -1232,7 +1232,7 @@ CONTAINS
       IF ( iprsta > 2 ) THEN
          WRITE( stdout,*)
          DO is = 1, nvb
-            IF( nvb .GT. 1 ) THEN
+            IF( nvb > 1 ) THEN
                WRITE( stdout,'(33x,a,i4)') ' updatc: bec (is)',is
                WRITE( stdout,'(8f9.4)')                                       &
      &            ((bec(ish(is)+(iv-1)*na(is)+1,i+istart-1),iv=1,nh(is)),i=1,nss)
@@ -1288,6 +1288,7 @@ CONTAINS
       !
       INTEGER  :: is, iv, jv, ia, inl, jnl, i, j
       REAL(DP), ALLOCATABLE :: qtemp( : , : )
+      REAL(DP) :: qqf
 !
       IF( n < 1 ) RETURN
       !
@@ -1301,15 +1302,13 @@ CONTAINS
          qtemp (:,:) = 0.d0
          DO is=1,nvb
             DO iv=1,nh(is)
+               inl = ish(is)+(iv-1)*na(is)
                DO jv=1,nh(is)
+                  jnl = ish(is)+(jv-1)*na(is)
                   IF(ABS(qq(iv,jv,is)) > 1.d-5) THEN
-                     DO ia=1,na(is)
-                        inl=ish(is)+(iv-1)*na(is)+ia
-                        jnl=ish(is)+(jv-1)*na(is)+ia
-                        DO i=1,n
-                           qtemp(inl,i) = qtemp(inl,i) +                &
-     &                                    qq(iv,jv,is)*bec(jnl,i)
-                        END DO
+                     qqf = qq(iv,jv,is)
+                     DO i=1,n
+                        CALL daxpy( na(is), qqf, bec(jnl+1,i),1,qtemp(inl+1,i), 1 )
                      END DO
                   ENDIF
                END DO
