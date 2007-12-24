@@ -1897,21 +1897,23 @@ END FUNCTION
 !
       IMPLICIT NONE
 !
-      REAL(8) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
+      REAL(DP) ::  rhovan(nhm*(nhm+1)/2,nat,nspin)
       INTEGER, INTENT(in) :: irb(3,nat)
-      COMPLEX(8), INTENT(in):: eigrb(ngb,nat)
-      REAL(8), INTENT(inout):: rhor(nnr,nspin)
-      COMPLEX(8),  INTENT(inout):: rhog(ng,nspin)
+      COMPLEX(DP), INTENT(in):: eigrb(ngb,nat)
+      REAL(DP), INTENT(inout):: rhor(nnr,nspin)
+      COMPLEX(DP),  INTENT(inout):: rhog(ng,nspin)
 !
-      INTEGER isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss,           &
-     &     isa, ia, ir, i, j
-      REAL(8) sumrho
-      COMPLEX(8) ci, fp, fm, ca
-      COMPLEX(8), ALLOCATABLE::  qgbt(:,:)
-      COMPLEX(8), ALLOCATABLE:: v(:)
-      COMPLEX(8), ALLOCATABLE:: qv(:)
-!
-      IF (nvb.EQ.0) RETURN
+      INTEGER     :: isup, isdw, nfft, ifft, iv, jv, ig, ijv, is, iss, isa, ia, ir, i, j
+      REAL(DP)    :: sumrho
+      COMPLEX(DP) :: ci, fp, fm, ca
+      COMPLEX(DP), ALLOCATABLE :: qgbt(:,:)
+      COMPLEX(DP), ALLOCATABLE :: v(:)
+      COMPLEX(DP), ALLOCATABLE :: qv(:)
+
+      !  Quick return if this sub is not needed
+      !
+      IF ( nvb == 0 ) RETURN
+
       CALL start_clock( 'rhov' )
       ci=(0.d0,1.d0)
 !

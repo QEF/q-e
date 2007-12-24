@@ -107,7 +107,6 @@
 
 
    PUBLIC :: vofmean
-   PUBLIC :: kspotential
    PUBLIC :: vofrhos
    PUBLIC :: vofps
    PUBLIC :: vofloc
@@ -314,18 +313,6 @@
 
   
    INTERFACE rhoofr
-      SUBROUTINE rhoofr_fpmd (nfi, tstress, c0, fi, rhor, omega, ekin, dekin)
-         USE kinds,      ONLY: DP         
-         IMPLICIT NONE
-         INTEGER,              INTENT(IN) :: nfi
-         LOGICAL,              INTENT(IN) :: tstress
-         COMPLEX(DP)                     :: c0(:,:)
-         REAL(DP),          INTENT(IN) :: fi(:)
-         REAL(DP),            INTENT(OUT) :: rhor(:,:)
-         REAL(DP),          INTENT(IN) :: omega
-         REAL(DP),          INTENT(OUT) :: ekin
-         REAL(DP),          INTENT(OUT) :: dekin(6)
-      END SUBROUTINE rhoofr_fpmd
       SUBROUTINE rhoofr_cp &
          ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin )
          USE kinds,      ONLY: DP         
@@ -1092,40 +1079,10 @@
       END SUBROUTINE
    END INTERFACE
 
-   INTERFACE kspotential
-      SUBROUTINE kspotential_x &
-         ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
-          ei1, ei2, ei3, sfac, c0, tcel, ht, fi, vpot, edft )
-         USE kinds,             ONLY: DP
-         USE energies,          ONLY: dft_energy_type
-         USE cell_base,         ONLY: boxdimensions
-         USE atoms_type_module, ONLY: atoms_type
-         USE wave_types,        ONLY: wave_descriptor 
-         IMPLICIT NONE
-         INTEGER,              INTENT(IN)    :: nfi
-         LOGICAL, INTENT(IN) :: tforce, tstress, tprint
-         REAL(DP) :: rhoe(:,:)
-         TYPE (atoms_type),    INTENT(INOUT) :: atoms
-         REAL(DP) :: bec(:,:)
-         REAL(DP) :: becdr(:,:,:)
-         COMPLEX(DP) :: eigr(:,:)
-         COMPLEX(DP) :: ei1(:,:)
-         COMPLEX(DP) :: ei2(:,:)
-         COMPLEX(DP) :: ei3(:,:)
-         COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-         COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
-         LOGICAL   :: tcel
-         TYPE (boxdimensions), INTENT(INOUT) ::  ht
-         REAL(DP), INTENT(IN) :: fi(:)
-         REAL(DP)    :: vpot(:,:)
-         TYPE (dft_energy_type) :: edft
-      END SUBROUTINE
-   END INTERFACE
-
 
    INTERFACE vofrhos
       SUBROUTINE vofrhos_x &
-         ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, fi, &
+         ( tprint, tforce, tstress, rhoe, rhoeg, atoms, vpot, bec, c0, fi, &
            eigr, ei1, ei2, ei3, sfac, box, edft )
          USE kinds,             ONLY: DP
          USE energies,          ONLY: dft_energy_type
@@ -1135,6 +1092,7 @@
          IMPLICIT NONE
          LOGICAL, INTENT(IN) :: tprint, tforce, tstress
          REAL(DP) :: rhoe(:,:)
+         COMPLEX(DP) :: rhoeg(:,:)
          TYPE (atoms_type), INTENT(INOUT) :: atoms
          REAL(DP)            :: vpot(:,:)
          REAL(DP)    :: bec(:,:)

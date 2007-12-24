@@ -115,15 +115,9 @@
             !
             IF( nproc_image > 1 ) THEN
                inl=(iv-1)*na(is)+1
-               ! CALL MXMA( wrk2, 2*ngw, 1, c, 1, 2*ngw, becps( inl, 1 ), 1, nhx, na(is), 2*ngw, n )
                CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becps( inl, 1 ), nhx )
-
-               ! subroutine mxma (a,na,iad,b,nb,ibd,c,nc,icd,nar,nac,nbc)
-               ! call DGEMM(mode1,mode2,nar,nbc,nac,1.d0,a,lda,b,ldb,0.d0,c,icd)
-
             ELSE
                inl=ish(is)+(iv-1)*na(is)+1
-               ! call MXMA( wrk2, 2*ngw, 1, c, 1, 2*ngw, becp( inl, 1 ), 1, nkb, na(is), 2*ngw, n )
                CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becp( inl, 1 ), nkb )
             END IF
 
@@ -252,7 +246,6 @@
                   end do
                end do
                inl=ish(is)+(iv-1)*na(is)+1
-               ! call MXMA(wrk2,2*ngw,1,c,1,2*ngw,becdr(inl,1,k),1, nkb,na(is),2*ngw,n)
                CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, becdr( inl, 1, k ), nkb )
             end do
 
@@ -556,7 +549,6 @@ SUBROUTINE caldbec( ngw, nkb, n, nspmn, nspmx, eigr, c, dbec, tred )
                  end do
               end do
               inl=ish(is)+(iv-1)*na(is)+1
-              ! call MXMA(wrk2,2*ngw,1,c,1,2*ngw,dbec(inl,1,i,j),1,nkb,na(is),2*ngw,n)
               CALL DGEMM( 'T', 'N', na(is), n, 2*ngw, 1.0d0, wrk2, 2*ngw, c, 2*ngw, 0.0d0, dbec( inl, 1, i, j ), nkb )
            end do
            if( ( nproc_image > 1 ) .AND. tred ) then

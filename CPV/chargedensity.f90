@@ -64,10 +64,11 @@
 
 
 
-!=----------------------------------------------------------------------=!
-   SUBROUTINE rhoofr_fpmd ( nfi, tstress, c0, fi, rhor, omega, ekin, dekin )
-!=----------------------------------------------------------------------=!
-
+!-----------------------------------------------------------------------
+   SUBROUTINE rhoofr_cp &
+      ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin )
+!-----------------------------------------------------------------------
+!
 !  this routine computes:
 !  rhor  = normalized electron density in real space
 !  ekin  = kinetic energy
@@ -86,226 +87,6 @@
 !    ib = index of band
 !    ig = index of G vector
 !  ----------------------------------------------
-
-! ... declare modules
-
-    USE kinds,           ONLY: DP
-    USE fft_base,        ONLY: dfftp, dffts
-    USE mp_global,       ONLY: intra_image_comm
-    USE mp,              ONLY: mp_sum
-    USE turbo,           ONLY: tturbo, nturbo, turbo_states, allocate_turbo
-    USE io_global,       ONLY: stdout, ionode
-    USE control_flags,   ONLY: iprint, use_task_groups
-    USE grid_dimensions, ONLY: nr1, nr2, nr3, nr1x, nr2x, nnrx
-    USE cp_interfaces,   ONLY: invfft
-    USE electrons_base,  ONLY: iupdwn, nupdwn, nspin
-    USE cp_interfaces,   ONLY: dft_total_charge, stress_kin
-    USE gvecw,           ONLY: ngw
-
-
-    IMPLICIT NONE
-
-! ... declare subroutine arguments
-
-    INTEGER,      INTENT(IN)  :: nfi
-    LOGICAL,      INTENT(IN)  :: tstress
-    COMPLEX(DP)               :: c0(:,:)
-    REAL(DP),     INTENT(IN)  :: fi(:)
-    REAL(DP),     INTENT(OUT) :: rhor(:,:)
-    REAL(DP),     INTENT(IN)  :: omega
-    REAL(DP),     INTENT(OUT) :: ekin
-    REAL(DP),     INTENT(OUT) :: dekin( 6 )
-
-! ... declare other variables
-
-    INTEGER :: i, is1, is2, j, ib, nb, iss
-    INTEGER :: nnr, iwfc1, iwfc2
-    REAL(DP)  :: r2, r1, coef3, coef4, rsumg( nspin ), rsumgs
-    REAL(DP)  :: fact, rsumr( nspin )
-    COMPLEX(DP), ALLOCATABLE :: psi2(:)
-    INTEGER :: ierr
-    LOGICAL :: ttprint
-
-    REAL(DP), EXTERNAL :: enkin
-
-! ... end of declarations
-!  ----------------------------------------------
-
-    CALL start_clock( 'rhoofr' )
-
-    IF( use_task_groups ) &
-       CALL errore( ' rhoofr_fpmd ', ' tasks group not implemented in fpmd ', 1 )
-
-    ! ... compute kinetic energy
-
-    ekin  = 0.0d0
-
-    DO iss = 1, nspin
-       ekin  = ekin + enkin( c0( 1, iupdwn(iss) ), SIZE( c0, 1 ), fi( iupdwn( iss ) ), nupdwn(iss) )
-    END DO
-
-    IF( tstress ) THEN
-       !
-       ! ... compute kinetic energy contribution
-       !
-       CALL stress_kin( dekin, c0, fi )
-       !
-    END IF
-
-    nnr   =  dfftp%nr1x * dfftp%nr2x * dfftp%npl
-
-    rsumg = 0.0d0
-    rsumr = 0.0d0
-
-    ttprint = ( nfi == 0 ) .OR. ( MOD( nfi, iprint ) == 0 ) 
-
-    ALLOCATE( psi2( nnrx ), STAT=ierr )
-    IF( ierr /= 0 ) CALL errore(' rhoofr ', ' allocating psi2 ', ABS(ierr) )
-
-    IF( tturbo ) THEN
-      !
-      ! ... if tturbo=.TRUE. some data is stored in memory instead of being
-      ! ... recalculated (see card 'TURBO')
-      !
-      CALL allocate_turbo( nnrx )
-
-    END IF
-
-    rhor  = 0.0d0
-
-    DO iss = 1, nspin
-
-       ! ...  arrange for FFT of wave functions
-       ! ...  Gamma-point calculation: wave functions are real and can be
-       ! ...  Fourier-transformed two at a time as a complex vector
-
-       psi2 = 0.0d0
-
-       nb   = ( nupdwn(iss) - MOD( nupdwn(iss), 2 ) )
-
-       DO ib = 1, nb / 2
-
-         is1 = 2*ib - 1       ! band index of the first wave function
-         is2 = is1  + 1       ! band index of the second wave function
-
-         iwfc1 = is1 + iupdwn( iss ) - 1
-         iwfc2 = is2 + iupdwn( iss ) - 1
-
-         ! ...  Fourier-transform wave functions to real-scaled space
-         ! ...  psi(s,ib,iss) = INV_FFT (  c0(ig,ib,iss)  )
-
-         CALL c2psi( psi2, dffts%nnr, c0( 1, iwfc1 ), c0( 1, iwfc2 ), ngw, 2 )
-         CALL invfft( 'Wave',psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-
-         IF( tturbo .AND. ( ib <= nturbo ) ) THEN
-            ! ...  store real-space wave functions to be used in force 
-            turbo_states( :, ib ) = psi2( : )
-         END IF
-
-         ! ...  occupation numbers divided by cell volume
-         ! ...  Remember: rhor( r ) =  rhor( s ) / omega
-
-         coef3 = fi( iwfc1 ) / omega
-         coef4 = fi( iwfc2 ) / omega 
-
-         ! ...  compute charge density from wave functions
-
-         DO i = 1, nnr
-
-                ! ...  extract wave functions from psi2
-
-                r1 =  DBLE( psi2(i) ) 
-                r2 = AIMAG( psi2(i) ) 
-
-                ! ...  add squared moduli to charge density
-
-                rhor(i,iss) = rhor(i,iss) + coef3 * r1 * r1 + coef4 * r2 * r2
-
-         END DO
-
-      END DO
-
-      IF( MOD( nupdwn(iss), 2 ) /= 0 ) THEN
-
-         nb = nupdwn(iss)
-
-         iwfc1 = nb + iupdwn( iss ) - 1
-
-         ! ...  Fourier-transform wave functions to real-scaled space
-
-         CALL c2psi( psi2, dffts%nnr, c0( 1, iwfc1 ), c0( 1, iwfc1 ), ngw, 1 )
-         CALL invfft( 'Wave', psi2, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
-
-         ! ...  occupation numbers divided by cell volume
-
-         coef3 = fi( iwfc1 ) / omega
-
-         ! ...  compute charge density from wave functions
-
-         DO i = 1, nnr
-
-             ! ...  extract wave functions from psi2
-
-             r1 = DBLE( psi2(i) )
-
-             ! ...  add squared moduli to charge density
-
-             rhor(i,iss) = rhor(i,iss) + coef3 * r1 * r1
-
-         END DO
-
-      END IF
-
-      IF( ttprint ) rsumr( iss ) = SUM( rhor( :, iss ) ) * omega / ( nr1 * nr2 * nr3 )
-
-    END DO
-
-
-    IF( ttprint ) THEN
-      !
-      DO iss = 1, nspin
-        fact = 2.d0
-        iwfc1 = iupdwn( iss )
-        rsumgs = dft_total_charge( c0( :, iwfc1 : iwfc1+nupdwn(iss)-1 ), ngw, &
-                                   fi( iwfc1 : iwfc1+nupdwn(iss)-1 ), nupdwn(iss) )
-        rsumg( iss ) = rsumg( iss ) + fact * rsumgs
-      END DO
-      !
-      CALL mp_sum( rsumg( 1:nspin ), intra_image_comm )
-      CALL mp_sum( rsumr( 1:nspin ), intra_image_comm )
-      !
-      if ( nspin == 1 ) then
-        WRITE( stdout, 10) rsumg(1), rsumr(1)
-      else
-        WRITE( stdout, 20) rsumg(1), rsumr(1), rsumg(2), rsumr(2)
-      endif
-
-10    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
-            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
-20    FORMAT( /, 3X, 'from rhoofr: total integrated electronic density', &
-            & /, 3X, 'spin up', & 
-            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 , &
-            & /, 3X, 'spin down', & 
-            & /, 3X, 'in g-space = ', f11.6, 3x, 'in r-space =', f11.6 )
-
-
-    END IF
-
-    DEALLOCATE(psi2, STAT=ierr)
-    IF( ierr /= 0 ) CALL errore(' rhoofr ', ' deallocating psi2 ', ABS(ierr) )
-
-    CALL stop_clock( 'rhoofr' )
-
-    RETURN
-!=----------------------------------------------------------------------=!
-  END SUBROUTINE rhoofr_fpmd
-!=----------------------------------------------------------------------=!
-
-
-!-----------------------------------------------------------------------
-   SUBROUTINE rhoofr_cp &
-      ( nfi, c, irb, eigrb, bec, rhovan, rhor, rhog, rhos, enl, denl, ekin, dekin )
-!-----------------------------------------------------------------------
 !     the normalized electron density rhor in real space
 !     the kinetic energy ekin
 !     subroutine uses complex fft so it computes two ft's
@@ -318,7 +99,7 @@
 !     e_v = sum_i,ij rho_i,ij d^ion_is,ji
 !
       USE kinds,              ONLY: DP
-      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor, use_task_groups
+      USE control_flags,      ONLY: iprint, iprsta, thdyn, tpre, trhor, use_task_groups, program_name
       USE ions_base,          ONLY: nat
       USE gvecp,              ONLY: ngm
       USE gvecs,              ONLY: ngs, nps, nms
@@ -386,15 +167,21 @@
       !
       IF( tpre ) THEN
          !
+         ! ... compute kinetic energy contribution
+         !
          CALL stress_kin( dekin, c, f )
          !
       END IF
       !
-      !     calculation of non-local energy
-      !
-      enl = ennl( rhovan, bec )
-      !
-      IF( tpre ) CALL dennl( bec, denl )
+      IF( program_name == 'CP90' ) THEN
+         !
+         !     calculation of non-local energy
+         !
+         enl = ennl( rhovan, bec )
+         !
+         IF( tpre ) CALL dennl( bec, denl )
+         !    
+      END IF
       !    
       !    warning! trhor and thdyn are not compatible yet!   
       !
@@ -557,7 +344,9 @@
          !     add vanderbilt contribution to the charge density
          !     drhov called before rhov because input rho must be the smooth part
          !
-         IF ( tpre ) CALL drhov( irb, eigrb, rhovan, rhog, rhor )
+         !
+         IF ( tpre .AND. program_name == 'CP90' ) &
+            CALL drhov( irb, eigrb, rhovan, rhog, rhor )
          !
          CALL rhov( irb, eigrb, rhovan, rhog, rhor )
 

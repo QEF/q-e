@@ -342,9 +342,9 @@ CONTAINS
 
        CALL nlrh( cm, ttforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
        !
-       CALL rhoofr( 0, tstress, cm, f, rhor, ht%deth, edft%ekin, dekin6 )
+       CALL rhoofr( 0, cm(:,:), irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, denl, edft%ekin, dekin6 )
        !
-       CALL vofrhos( ttprint, ttforce, tstress, rhor, atoms, &
+       CALL vofrhos( ttprint, ttforce, tstress, rhor, rhog, atoms, &
                   vpot, bec, cm, f, eigr, ei1, ei2, ei3, sfac, ht, edft )
        !
        IF( iprsta > 1 ) CALL debug_energies( edft )

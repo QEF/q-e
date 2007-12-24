@@ -168,6 +168,8 @@ MODULE cp_main_variables
       !
       ALLOCATE( rhor( nnr, nspin ) )
       ALLOCATE( vpot( nnr, nspin ) )
+      ALLOCATE( rhos( nnrsx, nspin ) )
+      ALLOCATE( rhog( ng,    nspin ) )
       !
       !  Compute local dimensions for lambda matrixes
       !
@@ -190,9 +192,6 @@ MODULE cp_main_variables
       !
       !
       IF( program_name == 'CP90' ) THEN
-         !
-         ALLOCATE( rhos( nnrsx, nspin ) )
-         ALLOCATE( rhog( ng,    nspin ) )
          !
          if ( abivol.or.abisur ) then
             !

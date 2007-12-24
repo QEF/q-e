@@ -123,56 +123,11 @@
         RETURN
       END SUBROUTINE vofmean_x
 
-!  -------------------------------------------------------------------------
-
-      SUBROUTINE kspotential_x &
-        ( nfi, tprint, tforce, tstress, rhoe, atoms, bec, becdr, eigr, &
-          ei1, ei2, ei3, sfac, c0, tcel, ht, fi, vpot, edft )
-
-        USE kinds,             ONLY: DP
-        USE cp_interfaces,     ONLY: rhoofr, nlrh, vofrhos
-        USE energies,          ONLY: dft_energy_type
-        USE cell_base,         ONLY: boxdimensions
-        USE atoms_type_module, ONLY: atoms_type
-        USE wave_types,        ONLY: wave_descriptor
-        USE dener,             ONLY: denl6, dekin6
-
-        IMPLICIT NONE
-
-! ...   declare subroutine arguments
-        INTEGER,              INTENT(IN)    :: nfi
-        LOGICAL, INTENT(IN) :: tforce, tstress, tprint
-        REAL(DP) :: rhoe(:,:)
-        TYPE (atoms_type),    INTENT(INOUT) :: atoms
-        REAL(DP) :: bec(:,:)
-        REAL(DP) :: becdr(:,:,:)
-        COMPLEX(DP) :: eigr(:,:)
-        COMPLEX(DP) :: ei1(:,:)
-        COMPLEX(DP) :: ei2(:,:)
-        COMPLEX(DP) :: ei3(:,:)
-        COMPLEX(DP), INTENT(IN) :: sfac(:,:)
-        COMPLEX(DP),         INTENT(INOUT) :: c0(:,:)
-        LOGICAL   :: tcel
-        TYPE (boxdimensions), INTENT(INOUT) ::  ht
-        REAL(DP), INTENT(IN) :: fi(:)
-        REAL(DP)    :: vpot(:,:)
-        TYPE (dft_energy_type) :: edft
-
-        CALL nlrh( c0, tforce, tstress, atoms%for, bec, becdr, eigr, edft%enl, denl6 )
-
-        CALL rhoofr( nfi, tstress, c0, fi, rhoe, ht%deth, edft%ekin, dekin6 )
-
-        CALL vofrhos( tprint, tforce, tstress, rhoe, atoms, vpot, bec, &
-                      c0, fi, eigr, ei1, ei2, ei3, sfac, &
-                      ht, edft )
-
-        RETURN
-      END SUBROUTINE kspotential_x
 
 !=----------------------------------------------------------------------------=!
 
    SUBROUTINE vofrhos_x &
-      ( tprint, tforce, tstress, rhoe, atoms, vpot, bec, c0, fi, &
+      ( tprint, tforce, tstress, rhoe, rhoeg, atoms, vpot, bec, c0, fi, &
         eigr, ei1, ei2, ei3, sfac, box, edft )
 
       !  this routine computes:
@@ -254,7 +209,8 @@
       TYPE (atoms_type), INTENT(INOUT) :: atoms
       TYPE (boxdimensions),    INTENT(INOUT) :: box
       TYPE (dft_energy_type) :: edft
-      REAL(DP) :: rhoe(:,:)
+      REAL(DP)    :: rhoe(:,:)    !  the electronic charge density in real space
+      COMPLEX(DP) :: rhoeg(:,:)   !  the electronic charge density in reciprocal space
       COMPLEX(DP), INTENT(IN) :: sfac(:,:)
 
       TYPE (dft_energy_type) :: edft_self
@@ -265,7 +221,7 @@
 ! ... declare other variables
 
       COMPLEX(DP), ALLOCATABLE :: vloc(:), self_vloc(:)
-      COMPLEX(DP), ALLOCATABLE :: rhog(:), drhog(:,:), rhoeg(:,:)
+      COMPLEX(DP), ALLOCATABLE :: rhog(:), drhog(:,:)
       COMPLEX(DP), ALLOCATABLE :: psi(:)
       COMPLEX(DP), ALLOCATABLE :: screen_coul(:)
       !
@@ -334,7 +290,6 @@
       fion = atoms%for( 1:3, 1:atoms%nat )
       !
 
-      ALLOCATE( rhoeg ( ngm, nspin ) )
       ALLOCATE( rhog( ngm ) )
       ALLOCATE( vloc( ngm ) )
       ALLOCATE( psi( SIZE( rhoe, 1 ) ) )
@@ -371,18 +326,6 @@
             ! CALL vdw_stress(c6, iesr, stau0, dvdw, na, nax, nsp)
          END IF
       END IF
-
-
-      ! ... FFT: rho(r) --> rho(g)  
-      !
-      DO iss = 1, nspin
-
-         psi = rhoe(:,iss)
-
-         CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
-         CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,iss), ngm )
- 
-      END DO
 
       rhog( 1:ngm ) = rhoeg( 1:ngm, 1 )
       IF( nspin > 1 ) rhog( 1:ngm ) = rhog( 1:ngm ) + rhoeg( 1:ngm, 2 )
@@ -675,7 +618,7 @@
       !
       atoms%for( 1:3, 1:atoms%nat ) = fion
 
-      DEALLOCATE( rhoeg, rhoetr, grho, v2xc, fion )
+      DEALLOCATE( rhoetr, grho, v2xc, fion )
       DEALLOCATE( vloc, psi )
 
       !

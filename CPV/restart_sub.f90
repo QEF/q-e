@@ -343,9 +343,9 @@ MODULE from_restart_module
           ! 
           CALL nlrh( c0, ttforce, tstress, atoms0%for, bec, becdr, eigr, edft%enl, denl6 )
           !
-          CALL rhoofr( nfi, tstress, c0, f, rhor, ht0%deth, edft%ekin, dekin6 )
+          CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, denl, edft%ekin, dekin6 )
           !
-          CALL vofrhos( .true. , ttforce, tstress, rhor, &
+          CALL vofrhos( .true. , ttforce, tstress, rhor, rhog, &
                         atoms0, vpot, bec, c0, f, eigr, &
                         ei1, ei2, ei3, sfac, ht0, edft )
           !

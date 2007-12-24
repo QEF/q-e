@@ -107,7 +107,7 @@
                                           vnhh, xnhh0, xnhhm, xnhhp, qnh, temph
       USE cell_base,                ONLY: cell_gamma
       USE grid_subroutines,         ONLY: realspace_grids_init, realspace_grids_para
-      USE uspp,                     ONLY: vkb, nkb, okvan
+      USE uspp,                     ONLY: vkb, nkb, okvan, becsum
       !
       USE reciprocal_vectors,       ONLY: &
            g,      & ! G-vectors square modulus
@@ -141,9 +141,9 @@
       USE io_files,                 ONLY: outdir, prefix
       USE printout_base,            ONLY: printout_base_init
       USE cp_main_variables,        ONLY: ei1, ei2, ei3, eigr, sfac, lambda, &
-                                          ht0, htm, htp, rhor, vpot, wfill, &
+                                          ht0, htm, htp, rhor, vpot, rhog, rhos, wfill, &
                                           acc, acc_this_run,  edft, nfi, bec, becdr, &
-                                          ema0bg, descla
+                                          ema0bg, descla, irb, eigrb
       USE ions_positions,           ONLY: atoms0, atomsp, atomsm
       USE cg_module,                ONLY: tcg
       USE cp_electronic_mass,       ONLY: emass
@@ -163,7 +163,8 @@
       INTEGER :: n1s, n2s, n3s
 
       REAL(DP) :: ekinc, ekcell, ekinp, erhoold, maxfion
-      REAL(DP) :: derho
+      REAL(DP) :: derho, dum
+      REAL(DP) :: dum3x3(3,3) = 0.0d0
       REAL(DP) :: ekmt(3,3) = 0.0d0
       REAL(DP) :: hgamma(3,3) = 0.0d0
       REAL(DP) :: gcm1(3,3) = 0.0d0
@@ -284,12 +285,12 @@
 
         ! ...   compute the new charge density "rhor"
         !
-        CALL rhoofr( nfi, tstress, c0, f, rhor, ht0%deth, edft%ekin, dekin6 )
+        CALL rhoofr( nfi, c0, irb, eigrb, bec, becsum, rhor, rhog, rhos, edft%enl, dum3x3, edft%ekin, dekin6 )
 
         ! ...   vofrhos compute the new DFT potential "vpot", and energies "edft",
         ! ...   ionc forces "fion" and stress "paiu".
         !
-        CALL vofrhos(ttprint, ttforce, tstress, rhor, atoms0, &
+        CALL vofrhos(ttprint, ttforce, tstress, rhor, rhog, atoms0, &
           vpot, bec, c0, f, eigr, ei1, ei2, ei3, sfac, ht0, edft)
 
         ! CALL debug_energies( edft ) ! DEBUG
