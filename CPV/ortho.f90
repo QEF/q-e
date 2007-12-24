@@ -364,7 +364,7 @@
 
       INTEGER :: nkbx
       INTEGER :: istart, nss, ifail, i, j, iss, iv, jv, ia, is, inl, jnl
-      INTEGER :: nspin_sub, nx0, nc, ic
+      INTEGER :: nspin_sub, nx0, nc, ic, icc
       REAL(DP) :: qqf
 
       nkbx = nkb
@@ -392,25 +392,22 @@
       !
       DO is=1,nvb
          DO iv=1,nh(is)
+            inl = ish(is)+(iv-1)*na(is)
             DO jv=1,nh(is)
-               IF(ABS(qq(iv,jv,is)).GT.1.e-5) THEN
-                  qqf = qq(iv,jv,is)
-                  DO ia=1,na(is)
-                     inl=ish(is)+(iv-1)*na(is)+ia
-                     jnl=ish(is)+(jv-1)*na(is)+ia
-                     DO iss = 1, nspin
-                        istart = iupdwn(iss)
-                        nc     = descla( nlac_ , iss )
-                        ic     = descla( ilac_ , iss )
-                        IF( la_proc ) THEN
-                           DO i = 1, nc
-                              qbephi(inl,i,iss) = qbephi(inl,i,iss)                    &
-                              + qqf * bephi(jnl,i+ic-1+istart-1)
-                              qbecp (inl,i,iss) = qbecp (inl,i,iss)                     &
-                              + qqf * becp (jnl,i+ic-1+istart-1)
-                           END DO
-                        END IF
-                     END DO
+               jnl = ish(is)+(jv-1)*na(is)
+               qqf = qq(iv,jv,is)
+               IF( ABS( qqf ) > 1.D-5 ) THEN
+                  DO iss = 1, nspin
+                     istart = iupdwn(iss)
+                     nc     = descla( nlac_ , iss )
+                     ic     = descla( ilac_ , iss ) + istart - 1
+                     IF( la_proc ) THEN
+                        DO i = 1, nc
+                           icc=i+ic-1+istart-1
+                           CALL daxpy( na(is), qqf, bephi(jnl+1,icc),1,qbephi(inl+1,i,iss), 1 ) 
+                           CALL daxpy( na(is), qqf, becp (jnl+1,icc),1, qbecp(inl+1,i,iss), 1 )
+                        END DO
+                     END IF
                   END DO
                ENDIF
             END DO
@@ -433,12 +430,12 @@
                            xloc, nx0, descla(:,iss), diff, iter, nbsp, nss, istart )
 
          IF( iter > ortho_max ) THEN
-            WRITE( stdout, * ) ' diff= ',diff,' iter= ',iter
+            WRITE( stdout, 100 ) diff, iter
             CALL errore('ortho','max number of iterations exceeded',iter)
          END IF
 
          IF( iprsta > 2 ) THEN
-            WRITE( stdout,*) ' diff= ',diff,' iter= ',iter
+            WRITE( stdout, 100 ) diff, iter
          ENDIF
          !     
          IF( la_proc ) x0( :, :, iss ) = xloc / ccc
@@ -454,4 +451,7 @@
       CALL stop_clock( 'ortho' )
       !
       RETURN
+      !
+100   FORMAT(3X,'diff = ',D18.10,' iter = ', I5 )
+      !
    END SUBROUTINE ortho_cp

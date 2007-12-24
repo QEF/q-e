@@ -240,6 +240,7 @@ CONTAINS
 110      FORMAT(3X,'ortho diag, time for parallel driver = ', 1F9.5, ' with ', I4, ' procs' )
          IF( tpar < tser ) use_parallel_diag = .TRUE.
       END IF
+      ! use_parallel_diag = .FALSE. ! debug
 
 #else
 
