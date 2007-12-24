@@ -34,6 +34,9 @@ subroutine data_structure( lgamma )
   USE fft_scalar, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
   !
+  USE control_flags, ONLY : use_task_groups
+  USE task_groups,   ONLY : task_groups_init
+  !
   implicit none
   logical, intent(in) :: lgamma
   integer :: n1, n2, n3, i1, i2, i3
@@ -373,6 +376,13 @@ subroutine data_structure( lgamma )
   ngms_g = ngms
   call mp_sum( ngm_g , intra_pool_comm )
   call mp_sum( ngms_g, intra_pool_comm )
+
+  IF( use_task_groups ) THEN
+    !
+    CALL task_groups_init( dffts )
+    !
+  END IF
+
 
   return
 

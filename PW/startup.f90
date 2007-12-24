@@ -56,6 +56,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   USE mp_global,  ONLY : mp_global_start, init_pool
   USE mp,         ONLY : mp_start, mp_env, mp_barrier, mp_bcast
   USE para_const, ONLY : maxproc
+  USE control_flags, ONLY : use_task_groups
   !
   IMPLICIT NONE
   !
@@ -66,6 +67,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   INTEGER            :: gid, node_number
   INTEGER            :: ierr = 0, ilen, nargs, iiarg
   INTEGER            :: iargc
+  INTEGER            :: ntask_groups
   ! do not define iargc as external: gfortran does not like
   !
   !
@@ -118,25 +120,15 @@ SUBROUTINE startup( nd_nmbr, code, version )
      !
      ! ... How many parallel images ?
      !
-     nimage = 1 
-     nargs  = iargc() 
-     !
-     DO iiarg = 1, ( nargs - 1 )
-        !
-        CALL getarg( iiarg, np )
-        !
-        IF ( TRIM( np ) == '-nimage' .OR. TRIM( np ) == '-nimages' ) THEN
-          !
-          CALL getarg( ( iiarg + 1 ), np )  
-          READ( np, * ) nimage 
-          !
-        END IF
-        !
-     END DO
+     CALL get_arg_nimage( nimage )
      !
      nimage = MAX( nimage, 1 )
      nimage = MIN( nimage, nproc )
      !          
+     ! ... How many task groups ?
+     !
+     CALL get_arg_ntg( ntask_groups )
+     !
   END IF
   !
   CALL mp_barrier() 
@@ -145,13 +137,18 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   CALL mp_bcast( npool,  meta_ionode_id )
   CALL mp_bcast( nimage, meta_ionode_id )
+  CALL mp_bcast( ntask_groups, meta_ionode_id )
   !
   IF ( nproc > maxproc ) &
      CALL errore( 'startup', ' too many processors', nproc )
   !
+  IF( ntask_groups > 1 ) THEN
+     use_task_groups = .TRUE.
+  END IF
+  !
   ! ... all pools are initialized here
   !
-  CALL init_pool()
+  CALL init_pool( nimage, ntask_groups )
   !
   ! ... set the processor label for files ( remember that 
   ! ... me_image = 0 : ( nproc_image - 1 ) )

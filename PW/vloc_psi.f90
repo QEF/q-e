@@ -15,6 +15,9 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE wvfct,   ONLY : igk
   USE wavefunctions_module,  ONLY: psic
+  USE control_flags, ONLY : use_task_groups
+  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool
+  USE task_groups,   ONLY : nolist
   !
   implicit none
   !
@@ -23,14 +26,20 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   real(DP) :: v(nrxxs)
   !
   complex(DP) :: fp, fm
-  integer :: ibnd, j
+  integer :: ibnd, j, incr
   ! counters
 
   call start_clock ('vloc_psi')
   !
+  IF( use_task_groups ) THEN
+     incr = 2 * nogrp
+  ELSE
+     incr = 2
+  END IF
+  !
   ! the local potential V_Loc psi. First bring psi to real space
   !
-  do ibnd = 1, m, 2
+  do ibnd = 1, m, incr
      psic(:) = (0.d0, 0.d0)
      if (ibnd < m) then
         ! two ffts at the same time
