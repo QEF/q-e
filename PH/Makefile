@@ -264,6 +264,6 @@ libph.a : $(PHOBJS) $(RAMAN)
 	$(RANLIB) $@
 
 clean :
-	- /bin/rm -f ph.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
+	- /bin/rm -f *.x *.o *.a *~ *.F90 *.d *.mod *.i *.L
 
 include make.depend
