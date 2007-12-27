@@ -1435,8 +1435,8 @@ SUBROUTINE rep_matmul_drv( TRANSA, TRANSB, M, N, K, ALPHA, A, LDA, B, LDB, BETA,
   INTEGER :: NB, IB_S, NB_SOUR, IB_SOUR, IBUF
   INTEGER :: nproc, mpime, q, r
 
-  REAL(8), ALLOCATABLE :: auxa( : )
-  REAL(8), ALLOCATABLE :: auxc( : )
+  REAL(DP), ALLOCATABLE :: auxa( : )
+  REAL(DP), ALLOCATABLE :: auxc( : )
 
   !
   ! ... BODY

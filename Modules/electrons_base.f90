@@ -465,8 +465,8 @@
   function electrons_nose_nrg( xnhe0, vnhe, qne, ekincw )
     !  compute energy term for nose thermostat
     implicit none
-    real(8) :: electrons_nose_nrg
-    real(8), intent(in) :: xnhe0, vnhe, qne, ekincw
+    real(dp) :: electrons_nose_nrg
+    real(dp), intent(in) :: xnhe0, vnhe, qne, ekincw
       !
       electrons_nose_nrg = 0.5_DP * qne * vnhe * vnhe + 2.0_DP * ekincw * xnhe0
       !
@@ -476,9 +476,9 @@
   subroutine electrons_nose_shiftvar( xnhep, xnhe0, xnhem )
     !  shift values of nose variables to start a new step
     implicit none
-    real(8), intent(out) :: xnhem
-    real(8), intent(inout) :: xnhe0
-    real(8), intent(in) :: xnhep
+    real(dp), intent(out) :: xnhem
+    real(dp), intent(inout) :: xnhe0
+    real(dp), intent(in) :: xnhep
       !
       xnhem = xnhe0
       xnhe0 = xnhep
@@ -488,16 +488,16 @@
 
   subroutine electrons_nosevel( vnhe, xnhe0, xnhem, delt )
     implicit none
-    real(8), intent(inout) :: vnhe
-    real(8), intent(in) :: xnhe0, xnhem, delt 
+    real(dp), intent(inout) :: vnhe
+    real(dp), intent(in) :: xnhe0, xnhem, delt 
     vnhe=2.0_DP*(xnhe0-xnhem)/delt-vnhe
     return
   end subroutine electrons_nosevel
 
   subroutine electrons_noseupd( xnhep, xnhe0, xnhem, delt, qne, ekinc, ekincw, vnhe )
     implicit none
-    real(8), intent(out) :: xnhep, vnhe
-    real(8), intent(in) :: xnhe0, xnhem, delt, qne, ekinc, ekincw
+    real(dp), intent(out) :: xnhep, vnhe
+    real(dp), intent(in) :: xnhe0, xnhem, delt, qne, ekinc, ekincw
     xnhep = 2.0_DP * xnhe0 - xnhem + 2.0_DP * ( delt**2 / qne ) * ( ekinc - ekincw )
     vnhe  = ( xnhep - xnhem ) / ( 2.0_DP * delt )
     return
