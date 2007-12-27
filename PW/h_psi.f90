@@ -161,6 +161,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        USE wavefunctions_module, ONLY : psic
        USE becmod,               ONLY : becp, calbec
+       USE control_flags,        ONLY : use_task_groups
        !
        IMPLICIT NONE
        !
@@ -172,6 +173,10 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        !
        !
        CALL start_clock( 'h_psi:init' )
+       !
+       IF( use_task_groups ) THEN
+          call errore( ' h_psi_k ', ' task_groups not yet implemented with k points', 1 )
+       END IF
        !
        ! ... Here we apply the kinetic energy (k+G)^2 psi
        !
@@ -265,6 +270,7 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   use becmod, only: becp_nc, calbec
   use wavefunctions_module, only: psic_nc
   use noncollin_module, only: noncolin, npol
+  USE control_flags,        ONLY : use_task_groups
   implicit none
   !
   integer :: lda, n, m
@@ -274,6 +280,11 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   ! counters
   call start_clock ('h_psi')
   call start_clock ('h_psi:init')
+
+  IF( use_task_groups ) THEN
+     call errore( ' h_psi_nc ', ' task_groups not yet implemented with non-collinear spin ', 1 )
+  END IF
+
   call calbec ( n, vkb, psi, becp_nc, m )
   !
   ! Here we apply the kinetic energy (k+G)^2 psi

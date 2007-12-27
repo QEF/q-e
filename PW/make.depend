@@ -156,8 +156,6 @@ c_phase_field.o : ../Modules/wavefunctions.o
 c_phase_field.o : becmod.o
 c_phase_field.o : buffers.o
 c_phase_field.o : pwcom.o
-ccalbec.o : ../Modules/kind.o
-ccalbec_nc.o : ../Modules/kind.o
 ccgdiagg.o : ../Modules/constants.o
 ccgdiagg.o : ../Modules/kind.o
 cdiagh.o : ../Modules/kind.o
@@ -288,6 +286,7 @@ d_matrix.o : ../Modules/kind.o
 d_matrix.o : ../Modules/random_numbers.o
 d_matrix.o : pwcom.o
 data_structure.o : ../Modules/cell_base.o
+data_structure.o : ../Modules/control_flags.o
 data_structure.o : ../Modules/fft_scalar.o
 data_structure.o : ../Modules/fft_types.o
 data_structure.o : ../Modules/io_global.o
@@ -295,6 +294,7 @@ data_structure.o : ../Modules/kind.o
 data_structure.o : ../Modules/mp.o
 data_structure.o : ../Modules/mp_global.o
 data_structure.o : ../Modules/stick_base.o
+data_structure.o : ../Modules/task_groups.o
 data_structure.o : para.o
 data_structure.o : pwcom.o
 davcio.o : ../Modules/io_global.o
@@ -1109,6 +1109,7 @@ sgama.o : ../Modules/kind.o
 smallg_q.o : ../Modules/kind.o
 sph_ind.o : ../Modules/kind.o
 spinor.o : ../Modules/kind.o
+startup.o : ../Modules/control_flags.o
 startup.o : ../Modules/io_global.o
 startup.o : ../Modules/mp.o
 startup.o : ../Modules/mp_global.o
@@ -1315,7 +1316,12 @@ vhpsi_nc.o : pwcom.o
 vhpsi_nc.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
+vloc_psi.o : ../Modules/control_flags.o
+vloc_psi.o : ../Modules/fft_parallel.o
 vloc_psi.o : ../Modules/kind.o
+vloc_psi.o : ../Modules/mp_global.o
+vloc_psi.o : ../Modules/parallel_include.o
+vloc_psi.o : ../Modules/task_groups.o
 vloc_psi.o : ../Modules/wavefunctions.o
 vloc_psi.o : pwcom.o
 w0gauss.o : ../Modules/constants.o
@@ -1440,7 +1446,6 @@ potinit.o : ../include/f_defs.h
 print_ks_energies.o : ../include/f_defs.h
 psymrho.o : ../include/f_defs.h
 psymrho_mag.o : ../include/f_defs.h
-pw_gemm.o : ../include/f_defs.h
 pw_restart.o : ../include/f_defs.h
 qvan2.o : ../include/f_defs.h
 rcgdiagg.o : ../include/f_defs.h

@@ -142,7 +142,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   IF ( nproc > maxproc ) &
      CALL errore( 'startup', ' too many processors', nproc )
   !
-  IF( ntask_groups > 1 ) THEN
+  IF( ntask_groups > 0 ) THEN
      use_task_groups = .TRUE.
   END IF
   !
@@ -234,6 +234,9 @@ SUBROUTINE startup( nd_nmbr, code, version )
      IF ( nproc_pool > 1 ) &
         WRITE( stdout, &
                '(5X,"R & G space division:  proc/pool = ",I4)' ) nproc_pool
+     IF ( ntask_groups > 0 ) &
+        WRITE( stdout, &
+               '(5X,"wavefunctions fft division:  fft/group = ",I4)' ) ntask_groups
      !
   END IF   
   !
