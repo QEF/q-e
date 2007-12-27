@@ -41,6 +41,7 @@
       use fft_cp,        only: cfft_cp, tg_cfft_cp
       use fft_base,      only: dfftp, dffts, dfftb
       use fft_scalar,    only: cfft3d, cfft3ds, cft_b
+      use fft_parallel,  only: tg_cft3s
       USE control_flags, ONLY: use_task_groups
 
       IMPLICIT none
@@ -78,7 +79,8 @@
          call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dffts)
       ELSE IF( grid_type == 'Wave' ) THEN
          IF( use_task_groups ) THEN
-            call tg_cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,2,dffts)
+            call tg_cft3s(f,dffts,2)
+            !call tg_cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,2,dffts)
          ELSE
             call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,2,dffts)
          END IF
@@ -137,6 +139,7 @@
       use fft_cp,        only: cfft_cp, tg_cfft_cp
       use fft_base,      only: dfftp, dffts
       use fft_scalar,    only: cfft3d, cfft3ds
+      use fft_parallel,  only: tg_cft3s
       USE control_flags, ONLY: use_task_groups
 
       implicit none
@@ -163,7 +166,8 @@
          call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dffts)
       ELSE IF( grid_type == 'Wave' ) THEN
          IF( use_task_groups ) THEN
-            call tg_cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-2,dffts)
+            !call tg_cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-2,dffts)
+            call tg_cft3s(f,dffts,-2)
          ELSE
             call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-2,dffts)
          END IF

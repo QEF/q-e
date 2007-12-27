@@ -129,7 +129,7 @@
            recv_displ(1) = 0
            DO i = 2, NOGRP
               recv_cnt(i) = dffts%npp( nolist(i) + 1 ) * dffts%nr1x * dffts%nr2x
-              recv_displ(i) = recv_displ(i-1) + recv_cnt(i)
+              recv_displ(i) = recv_displ(i-1) + recv_cnt(i-1)  ! "i-i" _NON_ "i", CAZZOOOO!!!
            ENDDO
 
 #if defined (__PARA) && defined (__MPI)

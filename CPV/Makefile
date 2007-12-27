@@ -117,6 +117,7 @@ MODULES = \
 ../Modules/electrons_base.o \
 ../Modules/energies.o \
 ../Modules/fft_base.o \
+../Modules/fft_parallel.o \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \
