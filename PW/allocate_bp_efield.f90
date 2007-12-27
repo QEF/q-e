@@ -2,13 +2,15 @@
  subroutine allocate_bp_efield
 !this subroutine allocate memory for the Berry's phase electric field 
    USE bp
+   USE ions_base,  ONLY : nat
    USE gvect, ONLY : ngm_g
 
    implicit none
    
    if(lberry.or.lelfield) then
       allocate(mapgp_global(ngm_g,3))
-      allocate(mapgm_global(ngm_g,3))      
+      allocate(mapgm_global(ngm_g,3))
+      allocate(forces_bp_efield(3,nat))
    endif
 
    return
@@ -25,6 +27,7 @@
    if(lberry.or.lelfield) then
       deallocate(mapgp_global)
       deallocate(mapgm_global)
+      deallocate(forces_bp_efield)
    endif
 
    return

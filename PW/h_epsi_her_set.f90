@@ -235,15 +235,15 @@ subroutine h_epsi_her_set
       dkm(:)=-dk(:)
 
 !calculates fact factor
-!electronic charge is 2. (Rydberg units)
+!electronic charge is sqrt(2.) (Rydberg units)
 !the factor (-i)/2 comes form operator Im
 
       if(nspin == 1) then
          !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod
-         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkfact
+         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*dsqrt(2.d0)/2.d0/dkfact
       else
          !fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkmod/DBLE(nspin)
-         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*(2.d0)/2.d0/dkfact
+         fact_hepsi(ik)=CMPLX(0.d0,-1.d0)*efield*dsqrt(2.d0)/2.d0/dkfact
       endif
 
 

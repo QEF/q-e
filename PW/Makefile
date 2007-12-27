@@ -76,6 +76,7 @@ ewald.o \
 ewald_dipole.o \
 exx.o \
 find_group.o \
+forces_bp_efield.o \
 force_cc.o \
 force_corr.o \
 force_ew.o \

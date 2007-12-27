@@ -38,6 +38,8 @@ SUBROUTINE forces()
   USE ldaU,          ONLY : lda_plus_u
   USE extfield,      ONLY : tefield, forcefield
   USE control_flags, ONLY : gamma_only, remove_rigid_rot, lbfgs
+  USE bp,            ONLY : lelfield, forces_bp_efield
+  USE uspp,          ONLY : okvan
   !
   IMPLICIT NONE
   !
@@ -91,6 +93,14 @@ SUBROUTINE forces()
   !
   CALL force_corr( forcescc )
   !
+  ! Berry's phase electric field terms
+  !
+  if(lelfield) then
+     forces_bp_efield(:,:)=0.d0
+     if(okvan) call  forces_us_efield(forces_bp_efield)
+     call forces_ion_efield
+  endif
+  !
   ! ... here we sum all the contributions and compute the total force acting
   ! ... on the crstal
   !
@@ -108,6 +118,7 @@ SUBROUTINE forces()
                          forcescc(ipol,na)
         !
         IF ( tefield ) force(ipol,na) = force(ipol,na) + forcefield(ipol,na)
+        IF (lelfield)  force(ipol,na) = force(ipol,na) + forces_bp_efield(ipol,na)
         !
         sumfor = sumfor + force(ipol,na)
         !

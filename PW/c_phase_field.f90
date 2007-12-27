@@ -512,7 +512,8 @@ SUBROUTINE c_phase_field
    if(nspin==1) pola=pola*2.d0
    !pola=pola/(gpar(gdir)*tpiba)
    call factor_a(gdir,at,dkfact)
-   pola=pola/tpiba*dkfact
+!factor sqrt(2) is the electronic charge in Rydberg units 
+   pola=pola*dsqrt(2.d0)/tpiba*dkfact
 
 !write output
    write(stdout,*)
