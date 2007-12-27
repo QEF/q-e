@@ -19,6 +19,7 @@ electrons_base.o \
 energies.o \
 exc_t.o \
 fft_base.o \
+fft_parallel.o \
 fft_scalar.o \
 fft_types.o \
 functionals.o \

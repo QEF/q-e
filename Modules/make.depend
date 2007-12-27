@@ -58,6 +58,13 @@ fft_base.o : kind.o
 fft_base.o : mp_global.o
 fft_base.o : parallel_include.o
 fft_base.o : task_groups.o
+fft_parallel.o : fft_base.o
+fft_parallel.o : fft_scalar.o
+fft_parallel.o : fft_types.o
+fft_parallel.o : kind.o
+fft_parallel.o : mp_global.o
+fft_parallel.o : parallel_include.o
+fft_parallel.o : task_groups.o
 
 fft_scalar.o : kind.o
 fft_types.o : io_global.o
@@ -281,6 +288,7 @@ basic_algebra_routines.o : ../include/f_defs.h
 constraints_module.o : ../include/f_defs.h
 dspev_drv.o : ../include/f_defs.h
 fft_base.o : ../include/f_defs.h
+fft_parallel.o : ../include/f_defs.h
 fft_scalar.o : ../include/f_defs.h
 fft_scalar.o : ../include/fft_defs.h
 
