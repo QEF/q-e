@@ -53,6 +53,13 @@ MODULE fft_types
     INTEGER, POINTER :: imax3(:)  ! the last local plane
     INTEGER, POINTER :: np3(:)    ! number of local plane for the box fft
     !
+    !  task groups
+    !
+    LOGICAL :: use_task_groups
+    INTEGER :: nnrx               ! maximum among nnr
+    INTEGER, POINTER :: tg_nsw(:) ! number of sticks per task group ( wave func )
+    INTEGER, POINTER :: tg_npp(:) ! number of "Z" planes per task group
+    !
   END TYPE
 
 
@@ -79,6 +86,7 @@ CONTAINS
     desc%nsp   = 0
     desc%nsw   = 0
     desc%ngl   = 0
+    desc%nwl   = 0
     desc%npp   = 0
     desc%ipp   = 0
     desc%iss   = 0
@@ -86,7 +94,12 @@ CONTAINS
     desc%ismap = 0
     desc%iplp  = 0
     desc%iplw  = 0
+
     desc%id    = 0
+
+    desc%use_task_groups = .FALSE.
+    NULLIFY( desc%tg_nsw )
+    NULLIFY( desc%tg_npp )
 
   END SUBROUTINE fft_dlay_allocate
 
@@ -105,6 +118,11 @@ CONTAINS
     IF ( ASSOCIATED( desc%iplp ) )   DEALLOCATE( desc%iplp )
     IF ( ASSOCIATED( desc%iplw ) )   DEALLOCATE( desc%iplw )
     desc%id = 0
+    IF( desc%use_task_groups ) THEN
+       IF ( ASSOCIATED( desc%tg_nsw ) )   DEALLOCATE( desc%tg_nsw )
+       IF ( ASSOCIATED( desc%tg_npp ) )   DEALLOCATE( desc%tg_npp )
+    END IF
+    desc%use_task_groups = .FALSE.
   END SUBROUTINE fft_dlay_deallocate
 
 !=----------------------------------------------------------------------------=!
@@ -124,6 +142,7 @@ CONTAINS
     desc%npp = 0
     desc%ipp = 0
     desc%np3 = 0
+    desc%use_task_groups = .FALSE.
   END SUBROUTINE fft_box_allocate
 
   SUBROUTINE fft_box_deallocate( desc )
@@ -134,6 +153,7 @@ CONTAINS
     IF( ASSOCIATED( desc%npp ) ) DEALLOCATE( desc%npp )
     IF( ASSOCIATED( desc%ipp ) ) DEALLOCATE( desc%ipp )
     IF( ASSOCIATED( desc%np3 ) ) DEALLOCATE( desc%np3 )
+    desc%use_task_groups = .FALSE.
   END SUBROUTINE fft_box_deallocate
 
 
@@ -181,6 +201,7 @@ CONTAINS
     IF( ( SIZE( ncp ) < nproc ) .OR. ( SIZE( ngp ) < nproc ) ) &
       CALL errore( ' fft_dlay_set ', ' wrong stick dimensions ', 4 )
 
+    desc%use_task_groups = .FALSE.
 
     !  Set the number of "xy" planes for each processor
     !  in other word do a slab partition along the z axis
@@ -240,10 +261,20 @@ CONTAINS
     !  Set fft local workspace dimension
 
     IF ( nproc == 1 ) THEN
-      desc%nnr = nr1x * nr2x * nr3x
+      desc%nnr  = nr1x * nr2x * nr3x
+      desc%nnrx = desc%nnr 
     ELSE
       desc%nnr  = MAX( nr3x * ncp(me), nr1x * nr2x * npp(me) )
+      desc%nnr  = MAX( 1, desc%nnr ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
+      desc%nnrx = desc%nnr
+      DO i = 1, nproc
+         desc%nnrx = MAX( desc%nnrx, nr3x * ncp( i ) )
+         desc%nnrx = MAX( desc%nnrx, nr1x * nr2x * npp( i ) )
+      END DO
+      desc%nnrx = MAX( 1, desc%nnrx ) ! ensure that desc%nrr > 0 ( for extreme parallelism )
     END IF
+
+    
 
     desc%ngl( 1:nproc )  = ngp( 1:nproc )
     desc%nwl( 1:nproc )  = ngpw( 1:nproc )
@@ -442,6 +473,7 @@ CONTAINS
 
     END DO
 
+    desc%use_task_groups = .FALSE.
 
   END SUBROUTINE fft_box_set
 
@@ -492,6 +524,8 @@ CONTAINS
     desc%nnp  = nr1x * nr2x
     desc%npp  = nr3
     desc%ipp  = 0
+    desc%use_task_groups = .FALSE.
+    desc%nnrx = desc%nnr
 
     RETURN
   END SUBROUTINE fft_dlay_scalar

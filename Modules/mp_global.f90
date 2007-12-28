@@ -48,6 +48,8 @@ MODULE mp_global
   INTEGER :: np_ortho(2) = 1  ! size of the processor grid used in ortho
   INTEGER :: leg_ortho   = 1  ! the distance in the father communicator
                               ! of two neighbour processors in ortho_comm
+  INTEGER, ALLOCATABLE :: nolist(:) ! list of processors in my orbital task group 
+  INTEGER, ALLOCATABLE :: nplist(:) ! list of processors in my plane wave task group 
   !
   ! ... communicators
   !
@@ -87,6 +89,10 @@ MODULE mp_global
        inter_image_comm = group_i
        intra_image_comm = group_i
        ortho_comm       = group_i
+       ALLOCATE( nolist( nproc_i ) )
+       ALLOCATE( nplist( nproc_i ) )
+       nolist = 0
+       nplist = 0
        !
        RETURN
        !

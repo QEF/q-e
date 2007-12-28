@@ -17,26 +17,8 @@ MODULE task_groups
    IMPLICIT NONE
    SAVE
 
-   INTEGER,  ALLOCATABLE :: nolist(:), nplist(:), pgroup(:)
-   INTEGER,  ALLOCATABLE :: tmp_nsw(:), tmp_npp(:)
-   INTEGER   :: strd
-   INTEGER   :: nswx  ! maximum number of stick per processor
 
 CONTAINS
-
-SUBROUTINE DEALLOCATE_GROUPS
-
-   IMPLICIT NONE
-
-   !  ... Deallocate groups related arrays
-
-   IF (ALLOCATED(nolist))       DEALLOCATE(nolist)
-   IF (ALLOCATED(nplist))       DEALLOCATE(nplist)
-   IF (ALLOCATED(pgroup))       DEALLOCATE(pgroup)
-   IF (ALLOCATED(tmp_nsw))      DEALLOCATE(tmp_nsw)
-   IF (ALLOCATED(tmp_npp))      DEALLOCATE(tmp_npp)
-
-END SUBROUTINE DEALLOCATE_GROUPS
 
 
 !========================================================================================
@@ -58,6 +40,7 @@ SUBROUTINE task_groups_init( dffts )
    !
    USE mp_global,      ONLY : me_pool, nproc_pool, intra_pool_comm
    USE mp_global,      ONLY : NOGRP, NPGRP, ogrp_comm, pgrp_comm  
+   USE mp_global,      ONLY : nolist, nplist
    USE mp,             ONLY : mp_bcast
    USE io_global,      only : stdout
    USE fft_types,      only : fft_dlay_descriptor
@@ -68,17 +51,19 @@ SUBROUTINE task_groups_init( dffts )
 
    IMPLICIT NONE 
 
-   TYPE(fft_dlay_descriptor), INTENT(IN) :: dffts
+   TYPE(fft_dlay_descriptor), INTENT(INOUT) :: dffts
 
    !----------------------------------
    !Local Variables declaration
    !----------------------------------
 
-   INTEGER  ::  MSGLEN, I, J, N1, IPOS, WORLD, NEWGROUP
-   INTEGER  ::  IERR
-   INTEGER  ::  itsk, ntsk, color, key
-   INTEGER  ::  num_planes, num_sticks
-   INTEGER,  DIMENSION(:),   ALLOCATABLE  ::  nnrsx_vec 
+   INTEGER  :: MSGLEN, I, J, N1, IPOS, WORLD, NEWGROUP
+   INTEGER  :: IERR
+   INTEGER  :: itsk, ntsk, color, key
+   INTEGER  :: num_planes, num_sticks
+   INTEGER  :: nnrsx_vec ( nproc_pool )
+   INTEGER  :: pgroup( nproc_pool )
+   INTEGER  :: strd
 
    !
    WRITE( stdout, 100 ) nogrp, npgrp
@@ -94,16 +79,10 @@ SUBROUTINE task_groups_init( dffts )
 
    IF( MOD( nproc_pool, nogrp ) /= 0 ) &
       CALL errore( " groups ", " nogrp should be a divisor of nproc_pool ", 1 )
- 
-   ALLOCATE( pgroup( nproc_pool ) )
    !
    DO i = 1, nproc_pool
       pgroup( i ) = i - 1
    ENDDO
-   !
-   ALLOCATE( nplist( npgrp ) )
-   !
-   ALLOCATE( nolist( nogrp ) )
    !
    !--------------------------------------
    !LIST OF PROCESSORS IN MY ORBITAL GROUP
@@ -171,20 +150,16 @@ SUBROUTINE task_groups_init( dffts )
 #endif
 
 
-   ALLOCATE( nnrsx_vec( nproc_pool ) )
-
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
 #if defined __MPI
    CALL MPI_Allgather( dffts%nnr, 1, MPI_INTEGER, nnrsx_vec, 1, MPI_INTEGER, intra_pool_comm, IERR)
    strd = MAXVAL( nnrsx_vec( 1:nproc_pool ) )
-   nswx = MAXVAL( dffts%nsw( 1:nproc_pool ) )
 #else
    strd = dffts%nnr 
-   nswx = dffts%nsw(1)
 #endif
 
-   DEALLOCATE( nnrsx_vec )
+   IF( strd /= dffts%nnrx ) CALL errore( ' task_groups_init ', ' inconsistent nnrx ', 1 )
 
    !-------------------------------------------------------------------------------------
    !C. Bekas...TASK GROUP RELATED. FFT DATA STRUCTURES ARE ALREADY DEFINED ABOVE
@@ -196,8 +171,8 @@ SUBROUTINE task_groups_init( dffts )
    !we choose to do the latter one.
    !-------------------------------------------------------------------------------------
    !
-   ALLOCATE(tmp_nsw(nproc_pool))
-   ALLOCATE(tmp_npp(nproc_pool))
+   ALLOCATE( dffts%tg_nsw(nproc_pool))
+   ALLOCATE( dffts%tg_npp(nproc_pool))
 
    num_sticks = 0
    num_planes = 0
@@ -207,12 +182,14 @@ SUBROUTINE task_groups_init( dffts )
    ENDDO
 
 #if defined __MPI
-   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, tmp_nsw, 1, MPI_INTEGER, intra_pool_comm, IERR)
-   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, tmp_npp, 1, MPI_INTEGER, intra_pool_comm, IERR)
+   CALL MPI_ALLGATHER(num_sticks, 1, MPI_INTEGER, dffts%tg_nsw(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
+   CALL MPI_ALLGATHER(num_planes, 1, MPI_INTEGER, dffts%tg_npp(1), 1, MPI_INTEGER, intra_pool_comm, IERR)
 #else
-   tmp_nsw(1) = num_sticks
-   tmp_npp(1) = num_planes
+   dffts%tg_nsw(1) = num_sticks
+   dffts%tg_npp(1) = num_planes
 #endif
+
+   dffts%use_task_groups = .TRUE.
 
    RETURN
 
