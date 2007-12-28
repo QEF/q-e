@@ -16,9 +16,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   USE gsmooth, ONLY : nls, nlsm, nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs
   USE wvfct,   ONLY : igk
   USE wavefunctions_module,  ONLY: psic
-  USE control_flags, ONLY : use_task_groups
-  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool
-  USE task_groups,   ONLY : nolist, tmp_npp, strd, nswx
+  USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
   USE fft_parallel,  ONLY : tg_cft3s
   USE sticks,        ONLY : dffts
   !
@@ -44,16 +42,16 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   !
   incr = 2
   !
-  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
+  use_tg = ( dffts%use_task_groups ) .AND. ( m >= nogrp )
 
   IF( use_tg ) THEN
      !
      ! call errore( ' vloc_psi ', ' task_groups not yet implemented ', 1 )
      !
-     v_siz =  strd * ( nogrp + 1 )
+     v_siz =  dffts%nnrx * ( nogrp + 1 )
      !
      ALLOCATE( tg_v   ( v_siz ) )
-     ALLOCATE( tg_psic( strd * ( nogrp + 1 ) ) )
+     ALLOCATE( tg_psic( dffts%nnrx * ( nogrp + 1 ) ) )
      !
      tg_v = 0.0d0
      !
@@ -105,7 +103,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
               END DO
            END IF
 
-           ioff = ioff + strd
+           ioff = ioff + dffts%nnrx
 
         END DO
         !
@@ -131,7 +129,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
         !
         call tg_cft3s ( tg_psic, dffts, 2)
 
-        do j = 1, nrx1s * nrx2s * tmp_npp( me_pool + 1 )
+        do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
            tg_psic (j) = tg_psic (j) * tg_v(j)
         enddo
 

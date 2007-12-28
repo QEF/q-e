@@ -1316,12 +1316,10 @@ vhpsi_nc.o : pwcom.o
 vhpsi_nc.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
-vloc_psi.o : ../Modules/control_flags.o
 vloc_psi.o : ../Modules/fft_parallel.o
 vloc_psi.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/mp_global.o
 vloc_psi.o : ../Modules/parallel_include.o
-vloc_psi.o : ../Modules/task_groups.o
 vloc_psi.o : ../Modules/wavefunctions.o
 vloc_psi.o : pwcom.o
 w0gauss.o : ../Modules/constants.o

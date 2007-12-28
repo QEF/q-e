@@ -118,8 +118,7 @@
       USE constants,          ONLY: pi, fpi
       USE mp,                 ONLY: mp_sum
       USE io_global,          ONLY: stdout
-      USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, ogrp_comm
-      USE task_groups,        ONLY: strd, tmp_npp, nolist
+      USE mp_global,          ONLY: intra_image_comm, nogrp, me_image, ogrp_comm, nolist
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: fwfft, invfft, stress_kin
@@ -435,11 +434,11 @@
          REAL(DP), ALLOCATABLE :: long_rhos(:,:)
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
-         ALLOCATE( psis( strd * ( nogrp + 1 ) ) ) 
+         ALLOCATE( psis( dffts%nnrx * ( nogrp + 1 ) ) ) 
          !
-         ALLOCATE( long_rhos( nr1sx * nr2sx * tmp_npp( me_image + 1 ), nspin ) )
+         ALLOCATE( long_rhos( nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ), nspin ) )
 
-         ALLOCATE( tmp_rhos ( nr1sx * nr2sx * tmp_npp( me_image + 1 ), nspin ) )
+         ALLOCATE( tmp_rhos ( nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ), nspin ) )
          !
          tmp_rhos = 0_DP
 
@@ -478,8 +477,8 @@
                   !  we choose to do the latter one.
 
                   do ig=1,ngw
-                     psis(nms(ig)+eig_offset*strd)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
-                     psis(nps(ig)+eig_offset*strd)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
+                     psis(nms(ig)+eig_offset*dffts%nnrx)=conjg(c(ig,i+eig_index-1))+ci*conjg(c(ig,i+eig_index))
+                     psis(nps(ig)+eig_offset*dffts%nnrx)=c(ig,i+eig_index-1)+ci*c(ig,i+eig_index)
                   end do
                   !
                   eig_offset = eig_offset + 1
@@ -519,10 +518,10 @@
             !code this should be equal to the total number of planes
             !
 
-            IF( nr1sx * nr2sx * tmp_npp( me_image + 1 ) > SIZE( psis ) ) &
-               CALL errore( ' rhoofr ', ' psis size too low ', nr1sx * nr2sx * tmp_npp( me_image + 1 ) )
+            IF( nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ) > SIZE( psis ) ) &
+               CALL errore( ' rhoofr ', ' psis size too low ', nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ) )
 
-            do ir = 1, nr1sx * nr2sx * tmp_npp( me_image + 1 )
+            do ir = 1, nr1sx * nr2sx * dffts%tg_npp( me_image + 1 )
                tmp_rhos(ir,iss1) = tmp_rhos(ir,iss1) + sa1*( real(psis(ir)))**2
                tmp_rhos(ir,iss2) = tmp_rhos(ir,iss2) + sa2*(aimag(psis(ir)))**2
             end do

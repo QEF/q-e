@@ -43,7 +43,6 @@
       USE funct,                  ONLY: dft_is_meta
       USE cp_interfaces,          ONLY: fwfft, invfft
       USE mp_global,              ONLY: nogrp, me_image, ogrp_comm
-      USE task_groups,            ONLY: tmp_npp, nolist, strd, nswx
 !
       IMPLICIT NONE
 !
@@ -74,7 +73,7 @@
       !
       IF( use_task_groups ) THEN
          nogrp_ = nogrp
-         ALLOCATE( psi( strd * ( nogrp + 1 ) ) )
+         ALLOCATE( psi( dffts%nnrx * ( nogrp + 1 ) ) )
       ELSE
          nogrp_ = 1
          ALLOCATE( psi( nnrsx ) )
@@ -107,7 +106,7 @@
             END DO
          END IF
 
-         igoff = igoff + strd
+         igoff = igoff + dffts%nnrx
 
       END DO
 
@@ -125,7 +124,7 @@
       !
       IF( use_task_groups ) THEN
          !
-         DO ir = 1, nr1sx * nr2sx * tmp_npp( me_image + 1 )
+         DO ir = 1, nr1sx * nr2sx * dffts%tg_npp( me_image + 1 )
             psi(ir) = CMPLX( v(ir,iss1) * DBLE( psi(ir) ), v(ir,iss2) * AIMAG( psi(ir) ) )
          END DO
          !

@@ -54,7 +54,6 @@ SUBROUTINE deallocate_modules_var()
   USE ions_nose,            ONLY : ions_nose_deallocate
   USE metagga,              ONLY : deallocate_metagga
   USE ncpp,                 ONLY : deallocate_ncpp
-  USE task_groups,          ONLY : deallocate_groups
   USE ions_positions,       ONLY : deallocate_ions_positions
   USE kohn_sham_states,     ONLY : ks_states_closeup
   USE ldau,                 ONLY : deallocate_lda_plus_u
@@ -89,8 +88,6 @@ SUBROUTINE deallocate_modules_var()
   CALL deallocate_cdvan()
   CALL deallocate_dqrad_mod()
   CALL deallocate_betax()
-  !
-  CALL deallocate_groups()
   !
   CALL fft_dlay_deallocate( dfftp )
   CALL fft_dlay_deallocate( dffts )

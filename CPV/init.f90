@@ -187,6 +187,9 @@
       !
       IF( use_task_groups ) THEN
         !
+        !  Initialize task groups.
+        !  Note that this call modify dffts adding task group data.
+        !
         CALL task_groups_init( dffts )
         !
       END IF

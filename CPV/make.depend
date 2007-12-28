@@ -79,14 +79,12 @@ chargedensity.o : ../Modules/mp.o
 chargedensity.o : ../Modules/mp_global.o
 chargedensity.o : ../Modules/parallel_include.o
 chargedensity.o : ../Modules/recvec.o
-chargedensity.o : ../Modules/task_groups.o
 chargedensity.o : ../Modules/uspp.o
 chargedensity.o : ../Modules/wave_base.o
 chargedensity.o : cg.o
 chargedensity.o : chargemix.o
 chargedensity.o : cp_interfaces.o
 chargedensity.o : modules.o
-chargedensity.o : turbo.o
 chargemix.o : ../Modules/kind.o
 chi2.o : ../Modules/cell_base.o
 chi2.o : ../Modules/io_files.o
@@ -310,7 +308,6 @@ dealloc.o : ../Modules/ions_nose.o
 dealloc.o : ../Modules/recvec.o
 dealloc.o : ../Modules/sic.o
 dealloc.o : ../Modules/stick_base.o
-dealloc.o : ../Modules/task_groups.o
 dealloc.o : ../Modules/uspp.o
 dealloc.o : ../Modules/wavefunctions.o
 dealloc.o : cg.o
@@ -411,8 +408,8 @@ exch_corr.o : ../Modules/recvec.o
 exch_corr.o : ../Modules/sic.o
 exch_corr.o : cp_interfaces.o
 exch_corr.o : modules.o
-fft.o : ../Modules/control_flags.o
 fft.o : ../Modules/fft_base.o
+fft.o : ../Modules/fft_parallel.o
 fft.o : ../Modules/fft_scalar.o
 fft.o : ../Modules/griddim.o
 fft.o : ../Modules/kind.o
@@ -424,8 +421,6 @@ fftdrv.o : ../Modules/fft_scalar.o
 fftdrv.o : ../Modules/fft_types.o
 fftdrv.o : ../Modules/kind.o
 fftdrv.o : ../Modules/mp_global.o
-fftdrv.o : ../Modules/parallel_include.o
-fftdrv.o : ../Modules/task_groups.o
 forceconv.o : ../Modules/kind.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
@@ -438,7 +433,6 @@ forces.o : ../Modules/kind.o
 forces.o : ../Modules/mp_global.o
 forces.o : ../Modules/parallel_include.o
 forces.o : ../Modules/recvec.o
-forces.o : ../Modules/task_groups.o
 forces.o : ../Modules/uspp.o
 forces.o : cp_interfaces.o
 forces.o : ensemble_dft.o
@@ -1016,7 +1010,6 @@ runcp.o : ../Modules/mp.o
 runcp.o : ../Modules/mp_global.o
 runcp.o : ../Modules/parallel_include.o
 runcp.o : ../Modules/recvec.o
-runcp.o : ../Modules/task_groups.o
 runcp.o : ../Modules/uspp.o
 runcp.o : ../Modules/wave_base.o
 runcp.o : cp_interfaces.o

@@ -26,7 +26,7 @@
       !
       USE parallel_include
       USE kinds,               ONLY : DP
-      USE mp_global,           ONLY : nogrp, ogrp_comm, me_image
+      USE mp_global,           ONLY : nogrp, ogrp_comm, me_image, nolist
       USE fft_base,            ONLY : dffts
       use wave_base,           only : wave_steepest, wave_verlet
       use control_flags,       only : lwf, tsde, use_task_groups, program_name
@@ -35,7 +35,6 @@
       use electrons_base,      only : n=>nbsp, ispin, f, nspin, nupdwn, iupdwn
       use wannier_subroutines, only : ef_potential
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
-      USE task_groups,         ONLY : nolist
       use gvecw,               only : ngw
       USE cp_interfaces,       ONLY : dforce
       USE ldaU
