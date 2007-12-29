@@ -239,7 +239,6 @@ stick_base.o : mp_global.o
 task_groups.o : fft_types.o
 task_groups.o : io_global.o
 task_groups.o : kind.o
-task_groups.o : mp.o
 task_groups.o : mp_global.o
 task_groups.o : parallel_include.o
 timestep.o : kind.o

@@ -41,7 +41,6 @@ SUBROUTINE task_groups_init( dffts )
    USE mp_global,      ONLY : me_pool, nproc_pool, intra_pool_comm
    USE mp_global,      ONLY : NOGRP, NPGRP, ogrp_comm, pgrp_comm  
    USE mp_global,      ONLY : nolist, nplist
-   USE mp,             ONLY : mp_bcast
    USE io_global,      only : stdout
    USE fft_types,      only : fft_dlay_descriptor
 
@@ -57,9 +56,8 @@ SUBROUTINE task_groups_init( dffts )
    !Local Variables declaration
    !----------------------------------
 
-   INTEGER  :: MSGLEN, I, J, N1, IPOS, WORLD, NEWGROUP
+   INTEGER  :: I
    INTEGER  :: IERR
-   INTEGER  :: itsk, ntsk, color, key
    INTEGER  :: num_planes, num_sticks
    INTEGER  :: nnrsx_vec ( nproc_pool )
    INTEGER  :: pgroup( nproc_pool )
@@ -69,86 +67,6 @@ SUBROUTINE task_groups_init( dffts )
    WRITE( stdout, 100 ) nogrp, npgrp
 
 100 FORMAT( /,3X,'Task Groups are in use',/,3X,'groups and procs/group : ',I5,I5 )
-
-   !--------------------------------------------------------------
-   !SUBDIVIDE THE PROCESSORS IN GROUPS
-   !
-   !THE NUMBER OF GROUPS HAS TO BE A DIVISOR OF THE NUMBER
-   !OF PROCESSORS
-   !--------------------------------------------------------------
-
-   IF( MOD( nproc_pool, nogrp ) /= 0 ) &
-      CALL errore( " groups ", " nogrp should be a divisor of nproc_pool ", 1 )
-   !
-   DO i = 1, nproc_pool
-      pgroup( i ) = i - 1
-   ENDDO
-   !
-   !--------------------------------------
-   !LIST OF PROCESSORS IN MY ORBITAL GROUP
-   !--------------------------------------
-   !
-   !  processors in these group have contiguous indexes
-   !
-   N1 = ( me_pool / NOGRP ) * NOGRP - 1
-   DO i = 1, nogrp
-      nolist( I ) = pgroup( N1 + I + 1 )
-      IF( me_pool == nolist( I ) ) ipos = i - 1
-   ENDDO
-
-   !-----------------------------------------
-   !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
-   !-----------------------------------------
-   !
-   DO I = 1, npgrp
-      nplist( I ) = pgroup( ipos + ( i - 1 ) * nogrp + 1 )
-   ENDDO
-
-   !-----------------
-   !SET UP THE GROUPS
-   !-----------------
-   !
-
-   !---------------------------------------
-   !CREATE ORBITAL GROUPS
-   !---------------------------------------
-   !
-#if defined __MPI
-   color = me_pool / nogrp
-   key   = MOD( me_pool , nogrp )
-   CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, ogrp_comm, ierr )
-   if( ierr /= 0 ) &
-      CALL errore( ' task_groups_init ', ' creating ogrp_comm ', ABS(ierr) )
-   CALL MPI_COMM_RANK( ogrp_comm, itsk, IERR )
-   CALL MPI_COMM_SIZE( ogrp_comm, ntsk, IERR )
-   IF( nogrp /= ntsk ) CALL errore( ' task_groups_init ', ' ogrp_comm size ', ntsk )
-   DO i = 1, nogrp
-      IF( me_pool == nolist( i ) ) THEN
-         IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' ogrp_comm rank ', itsk )
-      END IF
-   END DO
-#endif
-
-   !---------------------------------------
-   !CREATE PLANEWAVE GROUPS
-   !---------------------------------------
-   !
-#if defined __MPI
-   color = MOD( me_pool , nogrp )
-   key   = me_pool / nogrp
-   CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, pgrp_comm, ierr )
-   if( ierr /= 0 ) &
-      CALL errore( ' task_groups_init ', ' creating pgrp_comm ', ABS(ierr) )
-   CALL MPI_COMM_RANK( pgrp_comm, itsk, IERR )
-   CALL MPI_COMM_SIZE( pgrp_comm, ntsk, IERR )
-   IF( npgrp /= ntsk ) CALL errore( ' task_groups_init ', ' pgrp_comm size ', ntsk )
-   DO i = 1, npgrp
-      IF( me_pool == nplist( i ) ) THEN
-         IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' pgrp_comm rank ', itsk )
-      END IF
-   END DO
-#endif
-
 
    !Find maximum chunk of local data concerning coefficients of eigenfunctions in g-space
 
@@ -189,7 +107,7 @@ SUBROUTINE task_groups_init( dffts )
    dffts%tg_npp(1) = num_planes
 #endif
 
-   dffts%use_task_groups = .TRUE.
+   dffts%have_task_groups = .TRUE.
 
    RETURN
 

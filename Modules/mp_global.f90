@@ -139,12 +139,6 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
      nimage = nimage_
   END IF
   !  
-  IF( PRESENT( ntask_groups_ ) ) THEN
-     IF( ntask_groups_ > 0 ) THEN
-        nogrp = ntask_groups_
-     END IF
-  END IF
-  !  
   ! ... here we set all parallel indeces (defined in mp_global): 
   !
   !
@@ -217,14 +211,97 @@ SUBROUTINE init_pool( nimage_ , ntask_groups_ )
   !
   CALL init_ortho_group( nproc_pool, intra_pool_comm )
   !
-  IF( MOD( nproc_pool, nogrp ) /= 0 ) &
-      CALL errore( " init_pool ", " nogrp should be a divisor of nproc_pool ", 1 )
-  !
-  npgrp = nproc_pool / nogrp
+  !  
+  IF( PRESENT( ntask_groups_ ) ) THEN
+     IF( ntask_groups_ > 0 ) THEN
+        nogrp = ntask_groups_
+        CALL init_task_groups( )
+     END IF
+  END IF
   !
   RETURN
   !
 END SUBROUTINE init_pool
+!
+!
+SUBROUTINE init_task_groups( )
+  !
+  INTEGER :: i, n1, ipos, color, key, ierr, itsk, ntsk
+  INTEGER :: pgroup( nproc_pool )
+  !
+  !SUBDIVIDE THE PROCESSORS IN GROUPS
+  !
+  !THE NUMBER OF GROUPS HAS TO BE A DIVISOR OF THE NUMBER
+  !OF PROCESSORS
+  !
+  IF( MOD( nproc_pool, nogrp ) /= 0 ) &
+      CALL errore( " init_pool ", " nogrp should be a divisor of nproc_pool ", 1 )
+  !
+  npgrp = nproc_pool / nogrp
+
+  DO i = 1, nproc_pool
+     pgroup( i ) = i - 1
+  ENDDO
+  !
+  !LIST OF PROCESSORS IN MY ORBITAL GROUP
+  !
+  !  processors in these group have contiguous indexes
+  !
+  N1 = ( me_pool / NOGRP ) * NOGRP - 1
+  DO i = 1, nogrp
+     nolist( I ) = pgroup( N1 + I + 1 )
+     IF( me_pool == nolist( I ) ) ipos = i - 1
+  ENDDO
+  !
+  !LIST OF PROCESSORS IN MY PLANE WAVE GROUP
+  !
+  DO I = 1, npgrp
+     nplist( I ) = pgroup( ipos + ( i - 1 ) * nogrp + 1 )
+  ENDDO
+
+  !
+  !SET UP THE GROUPS
+  !
+  !
+  !CREATE ORBITAL GROUPS
+  !
+#if defined __MPI
+  color = me_pool / nogrp
+  key   = MOD( me_pool , nogrp )
+  CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, ogrp_comm, ierr )
+  if( ierr /= 0 ) &
+     CALL errore( ' task_groups_init ', ' creating ogrp_comm ', ABS(ierr) )
+  CALL MPI_COMM_RANK( ogrp_comm, itsk, IERR )
+  CALL MPI_COMM_SIZE( ogrp_comm, ntsk, IERR )
+  IF( nogrp /= ntsk ) CALL errore( ' task_groups_init ', ' ogrp_comm size ', ntsk )
+  DO i = 1, nogrp
+     IF( me_pool == nolist( i ) ) THEN
+        IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' ogrp_comm rank ', itsk )
+     END IF
+  END DO
+#endif
+  !
+  !CREATE PLANEWAVE GROUPS
+  !
+#if defined __MPI
+  color = MOD( me_pool , nogrp )
+  key   = me_pool / nogrp
+  CALL MPI_COMM_SPLIT( intra_pool_comm, color, key, pgrp_comm, ierr )
+  if( ierr /= 0 ) &
+     CALL errore( ' task_groups_init ', ' creating pgrp_comm ', ABS(ierr) )
+  CALL MPI_COMM_RANK( pgrp_comm, itsk, IERR )
+  CALL MPI_COMM_SIZE( pgrp_comm, ntsk, IERR )
+  IF( npgrp /= ntsk ) CALL errore( ' task_groups_init ', ' pgrp_comm size ', ntsk )
+  DO i = 1, npgrp
+     IF( me_pool == nplist( i ) ) THEN
+        IF( (i-1) /= itsk ) CALL errore( ' task_groups_init ', ' pgrp_comm rank ', itsk )
+     END IF
+  END DO
+#endif
+
+  
+  RETURN
+END SUBROUTINE init_task_groups
 !
 !
 SUBROUTINE init_ortho_group( nproc_try, comm_all )
