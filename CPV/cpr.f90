@@ -910,6 +910,7 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'calphi' )
   CALL print_clock( 'ortho' )
   CALL print_clock( 'ortho_iter' )
+  CALL print_clock( 'rsg' )
   CALL print_clock( 'rhoset' )
   CALL print_clock( 'updatc' )
   CALL print_clock( 'gram' )
@@ -927,22 +928,14 @@ SUBROUTINE terminate_run()
   CALL print_clock( 'fft' )
   CALL print_clock( 'ffts' )
   CALL print_clock( 'fftw' )
-  CALL print_clock( 'fftzf' )
-  CALL print_clock( 'fftzb' )
-  CALL print_clock( 'fftxyf' )
-  CALL print_clock( 'fftxyb' )
   CALL print_clock( 'fftb' )
-  CALL print_clock( 'rsg' )
+  CALL print_clock( 'cft3s' )
+  CALL print_clock( 'fft_scatter' )
   !
   IF (tcg) call print_clock_tcg()
   !
   IF( use_task_groups ) THEN
      !
-     CALL print_clock( 'tg_invfftw')
-     CALL print_clock( 'tg_fftw')
-     CALL print_clock( '1D' )
-     CALL print_clock( '2D' )
-     CALL print_clock( 'SCATTER' )
      CALL print_clock( 'ALLTOALL' )
      !
   END IF

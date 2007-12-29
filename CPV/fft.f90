@@ -38,10 +38,10 @@
 
 !
       USE kinds,         ONLY: DP
-      use fft_cp,        only: cfft_cp
       use fft_base,      only: dfftp, dffts, dfftb
       use fft_scalar,    only: cfft3d, cfft3ds, cft_b
       use fft_parallel,  only: tg_cft3s
+      use control_flags, only: use_task_groups
 
       IMPLICIT none
 
@@ -73,15 +73,11 @@
       END IF
       
       IF( grid_type == 'Dense' ) THEN
-         call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dfftp)
+         call tg_cft3s( f, dfftp, 1 )
       ELSE IF( grid_type == 'Smooth' ) THEN
-         call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dffts)
+         call tg_cft3s( f, dffts, 1 )
       ELSE IF( grid_type == 'Wave' ) THEN
-         IF( dffts%use_task_groups ) THEN
-            call tg_cft3s(f,dffts,2)
-         ELSE
-            call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,2,dffts)
-         END IF
+         call tg_cft3s( f, dffts, 2, use_task_groups )
       ELSE IF( grid_type == 'Box' .AND. np3 > 0 ) THEN
          call cft_b(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,imin3,imax3,1)
       END IF
@@ -134,10 +130,10 @@
 !   on the smooth grid . On output, f is overwritten
 ! 
       USE kinds,         ONLY: DP
-      use fft_cp,        only: cfft_cp
       use fft_base,      only: dfftp, dffts
       use fft_scalar,    only: cfft3d, cfft3ds
       use fft_parallel,  only: tg_cft3s
+      use control_flags, only: use_task_groups
 
       implicit none
 
@@ -158,15 +154,11 @@
 #if defined __PARA && !defined __USE_3D_FFT
 
       IF( grid_type == 'Dense' ) THEN
-         call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dfftp)
+         call tg_cft3s(f,dfftp,-1)
       ELSE IF( grid_type == 'Smooth' ) THEN
-         call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dffts)
+         call tg_cft3s(f,dffts,-1)
       ELSE IF( grid_type == 'Wave' ) THEN
-         IF( dffts%use_task_groups ) THEN
-            call tg_cft3s(f,dffts,-2)
-         ELSE
-            call cfft_cp(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-2,dffts)
-         END IF
+         call tg_cft3s(f,dffts,-2, use_task_groups )
       END IF
 
 #else 

@@ -408,6 +408,7 @@ exch_corr.o : ../Modules/recvec.o
 exch_corr.o : ../Modules/sic.o
 exch_corr.o : cp_interfaces.o
 exch_corr.o : modules.o
+fft.o : ../Modules/control_flags.o
 fft.o : ../Modules/fft_base.o
 fft.o : ../Modules/fft_parallel.o
 fft.o : ../Modules/fft_scalar.o
@@ -415,12 +416,6 @@ fft.o : ../Modules/griddim.o
 fft.o : ../Modules/kind.o
 fft.o : ../Modules/mp_global.o
 fft.o : ../Modules/recvec.o
-fft.o : fftdrv.o
-fftdrv.o : ../Modules/fft_base.o
-fftdrv.o : ../Modules/fft_scalar.o
-fftdrv.o : ../Modules/fft_types.o
-fftdrv.o : ../Modules/kind.o
-fftdrv.o : ../Modules/mp_global.o
 forceconv.o : ../Modules/kind.o
 forces.o : ../Modules/cell_base.o
 forces.o : ../Modules/constants.o
@@ -1133,7 +1128,6 @@ electrons.o : ../include/f_defs.h
 emptystates.o : ../include/f_defs.h
 exch_corr.o : ../include/f_defs.h
 fft.o : ../include/f_defs.h
-fftdrv.o : ../include/f_defs.h
 forceconv.o : ../include/f_defs.h
 forces.o : ../include/f_defs.h
 fromscra.o : ../include/f_defs.h
