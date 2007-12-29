@@ -19,6 +19,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
   USE fft_parallel,  ONLY : tg_cft3s
   USE sticks,        ONLY : dffts
+  USE control_flags, ONLY : use_task_groups
   !
   implicit none
   !
@@ -42,7 +43,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   !
   incr = 2
   !
-  use_tg = ( dffts%use_task_groups ) .AND. ( m >= nogrp )
+  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
 
   IF( use_tg ) THEN
      !
@@ -127,13 +128,13 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
      !
      IF( use_tg ) THEN
         !
-        call tg_cft3s ( tg_psic, dffts, 2)
+        call tg_cft3s ( tg_psic, dffts, 2, use_tg )
 
         do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
            tg_psic (j) = tg_psic (j) * tg_v(j)
         enddo
 
-        call tg_cft3s ( tg_psic, dffts, -2)
+        call tg_cft3s ( tg_psic, dffts, -2, use_tg )
         !
      ELSE
         !
