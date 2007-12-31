@@ -98,10 +98,17 @@ MODULE xml_io_base
       !
       CHARACTER(LEN=256) :: kdirname
       CHARACTER(LEN=5)   :: kindex
+      CHARACTER(LEN=6)   :: kindex1
       !
-      WRITE( kindex, FMT = '( I5.5 )' ) ik     
-      !
-      kdirname = TRIM( basedir ) // '/K' // kindex
+      IF (ik<99999) THEN
+         WRITE( kindex, FMT = '( I5.5 )' ) ik     
+         kdirname = TRIM( basedir ) // '/K' // kindex
+      ELSEIF (ik<999999) THEN
+         WRITE( kindex1, FMT = '( I6.6 )' ) ik     
+         kdirname = TRIM( basedir ) // '/K' // kindex1
+      ELSE
+         call errore('kpoint_dir','ik too large, increase format',1)
+      ENDIF
       !
       kpoint_dir = TRIM( kdirname )
       !
