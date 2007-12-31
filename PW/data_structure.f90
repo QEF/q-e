@@ -15,7 +15,7 @@ subroutine data_structure( lgamma )
   ! In the parallel case, it distributes columns to processes, too
   !
   USE io_global,  ONLY : stdout
-  USE sticks,     ONLY : dfftp, dffts
+  USE fft_base,   ONLY : dfftp, dffts
   USE kinds,      ONLY : DP
   USE cell_base,  ONLY : bg, tpiba, tpiba2
   USE klist,      ONLY : xk, nks

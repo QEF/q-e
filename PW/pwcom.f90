@@ -506,22 +506,6 @@ MODULE extfield
 END MODULE extfield
 !
 !
-MODULE sticks
-  !
-  ! ... data structure containing all information
-  ! ... about fft data distribution for a given 
-  ! ... potential grid, and its wave functions sub-grid.
-  !  
-  USE fft_types, ONLY : fft_dlay_descriptor
-  !
-  SAVE
-  !
-  TYPE ( fft_dlay_descriptor ) :: dfftp   ! dense grid
-  TYPE ( fft_dlay_descriptor ) :: dffts   ! smooth grid
-  !
-END MODULE sticks
-!  
-!  
 !
 MODULE fixed_occ
   !
@@ -614,7 +598,6 @@ MODULE pwcom
   USE us
   USE ldaU
   USE extfield
-  USE sticks
   USE bp
   USE fixed_occ
   USE spin_orb

@@ -31,7 +31,7 @@ SUBROUTINE clean_pw( lflag )
   USE uspp,                 ONLY : deallocate_uspp
   USE ldaU,                 ONLY : swfcatom
   USE extfield,             ONLY : forcefield
-  USE sticks,               ONLY : dfftp, dffts  
+  USE fft_base,             ONLY : dfftp, dffts  
   USE stick_base,           ONLY : sticks_deallocate
   USE fft_types,            ONLY : fft_dlay_deallocate
   USE spin_orb,             ONLY : lspinorb, fcoef

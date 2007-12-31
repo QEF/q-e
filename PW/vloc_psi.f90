@@ -18,7 +18,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   USE wavefunctions_module,  ONLY: psic
   USE mp_global,     ONLY : nogrp, ogrp_comm, me_pool, nolist
   USE fft_parallel,  ONLY : tg_cft3s
-  USE sticks,        ONLY : dffts
+  USE fft_base,      ONLY : dffts
   USE control_flags, ONLY : use_task_groups
   !
   implicit none

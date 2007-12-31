@@ -7,8 +7,6 @@
 !
 #include "f_defs.h"
 !
-#if defined (__PARA) && ! defined (__USE_3D_FFT)
-!
 !----------------------------------------------------------------------------
 SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !----------------------------------------------------------------------------
@@ -27,112 +25,23 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   ! ...                  and reorder
   ! ...               fft along z using pencils (cft_1z)
   !
-  USE fft_scalar, ONLY : cft_1z, cft_2xy
-  USE sticks,     ONLY : dfftp
-  USE fft_base,   ONLY : fft_scatter
-  USE kinds,      ONLY : DP
-  USE mp_global,  ONLY : nproc_pool, me_pool
-  USE pfft,       ONLY : nct, ncp, ncplane, nxx, npp
+  USE fft_scalar,   ONLY : cfft3d
+  USE fft_base,     ONLY : dfftp
+  USE fft_parallel, ONLY : tg_cft3s
+  USE kinds,        ONLY : DP
   !
   IMPLICIT NONE
   !
-  INTEGER,          INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
-  COMPLEX(DP), INTENT(INOUT) :: f(nxx)
+  INTEGER,     INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
+
+#if defined (__PARA) && ! defined (__USE_3D_FFT)
+
+  COMPLEX(DP), INTENT(INOUT) :: f( dfftp%nnr )
   !
-  INTEGER                        :: nxx_save, mc, i, j, ii, iproc, nppx
-  INTEGER                        :: me_p
-  COMPLEX(DP), ALLOCATABLE  :: aux(:)
-  !
-  !
-  CALL start_clock( 'cft3' )
-  !
-  ALLOCATE( aux( nxx ) )
-  !
-  me_p = me_pool + 1
-  !
-  ! ... the following is needed for the parallel fft running on one processor
-  ! ... for the special case nx3.ne.n3. Not an elegant solution, but simple,
-  ! ... fast, better than the preceding one that did not work in some cases.
-  ! ... Note that fft_scatter does nothing if nproc_pool=1. PG
-  !
-  IF ( nproc_pool == 1 ) THEN
-     !
-     nppx = nx3
-     !
-  ELSE
-     !
-     nppx = npp(me_p)
-     !
-  END IF
-  !
-  IF ( sign == 1 ) THEN
-     !
-     CALL cft_1z( f, ncp(me_p), n3, nx3, sign, aux )
-     !
-     CALL fft_scatter( aux, nx3, nxx, f, ncp, npp, sign )
-     !
-     f(:) = ( 0.D0, 0.D0 )
-     !
-     DO i = 1, nct
-        !
-        mc = dfftp%ismap(i)
-        !
-        DO j = 1, npp(me_p)
-           !
-           f(mc+(j-1)*ncplane) = aux(j+(i-1)*nppx)
-           !
-        END DO
-        !
-     END DO
-     !
-     CALL cft_2xy( f, npp(me_p), n1, n2, nx1, nx2, sign )
-     !
-  ELSE IF ( sign == - 1) THEN
-     !
-     CALL cft_2xy( f, npp(me_p), n1, n2, nx1, nx2, sign )
-     !
-     DO i = 1, nct
-        !
-        mc = dfftp%ismap(i)
-        !
-        DO j = 1, npp (me_p)
-           !
-           aux(j+(i-1)*nppx) = f(mc+(j-1)*ncplane)
-           !
-        END DO
-        !
-     END DO
-     !
-     CALL fft_scatter( aux, nx3, nxx, f, ncp, npp, sign )
-     !
-     CALL cft_1z( aux, ncp(me_p), n3, nx3, sign, f )
-     !
-  ELSE
-     !
-     CALL errore( 'cft3', 'not allowed', ABS( sign ) )
-     !
-  END IF
-  !
-  DEALLOCATE( aux )
-  !
-  CALL stop_clock( 'cft3' )
-  !
-  RETURN
-  !
-END SUBROUTINE cft3
-!
+  CALL tg_cft3s( f, dfftp, sign )
+
 #else
 !
-!----------------------------------------------------------------------------
-SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
-  !----------------------------------------------------------------------------
-  !
-  USE fft_scalar, ONLY : cfft3d
-  USE kinds,      ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,          INTENT(IN)    :: n1, n2, n3, nx1, nx2, nx3, sign
   COMPLEX(DP), INTENT(INOUT) :: f(nx1*nx2*nx3)
   !
   !
@@ -156,8 +65,8 @@ SUBROUTINE cft3( f, n1, n2, n3, nx1, nx2, nx3, sign )
   !
   CALL stop_clock( 'cft3' )
   !
+#endif
+  !
   RETURN
   !
 END SUBROUTINE cft3
-!
-#endif

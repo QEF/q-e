@@ -94,7 +94,7 @@ MODULE pw_restart
       USE ions_base,            ONLY : amass
       USE funct,                ONLY : get_dft_name
       USE scf,                  ONLY : rho
-      USE sticks,               ONLY : dfftp
+      USE fft_base,             ONLY : dfftp
       USE extfield,             ONLY : tefield, dipfield, edir, &
                                        emaxpos, eopreg, eamp
       USE io_rho_xml,           ONLY : write_rho

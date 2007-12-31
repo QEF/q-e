@@ -29,7 +29,7 @@ MODULE io_rho_xml
       ! ... the '.save' directory is created if not already present
       !
       USE io_files, ONLY : tmp_dir, prefix
-      USE sticks,   ONLY : dfftp
+      USE fft_base, ONLY : dfftp
       USE gvect,    ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
       USE spin_orb, ONLY : domag
       !
@@ -112,7 +112,7 @@ MODULE io_rho_xml
       ! ... files saved into the '.save' directory
       !
       USE io_files, ONLY : tmp_dir, prefix
-      USE sticks,   ONLY : dfftp
+      USE fft_base, ONLY : dfftp
       USE gvect,    ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
       USE spin_orb, ONLY : domag
       !

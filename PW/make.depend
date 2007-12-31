@@ -175,20 +175,17 @@ cegterg.o : ../Modules/mp.o
 cegterg.o : ../Modules/mp_global.o
 cegterg.o : ../Modules/ptoolkit.o
 cft3.o : ../Modules/fft_base.o
+cft3.o : ../Modules/fft_parallel.o
 cft3.o : ../Modules/fft_scalar.o
 cft3.o : ../Modules/kind.o
-cft3.o : ../Modules/mp_global.o
-cft3.o : para.o
-cft3.o : pwcom.o
 cft3s.o : ../Modules/fft_base.o
+cft3s.o : ../Modules/fft_parallel.o
 cft3s.o : ../Modules/fft_scalar.o
 cft3s.o : ../Modules/kind.o
-cft3s.o : ../Modules/mp_global.o
-cft3s.o : para.o
-cft3s.o : pwcom.o
 checkallsym.o : ../Modules/kind.o
 checksym.o : ../Modules/kind.o
 clean_pw.o : ../Modules/control_flags.o
+clean_pw.o : ../Modules/fft_base.o
 clean_pw.o : ../Modules/fft_types.o
 clean_pw.o : ../Modules/ions_base.o
 clean_pw.o : ../Modules/recvec.o
@@ -288,6 +285,7 @@ d_matrix.o : ../Modules/random_numbers.o
 d_matrix.o : pwcom.o
 data_structure.o : ../Modules/cell_base.o
 data_structure.o : ../Modules/control_flags.o
+data_structure.o : ../Modules/fft_base.o
 data_structure.o : ../Modules/fft_scalar.o
 data_structure.o : ../Modules/fft_types.o
 data_structure.o : ../Modules/io_global.o
@@ -521,6 +519,7 @@ get_locals.o : pwcom.o
 ggen.o : ../Modules/cell_base.o
 ggen.o : ../Modules/constants.o
 ggen.o : ../Modules/control_flags.o
+ggen.o : ../Modules/fft_base.o
 ggen.o : ../Modules/kind.o
 ggen.o : ../Modules/recvec.o
 ggen.o : pwcom.o
@@ -653,6 +652,7 @@ input.o : realus.o
 interpolate.o : ../Modules/control_flags.o
 interpolate.o : ../Modules/kind.o
 interpolate.o : pwcom.o
+io_rho_xml.o : ../Modules/fft_base.o
 io_rho_xml.o : ../Modules/io_files.o
 io_rho_xml.o : ../Modules/io_global.o
 io_rho_xml.o : ../Modules/kind.o
@@ -858,6 +858,7 @@ punch.o : pw_restart.o
 pw_restart.o : ../Modules/cell_base.o
 pw_restart.o : ../Modules/constants.o
 pw_restart.o : ../Modules/control_flags.o
+pw_restart.o : ../Modules/fft_base.o
 pw_restart.o : ../Modules/functionals.o
 pw_restart.o : ../Modules/input_parameters.o
 pw_restart.o : ../Modules/io_files.o
@@ -878,7 +879,6 @@ pw_restart.o : pwcom.o
 pw_restart.o : scf_mod.o
 pwcom.o : ../Modules/cell_base.o
 pwcom.o : ../Modules/constants.o
-pwcom.o : ../Modules/fft_types.o
 pwcom.o : ../Modules/kind.o
 pwcom.o : ../Modules/parameters.o
 pwcom.o : ../Modules/printout_base.o
@@ -1332,6 +1332,7 @@ vhpsi_nc.o : scf_mod.o
 vloc_of_g.o : ../Modules/constants.o
 vloc_of_g.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/control_flags.o
+vloc_psi.o : ../Modules/fft_base.o
 vloc_psi.o : ../Modules/fft_parallel.o
 vloc_psi.o : ../Modules/kind.o
 vloc_psi.o : ../Modules/mp_global.o
