@@ -305,143 +305,143 @@ CONTAINS
         !dfft%nsw(me) holds the number of Z-sticks proc. me has.
         !dfft%npp: number of planes per processor
         !
-         !
-         use fft_base, only: fft_scatter
-         !
-         INTEGER, INTENT(IN) :: iopt
-         INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j
-         !
-         IF( iopt == 2 ) THEN
-            !
-            IF( use_tg ) THEN
-               !
-               nppx = dfft%tg_npp( me_p )
-               npp  = dfft%tg_npp( me_p )
-               nnp  = nx1*nx2
-               !
-               CALL fft_scatter( aux, nx3, (nogrp+1)*dfft%nnrx, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
-               !
-            ELSE
-               !
-               nppx = dfft%npp( me_p )
-               IF( nproc_pool == 1 ) nppx = dfft%nr3x
-               npp  = dfft%npp( me_p )
-               nnp  = dfft%nnp
-               !
-               call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
-               !
-            END IF
-            !
-            f(:) = (0.d0, 0.d0)
-            ii = 0
-            !
-            do ip = 1, nproc_pool
-               !
-               do i = 1, dfft%nsw( ip )
-                  !
-                  mc = dfft%ismap( i + dfft%iss( ip ) )
-                  !
-                  ii = ii + 1
-                  !
-                  do j = 1, npp
-                     f( mc + ( j - 1 ) * nnp ) = aux( j + ( ii - 1 ) * nppx )
-                  end do
-                  !
-               end do
-               !
-            end do
-            !
-         ELSE IF( iopt == 1 ) THEN
-            !
-            if ( nproc_pool == 1 ) then
-               nppx = dfft%nr3x
-            else
-               nppx = dfft%npp( me_p )
-            end if
-            !
-            call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
-            !
-            f(:) = (0.d0, 0.d0)
-            !
-            do i = 1, dfft%nst
-               mc = dfft%ismap( i )
-               do j = 1, dfft%npp( me_p )
-                  f( mc + ( j - 1 ) * dfft%nnp ) = aux( j + ( i - 1 ) * nppx )
-               end do
-            end do
-            !
-         END IF
-         !
-         RETURN
+     !
+     use fft_base, only: fft_scatter
+     !
+     INTEGER, INTENT(IN) :: iopt
+     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j
+     !
+     IF( iopt == 2 ) THEN
+        !
+        IF( use_tg ) THEN
+           !
+           nppx = dfft%tg_npp( me_p )
+           npp  = dfft%tg_npp( me_p )
+           nnp  = nx1*nx2
+           !
+           CALL fft_scatter( aux, nx3, (nogrp+1)*dfft%nnrx, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
+           !
+        ELSE
+           !
+           nppx = dfft%npp( me_p )
+           IF( nproc_pool == 1 ) nppx = dfft%nr3x
+           npp  = dfft%npp( me_p )
+           nnp  = dfft%nnp
+           !
+           call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
+           !
+        END IF
+        !
+        f(:) = (0.d0, 0.d0)
+        ii = 0
+        !
+        do ip = 1, nproc_pool
+           !
+           do i = 1, dfft%nsw( ip )
+              !
+              mc = dfft%ismap( i + dfft%iss( ip ) )
+              !
+              ii = ii + 1
+              !
+              do j = 1, npp
+                 f( mc + ( j - 1 ) * nnp ) = aux( j + ( ii - 1 ) * nppx )
+              end do
+              !
+           end do
+           !
+        end do
+        !
+     ELSE IF( iopt == 1 ) THEN
+        !
+        if ( nproc_pool == 1 ) then
+           nppx = dfft%nr3x
+        else
+           nppx = dfft%npp( me_p )
+        end if
+        !
+        call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
+        !
+        f(:) = (0.d0, 0.d0)
+        !
+        do i = 1, dfft%nst
+           mc = dfft%ismap( i )
+           do j = 1, dfft%npp( me_p )
+              f( mc + ( j - 1 ) * dfft%nnp ) = aux( j + ( i - 1 ) * nppx )
+           end do
+        end do
+        !
+     END IF
+     !
+     RETURN
   END SUBROUTINE fw_scatter
 
   !
 
   SUBROUTINE bw_scatter( iopt )
-         !
-         use fft_base, only: fft_scatter
-         !
-         INTEGER, INTENT(IN) :: iopt
-         INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j
-         !
-         !  
-         IF( iopt == -2 ) THEN
-            !  
-            IF( use_tg ) THEN
-               !
-               nppx = dfft%tg_npp( me_p )
-               npp  = dfft%tg_npp( me_p )
-               nnp  = nx1*nx2
-               !
-            ELSE
-               !
-               nppx = dfft%npp( me_p )
-               IF( nproc_pool == 1 ) nppx = dfft%nr3x
-               npp  = dfft%npp( me_p )
-               nnp  = dfft%nnp
-               !
-            END IF
+     !
+     use fft_base, only: fft_scatter
+     !
+     INTEGER, INTENT(IN) :: iopt
+     INTEGER :: nppx, ip, nnp, npp, ii, i, mc, j
+     !
+     !  
+     IF( iopt == -2 ) THEN
+        !  
+        IF( use_tg ) THEN
+           !
+           nppx = dfft%tg_npp( me_p )
+           npp  = dfft%tg_npp( me_p )
+           nnp  = nx1*nx2
+           !
+        ELSE
+           !
+           nppx = dfft%npp( me_p )
+           IF( nproc_pool == 1 ) nppx = dfft%nr3x
+           npp  = dfft%npp( me_p )
+           nnp  = dfft%nnp
+           !
+        END IF
 
-            ii = 0
+        ii = 0
 
-            do ip = 1, nproc_pool
-               do i = 1, dfft%nsw( ip )
-                  mc = dfft%ismap( i + dfft%iss( ip ) )
-                  ii = ii + 1
-                  do j = 1, npp
-                     aux( j + ( ii - 1 ) * nppx ) = f( mc + ( j - 1 ) * nnp )
-                  end do
-               end do
-            end do
-            !
-            IF( use_tg ) THEN
-               !
-               CALL fft_scatter( aux, nx3, (nogrp+1)*dfft%nnrx, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
-               !
-            ELSE
-               !
-               call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
-               !
-            END IF
-            ! 
-         ELSE IF( iopt == -1 ) THEN
-            !
-            if ( nproc_pool == 1 ) then
-               nppx = dfft%nr3x
-            else
-               nppx = dfft%npp( me_p )
-            end if
-            do i = 1, dfft%nst
-               mc = dfft%ismap( i )
-               do j = 1, dfft%npp( me_p )
-                  aux( j + ( i - 1 ) * nppx ) = f( mc + ( j - 1 ) * dfft%nnp )
-               end do
-            end do
-            call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
-            !
-         END IF
-         !
-         RETURN
+        do ip = 1, nproc_pool
+           do i = 1, dfft%nsw( ip )
+              mc = dfft%ismap( i + dfft%iss( ip ) )
+              ii = ii + 1
+              do j = 1, npp
+                 aux( j + ( ii - 1 ) * nppx ) = f( mc + ( j - 1 ) * nnp )
+              end do
+           end do
+        end do
+        !
+        IF( use_tg ) THEN
+           !
+           CALL fft_scatter( aux, nx3, (nogrp+1)*dfft%nnrx, f, dfft%tg_nsw, dfft%tg_npp, iopt, use_tg )
+           !
+        ELSE
+           !
+           call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsw, dfft%npp, iopt )
+           !
+        END IF
+        ! 
+     ELSE IF( iopt == -1 ) THEN
+        !
+        if ( nproc_pool == 1 ) then
+           nppx = dfft%nr3x
+        else
+           nppx = dfft%npp( me_p )
+        end if
+        do i = 1, dfft%nst
+           mc = dfft%ismap( i )
+           do j = 1, dfft%npp( me_p )
+              aux( j + ( i - 1 ) * nppx ) = f( mc + ( j - 1 ) * dfft%nnp )
+           end do
+        end do
+        call fft_scatter( aux, nx3, dfft%nnr, f, dfft%nsp, dfft%npp, iopt )
+        !
+     END IF
+     !
+     RETURN
   END SUBROUTINE bw_scatter
   !
 END SUBROUTINE tg_cft3s

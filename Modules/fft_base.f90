@@ -23,6 +23,10 @@
         USE fft_types, ONLY: fft_dlay_descriptor
 
         IMPLICIT NONE
+
+        ! ... data structure containing all information
+        ! ... about fft data distribution for a given 
+        ! ... potential grid, and its wave functions sub-grid.
         
         TYPE ( fft_dlay_descriptor ) :: dfftp ! descriptor for dense grid
         TYPE ( fft_dlay_descriptor ) :: dffts ! descriptor for smooth grid
