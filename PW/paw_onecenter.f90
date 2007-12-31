@@ -174,6 +174,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    ENDDO atoms
 
 #ifdef __PARA
+   CALL reduce(nhm*(nhm+1)*nat*nspin/2,d)
    IF ( present(energy) ) CALL reduce (1, energy_tot )
    ! note: potential doesn't need to be recollected,
    ! see note at the top of the file for details.
