@@ -122,7 +122,7 @@
       USE funct,              ONLY: dft_is_meta
       USE cg_module,          ONLY: tcg
       USE cp_interfaces,      ONLY: fwfft, invfft, stress_kin
-      USE fft_base,           ONLY: dffts
+      USE fft_base,           ONLY: dffts, dfftp
       USE cp_interfaces,      ONLY: checkrho
       USE stress_param,       ONLY: alpha, beta
 !
@@ -198,7 +198,7 @@
             DO ir=1,nnrx
                psi(ir)=CMPLX(rhor(ir,iss),0.d0)
             END DO
-            CALL fwfft('Dense', psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL fwfft('Dense', psi, dfftp )
             DO ig=1,ngm
                rhog(ig,iss)=psi(np(ig))
             END DO
@@ -208,7 +208,7 @@
             DO ir=1,nnrx
                psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
             END DO
-            CALL fwfft('Dense', psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL fwfft('Dense', psi, dfftp )
             DO ig=1,ngm
                fp=psi(np(ig))+psi(nm(ig))
                fm=psi(np(ig))-psi(nm(ig))
@@ -249,7 +249,7 @@
                !
                CALL c2psi( psis, nnrsx, c( 1, i ), c( 1, i+1 ), ngw, 2 )
 
-               CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+               CALL invfft('Wave',psis, dffts )
                !
                iss1 = ispin(i)
                sa1  = f(i) / omega
@@ -281,7 +281,7 @@
             DO ir=1,nnrsx
                psis(ir)=CMPLX(rhos(ir,iss),0.d0)
             END DO
-            CALL fwfft('Smooth', psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            CALL fwfft('Smooth', psis, dffts )
             DO ig=1,ngs
                rhog(ig,iss)=psis(nps(ig))
             END DO
@@ -291,7 +291,7 @@
              DO ir=1,nnrsx
                psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
             END DO
-            CALL fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+            CALL fwfft('Smooth',psis, dffts )
             DO ig=1,ngs
                fp= psis(nps(ig)) + psis(nms(ig))
                fm= psis(nps(ig)) - psis(nms(ig))
@@ -312,7 +312,7 @@
                psi(nm(ig))=CONJG(rhog(ig,iss))
                psi(np(ig))=      rhog(ig,iss)
             END DO
-            CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL invfft('Dense',psi, dfftp )
             DO ir=1,nnrx
                rhor(ir,iss)=DBLE(psi(ir))
             END DO
@@ -328,7 +328,7 @@
                psi(nm(ig))=CONJG(rhog(ig,isup))+ci*CONJG(rhog(ig,isdw))
                psi(np(ig))=rhog(ig,isup)+ci*rhog(ig,isdw)
             END DO
-            CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+            CALL invfft('Dense',psi, dfftp )
             DO ir=1,nnrx
                rhor(ir,isup)= DBLE(psi(ir))
                rhor(ir,isdw)=AIMAG(psi(ir))
@@ -491,7 +491,7 @@
             !  psis: holds the fourier coefficients of the current proccesor
             !        for eigenstates i and i+2*NOGRP-1
             !
-            CALL invfft( 'Wave', psis, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx )
+            CALL invfft( 'Wave', psis, dffts )
 
             iss1=ispin(i)
             sa1=f(i)/omega
@@ -588,6 +588,7 @@
                                     nr1x, nr2x, nr3x, nnrx
       use cell_base,          only: tpiba
       USE cp_interfaces,      ONLY: invfft
+      USE fft_base,           ONLY: dfftp
 !
       implicit none
 ! input
@@ -612,7 +613,7 @@
             v(np(ig))=      ci*tpiba*gx(1,ig)*rhog(ig,iss)
             v(nm(ig))=CONJG(ci*tpiba*gx(1,ig)*rhog(ig,iss))
          end do
-         call invfft( 'Dense', v, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+         call invfft( 'Dense', v, dfftp )
          do ir=1,nnrx
             gradr(ir,1,iss)=DBLE(v(ir))
          end do
@@ -625,7 +626,7 @@
             v(nm(ig))= tpiba*(CONJG(ci*gx(2,ig)*rhog(ig,iss)+           &
      &                                 gx(3,ig)*rhog(ig,iss)))
          end do
-         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft( 'Dense', v, dfftp )
          do ir=1,nnrx
             gradr(ir,2,iss)= DBLE(v(ir))
             gradr(ir,3,iss)=AIMAG(v(ir))
@@ -767,7 +768,7 @@
 
       psi = rhor
 
-      CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL fwfft(   'Dense', psi, dfftp )
       CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoout, ngm )
 
       DEALLOCATE( psi )
@@ -865,7 +866,7 @@
       ALLOCATE( psi( SIZE( rhor ) ) )
 
       CALL rho2psi( 'Dense', psi, dfftp%nnr, rhoout, ngm )
-      CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL invfft(  'Dense', psi, dfftp )
 
       rhor = DBLE( psi )
 

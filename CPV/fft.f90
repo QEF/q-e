@@ -14,7 +14,7 @@
 
 
 !-----------------------------------------------------------------------
-  subroutine invfft_x( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, ia )
+  subroutine invfft_x( grid_type, f, dfft, ia )
 !-----------------------------------------------------------------------
 ! grid_type = 'Dense'
 !   inverse fourier transform of potentials and charge density
@@ -42,10 +42,11 @@
       use fft_scalar,    only: cfft3d, cfft3ds, cft_b
       use fft_parallel,  only: tg_cft3s
       use control_flags, only: use_task_groups
+      USE fft_types,     only: fft_dlay_descriptor
 
       IMPLICIT none
 
-      INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
+      TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
       INTEGER, OPTIONAL, INTENT(IN) :: ia
       CHARACTER(LEN=*), INTENT(IN) :: grid_type
       COMPLEX(DP) :: f(:)
@@ -53,12 +54,24 @@
       INTEGER :: imin3, imax3, np3
 
       IF( grid_type == 'Dense' ) THEN
+         IF( dfft%nr1  /= dfftp%nr1  .OR. dfft%nr2  /= dfftp%nr2  .OR. dfft%nr3  /= dfftp%nr3 .OR. &
+             dfft%nr1x /= dfftp%nr1x .OR. dfft%nr2x /= dfftp%nr2x .OR. dfft%nr3x /= dfftp%nr3x ) &
+            CALL errore( ' invfft ', ' inconsistent descriptor for Dense fft ' , 1 )
          call start_clock( 'fft' )
       ELSE IF( grid_type == 'Smooth' ) THEN
+         IF( dfft%nr1  /= dffts%nr1  .OR. dfft%nr2  /= dffts%nr2  .OR. dfft%nr3  /= dffts%nr3 .OR. &
+             dfft%nr1x /= dffts%nr1x .OR. dfft%nr2x /= dffts%nr2x .OR. dfft%nr3x /= dffts%nr3x ) &
+            CALL errore( ' invfft ', ' inconsistent descriptor for Smooth fft ' , 1 )
          call start_clock( 'ffts' )
       ELSE IF( grid_type == 'Wave' ) THEN
+         IF( dfft%nr1  /= dffts%nr1  .OR. dfft%nr2  /= dffts%nr2  .OR. dfft%nr3  /= dffts%nr3 .OR. &
+             dfft%nr1x /= dffts%nr1x .OR. dfft%nr2x /= dffts%nr2x .OR. dfft%nr3x /= dffts%nr3x ) &
+            CALL errore( ' invfft ', ' inconsistent descriptor for Wave fft ' , 1 )
          call start_clock('fftw')
       ELSE IF( grid_type == 'Box' ) THEN
+         IF( dfft%nr1  /= dfftb%nr1  .OR. dfft%nr2  /= dfftb%nr2  .OR. dfft%nr3  /= dfftb%nr3 .OR. &
+             dfft%nr1x /= dfftb%nr1x .OR. dfft%nr2x /= dfftb%nr2x .OR. dfft%nr3x /= dfftb%nr3x ) &
+            CALL errore( ' invfft ', ' inconsistent descriptor for Box fft ' , 1 )
          call start_clock( 'fftb' )
       ELSE 
          call errore( ' invfft ', ' unknown grid: '//grid_type , 1 )
@@ -79,24 +92,35 @@
       ELSE IF( grid_type == 'Wave' ) THEN
          call tg_cft3s( f, dffts, 2, use_task_groups )
       ELSE IF( grid_type == 'Box' .AND. np3 > 0 ) THEN
-         call cft_b(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,imin3,imax3,1)
+         call cft_b( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, imin3, imax3, 1 )
       END IF
 
 #else
 
-
 # if defined __COMPLIB || __SCSL || __SX6 || __USE_3D_FFT
 
-      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+      IF( grid_type == 'Dense' ) THEN
+         call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, 1)
+      ELSE IF( grid_type == 'Smooth' ) THEN
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
+      ELSE IF( grid_type == 'Wave' ) THEN
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
+      ELSE IF( grid_type == 'Box' ) THEN
+         call cfft3d( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, 1)
+      END IF
 
 # elif defined __ESSL || __LINUX_ESSL || __FFTW  || __FFTW3
 
-      IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' .OR. &
-          grid_type == 'Box' ) THEN
-         call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1)
+      IF( grid_type == 'Dense' ) THEN
+         call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, 1)
+      ELSE IF( grid_type == 'Smooth' ) THEN
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1)
       ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft3ds(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,1,dffts%isind, dffts%iplw)
+         call cfft3ds( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, 1, dffts%isind, dffts%iplw )
+      ELSE IF( grid_type == 'Box' ) THEN
+         call cfft3d( f, dfftb%nr1, dfftb%nr2, dfftb%nr3, dfftb%nr1x, dfftb%nr2x, dfftb%nr3x, 1)
       END IF
+
 # endif
 
 #endif
@@ -117,7 +141,7 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine fwfft_x(grid_type,f,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+      subroutine fwfft_x( grid_type, f, dfft )
 !-----------------------------------------------------------------------
 ! grid_type = 'Dense'
 !   forward fourier transform of potentials and charge density 
@@ -134,18 +158,28 @@
       use fft_scalar,    only: cfft3d, cfft3ds
       use fft_parallel,  only: tg_cft3s
       use control_flags, only: use_task_groups
+      USE fft_types,     only: fft_dlay_descriptor
 
       implicit none
 
-      INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
+      TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
       CHARACTER(LEN=*), INTENT(IN) :: grid_type
       COMPLEX(DP) :: f(:)
 
       IF( grid_type == 'Dense' ) THEN
+         IF( dfft%nr1  /= dfftp%nr1  .OR. dfft%nr2  /= dfftp%nr2  .OR. dfft%nr3  /= dfftp%nr3 .OR. &
+             dfft%nr1x /= dfftp%nr1x .OR. dfft%nr2x /= dfftp%nr2x .OR. dfft%nr3x /= dfftp%nr3x ) &
+            CALL errore( ' fwfft ', ' inconsistent descriptor for Dense fft ' , 1 )
          call start_clock( 'fft' )
       ELSE IF( grid_type == 'Smooth' ) THEN
+         IF( dfft%nr1  /= dffts%nr1  .OR. dfft%nr2  /= dffts%nr2  .OR. dfft%nr3  /= dffts%nr3 .OR. &
+             dfft%nr1x /= dffts%nr1x .OR. dfft%nr2x /= dffts%nr2x .OR. dfft%nr3x /= dffts%nr3x ) &
+            CALL errore( ' fwfft ', ' inconsistent descriptor for Smooth fft ' , 1 )
          call start_clock( 'ffts' )
       ELSE IF( grid_type == 'Wave' ) THEN
+         IF( dfft%nr1  /= dffts%nr1  .OR. dfft%nr2  /= dffts%nr2  .OR. dfft%nr3  /= dffts%nr3 .OR. &
+             dfft%nr1x /= dffts%nr1x .OR. dfft%nr2x /= dffts%nr2x .OR. dfft%nr3x /= dffts%nr3x ) &
+            CALL errore( ' fwfft ', ' inconsistent descriptor for Wave fft ' , 1 )
          call start_clock( 'fftw' )
       ELSE
          call errore( ' fwfft ', ' unknown grid: '//grid_type , 1 )
@@ -165,14 +199,22 @@
 
 # if defined __COMPLIB || __SCSL || __SX6 || __USE_3D_FFT
 
-      call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+      IF( grid_type == 'Dense' ) THEN
+         call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, -1)
+      ELSE IF( grid_type == 'Smooth' ) THEN
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
+      ELSE IF( grid_type == 'Wave' ) THEN
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
+      END IF
 
 # elif defined __ESSL || __LINUX_ESSL || __FFTW  || __FFTW3
 
-      IF( grid_type == 'Dense' .OR. grid_type == 'Smooth' ) THEN
-         call cfft3d(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1)
+      IF( grid_type == 'Dense' ) THEN
+         call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, -1)
+      ELSE IF( grid_type == 'Smooth' ) THEN
+         call cfft3d( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, -1)
       ELSE IF( grid_type == 'Wave' ) THEN
-         call cfft3ds(f,nr1,nr2,nr3,nr1x,nr2x,nr3x,-1,dffts%isind, dffts%iplw)
+         call cfft3ds( f, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x, -1, dffts%isind, dffts%iplw )
       END IF
 
 # endif

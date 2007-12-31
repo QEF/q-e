@@ -136,7 +136,7 @@
      rhoetg( 1:ngm ) = rhoetg( 1:ngm ) + vtemp( 1:ngm )
 
      CALL rho2psi( 'Dense', psi, dfftp%nnr, vtemp, ngm )
-     CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+     CALL invfft(  'Dense', psi, dfftp )
 
      IF( SIZE( rhoetr ) /= SIZE( psi ) ) &
         CALL errore( " add_core_charge ", " inconsistent sizes ", 1 )
@@ -269,6 +269,7 @@
       use grid_dimensions,    only: nr1, nr2, nr3, &
                                     nr1x, nr2x, nr3x, nnrx
       USE cp_interfaces,      ONLY: fwfft
+      USE fft_base,           ONLY: dfftp
 !
       implicit none
       !
@@ -306,7 +307,7 @@
 
       wrk1(:) = rhoc(:)
 
-      call fwfft('Dense',wrk1,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+      call fwfft('Dense',wrk1, dfftp )
       !
       ! In g-space:
       !
@@ -408,7 +409,7 @@
                   end do
                end if
 !
-               call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,ia+isa)
+               call invfft('Box',qv,dfftb,ia+isa)
                !
                ! note that a factor 1/2 is hidden in fac if nspin=2
                !
@@ -506,7 +507,7 @@
                end do
             endif
 !
-            call invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa+ia)
+            call invfft('Box',qv,dfftb,isa+ia)
 !
             call box2grid(irb(1,ia+isa),1,qv,wrk1)
             if (nfft.eq.2) call box2grid(irb(1,ia+1+isa),2,qv,wrk1)

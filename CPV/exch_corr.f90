@@ -54,7 +54,7 @@
                 !
                 psi( 1:nnrx ) = fac * v2xc( 1:nnrx, js, is ) * grho( 1:nnrx, ipol, is )
                 !
-                CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+                CALL fwfft(   'Dense', psi, dfftp )
                 CALL psi2rho( 'Dense', psi, dfftp%nnr, vtemp_pol, ngm )
                 !
                 DO ig = gstart, ngm
@@ -65,7 +65,7 @@
             END DO
             !
             CALL rho2psi( 'Dense', psi, dfftp%nnr, vtemp, ngm )
-            CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+            CALL invfft(  'Dense', psi, dfftp )
 
             vpot( 1:nnrx, js ) = vpot( 1:nnrx, js) - DBLE( psi( 1:nnrx ) )
 
@@ -550,6 +550,7 @@
       use cell_base, only: ainv, tpiba, omega
       use derho, only: drhog
       USE cp_interfaces, ONLY: fwfft, invfft
+      USE fft_base,      ONLY: dfftp
 !                 
       implicit none  
 ! input                   
@@ -577,7 +578,7 @@
          do ir=1,nnr
             v(ir)=CMPLX(gradr(ir,1,iss),0.d0)
          end do
-         call fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call fwfft('Dense',v, dfftp )
          do ig=1,ng
             x(ig)=ci*tpiba*gx(1,ig)*v(np(ig))
          end do
@@ -598,7 +599,7 @@
          do ir=1,nnr
             v(ir)=CMPLX(gradr(ir,2,iss),gradr(ir,3,iss))
          end do
-         call fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call fwfft('Dense',v, dfftp )
 !
          do ig=1,ng
             fp=v(np(ig))+v(nm(ig))
@@ -637,7 +638,7 @@
             v(np(ig))=x(ig)
             v(nm(ig))=CONJG(x(ig))
          end do
-         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v, dfftp )
          do ir=1,nnr
             rhor(ir,iss)=rhor(ir,iss)-DBLE(v(ir))
          end do

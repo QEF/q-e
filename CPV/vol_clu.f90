@@ -37,10 +37,10 @@
      &                       posv, xc0, weight, volclu, stress_vol,     &
      &                       surfclu, n_ele, jellium, R_j, h_j, e_j,    &
      &                       nelect, P_ext
+      use fft_base
 #ifdef __PARA
       use mp_global, only: nproc, mpime
       use io_global, only: ionode
-      use fft_base
       USE mp,                 ONLY: mp_bcast, mp_sum
       USE mp_global,          ONLY: intra_image_comm
 #endif
@@ -260,7 +260,7 @@
             psi(np(ig)) = rhotmp(ig,1)
             psi(nm(ig)) = conjg(rhotmp(ig,1))
          end do
-         call invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',psi, dfftp )
          do ir = 1,nnr
             rho_gaus(ir) = real(psi(ir))
          end do
@@ -269,7 +269,7 @@
             psi(np(ig)) = rhotmp(ig,1) + ci*rhotmp(ig,2)
             psi(nm(ig)) = conjg(rhotmp(ig,1)) + ci*conjg(rhotmp(ig,2))
          end do
-         call invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',psi, dfftp )
          do ir = 1,nnr
             rho_gaus(ir) = real(psi(ir))+aimag(psi(ir))
          end do

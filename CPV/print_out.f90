@@ -516,7 +516,7 @@
         !
         DO ispin = 1, nspin
           psi = rhoe(:,ispin)
-          CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+          CALL fwfft(   'Dense', psi, dfftp )
           CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,ispin), ngm )
         END DO
 

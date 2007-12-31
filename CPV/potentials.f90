@@ -529,7 +529,7 @@
            !
            psi = vpot(:,iss)
            !
-           CALL fwfft(   'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+           CALL fwfft(   'Dense', psi, dfftp )
            CALL psi2rho( 'Dense', psi, dfftp%nnr, rhoeg(:,iss), ngm )
            ! 
         END DO
@@ -553,7 +553,7 @@
       IF ( ttsic ) THEN
 
         CALL rho2psi( 'Dense', psi, dfftp%nnr, self_vloc, ngm )
-        CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+        CALL invfft(  'Dense', psi, dfftp )
         !
         vpot(:,1) =  vpot(:,1) - DBLE( psi(:) )
         vpot(:,2) =  vpot(:,2) + DBLE( psi(:) )
@@ -565,7 +565,7 @@
       ! ...   vpot = vpot + invfft(vloc)
 
       CALL rho2psi( 'Dense', psi, dfftp%nnr, vloc, ngm )
-      CALL invfft(  'Dense', psi, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL invfft(  'Dense', psi, dfftp )
 
       ! ... now potentials are in real space
       ! ... vpot(r) = hartree + xc + local
@@ -710,7 +710,7 @@
 
       ! grg = FFT( grr )
 
-      CALL fwfft(   'Dense', grr, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+      CALL fwfft(   'Dense', grr, dfftp )
       CALL psi2rho( 'Dense', grr, dfftp%nnr, grg, ngm )
 
       DO ig = 1, SIZE( screen_coul )
@@ -1399,7 +1399,7 @@
       ALLOCATE( k_density( ngm ) )
 
       CALL c2psi(  psi, dffts%nnr, wfc, wfc, ngw, 1 )
-      CALL invfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+      CALL invfft( 'Wave', psi, dffts )
 
       psi = DBLE( psi )
 
@@ -1465,7 +1465,7 @@
                END DO
             END DO
 
-            CALL fwfft(   'Dense', density, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x )
+            CALL fwfft(   'Dense', density, dfftp )
             CALL psi2rho( 'Dense', density, dfftp%nnr, k_density, ngm )
 
 ! ... G /= 0 elements

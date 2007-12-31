@@ -164,6 +164,7 @@ cp_fpmd.o : cpr_mod.o
 cp_fpmd.o : pseudopot.o
 cp_interfaces.o : ../Modules/cell_base.o
 cp_interfaces.o : ../Modules/energies.o
+cp_interfaces.o : ../Modules/fft_types.o
 cp_interfaces.o : ../Modules/griddim.o
 cp_interfaces.o : ../Modules/ions_base.o
 cp_interfaces.o : ../Modules/kind.o
@@ -226,6 +227,7 @@ cplib_meta.o : ../Modules/constants.o
 cplib_meta.o : ../Modules/control_flags.o
 cplib_meta.o : ../Modules/electrons_base.o
 cplib_meta.o : ../Modules/energies.o
+cplib_meta.o : ../Modules/fft_base.o
 cplib_meta.o : ../Modules/griddim.o
 cplib_meta.o : ../Modules/io_global.o
 cplib_meta.o : ../Modules/ions_base.o
@@ -412,6 +414,7 @@ fft.o : ../Modules/control_flags.o
 fft.o : ../Modules/fft_base.o
 fft.o : ../Modules/fft_parallel.o
 fft.o : ../Modules/fft_scalar.o
+fft.o : ../Modules/fft_types.o
 fft.o : ../Modules/griddim.o
 fft.o : ../Modules/kind.o
 fft.o : ../Modules/mp_global.o
@@ -467,6 +470,7 @@ fromscra.o : modules.o
 fromscra.o : ortho_base.o
 geninv.o : ../Modules/kind.o
 gradrho.o : ../Modules/cell_base.o
+gradrho.o : ../Modules/fft_base.o
 gradrho.o : ../Modules/griddim.o
 gradrho.o : ../Modules/recvec.o
 gradrho.o : cp_interfaces.o

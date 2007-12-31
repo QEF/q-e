@@ -197,7 +197,7 @@ CONTAINS
         ALLOCATE( rpsi2( nnrx ) )
 
         CALL c2psi( psi, dffts%nnr, c, c, ngw, 1 )
-        CALL invfft( 'Wave', psi, dffts%nr1, dffts%nr2, dffts%nr3, dffts%nr1x, dffts%nr2x, dffts%nr3x )
+        CALL invfft( 'Wave', psi, dffts )
 
         DO i = 1, nnrx
            rpsi2( i ) = DBLE( psi( i ) )**2

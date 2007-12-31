@@ -205,6 +205,7 @@ END FUNCTION
       USE uspp_param,         ONLY: upf
       USE grid_dimensions,    ONLY: nr1, nr2, nr3, nr1x, nr2x, nr3x
       USE cp_interfaces,      ONLY: fwfft
+      USE fft_base,           ONLY: dfftp
 
       IMPLICIT NONE
 
@@ -235,7 +236,7 @@ END FUNCTION
       !
       IF( nspin > 1 ) vxc(:) = vxc(:) + vxcr(:,2)
       !
-      CALL fwfft( 'Dense', vxc, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+      CALL fwfft( 'Dense', vxc, dfftp )
       !
       DO i=1,3
          DO j=1,3
@@ -430,7 +431,7 @@ END FUNCTION
       USE dqgb_mod,                 ONLY: dqgb
       USE recvecs_indexes,          ONLY: nm, np
       USE cp_interfaces,            ONLY: fwfft, invfft
-      USE fft_base,                 ONLY: dfftb
+      USE fft_base,                 ONLY: dfftb, dfftp
 
       IMPLICIT NONE
 ! input
@@ -533,7 +534,7 @@ END FUNCTION
                         END DO
                      ENDIF
 !
-                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+                     CALL invfft('Box',qv, dfftb, isa)
                      !
                      !  qv = US contribution in real space on box grid
                      !       for atomic species is, real(qv)=atom ia, imag(qv)=atom ia+1
@@ -552,7 +553,7 @@ END FUNCTION
                   drhor(ir,iss,i,j) = drhor(ir,iss,i,j) + DBLE(v(ir))
                END DO
 !
-               CALL fwfft( 'Dense', v, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+               CALL fwfft( 'Dense', v, dfftp )
 !
                DO ig=1,ng
                   drhog(ig,iss,i,j) = drhog(ig,iss,i,j) + v(np(ig))
@@ -606,7 +607,7 @@ END FUNCTION
      &                    +       ci*CONJG(eigrb(ig,isa)*dqgbt(ig,2))
                      END DO
 !
-                     CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+                     CALL invfft('Box',qv, dfftb, isa )
                      !
                      !  qv is the now the US augmentation charge for atomic species is
                      !  and atom ia: real(qv)=spin up, imag(qv)=spin down
@@ -625,7 +626,7 @@ END FUNCTION
                   drhor(ir,isdw,i,j) = drhor(ir,isdw,i,j) +AIMAG(v(ir))
                ENDDO
 !
-               CALL fwfft('Dense', v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+               CALL fwfft('Dense', v, dfftp )
                DO ig=1,ng
                   fp=v(np(ig))+v(nm(ig))
                   fm=v(np(ig))-v(nm(ig))
@@ -1294,7 +1295,7 @@ END FUNCTION
                      END DO
                   END IF
 !
-                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+                  CALL invfft('Box',qv,dfftb,isa)
 !
                   DO iss=1,nspin
                      deeq(iv,jv,isa,iss) = fac *                        &
@@ -1378,7 +1379,7 @@ END FUNCTION
                      END DO
                   END DO
 !
-                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+                  CALL invfft('Box',qv,dfftb,isa)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),1,qv,vr(1,iss))
@@ -1427,7 +1428,7 @@ END FUNCTION
                      END DO
                   END DO
 !
-                  CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+                  CALL invfft('Box',qv,dfftb,isa)
 !
                   fvan(ik,ia,is) =                                      &
      &                    boxdotgrid(irb(1,isa),isup,qv,vr(1,isup)) + &
@@ -1893,7 +1894,7 @@ END FUNCTION
       USE qgb_mod
       USE recvecs_indexes, ONLY: np, nm
       USE cp_interfaces, ONLY: fwfft, invfft
-      USE fft_base, ONLY: dfftb
+      USE fft_base, ONLY: dfftb, dfftp
 !
       IMPLICIT NONE
 !
@@ -1982,7 +1983,7 @@ END FUNCTION
                   END DO
                ENDIF
 
-               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+               CALL invfft('Box',qv,dfftb,isa)
 
                !
                !  qv = US augmentation charge in real space on box grid
@@ -2024,7 +2025,7 @@ END FUNCTION
      &           ' rhov: int  n_v(r)  dr = ',omega*ca/(nr1*nr2*nr3)
          ENDIF
 !
-         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft('Dense',v, dfftp )
 !
          IF(iprsta.GT.2) THEN
             WRITE( stdout,*) ' rhov: smooth ',omega*rhog(1,iss)
@@ -2078,7 +2079,7 @@ END FUNCTION
      &                  + ci*   CONJG(eigrb(ig,isa)*qgbt(ig,2))
                END DO
 !
-               CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+               CALL invfft('Box',qv,dfftb,isa)
 !
 !  qv is the now the US augmentation charge for atomic species is
 !  and atom ia: real(qv)=spin up, imag(qv)=spin down
@@ -2114,7 +2115,7 @@ END FUNCTION
             WRITE( stdout,'(a,2f12.8)') 'rhov:in n_v  ',omega*ca/(nr1*nr2*nr3)
          ENDIF
 !
-         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft('Dense',v, dfftp )
 !
          IF(iprsta.GT.2) THEN
             WRITE( stdout,*) 'rhov: smooth up',omega*rhog(1,isup)
@@ -2413,6 +2414,7 @@ END FUNCTION
       USE energies,         ONLY: self_exc, self_ehte
       USE cp_interfaces,    ONLY: pseudo_stress, compute_gagb, stress_hartree, &
                                   add_drhoph, stress_local, force_loc
+      USE fft_base,         ONLY: dfftp, dffts
 !@@@@@
       USE ldaU,             ONLY: e_hubbard
 !@@@@@
@@ -2661,7 +2663,7 @@ END FUNCTION
          !
          !     v_xc(r) --> v_xc(g)
          !
-         CALL fwfft( 'Dense', v, nr1, nr2, nr3, nr1x, nr2x, nr3x )
+         CALL fwfft( 'Dense', v, dfftp )
 !
          DO ig = 1, ng
             rhog( ig, iss ) = vtemp(ig) + v( np( ig ) )
@@ -2682,7 +2684,7 @@ END FUNCTION
                v(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
             end do
          end if
-         CALL fwfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL fwfft('Dense',v, dfftp )
          DO ig=1,ng
             fp=v(np(ig))+v(nm(ig))
             fm=v(np(ig))-v(nm(ig))
@@ -2728,7 +2730,7 @@ END FUNCTION
 !
 !     v(g) --> v(r)
 !
-         CALL invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL invfft('Dense',v, dfftp )
 !
          DO ir=1,nnr
             rhor(ir,iss)=DBLE(v(ir))
@@ -2745,7 +2747,7 @@ END FUNCTION
             v(nm(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO
 !
-         CALL invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         CALL invfft('Dense',v, dfftp )
          DO ir=1,nnr
             rhor(ir,isup)= DBLE(v(ir))
             rhor(ir,isdw)=AIMAG(v(ir))
@@ -2771,7 +2773,7 @@ END FUNCTION
             vs(nps(ig))=rhog(ig,iss)
          END DO
          !
-         CALL invfft('Smooth',vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         CALL invfft('Smooth',vs, dffts )
          !
          DO ir=1,nnrsx
             rhos(ir,iss)=DBLE(vs(ir))
@@ -2786,7 +2788,7 @@ END FUNCTION
             vs(nms(ig))=CONJG(rhog(ig,isup)) +ci*CONJG(rhog(ig,isdw))
          END DO 
          !
-         CALL invfft('Smooth',vs,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+         CALL invfft('Smooth',vs, dffts )
          !
          DO ir=1,nnrsx
             rhos(ir,isup)= DBLE(vs(ir))

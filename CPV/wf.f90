@@ -46,7 +46,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
   USE mp,                       ONLY : mp_barrier, mp_sum
   USE mp_global,                ONLY : nproc_image, me_image, root_image, intra_image_comm
   USE cp_interfaces,            ONLY : invfft
-  USE fft_base,                 ONLY : dfftp
+  USE fft_base,                 ONLY : dfftp, dfftb
   USE printout_base,            ONLY : printout_base_open, printout_base_unit, &
                                        printout_base_close
   USE parallel_include
@@ -404,7 +404,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
 #ifdef __PARA
               irb3=irb(3,isa)
 #endif
-              CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+              CALL invfft('Box',qv,dfftb,isa)
               iqv=1
               qvt=(0.D0,0.D0)
               qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
@@ -445,7 +445,7 @@ SUBROUTINE wf( clwf, c, bec, eigr, eigrb, taub, irb, &
                     qv(npb(ig))=eigrb(ig,isa)*qgb(ig,ijv,is)
                     qv(nmb(ig))=CONJG(eigrb(ig,isa)*qgb(ig,ijv,is))
                  END DO
-                 CALL invfft('Box',qv,nr1b,nr2b,nr3b,nr1bx,nr2bx,nr3bx,isa)
+                 CALL invfft('Box',qv,dfftb,isa)
                  iqv=1
                  qvt=0.D0
                  qvt=boxdotgridcplx(irb(1,isa),qv,expo(1,inw))
@@ -3126,6 +3126,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
   USE cp_interfaces,          ONLY : fwfft, invfft
   USE cp_interfaces,          ONLY : checkrho, stress_kin
   USE mp,                     ONLY : mp_sum
+  USE fft_base,               ONLY : dffts, dfftp
   !
   IMPLICIT NONE
   !
@@ -3208,7 +3209,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrx
            psi(ir)=CMPLX(rhor(ir,iss),0.d0)
         END DO
-        CALL fwfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL fwfft('Dense',psi, dfftp )
         DO ig=1,ngm
            rhog(ig,iss)=psi(np(ig))
         END DO
@@ -3218,7 +3219,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrx
            psi(ir)=CMPLX(rhor(ir,isup),rhor(ir,isdw))
         END DO
-        CALL fwfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL fwfft('Dense',psi, dfftp )
         DO ig=1,ngm
            fp=psi(np(ig))+psi(nm(ig))
            fm=psi(np(ig))-psi(nm(ig))
@@ -3249,7 +3250,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         psis(nps(ig))=c(ig,i)
      END DO
      !
-     CALL invfft('Wave',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+     CALL invfft('Wave',psis, dffts )
      !
      !            iss1=ispin(i)
      iss1=1
@@ -3275,7 +3276,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrsx
            psis(ir)=CMPLX(rhos(ir,iss),0.d0)
         END DO
-        CALL fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+        CALL fwfft('Smooth',psis, dffts )
         DO ig=1,ngs
            rhog(ig,iss)=psis(nps(ig))
         END DO
@@ -3285,7 +3286,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
         DO ir=1,nnrsx
            psis(ir)=CMPLX(rhos(ir,isup),rhos(ir,isdw))
         END DO
-        CALL fwfft('Smooth',psis,nr1s,nr2s,nr3s,nr1sx,nr2sx,nr3sx)
+        CALL fwfft('Smooth',psis, dffts )
         DO ig=1,ngs
            fp= psis(nps(ig)) + psis(nms(ig))
            fm= psis(nps(ig)) - psis(nms(ig))
@@ -3304,7 +3305,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            psi(nm(ig))=CONJG(rhog(ig,iss))
            psi(np(ig))=      rhog(ig,iss)
         END DO
-        CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL invfft('Dense',psi, dfftp )
         DO ir=1,nnrx
            rhor(ir,iss)=DBLE(psi(ir))
         END DO
@@ -3319,7 +3320,7 @@ SUBROUTINE rhoiofr( nfi, c, irb, eigrb, bec, &
            psi(nm(ig))=CONJG(rhog(ig,isup))+CI*CONJG(rhog(ig,isdw))
            psi(np(ig))=rhog(ig,isup)+CI*rhog(ig,isdw)
         END DO
-        CALL invfft('Dense',psi,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+        CALL invfft('Dense',psi, dfftp )
         DO ir=1,nnrx
            rhor(ir,isup)= DBLE(psi(ir))
            rhor(ir,isdw)=AIMAG(psi(ir))

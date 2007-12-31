@@ -21,6 +21,7 @@
       use reciprocal_vectors
       use recvecs_indexes
       USE cp_interfaces, ONLY: fwfft, invfft
+      USE fft_base,           ONLY: dfftp
       use grid_dimensions, only : nr1, nr2, nr3, nr1x, nr2x, nr3x,      &
      &                            nnr=> nnrx
 !      use grid_dimensions, only: nr1, nr2, nr3, &
@@ -64,8 +65,8 @@
             w(np(ig))=      -1.d0*tpiba**2*gx(1,ig)**2*rhog(ig,iss)
             w(nm(ig))=conjg(-1.d0*tpiba**2*gx(1,ig)**2*rhog(ig,iss))
          end do
-         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         call invfft('Dense',w,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v, dfftp )
+         call invfft('Dense',w, dfftp )
          do ir=1,nnr
             drho(1,ir)=drho(1,ir)+real(v(ir))
             d2rho(1,ir)=d2rho(1,ir)+real(w(ir))
@@ -85,8 +86,8 @@
             w(nm(ig))= -1.d0*tpiba**2*(conjg(gx(2,ig)**2*rhog(ig,iss))+ &
      &                           ci*conjg(gx(3,ig)**2*rhog(ig,iss)))
          end do
-         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
-         call invfft('Dense',w,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v, dfftp )
+         call invfft('Dense',w, dfftp )
          do ir=1,nnr
             drho(2,ir)=drho(2,ir)+real(v(ir))
             drho(3,ir)=drho(3,ir)+aimag(v(ir))
@@ -101,7 +102,7 @@
             v(np(ig))= -1.d0*tpiba**2*gx(1,ig)*gx(2,ig)*rhog(ig,iss)
             v(nm(ig))=conjg(v(np(ig)))
          end do
-         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v, dfftp )
          do ir=1,nnr
             dxdyrho(ir)=dxdyrho(ir)+real(v(ir))
          end do
@@ -116,7 +117,7 @@
      &                          (conjg(gx(1,ig)*gx(3,ig)*rhog(ig,iss))+ &
      &                        ci*conjg(gx(2,ig)*gx(3,ig)*rhog(ig,iss)))
          end do
-         call invfft('Dense',v,nr1,nr2,nr3,nr1x,nr2x,nr3x)
+         call invfft('Dense',v, dfftp )
          do ir=1,nnr
             dxdzrho(ir)=dxdzrho(ir)+real(v(ir))
             dydzrho(ir)=dydzrho(ir)+aimag(v(ir))

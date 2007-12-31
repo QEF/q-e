@@ -564,22 +564,24 @@
 
 
    INTERFACE invfft
-      SUBROUTINE invfft_x( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x, ia )
+      SUBROUTINE invfft_x( grid_type, f, dfft, ia )
+         USE fft_types,  only: fft_dlay_descriptor
          USE kinds,      ONLY: DP
          IMPLICIT NONE
-         INTEGER,           INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
          INTEGER, OPTIONAL, INTENT(IN) :: ia
          CHARACTER(LEN=*),  INTENT(IN) :: grid_type
+         TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
          COMPLEX(DP) :: f(:)
       END SUBROUTINE
    END INTERFACE
 
    INTERFACE fwfft
-      SUBROUTINE fwfft_x( grid_type, f, nr1, nr2, nr3, nr1x, nr2x, nr3x )
-         USE kinds,             ONLY: DP
+      SUBROUTINE fwfft_x( grid_type, f, dfft )
+         USE fft_types,  only: fft_dlay_descriptor
+         USE kinds,      ONLY: DP
          IMPLICIT NONE
-         INTEGER, INTENT(IN) :: nr1, nr2, nr3, nr1x, nr2x, nr3x
          CHARACTER(LEN=*), INTENT(IN) :: grid_type
+         TYPE(fft_dlay_descriptor), INTENT(IN) :: dfft
          COMPLEX(DP) :: f(:)
       END SUBROUTINE
    END INTERFACE

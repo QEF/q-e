@@ -110,7 +110,7 @@
 
       END DO
 
-      CALL invfft( 'Wave', psi, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx )
+      CALL invfft( 'Wave', psi, dffts )
       !
       ! the following avoids a potential out-of-bounds error
       !
@@ -142,7 +142,7 @@
          !
       END IF
       !
-      CALL fwfft( 'Wave', psi, nr1s, nr2s, nr3s, nr1sx, nr2sx, nr3sx )
+      CALL fwfft( 'Wave', psi, dffts ) 
       !
       !   note : the factor 0.5 appears 
       !       in the kinetic energy because it is defined as 0.5*g**2
