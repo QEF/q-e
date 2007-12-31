@@ -55,6 +55,8 @@ SUBROUTINE rotate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ALLOCATE( sc( nstart, nstart) )    
   ALLOCATE( vc( nstart, nstart) )    
   ALLOCATE( en( nstart ) )
+
+  aux=(0.0_DP,0.0_DP)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
@@ -143,7 +145,7 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
     ! number of spin polarizations
   LOGICAL :: overlap
     ! if .FALSE. : S|psi> not needed
-  COMPLEX(DP) :: psi(npwx,nstart), evc(npwx,nbnd)
+  COMPLEX(DP) :: psi(npwx*npol,nstart), evc(npwx*npol,nbnd)
     ! input and output eigenvectors (may overlap)
   REAL(DP) :: e(nbnd)
     ! eigenvalues
@@ -185,6 +187,8 @@ SUBROUTINE protate_wfc_k( npwx, npw, nstart, nbnd, npol, psi, overlap, evc, e )
   ALLOCATE( sc( nx, nx) )    
   ALLOCATE( vc( nx, nx) )    
   ALLOCATE( en( nstart ) )
+
+  aux=(0.0_DP,0.0_DP)
   !
   ! ... Set up the Hamiltonian and Overlap matrix on the subspace :
   !
