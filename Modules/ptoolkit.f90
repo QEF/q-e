@@ -3112,6 +3112,10 @@ SUBROUTINE pzpotf( sll, ldx, n, desc )
          DO ib = 1, jb - 1
             IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( ib - 1 ) ) ) THEN
                !
+               !  this is because only the lover triangle of ssnd will be set to 0 by ZHERK
+               !
+               ssnd = 0.0_DP  
+               !
                !  remember: matrix ssnd is nr*nr, and procs on the diagonale have nr == nc 
                !
                CALL ZHERK( 'L', 'N', nr, nc, -ONE, sll, ldx, zero, ssnd, ldx )
@@ -3330,6 +3334,10 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
          DO ib = 1, jb - 1
             IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( ib - 1 ) ) ) THEN
                !
+               !  this is because only the lover triangle of ssnd will be set to 0 by ZHERK
+               !
+               ssnd = 0_DP
+               !
                !  remember: matrix ssnd is nr*nr, and procs on the diagonale have nr == nc 
                !
                CALL DSYRK( 'L', 'N', nr, nc, -ONE, sll, ldx, zero, ssnd, ldx )
@@ -3359,7 +3367,7 @@ SUBROUTINE pdpotf( sll, ldx, n, desc )
       IF( ( myrow == ( jb - 1 ) ) .AND. ( mycol == ( jb - 1 ) ) ) THEN
          CALL DPOTRF( 'L', jnr, sll, ldx, INFO )
          IF( info /= 0 ) &
-            CALL errore( " pzpotrf ", " problems computing cholesky decomposition ", ABS( info ) )
+            CALL errore( " pdpotf ", " problems computing cholesky decomposition ", ABS( info ) )
       END IF
       !
       IF( ( jb > 1 ) .AND. ( jb < np ) ) THEN
@@ -4163,7 +4171,7 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
     IF( myrow >= mycol ) THEN
        CALL mpi_comm_free( col_comm, ierr )
        IF( ierr /= 0 ) &
-          CALL errore( " pdtrtri ", " in mpi_request_free 25 ", ABS( ierr ) )
+          CALL errore( " pdtrtri ", " in mpi_comm_free 25 ", ABS( ierr ) )
     END IF
 
     DEALLOCATE(B)
