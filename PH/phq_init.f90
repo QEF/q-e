@@ -210,12 +210,12 @@ SUBROUTINE phq_init()
   !
   DEALLOCATE( aux1 )
   !
-  IF (okpaw) then
-     CALL compute_becsum_ph()
-     CALL PAW_symmetrize(becsum)
-     CALL PAW_potential(becsum,ddd_paw) 
-  ENDIF
-  CALL newd()
+!  IF (okpaw) then
+!     CALL compute_becsum_ph()
+!     CALL PAW_symmetrize(becsum)
+!     CALL PAW_potential(becsum,ddd_paw) 
+!  ENDIF
+!  CALL newd()
   CALL dvanqq()
   CALL drho()
   !

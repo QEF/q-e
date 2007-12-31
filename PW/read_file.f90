@@ -215,7 +215,6 @@ SUBROUTINE read_file()
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
 
   !
   ! ... reads the wavefunctions and writes them in 'distributed' form 
@@ -227,6 +226,12 @@ SUBROUTINE read_file()
   !
   CALL pw_readfile( 'wave', ierr )
   !
+  CALL init_us_1()
+  IF (okpaw) then
+     CALL compute_becsum(1)
+     CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+  ENDIF
+  CALL newd()
   CALL close_buffer  ( iunwfc, 'KEEP' )
   !
   RETURN
