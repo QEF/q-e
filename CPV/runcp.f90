@@ -37,6 +37,7 @@
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
       use gvecw,               only : ngw
       USE cp_interfaces,       ONLY : dforce
+      USE task_groups,         ONLY : tg_gather
       USE ldaU
       !
       IMPLICIT NONE
@@ -55,7 +56,6 @@
      real(DP),    allocatable :: emadt2(:)
      real(DP),    allocatable :: emaver(:)
      complex(DP), allocatable :: c2(:), c3(:)
-     INTEGER,     ALLOCATABLE :: recv_cnt(:), recv_displ(:)
      REAL(DP),    ALLOCATABLE :: tg_rhos(:,:)
      integer :: i, nsiz, incr, idx, idx_in, ierr
      integer :: iwfc, nwfc, is, ii, tg_rhos_siz, c2_siz
@@ -112,7 +112,6 @@
         allocate( c2( c2_siz ), c3( c2_siz ) )
         allocate( tg_rhos( tg_rhos_siz, nspin ) )
 
-        tg_rhos = 0D0
         c2      = 0D0
         c3      = 0D0
 
@@ -122,23 +121,9 @@
            !  We need to redistribute it so that it is completely contained in the
            !  processors of an orbital TASK-GROUP
            !
-           ALLOCATE( recv_cnt( nogrp ), recv_displ( nogrp ) )
-           
-           recv_cnt(1)   = dffts%npp( nolist(1) + 1 ) * dffts%nr1x * dffts%nr2x
-           recv_displ(1) = 0
-           DO i = 2, NOGRP
-              recv_cnt(i) = dffts%npp( nolist(i) + 1 ) * dffts%nr1x * dffts%nr2x
-              recv_displ(i) = recv_displ(i-1) + recv_cnt(i-1)  ! "i-i" _NON_ "i", CAZZOOOO!!!
-           ENDDO
-
-#if defined (__PARA) && defined (__MPI)
            DO i = 1, nspin
-              nsiz = dffts%npp(me_image+1)* dffts%nr1x * dffts%nr2x
-              CALL MPI_Allgatherv( rhos(1,i), nsiz, MPI_DOUBLE_PRECISION, &
-                   tg_rhos(1,i), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
-           ENDDO
-#endif
-           DEALLOCATE( recv_cnt, recv_displ )
+              CALL tg_gather( dffts, rhos(:,i), tg_rhos(:,i) )
+           END DO
 
            incr = 2 * nogrp
 
@@ -247,7 +232,7 @@
 
       USE kinds,               ONLY : DP
       USE wave_base,           ONLY : wave_steepest, wave_verlet
-      USE control_flags,       ONLY : lwf, tsde, program_name
+      USE control_flags,       ONLY : lwf, tsde, program_name, use_task_groups
       USE uspp,                ONLY : deeq, vkb
       USE reciprocal_vectors,  ONLY : gstart
       USE wannier_subroutines, ONLY : ef_potential
@@ -298,6 +283,7 @@
                            'Electric field and sic are not implemented',2)
        IF( nspin == 1 ) CALL errore(' runcp_force_pairing ',' inconsistent nspin ', 1)
 
+       IF( use_task_groups ) CALL errore(' runcp_force_pairing ',' task_groups not implemented ', 1)
 !       
        ALLOCATE( emadt2( ngw ) )
        ALLOCATE( emaver( ngw ) )      

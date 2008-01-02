@@ -430,14 +430,11 @@
          !
          IMPLICIT NONE
          !
-         INTEGER :: to, from, ii, eig_index, eig_offset
-         REAL(DP), ALLOCATABLE :: long_rhos(:,:)
+         INTEGER :: from, ii, eig_index, eig_offset
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
          ALLOCATE( psis( dffts%nnrx * ( nogrp + 1 ) ) ) 
          !
-         ALLOCATE( long_rhos( nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ), nspin ) )
-
          ALLOCATE( tmp_rhos ( nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ), nspin ) )
          !
          tmp_rhos = 0_DP
@@ -492,17 +489,41 @@
             !        for eigenstates i and i+2*NOGRP-1
             !
             CALL invfft( 'Wave', psis, dffts )
+            !
+            ! Now the first proc of the group holds the first two bands
+            ! of the 2*nogrp bands that we are processing at the same time,
+            ! the second proc. holds the third and fourth band
+            ! and so on
+            !
+            ! Compute the proper factor for each band
+            !
+            DO ii = 1, nogrp
+               IF( nolist( ii ) == me_image ) EXIT
+            END DO
+            !
+            ! Remember two bands are packed in a single array :
+            ! proc 0 has bands ibnd   and ibnd+1
+            ! proc 1 has bands ibnd+2 and ibnd+3
+            ! ....
+            !
+            ii = 2 * ii - 1
 
-            iss1=ispin(i)
-            sa1=f(i)/omega
-            if (i.ne.n) then
-               iss2=ispin(i+1)
-               sa2=f(i+1)/omega
-            else
+            IF( ii + i - 1 < n ) THEN
+               iss1=ispin( ii + i - 1 )
+               sa1 =f( ii + i - 1 )/omega
+               iss2=ispin( ii + i )
+               sa2 =f( ii + i )/omega
+            ELSE IF( ii + i - 1 == n ) THEN
+               iss1=ispin( ii + i - 1 )
+               sa1 =f( ii + i - 1 )/omega
                iss2=iss1
                sa2=0.0d0
-            end if
-
+            ELSE
+               iss1=ispin( n )
+               sa1 = 0.0d0
+               iss2=iss1
+               sa2 =0.0d0
+            END IF
             !
             !Compute local charge density
             !
@@ -529,7 +550,7 @@
          END DO
 
          IF ( nogrp > 1 ) THEN
-            CALL mp_sum( tmp_rhos, long_rhos, gid = ogrp_comm )
+            CALL mp_sum( tmp_rhos, gid = ogrp_comm )
          ENDIF
          !
          !BRING CHARGE DENSITY BACK TO ITS ORIGINAL POSITION
@@ -537,29 +558,16 @@
          !If the current processor is not the "first" processor in its
          !orbital group then does a local copy (reshuffling) of its data
          !
-         IF ( me_image .NE. NOLIST(1) ) THEN
-            !
-            !  COPY THE PARTS OF THE EIGENSTATES NOT ASSIGNED TO THE FIRST ORBITAL GROUP
-            !
-            to = 1 !Where to copy initially
-            from = 1
-            DO ii=1, NOGRP
-               IF (NOLIST(ii).EQ.me_image) EXIT !Exit the loop
-               from = from +  nr1sx*nr2sx*dffts%npp(NOLIST(ii)+1)! From where to copy initially
-            ENDDO
-
-            CALL DCOPY(nr1sx*nr2sx*dffts%npp(me_image+1), long_rhos(from, 1), 1, long_rhos(to,1), 1)
-            IF (nspin.EQ.2) THEN
-               CALL DCOPY(nr1sx*nr2sx*dffts%npp(me_image+1), long_rhos(from, 2), 1, long_rhos(to,2), 1)
-            ENDIF
-
-         ENDIF
+         from = 1
+         DO ii = 1, nogrp
+            IF ( nolist( ii ) == me_image ) EXIT !Exit the loop
+            from = from +  nr1sx*nr2sx*dffts%npp( nolist( ii ) + 1 )! From where to copy initially
+         ENDDO
          !
-         DO ir=1, nspin
-            CALL dcopy(nnrsx, long_rhos(1,ir), 1, rhos(1,ir), 1)
+         DO ir = 1, nspin
+            CALL dcopy( nr1sx*nr2sx*dffts%npp(me_image+1), tmp_rhos(from,ir), 1, rhos(1,ir), 1)
          ENDDO
 
-         DEALLOCATE( long_rhos )
          DEALLOCATE( tmp_rhos )
          DEALLOCATE( psis ) 
 
