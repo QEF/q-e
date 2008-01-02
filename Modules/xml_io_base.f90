@@ -723,7 +723,9 @@ MODULE xml_io_base
 !         INQUIRE( FILE = TRIM( dirname ) // "/" &
 !                       & // TRIM( psfile(i) ), EXIST = pseudo_exists )
          !
-         CALL copy_file( TRIM( file_pseudo ), &
+         IF (TRIM( file_pseudo ).ne. TRIM( dirname ) // "/" // &
+                           TRIM(psfile(i))) &
+            CALL copy_file( TRIM( file_pseudo ), &
                             TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
          !
          CALL iotk_write_dat( iunpun, TRIM( atm(i) ) // "_MASS", &
