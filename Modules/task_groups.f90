@@ -111,7 +111,72 @@ SUBROUTINE task_groups_init( dffts )
 
    RETURN
 
-   END SUBROUTINE task_groups_init
+END SUBROUTINE task_groups_init
+
+!
+
+SUBROUTINE tg_gather( dffts, v, tg_v )
+   !
+   USE parallel_include
+   !
+   USE mp_global,      ONLY : me_pool, nogrp, ogrp_comm, nolist
+   USE fft_types,      only : fft_dlay_descriptor
+
+   ! T.G. 
+   ! NPGRP:      Number of processors per group
+   ! NOGRP:      Number of group
+
+   IMPLICIT NONE 
+
+   TYPE(fft_dlay_descriptor), INTENT(IN) :: dffts
+
+   REAL(DP) :: v(:)
+   REAL(DP) :: tg_v(:)
+
+   INTEGER :: nsiz, i, ierr, nsiz_tg
+   INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
+
+   nsiz_tg = dffts%nnrx * ( nogrp + 1 )
+
+   IF( SIZE( tg_v ) < nsiz_tg ) &
+      call errore( ' tg_gather ', ' tg_v too small ', ( nsiz_tg - SIZE( tg_v ) ) )
+
+   nsiz = dffts%npp( me_pool+1 ) * dffts%nr1x * dffts%nr2x
+
+   IF( SIZE( v ) < nsiz ) &
+      call errore( ' tg_gather ', ' v too small ',  ( nsiz - SIZE( v ) ) )
+
+   !
+   !  The potential in v is distributed accros all processors
+   !  We need to redistribute it so that it is completely contained in the
+   !  processors of an orbital TASK-GROUP
+   !
+   recv_cnt(1)   = dffts%npp( nolist(1) + 1 ) * dffts%nr1x * dffts%nr2x
+   recv_displ(1) = 0
+   DO i = 2, NOGRP
+      recv_cnt(i) = dffts%npp( nolist(i) + 1 ) * dffts%nr1x * dffts%nr2x
+      recv_displ(i) = recv_displ(i-1) + recv_cnt(i-1)
+   ENDDO
+ 
+   ! clean only elements that will not be overwritten
+   !
+   DO i = recv_displ(nogrp) + recv_cnt( nogrp ) + 1, SIZE( tg_v )
+      tg_v( i ) = 0.0d0
+   END DO
+
+#if defined (__PARA) && defined (__MPI)
+
+   CALL MPI_Allgatherv( v(1), nsiz, MPI_DOUBLE_PRECISION, &
+        tg_v(1), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
+   !
+   IF( ierr /= 0 ) &
+      call errore( ' tg_gather ', ' MPI_Allgatherv ', ABS( ierr ) )
+
+#endif
+
+
+   RETURN
+END SUBROUTINE
 
 
 END MODULE task_groups

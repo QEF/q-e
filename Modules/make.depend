@@ -272,6 +272,7 @@ xml_input.o : version.o
 xml_input.o : xml_io_base.o
 xml_io_base.o : ../iotk/src/iotk_module.o
 xml_io_base.o : constants.o
+xml_io_base.o : control_flags.o
 xml_io_base.o : io_files.o
 xml_io_base.o : io_global.o
 xml_io_base.o : kind.o
