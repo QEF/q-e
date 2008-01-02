@@ -73,7 +73,7 @@
       !
       IF( use_task_groups ) THEN
          nogrp_ = nogrp
-         ALLOCATE( psi( dffts%nnrx * ( nogrp + 1 ) ) )
+         ALLOCATE( psi( dffts%nnrx * nogrp ) )
       ELSE
          nogrp_ = 1
          ALLOCATE( psi( nnrsx ) )

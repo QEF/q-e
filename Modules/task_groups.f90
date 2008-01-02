@@ -136,7 +136,7 @@ SUBROUTINE tg_gather( dffts, v, tg_v )
    INTEGER :: nsiz, i, ierr, nsiz_tg
    INTEGER :: recv_cnt( nogrp ), recv_displ( nogrp )
 
-   nsiz_tg = dffts%nnrx * ( nogrp + 1 )
+   nsiz_tg = dffts%nnrx * nogrp
 
    IF( SIZE( tg_v ) < nsiz_tg ) &
       call errore( ' tg_gather ', ' tg_v too small ', ( nsiz_tg - SIZE( tg_v ) ) )

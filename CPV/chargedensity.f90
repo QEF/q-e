@@ -433,7 +433,7 @@
          INTEGER :: from, ii, eig_index, eig_offset
          REAL(DP), ALLOCATABLE :: tmp_rhos(:,:)
 
-         ALLOCATE( psis( dffts%nnrx * ( nogrp + 1 ) ) ) 
+         ALLOCATE( psis( dffts%nnrx * nogrp ) ) 
          !
          ALLOCATE( tmp_rhos ( nr1sx * nr2sx * dffts%tg_npp( me_image + 1 ), nspin ) )
          !

@@ -50,7 +50,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
      !
      ! call errore( ' vloc_psi ', ' task_groups not yet implemented ', 1 )
      !
-     v_siz =  dffts%nnrx * ( nogrp + 1 )
+     v_siz =  dffts%nnrx * nogrp
      !
      ALLOCATE( tg_v   ( v_siz ) )
      ALLOCATE( tg_psic( v_siz ) )

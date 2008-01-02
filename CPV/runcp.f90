@@ -35,7 +35,7 @@
       use electrons_base,      only : n=>nbsp, ispin, f, nspin, nupdwn, iupdwn
       use wannier_subroutines, only : ef_potential
       use efield_module,       only : dforce_efield, tefield, dforce_efield2, tefield2
-      use gvecw,               only : ngw
+      use gvecw,               only : ngw, ngwx
       USE cp_interfaces,       ONLY : dforce
       USE task_groups,         ONLY : tg_gather
       USE ldaU
@@ -74,8 +74,8 @@
      END IF
 
      IF( use_task_groups ) THEN
-        tg_rhos_siz = (nogrp+1)*dffts%nr1x * dffts%nr2x*MAXVAL( dffts%npp )
-        c2_siz      = (nogrp+1)*ngw 
+        tg_rhos_siz = nogrp * dffts%nnrx
+        c2_siz      = nogrp * ngwx
      ELSE
         tg_rhos_siz = 1
         c2_siz      = ngw 

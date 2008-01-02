@@ -300,7 +300,7 @@ SUBROUTINE sum_band()
           IF( dft_is_meta() ) &
              CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
           !
-          v_siz = dffts%nnrx * ( nogrp + 1 )
+          v_siz = dffts%nnrx * nogrp
           !
           ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho( v_siz ) )
@@ -641,7 +641,7 @@ SUBROUTINE sum_band()
           IF( noncolin ) &
              CALL errore( ' sum_band ', ' task groups with non colliner spin, not yet implemented ', 1 )
           !
-          v_siz = dffts%nnrx * ( nogrp + 1 )
+          v_siz = dffts%nnrx * nogrp
           !
           ALLOCATE( tg_psi( v_siz ) )
           ALLOCATE( tg_rho( v_siz ) )

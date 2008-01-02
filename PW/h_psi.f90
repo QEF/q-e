@@ -186,7 +186,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
        incr = 1
        !
        IF( use_tg ) THEN
-          v_siz = dffts%nnrx * ( nogrp + 1 )
+          v_siz = dffts%nnrx * nogrp
           ALLOCATE( tg_vrs( v_siz ) )
           ALLOCATE( tg_psi( v_siz ) )
           CALL tg_gather( dffts, vrs(:,current_spin), tg_vrs )
