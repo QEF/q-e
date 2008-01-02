@@ -96,8 +96,8 @@ PROGRAM bands
      'The bands code with constrained magnetization has not been tested',1)
 
   CALL openfil_pp()
-  CALL init_us_1()
-  CALL newd()
+!  CALL init_us_1()
+!  CALL newd()
   !
   CALL punch_band(filband,spin_component,lsigma,lsym)
   IF (lsym) call sym_band(filband,spin_component,firstk,lastk)

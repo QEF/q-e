@@ -180,7 +180,7 @@ SUBROUTINE extract (filplot,plot_num)
   CALL openfil_pp ( )
   CALL struc_fact (nat, tau, ntyp, ityp, ngm, g, bg, nr1, nr2, nr3, &
        strf, eigts1, eigts2, eigts3)
-  CALL init_us_1 ( )
+!  CALL init_us_1 ( )
   !
   ! The following line sets emax to its default value if not set
   ! It is done here because Ef must be read from file

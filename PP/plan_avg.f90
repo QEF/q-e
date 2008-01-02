@@ -239,7 +239,7 @@ subroutine plan_avg (averag, plan, ninter)
   else
      allocate(becp(nkb,nbnd))
   endif
-  CALL init_us_1 ( )
+!  CALL init_us_1 ( )
   do ik = 1, nks
      if (lsda) current_spin = isk (ik)
      call gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)

@@ -111,7 +111,7 @@ SUBROUTINE phq_init()
   ! ... parameters which define the non-local pseudopotential and
   ! ... which are independent of the k point for the US case
   !
-  CALL init_us_1()
+!  CALL init_us_1()
   !
   IF ( nksq > 1 ) REWIND( iunigk )
   !
