@@ -302,6 +302,10 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
          !
          CALL iotk_write_dat( iunpun, "PP_CHECK_FLAG", conv_ions )
+!
+!        This flag says how eigenvalues are saved
+!
+         CALL iotk_write_dat( iunpun, "LKPOINT_DIR", lkpoint_dir )
          !
 !-------------------------------------------------------------------------------
 ! ... CELL
@@ -458,11 +462,16 @@ MODULE pw_restart
                !
                ispin = 1
                !
-               filename = wfc_filename( ".", 'eigenval1', ik, EXTENSION='xml',&
-                                         DIR=lkpoint_dir )
-               !
-               CALL iotk_link( iunpun, "DATAFILE.1", &
+               IF (lkpoint_dir) THEN
+                  filename=wfc_filename(".",'eigenval1', ik, EXTENSION='xml',&
+                                      DIR=lkpoint_dir )
+                  !
+                  CALL iotk_link( iunpun, "DATAFILE.1", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
+               ELSE
+                  CALL iotk_write_begin( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP" )
+               ENDIF
                !
                IF ( wk(ik) == 0.D0 ) THEN
                   !
@@ -474,23 +483,35 @@ MODULE pw_restart
                   !
                END IF
                !
-               filename = wfc_filename( dirname, 'eigenval1', ik, &
+               IF (lkpoint_dir) THEN
+                  filename = wfc_filename( dirname, 'eigenval1', ik, &
                                    EXTENSION='xml',  DIR=lkpoint_dir )
-               !
-               CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
+                  !
+                   CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
                      "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin )
-               !
-               !
+               ELSE
+                   filename=' '
+                   CALL write_eig( iunpun, filename, nbnd, et(:, ik) / e2, &
+                     "Hartree", OCC = raux(:), IK=ik, ISPIN=ispin,  &
+                                LKPOINT_DIR=.FALSE. )
+               ENDIF
                !
                ispin = 2
                !
                ik_eff = ik + num_k_points
                !
-               filename = wfc_filename( ".", 'eigenval2', ik, &
+               IF (lkpoint_dir) THEN
+                  filename = wfc_filename( ".", 'eigenval2', ik, &
                           EXTENSION='xml',  DIR=lkpoint_dir )
-               !
-               CALL iotk_link( iunpun, "DATAFILE.2", &
+                  !
+                  CALL iotk_link( iunpun, "DATAFILE.2", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
+               ELSE
+                  CALL iotk_write_end( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP" )
+                  CALL iotk_write_begin( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW" )
+               ENDIF
                !
                IF ( wk(ik_eff) == 0.D0 ) THEN
                   !
@@ -502,19 +523,34 @@ MODULE pw_restart
                   !
                END IF
                !
-               filename = wfc_filename( dirname, 'eigenval2', ik, &
+               IF (lkpoint_dir) THEN
+                  filename = wfc_filename( dirname, 'eigenval2', ik, &
                              EXTENSION = 'xml',  DIR=lkpoint_dir )
-               !
-               CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
+                  !
+                  CALL write_eig( iunout, filename, nbnd, et(:, ik_eff) / e2, &
                                "Hartree", OCC = raux(:), IK = ik, ISPIN = ispin)
+               ELSE
+                  filename=' '
+                  CALL write_eig( iunpun, filename, nbnd, et(:, ik_eff) / e2, &
+                               "Hartree", OCC = raux(:), IK = ik, &
+                                         ISPIN = ispin, LKPOINT_DIR=.false.)
+                  CALL iotk_write_end( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW" )
+
+               ENDIF
                !
             ELSE
                !
-               filename = wfc_filename( ".", 'eigenval', ik, &
+               IF (lkpoint_dir) THEN
+                  filename = wfc_filename( ".", 'eigenval', ik, &
                           EXTENSION='xml',  DIR=lkpoint_dir )
-               !
-               CALL iotk_link( iunpun, "DATAFILE", &
+                  !
+                  CALL iotk_link( iunpun, "DATAFILE", &
                                filename, CREATE = .FALSE., BINARY = .FALSE. )
+               ELSE
+                  CALL iotk_write_begin( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) ) )
+               ENDIF
                !
                IF ( wk(ik) == 0.D0 ) THEN
                   !
@@ -526,12 +562,21 @@ MODULE pw_restart
                   !
                END IF
                !
-               filename = wfc_filename( dirname, 'eigenval', ik, &
-                          EXTENSION='xml',  DIR=lkpoint_dir )
-               !
-               CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
+               IF (lkpoint_dir) THEN
+                  filename = wfc_filename( dirname, 'eigenval', ik, &
+                             EXTENSION='xml',  DIR=lkpoint_dir )
+                  !
+                  CALL write_eig( iunout, filename, nbnd, et(:, ik) / e2, &
                                "Hartree", OCC = raux(:), IK = ik )
-               !
+               ELSE
+                  filename=' '
+                  CALL write_eig( iunpun, filename, nbnd, et(:, ik) / e2, &
+                               "Hartree", OCC = raux(:), IK = ik, &
+                                 LKPOINT_DIR=.false. )
+                  CALL iotk_write_end( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) ) )
+               ENDIF
+                  !
             END IF
             !
             CALL iotk_write_end( iunpun, "K-POINT" // TRIM( iotk_index( ik ) ) )
@@ -2273,6 +2318,7 @@ MODULE pw_restart
     SUBROUTINE read_band_structure( dirname, ierr )
       !------------------------------------------------------------------------
       !
+      USE control_flags, ONLY : lkpoint_dir
       USE basis,    ONLY : natomwfc
       USE lsda_mod, ONLY : lsda, isk
       USE klist,    ONLY : nkstot, wk, nelec
@@ -2344,34 +2390,65 @@ MODULE pw_restart
                !
                isk(ik) = 1
                !
-               CALL iotk_scan_begin( iunpun, "DATAFILE"//TRIM(iotk_index(1)) )
+               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_begin(iunpun, "DATAFILE"//TRIM(iotk_index(1)))
+               ELSE
+                  CALL iotk_scan_begin( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
+               ENDIF
+
                !
                CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik)  )
                CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
                !
-               CALL iotk_scan_end  ( iunpun, "DATAFILE"//TRIM(iotk_index(1)) )
+               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_end(iunpun, "DATAFILE"//TRIM(iotk_index(1)) )
+               ELSE
+                  CALL iotk_scan_end( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_UP")
+               ENDIF
                !
                ik_eff = ik + num_k_points
                !
                isk(ik_eff) = 2
                !
-               CALL iotk_scan_begin( iunpun, "DATAFILE"//TRIM(iotk_index(2)) )
+               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_begin(iunpun,"DATAFILE"//TRIM(iotk_index(2)) )
+               ELSE
+                  CALL iotk_scan_begin( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
+               ENDIF
                !
                CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik_eff) )
                CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik_eff) )
                !
-               CALL iotk_scan_end  ( iunpun, "DATAFILE"//TRIM(iotk_index(2)) )
+               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_end( iunpun, "DATAFILE"//TRIM(iotk_index(2)) )
+               ELSE
+                  CALL iotk_scan_end( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) )//"_SPIN_DW")
+               ENDIF
                !
             ELSE
                !
                isk(ik) = 1
                !
-               CALL iotk_scan_begin( iunpun, "DATAFILE" )
+               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_begin( iunpun, "DATAFILE" )
+               ELSE
+                  CALL iotk_scan_begin( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) ))
+               ENDIF
                !
                CALL iotk_scan_dat  ( iunpun, "EIGENVALUES", et(:,ik) )
                CALL iotk_scan_dat  ( iunpun, "OCCUPATIONS", wg(:,ik) )
                !
-               CALL iotk_scan_end  ( iunpun, "DATAFILE" )
+               IF (lkpoint_dir) THEN
+                  CALL iotk_scan_end  ( iunpun, "DATAFILE" )
+               ELSE
+                  CALL iotk_scan_end( iunpun, &
+                             "DATA_EIG"//TRIM( iotk_index( ik ) ))
+               ENDIF
                !
             END IF
             !

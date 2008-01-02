@@ -273,6 +273,7 @@ MODULE xml_io_base
       !
       USE io_global, ONLY : ionode, ionode_id
       USE mp_global, ONLY : intra_image_comm
+      USE control_flags, ONLY : lkpoint_dir
       !
       IMPLICIT NONE
       !
@@ -299,11 +300,17 @@ MODULE xml_io_base
          !
          IF ( .NOT. found ) lval = .FALSE. 
          !
+         CALL iotk_scan_dat( iunpun, "LKPOINT_DIR", lkpoint_dir, FOUND = found)
+         !
+         IF ( .NOT. found ) lkpoint_dir = .TRUE. 
+         !
          CALL iotk_close_read( iunpun )
          !
       END IF
       !
       CALL mp_bcast( lval, ionode_id, intra_image_comm )
+      !
+      CALL mp_bcast( lkpoint_dir, ionode_id, intra_image_comm )
       !
       pp_check_file = lval
       !
@@ -725,7 +732,7 @@ MODULE xml_io_base
          !
          IF (TRIM( file_pseudo ).ne. TRIM( dirname ) // "/" // &
                            TRIM(psfile(i))) &
-            CALL copy_file( TRIM( file_pseudo ), &
+         CALL copy_file( TRIM( file_pseudo ), &
                             TRIM( dirname ) // "/" // TRIM( psfile(i) ) )
          !
          CALL iotk_write_dat( iunpun, TRIM( atm(i) ) // "_MASS", &
@@ -1680,7 +1687,7 @@ MODULE xml_io_base
     !
     !------------------------------------------------------------------------
     SUBROUTINE write_eig( iuni, filename, nbnd, eig, energy_units, &
-                          occ, ik, ispin )
+                          occ, ik, ispin, lkpoint_dir )
       !------------------------------------------------------------------------
       !
       IMPLICIT NONE
@@ -1691,11 +1698,16 @@ MODULE xml_io_base
       CHARACTER(*),       INTENT(IN) :: energy_units
       REAL(DP), OPTIONAL, INTENT(IN) :: occ(:)
       INTEGER,  OPTIONAL, INTENT(IN) :: ik, ispin
+      LOGICAL,  OPTIONAL, INTENT(IN) :: lkpoint_dir
       CHARACTER(LEN=256), INTENT(IN) :: filename
+      LOGICAL :: lkpoint_dir0
       !
+      lkpoint_dir0=.TRUE.
+      IF (present(lkpoint_dir)) lkpoint_dir0=lkpoint_dir
       IF ( ionode ) THEN
          !
-         CALL iotk_open_write ( iuni, FILE = TRIM( filename ), BINARY = .FALSE. )
+         if (lkpoint_dir0) CALL iotk_open_write ( iuni, &
+                           FILE = TRIM( filename ), BINARY = .FALSE. )
          !
          CALL iotk_write_attr ( attr, "nbnd", nbnd, FIRST=.TRUE. )
          IF ( PRESENT( ik) )    CALL iotk_write_attr ( attr, "ik", ik )
@@ -1713,7 +1725,7 @@ MODULE xml_io_base
             !
          ENDIF
          !
-         CALL iotk_close_write ( iuni )
+         IF (lkpoint_dir0) CALL iotk_close_write ( iuni )
          !
       ENDIF
       !
