@@ -39,7 +39,7 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
 #if defined (__ESSL)
   CALL cdiagh_aix()
 #else
-  CALL cdiagh_lapack( v )
+  CALL cdiagh_lapack( v, e )
 #endif
   !
   CALL stop_clock( 'diagh' )
@@ -100,11 +100,12 @@ SUBROUTINE cdiagh( n, h, ldh, e, v )
 #else 
     !
     !-----------------------------------------------------------------------
-    SUBROUTINE cdiagh_lapack( v )
+    SUBROUTINE cdiagh_lapack( v, e )
       !-----------------------------------------------------------------------
       !
       IMPLICIT NONE
       !
+      REAL(DP)    :: e(n)      ! eigenvalues
       COMPLEX(DP) :: v(ldh,n)
       !
       ! ... local variables (LAPACK version)

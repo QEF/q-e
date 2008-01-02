@@ -20,6 +20,7 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
   USE fft_parallel,  ONLY : tg_cft3s
   USE fft_base,      ONLY : dffts
   USE control_flags, ONLY : use_task_groups
+  USE task_groups,   ONLY : tg_gather
   !
   implicit none
   !
@@ -52,30 +53,10 @@ subroutine vloc_psi(lda, n, m, psi, v, hpsi)
      v_siz =  dffts%nnrx * ( nogrp + 1 )
      !
      ALLOCATE( tg_v   ( v_siz ) )
-     ALLOCATE( tg_psic( dffts%nnrx * ( nogrp + 1 ) ) )
+     ALLOCATE( tg_psic( v_siz ) )
      !
-     tg_v = 0.0d0
-     !
-     !  The potential in v is distributed accros all processors
-     !  We need to redistribute it so that it is completely contained in the
-     !  processors of an orbital TASK-GROUP
-     !
-     recv_cnt(1)   = dffts%npp( nolist(1) + 1 ) * dffts%nr1x * dffts%nr2x
-     recv_displ(1) = 0
-     DO i = 2, NOGRP
-        recv_cnt(i) = dffts%npp( nolist(i) + 1 ) * dffts%nr1x * dffts%nr2x
-        recv_displ(i) = recv_displ(i-1) + recv_cnt(i-1)
-     ENDDO
-
-#if defined (__PARA) && defined (__MPI)
-     nsiz = dffts%npp( me_pool+1 ) * dffts%nr1x * dffts%nr2x
-     
-     CALL MPI_Allgatherv( v(1), nsiz, MPI_DOUBLE_PRECISION, &
-          tg_v(1), recv_cnt, recv_displ, MPI_DOUBLE_PRECISION, ogrp_comm, IERR)
-     IF( ierr /= 0 ) &
-        call errore( ' vloc_psi ', ' MPI_Allgatherv ', ABS( ierr ) )
-#endif
-
+     CALL tg_gather( dffts, v, tg_v )
+ 
      incr = 2 * nogrp
      !
   END IF
