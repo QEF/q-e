@@ -24,7 +24,7 @@ SUBROUTINE phq_readin()
   USE io_global,     ONLY : ionode_id
   USE mp,            ONLY : mp_bcast
   USE input_parameters, ONLY : max_seconds
-  USE ions_base,     ONLY : amass, atm
+  USE ions_base,     ONLY : amass, pmass, atm
   USE klist,         ONLY : xqq, xk, nks, nkstot, lgauss, two_fermi_energies
   USE control_flags, ONLY : gamma_only
   USE uspp,          ONLY : okvan
@@ -270,7 +270,7 @@ SUBROUTINE phq_readin()
      !
      !  convert masses to a.u.
      !
-     amass(it) = amconv * amass(it)
+     pmass(it) = amconv * amass(it)
   ENDDO
   lgamma_gamma=.FALSE.
   IF (nkstot==1.OR.(nkstot==2.AND.nspin==2)) THEN

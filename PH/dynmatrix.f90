@@ -17,7 +17,7 @@ subroutine dynmatrix
 #include "f_defs.h"
   !
   USE kinds,         ONLY : DP
-  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, amass
+  USE ions_base,     ONLY : nat, ntyp => nsp, ityp, tau, atm, pmass
   USE io_global,     ONLY : stdout
   USE control_flags, ONLY : modenum, noinv
   USE cell_base,     ONLY : at, bg, celldm, ibrav, symm_type
@@ -127,7 +127,7 @@ subroutine dynmatrix
      write (iudyn,'(2x,3f15.9)') ((at(i,j),i=1,3),j=1,3)
   end if
   do nt = 1, ntyp
-     write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', amass (nt)
+     write (iudyn, * ) nt, ' ''', atm (nt) , ' '' ', pmass (nt)
   enddo
   do na = 1, nat
      write (iudyn, '(2i5,3f15.7)') na, ityp (na) , (tau (j, na) , j = 1, 3)
@@ -148,9 +148,9 @@ subroutine dynmatrix
   !   Diagonalizes the dynamical matrix at q
   !
   IF (all_comp) THEN
-     call dyndia (xq, nmodes, nat, ntyp, ityp, amass, iudyn, dyn, w2)
+     call dyndia (xq, nmodes, nat, ntyp, ityp, pmass, iudyn, dyn, w2)
      IF (search_sym) CALL find_mode_sym (dyn, w2, at, bg, nat, nsym, s, irt, &
-                                     xq, rtau, amass, ntyp, ityp)
+                                     xq, rtau, pmass, ntyp, ityp)
   END IF
   call stop_clock('dynmatrix')
   return

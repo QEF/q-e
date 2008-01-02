@@ -24,6 +24,7 @@ PROGRAM phonon
                               two_fermi_energies
   USE relax,           ONLY : restart_bfgs
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
+  USE cellmd,          ONLY : calc
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr, delete_if_present
   USE mp,              ONLY : mp_bcast
@@ -271,6 +272,7 @@ PROGRAM phonon
         tot_charge        = 0.d0
         multiplicity      = 0
         two_fermi_energies= .FALSE.
+        calc=' '
         !
         ! ... the threshold for diagonalization ethr is calculated via
         ! ... the threshold on self-consistency tr2 - the value used

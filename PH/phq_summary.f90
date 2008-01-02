@@ -118,7 +118,7 @@ subroutine phq_summary
 
   WRITE( stdout, '(7x,i2,5x,a6,f8.4,"   tau(",i2, &
        &                              ") = (",3f11.5,"  )")')  &
-       &(na, atm (ityp (na) ) , amass (ityp (na) )  / amconv, na,  &
+       &(na, atm (ityp (na) ) , amass (ityp (na) ), na,  &
        &(tau (ipol, na) , ipol = 1, 3) , na = 1, nat)
   WRITE( stdout, '(/,5x,"Computing dynamical matrix for ")')
   WRITE( stdout, '(20x,"q = (",3f11.5," )")') (xq (ipol) , ipol = 1, 3)

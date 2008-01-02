@@ -15,7 +15,7 @@ SUBROUTINE elphon()
   !
   USE kinds, ONLY : DP
   USE cell_base, ONLY : celldm, omega, ibrav
-  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, amass
+  USE ions_base, ONLY : nat, ntyp => nsp, ityp, tau, pmass
   USE gvect, ONLY: nrxx
   USE gsmooth, ONLY: nrxxs, doublegrid
   USE lsda_mod, ONLY: nspin
@@ -65,7 +65,7 @@ SUBROUTINE elphon()
   ! calculated in a previous run
   !
   IF (.NOT.trans) CALL readmat (iudyn, ibrav, celldm, nat, ntyp, &
-       ityp, omega, amass, tau, xq, w2, dyn)
+       ityp, omega, pmass, tau, xq, w2, dyn)
   !
   CALL stop_clock ('elphon')
   RETURN
