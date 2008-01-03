@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2006 Quantum-ESPRESSO group
+! Copyright (C) 2001-2008 Quantum-ESPRESSO group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -8,12 +8,12 @@
 
 !--------------------------------------------------------------------------!
 ! FFT scalar drivers Module - contains machine-dependent routines for:     !
-! FFTW, FFTW3, MKL v.8, ESSL, LINUX_ESSL, SCSL, COMPLIB, SUNPERF libraries !
-! (both 3d for serial execution and 1d+2d FFTs for parallel execution)     !
-! NEC ASL, CXML libraries (3d only, no parallel execution)                 !
+! FFTW, FFTW3, ESSL, LINUX_ESSL, SCSL, SUNPERF, NEC ASL libraries          !
+! (both 3d for serial execution and 1d+2d FFTs for parallel execution,     !
+! excepted NEC ASL, 3d only, no parallel execution)                        !
 ! Written by Carlo Cavazzoni, modified by P. Giannozzi, contributions      !
 ! by Martin Hilgemans, Guido Roma, Pascal Thibaudeau, Stephane Lefranc,    !
-! Nicolas Lacorne - Last update June 2006                                  !
+! Nicolas Lacorne - Last update Jan 2008                                  !
 !--------------------------------------------------------------------------!
 
 
@@ -23,259 +23,10 @@
 #include "fft_defs.h"
 #include "f_defs.h"
 
-#if defined __FFTMKL8
-
-#include "mkl_dfti.f90"
- 
-      MODULE DFTI_WRAPPER
-        INTERFACE DftiCreateDescriptor
-
-         FUNCTION dfti_create_descriptor_1d(DFTI_Desc, precision, domain, dim, length)
-            !DEC$ATTRIBUTES C :: dfti_create_descriptor_1d
-            !MS$ATTRIBUTES REFERENCE :: precision
-            !MS$ATTRIBUTES REFERENCE :: domain
-            !MS$ATTRIBUTES REFERENCE :: dim
-            !MS$ATTRIBUTES REFERENCE :: length
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_create_descriptor_1d
-            INTEGER, INTENT(IN) :: precision
-            INTEGER, INTENT(IN) :: domain
-            INTEGER, INTENT(IN) :: dim, length
-            C_POINTER :: DFTI_Desc
-         END FUNCTION dfti_create_descriptor_1d
-
-         FUNCTION dfti_create_descriptor_highd(DFTI_Desc, precision, domain, dim, length)
-            !DEC$ATTRIBUTES C :: dfti_create_descriptor_highd
-            !MS$ATTRIBUTES REFERENCE :: precision
-            !MS$ATTRIBUTES REFERENCE :: domain
-            !MS$ATTRIBUTES REFERENCE :: dim
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_create_descriptor_highd
-            INTEGER, INTENT(IN) :: precision
-            INTEGER, INTENT(IN) :: domain
-            INTEGER, INTENT(IN) :: dim
-            INTEGER, INTENT(IN), DIMENSION(*) :: length
-            C_POINTER :: DFTI_Desc
-         END FUNCTION dfti_create_descriptor_highd
-
-       END INTERFACE
-
-      INTERFACE DftiCommitDescriptor
-
-        FUNCTION dfti_commit_descriptor_external(DFTI_Desc)
-            !DEC$ATTRIBUTES C :: dfti_commit_descriptor_external
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_commit_descriptor_external
-            C_POINTER ::DFTI_Desc
-        END FUNCTION dfti_commit_descriptor_external
-      END INTERFACE
-
-      INTERFACE DftiSetValue
-
-        FUNCTION dfti_set_value_intval(DFTI_Desc, OptName, IntVal)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_set_value_intval
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: IntVal
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_set_value_intval
-            INTEGER, INTENT(IN) :: OptName
-            INTEGER, INTENT(IN) :: IntVal
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_set_value_intval
-
-        FUNCTION dfti_set_value_sglval(DFTI_Desc, OptName, sglval)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_set_value_sglval
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: sglval
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_set_value_sglval
-            INTEGER, INTENT(IN) :: OptName
-            REAL(4), INTENT(IN) :: sglval
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_set_value_sglval
-
-        FUNCTION dfti_set_value_dblval(DFTI_Desc, OptName, DblVal)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_set_value_dblval
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: DblVal
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_set_value_dblval
-            INTEGER, INTENT(IN) :: OptName
-            REAL(8), INTENT(IN) :: DblVal
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_set_value_dblval
-
-        FUNCTION dfti_set_value_intvec(DFTI_Desc, OptName, IntVec)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_set_value_intvec
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: IntVec
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_set_value_intvec
-            INTEGER, INTENT(IN) :: OptName
-            INTEGER, INTENT(IN), DIMENSION(*) :: IntVec
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_set_value_intvec
-
-        FUNCTION dfti_set_value_chars(DFTI_Desc, OptName, Chars)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_set_value_chars
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: Chars
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_set_value_chars
-            INTEGER, INTENT(IN) :: OptName
-            CHARACTER(*), INTENT(IN) :: Chars
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_set_value_chars
-
-      END INTERFACE
-
-
-
-      INTERFACE DftiGetValue
-
-        FUNCTION dfti_get_value_intval(DFTI_Desc, OptName, IntVal)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_get_value_intval
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: IntVal
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_get_value_intval
-            INTEGER, INTENT(IN) :: OptName
-            INTEGER, INTENT(OUT) :: IntVal
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_get_value_intval
-
-        FUNCTION dfti_get_value_sglval(DFTI_Desc, OptName, sglval)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_get_value_sglval
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: sglval
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_get_value_sglval
-            INTEGER, INTENT(IN) :: OptName
-            REAL(4), INTENT(OUT) :: sglval
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_get_value_sglval
-
-        FUNCTION dfti_get_value_dblval(DFTI_Desc, OptName, DblVal)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_get_value_dblval
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: DblVal
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_get_value_dblval
-            INTEGER, INTENT(IN) :: OptName
-            REAL(8), INTENT(OUT) :: DblVal
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_get_value_dblval
-
-        FUNCTION dfti_get_value_intvec(DFTI_Desc, OptName, IntVec)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_get_value_intvec
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: IntVec
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_get_value_intvec
-            INTEGER, INTENT(IN) :: OptName
-            INTEGER, INTENT(OUT), DIMENSION(*) :: IntVec
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_get_value_intvec
-
-        FUNCTION dfti_get_value_chars(DFTI_Desc, OptName, Chars)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_get_value_chars
-            !MS$ATTRIBUTES REFERENCE :: OptName
-            !MS$ATTRIBUTES REFERENCE :: Chars
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_get_value_chars
-            INTEGER, INTENT(IN) :: OptName
-            CHARACTER(*), INTENT(OUT) :: Chars
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_get_value_chars
-
-      END INTERFACE
-
-      INTERFACE DftiComputeForward
-       FUNCTION dfti_compute_forward_z(DFTI_Desc, a_tst)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_compute_forward_z
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_compute_forward_z
-            COMPLEX(8), INTENT(INOUT), DIMENSION(*) :: a_tst
-            C_POINTER :: DFTI_Desc
-       END FUNCTION dfti_compute_forward_z
-
-       FUNCTION dfti_compute_forward_z_out(DFTI_Desc, a_tst, a_tst_out)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_compute_forward_z_out
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_compute_forward_z_out
-            COMPLEX(8), INTENT(IN), DIMENSION(*) :: a_tst
-            COMPLEX(8), INTENT(OUT), DIMENSION(*) :: a_tst_out
-            C_POINTER :: DFTI_Desc
-        END FUNCTION dfti_compute_forward_z_out
-
-      END INTERFACE
-
-      INTERFACE DftiFreeDescriptor
-        FUNCTION dfti_free_descriptor_external(hand_c1d)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_free_descriptor_external
-            !MS$ATTRIBUTES REFERENCE :: hand_c1d
-            INTEGER dfti_free_descriptor_external
-            C_POINTER :: hand_c1d
-        END FUNCTION dfti_free_descriptor_external
-       END INTERFACE
-
-
-
-      INTERFACE DftiComputeBackward
-
-       FUNCTION dfti_compute_backward_z(DFTI_Desc , a_tst)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_compute_backward_z
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_compute_backward_z
-            COMPLEX(8), INTENT(INOUT), DIMENSION(*) :: a_tst
-            C_POINTER :: DFTI_Desc
-       END FUNCTION dfti_compute_backward_z
-
-       FUNCTION dfti_compute_backward_z_out(DFTI_Desc , a_tst, a_tst_out)
-            USE MKL_DFT_TYPE
-            !DEC$ATTRIBUTES C :: dfti_compute_backward_z_out
-            !MS$ATTRIBUTES REFERENCE :: DFTI_Desc
-            INTEGER dfti_compute_backward_z_out
-            COMPLEX(8), INTENT(IN), DIMENSION(*) :: a_tst
-            COMPLEX(8), INTENT(OUT), DIMENSION(*) :: a_tst_out
-            C_POINTER :: DFTI_Desc
-       END FUNCTION dfti_compute_backward_z_out
-
-
-      END INTERFACE
-
-      END MODULE DFTI_WRAPPER
-
-
-
-
-
-#endif
-
 !=----------------------------------------------------------------------=!
        MODULE fft_scalar
 !=----------------------------------------------------------------------=!
        USE kinds
-
-#if defined __FFTMKL8
-       use MKL_DFT_TYPE
-       use DFTI_WRAPPER
-       ! use MKL_DFTI
-#endif
 
         IMPLICIT NONE
         SAVE
@@ -400,12 +151,6 @@
      INTEGER, PARAMETER :: ltabl = 4 * nfftx + 15
      REAL (DP), SAVE :: tablez (ltabl, ndims)
 
-#elif defined __FFTMKL8
-
-     ! INTEL MKL 8 
-     C_POINTER,SAVE :: Desc_Handle(ndims) = 0 
-     integer :: StrideArray(2)
-     integer Status
 #endif
 
 #if defined __HPM
@@ -427,7 +172,7 @@
         !   for this combination of parameters
 
         done = ( nz == zdims(1,ip) )
-#if defined __ESSL || defined __LINUX_ESSL || defined __FFTW3 || defined __FFTMKL8
+#if defined __ESSL || defined __LINUX_ESSL || defined __FFTW3
 
         !   The initialization in ESSL and FFTW v.3 depends on all three parameters
 
@@ -487,41 +232,6 @@
 #elif defined __SUN
 
        CALL zffti (nz, tablez (1, icurrent) )
-
-#elif defined __FFTMKL8
-
-!       IF ( ASSOCIATED(Desc_Handle(icurrent)) ) THEN 
-       write(*,*) "Descriptor:",icurrent,ndims,Desc_Handle(1),Desc_Handle(2),Desc_Handle(3)
-       IF (Desc_Handle(icurrent) /= 0 ) THEN
-         write(*,*) "Freeing Descriptor",icurrent,ndims,Desc_Handle(1),Desc_Handle(2),Desc_Handle(3)
-         Status =  DftiFreeDescriptor(Desc_Handle(icurrent)) 
-       ENDIF
-
-       tscale = 1.0_DP / nz
-       !write(*,*) "Creating Descriptor",icurrent
-      
-       Status = DftiCreateDescriptor(Desc_Handle(icurrent) , &
-                    DFTI_DOUBLE,DFTI_COMPLEX,1,nz)
-      ! Status =  DftiSetValue(Desc_Handle(icurrent) , &
-      !              DFTI_PLACEMENT,DFTI_INPLACE)
-
-       !Status =  DftiSetValue(Desc_Handle(icurrent), DFTI_FORWARD_SCALE, tscale )
-
-       StrideArray(1) = 0
-       StrideArray(2) = 1
-       Status =  DftiSetValue(Desc_Handle(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-       Status = DftiSetValue(Desc_Handle(icurrent),DFTI_OUTPUT_STRIDES,StrideArray)
-
-
-       Status = DftiSetValue(Desc_Handle(icurrent),DFTI_NUMBER_OF_TRANSFORMS,nsl)
-
-       Status = DftiSetValue(Desc_Handle(icurrent),DFTI_INPUT_DISTANCE,ldz)
-       Status = DftiSetValue(Desc_Handle(icurrent),DFTI_OUTPUT_DISTANCE,ldz)
-
-
-       
-
-       Status = DftiCommitDescriptor(Desc_Handle(icurrent))
 
 #else 
 
@@ -613,17 +323,6 @@
         cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
      END IF
 
-#elif defined __FFTMKL8
-     
-     IF (isign < 0) THEN
-        Status =  DftiComputeForWard(Desc_Handle(ip), c , cout)
-        cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) / nz
-     ELSE IF (isign > 0) THEN
-        Status = DftiComputeBackWard(Desc_Handle(ip), c , cout)
-     END IF
-
-
-
 #else
 
     CALL errore(' cft_1z ',' no scalar fft driver specified ', 1)
@@ -709,13 +408,6 @@
      REAL (DP), SAVE :: tablex (ltabl, ndims)
      REAL (DP), SAVE :: tabley (ltabl, ndims)
 
-#elif defined __FFTMKL8
-     C_POINTER,SAVE :: Desc_Handlex(ndims) = 0
-     C_POINTER,SAVE :: Desc_Handley(ndims) = 0
-     integer :: StrideArray(3)
-     integer :: DimArray(2)
-     integer :: Status
-     
 #endif
 
 #if defined __HPM
@@ -838,76 +530,6 @@
 
        CALL zffti (ny, tabley (1, icurrent) )
        CALL zffti (nx, tablex (1, icurrent) )
-
-#elif defined __FFTMKL8
-!       if(ASSOCIATED(Desc_Handlex(icurrent))) then
-       IF ( ldx /= nx .OR. ldy /= ny ) THEN
-         if(Desc_Handlex(icurrent) /= 0) then
-           Status = DftiFreeDescriptor(Desc_Handlex(icurrent))
-          endif
-
-!       if(ASSOCIATED(Desc_Handlex(icurrent))) then
-         if(Desc_Handley(icurrent) /= 0) then
-           Status =  DftiFreeDescriptor(Desc_Handley(icurrent)) 
-         endif
-         tscale = 1.0_DP / ( nx * ny )
-
-      
-       
-         Status = DftiCreateDescriptor(Desc_Handlex(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,nx)
-
-         Status = DftiCreateDescriptor(Desc_Handley(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,ny)
-
-         !Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_FORWARD_SCALE, tscale)
-         !Status = DftiSetValue(Desc_Handley(icurrent),DFTI_FORWARD_SCALE, tscale)
-
-         StrideArray(1) = 0
-         StrideArray(2) = 1
-
-         Status = DftiSetValue(Desc_Handley(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-
-         Status = DftiSetValue(Desc_Handley(icurrent),DFTI_OUTPUT_STRIDES,StrideArray)
-         StrideArray(1) = 0
-         StrideArray(2) = ldx
- 
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-        
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_OUTPUT_STRIDES,StrideArray) 
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_NUMBER_OF_TRANSFORMS,ny)
-
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_INPUT_DISTANCE,ldx)
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_OUTPUT_DISTANCE,ldx)
-
-                
-         Status = DftiCommitDescriptor(Desc_Handlex(icurrent))
-         Status = DftiCommitDescriptor(Desc_Handley(icurrent))
-       ELSE
-         if(Desc_Handlex(icurrent) /= 0) then
-            Status = DftiFreeDescriptor(Desc_Handlex(icurrent))
-         endif
-
-         DimArray(1) = nx
-         DimArray(2) = ny
-
-         StrideArray(1) = 0
-         
-         StrideArray(2) = 1 
-         StrideArray(3) = nx
-         tscale = 1.0_DP / ( nx * ny ) 
-         !Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_FORWARD_SCALE, tscale)
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_PLACEMENT, DFTI_INPLACE)
-
-         Status = DftiCreateDescriptor(Desc_Handlex(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,2,DimArray)
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_OUTPUT_STRIDES,StrideArray)
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_NUMBER_OF_TRANSFORMS,nzl)
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_INPUT_DISTANCE,nx*ny)
-
-         Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_OUTPUT_DISTANCE,nx*ny)
-
-         Status = DftiCommitDescriptor(Desc_Handlex(icurrent))
-
-       ENDIF
 
 #else
 
@@ -1167,48 +789,6 @@
 
      END IF
 
-#elif defined __FFTMKL8
-       IF ( ldx /= nx .OR. ldy /= ny ) THEN
-         IF( isign < 0 ) THEN
-           do j = 0, nzl-1
-              Status = DftiComputeForWard(Desc_Handlex(ip), &
-                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:))
-           end do
-           do i = 1, nx
-              do k = 1, nzl
-                 IF( dofft( i ) ) THEN
-                    j = i + ldx*ldy * ( k - 1 )
-                    Status =  DftiComputeForWard(Desc_Handley ( ip), r(j:), r(j:)) 
-                 END IF
-              end do
-           end do
-           tscale = 1.0_DP / ( nx * ny )
-           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
-
-          ELSE IF( isign > 0 ) THEN
-           do i = 1, nx
-              do k = 1, nzl
-                 IF( dofft( i ) ) THEN
-                    j = i + ldx*ldy * ( k - 1 )
-                    Status =  DftiComputeBackWard(Desc_Handley(ip), r(j:), r(j:)) 
-                 END IF
-              end do
-           end do
-           do j = 0, nzl-1
-              Status =  DftiComputeBackWard(Desc_Handlex(ip), &
-                   r(1+j*ldx*ldy:), r(1+j*ldx*ldy:))
-           end do
-         END IF
-       ELSE
-         IF( isign < 0 ) THEN
-           Status = DftiComputeForWard( Desc_Handlex(ip), r(1:), r(1:))
-           tscale = 1.0_DP / ( nx * ny )
-           CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
-        ELSE IF( isign > 0 ) THEN
-           Status = DftiComputeBackWard( Desc_Handlex( ip), r(1:), r(1:))
-        END IF
-
-       END IF
 #else
 
      CALL errore(' cft_2xy ',' no scalar fft driver specified ', 1)
@@ -1280,11 +860,6 @@
      INTEGER, PARAMETER :: ltabl = (4 * nfftx + 15)*3
      REAL (DP), SAVE :: table (ltabl, ndims)
 
-#elif defined __FFTMKL8
-     C_POINTER,SAVE :: Desc_Handle(ndims) = 0 
-     INTEGER Status
-     INTEGER DimArray(3)
-     INTEGER StrideArray(4)
 #elif defined __SX6 
 
      INTEGER, PARAMETER :: ltabl = 60
@@ -1407,28 +982,6 @@
 
        CALL zfft3i ( nx, ny, nz, table (1,icurrent) )
 
-#elif defined __FFTMKL8
-       IF ( nx /= ldx .or. ny /= ldy .or. nz /= ldz ) &
-         call errore('cfft3','not implemented',1)
-   
-       DimArray(1) = nx
-       DimArray(2) = ny
-       DimArray(3) = nz
-
-       tscale = 1.0_DP / (nx * ny * nz)
-
-       Status = DftiCreateDescriptor(Desc_Handle(icurrent) , &
-                    DFTI_DOUBLE,DFTI_COMPLEX,3,DimArray)
-
-       Status = DftiSetValue(Desc_Handle(icurrent) , &
-                    DFTI_PLACEMENT,DFTI_INPLACE)
-
-       Status = DftiSetValue(Desc_Handle(icurrent), DFTI_FORWARD_SCALE, tscale )
-
-
-       status = DftiCommitDescriptor(Desc_Handle(icurrent)) 
-
-
 #elif defined __SX6
 
 #  if defined ASL
@@ -1545,18 +1098,6 @@
         CALL zfft3b ( nx, ny, nz, f(1), ldx, ldy, table(1,ip), ltabl )
      ENDIF
 
-#elif defined __FFTMKL8
-     IF( isign < 0 ) THEN
-      Status = DftiComputeForWard( Desc_Handle(ip), f(1:), f(1:))
-
-     ELSE IF( isign > 0 ) THEN
-
-      Status = DftiComputeBackWard( Desc_Handle(ip), f(1:), f(1:))
-
-     END IF
-
-
-
 #elif defined __SX6
 
 #  if defined ASL
@@ -1651,19 +1192,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
   INTEGER, PARAMETER :: ltabl = 20000 + 3 * nfftx
   REAL (DP), SAVE :: fw_table( ltabl, 3, ndims )
   REAL (DP), SAVE :: bw_table( ltabl, 3, ndims )
-
-#elif __FFTMKL8
-
-  C_POINTER,SAVE :: Desc_Handlex(ndims) = 0
-  C_POINTER,SAVE :: Desc_Handley(ndims) = 0
-  C_POINTER,SAVE :: Desc_Handlez(ndims) = 0
-
-
-  
-
-  INTEGER DimArray(3)
-  INTEGER StrideArray(4)
-  INTEGER Status
 
 #endif
 
@@ -1776,59 +1304,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
           bw_table(1, 3, icurrent), ltabl, work(1), lwork )
 
 
-#elif defined __FFTMKL8
-
-!       IF(ASSOCIATED(Desc_Handlex(icurrent))) then
-       IF(Desc_Handlex(icurrent)/=0) then
-          Status =  DftiFreeDescriptor(Desc_Handlex(icurrent))
-       ENDIF
-!       IF(ASSOCIATED(Desc_Handley(icurrent))) then
-       IF(Desc_Handley(icurrent)/=0) then
-          Status = DftiFreeDescriptor(Desc_Handley(icurrent))
-       ENDIF
-!       IF(ASSOCIATED(Desc_Handlez(icurrent))) then
-       IF(Desc_Handlez(icurrent)/=0) then
-          Status =  DftiFreeDescriptor(Desc_Handlez(icurrent))
-       ENDIF
-
-       tscale = 1.0_DP / ( nx * ny * nz)
-
-       Status = DftiCreateDescriptor(Desc_Handlex(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,nx)
-       Status = DftiCreateDescriptor(Desc_Handley(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,ny)
-       Status = DftiCreateDescriptor(Desc_Handlez(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,nz)
-
-       StrideArray(1) = 0
-       StrideArray(2) = 1 
-       Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-       StrideArray(2) = ldx
-       Status = DftiSetValue(Desc_Handley(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-       StrideArray(2) = ldx*ldy
-       Status = DftiSetValue(Desc_Handlez(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-
-       
-
-
-!       Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_BACKWARD_SCALE, tscale)
-!       Status = DftiSetValue(Desc_Handley(icurrent),DFTI_BACKWARD_SCALE, tscale)
-
-
-
-
-
-
-
-          
-       Status = DftiSetValue(Desc_Handley(icurrent),DFTI_NUMBER_OF_TRANSFORMS,nx)
-       Status = DftiSetValue(Desc_Handlez(icurrent),DFTI_NUMBER_OF_TRANSFORMS,nx*ny)
-
-       Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_INPUT_DISTANCE,ldx)
-
-                
-       Status = DftiCommitDescriptor(Desc_Handlex(icurrent))
-       Status = DftiCommitDescriptor(Desc_Handley(icurrent))
-       Status = DftiCommitDescriptor(Desc_Handlez(icurrent))
-
-
 #else
 
        CALL errore(' cfft3ds ',' no scalar fft driver specified ', 1)
@@ -1862,8 +1337,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #elif defined __ESSL || defined __LINUX_ESSL
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
                   -isign, 1.0_DP, bw_table ( 1, 1,  ip ), ltabl, work( 1 ), lwork)
-#elif defined __FFTMKL8
-                Status = DftiComputeForward(Desc_Handlex(ip) , f( ii: ) , f( ii: ))
 #else
                 call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
@@ -1887,9 +1360,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #elif defined __ESSL || defined __LINUX_ESSL
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
                -isign, 1.0_DP, bw_table ( 1, 2,  ip ), ltabl, work( 1 ), lwork)
-#elif defined __FFTMKL8
-                Status = DftiComputeBackWard(Desc_Handley(ip) , f( ii: ) , f( ii: ))
-
 #else
              call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
@@ -1909,8 +1379,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #elif defined __ESSL || defined __LINUX_ESSL
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
           -isign, 1.0_DP, bw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
-#elif defined __FFTMKL8
-        Status =  DftiComputeBackWard(Desc_Handlez(ip) , f( 1: ) , f( 1: )) 
 #endif
 
      ELSE
@@ -1928,8 +1396,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #elif defined __ESSL || defined __LINUX_ESSL
         call dcft (0, f( 1 ), incx1, incx2, f( 1 ), incx1, incx2, nz, m, &
           -isign, 1.0_DP, fw_table ( 1, 3, ip ), ltabl, work( 1 ), lwork)
-#elif defined __FFTMKL8
-        Status = DftiComputeForWard(Desc_Handlez(ip) , f( 1: ) , f( 1: ))
 #endif
 
         !
@@ -1948,9 +1414,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #elif defined __ESSL || defined __LINUX_ESSL
              call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, ny, m, &
                -isign, 1.0_DP, fw_table ( 1, 2, ip ), ltabl, work( 1 ), lwork)
-#elif defined __FFTMKL8
-        Status = DftiComputeForWard(Desc_Handley(ip) , f( ii: ) , f( ii: ))
-
 #else
              call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
@@ -1975,9 +1438,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 #elif defined __ESSL || defined __LINUX_ESSL
                 call dcft (0, f ( ii ), incx1, incx2, f ( ii ), incx1, incx2, nx, m, &
                    -isign, 1.0_DP, fw_table ( 1, 1, ip ), ltabl, work( 1 ), lwork)
-#elif defined __FFTMKL8
-        Status = DftiComputeForWard(Desc_Handlex(ip) , f( ii: ) , f( ii: ))
-
 #else
                 call errore(' cfft3ds ',' no scalar fft driver specified ', 1)
 #endif
@@ -2048,18 +1508,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
      real(8), save :: bw_coeffx( ltabl,  ndims )
      REAL (DP)    :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
-
-#elif __FFTMKL8
-
-     C_POINTER,SAVE :: Desc_Handlexy(ndims) = 0
-     C_POINTER,SAVE :: Desc_Handlez(ndims) = 0
-
-
-
-     INTEGER Status
-     INTEGER DimArray(3)
-     INTEGER StrideArray(4)
-
 
 #endif
 
@@ -2135,54 +1583,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
            call dcft( 1, f(1), ldx, 1, f(1), ldx, 1, ny, ldx, isign,    &
               tscale, aux2(1,icurrent), ltabl, work(1), lwork)
          end if
-#elif __FFTMKL8
-
-       StrideArray(1) = 0 
-
-!       IF(ASSOCIATED(Desc_Handlexy(icurrent))) then
-       IF(Desc_Handlexy(icurrent)/=0) then
-          Status = DftiFreeDescriptor(Desc_Handlexy(icurrent))
-       ENDIF
-!       IF(ASSOCIATED(Desc_Handlez(icurrent))) then
-       IF(Desc_Handlez(icurrent)/=0) then
-          Status = DftiFreeDescriptor(Desc_Handlez(icurrent))
-       ENDIF
-
-       DimArray(1) = nx
-       DimArray(2) = ny 
-       Status = DftiCreateDescriptor(Desc_Handlexy(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,2,DimArray)
-       Status = DftiCreateDescriptor(Desc_Handlez(icurrent), DFTI_DOUBLE,DFTI_COMPLEX,1,nz)
-
-
-       StrideArray = 1
-       Status = DftiSetValue(Desc_Handlexy(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-       StrideArray = ldx*ldy
-       Status = DftiSetValue(Desc_Handlez(icurrent),DFTI_INPUT_STRIDES,StrideArray)
-
-       
-
-
-!       Status = DftiSetValue(Desc_Handlex(icurrent),DFTI_BACKWARD_SCALE, tscale)
-!       Status = DftiSetValue(Desc_Handley(icurrent),DFTI_BACKWARD_SCALE, tscale)
-
-
-
-
-
-
-
-          
-       Status = DftiSetValue(Desc_Handlexy(icurrent),DFTI_NUMBER_OF_TRANSFORMS,nplanes)
-       Status = DftiSetValue(Desc_Handlez(icurrent),DFTI_NUMBER_OF_TRANSFORMS,ldx*ldy)
-
-       Status = DftiSetValue(Desc_Handlexy(icurrent),DFTI_INPUT_DISTANCE,ldx*ldy)
-       Status = DftiSetValue(Desc_Handlez(icurrent),DFTI_INPUT_DISTANCE,1)
-                
-       Status = DftiCommitDescriptor(Desc_Handlexy(icurrent))
-       Status = DftiCommitDescriptor(Desc_Handlez(icurrent))
-
-
-
 
 #elif defined __COMPLIB
 
@@ -2222,10 +1622,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
 
       call dfftw_execute_dft(bw_planz(ip), f(1:), f(1:))
       call dfftw_execute_dft(bw_planxy(ip), f(nstart:), f(nstart:))
-
-#elif defined __FFTMKL8
-      Status = DftiComputeBackWard(Desc_Handlez(ip), f(1:), f(1:))
-      Status = DftiComputeBackWard(Desc_Handlexy(ip), f(nstart:), f(nstart:))
 
 #elif defined __ESSL || defined __LINUX_ESSL
 

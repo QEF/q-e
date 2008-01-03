@@ -88,7 +88,6 @@ Libraries:
       __FFTW3     as above, version 3
       __USE_INTERNAL_FFTW   use the local copy of FFTW, not an external lib
       __FFTW_WITH_SIZE      fftw specific option for cray xt3 (?)
-      __FFTMKL8   Use FFT's of v.8 of Intel's MKL library
       __COMPLIB   FFT routines from SGI CHALLENGEComplib scientific library
       __SCSL      FFT routines from SGI SCSL scientific library
       __SUN       FFT routines from SUN sunperf scientific library
