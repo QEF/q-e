@@ -51,6 +51,9 @@ electrons_base.o : kind.o
 electrons_base.o : timestep.o
 energies.o : io_global.o
 energies.o : kind.o
+error_handler.o : io_files.o
+error_handler.o : io_global.o
+error_handler.o : parallel_include.o
 exc_t.o : functionals.o
 exc_t.o : kind.o
 fft_base.o : fft_types.o

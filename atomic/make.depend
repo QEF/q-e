@@ -68,6 +68,9 @@ compute_phius.o : ld1inc.o
 compute_potps.o : ../Modules/kind.o
 compute_potps.o : ../Modules/radial_grids.o
 compute_potps.o : ld1inc.o
+compute_q_3bess.o : ../Modules/kind.o
+compute_q_3bess.o : ../Modules/radial_grids.o
+compute_q_3bess.o : ld1inc.o
 compute_solution.o : ../Modules/io_global.o
 compute_solution.o : ../Modules/kind.o
 compute_solution.o : ../Modules/radial_grids.o
@@ -210,9 +213,8 @@ occ_spin.o : ../Modules/kind.o
 occ_spin.o : ../Modules/radial_grids.o
 outward.o : ../Modules/kind.o
 outward.o : ../Modules/radial_grids.o
-pseudo_q.o : ../Modules/constants.o
+pseudo_q.o : ../Modules/io_global.o
 pseudo_q.o : ../Modules/kind.o
-pseudo_q.o : atomic_paw.o
 pseudo_q.o : ld1inc.o
 pseudo_q.o : parameters.o
 pseudovloc.o : ../Modules/io_global.o

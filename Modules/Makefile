@@ -17,6 +17,7 @@ descriptors.o \
 dspev_drv.o \
 electrons_base.o \
 energies.o \
+error_handler.o \
 exc_t.o \
 fft_base.o \
 fft_parallel.o \

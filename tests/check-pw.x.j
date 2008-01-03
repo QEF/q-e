@@ -39,6 +39,7 @@
 if test "`echo -e`" = "-e" ; then ECHO=echo ; else ECHO="echo -e" ; fi
 
 ESPRESSO_ROOT=`cd .. ; pwd`
+ESPRESSO_ROOT=$HOME/espressostable/espresso-3.2.3
 PARA_PREFIX=
 #PARA_PREFIX="mpirun -np 2"
 PARA_POSTFIX=

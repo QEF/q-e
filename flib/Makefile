@@ -47,8 +47,7 @@ localdim.o \
 localindex.o \
 npreroc.o \
 numroc.o \
-ownerof.o \
-error.o
+ownerof.o
 
 all: blas.a flib.a lapack_atlas.a lapack.a ptools.a
 

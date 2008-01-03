@@ -1,6 +1,17 @@
 c
 c   This file contains LAPACK routines used in quantum-espresso
 c   that are part of ATLAS - from www.netlib.org
+c   These are:
+* [S,D,C,Z]GESV
+* [S,D,C,Z]GETRF
+* [S,D,C,Z]GETRS
+* [S,D,C,Z]GETRI
+* [S,D,C,Z]TRTRI
+* [S,D,C,Z]POSV
+* [S,D,C,Z]POTRF
+* [S,D,C,Z]POTRS
+* [S,D,C,Z]POTRI
+* [S,D,C,Z]LAUUM 
 c
       SUBROUTINE DGESV( N, NRHS, A, LDA, IPIV, B, LDB, INFO )
 *

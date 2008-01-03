@@ -66,9 +66,6 @@ COMMON
 - spherical bessel functions: only one function calculating dj_l/dx
   j_l with l=-1 should not be needed
 
-- error is in flib/ but requires modules: not a good solution,
-  things in flib/ should not use modules except maybe kinds 
-  and other very low level modules 
 - too many confusing error messages are still around
 
 - replace calls to level-1 blas copy, scal, axpy, with f90 syntax

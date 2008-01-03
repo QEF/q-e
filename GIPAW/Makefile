@@ -45,8 +45,10 @@ MODULES = \
 ../Modules/descriptors.o \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
+../Modules/error_handler.o \
 ../Modules/exc_t.o \
 ../Modules/fft_base.o \
+../Modules/fft_parallel.o \
 ../Modules/fft_scalar.o \
 ../Modules/fft_types.o \
 ../Modules/functionals.o \

@@ -71,7 +71,6 @@ efermig.o \
 efermit.o \
 electrons.o \
 eqvect.o \
-error_handler.o \
 ewald.o \
 ewald_dipole.o \
 exx.o \
@@ -256,6 +255,7 @@ MODULES = \
 ../Modules/descriptors.o \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
+../Modules/error_handler.o \
 ../Modules/exc_t.o \
 ../Modules/fft_base.o \
 ../Modules/fft_parallel.o \

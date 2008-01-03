@@ -97,6 +97,7 @@ MODULES = \
 ../Modules/cell_base.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
+../Modules/error_handler.o \
 ../Modules/exc_t.o \
 ../Modules/functionals.o \
 ../Modules/io_global.o \

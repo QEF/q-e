@@ -11,7 +11,7 @@ module pseudo
   ! All variables to be read from the UPF file
   ! (UPF = unified pseudopotential format)
   !
-  integer ,parameter :: npsx = 6
+  integer ,parameter :: npsx = 2
   ! npsx  : maximum number of different pseudopotentials
   integer, parameter :: lmaxx  = 3, nchix  = 6, ndm = 2000
   ! lmaxx : maximum non local angular momentum in PP      

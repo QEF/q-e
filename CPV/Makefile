@@ -115,6 +115,7 @@ MODULES = \
 ../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
 ../Modules/energies.o \
+../Modules/error_handler.o \
 ../Modules/fft_base.o \
 ../Modules/fft_parallel.o \
 ../Modules/fft_scalar.o \
@@ -201,7 +202,11 @@ PPOBJS = \
 ../Modules/mp_wave.o \
 ../Modules/parser.o \
 ../Modules/kind.o \
-../Modules/parameters.o ../Modules/parallel_include.o ../Modules/constants.o
+../Modules/control_flags.o \
+../Modules/parameters.o \
+../Modules/parallel_include.o \
+../Modules/error_handler.o \
+../Modules/constants.o
 
 cppp.x : fpmdpp.o $(PPOBJS) $(LIBOBJS)
 	$(LD) $(LDFLAGS) -o cppp.x fpmdpp.o $(PPOBJS) $(LIBOBJS) $(LIBS)
