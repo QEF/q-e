@@ -183,9 +183,10 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   USE kinds,            ONLY : DP
   USE mp,               ONLY : mp_bcast
   USE mp_global,        ONLY : root_pool, intra_pool_comm
-  USE zhpev_module,     ONLY : pzhpev_drv
+  USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , la_nrlx_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_
+                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_myc_ , la_myr_
+  USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
   !
   IMPLICIT NONE
   !
@@ -207,6 +208,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   COMPLEX(DP), ALLOCATABLE :: ss(:,:), hh(:,:)
   COMPLEX(DP), ALLOCATABLE :: diag(:,:), vv(:,:)
     ! work space used only in parallel diagonalization
+  INTEGER :: i, j, k
   !
   ! ... input s and h are copied so that they are not destroyed
   !
@@ -277,6 +279,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      ! 
      !  Compute local dimension of the cyclically distributed matrix
      !
+#ifdef WORKING_PZHPEV
      ALLOCATE( diag( nrlx, n ) )
      ALLOCATE( vv( nrlx, n ) )
      !
@@ -289,6 +292,25 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
      DEALLOCATE( vv )
      DEALLOCATE( diag )
+#else
+     ALLOCATE( diag( n*(n+1)/2, 1 ) )
+     ALLOCATE( vv( n, n ) )
+     CALL zsqmcll( n, hh, nx, vv, n, desc, desc( la_comm_ ) )
+     IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 ) THEN
+        k = 1
+        DO j = 1, n
+           DO i = j, n
+              diag( k, 1 ) = vv( i, j )
+              k = k + 1
+           END DO
+        END DO
+        call zhpev_drv( 'V', 'L', N, diag(:,1), e, vv, n )
+     END IF
+     CALL mp_bcast( vv, 0, desc( la_comm_ ) )
+     CALL zsqmdst( n, vv, n, hh, nx, desc )
+     DEALLOCATE( diag )
+     DEALLOCATE( vv )
+#endif
      !
   END IF
   !
