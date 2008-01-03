@@ -266,7 +266,6 @@ cpr.o : cp_autopilot.o
 cpr.o : cp_emass.o
 cpr.o : cp_interfaces.o
 cpr.o : efield.o
-cpr.o : electrons.o
 cpr.o : ensemble_dft.o
 cpr.o : ions_positions.o
 cpr.o : mainvar.o
