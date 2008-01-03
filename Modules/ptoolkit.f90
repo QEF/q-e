@@ -445,11 +445,6 @@ SUBROUTINE dsqmsym( n, a, lda, desc )
       IF( ierr /= 0 ) &
          CALL errore( " dsqmsym ", " in wait ", ABS( ierr ) )
       !
-      CALL mpi_request_free( sreq, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL errore( " dsqmsym ", " in request_free ", ABS( ierr ) )
-      !
    END IF
 
 #else
@@ -481,7 +476,7 @@ SUBROUTINE zsqmher( n, a, lda, desc )
    !
    INTEGER, INTENT(IN) :: n
    INTEGER, INTENT(IN) :: lda
-   COMPLEX(DP)         :: a(lda,*) 
+   COMPLEX(DP)         :: a(lda,lda) 
    INTEGER, INTENT(IN) :: desc( descla_siz_ )
 #if defined __MPI
    INTEGER :: istatus( MPI_STATUS_SIZE )
@@ -564,11 +559,6 @@ SUBROUTINE zsqmher( n, a, lda, desc )
       IF( ierr /= 0 ) &
          CALL errore( " zsqmher ", " in MPI_Wait ", ABS( ierr ) )
       !
-      CALL mpi_request_free( sreq, ierr )
-      !
-      IF( ierr /= 0 ) &
-         CALL errore( " zsqmher ", " in mpi_request_free ", ABS( ierr ) )
-      !
    END IF
 
 #if defined __PIPPO
@@ -643,11 +633,11 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
    !
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
-   REAL(DP)            :: a(lda,*)  !  matrix to be redistributed into b
+   REAL(DP)            :: a(lda,lda)  !  matrix to be redistributed into b
    INTEGER, INTENT(IN) :: desca( descla_siz_ )
    INTEGER, INTENT(IN) :: nb
    INTEGER, INTENT(IN) :: ldb
-   REAL(DP)            :: b(ldb,*)
+   REAL(DP)            :: b(ldb,ldb)
    INTEGER, INTENT(IN) :: descb( descla_siz_ )
 
    INTEGER :: ipc, ipr, npc, npr
@@ -843,9 +833,6 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                CALL MPI_Wait( sreq, istatus, ierr )
                IF( ierr /= 0 ) &
                   CALL errore( " dsqmred ", " in MPI_Wait ", ABS( ierr ) )
-               CALL mpi_request_free( sreq, ierr )
-               IF( ierr /= 0 ) &
-                  CALL errore( " dsqmred ", " in mpi_request_free ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -952,9 +939,6 @@ SUBROUTINE dsqmred( na, a, lda, desca, nb, b, ldb, descb )
                CALL MPI_Wait( sreq, istatus, ierr )
                IF( ierr /= 0 ) &
                   CALL errore( " dsqmred ", " in MPI_Wait 2 ", ABS( ierr ) )
-               CALL mpi_request_free( sreq, ierr )
-               IF( ierr /= 0 ) &
-                  CALL errore( " dsqmred ", " in mpi_request_free 2 ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -1039,11 +1023,11 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
    !
    INTEGER, INTENT(IN) :: na
    INTEGER, INTENT(IN) :: lda
-   COMPLEX(DP)         :: a(lda,*)  !  matrix to be redistributed into b
+   COMPLEX(DP)         :: a(lda,lda)  !  matrix to be redistributed into b
    INTEGER, INTENT(IN) :: desca( descla_siz_ )
    INTEGER, INTENT(IN) :: nb
    INTEGER, INTENT(IN) :: ldb
-   COMPLEX(DP)         :: b(ldb,*)
+   COMPLEX(DP)         :: b(ldb,ldb)
    INTEGER, INTENT(IN) :: descb( descla_siz_ )
 
    INTEGER :: ipc, ipr, npc, npr
@@ -1229,9 +1213,6 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                CALL MPI_Wait( sreq, istatus, ierr )
                IF( ierr /= 0 ) &
                   CALL errore( " zsqmred ", " in MPI_Wait 1 ", ABS( ierr ) )
-               CALL mpi_request_free( sreq, ierr )
-               IF( ierr /= 0 ) &
-                  CALL errore( " zsqmred ", " in mpi_request_free 1 ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -1330,9 +1311,6 @@ SUBROUTINE zsqmred( na, a, lda, desca, nb, b, ldb, descb )
                CALL MPI_Wait( sreq, istatus, ierr )
                IF( ierr /= 0 ) &
                   CALL errore( " zsqmred ", " in MPI_Wait 2 ", ABS( ierr ) )
-               CALL mpi_request_free( sreq, ierr )
-               IF( ierr /= 0 ) &
-                  CALL errore( " zsqmred ", " in mpi_request_free 2 ", ABS( ierr ) )
             END IF
          END DO
       END IF
@@ -3613,14 +3591,6 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
           !
           CALL zgemm('N', 'N', ldx, ldx, ldx, -ONE, c, ldx, buf_recv, ldx, ZERO, sll, ldx)
           !
-          CALL mpi_request_free( req(1), ierr )
-          IF( ierr /= 0 ) &
-             CALL errore( " pztrtri ", " in mpi_request_free 7 ", ABS( ierr ) )
-          !
-          CALL mpi_request_free( req(2), ierr )
-          IF( ierr /= 0 ) &
-             CALL errore( " pztrtri ", " in mpi_request_free 8 ", ABS( ierr ) )
-          !
        END IF
        !
        IF( myrow == 0 .AND. mycol == 1 ) THEN
@@ -3772,14 +3742,6 @@ SUBROUTINE pztrtri ( sll, ldx, n, desc )
                 CALL MPI_Wait(req(2), status, ierr)
                 IF( ierr /= 0 ) &
                    CALL errore( " pztrtri ", " in MPI_Wait 22 ", ABS( ierr ) )
-                !
-                CALL mpi_request_free( req(1), ierr )
-                IF( ierr /= 0 ) &
-                   CALL errore( " pztrtri ", " in mpi_request_free 23 ", ABS( ierr ) )
-                !
-                CALL mpi_request_free( req(2), ierr )
-                IF( ierr /= 0 ) &
-                   CALL errore( " pztrtri ", " in mpi_request_free 24 ", ABS( ierr ) )
                 !
              END IF
              cicle = cicle + 1
@@ -3991,14 +3953,6 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
           !
           CALL dgemm('N', 'N', ldx, ldx, ldx, -ONE, c, ldx, buf_recv, ldx, ZERO, sll, ldx)
           !
-          CALL mpi_request_free( req(1), ierr )
-          IF( ierr /= 0 ) &
-             CALL errore( " pdtrtri ", " in mpi_request_free 7 ", ABS( ierr ) )
-
-          CALL mpi_request_free( req(2), ierr )
-          IF( ierr /= 0 ) &
-             CALL errore( " pdtrtri ", " in mpi_request_free 8 ", ABS( ierr ) )
-
        END IF
        !
        IF( myrow == 0 .AND. mycol == 1 ) THEN
@@ -4154,12 +4108,6 @@ SUBROUTINE pdtrtri ( sll, ldx, n, desc )
                 CALL MPI_Wait(req(2), status, ierr)
                 IF( ierr /= 0 ) &
                    CALL errore( " pdtrtri ", " in MPI_Wait 22 ", ABS( ierr ) )
-                CALL mpi_request_free( req(1), ierr )
-                IF( ierr /= 0 ) &
-                   CALL errore( " pdtrtri ", " in mpi_request_free 23 ", ABS( ierr ) )
-                CALL mpi_request_free( req(2), ierr )
-                IF( ierr /= 0 ) &
-                   CALL errore( " pdtrtri ", " in mpi_request_free 24 ", ABS( ierr ) )
                 !
              END IF
              cicle = cicle + 1
