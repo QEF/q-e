@@ -137,13 +137,6 @@
      REAL (DP)       :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
-#elif defined __COMPLIB
-
-     !   SGI scientific library complib
-
-     INTEGER, PARAMETER :: ltabl = 4 * nfftx
-     REAL (DP), SAVE :: tablez (ltabl, ndims)
-
 #elif defined __SUN
 
      !   SUN sunperf library
@@ -214,16 +207,6 @@
        CALL DCFT ( 1, c(1), 1, ldz, cout(1), 1, ldz, nz, nsl, -1, &
           1.0_DP, bw_tablez(1, icurrent), ltabl, work(1), lwork)
 
-#elif defined __COMPLIB
-
-       write (6,*) "Warning:   FFTs have been heavily restructured, those using complib are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cft_1z','complib untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cft_1z','complib untested, please test',1)
-
-       CALL ZFFT1DI( nz, tablez (1, icurrent) )
-
 #elif defined __SCSL
 
        CALL ZZFFTM (0, nz, 0, 0.0_DP, DUMMY, 1, DUMMY, 1, &
@@ -266,18 +249,6 @@
         cout( 1 : ldz * nsl ) = cout( 1 : ldz * nsl ) / nz
      ELSE IF (isign > 0) THEN
         CALL dfftw_execute_dft( bw_planz( ip), c, cout)
-     END IF
-
-#elif defined __COMPLIB
-
-     IF (isign < 0) THEN
-        idir   = -1
-        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldz, tablez (1, ip) )
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl ) / nz
-     ELSE IF( isign > 0 ) THEN
-        idir   = 1
-        CALL zfftm1d( idir, nz, nsl, c(1), 1, ldz, tablez (1, ip) )
-        cout( 1 : ldz * nsl ) = c( 1 : ldz * nsl )
      END IF
 
 #elif defined __SCSL
@@ -397,11 +368,6 @@
      REAL (DP)    :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
-#elif defined __COMPLIB
-
-     INTEGER, PARAMETER :: ltabl = 4 * nfftx
-     REAL (DP), SAVE  :: tablex (ltabl, ndims), tabley (ltabl, ndims)
-
 #elif defined __SUN
 
      INTEGER, PARAMETER :: ltabl = 4 * nfftx + 15
@@ -513,11 +479,6 @@
           tscale, fw_tablex( 1, icurrent), ltabl, work(1), lwork)
        CALL DCFT ( 1, r(1), 1, ldx, r(1), 1, ldx, nx, ny, -1, &
           1.0_DP, bw_tablex(1, icurrent), ltabl, work(1), lwork)
-
-#elif defined __COMPLIB
-
-       CALL ZFFT1DI( ny, tabley (1, icurrent) )
-       CALL ZFFT1DI( nx, tablex (1, icurrent) )
 
 #elif defined __SCSL
 
@@ -659,34 +620,6 @@
       END DO
       
    END IF
-
-#elif defined __COMPLIB
-
-     IF( isign < 0 ) THEN
-       idir =  -1
-       DO i = 1, nzl
-         k = 1 + ( i - 1 ) * ldx * ldy
-         call zfftm1d( idir, nx, ny, r(k), 1, ldx, tablex (1, ip) )
-       END DO
-       do i = 1, nx
-         IF( dofft( i ) ) THEN
-           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, tabley (1, ip) )
-         END IF
-       end do
-       tscale = 1.0_DP / ( nx * ny )
-       CALL ZDSCAL( ldx * ldy * nzl, tscale, r(1), 1)
-     ELSE IF( isign > 0 ) THEN
-       idir = 1
-       do i = 1, nx
-         IF( dofft( i ) ) THEN
-           call zfftm1d( idir, ny, nzl, r(i), ldx, ldx*ldy, tabley (1, ip) )
-         END IF
-       end do
-       DO i = 1, nzl
-         k = 1 + ( i - 1 ) * ldx * ldy
-         call zfftm1d( idir, nx, ny, r(k), 1, ldx, tablex (1, ip) )
-       END DO
-     END IF
 
 #elif defined __SCSL
 
@@ -848,13 +781,6 @@
      REAL (DP)       :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
-#elif defined __COMPLIB
-
-     !   SGI scientific library complib
-
-     INTEGER, PARAMETER :: ltabl = (4 * nfftx)*3
-     REAL (DP), SAVE :: table (ltabl, ndims)
-
 #elif defined __SUN
 
      INTEGER, PARAMETER :: ltabl = (4 * nfftx + 15)*3
@@ -873,32 +799,6 @@
      INTEGER :: nbtasks
      COMMON/NEC_ASL_PARA/nbtasks
 #  endif
-
-#elif defined DXML
-
-     STRUCTURE / DXML_Z_FFT_STRUCTURE /
-      INTEGER :: N
-      LOGICAL :: STRIDE_1_FLAG
-      INTEGER :: N_TI (0:16)
-      INTEGER :: N_K (0:16)
-      INTEGER :: N_T (0:16)
-      INTEGER :: TYPE (0:16)
-      INTEGER :: NUM_STAGES
-      INTEGER (8) :: ROTATION_VECTOR
-      INTEGER :: ROTATION_VECTOR_SIZE
-      INTEGER (8) :: TEMP_AREA
-      INTEGER :: TEMP_AREA_SIZE
-      INTEGER :: SET_BLOCK_SIZE
-      INTEGER :: NUM_NON_SPECIAL_RADIX
-      INTEGER :: NON_SPECIAL_RADIX (0:16)
-      INTEGER :: NON_SPEC_RAD_TWIDDLE_SIZE
-      INTEGER (8) :: NON_SPEC_RAD_TWIDDLE_VEC
-      INTEGER (8) :: NON_SPECIAL_RADIX_COS (0:16)
-      INTEGER (8) :: NON_SPECIAL_RADIX_SIN (0:16)
-      INTEGER :: FUTURE_USE (20)
-      INTEGER :: GK (0:11)
-      ENDSTRUCTURE
-      record / DXML_Z_FFT_STRUCTURE / fft_struct (ndims)
 
 #endif
 
@@ -963,16 +863,6 @@
 
        ! no initialization for 3d FFT's from ESSL
 
-#elif defined __COMPLIB
-
-       write (6,*) "Warning:   FFTs have been heavily restructured, those using complib are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cfft3d','complib untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cfft3d','complib untested, please test',1)
-
-       CALL zfft3di( nx, ny, nz, table(1,icurrent) )
-
 #elif defined __SCSL
 
        CALL zzfft3d (0, nx, ny, nz, 0.0_DP, DUMMY, 1, 1, DUMMY, 1, 1, &
@@ -998,18 +888,6 @@
 #  endif
 
        IF (err /= 0) CALL errore('cfft3d','FFT init returned an error ', err)
-
-#elif DXML
-
-       write (6,*) "Warning:   FFTs have been heavily restructured, those using cxml are untested"
-       write (6,*) "Warning:   Please locate and remove the following line in Modules/fft_scalar.f90:"
-       write (6,*) "           call errore('cfft3d','cxml untested, please test',1)"
-       write (6,*) "Warning:   Please recompile, test, report if it works"
-       call errore('cfft3d','cxml untested, please test',1)
-
-       err = zfft_exit_3d (fft_struct (icurrent) )
-       ! not sure whether the above call is useful or not
-       err = zfft_init_3d (nx, ny, nz, fft_struct (icurrent), .TRUE.)
 
 #else
 
@@ -1062,18 +940,6 @@
      IF( isign /= 0 ) CALL dcft3( f(1), ldx,ldx*ldy, f(1), ldx,ldx*ldy, &
           nx,ny,nz, idir, tscale, work(1), lwork)
 
-#elif defined __COMPLIB
-
-     IF( isign /= 0 ) THEN
-        IF( isign < 0 ) idir = -1
-        IF( isign > 0 ) idir = +1
-        CALL zfft3d( idir, nx, ny, nz, f(1), ldx, ldy, table(1,ip) )
-        IF( isign < 0 ) THEN
-           tscale = 1.0_DP / DBLE( nx * ny * nz )
-           call ZDSCAL( ldx * ldy * ldz, tscale, f(1), 1)
-        END IF
-     END IF
-
 #elif defined __SCSL
 
      IF ( isign /= 0 ) THEN
@@ -1118,20 +984,6 @@
      END IF
      IF (err /= 0) CALL errore('cfft3d','FFT returned an error ', err)
      DEALLOCATE(cw2)
-
-#elif DXML
-
-     IF ( isign < 0) THEN
-        CALL zfft_apply_3d ('C', 'C', 'f', f, f, ldx, ldy, &
-             fft_struct (ip) , 1, 1, 1)
-        tscale = 1.0_DP / DBLE( nx * ny * nz )
-        CALL ZDSCAL ( ldx*ldy*ldz, tscale, f(1), 1 )
-     ELSE IF ( isign > 0) THEN
-        CALL zfft_apply_3d ('C', 'C', 'b', f, f, ldx, ldy, &
-             fft_struct (ip) , 1, 1, 1)
-        tscale = DBLE( nx * ny * nz )
-        CALL ZDSCAL ( ldx*ldy*ldz, tscale, f(1), 1 )
-     END IF
 
 #endif
 
@@ -1493,13 +1345,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
       real(8), save :: aux2( ltabl, ndims )
       real(8), save :: aux1( ltabl, ndims )
 
-#elif defined __COMPLIB
-
-      INTEGER, PARAMETER :: ltabl = 4 * nfftx
-      real(8), save :: bw_coeffz( ltabl,  ndims )
-      real(8), save :: bw_coeffy( ltabl,  ndims )
-      real(8), save :: bw_coeffx( ltabl,  ndims )
-
 #elif defined __SCSL
 
      INTEGER, PARAMETER :: ltabl = 2 * nfftx + 256
@@ -1584,12 +1429,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
               tscale, aux2(1,icurrent), ltabl, work(1), lwork)
          end if
 
-#elif defined __COMPLIB
-
-         call zfft1di( nz, bw_coeffz( 1, icurrent ) )
-         call zfft1di( ny, bw_coeffy( 1, icurrent ) )
-         call zfft1di( nx, bw_coeffx( 1, icurrent ) )
-
 #elif defined __SCSL
 
          CALL ZZFFT (0, nz, 0.0_DP, DUMMY, 1, bw_coeffz(1, icurrent),    &
@@ -1643,15 +1482,6 @@ SUBROUTINE cfft3ds (f, nx, ny, nz, ldx, ldy, ldz, isign, &
              tscale, aux2(1,ip), ltabl, work(1), lwork)
       END DO
 
-#elif defined __COMPLIB
-
-      call zfftm1d( 1, nz, ldx*ldy, f(1), ldx*ldy, 1, bw_coeffz(1, ip) )
-      call zfftm1d( 1, nx, ldy*nplanes, f(nstart), 1, ldx, bw_coeffx(1, ip) )
-      DO K = imin3, imax3
-        nstart = ( k - 1 ) * ldx * ldy + 1
-        call zfftm1d( 1, ny, ldx, f(nstart), ldx, 1, bw_coeffy(1, ip) )
-      END DO
-
 #elif defined __SCSL
 
       CALL ZZFFTMR (1, nz, ldx*ldy, tscale, f(1), ldx*ldy, f(1),        &
@@ -1695,7 +1525,7 @@ integer function good_fft_dimension (n)
   ! this is the default: max dimension = fft dimension
   nx = n
   !
-#if defined(__ESSL) || defined(__LINUX_ESSL) || defined(DXML)
+#if defined(__ESSL) || defined(__LINUX_ESSL)
   log2n = LOG ( dble (n) ) / LOG ( 2.0_DP )
   ! log2n is the logarithm of n in base 2
   IF ( ABS (NINT(log2n) - log2n) < 1.0d-8 ) nx = n + 1

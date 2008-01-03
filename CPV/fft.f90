@@ -97,7 +97,7 @@
 
 #else
 
-# if defined __COMPLIB || __SCSL || __SX6 || __USE_3D_FFT
+# if defined __SCSL || __SX6 || __USE_3D_FFT
 
       IF( grid_type == 'Dense' ) THEN
          call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, 1)
@@ -197,7 +197,7 @@
 
 #else 
 
-# if defined __COMPLIB || __SCSL || __SX6 || __USE_3D_FFT
+# if defined __SCSL || __SX6 || __USE_3D_FFT
 
       IF( grid_type == 'Dense' ) THEN
          call cfft3d( f, dfftp%nr1, dfftp%nr2, dfftp%nr3, dfftp%nr1x, dfftp%nr2x, dfftp%nr3x, -1)

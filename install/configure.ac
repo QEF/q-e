@@ -122,7 +122,7 @@ aix )
 	try_dflags="-D__AIX -D__XLF"
 	;;
 mips )
-	try_dflags="-D__COMPLIB -D__ORIGIN"
+	try_dflags="-D__ORIGIN"
 	;;
 alpha )
 	try_dflags="-D__ALPHA"
