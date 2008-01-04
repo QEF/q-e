@@ -190,7 +190,7 @@ SUBROUTINE h_psi( lda, n, m, psi, hpsi )
           ALLOCATE( tg_vrs( v_siz ) )
           ALLOCATE( tg_psi( v_siz ) )
           CALL tg_gather( dffts, vrs(:,current_spin), tg_vrs )
-          incr = 2
+          incr = nogrp
        END IF
        !
        ! ... Here we apply the kinetic energy (k+G)^2 psi
@@ -342,21 +342,47 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   use scf, only: vrs
   use becmod, only: becp_nc, calbec
   use wavefunctions_module, only: psic_nc
-  use noncollin_module, only: noncolin, npol
+  use noncollin_module,     only: noncolin, npol
   USE control_flags,        ONLY : use_task_groups
+  USE task_groups,          ONLY : tg_gather
+  USE fft_parallel,         ONLY : tg_cft3s
+  USE fft_base,             ONLY : dffts
+  USE mp_global,            ONLY : nogrp, me_pool
+  !
   implicit none
   !
   integer :: lda, n, m
   complex(DP) :: psi(lda*npol,m), hpsi(lda,npol,m), sup, sdwn
   !
-  integer :: ibnd,j,ipol
+  integer :: ibnd,j,ipol, incr, v_siz, ioff, idx
   ! counters
+  COMPLEX(DP), ALLOCATABLE :: tg_psi(:,:) 
+  REAL(DP),    ALLOCATABLE :: tg_vrs(:,:) 
+  LOGICAL :: use_tg
+
   call start_clock ('h_psi')
   call start_clock ('h_psi:init')
 
-  IF( use_task_groups ) THEN
-     call errore( ' h_psi_nc ', ' task_groups not yet implemented with non-collinear spin ', 1 )
+  use_tg = ( use_task_groups ) .AND. ( m >= nogrp )
+  !              
+  incr = 1    
+  !        
+  IF( use_tg ) THEN
+     v_siz = dffts%nnrx * nogrp
+     IF( noncolin ) THEN
+        ALLOCATE( tg_vrs( v_siz, 4 ) )
+        CALL tg_gather( dffts, vrs(:,1), tg_vrs(:,1) )
+        CALL tg_gather( dffts, vrs(:,2), tg_vrs(:,2) )
+        CALL tg_gather( dffts, vrs(:,3), tg_vrs(:,3) )
+        CALL tg_gather( dffts, vrs(:,4), tg_vrs(:,4) )
+     ELSE
+        ALLOCATE( tg_vrs( v_siz, 1 ) )
+        CALL tg_gather( dffts, vrs(:,current_spin), tg_vrs(:,1) )
+     END IF
+     ALLOCATE( tg_psi( v_siz, npol ) )
+     incr = nogrp
   END IF
+
 
   call calbec ( n, vkb, psi, becp_nc, m )
   !
@@ -378,50 +404,132 @@ subroutine h_psi_nc (lda, n, m, psi, hpsi)
   !
   ! the local potential V_Loc psi. First the psi in real space
   !
-  do ibnd = 1, m
+  do ibnd = 1, m, incr
+
      call start_clock ('h_psi:firstfft')
-     psic_nc = (0.d0,0.d0)
-     do ipol=1,npol
-        do j = 1, n
-           psic_nc(nls(igk(j)),ipol) = psi(j+(ipol-1)*lda,ibnd)
+
+     IF( use_tg ) THEN
+        !
+        DO ipol = 1, npol
+           !
+           tg_psi(:,ipol) = ( 0.D0, 0.D0 )
+           ioff   = 0
+           ! 
+           DO idx = 1, nogrp
+              !
+              IF( idx + ibnd - 1 <= m ) THEN
+                 DO j = 1, n
+                    tg_psi( nls( igk(j) ) + ioff, ipol ) = psi( j +(ipol-1)*lda, idx+ibnd-1 )
+                 END DO
+              END IF
+  
+              ioff = ioff + dffts%nnrx
+     
+           END DO 
+           ! 
+           call tg_cft3s ( tg_psi(:,ipol), dffts, 2, use_tg )
+           !
+        END DO
+        !
+     ELSE
+        psic_nc = (0.d0,0.d0)
+        do ipol=1,npol
+           do j = 1, n
+              psic_nc(nls(igk(j)),ipol) = psi(j+(ipol-1)*lda,ibnd)
+           enddo
+           call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
         enddo
-        call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, 2)
-     enddo
+     END IF
+
      call stop_clock ('h_psi:firstfft')
      !
      !   product with the potential vrs = (vltot+vr) on the smooth grid
      !
      if (noncolin) then
-        do j=1, nrxxs
-           sup = psic_nc(j,1) * (vrs(j,1)+vrs(j,4)) + &
-                 psic_nc(j,2) * (vrs(j,2)-(0.d0,1.d0)*vrs(j,3))
-           sdwn = psic_nc(j,2) * (vrs(j,1)-vrs(j,4)) + &
-                  psic_nc(j,1) * (vrs(j,2)+(0.d0,1.d0)*vrs(j,3))
-           psic_nc(j,1)=sup
-           psic_nc(j,2)=sdwn
-        end do
+        IF( use_tg ) THEN
+           do j=1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
+              sup = tg_psi(j,1) * (tg_vrs(j,1)+tg_vrs(j,4)) + &
+                    tg_psi(j,2) * (tg_vrs(j,2)-(0.d0,1.d0)*tg_vrs(j,3))
+              sdwn = tg_psi(j,2) * (tg_vrs(j,1)-tg_vrs(j,4)) + &
+                     tg_psi(j,1) * (tg_vrs(j,2)+(0.d0,1.d0)*tg_vrs(j,3))
+              tg_psi(j,1)=sup
+              tg_psi(j,2)=sdwn
+           end do
+        ELSE
+           do j=1, nrxxs
+              sup = psic_nc(j,1) * (vrs(j,1)+vrs(j,4)) + &
+                    psic_nc(j,2) * (vrs(j,2)-(0.d0,1.d0)*vrs(j,3))
+              sdwn = psic_nc(j,2) * (vrs(j,1)-vrs(j,4)) + &
+                     psic_nc(j,1) * (vrs(j,2)+(0.d0,1.d0)*vrs(j,3))
+              psic_nc(j,1)=sup
+              psic_nc(j,2)=sdwn
+           end do
+        END IF
      else
-        do j = 1, nrxxs
-           psic_nc(j,1) = psic_nc(j,1) * vrs(j,current_spin)
-        enddo
+        IF( use_tg ) THEN
+           do j = 1, nrx1s * nrx2s * dffts%tg_npp( me_pool + 1 )
+              tg_psi (j,1) = tg_psi (j,1) * tg_vrs(j,1)
+           enddo
+        ELSE
+           do j = 1, nrxxs
+              psic_nc(j,1) = psic_nc(j,1) * vrs(j,current_spin)
+           enddo
+        END IF
      endif
      !
      !   back to reciprocal space
      !
      call start_clock ('h_psi:secondfft')
-     do ipol=1,npol
-        call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
-     enddo
-     !
-     !   addition to the total product
-     !
-     do ipol=1,npol
-        do j = 1, n
-           hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + psic_nc(nls(igk(j)),ipol)
+
+     IF( use_tg ) THEN
+        !
+        DO ipol = 1, npol
+
+           call tg_cft3s ( tg_psi(:,ipol), dffts, -2, use_tg )
+           !
+           ioff   = 0
+           !  
+           DO idx = 1, nogrp
+              !  
+              IF( idx + ibnd - 1 <= m ) THEN
+                 DO j = 1, n
+                    hpsi (j, ipol, ibnd+idx-1) = hpsi (j, ipol, ibnd+idx-1) + tg_psi( nls(igk(j)) + ioff, ipol )
+                 END DO
+              END IF
+              !
+              ioff = ioff + dffts%nr3x * dffts%nsw( me_pool + 1 )
+              !
+           END DO
+
+        END DO
+        !
+     ELSE
+
+        do ipol=1,npol
+           call cft3s (psic_nc(1,ipol), nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, -2)
         enddo
-     enddo
+        !
+        !   addition to the total product
+        !
+        do ipol=1,npol
+           do j = 1, n
+              hpsi(j,ipol,ibnd) = hpsi(j,ipol,ibnd) + psic_nc(nls(igk(j)),ipol)
+           enddo
+        enddo
+
+     END IF
+ 
      call stop_clock ('h_psi:secondfft')
+     !
   enddo
+
+  IF( use_tg ) THEN
+     !
+     DEALLOCATE( tg_vrs )
+     DEALLOCATE( tg_psi )
+     !
+  END IF
+
   !
   !  Here the product with the non local potential V_NL psi
   !

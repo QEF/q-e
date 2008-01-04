@@ -631,15 +631,12 @@ SUBROUTINE sum_band()
        IF ( nks > 1 ) REWIND( iunigk )
        !
        use_tg = ( use_task_groups ) .AND. ( nbnd >= nogrp )
+       use_tg = use_tg .AND. ( .NOT. noncolin )
+       use_tg = use_tg .AND. ( .NOT. dft_is_meta() )
        !
        incr = 1
        !
        IF( use_tg ) THEN
-          !
-          IF( dft_is_meta() ) &
-             CALL errore( ' sum_band ', ' task groups with meta dft, not yet implemented ', 1 )
-          IF( noncolin ) &
-             CALL errore( ' sum_band ', ' task groups with non colliner spin, not yet implemented ', 1 )
           !
           v_siz = dffts%nnrx * nogrp
           !
@@ -671,9 +668,13 @@ SUBROUTINE sum_band()
           !
           DO ibnd = 1, nbnd, incr
              !
-             DO idx = 1, nogrp
-                IF( idx + ibnd - 1 <= nbnd ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
-             END DO
+             IF( use_tg ) THEN   
+                DO idx = 1, nogrp
+                   IF( idx + ibnd - 1 <= nbnd ) eband = eband + et( idx + ibnd - 1, ik ) * wg( idx + ibnd - 1, ik )
+                END DO
+             ELSE
+                eband = eband + et( ibnd, ik ) * wg( ibnd, ik )
+             END IF
              !
              ! ... the sum of eband and demet is the integral for e < ef of 
              ! ... e n(e) which reduces for degauss=0 to the sum of the 
