@@ -185,7 +185,8 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   USE mp_global,        ONLY : root_pool, intra_pool_comm
   USE zhpev_module,     ONLY : pzhpev_drv, zhpev_drv
   USE descriptors,      ONLY : descla_siz_ , lambda_node_ , nlax_ , la_nrl_ , la_nrlx_ , &
-                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_myc_ , la_myr_
+                               la_npc_ , la_npr_ , la_me_ , la_comm_ , la_myc_ , la_myr_ , &
+                               nlar_
   USE parallel_toolkit, ONLY : zsqmdst, zsqmcll
   !
   IMPLICIT NONE
@@ -263,6 +264,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      !
      CALL sqr_zmm_cannon( 'N', 'N', n, ONE, ss, nx, hh, nx, ZERO, v, nx, desc )
      !
+     !
   END IF
   !
   ! ... hl = ( L^-1*H )*(L^-1)^T
@@ -270,6 +272,16 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
   IF( desc( lambda_node_ ) > 0 ) THEN
      !
      CALL sqr_zmm_cannon( 'N', 'C', n, ONE, v, nx, ss, nx, ZERO, hh, nx, desc )
+     !
+     IF( desc( la_myc_ ) == desc( la_myr_ ) ) THEN
+        !
+        ! ensure that "hh" is really Hermitian, it is sufficient to set the diagonal
+        ! properly, because only the lower triangle of hh will be used
+        ! 
+        DO j = 1, desc( nlar_ )
+           hh( j, j ) = CMPLX( REAL( hh(j,j) ), 0.0_DP )
+        END DO
+     END IF
      !
   END IF
   !
@@ -279,7 +291,7 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      ! 
      !  Compute local dimension of the cyclically distributed matrix
      !
-#ifdef WORKING_PZHPEV
+#ifndef TEST_DIAG
      ALLOCATE( diag( nrlx, n ) )
      ALLOCATE( vv( nrlx, n ) )
      !
@@ -293,23 +305,34 @@ SUBROUTINE pcdiaghg( n, h, s, ldh, e, v, desc )
      DEALLOCATE( vv )
      DEALLOCATE( diag )
 #else
-     ALLOCATE( diag( n*(n+1)/2, 1 ) )
      ALLOCATE( vv( n, n ) )
      CALL zsqmcll( n, hh, nx, vv, n, desc, desc( la_comm_ ) )
      IF( desc( la_myc_ ) == 0 .AND. desc( la_myr_ ) == 0 ) THEN
+        ALLOCATE( diag( n*(n+1)/2, 1 ) )
         k = 1
+        write( 100, fmt="(I5)" ) n
         DO j = 1, n
            DO i = j, n
               diag( k, 1 ) = vv( i, j )
+              write( 100, fmt="(2I5,2D18.10)" ) i, j, vv( i, j )
               k = k + 1
            END DO
         END DO
         call zhpev_drv( 'V', 'L', N, diag(:,1), e, vv, n )
+        write( 100, * ) 'eigenvalues and eigenvectors'
+        DO j = 1, n
+           write( 100, fmt="(1I5,1D18.10,A)" ) j, e( j ), 'eval'
+           DO i = 1, n
+              write( 100, fmt="(2I5,2D18.10)" ) i, j, vv( i, j )
+           END DO
+        END DO
+        close(100)
+        DEALLOCATE( diag )
      END IF
      CALL mp_bcast( vv, 0, desc( la_comm_ ) )
      CALL zsqmdst( n, vv, n, hh, nx, desc )
-     DEALLOCATE( diag )
      DEALLOCATE( vv )
+     CALL errore('cdiaghg','stop serial',1)
 #endif
      !
   END IF
