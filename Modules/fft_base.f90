@@ -262,18 +262,10 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
            !
            IF( .not. tstr( proc ) ) THEN
               call mpi_test( rh( proc ), tstr( proc ), istat, ierr )
-              IF( tstr( proc ) ) THEN
-                 ! free communication resources
-                 call mpi_request_free( rh( proc ), ierr )
-              END IF
            END IF
            !
            IF( .not. tsts( proc ) ) THEN
               call mpi_test( sh( proc ), tsts( proc ), istat, ierr )
-              IF( tsts( proc ) ) THEN
-                 ! free communication resources
-                 call mpi_request_free( sh( proc ), ierr )
-              END IF
            END IF
            !
            lrcv = lrcv .and. tstr( proc )
@@ -345,10 +337,6 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
            !
            IF( .not. tsts( proc ) ) THEN
               call mpi_test( sh( proc ), tsts( proc ), istat, ierr )
-              IF( tsts( proc ) ) THEN
-                 ! free communication resources
-                 call mpi_request_free( sh( proc ), ierr )
-              END IF
            END IF
 
            lsnd = lsnd .and. tsts( proc )
@@ -411,9 +399,6 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
                        enddo
                     enddo
                  END SELECT
-
-                 ! free communication resources
-                 call mpi_request_free( rh( proc ), ierr )
 
               END IF
 
