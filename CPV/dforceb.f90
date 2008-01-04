@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2008 Quantum-ESPRESS0 groups
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -34,8 +34,7 @@ subroutine dforceb(c0, i, betae, ipol, bec0, ctabin, gqq, gqqm, qmat, dq2, df)
   use electrons_base, only: nx => nbspx, n => nbsp, nspin, f
   use  constants
   use  cvan
-  use  ions_base
-  use ions_base, only : nas => nax
+  use ions_base, only : nat, nas => nax, na, nsp
   use cell_base, only: a1, a2, a3
   use uspp_param, only: nh, nhm
   use uspp, only : nhsa=> nkb
