@@ -97,7 +97,7 @@ SUBROUTINE electrons()
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
   !
-  type (scf_type) :: rhoin ! used to store rho_in of current/next iteration
+  type (scf_type), save :: rhoin ! used to store rho_in of current/next iteration
   !
   ! ... external functions
   !
