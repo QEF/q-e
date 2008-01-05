@@ -51,12 +51,13 @@ subroutine data_structure( lgamma )
   real(DP) :: gkcut
   ! cut-off for the wavefunctions
 
+  integer  :: ncplane, nxx
+  integer  :: ncplanes, nxxs
+
 #ifdef __PARA
   integer, allocatable :: st(:,:), sts(:,:) 
   ! sticks maps
 
-  integer  :: ncplane, nxx
-  integer  :: ncplanes, nxxs
   integer, allocatable :: ngc (:), ngcs (:), ngkc (:)
   integer  ::  ncp (nproc), nct, nkcp (nproc), ncts, ncps(nproc)
   integer  ::  ngp (nproc), ngps(nproc), ngkp (nproc), ncp_(nproc),&
