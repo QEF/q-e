@@ -50,7 +50,7 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   USE control_flags, ONLY : mixing_beta
   USE lsda_mod,      ONLY : nspin
   USE mp_global,     ONLY : intra_image_comm, me_pool
-  USE pfft,          ONLY : npp
+  USE fft_base,      ONLY : dfftp
   USE mp,            ONLY : mp_bcast
 
   IMPLICIT NONE
@@ -73,11 +73,6 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
 
   LOGICAL :: first=.TRUE.
   SAVE first
-
-#ifndef __PARA
-  npp(1) = nr3
-#endif
-
 
   IF (.NOT.tefield) RETURN
   IF ((.NOT.dipfield).AND. (.NOT.first).and. (iflag.EQ.0)) RETURN
@@ -159,7 +154,7 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
   !
   IF(edir.EQ.1) THEN
      DO ij=1,nr2
-        DO ik=1,npp(me_pool + 1)
+        DO ik=1,dfftp%npp(me_pool + 1)
            DO ii=nmax,nmax+ndesc-1
               value=vamp*(REAL(nmax+ndesc-ii,dp)/REAL(ndesc,dp)-0.5d0)
               itmp=ii
@@ -181,7 +176,7 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
      !
   ELSE IF (edir.EQ.2) THEN
      DO ii=1,nr1
-        DO ik=1,npp(me_pool + 1)
+        DO ik=1,dfftp%npp(me_pool + 1)
            DO ij=nmax,nmax+ndesc-1
               value=vamp*(REAL(nmax+ndesc-ij,dp)/REAL(ndesc,dp)-0.5d0)
               itmp=ij
@@ -206,7 +201,7 @@ SUBROUTINE add_efield(rho,vpoten,etotefield,iflag)
      izub=0
      DO itmp=1,me_pool + 1
         izlb=izub+1
-        izub=izub+npp(itmp)
+        izub=izub+dfftp%npp(itmp)
      END DO
 #else
      izlb=1

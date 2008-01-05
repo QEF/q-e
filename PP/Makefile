@@ -198,7 +198,7 @@ pw_export.x : pw_export.o $(PPOBJS) $(PWOBJS) $(MODULES) $(LIBOBJS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 wfdd.x : wfdd.o
-	$(LD) $(LDFLAGS) -o $@ wfdd.o $(LIBOBJS) $(LIBS)
+	$(LD) $(LDFLAGS) -o $@ wfdd.o $(MODULES) $(LIBOBJS) $(LIBS)
 	- ( cd ../bin ; ln -fs ../PP/$@ . )
 
 sumpdos.x : sumpdos.o 

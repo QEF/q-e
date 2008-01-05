@@ -14,13 +14,13 @@ SUBROUTINE psymrho( rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau )
   ! ...  p-symmetrize the charge density.
   !
   USE kinds,     ONLY : DP
-  USE pfft,      ONLY : nxx
   USE mp_global, ONLY : me_pool
+  USE fft_base,  ONLY : dfftp
   !
   IMPLICIT NONE
   !
   INTEGER        :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau
-  REAL (DP) :: rho(nxx)
+  REAL (DP) :: rho( dfftp%nnr )
   !
 #if defined  (__PARA)
   !

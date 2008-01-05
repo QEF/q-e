@@ -123,12 +123,12 @@ d3vrho.o : ../PH/phcom.o
 d3vrho.o : ../PW/pwcom.o
 d3vrho.o : ../PW/scf_mod.o
 d3vrho.o : d3com.o
+davcio_drho2.o : ../Modules/fft_base.o
 davcio_drho2.o : ../Modules/io_global.o
 davcio_drho2.o : ../Modules/kind.o
 davcio_drho2.o : ../Modules/mp.o
 davcio_drho2.o : ../Modules/mp_global.o
 davcio_drho2.o : ../PH/phcom.o
-davcio_drho2.o : ../PW/para.o
 davcio_drho2.o : ../PW/pwcom.o
 dpsi_corr.o : ../Modules/kind.o
 dpsi_corr.o : ../PH/phcom.o
@@ -207,11 +207,11 @@ openfild3.o : ../PW/pwcom.o
 openfild3.o : d3com.o
 print_clock_d3.o : ../Modules/io_global.o
 print_clock_d3.o : d3com.o
+psymd0rho.o : ../Modules/fft_base.o
 psymd0rho.o : ../Modules/ions_base.o
 psymd0rho.o : ../Modules/kind.o
 psymd0rho.o : ../Modules/mp_global.o
 psymd0rho.o : ../PH/phcom.o
-psymd0rho.o : ../PW/para.o
 psymd0rho.o : ../PW/pwcom.o
 psymd0rho.o : d3com.o
 qstar_d3.o : ../Modules/kind.o

@@ -25,7 +25,7 @@ USE gsmooth,              ONLY : nls, nlsm, nr1s, nr2s, nr3s, &
 USE scf,                  ONLY : rho
 USE ions_base,            ONLY : nat, ntyp => nsp, ityp
 USE mp_global,            ONLY : me_pool
-USE pffts,                ONLY : npps
+USE fft_base,             ONLY : dffts
 
 
 IMPLICIT NONE
@@ -163,12 +163,12 @@ DO ibnd = 1, nbnd
                yy = (j-1)*dy - y0
                r_aux = DSQRT (xx**2 + yy**2)
                IF (r_aux.LE.r_cut) THEN
-                  DO k = 1, npps(me_pool+1)
+                  DO k = 1, dffts%npp(me_pool+1)
                      ijk = i + (j-1) * nrx1s + (k-1) * nrx1s * nrx2s
                      dfx(ijk) = xx * dfy(ijk) - yy * dfx(ijk)
                   END DO
                ELSE
-                  DO k = 1, npps(me_pool+1)
+                  DO k = 1, dffts%npp(me_pool+1)
                      ijk = i + (j-1) * nrx1s + (k-1) * nrx1s * nrx2s
                      dfx (ijk) = 0.d0
                   END DO

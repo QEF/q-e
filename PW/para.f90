@@ -7,60 +7,6 @@
 !
 #include "f_defs.h"
 !
-!----------------------------------------------------------------------------
-MODULE para_const
-  !----------------------------------------------------------------------------
-  !
-  SAVE
-  !
-  INTEGER, PARAMETER :: &
-      maxproc  = 2048     !  maximum number of processors. 
-                          !  make it big for 'big iron'.
-END MODULE para_const
-!
-!
-!----------------------------------------------------------------------------
-MODULE pfft
-  !----------------------------------------------------------------------------
-  !
-  ! ... parallel fft information for the dense grid
-  !
-  USE para_const
-  !
-  SAVE
-  !
-  INTEGER :: &
-      npp(maxproc),     &!  number of plane per processor
-      ncp(maxproc),     &!  number of (density) columns per proc
-      ncp0(maxproc),    &!  starting column for each processor
-      ncplane,          &!  number of columns in a plane
-      nct,              &!  total number of non-zero columns
-      nxx                !  local fft data dim
-  !
-END MODULE pfft
-!
-!
-!----------------------------------------------------------------------------
-MODULE pffts
-  !----------------------------------------------------------------------------
-  !
-  ! ... parallel fft information for the smooth grid
-  !
-  USE para_const
-  !
-  SAVE
-  !
-  INTEGER :: &
-       nkcp(maxproc)     !  number of (wfs) columns per processor
-  INTEGER :: &
-       npps(maxproc),   &!  number of plane per processor
-       ncps(maxproc),   &!  number of (density) columns per proc
-       ncp0s(maxproc),  &!  starting column for each processor
-       ncplanes,        &!  number of columns in a plane
-       ncts,            &!  total number of non-zero columns
-       nxxs              !  local fft data dim
-  !
-END MODULE pffts
 !
 ! ... here are all parallel subroutines (wrappers to MPI calls) used 
 ! ... by the PWscf code
@@ -138,7 +84,7 @@ SUBROUTINE gather( f_in, f_out )
   ! ... REAL*8  f_in  = distributed variable (nxx)
   ! ... REAL*8  f_out = gathered variable (nrx1*nrx2*nrx3)
   !
-  USE pfft,      ONLY : ncplane, npp, nxx   
+  USE fft_base,  ONLY : dfftp
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
@@ -146,7 +92,7 @@ SUBROUTINE gather( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  REAL(DP) :: f_in(nxx), f_out(*)
+  REAL(DP) :: f_in( dfftp%nnr ), f_out(*)
   !
 #if defined (__PARA)  
   !
@@ -158,7 +104,7 @@ SUBROUTINE gather( f_in, f_out )
   !
   DO proc = 0, ( nproc_pool - 1 )
      !
-     recvcount(proc) = ncplane * npp(proc+1)
+     recvcount(proc) = dfftp%nnp * dfftp%npp(proc+1)
      !
      IF ( proc == 0 ) THEN
         !
@@ -196,7 +142,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   ! ... COMPLEX*16  f_in  = distributed variable (nrxx)
   ! ... COMPLEX*16  f_out = gathered variable (nrx1*nrx2*nrx3)
   !
-  USE pfft,      ONLY : ncplane, npp, nxx     
+  USE fft_base,  ONLY : dfftp
   USE mp_global, ONLY : intra_pool_comm, intra_image_comm, &
                         nproc_pool, me_pool
   USE mp,        ONLY : mp_barrier
@@ -204,7 +150,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: f_in(nxx), f_out(*)
+  COMPLEX(DP) :: f_in( dfftp%nnr ), f_out(*)
   !
 #if defined (__PARA)  
   !
@@ -216,7 +162,7 @@ SUBROUTINE cgather_sym( f_in, f_out )
   !
   DO proc = 0, ( nproc_pool - 1 )
      !
-     recvcount(proc) = 2 * ncplane * npp(proc+1)
+     recvcount(proc) = 2 * dfftp%nnp * dfftp%npp(proc+1)
      !
      IF ( proc == 0 ) THEN
         !
@@ -256,10 +202,10 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   !
   ! ... gathers nproc_pool distributed data on the first processor of every pool
   !
-  ! ... COMPLEX*16  f_in  = distributed variable (nxxs)
+  ! ... COMPLEX*16  f_in  = distributed variable ( dffts%nnr )
   ! ... COMPLEX*16  f_out = gathered variable (nrx1s*nrx2s*nrx3s)
   !
-  USE pffts,     ONLY : ncplanes, npps, nxxs   
+  USE fft_base,  ONLY : dffts
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
   USE mp,        ONLY : mp_barrier
   USE kinds,     ONLY : DP
@@ -267,7 +213,7 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: f_in(nxxs), f_out(*)
+  COMPLEX(DP) :: f_in( dffts%nnr ), f_out(*)
   !
 #if defined (__PARA)  
   !
@@ -279,7 +225,7 @@ SUBROUTINE cgather_smooth ( f_in, f_out )
   !
   DO proc = 0, ( nproc_pool - 1 )
      !
-     recvcount(proc) = 2 * ncplanes * npps(proc+1)
+     recvcount(proc) = 2 * dffts%nnp * dffts%npp(proc+1)
      !
      IF ( proc == 0 ) THEN
         !
@@ -320,7 +266,7 @@ SUBROUTINE scatter( f_in, f_out )
   ! ... REAL*8  f_in  = gathered variable (nrx1*nrx2*nrx3)
   ! ... REAL*8  f_out = distributed variable (nxx)
   !
-  USE pfft,      ONLY : ncplane, npp, nxx 
+  USE fft_base,  ONLY : dfftp
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
                         me_pool, root_pool
   USE mp,        ONLY : mp_barrier
@@ -329,7 +275,7 @@ SUBROUTINE scatter( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  REAL(DP) :: f_in(*), f_out(nxx)
+  REAL(DP) :: f_in(*), f_out( dfftp%nnr )
   !
 #if defined (__PARA)  
   !
@@ -341,7 +287,7 @@ SUBROUTINE scatter( f_in, f_out )
   !
   DO proc = 0, ( nproc_pool - 1 )
      !
-     sendcount(proc) = ncplane * npp(proc+1)
+     sendcount(proc) = dfftp%nnp * dfftp%npp(proc+1)
      !
      IF ( proc == 0 ) THEN
         !
@@ -363,7 +309,7 @@ SUBROUTINE scatter( f_in, f_out )
   !
   CALL errore( 'scatter', 'info<>0', info )
   !
-  IF ( sendcount(me_pool) /= nxx ) f_out(sendcount(me_pool)+1:nxx) = 0.D0
+  IF ( sendcount(me_pool) /= dfftp%nnr ) f_out(sendcount(me_pool)+1:dfftp%nnr) = 0.D0
   !
   CALL stop_clock( 'scatter' )
   !
@@ -382,7 +328,7 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   ! ... COMPLEX*16  f_in  = gathered variable (nrx1*nrx2*nrx3)
   ! ... COMPLEX*16  f_out = distributed variable (nxx)
   !
-  USE pfft,      ONLY : ncplane, npp, nxx 
+  USE fft_base,  ONLY : dfftp
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
                         me_pool, root_pool
   USE mp,        ONLY : mp_barrier
@@ -391,7 +337,7 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: f_in(*), f_out(nxx)
+  COMPLEX(DP) :: f_in(*), f_out( dfftp%nnr )
   !
 #if defined (__PARA)  
   !
@@ -403,7 +349,7 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   !
   DO proc = 0, ( nproc_pool - 1 )
      !
-     sendcount(proc) = 2 * ncplane * npp(proc+1)
+     sendcount(proc) = 2 * dfftp%nnp * dfftp%npp(proc+1)
      !
      IF ( proc == 0 ) THEN
         !
@@ -425,7 +371,7 @@ SUBROUTINE cscatter_sym( f_in, f_out )
   !
   CALL errore( 'cscatter_sym', 'info<>0', info )
   !
-  IF ( sendcount(me_pool) /= nxx ) f_out(sendcount(me_pool)+1:nxx) = 0.D0
+  IF ( sendcount(me_pool) /=  dfftp%nnr  ) f_out(sendcount(me_pool)+1: dfftp%nnr ) = 0.D0
   !
   CALL stop_clock( 'cscatter_sym' )
   !
@@ -443,9 +389,9 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   ! ... scatters data from the first processor of every pool
   !
   ! ... COMPLEX*16  f_in  = gathered variable (nrx1s*nrx2s*nrx3s)
-  ! ... COMPLEX*16  f_out = distributed variable (nxxs)
+  ! ... COMPLEX*16  f_out = distributed variable ( dffts%nnr)
   !
-  USE pffts,     ONLY : ncplanes, npps, nxxs
+  USE fft_base,  ONLY : dffts
   USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
                         me_pool, root_pool
   USE mp,        ONLY : mp_barrier
@@ -454,7 +400,7 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   !
   IMPLICIT NONE
   !
-  COMPLEX(DP) :: f_in(*), f_out(nxxs)
+  COMPLEX(DP) :: f_in(*), f_out( dffts%nnr )
   !
 #if defined (__PARA)  
   !
@@ -466,7 +412,7 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   !
   DO proc = 0, ( nproc_pool - 1 )
      !
-     sendcount(proc) = 2 * ncplanes * npps(proc+1)
+     sendcount(proc) = 2 * dffts%nnp * dffts%npp(proc+1)
      !
      IF ( proc == 0 ) THEN
         !
@@ -488,7 +434,7 @@ SUBROUTINE cscatter_smooth( f_in, f_out )
   !
   CALL errore( 'scatter', 'info<>0', info )
   !
-  IF ( sendcount(me_pool) /= nxxs ) f_out(sendcount(me_pool)+1:nxxs) = 0.D0
+  IF ( sendcount(me_pool) /=  dffts%nnr  ) f_out(sendcount(me_pool)+1: dffts%nnr ) = 0.D0
   !
   CALL stop_clock( 'scatter' )
   !

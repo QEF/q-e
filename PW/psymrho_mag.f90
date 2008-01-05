@@ -17,13 +17,13 @@ SUBROUTINE psymrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau, &
   !
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : me_pool, root_pool
-  USE pfft,      ONLY : nxx
+  USE fft_base,  ONLY : dfftp
   !
   IMPLICIT NONE
   !
   INTEGER :: nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau, i
 
-  REAL (DP) :: rho(nxx,3), at(3,3), bg(3,3)
+  REAL (DP) :: rho(dfftp%nnr,3), at(3,3), bg(3,3)
   REAL (DP), ALLOCATABLE :: rrho (:,:)
   !
   !

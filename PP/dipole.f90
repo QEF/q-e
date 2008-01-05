@@ -28,7 +28,6 @@ PROGRAM dipole
   USE gvect,     ONLY : g, gg, ngm, gstart, igtongl
   USE gvect,     ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE lsda_mod,  ONLY : nspin
-  USE pfft,      ONLY : npp
   USE mp_global, ONLY : me_pool, intra_pool_comm
   USE vlocal,    ONLY : strf, vloc
   USE mp,        ONLY : mp_sum, mp_bcast

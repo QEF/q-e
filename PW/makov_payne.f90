@@ -64,7 +64,7 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
   USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx
   USE scf,        ONLY : rho
   USE lsda_mod,   ONLY : nspin
-  USE pfft,       ONLY : npp
+  USE fft_base,   ONLY : dfftp
   USE mp_global,  ONLY : me_pool
   !
   IMPLICIT NONE
@@ -89,7 +89,7 @@ SUBROUTINE compute_e_dipole( x0, e_dipole, e_quadrupole )
 #if defined (__PARA)
   !
   DO i = 1, me_pool
-     index0 = index0 + nrx1*nrx2*npp(i)
+     index0 = index0 + nrx1*nrx2*dfftp%npp(i)
   END DO
   !
 #endif

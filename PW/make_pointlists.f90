@@ -28,7 +28,7 @@ SUBROUTINE make_pointlists
   USE cell_base,  ONLY : at, bg
   USE gvect,      ONLY : nr1, nr2, nr3, nrx1, nrx2, nrxx
   USE mp_global,  ONLY : me_pool
-  USE pfft,       ONLY : npp
+  USE fft_base,   ONLY : dfftp
 
   USE noncollin_module
   !
@@ -51,7 +51,7 @@ SUBROUTINE make_pointlists
   idx0 = 0
 #ifdef __PARA
   DO indproc=1,me_pool
-     idx0 = idx0 + nrx1*nrx2*npp(indproc)
+     idx0 = idx0 + nrx1*nrx2*dfftp%npp(indproc)
   ENDDO
 
 #endif

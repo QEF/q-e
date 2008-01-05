@@ -65,7 +65,7 @@ MODULE realus
       USE uspp,       ONLY : okvan, indv, nhtol, nhtolm, ap, nhtoj, lpx, lpl
       USE uspp_param, ONLY : upf, lmaxq, nh, nhm
       USE atom,       ONLY : rgrid
-      USE pfft,       ONLY : npp
+      USE fft_base,   ONLY : dfftp
       USE mp_global,  ONLY : me_pool
       USE splinelib,  ONLY : spline, splint
       !
@@ -161,7 +161,7 @@ MODULE realus
 #if defined (__PARA)
       !
       DO i = 1, me_pool
-         idx0 = idx0 + nrx1*nrx2*npp(i)
+         idx0 = idx0 + nrx1*nrx2*dfftp%npp(i)
       END DO
       !
 #endif

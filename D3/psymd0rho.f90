@@ -20,7 +20,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   USE phcom
   USE d3com
   USE mp_global, ONLY : me_pool
-  USE pfft,      ONLY : npp, ncplane
+  USE fft_base,  ONLY : dfftp
 
   IMPLICIT NONE
 
@@ -44,10 +44,10 @@ subroutine psymd0rho (nper, irr, dvtosym)
   allocate ( ddvtosym( nrx1 * nrx2 * nrx3, nper))    
   npp0 = 0
   do i = 1, me_pool
-     npp0 = npp0 + npp (i)
+     npp0 = npp0 + dfftp%npp (i)
   enddo
 
-  npp0 = npp0 * ncplane+1
+  npp0 = npp0 * dfftp%nnp + 1
   do iper = 1, nper
      call cgather_sym (dvtosym (1, iper), ddvtosym (1, iper) )
   enddo
@@ -55,7 +55,7 @@ subroutine psymd0rho (nper, irr, dvtosym)
   call symd0rho (max_irr_dim, nper, irr, ddvtosym, s, ftau, nsymg0, irgq, tg0, &
        nat, nr1, nr2, nr3, nrx1, nrx2, nrx3)
   do iper = 1, nper
-     call ZCOPY (npp (me_pool+1) * ncplane, ddvtosym (npp0, iper), 1, dvtosym &
+     call ZCOPY (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, iper), 1, dvtosym &
           (1, iper), 1)
   enddo
   deallocate(ddvtosym)

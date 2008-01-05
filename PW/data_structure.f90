@@ -23,13 +23,9 @@ subroutine data_structure( lgamma )
                          ngm, ngm_l, ngm_g, gcutm, ecutwfc
   USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
                          ngms, ngms_l, ngms_g, gcutms
-  USE para_const, ONLY : maxproc
-  USE pfft,       ONLY : ncplane, npp, ncp0, nxx, nct, ncp
-  USE pffts,      ONLY : nkcp, ncplanes, npps, ncp0s, nxxs, ncts, ncps
-
   USE mp,         ONLY : mp_sum
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
-                         nogrp
+                         nogrp, nproc
   USE stick_base
   USE fft_scalar, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
@@ -59,25 +55,18 @@ subroutine data_structure( lgamma )
   integer, allocatable :: st(:,:), sts(:,:) 
   ! sticks maps
 
+  integer  :: ncplane, nxx
+  integer  :: ncplanes, nxxs
   integer, allocatable :: ngc (:), ngcs (:), ngkc (:)
-  integer  ::  ngp (maxproc), ngps(maxproc), ngkp (maxproc), ncp_(maxproc),&
+  integer  ::  ncp (nproc), nct, nkcp (nproc), ncts, ncps(nproc)
+  integer  ::  ngp (nproc), ngps(nproc), ngkp (nproc), ncp_(nproc),&
        i, j, jj, idum
-  ! counters on planes
-  ! indices for including meshes
-  ! counter on k points
-  ! generic counters
-  ! check variables
-  ! number of columns per plane
-  ! number of columns per plane (smooth part)
-  ! number of columns per plane (hard part)
-  ! from thick plane to column list
-  ! from smooth plane to column list
-  ! number of g per processor
-  ! number of column per processor
-  ! counter on processor pools
-  ! counter on processors
-  ! counter on processors
-  ! used for swap
+
+  !      nxx                !  local fft data dim
+  !      ncplane,          &!  number of columns in a plane
+  !      nct,              &!  total number of non-zero columns
+  !      ncp(nproc),     &!  number of (density) columns per proc
+
 
   logical :: tk = .TRUE.   
   ! map type: true for full space sticks map, false for half space sticks map
@@ -231,27 +220,33 @@ subroutine data_structure( lgamma )
   ! set the number of plane per process
   !
 
-  npp ( 1 : nproc_pool ) = dfftp%npp ( 1 : nproc_pool )
-  npps( 1 : nproc_pool ) = dffts%npp ( 1 : nproc_pool )
+  ! npp ( 1 : nproc_pool ) = dfftp%npp ( 1 : nproc_pool )
+  ! npps( 1 : nproc_pool ) = dffts%npp ( 1 : nproc_pool )
+
+  if ( dfftp%nnp /= ncplane )    &
+     &    call errore('data_structure','inconsistent plane dimension on dense grid', ABS(dfftp%nnp-ncplane) )
+
+  if ( dffts%nnp /= ncplanes )    &
+     &    call errore('data_structure','inconsistent plane dimension on smooth grid', ABS(dffts%nnp-ncplanes) )
 
   WRITE( stdout, '(/5x,"Planes per process (thick) : nr3 =", &
-       &        i3," npp = ",i3," ncplane =",i5)') nr3, npp (me_pool + 1) , ncplane
+       &        i3," npp = ",i3," ncplane =",i5)') nr3, dfftp%npp (me_pool + 1) , ncplane
 
   if ( nr3s /= nr3 ) WRITE( stdout, '(5x,"Planes per process (smooth): nr3s=",&
-       &i3," npps= ",i3," ncplanes=",i5)') nr3s, npps (me_pool + 1) , ncplanes
+       &i3," npps= ",i3," ncplanes=",i5)') nr3s, dffts%npp (me_pool + 1) , ncplanes
 
   WRITE( stdout,*)
   WRITE( stdout,'(5X,                                                     &
     & "Proc/  planes cols     G    planes cols    G      columns  G"/5X,  &
     & "Pool       (dense grid)       (smooth grid)      (wavefct grid)")')
   do i=1,nproc_pool
-    WRITE( stdout,'(5x,i3,2x,2(i5,i7,i9),i7,i9)') i, npp(i), ncp(i), ngp(i), &
-      &        npps(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
+    WRITE( stdout,'(5x,i3,2x,2(i5,i7,i9),i7,i9)') i, dfftp%npp(i), ncp(i), ngp(i), &
+      &        dffts%npp(i), ncps(i), ngps(i), nkcp(i), ngkp(i)
   end do
   IF ( nproc_pool > 1 ) THEN
       WRITE( stdout,'(5x,"tot",2x,2(i5,i7,i9),i7,i9)') &
-      SUM(npp(1:nproc_pool)), SUM(ncp(1:nproc_pool)), SUM(ngp(1:nproc_pool)), &
-      SUM(npps(1:nproc_pool)),SUM(ncps(1:nproc_pool)),SUM(ngps(1:nproc_pool)),&
+      SUM(dfftp%npp(1:nproc_pool)), SUM(ncp(1:nproc_pool)), SUM(ngp(1:nproc_pool)), &
+      SUM(dffts%npp(1:nproc_pool)),SUM(ncps(1:nproc_pool)),SUM(ngps(1:nproc_pool)),&
       SUM(nkcp(1:nproc_pool)), SUM(ngkp(1:nproc_pool))
   END IF
   WRITE( stdout,*)
@@ -262,8 +257,8 @@ subroutine data_structure( lgamma )
   !   ncp0 = starting column for each processor
   !
 
-  ncp0( 1:nproc_pool )  = dfftp%iss( 1:nproc_pool )
-  ncp0s( 1:nproc_pool ) = dffts%iss( 1:nproc_pool )
+  ! ncp0( 1:nproc_pool )  = dfftp%iss( 1:nproc_pool )
+  ! ncp0s( 1:nproc_pool ) = dffts%iss( 1:nproc_pool )
 
   !
   !  array ipc and ipcl ( ipc contain the number of the
@@ -366,6 +361,10 @@ subroutine data_structure( lgamma )
 
 #endif
 
+  IF( nxx /= dfftp%nnr ) &
+     CALL errore( ' data_structure ', ' inconsistent value for nxx ', ABS( nxx - dfftp%nnr ) )
+  IF( nxxs /= dffts%nnr ) &
+     CALL errore( ' data_structure ', ' inconsistent value for nxxs ', ABS( nxxs - dffts%nnr ) )
   !
   !     compute the global number of g, i.e. the sum over all processors
   !     within a pool

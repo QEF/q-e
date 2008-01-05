@@ -82,13 +82,13 @@ compute_ppsi.o : ../PW/becmod.o
 compute_ppsi.o : ../PW/noncol.o
 compute_ppsi.o : ../PW/pwcom.o
 compute_sigma_avg.o : ../Modules/cell_base.o
+compute_sigma_avg.o : ../Modules/fft_base.o
 compute_sigma_avg.o : ../Modules/ions_base.o
 compute_sigma_avg.o : ../Modules/kind.o
 compute_sigma_avg.o : ../Modules/mp_global.o
 compute_sigma_avg.o : ../Modules/uspp.o
 compute_sigma_avg.o : ../Modules/wavefunctions.o
 compute_sigma_avg.o : ../PW/noncol.o
-compute_sigma_avg.o : ../PW/para.o
 compute_sigma_avg.o : ../PW/pwcom.o
 compute_sigma_avg.o : ../PW/scf_mod.o
 cube.o : ../Modules/kind.o
@@ -111,7 +111,6 @@ dipole.o : ../Modules/ions_base.o
 dipole.o : ../Modules/kind.o
 dipole.o : ../Modules/mp.o
 dipole.o : ../Modules/mp_global.o
-dipole.o : ../PW/para.o
 dipole.o : ../PW/pwcom.o
 do_initial_state.o : ../Modules/cell_base.o
 do_initial_state.o : ../Modules/control_flags.o

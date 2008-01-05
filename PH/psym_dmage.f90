@@ -17,7 +17,7 @@ SUBROUTINE psym_dmage (dvtosym)
   USE kinds,     ONLY : DP
   USE phcom
   USE mp_global, ONLY : me_pool
-  USE pfft,      ONLY : npp, ncplane
+  USE fft_base,  ONLY : dfftp
   !
   IMPLICIT NONE
   !
@@ -37,7 +37,7 @@ SUBROUTINE psym_dmage (dvtosym)
   ALLOCATE (ddvtosym ( nrx1 * nrx2 * nrx3, nspin, 3))    
   npp0 = 1
   DO i = 1, me_pool
-     npp0 = npp0 + npp (i) * ncplane
+     npp0 = npp0 + dfftp%npp (i) * dfftp%nnp
   ENDDO
   DO iper = 1, 3
      DO is = 1, nspin
@@ -48,7 +48,7 @@ SUBROUTINE psym_dmage (dvtosym)
   CALL sym_dmage (ddvtosym)
   DO iper = 1, 3
      DO is = 1, nspin
-        CALL ZCOPY (npp (me_pool+1) * ncplane, ddvtosym (npp0, is, iper), &
+        CALL ZCOPY (dfftp%npp (me_pool+1) * dfftp%nnp, ddvtosym (npp0, is, iper), &
              1, dvtosym (1, is, iper), 1)
      ENDDO
   ENDDO

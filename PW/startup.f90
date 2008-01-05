@@ -55,7 +55,6 @@ SUBROUTINE startup( nd_nmbr, code, version )
                          my_image_id, root_image, npool, nproc_pool
   USE mp_global,  ONLY : mp_global_start, init_pool
   USE mp,         ONLY : mp_start, mp_env, mp_barrier, mp_bcast
-  USE para_const, ONLY : maxproc
   USE control_flags, ONLY : use_task_groups
   !
   IMPLICIT NONE
@@ -138,9 +137,6 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CALL mp_bcast( npool,  meta_ionode_id )
   CALL mp_bcast( nimage, meta_ionode_id )
   CALL mp_bcast( ntask_groups, meta_ionode_id )
-  !
-  IF ( nproc > maxproc ) &
-     CALL errore( 'startup', ' too many processors', nproc )
   !
   IF( ntask_groups > 0 ) THEN
      use_task_groups = .TRUE.

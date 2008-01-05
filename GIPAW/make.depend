@@ -161,9 +161,9 @@ sym_cart_tensor.o : ../Modules/cell_base.o
 sym_cart_tensor.o : ../Modules/kind.o
 sym_cart_tensor.o : ../PW/pwcom.o
 symmetrize_field.o : ../Modules/cell_base.o
+symmetrize_field.o : ../Modules/fft_base.o
 symmetrize_field.o : ../Modules/kind.o
 symmetrize_field.o : ../Modules/mp_global.o
-symmetrize_field.o : ../PW/para.o
 symmetrize_field.o : ../PW/pwcom.o
 symmetrize_field.o : gipaw_module.o
 test_sum_rule.o : ../Modules/cell_base.o

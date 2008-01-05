@@ -17,7 +17,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   ! ... isw = -1 : reads data from a single file and distributes them
   !
   USE kinds,     ONLY : DP
-  USE pfft,      ONLY : npp, ncplane
+  USE fft_base,  ONLY : dfftp
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : inter_pool_comm, me_pool
   USE mp,        ONLY : mp_bcast, mp_barrier

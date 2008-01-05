@@ -95,6 +95,7 @@ parameters.o
 MODULES = \
 ../Modules/atom.o \
 ../Modules/cell_base.o \
+../Modules/clocks.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
 ../Modules/error_handler.o \
@@ -116,9 +117,12 @@ MODULES = \
 ../Modules/mp_global.o \
 ../Modules/mp.o \
 ../Modules/mp_base.o \
+../Modules/fft_base.o \
+../Modules/fft_types.o \
 ../Modules/uspp.o \
 ../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
+../PW/para.o \
 ../PW/startup.o
 
 TLDEPS= bindir mods libs 

@@ -66,14 +66,14 @@ SUBROUTINE psymmetrize_field(field, iflag)
   !     iflag = 1  => pseudo-tensor  (e.g. induced current)
   !
   USE kinds,                           ONLY : DP
-  USE pfft,                            ONLY : nxx
+  USE fft_base,                        ONLY : dfftp
   USE mp_global,                       ONLY : me_pool
   USE pwcom
   USE gipaw_module
 
   !-- parameters ------------------------------------------------------
   IMPLICIT NONE
-  REAL(DP), INTENT(INOUT) :: field(nxx,3,3)
+  REAL(DP), INTENT(INOUT) :: field(dfftp%nnr,3,3)
   INTEGER :: iflag
 
   !-- local variables ----------------------------------------------------

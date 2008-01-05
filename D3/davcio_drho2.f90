@@ -22,7 +22,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : intra_pool_comm, me_pool, root_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
-  USE pfft,      ONLY : ncplane, npp
+  USE fft_base,  ONLY : dfftp
   !
   IMPLICIT NONE
   !
@@ -57,10 +57,10 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
      !
      itmp = 1
      DO proc = 1, me_pool
-        itmp = itmp + ncplane * npp (proc)
+        itmp = itmp + dfftp%nnp * dfftp%npp (proc)
      ENDDO
      drho (:) = (0.d0, 0.d0)
-     CALL ZCOPY (ncplane * npp (me_pool+1), ddrho (itmp), 1, drho, 1)
+     CALL ZCOPY (dfftp%nnp * dfftp%npp (me_pool+1), ddrho (itmp), 1, drho, 1)
   ENDIF
 
   DEALLOCATE(ddrho)
