@@ -26,6 +26,7 @@ MODULES = \
 ../Modules/printout_base.o \
 ../Modules/pseudo_types.o \
 ../Modules/random_numbers.o \
+../Modules/radial_grids.o \
 ../Modules/recvec.o \
 ../Modules/splinelib.o \
 ../Modules/timestep.o \
