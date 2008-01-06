@@ -258,6 +258,7 @@ PROGRAM phonon
         !
         ! ... Setting the values for the nscf run
         !
+        CALL set_defaults_pw()
         lphonon           = .TRUE.
         lscf              = .FALSE.
         lbands            = .FALSE.
