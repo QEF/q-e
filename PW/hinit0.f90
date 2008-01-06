@@ -21,7 +21,8 @@ SUBROUTINE hinit0()
   USE vlocal,       ONLY : strf
   USE wvfct,        ONLY : npw, g2kin, igk
   USE io_files,     ONLY : iunigk
-  USE realus,       ONLY : tqr, qpointlist
+  USE realus,       ONLY : qpointlist
+  USE control_flags, ONLY : tqr
   USE paw_variables,ONLY : okpaw
   !
   IMPLICIT NONE

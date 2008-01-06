@@ -12,7 +12,8 @@ SUBROUTINE newd()
   USE uspp_param,    ONLY : upf, nh
   USE lsda_mod,      ONLY : nspin
   USE ions_base,     ONLY : nat, ntyp => nsp, ityp
-  use realus,        ONLY : tqr, newd_r
+  USE realus,        ONLY : newd_r
+  USE control_flags, ONLY : tqr
   USE paw_variables, ONLY : okpaw, ddd_paw
   IMPLICIT NONE
   integer :: na, nt, ih, jh, ijh

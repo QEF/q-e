@@ -56,7 +56,7 @@ MODULE pw_restart
       !------------------------------------------------------------------------
       !
       USE control_flags,        ONLY : istep, modenum, twfcollect, conv_ions, &
-                                       lscf, lkpoint_dir, gamma_only
+                                       lscf, lkpoint_dir, gamma_only, tqr
       USE global_version,       ONLY : version_number
       USE cell_base,            ONLY : at, bg, alat, tpiba, tpiba2, &
                                        ibrav, symm_type, celldm
@@ -306,6 +306,10 @@ MODULE pw_restart
 !        This flag says how eigenvalues are saved
 !
          CALL iotk_write_dat( iunpun, "LKPOINT_DIR", lkpoint_dir )
+!
+!        This flag says if Q in real space has to be used
+!
+         CALL iotk_write_dat( iunpun, "Q_REAL_SPACE", tqr )
          !
 !-------------------------------------------------------------------------------
 ! ... CELL

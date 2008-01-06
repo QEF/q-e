@@ -11,7 +11,8 @@
 SUBROUTINE addusdens()
   !----------------------------------------------------------------------
   !
-  USE realus, ONLY: tqr, addusdens_r
+  USE realus, ONLY: addusdens_r
+  USE control_flags, ONLY : tqr
   !
   IMPLICIT NONE
   !

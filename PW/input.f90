@@ -116,7 +116,6 @@ SUBROUTINE iosys()
                             nqx2_ => nq2, &
                             nqx3_ => nq3
   !
-  USE realus,        ONLY : tqr_ => tqr
   !
   USE lsda_mod,      ONLY : nspin_                  => nspin, &
                             starting_magnetization_ => starting_magnetization, &
@@ -137,6 +136,7 @@ SUBROUTINE iosys()
                             nosym_            => nosym, &
                             modenum_          => modenum, &
                             lkpoint_dir_      => lkpoint_dir, &
+                            tqr_              => tqr, &
                             io_level, ethr, lscf, lbfgs, lmd, lpath, lneb,   &
                             lsmd, lphonon, ldamped, lbands, lmetadyn, llang, &
                             lconstrain, lcoarsegrained, restart, twfcollect, &

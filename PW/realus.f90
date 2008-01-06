@@ -21,7 +21,6 @@ MODULE realus
   REAL(DP), ALLOCATABLE :: boxrad(:)
   REAL(DP), ALLOCATABLE :: boxdist(:,:), xyz(:,:,:)     
   REAL(DP), ALLOCATABLE :: spher(:,:,:)
-  LOGICAL               :: tqr
   !
   CONTAINS
     !

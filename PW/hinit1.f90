@@ -20,8 +20,8 @@ SUBROUTINE hinit1()
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : vrs, vltot, v, kedtau
   USE vlocal,        ONLY : strf
-  USE control_flags, ONLY : pot_order
-  USE realus,        ONLY : tqr, qpointlist
+  USE control_flags, ONLY : pot_order, tqr
+  USE realus,        ONLY : qpointlist
   !
   IMPLICIT NONE
   !

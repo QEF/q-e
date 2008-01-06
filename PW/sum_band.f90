@@ -17,7 +17,7 @@ SUBROUTINE sum_band()
   !
   USE kinds,                ONLY : DP
   USE ener,                 ONLY : eband
-  USE control_flags,        ONLY : diago_full_acc, gamma_only
+  USE control_flags,        ONLY : diago_full_acc, gamma_only, tqr
   USE cell_base,            ONLY : at, bg, omega, tpiba
   USE ions_base,            ONLY : nat, ntyp => nsp, ityp
   USE gvect,                ONLY : nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, &
@@ -27,7 +27,6 @@ SUBROUTINE sum_band()
   USE klist,                ONLY : nks, nkstot, wk, xk, ngk
   USE ldaU,                 ONLY : lda_plus_U
   USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
-  USE realus,               ONLY : tqr
   USE scf,                  ONLY : rho
   USE symme,                ONLY : nsym, s, ftau
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk

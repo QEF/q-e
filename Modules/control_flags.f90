@@ -301,7 +301,8 @@ MODULE control_flags
   LOGICAL,          PUBLIC :: tprojwfc = .FALSE.
                               !  in CP controls the printing of wave function projections
                               !  on atomic states
-
+  LOGICAL,          PUBLIC :: tqr=.FALSE. ! if true the Q are in real space
+ 
 
   !
   ! ...  end of module-scope declarations
