@@ -16,19 +16,19 @@ subroutine bcast_ph_input1
   use pwcom
   use phcom
   use mp, only: mp_bcast
+  USE io_global, ONLY : ionode_id
   implicit none
-  integer :: root = 0
 
   !
   ! integers
   !
-  call mp_bcast (nat_todo, root)
+  call mp_bcast (nat_todo, ionode_id)
   if (nat_todo.gt.0) then
-     call mp_bcast (atomo, root)
+     call mp_bcast (atomo, ionode_id)
   endif
-  call mp_bcast (nrapp, root)
+  call mp_bcast (nrapp, ionode_id)
   if (nrapp.gt.0) then
-     call mp_bcast (list, root)
+     call mp_bcast (list, ionode_id)
   endif
 #endif
   return

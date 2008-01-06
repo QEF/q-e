@@ -77,7 +77,7 @@ SUBROUTINE q_points ( )
   !
   ! Write the q points in the output
   !
-  write(stdout, '(//5x,"Calculation of the dynamical matrices for (", & 
+  write(stdout, '(//5x,"Dynamical matrices for (", & 
        &3(i2,","),") uniform grid of q-points")') nq1, nq2, nq3
   if ( single_q ) write(stdout, '(5x, "with only (", 3(i2,","), &
                                     & ") point requested")') iq1, iq2, iq3

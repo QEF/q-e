@@ -24,51 +24,53 @@ subroutine bcast_ph_input ( )
   USE ramanm, ONLY: lraman, elop, dek, eth_rps, eth_ns
   USE input_parameters, ONLY: max_seconds
   USE ions_base,     ONLY : amass
+  USE io_global, ONLY : ionode_id
 
   implicit none
-  integer :: root = 0
   !
   ! logicals
   !
-  call mp_bcast (lgamma, root)
-  call mp_bcast (epsil, root)
-  call mp_bcast (trans, root)
-  call mp_bcast (zue, root)
-  call mp_bcast (reduce_io, root)
-  call mp_bcast (elph, root)
-  call mp_bcast (lnscf, root)
-  call mp_bcast (ldisp, root)
-  call mp_bcast (lraman, root)
-  call mp_bcast (elop, root)
-  call mp_bcast (recover, root)
-  call mp_bcast (asr, root)
+  call mp_bcast (lgamma, ionode_id)
+  call mp_bcast (epsil, ionode_id)
+  call mp_bcast (trans, ionode_id)
+  call mp_bcast (zue, ionode_id)
+  call mp_bcast (reduce_io, ionode_id)
+  call mp_bcast (elph, ionode_id)
+  call mp_bcast (lnscf, ionode_id)
+  call mp_bcast (ldisp, ionode_id)
+  call mp_bcast (lraman, ionode_id)
+  call mp_bcast (elop, ionode_id)
+  call mp_bcast (recover, ionode_id)
+  call mp_bcast (asr, ionode_id)
+  call mp_bcast (lrpa, ionode_id)
+  call mp_bcast (lnoloc, ionode_id)
   !
   ! integers
   !
-  call mp_bcast (niter_ph, root)
-  call mp_bcast (nmix_ph, root)
-  call mp_bcast (maxirr, root)
-  call mp_bcast (iverbosity, root)
+  call mp_bcast (niter_ph, ionode_id)
+  call mp_bcast (nmix_ph, ionode_id)
+  call mp_bcast (maxirr, ionode_id)
+  call mp_bcast (iverbosity, ionode_id)
   !
   ! real*8
   !
-  call mp_bcast (tr2_ph, root)
-  call mp_bcast (eth_rps, root)
-  call mp_bcast (eth_ns, root)
-  call mp_bcast (amass, root)
-  call mp_bcast (alpha_mix, root)
-  call mp_bcast (xq, root)
-  call mp_bcast (max_seconds, root)
-  call mp_bcast (dek, root)
+  call mp_bcast (tr2_ph, ionode_id)
+  call mp_bcast (eth_rps, ionode_id)
+  call mp_bcast (eth_ns, ionode_id)
+  call mp_bcast (amass, ionode_id)
+  call mp_bcast (alpha_mix, ionode_id)
+  call mp_bcast (xq, ionode_id)
+  call mp_bcast (max_seconds, ionode_id)
+  call mp_bcast (dek, ionode_id)
   !
   ! characters
   !
-  call mp_bcast (title, root)
-  call mp_bcast (fildyn, root)
-  call mp_bcast (fildvscf, root)
-  call mp_bcast (fildrho, root)
-  call mp_bcast (tmp_dir, root)
-  call mp_bcast (prefix, root)
+  call mp_bcast (title, ionode_id)
+  call mp_bcast (fildyn, ionode_id)
+  call mp_bcast (fildvscf, ionode_id)
+  call mp_bcast (fildrho, ionode_id)
+  call mp_bcast (tmp_dir, ionode_id)
+  call mp_bcast (prefix, ionode_id)
 #endif
   return
 end subroutine bcast_ph_input
