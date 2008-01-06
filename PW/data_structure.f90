@@ -278,9 +278,8 @@ subroutine data_structure( lgamma )
   nrxxs = dffts%nnr
 
   !
-  ! nxx is just a copy in the parallel commons of nrxx
+  ! nxx is just a copy 
   !
-
   nxx   = nrxx
   nxxs  = nrxxs
 
@@ -299,6 +298,11 @@ subroutine data_structure( lgamma )
   nrx2s = nr2s
   nrx3s = nr3s
   nrxxs = nrx1s * nrx2s * nrx3s
+
+  ! nxx is just a copy 
+  !
+  nxx   = nrxx
+  nxxs  = nrxxs
 
   CALL fft_dlay_allocate( dfftp, nproc_pool, MAX(nrx1, nrx3),  nrx2  )
   CALL fft_dlay_allocate( dffts, nproc_pool, MAX(nrx1s, nrx3s), nrx2s )
