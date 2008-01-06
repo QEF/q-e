@@ -372,8 +372,6 @@ MODULE relax
   !
   SAVE
   !
-  LOGICAL :: &                   ! if .TRUE. start the structural optimization
-       restart_bfgs              ! from the results of a previous run
   REAL(DP) :: &
        epse,                    &! threshold on total energy
        epsf,                    &! threshold on forces

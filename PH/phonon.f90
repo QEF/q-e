@@ -18,13 +18,8 @@ PROGRAM phonon
   USE kinds,           ONLY : DP
   USE io_global,       ONLY : stdout, ionode, ionode_id
   USE control_flags,   ONLY : gamma_only
-  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, nkstot,            &
-                              tot_magnetization,                           &
-                              multiplicity, nelup, neldw, tot_charge,      &
-                              two_fermi_energies
-  USE relax,           ONLY : restart_bfgs
+  USE klist,           ONLY : xk, wk, xqq, lgauss, nks, nkstot        
   USE basis,           ONLY : startingwfc, startingpot, startingconfig
-  USE cellmd,          ONLY : calc
   USE force_mod,       ONLY : force
   USE io_files,        ONLY : prefix, tmp_dir, nd_nmbr, delete_if_present
   USE mp,              ONLY : mp_bcast
@@ -263,17 +258,9 @@ PROGRAM phonon
         lscf              = .FALSE.
         lbands            = .FALSE.
         restart           = .FALSE.
-        restart_bfgs      = .FALSE.
         startingconfig    = 'input'
         startingpot       = 'file'
         startingwfc       = 'atomic'
-        tot_magnetization = -1
-        nelup             = 0.d0
-        neldw             = 0.d0
-        tot_charge        = 0.d0
-        multiplicity      = 0
-        two_fermi_energies= .FALSE.
-        calc=' '
         !
         ! ... the threshold for diagonalization ethr is calculated via
         ! ... the threshold on self-consistency tr2 - the value used
