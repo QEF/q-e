@@ -58,12 +58,14 @@ SUBROUTINE stop_run( flag )
      !
   END IF
   !      
+  IF (flag) THEN
+     CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
+     CLOSE( UNIT = 4, STATUS = 'DELETE' )
+  ENDIF
+
   IF ( flag .AND. ionode ) THEN
      !
      ! ... all other files must be reopened and removed
-     !
-     CALL seqopn( 4, 'restart', 'UNFORMATTED', exst )
-     CLOSE( UNIT = 4, STATUS = 'DELETE' )
      !
      CALL seqopn( 4, 'update', 'FORMATTED', exst )
      CLOSE( UNIT = 4, STATUS = 'DELETE' )
