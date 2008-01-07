@@ -403,7 +403,7 @@
                      ic     = descla( ilac_ , iss ) + istart - 1
                      IF( la_proc ) THEN
                         DO i = 1, nc
-                           icc=i+ic-1+istart-1
+                           icc=i+ic-1
                            CALL daxpy( na(is), qqf, bephi(jnl+1,icc),1,qbephi(inl+1,i,iss), 1 ) 
                            CALL daxpy( na(is), qqf, becp (jnl+1,icc),1, qbecp(inl+1,i,iss), 1 )
                         END DO
