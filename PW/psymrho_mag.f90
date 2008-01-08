@@ -17,7 +17,7 @@ SUBROUTINE psymrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau, &
   !
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : me_pool, root_pool
-  USE fft_base,  ONLY : dfftp
+  USE fft_base,  ONLY : dfftp, grid_gather, grid_scatter
   !
   IMPLICIT NONE
   !
@@ -30,7 +30,7 @@ SUBROUTINE psymrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau, &
   ALLOCATE (rrho( nrx1 * nrx2 * nrx3, 3))    
 
   DO i=1,3
-     CALL gather (rho(1,i), rrho(1,i))
+     CALL grid_gather (rho(:,i), rrho(:,i))
   ENDDO
 
   IF ( me_pool == root_pool ) &
@@ -38,7 +38,7 @@ SUBROUTINE psymrho_mag (rho, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau, &
                       nr1, nr2, nr3, nsym, s, ftau, bg, at )
 
   DO i=1,3
-     CALL scatter (rrho(1,i), rho(1,i))
+     CALL grid_scatter (rrho(:,i), rho(:,i))
   ENDDO
 
   DEALLOCATE (rrho)

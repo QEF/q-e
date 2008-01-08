@@ -15,6 +15,8 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   USE io_global, ONLY : stdout
   USE kinds, ONLY : DP
   USE constants, ONLY: rytoev
+  USE mp, ONLY : mp_max, mp_min
+  USE mp_global, ONLY : inter_pool_comm
   implicit none
   !  I/O variables
   integer, intent(in) :: nks, nbnd, Ngauss, is, isk(nks)
@@ -42,8 +44,8 @@ FUNCTION efermig (et, nbnd, nks, nelec, wk, Degauss, Ngauss, is, isk)
   !
   ! find min and max across pools
   !
-  call poolextreme (Eup, + 1)
-  call poolextreme (Elw, - 1)
+  call mp_max( eup, inter_pool_comm )
+  call mp_min( elw, inter_pool_comm )
 #endif
   !
   !      Bisection method

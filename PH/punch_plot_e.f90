@@ -21,6 +21,7 @@ SUBROUTINE punch_plot_e()
   !
   USE ions_base,  ONLY : nat, ityp, ntyp => nsp, atm, zv, tau
   USE io_global,  ONLY : stdout, ionode
+  USE fft_base,   ONLY : grid_gather
   USE pwcom
   USE kinds,      ONLY : DP
   USE phcom
@@ -117,7 +118,7 @@ SUBROUTINE punch_plot_e()
      !
 #if defined (__PARA)
      ALLOCATE (raux1( nrx1 * nrx2 * nrx3))    
-     CALL gather (raux, raux1)
+     CALL grid_gather (raux, raux1)
      IF ( ionode ) WRITE (iunplot, '(5(1pe17.9))') &
           (raux1 (ir) , ir = 1, nrx1 * nrx2 * nrx3)
      DEALLOCATE (raux1)

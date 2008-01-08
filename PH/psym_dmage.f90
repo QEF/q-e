@@ -17,7 +17,7 @@ SUBROUTINE psym_dmage (dvtosym)
   USE kinds,     ONLY : DP
   USE phcom
   USE mp_global, ONLY : me_pool
-  USE fft_base,  ONLY : dfftp
+  USE fft_base,  ONLY : dfftp, cgather_sym
   !
   IMPLICIT NONE
   !
@@ -41,7 +41,7 @@ SUBROUTINE psym_dmage (dvtosym)
   ENDDO
   DO iper = 1, 3
      DO is = 1, nspin
-        CALL cgather_sym (dvtosym (1, is, iper), ddvtosym (1, is, iper) )
+        CALL cgather_sym (dvtosym (:, is, iper), ddvtosym (:, is, iper) )
      ENDDO
   ENDDO
 

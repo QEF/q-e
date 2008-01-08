@@ -36,8 +36,10 @@
 
         PRIVATE
 
-        PUBLIC :: fft_scatter
+        PUBLIC :: fft_scatter, grid_gather, grid_scatter
         PUBLIC :: dfftp, dffts, dfftb, fft_dlay_descriptor
+        PUBLIC :: cgather_sym, cgather_smooth, cscatter_sym, cscatter_smooth
+
 
 
 !=----------------------------------------------------------------------=!
@@ -674,6 +676,384 @@ subroutine fft_scatter ( f_in, nrx3, nxx_, f_aux, ncp_, npp_, sign, use_tg )
 end subroutine fft_scatter
 
 #endif
+
+!----------------------------------------------------------------------------
+SUBROUTINE grid_gather( f_in, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... gathers nproc_pool distributed data on the first processor of every pool
+  !
+  ! ... REAL*8  f_in  = distributed variable (nxx)
+  ! ... REAL*8  f_out = gathered variable (nrx1*nrx2*nrx3)
+  !
+  USE kinds,     ONLY : DP
+  USE parallel_include
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP) :: f_in( : ), f_out( : )
+  !
+#if defined (__PARA)
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
+  !
+  IF( SIZE( f_in ) < dfftp%nnr ) &
+     CALL errore( ' grid_gather ', ' f_in too small ', dfftp%nnr - SIZE( f_in ) )
+  !
+  CALL start_clock( 'gather' )
+  !
+  DO proc = 0, ( nproc_pool - 1 )
+     !
+     recvcount(proc) = dfftp%nnp * dfftp%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + recvcount(proc-1)
+        !
+     END IF
+     !
+  END DO
+  !
+  info = SIZE( f_out ) - displs( nproc_pool - 1 ) - recvcount( nproc_pool - 1 )
+  !
+  IF( info < 0 ) &
+     CALL errore( ' grid_gather ', ' f_out too small ', -info )
+  !
+  info = 0
+  !
+  CALL MPI_GATHERV( f_in, recvcount(me_pool), MPI_DOUBLE_PRECISION, f_out, &
+                    recvcount, displs, MPI_DOUBLE_PRECISION, root_pool,    &
+                    intra_pool_comm, info )
+  !
+  CALL errore( 'gather', 'info<>0', info )
+  !
+  CALL stop_clock( 'gather' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE grid_gather
+
+
+!----------------------------------------------------------------------------
+SUBROUTINE grid_scatter( f_in, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... scatters data from the first processor of every pool
+  !
+  ! ... REAL*8  f_in  = gathered variable (nrx1*nrx2*nrx3)
+  ! ... REAL*8  f_out = distributed variable (nxx)
+  !
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
+                        me_pool, root_pool
+  USE kinds,     ONLY : DP
+  USE parallel_include
+  !
+  IMPLICIT NONE
+  !
+  REAL(DP) :: f_in( : ), f_out( : )
+  !
+#if defined (__PARA)
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
+  !
+  IF( SIZE( f_out ) < dfftp%nnr ) &
+     CALL errore( ' grid_scatter ', ' f_out too small ', dfftp%nnr - SIZE( f_in ) )
+  !
+  CALL start_clock( 'scatter' )
+  !
+  DO proc = 0, ( nproc_pool - 1 )
+     !
+     sendcount(proc) = dfftp%nnp * dfftp%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + sendcount(proc-1)
+        !
+     END IF
+     !
+  END DO
+  !
+  info = SIZE( f_in ) - displs( nproc_pool - 1 ) - sendcount( nproc_pool - 1 )
+  !
+  IF( info < 0 ) &
+     CALL errore( ' grid_scatter ', ' f_in too small ', -info )
+  !
+  info = 0
+  !
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
+                     f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
+                     root_pool, intra_pool_comm, info )
+  !
+  CALL errore( 'scatter', 'info<>0', info )
+  !
+  IF ( sendcount(me_pool) /= dfftp%nnr ) f_out(sendcount(me_pool)+1:dfftp%nnr) = 0.D0
+  !
+  CALL stop_clock( 'scatter' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE grid_scatter
+!
+! ... "gather"-like subroutines
+!
+!-----------------------------------------------------------------------
+SUBROUTINE cgather_sym( f_in, f_out )
+  !-----------------------------------------------------------------------
+  !
+  ! ... gather complex data for symmetrization (in phonon code)
+  ! ... COMPLEX*16  f_in  = distributed variable (nrxx)
+  ! ... COMPLEX*16  f_out = gathered variable (nrx1*nrx2*nrx3)
+  !
+  USE mp_global, ONLY : intra_pool_comm, intra_image_comm, &
+                        nproc_pool, me_pool
+  USE mp,        ONLY : mp_barrier
+  USE parallel_include    
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: f_in( : ), f_out(:)
+  !
+#if defined (__PARA)  
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
+  !
+  !
+  CALL start_clock( 'cgather' )
+  !
+  DO proc = 0, ( nproc_pool - 1 )
+     !
+     recvcount(proc) = 2 * dfftp%nnp * dfftp%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + recvcount(proc-1)
+        !
+     END IF
+     !
+  END DO
+  !
+  CALL mp_barrier( intra_pool_comm )
+  !
+  CALL MPI_ALLGATHERV( f_in, recvcount(me_pool), MPI_DOUBLE_PRECISION, &
+                       f_out, recvcount, displs, MPI_DOUBLE_PRECISION, &
+                       intra_pool_comm, info )
+  !
+  CALL errore( 'cgather_sym', 'info<>0', info )
+  !
+  CALL mp_barrier( intra_image_comm )
+  !
+  CALL stop_clock( 'cgather' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cgather_sym
+!
+!----------------------------------------------------------------------------
+SUBROUTINE cgather_smooth ( f_in, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... gathers data on the smooth AND complex fft grid
+  !
+  ! ... gathers nproc_pool distributed data on the first processor of every pool
+  !
+  ! ... COMPLEX*16  f_in  = distributed variable ( dffts%nnr )
+  ! ... COMPLEX*16  f_out = gathered variable (nrx1s*nrx2s*nrx3s)
+  !
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, me_pool, root_pool
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
+  USE parallel_include    
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: f_in(:), f_out(:)
+  !
+#if defined (__PARA)  
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:nproc_pool-1), recvcount(0:nproc_pool-1)
+  !
+  !
+  CALL start_clock( 'gather' )
+  !
+  DO proc = 0, ( nproc_pool - 1 )
+     !
+     recvcount(proc) = 2 * dffts%nnp * dffts%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + recvcount(proc-1)
+        !
+     END IF
+     !
+  END DO
+  !
+  CALL mp_barrier( intra_pool_comm )
+  !
+  CALL MPI_GATHERV( f_in, recvcount(me_pool), MPI_DOUBLE_PRECISION, f_out, &
+                    recvcount, displs, MPI_DOUBLE_PRECISION, root_pool,    &
+                    intra_pool_comm, info )
+  !
+  CALL errore( 'gather', 'info<>0', info )
+  !
+  CALL stop_clock( 'gather' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cgather_smooth
+!
+! ... "scatter"-like subroutines
+!
+!----------------------------------------------------------------------------
+SUBROUTINE cscatter_sym( f_in, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... scatters data from the first processor of every pool
+  !
+  ! ... COMPLEX*16  f_in  = gathered variable (nrx1*nrx2*nrx3)
+  ! ... COMPLEX*16  f_out = distributed variable (nxx)
+  !
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
+                        me_pool, root_pool
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
+  USE parallel_include    
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: f_in(:), f_out(:)
+  !
+#if defined (__PARA)  
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
+  !
+  !
+  CALL start_clock( 'cscatter_sym' )
+  !
+  DO proc = 0, ( nproc_pool - 1 )
+     !
+     sendcount(proc) = 2 * dfftp%nnp * dfftp%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + sendcount(proc-1)
+        !
+     END IF
+     !
+  END DO
+  !
+  CALL mp_barrier( intra_pool_comm )
+  !  
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
+                     f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
+                     root_pool, intra_pool_comm, info )
+  !
+  CALL errore( 'cscatter_sym', 'info<>0', info )
+  !
+  IF ( sendcount(me_pool) /=  dfftp%nnr  ) f_out(sendcount(me_pool)+1: dfftp%nnr ) = 0.D0
+  !
+  CALL stop_clock( 'cscatter_sym' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cscatter_sym
+!
+!----------------------------------------------------------------------------
+SUBROUTINE cscatter_smooth( f_in, f_out )
+  !----------------------------------------------------------------------------
+  !
+  ! ... scatters data on the smooth AND complex fft grid
+  ! ... scatters data from the first processor of every pool
+  !
+  ! ... COMPLEX*16  f_in  = gathered variable (nrx1s*nrx2s*nrx3s)
+  ! ... COMPLEX*16  f_out = distributed variable ( dffts%nnr)
+  !
+  USE mp_global, ONLY : intra_pool_comm, nproc_pool, &
+                        me_pool, root_pool
+  USE mp,        ONLY : mp_barrier
+  USE kinds,     ONLY : DP
+  USE parallel_include    
+  !
+  IMPLICIT NONE
+  !
+  COMPLEX(DP) :: f_in(:), f_out(:)
+  !
+#if defined (__PARA)  
+  !
+  INTEGER :: proc, info
+  INTEGER :: displs(0:nproc_pool-1), sendcount(0:nproc_pool-1)
+  !
+  !
+  CALL start_clock( 'scatter' )
+  !
+  DO proc = 0, ( nproc_pool - 1 )
+     !
+     sendcount(proc) = 2 * dffts%nnp * dffts%npp(proc+1)
+     !
+     IF ( proc == 0 ) THEN
+        !
+        displs(proc) = 0
+        !
+     ELSE
+        !
+        displs(proc) = displs(proc-1) + sendcount(proc-1)
+        !
+     END IF
+     !
+  END DO
+  !
+  CALL mp_barrier( intra_pool_comm )
+  !  
+  CALL MPI_SCATTERV( f_in, sendcount, displs, MPI_DOUBLE_PRECISION,   &
+                     f_out, sendcount(me_pool), MPI_DOUBLE_PRECISION, &
+                     root_pool, intra_pool_comm, info )
+  !
+  CALL errore( 'scatter', 'info<>0', info )
+  !
+  IF ( sendcount(me_pool) /=  dffts%nnr  ) f_out(sendcount(me_pool)+1: dffts%nnr ) = 0.D0
+  !
+  CALL stop_clock( 'scatter' )
+  !
+#endif
+  !
+  RETURN
+  !
+END SUBROUTINE cscatter_smooth
 
 !=----------------------------------------------------------------------=!
    END MODULE fft_base

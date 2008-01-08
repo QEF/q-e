@@ -65,6 +65,7 @@ d3_setup.o : ../Modules/functionals.o
 d3_setup.o : ../Modules/io_global.o
 d3_setup.o : ../Modules/ions_base.o
 d3_setup.o : ../Modules/kind.o
+d3_setup.o : ../Modules/mp.o
 d3_setup.o : ../Modules/mp_global.o
 d3_setup.o : ../Modules/uspp.o
 d3_setup.o : ../PH/phcom.o

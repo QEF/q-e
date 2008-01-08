@@ -66,6 +66,8 @@ subroutine phq_setup
   use phcom
   USE control_flags, ONLY : iverbosity, modenum
   USE funct,         ONLY : dmxc, dmxc_spin, dmxc_nc, dft_is_gradient
+  USE mp,            ONLY : mp_max, mp_min
+  USE mp_global,     ONLY : inter_pool_comm
   implicit none
 
   real(DP) :: rhotot, rhoup, rhodw, target, small, fac, xmax, emin, emax
@@ -228,7 +230,7 @@ subroutine phq_setup
   enddo
 #ifdef __PARA
   ! find the minimum across pools
-  call poolextreme (emin, -1)
+  call mp_min( emin, inter_pool_comm )
 #endif
   if (lgauss) then
      emax = target
@@ -242,7 +244,7 @@ subroutine phq_setup
      enddo
 #ifdef __PARA
      ! find the maximum across pools
-     call poolextreme (emax, + 1)
+     call mp_max( emax, inter_pool_comm )
 #endif
      alpha_pv = 2.d0 * (emax - emin)
   endif

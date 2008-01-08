@@ -219,6 +219,7 @@ compute_becsum.o : paw_onecenter.o
 compute_becsum.o : pwcom.o
 compute_dip.o : ../Modules/cell_base.o
 compute_dip.o : ../Modules/constants.o
+compute_dip.o : ../Modules/fft_base.o
 compute_dip.o : ../Modules/io_global.o
 compute_dip.o : ../Modules/ions_base.o
 compute_dip.o : ../Modules/kind.o
@@ -361,6 +362,8 @@ dynamics_module.o : pwcom.o
 efermig.o : ../Modules/constants.o
 efermig.o : ../Modules/io_global.o
 efermig.o : ../Modules/kind.o
+efermig.o : ../Modules/mp.o
+efermig.o : ../Modules/mp_global.o
 efermit.o : ../Modules/constants.o
 efermit.o : ../Modules/io_global.o
 efermit.o : ../Modules/kind.o
@@ -396,6 +399,7 @@ ewald_dipole.o : pwcom.o
 exx.o : ../Modules/cell_base.o
 exx.o : ../Modules/constants.o
 exx.o : ../Modules/control_flags.o
+exx.o : ../Modules/fft_base.o
 exx.o : ../Modules/functionals.o
 exx.o : ../Modules/io_files.o
 exx.o : ../Modules/io_global.o
@@ -580,6 +584,7 @@ h_psi_meta.o : pwcom.o
 h_psi_meta.o : scf_mod.o
 hexsym.o : ../Modules/kind.o
 hinit0.o : ../Modules/cell_base.o
+hinit0.o : ../Modules/control_flags.o
 hinit0.o : ../Modules/io_files.o
 hinit0.o : ../Modules/ions_base.o
 hinit0.o : ../Modules/paw_variables.o
@@ -652,7 +657,6 @@ input.o : dynamics_module.o
 input.o : exx.o
 input.o : noncol.o
 input.o : pwcom.o
-input.o : realus.o
 interpolate.o : ../Modules/control_flags.o
 interpolate.o : ../Modules/kind.o
 interpolate.o : pwcom.o
@@ -668,6 +672,8 @@ ions.o : ../Modules/control_flags.o
 ions.o : pwcom.o
 irrek.o : ../Modules/kind.o
 iweights.o : ../Modules/kind.o
+iweights.o : ../Modules/mp.o
+iweights.o : ../Modules/mp_global.o
 iweights.o : noncol.o
 kpoint_grid.o : ../Modules/kind.o
 lchk_tauxk.o : ../Modules/kind.o
@@ -708,6 +714,8 @@ mix_rho.o : ../Modules/io_files.o
 mix_rho.o : ../Modules/io_global.o
 mix_rho.o : ../Modules/ions_base.o
 mix_rho.o : ../Modules/kind.o
+mix_rho.o : ../Modules/mp.o
+mix_rho.o : ../Modules/mp_global.o
 mix_rho.o : ../Modules/paw_variables.o
 mix_rho.o : ../Modules/uspp.o
 mix_rho.o : ../Modules/wavefunctions.o
@@ -792,7 +800,6 @@ output_tau.o : ../Modules/io_global.o
 output_tau.o : ../Modules/ions_base.o
 output_tau.o : ../Modules/kind.o
 output_tau.o : pwcom.o
-para.o : ../Modules/fft_base.o
 para.o : ../Modules/kind.o
 para.o : ../Modules/mp.o
 para.o : ../Modules/mp_global.o
@@ -1072,6 +1079,11 @@ scf_mod.o : paw_onecenter.o
 scf_mod.o : pwcom.o
 seqopn.o : ../Modules/io_files.o
 seqopn.o : ../Modules/kind.o
+set_defaults_pw.o : ../Modules/bfgs_module.o
+set_defaults_pw.o : ../Modules/control_flags.o
+set_defaults_pw.o : ../Modules/kind.o
+set_defaults_pw.o : a2fmod.o
+set_defaults_pw.o : pwcom.o
 set_fft_dim.o : ../Modules/cell_base.o
 set_fft_dim.o : ../Modules/fft_scalar.o
 set_fft_dim.o : ../Modules/io_global.o
@@ -1231,7 +1243,6 @@ sum_band.o : buffers.o
 sum_band.o : noncol.o
 sum_band.o : paw_onecenter.o
 sum_band.o : pwcom.o
-sum_band.o : realus.o
 sum_band.o : scf_mod.o
 sumkg.o : ../Modules/kind.o
 sumkt.o : ../Modules/kind.o
@@ -1486,6 +1497,7 @@ rotate_wfc_gamma.o : ../include/f_defs.h
 rotate_wfc_k.o : ../include/f_defs.h
 s_psi.o : ../include/f_defs.h
 scale_h.o : ../include/f_defs.h
+set_defaults_pw.o : ../include/f_defs.h
 set_rhoc.o : ../include/f_defs.h
 setlocal.o : ../include/f_defs.h
 setup.o : ../include/f_defs.h

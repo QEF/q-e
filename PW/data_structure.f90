@@ -23,9 +23,9 @@ subroutine data_structure( lgamma )
                          ngm, ngm_l, ngm_g, gcutm, ecutwfc
   USE gsmooth,    ONLY : nr1s, nr2s, nr3s, nrx1s, nrx2s, nrx3s, nrxxs, &
                          ngms, ngms_l, ngms_g, gcutms
-  USE mp,         ONLY : mp_sum
+  USE mp,         ONLY : mp_sum, mp_max
   USE mp_global,  ONLY : intra_pool_comm, nproc_pool, me_pool, my_image_id, &
-                         nogrp, nproc
+                         nogrp, nproc, inter_pool_comm
   USE stick_base
   USE fft_scalar, ONLY : good_fft_dimension
   USE fft_types,  ONLY : fft_dlay_allocate, fft_dlay_set, fft_dlay_scalar
@@ -419,7 +419,7 @@ contains
     !
     ! ... find maximum value among all the processors
     !
-    call poolextreme (gkcut, + 1)
+    call mp_max (gkcut, inter_pool_comm )
     !
     return
   end subroutine calculate_gkcut

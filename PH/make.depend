@@ -105,11 +105,13 @@ allocate_phq.o : ramanm.o
 bcast_ph_input.o : ../Modules/control_flags.o
 bcast_ph_input.o : ../Modules/input_parameters.o
 bcast_ph_input.o : ../Modules/io_files.o
+bcast_ph_input.o : ../Modules/io_global.o
 bcast_ph_input.o : ../Modules/ions_base.o
 bcast_ph_input.o : ../Modules/mp.o
 bcast_ph_input.o : ../PW/pwcom.o
 bcast_ph_input.o : phcom.o
 bcast_ph_input.o : ramanm.o
+bcast_ph_input1.o : ../Modules/io_global.o
 bcast_ph_input1.o : ../Modules/mp.o
 bcast_ph_input1.o : ../PW/pwcom.o
 bcast_ph_input1.o : phcom.o
@@ -533,6 +535,8 @@ phq_setup.o : ../Modules/functionals.o
 phq_setup.o : ../Modules/io_global.o
 phq_setup.o : ../Modules/ions_base.o
 phq_setup.o : ../Modules/kind.o
+phq_setup.o : ../Modules/mp.o
+phq_setup.o : ../Modules/mp_global.o
 phq_setup.o : ../Modules/uspp.o
 phq_setup.o : ../PW/noncol.o
 phq_setup.o : ../PW/pwcom.o
@@ -594,11 +598,13 @@ psyme2.o : ../Modules/kind.o
 psyme2.o : ../Modules/mp_global.o
 psyme2.o : ../PW/pwcom.o
 psyme2.o : phcom.o
+punch_plot_e.o : ../Modules/fft_base.o
 punch_plot_e.o : ../Modules/io_global.o
 punch_plot_e.o : ../Modules/ions_base.o
 punch_plot_e.o : ../Modules/kind.o
 punch_plot_e.o : ../PW/pwcom.o
 punch_plot_e.o : phcom.o
+punch_plot_ph.o : ../Modules/fft_base.o
 punch_plot_ph.o : ../Modules/io_global.o
 punch_plot_ph.o : ../Modules/ions_base.o
 punch_plot_ph.o : ../Modules/kind.o

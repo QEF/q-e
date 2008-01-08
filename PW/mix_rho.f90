@@ -443,6 +443,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   USE lsda_mod,             ONLY : nspin
   USE control_flags,        ONLY : ngm0, gamma_only
   USE scf,                  ONLY : mix_type, local_tf_ddot
+  USE mp,                   ONLY : mp_max, mp_min
+  USE mp_global,            ONLY : intra_image_comm
   !
   IMPLICIT NONE
   !
@@ -541,8 +543,8 @@ SUBROUTINE approx_screening2( drho, rhobest )
   !
   CALL reduce( 1, avg_rsm1 )
   !
-  CALL extreme( min_rs, -1 )
-  CALL extreme( max_rs, +1 )
+  CALL mp_min( min_rs, intra_image_comm )
+  CALL mp_max( max_rs, intra_image_comm )
   !
   alpha = 3.D0 * ( tpi / 3.D0 )**( 5.D0 / 3.D0 ) * alpha
   !

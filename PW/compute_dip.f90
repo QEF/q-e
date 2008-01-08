@@ -21,6 +21,7 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
   USE lsda_mod,  ONLY : nspin
   USE extfield,  ONLY : edir
   USE mp_global, ONLY : me_pool
+  USE fft_base,  ONLY : grid_gather
   
   IMPLICIT NONE
 !
@@ -64,7 +65,7 @@ SUBROUTINE compute_dip(rho, dip, dipion, z0)
   DO is=1,nspin
      aux(:) = aux(:) + rho(:,is)
   ENDDO
-  CALL gather (aux(1), rrho(1))
+  CALL grid_gather (aux, rrho)
   DEALLOCATE(aux)
   IF ((me_pool+1).EQ.1) THEN
 #else

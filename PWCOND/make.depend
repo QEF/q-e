@@ -81,6 +81,7 @@ openfil_cond.o : ../Modules/mp_global.o
 openfil_cond.o : ../PW/buffers.o
 openfil_cond.o : ../PW/noncol.o
 openfil_cond.o : ../PW/pwcom.o
+poten.o : ../Modules/fft_base.o
 poten.o : ../Modules/fft_scalar.o
 poten.o : ../Modules/io_global.o
 poten.o : ../Modules/mp.o

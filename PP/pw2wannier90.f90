@@ -1333,6 +1333,7 @@ subroutine write_plot
    use klist,           only : nkstot, xk
    use gvect,           only : g, ngm, ecutwfc
    use cell_base,       only : tpiba2
+   use fft_base,        only : cgather_smooth
 
    implicit none
    integer ik, ibnd, ibnd1, ikevc, i1, j, spin

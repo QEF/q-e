@@ -378,6 +378,7 @@ contains
 
     use mp_global,            ONLY : nproc_pool, me_pool
     use funct,                ONLY : get_exx_fraction, start_exx, exx_is_active
+    use fft_base,             ONLY : cgather_smooth, cscatter_smooth
 
     implicit none
     integer :: ik,ibnd, i, j, k, ir, ri, rj, rk, isym, ikq

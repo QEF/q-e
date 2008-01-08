@@ -39,6 +39,9 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   USE wavefunctions_module,  ONLY : evc, psic
   USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin
+  USE mp,        ONLY : mp_max, mp_min
+  USE mp_global, ONLY : inter_pool_comm
+  USE fft_base,  ONLY : grid_gather
 !
   implicit none
   logical :: stm_wfc_matching
@@ -114,7 +117,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      enddo
 #ifdef __PARA
      ! find the minimum across pools
-     call poolextreme (emin, - 1)
+     call mp_min( emin, inter_pool_comm )
 #endif
      emax = et (nbnd_ocp, 1)
      do ik = 2, nks
@@ -122,7 +125,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      enddo
 #ifdef __PARA
      ! find the maximum across pools
-     call poolextreme (emax, 1)
+     call mp_max( emax, inter_pool_comm )
 #endif
      ef = (emin + emax) * 0.5d0
      degauss = 0.00001d0
@@ -364,7 +367,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
      call poolreduce (nrxx, rho%of_r)
      call psymrho (rho%of_r, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
           ftau)
-     call gather (rho%of_r, stmdos)
+     call grid_gather (rho%of_r(:,1), stmdos)
   endif
 #else
   if (.not.stm_wfc_matching) call DCOPY (nrxx, rho%of_r, 1, stmdos, 1)

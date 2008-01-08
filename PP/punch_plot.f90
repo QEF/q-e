@@ -56,6 +56,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   USE scf,              ONLY : rho, vltot, v
   USE wvfct,            ONLY : npw, nbnd, wg, igk
   USE noncollin_module, ONLY : noncolin
+  USE fft_base,         ONLY : grid_gather
 
   IMPLICIT NONE
   CHARACTER(len=*) :: filplot
@@ -251,7 +252,7 @@ SUBROUTINE punch_plot (filplot, plot_num, sample_bias, z, dz, &
   ENDIF
 
 #ifdef __PARA
-  IF (.NOT. (plot_num == 5 ) ) CALL gather (raux, raux1)
+  IF (.NOT. (plot_num == 5 ) ) CALL grid_gather (raux, raux1)
   IF ( ionode ) &
      CALL plot_io (filplot, title, nrx1, &
          nrx2, nrx3, nr1, nr2, nr3, nat, ntyp, ibrav, celldm, at, gcutm, &

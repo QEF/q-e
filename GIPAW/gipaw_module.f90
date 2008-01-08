@@ -325,6 +325,9 @@ CONTAINS
                               read_recon, read_recon_paratec, set_paw_upf
     USE symme,         ONLY : nsym, s
     USE uspp_param,    ONLY : upf 
+    USE mp_global,     ONLY : inter_pool_comm 
+    USE mp,            ONLY : mp_max, mp_min 
+
     IMPLICIT none
     integer :: ik, nt, ibnd
     logical :: nlcc_any
@@ -755,7 +758,7 @@ CONTAINS
     enddo
 #ifdef __PARA
     ! find the minimum across pools
-    call poolextreme (emin, -1)
+    call mp_min( emin, inter_pool_comm )
 #endif
     if (degauss.ne.0.0_dp) then
       call errore('gipaw_setup', 'implemented only for insulators', -1)
@@ -768,7 +771,7 @@ CONTAINS
       enddo
 #ifdef __PARA
       ! find the maximum across pools
-      call poolextreme (emax, + 1)
+      call mp_max( emax, inter_pool_comm )
 #endif
       alpha_pv = 2.0_dp * (emax - emin)
     endif

@@ -36,6 +36,7 @@ SUBROUTINE sym_band(filband, spin_component, firstk, lastk)
   USE wavefunctions_module, ONLY : evc
   USE io_global,            ONLY : ionode, ionode_id, stdout
   USE mp,                   ONLY : mp_bcast
+  USE fft_base,             ONLY : cgather_sym, cscatter_sym
   !
   IMPLICIT NONE
   !
@@ -399,6 +400,7 @@ SUBROUTINE rotate_psi(evc,evcr,s,ftau,gk,nl,igk,nr1,nr2,nr3, &
 
 USE kinds,     ONLY : DP
 USE constants, ONLY : tpi
+USE fft_base,  ONLY : cgather_sym, cscatter_sym
 IMPLICIT NONE
 
 INTEGER :: nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, nbnd
@@ -723,6 +725,7 @@ SUBROUTINE rotate_psi_so(evc_nc,evcr,s,ftau,d_spin,has_e,gk,nl,igk,npol, &
 !
 USE kinds,     ONLY : DP
 USE constants, ONLY : tpi
+USE fft_base,  ONLY : cscatter_sym, cgather_sym
 IMPLICIT NONE
 
 INTEGER :: npol, nr1, nr2, nr3, nrx1, nrx2, nrx3, nrxx, ngm, npw, nbnd, npwx
@@ -761,7 +764,7 @@ DO ipol=1,npol
 #if defined  (__PARA)
    !
    !
-   CALL cgather_sym( psic(1,ipol), psic_collect )
+   CALL cgather_sym( psic(:,ipol), psic_collect )
    !
    psir_collect=(0.d0,0.d0)
    !
@@ -792,7 +795,7 @@ DO ipol=1,npol
       END DO
    END IF
    !
-   CALL cscatter_sym( psir_collect, psir(1,ipol) )
+   CALL cscatter_sym( psir_collect, psir(:,ipol) )
    !
 #else
    IF (zone_border) THEN

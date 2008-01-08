@@ -18,6 +18,7 @@ SUBROUTINE work_function (wf)
   USE scf,       ONLY : rho, vltot, v, rho_core, rhog_core
   USE gvect
   USE cell_base, ONLY : omega, alat
+  USE fft_base,  ONLY : grid_gather
   USE mp,        ONLY : mp_bcast
 
   IMPLICIT NONE
@@ -54,16 +55,16 @@ SUBROUTINE work_function (wf)
 #ifdef __PARA
      ALLOCATE (aux  ( nrxx))    
      aux(:) = rho%of_r(:,current_spin) + rho_core(:)/nspin0
-     CALL gather (aux, raux1)
+     CALL grid_gather (aux, raux1)
 #else
      raux1(1:nrxx) = rho%of_r(1:nrxx,current_spin) + rho_core(1:nrxx)/nspin0
 #endif
      !
 #ifdef __PARA
      aux(:) = vltot(:) + v%of_r(:,current_spin)
-     CALL gather (aux, vaux1)
+     CALL grid_gather (aux, vaux1)
      aux(:) = aux(:) - vxc(:,current_spin)
-     CALL gather (aux, vaux2)
+     CALL grid_gather (aux, vaux2)
 #else
      vaux1(1:nrxx) = vltot(1:nrxx) + v%of_r(1:nrxx,current_spin)
      vaux2(1:nrxx) = vaux1(1:nrxx) -vxc(1:nrxx,current_spin)

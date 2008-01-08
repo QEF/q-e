@@ -22,7 +22,7 @@ SUBROUTINE davcio_drho2 (drho, lrec, iunit, nrec, isw)
   USE io_global, ONLY : ionode_id
   USE mp_global, ONLY : intra_pool_comm, me_pool, root_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
-  USE fft_base,  ONLY : dfftp
+  USE fft_base,  ONLY : dfftp, cgather_sym
   !
   IMPLICIT NONE
   !

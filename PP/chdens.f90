@@ -29,6 +29,7 @@ SUBROUTINE chdens (filplot,plot_num)
   USE gsmooth
   USE wavefunctions_module,  ONLY: psic
   USE io_files, ONLY: nd_nmbr
+  USE fft_base,   ONLY: grid_scatter
 
   implicit none
   character (len=256), INTENT(in) :: filplot
@@ -355,7 +356,7 @@ SUBROUTINE chdens (filplot,plot_num)
      endif
 #ifdef __PARA
      allocate(aux(nrxx))
-     call scatter(rhor, aux)
+     call grid_scatter(rhor, aux)
      psic(:) = CMPLX (aux(:), 0.d0)
      deallocate(aux)
 #else

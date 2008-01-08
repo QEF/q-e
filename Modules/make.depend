@@ -58,6 +58,7 @@ exc_t.o : functionals.o
 exc_t.o : kind.o
 fft_base.o : fft_types.o
 fft_base.o : kind.o
+fft_base.o : mp.o
 fft_base.o : mp_global.o
 fft_base.o : parallel_include.o
 fft_parallel.o : fft_base.o
@@ -66,7 +67,6 @@ fft_parallel.o : fft_types.o
 fft_parallel.o : kind.o
 fft_parallel.o : mp_global.o
 fft_parallel.o : parallel_include.o
-
 fft_scalar.o : kind.o
 fft_types.o : io_global.o
 functionals.o : io_global.o
@@ -292,7 +292,6 @@ fft_base.o : ../include/f_defs.h
 fft_parallel.o : ../include/f_defs.h
 fft_scalar.o : ../include/f_defs.h
 fft_scalar.o : ../include/fft_defs.h
-
 mp_wave.o : ../include/f_defs.h
 parser.o : ../include/f_defs.h
 path_base.o : ../include/f_defs.h

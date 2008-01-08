@@ -53,7 +53,8 @@ SUBROUTINE d3_setup()
   USE constants,     ONLY : degspin
   USE phcom
   USE d3com
-  USE mp_global,     ONLY : npool, me_pool
+  USE mp_global,     ONLY : npool, me_pool, inter_pool_comm
+  USE mp,            ONLY : mp_max, mp_min
   USE funct,         ONLY : dmxc, dmxc_spin
   !
   IMPLICIT NONE
@@ -153,7 +154,7 @@ SUBROUTINE d3_setup()
   ENDDO
   ! find the minimum across pools
 
-  CALL poolextreme (emin, - 1)
+  CALL mp_min( emin, inter_pool_comm )
   emax = et (1, 1)
   DO ik = 1, nks
      DO ibnd = 1, nbnd
@@ -162,7 +163,7 @@ SUBROUTINE d3_setup()
   ENDDO
   ! find the maximum across pools
 
-  CALL poolextreme (emax, + 1)
+  CALL mp_max( emax, inter_pool_comm )
   alpha_pv = 2.d0 * (emax - emin)
   ! avoid zero value for alpha_pv
   alpha_pv = MAX (alpha_pv, 1.0d-2)

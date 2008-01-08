@@ -18,7 +18,7 @@ subroutine psyme2 (dvtosym)
   use kinds, only : DP
   use phcom
   USE mp_global, ONLY: me_pool
-  USE fft_base,  ONLY: dfftp
+  USE fft_base,  ONLY: dfftp, cgather_sym
   implicit none
 
   complex(DP) :: dvtosym (nrxx, 6)
@@ -38,7 +38,7 @@ subroutine psyme2 (dvtosym)
   enddo
   npp0 = npp0 * dfftp%nnp + 1
   do iper = 1, 6
-     call cgather_sym (dvtosym (1, iper), ddvtosym (1, iper) )
+     call cgather_sym (dvtosym (:, iper), ddvtosym (:, iper) )
   enddo
 
   call syme2 (ddvtosym)

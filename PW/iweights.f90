@@ -14,6 +14,8 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg, is, isk)
   !     On output, Ef is the highest occupied Kohn-Sham level
   USE kinds
   USE noncollin_module, ONLY: noncolin
+  USE mp, ONLY : mp_max
+  USE mp_global, ONLY : inter_pool_comm
   implicit none
   !
   integer, intent(in) :: nks, nbnd, is, isk(nks)
@@ -43,7 +45,7 @@ subroutine iweights (nks, wk, nbnd, nelec, et, Ef, wg, is, isk)
   !
   ! find max across pools
   !
-  call poolextreme (Ef, + 1)
+  CALL mp_max( ef, inter_pool_comm )
 #endif
 
   return

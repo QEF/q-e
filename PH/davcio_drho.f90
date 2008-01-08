@@ -17,7 +17,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
   ! ... isw = -1 : reads data from a single file and distributes them
   !
   USE kinds,     ONLY : DP
-  USE fft_base,  ONLY : dfftp
+  USE fft_base,  ONLY : dfftp, cgather_sym, cscatter_sym
   USE io_global, ONLY : ionode, ionode_id
   USE mp_global, ONLY : inter_pool_comm, me_pool
   USE mp,        ONLY : mp_bcast, mp_barrier
@@ -46,7 +46,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      DO is = 1, nspin
         !   
-        CALL cgather_sym( drho(1,is), ddrho(1,is) )
+        CALL cgather_sym( drho(:,is), ddrho(:,is) )
         !
      END DO
      !
@@ -66,7 +66,7 @@ SUBROUTINE davcio_drho( drho, lrec, iunit, nrec, isw )
      !
      DO is = 1, nspin
         !   
-        CALL cscatter_sym ( ddrho(1,is), drho(1,is) )
+        CALL cscatter_sym ( ddrho(:,is), drho(:,is) )
         !
      END DO
      !
