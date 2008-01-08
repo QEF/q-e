@@ -12,6 +12,7 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    ! As ggen, for the box grid. A "b" is appended to box variables.
    ! The documentation for ggen applies
    !
+   USE kinds, ONLY: DP
    use gvecb, only: ngb, ngbt, ngbl, ngbx, gb, gxb, glb, npb, nmb
    use gvecb, only: iglb, mill_b
    use io_global, only: stdout, ionode
@@ -20,12 +21,12 @@ subroutine ggenb (b1b, b2b, b3b, nr1b ,nr2b, nr3b, nr1bx ,nr2bx, nr3bx, gcutb )
    implicit none
 !
    integer nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx
-   real(8) b1b(3), b2b(3), b3b(3), gcutb
+   REAL(DP) b1b(3), b2b(3), b3b(3), gcutb
 !
    integer, allocatable:: idx(:)
    integer n1pb, n2pb, n3pb, n1mb, n2mb, n3mb
    integer it, icurr, nr1m1, nr2m1, nr3m1, ir, ig, i,j,k, itv(3), idum, ip
-   real(8) t(3), g2
+   REAL(DP) t(3), g2
 !
       nr1m1=nr1b-1
       nr2m1=nr2b-1
@@ -219,12 +220,13 @@ end subroutine ggenb
       subroutine gcalb( alatb, b1b_ , b2b_ , b3b_  )
 !-----------------------------------------------------------------------
 !
+      USE kinds, ONLY: DP
       use control_flags, only: iprint
       use gvecb
 !
       implicit none
-      real(8), intent(in) :: alatb, b1b_ (3), b2b_ (3), b3b_ (3)
-      real(8) :: b1b(3), b2b(3), b3b(3)
+      REAL(DP), intent(in) :: alatb, b1b_ (3), b2b_ (3), b3b_ (3)
+      REAL(DP) :: b1b(3), b2b(3), b3b(3)
 !
       integer i, i1,i2,i3,ig
 
@@ -328,6 +330,7 @@ end subroutine ggenb
 !
 !   the g's are in units of 2pi/a.
 !
+      USE kinds,              ONLY: DP
       use reciprocal_vectors, only: g, gx, igl, mill_g, g2_g, gl
       use reciprocal_vectors, only: mill_l, ig_l2g
       use reciprocal_vectors, only: gzero, gstart, sortedig_l2g
@@ -345,8 +348,8 @@ end subroutine ggenb
       !
       implicit none
       !
-      real(8) :: b1(3), b2(3), b3(3), gcut, gcuts, gcutw
-      real(8) :: t(3), g2
+      REAL(DP) :: b1(3), b2(3), b3(3), gcut, gcuts, gcutw
+      REAL(DP) :: t(3), g2
       logical      :: lgam
       integer      :: nr1,nr2,nr3, nr1s,nr2s,nr3s
       integer      :: n1p, n2p, n3p, n1m, n2m, n3m
@@ -621,21 +624,22 @@ END SUBROUTINE gcount
 SUBROUTINE gglobal( ng_g, g2_g, mill_g, b1, b2, b3, nr1, nr2, nr3, gcut, lgam )
 !-------------------------------------------------------------------------
 
+  USE kinds,     ONLY: DP
   use io_global, only: ionode
 
   IMPLICIT NONE
 
   INTEGER :: ng_g
   INTEGER :: mill_g(3,*)
-  real(8) :: g2_g(*)
+  REAL(DP) :: g2_g(*)
   integer :: nr1, nr2, nr3
-  real(8) :: b1(3), b2(3), b3(3), gcut
+  REAL(DP) :: b1(3), b2(3), b3(3), gcut
   LOGICAL :: lgam
 
   INTEGER :: nr1m1, nr2m1, nr3m1
   INTEGER :: i, j, k, ir, ng, ig
 
-  real(8) :: g2, t(3)
+  REAL(DP) :: g2, t(3)
 
 
       nr1m1=nr1-1
@@ -693,13 +697,14 @@ END SUBROUTINE gglobal
 SUBROUTINE glocal( ng, g, ig_l2g, mill_l, ng_g, g2_g, mill_g, nr1, nr2, nr3, isind, ldis )
 !-------------------------------------------------------------------------
 
+  USE kinds,     ONLY: DP
   use io_global, only: ionode
 
   IMPLICIT NONE
 
   INTEGER :: ng_g, ng
   INTEGER :: mill_g(3,*), ig_l2g(*), mill_l(3,*)
-  real(8) :: g2_g(*), g(*)
+  REAL(DP) :: g2_g(*), g(*)
   integer :: nr1, nr2, nr3, isind(*), ldis
 
   INTEGER :: i, j, k, ig, n1p, n2p, ng_l
@@ -914,12 +919,14 @@ END SUBROUTINE gfftindex
 SUBROUTINE gshcount( ngl, ngsl, ngwl, igl, ng, g, gcuts, gcutw )
 !-------------------------------------------------------------------------
 
+  USE kinds,     ONLY: DP
+
   IMPLICIT NONE
 
   INTEGER :: ngl, ngsl, ngwl
   INTEGER :: igl(*)
   INTEGER :: ng
-  REAL(8) :: g(*), gcuts, gcutw
+  REAL(DP) :: g(*), gcuts, gcutw
 
   INTEGER :: ig
 
@@ -953,6 +960,7 @@ END SUBROUTINE gshcount
 !
 !   the g's are in units of 2pi/a.
 !
+      USE kinds,     ONLY: DP
       use constants, only: tpi
       use control_flags, only: iprint
       use reciprocal_vectors, only: g, gx, mill_l
@@ -961,9 +969,9 @@ END SUBROUTINE gshcount
       use gvecw, only: ggp, ecutz, ecsig, ecfix
       implicit none
 !
-      real(8) :: alat, b1_(3),b2_(3),b3_(3), gmax
-      real(8), external :: erf
-      real(8) :: b1(3),b2(3),b3(3), tpiba2, gcutz
+      REAL(DP) :: alat, b1_(3),b2_(3),b3_(3), gmax
+      REAL(DP), external :: erf
+      REAL(DP) :: b1(3),b2(3),b3(3), tpiba2, gcutz
 !
       integer i1,i2,i3,ig
 
@@ -1233,13 +1241,14 @@ END SUBROUTINE gshcount
 
       SUBROUTINE electrons_print_info( )
 
+          USE kinds, ONLY: DP
           USE electrons_base, ONLY: nbnd, nspin, nel, nelt, nupdwn, iupdwn, f
           USE io_global, ONLY: stdout
           USE ions_base, ONLY: zv, nsp, na
 
           IMPLICIT NONE
           INTEGER :: i,is
-          real(8) qbac           
+          REAL(DP) qbac           
 
           IF( nspin == 1) THEN
             WRITE(stdout,6) nelt, nbnd
