@@ -1235,9 +1235,11 @@ END SUBROUTINE gshcount
 
           USE electrons_base, ONLY: nbnd, nspin, nel, nelt, nupdwn, iupdwn, f
           USE io_global, ONLY: stdout
+          USE ions_base, ONLY: zv, nsp, na
 
           IMPLICIT NONE
-          INTEGER :: i
+          INTEGER :: i,is
+          real(8) qbac           
 
           IF( nspin == 1) THEN
             WRITE(stdout,6) nelt, nbnd
@@ -1249,6 +1251,15 @@ END SUBROUTINE gshcount
             WRITE(stdout,10) nel(2)
             WRITE(stdout,7) ( f( i ), i = iupdwn(2), ( iupdwn(2) + nupdwn(2) - 1 ) )
           END IF
+
+         qbac=0.
+         do is=1,nsp
+           qbac=qbac+na(is)*zv(is)
+         end do
+         qbac=qbac-nelt
+         if(qbac.ne.0) write(stdout,11) qbac
+
+
 6         FORMAT(/,3X,'Electronic states',/  &
                   ,3X,'-----------------',/  &
                   ,3X,'Number of Electron = ',I5,', of States = ',I5,/ &
@@ -1260,7 +1271,7 @@ END SUBROUTINE gshcount
                   ,3X,'Number of Electron = ',I5)
 9         FORMAT(  3X,'Spins up   = ', I5, ', occupations: ')
 10        FORMAT(  3X,'Spins down = ', I5, ', occupations: ')
-
+11        FORMAT(/,3X,'WARNING: system charge = ',F12.6)
           RETURN
       END SUBROUTINE electrons_print_info
 
