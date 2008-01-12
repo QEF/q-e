@@ -85,6 +85,7 @@ SUBROUTINE restart_from_file
   END IF
   !
   CALL mp_bcast ( ios, ionode_id )
+  CALL mp_bcast ( where_restart, ionode_id )
   !
   IF ( ios == 0 ) THEN
      !
