@@ -59,7 +59,10 @@ int F77_FUNC_ (create_plan_3d, CREATE_PLAN_3D)
 {
    fftw_direction dir = ( (*idir < 0) ? FFTW_FORWARD : FFTW_BACKWARD );
    *p = fftw3d_create_plan(*l, *m, *n, dir, FFTW_ESTIMATE | FFTW_IN_PLACE);
-   if( *p == NULL ) fprintf(stderr," *** CREATE_PLAN_3D: warning empty plan ***\n");
+   if( *p == NULL ) {
+	fprintf(stderr," *** CREATE_PLAN_3D: warning empty plan ***\n");
+	fprintf(stderr," *** input was (n,m,l,dir): %d %d %d %d ***\n", *l, *m, *n, *idir);
+   }
 /*   printf(" pointer size = %d, value = %d\n", sizeof ( *p ), *p ); */
    return 0;
 }
