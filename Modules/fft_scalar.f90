@@ -802,6 +802,13 @@
 
 #endif
 
+     IF ( nx < 1 ) &
+         call errore('cfft3',' nx is less than 1 ', 1)
+     IF ( ny < 1 ) &
+         call errore('cfft3',' ny is less than 1 ', 1)
+     IF ( nz < 1 ) &
+         call errore('cfft3',' nz is less than 1 ', 1)
+
 #if defined __HPM
             CALL f_hpmstart( 50 + ABS(isign), 'cfft3d' )
 #endif
