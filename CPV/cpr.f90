@@ -256,7 +256,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
         !
      END IF
      ! 
-     IF ( okvan .AND. (tfor .OR. thdyn .OR. tfirst) ) THEN
+     IF ( (okvan .or. nlcc_any ) .AND. (tfor .OR. thdyn .OR. tfirst) ) THEN
         !
         CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
         !
@@ -718,7 +718,7 @@ SUBROUTINE cprmain( tau_out, fion_out, etot_out )
            ! ... in this case optimize c0 and lambda for smooth
            ! ... restart with CP
            !
-           IF ( okvan) THEN
+           IF ( okvan .or. nlcc_any ) THEN
               CALL initbox( tau0, taub, irb, ainv, a1, a2, a3 )
               CALL phbox( taub, eigrb, ainvb )
            END IF

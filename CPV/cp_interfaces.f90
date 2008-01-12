@@ -194,9 +194,8 @@
 
 
    INTERFACE pseudopotential_indexes
-      SUBROUTINE pseudopotential_indexes_x( nlcc_any )
+      SUBROUTINE pseudopotential_indexes_x( )
          IMPLICIT NONE
-         LOGICAL, INTENT(OUT) :: nlcc_any
       END SUBROUTINE pseudopotential_indexes_x
    END INTERFACE
 

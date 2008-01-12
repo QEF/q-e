@@ -176,6 +176,7 @@ END FUNCTION calculate_dx
       USE mp, ONLY: mp_bcast, mp_sum
       USE io_global, ONLY: stdout, ionode, ionode_id
       USE uspp, ONLY : okvan
+      USE core, ONLY : nlcc_any
       USE uspp_param, ONLY : oldvan
       USE cvan, ONLY: nvb
       use ions_base, only: zv, nsp
@@ -204,6 +205,7 @@ END FUNCTION calculate_dx
       nspnl   = 0  ! number of non local pseudo
       nvb     = 0  ! number of Vanderbilt pseudo
       !
+      nlcc_any = .false. ! core corrections
 
       IF( nsp < 1 ) THEN
         CALL errore(' READPOT ',' nsp less than one! ', 1 )
@@ -359,6 +361,10 @@ END FUNCTION calculate_dx
           !     count u-s vanderbilt species 
           !
           if (upf(is)%tvanp) nvb=nvb+1
+          !
+          !     check for core corrections
+          !
+          nlcc_any = nlcc_any .OR. upf(is)%nlcc
           !
         END IF
 

@@ -494,12 +494,14 @@ init.o : ../Modules/recvec.o
 init.o : ../Modules/smallbox.o
 init.o : ../Modules/stick_base.o
 init.o : ../Modules/task_groups.o
+init.o : ../Modules/uspp.o
 init.o : atoms_type.o
 init.o : cp_restart.o
 init.o : electrons.o
 init.o : ions.o
 init.o : ions_positions.o
 init.o : mainvar.o
+init.o : modules.o
 init.o : problem_size.o
 init_run.o : ../Modules/cell_base.o
 init_run.o : ../Modules/control_flags.o

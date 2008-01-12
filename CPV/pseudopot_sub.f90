@@ -51,7 +51,7 @@
 
 
 
-   SUBROUTINE pseudopotential_indexes_x( nlcc_any )
+   SUBROUTINE pseudopotential_indexes_x( )
 
       use parameters, only: lmaxx    !
       use ions_base,  only: nsp, &   !  number of specie
@@ -74,7 +74,6 @@
 
       IMPLICIT NONE
      
-      LOGICAL, INTENT(OUT) :: nlcc_any
       !
       INTEGER :: is, iv, ind, il, lm
       !     ------------------------------------------------------------------
@@ -84,7 +83,6 @@
       lmaxkb   = -1
       nkb      =  0
       nkbus    =  0
-      nlcc_any = .false.
       !
       do is = 1, nsp
          ind = 0
@@ -96,7 +94,6 @@
          ish(is)=nkb
          nkb = nkb + na(is) * nh(is)
          if(  upf(is)%tvanp ) nkbus = nkbus + na(is) * nh(is)
-         nlcc_any = nlcc_any .OR. upf(is)%nlcc
       end do
       nhm    = MAXVAL( nh(1:nsp) )
       nbetam = MAXVAL( upf(1:nsp)%nbeta )

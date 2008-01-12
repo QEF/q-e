@@ -43,6 +43,8 @@
       USE problem_size,             ONLY: cpsizes
       USE mp_global,                ONLY: nproc_image
       USE task_groups,              ONLY: task_groups_init
+      USE core,                     ONLY: nlcc_any
+      USE uspp,                     ONLY: okvan
 
       implicit none
 ! 
@@ -173,6 +175,11 @@
          gcutb = ecut / tpibab / tpibab
          !
          CALL ggenb ( b1b, b2b, b3b, nr1b, nr2b, nr3b, nr1bx, nr2bx, nr3bx, gcutb )
+
+      ELSE IF( okvan .OR. nlcc_any ) THEN
+
+         CALL errore( ' init_dimensions ', ' nr1b, nr2b, nr3b must be given for ultrasoft and core corrected pp ', 1 )
+
       END IF
 
       ! ... printout g vector distribution summary

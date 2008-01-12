@@ -355,7 +355,7 @@ subroutine nlinit
       !
       !   initialize indexes
       !
-      CALL pseudopotential_indexes( nlcc_any )
+      CALL pseudopotential_indexes( )
       !
       !   initialize array ap
       !

@@ -149,7 +149,7 @@ CONTAINS
     !
     CALL strucf( sfac, ei1, ei2, ei3, mill_l, ngs )
     !     
-    IF ( okvan ) THEN
+    IF ( okvan .OR. nlcc_any ) THEN
        CALL initbox ( tau0, taub, irb, ainv, a1, a2, a3 )
        CALL phbox( taub, eigrb, ainvb )
     END IF
