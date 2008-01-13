@@ -38,8 +38,9 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
        qmax,qmin,& ! the limits of the q search
        logdermax,logdermin,& ! the maximum and minimum logder
        logder, & ! the actual logder
+       jlmin, jlmax, & ! the value of jl in qmin and qmax
        compute_log, &! function for log derivative
-       dq      ! the step to braket the q
+       dq, dq_0 ! the step to braket the q
 
   integer ::    &
        nc,  &    ! counter on the q found
@@ -58,7 +59,7 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   !
   !    fix deltaq and the maximum step number
   !
-  dq=0.05_dp
+  dq_0=0.05_dp
   imax=600
   !
   !    prepare for the first iteration  
@@ -67,25 +68,41 @@ subroutine find_qi(logderae,xc,ik,lam,ncn,flag,iok)
   call sph_bes(7,grid%r(ik-3),qmax,lam,j1)
   j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)**flag
   logdermax=compute_log(j1,grid%r(ik),grid%dx)-logderae
+  jlmax = j1(4)
 
   do nc=1,ncn
      !
      !    bracket the zero
      !
-200  qmin=qmax
+200  dq=dq_0
+     qmin=qmax
      logdermin=logdermax
+     jlmin = jlmax
      do iq=1,imax
-        xc(nc)=qmin+dq*iq
-        call sph_bes(7,grid%r(ik-3),xc(nc),lam,j1)
+        qmax=qmin+dq
+        call sph_bes(7,grid%r(ik-3),qmax,lam,j1)
         j1(1:7) = j1(1:7)*grid%r(ik-3:ik+3)**flag
         logdermax=compute_log(j1,grid%r(ik),grid%dx)-logderae
+        jlmax = j1(4)
         !
         !    the zero has been bracketed?
         !
-        if (logdermax*logdermin.lt.0.0_dp) then
-           qmax=xc(nc)
-           goto 100
-        endif
+        if ( jlmin * jlmax .gt. 0.0_dp ) then ! far from an asintote
+           !
+           if (logdermax*logdermin.lt.0.0_dp) goto 100
+           !
+           qmin = qmax
+           logdermin=logdermax
+           jlmin = jlmax
+        else
+           if (logdermax*logdermin.lt.0.0_dp) then
+              qmin = qmax
+              logdermin=logdermax
+              jlmin = jlmax
+           else
+              dq = 0.5_dp * dq
+           end if
+        end if
      enddo
      call infomsg ('find_qi','qmax not found ')
      iok=1

@@ -373,8 +373,16 @@ subroutine ld1_readin
           do ns1=1,nwfs
              if (lls(ns) == lls(ns1) .and. jjs(ns) == jjs(ns1)) c1=c1+1 
           enddo
-          if (c1 < 2) call errore('ld1_readin', &
-                        'US requires at least two energies per channel',ns)
+!!!!
+          if (c1 < 2) then
+             write (stdout,'(/,5x,A)') &
+                  '!!!!!!!!!!!!!!!!!!! WARNING !!!!!!!!!!!!!!!!!!!!!!!'
+             call infomsg ('ld1_readin', &
+                  'US requires at least two energies per channel '//els(ns))
+             write (stdout,'(5x,A)') &
+                  '!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!'
+          endif
+!!!!
         endif
      enddo
      if (nwfs > 1) then

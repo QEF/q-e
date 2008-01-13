@@ -24,9 +24,13 @@ ELSE
    CALL intref(l,e,grid%mesh,grid,vpot,ze2,psi_out)
 ENDIF
 !
-!    fix arbitrarily the norm at the cut-off radius equal to 0.5
+!    fix arbitrarily the norm at the cut-off radius equal to (about) 0.5**2
 !
-jnor=psi_out(ik)
+jnor=0.0_dp
+do n=1,ik
+   jnor = jnor + grid%dx*grid%r(n)*psi_out(n)**2
+end do
+jnor = sqrt(jnor)
 DO n=1,grid%mesh
    psi_out(n)=psi_out(n)*0.5_dp/jnor
 ENDDO

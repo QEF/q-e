@@ -19,7 +19,7 @@
 use kinds, only: dp
 use io_global, only : stdout
 use radial_grids, only: ndmx
-use ld1inc, only: grid
+use ld1inc, only: grid, verbosity
   implicit none
 
       real(DP) :: &
@@ -94,6 +94,10 @@ use ld1inc, only: grid
          write(stdout,110) els_in,grid%r(ik),2.0_dp*xc(5)**2
 110      format (5x, ' Wfc-us ',a3,' rcutus=',f6.3, &
                 '  Estimated cut-off energy= ', f8.2,' Ry')
+         if (verbosity=='high') then
+           write (stdout,'(5x,a)') 'rc*logder, xc(1), xc(2), rc*q(1),rc*q(2)'
+           write (stdout,'(7f12.5)') grid%r(ik)*f1ae/fae,xc(1:2),xc(4:5)*grid%r(ik)
+         endif
       endif
 !
 !    define the phis function
