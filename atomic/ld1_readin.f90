@@ -300,7 +300,7 @@ subroutine ld1_readin
      rhoc=0.0_dp
   endif
   !
-  which_augfun = 'AE'
+  which_augfun = 'DEFAULT'
   if (iswitch == 1) then
      !
      !    no more data needed for AE calculations
@@ -325,13 +325,21 @@ subroutine ld1_readin
 
      !    paw defaults:
      lnc2paw = .false.
-     rmatch_augfun=0.5_dp   ! reasonable
-     rcutnc2paw(:) = 1.0_dp     ! reasonable
+     rmatch_augfun=-1.0_dp   ! force a crash
+     rcutnc2paw(:) = 1.0_dp  ! reasonable
 
      if (ionode) read(5,inputp,err=500,iostat=ios)
 500  call mp_bcast(ios, ionode_id)
      call errore('ld1_readin','reading inputp',abs(ios))
      call bcast_inputp()
+
+     if(which_augfun=='DEFAULT') then
+        if( (lpaw .and. lnc2paw) .or. (.not. lpaw) ) then
+            which_augfun='AE'
+        else
+            which_augfun='BESSEL'
+        endif
+     endif
 
      if (lloc < 0 .and. rcloc <=0.0_dp) &
           call errore('ld1_readin','rcloc must be positive',1)

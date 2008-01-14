@@ -147,23 +147,24 @@ CONTAINS
   !
   ! Convert the USPP to a PAW dataset
   !
-  SUBROUTINE us2paw (pawset_,                                     &
-       zval, grid, rmatch_augfun, ikk, &
+  SUBROUTINE us2paw (pawset_,                                        &
+       zval, grid, rmatch_augfun, ikk,                               &
        nbeta, lls, jjs, ocs, enls, els, rcutus, psipaw, phis, betas, &
-       qvan, kindiff, &
-       nlcc, aerhoc, psrhoc, aevtot, psvtot, which_paw_augfun)
+       qvan, kindiff,                                                &
+       nlcc, aerhoc, psrhoc, aevtot, psvtot, which_paw_augfun        )
+
     USE funct, ONLY : dft_name, get_iexch, get_icorr, get_igcx, get_igcc
-    USE ld1inc, ONLY : zed
+    USE ld1inc, ONLY : zed, file_screen
     USE pseudo_types, ONLY : nullify_pseudo_paw, allocate_pseudo_paw
-    USE io_global, ONLY : stdout
+    USE io_global, ONLY : stdout, ionode, ionode_id
+    USE mp,        only : mp_bcast
     IMPLICIT NONE
     TYPE(paw_t),      INTENT(OUT) :: pawset_
-!   CHARACTER(LEN=2), INTENT(IN)  :: symbol !now generated on the fly
     REAL(dp), INTENT(IN)  :: zval
     type(radial_grid_type), INTENT(IN) :: grid
     REAL(dp), INTENT(IN)  :: rmatch_augfun
-!   INTEGER,  INTENT(IN)  :: irc
     INTEGER,  INTENT(IN)  :: ikk(nwfsx)
+    !
     INTEGER,  INTENT(IN)  :: nbeta
     INTEGER,  INTENT(IN)  :: lls(nwfsx)
     REAL(dp), INTENT(IN)  :: ocs(nwfsx)
@@ -174,6 +175,7 @@ CONTAINS
     REAL(dp), INTENT(IN)  :: psipaw(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: phis(ndmx,nwfsx)
     REAL(dp), INTENT(IN)  :: betas(ndmx,nwfsx)
+    !
     REAL(dp), INTENT(IN)  :: qvan(ndmx,nwfsx,nwfsx)
     REAL(dp), INTENT(IN)  :: kindiff(nwfsx,nwfsx)
     LOGICAL,  INTENT(IN)  :: nlcc
@@ -186,7 +188,7 @@ CONTAINS
     REAL(DP),  EXTERNAL :: int_0_inf_dr
     CHARACTER, EXTERNAL :: atom_name*2
     REAL(dp) :: vps(ndmx,2), projsum(nwfsx,nwfsx,2), ddd(nwfsx,nwfsx,2), dddion(nwfsx,nwfsx)
-    INTEGER  :: irc, ns, ns1, n, l, leading_power, mesh
+    INTEGER  :: irc, ns, ns1, n, l, leading_power, mesh, ios
     REAL(dp) :: aux(ndmx), aux2(ndmx,2), raux
     REAL(dp) :: aecharge(ndmx,2), pscharge(ndmx,2)
     REAL(dp) :: etot
@@ -195,12 +197,12 @@ CONTAINS
     !
     ! variables for aug. functions generation
     ! 
-    REAL(DP) :: qc(2), xc(2), b1(2), b2(2), energy(5,3)
+    REAL(DP) :: qc(2), xc(2), b1(2), b2(2), energy(5,3), max_aug_cutoff = -1._dp
     REAL(DP), ALLOCATABLE :: j1(:,:)
     INTEGER  :: nc, iok          ! index Bessel function, ...
     INTEGER :: l1,l2,l3, lll, ircm, ir, ir0
-    REAL(dp) :: twosigma2, rm, gaussian(ndmx)  ! needed for "gaussian" augfun 
-    REAL(dp) :: zeta, resi,usigma=4._dp             ! needed for "bloechl" augfun 
+    REAL(dp) :: twosigma2, rm, gaussian(ndmx)  ! needed for "gaussian" augfun
+    REAL(dp) :: zeta, resi,usigma=4._dp        ! needed for "Bloechl" augfun
     !
     mesh = grid%mesh
     irc = maxval(ikk(1:nbeta))+8
@@ -258,6 +260,9 @@ CONTAINS
     !
     ! Compute the exact augmentation functions and their moments
     !
+    write(stdout,'(//,4x,a)') 'multipoles (all-electron charge) - (pseudo charge)'
+    write(stdout,'(7x,2a,":",2a,2x,6a)') ' ns',' l1','ns1',' l2',&
+                 '  l=0   ','  l=1   ','  l=2   ','  l=3   ','  l=4   ', '  l=5  '
     pawset_%augfun(:,:,:,:) = 0.0_dp
     pawset_%augmom(:,:,:) = 0.0_dp
     DO ns=1,nbeta
@@ -274,14 +279,8 @@ CONTAINS
              pawset_%augmom(ns,ns1,l3)=int_0_inf_dr(aux(1:irc),pawset_%grid,irc,lll)
              pawset_%augmom(ns1,ns,l3)=pawset_%augmom(ns,ns1,l3)
           end do
-          write (stdout,'(5x,a,2i3,a,2i3,10f8.4)') " MULTIPOLE",ns,l1,":",ns1,l2,&
+          write (stdout,'(7x,2i3,a,2i3,10f8.4)') ns,l1,":",ns1,l2,&
                               (pawset_%augmom(ns,ns1,l3), l3=0,l1+l2)
-!          do ir=1,irc
-!             if (r(ir) < 1.0_dp) ir0 = ir
-!          end do
-!          do ir=ir0,irc+30, 3
-!             write (stdout,'(10f8.4)') r(ir),(pawset_%augfun(ir,ns,ns1,l3),l3=0,l1+l2)
-!          end do
        END DO
     END DO
     !
@@ -402,24 +401,31 @@ CONTAINS
                    ENDDO
                    xc(1) = b1(2) / (b1(2) * b2(1) - b1(1) * b2(2))
                    xc(2) = - b1(1) * xc(1) / b1(2)
-                   pawset_%augfun(1:ircm,ns,ns1,l3) = &
+                   pawset_%augfun(1:ircm,ns,ns1,l3) =                   &
                           pawset_%augmom(ns,ns1,l3) * grid%r2(1:ircm) * &
-                          (xc(1) * j1(1:ircm,1) + xc(2) * j1(1:ircm,2)) 
+                          (xc(1) * j1(1:ircm,1) + xc(2) * j1(1:ircm,2))
                    ! Symmetrize augmentation functions:
-                       pawset_%augfun(1:mesh,ns1,ns,l3)=pawset_%augfun(1:mesh,ns,ns1,l3)
+                   pawset_%augfun(1:mesh,ns1,ns,l3)=pawset_%augfun(1:mesh,ns,ns1,l3)
+                   !
+                   ! Save higher bessel coefficient to compute suggested cutoff
+                   max_aug_cutoff=MAX( max_aug_cutoff, 2._dp*MAXVAL(xc(1:2)*(l3+1))**2)
                    !
                 end do 
                 DEALLOCATE (j1)
                 !
              CASE DEFAULT
                 !
-                CALL errore ('ld1_to_paw','Specified augmentation functions not allowed or coded',1)
+                CALL errore ('ld1_to_paw','Specified augmentation functions ('// &
+                             TRIM(which_paw_augfun)//') not allowed or coded',1)
                 !
              END SELECT
           END DO
        END DO
        IF ( which_paw_augfun == 'BG') &
          write(stdout,"(5x,a,f12.6)") "Gaussians generated with zeta: ", zeta
+       IF ( which_paw_augfun == 'BESSEL') &
+         write(stdout,'(5x, "Suggested rho cutoff for augmentation:",f7.2," Ry")'), max_aug_cutoff
+
     END IF
     !
     !
@@ -438,22 +444,35 @@ CONTAINS
     CALL compute_charges(projsum, pscharge, aecharge, aux2, &
        pawset_, nbeta, lls, nspin, spin, ocs, phis )
     pawset_%pscharge(1:mesh)=pscharge(1:mesh,1)
+    !
     CALL compute_onecenter_energy ( raux,  aux2, &
        pawset_, pscharge, pawset_%nlcc, pawset_%psccharge, nspin, &
        pawset_%grid%mesh )
     pawset_%psloc(1:mesh)=psvtot(1:mesh)-aux2(1:mesh,1)
+    !
     CALL compute_onecenter_energy ( raux,  aux2, &
        pawset_, aecharge, .TRUE.,       pawset_%aeccharge, nspin, &
        pawset_%grid%mesh)
     pawset_%aeloc(1:mesh)=aevtot(1:mesh)-aux2(1:mesh,1)
-    !WRITE(4444,'(5e20.10)')(r(n),aevtot(n),psvtot(n),pawset_%aeloc(n),pawset_%psloc(n),n=1,mesh)
+    !
+    if (file_screen .ne.' ') then
+        if (ionode) &
+            open(unit=20,file=file_screen, status='unknown', iostat=ios, err=105 )
+105     call mp_bcast(ios, ionode_id)
+        call errore('descreening','opening file'//file_screen,abs(ios))
+        if (ionode) then
+            write(20,'(a)') "#   n, r(n),       aeloc(n),   psloc(n),   pscharge(n)"
+            do n=1,grid%mesh
+            write(20,'(i5,7e12.4)') n,grid%r(n), pawset_%aeloc(n), &
+                    pawset_%psloc(n), pawset_%pscharge(n)
+            enddo
+            close(20)
+        endif
+    endif
     !
     pawset_%dft="                                                                                "
     CALL dft_name (get_iexch(), get_icorr(), get_igcx(), get_igcc(), pawset_%dft, shortname)
     !
-!     IF (PRESENT(do_write_dataset)) THEN
-!        IF (do_write_dataset) CALL human_write_paw(pawset_)
-!     END IF
     !
     ! Generate the paw hamiltonian for test (should be equal to the US one)
     CALL new_paw_hamiltonian (vps, ddd, etot, &
