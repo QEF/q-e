@@ -171,7 +171,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
         !
      END IF
      !
-  ELSE
+  ELSEIF (nproc_image < 1000) THEN
      !
      IF ( node_number < 10 ) THEN
         !
@@ -190,6 +190,9 @@ SUBROUTINE startup( nd_nmbr, code, version )
         WRITE( nd_nmbr, '(I3)' ) node_number
         !
      END IF
+  ELSE
+     !
+     call errore('startup','too many nodes, correct startup', 1)
      !
   END IF    
   !

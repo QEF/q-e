@@ -127,9 +127,6 @@ SUBROUTINE setup()
      !
   END IF
   !
-  ! ... If the occupations are from input, check the consistency with the
-  ! ... number of electrons
-  !
   ! time reversal operation is set up to 0 by default
   t_rev = 0
   IF ( noncolin ) THEN
@@ -230,6 +227,9 @@ SUBROUTINE setup()
      IF ( i_cons == 5 .AND. nspin /= 2 ) &
         CALL errore( 'setup', 'i_cons can be 5 only with nspin=2', 1 )
   END IF
+  !
+  ! ... If the occupations are from input, check the consistency with the
+  ! ... number of electrons
   !
   IF ( tfixed_occ ) THEN
      !

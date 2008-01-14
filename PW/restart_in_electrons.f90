@@ -55,7 +55,7 @@ subroutine restart_in_electrons (iter, ik_, dr2)
           &" of iteration #",i3)') iter + 1
   elseif (ik_.ne.nks) then
      iter = iter_ - 1
-     WRITE( stdout, '(5x,"Calculation restarted from kpoint #",i4, &
+     WRITE( stdout, '(5x,"Calculation restarted from kpoint #",i6, &
           &" of iteration #",i3)') ik_ + 1, iter + 1
   else
      iter = iter_ - 1
