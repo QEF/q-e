@@ -45,7 +45,7 @@ SUBROUTINE set_defaults_pw
   !
   USE gvect,         ONLY : ecfixed, qcutz, q2sigma
   !
-  USE klist,         ONLY : tot_charge, &
+  USE klist,         ONLY : lxkcry, tot_charge, &
                             tot_magnetization, &
                             multiplicity
 
@@ -80,6 +80,7 @@ SUBROUTINE set_defaults_pw
   iprint = 100000
   lberry   = .FALSE.
   lelfield = .FALSE.
+  lxkcry=.FALSE.
   tot_charge = 0.0_DP
   tot_magnetization = -1
   multiplicity = 0
