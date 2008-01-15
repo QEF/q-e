@@ -33,7 +33,7 @@ subroutine read_ncpp (iunps, np, upf)
   !====================================================================
   ! read norm-conserving PPs
   !
-  read (iunps, '(a2)', end=300, err=300, iostat=ios) upf%dft
+  read (iunps, '(a)', end=300, err=300, iostat=ios) upf%dft
   if (upf%dft(1:2) .eq.'**') upf%dft = 'PZ'
   read (iunps, *, err=300, iostat=ios) upf%psd, upf%zp, lmax, nlc, &
                                        nnl, upf%nlcc, lloc, bhstype
