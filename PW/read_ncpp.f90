@@ -248,6 +248,7 @@ subroutine read_ncpp (iunps, np, upf)
   upf%nqf = 0
   upf%nqlc= 0
   upf%tvanp =.false.
+  upf%tpawp =.false.
   upf%has_so=.false.
   !
   return

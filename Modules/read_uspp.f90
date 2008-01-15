@@ -202,6 +202,7 @@ CONTAINS
        call errore('readvan','keyps not implemented',keyps)
     end if
     upf%tvanp = (keyps == 3)
+    upf%tpawp = .false.
     !
     !     Read information on the angular momenta, and on Q pseudization
     !     (version > 3.0)
@@ -645,6 +646,7 @@ CONTAINS
     read( iunps, '(i5)',err=100, iostat=ios ) &
          pseudotype
     upf%tvanp = (pseudotype == 3)
+    upf%tpawp = .false.
 
     if ( upf%tvanp ) then
        upf%generated = &
