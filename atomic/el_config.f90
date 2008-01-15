@@ -320,10 +320,10 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
   character (len=1), external :: capital
 
   read(5,*,err=600,iostat=ios) nwfs
-600 call errore('read_psconfig','reading nwfs',abs(ios))
+600 call errore('read_psconfig','reading number of pseudo wavefunctions (nwfs)',abs(ios))
 
   if (nwfs <= 0 .or. nwfs > nwfsx) &
-       call errore('read_psconfig','nwfs is wrong',1)
+       call errore('read_psconfig','number of pseudo wavefunctions is wrong',1)
 
   do n=1,nwfs
      if (rel < 2) then
@@ -332,7 +332,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
                 els(n), nns(n), lls(n), ocs(n), enls(n), &
                 rcut(n), rcutus(n), isws(n)
            if (isws(n) > 2 .or. isws(n) < 1) &
-                call errore('read_psconfig', 'spin variable wrong ',n)
+                call errore('read_psconfig', 'spin variable wrong',n)
            if (ocs(n) > (2.0_dp*lls(n)+1.0_dp))                 &
              call errore('read_psconfig','occupations (ls) wrong',n)
         else
@@ -366,7 +366,7 @@ subroutine read_psconfig (rel, lsd, nwfs, els, nns, lls, ocs, &
      if (rcut(n) > rcutus(n)) &
           call errore('read_psconfig','rcut or rcutus is wrong',1)
   enddo
-30 call errore('read_psconfig','reading pseudo wavefunctions',abs(ios))
+30 call errore('read_psconfig','reading pseudo wavefunctions configuration',abs(ios))
   !
   return
 end subroutine read_psconfig
