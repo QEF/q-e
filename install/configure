@@ -1447,6 +1447,7 @@ then
 		alphaev*-dec-osf* )     arch=alpha  ;;
 		alphaev*-*-linux* )     arch=alinux ;;
 		sparc-sun-* )           arch=sparc  ;;
+		i386-pc-solaris* )      arch=solaris;;
 		*cray-unicosmp* )       arch=crayx1 ;;
 		powerpc-apple-darwin* ) arch=macppc ;;
 		i686-apple-darwin* )    arch=mac686 ;;
@@ -1471,14 +1472,19 @@ try_iflags="-I../include"
 try_mpif90="mpif90"
 try_f90="g95 gfortran f90"
 
+try_dflags=""
+
 # candidate compilers and flags based on architecture
 case $arch in
 ia64 | amd64 )
 	try_f90="ifort ifc efc pgf90 pathf95 $try_f90"
-        try_dflags=""
 	;;
 ia32 )
 	try_f90="ifort ifc pgf90 pathf95 $try_f90"
+	;;
+solaris )
+	try_f90="f95 g95"
+	try_dflags="-D__SOLARIS"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
@@ -1499,7 +1505,6 @@ alinux )
 	;;
 sparc )
 	try_mpif90="mpf90"
-	try_dflags="-D__SUN"
 	;;
 crayx1 | crayxt4 )
 	try_f90="ftn $try_f90"
@@ -1649,7 +1654,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:1652:" \
+echo "$as_me:1657:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2077,7 +2082,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:2080:" \
+echo "$as_me:2085:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -2308,7 +2313,7 @@ alpha:* )
 alinux:* )
 	try_cc="ccc $try_cc"
 	;;
-sparc:* )
+sparc:* | solaris:f95 )
 	try_f77="f77 $f90"
 	;;
 cray*:ftn )
@@ -4112,7 +4117,7 @@ fi
 
 
 # Provide some information about the compiler.
-echo "$as_me:4115:" \
+echo "$as_me:4120:" \
      "checking for Fortran 77 compiler version" >&5
 ac_compiler=`set X $ac_compile; echo $2`
 { (eval echo "$as_me:$LINENO: \"$ac_compiler --version </dev/null >&5\"") >&5
@@ -4355,6 +4360,13 @@ alpha:f90 )
 	try_f90flags="\$(FFLAGS) -free"
 	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records -assume buffered_io"
 	;;
+solaris:f95 )
+	try_fflags="-fast -O2 -fpp"
+	try_f90flags="\$(FFLAGS)"
+	try_fflags_noopt="-O0 "
+	try_ldflags=""
+	imod="-M"
+	;;
 sparc:mpf90 | sparc:f90 )
 	try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
 -xarch=v8plusb -xlic_lib=sunperf"
@@ -4448,7 +4460,7 @@ case "$arch:$cc" in
 *:pathcc )
 	try_cpp="pathcc -E"
 	;;
-aix:mpcc* | aix:xlc* | aix:cc )
+aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
 	;;
@@ -4458,7 +4470,10 @@ mips:cc )
 alpha:cc )
 	try_cflags="-O"
 	;;
-sparc:mpcc | sparc:cc )
+solaris:cc  )
+	try_cflags="-fast -O"
+	;;
+sparc:cc )
 	try_cflags="-fast -dalign -xchip=ultra3 -xarch=v8plusb \
 -xlic_lib=sunperf"
 	try_cpp="fpp"
@@ -4469,7 +4484,7 @@ crayx1:cc )
 crayxt4:cc )
         try_cflags="-fast"
         ;;
-macppc:xlc* | macppc:mpcc* )
+macppc:xlc* )
 	try_cflags="-O4"
 	;;
 necsx:* )
@@ -4617,7 +4632,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_verb"
-(eval echo $as_me:4621: \"$ac_link\") >&5
+(eval echo $as_me:4635: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4630,7 +4645,6 @@ rm -f conftest*
 ac_f77_v_output="`echo $ac_f77_v_output |
 	grep 'LPATH is:' |
 	sed 's,.*LPATH is\(: *[^ ]*\).*,\1,;s,: */, -L/,g'` $ac_f77_v_output"
-
 
 case $ac_f77_v_output in
   # If we are using xlf then replace all the commas with spaces.
@@ -4647,8 +4661,6 @@ case $ac_f77_v_output in
   # FIXME: a more general fix for quoted arguments with spaces?
   *cft90*)
     ac_f77_v_output=`echo $ac_f77_v_output | sed "s/\"//g"` ;;
-  *ftn*)
-    ac_f77_v_output=`echo $ac_f77_v_output | sed "s/'//g"` ;;
 esac
 
 
@@ -4698,7 +4710,7 @@ _ACEOF
 # flags.
 ac_save_FFLAGS=$FFLAGS
 FFLAGS="$FFLAGS $ac_cv_prog_f77_v"
-(eval echo $as_me:4699: \"$ac_link\") >&5
+(eval echo $as_me:4713: \"$ac_link\") >&5
 ac_f77_v_output=`eval $ac_link 5>&1 2>&1 | grep -v 'Driving:'`
 echo "$ac_f77_v_output" >&5
 FFLAGS=$ac_save_FFLAGS
@@ -4727,8 +4739,6 @@ case $ac_f77_v_output in
   # FIXME: a more general fix for quoted arguments with spaces?
   *cft90*)
     ac_f77_v_output=`echo $ac_f77_v_output | sed "s/\"//g"` ;;
-  *ftn*)
-    ac_f77_v_output=`echo $ac_f77_v_output | sed "s/'//g"` ;;
 esac
 
 
@@ -6409,7 +6419,7 @@ fi
 
 		;;
 
-	sparc:* )
+	sparc:* | solaris:* )
 		# check for SUNperf library
 		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
@@ -6504,8 +6514,8 @@ echo "$as_me:$LINENO: result: $ac_cv_search_dgemm" >&5
 echo "${ECHO_T}$ac_cv_search_dgemm" >&6
 if test "$ac_cv_search_dgemm" != no; then
   test "$ac_cv_search_dgemm" = "none required" || LIBS="$ac_cv_search_dgemm $LIBS"
-  have_blas=1
-			       blas_libs="-xlic_lib=sunperf $LIBS"
+  have_blas=1 have_lapack=1
+                               blas_libs="-xlic_lib=sunperf $LIBS"
 fi
 
 		;;
@@ -7914,7 +7924,8 @@ fi
 
 	    ;;
 	sparc )
-		# check for SUNperf library
+		# check for SUNperf FFT library on Sun Sparcs
+                # but not on solaris PC! it is slower than FFTW
 		unset ac_cv_search_zfft3i # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
@@ -8009,6 +8020,7 @@ echo "${ECHO_T}$ac_cv_search_zfft3i" >&6
 if test "$ac_cv_search_zfft3i" != no; then
   test "$ac_cv_search_zfft3i" = "none required" || LIBS="$ac_cv_search_zfft3i $LIBS"
   have_fft=1
+			       try_dflags="$try_dflags -D__SUNPERF"
 			       fft_libs="-xlic_lib=sunperf $LIBS"
 fi
 

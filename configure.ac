@@ -82,6 +82,7 @@ then
 		alphaev*-dec-osf* )     arch=alpha  ;;
 		alphaev*-*-linux* )     arch=alinux ;;
 		sparc-sun-* )           arch=sparc  ;;
+		i386-pc-solaris* )      arch=solaris;;
 		*cray-unicosmp* )       arch=crayx1 ;;
 		powerpc-apple-darwin* ) arch=macppc ;;
 		i686-apple-darwin* )    arch=mac686 ;;
@@ -105,14 +106,19 @@ try_iflags="-I../include"
 try_mpif90="mpif90"
 try_f90="g95 gfortran f90"
 
+try_dflags=""
+
 # candidate compilers and flags based on architecture
 case $arch in
 ia64 | amd64 )
 	try_f90="ifort ifc efc pgf90 pathf95 $try_f90"
-        try_dflags=""
 	;;
 ia32 )
 	try_f90="ifort ifc pgf90 pathf95 $try_f90"
+	;;
+solaris )
+	try_f90="f95 g95"
+	try_dflags="-D__SOLARIS"
 	;;
 aix )
 	try_mpif90="mpxlf90_r mpxlf90"
@@ -133,7 +139,6 @@ alinux )
 	;;
 sparc )
 	try_mpif90="mpf90"
-	try_dflags="-D__SUN"
 	;;
 crayx1 | crayxt4 )
 	try_f90="ftn $try_f90"
@@ -290,7 +295,7 @@ alpha:* )
 alinux:* )
 	try_cc="ccc $try_cc"
 	;;
-sparc:* )
+sparc:* | solaris:f95 )
 	try_f77="f77 $f90"
 	;;
 cray*:ftn )
@@ -439,6 +444,13 @@ alpha:f90 )
 	try_f90flags="\$(FFLAGS) -free"
 	try_fflags_noopt="-O0 -real_size 64 -align dcommons -align records -assume buffered_io"
 	;;
+solaris:f95 )
+	try_fflags="-fast -O2 -fpp"
+	try_f90flags="\$(FFLAGS)"
+	try_fflags_noopt="-O0 "
+	try_ldflags=""
+	imod="-M"
+	;;
 sparc:mpf90 | sparc:f90 )
 	try_fflags="-fast -O1 -nodepend -xvector=no -xchip=ultra3 \
 -xarch=v8plusb -xlic_lib=sunperf"
@@ -532,7 +544,7 @@ case "$arch:$cc" in
 *:pathcc )
 	try_cpp="pathcc -E"
 	;;
-aix:mpcc* | aix:xlc* | aix:cc )
+aix:xlc* | aix:cc )
 	try_cflags="-q64 -O2"
 	c_ldflags="-q64"
 	;;
@@ -542,7 +554,10 @@ mips:cc )
 alpha:cc )
 	try_cflags="-O"
 	;;
-sparc:mpcc | sparc:cc )
+solaris:cc  )
+	try_cflags="-fast -O"
+	;;
+sparc:cc )
 	try_cflags="-fast -dalign -xchip=ultra3 -xarch=v8plusb \
 -xlic_lib=sunperf"
 	try_cpp="fpp"
@@ -553,7 +568,7 @@ crayx1:cc )
 crayxt4:cc )
         try_cflags="-fast"
         ;;
-macppc:xlc* | macppc:mpcc* )
+macppc:xlc* )
 	try_cflags="-O4"
 	;;
 necsx:* )
@@ -822,14 +837,14 @@ then
                                 blas_libs="$LIBS")
 		;;
 
-	sparc:* )
+	sparc:* | solaris:* )
 		# check for SUNperf library
 		unset ac_cv_search_dgemm # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS=""
-		AC_SEARCH_LIBS(dgemm, sunperf, have_blas=1
-			       blas_libs="-xlic_lib=sunperf $LIBS")
+		AC_SEARCH_LIBS(dgemm, sunperf, have_blas=1 have_lapack=1
+                               blas_libs="-xlic_lib=sunperf $LIBS")
 		;;
 	necsx:* )
                 #sx5-nec or sx6-nec or sx8-nec: check in (/SX)/usr/lib 
@@ -1144,12 +1159,14 @@ then
 		AC_SEARCH_LIBS(dcft, essl, have_fft=1 fft_libs="$LIBS")
 	    ;;     
 	sparc )
-		# check for SUNperf library
+		# check for SUNperf FFT library on Sun Sparcs
+                # but not on solaris PC! it is slower than FFTW
 		unset ac_cv_search_zfft3i # clear cached value
 		FFLAGS="$test_fflags"
 		LDFLAGS="$test_ldflags"
 		LIBS="$libs"
 		AC_SEARCH_LIBS(zfft3i, sunperf, have_fft=1
+			       try_dflags="$try_dflags -D__SUNPERF"
 			       fft_libs="-xlic_lib=sunperf $LIBS")
 		;;
 	necsx )

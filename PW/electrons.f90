@@ -56,7 +56,7 @@ SUBROUTINE electrons()
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
 #if defined (EXX)
-  USE exx,                  ONLY : exxinit, init_h_wfc, exxenergy, exxenergy2
+  USE exx,                  ONLY : exxinit, exxenergy, exxenergy2
   USE funct,                ONLY : dft_is_hybrid, exx_is_active
 #endif
   USE funct,                ONLY : dft_is_meta

@@ -50,56 +50,6 @@ module exx
 
 contains
   !------------------------------------------------------------------------
-  subroutine init_h_wfc()
-  !------------------------------------------------------------------------
-
-     USE kinds,      ONLY : DP
-     USE constants,  ONLY : pi
-     USE io_files,   ONLY : iunigk, nwordwfc, iunwfc
-     USE klist,      ONLY : xk, nks, wk, ngk
-     USE wvfct,      ONLY : nbnd, npw, npwx, igk, g2kin, wg
-     USE gvect,      ONLY : g
-     USE cell_base,  ONLY : tpiba2, omega
-     USE wavefunctions_module, ONLY : evc
-     USE buffers,    ONLY : save_buffer
-
-     implicit none
-     integer :: ik, ig
-     REAL(DP) :: alpha, norm
-
-     wg = 0.d0
-     wg(1,1:nks/2) = 1.d0 * wk(1:nks/2)
-
-     IF ( nks > 1 ) REWIND( iunigk )
-     do ik=1,nks
-        IF ( nks > 1 ) READ( iunigk ) igk
-        npw=ngk(ik)
-        DO ig = 1, npw
-           !
-           g2kin(ig) = ( xk(1,ik) + g(1,igk(ig)) )**2 + &
-                       ( xk(2,ik) + g(2,igk(ig)) )**2 + &
-                       ( xk(3,ik) + g(3,igk(ig)) )**2
-        END DO
-        g2kin(:) = g2kin(:) * tpiba2
-        alpha = 1.d0
-
-        norm = 0.d0
-        DO ig = 1, npw
-           evc(ig,1) =  sqrt(alpha**3/pi) * 8.d0 * pi * alpha /  &
-                        (alpha**2 + g2kin(ig))**2 / sqrt(omega)
-!           norm = norm + abs(evc(ig,1))**2
-        end do
-!        write (*,*) "NORM  ", ik, norm
-!        evc(:,1) = evc(:,1)/sqrt(norm)
-
-        CALL save_buffer ( evc, nwordwfc, iunwfc, ik)
-
-     END DO
-
-     return
-  end subroutine init_h_wfc
-  
-  !------------------------------------------------------------------------
   subroutine exx_grid_init()
   !------------------------------------------------------------------------
   USE symme,     ONLY : nsym, s

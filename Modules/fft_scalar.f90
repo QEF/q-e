@@ -54,7 +54,7 @@
         INTEGER, PARAMETER :: lwork = 20000 + ( 2*nfftx + 256 ) * 64 + 3*nfftx
         REAL (DP) :: work( lwork ) 
 
-#elif defined __SCSL || defined __SUN
+#elif defined __SCSL || defined __SUNPERF
 
         !   SGI scientific library scsl and SUN sunperf
 
@@ -137,7 +137,7 @@
      REAL (DP)       :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
      !   SUN sunperf library
 
@@ -212,7 +212,7 @@
        CALL ZZFFTM (0, nz, 0, 0.0_DP, DUMMY, 1, DUMMY, 1, &
                     tablez (1, icurrent), DUMMY, isys)
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
        CALL zffti (nz, tablez (1, icurrent) )
 
@@ -280,7 +280,7 @@
              tscale, bw_tablez(1, ip), ltabl, work, lwork)
      END IF
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
      IF ( isign < 0) THEN
         DO i = 1, nsl
@@ -368,7 +368,7 @@
      REAL (DP)    :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
      INTEGER, PARAMETER :: ltabl = 4 * nfftx + 15
      REAL (DP), SAVE :: tablex (ltabl, ndims)
@@ -487,7 +487,7 @@
        CALL ZZFFTM  (0, nx, 0, 0.0_DP, DUMMY, 1, DUMMY, 1,               &
                      tablex (1, icurrent), DUMMY, isys)
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
        CALL zffti (ny, tabley (1, icurrent) )
        CALL zffti (nx, tablex (1, icurrent) )
@@ -681,7 +681,7 @@
 
      END IF
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
      IF ( isign < 0 ) THEN
         
@@ -781,7 +781,7 @@
      REAL (DP)       :: DUMMY
      INTEGER, SAVE :: isys(0:1) = (/ 1, 1 /)
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
      INTEGER, PARAMETER :: ltabl = (4 * nfftx + 15)*3
      REAL (DP), SAVE :: table (ltabl, ndims)
@@ -875,7 +875,7 @@
        CALL zzfft3d (0, nx, ny, nz, 0.0_DP, DUMMY, 1, 1, DUMMY, 1, 1, &
                      table(1,icurrent), work(1), isys)
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
        CALL zfft3i ( nx, ny, nz, table (1,icurrent) )
 
@@ -961,7 +961,7 @@
                        f(1), ldx, ldy, table(1,ip), work(1), isys )
      END IF
 
-#elif defined __SUN
+#elif defined __SUNPERF
 
      IF( isign < 0 ) THEN
         CALL zfft3f ( nx, ny, nz, f(1), ldx, ldy, table(1,ip), ltabl )

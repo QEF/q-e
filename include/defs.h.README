@@ -73,6 +73,7 @@ Hardware/Compiler:
       __ORIGIN    sgi origin 2k or 3k machines (Mips compiler)
       __ALPHA     hp-compaq (formerly dec) alphas
       __SX6       Nec sx-6 vector machines (Nec compiler)
+      __SOLARIS   Sun solaris for PC (workaround for mallinfo) 
       __PGI       Portland Group compiler (workarounds for compiler bugs)
       __GFORTRAN  gnu gfortran (workarounds for compiler bugs)
       __INTEL     Intel ifc and ifort compilers (workaround for compiler 
@@ -89,7 +90,7 @@ Libraries:
       __USE_INTERNAL_FFTW   use the local copy of FFTW, not an external lib
       __FFTW_WITH_SIZE      fftw specific option for cray xt3 (?)
       __SCSL      FFT routines from SGI SCSL scientific library
-      __SUN       FFT routines from SUN sunperf scientific library
+      __SUNPERF   FFT routines from SUN sunperf scientific library
       __ESSL      use blas/lapack/fft routines from IBM ESSL library
       __LINUX_ESSL  use blas/lapack/fft routines from IBM ESSL library (linux version)
       __MASS      use mathematical routines from IBM MASS library
