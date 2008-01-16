@@ -572,13 +572,6 @@ SUBROUTINE compute_gw( use_gmaps )
 
     DEALLOCATE( igk_l2g )
     
-  ENDDO
-
-
-  DO ik = 1, nkpt
-
-     CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, igk, g2kin)
-
      ! k + g thet must be in 2piba units
      kpg(:,:) = 0.d0
      DO ig=1,npw
