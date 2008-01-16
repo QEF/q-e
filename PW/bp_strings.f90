@@ -55,7 +55,6 @@ SUBROUTINE kp_strings ( nppstr, gdir, nrot, s, bg, npk, &
       CALL kpoint_grid (nrot, time_reversal, s, t_rev, bg, npk, &
                         k1,k2,k3, nk1,1,nk3, nks, xk0, wk0 ) 
    ELSE IF (gdir == 3) THEN
-      CALL kpoint_grid(nrot,s,bg,npk,k1,k2,k3,nk1,nk2,1,nks,xk0,wk0) 
       CALL kpoint_grid (nrot, time_reversal, s, t_rev, bg, npk, &
                         k1,k2,k3, nk1,nk2,1, nks, xk0, wk0 ) 
    ELSE
