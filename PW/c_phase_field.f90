@@ -16,7 +16,7 @@
 
 !======================================================================!
 
-SUBROUTINE c_phase_field
+SUBROUTINE c_phase_field(el_pola,ion_pola, fact_pola)
 
 !----------------------------------------------------------------------!
 
@@ -46,6 +46,11 @@ SUBROUTINE c_phase_field
    USE becmod,               ONLY : calbec
 !  --- Avoid implicit definitions ---
    IMPLICIT NONE
+
+   REAL(kind=DP), INTENT(out) :: el_pola!in output electronic polarization
+   REAL(kind=DP), INTENT(out) :: ion_pola!in output ionic polarization
+   REAL(kind=DP), INTENT(out) :: fact_pola!in outout the prefactor of the polarization
+
 
 !  --- Internal definitions ---
    INTEGER :: i
@@ -524,13 +529,19 @@ SUBROUTINE c_phase_field
 !                              ionic polarization                              !
 !  -------------------------------------------------------------------------   !
 
+!factor sqrt(2) is the electronic charge in Rydberg units
   pola_ion=0.d0
   DO na=1,nat
-    pola_ion=pola_ion+zv(ityp(na))*tau(gdir,na)
+    pola_ion=pola_ion+zv(ityp(na))*tau(gdir,na)*alat*dsqrt(2.d0)
   END DO
 
-   write(stdout,*) "    Ionic Dipole per cell (a.u.)",pola_ion
-   write(stdout,*)
+  write(stdout,*) "    Ionic Dipole per cell (a.u.)",pola_ion
+
+
+  el_pola=pola
+  ion_pola=pola_ion
+  fact_pola=dsqrt(2.d0)/tpiba*dkfact
+
 
 !  -------------------------------------------------------------------------   !
 

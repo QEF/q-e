@@ -20,7 +20,7 @@ SUBROUTINE electrons()
   ! ... the separate contributions.
   !
   USE kinds,                ONLY : DP
-  USE constants,            ONLY : eps8
+  USE constants,            ONLY : eps8, pi
   USE io_global,            ONLY : stdout, ionode
   USE cell_base,            ONLY : at, bg, alat, omega, tpiba2
   USE ions_base,            ONLY : zv, nat, nsp, ityp, tau
@@ -52,7 +52,8 @@ SUBROUTINE electrons()
   USE noncollin_module,     ONLY : noncolin, magtot_nc, i_cons,  bfield, &
                                    lambda, report
   USE spin_orb,             ONLY : domag
-  USE bp,                   ONLY : lelfield
+  USE bp,                   ONLY : lelfield, ion_pol,el_pol,fc_pol, l_el_pol_old, &
+                                   el_pol_acc,el_pol_old,efield
   USE io_rho_xml,           ONLY : write_rho
   USE uspp,                 ONLY : okvan
 #if defined (EXX)
@@ -93,6 +94,7 @@ SUBROUTINE electrons()
       descf         ! correction for variational energy
   LOGICAL :: &
       exst, first
+  REAL(DP) :: en_el=0.d0,sca
   !
   ! ... auxiliary variables for calculating and storing temporary copies of
   ! ... the charge density and of the HXC-potential
@@ -387,7 +389,26 @@ SUBROUTINE electrons()
      !
      ! ... calculate the polarization
      !
-     IF ( lelfield ) CALL c_phase_field()
+     IF ( lelfield ) THEN
+        CALL c_phase_field(el_pol,ion_pol,fc_pol)
+        if(.not.l_el_pol_old) then
+           l_el_pol_old=.true.
+           el_pol_old=el_pol
+           en_el=-efield*(el_pol+ion_pol)
+           el_pol_acc=0.d0
+        else
+           sca=(el_pol-el_pol_old)/fc_pol
+           if(sca < - pi) then
+              el_pol_acc=el_pol_acc+2.d0*pi*fc_pol
+          else if(sca > pi) then
+             el_pol_acc=el_pol_acc-2.d0*pi*fc_pol
+           endif
+           en_el=-efield*(el_pol+ion_pol+el_pol_acc)
+           el_pol_old=el_pol
+        endif
+     ELSE
+        en_el=0.d0!electric field contribution to the total energy
+     ENDIF
      !
      ! ... write recover file
      !
@@ -417,7 +438,7 @@ SUBROUTINE electrons()
            CALL errore( 'electrons', 'charge is wrong', 1 )
      END IF
      !
-     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf
+     etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
      !
      IF (okpaw) THEN
         correction1c = e_PAW

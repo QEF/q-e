@@ -563,7 +563,13 @@ MODULE bp
   INTEGER, ALLOCATABLE, TARGET :: mapgp_global(:,:)! map for G'= G+1 correspondence
   INTEGER, ALLOCATABLE, TARGET :: mapgm_global(:,:)! map for G'= G-1 correspondence
   REAL(DP), ALLOCATABLE, TARGET :: forces_bp_efield(:,:)!ionic and US contributions to the atomic forces due to el. fields
-  
+  REAL(DP) :: ion_pol!the ionic polarization
+  REAL(DP) :: el_pol!the electronic polarization
+  REAL(DP) :: fc_pol!the prefactor for the electronic polarization
+  LOGICAL  :: l_el_pol_old!if true there is already stored a n older value for the polarization
+                          !neeeded for having correct polarization during MD
+  REAL(DP) :: el_pol_old! the old  electronic polarization
+  REAL(DP) :: el_pol_acc! accumulator for the electronic polarization
 
 !
 END MODULE bp

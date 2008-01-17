@@ -13,6 +13,9 @@
       allocate(forces_bp_efield(3,nat))
    endif
 
+   l_el_pol_old=.false.
+   el_pol_acc=0.d0
+
    return
  end subroutine allocate_bp_efield
 
