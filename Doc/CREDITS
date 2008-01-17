@@ -22,7 +22,7 @@ under the responsibility of Carlo Cavazzoni (CINECA).
 The PWscf package (http://www.pwscf.org) was developed by Stefano Baroni, 
 Stefano de Gironcoli, Andrea Dal Corso (SISSA, Trieste), Paolo Giannozzi, 
 and many others. We quote in particular:
-- Matteo Cococcioni (MIT) for LDA+U implementation
+- Matteo Cococcioni (MIT) for DFT+U implementation
 - Oswaldo Dieguez (Rutgers) for Berry's phase calculations.
 - Michele Lazzeri (Paris VI) for the 2n+1 code and Raman cross section
   calculation with 2nd-order response.
@@ -53,6 +53,7 @@ We quote in particular:
 - Paolo Umari for finite electric fields and conjugate gradients.
 - Paolo Umari and Ismaila Dabo (MIT) for ensemble-DFT.
 - Xiaofei Wang (Princeton) for META-GGA.
+- Patrick Sit (MIT) for DFT+U implementation.
 - The Autopilot feature was contributed by Targacept, Inc.
 
 Other relevant contributions:
