@@ -277,6 +277,7 @@ subroutine data_structure( lgamma )
   nrxx  = dfftp%nnr
   nrxxs = dffts%nnr
 
+  nrxx = MAX( nrxx, nrxxs )
   !
   ! nxx is just a copy 
   !
@@ -366,7 +367,7 @@ subroutine data_structure( lgamma )
 
 #endif
 
-  IF( nxx /= dfftp%nnr ) &
+  IF( nxx < dfftp%nnr ) &
      CALL errore( ' data_structure ', ' inconsistent value for nxx ', ABS( nxx - dfftp%nnr ) )
   IF( nxxs /= dffts%nnr ) &
      CALL errore( ' data_structure ', ' inconsistent value for nxxs ', ABS( nxxs - dffts%nnr ) )
