@@ -53,7 +53,8 @@ subroutine seqopn (unit, extension, formatt, exst)
   if (extension.eq.' ') call errore ('seqopn','filename extension  not given',2)
   filename = trim(prefix) // "." // trim(extension)
   if ( trim(nd_nmbr) == '1' .or. trim(nd_nmbr) == '01'.or. &
-       trim(nd_nmbr) == '001') then
+       trim(nd_nmbr) == '001' .or. trim(nd_nmbr) == '0001'.or. &
+       trim(nd_nmbr) == '00001' .or. trim(nd_nmbr) == '000001' ) then
      !
      ! do not add processor number to files opened by processor 1
      ! in parallel execution: if only the first processor writes,

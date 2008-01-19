@@ -59,7 +59,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !
   IMPLICIT NONE
   !
-  CHARACTER (LEN=3)  :: nd_nmbr
+  CHARACTER (LEN=6)  :: nd_nmbr
   CHARACTER (LEN=6)  :: version
   CHARACTER (LEN=9)  :: code, cdate, ctime
   CHARACTER (LEN=80) :: np
@@ -149,52 +149,9 @@ SUBROUTINE startup( nd_nmbr, code, version )
   ! ... set the processor label for files ( remember that 
   ! ... me_image = 0 : ( nproc_image - 1 ) )
   !
-  nd_nmbr = '   '
-  !
   node_number = ( me_image + 1 )
   !
-  IF ( nproc_image < 10 ) THEN
-     !
-     WRITE( nd_nmbr(1:1), '(I1)' ) node_number
-     !
-  ELSE IF ( nproc_image < 100 ) THEN
-     !
-     IF ( node_number < 10 ) THEN
-        !
-        nd_nmbr = '0'
-        !
-        WRITE( nd_nmbr(2:2), '(I1)' ) node_number
-        !
-     ELSE
-        !
-        WRITE( nd_nmbr(1:2), '(I2)' ) node_number
-        !
-     END IF
-     !
-  ELSEIF (nproc_image < 1000) THEN
-     !
-     IF ( node_number < 10 ) THEN
-        !
-        nd_nmbr = '00'
-        !     
-        WRITE( nd_nmbr(3:3), '(I1)' ) node_number
-        !
-     ELSE IF ( node_number < 100 ) THEN
-        !
-        nd_nmbr = '0'
-        !
-        WRITE( nd_nmbr(2:3), '(I2)' ) node_number
-        !
-     ELSE
-        !
-        WRITE( nd_nmbr, '(I3)' ) node_number
-        !
-     END IF
-  ELSE
-     !
-     call errore('startup','too many nodes, correct startup', 1)
-     !
-  END IF    
+  CALL set_nd_nmbr( nd_nmbr, node_number, nproc_image )
   !
   ! ... stdout is printed only by the root_image ( set in init_pool() )
   !
@@ -253,5 +210,142 @@ SUBROUTINE startup( nd_nmbr, code, version )
 #endif
   !
   RETURN
+  !     
+CONTAINS
+  !
+  SUBROUTINE set_nd_nmbr( nd_nmbr, node_number, nproc_image )
+     !
+     IMPLICIT NONE
+     !
+     CHARACTER(LEN=6), INTENT(OUT) :: nd_nmbr
+     INTEGER, INTENT(IN) :: node_number
+     INTEGER, INTENT(IN) :: nproc_image
+     !
+     nd_nmbr = '      '
+     !
+     IF ( nproc_image < 10 ) THEN
+        !
+        WRITE( nd_nmbr(1:1), '(I1)' ) node_number
+        !
+     ELSE IF ( nproc_image < 100 ) THEN
+        !
+        IF ( node_number < 10 ) THEN
+           !
+           nd_nmbr = '0'
+           !
+           WRITE( nd_nmbr(2:2), '(I1)' ) node_number
+           !
+        ELSE
+           !
+           WRITE( nd_nmbr(1:2), '(I2)' ) node_number
+           !
+        END IF
+        !
+     ELSEIF (nproc_image < 1000) THEN
+        !
+        nd_nmbr = '00'
+        !
+        IF ( node_number < 10 ) THEN
+           !
+           !     
+           WRITE( nd_nmbr(3:3), '(I1)' ) node_number
+           !
+        ELSE IF ( node_number < 100 ) THEN
+           !
+           WRITE( nd_nmbr(2:3), '(I2)' ) node_number
+           !
+        ELSE
+           !
+           WRITE( nd_nmbr, '(I3)' ) node_number
+           !
+        END IF
+        !
+     ELSEIF (nproc_image < 10000) THEN
+        !
+        nd_nmbr = '000'
+        !
+        IF ( node_number < 10 ) THEN
+           !    
+           WRITE( nd_nmbr(4:4), '(I1)' ) node_number
+           !
+        ELSE IF ( node_number < 100 ) THEN
+           !
+           WRITE( nd_nmbr(3:4), '(I2)' ) node_number
+           !
+        ELSE IF ( node_number < 1000 ) THEN
+           !
+           WRITE( nd_nmbr(2:4), '(I3)' ) node_number
+           !
+        ELSE
+           !
+           WRITE( nd_nmbr, '(I4)' ) node_number
+           !
+        END IF
+        !
+     ELSEIF (nproc_image < 100000) THEN
+        !
+        nd_nmbr = '0000'
+        !
+        IF ( node_number < 10 ) THEN
+           !
+           WRITE( nd_nmbr(5:5), '(I1)' ) node_number
+           !
+        ELSE IF ( node_number < 100 ) THEN
+           !
+           WRITE( nd_nmbr(4:5), '(I2)' ) node_number
+           !
+        ELSE IF ( node_number < 1000 ) THEN
+           !
+           WRITE( nd_nmbr(3:5), '(I3)' ) node_number
+           !
+        ELSE IF ( node_number < 10000 ) THEN
+           !
+           WRITE( nd_nmbr(2:5), '(I4)' ) node_number
+           !
+        ELSE
+           !
+           WRITE( nd_nmbr, '(I5)' ) node_number
+           !
+        END IF
+        !
+     ELSEIF (nproc_image < 1000000) THEN
+        !
+        nd_nmbr = '00000'
+        !
+        IF ( node_number < 10 ) THEN
+           !
+           WRITE( nd_nmbr(6:6), '(I1)' ) node_number
+           !
+        ELSE IF ( node_number < 100 ) THEN
+           !
+           WRITE( nd_nmbr(5:6), '(I2)' ) node_number
+           !
+        ELSE IF ( node_number < 1000 ) THEN
+           !
+           WRITE( nd_nmbr(4:6), '(I3)' ) node_number
+           !
+        ELSE IF ( node_number < 10000 ) THEN
+           !
+           WRITE( nd_nmbr(3:6), '(I4)' ) node_number
+           !
+        ELSE IF ( node_number < 100000 ) THEN
+           !
+           WRITE( nd_nmbr(2:6), '(I5)' ) node_number
+           !
+        ELSE
+           !
+           WRITE( nd_nmbr, '(I6)' ) node_number
+           !
+        END IF
+        !
+     ELSE
+        !
+        call errore('startup','too many nodes, correct startup', 1)
+        !
+     END IF    
+     !
+     RETURN
+     !
+  END SUBROUTINE set_nd_nmbr
   !     
 END SUBROUTINE startup
