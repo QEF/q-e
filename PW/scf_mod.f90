@@ -27,21 +27,28 @@ MODULE scf
   !
   SAVE
   !
+#ifdef __GFORTRAN
+#define __ALLOCATABLE pointer
+#define __allocated   associated
+#else
+#define __ALLOCATABLE allocatable
+#define __allocated   allocated
+#endif
   TYPE scf_type
-     REAL(DP),    ALLOCATABLE :: of_r(:,:)  ! the charge density in R-space
-     COMPLEX(DP), ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
-     REAL(DP),    ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
-     COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
-     REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
-     REAL(DP),    POINTER     :: bec(:,:,:) ! the PAW hamiltonian elements, may point to
+     REAL(DP),   __ALLOCATABLE :: of_r(:,:)  ! the charge density in R-space
+     COMPLEX(DP),__ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
+     REAL(DP),   __ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
+     COMPLEX(DP),__ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
+     REAL(DP),  __ALLOCATABLE  :: ns(:,:,:,:)! the LDA+U occupation matrix 
+     REAL(DP),    POINTER      :: bec(:,:,:) ! the PAW hamiltonian elements, may point to
         LOGICAL :: internal_becsum = .false.! becsum in module uspp or be allocated anew.
   END TYPE scf_type
   !
   TYPE mix_type
-     COMPLEX(DP), ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
-     COMPLEX(DP), ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
-     REAL(DP),    ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
-     REAL(DP),    ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
+     COMPLEX(DP), __ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
+     COMPLEX(DP), __ALLOCATABLE :: kin_g(:,:) ! the charge density in G-space
+     REAL(DP),    __ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix 
+     REAL(DP),    __ALLOCATABLE :: bec(:,:,:) ! PAW corrections to hamiltonian
   END TYPE mix_type
 
   type (scf_type) :: rho  ! the charge density and its other components
@@ -100,11 +107,11 @@ CONTAINS
  SUBROUTINE destroy_scf_type ( rho )
  IMPLICIT NONE
  TYPE (scf_type) :: rho
- if (allocated(rho%of_r))  deallocate(rho%of_r)
- if (allocated(rho%of_g))  deallocate(rho%of_g)
- if (allocated(rho%kin_r)) deallocate(rho%kin_r)
- if (allocated(rho%kin_g)) deallocate(rho%kin_g)
- if (allocated(rho%ns))    deallocate(rho%ns)
+ if (__allocated(rho%of_r))  deallocate(rho%of_r)
+ if (__allocated(rho%of_g))  deallocate(rho%of_g)
+ if (__allocated(rho%kin_r)) deallocate(rho%kin_r)
+ if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
+ if (__allocated(rho%ns))    deallocate(rho%ns)
  ! Same reason as above for this hack:
  if (rho%internal_becsum) then
     if (associated(rho%bec)) deallocate(rho%bec)
@@ -118,6 +125,9 @@ CONTAINS
  IMPLICIT NONE
  TYPE (mix_type) :: rho
  allocate ( rho%of_g( ngms, nspin ) )
+#ifdef __GFORTRAN
+ nullify (rho%kin_g, rho%ns, rho%bec)
+#endif
  if (dft_is_meta()) allocate ( rho%kin_g( ngms, nspin ) )
  if (lda_plus_u)    allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
  if (okpaw)         allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
@@ -132,10 +142,10 @@ CONTAINS
  SUBROUTINE destroy_mix_type ( rho )
  IMPLICIT NONE
  TYPE (mix_type) :: rho
- if (allocated(rho%of_g))  deallocate(rho%of_g)
- if (allocated(rho%kin_g)) deallocate(rho%kin_g)
- if (allocated(rho%ns))    deallocate(rho%ns)
- if (allocated(rho%bec))   deallocate(rho%bec)
+ if (__allocated(rho%of_g))  deallocate(rho%of_g)
+ if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
+ if (__allocated(rho%ns))    deallocate(rho%ns)
+ if (__allocated(rho%bec))   deallocate(rho%bec)
  return
  END SUBROUTINE destroy_mix_type
  !
