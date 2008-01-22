@@ -112,7 +112,7 @@ subroutine lderiv
      if (ionode) then
         do ie=1,npte
            e= eminld+deld*(ie-1)
-           write(25,'(10f14.6)') e, (dlchi(ie,nc),nc=1,nld)
+           write(25,'(10f14.6)') e, (max(min(dlchi(ie,nc),9.d4),-9d4),nc=1,nld)
         enddo
         close(unit=25)
      endif

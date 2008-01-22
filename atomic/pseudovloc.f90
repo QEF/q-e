@@ -46,7 +46,6 @@ subroutine pseudovloc
   real(DP) :: &
        deriv_7pts, deriv2_7pts
 
-
   integer ::         &
        n,        &  ! counter on mesh points
        ns,       &  ! auxiliary
@@ -73,8 +72,11 @@ subroutine pseudovloc
 !
 !  smooth the potential before ik.
 !
-
-     call compute_potps(ik,vpot,vpsloc,xc)
+!  ... with the original recipe
+     if (lloc==-1) call compute_potps(ik,vpot,vpsloc,xc)
+!  ... or with a modified recipe that enforce V''(0)=0 as suggested by TM
+     if (lloc==-2) write(stdout,"(5x,' Enforcing V''''(0)=0 (lloc=-2)')")
+     if (lloc==-2) call compute_potps_new(ik,vpot,vpsloc,xc)
      write(stdout, 110) grid%r(ik),xc(5)**2 
 110  format (/5x, ' Local pseudo, rcloc=',f6.3, &
           ' Estimated cut-off energy= ', f8.2,' Ry')

@@ -403,6 +403,10 @@ subroutine gener_pseudo
   if (lpaw) then
      if (lnc2paw) write (stdout,'(/5x,''WARNING: __PAW_FROM_NC__'')')
      !
+     do n=1,grid%mesh
+!        write (1000,'(3f18.10)')  grid%r(n),vpotpaw(n),vpsloc(n)
+     end do
+     !
      !symbol=atom_name(nint(zed))
      !
      ! compute kinetic energy differences, using:
