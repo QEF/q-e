@@ -468,7 +468,7 @@ MODULE ldaU
        starting_ns(lqmax,nspinx,ntypx) !
   INTEGER :: &                                                
        niter_with_fixed_ns,  &! no. of iterations with fixed ns
-       Hubbard_l(ntypx),     &! the agular momentum of Hubbard states
+       Hubbard_l(ntypx),     &! the angular momentum of Hubbard states
        Hubbard_lmax = 0       ! maximum angular momentum of Hubbard states
   LOGICAL :: &                                                
        lda_plus_u,           &! .TRUE. if lda+u calculation is performed

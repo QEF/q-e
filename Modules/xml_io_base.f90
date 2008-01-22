@@ -1048,7 +1048,7 @@ MODULE xml_io_base
          CALL iotk_write_dat( iunpun, "HUBBARD_LMAX", Hubbard_lmax )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_L", &
-                              Hubbard_l(1:Hubbard_lmax) )
+                              Hubbard_l(1:nsp) )
          !
          CALL iotk_write_dat( iunpun, "HUBBARD_U", Hubbard_U(1:nsp) )
          !

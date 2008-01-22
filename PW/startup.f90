@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2001-2004 PWSCF group
+! Copyright (C) 2001-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -65,10 +65,9 @@ SUBROUTINE startup( nd_nmbr, code, version )
   CHARACTER (LEN=80) :: np
   INTEGER            :: gid, node_number
   INTEGER            :: ierr = 0, ilen, nargs, iiarg
-  INTEGER            :: iargc
   INTEGER            :: ntask_groups
+  INTEGER            :: iargc
   ! do not define iargc as external: gfortran does not like
-  !
   !
 #if defined (__PARA)
   !
@@ -213,7 +212,7 @@ SUBROUTINE startup( nd_nmbr, code, version )
   !     
 CONTAINS
   !
-  SUBROUTINE set_nd_nmbr( nd_nmbr, node_number, nproc_image )
+   SUBROUTINE set_nd_nmbr( nd_nmbr, node_number, nproc_image )
      !
      IMPLICIT NONE
      !
@@ -221,128 +220,36 @@ CONTAINS
      INTEGER, INTENT(IN) :: node_number
      INTEGER, INTENT(IN) :: nproc_image
      !
-     nd_nmbr = '      '
+     INTEGER :: nmax, nleft, nfact, n
      !
-     IF ( nproc_image < 10 ) THEN
+     nd_nmbr = '      '
+     nmax = INT ( LOG10 ( nproc_image + 1.0D-8 ) )
+     !
+     ! nmax+1=number of digits of nproc_image (number of processors)
+     ! 1.0D-8 protects from rounding error if nproc_image is a power of 10
+     !
+     IF ( nmax+1 > LEN (nd_nmbr) ) &
+        CALL errore ( ' startup ', 'insufficient size for nd_nmbr', nmax)
+     IF ( nmax < 0) &
+        CALL errore ( ' startup ', 'incorrect value for nproc_image', nmax)
+     !
+     nleft = node_number
+     !
+     DO n = nmax, 0, -1
         !
-        WRITE( nd_nmbr(1:1), '(I1)' ) node_number
+        ! decompose node_number (index of this process) into powers of 10:
+        !    node_number = i*10^nmax+j*10^(nmax-1)+k*10^(nmax-2)...
+        ! i,j,k,... can be equal to 0
         !
-     ELSE IF ( nproc_image < 100 ) THEN
+        nfact = INT ( nleft/10**n )
+        IF ( nfact > 9 ) CALL errore ( ' startup ', 'internal error', 1 )
+        nleft = nleft - nfact*10**n
         !
-        IF ( node_number < 10 ) THEN
-           !
-           nd_nmbr = '0'
-           !
-           WRITE( nd_nmbr(2:2), '(I1)' ) node_number
-           !
-        ELSE
-           !
-           WRITE( nd_nmbr(1:2), '(I2)' ) node_number
-           !
-        END IF
+        WRITE( nd_nmbr(nmax-n+1:nmax-n+1), '(I1)' ) nfact
         !
-     ELSEIF (nproc_image < 1000) THEN
-        !
-        nd_nmbr = '00'
-        !
-        IF ( node_number < 10 ) THEN
-           !
-           !     
-           WRITE( nd_nmbr(3:3), '(I1)' ) node_number
-           !
-        ELSE IF ( node_number < 100 ) THEN
-           !
-           WRITE( nd_nmbr(2:3), '(I2)' ) node_number
-           !
-        ELSE
-           !
-           WRITE( nd_nmbr, '(I3)' ) node_number
-           !
-        END IF
-        !
-     ELSEIF (nproc_image < 10000) THEN
-        !
-        nd_nmbr = '000'
-        !
-        IF ( node_number < 10 ) THEN
-           !    
-           WRITE( nd_nmbr(4:4), '(I1)' ) node_number
-           !
-        ELSE IF ( node_number < 100 ) THEN
-           !
-           WRITE( nd_nmbr(3:4), '(I2)' ) node_number
-           !
-        ELSE IF ( node_number < 1000 ) THEN
-           !
-           WRITE( nd_nmbr(2:4), '(I3)' ) node_number
-           !
-        ELSE
-           !
-           WRITE( nd_nmbr, '(I4)' ) node_number
-           !
-        END IF
-        !
-     ELSEIF (nproc_image < 100000) THEN
-        !
-        nd_nmbr = '0000'
-        !
-        IF ( node_number < 10 ) THEN
-           !
-           WRITE( nd_nmbr(5:5), '(I1)' ) node_number
-           !
-        ELSE IF ( node_number < 100 ) THEN
-           !
-           WRITE( nd_nmbr(4:5), '(I2)' ) node_number
-           !
-        ELSE IF ( node_number < 1000 ) THEN
-           !
-           WRITE( nd_nmbr(3:5), '(I3)' ) node_number
-           !
-        ELSE IF ( node_number < 10000 ) THEN
-           !
-           WRITE( nd_nmbr(2:5), '(I4)' ) node_number
-           !
-        ELSE
-           !
-           WRITE( nd_nmbr, '(I5)' ) node_number
-           !
-        END IF
-        !
-     ELSEIF (nproc_image < 1000000) THEN
-        !
-        nd_nmbr = '00000'
-        !
-        IF ( node_number < 10 ) THEN
-           !
-           WRITE( nd_nmbr(6:6), '(I1)' ) node_number
-           !
-        ELSE IF ( node_number < 100 ) THEN
-           !
-           WRITE( nd_nmbr(5:6), '(I2)' ) node_number
-           !
-        ELSE IF ( node_number < 1000 ) THEN
-           !
-           WRITE( nd_nmbr(4:6), '(I3)' ) node_number
-           !
-        ELSE IF ( node_number < 10000 ) THEN
-           !
-           WRITE( nd_nmbr(3:6), '(I4)' ) node_number
-           !
-        ELSE IF ( node_number < 100000 ) THEN
-           !
-           WRITE( nd_nmbr(2:6), '(I5)' ) node_number
-           !
-        ELSE
-           !
-           WRITE( nd_nmbr, '(I6)' ) node_number
-           !
-        END IF
-        !
-     ELSE
-        !
-        call errore('startup','too many nodes, correct startup', 1)
-        !
-     END IF    
+     END DO
+     !
+     IF ( nleft > 0 ) CALL errore ( ' startup ', 'internal error', 2 )
      !
      RETURN
      !
