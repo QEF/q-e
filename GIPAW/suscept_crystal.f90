@@ -35,6 +35,8 @@ SUBROUTINE suscept_crystal
   USE paw_gipaw,                   ONLY : paw_vkb, paw_becp, paw_nkb, paw_recon
   USE ions_base,                   ONLY : nat
   USE buffers,                     ONLY : get_buffer
+  USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                          ONLY : mp_sum
   
   !-- local variables ----------------------------------------------------
   IMPLICIT NONE
@@ -176,19 +178,19 @@ SUBROUTINE suscept_crystal
   
 #ifdef __PARA
   ! reduce over G-vectors
-  call reduce(9, f_sum)
-  call reduce(3*9, q_pGv)
-  call reduce(3*9, q_vGv)
+  call mp_sum( f_sum, intra_pool_comm )
+  call mp_sum( q_pGv, intra_pool_comm )
+  call mp_sum( q_vGv, intra_pool_comm )
 #endif
   
 #ifdef __PARA
   ! reduce over k-points
-  call poolreduce(9, f_sum)
-  call poolreduce(3*9, q_pGv)
-  call poolreduce(3*9, q_vGv)
-  call poolreduce(nrxxs*nspin*9, j_bare)
-  call poolreduce(9*nat, sigma_diamagnetic)
-  call poolreduce(9*nat, sigma_paramagnetic)
+  call mp_sum( f_sum, inter_pool_comm)
+  call mp_sum( q_pGv, inter_pool_comm)
+  call mp_sum( q_vGv, inter_pool_comm)
+  call mp_sum( j_bare, inter_pool_comm)
+  call mp_sum( sigma_diamagnetic, inter_pool_comm)
+  call mp_sum( sigma_paramagnetic, inter_pool_comm)
 #endif
   
   !====================================================================

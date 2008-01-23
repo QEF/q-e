@@ -56,6 +56,7 @@ g_tensor_crystal.o : ../Modules/io_files.o
 g_tensor_crystal.o : ../Modules/io_global.o
 g_tensor_crystal.o : ../Modules/ions_base.o
 g_tensor_crystal.o : ../Modules/kind.o
+g_tensor_crystal.o : ../Modules/mp.o
 g_tensor_crystal.o : ../Modules/mp_global.o
 g_tensor_crystal.o : ../Modules/wavefunctions.o
 g_tensor_crystal.o : ../PW/becmod.o
@@ -150,6 +151,7 @@ suscept_crystal.o : ../Modules/io_files.o
 suscept_crystal.o : ../Modules/io_global.o
 suscept_crystal.o : ../Modules/ions_base.o
 suscept_crystal.o : ../Modules/kind.o
+suscept_crystal.o : ../Modules/mp.o
 suscept_crystal.o : ../Modules/mp_global.o
 suscept_crystal.o : ../Modules/wavefunctions.o
 suscept_crystal.o : ../PW/becmod.o
@@ -170,6 +172,8 @@ test_sum_rule.o : ../Modules/cell_base.o
 test_sum_rule.o : ../Modules/io_files.o
 test_sum_rule.o : ../Modules/io_global.o
 test_sum_rule.o : ../Modules/kind.o
+test_sum_rule.o : ../Modules/mp.o
+test_sum_rule.o : ../Modules/mp_global.o
 test_sum_rule.o : ../Modules/wavefunctions.o
 test_sum_rule.o : ../PW/buffers.o
 test_sum_rule.o : ../PW/pwcom.o

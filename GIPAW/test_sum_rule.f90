@@ -29,6 +29,9 @@ SUBROUTINE test_f_sum_rule
   USE buffers
   USE pwcom
   USE gipaw_module
+  USE mp_global,                   ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                          ONLY : mp_sum
+
 
   !-- local variables ----------------------------------------------------
   IMPLICIT NONE
@@ -95,8 +98,8 @@ SUBROUTINE test_f_sum_rule
     f_sum(:,:) = f_sum(:,:) + f_sum_k(:,:)
   enddo   ! ik
 #ifdef __PARA
-  call reduce(9, f_sum)
-  call poolreduce(9, f_sum)
+  call mp_sum( f_sum, intra_pool_comm )
+  call mp_sum( f_sum, inter_pool_comm )
 #endif
   write(stdout, '(5X,''f-sum rule:'')')
   write(stdout, '(3(5X,3(F12.6,2X)/))') f_sum(:,:)

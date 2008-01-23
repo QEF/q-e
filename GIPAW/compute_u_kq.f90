@@ -113,7 +113,7 @@ SUBROUTINE compute_u_kq(ik, q)
   call diag_bands ( iter, ik, avg_iter )
 
 !#ifdef __PARA
-!  call poolreduce( 1, avg_iter )
+!  call mp_sum( avg_iter, inter_pool_comm )
 !#endif
   avg_iter = avg_iter / nkstot
 

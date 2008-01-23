@@ -300,7 +300,6 @@ CONTAINS
 #ifdef __PARA
     WRITE( stdout,  * ) '     Parallel routines'
     call print_clock ('reduce')
-    call print_clock ('poolreduce')
 #endif
   END SUBROUTINE print_clock_gipaw
 
