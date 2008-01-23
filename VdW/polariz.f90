@@ -21,6 +21,8 @@ subroutine polariz_vdw ( iu )
   USE phcom
   USE cell_base,    ONLY : omega
   USE eff_v,        ONLY : nelecr, veff, et_c, dvext, dpsi_eff
+  USE mp_global,    ONLY : intra_pool_comm, inter_pool_comm
+  USE mp,           ONLY : mp_sum
 
   IMPLICIT NONE
   !
@@ -62,8 +64,8 @@ subroutine polariz_vdw ( iu )
      enddo
   enddo
 #ifdef __PARA
-  call reduce (9, epsilon)
-  call poolreduce (9, epsilon)
+  call mp_sum ( epsilon, intra_pool_comm )
+  call mp_sum ( epsilon, inter_pool_comm )
 #endif
   !
   !      symmetrize

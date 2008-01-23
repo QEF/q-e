@@ -13,6 +13,8 @@ check_v_eff.o : ../Modules/control_flags.o
 check_v_eff.o : ../Modules/io_files.o
 check_v_eff.o : ../Modules/io_global.o
 check_v_eff.o : ../Modules/kind.o
+check_v_eff.o : ../Modules/mp.o
+check_v_eff.o : ../Modules/mp_global.o
 check_v_eff.o : ../Modules/uspp.o
 check_v_eff.o : ../Modules/wavefunctions.o
 check_v_eff.o : ../PW/g_psi_mod.o
@@ -61,6 +63,8 @@ polariz.o : ../Modules/cell_base.o
 polariz.o : ../Modules/io_files.o
 polariz.o : ../Modules/io_global.o
 polariz.o : ../Modules/kind.o
+polariz.o : ../Modules/mp.o
+polariz.o : ../Modules/mp_global.o
 polariz.o : ../PH/phcom.o
 polariz.o : ../PW/pwcom.o
 polariz.o : vdwcom.o
@@ -74,6 +78,8 @@ solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/ions_base.o
 solve_e.o : ../Modules/kind.o
+solve_e.o : ../Modules/mp.o
+solve_e.o : ../Modules/mp_global.o
 solve_e.o : ../Modules/uspp.o
 solve_e.o : ../PH/phcom.o
 solve_e.o : ../PW/becmod.o

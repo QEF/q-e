@@ -41,6 +41,8 @@ SUBROUTINE check_v_eff ( veff, charge )
   USE wavefunctions_module, ONLY : psic , evc 
   USE g_psi_mod,            ONLY : h_diag, s_diag
   USE eff_v,                ONLY : rho_fft, rho_veff, evc_veff, nelecr
+  USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -242,7 +244,7 @@ SUBROUTINE check_v_eff ( veff, charge )
           !
        END DO k_loop
        !
-       CALL poolreduce( 1, avg_iter )
+       CALL mp_sum( avg_iter, inter_pool_comm )
        !
        avg_iter = avg_iter / nkstot
        !

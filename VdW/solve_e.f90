@@ -37,6 +37,8 @@ subroutine solve_e_vdw ( iu )
   USE eff_v,                 ONLY : nelecr, veff, et_c, dvext,  evc => evc_veff, &
                                     dpsi_eff
   USE control_vdw
+  USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   implicit none
   !
@@ -344,7 +346,7 @@ subroutine solve_e_vdw ( iu )
      !   for all the modes of this representation. We symmetrize this potenti
      !
 #ifdef __PARA
-     call poolreduce (2 * 3 * nrxx *nspin, dvscfout)
+     call mp_sum ( dvscfout, inter_pool_comm )
 #endif
      fildrho = ' '
      do ipol=1,3
