@@ -29,7 +29,7 @@ SUBROUTINE compute_potps_new(ik,v_in,v_out,xc)
    use radial_grids, only: ndmx
    use ld1inc, only: grid
    IMPLICIT NONE
-   REAL(DP), PARAMETER :: a = sqrt(0.5_dp) ! the parameter defining f(x)
+   REAL(DP), PARAMETER :: a =  .707106781186547 !=sqrt(0.5_dp) ! the parameter defining f(x)
 
    REAL(DP) :: &
          v_in(ndmx), & ! input: the potential to pseudize
