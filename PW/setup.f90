@@ -687,7 +687,7 @@ SUBROUTINE setup()
   !
   CALL divide_et_impera( xk, wk, isk, lsda, nkstot, nks )
   !
-  IF ( use_para_diag )  CALL check_para_diag()
+  IF ( use_para_diag )  CALL check_para_diag( nelec )
   !
 #else
   !
@@ -795,14 +795,15 @@ FUNCTION n_atom_wfc( nat, ityp )
   !
 END FUNCTION n_atom_wfc
 
-SUBROUTINE check_para_diag()
+SUBROUTINE check_para_diag( nelec )
   !
-  USE wvfct,            ONLY : nbnd, nbndx
   USE control_flags,    ONLY : use_para_diag, ortho_para, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho, intra_pool_comm
 
   IMPLICIT NONE
+
+  INTEGER, INTENT(IN) :: nelec
 
   use_para_diag = .TRUE.
   !
@@ -815,34 +816,49 @@ SUBROUTINE check_para_diag()
      ! 
      !  use all the available processors
      !
-     CALL init_ortho_group( nproc_pool, intra_pool_comm )
+     ortho_para = MIN( INT( nelec )/2, nproc_pool ) 
      !
   ELSE
      !
-     CALL init_ortho_group( ortho_para, intra_pool_comm )
+     ortho_para = MIN( INT( nelec )/2, ortho_para )
      !
   END IF
+
+  CALL init_ortho_group( ortho_para, intra_pool_comm )
 
   IF ( ionode ) THEN
      !
      WRITE( stdout, '(/,5X,"Iterative solution of the eigenvalue problem")' ) 
+     !
   END IF
 
-  !  we need at least 4 procs to use distributed algorithm
 
   IF( np_ortho( 1 ) == 1 .AND. np_ortho( 2 ) == 1 ) THEN
+     !
+     !  too few resources for parallel diag. switch back to serial one
+     !
      use_para_diag = .FALSE.
-     IF ( ionode ) WRITE( stdout, '(5X,"Too few procs for parallel algorithm")' )
-     IF ( ionode ) WRITE( stdout, '(5X,"  we need at least 4 procs")' )
+
+     !  give some explanation
+
+     IF( nproc_pool < 4) THEN
+        !
+        !  we need at least 4 procs to use distributed algorithm
+        !
+        IF ( ionode ) WRITE( stdout, '(5X,"Too few procs for parallel algorithm")' )
+        IF ( ionode ) WRITE( stdout, '(5X,"  we need at least 4 procs per pool")' )
+        !
+     ELSE IF( INT( nelec )/2 < nproc_pool ) THEN
+        !
+        !  we need to have at least 1 electronic band per block
+        !
+        IF ( ionode ) WRITE( stdout, '(5X,"Too few electrons for parallel algorithm")')
+        IF ( ionode ) WRITE( stdout, '(5X,"  we need at least as many bands as SQRT(nproc)")' )
+        !
+     END IF
+
   END IF
 
-  !  we need to have at least 1 electronic band per block
-
-  IF( np_ortho( 1 ) > nbnd ) THEN
-     use_para_diag = .FALSE.
-     IF ( ionode ) WRITE( stdout, '(5X,"Too few bands for parallel algorithm")')
-     IF ( ionode ) WRITE( stdout, '(5X,"  we need at least as many bands as SQRT(nproc)")' )
-  END IF
 
   IF ( ionode ) THEN
      !
