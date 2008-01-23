@@ -424,7 +424,7 @@ CONTAINS
        IF ( which_paw_augfun == 'BG') &
          write(stdout,"(5x,a,f12.6)") "Gaussians generated with zeta: ", zeta
        IF ( which_paw_augfun == 'BESSEL') &
-         write(stdout,'(5x, "Suggested rho cutoff for augmentation:",f7.2," Ry")'), max_aug_cutoff
+         write(stdout,'(5x, "Suggested rho cutoff for augmentation:",f7.2," Ry")') max_aug_cutoff
 
     END IF
     !
