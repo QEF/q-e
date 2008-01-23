@@ -36,6 +36,8 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
   USE wavefunctions_module,  ONLY : evc
   use phcom
   use d3com
+  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                    ONLY : mp_sum
 
   implicit none
   integer :: irr, npe, imode0, isw_sl
@@ -296,13 +298,13 @@ subroutine solve_linter_d3 (irr, imode0, npe, isw_sl)
      enddo
   endif
 #ifdef __PARA
-  call poolreduce (2 * npe * nrxx, drhoscf)
+  call mp_sum( drhoscf, inter_pool_comm )
 #endif
 
   if (lmetq0) call set_efsh (drhoscf, imode0, irr, npe)
   aux_avg (1) = DBLE (ltaver)
   aux_avg (2) = DBLE (lintercall)
-  call poolreduce (2, aux_avg)
+  call mp_sum( aux_avg, inter_pool_comm )
 
   averlt = aux_avg (1) / aux_avg (2)
   tcpu = get_clock ('D3TOTEN')

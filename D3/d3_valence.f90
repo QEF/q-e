@@ -16,6 +16,9 @@ subroutine d3_valence
   use pwcom
   use phcom
   use d3com
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
   integer :: ik, ikk, ikq, nu_i, nu_j, nu_k, ibnd, jbnd, kbnd, nrec
 
@@ -226,11 +229,11 @@ subroutine d3_valence
      enddo
   endif
 #ifdef __PARA
-  call poolreduce (2 * 27 * nat * nat * nat, aux1)
-  call poolreduce (2 * 27 * nat * nat * nat, aux2)
+  call mp_sum( aux1, inter_pool_comm )
+  call mp_sum( aux2, inter_pool_comm )
   if (lgamma) then
-     call poolreduce (2 * 27 * nat * nat * nat, aux3)
-     call poolreduce (2 * 27 * nat * nat * nat, aux4)
+     call mp_sum( aux3, inter_pool_comm )
+     call mp_sum( aux4, inter_pool_comm )
   endif
 #endif
   d3dyn = d3dyn + aux1 + aux2 + aux3 + aux4

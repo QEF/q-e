@@ -17,6 +17,8 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
   use pwcom
   use phcom
   use d3com
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
   integer :: npe, imode0, irr
   ! input: the number of perturbation
@@ -58,7 +60,7 @@ subroutine set_efsh (drhoscf, imode0, irr, npe)
         enddo
      enddo
 #ifdef __PARA
-     call poolreduce (1, dos_ef)
+     call mp_sum( dos_ef, inter_pool_comm )
 #endif
   endif
   !

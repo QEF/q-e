@@ -24,6 +24,9 @@ subroutine d3dyn_cc
   use scf, only : rho, rho_core
   use phcom
   use d3com
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
   integer :: na, nta, ig, ir, i_cart, j_cart, k_cart, na_i, na_j, &
        na_k, nu_i, nu_j, nu_k, na_icart, nb_jcart, nc_kcart
@@ -182,14 +185,14 @@ subroutine d3dyn_cc
   do nu_i = npert_f + 1, 3 * nat
      call davcio_drho (aux, lrdrho, iudrho, nu_i, - 1)
   enddo
-  call reduce (2 * 27 * nat * nat * nat, d3dyn0)
-  call reduce (2 * 27 * nat * nat * nat, d3dyn1)
-  call reduce (2 * 27 * nat * nat * nat, d3dyn2)
-  call reduce (2 * 27 * nat * nat * nat, d3dyn3)
-  call poolreduce (2 * 27 * nat * nat * nat, d3dyn0)
-  call poolreduce (2 * 27 * nat * nat * nat, d3dyn1)
-  call poolreduce (2 * 27 * nat * nat * nat, d3dyn2)
-  call poolreduce (2 * 27 * nat * nat * nat, d3dyn3)
+  call mp_sum ( d3dyn0, intra_pool_comm )
+  call mp_sum ( d3dyn1, intra_pool_comm )
+  call mp_sum ( d3dyn2, intra_pool_comm )
+  call mp_sum ( d3dyn3, intra_pool_comm )
+  call mp_sum ( d3dyn0, inter_pool_comm )
+  call mp_sum ( d3dyn1, inter_pool_comm )
+  call mp_sum ( d3dyn2, inter_pool_comm )
+  call mp_sum ( d3dyn3, inter_pool_comm )
 #endif
   !
   !   The dynamical matrix was computed in cartesian axis and now we put
@@ -243,7 +246,7 @@ subroutine d3dyn_cc
      endif
   enddo
 #ifdef __PARA
-  call poolreduce (2 * 27 * nat * nat * nat, d3dyn4)
+  call mp_sum( d3dyn4, inter_pool_comm )
 #endif
   d3dyn (:,:,:) = d3dyn(:,:,:) + d3dyn4(:,:,:)
   d3dyn_aux8(:,:,:) = d3dyn4(:,:,:)

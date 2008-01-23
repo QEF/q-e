@@ -28,6 +28,8 @@ subroutine d3vrho()
   USE uspp_param,           ONLY : nh
   USE wavefunctions_module, ONLY : evc
   USE io_files,             ONLY : iunigk
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   USE phcom
   USE d3com
   !
@@ -152,7 +154,7 @@ subroutine d3vrho()
      enddo
   enddo
 #ifdef __PARA
-  call poolreduce (2 * 27 * nat * nat * nat, d3dynwrk)
+  call mp_sum( d3dynwrk, inter_pool_comm )
 #endif
   !
   !   The dynamical matrix was computed in cartesian axis and now we put
@@ -178,7 +180,7 @@ subroutine d3vrho()
      endif
   enddo
 #ifdef __PARA
-  call poolreduce (2 * 27 * nat * nat * nat, d3dynwrk2)
+  call mp_sum( d3dynwrk2, inter_pool_comm )
 #endif
   d3dyn (:,:,:) = d3dyn (:,:,:) +  d3dynwrk2 (:,:,:) 
   d3dyn_aux1(:,:,:) = d3dynwrk2 (:,:,:) 

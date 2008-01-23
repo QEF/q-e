@@ -13,6 +13,8 @@ subroutine dpsidvdpsi (nu_q0)
   !
   USE ions_base,  ONLY : nat
   USE kinds, only : DP
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
   use pwcom
   use phcom
   use d3com
@@ -147,10 +149,10 @@ subroutine dpsidvdpsi (nu_q0)
   endif
 
 #ifdef __PARA
-  call poolreduce (2 * 27 * nat * nat * nat, d3dyn1)
+  call mp_sum( d3dyn1, inter_pool_comm )
   if (.not.allmodes) then
-     call poolreduce (2 * 27 * nat * nat * nat, d3dyn2)
-     call poolreduce (2 * 27 * nat * nat * nat, d3dyn3)
+     call mp_sum( d3dyn2, inter_pool_comm )
+     call mp_sum( d3dyn3, inter_pool_comm )
   endif
 #endif
   do nu_i = 1, 3 * nat

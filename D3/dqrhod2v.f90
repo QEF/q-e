@@ -23,6 +23,8 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
   USE phcom
   USE d3com
   USE mp_global,            ONLY : me_pool, root_pool
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -176,7 +178,7 @@ SUBROUTINE dqrhod2v (ipert, drhoscf)
      ENDDO
   ENDDO
   !
-  CALL poolreduce (2 * 9 * nat * nat, d3dywrk)
+  CALL mp_sum( d3dywrk, inter_pool_comm )
   !
   !  Rotate the dynamical matrix on the basis of patterns
   !  some indices do not need to be rotated

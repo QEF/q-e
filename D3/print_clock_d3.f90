@@ -54,7 +54,6 @@ subroutine print_clock_d3
 #ifdef __PARA
   WRITE( stdout,  * ) '     Parallel routines'
   call print_clock ('reduce')
-  call print_clock ('poolreduce')
 #endif
   return
 end subroutine print_clock_d3

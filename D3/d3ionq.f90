@@ -22,6 +22,9 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
   USE kinds, only : DP
   USE io_global,  ONLY : stdout
   USE constants, ONLY: e2, tpi, fpi
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
+
   !
   implicit none
   !
@@ -346,8 +349,8 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
 
 100 continue
 #ifdef __PARA
-  call reduce (2 * 27 * nat * nat * nat, d3dy1)
-  call poolreduce (2 * 27 * nat * nat * nat, d3dy1)
+  call mp_sum( d3dy1, intra_pool_comm )
+  call mp_sum( d3dy1, inter_pool_comm )
 #endif
   !
   !   The dynamical matrix was computed in cartesian axis and now we put
@@ -375,7 +378,7 @@ subroutine d3ionq (nat, ntyp, ityp, zv, tau, alat, omega, q, at, &
      endif
   enddo
 #ifdef __PARA
-  call poolreduce (2 * 27 * nat * nat * nat, d3dy2)
+  call mp_sum ( d3dy2, inter_pool_comm )
 #endif
   d3dyn (:,:,:) = d3dyn(:,:,:) + d3dy2 (:,:,:)
 
