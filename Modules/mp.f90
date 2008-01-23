@@ -48,7 +48,7 @@
         MODULE PROCEDURE mp_sum_i1, mp_sum_iv, mp_sum_im, mp_sum_it, & 
           mp_sum_r1, mp_sum_rv, mp_sum_rm, mp_sum_rt, mp_sum_r4d, &
           mp_sum_c1, mp_sum_cv, mp_sum_cm, mp_sum_ct, mp_sum_c4d, &
-          mp_sum_rmm, mp_sum_cmm
+          mp_sum_c6d, mp_sum_rmm, mp_sum_cmm
       END INTERFACE
 
       INTERFACE mp_root_sum
@@ -1683,6 +1683,27 @@
         mp_call_sizex( 45 ) = MAX( mp_call_sizex( 45 ), msglen )
 #endif
       END SUBROUTINE mp_sum_c4d
+
+!
+!------------------------------------------------------------------------------!
+!
+! Carlo Cavazzoni
+!
+      SUBROUTINE mp_sum_c6d(msg,gid)
+        IMPLICIT NONE
+        COMPLEX (DP), INTENT (INOUT) :: msg(:,:,:,:,:,:)
+        INTEGER, OPTIONAL, INTENT(IN) :: gid
+        INTEGER :: group
+        INTEGER :: msglen
+#if defined(__MPI)
+        msglen = size(msg)
+        group = mpi_comm_world
+        IF( PRESENT( gid ) ) group = gid
+        CALL reduce_base_real( 2 * msglen, msg, group, -1 )
+        mp_call_count( 45 ) = mp_call_count( 45 ) + 1
+        mp_call_sizex( 45 ) = MAX( mp_call_sizex( 45 ), msglen )
+#endif
+      END SUBROUTINE mp_sum_c6d
 
 
 
