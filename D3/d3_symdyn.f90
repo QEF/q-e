@@ -16,6 +16,9 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
   !
 #include "f_defs.h"
   USE kinds, only : DP
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
+
   implicit none
   integer :: nat, s (3, 3, 48), irt (48, nat), irgq (48), invs (48), &
        nsymq, npert_i, npert_f, irotmq
@@ -78,7 +81,7 @@ subroutine d3_symdyn (d3dyn, u, ug0, xq, s, invs, rtau, irt, irgq, &
      enddo
   enddo
 #ifdef __PARA
-  call poolreduce (2 * 27 * nat * nat * nat, phi)
+  call mp_sum( phi, inter_pool_comm )
 #endif
   !
   ! Then we transform to the crystal axis

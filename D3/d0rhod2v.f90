@@ -23,7 +23,8 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
   USE wavefunctions_module,  ONLY : evc
   USE phcom
   USE d3com
-  USE mp_global,             ONLY : me_pool, root_image
+  USE mp_global,             ONLY : me_pool, root_image, inter_pool_comm, intra_pool_comm
+  USE mp,                    ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -184,7 +185,7 @@ SUBROUTINE d0rhod2v (ipert, drhoscf)
      ENDDO
   ENDDO
   !
-  CALL poolreduce (2*9*nat*nat, d3dywrk)
+  CALL mp_sum ( d3dywrk, inter_pool_comm )
   !
   !  Rotate the dynamical matrix on the basis of patterns
   !  first index does not need to be rotated
