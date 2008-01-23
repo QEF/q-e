@@ -39,8 +39,8 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   USE wavefunctions_module,  ONLY : evc, psic
   USE io_files, ONLY: iunwfc, nwordwfc
   USE constants,      ONLY : degspin
-  USE mp,        ONLY : mp_max, mp_min
-  USE mp_global, ONLY : inter_pool_comm
+  USE mp,        ONLY : mp_max, mp_min, mp_sum
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm 
   USE fft_base,  ONLY : grid_gather
 !
   implicit none
@@ -272,7 +272,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
                  enddo
               enddo
 #ifdef __PARA
-              call reduce (2 * nrx1 * nrx2, psi)
+              call mp_sum( psi, intra_pool_comm )
 #endif
               !
               !     now sum for each k-point and for each band the square
@@ -360,11 +360,11 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !
 #ifdef __PARA
   if (stm_wfc_matching) then
-     call poolreduce (nrx1 * nrx2 * nrx3, stmdos)
+     call mp_sum( stmdos, inter_pool_comm )
      call symrho (stmdos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
           ftau)
   else
-     call poolreduce (nrxx, rho%of_r)
+     call mp_sum( rho%of_r, inter_pool_comm )
      call psymrho (rho%of_r, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, &
           ftau)
      call grid_gather (rho%of_r(:,1), stmdos)
@@ -382,7 +382,7 @@ subroutine stm (wf, sample_bias, z, dz, stm_wfc_matching, stmdos)
   !
   wf = istates
 #ifdef __PARA
-  call poolreduce (1, wf)
+  call mp_sum( wf, inter_pool_comm )
 #endif
   z = z / alat
 

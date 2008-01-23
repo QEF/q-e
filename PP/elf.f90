@@ -43,6 +43,8 @@ subroutine do_elf (elf)
   USE wvfct, ONLY: npw, igk, g2kin, nbnd, wg
   USE control_flags, ONLY: gamma_only
   USE wavefunctions_module,  ONLY: evc
+  USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY: mp_sum
   !
   ! I/O variables
   !
@@ -101,7 +103,7 @@ subroutine do_elf (elf)
   !
   ! reduce local kinetic energy across pools
   !
-  call poolreduce (nrxxs, kkin)
+  call mp_sum( kkin, inter_pool_comm )
 #endif
   !
   ! interpolate the local kinetic energy to the dense grid

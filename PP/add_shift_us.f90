@@ -58,6 +58,9 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        ! ... calculation at gamma
        !
+       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                   ONLY: mp_sum
+
        IMPLICIT NONE
        !
        REAL(DP), ALLOCATABLE    :: rbecp(:,:), shift_(:)
@@ -125,7 +128,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        ! ... collect contributions across pools
        !
-       CALL poolreduce( nat, shift_ )
+       call mp_sum( shift_, inter_pool_comm )
 #endif
        !
        ! ... Since our summation over k points was only on the irreducible 
@@ -145,6 +148,9 @@ SUBROUTINE add_shift_us( shift_nl )
      SUBROUTINE add_shift_us_k()
        !-----------------------------------------------------------------------
        !  
+       USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
+       USE mp,                   ONLY: mp_sum
+
        IMPLICIT NONE
        !
        REAL(DP), ALLOCATABLE :: shift_(:)
@@ -215,7 +221,7 @@ SUBROUTINE add_shift_us( shift_nl )
        !
        ! ... collect contributions across pools
        !
-       CALL poolreduce( nat, shift_ )
+       call mp_sum( shift_, inter_pool_comm )
 #endif
        !
        ! ... Since our summation over k points was only on the irreducible 

@@ -329,6 +329,8 @@ SUBROUTINE eps_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndmax, s
   USE io_global,            ONLY : ionode, stdout
   !
   USE grid_module,          ONLY : alpha, focc, wgrid, grid_build, grid_destroy                
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   ! 
   IMPLICIT NONE
 
@@ -474,8 +476,8 @@ IF (nspin == 1) THEN
   !
   ! recover over kpt parallelization (inter_pool)
   !
-  CALL poolreduce( 3 * (nw), epsr ) 
-  CALL poolreduce( 3 * (nw), epsi ) 
+  CALL mp_sum( epsr, inter_pool_comm )
+  CALL mp_sum( epsi, inter_pool_comm )
   
   !
   ! impose the correct normalization
@@ -663,8 +665,8 @@ ENDDO spin_loop
   !
   ! recover over kpt parallelization (inter_pool)
   !
-  CALL poolreduce( 3 * (nw), epsr ) 
-  CALL poolreduce( 3 * (nw), epsi ) 
+  CALL mp_sum( epsr, inter_pool_comm )
+  CALL mp_sum( epsi, inter_pool_comm )
   
   !
   ! impose the correct normalization
@@ -1125,6 +1127,9 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndma
   USE klist,                ONLY : nks, nkstot, degauss
   USE grid_module,          ONLY : focc, wgrid, grid_build, grid_destroy
   USE io_global,            ONLY : ionode, stdout
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
+
   ! 
   IMPLICIT NONE
 
@@ -1247,7 +1252,7 @@ SUBROUTINE offdiag_calc ( intersmear,intrasmear, nw, wmax, wmin, nbndmin, nbndma
   !
   ! recover over kpt parallelization (inter_pool)
   !
-  CALL poolreduce( 2 * 3 * 3 * (nw), epstot )
+  CALL mp_sum( epstot, inter_pool_comm )
 
   !
   ! impose the correct normalization

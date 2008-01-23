@@ -44,9 +44,8 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, so, fcoef
   USE io_files,             ONLY : iunwfc, nwordwfc
-#ifdef __PARA
-  USE mp,                   ONLY : mp_bcast
-#endif
+  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
   USE becmod,               ONLY : calbec
   implicit none
   !
@@ -382,7 +381,7 @@ subroutine local_dos (iflag, lsign, kpoint, kband, spin_component, &
   !
   ! reduce charge density across pools
   !
-  call poolreduce (nrxx, dos)
+  call mp_sum( dos, inter_pool_comm )
   call psymrho(dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)
 #else
   call symrho (dos, nrx1, nrx2, nrx3, nr1, nr2, nr3, nsym, s, ftau)

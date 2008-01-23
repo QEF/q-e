@@ -81,6 +81,9 @@ SUBROUTINE compute_casino
   USE io_files, ONLY: nd_nmbr, nwordwfc, iunwfc
   USE wavefunctions_module, ONLY : evc
   USE funct, ONLY : dft_is_meta
+  USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY: mp_sum
+
   IMPLICIT NONE
   INTEGER :: ig, ibnd, ik, io, na, j, ispin, nbndup, nbnddown, &
        nk, ngtot, ig7, ikk, nt, ijkb0, ikb, ih, jh, jkb, at_num 
@@ -208,11 +211,11 @@ SUBROUTINE compute_casino
   ENDDO
 
 #ifdef __PARA
-  CALL reduce(1,eloc)
-  CALL reduce(1,ek)
-  CALL poolreduce(1,ek)
-  CALL poolreduce(1,enl)
-  CALL poolreduce(1,demet)
+  call mp_sum( eloc,  intra_pool_comm )
+  call mp_sum( ek,    intra_pool_comm )
+  call mp_sum( ek,    inter_pool_comm )
+  call mp_sum( enl,   inter_pool_comm )
+  call mp_sum( demet, inter_pool_comm )
 #endif
   eloc = eloc * omega 
   ek = ek * tpiba2
