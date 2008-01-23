@@ -33,6 +33,9 @@ SUBROUTINE new_ns(ns)
   USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, nwordatwfc, iunsat
   USE buffers,              ONLY : get_buffer
   USE uspp_param,           ONLY : upf
+  USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+  USE mp,                   ONLY : mp_sum
+
 
   IMPLICIT NONE
   !
@@ -136,7 +139,7 @@ SUBROUTINE new_ns(ns)
 
   ENDDO
 #ifdef __PARA
-  CALL poolreduce (ldim * ldim * nspin * nat , nr)  
+  CALL mp_sum( nr, inter_pool_comm )
 #endif
   IF (nspin.EQ.1) nr = 0.5d0 * nr
   !

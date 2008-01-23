@@ -135,6 +135,7 @@ c_bands.o : ../Modules/control_flags.o
 c_bands.o : ../Modules/io_files.o
 c_bands.o : ../Modules/io_global.o
 c_bands.o : ../Modules/kind.o
+c_bands.o : ../Modules/mp.o
 c_bands.o : ../Modules/mp_global.o
 c_bands.o : ../Modules/uspp.o
 c_bands.o : ../Modules/wavefunctions.o
@@ -319,6 +320,8 @@ divide_et_impera.o : exx.o
 dndepsilon.o : ../Modules/io_files.o
 dndepsilon.o : ../Modules/ions_base.o
 dndepsilon.o : ../Modules/kind.o
+dndepsilon.o : ../Modules/mp.o
+dndepsilon.o : ../Modules/mp_global.o
 dndepsilon.o : ../Modules/uspp.o
 dndepsilon.o : ../Modules/wavefunctions.o
 dndepsilon.o : becmod.o
@@ -404,6 +407,7 @@ exx.o : ../Modules/functionals.o
 exx.o : ../Modules/io_files.o
 exx.o : ../Modules/io_global.o
 exx.o : ../Modules/kind.o
+exx.o : ../Modules/mp.o
 exx.o : ../Modules/mp_global.o
 exx.o : ../Modules/wavefunctions.o
 exx.o : buffers.o
@@ -437,6 +441,7 @@ force_hub.o : ../Modules/control_flags.o
 force_hub.o : ../Modules/io_files.o
 force_hub.o : ../Modules/ions_base.o
 force_hub.o : ../Modules/kind.o
+force_hub.o : ../Modules/mp.o
 force_hub.o : ../Modules/mp_global.o
 force_hub.o : ../Modules/uspp.o
 force_hub.o : ../Modules/wavefunctions.o
@@ -451,6 +456,8 @@ force_us.o : ../Modules/control_flags.o
 force_us.o : ../Modules/io_files.o
 force_us.o : ../Modules/ions_base.o
 force_us.o : ../Modules/kind.o
+force_us.o : ../Modules/mp.o
+force_us.o : ../Modules/mp_global.o
 force_us.o : ../Modules/uspp.o
 force_us.o : ../Modules/wavefunctions.o
 force_us.o : becmod.o
@@ -747,6 +754,8 @@ new_ns.o : ../Modules/io_files.o
 new_ns.o : ../Modules/io_global.o
 new_ns.o : ../Modules/ions_base.o
 new_ns.o : ../Modules/kind.o
+new_ns.o : ../Modules/mp.o
+new_ns.o : ../Modules/mp_global.o
 new_ns.o : ../Modules/uspp.o
 new_ns.o : ../Modules/wavefunctions.o
 new_ns.o : buffers.o
@@ -1190,6 +1199,8 @@ stres_knl.o : ../Modules/constants.o
 stres_knl.o : ../Modules/control_flags.o
 stres_knl.o : ../Modules/io_files.o
 stres_knl.o : ../Modules/kind.o
+stres_knl.o : ../Modules/mp.o
+stres_knl.o : ../Modules/mp_global.o
 stres_knl.o : ../Modules/wavefunctions.o
 stres_knl.o : buffers.o
 stres_knl.o : noncol.o
@@ -1245,6 +1256,8 @@ sum_band.o : paw_onecenter.o
 sum_band.o : pwcom.o
 sum_band.o : scf_mod.o
 sumkg.o : ../Modules/kind.o
+sumkg.o : ../Modules/mp.o
+sumkg.o : ../Modules/mp_global.o
 sumkt.o : ../Modules/kind.o
 summary.o : ../Modules/atom.o
 summary.o : ../Modules/cell_base.o

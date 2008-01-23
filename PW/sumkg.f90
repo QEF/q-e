@@ -14,6 +14,8 @@ function sumkg (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
   !
   !
   USE kinds
+  USE mp_global, ONLY : inter_pool_comm
+  USE mp,        ONLY : mp_sum
   implicit none
   ! Output variable
   real(DP) :: sumkg
@@ -50,7 +52,7 @@ function sumkg (et, nbnd, nks, wk, degauss, ngauss, e, is, isk)
      sumkg = sumkg + wk (ik) * sum1
   enddo
 #ifdef __PARA
-  call poolreduce (1, sumkg)
+  call mp_sum ( sumkg, inter_pool_comm )
 #endif
   return
 end function sumkg

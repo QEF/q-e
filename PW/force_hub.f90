@@ -28,7 +28,8 @@ SUBROUTINE force_hub(forceh)
    USE control_flags,        ONLY : gamma_only
    USE lsda_mod,             ONLY : lsda, nspin, current_spin, isk
    USE scf,                  ONLY : v
-   USE mp_global,            ONLY : me_pool, my_pool_id
+   USE mp_global,            ONLY : me_pool, my_pool_id, inter_pool_comm
+   USE mp,                   ONLY : mp_sum
    USE basis,                ONLY : natomwfc
    USE becmod,               ONLY : becp, calbec
    USE uspp,                 ONLY : nkb, vkb
@@ -138,7 +139,7 @@ SUBROUTINE force_hub(forceh)
    END DO
 
 #ifdef __PARA
-   CALL poolreduce(3*nat,forceh)
+   CALL mp_sum( forceh, inter_pool_comm )
 #endif
 
 

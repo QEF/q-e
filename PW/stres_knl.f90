@@ -23,6 +23,8 @@ subroutine stres_knl (sigmanlc, sigmakin)
   USE control_flags,        ONLY: gamma_only
   USE noncollin_module,     ONLY: noncolin, npol
   USE wavefunctions_module, ONLY: evc
+  USE mp_global,            ONLY: inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY: mp_sum
   implicit none
   real(DP) :: sigmanlc (3, 3), sigmakin (3, 3)
   real(DP), allocatable :: gk (:,:), kfac (:)
@@ -89,10 +91,10 @@ subroutine stres_knl (sigmanlc, sigmakin)
 
   call addusstres (sigmanlc)
 #ifdef __PARA
-  call reduce (9, sigmakin)
-  call poolreduce (9, sigmakin)
-  call reduce (9, sigmanlc)
-  call poolreduce (9, sigmanlc)
+  call mp_sum( sigmakin, intra_pool_comm )
+  call mp_sum( sigmakin, inter_pool_comm )
+  call mp_sum( sigmanlc, intra_pool_comm )
+  call mp_sum( sigmanlc, inter_pool_comm )
 #endif
   !
   ! symmetrize stress

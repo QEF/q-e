@@ -890,6 +890,8 @@ MODULE pw_restart
       USE lsda_mod,   ONLY : nspin
       USE io_files,   ONLY : iunocc    
       USE ions_base,  ONLY : nat
+      USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+      USE mp,         ONLY : mp_sum
       !
       IMPLICIT NONE
       !
@@ -1104,8 +1106,8 @@ MODULE pw_restart
             ELSE
                rho%ns(:,:,:,:) = 0.D0
             END IF
-            CALL reduce( ldim*ldim*nspin*nat, rho%ns )
-            CALL poolreduce( ldim*ldim*nspin*nat, rho%ns )
+            CALL mp_sum( rho%ns, intra_pool_comm )
+            CALL mp_sum( rho%ns, inter_pool_comm )
             !
          END IF
          !

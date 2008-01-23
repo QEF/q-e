@@ -25,8 +25,8 @@ SUBROUTINE weights()
   USE noncollin_module,     ONLY : bfield
   USE wvfct,                ONLY : nbnd, wg, et
   USE mp_global,            ONLY : intra_image_comm, me_image, &
-                                   root_image, npool, my_pool_id
-  USE mp,                   ONLY : mp_bcast
+                                   root_image, npool, my_pool_id, inter_pool_comm
+  USE mp,                   ONLY : mp_bcast, mp_sum
   !
   IMPLICIT NONE
   !
@@ -102,7 +102,7 @@ SUBROUTINE weights()
                        ngauss, et, ef, demet, wg, 0, isk)
      END IF
      !
-     CALL poolreduce( 1, demet )
+     CALL mp_sum( demet, inter_pool_comm )
      !
   ELSE IF ( tfixed_occ ) THEN
      !

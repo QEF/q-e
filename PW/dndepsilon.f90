@@ -29,6 +29,9 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    USE io_files,             ONLY : iunigk, nwordwfc, iunwfc, &
                                     iunat, iunsat, nwordatwfc
    USE buffers,              ONLY : get_buffer
+   USE mp_global,            ONLY : intra_pool_comm, inter_pool_comm
+   USE mp,                   ONLY : mp_sum
+
    IMPLICIT NONE
    !
    ! I/O variables first
@@ -135,7 +138,7 @@ SUBROUTINE dndepsilon ( dns,ldim,ipol,jpol )
    END DO                 ! on k-points
 
 #ifdef __PARA
-   CALL poolreduce(ldim*ldim*nspin*nat,dns)
+   CALL mp_sum( dns, inter_pool_comm )
 #endif
    !
    ! In nspin.eq.1 k-point weight wg is normalized to 2 el/band 

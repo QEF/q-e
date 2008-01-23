@@ -45,8 +45,8 @@ SUBROUTINE potinit()
   USE noncollin_module,     ONLY : noncolin, report
   USE io_files,             ONLY : tmp_dir, prefix, iunocc, input_drho
   USE spin_orb,             ONLY : domag
-  USE mp,                   ONLY : mp_bcast
-  USE mp_global,            ONLY : intra_image_comm
+  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE mp_global,            ONLY : intra_image_comm, inter_pool_comm, intra_pool_comm
   USE io_global,            ONLY : ionode, ionode_id
   USE pw_restart,           ONLY : pw_readfile
   USE io_rho_xml,           ONLY : read_rho
@@ -119,8 +119,8 @@ SUBROUTINE potinit()
         ELSE
            rho%ns(:,:,:,:) = 0.D0
         END IF
-        CALL reduce( ldim*ldim*nspin*nat, rho%ns )
-        CALL poolreduce( ldim*ldim*nspin*nat, rho%ns )
+        CALL mp_sum( rho%ns, intra_pool_comm )
+        CALL mp_sum( rho%ns, inter_pool_comm )
         !
      END IF
      !

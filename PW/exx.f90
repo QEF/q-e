@@ -661,6 +661,8 @@ contains
     USE wavefunctions_module, ONLY : evc
     USE lsda_mod,   ONLY : lsda, current_spin, isk
     USE klist,      ONLY : ngk, nks
+    USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+    USE mp,         ONLY : mp_sum
 
     implicit none
     REAL (DP)   :: exxenergy,  energy
@@ -699,8 +701,8 @@ contains
     if (gamma_only) energy = 2.d0 * energy
 
 
-    call reduce ( 1, energy)
-    call poolreduce(1,energy)
+    call mp_sum( energy, intra_pool_comm )
+    call mp_sum( energy, inter_pool_comm )
 
     exxenergy = energy
 
@@ -725,6 +727,8 @@ contains
     USE klist,     ONLY : xk, ngk, nks
     USE lsda_mod,  ONLY : lsda, current_spin, isk
     USE gvect,     ONLY : g, nl
+    USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+    USE mp,         ONLY : mp_sum
 
     implicit none
     REAL (DP)   :: exxenergy2,  energy
@@ -864,8 +868,8 @@ contains
 
     deallocate (tempphic, temppsic, rhoc, fac )
 
-    call reduce ( 1, energy)
-    call poolreduce(1,energy)
+    call mp_sum( energy, intra_pool_comm )
+    call mp_sum( energy, inter_pool_comm )
 
     exxenergy2 = energy
 

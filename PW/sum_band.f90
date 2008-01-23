@@ -38,8 +38,8 @@ SUBROUTINE sum_band()
   USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
   USE mp_global,            ONLY : intra_image_comm, me_image, &
-                                   root_image, npool, my_pool_id
-  USE mp,                   ONLY : mp_bcast
+                                   root_image, npool, my_pool_id, inter_pool_comm
+  USE mp,                   ONLY : mp_bcast, mp_sum
   USE funct,                ONLY : dft_is_meta
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
@@ -138,7 +138,7 @@ SUBROUTINE sum_band()
   !
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
-  CALL poolreduce( 1, eband )
+  CALL mp_sum( eband, inter_pool_comm )
   !
   ! ... symmetrization of the charge density (and local magnetization)
   !
@@ -146,8 +146,8 @@ SUBROUTINE sum_band()
   !
   ! ... reduce charge density across pools
   !
-  CALL poolreduce( nspin * nrxx, rho%of_r )
-  if (dft_is_meta() ) CALL poolreduce( nspin * nrxx, rho%kin_r )
+  CALL mp_sum( rho%of_r, inter_pool_comm )
+  if (dft_is_meta() ) CALL mp_sum( rho%kin_r, inter_pool_comm )
   !
   IF ( noncolin ) THEN
      !

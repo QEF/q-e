@@ -31,6 +31,8 @@ SUBROUTINE force_us( forcenl )
   USE io_files,             ONLY : iunwfc, nwordwfc, iunigk
   USE buffers,              ONLY : get_buffer
   USE becmod,               ONLY : allocate_bec, deallocate_bec
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -161,7 +163,7 @@ SUBROUTINE force_us( forcenl )
        !
        ! ... collect contributions across pools
        !
-       CALL poolreduce( 3 * nat, forcenl )
+       CALL mp_sum( forcenl, inter_pool_comm )
 #endif
        !
        ! ... Since our summation over k points was only on the irreducible 
@@ -396,7 +398,7 @@ SUBROUTINE force_us( forcenl )
        !
        ! ... collect contributions across pools
        !
-       CALL poolreduce( 3 * nat, forcenl )
+       CALL mp_sum( forcenl, inter_pool_comm )
 #endif
        !
        ! ... Since our summation over k points was only on the irreducible 

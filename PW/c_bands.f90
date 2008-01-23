@@ -30,6 +30,8 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
   USE bp,                   ONLY : lelfield
+  USE mp_global,            ONLY : inter_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -136,7 +138,7 @@ SUBROUTINE c_bands( iter, ik_, dr2 )
   !
   ik_ = 0
   !
-  CALL poolreduce( 1, avg_iter )
+  CALL mp_sum( avg_iter, inter_pool_comm )
   !
   avg_iter = avg_iter / nkstot
   !
@@ -557,9 +559,8 @@ SUBROUTINE c_bands_nscf( ik_ )
   USE ldaU,                 ONLY : lda_plus_u, swfcatom
   USE lsda_mod,             ONLY : current_spin, lsda, isk
   USE wavefunctions_module, ONLY : evc
-#ifdef __PARA
-  USE mp_global,            ONLY : npool, kunit
-#endif
+  USE mp_global,            ONLY : npool, kunit, inter_pool_comm
+  USE mp,                   ONLY : mp_sum
   USE check_stop,           ONLY : check_stop_now
   !
   IMPLICIT NONE
@@ -699,7 +700,7 @@ SUBROUTINE c_bands_nscf( ik_ )
      !
   END DO k_loop
   !
-  CALL poolreduce( 1, avg_iter )
+  CALL mp_sum( avg_iter, inter_pool_comm )
   avg_iter = avg_iter / nkstot
   !
   WRITE( stdout, '( /,5X,"ethr = ",1PE9.2,",  avg # of iterations =",0PF5.1 )' ) &
