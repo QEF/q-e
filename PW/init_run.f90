@@ -27,6 +27,9 @@ SUBROUTINE init_run()
   !
   CALL setup()
   !
+  ! ... prepare index limits for allocations
+  CALL pre_init()
+  !
   ! ... allocate memory for G- and R-space fft arrays
   !
   CALL allocate_fft()
@@ -91,3 +94,42 @@ SUBROUTINE init_h()
   RETURN
   !
 END SUBROUTINE init_h
+
+!----------------------------------------------------------------------------
+SUBROUTINE pre_init()
+  !----------------------------------------------------------------------------
+  !
+  USE ions_base,        ONLY : nat, nsp, ityp
+  USE uspp_param,       ONLY : upf, lmaxkb, nh, nhm, nbetam
+  USE uspp,             ONLY : nkb, nkbus
+  IMPLICIT NONE
+  INTEGER :: na, nt, nb
+  !
+  !     calculate the number of beta functions for each atomic type
+  !
+  lmaxkb = - 1
+  do nt = 1, nsp
+     nh (nt) = 0
+     do nb = 1, upf(nt)%nbeta
+        nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
+        lmaxkb = max (lmaxkb, upf(nt)%lll(nb) )
+     enddo
+  enddo
+  !
+  ! calculate the maximum number of beta functions
+  !
+  nhm = MAXVAL (nh (1:nsp))
+  nbetam = MAXVAL (upf(:)%nbeta)
+  !
+  ! calculate the number of beta functions of the solid
+  !
+  nkb = 0
+  nkbus = 0
+  do na = 1, nat
+     nt = ityp(na)
+     nkb = nkb + nh (nt)
+     if (upf(nt)%tvanp) nkbus = nkbus + nh (nt)
+  enddo
+
+
+END SUBROUTINE pre_init

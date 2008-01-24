@@ -168,6 +168,7 @@ SUBROUTINE read_file()
   !
   ! ... allocate memory for G- and R-space fft arrays
   !
+  CALL pre_init()
   CALL allocate_fft()
   CALL ggen()
   !

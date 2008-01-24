@@ -53,9 +53,9 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 
    REAL(DP), INTENT(IN)    :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
    REAL(DP), INTENT(OUT) :: d(nhm*(nhm+1)/2,nat,nspin) ! descreening coefficients (AE - PS)
-   REAL(DP), INTENT(OUT), OPTIONAL :: energy          ! if present compute E[rho]
-   REAL(DP), INTENT(OUT), OPTIONAL :: e_cmp(nat,2,2)
-   !
+   REAL(DP), INTENT(OUT), OPTIONAL :: energy           ! if present compute E[rho]
+   REAL(DP), INTENT(OUT), OPTIONAL :: e_cmp(nat, 2, 2) ! components of the energy
+   !                                          {AE!PS}
    INTEGER, PARAMETER      :: AE = 1, PS = 2,&      ! All-Electron and Pseudo
                               XC = 1, H  = 2        ! XC and Hartree
    REAL(DP), POINTER       :: rho_core(:)           ! pointer to AE/PS core charge density 
@@ -122,10 +122,11 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 
             ! First compute the Hartree potential (it does not depend on spin...):
             CALL PAW_h_potential(i, rho_lm, v_lm(:,:,1), energy)
-            ! using "energy" as in/out parameter I save a double call, but I have to do this:
+      ! NOTE: optional variables works recursively: e.g. if energy is not present here
+            ! it will not be present in PAW_h_potential too!
             IF (present(energy)) energy_tot = energy_tot + sgn*energy
             IF (present(e_cmp)) e_cmp(na, H, i_what) = energy
-            DO is = 1,nspin ! ... so it has to be copied to all spin components
+            DO is = 1,nspin ! ... v_H has to be copied to all spin components
                savedv_lm(:,:,is) = v_lm(:,:,1)
             ENDDO
 
@@ -174,14 +175,12 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    ENDDO atoms
 
 #ifdef __PARA
-   CALL reduce(nhm*(nhm+1)*nat*nspin/2,d)
-   IF ( present(energy) ) CALL reduce (1, energy_tot )
-   ! note: potential doesn't need to be recollected,
-   ! see note at the top of the file for details.
+    ! recollect D coeffs and total one-center energy
+    CALL reduce(nhm*(nhm+1)*nat*nspin/2,d)
+    IF ( present(energy) ) CALL reduce (1, energy_tot )
 #endif
-
-   ! put energy back in the output variable
-   IF (present(energy)) energy = energy_tot
+    ! put energy back in the output variable
+    IF ( present(energy) ) energy = energy_tot
 
    CALL stop_clock('PAW_pot')
 
@@ -195,6 +194,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
     USE control_flags,     ONLY : nosym, gamma_only
+    USE io_global,          ONLY : stdout, ionode
 
     REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
 
@@ -238,19 +238,21 @@ SUBROUTINE PAW_symmetrize(becsum)
 
 !#define __DEBUG_PAW_SYM
 #ifdef __DEBUG_PAW_SYM
+    if(ionode) then
         na = 1
         nt = ityp(na)
         DO is = 1, nspin
-            write(*,*) is
+            write(stdout,*) is
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
             ijh = ijtoh(ih,jh,nt)
-            write(*,"(1f10.3)", advance='no') becsum(ijh,na,is)
+            write(stdout,"(1f10.3)", advance='no') becsum(ijh,na,is)
         ENDDO
-            write(*,*)
+            write(stdout,*)
         ENDDO
-            write(*,*)
+            write(stdout,*)
         ENDDO
+    endif
 #endif
 
     !IF( gamma_only .or. nosym ) RETURN
@@ -316,6 +318,7 @@ SUBROUTINE PAW_symmetrize(becsum)
 #endif
 
 #ifdef __DEBUG_PAW_SYM
+    if(ionode) then
         na = 1
         nt = ityp(na)
         DO is = 1, nspin
@@ -323,13 +326,14 @@ SUBROUTINE PAW_symmetrize(becsum)
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
             ijh = ijtoh(ih,jh,nt)
-            write(*,"(1f10.3)", advance='no') becsym(ijh,na,is)
+            write(stdout,"(1f10.3)", advance='no') becsym(ijh,na,is)
         ENDDO
-            write(*,*)
+            write(stdout,*)
         ENDDO
-            write(*,*)
+            write(stdout,*)
         ENDDO
-        write(*,*) "________________________________________________"
+        write(stdout,*) "________________________________________________"
+    endif
 #endif
 
     ! Apply symmetrization:
@@ -1088,5 +1092,5 @@ SUBROUTINE PAW_rad2lm3(i, F_rad, F_lm, lmax_loc)
 END SUBROUTINE PAW_rad2lm3
 
 
-
+#undef OPTIONAL_CALL
 END MODULE paw_onecenter

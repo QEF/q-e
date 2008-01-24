@@ -97,8 +97,6 @@ SUBROUTINE PAW_post_init()
                     upf(nt)%paw%ptfunc,     &
                     upf(nt)%paw%ae_vloc     &
                   )
-        DEALLOCATE( upf(nt)%vloc)
-!        DEALLOCATE( upf(nt)%rho_atc)
         info(mpime,nt) = .true.
     ENDDO types
     CALL reduce(nproc*ntyp, info)
@@ -211,6 +209,8 @@ SUBROUTINE PAW_init_onecenter()
     ENDDO
     !
     IF ( dft_is_gradient() ) THEN
+        ! Integrate up to a higher maximum lm if using gradient correction
+        ! it should xlm = 2, check expression for d(y_lm)/d\theta for details
         lmax_safe = xlm
     ELSE
         lmax_safe = 0
@@ -289,7 +289,7 @@ END SUBROUTINE PAW_increase_lm
 !!! initialize several quantities related to radial integration: spherical harmonics and their 
 !!! gradients along a few (depending on lmaxq) directions, weights for spherical integration
 !!
-!!! IMPORTANT: routine PW/summary.f90 has the initialization parameters hardcoded inside
+!!! IMPORTANT: routine PW/summary.f90 has the initialization parameters hardcoded in it
 !!!            remember to update it if you change this!!!
 SUBROUTINE PAW_rad_init(l, rad)
     USE constants,              ONLY : pi, fpi, eps8
@@ -405,8 +405,6 @@ SUBROUTINE PAW_rad_init(l, rad)
         DEALLOCATE(aux)
     ENDIF gradient
     ! cleanup
-    ALLOCATE(rad%r(3,rad%nx))
-    rad%r(:,:) = r(:,:)
     DEALLOCATE (r,r2)
 
     OPTIONAL_CALL stop_clock ('PAW_rad_init')
@@ -446,5 +444,5 @@ SUBROUTINE PAW_rad_init(l, rad)
     END SUBROUTINE weights
 END SUBROUTINE PAW_rad_init 
 
-
+#undef OPTIONAL_CALL
 END MODULE paw_init

@@ -40,7 +40,6 @@ MODULE paw_variables
         REAL(DP),POINTER :: dylmt(:,:),&! |d(ylm)/dtheta|**2
                             dylmp(:,:)  ! |d(ylm)/dphi|**2
         REAL(DP),POINTER :: cotg_th(:)  ! cos(theta)/sin(theta)  (for divergence)
-        REAL(DP),POINTER :: r(:,:)      ! DEBUG
     END TYPE
     TYPE(paw_radial_integrator), ALLOCATABLE :: &
         rad(:) ! information to integrate different atomic species

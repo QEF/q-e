@@ -44,6 +44,7 @@ SUBROUTINE sum_band()
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec, deallocate_bec
+  USE paw_variables,        ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -135,6 +136,8 @@ SUBROUTINE sum_band()
   ! ... Here we add the Ultrasoft contribution to the charge
   !
   IF ( okvan ) CALL addusdens()
+  ! For paw put a copy of becsum in rho structure for self-consistency
+  IF ( okpaw ) rho%bec(:,:,:) = becsum(:,:,:)
   !
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
@@ -148,6 +151,8 @@ SUBROUTINE sum_band()
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
   if (dft_is_meta() ) CALL mp_sum( rho%kin_r, inter_pool_comm )
+  ! rho%bec has to be recollected, but becsum must NOT, otherwise it breaks the stress!
+  if (okpaw)          CALL mp_sum(rho%bec, inter_pool_comm )
   !
   IF ( noncolin ) THEN
      !

@@ -615,7 +615,9 @@ init_ns.o : ../Modules/kind.o
 init_ns.o : pwcom.o
 init_ns.o : scf_mod.o
 init_run.o : ../Modules/control_flags.o
+init_run.o : ../Modules/ions_base.o
 init_run.o : ../Modules/paw_variables.o
+init_run.o : ../Modules/uspp.o
 init_run.o : dynamics_module.o
 init_run.o : paw_init.o
 init_run.o : pwcom.o
@@ -829,6 +831,7 @@ paw_onecenter.o : ../Modules/atom.o
 paw_onecenter.o : ../Modules/constants.o
 paw_onecenter.o : ../Modules/control_flags.o
 paw_onecenter.o : ../Modules/functionals.o
+paw_onecenter.o : ../Modules/io_global.o
 paw_onecenter.o : ../Modules/ions_base.o
 paw_onecenter.o : ../Modules/kind.o
 paw_onecenter.o : ../Modules/paw_variables.o

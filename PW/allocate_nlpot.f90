@@ -60,31 +60,10 @@ subroutine allocate_nlpot
   !
   allocate (igk( npwx ), g2kin ( npwx ) )    
   !
-  !     calculate the number of beta functions for each atomic type
-  !
-  lmaxkb = - 1
-  do nt = 1, nsp
-     nh (nt) = 0
-     do nb = 1, upf(nt)%nbeta
-        nh (nt) = nh (nt) + 2 * upf(nt)%lll(nb) + 1
-        lmaxkb = max (lmaxkb, upf(nt)%lll(nb) )
-     enddo
-  enddo
-  !
-  ! calculate the maximum number of beta functions
-  !
-  nhm = MAXVAL (nh (1:nsp))
-  nbetam = MAXVAL (upf(:)%nbeta)
-  !
-  ! calculate the number of beta functions of the solid
-  !
-  nkb = 0
-  nkbus = 0
-  do na = 1, nat
-     nt = ityp(na)
-     nkb = nkb + nh (nt)
-     if (upf(nt)%tvanp) nkbus = nkbus + nh (nt)
-  enddo
+  ! Note: computation of the number of beta functions for
+  ! each atomic type and the maximum number of beta functions
+  ! and the number of beta functions of the solid has been
+  ! moved to setup.f90 : pre_init()
   !
   allocate (indv( nhm, nsp))    
   allocate (nhtol(nhm, nsp))    
@@ -112,7 +91,7 @@ subroutine allocate_nlpot
   if (nkb > 0) allocate (vkb( npwx,  nkb))    
   allocate (becsum( nhm * (nhm + 1)/2, nat, nspin))    
   ! In PAW becsum has to be treated self-consistently:
-  if (okpaw) rho%bec => becsum
+  !if (okpaw) rho%bec => becsum
   !
   ! Calculate dimensions for array tab (including a possible factor
   ! coming from cell contraction during variable cell relaxation/MD)

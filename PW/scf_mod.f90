@@ -34,14 +34,23 @@ MODULE scf
 #define __ALLOCATABLE allocatable
 #define __allocated   allocated
 #endif
+! Details of PAW implementation:
+! NOTE: scf_type is used for two differt quantities: density and potential,
+!       these correspond, for PAW, to becsum and D coefficiets.
+!       Due to interference with the ultrasoft routines only the becsum part
+!       is stored in the structure (at the moment).
+!       This only holds for scf_type, mix_type is not affected.
+! NOTE: rho%bec is different from becsum for two reasons:
+!       1. rho%bec is mixed, while becsum is not
+!       2. for npool > 1 rho%bec is collected, becsum is not
+!          ( this is necessary to make the stress work)
   TYPE scf_type
      REAL(DP),   __ALLOCATABLE :: of_r(:,:)  ! the charge density in R-space
      COMPLEX(DP),__ALLOCATABLE :: of_g(:,:)  ! the charge density in G-space
      REAL(DP),   __ALLOCATABLE :: kin_r(:,:) ! the kinetic energy density in R-space
      COMPLEX(DP),__ALLOCATABLE :: kin_g(:,:) ! the kinetic energy density in G-space
-     REAL(DP),  __ALLOCATABLE  :: ns(:,:,:,:)! the LDA+U occupation matrix 
-     REAL(DP),    POINTER      :: bec(:,:,:) ! the PAW hamiltonian elements, may point to
-        LOGICAL :: internal_becsum = .false.! becsum in module uspp or be allocated anew.
+     REAL(DP),   __ALLOCATABLE :: ns(:,:,:,:)! the LDA+U occupation matrix
+     REAL(DP),   __ALLOCATABLE :: bec(:,:,:) ! the PAW hamiltonian elements
   END TYPE scf_type
   !
   TYPE mix_type
@@ -74,9 +83,13 @@ CONTAINS
  SUBROUTINE create_scf_type ( rho, do_not_allocate_becsum )
  IMPLICIT NONE
  TYPE (scf_type) :: rho
- LOGICAL,INTENT(IN),OPTIONAL :: do_not_allocate_becsum
+ LOGICAL,INTENT(IN),OPTIONAL :: do_not_allocate_becsum ! PAW hack
+ LOGICAL                     :: allocate_becsum        ! PAW hack
  allocate ( rho%of_r( nrxx, nspin) )
  allocate ( rho%of_g( ngm, nspin ) )
+#ifdef __GFORTRAN
+ nullify (rho%kin_r, rho%kin_g, rho%ns, rho%bec)
+#endif
  if (dft_is_meta()) then
     allocate ( rho%kin_r( nrxx, nspin) )
     allocate ( rho%kin_g( ngm, nspin ) )
@@ -85,20 +98,13 @@ CONTAINS
     allocate ( rho%kin_g(1,1) )
  endif
  if (lda_plus_u) allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
- if (okpaw) then
-   ! double no means yes, it looks silly here but clearer everywhere else
-   if(present(do_not_allocate_becsum) .and. & !<-- .but. would be clearer
-      do_not_allocate_becsum) then
-      ! This hack is necessary because when scf type is inited in
-      ! allocate_fft becsum is not yet initialized. The pointer is 
-      ! actually set in allocate_nlpot.
-      nullify(rho%bec)
-      rho%internal_becsum = .false.
-   else
-      allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
-      rho%bec(:,:,:) = 0._dp
-      rho%internal_becsum = .true.
-   endif
+ if (okpaw) then ! See the top of the file for clarification
+    if(present(do_not_allocate_becsum)) then
+       allocate_becsum = .not. do_not_allocate_becsum
+    else
+       allocate_becsum = .true.
+    endif
+    if(allocate_becsum) allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
  endif
 
  return
@@ -112,12 +118,7 @@ CONTAINS
  if (__allocated(rho%kin_r)) deallocate(rho%kin_r)
  if (__allocated(rho%kin_g)) deallocate(rho%kin_g)
  if (__allocated(rho%ns))    deallocate(rho%ns)
- ! Same reason as above for this hack:
- if (rho%internal_becsum) then
-    if (associated(rho%bec)) deallocate(rho%bec)
- else
-    nullify(rho%bec)
- endif
+ if (__allocated(rho%bec))   deallocate(rho%bec)
  return
  END SUBROUTINE destroy_scf_type
  !
@@ -128,7 +129,7 @@ CONTAINS
 #ifdef __GFORTRAN
  nullify (rho%kin_g, rho%ns, rho%bec)
 #endif
- if (dft_is_meta()) allocate ( rho%kin_g( ngms, nspin ) )
+ if (dft_is_meta()) allocate (rho%kin_g( ngms, nspin ) )
  if (lda_plus_u)    allocate (rho%ns(2*Hubbard_lmax+1,2*Hubbard_lmax+1,nspin,nat))
  if (okpaw)         allocate (rho%bec(nhm*(nhm+1)/2,nat,nspin))
 

@@ -270,7 +270,8 @@ SUBROUTINE setup()
      END IF
      !
      IF ( ABS( iocc - nelec ) > 1D-5 ) &
-        CALL errore( 'setup', 'strange occupations', 1 )
+        CALL errore( 'setup', 'strange occupations:'//&
+                     'number of electrons from occupations is wrong', 1 )
      !
   END IF
   !
@@ -814,10 +815,10 @@ SUBROUTINE check_para_diag( nelec )
   !  and ortho_para input keyword can be used to force a given number of proc
   !
   IF( ortho_para < 1 ) THEN
-     ! 
+     !
      !  use all the available processors
      !
-     ortho_para = MIN( INT( nelec )/2, nproc_pool ) 
+     ortho_para = MIN( INT( nelec )/2, nproc_pool )
      !
   ELSE
      !
