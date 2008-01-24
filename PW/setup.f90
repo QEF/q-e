@@ -797,13 +797,14 @@ END FUNCTION n_atom_wfc
 
 SUBROUTINE check_para_diag( nelec )
   !
+  USE kinds,            ONLY : DP
   USE control_flags,    ONLY : use_para_diag, ortho_para, gamma_only
   USE io_global,        ONLY : stdout, ionode, ionode_id
   USE mp_global,        ONLY : nproc_pool, init_ortho_group, np_ortho, intra_pool_comm
 
   IMPLICIT NONE
 
-  INTEGER, INTENT(IN) :: nelec
+  REAL(DP), INTENT(IN) :: nelec
 
   use_para_diag = .TRUE.
   !
