@@ -290,7 +290,7 @@ CONTAINS
        ! specific shape of the radial part of the augmentation functions
        ! in a spherically averager system (as is the case in atoms) only
        ! the zero-th moment contribute to the scf charge
-       CALL infomsg ('us2paw','You have specified: '//TRIM(which_paw_augfun))  
+       write(stdout, '(5x,2a)') 'Required augmentation: ',TRIM(which_paw_augfun)
        !
 101    pawset_%augfun(:,:,:,:) = 0.0_dp
        DO ns=1,nbeta
@@ -390,7 +390,7 @@ CONTAINS
                    ! 
                    CALL find_bes_qi(qc,pawset_%grid%r(ircm),l3,2,iok)
                    IF (iok.ne.0) CALL errore('compute_augfun', &
-                         'problems with find_aug_qi',1)
+                         'problems with find_bes_qi',1)
                    DO nc = 1, 2
                       !
                       CALL sph_bes(irc,grid%r(1),qc(nc),l3,j1(1,nc))

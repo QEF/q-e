@@ -23,6 +23,7 @@ atomic_paw.o : ../Modules/constants.o
 atomic_paw.o : ../Modules/functionals.o
 atomic_paw.o : ../Modules/io_global.o
 atomic_paw.o : ../Modules/kind.o
+atomic_paw.o : ../Modules/mp.o
 atomic_paw.o : ../Modules/parameters.o
 atomic_paw.o : ../Modules/pseudo_types.o
 atomic_paw.o : ../Modules/radial_grids.o
@@ -68,6 +69,9 @@ compute_phius.o : ld1inc.o
 compute_potps.o : ../Modules/kind.o
 compute_potps.o : ../Modules/radial_grids.o
 compute_potps.o : ld1inc.o
+compute_potps_new.o : ../Modules/kind.o
+compute_potps_new.o : ../Modules/radial_grids.o
+compute_potps_new.o : ld1inc.o
 compute_q_3bess.o : ../Modules/kind.o
 compute_q_3bess.o : ../Modules/radial_grids.o
 compute_q_3bess.o : ld1inc.o

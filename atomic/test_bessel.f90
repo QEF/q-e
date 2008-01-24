@@ -462,10 +462,12 @@ SUBROUTINE rdiags( n, h, s, ldh, m, e, v, ldv )
        0.0_dp, 0.0_dp, 1, m, 0.0_dp, mo, e, v, ldh, work, lwork, &
        iwork, ifail, info )
   !             
-  if ( info > 0) then
-     call errore('rdiagd','failed to converge',info)
+  if ( info > n) then
+     call errore('rdiags','failed to converge (factorization)',info-n)
+  else if(info > 0) then
+     call errore('rdiags','failed to converge: ',info)
   else if(info < 0) then
-     call errore('rdiagd','illegal arguments',-info)
+     call errore('rdiags','illegal arguments',-info)
   end if
   deallocate ( ifail, iwork, work )  
   !
