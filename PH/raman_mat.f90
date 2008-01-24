@@ -22,6 +22,8 @@ subroutine raman_mat
   USE wavefunctions_module,  ONLY: evc
   use phcom
   USE ramanm
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   implicit none
 
   logical :: wr_all
@@ -203,8 +205,8 @@ subroutine raman_mat
   enddo
 
 #ifdef __PARA
-  call     reduce(6 * 3 * nat * 2, wrk )
-  call poolreduce(6 * 3 * nat * 2, wrk )
+  call mp_sum( wrk, intra_pool_comm )
+  call mp_sum( wrk, inter_pool_comm )
 #endif
 
   do iat = 1, nat

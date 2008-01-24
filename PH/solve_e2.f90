@@ -25,6 +25,8 @@ subroutine solve_e2
   USE phcom
   USE ramanm
   USE check_stop, ONLY: check_stop_now
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
   implicit none
 
   real(DP) ::  thresh, weight, avg_iter, dr2
@@ -197,7 +199,7 @@ subroutine solve_e2
      !   for all the modes, and we symmetrize this potential
      !
 #ifdef __PARA
-     call poolreduce (2 * 6 * nrxx * nspin, dvscfout)
+     call mp_sum ( dvscfout, inter_pool_comm )
 #endif
      do ipol = 1, 6
         call dv_of_drho (0, dvscfout (1, 1, ipol), .false.)

@@ -47,6 +47,9 @@ subroutine dhdrhopsi
   use becmod
   use phcom
   use ramanm
+  USE mp_global ,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                    ONLY : mp_sum
+
   implicit none
 
   logical :: d_test
@@ -288,8 +291,8 @@ subroutine dhdrhopsi
   enddo
 
 #ifdef __PARA
-  call poolreduce (1, avg_iter1) 
-  call poolreduce (1, avg_iter2) 
+  call mp_sum ( avg_iter1, inter_pool_comm ) 
+  call mp_sum ( avg_iter2, inter_pool_comm ) 
 #endif
   avg_iter1 = avg_iter1 / nkstot
   avg_iter2 = avg_iter2 / nkstot

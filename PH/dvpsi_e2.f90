@@ -26,7 +26,8 @@ subroutine dvpsi_e2
   use phcom
   USE ramanm
 #ifdef __PARA
-  USE mp_global, ONLY: my_pool_id
+  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY: mp_sum
 #endif
   implicit none
 
@@ -185,7 +186,7 @@ subroutine dvpsi_e2
   enddo
 #ifdef __PARA
  100  continue
-  call poolreduce (2 * 6 * nrxx, aux6)
+  call mp_sum ( aux6, inter_pool_comm )
   call psyme2 (aux6)
 #else
   call syme2 (aux6)

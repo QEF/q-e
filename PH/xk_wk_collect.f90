@@ -18,6 +18,8 @@ SUBROUTINE xk_wk_collect( xk_start, wk_start, xk, wk, nkstot, nks )
   USE io_global, only : stdout
   USE kinds,     ONLY : DP
   USE mp_global, ONLY : my_pool_id, npool, kunit
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
   !
   IMPLICIT NONE
   !
@@ -59,9 +61,9 @@ SUBROUTINE xk_wk_collect( xk_start, wk_start, xk, wk, nkstot, nks )
   !
   wk_start(nbase+1:nbase+nks)=wk(1:nks)
   !
-  CALL poolreduce(nkstot*3, xk_start)
+  CALL mp_sum( xk_start, inter_pool_comm )
   !
-  CALL poolreduce(nkstot, wk_start)
+  CALL mp_sum( wk_start, inter_pool_comm )
   !
 #endif
   !

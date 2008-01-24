@@ -23,6 +23,8 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   USE io_global, ONLY : stdout
   USE kinds, only : DP
   use phcom
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
   implicit none
 
   integer :: irr, imode0, npe
@@ -75,8 +77,8 @@ subroutine drhodvus (irr, imode0, dvscfin, npe)
   !
   ! collect contributions from all pools (sum over k-points)
   !
-  call poolreduce (18 * nat * nat, dyn1)
-  call reduce (18 * nat * nat, dyn1)
+  call mp_sum ( dyn1, inter_pool_comm )
+  call mp_sum ( dyn1, intra_pool_comm )
 #endif
   !       WRITE( stdout,*) 'drhodvus dyn1, dyn'
   !       call tra_write_matrix('drhodvus dyn1',dyn1,u,nat)

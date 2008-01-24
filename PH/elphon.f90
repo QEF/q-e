@@ -672,6 +672,8 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !-----------------------------------------------------------------------
   !
   USE kinds, ONLY : DP
+  USE mp_global, ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,        ONLY : mp_sum
   IMPLICIT NONE
   REAL(DP) :: dos_ef
   INTEGER :: ngauss, nbnd, nks
@@ -692,7 +694,7 @@ FUNCTION dos_ef (ngauss, degauss, ef, et, wk, nks, nbnd)
   !
   !    Collects partial sums on k-points from all pools
   !
-  CALL poolreduce (1, dos_ef)
+  CALL mp_sum ( dos_ef, inter_pool_comm )
   !
   RETURN
 END FUNCTION dos_ef

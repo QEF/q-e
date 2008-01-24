@@ -49,6 +49,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
   USE efield_mod,           ONLY : epsilon, zstareu, zstarue, zstareu0, zstarue0
   USE dynmat,               ONLY : dyn, dyn00
   USE ramanm,               ONLY : lraman, elop, ramtns, eloptns 
+  USE mp_global,            ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
   !
   implicit none
 
@@ -545,8 +547,8 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
      !
      !   Reduce the delta rho across pools
      !
-     call poolreduce (2 * npe * nspin * nrxx, drhoscf)
-     call poolreduce (2 * npe * nspin * nrxx, drhoscfh)
+     call mp_sum ( drhoscf, inter_pool_comm )
+     call mp_sum ( drhoscfh, inter_pool_comm )
 #endif
      !
      ! q=0 in metallic case deserve special care (e_Fermi can shift)
@@ -601,7 +603,7 @@ subroutine solve_linter (irr, imode0, npe, drhoscf)
 #ifdef __PARA
      aux_avg (1) = DBLE (ltaver)
      aux_avg (2) = DBLE (lintercall)
-     call poolreduce (2, aux_avg)
+     call mp_sum ( aux_avg, inter_pool_comm )
      averlt = aux_avg (1) / aux_avg (2)
 #else
      averlt = DBLE (ltaver) / lintercall

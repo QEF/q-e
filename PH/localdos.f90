@@ -27,6 +27,9 @@ subroutine localdos (ldos, ldoss, dos_ef)
   USE uspp_param, ONLY: upf, nh, nhm
   use phcom
   USE io_files, ONLY: iunigk
+  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,               ONLY : mp_sum
+
   implicit none
 
   complex(DP) :: ldos (nrxx, nspin), ldoss (nrxxs, nspin)
@@ -209,9 +212,9 @@ subroutine localdos (ldos, ldoss, dos_ef)
   !
   !    Collects partial sums on k-points from all pools
   !
-  call poolreduce (2 * nrxxs * nspin, ldoss)
-  call poolreduce (2 * nrxx * nspin, ldos)
-  call poolreduce (1, dos_ef)
+  call mp_sum ( ldoss, inter_pool_comm )
+  call mp_sum ( ldos, inter_pool_comm )
+  call mp_sum ( dos_ef, inter_pool_comm )
 #endif
   !check
   !      check =0.d0

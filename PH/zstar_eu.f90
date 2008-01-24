@@ -22,6 +22,9 @@ subroutine zstar_eu
   USE wavefunctions_module,  ONLY: evc
   USE kinds, only : DP
   use phcom
+  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                    ONLY : mp_sum
+
   implicit none
 
   integer :: ibnd, ipol, jpol, icart, na, nu, mu, imode0, irr, &
@@ -74,8 +77,8 @@ subroutine zstar_eu
   if (okvan) call zstar_eu_us
 
 #ifdef __PARA
-  call reduce (18 * nat, zstareu0)
-  call poolreduce (18 * nat, zstareu0)
+  call mp_sum ( zstareu0, intra_pool_comm )
+  call mp_sum ( zstareu0, inter_pool_comm )
 #endif
   !
   ! bring the mode index to cartesian coordinates

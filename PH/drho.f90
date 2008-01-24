@@ -25,6 +25,9 @@ subroutine drho
   USE uspp_param, only: upf, nhm
   USE uspp, only : okvan
   use phcom
+  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,               ONLY : mp_sum
+
   implicit none
 
   integer :: nt, mode, mu, na, is, ir, irr, iper, npe, nrstot, nu_i, nu_j, &
@@ -153,12 +156,12 @@ subroutine drho
   !
   ! collect contributions from all pools (sum over k-points)
   !
-  call poolreduce (18 * nat * nat, dyn00)
-  call poolreduce (18 * nat * nat, wdyn)
+  call mp_sum ( dyn00, inter_pool_comm )
+  call mp_sum ( wdyn, inter_pool_comm )
   !
   ! collect contributions from nodes of a pool (sum over G & R space)
   !
-  call reduce (18 * nat * nat, wdyn)
+  call mp_sum ( wdyn, intra_pool_comm )
 #endif
   call ZAXPY (3 * nat * 3 * nat, (1.d0, 0.d0), wdyn, 1, dyn00, 1)
   !

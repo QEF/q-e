@@ -25,8 +25,8 @@ subroutine el_opt
   USE ramanm
   USE io_global, ONLY: ionode_id
 #ifdef __PARA
-  USE mp, ONLY: mp_bcast
-  USE mp_global, ONLY: my_pool_id
+  USE mp, ONLY: mp_bcast, mp_sum
+  USE mp_global, ONLY: my_pool_id, inter_pool_comm, intra_pool_comm
 #endif
   implicit none
 
@@ -82,8 +82,8 @@ subroutine el_opt
   enddo
 
 #ifdef __PARA
-  call     reduce(27, elop_ )
-  call poolreduce(27, elop_ )
+  call mp_sum( elop_ , intra_pool_comm)
+  call mp_sum( elop_ , inter_pool_comm)
 #endif
 
   deallocate (chif      )

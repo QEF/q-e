@@ -22,6 +22,9 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   USE kinds, only : DP
   USE io_files, ONLY: iunigk
   use phcom
+  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,               ONLY : mp_sum
+
   implicit none
 
   integer :: nper, nu_i0
@@ -128,7 +131,7 @@ subroutine drhodv (nu_i0, nper, drhoscf)
   !
   ! collect contributions from all pools (sum over k-points)
   !
-  call poolreduce (18 * nat * nat, wdyn)
+  call mp_sum ( wdyn, inter_pool_comm )
 #endif
   !
   ! add the contribution of the local part of the perturbation

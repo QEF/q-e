@@ -22,6 +22,8 @@ subroutine zstar_eu_us
   use pwcom
   USE noncollin_module, ONLY : noncolin, npol
   use phcom
+  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,               ONLY : mp_sum
   !
   implicit none
   integer :: ibnd, jbnd, ipol, jpol, imode0, irr, imode, nrec, mode
@@ -123,7 +125,7 @@ subroutine zstar_eu_us
   call addusddense (dvscf, dbecsum)
 
 #ifdef __PARA
-  call poolreduce (2 * 3 * nrxx *nspin, dvscf)
+  call mp_sum ( dvscf, inter_pool_comm )
 #endif
 
 #ifdef TIMINIG_ZSTAR_US

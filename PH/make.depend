@@ -232,17 +232,23 @@ dhdrhopsi.o : ramanm.o
 dielec.o : ../Modules/io_files.o
 dielec.o : ../Modules/io_global.o
 dielec.o : ../Modules/kind.o
+dielec.o : ../Modules/mp.o
+dielec.o : ../Modules/mp_global.o
 dielec.o : ../PW/noncol.o
 dielec.o : ../PW/pwcom.o
 dielec.o : phcom.o
 dielec_test.o : ../Modules/io_files.o
 dielec_test.o : ../Modules/kind.o
+dielec_test.o : ../Modules/mp.o
+dielec_test.o : ../Modules/mp_global.o
 dielec_test.o : ../Modules/wavefunctions.o
 dielec_test.o : ../PW/pwcom.o
 dielec_test.o : phcom.o
 dielec_test.o : ramanm.o
 drho.o : ../Modules/ions_base.o
 drho.o : ../Modules/kind.o
+drho.o : ../Modules/mp.o
+drho.o : ../Modules/mp_global.o
 drho.o : ../Modules/uspp.o
 drho.o : ../PW/noncol.o
 drho.o : ../PW/pwcom.o
@@ -251,6 +257,8 @@ drhodv.o : ../Modules/io_files.o
 drhodv.o : ../Modules/io_global.o
 drhodv.o : ../Modules/ions_base.o
 drhodv.o : ../Modules/kind.o
+drhodv.o : ../Modules/mp.o
+drhodv.o : ../Modules/mp_global.o
 drhodv.o : ../PW/becmod.o
 drhodv.o : ../PW/noncol.o
 drhodv.o : ../PW/pwcom.o
@@ -268,6 +276,8 @@ drhodvnl.o : phcom.o
 drhodvus.o : ../Modules/io_global.o
 drhodvus.o : ../Modules/ions_base.o
 drhodvus.o : ../Modules/kind.o
+drhodvus.o : ../Modules/mp.o
+drhodvus.o : ../Modules/mp_global.o
 drhodvus.o : ../PW/pwcom.o
 drhodvus.o : phcom.o
 dv_of_drho.o : ../Modules/functionals.o
@@ -300,6 +310,7 @@ dvpsi_e.o : phcom.o
 dvpsi_e.o : ramanm.o
 dvpsi_e2.o : ../Modules/io_files.o
 dvpsi_e2.o : ../Modules/kind.o
+dvpsi_e2.o : ../Modules/mp.o
 dvpsi_e2.o : ../Modules/mp_global.o
 dvpsi_e2.o : ../Modules/wavefunctions.o
 dvpsi_e2.o : ../PW/becmod.o
@@ -336,6 +347,7 @@ dynmat_us.o : ../Modules/io_files.o
 dynmat_us.o : ../Modules/io_global.o
 dynmat_us.o : ../Modules/ions_base.o
 dynmat_us.o : ../Modules/kind.o
+dynmat_us.o : ../Modules/mp.o
 dynmat_us.o : ../Modules/mp_global.o
 dynmat_us.o : ../Modules/uspp.o
 dynmat_us.o : ../Modules/wavefunctions.o
@@ -446,6 +458,8 @@ io_pattern.o : ../PW/pwcom.o
 localdos.o : ../Modules/io_files.o
 localdos.o : ../Modules/ions_base.o
 localdos.o : ../Modules/kind.o
+localdos.o : ../Modules/mp.o
+localdos.o : ../Modules/mp_global.o
 localdos.o : ../Modules/uspp.o
 localdos.o : ../Modules/wavefunctions.o
 localdos.o : ../PW/becmod.o
@@ -560,6 +574,8 @@ polariz.o : ../Modules/cell_base.o
 polariz.o : ../Modules/io_files.o
 polariz.o : ../Modules/io_global.o
 polariz.o : ../Modules/kind.o
+polariz.o : ../Modules/mp.o
+polariz.o : ../Modules/mp_global.o
 polariz.o : ../PW/pwcom.o
 polariz.o : phcom.o
 print_clock_ph.o : ../Modules/io_global.o
@@ -627,6 +643,8 @@ raman.o : ramanm.o
 raman_mat.o : ../Modules/io_files.o
 raman_mat.o : ../Modules/ions_base.o
 raman_mat.o : ../Modules/kind.o
+raman_mat.o : ../Modules/mp.o
+raman_mat.o : ../Modules/mp_global.o
 raman_mat.o : ../Modules/wavefunctions.o
 raman_mat.o : ../PW/becmod.o
 raman_mat.o : ../PW/pwcom.o
@@ -679,6 +697,8 @@ solve_e.o : ../Modules/io_files.o
 solve_e.o : ../Modules/io_global.o
 solve_e.o : ../Modules/ions_base.o
 solve_e.o : ../Modules/kind.o
+solve_e.o : ../Modules/mp.o
+solve_e.o : ../Modules/mp_global.o
 solve_e.o : ../Modules/uspp.o
 solve_e.o : ../Modules/wavefunctions.o
 solve_e.o : ../PW/becmod.o
@@ -690,6 +710,8 @@ solve_e2.o : ../Modules/io_files.o
 solve_e2.o : ../Modules/io_global.o
 solve_e2.o : ../Modules/ions_base.o
 solve_e2.o : ../Modules/kind.o
+solve_e2.o : ../Modules/mp.o
+solve_e2.o : ../Modules/mp_global.o
 solve_e2.o : ../Modules/uspp.o
 solve_e2.o : ../Modules/wavefunctions.o
 solve_e2.o : ../PW/becmod.o
@@ -701,6 +723,8 @@ solve_e_fpol.o : ../Modules/io_files.o
 solve_e_fpol.o : ../Modules/io_global.o
 solve_e_fpol.o : ../Modules/ions_base.o
 solve_e_fpol.o : ../Modules/kind.o
+solve_e_fpol.o : ../Modules/mp.o
+solve_e_fpol.o : ../Modules/mp_global.o
 solve_e_fpol.o : ../Modules/uspp.o
 solve_e_fpol.o : ../Modules/wavefunctions.o
 solve_e_fpol.o : ../PW/becmod.o
@@ -717,6 +741,8 @@ solve_linter.o : ../Modules/io_files.o
 solve_linter.o : ../Modules/io_global.o
 solve_linter.o : ../Modules/ions_base.o
 solve_linter.o : ../Modules/kind.o
+solve_linter.o : ../Modules/mp.o
+solve_linter.o : ../Modules/mp_global.o
 solve_linter.o : ../Modules/uspp.o
 solve_linter.o : ../Modules/wavefunctions.o
 solve_linter.o : ../PW/becmod.o
@@ -733,6 +759,8 @@ stop_ph.o : ../Modules/parallel_include.o
 sym_and_write_zue.o : ../Modules/io_global.o
 sym_and_write_zue.o : ../Modules/ions_base.o
 sym_and_write_zue.o : ../Modules/kind.o
+sym_and_write_zue.o : ../Modules/mp.o
+sym_and_write_zue.o : ../Modules/mp_global.o
 sym_and_write_zue.o : ../PW/pwcom.o
 sym_and_write_zue.o : phcom.o
 sym_def.o : ../Modules/kind.o
@@ -815,11 +843,14 @@ write_ramtns.o : ../Modules/ions_base.o
 write_ramtns.o : ../Modules/kind.o
 xk_wk_collect.o : ../Modules/io_global.o
 xk_wk_collect.o : ../Modules/kind.o
+xk_wk_collect.o : ../Modules/mp.o
 xk_wk_collect.o : ../Modules/mp_global.o
 zstar_eu.o : ../Modules/io_files.o
 zstar_eu.o : ../Modules/io_global.o
 zstar_eu.o : ../Modules/ions_base.o
 zstar_eu.o : ../Modules/kind.o
+zstar_eu.o : ../Modules/mp.o
+zstar_eu.o : ../Modules/mp_global.o
 zstar_eu.o : ../Modules/wavefunctions.o
 zstar_eu.o : ../PW/noncol.o
 zstar_eu.o : ../PW/pwcom.o
@@ -827,6 +858,8 @@ zstar_eu.o : phcom.o
 zstar_eu_us.o : ../Modules/io_files.o
 zstar_eu_us.o : ../Modules/ions_base.o
 zstar_eu_us.o : ../Modules/kind.o
+zstar_eu_us.o : ../Modules/mp.o
+zstar_eu_us.o : ../Modules/mp_global.o
 zstar_eu_us.o : ../Modules/uspp.o
 zstar_eu_us.o : ../Modules/wavefunctions.o
 zstar_eu_us.o : ../PW/noncol.o

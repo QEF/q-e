@@ -34,7 +34,9 @@ SUBROUTINE dynmat_us()
   USE phcom
   USE becmod,               ONLY : calbec
   USE io_global,            ONLY : stdout
-  USE mp_global,            ONLY : my_pool_id
+  USE mp_global,            ONLY : my_pool_id, inter_pool_comm, intra_pool_comm
+  USE mp,                   ONLY : mp_sum
+
 
   IMPLICIT NONE
   INTEGER :: icart, jcart, na_icart, na_jcart, na, nb, ng, nt, ik, &
@@ -241,7 +243,7 @@ SUBROUTINE dynmat_us()
   CALL addusdynmat (dynwrk)
   !
 500 continue
-  CALL poolreduce (18 * nat * nat, dynwrk)
+  CALL mp_sum ( dynwrk, inter_pool_comm )
   !
   !      do na = 1,nat
   !         do nb = 1,nat

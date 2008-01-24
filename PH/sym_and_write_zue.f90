@@ -19,6 +19,9 @@ subroutine sym_and_write_zue
   use pwcom
   USE kinds, only : DP
   use phcom
+  USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,         ONLY : mp_sum
+
   implicit none
 
   integer :: ipol, jpol, icart, jcart, na, nu, mu
@@ -31,8 +34,8 @@ subroutine sym_and_write_zue
   ! auxiliary space (note the order of indices)
   !
 #ifdef __PARA
-  call reduce (18 * nat, zstarue0)
-  call poolreduce (18 * nat, zstarue0)
+  call mp_sum ( zstarue0, intra_pool_comm )
+  call mp_sum ( zstarue0, inter_pool_comm )
 #endif
   !
   zstarue(:,:,:) = 0.d0

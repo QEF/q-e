@@ -30,6 +30,8 @@ subroutine solve_e_fpol ( iw )
   USE becmod,                ONLY : becp, calbec
   USE uspp_param,            ONLY : nhm
   use phcom
+  USE mp_global,             ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,                    ONLY : mp_sum
   
   implicit none
 
@@ -320,7 +322,7 @@ subroutine solve_e_fpol ( iw )
      !   for the three polarizations - symmetrize it
      !
 #ifdef __PARA
-     call poolreduce (2 * 3 * nrxx *nspin, dvscfout)
+     call mp_sum ( dvscfout, inter_pool_comm )
      call psyme (dvscfout)
 #else
      call syme (dvscfout)

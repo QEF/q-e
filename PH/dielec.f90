@@ -20,6 +20,9 @@ subroutine dielec
   USE noncollin_module, ONLY : npol
   USE kinds, only : DP
   use phcom
+  USE mp_global,        ONLY : inter_pool_comm, intra_pool_comm
+  USE mp,               ONLY : mp_sum
+
   implicit none
 
   integer :: ibnd, ipol, jpol, nrec, ik
@@ -54,8 +57,8 @@ subroutine dielec
      enddo
   enddo
 #ifdef __PARA
-  call reduce (9, epsilon)
-  call poolreduce (9, epsilon)
+  call mp_sum ( epsilon, intra_pool_comm )
+  call mp_sum ( epsilon, inter_pool_comm )
 #endif
   !
   !      symmetrize
