@@ -62,12 +62,15 @@ PHOBJS = ../PH/libph.a
 
 MODULES = \
 ../Modules/atom.o \
+../Modules/basic_algebra_routines.o \
 ../Modules/cell_base.o \
 ../Modules/clocks.o \
 ../Modules/check_stop.o \
 ../Modules/constants.o \
 ../Modules/control_flags.o \
+../Modules/constraints_module.o \
 ../Modules/descriptors.o \
+../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
 ../Modules/error_handler.o \
 ../Modules/exc_t.o \
@@ -109,7 +112,8 @@ MODULES = \
 ../Modules/vxc_t.o \
 ../Modules/vxcgc.o \
 ../Modules/wavefunctions.o \
-../Modules/xml_io_base.o
+../Modules/xml_io_base.o \
+../Modules/zhpev_drv.o
 
 PWOBJS = ../PW/libpw.a
 
