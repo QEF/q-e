@@ -50,7 +50,6 @@ subroutine print_clock_vdw
 #ifdef __PARA
   WRITE( stdout,  * ) '    Parallel routines'
   call print_clock ('reduce')
-  call print_clock ('poolreduce')
   WRITE( stdout, * )
 #endif
   return
