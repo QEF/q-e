@@ -34,6 +34,7 @@ MODULES = \
 ../Modules/constraints_module.o \
 ../Modules/control_flags.o \
 ../Modules/descriptors.o \
+../Modules/dspev_drv.o \
 ../Modules/electrons_base.o \
 ../Modules/error_handler.o \
 ../Modules/exc_t.o \
