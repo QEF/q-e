@@ -41,37 +41,6 @@ SUBROUTINE reduce( dim, ps )
   !
 END SUBROUTINE reduce
 !
-!------------------------------------------------------------------------
-SUBROUTINE poolreduce( dim, ps )
-  !-----------------------------------------------------------------------
-  !
-  ! ... Sums a distributed variable ps(dim) over the pools.
-  ! ... This MPI-only version uses a fixed-length buffer
-  !
-  USE mp_global, ONLY : inter_pool_comm, intra_image_comm, &
-                        my_pool_id, nproc_pool, npool
-  USE mp,        ONLY : mp_barrier
-  USE kinds,     ONLY : DP
-  !
-  IMPLICIT NONE
-  !
-  INTEGER,  INTENT(IN)    :: dim
-  REAL(DP), INTENT(INOUT) :: ps(dim)
-  !
-  IF ( dim <= 0 .OR. npool <= 1 ) RETURN
-  !
-  CALL start_clock( 'poolreduce' )
-  !
-  CALL mp_barrier( intra_image_comm )  !  WHY on image? carlo c.
-  !
-  CALL reduce_base_real( dim, ps, inter_pool_comm, -1 )
-  !
-  CALL stop_clock( 'poolreduce' )
-  !
-  RETURN
-  !
-END SUBROUTINE poolreduce
-!
 !----------------------------------------------------------------------------
 SUBROUTINE poolscatter( nsize, nkstot, f_in, nks, f_out )
   !----------------------------------------------------------------------------

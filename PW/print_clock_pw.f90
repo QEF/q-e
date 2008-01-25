@@ -142,7 +142,6 @@ SUBROUTINE print_clock_pw()
    !
    CALL print_clock( 'reduce' )
    CALL print_clock( 'fft_scatter' )
-   CALL print_clock( 'poolreduce' )
 #endif
    !
 #ifdef EXX
