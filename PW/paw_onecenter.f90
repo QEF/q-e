@@ -18,6 +18,8 @@ MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
     USE paw_variables,  ONLY : paw_info, saved, xlm, rad, radial_grad_style
+    USE mp_global,      ONLY : nproc_image, me_image, intra_image_comm
+    USE mp,             ONLY: mp_sum
     !
     IMPLICIT NONE
 
@@ -28,7 +30,7 @@ MODULE paw_onecenter
     PUBLIC :: PAW_symmetrize ! symmetrize becsums
     !
     PRIVATE
-
+    !
     ! the following macro controls the use of several fine-grained clocks
     ! set it to 'if(.false.) CALL' (without quotes) in order to disable them,
     ! set it to 'CALL' to enable them.
@@ -63,33 +65,38 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
    INTEGER                 :: i_what                ! counter on AE and PS
    INTEGER                 :: is                    ! spin index
    INTEGER                 :: lm                    ! counters on angmom and radial grid
-   INTEGER                 :: nb, mb, nmb           ! augfun indices
-   INTEGER                 :: na,first_nat,last_nat ! atoms counters and indexes
+   INTEGER                 :: nb, mb, nmb           ! augfun indexes
+   INTEGER                 :: ia,na_loc,ia_s,ia_e   ! atoms counters and indexes
    !
    REAL(DP), ALLOCATABLE   :: v_lm(:,:,:)   ! workspace: potential
    REAL(DP), ALLOCATABLE   :: rho_lm(:,:,:) ! density expanded on Y_lm
    REAL(DP), ALLOCATABLE   :: savedv_lm(:,:,:)   ! workspace: potential
    ! fake cross band occupations to select only one pfunc at a time:
    REAL(DP)                :: becfake(nhm*(nhm+1)/2,nat,nspin)
-   REAL(DP)                :: integral        ! workspace
+   REAL(DP)                :: integral           ! workspace
    REAL(DP)                :: energy_xc, energy_h, energy_tot
-   REAL(DP)                :: sgn
+   REAL(DP)                :: sgn                ! +1 for AE -1 for PS
+   INTEGER, EXTERNAL :: ldim_block, gind_block
 
    CALL start_clock('PAW_pot')
    ! Some initialization
    becfake(:,:,:) = 0._dp
    d(:,:,:) = 0._dp
-
    IF(present(energy)) energy_tot = 0._dp
    !
-   CALL divide (nat, first_nat, last_nat)
-   atoms: DO na = first_nat, last_nat
+   ! Parallel: divide tasks among all the processor for this image
+   ! (i.e. all the processors except for NEB and similar)
+   na_loc = ldim_block( nat, nproc_image, me_image)
+   ia_s   = gind_block( 1, nat, nproc_image, me_image )
+   ia_e   = ia_s + na_loc - 1
+   !
+   atoms: DO ia = ia_s, ia_e
       !
-      i%a = na         ! the index of the atom
-      i%t = ityp(na)   ! the type of atom na
-      i%m = g(i%t)%mesh! radial mesh size for atom na
-      i%b = upf(i%t)%nbeta
-      i%l = upf(i%t)%paw%lmax_rho+1
+      i%a = ia                      ! atom's index
+      i%t = ityp(ia)                ! type of atom ia
+      i%m = g(i%t)%mesh             ! radial mesh size for atom ia
+      i%b = upf(i%t)%nbeta          ! number of beta functions for ia
+      i%l = upf(i%t)%paw%lmax_rho+1 ! max ang.mom. in augmentation for ia
       !
       ifpaw: IF (upf(i%t)%tpawp) THEN
          !
@@ -125,7 +132,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
       ! NOTE: optional variables works recursively: e.g. if energy is not present here
             ! it will not be present in PAW_h_potential too!
             IF (present(energy)) energy_tot = energy_tot + sgn*energy
-            IF (present(e_cmp)) e_cmp(na, H, i_what) = energy
+            IF (present(e_cmp)) e_cmp(ia, H, i_what) = energy
             DO is = 1,nspin ! ... v_H has to be copied to all spin components
                savedv_lm(:,:,is) = v_lm(:,:,1)
             ENDDO
@@ -133,7 +140,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
             ! Then the XC one:
             CALL PAW_xc_potential(i, rho_lm, rho_core, v_lm, energy)
             IF (present(energy))energy_tot = energy_tot + sgn*energy
-            IF (present(e_cmp)) e_cmp(na, XC, i_what) = energy
+            IF (present(e_cmp)) e_cmp(ia, XC, i_what) = energy
             savedv_lm(:,:,:) = savedv_lm(:,:,:) + v_lm(:,:,:)
             !
             spins: DO is = 1, nspin
@@ -144,7 +151,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                      nmb = nmb+1 ! nmb = 1, nh*(nh+1)/2
                      !
                      ! compute the density from a single pfunc
-                     becfake(nmb,na,is) = 1._dp
+                     becfake(nmb,ia,is) = 1._dp
                      IF (i_what == AE) THEN
                         CALL PAW_rho_lm(i, becfake, upf(i%t)%paw%pfunc, rho_lm)
                      ELSE
@@ -161,7 +168,7 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
                         d(nmb,i%a,is) = d(nmb,i%a,is) + sgn * integral
                      ENDDO
                      ! restore becfake to zero
-                     becfake(nmb,na,is) = 0._dp
+                     becfake(nmb,ia,is) = 0._dp
                   ENDDO ! mb
                ENDDO ! nb
             ENDDO spins
@@ -176,8 +183,8 @@ SUBROUTINE PAW_potential(becsum, d, energy, e_cmp)
 
 #ifdef __PARA
     ! recollect D coeffs and total one-center energy
-    CALL reduce(nhm*(nhm+1)*nat*nspin/2,d)
-    IF ( present(energy) ) CALL reduce (1, energy_tot )
+    CALL mp_sum(d, intra_image_comm)
+    IF ( present(energy) ) CALL mp_sum(energy_tot, intra_image_comm)
 #endif
     ! put energy back in the output variable
     IF ( present(energy) ) energy = energy_tot
@@ -194,14 +201,15 @@ SUBROUTINE PAW_symmetrize(becsum)
     USE uspp,              ONLY : nhtolm,nhtol,ijtoh
     USE uspp_param,        ONLY : nh, upf
     USE control_flags,     ONLY : nosym, gamma_only
-    USE io_global,          ONLY : stdout, ionode
+    USE io_global,         ONLY : stdout, ionode
 
     REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)! cross band occupations
 
     REAL(DP)                :: becsym(nhm*(nhm+1)/2,nat,nspin)! symmetrized becsum
     REAL(DP) :: pref, usym
 
-    INTEGER :: is, na, nt   ! counters on spin, atom, atom-type
+    INTEGER :: ia,na_loc,ia_s,ia_e   ! atoms counters and indexes
+    INTEGER :: is, nt       ! counters on spin, atom-type
     INTEGER :: ma           ! atom symmetric to na
     INTEGER :: ih,jh, ijh   ! counters for augmentation channels
     INTEGER :: lm_i, lm_j, &! angular momentums of non-symmetrized becsum
@@ -209,7 +217,7 @@ SUBROUTINE PAW_symmetrize(becsum)
     INTEGER :: m_o, m_u     ! counters for sums on m
     INTEGER :: oh, uh, ouh  ! auxiliary indexes corresponding to m_o and m_u
     INTEGER :: isym         ! counter for symmetry operation
-    INTEGER :: first_nat, last_nat ! to parallelize on atoms
+    INTEGER, EXTERNAL :: ldim_block, gind_block
 
     ! The following mess is necessary because the symmetrization operation
     ! in LDA+U code is simpler than in PAW, so the required quantities are
@@ -263,11 +271,14 @@ SUBROUTINE PAW_symmetrize(becsum)
     becsym(:,:,:) = 0._dp
     usym = 1._dp / REAL(nsym)
 
-    CALL divide (nat, first_nat, last_nat)
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
     DO is = 1, nspin
     !
-    atoms: DO na = first_nat, last_nat
-        nt = ityp(na)
+    atoms: DO ia = ia_s, ia_e
+        nt = ityp(ia)
         ! No need to symmetrize non-PAW atoms
         IF ( .not. upf(nt)%tpawp ) CYCLE
         !
@@ -286,7 +297,7 @@ SUBROUTINE PAW_symmetrize(becsum)
             m_j   = lm_j - l_j**2
             !
             DO isym = 1,nsym
-                ma = irt(isym,na)
+                ma = irt(isym,ia)
                 DO m_o = 1, 2*l_i +1
                 DO m_u = 1, 2*l_j +1
                     oh = ih - m_i + m_o
@@ -300,7 +311,7 @@ SUBROUTINE PAW_symmetrize(becsum)
                         pref = usym
                     ENDIF
                     !
-                    becsym(ijh, na, is) = becsym(ijh, na, is) &
+                    becsym(ijh, ia, is) = becsym(ijh, ia, is) &
                         + D(l_i)%d(m_o,m_i, isym) * D(l_j)%d(m_u,m_j, isym) &
                           * pref * becsum(ouh, ma, is)
                 ENDDO ! m_o
@@ -308,13 +319,13 @@ SUBROUTINE PAW_symmetrize(becsum)
             ENDDO ! isym
             !
             ! Put the prefactor back in:
-            IF ( ih == jh ) becsym(ijh,na,is) = .5_dp * becsym(ijh,na,is)
+            IF ( ih == jh ) becsym(ijh,ia,is) = .5_dp * becsym(ijh,ia,is)
         ENDDO ! ih
         ENDDO ! jh
     ENDDO atoms ! nat
     ENDDO ! nspin
 #ifdef __PARA
-    CALL reduce( (nhm*(nhm+1)/2) *nat*nspin, becsym)
+    CALL mp_sum(becsym, intra_image_comm)
 #endif
 
 #ifdef __DEBUG_PAW_SYM
@@ -362,7 +373,7 @@ FUNCTION PAW_ddot(bec1,bec2)
 
     INTEGER, PARAMETER      :: AE = 1, PS = 2        ! All-Electron and Pseudo
     INTEGER                 :: i_what                ! counter on AE and PS
-    INTEGER                 :: na,first_nat,last_nat ! atoms counters and indexes
+    INTEGER                 :: ia,na_loc,ia_s,ia_e   ! atoms counters and indexes
     INTEGER                 :: lm,k                  ! counters on angmom and radial grid
 
     ! hartree energy scalar fields expanded on Y_lm
@@ -372,18 +383,22 @@ FUNCTION PAW_ddot(bec1,bec2)
     REAL(DP)                :: i_sign        ! +1 for AE, -1 for PS
     REAL(DP)                :: integral      ! workspace
     TYPE(paw_info)          :: i
+    INTEGER, EXTERNAL :: ldim_block, gind_block
 
     CALL start_clock ('PAW_ddot')
     ! initialize 
     PAW_ddot = 0._dp
 
-    CALL divide (nat, first_nat, last_nat)
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
     !
-    atoms: DO na = first_nat, last_nat
+    atoms: DO ia = ia_s, ia_e
     !
-    i%a = na           ! the index of the atom
-    i%t = ityp(na)    ! the type of atom na
-    i%m = g(i%t)%mesh ! radial mesh size for atom na
+    i%a = ia           ! the index of the atom
+    i%t = ityp(ia)    ! the type of atom ia
+    i%m = g(i%t)%mesh ! radial mesh size for atom ia
     i%b = upf(i%t)%nbeta
     i%l = upf(i%t)%paw%lmax_rho+1
     !
@@ -433,7 +448,7 @@ FUNCTION PAW_ddot(bec1,bec2)
     ENDDO atoms
 
 #ifdef __PARA
-    CALL reduce (1, PAW_ddot )
+    CALL mp_sum(PAW_ddot, intra_image_comm)
 #endif
 
     CALL stop_clock ('PAW_ddot')

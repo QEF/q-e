@@ -821,6 +821,7 @@ paw_init.o : ../Modules/functionals.o
 paw_init.o : ../Modules/io_global.o
 paw_init.o : ../Modules/ions_base.o
 paw_init.o : ../Modules/kind.o
+paw_init.o : ../Modules/mp.o
 paw_init.o : ../Modules/mp_global.o
 paw_init.o : ../Modules/paw_variables.o
 paw_init.o : ../Modules/radial_grids.o
@@ -834,6 +835,8 @@ paw_onecenter.o : ../Modules/functionals.o
 paw_onecenter.o : ../Modules/io_global.o
 paw_onecenter.o : ../Modules/ions_base.o
 paw_onecenter.o : ../Modules/kind.o
+paw_onecenter.o : ../Modules/mp.o
+paw_onecenter.o : ../Modules/mp_global.o
 paw_onecenter.o : ../Modules/paw_variables.o
 paw_onecenter.o : ../Modules/radial_grids.o
 paw_onecenter.o : ../Modules/uspp.o

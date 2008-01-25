@@ -16,7 +16,7 @@ MODULE paw_init
 
   PUBLIC :: PAW_init_becsum
   PUBLIC :: PAW_init_onecenter
-  PUBLIC :: PAW_increase_lm
+  !PUBLIC :: PAW_increase_lm ! <-- unused
 #ifdef __PARA
   PUBLIC :: PAW_post_init
 #endif
@@ -72,22 +72,28 @@ SUBROUTINE PAW_post_init()
     ! this routine does nothing at this moment...
     USE ions_base,          ONLY : nat, ntyp=>nsp, ityp
     USE uspp_param,         ONLY : upf
-    USE mp_global,          ONLY : mpime, nproc
+    USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
+    USE mp,                 ONLY : mp_sum
     USE io_global,          ONLY : stdout, ionode
     !
-    INTEGER :: nt, na, np, first_nat, last_nat
-    LOGICAL :: info(nproc,ntyp)
+    INTEGER :: nt, np, ia, ia_s, ia_e, na_loc
+    INTEGER :: info(0:nproc_image-1,ntyp)
+    INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF(ionode) &
     WRITE(stdout,"(5x,a)") &
         'Checking if some PAW data can be deallocated... '
-    info(:,:) = .false.
-    CALL divide (nat, first_nat, last_nat)
+    info(:,:) = 0
+
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
     !
     types : &
     DO nt = 1,ntyp
-        DO na = first_nat, last_nat
-            IF (ityp(na) == nt.or..not.upf(nt)%tpawp ) CYCLE types
+        DO ia =ia_s, ia_e
+            IF (ityp(ia) == nt.or..not.upf(nt)%tpawp ) CYCLE types
         ENDDO
         ! If I can't find any atom within first_nat and last_nat
         ! which is of type nt, then I can deallocate:
@@ -97,15 +103,16 @@ SUBROUTINE PAW_post_init()
                     upf(nt)%paw%ptfunc,     &
                     upf(nt)%paw%ae_vloc     &
                   )
-        info(mpime,nt) = .true.
+        info(me_image,nt) = 1
     ENDDO types
-    CALL reduce(nproc*ntyp, info)
+
+    CALL mp_sum(info, intra_image_comm)
 
     IF(ionode) THEN
-        DO np = 1,nproc
+        DO np = 0,nproc_image-1
         DO nt = 1,ntyp
-            IF( info(np,nt) ) &
-            WRITE(*,"(7x,a,i3,a,10i3)") "node ",np,&
+            IF( info(np,nt) > 0 ) &
+            WRITE(*,"(7x,a,i4,a,10i3)") "node ",np,&
                     ", deallocated PAW data for type:", nt
         ENDDO
         ENDDO
@@ -177,23 +184,30 @@ END SUBROUTINE PAW_init_becsum
 ! This allocates space to store onecenter potential and 
 ! calls PAW_rad_init to initialize onecenter integration.
 SUBROUTINE PAW_init_onecenter()
-    USE ions_base,              ONLY : nat, ityp, ntyp => nsp
-    USE paw_variables,          ONLY : xlm, rad, paw_is_init
-    USE atom,                   ONLY : g => rgrid
-    USE radial_grids,           ONLY : do_mesh
-    USE uspp_param,             ONLY : upf
-    USE lsda_mod,               ONLY : nspin
-    USE funct,                  ONLY : dft_is_gradient
+    USE ions_base,          ONLY : nat, ityp, ntyp => nsp
+    USE paw_variables,      ONLY : xlm, rad, paw_is_init
+    USE atom,               ONLY : g => rgrid
+    USE radial_grids,       ONLY : do_mesh
+    USE uspp_param,         ONLY : upf
+    USE lsda_mod,           ONLY : nspin
+    USE funct,              ONLY : dft_is_gradient
+    USE mp_global,          ONLY : me_image, nproc_image
+    USE mp,                 ONLY : mp_sum
 
-    INTEGER :: na, nt, first_nat, last_nat, lmax_safe
+
+    INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, na_loc
+    INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF( paw_is_init ) THEN
         CALL infomsg('PAW_init_onecenter', 'Already initialized!', 1)
         RETURN
     ENDIF
     !
-    ! for the atoms that it will actually use later.
-    CALL divide (nat, first_nat, last_nat)
+    ! Init only for the atoms that it will actually use later.
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
 
     ! initialize for integration on angular momentum and gradient, integrating
     ! up to 2*lmaxq (twice the maximum angular momentum of rho) is enough for
@@ -220,8 +234,8 @@ SUBROUTINE PAW_init_onecenter()
     DO nt = 1,ntyp
         ! only allocate radial grid integrator for atomic species
         ! that are actually present on this parallel node:
-        DO na = first_nat, last_nat
-        IF (ityp(na) == nt ) THEN
+        DO ia = ia_s, ia_e
+        IF (ityp(ia) == nt ) THEN
             CALL PAW_rad_init(2*upf(nt)%paw%lmax_rho + lmax_safe, rad(nt))
             !
             CYCLE types
@@ -233,13 +247,20 @@ SUBROUTINE PAW_init_onecenter()
 
 END SUBROUTINE PAW_init_onecenter
 
+#ifdef __COMPILE_THIS_UNUSED_FUNCTION
+!___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
+!!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
+!!! Increase maximum angularm momentum component for integration
+!!! from l to l+incr.
 SUBROUTINE PAW_increase_lm(incr)
     USE ions_base,          ONLY : nat, ityp, ntyp => nsp
     USE paw_variables,      ONLY : rad, paw_is_init
+    USE mp_global,          ONLY : me_image, nproc_image, intra_image_comm
     USE io_global,          ONLY : stdout, ionode
 
     INTEGER,INTENT(IN) :: incr ! required increase in lm precision
-    INTEGER :: na, nt, first_nat, last_nat, lmax_safe
+    INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, na_loc
+    INTEGER, EXTERNAL :: ldim_block, gind_block
 
     IF( .not. paw_is_init .or. .not. allocated(rad)) THEN
         CALL infomsg('PAW_increase_lm', &
@@ -247,7 +268,10 @@ SUBROUTINE PAW_increase_lm(incr)
         RETURN
     ENDIF
 
-    CALL divide (nat, first_nat, last_nat)
+    ! Parallel: divide among processors for the same image
+    na_loc = ldim_block( nat, nproc_image, me_image)
+    ia_s   = gind_block( 1, nat, nproc_image, me_image )
+    ia_e   = ia_s + na_loc - 1
 
     IF (ionode) &
         WRITE( stdout, '(5x,a)') &
@@ -264,8 +288,8 @@ SUBROUTINE PAW_increase_lm(incr)
         ENDIF
         ! only allocate radial grid integrator for atomic species
         ! that are actually present on this parallel node:
-        DO na = first_nat, last_nat
-        IF (ityp(na) == nt ) THEN
+        DO ia = na_s, na_e
+        IF (ityp(ia) == nt ) THEN
             IF(associated(rad(nt)%ww))      DEALLOCATE (rad(nt)%ww)
             IF(associated(rad(nt)%ylm))     DEALLOCATE (rad(nt)%ylm)
             IF(associated(rad(nt)%wwylm))   DEALLOCATE (rad(nt)%wwylm)
@@ -283,6 +307,7 @@ SUBROUTINE PAW_increase_lm(incr)
     !paw_is_init = .true.
 
 END SUBROUTINE PAW_increase_lm
+#endif
 
 !___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___   ___
 !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!!  !!!! 
