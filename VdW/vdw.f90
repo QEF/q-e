@@ -25,7 +25,8 @@ PROGRAM vdw
   USE io_files,        ONLY : nd_nmbr
   USE io_global,       ONLY : ionode, stdout
   USE pwcom
-  USE scf, only: rho
+  USE scf,             ONLY : rho
+  USE uspp,            ONLY : nkb, vkb
   USE phcom
   USE qpoint,          ONLY : nksq
   USE control_vdw,     ONLY : thresh_veff
@@ -47,6 +48,13 @@ PROGRAM vdw
   CALL check_stop_init()
   CALL start_clock( 'VdW' )
   !
+  !!! workaround to prevent array mismatch: vkb is allocated in allocate_nlpot,
+  !!! called by read_file, called by vdw_init, with nkb set to the "correct"
+  !!! value, but we need nkb=0 and vkb array consistently allocated
+  nkb  = 0
+  deallocate (vkb)
+  allocate (vkb(npwx,nkb))
+  !!!
   nbnd = 1
   nbndx = 4 * nbnd
   nksq   = 1

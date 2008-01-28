@@ -164,7 +164,6 @@ subroutine solve_e_vdw ( iu )
 
      dvscfout(:,:,:)=(0.d0,0.d0)
      dbecsum(:,:,:,:)=(0.d0,0.d0)
-
 !     if (nksq.gt.1) rewind (unit = iunigk)
      do ik = 1, nksq
         nbnd_occ(ik) = 1
@@ -185,12 +184,14 @@ subroutine solve_e_vdw ( iu )
 !        evc = evc_veff
         !
         npwq = npw
-        call init_us_2 (npw, igk, xk (1, ik), vkb)
         !
         ! we compute the becp terms which are used in the rest of
         !    the code
         !
-        IF ( nkb > 0 ) CALL calbec( npw, vkb, evc, becp1(:,:,ik) )
+        IF ( nkb > 0 ) THEN
+           call init_us_2 (npw, igk, xk (1, ik), vkb)
+           CALL calbec( npw, vkb, evc, becp1(:,:,ik) )
+        END IF
         !
         ! compute the kinetic energy
         !
