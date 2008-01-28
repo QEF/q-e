@@ -45,11 +45,11 @@ SUBROUTINE force_us( forcenl )
   !
   IF ( gamma_only ) THEN
      !
-     CALL force_us_gamma()
+     CALL force_us_gamma( forcenl )
      !
   ELSE
      !
-     CALL force_us_k()
+     CALL force_us_k( forcenl )
      !
   END IF  
   !
@@ -60,7 +60,7 @@ SUBROUTINE force_us( forcenl )
   CONTAINS
      !
      !-----------------------------------------------------------------------
-     SUBROUTINE force_us_gamma()
+     SUBROUTINE force_us_gamma( forcenl )
        !-----------------------------------------------------------------------
        !
        ! ... calculation at gamma
@@ -68,6 +68,7 @@ SUBROUTINE force_us( forcenl )
        USE becmod, ONLY : rbecp, calbec
        IMPLICIT NONE
        !
+       REAL(DP) :: forcenl(3,nat)
        REAL(DP), ALLOCATABLE    :: rdbecp (:,:,:)
        ! auxiliary variable, contains <dbeta|psi>
        COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
@@ -193,12 +194,13 @@ SUBROUTINE force_us( forcenl )
      END SUBROUTINE force_us_gamma
      !     
      !-----------------------------------------------------------------------
-     SUBROUTINE force_us_k()
+     SUBROUTINE force_us_k( forcenl )
        !-----------------------------------------------------------------------
        !  
        USE becmod, ONLY : becp, becp_nc, calbec
        IMPLICIT NONE
        !
+       REAL(DP) :: forcenl(3,nat)
        COMPLEX(DP), ALLOCATABLE :: dbecp(:,:,:), dbecp_nc(:,:,:,:)
        ! auxiliary variable contains <beta|psi> and <dbeta|psi>
        COMPLEX(DP), ALLOCATABLE :: vkb1(:,:)
