@@ -91,7 +91,7 @@ do ns=1,nwfts
       if (lpaw) then
           phits(:,ns)=psi(:,1,nwf0)
       else
-         if (tm) then
+         if (tm.or.(pseudotype<3.and.iswitch==2)) then
             call compute_phi_tm(lam,ik,psi(1,1,nwf0),phits(1,ns),0,xc,   &
                                                      enlts(ns),elts(ns))
          else

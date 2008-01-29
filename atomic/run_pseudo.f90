@@ -22,7 +22,7 @@ subroutine run_pseudo
                      nwfts, enlts, llts, jjts, iswts, octs, phits, &
                      vxt, enne, vh, vpsloc, file_potscf, beta, tr2,  &
                      eps0, file_recon, deld, vpstot, nbeta, ddd, etots, &
-                     paw_energy
+                     paw_energy, iswitch
   use atomic_paw, only : new_paw_hamiltonian
   implicit none
 
@@ -150,7 +150,13 @@ subroutine run_pseudo
 
 !            write(6,*) 'iteration number',iter, eps0
      if (conv) then
-        if (nerr /= 0) call infomsg ('scf','errors in PS-KS equations')
+        if (nerr /= 0) then
+           if (iswitch==2) then
+              call infomsg ('run_pseudo','Errors in PS-KS equations')
+           else
+              call errore ('run_pseudo','Errors in PS-KS equation', 1)
+           endif
+        endif
         goto 900
      endif
   enddo
