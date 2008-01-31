@@ -1052,7 +1052,8 @@ MODULE dynamics_module
             !
             idx = ANINT( norm( dtau(:) ) * inv_dmax * DBLE( hist_len ) )
             !
-            radial_distr(idx,i) = radial_distr(idx,i) + 1.D0
+            IF( idx > 0 .AND. idx <= SIZE( radial_distr, 1 ) ) &
+               radial_distr(idx,i) = radial_distr(idx,i) + 1.D0
             !
          END DO
          !
