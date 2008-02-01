@@ -125,16 +125,17 @@ END SUBROUTINE PAW_post_init
 ! Notice: requires exact correspondence chi <--> beta in the atom,
 ! that is that all wavefunctions considered for PAW generation are
 ! counted in chi (otherwise the array "oc" does not correspond to beta)
-SUBROUTINE PAW_init_becsum()
+SUBROUTINE PAW_init_becsum(becsum)
     USE kinds,              ONLY : dp
-    USE uspp,               ONLY : becsum, nhtol, indv
-    USE uspp_param,         ONLY : upf, nh, upf
+    USE uspp,               ONLY : nhtol, indv ! ,becsum
+    USE uspp_param,         ONLY : upf, nh, upf, nhm
     USE ions_base,          ONLY : nat, ityp
     USE lsda_mod,           ONLY : nspin, starting_magnetization
     USE paw_variables,      ONLY : okpaw
     USE paw_onecenter,      ONLY : PAW_symmetrize
     !USE random_numbers,     ONLY : rndm
     IMPLICIT NONE
+    REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
     INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
     !
     IF (.NOT. okpaw) RETURN
@@ -193,7 +194,6 @@ SUBROUTINE PAW_init_onecenter()
     USE funct,              ONLY : dft_is_gradient
     USE mp_global,          ONLY : me_image, nproc_image
     USE mp,                 ONLY : mp_sum
-
 
     INTEGER :: nt, lmax_safe, ia, ia_s, ia_e, na_loc
     INTEGER, EXTERNAL :: ldim_block, gind_block

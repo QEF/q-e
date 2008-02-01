@@ -216,7 +216,10 @@ SUBROUTINE potinit()
   ! ... PAW initialization: from atomic augmentation channel occupations
   ! ... compute corresponding one-center charges and potentials
   !
-  IF ( okpaw ) CALL PAW_init_becsum()
+  IF ( okpaw ) THEN
+      CALL PAW_init_becsum(becsum)
+      rho%bec = becsum
+   ENDIF
   !
   ! ... compute the potential and store it in vr
   !

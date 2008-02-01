@@ -32,6 +32,9 @@ SUBROUTINE compute_becsum(iflag)
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : calbec
+  USE mp_global,            ONLY : root_image, npool, my_pool_id, inter_pool_comm
+  USE mp,                   ONLY : mp_bcast, mp_sum
+  USE scf,                  ONLY : rho
   !
   IMPLICIT NONE
   INTEGER, INTENT(IN) :: iflag ! if 1 compute also the weights
@@ -65,7 +68,13 @@ SUBROUTINE compute_becsum(iflag)
   ! in k-space, not only on the irreducible zone. For USPP there is no need to do this as
   ! becsums are only used to compute the density, which is symmetrized later.
   !
-  IF ( okpaw ) CALL PAW_symmetrize(becsum)
+  IF( okpaw )  THEN
+     rho%bec(:,:,:) = becsum(:,:,:)
+#ifdef __PARA
+     CALL mp_sum(rho%bec, inter_pool_comm )
+#endif
+     CALL PAW_symmetrize(rho%bec)
+  ENDIF
   !
   CALL stop_clock( 'compute_becsum' )      
   !
