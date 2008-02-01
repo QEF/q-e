@@ -10,7 +10,7 @@
 #define ZERO ( 0._dp, 0._dp )
 !
 ! This macro force the normalization of betamix matrix, usually not necessary
-#define __NORMALIZE_BETAMIX
+!#define __NORMALIZE_BETAMIX
 !
 #ifdef __GFORTRAN
 ! gfortran hack - for some mysterious reason gfortran doesn't save
@@ -94,7 +94,10 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   type(mix_type) :: rhoin_save, rhout_save
   REAL(DP),ALLOCATABLE :: betamix(:,:), work(:)
   INTEGER, ALLOCATABLE :: iwork(:)
-  REAL(DP) :: gamma0, norm2, obn
+  REAL(DP) :: gamma0
+#ifdef __NORMALIZE_BETAMIX
+  REAL(DP) :: norm2, obn
+#endif
   LOGICAL :: &
     savetofile,  &! save intermediate steps on file $prefix."mix",...
     exst          ! if true the file exists
@@ -111,9 +114,6 @@ SUBROUTINE mix_rho( input_rhout, rhoin, alphamix, dr2, tr2_min, iter, n_iter, co
   REAL(DP) :: dr2_paw, norm
 !  REAL(DP),ALLOCATABLE :: e(:),v(:,:)
   INTEGER, PARAMETER :: read_ = -1, write_ = +1
-#ifdef __NORMALIZE_BETAMIX
-  REAL(DP),PARAMETER :: w0 = 0._dp
-#endif
   !
   ! ... external functions
   !
