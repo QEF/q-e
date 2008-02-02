@@ -22,7 +22,7 @@ subroutine partial_wave_expansion
   use ld1_parameters, only : nwfsx
   use ld1inc,    only : grid, nld, nbeta, nspin, rel, ikk, file_pawexp, &
                         betas, ddd, qq, lls, jjs, pseudotype, vpstot, vnl, &
-                        rlderiv, npte, emaxld, eminld, deld, phis, rcutus
+                        rlderiv, npte, emaxld, eminld, deld, phis, rcutus, rcloc
   implicit none
 
   integer  ::       &
@@ -165,7 +165,7 @@ subroutine partial_wave_expansion
            do jb=1,nbeta
               if (lls(jb).eq.lam.and.jjs(jb).eq.jam) then
                  ikb = 0
-                 do while (grid%r(ikb+1) < rcutus(jb) )
+                 do while (grid%r(ikb+1) < max(rcutus(jb),rcloc) )
                     ikb=ikb+1
                  end do
                  if (mod(ikb,2) == 0) ikb=ikb+1
