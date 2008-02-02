@@ -78,6 +78,7 @@ subroutine gener_pseudo
        is, nbf, nc, ios, ind
 
   character(len=5) :: indqvan
+  character(len=256) :: filename
 
   logical :: &
        lbes4     ! use 4 Bessel functions expansion
@@ -86,6 +87,9 @@ subroutine gener_pseudo
   real(DP) :: vpotpaw (ndmx) ! total potential to be used for PAW 
                              ! generation (normally the AE potential)
   integer  :: iknc2paw       ! point in rgrid closer to rcutnc2paw
+
+  real(DP) :: q, fac, vq, pi, wrk(ndmx), jlq(ndmx), norm(nwfsx), normr(nwfsx)
+  integer  :: ll
 
   if (lpaw) then
      write(stdout, &
@@ -403,10 +407,6 @@ subroutine gener_pseudo
   if (lpaw) then
      if (lnc2paw) write (stdout,'(/5x,''WARNING: __PAW_FROM_NC__'')')
      !
-     do n=1,grid%mesh
-!        write (1000,'(3f18.10)')  grid%r(n),vpotpaw(n),vpsloc(n)
-     end do
-     !
      !symbol=atom_name(nint(zed))
      !
      ! compute kinetic energy differences, using:
@@ -463,6 +463,38 @@ subroutine gener_pseudo
            write(19,'(15f12.6)') grid%r(n), (betas(n,ns), ns=1,nbeta)
         enddo
         close(19)
+   !
+   ! calculate and print the fourier transform of betas and the  
+   ! convergence of their norm with curtoff
+   !
+     filename = trim(file_beta)//'.q'
+     open(unit=19,file=filename, status='unknown', iostat=ios)
+     filename = trim(file_beta)//'.norm_q'
+     open(unit=29,file=filename, status='unknown', iostat=ios)
+     pi = 4._dp*atan(1._dp)
+     do ns=1,nbeta
+        wrk(1:grid%mesh)=( betas(1:grid%mesh,ns) ) ** 2
+        normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+     end do
+     write (*,*) normr(1:nbeta)
+     fac = pi /grid%r(grid%mesh) * 2._dp/pi
+     norm(:) = 0._dp
+     do n=1, 20 * grid%r(grid%mesh) /pi
+        q=n * pi /grid%r(grid%mesh)
+        do ns=1,nbeta
+          call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
+          wrk(1:grid%mesh)=jlq(1:grid%mesh)*betas(1:grid%mesh,ns)*grid%r(1:grid%mesh)
+          work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+        end do
+        norm(1:nbeta) = norm(1:nbeta) + work(1:nbeta)*work(1:nbeta)*q*q *fac
+        write (19,'(15f12.6)') q, (work(ns), ns=1,nbeta)
+        write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,nbeta)
+     end do
+     close(29)
+     close(19)
+     !
+     ! end of fourier analysis
+     !
      endif
   endif
   if (file_chi .ne. ' ') then
@@ -512,6 +544,39 @@ subroutine gener_pseudo
         enddo
         close(19)
      endif
+   !
+   ! calculate and print the fourier transform of phinc and the  
+   ! convergence of their norm with curtoff
+   !
+     filename = trim(file_wfcncgen)//'.q'
+     open(unit=19,file=filename, status='unknown', iostat=ios)
+     filename = trim(file_wfcncgen)//'.norm_q'
+     open(unit=29,file=filename, status='unknown', iostat=ios)
+     pi = 4._dp*atan(1._dp)
+     do ns=1,nwfs
+        wrk(1:grid%mesh)=( psipsus(1:grid%mesh,ns) *exp(-0.04*grid%r2(1:grid%mesh)) )** 2
+        normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+     end do
+     write (*,*) normr(1:nwfs)
+     fac = pi /grid%r(grid%mesh) * 2._dp/pi
+     norm(:) = 0._dp
+     do n=1, 10 * grid%r(grid%mesh) /pi
+        q=n * pi /grid%r(grid%mesh)
+        do ns=1,nwfs
+          call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
+          wrk(1:grid%mesh)=jlq(1:grid%mesh)*psipsus(1:grid%mesh,ns)*exp(-0.04*grid%r2(1:grid%mesh))*grid%r(1:grid%mesh)
+          work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+        end do
+        norm(1:nwfs) = norm(1:nwfs) + work(1:nwfs)*work(1:nwfs)*q*q*fac
+        write (19,'(15f12.6)') q, (work(ns), ns=1,nwfs)
+        write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,nwfs)
+     end do
+     write (*,*) norm(1:nwfs)
+     close (29)
+     close (19)
+     !
+     ! end of fourier analysis
+     !
   endif
 
   if (file_wfcusgen .ne. ' ') then
@@ -525,6 +590,38 @@ subroutine gener_pseudo
         enddo
         close(19)
      endif
+   !
+   ! calculate and print the fourier transform of phis and the  
+   ! convergence of their norm with curtoff
+   !
+     filename = trim(file_wfcusgen)//'.q'
+     open(unit=19,file=filename, status='unknown', iostat=ios)
+     filename = trim(file_wfcusgen)//'.norm_q'
+     open(unit=29,file=filename, status='unknown', iostat=ios)
+     pi = 4._dp*atan(1._dp)
+     do ns=1,nwfs
+        wrk(1:grid%mesh)=( phis(1:grid%mesh,ns) *exp(-0.04*grid%r2(1:grid%mesh)) )** 2
+        normr(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+     end do
+     write (*,*) normr(1:nwfs)
+     fac = pi /grid%r(grid%mesh) * 2._dp/pi
+     norm(:) = 0._dp
+     do n=1, 10 * grid%r(grid%mesh) /pi
+        q=n * pi /grid%r(grid%mesh)
+        do ns=1,nwfs
+          call sph_bes ( grid%mesh, grid%r, q, lls(ns), jlq )
+          wrk(1:grid%mesh)=jlq(1:grid%mesh)*phis(1:grid%mesh,ns)*exp(-0.04*grid%r2(1:grid%mesh))*grid%r(1:grid%mesh)
+          work(ns) = int_0_inf_dr ( wrk, grid, grid%mesh, 2*lls(ns)+2 )
+        end do
+        norm(1:nwfs) = norm(1:nwfs) + work(1:nwfs)*work(1:nwfs)*q*q*fac
+        write (19,'(15f12.6)') q, (work(ns), ns=1,nwfs)
+        write (29,'(15f12.6)') q, (norm(ns)/normr(ns), ns=1,nwfs)
+     end do
+     close (29)
+     close (19)
+     !
+     ! end of Fourier analysis
+     !
   endif
 
   write(stdout,"(/,5x,19('-'),' End of pseudopotential generation ',19('-'),/)")
