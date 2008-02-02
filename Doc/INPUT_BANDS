@@ -30,5 +30,8 @@
   !            representations of the small group of k. A file "filband".rap
   !            with the same format of "filband" is written. 
   !
+  ! no_overlap (default .false.) if .true. writes the eigenvalues in the
+  !            output file without changing their order.
+  !            
   ! firstk     if lsym=.true. makes the symmetry analysis only for k points
   ! lastk      between firstk to lastk

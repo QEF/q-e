@@ -24,12 +24,12 @@ PROGRAM bands
   IMPLICIT NONE
   !
   CHARACTER (len=256) :: filband, filp, outdir
-  LOGICAL :: lsigma(4), lsym, lp
+  LOGICAL :: lsigma(4), lsym, lp, no_overlap
   INTEGER :: spin_component, firstk, lastk
   INTEGER :: ios
   !
   NAMELIST / inputpp / outdir, prefix, filband, filp, spin_component, lsigma,&
-                       lsym, lp, filp, firstk, lastk
+                       lsym, lp, filp, firstk, lastk, no_overlap
   !                                  
   !
   CALL start_postproc (nd_nmbr)
@@ -44,6 +44,7 @@ PROGRAM bands
   lsigma=.false.
   filp='p_avg.dat'
   lp=.false.
+  no_overlap=.false.
   firstk=0
   lastk=10000000
   spin_component = 1
@@ -75,6 +76,7 @@ PROGRAM bands
   CALL mp_bcast( spin_component, ionode_id )
   CALL mp_bcast( firstk, ionode_id )
   CALL mp_bcast( lastk, ionode_id )
+  CALL mp_bcast( no_overlap, ionode_id )
   CALL mp_bcast( lp, ionode_id )
   CALL mp_bcast( lsym, ionode_id )
   CALL mp_bcast( lsigma, ionode_id )
@@ -96,10 +98,9 @@ PROGRAM bands
      'The bands code with constrained magnetization has not been tested',1)
 
   CALL openfil_pp()
-!  CALL init_us_1()
-!  CALL newd()
   !
-  CALL punch_band(filband,spin_component,lsigma,lsym)
+  IF (lsym) no_overlap=.true.
+  CALL punch_band(filband,spin_component,lsigma,no_overlap)
   IF (lsym) call sym_band(filband,spin_component,firstk,lastk)
   IF (lp) CALL write_p_avg(filp,spin_component,firstk,lastk)
   !
@@ -108,7 +109,7 @@ PROGRAM bands
 END PROGRAM bands
 !
 !-----------------------------------------------------------------------
-SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
+SUBROUTINE punch_band (filband, spin_component, lsigma, no_overlap)
   !-----------------------------------------------------------------------
   !
   !    This routine writes the band energies on a file. The routine orders
@@ -149,7 +150,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
   ! becpold: <psi|beta> at previous k-point
   COMPLEX(DP), ALLOCATABLE :: psiold_nc (:,:), old_nc(:,:), new_nc(:,:)
   COMPLEX(DP), ALLOCATABLE :: becp_nc(:,:,:), becpold_nc(:,:,:)
-  LOGICAL :: lsym
+  LOGICAL :: no_overlap
   ! as above for the noncolinear case
   INTEGER :: ibnd, jbnd, ik, ikb, ig, npwold, nks1, nks2, ipol, ih, is1
   ! counters
@@ -268,7 +269,7 @@ SUBROUTINE punch_band (filband, spin_component, lsigma, lsym)
         CALL calbec ( npw, vkb, evc, becp )
      END IF
      !
-     IF (ik==nks1.or.lsym) THEN
+     IF (ik==nks1.or.no_overlap) THEN
         !
         !  first k-point in the list:
         !  save eigenfunctions in the current order (increasing energy)
