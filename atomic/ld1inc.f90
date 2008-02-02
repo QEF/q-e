@@ -303,6 +303,7 @@ module ld1inc
        file_wavefunctionsps, & ! pseudopotential results for orbitals
        file_logder,          & ! all-electron logarithmic derivatives
        file_logderps,        & ! pseudopotential logarithmic derivatives
+       file_pawexp,          & ! quality index of partial wave expansion
        file_tests              ! results of pseudopotential tests
   !
   ! vdw calculation

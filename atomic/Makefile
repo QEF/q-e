@@ -59,6 +59,7 @@ new_potential.o \
 nodenum.o \
 normalize.o \
 occ_spin.o \
+partial_wave_expansion.o \
 pseudovloc.o \
 pseudo_q.o \
 read_newpseudo.o \

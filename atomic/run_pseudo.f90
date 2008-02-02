@@ -183,6 +183,10 @@ subroutine run_pseudo
   !    compute logarithmic derivatives
   !
   if ( deld > 0.0_dp) call lderivps ( )
+  !
+  !    compute expansion in partial waves 
+  !
+  if ( deld > 0.0_dp) call partial_wave_expansion ( )
 
   return
 end subroutine run_pseudo

@@ -408,7 +408,7 @@ CONTAINS
                    pawset_%augfun(1:mesh,ns1,ns,l3)=pawset_%augfun(1:mesh,ns,ns1,l3)
                    !
                    ! Save higher bessel coefficient to compute suggested cutoff
-                   max_aug_cutoff=MAX( max_aug_cutoff, 2._dp*MAXVAL(xc(1:2)*(l3+1))**2)
+                   max_aug_cutoff=MAX( max_aug_cutoff, MAXVAL(qc(1:2))**2)
                    !
                 end do 
                 DEALLOCATE (j1)

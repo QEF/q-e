@@ -18,7 +18,7 @@ subroutine ld1_setup
   use ld1inc, only : iswitch, lsd, rel,sl3, lmx, nconf, &
                 nbeta, lloc, nsloc, etot, etot0, etots0, vxt,   &
                 file_wavefunctions, file_logder,  &
-                file_wavefunctionsps, file_logderps, &
+                file_wavefunctionsps, file_logderps, file_pawexp, &
                 prefix, new, core_state, enls, enl,  &
                 nwf,                       jj,   el,   isw,   oc, nstoae, &
                 nwfs,          lls,        jjs,  els,  isws,  ocs, &
@@ -170,6 +170,7 @@ subroutine ld1_setup
   file_wavefunctionsps= trim(prefix)//'ps.wfc'
   file_logder   = trim(prefix)//'.dlog'
   file_logderps = trim(prefix)//'ps.dlog'
+  file_pawexp = trim(prefix)//'.pwe'
 
   return
 end subroutine ld1_setup
