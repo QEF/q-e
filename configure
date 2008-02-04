@@ -2254,7 +2254,7 @@ case "$arch" in
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
 		if test `echo $version | sed 's/\..*//'` -gt 8; then
-			MKL_LIBS="-lmkl_sequential"
+			MKL_LIBS=" "
 			MKL_FLAGS="-i-static -openmp"
 		fi
 	elif test "$pgf_version" != ""
@@ -7009,111 +7009,6 @@ then
 	# search
 	case "$arch:$f90" in
 
-	ia32:* | ia64:* )
-		# check for mkl_lapack
-		if test "$have_mkl" -ne 0
-		then
-			unset ac_cv_search_zggev # clear cached value
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags"
-			LIBS="$blas_libs"
-			LDFLAGS="$MKL_FLAGS $test_ldflags"
-			echo "$as_me:$LINENO: checking for library containing zggev" >&5
-echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6
-if test "${ac_cv_search_zggev+set}" = set; then
-  echo $ECHO_N "(cached) $ECHO_C" >&6
-else
-  ac_func_search_save_LIBS=$LIBS
-ac_cv_search_zggev=no
-cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call zggev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_search_zggev="none required"
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-if test "$ac_cv_search_zggev" = no; then
-  for ac_lib in mkl_lapack; do
-    LIBS="-l$ac_lib  $ac_func_search_save_LIBS"
-    cat >conftest.$ac_ext <<_ACEOF
-      program main
-      call zggev
-      end
-_ACEOF
-rm -f conftest.$ac_objext conftest$ac_exeext
-if { (eval echo "$as_me:$LINENO: \"$ac_link\"") >&5
-  (eval $ac_link) 2>conftest.er1
-  ac_status=$?
-  grep -v '^ *+' conftest.er1 >conftest.err
-  rm -f conftest.er1
-  cat conftest.err >&5
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); } &&
-	 { ac_try='test -z "$ac_f77_werror_flag"
-			 || test ! -s conftest.err'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; } &&
-	 { ac_try='test -s conftest$ac_exeext'
-  { (eval echo "$as_me:$LINENO: \"$ac_try\"") >&5
-  (eval $ac_try) 2>&5
-  ac_status=$?
-  echo "$as_me:$LINENO: \$? = $ac_status" >&5
-  (exit $ac_status); }; }; then
-  ac_cv_search_zggev="-l$ac_lib"
-break
-else
-  echo "$as_me: failed program was:" >&5
-sed 's/^/| /' conftest.$ac_ext >&5
-
-fi
-rm -f conftest.err conftest.$ac_objext \
-      conftest$ac_exeext conftest.$ac_ext
-  done
-fi
-LIBS=$ac_func_search_save_LIBS
-fi
-echo "$as_me:$LINENO: result: $ac_cv_search_zggev" >&5
-echo "${ECHO_T}$ac_cv_search_zggev" >&6
-if test "$ac_cv_search_zggev" != no; then
-  test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
-  have_lapack=1
-				       lapack_libs="-lmkl_lapack"
-fi
-
-		fi
-		;;
-
         amd64:path* | amd64:pgf* )
                 # check for acml
                 unset ac_cv_search_zggev # clear cached value
@@ -7214,14 +7109,14 @@ fi
 
                 ;;
 
-	amd64:* )
+	ia32:* | ia64:*| amd64:* )
 		# check for mkl_lapack
 		if test "$have_mkl" -ne 0
 		then
-			unset ac_cv_search_zggev # clear cached value
-			FFLAGS="$test_fflags"
+               	unset ac_cv_search_zggev # clear cached value
+                	FFLAGS="$test_fflags"
+                	LIBS=" $blas_libs"
 			LDFLAGS="$MKL_FLAGS $test_ldflags"
-			LIBS="$blas_libs"
 			echo "$as_me:$LINENO: checking for library containing zggev" >&5
 echo $ECHO_N "checking for library containing zggev... $ECHO_C" >&6
 if test "${ac_cv_search_zggev+set}" = set; then
@@ -7312,7 +7207,7 @@ echo "${ECHO_T}$ac_cv_search_zggev" >&6
 if test "$ac_cv_search_zggev" != no; then
   test "$ac_cv_search_zggev" = "none required" || LIBS="$ac_cv_search_zggev $LIBS"
   have_lapack=1
-				       lapack_libs="-lmkl_lapack"
+				       lapack_libs="$LIBS"
 fi
 
 		fi

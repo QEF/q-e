@@ -236,7 +236,7 @@ case "$arch" in
 		fi
 		# flags for MKL according to Axel - ifort 9 and later
 		if test `echo $version | sed 's/\..*//'` -gt 8; then
-			MKL_LIBS="-lmkl_sequential"
+			MKL_LIBS=" "
 			MKL_FLAGS="-i-static -openmp"
 		fi
 	elif test "$pgf_version" != ""
@@ -972,20 +972,6 @@ then
 	# search
 	case "$arch:$f90" in
 
-	ia32:* | ia64:* )
-		# check for mkl_lapack
-		if test "$have_mkl" -ne 0
-		then
-			unset ac_cv_search_zggev # clear cached value
-			FFLAGS="$test_fflags"
-			LDFLAGS="$test_ldflags"
-			LIBS="$blas_libs"
-			LDFLAGS="$MKL_FLAGS $test_ldflags"
-			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
-				       lapack_libs="-lmkl_lapack")
-		fi
-		;;
-
         amd64:path* | amd64:pgf* )
                 # check for acml
                 unset ac_cv_search_zggev # clear cached value
@@ -995,16 +981,16 @@ then
                 AC_SEARCH_LIBS(zggev, acml, have_lapack=1 lapack_libs="$LIBS")
                 ;;
 
-	amd64:* )
+	ia32:* | ia64:*| amd64:* )
 		# check for mkl_lapack
 		if test "$have_mkl" -ne 0
 		then
-			unset ac_cv_search_zggev # clear cached value
-			FFLAGS="$test_fflags"
+               	unset ac_cv_search_zggev # clear cached value
+                	FFLAGS="$test_fflags"
+                	LIBS=" $blas_libs"
 			LDFLAGS="$MKL_FLAGS $test_ldflags"
-			LIBS="$blas_libs"
 			AC_SEARCH_LIBS(zggev, mkl_lapack, have_lapack=1
-				       lapack_libs="-lmkl_lapack")
+				       lapack_libs="$LIBS")
 		fi
 		;;
 
