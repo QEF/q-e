@@ -1,5 +1,5 @@
 !
-! Copyright (C) 2002-2005 FPMD-CPV groups
+! Copyright (C) 2002-2008 Quantum-Espresso group
 ! This file is distributed under the terms of the
 ! GNU General Public License. See the file `License'
 ! in the root directory of the present distribution,
@@ -318,8 +318,8 @@
 
 
 !-----------------------------------------------------------------------
-      subroutine formfn( vps, dvps, r, rab, vloc_at, zv, rcmax, g, omega, &
-                         tpiba2, mesh, ngs, oldvan, tpre )
+      subroutine formfn( r, rab, vloc_at, zv, rcmax, g, omega, &
+                         tpiba2, mesh, ngs, oldvan, tpre, vps, dv0, dvps )
 !-----------------------------------------------------------------------
 !
         !computes the form factors of pseudopotential (vps),
@@ -340,13 +340,14 @@
         real(DP), intent(in)  ::  vloc_at( mesh )
         real(DP), intent(out) ::  vps( ngs )
         real(DP), intent(out) :: dvps( ngs )
+        real(DP), intent(out) :: dv0
         real(DP), intent(in)  :: zv, rcmax, omega, tpiba2
         !
         real(DP) :: xg
         integer   :: ig, ir, irmax
-        real(8), allocatable:: f(:),vscr(:), figl(:)
-        real(8), allocatable:: df(:), dfigl(:)
-        real(8), external :: erf
+        real(DP), allocatable:: f(:),vscr(:), figl(:)
+        real(DP), allocatable:: df(:), dfigl(:)
+        real(DP), external :: erf
 !
         allocate( figl(ngs), f(mesh), vscr(mesh) )
         if (tpre) then
@@ -366,7 +367,28 @@
         do ir = irmax + 1, mesh
           vscr(ir)=0.0d0
         end do
-
+        !
+        ! ... In CP the G=0 value of the Hartree+local pseudopotential
+        ! ... is not set to its correct value, the "alpha Z" term, but
+        ! ... to a different value. This has no effect on the energy
+        ! ... of a neutral system as long as all terms are consistent
+        ! ... but it yields a different alignment of levels and, only 
+        ! ... in charged system, a different energy. 
+        ! ... dv0 is the correction to the G=0 term in CP needed to
+        ! ...  reproduce the results from other PW codes
+        !
+        DO ir = 1, irmax
+           f(ir) = fpi * ( zv * erfc( r(ir)/rcmax ) ) * r(ir)
+        END DO
+        DO ir = irmax + 1, mesh
+          f(ir)=0.0d0
+        END DO
+        IF ( oldvan ) THEN
+           CALL herman_skillman_int( mesh, f, rab, dv0 )
+        ELSE
+           CALL simpson_cp90( mesh, f, rab, dv0 )
+        END IF
+        !
         do ig = 1, ngs
           xg = sqrt( g(ig) * tpiba2 )
           if( xg < gsmall ) then

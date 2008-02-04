@@ -692,7 +692,6 @@ mainvar.o : modules.o
 mainvar.o : pres_ai_mod.o
 mainvar.o : wave_types.o
 metaxc.o : ../Modules/recvec.o
-modules.o : ../Modules/electrons_base.o
 modules.o : ../Modules/kind.o
 modules.o : ../Modules/parameters.o
 move_electrons.o : ../Modules/cell_base.o

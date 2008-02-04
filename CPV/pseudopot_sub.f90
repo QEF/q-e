@@ -232,6 +232,7 @@
       use reciprocal_vectors, ONLY : g, gstart
       USE cp_interfaces,      ONLY : compute_xgtab, chkpstab
       USE pseudopotential,    ONLY : vps_sp, dvps_sp, xgtab
+      USE local_pseudo,       ONLY : vps0
       USE betax,              ONLY : mmx
 
       IMPLICIT NONE
@@ -269,10 +270,10 @@
          CALL allocate_spline( vps_sp(is), mmx, xgmin, xgmax )
          CALL allocate_spline( dvps_sp(is), mmx, xgmin, xgmax )
 
-         call formfn( vps_sp(is)%y, dvps_sp(is)%y, rgrid(is)%r, &
-                      rgrid(is)%rab, upf(is)%vloc(1:rgrid(is)%mesh), zv(is), &
-                      rcmax(is), xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, &
-                      mmx, oldvan(is), tpre )
+         call formfn( rgrid(is)%r, rgrid(is)%rab, &
+                      upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), &
+                      xgtab, 1.0d0, tpiba2, rgrid(is)%mesh, mmx, oldvan(is),&
+                      tpre, vps_sp(is)%y, vps0(is), dvps_sp(is)%y )
          ! obsolete BHS format
          !call formfa( vps_sp(is)%y, dvps_sp(is)%y, rc1(is), rc2(is), &
          !             wrc1(is), wrc2(is), rcl(:,is,lloc(is)), &

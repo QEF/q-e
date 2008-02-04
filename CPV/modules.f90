@@ -5,17 +5,9 @@
 ! in the root directory of the present distribution,
 ! or http://www.gnu.org/copyleft/gpl.txt .
 !
-!     f    = occupation numbers
-!     qbac = background neutralizing charge
-!     nspin = number of spins (1=no spin, 2=LSDA)
-!     nel(nspin) = number of electrons (up, down)
-!     nupdwn= number of states with spin up (1) and down (2)
-!     iupdwn=      first state with spin (1) and down (2)
 !     n     = total number of electronic states
 !     nx    = if n is even, nx=n ; if it is odd, nx=n+1
 !             nx is used only to dimension arrays
-!     ispin = spin of each state
-!
 
 !     tpiba   = 2*pi/alat
 !     tpiba2  = (2*pi/alat)**2
@@ -66,18 +58,24 @@
 
 
 module local_pseudo
+  use kinds, only: DP
   implicit none
   save
   !
   !    rhops = ionic pseudocharges (for Ewald term)
   !    vps   = local pseudopotential in G space for each species
   !
-  real(8), allocatable:: rhops(:,:), vps(:,:)
+  real(DP), allocatable:: rhops(:,:), vps(:,:)
   !
   !    drhops = derivative of rhops respect to G^2
   !    dvps   = derivative of vps respect to G^2
   !
-  real(8),allocatable:: dvps(:,:), drhops(:,:)
+  real(DP),allocatable:: dvps(:,:), drhops(:,:)
+  !
+  !    vps0  = correction factors needed to align V(0) to the "traditional"
+  !            value used by other plane-wave codes - one per species
+  !
+  real(DP),allocatable:: vps0(:)
   !
 contains
   !
@@ -88,21 +86,24 @@ contains
       ALLOCATE( vps( ng, nsp ) )
       ALLOCATE( drhops( ng, nsp ) )
       ALLOCATE( dvps( ng, nsp ) )
+      ALLOCATE( vps0( nsp ) )
   end subroutine
   !
   subroutine deallocate_local_pseudo
-      IF( ALLOCATED( rhops ) ) DEALLOCATE( rhops )
-      IF( ALLOCATED( vps ) ) DEALLOCATE( vps )
+      IF( ALLOCATED( vps0 ) ) DEALLOCATE( vps0 )
       IF( ALLOCATED( dvps ) ) DEALLOCATE( dvps )
       IF( ALLOCATED( drhops ) ) DEALLOCATE( drhops )
+      IF( ALLOCATED( vps ) ) DEALLOCATE( vps )
+      IF( ALLOCATED( rhops ) ) DEALLOCATE( rhops )
   end subroutine
   !
 end module local_pseudo
 
 module qgb_mod
+  USE kinds, ONLY: DP
   implicit none
   save
-  complex(8), allocatable :: qgb(:,:,:)
+  complex(DP), allocatable :: qgb(:,:,:)
 contains
   subroutine deallocate_qgb_mod
       IF( ALLOCATED( qgb ) ) DEALLOCATE( qgb )
@@ -110,9 +111,10 @@ contains
 end module qgb_mod
 
 module qradb_mod
+  USE kinds, ONLY: DP
   implicit none
   save
-  real(8), allocatable:: qradb(:,:,:,:)
+  real(DP), allocatable:: qradb(:,:,:,:)
 contains
   subroutine deallocate_qradb_mod
       IF( ALLOCATED( qradb ) ) DEALLOCATE( qradb )
@@ -134,13 +136,15 @@ contains
 end module derho
 
 MODULE metagga  !metagga
+  USE kinds, ONLY: DP
+  implicit none
   !the variables needed for meta-GGA
-  REAL(8), ALLOCATABLE :: &
+  REAL(DP), ALLOCATABLE :: &
        kedtaus(:,:), &! KineticEnergyDensity in real space,smooth grid
        kedtaur(:,:), &! real space, density grid
        crosstaus(:,:,:), &!used by stress tensor,in smooth grid
        dkedtaus(:,:,:,:)  !derivative of kedtau wrt h on smooth grid
-  COMPLEX(8) , ALLOCATABLE :: &
+  COMPLEX(DP) , ALLOCATABLE :: &
        kedtaug(:,:),    & !KineticEnergyDensity in G space
        gradwfc(:,:)    !used by stress tensor
 contains
@@ -172,9 +176,10 @@ MODULE dener
 END MODULE dener
 
 module dqgb_mod
+  USE kinds, ONLY: DP
   implicit none
   save
-  complex(8),allocatable:: dqgb(:,:,:,:,:)
+  complex(DP),allocatable:: dqgb(:,:,:,:,:)
 contains
   subroutine deallocate_dqgb_mod
       IF( ALLOCATED( dqgb ) ) DEALLOCATE( dqgb )
@@ -338,35 +343,6 @@ CONTAINS
    END SUBROUTINE deallocate_core
    !
 END MODULE core
-!@@@@
-module elct
-  USE kinds
-  use electrons_base, only: nspin, nel, nupdwn, iupdwn
-  use electrons_base, only: n => nbnd, nx => nbndx, ispin, f
-  implicit none
-  save
-  !     f    = occupation numbers
-  !     qbac = background neutralizing charge
-  real(DP) qbac
-  !     nspin = number of spins (1=no spin, 2=LSDA)
-  !     nel(nspin) = number of electrons (up, down)
-  !     nupdwn= number of states with spin up (1) and down (2)
-  !     iupdwn=      first state with spin (1) and down (2)
-  !     n     = total number of electronic states
-  !     nx    = if n is even, nx=n ; if it is odd, nx=n+1
-  !            nx is used only to dimension arrays
-  !     ispin = spin of each state
-!  integer, allocatable:: ispin(:)
-  !
-contains
-                                                                                                 
-  subroutine deallocate_elct()
-      IF( ALLOCATED( f ) ) DEALLOCATE( f )
-      IF( ALLOCATED( ispin ) ) DEALLOCATE( ispin )
-      return
-  end subroutine
-  !
-end module elct
 !
 module ldaU
   use parameters, only: nsx
@@ -390,9 +366,11 @@ contains
      IF( ALLOCATED( ns ) ) DEALLOCATE( ns )
      IF( ALLOCATED( vupsi ) ) DEALLOCATE( vupsi )
      !
+     !
   end subroutine
   !
 end module ldaU
+!
 !
 ! Occupation constraint ...to be implemented...
 !
@@ -406,6 +384,4 @@ module step_constraint
   ! complex(DP), allocatable:: vpsi_con(:,:)
   complex(DP) :: vpsi_con(1,1)
 end module step_constraint
-!
-!@@@@
 

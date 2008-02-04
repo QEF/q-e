@@ -24,7 +24,7 @@ subroutine formf( tfirst, eself )
   use gvecs,           ONLY : ngs
   use cell_base,       ONLY : omega, tpiba2, tpiba
   use ions_base,       ONLY : rcmax, zv, nsp, na
-  use local_pseudo,    ONLY : vps, rhops, dvps, drhops
+  use local_pseudo,    ONLY : vps, vps0, rhops, dvps, drhops
   use atom,            ONLY : rgrid
   use uspp_param,      ONLY : upf, oldvan
   use pseudo_base,     ONLY : compute_rhops, formfn, formfa, compute_eself
@@ -32,10 +32,11 @@ subroutine formf( tfirst, eself )
   use cp_interfaces,   ONLY : build_pstab
   use splines,         ONLY : spline
   use reciprocal_vectors, ONLY : gstart, g
+  use constants,       ONLY : autoev
   !
   implicit none
   logical      :: tfirst
-  real(DP)    :: eself
+  real(DP)    :: eself, DeltaV0
   !
   real(DP)    :: vpsum, rhopsum
   integer      :: is, ig
@@ -80,9 +81,10 @@ subroutine formf( tfirst, eself )
         !
      ELSE
 
-        call formfn( vps(:,is), dvps(:,is), rgrid(is)%r, rgrid(is)%rab, &
-                     upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), &
-                     g, omega, tpiba2, rgrid(is)%mesh, ngs, oldvan(is), tpre )
+        call formfn( rgrid(is)%r, rgrid(is)%rab, &
+                     upf(is)%vloc(1:rgrid(is)%mesh), zv(is), rcmax(is), g, &
+                     omega, tpiba2, rgrid(is)%mesh, ngs, oldvan(is), tpre, &
+                     vps(:,is), vps0(is), dvps(:,is) )
 
 ! obsolete BHS form
 ! call formfa( vps(:,is), dvps(:,is), rc1(is), rc2(is), wrc1(is), wrc2(is), &
@@ -106,6 +108,20 @@ subroutine formf( tfirst, eself )
      endif
      !
   end do
+  ! 
+  ! ... DeltaV0 is the shift to be applied to eigenvalues
+  ! ... in order to align them to other plane wave codes
+  !
+  DeltaV0 = 0.0_dp
+  DO is = 1, nsp
+     !
+     ! ...  na(is)/omega is the structure factor at G=0
+     !
+     DeltaV0 = DeltaV0 + na(is) / omega * vps0(is)
+  END DO
+  !
+   write(6,'("   Delta V(G=0): ",f10.6,"Ry, ",f11.6,"eV")') &
+         deltaV0, deltaV0*autoev
   !
   call stop_clock( 'formf' )
   !
