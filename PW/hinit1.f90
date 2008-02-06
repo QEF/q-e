@@ -13,39 +13,21 @@ SUBROUTINE hinit1()
   !
   USE ions_base,     ONLY : nat, nsp, ityp, tau
   USE cell_base,     ONLY : at, bg, omega, tpiba2
-  USE cellmd,        ONLY : lmovecell 
-  USE gvect,         ONLY : nr1, nr2, nr3, nrxx, ngm, g, eigts1, eigts2, eigts3
+  USE gvect,         ONLY : nr1, nr2, nr3, nrxx, ngm, g
   USE gsmooth,       ONLY : doublegrid
   USE ldaU,          ONLY : lda_plus_u
   USE lsda_mod,      ONLY : nspin
   USE scf,           ONLY : vrs, vltot, v, kedtau
-  USE vlocal,        ONLY : strf
-  USE control_flags, ONLY : pot_order, tqr
+  USE control_flags, ONLY : tqr
   USE realus,        ONLY : qpointlist
   !
   IMPLICIT NONE
   !
   !
-  ! ... update the potential
+  ! ... update the wavefunctions, charge density, potential
+  ! ... update_pot initializes structure factor array as well
   !
   CALL update_pot()
-  !
-  ! ... initialize structure factor array if it has not already been
-  ! ... calculated in update_pot ( i.e. when pot_order > 0 )
-  !
-  IF ( pot_order == 0 ) THEN
-     !
-     IF ( lmovecell ) CALL scale_h()
-     !
-     CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                      nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
-     !
-     ! ... calculate the core charge (if any) for the nonlinear 
-     ! ... core correction
-     !
-     CALL set_rhoc()
-     !
-  END IF
   !
   ! ... calculate the total local potential
   !

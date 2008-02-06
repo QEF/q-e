@@ -80,19 +80,11 @@ SUBROUTINE update_pot()
   LOGICAL               :: exists
   !
   !
-  IF ( pot_order == 0 .AND. wfc_order == 0 ) RETURN
-  !
   CALL start_clock( 'update_pot' )
   !
   ALLOCATE( tauold( 3, nat, 3 ) )
   !
   IF ( ionode ) THEN
-     !
-     ! ... default values for extrapolation coefficients (if history < 3 they
-     ! ... will not be used )
-     !
-     alpha0 = 1.D0
-     beta0  = 0.D0
      !
      CALL seqopn( iunupdate, 'update', 'FORMATTED', exists )
      !
@@ -101,8 +93,9 @@ SUBROUTINE update_pot()
         READ( UNIT = iunupdate, FMT = * ) history
         READ( UNIT = iunupdate, FMT = * ) tauold
         !
-        ! ... find the best coefficients for the extrapolation of the potential
-        ! ... and of the wavefunctions
+        ! ... find the best coefficients for the extrapolation
+        ! ... of the charge density and of the wavefunctions
+        ! ... (see Arias et al. PRB 45, 1538 (1992) )
         !
         CALL find_alpha_and_beta( nat, tau, tauold, alpha0, beta0 )
         !
@@ -110,6 +103,10 @@ SUBROUTINE update_pot()
         !
      ELSE
         !
+        ! ... default values of extrapolation coefficients
+        !
+        alpha0 = 1.D0
+        beta0  = 0.D0
         history = 0
         tauold = 0.0_dp
         !
@@ -123,34 +120,34 @@ SUBROUTINE update_pot()
   CALL mp_bcast( beta0,  ionode_id, intra_image_comm )
   CALL mp_bcast( tauold, ionode_id, intra_image_comm )
   !
-  ! ... determines the maximum effective order of the extrapolation on the
-  ! ... basis of the files that are really available
   !
-  ! ... for the wavefunctions
-  !
-  IF ( ionode ) THEN
+  IF ( wfc_order > 0 ) THEN
      !
-     wfc_extr = MIN( 1, history, wfc_order )
+     ! ... determines the maximum effective order of the extrapolation on the
+     ! ... basis of the files that are really available (for wavefunctions)
      !
-     INQUIRE( FILE = TRIM( tmp_dir ) // &
-            & TRIM( prefix ) // '.oldwfc' // nd_nmbr, EXIST = exists )
-     !
-     IF ( exists ) THEN
+     IF ( ionode ) THEN
         !
-        wfc_extr = MIN( 2, history, wfc_order  )
+        wfc_extr = MIN( 1, history, wfc_order )
         !
         INQUIRE( FILE = TRIM( tmp_dir ) // &
-               & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )
+            & TRIM( prefix ) // '.oldwfc' // nd_nmbr, EXIST = exists )
         !
-        IF ( exists ) wfc_extr = MIN( 3, history, wfc_order )
+        IF ( exists ) THEN
+           !
+           wfc_extr = MIN( 2, history, wfc_order  )
+           !
+           INQUIRE( FILE = TRIM( tmp_dir ) // &
+               & TRIM( prefix ) // '.old2wfc' // nd_nmbr , EXIST = exists )
+           !
+           IF ( exists ) wfc_extr = MIN( 3, history, wfc_order )
+           !
+        END IF
         !
      END IF
      !
-  END IF
-  !
-  CALL mp_bcast( wfc_extr, ionode_id, intra_image_comm )
-  !
-  IF ( wfc_order > 0 ) THEN
+     CALL mp_bcast( wfc_extr, ionode_id, intra_image_comm )
+     !
      !
      ! ... save tau(t+dt), replace with tau(t)
      ! ... extrapolate_wfcs needs tau(t) to evaluate S(t)
@@ -161,18 +158,16 @@ SUBROUTINE update_pot()
      !
      CALL extrapolate_wfcs( wfc_extr )
      !
-     !!!IF ( pot_order < 0 ) CALL sum_band ( )
-     !!!IF ( pot_order < 0 ) CALL v_of_rho ( )
-     !
      ! ... restore tau(t+dt)
      !
      tau (:,:) = tauold (:,:,2)
      !
+     DEALLOCATE( tauold )
+     !
   END IF
   !
-  DEALLOCATE( tauold )
-  !
-  ! ... for the charge density
+  ! ... determines the maximum effective order of the extrapolation on the
+  ! ... basis of the files that are really available (for the charge density)
   !
   IF ( ionode ) THEN
      !
@@ -196,7 +191,7 @@ SUBROUTINE update_pot()
   !
   CALL mp_bcast( rho_extr, ionode_id, intra_image_comm )
   !
-  IF ( pot_order > 0 ) CALL extrapolate_charge( rho_extr )
+  CALL extrapolate_charge( rho_extr )
   !
   CALL stop_clock( 'update_pot' )
   !
@@ -244,8 +239,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   INTEGER :: ir, is
   !
-  !
-  IF ( rho_extr == 0 ) THEN
+  IF ( rho_extr < 1 ) THEN
      !
      ! ... calculate structure factors for the new positions
      !
@@ -254,144 +248,163 @@ SUBROUTINE extrapolate_charge( rho_extr )
      CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
                       nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
      !
-     RETURN
+     ! ... new charge density from extrapolated wfcs
      !
-  END IF
-  !
-  ALLOCATE( work( nrxx, 1 ) )
-  !
-  work = 0.D0
-  !
-  ! ... in the lsda case the magnetization will follow rigidly the density
-  ! ... keeping fixed the value of zeta = mag / rho_tot.
-  ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
-  ! ... will contain the total valence charge
-  !
-  IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, 1 )
-  !
-  IF ( noncolin ) THEN
-     !
-     DO is = 2, nspin
+     IF ( rho_extr < 0 ) THEN
         !
-        WHERE( rho%of_r(:,1) > eps32 )
-           !
-           rho%of_r(:,is) = rho%of_r(:,is) / rho%of_r(:,1)
-           !
-        ELSEWHERE
-           !
-           rho%of_r(:,is) = 0.D0
-           !
-        END WHERE
+        CALL sum_band ()
         !
-     END DO
-     !
-  END IF
-  !
-  ! ... subtract the old atomic charge density
-  !
-  CALL atomic_rho( work, 1 )
-  !
-  rho%of_r(:,1) = rho%of_r(:,1) - work(:,1)
-  !
-  IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) * omega_old
-  !
-  ! ... extrapolate the difference between the atomic charge and
-  ! ... the self-consistent one
-  !
-  IF ( rho_extr == 1 ) THEN
-     !
-     ! ... if rho_extr = 1  update the potential subtracting to the charge
-     ! ...                  density the "old" atomic charge and summing the
-     ! ...                  new one
-     !
-     WRITE( UNIT = stdout, FMT = '(/5X, &
-          & "NEW-OLD atomic charge density approx. for the potential")' )
-     !
-     CALL write_rho( rho%of_r, 1, 'old' )
-     !
-  ELSE IF ( rho_extr == 2 ) THEN
-     !
-     WRITE( UNIT = stdout, &
-            FMT = '(/5X,"first order charge density extrapolation")' )
-     !
-     ! ...   oldrho  ->  work
-     !
-     CALL read_rho( work, 1, 'old' )
-     !
-     ! ...   rho%of_r   ->  oldrho
-     ! ...   work  ->  oldrho2
-     !
-     CALL write_rho( rho%of_r,  1, 'old' )
-     CALL write_rho( work, 1, 'old2' )
-     !
-     ! ... extrapolation
-     !
-     rho%of_r(:,1) = 2.D0*rho%of_r(:,1) - work(:,1)
-     !
-  ELSE IF ( rho_extr == 3 ) THEN
-     !
-     WRITE( UNIT = stdout, &
-            FMT = '(/5X,"second order charge density extrapolation")' )
-     !
-     ALLOCATE( work1( nrxx, 1 ) )
-     !
-     work1 = 0.D0
-     !
-     ! ...   oldrho2  ->  work1
-     ! ...   oldrho   ->  work
-     !
-     CALL read_rho( work1, 1, 'old2' )
-     CALL read_rho( work,  1, 'old' )
-     !
-     ! ...   rho%of_r   ->  oldrho
-     ! ...   work  ->  oldrho2
-     !
-     CALL write_rho( rho%of_r,  1, 'old' )
-     CALL write_rho( work, 1, 'old2' )
-     !
-     rho%of_r(:,1) = rho%of_r(:,1) + alpha0*( rho%of_r(:,1) - work(:,1) ) + &
-                            beta0*( work(:,1) - work1(:,1) )
-     !
-     DEALLOCATE( work1 )
-     !
-  END IF
-  !
-  IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) / omega
-  !
-  ! ... calculate structure factors for the new positions
-  !
-  IF ( lmovecell ) CALL scale_h()
-  !
-  CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
-                   nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
-  !
-  ! ... add atomic charges in the new positions
-  !
-  CALL atomic_rho( work, 1 )
-  !
-  rho%of_r(:,1) = rho%of_r(:,1) + work(:,1)
-  !
-  CALL set_rhoc()
-  !
-  ! ... reset up and down charge densities in the LSDA case
-  !
-  IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, -1 )
-  !
-  IF ( noncolin ) THEN
-     !
-     DO is = 2, nspin
+        WRITE( UNIT = stdout, FMT = '(/5X, &
+             & "charge density from extrapolated wavefunctions")' )
+     ELSE
         !
-        WHERE( rho%of_r(:,1) > eps32 )
-           !
-           rho%of_r(:,is) = rho%of_r(:,is)*rho%of_r(:,1)
-           !
-        ELSEWHERE
-           !
-           rho%of_r(:,is) = 0.D0
-           !
-        END WHERE
+        WRITE( UNIT = stdout, FMT = '(/5X, &
+             & "charge density from previous step")' )
         !
-     END DO
+     END IF
+     !
+     CALL set_rhoc()
+     !
+  ELSE
+     ! 
+     ALLOCATE( work( nrxx, 1 ) )
+     !
+     work = 0.D0
+     !
+     ! ... in the lsda case the magnetization will follow rigidly the density
+     ! ... keeping fixed the value of zeta = mag / rho_tot.
+     ! ... zeta is set here and put in rho%of_r(:,2) while rho%of_r(:,1) 
+     ! ... will contain the total valence charge
+     !
+     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, 1 )
+     !
+     IF ( noncolin ) THEN
+        !
+        DO is = 2, nspin
+           !
+           WHERE( rho%of_r(:,1) > eps32 )
+              !
+              rho%of_r(:,is) = rho%of_r(:,is) / rho%of_r(:,1)
+              !
+           ELSEWHERE
+              !
+              rho%of_r(:,is) = 0.D0
+              !
+           END WHERE
+           !
+        END DO
+        !
+     END IF
+     !
+     ! ... subtract the old atomic charge density
+     !
+     CALL atomic_rho( work, 1 )
+     !
+     rho%of_r(:,1) = rho%of_r(:,1) - work(:,1)
+     !
+     IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) * omega_old
+     !
+     ! ... extrapolate the difference between the atomic charge and
+     ! ... the self-consistent one
+     !
+     IF ( rho_extr == 1 ) THEN
+        !
+        ! ... if rho_extr = 1  update the potential subtracting to the charge
+        ! ...                  density the "old" atomic charge and summing the
+        ! ...                  new one
+        !
+        WRITE( UNIT = stdout, FMT = '(/5X, &
+             & "NEW-OLD atomic charge density approx. for the potential")' )
+        !
+        CALL write_rho( rho%of_r, 1, 'old' )
+        !
+     ELSE IF ( rho_extr == 2 ) THEN
+        !
+        WRITE( UNIT = stdout, &
+               FMT = '(/5X,"first order charge density extrapolation")' )
+        !
+        ! ...   oldrho  ->  work
+        !
+        CALL read_rho( work, 1, 'old' )
+        !
+        ! ...   rho%of_r   ->  oldrho
+        ! ...   work  ->  oldrho2
+        !
+        CALL write_rho( rho%of_r,  1, 'old' )
+        CALL write_rho( work, 1, 'old2' )
+        !
+        ! ... extrapolation
+        !
+        rho%of_r(:,1) = 2.D0*rho%of_r(:,1) - work(:,1)
+        !
+     ELSE IF ( rho_extr == 3 ) THEN
+        !
+        WRITE( UNIT = stdout, &
+               FMT = '(/5X,"second order charge density extrapolation")' )
+        !
+        ALLOCATE( work1( nrxx, 1 ) )
+        !
+        work1 = 0.D0
+        !
+        ! ...   oldrho2  ->  work1
+        ! ...   oldrho   ->  work
+        !
+        CALL read_rho( work1, 1, 'old2' )
+        CALL read_rho( work,  1, 'old' )
+        !
+        ! ...   rho%of_r   ->  oldrho
+        ! ...   work  ->  oldrho2
+        !
+        CALL write_rho( rho%of_r,  1, 'old' )
+        CALL write_rho( work, 1, 'old2' )
+        !
+        rho%of_r(:,1) = rho%of_r(:,1) + alpha0*( rho%of_r(:,1) - work(:,1) ) + &
+                               beta0*( work(:,1) - work1(:,1) )
+        !
+        DEALLOCATE( work1 )
+        !
+     END IF
+     !
+     IF ( lmovecell ) rho%of_r(:,1) = rho%of_r(:,1) / omega
+     !
+     ! ... calculate structure factors for the new positions
+     !
+     IF ( lmovecell ) CALL scale_h()
+     !
+     CALL struc_fact( nat, tau, nsp, ityp, ngm, g, bg, &
+                      nr1, nr2, nr3, strf, eigts1, eigts2, eigts3 )
+     !
+     CALL set_rhoc()
+     !
+     ! ... add atomic charges in the new positions
+     !
+     CALL atomic_rho( work, 1 )
+     !
+     rho%of_r(:,1) = rho%of_r(:,1) + work(:,1)
+     !
+     ! ... reset up and down charge densities in the LSDA case
+     !
+     IF ( lsda ) CALL rho2zeta( rho%of_r, rho_core, nrxx, nspin, -1 )
+     !
+     IF ( noncolin ) THEN
+        !
+        DO is = 2, nspin
+           !
+           WHERE( rho%of_r(:,1) > eps32 )
+           !
+              rho%of_r(:,is) = rho%of_r(:,is)*rho%of_r(:,1)
+              !
+           ELSEWHERE
+              !
+              rho%of_r(:,is) = 0.D0
+              !
+           END WHERE
+           !
+        END DO
+        !
+     END IF
+     !
+     DEALLOCATE( work )
      !
   END IF
   !
@@ -421,8 +434,6 @@ SUBROUTINE extrapolate_charge( rho_extr )
      rho%of_g = rho%of_g / charge*nelec
      !
   END IF
-  !
-  DEALLOCATE( work )
   !
   RETURN
   !

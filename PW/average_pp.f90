@@ -59,7 +59,7 @@ SUBROUTINE average_pp ( ntyp )
                  ind1=nbe
               ELSE
                  IF (ABS(upf(nt)%jjj(nbe+1)-upf(nt)%lll(nbe+1)+0.5d0) > 1.d-7) &
-                      call errore('setup','wrong beta functions',1)
+                      call errore('setup','wrong beta functions',2)
                  ind=nbe
                  ind1=nbe+1
               ENDIF
@@ -116,12 +116,12 @@ SUBROUTINE average_pp ( ntyp )
               !
               IF (ABS(upf(nt)%jchi(nbe)-upf(nt)%lchi(nbe)+0.5d0) < 1.d-7) THEN
                  IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)-0.5d0) > &
-                      1.d-7) call errore('setup','wrong chi functions',1)
+                      1.d-7) call errore('setup','wrong chi functions',3)
                  ind=nbe+1
                  ind1=nbe
               ELSE
                  IF ( ABS(upf(nt)%jchi(nbe+1)-upf(nt)%lchi(nbe+1)+0.5d0) > &
-                      1.d-7) call errore('setup','wrong chi functions',1)
+                      1.d-7) call errore('setup','wrong chi functions',4)
                  ind=nbe
                  ind1=nbe+1
               END IF

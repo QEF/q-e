@@ -210,6 +210,8 @@ compute_becsum.o : ../Modules/control_flags.o
 compute_becsum.o : ../Modules/io_files.o
 compute_becsum.o : ../Modules/ions_base.o
 compute_becsum.o : ../Modules/kind.o
+compute_becsum.o : ../Modules/mp.o
+compute_becsum.o : ../Modules/mp_global.o
 compute_becsum.o : ../Modules/paw_variables.o
 compute_becsum.o : ../Modules/uspp.o
 compute_becsum.o : ../Modules/wavefunctions.o
@@ -218,6 +220,7 @@ compute_becsum.o : buffers.o
 compute_becsum.o : noncol.o
 compute_becsum.o : paw_onecenter.o
 compute_becsum.o : pwcom.o
+compute_becsum.o : scf_mod.o
 compute_dip.o : ../Modules/cell_base.o
 compute_dip.o : ../Modules/constants.o
 compute_dip.o : ../Modules/fft_base.o
