@@ -48,11 +48,11 @@ spinorbit Pt fcc   spin-orbit + noncollinear magnetization
                    non-scf calculation
 relax     CO       forces
                    bfgs and damped dynamics
-                   potential extrapolation
 relax2    Al       forces in metals
                    bfgs_ndim=3
-                   wavefunction extrapolation
 md        Si       verlet algorithm 
+                   potential extrapolation
+                   wavefunction extrapolation
 neb       H        NEB calculation for the H2+H proton exchange
                    Automatic, manual, no choice of the climbing image
                    Old RRKJ format for pseudopotentials

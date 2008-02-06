@@ -12,6 +12,7 @@
     mixing_beta = 0.7
  /
  &ions
+    wfc_extrapolation='second_order'
  /
 ATOMIC_SPECIES
  Si  28.086  Si.vbc.UPF
