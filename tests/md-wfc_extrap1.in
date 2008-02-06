@@ -1,7 +1,7 @@
  &control
     calculation='md'
     dt=20,
-    nstep=10
+    nstep=50
  /
  &system
     ibrav= 2, celldm(1)=10.18, nat=  2, ntyp= 1,
