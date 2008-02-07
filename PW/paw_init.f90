@@ -14,7 +14,7 @@ MODULE paw_init
   !
   IMPLICIT NONE
 
-  PUBLIC :: PAW_init_becsum
+  PUBLIC :: PAW_atomic_becsum
   PUBLIC :: PAW_init_onecenter
   !PUBLIC :: PAW_increase_lm ! <-- unused
 #ifdef __PARA
@@ -125,20 +125,31 @@ END SUBROUTINE PAW_post_init
 ! Notice: requires exact correspondence chi <--> beta in the atom,
 ! that is that all wavefunctions considered for PAW generation are
 ! counted in chi (otherwise the array "oc" does not correspond to beta)
-SUBROUTINE PAW_init_becsum(becsum)
+SUBROUTINE PAW_atomic_becsum()
     USE kinds,              ONLY : dp
-    USE uspp,               ONLY : nhtol, indv ! ,becsum
+    USE uspp,               ONLY : nhtol, indv, becsum
+    USE scf,                ONLY : rho
     USE uspp_param,         ONLY : upf, nh, upf, nhm
     USE ions_base,          ONLY : nat, ityp
     USE lsda_mod,           ONLY : nspin, starting_magnetization
     USE paw_variables,      ONLY : okpaw
     USE paw_onecenter,      ONLY : PAW_symmetrize
-    !USE random_numbers,     ONLY : rndm
+    USE random_numbers,     ONLY : rndm
+    USE basis,              ONLY : startingwfc
+
     IMPLICIT NONE
-    REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
+    !REAL(DP), INTENT(INOUT) :: becsum(nhm*(nhm+1)/2,nat,nspin)
     INTEGER :: ispin, na, nt, ijh, ih, jh, nb, mb
+    REAL(DP) :: noise = 0._dp
     !
     IF (.NOT. okpaw) RETURN
+    IF (.NOT. allocated(becsum))     &
+      CALL errore('PAW_init_becsum', &
+                  'Something bad has happened: becsum is not allocated yet', 1)
+
+    ! Add a bit of random noise if not starting from atomic or saved wfcs:
+    IF ( startingwfc=='atomic+random') noise = 0.05_dp
+    IF ( startingwfc=='random')        noise = 0.10_dp
     !
     if (nspin.GT.2) &
         CALL errore('PAW_init_becsum', 'Atomic becsum not implemented for nspin>2',1)
@@ -170,7 +181,10 @@ SUBROUTINE PAW_init_becsum(becsum)
                 !mb = indv(jh,nt)
                 DO ispin = 1, nspin
                    becsum(ijh,na,ispin) = 0._dp
+                   if (noise > 0._dp) &
+                      becsum(ijh,na,ispin) = becsum(ijh,na,ispin) + noise *2._dp*(.5_dp-rndm())
                 END DO
+                !
                 ijh = ijh + 1
                 !
              END DO jh_loop
@@ -178,9 +192,11 @@ SUBROUTINE PAW_init_becsum(becsum)
        END IF is_paw
     END DO na_loop
 
-    CALL PAW_symmetrize(becsum)
+    ! copy becsum in scf structure and symmetrize it
+    rho%bec(:,:,:) = becsum(:,:,:)
+    CALL PAW_symmetrize(rho%bec)
 
-END SUBROUTINE PAW_init_becsum
+END SUBROUTINE PAW_atomic_becsum
 
 ! This allocates space to store onecenter potential and 
 ! calls PAW_rad_init to initialize onecenter integration.

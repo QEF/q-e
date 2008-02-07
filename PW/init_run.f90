@@ -62,12 +62,11 @@ SUBROUTINE init_run()
   !
   CALL openfil()
   !
-  CALL init_h()
-  !
-  ! Finish to initialize PAW data and cleanup
-  ! arrays that are only used for init (parallel only)
+  CALL init_h() ! <- hinit0, potinit, newd, wfcinit
+
 #ifdef __PARA
-    IF (okpaw)  CALL paw_post_init()
+  ! Cleanup PAW arrays that are only used for init
+  IF (okpaw) CALL paw_post_init() ! only parallel!
 #endif
   !
   IF ( lmd ) CALL allocate_dyn_vars()
@@ -85,6 +84,7 @@ SUBROUTINE init_h()
   IMPLICIT NONE
   !
   CALL hinit0()
+  !
   CALL potinit()
   !
   CALL newd()

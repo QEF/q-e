@@ -361,7 +361,10 @@ SUBROUTINE summary()
      DO ik = 1, nkstot
         WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
              (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
-     ENDDO 
+     ENDDO
+  ELSE
+     WRITE( stdout, '(/5x,a)') &
+     "Number of k-points >= 10000: set verbosity='high' to print them."
   ENDIF
   IF (iverbosity.EQ.1) THEN
      WRITE( stdout, '(/23x,"cryst. coord.")')

@@ -39,7 +39,7 @@ SUBROUTINE potinit()
                                    vltot, v, vrs, kedtau
   USE funct,                ONLY : dft_is_meta
   USE wavefunctions_module, ONLY : psic
-  USE ener,                 ONLY : ehart, etxc, vtxc
+  USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE ldaU,                 ONLY : niter_with_fixed_ns
   USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, eth
   USE noncollin_module,     ONLY : noncolin, report
@@ -53,15 +53,14 @@ SUBROUTINE potinit()
   !
   USE uspp,               ONLY : becsum
   USE paw_variables,      ONLY : okpaw, ddd_PAW
-  USE paw_init,           ONLY : PAW_init_becsum
+  USE paw_init,           ONLY : PAW_atomic_becsum
   USE paw_onecenter,      ONLY : PAW_potential
   !
   IMPLICIT NONE
   !
   REAL(DP)              :: charge           ! the starting charge
   REAL(DP)              :: etotefield       !
-  REAL(DP)              :: e_PAW            !
-  REAL(DP)              :: fact 
+  REAL(DP)              :: fact
   INTEGER               :: is, ios
   INTEGER               :: ldim             ! integer variable for I/O control
   LOGICAL               :: exst 
@@ -135,10 +134,12 @@ SUBROUTINE potinit()
      WRITE( UNIT = stdout, &
             FMT = '(/5X,"Initial potential from superposition of free atoms")' )
      !
-     ! ... in the lda+U case set the initial value of ns
      !
      CALL atomic_rho( rho%of_r, nspin )
+     ! ... in the lda+U case set the initial value of ns
      IF ( lda_plus_u ) CALL init_ns()
+     ! ... in the paw case uses atomic becsum
+     IF ( okpaw )      CALL PAW_atomic_becsum()
      !
      IF ( input_drho /= ' ' ) THEN
         !
@@ -213,19 +214,11 @@ SUBROUTINE potinit()
      !
   end if
   !
-  ! ... PAW initialization: from atomic augmentation channel occupations
-  ! ... compute corresponding one-center charges and potentials
-  !
-  IF ( okpaw ) THEN
-      CALL PAW_init_becsum(becsum)
-      rho%bec = becsum
-   ENDIF
-  !
   ! ... compute the potential and store it in vr
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+  IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
 
   !
   ! ... define the total local potential (external+scf)

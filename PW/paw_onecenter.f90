@@ -245,16 +245,16 @@ SUBROUTINE PAW_symmetrize(becsum)
 ! this expression should be general inside pwscf.
 
 !#define __DEBUG_PAW_SYM
-#ifdef __DEBUG_PAW_SYM
+#ifdef __DEBUG_PAW_SYM_BUT_NOT_HERE
     if(ionode) then
-        na = 1
-        nt = ityp(na)
+        ia = 1
+        nt = ityp(ia)
         DO is = 1, nspin
             write(stdout,*) is
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
             ijh = ijtoh(ih,jh,nt)
-            write(stdout,"(1f10.3)", advance='no') becsum(ijh,na,is)
+            write(stdout,"(1f10.3)", advance='no') becsum(ijh,ia,is)
         ENDDO
             write(stdout,*)
         ENDDO
@@ -329,22 +329,23 @@ SUBROUTINE PAW_symmetrize(becsum)
 #endif
 
 #ifdef __DEBUG_PAW_SYM
+   write(stdout,*) "------------"
     if(ionode) then
-        na = 1
-        nt = ityp(na)
+        ia = 1
+        nt = ityp(ia)
         DO is = 1, nspin
             write(*,*) is
         DO ih = 1, nh(nt)
         DO jh = 1, nh(nt)
             ijh = ijtoh(ih,jh,nt)
-            write(stdout,"(1f10.3)", advance='no') becsym(ijh,na,is)
+            write(stdout,"(1f10.3)", advance='no') becsym(ijh,ia,is)
         ENDDO
             write(stdout,*)
         ENDDO
             write(stdout,*)
         ENDDO
-        write(stdout,*) "________________________________________________"
     endif
+   write(stdout,*) "------------"
 #endif
 
     ! Apply symmetrization:

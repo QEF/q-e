@@ -69,7 +69,7 @@ MODULE uspp
   !
   COMPLEX(DP), ALLOCATABLE, TARGET :: &
        vkb(:,:)                ! all beta functions in reciprocal space
-  REAL(DP), pointer :: &
+  REAL(DP), ALLOCATABLE :: &
        becsum(:,:,:)           ! \sum_i f(i) <psi(i)|beta_l><beta_m|psi(i)>
   REAL(DP), ALLOCATABLE :: &
        dvan(:,:,:),           &! the D functions of the solid
@@ -252,8 +252,7 @@ CONTAINS
     IF( ALLOCATED( nhtoj ) )   DEALLOCATE( nhtoj )
     IF( ALLOCATED( ijtoh ) )   DEALLOCATE( ijtoh )
     IF( ALLOCATED( vkb ) )     DEALLOCATE( vkb )
-!    IF( ALLOCATED( becsum ) )  DEALLOCATE( becsum )
-    IF( ASSOCIATED( becsum ) )  DEALLOCATE( becsum )
+    IF( ALLOCATED( becsum ) )  DEALLOCATE( becsum )
     IF( ALLOCATED( qq ) )      DEALLOCATE( qq )
     IF( ALLOCATED( dvan ) )    DEALLOCATE( dvan )
     IF( ALLOCATED( deeq ) )    DEALLOCATE( deeq )

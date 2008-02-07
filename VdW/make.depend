@@ -99,6 +99,7 @@ vdw.o : ../Modules/ions_base.o
 vdw.o : ../Modules/kind.o
 vdw.o : ../Modules/mp.o
 vdw.o : ../Modules/parser.o
+vdw.o : ../Modules/uspp.o
 vdw.o : ../PH/phcom.o
 vdw.o : ../PW/pwcom.o
 vdw.o : ../PW/scf_mod.o

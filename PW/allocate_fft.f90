@@ -62,9 +62,6 @@ subroutine allocate_fft
   allocate (ig2(  ngm))    
   allocate (ig3(  ngm))    
 
-  ! NOTE for PAW: it is useful to point rho%bec to becsum in uspp module
-  ! but at this point becsum is not yet initialized, it will be pointed
-  ! later in allocate_nlpot.
   call create_scf_type(rho)
   call create_scf_type(v,    do_not_allocate_becsum = .true.)
   call create_scf_type(vnew, do_not_allocate_becsum = .true.)

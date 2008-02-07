@@ -13,7 +13,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   USE kinds, ONLY: DP
   USE cell_base, ONLY: omega, alat
   USE ions_base,     ONLY : nat, ityp, ntyp => nsp
-  USE ener,  ONLY: etot, ehart, etxc, vtxc
+  USE ener,  ONLY: etot, ehart, etxc, vtxc, epaw
   USE gvect, ONLY: gstart, g, gg, nl, ngm, nr1,nr2,nr3, nrx1,nrx2,nrx3, &
        nrxx
   USE klist, ONLY: nks
@@ -37,7 +37,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   ! check for number of atoms
   logical :: exst
 
-  real(DP) :: dr2, charge, etotefield, e_PAW
+  real(DP) :: dr2, charge, etotefield
   call seqopn (iunres, 'restart', 'unformatted', exst)
 
   if (.not.exst) goto 10
@@ -85,7 +85,7 @@ subroutine restart_in_ions (iter, ik_, dr2)
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+  IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
   !
   !  restart procedure completed
   !

@@ -71,7 +71,7 @@ SUBROUTINE compute_becsum(iflag)
   IF( okpaw )  THEN
      rho%bec(:,:,:) = becsum(:,:,:)
 #ifdef __PARA
-     CALL mp_sum(rho%bec, inter_pool_comm )
+     CALL mp_sum(rho%bec, inter_pool_comm)
 #endif
      CALL PAW_symmetrize(rho%bec)
   ENDIF
@@ -230,7 +230,7 @@ SUBROUTINE compute_becsum(iflag)
        ! ... here we sum for each k point the contribution
        ! ... of the wavefunctions to the charge
        !
-             write(6,*) 'trying to reqinw', iunigk
+             !write(6,*) 'trying to reqinw', iunigk
        !
        k_loop: DO ik = 1, nks
           !
@@ -239,12 +239,10 @@ SUBROUTINE compute_becsum(iflag)
           !
           IF ( nks > 1 ) THEN
              !
-             write(6,*) 'trying to read', iunigk
+             !write(6,*) 'trying to read', iunigk
              CALL gk_sort (xk (1, ik), ngm, g, ecutwfc / tpiba2, npw, &
                   igk, g2kin)
-
-!             READ( iunigk ) igk
-             write(6,*) 'trying to read', iunwfc
+             !write(6,*) 'trying to read', iunwfc
              CALL get_buffer ( evc, nwordwfc, iunwfc, ik )
              !
           END IF
@@ -303,7 +301,7 @@ SUBROUTINE compute_becsum(iflag)
                                         w1 * DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                           becp(ikb,ibnd) )
                                !
-                            END IF                       
+                            END IF
                             !
                             ijh = ijh + 1
                             !
@@ -331,7 +329,7 @@ SUBROUTINE compute_becsum(iflag)
                                      DBLE( CONJG( becp(ikb,ibnd) ) * &
                                                   becp(jkb,ibnd) )
                                ENDIF
-                               !            
+                               !
                                ijh = ijh + 1
                                !
                             END DO

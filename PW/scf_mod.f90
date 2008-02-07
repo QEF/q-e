@@ -242,7 +242,7 @@ CONTAINS
   TYPE(mix_type), INTENT(INOUT) :: Y
   Y%of_g  = X%of_g
   if (dft_is_meta()) Y%kin_g = X%kin_g
-  if (lda_plus_u) Y%ns = X%ns
+  if (lda_plus_u) Y%ns  = X%ns
   if (okpaw)      Y%bec = X%bec
   !
   RETURN

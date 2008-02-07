@@ -33,7 +33,7 @@ SUBROUTINE electrons()
   USE vlocal,               ONLY : strf
   USE wvfct,                ONLY : nbnd, et, npwx
   USE ener,                 ONLY : etot, hwf_energy, eband, deband, ehart, &
-                                   vtxc, etxc, etxcc, ewld, demet
+                                   vtxc, etxc, etxcc, ewld, demet, epaw
   USE scf,                  ONLY : scf_type, scf_type_COPY, &
                                    create_scf_type, destroy_scf_type, &
                                    rho, rho_core, rhog_core, &
@@ -105,10 +105,6 @@ SUBROUTINE electrons()
   !
   REAL(DP), EXTERNAL :: ewald, get_clock
   !
-  ! ... additional variables for PAW
-  REAL (DP) :: e_PAW ! deband, descf and E corrections from PAW
-  REAL (DP) :: correction1c                 ! total PAW correction
-  !
   iter = 0
   ik_  = 0
   !
@@ -170,6 +166,7 @@ SUBROUTINE electrons()
   WRITE( stdout, 9002 )
   !
   CALL flush_unit( stdout )
+
   !
   !%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%%
   !%%%%%%%%%%%%%%%%%%%%          iterate !          %%%%%%%%%%%%%%%%%%%%%
@@ -239,16 +236,18 @@ SUBROUTINE electrons()
         CALL poolrecover( et, nbnd, nkstot, nks )
         !
         ! ... the new density is computed here
-        ! PAW : sum_band computes new becsum (in uspp modules)
         CALL sum_band()
+        ! PAW : sum_band computes new becsum (stored in uspp modules) and a
+        ! subtly different copy in rho%bec (scf module)
         !
         ! ... the Harris-Weinert-Foulkes energy is computed here using only
         ! ... quantities obtained from the input density
         !
         hwf_energy = eband + deband_hwf + (etxc - etxcc) + ewld + ehart + demet
-        IF ( lda_plus_u ) hwf_energy = hwf_energy + eth
         !
         IF ( lda_plus_u )  THEN
+           !
+           hwf_energy = hwf_energy + eth
            !
            IF ( iverbosity > 0 .OR. first ) CALL write_ns()
            !
@@ -257,6 +256,7 @@ SUBROUTINE electrons()
            IF ( iter <= niter_with_fixed_ns ) rho%ns = rhoin%ns
            !
         END IF
+        IF (okpaw) hwf_energy = hwf_energy + epaw
         !
         ! ... calculate total and absolute magnetization
         !
@@ -267,6 +267,9 @@ SUBROUTINE electrons()
         ! ... eband + deband = \sum_v <\psi_v | T + Vion |\psi_v>
         !
         deband = delta_e()
+        !
+        ! ... mix_rho mixes several quantities: rho in g-space, tauk (for meta-gga)
+        ! ... ns (for lda+u) and becsum (for paw)
         !
         CALL mix_rho( rho, rhoin, mixing_beta, dr2, tr2_min, iter, nmix, conv_elec )
         !
@@ -306,7 +309,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rhoin, rho_core, rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           IF (okpaw) CALL PAW_potential(rhoin%bec, ddd_paw, e_PAW)
+           IF (okpaw) CALL PAW_potential(rhoin%bec, ddd_paw, epaw)
            !
            ! ... estimate correction needed to have variational energy:
            ! ... T + E_ion (eband + deband) are calculated in sum_band
@@ -342,7 +345,7 @@ SUBROUTINE electrons()
            !
            CALL v_of_rho( rho,rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           if (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, e_PAW)
+           if (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
            !
            vnew%of_r(:,:) = v%of_r(:,:) - vnew%of_r(:,:)
            !
@@ -439,12 +442,7 @@ SUBROUTINE electrons()
      END IF
      !
      etot = eband + ( etxc - etxcc ) + ewld + ehart + deband + demet + descf +en_el
-     !
-     IF (okpaw) THEN
-        correction1c = e_PAW
-        etot       = etot       + correction1c
-        hwf_energy = hwf_energy + correction1c
-     END IF
+     IF (okpaw) etot = etot + epaw
      !
 #if defined (EXX)
      !
@@ -461,7 +459,7 @@ SUBROUTINE electrons()
            fock0 = exxenergy2()
            CALL v_of_rho( rho, rho_core,rhog_core, &
                           ehart, etxc, vtxc, eth, etotefield, charge, v)
-           IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, e_PAW)
+           IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
            !
            CALL set_vrs( vrs, vltot, v%of_r, kedtau, v%kin_r, nrxx, nspin, doublegrid )
            !
@@ -514,10 +512,10 @@ SUBROUTINE electrons()
         !
 #endif
         !
-        IF ( tefield ) WRITE( stdout, 9061 ) etotefield
-        IF ( lda_plus_u ) WRITE( stdout, 9065 ) eth
+        IF ( tefield )            WRITE( stdout, 9061 ) etotefield
+        IF ( lda_plus_u )         WRITE( stdout, 9065 ) eth
         IF ( ABS (descf) > eps8 ) WRITE( stdout, 9069 ) descf
-        IF( okpaw) WRITE( stdout, 9067 ) correction1c
+        IF ( okpaw )              WRITE( stdout, 9067 ) epaw
         !
         ! ... With Fermi-Dirac population factor, etot is the electronic
         ! ... free energy F = E - TS , demet is the -TS contribution

@@ -597,7 +597,6 @@ hinit0.o : ../Modules/cell_base.o
 hinit0.o : ../Modules/control_flags.o
 hinit0.o : ../Modules/io_files.o
 hinit0.o : ../Modules/ions_base.o
-hinit0.o : ../Modules/paw_variables.o
 hinit0.o : pwcom.o
 hinit0.o : realus.o
 hinit1.o : ../Modules/cell_base.o
@@ -624,6 +623,7 @@ init_run.o : ../Modules/uspp.o
 init_run.o : dynamics_module.o
 init_run.o : paw_init.o
 init_run.o : pwcom.o
+init_run.o : scf_mod.o
 init_us_1.o : ../Modules/atom.o
 init_us_1.o : ../Modules/cell_base.o
 init_us_1.o : ../Modules/constants.o
@@ -828,9 +828,11 @@ paw_init.o : ../Modules/mp.o
 paw_init.o : ../Modules/mp_global.o
 paw_init.o : ../Modules/paw_variables.o
 paw_init.o : ../Modules/radial_grids.o
+paw_init.o : ../Modules/random_numbers.o
 paw_init.o : ../Modules/uspp.o
 paw_init.o : paw_onecenter.o
 paw_init.o : pwcom.o
+paw_init.o : scf_mod.o
 paw_onecenter.o : ../Modules/atom.o
 paw_onecenter.o : ../Modules/constants.o
 paw_onecenter.o : ../Modules/control_flags.o
@@ -1081,6 +1083,7 @@ save_in_ions.o : ../Modules/io_files.o
 save_in_ions.o : ../Modules/kind.o
 save_in_ions.o : pwcom.o
 scale_h.o : ../Modules/cell_base.o
+scale_h.o : ../Modules/control_flags.o
 scale_h.o : ../Modules/io_global.o
 scale_h.o : ../Modules/ions_base.o
 scale_h.o : pwcom.o

@@ -37,14 +37,12 @@ SUBROUTINE sum_band()
   USE noncollin_module,     ONLY : noncolin, npol
   USE spin_orb,             ONLY : lspinorb, domag, so, fcoef
   USE wvfct,                ONLY : nbnd, npwx, npw, igk, wg, et, btype
-  USE mp_global,            ONLY : intra_image_comm, me_image, &
-                                   root_image, npool, my_pool_id, inter_pool_comm
+  USE mp_global,            ONLY : root_image, npool, my_pool_id, inter_pool_comm
   USE mp,                   ONLY : mp_bcast, mp_sum
   USE funct,                ONLY : dft_is_meta
   USE paw_onecenter,        ONLY : PAW_symmetrize
   USE paw_variables,        ONLY : okpaw
   USE becmod,               ONLY : allocate_bec, deallocate_bec
-  USE paw_variables,        ONLY : okpaw
   !
   IMPLICIT NONE
   !
@@ -116,7 +114,17 @@ SUBROUTINE sum_band()
      !
      CALL sum_band_k()
      !
-  END IF    
+  END IF
+  !
+  IF( okpaw )  THEN
+     rho%bec(:,:,:) = becsum(:,:,:) ! becsum is filled in sum_band_{k|gamma}
+     ! rho%bec has to be recollected and symmetrized, becsum must not, otherwise
+     ! it will break stress routines.
+#ifdef __PARA
+     CALL mp_sum(rho%bec, inter_pool_comm )
+#endif
+     CALL PAW_symmetrize(rho%bec)
+  ENDIF
   !
   IF ( okvan ) CALL deallocate_bec ( )
   !
@@ -136,8 +144,6 @@ SUBROUTINE sum_band()
   ! ... Here we add the Ultrasoft contribution to the charge
   !
   IF ( okvan ) CALL addusdens()
-  ! For paw put a copy of becsum in rho structure for self-consistency
-  IF ( okpaw ) rho%bec(:,:,:) = becsum(:,:,:)
   !
   IF ( noncolin .AND. .NOT. domag ) rho%of_r(:,2:4)=0.D0
   !
@@ -151,8 +157,6 @@ SUBROUTINE sum_band()
   !
   CALL mp_sum( rho%of_r, inter_pool_comm )
   if (dft_is_meta() ) CALL mp_sum( rho%kin_r, inter_pool_comm )
-  ! rho%bec has to be recollected, but becsum must NOT, otherwise it breaks the stress!
-  if (okpaw)          CALL mp_sum(rho%bec, inter_pool_comm )
   !
   IF ( noncolin ) THEN
      !
@@ -199,13 +203,8 @@ SUBROUTINE sum_band()
   END IF
   !
 #endif
-  ! ... Needed for PAW: becsum has to be symmetrized so that they reflect a real integral
-  ! in k-space, not only on the irreducible zone. For USPP there is no need to do this as
-  ! becsums are only used to compute the density, which is symmetrized later.
   !
-  IF ( okpaw ) CALL PAW_symmetrize(becsum)
-  !
-  if (dft_is_meta() ) deallocate (kplusg)
+  if (dft_is_meta()) deallocate (kplusg)
   !
   ! ... synchronize rho%of_g to the calculated rho%of_r
   !
@@ -257,7 +256,7 @@ SUBROUTINE sum_band()
      END DO
   END IF
   !
-  CALL stop_clock( 'sum_band' )      
+  CALL stop_clock( 'sum_band' )
   !
   RETURN
   !

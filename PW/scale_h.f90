@@ -21,6 +21,7 @@ subroutine scale_h
   USE gvect,      ONLY : g, gg, ngm
   USE klist,      ONLY : xk, wk, nkstot
   USE us,         ONLY : nqxq, nqx, qrad, tab, tab_at
+  USE control_flags, ONLY : iverbosity
   !
   implicit none
   !
@@ -33,10 +34,13 @@ subroutine scale_h
   !
   call cryst_to_cart (nkstot, xk, at_old, - 1)
   call cryst_to_cart (nkstot, xk, bg, + 1)
-  WRITE( stdout, * ) ' NEW K-POINTS'
-  do ik = 1, nkstot
-     WRITE( stdout, '(3f12.7,f12.7)') (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
-  enddo
+  IF (iverbosity==1 .OR. nkstot < 10000 ) THEN
+     WRITE( stdout, '(5x,a)' ) 'NEW k-points:'
+     do ik = 1, nkstot
+        WRITE( stdout, '(8x,"k(",i5,") = (",3f12.7,"), wk =",f12.7)') ik, &
+             (xk (ipol, ik) , ipol = 1, 3) , wk (ik)
+     enddo
+  ENDIF
   !
   ! scale the g vectors (as well as gg and gl arrays)
   !

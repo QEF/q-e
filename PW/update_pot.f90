@@ -215,7 +215,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   USE ldaU,                 ONLY : eth
   USE wavefunctions_module, ONLY : psic
   USE control_flags,        ONLY : alpha0, beta0
-  USE ener,                 ONLY : ehart, etxc, vtxc
+  USE ener,                 ONLY : ehart, etxc, vtxc, epaw
   USE extfield,             ONLY : etotefield
   USE cellmd,               ONLY : lmovecell, omega_old
   USE vlocal,               ONLY : strf
@@ -235,7 +235,6 @@ SUBROUTINE extrapolate_charge( rho_extr )
     ! work  is the difference between rho and atomic rho at time t
     ! work1 is the same thing at time t-dt
   REAL(DP) :: charge
-  REAL(DP) :: e_PAW
   !
   INTEGER :: ir, is
   !
@@ -422,7 +421,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   !
   CALL v_of_rho( rho, rho_core, rhog_core, &
                  ehart, etxc, vtxc, eth, etotefield, charge, v )
-  IF (okpaw) CALL PAW_potential(becsum, ddd_PAW, e_PAW)
+  IF (okpaw) CALL PAW_potential(rho%bec, ddd_PAW, epaw)
   !
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !

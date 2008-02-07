@@ -15,6 +15,8 @@ add_shift_us.o : ../Modules/control_flags.o
 add_shift_us.o : ../Modules/io_files.o
 add_shift_us.o : ../Modules/ions_base.o
 add_shift_us.o : ../Modules/kind.o
+add_shift_us.o : ../Modules/mp.o
+add_shift_us.o : ../Modules/mp_global.o
 add_shift_us.o : ../Modules/uspp.o
 add_shift_us.o : ../Modules/wavefunctions.o
 add_shift_us.o : ../PW/becmod.o
@@ -137,6 +139,8 @@ elf.o : ../Modules/constants.o
 elf.o : ../Modules/control_flags.o
 elf.o : ../Modules/io_files.o
 elf.o : ../Modules/kind.o
+elf.o : ../Modules/mp.o
+elf.o : ../Modules/mp_global.o
 elf.o : ../Modules/wavefunctions.o
 elf.o : ../PW/pwcom.o
 elf.o : ../PW/scf_mod.o
@@ -172,6 +176,7 @@ local_dos.o : ../Modules/io_files.o
 local_dos.o : ../Modules/ions_base.o
 local_dos.o : ../Modules/kind.o
 local_dos.o : ../Modules/mp.o
+local_dos.o : ../Modules/mp_global.o
 local_dos.o : ../Modules/uspp.o
 local_dos.o : ../Modules/wavefunctions.o
 local_dos.o : ../PW/becmod.o
@@ -272,6 +277,7 @@ pw2casino.o : ../Modules/io_global.o
 pw2casino.o : ../Modules/ions_base.o
 pw2casino.o : ../Modules/kind.o
 pw2casino.o : ../Modules/mp.o
+pw2casino.o : ../Modules/mp_global.o
 pw2casino.o : ../Modules/uspp.o
 pw2casino.o : ../Modules/wavefunctions.o
 pw2casino.o : ../PW/becmod.o

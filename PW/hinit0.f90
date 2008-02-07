@@ -23,7 +23,6 @@ SUBROUTINE hinit0()
   USE io_files,     ONLY : iunigk
   USE realus,       ONLY : qpointlist
   USE control_flags, ONLY : tqr
-  USE paw_variables,ONLY : okpaw
   !
   IMPLICIT NONE
   !

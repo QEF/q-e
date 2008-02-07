@@ -934,6 +934,9 @@ cell_dynamics
                             extended lagrangian
                  'damp-w':  damped (Beeman) dynamics of the new Wentzcovitch
                             extended lagrangian
+                 'bfgs':    new BFGS quasi-newton algorithm, based on the trust
+                            radius procedure, is used for structural relaxation
+                            (experimental), ion_dynamics must be 'bfgs' too
                CASE ( calculation = 'vc-md' )
                  'none': default
                  'pr':      (Beeman) molecular dynamics of the Parrinello-Rahman

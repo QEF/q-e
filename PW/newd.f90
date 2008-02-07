@@ -23,6 +23,7 @@ SUBROUTINE newd()
      call newd_g()
   end if
   if (okpaw) then
+     ! Add paw contributions to deeq (computed in paw_potential)
      do na=1,nat
         nt = ityp(na)
         IF (.not.upf(nt)%tpawp) cycle
