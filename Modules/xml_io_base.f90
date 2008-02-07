@@ -304,7 +304,7 @@ MODULE xml_io_base
          !
          IF ( .NOT. found ) lkpoint_dir = .TRUE. 
          !
-         CALL iotk_scan_dat( iunpun, "Q_REAL", tqr, FOUND = found)
+         CALL iotk_scan_dat( iunpun, "Q_REAL_SPACE", tqr, FOUND = found)
          !
          IF ( .NOT. found ) tqr = .FALSE. 
          !
