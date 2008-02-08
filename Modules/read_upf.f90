@@ -658,10 +658,10 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
 
   ! Read augmentation charge:
   CALL scan_begin ( iunps, "AUGFUN", .false. )
-    read (iunps,*) dummy
-    read (iunps,*) upf%paw%augshape ! shape of augfun
-    read (iunps,*) upf%paw%raug, upf%paw%iraug, dummy
-    read (iunps,*) upf%paw%lmax_aug, dummy
+    read (iunps,*, err=101, end=101 ) dummy
+    read (iunps,*, err=101, end=101 ) upf%paw%augshape ! shape of augfun
+    read (iunps,*, err=101, end=101 ) upf%paw%raug, upf%paw%iraug, dummy
+    read (iunps,*, err=101, end=101 ) upf%paw%lmax_aug, dummy
     if(upf%paw%lmax_aug /= upf%paw%lmax_rho) &
         call errore('read_pseudo_paw', &
              'Max charge L and max aug.charge L differ: there is an error in the pseudopotential.',&
@@ -675,20 +675,20 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
     !
     ! First read multipoles (they are needed to read the augfuns)
     ALLOCATE( upf%paw%augmom(upf%nbeta,upf%nbeta, 0:upf%paw%lmax_aug) )
-    read (iunps,*) dummy ! multipolar momenti
-    read (iunps,*) (((upf%paw%augmom(nb,nb1,l), nb  = 1,upf%nbeta),&
+    read (iunps,*, err=102, end=102 ) dummy ! multipolar momenti
+    read (iunps,*, err=102, end=102 ) (((upf%paw%augmom(nb,nb1,l), nb  = 1,upf%nbeta),&
                                                             nb1 = 1,upf%nbeta),&
                                                             l   = 0,upf%paw%lmax_aug)
     !
     ! Read augmentation charge:
     ALLOCATE( upf%paw%aug(upf%mesh, upf%nbeta,upf%nbeta, 0:upf%paw%lmax_aug) )
-    read (iunps,*) dummy ! augmentation functions
+    read (iunps,*, err=103, end=103 ) dummy ! augmentation functions
     do l = 0,upf%paw%lmax_aug
         do nb = 1,upf%nbeta
         do nb1 = 1,upf%nbeta
             if (abs(upf%paw%augmom(nb,nb1,l)) > 1.e-10_dp) then
-                read (iunps,*) dummy ! blabla
-                read (iunps,*) (upf%paw%aug(k,nb,nb1,l), k  = 1,upf%mesh)
+                read (iunps,*, err=103, end=103 ) dummy ! blabla
+                read (iunps,*, err=103, end=103 ) (upf%paw%aug(k,nb,nb1,l), k  = 1,upf%mesh)
             else
                 upf%paw%aug(1:upf%mesh,nb,nb1,l) = 0._dp
             endif
@@ -700,7 +700,7 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   ! All-electron core correction charge
   ALLOCATE( upf%paw%ae_rho_atc(upf%mesh) )
   CALL scan_begin ( iunps, "AE_RHO_ATC", .false. )
-    read (iunps,*) (upf%paw%ae_rho_atc(k), k = 1,upf%mesh)
+    read (iunps,*, err=104, end=104 ) (upf%paw%ae_rho_atc(k), k = 1,upf%mesh)
   CALL scan_end ( iunps, "AE_RHO_ATC" )
 
   ! pfunc = phi_i * phi_j; ptfunc = phi~_i * phi~_j
@@ -712,8 +712,8 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   ! read AE wfc
   CALL scan_begin ( iunps, "AEWFC", .false. )
     do nb = 1,upf%nbeta
-    read (iunps,*) dummy ! blabla
-    read (iunps,*) (upf%aewfc(k,nb), k  = 1,upf%mesh)
+    read (iunps,*, err=105, end=105 ) dummy ! blabla
+    read (iunps,*, err=105, end=105 ) (upf%aewfc(k,nb), k  = 1,upf%mesh)
     enddo
   CALL scan_end ( iunps, "AEWFC" )
   ! reconstruct pfunc
@@ -730,8 +730,8 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   !       while for PAW we have to use all of them!
   CALL scan_begin ( iunps, "PSWFC_FULL", .false. )
     do nb = 1,upf%nbeta
-    read (iunps,*) dummy ! blabla
-    read (iunps,*) (upf%pswfc(k,nb), k  = 1,upf%mesh)
+    read (iunps,*, err=106, end=106 ) dummy ! blabla
+    read (iunps,*, err=106, end=106 ) (upf%pswfc(k,nb), k  = 1,upf%mesh)
     enddo
   CALL scan_end ( iunps, "PSWFC_FULL" )
   ! reconstruct \tilde{pfunc}
@@ -745,19 +745,19 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
 
   ALLOCATE( upf%paw%ae_vloc(upf%mesh) )
   CALL scan_begin ( iunps, "AE_VLOC", .false. )
-  read (iunps,*) (upf%paw%ae_vloc(k), k = 1,upf%mesh)
+  read (iunps,*, err=107, end=107 ) (upf%paw%ae_vloc(k), k = 1,upf%mesh)
   CALL scan_end ( iunps, "AE_VLOC" )
 
   ALLOCATE( upf%paw%kdiff(upf%nbeta,upf%nbeta) )
   CALL scan_begin ( iunps, "KDIFF", .false. )
-  read (iunps,*) ((upf%paw%kdiff(nb,nb1), nb  = 1,upf%nbeta),&
+  read (iunps,*, err=108, end=108 ) ((upf%paw%kdiff(nb,nb1), nb  = 1,upf%nbeta),&
                                                       nb1 = 1,upf%nbeta)
   CALL scan_end ( iunps, "KDIFF" )
 
   !IF(allocated(upf%oc)) DEALLOCATE(upf%oc)
   ALLOCATE( upf%paw%oc(upf%nbeta) )
   CALL scan_begin ( iunps, "OCCUP", .false. )
-  read (iunps,*) (upf%paw%oc(nb), nb  = 1,upf%nbeta)
+  read (iunps,*, err=109, end=109 ) (upf%paw%oc(nb), nb  = 1,upf%nbeta)
   CALL scan_end ( iunps, "OCCUP" )
   ! negative occupations has a meaning in ld1, but not here.
   do nb = 1,upf%nbeta
@@ -765,11 +765,11 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   enddo
 
   CALL scan_begin ( iunps, "GRID_RECON", .false. )
-    read (iunps,*) dummy
-    read (iunps,*) upf%grid%dx,   dummy
-    read (iunps,*) upf%grid%xmin, dummy
-    read (iunps,*) upf%grid%rmax, dummy
-    read (iunps,*) upf%grid%zmesh,dummy
+    read (iunps,*, err=110, end=110 ) dummy
+    read (iunps,*, err=110, end=110 ) upf%grid%dx,   dummy
+    read (iunps,*, err=110, end=110 ) upf%grid%xmin, dummy
+    read (iunps,*, err=110, end=110 ) upf%grid%rmax, dummy
+    read (iunps,*, err=110, end=110 ) upf%grid%zmesh,dummy
     CALL scan_begin ( iunps, "SQRT_R", .false. )
     read (iunps,*) ( upf%grid%sqr(k), k=1,upf%mesh)
     CALL scan_end ( iunps, "SQRT_R")
@@ -784,8 +784,18 @@ SUBROUTINE read_pseudo_paw ( upf, iunps )
   CALL scan_end ( iunps, "GRID_RECON" )
 
   RETURN
-  
-100 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file', 1 )
+
+100 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: paw version.', 1 )
+101 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: augmentation header.', 1 )
+102 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: augmentation momentums.', 1 )
+103 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: augmentation functions.', 1 )
+104 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: all-electron atomic density.', 1 )
+105 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: all-electron atomic wfcs.', 1 )
+106 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: pseudo wavefunctions.', 1 )
+107 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: all-electron local potential.', 1 )
+108 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: kinetic energy diffs.', 1 )
+109 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: atomic occupations.', 1 )
+110 CALL errore ( 'read_pseudo_paw', 'Reading pseudo file: radial grid reconstruction.', 1 )
 END SUBROUTINE read_pseudo_paw
 
 !---------------------------------------------------------------------

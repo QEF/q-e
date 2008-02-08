@@ -89,6 +89,7 @@ MODULE io_files
   INTEGER :: iunsat      = 14 ! unit for saving (orthogonal) atomic wfcs * S
   INTEGER :: iunocc      = 15 ! unit for saving the atomic n_{ij}
   INTEGER :: iunigk      = 16 ! unit for saving indices
+  INTEGER :: iunpaw      = 17 ! unit for saving paw becsum and D_Hxc
   !
   INTEGER :: iunexit     = 26 ! unit for a soft exit  
   INTEGER :: iunupdate   = 27 ! unit for saving old positions (extrapolation)

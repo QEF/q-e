@@ -17,9 +17,9 @@
 MODULE paw_onecenter
     !
     USE kinds,          ONLY : DP
-    USE paw_variables,  ONLY : paw_info, saved, xlm, rad, radial_grad_style
+    USE paw_variables,  ONLY : paw_info, xlm, rad, radial_grad_style
     USE mp_global,      ONLY : nproc_image, me_image, intra_image_comm
-    USE mp,             ONLY: mp_sum
+    USE mp,             ONLY : mp_sum
     !
     IMPLICIT NONE
 

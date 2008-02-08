@@ -18,10 +18,129 @@ MODULE io_rho_xml
   !
   PUBLIC :: write_rho, read_rho
   !
+  ! {read|write}_rho_only:    read or write the real space charge density
+  ! {read|write}_rho_general: as above, plus read or write ldaU ns coeffs
+  !                           and PAW becsum coeffs.
+
+  INTERFACE write_rho
+        MODULE PROCEDURE write_rho_only, write_rho_general
+  END INTERFACE write_rho
+
+  INTERFACE read_rho
+        MODULE PROCEDURE read_rho_only, read_rho_general
+  END INTERFACE read_rho
+
   CONTAINS
+
+    SUBROUTINE write_rho_general( rho, nspin, extension )
+      USE paw_variables, ONLY : okpaw
+      USE ldaU,          ONLY : lda_plus_u
+      USE funct,         ONLY : dft_is_meta
+      USE io_files,      ONLY : iunocc, iunpaw
+      USE io_global,     ONLY : ionode,stdout
+      USE scf,           ONLY : scf_type
+      !
+      IMPLICIT NONE
+      TYPE(scf_type),   INTENT(IN)           :: rho
+      INTEGER,          INTENT(IN)           :: nspin
+      CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
+      LOGICAL :: lexist
+
+      ! Use the equivalent routine to write real space density
+      CALL write_rho_only( rho%of_r, nspin, extension )
+
+      ! Then write the otehr terms to separate files
+      IF ( ionode ) THEN
+         !
+         IF ( lda_plus_u ) THEN
+            CALL seqopn( iunocc, 'occup', 'FORMATTED', lexist )
+            WRITE( iunocc, * , err = 101) rho%ns
+            CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
+         ENDIF
+         !
+         IF ( okpaw ) THEN
+            CALL seqopn( iunpaw, 'paw', 'FORMATTED', lexist )
+            WRITE( iunpaw, * , err = 102) rho%bec
+            CLOSE( UNIT = iunpaw, STATUS = 'KEEP' )
+         ENDIF
+         !
+         IF ( dft_is_meta() ) THEN
+              WRITE(stdout,'(5x,"Warning: cannot save meta-gga kinetic terms: not implemented.")')
+         ENDIF
+      END IF
+
+      RETURN
+101            CALL errore('write_rho_general', 'Writing ldaU ns', 1)
+102            CALL errore('write_rho_general', 'Writing PAW becsum', 1)
+    END SUBROUTINE write_rho_general
+
+    SUBROUTINE read_rho_general( rho, nspin, extension )
+      USE paw_variables, ONLY : okpaw
+      USE ldaU,          ONLY : lda_plus_u
+      USE funct,         ONLY : dft_is_meta
+      USE io_files,      ONLY : iunocc, iunpaw
+      USE io_global,     ONLY : ionode,stdout
+      USE scf,           ONLY : scf_type
+      !USE mp_global,     ONLY : intra_pool_comm, inter_pool_comm
+      USE mp_global,     ONLY : intra_image_comm
+      USE mp,            ONLY : mp_sum
+      !
+      IMPLICIT NONE
+      TYPE(scf_type),   INTENT(INOUT)        :: rho
+      INTEGER,          INTENT(IN)           :: nspin
+      CHARACTER(LEN=*), INTENT(IN), OPTIONAL :: extension
+      LOGICAL :: lexist
+
+      ! Use the equivalent routine to write real space density
+      CALL read_rho_only( rho%of_r, nspin, extension )
+
+      ! The occupations ns also need to be read in order to build up
+      ! the potential
+      IF ( lda_plus_u ) THEN
+         !
+         IF ( ionode ) THEN
+            CALL seqopn( iunocc, 'occup', 'FORMATTED', lexist )
+            READ( UNIT = iunocc, FMT = *, err=101 ) rho%ns
+            CLOSE( UNIT = iunocc, STATUS = 'KEEP')
+         ELSE
+            rho%ns(:,:,:,:) = 0.D0
+         END IF
+         CALL mp_sum(rho%ns, intra_image_comm)
+!          CALL mp_sum( rho%ns, intra_pool_comm )
+!          CALL mp_sum( rho%ns, inter_pool_comm )
+         !
+      END IF
+      !
+      ! Also the PAW coefficients are needed:
+      IF ( okpaw ) THEN
+         !
+         IF ( ionode ) THEN
+            CALL seqopn( iunpaw, 'paw', 'FORMATTED', lexist )
+            READ( UNIT = iunpaw, FMT = *, err=102 ) rho%bec
+            CLOSE( UNIT = iunpaw, STATUS = 'KEEP')
+         ELSE
+            rho%bec(:,:,:) = 0.D0
+         END IF
+         CALL mp_sum(rho%bec, intra_image_comm)
+!          CALL mp_sum( rho%bec, intra_pool_comm )
+!          CALL mp_sum( rho%bec, inter_pool_comm )
+         !
+      END IF
+      !
+      IF ( dft_is_meta() ) THEN
+         !
+         IF ( ionode ) THEN
+            WRITE(stdout,'(5x,"Warning: cannot recover meta-gga kinetic terms: not implemented.")')
+         END IF
+      END IF
+
+      RETURN
+101            CALL errore('read_rho_general', 'Reading ldaU ns', 1)
+102            CALL errore('read_rho_general', 'Reading PAW becsum', 1)
+    END SUBROUTINE read_rho_general
     !
     !------------------------------------------------------------------------
-    SUBROUTINE write_rho( rho, nspin, extension )
+    SUBROUTINE write_rho_only( rho, nspin, extension )
       !------------------------------------------------------------------------
       !
       ! ... this routine writes the charge-density in xml format into the
@@ -102,10 +221,10 @@ MODULE io_rho_xml
       !
       RETURN
       !
-    END SUBROUTINE write_rho
+    END SUBROUTINE write_rho_only
     !
     !------------------------------------------------------------------------
-    SUBROUTINE read_rho( rho, nspin, extension )
+    SUBROUTINE read_rho_only( rho, nspin, extension )
       !------------------------------------------------------------------------
       !
       ! ... this routine reads the charge-density in xml format from the
@@ -199,7 +318,7 @@ MODULE io_rho_xml
       !
       RETURN
       !
-    END SUBROUTINE read_rho
+    END SUBROUTINE read_rho_only
     !
     !------------------------------------------------------------------------
     SUBROUTINE para_inquire( file_base )

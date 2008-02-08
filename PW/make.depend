@@ -623,7 +623,6 @@ init_run.o : ../Modules/uspp.o
 init_run.o : dynamics_module.o
 init_run.o : paw_init.o
 init_run.o : pwcom.o
-init_run.o : scf_mod.o
 init_us_1.o : ../Modules/atom.o
 init_us_1.o : ../Modules/cell_base.o
 init_us_1.o : ../Modules/constants.o
@@ -673,13 +672,16 @@ interpolate.o : ../Modules/control_flags.o
 interpolate.o : ../Modules/kind.o
 interpolate.o : pwcom.o
 io_rho_xml.o : ../Modules/fft_base.o
+io_rho_xml.o : ../Modules/functionals.o
 io_rho_xml.o : ../Modules/io_files.o
 io_rho_xml.o : ../Modules/io_global.o
 io_rho_xml.o : ../Modules/kind.o
 io_rho_xml.o : ../Modules/mp.o
 io_rho_xml.o : ../Modules/mp_global.o
+io_rho_xml.o : ../Modules/paw_variables.o
 io_rho_xml.o : ../Modules/xml_io_base.o
 io_rho_xml.o : pwcom.o
+io_rho_xml.o : scf_mod.o
 ions.o : ../Modules/control_flags.o
 ions.o : pwcom.o
 irrek.o : ../Modules/kind.o
@@ -899,6 +901,7 @@ pw_restart.o : ../Modules/ions_base.o
 pw_restart.o : ../Modules/kind.o
 pw_restart.o : ../Modules/mp.o
 pw_restart.o : ../Modules/mp_global.o
+pw_restart.o : ../Modules/paw_variables.o
 pw_restart.o : ../Modules/recvec.o
 pw_restart.o : ../Modules/version.o
 pw_restart.o : ../Modules/wavefunctions.o

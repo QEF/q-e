@@ -19,7 +19,7 @@ MODULE paw_variables
     !!!! Pseudopotential data: !!!!
 
     ! There is no pseudopotential data here, it is all stored in the upf type.
-    ! See files pseudo_types.f90 and read_paw.f90
+    ! See files pseudo_types.f90 and read_uspp.f90
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! Initialization data: !!!!
@@ -46,16 +46,6 @@ MODULE paw_variables
 
     !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
     !!!! self-consistent variables: !!!!
-
-    ! We need a place to store the radial AE and pseudo potential,
-    ! as different atoms may have different max_lm, and different max(|r|)
-    ! using a derived type is the way to go
-    TYPE paw_saved_potential
-        REAL(DP),POINTER :: &
-            v(:,:,:,:)  ! indexes: |r|, lm, spin, {AE|PS}
-    END TYPE
-    TYPE(paw_saved_potential),ALLOCATABLE :: &
-         saved(:) ! allocated in PAW_rad_init
 
     ! This type contains some useful data that has to be passed to all
     ! functions, but cannot stay in global variables for parallel:

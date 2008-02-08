@@ -161,6 +161,7 @@ MODULE dynamics_module
       tau_new(:,:) = 0.D0
       vel(:,:)     = 0.D0
       acc(:,:)     = 0.D0
+      temp_av      = 0.D0
       !
       CALL seqopn( 4, 'md', 'FORMATTED', file_exists )
       !

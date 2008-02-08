@@ -43,7 +43,7 @@ SUBROUTINE electrons()
                                    restart, io_level, assume_isolated,  &
                                    gamma_only, iverbosity
   USE io_files,             ONLY : iunwfc, iunocc, nwordwfc, output_drho, &
-                                   iunefield
+                                   iunefield, iunpaw
   USE buffers,              ONLY : save_buffer
   USE ldaU,                 ONLY : eth, Hubbard_U, Hubbard_lmax, &
                                    niter_with_fixed_ns, lda_plus_u
@@ -325,15 +325,8 @@ SUBROUTINE electrons()
            CALL scf_type_COPY( rhoin, rho )
            !
            ! ... write the charge density to file
-           !
-           CALL write_rho( rho%of_r, nspin )
-           IF ( lda_plus_u ) THEN
-              IF ( ionode ) THEN
-                 CALL seqopn( iunocc, 'occup', 'FORMATTED', exst )
-                 WRITE( iunocc, * ) rho%ns
-                 CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
-              END IF
-           END IF
+           ! ... also write ldaU ns coeffs and PAW becsum
+           CALL write_rho( rho, nspin )
            !
         ELSE not_converged_electrons
            !

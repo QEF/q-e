@@ -85,6 +85,7 @@ MODULE pw_restart
       USE fixed_occ,            ONLY : tfixed_occ, f_inp
       USE ldaU,                 ONLY : lda_plus_u, Hubbard_lmax, Hubbard_l, &
                                        Hubbard_U, Hubbard_alpha
+      USE paw_variables,        ONLY : okpaw, ddd_paw
       USE spin_orb,             ONLY : lspinorb, domag
       USE symme,                ONLY : nsym, invsym, s, ftau, irt, t_rev
       USE char,                 ONLY : sname
@@ -662,9 +663,9 @@ MODULE pw_restart
 !-------------------------------------------------------------------------------
       !
       ! ... do not overwrite the scf charge density with a non-scf one
+      ! ... also writes rho%ns if lda+U and rho%bec if PAW
       !
-      IF ( lscf ) CALL write_rho( rho%of_r, nspin )
-      !
+      IF ( lscf ) CALL write_rho( rho, nspin )
 !-------------------------------------------------------------------------------
 ! ... END RESTART SECTIONS
 !-------------------------------------------------------------------------------
@@ -884,14 +885,15 @@ MODULE pw_restart
     SUBROUTINE pw_readfile( what, ierr )
       !------------------------------------------------------------------------
       !
-      USE io_rho_xml, ONLY : read_rho
-      USE scf,        ONLY : rho
-      USE ldaU,       ONLY : lda_plus_u, Hubbard_lmax
-      USE lsda_mod,   ONLY : nspin
-      USE io_files,   ONLY : iunocc    
-      USE ions_base,  ONLY : nat
-      USE mp_global,  ONLY : inter_pool_comm, intra_pool_comm
-      USE mp,         ONLY : mp_sum
+      USE io_rho_xml,    ONLY : read_rho
+      USE scf,           ONLY : rho
+      USE ldaU,          ONLY : lda_plus_u, Hubbard_lmax
+      USE paw_variables, ONLY : okpaw, ddd_paw
+      USE lsda_mod,      ONLY : nspin
+      USE io_files,      ONLY : iunocc, iunpaw
+      USE ions_base,     ONLY : nat
+      USE mp_global,     ONLY : inter_pool_comm, intra_pool_comm
+      USE mp,            ONLY : mp_sum
       !
       IMPLICIT NONE
       !
@@ -1091,25 +1093,8 @@ MODULE pw_restart
       IF ( lrho ) THEN
          !
          ! ... to read the charge-density we use the routine from io_rho_xml 
-         !
-         CALL read_rho( rho%of_r, nspin )
-         ! ... The occupations ns also need to be read in order to build up 
-         ! ... the potential
-         !
-         IF ( lda_plus_u ) THEN
-            !
-            ldim = 2*Hubbard_lmax + 1
-            IF ( ionode ) THEN
-               CALL seqopn( iunocc, 'occup', 'FORMATTED', lexist )
-               READ( UNIT = iunocc, FMT = * ) rho%ns
-               CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
-            ELSE
-               rho%ns(:,:,:,:) = 0.D0
-            END IF
-            CALL mp_sum( rho%ns, intra_pool_comm )
-            CALL mp_sum( rho%ns, inter_pool_comm )
-            !
-         END IF
+         ! ... it also reads ns for ldaU and becsum for PAW
+         CALL read_rho( rho, nspin )
          !
       END IF
       !

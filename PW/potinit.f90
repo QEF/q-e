@@ -81,6 +81,7 @@ SUBROUTINE potinit()
   IF ( startingpot == 'file' .AND. exst ) THEN
      !
      ! ... Cases a) and b): the charge density is read from file
+     ! ... this also reads rho%ns if lda+U and rho%bec if PAW
      !
      CALL pw_readfile( 'rho', ios )
      !
@@ -102,24 +103,6 @@ SUBROUTINE potinit()
         WRITE( stdout, '(/5X, &
              & "The potential is recalculated from file :"/5X,A,/)' ) &
             TRIM( filename )
-        !
-     END IF
-     !
-     ! ... The occupations ns also need to be read in order to build up 
-     ! ... the potential
-     !
-     IF ( lda_plus_u ) THEN
-        !
-        ldim = 2*Hubbard_lmax + 1
-        IF ( ionode ) THEN
-           CALL seqopn( iunocc, 'occup', 'FORMATTED', exst )
-           READ( UNIT = iunocc, FMT = * ) rho%ns
-           CLOSE( UNIT = iunocc, STATUS = 'KEEP' )
-        ELSE
-           rho%ns(:,:,:,:) = 0.D0
-        END IF
-        CALL mp_sum( rho%ns, intra_pool_comm )
-        CALL mp_sum( rho%ns, inter_pool_comm )
         !
      END IF
      !

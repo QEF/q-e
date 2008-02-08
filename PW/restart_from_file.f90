@@ -93,9 +93,7 @@ SUBROUTINE restart_from_file
      !
   ELSE
      !
-     WRITE( UNIT = stdout, FMT = * ) where_restart , '......?'
-     !
-     CALL errore( 'restart_from_file', 'problem in reading restart file', ios)
+     CALL errore( 'restart_from_file', 'Cannot restart from here: '//TRIM(where_restart), ios)
      !
   END IF
   !
