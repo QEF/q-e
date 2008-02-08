@@ -822,7 +822,7 @@ SUBROUTINE projwave_nc(filproj, lsym )
   IF (lmax_wfc > 3) CALL errore ('projwave_nc', 'l > 3 not yet implemented', 1)
   IF (nwfc /= natomwfc) CALL errore ('projwave_nc','wrong # of atomic wfcs?',1)
   !
-  ALLOCATE(wfcatom (npwx, npol*natomwfc) )
+  ALLOCATE(wfcatom (npwx*npol,natomwfc) )
   IF (.NOT. lda_plus_u) ALLOCATE(swfcatom (npwx*npol, natomwfc ) )  
   ALLOCATE (becp_nc ( nkb, npol, natomwfc)) 
   ALLOCATE(e (natomwfc) )  
