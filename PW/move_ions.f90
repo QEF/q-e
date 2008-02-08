@@ -257,7 +257,10 @@ SUBROUTINE move_ions()
      !
      ! ... the system is reinitialized
      !
-     CALL init_h()
+     !CALL init_h()
+     CALL potinit()
+     CALL newd()
+     CALL wfcinit()
      !
      ! ... this check is performed only once
      !
