@@ -9,7 +9,9 @@
 SUBROUTINE hinit0()
   !-----------------------------------------------------------------------
   !
-  ! ... configuration-independent hamiltonian initialization
+  ! ... hamiltonian initialization: 
+  ! ... atomic position independent initialization for nonlocal PP,
+  ! ... structure factors, local potential, core charge
   !
   USE ions_base,    ONLY : nat, nsp, ityp, tau
   USE basis,        ONLY : startingconfig
@@ -29,7 +31,7 @@ SUBROUTINE hinit0()
   INTEGER :: ik
   ! counter on k points
   !
-  ! ... calculate the local part of the pseudopotentials
+  ! ... calculate the Fourier coefficients of the local part of the PP
   !
   CALL init_vloc()
   !
@@ -39,6 +41,9 @@ SUBROUTINE hinit0()
   CALL init_at_1()
   !
   REWIND( iunigk )
+  !
+  ! ... The following loop must NOT be called more than once in a run
+  ! ... or else there will be problems with variable-cell calculations
   !
   DO ik = 1, nks
      !

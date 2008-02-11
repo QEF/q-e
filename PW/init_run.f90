@@ -62,8 +62,14 @@ SUBROUTINE init_run()
   !
   CALL openfil()
   !
-  CALL init_h() ! <- hinit0, potinit, newd, wfcinit
-
+  CALL hinit0()
+  !
+  CALL potinit()
+  !
+  CALL newd()
+  !
+  CALL wfcinit()
+  !
 #ifdef __PARA
   ! Cleanup PAW arrays that are only used for init
   IF (okpaw) CALL paw_post_init() ! only parallel!
@@ -76,25 +82,7 @@ SUBROUTINE init_run()
   RETURN
   !
 END SUBROUTINE init_run
-!
-!----------------------------------------------------------------------------
-SUBROUTINE init_h()
-  !----------------------------------------------------------------------------
   !
-  IMPLICIT NONE
-  !
-  CALL hinit0()
-  !
-  CALL potinit()
-  !
-  CALL newd()
-  !
-  CALL wfcinit()
-  !
-  RETURN
-  !
-END SUBROUTINE init_h
-
 !----------------------------------------------------------------------------
 SUBROUTINE pre_init()
   !----------------------------------------------------------------------------
