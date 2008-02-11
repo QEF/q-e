@@ -253,11 +253,11 @@ SUBROUTINE extrapolate_charge( rho_extr )
         !
         CALL sum_band ()
         !
-        WRITE( UNIT = stdout, FMT = '(/5X, &
+        WRITE( UNIT = stdout, FMT = '(5X, &
              & "charge density from extrapolated wavefunctions")' )
      ELSE
         !
-        WRITE( UNIT = stdout, FMT = '(/5X, &
+        WRITE( UNIT = stdout, FMT = '(5X, &
              & "charge density from previous step")' )
         !
      END IF
@@ -312,7 +312,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
         ! ...                  density the "old" atomic charge and summing the
         ! ...                  new one
         !
-        WRITE( UNIT = stdout, FMT = '(/5X, &
+        WRITE( UNIT = stdout, FMT = '(5X, &
              & "NEW-OLD atomic charge density approx. for the potential")' )
         !
         CALL write_rho( rho%of_r, 1, 'old' )
@@ -320,7 +320,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      ELSE IF ( rho_extr == 2 ) THEN
         !
         WRITE( UNIT = stdout, &
-               FMT = '(/5X,"first order charge density extrapolation")' )
+               FMT = '(5X,"first order charge density extrapolation")' )
         !
         ! ...   oldrho  ->  work
         !
@@ -339,7 +339,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
      ELSE IF ( rho_extr == 3 ) THEN
         !
         WRITE( UNIT = stdout, &
-               FMT = '(/5X,"second order charge density extrapolation")' )
+               FMT = '(5X,"second order charge density extrapolation")' )
         !
         ALLOCATE( work1( nrxx, 1 ) )
         !
@@ -426,7 +426,7 @@ SUBROUTINE extrapolate_charge( rho_extr )
   IF ( ABS( charge - nelec ) / charge > 1.D-7 ) THEN
      !
      WRITE( stdout, &
-            '(/,5X,"extrapolated charge ",F10.5,", renormalised to ",F10.5)') &
+            '(5X,"extrapolated charge ",F10.5,", renormalised to ",F10.5)') &
          charge, nelec
      !
      rho%of_r  = rho%of_r  / charge*nelec
@@ -510,11 +510,11 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      IF ( wfc_extr == 2 ) THEN
         !
-        WRITE( stdout, '(5X,"first order wave-functions extrapolation")' )
+        WRITE( stdout, '(/5X,"first order wave-functions extrapolation")' )
         !
      ELSE
         !
-        WRITE( stdout, '(5X,"second order wave-functions extrapolation")' )
+        WRITE( stdout, '(/5X,"second order wave-functions extrapolation")' )
         !
      END IF
      !
@@ -532,8 +532,11 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
      !
      DO ik = 1, nks
         !
+        ! ... read wavefcts as (t-dt), replace with wavefcts at (t)
+        !
         CALL davcio( evcold, 2*nwordwfc, iunoldwfc, ik, -1 )
         CALL get_buffer( evc, nwordwfc, iunwfc, ik )
+        CALL davcio(    evc, 2*nwordwfc, iunoldwfc, ik, +1 )
         !
         IF ( okvan ) THEN
            !
@@ -599,51 +602,49 @@ SUBROUTINE extrapolate_wfcs( wfc_extr )
         !
         ! ... now use aux as workspace to calculate "aligned" wavefcts:
         !
-        ! ... aux_i = sum_j evc_j*sp_m_ji (eq.3.21)
+        ! ... aux_i = sum_j evcold_j*s_m_ji (eq.3.21)
         !
-        CALL ZGEMM( 'N', 'N', npw, nbnd, nbnd, ONE, &
-                    evc, npwx, sp_m, nbnd, ZERO, aux, npwx )
+        CALL ZGEMM( 'N', 'C', npw, nbnd, nbnd, ONE, &
+                    evcold, npwx, sp_m, nbnd, ZERO, aux, npwx )
         !
-        ! ... extrapolate the wfc's (note that aux contains wavefcts
-        ! ... at (t) and evcold contains wavefcts at (t-dt) )
+        ! ... alpha0 and beta0 are calculated in "move_ions"
+        ! ... for first-order interpolation, alpha=1, beta0=0
         !
-        IF ( wfc_extr == 3 ) THEN
+        evc = ( 1.0_dp + alpha0 ) * evc + ( beta0 - alpha0 ) * aux
+        !
+        IF ( wfc_order > 2 ) THEN
            !
-           ! ... read wavefunctions at (t-2*dt)
+           ! ... second-order interpolation:
+           ! ... read wavefcts at (t-2dt), save aligned wavefcts at (t-dt)
            !
-           CALL davcio( evc, 2*nwordwfc, iunoldwfc2, ik, - 1 )
+           IF ( wfc_extr == 3 ) &
+               CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, -1 )
            !
-           ! ... alpha0 and beta0 are calculated in "move_ions"
+           CALL davcio(    aux, 2*nwordwfc, iunoldwfc2, ik, +1 )
            !
-           evc = ( 1 + alpha0 ) * aux + ( beta0 - alpha0 ) * evcold &
-               - beta0 * evc
-           !
-        ELSE
-           !
-           evc = 2.D0*aux - evcold
+           IF ( wfc_extr ==3 ) THEN
+              !
+              ! ... align wfcs at (t-2dt), add to interpolation formula 
+              !
+              CALL ZGEMM( 'N', 'C', npw, nbnd, nbnd, ONE, &
+                          evcold, npwx, sp_m, nbnd, ZERO, aux, npwx )
+              !
+              evc = evc - beta0 * aux
+              !
+           END IF
            !
         END IF
         !
-        ! ... move the files: "old" -> "old1" and "now" -> "old"
-        !
-        IF ( wfc_extr > 2 .OR. wfc_order > 2 ) THEN
-           !
-           CALL davcio( evcold, 2*nwordwfc, iunoldwfc2, ik, +1 )
-           !
-        END IF
-        !
-        CALL davcio( aux, 2*nwordwfc, iunoldwfc, ik, +1 )
-        !
-        ! ... save evc to file iunwfc
+        ! ... save interpolated wavefunctions to file iunwfc
         !
         CALL save_buffer( evc, nwordwfc, iunwfc, ik )
         !
      END DO
      !
      IF ( zero_ew > 0 ) &
-        WRITE( stdout, '(/,5X,"Message from extrapolate_wfcs: ",/,  &
-                        &  5X,"the matrix <psi(t-dt)|psi(t)> has ", &
-                        &  I2," small (< 0.1) eigenvalues")' ) zero_ew
+        WRITE( stdout, '( 5X,"Message from extrapolate_wfcs: ",/,  &
+                        & 5X,"the matrix <psi(t-dt)|psi(t)> has ", &
+                        & I2," small (< 0.1) eigenvalues")' ) zero_ew
      !
      DEALLOCATE( sp_m, u_m, w_m, work, ew, rwork )
      CALL deallocate_bec () 

@@ -340,8 +340,8 @@ MODULE dynamics_module
       !
       tau(:,:) = tau_new(:,:)
       !
-      IF ( nat == 2 ) &
-         PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
+      !!!IF ( nat == 2 ) &
+      !!!   PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
       !
 #if ! defined (__REDUCE_OUTPUT)
       !
@@ -946,8 +946,8 @@ MODULE dynamics_module
       !
       tau(:,:) = tau_new(:,:)
       !
-      IF ( nat == 2 ) &
-         PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
+      !!!IF ( nat == 2 ) &
+      !!!  PRINT *, "DISTANCE = ", DNRM2( 3, ( tau(:,1) - tau(:,2) ), 1 ) * ALAT
       !
 #if ! defined (__REDUCE_OUTPUT)
       !

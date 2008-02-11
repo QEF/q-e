@@ -887,6 +887,10 @@ SUBROUTINE iosys()
   niter = electron_maxstep
   !
   SELECT CASE( TRIM( pot_extrapolation ) )
+  CASE( 'from_wfcs', 'from-wfcs' )
+     !
+     pot_order =-1
+     !
   CASE( 'none' )
      !
      pot_order = 0
