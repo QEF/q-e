@@ -8,8 +8,8 @@
 # the code is in     PWROOT=$ROOT/espresso
 # temporary files in TMPDIR=$ROOT/tmp
 
-ROOT=/home/giannozz
-MAILTO=p.giannozzi@sns.it
+ROOT=/scratch/daily_test/
+MAILTO=developers@pwscf.org
 
 # cp does not write the restart file to outdir but to the current directory.
 # All other restart files are either written to outdir and cleaned by this
@@ -18,14 +18,18 @@ MAILTO=p.giannozzi@sns.it
 /bin/rm -r $ROOT/espresso/examples/example28/results/metadyn-cp_50.save/
 
 # choose setting for the compiler you want to use
-. /opt/intel_fc_80/bin/ifortvars.sh
+export CONFIG_OPTS="--disable-parallel"
 # for g95 + MKL:
 # export CONFIG_OPTS="--disable-parallel F90=g95"
 # for ifort:
-. /opt/intel_fc_80/bin/ifortvars.sh
-# use fortran lapack: weird things may occasionally occur with mkl
-export CONFIG_OPTS="--disable-parallel LAPACK_LIBS=../flib/lapack.a"
-
+. /opt/intel/fce/10.1.008/bin/ifortvars.sh
+. /opt/intel/mkl/10.0.1.014/tools/environment/mklvarsem64t.sh
+export OMP_NUM_THREADS=1
+# in order to use fortran lapack instead of mkl
+#export CONFIG_OPTS="--disable-parallel LAPACK_LIBS=../flib/lapack.a"
+#
+# choose if you want to run only pw.x tests (fast=1) or all examples (fast=0)
+fast=1
 #
 # choose if you want to update an existing cvs (update=1)
 #                 or to download a new one     (update=0)
@@ -91,7 +95,7 @@ tail -1 config.log >> $OUT
 echo "#" >> $OUT
 echo "# MAKE ALL " >> $OUT
 echo "#" >> $OUT
-make all vib >& make.log
+make all gipaw >& make.log
 errors=`grep -c -e Error make.log`
 if test  "$errors" = "0" ; then
    echo "make all: success" >> $OUT
@@ -102,76 +106,86 @@ else
    mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
    exit $errors
 fi
-cd examples
-./make_clean
-echo "#" >> $OUT
-echo "# RUNNING ALL EXAMPLES " >> $OUT
-echo "#" >> $OUT
-mv environment_variables environment_variables.orig
-cat > environment_variables << EOF
+#
+if test "$fast" = "0" ; then
+#
+   cd examples
+   ./make_clean
+   echo "#" >> $OUT
+   echo "# RUNNING ALL EXAMPLES " >> $OUT
+   echo "#" >> $OUT
+   mv environment_variables environment_variables.orig
+   cat > environment_variables << EOF
 BIN_DIR=$PWROOT/bin
 PSEUDO_DIR=$PWROOT/pseudo
 TMP_DIR=$TMPDIR
 PARA_PREFIX=
 PARA_POSTFIX=
 EOF
-#
-echo > run.log
-###./run_all_examples >& run.log
-#
-# TESTING ALL EXAMPLES
-#
-example_list=`/bin/ls -d example??`
-for example in $example_list
-do
+   #
+   echo > run.log
+   ###./run_all_examples >& run.log
+   #
+   # TESTING ALL EXAMPLES
+   #
+   example_list=`/bin/ls -d example??`
+   for example in $example_list
+   do
 
-  cd $PWROOT/examples/$example
+     cd $PWROOT/examples/$example
 
-  if test -x ./run_example ; then
-    if test  "$example" = "example21" ; then
-       # the argument "64" to run_example is used in example 21
-       ./run_example 64 >& run.log
-    else
-       # all other cases
-       ./run_example >& run.log
-    fi
-    # get the exit status of the script run_example
-    exit_status=$?
-    N=`echo $example | sed 's/example//'`
-    if test $exit_status -eq 0; then
-       echo "example $N finished OK" >> $OUT
-    else
-       echo "example $N ERROR EXIT (exit status = $exit_status)" >> $OUT
-    fi
+     if test -x ./run_example ; then
+       if test  "$example" = "example21" ; then
+         # the argument "64" to run_example is used in example 21
+         ./run_example 64 >& run.log
+       else
+         # all other cases
+         ./run_example >& run.log
+       fi
+       # get the exit status of the script run_example
+       exit_status=$?
+       N=`echo $example | sed 's/example//'`
+       if test $exit_status -eq 0; then
+         echo "example $N finished OK" >> $OUT
+       else
+         echo "example $N ERROR EXIT (exit status = $exit_status)" >> $OUT
+       fi
 
-    cat run.log >> ../run.log
-    /bin/rm run.log
-  fi
+       cat run.log >> ../run.log
+       /bin/rm run.log
+     fi
 
-done
+   done
 
-for example in $example_list
-do
+   for example in $example_list
+   do
 
-    cd $PWROOT/examples/$example
+     cd $PWROOT/examples/$example
 
-    N=`echo $example | sed 's/example//'`
+     N=`echo $example | sed 's/example//'`
 
-    if /bin/grep "HIGH VERBOSITY EXAMPLE" < run_example > /dev/null ; then
+     if /bin/grep "HIGH VERBOSITY EXAMPLE" < run_example > /dev/null ; then
        # high verbosity example: do not check
        echo "#" >> $OUT
        echo "# CHECK OF EXAMPLE # " $N " SKIPPED">> $OUT
        echo "#" >> $OUT
-    else
+     else
        # low-verbosity example: do a full check
        echo "#" >> $OUT
        echo "# CHECKING EXAMPLE # " $N >> $OUT
        echo "#" >> $OUT
        ../check_example ./ >> $OUT
-    fi
-done
+     fi
+   done
 
-cd $PWROOT/examples
-mv environment_variables.orig environment_variables
-
+   cd $PWROOT/examples
+   mv environment_variables.orig environment_variables
+#
+else
+#
+   cd tests
+   ./check-pw.x.j >> $OUT
+#
+fi
+#
 mail -s "RESULTS OF DAILY QE TEST" $MAILTO < $OUT
