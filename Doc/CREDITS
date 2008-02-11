@@ -74,7 +74,7 @@ Other relevant contributions:
   was written by A. Mostofi, J. Yates, Y.-S Lee (MIT)
 - The BlueGene porting was done by Costas Bekas and Alessandro Curioni
   (IBM Zurich).
-- Davide Ceresoli, Andrea Ferretti (S3), Guido Fratesi,
+- Davide Ceresoli, Andrea Ferretti (S3), Guido Fratesi, Jiayu Dai,
   Eyvaz Isaev (Moscow Steel and Alloy Inst), Axel Kohlmeyer (UPenn),
   Konstantin Kudin (Princeton), Sergey Lisenkov (Univ.Arkansas),
   Nicolas Mounet (MIT), Guido Roma (CEA), Pascal Thibaudeau (CEA), 
@@ -82,11 +82,11 @@ Other relevant contributions:
   helped in porting to new architectures, wrote some code
 
 A list of further contributors includes:
-Dario Alfe', Francesco Antoniella, Mauro Boero, Nicola Bonini, 
-Claudia Bungaro, Matteo Calandra, Paolo Cazzato, Gabriele Cipriani, 
-Cesar Da Silva, Alberto Debernardi, Gernot Deinzer, Martin Hilgeman,
-Yosuke Kanai, Nicolas Lacorne, Stephane Lefranc, Kurt Maeder,
-Andrea Marini, Pasquale Pavone, Mickael Profeta, 
+Dario Alfe', Alain Allouche,  Francesco Antoniella, Mauro Boero, 
+Nicola Bonini, Claudia Bungaro, Matteo Calandra, Paolo Cazzato, 
+Gabriele Cipriani, Cesar Da Silva, Alberto Debernardi, Gernot Deinzer, 
+Martin Hilgeman, Yosuke Kanai, Nicolas Lacorne, Stephane Lefranc, 
+Kurt Maeder, Andrea Marini, Pasquale Pavone, Mickael Profeta, 
 Kurt Stokbro, Antonio Suriano, Paul Tangney, Antonio Tilocca, 
 Jaro Tobik, Malgorzata Wierzbowska, Silviu Zilberman,
 and let us apologize to everybody we have forgotten.

@@ -1,5 +1,12 @@
 Fixed in CVS version:
 
+  *  In MD calculations with PWscf, there was the possibility of an
+     out-of-bound error, with unpredictable consequences, including 
+     in at least one case hanging of parallel jobs
+
+  *  Due to a bad dimensioning of variable hubbard_l, DFT+U results could 
+     be wrong if atomic type N with U term has N > L=maximum hubbard L
+
   *  a few symmetries were confusing the symmetry finder
 
   *  serious bugs in Berry's phase calculation. It affected only the US 
